@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D4373DD52E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84313DD526
 	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 09:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774604235; cv=none; b=MORtQnxW6DfoQRuIH2n8Ejvv0y7m1GQRLQqXTmmDGXosQO0pXMjIzXQX0LMuwtuWiOw/Fo+uW1PbN1SiX2pwaUfLfhFG6uI2K4IbPRBZxHsvlB/xrfdREKLljX/hO83FT5IRmwTiX6Agb9UWLHRXPvluktG+yccsT34pK9grX9M=
+	t=1774604236; cv=none; b=qhedNSWz8e7s323b+d1WgpQUdqwr6w4junqo2qGwBr4wQ5I9YeS7lvIGYSN1dg0CabW6gSYp0gUcv9RB/cVTnYI/yC+xr4ihByll6ZHm47+BZBWQN8aDQmbxXmQYQzvVkWprZHYXOPZBBErJXBj8mpfUdnAd8BnY/dibUEfT86w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774604235; c=relaxed/simple;
-	bh=MxV2DxCQDgJqDVGyA6PIXrjeUe9btldDIkGP8W2wZWM=;
+	s=arc-20240116; t=1774604236; c=relaxed/simple;
+	bh=NlSaYZA3M/iobvC4GcgbZ2txE35iZ3sgG8qnEEh/1fg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QpkJ9hKeW9mO/RUVfaG8ASVhVtcAGO1IyqaB1pWi3S8wD6OYBae3Jbhx5wPM0Hxf+PE2oCOywwRSUevMl/AhKzbEWnPHDTQZMgE6ug++VSC1ffs3PPyWUiIpw++yoSxwCc9NB8VaV+9teXSIqALKfL++2bmdq+pgRzgCY6epgYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=VmR9+unX; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=mCWceF4BzJeRkrVd6Ilo8GA57A5oV3ANzkzviuZUzEtYqyc82Pk5Ur7j6qY+gbtqSVKV1dMSQT2ysQ1/9dA3PCUKOIAUk1+1QYqCh7gAdKoZ0IgeLRav9/Gpco6RU6GQaWf7/k+KN/GstSH/VQ60hU1mc9P1FdqyRnBwuWPDMjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=hqC3xGW3; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="VmR9+unX"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="hqC3xGW3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=X4lttgOQzHkIg5AWqayn1gMvEhEpZHnqLAcvzCIsIF8=;
-	t=1774604234; x=1775813834; b=VmR9+unXsQeJAdOK2z/tI73NuaZbbXV4JkggV9I1jZVF35J
-	qZlScirxxQOz8ltZE8G7EG17rV7VEF9t/r+rNI6iGl2CMuJiZZKbuvN7zf6ncw/WDSPq8/npM5QAV
-	RJfknZfAkaTq6F3LFdSizAyH3p8k8n1t4QyttXCKrFtrLsFbKkLVcQaPe237OzF2dXL9bi4FMcgow
-	quiTJkpWfc1cqeco+WDomD2q4PBnQ5rQ4zGKL4zeny57UCY212ZdBs8Cj7KfZP/oLFaxNHzeMts35
-	ScTAR5wdLDkaSeRkdhgjWa5A1liadlO56XuM6n4qdsYr9J3QqF8damohsYFE2LWQ==;
+	Resent-Cc:Resent-Message-ID; bh=yYiNNCuMEM5p/ut8Vd48IKwGprHLEcH5wUj2nXOIzqU=;
+	t=1774604234; x=1775813834; b=hqC3xGW3iNDHfHOcnI+Tm4PULnoJK/8XRSetT0KH3dSaVwb
+	tF0lJc6ECrgQLxgBqJ70RHWdPaxWvJ4wZm2ObJ2LoryXP8xH6Z7zhDYRsg+bmFRq8atDH6bNNXBUa
+	T7ymQcWLmp+9rbN316HOikS6nPJmHtE/8neXWEBH5TVsxhPlikhpan2wOA3gTW4KKaziSla5D90Ch
+	BzmGA1fWaR5+wdFVUuZXR6DR8mbLTvp/WU9mWeSScgNFPGbb9sUK9NByUEjj5QgBs36V+JAzTW0tY
+	ZUw0aZis5xRUO+5xso4XQH6EG3REjS5Z6ad8l6NVvvfDiXMqeuBL60TIWLzw6Mpw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w63co-0000000E83L-3AH3;
-	Fri, 27 Mar 2026 10:37:06 +0100
+	id 1w63cu-0000000E83L-3PuK;
+	Fri, 27 Mar 2026 10:37:13 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 08/19] wifi: mac80211: clean up STA NSS handling
-Date: Fri, 27 Mar 2026 10:31:34 +0100
-Message-ID: <20260327103659.5296c2f3a949.I97fb93ccc1b366110ab23de58fcd73676cdd85d6@changeid>
+Subject: [RFC PATCH 17/19] wifi: nl80211: always validate AP operation/PHY regulatory
+Date: Fri, 27 Mar 2026 10:31:43 +0100
+Message-ID: <20260327103659.46376d7268f8.I2e0b12ce5eddd422a553d10ba2ed7dcd0fbb1871@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260327093659.711584-21-johannes@sipsolutions.net>
 References: <20260327093659.711584-21-johannes@sipsolutions.net>
@@ -50,368 +50,389 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Move ieee80211_sta_init_nss() from VHT code to station code,
-and disentangle it from rate control. This way, it becomes
-clearer when 'rx_nss' is set up.
-
-While doing this, fix the client side code to set up
-link_sta->op_mode_nss instead of link_sta->pub->rx_nss for
-the opmode element in association response, and remove the
-(now wrong) comment about handling that in the function.
+Instead of validating the AP operation elements and PHY regulatory
+individually in each caller, which missed CSA and color change,
+pass the channel to the beacon parsing function and validate the
+parameters there. This adds it to the missing places.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ibss.c        |  2 +
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/mesh_plink.c  |  2 +
- net/mac80211/mlme.c        | 11 +++--
- net/mac80211/ocb.c         |  4 +-
- net/mac80211/rate.c        |  4 +-
- net/mac80211/sta_info.c    | 92 +++++++++++++++++++++++++++++++++++++
- net/mac80211/sta_info.h    |  1 +
- net/mac80211/vht.c         | 93 --------------------------------------
- 9 files changed, 108 insertions(+), 103 deletions(-)
+ net/wireless/nl80211.c | 260 +++++++++++++++++++----------------------
+ 1 file changed, 123 insertions(+), 137 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1e1ab25d9d8d..b65f090a35dc 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -553,6 +553,8 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- 
- 	memcpy(addr, sta->sta.addr, ETH_ALEN);
- 
-+	ieee80211_sta_init_nss(&sta->deflink);
-+
- 	ibss_dbg(sdata, "Adding new IBSS station %pM\n", addr);
- 
- 	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f8f728619249..a683a79b7dcc 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2293,7 +2293,7 @@ ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta)
- {
- 	return _ieee80211_sta_cur_vht_bw(link_sta, NULL);
- }
--void ieee80211_sta_init_nss(struct link_sta_info *link_sta);
-+
- void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
- 				 struct ieee80211_link_data *link,
- 				 struct ieee80211_mgmt *mgmt);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 803106fc3134..99c666fb2d17 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -470,6 +470,8 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 					    elems->eht_cap, elems->eht_cap_len,
- 					    &sta->deflink);
- 
-+	ieee80211_sta_init_nss(&sta->deflink);
-+
- 	if (bw != sta->sta.deflink.bandwidth)
- 		changed |= IEEE80211_RC_BW_CHANGED;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7fc5616cb244..3a0fd3dc976c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -5749,9 +5749,9 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 	 */
- 
- 	/*
--	 * If an operating mode notification IE is present, override the
--	 * NSS calculation (that would be done in rate_control_rate_init())
--	 * and use the # of streams from that element.
-+	 * If an operating mode notification element is present, set the opmode
-+	 * NSS override to correct for the current number of spatial streams,
-+	 * overriding the capabilities. ieee80211_sta_init_nss() uses this.
- 	 */
- 	if (elems->opmode_notif &&
- 	    !(*elems->opmode_notif & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)) {
-@@ -5760,9 +5760,11 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 		nss = *elems->opmode_notif & IEEE80211_OPMODE_NOTIF_RX_NSS_MASK;
- 		nss >>= IEEE80211_OPMODE_NOTIF_RX_NSS_SHIFT;
- 		nss += 1;
--		link_sta->pub->rx_nss = nss;
-+		link_sta->op_mode_nss = nss;
- 	}
- 
-+	ieee80211_sta_init_nss(link_sta);
-+
- 	/*
- 	 * Always handle WMM once after association regardless
- 	 * of the first value the AP uses. Setting -1 here has
-@@ -10620,7 +10622,6 @@ void ieee80211_process_ml_reconf_resp(struct ieee80211_sub_if_data *sdata,
- 		if (add_links_data->link[link_id].status != WLAN_STATUS_SUCCESS)
- 			goto disconnect;
- 
--		ieee80211_sta_init_nss(link_sta);
- 		if (ieee80211_sta_activate_link(sta, link_id))
- 			goto disconnect;
- 
-diff --git a/net/mac80211/ocb.c b/net/mac80211/ocb.c
-index ebb4f4d88c23..447c84235c1c 100644
---- a/net/mac80211/ocb.c
-+++ b/net/mac80211/ocb.c
-@@ -4,7 +4,7 @@
-  *
-  * Copyright: (c) 2014 Czech Technical University in Prague
-  *            (c) 2014 Volkswagen Group Research
-- * Copyright (C) 2022 - 2024 Intel Corporation
-+ * Copyright (C) 2022 - 2024, 2026 Intel Corporation
-  * Author:    Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
-  * Funded by: Volkswagen Group Research
-  */
-@@ -92,6 +92,8 @@ static struct sta_info *ieee80211_ocb_finish_sta(struct sta_info *sta)
- 
- 	memcpy(addr, sta->sta.addr, ETH_ALEN);
- 
-+	ieee80211_sta_init_nss(&sta->deflink);
-+
- 	ocb_dbg(sdata, "Adding new IBSS station %pM (dev=%s)\n",
- 		addr, sdata->name);
- 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 31af7dd6aedc..ba1a3aa3f5d4 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -4,7 +4,7 @@
-  * Copyright 2005-2006, Devicescape Software, Inc.
-  * Copyright (c) 2006 Jiri Benc <jbenc@suse.cz>
-  * Copyright 2017	Intel Deutschland GmbH
-- * Copyright (C) 2019, 2022-2025 Intel Corporation
-+ * Copyright (C) 2019, 2022-2026 Intel Corporation
-  */
- 
- #include <linux/kernel.h>
-@@ -38,8 +38,6 @@ void rate_control_rate_init(struct link_sta_info *link_sta)
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 
--	ieee80211_sta_init_nss(link_sta);
--
- 	if (!ref)
- 		return;
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b3a016f3736b..31cf45095c60 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -3401,6 +3401,98 @@ void ieee80211_sta_remove_link(struct sta_info *sta, unsigned int link_id)
- 	sta_remove_link(sta, link_id, true);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f65f3887ea62..b9c7dc099b33 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6394,9 +6394,104 @@ static int nl80211_parse_he_bss_color(struct nlattr *attrs,
+ 	return 0;
  }
  
-+void ieee80211_sta_init_nss(struct link_sta_info *link_sta)
++static void nl80211_check_ap_rate_selectors(struct cfg80211_beacon_data *bcn,
++					    const struct element *rates)
 +{
-+	u8 ht_rx_nss = 0, vht_rx_nss = 0, he_rx_nss = 0, eht_rx_nss = 0, rx_nss;
-+	bool support_160;
++	int i;
 +
-+	if (link_sta->pub->eht_cap.has_eht) {
-+		int i;
-+		const u8 *rx_nss_mcs = (void *)&link_sta->pub->eht_cap.eht_mcs_nss_supp;
++	if (!rates)
++		return;
 +
-+		/* get the max nss for EHT over all possible bandwidths and mcs */
-+		for (i = 0; i < sizeof(struct ieee80211_eht_mcs_nss_supp); i++)
-+			eht_rx_nss = max_t(u8, eht_rx_nss,
-+					   u8_get_bits(rx_nss_mcs[i],
-+						       IEEE80211_EHT_MCS_NSS_RX));
++	for (i = 0; i < rates->datalen; i++) {
++		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
++			bcn->ht_required = true;
++		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_VHT_PHY)
++			bcn->vht_required = true;
 +	}
-+
-+	if (link_sta->pub->he_cap.has_he) {
-+		int i;
-+		u8 rx_mcs_80 = 0, rx_mcs_160 = 0;
-+		const struct ieee80211_sta_he_cap *he_cap = &link_sta->pub->he_cap;
-+		u16 mcs_160_map =
-+			le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_160);
-+		u16 mcs_80_map = le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_80);
-+
-+		for (i = 7; i >= 0; i--) {
-+			u8 mcs_160 = (mcs_160_map >> (2 * i)) & 3;
-+
-+			if (mcs_160 != IEEE80211_HE_MCS_NOT_SUPPORTED) {
-+				rx_mcs_160 = i + 1;
-+				break;
-+			}
-+		}
-+		for (i = 7; i >= 0; i--) {
-+			u8 mcs_80 = (mcs_80_map >> (2 * i)) & 3;
-+
-+			if (mcs_80 != IEEE80211_HE_MCS_NOT_SUPPORTED) {
-+				rx_mcs_80 = i + 1;
-+				break;
-+			}
-+		}
-+
-+		support_160 = he_cap->he_cap_elem.phy_cap_info[0] &
-+			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G;
-+
-+		if (support_160)
-+			he_rx_nss = min(rx_mcs_80, rx_mcs_160);
-+		else
-+			he_rx_nss = rx_mcs_80;
-+	}
-+
-+	if (link_sta->pub->ht_cap.ht_supported) {
-+		if (link_sta->pub->ht_cap.mcs.rx_mask[0])
-+			ht_rx_nss++;
-+		if (link_sta->pub->ht_cap.mcs.rx_mask[1])
-+			ht_rx_nss++;
-+		if (link_sta->pub->ht_cap.mcs.rx_mask[2])
-+			ht_rx_nss++;
-+		if (link_sta->pub->ht_cap.mcs.rx_mask[3])
-+			ht_rx_nss++;
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	if (link_sta->pub->vht_cap.vht_supported) {
-+		int i;
-+		u16 rx_mcs_map;
-+
-+		rx_mcs_map = le16_to_cpu(link_sta->pub->vht_cap.vht_mcs.rx_mcs_map);
-+
-+		for (i = 7; i >= 0; i--) {
-+			u8 mcs = (rx_mcs_map >> (2 * i)) & 3;
-+
-+			if (mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED) {
-+				vht_rx_nss = i + 1;
-+				break;
-+			}
-+		}
-+		/* FIXME: consider rx_highest? */
-+	}
-+
-+	rx_nss = max(vht_rx_nss, ht_rx_nss);
-+	rx_nss = max(he_rx_nss, rx_nss);
-+	rx_nss = max(eht_rx_nss, rx_nss);
-+	rx_nss = max_t(u8, 1, rx_nss);
-+	link_sta->capa_nss = rx_nss;
-+
-+	if (link_sta->op_mode_nss)
-+		link_sta->pub->rx_nss =
-+			min_t(u8, rx_nss, link_sta->op_mode_nss);
-+	else
-+		link_sta->pub->rx_nss = rx_nss;
 +}
 +
- void ieee80211_sta_set_max_amsdu_subframes(struct sta_info *sta,
- 					   const u8 *ext_capab,
- 					   unsigned int ext_capab_len)
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 92ba477e7c37..9c827199f949 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -996,6 +996,7 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
++/*
++ * Since the nl80211 API didn't include, from the beginning, attributes about
++ * HT/VHT/... operation, we parse them out of the elements and check for
++ * validity for use by drivers/mac80211.
++ */
++static int nl80211_calculate_ap_operation(struct nlattr *attrs[],
++					  struct cfg80211_beacon_data *bcn,
++					  struct netlink_ext_ack *extack)
++{
++	size_t ies_len = bcn->tail_len;
++	const u8 *ies = bcn->tail;
++	const struct element *rates;
++	const struct element *op;
++
++	rates = cfg80211_find_elem(WLAN_EID_SUPP_RATES, ies, ies_len);
++	nl80211_check_ap_rate_selectors(bcn, rates);
++
++	rates = cfg80211_find_elem(WLAN_EID_EXT_SUPP_RATES, ies, ies_len);
++	nl80211_check_ap_rate_selectors(bcn, rates);
++
++	op = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
++	if (op) {
++		if (op->datalen < sizeof(*bcn->he_oper) + 1) {
++			NL_SET_ERR_MSG(extack, "bad HE operation in beacon");
++			return -EINVAL;
++		}
++		bcn->he_oper = (void *)(op->data + 1);
++		/* takes extension ID into account */
++		if (op->datalen < ieee80211_he_oper_size((void *)bcn->he_oper)) {
++			NL_SET_ERR_MSG(extack, "bad HE operation in beacon");
++			return -EINVAL;
++		}
++	}
++
++	op = cfg80211_find_elem(WLAN_EID_HT_OPERATION, ies, ies_len);
++	if (op) {
++		if (op->datalen < sizeof(*bcn->ht_oper)) {
++			NL_SET_ERR_MSG(extack, "bad HT operation in beacon");
++			return -EINVAL;
++		}
++		bcn->ht_oper = (void *)op->data;
++	}
++
++	op = cfg80211_find_elem(WLAN_EID_VHT_OPERATION, ies, ies_len);
++	if (op) {
++		if (op->datalen < sizeof(*bcn->vht_oper)) {
++			NL_SET_ERR_MSG(extack, "bad VHT operation in beacon");
++			return -EINVAL;
++		}
++		bcn->vht_oper = (void *)op->data;
++	}
++
++	op = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_OPERATION, ies, ies_len);
++	if (op) {
++		if (!ieee80211_eht_oper_size_ok(op->data + 1,
++						op->datalen - 1)) {
++			NL_SET_ERR_MSG(extack, "bad EHT operation in beacon");
++			return -EINVAL;
++		}
++		bcn->eht_oper = (void *)(op->data + 1);
++	}
++
++	op = cfg80211_find_ext_elem(WLAN_EID_EXT_UHR_OPER, ies, ies_len);
++	if (op) {
++		/* need full UHR operation separately */
++		if (!attrs[NL80211_ATTR_UHR_OPERATION]) {
++			NL_SET_ERR_MSG(extack, "missing UHR operation");
++			return -EINVAL;
++		}
++		bcn->uhr_oper = nla_data(attrs[NL80211_ATTR_UHR_OPERATION]);
++	} else if (attrs[NL80211_ATTR_UHR_OPERATION]) {
++		NL_SET_ERR_MSG(extack, "unexpected UHR operation");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
+ 				struct nlattr *attrs[],
+ 				struct cfg80211_beacon_data *bcn,
++				struct ieee80211_channel *chan,
+ 				struct netlink_ext_ack *extack)
+ {
+ 	bool haveinfo = false;
+@@ -6511,6 +6606,19 @@ static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
+ 		}
+ 	}
  
- unsigned long ieee80211_sta_last_active(struct sta_info *sta, int link_id);
- 
-+void ieee80211_sta_init_nss(struct link_sta_info *link_sta);
- void ieee80211_sta_set_max_amsdu_subframes(struct sta_info *sta,
- 					   const u8 *ext_capab,
- 					   unsigned int ext_capab_len);
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index a72cf532bec7..63aa64b77ca0 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -475,99 +475,6 @@ _ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta,
- 	return bw;
++	err = nl80211_calculate_ap_operation(attrs, bcn, extack);
++	if (err)
++		return err;
++
++	if (bcn->he_oper && (chan->flags & IEEE80211_CHAN_NO_HE))
++		return -EOPNOTSUPP;
++
++	if (bcn->eht_oper && (chan->flags & IEEE80211_CHAN_NO_EHT))
++		return -EOPNOTSUPP;
++
++	if (bcn->uhr_oper && (chan->flags & IEEE80211_CHAN_NO_UHR))
++		return -EOPNOTSUPP;
++
+ 	return 0;
  }
  
--void ieee80211_sta_init_nss(struct link_sta_info *link_sta)
+@@ -6628,22 +6736,6 @@ nl80211_parse_unsol_bcast_probe_resp(struct cfg80211_registered_device *rdev,
+ 	return 0;
+ }
+ 
+-static void nl80211_check_ap_rate_selectors(struct cfg80211_beacon_data *bcn,
+-					    const struct element *rates)
 -{
--	u8 ht_rx_nss = 0, vht_rx_nss = 0, he_rx_nss = 0, eht_rx_nss = 0, rx_nss;
--	bool support_160;
+-	int i;
 -
--	if (link_sta->pub->eht_cap.has_eht) {
--		int i;
--		const u8 *rx_nss_mcs = (void *)&link_sta->pub->eht_cap.eht_mcs_nss_supp;
+-	if (!rates)
+-		return;
 -
--		/* get the max nss for EHT over all possible bandwidths and mcs */
--		for (i = 0; i < sizeof(struct ieee80211_eht_mcs_nss_supp); i++)
--			eht_rx_nss = max_t(u8, eht_rx_nss,
--					   u8_get_bits(rx_nss_mcs[i],
--						       IEEE80211_EHT_MCS_NSS_RX));
+-	for (i = 0; i < rates->datalen; i++) {
+-		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
+-			bcn->ht_required = true;
+-		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_VHT_PHY)
+-			bcn->vht_required = true;
 -	}
--
--	if (link_sta->pub->he_cap.has_he) {
--		int i;
--		u8 rx_mcs_80 = 0, rx_mcs_160 = 0;
--		const struct ieee80211_sta_he_cap *he_cap = &link_sta->pub->he_cap;
--		u16 mcs_160_map =
--			le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_160);
--		u16 mcs_80_map = le16_to_cpu(he_cap->he_mcs_nss_supp.rx_mcs_80);
--
--		for (i = 7; i >= 0; i--) {
--			u8 mcs_160 = (mcs_160_map >> (2 * i)) & 3;
--
--			if (mcs_160 != IEEE80211_HE_MCS_NOT_SUPPORTED) {
--				rx_mcs_160 = i + 1;
--				break;
--			}
--		}
--		for (i = 7; i >= 0; i--) {
--			u8 mcs_80 = (mcs_80_map >> (2 * i)) & 3;
--
--			if (mcs_80 != IEEE80211_HE_MCS_NOT_SUPPORTED) {
--				rx_mcs_80 = i + 1;
--				break;
--			}
--		}
--
--		support_160 = he_cap->he_cap_elem.phy_cap_info[0] &
--			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G;
--
--		if (support_160)
--			he_rx_nss = min(rx_mcs_80, rx_mcs_160);
--		else
--			he_rx_nss = rx_mcs_80;
--	}
--
--	if (link_sta->pub->ht_cap.ht_supported) {
--		if (link_sta->pub->ht_cap.mcs.rx_mask[0])
--			ht_rx_nss++;
--		if (link_sta->pub->ht_cap.mcs.rx_mask[1])
--			ht_rx_nss++;
--		if (link_sta->pub->ht_cap.mcs.rx_mask[2])
--			ht_rx_nss++;
--		if (link_sta->pub->ht_cap.mcs.rx_mask[3])
--			ht_rx_nss++;
--		/* FIXME: consider rx_highest? */
--	}
--
--	if (link_sta->pub->vht_cap.vht_supported) {
--		int i;
--		u16 rx_mcs_map;
--
--		rx_mcs_map = le16_to_cpu(link_sta->pub->vht_cap.vht_mcs.rx_mcs_map);
--
--		for (i = 7; i >= 0; i--) {
--			u8 mcs = (rx_mcs_map >> (2 * i)) & 3;
--
--			if (mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED) {
--				vht_rx_nss = i + 1;
--				break;
--			}
--		}
--		/* FIXME: consider rx_highest? */
--	}
--
--	rx_nss = max(vht_rx_nss, ht_rx_nss);
--	rx_nss = max(he_rx_nss, rx_nss);
--	rx_nss = max(eht_rx_nss, rx_nss);
--	rx_nss = max_t(u8, 1, rx_nss);
--	link_sta->capa_nss = rx_nss;
--
--	/* that shouldn't be set yet, but we can handle it anyway */
--	if (link_sta->op_mode_nss)
--		link_sta->pub->rx_nss =
--			min_t(u8, rx_nss, link_sta->op_mode_nss);
--	else
--		link_sta->pub->rx_nss = rx_nss;
 -}
 -
- u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 				  struct link_sta_info *link_sta,
- 				  u8 opmode, enum nl80211_band band)
+ /*
+  * Since the nl80211 API didn't include, from the beginning, attributes about
+  * HT/VHT/... capabilities, we parse them out of the elements and check for
+@@ -6697,83 +6789,6 @@ static int nl80211_calculate_ap_capabilities(struct genl_info *info,
+ 	return 0;
+ }
+ 
+-/*
+- * Since the nl80211 API didn't include, from the beginning, attributes about
+- * HT/VHT/... operation, we parse them out of the elements and check for
+- * validity for use by drivers/mac80211.
+- */
+-static int nl80211_calculate_ap_operation(struct genl_info *info,
+-					  struct cfg80211_beacon_data *bcn)
+-{
+-	size_t ies_len = bcn->tail_len;
+-	const u8 *ies = bcn->tail;
+-	const struct element *rates;
+-	const struct element *op;
+-
+-	rates = cfg80211_find_elem(WLAN_EID_SUPP_RATES, ies, ies_len);
+-	nl80211_check_ap_rate_selectors(bcn, rates);
+-
+-	rates = cfg80211_find_elem(WLAN_EID_EXT_SUPP_RATES, ies, ies_len);
+-	nl80211_check_ap_rate_selectors(bcn, rates);
+-
+-	op = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
+-	if (op) {
+-		if (op->datalen < sizeof(*bcn->he_oper) + 1) {
+-			GENL_SET_ERR_MSG(info, "bad HE operation in beacon");
+-			return -EINVAL;
+-		}
+-		bcn->he_oper = (void *)(op->data + 1);
+-		/* takes extension ID into account */
+-		if (op->datalen < ieee80211_he_oper_size((void *)bcn->he_oper)) {
+-			GENL_SET_ERR_MSG(info, "bad HE operation in beacon");
+-			return -EINVAL;
+-		}
+-	}
+-
+-	op = cfg80211_find_elem(WLAN_EID_HT_OPERATION, ies, ies_len);
+-	if (op) {
+-		if (op->datalen < sizeof(*bcn->ht_oper)) {
+-			GENL_SET_ERR_MSG(info, "bad HT operation in beacon");
+-			return -EINVAL;
+-		}
+-		bcn->ht_oper = (void *)op->data;
+-	}
+-
+-	op = cfg80211_find_elem(WLAN_EID_VHT_OPERATION, ies, ies_len);
+-	if (op) {
+-		if (op->datalen < sizeof(*bcn->vht_oper)) {
+-			GENL_SET_ERR_MSG(info, "bad VHT operation in beacon");
+-			return -EINVAL;
+-		}
+-		bcn->vht_oper = (void *)op->data;
+-	}
+-
+-	op = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_OPERATION, ies, ies_len);
+-	if (op) {
+-		if (!ieee80211_eht_oper_size_ok(op->data + 1,
+-						op->datalen - 1)) {
+-			GENL_SET_ERR_MSG(info, "bad EHT operation in beacon");
+-			return -EINVAL;
+-		}
+-		bcn->eht_oper = (void *)(op->data + 1);
+-	}
+-
+-	op = cfg80211_find_ext_elem(WLAN_EID_EXT_UHR_OPER, ies, ies_len);
+-	if (op) {
+-		/* need full UHR operation separately */
+-		if (!info->attrs[NL80211_ATTR_UHR_OPERATION]) {
+-			GENL_SET_ERR_MSG(info, "missing UHR operation");
+-			return -EINVAL;
+-		}
+-		bcn->uhr_oper = nla_data(info->attrs[NL80211_ATTR_UHR_OPERATION]);
+-	} else if (info->attrs[NL80211_ATTR_UHR_OPERATION]) {
+-		GENL_SET_ERR_MSG(info, "unexpected UHR operation");
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static bool nl80211_get_ap_channel(struct cfg80211_registered_device *rdev,
+ 				   struct cfg80211_ap_settings *params)
+ {
+@@ -6898,21 +6913,6 @@ static void nl80211_send_ap_started(struct wireless_dev *wdev,
+ 	nlmsg_free(msg);
+ }
+ 
+-static int nl80211_validate_ap_phy_operation(struct ieee80211_channel *channel,
+-					     struct cfg80211_beacon_data *bcn)
+-{
+-	if (bcn->he_oper && (channel->flags & IEEE80211_CHAN_NO_HE))
+-		return -EOPNOTSUPP;
+-
+-	if (bcn->eht_oper && (channel->flags & IEEE80211_CHAN_NO_EHT))
+-		return -EOPNOTSUPP;
+-
+-	if (bcn->uhr_oper && (channel->flags & IEEE80211_CHAN_NO_UHR))
+-		return -EOPNOTSUPP;
+-
+-	return 0;
+-}
+-
+ static int
+ nl80211_parse_s1g_short_beacon(struct cfg80211_registered_device *rdev,
+ 			       struct nlattr *attrs,
+@@ -6985,11 +6985,6 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (!params)
+ 		return -ENOMEM;
+ 
+-	err = nl80211_parse_beacon(rdev, info->attrs, &params->beacon,
+-				   info->extack);
+-	if (err)
+-		goto out;
+-
+ 	params->beacon_interval =
+ 		nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
+ 	params->dtim_period =
+@@ -7106,6 +7101,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		goto out;
+ 	}
+ 
++	err = nl80211_parse_beacon(rdev, info->attrs, &params->beacon,
++				   params->chandef.chan, info->extack);
++	if (err)
++		goto out;
++
+ 	beacon_check.iftype = wdev->iftype;
+ 	beacon_check.relax = true;
+ 	beacon_check.reg_power =
+@@ -7209,15 +7209,6 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		goto out;
+ 
+-	err = nl80211_calculate_ap_operation(info, &params->beacon);
+-	if (err)
+-		goto out;
+-
+-	err = nl80211_validate_ap_phy_operation(params->chandef.chan,
+-						&params->beacon);
+-	if (err)
+-		goto out;
+-
+ 	if (info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS])
+ 		params->flags = nla_get_u32(
+ 			info->attrs[NL80211_ATTR_AP_SETTINGS_FLAGS]);
+@@ -7285,19 +7276,11 @@ static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOMEM;
+ 
+ 	err = nl80211_parse_beacon(rdev, info->attrs, &params->beacon,
++				   wdev->links[link_id].ap.chandef.chan,
+ 				   info->extack);
+ 	if (err)
+ 		goto out;
+ 
+-	err = nl80211_calculate_ap_operation(info, &params->beacon);
+-	if (err)
+-		goto out;
+-
+-	err = nl80211_validate_ap_phy_operation(wdev->links[link_id].ap.chandef.chan,
+-						&params->beacon);
+-	if (err)
+-		goto out;
+-
+ 	/* recheck beaconing is permitted with possibly changed power type */
+ 	beacon_check.iftype = wdev->iftype;
+ 	beacon_check.relax = true;
+@@ -11898,11 +11881,16 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	params.count = cs_count;
+ 
++	err = nl80211_parse_chandef(rdev, info->extack, info->attrs,
++				    &params.chandef);
++	if (err)
++		goto free;
++
+ 	if (!need_new_beacon)
+ 		goto skip_beacons;
+ 
+ 	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon_after,
+-				   info->extack);
++				   params.chandef.chan, info->extack);
+ 	if (err)
+ 		goto free;
+ 
+@@ -11919,6 +11907,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 		goto free;
+ 
+ 	err = nl80211_parse_beacon(rdev, csa_attrs, &params.beacon_csa,
++				   wdev->links[link_id].ap.chandef.chan,
+ 				   info->extack);
+ 	if (err)
+ 		goto free;
+@@ -11947,11 +11936,6 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 		goto free;
+ 
+ skip_beacons:
+-	err = nl80211_parse_chandef(rdev, info->extack, info->attrs,
+-				    &params.chandef);
+-	if (err)
+-		goto free;
+-
+ 	if (!cfg80211_reg_can_beacon_relax(&rdev->wiphy, &params.chandef,
+ 					   wdev->iftype)) {
+ 		err = -EINVAL;
+@@ -18405,6 +18389,7 @@ static int nl80211_color_change(struct sk_buff *skb, struct genl_info *info)
+ 	params.color = nla_get_u8(info->attrs[NL80211_ATTR_COLOR_CHANGE_COLOR]);
+ 
+ 	err = nl80211_parse_beacon(rdev, info->attrs, &params.beacon_next,
++				   wdev->links[params.link_id].ap.chandef.chan,
+ 				   info->extack);
+ 	if (err)
+ 		return err;
+@@ -18420,6 +18405,7 @@ static int nl80211_color_change(struct sk_buff *skb, struct genl_info *info)
+ 		goto out;
+ 
+ 	err = nl80211_parse_beacon(rdev, tb, &params.beacon_color_change,
++				   wdev->links[params.link_id].ap.chandef.chan,
+ 				   info->extack);
+ 	if (err)
+ 		goto out;
 -- 
 2.53.0
 
