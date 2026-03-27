@@ -1,46 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C982F3F99F2
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 14:50:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451EE3EF0CE
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 14:51:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774623013; cv=none; b=XBX5EXx8YXja0VVU8flhv5ix8Md3qaci3nEY3pDIXqKrHEoLqRXTV7/LW6+jUi/2BMuccIYFyujS82zAIZ8t/1v+/1nvHHZ/e+4wB5IZX3pQMpo6by8Dv4ZMy9/V0bA/HRYkGBn3LDKRSYI979ZmSIhr0gFyIgCOfBX8GCPyjBE=
+	t=1774623086; cv=none; b=iXiHX4GPvCME6g2/8tRxQc7Zppe5fEQHqA/jFrbUeJUurWIA5X531h5wKj8e0oZHIdhEHaFCti7mhYQqbtwEpiJsAv4FiIwfhEl89zWYqsjSXcqibqKLzBSeyvyz//rZSlfhWSaSH5cLdB1lwmcDtTBHJqkPP9ANr1y4iCixuT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774623013; c=relaxed/simple;
-	bh=xAhOeYYXubtgDlF/P+peMIoOJQXENx3wxOMpRauBpoo=;
+	s=arc-20240116; t=1774623086; c=relaxed/simple;
+	bh=fHE/TQ2VA6qDa84vRAUIEQ8F5oXeKUmPHwXYv28cr70=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=owEjWRH5Taa5iGT1j7ox6gW/HKeupvaG8CCtKwehzRo4ef0E8ELAySmamuBcn/EOLiYKHT6BC2SRis5OLATEwQvH8M/lyDkUuuzB5v11bxHQePjvt2+7ATtd0IL2tloKzYHfLNwwiy2gtT7XEX07/gMKm/9H5S8f8D4in2g/DMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kV/hovMS; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=WgyK5esXRxBEMy+svGf/p8QYh5iW5oEcNNuYlOPPj7kgRNLi5ljCVtIlWW37D37XOaf+kqMMkKqtnE7C6EqomaV2WUM3ku2M/IizHQDsz+kcfcHXXOh3wzgPKHBnh29+yArf7oW3pfSk1TKTGOdTNhQfuZGODWAVn/0eo2CHjj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=txRvY3QS; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kV/hovMS"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="txRvY3QS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
 	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=xAhOeYYXubtgDlF/P+peMIoOJQXENx3wxOMpRauBpoo=;
-	t=1774623011; x=1775832611; b=kV/hovMSWsrYtpQXVMHEYoebGM8U9pAk8vR6Xew38uFUSjC
-	JXw+R3ji7ZhbAy82XmahMb7XdrDvEjg67ffESur9bYGtzLrhRn+Mgx1iJst6VVJzXC9Ty6uutjJa+
-	nn1LVVtDagN2RSW2SECQpDZjhnZR9UDJ0ojUXYw6YIyLWz1ifoQfPMknthGAfB91kvIczMYUC5LH8
-	ROxrBCvOrQ/AVxRr9hLdllIkc837Q7ukMwd6quVsIBXECW9iuUKDQluiLk2KJaBeoieKApElh+w8n
-	93lPKlNlxIjsIRhJhv5v5HhV8kFBj47hb1sIVsrRX4SQ1UsXYe3FtWJnJgWsvCgw==;
+	Resent-Cc:Resent-Message-ID; bh=eEiccdRL8mVq3UdqfFSuFGUi0qiM444bkdxzwYJl8kU=;
+	t=1774623084; x=1775832684; b=txRvY3QS/3XhI+FKDOyhWHo+2netU3zy4zQj1oooeYFnkY4
+	rTB5+snRd+cRiAFto8hP4qiY6Xy+hDLe4EUDnk92lfljC/0Tunkvj71G2tPsaeUE2dnCHbrkRpBKJ
+	26Zt4rLIc6Fwb/tRx738CwjN7Qs76cl2pIXUGFNdSuTePzqW6P/hQlgInMO4l30Fc24dvChXv8YBz
+	Q8IlD6Zs/pQ+YY6ejcnk3ny6htKePh6RiBofAbx1jbTdeMVTP3lRw6eA4S+UM7tLDGf47x2TYt1Yr
+	ZyOsaAMub7Le12e0iKBYMhPEnO/ZBctO8yWLcKZqbXPtXMT3M9S5ZwpYwLOOMrWw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w68Vk-0000000EKtU-3S2d;
-	Fri, 27 Mar 2026 15:50:09 +0100
-Message-ID: <8aa10ce1ed9da7409ade68d376a61f5e14c70219.camel@sipsolutions.net>
-Subject: Re: [RFC PATCH 08/19] wifi: mac80211: clean up STA NSS handling
+	id 1w68Wv-0000000EL8T-3OR2;
+	Fri, 27 Mar 2026 15:51:22 +0100
+Message-ID: <ab3241404c0366a5f06cc1d02cb7e9068d7d72cc.camel@sipsolutions.net>
+Subject: Re: [RFC PATCH 14/19] wifi: cfg80211: move AP HT/VHT/... operation
+ to beacon info
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Pablo MG <pmartin-gomez@freebox.fr>, linux-wireless@vger.kernel.org
-Date: Fri, 27 Mar 2026 15:50:08 +0100
-In-Reply-To: <79228bab-aa6c-4fda-97c9-768b158dfa3a@freebox.fr> (sfid-20260327_132444_673524_537A049C)
+Date: Fri, 27 Mar 2026 15:51:21 +0100
+In-Reply-To: <91b36670-30c2-4d67-a57b-c1b8295b5990@freebox.fr> (sfid-20260327_143420_271808_1069F29F)
 References: <20260327093659.711584-21-johannes@sipsolutions.net>
-	 <20260327103659.5296c2f3a949.I97fb93ccc1b366110ab23de58fcd73676cdd85d6@changeid>
-	 <79228bab-aa6c-4fda-97c9-768b158dfa3a@freebox.fr>
-	 (sfid-20260327_132444_673524_537A049C)
+	 <20260327103659.1cdda25b617f.I0d21120b41eed661eefc61d5417dadaae7145845@changeid>
+	 <91b36670-30c2-4d67-a57b-c1b8295b5990@freebox.fr>
+	 (sfid-20260327_143420_271808_1069F29F)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -52,19 +53,20 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Fri, 2026-03-27 at 13:24 +0100, Pablo MG wrote:
-> Hello,
+On Fri, 2026-03-27 at 14:34 +0100, Pablo MG wrote:
 >=20
-> If we are doing some cleanup, let's go full on it.
+> > @@ -1524,14 +1534,11 @@ struct cfg80211_s1g_short_beacon {
+> >    * @vht_cap: VHT capabilities (or %NULL if VHT isn't enabled)
+> >    * @he_cap: HE capabilities (or %NULL if HE isn't enabled)
+> >    * @eht_cap: EHT capabilities (or %NULL if EHT isn't enabled)
+> > - * @eht_oper: EHT operation IE (or %NULL if EHT isn't enabled)
+> > - * @uhr_oper: UHR operation (or %NULL if UHR isn't enabled)
+> >    * @ht_required: stations must support HT
+> >    * @vht_required: stations must support VHT
+> You forgot to remove those from the doc
 >=20
 
-No? You're sounding a lot like an LLM that really likes to comment on
-code that's only moved...
-
-I literally wrote:
-
->> Move ieee80211_sta_init_nss() from VHT code to station code,
-
-so it wouldn't be a good idea to be changing it at the same time.
+Hmm, yeah. No surprise, I had some conflicts here because our internal
+tree has some merge damage in the comments... oh well, next time.
 
 johannes
