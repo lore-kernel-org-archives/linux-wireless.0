@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA5FC379EC4
-	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 09:37:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D9543D6498
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2026 09:37:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774604232; cv=none; b=gG8kx6QQmA2fuYlTmf6o77NW3crpq08o67YqYTTwaWUE8Mmcibo2BRc398WXlbRdbOwFX1p90tgoCubJrWtqefd0MZ4u7nRFGE12qYWdpTphDFVSx/EwBewt+yvd6bNYtrKyka0A/AoYiUFM8uEdKCY4rgstk0ZpLqFw9GLI+bo=
+	t=1774604232; cv=none; b=klFAGOa11o9VHZt2kL2ehp8XMzk37ZmJstXKQ6qQmcD636yVPjaE8uVZ/d0RhzUrhkO5fW2zT+cGg9QK2PjbNY4UZtMegggwUb98C3D5PGheGoPpCqFaQm0fMa1DT+5CwkV2m1wylIly3j5W32Jv+1kITKVfk500Y2A5dZb3CM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1774604232; c=relaxed/simple;
-	bh=qzDxLG3XM1PzIzRIN+WSt1IPuSpd0xPpwG8FAf2poxM=;
+	bh=tBTKpuJKBY/Taj22GoJ8OirJvLh3dGI0lQrJpx2OZho=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mHpnb0sRJKglBQrLgOJHMb1ZQKRvFEwjjXv1GUKeu9YbZ3mr9n9bhkvkgTMyWQqBTGtyxnBDbIOZxWrXY44LjxLNdnfQCHa9TkWS3Rtns7IywtXaW7KnglJHFu1y/9I8CNVOztLO2EjsSX9DSuwHpvCWhf1H2ANRtRzLmohzALI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=jVuQTkKf; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=DL3qairFCPVdmjRZonytHMHoY/rGxgGIQQGG79xXTbZ299FX0bMfh0gekLwOdotWkuDb+GybF3G1Gz7mi4vtts/gezAIuUa4Bqzr0ZE1t6ktY54+kjxY8/PymxBZii2nPijFjdoqSQorFajYJ0kDuBahFduUDv+9vgFrGOo/9Ek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=SLMiO7E0; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="jVuQTkKf"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="SLMiO7E0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=FGqzA2ktDiRCqMGDAHBfvOOXgcaH16IKU3ZkjRaNAHE=;
-	t=1774604230; x=1775813830; b=jVuQTkKfNWpWw4MPDkKkKyrGPg8PHKN3ftEh9DnxLiZ2h4e
-	09XePNkfcleDPOmXQzSo8j3n9j6C0X2unO3+/PmJU1E0RElTjqP0oSjbt4PAo7cJBlESbVzVnbvA+
-	LeY0JtbhGNpocnVlmXNZZPGfqGvYGT+4iCRjiPh9TNLGYAzRC2Um/4KB3XBLZE2GuAXJ8W1KVYjFi
-	UgcMN2DbIakI7byS/yQFCHZuV7j9Awz2y1uWHTpPKT5xvb+xXErnfLWmSbDCX6RPklr8TscqlSBVh
-	MG5KbFsxyusdWvwHnOzMFAIKvXmTFeNTv+vgSayM3hnB8H7fN1AFjfVaz3gYJJKQ==;
+	Resent-Cc:Resent-Message-ID; bh=3VZrPVD2tLqD7BVw2HmmUbundMi351bxX0BgXC8BaGU=;
+	t=1774604231; x=1775813831; b=SLMiO7E0lN44ML3Y95QbYze6oSYI2dVm+agaA2zGCTeO11b
+	vK07paErjW7W08PgDa2Vy6CJ/SDhzGEQSwGbvheHSY8u4K5iyHe7vJuTY1taQJwxhfzuwpZTzVpma
+	aewLk3KaYsqH6ZtCNCHz9bdzLi8NWnZ5tqZH7NuhPGf2QQvnc/s4NbQixbYn77YEfezGu2nzjDclm
+	+wTmW6/JtWJLqR4ORMJpU5+lq9ZIYZ0ZnSZWz453K0tLiDmEf5qSsxzBj7qA51jiSYL8aBbA2LgeK
+	p82LMOSrEFzzONeXiIcmw7oKeRrborRd5mxjsHp6QTydt6rSvjWI7/bYK6IiiSPg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1w63cq-0000000E83L-3B2V;
-	Fri, 27 Mar 2026 10:37:08 +0100
+	id 1w63cl-0000000E83L-1Ne5;
+	Fri, 27 Mar 2026 10:37:03 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 11/19] wifi: mac80211: remove ieee80211_sta_cur_vht_bw()
-Date: Fri, 27 Mar 2026 10:31:37 +0100
-Message-ID: <20260327103659.070eeeb91e85.Ic8fc88a7e016e62d00dca380ffbf47a54ef3daef@changeid>
+Subject: [RFC PATCH 02/19] wifi: mac80211: use max BW for HT channel width update
+Date: Fri, 27 Mar 2026 10:31:28 +0100
+Message-ID: <20260327103659.6b1b58d8149c.I9683605229ed1b75ff5a9c14e967762e88b3fc36@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260327093659.711584-21-johannes@sipsolutions.net>
 References: <20260327093659.711584-21-johannes@sipsolutions.net>
@@ -50,206 +50,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-We can now easily always call _ieee80211_sta_cur_vht_bw() with
-a valid chandef, so do that, remove ieee80211_sta_cur_vht_bw()
-and drop the underscore prefix.
+When an HT channel width update comes in, don't use the
+capability of the station, but rather set it to max as
+the capability will be taken into account anyway when
+using the value.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/chan.c        |  4 ++--
- net/mac80211/he.c          |  2 +-
- net/mac80211/ht.c          |  7 ++++++-
- net/mac80211/ieee80211_i.h |  9 ++-------
- net/mac80211/mlme.c        |  4 ++--
- net/mac80211/sta_info.c    |  2 +-
- net/mac80211/vht.c         | 36 +++++++++++++++---------------------
- 7 files changed, 29 insertions(+), 35 deletions(-)
+ net/mac80211/ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 6beebbc93c3c..62f6d7f4be0d 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -626,8 +626,8 @@ static void ieee80211_chan_bw_change(struct ieee80211_local *local,
- 			else
- 				new_chandef = &link_conf->chanreq.oper;
- 
--			new_sta_bw = _ieee80211_sta_cur_vht_bw(link_sta,
--							       new_chandef);
-+			new_sta_bw = ieee80211_sta_cur_vht_bw(link_sta,
-+							      new_chandef);
- 
- 			/* nothing change */
- 			if (new_sta_bw == link_sta->pub->bandwidth)
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 028c5a8459b3..2f7f7a834da6 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -269,7 +269,7 @@ static void ieee80211_link_sta_rc_update_omi(struct ieee80211_link_data *link,
- 	band = link->conf->chanreq.oper.chan->band;
- 	sband = sdata->local->hw.wiphy->bands[band];
- 
--	new_bw = ieee80211_sta_cur_vht_bw(link_sta);
-+	new_bw = ieee80211_sta_cur_vht_bw(link_sta, &link->conf->chanreq.oper);
- 	if (link_sta->pub->bandwidth == new_bw)
- 		return;
- 
 diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index d5528fbc5fbe..f0d5c9363a5f 100644
+index 27b5578601ff..d951a4302e9a 100644
 --- a/net/mac80211/ht.c
 +++ b/net/mac80211/ht.c
-@@ -581,9 +581,14 @@ void ieee80211_ht_handle_chanwidth_notif(struct ieee80211_local *local,
- 	enum ieee80211_sta_rx_bandwidth max_bw, new_bw;
- 	struct ieee80211_supported_band *sband;
- 	struct sta_opmode_info sta_opmode = {};
-+	struct ieee80211_link_data *link;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-+	link = sdata_dereference(sdata->link[link_sta->link_id], sdata);
-+	if (WARN_ON(!link))
-+		return;
-+
+@@ -618,7 +618,7 @@ void ieee80211_ht_handle_chanwidth_notif(struct ieee80211_local *local,
  	if (chanwidth == IEEE80211_HT_CHANWIDTH_20MHZ)
  		max_bw = IEEE80211_STA_RX_BW_20;
  	else
-@@ -591,7 +596,7 @@ void ieee80211_ht_handle_chanwidth_notif(struct ieee80211_local *local,
+-		max_bw = ieee80211_sta_cap_rx_bw(link_sta);
++		max_bw = IEEE80211_STA_RX_BW_MAX;
  
  	/* set cur_max_bandwidth and recalc sta bw */
  	link_sta->cur_max_bandwidth = max_bw;
--	new_bw = ieee80211_sta_cur_vht_bw(link_sta);
-+	new_bw = ieee80211_sta_cur_vht_bw(link_sta, &link->conf->chanreq.oper);
- 
- 	if (link_sta->pub->bandwidth == new_bw)
- 		return;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 8a5640cdf298..29f51ec142ed 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2281,13 +2281,8 @@ enum ieee80211_sta_rx_bandwidth
- ieee80211_sta_cap_rx_bw(struct link_sta_info *link_sta,
- 			struct cfg80211_chan_def *chandef);
- enum ieee80211_sta_rx_bandwidth
--_ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta,
--			  struct cfg80211_chan_def *chandef);
--static inline enum ieee80211_sta_rx_bandwidth
--ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta)
--{
--	return _ieee80211_sta_cur_vht_bw(link_sta, NULL);
--}
-+ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta,
-+			 struct cfg80211_chan_def *chandef);
- 
- void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
- 				 struct ieee80211_link_data *link,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 06300cf1c8ec..3cd5fe11756f 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2571,8 +2571,8 @@ static void ieee80211_csa_switch_work(struct wiphy *wiphy,
- 			return;
- 
- 		link_sta->pub->bandwidth =
--			_ieee80211_sta_cur_vht_bw(link_sta,
--						  &link->csa.chanreq.oper);
-+			ieee80211_sta_cur_vht_bw(link_sta,
-+						 &link->csa.chanreq.oper);
- 		return;
- 	}
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 51d5618bd3f9..9ae32d601b61 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -3494,7 +3494,7 @@ void ieee80211_sta_init_nss_bw_capa(struct link_sta_info *link_sta,
- 	link_sta->capa_nss = ieee80211_sta_nss_capability(link_sta);
- 	link_sta->pub->rx_nss = link_sta->capa_nss;
- 
--	link_sta->pub->bandwidth = _ieee80211_sta_cur_vht_bw(link_sta, chandef);
-+	link_sta->pub->bandwidth = ieee80211_sta_cur_vht_bw(link_sta, chandef);
- }
- 
- void ieee80211_sta_set_max_amsdu_subframes(struct sta_info *sta,
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index f8992d71fd19..3e3efabe9149 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -397,12 +397,12 @@ ieee80211_sta_cap_rx_bw(struct link_sta_info *link_sta,
- 	 * The purpose, however, is to save power, and that requires
- 	 * changing also transmissions to the AP and the chanctx. The
- 	 * transmissions depend on link_sta->bandwidth which is set in
--	 * _ieee80211_sta_cur_vht_bw() below, but the chanctx depends
-+	 * ieee80211_sta_cur_vht_bw() below, but the chanctx depends
- 	 * on the result of this function which is also called by
--	 * _ieee80211_sta_cur_vht_bw(), so we need to do that here as
-+	 * ieee80211_sta_cur_vht_bw(), so we need to do that here as
- 	 * well. This is sufficient for the steady state, but during
- 	 * the transition we already need to change TX/RX separately,
--	 * so _ieee80211_sta_cur_vht_bw() below applies the _tx one.
-+	 * so ieee80211_sta_cur_vht_bw() below applies the _tx one.
- 	 */
- 	return min(_ieee80211_sta_cap_rx_bw(link_sta, chandef->chan->band),
- 		   link_sta->rx_omi_bw_rx);
-@@ -410,30 +410,19 @@ ieee80211_sta_cap_rx_bw(struct link_sta_info *link_sta,
- 
- /* FIXME: rename/move - this deals with everything not just VHT */
- enum ieee80211_sta_rx_bandwidth
--_ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta,
--			  struct cfg80211_chan_def *chandef)
-+ieee80211_sta_cur_vht_bw(struct link_sta_info *link_sta,
-+			 struct cfg80211_chan_def *chandef)
- {
- 	struct sta_info *sta = link_sta->sta;
- 	enum nl80211_chan_width bss_width;
- 	enum ieee80211_sta_rx_bandwidth bw;
- 	enum nl80211_band band;
- 
--	if (chandef) {
--		bss_width = chandef->width;
--		band = chandef->chan->band;
--	} else {
--		struct ieee80211_bss_conf *link_conf;
-+	if (WARN_ON(!chandef))
-+		return IEEE80211_STA_RX_BW_20;
- 
--		rcu_read_lock();
--		link_conf = rcu_dereference(sta->sdata->vif.link_conf[link_sta->link_id]);
--		if (WARN_ON_ONCE(!link_conf)) {
--			rcu_read_unlock();
--			return IEEE80211_STA_RX_BW_20;
--		}
--		bss_width = link_conf->chanreq.oper.width;
--		band = link_conf->chanreq.oper.chan->band;
--		rcu_read_unlock();
--	}
-+	bss_width = chandef->width;
-+	band = chandef->chan->band;
- 
- 	/* intentionally do not take rx_bw_omi_rx into account */
- 	bw = _ieee80211_sta_cap_rx_bw(link_sta, band);
-@@ -467,9 +456,14 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- {
- 	enum ieee80211_sta_rx_bandwidth new_bw;
- 	struct sta_opmode_info sta_opmode = {};
-+	struct ieee80211_link_data *link;
- 	u32 changed = 0;
- 	u8 nss;
- 
-+	link = sdata_dereference(sdata->link[link_sta->link_id], sdata);
-+	if (WARN_ON(!link))
-+		return 0;
-+
- 	/* ignore - no support for BF yet */
- 	if (opmode & IEEE80211_OPMODE_NOTIF_RX_NSS_TYPE_BF)
- 		return 0;
-@@ -516,7 +510,7 @@ u32 __ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	}
- 
--	new_bw = ieee80211_sta_cur_vht_bw(link_sta);
-+	new_bw = ieee80211_sta_cur_vht_bw(link_sta, &link->conf->chanreq.oper);
- 	if (new_bw != link_sta->pub->bandwidth) {
- 		link_sta->pub->bandwidth = new_bw;
- 		sta_opmode.bw = ieee80211_sta_rx_bw_to_chan_width(new_bw);
 -- 
 2.53.0
 
