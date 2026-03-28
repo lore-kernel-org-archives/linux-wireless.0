@@ -1,66 +1,66 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7BA4376472
-	for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2026 15:59:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497C0337BA6
+	for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2026 18:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774713557; cv=none; b=aMErAfEffib7xUuVPav4rjp45zGmkgbjLDM2l/YAnGZjCUq+JmiMQWvVSPD4PcUOAOMuJgee/Y5Ub7OJFAuAz1Y130eX+5EZY4tl4qypnScWd2/Yad3s6qXXPBnAY216pGHe6u6hRK2+6sKL79EMJumkS8+H3bQ2Wv2b2lPOUVg=
+	t=1774723940; cv=none; b=SQiTt9NIOh57MTolo9kJW2K56vjcGnQBTMmO0GsbEjuKIMq5epcCAVbfrC4ULjKGqWbaws8UEo4qyr2UeYXIGiHBV11iyTELTvrQMt8WPEYFvpieUqfVUC2ld5aDPJSn5AJVgeigBbWeAWJqlPpLVGJKClvKTls9Neec7qg2GXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774713557; c=relaxed/simple;
-	bh=DvZxylFcHruvbPeEYKBDnW4krrtPrW1e6CzdanuSK0s=;
+	s=arc-20240116; t=1774723940; c=relaxed/simple;
+	bh=SOoad42V5ojIVPEtnZNAUJVSCXLgcfwtR3LALNMX96s=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PSX2+h8vr69fa2OJwhW0Ol97Dn3TdZsFDZJkNtPI08iHPldT70sbvNX8DlnuJYp/9R/pxxSJyrDry8vaerWdqxwLgUhYvDscLxNVFinokwP+54UMYbXjn26MmMUxsFXGaTNoP5VvUujLA21koxrYhRjWZ8W7ybpQoh+CJ8WCxTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dM7a02V0; arc=none smtp.client-ip=209.85.208.45
+	 In-Reply-To:Content-Type; b=FOlhTV1kYgjj7CmBoXZyXZ4C7en0erjOz6br0Bh2+iZYb0uubDF1HbvHy2ZcWDSkpS82EOfrrQz9Wf8Cq4wmcZEFvdEC27clHTNnW3NsmiNFP1U5+qMaFSS6nodHYF2hGOs+F0s7gAxdUWY67shgZfQytEaDx7XpVhX0ZIqdFDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AHrXhrzY; arc=none smtp.client-ip=209.85.128.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dM7a02V0"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-66b941ebe79so566979a12.1
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2026 08:59:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AHrXhrzY"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-48334ee0aeaso27222005e9.1
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2026 11:52:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1774713554; x=1775318354; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1774723938; x=1775328738; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=h5H8gCTp/IRDQQxZGW/iIFZfQLZCVS/4MhsWoyOCHpA=;
-        b=dM7a02V0ruEaOrp4TG3DuJsdBHdw9OJGoHYRkcAfRc8uTJ3h2ovHVoX+3anJtzbJev
-         hNvRrmaE7DKrFp+2dSHo2OV1hpFgz2Md1plE2c1xG3XTfjHXzVIQr/NLxfha06WgK3s6
-         8UFAKGExOZiazefYMlDv/hQO+bIYA+0VWuW7xi6kR2+pOAhpm5JnQpWWwSSdpN9l5khT
-         bhGUvGsxf+xJv3Ig7xg1eui+iEHiDXmdseJBh+ld0uh2VdO0fmWLMxqQmYt2zAHJsVTk
-         G05iz+lQbsDHIOLWj4DfNHRmJyyw8HIab5tPN+Onan41WUgZOFhM6Cv/1OeejZLQ8TFH
-         HNeg==
+        bh=wWaMes09VbJA0eu/5mK0JBrbn1EAM0ibD7TXD1gN1LI=;
+        b=AHrXhrzYr5HwGo3Se64YLqn4hQgqWg55fsRGhIjrpxsvK38jTGEDD36YUYlSi4kutI
+         3zWzaHr96qKRCpgSOqsKuoC+GSB9yPxrsNdlY9mLbQnOWu8Ls3FOxohj/tWUwNYhsHsa
+         Bl8zgQTNZjGstHj6QiRoPlQbZxahI0RWudkTfmh5luaj52iVM1w0sSJswl/aHIs8oNcd
+         vpjREbUjrYsHq8UJ30f2m3B/ubk30zq5ltL2t1f/MZSjfWQcHVcXyRrv6zI3vBDaE1Cg
+         yFsavTvKgO400rFQaTgW3To14wsXo0w/HwjceT/m0xgZXSZKFPyUzKtRJ6IpaV9L9rnh
+         NiVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1774713554; x=1775318354;
+        d=1e100.net; s=20251104; t=1774723938; x=1775328738;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=h5H8gCTp/IRDQQxZGW/iIFZfQLZCVS/4MhsWoyOCHpA=;
-        b=LhT+QLiYBiNuthYM7w9mMl+Y1uzeovHQLOw7iQexPmkzWssp+b19E6ii40WZZBwo3m
-         YFbMtSLlA+RGNicXzL1LsaKq2Rpi91OIf7v1frM+qsCCREFHJgb8xUog0GqaB5U6SeqX
-         D1m2mYtaPsvK95kv7UY09SPRh12wh5AJKpEkGUQXjCsgGcOtCsY1FW1v+uAQmMGCEIQq
-         q9MTyXs1MaJrg+fdcIv2YhUZidPu89yR6NMeGFaIxgNu8goMlX1v/OwNs9A5R4llSpQO
-         6KFXCFjOyDn+crZPlsj+HoXaTHASqrK8NILdK5tsnLazUM7KT7iReC8EPRDFY/TKxbs9
-         CF8w==
-X-Forwarded-Encrypted: i=1; AJvYcCUxR/zCoxyy1zTObnVjjY9nW+fk706IvL9srAN3KNIw9o12G3GAEy9Udhb0IWtCFLq4K4CEFOWqVb/BcYJz/g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdolaVxTI2ZWoNkiTXU40SQkXq+wAb8Vnxv4wPP1hl7PZXjk2v
-	X9xZjoKJ64LMtS/ptRUm3w4Zg2MaM0c3NaNL+7vXaK4m1PckzqFG9b6/czZs3g==
-X-Gm-Gg: ATEYQzzkWKdqHkm0sDzMKs4rul49rWEMp5gaXw2mBWUGfOwfcAkzXKDZtnxHe/WxysO
-	3HoUln2Dbd754t+GQLWvab1D6igYyzU0QITTY1zseAx9TfwFUYEfzTGZDxtYSXlowjyRzEmv0i/
-	9jL8a23/LuqIpueDHvx3rzyJDyJ/XygG88YYjpBHcgqpxqc5bAHCIB2uokifitrQWEMyJlfEgGf
-	cQswqdlodOOXtxje1sJNMTWt/x+AETRc/ltiTD+msdyA4fOf+wT/gdOxhdSBmCkpnwgh25DnD8J
-	xFsV3mh8RvbNo1GTE9QxAQB51IlJZGYvzCsm+ZLMtCcwFjarmQUcWWlEWtGSxwb50doV1TOisQE
-	YO2Uka4+fdBCVu27URQdUw+TzMJk+ct/aGTl60QpcOZ/rZeZTkEew+wP61ETC3bXee/ks0Qq0ph
-	aLXzM+CICBMn2iWpugx3rGHuk2nOdJQQ==
-X-Received: by 2002:a05:600c:8485:b0:487:1fc:14f9 with SMTP id 5b1f17b1804b1-48727d77c8fmr103560685e9.15.1774703228845;
-        Sat, 28 Mar 2026 06:07:08 -0700 (PDT)
+        bh=wWaMes09VbJA0eu/5mK0JBrbn1EAM0ibD7TXD1gN1LI=;
+        b=O4YakIyLfvGj5tg3Z2rc2dXiFcfXxVXHzhnR8J0nXU6sqGYJ52Ve0Tm35nWlk16dHt
+         GYCn3Avlj47+t4TE4WwDHkAaISidu28JQza8jyAnNREY6QlHGMHyif3ypwO/S2d9GEOi
+         jtxDqYi++FdCIV6zTjborAVQJmBoGZMbpSv0Q0H8OzWQMo18I+EKEuGko23Du7+Uj8ZM
+         CnEexwkLxnvxwvEQxB1pEB72DaswQswK818gRjlmn5lVCd0RQ/c82JUSaqGEbhCXmHJj
+         1NN7kCZB+Ws3oJkoqXFq2j0oaNx/PMppwwD3Vh4R0pj0wV9X01zv+dX3LPIM1wuSPSch
+         KMzQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVHgnIdKwJYfnIR+Ln3WHu3TGKSEBjo9lt+QqGP6OItwznxr4P8w5QLOjncmN0We9kAj8goXqgmSb6BEdj2PQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywg2mBMju7o0DXXNIEde1YSsUqVpdc83CLvL3CwFnpF1/yvf0o8
+	ZCvXs5/Q8U86zPbLaSzr9QMzM8qjA0Dq6/i8dhSuNFBAHTe4D4LONyE+
+X-Gm-Gg: ATEYQzxj5wKW3akJ8UiJOrukhBn8CB9Rd8mkkrDflY/UQe1ciOhJ/CJjv85ydEFwPO7
+	2MgxhlerCi2MLMbau3wrx9QW25vKSxlfORB4RIq7bF4TCQz0GTv/lcKnyPlUf5xOywBEgjYf382
+	tvZj+tL7itIq7eGE90CzqYYu6L+SphSijjqlzXJ/bySY5TG35PzF9VpaJgz89UPOxmd3KRY2mXk
+	Tt+pgZT45p8kM+g+kFwuC9HFcDnVne+I3tF8E9GTzRrxLDAbnTAbsX+oooy2uLsiPA0Q9S/5sto
+	q6SycVDyZ6tw8mqvBU7fdo8S7mNiwr+VRsO8/mGw1qM9LdRNKBjO8R28P7swgvs6xwsTVWg6n49
+	7/DEJ1CjOplE4mG1wa9lK3iGOO3GEmFYfYT7Ezb1nLRjfr+ZxTHZg25cVX/Z4kICENqfgyttTx+
+	P+VCBHDEFJTES8A9dy54Pl6/zGLwnu2w==
+X-Received: by 2002:a05:600c:6085:b0:487:288:1198 with SMTP id 5b1f17b1804b1-48727eda73cmr114620325e9.22.1774723937265;
+        Sat, 28 Mar 2026 11:52:17 -0700 (PDT)
 Received: from [192.168.1.50] ([81.196.40.93])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722be608bsm204120235e9.0.2026.03.28.06.07.07
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48722d236a9sm301655295e9.11.2026.03.28.11.52.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 28 Mar 2026 06:07:08 -0700 (PDT)
-Message-ID: <5eb90d6d-e590-4c9e-91c8-1ba315f45304@gmail.com>
-Date: Sat, 28 Mar 2026 15:07:06 +0200
+        Sat, 28 Mar 2026 11:52:16 -0700 (PDT)
+Message-ID: <a5ea6373-8c07-4fcd-95fc-d87ce6aef6d5@gmail.com>
+Date: Sat, 28 Mar 2026 20:52:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -75,8 +75,6 @@ Cc: Ping-Ke Shih <pkshih@realtek.com>,
  "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
  "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <CALdGYqSQ1Ko2TTBhUizMu_FvLMUAuQfFrVwS10n_C-LSQJQQkQ@mail.gmail.com>
- <CALdGYqRbkV7_w7WDiqD-vYMa8MUFV7nSYz-=q2FzotgLHRy=HA@mail.gmail.com>
- <cb32c1eefb614a8bb96ef6fe2c4f4989@realtek.com>
  <CALdGYqQ3tS_aQpmf7xLkaCG9W55ATQXP=tnRNdjBAG8waqg8yA@mail.gmail.com>
  <dbe78a09fafe4a0ab16cd691049896a8@realtek.com>
  <CALdGYqQ3JQgFvvjiqh-ck8UqUQpAoJ0zeUzEL4i4Un8qPmqxJA@mail.gmail.com>
@@ -90,130 +88,82 @@ References: <CALdGYqSQ1Ko2TTBhUizMu_FvLMUAuQfFrVwS10n_C-LSQJQQkQ@mail.gmail.com>
  <CALdGYqQ_RCOwa2J-GsEyCxCQ4bztyxSzbc+6eYNesBSaY3Nt-w@mail.gmail.com>
  <da30a61b-dad0-48ff-a283-3dd8e9bdf91d@gmail.com>
  <CALdGYqS53=MmG4yCLwgV+RJAZ=U8Aqi8QQZFZ5oFMernhSyxTg@mail.gmail.com>
+ <5eb90d6d-e590-4c9e-91c8-1ba315f45304@gmail.com>
+ <CALdGYqRkX8=XMOePeauxvSTDZFLEYyJZKCtoxCzqaNwdO6BNnw@mail.gmail.com>
 Content-Language: en-US
 From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <CALdGYqS53=MmG4yCLwgV+RJAZ=U8Aqi8QQZFZ5oFMernhSyxTg@mail.gmail.com>
+In-Reply-To: <CALdGYqRkX8=XMOePeauxvSTDZFLEYyJZKCtoxCzqaNwdO6BNnw@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 28/03/2026 13:41, LB F wrote:
+On 28/03/2026 15:40, LB F wrote:
 > Hi Bitterblue,
 > 
-> Apologies for the delayed response. I applied your diagnostic patch
-> right away but held off on replying because the NULL pointer crash
-> has not reproduced since — it has been over 36 hours now with no
-> oops, which is unusual (previously it occurred in 4 out of 7 boots,
-> typically within 2 minutes to 24 hours).
+> Thank you for the quick feedback. Full dmesg from the current boot
+> session is attached (dmesg_boot0_clean.txt, 332K, 3349 lines).
 > 
-> I wanted to wait and collect the hex dumps from the crash-time burst
-> (the 50+ "unused phy status page" events that always preceded the
-> oops), as those would be the most valuable. Unfortunately, the crash
-> hasn't happened yet during this session. If/when it does, I will
-> follow up immediately with those dumps.
+> It contains all 76 "unused phy status page" events with both hex
+> dumps (4-byte grouped and byte-level) in full, plus all surrounding
+> kernel context.
 > 
-> In the meantime, here is what I have so far. The patch is working
-> and producing output. I collected 76 "unused phy status page" events
-> during this boot, with the following time distribution:
+> The interesting observation you made about the MAC addresses being
+> 24 bytes lower than expected is very helpful — I hadn't noticed the
+> offset discrepancy. If you need the adapter and AP MAC addresses
+> for reference:
 > 
->   14:01       1 event  (isolated)
->   16:33       1 event
->   16:57-17:00 73 events (burst over ~3 minutes, no crash followed)
->   00:03       1 event  (isolated)
+>   Adapter: 8c:c8:4b:68:d1:63
+>   AP:      6c:68:a4:1c:97:5b
 > 
-> Page number distribution (no page 0 or 1, all are "garbage" pages):
+> And yes, adding a NULL check in rtw_fw_adaptivity_result() seems
+> like a good defensive measure regardless of the root cause.
 > 
->   page 10: 10    page  7:  8    page  8:  7    page 13:  7
->   page 11:  7    page  9:  6    page 15:  6    page 12:  6
->   page  4:  5    page  2:  5    page 14:  4    page  5:  2
->   page  3:  2    page  6:  1
-> 
-> Here are representative hex dumps. I'm showing the byte-level dump
-> (second print_hex_dump) since it is easier to read:
-> 
-> Isolated event (page 9):
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (9)
->   00000000: c7 5e 9c 9d 91 69 4d dc b0 67 c2 09 84 33 00 00  .^...iM..g...3..
->   00000010: 00 1e fe 3f cf f2 f0 08 01 29 00 00 00 11 2a 01  ...?.....)....*.
->   00000020: 0e 00 00 00 00 00 00 20                           .......
-> 
-> Burst event (page 14):
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (14)
->   00000000: bd 2c e0 3d 00 00 00 11 87 0a 40 80 88 33 00 00  .,.=......@..3..
->   00000010: 00 1e fe 3f 3e b6 9b 44 01 2e 00 00 00 11 2a 01  ...?>..D......*.
->   00000020: 20 00 00 00 00 00 00 20                            ......
-> 
-> Burst event (page 12) — byte 0x10 is 0x7e instead of usual 0x00:
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (12)
->   00000000: 1c b3 7f 15 d1 94 95 7e 70 5e f4 e3 b4 a1 bf 10  .......~p^......
->   00000010: 7e 1e fe 3f 2e f1 62 44 01 2c 00 00 00 11 2a 01  ~..?..bD.,....*.
->   00000020: 14 00 00 00 00 00 00 20                           .......
-> 
-> Burst event (page 2) — contains MAC addresses:
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (2)
->   00000000: 88 55 51 95 d1 66 ad 50 2f 25 3f 89 ae 35 ef 77  .UQ..f.P/%?..5.w
->   00000010: 00 1e fe 3f 89 68 62 4d 88 42 40 00 8c c8 4b 68  ...?.hbM.B@...Kh
->   00000020: d1 63 6c 68 a4 1c 97 5b                           .clh...[
-> 
->   Note: bytes 0x1a-0x1f are 8c:c8:4b:68:d1:63 — my adapter's MAC.
->         bytes 0x20-0x25 are 6c:68:a4:1c:97:5b — the AP's BSSID (partially,
->         the dump is only 40 bytes so it cuts off after 0x25).
-> 
-> Burst event (page 15) — completely random, no recognizable structure:
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (15)
->   00000000: c6 a1 92 1c a7 68 6b 97 12 bd ad 89 30 98 ab 94  .....hk.....0...
->   00000010: 00 1e fe 3f ec 3f 3e 44 1f c2 91 41 0e 9b 54 5f  ...?.?>D...A..T_
->   00000020: 30 eb 40 18 6f d3 25 62                           0.@.o.%b
-> 
-> Burst event (page 10) — offset 0x10 is completely different pattern:
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (10)
->   00000000: cb 1c 2a df f1 69 d0 05 58 c0 e8 0e d0 59 87 6e  ..*..i..X....Y.n
->   00000010: 63 7e 56 f0 95 fa b8 d3 d5 4b 3e fa b0 0c 0e be  c~V......K>.....
->   00000020: 42 28 14 89 15 c1 fd ad                           B(......
-> 
-> Last isolated event (page 4):
-> 
->   rtw_8821ce 0000:13:00.0: unused phy status page (4)
->   00000000: 97 ee fa 4e 04 90 00 21 c0 0f 89 80 b3 33 00 00  ...N...!.....3..
->   00000010: 00 1e fe 3f 97 7e 64 90 5d 3e 74 fa 70 e0 39 65  ...?.~d.]>t.p.9e
->   00000020: 48 a4 40 d3 de a9 85 15                           H.@.....
-> 
-> Observations:
-> 
->   - Bytes at offset 0x0e-0x0f are usually 00 00 or have low values
->     in most dumps, but some are completely random.
->   - Bytes 0x11-0x13 are almost always 1e fe 3f (with byte 0x10
->     being 00 or 7e), suggesting this is a consistent part of the
->     RX descriptor that is not corrupted.
->   - The "page 2" dump at 17:00:23 clearly contains the adapter
->     and AP MAC addresses, confirming this is real RX frame data.
->   - Some dumps (page 10, page 5, page 15) have completely random
->     data with no recognizable RX descriptor structure at all.
->   - The 73-event burst at 16:57-17:00 happened over ~3 minutes but
->     did NOT result in a crash this time. Previously, similar bursts
->     of 50+ events within ~1 second always led to the NULL pointer
->     dereference in rtw_fw_c2h_cmd_handle+0x127.
-> 
-> I will keep monitoring and will send the crash-time dumps as soon as
-> the oops reproduces.
-> 
-> Thanks for looking into this.
+> Let me know if you need anything else or a different format.
 > 
 > Best regards,
 > Oleksandr Havrylov
 
-The other print_hex_dump is important too, so please attach the
-full dmesg.
+I made a mistake with the second print_hex_dump. It was supposed to
+print from rxdesc + 56. But not to worry, I think this is sufficient.
 
-You don't need to wait for a crash. It appears to be caused by
-random data, so I don't expect those dumps to be more useful than
-these. Of course, adding a NULL check like you said before is a
-good idea.
+Some of the frames have what looks like a valid PHY status at byte 24:
 
-The one dump that contains your MAC addresses has them 24 bytes
-lower than they are supposed to be.
+[ 9926.365048] cachyos-x8664 kernel: rtw_8821ce 0000:13:00.0: unused phy status page (7)
+[ 9926.365451] cachyos-x8664 kernel: 00000000: 05da26ac b587f0af 0aa2e765 f48d78f5  .&......e....x..
+[ 9926.365475] cachyos-x8664 kernel: 00000010: 3ffe9e00 49d11a5c 00002701 012a0000  ...?\..I.'....*.
+[ 9926.365496] cachyos-x8664 kernel: 00000020: 00000014 20000000 000000e2 0000000a  ....... ........
+[ 9926.365537] cachyos-x8664 kernel: 00000030: 0000001c 00000000                    ........
+
+But RTW_RX_DESC_W0_SHIFT is not 0. Then rtw88 looks for the PHY
+status in the wrong place, in this case at byte 25. The official
+driver always looks for it at byte 24:
+
+https://github.com/lwfinger/rtw88/blob/master/alt_rtl8821ce/hal/rtl8821c/pci/rtl8821ce_recv.c#L272
+
+Unfortunately fixing that won't be enough.
+
+The way rtw88 configures the chip, RTW_RX_DESC_W0_DRV_INFO_SIZE is
+supposed to be either 0 or 4, but in these frames it has many other
+values.
+
+In this case:
+
+[ 9986.214022] cachyos-x8664 kernel: rtw_8821ce 0000:13:00.0: unused phy status page (2)
+[ 9986.214512] cachyos-x8664 kernel: 00000000: 95515588 50ad66d1 893f252f 77ef35ae  .UQ..f.P/%?..5.w
+[ 9986.214544] cachyos-x8664 kernel: 00000010: 3ffe1e00 4d626889 00404288 684bc88c  ...?.hbM.B@...Kh
+[ 9986.214572] cachyos-x8664 kernel: 00000020: 686c63d1 5b971ca4 1ca4686c 73205a97  .clh...[lh...Z s
+[ 9986.214599] cachyos-x8664 kernel: 00000030: 4a670000 000b2000                    ..gJ. ..
+
+the 802.11 header immediately follows the RX descriptor (there is
+no PHY status, which is not unusual) but RTW_RX_DESC_W0_PHYST is 1.
+
+In station mode RTW_RX_DESC_W1_MACID is supposed to be 0 or 1 (I think),
+mostly 0. In these frames it has many other values.
+
+RTW_RX_DESC_W0_PKT_LEN sometimes exceeds 11454. In one case it's 0.
+
+In many of these frames bytes 25..31 don't look like a PHY status
+or 802.11 header.
+
+If we can't find the reason for these weird frames, maybe the best
+way to filter them out is to check RTW_RX_DESC_W0_DRV_INFO_SIZE.
+It takes care of 67 out of the 76 weird frames in dmesg_boot0_clean.txt.
