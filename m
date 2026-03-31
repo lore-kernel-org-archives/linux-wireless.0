@@ -1,57 +1,56 @@
-Received: from GV3P280CU013.outbound.protection.outlook.com (mail-swedencentralazolkn19010035.outbound.protection.outlook.com [52.103.35.35])
+Received: from MM0P280CU009.outbound.protection.outlook.com (mail-swedensouthazolkn19011024.outbound.protection.outlook.com [52.103.34.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD02A3B6371
-	for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2026 20:38:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.35.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E99B45349A
+	for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2026 20:38:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.34.24
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774989510; cv=fail; b=c8CI7Wf6AuMpyiKo5MnHxO7qa/POlpalmxs7vpFhzUGA+2vxmNPUA6j0DvTu6JIVRBxPu0Qk3wmf2qlrz0RXhSBdhK9bPrAIPOecJiYrawyfyJNHeesLpNyIRyTUof84jBjBR6WzGB5oRwARyOlW3XWDlvBLooUt/Vb5bCBhDt8=
+	t=1774989515; cv=fail; b=sF4uyoDasOyhGn5hKwsKjKDKsUFA8JrVs+xjk23CIPWyQ3Xw926tmR9n6gVcVTeJF21Dm/ueD2Cd52W22xRXDECXtF88fAwrZfyMzr3kTbuv4UicULa9kreyJ+hODLWfzhY5rvrkMK06cHT8ggCTpTCjskM81UkdUwjFQIDx6pU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774989510; c=relaxed/simple;
-	bh=w3jvkNlt49N9bbbmPUo4sI2/3+2Wc3E3yOPHxunmpxo=;
-	h=Message-ID:From:Date:Subject:To:Cc:Content-Type:MIME-Version; b=anr5y1eC+sZB+IZ4XYysbD1VSnNiXOskvR1FMXrHIlA8GS4gYLkQAlz8natiSB/2Jo2v3/ODhGTfDhaxx9YPpnpJLBqg7p0Gew6zqAgycxUCcXeq9aAuRyOn55eFGZyxX36dbiLcLK0tKj7Im0jJ397MzGADI5MmaLCAFDfu/n0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de; spf=pass smtp.mailfrom=hotmail.de; dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b=nEoJZQh4; arc=fail smtp.client-ip=52.103.35.35
+	s=arc-20240116; t=1774989515; c=relaxed/simple;
+	bh=0E76uDWcCnemZZ7JCZ0Z8Qpm+rXa1g4kWwPKTsmQvZc=;
+	h=Message-ID:From:Date:Subject:To:Cc:Content-Type:MIME-Version; b=T8019UpzUBcrP2IVa1YIFkfBXWoQJviWqaxVZQBXDUHn0EwDjIw5txSuv1key/5ZV/DFcUQ0G+bVUPcU2YG+52Kc1bbpDFyTPJLpMRBCn6b80G8pS0y6LEiYwFmAqIS4MHzs7FemGKyTjXaV4fCMOyyYzI5JPzEnpGoViZhvrjU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de; spf=pass smtp.mailfrom=hotmail.de; dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b=OrdB1xC1; arc=fail smtp.client-ip=52.103.34.24
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b="nEoJZQh4"
+	dkim=pass (2048-bit key) header.d=HOTMAIL.DE header.i=@HOTMAIL.DE header.b="OrdB1xC1"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=txYxTfxnEsTjQyJYThFWajxUiZROttYlEoT9T/E3Y0QZi/MEqGWmY49XoeUPR/nZJzlqVzA/7oAm9Yb0/HtZ6oAMBgN2bsF/T55Gv6u/xR4YgBJeseBPvAlPheiIkLkQF/Zfin8OUXDIj+02XXWLgoTL8ae2VoCQjzJqBaYHtW+3aS5qFaL+q9nG5DuwcNY0f8bZDsOxXOdc01sjMXgGPDL3GFV3gpcLcIdSAPsQ6JwU0iDskLcjSQnE8Aaq1pG1V1MB46FS1X9fcXxC5RQlWdnFBOucNJ+ErWblGLA3X+cEWiLxkpV0fT5zwspR8614BQowsi6Q4MSYkJhLfL5u1A==
+ b=L/036HBtUrWgsbZGjbTW/3vvN0UzSVbXkERSg/BFbj7Uhl5znoy/5ugLKGZ0ByH2tlrlV+bi5CIAjIpOXFWf8qZURtIWP98/FQNHEKMYPlHBcPwABzOQzyGUeujkGwCv84mDKmCM9EvbExRCnA5eA8cFMVjBSruouDcrBZd48HzF10P8mkKjwxbiHG1g8F8G83i/KX/MfudjZblJ4t67dlMC99mc/Vbc7rSCtp7OhxMEpf2+sjAC2Qfbr6p5REkprN633N/xlcIfiPEwAjgVOwZBeuqdvT2ExxS/79Hp4TAkJOrJv6dE34bPUDBZyhbjMnTRMvWiIjhi/Y6dyTNhtw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dp7WDm6vJETDjyEGFVIGQua7hM7fjv7FGQw063lOcHo=;
- b=odVhOZAAuaV5vVX+cHFNthX+70G7GtlXnhjfwVppYAq981R1p1GOFItIjjDRaiArDQdR+lSoGK4hcQ9SXX15eJzG3U1Tgjvao8FJq4EnuPs4e4OxfAQjnOqNCIVe0/ZAd9hGzZQqUal/5eA17XNtWiR59xsuTkHrRv5y5j4D35nfs6PzBzCh0h3MTa1AFVWPJcmscJdeWJv9yzgY/nVQkigzWLiFNko3A3f91xPdhFwb8FfbgRmVpXSUobDAhz2uhwAmQW2G++z5Vh23+3Avbe7o6bnOvgrd23xuWXku/4gJr/rfP8exQ1XYZYwd3+lBYtfcPsrx48L5g0JjIa4USQ==
+ bh=pMcgtKtBqCqXqmW7uRaf23fgpxdm+dUiyy6YGedTwSM=;
+ b=AqbmpYXNqpcW59+OkRB08iiz2+MuibTUOPJOe9PHoCnrRH2SSbnFsD7n6l3PQZAMK9j4s5SlE39RXNgpbBrJMO1eEj9THb7b5ydPxil8FzstWxNWJpiMHWXeZkJ8hZj3qpdnnl6KJ2hgVuPg7PXugzjnr/0B/svga7Fll1rBF6bx9tpJjeqcEWVNquWl9n74bjZyv4RM8jeL5EJWC5sdHV81Ns6S3zIP/mi29wOy4SG3jyDqZCwY1yASGpw1WbVSysTxYZu2iK9uPXO/ROWHzjIJI2S8XxNfRwC2HRcV8+zAllK6GPQGwtnjTZqoOodGXYMTKseBF2RnMUEXPLk59g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=HOTMAIL.DE;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dp7WDm6vJETDjyEGFVIGQua7hM7fjv7FGQw063lOcHo=;
- b=nEoJZQh4txXez8LA5k+2fhfyWJgaTC/DzNTfjj2qHlWn12qzFFvrwQmj84xD/n+rL5EQz279XrmZcVP/V0fpqHmWpeW3HGR8tjE2Sjp4pFbxZyiQuTvz1iCyJ/xu/yKaMAfpkjslacglpUibORn3aJTFiE4bTvzvUe37g347Qx63j1YwJhBreW0J3Ulinpw0L8CGiK8jPcouZH2o9g77Gr5e6X8POTKIqMnY4s4UKbiGE8edcoUEAikyuAaqtoQlM43wfWYEtIoH20HWGW1bkENSas37itW2MQECo9CaF+IueTBUJRGK0nXbrnjl0qsei4+vZAy4J+Pfg3KxId7YnA==
+ bh=pMcgtKtBqCqXqmW7uRaf23fgpxdm+dUiyy6YGedTwSM=;
+ b=OrdB1xC18IdThv4KsftNJP8sUdqjRc2FAgqliXRVwMty7Ma3bD75KNUSEf1pz42HhTp5ImJcggds2yaGYiToGIZxyP3GOhglolz01D5aYGrgRwQ+0IT3XWYBNCF4vnvVIHn0FsLbnQUtNAdRha3RqROxo35BMEapDpflsySZVjPJ2cAh97qls1P4k/+GTgttfz/7kLe+LaCOQPTHqo82NODRlE3rWNNXiW0nfYp4SfbyCTl9cAhoCvBf8sTaGo/5jW2Ad2xnbHcYQqdobpoaI68RcAF5miZJN9royS3BrFwHkC2KvEA7PIbrc6a3PnM8dwnwtKT8CUxWRtLrI0NK6Q==
 Received: from GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:19b::9)
  by MM0P280MB0851.SWEP280.PROD.OUTLOOK.COM (2603:10a6:190:3::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Tue, 31 Mar
- 2026 20:38:25 +0000
+ 2026 20:38:31 +0000
 Received: from GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  ([fe80::6328:bea5:c218:593f]) by GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  ([fe80::6328:bea5:c218:593f%4]) with mapi id 15.20.9723.018; Tue, 31 Mar 2026
- 20:38:25 +0000
+ 20:38:31 +0000
 Message-ID:
- <GVYP280MB1518D5CA4601F15C5506B66C9453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
+ <GVYP280MB151823D632870B1B48DA947D9453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
 From: Masi Osmani <mas-i@hotmail.de>
-Date: Thu, 12 Mar 2026 02:04:02 +0100
-Subject: [PATCH v2 04/16] carl9170: rx: remove stale TODO comment in
- carl9170_rx_mac_status
+Date: Tue, 31 Mar 2026 22:32:56 +0200
+Subject: [PATCH v2 07/16] carl9170: main: add exponential restart backoff
 To: Christian Lamparter <chunkeey@googlemail.com>
 Cc: linux-wireless@vger.kernel.org,
     ath9k-devel@qca.qualcomm.com
 Content-Type: text/plain
-X-ClientProxiedBy: FR2P281CA0178.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:9f::7) To GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
+X-ClientProxiedBy: FR2P281CA0184.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:9f::16) To GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
  (2603:10a6:150:19b::9)
-X-Microsoft-Original-Message-ID: <abb5ea706dca3b97e9637095dc217b0a@hotmail.de>
+X-Microsoft-Original-Message-ID: <e16f0479727bb486161c9e46229d628a@hotmail.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,61 +60,61 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: GVYP280MB1518:EE_|MM0P280MB0851:EE_
-X-MS-Office365-Filtering-Correlation-Id: 88363559-d997-4155-1059-08de8f65755a
+X-MS-Office365-Filtering-Correlation-Id: 976371f8-49c4-4f3a-d2a1-08de8f657885
 X-MS-Exchange-SLBlob-MailProps:
-	KW6s2gPZH1eaZMsDFrtnScTYUpn8LGIXh2GNqQbFbRRxWc+hE3nqSUzqO20DuaWwEddOej3Nxtk4hi0cMEiiwMF7QNR9RgeTDsZDoSsU2rPf+NtIz3Ft6KjbCY5EHPMeJgXW+y+1p6fl8tZp3tAsk0O3gxt7yTaT5MqQ/S0+0qJrD3TtgP6/1TXToMDh3J5kB555v5Oy8qxBqGrEsGLfu9kIa4zPa0iqHGeX60uSBvH7n5NQ0pB6pEvJz+9rX1MzN5AdC8VLlUkAfQPEX2JvrnaCtR4E3JSsAURB3pox2wrcwy7TSAJliaKXxIFPCYk7C0yHnp6zSVRWUvf816Td9zBGP6oM5Ie6E9ZiRR0f7AlAa1EvpPY86UO7oav4Mep0wShqbN8tuNMMr+RHxfSNocw6dllemnHlelUWgTRfMsfmF4liAqQtS0Vyf2OCp3DW4nU9IxDK1/zridjE1naLZ+jb2oCnUso0zer3X/ofVghaXv1wH8vmYFAWEEQoB90aW3Mnyx8yxl2jx/214XKQqasJhKWlJaPcTl798ShOc+n47u8vCaOvvPcvNdCT3VFpKcNHtTBY8L5jjXqAzRIIMWJUbibymyKNQ2Zw1HiP5Ug4tkrfGSD3IBzGHvzc7K69CWFCyHGqj66u6jLUgIlT0OovbibXsXromeh25vKDpbqfrtjyPhDHunlrpllxFOG+XvvEYZhURsiLXEq7h5iLCGoA5f1sF17nqV0YLcor3rw=
+	KW6s2gPZH1eaZMsDFrtnScTYUpn8LGIX5aUfgqQhE5OLaCkyJhOdtfbPv4Jwx23aiAEVwBGVan2ijpiLZ0ym9X1+Cse0HN9MQH72YjZcku7ETAnyuNlMxKb5FIVo4HGigLGCkgUEcra3pF0b8ZlmOjjqF5czYElIcrMYmT3hVlQjZ+o3uiT8CONmDnsWiQVR2pa4NdfAn0OjJzPRP9ej60YZ2XXk9leAVACLPMgJ3AuobPBJeEvUuPVdF25LLwnBYRGNRnOYDA3O3XwcTXdQzjQH1P3X4N/ot00i2gt7sAg1gn0cwNQEPWK7nUcOp8z1LXdGVE1Hvh6YiWjODlEjfCZuoza3wgZqzq4sxw8VmsvAsmAZ3EWokG2HidUcwCiugUU/LpVwBUvAvPR8+9P9P0l4hmReZDXXxSjb31gxT6LaMrkYsaniC8p73OJ7bAezbZ+46uaCL+ymi3z6nQWmfEy1oX9Ge0VqDxV8Ux/kNkavweBtNr+fvYmkmlX6xzBpA4N+hTDHUFLAClEDRTIcLcp5eS/WWft9mx8m/eHILoww0WBK3cSYp08Z7hH8DTTARX4j2QSpKQNMPggk152xTV0tNdCjjFtRjn3MEqmxjflfl+3AfCtjo3xfloGk1fJ3Gm9iazpWb61vKdN0MvYbxAv83GGfvo83vKza8Y8RAUHCUa6KfV+JtQyYne0JEmq/vLzkm6DqZ4lfSR3Bf4dVxw0nddwQuon0FFp05ybe2zg=
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|51005399006|8060799015|23021999003|41001999006|5072599009|5062599005|19110799012|15080799012|461199028|26121999003|13041999003|40105399003|440099028|3412199025;
+	BCL:0;ARA:14566002|51005399006|8060799015|23021999003|12121999013|41001999006|5072599009|5062599005|19110799012|15080799012|461199028|26121999003|40105399003|440099028|3412199025;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?VKiKpQ18f6J3bdGrcLBEHdp2w6ZMbes8FgzNF/NWgOB2VYuqjCIA6AN7ZFpa?=
- =?us-ascii?Q?N4FMqyxmNHo3YHqED4LVqCaaYFUA6+jmc0bc9ceCIWPJOhh3cIVaY2Bzx1t2?=
- =?us-ascii?Q?FzlDVaLl4sjuF8ohtBRx6njETP3XCJYxmp2d9gPBgQ7tFnEBjiDFCgjjYVE3?=
- =?us-ascii?Q?EOTkK8SpTkxQIePqE9oqoqcGAib/qPYaPDjqdyygvl5Z/5zWpukL+W86mkwU?=
- =?us-ascii?Q?sokYO9YQ/bhfxAWMmdQJK/0NIH3KtmLecSNDirv/Bd9slfXttJteimels+tz?=
- =?us-ascii?Q?HX+hdSqoXJWGwdNbj5NgimDwQcQy4fPT9AhMnBP0nle87Sc0tP/ASwAh2naX?=
- =?us-ascii?Q?NDj3vzrmI/SJ7QZBBybypv5Jbqttw0uZqneY+dzc6lNhaB7TDzSBwc0/p4do?=
- =?us-ascii?Q?Wr9tprROVmaYdn6FWqhIBljDqOeLb0UvMw0vmBQZjIMMYV/eZV8fAEl9uHPR?=
- =?us-ascii?Q?oVvqom28UXpL2uPSEqdAK0KT1tkR3L4o0jvl0QIDJoK1ENx2RDz9HlGsFkSK?=
- =?us-ascii?Q?CZCRMQ7C77s+XR/mjPuksNodBt1+dSvAP4rs5KbJfMjtHVYSvdJBb+iFVRUu?=
- =?us-ascii?Q?zq64tvgKBdOaoaymN+OU7XoUZqVM7hKSyr9ZqE9zdMrbrzOfFpZY7QC5pk6w?=
- =?us-ascii?Q?5TKmbSpqiLE79tnzBPBJG1lN4zf682zVBffc+7JpHkSdqacAqbicvlJ+IU3g?=
- =?us-ascii?Q?oFzROKZ6170/xpdefhB35MhBSkyhD7MefThrjY0GCKNk9NEBsYEW2VI/9fHi?=
- =?us-ascii?Q?yLBOr3snrQS2d7H79X+LWYflInw6a0kd5SZ3+FGeqIBAlty1K3SGDWblSAWt?=
- =?us-ascii?Q?shf989lG2/fIHyKBjl7j+AN1NEYeehHE6J1fMXWp9uHCKAoDDhMaacPQZPPP?=
- =?us-ascii?Q?dP8tP7yidb4nlgzG2DMXSq7bQZqyIY9UTHARcBG6m7z2LbRH/3LTimSCmgGx?=
- =?us-ascii?Q?aZq8St+E0kqPH6HmG397ppZwHXU8X1uLVkcQ46i3wot6p1Wj+oFJ+5yQ8612?=
- =?us-ascii?Q?96mODM6kz0uz+j8XMM1ev9QHw9WRIthB89JvdUHf/x8Fz3U=3D?=
+	=?us-ascii?Q?fUZxw4u3rQZ9NBvN3T1dYjd71yIOF05B4zDcozGvbrILDUXn+AbhpuWTUKKc?=
+ =?us-ascii?Q?jhe4uvL81pDLVEs3QGlp6p/zJ7H7bROKA1gsNwO6vJgq3+ATtb7EYQwQXxs7?=
+ =?us-ascii?Q?3Mn4Y7O59tKmcJuvCw3MMyp4/yfor8PqrM2liUSUCQE21BCAlOXfc8VsjXgr?=
+ =?us-ascii?Q?ARVRH6nhCLcUfSXJZMSmnNgG4aWnw949nBQHm3cehsSS5QPSWmYz+2gudOx0?=
+ =?us-ascii?Q?/mx+dH3so0okPm8hudktxC5zOgM+HnYdVkrsSFRDrwJtfA6YhW6K9P5N0WS+?=
+ =?us-ascii?Q?BY/ol5LLDJISHOJbIRN8+Cp4OunJ2P4KeblgKj6arBmH6btschO52nOAF2m2?=
+ =?us-ascii?Q?a/DH8ahPSamkd1LsndxdA4uglhI2DYunkO6nd5i50Tz5+dfizFeIpmaH2PEZ?=
+ =?us-ascii?Q?6UnZ+D/C5sp3Eq6lUAsMa6g7ZnfwJq8boYkEKFEUcgJIwcG/v0GsFvCYvHQt?=
+ =?us-ascii?Q?6Cy6qGoRLAbklyUJXxWmCA6SD2pVaEp+Q3Q5K/+k4KF8ytuGMauO1wm1WaWH?=
+ =?us-ascii?Q?dzYFkXcgajBQlz2DuRx6AKGYqb0nK3LRlC1GeHCvhAUw7pntc4uH507JZzeK?=
+ =?us-ascii?Q?Zk+JiVuifCqUGsb1uqMOIssppqTEBgpOzsDAJ7AnFY88/U93OD0m05b0TVR/?=
+ =?us-ascii?Q?lR5wJTUKRKPmRtccibTYcCwLhR7dmfXPcnjY4ElcnGDSbel4+l/vYQl0Tgfr?=
+ =?us-ascii?Q?f/WAydxAv9tl2psAXgdAKOD1aanyDKR3gAhWt7YR3GcV17KWwKDoD/nofQfH?=
+ =?us-ascii?Q?WRo9QF+9Dz6jbv2xlTA/YyLueRz99BWlXL1sFiaAhCGY0dsnqSbDcbhUpAjl?=
+ =?us-ascii?Q?G1WhN/6IHF1gKhlawEwZD/l/dWF4D+5oOJ+KRIcLgbXgEs5NVC/8rSnZVWnz?=
+ =?us-ascii?Q?qTrKTwgnYrVq9h3TOg17DAvy+49jGq5FOeCZXIEzn6A20RVM8J1iVEdJCcQL?=
+ =?us-ascii?Q?WcegTJDTbWCoy426rQTgxgRAueGpAiXzER9c5C20d9v/k6ZSbSAau9KWggYk?=
+ =?us-ascii?Q?5gOzGmRfvJq+8z/p4/A3bXLYymwtXJbNWW29K7fFA8ez7as=3D?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?xfWbeTVSBgS8rWKmy7GHL/XiDSll7QoquN5tjbZLzi1rVnsrA/XOugTqSbxS?=
- =?us-ascii?Q?waqbcvr9hix5S8r6H8HJvK8LM54KLSAgemgnPNB8ShsmLwTeMWyPq3RieOP/?=
- =?us-ascii?Q?DHgWatkYj8WbmXc5+J0s5uNZ3DwR5T/o/Kqo7/L1N9ydggbgwmMiJ20RInZB?=
- =?us-ascii?Q?8gDBeoNzY4UoXauQi/B+LiQb7RJ3wbAunkz+wDzh+N4vbXzN9Hxx2hzXYOry?=
- =?us-ascii?Q?mUfgUQ+f1SVMj+AfGmC3U81PIXlgvw5xWLbcZV849ScS0qoHH0mfWGG4aGLY?=
- =?us-ascii?Q?QCcezDxSeVZfCARcuRWkvBvn8/pv/6Gk894AAORe+/5rteH8U2QnLGXReOKn?=
- =?us-ascii?Q?4xXRSKPBBbSzpmNiGMeWaDAkGVncJlcoxE1k4IujtNV/vigjalkR+nS8Uqqi?=
- =?us-ascii?Q?Ah4n0wpVVZoxLh2vP79J2O1Z28+lES9tHhYf/XyHo0/2EDviaadMpmt1hO5z?=
- =?us-ascii?Q?+crhLH+iDlwdFQAgSZUAUx6/lLy5xitUm1BbfHuO5lzrO5/QgPUm6dcRurH6?=
- =?us-ascii?Q?pJUm1ZRNVsaXG8CI3AJpIAHrneALLrxnR1KNiwi3TOhuv3AkCNWXMbq8nNro?=
- =?us-ascii?Q?9tga889L365qIkXv7GMFVwwlkRyoJGssAOw2kRu4ZPJFZKsElQtqTlof/A9f?=
- =?us-ascii?Q?Jfh/RirMGtSXNCkvUTBFGnCkuBFwPeGQYaEF+Gieeg7aM22cWpAxqUM+FHs+?=
- =?us-ascii?Q?riO3fHIA7I9X4iLn/6p5+nZ4L0whhzxNS644C4zO5QArh5YF5pk5+fxXNFsL?=
- =?us-ascii?Q?evgujby3+LcuC2CY1s0CZMipCV1ksDiTlTUBHQWFCVbpWFm90sb+HKMvHdWI?=
- =?us-ascii?Q?Tvcqt3CDgfCpMzbs21XF0hmaIeFMBBbmfuVIxpMGhY/gyVjVh2CqswjXWmNn?=
- =?us-ascii?Q?Nd5UUJN3SP0oVvVe1XzHCt4zrn3Tucd0MJQPZcy2eWwl+aUtosuXnzzpTTRi?=
- =?us-ascii?Q?tc3OGqfJTy6KKrffUEJDrh+szYJ7rqiKNLw0hZA1IZWXQt5QLRZedjsaHxky?=
- =?us-ascii?Q?t7z8r+OB3Wf1omwMH83laYJY/C0fWq2jCBVGx1Exdwwb9Orz6T6IqgLDkQJH?=
- =?us-ascii?Q?HzWAG/Y9e/8FJpcdv3JdQsht7ovP2mCHdGgqevj/lZszfYoBnglxUe7GCqiB?=
- =?us-ascii?Q?gTbMoC4FJxK2IJrLdnb0DZFLOu93ysHn0DQ8UpDSRjw212cAPLK6Q6i1ciAN?=
- =?us-ascii?Q?6redb0y4DcqA1UpBhnixDqj3CTtMRNk44i+8jASdAArB5aeaRqRXuQ1brL9t?=
- =?us-ascii?Q?d7auXG9mCGM6zN+pxEeCaSXKTpDO2wj+L23iILrY9vfpvm0zFXoaYzxX97d1?=
- =?us-ascii?Q?0n3asRkSlXv5ptd1FiCrR9sf9RBhNngTH8hGSbvtjqBgluT6zB0FA6oUv3nl?=
- =?us-ascii?Q?nqzrzyECp3Yc90HL9L558MMOE6cV?=
+	=?us-ascii?Q?xjQKsWK5NuS9bT0hGJUDUENr+5vzPle+f3iLjPapaV2EfUloCQ8QgRZuEtZR?=
+ =?us-ascii?Q?2CmqtSVeXVpVyYJetG+YlvlowVgK4O9m61hWGrKBcXpZu6b4aS+p1HKdBCwq?=
+ =?us-ascii?Q?W37ydGkdzOW24fKzjDodnVWvwcMne01+yB7THg9n4XOjUcupIt33ReHtPpk6?=
+ =?us-ascii?Q?aP63OcW9P/NfaviUColIakJJ2ayHoDf5GEl0pz9rGz11FO22b8jSfPjwV4Aw?=
+ =?us-ascii?Q?QpfQFe+IlJryAAbPjIC1rpfK6U1qwQVM+5ERzjviFaNrmCA1pze6uI3ain8j?=
+ =?us-ascii?Q?KXJW3wcRW16NCk1Vl01cal3WIG+B03fzbVeAu/PHefO6onKt/UGesHTYsirT?=
+ =?us-ascii?Q?ZLwZ4QtRoGdo4FHtgU6+E6hp5zW+yAS4+Yvzrlk6Em9HD0I2OwBX4rVqdMvJ?=
+ =?us-ascii?Q?iQTweAfC7+2Z+LJ5KYqUYOJMjV6pP4yVanYvTRUhocOeIa6+v0qhAfdFPWMs?=
+ =?us-ascii?Q?HkLHQaCdc/b5jhWMyh9NICD0e9803sAorLbgXBgj6QmyRj5jY2kWfPYGtlz1?=
+ =?us-ascii?Q?QRIOCsvbDWCwU914Bm0BYfUmOX2PQqVLxMKowV33ArTQ00H18UarxQV3csEe?=
+ =?us-ascii?Q?WLFH/07uq51rC0tzFT1FJkVr4qX1InSo/EavUXLWcFgAaUaR7sBGT7TAtJzB?=
+ =?us-ascii?Q?t7uHuISNvzWe+GZ9ompAfLK8jdburgCVYLqdh3Gt9bzv0XDStZtkm1H55Sdt?=
+ =?us-ascii?Q?eJrd0+716zUcGvsp+PdOSMKdRXWKRl9vOvYCotfQoEqerDvikk7Nl4sn2+A6?=
+ =?us-ascii?Q?dudcD4HC1kl4/gYLc1Ud2hbbaAJAbhKcQuJFvqSZBo3x7iwCmDQO9tocm5hq?=
+ =?us-ascii?Q?z7znSE5lf93CrcpxVik0ouDugixvmMdAh7lTJ2xdE26v84I3xqi9azpvDPsV?=
+ =?us-ascii?Q?5aCiNXe4qe+HTP93jO+HYngV35gESZsJMY40F4UiZrxdlPP+xd/csgsKpT7V?=
+ =?us-ascii?Q?EOe8PWkVHeFFgC//tEK8CRmg+O6R9W09CGZRAWEcIWIh5O/ef8iLJiG66/jM?=
+ =?us-ascii?Q?O8zs3A3cQ6SaTui+2rLsuBGctRfESKSH83ujUhRng591coiO2JLtHzM2UVni?=
+ =?us-ascii?Q?LoSQ5+9E3Ua0sCdvgyivj7Ro/gIrByiRaqpGQ3E4xDbQVBTPDHWSX+ZSUmaS?=
+ =?us-ascii?Q?DgZIumE1TW35fGS35sjZ5wYL4s86prijSYhZ8rYiHzygp7gyw3/Ip1ceGgci?=
+ =?us-ascii?Q?5fv3Ai82NCcAdSeRPAnURvwM39YqNR7Gk3rOD+chqPjs8omvprY66//lbPm5?=
+ =?us-ascii?Q?3+KnHZimq8fg++ORcLTi56BCWhFnU157nPcQTCbpfdVKlKKujtUvQlusZXut?=
+ =?us-ascii?Q?LawLtj6X7Mr7XqYqAxMh5WJXng30jVaO9YFQgE92we351/TOe8eS0UiG4+ec?=
+ =?us-ascii?Q?2YIAYQvVFvc6+mCNW0nQ9EFa9of8?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-10872.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: 88363559-d997-4155-1059-08de8f65755a
+X-MS-Exchange-CrossTenant-Network-Message-Id: 976371f8-49c4-4f3a-d2a1-08de8f657885
 X-MS-Exchange-CrossTenant-AuthSource: GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 20:38:25.7998
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 20:38:31.1223
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -123,40 +122,142 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MM0P280MB0851
 
-The TODO asked to update netdevice RX dropped statistics for frames
-dropped due to unrecognised MAC error flags.  The rx_dropped counter
-is already incremented by the caller carl9170_rx_untie_data() at the
-drop: label for all frames that carl9170_rx_mac_status() rejects with
-a non-zero return code.  Remove the stale comment.
+When the AR9170 enters a bad state (firmware errors, command
+timeouts, TX queue stalls), the driver can trigger rapid-fire
+restarts that prevent the device from ever stabilizing.
 
-Wiring ar->rx_dropped into netdev stats (get_stats) is handled by a
-separate bugfix patch.
+Add exponential backoff to carl9170_restart(): if a restart
+request arrives before the current backoff window has elapsed,
+the request is throttled.  The backoff starts at 500 ms and
+doubles on each restart, capping at 30 seconds.  A successful
+restart resets the backoff to zero.
+
+Additionally, use named constants for the firmware error
+threshold (CARL9170_FW_ERROR_THRESHOLD) instead of a magic
+number, and add a window-based counting approach to avoid
+accumulating sporadic errors over long uptimes.
 
 Signed-off-by: Masi Osmani <mas-i@hotmail.de>
 ---
 Changes in v2:
-  - Change from replacing the TODO comment with ar->rx_dropped++ to a
-    pure deletion of the comment.  The drop counter is already
-    incremented by the caller carl9170_rx_untie_data() at its drop:
-    label, which covers all error paths through carl9170_rx_mac_status().
-    Adding a second increment here would double-count dropped frames.
+  - Remove CARL9170_FW_ERROR_WINDOW_MS: defined but never referenced in
+    any expression (dead constant).
+  - Change CARL9170_FW_ERROR_THRESHOLD from 3 to 4: the check uses >=,
+    so threshold 3 triggers on the 3rd error.  The original intent
+    (visible in pre-patch code using > 3) was to trigger on the 4th.
 
- drivers/net/wireless/ath/carl9170/rx.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/net/wireless/ath/carl9170/carl9170.h |  2 ++
+ drivers/net/wireless/ath/carl9170/main.c     | 38 ++++++++++++++++++++
+ drivers/net/wireless/ath/carl9170/rx.c       |  4 ++-
+ 3 files changed, 43 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
+index b13685e22..ed0b4b26a 100644
+--- a/drivers/net/wireless/ath/carl9170/carl9170.h
++++ b/drivers/net/wireless/ath/carl9170/carl9170.h
+@@ -301,6 +301,8 @@ struct ar9170 {
+ 	bool needs_full_reset;
+ 	bool force_usb_reset;
+ 	atomic_t pending_restarts;
++	unsigned long last_restart_jiffies;
++	unsigned int restart_backoff_ms;
+
+ 	/* interface mode settings */
+ 	struct list_head vif_list;
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index f665cccc2..252ebe14a 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -474,6 +474,7 @@ static void carl9170_restart_work(struct work_struct *work)
+ 	struct ar9170 *ar = container_of(work, struct ar9170,
+ 					 restart_work);
+ 	int err = -EIO;
++	unsigned long flags;
+
+ 	ar->usedkeys = 0;
+ 	ar->filter_state = 0;
+@@ -495,6 +496,9 @@ static void carl9170_restart_work(struct work_struct *work)
+ 	if (!err && !ar->force_usb_reset) {
+ 		ar->restart_counter++;
+ 		atomic_set(&ar->pending_restarts, 0);
++		spin_lock_irqsave(&ar->state_lock, flags);
++		ar->restart_backoff_ms = 0;
++		spin_unlock_irqrestore(&ar->state_lock, flags);
+
+ 		ieee80211_restart_hw(ar->hw);
+ 	} else {
+@@ -508,8 +512,13 @@ static void carl9170_restart_work(struct work_struct *work)
+ 	}
+ }
+
++#define CARL9170_RESTART_BACKOFF_INIT_MS	500
++#define CARL9170_RESTART_BACKOFF_MAX_MS		30000
++
+ void carl9170_restart(struct ar9170 *ar, const enum carl9170_restart_reasons r)
+ {
++	unsigned long flags;
++
+ 	carl9170_set_state_when(ar, CARL9170_STARTED, CARL9170_IDLE);
+
+ 	/*
+@@ -522,6 +531,35 @@ void carl9170_restart(struct ar9170 *ar, const enum carl9170_restart_reasons r)
+ 		return;
+ 	}
+
++	/*
++	 * Exponential backoff: if restarts are happening too frequently,
++	 * increase the delay before accepting the next one.  This prevents
++	 * restart storms when the device is in a bad state.
++	 *
++	 * last_restart_jiffies and restart_backoff_ms are read-modify-written
++	 * under state_lock to prevent races on SMP.
++	 */
++	spin_lock_irqsave(&ar->state_lock, flags);
++	if (ar->last_restart_jiffies &&
++	    time_before(jiffies, ar->last_restart_jiffies +
++			msecs_to_jiffies(ar->restart_backoff_ms))) {
++		spin_unlock_irqrestore(&ar->state_lock, flags);
++		dev_warn(&ar->udev->dev,
++			 "restart (%d) throttled (backoff %u ms)\n",
++			 r, ar->restart_backoff_ms);
++		atomic_dec(&ar->pending_restarts);
++		return;
++	}
++
++	ar->last_restart_jiffies = jiffies;
++	if (ar->restart_backoff_ms == 0)
++		ar->restart_backoff_ms = CARL9170_RESTART_BACKOFF_INIT_MS;
++	else
++		ar->restart_backoff_ms = min(ar->restart_backoff_ms * 2,
++					     (unsigned int)
++					     CARL9170_RESTART_BACKOFF_MAX_MS);
++	spin_unlock_irqrestore(&ar->state_lock, flags);
++
+ 	ieee80211_stop_queues(ar->hw);
+
+ 	dev_err(&ar->udev->dev, "restart device (%d)\n", r);
 diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
-index 683343013..4714ee8b6 100644
+index 4714ee8b6..b12bc508d 100644
 --- a/drivers/net/wireless/ath/carl9170/rx.c
 +++ b/drivers/net/wireless/ath/carl9170/rx.c
-@@ -340,8 +340,6 @@ static int carl9170_rx_mac_status(struct ar9170 *ar,
+@@ -46,6 +46,8 @@
+ #include "hw.h"
+ #include "cmd.h"
 
- 	/* drop any other error frames */
- 	if (unlikely(error)) {
--		/* TODO: update netdevice's RX dropped/errors statistics */
--
- 		if (net_ratelimit())
- 			wiphy_dbg(ar->hw->wiphy, "received frame with "
- 			       "suspicious error code (%#x).\n", error);
++#define CARL9170_FW_ERROR_THRESHOLD	4
++
+ static void carl9170_dbg_message(struct ar9170 *ar, const char *buf, u32 len)
+ {
+ 	bool restart = false;
+@@ -54,7 +56,7 @@ static void carl9170_dbg_message(struct ar9170 *ar, const char *buf, u32 len)
+ 	if (len > 3) {
+ 		if (memcmp(buf, CARL9170_ERR_MAGIC, 3) == 0) {
+ 			ar->fw.err_counter++;
+-			if (ar->fw.err_counter > 3) {
++			if (ar->fw.err_counter >= CARL9170_FW_ERROR_THRESHOLD) {
+ 				restart = true;
+ 				reason = CARL9170_RR_TOO_MANY_FIRMWARE_ERRORS;
+ 			}
 --
 2.53.0
 
