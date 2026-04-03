@@ -1,68 +1,67 @@
 Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67DF8386C25
-	for <linux-wireless@vger.kernel.org>; Fri,  3 Apr 2026 13:55:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1283921E4
+	for <linux-wireless@vger.kernel.org>; Fri,  3 Apr 2026 13:55:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775224525; cv=none; b=Ixe2/HAsn5ByecBDZ1828aXtxwBGTYdDGt06x10K5BjIEPAayCOlNqnu7oTEbyfX+sXo1IIiRaj2JAOYIePsSfyNxEDLObKjQjhmQ5rhHZhCCIt7aJZ4sP6uUKsecvQC2EmKvgA7P5+MmoxyIT9f4ffgSt5nQzSFzGDnEzP/DWU=
+	t=1775224528; cv=none; b=jP5rVsMfkzKpg27h35bo4HQQruyDMUjJvtzHq9UNe98yhLwRR0FKr/SKjmW6KTbOS7UjsI+CPCiP6DhoXE0VrX4KG1KaRIfZgDBlaeKIKK3ZT0byxC7vpfNR0f4IDhVTAS/lN75hR5JWLcv5MN7yS31ayyaICPZxDNkRWXyTv7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775224525; c=relaxed/simple;
-	bh=bX0RSkEhHMY0CQeWiiphb/xjS1x++AeW72AXUrJMhfA=;
+	s=arc-20240116; t=1775224528; c=relaxed/simple;
+	bh=Laagl1WvmKQiKODwRM094nhY7LnQG8oBc9UyZ9+RHgI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Z5BFQm5h9HyzOhGH359WL4dF3O5lIb7OtfziljSWRpYqjY52RrYZNJW5u9i1a6mDnFN1EQF2Fy3ryx4S293CPl2l1HO8NdhPkZr1193Cv8ywYdaBgw88KdDdzGcc+FUm+nFJbDhAelJNxHJfaXktSPUvNvvfPmtl4y+Ma7q+fAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=eMcDUq4k; arc=none smtp.client-ip=209.85.218.45
+	 In-Reply-To:To:Cc; b=WWdH/d7W4baNkkKa42dHEYrEWRTA/0gPOP7WjXy15JrGsMuEoDgQsCI6uOlm6kNbY+etv+/Sp07H5K0OSLVnuYo4UUHSItscwLURa37fr+o27o19ceVBY25F4ykuB+DvHqUUUXHq2Vrx5Io9CBwtMRG/dGVjWbEJWVoV1ifvZXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=uiiEeTs5; arc=none smtp.client-ip=209.85.218.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="eMcDUq4k"
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b9c745e18a0so125304866b.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2026 06:55:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="uiiEeTs5"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b9c745e18a0so125318166b.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2026 06:55:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1775224519; x=1775829319; darn=vger.kernel.org;
+        d=fairphone.com; s=fair; t=1775224521; x=1775829321; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=00QsAJAs94/ZqUyZhadzKRAFArz8oATvGeKh7GrAju0=;
-        b=eMcDUq4kDbXtJoLjYpvN4DIgSbal4SfAiQ0Bxs0F6N25Fnb15cXqGtpmsKKdnHVpq8
-         CqLdZzyAlFZF0Pg6taXCioUz7T70PZlIyUcFqndMcZvtkhWtJdV7ifrGRv4iQoEkzWt+
-         LutD/N5YlETUMeRA+y1H5VXvk9QNwV6ekKOL/TBPSmBoBbOkbWWsjWr20FJbFexyVJA4
-         6z7DNHy3x4lAfjn+IjV8t5AFlAvu9V17eucFr2iaXX9QwJGtVsziti/srrzqpDfl2WgG
-         XPoae8DCwCp2WfzEYiwRVA7m98eNXSbdZ/wcKK0Qz2SJyVvWaVboN2jj8VpK3NgT+PSs
-         jo9A==
+        bh=q1YCa6QIo9PeY+05m/sjhH3PUg81ljbhDyFPKMlTXyw=;
+        b=uiiEeTs5YPL1xzsMNn93RhdNKRlOdfSlZ0vc6opd3J2dqbPonRHAIR5CM9UlaE0Coy
+         sPlG7rRiH5D+2dTFKSMo47XZskYHG3xa1EGWBv9rA2bE6+jwzwWcxOZOtSJgAuR36ROC
+         ta0RejydEDLcpusmRSgJjATdWM88lKfEvdh/z0ilj+RZ/oRMM1dSyGs/u/Ev9RezXjou
+         6SPG+BStWNAhW1zE/ulOoRiLXnIKTq0PdSuUtIOFBnWlg/qybwwkP5qgphoCpquKCv7q
+         fKaWoww1GxHA37HyDknA6E6A5iQ/BfipLpgfuR++bf7lJ9TviLDAo740pNtewoIDbvBu
+         sCWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775224519; x=1775829319;
+        d=1e100.net; s=20251104; t=1775224521; x=1775829321;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=00QsAJAs94/ZqUyZhadzKRAFArz8oATvGeKh7GrAju0=;
-        b=Kg8Zcm9pq/tqw08hcmLIrYH8DSPuB6pihJcnOlckJgvLxlLk2puCLpc3IBY5GnSUUE
-         NFGanO80JobAvfLlOX5rD+XmJRhzlV4BiMe1g27qviu9whHZOAgxkMlcu4XBapnl1WPF
-         Emm2JP7RpYO4G0V3BtgdvnHWe+RkVM3MUKhbw79UDZ57ZtAs54GnmIKEvypQcBjbb5+3
-         leGqv6BPQ1Rd1eCmXV5v7t+FMfNlG4IuUxQ5J6ChVOqeXiiHlbrmzMHVMdXaVHRYcWDJ
-         weh9j6RfxaKaEXdnHZgdJGBOvweK4jQ5+iFdBAVtxjJ+bk+/F/emCyjvJtyHyvHur331
-         M4MA==
-X-Forwarded-Encrypted: i=1; AJvYcCW3B96hUW6vi+JA/j9sWJ3jowr51WSUtW7UO3+1i/IRrqejGsYGCQVp0BB0ce+xNc3/48jGXrKTFF58jRRWTQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw70TWni5tt9yxSb1wd1tKMNcsNmZ5A84k7hrjeYB/52seOnTvl
-	wN0nwAM71OMTDe8Zqm0eMsnm7rJ2Z5hWh1F7NQOZhfgP/M1uvsRsL6RX3Os+c9+Ju1o=
-X-Gm-Gg: AeBDievYGwozmT3V5q+fFGp3xnYL6yiTMJNHsYGfPJx5lR2Ahl/uajq8NdWOJ32GNxl
-	wjlh4jDPH3biCE1S8fc2zSq+u0KXMmlkRSESKD3R2bdbcFiZ3GfMT6466XaevicTaPBUTXwrELO
-	d3XA3c69d7VRzqz75ZfT3xEAlFuejwMFGiMtU8WTiqENPu1vUpuDuXtrVLRbAgoFa3dwLEsnZ/x
-	KCRAafLWm9xcMUaw7ViT+I42uu0LbAO35xX44VDraXn7lMv5Hz4+9h8qcGYnR95ppDmMhAhSMDp
-	PX6GLPRP2xDWhe0U2OifAcHbe8Vae9LsihC7hMT6oxpZ5yQJzE77OMPCcKG6MYJGhQpgtIhWyUp
-	lEj8GIxH1YEIoTnqvggyZZXLd1V0OOX70h/5lUPNQHnApH9JjTQSnmcRBUmk3iz6iJsXfwUxDJO
-	ff/WFhIVJ1qC/HmV/HO6+dxjKTmRSnWD2aW6IlIkpdvGBQJETuY3VvMDcfCiiEECXwF2KAKVm7K
-	UUZwZSKcsYtN8W4YVB60NAubIav78u+8ZaC2w==
-X-Received: by 2002:a17:906:6a02:b0:b9c:cb1:a61b with SMTP id a640c23a62f3a-b9c658742acmr142510866b.16.1775224516202;
-        Fri, 03 Apr 2026 06:55:16 -0700 (PDT)
+        bh=q1YCa6QIo9PeY+05m/sjhH3PUg81ljbhDyFPKMlTXyw=;
+        b=jdJ0jbSUeiD8SgFQtwZdBFvj7xUWVMOCp9lbO18YmIkOtXNMFPBMyn3OBcaUOqK0iT
+         wGKUZNFjdaPFxK4sUeNdGuFmC+J/ORLu1gHSSG5C0iBGqtsYdfQtB771QFNY2WdlYsji
+         1d5nKTl/GDhyezVBAerbQ5nxO4DPyui5G28Kl+pJSqFLlfT9mEgUrjLWSvois1bwrLc1
+         UPI+2gNU8J525e8IbAt57dWMHThErHtQAxrkg9QBnXTx89TMvg7sdiNiDyNbGLgVsZyV
+         uy71XnZbaOTi4UZ5vhLuaP1N1oZA+Qvn7TJ4NvtxOgq6mwA0nk+pnjlNWCYao7TbAa8y
+         eJRQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXnzEnrTnq9VfMZIEzheewYw++/rjntcsqncLuzlS9SQ7mMc0CRD1pEE69iRyeBOdI6NdxAFXaUQa+zLQkbPQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPDD4tuM+UDh1z7G/ycsCxwhSvZVf8oRhbybtMaR46VGcCaDs5
+	gTC44FZZQ/AaWcWPzfZladiGEeH9xnerkZb4ehp1BHjUoiT44KDfgKH2fXAC2R9yEuI=
+X-Gm-Gg: AeBDievvTttVC/cIol+QCuCL3ow/Fwm1LHB57d34pmxCXbqaFaXeTsRcpo2iZ6Gziw1
+	VpG9/0Z1jW635sQG84xAe5CIP75FCPOo2gbl6IZyX+ymfvqbhl/srw6NClkHBWU4WSxWAFaCoZ2
+	siJp4+wQChYgNG6KaqPLDV1I0MbM5nVUbmFyWMawJ9gLcYHXnlJQ1ezOtwc+lpWP8tgdA6Z2KL4
+	o9biYlqtZbU3AZURzQV0rBhTIsmiia4NAN/szPf6n/ZlYAFAAHG/X3oGk4BD54mUQpXJ+lNzxke
+	yHq1/PqqOH7Ctt9TOOKWuczsK+g7d7yK86evLKpmAjtqXJOd1MPrWpCJAGX6BXoBvmjBvLWnftZ
+	/Fme4td6gyGj9cXhK4xUnfyo2j4dfHb5v4gt46fX20PiaYRfqf+Yut4O0mivAij0WBic1Ul83yt
+	RzT0FpIBmF8AByBeNcVoTt3mGAcHOlnKXzIBfd+MLj/DvEdCiWfnfa0qKtcKIjTXI3VgD/vkZJz
+	qY3AFe2sOHk5I77wfGLmH6pfoIdNwS+gQpuiKh7wMuAq2jd
+X-Received: by 2002:a17:906:ee83:b0:b99:86b6:85fd with SMTP id a640c23a62f3a-b9c65596fdbmr158557066b.9.1775224521403;
+        Fri, 03 Apr 2026 06:55:21 -0700 (PDT)
 Received: from otso.local (2001-1c00-3b89-c600-71a4-084f-6409-1447.cable.dynamic.v6.ziggo.nl. [2001:1c00:3b89:c600:71a4:84f:6409:1447])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b9c3c972e28sm198057266b.1.2026.04.03.06.55.15
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b9c3c972e28sm198057266b.1.2026.04.03.06.55.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Apr 2026 06:55:15 -0700 (PDT)
+        Fri, 03 Apr 2026 06:55:20 -0700 (PDT)
 From: Luca Weiss <luca.weiss@fairphone.com>
-Date: Fri, 03 Apr 2026 15:52:49 +0200
-Subject: [PATCH v2 3/7] dt-bindings: net: wireless: ath11k: Document
- WCN6755 WiFi
+Date: Fri, 03 Apr 2026 15:52:51 +0200
+Subject: [PATCH v2 5/7] arm64: dts: qcom: milos: Add WCN6755 WiFi node
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -71,7 +70,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260403-milos-fp6-bt-wifi-v2-3-393322b27c5f@fairphone.com>
+Message-Id: <20260403-milos-fp6-bt-wifi-v2-5-393322b27c5f@fairphone.com>
 References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
 In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -92,50 +91,78 @@ Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
  linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
  Luca Weiss <luca.weiss@fairphone.com>
 X-Mailer: b4 0.15.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775224512; l=1239;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775224512; l=2562;
  i=luca.weiss@fairphone.com; s=20250611; h=from:subject:message-id;
- bh=bX0RSkEhHMY0CQeWiiphb/xjS1x++AeW72AXUrJMhfA=;
- b=DTJTtJ7BKJd8qPXVe3nd0JrxaYiQE2N8bwiN41dxZ5jihuyHGd6fmesGzuo/2w99jisvtHofF
- h8Mx18K34cAAflNUNQSKgyj8B17L/9Yc4dJVyM76qpuovDBjx8PeKjI
+ bh=Laagl1WvmKQiKODwRM094nhY7LnQG8oBc9UyZ9+RHgI=;
+ b=5dJnjoMOmNyoMHrWYuV+T1fDHL+fKjWcd2iksZsGpFY5KgrcxW85fMrGe1suXpl/g2g53QTu/
+ 2BtMLr3WqRnAYp8oduhNM5XgqDpI+uMmoQqYThDMSgKypx2bIP832X6
 X-Developer-Key: i=luca.weiss@fairphone.com; a=ed25519;
  pk=O1aw+AAust5lEmgrNJ1Bs7PTY0fEsJm+mdkjExA69q8=
 
-Document the WCN6755 WiFi using a fallback to WCN6750 since the two
-chips seem to be completely pin and software compatible. In fact the
-original downstream kernel just pretends the WCN6755 is a WCN6750.
+Add a node for the WCN6755 WiFi found with the Milos SoC.
 
 Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
- .../devicetree/bindings/net/wireless/qcom,ath11k.yaml    | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ arch/arm64/boot/dts/qcom/milos.dtsi | 46 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-index 0cc1dbf2beef..94f8f8551756 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
-@@ -16,11 +16,17 @@ description: |
+diff --git a/arch/arm64/boot/dts/qcom/milos.dtsi b/arch/arm64/boot/dts/qcom/milos.dtsi
+index 71292dfd6e08..3a3d7f2134e8 100644
+--- a/arch/arm64/boot/dts/qcom/milos.dtsi
++++ b/arch/arm64/boot/dts/qcom/milos.dtsi
+@@ -2438,6 +2438,52 @@ gic_its: msi-controller@17140000 {
+ 			};
+ 		};
  
- properties:
-   compatible:
--    enum:
--      - qcom,ipq8074-wifi
--      - qcom,ipq6018-wifi
--      - qcom,wcn6750-wifi
--      - qcom,ipq5018-wifi
-+    oneOf:
-+      - items:
-+          - enum:
-+              - qcom,wcn6755-wifi
-+          - const: qcom,wcn6750-wifi
++		wifi: wifi@17110040 {
++			compatible = "qcom,wcn6755-wifi", "qcom,wcn6750-wifi";
++			reg = <0x0 0x17110040 0x0 0x0>;
 +
-+      - enum:
-+          - qcom,ipq8074-wifi
-+          - qcom,ipq6018-wifi
-+          - qcom,wcn6750-wifi
-+          - qcom,ipq5018-wifi
- 
-   reg:
-     maxItems: 1
++			iommus = <&apps_smmu 0x1400 0x1>;
++
++			interrupts = <GIC_SPI 768 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 769 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 770 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 771 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 772 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 773 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 774 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 775 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 776 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 777 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 778 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 779 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 780 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 781 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 782 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 783 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 784 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 785 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 786 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 787 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 788 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 789 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 790 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 791 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 792 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 793 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 794 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 795 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 796 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 797 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 798 IRQ_TYPE_EDGE_RISING 0>,
++				     <GIC_SPI 799 IRQ_TYPE_EDGE_RISING 0>;
++
++			qcom,rproc = <&remoteproc_wpss>;
++			qcom,smem-states = <&smp2p_wlan_out 0>;
++			qcom,smem-state-names = "wlan-smp2p-out";
++
++			status = "disabled";
++		};
++
+ 		timer@17420000 {
+ 			compatible = "arm,armv7-timer-mem";
+ 			reg = <0x0 0x17420000 0x0 0x1000>;
 
 -- 
 2.53.0
