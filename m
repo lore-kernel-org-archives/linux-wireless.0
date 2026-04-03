@@ -1,66 +1,68 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7804836998B
-	for <linux-wireless@vger.kernel.org>; Fri,  3 Apr 2026 13:55:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E7C37187C
+	for <linux-wireless@vger.kernel.org>; Fri,  3 Apr 2026 13:55:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775224519; cv=none; b=okb3CiWwQLPXJjFaSc1a6insfqAF7cNLwH5UpKoDafumNO1PbE419gGYZL2XN4VEIRsbx6hVSLOvAzrzCXrLoSLNEQO+ro2CneoPD4drF/A12kPv/gj8ehRGkXp7VbJnEPCShYqzUEGc/X+MxisjIqySah+LPaMRmyz8U3qh+SI=
+	t=1775224522; cv=none; b=m/GMLR3c9dSzR9vwtSwQ+XbHKgC4somF98D9YINMzltiq/7WHw63CjYIuRXUOQboP+cu1IVFnHTLdWAyi/79SOceiEh1/+v+vwu4I6Lr/3rfRr+tY/j42iwNtM6TqDU6IU1iH3bciljxyf5dwACaEZP57XAauTjUK+nejAahtrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775224519; c=relaxed/simple;
-	bh=BF5TJfTjAHAamhIZ3z7tthOS+Ma4qFWW4uI2TjjrfiU=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=sRzPul6CWviJ2HLa4vPQWfAT7CYNWY2TRcU9Ta0A6JL2cZT1FFJ2TAYdQj+3IeS8QUdbmWtNVeH7Vwuyekf+ZjPzrH/necYnbxsd9CiTdjP00C+tJ67nHwd32se0JTDaid4XcaU54rpDI/Uh1JY4nejOZvHjKqSfMeADa41+BDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=zLJfnmrd; arc=none smtp.client-ip=209.85.218.52
+	s=arc-20240116; t=1775224522; c=relaxed/simple;
+	bh=pHexCrMEYsMQQy8zIs+sRrHJ1/ttZ3VMNeWvno6IS14=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=NTQ3mLzlSxGe9zCJnilwX3lzYjyHg0cOj3qcRCYNc8QoiElOvjEs/KdFsJuXuH4yZN2H13wjp6IIRebe9HG1AWGB6o5fG1AGc8sccATwg88/m1nHLp7LzstXbE/FwdpxKdvQN9W6NgfXDhlQWARuIVBgGNE7eqtSvlh0D5jJoos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=lhspZ84U; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fairphone.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="zLJfnmrd"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-b9bfcbaa81eso272007966b.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2026 06:55:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="lhspZ84U"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-b980785a0bfso242393066b.3
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Apr 2026 06:55:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1775224513; x=1775829313; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Tr3vVgaHqynfRwr0nQihQQVF1MqwcT9adBqdvMVF6WQ=;
-        b=zLJfnmrd7IwQH6jBIst/CazD9GSOjzcGAuig9yuWw1DOrhayV6t1lZMRxZqpfYCnMA
-         2QKoIFcFmROJTgiDrucvnel4zQwLuBBv6EtVrR68ODcmMyXL2ZbVOzv2o6EEHoc3FuNj
-         K/Z2Ve0zOat0xTN4zbDwhf46fWIugfUtReye5Zt2csFDp0l10y/0YaQZFrnyqVA70AiW
-         SUVPLbXqPPbbPJJnnQu9+cq0xLWGcMa9CAAiitDdVd12Fvb/0qSKOUkA1HrfqsiDBPgS
-         eg4+6MqRCqR+qSOxISzdXoICL7k2ex/raLt4VeLyoIlCyElFn5XS4f8EBJAUcV/oLO6V
-         zdkg==
+        d=fairphone.com; s=fair; t=1775224515; x=1775829315; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YOCuD1EIBix+K2H4tXL5BYaPaJquyNo2g3/MFSpuIHI=;
+        b=lhspZ84UwlEkwAdlqjW5n7AVdmK6VsAiJ46y93iH/lNolffn7OPkbasRDhuPcWmmuX
+         BgOMcQcCeBibMYg/ffAMRc998pjmsYuwBu5oPVaP4pdWaJlbXPeIn4Fotyva5x8S2N2Z
+         GPtxOVEb9oQa3XB23ngXTYBqUTWnXFSj9FexaYvclASjAlf0EvxQJ7yQWCPqi6hryNav
+         fqsnytSrW3F19wTB1X38uE0aQCgxyEaeb1ztiAE57Nir4f9+L/glB++C83mbIgk0+dZX
+         w019zZjzxC0qeMU0dlidIWaQwouTbryA+R77eZZRYsUxVsfoWcKCRTvxwFzP/pP5SD10
+         nSeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1775224513; x=1775829313;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Tr3vVgaHqynfRwr0nQihQQVF1MqwcT9adBqdvMVF6WQ=;
-        b=jM/QeX2SJUFcfNwJ34gQaQ7+wem30qSlaCjrViOqWS0H65MzqaiXHrrU1lD3k5e1uA
-         chCpjIf+6TwyJ7Mnlcg9fTXZFaR9j4oCjl2MhlL0A6hC9TOHoQA34Appnld7ZUhBWD+4
-         wC5NMkQR82taIbM1EaSMOS46qhlWhsbX5q3YFgjZtv4CFh6S14+7q8MAJ2kK0yp8CXCo
-         PgJKVurRLuwvwC55OX4qLsGvMbJBeLYHyy5DXVvlVPkYa8xwuPBTe48u52qzRGVC6cbp
-         Gxq4PeG1MstidZ7twTS1X+FipV+qsIox0JTfR9CtMCmFTcT/D+eUkKhvs445QWw94ATV
-         A0Pw==
-X-Forwarded-Encrypted: i=1; AJvYcCXWZc2D2S9M3k1TIrHkY2omjiSEMDP7e5sae47Cd4XCm7m9GIYNVBw/UQ11ww3ICLRTSTv7KmrGrClo6t98ow==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyc3M1aWuOak0R2ErdK5CFtisVELn/G/jtuJHIoFzWbZlUS9Ytp
-	gYZvuEfquuQYKur6XUJp6owRevUZpuh1o2SpIyUYjzIWJHVNlcrLEX7s9NFihQi+tFI=
-X-Gm-Gg: ATEYQzzcYdTZU/uDGxQhHMx5V/BA9O7QgtcxkBIGm8PGk6PNcJI4cbu6KJ1Sh2ZnmV3
-	pIaaW6EKjhqo60RGwotprf17YuUIqoAMKmBxxOyljJ92sv5j+jnD074sIPUKscuaw1B6O7SAcOL
-	sSNw5/YWuj6UnD47dyx2YB5RnqGwhL7SazYolfHOJY9Inzn+861n/7ebUXHarc4QgCg3PbZx/pr
-	oBby8mTlyOnv0XB50lTmeSQyfaHrL6EEoXOPdMk19ncyv2K2NxpFhpK627ZXB6ptd4tLx4vUzJq
-	aKFuHi1a8g0SdSuRBLpy8AQVgnTuVSSbcvab++xH15hSt2CRnnDTqnvl4c3ax+bic6VGWrk1Z4p
-	7euqD8r2H0+DLN+TdPm0as5pDlMbr+3I+FEAWnI+bHWD814yrNI4rGIL7Wz8afaUy6C5YvtazCX
-	wzaWNrCnfGvsmScDBcNlEhIY24Xeq0f+B6dTMCpXNulGYdGfdNGkQdQvrhehvZ+AEi/demZoWO3
-	37huiZm1Vek0bmKhYGVpYxA27KLZaYMNRBk8w==
-X-Received: by 2002:a17:906:478e:b0:b9c:69df:4d8e with SMTP id a640c23a62f3a-b9c69df5f1amr156882866b.25.1775224513349;
-        Fri, 03 Apr 2026 06:55:13 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1775224515; x=1775829315;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=YOCuD1EIBix+K2H4tXL5BYaPaJquyNo2g3/MFSpuIHI=;
+        b=fQQMzHXTQ6s7DDNVzyDYRxDLk5zwHDV3Wqgi0DV3q0wDNPcjohrUmeEdsqLQS41BwR
+         rQztoKzTwStxo0thr6aE6ND0uWTbqOM5o9HX0Q+XG1vDju3JsxvKF/lx4MzSm0Dta8nN
+         5cpTdZ3iL3wQCQBJV/xtlPeXeKwUdudSFy6ikpfCzNHjf55nZe0wV2pEHXGUGRYCOoU9
+         plJeYhwcJUeS6+gsFavmmLgjIHzvryOX+lbktIaZWmQhJsfQF7tbzXQUEDMLPJzpy3Wy
+         7qWhkn9Xbe6dgcDxJQqHUvLr/YWgTIOMcSXt1El4r1Ic+KZLV5nnpf5DxAmoi/JHXMss
+         EK2A==
+X-Forwarded-Encrypted: i=1; AJvYcCVINACrRsfkgd6v7TcYpeAELhmYHQKei+jOvCt6cgLa5cIuckcl0fYi90xJn8PuFjOCcPpkLojQMsVefgN2ZQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwI8gnRISTo+/LlL2OPdb5EEy6qkevaFdfVD80TuSyz6LtSwNiz
+	VTkFvC2lieyw9ge9Yk9cqzPFf83YxUTgGUeEC98WISEpaBOBozVUuFlPMfpOd9DVvr8=
+X-Gm-Gg: AeBDietTPe6EpwtQR8aL7nS/xjXf5LU/ZAdkojmDf6OqdRUGmOQoLwpHbwA+oKgxBGE
+	4V3HAmr8bBRACx9iHdAsk0knjF0ZmYWEzi4R4M6uxvi46ynYsaiOU/0yhPJzpNQZpUbvILbqyhO
+	ToxZog2qmRmfhQu28PzOf4WX2dz+OCHrD2vB2ziPn8ql+Li6ity4/VWguHpeofpPGyQcOrh+gMR
+	GctlJsWfsUStkuqYGIkR6DJKtTki+RVnRNJRputVBa/AHDdNPfgqJkk6UxYKomSeo7dWsGHoaC9
+	0frv+2WhhOoGea2v4II89eGmX/bg8nzFcbcGd3BEMYKnF1IYBaxGX2blpDFwn30ClgZIK4NXSYw
+	NuJS+MOhuClGyndJhFOjzi3GrUEBLIn/SpKiZpFjPA0ITpIxkOCwP+dmCgQVmQZfkE62qHZm4et
+	ZaBEvu4s3sLzcB6PbOEaIXDEhAL10LMEBWz0DE6ID6cB4LG9dHwEo8FVRiH/xrmOIaWL56Wwtgh
+	eIHSJJgGGUJTgXwlwuWKPbB4DjG+weHCfXfAg==
+X-Received: by 2002:a17:906:5189:10b0:b9b:1ea2:97d3 with SMTP id a640c23a62f3a-b9c67924de3mr103637866b.35.1775224515233;
+        Fri, 03 Apr 2026 06:55:15 -0700 (PDT)
 Received: from otso.local (2001-1c00-3b89-c600-71a4-084f-6409-1447.cable.dynamic.v6.ziggo.nl. [2001:1c00:3b89:c600:71a4:84f:6409:1447])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b9c3c972e28sm198057266b.1.2026.04.03.06.55.12
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b9c3c972e28sm198057266b.1.2026.04.03.06.55.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Apr 2026 06:55:13 -0700 (PDT)
+        Fri, 03 Apr 2026 06:55:14 -0700 (PDT)
 From: Luca Weiss <luca.weiss@fairphone.com>
-Subject: [PATCH v2 0/7] Enable Bluetooth and WiFi on Fairphone (Gen. 6)
-Date: Fri, 03 Apr 2026 15:52:46 +0200
-Message-Id: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
+Date: Fri, 03 Apr 2026 15:52:48 +0200
+Subject: [PATCH v2 2/7] dt-bindings: bluetooth: qcom,wcn6750-bt: Document
+ WCN6755 Bluetooth
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,11 +71,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/32OQQ6CMBBFr0Jm7RjaIFVX3sOwaOtUJhGKbUUM4
- e5W2Lt8k7z3Z4ZIgSnCuZgh0MiRfZ9B7gqwre7vhHzLDLKUdSlEjR0/fEQ31GgSvtkxSum0VkY
- c6Gghe0Mgx9PavDYbB3q+cjptRzA6ElrfdZzORU9TwjVflRJ+Qssx+fBZfxrFavyZHwWWKJWpn
- DFK0clenOYwtL6nfd6AZlmWL7EDcifnAAAA
-X-Change-ID: 20260116-milos-fp6-bt-wifi-22faa7b15e8c
+Message-Id: <20260403-milos-fp6-bt-wifi-v2-2-393322b27c5f@fairphone.com>
+References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
+In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
  Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
  Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -90,51 +90,47 @@ Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
  linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
  devicetree@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
  linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- Luca Weiss <luca.weiss@fairphone.com>, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+ Luca Weiss <luca.weiss@fairphone.com>
 X-Mailer: b4 0.15.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1775224512; l=1518;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1775224512; l=1081;
  i=luca.weiss@fairphone.com; s=20250611; h=from:subject:message-id;
- bh=BF5TJfTjAHAamhIZ3z7tthOS+Ma4qFWW4uI2TjjrfiU=;
- b=ednRrit/bAoAzVhkyGxL0NIrpVGJR0/5C62DiVQLNXJsmwqOGJ0X52r5uAazLmVy1hmNy7lOE
- ooCDQy+mLlJBCy0nu87HL3O/iRHxdVPR3Q8pIcTIF19ewqq5MrpRoDg
+ bh=pHexCrMEYsMQQy8zIs+sRrHJ1/ttZ3VMNeWvno6IS14=;
+ b=XCK+78nLfEjrwFntw0oaIZ6QCMaMqe0pdyMGnaJ0nfiCKkScqZ/j56Z2tA7Pr/+6ADMeTVzTg
+ pRaItd1h5BQBiCmYvoHhG6jioNRifeUAqMjZopZPnAysEnsr3FFCL+h
 X-Developer-Key: i=luca.weiss@fairphone.com; a=ed25519;
  pk=O1aw+AAust5lEmgrNJ1Bs7PTY0fEsJm+mdkjExA69q8=
 
-Add the required bits to enable Bluetooth and WiFi on the Milos
-SoC-based Fairphone (Gen. 6) smartphone.
+Document the WCN6755 Bluetooth using a fallback to WCN6750 since the two
+chips seem to be completely pin and software compatible. In fact the
+original downstream kernel just pretends the WCN6755 is a WCN6750.
 
 Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 ---
-Changes in v2:
-- Drop applied pd-mapper patch
-- Add compatibles for wcn6755 with fallback to wcn6750 (wifi & bt)
-- Rebase on linux-next
-- Pick up one tag (discard the rest due to addition of wcn6755
-  compatibles)
-- Link to v1: https://lore.kernel.org/r/20260116-milos-fp6-bt-wifi-v1-0-27b4fbb77e9c@fairphone.com
+ .../devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml     | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
----
-Luca Weiss (7):
-      regulator: dt-bindings: qcom,qca6390-pmu: Document WCN6755 PMU
-      dt-bindings: bluetooth: qcom,wcn6750-bt: Document WCN6755 Bluetooth
-      dt-bindings: net: wireless: ath11k: Document WCN6755 WiFi
-      arm64: dts: qcom: milos: Split up uart11 pinctrl
-      arm64: dts: qcom: milos: Add WCN6755 WiFi node
-      arm64: dts: qcom: milos-fairphone-fp6: Enable Bluetooth
-      arm64: dts: qcom: milos-fairphone-fp6: Enable WiFi
+diff --git a/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml b/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml
+index 8606a45ac9b9..79522409d709 100644
+--- a/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml
++++ b/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml
+@@ -12,8 +12,14 @@ maintainers:
+ 
+ properties:
+   compatible:
+-    enum:
+-      - qcom,wcn6750-bt
++    oneOf:
++      - items:
++          - enum:
++              - qcom,wcn6755-bt
++          - const: qcom,wcn6750-bt
++
++      - enum:
++          - qcom,wcn6750-bt
+ 
+   enable-gpios:
+     maxItems: 1
 
- .../bindings/net/bluetooth/qcom,wcn6750-bt.yaml    |  10 +-
- .../bindings/net/wireless/qcom,ath11k.yaml         |  16 +-
- .../bindings/regulator/qcom,qca6390-pmu.yaml       |  16 +-
- arch/arm64/boot/dts/qcom/milos-fairphone-fp6.dts   | 191 +++++++++++++++++++++
- arch/arm64/boot/dts/qcom/milos.dtsi                |  74 ++++++--
- 5 files changed, 285 insertions(+), 22 deletions(-)
----
-base-commit: 83acad05dee54a5cff0c98dd7962e55d4c6b145a
-change-id: 20260116-milos-fp6-bt-wifi-22faa7b15e8c
-
-Best regards,
---  
-Luca Weiss <luca.weiss@fairphone.com>
+-- 
+2.53.0
 
