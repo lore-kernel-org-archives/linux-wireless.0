@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE56A2D3A60;
-	Sat,  4 Apr 2026 10:57:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26590328260;
+	Sat,  4 Apr 2026 10:58:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775300263; cv=none; b=A+ixJ/ovlymVaweIjW1VOZrtIWkgBqNIPmOMnRC50Mer0j5zBgo+inMiP7rrofY9+av+vcNsPy3AdzYQnQLZcXqULt3CsYVw1x65nCgDk29dsRUC94SoUFJZBFfxjmWm/rYqSgcCjUUiPe2l8zfexLejc+OFXviYRk6vznYapv8=
+	t=1775300293; cv=none; b=MoMHaqJTZmRBoVV5kEKwSJ3jR7BPhoPO63SBVw60C9nJ498knmxKaJqtJBxaVFGF4dmwbFwN5oKJ+1sXl2uxsgRGRZPWsv+2cvd92S/p0xNUQsroll8IWmuqAoP5m5iIFwmy4lefHkuqsRPzcXVoeZGQwIDfUdyVTBW/y91CMTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775300263; c=relaxed/simple;
-	bh=hbrkyKzyYh2RUSekpQ2Vk/cdjhZ/Anu7DtnZZOV6zrc=;
+	s=arc-20240116; t=1775300293; c=relaxed/simple;
+	bh=M4uUFGPWTsMW+aVafwNZZdbKqmdCp3+dk9lic6nmNNg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RAkccVmpWsmt9PFlOpFYkqAFHXzFu+b40ZQgWTBqKDwkWLB350v6BfLaYDocgWKZBv96aLTD+z10lrc2Jlv2/loUgKkFSvzXypVBQM/2ijKXS66yPfaKVJgwPetpfcz/ZxvCJ6KyAdVJjre+/l3WvPCdG1TcZC3Lejrs8nKK0sY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gPcy+9Lc; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=iVaphXnRhoSh2gACEuWxopswq6fCnN6Xfd1C8t101EJmZkQq+hun1vc6LsYFGjaXSM0plZUpgGmcYEwOQ5dciObMJ1+epvwyfQsoPgKVTLmNmBAeEfPEUnTe0h/guU6JAMp7BUSqvRSWM+GQ3LM9aI76naGAw48NBqlWH2FKWIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LbKRr43C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gPcy+9Lc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9A9AC19421;
-	Sat,  4 Apr 2026 10:57:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LbKRr43C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50D50C19421;
+	Sat,  4 Apr 2026 10:58:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775300263;
-	bh=hbrkyKzyYh2RUSekpQ2Vk/cdjhZ/Anu7DtnZZOV6zrc=;
+	s=k20201202; t=1775300292;
+	bh=M4uUFGPWTsMW+aVafwNZZdbKqmdCp3+dk9lic6nmNNg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gPcy+9Lc3ZxOGyiROZnJsx0Qj9fT7tDtdhPAFXny6/OP9RNQrouARYmiKFmbp4IGg
-	 LapD6ojiXaKj/cW6v1aQ1/okwZT8fEwwSMXzbISvER5R5ws6Rz/H0hvmgCBXXKYv0S
-	 qkxP/UIq2hqBjy6KZXLzoevfMl19QGvcRcsOnLfIGjJPK/OM+CfvzqoA1PTZ2G38sP
-	 g+2VoUlljpELj1RAt62FVWtXdTVW6+mAJzWWCYZ+LyXXKQ1fWJwnxn6Ks8X84e6Cpe
-	 XBiXb9wirS0awPsBsy3cBoXOdeovYDmWDiZStwBYanQ9DWbVQUXaHIjRzii7swuvd6
-	 LSJ5dIqDP4KCw==
-Date: Sat, 4 Apr 2026 12:57:41 +0200
+	b=LbKRr43CdKESFgLQcOwsc8jDyHxZwuDAJyyaikSR4VXxIvxH1Q/ZD9kzYoS/Ineyg
+	 EuaWKdeewgkVDuNFIbGw0quKVMOr/JLtbktLQ09PdXQoNxG2CPgEenW7umeDa1uTGm
+	 HutqWDM2071LI97/hL1Byljj9A7+c6RMnID0liNCwo9LbQF6xVhA5Rt/CoeKbZxWTs
+	 nXVK73PobEhcy96b61kGoWUj4WdH/12SKrLHXOFg/Zrz+5bS+nck71nAIm9Sw9t1Vg
+	 bnTti7hhiWoay9lTi5JfMBWVEsAl3UO+iVVEcC0AY7XLmljmq/u0Jxi3Q0ICr0LPTP
+	 r6+iZfPeme2tg==
+Date: Sat, 4 Apr 2026 12:58:10 +0200
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Luca Weiss <luca.weiss@fairphone.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -40,11 +40,11 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
 	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-Subject: Re: [PATCH v2 1/7] regulator: dt-bindings: qcom,qca6390-pmu:
- Document WCN6755 PMU
-Message-ID: <20260404-lynx-of-extreme-chaos-1aa3f5@quoll>
+Subject: Re: [PATCH v2 2/7] dt-bindings: bluetooth: qcom,wcn6750-bt: Document
+ WCN6755 Bluetooth
+Message-ID: <20260404-fast-quaint-agama-8afbfe@quoll>
 References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
- <20260403-milos-fp6-bt-wifi-v2-1-393322b27c5f@fairphone.com>
+ <20260403-milos-fp6-bt-wifi-v2-2-393322b27c5f@fairphone.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -53,17 +53,17 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-1-393322b27c5f@fairphone.com>
+In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-2-393322b27c5f@fairphone.com>
 
-On Fri, Apr 03, 2026 at 03:52:47PM +0200, Luca Weiss wrote:
-> Document the WCN6755 PMU using a fallback to WCN6750 since the two chips
-> seem to be completely pin and software compatible. In fact the original
-> downstream kernel just pretends the WCN6755 is a WCN6750.
+On Fri, Apr 03, 2026 at 03:52:48PM +0200, Luca Weiss wrote:
+> Document the WCN6755 Bluetooth using a fallback to WCN6750 since the two
+> chips seem to be completely pin and software compatible. In fact the
+> original downstream kernel just pretends the WCN6755 is a WCN6750.
 > 
 > Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
 > ---
->  .../devicetree/bindings/regulator/qcom,qca6390-pmu.yaml  | 16 +++++++++++-----
->  1 file changed, 11 insertions(+), 5 deletions(-)
+>  .../devicetree/bindings/net/bluetooth/qcom,wcn6750-bt.yaml     | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
