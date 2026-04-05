@@ -1,16 +1,15 @@
 Received: from mail.unwrap.rs (mail.unwrap.rs [172.232.15.166])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBFEA285417
-	for <linux-wireless@vger.kernel.org>; Sun,  5 Apr 2026 05:41:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE8E35970F
+	for <linux-wireless@vger.kernel.org>; Sun,  5 Apr 2026 05:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.232.15.166
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775367720; cv=none; b=XxfxxpCwWm4PdoGCiir5A2EPzzverWSUkwb83xtSiCLDKNUVttihM1H6/UqoffR15vCm775BiLgpKsVhs4giPjfoQTzMFrCKpSoYFZhs6nScl0/EoM8AX4egw+9+EKYKLYBZ6BAAQeZ+i1VrLGlKIJDnHczpgt0OfkL2rVCwMV8=
+	t=1775367843; cv=none; b=d55jUsije8eVB9Yr69Q/PBMceEk3DED5RYMW9EaNrc7HPT3Disnzs8v7hLDOmiptUVYRq2AO/u0MPOY1bkNtIoOrJLSUyyK3iiJHfhFe/bnmzjIFPLpbbQdvonI5AmzkMMpSw9gbCAeiYZgWo2D/1xjX5afCe95vkVMmyzAzvFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775367720; c=relaxed/simple;
-	bh=e/PME1+4vL7zTH81pEUZRFHZL1DugfE6n+PNr5qux8s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LpH/KrP6HsaY2q6MPFTuf4HvxXlpdDDBBpCqfRwmJdzseMPOEfqkdukdVTjIb5hV1KTQGIl7B9jrtz/sJn0s3iVSrfEWXgtTKWbmKnNb3MUlFXQv+oBP3ZuxbpwpRUaCqr5xHW9f9mA5WkMQEAeUs2CUysTNYpJHyBKcT4AHQuo=
+	s=arc-20240116; t=1775367843; c=relaxed/simple;
+	bh=96TETqZ2OYljl1SQIqKsG2uuGXPMAHHiJfew+M2IpU4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HbJkrvOkhOehyiA0wgNnugk1rPHuy3bxzzNKYZM609uF9kiRUDHePmT7RYMgg70lzZyuNM1nbb1o4OHvecihokorK/VXG3urTMEjd2oCs3RDiyuaEg2IYFdrL4zdRbU9eMz82kefz70wFf1KhLJtD68D18gh+tiEZFvmDGwB1sg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs; spf=pass smtp.mailfrom=unwrap.rs; arc=none smtp.client-ip=172.232.15.166
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=unwrap.rs
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unwrap.rs
@@ -20,12 +19,10 @@ Cc: greearb@candelatech.com,
 	miriam.rachel.korenblit@intel.com,
 	johannes@sipsolutions.net,
 	cole@unwrap.rs
-Subject: [PATCH 3/3] wifi: iwlwifi: mld: skip TX when firmware is dead
-Date: Sat,  4 Apr 2026 22:41:45 -0700
-Message-ID: <20260405054145.1064152-4-cole@unwrap.rs>
+Subject: [PATCH v2 0/3] wifi: iwlwifi: mld: fix UAF and soft lockup on firmware error
+Date: Sat,  4 Apr 2026 22:41:42 -0700
+Message-ID: <20260405054145.1064152-1-cole@unwrap.rs>
 X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260405054145.1064152-1-cole@unwrap.rs>
-References: <20260405054145.1064152-1-cole@unwrap.rs>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -34,58 +31,49 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When firmware encounters an error, STATUS_FW_ERROR is set but the
-mac80211 TX path continues pulling frames from TXQs. Each frame
-fails at iwl_trans_tx() which checks STATUS_FW_ERROR and returns
--EIO, but iwl_mld_tx_from_txq() keeps looping over every queued
-frame. This burns CPU in a tight loop on dead firmware and can
-cause soft lockups during firmware error recovery.
+Three fixes for the iwlmld sub-driver addressing use-after-free,
+TSO segmentation explosion, and soft lockups during firmware error
+recovery on Intel BE200 (WiFi7).
 
-Add a STATUS_FW_ERROR check at the top of iwl_mld_tx_from_txq()
-to stop pulling frames from mac80211 TXQs when firmware is dead.
-Also guard iwl_mld_mac80211_tx() which bypasses the TXQ path
-entirely and would otherwise continue feeding frames to dead
-firmware.
+1/3 closes the NAPI race window where stale RX data from dying
+firmware reaches the TX completion handlers, causing corrupt SSN
+values to trigger skb use-after-free in iwl_trans_reclaim().
+Ben Greear confirmed the WARN_ONCE fires on his test systems.
 
-Once STATUS_FW_ERROR is cleared during firmware restart, TX
-resumes naturally with no explicit wake needed.
+2/3 fixes the TSO segmentation explosion when AMSDU is disabled
+for a TID. The TLC notification sets max_tid_amsdu_len to the
+sentinel value 1, which slips past the existing zero check and
+produces num_subframes=0, causing skb_gso_segment() to create
+32000+ tiny segments. Revised per Miriam Korenblit's feedback to
+check for the sentinel value directly and add a WARN_ON_ONCE
+guard after the division as defense-in-depth.
 
-Fixes: d1e879ec600f ("wifi: iwlwifi: add iwlmld sub-driver")
-Signed-off-by: Cole Leavitt <cole@unwrap.rs>
----
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 4 ++++
- drivers/net/wireless/intel/iwlwifi/mld/tx.c       | 3 +++
- 2 files changed, 7 insertions(+)
+3/3 adds STATUS_FW_ERROR checks in the TX pull path to stop
+feeding frames to dead firmware. Revised per Johannes Berg's
+feedback to use status bit checks instead of stop_queues/wake_queues,
+which doesn't interact well with TXQ-based APIs.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 71a9a72c9ac0..0df3be3089c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -519,6 +519,10 @@ iwl_mld_mac80211_tx(struct ieee80211_hw *hw,
- 	u32 link_id = u32_get_bits(info->control.flags,
- 				   IEEE80211_TX_CTRL_MLO_LINK);
- 
-+	if (unlikely(test_bit(STATUS_FW_ERROR, &mld->trans->status))) {
-+		ieee80211_free_txskb(hw, skb);
-+		return;
-+	}
- 	/* In AP mode, mgmt frames are sent on the bcast station,
- 	 * so the FW can't translate the MLD addr to the link addr. Do it here
- 	 */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.c b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-index 8af58aabcd68..33bd2e336166 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
-@@ -962,6 +962,9 @@ void iwl_mld_tx_from_txq(struct iwl_mld *mld, struct ieee80211_txq *txq)
- 	struct sk_buff *skb = NULL;
- 	u8 zero_addr[ETH_ALEN] = {};
- 
-+	if (unlikely(test_bit(STATUS_FW_ERROR, &mld->trans->status)))
-+		return;
-+
- 	/*
- 	 * No need for threads to be pending here, they can leave the first
- 	 * taker all the work.
+Changes since v1:
+  - 1/3: Added Tested-by from Ben Greear
+  - 2/3: Check max_tid_amsdu_len == 1 (sentinel) instead of
+    guarding !num_subframes after division; added WARN_ON_ONCE
+    defense-in-depth (Suggested-by: Miriam Korenblit)
+  - 3/3: Replaced ieee80211_stop_queues()/wake_queues() with
+    STATUS_FW_ERROR checks in TX pull path (per Johannes Berg)
+
+Cole Leavitt (3):
+  wifi: iwlwifi: prevent NAPI processing after firmware error
+  wifi: iwlwifi: mld: fix TSO segmentation explosion when AMSDU is
+    disabled
+  wifi: iwlwifi: mld: skip TX when firmware is dead
+
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c |   4 +
+ drivers/net/wireless/intel/iwlwifi/mld/tx.c   | 210 +++++------
+ .../wireless/intel/iwlwifi/pcie/gen1_2/rx.c   | 337 +++++++++---------
+ 3 files changed, 284 insertions(+), 267 deletions(-)
+
+
+base-commit: 3aae9383f42f687221c011d7ee87529398e826b3
 -- 
 2.52.0
 
