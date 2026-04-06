@@ -1,106 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5613C386541;
-	Mon,  6 Apr 2026 15:22:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FE62DB791
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Apr 2026 15:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775488970; cv=none; b=d0uUNJzovyGcJnXU64sfuMTOHNNb047O8sK/Q8aeF5Xw3QsXdon1sSPwkdhQWfcNDgdZh4eCz5TR6tjWKQ7ns3nX4khKP3YOPb0zzssIoe/S1lpMz0z45nReUvzWETgDuJLXqfdrnLMbp4R6fLSHd/ZInX72rE5EgC1G9R6Kdec=
+	t=1775490703; cv=none; b=UNPC2wDFw2r+u9tVHP6MhxB6ldKXO+uA4Gx6qGxU1dgUF5ffUILxjlLh2dHkk5LgWbG4CXlHIs2LRo3gcyBscWZyOrHkn+uXbo7QWybtt5ouGEvfGrdBKTmeTcjvL9mxIm8Vb9PHg4vMdFgVhiEJqJsdlYOYU/tPjSrVfw76kcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775488970; c=relaxed/simple;
-	bh=iC5RuUkjr4YheJjq+5kXm0uCQrLTCZePxmO0UJuDLJI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=MvsIPdmVPD43ZcPOHmlQ7OfBNlw0mvhAFhts5gi5i5hmuBmv8amMmR1HeFpBPoUa1LOQArVaF8sPaRzSAhnIPLGnY7qvIViv4xHMWIwETlBC9oqGb8MRmhdi0FnE9v5q/lZy27kGNUtB6xhEqSdDgki31hw5Ih/68ofyROyxOAQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vFbjQkjD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1775490703; c=relaxed/simple;
+	bh=rzKk5WejB+mbn/yRTIRbxkZzr1bQ4VA/zMee/GV8yyM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pxGq8MoYSyeYYUDN1w7MiW7GnBdFtOc14lEuXDRa8UFZVauvLouiphSDu/jdBgwKJBgMjtaCMIzxxBtZ+TGEHSMYgLtSogmmhULOvwTfEdJt0f7a0jIshv3sOa9itcnir8QZiD2FI7MFwi+uwI1GE0u7luCgzOs/4arAELp5rfk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=J93kyziE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IbjsllHE; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vFbjQkjD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9718C4CEF7;
-	Mon,  6 Apr 2026 15:22:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775488969;
-	bh=iC5RuUkjr4YheJjq+5kXm0uCQrLTCZePxmO0UJuDLJI=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=vFbjQkjDICQPatHELDGaZzMGsOG7IMqZS8Nx0QZ7vwFj+aO7qSZLsXOzn/2N3Aj8P
-	 GQaS+U+vr2nDy11N5l6FpMnGTPxVQCPaO44HkAA0aJr7qr1c6F5Nfjt8wEOGHEdnaG
-	 uvklpS8YoFvJ8yZ4D9kHX5qNvlrRjscjnj6mvcxJIR/OHxiuHuUTfNloMmaxYvV1hs
-	 p9NclkJ/ClxVwPY7sllotz/eUaHLFeDjYUhXB7y9xDxfCsmLWmVlApD9hr+Nsa2eDI
-	 rE+YsIJ/4bKRYOWBWiKAMG5g4+q2szxGIIDSDYo+GQLzupJ/idfiqks9ySg9L9GvoR
-	 THwzn+tommHiQ==
-From: Mark Brown <broonie@kernel.org>
-To: Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Alexander Koskovich <AKoskovich@pm.me>, 
- Liam Girdwood <lgirdwood@gmail.com>, Bartosz Golaszewski <brgl@kernel.org>, 
- Marcel Holtmann <marcel@holtmann.org>, 
- Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
- Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
- Rocky Liao <quic_rjliao@quicinc.com>, 
- Johannes Berg <johannes@sipsolutions.net>, 
- Jeff Johnson <jjohnson@kernel.org>, Luca Weiss <luca.weiss@fairphone.com>
-Cc: ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
- linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
-References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
-Subject: Re: (subset) [PATCH v2 0/7] Enable Bluetooth and WiFi on Fairphone
- (Gen. 6)
-Message-Id: <177548144839.46304.13972601101594073712.b4-ty@b4>
-Date: Mon, 06 Apr 2026 14:17:28 +0100
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="J93kyziE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IbjsllHE"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 636ENIIX2897250
+	for <linux-wireless@vger.kernel.org>; Mon, 6 Apr 2026 15:51:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ukQ6Zlht3NZUUsrPWZJsHdIlUjCDU/cg8ksvGrwiy2Q=; b=J93kyziEVXCaDbwt
+	ZIT0AYP/Y0+O2Lgk/IKQ0H3W06K6bAYtGRhFzD/XVbuvpZuwpBH6MUqdtNwsDJme
+	WouloICu0BfgqnKRoKxAXUdFscYsqt+EzzQAr3mUlPGKWa9Z7g5Vs2bE84XzaaCw
+	SOrQzYu5omCBrrW6wKKaa972ZNQllDgt2bpVHBel4Z4m43XHQAmU1EoqibHgajAY
+	Q4M2Q6kP21cghTLNdd/R8AVtvijc50TVOf5nh9YowLnhNFLjo8+T2wUK3iYDNgxX
+	DGMmbGzJS2N7idyKVqmsQuuOeeXQB216jedwhbFbXct2QhlY5R1P0fM7Sh28eK91
+	GYrzjg==
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dcehwga83-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2026 15:51:41 +0000 (GMT)
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-2ba9a744f7dso5692850eec.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Apr 2026 08:51:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1775490700; x=1776095500; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ukQ6Zlht3NZUUsrPWZJsHdIlUjCDU/cg8ksvGrwiy2Q=;
+        b=IbjsllHEUZ/v8E9OXA7/tD/s+FfZWcQcKqrETnI9P5/Tv5KN02nycERtnS12civnWt
+         6IOIrCQpf1xGMmXEpPhlOoJaFaVfTRhbaK2jYO0VNRFmYvcbrUoZgXQFOuG2bpKajoHq
+         fsoZiULiMUpzWnXltrwKb6BHxIYB31vF8jV1N27OSttLGeOG8PnTvJvIs7OGyD9UhAWz
+         iu32/UXhLSLkvh23qJH63KguQgz8Obl5tlGCehiPvepDjovIc4352pDmX1FzRtEfkoiZ
+         ZGMY7HeKxkjUT3xU1iW5J1MrHAqwxx7q8DAYHNIe14oYD9Boaon0bLjDaVMQRYqQSQEN
+         FrEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775490700; x=1776095500;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ukQ6Zlht3NZUUsrPWZJsHdIlUjCDU/cg8ksvGrwiy2Q=;
+        b=FQwMEPBM16HRshINrzphkL9n8ii0fpv3rmNiMzRTtjNNQLjQf3KmlsQITP83fyvITe
+         Tim3CpaZeuzfnsNwQWaPwHfs2l/4D6SkakEZ+SpviWLhoIFhdFLS9swe/uzxSTdS8b+a
+         ARjtZYXkyAkxMkjk8wTgvPGEXGQqsYWk7GWhOQGRdbPTCY1oVPYt6/7qjNNggGi7Jo/w
+         w3Ca6C1EpHEZpzeu++OxzWfHFEVbO4URpqKInuhkO2sVa0jQWazUwQ9Qby8mZd3oiOnh
+         b4bXXZm6nYFeg3CRfCNO8KMDg1/+rbgRM+lFu2/WSEppjSmAXu8WKGFTq4yELV69hqrc
+         DBWw==
+X-Forwarded-Encrypted: i=1; AJvYcCXQreXkJxBXidi7PoHwYRW6mslnRSlBZzRChhUH5JDEJVTggvshucoiTaUSFlHMZKnx5ulY2x0xD0wzIhTHRA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzz17P4r2rn6Y5Inuv03TH8gEW4TQ5BqK/Y9M+ymRRwj5CaAYl6
+	LfyJw4tx7t91ycm16c5IppV8fv3qUXZzztkSKO1jwYi4epPRSR/BjTEsvJvs06L9kRmjh3+zfD9
+	DeI8j8MJYxEz3SQSZTYu6H3O9ffhblNDnO5cAH+6I3WyvvV7yBssK5SYC7BswlhRt4qqJlQ==
+X-Gm-Gg: AeBDieuIraHzgyGj/k85KBULSap63U6ewEi55K2WRCjb+ISwaIQQ4JUay5cthg9jfo9
+	R6yDEzocA5DzTUp30sS514e/0HDKK/yj7AlWBmJMGZl+lzFyC1xGYv1RJFlySiPqhyny3uDEW3W
+	l3GfggwTrQkCO4dZ3ZDAy4KUiOrp6mae2bAVjgErgcZuviM7t7vkEcbNE3bywvBriz5KpKvMr6m
+	g6QPZhCjmOAjSKIzGes3ai3KRB7O8q/p1gH/imWU0hO9u3+cRqrIywGqmscS+zs5AdjGu/eF4xD
+	jWZWpCT5cc/D0vsvhJqgcgQaMyUEhAGoNaBKTx3MhFcb7nHhTHr8O2Sl476cavI6b1JThx1cOLQ
+	QbLi22aP0YNvW+xtuL+d6W1kbUovOf7dFBGDhkZ6/UwT80QNVWhJ7UWnpudXpUfejxmN03jJG4X
+	jSZq93rmaafPdoIg==
+X-Received: by 2002:a05:7022:62aa:b0:128:cc34:35fc with SMTP id a92af1059eb24-12bfb70ef65mr5780057c88.16.1775490700211;
+        Mon, 06 Apr 2026 08:51:40 -0700 (PDT)
+X-Received: by 2002:a05:7022:62aa:b0:128:cc34:35fc with SMTP id a92af1059eb24-12bfb70ef65mr5780019c88.16.1775490699506;
+        Mon, 06 Apr 2026 08:51:39 -0700 (PDT)
+Received: from [192.168.1.44] (c-24-130-122-79.hsd1.ca.comcast.net. [24.130.122.79])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-12bede54ba8sm15701803c88.10.2026.04.06.08.51.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Apr 2026 08:51:38 -0700 (PDT)
+Message-ID: <0cf5e285-b5f0-49ef-97ae-6c04504044ac@oss.qualcomm.com>
+Date: Mon, 6 Apr 2026 08:51:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/3] dt-bindings: wireless: ath10k: Add quirk to skip
+ host cap QMI requests
+To: david@ixit.cz, Johannes Berg <johannes@sipsolutions.net>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Paul Sajna <sajattack@postmarketos.org>
+Cc: Amit Pundir <amit.pundir@linaro.org>, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        phone-devel@vger.kernel.org
+References: <20260325-skip-host-cam-qmi-req-v4-0-bc08538487aa@ixit.cz>
+ <20260325-skip-host-cam-qmi-req-v4-1-bc08538487aa@ixit.cz>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260325-skip-host-cam-qmi-req-v4-1-bc08538487aa@ixit.cz>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.16-dev-67696
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1248; i=broonie@kernel.org;
- h=from:subject:message-id; bh=iC5RuUkjr4YheJjq+5kXm0uCQrLTCZePxmO0UJuDLJI=;
- b=owEBbQGS/pANAwAKASTWi3JdVIfQAcsmYgBp08/EHCSvABc5+hfj7LywcFO5vIyiMIyPbeR7h
- ppJ03irVwuJATMEAAEKAB0WIQSt5miqZ1cYtZ/in+ok1otyXVSH0AUCadPPxAAKCRAk1otyXVSH
- 0KVpB/9S4D+rqQdrlGK7dDEaMH4ZQMEuGOMsBF05rICalPIeS+4HrqIdPQlTVFXQS+2FvhlW2v9
- 05Q1bZHOQZs52JJs+bbrwIb+9HnsD4fm4Fcq/CwxMBFfcb3D/8Uh7op9NLC9TMkaPvIlEyMVD4V
- 2eZIcjoyQ3ZyIsPzOqGIEKPo5UdI+TQyvmwOYnNcJ7Pg/Ft7ElkHEieBdQ7gR8SjyUegXQSAXNJ
- Lklhvvjd7b4qNJo6F8BDqvjelJFrUH+BSDJI63aYQTuDG5KvMSdQqyGFYjyO6PyvaEmtsmtpWY1
- OBo9Osy1m0mMXQWQCHFcbL50CpXYNDkWKuhxF3yLVZDqBqGq
-X-Developer-Key: i=broonie@kernel.org; a=openpgp;
- fpr=3F2568AAC26998F9E813A1C5C3F436CA30F5D8EB
+X-Proofpoint-GUID: qwpgqFXcHCGnC2LSVFea2SC3gNcZvQw_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDA2MDE1NiBTYWx0ZWRfX5zFuGNTCSsit
+ 23y5H/qQs6Z3wgdNnUhBmUM37AlyPEjAgy7J4OnH3N6dVo+7FYE1MfVgFbqUxf+V4ngOJAfqLyX
+ akfLU9ANGNqy++oJndfn2K7pPimcK8AXpP4+h0G9m9I+FAIJQuxobm23afnipwowduNgBvMh28E
+ /TWcyiBXpEtYF7FWc3XRfUSd/JqaTk7xu8BkyOIq9RazSq/Gbe7czVetbkj+5h2pC5mczWiopEQ
+ taD2bwwsf+e3iW7jTuEdkAstVb16QSex746/8UzgZ6K0rVK5p9rreSJTk7tCsHiKVQXrS70zxM4
+ t4Qr48Z5Lv+MqaQu/6uKGX5+WEhERXZTqgd7oJqSlBdpxrcHf/QQBgbUMR+dR3che8t4/fJjH3i
+ QgWqXsKITHnNLWqX73LueWctut2BNXFY5BM6tY59PUH2tdY70O1byapnAW6TYK9tBRj8vWvb9rl
+ uBrVLU4cO/mwdvXjBWQ==
+X-Proofpoint-ORIG-GUID: qwpgqFXcHCGnC2LSVFea2SC3gNcZvQw_
+X-Authority-Analysis: v=2.4 cv=Nr3cssdJ c=1 sm=1 tr=0 ts=69d3d68d cx=c_pps
+ a=PfFC4Oe2JQzmKTvty2cRDw==:117 a=Tg7Z00WN3eLgNEO9NLUKUQ==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=VwQbUJbxAAAA:8 a=Gbw9aFdXAAAA:8 a=KKAkSRfTAAAA:8 a=Jr6ivFuIO4VC9FIHmAQA:9
+ a=QEXdDO2ut3YA:10 a=6Ab_bkdmUrQuMsNx7PHu:22 a=9vIz8raoGPyDa4jBFAYH:22
+ a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-06_03,2026-04-03_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 impostorscore=0 phishscore=0 malwarescore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
+ lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2603050001
+ definitions=main-2604060156
 
-On Fri, 03 Apr 2026 15:52:46 +0200, Luca Weiss wrote:
-> Enable Bluetooth and WiFi on Fairphone (Gen. 6)
+On 3/25/2026 10:57 AM, David Heidelberg via B4 Relay wrote:
+> From: Amit Pundir <amit.pundir@linaro.org>
 > 
-> Add the required bits to enable Bluetooth and WiFi on the Milos
-> SoC-based Fairphone (Gen. 6) smartphone.
+> Some firmware versions do not support the host-capability QMI request.
+> Since this request occurs before firmware and board files are loaded,
+> the quirk cannot be expressed in the firmware itself and must be described
+> in the device tree.
+> 
+> Signed-off-by: Amit Pundir <amit.pundir@linaro.org>
+> Signed-off-by: David Heidelberg <david@ixit.cz>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> index f2440d39b7ebc..5120b3589ab57 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+> @@ -171,6 +171,12 @@ properties:
+>        Quirk specifying that the firmware expects the 8bit version
+>        of the host capability QMI request
+>  
+> +  qcom,snoc-host-cap-skip-quirk:
+> +    type: boolean
+> +    description:
+> +      Quirk specifying that the firmware wants to skip the host
+> +      capability QMI request
+> +
+>    qcom,xo-cal-data:
+>      $ref: /schemas/types.yaml#/definitions/uint32
+>      description:
+> 
 
-Applied to
-
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git for-7.1
-
-Thanks!
-
-[1/7] regulator: dt-bindings: qcom,qca6390-pmu: Document WCN6755 PMU
-      https://git.kernel.org/broonie/regulator/c/b043657c35e5
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
+DT folks, there is a pending DTS series [1] that would like to reference this
+capability. Would like to get an ack so I can get this in the upcoming merge
+window.
 
 Thanks,
-Mark
+/jeff
 
+[1] https://lore.kernel.org/all/20260401-judyln-dts-v8-0-7677cfafbc78@postmarketos.org/
