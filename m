@@ -1,109 +1,172 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [67.231.154.164])
+Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com [209.85.222.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF3CA33ADB5;
-	Tue,  7 Apr 2026 17:31:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.154.164
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775583075; cv=none; b=UbZUMA2L4dH9mCaplrYvySJ14GuLWp4HMBUKhmzFlOc6FO/sPoZgir3bxCRuyUgNIDasn+FLVdvfI6U7diP8iHJUDet8nwaHKxArCGRs4YYB8RH1xep0kPT4zuhmmcY+CCjz4PD/8LMwIoKcD3rvBWNtsa5Zj5ymhsXWk51/bk0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775583075; c=relaxed/simple;
-	bh=uYGXrROU4X8csqVd6RltyvUGkSocVHoIvd/scjuPBn8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OsvNZHHew0Ui5zdyAkxmBsuYCZEiMpJdVh+KDUxTmDgjB+LKMExEv1jLHgZHP57SPZNRiJBtmCEUF7yqiGGbsejtY0KU/Hu8fpFii8UX9piaCyvU3vhWHKSJKK9JhLulO5NEh9oh2xAM2N0Bp/aFwW0Fz163+WNZNutIMuHR+NU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=TNND+m6l; arc=none smtp.client-ip=67.231.154.164
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B78934404F
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Apr 2026 17:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.222.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1775583330; cv=pass; b=Y+ta8DxlJdMb/z6OYdU8cNc/eyYaFRoSRFEvJ6KqsHznpKSBVXOE1HByBG58ezel+0uEe4xYFKpTbG8D+Z+xi0MZXoENMnMjsXYNuC83XFS1yalv68QrjEPo3sF4QOR33byK5SE+5P4z7gAeaIZYQQYKclWcmHve8pbpvDW9Mv4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1775583330; c=relaxed/simple;
+	bh=bVcou+Gprm8jI+MgNIWQTYr42AbaKd/ho0YCL94TYdU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Sta8NbzQmXNAEKThv5KaegLm3X/s0s9J77sZZSs424GhVMfdGxWa6pzNDLFf9I3CgSvzCJA6fiX+n+BEei331DPoVi5JyPd5ReYUwPzU8PlzvSS5HTJNCUgR+BPJreLFZJMIT+qfHMbUNpJP71UgPXyjfODcPhEfBW4gUbQvc5w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=F4cAwiv6; arc=pass smtp.client-ip=209.85.222.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="TNND+m6l"
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 4BD00180084;
-	Tue,  7 Apr 2026 17:31:07 +0000 (UTC)
-Received: from [192.168.100.159] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id 2BD6313C2B0;
-	Tue,  7 Apr 2026 10:31:05 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 2BD6313C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1775583065;
-	bh=uYGXrROU4X8csqVd6RltyvUGkSocVHoIvd/scjuPBn8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TNND+m6lrbMgpiQVWTYgIcMMzNWJFCmBgDAo6Q5X5+SPSU0TpxMzL5QXhpIBic+zh
-	 x14Nbq6h5QiulOsAlDH7YGy4J+WK31rBui1anb4SjvIssqAEuvUsjMBMYGe1HHA1tB
-	 IyaU0eG3Gl6xCSorEs04myw2lFeZZM4C3GfcANJ4=
-Message-ID: <5e197844-804e-51d7-a1de-e9e7686bad0a@candelatech.com>
-Date: Tue, 7 Apr 2026 10:31:04 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F4cAwiv6"
+Received: by mail-ua1-f43.google.com with SMTP id a1e0cc1a2514c-953a5defbbdso53480241.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Apr 2026 10:35:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1775583328; cv=none;
+        d=google.com; s=arc-20240605;
+        b=SXah3ySnSaysWYXXs0B895Fkx20wzKF/dvZUkqHgSrgyfRhEYnrz2tFnlF5mRtyMrl
+         srPmRi4h/yCgCJWPHzDJa/MULW+9phCZdoOZK8f/cCacsSpd82USFOkY+PWtE9Ep2HMx
+         xyE13+aGzoj58ALN5F6A3JJNvAPyAMkajAqa9dmVqlzG/Jmwa4uTikUPQBWvZWP6O/iI
+         UNkxE090eLxmpU/pK/ba8DCIHlKoKJgueLo/zBhxbPj0qDQLYVRJ6ZkCo1VbNxKCRWBN
+         cw9mhSWjh8259UfW3bUDGVfNU/ecWDPVanxhKZUDSlC4vydtqqrYp61nJ4c4qxlt1xDd
+         Kr/w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=d0d7dSyKzAyZ8PECEnJjvu70SAnmL644NrgpjRWVsEo=;
+        fh=z13KRDOBL26GXrXq9EJJjW8Udv+4Is3MOUPGIn9PAN4=;
+        b=gIs3xwDgbVAcFbrA+wcpieG4pRA3zjI7Sp3qwbKBO2f21RnmUO1KNVNSRvRnmJhgKA
+         gax4u5nIWvyRRIFd+WBy4w27PljYSa0AM02EjB+mZ5oRyA7TPvgwkKV+XU8YN0XiiaEI
+         KbF7sSwUtx7fbOeyoj3IiaGeiz+hFBH1vGExnCcYZ7GFaI9XWtsZZT9Ndf2AD2GAOnmL
+         US7EnRv7Xz349kXV8rNtJcKzIaciKrFDaYs84Yepj+CQrbIuzRyAmlcn4e76P1xXc6cw
+         YUp0T9W74sk3dnCv9OTI2lBrXskx/CJ2W+Yo8VibTKQe1ver4Q7R+Xi1fzmUm0JOy1d7
+         AUFA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1775583328; x=1776188128; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=d0d7dSyKzAyZ8PECEnJjvu70SAnmL644NrgpjRWVsEo=;
+        b=F4cAwiv6xG/b3XUADEDIdJBqQk+j2gWcrri+DtPEKJAT1/ca5p83YNVNnFdmqf+GSQ
+         eZeeGa7hP3mYZhXf7thT7tPM4zkpW9+S6XOkrqMnWxh4x796RbGY9ppMZeVaKsKDYL+M
+         7oLTJNGRzLx1Jmz2GHKgtuH565TI6OMyL6MoGx5hmBlrlwZlZ7ziAHFtS1ACjdPfZyuX
+         se3NPNCFbnMiMdjcNyONdB1YmSQkbtEaTvqNKMECRJawfHzoM6oknl2g4pF1bFejaPsK
+         j+PSffQb7eXJiWAVviiaMm9jCOP6PR5COpBfL/hhpHoj4V4XLuTCNGWJb0pH0DqqlOZ9
+         70RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775583328; x=1776188128;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=d0d7dSyKzAyZ8PECEnJjvu70SAnmL644NrgpjRWVsEo=;
+        b=YAiCr3Vpj/eG6QCzm/mrjyC5asSGkLz/eYcG90XdhB4ygab5VoGBUUKyeYzRIDM0EY
+         eQP6R8Of9TJ296emF/QzocHTAf+8yyU2LHaDY8kLxexRKk7KEH1+3iaGBm5SFGCUJveP
+         FPgpevH5LCKPLb45SMGtRJrHaPSsujoRdwLuCTMpaJQRCL3hA53/65Z11UwgTfB3d9V8
+         mYx/zqwdv1/zDU5fe2GIVDz0IztAwEffq3HKaHEczSOZvsyhm4RTa9gECyPnRqgXMM/M
+         fptGdk9O6oZgA348tNAC9eCyqVU3fXtD3irijXPhEpYGDQ1l4CXtoqVBMYm2Ut0NJc53
+         LBTg==
+X-Gm-Message-State: AOJu0Yz2whhbV0GYoRsBSSqkLFTILwNRQ+UgYvpJcxFo1FgN9+j8aD5x
+	3NpkHzXnbzkIDJ9WkgB/Nbb6hPcvpG1N6F4XYG29PUbN91Oht+TL7h5FFoCV8Xo5sTUgj8EQUvC
+	UV4ewvheO75XnTC3UGpMHCkqHVimht8I=
+X-Gm-Gg: AeBDiesCNkswFOKbBRWFJ8iE/P9bgZHRVQDcW+2Gbf5T1u4H2tATENvKW3BHrACTggl
+	U+bOD1RKJ/iOx65p0X+flf5GYsiVe+SK5QIcWotBuEb0xBdn4nLN8LUUuwn5D9Ac+Zv+aimpxP/
+	uoEg+BkxI9C2lEr83Sfsw6QtbN1arUKDouNNZv+K3sseLoXCpIC5nGcvyjYBWymNqW2asmP02jd
+	/MMzE45kcRxW3eeEVAmKE+JHsZXv0EkgEwxvBAR4ZMy5qaudf17qSffHtGVFO0Wx9oT0BOZD4vX
+	H7jSt/V58atQHg/94y8tQpNW9oWHamZ8EzQrjTQ1
+X-Received: by 2002:a05:6102:94d:b0:5f8:e41e:e5cc with SMTP id
+ ada2fe7eead31-605a5034c28mr5433959137.9.1775583328358; Tue, 07 Apr 2026
+ 10:35:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
+References: <20260406234739.29926-1-joshuaklinesmith@gmail.com>
+ <20260406234739.29926-5-joshuaklinesmith@gmail.com> <d4622e31-4012-4c05-9288-529b0bb0aebd@candelatech.com>
+ <CANs=ypgdgB_3stm5bCvO8RTat-sxs0N6SAaeYSQ-dyq43U-ZBg@mail.gmail.com>
+ <ddc4ccfe-27e0-7558-9b5b-27b4c4fe54b3@candelatech.com> <CANs=ypgceH4NL5xOr2C1FPp8KvDCcUWTu10i+DiXntuOmAfJVA@mail.gmail.com>
+ <5e197844-804e-51d7-a1de-e9e7686bad0a@candelatech.com>
+In-Reply-To: <5e197844-804e-51d7-a1de-e9e7686bad0a@candelatech.com>
+From: Joshua Klinesmith <joshuaklinesmith@gmail.com>
+Date: Tue, 7 Apr 2026 13:35:15 -0400
+X-Gm-Features: AQROBzAV6xaHAvXHRyVUe2RM59GmP1ed74mWrJcyksvjS9RgAmFB4oykGjkFOUg
+Message-ID: <CANs=yphvbzzDHFsZZexSW-7YZTU5zRc4P_iapvCH=NK0f_XbMg@mail.gmail.com>
 Subject: Re: [PATCH wireless 4/4] wifi: mt76: mt7925: fix RCPI chain 3 mask in
  sta_poll RSSI extraction
-Content-Language: en-US
-To: Joshua Klinesmith <joshuaklinesmith@gmail.com>
-Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org,
- ryder.lee@mediatek.com, shayne.chen@mediatek.com, sean.wang@mediatek.com,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260406234739.29926-1-joshuaklinesmith@gmail.com>
- <20260406234739.29926-5-joshuaklinesmith@gmail.com>
- <d4622e31-4012-4c05-9288-529b0bb0aebd@candelatech.com>
- <CANs=ypgdgB_3stm5bCvO8RTat-sxs0N6SAaeYSQ-dyq43U-ZBg@mail.gmail.com>
- <ddc4ccfe-27e0-7558-9b5b-27b4c4fe54b3@candelatech.com>
- <CANs=ypgceH4NL5xOr2C1FPp8KvDCcUWTu10i+DiXntuOmAfJVA@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-In-Reply-To: <CANs=ypgceH4NL5xOr2C1FPp8KvDCcUWTu10i+DiXntuOmAfJVA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1775583072-8JS1m76odQoM
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;at1;1775583072;8JS1m76odQoM;<greearb@candelatech.com>;cd1e1c133c9805f1fc8e076cc471adaa
-X-PPE-TRUSTED: V=1;DIR=OUT;
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org, 
+	ryder.lee@mediatek.com, shayne.chen@mediatek.com, sean.wang@mediatek.com, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/7/26 09:58, Joshua Klinesmith wrote:
-> On 4/7/26 12:31, Ben Greear wrote:
->> I am more concerned about the trickier patches that you have been posting
->> that is utilizing work from upstream vendor code.  How much of that is pure
->> AI driven?  How much testing has been done to see if there are actual stability
->> or performance improvements when testing actual hardware?
-> 
-> Hi Ben,
-> 
-> To be straightforward: my workflow involves pulling GitHub issues into
-> AI prompts along with firmware analysis tooling to identify potential
-> fixes. I have an MT6000 available, but I have not been doing thorough
-> on-hardware testing before submitting. That is a gap I need to close.
-> 
-> I will hold off on submitting further patches to the mt76 driver until
-> I have a proper test workflow in place and can verify changes on real
-> hardware.
-> 
-> I appreciate you raising this directly.
+On 4/7/26 Ben Greear wrote:
+> If you talked some AI bot into finding non public source, or if it can
+> actually generate useful c code out of vendor binaries, then I am not
+> sure how legit that is to even post.
 
-Please be sure to add note about using AI to patch submissions,
-and link to original bug reports you are trying to fix.
+Hi Ben,
 
-Possibly some of this is useful, but you need to do significant tests
-with real hardware if you are proposing non-trivial changes.
+Thank you for raising this point. After considering your feedback, I
+realize my workflow has involved analysis of proprietary vendor
+binaries, which raises legitimate provenance and licensing concerns
+for kernel submissions. I should not have submitted patches derived
+from that process.
 
-If you are referencing publicly available upstream driver source, then
-be clear about that and provide links.  'Reverse Engineering' could mean a lot of things,
-some of which is grey area for patch submission.  If you talked some AI bot
-into finding non public source, or if it can actually generate useful c code out of
-vendor binaries, then I am not sure how legit that is to even post.
+I am withdrawing my outstanding patches from this series. I will not
+submit further patches based on this workflow.
 
-Thanks,
-Ben
+Going forward, I will limit my contributions to fixes based solely on
+publicly available GPL-licensed sources and will clearly document the
+source and rationale in my commit messages.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Thank you again for taking the time to flag this.
 
-
+On Tue, Apr 7, 2026 at 1:31=E2=80=AFPM Ben Greear <greearb@candelatech.com>=
+ wrote:
+>
+> On 4/7/26 09:58, Joshua Klinesmith wrote:
+> > On 4/7/26 12:31, Ben Greear wrote:
+> >> I am more concerned about the trickier patches that you have been post=
+ing
+> >> that is utilizing work from upstream vendor code.  How much of that is=
+ pure
+> >> AI driven?  How much testing has been done to see if there are actual =
+stability
+> >> or performance improvements when testing actual hardware?
+> >
+> > Hi Ben,
+> >
+> > To be straightforward: my workflow involves pulling GitHub issues into
+> > AI prompts along with firmware analysis tooling to identify potential
+> > fixes. I have an MT6000 available, but I have not been doing thorough
+> > on-hardware testing before submitting. That is a gap I need to close.
+> >
+> > I will hold off on submitting further patches to the mt76 driver until
+> > I have a proper test workflow in place and can verify changes on real
+> > hardware.
+> >
+> > I appreciate you raising this directly.
+>
+> Please be sure to add note about using AI to patch submissions,
+> and link to original bug reports you are trying to fix.
+>
+> Possibly some of this is useful, but you need to do significant tests
+> with real hardware if you are proposing non-trivial changes.
+>
+> If you are referencing publicly available upstream driver source, then
+> be clear about that and provide links.  'Reverse Engineering' could mean =
+a lot of things,
+> some of which is grey area for patch submission.  If you talked some AI b=
+ot
+> into finding non public source, or if it can actually generate useful c c=
+ode out of
+> vendor binaries, then I am not sure how legit that is to even post.
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+>
