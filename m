@@ -1,47 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B73A2395D93;
-	Tue,  7 Apr 2026 10:50:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 245533A75B5
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Apr 2026 10:52:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775559029; cv=none; b=PNYC66qoJ6UNRNfdN9BHHmoN+RK3hb0owvP3sx7dRkS3L4dkELlTBrxQzIzCstY2a18Utn35DC2pxmAyemXiFYg8xmA6jpZ23H4gZRr215E/NkEfYj5uN2dwhJrw04axCpsDDvvMgO2ahbJZVXtoPCdzuG7ZlKYn4jZVz4QCEQ0=
+	t=1775559125; cv=none; b=t01+kgrm2/pdIFjBYtoUTP52ZcJm9hsm2lAGEGf2qwmgqkI0Z1xY0e1ucgdmZB620A7hWy1A3gRicWIJDManLDwpk4SJSYDdvsUtdpbuvFFNc6ANoRsArSj5bz/LchiM+YpJGKpvLAAtwzMEOLaVSuz+TFiYZQg6dZU/Eb4jImU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775559029; c=relaxed/simple;
-	bh=JHIUX+CAVtJIrgteiln3H0UCEd3d3VbNZuyYU6ThT/4=;
+	s=arc-20240116; t=1775559125; c=relaxed/simple;
+	bh=DEutK+HG/Fz7ZD3uQb1tBH3pvxlhBheyGhwpx7G3jpE=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=acvlj8S4dKB5HOSdJXl6XOWxNop4J9uF2EzYB6xDuQO5bq1+FplFGEdyhw51JUJOnEUw7atriEeAmHs1Bwtli+ieb+UDR9piHKZ76ZY/ffBA6bXRMQ6MZOcjYGe0kvGR8LoxzEhzacl9m6VdCQS4EgUh5fIiqWCUoiFtkG2Z77I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=vqPNiQGl; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=pb+eCQSJLjERuKHjdOZiR7Ce0THPB2JDUbektB18E5shLNSuR2F41tlIAOlGWm9hJeGDNMB9Z1TH6dOyeXavdyPX7zDkTcERzwlrl70SKbdRkJ0DFopAGpzn/3okz5/CCfQ4WKCWADDjfFRD7BEIkj8f5YZrQH1prwOtYTd2guA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Qq+wO85/; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="vqPNiQGl"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Qq+wO85/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=JHIUX+CAVtJIrgteiln3H0UCEd3d3VbNZuyYU6ThT/4=;
-	t=1775559028; x=1776768628; b=vqPNiQGls0VvXGFp+VZpbgg/calqimQyxZhwpxR/umg9iWO
-	f2yeSQrU1rTUoYM0tm50s7O/YEg3lodtgXCHj8cseSCxGowJfEckx5gn3s7KlLJOC4OA8IO/aYV1Z
-	iblIBlfcRk356Kwgi+F4iJrS7pkwVKwWz83bS6kD4K3OYmxsubiyveWnW+khYuneUKcxImcMWmseh
-	3Eu9b68IfCO8Uj/3S+rpFbPJOp5yixOn722C+jFemTEeXn9yR3f/fxGfB/BWPqZ8drstOjD5a54JY
-	5gmkZN3v3qpTODbSS7oLc+GTajM532JssPYWZBkGdtBeA3V19/NCmA5q6jRpLFzw==;
+	Resent-Cc:Resent-Message-ID; bh=DEutK+HG/Fz7ZD3uQb1tBH3pvxlhBheyGhwpx7G3jpE=;
+	t=1775559124; x=1776768724; b=Qq+wO85/zS/0rtXzyRD+s8QX6oxUd0NCBqxFoiERcAKZ0Lf
+	topIAx98rJx+wXScQUg49pjeOdGWwCxCCOxX7AEeCpWD4SBk6DNtdklB3s5jDiIQ19gpf8oGW8A1A
+	jz1ynA7p0jf1uOLSTkY32H68GEHpGj5J0MvLwTwzjngZcYxg87ZG8842Qucf/dQxHOtvZFibdCClU
+	YXVeitEauTvb7nZgGz1WZ5hozYRsZcfJmFcZLNSYB/BLAl9ehkICVjlgpwp6Zt5f0pHHHxlddM5U5
+	eE4CcQY332aMRbZnSC185tQP9RlpHvkAwvnHIYAKYmPV6Dm344GZPwRDDeS/pzVA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wA40n-0000000CGY9-1Yu3;
-	Tue, 07 Apr 2026 12:50:25 +0200
-Message-ID: <d16f1525ebfd12b0a4cbbde89b4ce7a7f64c7f18.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] iwlwifi: dvm: add missing cleaup for on error path
+	id 1wA42K-0000000CGfo-40wH;
+	Tue, 07 Apr 2026 12:52:01 +0200
+Message-ID: <9d093d8a8df188c99b9b652bb56a5c1faecef6c7.camel@sipsolutions.net>
+Subject: Re: [PATCH] carl9170: main: track sw_scan state and suppress
+ transient channel-change errors
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Elfring <Markus.Elfring@web.de>, Haoxiang Li	
- <lihaoxiang@isrc.iscas.ac.cn>, linux-wireless@vger.kernel.org, Miri
- Korenblit	 <miriam.rachel.korenblit@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 07 Apr 2026 12:50:24 +0200
-In-Reply-To: <604fd5a1-135b-4a47-b752-52cb21d8863e@web.de>
-References: <20260401030555.541685-1-lihaoxiang@isrc.iscas.ac.cn>
-	 <604fd5a1-135b-4a47-b752-52cb21d8863e@web.de>
+To: Masi Osmani <mas-i@hotmail.de>, Christian Lamparter
+	 <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Date: Tue, 07 Apr 2026 12:52:00 +0200
+In-Reply-To: <GVYP280MB15183AA20A65C0C5C03D09699453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
+References: 
+	<GVYP280MB15183AA20A65C0C5C03D09699453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -53,15 +53,8 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Thu, 2026-04-02 at 08:10 +0200, Markus Elfring wrote:
->=20
->=20
-> 3. Would you like to avoid a typo in the summary phrase?
->=20
+FWIW, all wifi patches should have "wifi: " prefix.
 
-See also
-
-https://lore.kernel.org/linux-wireless/3a7022fcd18fdaf98044f8a3a21b09a2f7cb=
-a914.camel@sipsolutions.net/
+(but I think you're not going to get my email, hotmail doesn't like me)
 
 johannes
