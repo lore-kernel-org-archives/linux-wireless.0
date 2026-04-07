@@ -1,47 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 245533A75B5
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Apr 2026 10:52:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB64839A078
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Apr 2026 10:53:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775559125; cv=none; b=t01+kgrm2/pdIFjBYtoUTP52ZcJm9hsm2lAGEGf2qwmgqkI0Z1xY0e1ucgdmZB620A7hWy1A3gRicWIJDManLDwpk4SJSYDdvsUtdpbuvFFNc6ANoRsArSj5bz/LchiM+YpJGKpvLAAtwzMEOLaVSuz+TFiYZQg6dZU/Eb4jImU=
+	t=1775559210; cv=none; b=cFb14ZUjJbFNWh3sa5OQc6CBxNQeS5PILPk2Vam/7XrwzU0SwwY0XFkMkOxQSOSfW0MUFvwvabNGrEOr8ARExyvBNpP70VH5zxRyKfKHcQaDi9uCNMYzehjoZwt9yBqqNAk/MNmpcRxFhBjeg/zHGtj0Vr3FSaITPJHJKg/C9p8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775559125; c=relaxed/simple;
-	bh=DEutK+HG/Fz7ZD3uQb1tBH3pvxlhBheyGhwpx7G3jpE=;
+	s=arc-20240116; t=1775559210; c=relaxed/simple;
+	bh=XDq8IUBOMZ/I3s6fWDk5nV81cndoYuPsVNso8VMvhFo=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pb+eCQSJLjERuKHjdOZiR7Ce0THPB2JDUbektB18E5shLNSuR2F41tlIAOlGWm9hJeGDNMB9Z1TH6dOyeXavdyPX7zDkTcERzwlrl70SKbdRkJ0DFopAGpzn/3okz5/CCfQ4WKCWADDjfFRD7BEIkj8f5YZrQH1prwOtYTd2guA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Qq+wO85/; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=J8eX/oameBUH5LiqJcEsNsbbIdp5eweSm0M1H4oRCCjN18p+BY9XN22dwwODNUjliUKBsgYLW6OA7KpRu7BwhUT7jhMeBAml+UDd1FV4Dl8q5kpjhd4J2U4Zx4ryIjcMOSlPpETBzTF7YIdQ5OPUuNNAiowrmyePoGVVuNZGvWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=IHbzPRca; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Qq+wO85/"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="IHbzPRca"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=DEutK+HG/Fz7ZD3uQb1tBH3pvxlhBheyGhwpx7G3jpE=;
-	t=1775559124; x=1776768724; b=Qq+wO85/zS/0rtXzyRD+s8QX6oxUd0NCBqxFoiERcAKZ0Lf
-	topIAx98rJx+wXScQUg49pjeOdGWwCxCCOxX7AEeCpWD4SBk6DNtdklB3s5jDiIQ19gpf8oGW8A1A
-	jz1ynA7p0jf1uOLSTkY32H68GEHpGj5J0MvLwTwzjngZcYxg87ZG8842Qucf/dQxHOtvZFibdCClU
-	YXVeitEauTvb7nZgGz1WZ5hozYRsZcfJmFcZLNSYB/BLAl9ehkICVjlgpwp6Zt5f0pHHHxlddM5U5
-	eE4CcQY332aMRbZnSC185tQP9RlpHvkAwvnHIYAKYmPV6Dm344GZPwRDDeS/pzVA==;
+	Resent-Cc:Resent-Message-ID; bh=XDq8IUBOMZ/I3s6fWDk5nV81cndoYuPsVNso8VMvhFo=;
+	t=1775559209; x=1776768809; b=IHbzPRcawnwX6STV8khpdzzFrGC7kc3yXnlb5jecnevsLrn
+	yeGyciJrvCaxkJobjKG79AMPi8hU84j3zts4LWMO/0WQLEqP5xs9KH/IL7QcUGXvSe+pTI4yaUnyz
+	Ad23yUezI1vXTyS8x92fJuJ2yN6L6pNMG1+YotqoLK+bNJdy/we7NYmiDUEt/otr95WBsRu2eU/ug
+	olDQR58H1dGWJ7crhY2JyF+B+ec/tgdya2wzAN2D0aqdKLxUqUZ13qqKJvsRz1pO+YsPKs1j6eH+5
+	QHaPSbM1WVZvIzHe6L6DtG1IKHoDPZJMgVDVCvLUT8igwipM9z6dAQDPelh6yN/Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wA42K-0000000CGfo-40wH;
-	Tue, 07 Apr 2026 12:52:01 +0200
-Message-ID: <9d093d8a8df188c99b9b652bb56a5c1faecef6c7.camel@sipsolutions.net>
-Subject: Re: [PATCH] carl9170: main: track sw_scan state and suppress
- transient channel-change errors
+	id 1wA43j-0000000CGjM-2NN4;
+	Tue, 07 Apr 2026 12:53:27 +0200
+Message-ID: <70f3e0d6f3467244e33ecd343fcfe3b22745f1f1.camel@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: stop hardware before clearing driver state on
+ reconfig failure
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Masi Osmani <mas-i@hotmail.de>, Christian Lamparter
+To: Masi Osmani <mas-i@hotmail.de>
+Cc: linux-wireless@vger.kernel.org, Christian Lamparter
 	 <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Date: Tue, 07 Apr 2026 12:52:00 +0200
-In-Reply-To: <GVYP280MB15183AA20A65C0C5C03D09699453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
+Date: Tue, 07 Apr 2026 12:53:26 +0200
+In-Reply-To: <GVYP280MB151883A5BB2910EE6439DE2F9453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
 References: 
-	<GVYP280MB15183AA20A65C0C5C03D09699453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
+	<GVYP280MB151883A5BB2910EE6439DE2F9453A@GVYP280MB1518.SWEP280.PROD.OUTLOOK.COM>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -53,8 +53,19 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-FWIW, all wifi patches should have "wifi: " prefix.
+On Tue, 2026-03-31 at 12:00 +0200, Masi Osmani wrote:
+> This patch fixes a hard system freeze (requires power cycle) observed
+> when unplugging an AR9170 USB WiFi adapter while under traffic, or when
+> any driver that uses ieee80211_reconfig() encounters a firmware deadlock.
+>=20
+> The race: ieee80211_handle_reconfig_failure() tears down station tables
+> while USB RX tasklets can still deliver frames that reference them
+> (use-after-free). Calling drv_stop() before clearing IN_DRIVER state
+> closes the race at the root cause.
 
-(but I think you're not going to get my email, hotmail doesn't like me)
+You can really stop resending this patch, I'm not taking it.
+
+https://lore.kernel.org/linux-wireless/e7f3ba3acca1308bc0871a3892da9e15525d=
+5038.camel@sipsolutions.net/
 
 johannes
