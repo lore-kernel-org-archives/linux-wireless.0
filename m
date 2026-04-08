@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 772EC38D6AB;
-	Wed,  8 Apr 2026 20:20:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3969D26F29B;
+	Wed,  8 Apr 2026 20:21:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775679629; cv=none; b=FeQgrkY7cXYrV9vJaEyKTSv4DFH7jx/gn7Bj3oL2pwLtM3kZpf90GrmVdQ7WSWsDHCdbf2pgeX7NYtDk7fc1Eu44ui304FSuYyGxIF7YqQSfIpi4zstrsS8i2bA3UjNuyz+DaEV2mSEIaoZk/rGj3gaIx01JEQ/NGVgcI8hMOBU=
+	t=1775679712; cv=none; b=L8/0aYle0uJNss6f3u17I6O/iZzpT9z6DxJ7yJLGYp46SXSSlRA7RZflbP1eZx+IXiqc2SQcAQzAp8X8rVQUiYeb5kDzyBXVpTQavJQVzbvQoZUmR+SWkAtyR0bdjyze6+NVWKuBSZDiGqmOeqiGLmgubbvxuSmyGjZJeUxewBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775679629; c=relaxed/simple;
-	bh=JHJ4QinlnrF8WrNXZvCq4WRQrio33RdljaeZwcyewWg=;
+	s=arc-20240116; t=1775679712; c=relaxed/simple;
+	bh=BVou9F0SrGtga1GQXF8xZ89pmIJJKkDR1j3Ghv7t+4A=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=SHGd63UcT9LxvaqmMX9I0EwpZ3FjM9Bd4d7jGHplZwkt3FiWG/3eAsfGCzyD18h7qdk1iUbRsa74xSmV4iwHjpwcuZWGFiGQ198jlXdhW32aMw5Fkl/T66JzOT1JxWAq7iY7XByDvuRkkeBY2nliqxBEteA74aA7NyMrwwfgZ+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FE95iFB7; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=aa9V+SY1qbANiVbLiI6zg14Vz8iys2Vnc0uELF6F67gSVfXXNW+vxB0WPQtHITMVt9QDzynk7PP7mgPPvB+YTS1pMual9XzyixNqdxsVWDYfkqc8Fo1OXpRxIm66M7nWqz1bp9JM1pjzWlkchBHQXnqD/Cwjz9iCRBear33rCXA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ME2LKMB7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FE95iFB7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85D10C19421;
-	Wed,  8 Apr 2026 20:20:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ME2LKMB7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2344EC19421;
+	Wed,  8 Apr 2026 20:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1775679628;
-	bh=JHJ4QinlnrF8WrNXZvCq4WRQrio33RdljaeZwcyewWg=;
+	s=k20201202; t=1775679711;
+	bh=BVou9F0SrGtga1GQXF8xZ89pmIJJKkDR1j3Ghv7t+4A=;
 	h=Date:From:To:Cc:Subject:From;
-	b=FE95iFB7p02sEPxjxJZ6mN+30YFlKABSCBTsvKpqBEmKdqXnnID8AfNdQ//UNgcDp
-	 032uovvjSHyOcOsq5hufYPnIX8jGb8SdY+430y/urnufwVtfyaRSHSbr9Epf+EMpUV
-	 yrWdD3Ixsz/szlAzTpktZHrZiL+wofkoZxQB9OCGkQkzJ/roQP8aAGBWUF63+AL6D6
-	 YIl+6zhJjZIR9ov3qs0vplWTKgpYLIDWNeEfk8Avmo5DVshOkBK+eh9gP9AfyGXVo+
-	 +VEbPQl8tKzauDsrUOwrwFMDu6ueo8RM0AH6Eqgb2qLLkODyylWE7z/FooqADogiwj
-	 08Yvcb8bu3Bxg==
-Date: Wed, 8 Apr 2026 14:19:22 -0600
+	b=ME2LKMB7bLM1rKawwrRWht9ldeC2LdjqyePI9s6loiNYq0EUFtphoVJeYGL+M+9Nt
+	 35IOreY/y82jRevjJCQizmxdNtkbuHz4MvqRAN26VfXVeJyVErmZNwYAYpTNivkmHF
+	 mOWLSQhAfKe1TjCqTfWUBDfF9eOTDtjv3MWzpv8zJ8y1rmJNQa5lfgRpV4xEkQWZeH
+	 /pKETQiBiw4GOkM+X5cYRSFoVn087SOeCfQjx+ndFuHxSK9e0iZDVQGrZAO5YZj3y1
+	 slR3pdYN3Am/EuoQ2bwu1spz9sE6ubn0ja4GMhgT/D3Ex/JhXOfRNoaUYnOAkQ+hkd
+	 WvNFiKPlLXKNQ==
+Date: Wed, 8 Apr 2026 14:20:46 -0600
 From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
 	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH][next] wifi: iwlwifi: mld: tlc: Avoid a
+Subject: [PATCH][next] wifi: iwlwifi: mld: rx: Avoid a
  -Wflex-array-member-not-at-end warning
-Message-ID: <ada4SvJPdt2DahPG@kspp>
+Message-ID: <ada4nkgytDjxs-Hv@kspp>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,83 +47,80 @@ Content-Disposition: inline
 -Wflex-array-member-not-at-end was introduced in GCC-14, and we are
 getting ready to enable it, globally.
 
-Use an anonymous embedded struct (enabled via -fms-extensions) to split
-the header portion from the flexible-array member in struct iwl_dhc_cmd,
-so the new header type struct iwl_dhc_cmd_hdr can be referenced
+Use an anonymous embedded struct (enabled via -fms-extensions) to split the
+header portion from the flexible-array member in struct iwl_rxq_sync_cmd,
+so the new header type struct iwl_rxq_sync_cmd_hdr can be referenced
 independently (of the flexible-array member), and fix the following
 warning:
 
-drivers/net/wireless/intel/iwlwifi/mld/tlc.c:544:36: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
+drivers/net/wireless/intel/iwlwifi/mld/rx.c:2172:41: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
 
 Add comments and a static_assert() to prevent adding new members
-directly to struct iwl_dhc_cmd. Any new members must be added to
-struct iwl_dhc_cmd_hdr instead. This preserves the expected memory
-layout between the header and the flexible-array member.
+directly to struct iwl_rxq_sync_cmd. Any new members must be added
+to struct iwl_rxq_sync_cmd_hdr instead. This preserves the expected
+memory layout between the header and the flexible-array member.
 
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/dhc.h   | 21 ++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/mld/tlc.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 21 ++++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   |  2 +-
  2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
-index b6d79c678cd8..bce4097fee27 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dhc.h
-@@ -51,7 +51,7 @@ enum iwl_dhc_umac_integration_table {
- #define DHC_TARGET_UMAC BIT(27)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index ac6c1ef2cbcd..02a5bacfb175 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -918,19 +918,34 @@ struct iwl_rss_config_cmd {
+ #define IWL_MULTI_QUEUE_SYNC_SENDER_MSK 0xf
  
  /**
-- * struct iwl_dhc_cmd - debug host command
-+ * struct iwl_dhc_cmd_hdr - debug host command header
-  * @length: length in DWs of the data structure that is concatenated to the end
-  *	of this struct
-  * @index_and_mask: bit 31 is 1 for data set operation else it's 0
-@@ -62,14 +62,29 @@ enum iwl_dhc_umac_integration_table {
-  *	bit 26 is 0 if the cmd targeted to LMAC0 and 1 if targeted to LMAC1,
-  *	relevant only if bit 27 set to 0
-  *	bits 0-25 is a specific entry index in the table specified in bits 28-30
-+ */
-+struct iwl_dhc_cmd_hdr {
-+	__le32 length;
-+	__le32 index_and_mask;
+- * struct iwl_rxq_sync_cmd - RXQ notification trigger
++ * struct iwl_rxq_sync_cmd_hdr - RXQ notification trigger header
+  *
+  * @flags: flags of the notification. bit 0:3 are the sender queue
+  * @rxq_mask: rx queues to send the notification on
+  * @count: number of bytes in payload, should be DWORD aligned
+- * @payload: data to send to rx queues
+  */
+-struct iwl_rxq_sync_cmd {
++struct iwl_rxq_sync_cmd_hdr {
+ 	__le32 flags;
+ 	__le32 rxq_mask;
+ 	__le32 count;
 +} __packed;
 +
 +/**
-+ * struct iwl_dhc_cmd - debug host command
++ * struct iwl_rxq_sync_cmd - RXQ notification trigger
 + *
 + * (NOTE: New members MUST NOT be added directly to this struct. Add them to
-+ * struct iwl_dhc_cmd_hdr instead.)
-  *
-+ * @iwl_dhc_cmd_hdr: anonymous embedded header - members are directly
-+ *		     accessible
-  * @data: the concatenated data.
++ * struct iwl_rxq_sync_cmd_hdr instead.)
 + *
-  */
- struct iwl_dhc_cmd {
--	__le32 length;
--	__le32 index_and_mask;
-+	struct iwl_dhc_cmd_hdr;
- 	__le32 data[];
- } __packed; /* DHC_CMD_API_S */
-+static_assert(offsetof(struct iwl_dhc_cmd, data) == sizeof(struct iwl_dhc_cmd_hdr),
-+	      "New members must be added to struct iwl_dhc_cmd_hdr instead.");
++ * @iwl_rxq_sync_cmd_hdr: anonymous embedded header - members are directly
++ *			  accessible
++ * @payload: data to send to rx queues
++ */
++struct iwl_rxq_sync_cmd {
++	struct iwl_rxq_sync_cmd_hdr;
+ 	u8 payload[];
+ } __packed; /* MULTI_QUEUE_DRV_SYNC_HDR_CMD_API_S_VER_1 */
++static_assert(offsetof(struct iwl_rxq_sync_cmd, payload) == sizeof(struct iwl_rxq_sync_cmd_hdr),
++	      "New members must be added to struct iwl_rxq_sync_cmd_hdr instead.");
  
  /**
-  * struct iwl_dhc_payload_hdr - DHC payload header
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-index 78d6162d9297..b6f41a8c138e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-@@ -619,7 +619,7 @@ static void iwl_mld_send_tlc_cmd(struct iwl_mld *mld,
- int iwl_mld_send_tlc_dhc(struct iwl_mld *mld, u8 sta_id, u32 type, u32 data)
+  * struct iwl_rxq_sync_notification - Notification triggered by RXQ
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+index a2e586c6ea67..492c03b8e5a0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
+@@ -2172,7 +2172,7 @@ void iwl_mld_sync_rx_queues(struct iwl_mld *mld,
  {
+ 	u8 num_rx_queues = mld->trans->info.num_rxqs;
  	struct {
--		struct iwl_dhc_cmd dhc;
-+		struct iwl_dhc_cmd_hdr dhc;
- 		struct iwl_dhc_tlc_cmd tlc;
+-		struct iwl_rxq_sync_cmd sync_cmd;
++		struct iwl_rxq_sync_cmd_hdr sync_cmd;
+ 		struct iwl_mld_internal_rxq_notif notif;
  	} __packed cmd = {
- 		.tlc.sta_id = sta_id,
+ 		.sync_cmd.rxq_mask = cpu_to_le32(BIT(num_rx_queues) - 1),
 -- 
 2.43.0
 
