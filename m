@@ -1,110 +1,206 @@
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA96A3BBA17
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 12:35:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776083746; cv=pass; b=ifsrvM8HkpZz3GnOpEmf1/WkDpcAczEdfOOudxIYNgaBw0SQBvAdUoa+vQE4OwJ0dnQH/WFrpWHdHIvI+0zNn6EJ1x/TXdRjHKUXCC5fpmHdlrPttlaF0NkNA0AtSegA2tmg/kJTEQHIYmlTrg24qAFSoiDzFBtiTHQuGeQdsxk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776083746; c=relaxed/simple;
-	bh=Ot3nyMzVrKGWoI2SgjQ3cEgVtxo2/lT4pgbrYEFAmH0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=J4+fgg/TMbTAVxC7Qf63EPkoWJPXOP9Cnk1JEc+rdDmWKuDV3zwug8G3BVD7XG3U5PQNyMVq/DHGKDP2TyBzZ5//ioAxPVQ7IZRCb6sjKwpj4mwlmR4u9i0eCWpFRgNoR7xnGZJPD9MLqRNN3d9p5RGQUf4GQQkYd1Dr98nv5rY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dIrgmp8K; arc=pass smtp.client-ip=209.85.210.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dIrgmp8K"
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7dbe07d3ec3so1983989a34.0
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 05:35:45 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776083744; cv=none;
-        d=google.com; s=arc-20240605;
-        b=g9VmfZOxTW2bJOImskYKhZntSlrsER61FL+gBggj8JUYPxTEajnGjY+BTHkK0i8s/+
-         0U1gdUrjIoQtKE2nSHvCfYO5/SFhWkz+oNh2XyJWJ+zQibk+9E936WuI26BL0QXsyGPE
-         uRBzbCDx0D0AgbmtnckSXzsdVLOZHX9AK5PAfkGxUGZ/x4eXX0fAvLV4/hXqdW1fhSun
-         G6zFiFwF6759OZpMcNLHRVdTFZ7+zQBDAWibYrZitcoJ+EJZsjgcVjXOjzHnGJyQVhik
-         RdqabO0JSKAMhsPxUjb2qoDwJesoVaJ0SjZ23fLfWcYfGfRCSgghwDemUS+RiGh2hQq1
-         VxQw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Ot3nyMzVrKGWoI2SgjQ3cEgVtxo2/lT4pgbrYEFAmH0=;
-        fh=rKXnWmUXQwH24iM/tEIIEVSCoARKCG/7bLoy02KTkRM=;
-        b=RA5pMjMinCaXRE6RJ6B1E/tLfsPN9SfKvTgiiz07sYzhSd4v3fs16UasTnVfoeRe2w
-         lWHC05E8Du3vnBMQnTDN3NY2rLYqLn6HFC43n16856Q6IM1DNhZfjDOH0icIb4ZFCXhP
-         11sm1QI85w5cLVn5Kx9vCSEYfMhi1r/0Lou4n3M2RWCeMtHk58nwLjpmmzkBAiDkdCpq
-         UhjRIlFZkfcQcvbbR+FKM5mUOnwLc9p0Jd0893v8Ofev0zikc1BZmeR5w2FKhbUldaX7
-         I0cc/lYATXd1UA1aAw55OGgXHou6LdeykP+GTY17TAkukE8hgyK25e0q3PvOmFnqmsmM
-         nfKA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776083744; x=1776688544; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ot3nyMzVrKGWoI2SgjQ3cEgVtxo2/lT4pgbrYEFAmH0=;
-        b=dIrgmp8KSgfD5haPCmlvglMhk2JwqlY/KF6cxfTj8lJ4+Mt8q5T89RbK6xXaet4qMS
-         npsTGmnGahj2z6cDR+1j/2naplnNVO4nZl7GYb7J2itXTOfXMcczy96ioKv6ht29BJUJ
-         bQFEvcowjYP2+PxucGul6US7AEpFC0RuBiMqw+VDMz7UYZ4TVERXJgRD3q0ONrskHTwt
-         Lt+/uwp7HcYvxpZAo9nuDlh6RdP5ppzD6kshRiz59HM7JJZG5htil2qoAIRcqGa0B/LS
-         qu5Dw9TwXLQKxEF4iyZ22RpctezyT2biUjTPxVDvRC+ipFfudsTcfI6KHU8DwffSZLjP
-         FJ+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776083744; x=1776688544;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Ot3nyMzVrKGWoI2SgjQ3cEgVtxo2/lT4pgbrYEFAmH0=;
-        b=tKfg4rg96jw/DmPf34r9l6TYs/KQWOpAbp5K6yTPj2Px7xrBQavpgOrzpGzP4qrBvx
-         ayksI5Xg+nRZ1yNBiZGxo4Mqf0xfxmiVvB2ECRK0u5+P1sO490qlfPHelnctlfi82h1r
-         RFYKuCnK4dIocMxfD6m007ynAIY7VNpTVIihKcbrkXgkwR6DMaTQJx4CCm5Ci/S+1/Vv
-         zYJi5wEA0VZZnlPYLTO48oOBcTKYBe8iAZT5fx36Gje3HG/yIOI6I+GBe4gaVhk9VRt6
-         xQCo0xpG5DY80m2TIJ6S1glu7f9vHjfxleRYKnnjxVSLQZzTtSQy9eGtGLWwn3pw5cHB
-         xnaA==
-X-Forwarded-Encrypted: i=1; AFNElJ8ePBMoQ21e3EL3rVFHfKkqQfWIx1X3xU775yK5fIGm0v7ryVKCuK+R8+ZZgHCvRoL10HyoHKFbSFifbkbjnA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNAH+b5zvPBeP0cTugnJuxljdozysiVmfR86rjJwFjZcieLgZg
-	f6EUBKbYypJYATlJlbwL7DF/G/IKRVc5RwGULSTRp019igQj4MLv9gCdRqNSXfWugW6Ov6SUEd3
-	yNfsKsTKsNF/ckxXxWmU2wBgveMyts24=
-X-Gm-Gg: AeBDieteQYmPWwzZ+BZxSPc8hpLgK9z94MkXLp3ikQSaDDYxJKMFtDHSpIyrim+AS7R
-	uVc1CVViHSMJEtz+46/ALnlr4+wIDBVpwAfCwaRKukxiZaOE34en6GkBxt2+nxJAuZS3vyPAenv
-	419XVloY4aPBtSQQh0mYakTI/9EFpEwtKjQDLj+4iUhHp1x/qwP9RsYfMr88qelnKVceanyK3ig
-	lCkqlt9beZjyv/xFxF/FNKuzKzOD4WGbicbCeRNzA6LT+Njy1SuDQN9oVxQ3hJfH9t06y/N3+7M
-	vl3yyEBr9pm5R6dwP6c=
-X-Received: by 2002:a05:6830:828c:b0:7d7:cb13:3fea with SMTP id
- 46e09a7af769-7dc27db661bmr7953176a34.18.1776083744514; Mon, 13 Apr 2026
- 05:35:44 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517933CA4A6;
+	Mon, 13 Apr 2026 13:03:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=160.30.148.35
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776085383; cv=none; b=bwTHW/tkxY99tCwHUoJHgwpZjOo9A4zphWbzXQFy0xtA7LtE2/PHO1efJ1LD+FjrcqUYN4wmN8mwVemBWTxUOwUARtUUPAfmUc2U5/3KXlt4tN8Ag06OSFV/i1ujLw2Ka7S8QY8lALOq/meKjp99DeWScs8GUZysYV9QMRgJy4w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776085383; c=relaxed/simple;
+	bh=EaqCVYb3mYfVBkGOFXvjwb/3rY9FtA9tCj0m3HXl1VM=;
+	h=Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type; b=E2FS0Mr44aeB66UkFZZ48HBwLHb5fdRBLmTQBxQVz5NXFeYCHKayBV+YvqzRMyLWWMZotdcE8UVuOqgnJWdgvSquHcamJwPcAlejOKjwDI3H3z1zYaykGK886Psv5TPOdGgdFb8ePR7Cxzxv0mzvy+YwqZTUZXgT6Hqx4CVxngs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn; spf=pass smtp.mailfrom=zte.com.cn; arc=none smtp.client-ip=160.30.148.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4fvSJ26Vzyz8Xs70;
+	Mon, 13 Apr 2026 21:02:58 +0800 (CST)
+Received: from xaxapp05.zte.com.cn ([10.99.98.109])
+	by mse-fl2.zte.com.cn with SMTP id 63DD2n3P010875;
+	Mon, 13 Apr 2026 21:02:49 +0800 (+08)
+	(envelope-from hu.shengming@zte.com.cn)
+Received: from mapi (xaxapp01[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Mon, 13 Apr 2026 21:02:52 +0800 (CST)
+X-Zmail-TransId: 2af969dce97c49e-2c715
+X-Mailer: Zmail v1.0
+Message-ID: <20260413210252672ZfdcegJLJtyvlYdFAUBlr@zte.com.cn>
+In-Reply-To: <adyyNeVTkXQlnh_2@hyeyoo>
+References: 20260410120044.031381086@kernel.org,20260410120318.525653921@kernel.org,adyyNeVTkXQlnh_2@hyeyoo
+Date: Mon, 13 Apr 2026 21:02:52 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260413100249.28618-1-npetrakopoulos2003@gmail.com>
-In-Reply-To: <20260413100249.28618-1-npetrakopoulos2003@gmail.com>
-From: LB F <goainwo@gmail.com>
-Date: Mon, 13 Apr 2026 15:35:08 +0300
-X-Gm-Features: AQROBzCe4kEuLMn4PP_BqkhdxKKY0laQ4nGzylN9jxLNecOi8GhcYAxEhkwG_rE
-Message-ID: <CALdGYqRLsPs8+kyAYphmKxfN9qF=1aGgn0O1LaASmjkDSUup_A@mail.gmail.com>
-Subject: Re: [PATCH] wifi: rtw88: Add NULL check for chip->edcca_th
-To: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>
-Cc: pkshih@realtek.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+From: <hu.shengming@zte.com.cn>
+To: <harry@kernel.org>
+Cc: <tglx@kernel.org>, <linux-kernel@vger.kernel.org>, <vbabka@kernel.org>,
+        <linux-mm@kvack.org>, <arnd@arndb.de>, <x86@kernel.org>,
+        <baolu.lu@linux.intel.com>, <iommu@lists.linux.dev>,
+        <m.grzeschik@pengutronix.de>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <herbert@gondor.apana.org.au>,
+        <linux-crypto@vger.kernel.org>, <dwmw2@infradead.org>,
+        <bernie@plugable.com>, <linux-fbdev@vger.kernel.org>, <tytso@mit.edu>,
+        <linux-ext4@vger.kernel.org>, <akpm@linux-foundation.org>,
+        <urezki@gmail.com>, <elver@google.com>, <dvyukov@google.com>,
+        <kasan-dev@googlegroups.com>, <ryabinin.a.a@gmail.com>,
+        <t.sailer@alumni.ethz.ch>, <linux-hams@vger.kernel.org>,
+        <Jason@zx2c4.com>, <richard.henderson@linaro.org>,
+        <linux-alpha@vger.kernel.org>, <linux@armlinux.org.uk>,
+        <linux-arm-kernel@lists.infradead.org>, <catalin.marinas@arm.com>,
+        <chenhuacai@kernel.org>, <loongarch@lists.linux.dev>,
+        <geert@linux-m68k.org>, <linux-m68k@lists.linux-m68k.org>,
+        <dinguyen@kernel.org>, <jonas@southpole.se>,
+        <linux-openrisc@vger.kernel.org>, <deller@gmx.de>,
+        <linux-parisc@vger.kernel.org>, <mpe@ellerman.id.au>,
+        <linuxppc-dev@lists.ozlabs.org>, <pjw@kernel.org>,
+        <linux-riscv@lists.infradead.org>, <hca@linux.ibm.com>,
+        <linux-s390@vger.kernel.org>, <davem@davemloft.net>,
+        <sparclinux@vger.kernel.org>, <hao.li@linux.dev>, <cl@gentwo.org>,
+        <rientjes@google.com>, <roman.gushchin@linux.dev>
+Subject: =?UTF-8?B?UmU6IFtwYXRjaCAxNC8zOF0gc2x1YjogVXNlIHByYW5kb20gaW5zdGVhZCBvZiBnZXRfY3ljbGVzKCk=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl2.zte.com.cn 63DD2n3P010875
+X-TLS: YES
+X-SPF-DOMAIN: zte.com.cn
+X-ENVELOPE-SENDER: hu.shengming@zte.com.cn
+X-SPF: None
+X-SOURCE-IP: 10.5.228.133 unknown Mon, 13 Apr 2026 21:02:58 +0800
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 69DCE982.001/4fvSJ26Vzyz8Xs70
 
-Hi Panagiotis,
+Harry wrote:
+> [Resending after fixing broken email headers]
+> 
+> On Fri, Apr 10, 2026 at 02:19:37PM +0200, Thomas Gleixner wrote:
+> > The decision whether to scan remote nodes is based on a 'random' number
+> > retrieved via get_cycles(). get_cycles() is about to be removed.
+> > 
+> > There is already prandom state in the code, so use that instead.
+> > 
+> > Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+> > Cc: Vlastimil Babka <vbabka@kernel.org>
+> > Cc: linux-mm@kvack.org
+> > ---
+> 
+> Acked-by: Harry Yoo (Oracle) <harry@kernel.org>
+> 
+> Is this for this merge window?
+> 
+> This may conflict with upcoming changes on freelist shuffling [1]
+> (not queued for slab/for-next yet though), but it should be easy to
+> resolve.
+> 
 
-Thank you for your interest and for looking into this issue!
+Hi Harry,
 
-I appreciate the effort, but as I'm not a developer, I would prefer to
-wait for a review and approval from the maintainer (Ping-Ke Shih)
-before testing or applying any patch =E2=80=94 to make sure everything stay=
-s
-consistent with the official direction.
+Would you like me to wait for this patch to land linux-next and then
+rebase and send v6 on top?
 
-Ping-Ke, could you please take a look at this patch when you have a
-chance? If you approve the approach, I'll be happy to test it and
-provide a Tested-by.
+Thanks,
 
-Best regards, Oleksandr Havrylov
+--
+With Best Regards,
+Shengming
+
+> [Cc'ing Shengming and SLAB ALLOCATOR folks]
+> [1] https://lore.kernel.org/linux-mm/20260409204352095kKWVYKtZImN59ybO6iRNj@zte.com.cn
+> 
+> -- 
+> Cheers,
+> Harry / Hyeonggon
+> 
+> >  mm/slub.c |   37 +++++++++++++++++++++++--------------
+> >  1 file changed, 23 insertions(+), 14 deletions(-)
+> > 
+> > --- a/mm/slub.c
+> > +++ b/mm/slub.c
+> > @@ -3302,6 +3302,25 @@ static inline struct slab *alloc_slab_pa
+> >      return slab;
+> >  }
+> >  
+> > +#if defined(CONFIG_SLAB_FREELIST_RANDOM) || defined(CONFIG_NUMA)
+> > +static DEFINE_PER_CPU(struct rnd_state, slab_rnd_state);
+> > +
+> > +static unsigned int slab_get_prandom_state(unsigned int limit)
+> > +{
+> > +    struct rnd_state *state;
+> > +    unsigned int res;
+> > +
+> > +    /*
+> > +     * An interrupt or NMI handler might interrupt and change
+> > +     * the state in the middle, but that's safe.
+> > +     */
+> > +    state = &get_cpu_var(slab_rnd_state);
+> > +    res = prandom_u32_state(state) % limit;
+> > +    put_cpu_var(slab_rnd_state);
+> > +    return res;
+> > +}
+> > +#endif
+> > +
+> >  #ifdef CONFIG_SLAB_FREELIST_RANDOM
+> >  /* Pre-initialize the random sequence cache */
+> >  static int init_cache_random_seq(struct kmem_cache *s)
+> > @@ -3365,8 +3384,6 @@ static void *next_freelist_entry(struct
+> >      return (char *)start + idx;
+> >  }
+> >  
+> > -static DEFINE_PER_CPU(struct rnd_state, slab_rnd_state);
+> > -
+> >  /* Shuffle the single linked freelist based on a random pre-computed sequence */
+> >  static bool shuffle_freelist(struct kmem_cache *s, struct slab *slab,
+> >                   bool allow_spin)
+> > @@ -3383,15 +3400,7 @@ static bool shuffle_freelist(struct kmem
+> >      if (allow_spin) {
+> >          pos = get_random_u32_below(freelist_count);
+> >      } else {
+> > -        struct rnd_state *state;
+> > -
+> > -        /*
+> > -         * An interrupt or NMI handler might interrupt and change
+> > -         * the state in the middle, but that's safe.
+> > -         */
+> > -        state = &get_cpu_var(slab_rnd_state);
+> > -        pos = prandom_u32_state(state) % freelist_count;
+> > -        put_cpu_var(slab_rnd_state);
+> > +        pos = slab_get_prandom_state(freelist_count);
+> >      }
+> >  
+> >      page_limit = slab->objects * s->size;
+> > @@ -3882,7 +3891,7 @@ static void *get_from_any_partial(struct
+> >       * with available objects.
+> >       */
+> >      if (!s->remote_node_defrag_ratio ||
+> > -            get_cycles() % 1024 > s->remote_node_defrag_ratio)
+> > +        slab_get_prandom_state(1024) > s->remote_node_defrag_ratio)
+> >          return NULL;
+> >  
+> >      do {
+> > @@ -7102,7 +7111,7 @@ static unsigned int
+> >  
+> >      /* see get_from_any_partial() for the defrag ratio description */
+> >      if (!s->remote_node_defrag_ratio ||
+> > -            get_cycles() % 1024 > s->remote_node_defrag_ratio)
+> > +        slab_get_prandom_state(1024) > s->remote_node_defrag_ratio)
+> >          return 0;
+> >  
+> >      do {
+> > @@ -8421,7 +8430,7 @@ void __init kmem_cache_init_late(void)
+> >      flushwq = alloc_workqueue("slub_flushwq", WQ_MEM_RECLAIM | WQ_PERCPU,
+> >                    0);
+> >      WARN_ON(!flushwq);
+> > -#ifdef CONFIG_SLAB_FREELIST_RANDOM
+> > +#if defined(CONFIG_SLAB_FREELIST_RANDOM) || defined(CONFIG_NUMA)
+> >      prandom_init_once(&slab_rnd_state);
+> >  #endif
+> >  }
+> > 
+> >
