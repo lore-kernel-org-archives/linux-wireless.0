@@ -1,143 +1,143 @@
-Received: from flow-b2-smtp.messagingengine.com (flow-b2-smtp.messagingengine.com [202.12.124.137])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88BED3BF688;
-	Mon, 13 Apr 2026 14:47:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA193CCFD9
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 15:30:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776091635; cv=none; b=IV5gPyOMinZ2CXSgjRAdLPQRuWeCXwJdmRd6kTY4KzvqS30jFtXifbTRo4PsTK0mWVE/W9HiTVUvTYjxuEbK5JKEB4AEluUiW9SPQX5ac9ufoQNKpz28r1FU8ztem4wgqiuoUTDEn4xyTVcCE3SKtxXGdOQhuOTIke45AiorL/8=
+	t=1776094205; cv=none; b=hzOY1E0Y8x5w00kOyZeDIgH1eDg3AOPdk8r9f6verFHGyheygkU27zfts4XggEu9ZTJqLI4MQSm/B8uDvIXDv85LL2uI0vos0EPGI05aO809u1L6x8YRBb89eEDp6NdjmQvZuBJlKmiYS1x/5V0xGw3CGiJ6GnLrmrIEJakagHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776091635; c=relaxed/simple;
-	bh=ccx1+jkkLB7Tf4UGJS5J97TEDRY8WsVnf6JE5Wy3IZo=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=dzVw22tDkQboZ3gEAfdstCdCEEhIZbEisdw6bbGJHiGngy8cC4Igbu5kb0yJJ+1NBn7HQypJzyV9JF54uE870tywC8K9LJmTq1hriulGcxemLtCU1NrHuzpG9rgLceyHGV2yMHlrk+DaAM3bhYYwwk9efYPBUF577G7uoc5TPYY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=LmjozJUZ; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=P0Pt1FmZ; arc=none smtp.client-ip=202.12.124.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1776094205; c=relaxed/simple;
+	bh=hVSOI1QAA5tLK2nUoQnc5KPdyXGswaUlDt5gkQg9bUY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=H5LyCNKZ5hNl8z0YcVQDUbZh/FPWqEOOHrf43i4u5JtCAOeQVcmfO+JmHnqtVvvzcCqdeu8TMcFmMv+/VwlRzsgkWdrzw49CjotTu9Pu0bKmUv5gowi+7S2/DKqlFVi/LXqyufEEfS6LMetuI6lxtwUk+Yq5cvvEMYPx7H4S8ZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=L5gc9r61; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DgkZnHcS; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="LmjozJUZ";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="P0Pt1FmZ"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailflow.stl.internal (Postfix) with ESMTP id 9D38D1300479;
-	Mon, 13 Apr 2026 10:47:12 -0400 (EDT)
-Received: from phl-imap-02 ([10.202.2.81])
-  by phl-compute-04.internal (MEProxy); Mon, 13 Apr 2026 10:47:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1776091632;
-	 x=1776098832; bh=W8U2X4bSWSk5VTnZUgN69eu5y1WQZmUIaZ0lY5fFNYs=; b=
-	LmjozJUZ3Jo4aDvRnxjNH6xr8327RRDJ6AyS2k2jkDl2R8fkH9iYi8hT1huSnuvC
-	fDXAO9TCtk28z5Z0YRzjvQVLbECztWiZU5NNtbQMRNzTIEQrOcdJnQGPD479uwHR
-	1Q8ok3Usz/sph0Zc33WNDHZ2vRiLAUdkasmWlryN5Yu1+0d+T5ZkgPdaZcIJ9UoD
-	LUtaK6rfdZx/q8xdekwLUdfJgdU2tYY2BZBNb9nIAqnbcU5rOmuWMelD9Mi0vAHq
-	QCAxCp3Z9MPSmP03naZuWjoQXnxN4zfhCwznV9CiO4R52VmIdP6Rcnf+zUDjPDtN
-	UXIkYMXlY1W1R8FqtfdOMw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1776091632; x=
-	1776098832; bh=W8U2X4bSWSk5VTnZUgN69eu5y1WQZmUIaZ0lY5fFNYs=; b=P
-	0Pt1FmZA3nT0gW/fGFJhGWUXdXBIcnOnTz8lnGNEggRDBNRkkIRZZ0rbNBev1XVe
-	zzRDGJ8xdI8n86dT020680Fi59i8OYpo55O8jaokE2rcHortABYU2ULGblyCdcE3
-	N7NLqkhP0h69s0MdHh8xGt/qaV3yIfjS2nWfiqQJrucaxHGogEVfeVOAY1wEf+xi
-	uch3DjI8PEGZovPDIghE3cw7CjHIO63YZV2H2BcC52PGMn1wht6rI8JJJxiiCxXU
-	UkCntruu9nNGBjU41kcYr9A+IW1YiAyNflF4aBilp4WdS700qNhK6R4AGl4ZTHZ/
-	zTr464QHWbqiGWfEZOjQw==
-X-ME-Sender: <xms:8AHdaV4EBY4AfwcF1maxWFQ-UReN_owOou9m4dD7NbRoLveor065LQ>
-    <xme:8AHdadsjRmCe9WprTyyNQkCK8SO45WF8KHRoafxkQdvsEV90LRX-MaXp0aVyJYDZ6
-    EmCfA1Y7H0u_e3mR0Jcw_jjFYyaDaWXBKlPB5CHolc71f6zGRLy>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdefkeehudcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpefoggffhffvvefkjghfufgtgfesthejredtredttdenucfhrhhomhepfdetrhhnugcu
-    uegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtthgvrh
-    hnpefhtdfhvddtfeehudekteeggffghfejgeegteefgffgvedugeduveelvdekhfdvieen
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegrrhhnug
-    esrghrnhgusgdruggvpdhnsggprhgtphhtthhopeegkedpmhhouggvpehsmhhtphhouhht
-    pdhrtghpthhtohepthdrshgrihhlvghrsegrlhhumhhnihdrvghthhiirdgthhdprhgtph
-    htthhopegtrghtrghlihhnrdhmrghrihhnrghssegrrhhmrdgtohhmpdhrtghpthhtohep
-    lhhinhhugiesrghrmhhlihhnuhigrdhorhhgrdhukhdprhgtphhtthhopegurghvvghmse
-    gurghvvghmlhhofhhtrdhnvghtpdhrtghpthhtohepmhhpvgesvghllhgvrhhmrghnrdhi
-    ugdrrghupdhrtghpthhtoheprhihrggsihhnihhnrdgrrdgrsehgmhgrihhlrdgtohhmpd
-    hrtghpthhtohepuhhrvgiikhhisehgmhgrihhlrdgtohhmpdhrtghpthhtohepuggvlhhl
-    vghrsehgmhigrdguvgdprhgtphhtthhopehhvghrsggvrhhtsehgohhnughorhdrrghprg
-    hnrgdrohhrghdrrghu
-X-ME-Proxy: <xmx:8AHdaaT0cMKbTafw58cG7wQ0Qv82m8qZTRYyny1dj-38kCZwa83j9Q>
-    <xmx:8AHdaeqogwjtF2ldxXkdqczEsPcfDM_1nEYFfwCk0UufLkJUoruyNA>
-    <xmx:8AHdaYOz_3J7HsqPIEODLkY5cvhuJsZCBlh7QMGV8E4tu7K29uhBUw>
-    <xmx:8AHdabApMPQo1X_BPzpLf70mTWvAAr9UgFJYBxC3fw_K7vhbYwNivw>
-    <xmx:8AHdaZoXgvLSsnx7srnkGqW8Du6l-JaiK78sBGKrQgfs5kgyjB9M2EbT>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id E812C700065; Mon, 13 Apr 2026 10:47:11 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="L5gc9r61";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DgkZnHcS"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63DDxnS5479862
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 15:30:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	XsBZdzMgUZ1Ovc49Jq1ZuQrmf8Pz1UqW5hXCPZ7ghig=; b=L5gc9r61mJFDtKk9
+	T8/YFXIeg4zvO7QRN0AnnA1q99N35pFhSu5YWDoKrJhAldtGskpJJ96A2bSJHD1P
+	DVH/mpAzSDuJXL49jXmQRqgA8QYtbwqmzgGS125IqaqceJpxsf+UqvHSmjoCeo61
+	WDGyDe3iv/btnyY8LwVWu4YB11q+xYxTX0EyC+BrNcWv08q4X/PbjWB3qg7h1x7a
+	NAKI/th+gy/Fy6f+DKDs3EYsVdUpOP8A6Iopi2k61dx2N9t871qzNg+ER/he08zl
+	mdp5Y1WxpwCyOvIQl1vD2D2C64R5cbhanrCYuOo/iab410D9BF7Br89jNgVUd+mN
+	UFjf2Q==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dguuj9sey-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 15:30:03 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2b2ecc96a9aso15212335ad.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2026 08:30:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1776094203; x=1776699003; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XsBZdzMgUZ1Ovc49Jq1ZuQrmf8Pz1UqW5hXCPZ7ghig=;
+        b=DgkZnHcSc0QSAAZEWJfgoXCk/L9N5Pg2RSHnH6BqC0xG9/7/P2DlladtaT9XKdwez9
+         wWCXMtY5BF0H8PYe6cv4RUq8AxLs7lFndy8onOWHVaq9fnTg1Lps/or2oIsfQ/MO7SVt
+         DmqI3ewbmXPb1qvuNSem/BbOGnoBFa6ExMZMmnHZTZcJVPgwZ8y3PkWCfK8CfZtuZjLu
+         3yYZNkDVPY+XZr1UcktKdsM6reZ5FvjP3MuBoa0WYLtoMQelnpXdiQIYD9mkpXsD9IqT
+         wGRuLGqvTcVNnofp+doCGBaFJiLDURVU/7IGe34SYevIM51lHmXUN9JKFxwHejcNjqxR
+         nFFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776094203; x=1776699003;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=XsBZdzMgUZ1Ovc49Jq1ZuQrmf8Pz1UqW5hXCPZ7ghig=;
+        b=XyR+wlS4Uvw6Q0i/HueawGTMbks6yFvozwtg8auIE/N7oCge9kfiOixpPly79gMsWC
+         +kH1uJL/q5jlpSc1UCIqH+UTm/u5PQSkHfG0kOOmM3YReZM0KIpg17dglKB/pTyecROS
+         4GHF3vrVeygNlphATm2SamTTEwVrRcL47lau3M627KkWLsWLSK06bw2gyL8zVchpld+9
+         XI0CQyUcGGoVY6iSWuZfnnLXM5RvwS6A30xDloL9gXjpx9YMCrMnke8k+gg0CrCYTK0j
+         GHOcVIFBbTypZKW0DNdalvOE/NXW0PK23C4nGRiYAGGmrPYyjamReJTAHXUFpPefSvq7
+         KGuA==
+X-Gm-Message-State: AOJu0Yxk9uL83dWw21zEKF93KYcigv341tde0gVWhLc1sxQHCTorYCQD
+	YDw14a4ZkgfgfhQ2vd7pJPO2GaXhXyciXD+B9E4fg2DnXtdLcPeCBb8B2qiM8dT42TLoAql4Amz
+	GG/vtO7Zrd6hmrJpRkTPCM3jNS4QZ0J7qOK9O7rJOKyUPeLRJux7oursbN31xaEN0GQwfnA==
+X-Gm-Gg: AeBDiet9j4Dy24B96taFKxXl2LkeqTFWhugk1lkvDP1odWxc+bPewq1ZkFVS38A9ECl
+	dfdKxIWJMuLJ3+YFEBIOyoTOIsOSQdLvuKem3ZnXmoUk5qL4zMDKbiljqWoo/VU5pHZhyczPncI
+	b0aHDU/q6TFYL0Pv9vMH8UGK+bmFPeYsQV5AJ4Uwjg+eGk9L55kNZ0H73GjJ3Yse0riSMr6wJD3
+	HGdHD+BezjkhwcaxaT1LZJPADMayc3Gi6l6IXmKBGy9GlJqY7Z8LfAUcde3ugRHIw4/W3Rn/Mbt
+	lE+VohYUqr+ZWXr+UX4ppAwAc6h1K8Hw92iv/aw1rG6BBZbdfky3aR9PZYjnXD7UHRJQHAArR0I
+	fROGwAUf0cBYIH2oDTDzJAKaYNrzTDk9MlwAgLhhFrFEahH1mlmmqEPgfRbDdaJY=
+X-Received: by 2002:a17:903:292:b0:2b4:5cea:f619 with SMTP id d9443c01a7336-2b45ceaf903mr43676065ad.22.1776094202649;
+        Mon, 13 Apr 2026 08:30:02 -0700 (PDT)
+X-Received: by 2002:a17:903:292:b0:2b4:5cea:f619 with SMTP id d9443c01a7336-2b45ceaf903mr43675795ad.22.1776094202095;
+        Mon, 13 Apr 2026 08:30:02 -0700 (PDT)
+Received: from [192.168.0.2] ([183.82.204.171])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b45e949464sm49024015ad.24.2026.04.13.08.30.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Apr 2026 08:30:01 -0700 (PDT)
+Message-ID: <2e8dab9d-dbab-47ff-9b2a-d245b9ba064a@oss.qualcomm.com>
+Date: Mon, 13 Apr 2026 20:59:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: A4mZ2Su1YSkV
-Date: Mon, 13 Apr 2026 16:46:30 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Thomas Gleixner" <tglx@kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: "Theodore Ts'o" <tytso@mit.edu>, linux-ext4@vger.kernel.org,
- x86@kernel.org, "Baolu Lu" <baolu.lu@linux.intel.com>,
- iommu@lists.linux.dev, "Michael Grzeschik" <m.grzeschik@pengutronix.de>,
- Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
- "Herbert Xu" <herbert@gondor.apana.org.au>, linux-crypto@vger.kernel.org,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, linux-mm@kvack.org,
- "David Woodhouse" <dwmw2@infradead.org>,
- "Bernie Thompson" <bernie@plugable.com>, linux-fbdev@vger.kernel.org,
- "Andrew Morton" <akpm@linux-foundation.org>,
- "Uladzislau Rezki (Sony)" <urezki@gmail.com>,
- "Marco Elver" <elver@google.com>, "Dmitry Vyukov" <dvyukov@google.com>,
- kasan-dev@googlegroups.com, "Andrey Ryabinin" <ryabinin.a.a@gmail.com>,
- "Thomas Sailer" <t.sailer@alumni.ethz.ch>, linux-hams@vger.kernel.org,
- "Jason A . Donenfeld" <Jason@zx2c4.com>,
- "Richard Henderson" <richard.henderson@linaro.org>,
- linux-alpha@vger.kernel.org, "Russell King" <linux@armlinux.org.uk>,
- linux-arm-kernel@lists.infradead.org,
- "Catalin Marinas" <catalin.marinas@arm.com>,
- "Huacai Chen" <chenhuacai@kernel.org>, loongarch@lists.linux.dev,
- "Geert Uytterhoeven" <geert@linux-m68k.org>,
- linux-m68k@lists.linux-m68k.org, "Dinh Nguyen" <dinguyen@kernel.org>,
- "Jonas Bonn" <jonas@southpole.se>,
- "linux-openrisc@vger.kernel.org" <linux-openrisc@vger.kernel.org>,
- "Helge Deller" <deller@gmx.de>, linux-parisc@vger.kernel.org,
- "Michael Ellerman" <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org,
- "Paul Walmsley" <pjw@kernel.org>, linux-riscv@lists.infradead.org,
- "Heiko Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org,
- "David S . Miller" <davem@davemloft.net>, sparclinux@vger.kernel.org
-Message-Id: <90a889aa-f204-4ea8-8642-6752aa1955d8@app.fastmail.com>
-In-Reply-To: <20260410120318.727211419@kernel.org>
-References: <20260410120044.031381086@kernel.org>
- <20260410120318.727211419@kernel.org>
-Subject: Re: [patch 17/38] ext4: Replace get_cycles() usage with ktime_get()
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next 1/5] wifi: ath12k: handle thermal throttle stats
+ WMI event
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+References: <20260331142446.2951809-1-maharaja.kennadyrajan@oss.qualcomm.com>
+ <20260331142446.2951809-2-maharaja.kennadyrajan@oss.qualcomm.com>
+ <bb391f8d-e385-42b6-adec-171c21c67246@oss.qualcomm.com>
+Content-Language: en-US
+From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+In-Reply-To: <bb391f8d-e385-42b6-adec-171c21c67246@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDEzMDE1MiBTYWx0ZWRfXztMalT3cTTbf
+ eGEA7pK3Ik/f1eH2bMMRzKNwXV0k8xpAETrejie+vzvIKnOhvTN3Vej+xRPsvV3gCZwwkgtBFv4
+ lh6VTFFJ/dQGUa+xLK1wu94ltCn+v41Lla1y8O1R55bvgIQVS9Si5oyTTqd/kINGspzzFIOgR24
+ DWWo19aif906ADxCRhRImmlQp/dgMlFg7R8+Y6KVxrDuxnFaHI5AGiC60bWPRKwJR+DCrLTWAXg
+ mkRcEBRaF8z14cc+g9Sx2p324Y5FmjjfZPV7iojf8bf3BJWk9c0pkiXDTx9Jza9yZjPV5VAjocV
+ STZ8suWUN7E1vE5nKNidm2oNU2e/Pc1jM0GJMClx9J3SgML/I47wWFQkOLYcyoqUzZ0HYcSP6ha
+ 8106XeY4kImGix4v11AEq+UABkfP6uantiDJXHDJG6O42TgVIBV3gRrBDY8LXlWBrTYS0GMSQe8
+ uIKrNMRaXrIAj1/NtpA==
+X-Authority-Analysis: v=2.4 cv=c/ibhx9l c=1 sm=1 tr=0 ts=69dd0bfb cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=YJTfi758wS+jUHW9EIh7Fg==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=bC-a23v3AAAA:8 a=pGLkceISAAAA:8 a=WdzAzTw8HI4wpw2Cg8EA:9 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22 a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-GUID: gigKul_uKZw9Umgpq4C1xPmumOyTzFoS
+X-Proofpoint-ORIG-GUID: gigKul_uKZw9Umgpq4C1xPmumOyTzFoS
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-13_03,2026-04-13_04,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 bulkscore=0 spamscore=0 adultscore=0 lowpriorityscore=0
+ clxscore=1015 malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604010000 definitions=main-2604130152
 
-On Fri, Apr 10, 2026, at 14:19, Thomas Gleixner wrote:
-> get_cycles() is not guaranteed to be functional on all systems/platforms
-> and the values returned are unitless and not easy to map to something
-> useful.
->
-> Use ktime_get() instead, which provides nanosecond timestamps and is
-> functional everywhere.
->
-> This is part of a larger effort to limit get_cycles() usage to low level
-> architecture code.
->
-> Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-> Cc: "Theodore Ts'o" <tytso@mit.edu>
-> Cc: linux-ext4@vger.kernel.org
 
-I think this is technically an ABI chance, since the time
-difference gets exported through procfs, but the new version
-is clearly the right thing to do since it replaces a hardware
-specific value with a portable one.
+On 10-04-2026 10:54 pm, Jeff Johnson wrote:
+> On 3/31/2026 7:24 AM, Maharaja Kennadyrajan wrote:
+>> +static void ath12k_wmi_thermal_throt_stats_event(struct ath12k_base *ab,
+>> +						 struct sk_buff *skb)
+>> +{
+>> +	const struct wmi_therm_throt_stats_event *ev;
+>> +	struct ath12k *ar;
+>> +
+>> +	const void **tb __free(kfree) = ath12k_wmi_tlv_parse_alloc(ab, skb, GFP_ATOMIC);
+> please rebase on current ath-main, this interface changed with:
+> https://msgid.link/20260407095426.3285574-1-nico.escande@gmail.com
 
-       Arnd
+sure, I will rebase on latest TOT with new interface and send the next 
+version.
+
+> /jeff
