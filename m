@@ -1,59 +1,56 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F9A2224AFA
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2026 00:55:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C831E2777F3
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2026 02:03:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776128145; cv=none; b=eVIy4uaTTUbIKQj/DYCPPC5FtO9cZ+0pAY1i8fdFlkwgRtC65dUTDUj1pFLpl4DlxXN570wLnWxtpjWAguj2ckDDqLRqj2T5+sBEBjg7GnSIpLWTxLZgXH6PocD1XolEOjaSLIywiGuBIFjGz8UZwcYiVLWPdNIKq87yQebnwbc=
+	t=1776132236; cv=none; b=TJVM8Y9fgQKn3+d7jTV/UUI+OZSHsffObjeVYkDZYlALW47sMT1qMZVqJK3vEseibl7Z9ZbL6ZspOuyK2mVRO8aIkP8dh/OjMDeegdNVMMk/RQYCmXkxEeWEFUWmEP9f+KGu3OZsU1/Xirm2pQX1s7J7lXWdyeSeTHzIRqZHrCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776128145; c=relaxed/simple;
-	bh=I7AhpsRjcXSDEj+ZSjHYnCjfFvXtDbszMCC+VRx3wtY=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=bxsefhBbq7ceyxyF1sweoFhzYFNka/XISJZUxHDjB48SpDVihCdaCUzJ01Nr2repvjCHctz4WZvfidHNrCkQwf90IzHHAaEBfduHWUXUHNtmVABBY9Lo0f8qR5j8GrOrqpNnWOfHlg8Xc62VBtvMbl7TwA4PQWQ67oXTPeKSng8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=GomZ4vnt; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1776132236; c=relaxed/simple;
+	bh=VW+aCAzwIkfJoifkbt3tzD1vtoCjvW9idfIi+cNaT6E=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=rj9vLPNCf7DnafY01rQ7UZGYPhhnoLtAa8PSkNbowp/twxYtnReQSQVZHZhQU7KtufSdg0a4gDQdHtg0YNWOiqiUe0CmZLkzfJqaOAkMWZLXSd3lXfqqY6vaPqZVsfRqgUMcNtmkOaHxx0aqpRuetdFWB9gnesKLEen5+1zvEH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Z/b5JGLQ; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="GomZ4vnt"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63E0tRYc91020124, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Z/b5JGLQ"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63E23psF61137498, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1776128127; bh=lKbn22FWgghQXU/2YdJxBPJ4HcVjc53ZOwvS+HD4RtQ=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	t=1776132231; bh=Ks14jCKyc94k+kEyLz8l6XYnTjCSzlTnwyL2y/XS6oU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=GomZ4vnt6YHeJM1CaRrtAVF0mQhey5v6Lo7566Y58NgWIwcSfwwgCQLUbZSKjtk88
-	 0dIctO3h5KWYkuxedekqzWt8VqZepAnK9Z7ShRbg4v8dUmZxYzk5WR+kh0NUqtRusi
-	 dSKuR0vhQEHgVGzGwyYqycemiLMVrsYKSYf+VK4zMxsExSWxw6YjNEBI3RUrCOhVu2
-	 Xf+Fic+nhTdq4vj2y6S/sfxWav7ltfQbpGBDCJbg7zlBXjRXXUyuMvcU9y789dcqTu
-	 x3c9JgvUGRrF0I+bYM+2bUMd4X3pXlbU7vcxuOq4ua1Plt996HsiaIa2LezgJh7uNA
-	 tVvZl4Y67HGGw==
+	b=Z/b5JGLQ38WAJQxCfrm2ZrKLzVYNt4HqUH1sMYSLyN80R9H1d9T15PfYmyZxB9y+a
+	 fhTYSRtZ70XK3iMD7hQHqTGTSJBjxhHRl3ZQC/gTr4CXb8dLx9damlb18ML7nxfu41
+	 TegmeSiu1XUGEaflxR/n+diMnHjdD+MSSarj3V6PBQj3w4eBK5dhClEGcD+9Q4N3F7
+	 1/4yH3ai768TRwMD8SGMnaUggnOq5gPCPib4j6q3BmdguWt1SS+J1lCZVNcSAFXR2s
+	 J0UySkKTyojiw1nUHjuiZLKnd8YSnKJzV5NFJfaMVzzi37Fh5uHLfuitQbzkNK4rXq
+	 zKGHAKjAssdLQ==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.26/5.94) with ESMTPS id 63E0tRYc91020124
+	by rtits2.realtek.com.tw (8.15.2/3.26/5.94) with ESMTPS id 63E23psF61137498
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 14 Apr 2026 08:55:27 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+	Tue, 14 Apr 2026 10:03:51 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 14 Apr 2026 08:55:27 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 14 Apr 2026 08:55:27 +0800
+ 15.2.1748.10; Tue, 14 Apr 2026 10:03:50 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([fe80::ed72:3015:2840:4458]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::ed72:3015:2840:4458%10]) with mapi id
- 15.02.1748.010; Tue, 14 Apr 2026 08:55:27 +0800
+ 15.02.1748.010; Tue, 14 Apr 2026 10:03:50 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH wireless-next] wifi: mac80211: add __packed to union
- members of struct ieee80211_rx_status
-Thread-Topic: [PATCH wireless-next] wifi: mac80211: add __packed to union
- members of struct ieee80211_rx_status
-Thread-Index: AQHcyYS8LcuPkmNJGEK2JVXt8Skgn7XdvWiQ
-Date: Tue, 14 Apr 2026 00:55:27 +0000
-Message-ID: <280094f50a534fc998037b21c36ebe11@realtek.com>
-References: <20260411072509.1556635-1-pkshih@realtek.com>
-In-Reply-To: <20260411072509.1556635-1-pkshih@realtek.com>
+To: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "goainwo@gmail.com" <goainwo@gmail.com>,
+        Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH] wifi: rtw88: Add NULL check for chip->edcca_th
+Thread-Topic: [PATCH] wifi: rtw88: Add NULL check for chip->edcca_th
+Thread-Index: AQHcyyzTY+6cVUzujkaEJSe4anaYQrXdzaPA
+Date: Tue, 14 Apr 2026 02:03:49 +0000
+Message-ID: <aa92a81841ec4d1da48916153e07f31d@realtek.com>
+References: <20260413100249.28618-1-npetrakopoulos2003@gmail.com>
+In-Reply-To: <20260413100249.28618-1-npetrakopoulos2003@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -65,68 +62,80 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
-> The arm-linux-gnueabi-gcc compiler, align the field followed by union
-> members, causing size of struct ieee80211_rx_status over skb->cb
-> (48 bytes). By investigation, the union member starts at offset 32,
-> and the offset of next field rate_idx is 36 instead of expected 33, and
-> the total size is (unexpected) 52.
++ Bitterblue
+
+Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com> wrote:
+> It was recently reported that rtw_fw_adaptivity_result
+> in fw.c dereferences rtwdev->chip->edcca_th without
+> a null check. The issue appears to be that devices
+> with the 8821CE chip don't define edcca_th in their
+> chip info. As a result, when rtw_fw_adaptivity_result
+> tries to dereference it, the kernel triggers an oops.
 >=20
-> When compiling rtw88 driver, it throws:
+> Add a NULL check for edcca_th before dereferencing
+> it in rtw_fw_adaptivity_result() in fw.c and
+> rtw_phy_set_edcca_th() in phy.c.
 >=20
-> In file included from /work/linux-src/linux-stable/include/linux/string.h=
-:386,
->                  from /work/linux-src/linux-stable/include/linux/bitmap.h=
-:13,
->                  from /work/linux-src/linux-stable/include/linux/cpumask.=
-h:11,
->                  from /work/linux-src/linux-stable/include/linux/smp.h:13=
-,
->                  from /work/linux-src/linux-stable/include/linux/lockdep.=
-h:14,
->                  from /work/linux-src/linux-stable/include/linux/mutex.h:=
-17,
->                  from /work/linux-src/linux-stable/include/linux/kernfs.h=
-:11,
->                  from /work/linux-src/linux-stable/include/linux/sysfs.h:=
-16,
->                  from /work/linux-src/linux-stable/include/linux/kobject.=
-h:20,
->                  from /work/linux-src/linux-stable/include/linux/dmi.h:6,
->                  from pci.c:5:
-> In function 'fortify_memcpy_chk',
->     inlined from 'rtw_pci_rx_napi.constprop' at pci.c:1095:4:
-> /work/linux-src/linux-stable/include/linux/fortify-string.h:569:25: warni=
-ng: call to
-> '__write_overflow_field' declared with attribute warning: detected write =
-beyond size of field (1st
-> parameter); maybe use struct_group()? [-Wattribute-warning]
->   569 |                         __write_overflow_field(p_size_field, size=
-);
->       |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~=
-~
+> Tested on a 8822CE chip which defines edcca_th, so
+> this issue is not present on it, but it still uses
+> this driver and I can verify there are no regressions.
 >=20
-> After this patch, the size of struct ieee80211_rx_status is 48.
->=20
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Reported-by: Oleksandr Havrylov <goainwo@gmail.com>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D221286
+> Link:
+> https://lore.kernel.org/linux-wireless/CALdGYqQriS7mP0vj_rm_xvisfzFVh0hbp=
+y+---48r6bodZO7tg@mail.gm
+> ail.com/
+> Signed-off-by: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>
 > ---
-> Because of size assertion of rtw88's efuse map [1], I found
-> arm-linux-gnueabi-gcc compiler throws this warning, but x86 gcc is absolu=
-tely
-> silent and expected without this patch.
+>  drivers/net/wireless/realtek/rtw88/fw.c  | 3 +++
+>  drivers/net/wireless/realtek/rtw88/phy.c | 3 +++
+>  2 files changed, 6 insertions(+)
 >=20
-> [1]
-> https://lore.kernel.org/linux-wireless/7c65e315-5a2e-455e-87ee-8fc6d60ed8=
-07@gmail.com/T/#m43fdf8a1
-> c2b8cff92c1ef50faab7993522647162
+> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wirele=
+ss/realtek/rtw88/fw.c
+> index 48207052e3f8..c4819ef6d54d 100644
+> --- a/drivers/net/wireless/realtek/rtw88/fw.c
+> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
+> @@ -284,6 +284,9 @@ static void rtw_fw_adaptivity_result(struct rtw_dev *=
+rtwdev, u8 *payload,
+>                 result->density, result->igi, result->l2h_th_init, result=
+->l2h,
+>                 result->h2l, result->option);
+>=20
+> +       if (!edcca_th)
+> +               return;
+> +
 
-I'd note that discussion thread [2] of original kernel test robot.
-Arnd pointed out the cause is CONFIG_AEABI is not set, and he said
-nobody should be using ARM OABI any more.=20
+As Bitterblue analysis, this might be a garbage, so I'd return at the entry
+of this function.
 
-Maybe, we can ignore the CPU and skip this patch.
+>         rtw_dbg(rtwdev, RTW_DBG_ADAPTIVITY, "Reg Setting: L2H %x H2L %x\n=
+",
+>                 rtw_read32_mask(rtwdev, edcca_th[EDCCA_TH_L2H_IDX].hw_reg=
+.addr,
+>                                 edcca_th[EDCCA_TH_L2H_IDX].hw_reg.mask),
+> diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wirel=
+ess/realtek/rtw88/phy.c
+> index e2ac5c6fd500..c10eb28e54ad 100644
+> --- a/drivers/net/wireless/realtek/rtw88/phy.c
+> +++ b/drivers/net/wireless/realtek/rtw88/phy.c
+> @@ -161,6 +161,9 @@ void rtw_phy_set_edcca_th(struct rtw_dev *rtwdev, u8 =
+l2h, u8 h2l)
+>  {
+>         const struct rtw_hw_reg_offset *edcca_th =3D rtwdev->chip->edcca_=
+th;
+>=20
+> +       if (!edcca_th)
+> +               return;
+> +
 
-[2] https://lore.kernel.org/lkml/6b6310b8-2b0d-4390-992e-5ccd81cef2e0@app.f=
-astmail.com/
+The callers of rtw_phy_set_edcca_th() are RTL8822B and RTL8822C, which both
+define rtwdev->chip->edcca_th. How can edcca_th be NULL?
 
+>         rtw_write32_mask(rtwdev,
+>                          edcca_th[EDCCA_TH_L2H_IDX].hw_reg.addr,
+>                          edcca_th[EDCCA_TH_L2H_IDX].hw_reg.mask,
+> --
+> 2.53.0
 
