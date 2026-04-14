@@ -1,39 +1,43 @@
 Received: from mail-08.mail-europe.com (mail-08.mail-europe.com [57.129.93.249])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D4F527E049;
-	Tue, 14 Apr 2026 04:39:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39C18282F33
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2026 05:02:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.129.93.249
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776141581; cv=none; b=crQnOW/3cibcWayS4KDDY/kOewt4oZN4uZ6OK/lJQsGTxLm9PlkZpAFpjD/HjRvwga4QCIoyFwfqza9nkUtZi71qt807008ZkDv9QY0YxwtK98tW1cCQGGA4eJiW/fuK2m0H1nZXB8Y1c/EK2MuTie2YRu/PyMXjMRXgyZL6o08=
+	t=1776142966; cv=none; b=omYIDvwKe/WU2Uac8Brutsj+v6Hc386pBXlgULLK7EKDSeRA0oDOzaywey1zreqN/RpMZYu2sB63gfLp2gIsb6YayEyQyR3vbMgI4q0Hq30QN6QkaUl77o9dbqddliwT9KuSozAv2OuPE3Ka1e0UNZvaQqG2H5K+tP6wIi1H4hI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776141581; c=relaxed/simple;
-	bh=quadcf+F3w95Vv4EffkoWEgj0LG46W18oiyVW2rhqjk=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=aYp+PT7zmdG8KnS/liCJYVgl1d/2s9xbNFuKE4Up645fCYN1K1XofjZ0BYYSY5FqmQe8F7U61kh2T3WCLPejbI+d5sH8awXlgo8CvJPYMg2NcMkD57o5mAD/hFdeSO559L0Qq/im1JfPB/oQsYwywxjwwUVHugypuZgJfY3VEb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me; spf=pass smtp.mailfrom=r26.me; dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b=Mz3aj62z; arc=none smtp.client-ip=57.129.93.249
+	s=arc-20240116; t=1776142966; c=relaxed/simple;
+	bh=OCWLcsNHwCEk6LHbC54ErXgKWLnSLLirH7MrRfWtx/o=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=rb8OOJoaVSfGd5QjjqzfAhLbCL6NqgnX2xuxd0AL5hK2Sdwtl0jBvaB5eRyLNFV5jxb1s8WQ+EOPUhhaJDK5veV6UtRc5pF0Y+7PO821PiC17ckyd0HCmGx/zdelJWS2UZcI4r5jxijtUUX4W9Mvx9inznnV2ABADSm7OxlxcqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me; spf=pass smtp.mailfrom=r26.me; dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b=pciELZ1d; arc=none smtp.client-ip=57.129.93.249
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=r26.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b="Mz3aj62z"
+	dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b="pciELZ1d"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=r26.me;
-	s=protonmail; t=1776141566; x=1776400766;
-	bh=quadcf+F3w95Vv4EffkoWEgj0LG46W18oiyVW2rhqjk=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=Mz3aj62zCEj1YXAHW18Q0nT5KzG13NEbzyojDuj5xpANonu6BC+IZ8RB+axJMmTmR
-	 ctG1wW5B1ReMljmW1kIXkpGopDmY9TFACTlxBLfFnDfT5XwShrEft+QwZZZnqQsJtX
-	 dYoAOmjapvpyHYhOJfDkJFRDbRbUutrVWRSxwYpYhCFl13moPeVi0eoA15Try2RYXr
-	 I758Tv9GjnAurx7Wcz5pTSNfqkkYBTyO8FjKYvAjT5C53qpXTVOleUrmWuP5BmHrBV
-	 tgB7meivNDqPwhr6K9AmJjeoGc2q8NCbVHfqaMISmmTB47u/WexJjT2K60xb2bj867
-	 o2XEDlTstuT3w==
-Date: Tue, 14 Apr 2026 04:39:24 +0000
+	s=protonmail; t=1776142951; x=1776402151;
+	bh=OCWLcsNHwCEk6LHbC54ErXgKWLnSLLirH7MrRfWtx/o=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=pciELZ1d9XEsOXKnyAdFvX4fin0TH6YjSqA3xZktddGHRvoT/teGA1YvIVcRlR8hp
+	 x6wwj6vezwRisTwGfL+jdraXMty0Eb4iwhyrJoSyfYsiqSDoVEk+5FjWw0b4XcE3ri
+	 YnUJDLKrCh5QFGRpdWqqFcioRkcv2RaqpSjKBExFw5ZRIDZ39we6YHUOdygC6HJPfT
+	 tmfncuycxahorSmqTJNq4+pHh0FjgWtryIh0mzpAs4Yh5AsRSKM0bd4Zcfm4YlT9Wi
+	 7PaxxeBw8bkW9DCX/PgJ7fpCW4OPC0yF6dBQiCqdyNk2Ifx2eu1Pt0FCp99IOZd/a4
+	 KLfDV1GJi5ZrQ==
+Date: Tue, 14 Apr 2026 05:02:26 +0000
 To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 From: Rio Liu <rio@r26.me>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "johannes@sipsolutions.net" <johannes@sipsolutions.net>, "benjamin.berg@intel.com" <benjamin.berg@intel.com>
 Subject: [PATCH] Skip ieee80211_verify_sta_ht_mcs_support check in non-strict mode
-Message-ID: <7h5kwW8K-FIgMb5P9VQ1BwuECi1JtpQP3RNBytb3F0k2g6DtBAnz65o1smDvWOr2ag9Kla-YpMSGyN1NsU7yYslLU-K9NCyTAxjyx-PEEF8=@r26.me>
+Message-ID: <AKVRf_yEu2mRCJekCJpre5xXMuHa_3_dO7_H1UU8fiKZRjJUf96ZKepiR999NwpiVwmzWBYoKipBpx1rqZatVihMYOCvANUnbeoyI2U7ct0=@r26.me>
+In-Reply-To: <7h5kwW8K-FIgMb5P9VQ1BwuECi1JtpQP3RNBytb3F0k2g6DtBAnz65o1smDvWOr2ag9Kla-YpMSGyN1NsU7yYslLU-K9NCyTAxjyx-PEEF8=@r26.me>
+References: <7h5kwW8K-FIgMb5P9VQ1BwuECi1JtpQP3RNBytb3F0k2g6DtBAnz65o1smDvWOr2ag9Kla-YpMSGyN1NsU7yYslLU-K9NCyTAxjyx-PEEF8=@r26.me>
 Feedback-ID: 77429777:user:proton
-X-Pm-Message-ID: 5afd1e4c48b0cd47de51767ea5ec762a8f111317
+X-Pm-Message-ID: 3024d96ba447ae0cae267b55b94a25e2c14dfc74
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -43,4 +47,65 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Empty Message
+Some AP advertise 3 or 4 spatial stream MCS indexes in their basic
+HT-MCS set. On cards with lower (2x2) spatial streams, the check would
+fail, and we'd be stuck with no HT when it in fact work fine with
+2-stream rate. This change makes it so the check is only performed in
+strict mode.
+
+Signed-off-by: Rio Liu <rio@r26.me>
+---
+My previous mail is showing up as empty on LKML for some reason.
+Apologies for that, trying again.
+
+There has been some reports that WIFI speed is capped on some routers:
+
+Link: https://linuxcommunity.io/t/intel-ax210-speeds-capped-at-20-mbps-on-m=
+ultiple-distros/6708/28
+Link: https://bbs.archlinux.org/viewtopic.php?id=3D312952
+Link: https://bbs.archlinux.org/viewtopic.php?id=3D313033
+Link: https://www.reddit.com/r/Rogers/comments/1s89j9f/xb8_5ghz_dfs_channel=
+_broadcasting_at_54_mbps/
+Link: https://www.reddit.com/r/Comcast_Xfinity/comments/1s7fc3f/recent_firm=
+ware_update_to_wifi_gateway_breaking/
+Link: https://www.reddit.com/r/Comcast_Xfinity/comments/1sg9r6z/slow_intern=
+et_for_linux_computers/
+
+Apparently some APs advertises higher MIMO streams than the device
+supports. In that case, HT-MCS check would fail and we fall back to
+20MHz channel. A patch exists here that bypasses the check completely:
+https://github.com/WoodyWoodster/mac80211-mcs-patch, and have been
+reported to get 80MHz channel back.
+
+This patch adds a check on STRICT flag before verifying HT MCS set from
+the AP, similar to how it is done in ieee80211_verify_sta_vht_mcs_support.
+---
+ net/mac80211/mlme.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 810bea1aacc5..0e33733ac634 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -419,6 +419,15 @@ ieee80211_verify_sta_ht_mcs_support(struct ieee80211_s=
+ub_if_data *sdata,
+ =09memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
+ =09ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
+
++=09/*
++=09 * Some AP advertise 3 or 4 spatial stream MCS indexes in their basic H=
+T-MCS
++=09 * set. On cards with lower (2x2) spatial streams, the check would fail=
+, and
++=09 * we'd be stuck with no HT when it in fact work fine with 2-stream rat=
+e. So
++=09 * check it only in strict mode.
++=09 */
++=09if (!ieee80211_hw_check(&sdata->local->hw, STRICT))
++=09=09return true;
++
+ =09/*
+ =09 * P802.11REVme/D7.0 - 6.5.4.2.4
+ =09 * ...
+--
+base-commit: d65b175cfac64ee65506eea7fa573d291a9694ca
