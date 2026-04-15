@@ -1,72 +1,74 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9954C394463
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:23:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB65D3909B6
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:23:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776291797; cv=none; b=GmT9X8LINjmurcckehW+MAIkPo3jVEt5KNxFj2PqEJ+wxd254d76fFFIP49rMxFyI2Co6571CT+jMGK2DaHStvjy/ie9ZAOFNVN4xW4Ylm/8jqYOM1ZNN2b4ND1YgMoUP5zkChFkGttJYt+ebdb1w7eCWeUQfYRBrji/+IGd6WY=
+	t=1776291805; cv=none; b=P+F0iPnWf5No7hpaxL7C9LvQ1aliCnd0PqmmgufAuhbTJAShERhi1NPdnf72vR30p3SUE/SzZbPx1dTiFtmPr19hmtW7Rc4JsmvnmuGviBetTIUx9fkkyZaWxo8PSBvO5QS1xSCBuOJ+FfPRqx/D3YK+hjGdhqaQ1ObGc7kuvCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776291797; c=relaxed/simple;
-	bh=lvIZcEnA1Xr8BvwLhhibnIOHVWeM+A2VwaOHYI2m2Qw=;
+	s=arc-20240116; t=1776291805; c=relaxed/simple;
+	bh=tGljGO9tzKW8lni6xeMPD7R0c/Mxcc3qq+fWX9qFIS0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hDlEDqUzmbgYI9fKXmto1h5T+UfmJ7C9qyHgpWc8KYOk7C05/9Af5XTNzHRMZvf5ExUFq+galX+8CEunKTKyxAzPDEbG5sUCNP9Svq3P+uQrb83cNmNeYBZkd4LNdunQOxerBAsEyKldYov46Lsb9PVnLonl7vOvJp7SpIgnKiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EUjYv7tC; arc=none smtp.client-ip=209.85.128.47
+	 MIME-Version; b=NMBsIpu/72xHkdZTTUnnm+i+To1c4CaBqbjRGhPF/oaUjAOOyZANj6oA0XMJMcP0on3xtxRfQP8ZBKirzfWQvIJ9mEcBWKp7G69MGiKJRthYNJZvgk6hzAxmfMURT189lFUcI11EEzZ00PwkOc3ylS1GfrZQ01cMtoLh4hiIERQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mcnkJsOv; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EUjYv7tC"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-488b00ed86fso74536715e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:23:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mcnkJsOv"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-488e1a8ac40so66783325e9.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:23:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776291794; x=1776896594; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1776291801; x=1776896601; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pGRAAzpvd07h97fVtYsZEQ5p5WwJfIFgjHO7stV6AD0=;
-        b=EUjYv7tCtLn4Lw40LM/cqaTSeuRVqJT3CNYzT/N90euxOz6vDH8PYtkg8RqE9Zfv+e
-         0l5aWvwaL8ORCEvqHb7PL7QQevNbtzsqMBU/c96qogoQW+FUDA0cHbvD2GVvIl+hdqgR
-         k51FK3YK4W8anm/OzLAaW480UBPDTKBQeKTt8V8m7nqqrArmIXJmB6NeC84231Z6mn5G
-         34VDotQA633BdQhLHMNhAF+Us44weYyU/IXeahScAngGRLZRiyqIqZ2paW17ml7ZbxVC
-         jGx19mvSkzqNIRFHMtXfXfy9xh6akMfYEQBko5vGjtXh31szKtAnOMJahRYyL/4b93xR
-         LU+Q==
+        bh=fPRO7u5vAVBFmWntFw1KXmo+AzHAOpXCPHhKh6Z1jzs=;
+        b=mcnkJsOvD46gyQNcdfpupUrGFqSdR3m4Q+FDSEdnUfHHyqX/7AYQ6FcHkXQVoTrslC
+         jvbFeqoVq1rTYaZdwgstdMq7Sq931OHhTRNg9Az5Vl5ztXVVZb8/EvTptTy2XPps9mgJ
+         5HZR4qO/bMZvjUTWrey/JoVvhhsvqZcUOIEDhI+oB96d28g0FUEAxyH7kH6Iy0BDstZ1
+         tv78sRzE+zIaxmo3aXbR9/yTZdaRtjHoisCvxgim/rTK9gePOGWYJM8RppE3gePYXIn7
+         e3uy6b4q/kNE135wbw3Iv+qou4vPiN0Qb21gS6Xn5uuV4wV8nO/OcmCqJkODyQN6FsuM
+         1XTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776291794; x=1776896594;
+        d=1e100.net; s=20251104; t=1776291801; x=1776896601;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=pGRAAzpvd07h97fVtYsZEQ5p5WwJfIFgjHO7stV6AD0=;
-        b=G54DIqO6xZWBy15mk1dDN2GfWdanILh6NDhH13BLVsoj0BgAEwfL++vkkEU6W0xUQJ
-         mWh3+WOjA8FG2E5u7TOhlQqOVehpQn5rk/0dIdLieJ7J+z66Bx1G9ROqIV3f6NcazC2J
-         1aAlcOi19g3+40JYReqML+4Na6zao0hbDOuwPLuJOxE21G09HBX4NURUUsAQT0kwuxmJ
-         jRXp49fkrWZrj1vdiiw4fpvT9KhO0wkQkc0qFRRPc1unFRd5WVI8au+G4fB1WfjINGMk
-         8g0EYyA6Lk+gQjvaVeA7Lp3ge1Sp3nVWr/Z0Iky4jR8rBpiUBEj0dp/m2JRR40qwZxXB
-         Ffew==
-X-Gm-Message-State: AOJu0YxkQnDui5zcP7yU+SAosnP0hrVbM2HkHKUSwJeFP+eqc4J+nfZl
-	cKR8vMj9Nrh8pJVwuSpm2d6tDg9XiMK3VHNqSCc/tZOjqSWvNmJhcWNrU0iUCfQQWw==
-X-Gm-Gg: AeBDietfjaZXKyEjiIP9XNUhMw4Ej5qTIMW99rGHccloObWA8JJlmEBeMMaqCXFwzv6
-	BFGSsh6UWI171v71ujnOAcS3kGfNt/elxrmjhOTV8ChN9bU0OtBhncq/hN8hN+pNs5KqcqXVqbP
-	c3adXg56AArxiEQI2JhyJuEbUVhhKdZ3/J3B4lGDARdCNvx6ARp77eJVgccs/QKZ9lvgszWkcZZ
-	8qWsuw6hrwjivRlrSIwq8+qD2S7gM0jpk2damT5F4gDd50FyXz6rPtVLlNN3kHTV/cmT48lySfN
-	FgU1Tp4h8uu02MRnqVZbsrfrLwEwrz5+oV0ZN0ALhrEQxvfWs+ZRL0rzMK8ORt/wUgdfyNxLEUw
-	zAkE8RgaDVWSBrb2ybAMsNtWGAEsPTII4CozXp9GMqj/jP/0KLdP50HFckJdeqxAWNhjfMwzWDh
-	mC4+F+5A1sv8z8yQ==
-X-Received: by 2002:a05:600c:46d0:b0:485:40c6:f507 with SMTP id 5b1f17b1804b1-488d689dbfcmr327948095e9.30.1776291793932;
-        Wed, 15 Apr 2026 15:23:13 -0700 (PDT)
+        bh=fPRO7u5vAVBFmWntFw1KXmo+AzHAOpXCPHhKh6Z1jzs=;
+        b=qx2na+QL6Ju+M7ixNEH8MYEcDceQ8wenb4KrhQlYTiLKu1aZ2fLEXIVE13MQiwYkEl
+         bVrC0jvVit8IrmuRug+Nz5a9Vo+9wUuSwF5MAw0q1Dph/ANHMNqap279nRN6EpdZguit
+         xHQ3HLKI8HSg1/oQ4VgrspWeKDRlR5zEB1E94B2awX5WDPFi36w60y6Htr45a4BTCG+M
+         fAMshASOVOD2cLbr5YSag78RXabRHscYSQ/jhdA7xhB48HWnQzBpe9yx2o0QV+rYLUnF
+         wL4BUuzVbUoONmX4zbQOscFrCP7i1Oj9d2+nYEEvHcJ/jUp4T4k2YaIxTS0wKu4DeD/B
+         oVkQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+zXwmFnx8A7u8ujnjnhizUt80DH7eNagWx1HGWxG1m1hP+N6XQ6k35TCDTpw+bzgnYRh/caWJOQeygHtJIyw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yymmj9nWs21W6KIeoK309Yph2lLcVCRRxJuanH28U804L2P0U6q
+	uAt8xk3ZaC6c2xBgbwnNTusnT46nF/HH/62p5PMksR6UW8lZmFz08nc=
+X-Gm-Gg: AeBDietnOLNdSzpBGMmtBVQbK7UjY107Rfo9vCmQBtp1/b/5REFC+dhuckFez4sttul
+	yT5xDf5+u3rvGhmgJq8y5YyHMmB2pYC3Lt45pW1/702IQ0vxHXx+4fP6g/GFk/POFbJj0D6YU7h
+	HTYqIrxZvYUamEzm/f95p4/DCfIhUODFzRGoUCK5hlwNHb1k9aus4uKlqczL0SMq8IWJ8V7+eLs
+	2a2/jLbSnWn2nzOoWS83hF12aL01yRWS0WG0Z4Yf7M0UgigmExQfNGpxltm70Kk94HY3PtJRd5Q
+	AL7W7GAN9phnnSw1Z85SsdO1/ys9emJkeA8HYkmYzPrlfQs/JeOkG8mZVhEp8hBWuFZIb3l2YgZ
+	3M8aI0NJTyPobyWm7CQQi0+1O5l/90DZ1lijLJlXGdp9y6zbgfGjLLsv/+kqH+qPlhyXPoSrqat
+	bjZ3w=
+X-Received: by 2002:a05:600c:5d4:b0:488:d6eb:e63c with SMTP id 5b1f17b1804b1-488d6ebe787mr192488315e9.15.1776291801139;
+        Wed, 15 Apr 2026 15:23:21 -0700 (PDT)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead3d5eb4sm8662959f8f.20.2026.04.15.15.23.13
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488f0e9a742sm28702585e9.14.2026.04.15.15.23.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Apr 2026 15:23:13 -0700 (PDT)
+        Wed, 15 Apr 2026 15:23:20 -0700 (PDT)
 From: Tristan Madani <tristmd@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 5/5] wifi: rsi: fix infinite loop when firmware sends zero-length packet
-Date: Wed, 15 Apr 2026 22:23:07 +0000
-Message-ID: <20260415222307.1537309-6-tristmd@gmail.com>
+Subject: [PATCH v2 1/3] wifi: carl9170: bound memcpy length in cmd callback to prevent OOB read
+Date: Wed, 15 Apr 2026 22:23:17 +0000
+Message-ID: <20260415222319.1538389-2-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260415222307.1537309-1-tristmd@gmail.com>
-References: <20260415222307.1537309-1-tristmd@gmail.com>
+In-Reply-To: <20260415222319.1538389-1-tristmd@gmail.com>
+References: <20260415222319.1538389-1-tristmd@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -77,33 +79,41 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-rsi_read_pkt() reads actual_length from the frame descriptor as a u16.
-When the firmware returns actual_length == 0, the loop's index and
-rcv_pkt_len counters never change, creating an infinite kernel loop.
+When the firmware sends a command response with a length mismatch,
+carl9170_cmd_callback() logs the mismatch and calls carl9170_restart()
+but then falls through to memcpy(ar->readbuf, buffer + 4, len - 4).
+Since len comes from the firmware and can exceed ar->readlen, this
+copies more data than the readbuf was allocated for.
 
-Check for zero actual_length immediately after reading it from the
-descriptor and bail out if invalid.
+Bound the memcpy to min(len - 4, ar->readlen) so that the response
+is still completed -- avoiding repeated restarts from queued garbage --
+while preventing an overread past the response buffer.
 
-Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
+Fixes: a84fab3cbfdc ("carl9170: 802.11 rx/tx processing and usb backend")
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
-drivers/net/wireless/rsi/rsi_91x_main.c | 3 +++
- 1 file changed, 3 insertions(+)
+Changes in v2:
+  - v2: bound memcpy with min_t() instead of adding early return after
+    carl9170_restart(), per Christian Lamparter's feedback. The restart
+    path must handle queued responses gracefully.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+drivers/net/wireless/ath/carl9170/rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
 index XXXXXXX..XXXXXXX 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -168,6 +168,9 @@ int rsi_read_pkt(struct rsi_common *common, u8 *rx_pkt, s32 rcv_pkt_len)
- 	do {
- 		frame_desc = &rx_pkt[index];
- 		actual_length = *(u16 *)&frame_desc[0];
-+		if (!actual_length)
-+			goto fail;
-+
- 		offset = *(u16 *)&frame_desc[2];
- 		if (!rcv_pkt_len && offset >
- 			RSI_MAX_RX_USB_PKT_SIZE - FRAME_DESC_SZ)
+--- a/drivers/net/wireless/ath/carl9170/rx.c
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -151,7 +151,8 @@ static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
+ 	spin_lock(&ar->cmd_lock);
+ 	if (ar->readbuf) {
+ 		if (len >= 4)
+-			memcpy(ar->readbuf, buffer + 4, len - 4);
++			memcpy(ar->readbuf, buffer + 4,
++			       min_t(u32, len - 4, ar->readlen));
+
+ 		ar->readbuf = NULL;
+ 	}
 --
 2.43.0
 
