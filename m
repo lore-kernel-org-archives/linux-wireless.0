@@ -1,50 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00FF53382CB;
-	Wed, 15 Apr 2026 12:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C941634D3B5
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 12:12:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776255112; cv=none; b=o7jwswYzhBHnHzmc0gHgKJVr1rPupVUfAmm5MK3ARbWeIuXArAgas+zujNEi7gp+Wod0UshC1ERMewexRNiY6xh0At465w+4u+6WwyUUMvqU7I/BfqIgnRnXIbPSB/ihW+KkerxrBG+BSL6X2ITy9uhz7WegnTLgyNsx/mzk7Hw=
+	t=1776255176; cv=none; b=n/vqlPVbU+SQMCPusrI3j9y6n/HkaB30FOHjNRAuzBDjkrp6nraUuG0oWesmVAngRYUNU/4/F+l4tQeC8N/G5d6DRT7+tAxKdaSJ2GG8v+qiV+IvbqmDWo1GVj3V0NBTJPIXlOubY4uq9CsXrGkGTwqyVzLLfxXjCnYZlpX16OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776255112; c=relaxed/simple;
-	bh=4Uu9x+Wy2nBT3wpP+N7Z95qtJ+GomHU1dMyPdeiy+Zs=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=lb7psYF217jUWGn42E5fhneS8d9n7KAbBDUSmya8v+zSn0selgzV5/Dka7lrJwHf2MrXb8byHa0g+sIAUiQby/i5PCQ4TzgQ4TESk0020evS/mAgS6up3+aMeLQ9p4p6xtscxR7wjLJU9J5JGQnFnKeruc/ADBJK181AWZdid24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PRN7VCte; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1776255176; c=relaxed/simple;
+	bh=V47QstzcxjQgrEIc4raXpZ7cg3JthIkx0h0koXK4RDw=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fDv9mtYqyF2E1Rfr2P9qP56PZyBWu1GLtBD+m0yFZqVgWtC2ynYnuot1pFz1fenX3KGs2Krk20gIlrr8OKAM6nc3vjoC5aI6pEKN6ugrqsOHhqDNBN0rTiO5RwzAaufa5rgzHpQ1hXKL3V9BpGSIvwqyDiESoZ5y76QPAtdwfBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=fBNEV1Me; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PRN7VCte"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fBNEV1Me"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=4Uu9x+Wy2nBT3wpP+N7Z95qtJ+GomHU1dMyPdeiy+Zs=;
-	t=1776255111; x=1777464711; b=PRN7VCte9JDO0ACP+G+XO3wRV5y7t90bWyBh+n6cINPZGtM
-	PP2XoCEEqfA28SWhiZqSoFhKOEQvxuziX18o9001SDhXTPqnwvMxtK4VRh0eowq4C3aKcOwJBWnBT
-	1ZH8vnK6/k++IlP5RG5ydtQzSEEp/zGOkxdcV/HXEgFBJi6X8+gTJD+8vw4Hnlzlf8xY1yLePMfVS
-	N/orLpMG2crMhwVNfzIOkUceeMB2Dd0kqgPptD2HGKI/A6XbEMkR78/8tJBNNVblAJid5bcEs1JAj
-	J5w4vcDBVH30MdhipRQP8DjtsWiSYXX6I3oHJqb/Gir4SEMKWsFi3XSyOSKYxiCA==;
+	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
+	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=V47QstzcxjQgrEIc4raXpZ7cg3JthIkx0h0koXK4RDw=;
+	t=1776255174; x=1777464774; b=fBNEV1Me18m5jaUujVnAnNYAmdkcPalur+RE6Rm1OqFgFiA
+	O8BCuDxum+KkOTc6CBW4Rx1rRt0duHH3Qg45D7qUmaGQIEh+eEWJ8VHWxhxQhJ1AYq6GlVUpE4sTw
+	yMXmo8ctz0yh47aHwDRmZLhLqSFzqEkww+icBpRMmyLSn67cjoYy/xuyeR4o1JfY+vJr0IjimQvnv
+	WF5mwWY3ok7FNbTTqaOv5/+oCauG77ASl3dJFMpPlMNHjonr6Q+XTpTBfrjLwXT545YF2aIy7uFhK
+	mn+hP8h3bRP1GwJlmE96xIWT/0AdOMg0i9HqdfOIeXXbsZIncYRSBI1sAq8a+MPA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wCz5s-00000006NlA-03uu;
-	Wed, 15 Apr 2026 14:11:44 +0200
-Message-ID: <57275e905a67e789ea438bf637be0aeb442fc880.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/1] add wake_up call inside if_usb_disconnect
+	id 1wCz6x-00000006NnU-1zRJ;
+	Wed, 15 Apr 2026 14:12:51 +0200
+Message-ID: <fdcc6bd175d5f241ad9d4547075149ce3a6853e8.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next] wifi: radiotap: add definitions for the
+ new UHR TLVs
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jakov Novak <jakovnovak30@gmail.com>, linux-wireless@vger.kernel.org
-Cc: Kees Cook <kees@kernel.org>, Szymon Wilczek <swilczek.lx@gmail.com>, 
- Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>, "John W
- . Linville"	 <linville@tuxdriver.com>, Dan Williams <dcbw@redhat.com>, 
-	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	skhan@linuxfoundation.org, 
-	syzbot+c99d17aa44dbdba16ad2@syzkaller.appspotmail.com
-Date: Wed, 15 Apr 2026 14:11:43 +0200
-In-Reply-To: <20260410213241.1177592-2-jakovnovak30@gmail.com>
-References: <20260410213241.1177592-1-jakovnovak30@gmail.com>
-	 <20260410213241.1177592-2-jakovnovak30@gmail.com>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+	linux-wireless@vger.kernel.org
+Date: Wed, 15 Apr 2026 14:12:50 +0200
+In-Reply-To: <20260412152605.73e682d0c8c3.I5a0c858467c852b7a2a00f580bd073af29c37705@changeid>
+References: 
+	<20260412152605.73e682d0c8c3.I5a0c858467c852b7a2a00f580bd073af29c37705@changeid>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -56,15 +52,13 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Fri, 2026-04-10 at 23:32 +0200, Jakov Novak wrote:
-> Fixes: 954ee164f4f45
-> Reported-and-tested-by: syzbot+c99d17aa44dbdba16ad2@syzkaller.appspotmail=
-.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3Dc99d17aa44dbdba16ad2
-> Signed-off-by: Jakov Novak <jakovnovak30@gmail.com>
+On Sun, 2026-04-12 at 15:26 +0300, Miri Korenblit wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>=20
+> Add the necessary definitions to create radiotap UHR TLVs
+> for UHR sniffers.
 
-Please correct the fixes tag, have a commit message explaining the
-change, and fix up the subject per the driver's convention (see older
-patches).
+Any particular reason you resent this? v2+changelog would be nice then,
+but I guess I'll drop the older version now.
 
 johannes
