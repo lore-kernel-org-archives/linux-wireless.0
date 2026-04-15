@@ -1,86 +1,134 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mail.bues.ch (bues.ch [116.203.120.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 577D42989BC
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 16:05:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E7978F3A
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 16:07:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.120.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776269156; cv=none; b=tl6X8Hvzi52BsCFHiDGxyVmkd2Quijk7b6IQwuvqF9luVxDNTJqRu+0pIH0WTzO+BuvdRSun8MwY1+Rn3lcdVohxMv9u/ZaV6cjEPpsK16qSYfRVUsZO9IeaZKexqUsLOmhm/sR+jM6LinwwPNjPNbspi4k5PjQOpQmMDxFeUKE=
+	t=1776269240; cv=none; b=JCdXuUu5NT+i+Jd7eyuMVKi5U/cncG/vhIpa192nJw/RfrkFKjtF7YyfIHyETRBg5rmbWvFPKRHsd+fGdojN2CS/oN7CYIEdTZQMwr5PCl0PrQZ/W/44WK1R/B1pVdwX5d2QkukY4FadXSV2ot6DXJVLmZrWd+gTklxc+kDkDZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776269156; c=relaxed/simple;
-	bh=iwN4wHTBsfLFKci0H7PA8rIYYv2bD9nTXgU0TIlgPRc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=hG0t7cbK1Ftsa4ePHyW+6W3L9JBrYhE+2p5bL7dhvsJOFWUibuZVLyHIbintsMOHoiChTro8kdXF0wz5Mnoo7liIPRWj2JQwcMxogt7BlMlhhH2HzPRgstrQn4oULqG78yrFP98Hn0GtJ1+YusS/p8549LUbaCX/PV/pzKOADHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=UH4c/yW9; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1776269240; c=relaxed/simple;
+	bh=J/J/rHcH80SrKxja8htcH+s0y97ceMSk5zZnzhnKpkI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Seexd7y0VUfC7OANp8jsFv4eLkj9kTHIg803U8uCCj3PO486Dt4xBAjpLBDi+yfQ6+IOhFboAGDBWeh+vBjGENf+VSGPzmE1XVBKc6l6+w4L5dF/xrUl03pTKtwwR9KoK3iQIuL7DDsdR2F9ItoBdID+JgjCSNQIXsldQbiaKd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b=BN5wFWY3; arc=none smtp.client-ip=116.203.120.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="UH4c/yW9"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=nVCIhm+64kTSsrmLU18tTGq9u3NTD95uakO0tiD4c8Y=;
-	t=1776269155; x=1777478755; b=UH4c/yW9G+z591UJT04MoBI94B6zUuXYkHK7/WzKxalfskR
-	fpWxMexDHLs2f/QwPMtHrys3AXJ8MvcE5oZk2AtW/Z9KcO3+phv+LGPzbvMN3PVDU2Glug8hrkazu
-	gMRv4e87uo6D4JaY1UKN+LkLN/L6xIXn0+bAi/A6cleVv1jxKrW+dSYLjFcb/Dy8rNWpieTouFsWX
-	VoAj7n28ZxxppzvjuqPc66MQsiIEOQksJv5zySMwNNEHXq9IOqNq4dJcwLnGfIX3ZLTBb38Ce7c5s
-	7PRcDd6wOXCWKWeaUT/OM8AYgV3DikpgnVorUyaP6lHTVVcZEl2YhuKcjpYsdUoA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wD2kR-00000006VIb-1jON;
-	Wed, 15 Apr 2026 18:05:52 +0200
-Message-ID: <9c77d6dfd7de1a54a3a454516af664a53bddd00b.camel@sipsolutions.net>
-Subject: Re: [PATCH 17/20] wifi: cfg80211: provide HT/VHT operation for AP
- beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pablo MARTIN-GOMEZ <pmartin-gomez@freebox.fr>, 
-	linux-wireless@vger.kernel.org
-Cc: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Date: Wed, 15 Apr 2026 18:05:50 +0200
-In-Reply-To: <5633ace2-45df-4ee6-a41f-831de3e90d60@freebox.fr> (sfid-20260415_180219_977065_1257F0CF)
-References: <20260415124514.284345-22-johannes@sipsolutions.net>
-	 <20260415144514.32ad98454543.Ia9692671b699164edcc0bdaf4fdbdbefc50b18f8@changeid>
-	 <ddfdac5d-602f-4f67-80bf-d41924b0b7e7@freebox.fr>
-	 <b5a0822b7ebf8e816e096e6a628db6b21fad40ef.camel@sipsolutions.net>
-	 <5633ace2-45df-4ee6-a41f-831de3e90d60@freebox.fr>
-	 (sfid-20260415_180219_977065_1257F0CF)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b="BN5wFWY3"
+Date: Wed, 15 Apr 2026 17:57:48 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
+	t=1776268691;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=J/J/rHcH80SrKxja8htcH+s0y97ceMSk5zZnzhnKpkI=;
+	b=BN5wFWY3B9u47kWoWHKih/s7VQ1i5WIU8pZ6Qpup8hBLQx6+nq7T8QqdRDu8mlVBPYhTOP
+	gyb7RwMuvYPlE4Vt4ue745CpKycVYC8lq4n2O8IHH2xPqi73w6Fx7YNfAxL+uRwbNcFXVe
+	pTQfaG1fYNVcFq3qsPYDamF4S//GBLmxrYpWfr6/05kuXL6pX4egpwSfXpyBiq2P2dNJKb
+	rWs8DhCXx6qy7WXcBW/leVRuyhpBJGYdbeiON39Og+88BHBpns+iHfKxBbMCWm101NNJSS
+	1W7BFuoFhP2ABQtFaZAIEyBYpwLhq+mOoMxpOqrXbJ4EyX6RPv9AMYr8xFQuQg==
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Jonas Gorski <jonas.gorski@gmail.com>
+Cc: Joshua Peisach <jpeisach@ubuntu.com>, Johannes Berg
+ <johannes@sipsolutions.net>, b43-dev@lists.infradead.org,
+ linux-wireless@vger.kernel.org
+Subject: Re: Firmware for reverse engineering b43?
+Message-ID: <20260415175748.61aa7993@barney>
+In-Reply-To: <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
+References: <DHS1BJ5XFYRC.GCF9PXS0OSRI@ubuntu.com>
+ <c62a448843f189d78187de18d3fcb955f2779d13.camel@sipsolutions.net>
+ <DHSUDVMGW0PS.2LYWKGG1C1135@ubuntu.com>
+ <CAOiHx==kVm0OKWRKi4VHSEEr6ZygzrpNiA=zj+zEHT6_rgZ3CQ@mail.gmail.com>
+ <DHTPAVC76140.1JLO3HNQARQ9Q@ubuntu.com>
+ <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: multipart/signed; boundary="Sig_/lPMAN2dntsU+fJbqlNm7P6y";
+ protocol="application/pgp-signature"; micalg=pgp-sha512
 
-On Wed, 2026-04-15 at 18:02 +0200, Pablo MARTIN-GOMEZ wrote:
-> On 15/04/2026 17:42, Johannes Berg wrote:
-> > On Wed, 2026-04-15 at 17:22 +0200, Pablo MARTIN-GOMEZ wrote:
-> > >=20
-> > > > + * @ht_oper: HT operation element (or %NULL if HT isn't enabled)
-> > > Might be some nitpicking you can ignore, but HT operation element is =
-optional when HT is enabled. With the current comment, someone might (wrong=
-ly) deduce that if `ht_oper` is NULL then HT is not enabled.
-> > >=20
-> >=20
-> > Not sure how you mean that, but not really? If the AP has HT then it
-> > must have HT operation, otherwise the clients can't use it?
-> Oh my bad, you can ignore my comment. I wasn't sure if HT operation
-> element was mandatory, so I quickly checked the standard and the wording
-> of second table of 6.5.3.3.2 misled me in thinking it was optional ("The
-> parameter is optionally present if dot11HighThroughputOptionImplemented
-> is true; otherwise not present.")
+--Sig_/lPMAN2dntsU+fJbqlNm7P6y
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, 15 Apr 2026 13:54:31 +0200
+Jonas Gorski <jonas.gorski@gmail.com> wrote:
+
+> On Wed, Apr 15, 2026 at 1:44=E2=80=AFPM Joshua Peisach <jpeisach@ubuntu.c=
+om> wrote:
+> > It does appear to be similar - even the current brcm80211. So much so
+> > that I sometimes need to think about whether b43 is actually a
+> > duplicated driver.
+> >
+> > Since b43 is in an orphan state, I thought it would be a great place to
+> > start for kernel development. 5G doesn't work on that iMac, some of the
+> > PHYs, like the AC PHYs appear to be incomplete - it felt reasonable.
+> >
+> > Because I'm one of those "there's always room for improvement people",
+> > I was going to try to improve the driver, filling out TODOs, fixing
+> > hardcoded register numbers, etc. But if it's best left alone.. then I
+> > guess we can do that.
+> >
+> > That is, assuming b43 is actually supposed to be a separate driver,
+> > because if brcmsmac basically has the same code, then maybe we should
+> > focus to centralizing everything? But then there's b43legacy.. hm... =20
 >=20
+> It is/was intentionally a separate driver: Broadcom didn't want to
+> maintain support for obsolete chips (anything SSB, anything older than
+> BCM43224), so the decision was to have b43 support all the "legacy"
+> chips, while brcm80211 supports everything never. Since they were both
+> based on the same driver, they are (more or less) the same
+> architecture.
+>=20
+> But now that Broadcom has essentially abandoned the softmac part of
+> brcm80211 since several years, I don't think there would be many
+> objections on unifying it with b43.
 
-Huh. I'm not sure what you're referring to (spec version is highly
-relevant), but HT operation in a beacon frame, REVmf D2.0 says:
+The hardest part in the b43 development always was not to break already
+working stuff. There are many different types and revisions of the hardware
+out there. Probably in the order of many dozens of variants.
 
-	The HT Operation element is included by an AP and a mesh STA
-	when dot11HighThroughputOperationImplemented is true and the AP
-	or mesh STA is not a STA 6G.
+Please keep in mind that changing code means mostly testing.
+Which is hard, if you don't have the hardware variants and basically no
+users exist anymore. Just implementing random TODOs and missing pieces
+will break things. (e.g. not doing some HW calibration or workaround might
+be better than only partially doing it or doing it wrong).
 
-johannes
+I would personally not touch this thing anymore, except for security fixes =
+and such.
+
+But if you want to work on the code, long term, I would welcome that.
+We could even arrange that I ship you some hardware.
+But keep in mind, it's all almost 20 years old legacy stuff.
+
+--=20
+Michael B=C3=BCsch
+https://bues.ch/
+
+--Sig_/lPMAN2dntsU+fJbqlNm7P6y
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmnftXwACgkQ9TK+HZCN
+iw74gRAAtog6Qh+8376tiB6lfcrpQCa5Y8kjAKSUuHYWJdoK5d9tDZz2G10FuBCx
+IjjGrYd2FRHyhA9RFHe4XpLdcAwNUhUs2Z6cuaYhE0VkasowyfNEhsBEWfOeW/a+
+llN4zzD1m/A2tPkylqderJt1Fere/y7glhyNDGeCz761ljQKIRwXed6MYfsbHoc7
+GF/FDLizkWcdoPlIgInPeqwzA8kHe541lm5sUaQVNKJshLItFY9OGGAYKvm6zO1i
+geSxjctnDcRo9XUYANplQBZ9eB7su7GqNmdVacbNOeiie61bWsMpXapuqDSK95aV
+nR2ZvCUysPMUVbZrQW9+p+sknongYrk0kY557zdrTzxaWwRzZeCTbqLZLm3FygPt
+JwO1mA4vUYa6mNLbuFo0A0YwmnosX43VXW1FBhNB8uWFUF1QUQbo1jKj5N/KFh5v
+jXkfyp4OTSMfde5629q3Q5BSrGydMsp2vqtWq2Ql2yIdWnmayF3ZNbDZt1WgsTRn
+dLmJLwuP2pc+o/0tL3VjcNsriqMNmShSX96poPckJhK+ikL7V83pXHRgIYN/XgjD
+OUkjT0mZe6qh3hylszcW6028ekH+/NyaYLPtzr0GLVstLmChTxQm9st0bnmkMw7T
+cIjVFemphPEq4tpu1Ww3RMwe54uGkKgUygL5Ok9uVk5idxGkN64=
+=kr47
+-----END PGP SIGNATURE-----
+
+--Sig_/lPMAN2dntsU+fJbqlNm7P6y--
