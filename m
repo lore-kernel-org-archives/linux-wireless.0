@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B98D31A062
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B8F3242B1
 	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 12:45:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776257123; cv=none; b=Fvb+qp89B+tsRFkK/tpJPfSQuYpDnwwbPYNB6qyJZUflPZRICgAhVMFvfdCO1v+d5RPidmN2DrxKG90qrt0hx8C59SSR8NJ5wwJKVjeQr8GM57/mq97JEC0cPoOiAsPX2/idvwAAHK0vc20TlVA1H0pRMLY2/5XVg+vkBQFijAk=
+	t=1776257124; cv=none; b=OKaC7scSJ0W+3gpzwlGos232UEzhck1nUdM0LMreW6SBjaw3LoduJSz2jFju4Rp+KeWFz9Cp82YZopBLdVMryK52apPXEUnRW+zL/KmNTHC/9wJAleUX7yia5UWOINaQ0MNDnbQXGF2l24/PPdUJ7k2WSxQlP6CJ1udW0DCP7tM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776257123; c=relaxed/simple;
-	bh=IBemyFmqhTEQzB0ExE15wwoOrbIlm9tnx5t7NGXf1Xo=;
+	s=arc-20240116; t=1776257124; c=relaxed/simple;
+	bh=pbYYQKJ6ZvyjGvRcH7UluHgsF1+oPX3CDhAazpnCmjc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A4l93zFHAoFvE6Jcx1lRANatZvicPt7R8GE53Ff+jTYCTmcEH5soBOk2tklNSwd/qVRW0JrifVh6WN74uie+xlJmKQ6qZjiF/uM0f9Xnmk4dnvak7lhHI4AlMH8zAt/0McZEceQU4nQ+HjRcRlxLyaq4l10e5Oik7xC1jR30DhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ZTm5Da2M; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=r87MEYBHPi+uR5Wzc3bITm+KmTA4SgxiWhbaD4Tfa65TjxuhHBIEuAm+X3CMzXkhr+60GE1OSfgYkLuSWrc9QS5lU+qYzcD6AtpJN4EmCIVEoehFa3e7CTUlUeHCkTsoU3ic5ojPq2DxEu1sJPyedF1T3CytP5JsAKgc4R9LH7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=K9UHV7Fh; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ZTm5Da2M"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="K9UHV7Fh"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=svB9Unc/RMd1Gmd6WDQkvWMV7TCi8UeqLvuQvzn5998=;
-	t=1776257122; x=1777466722; b=ZTm5Da2MJO53ld0j6Kt51YbUvunSLvdl4dWVkC7Oqmov9mQ
-	yybi+minp9BCChg5i9OFtYv4XRD+s9WYiffBU5nxs2kzSOJlDMaUt7+p0MtKTR5P7shlR+M82mco7
-	u20S2rmokoiYlbvg/9JkRKhwJNvsDKRhzUgJ2NXXz5+UD7+v9EP6v33ndvzXVewJ9G+AzWOgCoVRi
-	/8UkptkEzwNT40G1ulIt8IscC652QGQwlVdkP6i6/NxKe5MOYbKvq3jGSYk/GVPYmmEDXfY1AuzPt
-	P/Gj4KjmKmKRchEXWiPUYhYeCq0W6x3k+nQcdS/H+QZatKHYsDthvs0Njte5YNag==;
+	Resent-Cc:Resent-Message-ID; bh=Ai+jzrCa37MK7EIrbqir0X5wYYCEbllboanw2m4jFaE=;
+	t=1776257122; x=1777466722; b=K9UHV7FhJpGyfMF3qaTevtUM5R663Y9NZ3IQOXn59+zl8oJ
+	zLZBPJBY9w4gn606nlCvWx7g7w3AFPimIkqfC93TQe1ebmNM9/kyp7gzErzj1zIXUwC7F5jVH7Rwv
+	Hp20urSl1Exiye0fvAogVeYMcjsfNkDBtBxVHVaHsFwM+m5G6iyfgd6pS+rtrwHrOJPXS6gj8bUVm
+	4c93QxaZ4mzpnDsrE4Ur6CQ5L52EyZ4LfzqAt4G9EKNML1qX+KoiWjvUazz8EcMy7hHvBkNVQYNnQ
+	UUv449YqMc+97atyr8ezlnNF5jstKQ/JV5zAKQjUmbLI7Ys1KWCM+AsgHWWG1Hdg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wCzcN-00000006OgW-3ykR;
+	id 1wCzcO-00000006OgW-225m;
 	Wed, 15 Apr 2026 14:45:20 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 04/20] wifi: mac80211: use chandef in ieee80211_get_sta_bw()
-Date: Wed, 15 Apr 2026 14:42:02 +0200
-Message-ID: <20260415144514.d2bdf106a39f.I6ae07289a272dd9e27118f9fa324a4865f994003@changeid>
+Subject: [PATCH 05/20] wifi: mac80211: use chandef in TDLS chanctx handling
+Date: Wed, 15 Apr 2026 14:42:03 +0200
+Message-ID: <20260415144514.cc7c1590e953.Id2381d2b5a9d1ded170501976240d4fca23ee35c@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260415124514.284345-22-johannes@sipsolutions.net>
 References: <20260415124514.284345-22-johannes@sipsolutions.net>
@@ -51,62 +51,34 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When getting the bandwidth the station uses in order to
-calculate the channel context's min_def, pass the channel
-for the link to _ieee80211_sta_cap_rx_bw() instead of using
-ieee80211_sta_cap_rx_bw(), which looks it up.
+When getting the station's bandwidth for TDLS chanctx
+updates, pass the chandef so that the band can be used
+in _ieee80211_sta_cap_rx_bw(), instead of this using
+ieee80211_sta_cap_rx_bw() which looks it up from the
+link.
+
+This removes the last user of ieee80211_sta_cap_rx_bw().
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/chan.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/tdls.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index fda692316f08..5e93405d70a3 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -438,11 +438,12 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
- 	return NULL;
- }
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 44bba7c3e603..90a122dc274f 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1334,7 +1334,8 @@ static void iee80211_tdls_recalc_chanctx(struct ieee80211_sub_if_data *sdata,
+ 			enum ieee80211_sta_rx_bandwidth bw;
  
--static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta,
--						    unsigned int link_id)
-+static enum nl80211_chan_width
-+ieee80211_get_sta_bw(struct sta_info *sta, struct ieee80211_link_data *link)
- {
- 	enum ieee80211_sta_rx_bandwidth width;
- 	struct link_sta_info *link_sta;
-+	int link_id = link->link_id;
- 
- 	link_sta = wiphy_dereference(sta->local->hw.wiphy, sta->link[link_id]);
- 
-@@ -457,7 +458,7 @@ static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta,
- 	 * capabilities here. Calling it RX bandwidth capability is a bit
- 	 * wrong though, since capabilities are in fact symmetric.
- 	 */
--	width = ieee80211_sta_cap_rx_bw(link_sta);
-+	width = _ieee80211_sta_cap_rx_bw(link_sta, &link->conf->chanreq.oper);
- 
- 	switch (width) {
- 	case IEEE80211_STA_RX_BW_20:
-@@ -492,7 +493,6 @@ static enum nl80211_chan_width
- ieee80211_get_max_required_bw(struct ieee80211_link_data *link)
- {
- 	struct ieee80211_sub_if_data *sdata = link->sdata;
--	unsigned int link_id = link->link_id;
- 	enum nl80211_chan_width max_bw = NL80211_CHAN_WIDTH_20_NOHT;
- 	struct sta_info *sta;
- 
-@@ -503,7 +503,7 @@ ieee80211_get_max_required_bw(struct ieee80211_link_data *link)
- 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
- 			continue;
- 
--		max_bw = max(max_bw, ieee80211_get_sta_bw(sta, link_id));
-+		max_bw = max(max_bw, ieee80211_get_sta_bw(sta, link));
- 	}
- 
- 	return max_bw;
+ 			bw = ieee80211_chan_width_to_rx_bw(conf->def.width);
+-			bw = min(bw, ieee80211_sta_cap_rx_bw(&sta->deflink));
++			bw = min(bw, _ieee80211_sta_cap_rx_bw(&sta->deflink,
++							      &conf->def));
+ 			if (bw != sta->sta.deflink.bandwidth) {
+ 				sta->sta.deflink.bandwidth = bw;
+ 				rate_control_rate_update(local, sband,
 -- 
 2.53.0
 
