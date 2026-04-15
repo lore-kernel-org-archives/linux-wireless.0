@@ -1,72 +1,70 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9248239EF0A
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D808396B84
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:24:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776291835; cv=none; b=f84nWnbgIYmKSA+8wf3oWJAfmHk0qDJKBLiREHmcttaeTLVUtEMWQ/N3wCmsTqf4mRAxS6SpyoTaSvopgIEUXI2FdU5eUwDdLeYq2d8y9IXLe1RLL3wYRYr2DWZvZp5Ccd7aJ/kkE4SF9IfU2b7FiACSzzbC9vdu2lsI/KiPATk=
+	t=1776291843; cv=none; b=rQH1z+iVenjC4dXEiZ9Kk4I2F3vbcqDXd2VDI/iKE0FGYQIEj+jQNgJP50qsQZTidrNvGOFDQSNZRsBtT0pn3QgdSzKg3IY7/BoHSyDRwSdBXCXMl9dd0VmbVyDg8oB1xJz8QEAc8fILinBG07u1NldzcZw3HNqYEJmNktoVMgw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776291835; c=relaxed/simple;
-	bh=5KT4zftllyjvMTucsE6urzjf7XJ1mXJBzMbbpQp/Y3o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ue5srjvSgHfmYN/Ya4My9mkOXc02TV2dQToky3+VTrNbBchy/E/LbIAHxpJ+GCJEo3NPxhckq3mF93whV4EH76mGSXsaO1IrKsafSLZ26pHHoDk4b1UAAyLdxqpuXAqQLNoKZIXUN2eHkT83uOXYMW75uzPPb42jQDS0d5QFE6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=luftM5A5; arc=none smtp.client-ip=209.85.128.41
+	s=arc-20240116; t=1776291843; c=relaxed/simple;
+	bh=FWZh+bpoeNl243+DGXsMV0oOeY5uxeAu3hfQ6f7yr+o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lYebVq+47iqziKobOZon5N8vHw9121RK1QPPIKZ0fawnEvfhA9nkB2NIrP0eGDT9PlVsBcd+AIe0DUNr6TPaNxowBkuEsAjOkzKYi2wC0UtfoBv0k/CLRuj4dgKhM8hC2MzlN4IDBRPJa8p+rJnq98tNMbRReQuXcwcX82HzF30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jmwKb4cn; arc=none smtp.client-ip=209.85.221.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="luftM5A5"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-483487335c2so80678845e9.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:23:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jmwKb4cn"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-43cfce3a195so4523246f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:24:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776291833; x=1776896633; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eX0Glenf7dhcpBF0K+wa69LSV3USNbfawO60wMsqyo0=;
-        b=luftM5A5ECMI+/B5ZkbQyTh7ZjTCc4Dy2oQmtmllAqOxoRjboxLp1dATCrXZOkl7IG
-         bd+nmTRf7EPHpE/n2f92/Aay6BHwF7F8tvW+wOMYf6N7nbaXWiKJOCuji+oEoEi3v7pZ
-         TEugTRGTEH87Rx9hxqcnZmrheO2RVjT6O4z6XQJ57RlR90zoDlWeoYl3si4PischvjJF
-         p1a8sRjXs2einsgmhmUFTbQNWhGcfd5bRY8gXnVoaWkRzjpNSuUwomjbjgNpitcUYw27
-         oObkE3nWgr+WgegF50BWbEAB9y9mPMDU14Of6qjW7OIY6YM45sfLVJZQx/U9KCSxCaPx
-         kZgQ==
+        d=gmail.com; s=20251104; t=1776291840; x=1776896640; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=FWZh+bpoeNl243+DGXsMV0oOeY5uxeAu3hfQ6f7yr+o=;
+        b=jmwKb4cn+6KZ/2HyNWE1An4deXQFRuRIMUpQ5iHfB0LHugXxv5CVOcK/ljgsGcaUzX
+         GdT36+RMCO+WY1K2D+tn3uCcaUaYS4u02WuFcDtRbGr2YnA71H33ZO1GhBnH6Cc0e9+e
+         H8JlL/7rwnuVPdL9sFpOKvWbyn8/lmLq24AgIbYbGWi//JLg42hifoYLzz9cPwWUcGne
+         ToLn0rUyulWQjApWcezLgeXsRor1PX8nPD2tvNXzHUJ0jFJut8GcH17PRHXcPwOV5r0w
+         cfN0dNYCjxLrXYRzKLrRiJP7YHjNYw2o56kOeq+EsrzSDt7m16wbAqkiwlD24Dc0hbM8
+         baqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776291833; x=1776896633;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=eX0Glenf7dhcpBF0K+wa69LSV3USNbfawO60wMsqyo0=;
-        b=la9LEtxMKIGymGVWaeSSDUTHuZjtYXu12/6wfHFoFd53FSRSpgi3c7lSSB+EtJsdd9
-         K5CrzBWHv0n6Z4LxRFZM12DyAtqW08SxkDbGYx8F5A8clDYpT960AQmVjTAPBigolziD
-         MHGZGj3+3ekEBtNnpt/Y7W6dModhqTarPnKVxdf5sLwAXlSuCqo0K+KCOSgF5y2a1qtX
-         +oBX3bMQYgtueJ0EjYi4kBdvqgMcEtSv73x4hyHWHZwM8oADjG19q92U2e8zBCCQta0I
-         l519L1xzBBvbBjOasnH6TkKdDO8h816y3/xe8USEG6pBJiIULHhqHk+KvjoBUydfpmJw
-         FfRA==
-X-Gm-Message-State: AOJu0Yz2BRhbPCU8MnG7PXfaDSNSf5MY+Tt0iwh8C8Yu3/taF9UioWyR
-	qJLjzJ+w/YQo0M4J+m4Eqy+mSidxWKji5rvJp6l2NhgtqsYYW0nRjpl5gzlUaXXZ+Q==
-X-Gm-Gg: AeBDiet7jgF1eH/5QHItAi6LqjiBGS1WFxw4qO/EcitA3XJyih7ltgK4DQAUMJa3rW0
-	5lIZZAzeQ3pDuWILsPPgyENVc3VPxdA+g1zn+sOPFnvZHk5ubz5yT1v0FEz7WC+vlSpFJJUSKTb
-	GWa7SpUfpynua3hId5asXzhEkUMvfAcYpTsTBtoEswB73FBthcO1lS7n5xrQseNDgO5SW6cKN3f
-	SekIWFd0QbmxnJhrSzm7HmLct3uu3ZtUtXjEvCg4Lxk0nVK2cicsXGxr3QxfK0OjpjKVG2rUQXy
-	KHqEIN+b3JVOcb5Ut3LQB+BTFoC9TFfijUlC7lULws+5K+s0eVdo7SCPbQQMxj83Ov3LQZH8oiT
-	7f37rGB6J0Sp4MrnUVS34Pk0ZYVyap54A1cSGfuZH5p486eknmQQzD0jae2De/ZLyMHtDE812P5
-	zA6BM=
-X-Received: by 2002:a05:600c:8709:b0:488:945a:ed63 with SMTP id 5b1f17b1804b1-488d6655adfmr318872155e9.0.1776291832950;
-        Wed, 15 Apr 2026 15:23:52 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1776291840; x=1776896640;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FWZh+bpoeNl243+DGXsMV0oOeY5uxeAu3hfQ6f7yr+o=;
+        b=PIjtIy4I6VXomBxm1g6DLtOaahCGj9MTVsQvuD0jo28f4lSIoMN70VXbd64tKDvyNl
+         qHcHVXZp4u9Gl0RiyZ3MOY3jrYjgLqeksq+zglyNO+t38QbCUkREnH5u54+3kYkHeMxk
+         vm7ME6jwjFujvmDretHtWReRtcfitlQ7QjAro/epGdbk8SiQS0W6QlQes1Ib0B0h/gnk
+         je4aMqWfq+v8h7fqRi8RX17+9OKbhUhiV5LUYSGzRRQJW+//8pnuRbFyXPgRqOIiZP4A
+         rp10l5Z2e63EFHhqBx72cAVI02dlAuCRLZ/FOMgsE/tV53ssWQUCUo1fyjTfMhh/7PNR
+         BpkA==
+X-Forwarded-Encrypted: i=1; AFNElJ/PZmS+5RtR47BCH4ziNr2NQ47/k8pf0UQZrU5OkM/aGUkiNBEaP6ZkTt5CzS2YkpPc6Cs0dglcsR+WPT7eWA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YymKpSCx+OtQ1txHJRgdJGiD4VE938C4NshHqcRsyRssGFCVqNZ
+	EzFdUaDPy7iTe7ytozOqnOnFb+BA6YTKV1GvIjcyiLPeSY6ZfH2s9is=
+X-Gm-Gg: AeBDiet+vI8/RMNh4Pl+simWQdSEv/AZ9YHnUS5AQUXViwv+iGodfsdZcLR0KD3rwgD
+	ocwKD87uT4j+XmpcBse5wXruhUKtORZRHdgsZ3Zhe5SctpTNOfe/gWYXhGVqf4Zgghk8CNq3Fos
+	Fz0FrBPtbFxE+JB13XBcu5JrUFydryo8kzekXrMDmym/dp7+q0vl/SKDteEtewFtUU9X00kzJwM
+	6oljSi3sUjyzfMaHOZdMypS6ggqhpxoKoOpQV2QgAGfivxz1UPitENzReahe1TFiFyxz1Uqh5sH
+	KjNQzNo8pqs3QuoGeqp47KWjwANn/1GWFMj417DbWxhQVWsNXe/jYkeT255TBxtI9jlNYX9oJDx
+	sJH1i6jQyxFvXo11gWATXv2n0oWJQG3CC4FOcpYYoQZikn3TUPMqv25hQ5WPGxSzUa4HxXXObKf
+	5JYdE=
+X-Received: by 2002:a05:6000:178d:b0:43d:4a43:53db with SMTP id ffacd0b85a97d-43d642a98b4mr33564457f8f.26.1776291840421;
+        Wed, 15 Apr 2026 15:24:00 -0700 (PDT)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead402ee8sm8339591f8f.37.2026.04.15.15.23.52
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43ead3dfff3sm7613861f8f.26.2026.04.15.15.23.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Apr 2026 15:23:52 -0700 (PDT)
+        Wed, 15 Apr 2026 15:23:59 -0700 (PDT)
 From: Tristan Madani <tristmd@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] wifi: ath6kl: fix OOB read from firmware num_msg in TX complete handler
-Date: Wed, 15 Apr 2026 22:23:49 +0000
-Message-ID: <20260415222349.1541181-4-tristmd@gmail.com>
+To: Loic Poulain <loic.poulain@linaro.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2 0/3] wifi: wcn36xx: fix OOB reads and heap overflow from firmware responses
+Date: Wed, 15 Apr 2026 22:23:55 +0000
+Message-ID: <20260415222358.1541983-1-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260415222349.1541181-1-tristmd@gmail.com>
-References: <20260415222349.1541181-1-tristmd@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -77,33 +75,17 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-The firmware-controlled num_msg field (u8, 0-255) drives the loop in
-ath6kl_wmi_tx_complete_event_rx() without validation against the buffer
-length. This allows out-of-bounds reads of up to 1020 bytes past the
-WMI event buffer when the firmware sends an inflated num_msg.
+Hi Loic,
 
-Add a check that the buffer is large enough to hold num_msg entries.
+Note: this is a v2 resubmission. The original was sent via Gmail which
+caused HTML rendering issues. This version uses git send-email for
+proper plain-text formatting.
 
-Fixes: bdcd81707973 ("Add ath6kl cleaned up driver")
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
----
-drivers/net/wireless/ath/ath6kl/wmi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Three issues in wcn36xx HAL firmware response handling, including a heap
+overflow in the main response dispatcher:
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index XXXXXXX..XXXXXXX 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -485,6 +485,12 @@ static int ath6kl_wmi_tx_complete_event_rx(u8 *datap, int len)
+Proposed fixes in the following patches.
 
- 	evt = (struct wmi_tx_complete_event *) datap;
-
-+	if (len < sizeof(*evt) ||
-+	    len < sizeof(*evt) + evt->num_msg * sizeof(struct tx_complete_msg_v1)) {
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "tx complete: invalid len %d for %u msgs\n",
-+			   len, evt->num_msg);
-+		return -EINVAL;
-+	}
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "comp: %d %d %d\n",
- 		   evt->num_msg, evt->msg_len, evt->msg_type);
+Thanks,
+Tristan
 
