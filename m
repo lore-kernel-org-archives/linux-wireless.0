@@ -1,113 +1,148 @@
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shell.v3.sk (mail.v3.sk [167.172.186.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6554D3E639A
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 17:03:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776272641; cv=pass; b=Ji7uEqcMX81GYUfn4EQxiTnI/C8i1mSYUa6i+SJBEwmIAq3u1KoLGICUs9oaxc1NravkiSQSPkqbAepDCvEOPlY/zoRWAbE9QMj8u70PUvbbCLs1gRItxbyjJqjvJjKooRjaYEYlHIwYDzlFifIb+o0xbAgxeEIlvscRn3bj+n4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776272641; c=relaxed/simple;
-	bh=S5NhDLLih0xWHY1USnTam+lNuj714IEk59kE3isHgEY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EXj76kEmxPKY233aE8PX1XfSJIY+QqSK9LC66RB7/1LkzmXA5vQlv6CNcN95Vbyh+PdrJnniohT/dF3gvIa3qX1UwnllrcYpfKgsBOyaYBJpe5ACgu/bc+/NOwCHxLiZq57drjOiGMobDn5pvgl2iLBVUG1adlCErNfggN/oXO0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aAQT0wOc; arc=pass smtp.client-ip=209.85.210.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aAQT0wOc"
-Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7d86eb7c854so3483522a34.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 10:03:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1776272637; cv=none;
-        d=google.com; s=arc-20240605;
-        b=E5OEQTpqWQDmQG5IKnxXh1ImolP3iH93hlKz96ytHyXmXZrFqZqS35dTWOu6jLRZuy
-         HBHmsSZr5VyMsyn+p+6C7eP62HuqDJGY7XkvsimSjVg6M6i2KktMnU02JqR1sELtrlAS
-         EQblQ+Bzu/TnRgsUBgYmkmC9SE9lHHOx3gUO5wkQWVlLSdop67kubxldGP7Ad54AZcEv
-         jieWl0FIAQIOIAiecSypYOdweuR+KJy0jYD4JXtFcRfoqnLPQheO0RWobvVU9odrrRiG
-         la1JWpvm0aM9vmeTaz8CENFHhY53imwPa7O0HmbbgUwafJ/FsRS4pwclzXSYzmIwGscv
-         exaA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=S5NhDLLih0xWHY1USnTam+lNuj714IEk59kE3isHgEY=;
-        fh=rXjh9mvtsYw3eG+YQ3StxTwY26w6ijf+9wcS0T7g+Go=;
-        b=XnNcPGH+wDXA+MHkD3I+7rtNbVWQ+pZZpcWrGRyiXbth5WwK0a784SEtG8TMx8WvRN
-         hogiPFoim6nDlS1KGo58BuutVRTNfMwNaySx4GI3iPye5zQPvIormvF5yRm1nz1nU+gF
-         ffZPKVMkAQnoc9KuowTZTeXj5OzDPhsq7Am0bk3qQtOWLfRsNVrQBqZdNPlkGP0TdPEm
-         GliYFEAvtxHMvCkvMFQdESQ95c4BP+Hp9RIVhBxzP2sLQaA3A8O/TiPejf2NRAEPCSeI
-         2Xh1I7gFLmGuIblq4f2KyruPtoC8d3pBn6WhK4SpjnOwrsuxocI78YCwiQMGl5PCEXuD
-         jm7g==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776272637; x=1776877437; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=S5NhDLLih0xWHY1USnTam+lNuj714IEk59kE3isHgEY=;
-        b=aAQT0wOcuQyxZAPHkoJnJ21zRkSFAPeHa2ddRAt8R34e1GxvFi/ofe84n977SR0H0N
-         9OBUk5ue6lD3pDTFAkFXUHkBXzkdZYD6fClVXaomqVH+/FkmPPC5WkGqeO7mz4xR3UOM
-         WEATORc98mPI3eJn6IZrOMIRXZ6EFZdwdOHh8iSi0SnhZ06F/a8p7W0eu+DYgsjAzF1t
-         H55GeNUmtrjZG8Z8Budno5pMjuSIkGNxTdR0UUk2ojdvPoQBxltIiXx/rYHOEb+FMu8Q
-         Ir458E+qOLMKoZ4T+2649ZOVYmawTnxXHsE+ifrwQPBBLh8jU+HQYclOJgDucZAcPUSg
-         C6LA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776272637; x=1776877437;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=S5NhDLLih0xWHY1USnTam+lNuj714IEk59kE3isHgEY=;
-        b=QwOQUjo5y5IBJ6q6PYRkHHyh1ptR5CMmBTFTV6rG6CSSAFDSjZLQ0LD9NZrbhNTSZ8
-         hyXDITIoi6lYt7D9DH8nftJ6IigqqbwEduY9MEWYMt7CJEYBZo216UfsdhNFqh8N+Lg0
-         fS1XpOEvkn5XyWovCjjVlGH2T4TqAOCFzZxUbZbNOHwqNlrjsQQ2scnWU+b7rBGPnHnR
-         aRgzFZWtaEQnetQkpHw1fuid41fWsQyV7YfiQctokum/+2Vga98yhW8XcVYgiI67gMCT
-         lDi98xBVRoLvuWz4PBWggL6EAYqW2ALOReMd3E/rCPNFmTnWeJvd6mlTuwMN2gpYKoGW
-         doWw==
-X-Forwarded-Encrypted: i=1; AFNElJ/2U20bmo0N9Lwk9nHSm6GEnbXhKlfClEbTnDYTpOo3hD8++wHvcPTbftwg/9HTAP57adMcqZxC5JWlabIMOQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxdARSF4I2Z5zLvoWCO1wnEuBQsqKE+4RKhZ6ZLXDzK/dEypGZn
-	CbIgZkkH6vBNrWBGeazerxflaCxlqHeylUgU+kDt1bD6vS5y8m/boQ+NrlRK0JacDbLsfXBn87g
-	PQFraRpXaNPyw3VQx9KPntOb1mKo1rNaCxb6YhjDgHQ==
-X-Gm-Gg: AeBDiesBRfzsqgZu94pUdiydruhl4XhUPJbkuheMcPDSTnPuKZMXboSyiieW8giI4O8
-	beBRj2wCvyCirfTQggPdvkfNchNq21pQxZuOKsNBn8WJp/QTPxqr2E9tu+/Eoi7L+wDUirrqbyQ
-	UHONFn9KUmaH+wuuqgtq2Y+qzMdtDidjFeT00rIYYQOygzt/O6xaXZv36iJ/bv/QvcvbxPsC+bX
-	aZb+oseNUnjwpsKRd3w1q3SfXv18p64hpbZ8UojZuh4nY6Ge/OYMloPNwOzBnlvu1YiwDrYF+p1
-	MdbiCdHK4n5hAN2b+sk=
-X-Received: by 2002:a05:6808:344c:b0:467:bfa:bdb2 with SMTP id
- 5614622812f47-478a0400607mr11838977b6e.25.1776272636884; Wed, 15 Apr 2026
- 10:03:56 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8324D373C04;
+	Wed, 15 Apr 2026 17:18:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=167.172.186.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1776273486; cv=none; b=a6wXYeLZyzTDs+5EMV46+zswdSjpiKSLrT6+AnOGRKJ+q46iBt+x9uW/lZUNOaCOxpr00PSvCZNRMzs2hJv9YQnjacWHoqB/ZQDmB6LPrGt8AcZT9wc2itN0VrytqCudYlEhBjtAV/iCx5D8h8YoVXRDQ7WPH08HNwK75JX58A0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1776273486; c=relaxed/simple;
+	bh=BXM+to8siLu81KiUOonJM1w02O5RIRoRGMXyVjaji/c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tBf9FjrusieI65aSr4lvhwZGIGA5DcvdOFjlPKfgit+UiwklWKSBzrp2iKuSDhzGHsirDgqtNqLTq6G2emKzgUYmuqLlMxg8b9bws3syiehuqk1JnnhJQOsBppkDkGgC2Uwl+GuE60Tx1qhhqIRkFy3s3Z4WX6dhO5nDCf3g3rc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=v3.sk; spf=pass smtp.mailfrom=v3.sk; arc=none smtp.client-ip=167.172.186.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=v3.sk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=v3.sk
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zimbra.v3.sk (Postfix) with ESMTP id DD4E1E2111;
+	Wed, 15 Apr 2026 16:52:53 +0000 (UTC)
+Received: from shell.v3.sk ([127.0.0.1])
+	by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id R4N2wv-dUtxI; Wed, 15 Apr 2026 16:52:53 +0000 (UTC)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zimbra.v3.sk (Postfix) with ESMTP id 4E47AE210E;
+	Wed, 15 Apr 2026 16:52:53 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at zimbra.v3.sk
+Received: from shell.v3.sk ([127.0.0.1])
+	by localhost (zimbra.v3.sk [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id MkbUL-gib38t; Wed, 15 Apr 2026 16:52:53 +0000 (UTC)
+Received: from demiurge.local (unknown [109.183.109.54])
+	by zimbra.v3.sk (Postfix) with ESMTPSA id 06174E210D;
+	Wed, 15 Apr 2026 16:52:53 +0000 (UTC)
+From: Lubomir Rintel <lkundrak@v3.sk>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Lubomir Rintel <lkundrak@v3.sk>
+Subject: [PATCH] zd1211rw/mac: Fix out-of-bounds upon RX when unassociated
+Date: Wed, 15 Apr 2026 19:08:10 +0200
+Message-ID: <20260415170810.1809398-1-lkundrak@v3.sk>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260414194757.163339-1-npetrakopoulos2003@gmail.com>
- <20260415052959.14844-1-npetrakopoulos2003@gmail.com> <ad69b2f3dbc74ea6b9b1a17f2a77fbb4@realtek.com>
-In-Reply-To: <ad69b2f3dbc74ea6b9b1a17f2a77fbb4@realtek.com>
-From: LB F <goainwo@gmail.com>
-Date: Wed, 15 Apr 2026 20:03:20 +0300
-X-Gm-Features: AQROBzDgga_jZUeB1-sQh2Y0w7VvH3nw1Bq63jbFFR1fUFTE2ABRpoPIcAqLO9I
-Message-ID: <CALdGYqSepO3xy9UerKXFfKLdj1BS1jGQh5YgkcSHrxYYY=n3Kg@mail.gmail.com>
-Subject: Re: [PATCH v3] wifi: rtw88: Add NULL check for chip->edcca_th in rtw_fw_adaptivity_result()
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>, 
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 15 Apr 2026, Panagiotis Petrakopoulos wrote:
-> Add a NULL check for edcca_th before dereferencing
-> it in rtw_fw_adaptivity_result() in fw.c.
+Upon plugging the adapter, UBSAN complains about an out of bounds read:
 
-Hi Panagiotis,
+  zd1211rw 1-12:1.0: firmware version 4725
+  zd1211rw 1-12:1.0: zd1211b chip 083a:4505 v4810 high 00-13-f7 AL2230_RF=
+ pa0 g--NS
+  ------------[ cut here ]------------
+  UBSAN: array-index-out-of-bounds in drivers/net/wireless/zydas/zd1211rw=
+/zd_mac.c:1059:26
+  index -1 is out of range for type 'ieee80211_channel [14]'
+  CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 6.17.12-300.fc43.x86_6=
+4 #1 PREEMPT(lazy)
+  Hardware name: MSI MS-7A68/B250 KRAIT GAMING (MS-7A68), BIOS H.00 12/15=
+/2016
+  Call Trace:
+   <IRQ>
+   dump_stack_lvl+0x5d/0x80
+   ubsan_epilogue+0x5/0x2b
+   __ubsan_handle_out_of_bounds.cold+0x54/0x59
+   zd_mac_rx+0x453/0x470 [zd1211rw]
+   ? raise_softirq_irqoff+0x9/0x30
+   rx_urb_complete+0x178/0x260 [zd1211rw]
+   ? queue_work_on+0x73/0x80
+   ? led_trigger_blink_oneshot+0x78/0xa0
+   __usb_hcd_giveback_urb+0x9d/0x120
+   usb_giveback_urb_bh+0xb1/0x140
+   process_one_work+0x18f/0x350
+   bh_worker+0x1ac/0x210
+   tasklet_action+0x10/0x30
+   handle_softirqs+0xed/0x340
+   __irq_exit_rcu+0xcb/0xf0
+   common_interrupt+0x85/0xa0
+   </IRQ>
+   <TASK>
+   asm_common_interrupt+0x26/0x40
+  RIP: 0010:cpuidle_enter_state+0xcc/0x660
 
-I have applied this v3 patch to my local out-of-tree rtw88 build
-(openSUSE Tumbleweed, kernel 6.19) on the affected RTL8821CE
-hardware. The driver compiles cleanly and the module loads
-without issues.
+  Code: 00 00 e8 f7 36 ef fe e8 72 f0 ff ff 49 89 c4 0f
+        1f 44 00 00 31 ff e8 23 55 ed fe 45 84 ff 0f 85
+        02 02 00 00 fb 0f 1f 44 00 00 <85> ed 0f 88 d3 01
+        00 00 4c 63 f5 49 83 fe 0a 0f 83 9f 04 00 00 49
+  RSP: 0018:ffffffff9dc03df8 EFLAGS: 00000246
+  RAX: ffff8a5440447000 RBX: ffff8a53df03ea40 RCX: 0000000000000000
+  RDX: 001bd812ca957581 RSI: 00000000248799d1 RDI: 0000000000000000
+  RBP: 0000000000000002 R08: fffffffc74360e92 R09: ffff8a53df02cbe0
+  R10: 001bd81656731313 R11: 0000000000000000 R12: 001bd812ca957581
+  R13: ffffffff9df0fa60 R14: 0000000000000002 R15: 0000000000000000
+   ? cpuidle_enter_state+0xbd/0x660
+   cpuidle_enter+0x31/0x50
+   cpuidle_idle_call+0xf5/0x160
+   ? ktime_get+0x3c/0xf0
+   do_idle+0x78/0xd0
+   cpu_startup_entry+0x29/0x30
+   rest_init+0xe7/0xf0
+   start_kernel+0x49d/0x4a0
+   x86_64_start_reservations+0x24/0x30
+   x86_64_start_kernel+0x126/0x130
+   common_startup_64+0x13e/0x141
+   </TASK>
+  ---[ end trace ]---
 
-I am now starting a structured stability test covering suspend,
-hibernation, high-throughput transfers, and long uptime. I will
-follow up with a Tested-by once I have sufficient confidence in
-the results.
+It is correct: if zd_mac_rx() is called when unassociated, the channel
+is 0, becomes -1 under assumption there's a proper channel number
+starting from 1.
 
-Best regards,
-Oleksandr Havrylov
+Add a missing bounds check.
+
+Signed-off-by: Lubomir Rintel <lkundrak@v3.sk>
+---
+ drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/w=
+ireless/zydas/zd1211rw/zd_mac.c
+index 03948f0b4628..c59d1929a69c 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
+@@ -1022,6 +1022,7 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *bu=
+ffer, unsigned int length)
+ 	const struct rx_status *status;
+ 	struct sk_buff *skb;
+ 	int bad_frame =3D 0;
++	u8 channel;
+ 	__le16 fc;
+ 	int need_padding;
+ 	int i;
+@@ -1055,7 +1056,9 @@ int zd_mac_rx(struct ieee80211_hw *hw, const u8 *bu=
+ffer, unsigned int length)
+ 		}
+ 	}
+=20
+-	stats.freq =3D zd_channels[_zd_chip_get_channel(&mac->chip) - 1].center=
+_freq;
++	channel =3D _zd_chip_get_channel(&mac->chip);
++	if (channel > 0 && channel <=3D ARRAY_SIZE(zd_channels))
++		stats.freq =3D zd_channels[channel - 1].center_freq;
+ 	stats.band =3D NL80211_BAND_2GHZ;
+ 	stats.signal =3D zd_check_signal(hw, status->signal_strength);
+=20
+--=20
+2.52.0
+
