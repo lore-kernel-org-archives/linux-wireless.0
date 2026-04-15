@@ -1,43 +1,43 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 683D9257843
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6231332EC1
 	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 12:45:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776257129; cv=none; b=mC5wjZj+j2Pkk6iy0g8N+edsjyHxz3vKw8cjBM6r820H7i8DPXwZIaO0tlt9FdenUz/fD/uGtvdPKLF7u3cTtcGdRsbXm8mp7mFBLjpBfDN/GfXsEByG9TFGKDeryT6nylMUBkaXrGf1upJdsraJ5KVlcQTajiKmFWUaV7XUmjM=
+	t=1776257130; cv=none; b=F+08WpOjM0VPcMbh6KPGrT/uwTR8/uNUM7E1zQW2QMsIRRmlNnWmIlHw1p7D2VA1FdjLG0reo7NieKwZmeWdNN6rDW3Ow4ZvXE72Je88zxp2fkI+qnAFhwJfspbmQ+dQfEoRkNvuWOmHj0ajWLgJ/zoiSmag7OO4K4N9s9Xym8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776257129; c=relaxed/simple;
-	bh=rfc1BVPX2T7dOrocJwwEeLwviODF0AiWkDPEpPh/Fh8=;
+	s=arc-20240116; t=1776257130; c=relaxed/simple;
+	bh=ufWts/mkENhkjIuqk1tZ03RBOIzpbfHLjj1LPtP3P0c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=a6PlBA4UpIWaW8FIAoe3F9HtfHFtgkfk8l0vwYPWFqdXCgBuFP0ovDvdYSqNIuCcFIYTFVaaZRHrqtgaDNA+w9wO3fk2R8/9iZOcSbfrFPbnN2OnEqwuKZtxxitoAxFwlJM4vxaC7Iz6YyxgbEC6itgKyIZD0cZKipZ32Jwmw9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=XnvIf4To; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=nE+tYF5b6NokfYXWsiFPtMJOyInBoqysMLixIQx3XaWY+HzNVT8DW16HuMzi/6Kys/OuocgOto0M/d5ev6q3SASZV0e1G7jcjGIty6GWkinQiacuV4cY9wPYuprYDC9mEBOdF9iwwQ2Y/EfxmcrYcbk9bkDBxXZg3XMM6I9VSq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qOA07x+y; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="XnvIf4To"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qOA07x+y"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=wuRcMaNn1i86M8f8LuIc1WyOQ5hak5R+OifgMLCPN4I=;
-	t=1776257128; x=1777466728; b=XnvIf4To1qZCT3HZXgLZoJAEqWQzWTZP53fsjhXa3mWFkkW
-	yM0pmxbCchWKrMaQrNzUf6klpQ64ahBevcT/m0DCkO+js71KHq7yld+oBtw3Rh7hz/qvPN+DTTaXX
-	fb8sSbMcC2qtuUBbIRtfb58LMXxrGZvZ4UAMMQsqjA0CM/pW/qVEPegbroJoCdvHcMxKarHNFkJcG
-	dpoIRap8mtu1dSfLtsOODZDT3nOL4oa9t6Jczk2Ft3aWl78dpZkr9AQabSftX9PrUhjf+SWHst5Ws
-	hstJa7F5AAZV8aGJZdSFrubm9siUMWfW2/CgfOVpe6uAZ0s1CC9HgrB+hrR82p3A==;
+	Resent-Cc:Resent-Message-ID; bh=YQW/kpyGR0Osy0DzhPaVcpxJj8/ZUf1eztYRrmKmdus=;
+	t=1776257128; x=1777466728; b=qOA07x+yMxsDosFQ2nINlrhq9V2zwt/KbuyZymfkPTSbkYV
+	NpfsAeUR0DypKxY/QxLv94uN+G8IsUBpMgqkZu18w8+5DY6Jp0VOPw9D8MWKFaUYpRT2DDuwEv9YH
+	IU8d8W5+VnKax8ZuLSsNORvp5M5hMfbFOy1iKfx5KCwzF0L5JPxZG2qyXxgtrmSQcREBI+745dSiG
+	PMZ0jypvzVT+bxndiuhiJXYeknhiHCrASo1fyGn/417biWc2MN2K8TQCfFvcTvhm+K/OTal8OPIKK
+	exLCTlPZHxlw+/pHDNBlpK1BHV136HDlffsfrNNUGARQE6KsSz00Cz1AkImlf4SQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wCzcU-00000006OgW-0PPF;
-	Wed, 15 Apr 2026 14:45:26 +0200
+	id 1wCzcU-00000006OgW-3Xtj;
+	Wed, 15 Apr 2026 14:45:27 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH 13/20] wifi: cfg80211: remove HE/SAE H2E required fields
-Date: Wed, 15 Apr 2026 14:42:11 +0200
-Message-ID: <20260415144514.a4a3ebb0f95a.Ifadd953e13133e7a45ee3318fb04b2ff9dde62e4@changeid>
+Subject: [PATCH 14/20] wifi: nl80211: reject beacons with bad HE operation
+Date: Wed, 15 Apr 2026 14:42:12 +0200
+Message-ID: <20260415144514.6217f5974fb5.Iff7ff6bcb159584e756d0f825c65860cdd53c6ea@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260415124514.284345-22-johannes@sipsolutions.net>
 References: <20260415124514.284345-22-johannes@sipsolutions.net>
@@ -51,37 +51,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-These are not used by any drivers, even the HT/VHT ones
-are only used by the qtnfmac driver. Remove the fields.
+The HE operation element not only needs to be longer than
+the fixed part, but also have an appropriate size for the
+variable part inside of it. Check this.
 
 Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ net/wireless/nl80211.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9d3639ff9c28..8bebf45af95d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1529,8 +1529,6 @@ struct cfg80211_s1g_short_beacon {
-  * @ht_required: stations must support HT
-  * @vht_required: stations must support VHT
-  * @twt_responder: Enable Target Wait Time
-- * @he_required: stations must support HE
-- * @sae_h2e_required: stations must support direct H2E technique in SAE
-  * @flags: flags, as defined in &enum nl80211_ap_settings_flags
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-@@ -1566,7 +1564,7 @@ struct cfg80211_ap_settings {
- 	const struct ieee80211_eht_cap_elem *eht_cap;
- 	const struct ieee80211_eht_operation *eht_oper;
- 	const struct ieee80211_uhr_operation *uhr_oper;
--	bool ht_required, vht_required, he_required, sae_h2e_required;
-+	bool ht_required, vht_required;
- 	bool twt_responder;
- 	u32 flags;
- 	struct ieee80211_he_obss_pd he_obss_pd;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f334cdef8958..7a1c9faef443 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6641,10 +6641,6 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
+ 			params->ht_required = true;
+ 		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_VHT_PHY)
+ 			params->vht_required = true;
+-		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_HE_PHY)
+-			params->he_required = true;
+-		if (rates->data[i] == BSS_MEMBERSHIP_SELECTOR_SAE_H2E)
+-			params->sae_h2e_required = true;
+ 	}
+ }
+ 
+@@ -6677,8 +6673,12 @@ static int nl80211_calculate_ap_params(struct cfg80211_ap_settings *params)
+ 	if (cap && cap->datalen >= sizeof(*params->he_cap) + 1)
+ 		params->he_cap = (void *)(cap->data + 1);
+ 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_OPERATION, ies, ies_len);
+-	if (cap && cap->datalen >= sizeof(*params->he_oper) + 1)
++	if (cap && cap->datalen >= sizeof(*params->he_oper) + 1) {
+ 		params->he_oper = (void *)(cap->data + 1);
++		/* takes extension ID into account */
++		if (cap->datalen < ieee80211_he_oper_size((void *)params->he_oper))
++			return -EINVAL;
++	}
+ 	cap = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY, ies, ies_len);
+ 	if (cap) {
+ 		if (!cap->datalen)
 -- 
 2.53.0
 
