@@ -1,120 +1,142 @@
-Received: from mail.bues.ch (bues.ch [116.203.120.240])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.forwardemail.net (smtp.forwardemail.net [121.127.44.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47D5F39099A
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 17:42:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.120.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6EE41C71
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 17:47:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=121.127.44.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776274978; cv=none; b=EcWR/hUAv75zZocnGJE+Y499AeqYtrZf6QXijgSge2Rp1Yxgj+gA0QfibWIiU+3u1887gOaNIDF0CeXmd4SUbDTCxGD3lgWHQ/EybXdjo7xy1IJ1D0Z1aTgX2YgJ36KiaA4R9+d4bteICoOwetUfi7ppwbcrFt4VXwsoaLvehpQ=
+	t=1776275252; cv=none; b=oInR8umLxpMEdnhOIFhuMyJzcJsgU7F1lcS6D8dMoZkEXHDjcKMdb6DHVIJ265fCbvSiJ5tFjDva3e3L36etR56TuwoWkScHwnlmC8bhot1zQoU9of2upffv0qxk0X7vuNC2cnYu8AJg77hJftv4ZeBQVsecRbz/uDEd5tj0/xQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776274978; c=relaxed/simple;
-	bh=iMU8Q7tk0mzvGfxhQdx/C/pXwAGPrpTMzMu2PP4YAmI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mHHcnVjA1+BWRZwMFvD7RTXZ8irBuBol3mzLsWCexMfoxnx9/EXadNId7RV2862ANtiAYTkUN4IFah62OacKa43wzzOEbWHbgUmY0qUwLMp1xEeDVOBoOYYGOilpEedxhfjk7P4jLZha3lzlCLWJo4EaVsPow9/iV9TgFZ3RlgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b=HOM3+atI; arc=none smtp.client-ip=116.203.120.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
+	s=arc-20240116; t=1776275252; c=relaxed/simple;
+	bh=NtB/eWOJij+AJOpCmAPG4LZPrrs0H8n9UE2w9g0Bys8=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=IB6It0tI9zFfYAh/eyo4ceB/Y9dNMQ5mrE/BUKtX74dJYtJ/C8cgpVyYjWkSkyfsNoIvkzSP7sWy95nSjy53TGLdv+XpM30Exh3dhDS4DzUIiOeeHyngoupSZ8625peXv5gUv6GF1oFK7u7F36DE9tODcei63E7iO9hiHAaASPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ubuntu.com; spf=pass smtp.mailfrom=fe-bounces.ubuntu.com; dkim=pass (2048-bit key) header.d=ubuntu.com header.i=@ubuntu.com header.b=YtF897uv; arc=none smtp.client-ip=121.127.44.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ubuntu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fe-bounces.ubuntu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b="HOM3+atI"
-Date: Wed, 15 Apr 2026 19:41:50 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
-	t=1776274974;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=iMU8Q7tk0mzvGfxhQdx/C/pXwAGPrpTMzMu2PP4YAmI=;
-	b=HOM3+atIPHRb4nfcOcS9numuJVQJCQtHAjo+ljFid+5XbI2ICaacgElaz9xAV0s4shEWPb
-	2ssYa71UCKofBzWT4mayl6mpSecJ9MU4HyrNvhz8hiSMZ818j5A5vRqAZvl/fIHC2Qds+n
-	hE13Np8rju1PojUPpujNFpnT41LeTC+/ZHQha3rE2iBR5eC8tiqrXJ0Iri4acAoO8/IQhm
-	CuWZbj3xj/nJuL2wnXRSd28AjQNxGKSIxkbCuDrleKtCPj8SuImqb5l3Lo9QkvJHOUBDnU
-	YPhygfkKnHqbMjbaUoDUI0egb5OYxwKZwYvCs20mADOgU/LL3NZkxPk/BXJPWw==
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: "Joshua Peisach" <jpeisach@ubuntu.com>
-Cc: "Jonas Gorski" <jonas.gorski@gmail.com>, "Johannes Berg"
- <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
- <b43-dev@lists.infradead.org>, "b43-dev"
- <b43-dev-bounces@lists.infradead.org>
-Subject: Re: Firmware for reverse engineering b43?
-Message-ID: <20260415194150.291dbe2d@barney>
-In-Reply-To: <DHTW44HOVZLS.GFYBZTKJTMP4@ubuntu.com>
-References: <DHS1BJ5XFYRC.GCF9PXS0OSRI@ubuntu.com>
-	<c62a448843f189d78187de18d3fcb955f2779d13.camel@sipsolutions.net>
-	<DHSUDVMGW0PS.2LYWKGG1C1135@ubuntu.com>
-	<CAOiHx==kVm0OKWRKi4VHSEEr6ZygzrpNiA=zj+zEHT6_rgZ3CQ@mail.gmail.com>
-	<DHTPAVC76140.1JLO3HNQARQ9Q@ubuntu.com>
-	<CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
-	<20260415175748.61aa7993@barney>
-	<DHTW44HOVZLS.GFYBZTKJTMP4@ubuntu.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=ubuntu.com header.i=@ubuntu.com header.b="YtF897uv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ubuntu.com;
+ h=In-Reply-To: References: To: From: Subject: Cc: Message-Id: Date:
+ Content-Type: Content-Transfer-Encoding: Mime-Version; q=dns/txt;
+ s=fe-953a8a3ca9; t=1776275249;
+ bh=NtB/eWOJij+AJOpCmAPG4LZPrrs0H8n9UE2w9g0Bys8=;
+ b=YtF897uvfpHmJo76GRPqlxNxOjklRIZdPi3Xs03/bZEDCH9vygGlsME0iNmi327mJYvP8PCP+
+ EFmnE7Y88PdJwrBluSx/ddpvFe+X5Cpd089y4/m1FEXmYVsvSwWjEv/2u53VGIbW8PwZBarsDm+
+ 5CDSiJbWYnvKygEryVgDJy9DoFXhgclCBEVgYFb5VabUDf/79W2CKut2/dIYpXoR/d8ZBkpw4xj
+ ZFY0C+u5mpJpsQL46kbwAq7S+D5n8QW7p2ORF6Ns2dIslVUB6kg0/K34YvWeij6Mu82LKvmk4Zx
+ YYXqhWN+yefjxzBkJxysbdUx9DcuDqc98imkvM05322A==
+X-Forward-Email-ID: 69dfc52a8929b895becdf89a
+X-Forward-Email-Sender: rfc822; jpeisach@ubuntu.com, smtp.forwardemail.net,
+ 121.127.44.73
+X-Forward-Email-Version: 2.7.3
+X-Forward-Email-Website: https://forwardemail.net
+X-Complaints-To: abuse@forwardemail.net
+X-Report-Abuse: abuse@forwardemail.net
+X-Report-Abuse-To: abuse@forwardemail.net
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/5GlhseULoQivVP7Dmr.YsLG";
- protocol="application/pgp-signature"; micalg=pgp-sha512
-
---Sig_/5GlhseULoQivVP7Dmr.YsLG
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8; format=Flowed
+Date: Wed, 15 Apr 2026 13:04:40 -0400
+Message-Id: <DHTW44HOVZLS.GFYBZTKJTMP4@ubuntu.com>
+Cc: "Johannes Berg" <johannes@sipsolutions.net>,
+ <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>, "b43-dev"
+ <b43-dev-bounces@lists.infradead.org>
+Subject: Re: Firmware for reverse engineering b43?
+From: "Joshua Peisach" <jpeisach@ubuntu.com>
+To: =?utf-8?q?Michael_B=C3=BCsch?= <m@bues.ch>, "Jonas Gorski"
+ <jonas.gorski@gmail.com>
+X-Mailer: aerc 0.21.0
+References: <DHS1BJ5XFYRC.GCF9PXS0OSRI@ubuntu.com>
+ <c62a448843f189d78187de18d3fcb955f2779d13.camel@sipsolutions.net>
+ <DHSUDVMGW0PS.2LYWKGG1C1135@ubuntu.com>
+ <CAOiHx==kVm0OKWRKi4VHSEEr6ZygzrpNiA=zj+zEHT6_rgZ3CQ@mail.gmail.com>
+ <DHTPAVC76140.1JLO3HNQARQ9Q@ubuntu.com>
+ <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
+ <20260415175748.61aa7993@barney>
+In-Reply-To: <20260415175748.61aa7993@barney>
 
-On Wed, 15 Apr 2026 13:04:40 -0400
-"Joshua Peisach" <jpeisach@ubuntu.com> wrote:
-> Well, if the regression risk is that high, then I guess I'll let it be.
+On Wed Apr 15, 2026 at 11:57 AM EDT, Michael B=C3=BCsch wrote:
+> On Wed, 15 Apr 2026 13:54:31 +0200
+> Jonas Gorski <jonas.gorski@gmail.com> wrote:
+>
+>> On Wed, Apr 15, 2026 at 1:44=E2=80=AFPM Joshua Peisach <jpeisach@ubuntu.=
+com> wrote:
+>> > It does appear to be similar - even the current brcm80211. So much so
+>> > that I sometimes need to think about whether b43 is actually a
+>> > duplicated driver.
+>> >
+>> > Since b43 is in an orphan state, I thought it would be a great place t=
+o
+>> > start for kernel development. 5G doesn't work on that iMac, some of th=
+e
+>> > PHYs, like the AC PHYs appear to be incomplete - it felt reasonable.
+>> >
+>> > Because I'm one of those "there's always room for improvement people",
+>> > I was going to try to improve the driver, filling out TODOs, fixing
+>> > hardcoded register numbers, etc. But if it's best left alone.. then I
+>> > guess we can do that.
+>> >
+>> > That is, assuming b43 is actually supposed to be a separate driver,
+>> > because if brcmsmac basically has the same code, then maybe we should
+>> > focus to centralizing everything? But then there's b43legacy.. hm... =
+=20
+>>=20
+>> It is/was intentionally a separate driver: Broadcom didn't want to
+>> maintain support for obsolete chips (anything SSB, anything older than
+>> BCM43224), so the decision was to have b43 support all the "legacy"
+>> chips, while brcm80211 supports everything never. Since they were both
+>> based on the same driver, they are (more or less) the same
+>> architecture.
+>>=20
+>> But now that Broadcom has essentially abandoned the softmac part of
+>> brcm80211 since several years, I don't think there would be many
+>> objections on unifying it with b43.
+>
+> The hardest part in the b43 development always was not to break already
+> working stuff. There are many different types and revisions of the hardwa=
+re
+> out there. Probably in the order of many dozens of variants.
+>
+> Please keep in mind that changing code means mostly testing.
+> Which is hard, if you don't have the hardware variants and basically no
+> users exist anymore. Just implementing random TODOs and missing pieces
+> will break things. (e.g. not doing some HW calibration or workaround migh=
+t
+> be better than only partially doing it or doing it wrong).
+>
 
-> Sure. I might just make sure everything is using register definitions
-> instead of hardcoded values, but then leave it there.
+Well, if the regression risk is that high, then I guess I'll let it be.
 
-I mean, I don't want to discourage you from doing anything,
-but I just wanted to point out that this is a lot more work than just imple=
-ment
-a TODO here and there.
+> I would personally not touch this thing anymore, except for security fixe=
+s and such.
+>
 
-For most of the code we don't really know what it does exactly.
-That may change a bit, if you pull over some code from the newer drivers.
-But I don't think the situation will improve fundamentally.
+Sure. I might just make sure everything is using register definitions
+instead of hardcoded values, but then leave it there.
 
-> So I guess this driver just sits here.. not quite pointless to be
-> removed from the main tree, but not quite worth the effort to bring it
-> up to speed.
+> But if you want to work on the code, long term, I would welcome that.
+> We could even arrange that I ship you some hardware.
+> But keep in mind, it's all almost 20 years old legacy stuff.
 
-Well, it probably still works well on the (few) devices it worked well on,
-because it basically hasn't changed.
-There are many devices which were never supported at all or were never supp=
-orted
-properly. It's not that just your device is missing to complete
-the perfect picture :-)
+The only b43 devices I have are the aforementioned iMac, and also the
+Wii. And unless the hardware is unique in some other way, I don't think
+its worth sending it to me. Besides, if the code is so risky to touch,
+then the only technical change I make should just be to fix my 5G
+situation.
 
-There might be better uses of your time than working on this legacy stuff.
-For example working on the microcode reverse engineering and tools and
-get them updated for the current generation of devices is probably
-much more useful. And I think much more fun, too.
-Or something else altogether.
+I didn't intend to become a b43 maintainer, and given where I currently
+am lifewise, I don't think it's worth trying to fulfill that role long
+term. Hopefully I'll find areas of work in brcm80211 to work in. It
+just so happened that "make sure the kernel works on everything you can
+get your hands on" stumbled across b43, which I thought would be a good
+starting point.
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
-
---Sig_/5GlhseULoQivVP7Dmr.YsLG
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmnfzd4ACgkQ9TK+HZCN
-iw6hcRAAhtbf9pPiLjU6v5aNDqOs27ICOjU4ys4u4AYEUk1iYWSkY/oQTxbnX4r1
-GdRFaRijhVwtxP2mzDGEbwi8LcjyZatA0ANhdPEO9h+UeXc1xjQAiMNgGVY2t3KH
-56HllAN10+BgSQoFmysytW1jbxawzFvctetJ4mGWyX8SaoNn0MMCiACrWoP2rFH1
-Wx5bTvImGPiR+KP8FV62gAsMHZ9tBw0WyvZ7fDFc17ePAMLFNqkYeWbY00fziRnd
-9oLCTnu9k1Edky4+W30HaYSZdjCcM7Tx/bkyVFaKqhT61NsfubmZBI6ilw2lEbew
-A0dZU/rTGaf2RczgTRK+QN4lAyykBFcb23VFYB05ybNb7BALXyD0NiI33rdrIoik
-Lde/pe8KAME4+mLZCPBsIS8OOK5iQpIICneCvl3JjsLMTxZ5ejrPbqurDmgC9e7J
-LUFJc71rpUPfstEbJ5N0t/Y7NThzXL6/uuyQ0GkPyyqJ5QeIaU4qFFa7GPrylsod
-R+525VAMss0H2l7aO2Mog8P0bxYOmb2KpzxXe6icaNdxSgktVDMVkygAJh0IH1Ka
-eq3sPCBMGmW/IBFgLyXiohW6uqU2WPWgCn7oTKpGK+hvrH/nivRbcMDPQw7wRDEA
-3p0bU1uJ1L/xTSk9nUpc5cZX7OC+KCjVHfs3crE4WCPN0fMmXkw=
-=BYmO
------END PGP SIGNATURE-----
-
---Sig_/5GlhseULoQivVP7Dmr.YsLG--
+So I guess this driver just sits here.. not quite pointless to be
+removed from the main tree, but not quite worth the effort to bring it
+up to speed.
