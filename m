@@ -1,71 +1,71 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BD1939524A
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:23:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE65391500
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 22:23:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776291816; cv=none; b=tfZ2GzJI13QL86rVTfc4oMfI+FJAa87CatfXrrT5im+Ui7HuZdtoqSmlW3KYQ9VmkdKyfiKxizXFAN4/WMZtnByt44SIDFiNs5q52PYw5L4cwpM/3D226ZC956Nntb1Kt5GNweCOBSbDBF+W72NwlCMGGhSTxIsn1O4kFuGmHe4=
+	t=1776291817; cv=none; b=ikV4p3Ooei+5IhACedKMo1VFDcdrrzj6O/U6wqRrNc3kvB66Ej5dnAZmkcQjoO4k2fnC5kg3sUcK7SFZokAt4g7tLXRhICZ3swZ8lTSnoXeH5W4LUdSb7K27XD6dr6HaOmCsowASGS0i2IxUGcUS5x34yCumCVnrrqx8+iZAc0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776291816; c=relaxed/simple;
-	bh=v46IZ1SzmsGJww3UxMiqnbb/req4jkKIhm+Hwkx9w1U=;
+	s=arc-20240116; t=1776291817; c=relaxed/simple;
+	bh=tZjNaZEXvnSFPEDZzHmrMt9aRXiBa+bJDj1WSm7wEDQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Vsdzdgi9Lgva6RbTkuwB66A2aIHcGriCWaeZ8H1ZVDaMsHapL70j23UnWYRqOtGGuYVIqo3CCf9/2PtI3Gc6g9l7VPPir6l9WVnsYAA7Firek7laUr8jEkO65YX7xO7fQCsATEMfWfwxwxZaysOUJUrKq5MG2puHPRifolU5Ncw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l8v/wca3; arc=none smtp.client-ip=209.85.128.49
+	 MIME-Version; b=CiIaGcVANih2No68lKQkBW/idFUuCMCokeUyHJoeMebMOVu7UQ1ysnjj0U2VQzzDHlic8K1tLFh4P/b86RXBCJquC2/1Ts8f7GUJa9Ic2dcLe9Y/M8F4jmZmQfvnMnsrRwVY/1slmIKMxWDMKhMeAuOei0WSC3jzXEm/UtKCR2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a0hnPQzP; arc=none smtp.client-ip=209.85.128.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l8v/wca3"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-488971db0fdso72522675e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:23:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a0hnPQzP"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-488ab2db91aso112611515e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 15:23:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776291814; x=1776896614; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1776291811; x=1776896611; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Qu4+ZL2QMhA6P6OJkoB9A5NpknefCcp85WdeQdgdhoA=;
-        b=l8v/wca3tD/feKvgMzdC2Ln2/wDWmYRXKKFzLlGAwq02cBWHvhSHGKAETPKYQNPycn
-         2HLUgceZbdrXockzQ3iAo9P/xHUumqUplSB48fpZHmmC2cJJ5QYa1ZAHnxSYeiuV8cOK
-         15ZBmhRxVvHsfROJQHem21yRVjm6cTmRLrXBCbzCDrf5cw7JtAoV9tBCWrMJnShWVB4e
-         x6jZw+NL5rNBglSj/FFITLzTh4y9esPgAkSoRavQgE3pJQGCt76lGv9rg4nN7hhPrXt/
-         TJgLQsLg661YjCXj0GQSx6sDNKm+yGPUrC4OJTGkzO10kmvVuy3LU5FZ/7Bkrz9H5biW
-         ebPg==
+        bh=58lzRs6nO9P0m/wYeIkyHuOnKofA9zauhmvpRE3UfRM=;
+        b=a0hnPQzPtL+eQmh0IZxap92h8szglN7k2WJCGKLF+IgSPcOpSa017yE7c7CGMkdRnG
+         +2uLMlVzZ0Ei3k1YqpGmoxEqdi+uUXSaGxrN/EKTBTGaJ+cOzMU7RJ/we6Bhordewoi9
+         6Tu5c8VFaLVgp4l0HuOgqEVRPptiK0R6m3Xtn089LPp5bnkFUQMsgJOdP3bIFqSp+OUK
+         GVojr6Ug9I3YHhTdWyPfaFsNAxf814b/vpgco/fEGK0SS9xgLU5WZ5PyMEQ36FB3RKYZ
+         V7elHzb5+hdWAy3ygt7ad1DsYd2XGQCvG/ZW06XD0Dr0uHVgHNrCeleBYQEyvs9lrxDL
+         01iA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776291814; x=1776896614;
+        d=1e100.net; s=20251104; t=1776291811; x=1776896611;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Qu4+ZL2QMhA6P6OJkoB9A5NpknefCcp85WdeQdgdhoA=;
-        b=Y1YE0GaTW3iTmtWDPms1If9QBE0M9Mk9ihbjPiIhnlWHEkLlrj4EFK7pMBsZiotWn6
-         JtKzGZoQqW9AAyLI0SxRbtCzqDgl4KFiohpb3s4SNVXnaLmg3VrZwidmFNtWQriqcieo
-         raT4hLJ3OgQCVcp1BmG7APv7E8PlCFBERRrIaVTNsNWj36FDtT3WS/cLRv2cb5JpnUrp
-         e4SFWHO9VDgOrLg2euAJQ2LNx546PDiwnjQnbkM5hIDNw7eAPxjkCPidofaU2JkuPOrs
-         ymE8ZPdEQa8+egZZDNCx44BvC2P6+d/XtxATQVf6tJ5wxF656p5OB+xgScTv/iVzhzso
-         2ZTg==
-X-Forwarded-Encrypted: i=1; AFNElJ+AiicAn8QcQvoaP9gFEGwq9tP91FM63wBCC25+ZgSx1dWTSMNXwRJf8vTm6tZKWdTElrPw0c6NZ/QnbgSCkw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw5UeBZ09EqOB4f7PbjQdFz8CRS8/kOON/OsVE4I9E2NPeQz0wA
-	nwYQ1xbcrhkDiyV1soqWpylYzAdSC0UEV8vjh2RoA0a/5+LJnlRoaGE=
-X-Gm-Gg: AeBDiesy/IR6HxSjLEIyEvxZOimnzRYQ4GWVMTnZwSsOUUvVqGN/AozOP76eA2JjP65
-	pifGJarkGN69Qita/crocFWhjYCApgFkMBYVfYuMSlySklz2EJxq1YhMQbjE8DOwZ2gEK3LhPzx
-	8wpmfyMJaZRci9WHh4Wq6wCNepjHTvsnyDnQfsmLDNKHvI7QNZBw8S/tZ8TFMXD743b/xnKNdqx
-	xfJ6uMzMQ4XNL1uWLLXUjVB3Zu3z8Sy/aPUtlY0JIt3P/IxCbzEY1XWTs4PbQjUXEAwKkGOyboP
-	vOC1wqwM+bw61v9eoL3aAVJbBMP/ccOyvnFH0wTNlkJY76ypLjeztpURP+l92pMVtAyvZ5vKTlN
-	9yVpcZu/I5eICoBKYreBMxRW9Pnas/uYqu8x3s8Chej68iDMqPumt/58XbTlTx/uGjGVL9Y8ijN
-	CNX2VZmvReO6Yr9w==
-X-Received: by 2002:a05:600c:5299:b0:487:1fb4:7e1 with SMTP id 5b1f17b1804b1-488d6875f3emr313138965e9.22.1776291813644;
-        Wed, 15 Apr 2026 15:23:33 -0700 (PDT)
+        bh=58lzRs6nO9P0m/wYeIkyHuOnKofA9zauhmvpRE3UfRM=;
+        b=CURbaj321vKxcp4jOVS2/WoNyAovJYcYtMCs0dkRluHihmqoK9iKcYkxhZazGuWaxU
+         PCYXDPp4tjW6SQba0cYXGxNxN8HTOA/kVCh0H0pxVtPXg+1dm0i1y6FXSb+ykHyLDcJt
+         sqPbbnG5fFkgoqQoBAaF7tZW9EeyTg96TIV1np4cYOzb/cr0UOLMZhVplaWk9/rOkhFq
+         Fy2PSpDcYYwQUzjLk/lib6j3T7dEOQtHsoDov3lM8VuyWevqtfXGAMYxhzIgYLoU/qVC
+         xdzEf2lxce3oQuSjWOE+He2iYNYLtNpainLevbTgeK9+h0a3XEMLcr4JHICDpqkApJHQ
+         nvlQ==
+X-Forwarded-Encrypted: i=1; AFNElJ89lQslEC0GiN5owlySjLyAL/r5BxOlpEYVRo22Pd0Nq9W201HeO4da+5Sg2zGEXAn/q60F0iRWm6F6d+6tXg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyd3KyyvIxlqY476GdWJrS+gpj1ubCGQySEPxKLfPs/WvihShXZ
+	8UP1pgJMk3I4cPirW/C5LSt12P0T9xkkR22qaiEpG44TAjTaNiFx9xw=
+X-Gm-Gg: AeBDietDshtkLl3p4KtuQEc0i4KlJJb5Nz6sP49uAp30HDGjF3zAIXVoTAm3gMEVcio
+	7FJ6DCOzMTd/0XYfUkyL92Pq6yIGISomMvKyXErOWnzHTGBxdFlZwpUzzSM1+tj/fTHBih/fly8
+	+gnjJkL1CtYuh3XUfOqUdoYYLpgNQIK1vEew76fUqrkM54rkDVmDrTEjOEwgKvIZGD2inv8x/dw
+	KI0qg86sGUwK7zfkhtWq2B3y78GVZOH6yrP/yftpKDitXt10RsPUVfUSuuEHo0Wv15MreIG/Mgz
+	hK6+IBT4RE5E1+USeZg9zAQBumsch8cxYe01mVrp+YM0KO8rIM7sVbXEV30AhqCQLUiM+v+wIv7
+	TGMYVxQo6JxPOTzQVd0brm+9UB3WZxmPh9F2vXGuEKOfTZj2eURdafuYLrF91QR9BGD1mXdilIw
+	GUgl8=
+X-Received: by 2002:a05:600c:c117:b0:487:4eb:d125 with SMTP id 5b1f17b1804b1-488d67e370bmr223489645e9.9.1776291810987;
+        Wed, 15 Apr 2026 15:23:30 -0700 (PDT)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488f0eb3842sm30160995e9.24.2026.04.15.15.23.31
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488f0eb3842sm30160995e9.24.2026.04.15.15.23.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Apr 2026 15:23:32 -0700 (PDT)
+        Wed, 15 Apr 2026 15:23:30 -0700 (PDT)
 From: Tristan Madani <tristmd@gmail.com>
 To: Brian Norris <briannorris@chromium.org>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/6] wifi: mwifiex: fix OOB read from firmware sta_count in station list response
-Date: Wed, 15 Apr 2026 22:23:24 +0000
-Message-ID: <20260415222327.1539269-4-tristmd@gmail.com>
+Subject: [PATCH v2 1/6] wifi: mwifiex: fix OOB write from firmware queue_index in WMM status response
+Date: Wed, 15 Apr 2026 22:23:22 +0000
+Message-ID: <20260415222327.1539269-2-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260415222327.1539269-1-tristmd@gmail.com>
 References: <20260415222327.1539269-1-tristmd@gmail.com>
@@ -79,38 +79,32 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-The firmware-controlled sta_count (u16) is used as an unbounded loop
-counter for iterating station info entries. An inflated count drives
-reads past the response buffer into kernel heap memory.
+The firmware-controlled queue_index (u8) from the WMM queue status TLV
+is used to index the 4-entry ac_status[] array without validation. An
+out-of-range value causes out-of-bounds writes of three firmware-
+controlled bytes into adjacent struct fields.
 
-Add a check that sta_count fits within the response size.
+Add a bounds check before using queue_index as an array index.
 
-Fixes: b21783e94e20 ("mwifiex: add sta_list firmware command")
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
-drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+drivers/net/wireless/marvell/mwifiex/wmm.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
 index XXXXXXX..XXXXXXX 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -976,7 +976,15 @@ static int mwifiex_ret_uap_sta_list(struct mwifiex_private *priv,
- 	struct mwifiex_ie_types_sta_info *sta_info = (void *)&sta_list->tlv;
- 	int i;
- 	struct mwifiex_sta_node *sta_node;
-+	u16 resp_size = le16_to_cpu(resp->size);
-+	u16 count = le16_to_cpu(sta_list->sta_count);
-+	u16 max_count;
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -945,6 +945,11 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ 				    tlv_wmm_qstatus->disabled);
 
-+	if (resp_size < sizeof(*resp) - sizeof(resp->params) + sizeof(*sta_list))
-+		return -EINVAL;
-+	max_count = (resp_size - sizeof(*resp) + sizeof(resp->params) -
-+		     sizeof(*sta_list)) / sizeof(*sta_info);
-+	count = min(count, max_count);
--	for (i = 0; i < (le16_to_cpu(sta_list->sta_count)); i++) {
-+	for (i = 0; i < count; i++) {
- 		sta_node = mwifiex_get_sta_entry(priv, sta_info->mac);
- 		if (unlikely(!sta_node))
- 			continue;
++			if (tlv_wmm_qstatus->queue_index >=
++			    IEEE80211_NUM_ACS) {
++				break;
++			}
++
+ 			ac_status = &priv->wmm.ac_status[tlv_wmm_qstatus->
+ 							 queue_index];
+ 			ac_status->disabled = tlv_wmm_qstatus->disabled;
 
