@@ -1,142 +1,140 @@
-Received: from smtp.forwardemail.net (smtp.forwardemail.net [121.127.44.73])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6EE41C71
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 17:47:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=121.127.44.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048163016E0
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 18:30:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776275252; cv=none; b=oInR8umLxpMEdnhOIFhuMyJzcJsgU7F1lcS6D8dMoZkEXHDjcKMdb6DHVIJ265fCbvSiJ5tFjDva3e3L36etR56TuwoWkScHwnlmC8bhot1zQoU9of2upffv0qxk0X7vuNC2cnYu8AJg77hJftv4ZeBQVsecRbz/uDEd5tj0/xQ=
+	t=1776277839; cv=none; b=e/6Yvwdgqm5rnipurCGL8H1Y2ZsB8OG5gwe2m4YtS30tbrrsop2mfZtLeoysD7pJ4WN1KsfQf9zH3QgZEmHpBRaM8Q2RqCel5fIrF8UzTB7qZRm9HggOpk2p+E/2yR/zQ2FK4hdGZlkymzHDUB3n8eL/cOFwlUiH8YACkqwU2jI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776275252; c=relaxed/simple;
-	bh=NtB/eWOJij+AJOpCmAPG4LZPrrs0H8n9UE2w9g0Bys8=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=IB6It0tI9zFfYAh/eyo4ceB/Y9dNMQ5mrE/BUKtX74dJYtJ/C8cgpVyYjWkSkyfsNoIvkzSP7sWy95nSjy53TGLdv+XpM30Exh3dhDS4DzUIiOeeHyngoupSZ8625peXv5gUv6GF1oFK7u7F36DE9tODcei63E7iO9hiHAaASPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ubuntu.com; spf=pass smtp.mailfrom=fe-bounces.ubuntu.com; dkim=pass (2048-bit key) header.d=ubuntu.com header.i=@ubuntu.com header.b=YtF897uv; arc=none smtp.client-ip=121.127.44.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ubuntu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fe-bounces.ubuntu.com
+	s=arc-20240116; t=1776277839; c=relaxed/simple;
+	bh=Ohbt9ZqD4MIjFq8WvgJfeXsDdndtXr0Y2oCOQ01NELA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ue5zL34t1saN5CMNauAJrF9uvAS+Ul/hRlqH6YwY2daiFi20x7WRxVFxoK4Rh6r4SBtTEcaK1UTOM3/e0lNI1pYcXGX9zut3Jd9cMfwH5iv1Zb8MS91UhRo59EXf0iW+l9kx45T+RmdnTfUnaN9oXTb92lQ7Ajmp+/TdKlqdveI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MVEzeHIN; arc=none smtp.client-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ubuntu.com header.i=@ubuntu.com header.b="YtF897uv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ubuntu.com;
- h=In-Reply-To: References: To: From: Subject: Cc: Message-Id: Date:
- Content-Type: Content-Transfer-Encoding: Mime-Version; q=dns/txt;
- s=fe-953a8a3ca9; t=1776275249;
- bh=NtB/eWOJij+AJOpCmAPG4LZPrrs0H8n9UE2w9g0Bys8=;
- b=YtF897uvfpHmJo76GRPqlxNxOjklRIZdPi3Xs03/bZEDCH9vygGlsME0iNmi327mJYvP8PCP+
- EFmnE7Y88PdJwrBluSx/ddpvFe+X5Cpd089y4/m1FEXmYVsvSwWjEv/2u53VGIbW8PwZBarsDm+
- 5CDSiJbWYnvKygEryVgDJy9DoFXhgclCBEVgYFb5VabUDf/79W2CKut2/dIYpXoR/d8ZBkpw4xj
- ZFY0C+u5mpJpsQL46kbwAq7S+D5n8QW7p2ORF6Ns2dIslVUB6kg0/K34YvWeij6Mu82LKvmk4Zx
- YYXqhWN+yefjxzBkJxysbdUx9DcuDqc98imkvM05322A==
-X-Forward-Email-ID: 69dfc52a8929b895becdf89a
-X-Forward-Email-Sender: rfc822; jpeisach@ubuntu.com, smtp.forwardemail.net,
- 121.127.44.73
-X-Forward-Email-Version: 2.7.3
-X-Forward-Email-Website: https://forwardemail.net
-X-Complaints-To: abuse@forwardemail.net
-X-Report-Abuse: abuse@forwardemail.net
-X-Report-Abuse-To: abuse@forwardemail.net
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MVEzeHIN"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-82418b0178cso3678705b3a.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 11:30:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1776277837; x=1776882637; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lN21C+5PsTyxBA2toqguwwdmaHUEvYgpm7U5rs5TcnM=;
+        b=MVEzeHINDPSIqxxFndyRUiY3DjhdWlFpOxjmUclnPufT5HdEu1drjYcuQlqNlLvjsP
+         plWB2/WIH/JVhPm6SonMFSanE6SgUchg69Wc8bOyjmPuvmMKCap6Hm1AOJW9R/IA4EHn
+         mKVTvfCmEzB8hPcP46ZZRbgr0nwHNPN6us6YunyfXvlX+H5DnNOyNYXLr66jrJ5ytukg
+         1jfLrvRGv8Hdz4NKjAkLL3dlzWdECsdNJW1/TGzBegvilf0620R0fXYlYgDVH6xHe3if
+         tAVBQG4WelSu9zEITpwxpO2AiePzaLYrZ57bbOX8ttE05j7B5+EKkzzcr819pdtY0Z+Y
+         e/6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776277837; x=1776882637;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lN21C+5PsTyxBA2toqguwwdmaHUEvYgpm7U5rs5TcnM=;
+        b=jgGePQ/hO1hqIej1B3XYeF1Y2qQ+Os50ET92RZH/mV5DExlRfiLBWM18mkv0qaVuzi
+         EgsIgUpiLH2tFzL2NAFmSY0BqZ98hv8k9mncfupz1kqFo9acm7dyLDAzCjya3ofjeNFT
+         R3MOXtlLLXCtSKgazDGCuqjHWIkK7XjBmuePlS4cqE8ps+DdQ+PtziyNmAWGkd9yl7qD
+         mP6Gpb2KRWqHXFImHMoSCmKGye5egpAZnILF80Ikknax3JLXJnizh77Cbebt1BkGSk86
+         rs46EIawj6YjV7FWsw1HtuaSUBUTZxewn7r4j8XL3QtGU6T7/8SFfTwg/K4ew6GuNJwa
+         AHJQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9a8c/UIcLm9bsVFuk3zoiL19PhaKAzyEwKekt493T8PUqup4fvCm7RmAT+WYTvPZYRwYVuu7k/c0QlzxRQxA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzRRHtI/6GlF7zatxHaQPN1IYs+L8Vw/uxzM6NKsrQdXOLsLp3b
+	lJtzfaPzKpSX7rGxKDxhuBu5zxeozJ5LjX4EjR5jEp9mwUzlR3PWiL0G
+X-Gm-Gg: AeBDieuh7rsZeldxCd0grEGrytT3k0apmvb6BAbxc6vu34Wqg+vAa9S2NPpfiQnzbd+
+	MtIigRKC6Bkn/tN2X74QUi+db11cayAEs/QNsY0tcyH8WzmPuMJcbJ6qCWBZzgcEfL0r9h1sw47
+	dEh/72BCTmgq4B8S3anOUSUENB3k2VdugTHIdHGHDrKHt/a4j5vvsVOXd1DU+e14LomohruI2FR
+	Y6GNKGoKPdkGbHxSUbgti7me1Huyb1NZP8LKIesEez9NNswMMFzPjNFagvjhXf1CFdhIotGdFxT
+	RyAVtRIS8ffJX1nvmxPhQVpNaB0BUBtfnFdWBzIpzmYpUYiCnVz7zw94pSu1hKNczbTAXifhzJC
+	naK2KRNNHb+gCMcS3teQYACL7KcQCn4fd07HFoCyvTguxYkqw5j+fZZiF0fTEFJW0cOvtidi0sZ
+	wfJf7VJaznp9CHrK1WFjQxl6Q4emJA3jHTkzMlBLPsFIOmMg==
+X-Received: by 2002:a05:6a00:10b:b0:82f:1d38:f68f with SMTP id d2e1a72fcca58-82f1d38fc7bmr14476588b3a.31.1776277837089;
+        Wed, 15 Apr 2026 11:30:37 -0700 (PDT)
+Received: from lgs.. ([2409:893d:1171:10e2:93ee:194:b07d:a9b2])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-82f67449c3asm2843343b3a.53.2026.04.15.11.30.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Apr 2026 11:30:35 -0700 (PDT)
+From: Guangshuo Li <lgs201920130244@gmail.com>
+To: Michael Buesch <m@bues.ch>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Guangshuo Li <lgs201920130244@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] ssb: fix reference leaks on failed flash device registration
+Date: Thu, 16 Apr 2026 02:30:02 +0800
+Message-ID: <20260415183002.3752935-1-lgs201920130244@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8; format=Flowed
-Date: Wed, 15 Apr 2026 13:04:40 -0400
-Message-Id: <DHTW44HOVZLS.GFYBZTKJTMP4@ubuntu.com>
-Cc: "Johannes Berg" <johannes@sipsolutions.net>,
- <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>, "b43-dev"
- <b43-dev-bounces@lists.infradead.org>
-Subject: Re: Firmware for reverse engineering b43?
-From: "Joshua Peisach" <jpeisach@ubuntu.com>
-To: =?utf-8?q?Michael_B=C3=BCsch?= <m@bues.ch>, "Jonas Gorski"
- <jonas.gorski@gmail.com>
-X-Mailer: aerc 0.21.0
-References: <DHS1BJ5XFYRC.GCF9PXS0OSRI@ubuntu.com>
- <c62a448843f189d78187de18d3fcb955f2779d13.camel@sipsolutions.net>
- <DHSUDVMGW0PS.2LYWKGG1C1135@ubuntu.com>
- <CAOiHx==kVm0OKWRKi4VHSEEr6ZygzrpNiA=zj+zEHT6_rgZ3CQ@mail.gmail.com>
- <DHTPAVC76140.1JLO3HNQARQ9Q@ubuntu.com>
- <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
- <20260415175748.61aa7993@barney>
-In-Reply-To: <20260415175748.61aa7993@barney>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed Apr 15, 2026 at 11:57 AM EDT, Michael B=C3=BCsch wrote:
-> On Wed, 15 Apr 2026 13:54:31 +0200
-> Jonas Gorski <jonas.gorski@gmail.com> wrote:
->
->> On Wed, Apr 15, 2026 at 1:44=E2=80=AFPM Joshua Peisach <jpeisach@ubuntu.=
-com> wrote:
->> > It does appear to be similar - even the current brcm80211. So much so
->> > that I sometimes need to think about whether b43 is actually a
->> > duplicated driver.
->> >
->> > Since b43 is in an orphan state, I thought it would be a great place t=
-o
->> > start for kernel development. 5G doesn't work on that iMac, some of th=
-e
->> > PHYs, like the AC PHYs appear to be incomplete - it felt reasonable.
->> >
->> > Because I'm one of those "there's always room for improvement people",
->> > I was going to try to improve the driver, filling out TODOs, fixing
->> > hardcoded register numbers, etc. But if it's best left alone.. then I
->> > guess we can do that.
->> >
->> > That is, assuming b43 is actually supposed to be a separate driver,
->> > because if brcmsmac basically has the same code, then maybe we should
->> > focus to centralizing everything? But then there's b43legacy.. hm... =
-=20
->>=20
->> It is/was intentionally a separate driver: Broadcom didn't want to
->> maintain support for obsolete chips (anything SSB, anything older than
->> BCM43224), so the decision was to have b43 support all the "legacy"
->> chips, while brcm80211 supports everything never. Since they were both
->> based on the same driver, they are (more or less) the same
->> architecture.
->>=20
->> But now that Broadcom has essentially abandoned the softmac part of
->> brcm80211 since several years, I don't think there would be many
->> objections on unifying it with b43.
->
-> The hardest part in the b43 development always was not to break already
-> working stuff. There are many different types and revisions of the hardwa=
-re
-> out there. Probably in the order of many dozens of variants.
->
-> Please keep in mind that changing code means mostly testing.
-> Which is hard, if you don't have the hardware variants and basically no
-> users exist anymore. Just implementing random TODOs and missing pieces
-> will break things. (e.g. not doing some HW calibration or workaround migh=
-t
-> be better than only partially doing it or doing it wrong).
->
+When platform_device_register() fails in ssb_devices_register(), the
+embedded struct device in ssb_pflash_dev or ssb_sflash_dev has already
+been initialized by device_initialize(), but the failure paths only
+report the error and do not drop the device reference for the current
+platform device:
 
-Well, if the regression risk is that high, then I guess I'll let it be.
+  ssb_devices_register()
+    -> platform_device_register(&ssb_pflash_dev)
+       -> device_initialize(&ssb_pflash_dev.dev)
+       -> setup_pdev_dma_masks(&ssb_pflash_dev)
+       -> platform_device_add(&ssb_pflash_dev)
 
-> I would personally not touch this thing anymore, except for security fixe=
-s and such.
->
+  ssb_devices_register()
+    -> platform_device_register(&ssb_sflash_dev)
+       -> device_initialize(&ssb_sflash_dev.dev)
+       -> setup_pdev_dma_masks(&ssb_sflash_dev)
+       -> platform_device_add(&ssb_sflash_dev)
 
-Sure. I might just make sure everything is using register definitions
-instead of hardcoded values, but then leave it there.
+This leads to reference leaks when platform_device_register() fails.
+Fix this by calling platform_device_put() after reporting the error.
 
-> But if you want to work on the code, long term, I would welcome that.
-> We could even arrange that I ship you some hardware.
-> But keep in mind, it's all almost 20 years old legacy stuff.
+The issue was identified by a static analysis tool I developed and
+confirmed by manual review.
 
-The only b43 devices I have are the aforementioned iMac, and also the
-Wii. And unless the hardware is unique in some other way, I don't think
-its worth sending it to me. Besides, if the code is so risky to touch,
-then the only technical change I make should just be to fix my 5G
-situation.
+Fixes: c7a4a9e3880cc ("ssb: register platform device for parallel flash")
+Fixes: 7b5d6043de312 ("ssb: register serial flash as platform device")
+Cc: stable@vger.kernel.org
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
+ drivers/ssb/main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-I didn't intend to become a b43 maintainer, and given where I currently
-am lifewise, I don't think it's worth trying to fulfill that role long
-term. Hopefully I'll find areas of work in brcm80211 to work in. It
-just so happened that "make sure the kernel works on everything you can
-get your hands on" stumbled across b43, which I thought would be a good
-starting point.
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index b2d339eb57d5..5cdf612a8516 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -535,16 +535,20 @@ static int ssb_devices_register(struct ssb_bus *bus)
+ #ifdef CONFIG_SSB_DRIVER_MIPS
+ 	if (bus->mipscore.pflash.present) {
+ 		err = platform_device_register(&ssb_pflash_dev);
+-		if (err)
++		if (err) {
+ 			pr_err("Error registering parallel flash\n");
++			platform_device_put(&ssb_pflash_dev);
++		}
+ 	}
+ #endif
+ 
+ #ifdef CONFIG_SSB_SFLASH
+ 	if (bus->mipscore.sflash.present) {
+ 		err = platform_device_register(&ssb_sflash_dev);
+-		if (err)
++		if (err) {
+ 			pr_err("Error registering serial flash\n");
++			platform_device_put(&ssb_sflash_dev);
++		}
+ 	}
+ #endif
+ 
+-- 
+2.43.0
 
-So I guess this driver just sits here.. not quite pointless to be
-removed from the main tree, but not quite worth the effort to bring it
-up to speed.
