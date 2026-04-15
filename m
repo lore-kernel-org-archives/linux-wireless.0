@@ -1,134 +1,98 @@
-Received: from mail.bues.ch (bues.ch [116.203.120.240])
+Received: from mail-4323.protonmail.ch (mail-4323.protonmail.ch [185.70.43.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E7978F3A
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2026 16:07:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.120.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53E2231AAA8;
+	Wed, 15 Apr 2026 16:57:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776269240; cv=none; b=JCdXuUu5NT+i+Jd7eyuMVKi5U/cncG/vhIpa192nJw/RfrkFKjtF7YyfIHyETRBg5rmbWvFPKRHsd+fGdojN2CS/oN7CYIEdTZQMwr5PCl0PrQZ/W/44WK1R/B1pVdwX5d2QkukY4FadXSV2ot6DXJVLmZrWd+gTklxc+kDkDZI=
+	t=1776272244; cv=none; b=tkMS94ScpKDSLFoT0Xscc+FWZkxLIohTOcDjVh1a9CZd+p1JsM2fw1V6dSwxUaIZelAB6GaInu9h/W87+jkeF6aPxx7TYdirYlMG6zIgtzdBvBjKwNXNKmMy++DNnqpVFLIUG1NQWeEAzgVExZxZfuWdR5QpedUHkzPjDRCMivg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776269240; c=relaxed/simple;
-	bh=J/J/rHcH80SrKxja8htcH+s0y97ceMSk5zZnzhnKpkI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Seexd7y0VUfC7OANp8jsFv4eLkj9kTHIg803U8uCCj3PO486Dt4xBAjpLBDi+yfQ6+IOhFboAGDBWeh+vBjGENf+VSGPzmE1XVBKc6l6+w4L5dF/xrUl03pTKtwwR9KoK3iQIuL7DDsdR2F9ItoBdID+JgjCSNQIXsldQbiaKd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b=BN5wFWY3; arc=none smtp.client-ip=116.203.120.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
+	s=arc-20240116; t=1776272244; c=relaxed/simple;
+	bh=V9T5Bgj31sBKP6pd9DlhQ0fIulRPEXKuRHEVPjkkrLk=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=oHQ+Bquz15/UxuyNAaL+UuzSkkr4/HXave6hj+Eguf3Mj78xBgzqEZbRH/MGV+ZgR+dAMJqBD3id31OI2cThwTMkvWkcCe4mX+T+v/J5TM9uL4kVDEX4T8fiORaF/llXAoTAytGv4Ddoty7m2R/xNlmFLtrUhLJk4K1q2JPDwTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me; spf=pass smtp.mailfrom=r26.me; dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b=p44Ny+tI; arc=none smtp.client-ip=185.70.43.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=r26.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=r26.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b="BN5wFWY3"
-Date: Wed, 15 Apr 2026 17:57:48 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
-	t=1776268691;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=J/J/rHcH80SrKxja8htcH+s0y97ceMSk5zZnzhnKpkI=;
-	b=BN5wFWY3B9u47kWoWHKih/s7VQ1i5WIU8pZ6Qpup8hBLQx6+nq7T8QqdRDu8mlVBPYhTOP
-	gyb7RwMuvYPlE4Vt4ue745CpKycVYC8lq4n2O8IHH2xPqi73w6Fx7YNfAxL+uRwbNcFXVe
-	pTQfaG1fYNVcFq3qsPYDamF4S//GBLmxrYpWfr6/05kuXL6pX4egpwSfXpyBiq2P2dNJKb
-	rWs8DhCXx6qy7WXcBW/leVRuyhpBJGYdbeiON39Og+88BHBpns+iHfKxBbMCWm101NNJSS
-	1W7BFuoFhP2ABQtFaZAIEyBYpwLhq+mOoMxpOqrXbJ4EyX6RPv9AMYr8xFQuQg==
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Joshua Peisach <jpeisach@ubuntu.com>, Johannes Berg
- <johannes@sipsolutions.net>, b43-dev@lists.infradead.org,
- linux-wireless@vger.kernel.org
-Subject: Re: Firmware for reverse engineering b43?
-Message-ID: <20260415175748.61aa7993@barney>
-In-Reply-To: <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
-References: <DHS1BJ5XFYRC.GCF9PXS0OSRI@ubuntu.com>
- <c62a448843f189d78187de18d3fcb955f2779d13.camel@sipsolutions.net>
- <DHSUDVMGW0PS.2LYWKGG1C1135@ubuntu.com>
- <CAOiHx==kVm0OKWRKi4VHSEEr6ZygzrpNiA=zj+zEHT6_rgZ3CQ@mail.gmail.com>
- <DHTPAVC76140.1JLO3HNQARQ9Q@ubuntu.com>
- <CAOiHx=n8awRRvArvG8sWqEokojXL6ppFRJ8_SOuGAddDb1D32A@mail.gmail.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=r26.me header.i=@r26.me header.b="p44Ny+tI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=r26.me;
+	s=protonmail; t=1776272238; x=1776531438;
+	bh=V9T5Bgj31sBKP6pd9DlhQ0fIulRPEXKuRHEVPjkkrLk=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=p44Ny+tIelN3XwDc51CBNqEsFxfwsUWb8onR9hV8hs9nFcupihzP954gx2Qnp+C5I
+	 Bjx7KWCsC09bLTDi2c/S9WrhHFJ1QdmRzUXSyKMWKb+oeFswfoIVwPD/CyLR10xfAS
+	 YE0q97ivtWEJAO6yCTYV6mQhbOwv9pXBET3bF7Nz2QBOu3xhAtLcfV1TKr8qeuR4BA
+	 2hJNzjWSvousKIcGCGa4EH6tvgR24Am6/5gJOlhlGOr6KMrQ44IYOr6f0kzI50beL8
+	 OBYpGArYWIfmPfqMfio3s9FhiLFB8wKbjqOfeByD3xZhvZq/BUM6fPsqG/OzmiBX1J
+	 vAKKVw/J9oJ6g==
+Date: Wed, 15 Apr 2026 16:57:13 +0000
+To: Johannes Berg <johannes@sipsolutions.net>
+From: Rio Liu <rio@r26.me>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, "benjamin.berg@intel.com" <benjamin.berg@intel.com>
+Subject: [PATCH v2] wifi: mac80211: skip ieee80211_verify_sta_ht_mcs_support check in non-strict mode
+Message-ID: <99Mv9QEceyPrQhSP52MtAVmz0_kWJmzqotJjD9YW6LGLqk-AZloAueUyHCURilFkuqOh6Ecv8i2KKdSE1ujP3AnbU5QEouVisT1w_V3xdfc=@r26.me>
+Feedback-ID: 77429777:user:proton
+X-Pm-Message-ID: 53d93d6dcfe9b777cac89c2172c46285dc4aaa65
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/lPMAN2dntsU+fJbqlNm7P6y";
- protocol="application/pgp-signature"; micalg=pgp-sha512
-
---Sig_/lPMAN2dntsU+fJbqlNm7P6y
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 15 Apr 2026 13:54:31 +0200
-Jonas Gorski <jonas.gorski@gmail.com> wrote:
+Some Xfinity XB8 firmware advertises >1 spatial stream MCS indexes in
+their basic HT-MCS set. On cards with lower spatial streams, the check
+would fail, and we'd be stuck with no HT when in fact work fine with its
+own supported rate. This change makes it so the check is only performed
+in strict mode.
 
-> On Wed, Apr 15, 2026 at 1:44=E2=80=AFPM Joshua Peisach <jpeisach@ubuntu.c=
-om> wrote:
-> > It does appear to be similar - even the current brcm80211. So much so
-> > that I sometimes need to think about whether b43 is actually a
-> > duplicated driver.
-> >
-> > Since b43 is in an orphan state, I thought it would be a great place to
-> > start for kernel development. 5G doesn't work on that iMac, some of the
-> > PHYs, like the AC PHYs appear to be incomplete - it felt reasonable.
-> >
-> > Because I'm one of those "there's always room for improvement people",
-> > I was going to try to improve the driver, filling out TODOs, fixing
-> > hardcoded register numbers, etc. But if it's best left alone.. then I
-> > guess we can do that.
-> >
-> > That is, assuming b43 is actually supposed to be a separate driver,
-> > because if brcmsmac basically has the same code, then maybe we should
-> > focus to centralizing everything? But then there's b43legacy.. hm... =20
->=20
-> It is/was intentionally a separate driver: Broadcom didn't want to
-> maintain support for obsolete chips (anything SSB, anything older than
-> BCM43224), so the decision was to have b43 support all the "legacy"
-> chips, while brcm80211 supports everything never. Since they were both
-> based on the same driver, they are (more or less) the same
-> architecture.
->=20
-> But now that Broadcom has essentially abandoned the softmac part of
-> brcm80211 since several years, I don't think there would be many
-> objections on unifying it with b43.
+Fixes: 574faa0e936d ("wifi: mac80211: add HT and VHT basic set verification=
+")
+Signed-off-by: Rio Liu <rio@r26.me>
+---
+v2 changes:
+- update comment to include Xfinity router model
+- generalize comment to include devices with only single spatial stream
+- add Fixes tag
+- add wifi: mac80211: to patch title
 
-The hardest part in the b43 development always was not to break already
-working stuff. There are many different types and revisions of the hardware
-out there. Probably in the order of many dozens of variants.
+Link to v1: https://lore.kernel.org/linux-wireless/AKVRf_yEu2mRCJekCJpre5xX=
+MuHa_3_dO7_H1UU8fiKZRjJUf96ZKepiR999NwpiVwmzWBYoKipBpx1rqZatVihMYOCvANUnbeo=
+yI2U7ct0=3D@r26.me/T/#u
 
-Please keep in mind that changing code means mostly testing.
-Which is hard, if you don't have the hardware variants and basically no
-users exist anymore. Just implementing random TODOs and missing pieces
-will break things. (e.g. not doing some HW calibration or workaround might
-be better than only partially doing it or doing it wrong).
+ net/mac80211/mlme.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-I would personally not touch this thing anymore, except for security fixes =
-and such.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 810bea1aacc5..44cb826263ba 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -419,6 +419,15 @@ ieee80211_verify_sta_ht_mcs_support(struct ieee80211_s=
+ub_if_data *sdata,
+ =09memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
+ =09ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
 
-But if you want to work on the code, long term, I would welcome that.
-We could even arrange that I ship you some hardware.
-But keep in mind, it's all almost 20 years old legacy stuff.
++=09/*
++=09 * Some Xfinity XB8 firmware advertises >1 spatial stream MCS indexes i=
+n
++=09 * their basic HT-MCS set. On cards with lower spatial streams, the che=
+ck
++=09 * would fail, and we'd be stuck with no HT when it in fact work fine w=
+ith
++=09 * its own supported rate. So check it only in strict mode.
++=09 */
++=09if (!ieee80211_hw_check(&sdata->local->hw, STRICT))
++=09=09return true;
++
+ =09/*
+ =09 * P802.11REVme/D7.0 - 6.5.4.2.4
+ =09 * ...
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
+base-commit: d65b175cfac64ee65506eea7fa573d291a9694ca
+--
+2.53.0
 
---Sig_/lPMAN2dntsU+fJbqlNm7P6y
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmnftXwACgkQ9TK+HZCN
-iw74gRAAtog6Qh+8376tiB6lfcrpQCa5Y8kjAKSUuHYWJdoK5d9tDZz2G10FuBCx
-IjjGrYd2FRHyhA9RFHe4XpLdcAwNUhUs2Z6cuaYhE0VkasowyfNEhsBEWfOeW/a+
-llN4zzD1m/A2tPkylqderJt1Fere/y7glhyNDGeCz761ljQKIRwXed6MYfsbHoc7
-GF/FDLizkWcdoPlIgInPeqwzA8kHe541lm5sUaQVNKJshLItFY9OGGAYKvm6zO1i
-geSxjctnDcRo9XUYANplQBZ9eB7su7GqNmdVacbNOeiie61bWsMpXapuqDSK95aV
-nR2ZvCUysPMUVbZrQW9+p+sknongYrk0kY557zdrTzxaWwRzZeCTbqLZLm3FygPt
-JwO1mA4vUYa6mNLbuFo0A0YwmnosX43VXW1FBhNB8uWFUF1QUQbo1jKj5N/KFh5v
-jXkfyp4OTSMfde5629q3Q5BSrGydMsp2vqtWq2Ql2yIdWnmayF3ZNbDZt1WgsTRn
-dLmJLwuP2pc+o/0tL3VjcNsriqMNmShSX96poPckJhK+ikL7V83pXHRgIYN/XgjD
-OUkjT0mZe6qh3hylszcW6028ekH+/NyaYLPtzr0GLVstLmChTxQm9st0bnmkMw7T
-cIjVFemphPEq4tpu1Ww3RMwe54uGkKgUygL5Ok9uVk5idxGkN64=
-=kr47
------END PGP SIGNATURE-----
-
---Sig_/lPMAN2dntsU+fJbqlNm7P6y--
