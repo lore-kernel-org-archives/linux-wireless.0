@@ -1,75 +1,44 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26A5D384250
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 11:11:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED2F2279DAF
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 12:16:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776424310; cv=none; b=VPcGu+cZJAPGvUN9jjRfe2TskOKTQJrLltT7Elunoz1UzYRmeg1iU2VSkWKCByvmyFQ0N8IKtHYQY99vnQgN2QC5DtdzYcsF5+PBMSi2Ifo9NXBS0SGc2hDVzuzIvbTj2gKJNPlFq/XytCrPQJ+oXIDGYYKjqi6oj3bJkNzRaFQ=
+	t=1776428176; cv=none; b=e+JQI+wbpGBH1egGbp4yO8VQ5HsYuFAzR+N57zKkJ46Y/aKN/TMD6SFJ0vZ/h9H9wP7U6oQFJ6WCDBX8qbvHJVZemccZXRg3b/wXs50msxj+R7aZsJIDzfnnTUg4C3up2+IZcKqV9to6YliGRx4lYdYVRywJ+IB8TKn9eXs09kE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776424310; c=relaxed/simple;
-	bh=oXxvYp7mSxvDjDiF1oqhXSRgzy+AMfLNV5vfZJKXa88=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N4MhFGAOVSVqRhdlJXg58lo0XLNMz2hG5Mtdss/++UCfUbxrPlHlllEYFDPk7FBMEANCVPdR2S0VQqS0AhtyJOTpNDBZY9pBpspW8NKt68yHUQ80xutYdAEKFvjd7NPz4Y59oXrJZBlKkZedjqj9ECPAq/jgACh0SzqkCAGXM6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=le3gwoOF; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1776428176; c=relaxed/simple;
+	bh=rcJl1JQcEtu6wl0Xys6KmfnkHJEVJiGYN2rdhsbXOTo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Lt8nj2S3gZ3KRyyYZJH/WF2uYcBrzLkzI4faiS8Gcl0Ql0IPcQy04Yv99w37aGF4RPYM8cBu6K8Dq4q4hELFCWZ3EYdF7rP13hoWL6149B5OyMXuk+gQbyh1F8GdsY5X/pFwzjaWHkQJcgu9bjBbIuSj7w5sy5RnUVtVADH8poI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PKy2vmY4; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="le3gwoOF"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-488ba6366a7so7368185e9.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 04:11:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776424307; x=1777029107; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OZN3gfZee7R57N4dlGIBXrBPV0sAI+/BLIAVKZCa0Ck=;
-        b=le3gwoOFGrVmtZNbTdJ1VkbmPjsqOfNHvO+n8KQkE2K8eAz7EgILbr5F861XgYhqNq
-         ZlMu94WLVvTldkth3TAqrmFNwMBn+Feh/DVeRLlPopFQ7BU2QlyhBYopgj5ZLwxt8Tbv
-         F/hGX3u5qCs/At765ADqStaBXk6xEiBrJaIp7rgXWpW+MBbE7f8QJOLep6eUJWMCJ60l
-         nBVPryZdKy3XUuK5eD7Puvlhwil3zwdiyVeUenqj4BunNHIIrIlU5T9gs5ZHN/IWd7N9
-         QwY/SBpZnbQRjoxvCfTmJjalbmjr3UXMyKnCtPgKXWT8nUTh9VvbYgfMFyHenYJOgV/+
-         2ucA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776424307; x=1777029107;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=OZN3gfZee7R57N4dlGIBXrBPV0sAI+/BLIAVKZCa0Ck=;
-        b=MDOQ111JWwLbTbIk3f5E7wKpCOGIVgdqRjNmIaMuVunNuw0IGN41JvHFg+j2X0rwh2
-         W5XvwKucszdI/bUFbKkXrXV8QgylohNjWTx96BssVTQwy26XujppglguQFYpK2zwCvs7
-         yJMC+zcG2k8LWGrguLoVtI6aExmEqwCQf/Fu5XIVEhJODpwNBAOa7BYa63gTkZfbI9Nr
-         axYwroSjfU6RCV9+gNXHQ3b7VDQN0nYeZ4Ql8P0gZ4eJJ4g25a6RPS8HFpgPC6ylJ6Yi
-         w0CxqykyjZWkfcPmhO3UdbGh0IRoEuyTzjIDtlR5WdGxcwU6wVXDJqF1vfOHgf3iEUJO
-         tytA==
-X-Gm-Message-State: AOJu0YwG8u8qQdoVhXM6MF3TxnpEAqG0tB+udnkYk4fZcK2MBkdNEGW1
-	cqNW2UomEA6ExUSRdmoftsQOHZrUUevflI3Kt3VbC71/RRJnsvBwfTIYpwZJd2s=
-X-Gm-Gg: AeBDiesVpb6M47F1v66zzJg6iXoep4L40uWZOCanalX8crhLpKNpitVT5Sc3r64ySCE
-	nCV4WCUc3yYZMY/VPductvBWOmjrWA5uZDD4a7UcioOWMocTI2TFk0DOxnMxVK+sdVxH/RQ9nsr
-	kmBU5k2VMQExaCwpksJ8MzsAFTTPD5IupDYXM1h3nWz71gnUu934ONZ1qyTztgxZL/uW9LoGXTi
-	ZeC3fJBAdBgydD7sRHDRpB7BV4EAdUkGxIzQFBdFFYq5/VcmDZ2yWALGehBZMjaOYkF7AJpTuJq
-	38lD+lgmVHFcefxF/lofAd/ovBh+oyfUEYa+4u3o6wW4kO1eB4m2klIWpliOO3wOd69o0nQB3+o
-	sKoTu9jLlVrMgZtJObIv8a+ToUJYDjbtCigbXKMH1BhjoYBW8FvwaxYWJdyUiA/wKKR3FPxke5h
-	+ayyA=
-X-Received: by 2002:a05:600d:8408:b0:488:be58:bb5b with SMTP id 5b1f17b1804b1-488fb773f0cmr25674465e9.24.1776424307402;
-        Fri, 17 Apr 2026 04:11:47 -0700 (PDT)
-Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fc0f82bbsm62121235e9.3.2026.04.17.04.11.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Apr 2026 04:11:46 -0700 (PDT)
-From: Tristan Madani <tristmd@gmail.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PKy2vmY4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=GJhbiTunaNvldj6lA9w33/8FEE+Vc3fQFf0iyOfMpE4=; t=1776428175; x=1777637775; 
+	b=PKy2vmY4jheYER8vVKlkZM/KLDCecLcgzKe58tLTgf5h1gSdOcfC1P8h0ucmvSoCRC3mGpVcV0B
+	exdmB0AHGleWY6lWDzEXMJ0zXtg8DmjJYrHXUWDDkIzbAcUUbtHP37Rd9+IzTN9N/MdYvlseLhCrW
+	QBBvMfs9Im4o9R0jbVu1joNufPlV6KqNg671EmU6h185St5dCLAF+3d28qXJFs8P1hjjZxod/HirE
+	1ssbcFpB9TaNdGNFZEtabKd7s7wZtgcFItG63fZgQQDKrS4zC1ZrciSP1yom0ppWQqrvh6aJAoyoO
+	XeRioDpq4ASGRhIQYHBmbkSjFRnyR0Z9CoqA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wDi79-00000008Ttf-345c;
+	Fri, 17 Apr 2026 14:16:03 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	jonas.gorski@gmail.com,
-	m@bues.ch,
-	b43-dev@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: [PATCH v3 2/2] wifi: b43legacy: enforce bounds check on firmware key index in RX path
-Date: Fri, 17 Apr 2026 11:11:45 +0000
-Message-ID: <20260417111145.2694196-2-tristmd@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260417111145.2694196-1-tristmd@gmail.com>
-References: <20260417111145.2694196-1-tristmd@gmail.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Jouni Malinen <j@w1.fi>
+Subject: [PATCH wireless-next] wifi: mac80211: always allow transmitting null-data on TXQs
+Date: Fri, 17 Apr 2026 14:16:01 +0200
+Message-ID: <20260417141601.851ddf4adb59.I3d668c0e1bdca9cd98f2fc46f84a066e68cc7a62@changeid>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -78,36 +47,43 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Tristan Madani <tristan@talencesecurity.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Same fix as b43: the firmware-controlled key index in b43legacy_rx()
-can exceed dev->max_nr_keys. The existing B43legacy_WARN_ON is
-non-enforcing in production builds, allowing an out-of-bounds read of
-dev->key[].
+Jouni reported that certain sequences of tests caused some
+WDS tests to fail after applying the upcoming hwsim changes
+for NAN. I bisected that down to converting hwsim to TXQs,
+and after a long debug session found that the 4-addr NDP was
+getting dropped, because it goes out via a (management) TXQ
+and is a data frame.
 
-Make the check enforcing by dropping the frame for invalid indices.
+It's unclear to me now why this only happens in some test
+sequences (e.g. "sigma_dut_sae_h2e_ap_loop ap_wds_sta" and
+"sigma_dut_eap_ttls_all_akm_suites ap_wds_sta_open"), maybe
+that affects timing and the frame is otherwise delayed in
+some way.
 
-Fixes: 75388acd0cd8 ("[B43LEGACY]: add mac80211-based driver for legacy BCM43xx devices")
-Cc: stable@vger.kernel.org
-Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
+Correct the check to only drop frames that actually carry
+data, not NDPs.
+
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/broadcom/b43legacy/xmit.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/xmit.c b/drivers/net/wireless/broadcom/b43legacy/xmit.c
-index efd63f4ce..ee199d4ea 100644
---- a/drivers/net/wireless/broadcom/b43legacy/xmit.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/xmit.c
-@@ -476,7 +476,8 @@ void b43legacy_rx(struct b43legacy_wldev *dev,
- 		 * key index, but the ucode passed it slightly different.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 230826960721..933c86ca21c3 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3916,7 +3916,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		 * injected frames or EAPOL frames from the local station.
  		 */
- 		keyidx = b43legacy_kidx_to_raw(dev, keyidx);
--		B43legacy_WARN_ON(keyidx >= dev->max_nr_keys);
-+		if (B43legacy_WARN_ON(keyidx >= dev->max_nr_keys))
-+			goto drop;
- 
- 		if (dev->key[keyidx].algorithm != B43legacy_SEC_ALGO_NONE) {
- 			/* Remove PROTECTED flag to mark it as decrypted. */
+ 		if (unlikely(!(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+-			     ieee80211_is_data(hdr->frame_control) &&
++			     ieee80211_is_data_present(hdr->frame_control) &&
+ 			     !ieee80211_vif_is_mesh(&tx.sdata->vif) &&
+ 			     tx.sdata->vif.type != NL80211_IFTYPE_OCB &&
+ 			     !is_multicast_ether_addr(hdr->addr1) &&
 -- 
-2.47.3
+2.53.0
 
