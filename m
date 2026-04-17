@@ -1,89 +1,141 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED2F2279DAF
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 12:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D7AC397E8E
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 13:11:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776428176; cv=none; b=e+JQI+wbpGBH1egGbp4yO8VQ5HsYuFAzR+N57zKkJ46Y/aKN/TMD6SFJ0vZ/h9H9wP7U6oQFJ6WCDBX8qbvHJVZemccZXRg3b/wXs50msxj+R7aZsJIDzfnnTUg4C3up2+IZcKqV9to6YliGRx4lYdYVRywJ+IB8TKn9eXs09kE=
+	t=1776431489; cv=none; b=D5cCFzLsCzpYGff99+CMtdb5fJmUBChHT/rSOlvXBjnGQt4mwyEfY0w1jiXP2RnCg4BoG/kKuPZCVtbtR214pRUh0/avV5YuovjdmoCzOolIESGMna+tR+w8FsjLAZFhyqkoG/wyIcqKnLUqbJ57IChVOawVtozKpEHlW6t4Bno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776428176; c=relaxed/simple;
-	bh=rcJl1JQcEtu6wl0Xys6KmfnkHJEVJiGYN2rdhsbXOTo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Lt8nj2S3gZ3KRyyYZJH/WF2uYcBrzLkzI4faiS8Gcl0Ql0IPcQy04Yv99w37aGF4RPYM8cBu6K8Dq4q4hELFCWZ3EYdF7rP13hoWL6149B5OyMXuk+gQbyh1F8GdsY5X/pFwzjaWHkQJcgu9bjBbIuSj7w5sy5RnUVtVADH8poI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=PKy2vmY4; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1776431489; c=relaxed/simple;
+	bh=Klkglyq/jaqn07LVoY+DygFKlFSeY4mf3uyDS+66nUI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=thqQJVaFPNJvnaOK26kMxQzzotGzfwY/vg60GT5JJ9Pxih/TP3iuPpuMoXyTq171BlLgZGqPMQk3tQwRCg13oxWN4qZ6+sJpFWbcfz7Jvz/hDiBVg11eJD4cgUQR0OAvUocrdXKjZgPTzkeMe5rFgILABG0eQsdoFS9WarMEWbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20251104.gappssmtp.com header.i=@baylibre-com.20251104.gappssmtp.com header.b=kgat+i2O; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="PKy2vmY4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=GJhbiTunaNvldj6lA9w33/8FEE+Vc3fQFf0iyOfMpE4=; t=1776428175; x=1777637775; 
-	b=PKy2vmY4jheYER8vVKlkZM/KLDCecLcgzKe58tLTgf5h1gSdOcfC1P8h0ucmvSoCRC3mGpVcV0B
-	exdmB0AHGleWY6lWDzEXMJ0zXtg8DmjJYrHXUWDDkIzbAcUUbtHP37Rd9+IzTN9N/MdYvlseLhCrW
-	QBBvMfs9Im4o9R0jbVu1joNufPlV6KqNg671EmU6h185St5dCLAF+3d28qXJFs8P1hjjZxod/HirE
-	1ssbcFpB9TaNdGNFZEtabKd7s7wZtgcFItG63fZgQQDKrS4zC1ZrciSP1yom0ppWQqrvh6aJAoyoO
-	XeRioDpq4ASGRhIQYHBmbkSjFRnyR0Z9CoqA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wDi79-00000008Ttf-345c;
-	Fri, 17 Apr 2026 14:16:03 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Jouni Malinen <j@w1.fi>
-Subject: [PATCH wireless-next] wifi: mac80211: always allow transmitting null-data on TXQs
-Date: Fri, 17 Apr 2026 14:16:01 +0200
-Message-ID: <20260417141601.851ddf4adb59.I3d668c0e1bdca9cd98f2fc46f84a066e68cc7a62@changeid>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=baylibre-com.20251104.gappssmtp.com header.i=@baylibre-com.20251104.gappssmtp.com header.b="kgat+i2O"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-43d77f60944so499499f8f.3
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2026 06:11:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20251104.gappssmtp.com; s=20251104; t=1776431486; x=1777036286; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yLBJQur6L6abrgINbvpQqXST9x1YXfxN6XkkI5ZCGzQ=;
+        b=kgat+i2Oa6Wy9zEOI65gHK3Zn9aMLrxwt/mf7bc7zAHG2PcE2wWKWhs+3MjkbcCAuz
+         sd9N3EZ9kSFwUmKa20GXjKUvoKsXqum9lZAHIMOR+mVXLGphlnSmAjNKK776hHo3meip
+         EXzDLnetciMhyrijIbsYGXjGhtibipFdHPOOjbaNzwu7LYQpF9lH8Jwt5JK3mGczK6Bw
+         6NMX4UmX0cqrdoitSk2b/Bn/QR89mLBjpoLJKkTwMKYlKX9gXxl5GQJ6mBjICKg6OsGp
+         mbr1S5TM5yOF0ZQyapKPlZJnpvZnFqeGo+JZAE9NUYV0WczLVAnuxj7fFSOYRgbknC+a
+         IGdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1776431486; x=1777036286;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=yLBJQur6L6abrgINbvpQqXST9x1YXfxN6XkkI5ZCGzQ=;
+        b=Lo3oi+19UInTXOgHXPyflJI2oQsucy3ce9MbhXvYB/jeqhhxx59KlfuaNgu/2LxOye
+         y8YcK2BV4WeNdWUchVJQ6StBhhsgLlr9CKILPaQMDrxECGYIXtGcrO3/r9Fki4A0VfdL
+         J0e1dhf3Osf98HlaAEjSZGFQO2VwlvjePxKBiiPrswGJt/WMCLMctPiaGsMw6HyuPSZ5
+         WaOEF0mCVVVgUjKOTjwsViCdhAFJWUg7bXEXy4C7Lm9JUxTitIWEEsrdEOekP5QojpXR
+         UIl42Z6TLGbxNzqnSED/BR5mfbfnwKK22UewTQ44siQWydpjDMO7hTfbhvQ8xT5kKP8h
+         5XJg==
+X-Forwarded-Encrypted: i=1; AFNElJ+ceoUVzfOOC1aZLONRHom7j2qnsY5Eb/nchQnEkbYwqe8G+o0dHPsXQn//W+haqY1Za0lRHEd3C+yDYDEgxQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7B79vPttf0BzN+xqXU6RzPE2Z2jZRuj0Cs2YVKbzWHP8FZRhZ
+	io0jkhyCU1q6IbxfT4WJVVGp6TYFjey9RNMlLPfb3HZyH6+iMyTRWOVQ2VNkpmwdF3M=
+X-Gm-Gg: AeBDieuoRnGiJNjJFt/Hq8U2j2YvvawUBH7qbbB9B0tiqVckACmB8MT+QsgT9ZVs1El
+	7SdYYPEZwLM4Inotr+bvKi3QyJYJ3LjuweZKK2OXPFRWIw5hQpD4FRKGi3lmSr+fwoShG2KnvKV
+	XHRHnpq6oYv8vVYFA3j1FQIiYM0KfGQ8BNXIemJG0jc4vtps2sVlEWfI85Ep2tTfWICs4uZmer3
+	b21F59NRNd8tLzz6Pw9th5obhR0mA+Lt005D8hjjl4IGUzvCybq4qFz0XnZWTSXRJGQsV6kEGsP
+	dgTN/QPOH3s3zRROmsizWRBOjoefGNeLFmvZhsxnz3nZ7ZgPYd9VW37eKPPE+XZTCAD+T8e9ky0
+	lL1eQghP8Fk1iNLOYsCjJrqldEx8/vyjuM1TJM+2ycc1hdMWEQLR0LkG/OsQ75AhiGKliO3+Raf
+	dWay5qKdoVhz0SKMlTQenTMqdQ413Ct4xYyKb9v55Pmxlu38mMpVHdHHhe2WDsNByrQHmvAIzBS
+	QOeV5aliHIutpegw+HWlj5E
+X-Received: by 2002:a05:6000:420a:b0:43e:a69b:d813 with SMTP id ffacd0b85a97d-43fe3e0d459mr4571980f8f.25.1776431485775;
+        Fri, 17 Apr 2026 06:11:25 -0700 (PDT)
+Received: from localhost (p200300f65f20eb08db61cfc60d8aa232.dip0.t-ipconnect.de. [2003:f6:5f20:eb08:db61:cfc6:d8a:a232])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-43fe4e4daf2sm4238766f8f.33.2026.04.17.06.11.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Apr 2026 06:11:25 -0700 (PDT)
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig=20=28The=20Capable=20Hub=29?= <u.kleine-koenig@baylibre.com>
+To: Ulf Hansson <ulfh@kernel.org>
+Cc: "Christian A. Ehrhardt" <christian.ehrhardt@codasip.com>,
+	linux-mmc@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>,
+	linux-kernel@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	linux-bluetooth@vger.kernel.org,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-mediatek@lists.infradead.org,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/6] sdio: Add syntactic sugar to store a pointer in sdio_driver_id
+Date: Fri, 17 Apr 2026 15:10:47 +0200
+Message-ID:  <c830049dcfcd99f005e2ff6742aace9341c61f13.1776429984.git.u.kleine-koenig@baylibre.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <cover.1776429984.git.u.kleine-koenig@baylibre.com>
+References: <cover.1776429984.git.u.kleine-koenig@baylibre.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1594; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=Klkglyq/jaqn07LVoY+DygFKlFSeY4mf3uyDS+66nUI=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBp4jFZkxQbj+KYt4Q9fEkJxuokeQF4k0Z8QVO3Q 7wAQaupW5KJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaeIxWQAKCRCPgPtYfRL+ TtZtB/0YGCqVt5rVpLrWqCD44F5LfNFUgv/+TGPxayzQfsH7zoCBqE9UgsVpBkFZprUwAzLBPWG MPbj74nUaxJfky/T/6x/bsJ20CXFl14Aky5oeSqWXwpx/STsvR1t7BH1meFZ1chEsexFTdIwswa 8F2lrrBsAe+eGHk4UdYwOcEBLke8MRKu7X9WInf8735NDYlo6VkX6TwaQTxpOcTlNIDfwZlA6ON nlrxK4GTkQYXCmaFZYylJBpOTDYLdH8GJZthPQhYPW5w9D8jVeVUIanYYaSikHt0R/zyWaylAij O7+GqKklrjT08jMFR3/4DzejRKFhjlyBUA+HrbH74dCapvBS
+X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+On all current Linux architectures sizeof(long) == sizeof(void *) and
+this is used a lot through the kernel. For example it enables the usual
+practice to store pointers in sdio_driver_id's .driver_data member.
 
-Jouni reported that certain sequences of tests caused some
-WDS tests to fail after applying the upcoming hwsim changes
-for NAN. I bisected that down to converting hwsim to TXQs,
-and after a long debug session found that the 4-addr NDP was
-getting dropped, because it goes out via a (management) TXQ
-and is a data frame.
+This works fine, but involves casting and thus isn't type-safe.
+Additionally with the CHERI architecture extension there are machines
+with sizeof(void *) > sizeof(long) for with the traditional approach of
+storing a pointer in .driver_data doesn't work.
 
-It's unclear to me now why this only happens in some test
-sequences (e.g. "sigma_dut_sae_h2e_ap_loop ap_wds_sta" and
-"sigma_dut_eap_ttls_all_akm_suites ap_wds_sta_open"), maybe
-that affects timing and the frame is otherwise delayed in
-some way.
+By replacing the plain unsigned long .driver_data by an anonymous union,
+most of the casting can be dropped and it yields a working solution for
+CHERI.
 
-Correct the check to only drop frames that actually carry
-data, not NDPs.
+All users of struct sdio_driver_id are initialized in a way that is
+compatible with the new definition, so no adaptions are needed there.
 
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Uwe Kleine-König (The Capable Hub) <u.kleine-koenig@baylibre.com>
 ---
- net/mac80211/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/mod_devicetable.h | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 230826960721..933c86ca21c3 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3916,7 +3916,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 		 * injected frames or EAPOL frames from the local station.
- 		 */
- 		if (unlikely(!(info->flags & IEEE80211_TX_CTL_INJECTED) &&
--			     ieee80211_is_data(hdr->frame_control) &&
-+			     ieee80211_is_data_present(hdr->frame_control) &&
- 			     !ieee80211_vif_is_mesh(&tx.sdata->vif) &&
- 			     tx.sdata->vif.type != NL80211_IFTYPE_OCB &&
- 			     !is_multicast_ether_addr(hdr->addr1) &&
+diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+index 5b1725fe9707..0eb5d196f5b5 100644
+--- a/include/linux/mod_devicetable.h
++++ b/include/linux/mod_devicetable.h
+@@ -414,7 +414,10 @@ struct sdio_device_id {
+ 	__u8	class;			/* Standard interface or SDIO_ANY_ID */
+ 	__u16	vendor;			/* Vendor or SDIO_ANY_ID */
+ 	__u16	device;			/* Device ID or SDIO_ANY_ID */
+-	kernel_ulong_t driver_data;	/* Data private to the driver */
++	union {				/* Data private to the driver */
++		kernel_ulong_t driver_data;
++		const void *driver_data_ptr;
++	};
+ };
+ 
+ /* SSB core, see drivers/ssb/ */
 -- 
-2.53.0
+2.47.3
 
