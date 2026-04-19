@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 676E632D452;
-	Sun, 19 Apr 2026 13:21:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4319A378D84;
+	Sun, 19 Apr 2026 13:22:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776604906; cv=none; b=GfMI35YJ97byPkTECSNUts2Q/c7FqPb7Uz23p256aSCzU8fwVqmgTve8YgHSQkUvWlF5Ux5pce1dhDjLXJ9953PqH5QJjlOZOnXBo0v3MV/b6DKJEsE5Vv5cuAnVG6SAAA+vCrrYd59e7g/IzhM9Vdn7pvqDDTjQGxOSLclvqkI=
+	t=1776604933; cv=none; b=psg3waUL/fWy3Wt+5lNycSNKvRpL+36JwqQK0cPppuMPZCqz6ur3Hwdp4W3lE8kDbZkzmd6k/HVp72UcExgSl3tyIT50uoLq+lsfywD+UbluIf3vxOfZjtjMK/9U63WV/WfvJa9BmR/caAzMapyn6uvNjbulyXIrmJkbrMWmY/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776604906; c=relaxed/simple;
-	bh=aDBT/XErMEHxKvpB883yVAHwGQ6WsrujzMQ1W1nlBws=;
+	s=arc-20240116; t=1776604933; c=relaxed/simple;
+	bh=YAL6Vv+j0UU9yXxD+dedtZ92wEaekUaHVW7B4CKFI9A=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Bg8SWawDAWkXjeph1VhxrY8AZz55S/c6s/RZfjODVtnH0pnvlacoQUK/XvW6+EfKHX5AGixmiLiaxm4o4Z1oLh5FA6292gYJNeNuH0/A37tW1qEMeHBP9dfNA9xFc8tLL7VaBJ3TaJjoXgKB1lBa49u2sF9jLV8ejS1fLOpgUdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e3P5OvpW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rGc4oUBLOaoZQKBRcSUUMliijJj3zT7iljZz0ucZGCw7Ued2IWlx0qAqp+Mc70wH88c3gDLzcwzSDXaZI4qXPxmQP/0o4ISaPnkxlLhDPinbDv0vYGMUOZJyE6ZcOfTs1kL/mR7emk/2hT6+tWb1urjFB2Va8vFN+KdH4gWPmfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tlu1U8Ne; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e3P5OvpW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0623C2BCAF;
-	Sun, 19 Apr 2026 13:21:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tlu1U8Ne"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3E2DC2BCAF;
+	Sun, 19 Apr 2026 13:22:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1776604906;
-	bh=aDBT/XErMEHxKvpB883yVAHwGQ6WsrujzMQ1W1nlBws=;
+	s=k20201202; t=1776604932;
+	bh=YAL6Vv+j0UU9yXxD+dedtZ92wEaekUaHVW7B4CKFI9A=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=e3P5OvpW25qZtd8K+8K4+KKWorTXHowo8wWfid/wlEDzTe12B5MCD77tBwWQ5pmtc
-	 Nsv5Q0gXjJV+5qRgkcCT2WkZ05KZvs/ksWUX+xZl44acurvXeXiDDogYBiYq1vFGxi
-	 X9djwXPKLHKkWZp5duf8H+7s+8WHRPk3Xn9wDhcQzdSuI1NXc875i9RRHnVIp7uwww
-	 p//nQoue6WZMaF7lJHagF6wKOHYB3QUi9dQ2o0dhqDQyi7m5CHBUFHfStC6rQ+AJ93
-	 MfgKIAeaG2FEXz2udRM19cGzfAAZaVVoOX3J8XoJmgmyeKu1PNVxPxIN1EflSmNcv2
-	 wUt8oDv324JpA==
-Date: Sun, 19 Apr 2026 14:21:29 +0100
+	b=tlu1U8NeuPpOaClOXZTfBg0MTPwhqOijzh8eS3fsZAtdw1Z1KjKE5BTQzanDazl3T
+	 Il32H4NQDJowUYhD/XnP43CzVpAJmzg33C+pwtkIau7mJwEFz0WlCbUr8X4WAvXJgN
+	 bhQ8A3ss0Yjec7Y0D5CCsBHMNQm2xq/QDkofrIDYEUqHFJ3+EvAnS9zOjcyALhCcsc
+	 PaEas0OxpwheEQSc+o3BT4DWOA3TF7iIB/owgOme9ILuOSlgA0VnudTRKzrXDdfqxo
+	 L3/Y27zUXOQkEuF7eZr1UzRs9nAmlZ6/PLd3x10PPOl/+KRnuSuXEvKIz74tHjxytm
+	 UNyyJYKPRxAVw==
+Date: Sun, 19 Apr 2026 14:21:56 +0100
 From: Jonathan Cameron <jic23@kernel.org>
 To: Yury Norov <ynorov@nvidia.com>
 Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
@@ -46,12 +46,11 @@ Cc: Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
  Collins <bcollins@watter.com>, linux-kernel@vger.kernel.org,
  linux-iio@vger.kernel.org, linux-wireless@vger.kernel.org,
  netdev@vger.kernel.org, linux-rtc@vger.kernel.org
-Subject: Re: [PATCH 5/9] iio: pressure: bmp280: switch to using
- FIELD_GET_SIGNED()
-Message-ID: <20260419142129.591aabff@jic23-huawei>
-In-Reply-To: <20260417173621.368914-6-ynorov@nvidia.com>
+Subject: Re: [PATCH 6/9] iio: mcp9600: switch to using FIELD_GET_SIGNED()
+Message-ID: <20260419142156.5890e74c@jic23-huawei>
+In-Reply-To: <20260417173621.368914-7-ynorov@nvidia.com>
 References: <20260417173621.368914-1-ynorov@nvidia.com>
-	<20260417173621.368914-6-ynorov@nvidia.com>
+	<20260417173621.368914-7-ynorov@nvidia.com>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -62,7 +61,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Fri, 17 Apr 2026 13:36:16 -0400
+On Fri, 17 Apr 2026 13:36:17 -0400
 Yury Norov <ynorov@nvidia.com> wrote:
 
 > Switch from sign_extend32(FIELD_GET()) to the dedicated
