@@ -1,89 +1,88 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC3B38F240
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F3EA38F226
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776676187; cv=none; b=GegnpcWdaiATeOk3kx8Q+BXKCuVZhBM6ew2vAG1H+0CR1VVf2iMH5sW1S8tIImicNEiBUsTH8/szYvnwwJpL2lR4u14RQ9PA5YEW5T0EYTlWwa+ZdUmKc649ZxmLvGPy5YaikBh0Z8Lys4bvhdE3TP+EV2ztHN6HXrOlMD6U+ts=
+	t=1776676190; cv=none; b=YFJaZb6iBJ3ifYpbb2HDsyWMymtJuK65KsPqplCZFEIFDUsEZr5xJcOOKX6XD+rlwENEa8YDM67UtHQqQNDKmShQzc0q8BR8qA3m5SpqoFa6bckLOiC21irZZiJ9QgSUO4sNMsiuudm2tSvnbXuqOR5Y5Fi1IWuDxSb+YjpM+dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776676187; c=relaxed/simple;
-	bh=DLHRjVYqaS2ECq04xQxieY0YP6MHJGU+d7rG9+GPD6o=;
+	s=arc-20240116; t=1776676190; c=relaxed/simple;
+	bh=3oAwPSqUSWNLbBWan3lAgOgt+sT3/O/FFpnQG8O66MQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=queh6pctG2Nni04UFgGwEE5B7Xsn+AEF37copB2RbpGR4clXMKMD3qJsvcpz15gXNeuD8gjR367iclZNFhlgkz7W4zDZN7JU7dKeb8hlu3jUZ05dviXG13GzR0EbOeYUVUey3/R/CtnNYXF3c+Kmz8dmQSpTcl6pdCvFZIJXRzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=PrOuH8s9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=gMfcb64k; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=iwatHTzuky45PEpWFoKamxPY46vZoHhX07QRrLi2iy/nVvcaZKP4ty2P0q5/N9dXTihwxeUZxcsmCJKObgNHk+wRdkf8p+LHhA6OqpdeZn1ylIsxee/bo3ReRTQ3o4aqzh+R9cZp4rx6aSwIm+Aw1SMNJehv4300FGPnDono9Ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gMi8Drbh; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Mcv6jw3S; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="PrOuH8s9";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="gMfcb64k"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63K8pRUM1977967
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:43 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gMi8Drbh";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Mcv6jw3S"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63K7Wt6x1532102
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Vc09laNS0Jd
-	MFIxpeDO8Al+BZHREBJJOlDf5fuqOgmY=; b=PrOuH8s9OZ30P161sqZSRge2Rit
-	RQUG8gNh5cK20wo7AZ/RFDI+6p+omMtNa56DitW8w1bI6SDpzcEaiZ22MsG5YOLL
-	ZLLcoPcBooiAf6yruQH6bsnQr/hfkzuqqaNHzL8OnH7ItvxlBlQsEn+IpKb/Fk3W
-	zlzXRzCk3Sx42k3+rdY6Qaxcpk+viRn87TUUTENdmDrEN7OerfhS2HTOTAzZ5RRz
-	NBZSigd5HNVGUWQyhSVIh5ygRA9XWsb9yAIoFjbszLgG/0STJw6lpKEtpYdEM+Mu
-	hdnZnOsxRwDv0SvtTGrUQWHRQ8DbUR3FbgCXwa4qu6lBacNjqMN9QFkhWdA==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dm388n762-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=+qn1NIW45K+
+	em9BTUPtoLJ3trXH+YxHK12XGZZm1G3M=; b=gMi8Drbhbd6/+5DP7v1tGUc8V5f
+	d+Cx8Ikc4lTra3YtDKtI7wXro56TMDbhai5dYIcyqgr4ztaNKMNXPqcErJ8aNXRq
+	+/cnp1u4ifR/E7hIfCAHFskAw1PW4m4fAKQ4jL+usVJ7rFUBn6vzIQIBo2+KDmos
+	/73ox7pULIP8wQmdIuxGZREQKxPTkpXDNY1DX+0bt8paEp0nFzSqSXSiJCOQukrZ
+	pE8SkVpgJ8H4+lrjDbXpWArLOyDekpQLKVN5xBPhdW7ylOr+IRh9rQgHcEjNI0vU
+	neIEbgSWmBZjHWf6CsUm3PviFWfcWHZEAoZ8+D/3pd0TsX+juE1BPTOY23Q==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dnfus0ns1-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:42 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-35fc22424d9so5355639a91.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 02:09:42 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 09:09:47 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-354c44bf176so3332396a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Apr 2026 02:09:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1776676182; x=1777280982; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1776676187; x=1777280987; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Vc09laNS0JdMFIxpeDO8Al+BZHREBJJOlDf5fuqOgmY=;
-        b=gMfcb64klbbIjbPKTDcCTNqZfra+NBSj9E7hT6P+P9DM2jmgH+NWA4Oytcar1xVug7
-         W2p3veDOrGW/ILfh3DeKJIn1JVZRFM8ZeV+MxxP463kZdzkO2sYt23Eed+CNP0hs3/zp
-         Goqam7zmkWdFPcl7k7gGzPL0smOOOVIcKmxANkNUQKW24hG2YlqwBCZrmdqsuDDGX9uD
-         dP8cthtCn3E9JVUF4QNBk9oLXwYUF7ZWIhXkVfr1bEBl6jUcbbrqOGMIojBS+OWY23ep
-         TPZO+tbXJD2+5kA8XvNV5SB5sajGJvlQFSoNMY1KuvlbYqzP0JJeeDPE5aidGTo4b299
-         NhPQ==
+        bh=+qn1NIW45K+em9BTUPtoLJ3trXH+YxHK12XGZZm1G3M=;
+        b=Mcv6jw3SGcbrGqzDcfRaoOCV0RR2Q1I2pbn8mgfcBpZ39xepxia/paVhOI2bUJ0ZpK
+         7TNe40CAadEaxT9I5B9Z2JjIjZFZ7v1Uk207N7+T/H4vkJ7Ud8n7tViJbeOOlItO1Sg/
+         rDzycaMYNhqIew/igZw8GHR8xBeoHnhLIqV+gjLSe4Ii/ZfJ7ewN5kBM9mZasV/SsaEV
+         t9opEBZ89fqkfRu5/Q+p9BR00Nri+w+2TsGHUK4P/BVAkjzP3IXBKj2RruBx8Dn4TLCI
+         VF2tAF0qe3OMvoHFZoxWGyErcA2h1O7sJblNIOYs6foMBjN8u5pAgwjUDn6WTChdv0lm
+         QlfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776676182; x=1777280982;
+        d=1e100.net; s=20251104; t=1776676187; x=1777280987;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Vc09laNS0JdMFIxpeDO8Al+BZHREBJJOlDf5fuqOgmY=;
-        b=HE9fvnhmZOQ5l6cuRXqk1MqbWL2vEihzEftegQjmfdB3q6TAPNL+i57s7yTTnQWrqG
-         Q3CAHjPiPuQhoCWcwRzhbua3QdYLti1Sqc0x4FDhkWLJd3zts6Ot4ikFbGCSI1ymd6on
-         xhYWr9VjxG0Lyq7NR+DVqgQKhDyPyuUXZPybNdd6HvKpnftZeopSSS5dlrlLT76ZpdT/
-         Zil7ypSBbyWER0PSrZBxmw+Adn/w3FxzLjIcYo0WvKOOE0PR7dqzsPQ0vt9gP5Y6hq4w
-         B9fI6DbAID5jzICuu17mVZxMqi2GUtAtG7tJKLs/+X8UmkF2HvtGrmCxNtGFb6+XmHtV
-         bLmg==
-X-Gm-Message-State: AOJu0Yymix4ujsxslF5tS7+8m0skhKUUAJQAav3q+Rua8pFXrsqQC4gr
-	Fr0+fLwHdE8UO37+QViqse1m476HdG3ZZVZDjSYHi2Xo+rAo0RI2xERVfDtaohhixJmDSKWA0Kg
-	+g9bpfD9Q8ZbG2NZMTfzLVd4dB65yFkTlQ/Od0q3vioOoRxuqrpzT6wIzILSn3tO6sXTyqn8aXr
-	Ye
-X-Gm-Gg: AeBDieveYSVuiMqWQCVsttG/Q1nh6bgs8gpZstnU0ubS4A1wMkjc+uDbKcMyVMKk7/n
-	EbDfmBaZUZLdr2bLnJTCnh6pZmlAczvRrbNdRPXPI1PE5xYnLu9NnXhlMVsma2dilwxrmgp6wFJ
-	lYlJiUkwHzZe3AuqNV29pp0YTHodDc3t4T7jOyp4QLnEz6L3tOgnUbbI8YcnjDMEIv+hKZPepTv
-	qVZEREGUCR07arKytJna1biD4oqoezYq0ThtqwR3ytlDowAMwTzp+oqIhbB7q1sjlrk9YyE5m1W
-	EAarDO77UZtgaqiCyzhgJFsqAczW+n7qNiQ2Ho501ie4c9ctDKF/6XDfIb7BC5m4v7EXJBDAQXi
-	XlBy17rgjaEM/PbNLoJGKzzr9zjoOO/QXO2Re8yyVgFlc/oLaswza3BHsCqSSth14cg==
-X-Received: by 2002:a17:90b:562b:b0:35b:929f:7e95 with SMTP id 98e67ed59e1d1-361403bdcfcmr13547116a91.4.1776676182200;
-        Mon, 20 Apr 2026 02:09:42 -0700 (PDT)
-X-Received: by 2002:a17:90b:562b:b0:35b:929f:7e95 with SMTP id 98e67ed59e1d1-361403bdcfcmr13547081a91.4.1776676181688;
-        Mon, 20 Apr 2026 02:09:41 -0700 (PDT)
+        bh=+qn1NIW45K+em9BTUPtoLJ3trXH+YxHK12XGZZm1G3M=;
+        b=IzmHusXAzxoAYIagfS4NSSdPM6fedHPjDUnWVMTzNgyD9PaHJMzmi3D2hyxpJcLqKy
+         Yj+2XeeGvT+e8uUgYvRr49w1EySHPyDHM5I831zpUvXjeJevYoPKAB02/YqjQnO4FYyL
+         K20qNDDNR18MITJY9h6ySFMkMMsUSLwxkRwEkP7iMnGrriC6wN17Brf37cbbr5VF9bD+
+         t2/inblMLTSR3rs2KfpOv4Bow4X+qwJQUMDgFC0LawTJ72wZlGfzOKPmsVY6+9P5TbIX
+         shIEydnflzwuJK/ff4lwqpuIXs5QdnZBOhro1cm8Y+hr+/7Z5IT2n7rcpA/pGzftxvUo
+         z3Fg==
+X-Gm-Message-State: AOJu0Yx39jetZzOG4CqTv/d7UzBtRj6k47xs1ANCho6Rh2i6i62WCEQ/
+	XmZuH5lr3KbwjhgWUVIXCgY1wkoaGm877HYFQaFuPObS/IqE6ZKUXtfBESH/m7zQ/Blhy2VpRYa
+	H0u2HfvmO/L/uQx899AuLI+UV4AJLP5TRgqzmkEf7gUdc84WPHjatX4j7ooQuaE8iRMSZ
+X-Gm-Gg: AeBDietfZNX67mHV1KBJ5CYf0LawNea2PX7Ynmv4XOwqYQNvJvGR1IwOplXF1bIfOnC
+	PpUXdo8g2xExaCobWdaMby7/tQMO+H4XmqgXycA++kiSeEgo8tntKoQ5cJGW0UncT48x3CXjaCt
+	q3rKxiM+8ewK071PbKJKlZC3Q7DVh/N3/8RlIziSErZALSiMZJqEpvAcHd3UQ3/GNo0Gn30lYLC
+	QBbfX0yM5M7/wWNrjMVHQSJIT7DmflWNBdBgx0EAerBYVlvX9aOlfKgP2+++R2xtUBA2dhm3aUa
+	jDE/3sGg8gGl/T/zksKJnyDckigvukGV9W++MRQyyLyfVFJAgl/azZwthIk0sKh1t5OftbRl5Yo
+	vSJc5L5/jdGm4btAFLz6+HeEUTEH88fFPNY3/KJA7ruPhLSTK/5wt10IE4tz4fKn7hw==
+X-Received: by 2002:a17:90b:3c0f:b0:359:87a8:e65c with SMTP id 98e67ed59e1d1-3614046c9f7mr12880927a91.17.1776676186855;
+        Mon, 20 Apr 2026 02:09:46 -0700 (PDT)
+X-Received: by 2002:a17:90b:3c0f:b0:359:87a8:e65c with SMTP id 98e67ed59e1d1-3614046c9f7mr12880895a91.17.1776676186239;
+        Mon, 20 Apr 2026 02:09:46 -0700 (PDT)
 Received: from hu-peddolla-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3613fba1436sm3812551a91.11.2026.04.20.02.09.39
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3613fba1436sm3812551a91.11.2026.04.20.02.09.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Apr 2026 02:09:41 -0700 (PDT)
+        Mon, 20 Apr 2026 02:09:45 -0700 (PDT)
 From: Peddolla Harshavardhan Reddy <peddolla.reddy@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org, kavita.kavita@oss.qualcomm.com,
         peddolla.reddy@oss.qualcomm.com
-Subject: [PATCH wireless-next v5 04/13] wifi: cfg80211: add start/stop proximity detection commands
-Date: Mon, 20 Apr 2026 14:38:47 +0530
-Message-Id: <20260420090856.2152905-5-peddolla.reddy@oss.qualcomm.com>
+Subject: [PATCH wireless-next v5 06/13] wifi: cfg80211: add NTB continuous ranging and FTM request type support
+Date: Mon, 20 Apr 2026 14:38:49 +0530
+Message-Id: <20260420090856.2152905-7-peddolla.reddy@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260420090856.2152905-1-peddolla.reddy@oss.qualcomm.com>
 References: <20260420090856.2152905-1-peddolla.reddy@oss.qualcomm.com>
@@ -94,317 +93,361 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=GthyPE1C c=1 sm=1 tr=0 ts=69e5ed56 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIwMDA4NyBTYWx0ZWRfX99IJW3HXvyJj
+ BFCQ7sLRNNrWfs+Yi9hvSmfl3q4S6JW2tQ0PiKJ8jTOx/kEFETXqpt+TQcNPaVyOQg+shRBJt2F
+ MaCD2QWXZYMInXZePgWEm4aC+p4owzblRlo+LDv5S2o+9h/86LMty9lkYPYPE//5h6SwyaUm4r2
+ lMQCNqzFn/UUTK85c1cptLbIKewDiNefNYIb3J30pve4t67drozeDypAgN414lYcmyJ0Hvlpwfp
+ qJlSTKD068zRngOPqEqopZqYFiFLUtwYqRWFzXBxXdQ0suGwW9nWlBvs+ptHg5Cd5yIohA2I+eu
+ +mrpqvZyda3zE8QggsbIcg7sVHA4eCd74G8FALoo2b87RJ3dBTYWqagczXKz/oaFOHZCAyqWD8M
+ vuzqs9WO7CoGUmFbs52GsX3ewgMHXAUyoSkZ7NASc299TR9SZ93qzvI6ZpC++TKKNzE94YmtQ+m
+ mzsn6lgS8iny9x+bMwg==
+X-Proofpoint-GUID: sUBgHGpIQUlRVEQweuuquggVJ6OcfUs2
+X-Authority-Analysis: v=2.4 cv=PMQ/P/qC c=1 sm=1 tr=0 ts=69e5ed5b cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
  a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=EUspDBNiAAAA:8
- a=7Ubf0ANF9fMZ6H_vmasA:9 a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-GUID: yriHl5dPtR7AEIciajr-RZjW8zeGqfh_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDIwMDA4NyBTYWx0ZWRfX2TBlgkN7rufz
- 8oOv+hQ+u74zF4QagP7nA6YEzj/yoUwTef90/EIypJKC71qsB3q7ygjMf9GQqtj8gtV+f6ahH29
- R3YzDmmam6xGf5p/yHk6C2JfMRTpdRriKOBGIK7RAoV0ffwe5CFzTDgdS8EbMvGqUiKSMyYHkl8
- 4XWJ7C1G8wVSXFeJE3hQ9brWsSEndTM68xPAc0Fi2K+Yr3A5REhMlBY/76onnhhusG7AN2UJ/oQ
- lCiRQ7bvw5OkkTGkLc3wvVnJJrhhmFnY8gPx7LJO4EvTOvs1IjGidylMEpScIjN7rUcaAGIms4b
- 9JrlXMFCkC+UVFCWAMZW9kZmUtCtbhCiTJl1FbR2EgPjofQEPYqTjBFeSPnWr79pfzL5FBYfzDH
- bq/Cc6BcrK+h3Kb6upeumIJgejdduTt4eixd1AkO/alg6RkxYsoVRoz/H8iPiuAsK0ylYgUHRz0
- vhKvpG0rdUp6tbzvkWA==
-X-Proofpoint-ORIG-GUID: yriHl5dPtR7AEIciajr-RZjW8zeGqfh_
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
+ a=RhOg37svkhQRMARXwRAA:9 a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-ORIG-GUID: sUBgHGpIQUlRVEQweuuquggVJ6OcfUs2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-04-20_01,2026-04-17_04,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
- priorityscore=1501 malwarescore=0 spamscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 spamscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0
+ suspectscore=0 priorityscore=1501 clxscore=1015 malwarescore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2604070000 definitions=main-2604200087
 
-Currently, the proximity detection (PD) interface type has no
-start/stop commands defined, preventing user space from
-controlling PD operations through the nl80211 interface.
+Enable NTB continuous ranging with configurable timing and measurement
+parameters as per the Wi-Fi Alliance specification "Proximity Ranging
+(PR) Implementation Consideration Draft 1.9 Rev 1, section 5.3". Add
+new FTM request attributes for min/max time between measurements,
+nominal time (mandatory for NTB), AW duration, and total measurement
+count.
 
-Add NL80211_CMD_START_PD and NL80211_CMD_STOP_PD commands to
-allow user space to start and stop a PD interface. Add the
-corresponding start_pd and stop_pd operations to cfg80211_ops
-and ieee80211_ops, along with nl80211 command handlers, rdev
-wrappers, and tracing support. Validate that drivers advertising
-PD interface support implement the required operations. Handle
-PD interface teardown during device unregistration and when
-the interface leaves the network.
+Add NL80211_PMSR_PEER_ATTR_REQ_TYPE attribute using the new
+nl80211_peer_measurement_ftm_req_type enum to allow userspace to
+specify the ranging request type per peer:
+  - NL80211_PMSR_FTM_REQ_TYPE_INFRA: STA-to-AP or AP-to-STA ranging
+    (default if attribute is absent)
+  - NL80211_PMSR_FTM_REQ_TYPE_PD: peer-to-peer ranging
+
+Validate the request type against the device TYPE_CAPS capabilities
+advertised via NL80211_PMSR_FTM_CAPA_ATTR_TYPE_CAPS. Reject PD
+requests if the device does not advertise PD support.
+
+Reject PD requests that set trigger-based ranging, as TB ranging is
+not compatible with peer-to-peer proximity detection.
+
+Add ftms_per_burst limit of 4 for PD NTB ranging requests.
 
 Signed-off-by: Peddolla Harshavardhan Reddy <peddolla.reddy@oss.qualcomm.com>
 ---
- include/net/cfg80211.h       |  5 ++++
- include/uapi/linux/nl80211.h |  9 ++++++
- net/wireless/core.c          | 35 ++++++++++++++++++++++-
- net/wireless/core.h          |  2 ++
- net/wireless/nl80211.c       | 54 ++++++++++++++++++++++++++++++++++++
- net/wireless/rdev-ops.h      | 19 +++++++++++++
- net/wireless/trace.h         | 10 +++++++
- 7 files changed, 133 insertions(+), 1 deletion(-)
+ include/net/cfg80211.h       | 35 +++++++++++++++++++-
+ include/uapi/linux/nl80211.h | 62 ++++++++++++++++++++++++++++++++++--
+ net/wireless/nl80211.c       | 11 +++++++
+ net/wireless/pmsr.c          | 61 +++++++++++++++++++++++++++++++++--
+ 4 files changed, 163 insertions(+), 6 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 25847230428e..0ab0a99fa824 100644
+index 16b03a074f58..ec82ca19470b 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -5085,6 +5085,9 @@ struct mgmt_frame_regs {
-  *	links by calling cfg80211_mlo_reconf_add_done(). When calling
-  *	cfg80211_mlo_reconf_add_done() the bss pointer must be given for each
-  *	link for which MLO reconfiguration 'add' operation was requested.
-+ *
-+ * @start_pd: Start the PD interface.
-+ * @stop_pd: Stop the PD interface.
+@@ -4524,7 +4524,8 @@ struct cfg80211_pmsr_result {
+  * @burst_duration: burst duration. If @trigger_based or @non_trigger_based is
+  *	set, this is the burst duration in milliseconds, and zero means the
+  *	device should pick an appropriate value based on @ftms_per_burst.
+- * @ftms_per_burst: number of FTMs per burst
++ * @ftms_per_burst: number of FTMs per burst. If set to 0, the firmware or
++ *	driver can automatically select an appropriate value.
+  * @ftmr_retries: number of retries for FTM request
+  * @request_lci: request LCI information
+  * @request_civicloc: request civic location information
+@@ -4541,6 +4542,31 @@ struct cfg80211_pmsr_result {
+  * @bss_color: the bss color of the responder. Optional. Set to zero to
+  *	indicate the driver should set the BSS color. Only valid if
+  *	@non_trigger_based or @trigger_based is set.
++ * @request_type: ranging request type, one of
++ *	&enum nl80211_peer_measurement_ftm_req_type. Defaults to
++ *	%NL80211_PMSR_FTM_REQ_TYPE_INFRA if not specified.
++ * @min_time_between_measurements: minimum time between two consecutive range
++ *	measurements in units of 100 microseconds, for non-trigger based
++ *	ranging. Should be set as short as possible to minimize turnaround
++ *	time, since two-way ranging with delayed LMR requires two measurements.
++ *	Only valid if @non_trigger_based is set.
++ * @max_time_between_measurements: maximum time between two consecutive range
++ *	measurements in units of 10 milliseconds, for non-trigger based
++ *	ranging. Acts as a session timeout; if exceeded, the ranging session
++ *	should be terminated. Only valid if @non_trigger_based is set.
++ * @availability_window: duration of the availability window (AW) in units of
++ *	1 millisecond (0-255 ms). Only valid if @non_trigger_based is set.
++ *	If set to 0, the firmware or driver can automatically select an
++ *	appropriate value.
++ * @nominal_time: Nominal duration between adjacent availability windows
++ *	in units of milli seconds. Only valid if @non_trigger_based is set.
++ *	If set to 0, the firmware or driver can automatically select an
++ *	appropriate value.
++ * @num_measurements: number of Availability Windows (AWs) to schedule
++ *	for non-trigger-based ranging. Each AW may contain multiple FTM
++ *	exchanges as configured by @ftms_per_burst. Only valid if
++ *	@non_trigger_based is set. If set to 0, the firmware or driver
++ *	can automatically select an appropriate value.
+  *
+  * See also nl80211 for the respective attribute documentation.
   */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -5461,6 +5464,8 @@ struct cfg80211_ops {
- 				   struct cfg80211_ml_reconf_req *req);
- 	int	(*set_epcs)(struct wiphy *wiphy, struct net_device *dev,
- 			    bool val);
-+	int	(*start_pd)(struct wiphy *wiphy, struct wireless_dev *wdev);
-+	void	(*stop_pd)(struct wiphy *wiphy, struct wireless_dev *wdev);
+@@ -4560,6 +4586,13 @@ struct cfg80211_pmsr_ftm_request_peer {
+ 	u8 ftms_per_burst;
+ 	u8 ftmr_retries;
+ 	u8 bss_color;
++
++	u32 request_type;
++	u32 min_time_between_measurements;
++	u32 max_time_between_measurements;
++	u8 availability_window;
++	u32 nominal_time;
++	u32 num_measurements;
  };
  
- /*
+ /**
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7fb77091f863..53d22194e75d 100644
+index e540cd21b9e7..4be04dea7938 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
-@@ -1417,6 +1417,12 @@
-  *	identifying the evacuated channel.
-  *	User space may reconfigure the local schedule in response to this
-  *	notification.
-+ * @NL80211_CMD_START_PD: Start PD operation, identified by its
-+ *	%NL80211_ATTR_WDEV interface. This interface must have been previously
-+ *	created with %NL80211_CMD_NEW_INTERFACE.
-+ * @NL80211_CMD_STOP_PD: Stop the PD operation, identified by
-+ *	its %NL80211_ATTR_WDEV interface.
+@@ -7980,6 +7980,26 @@ enum nl80211_peer_measurement_resp {
+ 	NL80211_PMSR_RESP_ATTR_MAX = NUM_NL80211_PMSR_RESP_ATTRS - 1
+ };
+ 
++/**
++ * enum nl80211_peer_measurement_ftm_req_type - FTM ranging request type,
++ *	used with %NL80211_PMSR_PEER_ATTR_REQ_TYPE
 + *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1692,6 +1698,9 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_NAN_CHANNEL_EVAC,
- 
-+	NL80211_CMD_START_PD,
-+	NL80211_CMD_STOP_PD,
++ * @NL80211_PMSR_FTM_REQ_TYPE_INFRA: infrastructure ranging, i.e. STA-to-AP
++ * @NL80211_PMSR_FTM_REQ_TYPE_PD: peer-to-peer ranging as defined in the
++ *	Wi-Fi Alliance specification "Proximity Ranging (PR) Implementation
++ *	Consideration Draft 1.9 Rev 1"
++ * @NUM_NL80211_PMSR_FTM_REQ_TYPE: internal
++ * @NL80211_PMSR_FTM_REQ_TYPE_MAX: highest request type value
++ */
++enum nl80211_peer_measurement_ftm_req_type {
++	NL80211_PMSR_FTM_REQ_TYPE_INFRA,
++	NL80211_PMSR_FTM_REQ_TYPE_PD,
 +
- 	/* add new commands above here */
++	/* keep last */
++	NUM_NL80211_PMSR_FTM_REQ_TYPE,
++	NL80211_PMSR_FTM_REQ_TYPE_MAX = NUM_NL80211_PMSR_FTM_REQ_TYPE - 1
++};
++
+ /**
+  * enum nl80211_peer_measurement_peer_attrs - peer attributes for measurement
+  * @__NL80211_PMSR_PEER_ATTR_INVALID: invalid
+@@ -7993,6 +8013,9 @@ enum nl80211_peer_measurement_resp {
+  * @NL80211_PMSR_PEER_ATTR_RESP: This is a nested attribute indexed by
+  *	measurement type, with attributes from the
+  *	&enum nl80211_peer_measurement_resp inside.
++ * @NL80211_PMSR_PEER_ATTR_REQ_TYPE: u32 attribute specifying the ranging
++ *	request type, using values from &enum nl80211_peer_measurement_ftm_req_type.
++ *	If absent, defaults to %NL80211_PMSR_FTM_REQ_TYPE_INFRA.
+  *
+  * @NUM_NL80211_PMSR_PEER_ATTRS: internal
+  * @NL80211_PMSR_PEER_ATTR_MAX: highest attribute number
+@@ -8004,6 +8027,7 @@ enum nl80211_peer_measurement_peer_attrs {
+ 	NL80211_PMSR_PEER_ATTR_CHAN,
+ 	NL80211_PMSR_PEER_ATTR_REQ,
+ 	NL80211_PMSR_PEER_ATTR_RESP,
++	NL80211_PMSR_PEER_ATTR_REQ_TYPE,
  
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index be2785812811..55ad4d0bcc73 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -322,6 +322,28 @@ int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
+ 	/* keep last */
+ 	NUM_NL80211_PMSR_PEER_ATTRS,
+@@ -8227,9 +8251,11 @@ enum nl80211_peer_measurement_ftm_type_capa {
+  *	default 15 i.e. "no preference"). For non-EDCA ranging, this is the
+  *	burst duration in milliseconds (optional with default 0, i.e. let the
+  *	device decide).
+- * @NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST: number of successful FTM frames
+- *	requested per burst
++ * @NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST: (Optional) number of successful
++ *	FTM frames requested per burst
+  *	(u8, 0-31, optional with default 0 i.e. "no preference")
++ *	If the attribute is absent ("no preference"), the driver or firmware can
++ *	choose a suitable value.
+  * @NL80211_PMSR_FTM_REQ_ATTR_NUM_FTMR_RETRIES: number of FTMR frame retries
+  *	(u8, default 3)
+  * @NL80211_PMSR_FTM_REQ_ATTR_REQUEST_LCI: request LCI data (flag)
+@@ -8263,6 +8289,33 @@ enum nl80211_peer_measurement_ftm_type_capa {
+  *	Only valid if %NL80211_PMSR_FTM_REQ_ATTR_LMR_FEEDBACK is set (so the
+  *	RSTA will have the measurement results to report back in the FTM
+  *	response).
++ * @NL80211_PMSR_FTM_REQ_ATTR_MIN_TIME_BETWEEN_MEASUREMENTS: minimum time
++ *	between two consecutive range measurements in units of 100 microseconds,
++ *	for non-trigger based ranging (u32). Should be set as short as possible
++ *	to minimize turnaround time, since two-way ranging with delayed LMR
++ *	requires two measurements. Only valid if
++ *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
++ * @NL80211_PMSR_FTM_REQ_ATTR_MAX_TIME_BETWEEN_MEASUREMENTS: maximum time
++ *	between two consecutive range measurements in units of 10 milliseconds,
++ *	for non-trigger based ranging (u32). Acts as a session timeout; if
++ *	exceeded, the ranging session should be terminated. Only valid if
++ *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
++ * @NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME: The nominal time field shall be
++ *	set to the nominal duration between adjacent Availability Windows in
++ *	units of milli seconds (u32). Mandatory if
++ *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
++ * @NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION: (Optional) The AW duration field
++ *	shall be set to the duration of the AW in units of 1ms (0-255 ms) (u32).
++ *	Only valid if %NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
++ *	If the attribute is absent ("no preference"), the driver or firmware
++ *	can choose a suitable value.
++ * @NL80211_PMSR_FTM_REQ_ATTR_NUM_MEASUREMENTS: (Optional) number of
++ *	Availability Windows (AWs) to schedule for non-trigger-based ranging.
++ *	Each AW may contain multiple FTM exchanges as configured by
++ *	%NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST. Only valid if
++ *	%NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED is set.
++ *	If the attribute is absent ("no preference"), the driver or firmware
++ *	can choose a suitable value.
+  *
+  * @NUM_NL80211_PMSR_FTM_REQ_ATTR: internal
+  * @NL80211_PMSR_FTM_REQ_ATTR_MAX: highest attribute number
+@@ -8284,6 +8337,11 @@ enum nl80211_peer_measurement_ftm_req {
+ 	NL80211_PMSR_FTM_REQ_ATTR_LMR_FEEDBACK,
+ 	NL80211_PMSR_FTM_REQ_ATTR_BSS_COLOR,
+ 	NL80211_PMSR_FTM_REQ_ATTR_RSTA,
++	NL80211_PMSR_FTM_REQ_ATTR_MIN_TIME_BETWEEN_MEASUREMENTS,
++	NL80211_PMSR_FTM_REQ_ATTR_MAX_TIME_BETWEEN_MEASUREMENTS,
++	NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME,
++	NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION,
++	NL80211_PMSR_FTM_REQ_ATTR_NUM_MEASUREMENTS,
+ 
+ 	/* keep last */
+ 	NUM_NL80211_PMSR_FTM_REQ_ATTR,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 51046d749581..3fb540c6adcf 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -476,6 +476,15 @@ nl80211_pmsr_ftm_req_attr_policy[NL80211_PMSR_FTM_REQ_ATTR_MAX + 1] = {
+ 	[NL80211_PMSR_FTM_REQ_ATTR_LMR_FEEDBACK] = { .type = NLA_FLAG },
+ 	[NL80211_PMSR_FTM_REQ_ATTR_BSS_COLOR] = { .type = NLA_U8 },
+ 	[NL80211_PMSR_FTM_REQ_ATTR_RSTA] = { .type = NLA_FLAG },
++	[NL80211_PMSR_FTM_REQ_ATTR_MIN_TIME_BETWEEN_MEASUREMENTS] = {
++		.type = NLA_U32
++	},
++	[NL80211_PMSR_FTM_REQ_ATTR_MAX_TIME_BETWEEN_MEASUREMENTS] = {
++		.type = NLA_U32
++	},
++	[NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME] = { .type = NLA_U32 },
++	[NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION] = NLA_POLICY_MAX(NLA_U32, 255),
++	[NL80211_PMSR_FTM_REQ_ATTR_NUM_MEASUREMENTS] = { .type = NLA_U32 },
+ };
+ 
+ static const struct nla_policy
+@@ -498,6 +507,8 @@ nl80211_pmsr_peer_attr_policy[NL80211_PMSR_PEER_ATTR_MAX + 1] = {
+ 	[NL80211_PMSR_PEER_ATTR_REQ] =
+ 		NLA_POLICY_NESTED(nl80211_pmsr_req_attr_policy),
+ 	[NL80211_PMSR_PEER_ATTR_RESP] = { .type = NLA_REJECT },
++	[NL80211_PMSR_PEER_ATTR_REQ_TYPE] =
++		NLA_POLICY_MAX(NLA_U32, NL80211_PMSR_FTM_REQ_TYPE_MAX),
+ };
+ 
+ static const struct nla_policy
+diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
+index c21f693fac29..951ba0b96da2 100644
+--- a/net/wireless/pmsr.c
++++ b/net/wireless/pmsr.c
+@@ -91,11 +91,10 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 			nla_get_u32(tb[NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST]);
+ 
+ 	if (capa->ftm.max_ftms_per_burst &&
+-	    (out->ftm.ftms_per_burst > capa->ftm.max_ftms_per_burst ||
+-	     out->ftm.ftms_per_burst == 0)) {
++	    out->ftm.ftms_per_burst > capa->ftm.max_ftms_per_burst) {
+ 		NL_SET_ERR_MSG_ATTR(info->extack,
+ 				    tb[NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST],
+-				    "FTM: FTMs per burst must be set lower than the device limit but non-zero");
++				    "FTM: FTMs per burst must be set lower than the device limit");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -128,6 +127,14 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 	}
+ 
++	if (out->ftm.request_type == NL80211_PMSR_FTM_REQ_TYPE_PD &&
++	    out->ftm.trigger_based) {
++		NL_SET_ERR_MSG_ATTR(info->extack,
++				    ftmreq,
++				    "FTM: TB ranging is not supported for PD request type");
++		return -EINVAL;
++	}
++
+ 	out->ftm.non_trigger_based =
+ 		!!tb[NL80211_PMSR_FTM_REQ_ATTR_NON_TRIGGER_BASED];
+ 	if (out->ftm.non_trigger_based && !capa->ftm.non_trigger_based) {
+@@ -143,6 +150,14 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 	}
+ 
++	if (out->ftm.request_type == NL80211_PMSR_FTM_REQ_TYPE_PD &&
++	    out->ftm.non_trigger_based && out->ftm.ftms_per_burst > 4) {
++		NL_SET_ERR_MSG_ATTR(info->extack,
++				    tb[NL80211_PMSR_FTM_REQ_ATTR_FTMS_PER_BURST],
++				    "FTM: FTMs per burst must not exceed 4 for PD NTB ranging");
++		return -ERANGE;
++	}
++
+ 	if (out->ftm.ftms_per_burst > 31 && !out->ftm.non_trigger_based &&
+ 	    !out->ftm.trigger_based) {
+ 		NL_SET_ERR_MSG_ATTR(info->extack,
+@@ -222,6 +237,33 @@ static int pmsr_parse_ftm(struct cfg80211_registered_device *rdev,
+ 		return -EINVAL;
+ 	}
+ 
++	if (out->ftm.non_trigger_based) {
++		if (out->ftm.request_type == NL80211_PMSR_FTM_REQ_TYPE_PD &&
++		    !tb[NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME]) {
++			NL_SET_ERR_MSG(info->extack,
++				       "FTM: nominal time is required for PD NTB ranging");
++			return -EINVAL;
++		}
++		out->ftm.nominal_time =
++			nla_get_u32(tb[NL80211_PMSR_FTM_REQ_ATTR_NOMINAL_TIME]);
++
++		if (tb[NL80211_PMSR_FTM_REQ_ATTR_MIN_TIME_BETWEEN_MEASUREMENTS])
++			out->ftm.min_time_between_measurements =
++			nla_get_u32(tb[NL80211_PMSR_FTM_REQ_ATTR_MIN_TIME_BETWEEN_MEASUREMENTS]);
++
++		if (tb[NL80211_PMSR_FTM_REQ_ATTR_MAX_TIME_BETWEEN_MEASUREMENTS])
++			out->ftm.max_time_between_measurements =
++			nla_get_u32(tb[NL80211_PMSR_FTM_REQ_ATTR_MAX_TIME_BETWEEN_MEASUREMENTS]);
++
++		if (tb[NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION])
++			out->ftm.availability_window =
++				nla_get_u8(tb[NL80211_PMSR_FTM_REQ_ATTR_AW_DURATION]);
++
++		if (tb[NL80211_PMSR_FTM_REQ_ATTR_NUM_MEASUREMENTS])
++			out->ftm.num_measurements =
++				nla_get_u32(tb[NL80211_PMSR_FTM_REQ_ATTR_NUM_MEASUREMENTS]);
++	}
++
  	return 0;
  }
  
-+void cfg80211_stop_pd(struct cfg80211_registered_device *rdev,
-+		      struct wireless_dev *wdev)
-+{
-+	lockdep_assert_held(&rdev->wiphy.mtx);
+@@ -249,6 +291,19 @@ static int pmsr_parse_peer(struct cfg80211_registered_device *rdev,
+ 
+ 	memcpy(out->addr, nla_data(tb[NL80211_PMSR_PEER_ATTR_ADDR]), ETH_ALEN);
+ 
++	if (tb[NL80211_PMSR_PEER_ATTR_REQ_TYPE])
++		out->ftm.request_type =
++			nla_get_u32(tb[NL80211_PMSR_PEER_ATTR_REQ_TYPE]);
++	else
++		out->ftm.request_type = NL80211_PMSR_FTM_REQ_TYPE_INFRA;
 +
-+	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_PD))
-+		return;
-+
-+	if (!rdev->ops->stop_pd)
-+		return;
-+
-+	if (!wdev_running(wdev))
-+		return;
-+
-+	cfg80211_pmsr_wdev_down(wdev);
-+
-+	rdev_stop_pd(rdev, wdev);
-+	wdev->is_running = false;
-+
-+	rdev->opencount--;
-+}
-+
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-@@ -351,6 +373,9 @@ void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
- 		case NL80211_IFTYPE_NAN:
- 			cfg80211_stop_nan(rdev, wdev);
- 			break;
-+		case NL80211_IFTYPE_PD:
-+			cfg80211_stop_pd(rdev, wdev);
-+			break;
- 		default:
- 			break;
- 		}
-@@ -828,6 +853,9 @@ int wiphy_register(struct wiphy *wiphy)
- 		    (!rdev->ops->tdls_channel_switch ||
- 		     !rdev->ops->tdls_cancel_channel_switch)))
- 		return -EINVAL;
-+	if (WARN_ON((wiphy->interface_modes & BIT(NL80211_IFTYPE_PD)) &&
-+		    (!rdev->ops->start_pd || !rdev->ops->stop_pd)))
++	if (out->ftm.request_type == NL80211_PMSR_FTM_REQ_TYPE_PD &&
++	    !rdev->wiphy.pmsr_capa->ftm.type.pd_support) {
++		NL_SET_ERR_MSG_ATTR(info->extack,
++				    tb[NL80211_PMSR_PEER_ATTR_REQ_TYPE],
++				    "FTM: PD request type not supported by device");
 +		return -EINVAL;
- 
- 	if (WARN_ON((wiphy->interface_modes & BIT(NL80211_IFTYPE_NAN)) &&
- 		    (!rdev->ops->start_nan || !rdev->ops->stop_nan ||
-@@ -1387,6 +1415,9 @@ static void _cfg80211_unregister_wdev(struct wireless_dev *wdev,
- 	case NL80211_IFTYPE_NAN:
- 		cfg80211_stop_nan(rdev, wdev);
- 		break;
-+	case NL80211_IFTYPE_PD:
-+		cfg80211_stop_pd(rdev, wdev);
-+		break;
- 	default:
- 		break;
- 	}
-@@ -1495,10 +1526,12 @@ void cfg80211_leave_locked(struct cfg80211_registered_device *rdev,
- 	case NL80211_IFTYPE_NAN:
- 		cfg80211_stop_nan(rdev, wdev);
- 		break;
-+	case NL80211_IFTYPE_PD:
-+		cfg80211_stop_pd(rdev, wdev);
-+		break;
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_NAN_DATA:
--	case NL80211_IFTYPE_PD:
- 		/* nothing to do */
- 		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index ae2d56d3ad90..cbea34005330 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -556,6 +556,8 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
- 
- void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
- 		       struct wireless_dev *wdev);
-+void cfg80211_stop_pd(struct cfg80211_registered_device *rdev,
-+		      struct wireless_dev *wdev);
- 
- int cfg80211_nan_set_local_schedule(struct cfg80211_registered_device *rdev,
- 				    struct wireless_dev *wdev,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4b387bf1fe7a..e40b1898ab02 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -16571,6 +16571,46 @@ static int nl80211_nan_change_config(struct sk_buff *skb,
- 	return rdev_nan_change_conf(rdev, wdev, &conf, changed);
- }
- 
-+static int nl80211_start_pd(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+	int err;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_PD)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev_running(wdev))
-+		return -EEXIST;
-+
-+	if (rfkill_blocked(rdev->wiphy.rfkill))
-+		return -ERFKILL;
-+
-+	if (!rdev->ops->start_pd)
-+		return -EOPNOTSUPP;
-+
-+	err = rdev_start_pd(rdev, wdev);
-+	if (err)
-+		return err;
-+	wdev->is_running = true;
-+	rdev->opencount++;
-+
-+	return 0;
-+}
-+
-+static int nl80211_stop_pd(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev = info->user_ptr[1];
-+
-+	if (wdev->iftype != NL80211_IFTYPE_PD)
-+		return -EOPNOTSUPP;
-+
-+	cfg80211_stop_pd(rdev, wdev);
-+
-+	return 0;
-+}
-+
- void cfg80211_nan_match(struct wireless_dev *wdev,
- 			struct cfg80211_nan_match_params *match, gfp_t gfp)
- {
-@@ -19733,6 +19773,20 @@ static const struct genl_small_ops nl80211_small_ops[] = {
- 		.flags = GENL_ADMIN_PERM,
- 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP),
- 	},
-+	{
-+		.cmd = NL80211_CMD_START_PD,
-+		.doit = nl80211_start_pd,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV |
-+					 NL80211_FLAG_NEED_RTNL),
-+	},
-+	{
-+		.cmd = NL80211_CMD_STOP_PD,
-+		.doit = nl80211_stop_pd,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = IFLAGS(NL80211_FLAG_NEED_WDEV_UP |
-+					 NL80211_FLAG_NEED_RTNL),
-+	},
- 	{
- 		.cmd = NL80211_CMD_SET_MCAST_RATE,
- 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index d97d5c08d135..63c26e8b1139 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1093,6 +1093,25 @@ rdev_nan_set_peer_sched(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline int rdev_start_pd(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev)
-+{
-+	int ret;
-+
-+	trace_rdev_start_pd(&rdev->wiphy, wdev);
-+	ret = rdev->ops->start_pd(&rdev->wiphy, wdev);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
-+static inline void rdev_stop_pd(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev)
-+{
-+	trace_rdev_stop_pd(&rdev->wiphy, wdev);
-+	rdev->ops->stop_pd(&rdev->wiphy, wdev);
-+	trace_rdev_return_void(&rdev->wiphy);
-+}
-+
- static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
- 				   struct net_device *dev,
- 				   struct cfg80211_acl_data *params)
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 938fea1fe9d8..a68d356fe127 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2375,6 +2375,16 @@ DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_nan,
- 	TP_ARGS(wiphy, wdev)
- );
- 
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_start_pd,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	TP_ARGS(wiphy, wdev)
-+);
-+
-+DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_pd,
-+	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
-+	TP_ARGS(wiphy, wdev)
-+);
-+
- TRACE_EVENT(rdev_add_nan_func,
- 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		 const struct cfg80211_nan_func *func),
++	}
+ 	/* reuse info->attrs */
+ 	memset(info->attrs, 0, sizeof(*info->attrs) * (NL80211_ATTR_MAX + 1));
+ 	err = nla_parse_nested_deprecated(info->attrs, NL80211_ATTR_MAX,
 -- 
 2.34.1
 
