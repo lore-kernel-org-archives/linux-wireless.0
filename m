@@ -1,70 +1,70 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 096BC3D813C
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 13:49:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFC323D8114
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 13:49:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776779397; cv=none; b=nGCxsa70INPxXEWUAQGyoF61rjiihciJlWeVYrGFbSdYqHEgbcP+cK3wSk0K7Fo6Hr5tZMbQvfX5ljJEvMJ85zZ9LxOifiAulqpVjryMlC1agznhfi9Q9i/2tEu7GXy08iZrIAwnQzDmIeLKJtUjlNQ/6n8Ol6AVxVjW0kO13RE=
+	t=1776779398; cv=none; b=MLJE8KfkRYxhyrX28RNUP90MHb7f2iKjvdGreOgYjaBtHG1wTduF3RpZcq1yWta9e0YIeXG0/m0Zpq81rHVezIHzdXhQeAUTPiLCfdSQZnWBOKImyrSDFwGuY1ycrtk2USx0KanTD/NXrRvm8+AP9xPUh0i6YQXi+R0biW4b2NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776779397; c=relaxed/simple;
-	bh=kKZ2eoQ5zExPxPUVDm9+Bjv946REbBveK4BG4RekTwk=;
+	s=arc-20240116; t=1776779398; c=relaxed/simple;
+	bh=VQJmGeicKEsi6S1aknxYXPHkbMtvDEapOhVDhRsNyb8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T1CqWmdtiyAWhF5YAH92vEMjrBV8zQyfJAJLfpkvaL+teYV6Se3xA0vJ9xsveAE3d7uLY0ZV9m34LIkCt6n9tj2ORYqhmgsCsUNTD3QIVWYFOnIEXW86pQElDbE+DNA5RO6GRHmygEoi/WyAEeq1EHogzkjxBO3MRKDneXP3RQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=El27gZ9O; arc=none smtp.client-ip=209.85.221.47
+	 MIME-Version; b=B9PA/B8Ri6BiSDsId7bsNSyTwZ4t+x+0cD6yJAV9CNxOLH52l12Ia0wEQ3aXuZn18Q916ApCLnAtNpQHXVnUnVz0WX/D1PMZaTPTmc2O5yCX19FV5oLshEF+rJRgI/i8SBA77vJ+ud/c2COJ5q1xz/s6qHtgu9+QO65JbJRbQnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OUJtJdOs; arc=none smtp.client-ip=209.85.128.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="El27gZ9O"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-43d0deb7ad5so3477504f8f.2
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 06:49:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OUJtJdOs"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4890098abbaso29139665e9.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 06:49:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776779394; x=1777384194; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1776779395; x=1777384195; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2zHXMr6dY7lbD0aEaxS9wFDwdUTKjF7ef2KbAfXUkPE=;
-        b=El27gZ9OlwnaitqqZOs+yfShEU0YqlH+Nq72sniySrJjn1Nmp02Nryq6+8KeqPppVF
-         tyDv2KXc0J0quwxpy+hQsXU+e86UoQQk9CoCCs64+6a2SGBd+kTfL3DQzX/q7qjHHCrB
-         jyjRLvTyAdmVqk0uRpkFcyG/STmNhHbgjMp+aHTFN8knuiiH7HL7eDKke2sv3XHTLU/z
-         uy/hMsYFbkf88ost5mr79tGklRf8h103xAyDLe/QEQMPFi3sumN3eXj4uhP4B5LxDtLr
-         Xh25+Xqs8VPoYLfEEaRh8XH3TNyl/WsW7i0/57eqD1qay7ouS8PQ+farRHEwj3R9XGYs
-         /gjA==
+        bh=XW7SuI64R5lXg3EcFdNoYLk+o32d4vhook9t2qciYl4=;
+        b=OUJtJdOsxaoIeEDmx92xeuRCER3C+Hd8QJwVrboQYm2MTT5riRyXks6IeCSBiJaRij
+         7U++RfRQVKsycwu4D5aMaZmJsuzUeYOuiHfBNiOZfkKo4UeHgrBLUgDpkyZKFKEXLrtm
+         OFaG3n2/JSjjvS6MuwbpuNhN6mRMPBCJZHyiE9rD6TqHAt7EF+jdYJQ3cUr8Izu/9gQl
+         nSNVz5PFRjT+etzcomgb78QyUh9GAXxfSbZQBS+jD+zNUDsdtzzoDFW5srPeUZCP5HaN
+         0P91A9RAFgdc2I+F7JYysdtiyD6Bd1u1slNkb7Azf/O6qP2gzELEo7nhaY+ua8dUTGTe
+         IRuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776779394; x=1777384194;
+        d=1e100.net; s=20251104; t=1776779395; x=1777384195;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=2zHXMr6dY7lbD0aEaxS9wFDwdUTKjF7ef2KbAfXUkPE=;
-        b=K7yXbZ1qukURigyfIkuKx09uh0dJiqatsbgxp0T0Xf30VIOE662r0v/mc1EMNGlSKz
-         WgAJbVb4ZBjbLLI7MZExZPuyzDFgic6tknb/1fy9r5JD4r1JzqMNMnkwCbD/N//tWs+7
-         fVTX8WYGuOwoeQnbleAlKHUXFlZ/dfXH8tvA6jK3kW7rRDfRV0XATtsr1XcW9UKIhR3p
-         ztWtE1/JHZQShMmLJWPGEsIUqCz0AFei+A0CP51fj+DyFtIhZNUQeWbqjc6ootIfjJK1
-         T+cXyrtu+dho+nVo1X9JzdRnq7im7voM6gUvZG92+/cWhYQkNiwJlCsRFBmm4N19It5I
-         hk3g==
-X-Gm-Message-State: AOJu0Yzoh7SjmbnNh9IDzqNiiDClP97cGlxYw7s0Urcg+XEnHpDAe1Bj
-	bTKSWG+h3riPkFbZipT9S5mK2RdJCiMlKs7PQ51HcfZOkqp5ITdDlEs=
-X-Gm-Gg: AeBDiesH2xdg1yR/micZYPaKdDGU+1BKmW25X0jNdzZGaS/RDEl+AwcCqZfex7PsscJ
-	XNXzC5UH1N82ZBXMJUXOalM5wGr2w+w/GKLOC04yD5J7d5jwjyP/KgreC6d55prB3scxoEN7VR8
-	12l7wd78orlayfF3GRngCzOrlKTveQyjHVLJYDgA9T5sQZ7ibBWWQW37pu6hVk7aDs6ERwa+E0m
-	ybTYFY6YmbffWKGGGFi1P4+LS+gpLAHWyXU28zHXAAf6uiJuEvfnDJxU86gOcA1OMukvXASgLk7
-	d2nqFiL46xjP1+Z6ECwfxkT5HT+2jXkdmrNzv6sizGZ/8tuGo0TiJ57iEruWEogR/NRjwO50fxT
-	qL3G39YLlOpSEJQzYDly5cQQOOupesATShxhM3PWGzCHGNrIhTajYpF3SZEBpAjuM/g0wgXWhun
-	D+eSs=
-X-Received: by 2002:a05:6000:250e:b0:43d:7ef:552f with SMTP id ffacd0b85a97d-43fe3dfbd9fmr29529388f8f.25.1776779394294;
-        Tue, 21 Apr 2026 06:49:54 -0700 (PDT)
+        bh=XW7SuI64R5lXg3EcFdNoYLk+o32d4vhook9t2qciYl4=;
+        b=JgurrfiR+DLG25G/UbBPSYO85ZHx8NhixreiBo4XTodxiIIs7U5JGcG+ejgrTDtUoK
+         U30wMvzxRUPTsjt2O6mzF4yBS2swuCX54+k81U65nG1M9fxGbL9xc91lfMK55T5KxlGu
+         TJPJYZwsedVzvXfsct5uxgnIBoPxVj1EYddz8KdPcGYXbyHr8nP9YWP30WBbZtAUeFcx
+         O+VcTS7okbV2Jwkj1rGrbaYTNli9ND+ux85fQGOPEIVd7+4Z+tBOTZT2JUod8NUsD+CH
+         dkEjsncjxnhTy3JvDQita/SjzopNr8FBNFwcSQOx4ixDpsu1+8AGU6Y7+JdxRjDP5ZdW
+         49bg==
+X-Gm-Message-State: AOJu0YyMZk/Xn+Wg3lGXX1O3P6KTUbBaCaqrkGMTeMXR1Y8krUz3q+wF
+	zPslQOHQEZQFyWsIuFo29YYxqGREp3kDYUPazUn7zD6ESci8CP2vWzza7taE
+X-Gm-Gg: AeBDievelvAaDJNeDR0Du29GpP8TbStSA4i1B9oFI78WXWGjMn4N8uYyCzQ9tWnzZHb
+	dvg5LAOtj4hzz2FB34Ju8ILAywrRTfXgNQa1/YWOQSnLexRdL41e3+eT/gq7gugBEE08YIHXZPj
+	uePVJSPEy3BSrPifXRuVT7UEri9DGadlbWBbb9vBZyaT72aEeenjjnCd/fXCbPVfTmVC7YO92MD
+	iIbDI8Kuigo3qmBYY49t9ZW/dvDHcDtQfbnDvvICdHKssN6QOhbb2bsKB6LRPlf7dnqVUdCLXS/
+	F2CFIyZGQrvRHDAMNKIbgXgfRPI7blqTG2vt/IqOtvOqY3t18eEzk5rrMqxk4yDcW6d+l+M7bCo
+	7tGEU9BLhXghsF4IrXNU9UeNvzPB7Db65pXOpbdipr9NzlDvwlJOEjQ/jNKcJ9xAQM512y+lyCp
+	FZpes=
+X-Received: by 2002:adf:f2c7:0:b0:43f:e44a:f276 with SMTP id ffacd0b85a97d-43fe44b01a5mr20217458f8f.3.1776779395152;
+        Tue, 21 Apr 2026 06:49:55 -0700 (PDT)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43fe4cb13a0sm37671480f8f.8.2026.04.21.06.49.53
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43fe4cb13a0sm37671480f8f.8.2026.04.21.06.49.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Apr 2026 06:49:53 -0700 (PDT)
+        Tue, 21 Apr 2026 06:49:54 -0700 (PDT)
 From: Tristan Madani <tristmd@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH v3 1/3] wifi: wl18xx: fix OOB read from firmware rx_ba_link_id in BA event handler
-Date: Tue, 21 Apr 2026 13:49:49 +0000
-Message-ID: <20260421134952.338301-2-tristmd@gmail.com>
+Subject: [PATCH v3 2/3] wifi: wlcore: fix OOB read from firmware max_buff_size in logger handler
+Date: Tue, 21 Apr 2026 13:49:50 +0000
+Message-ID: <20260421134952.338301-3-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260421134952.338301-1-tristmd@gmail.com>
 References: <20260421134952.338301-1-tristmd@gmail.com>
@@ -78,15 +78,15 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-The firmware-controlled rx_ba_link_id (u8) is used to index the 16-entry
-wl->links[] array without bounds checking in the BA window size change
-event handler. An out-of-range value causes OOB reads and an immediate
-pointer dereference of the OOB wlvif field.
+The firmware-controlled max_buff_size field is used to compute buffer
+offsets in wlcore_event_fw_logger() without validation against the
+4128-byte kernel allocation. An inflated value causes out-of-bounds
+reads from kernel heap, with the data written to the debugfs-accessible
+fwlog ring buffer.
 
-Add bounds validation consistent with all other HLID consumers in the
-driver.
+Cap max_buff_size at the allocation size minus the header offset.
 
-Fixes: d4392269f7ce ("wlcore: Add RX_BA_WIN_SIZE_CHANGE_EVENT event")
+Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
 Changes in v3:
@@ -96,25 +96,26 @@ Changes in v3:
 Changes in v2:
   - No code changes from v1.
 
- drivers/net/wireless/ti/wl18xx/event.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ti/wlcore/event.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index a9f090e15cbbe..fac12a8590355 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -212,6 +212,12 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
- 		u8 win_size = mbox->rx_ba_win_size;
- 		const u8 *addr;
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 6c3a8ea9613e9..26c74dfcaeeff 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -61,6 +61,13 @@ int wlcore_event_fw_logger(struct wl1271 *wl)
+ 	if (actual_len == 0)
+ 		goto free_out;
  
-+		if (link_id >= WLCORE_MAX_LINKS) {
-+			wl1271_error("BA event: invalid link_id %u\n",
-+				     link_id);
-+			goto out;
-+		}
++	if (le32_to_cpu(fw_log.max_buff_size) >
++	    WL18XX_LOGGER_SDIO_BUFF_MAX - WL18XX_LOGGER_BUFF_OFFSET) {
++		wl1271_error("fw logger: max_buff_size %u exceeds buffer\n",
++			     le32_to_cpu(fw_log.max_buff_size));
++		goto free_out;
++	}
 +
- 		wlvif = wl->links[link_id].wlvif;
- 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 	/* Calculate the internal pointer to the fwlog structure */
+ 	addr_ptr = internal_fw_addrbase + addr;
  
 -- 
 2.47.3
