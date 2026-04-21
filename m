@@ -1,70 +1,70 @@
 Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C997A3D75D2
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 13:49:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815773D7D77
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 13:49:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776779363; cv=none; b=d7MElq9MD+xb6I903EC1rqNrUlPxuQBoOblXuNfmIZ9n+9yBe9g1TsG6Xs/PFXWWOAxK5la576ZN42c8eEN6nR565/mPjHreC7KMcqvz+2NLjXFtEMSpCzXp5FTQtbzJHMpJgw/VbuikTCOO/1A0vJ7E+m1g5Sq27Y5Lt0lLzr0=
+	t=1776779365; cv=none; b=iEbzItCGIt9rwPHoDCLNAwNA8tIBnBABbjzA3lSk4YRcWEdOS2bPDIhxoSTQRGbfrzrdI4kUDPIzdB2IlLTOZsI2U7XVtxhqlUAQwizW8XnSNxGXf2tq69u33xeYr+PMf5RYJZZ6PGUBsJp5nU3vAxhTMFVKwRVD5j2snxJo4EE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776779363; c=relaxed/simple;
-	bh=bM5IYU9DkvKI9rUMjJFNd4dTavPzH6oyjHIeJT7x5/s=;
+	s=arc-20240116; t=1776779365; c=relaxed/simple;
+	bh=FsEyNcKsmbVeitLlbdRRJsSH2nfyg+nEiUQSAafRp2M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LY3SOWiSBC12K1WStb4wlr3OnU/gQcPbHje1hLMbwPWVdiv/hcsXrICregLuPNe8B7yAfvv6M0ryxskDeJ6zee92W2vAtWSDTq0PELcYWNtU4uzF7JiFTVUN/Tw50dp4Th9jfItdmvxSooEeXBgS3kUp8tfWHEwk+HSK8tfMVd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RKPvu/LE; arc=none smtp.client-ip=209.85.128.48
+	 MIME-Version; b=Dc/Mzayyd15lFyL8cKtTwyyAT5q0vw6NtqkCdH4pyz2IC/lgLlrnxWVl/odwXQ9Pf+d0fg9hPUr4HO1wvqAw8tQWhMsM2YgXCme4Nc771jhdB84gX2v8GxbWpXvFDhzw4v5ckc5AUyoae8fbKJRE2yBdHKkIcFKfUwPBZnw3a4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hNZIam2M; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RKPvu/LE"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-488e1a8ac40so54570625e9.2
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 06:49:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hNZIam2M"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-48334ee0aeaso43559185e9.1
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Apr 2026 06:49:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1776779360; x=1777384160; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1776779362; x=1777384162; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XlA8Sx2SvOQml+XUjijzY7lL9TvTpQThCt1oUlqqS8s=;
-        b=RKPvu/LE61iB3jWduWto7JcVKQVwhLYjkvpO8s1vGQLMFL8SJK+lJNnxzpCSfv6Zlo
-         rvEwGUuMUEIhsznmoKn9aJabNxGBzlTrwKCmE53gq3lDzDeQmZm0atA+1R1BKIp31WeR
-         JSbqUTrqUBsd64POedD4xWKy1bRv5Bg0biEDmKufStX4zURkqd44D+TdG5dkjymQPX3D
-         3hDmRh/Mz4Ge08IVZPzwFSFzvY902FDcU5frgagnKVcypnl+OJQAUGXMcznel/x3YJV6
-         HwioMSW+2vDyncvXJ5Z4fkoF7vYBbWtSzJXfvOe6Ohdpl5gAdvdB2qy8Vwy1KPxnOjn/
-         wgIA==
+        bh=+urhPHXHrBrUh/OUNLHYjk/e3pQVaD+/6s/iaxBM7i4=;
+        b=hNZIam2MpJ1lG8deZT13BCnRkElSpk0ciVCl+F4v6Y+vOFRtNk6hh/iEEPGDZyTJBP
+         CWC31fnVMHLolXiPwqUFH2SDrxuQxWLIthxtMR/oUoy6XHm5hru+xUr6vIrZMXI4XAGm
+         qzKZUHAOUpFklacOXkuGyJuJ1ufMk+877loGFBMh0wh6kB9SsRcfj0Vt4DCB9xAX1w93
+         0NxKfq11I4+JLrcrrG3oWmtofZ662uysG/Ssy/An8wl3PeHBxATMOdRCwI3XGp3nqipl
+         xhw3hkM5587VlHfFCp1kx8sOIXyq/zaOwHSLK40RjqIRAWl0v0uyXnL7kK9NIDywvsx8
+         kxdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1776779360; x=1777384160;
+        d=1e100.net; s=20251104; t=1776779362; x=1777384162;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=XlA8Sx2SvOQml+XUjijzY7lL9TvTpQThCt1oUlqqS8s=;
-        b=n6QtkMrkMbcKJn6VoQzYkiCzey97VCDg8PwTVaUcUc8eI0GbiuWd6vdTIR4C2yOyUD
-         u7UEeQKguVZ3XFmrwpONgetsb157P0QnDiDlcYGbMYqoFTigjOtyDf1Tp1zM0z2EsKZ+
-         1A3OUNWMD9Vt4OqOGCpGP6Zs5pgTFoBSeMzou2w1CeVolo4e6LiLK6qjPn/sCctRYFhC
-         pW+ty5SCzmQBBmRGh34IPiEg3QKk7cCgs2YbR6xSoOVtvnekGAwM952pZhCGByTXTPn4
-         k5PLdv54Lw1xfDREPe8qt04u9BUOftmDbFWcVIIBwqysyd64IOyTUiSmzNhe3bNQMUwq
-         n2oQ==
-X-Gm-Message-State: AOJu0YyW6ZtHvhQa/u0HFX6NfRqzYwQD9lN9C7XLv9pzA0d6vANy6ubl
-	7IEoZOPjDTcSMOs32oq8gAvqVeaG5QhuMnT+7in8zQNY3ck219Q9vtU=
-X-Gm-Gg: AeBDiesfkqa/nrZiTcijt6zpSwviVsSSVOsnbC9+poOEtGCaa63pZAj0LqnZmNPtMRF
-	Le3Kg8XnZbfzTBcjFmfEJi3xMVVVjptRavzz4khQwBpZAy1fBQ/dYda9IibsvvOb/2r7099WASV
-	WiMvcIu++C1fXpTNIMl2lORnI0qXH/6DHLlZU7Pi6XCZLIrso8GoNfnE0ATLl3sT8mwqFm3s442
-	amMDl7Jh59VP+GdMLIjyNzwbuennwAAKmb7nR+74c+pMxY0y1uP+1IxCef4uq+gKD9+CA+V5mJB
-	abohw8NASnzXtj9e6QMb9Iw5hDm0vfYomQOuX+KLibQFtzu6I6REiHE7POVuX38uTxOxKJB81cU
-	5hB0Brj+uIk6PKzH2kdA92FOuYjwO3L0M4Jjkt3S7+pmTJnuX6cb9TOIXdTPN4oznIgIv19BE+g
-	5gS/E=
-X-Received: by 2002:a05:600c:c108:b0:488:a82f:bbb6 with SMTP id 5b1f17b1804b1-488fb78e576mr180769885e9.27.1776779359938;
-        Tue, 21 Apr 2026 06:49:19 -0700 (PDT)
+        bh=+urhPHXHrBrUh/OUNLHYjk/e3pQVaD+/6s/iaxBM7i4=;
+        b=qdOn+zP+61hyEBA6KGmuIV83bEwHwkmr7sytisDwea3sCkPS88iwTN1CA3vift5s6K
+         rCpkEIl+V00VKYgV2KkDZ/i2siXIw6DWZET1bCDZHon99VsE67t1xU+ELnyFoXhZuB7K
+         tEpeSl7HTMyD6WuGpoBUmIcQMatp1jknpNtfrhhSrE6vKubJ2bsPDnI5/cOzkg7vGw4M
+         boPwzJjPpxSl/36m/4FbLEsO9u5NXbSYS6qZ0KEp/U8sdlKCapvgj6ZF6H598YZLBU0p
+         1EdgOgGq/idt3ouBXuk8MxRQh0h/6N48tZ3LQ7uhXvOmY4is9KsvfeawH+HcjUSl+ZTF
+         YQ7Q==
+X-Gm-Message-State: AOJu0YwK9R1trWurtMvUUzwWuUnce/M9/X2numZrtEPVDlOaZoeygr1i
+	1UbqgxviGav4o7g2E16I0V8ZeoHdoXhOXygzY5kc8NyuxLqX53mJLDs=
+X-Gm-Gg: AeBDietC/2MH6UQryoBkhLyJysneuT9ys71FNzkJhJPd48JmD5nIakpRjfxSwHwY39b
+	AbBU4IkwSawR14FVOit/At9HVt4NgxwKuJASRgejCZQRDq0MRG2xVVxgAgHGdLjLT9zR+wbfu8u
+	eg82SGkZMA3spufqTCx8LGRnQhawof74qJYRDec9wGARkACqq1D8DcaEx4X6O5Ly+rNVPer9cuY
+	z2aPZDNwfQemTTA9Qn2bY7gvYbbVfpKaqyBiAlOeYYM4ghPaqjNPbDJJcblRkD8JbpQB9ATbWLj
+	GQvfZpG62EAohAiBm37bteWiiDRorOSHWmoIcSl4OEl/yUfdIBS/8pSQXg0NzOnel2EndvUpRUA
+	xCcxre/hXpjzv+99lHSjGcoFFaJugppzEyna8CAq7TMpJz1l/8O5SDcSARgcqWbmB+1E8tk5BO2
+	0W0dOdtEmoV17z7A==
+X-Received: by 2002:a05:600c:3483:b0:488:af7f:775f with SMTP id 5b1f17b1804b1-488fb77d343mr244747025e9.18.1776779361615;
+        Tue, 21 Apr 2026 06:49:21 -0700 (PDT)
 Received: from debian.. ([2001:41d0:303:db6b::])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb7a06f3sm134028065e9.22.2026.04.21.06.49.18
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-488fb7a06f3sm134028065e9.22.2026.04.21.06.49.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Apr 2026 06:49:18 -0700 (PDT)
+        Tue, 21 Apr 2026 06:49:21 -0700 (PDT)
 From: Tristan Madani <tristmd@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tristan Madani <tristan@talencesecurity.com>
-Subject: [PATCH v3 1/5] wifi: rsi: fix integer underflow from firmware extended_desc in rsi_prepare_skb()
-Date: Tue, 21 Apr 2026 13:49:12 +0000
-Message-ID: <20260421134916.317971-2-tristmd@gmail.com>
+Subject: [PATCH v3 3/5] wifi: rsi: fix OOB read from firmware pad_bytes in management RX path
+Date: Tue, 21 Apr 2026 13:49:14 +0000
+Message-ID: <20260421134916.317971-4-tristmd@gmail.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20260421134916.317971-1-tristmd@gmail.com>
 References: <20260421134916.317971-1-tristmd@gmail.com>
@@ -78,16 +78,19 @@ Content-Transfer-Encoding: 8bit
 
 From: Tristan Madani <tristan@talencesecurity.com>
 
-The firmware-controlled extended_desc value is subtracted from pkt_len
-without bounds checking. When extended_desc exceeds pkt_len, the u32
-subtraction wraps, causing either a failed allocation (DoS) or an
-out-of-bounds heap read via the subsequent memcpy from buffer +
-payload_offset. Both SDIO and USB paths are affected.
+The firmware-controlled pad_bytes value (u8, from descriptor byte 4) is
+used to shift the skb_put_data() source pointer forward in
+rsi_mgmt_pkt_to_core(). While the existing msg_len -= pad_bytes check
+catches the case where pad_bytes >= msg_len, it does not prevent a large
+pad_bytes from shifting the read window into heap memory beyond the
+actual packet data. The resulting kernel heap contents are delivered to
+mac80211 as a management frame.
 
-Add a bounds check to reject packets where extended_desc exceeds
-pkt_len.
+Add validation that pad_bytes does not exceed half of msg_len. Alignment
+padding in 802.11 management frames is typically 0-3 bytes, so any
+value exceeding msg_len / 2 indicates a corrupted descriptor.
 
-Fixes: dad0d04fa7ba ("rsi: data and management rx path")
+Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
 Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
 ---
 Changes in v3:
@@ -97,25 +100,26 @@ Changes in v3:
 Changes in v2:
   - No code changes from v1.
 
- drivers/net/wireless/rsi/rsi_91x_main.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 662e42d1e5e8d..2ff7068bad7a7 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -134,6 +134,11 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
- 		pkt_len = RSI_RCV_BUFFER_LEN * 4;
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 7f2c1608f2ce3..ebbc2a43ddfa6 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -490,6 +490,12 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
+ 	u8 pad_bytes = msg[4];
+ 	struct sk_buff *skb;
  
-+	if (extended_desc > pkt_len) {
-+		rsi_dbg(ERR_ZONE, "%s: extended_desc %u > pkt_len %u\n",
-+			__func__, extended_desc, pkt_len);
-+		return NULL;
++	if (pad_bytes > msg_len / 2) {
++		rsi_dbg(MGMT_RX_ZONE,
++			"%s: pad_bytes %u too large for msg_len %d\n",
++			__func__, pad_bytes, msg_len);
++		return -EINVAL;
 +	}
- 	pkt_len -= extended_desc;
- 	skb = dev_alloc_skb(pkt_len + FRAME_DESC_SZ);
- 	if (skb == NULL)
+ 	if (!adapter->sc_nvifs)
+ 		return -ENOLINK;
+ 
 -- 
 2.47.3
 
