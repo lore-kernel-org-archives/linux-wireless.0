@@ -1,49 +1,49 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2099533DEFE;
-	Wed, 22 Apr 2026 19:06:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E6D935AC0F;
+	Wed, 22 Apr 2026 19:12:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776884792; cv=none; b=WwDLCV5ySsHOK7bf71/PfD7h8qtk7WatYiOiJDhmE2QaIkh4qLJ9g1pBzdfiY6AHttCAPpUMrApy7p4rC5s181IjXgsYRBFQICTW9bn/Cepg8Wkft6UwCZPeaBSUx87OWB0ihE5fmxOnGT1pmWXrpuMtUefTPKvxFnixJ0fAg5c=
+	t=1776885142; cv=none; b=E02u/kpnRJDs+3o2FmalVYg0oGYSgxeVXBN3Brequ2JBAq90OzwGNwSwhT2+2qvPgHx1ejQKkoklKJC9wRLefRXial/820oaIIbtxqqRzf+H0pVQGj6nxxkEbX7/UdwQiMAABaVn+cngWnS08DSOaHmDAJuKqM64YK7P1h2EyfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776884792; c=relaxed/simple;
-	bh=5t4ZoPviliKuKdYhL0gnl7koeNrpssgKuvjjXu59Ofs=;
+	s=arc-20240116; t=1776885142; c=relaxed/simple;
+	bh=CHSbAdLxap8U/87UGwfGv0+Bd+7Z8CMJ6KvuzJDmVEI=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Pgbex+/q2W1jnNXTlaqyjbCbwXHu/wFBvcfcgNjG4VksFcsXs5T4pJJMaKkZ3BgmWEBT7HDRC7NBI1Bx8uXV4QYdsuL6ZkjuyjRhqLv86r+2RX4dbV0atJGKPz7I3cgcUL1hByzW2odK7xQ9C+79geVplteIB0k8FRiQ+FxxL6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NwhMu4bB; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=PPSYDs/uyGHcZPEuML6iMpw2Z6LFWfb0v3VFTaY93b6QNuQOOVsOHrKZqgNEhCegXhYUzE+RZO6M41iOF452eGxtnTcDjZRin2czsx3KXyncQm4Gl5fIz4soq8q+uA4p1ideCZFRpeDLMKGM1/1ELx1nEu+O78THRiTpNUHzyq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=wbETMsIz; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NwhMu4bB"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="wbETMsIz"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=XNvXL+h8MBHy+4KpaY/b4FF58OsfMwUcG5tMZd/vCH4=;
-	t=1776884782; x=1778094382; b=NwhMu4bBTodRrkCAD3pmzLvavmTMFm1r9ZgbFzVo5iG+Dcj
-	jOKJhNfuA0qKoQvLvlDQnA1PgehxfeAnor0CXfA1atqsnFV5fs50el2MReZIh0AaA3PlwMir6eIZp
-	DaOLsDnzGF+6ubCit8AuTm//+05p9vGRBHaFOEnzzz/9YaD69pzGtWyYu4spRxEQCR8c1cmDU9wUJ
-	Szt4RfVldQxlui0hEy0Nx8irnAJcoZ9tE3p+V77MoA5pzASHedugm999wYuTZxjIcsNJibJYma1kR
-	/AfXg7b0aR5nzcmEU9Twf+g6CrPl1wIUpO3aS9vt2uXXYsVRkMtOmrVWL156KplQ==;
+	Resent-Cc:Resent-Message-ID; bh=94lgLNY96ah+G3TZGHsgMcXD3COQvY/pKYXue63uduU=;
+	t=1776885137; x=1778094737; b=wbETMsIzC5oemkbkb5G7Z3wkTd/xcyZAZ0e/2wJfm/Tz0kp
+	SdXYq8zdYaachTOy493K32lDy2m+7Cv53/3NANLr4tGeaxekS0vbTFI/DzcNxGlll4clFY9/e0bOz
+	lonAQhVLN9JxHL8NOH7e1fWKhBnfCxhL1bFdtPq/PbVTzz6KW3PfH2c7ynt8+KRTN6TVCftKQLFfH
+	nL5QD62wNysaYpeVbhtULSlqUXul6xgfTJ17NAlPP4G6i/2B1AOg+ZMkx16r+Cwx3qumxkJ9GcqLc
+	o3BALssaSRrSQ6hSjcNohnCufppq6mmQWHYNBJBo4T37wcOKHWylhMGBZx6J7UHg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wFctl-00000006SoT-02IJ;
-	Wed, 22 Apr 2026 21:06:09 +0200
-Message-ID: <247e926c76f01aaf13793d39492a2734ef11cf12.camel@sipsolutions.net>
+	id 1wFczc-00000006Sy1-2F9u;
+	Wed, 22 Apr 2026 21:12:12 +0200
+Message-ID: <2e20cb23d2d156963c2b687c4c51635e5eec2c7c.camel@sipsolutions.net>
 Subject: Re: [PATCH v3 3/6] wifi: mwifiex: fix OOB read from firmware
  sta_count in station list response
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tristan Madani <tristmd@gmail.com>, Brian Norris
- <briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>, Tristan Madani
+ <tristmd@gmail.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Tristan
  Madani <tristan@talencesecurity.com>
-Date: Wed, 22 Apr 2026 21:06:08 +0200
-In-Reply-To: <20260421134938.331334-4-tristmd@gmail.com> (sfid-20260421_154945_925411_F2F09AE8)
+Date: Wed, 22 Apr 2026 21:12:11 +0200
+In-Reply-To: <aekS72ESOUlnqGIo@google.com> (sfid-20260422_202701_581637_5690F81D)
 References: <20260421134938.331334-1-tristmd@gmail.com>
-	 <20260421134938.331334-4-tristmd@gmail.com>
-	 (sfid-20260421_154945_925411_F2F09AE8)
+	 <20260421134938.331334-4-tristmd@gmail.com> <aekS72ESOUlnqGIo@google.com>
+	 (sfid-20260422_202701_581637_5690F81D)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -55,24 +55,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Tue, 2026-04-21 at 13:49 +0000, Tristan Madani wrote:
-> From: Tristan Madani <tristan@talencesecurity.com>
+On Wed, 2026-04-22 at 11:26 -0700, Brian Norris wrote:
 >=20
-> The firmware-controlled sta_count (u16) is used as an unbounded loop
-> counter for iterating station info entries. An inflated count drives
-> reads past the response buffer into kernel heap memory.
+> > +	u16 resp_size =3D le16_to_cpu(resp->size);
+> > +	u16 count =3D le16_to_cpu(sta_list->sta_count);
+> > +	u16 max_count;
+> > =20
+> > -	for (i =3D 0; i < (le16_to_cpu(sta_list->sta_count)); i++) {
+> > +	if (resp_size < sizeof(*resp) - sizeof(resp->params) + sizeof(*sta_li=
+st))
+> > +		return -EINVAL;
+> > +	max_count =3D (resp_size - sizeof(*resp) + sizeof(resp->params) -
+> > +		     sizeof(*sta_list)) / sizeof(*sta_info);
 >=20
-> Add a check that sta_count fits within the response size.
->=20
-> Fixes: b21783e94e20 ("mwifiex: add sta_list firmware command")
-> Signed-off-by: Tristan Madani <tristan@talencesecurity.com>
-> ---
-> Changes in v3:
->   - Regenerated from wireless-next with proper git format-patch to
->     produce valid index hashes (v2 had post-processed index lines).
+> The repeated arithmetic is a bit weird, but I'm not sure if it'd
+> actually be better to stash it in its own variable. Seems good enough I
+> suppose.
 
-For the record, that wasn't the problem. I _think_ the problem was that
-your post-processing also skipped whitespace-only lines, which are very
-relevant in patches.
+I think it might be simpler if instead trying to limit:
+
+> > +	count =3D min(count, max_count);
+
+it'd just check the needed length based on the given count, and reject
+anything above that?
+
+Also, the whole sizeof(*resp) - sizeof(resp->params) etc. shouldn't be
+there, that should just be
+
+	offsetofend(resp, sta_list.tlv)
+
+and then suddenly it becomes _way_ simpler:
+
+	if (resp_size < offsetofend(resp, sta_list.tlv))
+		return -EINVAL;
+	if (resp_size < offsetofend(resp, sta_list.tlv) +
+			sizeof(*sta_info) * le16_to_cpu(sta_.list->sta_count))
+		return -EINVAL;
+
+But regardless, I question the sanity of checking the size against the
+size the firmware said the whole thing was going to be, rather than
+checking against the actual buffer size ...
 
 johannes
