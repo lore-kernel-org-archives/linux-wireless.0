@@ -1,87 +1,71 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3C537D115;
-	Thu, 23 Apr 2026 16:14:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35F83A75AE
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2026 17:34:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1776960890; cv=none; b=HFcEU0oHAp1ihd63uU/L6xkmiXzqnsbYwnThuPc7w/jMgPRICHLbKmsWwJysEzFYMFnYMi3QQLYauJtzc5lhfCih1UMqWCx9iahCcx9pHBsEHCwu1uOHJWEpPjYg25zLm2huZwSBmgSQ5BMgngPlDbEEBjNPdvHXdGsy9oTBfdA=
+	t=1776965675; cv=none; b=o/xrR/jqhQQCEQvRBW7BU1RSih6UanV53N3VjoAE93zxu88JW5J+Kw07p0FmMklePNevUd6Y4OtzWV1Sbs+54bnqziqyWn7j5BnW7YER4aW476TGxOhoD5CrX/gZnCA3jLrZMD1PG/SX9324MuguGyLA7zeyd9YrMkwk3IiMTqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1776960890; c=relaxed/simple;
-	bh=2CTQ4RAv+u3NA76KBzNTfx7cj8+ZcpCfmAabBKswfn8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z18Z2uzHQzcT82CfkMsutD5wNN4tki+1tup0pNWaj5JjpwyKohgV6WrnVSHzfSi2a3Sk/oJSRlvHI5AsNCSKoDJFW84fnxuiwburofFO92fjFgUmBmIgT8Dqji3OnUmJBISByyyNJZ4cV1pOFcTNVDlCYjAyB3/bjjQb1SgQUaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=DMteiUAA; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=tbZY+vnr; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1776965675; c=relaxed/simple;
+	bh=tz3OwM6ZqtXTE234+rrZJXeoUNgJ9jOHjfV583YpF8Y=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=EYXFB9LsINKxnBgbbUm7SbpFupC+u5NPuzDRKd4Acn6HmwzezZ6nM/6OYahFKYmj6kAvpNrAihXo7Z7ML/i5kUloYdeFzfNw7ILBgDd1iaEM3xshx9qTrL6AcK1oPck8udjWEQFySG1I3/StWjjfbmsWocMfY7Jst6FeO3j3/K4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NWnkHW7C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DMteiUAA";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="tbZY+vnr"
-Date: Thu, 23 Apr 2026 18:14:45 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1776960887;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2CTQ4RAv+u3NA76KBzNTfx7cj8+ZcpCfmAabBKswfn8=;
-	b=DMteiUAAVXDXQ/cR2GcUwc3gsNlo5X3lAy4BWFbtBZ0DcE3Ek3lqs1mq3eqlDOo2HBqTKz
-	QZKo7FCRmfLgCTX5wP/wrmbtcInMBAQhWB/1EusEEnnGifQTiAXGlv/YxLviXaHfMY0Vc+
-	4KAd3pmbBiqmQ1VoMfiEjhsvraNWy46bSCpkcyJvFG7yoxHv+zLs1BI8Fa+h13BwN1yMgB
-	vrlzI9kx7XSdxL/i+aFLNK/xGVpAELrjqeiM9xNMKZNkGtZcOTXxk2+JA02PsfuK6Xd6lf
-	6dqz6wnY9o5ihpvj1wVXsl5Mmsqqie7AdGYXxwlRNSgIHAkGHW8EeqtJPSlxPQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1776960887;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2CTQ4RAv+u3NA76KBzNTfx7cj8+ZcpCfmAabBKswfn8=;
-	b=tbZY+vnrzHQBW5hJE3HA/YoIDWKjQZ5ZIS5hkZL7iVKAR09XRbWOcVJrj2jCD+9Yo9ksZy
-	ngalhiVcVdokGgDA==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Yu-Hsiang Tseng <asas1asas200@gmail.com>,
-	Jeff Johnson <jjohnson@kernel.org>, ath12k@lists.infradead.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v3] wifi: ath12k: use lockdep_assert_in_rcu_read_lock()
- for RCU assertions
-Message-ID: <20260423161445.10FeXYSb@linutronix.de>
-References: <20260422180814.1938317-1-asas1asas200@gmail.com>
- <20260423063020.NAero6Rz@linutronix.de>
- <caad3b9c-2c14-4e09-b8f8-840d2ec111be@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NWnkHW7C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3BABC2BCF6
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2026 17:34:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1776965674;
+	bh=tz3OwM6ZqtXTE234+rrZJXeoUNgJ9jOHjfV583YpF8Y=;
+	h=References:In-Reply-To:From:Date:Subject:To:List-Id:Cc:From;
+	b=NWnkHW7CQHMqiMxwIcbqflDGH0mDDXIkp94zC2grKfec1rr9KSC+KgU5DO4Xj3I/I
+	 aWXFUdG9vMH9PDVLtufNMT7/yIBRPumliKni7QAsfwbCRQSLh01/XnhN+DQqyH1Xwi
+	 FsDqWRY3WvjB17UoRrHCLfYgx9/dpVhz89xk3c/gqiKUafuiexeaYs3BVLKtJqFZHC
+	 RpIqlRvIoXfsgzlYt6z3OGg3mIXNS9pUTP45cuezKBx50YmSbforkBCZ8F0h08Ebj4
+	 1ykYlgYz9a5HDxl+6xzMuspzjD449yIDHpdYi1fZyMgjH3sCr4a+RiRvM7xcpyJkRE
+	 yYaC0gGyHJjuw==
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5a3d42263e4so6629210e87.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2026 10:34:34 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ8al82lMoZhmWg3x9HGIsAoMru8fL0+UxSiKKlmK/vl1A2BUGBZEw4VYR6EpijzfqlaaecvlY0l1T8NNzbznQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwomkKsYt7vMhqAmxtKSo7iy8yREfuJZPYoQT96PfD2ngmpvLVI
+	TSTw1MUERZzUoYRvIEliGA3MwNXuMPa0gzZLtWCPIq7DpYwA4ylBLqyrycdTkwtUK9/BQVP3Uns
+	APpSAjzgBplXcXOCfeJb8g9jrFrWaAD4=
+X-Received: by 2002:a05:6512:2308:b0:5a4:2cf:601e with SMTP id
+ 2adb3069b0e04-5a4172c3f7fmr8750846e87.12.1776965672922; Thu, 23 Apr 2026
+ 10:34:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+References: <CAKHmtrRD35fnE_TsZHzfgQ5p7=WHE1Fz8wnV0t2SGxDcgmopjQ@mail.gmail.com>
+In-Reply-To: <CAKHmtrRD35fnE_TsZHzfgQ5p7=WHE1Fz8wnV0t2SGxDcgmopjQ@mail.gmail.com>
+From: Sean Wang <sean.wang@kernel.org>
+Date: Thu, 23 Apr 2026 12:34:20 -0500
+X-Gmail-Original-Message-ID: <CAGp9Lzq2HKHCpzG=rXjvQa=aORPRYvpEjsUnqsc6jDvwNMtB7g@mail.gmail.com>
+X-Gm-Features: AQROBzAlw-9F3viDRFk4zHZKcR0uIDtWqMO3nL-w00vYCJ1t3Wo4hMiO16cNv8c
+Message-ID: <CAGp9Lzq2HKHCpzG=rXjvQa=aORPRYvpEjsUnqsc6jDvwNMtB7g@mail.gmail.com>
+Subject: Re: [PATCH] linux-firmware: update firmware for MT7925 WiFi device
+To: David Ruth <druth@chromium.org>
+Cc: jb.tsai@mediatek.com, Leon Yen <Leon.Yen@mediatek.com>, ben@decadent.org.uk, 
+	=?UTF-8?B?Q2hyaXMgTHUgKOmZuOeomuazkyk=?= <chris.lu@mediatek.com>, 
+	dwmw2@infradead.org, jwboyer@kernel.org, linux-firmware@kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	linux-mediatek <linux-mediatek@lists.infradead.org>, 
+	linux-wireless <linux-wireless@vger.kernel.org>, litien.chang@mediatek.com, 
+	Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>, Quan Zhou <quan.zhou@mediatek.com>, 
+	Sean Wang <sean.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <caad3b9c-2c14-4e09-b8f8-840d2ec111be@oss.qualcomm.com>
 
-On 2026-04-23 08:24:46 [-0700], Jeff Johnson wrote:
-> On 4/22/2026 11:30 PM, Sebastian Andrzej Siewior wrote:
-> > On 2026-04-23 02:08:14 [+0800], Yu-Hsiang Tseng wrote:
-> >> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.=
-0_SILICONZ-1.115823.3
-> >=20
-> > This could written in plain english as in "Tested on =E2=80=A6". Not su=
-re what
-> > this "convention" is but anyway.
->=20
-> FYI this is a long-standing convention for the ath family of wifi drivers,
-> dating back to at least ath10k:
+Merged
+https://gitlab.com/kernel-firmware/linux-firmware/-/merge_requests/1015
 
-I see. Never mind then. The previous comment read like "don't use
-non-standard tags" and the change was to use a blank line.
-Anyway, not my department.
-
-Sebastian
+On Wed, Apr 22, 2026 at 5:22=E2=80=AFPM David Ruth <druth@chromium.org> wro=
+te:
+>
+> Tested-by: David Ruth <druth@chromium.org>
+>
