@@ -1,79 +1,134 @@
-Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [178.154.239.149])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C473434D929
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:31:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C76D3A63F6
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:32:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777368712; cv=none; b=NnCYUuYXwqUYCHQjM2C/Cxdcsrb5lz+Ngz/ezuTXloDCVeFsdpCrlhM65GGZ3LNBLXEIjICB/g5aT+ibuqKdvCwGyTy1NLJL5u09AIwsWmDdvUIp440cDhWE6oHzfVoL8+XSH8Ad+MGCHVNxXShuY/ldsUB5DgtkZaaRsFjwsEg=
+	t=1777368735; cv=none; b=bdK1HeiC6VIFYNAj69Zi/w33lov36nFZ4Gru7PDpKki014tf8XZHOk+1fgipaYIjkAkMmkNPJSgjHb/Bgop2ApbH8uV7uXaWnm7Zb3iSccXunqnYkWvhAJSV35+6WVzbQkjTXZY2QIBpHgT42c69McEQa2BDTcgudz+rqesTRv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777368712; c=relaxed/simple;
-	bh=89u0Nra6HcCxiHVgf4hs8s+ke9wMHVAsbmNUydTt9Qg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XmfemwCvw+dFavVG23vjBHf22b4wOMps48o4nT2mDKD64FJJr/owPDxF5QXm6xlkU2JqpvMpQVcN5WphWpKEP9bPzJQdJOwPhhtjUPcKHDPdAYSwXHSDplIrDghjSbrowQQkaS7va+h3oj/oA7+aNUVSzra64dd+9VZgV8gGmMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me; spf=pass smtp.mailfrom=0upti.me; dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b=gzjK+8xV; arc=none smtp.client-ip=178.154.239.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=0upti.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0upti.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=0upti.me header.i=@0upti.me header.b="gzjK+8xV"
-Received: from mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net [IPv6:2a02:6b8:c11:2281:0:640:870e:0])
-	by forward102b.mail.yandex.net (Yandex) with ESMTPS id BD1DBC00CD;
-	Tue, 28 Apr 2026 12:31:37 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net (smtp) with ESMTPSA id QVVcnN0Q9uQ0-UGZNg7xp;
-	Tue, 28 Apr 2026 12:31:36 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=0upti.me; s=mail;
-	t=1777368696; bh=QanN1hvymPQkfK3pxfbCHGaN5t55yhRf2F2DTrO0/LA=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=gzjK+8xVMeZy8EWm1TVOI4sgG1FUDod6bB4Nn6zqLu1Hx4XspfuPMQq9yZp7Bp77O
-	 AU0iuVe1+KQXdc82+12mLUr1TEXe60/Vi6Xp9haTqOE4iZT3MD80HOEF2VzuCsxrvf
-	 IWg1Bcq6Jyz3bHt0Hz2mhh0hHJr/2b6DRLD7nvsM=
-Authentication-Results: mail-nwsmtp-smtp-production-main-89.sas.yp-c.yandex.net; dkim=pass header.i=@0upti.me
-From: K900 <me@0upti.me>
-To: wens@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	wireless-regdb@lists.infradead.org,
-	K900 <me@0upti.me>,
-	Louis Kotze <loukot@gmail.com>
-Subject: [PATCH v2] wireless-regdb: allow 320MHz channel width for Russia
-Date: Tue, 28 Apr 2026 12:30:53 +0300
-Message-ID: <20260428093058.3672383-1-me@0upti.me>
-X-Mailer: git-send-email 2.53.0
+	s=arc-20240116; t=1777368735; c=relaxed/simple;
+	bh=WZ0dv++aH+AeLwkvbNXxLqu7wJ3mA6GpS63WG1N27Uc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XGsW4eTo7ifZOEjEiOZ1WhRtgc29vqWAsy/MVH3CaCW63/oiP2bmWtxnq89ZuiHbunIypDy05xkjBApOp0ydaW9VE269W/UfuIxuoT/F+iP6KUdLu0Nr71iH3yh3o+cTJlCH1W1xpRqNVliiYrjt+SyR87Ha+Zx4mPaTcTYLE+g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-65c4152313fso15351874a12.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 02:32:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777368733; x=1777973533;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Al22kA6RCf7FSEzj29cZLSkjdM9EgXxihmBX7/SeSVI=;
+        b=aeEvuSJCQh+LQBpWSmdUABhDP2QwKt26gUAiqHq7RwH+H8FZQ+NlPrJI5nhhSPAvwJ
+         BGLlB0SN04BHth3BnWXmv0koKqa4SObzLRaZU5geaZi4dqe6aBn/FGLQZqflm/lT96wB
+         8rkZdQER5p5b+IpejOdXmh67NXc5LShwDxt/0dKJUtgS4bOaZczCS2oVfYe3HUR7t7cd
+         /QZiA1h4QVxloshnZh/4fxOdzvhdQd91USfdl6IiDauz4vak+0gPxR8hd0MZRgW32cl2
+         E6v8uTFrbpiMq2KQQtMyUItUpVP492bHcdi+sUAytPs+zSqO9IptVKajMEokv5fxbUyJ
+         Cg2w==
+X-Forwarded-Encrypted: i=1; AFNElJ8kmb095ki6Jk+/xTIcpFDJ4Ae6TPrSJ3oMxekyyGxxiwbU76jXe3j5lyrk2Lro82N4vZfWEasihjp3xI4ACA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx00RhEtUjyxvMst71U0ifmqrLGC/hMFh9EPr2EGQ5qp2Behz2q
+	54tvpM6pLKE6kr5Be5HtdqReXC/t5ZBfQvVcc/He8udZQYoVwEGINeKxuwCV3o4e9ek=
+X-Gm-Gg: AeBDietjheIZ7ZX6N8ihgiVZ9QkiVxBMO8uRvPsnc3nfCJnkXc8jXWhsWUHFW1TsI1C
+	iZBG14lTsoP3nmFvBWUSgKugZcvhHUud8XrBR6EftWI8swq+76ffXetYWUrUqHef+k7nmaeJKNG
+	kjwBwcSMWQmC3B/PBeNBcUmM1kCwg9pYBXwM/4JN5J0NwO024B/WGtb1SjQatzQsBmjI9Qdqfti
+	hBbnUflQT5TpWTyWryNRp6yf72Bsqcz1sxdOvok2tYXwY7/+aQ45GsFUoADBd3ssQx3YayNyg6L
+	RFPV89ZqKSWIQTOB16Bqj6y0AJds1l6XyC8RRyYKPqKf0lqczj1tWt7LQJxd0unHmc/VplEJl0/
+	xxPenlL91has1GI4bY1pLAYX1bRE0+/6wIXaIQ0jmrpjuzwEB4a1y9t2GhgCM3h0l4f1zNvTkhf
+	qIpgRDOtZhz01YzUl69u4eRlqSuCYOcw6ZtEySmAHi60I3O93aJIcdELWVh8zPE/DtCy0lfqU=
+X-Received: by 2002:a17:906:ba89:b0:bad:a28:e09 with SMTP id a640c23a62f3a-bb804d28002mr143779866b.41.1777368732328;
+        Tue, 28 Apr 2026 02:32:12 -0700 (PDT)
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com. [209.85.208.52])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bb80c57f559sm73985466b.61.2026.04.28.02.32.11
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Apr 2026 02:32:11 -0700 (PDT)
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-67389cf78b0so19506906a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 02:32:11 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/tDOo4dcBhTonq9JpUO5KnPiXgW2L3GZ1b49FjixsFR0MLBmrUT/NhfK95PCTE5rQ6HZysp65T1utbSfKIGw==@vger.kernel.org
+X-Received: by 2002:a05:6402:5056:b0:676:d8a1:7a04 with SMTP id
+ 4fb4d7f45d1cf-679bb09a4admr915149a12.23.1777368324094; Tue, 28 Apr 2026
+ 02:25:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <cover.1777306795.git.chleroy@kernel.org> <c73b90236f2810edd47c84edd2a8d8e8e0c816da.1777306795.git.chleroy@kernel.org>
+In-Reply-To: <c73b90236f2810edd47c84edd2a8d8e8e0c816da.1777306795.git.chleroy@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 28 Apr 2026 11:25:11 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUvTBWoDN_wUo2n8-gkoheJ+-rbwew53OvoAwo8G5n1qg@mail.gmail.com>
+X-Gm-Features: AVHnY4JEWBVPw4tSjHgbQTia8gZd2WGJ1sv6qLdKJbtvs4hms1blpvc35yb0VWw
+Message-ID: <CAMuHMdUvTBWoDN_wUo2n8-gkoheJ+-rbwew53OvoAwo8G5n1qg@mail.gmail.com>
+Subject: Re: [RFC PATCH v1 4/9] uaccess: Introduce copy_{to/from}_user_partial()
+To: "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
+Cc: Yury Norov <ynorov@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Linus Torvalds <torvalds@linux-foundation.org>, David Laight <david.laight.linux@gmail.com>, 
+	Thomas Gleixner <tglx@linutronix.de>, linux-alpha@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-snps-arc@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, 
+	sparclinux@vger.kernel.org, linux-um@lists.infradead.org, 
+	dmaengine@vger.kernel.org, linux-efi@vger.kernel.org, 
+	linux-fsi@lists.ozlabs.org, amd-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+	linux-wpan@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-staging@lists.linux.dev, 
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, linux-fsdevel@vger.kernel.org, 
+	ocfs2-devel@lists.linux.dev, bpf@vger.kernel.org, kasan-dev@googlegroups.com, 
+	linux-mm@kvack.org, linux-x25@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+	linux-sound@vger.kernel.org, sound-open-firmware@alsa-project.org, 
+	linux-csky@vger.kernel.org, linux-hexagon@vger.kernel.org, 
+	loongarch@lists.linux.dev, linux-m68k@lists.linux-m68k.org, 
+	linux-openrisc@vger.kernel.org, linux-parisc@vger.kernel.org, 
+	linux-sh@vger.kernel.org, linux-arch@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The entry was added before 11be (and thus 320MHz) was a thing,
-and there is no actual legal restriction on channel width, so
-update it to allow 320MHz channels.
+Hi Christophe,
 
-Signed-off-by: K900 <me@0upti.me>
-Reviewed-by: Louis Kotze <loukot@gmail.com>
+Thanks for your patch!
 
----
+On Mon, 27 Apr 2026 at 19:18, Christophe Leroy (CS GROUP)
+<chleroy@kernel.org> wrote:
+> Today there are approximately 3000 calls for copy_to_user() and
+> 3000 calls to copy_from_user().
+>
+> The majority of callers of copy_{to/from}_user() don't care about the
+> return value, they only check whether it is 0 or not, and when it is
+> not 0 they handle it as a -EACCES.
 
-Rebased from v1: https://lore.kernel.org/wireless-regdb/20250708-russia-320-v1-1-53641e8dd417@0upti.me/T/#u
----
- db.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I think the "a" can be dropped.
 
-diff --git a/db.txt b/db.txt
-index c310b7f..de53874 100644
---- a/db.txt
-+++ b/db.txt
-@@ -1772,7 +1772,7 @@ country RU:
- 	(2400 - 2483.5 @ 40), (100mW)
- 	(5150 - 5350 @ 160), (100 mW), NO-OUTDOOR
- 	(5650 - 5850 @ 160), (200 mW), NO-OUTDOOR
--	(5925 - 6425 @ 160), (200 mW), NO-OUTDOOR
-+	(5925 - 6425 @ 320), (200 mW), NO-OUTDOOR
- 	# 60 GHz band channels 1-4, ref: Changes to NLA 124_Order №129_22042015.pdf
- 	(57000 - 66000 @ 2160), (40), NO-OUTDOOR
- 
+> In order to allow better optimisation of copy_{to/from}_user() when
+> the size of the copy is known at build time, create new fonctions
+
+functions
+
+> named copy_{to/from}_user_partial() to be used by the few callers
+> that are interested in partial copies and need to now how many
+
+know
+
+> bytes remain at the end of the copy.
+>
+> For the time being it is just the same as copy_{to/from}_user().
+>
+> Signed-off-by: Christophe Leroy (CS GROUP) <chleroy@kernel.org>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.53.0
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
