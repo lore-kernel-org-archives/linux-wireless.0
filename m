@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C15C33D8135
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:09:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A1C83D88E0
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:09:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777367363; cv=none; b=RmdCotemU99selLvihEAix/o1U+fpGOruLOV4G1Q407DsXxwOcQ8RulWO5AHPBlQZkKlDVprSJlbeCUTH70HD6O3caXiaD1n5pv5oAo5GFzlzAItOJK/yOxpyL0OC+einu5g2B8RF7lixPGqM2NEddevjew8BH2gRDjrfS0UYD8=
+	t=1777367363; cv=none; b=p5I6LEkGZtVXHMigVezRq05lZG32hEFwSqC0nZpR10lWkI5kI/LYx8Uq0WZPzeg2WMUny2W4xsBCEPutN18cbuIdFmpS9kN0rM8ASpjui3r2ZOOk9xCJVBxkRFZlqXa6QUsBrC+Q3saA8dTy8NFgx4Kp5YPvmVzSX0GgrtWUbnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777367363; c=relaxed/simple;
-	bh=8GAPvAvgo+bqbCaoU40BfsVzI11nHN+kUupNYXsF7LE=;
+	bh=zFBNIq5ChhjqHKz0FWU8EoRE+oN8uVRnto2hwdrlvG0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QrvwR9eS3rAPAYv/saXbjJ2r5qaGcMvFn8Qg40a+Zv6V3x11R5XTOV0DcN0vqzorebrFJxfk1AX13SoigEboFKwQ9Yq0E/e8iMMGypRdFZnroudaOp9SoxvS4UiVzQDSTuZXfOxHayEECeGnWFLOvtOYJ7leuI9IePpd04L61g0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=XCjLWOje; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=LMPECO4VMpLSkeTEXkekljblV++Du/J75niMdTBzW07EPdPpWnWWvzIKGnCpJtP+/+je718+OWTjIU7tnA2ZLTicTgDuMrZ1tgZn137XOynNvqNgQqHBBgW6VtKsPYW/yzisShHjx6LZNhZzOtUapo70k/v1t/f2MuFvpyFgF8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=x91lrYmW; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="XCjLWOje"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="x91lrYmW"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=mOlvqH9E3OYlE5qC1fCSzo9YMoyc9saUMKfAlef90Gw=;
-	t=1777367361; x=1778576961; b=XCjLWOje4fEkYbtdlWWl4t6X2BiWCACmrh+gjCyTY/O+mvN
-	orzae1skNjihmJI82BPxiKAKPfynvZGzipSFwfAcqjpx1ZrAHYIQACKfrnUI//5S12x3kyUh9Ja1J
-	QtIZvql3cPLvEboFYiHmFq3cyBDetphoRrtoka6Z3HZ/bdALPQjt0Jmv/2FGlXZ0emt70lD/QfftC
-	fMIuaau6sehyboP/gz5+S/wrMGTqoTuwJGujXxCI/x6RH3DWEzprx/PatczkAXecrRiZIWdU2DkWr
-	FvO5vNckCGxLbNnbcg5TMsUaZW4PVTN06JSH9UEauA26Zpzr2IMRR1vvqst484Xw==;
+	Resent-Cc:Resent-Message-ID; bh=zTfhJEZsOIrcGBspTnNail7eznrxrDjEYuDaIFENY4U=;
+	t=1777367362; x=1778576962; b=x91lrYmWH6Sjbx/kHkmTxl0ewTVar8Y4Ra9K6i/q02k9dtU
+	OdK4iqO73neVyWOXzlVJ5F4N82ZQTiyMRzgibI++61/54+neqvVZAPeQA1Zl9AwjDDkKQLCBOUtc6
+	HzQ8ZSy8mcg1p7dtJOMz+dhVfCJ7KsA0RJ6CsSxKHYTxUpNRynZtJCXS5zSAztshAKIPfS9xxsrV6
+	pIP8HhfkT1o6+pRJVOL4TeoRx11bc0YXMMMXz5wNjC8wc7uBjwujSML1wZdV3bF4FZyN18qZg+zgT
+	s7rzWaJbGQG0PnFaJDaRYH95WMXO/SgM84CAUw62p9ytKePs+oAQYQT5iuTpQ4NA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wHeRT-0000000HGH2-1rsm;
-	Tue, 28 Apr 2026 11:09:19 +0200
+	id 1wHeRU-0000000HGH2-0Q7U;
+	Tue, 28 Apr 2026 11:09:20 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 1/5] wifi: ieee80211: define UHR ML-PM extended MLD capability
-Date: Tue, 28 Apr 2026 11:06:56 +0200
-Message-ID: <20260428110915.c6b6a06016cf.I7ebd97397507d320124547017e21191b55c5d34d@changeid>
+Subject: [PATCH wireless-next 2/5] wifi: mac80211: track AP's extended MLD capa/ops
+Date: Tue, 28 Apr 2026 11:06:57 +0200
+Message-ID: <20260428110915.e4038a00e4b2.I323686be5d4a73e8b962019a30d51309496b86a6@changeid>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260428090915.54717-7-johannes@sipsolutions.net>
 References: <20260428090915.54717-7-johannes@sipsolutions.net>
@@ -50,47 +50,54 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-UHR defines bit 8 to mean multi-link power management, add
-a definition for it. Also reindent the other definitions to
-use tabs, not spaces.
+For UHR multi-link power management, the driver/device needs
+to know if the AP supports it, to be able to use it. Track
+the AP's extended MLD capabilities and operations so it does.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211-eht.h | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ include/net/mac80211.h | 3 +++
+ net/mac80211/mlme.c    | 6 ++++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/include/linux/ieee80211-eht.h b/include/linux/ieee80211-eht.h
-index 335e78bd4b5d..87d92fb86fab 100644
---- a/include/linux/ieee80211-eht.h
-+++ b/include/linux/ieee80211-eht.h
-@@ -9,7 +9,7 @@
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright (c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (c) 2018 - 2025 Intel Corporation
-+ * Copyright (c) 2018 - 2026 Intel Corporation
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 02318a4be0e1..5dc4ac08606f 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2674,6 +2674,8 @@ struct ieee80211_link_sta {
+  * @epp_peer: indicates that the peer is an EPP peer.
+  * @nmi: For NDI stations, pointer to the NMI station of the peer.
+  * @nan_sched: NAN peer schedule for this station. Valid only for NMI stations.
++ * @ext_mld_capa_ops: the MLD's extended MLD capabilities and operations
++ *	NOTE: currently only tracked for AP STAs
   */
+ struct ieee80211_sta {
+ 	u8 addr[ETH_ALEN] __aligned(2);
+@@ -2698,6 +2700,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS + 1];
  
- #ifndef LINUX_IEEE80211_EHT_H
-@@ -750,11 +750,13 @@ static inline u16 ieee80211_mle_get_mld_capa_op(const u8 *data)
- }
+ 	u16 valid_links;
++	u16 ext_mld_capa_ops;
+ 	bool epp_peer;
+ 	struct ieee80211_link_sta deflink;
+ 	struct ieee80211_link_sta __rcu *link[IEEE80211_MLD_MAX_NUM_LINKS];
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 00b4beff0e43..d24db2c2cde9 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6462,6 +6462,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.spp_amsdu = assoc_data->spp_amsdu;
  
- /* Defined in Figure 9-1074t in P802.11be_D7.0 */
--#define IEEE80211_EHT_ML_EXT_MLD_CAPA_OP_PARAM_UPDATE           0x0001
--#define IEEE80211_EHT_ML_EXT_MLD_CAPA_OP_RECO_MAX_LINKS_MASK    0x001e
--#define IEEE80211_EHT_ML_EXT_MLD_CAPA_NSTR_UPDATE               0x0020
--#define IEEE80211_EHT_ML_EXT_MLD_CAPA_EMLSR_ENA_ON_ONE_LINK     0x0040
--#define IEEE80211_EHT_ML_EXT_MLD_CAPA_BTM_MLD_RECO_MULTI_AP     0x0080
-+#define IEEE80211_EHT_ML_EXT_MLD_CAPA_OP_PARAM_UPDATE		0x0001
-+#define IEEE80211_EHT_ML_EXT_MLD_CAPA_OP_RECO_MAX_LINKS_MASK	0x001e
-+#define IEEE80211_EHT_ML_EXT_MLD_CAPA_NSTR_UPDATE		0x0020
-+#define IEEE80211_EHT_ML_EXT_MLD_CAPA_EMLSR_ENA_ON_ONE_LINK	0x0040
-+#define IEEE80211_EHT_ML_EXT_MLD_CAPA_BTM_MLD_RECO_MULTI_AP	0x0080
-+/* defined by UHR Draft P802.11bn_D1.3 Figure 9-1147 */
-+#define IEEE80211_UHR_ML_EXT_MLD_CAPA_ML_PM			0x0100
- 
- /**
-  * ieee80211_mle_get_ext_mld_capa_op - returns the extended MLD capabilities
+ 	if (ieee80211_vif_is_mld(&sdata->vif)) {
++		if (!elems->ml_basic)
++			goto out_err;
++
++		sta->sta.ext_mld_capa_ops =
++			ieee80211_mle_get_ext_mld_capa_op((const void *)elems->ml_basic);
++
+ 		for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
+ 			if (!assoc_data->link[link_id].bss)
+ 				continue;
 -- 
 2.53.0
 
