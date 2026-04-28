@@ -1,75 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FEDD3793DE
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:23:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48418388E46
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:27:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777368235; cv=none; b=Qi/Ve7y8ohyxRAiYpYHn16MpYhQnVBOgsNpcBAvnQ9Oz500jCZGBDKQ2uZEBpL9fhtR1xWaig8YOgcfceyXin3+6PwRDXxQQDK8ILhiiVlugBb/Vrx7Kmw/oQthrh2i8v6EVgFi53dFBrgLKxJKfCWKTbcx84eBcpQSLRI/Dc3Q=
+	t=1777368436; cv=none; b=ZNAuwrVbmRtlb6HtgChxNVtlr2zw0ghuDRtXAeeI944a3F341/LnJJmuy5QL/w9+1c0PFAj3ZrUZqjI8FWyI8OJZRPJxY7xD2Fw2GiDzxaEYtnqsPUBZaF9415wfVBESq6TVJgJyMwTFzDBX2GWlgFd69AyECOeZLhzcBOCT1X0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777368235; c=relaxed/simple;
-	bh=9pkZ6oxnoncKr7jqUvyDrIdS2cxfpXEDf6Td11rH+FU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=V0xTC45xCx2MDIYL78Q9BIFsABVe1zoEhYwpIsb8zPSn/cmyCnBkWvNtOPzu08Bw6ZbNP34oC6U6/xMbyZbzPeNMOdRR4k79Xoemdpkno6oPuljsy6ItRgTUZ/H/mXIN44slIvDi+J/hNXcJnnZuqYu7d6cVXAxlOSkBVxZMPLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=si4DzF2u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777368436; c=relaxed/simple;
+	bh=abERnnnVSMj8ugB/cErvrZkmpTpcwIUUmzm/9lZ21ZA=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=sNaEZBc6cS4cqQ73l0jYXlel4uc0fg8UT9TpYq+nVIQ4da6/zvMIHUvAc5/302pklqKZLGOZa+OvGbBhLfw+R4hIr44AVoiR/Vpus4Yncm38o+m1x7+USGFOQrxeEvwyvJiSKXZphBJAu+mFpXCiTdiIWk9FF2ag35lNqFsnM38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=jq4J4A8r; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="si4DzF2u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48BBCC2BCB8
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 09:23:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777368234;
-	bh=9pkZ6oxnoncKr7jqUvyDrIdS2cxfpXEDf6Td11rH+FU=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc:From;
-	b=si4DzF2uqzT/VXlkmg6UQCU6fvWCLW0kNYoxT5kigUVg5+aztNt2nK+k6sFhE4Fg3
-	 ua53wAvDK33QOrnh8IcK1OX62JeSfAj5oQst4HGk+XkgCNdtCcfeRkLuKP9hN5s3YO
-	 YcUfYT1NQ6oyPM2WpqhJluttPOkf1x/C6t6c8DQZ3k1N3nxxULtPQy9tLYiIRS0WYp
-	 YpfWC8A9ULmcRyEiC53dgdRVhgQUPolxO7/kpEo1rZVfKVZ6UW04ddDBaeIcl7txWG
-	 k1NiCmjh97duvZnfMaSoUw2nrjPnODCJK8gY3yzdYmTTiR2k1TQ2BQcFOlD+FEk9nW
-	 FFaQPinWRlPSQ==
-Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-38dd9f11a09so99620421fa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2026 02:23:54 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8tvYixIBJj0lsvveREHjWjE6+p+SjskT/W4UdXEJNTCrYgq4MEIFiH06tB2QkdNbei0wmwt6Zc8ByWynwKjg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/1wcEAv/ThLwy3NWFV4gQQVceBpX+jW4Tol72dbZn6ustrrLZ
-	EbE71yEf6oGcT1+8NJ2/qFZ7WebtK68hdFh2rsN/g3FAEqYf5Q/iXXt57gcBFcLLFBkuwrbm7F3
-	VcEkww0K1ZXo5/WCLeN1h355DL4m8bNM=
-X-Received: by 2002:a05:651c:4191:b0:38e:9eb1:6940 with SMTP id
- 38308e7fff4ca-39240f694d5mr6737951fa.10.1777368232579; Tue, 28 Apr 2026
- 02:23:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="jq4J4A8r"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=e9P7vszTpCHLzj9OEsyNY+ObFWUk2MU5DZBnn4GTSs0=; t=1777368434; x=1778578034; 
+	b=jq4J4A8rKHCEeqc1gFaCfoe0GAx2mdAnnGk6EoTqSZ503m/DuyfgYzVVCRooLYZqsZvzHnN4L9U
+	Zf2tsHMPCHVs0A8VCsI9qKDpljriOsQRXmz+ruzzQU5MdLj0HZIqyO7e9hE0/wVqKAQ8Ipti2pgYQ
+	YnOnqFNoC83eksB+I6Wq5zg++caQQkVfDPKFFMeY7sC/Z7N34mTIqvVSJ8iZ9Bt53SiXSLDQSIO7+
+	8T+vQC2nuubMCy/4blxrKnFHegABIsLsjA7s4iRFiX72e3y0HS4o2bPqizLmnnZZZ6+Ip2R5914TP
+	V1G/XpRzrmcdjUUnT06WjnERE2hpGYYzlRgg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wHeil-0000000HLwg-0vvk
+	for linux-wireless@vger.kernel.org;
+	Tue, 28 Apr 2026 11:27:11 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-next 00/14] wifi: UHR non-primary channel access
+Date: Tue, 28 Apr 2026 11:25:28 +0200
+Message-ID: <20260428092708.71740-16-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250708-russia-320-v1-1-53641e8dd417@0upti.me>
- <20260428074500.ru-320-review-resend@gmail.com> <b9d9d6e1-91c4-487f-82af-e53d4148c11b@0upti.me>
-In-Reply-To: <b9d9d6e1-91c4-487f-82af-e53d4148c11b@0upti.me>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Tue, 28 Apr 2026 18:23:38 +0900
-X-Gmail-Original-Message-ID: <CAGb2v66SDbn7KV+ehT9qpEZa1RRYXSXCM_3O-0qgqayks8igqg@mail.gmail.com>
-X-Gm-Features: AVHnY4IY33HCwe-Lx3cMh6T9rTZtboswfbohryCVPxTEjpmsxN1GBvAQmwk1AqM
-Message-ID: <CAGb2v66SDbn7KV+ehT9qpEZa1RRYXSXCM_3O-0qgqayks8igqg@mail.gmail.com>
-Subject: Re: [PATCH] wireless-regdb: allow 320MHz channel width for Russia
-To: Ilya K <me@0upti.me>
-Cc: Louis Kotze <loukot@gmail.com>, Valeriy Kosikhin <vkosikhin@gmail.com>, 
-	wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Tue, Apr 28, 2026 at 5:17=E2=80=AFPM Ilya K <me@0upti.me> wrote:
->
-> On 2026-04-28 10:44, Louis Kotze wrote:
-> >
-> > Note that the patch base predates the recent RU power update (commit
-> > 6873bfe in wens/wireless-regdb), which changed 5925-6425 from 100 mW
-> > to 200 mW, so this needs a rebase on current HEAD before it can be
-> > applied.
-> >
-> I can resend a rebased version if necessary.
+This series implements UHR NPCA (non-primary channel access) in general
+(chandef etc.), for the AP side (just configuration values), and the
+client (using it from assoc response.)
 
-Yes, please send a new version for the record.
+A few things to note:
 
+ - I know that the 802.11bn draft is likely to change and use an 8-bit
+   NPCA primary channel field, which changes the parsing. This will need
+   to be adjusted once that finalizes.
 
-Thanks
-ChenYu
+ - This change will likely also come together with allowing NPCA to be
+   used inside the DBE rather than only inside the BSS bandwidth, but
+   we'll see how this will play out in the spec.
+
+ - I have, at least for now, deliberately opted to keep more patches
+   rather than squashing "don't parse full UHR operation from beacons"
+   and "separate NPCA validity from chandef validity" as I think it may
+   be easier to follow, but we can change that. It reflects my thought
+   process more than anything I guess.
+
+ - In addition to this I also have preliminary DBE (dynamic bandwidth
+   extension) patches, but I've opted to not include them here for now.
+
+ - For the AP side, I've only made "fake NPCA" patches that allow
+   advertising it with specific values in hostapd, rather than handling
+   the client request to enable it and updating the BSS values. I don't
+   really know how "real AP" vendors want to handle this, so I'm
+   deliberately leaving it out.
+
+johannes
+
