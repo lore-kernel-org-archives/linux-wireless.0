@@ -1,45 +1,52 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 810051DD0D4;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FB11BC08F;
 	Wed, 29 Apr 2026 00:41:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777423308; cv=none; b=EtAdau46NEs9/7PPtO6KaTHuyFpTo0AHUOVdXSg2j6mpnGcPmL45B9BKiF6SUaUZUpMBUwQSOG4xxskFXx38/QG7HudC/ZkCRtiBcawJBZoO9h1XY1Z2g0e/zh2YODTGiwPgMXxMtVSkHI4Qymf09KH6UI1s4k36ruLllKzPz3c=
+	t=1777423308; cv=none; b=rFGoZAF/bVbVW0Tm1LrflOpCuvCs5VrUqN8Wk7yY4S+y0ly3KGRApsg8KfXM125rOMcOJ0YWQ2YqA24JGhsvr0OAktJ6H4AFeASR40e8kcdHelOljwYlGsOqC4GChIoKaV9/ds+LWf9VZNuo7kQmOPMbr001sTPtJvps/LYaRsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777423308; c=relaxed/simple;
-	bh=YQkVH7lirlYNBMaQ3LoLyoQpPlONIc2D3c8S5pNufuA=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=E+5svuubvj8p1uBS+Z48TmUKkIFF5kLTQwgaP1qLkalnxssTByfgTChi5LcXyA1qWQ2ZFWGvGM0fqBTKOmxkTtV78YSoHy488fqQZPN7Y66Wek49RZHNgZnUCG81rX1PiFU+VkCdv5NPk0WxzrVeAAhqZ2p4/keAFUk2CjAUyrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Hd4gF/tn; arc=none smtp.client-ip=211.75.126.72
+	bh=SRVu0gvzT/ehuCyMCHuLngBCW6c+UO5WR3it6v24epA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=DsZKDqYe2SrykJGu9jqxDl5z/iAoM6zeS9kPbt4kDrijpAtH7iWTaUJ/Yf5Wzy9g93ZvE5G/WnlwVSp1PVJ9Vy4ZQeTXd8SH6JLbKbwWVMT8k/Yhq55ANehvUzCzcptRQymkBlez84kyVHc6V9ZtdOrg7NgntUY7cCRiPsflBCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=FC44CfdH; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Hd4gF/tn"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63T0eQy75850035, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="FC44CfdH"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63T0dsv87849936, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1777423226; bh=YQkVH7lirlYNBMaQ3LoLyoQpPlONIc2D3c8S5pNufuA=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	t=1777423195; bh=M40E/Xv0XWgIE9iHSFt6HVwr8JYRwYTzfsgJDkisjQ0=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=Hd4gF/tnrGNSK0f4tEtSVhJIA/ckn7mucHDFLDFkjor7nufQbBpxJyk26DFueplr1
-	 H/kFO8EOYyrby+PZbEO7Llashb8Az5mbb8NiZ+JBZopF218JQBLBzWxWnSmcQeYMcG
-	 FE77Y5ZKQlUGv+v2el9rMqThvoL5BC/ktpVpBeukQ4miy2H5PEHRs+ilB2AdatZwrs
-	 Ef2dQUlKv+aju2AKz3inMgiYBJzaQmzqoFN7b1RZd4igd5kp0HJ78Ot0nlgQUxdpWb
-	 Wyf4YFkj8/hdebMyteQLs8kXpOTps7SaiG37U8B2OQAhSTs7lHMg/eNrTdpe4vHI9k
-	 EUJloqTHPgnQg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 63T0eQy75850035
+	b=FC44CfdHXDeaHc+XB4lJf0su/ilf1md9v9++5QMFKO5Vj/V+0skE9usVY1Mqhufa5
+	 +s6Er2dw3P7GMzYWh1VQJzg+ZaFuQbKiKMiql+mELkuWTZXrBGWRfTEUrJt7BEhigG
+	 HV7huvqUE2n0DTJsL4OSWUmgPyjwYxeuBhK/1nqCzRcH8/ySk5qgULccISSJkb+e8J
+	 QuGlUWObMctHsgxQhg+KgKtLB81cMBeWrqiJ2wrCbpeB6vsehFXrbnqG42bwFrEXnC
+	 S+Kq6+5LrXH1XXwFOUhTqb3LZbXqs9RdrOFApRw64P9fVTo76Ti04EhfWvVXnVcwhx
+	 JTaBD/R9SzuoA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 63T0dsv87849936
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Apr 2026 08:40:26 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+	Wed, 29 Apr 2026 08:39:54 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Wed, 29 Apr 2026 08:40:27 +0800
+ 15.2.1748.10; Wed, 29 Apr 2026 08:39:55 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Wed, 29 Apr 2026 08:39:55 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([fe80::ed72:3015:2840:4458]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::ed72:3015:2840:4458%10]) with mapi id
- 15.02.1748.010; Wed, 29 Apr 2026 08:40:26 +0800
+ 15.02.1748.010; Wed, 29 Apr 2026 08:39:55 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Yury Norov <ynorov@nvidia.com>, Thomas Gleixner <tglx@kernel.org>,
+To: David Laight <david.laight.linux@gmail.com>,
+        Andy Shevchenko
+	<andriy.shevchenko@intel.com>
+CC: Yury Norov <ynorov@nvidia.com>, Thomas Gleixner <tglx@kernel.org>,
         "Ingo
  Molnar" <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
         Dave Hansen
@@ -47,11 +54,9 @@ To: Yury Norov <ynorov@nvidia.com>, Thomas Gleixner <tglx@kernel.org>,
         "H. Peter Anvin" <hpa@zytor.com>, "Andy
  Lutomirski" <luto@kernel.org>,
         Peter Zijlstra <peterz@infradead.org>,
-        "Jonathan Cameron" <jic23@kernel.org>,
+        Jonathan Cameron <jic23@kernel.org>,
         David Lechner <dlechner@baylibre.com>,
-        "Johannes Berg" <johannes@sipsolutions.net>,
-        David Laight
-	<david.laight.linux@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
         =?iso-8859-1?Q?Nuno_S=E1?=
 	<nuno.sa@analog.com>,
         Andy Shevchenko <andy@kernel.org>,
@@ -73,7 +78,7 @@ To: Yury Norov <ynorov@nvidia.com>, Thomas Gleixner <tglx@kernel.org>,
 	<sakari.ailus@linux.intel.com>,
         Salah Triki <salah.triki@gmail.com>,
         "Achim
- Gratz" <Achim.Gratz@Stromeko.DE>,
+ Gratz" <Achim.Gratz@stromeko.de>,
         Ben Collins <bcollins@watter.com>, "x86@kernel.org" <x86@kernel.org>,
         "linux-kernel@vger.kernel.org"
 	<linux-kernel@vger.kernel.org>,
@@ -87,12 +92,13 @@ To: Yury Norov <ynorov@nvidia.com>, Thomas Gleixner <tglx@kernel.org>,
 	<linux-rtc@vger.kernel.org>
 Subject: RE: [PATCH v2 7/9] wifi: rtw89: switch to using FIELD_GET_SIGNED()
 Thread-Topic: [PATCH v2 7/9] wifi: rtw89: switch to using FIELD_GET_SIGNED()
-Thread-Index: AQHc1o6xWsc4T9bdAkGO0jI3Cj/ORbX1Mn/A
-Date: Wed, 29 Apr 2026 00:40:26 +0000
-Message-ID: <571202270b0f4811b18cbd6c9381522c@realtek.com>
+Thread-Index: AQHc1o6xWsc4T9bdAkGO0jI3Cj/ORbXziO4AgAA7mwCAAW5CsA==
+Date: Wed, 29 Apr 2026 00:39:55 +0000
+Message-ID: <5747f43ed3b44cbd839716e07e1186fd@realtek.com>
 References: <20260427214127.406067-1-ynorov@nvidia.com>
- <20260427214127.406067-8-ynorov@nvidia.com>
-In-Reply-To: <20260427214127.406067-8-ynorov@nvidia.com>
+	<20260427214127.406067-8-ynorov@nvidia.com>
+	<afBdXj_9r25Ssnz6@ashevche-desk.local> <20260428114342.0d674fd8@pumpkin>
+In-Reply-To: <20260428114342.0d674fd8@pumpkin>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="iso-8859-1"
@@ -104,11 +110,34 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Yury Norov <ynorov@nvidia.com> wrote:
-> Switch from sign_extend32(FIELD_GET()) to the dedicated
-> FIELD_GET_SIGNED() and don't calculate the fields length explicitly.
+David Laight <david.laight.linux@gmail.com> wrote:
 >=20
-> Signed-off-by: Yury Norov <ynorov@nvidia.com>
+> On Tue, 28 Apr 2026 10:10:22 +0300
+> Andy Shevchenko <andriy.shevchenko@intel.com> wrote:
+>=20
+> > On Mon, Apr 27, 2026 at 05:41:24PM -0400, Yury Norov wrote:
+> > > Switch from sign_extend32(FIELD_GET()) to the dedicated
+> > > FIELD_GET_SIGNED() and don't calculate the fields length explicitly.
+> >
+> > ...
+> >
+> > >     for (i =3D 0; i < ADDC_T_AVG; i++) {
+> > >             tmp =3D rtw89_phy_read32_mask(rtwdev, R_DBG32_D, MASKDWOR=
+D);
+> > > -           dc_re +=3D sign_extend32(FIELD_GET(0xfff000, tmp), 11);
+> > > -           dc_im +=3D sign_extend32(FIELD_GET(0xfff, tmp), 11);
+> > > +           dc_re +=3D FIELD_GET_SIGNED(0xfff000, tmp);
+> > > +           dc_im +=3D FIELD_GET_SIGNED(0xfff, tmp);
+> >
+> > In the same driver the GENMASK() is being used, why not  doing it here =
+while at it?
+>=20
+> To me those bit masks look more readable than the GENMASK() calls would b=
+e.
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Either way is fine to me. As we rewrite these into rtw89, using GENMASK()
+can be easier to check if vendor driver defines the masks correctly, no
+overlap.=20
+
+Ping-Ke
 
