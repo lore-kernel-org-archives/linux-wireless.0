@@ -1,56 +1,58 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 734C227CCE0;
-	Wed, 29 Apr 2026 02:52:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF94215F42
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2026 02:55:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777431149; cv=none; b=feNj7crvHEj7xFy8w/V1IcmoKzZ6TuAOQYgNVgTRIJyKZpo7oC1JHUPCTzt3kDflukOR9ITWRIcDnOVS5AAM5xUxpcuJXAuKzsKFSOSlm6neVriakxw4Vxa0XWEFCQVhBzd4AkgDGB81srjs6Ds/PINJE1SDgZeIqPy6s/woRww=
+	t=1777431332; cv=none; b=FZOisPqhEMoULRt0LIRGN5EQUVuDpJyTDlPTvM2iqKpjJWpwG0lCZ7IV+s4iA8K1Ux726t3hxtMGm7THAXusJl3bVsaaoGSAwfjmObVpGcXljUGF6+0xbWrzb8qRXDqRei++rWYNF+TopubRj49b2kjv72Ss9L1F4k5uEvzC/HA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777431149; c=relaxed/simple;
-	bh=fRO2+weWk6ONkFJWZxh9a6cu+SmV2rbBMN7uVgQT8Ms=;
+	s=arc-20240116; t=1777431332; c=relaxed/simple;
+	bh=lH+6WBllpnCmz8XZG73/wBCaczMoA/k3xD9+YAfWNQE=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=J3jD6hI4pTB5ZqJSiQk9I/dzKsfcQ8o2wkevVQBcAfjg4wAOfm7JwcfCXoO3y3WYSX0YmGfEyyZ/GIkdcp6QTRU6JxEUVLdybjWqZE9AFnlWbNL3SYrnIntCjHyt9K2Qy3x2PNin3n6NEOUvJvCtYSDOi5ywhZK+eQyM7M2yvHs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=v2MfMUPE; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=mVpT96DqRYIWJoy8Ryn2e4O0A3H6Z78Y+f05NdHjLgkt2Bn/Gel5KW2AaP0FEbdLg1TuXGI5qkf8O5Uo+LiIvaJ3NQklhCx84rZbh1qan+ZUjqAcHZMDJ/4OHkXaN6wbg1BKykehm2wN67NpIs7NtSeXALWKLeZH+XV0Z6jAkYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=E2b9az07; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="v2MfMUPE"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63T2qNs25911152, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="E2b9az07"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 63T2tD661912039, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1777431143; bh=FzidWkoEm9ZwLtkZ6hIACQ8RLpQ6i5ChcbW5zzvI/9M=;
+	t=1777431313; bh=gIYrxs40KOIzT3bQnTmOxez7QU5v1r2xTLDpLF7GCtA=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=v2MfMUPEns3W8yB3bv3D93XQuIvWoVDt6nu0R9uKva2spzfU7jhAotE9XO1I0z/Ch
-	 hiCvvZpjZ3i8+Sxcd92iebzsrSnDiBKm6wQlzBjHJUL9iJValqq/JVN8ibTyu/DDIC
-	 PXhP+8WSbgH/3SdnQiEdU5K43jWNnyVu6z35fpJjol8lwpiv6zJupNaTiUF8a6GGfO
-	 +PG0G77Jp+pOUrPxSqorvEXzVdXGtWk5gSQ314mOvUKfH6gRWRgPPJb7HaFCvpdfr1
-	 s++tOo6DbNlTXIUmxKSRrcu/GQor634If2gHg4h8kMe6TLjYkaWHceiOwSlt/kes0j
-	 BfyA2MTkvmTSg==
+	b=E2b9az076lXDjqc0M7lOX8n5syzSnvAluxuir/kPIs17j9iucb4R7vPk2T49MO2/7
+	 0uXj7s+7w+jlJP6d0msm8LHrayS9U3D993G7VbjPdBiw/kDyBgM5vS6bH/uZoUxNOD
+	 EnaUqtPbN6C8ZaFq2OwHrNKqbUJ0Zs7GzHAf/bGs8F/XuRoPudpVUtpLcV8rkwuGG/
+	 q/an4X+hjJEtY3IeY17drdMN/lF8wshJGc6uq2MzObnua+ewCuRd4nO4qeVcPOBK6I
+	 P/FKJi3aFJs7KtBenKjGpRPwJgyl/Q2tKQwVqT/6jhifjU2OIJSgL/goeLfpzWLdch
+	 rD6YNXmvRKtWw==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 63T2qNs25911152
+	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 63T2tD661912039
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Apr 2026 10:52:23 +0800
+	Wed, 29 Apr 2026 10:55:13 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Wed, 29 Apr 2026 10:52:23 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ 15.2.1748.10; Wed, 29 Apr 2026 10:55:13 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Wed, 29 Apr 2026 10:55:13 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
+ (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Wed, 29 Apr 2026 10:52:18 +0800
+ Transport; Wed, 29 Apr 2026 10:55:08 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Christos Longros <chris.longros@gmail.com>,
-        Ping-Ke Shih
-	<pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Christos
- Longros <chris.longros@gmail.com>
-Subject: Re: [PATCH] wifi: rtw89: fix wrong pci_get_drvdata type in AER handlers
-In-Reply-To: <20260329073857.113081-1-chris.longros@gmail.com>
-References: <20260329073857.113081-1-chris.longros@gmail.com>
-Message-ID: <411d1fc5-bd39-49e0-9b46-1a40daf09bf3@RTKEXHMBS06.realtek.com.tw>
-Date: Wed, 29 Apr 2026 10:52:18 +0800
+To: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>, <pkshih@realtek.com>
+CC: <colin.i.king@gmail.com>, <johannes.berg@intel.com>, <bhelgaas@google.com>,
+        <arnd@arndb.de>, <linux-wireless@vger.kernel.org>,
+        Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: Re: [PATCH v2] rtlwifi: rtl8821ae: Remove dead code in rtl8821ae_update_hal_rate_table()
+In-Reply-To: <20260407123427.14612-1-chelsyratnawat2001@gmail.com>
+References: <20260407123427.14612-1-chelsyratnawat2001@gmail.com>
+Message-ID: <5164841d-9ba8-43fa-bb4e-36608118cabe@RTKEXHMBS03.realtek.com.tw>
+Date: Wed, 29 Apr 2026 10:55:08 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,26 +61,21 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Christos Longros <chris.longros@gmail.com> wrote:
+Chelsy Ratnawat <chelsyratnawat2001@gmail.com> wrote:
 
-> rtw89 stores an ieee80211_hw pointer via pci_set_drvdata() at probe
-> time, but io_error_detected() and io_resume() retrieve it as a
-> net_device pointer.  This causes netif_device_detach/attach to
-> operate on an ieee80211_hw struct, reading and writing at wrong
-> offsets.  The adjacent io_slot_reset() already does it correctly.
+> The variable 'mimo_ps' is initialized to IEEE80211_SMPS_OFF and never
+> modified throughout the function. This makes the condition checking for
+> IEEE80211_SMPS_STATIC always evaluate to false, rendering the entire
+> if-branch unreachable dead code.
 > 
-> Use ieee80211_stop_queues/wake_queues instead, consistent with
-> every other queue stop/start path in the driver.
+> The error was reported by Coverity Scan.
 > 
-> Tested on RTL8852CE by calling the handlers from a test module
-> before and after the fix.
-> 
-> Signed-off-by: Christos Longros <chris.longros@gmail.com>
+> Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
 1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-7068c379cf9a wifi: rtw89: fix wrong pci_get_drvdata type in AER handlers
+d603f2cfa623 wifi: rtlwifi: rtl8821ae: Remove dead code in rtl8821ae_update_hal_rate_table()
 
 ---
 https://github.com/pkshih/rtw.git
