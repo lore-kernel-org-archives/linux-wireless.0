@@ -1,94 +1,101 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F3344BC8E
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2026 17:44:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83BCC364038;
+	Thu, 30 Apr 2026 17:56:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777571073; cv=none; b=BKUkKQbNP7t77qfcAfBnNoRnSk8qPCh0fVJ752vxltc+CLDDHVX6+3qbQwDjEXQpNAzvLYQHw039Fhabqqv8SjhI+WPPYIm4x3C9MO8wOpalsOnp1v9oU5ap9azqw6zo5AoIo0a4Qg+Nj+Wj06uOC+fIEhHrOEVm7X7zJUnxHXk=
+	t=1777571787; cv=none; b=Ovi9DjCMfBwRd+ahMvDqDaD9Ddyp4r00KRs1pcaG/0llZJpPcaY4N6zjrpX2rhEbO/hKNhZTA639IVkrZ5wBBXM1juQ6xvIW9FYTYcMJ+SO/wmVustFvqGcC8ApVkzlnO+3wCROTOG0YCXU5SzH6INRVdKYHq/AjW7wVFgVqLhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777571073; c=relaxed/simple;
-	bh=fazZ074G9rAIz9AX5nhIFO+Bzp/EdU5S4aYSd7VZ4a8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=K4O0ZvfGN2le47ZT2mtMC4FXbQWPn/YKKckxN0sKAnpfGnknciZzyzclDKmyuCZz+7lJ05GbU4Z09i1EdkmTeagDPZDYFDCZoY/RC9OeCXB58oi9iVo+jOhuQAwxSG8qT7V1ABT3xxqXZU4oECwpB2TJmrmv63oui8qEk6ZWQ3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RiVAYPsm; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1777571787; c=relaxed/simple;
+	bh=bxJhILJOj52ikSwAlpqvCXweZKZMwSWKG7xehCSproo=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=PRQwsy/vM/GIDnEmCgm24HJUA8gIgVyQN/KJwn2fcI1w4BbDC2KVCQ3YdB6HjJ5b/9ScQmCWWyraR2A2KMmEeZAqo0CbsFR41CO8q7T7hxLC8Kgj8I+9Mi78cg+9MUi1jSqQQv+lx+mb2TbOxYLHQSgXMTWN2QI5KNVe8GUPkJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EnW8loyD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RiVAYPsm"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4g61l369Cvz1XM6JS;
-	Thu, 30 Apr 2026 17:44:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1777571068; x=1780163069; bh=glASWuYUbNvY/5xnloOKysvZzxBobd2zdzJ
-	yMqbPJRc=; b=RiVAYPsmBeT5M0MSK106KAjyXfrQiOr/9IcTbKYg7L8aKYi94Q7
-	smmSUglmsHUHxpyR3i0PY8UpK0ki3vDXo3Pu8yyUe6OCA3fD0KnLr1BAuCjfh0sd
-	wTdB26XYfPoSnBlJhLSZgrvrfvLHq987GqCT29yqPrqzQT+PG7I+SYDYM78DwN/7
-	DkVZ4/4ycUOEh1SosiZP9eHg3IcjF6oDUupM3S8NZa6j9q+ysbfaDljvFJsIh22N
-	m04RhgOcvBfSuwwtvNUXXOoAdCQh7trg479OBQriOMkqaQoj+dkGzdlYj7sqUDSn
-	X85iIxDQ8KIB5n9V7U9Sfjw4uRYvwHI967g==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6qsgm4FTpE9i; Thu, 30 Apr 2026 17:44:28 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4g61kz5yyPz1XM31H;
-	Thu, 30 Apr 2026 17:44:27 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Kees Cook <kees@kernel.org>
-Subject: [PATCH] wifi: cw1200: Revert "Fix locking in error paths"
-Date: Thu, 30 Apr 2026 10:44:15 -0700
-Message-ID: <20260430174418.1845431-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EnW8loyD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D7F7C2BCB3;
+	Thu, 30 Apr 2026 17:56:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777571787;
+	bh=bxJhILJOj52ikSwAlpqvCXweZKZMwSWKG7xehCSproo=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=EnW8loyDS+MFh9w1Z8tgZUxJJgHEupnAfw00NSjwn9rJL9EmNSfwcnkp6XsHz39Rp
+	 Fi7xE1lr1xiSz6Me0DCRM0xiw9owT6ttmYSQ0bs22vCtCEiUOFamgkcOUks48jVjxl
+	 HMx37kydLKviLYJfKsv8L9IEmrJvopNxlWPqaWrPvdFWY7SiA12CvyGl4y9f7YHsdx
+	 c5hpEnT9/LxEXfJ8lWaHSGMA0/s/usUCwOMuzCU9GtlCtviNlJopTlNxhQpjbS+3cV
+	 zfGz+w5er68eozEZBXR2zV1V5ZP3UDs7EYMiS/juDxNDH95MD4C0RwR3nbthmEq3Z6
+	 sE97C0G75clVg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B9EE7380AA62;
+	Thu, 30 Apr 2026 17:55:42 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2 0/7] Enable Bluetooth and WiFi on Fairphone (Gen. 6)
+From: patchwork-bot+bluetooth@kernel.org
+Message-Id: 
+ <177757174129.3109994.12376905026107591695.git-patchwork-notify@kernel.org>
+Date: Thu, 30 Apr 2026 17:55:41 +0000
+References: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
+In-Reply-To: <20260403-milos-fp6-bt-wifi-v2-0-393322b27c5f@fairphone.com>
+To: Luca Weiss <luca.weiss@fairphone.com>
+Cc: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, AKoskovich@pm.me,
+ lgirdwood@gmail.com, broonie@kernel.org, brgl@kernel.org,
+ marcel@holtmann.org, luiz.dentz@gmail.com, quic_bgodavar@quicinc.com,
+ quic_rjliao@quicinc.com, johannes@sipsolutions.net, jjohnson@kernel.org,
+ ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+ linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+ dmitry.baryshkov@oss.qualcomm.com
 
-Revert commit d98c24617a83 ("wifi: cw1200: Fix locking in error paths")
-because it introduces a locking bug instead of fixing a locking bug.
-cw1200_wow_resume() unlocks priv->conf_mutex. Hence, adding
-mutex_unlock(&priv->conf_mutex) just after cw1200_wow_resume() is wrong.
+Hello:
 
-Reported-by: Ben Hutchings <ben@decadent.org.uk>
-Closes: https://lore.kernel.org/all/408661f69f263266b028713e1412ba36d457e=
-63d.camel@decadent.org.uk/
-Fixes: d98c24617a83 ("wifi: cw1200: Fix locking in error paths")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/net/wireless/st/cw1200/pm.c | 2 --
- 1 file changed, 2 deletions(-)
+This series was applied to bluetooth/bluetooth-next.git (master)
+by Mark Brown <broonie@kernel.org>:
 
-diff --git a/drivers/net/wireless/st/cw1200/pm.c b/drivers/net/wireless/s=
-t/cw1200/pm.c
-index 84eb15d729c7..120f0379f81d 100644
---- a/drivers/net/wireless/st/cw1200/pm.c
-+++ b/drivers/net/wireless/st/cw1200/pm.c
-@@ -264,14 +264,12 @@ int cw1200_wow_suspend(struct ieee80211_hw *hw, str=
-uct cfg80211_wowlan *wowlan)
- 		wiphy_err(priv->hw->wiphy,
- 			  "PM request failed: %d. WoW is disabled.\n", ret);
- 		cw1200_wow_resume(hw);
--		mutex_unlock(&priv->conf_mutex);
- 		return -EBUSY;
- 	}
-=20
- 	/* Force resume if event is coming from the device. */
- 	if (atomic_read(&priv->bh_rx)) {
- 		cw1200_wow_resume(hw);
--		mutex_unlock(&priv->conf_mutex);
- 		return -EAGAIN;
- 	}
-=20
+On Fri, 03 Apr 2026 15:52:46 +0200 you wrote:
+> Add the required bits to enable Bluetooth and WiFi on the Milos
+> SoC-based Fairphone (Gen. 6) smartphone.
+> 
+> Signed-off-by: Luca Weiss <luca.weiss@fairphone.com>
+> ---
+> Changes in v2:
+> - Drop applied pd-mapper patch
+> - Add compatibles for wcn6755 with fallback to wcn6750 (wifi & bt)
+> - Rebase on linux-next
+> - Pick up one tag (discard the rest due to addition of wcn6755
+>   compatibles)
+> - Link to v1: https://lore.kernel.org/r/20260116-milos-fp6-bt-wifi-v1-0-27b4fbb77e9c@fairphone.com
+> 
+> [...]
+
+Here is the summary with links:
+  - [v2,1/7] regulator: dt-bindings: qcom,qca6390-pmu: Document WCN6755 PMU
+    https://git.kernel.org/bluetooth/bluetooth-next/c/b043657c35e5
+  - [v2,2/7] dt-bindings: bluetooth: qcom,wcn6750-bt: Document WCN6755 Bluetooth
+    (no matching commit)
+  - [v2,3/7] dt-bindings: net: wireless: ath11k: Document WCN6755 WiFi
+    (no matching commit)
+  - [v2,4/7] arm64: dts: qcom: milos: Split up uart11 pinctrl
+    (no matching commit)
+  - [v2,5/7] arm64: dts: qcom: milos: Add WCN6755 WiFi node
+    (no matching commit)
+  - [v2,6/7] arm64: dts: qcom: milos-fairphone-fp6: Enable Bluetooth
+    (no matching commit)
+  - [v2,7/7] arm64: dts: qcom: milos-fairphone-fp6: Enable WiFi
+    (no matching commit)
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
