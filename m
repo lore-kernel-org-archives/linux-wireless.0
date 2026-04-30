@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 233182C029D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 235D13FD15E;
 	Thu, 30 Apr 2026 08:33:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777538034; cv=none; b=tat913byvOBc9lYrz5f5YUy+qFMM0nPoBNUe/pNFvitnIQEcEqoxU0D37LC1BkRwOkZ1K+eWI7nKXouTyQhfvlMjXnGyRUycSTIQgNzMTcUJ4PrFW+Rf9V/3P1V96bCXnVgOFAVU43dbRaXdTtUVeX6zE3G8y2y3/AanktGwrSY=
+	t=1777538034; cv=none; b=t2dCx0i/wHdbAbN0IYlswzawryAIharV7x36jmP9snyO52BrLV9qYo33NzYVHgEluepmfRzAVwwHNC8TkSHDsKMGy/2/KkQ7AkfyhjcGNwCr7iRJGcTOEzPCLMQKNoPUQ2HGR7Hb+wLIplPrDWwP/u/GNuTd8hF2evXohzebRIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777538034; c=relaxed/simple;
-	bh=vxD9xO6E6gxI2jN1+uuURcxBVAKWmSKLybdcQnknBu0=;
+	bh=w4MvbuUnVFxrRLrqGcz+OIFkZ2X2qfkCXwh910utgqQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Hh/QrOopC//r6wz+7CXaXowiCyCvAwRx4iSaLQTTLHGKXzKdUhLO/oQUB3dZ7SxejufYjo0ROsURZddAqGdBk8iy4ab675AxjMgtYofV45QjlhklCs7+W+PFeeFc91rq1fY7AxBPRKMYwKlujthS4CisuxabMEHqQSLFmVV9jLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Udrd04/G; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=KDbLHvXqo0P2Z+t50H0+9U4CCV0OwO1dOZlFKppFFC+XNApBOQEMQMKAhlKtz1EAmnVB7IRxG54cU36gMT/5qTipoRM/hdBtvri1KYo+JC/oQ1VRS/0cWzVpXhewYYLuMPc7qg7Y2747FTMr6jbwJVMy7JUTiA9paU/l+SL5rTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J36Uxyl5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Udrd04/G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE90FC2BCC6;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J36Uxyl5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9D18C4AF09;
 	Thu, 30 Apr 2026 08:33:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1777538033;
-	bh=vxD9xO6E6gxI2jN1+uuURcxBVAKWmSKLybdcQnknBu0=;
+	bh=w4MvbuUnVFxrRLrqGcz+OIFkZ2X2qfkCXwh910utgqQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Udrd04/GFekpcWkAbRf/DTZeYGDjPZ10LeYx0lyl78iRMOLH2LjsubMJ2JZv+gfBo
-	 jpd3fDuzxLGgZSJIEo68r4DVjkRPbrVhTQLfmYv3cN3s11ZgrbFGC/gg8rKaoZQyXc
-	 hBDlXSWV9ZR830TT0mtp1blKFrvymmUEFBFMcTQyuwyfrwP/inHW4V+fsMimDFv96T
-	 e/W+WUh7aCP5QMmM73UtB5Hm21Dl5XK0hhhkVTt87hpJIR4GO3B2X7s7RQx8Ui1w/B
-	 HSKILqEZ+gZPcJ+y/agypuJ1MceBh2iKgdXiMCWHH2jjTz9nNyZvPGYpzA+XFXI7i2
-	 6wBLY21Lo87NQ==
+	b=J36Uxyl51qV1TMtO70TlIuevJnP9WfqcH1nq4Id7hz8F22pgNl7X2vSNo0EF/nH0W
+	 owqKo+aGWcWhnEEE4GcT0A4IAN6/tgwt2qeyzmtPXuhdWcQ77x5HUGqf/h9AoYXYQF
+	 NBwUoTtIFo91TZvnzS7CFqlUBVXCMwWlXDniVAbV80/6nBer0wJLnsAc4aLauha2TF
+	 U7iWmD5uKLAjBlQTxCTLAmFtLYVBTxgr2BdxoB8KhBxItd1WgVdyq/MMUWMnPI5PHN
+	 ewF2+V+Zg5QFxoKI4vzusP7+05MPFfbtWWV/pLYxw0/HQ9x63MgYV5rwnBvcneeRIh
+	 PwVH+uPPf597Q==
 Received: from johan by xi.lan with local (Exim 4.98.2)
 	(envelope-from <johan@kernel.org>)
-	id 1wIMqF-00000000u0I-1vYF;
+	id 1wIMqF-00000000u0A-1lNw;
 	Thu, 30 Apr 2026 10:33:51 +0200
 From: Johan Hovold <johan@kernel.org>
 To: Felix Fietkau <nbd@nbd.name>,
@@ -43,9 +43,9 @@ Cc: Shayne Chen <shayne.chen@mediatek.com>,
 	linux-mediatek@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan@kernel.org>
-Subject: [PATCH v2 RESEND 5/5] wifi: mt7601u: drop redundant device reference
-Date: Thu, 30 Apr 2026 10:33:35 +0200
-Message-ID: <20260430083335.215239-6-johan@kernel.org>
+Subject: [PATCH v2 RESEND 1/5] wifi: mt76: drop redundant device reference
+Date: Thu, 30 Apr 2026 10:33:31 +0200
+Message-ID: <20260430083335.215239-2-johan@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260430083335.215239-1-johan@kernel.org>
 References: <20260430083335.215239-1-johan@kernel.org>
@@ -68,37 +68,37 @@ the risk of memory leaks when drivers fail to release it.
 
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/usb.c | 3 ---
+ drivers/net/wireless/mediatek/mt76/mt7615/usb.c | 3 ---
  1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/usb.c b/drivers/net/wireless/mediatek/mt7601u/usb.c
-index c41ae251cb95..9306870cbc91 100644
---- a/drivers/net/wireless/mediatek/mt7601u/usb.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/usb.c
-@@ -274,7 +274,6 @@ static int mt7601u_probe(struct usb_interface *usb_intf,
- 	if (!dev)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+index d91feffadda9..bab7b91f14be 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+@@ -151,7 +151,6 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
  		return -ENOMEM;
  
--	usb_dev = usb_get_dev(usb_dev);
- 	usb_reset_device(usb_dev);
+ 	dev = container_of(mdev, struct mt7615_dev, mt76);
+-	udev = usb_get_dev(udev);
+ 	usb_reset_device(udev);
  
  	usb_set_intfdata(usb_intf, dev);
-@@ -319,7 +318,6 @@ static int mt7601u_probe(struct usb_interface *usb_intf,
- 	mt7601u_cleanup(dev);
- err:
+@@ -193,7 +192,6 @@ static int mt7663u_probe(struct usb_interface *usb_intf,
+ error:
+ 	mt76u_queues_deinit(&dev->mt76);
  	usb_set_intfdata(usb_intf, NULL);
 -	usb_put_dev(interface_to_usbdev(usb_intf));
  
- 	destroy_workqueue(dev->stat_wq);
- 	ieee80211_free_hw(dev->hw);
-@@ -334,7 +332,6 @@ static void mt7601u_disconnect(struct usb_interface *usb_intf)
- 	mt7601u_cleanup(dev);
+ 	mt76_free_device(&dev->mt76);
+ 
+@@ -211,7 +209,6 @@ static void mt7663u_disconnect(struct usb_interface *usb_intf)
+ 	mt7663u_cleanup(dev);
  
  	usb_set_intfdata(usb_intf, NULL);
 -	usb_put_dev(interface_to_usbdev(usb_intf));
  
- 	destroy_workqueue(dev->stat_wq);
- 	ieee80211_free_hw(dev->hw);
+ 	mt76_free_device(&dev->mt76);
+ }
 -- 
 2.53.0
 
