@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2514E3AE1A2
-	for <linux-wireless@vger.kernel.org>; Sun,  3 May 2026 08:59:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E52923AF65E
+	for <linux-wireless@vger.kernel.org>; Sun,  3 May 2026 08:59:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777798768; cv=none; b=hdYnqpRYT/41V452lPdFfory6vwXC/+DN5O0Er7O2jRUOwxBGZfbUaKbLPxJfJfUNPLv7QS/32Aq3UdAdc6ggqu5bnaiO3jyXTr+dMH1gJiHExYRRcAvYIg7F0T4F/Vj5+NrFJEWQocv8NTnKQpZO9GONwEg/lcZa0Xf4ijILZw=
+	t=1777798771; cv=none; b=nGzpix3/aSZ1fqBQK+DJJyGZnm+pel9UBQfuRAZK/nuSmYd1/MnOflOqsgrzEv9bHqFtOM4zKxyOorphdcWUUTJmM4wdzI3PZ22Mpfmm7QSEbyyum+S6GyDJRmw2fg05E6GDt6iLBH27Jcex9/L5dI96FGZ5RFyeK346OLs92Ig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777798768; c=relaxed/simple;
-	bh=XMUBzYW4ZmvubPpHYMYpnNs13e+TeVRvFuTp6UT2SaM=;
+	s=arc-20240116; t=1777798771; c=relaxed/simple;
+	bh=RS3EKfpot6D7dTUjQ3XjZqVY1xcnz4AL+HQugEAKGqA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BeKbrxGjrgfkPv2AqzxxYnvg8Qwo89GPi33kcqLeR6hJ8yxLYNP8vQxb5zGE/zSpgi8RNRhaiCFeVW0yG8ohkvfn4oyCHFvzIWjs7r9sl46R1TngWBiSMLSCYaQIX8AcHJYuS3l5Ynf+BokuMDH2VGCWTUX8o/HVomXzchQNhMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gdfVg81x; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=sX9+bKl8u6Q7Mto6FcWWRhM0u+dpA6kYXsaA92aQQR1pGr4mmsPci5Y8WmiAsC4OcRqkWRHmisM/wY4lJ/In4/cnZoy0iUVllN6qySApPYPonmq4GiDYmchxEaJDSmKOLr+udFiHQH9rebL4AoLErny3EVh+ebHQxgNyfsl7shg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PmIBKDEW; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gdfVg81x"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PmIBKDEW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777798766; x=1809334766;
+  t=1777798768; x=1809334768;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=XMUBzYW4ZmvubPpHYMYpnNs13e+TeVRvFuTp6UT2SaM=;
-  b=gdfVg81x2Z9qc/rgyMHLtY9R3tF3G9YHVv9gHO+TCvUmkhUHMjBRjUkO
-   FBiS4nIHN4IVW4b8DZazoHvfx8lwXgyFU0FgN61QqPmOysyiotm8Cnuw+
-   X0DZgMQykTBQ8D2AR49HXCDSa0TLwqJ3YO/TajiHacty4EB923EPQuUvb
-   BGcVncyActPxF+FF6unN+2Aaqi8a4GcDFLmsd4ZyOmVfjzmR4KiHNcAGh
-   Gv7WBjckdijLfSJyxMTTAhXB4uB261yCrpEsbzSMGL/ceLd2wT+yB2Eja
-   m3tKMGStkOilG+b316oTRePwdwAEJm9mSM/wlbjfEewdvHwvO4F/pEmpF
-   g==;
-X-CSE-ConnectionGUID: Qn9n8SgJQcGP0FqeDJ63Dg==
-X-CSE-MsgGUID: R8cTu7XMQYa0ZLarZiQH7w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11774"; a="89380357"
+  bh=RS3EKfpot6D7dTUjQ3XjZqVY1xcnz4AL+HQugEAKGqA=;
+  b=PmIBKDEWOt9Aj6hnY59OLANRkG7wEIZ5WRk+4Dj4TdNJCECW1OZ2MJE4
+   uYt1jpbg0gxdBlpyhwycE6iY5xPQ3qkl/HFTlEZddomER3Q2DNyFFqGYL
+   HKzCD3bp8oy9UUREdTamSP2NWb65QM2Bii6w63G6UF/xozvohBKuBBwu4
+   jWTelxJ8AwXn/4ouMDPp8w6n72Pc7u4dqMSEO31XbktS076T3nODg9TNb
+   KtKxojNu2Da+y0nfhDFBIFXutQbF12eF4q9134PQ0015mBeZUJd6dqW5Z
+   RKa993X49RmTnHO8EnNf2EV9qsVWkMLEOlPIvyoVzTo/jZnRJ5HzbGbQU
+   w==;
+X-CSE-ConnectionGUID: wHoqfPqTQ9qsXkDM+/TI0Q==
+X-CSE-MsgGUID: Kgsor2RgRJyaQcJ1BYsTxg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11774"; a="89380401"
 X-IronPort-AV: E=Sophos;i="6.23,213,1770624000"; 
-   d="scan'208";a="89380357"
+   d="scan'208";a="89380401"
 Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2026 01:59:24 -0700
-X-CSE-ConnectionGUID: 69pBNdMDRF+KlB71+eJYtQ==
-X-CSE-MsgGUID: ptW7edIJRx2bIu7o9kI+Vg==
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2026 01:59:27 -0700
+X-CSE-ConnectionGUID: a3555yVfSyCYcrwngemEqA==
+X-CSE-MsgGUID: KtbtqpG7TJmCzQO2N3/pOQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,213,1770624000"; 
-   d="scan'208";a="235123784"
+   d="scan'208";a="235123791"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2026 01:59:23 -0700
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 May 2026 01:59:26 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>
-Subject: [PATCH v3 wireless-next 03/15] wifi: mac80211: accept protected frames for NAN device
-Date: Sun,  3 May 2026 11:58:55 +0300
-Message-Id: <20260503115440.1900c926c2e8.Ia25b2e82b250058fefa179c39327d9c8b3c3cd62@changeid>
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [PATCH v3 wireless-next 05/15] wifi: mac80211: Fix a kernel panic in ieee80211_encrypt_tx_skb()
+Date: Sun,  3 May 2026 11:58:57 +0300
+Message-Id: <20260503085907.257378-2-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260503085907.257378-1-miriam.rachel.korenblit@intel.com>
 References: <20260503085907.257378-1-miriam.rachel.korenblit@intel.com>
@@ -61,58 +61,46 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Some frames sent to the NAN device may be protected, such as
-protected action frames (in particular protected dual of
-public action).
+skb->dev may be NULL for frames on non-netdev devices. For example, NAN
+device frames after pairing. Fix it.
 
-Accept robust management frames except disassoc on the NAN
-device, and clean up the code a little bit.
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/mac80211/rx.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
+ net/mac80211/tx.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 82ea7404f3da..e1f376e0620c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -4624,16 +4624,24 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 		    ieee80211_has_fromds(hdr->frame_control))
- 			return false;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c18de2cb3769..933c86ca21c3 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -5355,7 +5355,7 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
+ int ieee80211_encrypt_tx_skb(struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata = NULL;
+ 	struct sk_buff *check_skb;
+ 	struct ieee80211_tx_data tx;
+ 	ieee80211_tx_result res;
+@@ -5370,7 +5370,14 @@ int ieee80211_encrypt_tx_skb(struct sk_buff *skb)
+ 	__skb_queue_head_init(&tx.skbs);
+ 	__skb_queue_tail(&tx.skbs, skb);
  
--		/* Accept only frames that are addressed to the NAN cluster
-+		/*
-+		 * Accept only frames that are addressed to the NAN cluster
- 		 * (based on the Cluster ID). From these frames, accept only
--		 * action frames or authentication frames that are addressed to
--		 * the local NAN interface.
-+		 *  - public action frames,
-+		 *  - authentication frames to the local address, and
-+		 *  - robust management frames except disassoc.
- 		 */
--		return memcmp(sdata->u.nan.conf.cluster_id,
--			      hdr->addr3, ETH_ALEN) == 0 &&
--			(ieee80211_is_public_action(hdr, skb->len) ||
--			 (ieee80211_is_auth(hdr->frame_control) &&
--			  ether_addr_equal(sdata->vif.addr, hdr->addr1)));
-+		if (!ether_addr_equal(sdata->u.nan.conf.cluster_id, hdr->addr3))
-+			return false;
-+		if (ieee80211_is_public_action(hdr, skb->len))
-+			return true;
-+		if (ieee80211_is_auth(hdr->frame_control) &&
-+		    ether_addr_equal(sdata->vif.addr, hdr->addr1))
-+			return true;
-+		if (!ieee80211_is_disassoc(hdr->frame_control) &&
-+		    ieee80211_is_robust_mgmt_frame(skb))
-+			return true;
-+		return false;
- 	case NL80211_IFTYPE_NAN_DATA:
- 		if (ieee80211_has_tods(hdr->frame_control) ||
- 		    ieee80211_has_fromds(hdr->frame_control))
+-	sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
++	if (skb->dev)
++		sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
++	else if (info->control.vif)
++		sdata = vif_to_sdata(info->control.vif);
++
++	if (WARN_ON(!sdata))
++		return -EINVAL;
++
+ 	tx.sdata = sdata;
+ 	tx.local = sdata->local;
+ 	res = ieee80211_tx_h_encrypt(&tx);
 -- 
 2.34.1
 
