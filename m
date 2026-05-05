@@ -1,45 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4DDE42DFFE
-	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2026 13:12:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABB271B983F;
+	Tue,  5 May 2026 13:15:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777986773; cv=none; b=L6Jgxf3i9lf7jC/nzCu5okHCy5nOpq/3zh7zNyNI3k4qayfbigDa2hnyXM1Bgwei+hlpBa4K3XbAWo3DrHppdQUM+Z6WRDX6pCFAI4iEXM6xfMj6xejw/PxtGvl9OtS/qWSOsOb+hvHET/un+H/k53Fmv5I2WoS2qeyzrHi2Jd4=
+	t=1777986943; cv=none; b=F/+Sul54zdNou5+ZlUxBcMst2sO1rkpX88LnfNrIvRuILKbiv/gsCOlztdpgFwRKS54una+6AfS4VD96MctI4eSH+JFeiioYuoInQlocDPjjwntbW6pSKuEZhUEiltkoSxIAvQTUAMMQroLpjJTGFVdUBMdeQatVxgcvykp7+hk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777986773; c=relaxed/simple;
-	bh=KYgReFnOSiOh08fzcb9TucZdS6/tsBY8fBNawv4uq2Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GtYpiRe6s+v6fQ6tUIBQjYsHsHeqHm2RNMvMzjQYspBG1A5fT80gU7pCFJK89Iu3pt0euOYKbbMgFFIt3+MhXk31vrZUzr80OD9L24kdzkHEbe0PpsOlSI2IoJImJsQIWwjF+uw7kZlRMSTFYzTV27DIsqRmFdo4cYdr00xyxdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=voT0W1t7; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1777986943; c=relaxed/simple;
+	bh=t0OQUdvypgMBCGE6rnH5E4q6byT2S089JpCH2pHsuUQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LrEhP20l83jOblQyPTBmV7AjMpsWKqHph7VFP6UNFsH245MBt3BxGe0ULLnuokm0nE487kjgkCqBN+FGJgoEAuZkPo/5Ew8dVD3gkEo/5DeK3uzmSokfSnYzI2a+cIyqb49omE05OaQykrDzsjC6sssXmjG5oaCWRb8MqcOcxmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kzjWirG0; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="voT0W1t7"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kzjWirG0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=LUvjJVsr2OG78uRE0bzy95TNNvw6alHP4uuKeDEZncU=;
-	t=1777986771; x=1779196371; b=voT0W1t7eNSKHF03KtkUFehGimYVYeJA8EPhCIGJx4Lv2zi
-	l5TgtEBO63ZDusVxfZVcqwBCHd4EqA0u7qha/PPIc0wIPo22VmZZzyXwDwN6ifRwJxmFZBZWsEGVG
-	SHtZp+g/KmxQf+e7YRMX2wRwGVi1KHnclge8nDYGcQmnTDtPKSyV+6DMwAK1TVjxWhYaXtD8KONVf
-	n0OT/UQxkK2dvZl0+I5WYsudSqCeXDH9JuiqbxtW/TYoLmBI7Vphi+MpbUjGCJDphLwEi/6Jy5nuN
-	IKdvApHWXoEJJ8VPsFbNsc1DQMQPffKEKHhCBkjnNiNp7csdk+whsIEN45ERtUzA==;
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=B9wzZY+pQbwLLtmVwfZ1aGBw17PrwrxuQ9um+c8kqQs=; t=1777986941; x=1779196541; 
+	b=kzjWirG0CLaGeiV0Ll14J7/vHtndgJszJh6UU7tgbuJf/vQwz/YmprKzgToN5HaMVraIdon3nDx
+	6sg0dYJklNZ2/FO7y/9xhNcbSljDl3k1vgsOU2azY2mYBxapx/966m4vFtJiDe4z1bybec92Q0cny
+	ZRXbX8bVuVvgpYHnDQHrii//oQ+m3jfgqvlh153tMBtmPQj7dJaAvjmAZPErCwuVqqXroG1CIYPy4
+	pvC9LzSkH6bwCCJ+6/xN7OsYP/yHXQrfBNpyOo/w/HxMH9ge5/wwsqPfOC0Xe4gLCH6M/F+/XLJno
+	7rzd6L2B3iikq+TwetNK3scAtPQ14l4Q/+fQ==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wKFZv-0000000GENC-0XYj;
-	Tue, 05 May 2026 15:12:47 +0200
+	id 1wKFcd-0000000GEf4-41BO;
+	Tue, 05 May 2026 15:15:36 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 2/2] wifi: mac80211: explicitly disable FTM responder on AP stop
-Date: Tue,  5 May 2026 15:12:16 +0200
-Message-ID: <20260505151241.f213196d7d6a.I95d65c030e986c5f7d63ecbd79596da890b9fc84@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	stable@vger.kernel.org,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Subject: [PATCH wireless] wifi: mac80211: remove station if connection prep fails
+Date: Tue,  5 May 2026 15:15:34 +0200
+Message-ID: <20260505151533.c4e52deb06ad.Iafe56cec7de8512626169496b134bce3a6c17010@changeid>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260505151241.285da8fbf7f4.I1b6922ca8d06d592356d7a5d190e6118fec1d5b5@changeid>
-References: <20260505151241.285da8fbf7f4.I1b6922ca8d06d592356d7a5d190e6118fec1d5b5@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -50,48 +50,59 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When stopping the AP, explicitly disable FTM responder while
-disabling beaconing.
+If connection preparation fails for MLO connections, then the
+interface is completely reset to non-MLD. In this case, we must
+not keep the station since it's related to the link of the vif
+being removed. Delete an existing station. Any "new_sta" is
+already being removed, so that doesn't need changes.
 
+This fixes a use-after-free/double-free in debugfs if that's
+enabled, because a vif going from MLD (and to MLD, but that's
+not relevant here) recreates its entire debugfs.
+
+Cc: stable@vger.kernel.org
+Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0ebc58a768a4..0b1291ff7a2c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1990,6 +1990,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_link_data *link =
- 		sdata_dereference(sdata->link[link_id], sdata);
- 	struct ieee80211_bss_conf *link_conf = link->conf;
-+	u64 changes = BSS_CHANGED_BEACON_ENABLED;
- 	LIST_HEAD(keys);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 298ebff6bbf8..0a0f27836d57 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -9149,7 +9149,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_bss *bss = (void *)cbss->priv;
+ 	struct sta_info *new_sta = NULL;
+ 	struct ieee80211_link_data *link;
+-	bool have_sta = false;
++	struct sta_info *have_sta = NULL;
+ 	bool mlo;
+ 	int err;
+ 	u16 new_links;
+@@ -9168,11 +9168,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ 		mlo = false;
+ 	}
  
- 	lockdep_assert_wiphy(local->hw.wiphy);
-@@ -2039,6 +2040,11 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (old_s1g_short_beacon)
- 		kfree_rcu(old_s1g_short_beacon, rcu_head);
+-	if (assoc) {
+-		rcu_read_lock();
++	if (assoc)
+ 		have_sta = sta_info_get(sdata, ap_mld_addr);
+-		rcu_read_unlock();
+-	}
  
-+	if (link_conf->ftm_responder) {
-+		link_conf->ftm_responder = false;
-+		changes |= BSS_CHANGED_FTM_RESPONDER;
-+	}
-+
- 	kfree(link_conf->ftmr_params);
- 	link_conf->ftmr_params = NULL;
- 
-@@ -2060,8 +2066,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->vif.cfg.ssid_len = 0;
- 	sdata->vif.cfg.s1g = false;
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
--	ieee80211_link_info_change_notify(sdata, link,
--					  BSS_CHANGED_BEACON_ENABLED);
-+	ieee80211_link_info_change_notify(sdata, link, changes);
- 
- 	ieee80211_remove_link_keys(link, &keys);
- 	if (!list_empty(&keys)) {
+ 	if (mlo && !have_sta &&
+ 	    WARN_ON(sdata->vif.valid_links || sdata->vif.active_links))
+@@ -9336,6 +9333,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
+ out_release_chan:
+ 	ieee80211_link_release_channel(link);
+ out_err:
++	if (mlo && have_sta)
++		WARN_ON(__sta_info_destroy(have_sta));
+ 	ieee80211_vif_set_links(sdata, 0, 0);
+ 	return err;
+ }
 -- 
 2.53.0
 
