@@ -1,44 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 799E3426EDF
-	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2026 13:12:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4DDE42DFFE
+	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2026 13:12:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777986771; cv=none; b=tV7A/P4+30c59x05mOvkX+ccyyrsIv0MZ+0iADMWrPukzfFQD80ZlQABy0rw11F3cZfUCiFL4Zt6jcAXJ1Pjn9MzLeBWbxpotsjqzMxRBiL3xuTKPzcsIHAqELQlrNU3YpbqEbpIb07tpVaaBjmzSLXSCgwVUikErqf53PgP62A=
+	t=1777986773; cv=none; b=L6Jgxf3i9lf7jC/nzCu5okHCy5nOpq/3zh7zNyNI3k4qayfbigDa2hnyXM1Bgwei+hlpBa4K3XbAWo3DrHppdQUM+Z6WRDX6pCFAI4iEXM6xfMj6xejw/PxtGvl9OtS/qWSOsOb+hvHET/un+H/k53Fmv5I2WoS2qeyzrHi2Jd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777986771; c=relaxed/simple;
-	bh=fQoDepXunJY6zLSPfzyh0QNkVQyqt9rVMn/GzLXSPSQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rQxfIvQVyF5EaR97TQcQYmKVlUjAWhhWh0d4si2Yqhrbb4P/dsUxTvVeanxPktE917pesWnpp0bjGU1Xn13a3vjQbtcz2GodH4QTJlrbrwxLIwaJK8oTNWWSEBItSQkefupqh8t8OBmZmlKOifNmune3y+tIuVGSpFy7ka+eHA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oP8uH0A+; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1777986773; c=relaxed/simple;
+	bh=KYgReFnOSiOh08fzcb9TucZdS6/tsBY8fBNawv4uq2Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GtYpiRe6s+v6fQ6tUIBQjYsHsHeqHm2RNMvMzjQYspBG1A5fT80gU7pCFJK89Iu3pt0euOYKbbMgFFIt3+MhXk31vrZUzr80OD9L24kdzkHEbe0PpsOlSI2IoJImJsQIWwjF+uw7kZlRMSTFYzTV27DIsqRmFdo4cYdr00xyxdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=voT0W1t7; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oP8uH0A+"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="voT0W1t7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=qzYlRnKLecimkelaVkm4QGqRI1oNaZm6u7lc+tumsm4=; t=1777986769; x=1779196369; 
-	b=oP8uH0A+UYZq5ouuU+J6gYz4pxX5bzalhgdH3u6F9kzxIlTjcX+XqFqeXLvR389gptbR95frfK+
-	+wVCNEmlFKwaRuhrVNzW6iVxoqwE7VX1xGMGIYDJ5hc/8YfG88u0LPxBWhGnJxfuP2q82NsKCNvIn
-	aqX1c3M8aVg36NDcLfhxLGrGRL1RKGB84bl801XDK3EvcF252Ehqgus0SxIYBMDpnXg1QOl5CrqG6
-	z1GNE0k4FZ/Hu9kkgAT7eZVOZnEdYgX8iWueUUP2qG4VUAXfvP5LRLjh22nBBhPYxgDkEvIB82/nM
-	roTXA16kAZlcTcdThGjhks23lpsQ8CgbtbDw==;
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=LUvjJVsr2OG78uRE0bzy95TNNvw6alHP4uuKeDEZncU=;
+	t=1777986771; x=1779196371; b=voT0W1t7eNSKHF03KtkUFehGimYVYeJA8EPhCIGJx4Lv2zi
+	l5TgtEBO63ZDusVxfZVcqwBCHd4EqA0u7qha/PPIc0wIPo22VmZZzyXwDwN6ifRwJxmFZBZWsEGVG
+	SHtZp+g/KmxQf+e7YRMX2wRwGVi1KHnclge8nDYGcQmnTDtPKSyV+6DMwAK1TVjxWhYaXtD8KONVf
+	n0OT/UQxkK2dvZl0+I5WYsudSqCeXDH9JuiqbxtW/TYoLmBI7Vphi+MpbUjGCJDphLwEi/6Jy5nuN
+	IKdvApHWXoEJJ8VPsFbNsc1DQMQPffKEKHhCBkjnNiNp7csdk+whsIEN45ERtUzA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wKFZu-0000000GENC-26v5;
-	Tue, 05 May 2026 15:12:46 +0200
+	id 1wKFZv-0000000GENC-0XYj;
+	Tue, 05 May 2026 15:12:47 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless-next 1/2] wifi: iwlwifi: don't blindly start the responder upon BSS_CHANGED_FTM_RESPONDER
-Date: Tue,  5 May 2026 15:12:15 +0200
-Message-ID: <20260505151241.285da8fbf7f4.I1b6922ca8d06d592356d7a5d190e6118fec1d5b5@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless-next 2/2] wifi: mac80211: explicitly disable FTM responder on AP stop
+Date: Tue,  5 May 2026 15:12:16 +0200
+Message-ID: <20260505151241.f213196d7d6a.I95d65c030e986c5f7d63ecbd79596da890b9fc84@changeid>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260505151241.285da8fbf7f4.I1b6922ca8d06d592356d7a5d190e6118fec1d5b5@changeid>
+References: <20260505151241.285da8fbf7f4.I1b6922ca8d06d592356d7a5d190e6118fec1d5b5@changeid>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,60 +48,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-mac80211 may just want to stop it, so check the ftm_responder boolean
-before starting the responder.
+When stopping the AP, explicitly disable FTM responder while
+disabling beaconing.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/cfg.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 214e6d10081b..c256cbc6602e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -3144,7 +3144,7 @@ iwl_mvm_bss_info_changed_ap_ibss(struct iwl_mvm *mvm,
- 	    iwl_mvm_mac_ctxt_beacon_changed(mvm, vif, &vif->bss_conf))
- 		IWL_WARN(mvm, "Failed updating beacon data\n");
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0ebc58a768a4..0b1291ff7a2c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1990,6 +1990,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	struct ieee80211_link_data *link =
+ 		sdata_dereference(sdata->link[link_id], sdata);
+ 	struct ieee80211_bss_conf *link_conf = link->conf;
++	u64 changes = BSS_CHANGED_BEACON_ENABLED;
+ 	LIST_HEAD(keys);
  
--	if (changes & BSS_CHANGED_FTM_RESPONDER) {
-+	if ((changes & BSS_CHANGED_FTM_RESPONDER) && bss_conf->ftm_responder) {
- 		int ret = iwl_mvm_ftm_start_responder(mvm, vif, &vif->bss_conf);
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+@@ -2039,6 +2040,11 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	if (old_s1g_short_beacon)
+ 		kfree_rcu(old_s1g_short_beacon, rcu_head);
  
- 		if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-index f1dbfeae20bc..6ea9a7c8da0c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2022-2025 Intel Corporation
-+ * Copyright (C) 2022-2026 Intel Corporation
-  */
- #include "mvm.h"
++	if (link_conf->ftm_responder) {
++		link_conf->ftm_responder = false;
++		changes |= BSS_CHANGED_FTM_RESPONDER;
++	}
++
+ 	kfree(link_conf->ftmr_params);
+ 	link_conf->ftmr_params = NULL;
  
-@@ -729,7 +729,7 @@ iwl_mvm_mld_link_info_changed_ap_ibss(struct iwl_mvm *mvm,
- 		IWL_WARN(mvm, "Failed updating beacon data\n");
+@@ -2060,8 +2066,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.cfg.ssid_len = 0;
+ 	sdata->vif.cfg.s1g = false;
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+-	ieee80211_link_info_change_notify(sdata, link,
+-					  BSS_CHANGED_BEACON_ENABLED);
++	ieee80211_link_info_change_notify(sdata, link, changes);
  
- 	/* FIXME: need to decide if we need FTM responder per link */
--	if (changes & BSS_CHANGED_FTM_RESPONDER) {
-+	if (changes & BSS_CHANGED_FTM_RESPONDER && link_conf->ftm_responder) {
- 		int ret = iwl_mvm_ftm_start_responder(mvm, vif, link_conf);
- 
- 		if (ret)
+ 	ieee80211_remove_link_keys(link, &keys);
+ 	if (!list_empty(&keys)) {
 -- 
 2.53.0
 
