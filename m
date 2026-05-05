@@ -1,44 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABB271B983F;
-	Tue,  5 May 2026 13:15:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9ABD2F3622
+	for <linux-wireless@vger.kernel.org>; Tue,  5 May 2026 13:17:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777986943; cv=none; b=F/+Sul54zdNou5+ZlUxBcMst2sO1rkpX88LnfNrIvRuILKbiv/gsCOlztdpgFwRKS54una+6AfS4VD96MctI4eSH+JFeiioYuoInQlocDPjjwntbW6pSKuEZhUEiltkoSxIAvQTUAMMQroLpjJTGFVdUBMdeQatVxgcvykp7+hk=
+	t=1777987058; cv=none; b=b3at/MwCKhiq1KODmcgwKlSxtv+JxI6wPj5s/LCuip+QBZF8n2H9qmc1bSaF1Qii4+/eaTKJb/sNrDtOBN7iQqqYhqTLENly1DZ10919s2GsF70Wyxhl/IsgSA5o3yuwlYK9NKtlDs3I5Qvbmo/Xl5ZQ9q8B/3dUxtnrRbTNL4A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777986943; c=relaxed/simple;
-	bh=t0OQUdvypgMBCGE6rnH5E4q6byT2S089JpCH2pHsuUQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LrEhP20l83jOblQyPTBmV7AjMpsWKqHph7VFP6UNFsH245MBt3BxGe0ULLnuokm0nE487kjgkCqBN+FGJgoEAuZkPo/5Ew8dVD3gkEo/5DeK3uzmSokfSnYzI2a+cIyqb49omE05OaQykrDzsjC6sssXmjG5oaCWRb8MqcOcxmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=kzjWirG0; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1777987058; c=relaxed/simple;
+	bh=MFxw8AW9b17paMshIq7X3boHAsXZwBjfrPUOQlhQe2I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Cz7PcAtZLsXnCDdfGC5ezILjil4o479cArfVJkKAyvp/z5bd1ZcegkQ4oxC5jAkSOY3d7IViO4134qzwZ27qG8hOyLKutnqPLiTsc91TgIGDzyqyJUrqueHcm/MUoLDExsarcjY8p39Isqk4OB0+sVU5II8zxslgBWvMyzbNQ3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=TE/F8sHU; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="kzjWirG0"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="TE/F8sHU"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
 	Resent-Message-ID:In-Reply-To:References;
-	bh=B9wzZY+pQbwLLtmVwfZ1aGBw17PrwrxuQ9um+c8kqQs=; t=1777986941; x=1779196541; 
-	b=kzjWirG0CLaGeiV0Ll14J7/vHtndgJszJh6UU7tgbuJf/vQwz/YmprKzgToN5HaMVraIdon3nDx
-	6sg0dYJklNZ2/FO7y/9xhNcbSljDl3k1vgsOU2azY2mYBxapx/966m4vFtJiDe4z1bybec92Q0cny
-	ZRXbX8bVuVvgpYHnDQHrii//oQ+m3jfgqvlh153tMBtmPQj7dJaAvjmAZPErCwuVqqXroG1CIYPy4
-	pvC9LzSkH6bwCCJ+6/xN7OsYP/yHXQrfBNpyOo/w/HxMH9ge5/wwsqPfOC0Xe4gLCH6M/F+/XLJno
-	7rzd6L2B3iikq+TwetNK3scAtPQ14l4Q/+fQ==;
+	bh=931upzR5hOuk0hDgQ+KFk8oILzGD40A6S9pusc+EHiw=; t=1777987056; x=1779196656; 
+	b=TE/F8sHURXtmKRGe2byBQEdf7wPS3gBBzL/qN9JAo8t5Niv0QJFIN6jWpbbOOBSBwnWKkfvcb4h
+	qlsTCB70SbD5NrbWoBSK4z57nOe5nuVrjIAxjJCrI4iteBehl987lDlkxnRgjnGjIO/KmoaQUuFH1
+	CU3OvEHtsH5YYrLydDjpH5JsD6oORb0Rjj6mDJw38vMREoxT8hcXApuT87PPingwBb0qa7xBIxMUG
+	CCHCH9YE6cY3hQvZ97PYgDuPcdjNMRFaaxlxg+FbBzk25bafB7pKi7683ezhbY/ZALn3U9cFslpWD
+	K01Xj2gaFaQ54Pewwpgzmq1cxVXsUZXPwRaA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wKFcd-0000000GEf4-41BO;
-	Tue, 05 May 2026 15:15:36 +0200
+	id 1wKFeX-0000000GEqk-3byy;
+	Tue, 05 May 2026 15:17:34 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org,
-	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
-Subject: [PATCH wireless] wifi: mac80211: remove station if connection prep fails
-Date: Tue,  5 May 2026 15:15:34 +0200
-Message-ID: <20260505151533.c4e52deb06ad.Iafe56cec7de8512626169496b134bce3a6c17010@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH wireless-next] wifi: mac80211: check stations are removed before MLD change
+Date: Tue,  5 May 2026 15:17:31 +0200
+Message-ID: <20260505151731.3d7cbb8b952c.I4ce7b536e8af26d7b115e82fd733734446cc56a4@changeid>
 X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -50,59 +48,49 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If connection preparation fails for MLO connections, then the
-interface is completely reset to non-MLD. In this case, we must
-not keep the station since it's related to the link of the vif
-being removed. Delete an existing station. Any "new_sta" is
-already being removed, so that doesn't need changes.
+If an interface changes to/from MLD, then all stations related
+to it must have been removed first. This is just natural since
+we go from having links to not (or vice versa), but not doing
+so also causes crashes in debugfs since vif changing to/from
+MLD removes the entire debugfs for the vif, including stations.
 
-This fixes a use-after-free/double-free in debugfs if that's
-enabled, because a vif going from MLD (and to MLD, but that's
-not relevant here) recreates its entire debugfs.
+Delete all stations but warn in this case, other code should
+be handling it, in effect fail fast rather than doing a double
+free or use-after-free in debugfs.
 
-Cc: stable@vger.kernel.org
-Fixes: 81151ce462e5 ("wifi: mac80211: support MLO authentication/association with one link")
-Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+This basically makes sure that the bug I fixed in
+https://lore.kernel.org/linux-wireless/20260505151533.c4e52deb06ad.Iafe56cec7de8512626169496b134bce3a6c17010@changeid/
+is noticed quickly. I'll probably merge this only
+after the fix lands in wireless-next via net/net-next.
+---
+ net/mac80211/link.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 298ebff6bbf8..0a0f27836d57 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -9149,7 +9149,7 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_bss *bss = (void *)cbss->priv;
- 	struct sta_info *new_sta = NULL;
- 	struct ieee80211_link_data *link;
--	bool have_sta = false;
-+	struct sta_info *have_sta = NULL;
- 	bool mlo;
- 	int err;
- 	u16 new_links;
-@@ -9168,11 +9168,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 		mlo = false;
- 	}
+diff --git a/net/mac80211/link.c b/net/mac80211/link.c
+index 93e290dd783f..e81dd02de12e 100644
+--- a/net/mac80211/link.c
++++ b/net/mac80211/link.c
+@@ -2,7 +2,7 @@
+ /*
+  * MLO link handling
+  *
+- * Copyright (C) 2022-2025 Intel Corporation
++ * Copyright (C) 2022-2026 Intel Corporation
+  */
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+@@ -307,6 +307,9 @@ static int ieee80211_vif_update_links(struct ieee80211_sub_if_data *sdata,
+ 	if (old_links == new_links && dormant_links == sdata->vif.dormant_links)
+ 		return 0;
  
--	if (assoc) {
--		rcu_read_lock();
-+	if (assoc)
- 		have_sta = sta_info_get(sdata, ap_mld_addr);
--		rcu_read_unlock();
--	}
- 
- 	if (mlo && !have_sta &&
- 	    WARN_ON(sdata->vif.valid_links || sdata->vif.active_links))
-@@ -9336,6 +9333,8 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- out_release_chan:
- 	ieee80211_link_release_channel(link);
- out_err:
-+	if (mlo && have_sta)
-+		WARN_ON(__sta_info_destroy(have_sta));
- 	ieee80211_vif_set_links(sdata, 0, 0);
- 	return err;
- }
++	if (!old_links || !new_links)
++		WARN_ON(sta_info_flush(sdata, -1) > 0);
++
+ 	/* if there were no old links, need to clear the pointers to deflink */
+ 	if (!old_links)
+ 		rem |= BIT(0);
 -- 
 2.53.0
 
