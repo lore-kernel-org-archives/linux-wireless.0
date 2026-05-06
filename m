@@ -1,190 +1,136 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from fhigh-a5-smtp.messagingengine.com (fhigh-a5-smtp.messagingengine.com [103.168.172.156])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ECA44B8DF7
-	for <linux-wireless@vger.kernel.org>; Wed,  6 May 2026 18:19:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CDA52E9757;
+	Wed,  6 May 2026 20:09:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.156
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778091592; cv=none; b=bYqHx4h33bEToKKsbkkPiv17d1nCBAEmQhk4Pb7nSBGG2KQ3cW55RewJB/IEGEJ/OJhQvSk4ifUukXHOpTkqgWmQKmWr7rKJCFt9i5PMZbJKxX4wPA1xURBBD60JqlWXFfGVisnej7cL6SD51JU60cDtw5MCHDa7KnCBX1uyY7w=
+	t=1778098161; cv=none; b=ImlP9Rtb0ON2a75CBY3imPiQD4frxQrPgRHT53azGwwBa8UxngMwoVPDVaMAo9moCdNxNtfBZLm2NOg2Lqv/7KpmLlx8nGKaVtGnSkl25QJXuyQzamYjKyh4CV+NxkRM1cZqAKWnlt67ApIHGfvdfEHc3d4xoPTjpgHDA/pwMzA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778091592; c=relaxed/simple;
-	bh=7aiu2JUFoolSsX24+en1TLO4jHhLy4ztH/j+S3dnKmU=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=XZ7qBHte5hMMTMKQ9PNdO/UnRU4/GPBRu6j9vINo/F/RycP5KSNPhew69959oA+5gQLcyb/3CvO1vbFdf78KXK/OMQdahGs6dH/pn3WM48BP31iS76XuEdXqR7Ec878+MzXchfLIHyATCoqKabTPuOC2Vn4Hu6qmQQfRGI0TdBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Brj8A/Zb; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KqSeVHBs; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1778098161; c=relaxed/simple;
+	bh=x4OPdXSil4/3tqs8a1SjyLj4aGFinVsgsTUC8WLuF5Y=;
+	h=Content-Type:MIME-Version:From:To:Date:Subject:Cc:In-Reply-To:
+	 References:Message-Id; b=KVF55PfJWpTBqLhazPtggEnGbuek3dYVzyR28r89/GcuE6i37eOKPIN5xobD/DYTKes88Lbx1rSccQxIhOMHxjq6rxIdclN3OVEG+qu9absXAomJovMGxHjwzZLr6u/q88c5+VDCeB9k1Zkq41b+CJwbvkTsrcfg8AnX3C1V6t0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me; spf=pass smtp.mailfrom=jetm.me; dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b=daqSAmkr; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=URK7ISgF; arc=none smtp.client-ip=103.168.172.156
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=jetm.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jetm.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Brj8A/Zb";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KqSeVHBs"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 646H4Kd21953101
-	for <linux-wireless@vger.kernel.org>; Wed, 6 May 2026 18:19:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	fW7+cAaB9tFYadSH4iU2QxnEOPZYkbnvDwiqGGx9hdw=; b=Brj8A/Zb65emycac
-	3xJRMK4BCeAN+LdEAaWbPQMYPEBe5q8uyeizOGzX6DRYj4OHH8BiNdJ63U0NDtTx
-	/oFQzG5Y2gm+cdTRQ6gb16EuD2zyg67CAraf1umrds9vnhLY8DwvOLAoeMQf/sj8
-	QBdnnN+WLmIlan7uJurTmsrAhiXLx544xLzVXBcZy+NYSe1SYKAOxCwXChQT3uJS
-	JinWIQAz2m5cELZZkxA8n41TdSAKjv60TyM4XvTcX7WKppmNWY1QKFZENrYl+5CH
-	9RJafTx3bwp4UQNy1ujM256AZz3O+vVQsMnQTwmJDHiOH04FdQRhwjmXwyyyz67W
-	Feuucg==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e03jc1vdh-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 06 May 2026 18:19:44 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-c8247b55775so1020873a12.3
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2026 11:19:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778091584; x=1778696384; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=fW7+cAaB9tFYadSH4iU2QxnEOPZYkbnvDwiqGGx9hdw=;
-        b=KqSeVHBsijfBsWIKu7/rieMJBPMeHnmA9GcYPzvwAOY3htFjq+LFmRQCBrqNQNOnS7
-         66b2rRmGlZSgHRhGSKyEFJvkTFLZkaXl1ndweVV+qGxEmAeXsrJr1X+FgrOeBt68KMYW
-         vd5m/VD2hzq/hl8shrcEb/XjcggNfGopgV430WXe9jzt6ZFn07Z7RvMpBOG4sczCltj7
-         yYy8AbBcxoPeihVoNZsPYlmZ+Yj1eyQvKw11+mMx21AU2wrabxqstWCCj0ktrePsBwcB
-         MyA1c/tV1GfTCPXHDlF6b0GcBRn5bL+OrW6pWZo1xXT2jKQXNtAbj9L283AGdiJWnjmj
-         2TXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778091584; x=1778696384;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fW7+cAaB9tFYadSH4iU2QxnEOPZYkbnvDwiqGGx9hdw=;
-        b=QZEQ4rdnUWGFUmoq1QI/BTORMm8jwTeCJBB1bJDFPazemmMelBDWfAWwm6Jv34x10T
-         Mi/TrO+cVmVvjAe9J4kcZWC9ak5QORSnXGk99rtgnqGKaTv5hPZaadC25rauikx+tDh4
-         KDFKFclRnLSmbAlQAsmdD+QglD7asjYAEptjBqyj2nLHZ4Vv7nLlKpDfdSNTg0gDZ2cT
-         UYkd4SjqloBmxjixo68Ztajp+FPqjOsaHg1VrK9oslfNPhkrTmBWovY7UfBUKCDa8e1Z
-         81A0KmQQXggUbpqQradoDDlQuY5CnczbwRy/A/WNWubL4OpOC0mzG/Zx1NCnKbycxuVJ
-         UXjQ==
-X-Gm-Message-State: AOJu0YzykYxYMbNk5+MdHFLa74BMDeNypXWULUEKgwsDbR37uNYko9pN
-	/mzgsaUX/hiPBmXAPe1kvlCw5NgYmYHPO/ES3scuLbQc3A1l0NbRMMzM2FBW12ObrIdeK68+1XW
-	/B49hml4VtjI56dZku6JdcETdD8zV3PidaaBqF+7H59aB9ewHLRm/C7N9ebIxeBZBoAQ5Hg==
-X-Gm-Gg: AeBDiesCBqo2pvqI50yz/Ysjt7sD5/cQrmlgHKlk8Dcc2XyO6K4zYdgr7FWnLwD99bt
-	OzlhCHNFxQBMMykclvvOCY4MLc1qQdZ3lpuI706JylbEQ4xzgTi9s28s8KbhbDf36OeuvFhQRe6
-	QEhl5G5l5ol+oInCR/5NKBNSX8AbarryKlJA7heoWO6kWYquvTpd5GySguXveRuCqbYiC14Ote2
-	IspIeJQn9Th7qtZydHyyjIfQukA6WquQaKYLG2F8Cv1WTL2eei6URpccQE5gkhQxBQ3CsZ1hk1L
-	e1/YsUP0TKCYV735XwCApfqPXfBQk9SZb3wyfYNP6V1R7L6EUhW2kYgFki7mQIPorbYG6OVMrjo
-	Xx6kk76sX1EplsiJiJK+KiMbegC5u0Y6KuHYrOqyrdbj2Q7hS0a8dy5ue3AcH/zcxT5Yz5+JfgP
-	BY
-X-Received: by 2002:a05:6a00:4517:b0:827:3d52:5d1a with SMTP id d2e1a72fcca58-83a58a2afc1mr3812502b3a.0.1778091583955;
-        Wed, 06 May 2026 11:19:43 -0700 (PDT)
-X-Received: by 2002:a05:6a00:4517:b0:827:3d52:5d1a with SMTP id d2e1a72fcca58-83a58a2afc1mr3812477b3a.0.1778091583464;
-        Wed, 06 May 2026 11:19:43 -0700 (PDT)
-Received: from [192.168.11.104] ([124.123.82.179])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-839659487afsm5831890b3a.18.2026.05.06.11.19.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 May 2026 11:19:43 -0700 (PDT)
-Message-ID: <005af843-da19-4df9-af67-2cd148b24d62@oss.qualcomm.com>
-Date: Wed, 6 May 2026 23:49:38 +0530
+	dkim=pass (2048-bit key) header.d=jetm.me header.i=@jetm.me header.b="daqSAmkr";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="URK7ISgF"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 6D8131400070;
+	Wed,  6 May 2026 16:09:19 -0400 (EDT)
+Received: from phl-imap-07 ([10.202.2.97])
+  by phl-compute-02.internal (MEProxy); Wed, 06 May 2026 16:09:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jetm.me; h=cc:cc
+	:content-transfer-encoding:content-type:content-type:date:date
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1778098159;
+	 x=1778184559; bh=45fzbr5u0590fQqlzP1nzbj90VoHWyrUuJIXnMHC0JA=; b=
+	daqSAmkr/rCqg7/cylMR5qWxeLSyXoINIWrU7l0ljmWrD2afiY35gKZM46EzVLE2
+	1s2GYrmP0FClj0kI1AkhM4EQCtG8cZYg+Wm7Wvd8QNp7/VKJtJhDsGhCePufKm22
+	BCU4Qi68JBZ7wSrixpgq0Zg8AYmGVsn+7KSF5YbxGgc5eQq1ZZsCK7jk21PgwLT8
+	gL5l6XtidazcsICs0vYGNFdgsJBtM4+Koq2UD46esYx51JfntWrFnTchjOxCvPnQ
+	8j1hr25Yh1RAaRAemRW6/EUrKPml1kMoDW2YbAHhCKZUBtikif1KEnpCnKyySbKA
+	oCRu4yr5qtG5AjEBq63+lA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778098159; x=
+	1778184559; bh=45fzbr5u0590fQqlzP1nzbj90VoHWyrUuJIXnMHC0JA=; b=U
+	RK7ISgFBN31jC0gTaq7VjwC5YeE9NSAuL+JyMU4HfLBC2Eb5lH7tv95EEgqXZ20/
+	2ZV5DpMA4VSIayx/zGxMf5w4fruPSpRhbBya0pi3oNwYJEkq8257LuPkJj+HFhzK
+	gmOy2+fFeUWoJ6przJCAf81pAVIUdxli9kJrh3eg8N/uSR/fEFHPKE/MEOIMeBPq
+	xD++l62CHRivC7RlQ9Qn8OzBXHEDeXPxoiFINr5Gz1FCtxMNIbNukoofrOvSXSqP
+	k3dVfnjmaWsa87+p0vkOu9uF09uHGzMWt+LAcaLx4gnfRpWH2XctJr1vrWhlxcm7
+	u0R6Z6y9ihLGvUjWOzooQ==
+X-ME-Sender: <xms:7p_7aeaqhonRvp1gf_cncceRwXgMXKLnbVswBPgy0zYKmnSXDFm_Cg>
+    <xme:7p_7acM7eGdwD29XzFVxhSMVVmYsn6EUgUHyqvtDjvUDIx1Km5JqPZC9Lmwfpb1oH
+    zVZ5CYfeuowwIsxUXnDiwmXOqawpljVwWSoYx2gCSBsffy2Xt_OOUQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddutdehhedvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnegopf
+    hokfffucdluddtmdenucfjughrpefotggggffhvfffufevjghfsehtkedttdertdejnecu
+    hfhrohhmpeflrghvihgvrhcuvfhirgcuoehflhhoshhssehjvghtmhdrmhgvqeenucggtf
+    frrghtthgvrhhnpeegfeduffefgeejvdehgedtffdutedvveehvdekvdetleekjedvheev
+    vdelgffgteenucffohhmrghinhepghhithhhuhgsrdgtohhmnecuvehluhhsthgvrhfuih
+    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhlohhsshesjhgvthhmrdhmvgdp
+    nhgspghrtghpthhtohepkedpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepsghrrg
+    gurdhpihiiiihimhgvnhhtihesghhmrghilhdrtghomhdprhgtphhtthhopehlohhrvghn
+    iihosehkvghrnhgvlhdrohhrghdprhgtphhtthhopehrhiguvghrrdhlvggvsehmvgguih
+    grthgvkhdrtghomhdprhgtphhtthhopehsvggrnhdrfigrnhhgsehmvgguihgrthgvkhdr
+    tghomhdprhgtphhtthhopehshhgrhihnvgdrtghhvghnsehmvgguihgrthgvkhdrtghomh
+    dprhgtphhtthhopehnsggusehnsggurdhnrghmvgdprhgtphhtthhopehlihhnuhigqdhk
+    vghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqd
+    ifihhrvghlvghsshesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+X-ME-Proxy: <xmx:75_7aXYEqKiGN5LgVIiWnXkqjgddRREM8eLBcba29tUTgaBx0TOT_A>
+    <xmx:75_7adI6F7fIB2e-dDpNrFRqwJYZaRsFWN7tfyelENmklloYf-uTPA>
+    <xmx:75_7abuXCFyuNunssISECyj29DqV4mZL-LzVTdqruuWtnEpYcHoTCg>
+    <xmx:75_7aZVxfHkQG017sKaP7OGlajFLdKsWIkggauLbjcdk57RBKnx77g>
+    <xmx:75_7adIkhkEcvSHxDrZz7VR0Aj2_PmmV-VrUHxneLFSlTwYD5t4bL2MU>
+Feedback-ID: i9dde48b3:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id D68321EA006C; Wed,  6 May 2026 16:09:18 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Subject: Re: [PATCH] wifi: ath11k: fix warning when unbinding
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, jjohnson@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260420110130.509670-1-jtornosm@redhat.com>
-Content-Language: en-US
-In-Reply-To: <20260420110130.509670-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA2MDE3OSBTYWx0ZWRfX/9IM47f2AJoT
- w5cr3qdsJXUsT+jBfwEmV58LoTiTCYK8MH2d8cXF5hX2ewVFP8rTgF95cNaZiv0FdXXvLF6rA/6
- E70sROf+HC8jRMgz+hhNhJCstn6Vq5Z0HiB5exQbXeV3xho6xWW1sWyDwIeysT7Ks1M0UIo8+RZ
- /pKKzNkJoy5VdiJthtCWIFHAtkPETuqe0+SHYMr773PN2x88YNTyJ9gRcot6t1z1JoYIlpWbxI2
- gju3k8ldKGfqfRo0vz6h0UErW4XpeE53FtlvkUe6lZ1YHphkEKdwYUbkJnQXjY0c3torQAY8YIV
- 1GDGihQ97y9WsvAJGs5hFHius8adeNiwtuO/jAaGKkn2FqP1GjZLeqfhYJXu+vMTVfyEBW+8yEp
- eRNOQLGaIW2Exs246u92DDWq5PvT4HK/ynpjfnMbrScRd6RGhTwI5mkIcLYIGTogydPv+i4ApQz
- /BTpBoZ7PnLVsS1Losw==
-X-Proofpoint-ORIG-GUID: NVKP8Z-mSPCfEHNQ73vY9l3yrfsWGoKd
-X-Proofpoint-GUID: NVKP8Z-mSPCfEHNQ73vY9l3yrfsWGoKd
-X-Authority-Analysis: v=2.4 cv=EpHiaycA c=1 sm=1 tr=0 ts=69fb8640 cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=ZCREz13nqshT/on6E9YcPw==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=20KFwNOVAAAA:8 a=vrVOvOPcliifg5cE6R0A:9
- a=QEXdDO2ut3YA:10 a=x9snwWr2DeNwDh03kgHS:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-06_01,2026-05-06_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 bulkscore=0 priorityscore=1501 malwarescore=0 adultscore=0
- impostorscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605060179
+Content-Transfer-Encoding: 8bit
+From: Javier Tia <floss@jetm.me>
+To: Bradley Pizzimenti <brad.pizzimenti@gmail.com>
+Date: Wed, 06 May 2026 14:02:32 -0600
+Subject: Re: [bug report] wifi: mt76: mt7925: iw set txpower fixed accepted but ignored
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, shayne.chen@mediatek.com, sean.wang@mediatek.com
+In-Reply-To: <CACjnFagN9zeSkwEv3-CSPJDUENPcEcOLjKyQoLQ91Yjn=rq5ww@mail.gmail.com>
+References: <CACjnFagN9zeSkwEv3-CSPJDUENPcEcOLjKyQoLQ91Yjn=rq5ww@mail.gmail.com>
+Message-Id: <20260506200918.D68321EA006C@mailuser.phl.internal>
 
-On 4/20/2026 4:31 PM, Jose Ignacio Tornos Martinez wrote:
-> If there is an error during some initialization related to firmware,
-> the buffers dp->tx_ring[i].tx_status are released.
-> However this is released again when the device is unbinded (ath11k_pci),
-> and we get:
-> WARNING: CPU: 0 PID: 6231 at mm/slub.c:4368 free_large_kmalloc+0x57/0x90
-> Call Trace:
-> free_large_kmalloc
-> ath11k_dp_free
-> ath11k_core_deinit
-> ath11k_pci_remove
-> ...
-> 
-> The issue is always reproducible from a VM because the MSI addressing
-> initialization is failing.
-> 
-> In order to fix the issue, just set the buffers to NULL after releasing in
-> order to avoid the double free.
-> 
-> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
->   drivers/net/wireless/ath/ath11k/dp.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-> index bbb86f165141..5a50b623bd07 100644
-> --- a/drivers/net/wireless/ath/ath11k/dp.c
-> +++ b/drivers/net/wireless/ath/ath11k/dp.c
-> @@ -1040,6 +1040,7 @@ void ath11k_dp_free(struct ath11k_base *ab)
->   		idr_destroy(&dp->tx_ring[i].txbuf_idr);
->   		spin_unlock_bh(&dp->tx_ring[i].tx_idr_lock);
->   		kfree(dp->tx_ring[i].tx_status);
-> +		dp->tx_ring[i].tx_status = NULL;
->   	}
->   
->   	/* Deinit any SOC level resource */
+On Sun May  4 22:04:48 2026 Bradley Pizzimenti wrote:
+> `iw dev <iface> set txpower fixed N` returns success on mt7925 for
+> any N tested, but the reported txpower never changes from a stuck
+> value of 3.00 dBm.
 
-On which hardware did you observe this issue? is it QCA6390, WCN6855, 
-QCA2066 or QCA6698AQ ? Also, where do you see the initial failure ? Is 
-it somewhere in ath11k_core_qmi_firmware_ready() ?
+Hi Bradley,
 
-I am asking because this looks like it may be exposed by commit 
-6fe62a8cec51 ("wifi: ath11k: Add cold boot calibration support on 
-WCN6750") [1]. That commit added the ATH11K_QMI_EVENT_FW_READY path, but 
-the return value from ath11k_core_qmi_firmware_ready() is not handled 
-there. If that call fails after ath11k_dp_free() has already run on the 
-error path, ATH11K_FLAG_QMI_FAIL is not set. Later, ath11k_pci_remove() 
-does not take the QMI-fail cleanup path and calls ath11k_core_deinit(), 
-which calls ath11k_dp_free() and other cleanup functions again.
+The 3 dBm display bug is a known issue we have seen when using mt7927
+and a tested fix has been working well so far. The root cause is that
+mt7925_mcu_set_rate_txpower() programs the per-band SKU tables into
+firmware but never assigns phy->txpower_cur. mt76_get_txpower() then
+computes:
 
-This is similar to the failure case fixed earlier by a19c0e104db9
-("ath11k: Handle failure in qmi firmware ready") [2], where failure from
-ath11k_core_qmi_firmware_ready() needed to be handled.
+  DIV_ROUND_UP(0 + 6, 2) = 3
 
+regardless of the actual power level. The RF output is unaffected;
+it is a display-only bug.
 
-[1] 
-https://lore.kernel.org/r/20220720134909.15626-3-quic_mpubbise@quicinc.com
-[2] 
-https://lore.kernel.org/r/1645079195-13564-1-git-send-email-quic_seevalam@quicinc.com
+The fix reads the effective TX power back from the rate power limits
+after programming the SKU tables and writes it to phy->txpower_cur,
+following the same pattern used by mt7996:
 
+  https://github.com/jetm/mediatek-mt7927-dkms/blob/master/mt7927-wifi-14-fix-reported-txpower-always-showing-3-db.patch
 
+This is part of a series we are targeting for wireless-next; not
+yet upstream.
 
---
-Ramesh
+> What seems potentially distinct here is that the user-issued
+> `iw set txpower fixed N` itself is silently no-op'd, separate
+> from the reported-value question.
+
+Agreed those are two separate issues. Our patch addresses the
+display-only side: after applying it, iw will report the value the
+firmware is actually using based on the SKU tables, rather than
+always 3 dBm. Whether `set txpower fixed N` propagates to firmware
+to change actual output power is orthogonal and not addressed here.
+
+If you can test the patch on your MT7925 and confirm the displayed
+value reflects the correct power after association, a Tested-by
+would be appreciated.
+
+Best,
+Javier
