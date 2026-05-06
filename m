@@ -1,58 +1,56 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9253C3E022A
-	for <linux-wireless@vger.kernel.org>; Wed,  6 May 2026 07:57:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 239E1175A7B
+	for <linux-wireless@vger.kernel.org>; Wed,  6 May 2026 08:23:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778054272; cv=none; b=eok5yDvT3SVq1iySMCvm9aU3mWWyIE15Fpaw2QpMjqnqTho+qqlcGF0X7KNLogszVgrL+czecN6EIBYS0TeHRv+G24lawHh1WgcaSdKENj6b8+HjPeKxC2NjAq8JVKufnCc+AYeGzBvl6AFvP0NFn6rAFoV7NFtXOfDfBPumZ6Q=
+	t=1778055838; cv=none; b=EcQ6NR4sWPywVNB/w778cB1WsAi3lXoFhFLX8MKK+CE8BgAsvoBPf1aHqNQA/dCwvHJewHqF07Gv/DInRvclUi4vEQBTxLwOYmyuoOnZm6oNryeqcaLosazz5v/3ai5wK/Jc7Tp8fR1k/EgdQTnjt0mvxd7Iv9dV7FtE1v3w4Gk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778054272; c=relaxed/simple;
-	bh=wbDVga/x7xMy/35NMmgxn23ynNkGVrt9gD0Z+6SYV0g=;
+	s=arc-20240116; t=1778055838; c=relaxed/simple;
+	bh=GokYZUprmI5E5GH5v2phAPgVFHRWmZ5bRkFNGFzyK+s=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=uT9CNvzM66Z3ndrbsOA3XrX1Fr5ihmPkYPlp9nvcS24o7EAUZGW1QjncpDgBLTRUVAekt+OJdL65BQww760jofUyTT1gRqgOhA96S4+0CyFaWCslkC+SOgOhMZdfkReP1xjakQGY4ndPTjot5rUFGiRd7sANESGRAzlCr4ThLBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=I9mNZXHM; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=ifan1s07r8GSmHzWrbu3/Aik/QKW72orIgecVk6Db229IXR4Tw2gna7ZXsvUFkCeppDh9FZ/hBZViRrf0ls2ODlJ9CzoXonwDveyPmN0wvaQtgEGx1FpDZRbhySxHXNqTl6wYTlIiTSErW7nReYa6zxuUNmolWGu8CH5NsDqOvw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=PD192bID; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="I9mNZXHM"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6467vYQi91844915, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="PD192bID"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6468NtBT21857409, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1778054254; bh=rQcxqeddG8He+xQbSo60krSpUCCHxII/6odMeZ97RBU=;
+	t=1778055835; bh=bDbPudfxK7PQow5lW06xisRv6tT4xFCrBrVQBV2zEdU=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=I9mNZXHMvwbS86sc+3o/szn/QTHEeBl2BXhPTnMZoIidTaZDs08nQwfiTi+QlTF0s
-	 1xVzetdps4o0AYZoMCR1f83QjVj23C8ebB4JGVmPyj/Eb+LmGcopVnqOvR8BhSOHBN
-	 C8RuUNVWmoaZMnSJVh1Ig0yEoUaDMRMaz82fLv7PrCm5xOuCqjwrpeRmVjOqdFjjkq
-	 OdeYXMABPWwdXs4nUDP1uo3L9xSF/ABIzqCS9z5Zsj86MqSX6IbqQmPJE/IIvT/uhw
-	 NXo3HijSMvJnfwxt0adBQkyvWhfbMDl59H140coCeunHvmZjKWcsVN+Gy/ieF2Uyzg
-	 l+FskRS3WbQ1w==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 6467vYQi91844915
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 6 May 2026 15:57:34 +0800
+	b=PD192bIDDXY7Ed0OmFKEdzvUrPFM74FJ++edHkupB1lpPZHIytJnu1njt0kbLWwY7
+	 3YKatc6Zlq2f+noxAIyfY+dbSGQE9rYMtkVG7kW0vhlZEt1mf6ibs16DtR1VrAEksA
+	 HM6jRclBaVqooctnyyeSFqGt+R0BhsmNxNdOrfHKC1GugI1DfOzQSRKySmgtaNEiMk
+	 Ad73l5OCqPl+V3dEzCIIWBrQgJt7pZNiktPmkPDF1feP99yCoVGNrEmcWPFxaTcFi8
+	 9ALUTW9kV1dHCTRzjn7/D/RM6EGDdg9uMY6gI7Qbe/uOk4lAza4tXbZUACUM/jg9rf
+	 1cYKqpHXvLohA==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 6468NtBT21857409
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Wed, 6 May 2026 16:23:55 +0800
 Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Wed, 6 May 2026 15:57:34 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
+ 15.2.2562.17; Wed, 6 May 2026 16:23:54 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Wed, 6 May 2026 15:57:34 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10 via Frontend
- Transport; Wed, 6 May 2026 15:57:34 +0800
+ 15.2.2562.17; Wed, 6 May 2026 16:23:53 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Wed, 6 May 2026 16:23:53 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Ping-Ke Shih <pkshih@realtek.com>, Jes Sorensen <Jes.Sorensen@gmail.com>,
-        <art1310@proton.me>
-Subject: Re: [PATCH rtw-next v2] wifi: rtl8xxxu: Detect the maximum supported channel width
-In-Reply-To: <c57de68e-5d57-4c26-898f-8a284bb25381@gmail.com>
-References: <c57de68e-5d57-4c26-898f-8a284bb25381@gmail.com>
-Message-ID: <ee88b3a2-2cc9-4370-b782-189a603a7fa1@RTKEXHMBS04.realtek.com.tw>
-Date: Wed, 6 May 2026 15:57:34 +0800
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+CC: <damon.chen@realtek.com>
+Subject: Re: [PATCH rtw-next 1/7] wifi: rtw89: mlo: rearrange MLSR link decision flow
+In-Reply-To: <20260429132625.1659182-2-pkshih@realtek.com>
+References: <20260429132625.1659182-1-pkshih@realtek.com> <20260429132625.1659182-2-pkshih@realtek.com>
+Message-ID: <e90a8b3d-ddd5-4663-a478-11ffef89bc0d@RTKEXHMBS06.realtek.com.tw>
+Date: Wed, 6 May 2026 16:23:53 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,28 +59,26 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> Some devices malfunction when connected to a network with 40 MHz channel
-> width, because they don't support that.
+> From: Kuan-Chung Chen <damon.chen@realtek.com>
 > 
-> RTL8188FU, RTL8192FU, and RTL8710BU (RTL8188GU) have a way to signal
-> this (and some other capabilities) to the driver. Get this information
-> from the hardware and advertise 40 MHz support only when the hardware
-> can handle it. We assume the other chips can always handle it.
+> The original MLSR link decision refers to RSSI, but it should be
+> based on the premise of an existing link. Otherwise, make a link
+> decision to select a new link from any available band.
 > 
-> RTL8710BU needs a different way to retrieve this information, which will
-> be implemented some other time.
-> 
-> Fixes: dbf9b7bb0edf ("wifi: rtl8xxxu: Enable 40 MHz width by default")
-> Cc: stable@vger.kernel.org
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221394
-> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-> Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Kuan-Chung Chen <damon.chen@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+7 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-ef771eabc79d wifi: rtl8xxxu: Detect the maximum supported channel width
+7284f5be5d29 wifi: rtw89: mlo: rearrange MLSR link decision flow
+09d369c66373 wifi: rtw89: phy: support per PHY RX statistics
+523d012f47e7 wifi: rtw89: debug: bb_info entry including TX rate count for WiFi 7 chips
+3b851f36c3f1 wifi: rtw89: debug: add PMAC counter in bb_info
+419ed7f4a053 wifi: rtw89: debug: extend bb_info with TX status and PER
+c77bb66e244e wifi: rtw89: debug: add RX statistics in bb_info
+c1ed02655f91 wifi: rtw89: debug: add BB diagnose
 
 ---
 https://github.com/pkshih/rtw.git
