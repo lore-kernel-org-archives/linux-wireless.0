@@ -1,67 +1,72 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14B9247DD5B
-	for <linux-wireless@vger.kernel.org>; Wed,  6 May 2026 13:42:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA4147A0C7
+	for <linux-wireless@vger.kernel.org>; Wed,  6 May 2026 13:42:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778074964; cv=none; b=OLo7lShiiV0bkYVAaC+aIy7mHfAQVG/USyx5qa6y2RifT8U94pFack9Q1Oy0EAi+Qxw1f3pBY8uarcwG4qp1sRUdO3RPyWHI4gU29cQAWYCQbkGic9oRvQ8YUG6nONT68JdWLyqpPx7fAwO4bO5huZLxFR6hlGBG1pjIJqrGKHw=
+	t=1778074965; cv=none; b=qBf1EUmnOwkqhBWBxN4Y6tA51ukG47yMP0feIOJ047SnRUokaxh6SEXKzUOd3Kb/EpJDFq1XdI+6Sgj20iPxHSl9xfNf+TK6YdVy755oeOAMAEXwhlEXbcFnNgoHi/6f6li4TsYvs620lHkc0AMnIhTIaUoqFtd1J4p3kR2UH1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778074964; c=relaxed/simple;
-	bh=azDSP24GwVs2NbBZbYr1HjJksnV1C4tvxOvpFQzQF0U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ivU1mkc2d4iFWwRqW64SpV12fXQFgAJGLj8a2U9LgxX0StdF5pcFCdiGqqSnZlpUpW4DTDXHEoAN05yPFPli70V8mVil2hy2rUlZE70ShhHDwQjEobnN8btEu0oMn05g8npc2DSnAjZwZt+hqX1TeKhYyRMeCqIAuN10ugLW/tE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nkf5J6TR; arc=none smtp.client-ip=209.85.221.43
+	s=arc-20240116; t=1778074965; c=relaxed/simple;
+	bh=ilHYYJ+J8NG/FtGODILVHS3dJOyLVu7PuMIjjVSakU8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YQr7x5WxzKtMmH4X3OaKkV0m6/Ei76okUqSjt4TVyZ721NZVB/qXMamGt121HrARJHdOyln858XVLDTzei1mmRgIJKcEZW5wgSoHQPNW+3syySj5GFK4H3a/h9oxnZv4onV9hzmwDmSb2kg4M83jrFFso/XLN1wIqXL0IvIWnyY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R5YTPIfE; arc=none smtp.client-ip=209.85.221.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nkf5J6TR"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-43d734223e4so619830f8f.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2026 06:42:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R5YTPIfE"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-452169ae568so365883f8f.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 May 2026 06:42:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778074961; x=1778679761; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7pexLJ9J+9YgCt2KZyZO6yiZqoTWaoO8wMjWHe+dEeI=;
-        b=Nkf5J6TR3x3EBoRGpiY1t/pctCYXI+e9SGkyz1FMzWFU7CR7qNceq4i+huMxS8bObi
-         /UoZb5pljHxCpt9RWImmO7qbD3Woe7acUowTg2nej903ZSidCFt9ECQd1DQmixRWMBLF
-         L8tLsSJBIPrLnBc7eAOrjihsW9VlMk9jN/6mGZ6J6hIGRHiF8x8WBBfnBGPkGOrLmqHX
-         i5RSPZuKOXVl6kEn84qMJqZnyW5J6x7E5tMMSj4XGffo+SfZ1Czbhpw4lJE+Vb4Wrf60
-         MCx8Wa/73KVHk83v3XUyodGFNu8rrZcuxe0b9BVOrpzVN00cztBUyLXlYGa5i2ekN/BZ
-         hMIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778074961; x=1778679761;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1778074963; x=1778679763; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=7pexLJ9J+9YgCt2KZyZO6yiZqoTWaoO8wMjWHe+dEeI=;
-        b=YAO8oIdzwBF/ng78kb+8DU4yzeGcG2aEETcCAja00blNX4zHGOwc+qPUzX6/IYF0lq
-         2M/XLr+oI2gkorCCVROGdKbkvK9ehYk3wbv2S2+bIiDnvBGIEiZju7UP4dwIkEcNhD3+
-         RT2vf8+QhEGQlgSPfopZRO7h4sguED60TlosfOvQ6lyLIKlsyk9Hy0JNJUlb+llie/fo
-         Tj4kEI6XMX5wcXw2E31vxyKSoQfayHN6YfsTtJAKDMKpgNB4uxpJ0pQxucoVVrT553UE
-         aGcKVlX7NVG/cQIdp/5+LM/Co8JdrrJtlf48S80xDnRMH28ADvyAf6eQ6n+oS94BYHiS
-         sb7g==
-X-Gm-Message-State: AOJu0Yw+j/scv8+GJRB+1jkjjugs3p7+yDwlIaUt9XOHFg+ggGgeRPOJ
-	e14pegCoRqQf0SQ9AG3t4E3HnZXz0YTY3QDZ+2KlprBSBD2/470Hw2CGE2tCBw==
-X-Gm-Gg: AeBDiesxfi66UrxmxeNlBab5UoeOpPMvruLHTJXuwwhCtP4MJuxApsSYp/MZHgKPp80
-	gSxLdr0CsFaHJEoXQz3TeLovSwuzE6eJOJdt11ZV6cGhbqkPZXRDd8Ka+U/terMn9hZbrs1RHzZ
-	pabjUikIvIeIIWBj6UV+nnozpTXZFj8XtkpB2P+AkLJpKrqMiJoQeIYWWXj1GonOa3cGYTNvvIY
-	Eh5zm49Ubv0iiuZf1DY8A1+w2kSi0iNPTr18xR/fEBehCuA8acqm9JiZlL0SEdI0CzgtBn8YSDz
-	S+8t+sksemF4cd4aFcFxVVwgQkX/6cJsSgFp6vzipUFZNBuiex5ioE8kYxui0BDnsaxfQVAHOIO
-	1hLS0/GNgu/gAJe5g+PIrVNgaKzQo322M+fOj0JbUaokKV/Qx7Gd+8vjhbbTUS92R+fk51OQBaS
-	LG2fL+Quv9dBKTtcbFXUVCI8+D3LGHGF/84R1+jvL8Hjbdb7OXUAW8JcipLvyGNKNhDdQ=
-X-Received: by 2002:a05:6000:438a:b0:43f:df55:fe5e with SMTP id ffacd0b85a97d-44fd83c7bb1mr14066953f8f.0.1778074961246;
-        Wed, 06 May 2026 06:42:41 -0700 (PDT)
+        bh=8dnZTLfPBq3s3Da2DqBjriorpRBU/d6uIDxI87h8TXI=;
+        b=R5YTPIfER93kYCOYFbUUnhPs6GINdwuwBungcFoCgJFKM0ZrAmNgz7nN42gjAjz0pk
+         A1hSU7uzxNRsaTfPKW1XlQ+6f+rZ+Q+bqAeIl2xOlGUqwIuuQu1hLkwBzCyXvQ6zURik
+         vReDvTz/yxjaE/ACa1bncJ8GFwJN1WntNpaVTPS07JMyfHxYD5m0vgijUZX/goU+cjYW
+         J7BCxKJMjTZjlLGeeAp2cqIvPETwQp7R8cJCI1R+iGsvidmaVHfW3bO82JkA2OTARarB
+         WBuQNkKrVhjD1oq05GxM0LFhUFRRYMY7t3FIwSm4hLtxuhp7YAyQZA24NoqqLzTFIjXx
+         676g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778074963; x=1778679763;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8dnZTLfPBq3s3Da2DqBjriorpRBU/d6uIDxI87h8TXI=;
+        b=QXnN+3MdO5ufWuV0X0aFWWSBIUKw9L0PpBmnBC52tZGBcp7j5e2V0HH6vuZb0cSj9+
+         YckO9vfpnSLNtmKwkw+UhVw+U/P2kvytNaztMho0uJegLceWVxRny9Yn98TGpcIP/Zag
+         PR6pXMQ+yoOavm0eRBOtmj7GgJ2WnDErdppwWGz7k3vrcrImJRRfc7dPP2qFaTc/8S8q
+         Ztuazu7ygMoiAMfdft5PH1PlwzCkDiD/KGQh1G9yZUNV0KO4isG/iuUKBQ37GnUoxEqG
+         7ZrcOsxTmyNU74md5D/v9r2zhMirtsFaGhkGJ43amoKIrt7342kpsPHAo8ocb+pXnn+A
+         4xQQ==
+X-Gm-Message-State: AOJu0YyKUsmInMDzsmoJ5RbzpohaiidqWj3qz3so7KsYVh7Xc/Q7G6Kg
+	j7oBms4AGG3O0FCsPkvtC+xz9HXxtqdIKNcTA9aMvXcqP8IABrHcvTN2
+X-Gm-Gg: AeBDies2R+prPasWAwDyaUC1ImEeZLoDzXMO3rocsISgI3rAguREbatrgKP9XQzSTjr
+	U6ScVeTAk0PxBYXUwcoxX9PabY1xga53VlwiM1z8EtdnhvJvUQU4A3HccZb75RTiLrzbNvq7Sx5
+	n70etb3SRja4XkY3FlrgPCmVwZTYxl8NWZ5uy3wG+gQ1KxQHTjzZPhE3dNiCfZJA/UL+MJi13Hx
+	3+Pfo/HLoXvkP4pEebQJmiM4LuaO+dpoXK2AYwYltFr4Z1rdzI1gpC2qz/3WbG4xd2paoCe8qSs
+	SlEBNefARrcHTDdP0mIxGltxSVyBwfRuW3oRXGne+IrR6gCaTSie0myj8zPEawNcvry5bryUD2U
+	xWO2VnDmcxWyf8bpOsPQx2HJEhPjntJ3P2et3ZJ8Jxhz2HMQ+X6/vUAwyY2RQ6ToKyMr0vNLiZl
+	tCNI70q9LFsHv8rqf+o3H+O0YVD+hpgC3QQTLsKx75uBxTCUwmekT4pe9UXpRjt77h+Na1rY7+/
+	Jg72A==
+X-Received: by 2002:a05:6000:4210:b0:439:b1c3:84c8 with SMTP id ffacd0b85a97d-4515cd27a66mr5880843f8f.21.1778074962750;
+        Wed, 06 May 2026 06:42:42 -0700 (PDT)
 Received: from syracuse.iliad.local (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45052483166sm12542182f8f.7.2026.05.06.06.42.40
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45052483166sm12542182f8f.7.2026.05.06.06.42.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 May 2026 06:42:40 -0700 (PDT)
+        Wed, 06 May 2026 06:42:42 -0700 (PDT)
 From: Nicolas Escande <nico.escande@gmail.com>
 To: ath11k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/3] fix leaks in some WMI error path
-Date: Wed,  6 May 2026 15:42:37 +0200
-Message-ID: <20260506134240.2284016-1-nico.escande@gmail.com>
+Subject: [PATCH v2 3/3] wifi: ath11k: fix error path leak in ath11k_tm_cmd_wmi_ftm()
+Date: Wed,  6 May 2026 15:42:40 +0200
+Message-ID: <20260506134240.2284016-4-nico.escande@gmail.com>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260506134240.2284016-1-nico.escande@gmail.com>
+References: <20260506134240.2284016-1-nico.escande@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -70,29 +75,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-So this is similar work to what has been posted here [0] for ath12k.
+This is similar to what was fixed by previous patches. We have a to
+ath11k_wmi_cmd_send() which does check the return value, but forgot to
+free the related skb.
 
-When we use the pattern 'return ath11k_wmi_cmd_send(...)' without
-explicitly checking the return value we fail to free the allocated skb.
-
-This has been split into 2 patches per Jeff's guidance to hopefully
-ease the backporting process.
-
-[0] https://lore.kernel.org/linux-wireless/20260422163258.3013872-1-nico.escande@gmail.com/
-
+Fixes: b43310e44edc ("wifi: ath11k: factory test mode support")
+Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
 ---
-Changes from v1:
-  - Added patch to also fix ath11k_tm_cmd_wmi_ftm() as per Rameshkumar's remark
+ drivers/net/wireless/ath/ath11k/testmode.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Nicolas Escande (3):
-  wifi: ath11k: fix leak in error path of some WOW related WMI commands
-  wifi: ath11k: fix error path leaks in some WMI calls
-  wifi: ath11k: fix error path leak in ath11k_tm_cmd_wmi_ftm()
-
- drivers/net/wireless/ath/ath11k/testmode.c |   1 +
- drivers/net/wireless/ath/ath11k/wmi.c      | 131 ++++++++++++++++++---
- 2 files changed, 113 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/testmode.c b/drivers/net/wireless/ath/ath11k/testmode.c
+index a9751ea2a0b7..c72eed358f6d 100644
+--- a/drivers/net/wireless/ath/ath11k/testmode.c
++++ b/drivers/net/wireless/ath/ath11k/testmode.c
+@@ -457,6 +457,7 @@ static int ath11k_tm_cmd_wmi_ftm(struct ath11k *ar, struct nlattr *tb[])
+ 		ret = ath11k_wmi_cmd_send(wmi, skb, cmd_id);
+ 		if (ret) {
+ 			ath11k_warn(ar->ab, "failed to send wmi ftm command: %d\n", ret);
++			dev_kfree_skb(skb);
+ 			goto out;
+ 		}
+ 
 -- 
 2.54.0
 
