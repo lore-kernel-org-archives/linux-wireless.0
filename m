@@ -1,90 +1,98 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from akranes.kaiser.cx (akranes.kaiser.cx [152.53.16.207])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E337A346AFB
-	for <linux-wireless@vger.kernel.org>; Thu,  7 May 2026 07:08:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C91B8326928;
+	Thu,  7 May 2026 08:22:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=152.53.16.207
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778137699; cv=none; b=iWvgU824VM8Q9rhI878Dp6vafrb5iRPeqIxrvKkGXTTWEJVE6tLevWnOhRIuRGaobKkxEuyXQcglIs77JH4iBJwIhfPjsXqa1HlBu5NiMEsfEO8dFjaehjMhWojUBCNNMB1Y4wO/Bw2eAzoi+s6pLalT8MJZSUErwxTnxeMzLGQ=
+	t=1778142167; cv=none; b=ewtvaPgaG0j+GytZa7JJZD97wjV1MQm5l0Fiv+WsYhZsljf44cTFZ7zXHVgZ9U2IHZeiHYgTKOKxIkhwNOxXIJ+BvW4+z6joLtnzRSdNGU5xkszhVcJUq8dBV8X6Hc+E87D6bHGPnbuY3WwflCZm1X1gaXl6webYTr1BqskQGCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778137699; c=relaxed/simple;
-	bh=szDG1yGf2JvHzzIARZ5fXBS4Y9Dri5eXAFqj1ClQZbA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bH4v85cMl1ze4jT6L4iKLfiMVt6E1zxEZRUxDbHG7XxKgO+2jfBhkTDk3VUyySv6Ilvx10Db5rTcyJaEoNfxGW0wh205OY8+uJ1ENq+IaprJLkYLA8x7ZsbshXZEVWByBhk48lD9dvPq/6Tt9NeoAIwZmF8SXM6VIaZECWdpmhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ceJ7kW8d; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ceJ7kW8d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778137696;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=szDG1yGf2JvHzzIARZ5fXBS4Y9Dri5eXAFqj1ClQZbA=;
-	b=ceJ7kW8db2uHxCtIVXXD9sQwHia5n2daJUfYHKzGC/fClhKU+2J5fRNuZd6eQ1A+XkUPiQ
-	C1GhcEuJC3JNZB6BEQuhc3qM3rc7+zgbxRvie3aRZPBZ6GmVUvA/5komi+J15pU5HxLiq/
-	SJ7it068qGNSGXIWx7bZxwYzkZuVogs=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-FaxXW4vKMHm-x5oZVn4pVg-1; Thu,
- 07 May 2026 03:08:15 -0400
-X-MC-Unique: FaxXW4vKMHm-x5oZVn4pVg-1
-X-Mimecast-MFC-AGG-ID: FaxXW4vKMHm-x5oZVn4pVg_1778137694
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 51528195608F;
-	Thu,  7 May 2026 07:08:14 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.69])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9EE961953947;
-	Thu,  7 May 2026 07:08:10 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: rameshkumar.sundaram@oss.qualcomm.com
-Cc: ath11k@lists.infradead.org,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
+	s=arc-20240116; t=1778142167; c=relaxed/simple;
+	bh=359YSji4sS3Ohx4uk9Oha8X4GF/An7AlJrwM96KteKk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bZDWqIOAWHY5b54Y2Unari3nXiOQkzqgo336z2uJOkGLrJCLAi2TJrEcJiApeIrSghor6Xg/rYNbidnQ97UZtXHK49es12cRwGGWju2X2RChlC+9qk3YMQCLGvYBsD3jILZVwd+qPF2/h//uKXM7maQ+QG03R8R8CAZbsKGLMjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kaiser.cx; spf=pass smtp.mailfrom=kaiser.cx; arc=none smtp.client-ip=152.53.16.207
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kaiser.cx
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kaiser.cx
+Received: from ipservice-092-208-105-007.092.208.pools.vodafone-ip.de ([92.208.105.7] helo=nb282.user.codasip.com)
+	by akranes.kaiser.cx with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <martin@kaiser.cx>)
+	id 1wKu0I-00000000buB-0puI;
+	Thu, 07 May 2026 10:22:42 +0200
+From: Martin Kaiser <martin@kaiser.cx>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	linux-wireless@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath11k: fix warning when unbinding
-Date: Thu,  7 May 2026 09:08:07 +0200
-Message-ID: <20260507070808.367442-1-jtornosm@redhat.com>
-In-Reply-To: <005af843-da19-4df9-af67-2cd148b24d62@oss.qualcomm.com>
-References: <005af843-da19-4df9-af67-2cd148b24d62@oss.qualcomm.com>
+	linux-kernel@vger.kernel.org,
+	Martin Kaiser <martin@kaiser.cx>
+Subject: [PATCH v2] wifi: rtw88: remove rtw_txq_dequeue
+Date: Thu,  7 May 2026 10:22:12 +0200
+Message-ID: <20260507082238.889656-1-martin@kaiser.cx>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Hello Rameshkumar,
+Remove the rtw_txq_dequeue helper. It's a wrapper around
+ieee80211_tx_dequeue with just one caller.
 
-The hardwre that I am using is QCNFA765, but I think it is something
-related to ath11k driver and not related to some specific hardware.
+Call ieee80211_tx_dequeue directly in rtw_txq_push. There's no need to
+fetch txq for every frame, we can do this once outside of the rcu lock.
 
-I am running with the latest upstream kernel and I can reproduce it, so
-I think it is not related with the problems that you comment.
+Make the loop variable i unsigned long, it should have the same type as
+frames.
 
-Let me repeat this to try to clarify:
+Signed-off-by: Martin Kaiser <martin@kaiser.cx>
+---
+v2:
+- variable declarations in reverse xmas tree order
 
-The easiest way to reproduce it is to run in a VM the default upstream
-kernel (with this card using PCI passthrough), and since this is always
-failing, just unbind the device (ath11k_pci).
+ drivers/net/wireless/realtek/rtw88/tx.c | 18 +++---------------
+ 1 file changed, 3 insertions(+), 15 deletions(-)
 
-The same problem was fixed by me for ath12k driver here ca68ce0d9f4b
-("wifi: ath12k: fix warning when unbinding"), and I have seen the same
-problem is also happening for ath11k driver.
-
-Thanks
-
-Best regards
-José Ignacio
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 3106edb84fb4..bea78971141e 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -619,31 +619,19 @@ static int rtw_txq_push_skb(struct rtw_dev *rtwdev,
+ 	return 0;
+ }
+ 
+-static struct sk_buff *rtw_txq_dequeue(struct rtw_dev *rtwdev,
+-				       struct rtw_txq *rtwtxq)
+-{
+-	struct ieee80211_txq *txq = rtwtxq_to_txq(rtwtxq);
+-	struct sk_buff *skb;
+-
+-	skb = ieee80211_tx_dequeue(rtwdev->hw, txq);
+-	if (!skb)
+-		return NULL;
+-
+-	return skb;
+-}
+-
+ static void rtw_txq_push(struct rtw_dev *rtwdev,
+ 			 struct rtw_txq *rtwtxq,
+ 			 unsigned long frames)
+ {
++	struct ieee80211_txq *txq = rtwtxq_to_txq(rtwtxq);
+ 	struct sk_buff *skb;
++	unsigned long i;
+ 	int ret;
+-	int i;
+ 
+ 	rcu_read_lock();
+ 
+ 	for (i = 0; i < frames; i++) {
+-		skb = rtw_txq_dequeue(rtwdev, rtwtxq);
++		skb = ieee80211_tx_dequeue(rtwdev->hw, txq);
+ 		if (!skb)
+ 			break;
+ 
+-- 
+2.43.7
 
