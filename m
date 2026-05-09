@@ -1,170 +1,134 @@
-Received: from spe9-1.ucebox.co.za (spe9-1.ucebox.co.za [197.242.159.189])
+Received: from mx4.wp.pl (mx4.wp.pl [212.77.101.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A5C7846A
-	for <linux-wireless@vger.kernel.org>; Sat,  9 May 2026 09:36:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=197.242.159.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC8C237BE84
+	for <linux-wireless@vger.kernel.org>; Sat,  9 May 2026 10:13:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778319419; cv=none; b=hmAKCYIN4nCa/amocyCz8de4W6Y/b5e5N9d6qO/DWZFHq1JZ77vhidXv1E3an8cQHzZ+TMxxbRc+UYIcLBRVy1i1wcIWcZEAy0dBJndvmQOyVPf79H1/V7rHQSwBWYlaBfLopAxF8LVIFEMZK5m+nk7be2rNmmls0cgUwldE5c0=
+	t=1778321620; cv=none; b=CR8Cf+2kSZlNGUR41KuuVd8z60vAE6p9HfvA7atvilJ9pJUxYNURC2dwi0ljSXEb5UpjVtDzLgp5sMG7+RUIUKxDK3ebBv3rvNp49TWHZw2JXX3nEcK41oo4B9/5G6lebywmfnpLCV9q6R8L3yAGwwF7LWCTjkznhhqWwVz8VXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778319419; c=relaxed/simple;
-	bh=w2Uhob8BnfQANd1hHoB+agOsiCGWUhjPbv1W+GnSHQ8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eyJZK3DgXVIUtXSbP4vvpfFL9FcZm5u71d5yGSsJNNQW62TsJw4RYmzVpgNl7rmWrsfb4b9Yw1V5NWnEGaGxiaYLiuAxDnS9jVo5hucXG4gZM8HteD6eewsSyOeO72EUgIZrRuTLtPyOGv4gecV68wACd4R6dlV92YImxC5eTLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hlope.org.za; spf=pass smtp.mailfrom=hlope.org.za; dkim=fail (0-bit key) header.d=hlope.org.za header.i=@hlope.org.za header.b=TvM5nuSB reason="key not found in DNS"; arc=none smtp.client-ip=197.242.159.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hlope.org.za
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hlope.org.za
+	s=arc-20240116; t=1778321620; c=relaxed/simple;
+	bh=9bxNQaqsDNMu6TKjidxrJlXeWZkeA13IKD/dWzkKxEE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Pwjh3WpmEzSifPeidsspwVk0Xz18UoNlBICbiLDQNT4MUlguxw13iCdTGlczxxgtuNblhaXzd13xvQ/DaotoFJJzeKyaH0mVqxpmyQid1mTXwRGh0K8j6F6KLrPVeOYNNdmNIl5uygGK4HxyVrKmmbZbyj/1ijyZMMm9yG7d4dk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=Zg8+2tq0; arc=none smtp.client-ip=212.77.101.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=hlope.org.za header.i=@hlope.org.za header.b="TvM5nuSB"
-Received: from zulu.aserv.co.za ([154.0.174.187])
-	by spe11.ucebox.co.za with esmtps  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <developer@hlope.org.za>)
-	id 1wLcu0-004eq2-Uz; Sat, 09 May 2026 10:23:36 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=hlope.org.za; s=default; h=Content-Transfer-Encoding:Content-Type:
-	MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=KM+PhIlgwvO1UsKJY62GfJBC621wDFP9y6GILYNBU7s=; b=TvM5nuSBhM88Qwk6sJX4AUSRFN
-	mcGwaE74fNKGnNGos8iiQPZe3HxGBi2VmcBYiBlh5Ohj1K4scEDjqa52ma8Qw+IQAooIV16ielEPI
-	rCUkijJN17Y/ud+55lytAwOkjiT7+O5hoBSnj4BKJ4DezQJhYMgpY82hgm5En3I6mAITXcUVo5jiz
-	ITg3Zi2EqMuXPDlbjEZZnyhRNIHiWWhNB4uKRD3f5D0RIPwYFTPu0iUBJoAIwG/UM5cntbMW3vMCq
-	Rb4fBiUZP2LZid9CZYWL8E2LhcEMHAJL6HBahKkuIb2vD/Uf55MrHZ2+NyaGYVYrArr4/BmXflmuL
-	vv/Pw1hg==;
-Received: from vc-vb-41-1-137-10.umts.vodacom.co.za ([41.1.137.10]:35008 helo=bongani-mini.home.org.za)
-	by zulu.aserv.co.za with essmtpa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.2)
-	(envelope-from <developer@hlope.org.za>)
-	id 1wLcy1-00000002Iq7-2DWu;
-	Sat, 09 May 2026 10:23:21 +0200
-Date: Sat, 9 May 2026 10:23:19 +0200
-From: Bongani Hlope <developer@hlope.org.za>
-To: Sean Wang <sean.wang@kernel.org>
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org, Sean
- Wang <sean.wang@mediatek.com>
-Subject: Re: [PATCH] wifi: mt76: mt792x: fix NULL dereference during CSA
- beacon handling
-Message-ID: <20260509102319.43c14125@bongani-mini.home.org.za>
-In-Reply-To: <20260503004613.17903-1-sean.wang@kernel.org>
-References: <20260503004613.17903-1-sean.wang@kernel.org>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.49; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="Zg8+2tq0"
+Received: (wp-smtpd smtp.wp.pl 5859 invoked from network); 9 May 2026 12:13:27 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1778321607; bh=jIdxinbdgJMMMfk7uVVnJm1N47P2HSHNC1jvpWELkwU=;
+          h=From:To:Cc:Subject;
+          b=Zg8+2tq0ONfEVN9Jncw8nxb4Qt2J9J3h6Sgu53UEUK7iRWK6nG/pVkDx2eNtSpR1S
+           LSkl4IloYNJ0PBRMhmdNsxMq7fCT2ACTSBdwlIj6BO8NwSMeACxAByCPSsrJ0XDnEv
+           hvG9mr7PFHw5zGvOromMQN8hBwwgVrmZUQdYLTOOTb8X4CSshTghFle4c0tnk7yecJ
+           HAam4mfUslAvzzR+t15CJGQ80ohgMxefk4lOi4BHvi19WUc/1GwVH59GQC5chzyCEl
+           hH9YNMxe4bVAxH6CirtIzUpTKvZDVC11Rh8C+D6YaIkZHLthR4pDexEIcg4VB7P7qB
+           zjFE2Ewp1No6Q==
+Received: from 77-236-5-241.static.play.pl (HELO localhost) (stf_xl@wp.pl@[77.236.5.241])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <rosenp@gmail.com>; 9 May 2026 12:13:27 +0200
+Date: Sat, 9 May 2026 12:13:26 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH wireless-next] wifi: rt2x00: allocate anchor with
+ rt2x00dev
+Message-ID: <20260509101326.GA2170@wp.pl>
+References: <20260430232206.141461-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Get-Message-Sender-Via: zulu.aserv.co.za: authenticated_id: developer@hlope.org.za
-X-Authenticated-Sender: zulu.aserv.co.za: developer@hlope.org.za
-X-Afrihost-Domain: zulu.aserv.co.za
-X-Afrihost-Username: 154.0.174.187
-Authentication-Results: ucebox.co.za; auth=pass smtp.auth=154.0.174.187@zulu.aserv.co.za
-X-Afrihost-Outgoing-Class: ham
-X-Afrihost-Outgoing-Evidence: SB/global_tokens (0.00134300060253)
-X-Recommended-Action: accept
-X-Filter-ID: 9kzQTOBWQUFZTohSKvQbgI7ZDo5ubYELi59AwcWUnuWttwhTDfbOFm1IrTV+N0tt5W8I8I5o/07Q
- djfeDWgbhyu2SmbhJN1U9FKs8X3+Nt1zK+WV213mG9v1wBG3CJSJghHNKUD0bxViKcuMBmKJGtCI
- EVI9LzXDA1Xh+DPG4pIRM0tjkoPC0oPEvsMNWBXdk31k9aIIh+zJRA1xOJoRUKPGxjczx15onleF
- Kw2Xyyt6ZP2tC/xa8XrsQTYQrzShFpLBrlhgaheoKeMzRkq15aAsLnBQySPkxRUcL6SRMtkAGpRG
- q7O/mMOjYzEVVhqKzO11BRKqT8B4uLrn7iz8ujemlCquzrJ0YZ1VzniO/xNwFnDSg8Na/uzow/Qd
- /TXu3FtekKBuIoGwD4N2LqZrB81WEz3zuqka4Leqo6VkfdEs9H9vRWZELOiK/O0f2DQLszMSIo1O
- FBBNLYHJjrLx7KD+PcKoiyuHYH027/azHsfyF0j07IuLxHAIhMOSKZ8SXPwDOp0XzVcbaKehNrQC
- lyWECWLQqrwwfOypInY7IE4WqyvWaJHVy0dAJPh1agO+W712/S7qYELcBqskFxaN0IK3H3zddGMG
- ENsySGnKddaNyIe8PyhXeURjgDQvgYtvI3imOCD2AcAqzAUqPiQ+vsS4KCvAQlb64nmNydRDntbP
- WdUomhZ6E4lig4P8DOupvCrJPmnnTHzVkpybMK7ZTQU1FjzOY34M4LJ5dj1U5QyziKIm/RF17S5j
- mZvsrbOk5ELSSdBCZ+Th+/7SXdAc1ioAdl/0YclQj65KFqyldCtoh9VoIekQHpwUfpYnEThmL9mh
- N2sn9+cD9nPx2dLCkiB0zjmVxLBXMwzcQyZ7VrYMoghy8rP7ZskpYo0tCvJdhNHL4hwDAmUJZftc
- /qh2BVCQMm9F7O0YHLH+UPatjf1O+Mr36p/04lq7E2PTupJG5wvZFPBM8z1lzyXsCKUbkUYxAR1g
- dzpfCT8MW3+36Tt6QlFXnpAsrR1nIklsIaLGO3WRj39GEtKMyPBWDu+J2o+4/pO6PSl14xj6c8yM
- qw/uUkAZolzVpVG7k+diMar4p8r4UU10Bm5re8g+XyEpvJ3iGKWnonO9OJmckd63zPaLkuXizJSN
- HcvSgL08BiJQP2BxhnbeXg/cmvNZLyNaHzJB4EN9jDRWx0Y3AfLsh+PBDQgjxYblsNqNdMJKP021
- Q7gXso7XeulA+cWxJX+boA5kTebrYQ7/3TrJAF4KqX0=
-X-Report-Abuse-To: spam@spe1.ucebox.co.za
-X-Complaints-To: abuse@spe1.ucebox.co.za
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260430232206.141461-1-rosenp@gmail.com>
+X-WP-MailID: e19a3bbd0e37514d669a47517fbefaec
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [UXNx]                               
 
-Sorry I had some down time on my mail server. I can confirm this patch
-works for me, I have been running with it since you sent it through.
+Hi,
 
-Regards
+On Thu, Apr 30, 2026 at 04:22:06PM -0700, Rosen Penev wrote:
+> Instead of being creative with devm, allocate with rt2x00dev by using a
+> flexible array member. Simplifies code slightly.
 
-On Sat,  2 May 2026 19:46:13 -0500
-Sean Wang <sean.wang@kernel.org> wrote:
+I think this patch is more creative. Using a flexible array member
+is less conventional than the current approach of allocating separately
+and storing a pointer. But OK, lets get rid of 9 LOC.
 
-> From: Sean Wang <sean.wang@mediatek.com>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+
+> It's worth noting that in 25369b22223d1c56e42a0cd4ac9137349d5a898e , the
+> proper device was set to the devm call as it seems there was confusion
+> there.
 > 
-> mac80211 may call channel_switch_rx_beacon() while CSA is active, but
-> mt76's cached dev->new_ctx is not guaranteed to be valid at that
-> point.
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  3 ++-
+>  drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 11 +----------
+>  2 files changed, 3 insertions(+), 11 deletions(-)
 > 
-> Avoid dereferencing dev->new_ctx when the target channel context is
-> not available and leave the existing CSA timer unchanged.
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> index 665887e9b118..7d313e86d3f2 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> @@ -1009,11 +1009,12 @@ struct rt2x00_dev {
+>  	/* Extra TX headroom required for alignment purposes. */
+>  	unsigned int extra_tx_headroom;
 > 
-> kernel: Workqueue: events_unbound cfg80211_wiphy_work [cfg80211]
-> kernel: RIP: 0010:mt7921_channel_switch_rx_beacon+0x1f/0x100
-> [mt7921_common]
-> kernel: RAX: 0000000000000000
-> kernel: CR2: 0000000000000000
-> kernel: Call Trace:
-> kernel:  <TASK>
-> kernel:  ieee80211_sta_process_chanswitch+0x67c/0xee0 [mac80211]
-> kernel:  ieee80211_rx_mgmt_beacon+0x842/0x22a0 [mac80211]
-> kernel:  ieee80211_sta_rx_queued_mgmt+0xa7/0xbb0 [mac80211]
-> kernel:  ieee80211_iface_work+0x62e/0x890 [mac80211]
-> kernel:  cfg80211_wiphy_work+0x1ee/0x280 [cfg80211]
-> kernel:  process_scheduled_works+0x180/0x680
-> kernel:  worker_thread+0x1aa/0x450
-> kernel:  kthread+0x181/0x1e0
-> kernel:  ret_from_fork+0x405/0x600
-> kernel:  ret_from_fork_asm+0x11/0x20
-> kernel:  </TASK>
-> kernel: CR2: 0000000000000000
-> kernel: ---[ end trace 0000000000000000 ]---
+> -	struct usb_anchor *anchor;
+>  	unsigned int num_proto_errs;
 > 
-> mt7925 has the same unsafe dev->new_ctx dereference in its CSA beacon
-> handling path, so guard both drivers against the missing target
-> channel context and leave the existing CSA timer unchanged.
-> 
-> Reported-by: Bongani Hlope <developer@hlope.org.za>
-> Closes:
-> https://lore.kernel.org/linux-wireless/20260502140616.7672da98@bongani-mini.home.org.za/
-> Fixes: 8aa2f59260eb ("wifi: mt76: mt7921: introduce CSA support")
-> Fixes: 7900da40e315 ("wifi: mt76: mt7925: introduce CSA support in
-> non-MLO mode") Signed-off-by: Sean Wang <sean.wang@mediatek.com> ---
->  drivers/net/wireless/mediatek/mt76/mt7921/main.c | 3 +++
->  drivers/net/wireless/mediatek/mt76/mt7925/main.c | 3 +++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/main.c
-> b/drivers/net/wireless/mediatek/mt76/mt7921/main.c index
-> 3d74fabe7408..a326f4c95c7c 100644 ---
-> a/drivers/net/wireless/mediatek/mt76/mt7921/main.c +++
-> b/drivers/net/wireless/mediatek/mt76/mt7921/main.c @@ -1508,6 +1508,9
-> @@ static void mt7921_channel_switch_rx_beacon(struct ieee80211_hw
-> *hw, struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
-> u16 beacon_interval = vif->bss_conf.beacon_int; 
-> +	if (!dev->new_ctx)
-> +		return;
+>  	/* Clock for System On Chip devices. */
+>  	struct clk *clk;
 > +
->  	if (cfg80211_chandef_identical(&chsw->chandef,
->  				       &dev->new_ctx->def) &&
->  				       chsw->count) {
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-> b/drivers/net/wireless/mediatek/mt76/mt7925/main.c index
-> 73d3722739d0..b96a8e2efcbc 100644 ---
-> a/drivers/net/wireless/mediatek/mt76/mt7925/main.c +++
-> b/drivers/net/wireless/mediatek/mt76/mt7925/main.c @@ -2402,6 +2402,9
-> @@ static void mt7925_channel_switch_rx_beacon(struct ieee80211_hw
-> *hw, beacon_interval = vif->bss_conf.beacon_int;
->  
-> +	if (!dev->new_ctx)
-> +		return;
-> +
->  	if (cfg80211_chandef_identical(&chsw->chandef,
->  				       &dev->new_ctx->def) &&
->  				       chsw->count) {
-
+> +	struct usb_anchor anchor[];
+>  };
+> 
+>  struct rt2x00_bar_list_entry {
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> index 174d89b0b1d7..47e427ea8622 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> @@ -804,7 +804,7 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+> 
+>  	usb_reset_device(usb_dev);
+> 
+> -	hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
+> +	hw = ieee80211_alloc_hw(struct_size(rt2x00dev, anchor, 1), ops->hw);
+>  	if (!hw) {
+>  		rt2x00_probe_err("Failed to allocate hardware\n");
+>  		return -ENOMEM;
+> @@ -826,13 +826,6 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+>  	if (retval)
+>  		goto exit_free_device;
+> 
+> -	rt2x00dev->anchor = devm_kmalloc(&usb_intf->dev,
+> -					sizeof(struct usb_anchor),
+> -					GFP_KERNEL);
+> -	if (!rt2x00dev->anchor) {
+> -		retval = -ENOMEM;
+> -		goto exit_free_reg;
+> -	}
+>  	init_usb_anchor(rt2x00dev->anchor);
+> 
+>  	retval = rt2x00lib_probe_dev(rt2x00dev);
+> @@ -843,8 +836,6 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+> 
+>  exit_free_anchor:
+>  	usb_kill_anchored_urbs(rt2x00dev->anchor);
+> -
+> -exit_free_reg:
+>  	rt2x00usb_free_reg(rt2x00dev);
+> 
+>  exit_free_device:
+> --
+> 2.54.0
+> 
