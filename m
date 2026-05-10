@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8D8033D4E9
-	for <linux-wireless@vger.kernel.org>; Sun, 10 May 2026 20:49:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A714564
+	for <linux-wireless@vger.kernel.org>; Sun, 10 May 2026 20:49:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778446144; cv=none; b=Qmxx6xAYcBn7AduAGha+j7R88ytY/KJoYEAUTUp+2ICj35mGUW3mnDmsVybVV1EQWhUccJZCW0OOzZwppkIOxYxEG99rKq3PBGHOc1gtBrnXveiJ0yfQZJi9AmEAGJp9OHXvBvTGsrrXwzggBkTG2dS/xZTMHWfkEjRk1cCqGfY=
+	t=1778446145; cv=none; b=HOG1i3hsqdkFGCiAvr0a7rzCKKc73ePMACdF02RCeh4KEFUl1YLF/oNySn4/wpV5ZZF7ZKR3Avk54oYY+BUcHaByBr9BlRb2F1KxxCXMRKICHIIEgs+8vnx/kbDzsmdSqGcjfPy3frYxQJfoG87uqtv/XQtxT2QGtRCk/mg0jnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778446144; c=relaxed/simple;
-	bh=mxeCko/rSefmibJOmRwa3kSxv1JkqBrXHTQDSWP5BE8=;
+	s=arc-20240116; t=1778446145; c=relaxed/simple;
+	bh=fIM9dYnNXKPnNvkWH26idswA/I6YD1ImfWVSA7CrQHI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YC9/9XAUDQkJurwErRva9WyNMiRqTaqBr9yQZYEZRML3KUTYWUl6pYy9gswK6hVgIMEZCs3BVP3KZE1DV4eA3qPNn/HsvPFwdM9vYMymxUdTqsijz4UaC4sgnfwBfYYgg43QtxRs+hzF5n5v/6+OImA0SDorMz1sNGOTSfpSFWY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oHnBIJ2/; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=h/ynCsBB7y7pA3NM2YHQPdeTjQDHn9CcInveOvLj/6rzEjL3H/3B0wFQYjNfBc/3tqK0j+yZDstQl2tcQ94bXqQ+FiZLD3ryoWkeC0q9kj1B5KIoI72o3qAOA1iGZ/BxpnEtafMr5H7HeB43EFDZsaZis/qUVAPJyY2BxGuNn7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=g7NaOBak; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oHnBIJ2/"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="g7NaOBak"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778446142; x=1809982142;
+  t=1778446144; x=1809982144;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mxeCko/rSefmibJOmRwa3kSxv1JkqBrXHTQDSWP5BE8=;
-  b=oHnBIJ2/n6Oej4A5orep/6xrUFzqLRYC7cPDZP05Yr0/uiBsp/9RCoRa
-   ip5+kpXXvtbuT0PYTF3b48PfpsVJbg5KjWgDunMawGWPJ04XDhc7HPZDj
-   4jc8WbOsio2fBqHWJoI8/7yQCqOkDyc7W/7Mf5VInJQ01Ul1NQHluIJhS
-   mcGzBzmgC0uCNgRDs9TjiQH4g27U9Irr4gNgNW0NBUaUvXZELAwTW3iSo
-   tIsN4Lms8AkYjH4OKBTkpn0Gpcvn3pFBJLmHE9PWOTm9gm/5KHGRNSf+O
-   LfunMdRTqDvOwHlHRMBGRRCQiJLBB8RMsjbm2q0HZBuCL2/Zrk+UPMATE
-   Q==;
-X-CSE-ConnectionGUID: gttsFN2HSQ6p89zQzDkT0Q==
-X-CSE-MsgGUID: /R4xY6lfTeKbnzwFi3NEMA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11782"; a="81904753"
+  bh=fIM9dYnNXKPnNvkWH26idswA/I6YD1ImfWVSA7CrQHI=;
+  b=g7NaOBakkvFW8vOS5Pb4WrzUwvaZDxBGQn5vo7l3SZG20JhOoU49GtUD
+   7QkUIF7six7w6eu3GuX8KJpaniiBRJa0XMJbcofwfpe34k9Gd5wNeRxDR
+   adIXdMxM367aF9E3jXmt1fiQW+Ns5nlX5SnbAwK4rhjs70Uq8nrXSlsyr
+   Ildp2cnSgd39OjhUbIiD60Spi5J1CM8XV6bew9b5NDI3tXyJDS+iS9Bwx
+   WRTeXdHYENiaphCnrWWDCBiQfQn5RnT7Qz63PeHt4yuCWfHvVHeslnJ8p
+   PMRw9BWl42yfWpWkQ0/4b6XDjkz2+6EpaBgZEZZxPseJAwqONyNIwppj8
+   w==;
+X-CSE-ConnectionGUID: UrhivnxIQJ+PsEvkN+IaRw==
+X-CSE-MsgGUID: kbMpzn0tSKeOJSNn10sNmQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11782"; a="81904755"
 X-IronPort-AV: E=Sophos;i="6.23,227,1770624000"; 
-   d="scan'208";a="81904753"
+   d="scan'208";a="81904755"
 Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2026 13:49:01 -0700
-X-CSE-ConnectionGUID: HdaGDj5lRaimtZGW1gFTuw==
-X-CSE-MsgGUID: fBSx0x0kTjaORKRwLAM8Gg==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2026 13:49:04 -0700
+X-CSE-ConnectionGUID: 4sj8VIFuQ0uKKD+K6DcS+w==
+X-CSE-MsgGUID: bWz0tfEIS8mKaw5wCdnZfA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,227,1770624000"; 
-   d="scan'208";a="239095042"
+   d="scan'208";a="239095053"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2026 13:49:00 -0700
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 May 2026 13:49:03 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 iwlwifi-next 05/15] wifi: iwlwifi: mld: add NAN link management
-Date: Sun, 10 May 2026 23:48:30 +0300
-Message-Id: <20260510234534.39ee3533ef30.I81ff6dc02e912396040f922e21888fd94b3c26e6@changeid>
+Subject: [PATCH v2 iwlwifi-next 07/15] wifi: iwlwifi: mld: implement NAN peer station management
+Date: Sun, 10 May 2026 23:48:32 +0300
+Message-Id: <20260510234534.cbf6bac4744f.I3bd01266e47f24fb7f1240db62ac3bd47c479127@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260510204840.133723-1-miriam.rachel.korenblit@intel.com>
 References: <20260510204840.133723-1-miriam.rachel.korenblit@intel.com>
@@ -63,574 +63,315 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The firmware requires links for NAN which mac80211 doesn't use,
-so introduce a new NAN link data structure that the driver has
-for itself only, and handle the link command sending code for
-NAN using this data structure, most of the bss_conf data isn't
-used for NAN anyway, so those structures aren't useful.
-
-With that, add, activate, deactivate or remove links depending
-on the local NAN schedule updates.
+Implement peer station management for NAN, i.e. support for adding,
+removing, and updating NMI and NDI stations.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Co-developed-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mld/iface.c    |  15 +-
- .../net/wireless/intel/iwlwifi/mld/iface.h    |   9 +
- drivers/net/wireless/intel/iwlwifi/mld/link.c |  12 +-
- drivers/net/wireless/intel/iwlwifi/mld/link.h |   7 +
- drivers/net/wireless/intel/iwlwifi/mld/mld.h  |   8 +-
- drivers/net/wireless/intel/iwlwifi/mld/nan.c  | 301 +++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mld/nan.h  |  19 ++
- drivers/net/wireless/intel/iwlwifi/mld/rx.c   |   2 +-
- .../wireless/intel/iwlwifi/mld/tests/utils.c  |   2 -
- 9 files changed, 356 insertions(+), 19 deletions(-)
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/nan.c  | 35 +++++--
+ drivers/net/wireless/intel/iwlwifi/mld/sta.c  | 96 +++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mld/sta.h  |  4 +-
+ 4 files changed, 109 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-index 150ad095e0ae..5fc3f6729455 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
-@@ -5,6 +5,7 @@
- #include <net/cfg80211.h>
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+index 3c84c6b0faaa..6b4b2683cd1e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
+@@ -1841,7 +1841,7 @@ static int iwl_mld_move_sta_state_up(struct iwl_mld *mld,
+ 		   new_state == IEEE80211_STA_AUTHORIZED) {
+ 		ret = 0;
  
- #include "iface.h"
-+#include "nan.h"
- #include "hcmd.h"
- #include "key.h"
- #include "mlo.h"
-@@ -55,8 +56,12 @@ void iwl_mld_cleanup_vif(void *data, u8 *mac, struct ieee80211_vif *vif)
+-		if (!sta->tdls) {
++		if (vif->type == NL80211_IFTYPE_STATION && !sta->tdls) {
+ 			mld_vif->authorized = true;
  
- 	ieee80211_iter_keys(mld->hw, vif, iwl_mld_cleanup_keys_iter, NULL);
- 
--	if (vif->type == NL80211_IFTYPE_NAN)
-+	if (vif->type == NL80211_IFTYPE_NAN) {
- 		mld_vif->nan.mac_added = false;
-+		/* Clean up NAN links */
-+		for (int i = 0; i < ARRAY_SIZE(mld_vif->nan.links); i++)
-+			iwl_mld_cleanup_nan_link(&mld_vif->nan.links[i]);
-+	}
- 
- 	CLEANUP_STRUCT(mld_vif);
+ 			/* Ensure any block due to a non-BSS link is synced */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/nan.c b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
+index eba79aca8c06..53d39717deab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/nan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
+@@ -464,19 +464,17 @@ static int iwl_mld_nan_link_set_active(struct iwl_mld *mld,
  }
-@@ -515,6 +520,14 @@ iwl_mld_init_vif(struct iwl_mld *mld, struct ieee80211_vif *vif)
- 		wiphy_delayed_work_init(&mld_vif->mlo_scan_start_wk,
- 					iwl_mld_mlo_scan_start_wk);
- 	}
-+
-+	if (vif->type == NL80211_IFTYPE_NAN) {
-+		for (int i = 0; i < ARRAY_SIZE(mld_vif->nan.links); i++) {
-+			memset(&mld_vif->nan.links[i], 0, sizeof(mld_vif->nan.links[i]));
-+			mld_vif->nan.links[i].fw_id = FW_CTXT_ID_INVALID;
+ 
+ static void iwl_mld_nan_link_remove(struct iwl_mld *mld,
+-				    struct iwl_mld_nan_link *nan_link)
++				    struct iwl_mld_nan_link *nan_link,
++				    u32 link_id)
+ {
+ 	struct iwl_link_config_cmd cmd = {
+-		.link_id = cpu_to_le32(nan_link->fw_id),
++		.link_id = cpu_to_le32(link_id),
+ 		.phy_id = cpu_to_le32(FW_CTXT_ID_INVALID),
+ 	};
+ 
+-	if (WARN_ON_ONCE(nan_link->fw_id == FW_CTXT_ID_INVALID))
+-		return;
+-
+ 	iwl_mld_send_link_cmd(mld, &cmd, FW_CTXT_ACTION_REMOVE);
+ 
+-	RCU_INIT_POINTER(mld->fw_id_to_bss_conf[nan_link->fw_id], NULL);
++	RCU_INIT_POINTER(mld->fw_id_to_bss_conf[link_id], NULL);
+ 	nan_link->fw_id = FW_CTXT_ID_INVALID;
+ 	nan_link->active = false;
+ 	nan_link->chanctx = NULL;
+@@ -518,6 +516,8 @@ void iwl_mld_nan_vif_cfg_changed(struct iwl_mld *mld,
+ 	struct ieee80211_nan_channel **slots = sched_cfg->schedule;
+ 	bool link_used[ARRAY_SIZE(mld_vif->nan.links)] = {};
+ 	struct iwl_mld_nan_link *nan_link;
++	unsigned long remove_link_ids = 0;
++	bool added_links = false;
+ 	bool empty_schedule = true;
+ 	int ret, i;
+ 
+@@ -588,6 +588,7 @@ void iwl_mld_nan_vif_cfg_changed(struct iwl_mld *mld,
+ 
+ 		/* we have a link, activate it */
+ 		if (links[i]) {
++			added_links = true;
+ 			link_used[links[i]->fw_id] = true;
+ 			iwl_mld_nan_link_set_active(mld, links[i], true);
+ 		}
+@@ -626,14 +627,32 @@ void iwl_mld_nan_vif_cfg_changed(struct iwl_mld *mld,
+ 	if (ret)
+ 		IWL_ERR(mld, "NAN: failed to update schedule (%d)\n", ret);
+ 
+-	/* delete unused links */
++	/* prepare stations for links we'll remove */
+ 	for_each_mld_nan_valid_link(mld_vif, nan_link) {
+ 		if (!link_used[nan_link->fw_id]) {
+ 			iwl_mld_nan_link_set_active(mld, nan_link, false);
+-			iwl_mld_nan_link_remove(mld, nan_link);
++			remove_link_ids |= BIT(nan_link->fw_id);
++			/* mark unused for STA updates */
++			nan_link->fw_id = FW_CTXT_ID_INVALID;
 +		}
 +	}
 +
- 	iwl_mld_init_internal_sta(&mld_vif->aux_sta);
++	if (added_links || remove_link_ids) {
++		struct ieee80211_sta *sta;
++
++		for_each_station(sta, mld->hw) {
++			struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
++
++			if (mld_sta->sta_type == STATION_TYPE_NAN_PEER_NMI ||
++			    mld_sta->sta_type == STATION_TYPE_NAN_PEER_NDI)
++				iwl_mld_add_modify_sta_cmd(mld, &sta->deflink);
+ 		}
+ 	}
+ 
++	/* delete unused links */
++	for_each_set_bit(i, &remove_link_ids, ARRAY_SIZE(mld_vif->nan.links))
++		iwl_mld_nan_link_remove(mld, &mld_vif->nan.links[i], i);
++
+ 	/* remove MAC if needed */
+ 	if (!previously_empty_schedule && empty_schedule) {
+ 		/* must have been added */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.c b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
+index 4c97d12ce2d0..f794f80b0fdd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
+ 
+ #include <linux/ieee80211.h>
+@@ -13,6 +13,7 @@
+ #include "key.h"
+ #include "agg.h"
+ #include "tlc.h"
++#include "nan.h"
+ #include "fw/api/sta.h"
+ #include "fw/api/mac.h"
+ #include "fw/api/rx.h"
+@@ -43,13 +44,13 @@ int iwl_mld_fw_sta_id_from_link_sta(struct iwl_mld *mld,
+ 
+ static void
+ iwl_mld_fill_ampdu_size_and_dens(struct ieee80211_link_sta *link_sta,
+-				 struct ieee80211_bss_conf *link,
++				 bool is_6ghz,
+ 				 __le32 *tx_ampdu_max_size,
+ 				 __le32 *tx_ampdu_spacing)
+ {
+ 	u32 agg_size = 0, mpdu_dens = 0;
+ 
+-	if (WARN_ON(!link_sta || !link))
++	if (WARN_ON(!link_sta))
+ 		return;
+ 
+ 	/* Note that we always use only legacy & highest supported PPDUs, so
+@@ -63,7 +64,7 @@ iwl_mld_fill_ampdu_size_and_dens(struct ieee80211_link_sta *link_sta,
+ 		mpdu_dens = link_sta->ht_cap.ampdu_density;
+ 	}
+ 
+-	if (link->chanreq.oper.chan->band == NL80211_BAND_6GHZ) {
++	if (is_6ghz) {
+ 		/* overwrite HT values on 6 GHz */
+ 		mpdu_dens =
+ 			le16_get_bits(link_sta->he_6ghz_capa.capa,
+@@ -439,29 +440,56 @@ static int iwl_mld_send_sta_cmd(struct iwl_mld *mld,
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.h b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
-index 1ac14996985c..ce4f8ca885cf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/iface.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
-@@ -8,6 +8,7 @@
- #include <net/mac80211.h>
- 
- #include "link.h"
-+#include "nan.h"
- #include "session-protect.h"
- #include "d3.h"
- #include "fw/api/time-event.h"
-@@ -153,6 +154,7 @@ struct iwl_mld_emlsr {
-  * @aux_sta: station used for remain on channel. Used in P2P device.
-  * @mlo_scan_start_wk: worker to start a deferred MLO scan
-  * @nan: NAN parameters
-+ * @nan.links: NAN links for FW (indexed by FW link ID)
-  * @nan.mac_added: track whether or not the MAC was added to FW
-  */
- struct iwl_mld_vif {
-@@ -179,6 +181,7 @@ struct iwl_mld_vif {
- 
- 	struct {
- 		/* use only with wiphy protection */
-+		struct iwl_mld_nan_link links[IWL_FW_MAX_LINKS];
- 		bool mac_added;
- 	} nan;
- 
-@@ -242,6 +245,12 @@ static inline bool iwl_mld_vif_fw_id_valid(struct iwl_mld_vif *mld_vif)
- 	     link_id++)							\
- 		if ((mld_link = iwl_mld_link_dereference_check(mld_vif, link_id)))
- 
-+#define for_each_mld_nan_valid_link(mld_vif, nan_link)			\
-+	for (nan_link = &(mld_vif)->nan.links[0];			\
-+	     nan_link < &(mld_vif)->nan.links[ARRAY_SIZE((mld_vif)->nan.links)]; \
-+	     nan_link++)						\
-+		if (nan_link->fw_id != FW_CTXT_ID_INVALID)
-+
- /* Retrieve pointer to mld link from mac80211 structures */
- static inline struct iwl_mld_link *
- iwl_mld_link_from_mac80211(struct ieee80211_bss_conf *bss_conf)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.c b/drivers/net/wireless/intel/iwlwifi/mld/link.c
-index b66e84d2365f..9e40b334ee1f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/link.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/link.c
-@@ -16,14 +16,17 @@
- #include "fw/api/context.h"
- #include "fw/dbg.h"
- 
--static int iwl_mld_send_link_cmd(struct iwl_mld *mld,
--				 struct iwl_link_config_cmd *cmd,
--				 enum iwl_ctxt_action action)
-+int iwl_mld_send_link_cmd(struct iwl_mld *mld,
-+			  struct iwl_link_config_cmd *cmd,
-+			  enum iwl_ctxt_action action)
+-static int
+-iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
+-			   struct ieee80211_link_sta *link_sta)
++int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
++			      struct ieee80211_link_sta *link_sta)
  {
- 	int ret;
+ 	struct ieee80211_sta *sta = link_sta->sta;
+ 	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
+-	struct ieee80211_bss_conf *link;
+-	struct iwl_mld_link *mld_link;
+ 	struct iwl_sta_cfg_cmd cmd = {};
+ 	int fw_id = iwl_mld_fw_sta_id_from_link_sta(mld, link_sta);
++	bool is_6ghz, uora_exists;
++	u32 link_mask;
  
  	lockdep_assert_wiphy(mld->wiphy);
  
-+	if (WARN_ON_ONCE(cmd->link_id == cpu_to_le32(FW_CTXT_ID_INVALID)))
+-	link = link_conf_dereference_protected(mld_sta->vif,
+-					       link_sta->link_id);
++	if (WARN_ON(fw_id < 0))
 +		return -EINVAL;
 +
- 	cmd->action = cpu_to_le32(action);
- 	ret = iwl_mld_send_cmd_pdu(mld,
- 				   WIDE_ID(MAC_CONF_GROUP, LINK_CONFIG_CMD),
-@@ -437,7 +440,8 @@ iwl_mld_rm_link_from_fw(struct iwl_mld *mld, struct ieee80211_bss_conf *link)
- 	iwl_mld_send_link_cmd(mld, &cmd, FW_CTXT_ACTION_REMOVE);
- }
++	if (mld_sta->sta_type == STATION_TYPE_NAN_PEER_NMI ||
++	    mld_sta->sta_type == STATION_TYPE_NAN_PEER_NDI) {
++		struct iwl_mld_nan_link *nan_link;
++		struct iwl_mld_vif *nan_dev;
  
--static IWL_MLD_ALLOC_FN(link, bss_conf)
-+IWL_MLD_ALLOC_FN(link, bss_conf)
-+EXPORT_SYMBOL_IF_IWLWIFI_KUNIT(iwl_mld_allocate_link_fw_id);
+-	mld_link = iwl_mld_link_from_mac80211(link);
++		is_6ghz = false;
++		uora_exists = false;
  
- /* Constructor function for struct iwl_mld_link */
- static int
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.h b/drivers/net/wireless/intel/iwlwifi/mld/link.h
-index ca691259fc5e..84d9a24134a8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/link.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/link.h
-@@ -99,6 +99,13 @@ iwl_mld_cleanup_link(struct iwl_mld *mld, struct iwl_mld_link *link)
- /* Convert a percentage from [0,100] to [0,255] */
- #define NORMALIZE_PERCENT_TO_255(percentage) ((percentage) * 256 / 100)
- 
-+int iwl_mld_allocate_link_fw_id(struct iwl_mld *mld, u8 *fw_id,
-+				struct ieee80211_bss_conf *mac80211_ptr);
+-	if (WARN_ON(!link || !mld_link) || fw_id < 0)
+-		return -EINVAL;
++		if (WARN_ON(!mld->nan_device_vif))
++			return -EINVAL;
 +
-+int iwl_mld_send_link_cmd(struct iwl_mld *mld,
-+			  struct iwl_link_config_cmd *cmd,
-+			  enum iwl_ctxt_action action);
++		nan_dev = iwl_mld_vif_from_mac80211(mld->nan_device_vif);
 +
- int iwl_mld_add_link(struct iwl_mld *mld,
- 		     struct ieee80211_bss_conf *bss_conf);
- void iwl_mld_remove_link(struct iwl_mld *mld,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.h b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
-index 606cb64f8ea4..69da3c346394 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
-@@ -558,12 +558,18 @@ iwl_mld_allocate_##_type##_fw_id(struct iwl_mld *mld,					\
- static inline struct ieee80211_bss_conf *
- iwl_mld_fw_id_to_link_conf(struct iwl_mld *mld, u8 fw_link_id)
- {
-+	struct ieee80211_bss_conf *link;
++		link_mask = 0;
 +
- 	if (IWL_FW_CHECK(mld, fw_link_id >= mld->fw->ucode_capa.num_links,
- 			 "Invalid fw_link_id: %d\n", fw_link_id))
- 		return NULL;
- 
--	return wiphy_dereference(mld->wiphy,
-+	link = wiphy_dereference(mld->wiphy,
- 				 mld->fw_id_to_bss_conf[fw_link_id]);
-+	if (IS_ERR(link))
-+		return NULL;
-+
-+	return link;
- }
- 
- #define MSEC_TO_TU(_msec)	((_msec) * 1000 / 1024)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/nan.c b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
-index 96e79ba5234a..6ea11b66a545 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/nan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
-@@ -5,8 +5,11 @@
- 
- #include "mld.h"
- #include "iface.h"
-+#include "link.h"
- #include "mlo.h"
- #include "fw/api/mac-cfg.h"
-+#include "fw/api/mac.h"
-+#include "fw/api/rs.h"
- 
- #define IWL_NAN_DISOVERY_BEACON_INTERNVAL_TU 512
- #define IWL_NAN_RSSI_CLOSE 55
-@@ -297,24 +300,302 @@ void iwl_mld_handle_nan_dw_end_notif(struct iwl_mld *mld,
- 	cfg80211_next_nan_dw_notif(wdev, chan, GFP_KERNEL);
- }
- 
-+static void iwl_mld_nan_fill_rates(struct iwl_link_config_cmd *cmd)
-+{
-+	u32 ofdm = 0;
-+
-+	/* All OFDM rates - NAN uses OFDM only, no CCK */
-+	ofdm |= IWL_RATE_BIT_MSK(6) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(9) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(12) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(18) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(24) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(36) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(48) >> IWL_FIRST_OFDM_RATE;
-+	ofdm |= IWL_RATE_BIT_MSK(54) >> IWL_FIRST_OFDM_RATE;
-+
-+	cmd->ofdm_rates = cpu_to_le32(ofdm);
-+	cmd->short_slot = cpu_to_le32(1);
-+}
-+
-+static void iwl_mld_nan_fill_qos(struct iwl_ac_qos *ac, __le32 *qos_flags)
-+{
-+	/* AC_BK: CWmin=15, CWmax=1023, AIFSN=7, TXOP=0 */
-+	ac[AC_BK].cw_min = cpu_to_le16(15);
-+	ac[AC_BK].cw_max = cpu_to_le16(1023);
-+	ac[AC_BK].aifsn = 7;
-+	ac[AC_BK].fifos_mask = BIT(IWL_BZ_EDCA_TX_FIFO_BK);
-+	ac[AC_BK].edca_txop = 0;
-+
-+	/* AC_BE: CWmin=15, CWmax=1023, AIFSN=3, TXOP=0 */
-+	ac[AC_BE].cw_min = cpu_to_le16(15);
-+	ac[AC_BE].cw_max = cpu_to_le16(1023);
-+	ac[AC_BE].aifsn = 3;
-+	ac[AC_BE].fifos_mask = BIT(IWL_BZ_EDCA_TX_FIFO_BE);
-+	ac[AC_BE].edca_txop = 0;
-+
-+	/* AC_VI: CWmin=7, CWmax=15, AIFSN=2, TXOP=3008us */
-+	ac[AC_VI].cw_min = cpu_to_le16(7);
-+	ac[AC_VI].cw_max = cpu_to_le16(15);
-+	ac[AC_VI].aifsn = 2;
-+	ac[AC_VI].fifos_mask = BIT(IWL_BZ_EDCA_TX_FIFO_VI);
-+	ac[AC_VI].edca_txop = cpu_to_le16(3008);
-+
-+	/* AC_VO: CWmin=3, CWmax=7, AIFSN=2, TXOP=1504us */
-+	ac[AC_VO].cw_min = cpu_to_le16(3);
-+	ac[AC_VO].cw_max = cpu_to_le16(7);
-+	ac[AC_VO].aifsn = 2;
-+	ac[AC_VO].fifos_mask = BIT(IWL_BZ_EDCA_TX_FIFO_VO);
-+	ac[AC_VO].edca_txop = cpu_to_le16(1504);
-+
-+	*qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
-+}
-+
-+static void
-+iwl_mld_nan_link_prep_cmd(struct iwl_mld *mld,
-+			  struct iwl_mld_nan_link *nan_link,
-+			  struct iwl_link_config_cmd *cmd,
-+			  u32 modify_flags)
-+{
-+	struct ieee80211_vif *vif = mld->nan_device_vif;
-+	struct iwl_mld_vif *mld_vif;
-+
-+	if (WARN_ON_ONCE(!vif))
-+		return;
-+
-+	mld_vif = iwl_mld_vif_from_mac80211(vif);
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+
-+	if (!nan_link->chanctx) {
-+		cmd->phy_id = cpu_to_le32(FW_CTXT_ID_INVALID);
++		for_each_mld_nan_valid_link(nan_dev, nan_link)
++			link_mask |= BIT(nan_link->fw_id);
 +	} else {
-+		struct iwl_mld_phy *mld_phy;
++		struct ieee80211_bss_conf *link;
++		struct iwl_mld_link *mld_link;
 +
-+		mld_phy = iwl_mld_phy_from_mac80211(nan_link->chanctx);
-+		cmd->phy_id = cpu_to_le32(mld_phy->fw_id);
++		link = link_conf_dereference_protected(mld_sta->vif,
++						       link_sta->link_id);
++		mld_link = iwl_mld_link_from_mac80211(link);
++
++		if (WARN_ON(!link || !mld_link))
++			return -EINVAL;
++
++		link_mask = BIT(mld_link->fw_id);
++		is_6ghz = link->chanreq.oper.chan->band == NL80211_BAND_6GHZ;
++		uora_exists = link->uora_exists;
++	}
+ 
+ 	cmd.sta_id = cpu_to_le32(fw_id);
+-	cmd.link_mask = cpu_to_le32(BIT(mld_link->fw_id));
++	cmd.link_mask = cpu_to_le32(link_mask);
+ 	cmd.station_type = cpu_to_le32(mld_sta->sta_type);
+ 
+ 	memcpy(&cmd.peer_mld_address, sta->addr, ETH_ALEN);
+@@ -499,7 +527,7 @@ iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
+ 		break;
+ 	}
+ 
+-	iwl_mld_fill_ampdu_size_and_dens(link_sta, link,
++	iwl_mld_fill_ampdu_size_and_dens(link_sta, is_6ghz,
+ 					 &cmd.tx_ampdu_max_size,
+ 					 &cmd.tx_ampdu_spacing);
+ 
+@@ -511,7 +539,7 @@ iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
+ 
+ 	if (link_sta->he_cap.has_he) {
+ 		cmd.trig_rnd_alloc =
+-			cpu_to_le32(link->uora_exists ? 1 : 0);
++			cpu_to_le32(uora_exists ? 1 : 0);
+ 
+ 		/* PPE Thresholds */
+ 		iwl_mld_fill_pkt_ext(mld, link_sta, &cmd.pkt_ext);
+@@ -525,6 +553,25 @@ iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
+ 			cmd.ack_enabled = cpu_to_le32(1);
+ 	}
+ 
++	if (mld_sta->sta_type == STATION_TYPE_NAN_PEER_NDI) {
++		struct ieee80211_sta *nmi_sta =
++			wiphy_dereference(mld->wiphy, sta->nmi);
++		int nmi_fw_id;
++
++		/* copy the local NDI address */
++		ether_addr_copy(cmd.ndi_local_addr, mld_sta->vif->addr);
++
++		if (WARN_ON(!nmi_sta))
++			return -EINVAL;
++
++		nmi_fw_id = iwl_mld_fw_sta_id_from_link_sta(mld,
++					&nmi_sta->deflink);
++		if (nmi_fw_id < 0)
++			return -EINVAL;
++
++		cmd.nmi_sta_id = (u8) nmi_fw_id;
 +	}
 +
-+	if (modify_flags & LINK_CONTEXT_MODIFY_RATES_INFO)
-+		iwl_mld_nan_fill_rates(cmd);
-+
-+	if (modify_flags & LINK_CONTEXT_MODIFY_QOS_PARAMS)
-+		iwl_mld_nan_fill_qos(cmd->ac, &cmd->qos_flags);
-+
-+	cmd->link_id = cpu_to_le32(nan_link->fw_id);
-+	cmd->mac_id = cpu_to_le32(mld_vif->fw_id);
-+	cmd->active = cpu_to_le32(nan_link->active);
-+
-+	ether_addr_copy(cmd->local_link_addr, vif->addr);
-+
-+	cmd->modify_mask = cpu_to_le32(modify_flags);
-+}
-+
-+static struct iwl_mld_nan_link *
-+iwl_mld_nan_link_add(struct iwl_mld *mld,
-+		     struct iwl_mld_vif *mld_vif,
-+		     struct ieee80211_chanctx_conf *chanctx)
-+{
-+	struct iwl_mld_nan_link *nan_link;
-+	struct iwl_link_config_cmd cmd;
-+	u8 fw_id;
-+	int ret;
-+
-+	ret = iwl_mld_allocate_link_fw_id(mld, &fw_id, ERR_PTR(-ENODEV));
-+	if (ret < 0)
-+		return NULL;
-+
-+	nan_link = &mld_vif->nan.links[fw_id];
-+
-+	if (WARN_ON_ONCE(nan_link->fw_id != FW_CTXT_ID_INVALID))
-+		goto err;
-+
-+	nan_link->fw_id = fw_id;
-+	nan_link->chanctx = chanctx;
-+
-+	iwl_mld_nan_link_prep_cmd(mld, nan_link, &cmd,
-+				  LINK_CONTEXT_MODIFY_RATES_INFO |
-+				  LINK_CONTEXT_MODIFY_QOS_PARAMS);
-+
-+	ret = iwl_mld_send_link_cmd(mld, &cmd, FW_CTXT_ACTION_ADD);
-+	if (ret) {
-+		nan_link->fw_id = FW_CTXT_ID_INVALID;
-+		nan_link->chanctx = NULL;
-+		goto err;
-+	}
-+
-+	return nan_link;
-+err:
-+	RCU_INIT_POINTER(mld->fw_id_to_bss_conf[fw_id], NULL);
-+	return NULL;
-+}
-+
-+static int iwl_mld_nan_link_set_active(struct iwl_mld *mld,
-+				       struct iwl_mld_nan_link *nan_link,
-+				       bool active)
-+{
-+	struct iwl_link_config_cmd cmd;
-+	int ret;
-+
-+	if (nan_link->active == active)
-+		return 0;
-+
-+	nan_link->active = active;
-+
-+	iwl_mld_nan_link_prep_cmd(mld, nan_link, &cmd,
-+				  LINK_CONTEXT_MODIFY_ACTIVE);
-+
-+	ret = iwl_mld_send_link_cmd(mld, &cmd, FW_CTXT_ACTION_MODIFY);
-+	if (ret) {
-+		nan_link->active = !nan_link->active;
-+		return ret;
-+	}
-+
-+	if (!active)
-+		nan_link->chanctx = NULL;
-+
-+	return 0;
-+}
-+
-+static void iwl_mld_nan_link_remove(struct iwl_mld *mld,
-+				    struct iwl_mld_nan_link *nan_link)
-+{
-+	struct iwl_link_config_cmd cmd = {
-+		.link_id = cpu_to_le32(nan_link->fw_id),
-+		.phy_id = cpu_to_le32(FW_CTXT_ID_INVALID),
-+	};
-+
-+	if (WARN_ON_ONCE(nan_link->fw_id == FW_CTXT_ID_INVALID))
-+		return;
-+
-+	iwl_mld_send_link_cmd(mld, &cmd, FW_CTXT_ACTION_REMOVE);
-+
-+	RCU_INIT_POINTER(mld->fw_id_to_bss_conf[nan_link->fw_id], NULL);
-+	nan_link->fw_id = FW_CTXT_ID_INVALID;
-+	nan_link->active = false;
-+	nan_link->chanctx = NULL;
-+}
-+
-+static bool iwl_mld_nan_have_links(struct iwl_mld_vif *mld_vif)
-+{
-+	struct iwl_mld_nan_link *nan_link;
-+
-+	for_each_mld_nan_valid_link(mld_vif, nan_link)
-+		return true;
-+
-+	return false;
-+}
-+
-+static struct iwl_mld_nan_link *
-+iwl_mld_nan_find_link(struct iwl_mld_vif *mld_vif,
-+		      struct ieee80211_chanctx_conf *chanctx)
-+{
-+	struct iwl_mld_nan_link *nan_link;
-+
-+	for_each_mld_nan_valid_link(mld_vif, nan_link) {
-+		if (nan_link->chanctx == chanctx)
-+			return nan_link;
-+	}
-+
-+	return NULL;
-+}
-+
- void iwl_mld_nan_vif_cfg_changed(struct iwl_mld *mld,
- 				 struct ieee80211_vif *vif,
- 				 u64 changes)
+ 	return iwl_mld_send_sta_cmd(mld, &cmd);
+ }
+ 
+@@ -759,10 +806,23 @@ int iwl_mld_add_sta(struct iwl_mld *mld, struct ieee80211_sta *sta,
  {
--	struct ieee80211_nan_sched_cfg *sched_cfg = &vif->cfg.nan_sched;
- 	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
--	bool has_sched = memchr_inv(sched_cfg->schedule, 0,
--				    sizeof(sched_cfg->schedule));
--
--	lockdep_assert_wiphy(mld->wiphy);
-+	bool previously_empty_schedule = !iwl_mld_nan_have_links(mld_vif);
-+	struct ieee80211_nan_sched_cfg *sched_cfg = &vif->cfg.nan_sched;
-+	struct iwl_mld_nan_link *links[ARRAY_SIZE(sched_cfg->channels)] = {};
-+	bool link_used[ARRAY_SIZE(mld_vif->nan.links)] = {};
-+	struct iwl_mld_nan_link *nan_link;
-+	bool empty_schedule = true;
-+	int ret;
+ 	struct iwl_mld_sta *mld_sta = iwl_mld_sta_from_mac80211(sta);
+ 	struct ieee80211_link_sta *link_sta;
++	enum iwl_fw_sta_type type;
+ 	int link_id;
+ 	int ret;
  
- 	if (!(changes & BSS_CHANGED_NAN_LOCAL_SCHED))
- 		return;
- 
--	if (has_sched && !mld_vif->nan.mac_added) {
--		if (iwl_mld_add_nan_vif(mld, vif))
--			IWL_ERR(mld, "Failed to add NAN vif\n");
--	} else if (!has_sched && mld_vif->nan.mac_added) {
--		iwl_mld_rm_vif(mld, vif);
-+	for (int i = 0; i < ARRAY_SIZE(sched_cfg->channels); i++) {
-+		if (!sched_cfg->channels[i].chanreq.oper.chan)
-+			continue;
-+		empty_schedule = false;
+-	ret = iwl_mld_init_sta(mld, sta, vif, STATION_TYPE_PEER);
++	switch (vif->type) {
++	case NL80211_IFTYPE_NAN:
++		type = STATION_TYPE_NAN_PEER_NMI;
++		break;
++	case NL80211_IFTYPE_NAN_DATA:
++		type = STATION_TYPE_NAN_PEER_NDI;
++		break;
++	default:
++		type = STATION_TYPE_PEER;
 +		break;
 +	}
 +
-+	/* add the MAC if needed (before adding links) */
-+	if (!empty_schedule && previously_empty_schedule) {
-+		WARN_ON(mld_vif->nan.mac_added);
-+		ret = iwl_mld_add_nan_vif(mld, vif);
-+
-+		if (ret) {
-+			IWL_ERR(mld, "NAN: failed to add MAC (%d)\n", ret);
-+			return;
-+		}
-+	}
-+
-+	if (!mld_vif->nan.mac_added) {
-+		/* nothing to do */
-+		return;
-+	}
-+
-+	/* find links we can keep (same chanctx/PHY) */
-+	for (int i = 0; i < ARRAY_SIZE(sched_cfg->channels); i++) {
-+		struct ieee80211_chanctx_conf *chanctx;
-+		struct iwl_mld_nan_link *link;
-+
-+		chanctx = sched_cfg->channels[i].chanctx_conf;
-+		/* ULW */
-+		if (!chanctx)
-+			continue;
-+
-+		link = iwl_mld_nan_find_link(mld_vif, chanctx);
-+		links[i] = link;
-+		if (link)
-+			link_used[link->fw_id] = true;
-+	}
-+
-+	/* add/reassign links for new channels */
-+	for (int i = 0; i < ARRAY_SIZE(sched_cfg->channels); i++) {
-+		struct ieee80211_chanctx_conf *chanctx;
-+
-+		/* already have an existing active link */
-+		if (links[i])
-+			continue;
-+
-+		chanctx = sched_cfg->channels[i].chanctx_conf;
-+		/* ULW or unused slot */
-+		if (!chanctx)
-+			continue;
-+
-+		/*
-+		 * if this fails we still update the schedule, but
-+		 * without a valid link we'll always ULW it
-+		 */
-+		links[i] = iwl_mld_nan_link_add(mld, mld_vif, chanctx);
-+
-+		/* we have a link, activate it */
-+		if (links[i]) {
-+			link_used[links[i]->fw_id] = true;
-+			iwl_mld_nan_link_set_active(mld, links[i], true);
-+		}
-+	}
-+
-+	/* delete unused links */
-+	for_each_mld_nan_valid_link(mld_vif, nan_link) {
-+		if (!link_used[nan_link->fw_id]) {
-+			iwl_mld_nan_link_set_active(mld, nan_link, false);
-+			iwl_mld_nan_link_remove(mld, nan_link);
-+		}
-+	}
-+
-+	/* remove MAC if needed */
-+	if (!previously_empty_schedule && empty_schedule) {
-+		/* must have been added */
-+		WARN_ON_ONCE(!mld_vif->nan.mac_added);
-+
-+		/* mac80211 should reconfigure same state */
-+		if (!WARN_ON_ONCE(mld->fw_status.in_hw_restart))
-+			iwl_mld_rm_vif(mld, vif);
- 	}
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/nan.h b/drivers/net/wireless/intel/iwlwifi/mld/nan.h
-index 9487155cf6b3..933e16c3c274 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/nan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/nan.h
-@@ -7,6 +7,25 @@
- #include <net/cfg80211.h>
- #include <linux/etherdevice.h>
++	ret = iwl_mld_init_sta(mld, sta, vif, type);
+ 	if (ret)
+ 		return ret;
  
-+/**
-+ * struct iwl_mld_nan_link - struct representing a NAN link
-+ * @chanctx: the channel context
-+ * @active: indicates the NAN link is currently active
-+ * @fw_id: FW link ID
-+ */
-+struct iwl_mld_nan_link {
-+	struct ieee80211_chanctx_conf *chanctx;
-+	bool active;
-+	u8 fw_id;
-+};
-+
-+/* Cleanup function for struct iwl_mld_nan_link, will be called in restart */
-+static inline void iwl_mld_cleanup_nan_link(struct iwl_mld_nan_link *nan_link)
-+{
-+	memset(nan_link, 0, sizeof(*nan_link));
-+	nan_link->fw_id = FW_CTXT_ID_INVALID;
-+}
-+
- bool iwl_mld_nan_supported(struct iwl_mld *mld);
- int iwl_mld_start_nan(struct ieee80211_hw *hw,
- 		      struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/rx.c b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-index a2e586c6ea67..b270cf87824d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/rx.c
-@@ -158,7 +158,7 @@ static bool iwl_mld_used_average_energy(struct iwl_mld *mld, int link_id,
- 	guard(rcu)();
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/sta.h b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
+index 36288c2fb38c..13644ffd185d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/sta.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
  
- 	link_conf = rcu_dereference(mld->fw_id_to_bss_conf[link_id]);
--	if (!link_conf)
-+	if (IS_ERR_OR_NULL(link_conf))
- 		return false;
- 
- 	mld_link = iwl_mld_link_from_mac80211(link_conf);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tests/utils.c b/drivers/net/wireless/intel/iwlwifi/mld/tests/utils.c
-index dce747270167..0cdbbb86dbd9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tests/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tests/utils.c
-@@ -68,8 +68,6 @@ int iwlmld_kunit_test_init(struct kunit *test)
- 	return 0;
- }
- 
--static IWL_MLD_ALLOC_FN(link, bss_conf)
--
- static void iwlmld_kunit_init_link(struct ieee80211_vif *vif,
- 				   struct ieee80211_bss_conf *link,
- 				   struct iwl_mld_link *mld_link, int link_id)
+ #ifndef __iwl_mld_sta_h__
+@@ -195,6 +195,8 @@ void iwl_mld_remove_sta(struct iwl_mld *mld, struct ieee80211_sta *sta);
+ int iwl_mld_fw_sta_id_from_link_sta(struct iwl_mld *mld,
+ 				    struct ieee80211_link_sta *link_sta);
+ u32 iwl_mld_fw_sta_id_mask(struct iwl_mld *mld, struct ieee80211_sta *sta);
++int iwl_mld_add_modify_sta_cmd(struct iwl_mld *mld,
++			       struct ieee80211_link_sta *link_sta);
+ int iwl_mld_update_all_link_stations(struct iwl_mld *mld,
+ 				     struct ieee80211_sta *sta);
+ void iwl_mld_flush_sta_txqs(struct iwl_mld *mld, struct ieee80211_sta *sta);
 -- 
 2.34.1
 
