@@ -1,45 +1,66 @@
-Received: from out-182.mta1.migadu.com (out-182.mta1.migadu.com [95.215.58.182])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76FE4436347
-	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2026 16:08:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89BEC42316C;
+	Mon, 11 May 2026 16:14:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778515711; cv=none; b=rJmMD39lhF7Tp9TYSIXgp9jUzpw7Z3KLF12GOBmDaFtmZbv36KKXXczLeFMvIef/zU9yBXtnYf/YVsVyaWpWY5ZwKqT1f7F/wAw1eR2JyDH2qlxVWMlMVySs2do03+637TdrSjbMrRLn6G/2KEZOaUJk79P21X1vynVGmxLOLsc=
+	t=1778516066; cv=none; b=uQd/AEkJ2KurZiP741sjHIdWhmm4lXM6VJheeUk27ZvAnrtO2u46F5Iamv1ZLB5aQ+E+zOzN7xT+JfRpcOskvc9JEMWNIe3bjqJNC/BX7RZbSOF/xz5WchYBlPHagYJhPJrQZR25ErBsLkjsEJhYr6EkXP9iDAL72/zuoDCdSg0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778515711; c=relaxed/simple;
-	bh=fuUTjtAAxgbRCsDFjwRmNa3YZdQiC6yiZw8Z6TFh94E=;
+	s=arc-20240116; t=1778516066; c=relaxed/simple;
+	bh=loApl5z4gNMlxHcs5ARDnO2c3Zo1516aXOntv1kkSOI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MT7dwgHEXXxIci4Dop3jHeVy7Fq+UO5I8qR8/qy9zIlCBBDaeyszWphvq1gS7zmwShZRpUYWq7Bkv+qhNpQFyk313r8O05AMPsfETw0TF/EsNuM8COs0AwQ4MaU1998rUMr9svUgNHAToKtK6CHAsRvP1IfCRhLSHivB5/dbVN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=s9e6OWNS; arc=none smtp.client-ip=95.215.58.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	 MIME-Version; b=Xokg7dAWVI1n5+Qjur1mYU80xjdvXd9ZZFEbNb6KRSTasvNzfPnaxKtXH195DRU7xHa5I3njYqDeVB7RROEoSZl7+AIzs1l76dbORnQmbQBFKYK765dcNDo66lcRlDDoSX5VJ2OL5iF1LUoZLWu2vp4f9YIC/LqTav215IOjE4w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AEeA/6RZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="s9e6OWNS"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1778515697;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cMajrjBMOFr81A6WwaAK6DOUFAmEyTUDsbfZ00S+En4=;
-	b=s9e6OWNSqqawEpiFvyNyqqBPsVJLw/TxiGcO03Jrf1AeHb9fQohxSX4JSBOZs+HlWvMnfC
-	xMwVjsHSl2ERTFcorhsXbjSQdOQGynwWFO+RtyZnKLxH3vks3zkBLOgAK0nA0YopZQPsCZ
-	uOhvk1jNoMOsEJroq9njn7Msn2jrbIiYdsXtwebILhhzee+NFE63AwDgH5E5/Bv3PxcwD1
-	+8wzu3c3ZFi+HFEoMmwLR5tZtVJpDFjvtwjv6up7bTjMb8UIlvLJh0V0DWNtVwRJHU7i0A
-	vgG8plBDjyP3/5CHCsh0diCmZCPW/LaEDmZWHzN3U5Zu7nw08zXpwS0KmIASyA==
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com,
-	rtl8821cerfe2@gmail.com,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AEeA/6RZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0977C2BCB0;
+	Mon, 11 May 2026 16:14:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778516066;
+	bh=loApl5z4gNMlxHcs5ARDnO2c3Zo1516aXOntv1kkSOI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=AEeA/6RZ7YTpM/mMfohIkUuAPJCtp2QiDJuGU1bgB1m4w8DDqNIsJvjjEdg1yis6w
+	 WRBNHSyhHo6FBHW1PFoyBgzmhB543o/db/XweILflbtXmveiTQFmmBR7Y7eIK4qNsq
+	 jIjY90qth83Pt21QXi90Ffm3xgQYlnrBz6htplTsPUb94t5K3gJtlyZWyaQpMY/W8D
+	 nPq5l4OHunZThPbuUnqwORsQZJMmx2n/MsXXPnhNPcLne9U8Lk2JIMxsdG/l1oOhfw
+	 JNLxfqx/ld2gvmmvouQNRubK0Lk+HGJktszx3mEqeMMByX/R3I+vI/xJQqI7ninEbm
+	 uL/GzsKtc0pag==
+From: Simon Horman <horms@kernel.org>
+To: arnd@kernel.org
+Cc: 'Simon Horman' <horms@kernel.org>,
+	netdev@vger.kernel.org,
+	arnd@arndb.de,
+	aaro.koskinen@iki.fi,
+	andreas@kemnade.info,
+	brgl@kernel.org,
+	bcousson@baylibre.com,
+	davem@davemloft.net,
+	dmitry.torokhov@gmail.com,
+	edumazet@google.com,
+	balbi@kernel.org,
+	kuba@kernel.org,
+	johannes@sipsolutions.net,
+	khilman@baylibre.com,
+	krzk+dt@kernel.org,
+	linusw@kernel.org,
+	pabeni@redhat.com,
+	robh+dt@kernel.org,
+	rogerq@kernel.org,
+	tony@atomide.com,
+	linux-wireless@vger.kernel.org,
+	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Devin Wittmayer <lucid_duck@justthetip.ca>
-Subject: [PATCH rtw-next v2 0/1] wifi: rtw89: usb: Support switching to USB 3 mode
-Date: Mon, 11 May 2026 09:08:10 -0700
-Message-ID: <20260511160811.17647-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20260508054421.128938-1-lucid_duck@justthetip.ca>
-References: <20260508054421.128938-1-lucid_duck@justthetip.ca>
+	linux-arm-kernel@lists.infradead.org,
+	linux-gpio@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	krzk@kernel.org
+Subject: Re: [PATCH 2/3] [v5 net-next] p54spi: convert to devicetree
+Date: Mon, 11 May 2026 17:12:45 +0100
+Message-ID: <20260511161243.49098-3-horms@kernel.org>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260507212451.3333185-3-arnd@kernel.org>
+References: <20260507212451.3333185-3-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,137 +68,108 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
-This patch adds USB 2 to USB 3 mode switching for the AX-generation
-chips in the rtw89 USB driver (8852AU, 8852BU, 8852CU and helper
-variants). Without it, those adapters enumerate at USB 2.0
-high-speed on first plug and stay there, capping real-world
-throughput around 260 Mbps TCP regardless of radio capability.
+From: 'Simon Horman' <horms@kernel.org>
 
-It is Bitterblue Smith's morrownr/rtw89 commit cd287ccf544b
-(2025-07-16) rebased onto rtw-next without code changes:
-author's Signed-off-by preserved, my Signed-off-by added as
-relayer, Tested-by per chip based on the matrix below.
+This is an AI-generated review of your patch. The human sending this
+email has considered the AI review valid, or at least plausible.
+Full review at: https://sashiko.dev
+---
+p54spi: convert to devicetree
 
-Changes since v1
-================
+This commit converts the Prism54 SPI driver from using hardcoded GPIO
+module parameters to using the GPIO descriptor interface and device tree
+probing.
 
-- Rebased onto pkshih/rtw rtw-next (HEAD c1ed02655f91) per
-  maintainer feedback. The patch diff is unchanged from v1; the
-  test matrix below carries forward.
-- Cover letter tightened to AX-generation scope only.
+> diff --git a/drivers/net/wireless/intersil/p54/p54spi.c b/drivers/net/wireless/intersil/p54/p54spi.c
+> index 9d66dcae54e02..d18be25450285 100644
+> --- a/drivers/net/wireless/intersil/p54/p54spi.c
+> +++ b/drivers/net/wireless/intersil/p54/p54spi.c
 
-The bug
-=======
+[ ... ]
 
-These chips present as USB 2 devices on first plug. The driver is
-expected to send a switch-mode register write to make them disappear
-and re-enumerate as USB 3 SuperSpeed. Mainline rtw89 does not issue
-these commands anywhere. Every user with one of these adapters on
-a mainline-derived distribution sits at the USB 2.0 ceiling for
-the life of the plug, regardless of negotiated radio rate.
+> @@ -30,19 +31,6 @@
+>  MODULE_FIRMWARE("3826.arm");
+>  MODULE_FIRMWARE("3826.eeprom");
+>  
+> -/* gpios should be handled in board files and provided via platform data,
+> - * but because it's currently impossible for p54spi to have a header file
+> - * in include/linux, let's use module parameters for now
+> - */
+> -
+> -static int p54spi_gpio_power = 97;
+> -module_param(p54spi_gpio_power, int, 0444);
+> -MODULE_PARM_DESC(p54spi_gpio_power, "gpio number for power line");
+> -
+> -static int p54spi_gpio_irq = 87;
+> -module_param(p54spi_gpio_irq, int, 0444);
+> -MODULE_PARM_DESC(p54spi_gpio_irq, "gpio number for irq line");
+> -
+>  static void p54spi_spi_read(struct p54s_priv *priv, u8 address,
+>  			      void *buf, size_t len)
+>  {
 
-The fix
-=======
+Simon says: As a pre-existing issue I don't think we need to be concerned
+            about this in the scope of this patch-set. But it may
+	    be a potential for follow-up.
 
-The patch covers AX-generation chips (8852AU, 8852BU, 8852CU and
-helper variants) via R_AX_PAD_CTRL2. It also adds the
-switch_usb_mode module parameter (default on) for users who
-experience 2.4 GHz interference under USB 3.
+This problem wasn't introduced by this patch, but I noticed a pre-existing
+issue in the context here. Does the p54spi_spi_read() function perform an SPI
+transfer using a stack-allocated buffer?
 
-Mainline precedent
-==================
+Looking at p54spi_spi_read(), the addr variable is allocated on the stack and
+passed as a transfer buffer to spi_sync(). The SPI framework maps transfer
+buffers for DMA. Passing a stack-allocated buffer is illegal, particularly with
+CONFIG_VMAP_STACK enabled, because stack memory resides in vmalloc space and
+cannot be safely DMA-mapped.
 
-The same mechanism is in mainline rtw88 across three commits
-between July 2024 and April 2025, all authored by Bitterblue Smith:
+Could this cause memory corruption or a kernel panic during the transfer?
 
-  commit 315c23a64e99 ("wifi: rtw88: usb: Support USB 3 with RTL8822CU/RTL8822BU")
-  commit 82a35723a67c ("wifi: rtw88: usb: Support USB 3 with RTL8812AU")
-  commit bf1103654df9 ("wifi: rtw88: usb: Enable switching the RTL8814AU to USB 3")
+[ ... ]
 
-Test results
-============
+> @@ -608,31 +596,20 @@ static int p54spi_probe(struct spi_device *spi)
+>  		goto err_free;
+>  	}
+>  
+> -	ret = gpio_request(p54spi_gpio_power, "p54spi power");
+> -	if (ret < 0) {
+> -		dev_err(&priv->spi->dev, "power GPIO request failed: %d", ret);
+> +	priv->gpio_powerdown = gpiod_get_optional(&spi->dev, "powerdown", GPIOD_OUT_HIGH);
+> +	if (IS_ERR(priv->gpio_powerdown)) {
+> +		ret = dev_err_probe(&priv->spi->dev, PTR_ERR(priv->gpio_powerdown),
+> +				    "powerdown GPIO request failed\n");
+>  		goto err_free;
+>  	}
+>  
+> -	ret = gpio_request(p54spi_gpio_irq, "p54spi irq");
+> -	if (ret < 0) {
+> -		dev_err(&priv->spi->dev, "irq GPIO request failed: %d", ret);
+> -		goto err_free_gpio_power;
+> -	}
+> -
+> -	gpio_direction_output(p54spi_gpio_power, 0);
+> -	gpio_direction_input(p54spi_gpio_irq);
+> -
+> -	ret = request_irq(gpio_to_irq(p54spi_gpio_irq),
+> -			  p54spi_interrupt, IRQF_NO_AUTOEN, "p54spi",
+> -			  priv->spi);
+> +	ret = request_irq(spi->irq, p54spi_interrupt, IRQF_NO_AUTOEN, "p54spi", priv->spi);
 
-60 plug-cycles + 30+ gated throughput cells captured 2026-04-11
-to 2026-05-07. Both x86_64 (Tiger Lake xHCI) and aarch64
-(Broadcom RP1 xHCI) reproductions confirm the bug and the fix.
+Simon says: This one seems more concerning in the context of this patch-set.
 
-  Hosts:    Framework 13 (x86_64, Fedora 43 / 6.19.13, Tiger Lake xHCI)
-            NucBox K8 Plus (x86_64, Arch Linux / 6.17.9, AMD F19h USB)
-            Raspberry Pi 5 (aarch64, Pi OS / 6.12.47, BCM2712 + RP1)
-            Banana Pi BPi-R4 Pro (aarch64, OpenWrt / 6.6.93, MT7988A;
-                                  also used as a controlled lab AP)
-  Adapters: D-Link DWA-X1850 A1 / B1 (RTL8852AU)
-            BrosTrend AX1L compact / AX4L high-gain (RTL8852BU)
-            BrosTrend AX8L AXE5400 / EDUP AXE5400 (RTL8852CU)
-  APs:      consumer multi-band router (WPA3-SAE / WPA2-PSK)
-            BPi-R4 Pro single-band lab AP (WPA3-SAE)
-  Server:   Linux iperf3 host on 2.5 GbE wired Ethernet
+Is there missing validation for spi->irq before calling request_irq()?
 
-Full per-cell evidence (raw iperf3 stdout, dmesg captures, sysfs
-snapshots, iw link snapshots, byte-counter deltas, per-host detail)
-at https://github.com/Lucid-Duck/rtw89-usb3-gap.
+If the device tree node lacks an interrupts property, the SPI core may set
+spi->irq to 0 or a negative error code.
 
-Plug-cycle. N=10 cycles per (chip, host) cell. Pass = post-plug
-/sys/bus/usb/devices/<id>/speed reads 5000 (USB 3 SuperSpeed),
-zero WARN/BUG/Oops in cycle-bracketed dmesg, non-empty association
-BSSID after settle.
+Passing this directly to request_irq() without validation can successfully
+hijack a core system interrupt like the system timer on some architectures,
+leading to system instability or deadlocks.
 
-  Adapter (chip)               FW13 6.19      K8 Plus 6.17
-  ---------------------------  -------------  --------------
-  DWA-X1850 A1 (RTL8852AU)     10/10 PASS     10/10 PASS
-  BrosTrend AX1L (RTL8852BU)   10/10 PASS     10/10 PASS
+Should there be a check like if (spi->irq <= 0) to fail the probe gracefully?
 
-  FW13:    Fedora 43, 6.19.13, wireless-next + this patch
-  K8 Plus: Arch Linux, 6.17.9-arch1-1, morrownr/rtw89 (upstream
-           fork; identical AX-gen behavior to this patch)
-
-Throughput. TCP iperf3, N=10 30-second iterations per sub-cell,
-four sub-cells per cell (P=8 and P=1, each direction), to a Linux
-2.5 GbE host. Per-cell /32 host route forces traffic onto the WiFi
-adapter; per-iteration byte-counter cross-check on every cited cell
-shows wireless tx/rx delta at 103-108% of iperf3 reported bytes
-(excess is normal TCP/IP framing), so wired-NIC bleed is ruled out.
-Linux tuning applied (rmem 32 MB, RPS=ff on the WiFi RX queue).
-
-FW13 stock (in-kernel rtw89, USB 2 stuck) vs patched (USB 3
-SuperSpeed), same adapter / AP / kernel / capture script, P=8 mean
-Mbps, AP is the consumer multi-band router:
-
-  Adapter (chip)              Band, width      UL stock  UL patched  DL stock  DL patched
-  --------------------------  ---------------  --------  ----------  --------  ----------
-  EDUP AXE5400 (RTL8852CU)    6 GHz, 160 MHz       269        1364       327         579
-  AX8L AXE5400 (RTL8852CU)    6 GHz, 160 MHz       269        1440       324         510
-  AX4L AX1800 (RTL8852BU)     5 GHz,  80 MHz       208         597       293         695
-  AX1L AX1800 (RTL8852BU)     5 GHz,  80 MHz       235         608       273         843
-  DWA-X1850 A1 (RTL8852AU)    5 GHz,  80 MHz       254         748       264         707
-  DWA-X1850 B1 (RTL8852AU)    5 GHz,  80 MHz       248         706       265         679
-
-USB enumeration verified at SuperSpeed (5000 Mbps) on every
-patched cell, both pre and post.
-
-K8 Plus second-rig spot check, kernel 6.17.9-arch1-1, consumer
-multi-band router, single-link 5 GHz 80 MHz, TCP P=1, N=10:
-
-  DWA-X1850 A1 (RTL8852AU)    788 UL / 693 DL Mbps (sigma 16 / 54)
-
-For comparison, every stock cell above caps at 208-327 Mbps, the
-USB 2.0 ceiling.
-
-Submission notes
-================
-
-Applies cleanly on pkshih/rtw rtw-next HEAD c1ed02655f91.
-checkpatch.pl --strict: zero errors, zero warnings, zero checks.
-
-Bitterblue Smith (1):
-  wifi: rtw89: usb: Support switching to USB 3 mode
-
- drivers/net/wireless/realtek/rtw89/reg.h |  4 +++
- drivers/net/wireless/realtek/rtw89/usb.c | 41 ++++++++++++++++++++++++
- 2 files changed, 45 insertions(+)
-
---
-2.53.0
-
+>  	if (ret < 0) {
+>  		dev_err(&priv->spi->dev, "request_irq() failed");
+> -		goto err_free_gpio_irq;
+> +		goto err_free_gpio_power;
+>  	}
