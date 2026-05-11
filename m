@@ -1,73 +1,183 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FEAB3BFE33
-	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2026 10:11:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C4913C5529
+	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2026 10:13:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778494314; cv=none; b=SxmIMuSlJahtgbtYCxSdLJB1/E9QTQ4H1Qg8cA7Avxq2eDWp7lZ4RenM+bcEbtfXNC3k+8Zbmnw7S+6nOmBHD4Md2wkcIX5PPo3lTkIBT707/1/nnCc4D6Gh3AuTo01pUXxpwWV7F0thY5O2UCuZzxDWDGYtnHfSi3sTY2thHKs=
+	t=1778494420; cv=none; b=C4BmtTknJexaNCyvKofyHnaIygcE/32aSFhJUFBRjZ1qoszzg1nwhZo5/4FUi1oL+3RImXzRA+Xies8TuhEYJmvcMURF87bZ7mWFKGB4qZNppzvZKjTisk+NVvcNGPqOEA4n7eblRrBArv+8U/YjXvP9TZGmTpsgcBlAIgN+DFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778494314; c=relaxed/simple;
-	bh=bxhrwC97Ysavxli17qNjhBbp8xXMJ93GllhGTrawqEw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=iHxQ4lmxlhhRHHRhaTnp7ZgbXS4oMUdG2u9okTI8mXpCGaHMdVVRagOBQ9E1fr406T2EfgGlUo+usCnnuDQxQRmbN+gMoQPhlxMwzdbnlUufopiiVLC2tRLOQlQt9TxtKAgPqROAByUGV33pBThi48/u7WbyRpNEXs1/lhh+ljY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=EOk4ylQs; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1778494420; c=relaxed/simple;
+	bh=ZSe1WM9GkxfcU2XH2njJDoyE4Vs9MxV6+egA23NmwZA=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ABuEhUCQeMvLP/3FxrrRdz9KHVM6iD7g+uq/PUQpcVUFKPRcNXvNNiOulcQd6Ufm3H5CeUVm31nYioA42kHQuS9ZeuS2tWdvcREjsCOXOnFplJI2TiySf5yDvwNkVTCs9mSw2egqOOXEd/4m44Gw9WKYHbJR+Ex0gUApMQIrvZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HBPdIqL5; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="EOk4ylQs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=bxhrwC97Ysavxli17qNjhBbp8xXMJ93GllhGTrawqEw=;
-	t=1778494312; x=1779703912; b=EOk4ylQsPO6mDOYAmdoMud8WOFMBygGC9axVYSxLqwiRNNo
-	KbtdM6eYrB2Q9P56XPPCrm24xrRt336ItL6nOAIr95VXPsAPEuY3gaiGL6Aq2SwJvNQ61BPKZw/9M
-	8G0TriwxcsWLoUQv16f0567zcAF8FZpqpaMtKh9DgTyVbZ6Whm9WMauAGkPV7OIEwWMwNZ6SOBJOg
-	Obt3yzmN/bQTKpM12vHt7K8g+470mZ9BvhHmbkM0mUtzuHzE1N84WqdWX4QuFEaGcMO1xph00FjYS
-	TGSCXvM3LuoWEhxS5lI7YDjbjsZL4ZiS0UpsDJOIpurcA6rZeU0rSPVgEdXPKWdQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wMNc4-0000000ElqJ-38Si;
-	Mon, 11 May 2026 12:11:48 +0200
-Message-ID: <cf877993914f9cee95fd5da1d9e57c838319a085.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next] wifi: mac80211: Fix ADDBA request
- rejection after MLD link removal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Hari Naraayana Desikan Kannan
-	 <hnaraaya@qti.qualcomm.com>
-Date: Mon, 11 May 2026 12:11:47 +0200
-In-Reply-To: <ffb9e313-fa81-4da7-8415-6713cfca3230@oss.qualcomm.com>
-References: <20260415-addba-req-v1-1-6eb9a33d8ca6@oss.qualcomm.com>
-	 <1f57207139c3fb955459425deda4d06c374ae212.camel@sipsolutions.net>
-	 <1d06b2a3-66d8-4c27-b965-6c21f80b7539@oss.qualcomm.com>
-	 <a5b6798819178dd2995c34ec817457e90985708e.camel@sipsolutions.net>
-	 <dbb28e3e-5022-4915-93e3-dd428ea59507@oss.qualcomm.com>
-	 <72b480830dee1489bc28246d13102048635de5db.camel@sipsolutions.net>
-	 <ffb9e313-fa81-4da7-8415-6713cfca3230@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HBPdIqL5"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c80291e6237so2801071a12.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 May 2026 03:13:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778494418; x=1779099218; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:date:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=hVYHbC707lJbCSq9uPq5+h8+br2adm20wgf0NGFSTss=;
+        b=HBPdIqL5+oc6lQpQG16iEevyAQkUsPqmtixvyZ8iwaF7tOqk7MWGPjnouIyHldG1Mh
+         32+GPYvNfDCykEWN46OsTlkuVkqjaf1nqzZR8nXqaXhkFp4U7ennpUtN/rbvqkZ1nTFi
+         ztCzIgzQV8eKe4IyYN4CMP9NHBESPkdWBsRBtTQst7zK+GLNsHR7zI7Syxcg0oulbrmY
+         fRLewao9vab6eDcnTS5CrTmCmSFaY4wNOdRUAQ+FABJhjs2rhKmlm5bfac2jA7zW6+V0
+         9VZMgYWwYPO/sqm4uZx20t2+w8m0AOiIx+t2JSr6qXV7WrWk0roODCttjjYoIn80X3nQ
+         +6oA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778494418; x=1779099218;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hVYHbC707lJbCSq9uPq5+h8+br2adm20wgf0NGFSTss=;
+        b=IIfpY0/dq/YVqfYW4w9mln5nnORAdNF5r8QzP4a4lABO9wWs50G5fiE2AjOp6lJZUX
+         1+gpbMzNEAMOryIqlO2fk3kEaXY1RBl+fUgCLyhm/6G8T8uaq/8W3f2VYEhVk9e9RCdR
+         gp+6jBm+f8elRvQAhTAEX8NQAh6iI5yVxNVgSLQ48pYgrKBzW2bPH3KEyHCubcaYv1ks
+         TBIthNdui1Khkr2DqQ7DKkGhnSXoybPJiAl47IY7gUowBiHhOuQa3Vb77eN9PPRnD+RO
+         nTX6tKomnZiScuLw5BRHMdleLZ7ImfllPre3Br1VvgNjyJA3oz7WP4t8F15naDz3uKiN
+         IHTA==
+X-Gm-Message-State: AOJu0YzPxUS6gP3Cr4lWwU3/noHruyXjOAqt2kDPihnDXtkLOswy/uZw
+	5v6FA8zkRGOHxnYSfPZFL/D/SPBXPEmjAEtE4DBeSsPR4JTjBMwmHcs7tMM54igDi04=
+X-Gm-Gg: Acq92OHh5oy8/jV2aHsybh3A6sXxIY50355P8XUgw9IwfiwhA5xUL+aEDVqR0f3WpNy
+	UHCke5LPvFCvtb0YnYqZho2Lb3WpwduV5WvBsfUOnJYxFsiWigxroLyiHJB5E7QEBdYevXzq5qQ
+	2U0a4XL4Gv/iNNopQEDjbz1thIm6bCmR412sa7MjKZ7DC1i+Tx5enNMR0nv5scYzz+ziHUM0dXR
+	3mN5LJYB2YO+lIvLUTO1SQ3cdu50bLscHRlwMv6nPcoB8nMKou/WouVCSQ8IHSsrEpWGJEVtIJS
+	cEQdWh4f7c0e54ZYk4ZupnHvrrOPCikuHUjCMXCUlY0k96cEwGqPPVVqw7wyyGRHTtPIzpspDEk
+	rYTBhn0nopnC2h5uoLX6oYe8YpGCfAqfRIzeixDBHGZrfJthSwFSywu0qvW9Hjf2kyjqQNiX+N+
+	608YLDgSkhfMQl3Q==
+X-Received: by 2002:a05:6300:8b0f:b0:3a2:7ef4:81e7 with SMTP id adf61e73a8af0-3aa5abc82b1mr26403276637.45.1778494418175;
+        Mon, 11 May 2026 03:13:38 -0700 (PDT)
+Received: from localhost ([2a09:bac5:4302:dc::16:19b])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c8267723637sm8924018a12.27.2026.05.11.03.13.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 May 2026 03:13:37 -0700 (PDT)
+From: Coiby Xu <coiby.xu@gmail.com>
+X-Google-Original-From: Coiby Xu <Coiby.Xu@gmail.com>
+Date: Mon, 11 May 2026 18:13:10 +0800
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, 
+	"Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
+Subject: Re: iwlwifi: network not back after resuming from suspend since
+ v6.15-rc2
+Message-ID: <agGo8Hu-8Jw9lg9n@Rk>
+References: <agFzc-Ngf_ZFXJ3o@Rk>
+ <5d143832c8fdb8c39ee7daa5002cda9e5a26921e.camel@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5d143832c8fdb8c39ee7daa5002cda9e5a26921e.camel@intel.com>
 
-On Mon, 2026-05-11 at 15:40 +0530, Manish Dharanenthiran wrote:
->=20
-> Even-then, if there is a actual change, it goes to invoke the UPDATE.=20
-> For the driver(s) which didn't implement the UPDATE yet, should we use=
-=20
-> additional flags to notify the UPDATE support or returning a failure=20
-> from driver should be suffice?
+On Mon, May 11, 2026 at 07:17:31AM +0000, Grumbach, Emmanuel wrote:
+>Hi,
 
-I hope drivers would refuse unknown operations, so I think returning a
-failure is fine. We can quickly review the drivers that handle this to
-make sure, but I'd prefer not to have a feature flag.
+Your quick reply is much appreciated:)
 
-johannes
+>
+>
+>On Mon, 2026-05-11 at 14:49 +0800, Coiby Xu wrote:
+>> Hi Emmanuel,
+>>
+>> I notice since v6.15-rc2, most of the times the network won't be back
+>> again after resuming from suspend. And sometimes I need to run
+>> "systemctl suspend" for 8 or 9 consecutive times to make WIFI
+>> available
+>> again. bisect and manual reverting show 15220a257319 ("wifi: iwlwifi:
+>> don't warn if the NIC is gone in resume") is the 1st bad commit.
+>>
+>
+>This is ... strange.
+>Can you try to use our backport tree?
+>https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/backport-iwlwifi.git/log/
+>
+>I am pretty sure it won't solve anything, but at least, it'll make it
+>easier for us to work together on this issue.
+>
+>Also, may I suggest you open a bugzilla ticket on the drivers /
+>wireless-intel component?
+>As a starting point, I'll absolutely need the kernel log.
+
+Thanks for the suggestion! I've filed 
+https://bugzilla.kernel.org/show_bug.cgi?id=221501
+with kernel logs after reproducing the issue using the backport tree
+version.
+
+>
+>
+>> Here are some other clues that may help resolve this issue,
+>>
+>>      1. An iwlwifi setting [1] can make this issue disappear,
+>>         options iwlwifi swcrypto=0
+>>         options iwlwifi bt_coex_active=0
+>>         options iwlwifi power_save=0
+>>         options iwlwifi uapsd_disable=1
+>>         options iwlmvm power_scheme=1
+>
+>This is even more strange.
+>
+>>
+>>      2. Before v6.15-rc2, the issue rarely happens. And if it
+>> happens,
+>>         simply suspending once can bring the network online again.
+>> Other
+>>         users seem to have experienced the same issue e.g. [2][3][4].
+>>
+>>      3. Suspending by "rtcwake -m mem -s 5" instead of by "systemcl
+>> suspend"
+>>         can make it much easier to reproduce this issue for kernels
+>> older
+>>         than v6.15-rc2.
+>>
+>> If you need more details from me, feel free to let me know! And I'll
+>> very happy to test any possible solutions. Thanks!
+>
+>My problem here is that we seem to be talking about "the issue" but we
+>don't know exactly which one... Let's start with a bugzilla ticket with
+>logs.
+
+Sorry I can only describe the issue as "network unavailable after
+resuming from suspend". I've opened the ticket. Please let me know if
+you need further info to narrow down the issue and find the root cause.
+Meanwhile I'll also do some experiments like reverting the 1st bad
+commit in the backport tree.
+
+>
+><snip>
+>
+>> I can't bisect against upstream kernel directly because v6.15-rc2
+>> won't
+>> be able to mount my root partition. So I manually reverted upstream
+>> 15220a257319 ("wifi: iwlwifi: don't warn if the NIC is gone in
+>> resume")
+>> in v6.15 to confirm it's indeed the bad commit.
+>>
+>> [1] https://bbs.archlinux.org/viewtopic.php?pid=2227202#p2227202
+>> [2] https://bbs.archlinux.org/viewtopic.php?id=301971
+>> [3]
+>> https://discussion.fedoraproject.org/t/random-wi-fi-adapter-loss-on-fedora-42-intel-alder-lake-p-cnvi/152878
+>> [4]
+>> https://forums.opensuse.org/t/wifi-suddenly-no-more-available/184399
+>> [5]
+>> https://github.com/coiby/kernel-auto-bisect/tree/random_issue_bisect
+>> [6] https://github.com/rhkdump/kernel-auto-bisect
+>> [7]
+>> https://gitlab.com/cki-project/kernel-ark/-/commit/6453e892cf86c900d51f5884e9013e0dbeeea4ad
+>>
+>
+>Those tickets are all over the place and unfortunately, nothing very
+>conclusive comes up from those links.
+
+-- 
+Best regards,
+Coiby
