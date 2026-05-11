@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B4C3FF8BF
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBDDB441022
 	for <linux-wireless@vger.kernel.org>; Mon, 11 May 2026 17:36:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778521019; cv=none; b=sMhiZeEoFIe5cNDeVI/y5MaZR+LqDKv4x3gG69EkVcejIVRGGjb59Z8dTVQD2e1lon5cz0b4XkM3Ug7Z4AGxFa0PdmaYUQo3hz/N09cPmyPs+iExpoLxBOKP/jrBsNEbV0oI/zXNpf1M1Pj+ZxcQAPFfFIwqTVIndeLWc/LyRaw=
+	t=1778521020; cv=none; b=Tj9lFyMArvS/HSlhWKzAGBd1dOTjLdyB5lCKRdBLccJCa6zGlgqmUgyf6Ut4EVpRLbvniXdi36koxdzAOBmjhYIeDQHk6OFfJnubiXHGmlU65PK8fK1tbmf4KoDqaApgqHfeye34bTsb/34QrobckT8yVvh8cGyxWcuKK/vnGYs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778521019; c=relaxed/simple;
-	bh=kFqZ62owYNYXGRiDCqobz1kHLVNrA5CbU0IMaTlmurM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EbwHlD+3Hfnq2mejZk+zncB3xWzWzO7dwPUNdO8xFBz9GVcxYcghNs0ONkQplvVgs75sexLUTqWBIre3YO0bnF4/bRLXCNBeeRYAmBVGLtzHkXW581JfnbC3pK+guF15lxypbXFVrRwFVGOE+h5RkN8+qMQPOF7FVfGygP9a0f8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q86zRJUB; arc=none smtp.client-ip=198.175.65.21
+	s=arc-20240116; t=1778521020; c=relaxed/simple;
+	bh=k+iAtSl/J9nhC/1A4kQMls01/u4GHJ9ZlgCBMrwDy/g=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=l57Wpcut8hfcnDSYGAWnQHYx5rPe0IWRTCtXaQn4lgtxgFJsYxxqpxv0YFbrjGSuLbwhSpUwsj4cSpZz64CXVhObHUPeDCvAWvH2aPL8KdHFXXyUNvxA6KODaVCKjyUG+gPyZpEfN1YE4A4rDfk8w/E19c7DSmqtUiwCCaUoWjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=W3bMuIHN; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q86zRJUB"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="W3bMuIHN"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1778521019; x=1810057019;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=kFqZ62owYNYXGRiDCqobz1kHLVNrA5CbU0IMaTlmurM=;
-  b=Q86zRJUBV/Gdl+mookxAw7NTBnni3HnK0UJA3iMzM6MYcB5DLpL+fg2K
-   /or3Tp1vAOuJxe0VXxPWOg2yH8GsjQh8m7NTk4pB36iZ11dwl1zuRykUJ
-   x0MygGjkkEgnTr6RWQn+C4ygmmeS78F17XhxR8J7eyF7pxmFk6G1uYXyw
-   zwon9+gOm980B+GIivPOTGAzGOA4xro0Ai5i8UFUfSkbJ1ZExkyEo7wLQ
-   s3uZrWUYJYF5TN3Ce/dk1TMWRu2pkSXbXjinJqV1eI83ZY6S7Y9B8ra/a
-   18cfIzq4x+7xIUC8mUfttMHwiusTcW3jK8b4keEMXFAy8UzV2Vo5zqqAn
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=k+iAtSl/J9nhC/1A4kQMls01/u4GHJ9ZlgCBMrwDy/g=;
+  b=W3bMuIHNKhYg6i0qjZkgsF5NORG1UnZtQdKDah3nsSZCjK9cuoEmmSwh
+   hseWV/1JN190FrKybUp9mnFkgezu9hlmSgaEM44vjum40qboRTWWBw+Dp
+   heqq0JTdic4pczT1dBbZToNPU3lz9p+HDuszt3656HFZ/pa+Nb08PyaoC
+   VvY5DnCfHtpf32eY4vXyg60fAvqg6n7uaOTLi3dbur39qRx6ttRSpg4qZ
+   P2BLuYRTeoKcOOr5ygYSy5xm80WVEt2glG460x5GE22ig0R7sn1aBT9v5
+   Rz6k8jd8fiwetgq0hSKeXtDMOlRwzDqZm8dUsc18s7vJv9WQEZ7f6kTKV
    Q==;
-X-CSE-ConnectionGUID: f2UQQRC7Q+uimSA4sndO9A==
-X-CSE-MsgGUID: zobdj/7SQBqYJRgbxl3vZQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="79314811"
+X-CSE-ConnectionGUID: 9EhByjkfRdmqbMCqQmzE4A==
+X-CSE-MsgGUID: djy886w4SdevYQj6WLDqpQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="79314816"
 X-IronPort-AV: E=Sophos;i="6.23,229,1770624000"; 
-   d="scan'208";a="79314811"
+   d="scan'208";a="79314816"
 Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 10:36:57 -0700
-X-CSE-ConnectionGUID: cuXsnDP9RqCg/ZPTl+lU1g==
-X-CSE-MsgGUID: 3OM0L6iEQO+YOiYB+WuFJg==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 10:36:58 -0700
+X-CSE-ConnectionGUID: CkJZhutCRce+Xy5b4mZTBw==
+X-CSE-MsgGUID: PUXTElsEQXilEtBmtB3t6g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,229,1770624000"; 
-   d="scan'208";a="261004745"
+   d="scan'208";a="261004750"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 10:36:53 -0700
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 10:36:56 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 07/15] wifi: iwlwifi: mld: clean up station handling in key APIs
-Date: Mon, 11 May 2026 20:36:23 +0300
-Message-Id: <20260511203428.0efcbac3e96e.I5b78af51df283d452fc4f1366b04b4769f60f24e@changeid>
+Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: mld: allow NAN data
+Date: Mon, 11 May 2026 20:36:25 +0300
+Message-Id: <20260511203428.c47453e9329a.I4a250a0df0ca0d184eb6ac84a4a9fcc3491e9e66@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260511173631.1067831-1-miriam.rachel.korenblit@intel.com>
 References: <20260511173631.1067831-1-miriam.rachel.korenblit@intel.com>
@@ -61,89 +60,88 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+Allow NAN_DATA interfaces when FW supports it.
 
-The internal key APIs, when called with group keys where mac80211
-doesn't pass the (AP) station pointer, are still sometimes called
-with the AP station pointer on internal calls. This is confusing.
-Clean it up and always call them with the AP STA when it exists,
-even when coming in from mac80211, by looking it up immediately.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/key.c      | 12 ++----------
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 11 +++++++++++
- 2 files changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 13 +++++++++----
+ drivers/net/wireless/intel/iwlwifi/mld/nan.c      | 12 ++++++++++--
+ 2 files changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/key.c b/drivers/net/wireless/intel/iwlwifi/mld/key.c
-index 04192c5f07ff..2cb312ebd7a7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/key.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/key.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2024 Intel Corporation
-+ * Copyright (C) 2024, 2026 Intel Corporation
-  */
- #include "key.h"
- #include "iface.h"
-@@ -12,7 +12,6 @@ static u32 iwl_mld_get_key_flags(struct iwl_mld *mld,
- 				 struct ieee80211_sta *sta,
- 				 struct ieee80211_key_conf *key)
- {
--	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
- 	bool pairwise = key->flags & IEEE80211_KEY_FLAG_PAIRWISE;
- 	bool igtk = key->keyidx == 4 || key->keyidx == 5;
- 	u32 flags = 0;
-@@ -38,9 +37,6 @@ static u32 iwl_mld_get_key_flags(struct iwl_mld *mld,
- 		break;
- 	}
- 
--	if (!sta && vif->type == NL80211_IFTYPE_STATION)
--		sta = mld_vif->ap_sta;
--
- 	/* If we are installing an iGTK (in AP or STA mode), we need to tell
- 	 * the firmware this key will en/decrypt MGMT frames.
- 	 * Same goes if we are installing a pairwise key for an MFP station.
-@@ -92,11 +88,7 @@ static u32 iwl_mld_get_key_sta_mask(struct iwl_mld *mld,
- 		return BIT(link->mcast_sta.sta_id);
- 	}
- 
--	/* for client mode use the AP STA also for group keys */
--	if (!sta && vif->type == NL80211_IFTYPE_STATION)
--		sta = mld_vif->ap_sta;
--
--	/* STA should be non-NULL now */
-+	/* STA should be non-NULL */
- 	if (WARN_ON(!sta))
- 		return 0;
- 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index c02994e63b14..4b5f50ff2b05 100644
+index 4b5f50ff2b05..8856f96a9760 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -2282,9 +2282,20 @@ static int iwl_mld_mac80211_set_key(struct ieee80211_hw *hw,
- 				    struct ieee80211_sta *sta,
- 				    struct ieee80211_key_conf *key)
- {
-+	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
- 	struct iwl_mld *mld = IWL_MAC80211_GET_MLD(hw);
- 	int ret;
+@@ -62,13 +62,17 @@ static const struct ieee80211_iface_limit iwl_mld_limits_ap[] = {
  
-+	/*
-+	 * FW always needs the AP STA for client mode.
-+	 * Note that during removal this could already
-+	 * be NULL (mac80211 removes keys after STAs)
-+	 * but then we'll already have removed the key
-+	 * and set hw_key_idx = STA_KEY_IDX_INVALID.
-+	 */
-+	if (!sta && vif->type == NL80211_IFTYPE_STATION)
-+		sta = mld_vif->ap_sta;
+ static const struct ieee80211_iface_limit iwl_mld_limits_nan[] = {
+ 	{
+-		.max = 2,
++		.max = 1,
+ 		.types = BIT(NL80211_IFTYPE_STATION),
+ 	},
+ 	{
+ 		.max = 1,
+ 		.types = BIT(NL80211_IFTYPE_NAN),
+ 	},
++	{
++		.max = 2,
++		.types = BIT(NL80211_IFTYPE_NAN_DATA),
++	},
+ };
+ 
+ static const struct ieee80211_iface_combination
+@@ -87,8 +91,8 @@ iwl_mld_iface_combinations[] = {
+ 	},
+ 	/* NAN combination follow, this excludes P2P and AP */
+ 	{
+-		.num_different_channels = 2,
+-		.max_interfaces = 3,
++		.num_different_channels = 3,
++		.max_interfaces = 4,
+ 		.limits = iwl_mld_limits_nan,
+ 		.n_limits = ARRAY_SIZE(iwl_mld_limits_nan),
+ 	},
+@@ -266,6 +270,7 @@ static void iwl_mld_hw_set_nan(struct iwl_mld *mld)
+ 	struct ieee80211_hw *hw = mld->hw;
+ 
+ 	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_NAN);
++	hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_NAN_DATA);
+ 
+ 	hw->wiphy->nan_supported_bands = BIT(NL80211_BAND_2GHZ);
+ 	if (mld->nvm_data->bands[NL80211_BAND_5GHZ].n_channels)
+@@ -363,7 +368,7 @@ static void iwl_mac_hw_set_wiphy(struct iwl_mld *mld)
+ 			ARRAY_SIZE(iwl_mld_iface_combinations);
+ 		iwl_mld_hw_set_nan(mld);
+ 	} else {
+-		/* Do not include NAN combinations */
++		/* Do not include NAN combination */
+ 		wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(iwl_mld_iface_combinations) - 1;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/nan.c b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
+index 59e85818b613..cb7a3e01adb4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/nan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/nan.c
+@@ -18,8 +18,16 @@
+ 
+ bool iwl_mld_nan_supported(struct iwl_mld *mld)
+ {
+-	return fw_has_capa(&mld->fw->ucode_capa,
+-			   IWL_UCODE_TLV_CAPA_NAN_SYNC_SUPPORT);
++	const struct iwl_fw *fw = mld->fw;
 +
- 	switch (cmd) {
- 	case SET_KEY:
- 		ret = iwl_mld_set_key_add(mld, vif, sta, key);
++	if (fw_has_capa(&fw->ucode_capa, IWL_UCODE_TLV_CAPA_NAN_SYNC_SUPPORT) &&
++	    iwl_fw_lookup_cmd_ver(fw, WIDE_ID(MAC_CONF_GROUP, NAN_SCHEDULE_CMD), 0) >= 1 &&
++	    iwl_fw_lookup_cmd_ver(fw, WIDE_ID(MAC_CONF_GROUP, NAN_PEER_CMD), 0) >= 1 &&
++	    iwl_fw_lookup_cmd_ver(fw, WIDE_ID(MAC_CONF_GROUP, STA_CONFIG_CMD), 0) >= 3 &&
++	    iwl_fw_lookup_cmd_ver(fw, WIDE_ID(MAC_CONF_GROUP, MAC_CONFIG_CMD), 0) >= 4 &&
++	    iwl_fw_lookup_cmd_ver(fw, WIDE_ID(DATA_PATH_GROUP, TLC_MNG_CONFIG_CMD), 0) >= 6)
++		return true;
++	return false;
+ }
+ 
+ static int iwl_mld_nan_send_config_cmd(struct iwl_mld *mld,
 -- 
 2.34.1
 
