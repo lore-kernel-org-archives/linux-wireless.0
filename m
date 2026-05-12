@@ -1,71 +1,65 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4C751448D5;
-	Tue, 12 May 2026 00:44:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7201E274652;
+	Tue, 12 May 2026 01:25:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778546697; cv=none; b=Qshy2cEz4riQKvlcX9MarxG0501uPaWq56kEORfwuLLfs/Ftr16d+MjcY1hdVOgYvlPKfjqgyQV6XqnApyC/mv4E3CUA8zw5O5HR7dfbKdw0p295GjRVjF+LbhPl5xt9YsbXTLEno9jUNbeq+KLc7RIRoiZhnLKvLT05dLVzuPQ=
+	t=1778549143; cv=none; b=tNUIx9JgTbHddr6D3r056atpb7Uema0Yn4qEpLH2Z2T8ksMhQPR4O0dZnX9Py1iYQSLxoK128bsYKJlQOfIw6t7ILuWfVMdl7eqLtktcWUvOhBEWrZudLtI12VyVXRBzRiJA+PLz9qfMNiVJplg7x6HV4wv/Mzd+K7XSVvDf8Zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778546697; c=relaxed/simple;
-	bh=sseY+/jo8EDcFzjLtSuyFmopibhtbUEYPlr0n3PPu5Y=;
+	s=arc-20240116; t=1778549143; c=relaxed/simple;
+	bh=sD7THkCpyvctCNkFb8gP1aEmsezKLo+ZkzrPZYiiiUo=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=qNsowRUZz7dQMEYJ8XhZlMoIk5nvHlTYHUgdEKXIEWfihHh2eb/mBkzEbkW79t46QImj5H08l18tro/MOeF83n0nqndtnlnGrlmyU3jqLCQnM56RtZLKdg2xbJYdhhUb5+2oKqi6pMTAw0s/JW16N7H/utfBwXdmT0yuqiXXmVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=hNHYECdW; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=QYH+cP0fM5e2cRHSyJzFp3TVLU4hWgR0GLsv1hIzx249XNOQERMDQOzzogTo7Ed/LUvlV7Dz+LRJWdvxu8+86itSkGIziCH3x5s83GbnMNcn6j1yerfw+cKsmk3cm/6PJX7NYkBmuvrkEklZlJYHMuXdXgFaWmD2XKN2wnshQrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=RNCKTdJl; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="hNHYECdW"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64C0ieEeB3412887, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="RNCKTdJl"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64C1PFa743450606, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1778546680; bh=sseY+/jo8EDcFzjLtSuyFmopibhtbUEYPlr0n3PPu5Y=;
+	t=1778549115; bh=xNkS2Oo1SRFZ1oqGWqT65dkADUGTE0syKdbbupWyRjo=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=hNHYECdW3RN3+I1jYu+xQePdx2j/Znh/v+hEl+OBfqqNRT1caw0A/4ly7UMxo/5H7
-	 LTSSG9Cs/gOkJVLcF/CA4Vyu+mGImzdfRTypd+K8sRS5BiUKoW/EjZ93axTsRTsnuI
-	 +APgeY3SF9AfCNi4yJafoZUs0w4569jVUVEHuBIYhwmFgHOJVZHZdLRpbATfvx2ijM
-	 dBE0M6YU/GkfPmLSduH61ReZRh3CSktYEiRIGmWoXjzfvsnNJPH/6XIO48iJaLzq0X
-	 CQnZU0rI0tdvZ0ZOxKP9cEFqoU38GKocTVQAl9NM/K92aQ3Y0XyUaGo4q3KMDowv8j
-	 3rp0veFTvoRhQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 64C0ieEeB3412887
+	b=RNCKTdJlu+6UyMLbpLFdtTmVDUYqCUvTtVVBEKa5tQxBlyFj8l0NWoNYty5ql39o4
+	 g6aV6BpGicNlgpWLoA0OCiiyPodfFaw7KvjF/T1m4+nHzCJPycgSFTrHrcmPRLXaYt
+	 iZ/CiLm7wgP18kOts94Og9rTIvrBPyMyYc9x6FCXu6+wh4WuzfDeTy56vE2KQcv31P
+	 nCWcLH3lXTId6NnckCHt9iwvGIgiO11+L1cgjAFpuH0GHTQdRdWDEsrYG4JDoSJl8B
+	 3wGcoPMznw3bOU1tBkEK8QtVBbGcdv2k9zszUQuMrblmpQN8qRUeLGPwX/YD/zgH9r
+	 DDUwGGFDFAwUQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 64C1PFa743450606
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 12 May 2026 08:44:40 +0800
+	Tue, 12 May 2026 09:25:15 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 12 May 2026 08:44:40 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 12 May 2026 08:44:40 +0800
+ 15.2.2562.17; Tue, 12 May 2026 09:25:16 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Tue, 12 May 2026 08:44:40 +0800
+ 15.02.2562.017; Tue, 12 May 2026 09:25:16 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Thorsten Leemhuis <linux@leemhuis.info>
-CC: Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>,
+To: Devin Wittmayer <lucid_duck@justthetip.ca>,
+        "johannes@sipsolutions.net"
+	<johannes@sipsolutions.net>,
         "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>,
-        "art1310@proton.me" <art1310@proton.me>,
-        Linux kernel regressions list <regressions@lists.linux.dev>
-Subject: RE: [PATCH rtw-next v2] wifi: rtl8xxxu: Detect the maximum supported
- channel width
-Thread-Topic: [PATCH rtw-next v2] wifi: rtl8xxxu: Detect the maximum supported
- channel width
-Thread-Index: AQHc19AdbF1YRPFzdU66bhcRCp5GbrYAJkIAgAgQNgCAAWlB8A==
-Date: Tue, 12 May 2026 00:44:40 +0000
-Message-ID: <f26992e669744e6f87084e017f897275@realtek.com>
-References: <c57de68e-5d57-4c26-898f-8a284bb25381@gmail.com>
- <ee88b3a2-2cc9-4370-b782-189a603a7fa1@RTKEXHMBS04.realtek.com.tw>
- <41693ffc-926c-4e67-9a48-b6e1b1d150bd@leemhuis.info>
-In-Reply-To: <41693ffc-926c-4e67-9a48-b6e1b1d150bd@leemhuis.info>
+	<linux-wireless@vger.kernel.org>
+CC: "rtl8821cerfe2@gmail.com" <rtl8821cerfe2@gmail.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2 1/1] wifi: rtw89: usb: Support switching to
+ USB 3 mode
+Thread-Topic: [PATCH rtw-next v2 1/1] wifi: rtw89: usb: Support switching to
+ USB 3 mode
+Thread-Index: AQHc4WBnvzkVdckSH0mw5MmxdTZUKbYIjd+AgAAKT4CAAP2NcA==
+Date: Tue, 12 May 2026 01:25:16 +0000
+Message-ID: <c71a1459979040f0a33b3f0b839deb76@realtek.com>
+References: <6d553cffcb0ae84e141006ae1430f6f37909ad2b.camel@sipsolutions.net>
+ <20260511180351.26471-1-lucid_duck@justthetip.ca>
+In-Reply-To: <20260511180351.26471-1-lucid_duck@justthetip.ca>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -73,37 +67,41 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-VGhvcnN0ZW4gTGVlbWh1aXMgPGxpbnV4QGxlZW1odWlzLmluZm8+IHdyb3RlOg0KPiBPbiA1LzYv
-MjYgMDk6NTcsIFBpbmctS2UgU2hpaCB3cm90ZToNCj4gPiBCaXR0ZXJibHVlIFNtaXRoIDxydGw4
-ODIxY2VyZmUyQGdtYWlsLmNvbT4gd3JvdGU6DQo+ID4NCj4gPj4gU29tZSBkZXZpY2VzIG1hbGZ1
-bmN0aW9uIHdoZW4gY29ubmVjdGVkIHRvIGEgbmV0d29yayB3aXRoIDQwIE1IeiBjaGFubmVsDQo+
-ID4+IHdpZHRoLCBiZWNhdXNlIHRoZXkgZG9uJ3Qgc3VwcG9ydCB0aGF0Lg0KPiA+Pg0KPiA+PiBS
-VEw4MTg4RlUsIFJUTDgxOTJGVSwgYW5kIFJUTDg3MTBCVSAoUlRMODE4OEdVKSBoYXZlIGEgd2F5
-IHRvIHNpZ25hbA0KPiA+PiB0aGlzIChhbmQgc29tZSBvdGhlciBjYXBhYmlsaXRpZXMpIHRvIHRo
-ZSBkcml2ZXIuIEdldCB0aGlzIGluZm9ybWF0aW9uDQo+ID4+IGZyb20gdGhlIGhhcmR3YXJlIGFu
-ZCBhZHZlcnRpc2UgNDAgTUh6IHN1cHBvcnQgb25seSB3aGVuIHRoZSBoYXJkd2FyZQ0KPiA+PiBj
-YW4gaGFuZGxlIGl0LiBXZSBhc3N1bWUgdGhlIG90aGVyIGNoaXBzIGNhbiBhbHdheXMgaGFuZGxl
-IGl0Lg0KPiA+Pg0KPiA+PiBSVEw4NzEwQlUgbmVlZHMgYSBkaWZmZXJlbnQgd2F5IHRvIHJldHJp
-ZXZlIHRoaXMgaW5mb3JtYXRpb24sIHdoaWNoIHdpbGwNCj4gPj4gYmUgaW1wbGVtZW50ZWQgc29t
-ZSBvdGhlciB0aW1lLg0KPiA+Pg0KPiA+PiBGaXhlczogZGJmOWI3YmIwZWRmICgid2lmaTogcnRs
-OHh4eHU6IEVuYWJsZSA0MCBNSHogd2lkdGggYnkgZGVmYXVsdCIpDQo+ID4+IENjOiBzdGFibGVA
-dmdlci5rZXJuZWwub3JnDQo+ID4+IENsb3NlczogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3Jn
-L3Nob3dfYnVnLmNnaT9pZD0yMjEzOTQNCj4gPj4gU2lnbmVkLW9mZi1ieTogQml0dGVyYmx1ZSBT
-bWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+DQo+ID4+IFJldmlld2VkLWJ5OiBQaW5nLUtl
-IFNoaWggPHBrc2hpaEByZWFsdGVrLmNvbT4NCj4gDQo+IFRoeCBmb3IgZml4aW5nIHRoaXMhDQo+
-IA0KPiA+IDEgcGF0Y2goZXMpIGFwcGxpZWQgdG8gcnR3LW5leHQgYnJhbmNoIG9mIHJ0dy5naXQs
-IHRoYW5rcy4NCj4gPiBlZjc3MWVhYmM3OWQgd2lmaTogcnRsOHh4eHU6IERldGVjdCB0aGUgbWF4
-aW11bSBzdXBwb3J0ZWQgY2hhbm5lbCB3aWR0aA0KPiA+IGh0dHBzOi8vZ2l0aHViLmNvbS9wa3No
-aWgvcnR3LmdpdA0KPiANCj4gcnR3LW5leHQgc291bmRzIGxpa2UgaXQgYWltcyBmb3IgdGhlIG5l
-eHQgbWVyZ2Ugd2luZG93OyBhbmQgaXQgc2VlbXMgdGhlDQo+IGZpeCBoYXNuJ3QgZXZlbiBoaXQg
-LW5leHQgeWV0LiBUaGlzIGlzIHNsaWdodGx5IHVuZm9ydHVuYXRlLCBhcyB0aGlzDQo+IGFmYWlj
-cyBpcyBhIGZpeCBmb3IgYSByZWNlbnQgcmVncmVzc2lvbiAtLSBzbyBpdCBpZGVhbGx5IHNob3Vs
-ZCBoZWFkDQo+IHRvd2FyZHMgbWFpbmxpbmUgYnkgbm93WzFdLCBhcyBMaW51cycgdGhlIHJ1bGUg
-b2YgdGh1bWIgaXMgdG8gImdlbmVyYWxseQ0KPiBmaXggcmVncmVzc2lvbnMgIndpdGhpbiBhIHdl
-ZWsiLCBwcmVmZXJhYmx5IGJlZm9yZSB0aGUgbmV4dCByYyJbMV0uDQo+IA0KPiBPciBhbSBJIG1p
-c3Npbmcgc29tZXRoaW5nPyBUaGF0IG1pZ2h0IHZlcnkgd2VsbCBiZSB0aGUgY2FzZSwgc28gZG8g
-bm90DQo+IGhlc2l0YXRlIHRvIHRlbGwgbWUhDQoNCkFzIHRoaXMgcGF0Y2ggYXBwbGllZCB0byBw
-dWJsaWMgcnR3IHRyZWUsIGFuZCBwZW9wbGUgd2hvIGVuY291bnRlcmVkIHRoZQ0KcHJvYmxlbSBp
-biBidWd6aWxsYSBjYW4gd29yayBhZ2Fpbi4gVG8gcHJldmVudCBicmVha2luZyB0aGUgcHVibGlj
-IHRyZWUsDQpJJ2Qga2VlcCBpdCBhcyB3YXMuDQoNCkkgd2lsbCBiZSBjYXJlZnVsbHkgdG8gaGFu
-ZGxlIHRoaXMga2luZCBvZiBwYXRjaGVzIGxhdGVyLiANCg0KUGluZy1LZQ0KDQo=
+Devin Wittmayer <lucid_duck@justthetip.ca> wrote:=20
+>=20
+> On Mon, 2026-05-11 at 19:26 +0200, Johannes Berg wrote:
+> > > +static bool rtw89_switch_usb_mode =3D true;
+> > > +module_param_named(switch_usb_mode, rtw89_switch_usb_mode, bool, 064=
+4);
+> > > +MODULE_PARM_DESC(switch_usb_mode,
+> > > +         "Set to N to disable switching to USB 3 mode to avoid poten=
+tial interference in the 2.4
+> GHz band (default: Y)");
+> >
+> > We shouldn't really add new module parameters.
+ This module parameter follows the pattern Bitterblue established for
+> rtw88: same user-facing name (switch_usb_mode), same description, same
+> default. Commit 315c23a64e99 "wifi: rtw88: usb: Support USB 3 with
+> RTL8822CU/RTL8822BU" (2024-07-10) added it to rtw88/usb.c and it
+> remains in-tree.
+
+I took the patch of rtw88 because we switch USB mode at probe stage, but
+USB 3 mode has interference on 2.4GHz band (as the comment says). If a user
+insist on 2.4GHz with a good performance, this is an option to keep USB 2
+mode.
+
+>=20
+> Three v3 paths I see:
+>=20
+> 1. Drop the param. Users hitting USB3 2.4 GHz harmonic interference
+>    would need to use a USB 2 port instead.
+> 2. Move the escape hatch behind a sysfs or nl80211 control. New UABI
+>    surface; open to design suggestions on that.
+> 3. Keep it for rtw89/rtw88 symmetry on the same USB3 / 2.4 GHz
+>    harmonic interference issue.
+
+An additional option might be to not support 2.4GHz channels when switching
+to USB 3. But I'm not really sure if it is acceptable to USB users.
+
+Ping-Ke
+
