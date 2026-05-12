@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732263815DB
-	for <linux-wireless@vger.kernel.org>; Tue, 12 May 2026 05:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49687382374
+	for <linux-wireless@vger.kernel.org>; Tue, 12 May 2026 05:23:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778563414; cv=none; b=YtfhiogVm/WN5eXD3x1NLVfmihFsrld7i/rnAIPkMqpkQR8OTKBJjqiALyNaMjGM0UJFlqxxNgFreMFcE1nWgaK3I5VF36V/niYMsYHA9rk01eL+yBUAobYqExb43mixzd7znGdpMmdJH3vb94FSPRcADv9y0hH4WEdpR2eWE/Y=
+	t=1778563415; cv=none; b=uK1i9SibiXWrO8gfU/xpsFBiFxewTp5SA5iOcErhpZGI/RN8IiPizPAoZYds64GuQAan+CuW35GEEBHAkbbjfdAZgaAuOMt0JjeItw/U8PDUKveCq4CKQpIn2mr4XRZtOZdLOggFmVkmAnx9vqo9zPyhUEWiBGU/7Zc8zInDmpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778563414; c=relaxed/simple;
-	bh=zTb793EQoBm9mclVFP2EAd5rKZ4HdJvehdvu4wWcWg0=;
+	s=arc-20240116; t=1778563415; c=relaxed/simple;
+	bh=9/60VmiVfGmaGA6lsp2b73pD3/n6MVrRjCTu+7jQKl0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZBpNimbcRCK1ZO7t3Bo2X896tRZqBJrZ0eQLb1zb8tiN0gMtZDDRdAXwojnZe0DA3hgAtT72OHPMZGtpfjIWiqZryU87OeQat0ajPrDcg1WbVp7mpXbraxudwVOIiB1TX7LkYFdA7Vjqky3bPtiSWPX/kMpWPViHW5wdVWxpxgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cQDloNp4; arc=none smtp.client-ip=192.198.163.19
+	 MIME-Version; b=BXNbg2IJnNPugWh5tpQVWwZNN/okRqxpYy5PlMBcGtd97/aJlk70QJ2ak75FioKQZZIgdAXpBbiBrRAYaQNZNmmkQhVgGRL6OMM5Ubyiqp+tVjDgbzpk/07DBE9sJP5fUAOnYpWBhlxb7fIYwlT+bB0dt7b05+u/6WrN7s5/7e8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QI49tNYL; arc=none smtp.client-ip=192.198.163.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cQDloNp4"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QI49tNYL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778563413; x=1810099413;
+  t=1778563414; x=1810099414;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=zTb793EQoBm9mclVFP2EAd5rKZ4HdJvehdvu4wWcWg0=;
-  b=cQDloNp4BC9lHRRPEwoZnNEZoWbzHwsmuzCUt6WwJCPsSV0bEf6awqk6
-   cXnaYNCGZwHfAV5I3cURbkQ/khSO6KvhHHMhKjsAbAMJVRyugzqYrjyST
-   8EcMIB2HhvrDDK18gyYjOWkw1h1ke/ob357UNQYWGqMz7pNBBdTnHlw0W
-   tKLtBB0gT/ISSTAcXsTSsxnXkPMzPYvP0A+7Gr3s4zA2nyKIUWUvs/JNy
-   sJK9teN1Xjkk3nXS6AmDaWxiJCXQtyHt2VmbNNunWUdXnIG4XeSfT8w65
-   eLohxrAwlNmli6n8Tz/vWRLmBdFH/QP16aEFf6EeBJUtll2UBxhz3aw2r
-   w==;
-X-CSE-ConnectionGUID: E6fB/T1OQuKWxSSSgQoAag==
-X-CSE-MsgGUID: Ggg1K7GARziSxUg8m1Dx/g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="78495098"
+  bh=9/60VmiVfGmaGA6lsp2b73pD3/n6MVrRjCTu+7jQKl0=;
+  b=QI49tNYLZo1ZfoD1Ojm9fUQG9FJI/jnMQlZgueKirY0vpPdS4N9FcHhD
+   QF5UcwxCsyMSQrXcs6Vwmnb2iYshMnmGwhGZ5dOAkmMIsGqzLAofezke0
+   iXdMTqhITkCRtOmzPpNeSeiVcED/wacsMeQIP/qNisyrIxRpzoHjHUpyC
+   m8n9E0sydJoSDBI/U7isurQND9Pl+ksa8N0bGn0zDnUSMoj7CjNf8jL7P
+   gO3giJtC3JSeGzmQRPdM4KYBbBdwrFhlLl3wg86cq08555O70pUcd3+Ko
+   1GWZROSwQDV4iAW+gxbzcEpzmWUk+u/wY9inYdQvYuqTbrmaHuFf7dXQW
+   g==;
+X-CSE-ConnectionGUID: 0hhOXuYASEW0O1VH+ZRnJw==
+X-CSE-MsgGUID: i0X4xJioRHGA2ejHgiuWJA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="78495100"
 X-IronPort-AV: E=Sophos;i="6.23,230,1770624000"; 
-   d="scan'208";a="78495098"
+   d="scan'208";a="78495100"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 22:23:33 -0700
-X-CSE-ConnectionGUID: O4bfqsDwRTaGPdTYXUzD/A==
-X-CSE-MsgGUID: KOZ2NXXuQWSy7Zt8Y9RX/g==
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 22:23:34 -0700
+X-CSE-ConnectionGUID: RH4uvhliTS2HCyFNF+gWkQ==
+X-CSE-MsgGUID: XNjXji6aQjafh8Eh/eRodw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,230,1770624000"; 
-   d="scan'208";a="233187572"
+   d="scan'208";a="233187580"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 22:23:32 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 22:23:33 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 10/15] wifi: iwlwifi: mark that we support iwl_rx_mpdu_desc version 7 and 8
-Date: Tue, 12 May 2026 08:23:02 +0300
-Message-Id: <20260512082114.3604e2111b27.I1f44475b56e084ee4aaeaed11b8a4fe2d27bed0c@changeid>
+Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: stop supporting cores 97 to 100
+Date: Tue, 12 May 2026 08:23:03 +0300
+Message-Id: <20260512082114.3dc9251c69ef.Icc027dc533f06ac007abfa0356774948ffdfaf3d@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260512052307.1603442-1-miriam.rachel.korenblit@intel.com>
 References: <20260512052307.1603442-1-miriam.rachel.korenblit@intel.com>
@@ -61,28 +61,88 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Mark the driver struct as matching RX_MPDU_RES_START_API_S_VER_7 and
-RX_MPDU_RES_START_API_S_VER_8
+Remove support from cores 97 to 100, including.
 
 Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/rx.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 6 +++---
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index aa4e5e9d4d4e..699343cf0279 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -735,6 +735,8 @@ struct iwl_rx_mpdu_desc {
- 	     * RX_MPDU_RES_START_API_S_VER_4,
- 	     * RX_MPDU_RES_START_API_S_VER_5,
- 	     * RX_MPDU_RES_START_API_S_VER_6
-+	     * RX_MPDU_RES_START_API_S_VER_7
-+	     * RX_MPDU_RES_START_API_S_VER_8
- 	     */
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+index 8b3f15899396..c060b12cc952 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+@@ -12,8 +12,8 @@
+ /* Highest firmware core release supported */
+ #define IWL_BZ_UCODE_CORE_MAX	103
  
- #define IWL_RX_DESC_SIZE_V1 offsetofend(struct iwl_rx_mpdu_desc, v1)
+-/* Lowest firmware API version supported */
+-#define IWL_BZ_UCODE_API_MIN	100
++/* Lowest firmware core release supported */
++#define IWL_BZ_UCODE_CORE_MIN	101
+ 
+ /* Memory offsets and lengths */
+ #define IWL_BZ_SMEM_OFFSET		0x400000
+@@ -69,7 +69,7 @@ static const struct iwl_family_base_params iwl_bz_base = {
+ 	},
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS | NETIF_F_RXCSUM,
+ 	.ucode_api_max = ENCODE_CORE_AS_API(IWL_BZ_UCODE_CORE_MAX),
+-	.ucode_api_min = IWL_BZ_UCODE_API_MIN,
++	.ucode_api_min = ENCODE_CORE_AS_API(IWL_BZ_UCODE_CORE_MIN),
+ };
+ 
+ const struct iwl_mac_cfg iwl_bz_mac_cfg = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
+index a8f2ac688d31..3ccbb21276c1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
+@@ -11,8 +11,8 @@
+ /* Highest firmware core release supported */
+ #define IWL_DR_UCODE_CORE_MAX	103
+ 
+-/* Lowest firmware API version supported */
+-#define IWL_DR_UCODE_API_MIN	100
++/* Lowest firmware core release supported */
++#define IWL_DR_UCODE_CORE_MIN	101
+ 
+ /* Memory offsets and lengths */
+ #define IWL_DR_SMEM_OFFSET		0x400000
+@@ -70,7 +70,7 @@ static const struct iwl_family_base_params iwl_dr_base = {
+ 	},
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS | NETIF_F_RXCSUM,
+ 	.ucode_api_max = ENCODE_CORE_AS_API(IWL_DR_UCODE_CORE_MAX),
+-	.ucode_api_min = IWL_DR_UCODE_API_MIN,
++	.ucode_api_min = ENCODE_CORE_AS_API(IWL_DR_UCODE_CORE_MIN),
+ };
+ 
+ const struct iwl_mac_cfg iwl_dr_mac_cfg = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+index 4532d31d5f8b..04c726e8c283 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+@@ -12,8 +12,8 @@
+ /* Highest firmware core release supported */
+ #define IWL_SC_UCODE_CORE_MAX	103
+ 
+-/* Lowest firmware API version supported */
+-#define IWL_SC_UCODE_API_MIN	100
++/* Lowest firmware core release supported */
++#define IWL_SC_UCODE_CORE_MIN	101
+ 
+ /* Memory offsets and lengths */
+ #define IWL_SC_SMEM_OFFSET		0x400000
+@@ -75,7 +75,7 @@ static const struct iwl_family_base_params iwl_sc_base = {
+ 	},
+ 	.features = IWL_TX_CSUM_NETIF_FLAGS | NETIF_F_RXCSUM,
+ 	.ucode_api_max = ENCODE_CORE_AS_API(IWL_SC_UCODE_CORE_MAX),
+-	.ucode_api_min = IWL_SC_UCODE_API_MIN,
++	.ucode_api_min = ENCODE_CORE_AS_API(IWL_SC_UCODE_CORE_MIN),
+ };
+ 
+ const struct iwl_mac_cfg iwl_sc_mac_cfg = {
 -- 
 2.34.1
 
