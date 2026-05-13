@@ -1,104 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B4F399348;
-	Wed, 13 May 2026 03:46:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB2EB356769
+	for <linux-wireless@vger.kernel.org>; Wed, 13 May 2026 03:53:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778644000; cv=none; b=Moe+7QO2SPd7+Q/kXFUEtkmDKMctW/Nwt46NYuDELkh/7lmBpNViROl03FOSvFRR4QDLc3kA5BAHlicElo8KLcEhHXECJur6eFrXHEyHjtXze7p29ghP9sfxYynse+JfkXbMEkaDvAv49gG2RpjwhAceARUxrtyWs1GabkeilOk=
+	t=1778644398; cv=none; b=TCm1y4WxkG35F3ICaFY5pP+Q8wQvIk8vvvmwfX4hZuHKtlHmYbZjA6etWgAFGY4S25RQASznmXza+KpcUYJ2+F6WpadKC8Y1yG+IixZP3QteN/9haW1JifAB39Zgfoa5ZocdPSiNW324gtxkh4uTBdKREdMbdJOkqXyzFV/263M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778644000; c=relaxed/simple;
-	bh=gyb8pfCwFcLBe2rptRiE3sjarGUMInC36meBQ9ZTM4w=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=hIsMJjCqlhQSwXLxfD8cpho0P8gUsVEqXkXQihweeCSbHeHnStcsvJfVpj+xU0FD3uF0DxhVIZNWX0Vl49mKx7nNHGD5DfRfFvkgkfluR/eHBVEvdh5MgMInr7rpIsZdgMeMS+nj84jiyGcP+2ib57GcKUDSai97ImsSuPF0lD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KNzv9alJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778644398; c=relaxed/simple;
+	bh=Ab5nNAx8DBQSkiRo2hsYdWjmWD2vijAjwIIx1P7HlIc=;
+	h=From:To:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type; b=MswTWR0cCwNKFBhKy1cboqQKSJoWhy8LJGVql0XhSkTXrCzqsLh2nmm/PBWg0XWiwh4OFN9Gbk4BkcyIVXStwQBclGXKSs1+aaKGC1gLlgb8BEtrsIR7p58p/JyCH/SqdvKuYlxvFlzZxvcyxqNlf4fA1kPro3ZyMQ2+RehpHFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=lfQaZv0G; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KNzv9alJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9C71C2BCC7;
-	Wed, 13 May 2026 03:46:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778643999;
-	bh=gyb8pfCwFcLBe2rptRiE3sjarGUMInC36meBQ9ZTM4w=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=KNzv9alJGXZ6074TaCv2GYS4ngVHJYVPI/dUxnPvzStHLbJcuabjlUFQwP+tzgm8G
-	 ZtzCXaJY3VEiR4FI/cux8ct2DnyBo4xgtYUtwtQcfNznThE1vIqPSfiVrvgZlvu/lF
-	 t9DNyJVcgYV9JAZr+oPCeTVpkZ9oxEm8piGVBQrgKaVzK1knG75N3GfojN1tzGtGYx
-	 e1ZCDggEkcV2wc8nxqqNMwx/PO4W09sGPNEK7eTtjYApF65gQyVfylvCQw5BoOP+wD
-	 awa11v0/GBU6+oA7XeqHZFLGUDuYZFtN7/2ADm0bvjMN0xY5JKV8eRoHU0330d2NXf
-	 c2snDgAszC5BQ==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B9F363822D60;
-	Wed, 13 May 2026 03:45:46 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="lfQaZv0G"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64D3rEohD487520, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1778644394; bh=ZTwaJ2t6m+38xY1apsMfhlBLf3kglfO74Ei2+E2JAxU=;
+	h=From:To:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type;
+	b=lfQaZv0GwPuYklKz6UoxulWz2Os/6/vLDGu+eVrXRcNBOim3zr95ijgkCM+rXK2BY
+	 wZ7KTi4R2SRJh9kQOhDLVS0SgFA3gfeK8Srt0Oj9T9PGuuSVdau6DQ2X/aSzHeWg3m
+	 ivCURUkbG3JqXp5RLTnQItL99gvOoTPXuP2JZBME74h459m9EE32QKoUpAcTQu/mtA
+	 GBp6jkcH3GnWKowTsxlxUT/qLT/glf3ukuEjlbxtjyJgbc0/xzvY9yg47cHYkol88F
+	 fZOMktg45xd1Ktfv2iytV+fSbwmW4+QeEMJlEo4pW6sGHMwaHgITXZJRR7oj0VMLdV
+	 4jBblFkIzZNpA==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.27/5.94) with ESMTPS id 64D3rEohD487520
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Wed, 13 May 2026 11:53:14 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Wed, 13 May 2026 11:53:15 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Wed, 13 May 2026 11:53:14 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Wed, 13 May 2026 11:53:14 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH rtw-next 01/14] wifi: rtw89: add AMPDU to radiotap
+In-Reply-To: <20260506131000.1706298-2-pkshih@realtek.com>
+References: <20260506131000.1706298-1-pkshih@realtek.com> <20260506131000.1706298-2-pkshih@realtek.com>
+Message-ID: <86f5cdbb-ced9-4b14-839b-f95ac0b1ce53@RTKEXHMBS05.realtek.com.tw>
+Date: Wed, 13 May 2026 11:53:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net-next v3 0/2] Rework pci_device_id initialisation
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <177864394529.3173643.6436794072017399758.git-patchwork-notify@kernel.org>
-Date: Wed, 13 May 2026 03:45:45 +0000
-References: <20260511090023.1634387-4-u.kleine-koenig@baylibre.com>
-In-Reply-To: <20260511090023.1634387-4-u.kleine-koenig@baylibre.com>
-To: =?utf-8?q?Uwe_Kleine-K=C3=B6nig_=28The_Capable_Hub=29_=3Cu=2Ekleine-koenig?=@aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org,
-	=?utf-8?q?=40baylibre=2Ecom=3E?=@aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org
-Cc: mgr@kernel.org, andrew+netdev@lunn.ch, davem@davemloft.net,
- edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, mkl@pengutronix.de,
- mailhol@kernel.org, johannes@sipsolutions.net, klassert@kernel.org,
- dave@thedillows.org, ionut@badula.org, mark.einon@gmail.com,
- rmody@marvell.com, GR-Linux-NIC-Dev@marvell.com, manishc@marvell.com,
- bharat@chelsio.com, kirjanov@gmail.com, shaojijie@huawei.com,
- shenjian15@huawei.com, cai.huoqing@linux.dev, gongfan1@huawei.com,
- anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com, tariqt@nvidia.com,
- saeedm@nvidia.com, leon@kernel.org, mbloch@nvidia.com, idosch@nvidia.com,
- petrm@nvidia.com, dong100@mucse.com, hkallweit1@gmail.com,
- nic_swsd@realtek.com, jiri@resnulli.us, romieu@fr.zoreil.com,
- venza@brownhat.org, chessman@tux.org, jiawenwu@trustnetic.com,
- mengyuanlou@net-swift.com, kevin.curtis@farsite.co.uk,
- arend.vanspriel@broadcom.com, stas.yakovlev@gmail.com,
- richardcochran@gmail.com, kees@kernel.org, aleksandr.loktionov@intel.com,
- tglx@kernel.org, jacob.e.keller@intel.com, fourier.thomas@gmail.com,
- mingo@kernel.org, kory.maincent@bootlin.com, zilin@seu.edu.cn,
- vadim.fedorenko@linux.dev, marco.crivellari@suse.com, bhelgaas@google.com,
- darinzon@amazon.com, yyyynoom@gmail.com, benato.denis96@gmail.com,
- liuyonglong@huawei.com, andriy.shevchenko@intel.com, rdunlap@infradead.org,
- yiconghui@gmail.com, danishanwar@ti.com, nathan@kernel.org,
- enelsonmoore@gmail.com, larysa.zaremba@intel.com, ian.lin@infineon.com,
- colin.i.king@gmail.com, double.lo@cypress.com, msp@baylibre.com,
- horms@kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-can@vger.kernel.org, linux-parisc@vger.kernel.org,
- intel-wired-lan@lists.osuosl.org, linux-rdma@vger.kernel.org,
- oss-drivers@corigine.com, linux-wireless@vger.kernel.org,
- brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com
+Content-Type: text/plain
 
-Hello:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-This series was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
-
-On Mon, 11 May 2026 11:00:22 +0200 you wrote:
-> Hello,
+> The RX desc can report current frame is in AMPDU, but no way point out
+> if it is a last one in AMPDU. Update AMPDU reference only.
 > 
-> the previous iteration of this series (v2) is available at
-> https://lore.kernel.org/netdev/cover.1778149923.git.u.kleine-koenig@baylibre.com
-> 
-> Changes since v2:
-> 
-> [...]
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Here is the summary with links:
-  - [net-next,v3,1/2] net: nfp: Drop PCI class entries with .class_mask = 0
-    https://git.kernel.org/netdev/net-next/c/0f5b8332b0b2
-  - [net-next,v3,2/2] net: Consistently define pci_device_ids using named initializers
-    https://git.kernel.org/netdev/net-next/c/733334d6bdaf
+14 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+756dc69e5639 wifi: rtw89: add AMPDU to radiotap
+9535e2279ba9 wifi: rtw89: add VHT beamformed to radiotap
+a371139d8be9 wifi: rtw89: SNIFFER_MODE bit along IEEE80211_CONF_MONITOR
+c847d0c14c47 wifi: rtw89: phy: define PHY status IE length for generations
+847758f15f46 wifi: rtw89: phy: enable IE-09/IE-10 PHY status report for monitor mode
+bc1006b68b89 wifi: rtw89: move HE radiotap to an individual function
+236b25d9308d wifi: rtw89: fill VHT radiotap
+16a1becdd1fb wifi: rtw89: fill HE-SU/HE-TB/HE-MU/HE-EXT_SU radiotap
+41d78f3f3596 wifi: rtw89: debug: make implementation of beacon_info entry in order
+cd92d278c186 wifi: rtw89: add debugfs entry of monitor mode options to capture HE-MU packets
+884495c39de1 wifi: rtw89: phy: check length before parsing PHY status IE
+48402f736f93 wifi: rtw89: phy: skip trailing 8-byte zeros of PHY status IE for RTL8922D
+0805ddc2fdb6 wifi: rtw89: phy: support PHY status IE-09 GEN2 for RTL8922D
+f77199a0cf66 wifi: rtw89: check skb headroom before adding radiotap
 
+---
+https://github.com/pkshih/rtw.git
 
