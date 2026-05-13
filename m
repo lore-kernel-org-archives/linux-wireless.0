@@ -1,54 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DBCD3A6EEE
-	for <linux-wireless@vger.kernel.org>; Wed, 13 May 2026 05:44:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99D1C3A6EE2
+	for <linux-wireless@vger.kernel.org>; Wed, 13 May 2026 05:44:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778651071; cv=none; b=Lxq5CDSJpU3Efh1HhlCrY+RFBdjZCpaSsTu95QvDmTBDS/rKy/HiMmRtEs835gdGKsUGnbZnHD5mdDsZt5VXWyBeufeNOd+3gfZmxgmL14j8v3FfLRYdR7hAqnAGiRwPmJQBzVlUXcnlit11yr81MAXkUMunWAwrBUilSrOnLmQ=
+	t=1778651072; cv=none; b=IYHrlnT1tb8P0fbjeeAzfUuwgKN7wflw7U3H1LjW3ABjCxWz4Fi4FAYh1HLC3Kdralp3npLfUQLD6X48eu39VDf66pyu2gReRUPKLrtenC9d2C6j4L6I+YYvheLSH0etXmHu0eADckyh8FEwyp7N8q/4MsuupttT8mgB1r1nhrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778651071; c=relaxed/simple;
-	bh=O92nAE98UPPJr8XOS7tH1ppqAw60hwfnt6RHEDtYlPU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=p4D8j2/ddcQLJ8ru9lPF9+nI8Urm5uapVIhrXHwGEzkm8QIduNdOSnbFsoGmmDZgZf9BTZZ01xuaniyAyVuJaJkoTqNWCcuUB4nLwyJE79p2Wj1tf3oPe94ZVRmP8ZBC+OI1/o0eH9cSMByMm4eRF8xQT/z7ZV/gpuhbkWWr2nk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZfzCQT2r; arc=none smtp.client-ip=198.175.65.17
+	s=arc-20240116; t=1778651072; c=relaxed/simple;
+	bh=h9TixR5m1JtUUcNZEQIXDGEIQUG45ThVQlp3ngWO6U4=;
+	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JAFgg8imRE9EdpcWzmwndLXPV9/u11cily7vU/6ZVlvs2UC94OGn9sg8VlVCOVetOhzS9o25isAo+NwRRTmTVdy9GSZZck1qUuZzoqxV5h5XM8MlpXVZXEbzwaH/sxksoDzL2SQcucaG4XDJ/igXnQjaFnL4fTREV2qv6BTMmz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bY6WpNBv; arc=none smtp.client-ip=198.175.65.17
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZfzCQT2r"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bY6WpNBv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778651070; x=1810187070;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=O92nAE98UPPJr8XOS7tH1ppqAw60hwfnt6RHEDtYlPU=;
-  b=ZfzCQT2rIbfUtU/AjKFGN2GoPxvojmzaNXo9EOOOt2GgmODNrABw2Owe
-   JJ23cKF2J7amTTnsJR5gP+h683C9O9HIdhX0lpJe5ZhLPIW7dTSmjhO1l
-   HQRNI9zNfhUxBrbXfO2a32dWaZXQfKnI3VmpBQfgIf0S246drhp9M0dVY
-   UWjmMn2BXhlxc2V1z76w8hf1XIuBL/gw3JGb5Rrl8C+0VDUo7eEe5QwRp
-   RW5JA2Jy578xp2OcqCQf9FwJsMHWGpE9K64Uhmy68S+c6lyQPD6oeNrzt
-   uhixxqtG9LAxxpUjbSW5++a6AjRVXAiNeIUszuDqUrbfZQsPj/iRRw6oa
+  t=1778651071; x=1810187071;
+  h=from:to:subject:date:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=h9TixR5m1JtUUcNZEQIXDGEIQUG45ThVQlp3ngWO6U4=;
+  b=bY6WpNBvpvV8q7bYpTjATFvDxnNPbFACgg2MAjwOdmGf6SD/28S1eTd2
+   /T3Gw0V9HWHKFqk+Hdt8Gfizc8fM5tckepq3E6d1An+mlaaWM9a7R6iDy
+   gKe79rdwRFBMUEdC19pczSAPhvgw1hosIchbsNRmvO6PQhwVLyjOJRImh
+   jr/HDH6uMk0jteC8Ih3QtKdq0o1oXGtuHbaQEbTflOeErcr7v1XokLKoR
+   5XptqWH+6JKF0ywA5ReTy/0qEu8QuoJYXRzYGkAY7pb+sCDJHT24+Ffyl
+   EpSAmogSH07BuZ8KdpZXH7m5UEeG5scKgSYJpnnxsYbsFFcvke5vwBpvA
    Q==;
-X-CSE-ConnectionGUID: 34pVlsQCTju2wyG/x63hjA==
-X-CSE-MsgGUID: bxHQQgNoRd2/xBb1Bznncg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11784"; a="79552838"
+X-CSE-ConnectionGUID: gburQD5dSZGezok7GQk7zA==
+X-CSE-MsgGUID: 8JS9haaeRryLhzcO7xwTyg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11784"; a="79552841"
 X-IronPort-AV: E=Sophos;i="6.23,232,1770624000"; 
-   d="scan'208";a="79552838"
+   d="scan'208";a="79552841"
 Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 22:44:28 -0700
-X-CSE-ConnectionGUID: sk4GPB4ESwyOJ/M7/HpdgA==
-X-CSE-MsgGUID: TWrWJqhJQy2flaGppqibcw==
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 22:44:30 -0700
+X-CSE-ConnectionGUID: r/sN1CmVRp26UwsBz0adiQ==
+X-CSE-MsgGUID: +VM6wTZdRpGN+7+i8N/sBA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,232,1770624000"; 
-   d="scan'208";a="238077937"
+   d="scan'208";a="238077941"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 22:44:26 -0700
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 22:44:29 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Avinash Bhatt <avinash.bhatt@intel.com>
-Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: mld: implement PSD/EIRP RSSI adjustment
-Date: Wed, 13 May 2026 08:43:56 +0300
-Message-Id: <20260513084215.ff1c5ba7491f.I2403678e34625809a7edf02f18760eda16a2c906@changeid>
+Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: bump core version for BZ/SC/DR to 104
+Date: Wed, 13 May 2026 08:43:58 +0300
+Message-Id: <20260513084215.9d584ef19b3c.I2b5b08ff63f8fafda6bc888b597615ad7d34f537@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260513054402.2897702-1-miriam.rachel.korenblit@intel.com>
 References: <20260513054402.2897702-1-miriam.rachel.korenblit@intel.com>
@@ -61,181 +60,80 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Avinash Bhatt <avinash.bhatt@intel.com>
+Start supporting Core 104 FW on these devices.
 
-APs operating in PSD mode increase transmit power with bandwidth,
-requiring RSSI compensation for accurate link grading.
-
-Parse TPE elements to determine power mode and apply RSSI adjustment
-based on operational bandwidth and power constraints.
-
-Signed-off-by: Avinash Bhatt <avinash.bhatt@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/link.c | 143 ++++++++++++++++++
- 1 file changed, 143 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.c b/drivers/net/wireless/intel/iwlwifi/mld/link.c
-index 785459937fbe..70965627e2dd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/link.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/link.c
-@@ -972,6 +972,145 @@ iwl_mld_get_dup_beacon_rssi_adjust(struct iwl_mld *mld,
- 	}
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+index a70b356d9576..51d7c599e998 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2025 Intel Corporation
++ * Copyright (C) 2018-2026 Intel Corporation
+  */
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+@@ -10,7 +10,7 @@
+ #include "fw/api/txq.h"
  
-+static s8 iwl_mld_get_primary_psd(const struct ieee80211_parsed_tpe_psd *psd,
-+				  const struct cfg80211_chan_def *chandef,
-+				  int bw_mhz)
-+{
-+	int start_freq, primary_idx;
-+
-+	if (!psd->valid)
-+		return S8_MAX;
-+
-+	start_freq = chandef->center_freq1 - (bw_mhz / 2);
-+	primary_idx = (chandef->chan->center_freq - start_freq - 10) / 20;
-+
-+	if (primary_idx < 0 || primary_idx >= psd->count)
-+		return S8_MAX;
-+
-+	/* TPE element stores PSD limit as value * 2 */
-+	return psd->power[primary_idx] / 2;
-+}
-+
-+static s8 iwl_mld_get_psd_eirp_rssi_adjust(struct ieee80211_bss_conf *link_conf)
-+{
-+	const struct ieee80211_parsed_tpe *tpe = &link_conf->tpe;
-+	s8 psd_20mhz, psd_oper, psd_local, psd_reg, psd_boost;
-+	s8 min_20mhz, min_oper, adjustment, ap_power_limit;
-+	s8 psd_avg_local = S8_MAX, psd_avg_reg = S8_MAX;
-+	s8 eirp_20mhz, eirp_oper, eirp_local, eirp_reg;
-+	int bw_mhz, num_subchans;
-+	u8 bw_index;
-+
-+	/* PSD/EIRP adjustment is only specific to 6 GHz */
-+	if (WARN_ONCE(link_conf->chanreq.oper.chan->band != NL80211_BAND_6GHZ,
-+		      "PSD/EIRP adjustment called for non-6 GHz band %d\n",
-+		      link_conf->chanreq.oper.chan->band))
-+		return 0;
-+
-+	bw_mhz = nl80211_chan_width_to_mhz(link_conf->chanreq.oper.width);
-+
-+	switch (bw_mhz) {
-+	case 20:
-+		bw_index = 0;
-+		break;
-+	case 40:
-+		bw_index = 1;
-+		break;
-+	case 80:
-+		bw_index = 2;
-+		break;
-+	case 160:
-+		bw_index = 3;
-+		break;
-+	case 320:
-+		bw_index = 4;
-+		break;
-+	default:
-+		WARN_ONCE(1, "Unexpected bandwidth: %d MHz\n", bw_mhz);
-+		return 0;
-+	}
-+
-+	if (link_conf->power_type == IEEE80211_REG_VLP_AP)
-+		ap_power_limit = 14;
-+	else
-+		ap_power_limit = 23;
-+
-+	/* Primary 20 MHz PSD */
-+	psd_local = iwl_mld_get_primary_psd(&tpe->psd_local[0],
-+					    &link_conf->chanreq.oper,
-+					    bw_mhz);
-+	psd_reg = iwl_mld_get_primary_psd(&tpe->psd_reg_client[0],
-+					  &link_conf->chanreq.oper,
-+					  bw_mhz);
-+	psd_20mhz = min(psd_local, psd_reg);
-+
-+	/* TPE element stores EIRP limit as value * 2 */
-+	eirp_local = (tpe->max_local[0].valid && tpe->max_local[0].count > 0) ?
-+			tpe->max_local[0].power[0] / 2 : S8_MAX;
-+	eirp_reg = (tpe->max_reg_client[0].valid &&
-+		    tpe->max_reg_client[0].count > 0) ?
-+		      tpe->max_reg_client[0].power[0] / 2 : S8_MAX;
-+	eirp_20mhz = min(eirp_local, eirp_reg);
-+
-+	num_subchans = bw_mhz / 20;
-+
-+	if (tpe->psd_local[0].valid) {
-+		int sum_local = 0, valid_local = 0;
-+		int count_local = min(num_subchans, tpe->psd_local[0].count);
-+
-+		for (int i = 0; i < count_local; i++) {
-+			if (tpe->psd_local[0].power[i] != S8_MIN) {
-+				sum_local += tpe->psd_local[0].power[i];
-+				valid_local++;
-+			}
-+		}
-+		/* TPE element stores PSD limit as value * 2 */
-+		if (valid_local > 0)
-+			psd_avg_local = sum_local / valid_local / 2;
-+	}
-+
-+	if (tpe->psd_reg_client[0].valid) {
-+		int sum_reg = 0, valid_reg = 0;
-+		int count_reg = min(num_subchans, tpe->psd_reg_client[0].count);
-+
-+		for (int i = 0; i < count_reg; i++) {
-+			if (tpe->psd_reg_client[0].power[i] != S8_MIN) {
-+				sum_reg +=
-+					tpe->psd_reg_client[0].power[i];
-+				valid_reg++;
-+			}
-+		}
-+		/* TPE element stores PSD limit as value * 2 */
-+		if (valid_reg > 0)
-+			psd_avg_reg = sum_reg / valid_reg / 2;
-+	}
-+
-+	psd_oper = min(psd_avg_local, psd_avg_reg);
-+
-+	/* TPE element stores EIRP limit as value * 2 */
-+	eirp_local = (tpe->max_local[0].valid &&
-+		      tpe->max_local[0].count > bw_index) ?
-+			tpe->max_local[0].power[bw_index] / 2 : S8_MAX;
-+	eirp_reg = (tpe->max_reg_client[0].valid &&
-+		    tpe->max_reg_client[0].count > bw_index) ?
-+		      tpe->max_reg_client[0].power[bw_index] / 2 : S8_MAX;
-+	eirp_oper = min(eirp_local, eirp_reg);
-+
-+	min_20mhz = min(ap_power_limit, min(eirp_20mhz, psd_20mhz));
-+
-+	/* PSD boost: 10*log10(BW/20) approximated as 3*ilog2(BW/20) */
-+	psd_boost = 3 * ilog2(bw_mhz / 20);
-+
-+	/* Use int for psd_oper + psd_boost to prevent s8 overflow */
-+	min_oper = min(ap_power_limit,
-+		       min(eirp_oper,
-+			   (s8)min_t(int, psd_oper + psd_boost, S8_MAX)));
-+
-+	adjustment = max(min_oper - min_20mhz, 0);
-+
-+	return adjustment;
-+}
-+
- /* This function calculates the grade of a link. Returns 0 in error case */
- unsigned int iwl_mld_get_link_grade(struct iwl_mld *mld,
- 				    struct ieee80211_bss_conf *link_conf)
-@@ -1000,6 +1139,10 @@ unsigned int iwl_mld_get_link_grade(struct iwl_mld *mld,
- 		s8 rssi_adj_6g =
- 			iwl_mld_get_dup_beacon_rssi_adjust(mld, link_conf);
+ /* Highest firmware core release supported */
+-#define IWL_BZ_UCODE_CORE_MAX	103
++#define IWL_BZ_UCODE_CORE_MAX	104
  
-+		if (!rssi_adj_6g)
-+			rssi_adj_6g =
-+				iwl_mld_get_psd_eirp_rssi_adjust(link_conf);
-+
- 		if (!rssi_adj_6g)
- 			rssi_adj_6g = 4;
+ /* Lowest firmware core release supported */
+ #define IWL_BZ_UCODE_CORE_MIN	101
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
+index e95112fdc664..76fbc120a092 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+@@ -9,7 +9,7 @@
+ #include "fw/api/txq.h"
  
+ /* Highest firmware core release supported */
+-#define IWL_DR_UCODE_CORE_MAX	103
++#define IWL_DR_UCODE_CORE_MAX	104
+ 
+ /* Lowest firmware core release supported */
+ #define IWL_DR_UCODE_CORE_MIN	101
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+index d1e5cef42fff..db7858b2cb74 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2025 Intel Corporation
++ * Copyright (C) 2018-2026 Intel Corporation
+  */
+ #include <linux/module.h>
+ #include <linux/stringify.h>
+@@ -10,7 +10,7 @@
+ #include "fw/api/txq.h"
+ 
+ /* Highest firmware core release supported */
+-#define IWL_SC_UCODE_CORE_MAX	103
++#define IWL_SC_UCODE_CORE_MAX	104
+ 
+ /* Lowest firmware core release supported */
+ #define IWL_SC_UCODE_CORE_MIN	101
 -- 
 2.34.1
 
