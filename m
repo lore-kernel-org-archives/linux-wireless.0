@@ -1,55 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81FB53B3BE3
-	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2026 19:45:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC018390987
+	for <linux-wireless@vger.kernel.org>; Thu, 14 May 2026 19:45:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778787902; cv=none; b=Qpd702p4XXjkCkNXbVitzHobo3lYe4fgp7b823gWC+Bk2xn7eiL175pY2QGVzcZN/Sw3d7bvAPsbNKjSaZAnvcpPMtEuBebuVYChaKYDpYrOTQ1UA+WAZXeBFnU9TMuRjN7zMKif31YNBVXZ91/n+0xP+WxiNgIoBD5a8W8en90=
+	t=1778787904; cv=none; b=PhgBfbHNgFTF9oghBualzfWXYanDCG2I1xHBPD6/1eoA1x0BtigmNHcvE87gYSRGprNqeFjGODn/6JgNCE09U6/g4jMk+UyvvQbiWYHjtTlfuB+dDtXEaSVAyTxeC1ulg6yqEZBLTT/v80KY+XErdMDz8xTMHMIA5QdE5efKzkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778787902; c=relaxed/simple;
-	bh=Wr5pX1y94a1//aXoJapahlSqY58OZNE6MPEMJqU6HTs=;
+	s=arc-20240116; t=1778787904; c=relaxed/simple;
+	bh=H/BR6vVAxgALlYGNh4PSMQHWm5CefTxpF6lG80lT6yA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mVzAuQ4Bgw3YtYU+CfH24904DRsdd2oP9KKpxmjvJydkgXzcRQEoc4DqrpbsQgruD3pdGtVjHR40D501l+14B2Lb4859dhyXmHZbK7yefmZd8jVg92kweW4lQVgqRNH5kwwUBq2O0dr0i6YfvwLC2DGKlRg4QWjLJTQoCi1lwfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VU2an8Lv; arc=none smtp.client-ip=198.175.65.15
+	 MIME-Version; b=F7ZFKEBJH+dBubdR9w+Ifhxb6NT5aTXks50EzFiHNvgKO7picQ+lTrvsgMEwzWnOCgguzW/C093/WDmfoH25AuIK8BZmGp36BqFb5mWnNU6moNd6rSWkOYrc+RQdkEkn8MiI2SgTRcnEQG4aiEH7he0Gh1pLeH+UrqMRY0957Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UbUyGF5C; arc=none smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VU2an8Lv"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UbUyGF5C"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778787902; x=1810323902;
+  t=1778787903; x=1810323903;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Wr5pX1y94a1//aXoJapahlSqY58OZNE6MPEMJqU6HTs=;
-  b=VU2an8LvaI1SXOYs//ix3pkRqiJbjQgCDxzPOnAa1JE/k/5Xzjg1Vueq
-   iKmFpf+9doc+dZh7DvhzJr1uIKjoiEDgb065lhq/aA087Wy7b5J57bcXZ
-   eMotsOC36u5QpgNJQ6Su9lDxnQbkdArCQte4+/HTV60ITP3nBEvAaatTv
-   1GvV2X9HN3z3qMcPVn62wCcnE9xbt3bbqdjdGNe78yiPTQCb6E86DBk3l
-   lg3nkUbXxDGGc0BwasrPLBsBgxg1EzZ48b6jeVO9sqY0BMGjVw8uHNal+
-   MA35tRhxRjUPvzA63xOXAuhPlz7ttcMOpZKMxew+tn33Lyh6y3pyIpefl
-   A==;
-X-CSE-ConnectionGUID: j3/nO8rLT1+u6qT0aorUuw==
-X-CSE-MsgGUID: WTIuWpuySMyP3IPpQrpWkg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="83352590"
+  bh=H/BR6vVAxgALlYGNh4PSMQHWm5CefTxpF6lG80lT6yA=;
+  b=UbUyGF5CfMKShSdaV4cU6AzYxUARFayO7WilPr/y6mKYJr30KaTZf645
+   FJZ+0ON/heIYff3yVx53wuwaxplJhWNqE/r7d2Yp5PwSV9BciGLHY6+9f
+   EV0ow7k5HuJAJ69gUzaNT2OpYN5qVChT5y08r4DkF4/ejJk/9QSfPiw/b
+   9w4D22I25Zz4ORLY7Vc1rhf2vNVd1Oblf5fRbn1UWuwPYzlGPFSCwFmbi
+   Bb/ZCyWKbqdhRiK1URfc74muWKv+i4dgF8XAzZzNmlthT4cWZCx79En0e
+   NefowcBkUaLUseXLx5kgePQFBJwoI3IFsnAW73XvMkgytnogk/3NL15r7
+   Q==;
+X-CSE-ConnectionGUID: fSOm1wuIS0SKLUsyNfgQAA==
+X-CSE-MsgGUID: yUFlxI/PS7WSmqLJERdwbg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="83352597"
 X-IronPort-AV: E=Sophos;i="6.23,235,1770624000"; 
-   d="scan'208";a="83352590"
+   d="scan'208";a="83352597"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 12:45:01 -0700
-X-CSE-ConnectionGUID: HR7Zx4TgQuePlKcGs2Mlxg==
-X-CSE-MsgGUID: VTYSWNX0TnWpHafhaem2UQ==
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 12:45:02 -0700
+X-CSE-ConnectionGUID: 9U2BZXYLRX+Yd2uIjLUJRw==
+X-CSE-MsgGUID: F4e6Be1TQ3mi5Fbrtncx6w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,235,1770624000"; 
-   d="scan'208";a="237616297"
+   d="scan'208";a="237616325"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 12:44:59 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 12:45:01 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: mld: Disallow using a per-STA GTK for Tx
-Date: Thu, 14 May 2026 22:44:27 +0300
-Message-Id: <20260514224230.b004744087cb.I25fb83f9e3dc563d122a160da150d793155513fa@changeid>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH iwlwifi-next 09/15] wifi: iwlwifi: mld: rename LINK_DEBUGFS_WRITE_FILE_OPS
+Date: Thu, 14 May 2026 22:44:28 +0300
+Message-Id: <20260514224230.5bff36ea7dd0.I62b01f83b622f281257fb842d9cc00b28dc2f5e1@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260514194434.401241-1-miriam.rachel.korenblit@intel.com>
 References: <20260514194434.401241-1-miriam.rachel.korenblit@intel.com>
@@ -62,40 +61,32 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-When a GTK is configured for a station, it can only be used for Rx
-and never for Tx. In such a case, set the IWL_SEC_KEY_FLAG_NO_TX
-flag when the key is installed, so the FW will not use it for Tx.
+These are with wiphy mutex held, so rename the macro to
+LINK_DEBUGFS_WIPHY_WRITE_FILE_OPS indicating that.
 
-Specifically, this is needed for per-station GTK installed on NAN
-NDI stations associated with NAN Data interfaces.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 tested: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/key.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mld/debugfs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/key.c b/drivers/net/wireless/intel/iwlwifi/mld/key.c
-index a6454d90d0e3..bf80b4770b5a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/key.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/key.c
-@@ -49,6 +49,12 @@ static u32 iwl_mld_get_key_flags(struct iwl_mld *mld,
- 	if (key->flags & IEEE80211_KEY_FLAG_SPP_AMSDU)
- 		flags |= IWL_SEC_KEY_FLAG_SPP_AMSDU;
- 
-+	/* When a GTK is configured for a station, it can only be
-+	 * used for Rx and never for Tx. Thus, set the NO TX flag.
-+	 */
-+	if (!pairwise && sta)
-+		flags |= IWL_SEC_KEY_FLAG_NO_TX;
-+
- 	return flags;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+index ba5a47519aa1..afe972834cb8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/debugfs.c
+@@ -979,7 +979,8 @@ void iwl_mld_add_vif_debugfs(struct ieee80211_hw *hw,
+ 	VIF_DEBUGFS_ADD_FILE(twt_operation, mld_vif_dbgfs, 0200);
+ 	VIF_DEBUGFS_ADD_FILE(int_mlo_scan, mld_vif_dbgfs, 0200);
  }
+-#define LINK_DEBUGFS_WRITE_FILE_OPS(name, bufsz)			\
++
++#define LINK_DEBUGFS_WIPHY_WRITE_FILE_OPS(name, bufsz)			\
+ 	WIPHY_DEBUGFS_WRITE_FILE_OPS(link_##name, bufsz, bss_conf)
  
+ #define LINK_DEBUGFS_ADD_FILE_ALIAS(alias, name, parent, mode)		\
 -- 
 2.34.1
 
