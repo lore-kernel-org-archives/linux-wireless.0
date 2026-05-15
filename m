@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32EE0478E53
-	for <linux-wireless@vger.kernel.org>; Fri, 15 May 2026 12:10:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB2547ECFF
+	for <linux-wireless@vger.kernel.org>; Fri, 15 May 2026 12:10:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778847022; cv=none; b=p9Zfuee/Vaa2dQWvMuOyBwIQZ7eR0KxkSbc3tWuPkNZu9jNKuBu8P7XQeFzMeWx61a4nlTTbRMDd6M5CDPLopacsITYBt0DiL3rZzP/VDK87if4jo5uHAd95X8utjPXTyiIcspQn/0pDG2GRT0EUeIYE0634PzK932Z2tP4/19c=
+	t=1778847024; cv=none; b=ptbqdqcO6l219AMz6OfnvQzyaKVSQ4108CphV76TioTmynzsbGrDwyvVCWwxfzW20T+n9qiAFuExJihBTVEfYD14Mf9ov6fWh2x7OZ5X8IDRxD93OkZ+gZu2jzopQTg8cIn7hmsu0MzqtslJ5tBuyzJlYMz5NCVdyeQQCod69DM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778847022; c=relaxed/simple;
-	bh=75ROxb1uiyCqVutGTVVrEAXNZA5DckGYg5JONs791BI=;
+	s=arc-20240116; t=1778847024; c=relaxed/simple;
+	bh=BYKjSB258Uz3bMvBBAR0gYWkOiPb0PfXDbQYisiaK80=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=bVfUD5f0nrWmfAnreYQlUP3yCiIjbhiDeVh9uknRbJCpvr2jpTfDGqhM4LgMX+UlUd/gJ3z7I6ZfPOL7/Ql3hviGU4/wsmwGNt3Yk80yjow51WNKIFfPF/Rh6Ni9cbVn/GBsa85FVY7rOE3AEq6Kbw4yOVXCIeeKLPA4zFQuaqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=O0wOojsL; arc=none smtp.client-ip=192.198.163.10
+	 MIME-Version; b=Nd9we3hyiZhMZtf2ztP6Kru0ygqCoW/YZfogRkTPiSnx2HNw9TleqbOIaqwOkvlOAeutldDaO9xmFlmiJHBI4O2XAmGjbYBMi4IF/SXdOEU3vUwLGCmVXskXDpc0yRqN7pgvKdgoa7V0Ui9DJO4eEDjG2v2idzLqrhiCJBvnfR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KFz7dSmY; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="O0wOojsL"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KFz7dSmY"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778847021; x=1810383021;
+  t=1778847022; x=1810383022;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=75ROxb1uiyCqVutGTVVrEAXNZA5DckGYg5JONs791BI=;
-  b=O0wOojsLx3TJb5w+zOfk5txXQiPHSKzHaEtjd6rGpgmAhXNDVDDGf2/i
-   RTGRF3MalM5Yt5gqiiZ9jVRLmJdQ0X/ofRksqRT5tK9r0YO3hZAwdcS+2
-   fxdNvXKqCZT8d7YDnMOfAJpq80883weP6bNSE8K1jDRNlJJfQNUAHP6LH
-   OLDG9LxjuwE+Gj+G5YSVoFpq9h17Vs4FYiRgq0eE3wvYjvTQS9nPy/b18
-   O8Xpq+6xkBqHBO19++7r5ApHxOJfg1AkGwFtPiEO/GR/VbUVRf1nSOYX8
-   xmd9r6ovbBXvwTv9Jr0fIFuHWVRskERXTMwuDFmssOuuGC66XtS9cUiX5
-   A==;
-X-CSE-ConnectionGUID: SercRauiRDOFY+hIFhBoyA==
-X-CSE-MsgGUID: pGOiTNE9Rz2RDb3lDFJt8w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="91185689"
+  bh=BYKjSB258Uz3bMvBBAR0gYWkOiPb0PfXDbQYisiaK80=;
+  b=KFz7dSmYlCIjDQk8T1cDwwanFNX8XVwdg7BiHmYat51/Xdyp7yyd6Son
+   O6E8LdmoFkgtmoGl3lUmZMire8GlP6Z6F2Q+TZ5mvUM00sUWwWD49m2rZ
+   Ct7SsqSo+Ep5x9MLpXLNdWXChwjUFtet1zeLnjLv5UoUIsWzF7ANnMOvi
+   LGByzhCCMIAt6kz7I1oHtGiolGEuCPXEao14bX5VAS1UKYvAn63o2B9KN
+   0/PN3vm01KjSwxXfxW+5EzgQGmG5RWd2qZSZCEAML+PwxJveoZGJd1Fvx
+   UwCchDeEmPKqkBtcCq3Lg+/2yWHZ0IRfa1578/kcFmLHIO+7LuQL2psVR
+   w==;
+X-CSE-ConnectionGUID: jlkDu9EHSW2aiveDYBe8Og==
+X-CSE-MsgGUID: yQwEOMsdQ36AERE1sTIlCw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="91185693"
 X-IronPort-AV: E=Sophos;i="6.23,236,1770624000"; 
-   d="scan'208";a="91185689"
+   d="scan'208";a="91185693"
 Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2026 05:10:20 -0700
-X-CSE-ConnectionGUID: SoJY9H7HSWqqWPDWt9tg/w==
-X-CSE-MsgGUID: N+NIpK6VSYWrp6z+JZLUGQ==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2026 05:10:22 -0700
+X-CSE-ConnectionGUID: zh9BtrucR0+TwI1HlN/yLg==
+X-CSE-MsgGUID: LqbW6ye1QCSCz8I3Wl2YXg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,236,1770624000"; 
-   d="scan'208";a="243650063"
+   d="scan'208";a="243650072"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2026 05:10:19 -0700
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2026 05:10:20 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 iwlwifi-next 13/15] wifi: iwlwifi: pcie: add two LNL PCI IDs
-Date: Fri, 15 May 2026 15:09:46 +0300
-Message-Id: <20260515150751.d2e3c380227a.I791eef3dedc11a8b246ce3130a34018886e63d3f@changeid>
+Cc: Shahar Tzarfati <shahar.tzarfati@intel.com>
+Subject: [PATCH v2 iwlwifi-next 14/15] wifi: iwlwifi: mld: expose beacon avg signal
+Date: Fri, 15 May 2026 15:09:47 +0300
+Message-Id: <20260515150751.a74a22d90890.I74d596359c5b69364fb977fdf31396eb57ca0927@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260515120948.1157329-1-miriam.rachel.korenblit@intel.com>
 References: <20260515120948.1157329-1-miriam.rachel.korenblit@intel.com>
@@ -61,29 +61,120 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar Tzarfati <shahar.tzarfati@intel.com>
 
-Add two PCI IDs for two WiFi-7 BE1735x Killer devices (these
-are CRFs) so they work when put into the LNL platform.
+Store beacon_average_energy from per-link FW statistics and expose it
+via station_info as rx_beacon_signal_avg in sta statistics.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This fixes missing beacon average signal reporting to upper layers.
+
+Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mld/link.h |  3 ++
+ .../net/wireless/intel/iwlwifi/mld/stats.c    | 47 ++++++++++++++++++-
+ 2 files changed, 48 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index fdafbad506a7..b0c59181907e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -537,6 +537,8 @@ VISIBLE_IF_IWLWIFI_KUNIT const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0xA840, 0x4314, iwl_bz_mac_cfg)},
- 	{IWL_PCI_DEVICE(0xA840, 0x1775, iwl_bz_mac_cfg)},
- 	{IWL_PCI_DEVICE(0xA840, 0x1776, iwl_bz_mac_cfg)},
-+	{IWL_PCI_DEVICE(0xA840, 0x1735, iwl_bz_mac_cfg)},
-+	{IWL_PCI_DEVICE(0xA840, 0x1736, iwl_bz_mac_cfg)},
- 	{IWL_PCI_DEVICE(0x7740, PCI_ANY_ID, iwl_bz_mac_cfg)},
- 	{IWL_PCI_DEVICE(0x4D40, PCI_ANY_ID, iwl_bz_mac_cfg)},
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/link.h b/drivers/net/wireless/intel/iwlwifi/mld/link.h
+index 4527f054ce92..0b3974d86531 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/link.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/link.h
+@@ -36,6 +36,8 @@ struct iwl_probe_resp_data {
+  * @rcu_head: RCU head for freeing this data.
+  * @fw_id: the fw id of the link.
+  * @active: if the link is active or not.
++ * @avg_signal: The current average signal of beacons [dBm] retrieved from
++ *	firmware per-link periodic stats (STATISTICS_OPER_NOTIF).
+  * @queue_params: QoS data from mac80211. This is updated with a call to
+  *	drv_conf_tx per each AC, and then notified once with BSS_CHANGED_QOS.
+  *	So we store it here and then send one link cmd for all the ACs.
+@@ -68,6 +70,7 @@ struct iwl_mld_link {
+ 	struct_group(zeroed_on_hw_restart,
+ 		u8 fw_id;
+ 		bool active;
++		s8 avg_signal;
+ 		struct ieee80211_tx_queue_params queue_params[IEEE80211_NUM_ACS];
+ 		struct ieee80211_chanctx_conf __rcu *chan_ctx;
+ 		bool he_ru_2mhz_block;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/stats.c b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
+index b93e0f8ab5fb..e7b283cbe199 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/stats.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/stats.c
+@@ -311,6 +311,40 @@ static void iwl_mld_sta_stats_fill_txrate(struct iwl_mld_sta *mld_sta,
+ 	}
+ }
+ 
++static void iwl_mld_sta_stats_fill_beacon_signal_avg(struct ieee80211_vif *vif,
++						     struct station_info *sinfo)
++{
++	struct ieee80211_bss_conf *link_conf;
++	struct iwl_mld_link *link;
++	u8 link_id;
++
++	if (iwl_mld_emlsr_active(vif))
++		return;
++
++	/* TODO: support statistics for NAN */
++	if (vif->type == NL80211_IFTYPE_NAN ||
++	    vif->type == NL80211_IFTYPE_NAN_DATA)
++		return;
++
++	link_id = iwl_mld_get_primary_link(vif);
++	link_conf = link_conf_dereference_protected(vif, link_id);
++
++	if (WARN_ONCE(!link_conf,
++		      "link_conf is NULL for link_id=%u\n", link_id))
++		return;
++
++	link = iwl_mld_link_from_mac80211(link_conf);
++	if (WARN_ONCE(!link,
++		      "iwl_mld_link is NULL for link_id=%u\n", link_id))
++		return;
++
++	if (!link->avg_signal)
++		return;
++
++	sinfo->rx_beacon_signal_avg = link->avg_signal;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
++}
++
+ void iwl_mld_mac80211_sta_statistics(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_sta *sta,
+@@ -329,9 +363,9 @@ void iwl_mld_mac80211_sta_statistics(struct ieee80211_hw *hw,
+ 
+ 	iwl_mld_sta_stats_fill_txrate(mld_sta, sinfo);
+ 
+-	/* TODO: NL80211_STA_INFO_BEACON_RX */
++	iwl_mld_sta_stats_fill_beacon_signal_avg(vif, sinfo);
+ 
+-	/* TODO: NL80211_STA_INFO_BEACON_SIGNAL_AVG */
++	/* TODO: NL80211_STA_INFO_BEACON_RX */
+ }
+ 
+ #define IWL_MLD_TRAFFIC_LOAD_MEDIUM_THRESH	10 /* percentage */
+@@ -443,6 +477,8 @@ iwl_mld_process_per_link_stats(struct iwl_mld *mld,
+ 	     fw_id++) {
+ 		const struct iwl_stats_ntfy_per_link *link_stats;
+ 		struct ieee80211_bss_conf *bss_conf;
++		struct iwl_mld_link *link;
++		u32 avg_raw;
+ 		int sig;
+ 
+ 		bss_conf = iwl_mld_fw_id_to_link_conf(mld, fw_id);
+@@ -456,6 +492,13 @@ iwl_mld_process_per_link_stats(struct iwl_mld *mld,
+ 		sig = -le32_to_cpu(link_stats->beacon_filter_average_energy);
+ 		iwl_mld_update_link_sig(bss_conf->vif, sig, bss_conf);
+ 
++		link = iwl_mld_link_from_mac80211(bss_conf);
++		if (WARN_ON_ONCE(!link))
++			continue;
++
++		avg_raw = le32_to_cpu(link_stats->beacon_average_energy);
++		link->avg_signal = clamp_t(int, -(int)avg_raw, S8_MIN, 0);
++
+ 		/* TODO: parse more fields here (task=statistics)*/
+ 	}
  
 -- 
 2.34.1
