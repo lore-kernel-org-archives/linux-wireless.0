@@ -1,54 +1,54 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF059305692
-	for <linux-wireless@vger.kernel.org>; Sun, 17 May 2026 08:00:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271882DEA6B
+	for <linux-wireless@vger.kernel.org>; Sun, 17 May 2026 08:00:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779004844; cv=none; b=VMIsgZt8exZ/NF98jW85KiYmiYwp1ttzMq/moq1TAZpq0Cgn36KnwuesHu72NgMlUNtSRi2I4uYt5fGaBwelWF9NUkvalG+ecSmjVsA7EL2yEJyDUkqvhn7w0Sr+EejLyJeq9xkSnhV7aE4nmZoEGJ6mwmcdXh5l7MiFjLNq+L8=
+	t=1779004845; cv=none; b=BbSlmDEYuLmTI6inK4YP5rjXD5e9h47Tnv6Qmlq5c3dBXolUH5ZkjsKOoS9GrI3HleW3R31dc3dmDCr55qm4nDM6x6FKH3Pt0c4xy19TA5SBln1SfaFQVGxOV3Y5c9fXD0y9/S+8Bxx2bFL29wbWptoOkE1Z5ZvOieK3indfc4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779004844; c=relaxed/simple;
-	bh=aVvN7l/cv+cS3SACNrVPV0+d0dDH2qI1BNo5effPBKM=;
+	s=arc-20240116; t=1779004845; c=relaxed/simple;
+	bh=G0/iNgEqyoajl8BcvSILudCcCIH2x2OpakqIfzsQEj4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Q3w0kX85S4OcmbPs09Vng5fZd2ZCtCw0Df9vX/Vt+ioKvVY5weTKDHtro79t7P1iIbISraJGhvX3HIGgFUSsRrhhGbHkkVrrgrsZX4quaZ6QAjKJq7qpHIS4mDJDoLP0uWN85E/UUGHz1i7v2M+jp5O/pPjAXEetJ9s7p0uDZks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Olt50zXW; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version; b=XCF2PSA4cIDegJhvHdwgzAC9h2PtglDFtbCI/mjAHVqw+6RISbyJUiYr3jlGl12MLbOTVUlsnKSRqBoN6Tn0iay53KI1/ASxfTDJh6V+qY0oZ0xDwrdsESoju+ZnjVLiVoNauEAGLbUvKketKHR1LfbWtE7/MLX5Kf2BuMFdldc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ijkklfni; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Olt50zXW"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ijkklfni"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779004841; x=1810540841;
+  t=1779004844; x=1810540844;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=aVvN7l/cv+cS3SACNrVPV0+d0dDH2qI1BNo5effPBKM=;
-  b=Olt50zXWJSVKBeI7myFtmSonJnXL0eJhMTq+h/qvV84+UNYqIPRM7eoO
-   PQlok2zdXZ34yuLjTobLTKBn+TxdxuyT2HwPewqdUmuo4dyrpQYmA4g1r
-   Eeyh6gWhgquxRZ0RWu0LalXBkvmChGn4kaLsUPCzPzdOMW1a8HLMeGXfx
-   R3BBofIRDaagVJKZp6Kb9t6PxuIA9xxatX1eP9W/Y4RAgJ2F8jvIxUraZ
-   A9LRBEpf/LXN/kpNOk+pps+/vWS1Tg98fbjmOCzR3fs/5abyzjOeUf0yq
-   MlzGdkZTt3OTvTEFJlayKFXWm6IPFzpI1BZA3h/pAi0Y9wYYti+JfNK/g
+  bh=G0/iNgEqyoajl8BcvSILudCcCIH2x2OpakqIfzsQEj4=;
+  b=IjkklfniErIJoq0T1/PzgOkGdYofPpqb4GZW7UFU84ZTq0e896uZyicc
+   rfy0fsdW604zZsmsGEeXavi2ip5voTIHGk1Um0Wc+c+vOHJOwQuqBnKl/
+   k2ojmUmBiGot9u0sgumTqdYQW3M14egj5k3wGaJDushYwcqyd67KeIF54
+   PmQp10c2KkIez5MkSvJ4I4d8NHcIAEopJtFwGwZjoMHNpUT1p3eYbN38u
+   y2Kjq/6ClIrj4G6SR3fgHM40c13SoK+KQUzmrbOJjwlqbjCusf1iXF9Op
+   8neSjMhqcmy3vBl2oBM36/cMnfhYGjsd09zpzKcD5o18hYDg3z1sxY2jV
    g==;
-X-CSE-ConnectionGUID: LuC5ZbqbQ4azbxsOPuZ+Sw==
-X-CSE-MsgGUID: aqIAVGioS6ixqYeZn2tJpg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11788"; a="79606974"
+X-CSE-ConnectionGUID: ot+b33QRQh+ywWmCsC661A==
+X-CSE-MsgGUID: kjqIk/cfTlmEXjmCFVu//A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11788"; a="79606979"
 X-IronPort-AV: E=Sophos;i="6.23,239,1770624000"; 
-   d="scan'208";a="79606974"
+   d="scan'208";a="79606979"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:00:40 -0700
-X-CSE-ConnectionGUID: 8MvYwpUNQoyD2vvJ1QcihQ==
-X-CSE-MsgGUID: +1DBY+3JSqmOvwQrqgGNLg==
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:00:43 -0700
+X-CSE-ConnectionGUID: Bx7NRkVZTTSWSusyRlG0bQ==
+X-CSE-MsgGUID: Hl04bJ7aSFyoA7A9Sz7xgg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,239,1770624000"; 
-   d="scan'208";a="236490503"
+   d="scan'208";a="236490527"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:00:39 -0700
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:00:42 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 iwlwifi-next 12/15] wifi: iwlwifi: fw: dbg: always use non-tracing PRPH access
-Date: Sun, 17 May 2026 10:59:56 +0300
-Message-Id: <20260517100550.bbc7623a0348.I827729916da8f264befbcb90ac6509c359ee97a3@changeid>
+Subject: [PATCH v2 iwlwifi-next 14/15] wifi: iwlwifi: dbg: remove unused 'range_len' arg from dump
+Date: Sun, 17 May 2026 10:59:58 +0300
+Message-Id: <20260517100550.ea3502f97c2a.I4ce08f0ea7ea3bacd4928b427c0710b77259d002@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260517075959.2815365-1-miriam.rachel.korenblit@intel.com>
 References: <20260517075959.2815365-1-miriam.rachel.korenblit@intel.com>
@@ -63,192 +63,219 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The iwl_{read,write}_prph_no_grab() functions will trace each
-access, but in debug dump a lot of accesses already use the
-transport versions of these functions directly. Since the data
-(register addresses and their content) is going into the dump
-file, tracing isn't really needed. Use the transport functions
-in all places.
+None of the functions use this, and it's not really passed the
+length of the specific range anyway, but rather the entire
+remaining size. Remove the unused argument.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 63 +++++++++++----------
- 1 file changed, 32 insertions(+), 31 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 45 ++++++++++-----------
+ 1 file changed, 22 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 886c8e6ef48e..18667de4915f 100644
+index 64ead8ecd52c..069c3bad6f29 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -46,8 +46,8 @@ static void iwl_read_radio_regs(struct iwl_fw_runtime *fwrt,
- 		u32 rd_cmd = RADIO_RSP_RD_CMD;
+@@ -111,7 +111,7 @@ static int iwl_dump_ini_prph_mac_iter_common(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
+ 			   struct iwl_dump_ini_region_data *reg_data,
+-			   void *range_ptr, u32 range_len, int idx)
++			   void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	u32 addr = le32_to_cpu(reg->addrs[idx]) +
+@@ -124,7 +124,7 @@ iwl_dump_ini_prph_mac_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_prph_mac_block_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_addr_size *pairs = (void *)reg->addrs;
+@@ -201,7 +201,7 @@ static int iwl_dump_ini_prph_phy_iter_common(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
+ 			   struct iwl_dump_ini_region_data *reg_data,
+-			   void *range_ptr, u32 range_len, int idx)
++			   void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	u32 addr = le32_to_cpu(reg->addrs[idx]);
+@@ -214,7 +214,7 @@ iwl_dump_ini_prph_phy_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_prph_phy_block_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_addr_size *pairs = (void *)reg->addrs;
+@@ -227,7 +227,7 @@ iwl_dump_ini_prph_phy_block_iter(struct iwl_fw_runtime *fwrt,
  
- 		rd_cmd |= i << RADIO_RSP_ADDR_POS;
--		iwl_write_prph_no_grab(fwrt->trans, RSP_RADIO_CMD, rd_cmd);
--		*pos = (u8)iwl_read_prph_no_grab(fwrt->trans, RSP_RADIO_RDDAT);
-+		iwl_trans_write_prph(fwrt->trans, RSP_RADIO_CMD, rd_cmd);
-+		*pos = (u8)iwl_trans_read_prph(fwrt->trans, RSP_RADIO_RDDAT);
+ static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -246,7 +246,7 @@ static int iwl_dump_ini_csr_iter(struct iwl_fw_runtime *fwrt,
  
- 		pos++;
- 	}
-@@ -513,7 +513,7 @@ static void iwl_read_prph_block(struct iwl_trans *trans, u32 start,
- 	u32 i;
+ static int iwl_dump_ini_config_iter(struct iwl_fw_runtime *fwrt,
+ 				    struct iwl_dump_ini_region_data *reg_data,
+-				    void *range_ptr, u32 range_len, int idx)
++				    void *range_ptr, int idx)
+ {
+ 	struct iwl_trans *trans = fwrt->trans;
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+@@ -274,7 +274,7 @@ static int iwl_dump_ini_config_iter(struct iwl_fw_runtime *fwrt,
  
- 	for (i = 0; i < len_bytes; i += 4)
--		*data++ = cpu_to_le32(iwl_read_prph_no_grab(trans, start + i));
-+		*data++ = cpu_to_le32(iwl_trans_read_prph(trans, start + i));
+ static int iwl_dump_ini_dev_mem_iter(struct iwl_fw_runtime *fwrt,
+ 				     struct iwl_dump_ini_region_data *reg_data,
+-				     void *range_ptr, u32 range_len, int idx)
++				     void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -296,7 +296,7 @@ static int iwl_dump_ini_dev_mem_iter(struct iwl_fw_runtime *fwrt,
  }
  
- static void iwl_dump_prph(struct iwl_fw_runtime *fwrt,
-@@ -1132,16 +1132,16 @@ static int iwl_dump_ini_prph_phy_iter_common(struct iwl_fw_runtime *fwrt,
- 			continue;
- 		}
+ static int _iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
+-				     void *range_ptr, u32 range_len, int idx)
++				     void *range_ptr, int idx)
+ {
+ 	struct page *page = fwrt->fw_paging_db[idx].fw_paging_block;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -316,7 +316,7 @@ static int _iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
  
--		iwl_write_prph_no_grab(fwrt->trans, indirect_wr_addr,
--				       WMAL_INDRCT_CMD(addr + i));
-+		iwl_trans_write_prph(fwrt->trans, indirect_wr_addr,
-+				     WMAL_INDRCT_CMD(addr + i));
+ static int iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
+ 				    struct iwl_dump_ini_region_data *reg_data,
+-				    void *range_ptr, u32 range_len, int idx)
++				    void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_error_dump_range *range;
+ 	u32 page_size;
+@@ -325,7 +325,7 @@ static int iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
+ 	idx++;
  
- 		if (fwrt->trans->info.hw_rf_id != IWL_CFG_RF_TYPE_JF1 &&
- 		    fwrt->trans->info.hw_rf_id != IWL_CFG_RF_TYPE_JF2 &&
- 		    fwrt->trans->info.hw_rf_id != IWL_CFG_RF_TYPE_HR1 &&
- 		    fwrt->trans->info.hw_rf_id != IWL_CFG_RF_TYPE_HR2) {
- 			udelay(2);
--			prph_stts = iwl_read_prph_no_grab(fwrt->trans,
--							  WMAL_MRSPF_STTS);
-+			prph_stts = iwl_trans_read_prph(fwrt->trans,
-+							WMAL_MRSPF_STTS);
+ 	if (!fwrt->trans->mac_cfg->gen2)
+-		return _iwl_dump_ini_paging_iter(fwrt, range_ptr, range_len, idx);
++		return _iwl_dump_ini_paging_iter(fwrt, range_ptr, idx);
  
- 			/* Abort dump if status is 0xA5A5A5A2 or FIFO1 empty */
- 			if (prph_stts == WMAL_TIMEOUT_VAL ||
-@@ -1149,8 +1149,8 @@ static int iwl_dump_ini_prph_phy_iter_common(struct iwl_fw_runtime *fwrt,
- 				break;
- 		}
+ 	range = range_ptr;
+ 	page_size = fwrt->trans->init_dram.paging[idx].size;
+@@ -341,7 +341,7 @@ static int iwl_dump_ini_paging_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_mon_dram_iter(struct iwl_fw_runtime *fwrt,
+ 			   struct iwl_dump_ini_region_data *reg_data,
+-			   void *range_ptr, u32 range_len, int idx)
++			   void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -360,7 +360,7 @@ iwl_dump_ini_mon_dram_iter(struct iwl_fw_runtime *fwrt,
  
--		prph_val = iwl_read_prph_no_grab(fwrt->trans,
--						 indirect_rd_addr);
-+		prph_val = iwl_trans_read_prph(fwrt->trans,
-+					       indirect_rd_addr);
- 		*val++ = cpu_to_le32(prph_val);
- 	}
+ static int iwl_dump_ini_mon_smem_iter(struct iwl_fw_runtime *fwrt,
+ 				      struct iwl_dump_ini_region_data *reg_data,
+-				      void *range_ptr, u32 range_len, int idx)
++				      void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -428,7 +428,7 @@ static bool iwl_ini_txf_iter(struct iwl_fw_runtime *fwrt,
  
-@@ -1410,7 +1410,7 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
- 	range->fifo_hdr.num_of_registers = cpu_to_le32(registers_num);
- 	range->range_data_size = cpu_to_le32(iter->fifo_size + registers_size);
+ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -497,7 +497,7 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_prph_snps_dphyip_iter(struct iwl_fw_runtime *fwrt,
+ 				   struct iwl_dump_ini_region_data *reg_data,
+-				   void *range_ptr, u32 range_len, int idx)
++				   void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -610,7 +610,7 @@ static void iwl_ini_get_rxf_data(struct iwl_fw_runtime *fwrt,
  
--	iwl_write_prph_no_grab(fwrt->trans, TXF_LARC_NUM + offs, iter->fifo);
-+	iwl_trans_write_prph(fwrt->trans, TXF_LARC_NUM + offs, iter->fifo);
+ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -676,7 +676,7 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_err_table_iter(struct iwl_fw_runtime *fwrt,
+ 			    struct iwl_dump_ini_region_data *reg_data,
+-			    void *range_ptr, u32 range_len, int idx)
++			    void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_region_err_table *err_table = &reg->err_table;
+@@ -695,7 +695,7 @@ iwl_dump_ini_err_table_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_special_mem_iter(struct iwl_fw_runtime *fwrt,
+ 			      struct iwl_dump_ini_region_data *reg_data,
+-			      void *range_ptr, u32 range_len, int idx)
++			      void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_region_special_device_memory *special_mem =
+@@ -716,7 +716,7 @@ iwl_dump_ini_special_mem_iter(struct iwl_fw_runtime *fwrt,
+ static int
+ iwl_dump_ini_dbgi_sram_iter(struct iwl_fw_runtime *fwrt,
+ 			    struct iwl_dump_ini_region_data *reg_data,
+-			    void *range_ptr, u32 range_len, int idx)
++			    void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -746,7 +746,7 @@ iwl_dump_ini_dbgi_sram_iter(struct iwl_fw_runtime *fwrt,
  
- 	/*
- 	 * read txf registers. for each register, write to the dump the
-@@ -1420,8 +1420,8 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
- 		addr = le32_to_cpu(reg->addrs[i]) + offs;
+ static int iwl_dump_ini_fw_pkt_iter(struct iwl_fw_runtime *fwrt,
+ 				    struct iwl_dump_ini_region_data *reg_data,
+-				    void *range_ptr, u32 range_len, int idx)
++				    void *range_ptr, int idx)
+ {
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+ 	struct iwl_rx_packet *pkt = reg_data->dump_data->fw_pkt;
+@@ -767,7 +767,7 @@ static int iwl_dump_ini_fw_pkt_iter(struct iwl_fw_runtime *fwrt,
  
- 		reg_dump->addr = cpu_to_le32(addr);
--		reg_dump->data = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans,
--								   addr));
-+		reg_dump->data = cpu_to_le32(iwl_trans_read_prph(fwrt->trans,
-+								 addr));
+ static int iwl_dump_ini_imr_iter(struct iwl_fw_runtime *fwrt,
+ 				 struct iwl_dump_ini_region_data *reg_data,
+-				 void *range_ptr, u32 range_len, int idx)
++				 void *range_ptr, int idx)
+ {
+ 	/* read the IMR memory and DMA it to SRAM */
+ 	struct iwl_fw_ini_error_dump_range *range = range_ptr;
+@@ -1277,7 +1277,7 @@ struct iwl_dump_ini_mem_ops {
+ 			      void *data, u32 data_len);
+ 	int (*fill_range)(struct iwl_fw_runtime *fwrt,
+ 			  struct iwl_dump_ini_region_data *reg_data,
+-			  void *range, u32 range_len, int idx);
++			  void *range, int idx);
+ };
  
- 		reg_dump++;
- 	}
-@@ -1432,17 +1432,17 @@ static int iwl_dump_ini_txf_iter(struct iwl_fw_runtime *fwrt,
- 	}
+ struct iwl_fw_ini_dump_entry {
+@@ -1413,8 +1413,7 @@ static u32 iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt,
+ 	free_size -= header_size;
  
- 	/* Set the TXF_READ_MODIFY_ADDR to TXF_WR_PTR */
--	iwl_write_prph_no_grab(fwrt->trans, TXF_READ_MODIFY_ADDR + offs,
--			       TXF_WR_PTR + offs);
-+	iwl_trans_write_prph(fwrt->trans, TXF_READ_MODIFY_ADDR + offs,
-+			     TXF_WR_PTR + offs);
+ 	for (i = 0; i < le32_to_cpu(header->num_of_ranges); i++) {
+-		int range_size = ops->fill_range(fwrt, reg_data, range,
+-						 free_size, i);
++		int range_size = ops->fill_range(fwrt, reg_data, range, i);
  
- 	/* Dummy-read to advance the read pointer to the head */
--	iwl_read_prph_no_grab(fwrt->trans, TXF_READ_MODIFY_DATA + offs);
-+	iwl_trans_read_prph(fwrt->trans, TXF_READ_MODIFY_DATA + offs);
- 
- 	/* Read FIFO */
- 	addr = TXF_READ_MODIFY_DATA + offs;
- 	data = (void *)reg_dump;
- 	for (i = 0; i < iter->fifo_size; i += sizeof(*data))
--		*data++ = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans, addr));
-+		*data++ = cpu_to_le32(iwl_trans_read_prph(fwrt->trans, addr));
- 
- 	if (fwrt->sanitize_ops && fwrt->sanitize_ops->frob_txf)
- 		fwrt->sanitize_ops->frob_txf(fwrt->sanitize_ctx,
-@@ -1487,12 +1487,12 @@ iwl_dump_ini_prph_snps_dphyip_iter(struct iwl_fw_runtime *fwrt,
- 			continue;
- 		}
- 
--		iwl_write_prph_no_grab(fwrt->trans, indirect_rd_wr_addr,
--				       addr + i);
-+		iwl_trans_write_prph(fwrt->trans, indirect_rd_wr_addr,
-+				     addr + i);
- 		/* wait a bit for value to be ready in register */
- 		udelay(1);
--		prph_val = iwl_read_prph_no_grab(fwrt->trans,
--						 indirect_rd_wr_addr);
-+		prph_val = iwl_trans_read_prph(fwrt->trans,
-+					       indirect_rd_wr_addr);
- 		*val++ = cpu_to_le32((prph_val & DPHYIP_INDIRECT_RD_MSK) >>
- 				     DPHYIP_INDIRECT_RD_SHIFT);
- 	}
-@@ -1601,8 +1601,8 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
- 		addr = le32_to_cpu(reg->addrs[i]) + offs;
- 
- 		reg_dump->addr = cpu_to_le32(addr);
--		reg_dump->data = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans,
--								   addr));
-+		reg_dump->data = cpu_to_le32(iwl_trans_read_prph(fwrt->trans,
-+								 addr));
- 
- 		reg_dump++;
- 	}
-@@ -1615,18 +1615,17 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
- 	offs = rxf_data.offset;
- 
- 	/* Lock fence */
--	iwl_write_prph_no_grab(fwrt->trans, RXF_SET_FENCE_MODE + offs, 0x1);
-+	iwl_trans_write_prph(fwrt->trans, RXF_SET_FENCE_MODE + offs, 0x1);
- 	/* Set fence pointer to the same place like WR pointer */
--	iwl_write_prph_no_grab(fwrt->trans, RXF_LD_WR2FENCE + offs, 0x1);
-+	iwl_trans_write_prph(fwrt->trans, RXF_LD_WR2FENCE + offs, 0x1);
- 	/* Set fence offset */
--	iwl_write_prph_no_grab(fwrt->trans, RXF_LD_FENCE_OFFSET_ADDR + offs,
--			       0x0);
-+	iwl_trans_write_prph(fwrt->trans, RXF_LD_FENCE_OFFSET_ADDR + offs, 0x0);
- 
- 	/* Read FIFO */
- 	addr =  RXF_FIFO_RD_FENCE_INC + offs;
- 	data = (void *)reg_dump;
- 	for (i = 0; i < rxf_data.size; i += sizeof(*data))
--		*data++ = cpu_to_le32(iwl_read_prph_no_grab(fwrt->trans, addr));
-+		*data++ = cpu_to_le32(iwl_trans_read_prph(fwrt->trans, addr));
- 
- out:
- 	iwl_trans_release_nic_access(fwrt->trans);
-@@ -1690,9 +1689,11 @@ iwl_dump_ini_dbgi_sram_iter(struct iwl_fw_runtime *fwrt,
- 
- 	range->range_data_size = reg->dev_addr.size;
- 	for (i = 0; i < (le32_to_cpu(reg->dev_addr.size) / 4); i++) {
--		prph_data = iwl_read_prph_no_grab(fwrt->trans, (i % 2) ?
--					  DBGI_SRAM_TARGET_ACCESS_RDATA_MSB :
--					  DBGI_SRAM_TARGET_ACCESS_RDATA_LSB);
-+		prph_data =
-+			iwl_trans_read_prph(fwrt->trans,
-+					    (i % 2) ?
-+						DBGI_SRAM_TARGET_ACCESS_RDATA_MSB :
-+						DBGI_SRAM_TARGET_ACCESS_RDATA_LSB);
- 		if (iwl_trans_is_hw_error_value(prph_data)) {
- 			iwl_trans_release_nic_access(fwrt->trans);
- 			return -EBUSY;
-@@ -1791,7 +1792,7 @@ static __le32 iwl_get_mon_reg(struct iwl_fw_runtime *fwrt, u32 alloc_id,
- 	if (!reg_info || !reg_info->addr || !reg_info->mask)
- 		return 0;
- 
--	val = iwl_read_prph_no_grab(fwrt->trans, reg_info->addr + offs);
-+	val = iwl_trans_read_prph(fwrt->trans, reg_info->addr + offs);
- 
- 	return cpu_to_le32(mask_apply_and_normalize(val, reg_info->mask));
- }
+ 		if (range_size < 0) {
+ 			IWL_ERR(fwrt,
 -- 
 2.34.1
 
