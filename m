@@ -1,35 +1,35 @@
 Received: from smtpdh20-1.aruba.it (smtpdh20-1.aruba.it [62.149.155.164])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7936F1EB5E3
-	for <linux-wireless@vger.kernel.org>; Mon, 18 May 2026 01:53:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 480E41FECBA
+	for <linux-wireless@vger.kernel.org>; Mon, 18 May 2026 01:54:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.164
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779069221; cv=none; b=MKDcYGw3kdfRTMLiDSfBcen/fIHz/av4/+e2dQFEwKij0PE4wAgcj6sNrzq6WHXFpCldBirar4xqHg2H6vYN3+CV0pQGjLlxgEDnAyCyY9FDgOOP3Z/APV+upC/37djjty6GWsMdP1CsIwSYdyTzj5pawYqW3Ffpx/az5wtpA8I=
+	t=1779069261; cv=none; b=QhQYbQPNfagPFgvKb38Gb81ofNjVoHwIfvCpq9YD9Xg9jKRv9h1qGrsnnE0tnfAdjvw+sM92rw3soTOCSq36RPHB2YmTNkYZQcuodDOxHaiyfx5wkbk/q3F9d/8Tg5oLhpvuEzlnZfg7qi/h1c8WJrCeLFOplZ/T+ZX4p5AASRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779069221; c=relaxed/simple;
-	bh=f92PXsrNJbn1Pcjwgfmmj1GECyc39UkvGMf/+SXNDBk=;
+	s=arc-20240116; t=1779069261; c=relaxed/simple;
+	bh=Mdt8NKJaOHbPoFDFNwE0LYxPnB/LN/w2c+7vx0TXwuU=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=P/9jH9dK4lhSofh7ATig6Y8BNnxXrxoMb9IBnib2GdMonUvBHN+2ajr45aiUraA3cdNBCiF8vNjA4jS8rxZTfnnQuiv0wCi+sQJHFGS2NeA5JIvUJrzx2TRgpyUIJjngIEMzRVSdox4LfdxxeY2oEzqGzSMDDrIPCTl+dw7XQAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=Gblx13SA; arc=none smtp.client-ip=62.149.155.164
+	 In-Reply-To:Content-Type; b=JEg6k6t44D20BwKlLpa3fU5hcu/0bpOlX84G+Q8x1XvWNjRsSgHk+Ib7M9Q/jrIUuSCY3eCkdTaA7yY69X91KCt6VVbyHUpnZE6hZ+eCW/4tMr9xo9wkZDRj1Ve9dNne7jodrzWm6p+mlTuWsPj26lhtDPCg+oBX5F7iP39pDM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=TcRybzlL; arc=none smtp.client-ip=62.149.155.164
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="Gblx13SA"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="TcRybzlL"
 Received: from [192.168.1.83] ([79.20.159.46])
 	by Aruba SMTP with ESMTPSA
-	id OnApwqtIQEZ9tOnApwfr4s; Mon, 18 May 2026 03:53:39 +0200
+	id On8ZwqsNYEZ9tOn8Zwfqmp; Mon, 18 May 2026 03:51:19 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779069219; bh=f92PXsrNJbn1Pcjwgfmmj1GECyc39UkvGMf/+SXNDBk=;
+	t=1779069079; bh=Mdt8NKJaOHbPoFDFNwE0LYxPnB/LN/w2c+7vx0TXwuU=;
 	h=Date:MIME-Version:Subject:From:To:Content-Type;
-	b=Gblx13SAtEb9W8xwj8087xG2a/j+sSCNX8wC8QwXK2X77ILnJAXauLmcbwwSnPT0E
-	 nQRzrSk1hFix9COeb24LiUW8rp0ApV6PjNzSe2rcfRnM4PhyeF2ZiGA9EdMF6ZDMyz
-	 HH/VlgvueCypCCoIRNwwmvMYAIuuOPZYedQjm/yGrxwCvcM99/YrgMV7Mo8hmgS2kr
-	 8M6bG8J/43zVQ3VJUd2lXJ+fs1LJXp9ePF+oHt4qJ8XyAIxrBx8GdGnsOkXQj2aU10
-	 BFguf4ksdOmOrcba4o2UYI/AAZMYzS4CjgU2r3O/V+xPKZjY3DMCb071aoanASF61O
-	 fJhg7bc95ni+Q==
-Message-ID: <4581a48e-a6e4-46b1-853f-16db445d6890@mythread.it>
-Date: Mon, 18 May 2026 03:53:38 +0200
+	b=TcRybzlL4unEkmn3HQ+l0zrFsVip8JNk1J4o4XFq0reCuxQ/6WZQeGw41OQ2cO7Zu
+	 h6BraMxsTB99XL0mN1nDVHEEJ+iJA4+WuLe/w/mm21IsEyw7/8VmBOWAvlSXF4UtGO
+	 DO75X0xpPZ/KyNZIKOP9FjAyxfqSQE+nWi8evAhSCUyFyNT65poIcoTch9z77JC7Qu
+	 ZVdYRhAsd/KW39yLFAVgHnXqQWdieJrtvNl0SWkze0pnPI+2a0aEmFk565iTRdYZJp
+	 CmMXYZXzMNBbvoipX9ZD1SD03w3jtiQXDMSS4kP286ek7/KLf5pXlOBRa2gxfXNWEb
+	 gy4MqV1OWbPBQ==
+Message-ID: <3c2cba9c-8dc4-47a1-adb7-a7fd38d295e7@mythread.it>
+Date: Mon, 18 May 2026 03:51:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -37,7 +37,7 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 4/6] b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
+Subject: [PATCH 2/6] b43: route d11 corerev 22 to 24-bit indirect radio access
 Content-Language: it
 From: Alessio Ferri <alessio.ferri@mythread.it>
 To: linux-wireless@vger.kernel.org
@@ -47,104 +47,136 @@ References: <8c0a07d2-9ec9-43d6-bdf7-f625bbb4a38a@mythread.it>
 In-Reply-To: <8c0a07d2-9ec9-43d6-bdf7-f625bbb4a38a@mythread.it>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfAVt9958lNEGYmKhM3kGOm8jhgNbPjckyGJqChUkpjOijmN/r4gSxm686Gvv9Cs7gEXjeIOKzMAtVztZx4xXW06sW1u0FUVs/aYxIDSdnxMX7WdDcz6x
- W75fppm2wB1U2S7MNVGwfvYXWZEdqw1yuIs5+iRx0riBg1+OGWzOien0NzesK6utJvAcWSsNz6bSiIUw2ulETZ9Iwqh91PwA5nP99mLitbkyLcmYYaDFPKHa
- UwqniGIYyjMXytW2prRaqwW9KhCixmAGwcalWYy+6uE+/cNbcHNPaPzAHva9KnFHDHXzBIWrPuVaZgJxcMTGuw==
+X-CMAE-Envelope: MS4xfP+XANS/QP1ra5UIaxa6kPPRnUIq9DQSmK0PVDFsnIp8aJv/n3TC3QQFtM3ejpds/GSXSX6U1rbgd+lM8Q8bTEtOCsJjskiiDA1vBixmmTGOZLGvSOH3
+ 9FVFmJog/ceo8GT0NIHZgHSdrQYYfMuNc7SFHstO4GiZuG+jYdujdCwHixagKeQhkd98TwNyxNvBx719AnI6D5jYwd8DZrIcPpSIbRPMt3UMYHyUwz7mnJuS
+ ESTWRod6bDGHKbZ6zl19IAT/I0cyMQaWSaAsEJM95tUa4U3KD/eJbjTXbxBRSR3q11cge/6iQsHUSERicnAO8w==
 
-Add the 2.4 GHz IPA TX gain table for N-PHY rev 8 paired with radio
-2057 rev 8 and wire it to the existing dispatcher.
+D11 core revision 22 is an outlier in the corerev-to-radio-access
+mapping. b43_phy_versioning() reads radio identifiers via two
+different paths:
 
-b43_nphy_get_ipa_gain_table() in tables_nphy.c currently handles
-case 8 only for radio_rev == 5; radio_rev == 8 falls through and
-the function logs:
+  - core_rev >= 24: 24-bit indirect access (B43_MMIO_RADIO24_CONTROL
+    + B43_MMIO_RADIO24_DATA);
+  - otherwise: legacy 4-wire access (B43_MMIO_RADIO_CONTROL +
+    B43_MMIO_RADIO_DATA_LOW/HIGH).
 
-    b43-phyX ERROR: No 2GHz IPA gain table available for this device
-    b43-phyX ERROR: PHY init: Channel switch to default failed
+Corerev 22 backports the older 802.11 core but pairs it with a radio
+in the 2057 family, which requires the 24-bit indirect path. With
+the current dispatch, corerev 22 falls into the legacy 4-wire branch,
+reads garbage for radio_id, and bails out with -EOPNOTSUPP at the
+"FOUND UNSUPPORTED RADIO" branch below.
 
-leaving b43_phy_init() to return an error and core_init to abort
-before the MAC is enabled.
+brcmsmac handles the same silicon family with the equivalent
+dispatch in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/
+phy_cmn.c read_radio_reg() and write_radio_reg():
 
-The new b43_ntab_tx_gain_ipa_2057_rev8_2g[] is 128 u32 entries,
-matching the layout of the existing b43_ntab_tx_gain_ipa_2057_
-rev5_2g and b43_ntab_tx_gain_ipa_2057_rev9_2g siblings in this
-file. Each entry packs five gain fields decoded by
-wlc_phy_get_tx_gain_nphy in the proprietary driver, the same
-encoding b43 uses for the other 2057 IPA tables.
+    if ((D11REV_GE(pi->sh->corerev, 24)) ||
+        (D11REV_IS(pi->sh->corerev, 22)
+         && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
+            /* radioregaddr / radioregdata (indirect) */
+    } else {
+            /* phy4waddr / phy4wdatalo (legacy)      */
+    }
 
-The high byte of every entry differs from the rev 5 sibling (0x40
-vs 0x30): different PAD-gain code prefix for the rev 8 front-end.
-The low 24 bits coincide with rev 5 across the whole table - the
-gain step amplitudes are the same, only the PAD-gain selector
-prefix changes.
+The "phy_type != PHY_TYPE_SSN" carve-out in brcmsmac is for the SSN
+PHY variant of corerev 22, which uses the legacy path. b43 does not
+support SSN/SSLPN PHYs - they are rejected earlier in
+b43_phy_versioning() at the "unsupported PHY type" switch - so by
+the time control reaches the radio versioning dispatch there is no
+SSN device to mis-route. A positive (core_rev == 22) clause is
+therefore sufficient and equivalent.
 
-Values extracted from an MMIO dump of the proprietary Broadcom wl
-driver running on BCM6362 silicon (wl driver 6.30.102.7).
-Encoding cross-validated by re-deriving the in-tree rev 5 table
-from the same source using the same extraction method - the
-result matches b43_ntab_tx_gain_ipa_2057_rev5_2g byte-for-byte.
+Encountered on the Broadcom BCM6362 single-die integrated 2.4 GHz
+wireless block (radio 2057 rev 8, paired with d11 corerev 22 on
+this silicon).
 
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- .../net/wireless/broadcom/b43/tables_nphy.c   | 39 +++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/net/wireless/broadcom/b43/main.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/tables_nphy.c b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-index 41a25d909..84e8d718d 100644
---- a/drivers/net/wireless/broadcom/b43/tables_nphy.c
-+++ b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-@@ -2715,6 +2715,43 @@ static const u32 b43_ntab_tx_gain_ipa_2057_rev5_2g[] = {
- 	0x300f0715, 0x300f0715, 0x300f0715, 0x300f0715,
- };
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index 673a56c30..7f96df5eb 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -4555,7 +4555,11 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 		radio_id = b43_read16(dev, B43_MMIO_RADIO24_DATA);
  
-+/* Extracted from MMIO dump of 6.30.102.7 */
-+static const u32 b43_ntab_tx_gain_ipa_2057_rev8_2g[] = {
-+	0x40ff0031, 0x40e70031, 0x40e7002e, 0x40cf002e,
-+	0x40bf002e, 0x40af002e, 0x409f002f, 0x407f0033,
-+	0x407f0031, 0x407f002e, 0x4077002e, 0x406f002e,
-+	0x4067002e, 0x405f002f, 0x40570030, 0x4057002d,
-+	0x404f002e, 0x40470031, 0x4047002e, 0x4047002c,
-+	0x40470029, 0x403f002c, 0x403f0029, 0x4037002d,
-+	0x4037002a, 0x40370028, 0x402f002c, 0x402f002a,
-+	0x402f0028, 0x402f0026, 0x4027002c, 0x40270029,
-+	0x40270027, 0x40270025, 0x40270023, 0x401f002c,
-+	0x401f002a, 0x401f0028, 0x401f0025, 0x401f0024,
-+	0x401f0022, 0x401f001f, 0x4017002d, 0x4017002b,
-+	0x40170028, 0x40170026, 0x40170024, 0x40170022,
-+	0x40170020, 0x4017001e, 0x4017001d, 0x4017001b,
-+	0x4017001a, 0x40170018, 0x40170017, 0x40170015,
-+	0x400f002c, 0x400f0029, 0x400f0027, 0x400f0024,
-+	0x400f0022, 0x400f0021, 0x400f001f, 0x400f001d,
-+	0x400f001b, 0x400f001a, 0x400f0018, 0x400f0017,
-+	0x400f0016, 0x400f0015, 0x400f0115, 0x400f0215,
-+	0x400f0315, 0x400f0415, 0x400f0515, 0x400f0615,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+};
-+
-+
- /* Extracted from MMIO dump of 6.30.223.141 */
- static const u32 b43_ntab_tx_gain_ipa_2057_rev9_2g[] = {
- 	0x60ff0031, 0x60e7002c, 0x60cf002a, 0x60c70029,
-@@ -3651,6 +3688,8 @@ static const u32 *b43_nphy_get_ipa_gain_table(struct b43_wldev *dev)
- 		case 8:
- 			if (phy->radio_rev == 5)
- 				return b43_ntab_tx_gain_ipa_2057_rev5_2g;
-+			if (phy->radio_rev == 8)
-+				return b43_ntab_tx_gain_ipa_2057_rev8_2g;
- 			break;
- 		case 6:
- 			if (dev->dev->chip_id == BCMA_CHIP_ID_BCM47162)
+ 		radio_ver = 0; /* Is there version somewhere? */
+-	} else if (core_rev >= 24) {
++	} else if (core_rev >= 24 || core_rev == 22) {
++		/*
++		 * D11 corerev 22 pairs an older 802.11 core with a 2057
++		 * radio that requires the 24-bit indirect access path.
++		 */
+ 		u16 radio24[3];
+ 
+ 		for (tmp = 0; tmp < 3; tmp++) {
 -- 
 2.43.0
+
+
+
+Il 18/05/2026 03:49, Alessio Ferri ha scritto:
+> This series completes b43 support for the Broadcom N-PHY revision 8
+> paired with radio 2057 revision 8. b43 already supports the surrounding
+> PHY family - N-PHY rev 8 with radio 2057 rev 5 and rev 7 are handled,
+> and rev 16 with radio 2057 rev 9 is handled - but the rev 8 + rev 8
+> combination falls through four dispatcher gaps:
+> 
+>   - radio_2057.c, r2057_upload_inittabs(), case 8 lists radio_rev 5
+>     and 7 only;
+>   - radio_2057.c, r2057_get_chantabent_rev7(), case 8 lists radio_rev
+>     5 only;
+>   - tables_nphy.c, b43_nphy_get_ipa_gain_table(), case 8 lists
+>     radio_rev 5 only;
+>   - radio_2057.c carries r2057_rev8_init[] as a 54-entry stub commented
+>     out with "TODO: Which devices should use it?".
+> 
+> Two further pieces of plumbing are needed to reach those dispatchers
+> in the first place: d11 core revision 0x16 is missing from the b43
+> bcma id table, and the corerev 22 / radio 2057 combination needs the
+> 24-bit indirect radio access path that brcmsmac uses for the same
+> silicon generation (see brcmsmac/phy/phy_cmn.c read_radio_reg() /
+> write_radio_reg()).
+> 
+> The series:
+> 
+>   1/6  b43: add d11 core revision 0x16 to id table
+>   2/6  b43: route d11 corerev 22 to 24-bit indirect radio access
+>   3/6  b43: support radio 2057 rev 8
+>   4/6  b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
+>   5/6  b43: add channel info table for N-PHY r8 + radio 2057 r8
+>   6/6  b43: add RF power offset for N-PHY r8 + radio 2057 r8
+> 
+> Patches are ordered so that each one fixes the next visible failure
+> in bring-up: 1/6 makes b43 bind to the core, 2/6 lets phy versioning
+> read coherent radio identifiers, 3/6 unblocks the boot-time radio
+> calibration that otherwise stalls the PSM at microcode startup, and
+> 4/6-6/6 fill the remaining 2.4 GHz dispatcher entries so
+> b43_nphy_set_channel completes to the default channel and core_init
+> proceeds past PHY init.
+> 
+> Tested on a D-Link DSL-3580L (Broadcom BCM6362 SoC, single-die 2.4 GHz
+> N-PHY rev 8 + radio 2057 rev 8 in 2.4 GHz IPA mode). The chip is in
+> service worldwide in xDSL CPE devices.
+> 
+> b43 is currently Orphan in MAINTAINERS. These patches do not add a
+> new chip family or PHY infrastructure; they fill four explicit
+> dispatcher gaps for a combination of an already-supported PHY and
+> an already-supported radio.
+> 
+> Alessio Ferri (6):
+>   b43: add d11 core revision 0x16 to id table
+>   b43: route d11 corerev 22 to 24-bit indirect radio access
+>   b43: support radio 2057 rev 8
+>   b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
+>   b43: add channel info table for N-PHY r8 + radio 2057 r8
+>   b43: add RF power offset for N-PHY r8 + radio 2057 r8
+> 
+>  drivers/net/wireless/broadcom/b43/main.c      |  10 +-
+>  .../net/wireless/broadcom/b43/radio_2057.c    | 230 ++++++++++++++++--
+>  .../net/wireless/broadcom/b43/tables_nphy.c   |  58 +++++
+>  3 files changed, 280 insertions(+), 18 deletions(-)
+> 
 
