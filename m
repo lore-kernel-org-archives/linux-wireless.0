@@ -1,76 +1,82 @@
-Received: from smtpdh20-2.aruba.it (smtpdh20-2.aruba.it [62.149.155.165])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F1232D42B
-	for <linux-wireless@vger.kernel.org>; Wed, 20 May 2026 21:26:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.155.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E806739F17F;
+	Wed, 20 May 2026 21:40:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779312367; cv=none; b=XUHboZZPXsfmerO0S44jJCT0zmMWXbNZ/3oErWOI6Jtr2GJf7xMzzZPxOQ1i0QmhfMrn0ga4nRt5WuCMvHYcMH7FUxYVRCIenFg4EQOCIPdCNd6sDIRWeZ+L2c1AGyekwwxC1RpoJhThPz+7KAy1yYZoJjtn7IbvxethkEI29ZE=
+	t=1779313209; cv=none; b=dofH3HtUnG2kDDEAKfIbpurZyxpaMuVSTOTU/Ha0ddUPs5RHxwOhMGmkj1XQliHbOqDOMw4bt+0J7vGIW3AMLboL2f3FbnoGdD0UqW5+8KCoQommno3InTb3E+lt18PnU5L4KyHlQnpuoaKZuW03GZfRl3Q4nGivtf6PPfJVkI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779312367; c=relaxed/simple;
-	bh=QiRS2eDU8bKpoVDo418q80Z3Ox4FTtx/mwwg/sLLRZM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ibcrEvBndPoka/yFMx3QQUAvth9+L0Se4aZ4XucuudieRAiVjaH516V7YvKKaQno4qMIbQ7jpH5O7HgU0Lg5i1bORbt0p46dIkX9rpooSGJdzzLyXMa3/zHq7ha4DFfLwLt/uTEAILqNw2bl5hMB4gybhalJbzqcRyJaaAoxDkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=R4pGg+88; arc=none smtp.client-ip=62.149.155.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	s=arc-20240116; t=1779313209; c=relaxed/simple;
+	bh=0t78VNT3MDuLej6QDJZbgndGGVnTNJPx4/DHHRVrdJ4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=J/Nz5A4bdQL9g6iJh7C1ftKs1F7tY2sEOoFo84XfSfvFZxmwsrKQHFadzZ4U0s9OV5cJHN6Mu2Ffykpz49tl7SfCHndEne5Cc/3kxHgBmGlcjl6myX3bYIgzO0+Q9DaL30RmqcLLp03V2X0XlzsZgp73auyrYFdXG5Yz1sml/nQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=T4Ip8HFK; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="R4pGg+88"
-Received: from fedora ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id PoQOwXdFJEZ9tPoQPw3OVl; Wed, 20 May 2026 23:25:57 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779312357; bh=QiRS2eDU8bKpoVDo418q80Z3Ox4FTtx/mwwg/sLLRZM=;
-	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=R4pGg+88IEVpNe0Ei/nJ1ocrJT2SThG/bi7VyLr+kZtgLM2uxGsA4IbjWOM7M69TO
-	 VHVZUdYiAjKxd/DF4BZLDVLYQ82XqQiv692nTbOtbp/ntZTlEqtZJrPXNOCYW1ZEkZ
-	 tqm51YarEr4kMwY+Kw5A88XnPzzvIV/igAB7kkR3YcGUvRAeHRFo7eKLvF/X23P3eK
-	 G/980ANyUISBpXXNxgD3SWJ/nUB1ES+au1NoLdbwx6WnRAcRQdWeMiYfxRKyp1tSTF
-	 4gS3QXky6KMBIRvOhPQDSDtIzYXIsyKXBlDM1m64Kwd1PewlOfPVTjTNV7YWQIFeYS
-	 /5bP891lzmw2Q==
-Date: Wed, 20 May 2026 23:25:56 +0200
-From: Alessio Ferri <alessio.ferri@mythread.it>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael =?UTF-8?B?QsO8c2No?=  <m@bues.ch>,
- linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
- kvalo@kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/6] b43: complete N-PHY rev 8 + radio 2057 rev 8
- support
-Message-ID: <20260520232556.0ab23b53@fedora>
-In-Reply-To: <a052e02c8039b06348119a1ec0b18bf1986a999e.camel@sipsolutions.net>
-References: <8c0a07d2-9ec9-43d6-bdf7-f625bbb4a38a@mythread.it>
-	<20260519175812.7ce97ba1@barney>
-	<20260519230241.49489a8f@DELL-MOBILE03.ad.smart.it>
-	<a052e02c8039b06348119a1ec0b18bf1986a999e.camel@sipsolutions.net>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="T4Ip8HFK"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=0t78VNT3MDuLej6QDJZbgndGGVnTNJPx4/DHHRVrdJ4=;
+	t=1779313208; x=1780522808; b=T4Ip8HFK+PQmwWuwHRO7aFuDMO+ieWc6xHvP/Nqj8yLfKgO
+	Wxq0L19IKJ1+XOK3peOesIGCR9zpEsR4RipIOlPhiFqIlrPMrDAxogRQQXTnIsnYtMnvzsm5NIFcx
+	BmYafn427MFoG7uc9kl7MYI6XZnpvL4XehYLtlIp/xU3OadA3Uk96C5Y/mLNGaAg3jD1OXKi7n+YT
+	neFlFmDI3T6ApVyO6hZaQvSw6REqd2zSDghVc5mw2b0zJB7I959oPmu6dlHHNuHjSCiAstIVlgfuv
+	DOKCelH4C+wQkKXsccFeTT4UDcQ9H6ivF7VTrjXvf5ThxXfXdCX5VZHLZXmJ6e9w==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wPode-0000000AvjQ-04At;
+	Wed, 20 May 2026 23:39:38 +0200
+Message-ID: <01692b53456bfaa98778f3f1ab2a906bc25bad04.camel@sipsolutions.net>
+Subject: Re: [PATCH 09/10] [v6 omap] ARM: dts: omap2: add stlc4560
+ spi-wireless node
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arnd Bergmann <arnd@kernel.org>, linux-gpio@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Christian
+ Lamparter <chunkeey@googlemail.com>, Aaro Koskinen <aaro.koskinen@iki.fi>,
+ Andreas Kemnade	 <andreas@kemnade.info>, Kevin Hilman
+ <khilman@baylibre.com>, Roger Quadros	 <rogerq@kernel.org>, Tony Lindgren
+ <tony@atomide.com>, Thomas Bogendoerfer	 <tsbogend@alpha.franken.de>, John
+ Paul Adrian Glaubitz	 <glaubitz@physik.fu-berlin.de>, Thomas Gleixner
+ <tglx@kernel.org>, Ingo Molnar	 <mingo@redhat.com>, Borislav Petkov
+ <bp@alien8.de>, Dave Hansen	 <dave.hansen@linux.intel.com>, x86@kernel.org,
+ "H. Peter Anvin" <hpa@zytor.com>,  Linus Walleij <linusw@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>, Dmitry Torokhov	
+ <dmitry.torokhov@gmail.com>, Lee Jones <lee@kernel.org>, Pavel Machek	
+ <pavel@kernel.org>, Matti Vaittinen <mazziesaccount@gmail.com>, Florian
+ Fainelli <florian.fainelli@broadcom.com>, Jonas Gorski
+ <jonas.gorski@gmail.com>, Andrew Lunn	 <andrew@lunn.ch>, Vladimir Oltean
+ <olteanv@gmail.com>, "David S. Miller"	 <davem@davemloft.net>, Eric Dumazet
+ <edumazet@google.com>, Jakub Kicinski	 <kuba@kernel.org>, Paolo Abeni
+ <pabeni@redhat.com>, 	linux-wireless@vger.kernel.org,
+ linux-omap@vger.kernel.org, 	linux-arm-kernel@lists.infradead.org,
+ linux-mips@vger.kernel.org, 	linux-sh@vger.kernel.org,
+ linux-input@vger.kernel.org, 	linux-leds@vger.kernel.org,
+ netdev@vger.kernel.org, Krzysztof Kozlowski	 <krzk@kernel.org>
+Date: Wed, 20 May 2026 23:39:36 +0200
+In-Reply-To: <20260520183815.2510387-10-arnd@kernel.org>
+References: <20260520183815.2510387-1-arnd@kernel.org>
+	 <20260520183815.2510387-10-arnd@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfFmIfqicFKKsNmggrArSj0nxzixVz7gwZFkbTw/jDGoxJPHNQdtpk1VFSUUIDwQhMoh51QUWqNlhy5578dQElfaIDCbNdSB7NsNKIAuJvx5Vn73Gu6/D
- jkYgMa96OSYP5Zvf7W4dRFS+uWE1fY6H0OpfIr0zRuwJMrpTWXRtJhVY7v0JEYsNHLLBmw6Z+OGjhT1uAye8XYHGP56ZxlI66aI6xpt7McMllhxu7Jt9QFo8
- JgBXgbmii/B/P25Rf1S3WB03/x8mvfY2yfrR1nO3n8pcJPWq1xVwonzV2X9J0F5vUNvizdLUdtI9GGyPiXmmcMi7ynLNfpWd3uA7knv7+3j7g4T7z9Qlarwz
- Fmk3z2Vk
+X-malware-bazaar: not-scanned
 
-Il giorno Wed, 20 May 2026 13:06:05 +0200
-Johannes Berg <johannes@sipsolutions.net> ha scritto:
+On Wed, 2026-05-20 at 20:38 +0200, Arnd Bergmann wrote:
+>=20
+> v1 through v5: adaptations that correspond to the binding updates
 
-> On Tue, 2026-05-19 at 23:02 +0200, Alessio Ferri wrote:
-> > 
-> > The patchset is tested on my own DLink DSL 3580L router and
-> > generated by claude from our shared notes, i then reviewed it for
-> > sanity and verified it by navigating from the router with modified
-> > b43 driver with my phone.  
-> 
-> I would ask you to disclose this in the commits per
-> 
-> https://docs.kernel.org/process/coding-assistants.html
-> 
-> johannes
+FWIW, I had just applied v5 of these three patches today, but didn't
+send out a pull request yet. I'll do that tomorrow morning.
 
-Will send a V2 with the required assisted-by in the form:
-Assisted-by: Claude:claude-4.7-opus
+johannes
