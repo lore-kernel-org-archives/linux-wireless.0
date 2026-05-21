@@ -1,100 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7DB366DD3
-	for <linux-wireless@vger.kernel.org>; Thu, 21 May 2026 09:04:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9BC7385D9E;
+	Thu, 21 May 2026 10:57:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779354269; cv=none; b=Gi4FPr0s7egU/eaGJ2/rL0dAbV2Vu7w3v7B/LEJYLuYwekwCRxFeNPjuJJcAOqlaxBsFSIHtx02lHFFcm9SwkSs6HszgvZK/mLZIV26oCBi9hqIBRapmfKPQNM/sJ7SWexXguNSzeLLs8/FNKfYmjmTAd9jFkyc/HT3N+FzC948=
+	t=1779361062; cv=none; b=gz7u/K/wn+PuBLBaF08DBkoR3D9FgjDFGQtcpir7mqUWDqcpnksH1RFQPHWnbOfEZzeMrgkglziv/AfvZsQhklN8lAa/wtq07CdoKvCvr1Vv5/h4yPJR2FYf0MO8TDBeEwT+5Xqye5x8mxV2Pqvho6AKSMcBWtxzSIreblnHP9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779354269; c=relaxed/simple;
-	bh=TKLGSf3GBjMP36BA0MEdaSC8c160hy43LOrQEKAZGHA=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rk0uqHzPc4g6RtvUYA71itqVdvYe00QQADg5NUMtmSfjWzxjDnhK4jGdz+FDL7qMZjOl6k7o4iItM7xdaIxLIRmVCAeQl0PWxn4/UIMXiXF92svfp7rWrbxgRYVoG5gzVrZ1hTHiCjW/gNjoo8IuTsT3fg7pP/15RKpD+fBogk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKQomMCR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779361062; c=relaxed/simple;
+	bh=bPSw3rQUd5ThqwO4nSsvJOhJieCC7zrqPZfbkVxMrNw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lLNcydKB3o+Vbr6b0Ko/biTB6EXRRmF3FOJxhlC35MIQZmhovWKBDgXQV3FkNr+oSp6pmdMLiJvhn0WU4BzppHS5nhDEa+lTGkR94DUVl/Aq1zb8RdCqDWvhh40Kg6QwO++upvoJiX6QJZGnGiXwJM8wTtA+NPtFv/mrkx88H1s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=C2PgYbTW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKQomMCR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E75A1F00A3D
-	for <linux-wireless@vger.kernel.org>; Thu, 21 May 2026 09:04:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779354266;
-	bh=TKLGSf3GBjMP36BA0MEdaSC8c160hy43LOrQEKAZGHA=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=eKQomMCRdagq0CrKNNAbWd+5SdT7HxEZk8SS5c8YukUkxYbmsHDNc/MTCkRogOOAR
-	 Pt90hL1Y+9+RT+N3XxUqrqLtC8PCPudBhj3TVnarBl21Gv9NEoCrtJ8+d5Jb/WMAeC
-	 ML0j7DPXCMlI6VpU6g8SKFHinb03aCauKOqSAnYd6mmg/ByxqHRUMCYHVZSLCbjYjR
-	 Jqr3WTarjbmTW+joe5Y++iCVDIgMGOqSp9V1U1/HCam6x7pvdtNk1FCRJOo8Tkv7FQ
-	 FOLySF45LYKr6CJSo7I6TQ3iC18Zx5azfFzHqJN/J5myRPJSuw9bweC9nSI3U1A2dq
-	 WJy66QWmIaooQ==
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-132830d8281so4827239c88.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2026 02:04:26 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ/V/JWNJWRm8EqfHOLKuw1/PHyPL1AFp5nKQpi3+RpZ5NUEMY+XNEQ2qnib2pzh/0sMlxVO2dP5rOhEodoFCA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwuU6cWbWxhOdFPHdtDGFl0RiW5SxiUjI6jsevX06MLM4GPn9ph
-	L4gKF/2xbITCM62utaroWyh4BepMpQZ7djTwkjDvhUfe+skXNnyGIXfMG/7v+Lj/iM2izMhd0b+
-	TG6hhkb8BR2sgrwQ7tUQ7QTx7vq3eEuux14hpa9KbNw==
-X-Received: by 2002:a05:7022:ec88:b0:134:a731:e778 with SMTP id
- a92af1059eb24-13632f6adf6mr920006c88.39.1779354265385; Thu, 21 May 2026
- 02:04:25 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 21 May 2026 02:04:21 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Thu, 21 May 2026 02:04:21 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260520183815.2510387-8-arnd@kernel.org>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="C2PgYbTW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 302BE1F000E9;
+	Thu, 21 May 2026 10:57:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1779361061;
+	bh=27akLTsRSgP7ogQAxJhqBgzdTNpBKT8E1KbP/a65xnI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=C2PgYbTWBAYgfUiOkuED7Fqh31DAfCDpd2btf+7P6gkBCF5ua/XOJxa6+gCRqm0Qj
+	 HG74RnBW66E/2v2FSaEDftzT//lpnEgx2mCuUxFzBPHyu6eQmcnJO6igsXL85mYtIy
+	 PHdhMtqo8vEvO/XlyOULPB8fn8KcegTek19fWja4=
+Date: Thu, 21 May 2026 12:57:44 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Elliot Saba <sabae@valvesoftware.com>
+Cc: Johnson Tsai <wenjie.tsai@realtek.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"driver-core@lists.linux.dev" <driver-core@lists.linux.dev>,
+	Charles Lohr <charlesl@valvesoftware.com>
+Subject: Re: [External Mail] Re: [RFC rtw-next 1/2] wifi: rtw89: usb: add
+ hw_info sysfs attribute
+Message-ID: <2026052152-pureness-blinker-9e5c@gregkh>
+References: <20260519072415.25746-1-pkshih@realtek.com>
+ <efb61959e14e4f57b78fbd49a563398e@realtek.com>
+ <83ddb427597663b947c49afd835014f2bc1033f2.camel@sipsolutions.net>
+ <2026051957-refract-barge-b21e@gregkh>
+ <b8640de28c5e4a94a3c2bbc3a101c1fa@realtek.com>
+ <2026052025-daringly-prolonged-5b2a@gregkh>
+ <9ce7404ea7bc480786b5ed0bb2182157@valvesoftware.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260520183815.2510387-1-arnd@kernel.org> <20260520183815.2510387-8-arnd@kernel.org>
-Date: Thu, 21 May 2026 02:04:21 -0700
-X-Gmail-Original-Message-ID: <CAMRc=Mebt+hpSBfpsnHh1+SKt9b1cRBNge5WSoRrsfX1BBFgtA@mail.gmail.com>
-X-Gm-Features: AVHnY4LWqhGtTeBYvpB-D8gN85zif4ar2-h8NZZ1yCLGF3pH11futzwzVDKQXSE
-Message-ID: <CAMRc=Mebt+hpSBfpsnHh1+SKt9b1cRBNge5WSoRrsfX1BBFgtA@mail.gmail.com>
-Subject: Re: [PATCH 07/10] [v6 net-next] dt-bindings: net: add
- st,stlc4560/p54spi binding
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, 
-	Christian Lamparter <chunkeey@googlemail.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Aaro Koskinen <aaro.koskinen@iki.fi>, Andreas Kemnade <andreas@kemnade.info>, 
-	Kevin Hilman <khilman@baylibre.com>, Roger Quadros <rogerq@kernel.org>, 
-	Tony Lindgren <tony@atomide.com>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, Linus Walleij <linusw@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Lee Jones <lee@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, Matti Vaittinen <mazziesaccount@gmail.com>, 
-	Florian Fainelli <florian.fainelli@broadcom.com>, Jonas Gorski <jonas.gorski@gmail.com>, 
-	Andrew Lunn <andrew@lunn.ch>, Vladimir Oltean <olteanv@gmail.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, linux-wireless@vger.kernel.org, 
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-mips@vger.kernel.org, linux-sh@vger.kernel.org, 
-	linux-input@vger.kernel.org, linux-leds@vger.kernel.org, 
-	netdev@vger.kernel.org, Christian Lamparter <chunkeey@gmail.com>, 
-	Conor Dooley <conor.dooley@microchip.com>, linux-gpio@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9ce7404ea7bc480786b5ed0bb2182157@valvesoftware.com>
 
-On Wed, 20 May 2026 20:38:12 +0200, Arnd Bergmann <arnd@kernel.org> said:
-> From: Arnd Bergmann <arnd@arndb.de>
->
-> The SPI version of Prism54 was sold under a couple of different
-> names and supported by the Linux p54spi driver, but there was
-> never a DT binding for it.
->
-> Document the four known names of this device and the properties
-> that are sufficient for its use on the Nokia N8x0 tablet.
->
-> As I don't have this hardware or documentation for it, this is
-> purely based on existing usage in the driver.
->
-> Link: https://lore.kernel.org/all/e8dc9acb-6f85-e0a9-a145-d101ca6da201@gmail.com/
-> Acked-by: Christian Lamparter <chunkeey@gmail.com>
->
-> Acked-by: Conor Dooley <conor.dooley@microchip.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+On Wed, May 20, 2026 at 07:32:13PM +0000, Elliot Saba wrote:
+> Hello Greg, Johannes, thank you for your time and feedback on this patchset.
+> 
+> The purpose of this information is to provide access to two pieces of information, a serial number (also printed on the outside of the device, used for product tracking, RMAs, etc...) and a GUID (random entropy that is intentionally difficult to guess).
+> We use the GUID to establish a direct connection between the USB network adapter and another device.
+> 
+> To directly answer your USB questions, unfortunately the ASIC used in this product does not support customization of the USB serial number; all devices have the same USB serial number.  Indeed, I believe there is no mutable state on the device at all except for the e-fuses that are written at the factory to write these two values.  Given those constraints, we're trying to find the best way to raise this up to userspace, and we're grateful for your feedback.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Then where exactly does that "serial number" come from in the device so
+that it can be read by the kernel, if not in the USB device itself?
+
+> This USB device is expected to operate on both Windows and Linux hosts, on the Windows side we have a custom driver that allows our host application (Steam) to directly query these fuses and setup the network connection appropriately.  We're attempting to upstream this capability as much as possible so that users running a vanilla kernel can take advantage of these features as much as possible.
+
+Great, why can't this driver also query the fuses?
+
+> With regards to permissions, we'd really like to make this serial number readable by non-root users so that the pairing functionality can work out-of-the-box without needing special udev/tmpfiles.d rules to adjust permissions to allow Steam to read this information, but we are simultaneously sympathetic to the desire to limit trackable/identifying information by default.  Of course we can adjust permissions however needed for our own Linux distribution, but in our effort to support the rest of the Linux ecosystem as best we can, we'd like to do our best to find a solution that would work everywhere.  We're open to comparing against any existing precedent for devices that necessarily require identifying information to perform their basic function, if you know of any.
+
+My objection is the placement of random sysfs files in the USB device
+directory, for something that is not a USB device-specific thing, but
+rather a driver-specific thing.  If this is a driver/device bound
+specific thing, then put it in the device that the driver creates and
+owns.  NOT in the device that the USB core creates and owns.
+
+thanks,
+
+greg k-h
