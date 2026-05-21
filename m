@@ -1,101 +1,97 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39EB4369970
-	for <linux-wireless@vger.kernel.org>; Thu, 21 May 2026 07:42:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615AD36F8F3
+	for <linux-wireless@vger.kernel.org>; Thu, 21 May 2026 07:53:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779349338; cv=none; b=kAoxbw7ceFkqlxywlHVrNT3+aDVAfHjjopjovUtha4/k+dfbw1NequcNyRmKUKTg1ppUc4XBRLbbJMgMk2FwBms6RaB2k7s12HxqHrnM9yGQH7O9UdNsiUv8Vh6rMo4BWLbTu1tuXPHSj5JlPnApXzuHHYHMsjMfyYYulfSd9as=
+	t=1779350013; cv=none; b=WXNS3MDrCWkI2e7erV4JEgyq5SZj1Mk+f5r/NEyTKazPz7lUohnY1B9UrOlJyoOSoFlAcaXoL37s8ySA1N+4bEnh3rE/oOPY9cv8dJuyxx4QwZib/a2l9Z+xIb1CLJ51shbMYonvIokB60LJ20ztF8iNV7psBrSohZYw1M7XLKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779349338; c=relaxed/simple;
-	bh=bbbekLEXB21vfPPsg+kVFH8yLE8eQtodALMDIboQk9E=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=DDllUXPiaZaaPehVuLHmC/F238qvqRXphIlab7JGjvU7vIjuKhZClec1FbHFVDM034Cx0dpWM5Of4iW2dQMgEUHwRDE7alUDP7GPn7HYDFTX+pP9Bh1D6qWDyfB/d+9gtTSwuws2RJK+U9nnUVEr5J7c9Do09BVdcTxC24SllvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Pq+j39XW; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1779350013; c=relaxed/simple;
+	bh=a3lI1uBhY+65s4W+EKo7UFoC+eRLo9+l5Pk+KkHJfDU=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Xai5YS3WpnSExeeGQFwIFMeVWvOe9oh5y9mmPemzjhmg8OfKTOYlIYNJ/Iq7pUdjOtg4UJFVWaEii+gAbPSaErxfwMnDHVp3D0unKxWaoLB2CUvHmBM2IFUXq5tc8jhExz6xSid5nAfIXjODypLrwko+EQUXOetfvEH6t5COO+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=szw6ceQy; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Pq+j39XW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID:Sender:
-	Reply-To:Cc:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=muTAy6l9Ne10LTT0s5OukQkIoUOvif+5b1Gnk9FHhGg=;
-	t=1779349337; x=1780558937; b=Pq+j39XWyZiAOKi30yNOYjCO6sRFV02z66jKzNVgqR5h81D
-	e3vvcuxvd9zxoBjnJP5cV3+5Ql2bPpzJQa2Rk47DQ94nHF3ExdKeFvWtq9O7q1UaxrrRGhTWZnKfs
-	xlohtHz0Jnm6yDD09YyILRuKihovg60cImwh3O7A1MRgAhfMYtO4lJPMXpFZMBaRitrNmc627NOyA
-	BJW8nwtOUvIQsVjXlOZoTT8MFjDzn1I3pwTJfFUNkUiRTX37FopCU6j11BXlJq/V39h6xJBAViVPh
-	GirbdP4voPQSBtERPN1PzbdX1DDVbDztR4Z+uJCZVN4tUPULpcwnU1jWoxnAQfRw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wPy2o-0000000BoZq-0NWB;
-	Thu, 21 May 2026 09:42:14 +0200
-Message-ID: <bf2081a986eccd28378b4019b2968c15e6659b7f.camel@sipsolutions.net>
-Subject: Re: [PATCH v6 1/6] wifi: mac80211: Use struct instead of macro for
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="szw6ceQy"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64L7rMKA11132630, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1779350002; bh=a3lI1uBhY+65s4W+EKo7UFoC+eRLo9+l5Pk+KkHJfDU=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=szw6ceQy0O/3cX+TBV1oWoy+Wcst+FMfQ9Co7t7keUdxq7VURIIktplxyVHzst4W1
+	 WrJNzjMDBs/nlKBb9+0nfN4Jm9bjIkK60shKE/77Cyp0k/tVCEVls4HL68DikReToh
+	 UdQT7RNBn1o+YJrqrIzFu1HXeTPkSMak8b8B0sl29KVwf65/ucCH6NXX56zw8VwdEc
+	 HSyZ+ptf2R94PMtT3CdG3T9fPUuQb+qA7v90H6/ZL4Pc0x/3YWs5SvKWoQRABCEmGS
+	 a5+TVGeFOLQ7gKrYgjBN6c06baiQORylvNIMotjEZEMS+ew+ii5llMb1b7mi+TbdpV
+	 B7ko2nXvLntPA==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64L7rMKA11132630
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 21 May 2026 15:53:22 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 21 May 2026 15:53:22 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 21 May 2026 15:53:22 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Thu, 21 May 2026 15:53:22 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Masashi Honma
+	<masashi.honma@gmail.com>,
+        "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v6 1/6] wifi: mac80211: Use struct instead of macro for
  PREQ frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ping-Ke Shih <pkshih@realtek.com>, Masashi Honma
- <masashi.honma@gmail.com>,  "linux-wireless@vger.kernel.org"	
- <linux-wireless@vger.kernel.org>
-Date: Thu, 21 May 2026 09:42:09 +0200
-In-Reply-To: <7e1aac3afd714d448e5bfba4a9a113b0@realtek.com>
+Thread-Topic: [PATCH v6 1/6] wifi: mac80211: Use struct instead of macro for
+ PREQ frame
+Thread-Index: AQHc5MP/zOngxkWbM0ai666I8zXda7YWRAMAgAFlUeCAAGI1LYAADEAQ//+DOoCAAIiyQA==
+Date: Thu, 21 May 2026 07:53:22 +0000
+Message-ID: <9996dcdc12774caf835205040e18eaeb@realtek.com>
 References: <20260515233839.86829-1-masashi.honma@gmail.com>
 		 <965eff7ec3b928f093f7891e4307ec4e4a080ac4.camel@sipsolutions.net>
 		 <d2c051127e384a918ff014da02e37e1e@realtek.com>
-		 (sfid-20260521_024301_935117_BC310192) <93ab81b4fb7130a4d4e1048581d886568086fe24.camel@sipsolutions.net>
+		 (sfid-20260521_024301_935117_BC310192)
+ <93ab81b4fb7130a4d4e1048581d886568086fe24.camel@sipsolutions.net>
 	 <7e1aac3afd714d448e5bfba4a9a113b0@realtek.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+ <bf2081a986eccd28378b4019b2968c15e6659b7f.camel@sipsolutions.net>
+In-Reply-To: <bf2081a986eccd28378b4019b2968c15e6659b7f.camel@sipsolutions.net>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
 
-On Thu, 2026-05-21 at 07:38 +0000, Ping-Ke Shih wrote:
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> > The point is that __packed forces the compiler to emit code that doesn'=
-t
-> > rely on alignment.
->=20
-> I was not aware that __packed is a hint of unalignment to compiler.
-> I learned. :)
-
-Yes. Note it goes further:
-
-> In my tests with arm-gcc compiler, I did a special case:=20
->=20
-> struct foo {
-> 	int a;
-> 	char b;
-> } __packed;
->=20
-> int bar(struct foo *foo)
-> {
-> 	return foo->a;
-> }
->=20
-> It is obviously aligned (offset =3D 0), so I guessed arm-gcc can generate
-> a single load instruction, but actually it doesn't (even with -O3).
-
-No, it cannot, because in addition it has to assume the pointer 'foo'
-itself has no alignment. We use this a lot too, since a struct like your
-'struct foo' could be in a frame element where we don't know what came
-before it while parsing the elements, so we don't know that 'foo' has
-any alignment.
-
-The reasons are related to what happens when you have a
-
-	struct foo array[N];
-
-I think, because then __packed means there's no padding at the end of
-'struct foo' either, and array[1] is a completely unaligned pointer.
-
-So no, the compiler couldn't assume alignment even for fields that look
-aligned within 'struct foo'.
-
-johannes
+Sm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4gd3JvdGU6DQo+ID4gSW4g
+bXkgdGVzdHMgd2l0aCBhcm0tZ2NjIGNvbXBpbGVyLCBJIGRpZCBhIHNwZWNpYWwgY2FzZToNCj4g
+Pg0KPiA+IHN0cnVjdCBmb28gew0KPiA+ICAgICAgIGludCBhOw0KPiA+ICAgICAgIGNoYXIgYjsN
+Cj4gPiB9IF9fcGFja2VkOw0KPiA+DQo+ID4gaW50IGJhcihzdHJ1Y3QgZm9vICpmb28pDQo+ID4g
+ew0KPiA+ICAgICAgIHJldHVybiBmb28tPmE7DQo+ID4gfQ0KPiA+DQo+ID4gSXQgaXMgb2J2aW91
+c2x5IGFsaWduZWQgKG9mZnNldCA9IDApLCBzbyBJIGd1ZXNzZWQgYXJtLWdjYyBjYW4gZ2VuZXJh
+dGUNCj4gPiBhIHNpbmdsZSBsb2FkIGluc3RydWN0aW9uLCBidXQgYWN0dWFsbHkgaXQgZG9lc24n
+dCAoZXZlbiB3aXRoIC1PMykuDQo+IA0KPiBObywgaXQgY2Fubm90LCBiZWNhdXNlIGluIGFkZGl0
+aW9uIGl0IGhhcyB0byBhc3N1bWUgdGhlIHBvaW50ZXIgJ2ZvbycNCj4gaXRzZWxmIGhhcyBubyBh
+bGlnbm1lbnQuIFdlIHVzZSB0aGlzIGEgbG90IHRvbywgc2luY2UgYSBzdHJ1Y3QgbGlrZSB5b3Vy
+DQo+ICdzdHJ1Y3QgZm9vJyBjb3VsZCBiZSBpbiBhIGZyYW1lIGVsZW1lbnQgd2hlcmUgd2UgZG9u
+J3Qga25vdyB3aGF0IGNhbWUNCj4gYmVmb3JlIGl0IHdoaWxlIHBhcnNpbmcgdGhlIGVsZW1lbnRz
+LCBzbyB3ZSBkb24ndCBrbm93IHRoYXQgJ2ZvbycgaGFzDQo+IGFueSBhbGlnbm1lbnQuDQo+IA0K
+PiBUaGUgcmVhc29ucyBhcmUgcmVsYXRlZCB0byB3aGF0IGhhcHBlbnMgd2hlbiB5b3UgaGF2ZSBh
+DQo+IA0KPiAgICAgICAgIHN0cnVjdCBmb28gYXJyYXlbTl07DQo+IA0KPiBJIHRoaW5rLCBiZWNh
+dXNlIHRoZW4gX19wYWNrZWQgbWVhbnMgdGhlcmUncyBubyBwYWRkaW5nIGF0IHRoZSBlbmQgb2YN
+Cj4gJ3N0cnVjdCBmb28nIGVpdGhlciwgYW5kIGFycmF5WzFdIGlzIGEgY29tcGxldGVseSB1bmFs
+aWduZWQgcG9pbnRlci4NCj4gDQo+IFNvIG5vLCB0aGUgY29tcGlsZXIgY291bGRuJ3QgYXNzdW1l
+IGFsaWdubWVudCBldmVuIGZvciBmaWVsZHMgdGhhdCBsb29rDQo+IGFsaWduZWQgd2l0aGluICdz
+dHJ1Y3QgZm9vJy4NCg0KSSBsZWFybmVkIG1vcmUuIFN1cGVyIHRoYW5rIHlvdS4gOikNCg0KUGlu
+Zy1LZQ0KDQo=
