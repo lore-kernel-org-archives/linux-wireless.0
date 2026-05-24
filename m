@@ -1,39 +1,39 @@
-Received: from smtpcmd15176.aruba.it (smtpcmd15176.aruba.it [62.149.156.176])
+Received: from smtpcmd0641.aruba.it (smtpcmd0641.aruba.it [62.149.156.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A8433D6E1
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:36:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA3832B125
+	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:36:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779658574; cv=none; b=LLMuNBkIPJtb4hv8STCeR5yuPduh6d3SwBDDKu0bS4PKnlhHv3NuZmR+Usbe16TPjBsLuFQ812g2FSV/j3Q/9MDwFWKokaHLNTfFYXJSJ9Aa25yaZHg5MMtJ11LbaVnDbgP6jtLx2lmL8hV/9D3d/XtDjMY0H9uuS38a+UianGM=
+	t=1779658581; cv=none; b=oNkc/MGAWZlMuZrNXFHaU7qbK5Ta/pFDhSq5LcDS/m2CS+EJouzdqr3FNBFlNgVPF/WQvNS44YmMQAqTt0bGJDAuE+SkVS10J8apy8HrwRfRkOWpG8XZIj6b9ZR/opCAyGBcpMimhiQ5v85XFwbYvfX7H502TsIhcMJ/KV8c+8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779658574; c=relaxed/simple;
-	bh=puWOPnW6DK1aPT9XGMhxSGX/gTDMx9Trn+CpctvI92E=;
+	s=arc-20240116; t=1779658581; c=relaxed/simple;
+	bh=ulyB/um8I4Zuj24Mii0xKRyjllYmblKDe6Wn9LoY1+s=;
 	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jVIbuVu7CLSE9O1zugYJcW4lpl7/1XSq8hrFRfI0Xq5NY/84NpLKjJbt+++yZQ4e2UtjCG9Y/elrFHDjWP9+OAXh4/HunjZF4cwb1kx3XLmqHvCPIpqDMmNejohS7w2gQpyvz+iu0eZLAHxalDy+Y7eF446ZtNk+ITIId6ThxbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=QdwciU4v; arc=none smtp.client-ip=62.149.156.176
+	 MIME-Version:Content-Type; b=oscpLxxxIBbjbGAUypcWlSrx8Ux4xmu1VvmzDZb0hed515Gm+o1MHjOMhfTYnf6U/vWPfgTF93TNF3enyfVte2/QrU+qSa97HXmwXaV+NFZVShvkDYD+HkdCPycsCLG8IfRgYrwUWDDSdWWzAUq8jtr99X2Kkp6vz13dDiK40PQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=kTexPuxb; arc=none smtp.client-ip=62.149.156.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="QdwciU4v"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="kTexPuxb"
 Received: from fedora ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id RGUWwsCGRwf0DRGUWwFAdO; Sun, 24 May 2026 23:36:13 +0200
+	id RGRiwYwaMdarQRGRiwhW2N; Sun, 24 May 2026 23:33:19 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779658573; bh=puWOPnW6DK1aPT9XGMhxSGX/gTDMx9Trn+CpctvI92E=;
+	t=1779658399; bh=ulyB/um8I4Zuj24Mii0xKRyjllYmblKDe6Wn9LoY1+s=;
 	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=QdwciU4vat++y2AfMWdBUACI4D8MAByTZf6Ygj0PE+D3PQ7PcpuKMUK/K6VUINkKk
-	 uwpKW2ioTIRAQY336r5lb1H3MjHaOwdt84csCxuJ/sGzC+rn6dO+9gx4jGyC4JkvMG
-	 OHmC59dXCZXAAwvJIkfaFzQ1DqZqooEnr1zzmICMQSxL41Uv9RhmNJ2rZbyli0aZj7
-	 0idr0gMHc4Oe9vYjucAGiq/dY38KLtkB6D0ZhxH7TXseaLLMP7gpxBieh9Jw+We5Vy
-	 6wKFBrAunYIP4PszV2KXgb+Vf0vBiyu6MboCYb8FA6PNKkEcdZoiOqZNwONColQC1d
-	 D2Skp0QvzkvNg==
-Date: Sun, 24 May 2026 23:36:12 +0200
+	b=kTexPuxbPpJrIO0gQ3WNQcsfjCtYzcMHZjKkhfcz59eyackm9+PZBvtWddjE6WgHl
+	 nYglnzrDrE+cJn1vzumUo75Rj+7ugtgU7OG/HmhWI3G0wbagIQ60eCONcMcLeHJh2l
+	 nDyO1fsTHNN+5TJ+YXbeVIdOJhVpI1++O+GUftJabysb+irrO39N4xGFQThvS4S08r
+	 NujU3ZZFtVQ6YOMIybEV2av2Dv8lYFDS0mtBrqXzZuUEM/PpVg9q9CcYEQOH0J7vE9
+	 vU3OUj8dDHuPANX/Tmz8nD7zY2bUDeOLDVIkMFzIrheb3YeIUtCtKJ7o/QJys6RLcF
+	 Z1Z11LFHGmx2Q==
+Date: Sun, 24 May 2026 23:33:18 +0200
 From: Alessio Ferri <alessio.ferri@mythread.it>
 To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] b43: complete N-PHY rev 8 + radio 2057 rev 8
-Message-ID: <20260524233612.4d0e87f7@fedora>
+Subject: Re: [PATCH v2 0/7] b43: complete N-PHY rev 8 + radio 2057 rev 8
+Message-ID: <20260524233318.7cb14643@fedora>
 In-Reply-To: <20260524233228.06b38dba@fedora>
 References: <20260524233228.06b38dba@fedora>
 X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
@@ -45,84 +45,56 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfByFKf31Q/ssCwsoRl0p3b86fXEnF0LFLMJgn0SkmstqLPT4/It6qbghhQ73Y/cBbgNcgldg6zCWU/fGgrVYQZJl99rHBM6MaVP4DFCLiN49X6ktHoD0
- NXzHi6lsH/qcf/Npuc2+oeu9EEu+CdoXmnL3TWH9EbcO2iLxxQ/dD9xFXewv/670c/QmLXPtUHQ/05/5gdl5LneOW8JRZt61QIev9G+wHO8ecxqbeJQftc5z
- OqM44gc7+KWUReP0ZD8YV+0Vernv8nJbns2H/1LuLlQ=
+X-CMAE-Envelope: MS4xfFD8Ux+30GB8HizqaImeWNT7J1PIet+7FLEN2O5IOHMqx8hYA+jF5a+eWBUdrIZLnQ5ybihOmMh5dVr6wiIp0gSNnsnrttfigrqNsk4u/ba9fBVZfcFp
+ eCcKDawthC5Xf3rRcPRzlhgJbps4z09x9js4Qu5wK+4hi+v1DbqaFMIiAh5ylv1XYb84t5KWZk5iBlEAFWWzcQkjXX06nhjZiFMYViQjVt2SnUJOYbQgveqh
+ 06S10gCTS9+WU4XXI+R5NMWZ1xTe+ImYQEUL75gdyrY=
 
-
-Add the 2.4 GHz RF power offset table for N-PHY rev 8 paired with
-radio 2057 rev 8 and wire it to the existing dispatcher.
-
-b43_ntab_get_rf_pwr_offset_table() currently dispatches on phy->rev
-== 17 (radio_rev 14) and phy->rev == 16 (radio_rev 9) for 2.4 GHz.
-phy->rev == 8 falls through and the function logs:
-
-    b43-phyX ERROR: No 2GHz RF power table available for this device
-
-Add a phy->rev == 8 / radio_rev == 8 case returning the new table.
-
-The values are sourced from the proprietary Broadcom wl driver's
-nphy_papd_padgain_dlt_2g_2057rev5 array. Reusing the rev 5 values
-is structurally appropriate: the IPA TX gain table added by the
-preceding patch in this series shares the low 24 bits of every
-entry with rev 5 - same gain step amplitudes, only the PAD-gain
-selector byte differs. b43's pad_gain extraction in
-b43_nphy_tx_pwr_ctl_init() reads bits 19..23 of the gain entry,
-which sit in the shared low-24-bit range; the same gain index
-therefore maps to the same physical PAD gain code on both
-revisions and warrants the same per-index dB offset.
-
-Note that b43_nphy_tx_gain_table_upload() currently has a "TODO:
-Enable this once we have gains configured" early-return for
-phy->rev >= 7. With that early-return in place, this table is
-fetched (silencing the b43err that would otherwise abort PHY
-init) but its values are not yet written to MMIO. Resolving the
-TODO is a future, separate task.
 
 Assisted-by: Claude:claude-4.7-opus
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/broadcom/b43/tables_nphy.c | 19
-+++++++++++++++++++ 1 file changed, 19 insertions(+)
+ drivers/net/wireless/broadcom/b43/main.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/tables_nphy.c
-b/drivers/net/wireless/broadcom/b43/tables_nphy.c index
-84e8d718d..ecd660b9c 100644 ---
-a/drivers/net/wireless/broadcom/b43/tables_nphy.c +++
-b/drivers/net/wireless/broadcom/b43/tables_nphy.c @@ -2923,6 +2923,21
-@@ static const s16 b43_ntab_rf_pwr_offset_2057_rev9_5g[] = { 0,
- };
- 
-+/* Sourced from the rev 5 sibling: the rev 8 IPA TX gain table
-+ * shares the low 24 bits of every entry with rev 5 (only the
-+ * PAD-gain selector byte differs), so the same gain index maps to
-+ * the same physical PAD gain code on both revisions.
-+ */
-+static const s16 b43_ntab_rf_pwr_offset_2057_rev8_2g[] = {
-+	-109, -109, -82, -68, -58,
-+	-50,  -44, -39, -35, -31,
-+	-28,  -26, -23, -21, -19,
-+	-17,  -16, -14, -13, -11,
-+	-10,   -9,  -8,  -7,  -5,
-+	 -5,   -4,  -3,  -2,  -1,
-+	 -1,    0,
-+};
-+
- /* Extracted from MMIO dump of 6.30.223.248
-  * Entries: 0, 26, 28, 29, 30, 31 were guessed
-  */
-@@ -3782,6 +3797,10 @@ const s16
-*b43_ntab_get_rf_pwr_offset_table(struct b43_wldev *dev) if
-(phy->radio_rev == 9) return b43_ntab_rf_pwr_offset_2057_rev9_2g;
- 			break;
-+		case 8:
-+			if (phy->radio_rev == 8)
-+				return
-b43_ntab_rf_pwr_offset_2057_rev8_2g;
-+			break;
- 		}
- 
- 		b43err(dev->wl,
+diff --git a/drivers/net/wireless/broadcom/b43/main.c
+b/drivers/net/wireless/broadcom/b43/main.c index b0e6aeb0b..37c5d9928
+100644 --- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -2344,6 +2344,10 @@ static int b43_try_request_fw(struct
+b43_request_fw_context *ctx) if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+ 		break;
++	case 22:
++		if (phy->type == B43_PHYTYPE_N)
++			filename = "ucode22_mimo";
++		break;
+ 	case 16 ... 19:
+ 		if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+@@ -2405,7 +2409,9 @@ static int b43_try_request_fw(struct
+b43_request_fw_context *ctx) else if (rev == 24)
+ 			filename = "n0initvals24";
+ 		else if (rev == 23)
+-			filename = "n0initvals16"; /* What about
+n0initvals22? */
++			filename = "n0initvals16";
++		else if (rev == 22)
++			filename = "n0initvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0initvals16";
+ 		else if (rev >= 11 && rev <= 12)
+@@ -2465,7 +2471,9 @@ static int b43_try_request_fw(struct
+b43_request_fw_context *ctx) else if (rev == 24)
+ 			filename = "n0bsinitvals24";
+ 		else if (rev == 23)
+-			filename = "n0bsinitvals16"; /* What about
+n0bsinitvals22? */
++			filename = "n0bsinitvals16";
++		else if (rev == 22)
++			filename = "n0bsinitvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0bsinitvals16";
+ 		else if (rev >= 11 && rev <= 12)
 
 -- 
 2.54.0
