@@ -1,101 +1,99 @@
 Received: from smtpcmd15176.aruba.it (smtpcmd15176.aruba.it [62.149.156.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F8A31F9A7
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:37:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9BB337B02B
+	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779658643; cv=none; b=sqK3Xxxm9dWE+ATmWzRY/2+3eZOC9uAIKWAAXoed70bFuzkg7PYHbk0/98j/rZI4WxgG4CCTQiWrYQuCcDtirjeVfA8hyRdabhd7CZSXby8+YNXebd1ueZXk61tRoGAQmU9ofOSFnLX2DJXTlauPB6lIgza2hUUoTd079iTD3cs=
+	t=1779659789; cv=none; b=IPN4rdEfEeO2s/yduCso+AJMNkeHM3QBLhQUVP7XVgfJR2atK+b1N4GyEz+AjPgzT7QC6FyK/acabo3SYuxcJ5l+JfeY+PdBb67Bou0I8FwUo4F3c9K0jLdryOq+1eJ8HBMtbEnaGh6BoCnND5rZ28uV3jqe5QkX/oknNDszYoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779658643; c=relaxed/simple;
-	bh=RG0KZyQtlU1j74lUouM9Mvo7qOrsOrUFD/m4zDgFqlo=;
-	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=awIOf8kk9l62okjeK5oMCsrnYIw5H5q6j1VALrgUmblDjbhGeFVxzCoYdyE6HKGBnkDe/RrKIqLGQz4vgsiqtlwgBp5SJBEJXwmBAD+Izs0+dhnGUKgBKo1LnocZVV79MptKhExRUIW8Qp7TXv8q05XYIUluwkiyev/98rnGee4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=TIXm0K6+; arc=none smtp.client-ip=62.149.156.176
+	s=arc-20240116; t=1779659789; c=relaxed/simple;
+	bh=ihqAdUA3dK4d4sZJzVA0sG91EQtAx2kZHvucSHzv7Lw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To; b=QUvckXY7zwMzhEIHquuTq22hsR/yhdeoZV2lG3MOYhrHK8qwbXq1jMd/U5JmBM0UyN4nA0ZpZrSss7AkjIOfvivsi3RR6PiMO+WTxy0RSqpZCPAukdPd5T1LIvlcAVKRlbOpOc7ouEGobyEtlWeuqtd0A7cwP2vj3U7EZ3UTBQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=ae+CkOT3; arc=none smtp.client-ip=62.149.156.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="TIXm0K6+"
-Received: from fedora ([94.34.125.0])
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="ae+CkOT3"
+Received: from [192.168.1.237] ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id RGSjwsAAMwf0DRGSjwF9mP; Sun, 24 May 2026 23:34:21 +0200
+	id RGo5wsRmcwf0DRGo5wFEW0; Sun, 24 May 2026 23:56:25 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779658461; bh=RG0KZyQtlU1j74lUouM9Mvo7qOrsOrUFD/m4zDgFqlo=;
-	h=Date:From:To:Subject:MIME-Version:Content-Type;
-	b=TIXm0K6+Ud7Otyd9JGISay2DBVJgm6ley7d4uhYVzCpCytA3L46Jej0geZrCk+/lp
-	 rBDSZhjSri8v0AASNCBm36YLaB6EpvjoDaxpL7P6/3nH4lA67a4UgGIhBzyJNBKL78
-	 Qg+4ysAFSMH/EOVC9rGcGGeulQ0sj7xsyxHUoy1T8n2xWqwN5QDK/n9FfafimHCFwh
-	 zToqCzT6YrAW+wiTxl5vjLGFbFjkH502SqLzQqofp9LrMXnHjXKpGGKZQsDrp0C3dy
-	 gXVZo8IakMfHY/7zmorTwhMdd/gu+EGI8zy7pEa+tU53tFOGUiOevTgQcZFnIN1EGf
-	 bPYSqmqVBhLQg==
-Date: Sun, 24 May 2026 23:34:21 +0200
+	t=1779659785; bh=ihqAdUA3dK4d4sZJzVA0sG91EQtAx2kZHvucSHzv7Lw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=ae+CkOT3aUfVZKLGXxoA9yOJ9a+vRzFx+lffWE+nAVcM6OBU5rpRtK6ptVQkTggjO
+	 f4leT2k/K3d+q04DNlbKI9NAbKUTGkmum/gDVXYJw4cRgvoPplUnxpBZeChhlwGgHs
+	 jb/0l1FS1QlcVgeNvVfoCGDrqM1cl8OwnSetlu/ks3GtgGfyGszdFJ2qhWA/usTa6G
+	 tORfvdSQHOILlD4OwdT/ueWwSSf9L2i2+MMpaAQJLhMCPhInfT+Kb4nqIx7xXR9qcu
+	 hC7T4dM2e4+ote1lGiJunAU8/kBzVbLYLBLNdf/dHO4kMWOWbGNaCAUrbw9zL/ppAr
+	 l36wG41PpFEfA==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/7] b43: complete N-PHY rev 8 + radio 2057 rev 8
-Message-ID: <20260524233421.3586440f@fedora>
-In-Reply-To: <20260524233228.06b38dba@fedora>
-References: <20260524233228.06b38dba@fedora>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+Date: Sun, 24 May 2026 23:56:18 +0200
+Subject: [PATCH v3 1/7] b43: add firmware mappings and remove comments
+ wondering about rev22 initvals
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfAjxe4MLZWq4FGrKWsG+dGrIeOwazvdChQn9UJRf7ZGS4bgHXonLXNFPaNn6bgLxjJ9Z24GTtcGakcSxL8puiaJipt3bU9HD5HpEN480QcTmN83t357/
- D7u560BfcSDpAkYrZRTXtvZp/LO791ZO8IxdwwO6mthh83pMToPOdMbWH/HrtyIxIqc2ze9ty94NFKebR5QxveIGfsR2DSx12351lH3OTo/u755B0yGrowGQ
- x/ocO8df1icjVYkCrgjsYxlgHrfCNDL5DYW0D9b1nWE=
-
-
-Rev 22 backports the older 802.11 core but pairs it with a radio
-in the 2057 family, which requires the 24-bit indirect path. With
-the current dispatch, corerev 22 falls into the legacy 4-wire branch,
-reads garbage for radio_id, and bails out with -EOPNOTSUPP at the
-"FOUND UNSUPPORTED RADIO" branch below.
-
-brcmsmac handles the same silicon family with the equivalent
-dispatch in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/
-phy_cmn.c read_radio_reg() and write_radio_reg():
-
-    if ((D11REV_GE(pi->sh->corerev, 24)) ||
-        (D11REV_IS(pi->sh->corerev, 22)
-         && (pi->pubpi.phy_type != PHY_TYPE_SSN))) {
-            /* radioregaddr / radioregdata (indirect) */
-    } else {
-            /* phy4waddr / phy4wdatalo (legacy)      */
-    }
-
-b43 does not support SSN/SSLPN PHYs - they are rejected earlier in
-b43_phy_versioning() at the "unsupported PHY type" switch - so just
-adding the check corerev == 22 will do.
+Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-1-cdad2c8526c6@gmail.com>
+References: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
+In-Reply-To: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: b4 0.14.3
+X-CMAE-Envelope: MS4xfK6e4tZhO5nbXI139+tskn3ZldskwfZS0yAkmZzdcOiRqB5wDe+cpYChzUy/iHFxUhoVp6ah5tm/xaN8TPVJUQrwkYksZlAIe9yIAVsmHrTjgL+TX1og
+ HjWJnTDeXqY/mLXoEZFeQito8onhlhJuL9iHTYF4Y6kr0garwS6/ceTopffj2vVF27c9FcGjybi74l96GO1XPhhFjz0aw5NclsV5DLN9cDKQNey8hPuI9Mr4
+ xsWV1tci4PZrxsE+vgaHc1n3T2mR59exei4b+jy6mXj8/5tJHWS0S4i0M3oMLhO9ROIqQB6eu5UVlcItQfFfdjQNE/BiBtfF/aKPe3zEtco=
 
 Assisted-by: Claude:claude-4.7-opus
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/broadcom/b43/main.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/b43/main.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c
-b/drivers/net/wireless/broadcom/b43/main.c index 85ea8fdd9..783af26cb
-100644 --- a/drivers/net/wireless/broadcom/b43/main.c
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index b0e6aeb0b..37c5d9928 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
 +++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -4563,7 +4563,11 @@ static int b43_phy_versioning(struct b43_wldev
-*dev) radio_id = b43_read16(dev, B43_MMIO_RADIO24_DATA);
- 
- 		radio_ver = 0; /* Is there version somewhere? */
--	} else if (core_rev >= 24) {
-+	} else if (core_rev >= 24 || core_rev == 22) {
-+		/*
-+		 * D11 corerev 22 pairs an older 802.11 core with a
-2057
-+		 * radio that requires the 24-bit indirect access path.
-+		 */
- 		u16 radio24[3];
- 
- 		for (tmp = 0; tmp < 3; tmp++) {
+@@ -2344,6 +2344,10 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+ 		break;
++	case 22:
++		if (phy->type == B43_PHYTYPE_N)
++			filename = "ucode22_mimo";
++		break;
+ 	case 16 ... 19:
+ 		if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+@@ -2405,7 +2409,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else if (rev == 24)
+ 			filename = "n0initvals24";
+ 		else if (rev == 23)
+-			filename = "n0initvals16"; /* What about n0initvals22? */
++			filename = "n0initvals16";
++		else if (rev == 22)
++			filename = "n0initvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0initvals16";
+ 		else if (rev >= 11 && rev <= 12)
+@@ -2465,7 +2471,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else if (rev == 24)
+ 			filename = "n0bsinitvals24";
+ 		else if (rev == 23)
+-			filename = "n0bsinitvals16"; /* What about n0bsinitvals22? */
++			filename = "n0bsinitvals16";
++		else if (rev == 22)
++			filename = "n0bsinitvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0bsinitvals16";
+ 		else if (rev >= 11 && rev <= 12)
 
 -- 
 2.54.0
+
