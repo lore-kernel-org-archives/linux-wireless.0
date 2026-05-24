@@ -1,37 +1,36 @@
 Received: from smtpcmd15176.aruba.it (smtpcmd15176.aruba.it [62.149.156.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8592F37B416
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4BB37B03E
+	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779659791; cv=none; b=fbommqVPcR8/38hqra5oZYH3BTJIkHi1fHQcOmciPLq0J6njzAmHNzUD5d+fJClSMUlm9cQQumm3Ac/LgTYrH36vi4VZJKiWxMScRxWs6hEuJyCltgbHHezrwvjT/d3bgGHdcqI/txO2OIk6Oug+1s3pIJYF5ckKYqUR+gY9kL4=
+	t=1779659791; cv=none; b=A9uCMOaa1zJKlOxmgjdEkskEnOYBpFG4i2mepzVXON1J24nr+HNImS2EQS9Wv8YmjBbzOISB98/nN88DR524bgT5NZHfAjmk4qcGvqtpFsykql2G3K/974MAkuBmwrO0TWSNatcmg3l1DgAiMR2yUIhNzUManWjwBHie7pBOe3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1779659791; c=relaxed/simple;
-	bh=nU0wzFaFhsFBD4bQKqEatdtCZlYs7XpG5eZEIAlIdTg=;
+	bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=n/nH2pTTP1YCwyFJoG0DGaUP+bPkxgNmgDKiu0g5vC+/Ablcq02u1ilYpmYolbwpzzzyfXpKLherrJ5BRFBP7itN54X1WIMreIfalC4+EyrbrSUM9qZjhmcNiqL4livJUP3XIoBK9AH4FrYMWoKXpI2sU0BrpukDGV3TQLof+/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=TPn2pAE+; arc=none smtp.client-ip=62.149.156.176
+	 In-Reply-To:To; b=CWseJqSyBfDuqh3LJQeCxyKN87IyPUWknQT7TLPsc85+PY/1AxpG8pMq72FwaxgJ4b7YaGNw6o/KvdS2bAJDei9ATCj0/KWW0lt2uV3JIslPndrXgXsKzMfwSKCH3WshXfiQRodQzh8YzQuXoCuOpxov1Xak6Bq9XM+7+TEzg3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=dSMBt39M; arc=none smtp.client-ip=62.149.156.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="TPn2pAE+"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="dSMBt39M"
 Received: from [192.168.1.237] ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id RGo5wsRmcwf0DRGo5wFEWf; Sun, 24 May 2026 23:56:26 +0200
+	id RGo5wsRmcwf0DRGo5wFEWC; Sun, 24 May 2026 23:56:25 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779659786; bh=nU0wzFaFhsFBD4bQKqEatdtCZlYs7XpG5eZEIAlIdTg=;
+	t=1779659785; bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=TPn2pAE+hSuwnqo6kRfuijsMIehYI4lhis3eHaxBOXkuj2P5iDXZgz9EqnIXjxSdi
-	 NVy26GtLrwZELTCwg7KpYbHsugyiGNr4DrLxZYRi0UPwWkUYotIx1RVeH5V5n6w7xC
-	 nUajNLDb65/bCwxsDGY7OH9zpDrna1abwWgAOER7ESJaPc9iZcPLq38zkrurxn9Xxa
-	 /hMJ5kjEBV02mfqP6H0I87Auqxf+zU0XxmIuvyL6z1FGEgbu6zQGyYObXvGJBiDTfW
-	 oahKtn34eKCepwgFc9nIKL4h49muwGJE4+heJYF9j8KvLIlVGtb7oG/VC4Pt3v/vpM
-	 biy9x/ThAeuQA==
+	b=dSMBt39Mea0CwaxBow9Sb07rb8rIcceczo4uGdg8hNVJerH3eS2fDHwT+So70vhe1
+	 AchcwYByfaeHWnho0cR+4viUq8Istsup/d8fVqAgLdl/PT1YzoUjxTgDPfxoNZHNUh
+	 qM1k7ebDGlgXTxizY8QRnBzytkfjEjFg+ItlwB+1KpHA3JB7cgBw3i2t9GQZw+hP7q
+	 hh3jRmH5Le0IG6Hntp7WPkvHXm+sVj9RZ1aAaI11ODHFHEV8kF6sPWVYafz1Qd3KJq
+	 SopGLsT0epIGovkpBdN5XvdGOczGC8ItMCct3e1g0+yvWN0Dud0ZPqU6XF6y224w5+
+	 kC0/k1MPm9bPQ==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Sun, 24 May 2026 23:56:22 +0200
-Subject: [PATCH v3 5/7] b43: add IPA TX gain table for N-PHY r8 + radio
- 2057 r8
+Date: Sun, 24 May 2026 23:56:19 +0200
+Subject: [PATCH v3 2/7] b43: add d11 core revision 0x16 to id table
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,101 +39,46 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-5-cdad2c8526c6@gmail.com>
+Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-2-cdad2c8526c6@gmail.com>
 References: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
 In-Reply-To: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
 To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
  linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
 X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfA68BqaCkARgcDeF0kZ2UFl6SNlLG18wR+LQBV8qIB0LCxYN2/+rkKbov4N3NO6Mo6TWpaUKQz03uo0SF2PaeQYV16MzNF3ra8jTW86kg0CPBytWRzkp
- d8c2s4TVdBqBsWRw5aLGzkJ3ZMRxJn3QM6dOF/m1Z5un74VmOQoq5Fy0PtdOwp2ANnPjutzDk0UQCpQ9R73Z457QW7EuxL0C9LiMnROBOBTI0NLDNzutxWX7
- ejqX4QxUgegJG5GxuGyf2tfV2PUtuuNnd/IKPSECMhigZ/KnIfgFE/CruilI8wRTeJ4JjtNNb0IrIpHMupqlknExVmWS8fMZ9EPIYzusd3E=
+X-CMAE-Envelope: MS4xfK6e4tZhO5nbXI139+tskn3ZldskwfZS0yAkmZzdcOiRqB5wDe+cpYChzUy/iHFxUhoVp6ah5tm/xaN8TPVJUQrwkYksZlAIe9yIAVsmHrTjgL+TX1og
+ HjWJnTDeXqY/mLXoEZFeQito8onhlhJuL9iHTYF4Y6kr0garwS6/ceTopffj2vVF27c9FcGjybi74l96GO1XPhhFjz0aw5NclsV5DLN9cDKQNey8hPuI9Mr4
+ xsWV1tci4PZrxsE+vgaHc1n3T2mR59exei4b+jy6mXj8/5tJHWS0S4i0M3oMLhO9ROIqQB6eu5UVlcItQfFfdjQNE/BiBtfF/aKPe3zEtco=
 
-Add the 2.4 GHz IPA TX gain table for N-PHY rev 8 paired with radio
-2057 rev 8 and wire it to the existing dispatcher.
+Add d11 core revision 0x16 (= 22) to the b43 bcma device id table.
 
-b43_nphy_get_ipa_gain_table() in tables_nphy.c currently handles
-case 8 only for radio_rev == 5; radio_rev == 8 falls through and
-the function logs:
+The b43 bcma id table covers d11 revisions 0x11, 0x15, 0x17, 0x18,
+0x1C, 0x1D, 0x1E, 0x28 and 0x2A. Revision 0x16 belongs to the same
+N-PHY family as revisions 0x17 and 0x18 (radio 2057) and needs no
+new PHY or radio code beyond the radio_rev 8 dispatcher entries
+added later in this series - only the device id entry is missing.
+Without it bcma scan enumerates the 802.11 core but no driver binds.
 
-    b43-phyX ERROR: No 2GHz IPA gain table available for this device
-    b43-phyX ERROR: PHY init: Channel switch to default failed
-
-leaving b43_phy_init() to return an error and core_init to abort
-before the MAC is enabled.
-
-The high byte of every entry differs from the rev 5 sibling (0x40
-vs 0x30): different PAD-gain code prefix for the rev 8 front-end.
-The low 24 bits coincide with rev 5 across the whole table - the
-gain step amplitudes are the same, only the PAD-gain selector
-prefix changes.
-
-Values extracted from an MMIO dump of the proprietary Broadcom wl
-driver running on BCM6362 silicon (wl driver 6.30.102.7).
+The revision is used by the Broadcom BCM6362 single-die integrated
+2.4 GHz wireless block found in xDSL SoCs.
 
 Assisted-by: Claude:claude-4.7-opus
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/broadcom/b43/tables_nphy.c | 39 +++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/net/wireless/broadcom/b43/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/tables_nphy.c b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-index 41a25d909..84e8d718d 100644
---- a/drivers/net/wireless/broadcom/b43/tables_nphy.c
-+++ b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-@@ -2715,6 +2715,43 @@ static const u32 b43_ntab_tx_gain_ipa_2057_rev5_2g[] = {
- 	0x300f0715, 0x300f0715, 0x300f0715, 0x300f0715,
- };
- 
-+/* Extracted from MMIO dump of 6.30.102.7 */
-+static const u32 b43_ntab_tx_gain_ipa_2057_rev8_2g[] = {
-+	0x40ff0031, 0x40e70031, 0x40e7002e, 0x40cf002e,
-+	0x40bf002e, 0x40af002e, 0x409f002f, 0x407f0033,
-+	0x407f0031, 0x407f002e, 0x4077002e, 0x406f002e,
-+	0x4067002e, 0x405f002f, 0x40570030, 0x4057002d,
-+	0x404f002e, 0x40470031, 0x4047002e, 0x4047002c,
-+	0x40470029, 0x403f002c, 0x403f0029, 0x4037002d,
-+	0x4037002a, 0x40370028, 0x402f002c, 0x402f002a,
-+	0x402f0028, 0x402f0026, 0x4027002c, 0x40270029,
-+	0x40270027, 0x40270025, 0x40270023, 0x401f002c,
-+	0x401f002a, 0x401f0028, 0x401f0025, 0x401f0024,
-+	0x401f0022, 0x401f001f, 0x4017002d, 0x4017002b,
-+	0x40170028, 0x40170026, 0x40170024, 0x40170022,
-+	0x40170020, 0x4017001e, 0x4017001d, 0x4017001b,
-+	0x4017001a, 0x40170018, 0x40170017, 0x40170015,
-+	0x400f002c, 0x400f0029, 0x400f0027, 0x400f0024,
-+	0x400f0022, 0x400f0021, 0x400f001f, 0x400f001d,
-+	0x400f001b, 0x400f001a, 0x400f0018, 0x400f0017,
-+	0x400f0016, 0x400f0015, 0x400f0115, 0x400f0215,
-+	0x400f0315, 0x400f0415, 0x400f0515, 0x400f0615,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+};
-+
-+
- /* Extracted from MMIO dump of 6.30.223.141 */
- static const u32 b43_ntab_tx_gain_ipa_2057_rev9_2g[] = {
- 	0x60ff0031, 0x60e7002c, 0x60cf002a, 0x60c70029,
-@@ -3651,6 +3688,8 @@ static const u32 *b43_nphy_get_ipa_gain_table(struct b43_wldev *dev)
- 		case 8:
- 			if (phy->radio_rev == 5)
- 				return b43_ntab_tx_gain_ipa_2057_rev5_2g;
-+			if (phy->radio_rev == 8)
-+				return b43_ntab_tx_gain_ipa_2057_rev8_2g;
- 			break;
- 		case 6:
- 			if (dev->dev->chip_id == BCMA_CHIP_ID_BCM47162)
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index 37c5d9928..85ea8fdd9 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -117,6 +117,7 @@ MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if over
+ static const struct bcma_device_id b43_bcma_tbl[] = {
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x15, BCMA_ANY_CLASS),
++	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x16, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1C, BCMA_ANY_CLASS),
 
 -- 
 2.54.0
