@@ -1,80 +1,120 @@
-Received: from sender4-of-o50.zoho.com (sender4-of-o50.zoho.com [136.143.188.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFD163019DC
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 13:38:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779629916; cv=pass; b=HYxmilNYMaW1UubHqTogsDlkhYHR0bvzlwnFfdpbV72y/CahZZyx0XeXjMdwqbIHm+seG/+otPwl/PdnODwvlreRAp59r2iTimwff4rScdgdLSsK5hTcqHy6HfVLGWbNtuQy7duExMME1M1ZGmkElI/rZFxIIYB5Syrvlppc4Sg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779629916; c=relaxed/simple;
-	bh=LTBitT9wtOKAKpx5UQkIyUlEBQovd/BnTQ6s+czd5J0=;
-	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:To; b=O/0T4IESeAZ8VLSAmYGJQbMmynSHAmByg1rI8IVmnPjVTHwibc8grpvF1mNsxoTzmbdSoC4Uvv9Zh+rui3vj5ghhP7p7ZNsbfQQJD6N9i9skrWuC8CgVt0WY50i+SZB1BDLG5jC6UG1Bmry4brzmtgX2UBHv9pNEHL84YGAVVRI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gservera.com; spf=pass smtp.mailfrom=gservera.com; dkim=pass (1024-bit key) header.d=gservera.com header.i=guillem@gservera.com header.b=KIpLpx3T; arc=pass smtp.client-ip=136.143.188.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gservera.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gservera.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C0C319617;
+	Sun, 24 May 2026 16:53:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779641620; cv=none; b=TfO3itDDyCTzfZHFbzWt/Hz0vE8wTFXvfqlWFyHBGt71on4srhHaheYr9IAm6AI1pzS8mn136LQRMpNLf8Gqo9A486EMSwGNtmXRsY2WsnbRJMfXF9P6deyYRO7dXibAuBTrOHGfu0YIptZtBYirLEwSKcgNi2V8ts6hGaab0xU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779641620; c=relaxed/simple;
+	bh=oVdJqfzDg+pfCc4Qmkr/qgAA6WrCqYj0GrqFfkK6LQA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rUVKG3ybFSe09pnO7DHOqAoOCpLkd5OH7SCFSvfysZlX/Z/q3Z5d7SnMqv1wn+q3krXwcDh5x0jWK47msEmPml//Juf5CF+H50RCKL9PGCGtsFu+JGX7SxN4n4zjkrBjBvqrN8B6er8cZwTfN2HxplZLhLKkXlsOYogccPwePBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=WLVZmTJu; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=gservera.com header.i=guillem@gservera.com header.b="KIpLpx3T"
-ARC-Seal: i=1; a=rsa-sha256; t=1779629912; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=Lfd/xgt6b/mT2SpbwDCI7VaDDQxXIqErI0JGGLXRnFi4eArPmNIkxr/fOd9Uo3+CPom9bD/wCv0f9BvyIoogOKfXHaoOn6go+pmnksjWpS7/yYI4UUUmYO9O24k65i5QPdfN7ozG6CpFq2TZkkiGTJO2gJGNFkcdycrubkWX/Qw=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1779629912; h=Content-Type:Content-Transfer-Encoding:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To:Cc; 
-	bh=LTBitT9wtOKAKpx5UQkIyUlEBQovd/BnTQ6s+czd5J0=; 
-	b=mKxpNTiXriqF2SVEkGilljk0TXRpuKY2wHUYB7qxkueTe8UPo+Ad0lpUHsqIqIuqmVoDN842Ia3G/L4Y4dJuxWRmosxf2WNvCYNxypD2L61aeiJvmT0lRF6qqyyB7Sc/B4ruN4Y7cAalkYZfprW6tYY6aTiWZNUHR+6EUaZ+IwE=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=gservera.com;
-	spf=pass  smtp.mailfrom=guillem@gservera.com;
-	dmarc=pass header.from=<guillem@gservera.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1779629912;
-	s=mailguard; d=gservera.com; i=guillem@gservera.com;
-	h=From:From:Content-Type:Content-Transfer-Encoding:Mime-Version:Subject:Subject:Message-Id:Message-Id:Date:Date:To:To:Reply-To:Cc;
-	bh=LTBitT9wtOKAKpx5UQkIyUlEBQovd/BnTQ6s+czd5J0=;
-	b=KIpLpx3T7Ztnc6qqF6fH/o/h+0ivITHSWZCoXYK2OZu48MgcQk4WXDJHVofz5KEu
-	p1K3DFJ26WtftUOZzyG3iFmR95TutJZWB0crLWNpgAZNM8Wt0IAb+0QCkEwbkRwJFnU
-	enxjtUfjq9Nya8H8E1YzxyvJDbfra+ireyEpy3Xw=
-Received: by mx.zohomail.com with SMTPS id 1779629910066539.0439107290106;
-	Sun, 24 May 2026 06:38:30 -0700 (PDT)
-From: Guillermo Servera Negre <guillem@gservera.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="WLVZmTJu"
+Received: from debian.lan (unknown [95.24.24.142])
+	by mail.ispras.ru (Postfix) with ESMTPSA id 8230C45F79AF;
+	Sun, 24 May 2026 16:53:26 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru 8230C45F79AF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1779641606;
+	bh=jj4UBIPSW7Y6JlpURWt0PQfTWw8tmPjqzcErRESUcKk=;
+	h=From:To:Cc:Subject:Date:From;
+	b=WLVZmTJuJBNKgf4SZQ7c3es0MHBWHFQ2hWv5tnwgcYuCdmQTqGyosGbWuCKb/QWO8
+	 JgBDRw8NrGAU4IzTviLojcvhShiPgpBvKPtsM//qUnyfioIptJpgB5jVEPdD0O7uE7
+	 3vs7i/PZvtXegkzoMhKtOoFR1TYEB4K+CE/R80LU=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Tova Mussai <tova.mussai@intel.com>,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH] wifi: cfg80211: fix leak if split 6 GHz scanning fails
+Date: Sun, 24 May 2026 19:53:20 +0300
+Message-ID: <20260524165320.62089-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: wifi: rtw89: 8851bu: add Mercusys MA60XNB (2c4e:0128)
-Message-Id: <418D5F85-B110-4CD2-B733-FEA8D4901EBB@gservera.com>
-Date: Sun, 24 May 2026 15:38:17 +0200
-To: linux-wireless@vger.kernel.org
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Hi,
+rdev->int_scan_req is leaked if cfg80211_scan() fails [1].  It's supposed
+to be released at ___cfg80211_scan_done() but this doesn't happen as
+rdev->scan_req is NULL at that point, too, leading to the early return
+from the freeing function.  Anyway scan_done shouldn't ever be expected to
+be called if triggering the scan has already failed.
 
-The Mercusys MA60XNB (AX900 Nano USB WiFi 6 adapter) works with the =
-rtw89_8851bu driver but its USB ID (2c4e:0128) is not in the device =
-table. Windows identifies the chipset as RTL8851BU.
+Note that the similar pattern at cfg80211_scan_6ghz() looks okay since
+int_scan_req is freed there on error in case first_part is being
+processed.  On the other side, when first_part is false - called directly
+from ___cfg80211_scan_done() - the old int_scan_req is kept then and will
+be freed afterwards.
 
- Adding the following entry to rtw_8851bu_id_table in rtw8851bu.c makes =
-the adapter fully functional:
+[1]:
+unreferenced object 0xffff8881161d0800 (size 512):
+  comm "wpa_supplicant", pid 379, jiffies 4294749765
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 f0 81 13 16 81 88 ff ff  ................
+  backtrace (crc c867fdb6):
+    kmemleak_alloc+0x89/0x90
+    __kmalloc_noprof+0x2fd/0x410
+    cfg80211_scan+0x133/0x730
+    nl80211_trigger_scan+0xc69/0x1cc0
+    genl_family_rcv_msg_doit+0x204/0x2f0
+    genl_rcv_msg+0x431/0x6b0
+    netlink_rcv_skb+0x143/0x3f0
+    genl_rcv+0x27/0x40
+    netlink_unicast+0x4f6/0x820
+    netlink_sendmsg+0x797/0xce0
+    __sock_sendmsg+0xc4/0x160
+    ____sys_sendmsg+0x5e4/0x890
+    ___sys_sendmsg+0xf8/0x180
+    __sys_sendmsg+0x136/0x1e0
+    __x64_sys_sendmsg+0x76/0xc0
+    x64_sys_call+0x13f0/0x17d0
 
- { USB_DEVICE_AND_INTERFACE_INFO(0x2C4E, 0x0128, 0xff, 0xff, 0xff), =
-.driver_info =3D (kernel_ulong_t)&rtw89_8851bu_info },
+Found by Linux Verification Center (linuxtesting.org).
 
-Tested on Fedora 44 with kernel 7.0.8-200.fc44.x86_64 and linux-firmware =
-20260410-1.fc44.
+Fixes: c8cb5b854b40 ("nl80211/cfg80211: support 6 GHz scanning")
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
+ net/wireless/scan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-USB device details:
-idVendor 0x2c4e Mercucys INC
-idProduct 0x0128
-iProduct 2 802.11ax WLAN Adapter
-iManufacturer 1 Realtek
-bcdUSB 2.00
-bNumInterfaces 3
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 358cbc9e43d8..fe7b47d046c7 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1071,6 +1071,7 @@ int cfg80211_scan(struct cfg80211_registered_device *rdev)
+ 	struct cfg80211_scan_request_int *request;
+ 	struct cfg80211_scan_request_int *rdev_req = rdev->scan_req;
+ 	u32 n_channels = 0, idx, i;
++	int err;
+ 
+ 	if (!(rdev->wiphy.flags & WIPHY_FLAG_SPLIT_SCAN_6GHZ)) {
+ 		rdev_req->req.first_part = true;
+@@ -1101,7 +1102,12 @@ int cfg80211_scan(struct cfg80211_registered_device *rdev)
+ 	rdev_req->req.scan_6ghz = false;
+ 	rdev_req->req.first_part = true;
+ 	rdev->int_scan_req = request;
+-	return rdev_scan(rdev, request);
++	err = rdev_scan(rdev, request);
++	if (err) {
++		kfree(rdev->int_scan_req);
++		rdev->int_scan_req = NULL;
++	}
++	return err;
+ }
+ 
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
+-- 
+2.53.0
 
-
-Thanks,
-Guillem=
