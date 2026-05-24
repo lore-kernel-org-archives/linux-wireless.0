@@ -1,37 +1,37 @@
 Received: from smtpcmd15176.aruba.it (smtpcmd15176.aruba.it [62.149.156.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A3E37BE62
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A9237B017
+	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779659790; cv=none; b=L4Xgu7rymWwZpPXV3NiTzJeC55e3HtqvZWLh/veMCfrbpgedAORWPAMk8GF2cc4nH3elT4EQnBzzr7SyPY9RL3IrzY7PFPM27pGbvMqnVG1qEkoqMvMdAr7wUa3wrNFfa/GRvNJTPWFQHnrjfJ3tSlG47F10JjDRICTRyvtPwig=
+	t=1779659791; cv=none; b=AJWIh47ebieWUOPWnfz2ONnzByxGwBHPKzY9veEuLIz+/r/4SAgIpJOfbsq/QcTPJ5NH1VKKx63lzchf2ibw0h1GVsL1Av7pZZPuUlM0CgHeNoh938wTWAPuLTDBZQ72IHngYJ5AeeUqMO2iQU0Zpht5eOY0nVz6GxhG5rdsc7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779659790; c=relaxed/simple;
-	bh=7U2VRrCjLV3YsP3PE4UZxyswXXGxQcG+dcQvS3dsOgs=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=D3PP6T1XV8IQcTjbZfiGaPAKICPZ5pGM27jHf6TCOdzJwj/qM7GBv22TezR+uIRNGr5w+XFAuQNoRJxIqSlanf9vZCmU06hewBVmD+3LwpsgIUCZ5b7wujMZfTAWYyx44WbgOCdbYCR2EWwSv1TtFMHw9ttBfsDQ/+OkZGOhmzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=SXlaOtn0; arc=none smtp.client-ip=62.149.156.176
+	s=arc-20240116; t=1779659791; c=relaxed/simple;
+	bh=Mp8um2km/ncOD5Sy/AXymgDhuu+gQzVP3iJ7E/I3Z5I=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To; b=BHu2F+2T1QDIm3dTcWkPwOrmZpFVElWLVUgbFsP3BqRLYXrpMo6UJv4ala3k/HJJmwPoHd5RJQTsxNXcacY8tfftKIxoO1SHwRsE21xbPo4fxVfjjTpX042A0woNLvjwBs9jnOvyWswiTpmGd5ayfvD54kSeh/8V+UDcXJtYgnc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=gQbmNb1Q; arc=none smtp.client-ip=62.149.156.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="SXlaOtn0"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="gQbmNb1Q"
 Received: from [192.168.1.237] ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id RGo5wsRmcwf0DRGo6wFEWp; Sun, 24 May 2026 23:56:26 +0200
+	id RGo5wsRmcwf0DRGo5wFEVq; Sun, 24 May 2026 23:56:25 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779659786; bh=7U2VRrCjLV3YsP3PE4UZxyswXXGxQcG+dcQvS3dsOgs=;
-	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=SXlaOtn04CdzBea/JCHPQq0IPKs3bITjiTwNOIE5FfrcYkAf3ElIdwnij0hEq2jWn
-	 dSav6jWoXnZ8OIGVxTmBPH08UjSfHqxN0tJ2S1bapq7mm3uGt+M3B4I7dHBVejtvnd
-	 VLM74gXeNowG4DuYEQOmZLq4xYtGrmjQkHXog8YwZrZJoAm9yeJlnHaMZdn7uKGScT
-	 5iIrYlDrk5xt/xTJ3RK9857btipJV3ldCdQ+Lh9Fm7LXrDxH0jpkCrXcL3zHlcyx3T
-	 +l7KhMfrTrRx70G+Tr6I52AuPYZp0Dp/9H+in1gh8NWPS6DEgVn0hjHyi7OSoW0Lph
-	 wvvf9p8HyHwVA==
+	t=1779659785; bh=Mp8um2km/ncOD5Sy/AXymgDhuu+gQzVP3iJ7E/I3Z5I=;
+	h=From:Subject:Date:MIME-Version:Content-Type:To;
+	b=gQbmNb1QyvDA0i//OBQN7tS0LXKaxSYWLs/YN/JgZ4FUJMYvResjUMfax2hWGg0Ce
+	 akYCy5RJLbGRovPWRmVx90a0umwhXlThD8/80lOjDxeQ5Fwf3qXv2ozcxLDUoZqh1+
+	 Sz769RGzxZKU3RBMMItLgAz02GlKeAQwOrASojrDkBqXzxA0I4iO6K6yyigMbfko11
+	 QfKC3tLVPyyOLRTiEnf5tU0hV0wKi7FMPWqmPJR0Sul/rm9OcI0rKpeXHz7LgiFrPu
+	 KLxGhyHBnXXvp930Qfx2F+QCLqXzIZKsDRowd0a44BPCB+wzj7/gjfK/31OvWxr6vJ
+	 /UqueWtbx5tUg==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Sun, 24 May 2026 23:56:23 +0200
-Subject: [PATCH v3 6/7] b43: add channel info table for N-PHY r8 + radio
- 2057 r8
+Subject: [PATCH v3 0/7] b43: complete N-PHY rev 8 + radio 2057 rev 8
+ support
+Date: Sun, 24 May 2026 23:56:17 +0200
+Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,163 +40,94 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-6-cdad2c8526c6@gmail.com>
-References: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
-In-Reply-To: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/y2NUQrCMBAFr1L220CyMVW8ipQlbbd2QZOQ1GIpv
+ btB/JwH82aHwlm4wK3ZIfMqRWKoYE4NDLMPD1YyVgbU2GqHRvVnS0N8pScvTIHSvFH16ErZjxI
+ Jtbv8h/JOKeZFeWvQTbplNAz1N2We5PNr3mG10B3HF5ip4ruHAAAA
+X-Change-ID: 20260521-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-a3125f06e21e
 To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
  linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
 X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfA68BqaCkARgcDeF0kZ2UFl6SNlLG18wR+LQBV8qIB0LCxYN2/+rkKbov4N3NO6Mo6TWpaUKQz03uo0SF2PaeQYV16MzNF3ra8jTW86kg0CPBytWRzkp
- d8c2s4TVdBqBsWRw5aLGzkJ3ZMRxJn3QM6dOF/m1Z5un74VmOQoq5Fy0PtdOwp2ANnPjutzDk0UQCpQ9R73Z457QW7EuxL0C9LiMnROBOBTI0NLDNzutxWX7
- ejqX4QxUgegJG5GxuGyf2tfV2PUtuuNnd/IKPSECMhigZ/KnIfgFE/CruilI8wRTeJ4JjtNNb0IrIpHMupqlknExVmWS8fMZ9EPIYzusd3E=
+X-CMAE-Envelope: MS4xfK6e4tZhO5nbXI139+tskn3ZldskwfZS0yAkmZzdcOiRqB5wDe+cpYChzUy/iHFxUhoVp6ah5tm/xaN8TPVJUQrwkYksZlAIe9yIAVsmHrTjgL+TX1og
+ HjWJnTDeXqY/mLXoEZFeQito8onhlhJuL9iHTYF4Y6kr0garwS6/ceTopffj2vVF27c9FcGjybi74l96GO1XPhhFjz0aw5NclsV5DLN9cDKQNey8hPuI9Mr4
+ xsWV1tci4PZrxsE+vgaHc1n3T2mR59exei4b+jy6mXj8/5tJHWS0S4i0M3oMLhO9ROIqQB6eu5UVlcItQfFfdjQNE/BiBtfF/aKPe3zEtco=
 
-Add the 2.4 GHz channel info table for N-PHY rev 8 paired with
-radio 2057 rev 8 and wire it to the existing dispatcher in
-r2057_get_chantabent_rev7().
+This series completes b43 support for the Broadcom N-PHY revision 8
+paired with radio 2057 revision 8. b43 already supports the surrounding
+PHY family - N-PHY rev 8 with radio 2057 rev 5 and rev 7 are handled,
+and rev 16 with radio 2057 rev 9 is handled - but the rev 8 + rev 8
+combination falls through four dispatcher gaps:
 
-The dispatcher's case 8 currently handles radio_rev == 5 only.
-For radio_rev == 8 both output pointers stay NULL,
-b43_nphy_set_channel() returns an error and channel switch to
-the default channel fails.
+  - radio_2057.c, r2057_upload_inittabs(), case 8 lists radio_rev 5
+    and 7 only;
+  - radio_2057.c, r2057_get_chantabent_rev7(), case 8 lists radio_rev
+    5 only;
+  - tables_nphy.c, b43_nphy_get_ipa_gain_table(), case 8 lists
+    radio_rev 5 only;
+  - radio_2057.c carries r2057_rev8_init[] as a 54-entry stub commented
+    out with "TODO: Which devices should use it?".
 
-The new b43_nphy_chantab_phy_rev8_radio_rev8[] is 14 entries
-covering the standard 2.4 GHz channel set (2412..2472 in 5 MHz
-steps, plus 2484 for channel 14).
+Two further pieces of plumbing are needed to reach those dispatchers
+in the first place: d11 core revision 0x16 is missing from the b43
+bcma id table, firmware name, and the corerev 22 / radio 2057 combination
+needs the 24-bit indirect radio access path that brcmsmac uses for
+the same silicon generation (see brcmsmac/phy/phy_cmn.c
+read_radio_reg() / write_radio_reg()).
 
-Values extracted from an MMIO dump of the proprietary Broadcom wl
-driver running on BCM6362 silicon (wl driver 6.30.102.7).
+The series:
 
-Assisted-by: Claude:claude-4.7-opus
+  1/7  b43: add firmware and initvals names for rev22
+  2/7  b43: add d11 core revision 0x16 to id table
+  3/7  b43: route d11 corerev 22 to 24-bit indirect radio access
+  4/7  b43: support radio 2057 rev 8
+  5/7  b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
+  6/7  b43: add channel info table for N-PHY r8 + radio 2057 r8
+  7/7  b43: add RF power offset for N-PHY r8 + radio 2057 r8
+
+Patches almost reveal the bringup, the first two are swapped, as
+applying 2/7 without 1/7 generate an immediate kernel panic caused
+by a null deref.
+From the third, each one fixes the next visible failure
+in bring-up: 3/7 lets phy versioning read coherent radio identifiers,
+4/7 unblocks the boot-time radio calibration that otherwise stalls,
+and 5/7-7/7 fill the remaining 2.4 GHz dispatcher entries so
+b43_nphy_set_channel completes to the default channel and core_init
+proceeds past PHY init.
+
+Tested on a D-Link DSL-3580L (Broadcom BCM6362 SoC, single-die 2.4 GHz
+N-PHY rev 8 + radio 2057 rev 8 in 2.4 GHz IPA mode).
+
+b43 is currently Orphan in MAINTAINERS. These patches do not add a
+new chip family or PHY infrastructure; they fill four explicit
+dispatcher gaps for a combination of an already-supported PHY and
+an already-supported radio.
+
+CHANGELOG:
+v3: no changes, fighting with b4
+v2:
+  - Recovered the first patch of the series, so numbering is now /7
+  - Added Assisted-By header
+v1: https://lore.kernel.org/linux-wireless/8c0a07d2-9ec9-43d6-bdf7-f625bbb4a38a@mythread.it/
+
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/broadcom/b43/radio_2057.c | 106 +++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+Alessio Ferri (7):
+      b43: add firmware mappings and remove comments wondering about rev22 initvals
+      b43: add d11 core revision 0x16 to id table
+      b43: route d11 corerev 22 to 24-bit indirect radio access
+      b43: support radio 2057 rev 8
+      b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
+      b43: add channel info table for N-PHY r8 + radio 2057 r8
+      b43: add RF power offset for N-PHY r8 + radio 2057 r8
 
-diff --git a/drivers/net/wireless/broadcom/b43/radio_2057.c b/drivers/net/wireless/broadcom/b43/radio_2057.c
-index 9f693d92b..e761f899b 100644
---- a/drivers/net/wireless/broadcom/b43/radio_2057.c
-+++ b/drivers/net/wireless/broadcom/b43/radio_2057.c
-@@ -445,6 +445,109 @@ static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev17_radio
- 	},
- };
- 
-+/* Extracted from MMIO dump of 6.30.102.7 */
-+static const struct b43_nphy_chantabent_rev7_2g b43_nphy_chantab_phy_rev8_radio_rev8[] = {
-+	{
-+		.freq			= 2412,
-+		RADIOREGS7_2G(0x48, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x6c,
-+			      0x09, 0x0f, 0x09, 0x07, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03c9, 0x03c5, 0x03c1, 0x043a, 0x043f, 0x0443),
-+	},
-+	{
-+		.freq			= 2417,
-+		RADIOREGS7_2G(0x4b, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x71,
-+			      0x09, 0x0f, 0x09, 0x07, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03cb, 0x03c7, 0x03c3, 0x0438, 0x043d, 0x0441),
-+	},
-+	{
-+		.freq			= 2422,
-+		RADIOREGS7_2G(0x4e, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x76,
-+			      0x09, 0x0f, 0x09, 0x06, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03cd, 0x03c9, 0x03c5, 0x0436, 0x043a, 0x043f),
-+	},
-+	{
-+		.freq			= 2427,
-+		RADIOREGS7_2G(0x52, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x7b,
-+			      0x09, 0x0f, 0x09, 0x06, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03cf, 0x03cb, 0x03c7, 0x0434, 0x0438, 0x043d),
-+	},
-+	{
-+		.freq			= 2432,
-+		RADIOREGS7_2G(0x55, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x80,
-+			      0x09, 0x0f, 0x09, 0x06, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03d1, 0x03cd, 0x03c9, 0x0431, 0x0436, 0x043a),
-+	},
-+	{
-+		.freq			= 2437,
-+		RADIOREGS7_2G(0x58, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x85,
-+			      0x09, 0x0f, 0x09, 0x06, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03d3, 0x03cf, 0x03cb, 0x042f, 0x0434, 0x0438),
-+	},
-+	{
-+		.freq			= 2442,
-+		RADIOREGS7_2G(0x5c, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8a,
-+			      0x09, 0x0f, 0x08, 0x05, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03d5, 0x03d1, 0x03cd, 0x042d, 0x0431, 0x0436),
-+	},
-+	{
-+		.freq			= 2447,
-+		RADIOREGS7_2G(0x5f, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x8f,
-+			      0x09, 0x0f, 0x08, 0x05, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03d7, 0x03d3, 0x03cf, 0x042b, 0x042f, 0x0434),
-+	},
-+	{
-+		.freq			= 2452,
-+		RADIOREGS7_2G(0x62, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x94,
-+			      0x09, 0x0f, 0x08, 0x05, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03d9, 0x03d5, 0x03d1, 0x0429, 0x042d, 0x0431),
-+	},
-+	{
-+		.freq			= 2457,
-+		RADIOREGS7_2G(0x66, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x99,
-+			      0x09, 0x0f, 0x08, 0x05, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03db, 0x03d7, 0x03d3, 0x0427, 0x042b, 0x042f),
-+	},
-+	{
-+		.freq			= 2462,
-+		RADIOREGS7_2G(0x69, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0x9e,
-+			      0x09, 0x0f, 0x08, 0x05, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03dd, 0x03d9, 0x03d5, 0x0424, 0x0429, 0x042d),
-+	},
-+	{
-+		.freq			= 2467,
-+		RADIOREGS7_2G(0x6c, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0xa3,
-+			      0x09, 0x0f, 0x07, 0x04, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03df, 0x03db, 0x03d7, 0x0422, 0x0427, 0x042b),
-+	},
-+	{
-+		.freq			= 2472,
-+		RADIOREGS7_2G(0x70, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0xa8,
-+			      0x09, 0x0f, 0x07, 0x04, 0x61, 0x73, 0xf0, 0x61,
-+			      0x73, 0xf0),
-+		PHYREGS(0x03e1, 0x03dd, 0x03d9, 0x0420, 0x0424, 0x0429),
-+	},
-+	{
-+		.freq			= 2484,
-+		RADIOREGS7_2G(0x78, 0x16, 0x30, 0x1b, 0x0a, 0x0a, 0x30, 0xb4,
-+			      0x09, 0x0f, 0x07, 0x04, 0x61, 0x73, 0xe0, 0x61,
-+			      0x73, 0xe0),
-+		PHYREGS(0x03e6, 0x03e2, 0x03de, 0x041b, 0x041f, 0x0424),
-+	}
-+};
-+
-+
- /* Extracted from MMIO dump of 6.30.223.141 */
- static const struct b43_nphy_chantabent_rev7 b43_nphy_chantab_phy_rev16_radio_rev9[] = {
- 	{
-@@ -678,6 +781,9 @@ void r2057_get_chantabent_rev7(struct b43_wldev *dev, u16 freq,
- 		if (phy->radio_rev == 5) {
- 			e_r7_2g = b43_nphy_chantab_phy_rev8_radio_rev5;
- 			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev8_radio_rev5);
-+		} else if (phy->radio_rev == 8) {
-+			e_r7_2g = b43_nphy_chantab_phy_rev8_radio_rev8;
-+			len = ARRAY_SIZE(b43_nphy_chantab_phy_rev8_radio_rev8);
- 		}
- 		break;
- 	case 16:
+ drivers/net/wireless/broadcom/b43/main.c        |  22 ++-
+ drivers/net/wireless/broadcom/b43/radio_2057.c  | 230 ++++++++++++++++++++++--
+ drivers/net/wireless/broadcom/b43/tables_nphy.c |  58 ++++++
+ 3 files changed, 290 insertions(+), 20 deletions(-)
+---
+base-commit: 8bc67e4db64aa72732c474b44ea8622062c903f0
+change-id: 20260521-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-a3125f06e21e
 
+Best regards,
 -- 
-2.54.0
+Alessio <alessio.ferri.3012@gmail.com>
 
