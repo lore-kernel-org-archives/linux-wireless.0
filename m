@@ -1,85 +1,90 @@
-Received: from smtpcmd15176.aruba.it (smtpcmd15176.aruba.it [62.149.156.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4BB37B03E
-	for <linux-wireless@vger.kernel.org>; Sun, 24 May 2026 21:56:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD0736FC3
+	for <linux-wireless@vger.kernel.org>; Mon, 25 May 2026 01:17:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779659791; cv=none; b=A9uCMOaa1zJKlOxmgjdEkskEnOYBpFG4i2mepzVXON1J24nr+HNImS2EQS9Wv8YmjBbzOISB98/nN88DR524bgT5NZHfAjmk4qcGvqtpFsykql2G3K/974MAkuBmwrO0TWSNatcmg3l1DgAiMR2yUIhNzUManWjwBHie7pBOe3M=
+	t=1779671872; cv=none; b=M+0QXaS4/53FjUp5D6CbqHl9TXq21YbkXU66IcX6pRWK+JxmmX++O7d+HDLk0yN1ABovVXcyABOlwPhlNrGxEt6yC/1jj/ZplDDr7JYynQKKFVkSEXH/EC3agGz2wG6gpvAjyUZz4yOT8KLmJupiN4hbUr2S7kwfA65JtrOz73M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779659791; c=relaxed/simple;
-	bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=CWseJqSyBfDuqh3LJQeCxyKN87IyPUWknQT7TLPsc85+PY/1AxpG8pMq72FwaxgJ4b7YaGNw6o/KvdS2bAJDei9ATCj0/KWW0lt2uV3JIslPndrXgXsKzMfwSKCH3WshXfiQRodQzh8YzQuXoCuOpxov1Xak6Bq9XM+7+TEzg3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=dSMBt39M; arc=none smtp.client-ip=62.149.156.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	s=arc-20240116; t=1779671872; c=relaxed/simple;
+	bh=seyIhuMXh8N05yMB41NWtNFSIQNIlq7E5Jpumnj73e8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Ve6wzKzN2dC89KSYOZmrsxZ/RW9JGFVbLCW3RIigo6RXNJfweDy/q6roiVIssHBM489UD/A7hYqnxGmUXsjvoZezUTjucmI0/7w3+96WtyjF8kNADbC5LY1gsaHZaDWjpR1Cz0N3l1/dcUAmQNvtiZarVKRALcV46ySqBW7xruQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=wjipr6eL; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="dSMBt39M"
-Received: from [192.168.1.237] ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id RGo5wsRmcwf0DRGo5wFEWC; Sun, 24 May 2026 23:56:25 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779659785; bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=dSMBt39Mea0CwaxBow9Sb07rb8rIcceczo4uGdg8hNVJerH3eS2fDHwT+So70vhe1
-	 AchcwYByfaeHWnho0cR+4viUq8Istsup/d8fVqAgLdl/PT1YzoUjxTgDPfxoNZHNUh
-	 qM1k7ebDGlgXTxizY8QRnBzytkfjEjFg+ItlwB+1KpHA3JB7cgBw3i2t9GQZw+hP7q
-	 hh3jRmH5Le0IG6Hntp7WPkvHXm+sVj9RZ1aAaI11ODHFHEV8kF6sPWVYafz1Qd3KJq
-	 SopGLsT0epIGovkpBdN5XvdGOczGC8ItMCct3e1g0+yvWN0Dud0ZPqU6XF6y224w5+
-	 kC0/k1MPm9bPQ==
-From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Sun, 24 May 2026 23:56:19 +0200
-Subject: [PATCH v3 2/7] b43: add d11 core revision 0x16 to id table
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="wjipr6eL"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64P1HjImA565764, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1779671865; bh=vxRP6MdDIr/uGAYbS0yfwiS1L0fVbIP/ixG/7zXz53g=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=wjipr6eLuK4AtaisuPpb6IxvGF5lT/IO4J5oqVjvLbuBi15L969LrnewpuCP0i3NH
+	 zHLOABB1UdMcBWjujj63uzOC0m41Y1xCe4hqe6Y9/cDXc6YxCXZ4kIS5f3mzdkLgfQ
+	 tTS7n9jysNFvh4hZlvKr5Q25aR+fniZsn1RQyDMMpGPbwN4E+DbwPDD2ZCQlZBjxWe
+	 IYciRyFrtzqRUvDxwdcDK0MUbyMEyafepgc2lCIyEoeSiOBilbpHB9VuLSH9MryS90
+	 6CQEa6NAUIX9gLVEGEebrMmRyBIRoyYlzKJA0971DC1P4SmgNLbMSQubJfyGJE2WSk
+	 W6AY2/Fa3MVfg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64P1HjImA565764
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 25 May 2026 09:17:45 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 25 May 2026 09:17:45 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 25 May 2026 09:17:45 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Mon, 25 May 2026 09:17:45 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <guillem@gservera.com>
+Subject: [PATCH rtw-next] wifi: rtw89: 8851bu: add Mercusys MA60XNB (2c4e:0128)
+Date: Mon, 25 May 2026 09:17:28 +0800
+Message-ID: <20260525011728.6836-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-2-cdad2c8526c6@gmail.com>
-References: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
-In-Reply-To: <20260524-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v1-0-cdad2c8526c6@gmail.com>
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
- linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
-X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfK6e4tZhO5nbXI139+tskn3ZldskwfZS0yAkmZzdcOiRqB5wDe+cpYChzUy/iHFxUhoVp6ah5tm/xaN8TPVJUQrwkYksZlAIe9yIAVsmHrTjgL+TX1og
- HjWJnTDeXqY/mLXoEZFeQito8onhlhJuL9iHTYF4Y6kr0garwS6/ceTopffj2vVF27c9FcGjybi74l96GO1XPhhFjz0aw5NclsV5DLN9cDKQNey8hPuI9Mr4
- xsWV1tci4PZrxsE+vgaHc1n3T2mR59exei4b+jy6mXj8/5tJHWS0S4i0M3oMLhO9ROIqQB6eu5UVlcItQfFfdjQNE/BiBtfF/aKPe3zEtco=
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-Add d11 core revision 0x16 (= 22) to the b43 bcma device id table.
+Add the specific USB device ID which adapter tested fully functional on
+Fedora 44 with kernel 7.0.8-200.fc44.x86_64 and linux-firmware
+20260410-1.fc44.
 
-The b43 bcma id table covers d11 revisions 0x11, 0x15, 0x17, 0x18,
-0x1C, 0x1D, 0x1E, 0x28 and 0x2A. Revision 0x16 belongs to the same
-N-PHY family as revisions 0x17 and 0x18 (radio 2057) and needs no
-new PHY or radio code beyond the radio_rev 8 dispatcher entries
-added later in this series - only the device id entry is missing.
-Without it bcma scan enumerates the 802.11 core but no driver binds.
-
-The revision is used by the Broadcom BCM6362 single-die integrated
-2.4 GHz wireless block found in xDSL SoCs.
-
-Assisted-by: Claude:claude-4.7-opus
-Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+Reported-by: Guillermo Servera Negre <guillem@gservera.com>
+Tested-by: Guillermo Servera Negre <guillem@gservera.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/broadcom/b43/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtw89/rtw8851bu.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 37c5d9928..85ea8fdd9 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -117,6 +117,7 @@ MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if over
- static const struct bcma_device_id b43_bcma_tbl[] = {
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x15, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x16, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
- 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1C, BCMA_ANY_CLASS),
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+index 6a8d31544314..14f1b703902f 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+@@ -44,6 +44,9 @@ static const struct usb_device_id rtw_8851bu_id_table[] = {
+ 	/* D-Link AX9U rev. A1 */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x332a, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
++	/* Mercusys MA60XNB */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x2C4E, 0x0128, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
+ 	/* TP-Link Archer TX10UB Nano */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x3625, 0x010b, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
 
+base-commit: 7076af642955693935e60bc94546d105fb0395ca
 -- 
-2.54.0
+2.25.1
 
