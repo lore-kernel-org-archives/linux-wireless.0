@@ -1,53 +1,54 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98C4039B97B
-	for <linux-wireless@vger.kernel.org>; Mon, 25 May 2026 06:29:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 001AA361DC1;
+	Mon, 25 May 2026 06:33:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779690585; cv=none; b=E3TrtpJKg1LIkVspLMTS7t8OPIkoVn7cQ7ow7jvokRqC9MiuaJsVxxmOcWNVw1weovRAZgIzH0poq7MUHI8oRAktsVYFWVt3mm6U94RUGF+ICaNZ1aLsXHFvhmTTFypkN8bwwNs6V8QpXFUo94w3HOS3wInisbg8xyXo1WUUKvo=
+	t=1779690834; cv=none; b=M4kCiY6ujkH0tGTLG7oM0T/jWUVMgK5D/DE+ZUWOZu1NBaPD/3zs+UpNFWXTW6NSjBw9PoAGVpMiIvM1Vf1gAp6I6ocJ5fjJnA1KQzwN4W0d/Ed6YcE9YRM+maduMYgWBFNMFqeYp9+x8imBLLD4abu6OhrT5/AYcHPC6EZ0bBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779690585; c=relaxed/simple;
-	bh=GxRyxYFbxbALiHn1o3mYv+5DCcm9JWlD3/uidf35P84=;
+	s=arc-20240116; t=1779690834; c=relaxed/simple;
+	bh=KHatG7E1vKbMdt7JqhxQl99sIwwEsQNW158fXQzt8II=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=a48aA2kxF3HbkFi6Ye5E7nXFpQr9zaZyTgh3GnM4BiISL8MuMfothnAq8pn23pVxlfkB4i1/18XtmI3rDuOi1RMJ8AqTZ8zZXF0pwQPbc3X2P3IbzpuM/nRVkyUed+LBY9oiKV6i2MAwfg2PfZ/2CCmjJ24mQOh8qERr2OH3/jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=W4HXcvJK; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=fxaAFyhL5UULpYzgcc/wzj3CvGp7j7Pm13Q0i0igNFycfkr+WfuSh3FJaF+GaRw2vjc1P9MFD7T4KgAI7eayEhRwdw8lRXDVq+dmqkT8aclxrJ7NPB7htVbU/s41fEYzFNFlvJO0/0QPdgOdjj9o0TgS37SaEEGQvWThSuVAFU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=JfoRNAz2; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="W4HXcvJK"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64P6TdXqA849677, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="JfoRNAz2"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64P6XEsC4851405, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1779690579; bh=IFnO07eTGZLzc1fEQuJWISNdemy4poaowik36idj8w8=;
+	t=1779690795; bh=AMmJRfJIDwDWgQWDDac+T18qxi5KQ8BJbVqUZdrWcyw=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=W4HXcvJKDCYVdotWkHHP+4Wq5ZaWgJIszoPZ4QA/JUHrtoPt1F7+9RvDX0A6eNDuF
-	 GYOBHZklHMTI+ZjpUT2AV4AQCwmOX8Kymg6MtQPpRwFWA03g9k5wFyelxwctX4LIld
-	 B4ajn47CLQSjFLoU1pQA9zQvCyBwallZRk3w8fIiNGxCkNimU9se6ghGyM5XfrnbPM
-	 uX+512sMOsJEo+UVKhpWBXyaJ6DM/HUvzgJoo4/IJQfPe/wvpWoGNQU/G7GDGFW5rn
-	 BkA1KY4lBxl3ExU33OPfhn4sabKXBcrxrsZu6oLYawZCrv9VMIFHXZxfVjH3b/fNQ5
-	 QfuzwOmmmL3Ww==
+	b=JfoRNAz29FYb/U370QrBqjYs2pI+Fjvz+zouHlvWe/WYTS8Pw1AsHYod3qCClRpwc
+	 RsD76NCZqvAxlK10VpTd/sLCABFbO6tBWbIhBqTHvDbhOXN+2CcR3UKl6idXIvXVM4
+	 dlJFeMO+wPcLIlx9JbOpABnMeTcvtmsOmzhCzPy80fo8embUPZqcrORDFIgRVVqIUT
+	 i0Fx9n/9GvnCHZIx78/0m/pBW69mGdD31g1DhosvXiFLkEdj/Ltr0TYmIqhTwccII8
+	 eBFmGDOXY+3AtNhsGKEnJ1vDR2xU9cwY3arSS2ysNOhSKmvgB7QosmH+rJcRKtN2GS
+	 QPBozBhcu9hyw==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64P6TdXqA849677
+	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64P6XEsC4851405
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 25 May 2026 14:29:39 +0800
+	Mon, 25 May 2026 14:33:15 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 25 May 2026 14:29:39 +0800
+ 15.2.2562.17; Mon, 25 May 2026 14:33:12 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
  (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Mon, 25 May 2026 14:29:39 +0800
+ Transport; Mon, 25 May 2026 14:33:07 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Ping-Ke Shih <pkshih@realtek.com>
-Subject: Re: [PATCH rtw-next] wifi: rtw89: Add missing TX queue mappings for RTL8922AU
-In-Reply-To: <0c8e0cf1-13e9-4c67-a67f-5f6f79fd0658@gmail.com>
-References: <0c8e0cf1-13e9-4c67-a67f-5f6f79fd0658@gmail.com>
-Message-ID: <48e025ca-d90d-4c53-9f5b-d4001f4d1943@RTKEXHMBS05.realtek.com.tw>
-Date: Mon, 25 May 2026 14:29:39 +0800
+To: <luka.gejak@linux.dev>, Ping-Ke Shih <pkshih@realtek.com>
+CC: Kalle Valo <kvalo@kernel.org>, Luka Gejak <luka.gejak@linux.dev>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH v4] wifi: rtw88: increase TX report timeout to fix race condition
+In-Reply-To: <20260518142311.10328-1-luka.gejak@linux.dev>
+References: <20260518142311.10328-1-luka.gejak@linux.dev>
+Message-ID: <6d0f9c92-bab7-4d2e-8d5e-30b10e5ddcae@RTKEXHMBS05.realtek.com.tw>
+Date: Mon, 25 May 2026 14:33:07 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,30 +57,37 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+luka.gejak@linux.dev wrote:
 
-> A user with MLO-capable router reports:
+> From: Luka Gejak <luka.gejak@linux.dev>
 > 
-> [ 753.080409] rtw89_8922au_git 2-2:1.0: Cannot map qsel to dma v2: 26
-> [ 753.080417] rtw89_8922au_git 2-2:1.0: Cannot map qsel to dma v2: 26
-> [ 813.649426] rtw89_8922au_git 2-2:1.0: Cannot map qsel to dma v2: 26
-> [ 813.649445] rtw89_8922au_git 2-2:1.0: Cannot map qsel to dma v2: 26
-> [ 813.855983] rtw89_8922au_git 2-2:1.0: Cannot map qsel to dma v2: 26
+> The driver expects the firmware to report TX status within 500ms.
+> However, a timeout can be triggered when the hardware performs
+> background scans while under TX load. During these scans, the firmware
+> stays off-channel for periods exceeding 500ms, delaying the delivery of
+> TX reports back to the driver.
 > 
-> Map RTW89_TX_QSEL_B1_MGMT and RTW89_TX_QSEL_B1_HI to RTW89_TXCH_CH10.
-> This is probably the right channel for these queues.
+> When this occurs, the purge timer fires prematurely and drops the
+> tracking skbs from the queue. This results in the host stack
+> interpreting the missing status as packet loss, leading to TCP window
+> collapse. In testing with iperf3, this causes throughput to drop from
+> ~90 Mbps to near-zero for approximately 2 seconds until the connection
+> recovers.
 > 
-> This function is also used for RTL8852AU and RTL8852CU, but those
-> currently aren't used in DBCC mode with rtw89 so it makes no difference
-> for them.
+> Increase RTW_TX_PROBE_TIMEOUT to 2500ms for RTL8723DU. This duration is
+> sufficient to accommodate off-channel dwell time during full background
+> scans, ensuring the purge timer only trips during genuine firmware
+> lockups and preventing unnecessary TCP retransmission cycles.
 > 
-> Link: https://github.com/morrownr/rtw89/issues/83#issuecomment-4314735734
-> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+> Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
+> Cc: stable@vger.kernel.org
 > Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> Tested-by: Luka Gejak <luka.gejak@linux.dev>
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 
 1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-cc9cdac80099 wifi: rtw89: Add missing TX queue mappings for RTL8922AU
+c80788f7c5ae wifi: rtw88: increase TX report timeout to fix race condition
 
 ---
 https://github.com/pkshih/rtw.git
