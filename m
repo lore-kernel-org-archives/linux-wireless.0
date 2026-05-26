@@ -1,37 +1,37 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5936B3FE64B;
-	Tue, 26 May 2026 23:45:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 108303FF8BE;
+	Tue, 26 May 2026 23:46:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779839158; cv=none; b=O0gDbTb1w3DIHy1xpsE7XfVT55riHKDvc+4btHb9rOWS/yWgIRbpka6QwjWxao46ZTc6ixCzUiO+bP8h0yRtgvVHbTiAdfuuhQcKR8hZhExnXdkjIreobwyJZIeFbunmCZZ8TVpGcxb4zuqfnbTzD/61JiQKGh3DCyStdDjLSIo=
+	t=1779839192; cv=none; b=isQfN466E173XuXUo+es4iGBw8Blk4+BQsTyKgCB/WEytKvVnEaKCKW0rmeuKqvNjhZRvk0D9VIiVGqBRrj2zz58se2XYI8UdR+HrvpnF3Rg+UwERq6nEE1fs88gXjC/fwcDzRkCdzMOK9wCbf0h74Wpli4zvwzy/yZ2epmEskc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779839158; c=relaxed/simple;
-	bh=2qz8Lc1izs8vKZMNcvkVYq3qiagwsKRsUQ5xdSGlp20=;
+	s=arc-20240116; t=1779839192; c=relaxed/simple;
+	bh=ZNMKSXs2kN9zDH1GUaXtaSRPPDArBpvJP7bAluPqfMw=;
 	h=Message-ID:Subject:From:To:Cc:Date:in-reply-to:Content-Type:
-	 MIME-Version; b=HNlRz3DRb93XyokcsYw+w/v08fWX4HKHAgmiLQt7EICzJNiVBWnMnhccgzX8VGQk1soqiYCUrgIg3zrrcr7p7w++L3pfDmsFVKLLWVLrwD0xAsAw2k4tqIqE95tv/m6eCnEtWE5eDUsGaPiCS4R/VJ+9f0MC03WIDj/jtPS5yrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Z80AYADI; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=WrXs2V3Ta8IZFQEetjeI7U6T0HVdeN4u2wIXuFy/46eGquJ21/hEKEjmfgdR1LtRmMmIV1xtZmtWyTGMw31PtxNmqiir842ibZqrbFny++ZQ/Daj4TWgAKG0WhBajYVfLeh8+7Z2vZ6Qgr0EUqsJsmtRmJgVH2jZtdT8GdCl5sg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hI2Luvs2; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z80AYADI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hI2Luvs2"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=MIME-Version:Content-Type:in-reply-to:
 	Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:References;
-	bh=2qz8Lc1izs8vKZMNcvkVYq3qiagwsKRsUQ5xdSGlp20=; b=Z80AYADIRzxSEdodGVmX0yUUik
-	0M1KujLsm1K/UFTPQS3xR+A/tzwt69wDToMMRB8+d3ntPOpn5u47ezsLyp7wbJDIG94tHb1L2XIjO
-	fCtddmAo6gUI+UO3UqUhM2gRCNG2rCq7FjfxPBWFnAdLR9sGwILXpMfzYDgMJsuyyOED/fDXquwW2
-	MELAoKFTuQToVuJfoK1AtqhUZNrNY99jfMPN8ORXyfv8PFsBqT1RRHaFRxwmnDPVfJplUXatNI+jn
-	OT9DlKU6tBW49j0iQxymMZRz3IuP5PJqG/qaFdiyukWEeqi2syO+4axEWcpenCamfoAqWu5Dfs8Qn
-	zdEW6zgg==;
+	bh=ZNMKSXs2kN9zDH1GUaXtaSRPPDArBpvJP7bAluPqfMw=; b=hI2Luvs2RvwfzWGDk67Xlkruo5
+	p0dza1erTZk4x5I6AJGwCgo+VL2PizNllnC4wd460Tr95/PwNGSlvHBIgjiUHsnZIGqC6m553oNWm
+	7RzgO5ANrfPgvR5fyl4DjpBH5c8B7k4Qw2dykgN9aQaXoXoCnaIUl+uOuieSK2xhLeGGrSAGym5yB
+	+LtbYMXsLEP4NEQhmcmKhkF2OswaFXn/++438ba3nmGXdSyYUrg5DDNb1Y/Gv0jNCAv2riUKUQQas
+	Hpx95HHmyn517bJwScTfVokYJUBzOATbIswN8B4mc7tG10DkIdgowKJ3y9VFaHgcQH/skmztly7uP
+	F7sIGfYg==;
 Received: from 54-240-197-239.amazon.com ([54.240.197.239] helo=u09cd745991455d.ant.amazon.com)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wS1T5-00000001fon-1goN;
-	Tue, 26 May 2026 23:45:51 +0000
-Message-ID: <3f44f40a3e4a0485ba4a291d3a3668eab2908bd2.camel@infradead.org>
-Subject: Re: [PATCH 10/24] timekeeping: Add system_counterval_t to struct
+	id 1wS1TX-00000001fq3-1w8Z;
+	Tue, 26 May 2026 23:46:19 +0000
+Message-ID: <49d88c4301b46754c0e06a5da48e67cab7791718.camel@infradead.org>
+Subject: Re: [PATCH 11/24] timekeeping: Add CLOCK ID to
  system_device_crosststamp
 From: David Woodhouse <dwmw2@infradead.org>
 To: tglx@kernel.org
@@ -46,10 +46,10 @@ Cc: akiyano@amazon.com, anna-maria@linutronix.de,
  richardcochran@gmail.com, saeedm@nvidia.com,  sboyd@kernel.org,
  thomas.weissschuh@linutronix.de, tiwai@suse.com,  vdonnefort@google.com,
  virtualization@lists.linux.dev
-Date: Wed, 27 May 2026 00:45:49 +0100
-in-reply-to: <20260526171223.448889379@kernel.org>
+Date: Wed, 27 May 2026 00:46:17 +0100
+in-reply-to: <20260526171223.522578743@kernel.org>
 Content-Type: multipart/signed; micalg="sha-256"; protocol="application/pkcs7-signature";
-	boundary="=-+EanIQ+G51f0VTgyqQPm"
+	boundary="=-y9I2CwSAkwyQm/S0Vc45"
 User-Agent: Evolution 3.52.3-0ubuntu1.1 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -60,19 +60,24 @@ MIME-Version: 1.0
 X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
 
---=-+EanIQ+G51f0VTgyqQPm
+--=-y9I2CwSAkwyQm/S0Vc45
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 26 May 2026 19:14:18 +0200, Thomas Gleixner wrote:
-> An upcoming extension to the PTP IOCTL requires to return the system coun=
-ter
-> value and the clocksource ID to user space. get_device_system_crosststamp=
-() has
-> this information already.
+On Tue, 26 May 2026 19:14:23 +0200, Thomas Gleixner wrote:
+> The normal capture for system/device cross timestamps is CLOCK_REALTIME,
+> but that's meaningless for AUX clocks.
 >
-> Extend struct system_device_crosststamp with a system_counterval_t member
-> and fill in the data.
+> Add a clock_id field to struct system_device_crosststamp and initialize i=
+t
+> with CLOCK_REALTIME at the two places which prepare for cross
+> timestamps.
+>
+> After the related code has been cleaned up, the core code will honor the
+> clock_id field when calculating the system time from the system counter
+> snapshot.
+>
+> No functional change.
 >
 > Signed-off-by: Thomas Gleixner <tglx@kernel.org>
 
@@ -80,7 +85,7 @@ Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
 Tested-by: David Woodhouse <dwmw@amazon.co.uk>
 
 
---=-+EanIQ+G51f0VTgyqQPm
+--=-y9I2CwSAkwyQm/S0Vc45
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -159,21 +164,21 @@ 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
-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
+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
-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
+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
 
 
---=-+EanIQ+G51f0VTgyqQPm--
+--=-y9I2CwSAkwyQm/S0Vc45--
