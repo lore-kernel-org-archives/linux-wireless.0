@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578A338C42F;
-	Tue, 26 May 2026 17:14:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535D8403E99;
+	Tue, 26 May 2026 17:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779815682; cv=none; b=YSjXG2YMWnUU6PfXa7SNrq6YHTSwoKoWzi8b5HB6xCV5BwSZM2Ah9+ROTK/oLbz1RffB6S4WkT3VXiKUzVnUTcSBVGhr3ZG7jJc5nlyrPMipmdBM452bvOWaTU8Osr+NOluv4kgyILNXQjvtu3wvqUEqcdDwayMoc4RuLgOTypw=
+	t=1779815687; cv=none; b=qeQTjGPTCrIEzE0siYs7GFFyFaY5WMGrMj7KY3rQw1G2FHOFPulY0KBC5rnRrLOADGeac6Im9W8Bk5oZ2JWEDP6IkxOHas/YL28WYJ5E8VC8s46HCeNpaqNkgrpS0E8b6dEwZ1VkLzl9kC1Q0+KVFW7+w/A3G8tRA9WNuZ20PQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779815682; c=relaxed/simple;
-	bh=FMGiUIWW29SL0cXr9CKSy7VJv5vDZCiZTj4ZKb2FdvQ=;
+	s=arc-20240116; t=1779815687; c=relaxed/simple;
+	bh=eqDmv2UxJrRVlr6eig+h4vADLMNuDousFQxN6Zd4qtI=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=RS6gP1RmF96rtPP/ykk0YuM/2WphnOjebY5pswFJP8LcPblzdiao18dq4j6GOtUFybDWeL/+p5rdmxgRAN5+IoBDhWNkq7vzI5kN7hleK4ByelGGcDKLHZJLTO45jDuIblTtlX9sEgTr5y90zlJDrwa00LK8UyIvif4YMuSjjUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JVagiMvh; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=n1kCtIy/BoL7wGh2iLMdSjf31jWnl4UIw6geHDIde7HhkW8ynC7FuGC4eCcJNblKg6VPJc1oQPSzxzvWlQTB0V7b4upVslYn1p2BV1OP/ELfAPuk6G84U/A+ljQpeqaIyNs8mHEH4z5ITMHmE8B/B6O1AUxLZjZaG4VNhO02lzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cILTQson; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JVagiMvh"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4A0861F000E9;
-	Tue, 26 May 2026 17:14:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cILTQson"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1B2411F000E9;
+	Tue, 26 May 2026 17:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779815681;
-	bh=R0VKXSe8JW8k5VwE7MkMVpULu2pZ+xlu5Y3DpfUjVmo=;
+	s=k20260515; t=1779815686;
+	bh=cBO+dX735CksKtXJ1HJ6TXwHjNQmqyoR/p2tV7cxXb0=;
 	h=Date:From:To:Cc:Subject:References;
-	b=JVagiMvhbmqyJMx9X+aTaV+UDZZvwgWYIrS+aNgU2okDyiRIvRvbFwz/A29WTxXS8
-	 51r1Q1MIsLtqJQrlTjMBT49ltU+58Q0N4q877Fv2BGYN9x445JKtjA7c2do/7EeG2+
-	 TaruBcMC5dzJrtT+otenMpWyTM3hE6yxlGWZkq2pIW1+1iUkU0Qvt+v2sYFuUbUfUV
-	 NIV905YFJB86dXqFnuJxK39b8EQ2knTmu0hqMojX10drt1XUyieb8jsVsU6lkRTBBm
-	 LtMs0ZDHSYln9h16lwj6xJA+iKtE9+hfHS1MiqAdOnrSnVDgT/imOMh0wC8Kg59MIZ
-	 qQNWppVCV66cA==
-Date: Tue, 26 May 2026 19:14:37 +0200
-Message-ID: <20260526171223.745281238@kernel.org>
+	b=cILTQsonW++0qS7x+cFj3PEdFUuahq/pXsnEuKC8tyzniFVBXJd5h8Ig+wX52U8nw
+	 gvjeABRhU4sekjYYnLQT9DOEehvX5hcUhBx5B0E41+Zd2Z/FwXGbjiB5GPOCcBEFrm
+	 EGyNzpdo6ZS3w3lEShtw8oaNynpYrJLZnNlBGexShIj5GrhT7qzy84w5ReeffvpeMt
+	 6qwlJJVOwtf8GkuyB0WyjKN7lHEfi5wyIE0Z8XsKLlqqq+rlP8pt/NdLpmHeWOGVqN
+	 TXuSzUw1zK+ZvcOTSlzyDDXes/VBxBcl3zCCVCRQbEy+JQ8Df3/e4xGFlXzdDqyUJL
+	 vg0GpsVpO/enw==
+Date: Tue, 26 May 2026 19:14:42 +0200
+Message-ID: <20260526171223.826096151@kernel.org>
 User-Agent: quilt/0.68
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -39,7 +39,7 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  Frederic Weisbecker <frederic@kernel.org>,
  thomas.weissschuh@linutronix.de,
  Arthur Kiyanovski <akiyano@amazon.com>,
- Tony Nguyen <anthony.l.nguyen@intel.com>,
+ Saeed Mahameed <saeedm@nvidia.com>,
  Rodolfo Giometti <giometti@enneenne.com>,
  Vincent Donnefort <vdonnefort@google.com>,
  Marc Zyngier <maz@kernel.org>,
@@ -52,13 +52,13 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  Miri Korenblit <miriam.rachel.korenblit@intel.com>,
  Johannes Berg <johannes.berg@intel.com>,
  Jacob Keller <jacob.e.keller@intel.com>,
- Saeed Mahameed <saeedm@nvidia.com>,
+ Tony Nguyen <anthony.l.nguyen@intel.com>,
  Peter Hilber <peter.hilber@oss.qualcomm.com>,
  "Michael S. Tsirkin" <mst@redhat.com>,
  virtualization@lists.linux.dev,
  linux-wireless@vger.kernel.org,
  linux-sound@vger.kernel.org
-Subject: [patch 14/24] igc: Use provided clock ID for history snapshot
+Subject: [patch 15/24] net/mlx5: Use provided clock ID for history snapshot
 References: <20260526165826.392227559@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -72,46 +72,34 @@ The PTP core indicates in system_device_crosststamp::clock_id the clock ID
 for which the system time stamp should be taken. That allows to utilize
 hardware timestamps with e.g. AUX clocks.
 
-Save the provided clock ID and use it in igc_phc_get_syncdevicetime() for
-taking the history snapshot.
+Use ktime_get_snapshot_id() and hand the provided clock ID in.
 
 No functional change.
 
 Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-Cc: Tony Nguyen <anthony.l.nguyen@intel.com>
+Cc: Saeed Mahameed <saeedm@nvidia.com>
 ---
- drivers/net/ethernet/intel/igc/igc.h     |    1 +
- drivers/net/ethernet/intel/igc/igc_ptp.c |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/drivers/net/ethernet/intel/igc/igc.h
-+++ b/drivers/net/ethernet/intel/igc/igc.h
-@@ -326,6 +326,7 @@ struct igc_adapter {
- 	struct timespec64 prev_ptp_time; /* Pre-reset PTP clock */
- 	ktime_t ptp_reset_start; /* Reset time in clock mono */
- 	struct system_time_snapshot snapshot;
-+	clockid_t snapshot_clock_id;
- 	struct mutex ptm_lock; /* Only allow one PTM transaction at a time */
+--- a/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
+@@ -340,7 +340,7 @@ static int mlx5_ptp_getcrosststamp(struc
+ 		goto unlock;
+ 	}
  
- 	char fw_version[32];
---- a/drivers/net/ethernet/intel/igc/igc_ptp.c
-+++ b/drivers/net/ethernet/intel/igc/igc_ptp.c
-@@ -1049,7 +1049,7 @@ static int igc_phc_get_syncdevicetime(kt
- 	 */
- 	do {
- 		/* Get a snapshot of system clocks to use as historic value. */
--		ktime_get_snapshot(&adapter->snapshot);
-+		ktime_get_snapshot_id(&adapter->snapshot, adapter->snapshot_clock_id);
+-	ktime_get_snapshot(&history_begin);
++	ktime_get_snapshot_id(&history_begin, cts->clock_id);
  
- 		igc_ptm_trigger(hw);
+ 	err = get_device_system_crosststamp(mlx5_mtctr_syncdevicetime, mdev,
+ 					    &history_begin, cts);
+@@ -366,7 +366,7 @@ static int mlx5_ptp_getcrosscycles(struc
+ 		goto unlock;
+ 	}
  
-@@ -1103,6 +1103,8 @@ static int igc_ptp_getcrosststamp(struct
- 	/* This blocks until any in progress PTM transactions complete */
- 	mutex_lock(&adapter->ptm_lock);
+-	ktime_get_snapshot(&history_begin);
++	ktime_get_snapshot_id(&history_begin, cts->clock_id);
  
-+	adapter->snapshot_clock_id = cts->clock_id;
-+
- 	ret = get_device_system_crosststamp(igc_phc_get_syncdevicetime,
- 					    adapter, &adapter->snapshot, cts);
- 	mutex_unlock(&adapter->ptm_lock);
+ 	err = get_device_system_crosststamp(mlx5_mtctr_syncdevicecyclestime,
+ 					    mdev, &history_begin, cts);
 
