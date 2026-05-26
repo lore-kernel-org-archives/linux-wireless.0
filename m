@@ -1,242 +1,224 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08EA1351C3B;
-	Tue, 26 May 2026 21:49:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.17
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779832162; cv=fail; b=P+ja3Rx6HFWtVpsR7pK8OoMHKRBOe0F2O09IvAO/Qrj1pEHUqpzddwYWgWp7UE+N6S0luOAD0flcVsyNzzSr/oiQqXWi6LqODVqdy0ga1BjJJ8Qga+Wnm8q3ZGtuKie3beH+DDbG9RD7PyrfdJ20bvP+qop4S4T76lLLusJ/MbQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779832162; c=relaxed/simple;
-	bh=wrsIPDijdN+ZuhlDKpNFtLInU3bTOY5FIJCr7+SCsF0=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=UShpiro+O0xk3aScK3wR2NBTDfQzrD84cC1eegU0tVBllkFhj6CVeCvuhLzzN06mqk7ZsmkHqAcxIIT+Etpu2rFBZW9VYv9Ap3LPld6UQc9zjsllghDvpKEKrVsNW4vhJ1WY46wVDbpbRa0+0GoBbulREYIKh63CUUZYhEc2fNI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LOe0iXwI; arc=fail smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC01B3C818B
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2026 21:52:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779832368; cv=none; b=WP5mQul1JjOhQAFVbEmexwy1LHHgPzOgtXNdI2tsbCmaX8qXMXGtN6rZVX6Gr8uEYer44/AskedqGf70ggS8LIykDSyLYqluSx/jlGrV8jMYjr+bW0bpaNuItLZ7m9Pyhga6ysIbf4jlEygxM32TNwdnYhLd9ezW5IVEmKfqfiQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779832368; c=relaxed/simple;
+	bh=c+8/7l091quGh0H14krQlVhQZvm8FgIVDYoP3y7im1o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DPU8LiNNzOH16mMA5gV5ud9ly6rgD3vCYeWFY+Y2QGr5UR2EOE5OR1h3CmfNnnFQP0ZJCugdn5Hxr9osT7ZegHxc6eaOJtM28d4BXn4sTFqJpAcTb+VeSEYQzIFyyauJWEzfTPRUO1GLqKdTz3esrhVfvLUo1u0kwooUrQjr5UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JvySodVW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LOe0iXwI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779832161; x=1811368161;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=wrsIPDijdN+ZuhlDKpNFtLInU3bTOY5FIJCr7+SCsF0=;
-  b=LOe0iXwIvn9wEbeifDo9/qv1+YdT9NwJB49n6Pk8R8C3kKMuSgI22M69
-   gyGO51uGyFePoLsAuutb6qeXx33/DXTJv0JgeZkXVuPTRONE4yOl2ETuA
-   MOD3lmrD7HiS5ruYWpUYVDXBSSq37Ps+Hi3DOb8i9Ik+ommHeGt6pQCoc
-   d6SOIKf7v2LIWv98VDurWpJiTMSTcF64EQXbuCOxPi30B9BvvGC3XvXby
-   rD30gNOAmhxJVFlZcasQF6LKXrUtnSq3C3Z6sRYyQKcxtHkOqmgBNVJI3
-   2IJ7w7+E0368Lel2RstpagqWdATPmfNq/foUVxTlPnxFXXwOS+dbwoOoi
-   Q==;
-X-CSE-ConnectionGUID: be/vl6BDR6i1ha/9Y43WMw==
-X-CSE-MsgGUID: 482lGBwbT3OZ2xrlbBgO8A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11798"; a="80507360"
-X-IronPort-AV: E=Sophos;i="6.24,170,1774335600"; 
-   d="scan'208";a="80507360"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 14:49:20 -0700
-X-CSE-ConnectionGUID: oOivFXj0QjSFD0ErEoto9g==
-X-CSE-MsgGUID: uMMjHfYtQC62Xuq4dWjLPA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,170,1774335600"; 
-   d="scan'208";a="265907806"
-Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
-  by fmviesa001.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 14:49:20 -0700
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
- fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 26 May 2026 14:49:19 -0700
-Received: from fmsedg902.ED.cps.intel.com (10.1.192.144) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Tue, 26 May 2026 14:49:19 -0700
-Received: from PH8PR06CU001.outbound.protection.outlook.com (40.107.209.68) by
- edgegateway.intel.com (192.55.55.82) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Tue, 26 May 2026 14:49:19 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=t6Xqs+7T4wzW6hHeLn5iig+DebbxBf3IGSYeMk+AMoTb0kaxZCddhVUt7QFIinbz4nVHhAnV4+UtdyhcNmeavr+1JYmIbhgTyl/s/kAd1GaQvG7IAiuBoFzuJaKmXaFh/ehX1o97P9fiZ1V3D0Euvq5Udkf0tjyxrRz3OVIJpKNfujBRCe/XNYsNiNr3JBzHJlq1ZQzoS3xt/PnLjj5EpgEr0rDwatWXhMExnUfZwlJzEFtSZgnHgiqf2eF/1Y9Ej9TsT1cjAMcQyTouVpXUzZrYWBbI7FOc2KfuA8SP+X8qchkhCQl4ZU5411ukvkHi2rS0WnfFlP4SoznbJZzBKw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HgnIh6/obKyVceiIaSYRUhcEJXwnAAASzeCIn/OP3u8=;
- b=wwelXcXWKlsARb4xUGf6UnjlN1gZ1j2mYQYrIWxFifn3zIDPhmwro0Gc5Mh+R3xKrStO9l8ixBfJaPNxKbeHYndkIqcDARECQI0HxNIQ/NIq70YZ1VjN03n6IVDB71iq+PfD2ykLEywBKOl3Yhd06MRwGQ5Jlol0tI1+VqNFYVzmP+cuaMD1kkjYrdImiGkseGXcl5NVqmrfyTzrUhadAytDLiEDi5KmmOYPBbkOAxZHL6UK76azETw9CN9cCo5OQUFVG2Wso10o04HmqbyFdEnJkcK/nTJErSy3wo5qsZ+xtrl7rLuOgW1ZJhUA+SmmO16TuAMrLS2TXk62sgJUHA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from DS0PR11MB7381.namprd11.prod.outlook.com (2603:10b6:8:134::14)
- by PH0PR11MB4888.namprd11.prod.outlook.com (2603:10b6:510:32::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Tue, 26 May
- 2026 21:49:16 +0000
-Received: from DS0PR11MB7381.namprd11.prod.outlook.com
- ([fe80::4c39:dfe6:d6dc:6f58]) by DS0PR11MB7381.namprd11.prod.outlook.com
- ([fe80::4c39:dfe6:d6dc:6f58%5]) with mapi id 15.21.0071.011; Tue, 26 May 2026
- 21:49:16 +0000
-Message-ID: <9819b5ee-1f03-4687-9a36-9284741e19a4@intel.com>
-Date: Tue, 26 May 2026 14:49:13 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [patch 08/24] timekeeping: Remove system_time_snapshot::real/boot
-To: Thomas Gleixner <tglx@kernel.org>, LKML <linux-kernel@vger.kernel.org>
-CC: David Woodhouse <dwmw2@infradead.org>, Miroslav Lichvar
-	<mlichvar@redhat.com>, John Stultz <jstultz@google.com>, Stephen Boyd
-	<sboyd@kernel.org>, Anna-Maria Behnsen <anna-maria@linutronix.de>, "Frederic
- Weisbecker" <frederic@kernel.org>, <thomas.weissschuh@linutronix.de>, "Arthur
- Kiyanovski" <akiyano@amazon.com>, Rodolfo Giometti <giometti@enneenne.com>,
-	Vincent Donnefort <vdonnefort@google.com>, Marc Zyngier <maz@kernel.org>,
-	Oliver Upton <oliver.upton@linux.dev>, <kvmarm@lists.linux.dev>, Oliver Upton
-	<oupton@kernel.org>, Richard Cochran <richardcochran@gmail.com>,
-	<netdev@vger.kernel.org>, Takashi Iwai <tiwai@suse.com>, Miri Korenblit
-	<miriam.rachel.korenblit@intel.com>, Johannes Berg <johannes.berg@intel.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>, Saeed Mahameed <saeedm@nvidia.com>,
-	Peter Hilber <peter.hilber@oss.qualcomm.com>, "Michael S. Tsirkin"
-	<mst@redhat.com>, <virtualization@lists.linux.dev>,
-	<linux-wireless@vger.kernel.org>, <linux-sound@vger.kernel.org>
-References: <20260526165826.392227559@kernel.org>
- <20260526171223.300914258@kernel.org>
-Content-Language: en-US
-From: Jacob Keller <jacob.e.keller@intel.com>
-In-Reply-To: <20260526171223.300914258@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MW4PR03CA0243.namprd03.prod.outlook.com
- (2603:10b6:303:b4::8) To DS0PR11MB7381.namprd11.prod.outlook.com
- (2603:10b6:8:134::14)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JvySodVW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D40EC1F00A3E
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2026 21:52:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779832365;
+	bh=vofwtLagvBRYkOYwKOjHnTeC6C87g7YP3KZhbzyhI3Q=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=JvySodVWkZ4MM3tRJ8YS99NO8G7r2QGWchQgjJs/N+v4T2fakaO4nQDdnRKzeIqTT
+	 twW0FxpXffz7ntaZsc3O/ISWeFOfVsNb/x05burAQaCV9x0p4/oCBx+unOrZNDKiKH
+	 l9eEs/xvzHk7ZO9LGKRzD+wyhYk/qRZhK5KF4wg+jKuzkyANdqT3/0CZ70KJQmgnhs
+	 zZQSlPOBMLaWKn7O7IGnTpnQLYT/fNAPwTGi9bD8J0K1DlMF127mpbMjHwpWu/C29v
+	 j8kQ4+Ada+sfRBKhvdrHvYOoaCl3yhfcJa5ke+GxzVVmXHgt06pmnxndTucORDzD0u
+	 JP8bxaosMVwHg==
+Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-38ea6a5a0b3so88879881fa.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 May 2026 14:52:45 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ+mwp70fUQMNB74/DAky//DFfq30nq5/K4Qc7Yzj8wnEbtzyjjYkqL9URUATtXGUr5nErsbWZoE48+hO4UioQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxI7PMgTdU7wWD91cW+KlBe0rDnDzfOJ9p8SHm8akT5EHtVnk2
+	OvR68fn7Nq0UlyDBB2Xgp1sjAquzOra2ru3WNjUiUzMrP7MoeOP8p9hkd+nFmaeBjJAOgLm7+9A
+	NZAVb7EELiIBRi0rnQ40Dm67Nx1Gs58M=
+X-Received: by 2002:a2e:8192:0:b0:394:2b8a:2374 with SMTP id
+ 38308e7fff4ca-395d8d3de65mr47969431fa.16.1779832364145; Tue, 26 May 2026
+ 14:52:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR11MB7381:EE_|PH0PR11MB4888:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3a252b61-f52a-4cdb-d296-08debb70a1f0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024|18002099003|22082099003|56012099006|11063799006|4143699003;
-X-Microsoft-Antispam-Message-Info: 0LAnseN6mHLIDRQ9j2T30Y130UPQ2vwiNXEu9vqzzQr5dL6jgKoH/wMluvhq3HQOejmQ4PM4b5qJgXAdFPEXI1qBuCWS5QANj2OGt/BQLprVNfJgRh3aKRQxLuvUjh4n7zx8rcQWVI2vx3UNZuQnxNeGJWchm3c5pMwPOV42Dp8qT/BAERIji5SVXhLmA4A/4/pH8l2mD73Lu4g3fXh+hd+AVcNnH8WuUu7m5AA/avz2YGjh72xqY2jy/ANLviNEa7w5MB0119AGhGH2TmGrnnoGD4pWsM85lH+Bo1efXBRhZOKDElJPAeGfUUwgHS9fUvhEKFQLAtB0xNRv4aFunvro3HU1JJzYZZBB5yOPPvR84KqPwR1uD1LoIDRj2zBwP8xSACbZs3nsgcdLzhErW5X2qtEGnB1Bmj4xAIcDdCUX+ZZqALObPUwOThQ2EzLzdzZy/gEIwJuTo0hS5WJ3MzaUBr9Cgv1dIqVjoilwoJMStlmJV7bFm1z3MYkdQabODYvX5Re3SulmeHB7z4jiZUk0vdeFM/Ee90TtaSxd3YJcSCzWyFo/fl8tHyIxr+vfVsqaWZf+aWr+NOEQPK6sAmw8ogfJKbpO+Pv7bn9Kj6RwMimhu2SHX1SuAkquNWagE2Uwq5k7BlICd6R+c9jnWlg5fMUnDrfOoMBSgiuLIwRmaxb4Qbw69Vn/gsI1vx++
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR11MB7381.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?N1VZV1BpV0Irc2JCWGJUOUZZNmhOQ3ZxZHpzOSt3RldlUnhQNitsc2VGdmY5?=
- =?utf-8?B?MjRIdzZEaW9CLzlPOGliNS9ib1F1blE4eldNcmVjdll1MkhmaW5iUHl3ZEhU?=
- =?utf-8?B?R2t2VVdrNmVlWkVpVjQ1ZHg3NWdwYkJSKzhmY1RpcklYODVpemd6aU11NXda?=
- =?utf-8?B?cnpxOExSb3FFZ0tENnJSR2l2a3k4MnVDRGJrVTRFNmY1Ym1sb0JSSWlNT1NR?=
- =?utf-8?B?ajdLM0Naa2xkcEVsMVN3Y3lRZnl5UDQ4aDBDRVY0OVpCVGYzbDhwT0xlWCtj?=
- =?utf-8?B?TnVqRERHN3V4MUthbjQ0YVgzQ0tNcGFFYjBMbnBDa2d1UGFGbHZCYTZ1a1Q3?=
- =?utf-8?B?UXBXQW90ZlBHL0dVa0xWb3BaVlloTU45OWM0Sk1VSXpqWEVqQmp6SzAyMWVN?=
- =?utf-8?B?SElEV2hSZGJrdWpGOVZOeC80eUdvRUROYmpuZkE5NWhwRG9aeWlqZ1R4WjAz?=
- =?utf-8?B?R1ZlVkkyZXNFOTc5Ynd6RU0yKy85c21PUFAxbUJUTVkvNU1jcFBtbjRPbUNk?=
- =?utf-8?B?S2l1QWlNOS9icmNSTWo4VERFaHhLT1pMWWlLUkhMMkhIeUszSDl6MkwzWSth?=
- =?utf-8?B?bUM1bjJYU2Evd3pSRUhPc1p4QXNUOFIzaWU4YVdMcjFVNVpVTUJDMWRVL1VX?=
- =?utf-8?B?WmgweDB5aE9EUzV4MTU1cU04c0lQOXlxdUJCbWEyMldyUXVKbGhRanpMemlQ?=
- =?utf-8?B?bjdQWDladU9LeVhJcnJzSVJKOXgvZE9NZnhkNzMyS1RVN3NZUFd2dkRnRmhz?=
- =?utf-8?B?VGZoNW9Kamk0M1ZiYUxVWXdGUkFEdWkwTkFFdk45TkVOdEkvMm5sNXVpQmhD?=
- =?utf-8?B?bUtlTHVHeHpvd044RTl3VDlGem0xMnNZS3NETXNkSGliY1FNZ0hNQVdMQ0JW?=
- =?utf-8?B?ZVlET1AzSjV1L2xhQW9xQ2xOTmdEMjhMN0hwQjlEM2VrNjJDNHFCMkt2SkFP?=
- =?utf-8?B?MU5UbVM4VTVCNDVmdVo5Tnd5Vk9ublZ0clNHWVZsSG9KU244T3dERWJuaHVt?=
- =?utf-8?B?YVN4UHR0dnlab1JZMjcvemt2cjZOUDFiQUdUemQ3TCtLY283bW1aWlVmQU1C?=
- =?utf-8?B?bzNwUDE4WFF2RTh2MDBWZzRMOEs3RldHQ0drYk5pM1RYUTJEbXYzYlBUMHNX?=
- =?utf-8?B?Rnd1ek9meXdnR0hwME5iYU1ROVNGVDBlNmVxOTVqbE5rSWJPcFBBRVdZWTFO?=
- =?utf-8?B?QWU1TloyRUg4OGk3TkFieGpvVmdlaFRGaXZVeXU4NGc2VU5GajZ4d1VWRnpk?=
- =?utf-8?B?ekxHdm1Qc1o4eUxFd3Y1ais4U0pSaldYOFZKNGtoTFRNbTQ4OVdmZ1A5M250?=
- =?utf-8?B?QzZPYVJINU9CQml1YVZLbnFyL2xkQnd0a1ZVVVBxa3JYSFhMMCtyTlRHTlpX?=
- =?utf-8?B?WXY4SDFuTUVmVVlsaUM0N1Vwa2FJQlQxbkFTeXkyOE1wNmg2eDhuMTk1dDRK?=
- =?utf-8?B?SUxGbUVpUmxOQ1p1V0xCUUxMemxGSFd0aVlPNVBESTlpcVBzdys3dW5JQzc4?=
- =?utf-8?B?eHYvVytXdUtkR0VMblg4Sm81aUlRY3pFRGprK1VVWmFnS1VnSXBZQ3VKUmYz?=
- =?utf-8?B?cWZFanl3TllOSWw2ZTFTaFU4UGptMzhOY093bDZjREZtNkVlUXFtWTFTWVMv?=
- =?utf-8?B?bGxDMTJ1OUQxVWExRktZZkJ1N0dRUnRlZ2FvK3o4d0YwdVh1RFBjQjg1Uzla?=
- =?utf-8?B?WGgrSkRCVjBkRHNMdGdoR0EzcFdPZ1JKK1Bjd3d0R1V3a3JaZzErYzVYUU5r?=
- =?utf-8?B?N2d5TzJFcS9BZlBtZVlDY3hvWWZ3WkdySlhYQnEzMmVwM0RGWktrSEh0Wk0x?=
- =?utf-8?B?UXE5L2VxSFZFUkZ4SUdwV09USWd1Q1Z1V1VVZlhWVVhyNDhONW5weEJheHZ6?=
- =?utf-8?B?R09SRTVJWmNVZW1IU1VYaUtrV0tIaGxsS0k3QWRSbHVQTkg3TFA4MGd4NDBN?=
- =?utf-8?B?cS9UcFg5dkQwb3MvdnFBNTJ0Q0NJU0pRZmNpVE93dURqOGJudUgzdW5WU3k3?=
- =?utf-8?B?dTlkM2hqY1lBZ0ZDODByZnJXcUQ1dnNCZ0hzazVyWUxaN3hSQVg0OGNQdkxC?=
- =?utf-8?B?NXFiMWRVcXFlOFIxUzkwbE44SWE5M0RNOThPczQ5SitiOHhiTjQ0VW1XM2FO?=
- =?utf-8?B?VzlaOEhiUCtmcG5FTGpXV2R6ZzRSVnBlOUlMZnpmZlJJV2FTNzVGcDVFTmV6?=
- =?utf-8?B?NkxraUxHVkZKN1doamk1WDZqeWFSTkQ4ZGtqS280QjZwSjNhY2hOVi9iRHZQ?=
- =?utf-8?B?aVZlNFhQRUgreWhFbFRCSkhVK0QveWxRT1I4NnZBRW5VZWVQL0dKU3E4T3hC?=
- =?utf-8?B?VWk3QzRrUG81NzBNdUtCNXFxWDE4R2k0dGpOTWFGM0tKZXlVNWY3dz09?=
-X-Exchange-RoutingPolicyChecked: SQ/ooREL2fSjt8/Xv4E+1+n6Ir4Iai5QLNL9OQRR9yJybee6jrUcksYb1w+BIQ2XEi5ojZql3LtNVCn95lMoRMQPtX//0wynhGAcvblDl0rXWX/M4qDXVLeKbrPx6U606q1AkjmnQhTZ3crje0B4LyRbcL8H+b5I3CsmJLajkriLPlwR7ls4Nd69qlSQNFE3mmaP9ejYcFE0BmY88P8cE3D+tNQp4+z1FTTBKczk7lxboCmd41Nc4uB8XMhlbu/ASqO4I83akqJb8BShRAmmC+ofxmxE/Wes2bHty0kmhbUq5lmb8Yn2JEzyjDIdSgWL+S8QCRL+UYa65uby8ldmEQ==
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3a252b61-f52a-4cdb-d296-08debb70a1f0
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR11MB7381.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2026 21:49:16.2200
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 4RXVgazcFpK5EM2GflSIAJsTaH7R08RORxqKzTEu+UlSBw7SQXp5PCiDWw9TGXTIiXhs8bGDUB3lHe674JKJK5DHPYzJP62h8+gZh7lkzwg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB4888
-X-OriginatorOrg: intel.com
+References: <20260526060841.49161-1-liujiajia@kylinos.cn>
+In-Reply-To: <20260526060841.49161-1-liujiajia@kylinos.cn>
+From: Sean Wang <sean.wang@kernel.org>
+Date: Tue, 26 May 2026 16:52:32 -0500
+X-Gmail-Original-Message-ID: <CAGp9LzqzddmyDHMNsaqigYpVEdo_Pmzwbeh5Ri5_Gr87cVL6Dg@mail.gmail.com>
+X-Gm-Features: AVHnY4JN4XiSX6iZ8nQKBZrwSnhXgkTYMQMdyt2mZqBTxzISywSnHzHgBHOFEuo
+Message-ID: <CAGp9LzqzddmyDHMNsaqigYpVEdo_Pmzwbeh5Ri5_Gr87cVL6Dg@mail.gmail.com>
+Subject: Re: [PATCH] wifi: mt76: mt7925: add wcid publish check in mt76_sta_add
+To: Jiajia Liu <liujiajia@kylinos.cn>
+Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>, Michael Lo <michael.lo@mediatek.com>, 
+	Leon Yen <leon.yen@mediatek.com>, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 5/26/2026 10:14 AM, Thomas Gleixner wrote:
-> All users are converted over to ktime_get_snapshot_id() and
-> system_time_snapshot::sys.
-> 
+Hi,
 
-I would have expected this to also remove ktime_get_snapshot() since the
-description claims all users are converted to ktime_get_snapshot_id().
-
-> Remove the leftovers.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+On Tue, May 26, 2026 at 1:09=E2=80=AFAM Jiajia Liu <liujiajia@kylinos.cn> w=
+rote:
+>
+> Since mt7925_mac_sta_add publishes wcid, add publish check in mt76_sta_ad=
+d
+> to avoid reinitializing the wcid->poll_list for mt7925.
+>
+> Found dev->sta_poll_list corruption when using mt7925 and 7.0-rc4.
+> According to the corruption information, prev->next was changed to itself=
+.
+>
+> wlan0: disconnect from AP 90:fb:5d:94:8b:e3 for new auth to 90:fb:5d:94:8=
+b:e2
+> wlan0: authenticate with 90:fb:5d:94:8b:e2 (local address=3D84:9e:56:9c:7=
+e:6b)
+> wlan0: send auth to 90:fb:5d:94:8b:e2 (try 1/3)
+>  slab kmalloc-8k start ffff8c80958a6000 pointer offset 4160 size 8192
+> list_add corruption. prev->next should be next (ffff8c808a7488f8), but wa=
+s ffff8c80958a7040. (prev=3Dffff8c80958a7040).
+>
+>  mt76_wcid_add_poll+0x95/0xd0 [mt76]
+>  mt7925_mac_add_txs.part.0+0xa5/0xe0 [mt7925_common]
+>  mt7925_rx_check+0xa7/0xc0 [mt7925_common]
+>  mt76_dma_rx_poll+0x50d/0x790 [mt76]
+>  mt792x_poll_rx+0x52/0xe0 [mt792x_lib]
+>
+> Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
 > ---
->  include/linux/timekeeping.h |    4 ----
->  kernel/time/timekeeping.c   |    8 --------
->  2 files changed, 12 deletions(-)
-> 
-> --- a/include/linux/timekeeping.h
-> +++ b/include/linux/timekeeping.h
-> @@ -280,8 +280,6 @@ static inline bool ktime_get_aux_ts64(cl
->   *				 a selected CLOCK_* and the clocksource counter value
->   * @cycles:		Clocksource counter value to produce the system times
->   * @sys:		The system time of the selected CLOCK ID
-> - * @real:		Realtime system time
-> - * @boot:		Boot time
->   * @raw:		Monotonic raw system time
->   * @cs_id:		Clocksource ID
->   * @clock_was_set_seq:	The sequence number of clock-was-set events
-> @@ -291,8 +289,6 @@ static inline bool ktime_get_aux_ts64(cl
->  struct system_time_snapshot {
->  	u64			cycles;
->  	ktime_t			sys;
-> -	ktime_t			real;
-> -	ktime_t			boot;
->  	ktime_t			raw;
->  	enum clocksource_ids	cs_id;
->  	unsigned int		clock_was_set_seq;
-> --- a/kernel/time/timekeeping.c
-> +++ b/kernel/time/timekeeping.c
-> @@ -1196,8 +1196,6 @@ bool ktime_get_snapshot_id(struct system
->  	struct timekeeper *tk;
->  	struct tk_data *tkd;
->  	unsigned int seq;
-> -	ktime_t base_real;
-> -	ktime_t base_boot;
->  
->  	/* Invalidate the snapshot for all failure cases */
->  	systime_snapshot->valid = false;
-> @@ -1239,18 +1237,12 @@ bool ktime_get_snapshot_id(struct system
->  		offs_sys = *offs;
->  		base_raw = tk->tkr_raw.base;
->  
-> -		/* Kept around until the callers are fixed up */
-> -		base_real = ktime_add(base_sys, tk_core.timekeeper.offs_real);
-> -		base_boot = ktime_add(base_sys, tk_core.timekeeper.offs_boot);
-> -
->  		nsec_sys = timekeeping_cycles_to_ns(&tk->tkr_mono, now);
->  		nsec_raw = timekeeping_cycles_to_ns(&tk->tkr_raw, now);
->  	} while (read_seqcount_retry(&tkd->seq, seq));
->  
->  	systime_snapshot->cycles = now;
->  	systime_snapshot->sys = ktime_add_ns(base_sys, offs_sys + nsec_sys);
-> -	systime_snapshot->real = ktime_add_ns(base_real, nsec_sys);
-> -	systime_snapshot->boot = ktime_add_ns(base_boot, nsec_sys);
->  	systime_snapshot->raw = ktime_add_ns(base_raw, nsec_raw);
->  
->  	/*
-> 
+>
+> Reproduced and tested using the script below over ssh. Roam between two
+> bssids with the same SSID on a router.
+>
+> #!/bin/bash
+>
+> set -ex
+>
+> while :; do
+>         num=3D$(sudo iw wlan0 scan | grep Polaris | wc -l)
+>         if [ $num -eq 2 ]; then
+>                 break
+>         fi
+> done
+>
+> for i in $(seq 1 500); do
+>
+> echo "index $i"
+> wpa_cli -i wlan0 roam 90:fb:5d:94:8b:e3
+> sleep 5
+> wpa_cli -i wlan0 roam 90:fb:5d:94:8b:e2
+> sleep 5
+>
+> done
+>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mac80211.c    | 11 ++++++++---
+>  drivers/net/wireless/mediatek/mt76/mt76.h        |  1 +
+>  drivers/net/wireless/mediatek/mt76/mt7925/main.c |  3 +++
+>  3 files changed, 12 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/=
+wireless/mediatek/mt76/mac80211.c
+> index 4ae5e4715a9c..83f4f941b890 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+> @@ -1595,11 +1595,16 @@ mt76_sta_add(struct mt76_phy *phy, struct ieee802=
+11_vif *vif,
+>                 mtxq->wcid =3D wcid->idx;
+>         }
+>
+> -       ewma_signal_init(&wcid->rssi);
+> -       rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
+> +       if (!test_bit(MT_WCID_FLAG_DRV_PUBLISH, &wcid->flags)) {
+> +               ewma_signal_init(&wcid->rssi);
+> +               rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
+> +               mt76_wcid_init(wcid, phy->band_idx);
+> +       } else {
+> +               wcid->phy_idx =3D phy->band_idx;
+> +       }
+> +
+>         phy->num_sta++;
+>
 
+Thanks for spotting the roaming issue.
+
+I think we can avoid adding MT_WCID_FLAG_DRV_PUBLISH and instead use the
+WCID table itself for the publish check.
+
+dev->wcid[] already encodes whether a WCID has been published, so checking
+it directly avoids adding a second mirror state. MT_WCID_FLAG_* is also
+better kept for WCID features that affect WTBL setup or data-path handling,
+rather than common bookkeeping state.
+
+Something like:
+
+@@ -1620,6 +1620,7 @@ mt76_sta_add(struct mt76_phy *phy, struct
+ieee80211_vif *vif,
+{
+  struct mt76_wcid *wcid =3D (struct mt76_wcid *)sta->drv_priv;
+  struct mt76_dev *dev =3D phy->dev;
++       struct mt76_wcid *published;
+  int ret;
+  int i;
+
+@@ -1639,7 +1640,10 @@ mt76_sta_add(struct mt76_phy *phy, struct
+ieee80211_vif *vif,
+          mtxq->wcid =3D wcid->idx;
+  }
+
+-       if (!test_bit(MT_WCID_FLAG_DRV_PUBLISH, &wcid->flags)) {
++       published =3D rcu_dereference_protected(dev->wcid[wcid->idx],
++                                             lockdep_is_held(&dev->mutex))=
+;
++       if (published !=3D wcid) {
++               WARN_ON_ONCE(published);
+                 ewma_signal_init(&wcid->rssi);
+                 rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
+                 mt76_wcid_init(wcid, phy->band_idx);
+
+   ....
+
+
+> -       mt76_wcid_init(wcid, phy->band_idx);
+>  out:
+>         mutex_unlock(&dev->mutex);
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wire=
+less/mediatek/mt76/mt76.h
+> index 527bef97e122..8bfce686bff7 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+> @@ -361,6 +361,7 @@ enum mt76_wcid_flags {
+>         MT_WCID_FLAG_PS,
+>         MT_WCID_FLAG_4ADDR,
+>         MT_WCID_FLAG_HDR_TRANS,
+> +       MT_WCID_FLAG_DRV_PUBLISH,
+>  };
+>
+>  #define MT76_N_WCIDS 1088
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/n=
+et/wireless/mediatek/mt76/mt7925/main.c
+> index 73d3722739d0..35b5c718475c 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+> @@ -1102,6 +1102,9 @@ int mt7925_mac_sta_add(struct mt76_dev *mdev, struc=
+t ieee80211_vif *vif,
+>                                               &msta->deflink);
+>         }
+>
+> +       if (!err)
+> +               set_bit(MT_WCID_FLAG_DRV_PUBLISH, &msta->deflink.wcid.fla=
+gs);
+> +
+>         return err;
+>  }
+>  EXPORT_SYMBOL_GPL(mt7925_mac_sta_add);
+> --
+> 2.53.0
+>
+>
