@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E3A1425CF5;
-	Tue, 26 May 2026 17:14:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB996428494;
+	Tue, 26 May 2026 17:14:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779815644; cv=none; b=gIykxaIUOEBZDuIq8IylTe8a8y9H7pcrza+uV3Jl3iSZX5OrEgs8hpFqrrynGAKvTlf1ymKGNxHxnoYk/sFIWIIN0p81N1qC+oMYw9ugpbtyoZYZaMs12Xh7VuHXm7+fxeziJSzSwCEduNwc4+8by9YjIOaTMV7sXGpHsuW3SpQ=
+	t=1779815647; cv=none; b=c5yIJzG9olSG5UzNXz5vVzvQCU0ZylhDMzRfGZHN6/euYes7DofAL1tD7ZiJS8U2FmJactatThQ1frcmZxz/mVsnBkFnwz+UR4L/8LzqJ8TTXAoKwRB5pS68T5y/Z2sXDpZAjmtPSir8WBRHJRF65p52KjSxRLhPQSYAIp7u9OE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779815644; c=relaxed/simple;
-	bh=p1bCOvFUnRZdHK9oC4A/qYvklVkRMVW2a1tjKJ7ZXnU=;
+	s=arc-20240116; t=1779815647; c=relaxed/simple;
+	bh=C/lMk2GwsVhK7xeNGjqgovxJVEbkd/ih7wBImrOm6no=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=j9sa7F2q3TJCbwgeRP3xcdhsUuPp9f4ANs/wivylPwavmXEPXlrinAKkmrEv6Oyfg9zJxLNRIQIqj5ZLE2Yzz1oggWwbxXYM7eTY5K29pelVUIHC3mVvfOKly3zHgGlTpFQ+1rGWO+0uPB1+vdz+5E+0xs+iYT0sKG/4WJNGbBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=flRS5F69; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=n2MZq9o9oo54ekbfXSwEJspcKKeno+iEo4EtTvI9Ky8RoaczP0oS7Nyvip0lMZhWzX8bh0J/9SF1NKRW1bDQv4cQEtYjMjs8aIPrR4R6rIwUWbf1j+i5aOR+dGdgflrfCOXeI0nR19Zz6CL5KEtVRud+8OkF9sM2h7oBbSBb2+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W+jXC5EY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="flRS5F69"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id BB5A21F00A3E;
-	Tue, 26 May 2026 17:14:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W+jXC5EY"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5D0DA1F000E9;
+	Tue, 26 May 2026 17:14:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779815641;
-	bh=4U2mbuq0xtl7gCbi5xEqZvtSRzRMupEXV/dl04k7LQs=;
+	s=k20260515; t=1779815646;
+	bh=2ympzjAuthBIB8syf+QxMkzZ62mfQrNEou/VCvaS1MU=;
 	h=Date:From:To:Cc:Subject:References;
-	b=flRS5F69yAU28B6rRvNeU/k3gPOzTuv2+Nwc3ZPccKO0kXtBRESu6Tq0JqEuUZlXJ
-	 6QofuY2O19vJqMJjhtoctyQ5wmgw2fiQAp0bkkEOiWwImF/zVrVR1ejY/YcIJriy4a
-	 ika8Yf2siWBDQ0j90LSV+l1y8w3t3sl6NkzRApMji0TY9wNuAkAtgBkFwDiIJ5nEoi
-	 KccjmbHgOplcMUBvoj+XiBKn+uz9H1Pzd0tX4dqV64VWjwh/CamYK0QjGJH+z7zwpp
-	 S6QPXJP0lph2ho6kDT8U50uwr3HKu7M24fQ5VtTIo0+17NQahXxAq9HW15HCvUANxm
-	 XPRyetaM0ZqcA==
-Date: Tue, 26 May 2026 19:13:58 +0200
-Message-ID: <20260526171223.144327185@kernel.org>
+	b=W+jXC5EY7w0lfHOahBCkY0aiK84bLrigeVkZqS28mZeHL4pwSOPqcyj6u14nPVAqe
+	 GRC/xUIdM+A67H6udH3kJTgfDK7P9CNeXCJo0Sxzk2NcHG/2aJCMoLE0VAtQk4ZPrz
+	 hO0CKUdsNaxx/d/kvOORBbpR6VMwJzJG54DlwhGjWplDbjcL/OklY+v8hezKTRUEe5
+	 b1TuNSIkANh8NhVyzPYKcMSldAG9dj2Uf5D7MtAh4+fvT5e1JD73wuV8ifjcGePG7U
+	 Wr+mRcXqfynnoW0EziFCm1pS4a/kRBpVbo2A2nzQInpHtFCoccatYEtnlv8F1HLhwi
+	 b7KFZ9XWNXA8A==
+Date: Tue, 26 May 2026 19:14:03 +0200
+Message-ID: <20260526171223.223860692@kernel.org>
 User-Agent: quilt/0.68
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -39,14 +39,14 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  Frederic Weisbecker <frederic@kernel.org>,
  thomas.weissschuh@linutronix.de,
  Arthur Kiyanovski <akiyano@amazon.com>,
- Marc Zyngier <maz@kernel.org>,
- Oliver Upton <oupton@kernel.org>,
- kvmarm@lists.linux.dev,
- Rodolfo Giometti <giometti@enneenne.com>,
- Vincent Donnefort <vdonnefort@google.com>,
- Oliver Upton <oliver.upton@linux.dev>,
  Richard Cochran <richardcochran@gmail.com>,
  netdev@vger.kernel.org,
+ Rodolfo Giometti <giometti@enneenne.com>,
+ Vincent Donnefort <vdonnefort@google.com>,
+ Marc Zyngier <maz@kernel.org>,
+ Oliver Upton <oliver.upton@linux.dev>,
+ kvmarm@lists.linux.dev,
+ Oliver Upton <oupton@kernel.org>,
  Takashi Iwai <tiwai@suse.com>,
  Miri Korenblit <miriam.rachel.korenblit@intel.com>,
  Johannes Berg <johannes.berg@intel.com>,
@@ -58,8 +58,7 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  virtualization@lists.linux.dev,
  linux-wireless@vger.kernel.org,
  linux-sound@vger.kernel.org
-Subject: [patch 06/24] KVM: arm64: Use ktime_get_snapshot_id() to snapshot
- CLOCK_REALTIME
+Subject: [patch 07/24] ptp: ptp_vmclock: Convert to ktime_get_snapshot_id()
 References: <20260526165826.392227559@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -73,40 +72,54 @@ ktime_get_snapshot() is replaced by ktime_get_snapshot_id() which allows to
 request a particular CLOCK ID to be captured along with the clocksource
 counter.
 
-Convert the usage in kvm_get_ptp_time() over and use the new
-system_time_snapshot::sys field, which holds the system timestamp selected
-by the CLOCK ID argument.
+Convert vmclock over and use the new system_time_snapshot::sys field, which
+holds the system timestamp selected by the CLOCK ID argument.
 
 No functional change intended.
 
 Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Oliver Upton <oupton@kernel.org>
-Cc: kvmarm@lists.linux.dev
+Cc: Richard Cochran <richardcochran@gmail.com>
+Cc: netdev@vger.kernel.org
 ---
- arch/arm64/kvm/hypercalls.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ptp/ptp_vmclock.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
---- a/arch/arm64/kvm/hypercalls.c
-+++ b/arch/arm64/kvm/hypercalls.c
-@@ -28,7 +28,7 @@ static void kvm_ptp_get_time(struct kvm_
- 	 * system time and counter value must captured at the same
- 	 * time to keep consistency and precision.
- 	 */
--	ktime_get_snapshot(&systime_snapshot);
-+	ktime_get_snapshot_id(&systime_snapshot, CLOCK_REALTIME);
+--- a/drivers/ptp/ptp_vmclock.c
++++ b/drivers/ptp/ptp_vmclock.c
+@@ -132,7 +132,7 @@ static int vmclock_get_crosststamp(struc
+ 		 * will be derived from the *same* counter value.
+ 		 *
+ 		 * If the system isn't using the same counter, then the value
+-		 * from ktime_get_snapshot() will still be used as pre_ts, and
++		 * from ktime_get_snapshot_id() will still be used as pre_ts, and
+ 		 * ptp_read_system_postts() is called to populate postts after
+ 		 * calling get_cycles().
+ 		 *
+@@ -140,7 +140,7 @@ static int vmclock_get_crosststamp(struc
+ 		 * the seq_count loop.
+ 		 */
+ 		if (sts) {
+-			ktime_get_snapshot(&systime_snapshot);
++			ktime_get_snapshot_id(&systime_snapshot, CLOCK_REALTIME);
+ 			if (systime_snapshot.cs_id == st->cs_id) {
+ 				cycle = systime_snapshot.cycles;
+ 			} else {
+@@ -181,7 +181,7 @@ static int vmclock_get_crosststamp(struc
+ 	}
  
- 	/*
- 	 * This is only valid if the current clocksource is the
-@@ -61,8 +61,8 @@ static void kvm_ptp_get_time(struct kvm_
- 	 * in the future (about 292 years from 1970, and at that stage
- 	 * nobody will give a damn about it).
- 	 */
--	val[0] = upper_32_bits(systime_snapshot.real);
--	val[1] = lower_32_bits(systime_snapshot.real);
-+	val[0] = upper_32_bits(systime_snapshot.sys);
-+	val[1] = lower_32_bits(systime_snapshot.sys);
- 	val[2] = upper_32_bits(cycles);
- 	val[3] = lower_32_bits(cycles);
- }
+ 	if (sts) {
+-		sts->pre_ts = ktime_to_timespec64(systime_snapshot.real);
++		sts->pre_ts = ktime_to_timespec64(systime_snapshot.sys);
+ 		if (systime_snapshot.cs_id == st->cs_id)
+ 			sts->post_ts = sts->pre_ts;
+ 	}
+@@ -272,7 +272,7 @@ static int ptp_vmclock_getcrosststamp(st
+ 	if (ret == -ENODEV) {
+ 		struct system_time_snapshot systime_snapshot;
+ 
+-		ktime_get_snapshot(&systime_snapshot);
++		ktime_get_snapshot_id(&systime_snapshot, CLOCK_REALTIME);
+ 
+ 		if (systime_snapshot.cs_id == CSID_X86_TSC ||
+ 		    systime_snapshot.cs_id == CSID_X86_KVM_CLK) {
 
