@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69ACC405C40;
-	Tue, 26 May 2026 17:13:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8CC409118;
+	Tue, 26 May 2026 17:13:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779815625; cv=none; b=KaVlg54ZSLeoidr6npWAOeBUapBkHZe3Szz2JaAvUfPn1/HAuk3zqxDX6ifuSng2x3lorrB0XJF4CLWKepxOpOE1pQTt2acTmDvOysvKHUhhkcLNqNKzL0MXvcun5POdCB46m+ZlxOKcwkchDaWy4w6wNrI1CCm8VuBAu6nHlTw=
+	t=1779815633; cv=none; b=X9U888iuUXrde4aHwuqEBacTzcJXsUEugSTOcFsYY69+iFGMtmGibaeKDpxyRKIWRvL945rWyOcKcbpUwtfKCCernyCWWux6EkG+D/9Z9312gzrGrTGykqtIiSi5gufun3+fVXc8vjxsXekfnNZ2SXazTm9gjUirtZd2OHQZ+ns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779815625; c=relaxed/simple;
-	bh=/uIxxcW/VKW7V6tqmh6Hwrv4myf2hGcVB+nmBbsM4O0=;
+	s=arc-20240116; t=1779815633; c=relaxed/simple;
+	bh=Jo/Au8bQYAno4GeE3KqHD8eiAALVUwsf3qSc631Dg88=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=m35RBSP7Kfx1XMbzGHJXa5d8qvv0dUHW7IhT43nDj5iSq+t6bjIRkZ4pyQzXeb4Pf2GcUIuSa7jYeHEKjBqF3Qb7mrEVqyHZ2QTHLpiYuGZMeTG6/Uhfg0nRkuSaVycVRAmB1tmAX8uBPw+snr/eSPWvBa/BjuxGxf34S9Cxiqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XzCPuMax; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=ZjBEMoopTvEmDPdo8fmix8jDVfNJKp9wOL1FmOJy4QIwbXcRFuATW61AmfJOpWL3cbvC19acXkJCb3z6oMWVlFfxB2dsyPWxAJ0wBgK0J0rqee8AxMf5NTlCb/nQxqWo/WiG/Imu65+9GYuX9MELsUN1ikEmmL3FzGG1jmgtgb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gBaPgM/x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XzCPuMax"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 308DD1F00A3E;
-	Tue, 26 May 2026 17:13:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gBaPgM/x"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id CAD001F00A3A;
+	Tue, 26 May 2026 17:13:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779815617;
-	bh=C2RjMS9VQOGkJN1go0lhI1NDtbLN/H1nTVa2BdBDyCY=;
+	s=k20260515; t=1779815626;
+	bh=X0scQND1xJm72l+yu4qfzG29LQeAoWdi/2lmLZs8YK4=;
 	h=Date:From:To:Cc:Subject:References;
-	b=XzCPuMaxP2oFxIaAt7DXedzD5bIxlbBx7ED2ib8msOaomyI8z4WFTt+xTSXFYvexl
-	 DpA3ow5UqhjSkEwvKDhBUuj1H4vMFzDvFLyWfSk6msiow2Nu7rNop71fPeVr+oXahH
-	 qnEJ/D57j/KxJhWDOAx7SQVdqFCATBIBamxIeu7vh8rhNpA9wkL5JxR1YUBLD+qjjZ
-	 zU5yWGiCv1A9fHt+Q0RJzNKj8RSg9aJ9hqJ8cLkj6Z/aAe65jO3MYiVk++A/wGPch7
-	 w5109BrM7Sd/pzDcES4IE6i7IKyo7GYPZs9g5ZD2UxXVDoRPjV7D0SaSFevQcLxjXj
-	 uOHOY9vOofjmQ==
-Date: Tue, 26 May 2026 19:13:33 +0200
-Message-ID: <20260526171222.769770418@kernel.org>
+	b=gBaPgM/xsCiUVCAw9BPRWT13zmyadEtGDb6uVyJdpOXvhWBk2ulU534ck+xRoQ//k
+	 9sUHIZvMsrUTuJPwaQzLyKyf1L1zY3Lo8ZxJ8SAsmKCTgb/GF9F7HZxiNCsS0Zpg/k
+	 nuU0oRAvZF6Qvj/Q+n5ulI4ai+250J3JNiqk9gnayFDcEntnuAxW2eV1zJi8SFy+nZ
+	 G0Ha02ne6Ck8Pi26tBsHGkCFMA4ybw53o2riJmtasNU+NfZ+pSqIknkIgG4R8byMwb
+	 NDmOd+QhbvSXAOBtuxGyy5RsFc93k/j4gZIgiBn2RM3VKW/510aFVqzMjHXHWgpHXN
+	 Fa0BUCoW+3qcQ==
+Date: Tue, 26 May 2026 19:13:43 +0200
+Message-ID: <20260526171222.920736414@kernel.org>
 User-Agent: quilt/0.68
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -58,7 +58,8 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  virtualization@lists.linux.dev,
  linux-wireless@vger.kernel.org,
  linux-sound@vger.kernel.org
-Subject: [patch 01/24] timekeeping: Provide ktime_get_snapshot_id()
+Subject: [patch 03/24] pps: generators: Use ktime_get_real_ts64() instead of
+ ktime_get_snapshot()
 References: <20260526165826.392227559@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -68,201 +69,49 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-ktime_get_snapshot() provides a snapshot of the underlying clocksource
-counter value and the corresponding CLOCK_MONOTONIC_RAW, CLOCK_REALTIME and
-CLOCK_BOOTTIME timestamps.
+There is no reason to use the more complex ktime_get_snapshot() for
+retrieving CLOCK_REALTIME.
 
-There is no usage of CLOCK_REALTIME and CLOCK_BOOTTIME at the same time and
-CLOCK_BOOTTIME support was just added for the ARM64 KVM tracing mechanism,
-which needs CLOCK_BOOTTIME and the underlying clocksource counter value.
+Just use ktime_get_real_ts64(), which avoids the extra timespec64
+conversion as a bonus.
 
-ktime_get_snapshot() is also not suitable for usage with CLOCK_AUX, but
-that's a prerequisite to support PTP hardware timestamping for CLOCK_AUX
-steering.
-
-As a first step, rename ktime_get_snapshot() to ktime_get_snapshot_id(),
-which now takes a clockid argument to select the clock which needs to be
-captured. The result is stored in system_time_snapshot::sys, which will
-replace the system_time_snapshot::real/boot members once all usage sites
-have been converted.
-
-ktime_get_snapshot() is a simple wrapper which hands in CLOCK_REALTIME as
-clockid argument for the conversion period. That means CLOCK_REALTIME is
-now captured twice, but that redunancy is only temporary.
-
-No functional change vs. current users of ktime_get_snapshot()
+No functional change intended.
 
 Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Cc: Rodolfo Giometti <giometti@enneenne.com>
 ---
- include/linux/timekeeping.h |   29 ++++++++++-----
- kernel/time/timekeeping.c   |   84 +++++++++++++++++++++++++++++++++-----------
- 2 files changed, 84 insertions(+), 29 deletions(-)
+ drivers/pps/generators/pps_gen-dummy.c |    6 +-----
+ drivers/pps/generators/pps_gen_tio.c   |    6 +-----
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
---- a/include/linux/timekeeping.h
-+++ b/include/linux/timekeeping.h
-@@ -276,24 +276,28 @@ static inline bool ktime_get_aux_ts64(cl
- #endif
- 
- /**
-- * struct system_time_snapshot - simultaneous raw/real time capture with
-- *				 counter value
-- * @cycles:	Clocksource counter value to produce the system times
-- * @real:	Realtime system time
-- * @boot:	Boot time
-- * @raw:	Monotonic raw system time
-- * @cs_id:	Clocksource ID
-+ * struct system_time_snapshot - Simultaneous time capture of CLOCK_MONOTONIC_RAW,
-+ *				 a selected CLOCK_* and the clocksource counter value
-+ * @cycles:		Clocksource counter value to produce the system times
-+ * @sys:		The system time of the selected CLOCK ID
-+ * @real:		Realtime system time
-+ * @boot:		Boot time
-+ * @raw:		Monotonic raw system time
-+ * @cs_id:		Clocksource ID
-  * @clock_was_set_seq:	The sequence number of clock-was-set events
-  * @cs_was_changed_seq:	The sequence number of clocksource change events
-+ * @valid:		True if the snapshot is valid
-  */
- struct system_time_snapshot {
- 	u64			cycles;
-+	ktime_t			sys;
- 	ktime_t			real;
- 	ktime_t			boot;
- 	ktime_t			raw;
- 	enum clocksource_ids	cs_id;
- 	unsigned int		clock_was_set_seq;
- 	u8			cs_was_changed_seq;
-+	u8			valid;
- };
- 
- /**
-@@ -341,9 +345,16 @@ extern int get_device_system_crosststamp
- 			struct system_device_crosststamp *xtstamp);
- 
- /*
-- * Simultaneously snapshot realtime and monotonic raw clocks
-+ * Simultaneously snapshot a given clock with MONOTONIC_RAW and the underlying
-+ * clocksource counter value.
-  */
--extern void ktime_get_snapshot(struct system_time_snapshot *systime_snapshot);
-+extern bool ktime_get_snapshot_id(struct system_time_snapshot *systime_snapshot,
-+				  clockid_t clock_id);
-+
-+static inline void ktime_get_snapshot(struct system_time_snapshot *systime_snapshot)
-+{
-+	WARN_ON_ONCE(!ktime_get_snapshot_id(systime_snapshot, CLOCK_REALTIME));
-+}
- 
- /*
-  * Persistent clock related interfaces
---- a/kernel/time/timekeeping.c
-+++ b/kernel/time/timekeeping.c
-@@ -1183,43 +1183,87 @@ noinstr time64_t __ktime_get_real_second
- }
- 
- /**
-- * ktime_get_snapshot - snapshots the realtime/monotonic raw clocks with counter
-- * @systime_snapshot:	pointer to struct receiving the system time snapshot
-+ * ktime_get_snapshot_id -  Simultaneously snapshot a given clock ID with
-+ *			    CLOCK_MONOTONIC_RAW and the underlying
-+ *			    clocksource counter value.
-+ * @systime_snapshot:	Pointer to struct receiving the system time snapshot
-+ * @clock_id:		The clock ID to snapshot
-  */
--void ktime_get_snapshot(struct system_time_snapshot *systime_snapshot)
-+bool ktime_get_snapshot_id(struct system_time_snapshot *systime_snapshot, clockid_t clock_id)
+--- a/drivers/pps/generators/pps_gen-dummy.c
++++ b/drivers/pps/generators/pps_gen-dummy.c
+@@ -39,11 +39,7 @@ static void pps_gen_ktimer_event(struct
+ static int pps_gen_dummy_get_time(struct pps_gen_device *pps_gen,
+ 					struct timespec64 *time)
  {
--	struct timekeeper *tk = &tk_core.timekeeper;
-+	ktime_t base_raw, base_sys, offs_sys, *offs, offs_zero = 0;
-+	u64 nsec_raw, nsec_sys, now;
-+	struct timekeeper *tk;
-+	struct tk_data *tkd;
- 	unsigned int seq;
--	ktime_t base_raw;
- 	ktime_t base_real;
- 	ktime_t base_boot;
--	u64 nsec_raw;
--	u64 nsec_real;
--	u64 now;
- 
--	WARN_ON_ONCE(timekeeping_suspended);
-+	/* Invalidate the snapshot for all failure cases */
-+	systime_snapshot->valid = false;
-+
-+	if (WARN_ON_ONCE(timekeeping_suspended))
-+		return false;
-+
-+	switch (clock_id) {
-+	case CLOCK_REALTIME:
-+		tkd = &tk_core;
-+		offs = &tk_core.timekeeper.offs_real;
-+		break;
-+	/* Map RAW to MONOTONIC so the loop below is trivial */
-+	case CLOCK_MONOTONIC_RAW:
-+	case CLOCK_MONOTONIC:
-+		tkd = &tk_core;
-+		offs = &offs_zero;
-+		break;
-+	case CLOCK_BOOTTIME:
-+		tkd = &tk_core;
-+		offs = &tk_core.timekeeper.offs_boot;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return false;
-+	}
-+
-+	tk = &tkd->timekeeper;
- 
- 	do {
--		seq = read_seqcount_begin(&tk_core.seq);
-+		seq = read_seqcount_begin(&tkd->seq);
-+
- 		now = tk_clock_read(&tk->tkr_mono);
- 		systime_snapshot->cs_id = tk->tkr_mono.clock->id;
- 		systime_snapshot->cs_was_changed_seq = tk->cs_was_changed_seq;
- 		systime_snapshot->clock_was_set_seq = tk->clock_was_set_seq;
--		base_real = ktime_add(tk->tkr_mono.base,
--				      tk_core.timekeeper.offs_real);
--		base_boot = ktime_add(tk->tkr_mono.base,
--				      tk_core.timekeeper.offs_boot);
-+
-+		base_sys = tk->tkr_mono.base;
-+		offs_sys = *offs;
- 		base_raw = tk->tkr_raw.base;
--		nsec_real = timekeeping_cycles_to_ns(&tk->tkr_mono, now);
--		nsec_raw  = timekeeping_cycles_to_ns(&tk->tkr_raw, now);
--	} while (read_seqcount_retry(&tk_core.seq, seq));
-+
-+		/* Kept around until the callers are fixed up */
-+		base_real = ktime_add(base_sys, tk_core.timekeeper.offs_real);
-+		base_boot = ktime_add(base_sys, tk_core.timekeeper.offs_boot);
-+
-+		nsec_sys = timekeeping_cycles_to_ns(&tk->tkr_mono, now);
-+		nsec_raw = timekeeping_cycles_to_ns(&tk->tkr_raw, now);
-+	} while (read_seqcount_retry(&tkd->seq, seq));
- 
- 	systime_snapshot->cycles = now;
--	systime_snapshot->real = ktime_add_ns(base_real, nsec_real);
--	systime_snapshot->boot = ktime_add_ns(base_boot, nsec_real);
-+	systime_snapshot->sys = ktime_add_ns(base_sys, offs_sys + nsec_sys);
-+	systime_snapshot->real = ktime_add_ns(base_real, nsec_sys);
-+	systime_snapshot->boot = ktime_add_ns(base_boot, nsec_sys);
- 	systime_snapshot->raw = ktime_add_ns(base_raw, nsec_raw);
-+
-+	/*
-+	 * Special case for PTP. Just transfer the raw time into sys,
-+	 * so the call sites can consistently use snap::sys.
-+	 */
-+	if (clock_id == CLOCK_MONOTONIC_RAW)
-+		systime_snapshot->sys = systime_snapshot->raw;
-+	/* Tell the consumer that this snapshot is valid */
-+	systime_snapshot->valid = true;
-+	return true;
+-	struct system_time_snapshot snap;
+-
+-	ktime_get_snapshot(&snap);
+-	*time = ktime_to_timespec64(snap.real);
+-
++	ktime_get_real_ts64(time);
+ 	return 0;
  }
--EXPORT_SYMBOL_GPL(ktime_get_snapshot);
-+EXPORT_SYMBOL_GPL(ktime_get_snapshot_id);
  
- /* Scale base by mult/div checking for overflow */
- static int scale64_check_overflow(u64 mult, u64 div, u64 *base)
+--- a/drivers/pps/generators/pps_gen_tio.c
++++ b/drivers/pps/generators/pps_gen_tio.c
+@@ -189,11 +189,7 @@ static int pps_tio_gen_enable(struct pps
+ static int pps_tio_get_time(struct pps_gen_device *pps_gen,
+ 			    struct timespec64 *time)
+ {
+-	struct system_time_snapshot snap;
+-
+-	ktime_get_snapshot(&snap);
+-	*time = ktime_to_timespec64(snap.real);
+-
++	ktime_get_real_ts64(time);
+ 	return 0;
+ }
+ 
 
