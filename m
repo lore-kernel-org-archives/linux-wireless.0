@@ -1,111 +1,115 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F4FC54739
-	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2026 02:44:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 89398397AFF
+	for <linux-wireless@vger.kernel.org>; Tue, 26 May 2026 03:39:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779763444; cv=none; b=ce9Ntt0CMVaYFQYs3iqFFbhBK0cqOcmobIb7J6Qxs4fSgUTZoR0vipbepbXX0BWEgH4+MS5WhHovwQLilka/QwH/FtXcG9/PwsgFGQCrzH7Ra78rjfsJEq3iW8ZWuAl+73N+ZivTXmdUc37gmFYn8a1iThxTuzw8VUVn/GPPpFE=
+	t=1779766765; cv=none; b=H2q94ABbMdm8tu8nVVEg7AcjztbKhopuxmMX2TGBqGpYE8YXDZMavu/RdA8Munkt2dJeWQBDEVTP1lBkQ2twjuqTjBQ1q5e5LVOZoRnxOc2H256RLjH7B7LcMZLQNeqe4FNLkl1JrmwacqBP7d89BIM7zRTQRQYWm7n427bGfiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779763444; c=relaxed/simple;
-	bh=e8Pkhe/baXo3eTcZM9TAtcCQMvaz0StLuIphh95Cedo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=qbmAHzuWcxQB/JaYUSTGrlDYeOcWCdupMdNjIo4FpHNiplwhKAUxVJcATDrA97Ic7DEWXrYihc8LYlpQ2gGT1F3aoCfM8qmb0CiJTUf15/Vlzl0L+jYx4oHqasUi6oFLycE7ONz6MiyUn4hTZHDD4KTZ7aEpBrki/10ijOkQOXI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=KiafQFu7; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="KiafQFu7"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64Q2hTyxD1451350, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1779763410; bh=VTChcgHDztyJQUCJM6/P9otx+U4R3aryo5+/vyvpXEk=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=KiafQFu7RxGw3w2f4pr4d0w2TEdH+KVOj70fT0ev5jgIkS5UhcNVpyJl+zoA5iYAH
-	 THfhitQIaYaSO3HNylkqSsmxj3jO8baCN9PbLJnUCN1dOalmIQlHKvDt6fRQll7J2t
-	 gPuq9u97ZKZQ7qtz8C/uwEQG2ox1zL2UZrvDhhJsbkJyh5rdwPkH2XF7uKJXjItbFo
-	 AphJrih1ZSJn24iM7DgSSzZhVd/h2cFlt2GJ6bLELQVvMnfuWN9YTKd2FIwjg+kqLQ
-	 HcGoGMJG+t3iXD6eGpSJ7Np43ZgqM4tpqffzq/1Eceuo5DWRp9Z7uI0bLBz8jfnJff
-	 8YWBecU4ldyYA==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64Q2hTyxD1451350
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 26 May 2026 10:43:29 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 26 May 2026 10:43:29 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 26 May 2026 10:43:28 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Tue, 26 May 2026 10:43:28 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ren Wei <n05ec@lzu.edu.cn>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>, "nbd@openwrt.org"
-	<nbd@openwrt.org>, "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"yuantan098@gmail.com" <yuantan098@gmail.com>, "zcliangcn@gmail.com"
-	<zcliangcn@gmail.com>, "bird@lzu.edu.cn" <bird@lzu.edu.cn>,
-	"xuyuqiabc@gmail.com" <xuyuqiabc@gmail.com>
-Subject: RE: [PATCH 1/1] wifi: mac80211: validate minstrel HT tx status rates
-Thread-Topic: [PATCH 1/1] wifi: mac80211: validate minstrel HT tx status rates
-Thread-Index: AQHc7DeV3sPtUhGHxkSnMfCWt+PfS7YfmbhQ
-Date: Tue, 26 May 2026 02:43:28 +0000
-Message-ID: <710745062b5f4323a233db0cd4288ced@realtek.com>
-References: <cover.1779619788.git.xuyq21@lenovo.com>
- <0e3f97ca5cfbeb67a8e60ca5c266f4335950816b.1779619788.git.xuyq21@lenovo.com>
-In-Reply-To: <0e3f97ca5cfbeb67a8e60ca5c266f4335950816b.1779619788.git.xuyq21@lenovo.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1779766765; c=relaxed/simple;
+	bh=XtiSO8QaIwpKLd8e8eYcVI0ifUfloh2ZhDUKh7Lmg4A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jt69F0odubM1IURpHhFdHXGQ1WTOwKGljUNtDQWVtTNM8WqW0lV74+r+6uNI4iaUn6Oqgylz3b23f5Z4//bmWPeA24xzigUyGOVbDUTYJdHSxug8rp1xg6NEzuImuGJTEBH0pvuIFKKT4TIGiycZp/NgNoCAJ3qykFcmLOeEEeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lzu.edu.cn; spf=pass smtp.mailfrom=lzu.edu.cn; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lzu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lzu.edu.cn
+Received: from [IPV6:fdfe:dcba:9876::1] (unknown [172.23.56.36])
+	by app2 (Coremail) with SMTP id zQmowAA3zwbgFRVqb9QOAA--.14932S2;
+	Tue, 26 May 2026 11:39:12 +0800 (CST)
+Message-ID: <84aa4118-6120-49bf-bcc3-9f2d1219e799@lzu.edu.cn>
+Date: Tue, 26 May 2026 11:39:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] wifi: mac80211: validate minstrel HT tx status rates
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+ "nbd@openwrt.org" <nbd@openwrt.org>,
+ "linville@tuxdriver.com" <linville@tuxdriver.com>,
+ "yuantan098@gmail.com" <yuantan098@gmail.com>,
+ "zcliangcn@gmail.com" <zcliangcn@gmail.com>,
+ "bird@lzu.edu.cn" <bird@lzu.edu.cn>,
+ "xuyuqiabc@gmail.com" <xuyuqiabc@gmail.com>
+References: <cover.1779619788.git.xuyq21@lenovo.com>
+ <0e3f97ca5cfbeb67a8e60ca5c266f4335950816b.1779619788.git.xuyq21@lenovo.com>
+ <710745062b5f4323a233db0cd4288ced@realtek.com>
+Content-Language: en-US
+From: Ren Wei <n05ec@lzu.edu.cn>
+In-Reply-To: <710745062b5f4323a233db0cd4288ced@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:zQmowAA3zwbgFRVqb9QOAA--.14932S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kw4UZrWkXF17CFyrAw47Arb_yoW8Xw1fpa
+	y8GFyjvr95JrW8tFsrXF4rAF1fAr48J34fG34rtw1SvF9xtr43Grn2qr90vr4fWFsxuw1F
+	va10krW3u3WayFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvIb7Iv0xC_Cr1lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI
+	0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2Wl
+	Yx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvEwIxGrwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE-syl42xK82IY
+	c2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8GwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
+	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
+	Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
+	vEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
+	9x07j1rWrUUUUU=
+X-CM-SenderInfo: zqqvvuo6o23hxhgxhubq/1tbiAQETCWoUBk4M-AABsd
 
-Ren Wei <n05ec@lzu.edu.cn> wrote:
-> @@ -1205,8 +1242,9 @@ minstrel_ht_txstat_valid(struct minstrel_priv *mp, =
-struct minstrel_ht_sta *mi,
->         if (!rate->count)
->                 return false;
->=20
-> -       if (rate->flags & IEEE80211_TX_RC_MCS ||
-> -           rate->flags & IEEE80211_TX_RC_VHT_MCS)
-
-Miss a line?
-- 		return true;
 
 
-> +       if (rate->flags & IEEE80211_TX_RC_MCS ||
-> +           rate->flags & IEEE80211_TX_RC_VHT_MCS)
-> +               return minstrel_ht_txstat_valid_rate(rate);
->=20
->         for (i =3D 0; i < ARRAY_SIZE(mp->cck_rates); i++)
-> @@ -1235,8 +1273,9 @@ minstrel_ht_ri_txstat_valid(struct minstrel_priv *m=
-p,
->         if (!rate_status->try_count)
->                 return false;
->=20
-> -       if (rate_status->rate_idx.flags & RATE_INFO_FLAGS_MCS ||
-> -           rate_status->rate_idx.flags & RATE_INFO_FLAGS_VHT_MCS)
+On 5/26/26 10:43, Ping-Ke Shih wrote:
+> Ren Wei <n05ec@lzu.edu.cn> wrote:
+>> @@ -1205,8 +1242,9 @@ minstrel_ht_txstat_valid(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+>>         if (!rate->count)
+>>                 return false;
+>>
+>> -       if (rate->flags & IEEE80211_TX_RC_MCS ||
+>> -           rate->flags & IEEE80211_TX_RC_VHT_MCS)
+> 
+> Miss a line?
+> - 		return true;
+> 
+> 
+>> +       if (rate->flags & IEEE80211_TX_RC_MCS ||
+>> +           rate->flags & IEEE80211_TX_RC_VHT_MCS)
+>> +               return minstrel_ht_txstat_valid_rate(rate);
+>>
+>>         for (i = 0; i < ARRAY_SIZE(mp->cck_rates); i++)
+>> @@ -1235,8 +1273,9 @@ minstrel_ht_ri_txstat_valid(struct minstrel_priv *mp,
+>>         if (!rate_status->try_count)
+>>                 return false;
+>>
+>> -       if (rate_status->rate_idx.flags & RATE_INFO_FLAGS_MCS ||
+>> -           rate_status->rate_idx.flags & RATE_INFO_FLAGS_VHT_MCS)
+> 
+> Miss a line?
+> 
+> -		return true;
+> 
+>> +       if (rate_status->rate_idx.flags & RATE_INFO_FLAGS_MCS ||
+>> +           rate_status->rate_idx.flags & RATE_INFO_FLAGS_VHT_MCS)
+>> +               return minstrel_ht_ri_txstat_valid_rate(&rate_status->rate_idx);
+>>
+>>         for (i = 0; i < ARRAY_SIZE(mp->cck_rates); i++) {
+>> --
+>> 2.54.0
+>>
 
-Miss a line?
+Yes, you're right, and I'm very sorry about this.
 
--		return true;
+After generating the patch, we adjusted this part after finding
+an issue, but I made a mistake in that follow-up change and ended
+up changing it incorrectly here.
 
-> +       if (rate_status->rate_idx.flags & RATE_INFO_FLAGS_MCS ||
-> +           rate_status->rate_idx.flags & RATE_INFO_FLAGS_VHT_MCS)
-> +               return minstrel_ht_ri_txstat_valid_rate(&rate_status->rat=
-e_idx);
->=20
->         for (i =3D 0; i < ARRAY_SIZE(mp->cck_rates); i++) {
-> --
-> 2.54.0
->=20
+What should have been replaced in both places was the old
+return true; line with the helper-based return.
+
+I'll fix it in the next revision. Thank you for catching this,
+and sorry for the trouble.
 
