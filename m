@@ -1,38 +1,37 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AC03D4138;
-	Tue, 26 May 2026 23:51:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CE2D3DB655;
+	Tue, 26 May 2026 23:52:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779839524; cv=none; b=Ie82pu+rOeXLNtANi+cWvlFSpJii0Saw163h4AWgav9GqjpWA4qrP6qGMlsjjZqeGCdFeHwfVUbcdsv3Najt0+9UepVFunO+ahZCw3L0aTAzCncYD72Q3PEKpMZWHqa9fgudSUCOdiP0E056E573Lju4atneg1P0yUSm4IYV0Vk=
+	t=1779839547; cv=none; b=rDpXut/oZzUcA64KzMkoIfF0Oj5LJ2/ISKHyAm+kfdRbYZljaVl3TIYs6b35bsxnlK2MmkC5/vCo7/4pe1F+OqK/+XN96FpB+fIM4We2a/CQIiPXM1fVG+1tiJN0jtcSeBLr4f4mZL6ghOhxkpWB513HqLS7OHBKLD5F1tlQs0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779839524; c=relaxed/simple;
-	bh=WJt9qz0lut1x/n2zB5Zh14+8HFERu++tT8xM8zD1wKo=;
+	s=arc-20240116; t=1779839547; c=relaxed/simple;
+	bh=oJRh9hb15P6VfYKfAFM5Gsl2SUkKS8vQk8B647ke+oM=;
 	h=Message-ID:Subject:From:To:Cc:Date:in-reply-to:Content-Type:
-	 MIME-Version; b=KBPa+JGQZLx1XvocXyrmhjZN4EHY3uefGTt/S7LpoK6g+zEHbl2r0O954omXeQPqfvtFXKVYv+hcvkW+9rQOfzka0Fcva67P8F58Ezti9Pgp52OaFzt4eNDukHlPN5iERMsTBTd7GjcfYz6Ru1tm3VcQn9YWumRtPHf6kfVvOdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Pap1+zhJ; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=gIVCSNqKsTsiG4T4GvFuRxRLjcMm51kFg552Z2dpiSfQQWR+0Wnb9WHuF/EooQo5Z/H8zYgfV0UD+cnlz2YE+HOxOun5nyoogdxEjdEOa+4EDoyMs0CB+53u4wsLZaF3JGkAQayGgNIXwkMTh0autzK8mMurESURSAtJOL2n+W0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cVjaOSzo; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pap1+zhJ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cVjaOSzo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=MIME-Version:Content-Type:in-reply-to:
 	Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:References;
-	bh=WJt9qz0lut1x/n2zB5Zh14+8HFERu++tT8xM8zD1wKo=; b=Pap1+zhJUrFDeMG1GrR5+B6baD
-	0AS05BIycgYDu+uHt6rj+9XgHZcyU0obUnMdpZzXEVlM086AVhjwNaCEbUoDLmMQnoAK1y4tLSZxf
-	lTYCR6gumeqYVg7gB6gkXKqbwy6Ggi8yZdFplBNrEK+zVcJ7KivVZJ7NoPh6yYPJaUOUkuo53F8k5
-	SrXakxFRMw166m5UFsE+l9uS5QPZZ7L7iKp69u7XUmIg+90ylMpx0Jv7h2GvrLZsmiiS8Y7JJ8R8N
-	q0hrwaNduLDvzNRIs6nQ72OkjQybmqIexDUWjei/mRUjIocE5sCHE/pniru5QRz9ksPLsbyEDcHwV
-	DZS0VOsQ==;
-Received: from 54-240-197-231.amazon.com ([54.240.197.231] helo=u09cd745991455d.ant.amazon.com)
+	bh=oJRh9hb15P6VfYKfAFM5Gsl2SUkKS8vQk8B647ke+oM=; b=cVjaOSzo/7LVlqwZ6uL6swxQD3
+	nfyEWRhJHTi2w8o5RBjO8y2rpL/AUs4qY217ErCgrpOP8322ZMFVBUKOH/cYE4kvaB8xMEM0Q70jx
+	Q2wMzpaokThBp4nW/v50Lluqkgm4kPQZ5pP8MtpUWeDT6/6QDALp2v/C3Bem+2D/hbilzDRQQVsy3
+	ROPBwqeC5OIwhznk69vZwphqrhKROhSCbQy8qAqGP38VqZ7T/GO/f2TKXbu+sEGQM21otstbJV7di
+	KTnMinEz7WPt2nZ0UG5N3FYbTpKRIHpPkL0XaBRiRZo6YBIq26p6Pm74+8mlGD31Jrvy55LjX7WUx
+	pwF7KD2g==;
+Received: from 54-240-197-239.amazon.com ([54.240.197.239] helo=u09cd745991455d.ant.amazon.com)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wS1Yn-00000001g9c-0PlQ;
-	Tue, 26 May 2026 23:51:45 +0000
-Message-ID: <3faf090883cfa696ef3400ed057cdfe9ef2bc3b2.camel@infradead.org>
-Subject: Re: [PATCH 16/24] virtio_rtc: Use provided clock ID for history
- snapshot
+	id 1wS1Z7-00000001gBh-3RFJ;
+	Tue, 26 May 2026 23:52:06 +0000
+Message-ID: <b6df5141bd89167a064d06de218261f150b597b9.camel@infradead.org>
+Subject: Re: [PATCH 17/24] timekeeping: Remove ktime_get_snapshot()
 From: David Woodhouse <dwmw2@infradead.org>
 To: tglx@kernel.org
 Cc: akiyano@amazon.com, anna-maria@linutronix.de,
@@ -46,10 +45,10 @@ Cc: akiyano@amazon.com, anna-maria@linutronix.de,
  richardcochran@gmail.com, saeedm@nvidia.com,  sboyd@kernel.org,
  thomas.weissschuh@linutronix.de, tiwai@suse.com,  vdonnefort@google.com,
  virtualization@lists.linux.dev
-Date: Wed, 27 May 2026 00:51:43 +0100
-in-reply-to: <20260526171223.901103717@kernel.org>
+Date: Wed, 27 May 2026 00:52:04 +0100
+in-reply-to: <20260526171223.974925389@kernel.org>
 Content-Type: multipart/signed; micalg="sha-256"; protocol="application/pkcs7-signature";
-	boundary="=-pfhZO1+rC5gNDKf/Mm1D"
+	boundary="=-7jyZ/vi6+cDcCsQ/KTLh"
 User-Agent: Evolution 3.52.3-0ubuntu1.1 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -60,26 +59,20 @@ MIME-Version: 1.0
 X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
 
---=-pfhZO1+rC5gNDKf/Mm1D
+--=-7jyZ/vi6+cDcCsQ/KTLh
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 26 May 2026 19:14:47 +0200, Thomas Gleixner wrote:
-> The PTP core indicates in system_device_crosststamp::clock_id the clock I=
-D
-> for which the system time stamp should be taken. That allows to utilize
-> hardware timestamps with e.g. AUX clocks.
->
-> Use ktime_get_snapshot_id() and hand the provided clock ID in.
->
-> No functional change.
+On Tue, 26 May 2026 19:14:52 +0200, Thomas Gleixner wrote:
+> All users have been converted to ktime_get_snapshot_id().
 >
 > Signed-off-by: Thomas Gleixner <tglx@kernel.org>
 
 Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
+Tested-by: David Woodhouse <dwmw@amazon.co.uk>
 
 
---=-pfhZO1+rC5gNDKf/Mm1D
+--=-7jyZ/vi6+cDcCsQ/KTLh
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -158,21 +151,21 @@ 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
-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
+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
-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
+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
 
 
---=-pfhZO1+rC5gNDKf/Mm1D--
+--=-7jyZ/vi6+cDcCsQ/KTLh--
