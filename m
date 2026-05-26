@@ -1,37 +1,38 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC483D7D99;
-	Tue, 26 May 2026 23:50:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B662C3D16F5;
+	Tue, 26 May 2026 23:51:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779839454; cv=none; b=Pkn61F9Mq8pUL9/CsTQ0KQitGLMLJiH0j/fDdl+/jGd1OY41WPiMCVMZhcRkn0zvZaxTdvcSCWDVtF/3ijBgaJ8KQyAh2aSEDEiwn6d2BbB+Uew7Z9aCgoQz5gC1QT9nt0oTyzeC72bdpM54GN+WnL+yVfWNjupW/UCdcdTrxYk=
+	t=1779839495; cv=none; b=EBc5yuufvTiP6KWNhBv4dXVcHsqn6WPIX0XYKrd5VUEC/1Wgiwnv+L1o+ZnKq10op9v8VkC/j6kab4LD7GCJyLSiQu0LGoydYVMRNFGJpedO9jhfpvzTYn4hQEjbmpNEpgpgbeoXRg98uVltjCt2AWiEbtoDe5h586F7AqlaEmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779839454; c=relaxed/simple;
-	bh=Le8hUx+GqifkMM9KGObqXvDJEWCpjmxkbYHfn4qQfFE=;
+	s=arc-20240116; t=1779839495; c=relaxed/simple;
+	bh=xy/AQFNFJydkGF/RN4ne5i8fgvR1ebAl5OEU1UCo54w=;
 	h=Message-ID:Subject:From:To:Cc:Date:in-reply-to:Content-Type:
-	 MIME-Version; b=d3MjFFjuNX4DEQ33XrDZkqGX7NI+V7SVD1FqZD0rh40xSa4ZJjb3Uk2iVsoUVhgYkOrn0OMb8xi0PbF21hKkkbLiO8EQqN8s0oFS/zsvCXZxRmNm5ObRN8vSXA3/lDzSSPo6fR7UeG+XDr3Kw7HGMOClXDCjRR2Xv9gA61pGYis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=C0G4qiUA; arc=none smtp.client-ip=90.155.50.34
+	 MIME-Version; b=MRZLZLK+cnKbe7BRWjpD1JbHz+O37M+XN55+0CFBYIOVhvBsKohlIoccQY9xGRnsx3cJPq0DLWY+REjBvDRgST3wbqRzAK8s9Nrb1rdr3x/u4x1Zry9deZMlk3YMujU0RQzfQ1kid1TAvlwn6p3Rqmli8m673hB9Et0utXJr2aA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=casper.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=H23Zrles; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=casper.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C0G4qiUA"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="H23Zrles"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=MIME-Version:Content-Type:in-reply-to:
 	Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:References;
-	bh=Le8hUx+GqifkMM9KGObqXvDJEWCpjmxkbYHfn4qQfFE=; b=C0G4qiUAWMj4mO6mZui9amPH1I
-	sKJZgWbRmHFTiM5XeAkjLoxJgEtAC9cuhnzeGat/YmcMOijEh8OttA3JhpfPv/M9t83pbs5d7k/CY
-	ZLut6FRqoc2ft0Ymsg4Pmp6ocdU21H3a6JhJ97lju6Dxvf34XorpXZ/TGaYFUG+rF9QjXMylgAT0B
-	Jhb3YgxDbQOQjqBlUjExL6iOgjhrue43MsOSnLk0evKimW4OHfunhUvsd0D35G7o8Yxx0yq+T29gj
-	ew+e52f6NxnrWZw6iFlsT3h9CqpZjYnNfgEs70AyPLkG0BmcLdx60d4+3E3afMlqImD0Z2aIfLfNw
-	II+7Zsww==;
-Received: from 54-240-197-239.amazon.com ([54.240.197.239] helo=u09cd745991455d.ant.amazon.com)
+	bh=xy/AQFNFJydkGF/RN4ne5i8fgvR1ebAl5OEU1UCo54w=; b=H23Zrles/ZdCHQZxvdI20MWp9H
+	iFBf1aGDIRZWR63aBAL94HTD4W4cZACRLdUCt5f08Kn8YKE+T+sCLk1Bbs7ALFGVztSeXARxoJbNg
+	UJYGIB/9N7VGL3nJoLFPuxYW3lg+5k8Z0bHovf/IwzDYehhKVf80hxniDrptahK97KzOKWi/ga4qw
+	gTve9z4De/XDPHUIGUZg9KvS6NTLb6pJwKUiZeQhBDH0xoM4DOZkVg8f844iCA5J+qsP4eCfX0h9R
+	0iRD7ddv+f4x4waIabEVbke1uhsTWWUQmqDfHsH5uh5R41HtfeVwhgdI+mxV2ncIquHfQYkb2q2RN
+	NEd9kkoQ==;
+Received: from 54-240-197-231.amazon.com ([54.240.197.231] helo=u09cd745991455d.ant.amazon.com)
 	by casper.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wS1Xo-00000001g5U-1hAe;
-	Tue, 26 May 2026 23:50:44 +0000
-Message-ID: <31b7fb48e98e5e0530246960bfcfc75e8bc5c8ae.camel@infradead.org>
-Subject: Re: [PATCH 14/24] igc: Use provided clock ID for history snapshot
+	id 1wS1YJ-00000001g8K-3hLb;
+	Tue, 26 May 2026 23:51:16 +0000
+Message-ID: <1600050288e5a8e5a2910eaac191f1ce1e8e1428.camel@infradead.org>
+Subject: Re: [PATCH 15/24] net/mlx5: Use provided clock ID for history
+ snapshot
 From: David Woodhouse <dwmw2@infradead.org>
 To: tglx@kernel.org
 Cc: akiyano@amazon.com, anna-maria@linutronix.de,
@@ -45,10 +46,10 @@ Cc: akiyano@amazon.com, anna-maria@linutronix.de,
  richardcochran@gmail.com, saeedm@nvidia.com,  sboyd@kernel.org,
  thomas.weissschuh@linutronix.de, tiwai@suse.com,  vdonnefort@google.com,
  virtualization@lists.linux.dev
-Date: Wed, 27 May 2026 00:50:42 +0100
-in-reply-to: <20260526171223.745281238@kernel.org>
+Date: Wed, 27 May 2026 00:51:14 +0100
+in-reply-to: <20260526171223.826096151@kernel.org>
 Content-Type: multipart/signed; micalg="sha-256"; protocol="application/pkcs7-signature";
-	boundary="=-VJy4Nlq1heVVeJJyF0YA"
+	boundary="=-heda2bPdRTujeptmypqh"
 User-Agent: Evolution 3.52.3-0ubuntu1.1 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -59,18 +60,17 @@ MIME-Version: 1.0
 X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 
 
---=-VJy4Nlq1heVVeJJyF0YA
+--=-heda2bPdRTujeptmypqh
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, 26 May 2026 19:14:37 +0200, Thomas Gleixner wrote:
+On Tue, 26 May 2026 19:14:42 +0200, Thomas Gleixner wrote:
 > The PTP core indicates in system_device_crosststamp::clock_id the clock I=
 D
 > for which the system time stamp should be taken. That allows to utilize
 > hardware timestamps with e.g. AUX clocks.
 >
-> Save the provided clock ID and use it in igc_phc_get_syncdevicetime() for
-> taking the history snapshot.
+> Use ktime_get_snapshot_id() and hand the provided clock ID in.
 >
 > No functional change.
 >
@@ -79,7 +79,7 @@ D
 Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
 
 
---=-VJy4Nlq1heVVeJJyF0YA
+--=-heda2bPdRTujeptmypqh
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -158,21 +158,21 @@ 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
-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
+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
-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
+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
 
 
---=-VJy4Nlq1heVVeJJyF0YA--
+--=-heda2bPdRTujeptmypqh--
