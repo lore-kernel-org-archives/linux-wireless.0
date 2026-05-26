@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA420405C51;
-	Tue, 26 May 2026 17:15:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE3D8413D63;
+	Tue, 26 May 2026 17:15:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779815722; cv=none; b=fUp1DAV4SFcfckrCpYCS7C5Oh1S1o6QFjq9bqis+pNOrvNIxlhrwrg5IYJmB/CyHY1eZG0nEJiRiUDzdu2hKyCc7qoU3AijDmoT0EV1lmnvyDAPzgdxZ/6GLUjfKfpf75eAClL0bwWkjbmayGbSFV+IWu+BzoEWqqjgafBDxanE=
+	t=1779815726; cv=none; b=hAcF2MU8+ygupJD61omFQQf9W2G4t6oObCnl6pZGgKuQ8da3latCxWZzuICbY3TC0OeHxEa+tqxXVP+CiF1/uuqf8OnTJEgE1NzGenhUTeE7m89JoMC9qnz7Lv5Wds5N6qwFm1FRaemhdvrRpT0ZGWIBh5gHh0FKKLtNApNBqr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779815722; c=relaxed/simple;
-	bh=taA3JhJ8LfR540IvF/KyclmLykmRPPkG2o8PM3ZOnT0=;
+	s=arc-20240116; t=1779815726; c=relaxed/simple;
+	bh=UPQTtjMr5+Q62rEYqCbl500+U2deKAK7t7gFD28njww=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=IBleQwZ2eL06uIg89lsmC7arA2EIHCdKzgYPEFHGj7GT7HT8C7vpVfmAsyXLDYManmnkZPR7WxqEGMqlt9QNxq2DMCkMOYs13XXdPIWFlUQuI/9Dy4nzFpW04pJG/wY7pjGX0X5oWIbSARnvO0oddUA6lS6o1tUqgRG8i5IIl0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mJ9txE58; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=Dc7SmDqLC18mBRy0l/ct4fEktl+DQbtDKNj5wqSMSYickc6HTbtkak/rl5EmoF27vBQ/Jotn2/ydm2Ip2ttacuKEZb81TIVORtjaE/vfI33/FRmlkk8UrJZcdLkAbWQYnGijIFEG2ilOZ7m9cYeKFvC9VW2OhR9zMNB6I/WbIUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hz5rNADp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mJ9txE58"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id B18251F000E9;
-	Tue, 26 May 2026 17:15:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hz5rNADp"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9E10A1F000E9;
+	Tue, 26 May 2026 17:15:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779815720;
-	bh=iP9+Ejq+468GjDeS30IX6KFuH3pNpoH1TK3AxvpH6jM=;
+	s=k20260515; t=1779815725;
+	bh=kHti9+sqVBZGq/j203ISTyL+B5Np9OokbIRFwk8d52M=;
 	h=Date:From:To:Cc:Subject:References;
-	b=mJ9txE58645sQz4WH7pcRhejpZWtR9+rOPLzP0JoT85ne5BnRR3eoGxgqeuO3sXvm
-	 EDc64YGg1uTPw64JEPsVEU/b0dm7bVYiFTnD5hKg8/FVmMxA1ScVOaLF0PhpzwUb5k
-	 uhplXMkSmgbQHiK5PBnr1dcuFNlqkToeEut6YWN/aSkUqlVNM00Sbl3WNlBTldhqY2
-	 MGZPhvQKA/s6B0w3VRRX87UD4VEiMcJe2sWsfB1gXznCB+F+EUlGDhtihWuk9QUL85
-	 9ENqoFtbpNE1NpBSkPuMTHrYCHzxJdmm4U0cyui2DB26SCFwqza711Wm1FkFMnJ1f1
-	 Qk8tMpgtfmbeQ==
-Date: Tue, 26 May 2026 19:15:17 +0200
-Message-ID: <20260526171224.347997043@kernel.org>
+	b=hz5rNADprN6ALUeIESOs1EAHI+3FrqImMNfrKx8bHnTUUhymIz6kZ19jV9U59OEKJ
+	 +oQD6+HT2X3ZFUTkTaGu8AhNw2XmcPBg0Soma/+16SPZb2sNVLr2z3EFSZif/Ph24c
+	 eocOJhkBMV6pZ/Y3pRsmMYgO8Hk2+qiuC6j445ZmpdGiytf/kblpU1IzFCNjdyZF39
+	 ZMyIdYvz4t+473edPLKykgFkAUlE/CLzT/fbPmf56abgPb1I+5x9lhJk4SWBgTVGVO
+	 LMXqW91ZCsRmm99cZPhes8CX4bm4dBXg/NzSUpCVRTui+5VNo9rYI/L5tCxaWg0cFo
+	 v8VlRWgnTi4AQ==
+Date: Tue, 26 May 2026 19:15:22 +0200
+Message-ID: <20260526171224.423155175@kernel.org>
 User-Agent: quilt/0.68
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -58,8 +58,8 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  virtualization@lists.linux.dev,
  linux-wireless@vger.kernel.org,
  linux-sound@vger.kernel.org
-Subject: [patch 22/24] timekeeping: Remove
- system_device_crosststamp::sys_realtime
+Subject: [patch 23/24] timekeeping: Add support for AUX clock cross
+ timestamping
 References: <20260526165826.392227559@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -69,34 +69,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-All users are converted to sys_systime.
+Now that all prerequisites are in place add the final support for AUX
+clocks in get_device_system_crosststamp(), which enables the PTP layer to
+support hardware cross timestamps with a new IOTCL.
 
 Signed-off-by: Thomas Gleixner <tglx@kernel.org>
 ---
- include/linux/timekeeping.h |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ kernel/time/timekeeping.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
---- a/include/linux/timekeeping.h
-+++ b/include/linux/timekeeping.h
-@@ -318,7 +318,6 @@ struct system_counterval_t {
-  * @clock_id:		System time Clock ID to capture
-  * @device:		Device time
-  * @sys_counter:	Clocksource counter value simultaneous with device time
-- * @sys_realtime:	Realtime simultaneous with device time
-  * @sys_systime:	System time for @clock_id
-  * @sys_monoraw:	Monotonic raw simultaneous with device time
-  */
-@@ -326,11 +325,7 @@ struct system_device_crosststamp {
- 	clockid_t			clock_id;
- 	ktime_t				device;
- 	struct system_counterval_t	sys_counter;
--	union {
--		/* realtime goes away once all users are converted */
--		ktime_t			sys_realtime;
--		ktime_t			sys_systime;
--	};
-+	ktime_t				sys_systime;
- 	ktime_t				sys_monoraw;
- };
- 
+--- a/kernel/time/timekeeping.c
++++ b/kernel/time/timekeeping.c
+@@ -1518,6 +1518,12 @@ int get_device_system_crosststamp(int (*
+ 		tkd = &tk_core;
+ 		offs = &tk_core.timekeeper.offs_real;
+ 		break;
++	case CLOCK_AUX ... CLOCK_AUX_LAST:
++		tkd = aux_get_tk_data(xtstamp->clock_id);
++		if (!tkd)
++			return false;
++		offs = &tkd->timekeeper.offs_aux;
++		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		return false;
 
