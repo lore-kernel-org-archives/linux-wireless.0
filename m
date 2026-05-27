@@ -1,80 +1,81 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0E12C027C;
-	Wed, 27 May 2026 07:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 722CE377009
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 08:42:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779866702; cv=none; b=m4Zrkfyas/cW7pe3S4OdU4+cQylWEkyU4cE8yMwbiczyHiW8fuyHU7sCYJcjUj8OcmjnqpxjiyzdkdNHGTMGGz5O5ZR+YmJciR5t6xGWS5Y0CGIecZ1BaL5hY2jxXt5/kUZyCBvyxkB1UA9/BLeSPRrEkVFFG3cIrjGTAZBxEbA=
+	t=1779871369; cv=none; b=HADA7sN+XCg/4pIg1cWw0geBJqsbZ1YyIzxCP9SzSG+P1kLKh51vKaXVbWCqYCVowtWKXpYBXhnirUg7L6oxRd1ZXvOOCugsu+J2Epj3f+92iqk3DlUWmZEmkOwjFePE1nNN3K9LnfKSdWG38+4JZf94bB9RfRbia31TIPgyw90=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779866702; c=relaxed/simple;
-	bh=H286pH0XEVaTBl11NoF476tTyCrePsNa+hNCO4h58i8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CwoF5ZVxl5eC2PX6IATc13M798584QJeKsXbba2BnxcLKoWmAsLEVvOZKb7hOz6SXM3HHXRbKu33NJYDT5KPr6wHAUkDb0XeQtnPzvse/Kq9fKoCPUNCW5eg5heLDno2TFAa0zE88iKwUzX5JwcCj6ZkwZJT7+bJLvJZqHmeHKc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=yxICJRlV; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=SWxeWBwT; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1779871369; c=relaxed/simple;
+	bh=lMDiVgf8SvYgqZNRXkEmSHTAzApnpJnoWjORk68lEIc=;
+	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type; b=CBhEuFZb2CwUlwGBiI1HF/HLcayhHKv/gIjz+8gk/HV76+J/WVPNaeFjw7TwPKtscmjVzEAyCZj1aRB15lgkAHpPNMN/91O8p7u/qV2uqUllov1lvsJYFtDEDVXgYzqILGNSWgPwy/UDfviXqaQfVLMiO+CKCP2bnAm4gxTcVDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=j7j4FF7S; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="yxICJRlV";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="SWxeWBwT"
-Date: Wed, 27 May 2026 09:24:59 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1779866700;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Wbgh1lph/Cw9cQ2P7yfOnakbfAXz1iVADCAMap9VS2s=;
-	b=yxICJRlVnrHFs7DxFJvW+0S+eTDuoFTKh6YKulHGTjwvy/voHWsGUCGCmM2ZhTZG+Ndcor
-	RdcmpLsSec38GmQ2YaTGdsz2w5LwBhJb4gMKodn8snCpxniL57+0pJluvJpHzA7MUL7VVo
-	kVh4Tyqw6jo4K3JO8WBjyCVePOW/pzxo5MKaIg4/NXj7A5qEOUDHm4V00aqkTeP/ZumqaM
-	lFoFI9XJ88pWL8jqoFkCmw4gy5CVZRx7Qi8MnE+tLY8k8lpCCuCXgE+5JtOnmWZaD9YGiy
-	JIivgwPtV24GGWDMhY+u5LNb3Nc5U+W95ZW9JGJkX/3jw2G6c2ViiYkNdB0rpQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1779866700;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Wbgh1lph/Cw9cQ2P7yfOnakbfAXz1iVADCAMap9VS2s=;
-	b=SWxeWBwTBBmK1D3E1cPJ4Sod+C/sOqkqJA4Z5RxQ7r7sOrEyKlkQsh95tLQxrSeGcl1j0y
-	an/Z0sm1XLeeUkCg==
-From: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
-To: Thomas Gleixner <tglx@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, 
-	David Woodhouse <dwmw2@infradead.org>, Miroslav Lichvar <mlichvar@redhat.com>, 
-	John Stultz <jstultz@google.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Anna-Maria Behnsen <anna-maria@linutronix.de>, Frederic Weisbecker <frederic@kernel.org>, 
-	Arthur Kiyanovski <akiyano@amazon.com>, Rodolfo Giometti <giometti@enneenne.com>, 
-	Vincent Donnefort <vdonnefort@google.com>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oliver.upton@linux.dev>, kvmarm@lists.linux.dev, Oliver Upton <oupton@kernel.org>, 
-	Richard Cochran <richardcochran@gmail.com>, netdev@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, 
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>, Johannes Berg <johannes.berg@intel.com>, 
-	Jacob Keller <jacob.e.keller@intel.com>, Tony Nguyen <anthony.l.nguyen@intel.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Peter Hilber <peter.hilber@oss.qualcomm.com>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, virtualization@lists.linux.dev, linux-wireless@vger.kernel.org, 
-	linux-sound@vger.kernel.org
-Subject: Re: [patch 23/24] timekeeping: Add support for AUX clock cross
- timestamping
-Message-ID: <20260527092439-18ac09b4-d62f-4215-bb20-fe3ad7b0e77b@linutronix.de>
-References: <20260526165826.392227559@kernel.org>
- <20260526171224.423155175@kernel.org>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="j7j4FF7S"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 64R8gidK72301470, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1779871365; bh=/0nkl9RXAyLx3nHY57tX+z9Pv1/aB/TSVpER3u+CSfQ=;
+	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
+	 MIME-Version:Content-Type;
+	b=j7j4FF7ShN/RtMb2WDbOiV1LDDbaiCUxADD/6fBw+5zicW/YqWFeI+b7blYxfFUZF
+	 Onp797JG9epSvAQlbs2uVmOVkyss47y/1a4EN2LoHjgvLv/jSKqB0+neZTRGUjIX8k
+	 PHkg8qiEAlReVZECe/p/6ZNxp/4NFojRprJlBPlqonW2zZ5bMikPY+C32tJfw00A0s
+	 hd5Nlt7TLcCisPImEwrmpiwX6z4PqWw2ueEDN/OrOHBqnZr99hconDw5lN5Pflf9On
+	 usBf5s7q5XzNrRqQ1VdpAH9CawBjiXE4XLcKfVIVCLaqziKhF66ZWFk1oL2/RdR525
+	 fnm9CaRcax+Uw==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.28/5.94) with ESMTPS id 64R8gidK72301470
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 16:42:44 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Wed, 27 May 2026 16:42:43 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Wed, 27 May 2026 16:42:43 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+CC: <kevin_yang@realtek.com>
+Subject: Re: [PATCH rtw-next 1/7] wifi: rtw89: fw: load TX power track element according to AID
+In-Reply-To: <20260520123823.1792954-2-pkshih@realtek.com>
+References: <20260520123823.1792954-1-pkshih@realtek.com> <20260520123823.1792954-2-pkshih@realtek.com>
+Message-ID: <18293035-af4c-4b87-abf6-10bd462dd4d0@RTKEXHMBS05.realtek.com.tw>
+Date: Wed, 27 May 2026 16:42:43 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260526171224.423155175@kernel.org>
+Content-Type: text/plain
 
-On Tue, May 26, 2026 at 07:15:22PM +0200, Thomas Gleixner wrote:
-> Now that all prerequisites are in place add the final support for AUX
-> clocks in get_device_system_crosststamp(), which enables the PTP layer to
-> support hardware cross timestamps with a new IOTCL.
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+
+> From: Zong-Zhe Yang <kevin_yang@realtek.com>
 > 
-> Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+> RF parameters has different TX power track table for different AID.
+> FW elements may include multiple TX power track tables for different
+> AID. So, load the corresponding one.
+> 
+> Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Reviewed-by: Thomas Weiﬂschuh <thomas.weissschuh@linutronix.de>
+7 patch(es) applied to rtw-next branch of rtw.git, thanks.
+
+f50cf5f5d6a3 wifi: rtw89: fw: load TX power track element according to AID
+57efc7b096a6 wifi: rtw89: 8922d: refactor digital power compensation to support new format
+c77a155c96d7 wifi: rtw89: 8922d: support new digital power compensation format
+89ab7535e428 wifi: rtw89: fw: load TX compensation element by RFE type
+ed438b312d07 wifi: rtw89: Wi-Fi 7 configure TX power limit for large MRU
+a153f9ce94e6 wifi: rtw89: debug: show large MRU in txpwr_table dbgfs
+756abe2ebe3e wifi: rtw89: 8922d: configure TX shape settings
+
+---
+https://github.com/pkshih/rtw.git
+
