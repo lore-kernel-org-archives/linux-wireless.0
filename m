@@ -1,207 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E05443B19B4
-	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:52:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD2F63B27DF
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:52:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779911525; cv=none; b=k0+iBjMjLKx8BCN8zuQQdputmK2HNzVFMWCTYYTGy6BtgZelta1yI/FR7MZLWjrG86ffaoZuGlzFExk4gBw1zMPb6r/StVrNLXbpzzgFyIcCD3NthUA46vocmE/rVzmUFQrL8FrR+YiJ2FTr5TzTlmUN7k5zeO7iSZs4GNX9TVs=
+	t=1779911526; cv=none; b=J9lEW4EM3O3bORAVfFwccqvZiG/DMTbtaqUKhlwcZbhZQw0W+zHm8faXYY1Sb7zBMBqiy7aVoc+B+1hwP3eBzTsFOQJSYJ7WexY314OJuGmYKiF+GrCX/Dje1usRkz30ygbSoPyRhhz9EgGA212OSdgHoVRpDcaIspUoJTgCSrM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779911525; c=relaxed/simple;
-	bh=oZFDoS06SSLGsRFkh088FqFTFfRDydwtEZMxnWjdzho=;
-	h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kF4E1cM7zIZ0H9iPqqOsbSIzrGk8y/RIFKaiRIE3W8MiAmrqhAYFn3fr7WP3HHbWpKypkbrN5++FtrW5e6FG4VS01H/kkNhdggb0Ze6PZKBHxaK54Aeh1pnR2of7y1h7SlGUn7txPX3Oyxv8k4x4+jPcSuL0Fzsf2uPmlS4sfI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FahBzuIR; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1779911526; c=relaxed/simple;
+	bh=qAIUo/4v6Wk2IxOgZvpMGagyTAV1+Ca8gIbzJJy9iqI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B+InT3Rr6CEAAliNoZJflw1HrbtpF+Iz+cBBmylEsUvgk1jU8nyYlZQi9gTHCWG+WD/Mj+4NpBtDgzZ0n3cg+ZC1ktyuRmYyekHm8BUwRcaKdzwmy7hC2JxDVc3/TDX+Y9hJGlxc6VEspOL5bM77GQrUEea4ou0UfWUdzEy4CYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=azbXpwa5; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Q4PL811o; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FahBzuIR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779911524; x=1811447524;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=oZFDoS06SSLGsRFkh088FqFTFfRDydwtEZMxnWjdzho=;
-  b=FahBzuIRg3TAPtKTLcCNOABmquc0KtE7EtqGAtYgm1fCR/rbDtknQcw6
-   ymCtdUmA3QvSge5wtnEXeZT0eXi33Z68zhk1k04vqA25jx7k0EDnWQzOx
-   IluTXMO8gmsSYosxu28z2YBgj5w7XD2iBZJi2OUgd8qlbnG3Uedh+GxND
-   XqV8Y3OQ9Pw5a7x6dgpNmADtkr4DqRB11BTPHcThzJVUo4TORaKuRtI9B
-   m0qHDDQ6OUHaTKBdfDqjcmNfUGl8pGlkqhLZ9uwsT1M/X7EFKGCnCORuj
-   qHZTg03ZR0a1iRR9Flgz395f2jvcSFCgbU/jfV/Kz1SPAaKexJAqghmkH
-   Q==;
-X-CSE-ConnectionGUID: 0ebkBQYeQYO80XOY+UPW9A==
-X-CSE-MsgGUID: Btx1TdqOS9KSH2DwbzbjUw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="80784725"
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="80784725"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:52:02 -0700
-X-CSE-ConnectionGUID: +ydZ7u9kQPe154J7hAe0hg==
-X-CSE-MsgGUID: 7u+wFqd7QWiaFBdPXJ/UPg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="280465111"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:52:01 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH wireless-next 2/3] wifi: mac80211: refactor ieee80211_nan_try_evacuate
-Date: Wed, 27 May 2026 22:51:44 +0300
-Message-Id: <20260527224745.589503562912.I9e266da48ceaf85bd0fe1b0487c3fdbeaaf9baaa@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260527195145.468037-1-miriam.rachel.korenblit@intel.com>
-References: <20260527195145.468037-1-miriam.rachel.korenblit@intel.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="azbXpwa5";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Q4PL811o"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64RJgicR1478000
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:52:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	rZO3fziTBuxbAv6/WgS4fmu/DgnKomzs/QOcLDB/MF4=; b=azbXpwa5dJ/EV6fw
+	us1A+oRKB7oi9C4PCZ00DfpG/apj5eX275oZuW473rQiGzH4arAMiW/axqV0ZoXt
+	pRwjVulzHq1DTfYd2YAViGyccI5c9ghhSwkUyv+aEAt3K3iHGOyCGbDh75/jMDen
+	pRt5ogDojxN8PfsIRdW4IXvUybw47cpIE+4h92jrrUmPgVYXsRiYwvTSv7iy/Jdv
+	z6WuFfGvv1jDSyvVRZcEhcv4LRkyGpmRZrmSqas7+mujlJ8if8ZadPJwmbhHU49l
+	uJnZNjWzliP9IfkW/t9l7e6/hl69w0r5tFAK0jsPLq7BP4u9Vz+n5+qJxUczneq2
+	rkGzTw==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ee0a89rv3-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:52:03 +0000 (GMT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-2f2d983d109so6809985eec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 12:52:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1779911523; x=1780516323; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rZO3fziTBuxbAv6/WgS4fmu/DgnKomzs/QOcLDB/MF4=;
+        b=Q4PL811oWuAkibR5dyX1XCaAeJlapMfc3GzC9Upucm7zbFHbDRUb2fZK3AXLezftf2
+         WQznq1t0LKf79FYsijGEmPg/aHiVeCjycTYq1pcZgR/08DSvaEMH/eL+s7c2nTCnJk7H
+         2fdh2bCqjzyTuNZbBrJ5VNJKUbbx3fHH7LElkfqg0xvm8MyTh4VLCObpPdmLDr5bVjyH
+         /u/zUTJcA/1Nper0mNEaSmj7X3Ip3JBd3AcZCifAFKMRgIbichploBoBfro1C7O16/NR
+         XyYO7jDM1DmYU44gu3G1i1OPz9QNzPrQE2oCNyL047lOkYzAsx0JdUJclGO8gA5+IckU
+         ALWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779911523; x=1780516323;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rZO3fziTBuxbAv6/WgS4fmu/DgnKomzs/QOcLDB/MF4=;
+        b=nuFscJPbA/O57KuhhB631zSicFCBRyawEifwsGN+e6JeNRd9//FNhKLyDm6oYABXKs
+         p7al5npGgUmmGwGcpXxwJhiLzcyDnz2w7XBYJnx+LpLWJK98tr6IBmV1ztI6D7oRduiy
+         bs+slSEcjDsWOLfjMrpdRcDew633jRhWcEeJXJnRDl6NxhqlnQxQVsSQReoeaZ/VQZAL
+         TIahgYsfWfZNqAkucTEQPO6tME7TeoIcSIs9RLi3+xdd7kC0vXJupfklp3grI2aFT6UN
+         KfyUiw8uIeQhrRdRQqyUzZcfapRqHi8u3/tf8XdaWXkcWctsfNiyCY/WzBSDkuwiAmzX
+         xDmQ==
+X-Gm-Message-State: AOJu0Yxi6DUqNrri3BDX1VRodTp2xW3NryfB2XpEx6a5PaA9b8WwZQCF
+	5jWLh8pkxfpl0lH7pkve62oPKvK7cW1yzq+rUki0Wq96EfWAWaNdUpSwzncn9XPni3oM98XkUYF
+	ysY6Oi3/VVEGBmVQpX058nNNyqh9hN8U5tjqGV6ij0A/0lHYgShl/axjbyYDFI5DNImtaIw==
+X-Gm-Gg: Acq92OF6qoq2kkBH3446v8HMUEB0qkH4X+bl9AzxgeH9t4e6AXJvNjZBL/ipVRtDhgg
+	yUJZT/T+8C8FFN2Mk5GlLV/XedHp4rwROZJdp/NkXObS22Sick/HNQhNOxlQwTZicfFSB8qw0oU
+	cy4o5u06EBy7WkFmjbn3KXt7uMXjKYx8VzvyyXpWz28rG+FBLnG+Up0ji4g1iynO1JTV3cm16Sm
+	R2T84AAUbABaFvk53LP+P9xNUhdBpMZ02zsLY4uic9iGe0Na3Y/C+JHtjvslw6021tT+ECGDW75
+	Zrnnqs8nhj48zF1ikusaXeiwSQv1al3KWQGi9UQBDbysZSDcsaiOKedA+olO06QPuQ+n4UGzTT+
+	YS51slPoL0yj3DiT6Q/9CCCWAOq6uCzZ7OvVYoSQLLLNcwg8BTGsPl6OW9kYsf1NEumJEPsbldw
+	xG7Brqyx0aLdjkdQu3HwmMh6hg
+X-Received: by 2002:a05:7301:9bc8:b0:2be:6f30:f2f9 with SMTP id 5a478bee46e88-30449187ebdmr12061317eec.26.1779911522698;
+        Wed, 27 May 2026 12:52:02 -0700 (PDT)
+X-Received: by 2002:a05:7301:9bc8:b0:2be:6f30:f2f9 with SMTP id 5a478bee46e88-30449187ebdmr12061295eec.26.1779911522174;
+        Wed, 27 May 2026 12:52:02 -0700 (PDT)
+Received: from [192.168.1.59] (c-24-130-122-79.hsd1.ca.comcast.net. [24.130.122.79])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-304524610f7sm13536204eec.29.2026.05.27.12.52.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 May 2026 12:52:01 -0700 (PDT)
+Message-ID: <dc8c9c9c-dc85-40dd-9313-845a808a35f4@oss.qualcomm.com>
+Date: Wed, 27 May 2026 12:52:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] wifi: ath12k: support calibration-variant from device
+ tree
+To: Andrew LaMarche <andrewjlamarche@gmail.com>,
+        Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <20260131003222.2011259-1-andrewjlamarche@gmail.com>
+ <A2E3AAE1-1A80-4265-9497-0C95C3308CD7@gmail.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <A2E3AAE1-1A80-4265-9497-0C95C3308CD7@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=XrrK/1F9 c=1 sm=1 tr=0 ts=6a174b63 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=Tg7Z00WN3eLgNEO9NLUKUQ==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=bC-a23v3AAAA:8 a=COk6AnOGAAAA:8 a=KKAkSRfTAAAA:8 a=HgE-MqBRfio-cNNWzu0A:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
+ a=FO4_E8m0qiDe52t0p3_H:22 a=TjNXssC_j7lpFel5tvFf:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-GUID: C9kNTwQKk0ZsHAWH8DMyJOeuIU5sq0vI
+X-Proofpoint-ORIG-GUID: C9kNTwQKk0ZsHAWH8DMyJOeuIU5sq0vI
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI3MDE5OSBTYWx0ZWRfXwYLeOFRWz/wu
+ YLZG7Wtmkr+OgPrsDab46U1Wisn7kxtj/n8WkRkGhJ9JBpFeVx/No084wHftVpjd2EMK1t9/OwF
+ fxkhLN5BgKvkGk9zDhzzCg2fV8wZ7quqF6aIm+l2ltR0U+F/wznk3h2F/5yHR+WTk04MzvEf0vT
+ bx2ggd80yFTjITJLL8p3eB5dEPsRrDbxIycJDFmWAVu0w+4qLHTtsABq32ot3XuGyRwrqvNmRVF
+ b1l3YMDYjstoSxMzceg2Fv1iGF6qksNNRXEPzPMC+4BUvco6XkfwnNNGD1OEtqWC5yZz5QR4bc3
+ nL/3fByrvNh+kiQBThmhgjyLGzh5j8JAurWTeM4/3zJ4hOBWVnBYz/rzP0eYz06Pj+UbwEcSHQK
+ fUfF6Q5MIRqQEtx9CSg5rSmz7aBExun8GEhGnzDs1Up3RXLGgI93rz8ehEKrt9LvmUKOEo18Sz/
+ iCd4lAfL4dt2d9vS6Eg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-05-27_04,2026-05-26_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015 impostorscore=0
+ spamscore=0 suspectscore=0 malwarescore=0 priorityscore=1501 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605270199
 
-Extract the logic that finds a NAN channel which makes a good evacuation
-candidate into a separate function. It will be used in a later patch.
+On 5/27/2026 9:12 AM, Andrew LaMarche wrote:
+> Hi,
+> 
+> A kind ping here. I’m not sure why this functionality is missing in the first place, but it is needed for loading caldata from the device tree.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- net/mac80211/ieee80211_i.h | 27 +++++++++++++++----
- net/mac80211/nan.c         | 53 +++++++++++++++++++++++---------------
- 2 files changed, 54 insertions(+), 26 deletions(-)
+Your patch duplicates functionality in the Qualcomm authored series:
+https://msgid.link/20250228184214.337119-1-quic_rajkbhag@quicinc.com
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1ac92e005763..29ae3004655c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1946,6 +1946,11 @@ ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
- 	return -1;
- }
- 
-+static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
-+{
-+	return test_bit(SDATA_STATE_RUNNING, &sdata->state);
-+}
-+
- int ieee80211_hw_config(struct ieee80211_local *local, int radio_idx,
- 			u32 changed);
- int ieee80211_hw_conf_chan(struct ieee80211_local *local);
-@@ -2055,6 +2060,23 @@ int ieee80211_nan_set_peer_sched(struct ieee80211_sub_if_data *sdata,
- void ieee80211_nan_free_peer_sched(struct ieee80211_nan_peer_sched *sched);
- void ieee80211_nan_update_ndi_carrier(struct ieee80211_sub_if_data *ndi_sdata);
- 
-+static inline struct ieee80211_sub_if_data *
-+ieee80211_find_nan_sdata(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	/* Find the NAN interface - there can only be one */
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (ieee80211_sdata_running(sdata) &&
-+		    sdata->vif.type == NL80211_IFTYPE_NAN)
-+			return sdata;
-+	}
-+
-+	return NULL;
-+}
-+
- /* scan/BSS handling */
- void ieee80211_scan_work(struct wiphy *wiphy, struct wiphy_work *work);
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
-@@ -2155,11 +2177,6 @@ void ieee80211_recalc_txpower(struct ieee80211_link_data *link,
- 			      bool update_bss);
- void ieee80211_recalc_offload(struct ieee80211_local *local);
- 
--static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
--{
--	return test_bit(SDATA_STATE_RUNNING, &sdata->state);
--}
--
- /* link handling */
- void ieee80211_link_setup(struct ieee80211_link_data *link);
- void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/nan.c b/net/mac80211/nan.c
-index cea620aaee6a..44b6e298d94d 100644
---- a/net/mac80211/nan.c
-+++ b/net/mac80211/nan.c
-@@ -754,33 +754,20 @@ ieee80211_nan_evacuate_channel(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_free_chanctx(sdata->local, ctx, false);
- }
- 
--bool ieee80211_nan_try_evacuate(struct ieee80211_hw *hw,
--				struct ieee80211_chanctx_conf *conf)
-+static struct ieee80211_nan_channel *
-+ieee80211_nan_find_evac_chan(struct ieee80211_local *local,
-+			     struct ieee80211_sub_if_data *sdata,
-+			     struct ieee80211_chanctx *ctx)
- {
--	struct ieee80211_sub_if_data *sdata = NULL, *tmp;
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_nan_channel *evac_chan = NULL;
- 	struct ieee80211_nan_sched_cfg *sched_cfg;
--	struct ieee80211_chanctx *ctx = NULL;
-+	struct ieee80211_nan_channel *evac_chan = NULL;
- 	int min_slot_count = INT_MAX;
- 	int usable_channels = 0;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
--	if (conf)
--		ctx = container_of(conf, struct ieee80211_chanctx, conf);
--
--	/* Find the NAN interface - there can only be one */
--	list_for_each_entry(tmp, &local->interfaces, list) {
--		if (ieee80211_sdata_running(tmp) &&
--		    tmp->vif.type == NL80211_IFTYPE_NAN) {
--			sdata = tmp;
--			break;
--		}
--	}
--
--	if (!sdata)
--		return false;
-+	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_NAN))
-+		return NULL;
- 
- 	sched_cfg = &sdata->vif.cfg.nan_sched;
- 
-@@ -823,10 +810,34 @@ bool ieee80211_nan_try_evacuate(struct ieee80211_hw *hw,
- 
- 	/* No suitable NAN channel found */
- 	if (!evac_chan)
--		return false;
-+		return NULL;
- 
- 	/* NAN needs at least one remaining usable channel after evacuation */
- 	if (usable_channels < 2)
-+		return NULL;
-+
-+	return evac_chan;
-+}
-+
-+bool ieee80211_nan_try_evacuate(struct ieee80211_hw *hw,
-+				struct ieee80211_chanctx_conf *conf)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata =
-+		ieee80211_find_nan_sdata(local);
-+	struct ieee80211_nan_channel *evac_chan;
-+	struct ieee80211_chanctx *ctx = NULL;
-+
-+	lockdep_assert_wiphy(local->hw.wiphy);
-+
-+	if (!sdata)
-+		return false;
-+
-+	if (conf)
-+		ctx = container_of(conf, struct ieee80211_chanctx, conf);
-+
-+	evac_chan = ieee80211_nan_find_evac_chan(local, sdata, ctx);
-+	if (!evac_chan)
- 		return false;
- 
- 	ieee80211_nan_evacuate_channel(sdata, evac_chan);
--- 
-2.34.1
+And note the upstream device bindings for ath10k and ath11k only support the
+generic binding qcom,calibration-variant.
 
+There are no longer any generation-specific bindings, see:
+https://msgid.link/20250225-b-wifi-qcom-calibration-variant-v1-0-3b2aa3f89c53@linaro.org
+
+/jeff
