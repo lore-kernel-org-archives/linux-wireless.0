@@ -1,111 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from forwardcorp1a.mail.yandex.net (forwardcorp1a.mail.yandex.net [178.154.239.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B343CA490;
-	Wed, 27 May 2026 09:03:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E1A63E277F;
+	Wed, 27 May 2026 09:09:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779872598; cv=none; b=HWONJl9VUp2ngLNvFAxtK/+kuFoNlGxrdA7LTZ2bcvEItr9uk7z0B75WYa6DcUo2DY6p723BZNRHG79K9vQYEJPLWcE58UNdfeln+AJIr94o6yXwc01y7aJWathmSDa8BSpysGbwbemw8wYKgcAFTZNBPUO5rmbTeZt4Bh457aA=
+	t=1779872963; cv=none; b=guXr2NAteV/oK9ten25+T8FMQrv/tRI+gHdxgGyRFpqZDgImfxAOtQJQgExXcZ8/hiGMO0Cjj1sTk+V54TNdt1XjV/mWtzDVFy4CDvk1eSVLraK5JEXjJ7bAl4hl5GmM4ll2kVo+gPVuVRT62TbpT2bx3mJQks//b5R861r0hW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779872598; c=relaxed/simple;
-	bh=1QPGxVe2YVjIdUHB6ZQpNIFZJ/tNHjuloIjcC5WL6yk=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K+h1sOIhVAW0vdBIQcaaaEJBGvUfTfXo7qDMxx7mkDfyfG59r2EBKeHKEszaAcAUB4udYq7cgs1w1WD9b+jt20+eKladFeSvHBVOf3LX4hYzFNTY3o/mmChwh6bD3soCBWhZ/XB7cEOoMgyX6WLv3WQlUc+NAt69qlN8ftd+5V4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSmOoBi5; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779872963; c=relaxed/simple;
+	bh=vzoo95YI4OQsuRuaJuDJx427z+CcEVxZzy5X9IIKetA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GCIFU04bcwn3fbxRcdZQrIRRqWJ2jHrIpVwdb6Vs21nK2AfOEZOviIcn8VkjYm5HEGG4DYEt9+Mf1hhr2ItnQpmEcPIqOYr9LnVFAPAY3BY8tbJoWo3gdJCI2fvICgxgJe1nHGfkrjElmVCAfneDUJ/63ayl0+Gh16IN4Uu8zgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru; spf=pass smtp.mailfrom=yandex-team.ru; dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b=C7CYZWAF; arc=none smtp.client-ip=178.154.239.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex-team.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSmOoBi5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78BE91F000E9;
-	Wed, 27 May 2026 09:03:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779872597;
-	bh=BLbsXnBlvM3iwIqe2tGZckughDYZqFaWG4pE/G8Jl5w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ZSmOoBi534c+Apdrr5BrPxD+73gSRd0jaT/awagOLp3NQC1vdv1yed9m7118mI8zW
-	 N40WhYoaFqbI/0ARxsfyAuno7PslZyegv5sBVoHcD7o5jBMUusY/wE0zWeN1U8oKBL
-	 T9wf0q2/4OrR1aBDayH8jsf8CwAeR9ozQx8Qoyjs2KEiTpAsUsNuf2w/Hcsv2F91zX
-	 T2Eb9ifBaCNZuTncW4sp44fcTY9YzI69o3BAR1tmddC3Z9zSyt26eVFsvo8J61yG/O
-	 s9EOf4W8b6kCQ3NL3qqqdCtXUuw4jf8IKfZRiCzelFdXkEf/W2/B8oy3HIPgbSjZST
-	 FGh6JaxjC8WQQ==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <maz@kernel.org>)
-	id 1wSAAV-00000006bac-1rBt;
-	Wed, 27 May 2026 09:03:15 +0000
-Date: Wed, 27 May 2026 10:03:14 +0100
-Message-ID: <86pl2husvh.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Thomas Gleixner <tglx@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Miroslav Lichvar <mlichvar@redhat.com>,
-	John Stultz <jstultz@google.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Anna-Maria Behnsen <anna-maria@linutronix.de>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	thomas.weissschuh@linutronix.de,
-	Arthur Kiyanovski <akiyano@amazon.com>,
-	Oliver Upton <oupton@kernel.org>,
-	kvmarm@lists.linux.dev,
-	Rodolfo Giometti <giometti@enneenne.com>,
-	Vincent Donnefort <vdonnefort@google.com>,
-	Oliver Upton <oliver.upton@linux.dev>,
-	Richard Cochran <richardcochran@gmail.com>,
-	netdev@vger.kernel.org,
-	Takashi Iwai <tiwai@suse.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Jacob Keller <jacob.e.keller@intel.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Peter Hilber <peter.hilber@oss.qualcomm.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	virtualization@lists.linux.dev,
-	linux-wireless@vger.kernel.org,
-	linux-sound@vger.kernel.org
-Subject: Re: [patch 06/24] KVM: arm64: Use ktime_get_snapshot_id() to snapshot CLOCK_REALTIME
-In-Reply-To: <20260526171223.144327185@kernel.org>
-References: <20260526165826.392227559@kernel.org>
-	<20260526171223.144327185@kernel.org>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b="C7CYZWAF"
+Received: from mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net [IPv6:2a02:6b8:c2d:3530:0:640:eca4:0])
+	by forwardcorp1a.mail.yandex.net (Yandex) with ESMTPS id 6904DC01BE;
+	Wed, 27 May 2026 12:09:13 +0300 (MSK)
+Received: from kniv-nix.yandex-team.ru (unknown [2a02:6bf:8080:1a::1:10])
+	by mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net (smtpcorp) with ESMTPSA id X8VR7K0XJSw0-UAZ19Y9I;
+	Wed, 27 May 2026 12:09:12 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+	s=default; t=1779872952;
+	bh=bKNvoIKWs8rt1p1/xgViVNVlhP27k63LgvgrDzBDcnM=;
+	h=Message-Id:Date:Cc:Subject:To:From;
+	b=C7CYZWAFDWicK+2c0A86LuKVT76ZMwVpCZRxLIIrr94GBU5FO0KHWPgHP9DzVkQxF
+	 P0s86jTGkpqEvwVyd7m/Im/ADhTiwRQbjnFBluRUrSXfOD6f9/NcfdPwRZnncTRpxf
+	 qXdM46xEaTSKDWd4t1/1TOjqZYo4e5/9ABOG/fL0=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From: Nikolay Kuratov <kniv@yandex-team.ru>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Hong Liu <liu.hong@intel.com>,
+	James Ketrenos <jketreno@linux.intel.com>,
+	Nikolay Kuratov <kniv@yandex-team.ru>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: ipw2x00: Fix potential NULL crypt->ops dereference in libipw_xmit()
+Date: Wed, 27 May 2026 12:08:33 +0300
+Message-Id: <20260527090833.521511-1-kniv@yandex-team.ru>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: tglx@kernel.org, linux-kernel@vger.kernel.org, dwmw2@infradead.org, mlichvar@redhat.com, jstultz@google.com, sboyd@kernel.org, anna-maria@linutronix.de, frederic@kernel.org, thomas.weissschuh@linutronix.de, akiyano@amazon.com, oupton@kernel.org, kvmarm@lists.linux.dev, giometti@enneenne.com, vdonnefort@google.com, oliver.upton@linux.dev, richardcochran@gmail.com, netdev@vger.kernel.org, tiwai@suse.com, miriam.rachel.korenblit@intel.com, johannes.berg@intel.com, jacob.e.keller@intel.com, anthony.l.nguyen@intel.com, saeedm@nvidia.com, peter.hilber@oss.qualcomm.com, mst@redhat.com, virtualization@lists.linux.dev, linux-wireless@vger.kernel.org, linux-sound@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 26 May 2026 18:13:58 +0100,
-Thomas Gleixner <tglx@kernel.org> wrote:
-> 
-> ktime_get_snapshot() is replaced by ktime_get_snapshot_id() which allows to
-> request a particular CLOCK ID to be captured along with the clocksource
-> counter.
-> 
-> Convert the usage in kvm_get_ptp_time() over and use the new
-> system_time_snapshot::sys field, which holds the system timestamp selected
-> by the CLOCK ID argument.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-> Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Oliver Upton <oupton@kernel.org>
-> Cc: kvmarm@lists.linux.dev
-> ---
->  arch/arm64/kvm/hypercalls.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+crypt and crypt->ops could be null, so we need to checking null
+before dereference
 
-Acked-by: Marc Zyngier <maz@kernel.org>
+Previously the commit
+e8366bbabe1d ("ipw2x00: Fix potential NULL dereference in libipw_xmit()")
+partially fixed that same issue in libipw_xmit().
+This is similar to CVE-2022-49544.
 
-	M.
+Found by Svace static analysis tool.
 
+Cc: stable@vger.kernel.org
+Fixes: 1264fc0498e1e ("[PATCH] ieee80211: Fix TKIP, repeated fragmentation problem, and payload_size reporting")
+Signed-off-by: Nikolay Kuratov <kniv@yandex-team.ru>
+---
+ drivers/net/wireless/intel/ipw2x00/libipw_tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+index 6e16060834b8..ec455e680030 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_tx.c
+@@ -450,7 +450,7 @@ netdev_tx_t libipw_xmit(struct sk_buff *skb, struct net_device *dev)
+ 	for (; i < nr_frags; i++) {
+ 		skb_frag = txb->fragments[i];
+ 
+-		if (host_encrypt)
++		if (host_encrypt && crypt && crypt->ops)
+ 			skb_reserve(skb_frag,
+ 				    crypt->ops->extra_mpdu_prefix_len);
+ 
 -- 
-Without deviation from the norm, progress is not possible.
+2.34.1
+
