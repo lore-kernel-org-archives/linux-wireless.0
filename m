@@ -1,54 +1,52 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC95314D18
-	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:43:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86873B19BF
+	for <linux-wireless@vger.kernel.org>; Wed, 27 May 2026 19:52:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779910995; cv=none; b=IjOZ+Sh6vODFLEnJetf38+vaDMl4MUxIwhNrX9Yv8W0YDFuVlAhxwu15EJZFZZ3e9kZaC4iBdS9sKZfxapLl+GZ7uYtMjp15K9aWJhJD9gYDKvryWMZrB5wCX0lBHtJCNCttmb9TkTimzrd7aCsLQOVfIEbKmm1ZrWi32PjK/Do=
+	t=1779911522; cv=none; b=AnZ5rbaOs/vl/lbOUGtLCcQzjbfqY96Bihea4wqXBcllyO7ownGManWrVH6F+Y7ZKR8D2Cg+L3wGkbfD0gekI+3wb6LHPiFsL7ylU3oc1OqX8BMmwGGznaLSP+ZpBWb2qla16Ds6T4tpHQ3ZtOMsI5JDRBjCN2kGpAGaaWhK7FY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779910995; c=relaxed/simple;
-	bh=zjz4yXaBwBPcv77Q9AKn5PPsm2GrGPVxZWi2hLt82jY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hUjY72j0CbAZqU0iemm+DKRiq9j3LMnpKTbBJfO7cCvr2zKxd63FKbXQHIm7/MVsQck3BGx+ndatgnCasuoiGqqnOzs4+ZcDKyNCPy/0kGRq56qmLPmJqWRzrWAHuJpBoYyuV9v6XycrSDta+wCk8XLZwc12mERtY+QSDeiXNg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HBe5KwI+; arc=none smtp.client-ip=192.198.163.12
+	s=arc-20240116; t=1779911522; c=relaxed/simple;
+	bh=n7mi43OgolxAqsOY5ySqGjdBOPMLwbK8j6+DC0CDifI=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version; b=MUvtNMvP+0OMdwTATq0x5LnAsqg5K+E4CA6dqWm/xYwNxHXAbc9lrveSGFPouRePmAb1iI+H4g5O+nQMb0QF72K0rlUO5q13BMl0TD/qibOPpRzZUYf3s2O3Wa4hmvHf9j78aTiiKThWsaSSmnakIVCE2wrQt0BExwKr2/T+xbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JrRIoO4+; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HBe5KwI+"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JrRIoO4+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779910994; x=1811446994;
-  h=from:to:cc:subject:date:message-id:mime-version:
+  t=1779911521; x=1811447521;
+  h=from:to:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=zjz4yXaBwBPcv77Q9AKn5PPsm2GrGPVxZWi2hLt82jY=;
-  b=HBe5KwI+Ymb2+PBcPsrDSsJir98prg60j7JacQG6CDaY0XHDn+OlPLel
-   hiLkqlPrkhgOcFimHtp0k+AAD38saXp54VjBmsOx0u69w2OXJX2SFrB6b
-   aQs5mk0uKwqd+QlKbMsHHadhcGCl0xJ4EALPFhOnB5XH3GROVVqz8lcCb
-   3TeMhdMCk38hAsQP0lXH8E2/ZFnam9k79ka38+HKuNu2U/0lmHVTkS6DH
-   hBPYRNlAoLr4swUM320Mt7DgNn1U8+ZJ+c/qjOUY1nFuIGy5EIqTS93w4
-   S/WTFj3uFmQYA6xvYw4MMBuZrzPgxm+TTs935leCUunE8W+9OK9Ii9xxo
-   g==;
-X-CSE-ConnectionGUID: juxF5tj4RPS6fTreA/jV7w==
-X-CSE-MsgGUID: Hud5WTQWR4GbzYtG43wMhQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="84611764"
+  bh=n7mi43OgolxAqsOY5ySqGjdBOPMLwbK8j6+DC0CDifI=;
+  b=JrRIoO4+svBxByQf34Dh3B8u3k0wJfLqhIkCP6lAyneUjVDkvdSzM4C9
+   9zgUuQgraOMyp4r1deNlwlEMxeNyHKZXMzgSvlc87AnpSzAUHylpJ8S7v
+   HHefySKM80KJ3cA2/jX0ZCOe7N3f9nqMSFgJbjmk+A5a3Q428zyJ7hpPA
+   9ElpXRaGqMInCOa+BzMO4tKGiRYwohG6SGST3FtPSafRkp5ew4PXtOSvz
+   5xUw8stax+EZOqxKKl+Tcbo6ANlOxqQCzHxRDhdvP/mjt+sz391XsTyJ0
+   ZZNFP9uj/CZHQXMsY+A/J/JMClpKGFITyGe1zM5CEt1Dl2W4hEz1XLJUi
+   w==;
+X-CSE-ConnectionGUID: y/rZGv+rRhSAAClN01zGYg==
+X-CSE-MsgGUID: Kbgd/HocQX+DytDH/gSw+A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="80784718"
 X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="84611764"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:43:13 -0700
-X-CSE-ConnectionGUID: F2F9eLt1R1W+c1ILR5pjUA==
-X-CSE-MsgGUID: lQk3xesZRAGF6UuzA4fuOA==
+   d="scan'208";a="80784718"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:52:00 -0700
+X-CSE-ConnectionGUID: plvEYltlTjCJVyuB4doNCg==
+X-CSE-MsgGUID: vUm1a+FYQAWKRsGq3qnsfg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="265940787"
+   d="scan'208";a="280465108"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:43:12 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:51:59 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211_hwsim: add debug messages for link changes
-Date: Wed, 27 May 2026 22:42:40 +0300
-Message-Id: <20260527224151.b22a048abc7c.Ief2132c5c4bb67fa56e90eb8e7d59dfd9f2b9378@changeid>
+Subject: [PATCH wireless-next 0/3] wifi: mac80211: fix channel evacuation logic
+Date: Wed, 27 May 2026 22:51:42 +0300
+Message-Id: <20260527195145.468037-1-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -59,47 +57,28 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+This series is fixing the channel evacuation logic: in case we are
+missing a chanctx for example for a BSS, we will fail the combination
+check.
+OTOH, we don't want to evacuate a NAN channel and then find out that
+there are other things that prevent this BSS channel.
+This series adds an option to ingore one of the exitsing channel
+contexts in the combination check (the one we want to evacuate) to make
+sure that all other conditions meet for adding the new BSS channel.
+In that case, we will evacuate the NAN channel.
 
-It's useful to be able to see the link addresses when the
-interface links change, so add some prints to hwsim for the
-vif link change callback.
+Miri Korenblit (3):
+  wifi: mac80211: add an option to filter out a channel in combinations
+    check
+  wifi: mac80211: refactor ieee80211_nan_try_evacuate
+  wifi: mac80211: fix channel evacuation logic
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Benjamin Berg <benjamin.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ net/mac80211/chan.c        | 78 ++++++++++++++++++++++++++++++++------
+ net/mac80211/ieee80211_i.h | 67 +++++++++++++++++++++++++++-----
+ net/mac80211/nan.c         | 55 ++++++++++++++++-----------
+ net/mac80211/util.c        | 34 ++++++++++-------
+ 4 files changed, 179 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 67a33e5e7d54..af9b0d957ad0 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -3505,8 +3505,13 @@ static int mac80211_hwsim_change_vif_links(struct ieee80211_hw *hw,
- 	if (!new_links)
- 		add |= BIT(0);
- 
--	for_each_set_bit(i, &rem, IEEE80211_MLD_MAX_NUM_LINKS)
-+	wiphy_dbg(hw->wiphy, "%s:\n", __func__);
-+
-+	for_each_set_bit(i, &rem, IEEE80211_MLD_MAX_NUM_LINKS) {
- 		mac80211_hwsim_config_mac_nl(hw, old[i]->addr, false);
-+		wiphy_dbg(hw->wiphy,
-+			  "  link [%d/%pM] removed\n", i, old[i]->addr);
-+	}
- 
- 	for_each_set_bit(i, &add, IEEE80211_MLD_MAX_NUM_LINKS) {
- 		struct ieee80211_bss_conf *link_conf;
-@@ -3516,6 +3521,8 @@ static int mac80211_hwsim_change_vif_links(struct ieee80211_hw *hw,
- 			continue;
- 
- 		mac80211_hwsim_config_mac_nl(hw, link_conf->addr, true);
-+		wiphy_dbg(hw->wiphy,
-+			  "  link [%d/%pM] added\n", i, link_conf->addr);
- 	}
- 
- 	return 0;
 -- 
 2.34.1
 
