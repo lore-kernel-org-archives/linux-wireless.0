@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE91C3C1966;
-	Wed, 27 May 2026 09:02:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B343CA490;
+	Wed, 27 May 2026 09:03:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779872554; cv=none; b=U+oIelv8LvP9A3yUbDK2XLLKn9YZKb7R42QxpB8vOS1xyrQ51RCG8100CX63ZQAr2sJ0bEDz+aiydzFEXUqh4L20jle92kTkYVlwVxMRqTQx3FKf2/im09qlb3woWdrnpUNMytZdMhtQi1uF+IUmedDgraeGPjWTZy4pB5eZqzs=
+	t=1779872598; cv=none; b=HWONJl9VUp2ngLNvFAxtK/+kuFoNlGxrdA7LTZ2bcvEItr9uk7z0B75WYa6DcUo2DY6p723BZNRHG79K9vQYEJPLWcE58UNdfeln+AJIr94o6yXwc01y7aJWathmSDa8BSpysGbwbemw8wYKgcAFTZNBPUO5rmbTeZt4Bh457aA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779872554; c=relaxed/simple;
-	bh=lYTCTvgHVGcOtmEb6DtcZqY+WYkGeywCYM+ml7rXFjE=;
+	s=arc-20240116; t=1779872598; c=relaxed/simple;
+	bh=1QPGxVe2YVjIdUHB6ZQpNIFZJ/tNHjuloIjcC5WL6yk=;
 	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kjDrGQsxzQgW8rMH2xX6u94dkc4htlS1TNp4OZ19WwpfCaXTHiWiiBCrNQX7j5xv98YCfKcVar/Kz/ipe0mbwLkS5QjlHtm2PDSMt3+NZJ/DVyatVaIpWxMrj+aQ9+sRvj0xdfpseQJcUmwHRrghqNNThHanD2Qbmg9ZkwyRmQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YniFvG6k; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=K+h1sOIhVAW0vdBIQcaaaEJBGvUfTfXo7qDMxx7mkDfyfG59r2EBKeHKEszaAcAUB4udYq7cgs1w1WD9b+jt20+eKladFeSvHBVOf3LX4hYzFNTY3o/mmChwh6bD3soCBWhZ/XB7cEOoMgyX6WLv3WQlUc+NAt69qlN8ftd+5V4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZSmOoBi5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YniFvG6k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 834C21F000E9;
-	Wed, 27 May 2026 09:02:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZSmOoBi5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78BE91F000E9;
+	Wed, 27 May 2026 09:03:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779872553;
-	bh=rGBmGJCMxMcgGStc79JIYyj7AKuKN8bicGaaCMmbyKY=;
+	s=k20260515; t=1779872597;
+	bh=BLbsXnBlvM3iwIqe2tGZckughDYZqFaWG4pE/G8Jl5w=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=YniFvG6k5xKd0A6GeC8pPRc/reZCdHFtynazZq9U+gt0A9E0M5ORd9cEHzzrgdLeW
-	 5ceW3Vm2y9mgjnu3Ek9VCYr4cDz+19BF4pXMpio4m3yABRGeS7LygoAqnS47D2pjTa
-	 1dsm3Zerwgdhnp3RQvje6dzBK3XmUkftErkh558/WulLjoMynMURzF2IgczBrKO9PJ
-	 Bg6RljEryqlQL/KnDosOjzZtpBdG7rp7bn1CZbVKe+205Ov+7+pu2bn0HMTxaQGmre
-	 CqGS/T1ea9WMzyXz1l0TkA8QoNy5nzJkvJWwH/AXjjRzvy5tZfOGvysxMRxB4AFGgf
-	 075Ue+38WjJEg==
+	b=ZSmOoBi534c+Apdrr5BrPxD+73gSRd0jaT/awagOLp3NQC1vdv1yed9m7118mI8zW
+	 N40WhYoaFqbI/0ARxsfyAuno7PslZyegv5sBVoHcD7o5jBMUusY/wE0zWeN1U8oKBL
+	 T9wf0q2/4OrR1aBDayH8jsf8CwAeR9ozQx8Qoyjs2KEiTpAsUsNuf2w/Hcsv2F91zX
+	 T2Eb9ifBaCNZuTncW4sp44fcTY9YzI69o3BAR1tmddC3Z9zSyt26eVFsvo8J61yG/O
+	 s9EOf4W8b6kCQ3NL3qqqdCtXUuw4jf8IKfZRiCzelFdXkEf/W2/B8oy3HIPgbSjZST
+	 FGh6JaxjC8WQQ==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.98.2)
 	(envelope-from <maz@kernel.org>)
-	id 1wSA9n-00000006bZj-19Do;
-	Wed, 27 May 2026 09:02:31 +0000
-Date: Wed, 27 May 2026 10:02:30 +0100
-Message-ID: <86qzmxuswp.wl-maz@kernel.org>
+	id 1wSAAV-00000006bac-1rBt;
+	Wed, 27 May 2026 09:03:15 +0000
+Date: Wed, 27 May 2026 10:03:14 +0100
+Message-ID: <86pl2husvh.wl-maz@kernel.org>
 From: Marc Zyngier <maz@kernel.org>
 To: Thomas Gleixner <tglx@kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>,
@@ -45,11 +45,11 @@ Cc: LKML <linux-kernel@vger.kernel.org>,
 	Frederic Weisbecker <frederic@kernel.org>,
 	thomas.weissschuh@linutronix.de,
 	Arthur Kiyanovski <akiyano@amazon.com>,
-	Vincent Donnefort <vdonnefort@google.com>,
-	Oliver Upton <oliver.upton@linux.dev>,
+	Oliver Upton <oupton@kernel.org>,
 	kvmarm@lists.linux.dev,
 	Rodolfo Giometti <giometti@enneenne.com>,
-	Oliver Upton <oupton@kernel.org>,
+	Vincent Donnefort <vdonnefort@google.com>,
+	Oliver Upton <oliver.upton@linux.dev>,
 	Richard Cochran <richardcochran@gmail.com>,
 	netdev@vger.kernel.org,
 	Takashi Iwai <tiwai@suse.com>,
@@ -63,10 +63,10 @@ Cc: LKML <linux-kernel@vger.kernel.org>,
 	virtualization@lists.linux.dev,
 	linux-wireless@vger.kernel.org,
 	linux-sound@vger.kernel.org
-Subject: Re: [patch 05/24] KVM: arm64: Use ktime_get_snapshot_id() to retrieve CLOCK_BOOTTIME
-In-Reply-To: <20260526171223.070087856@kernel.org>
+Subject: Re: [patch 06/24] KVM: arm64: Use ktime_get_snapshot_id() to snapshot CLOCK_REALTIME
+In-Reply-To: <20260526171223.144327185@kernel.org>
 References: <20260526165826.392227559@kernel.org>
-	<20260526171223.070087856@kernel.org>
+	<20260526171223.144327185@kernel.org>
 User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
  FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/30.1
  (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
@@ -78,31 +78,30 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
 Content-Type: text/plain; charset=US-ASCII
 X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: tglx@kernel.org, linux-kernel@vger.kernel.org, dwmw2@infradead.org, mlichvar@redhat.com, jstultz@google.com, sboyd@kernel.org, anna-maria@linutronix.de, frederic@kernel.org, thomas.weissschuh@linutronix.de, akiyano@amazon.com, vdonnefort@google.com, oliver.upton@linux.dev, kvmarm@lists.linux.dev, giometti@enneenne.com, oupton@kernel.org, richardcochran@gmail.com, netdev@vger.kernel.org, tiwai@suse.com, miriam.rachel.korenblit@intel.com, johannes.berg@intel.com, jacob.e.keller@intel.com, anthony.l.nguyen@intel.com, saeedm@nvidia.com, peter.hilber@oss.qualcomm.com, mst@redhat.com, virtualization@lists.linux.dev, linux-wireless@vger.kernel.org, linux-sound@vger.kernel.org
+X-SA-Exim-Rcpt-To: tglx@kernel.org, linux-kernel@vger.kernel.org, dwmw2@infradead.org, mlichvar@redhat.com, jstultz@google.com, sboyd@kernel.org, anna-maria@linutronix.de, frederic@kernel.org, thomas.weissschuh@linutronix.de, akiyano@amazon.com, oupton@kernel.org, kvmarm@lists.linux.dev, giometti@enneenne.com, vdonnefort@google.com, oliver.upton@linux.dev, richardcochran@gmail.com, netdev@vger.kernel.org, tiwai@suse.com, miriam.rachel.korenblit@intel.com, johannes.berg@intel.com, jacob.e.keller@intel.com, anthony.l.nguyen@intel.com, saeedm@nvidia.com, peter.hilber@oss.qualcomm.com, mst@redhat.com, virtualization@lists.linux.dev, linux-wireless@vger.kernel.org, linux-sound@vger.kernel.org
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-On Tue, 26 May 2026 18:13:53 +0100,
+On Tue, 26 May 2026 18:13:58 +0100,
 Thomas Gleixner <tglx@kernel.org> wrote:
 > 
 > ktime_get_snapshot() is replaced by ktime_get_snapshot_id() which allows to
 > request a particular CLOCK ID to be captured along with the clocksource
 > counter.
 > 
-> Convert the tracing mechanism over and use the new
+> Convert the usage in kvm_get_ptp_time() over and use the new
 > system_time_snapshot::sys field, which holds the system timestamp selected
 > by the CLOCK ID argument.
 > 
 > No functional change intended.
 > 
 > Signed-off-by: Thomas Gleixner <tglx@kernel.org>
-> Cc: Vincent Donnefort <vdonnefort@google.com>
 > Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Oliver Upton <oliver.upton@linux.dev>
+> Cc: Oliver Upton <oupton@kernel.org>
 > Cc: kvmarm@lists.linux.dev
 > ---
->  arch/arm64/kvm/hyp_trace.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  arch/arm64/kvm/hypercalls.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 
 Acked-by: Marc Zyngier <maz@kernel.org>
 
