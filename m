@@ -1,137 +1,121 @@
-Received: from smtpweb146.aruba.it (smtpweb146.aruba.it [62.149.158.146])
+Received: from mail.w14.tutanota.de (mail.w14.tutanota.de [185.205.69.214])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01E553FD971
-	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2026 17:34:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.158.146
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C4526B973
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2026 20:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.205.69.214
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779989697; cv=none; b=ITTf+N7ZD2gTRFR2Dq8kye6WfByBr/2cfY9Xc0uzdXl+fM20MibRNPggmJzHvnxUqAXMXIi54QGOdZ3+VZZYggnVUWZONt1zWVqYT1KfqhPrkWjqbEaouQoy6JnDIoNatX82QYVkEzDV8/HkkdIgUEQH4aksrkQVrgRWnCbGGyA=
+	t=1779998468; cv=none; b=rFmzkpsXGuplVA/ImEEqZzvktow1vzeMTMOj54EleWdxEw9ujMhfK8fc9WaXsmMIjlrjLk0UX9Ws6kIQ4Ao057uKutXBbG4fD9vtnXtCHpc+uJQHZZ6p4TNHJV3E0eFsyNyyrah/JKb6dPnq0g79a+pnqP/qC7VkIGvDjco5R78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779989697; c=relaxed/simple;
-	bh=x/C7YXh4n4v0Noj27OMkH+Jht47ZFV6pK6P7tks4i4U=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To; b=lPMgOzimdiuEEpFZcvKu0/56nXYjWDLjaaOjf97sh8PSsR49sWZEq12qzqlgcHxQ35A2RrgvBx86BC5TYl0AM4UiJ6jVQgbddX5zXGvpA8Jv8AAXs7oBjBmue9SH5E1uqNOvRM3p7gefPPmt9/tpQhkKpcH/M/ZwdwfuokVAFyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=l++jPRxu; arc=none smtp.client-ip=62.149.158.146
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	s=arc-20240116; t=1779998468; c=relaxed/simple;
+	bh=V0emmDcSnvCmyViSmeSEhSubfvKcVVdRdtlz+Y1jJcY=;
+	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type; b=J3BHaIcFE0Kv0FhyzgJSh2xET6sMQO0ioEegwLX90ify4PFnRUOZzPhQ9tuiQ2LlwGe8AHsf97YD5VCu1OFYgEaKMu0W1JaHREj9N4hNZ08Ug/FF0/38GNWrVLwOSb7lPI37BorM6ChrUvwApQmyodEFg3+toSF/uIRaLHUqAAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuta.com; spf=pass smtp.mailfrom=tuta.com; dkim=pass (2048-bit key) header.d=tuta.com header.i=@tuta.com header.b=n0/IBX/r; arc=none smtp.client-ip=185.205.69.214
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="l++jPRxu"
-Received: from [192.168.1.237] ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id Sea5wczvrrbJKSea5w6A2x; Thu, 28 May 2026 19:31:42 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779989502; bh=x/C7YXh4n4v0Noj27OMkH+Jht47ZFV6pK6P7tks4i4U=;
-	h=From:Subject:Date:MIME-Version:Content-Type:To;
-	b=l++jPRxuiVCSwEHI4Z9PzE+zWObhL8lppF+zVAj4VOBRI8vBll3mfuYDSvBhpBYmI
-	 OQ+kdWYCkRu5hNqLQMqODf1G5aTOG1Q6/kTxweMj40Qx5viYRoV3UXZHvPb6VrcZlE
-	 A5ieRhHduhgbie2ubKEDiVde9s8yMlX+HcBY61Yyc4L59rEi+NmyRS/h6+NA/TaFyl
-	 xA534Ft/kGSc/vJtUD7PUVcx6w6RVH614MUXIxg1q1Zj2zGz/e+0B/gAFeHZ5/7eTR
-	 Z7D/EF6HKhdAacOYoe+GUj8+06lufoxLMIaMllRhrC5KTadrY8XPuOc4+pvGbtoSvA
-	 qv5kVkJObOFow==
-From: Alessio Ferri <alessio.ferri@mythread.it>
-Subject: [PATCH v4 0/7] b43: complete N-PHY rev 8 + radio 2057 rev 8
- support
-Date: Thu, 28 May 2026 19:31:34 +0200
-Message-Id: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-0-464566194d47@gmail.com>
+	dkim=pass (2048-bit key) header.d=tuta.com header.i=@tuta.com header.b="n0/IBX/r"
+Received: from tutadb.w10.tutanota.de (w10.api.tuta.com [IPv6:fd:ac::d:10])
+	by mail.w14.tutanota.de (Postfix) with ESMTP id 36785146CA49A
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2026 21:51:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1779997899;
+	s=s1; d=tuta.com;
+	h=From:From:To:To:Subject:Subject:Content-Description:Content-ID:Content-Type:Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:In-Reply-To:MIME-Version:MIME-Version:Message-ID:Message-ID:Reply-To:References:Sender;
+	bh=/6acsCH1Ydw2E7KRWYVpPcj4kAhsMBc1RGF19GaxHqk=;
+	b=n0/IBX/rji+XkJqK7MAAxeIh3WCizc6Wn6nnJ6MU1cOr1JLI5J47K6wXkR6KEPwo
+	K+48rKd8q7k6s0L+sMgTpzzfdHTHVuEOcIpbEu8EFE8+GWImUZ5yzKSEewLIQJsO/tZ
+	rxy5xP+81n3yQQTDHIvsbdFYYdKiPLbYtbeMnsncsjQJL4ncx9jYY/gdMp0V6C0RArm
+	MUYQ70AEb1s7NRuUd1qS8R+jKguxpjT4zdj+BPcPZ/ZXFz9dDbZEl43s6mKZilf/OHS
+	HMcMGNrDMoIdOsmsPUFrW0fOCsGNBfTGiioOfcAoSuAwhmveteAaEQqfoHF/+l52Qhj
+	HO53qvp+fA==
+Date: Thu, 28 May 2026 21:51:39 +0200 (CEST)
+From: VolcomIlluminated <volcomilluminated@tuta.com>
+To: Pkshih <pkshih@realtek.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Message-ID: <Otk4rgS--F-9@tuta.com>
+Subject: [PATCH] rtw88: tx: increase TX report timeout for USB devices
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/mixed; 
+	boundary="----=_Part_450625_629192785.1779997899218"
+Feedback-ID: 01c4e8c013a2562e865d8b77e5b3f9fcabf876cc11e122ee288eb6e126f2764b3bcd8be2e44ea7adb908e52f58339be100204e013477eb10895d54267c0038bec6:TurnOnPrivacy!:tutamail
+
+------=_Part_450625_629192785.1779997899218
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_450626_1745181212.1779997899218"
+
+------=_Part_450626_1745181212.1779997899218
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/52OQQ6DIBREr2JYlwa+Qk1XvUdjCIWvkqgQsKbGe
- PdS016gyzfJzJuNJIwOE7kWG4m4uOT8lKE6FcT0euqQOpuZAAPJBHD6qEpl/BgGnFFNKvSryj1
- Vq6it8wqYuHyD9AzBx5nqkoNomUTgSPJuiNi61+G8N5l7l2Yf1+PCwj/pz1b9YVs4ZdRYbcHUA
- qSRt27UbjjnFdLs+/4G3ebSIPIAAAA=
-X-Change-ID: 20260521-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-a3125f06e21e
-To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
- linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
-X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfOUW+OMsbislXLVfjghoLiIMSllfjXG3jKhyT1qtr1TPotfGmGoeb8vIdxFRzON3ha+X1I01ALnINSxjunIRNJpkd+hb2Tso3vfQ6c4Al8AAeBDPURzQ
- 29rmtnLnULRa/0VO3EcRCGmWXrooQhLCSqu40xytABMkKlcKB3hRVoC95GKPgsnpJAd3K9lN6GO5nNKsx17R2Mutn7NSdr9S/uiqb1CtsCb/hg8E+yllqt/u
- ISNj8R6MRy9W4IQM8xcXYODVPcwBRGWI658r2/xDq9z4g/xbS34L7GLyOev25WmdqYS+z22dTV35Abi8K3uXSBOpyhKw+cyRTuLnPPUyqtk=
 
-This series completes b43 support for the Broadcom N-PHY revision 8
-paired with radio 2057 revision 8. b43 already supports the surrounding
-PHY family - N-PHY rev 8 with radio 2057 rev 5 and rev 7 are handled,
-and rev 16 with radio 2057 rev 9 is handled - but the rev 8 + rev 8
-combination falls through four dispatcher gaps:
+patch attached!
+------=_Part_450626_1745181212.1779997899218
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-  - radio_2057.c, r2057_upload_inittabs(), case 8 lists radio_rev 5
-    and 7 only;
-  - radio_2057.c, r2057_get_chantabent_rev7(), case 8 lists radio_rev
-    5 only;
-  - tables_nphy.c, b43_nphy_get_ipa_gain_table(), case 8 lists
-    radio_rev 5 only;
-  - radio_2057.c carries r2057_rev8_init[] as a 54-entry stub commented
-    out with "TODO: Which devices should use it?".
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+<div dir="auto">patch attached!</div>  </body>
+</html>
 
-Two further pieces of plumbing are needed to reach those dispatchers
-in the first place: d11 core revision 0x16 is missing from the b43
-bcma id table, firmware name, and the corerev 22 / radio 2057 combination
-needs the 24-bit indirect radio access path that brcmsmac uses for
-the same silicon generation (see brcmsmac/phy/phy_cmn.c
-read_radio_reg() / write_radio_reg()).
+------=_Part_450626_1745181212.1779997899218--
 
-The series:
+------=_Part_450625_629192785.1779997899218
+Content-Type: text/plain; charset=us-ascii; 
+	name=0001-rtw88-tx-increase-USB-TX-report-timeout.txt
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; 
+	filename=0001-rtw88-tx-increase-USB-TX-report-timeout.txt
 
-  1/7  b43: add firmware and initvals names for rev22
-  2/7  b43: add d11 core revision 0x16 to id table
-  3/7  b43: route d11 corerev 22 to 24-bit indirect radio access
-  4/7  b43: support radio 2057 rev 8
-  5/7  b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
-  6/7  b43: add channel info table for N-PHY r8 + radio 2057 r8
-  7/7  b43: add RF power offset for N-PHY r8 + radio 2057 r8
+USB devices have higher latency than PCIe devices. The current 500ms
+timeout for TX report purging causes "failed to get tx report from
+firmware" errors on boot with USB WiFi adapters.
 
-Patches almost reveal the bringup, the first two are swapped, as
-applying 2/7 without 1/7 generate an immediate kernel panic caused
-by a null deref.
-From the third, each one fixes the next visible failure
-in bring-up: 3/7 lets phy versioning read coherent radio identifiers,
-4/7 unblocks the boot-time radio calibration that otherwise stalls,
-and 5/7-7/7 fill the remaining 2.4 GHz dispatcher entries so
-b43_nphy_set_channel completes to the default channel and core_init
-proceeds past PHY init.
+Introduce RTW_TX_PROBE_TIMEOUT_USB at 1000ms and select it based on
+the HCI type. PCIe devices retain the original 500ms timeout.
 
-Tested on a D-Link DSL-3580L (Broadcom BCM6362 SoC, single-die 2.4 GHz
-N-PHY rev 8 + radio 2057 rev 8 in 2.4 GHz IPA mode).
+Tested on RTL8822BU (Edimax EW-7822ULC) with zero TX report errors
+across 24+ hour operation and 17,706 packets with zero drops.
 
-b43 is currently Orphan in MAINTAINERS. These patches do not add a
-new chip family or PHY infrastructure; they fill four explicit
-dispatcher gaps for a combination of an already-supported PHY and
-an already-supported radio.
-
-CHANGELOG:
-v4: reword patch 1/7 commit
-v3: no changes, fighting with b4
-v2:
-  - Recovered the first patch of the series, so numbering is now /7
-  - Added Assisted-By header
-v1: https://lore.kernel.org/linux-wireless/8c0a07d2-9ec9-43d6-bdf7-f625bbb4a38a@mythread.it/
-
-Assisted-by: Claude:claude-4.7-opus
-Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+Signed-off-by: VolcomIlluminated <volcomilluminated@tuta.com>
 ---
----
-Alessio Ferri (7):
-      b43: add firmware mappings for rev22
-      b43: add d11 core revision 0x16 to id table
-      b43: route d11 corerev 22 to 24-bit indirect radio access
-      b43: support radio 2057 rev 8
-      b43: add IPA TX gain table for N-PHY r8 + radio 2057 r8
-      b43: add channel info table for N-PHY r8 + radio 2057 r8
-      b43: add RF power offset for N-PHY r8 + radio 2057 r8
+--- /tmp/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.c	2025-11-30 17:42:10.000000000 -0500
++++ /home/ptpx86mm1/kernelbuild/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.c	2026-05-24 16:28:06.013490121 -0400
+@@ -197,6 +197,7 @@
+ {
+ 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
+ 	unsigned long flags;
++	unsigned long timeout;
+ 	u8 *drv_data;
+ 
+ 	/* pass sn to tx report handler through driver data */
+@@ -207,7 +208,9 @@
+ 	__skb_queue_tail(&tx_report->queue, skb);
+ 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+ 
+-	mod_timer(&tx_report->purge_timer, jiffies + RTW_TX_PROBE_TIMEOUT);
++	timeout = rtwdev->hci.type == RTW_HCI_TYPE_USB ?
++		RTW_TX_PROBE_TIMEOUT_USB : RTW_TX_PROBE_TIMEOUT;
++	mod_timer(&tx_report->purge_timer, jiffies + timeout);
+ }
+ EXPORT_SYMBOL(rtw_tx_report_enqueue);
+ 
+--- /tmp/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.h	2025-11-30 17:42:10.000000000 -0500
++++ /home/ptpx86mm1/kernelbuild/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.h	2026-05-24 16:23:26.012668469 -0400
+@@ -8,6 +8,7 @@
+ #define RTK_TX_MAX_AGG_NUM_MASK		0x1f
+ 
+ #define RTW_TX_PROBE_TIMEOUT		msecs_to_jiffies(500)
++#define RTW_TX_PROBE_TIMEOUT_USB	msecs_to_jiffies(1000)
+ 
+ struct rtw_tx_desc {
+ 	__le32 w0;
 
- drivers/net/wireless/broadcom/b43/main.c        |  22 ++-
- drivers/net/wireless/broadcom/b43/radio_2057.c  | 230 ++++++++++++++++++++++--
- drivers/net/wireless/broadcom/b43/tables_nphy.c |  58 ++++++
- 3 files changed, 290 insertions(+), 20 deletions(-)
----
-base-commit: 8bc67e4db64aa72732c474b44ea8622062c903f0
-change-id: 20260521-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-a3125f06e21e
-
-Best regards,
--- 
-Alessio Ferri <alessio.ferri.3012@gmail.com>
-
+------=_Part_450625_629192785.1779997899218--
