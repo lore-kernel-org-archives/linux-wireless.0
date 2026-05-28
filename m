@@ -1,78 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtpweb146.aruba.it (smtpweb146.aruba.it [62.149.158.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC30023F417;
-	Thu, 28 May 2026 13:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F38DE3FD946
+	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2026 17:34:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.158.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779976520; cv=none; b=oxBSZYbUwUFwXxH+xbjOoaxcS9iWXicfGwyIiGtfyw9umi1TnXhNGlCGN1p/5PMKfci6eOi/Vv103GogI3mxICWVp1HEhMXg/Htnatc7NiSdBU1g5mi5eQXDp/8mX3tEnBN2DOw54jqVdciUNNyKhOi5pRMqyiY3knRATtfAAPE=
+	t=1779989695; cv=none; b=lX/sTKfq5idKyzV4KDc/mdWz9Z5JgQlQFHw5ONrOLnCxae3fY9Hk0rY/Zbx37Za+4C7620agJknR3mnbU8M+4eZo6WiQFfVTd3IoMB4+aJlYZDvbQYkSpqVEfMv0Jr+fL/XAENu/qETIor/oGWE4DpXSNyBQtITn3eRCA9w1k0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779976520; c=relaxed/simple;
-	bh=JHlB1VRiFdijv0FLI9b4i0396zAo+2ZyHpGGII6D6+o=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=pMVFVNXWD+ohy/40scxQSBXkZ78Sa7f+jiDwE95F/hnCN+GN66eVFO3Iznl13qWZdSnxf5odnkV4j1+uvgEaqBj9LU6+S/moe5arE7OAthN3DzRx1sSkTAejpOqyhO/RlE628rhn4g8PP0WWxNUvWFEGT8Z72py1oIVr7rGIC4U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kqyPs9Tn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779989695; c=relaxed/simple;
+	bh=19Z+zdaXGI3FYfSGWQoCBXevBSvCZqWMLW3DMW3r/lw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To; b=P9IcbBgH0M0kq3H2RYn7tP5V66IosZh3ceR3pEJ75yyYo7aGmisW6yHvEkv5P2bqwjwb9HF8RG3e78iE7MgpOtwweSlyOYO6Ei2yZimPOa8qoosSesfNK5sgFrz9KrBpMmYonCxG9a/U5jJSNNqeNXSN1hYbh7qgmvaFxTk65z0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=GSetKNaj; arc=none smtp.client-ip=62.149.158.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kqyPs9Tn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 157001F000E9;
-	Thu, 28 May 2026 13:55:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779976518;
-	bh=TWrEufAZ8DUslPgMoW8nH/Kc1/FwICNwsgwROWhzNko=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=kqyPs9TnwtA5QQRhEEFdwnM48mCMueLnPbgjtvSlZXef6hvNOujW10shIsgthUfUt
-	 +t5LEfYEt0p+4Kvz+Js1I8qPG2Z6aVyCupMD1HKaIjtsoNejXZWqQU2p1Od0p7V9uR
-	 52aqjzu77SDU4rMz6y2QOWkk5hlfPLckwWHCkYy4CNDAUZNe8zCSfAJIxkA2QB+wEp
-	 RHOoUPJhGv8Y8bncebkPsAnvx436eale+F5k+GHDU+uCx4X06ja8udX6Zg9HXr6LZx
-	 LiD4YRUIlOUMXsVi8P+/R65PhV073jbL0jEgTeWrADmcErO4l7bpZ2JPDt3MB2C9Uy
-	 dAv/dkt0/TfiQ==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Jakub Kicinski <kuba@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, David Woodhouse
- <dwmw2@infradead.org>, Miroslav Lichvar <mlichvar@redhat.com>, John Stultz
- <jstultz@google.com>, Stephen Boyd <sboyd@kernel.org>, Anna-Maria Behnsen
- <anna-maria@linutronix.de>, Frederic Weisbecker <frederic@kernel.org>,
- thomas.weissschuh@linutronix.de, Arthur Kiyanovski <akiyano@amazon.com>,
- Rodolfo Giometti <giometti@enneenne.com>, Vincent Donnefort
- <vdonnefort@google.com>, Marc Zyngier <maz@kernel.org>, Oliver Upton
- <oliver.upton@linux.dev>, kvmarm@lists.linux.dev, Oliver Upton
- <oupton@kernel.org>, Richard Cochran <richardcochran@gmail.com>,
- netdev@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, Miri Korenblit
- <miriam.rachel.korenblit@intel.com>, Johannes Berg
- <johannes.berg@intel.com>, Jacob Keller <jacob.e.keller@intel.com>, Tony
- Nguyen <anthony.l.nguyen@intel.com>, Saeed Mahameed <saeedm@nvidia.com>,
- Peter Hilber <peter.hilber@oss.qualcomm.com>, "Michael S. Tsirkin"
- <mst@redhat.com>, virtualization@lists.linux.dev,
- linux-wireless@vger.kernel.org, linux-sound@vger.kernel.org
-Subject: Re: [patch 24/24] ptp: Switch to ktime_get_snapshot_id() for
- pre/post timestamps
-In-Reply-To: <20260527165621.0ddad586@kernel.org>
-References: <20260526165826.392227559@kernel.org>
- <20260526171224.499777655@kernel.org> <20260527165621.0ddad586@kernel.org>
-Date: Thu, 28 May 2026 15:55:15 +0200
-Message-ID: <87eciviqpo.ffs@fw13>
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="GSetKNaj"
+Received: from [192.168.1.237] ([94.34.125.0])
+	by Aruba SMTP with ESMTPSA
+	id Sea5wczvrrbJKSea6w6A39; Thu, 28 May 2026 19:31:42 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1779989502; bh=19Z+zdaXGI3FYfSGWQoCBXevBSvCZqWMLW3DMW3r/lw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=GSetKNajeSjQPvm6v9X83qDUhcXhY4+R2ef8/HQNnHNIEDa7/tdvN0jnNbXn4MEhK
+	 WIvjBgty8cIu5/FzX8DEiP5hTMH6R9XIC0ZSq2IxUO4uaC9ZZYI/eLzdHlP/jKxwWB
+	 KzgfCOPXay1hqZG67LcBSUIGSRvQMNh4n0HybTomHYUalwPZ1le9QJJLy4Kf444oWB
+	 YeJ7YvwUIzeEb1Z66FJSd48X18bF7qX7AAB4vFze16YLhdVgbGSokZOpF0SIU34MUp
+	 kwTmuZKfbhrWC8R1wVqvWyZ/GJo44WOWe8fLpdKZggeVT8lDCskvtojjMuDDPJDklZ
+	 aAQQQzji4M6GA==
+From: Alessio Ferri <alessio.ferri@mythread.it>
+Date: Thu, 28 May 2026 19:31:35 +0200
+Subject: [PATCH v4 1/7] b43: add firmware mappings for rev22
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-1-464566194d47@gmail.com>
+References: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-0-464566194d47@gmail.com>
+In-Reply-To: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-0-464566194d47@gmail.com>
+To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, Alessio Ferri <alessio.ferri@mythread.it>
+X-Mailer: b4 0.14.3
+X-CMAE-Envelope: MS4xfOUW+OMsbislXLVfjghoLiIMSllfjXG3jKhyT1qtr1TPotfGmGoeb8vIdxFRzON3ha+X1I01ALnINSxjunIRNJpkd+hb2Tso3vfQ6c4Al8AAeBDPURzQ
+ 29rmtnLnULRa/0VO3EcRCGmWXrooQhLCSqu40xytABMkKlcKB3hRVoC95GKPgsnpJAd3K9lN6GO5nNKsx17R2Mutn7NSdr9S/uiqb1CtsCb/hg8E+yllqt/u
+ ISNj8R6MRy9W4IQM8xcXYODVPcwBRGWI658r2/xDq9z4g/xbS34L7GLyOev25WmdqYS+z22dTV35Abi8K3uXSBOpyhKw+cyRTuLnPPUyqtk=
 
-On Wed, May 27 2026 at 16:56, Jakub Kicinski wrote:
-> On Tue, 26 May 2026 19:15:27 +0200 Thomas Gleixner wrote:
->> -	if (sts && bp->ts_window_adjust) {
->> -		s64 ns = timespec64_to_ns(&sts->post_ts);
->> -
->> -		sts->post_ts = ns_to_timespec64(ns - bp->ts_window_adjust);
->> -	}
->> +	if (sts && bp->ts_window_adjust)
->> +		sts->post_ts.sys -= bp->ts_window_adjust;
->
-> FWIW build says:
->
-> drivers/ptp/ptp_ocp.c:1495:8: error: no member named 'post_ts' in 'struct ptp_system_timestamp'
->  1495 |                 sts->post_ts.sys -= bp->ts_window_adjust;
->       |                 ~~~  ^
+add the specific firmware mappings for rev22, and drop comments wondering about rev22 initvals
 
-Noticed too and fixed locally already.
+Assisted-by: Claude:claude-4.7-opus
+Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+---
+ drivers/net/wireless/broadcom/b43/main.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index b0e6aeb0b..37c5d9928 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -2344,6 +2344,10 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+ 		break;
++	case 22:
++		if (phy->type == B43_PHYTYPE_N)
++			filename = "ucode22_mimo";
++		break;
+ 	case 16 ... 19:
+ 		if (phy->type == B43_PHYTYPE_N)
+ 			filename = "ucode16_mimo";
+@@ -2405,7 +2409,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else if (rev == 24)
+ 			filename = "n0initvals24";
+ 		else if (rev == 23)
+-			filename = "n0initvals16"; /* What about n0initvals22? */
++			filename = "n0initvals16";
++		else if (rev == 22)
++			filename = "n0initvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0initvals16";
+ 		else if (rev >= 11 && rev <= 12)
+@@ -2465,7 +2471,9 @@ static int b43_try_request_fw(struct b43_request_fw_context *ctx)
+ 		else if (rev == 24)
+ 			filename = "n0bsinitvals24";
+ 		else if (rev == 23)
+-			filename = "n0bsinitvals16"; /* What about n0bsinitvals22? */
++			filename = "n0bsinitvals16";
++		else if (rev == 22)
++			filename = "n0bsinitvals22";
+ 		else if (rev >= 16 && rev <= 18)
+ 			filename = "n0bsinitvals16";
+ 		else if (rev >= 11 && rev <= 12)
+
+-- 
+2.54.0
+
