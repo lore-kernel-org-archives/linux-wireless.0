@@ -1,37 +1,36 @@
 Received: from smtpweb146.aruba.it (smtpweb146.aruba.it [62.149.158.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F357C3FCB06
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA6F3FBED9
 	for <linux-wireless@vger.kernel.org>; Thu, 28 May 2026 17:34:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.158.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779989696; cv=none; b=tODuOGc0CJdONaCyU+JQ8Q3IIwXMjj+oUOkabFCvLUmNKbVcZP87eAyS9yXbeJEMyTrvGuSdoU5UtcedDJVgFUFMwTXY3kCkbZD1XZ7bqPbu9tCXtVKdHd9bD1NHll2zlpv/prFFHfRi58BLKdnUBEt2k27SJ82595+RDGIbJAk=
+	t=1779989697; cv=none; b=mdkioOODox3BEfIBTOjchD93Iak/RXIMZEH3QP+g+BNFpQFdNewdBSzVo4/4z4qtzFHhPREM9ezXAy2hYZkdTIVkUMztiy8KfaDuMqItaFRH8F/uIn6Rdl8mu6r5Eg0ctw7GW1qyFffgLNOAc45QPbKdLonM62EsxjJBO2jb9nU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779989696; c=relaxed/simple;
-	bh=nU0wzFaFhsFBD4bQKqEatdtCZlYs7XpG5eZEIAlIdTg=;
+	s=arc-20240116; t=1779989697; c=relaxed/simple;
+	bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To; b=UTehFa/8aYrclN5ldTShBxxB8clrWfdkefclOt3Q8PRZ4DMnYYKjc1efxbAfS0xU4X1McXFXH+KgtwaPGAEwitMr5267R5oqnzCBzRSN5qr1tF1D5uoCNEouYYhUzXBrvmEjJIOK6nM+V1vB7iLbX6EyE5jDzLHLUZLW7PjoZbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=UxuoBcMp; arc=none smtp.client-ip=62.149.158.146
+	 In-Reply-To:To; b=bAHMS+uKPgvJhapazwBB55sYcxxqMGC4gZOFnpkTKCV9nmGBdLyckaPCO7deEwzzLHdk94JvZ+QK13224AJmYlcYc5Ok5/zE0clofkj75ILA4ijQtcoafJpr1WbYFWFwxde5vg8Q3hMX6jKJMcyPWu21BH5s9+XyBs7IIhGZP0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=JjfcVLnv; arc=none smtp.client-ip=62.149.158.146
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="UxuoBcMp"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="JjfcVLnv"
 Received: from [192.168.1.237] ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id Sea5wczvrrbJKSea6w6A3p; Thu, 28 May 2026 19:31:42 +0200
+	id Sea5wczvrrbJKSea6w6A3J; Thu, 28 May 2026 19:31:42 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1779989502; bh=nU0wzFaFhsFBD4bQKqEatdtCZlYs7XpG5eZEIAlIdTg=;
+	t=1779989502; bh=SYIv7H7SpupxdJet3IQpOb3GAjuN7nX15ZBOx75fnxU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=UxuoBcMpLQOTm0ofwCrVi6v8rQsT/UaSbjo/y7bxkQOw1Fta7wcJDqR7O1ObAmTBh
-	 XCWnSObQKT61tynZ3OiEYgl09V4+Sm6rebdBmJCcBO1kST7Ma7yoj0TdQOKj/D9QAb
-	 bJdhHBycJOgA+/wdPVo+6Y5SJaCQYXn1KWmpGgcgixcCu0nBRCqVTt2pgYqGypITd3
-	 LNS/Bp3NOsg8yUGNxnY1ZmfyUHpdk7vIBe682bb5w8hwRNEyotA8nc08qlFyXw00TK
-	 KgOx78vJI29/GOEwdeV4PpX/9TtFCurSiLypYIKtRwm8UaMv+ilqlrEkDh8RicsOVc
-	 ySLhLuGR1pFyA==
+	b=JjfcVLnv8Z9gfg+QYPbUQjBZthMfNSpIwH00Mgq/gLV3IUWNiOVC6erSiHyabCswF
+	 HCPSI8+YsNtzmr1j079ODdWLTrL2vmYR+4t8mB+L9maQ45wtdKiSvV+DpJ25n2MGrt
+	 3uuW6kDy+Nw+VAdhc8en1EkEnbIe3HgRQleXnb03iUP4LY8XDBy23KIojKzO1+0OeK
+	 eMYj3Z3BbcV1tTcsuewJDFPAvDtpQjpRQ/09TNVfNaYMA9Xj0/s993omWdTWnxqDWt
+	 2z6fRv/uJK3jPuYghmaqM63T+H6kkgAlC1npifv6NrnnNhb/eass3hPmUJQGqqiwSs
+	 20gZwMipH1EZA==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Thu, 28 May 2026 19:31:39 +0200
-Subject: [PATCH v4 5/7] b43: add IPA TX gain table for N-PHY r8 + radio
- 2057 r8
+Date: Thu, 28 May 2026 19:31:36 +0200
+Subject: [PATCH v4 2/7] b43: add d11 core revision 0x16 to id table
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,7 +39,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-5-464566194d47@gmail.com>
+Message-Id: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-2-464566194d47@gmail.com>
 References: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-0-464566194d47@gmail.com>
 In-Reply-To: <20260528-b43_complete_n_phy_rev_8_radio_2057_rev_8_support-v4-0-464566194d47@gmail.com>
 To: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org, 
@@ -50,91 +49,36 @@ X-CMAE-Envelope: MS4xfOUW+OMsbislXLVfjghoLiIMSllfjXG3jKhyT1qtr1TPotfGmGoeb8vIdxF
  29rmtnLnULRa/0VO3EcRCGmWXrooQhLCSqu40xytABMkKlcKB3hRVoC95GKPgsnpJAd3K9lN6GO5nNKsx17R2Mutn7NSdr9S/uiqb1CtsCb/hg8E+yllqt/u
  ISNj8R6MRy9W4IQM8xcXYODVPcwBRGWI658r2/xDq9z4g/xbS34L7GLyOev25WmdqYS+z22dTV35Abi8K3uXSBOpyhKw+cyRTuLnPPUyqtk=
 
-Add the 2.4 GHz IPA TX gain table for N-PHY rev 8 paired with radio
-2057 rev 8 and wire it to the existing dispatcher.
+Add d11 core revision 0x16 (= 22) to the b43 bcma device id table.
 
-b43_nphy_get_ipa_gain_table() in tables_nphy.c currently handles
-case 8 only for radio_rev == 5; radio_rev == 8 falls through and
-the function logs:
+The b43 bcma id table covers d11 revisions 0x11, 0x15, 0x17, 0x18,
+0x1C, 0x1D, 0x1E, 0x28 and 0x2A. Revision 0x16 belongs to the same
+N-PHY family as revisions 0x17 and 0x18 (radio 2057) and needs no
+new PHY or radio code beyond the radio_rev 8 dispatcher entries
+added later in this series - only the device id entry is missing.
+Without it bcma scan enumerates the 802.11 core but no driver binds.
 
-    b43-phyX ERROR: No 2GHz IPA gain table available for this device
-    b43-phyX ERROR: PHY init: Channel switch to default failed
-
-leaving b43_phy_init() to return an error and core_init to abort
-before the MAC is enabled.
-
-The high byte of every entry differs from the rev 5 sibling (0x40
-vs 0x30): different PAD-gain code prefix for the rev 8 front-end.
-The low 24 bits coincide with rev 5 across the whole table - the
-gain step amplitudes are the same, only the PAD-gain selector
-prefix changes.
-
-Values extracted from an MMIO dump of the proprietary Broadcom wl
-driver running on BCM6362 silicon (wl driver 6.30.102.7).
+The revision is used by the Broadcom BCM6362 single-die integrated
+2.4 GHz wireless block found in xDSL SoCs.
 
 Assisted-by: Claude:claude-4.7-opus
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 ---
- drivers/net/wireless/broadcom/b43/tables_nphy.c | 39 +++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ drivers/net/wireless/broadcom/b43/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/tables_nphy.c b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-index 41a25d909..84e8d718d 100644
---- a/drivers/net/wireless/broadcom/b43/tables_nphy.c
-+++ b/drivers/net/wireless/broadcom/b43/tables_nphy.c
-@@ -2715,6 +2715,43 @@ static const u32 b43_ntab_tx_gain_ipa_2057_rev5_2g[] = {
- 	0x300f0715, 0x300f0715, 0x300f0715, 0x300f0715,
- };
- 
-+/* Extracted from MMIO dump of 6.30.102.7 */
-+static const u32 b43_ntab_tx_gain_ipa_2057_rev8_2g[] = {
-+	0x40ff0031, 0x40e70031, 0x40e7002e, 0x40cf002e,
-+	0x40bf002e, 0x40af002e, 0x409f002f, 0x407f0033,
-+	0x407f0031, 0x407f002e, 0x4077002e, 0x406f002e,
-+	0x4067002e, 0x405f002f, 0x40570030, 0x4057002d,
-+	0x404f002e, 0x40470031, 0x4047002e, 0x4047002c,
-+	0x40470029, 0x403f002c, 0x403f0029, 0x4037002d,
-+	0x4037002a, 0x40370028, 0x402f002c, 0x402f002a,
-+	0x402f0028, 0x402f0026, 0x4027002c, 0x40270029,
-+	0x40270027, 0x40270025, 0x40270023, 0x401f002c,
-+	0x401f002a, 0x401f0028, 0x401f0025, 0x401f0024,
-+	0x401f0022, 0x401f001f, 0x4017002d, 0x4017002b,
-+	0x40170028, 0x40170026, 0x40170024, 0x40170022,
-+	0x40170020, 0x4017001e, 0x4017001d, 0x4017001b,
-+	0x4017001a, 0x40170018, 0x40170017, 0x40170015,
-+	0x400f002c, 0x400f0029, 0x400f0027, 0x400f0024,
-+	0x400f0022, 0x400f0021, 0x400f001f, 0x400f001d,
-+	0x400f001b, 0x400f001a, 0x400f0018, 0x400f0017,
-+	0x400f0016, 0x400f0015, 0x400f0115, 0x400f0215,
-+	0x400f0315, 0x400f0415, 0x400f0515, 0x400f0615,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+	0x400f0715, 0x400f0715, 0x400f0715, 0x400f0715,
-+};
-+
-+
- /* Extracted from MMIO dump of 6.30.223.141 */
- static const u32 b43_ntab_tx_gain_ipa_2057_rev9_2g[] = {
- 	0x60ff0031, 0x60e7002c, 0x60cf002a, 0x60c70029,
-@@ -3651,6 +3688,8 @@ static const u32 *b43_nphy_get_ipa_gain_table(struct b43_wldev *dev)
- 		case 8:
- 			if (phy->radio_rev == 5)
- 				return b43_ntab_tx_gain_ipa_2057_rev5_2g;
-+			if (phy->radio_rev == 8)
-+				return b43_ntab_tx_gain_ipa_2057_rev8_2g;
- 			break;
- 		case 6:
- 			if (dev->dev->chip_id == BCMA_CHIP_ID_BCM47162)
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index 37c5d9928..85ea8fdd9 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -117,6 +117,7 @@ MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if over
+ static const struct bcma_device_id b43_bcma_tbl[] = {
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x15, BCMA_ANY_CLASS),
++	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x16, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1C, BCMA_ANY_CLASS),
 
 -- 
 2.54.0
