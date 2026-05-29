@@ -1,188 +1,75 @@
-Received: from smtpcmd0757.aruba.it (smtpcmd0757.aruba.it [62.149.156.57])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C160B2AF00
-	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2026 00:09:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.57
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04DE6DF59;
+	Fri, 29 May 2026 00:11:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780013356; cv=none; b=HumcbY1DvA8fZJG6zthQLGLnehbSAMDJxMKZsRSSzWIT5KhYKP5dUA2n0fds4lPbLhe84iyGjS7SSwLGkAO/qNhHlhiCNuN2jhnCujZ00U88Ef0Ufe1VbLXWYVYQF3ZfA59KMhLbf2ZUpsv1ITGYG8MZGrR0Ey208Nwk1JGINGU=
+	t=1780013518; cv=none; b=p+re4HiFRlPoz/tCREW1BcJNzxri/tduChd7WyiuJ69r8Jof/4KF3WCH6xiIyMExFmn3BLbJ54PHWFFVTe9TQtkavNuzn5Bi+zyLYREU7MI1lAbbGOx5L5itibr/3KNj3p4KEaedIsZry2GNf+YiKvnZtfd8G+EX+HAFkwJgKBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780013356; c=relaxed/simple;
-	bh=jzalkTDcXfTL0juq3QudRRH5SlEglV75jQDgtXc2iLg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Gw9xImwkgoSVUvSqRsTpV1s2PC8ZXqegsGj9Kos9SvsPPRfblPBnL2hELNQaM9xd7yN8aO8l1ts3aATKB8WJQyFohkLjD2S+fZptFd99SUf5CV0Uf3G1F47EbXLsGg1sxyl41c4tAuxvC12NbFDTqSxXqSkIRa+QJ/zzA4oTbg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=LSEAwMkU; arc=none smtp.client-ip=62.149.156.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
+	s=arc-20240116; t=1780013518; c=relaxed/simple;
+	bh=ceAOd84t3yp9huEL/bSjY33EFu+RYAbJJ0Q68GnEesw=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=ttssrFliwZOBdNIYFXGPRxsmDIrmq60YYzZ8ikbUKHGXhk+UKA2SZ0bpqArN09UDM3DBizb7rYQTG6Eb1yGS8NsCkLqF8vRM22XdzV41cIO1XTtlnzjD/cLYiZvjawq2mTnd6/j3Zjl8G88/Yi7o9QTh91+BOB8WQwPgnDhpFr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TjgtBvlk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="LSEAwMkU"
-Received: from [192.168.1.237] ([94.34.125.0])
-	by Aruba SMTP with ESMTPSA
-	id Skjiwb0oZtpTfSkjjw9YPt; Fri, 29 May 2026 02:06:03 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1780013163; bh=jzalkTDcXfTL0juq3QudRRH5SlEglV75jQDgtXc2iLg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:To;
-	b=LSEAwMkU+SQcmVl1n+YlTvQjqNbU2w94SukoOnfQV56pyyqMO8CXjQ3CZ2Icj88a6
-	 D2Ka1aQDPmnbBDgdQy7T+kCE1n+uvng+kKzzZCxsvPr/OlOhY9uUagPg7+o9fEN/gx
-	 qtbenEtitRUIraenRZgutrLdc2vrj+q1o6NmEoYqulF4WH4JT8yI2NUAFV6q3yUfI3
-	 GjkNoMhbbjBlZeM125IUXJLwJ2UZiIzpRhlQT2enCLLh5lTjzq0AhWKOwredrv43eg
-	 dkEo1cCxT+of8/TthCkJDtY6MK/rqTZXlJcSQSjB9fMqDp06xWOmXPRww4sXa3I+70
-	 YsfHsF30T8GuQ==
-From: Alessio Ferri <alessio.ferri@mythread.it>
-Date: Fri, 29 May 2026 02:06:01 +0200
-Subject: [PATCH 3/4] dt-bindings: bus: add brcm,bcm6362-wlan
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TjgtBvlk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B72C01F000E9;
+	Fri, 29 May 2026 00:11:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780013517;
+	bh=bpADtKUVdLn6vRP8SiV7WtMqeN752lhTIWs+k4+ws6w=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc;
+	b=TjgtBvlkzzr9IX/PNUNu3u87zei4GceK7GTAnV44TinXBP7GNmgSh9q8lqdnvbzOz
+	 15yg0KAXD7brGCvZsIqAKKfIId0Ftbrpsd0rBbhtQjdtuFH7YRRB9Fe4QYZPZj/zYz
+	 PLUolQDETdE+HG0LYzAKtzlPQTaP7Wkf6AWUBOzhDjE/yvTpnQYWOVmRX+3MjcBUEm
+	 ucUnqdNhrNqABS44Q0at2PklEVVOQtTTg3Zw7c2kOQgn+Su6iXF0QVARubiCNIbapg
+	 TOn4g+4fKm30GFnIWeLFoVwxGzyz2ri3aOFJxIg5eYzEp5AZjKNBkiqOMQpUPi/rgy
+	 YPJPDEIlaAqjg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 198843811979;
+	Fri, 29 May 2026 00:12:03 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260529-add-bcm6362-wlan-v1-3-722242777f58@gmail.com>
-References: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
-In-Reply-To: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
- Alessio Ferri <alessio.ferri@mythread.it>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
- Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
- devicetree@vger.kernel.org
-X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfBcr/DglRpxN7rw6gJy2iDE09fw681n/E0jjnusTr+YBzo0LvhdgKX9REQgLsE+08MNT4wD7AwS0wWzXJJxSryGamNMzjPD3JAECY5TxJEBqpCpvQZjQ
- jtNQyPnP/Nedax3aMJKayvYunmGdpvpOeIXNFL6EW4gfX8gyUyJXg2A73FbfvY+Nfd9QlEoYW+daAjCliaJOEvgIzRis69RY7OYX+Qd+UmK3U7vvV1PLoB0u
- 2C5QtwVSKfpRZ8a1k3PeQOkP68M00EKZ05Fg6g68FNKvHo376SjaoXNZQg7alQLznV9EwQME4znJHzZapoiWomx4bxEIibWgzIInH7QxO0fD4YBjUTo4yc2T
- 0xIQnInC8zUdo/YlUaNwEl6viUSG71eGNuKwBk7peD6QfG2lLYVvpjWgjTbeizGQrizxGLY09PdyXOw2KrER7EhgCGWbbvJhfVc/iXAkEhmn6vNNabCCQvlH
- GZn6vNEF9cuq+TFWK98ZdraTT736/WIjykftNuFjKJ90kTacCr6eOcT7lPM=
+Content-Transfer-Encoding: 8bit
+Subject: Re: [GIT PULL] wireless-next-2026-05-28
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <178001352190.1565998.2039430206651171575.git-patchwork-notify@kernel.org>
+Date: Fri, 29 May 2026 00:12:01 +0000
+References: <20260528123911.284536-26-johannes@sipsolutions.net>
+In-Reply-To: <20260528123911.284536-26-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 
-Document the binding for the SHIM bridge that gates the on-chip
-2.4 GHz WLAN block of the Broadcom BCM6362 SoC. The bridge owns the
-SHIM peephole, a single clock for the macro, and two resets (the
-SHIM macro itself and its ubus side). It is also a bus: it carries
-one brcm,bus-axi child describing the bcma backplane behind the
-SHIM, with a standard interrupt-map routing the d11 core's IRQ to
-the SoC interrupt controller.
+Hello:
 
-Assisted-by: Claude:claude-4.8-opus
-Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
----
- .../devicetree/bindings/bus/brcm,bcm6362-wlan.yaml | 106 +++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+This pull request was applied to netdev/net-next.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-diff --git a/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
-new file mode 100644
-index 000000000000..c8d49ccdd2c1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
-@@ -0,0 +1,106 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/bus/brcm,bcm6362-wlan.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Broadcom BCM6362 on-chip WLAN SHIM bridge
-+
-+maintainers:
-+  - Alessio Ferri <alessio.ferri@mythread.it>
-+
-+description: |
-+  The BCM6362 SoC integrates a 2.4 GHz Broadcom WLAN block whose
-+  register backplane uses the Broadcom AMBA (bcma) architecture. The
-+  backplane is gated by a small SHIM bridge that holds the WLAN macro
-+  in reset and disables its clocks until released by software. CFE
-+  does not release this block, so software bring-up is required
-+  before bcma can enumerate the backplane.
-+
-+  This binding describes the SHIM bridge node. The SHIM driver brings
-+  the macro up and then populates the brcm,bus-axi child node, which
-+  describes the bcma backplane behind the SHIM and is bound by the
-+  bcma-host-soc driver. The SoC-specific configuration (big-endian
-+  accessors, SHIM-attached topology, SHIM Control register peephole
-+  pointer) is delivered to bcma via platform_data injected at
-+  populate time, so the brcm,bus-axi child stays SoC-agnostic.
-+
-+properties:
-+  compatible:
-+    const: brcm,bcm6362-wlan
-+
-+  reg:
-+    maxItems: 1
-+    description: SHIM peephole registers.
-+
-+  reg-names:
-+    items:
-+      - const: shim
-+
-+  clocks:
-+    maxItems: 1
-+
-+  resets:
-+    items:
-+      - description: SHIM macro reset
-+      - description: SHIM ubus reset
-+
-+  reset-names:
-+    items:
-+      - const: shim
-+      - const: shim-ubus
-+
-+  '#address-cells':
-+    const: 1
-+
-+  '#size-cells':
-+    const: 1
-+
-+  ranges: true
-+
-+patternProperties:
-+  "^axi@[0-9a-f]+$":
-+    type: object
-+    description: The bcma AXI backplane behind the SHIM.
-+    $ref: /schemas/types.yaml#
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - clocks
-+  - resets
-+  - reset-names
-+  - '#address-cells'
-+  - '#size-cells'
-+  - ranges
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    wlan@10007000 {
-+        compatible = "brcm,bcm6362-wlan";
-+        reg = <0x10007000 0x100>;
-+        reg-names = "shim";
-+        clocks = <&periph_clk 11>;
-+        resets = <&periph_rst 7>, <&periph_rst 17>;
-+        reset-names = "shim", "shim-ubus";
-+
-+        #address-cells = <1>;
-+        #size-cells = <1>;
-+        ranges;
-+
-+        axi@10004000 {
-+            compatible = "brcm,bus-axi";
-+            reg = <0x10004000 0x1000>;
-+            ranges = <0x00000000 0x10004000 0x00002000>;
-+
-+            #address-cells = <1>;
-+            #size-cells = <1>;
-+            #interrupt-cells = <1>;
-+
-+            interrupt-map-mask = <0x000fffff 0xffff>;
-+            interrupt-map = <0x00005000 0 &periph_intc 0 12>;
-+        };
-+    };
+On Thu, 28 May 2026 14:37:26 +0200 you wrote:
+> Hi,
+> 
+> Here's a new set of changes, mostly ath and iwlwifi
+> drivers this time.
+> 
+> I have a few more things pending, and I expect a few
+> more drivers will have pull requests later too.
+> 
+> [...]
 
+Here is the summary with links:
+  - [GIT,PULL] wireless-next-2026-05-28
+    https://git.kernel.org/netdev/net-next/c/e7d6bd24e883
+
+You are awesome, thank you!
 -- 
-2.54.0
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
