@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66F343DA2E;
-	Fri, 29 May 2026 20:00:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A301F43E9D1;
+	Fri, 29 May 2026 20:00:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780084856; cv=none; b=irEQDNr2OPetqN05xFqQUgt0Ug0JDg2LJOL0SauyWAGAQYca6/wDtmdnY1zYWklN+AOs1sc8B3567a6KFkHDnzx62aKT7lcRBQFoGaiYVOHDdO1iC7ftgNRuWt3Qfdd3ploSYbn/U58Fyd01T1ETn8Df6wIAf3uchK6ZOWqnbfc=
+	t=1780084860; cv=none; b=sR/HhsLvR+REm44qgt2wvrIsogPQh3Z3IbnxFNJacBaWQfarG3WYNUlvuc8hO1QgJF+W1kZUeDC6+n7ffr/c+B4byctzXQOwiJYqhYGpWDkwJ2QiNXlOij6QimcdZ1m1/Dyp2p9e1gb5pKfvp4Ruk4jKezbRaWU46hNWjCJwg2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780084856; c=relaxed/simple;
-	bh=jfnjk0DrjAfvGqJQtbk2xk50gds9efqlBLmxRtifTf0=;
+	s=arc-20240116; t=1780084860; c=relaxed/simple;
+	bh=TjDxcDLb2J9B/F5VPwHZZwZhUCGD+n1Zxf5w2iisH9g=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=IjH/EYAcxDWOyVJKuthdhYCj1c+R+KhmrIwBrNWqXAN/rthUx2kmn1Yzju5xHoAW/RLiWjdILgD9LRJaxJliV3CVtGEaMyYvy4/TC0O/jq43TcHfsX5JUGF/ib9utFJr5qcem38XLvX78arL60HuGHs5VTwUKVkS7pkg6wFgcuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jYsyJQ0X; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=AOiB92V+/wZDBBFiyGXzI9RLMvCZP71RLl7MIbbl9P/81G8ZSLUWyLj+BqbAuW+Xrtorsf2fnLEQ66GnIZXcSexPbEDXO68ScRjYcizXEQ4vSJ7klxTpmA1IdzCcmXtyVG+7+F1auzCrf6oPgxfU5Rq35AoOk9mdhr7CRyLGrn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsTk5hxh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jYsyJQ0X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EBEB1F00893;
-	Fri, 29 May 2026 20:00:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsTk5hxh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB61D1F00893;
+	Fri, 29 May 2026 20:00:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780084855;
-	bh=4Dl2AVIauMqhvyfPh4Lxz1+YVPAwec+mGhNTlZwpJas=;
+	s=k20260515; t=1780084859;
+	bh=fxF7IUJLmP951C4QzYmMiCV+YlkoHUCPEOW+29GOPe4=;
 	h=Date:From:To:Cc:Subject:References;
-	b=jYsyJQ0X3zcmMMvTpDZ4XN353dTHqIvBzb8N5oTCJVeIITP/stpRtWKlT9l8UPEtO
-	 WHeKC7dFhCm8eNg/rosugMW6Guze3ONqe6/6MKMiSJvEhclZs9GY1rughm1xaBqoAd
-	 BWfiC0V5g9be8EUpur/sHK5uSy1BXm+OFH6kkaUqxBRyW+BUExitWyDOmqaWIqBaUy
-	 gFYGtZ70XhtJh1cMZbdmARtKplhM32EjGnWq2Z4sesBWCp5DgxXlwDMZakn08a05aY
-	 QSO+ebcNBCpv2/wlHA/+uy5WmI4og4N4ckVe7jKktfIq2JpiyXRGdbScQtyfn3/FE7
-	 mRm2oZdz0PZeg==
-Date: Fri, 29 May 2026 22:00:52 +0200
-Message-ID: <20260529195557.744271454@kernel.org>
+	b=WsTk5hxhDKEy0peIliPk2CQVgBLsbM7oTIaDRXduLffrLVEy9xKn0/Hg/H5tmBJDD
+	 Khj9LV/SV+8Smf4b6v3NUAg+jmpZZS9l+CVpDM2tck5TcNORz/7kSLSscvzvwFOvaz
+	 d084nBPnNytVNL3iwhJxE87NBB1sht1OKvx2Fhji75bNDe9QCvz4Gxashbr3/4vFh7
+	 2Irw3z9dW8Eye2n81HsBuPJ8OMnGCVU9moS9y8kPmt4ZN8RtY1MIcc2qSPdmFHabsA
+	 bh3zvvmLHn4Oq00x3vK5F6vrcpURvg0Hat7kuWIgIgi0PEaLvp+ssFq5gK/yhg1GkD
+	 zdjFThQmmS5wA==
+Date: Fri, 29 May 2026 22:00:56 +0200
+Message-ID: <20260529195557.795510496@kernel.org>
 User-Agent: quilt/0.69
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -60,8 +60,7 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  linux-sound@vger.kernel.org,
  David Woodhouse <dwmw@amazon.co.uk>,
  Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Subject: [patch V2 16/25] virtio_rtc: Use provided clock ID for history
- snapshot
+Subject: [patch V2 17/25] timekeeping: Remove ktime_get_snapshot()
 References: <20260529193435.921555544@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -73,30 +72,29 @@ Content-Type: text/plain; charset=UTF-8
 
 From: Thomas Gleixner <tglx@kernel.org>
 
-The PTP core indicates in system_device_crosststamp::clock_id the clock ID
-for which the system time stamp should be taken. That allows to utilize
-hardware timestamps with e.g. AUX clocks.
-
-Use ktime_get_snapshot_id() and hand the provided clock ID in.
-
-No functional change.
+All users have been converted to ktime_get_snapshot_id().
 
 Signed-off-by: Thomas Gleixner <tglx@kernel.org>
+Tested-by: David Woodhouse <dwmw@amazon.co.uk>
 Tested-by: Arthur Kiyanovski <akiyano@amazon.com>
 Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
+Reviewed-by: Thomas Weißschuh <thomas.weissschuh@linutronix.de>
 Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
 ---
- drivers/virtio/virtio_rtc_ptp.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
---- a/drivers/virtio/virtio_rtc_ptp.c
-+++ b/drivers/virtio/virtio_rtc_ptp.c
-@@ -139,7 +139,7 @@ static int viortc_ptp_getcrosststamp(str
- 	if (ret)
- 		return ret;
+ include/linux/timekeeping.h |    5 -----
+ 1 file changed, 5 deletions(-)
+--- a/include/linux/timekeeping.h
++++ b/include/linux/timekeeping.h
+@@ -350,11 +350,6 @@ extern int get_device_system_crosststamp
+  */
+ extern void ktime_get_snapshot_id(clockid_t clock_id, struct system_time_snapshot *systime_snapshot);
  
--	ktime_get_snapshot(&history_begin);
-+	ktime_get_snapshot_id(xtstamp->clock_id, &history_begin);
- 	if (history_begin.cs_id != cs_id)
- 		return -EOPNOTSUPP;
- 
+-static inline void ktime_get_snapshot(struct system_time_snapshot *systime_snapshot)
+-{
+-	ktime_get_snapshot_id(CLOCK_REALTIME, systime_snapshot);
+-}
+-
+ /*
+  * Persistent clock related interfaces
+  */
 
