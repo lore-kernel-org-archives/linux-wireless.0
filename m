@@ -1,94 +1,61 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 417B52C15A5;
-	Fri, 29 May 2026 06:20:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4BB3AA4EF
+	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2026 06:45:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780035622; cv=none; b=muCJ3qT6b92yfFojPo3ITcwnLZvT3GgeIFx0EuI+7j8ctoaGnclLy57knVsgbiYH8L3VNxNBIGFGHTzYDSDE8ysOu1B3MBODrqu0uEA1Nsm0uDSYt9Nzw5sU6zZ66L3AsdHEB/HqgINXG5GD2K5PuaQGL4qxZRk/tFVK5xeBwzQ=
+	t=1780037109; cv=none; b=n/Qvt5/UT6xSnyhlb6ScgJCqnsjRtcRwkfGoAlonG0HFPVgNoeS7Z0JypYdatwZCPV2J27/90SUndV918PbyvuEUKUi/9mO8r3ZAd+tl2x22/sBUv+cWcClq3BQTa8oUp1mtVEk1Viuh2hh2g4cjqr+1bZTXEeYUquroD7m/CQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780035622; c=relaxed/simple;
-	bh=qCaNf6MHD7X8HMRsT1uomZar47lbzVSpDYtfi0wZHX0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Oy4z5DiFudRAW4JCUyuNka5R9ifYAMicEphl2Xgi3gMsLagvInFouLwYMOa07CxNka+xwNSWJQ+tkBgxSO/F0H+lqD/1/+ssNntRUmaBqAZ5iMBUOLxZPlDtMd4S3RyLnpb4Gia7dHO7CnqmSBSJXZKjTBb9rOfrQCYKAkYwZ2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NRDUI+Zr; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1780037109; c=relaxed/simple;
+	bh=17Uh5uVWhiwrZ7eiXfxOa1FuJc0b6agVJBm0KDQou/E=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=B4BdVxvI+6DTq9qE+e6TSDsJd/2jWFSCBDcsb7Mj82X6iRYkUuyiCMGtijHoPUPSQRGUNf9ATYgT60Y2HJtGSsFd74L3N8yReEI1Fh1M+4Z5koaSPp7UO+IOe+y9lVV+ehzz+gL5lB6c3VkxG/T36XKV3y18FEvvEKiTsAEFAVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=NnYb8cDv; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NRDUI+Zr"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="NnYb8cDv"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=qCaNf6MHD7X8HMRsT1uomZar47lbzVSpDYtfi0wZHX0=;
-	t=1780035619; x=1781245219; b=NRDUI+Zr67ZPvJuByjaC9QiC3n4FZi6ut5gGy18sA0qL87v
-	280/1jKXJOkSrtqMFJFDDAVm5pXd8uUeVNzTaZjm25vlxwOtdaOT0vhqqMyw5getwwtDF5DFtSg3L
-	9/tIOCEe/1b0hPDisQMCwoDMU2tQxwtMSFX/8+3wXOpB/JIfvvkHmWXfRKWClQ5WzYJZjl8aIRKmd
-	cra/XgDC7DGfR4uXVlw9NRVR3yNxTkE7Oh/4JFlxP5c3fg/nZ23ukBaueVH05fmKKGRy9E8h0D0DD
-	YHqCNQdUZxhSZzURHP/0N0AzYUGShcfhd/BKHkt2lCN1VsWY5hg2Q5YDY/I9H7Lw==;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=17Uh5uVWhiwrZ7eiXfxOa1FuJc0b6agVJBm0KDQou/E=; t=1780037107; x=1781246707; 
+	b=NnYb8cDvZOrYFfCvePIUbZJ2vK2LPriaLxEG6ia1DM8nppY5YiRQdBq1T3suFq4mIogZU+l5XwN
+	Ppi0B4y0fTM5+peb/hTASnlUwsO/k8Je2p9zVexqhn9HXQsRp+O7u/Dst3st1DUylLrPtwDDB+Vb3
+	//IIeYue+A2xW9tzcpovuhKDAzoRnBVfqmpG/YwGzaadZzd0Fe9SK2yGt+vxPTSjhtR8lH1Es8ZD/
+	/arShZI+EzlU4xXnzpTw/V1wlUu6uDqaoRWBAIVhqFPAOFZYOciQfB6rX0pdqeUrkqMEjafO5zV/m
+	mPkuPaEPBsuBkl2OWj7YUn1qoCs7ZQzusftg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wSqZr-00000009WRV-1H0w;
-	Fri, 29 May 2026 08:20:15 +0200
-Message-ID: <fc34f52ed88ee22b776828f06489a043316456a8.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211_hwsim: handle 5/10 MHz chanctx in rc
- update
+	id 1wSqxs-00000009XXt-3chJ
+	for linux-wireless@vger.kernel.org;
+	Fri, 29 May 2026 08:45:05 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>, meihaipeng
-	 <meihaipeng@uniontech.com>
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot+c0472dd80bb8f668625f@syzkaller.appspotmail.com
-Date: Fri, 29 May 2026 08:20:13 +0200
-In-Reply-To: <qrtsnjplvmg2pbq2cym5s3c5zxm5lrxw5dui26ks4jbbmmqhem@uwzblpmgdi5h> (sfid-20260529_071103_051144_2118964C)
-References: <20260529040923.9816-1-meihaipeng@uniontech.com>
-	 <qrtsnjplvmg2pbq2cym5s3c5zxm5lrxw5dui26ks4jbbmmqhem@uwzblpmgdi5h>
-	 (sfid-20260529_071103_051144_2118964C)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH wireless-next 0/2] wifi: remove 5/10 MHz channel support
+Date: Fri, 29 May 2026 08:40:26 +0200
+Message-ID: <20260529064502.37422-4-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2026-05-29 at 15:10 +1000, Lachlan Hodges wrote:
-> Hi,
->=20
-> > The STA bandwidth enum has no sub-20 MHz states, so a normal 20 MHz lin=
-k=20
-> > STA falsely trips the warning on 5/10 MHz OCB channel contexts.so=20
-> > a normal 20 MHz link STA falsely trips the warning on 5/10 MHz OCB=20
-> > channel contexts.
->=20
-> There is also S1G widths :) but that doesn't really matter.
->=20
-> > Treat sub-20 MHz channel contexts as 20 MHz for this validation and use=
-=20
-> > the actual channel-context width in the warning message.
-> >=20
-> > Fixes: aea9a6088ae46 ("wifi: mac80211_hwsim: do rc update per link")
-> > Reported-by: syzbot+c0472dd80bb8f668625f@syzkaller.appspotmail.com
-> > Closes: https://syzkaller.appspot.com/bug?extid=3Dc0472dd80bb8f668625f
-> > Signed-off-by: meihaipeng <meihaipeng@uniontech.com>
->=20
-> Looking at the stack trace of this report and a few of the others,
-> it comes from mac80211_hwsim_sta_add() which calls the rc_update on
-> the new STA, so it would probably be better to do something similar
-> to what we did for S1G [1] since I'm pretty sure the rc_update()
-> path isn't reachable on 5/10MHz (just like S1G).
+We had this discussion last about three years ago and nothing changed,
+nobody cares about this code and it's de-facto unusable since the AP
+side exists but not client, IBSS sort of exists but can't scan for any
+networks, etc. It only exists to attract syzbot attention, and with
+all attention going to UHR (WiFi 8), NAN, sensing/ranging, etc. I don't
+see any of this changing.
 
-I don't know if it is or isn't, but a simpler change like that would
-indeed seem preferable.
-
-> Though there are also quite a few 5/10MHz syzbot reports for various
-> things similar so maybe it's not worth it.. but that is up to
-> Johannes :).
-
-Yeah, I'm still going to rip it out entirely soon.
+Remove it. We can always put things back if anyone _really_ needs it
+(and can actually use it), but I'd expect them to help maintain it as
+well then.
 
 johannes
+
