@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF35A409629;
-	Fri, 29 May 2026 20:01:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA8D409629;
+	Fri, 29 May 2026 20:01:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780084872; cv=none; b=bf6L/LW8Bt4idMaOESnqtwKYPIAMjP/ugzfo19RDMPZ6vpdkn+J768ObA/rJ8nKly+ON80IpMIkiaVeTM+SPhq0RUIqpqlWCWZ6Ri6BD6uAbHWyJ2DAuQW/AVc2Orx1EmL+IR/hjWeN24qje+FRMUGDTo/s8SRSyNtrrrGSdfUQ=
+	t=1780084876; cv=none; b=l0IZqq60tdg/knf3GUseGHuYlVgnKyY6oz7iCLskYrE4qzUy+bxGuqGUWVcuv6lrnKCOmDFZhOUiby4pRzis1BVmwliOfbpU/mr4gHRDgUeEHe0eENuDfQFuimf8gJTkSrgZbsi7nsjverldDmo41oa+zxzgfL6IYHibPep01Uw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780084872; c=relaxed/simple;
-	bh=XSyy51MuZwA2GjVtTQbHBowdU707Ss5reS13iwms0Sw=;
+	s=arc-20240116; t=1780084876; c=relaxed/simple;
+	bh=XLitJgpfGmRutMPFJzOM1pjEY3gn7ksLn0f7TeCcaaM=;
 	h=Date:Message-ID:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=kuazOMCziPo6vGB5/N/JH8KB2amuLMufLT+Ac//mpfde6YdmIX1aePTgZTHI9Arbrkry66dGNiXo71f27lWcO23k7inFwAnDi3BM7E06cSiIH0c7+EiwETeaL6gOllQsJYFBWqnUQHj7ayPP2Q1cjbgochvmhTQ3+tGPNkxT7aQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y2avko+1; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type; b=JttogS4UNe/SvCk/mQwXAJ9uSC7WVY2xV2TXxyakThDOFFCbOJQ7ocqFowIclq7OCOrAzKbiu8s25U6GNNAyEmsEokCfyDeGjMBYdut9iMe0tSVOb3sMzIwjgowuNntqBWTAsaiWEP0TkmAKmuZytDcrZXwdbe6FYDYUEGk4Egc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hVTgFGFP; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y2avko+1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB6651F00893;
-	Fri, 29 May 2026 20:01:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hVTgFGFP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA3F41F00893;
+	Fri, 29 May 2026 20:01:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780084871;
-	bh=qPFPr4UR6sdCcQ981+CAww5bj9pIWXC4SGPJ5TkTsVY=;
+	s=k20260515; t=1780084875;
+	bh=LhRFAgSNvBh+ZqD31SHVs+HFkLsPpwGrlWZRmKcDpmg=;
 	h=Date:From:To:Cc:Subject:References;
-	b=Y2avko+1fxxxpz9mcN2IFv7Nw/HV9AK4H7h4peMrZZ0SjSi/5US4CFD40q/21HYDR
-	 Hrhla9+4wIUiq69olMtnFhhuVc6JH7uLoY1/EI9x98BGtCtVRnnpPn/D8XMel0fzUi
-	 ahZiwVnyQacSRDheM9iVXwthal1CisbYrp96BLftVfq3tzfiHP4nn0ektpku2NBEEU
-	 JsFqyJh4k8/iz6BapEARbrcblT/3ghLIANJ8E2vaqz4gcZGG3FNRY7JZ9Q+suh8oF3
-	 jRO4E92RpsCZlwiSMsWq70zMnGksbg0u/tnJN1PczCX6EN0IfnQSWt5mFXFs3xKiIM
-	 IBINiO6GpcNvA==
-Date: Fri, 29 May 2026 22:01:09 +0200
-Message-ID: <20260529195557.946612509@kernel.org>
+	b=hVTgFGFPlkC2+XDoaYA6/zfeQRv0hlPIcTW4ASFNt+kqI/ihcbO1x/hvzTXVQQTyv
+	 uZ1Nuzx5nAypR5GKmnDHxW/sznpSPcbTrXP8122glU7mQkjvN0+1lah4NbhqtkvKAS
+	 BPc7pH9yFRKEDiJqpUVrLwFJmorg6hI2KzGJVyTSuEWkVYU1WXTdhihbd03ICWdiHu
+	 j9qjL/uv+NDRjCEiJYlDFdNNNh50WHE7tReNtm1Y8oIy8ZjzvBN/SNIEzYQguIZUty
+	 JyU/rEqXTT7827J/9FWoIOT9G07NYNG38vc+0R9Gi+0qFykcVxuaboHOpImytrOzG6
+	 REHFmH5t+M6XA==
+Date: Fri, 29 May 2026 22:01:13 +0200
+Message-ID: <20260529195557.995298795@kernel.org>
 User-Agent: quilt/0.69
 From: Thomas Gleixner <tglx@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
@@ -60,7 +60,7 @@ Cc: David Woodhouse <dwmw2@infradead.org>,
  linux-sound@vger.kernel.org,
  David Woodhouse <dwmw@amazon.co.uk>,
  Vadim Fedorenko <vadim.fedorenko@linux.dev>
-Subject: [patch V2 20/25] wifi: iwlwifi: Use
+Subject: [patch V2 21/25] ALSA: hda/common: Use
  system_device_crosststamp::sys_systime
 References: <20260529193435.921555544@kernel.org>
 Precedence: bulk
@@ -83,31 +83,19 @@ Tested-by: Arthur Kiyanovski <akiyano@amazon.com>
 Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
 Reviewed-by: Jacob Keller <jacob.e.keller@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/ptp.c |    2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ptp.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
---- a/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/ptp.c
-@@ -271,7 +271,7 @@ iwl_mld_phc_get_crosstimestamp(struct pt
+ sound/hda/common/controller.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+--- a/sound/hda/common/controller.c
++++ b/sound/hda/common/controller.c
+@@ -525,7 +525,7 @@ static int azx_get_time_info(struct snd_
+ 			break;
  
- 	/* System monotonic raw time is not used */
- 	xtstamp->device = ns_to_ktime(gp2_ns);
--	xtstamp->sys_realtime = sys_time;
-+	xtstamp->sys_systime = sys_time;
+ 		default:
+-			*system_ts = ktime_to_timespec64(xtstamp.sys_realtime);
++			*system_ts = ktime_to_timespec64(xtstamp.sys_systime);
+ 			break;
  
- 	return ret;
- }
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-@@ -185,7 +185,7 @@ iwl_mvm_phc_get_crosstimestamp(struct pt
- 
- 	/* System monotonic raw time is not used */
- 	xtstamp->device = (ktime_t)gp2_ns;
--	xtstamp->sys_realtime = sys_time;
-+	xtstamp->sys_systime = sys_time;
- 
- out:
- 	mutex_unlock(&mvm->mutex);
+ 		}
 
 
 
