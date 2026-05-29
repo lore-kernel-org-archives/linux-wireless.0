@@ -1,37 +1,36 @@
 Received: from smtpcmd0757.aruba.it (smtpcmd0757.aruba.it [62.149.156.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C177B6FC5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C160B2AF00
 	for <linux-wireless@vger.kernel.org>; Fri, 29 May 2026 00:09:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780013355; cv=none; b=gJQ5StkLmiut1iCapSVjTGyPSfFVXP1JHo5XsZCV7MpxJTFei0apFlqxnmU78ndwrSwAuuFE32bT9Q6zNYhs7WXqsq45VMmgqP6dHcE7hD2IQmaTGKh+J5kDuJvWCT5ybt8X7Kd78VV+VVhRiLqlDaRpVoqWOFyQ1oOOg7M1hQk=
+	t=1780013356; cv=none; b=HumcbY1DvA8fZJG6zthQLGLnehbSAMDJxMKZsRSSzWIT5KhYKP5dUA2n0fds4lPbLhe84iyGjS7SSwLGkAO/qNhHlhiCNuN2jhnCujZ00U88Ef0Ufe1VbLXWYVYQF3ZfA59KMhLbf2ZUpsv1ITGYG8MZGrR0Ey208Nwk1JGINGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780013355; c=relaxed/simple;
-	bh=xLykC2eIwzjFRI18ogQQECB3XMRxQamtyZ2VzPNDeuw=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=RCO2DWe2P7y/NAYXf/O2wDFM9z1nquPV8eYbMsr1KHXM49RmKFjgSMXW7Ohd3xRSr116vwDDnmzAHEZViv+6dGAKBMKZQg3ZobDEBePnFP0yiJWgGX5ARt1aisyuSSFo3sKtfHKLu9InlHXJZAL9mq4Uv9Mt+wdNjogklG/FZp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=UeDSWsAm; arc=none smtp.client-ip=62.149.156.57
+	s=arc-20240116; t=1780013356; c=relaxed/simple;
+	bh=jzalkTDcXfTL0juq3QudRRH5SlEglV75jQDgtXc2iLg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Gw9xImwkgoSVUvSqRsTpV1s2PC8ZXqegsGj9Kos9SvsPPRfblPBnL2hELNQaM9xd7yN8aO8l1ts3aATKB8WJQyFohkLjD2S+fZptFd99SUf5CV0Uf3G1F47EbXLsGg1sxyl41c4tAuxvC12NbFDTqSxXqSkIRa+QJ/zzA4oTbg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=LSEAwMkU; arc=none smtp.client-ip=62.149.156.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="UeDSWsAm"
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="LSEAwMkU"
 Received: from [192.168.1.237] ([94.34.125.0])
 	by Aruba SMTP with ESMTPSA
-	id Skjiwb0oZtpTfSkjiw9YOk; Fri, 29 May 2026 02:06:02 +0200
+	id Skjiwb0oZtpTfSkjjw9YPt; Fri, 29 May 2026 02:06:03 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
-	t=1780013162; bh=xLykC2eIwzjFRI18ogQQECB3XMRxQamtyZ2VzPNDeuw=;
-	h=From:Subject:Date:MIME-Version:Content-Type:To;
-	b=UeDSWsAmaJY/u4obrPt/JKq2i6mhd+IV1r0A+VaXkhyq4TWm0uBZyne3hXvtOJHZe
-	 zc1PtnxJvSNku4OVrprMFF0Shn7d543P1pzhasZDgEpXEqWJkrhW9FBNhAyAoy9gLX
-	 HQu9Ymw2t1o1zId9qrFDcxjmt7Hf+3lZtEy0It5+lXbCOl/fEh6OHsfuzdgvAZ7iC/
-	 Opob933Wj4FIPCgtvX522gZ06C8lSSW4zRDFSpYbVnwTZclC7j66/TZEjOntS0RfJj
-	 gI/NKJYyS7zOqjDKQ92yZSPr2jiOq0+2aRoEWOv0PaxaqF/OW92Enl06tQsOi5H/Ps
-	 L9Uh0Nxxr+7zQ==
+	t=1780013163; bh=jzalkTDcXfTL0juq3QudRRH5SlEglV75jQDgtXc2iLg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=LSEAwMkU+SQcmVl1n+YlTvQjqNbU2w94SukoOnfQV56pyyqMO8CXjQ3CZ2Icj88a6
+	 D2Ka1aQDPmnbBDgdQy7T+kCE1n+uvng+kKzzZCxsvPr/OlOhY9uUagPg7+o9fEN/gx
+	 qtbenEtitRUIraenRZgutrLdc2vrj+q1o6NmEoYqulF4WH4JT8yI2NUAFV6q3yUfI3
+	 GjkNoMhbbjBlZeM125IUXJLwJ2UZiIzpRhlQT2enCLLh5lTjzq0AhWKOwredrv43eg
+	 dkEo1cCxT+of8/TthCkJDtY6MK/rqTZXlJcSQSjB9fMqDp06xWOmXPRww4sXa3I+70
+	 YsfHsF30T8GuQ==
 From: Alessio Ferri <alessio.ferri@mythread.it>
-Subject: [PATCH 0/4] bcma: support SHIM-attached big-endian SoC backplanes
- (BCM6362)
-Date: Fri, 29 May 2026 02:05:58 +0200
-Message-Id: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
+Date: Fri, 29 May 2026 02:06:01 +0200
+Subject: [PATCH 3/4] dt-bindings: bus: add brcm,bcm6362-wlan
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,11 +38,10 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDUyNL3cSUFN2k5FwzYzMj3fKcxDzdVONUc6OUpJTUJItEJaC2gqLUtMw
- KsJHRsbW1AJQksupiAAAA
-X-Change-ID: 20260529-add-bcm6362-wlan-e3e72dbdeb8a
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260529-add-bcm6362-wlan-v1-3-722242777f58@gmail.com>
+References: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
+In-Reply-To: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
 To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
  Alessio Ferri <alessio.ferri@mythread.it>, Rob Herring <robh@kernel.org>, 
  Krzysztof Kozlowski <krzk+dt@kernel.org>, 
@@ -52,68 +50,139 @@ To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
 Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
  devicetree@vger.kernel.org
 X-Mailer: b4 0.14.3
-X-CMAE-Envelope: MS4xfEqJjOvyNZ7IZw8V1bFtR0LGeea5ChksvNZ/vFRqWLblRWonEW4o1mQgGMKGBkzXg9MbUUlCThxHNDCAI5EXMQwRXBpru5vfb3sv8WzT+dBswgBcmRGg
- 7IoMBI8WbC8Uo+a/V6XsFFbR5zJoUAdvH0m3+PaInfTSCKpOSGk/xKgX5QDr4I236FRUXZEpZ4Q0Rp/WCotHtH5iqfsUmXSx5RmIkps90Paav5D/n+X2GOsZ
- EFT1+AT0PWzkojKg/0tf7d9RRjhqoMoRoGid0EBf4g0BAsEZjyUgsXUrKEmc2353OdOTyuC9ykaeEnFuTLAW7NEfxWKSnsCg1pjvrVHFNwTjXglL+PBfMDCc
- QJQ+0NEKRuaNxt1D+VJUvtfeJXQWdhh+tPUwQi07hgodLFWfgCEWgCNmUSG0i2rrLBs6ka5gY5+wnAaQf+RtQnPUi1OTDq7YKzG/LUnytlyhlWXm/dyuhN/H
- svFVNKdPo7XbiS8qxGOMmt6vBo0EG9SRPAZfBpplSiItqoV8MuN4/LK8550=
+X-CMAE-Envelope: MS4xfBcr/DglRpxN7rw6gJy2iDE09fw681n/E0jjnusTr+YBzo0LvhdgKX9REQgLsE+08MNT4wD7AwS0wWzXJJxSryGamNMzjPD3JAECY5TxJEBqpCpvQZjQ
+ jtNQyPnP/Nedax3aMJKayvYunmGdpvpOeIXNFL6EW4gfX8gyUyJXg2A73FbfvY+Nfd9QlEoYW+daAjCliaJOEvgIzRis69RY7OYX+Qd+UmK3U7vvV1PLoB0u
+ 2C5QtwVSKfpRZ8a1k3PeQOkP68M00EKZ05Fg6g68FNKvHo376SjaoXNZQg7alQLznV9EwQME4znJHzZapoiWomx4bxEIibWgzIInH7QxO0fD4YBjUTo4yc2T
+ 0xIQnInC8zUdo/YlUaNwEl6viUSG71eGNuKwBk7peD6QfG2lLYVvpjWgjTbeizGQrizxGLY09PdyXOw2KrER7EhgCGWbbvJhfVc/iXAkEhmn6vNNabCCQvlH
+ GZn6vNEF9cuq+TFWK98ZdraTT736/WIjykftNuFjKJ90kTacCr6eOcT7lPM=
 
-Some BMIPS xDSL SoCs (BCM6362) integrate a Broadcom 802.11 backplane that is reachable
-through bcma but differs from the BCM47xx SoCs host_soc was written for:
-the AXI backplane is big-endian on a big-endian CPU, and the cores bcma must gate
-(ChipCommon, the 802.11 core, the SHIM core) expose no per-core DMP wrappers — clock
-and reset live in a small SoC-level SHIM Control register instead.
-
-Rather than describe these quirks as DT properties on the bcma node, the SoC-specific
-configuration is delivered to host_soc via platform_data from a parent bridge driver. The
-bcma DT node stays a plain "brcm,bus-axi" and all the 6362-specific knowledge lives in the
-bridge driver. The standard brcm,bus-axi path is unchanged.
-
-The series is:
-  1/4  bcma: support driver specific quirks from soc pdata
-  2/4  bcma: allow SHIM-style mini-EROM wrapper-less cores in scan
-  3/4  dt-bindings: bus: add brcm,bcm6362-wlan
-  4/4  bus: add BCM6362 on-chip WLAN SHIM bridge driver
-
-Patches 1-2 touch drivers/bcma (wireless tree); patch 3 is a new drivers/bus driver; patch 4 is
-the binding. The patches are sent together to keep the whole context intact.
-
-The original Broadcom driver materialized a fake PCI device, i don't think that would be allowed
-in the kernel.
-
-Tested on a D-Link DSL-3580L (BCM6362, d11 corerev 22, N-PHY):
-- SHIM brings the backplane up,
-- bcma enumerates ChipCommon + the 802.11 core,
-- b43 binds.
-
-b43 patches are necessary for the last point, but those has
-already been sent in linux-wireless.
+Document the binding for the SHIM bridge that gates the on-chip
+2.4 GHz WLAN block of the Broadcom BCM6362 SoC. The bridge owns the
+SHIM peephole, a single clock for the macro, and two resets (the
+SHIM macro itself and its ubus side). It is also a bus: it carries
+one brcm,bus-axi child describing the bcma backplane behind the
+SHIM, with a standard interrupt-map routing the d11 core's IRQ to
+the SoC interrupt controller.
 
 Assisted-by: Claude:claude-4.8-opus
 Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
-
 ---
-Alessio Ferri (4):
-      bcma: support driver specific quirks from soc pdata
-      bcma: allow SHIM-style mini-EROM wrapper-less cores in scan
-      dt-bindings: bus: add brcm,bcm6362-wlan
-      bus: add BCM6362 on-chip WLAN SHIM bridge driver
+ .../devicetree/bindings/bus/brcm,bcm6362-wlan.yaml | 106 +++++++++++++++++++++
+ 1 file changed, 106 insertions(+)
 
- .../devicetree/bindings/bus/brcm,bcm6362-wlan.yaml | 106 +++++++++
- MAINTAINERS                                        |   7 +
- drivers/bcma/host_soc.c                            | 224 +++++++++++++++++-
- drivers/bcma/scan.c                                |  19 +-
- drivers/bus/Kconfig                                |  13 ++
- drivers/bus/Makefile                               |   1 +
- drivers/bus/bcm6362-wlan-shim.c                    | 252 +++++++++++++++++++++
- include/linux/bcma/bcma.h                          |  14 ++
- include/linux/platform_data/bcma_host_soc.h        |  31 +++
- 9 files changed, 654 insertions(+), 13 deletions(-)
----
-base-commit: 8fde5d1d47f69db6082dfa34500c27f8485389a5
-change-id: 20260529-add-bcm6362-wlan-e3e72dbdeb8a
+diff --git a/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
+new file mode 100644
+index 000000000000..c8d49ccdd2c1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
+@@ -0,0 +1,106 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/bus/brcm,bcm6362-wlan.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Broadcom BCM6362 on-chip WLAN SHIM bridge
++
++maintainers:
++  - Alessio Ferri <alessio.ferri@mythread.it>
++
++description: |
++  The BCM6362 SoC integrates a 2.4 GHz Broadcom WLAN block whose
++  register backplane uses the Broadcom AMBA (bcma) architecture. The
++  backplane is gated by a small SHIM bridge that holds the WLAN macro
++  in reset and disables its clocks until released by software. CFE
++  does not release this block, so software bring-up is required
++  before bcma can enumerate the backplane.
++
++  This binding describes the SHIM bridge node. The SHIM driver brings
++  the macro up and then populates the brcm,bus-axi child node, which
++  describes the bcma backplane behind the SHIM and is bound by the
++  bcma-host-soc driver. The SoC-specific configuration (big-endian
++  accessors, SHIM-attached topology, SHIM Control register peephole
++  pointer) is delivered to bcma via platform_data injected at
++  populate time, so the brcm,bus-axi child stays SoC-agnostic.
++
++properties:
++  compatible:
++    const: brcm,bcm6362-wlan
++
++  reg:
++    maxItems: 1
++    description: SHIM peephole registers.
++
++  reg-names:
++    items:
++      - const: shim
++
++  clocks:
++    maxItems: 1
++
++  resets:
++    items:
++      - description: SHIM macro reset
++      - description: SHIM ubus reset
++
++  reset-names:
++    items:
++      - const: shim
++      - const: shim-ubus
++
++  '#address-cells':
++    const: 1
++
++  '#size-cells':
++    const: 1
++
++  ranges: true
++
++patternProperties:
++  "^axi@[0-9a-f]+$":
++    type: object
++    description: The bcma AXI backplane behind the SHIM.
++    $ref: /schemas/types.yaml#
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - clocks
++  - resets
++  - reset-names
++  - '#address-cells'
++  - '#size-cells'
++  - ranges
++
++additionalProperties: false
++
++examples:
++  - |
++    wlan@10007000 {
++        compatible = "brcm,bcm6362-wlan";
++        reg = <0x10007000 0x100>;
++        reg-names = "shim";
++        clocks = <&periph_clk 11>;
++        resets = <&periph_rst 7>, <&periph_rst 17>;
++        reset-names = "shim", "shim-ubus";
++
++        #address-cells = <1>;
++        #size-cells = <1>;
++        ranges;
++
++        axi@10004000 {
++            compatible = "brcm,bus-axi";
++            reg = <0x10004000 0x1000>;
++            ranges = <0x00000000 0x10004000 0x00002000>;
++
++            #address-cells = <1>;
++            #size-cells = <1>;
++            #interrupt-cells = <1>;
++
++            interrupt-map-mask = <0x000fffff 0xffff>;
++            interrupt-map = <0x00005000 0 &periph_intc 0 12>;
++        };
++    };
 
-Best regards,
 -- 
-Alessio Ferri <alessio.ferri.3012@gmail.com>
+2.54.0
 
