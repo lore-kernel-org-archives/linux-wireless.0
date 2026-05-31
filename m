@@ -1,41 +1,69 @@
-Received: from mail.cock.li (mail.cock.li [37.120.193.123])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707FF33F591;
-	Sun, 31 May 2026 22:43:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.120.193.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A83233934
+	for <linux-wireless@vger.kernel.org>; Sun, 31 May 2026 23:29:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780267397; cv=none; b=cS9XTqWm21JatX7s7uI+3Q0X0vzgDfVLM4a/NKmfF927OLd+tEC9QwWvNB4uMkKkR+YlLjd4bMPQwXQBwqDmBN8uboe1ptwhco6jmiM27HD+YcKPlFgacjnY4eOaYaOF8IvxTwJW+1ZjabUOwzKbUhIeR0FRHLkxYansIRqcS7w=
+	t=1780270162; cv=none; b=gNF+vE06vrN64yiWMvdMt8N4Z+ewqyqeYFHPC9WeN3r2pTRmr3lOH4pKig850Hy4T1nvr+wXI+bCs0TwLSV7jNNfCDW3e8W+ZIe2p6wtwLxi8fdJmLxQQ7sfl25JRSmXRIZMahV+LNnc40fyIOU5UfAMGKA+BbP9TVJijIKBn3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780267397; c=relaxed/simple;
-	bh=XgZKgdvdRJZ6QE3Us3zZJ8a1z/dSj82ioQpHMdTmgBc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ms8iu0Rej1oUqx1MLwbf3GVuOmCKEIm1s3vnop9hsgeBBawtBAHG6LMAc4STo+Dn0p/3w0EoWLERaW/1zB1pFszVI88z1ek4PiO6e3zsHDdYPJEtydkfJKXNQNce/pLSFJ3c80jG/aBy5CnkpoKdxY0nkdtHZ8IIzepzK2owgmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=airmail.cc; spf=pass smtp.mailfrom=airmail.cc; dkim=pass (2048-bit key) header.d=airmail.cc header.i=@airmail.cc header.b=aIef59G+; arc=none smtp.client-ip=37.120.193.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=airmail.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=airmail.cc
+	s=arc-20240116; t=1780270162; c=relaxed/simple;
+	bh=euuPkT9Q3LW3NV3ZEElbM+p4ZzTQi43Br/qCIjYZH3U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G8T4U7/WaQVAon80mUdLNuH+k+hN6Dvk5oS0A2EnbhY9uqlzF3tUGZVtW6ezOEglRCP5m8NMlqV65mBKC2Hp5OHYBUTcik30eIbTM62+KBYQE52/XRtiPB0+waa3d+AO/j7Q3KL0LSLZ9BmKztpLkjiw0eFPRUumGDPkpxmPDJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AWOZ1jeF; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=airmail.cc header.i=@airmail.cc header.b="aIef59G+"
-From: VolcomIlluminated <Volcomilluminated@airmail.cc>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=airmail.cc; s=mail;
-	t=1780266909; bh=XgZKgdvdRJZ6QE3Us3zZJ8a1z/dSj82ioQpHMdTmgBc=;
-	h=From:To:Cc:Subject:Date:From;
-	b=aIef59G+aUXQ5GdSZps8sPh4NxPMCea0DfA/QQhepWRW3QVDxrSQU9M4EBMRJGw4h
-	 pRHK76Juo9dQkN/TplaAR+Gf3FLBrfGWFL5z/8m+tKeECKzFZbxgsWJ0hky3x66LTi
-	 kxqc0Nu9V9culBITTrO/I1/gRkAvfJZcyMyMJwTqbguEefh86yjW5uRdIm1BVvcnln
-	 T/RTq3Pe7VPuVHe/LttYizloRYrNSgEb/4/XTx6yFHy+nvuqN31dv54lb/0m3cFjtp
-	 AiOyvMfqsUOpngMtyvmbLeQ88yZnIcS4iZLj0RceAL+Dr0NeChfx5XWvF1Tksvc4/3
-	 a0yqqbU8uokwA==
-To: pkshih@realtek.com
-Cc: kvalo@kernel.org,
-	luka.gejak@linux.dev,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	VolcomIlluminated <Volcomilluminated@airmail.cc>
-Subject: [PATCH] wifi: rtw88: extend USB TX report timeout to RTL8822BU
-Date: Sun, 31 May 2026 18:33:49 -0400
-Message-ID: <20260531223349.5952-1-Volcomilluminated@airmail.cc>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AWOZ1jeF"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2c0bd02d97eso9841495ad.2
+        for <linux-wireless@vger.kernel.org>; Sun, 31 May 2026 16:29:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780270161; x=1780874961; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hsBt+sDiXwgLAGV6AGq6h1QTJOhCDDy/H3QW5XAubp0=;
+        b=AWOZ1jeF0J8CRPE9HIGL3lR76aXWYEfA0i0bGROq0IiJI3V0JPvrLnH2uqqwK5olWa
+         PdILrbTFBHGukyDuWrkmz0IEhr1QtIm5B627hAN1nRNiw7qwCtmRnYzTOZTV1zYUv4pK
+         07hMjfCqFKK/z1a4y2OltY5RBxTAMH82Saz6EainDRKiRt+WNv26CNmr810Ow2DLHfFZ
+         mr35IT5hNvbRwvOSl4LktDqk2RVgVyENVnJwMgqgT7N4x6S1cxShdfsOeyHmT90eyZ4s
+         ydMxLPI7rkJdFd/coqWl9OxZQ3jSd/99CJMta/AyZDKv479xgY6BI6FFSGFopopfYK3K
+         PraQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780270161; x=1780874961;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hsBt+sDiXwgLAGV6AGq6h1QTJOhCDDy/H3QW5XAubp0=;
+        b=VDIMuRv2uayssIIf5o4rIpvMTrgE0DmwHQkGHJSS+NKPIAm0yfHAGzoxtC/XBOuoye
+         uy+9NcHb9V7KTfOsd9QQuotlT3QGAVphYps5gyD5A83rIiELZzDC4nJii3R3aofrMd5F
+         zgqzxQ533TNtXn9Qv/8wv//d+Vs/rIIvxLClbhnyBZVNyZ3B3hnDOMBi88qVzlDTCCha
+         KYbniFfdOPJbr/R1ToKh5mmOnrb+HZ9L0ZTLK3TAVUE6K5o5uFFDk0CWGu3+DmhOWa+n
+         S5OjNkpYrnLiWENwmuxK0aePWpOfZcBhmFxm64r/I0LT+JB+bzETCUK8wqXkynb6qgL5
+         Z7wQ==
+X-Gm-Message-State: AOJu0YxIESFNyepxlkDpQLP+UY1KzBstGno0jZrd3/Vazvy+p4KDC2/a
+	dScwCBe5nfwFVqa+GsLAGNnuXgltDyTUceXGtUeFvSDkoPQ4N7rFHpJOLVYegZUW
+X-Gm-Gg: Acq92OHFUysGpoG9DJrXgGl8XUEiRtKT83eIgly/L14Wu87LSLkLjm8m9Uyr0vzubaD
+	rLwXDMRU62oD+aehZ/A+ie/8ov60T67JuO62fge2m4psu27SGkc6Pf5n72Ak7pgc611WYfanc/T
+	ELolc3GzlSbsChk+T8NzkBFu+k4XybPz7OMJE5Md4LKAv2sxl3pOQl4kn5eQ0oRk3WewtBQ8wyh
+	0vf2qx+aSwLSyDUEZD6QZ+nvGHSnpvvuMm1SXgLGdsJgwk58WpZX1+lXm/lZ/RpMU5Q77Wc5vQ2
+	mV+Y5/nJ8yGT6F0Mj2K9MeCoYSvM+0Zw070PsLltjjyhCQuQe34V6fp/40pCPsGdakG8i0v+UdX
+	1IogHzaeXD1TYePTt1EURDbovW1m0bTuui9ys9EHtbxiVxLjYrY80WAcrShyAjrF4jrDe5TNf1q
+	R0ooyuwkIJIimLOcB+6BsFH7z2RsKRZ2K4OkWM/X6G3tKX4V9P/nu53aS7SqfL3Mj+Aa4=
+X-Received: by 2002:a17:902:fc43:b0:2c0:a555:80e6 with SMTP id d9443c01a7336-2c0a555946cmr65698295ad.6.1780270160982;
+        Sun, 31 May 2026 16:29:20 -0700 (PDT)
+Received: from BM5220 (123-194-40-181.dynamic.kbronet.com.tw. [123.194.40.181])
+        by smtp.googlemail.com with ESMTPSA id 41be03b00d2f7-c85772d7342sm7954473a12.26.2026.05.31.16.29.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 31 May 2026 16:29:20 -0700 (PDT)
+From: Zenm Chen <zenmchen@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	pkshih@realtek.com,
+	rtl8821cerfe2@gmail.com
+Cc: zenmchen@gmail.com
+Subject: [PATCH rtw-next v2 1/5] wifi: rtw89: 8831bu: Add support for ELECOM WD{B,C}-X600DU2M-B
+Date: Mon,  1 Jun 2026 07:29:10 +0800
+Message-ID: <20260531232914.4406-1-zenmchen@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,43 +72,37 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Luka Gejak's patch increased the TX report timeout for RTL8723DU to
-accommodate off-channel dwell time during background scans. The same
-issue affects RTL8822BU (tested on Edimax EW-7822ULC) where background
-scans cause the firmware to stay off-channel for periods exceeding the
-default 500ms timeout, causing the purge timer to fire prematurely and
-drop TX tracking skbs.
+Add the ids 056e:4027 and 056e:4028 into the device table to support
+ELECOM WD{B,C}-X600DU2M-B, two new 8831bu-based adapters.
 
-Extend the 2500ms timeout to also cover RTL8822BU USB devices.
+Compile tested only.
 
-Tested on RTL8822BU (Edimax EW-7822ULC) with 17,706 packets over 24+
-hours with zero drops.
-
-Fixes: a82dfd33d123 ("wifi: rtw88: Add common USB chip support")
-Cc: stable@vger.kernel.org
-Signed-off-by: VolcomIlluminated <Volcomilluminated@airmail.cc>
+Link: https://github.com/morrownr/rtw89/commit/9e2db2834b37c6adfc4b872a9ef56c927df22bea
+Signed-off-by: Zenm Chen <zenmchen@gmail.com>
 ---
---- /tmp/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.c	2025-11-30 17:42:10.000000000 -0500
-+++ /home/ptpx86mm1/kernelbuild/linux-6.18/drivers/net/wireless/realtek/rtw88/tx.c	2026-05-31 16:00:37.125645594 -0400
-@@ -196,6 +196,7 @@
- void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
- {
- 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
-+	unsigned long timeout = RTW_TX_PROBE_TIMEOUT;
- 	unsigned long flags;
- 	u8 *drv_data;
+v2:
+ - Add missing "Link: "
+---
+ drivers/net/wireless/realtek/rtw89/rtw8851bu.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+index 6a8d31544..343941ccb 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+@@ -37,6 +37,12 @@ static const struct rtw89_driver_info rtw89_8851bu_info = {
+ };
  
-@@ -207,7 +208,12 @@
- 	__skb_queue_tail(&tx_report->queue, skb);
- 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
- 
--	mod_timer(&tx_report->purge_timer, jiffies + RTW_TX_PROBE_TIMEOUT);
-+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D ||
-+	     rtwdev->chip->id == RTW_CHIP_TYPE_8822B) &&
-+	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
-+		timeout = msecs_to_jiffies(2500);
-+
-+	mod_timer(&tx_report->purge_timer, jiffies + timeout);
- }
- EXPORT_SYMBOL(rtw_tx_report_enqueue);
- 
+ static const struct usb_device_id rtw_8851bu_id_table[] = {
++	/* ELECOM WDC-X600DU2M-B */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x056e, 0x4027, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
++	/* ELECOM WDB-X600DU2M-B */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x056e, 0x4028, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0bda, 0xb831, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0bda, 0xb851, 0xff, 0xff, 0xff),
+-- 
+2.53.0
+
