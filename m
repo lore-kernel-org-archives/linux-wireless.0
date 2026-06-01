@@ -1,16 +1,16 @@
 Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51B493D8905;
-	Mon,  1 Jun 2026 15:12:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 012713D7D6C;
+	Mon,  1 Jun 2026 15:15:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780326749; cv=none; b=PA5mh7zUFrcUJkE+J1Kru3ExS+A64JNAowaNGBw5JGO5e79V2fz9c468f2CRjjVp3FLwkHfQWhen6NfpkTrooRDNA7aPVEC9JY7WSMNs/y5y6ok65tTKF22U2EdYhdAn9dmI3RRm/913sqMYhAvSfvbI+M3TXM+FHng3zzqx7sA=
+	t=1780326927; cv=none; b=mmc/m5K0kV7EGj8c/ycqniLCab04Up53ZFtAMSE7qOqvx6LY6UOmRgT4HoLoaDierD9jv/7C1r4g/JxHmPE1QriMruJuTE3oETq6dqgNII3wLQ9NyMSZR1za1uvAHIRGu/kcceDke6dGMMz9S9FDJE/igQzB+OapsYE1WtmMps4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780326749; c=relaxed/simple;
-	bh=aRF+2Y6D1jnKi0mH2Wz7CdMrKPi/NcARzhImPTUUFDw=;
+	s=arc-20240116; t=1780326927; c=relaxed/simple;
+	bh=j65STQ6K1vQcze2GuiePaH0vvrOo+Y8jNvbWuyTPT68=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=ZPWmhiY9KZ0jHDfkKZvN+1HlcIg+Du6OyTfyR944sLeYcj9KaYHqhPlgiGl3SSEd8BPIUeJjGjQat61J4y3CuTOurldvRgjrgrnnY/kfgeV/+XC3NqGw/ZdqXaUFCfQjS/I6r0yMULrS0HK+Wu5KHDHHh0IpeI+otFsl0PbsVCA=
+	 MIME-Version:Content-Type; b=CZHtmUgiyYzgu2DVcXuf4OXfKVRlRJo2djnK68g74q/n3rtf7a1522fehjclU1ToLXKJ86sZjemXomjEPSJ1qEjsmjAfg72G3Q1ZGbuwYEewBhCqfEhAWLS9zxu6/qgd4Blj72yey0QIQDtdpCsmd1mPRR4CHkvepp8NxP/eZVY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
@@ -18,12 +18,12 @@ From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 Authentication-Results: mail.toke.dk; dkim=none
 To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
 Cc: open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH ath-next] wifi: ath9k_htc: allocate tx_buf and buf together
-In-Reply-To: <20260521232020.261405-1-rosenp@gmail.com>
-References: <20260521232020.261405-1-rosenp@gmail.com>
-Date: Mon, 01 Jun 2026 17:12:25 +0200
+Subject: Re: [PATCHv2 ath-next] wifi: ath9k_htc: use module_usb_driver
+In-Reply-To: <20260506234848.189840-1-rosenp@gmail.com>
+References: <20260506234848.189840-1-rosenp@gmail.com>
+Date: Mon, 01 Jun 2026 17:09:36 +0200
 X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87a4te1ehy.fsf@toke.dk>
+Message-ID: <87ldcy1emn.fsf@toke.dk>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,8 +35,9 @@ Content-Transfer-Encoding: quoted-printable
 
 Rosen Penev <rosenp@gmail.com> writes:
 
-> Use a flexible array member to combine allocations. No need to have them
-> separate as they are always together.
+> This follows the pattern with other USB Wifi drivers. There is nothing
+> special being done in the _init and _exit functions here. Simplifies and
+> saves some lines of code.
 >
 > Signed-off-by: Rosen Penev <rosenp@gmail.com>
 
