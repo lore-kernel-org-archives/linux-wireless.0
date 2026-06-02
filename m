@@ -1,124 +1,138 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19282F39B9;
-	Tue,  2 Jun 2026 18:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AB72222C5
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Jun 2026 19:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780426755; cv=none; b=ReAvA/Lb2NUtzfKTVD0QQJYAsDY2OAAydWNDJruFhbiw4CLofid0O7v4/HRfOcKM2XlSseQNYyv7b/EYzOCOZ+8Ek8d/mU/ekThs0oUMwS13YdqijMAFzJnkEA30HwIuvEulM8VtWJNcXtwX6xMu4eaLjcCKLWBCMXR1h46yQt0=
+	t=1780427220; cv=none; b=Ucr/yrr1RubrwoCCDCtr0uJjeVRbfXdABIQs/Tted2gGPpmavUitzXi/mBdWiKS67z5uI9J/RsaTqrfMXyjDPQGWScoCMwC/WuquwMcOpail0LiHaPyfZSYLxgig+Rnlltqn3OD2FLf7dqtcG/nlc9IVrzWncil4lusXVFupWJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780426755; c=relaxed/simple;
-	bh=GvyU1VHG9G0bx3iqtGiPUhz+SeLDv9qe2ZeDnh9OQ+E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ubTyGfYNVV6TO4A6gd/Qan1h6jGQhOAWn6RkerhOUlNh3Gw99zdQno8XLjj3hG5iWC7+kJjfTML93q6S28APOhcieMKZOyOZDWjw7J4aY9J948IYok8gE6gYq17+eL/9fr+Rz/8Rc9ZlebUegsCvL+aA6pKZ3Vjur9Br3RN5q0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Yo582DSO; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1780427220; c=relaxed/simple;
+	bh=4klqaW+qlOcvDydYV4JdaHYFzR0FqwPoLlkr0xdbJXo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MnZXo9VjxwRvLXo+OFBiF9FqwX22E3aM+P2xYgtvQ2tKGgpWSV0UQWapD1+ZE5PcYkS2CKpDrajzTmncve0hRs5UYe5tRWFuP71HJM4F68Sg4HcSgbVHrTJOst3Cx9ALN+Sp5esl/VW1dwAX5BiBH1mFErMSSSK0nTkPn6A3s/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=FuTMALJR; arc=none smtp.client-ip=148.163.129.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Yo582DSO"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780426753; x=1811962753;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=GvyU1VHG9G0bx3iqtGiPUhz+SeLDv9qe2ZeDnh9OQ+E=;
-  b=Yo582DSOXev/Cy49uul4q2uaLqOBtHFQOJOy7ptHQwkR11paBf8Hk4hg
-   aBn6/9iZH0SKBgTta7LDHTMb4rnCYLSPaQyNxLIYsqCQ4CQEDZvSKgIz+
-   6FOPrFiAJNUEIPDdSpik59y5OK1Ieu8f4n8mj4WVkMsLwfmncHPksJXx3
-   vqfFGgB4MRG/KD1HakJlQj3qv29CBVuOfHLfcsWu39VyAESZnOPyZhiJY
-   44h4HzLm5RZZQ6sLCbYEjG/2VWs9C58LrupWJVo+NgyRAN80O7abnltah
-   RhbWJniKCm1VCBV1kmwJU8v7BtHumVLnb+0etEGAM1ulHADnu/2/z9+/s
-   w==;
-X-CSE-ConnectionGUID: 7pyuHn8LSE+T4+g/vrALeA==
-X-CSE-MsgGUID: TT1U3Vx6TWaKxMnXDvnPCQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11805"; a="91533739"
-X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
-   d="scan'208";a="91533739"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 11:59:13 -0700
-X-CSE-ConnectionGUID: RQzM3udfSO6EFJ+AdhTWXg==
-X-CSE-MsgGUID: NLFQCh7FSO6e1Hvs+jok5A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
-   d="scan'208";a="239543956"
-Received: from mkosciow-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.229])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 11:59:07 -0700
-Date: Tue, 2 Jun 2026 21:59:04 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Petr Mladek <pmladek@suse.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Nick Desaulniers <nick.desaulniers+lkml@gmail.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	Vlastimil Babka <vbabka@kernel.org>, linux-rdma@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
-	linux-trace-kernel@vger.kernel.org, llvm@lists.linux.dev
-Subject: Re: [PATCH 1/2] tracing: work around -Wmissing-format-attribute
- warning
-Message-ID: <ah8n-Nk305S5hRwN@ashevche-desk.local>
-References: <20260602150904.2258624-1-arnd@kernel.org>
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="FuTMALJR"
+Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
+	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CF6C32A461F
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Jun 2026 18:58:45 +0000 (UTC)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 09C8DC008E;
+	Tue,  2 Jun 2026 18:58:35 +0000 (UTC)
+Received: from [192.168.101.118] (firewall.candelatech.com [50.251.239.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail3.candelatech.com (Postfix) with ESMTPSA id E226313C2B0;
+	Tue,  2 Jun 2026 11:58:32 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E226313C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1780426713;
+	bh=4klqaW+qlOcvDydYV4JdaHYFzR0FqwPoLlkr0xdbJXo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=FuTMALJRvJrpeRqxwCThZVjQY1vWP0JxucKYuEVEbpTXjryKew/mrGPmokove/Nm1
+	 OYWL2YcJxzwgKE5C319iRtRTubqsSYqCWyinBlUYNqJxyYqSul1p2qTE8HK0sr5sUM
+	 MknIRjOF6wncVnkz05QoEHNSHhr6XwU8ke+sMuWY=
+Message-ID: <80ff2108-dce3-4060-a8d0-59740979a99a@candelatech.com>
+Date: Tue, 2 Jun 2026 11:58:32 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260602150904.2258624-1-arnd@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: mt76: mt7996: Fix possible token leak in
+ mt7996_tx_prepare_skb()
+To: Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>,
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>, Matthias Brugger
+ <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org
+References: <20260531-mt7996_tx_prepare_skb-token-leack-v1-1-2b9c9f59ceb1@kernel.org>
+Content-Language: en-US
+From: Dylan Eskew <dylan.eskew@candelatech.com>
+In-Reply-To: <20260531-mt7996_tx_prepare_skb-token-leack-v1-1-2b9c9f59ceb1@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MDID: 1780426717-WQhNphcM8TUz
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;ut7;1780426717;WQhNphcM8TUz;<dylan.eskew@candelatech.com>;40f3b03bb24907b736a33b345f288e14
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On Tue, Jun 02, 2026 at 05:07:05PM +0200, Arnd Bergmann wrote:
-> 
-> A number of tracing headers turn off -Wsuggest-attribute=format for
-> gcc, but they don't turn it off for clang, so the same warning still
-> happens on new versions of clang that support the format attribute.
-> 
-> To avoid duplicating the same thing in each tracing header, as well
-> as changing all of them to also turn it off for clang, add a new
-> __vsnprintf() helper that is not annotated this way in linux/sprintf.h
-> but is defined to work the same way as the regular vsprintf.
+Hi Lore,
 
-vsprintf()
+We have been seeing the token memory leak in our custom kernel. After 
+pulling your patch in, we are still getting the leak (validated with 
+kmemleak). How did you figure out where this potential leak was? I want 
+to determine if we are leaking because of our changes or if there's more 
+areas for token leakage.
 
-> Aside from tracing, the same thing can be used in va_format(),
-> which is part of lib/vsprintf.c itself.
+-- Dylan
 
-...
-
-> --- a/include/linux/sprintf.h
-> +++ b/include/linux/sprintf.h
-> @@ -12,6 +12,7 @@ __printf(2, 3) int sprintf(char *buf, const char * fmt, ...);
->  __printf(2, 0) int vsprintf(char *buf, const char *, va_list);
->  __printf(3, 4) int snprintf(char *buf, size_t size, const char *fmt, ...);
->  __printf(3, 0) int vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
-> +int __vsnprintf(char *buf, size_t size, const char *fmt, va_list args);
-
-Why the __printf() annotation is in the C file and not here?
-Is this all about headers as the second paragraph in the commit message explains?
-I would add a comment to explain it here, otherwise we might see false patches to
-"make things consistent" in a wrong way.
-
->  __printf(3, 4) int scnprintf(char *buf, size_t size, const char *fmt, ...);
->  __printf(3, 0) int vscnprintf(char *buf, size_t size, const char *fmt, va_list args);
->  __printf(2, 3) __malloc char *kasprintf(gfp_t gfp, const char *fmt, ...);
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+On 5/31/26 2:10 AM, Lorenzo Bianconi wrote:
+> If link_conf or link_sta lookup fails in mt7996_tx_prepare_skb routine,
+> mt7996 driver leaks an already allocated tx token. Fix the issue
+> releasing the token in case of error.
+>
+> Fixes: 7ef0c7ad735b0 ("wifi: mt76: mt7996: Implement MLD address translation for EAPOL")
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>   drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 8 ++++++--
+>   drivers/net/wireless/mediatek/mt76/tx.c         | 2 +-
+>   2 files changed, 7 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+> index c98446057282..8c56344d211b 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+> @@ -1067,11 +1067,11 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+>   
+>   		link_conf = rcu_dereference(vif->link_conf[wcid->link_id]);
+>   		if (!link_conf)
+> -			return -EINVAL;
+> +			goto error_relase_token;
+>   
+>   		link_sta = rcu_dereference(sta->link[wcid->link_id]);
+>   		if (!link_sta)
+> -			return -EINVAL;
+> +			goto error_relase_token;
+>   
+>   		dma_sync_single_for_cpu(mdev->dma_dev, tx_info->buf[1].addr,
+>   					tx_info->buf[1].len, DMA_TO_DEVICE);
+> @@ -1176,6 +1176,10 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
+>   	tx_info->nbuf = MT_CT_DMA_BUF_NUM;
+>   
+>   	return 0;
+> +
+> +error_relase_token:
+> +	mt76_token_release(mdev, id, NULL);
+> +	return -EINVAL;
+>   }
+>   
+>   u32 mt7996_wed_init_buf(void *ptr, dma_addr_t phys, int token_id)
+> diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+> index 22f9690634c9..f96d9c471853 100644
+> --- a/drivers/net/wireless/mediatek/mt76/tx.c
+> +++ b/drivers/net/wireless/mediatek/mt76/tx.c
+> @@ -933,7 +933,7 @@ mt76_token_release(struct mt76_dev *dev, int token, bool *wake)
+>   #endif
+>   	}
+>   
+> -	if (dev->token_count < dev->token_size - MT76_TOKEN_FREE_THR &&
+> +	if (wake && dev->token_count < dev->token_size - MT76_TOKEN_FREE_THR &&
+>   	    dev->phy.q_tx[0]->blocked)
+>   		*wake = true;
+>   
+>
+> ---
+> base-commit: 4913f44167cf35a9536e9eec7352e15b2de0c573
+> change-id: 20260531-mt7996_tx_prepare_skb-token-leack-82e240d8c66f
+>
+> Best regards,
