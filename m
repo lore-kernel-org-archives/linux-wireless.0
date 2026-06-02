@@ -1,138 +1,97 @@
-Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com [209.85.161.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AB72222C5
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Jun 2026 19:06:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A40831352B
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Jun 2026 20:32:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780427220; cv=none; b=Ucr/yrr1RubrwoCCDCtr0uJjeVRbfXdABIQs/Tted2gGPpmavUitzXi/mBdWiKS67z5uI9J/RsaTqrfMXyjDPQGWScoCMwC/WuquwMcOpail0LiHaPyfZSYLxgig+Rnlltqn3OD2FLf7dqtcG/nlc9IVrzWncil4lusXVFupWJs=
+	t=1780432349; cv=none; b=schSkRYfGDGSrwD0xc0uwgFH7iY4Nu6ruNUT0JDHzhDtsBQ/ycEJG7isKcU6vphQKkcAdRkYyZxgl5xNpiGtH+W2wxgWzdYJMsjV3tiSRyp62DNgSVnyFRCyVUhv+ghxPoP2eJdjYMC8KST0cOanD/D+m9uVs7gvfrwHBJYggf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780427220; c=relaxed/simple;
-	bh=4klqaW+qlOcvDydYV4JdaHYFzR0FqwPoLlkr0xdbJXo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MnZXo9VjxwRvLXo+OFBiF9FqwX22E3aM+P2xYgtvQ2tKGgpWSV0UQWapD1+ZE5PcYkS2CKpDrajzTmncve0hRs5UYe5tRWFuP71HJM4F68Sg4HcSgbVHrTJOst3Cx9ALN+Sp5esl/VW1dwAX5BiBH1mFErMSSSK0nTkPn6A3s/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=FuTMALJR; arc=none smtp.client-ip=148.163.129.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="FuTMALJR"
-Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
-	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id CF6C32A461F
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Jun 2026 18:58:45 +0000 (UTC)
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
-	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 09C8DC008E;
-	Tue,  2 Jun 2026 18:58:35 +0000 (UTC)
-Received: from [192.168.101.118] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail3.candelatech.com (Postfix) with ESMTPSA id E226313C2B0;
-	Tue,  2 Jun 2026 11:58:32 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E226313C2B0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-	s=default; t=1780426713;
-	bh=4klqaW+qlOcvDydYV4JdaHYFzR0FqwPoLlkr0xdbJXo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=FuTMALJRvJrpeRqxwCThZVjQY1vWP0JxucKYuEVEbpTXjryKew/mrGPmokove/Nm1
-	 OYWL2YcJxzwgKE5C319iRtRTubqsSYqCWyinBlUYNqJxyYqSul1p2qTE8HK0sr5sUM
-	 MknIRjOF6wncVnkz05QoEHNSHhr6XwU8ke+sMuWY=
-Message-ID: <80ff2108-dce3-4060-a8d0-59740979a99a@candelatech.com>
-Date: Tue, 2 Jun 2026 11:58:32 -0700
+	s=arc-20240116; t=1780432349; c=relaxed/simple;
+	bh=D451K68YXi0VVvO2lWp+kSDvSLOugmI2bwM3iQUmO3w=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=sD5zlg+xpjqvpKV8n1Qi3Hec4Bv6HSLHTKhKdG9i1+BftDJGmfiMLqzqNmziKs8URABFgx/X3fEXDphzrr6e8/yuvEYoY18V6oqdYtHAt8kCkMR+vVe4vdVNf+Y79XLa76JJlAsH5PZ8YhRBJBj9FZwnJNouUOT5i+7x41H6UBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-69de23f28d5so8841294eaf.2
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Jun 2026 13:32:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780432348; x=1781037148;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=YL5nMlPraDN24Z7ecvcmfheTXvHmW6igzkP+gzLkuKc=;
+        b=rG/ZtV2ze99q+zTBdMTlXpb3icGNzeg1QnVEWYtW0388HEnd/U7jcChIdS8N9jrUvD
+         D0McraEOgvYaKmCRqLxUe13VMjbT7oJnMVW3739rtc+Y1NyPVUDEdlq9b6VnWHtlFnui
+         1VCJkLCcUmF1UwN8QS9wpA9tpiBkt0TMoyYiCobGYc5Ezmf1RNqGxNYAARhFZ7M47den
+         qZfns1Fp94zdlZILAZH0of7z+SfJ9O6vyaqaGTc+D28KPYw8n7UsTbVGbUA3bk/BukAt
+         ZjZlU7cPUJGDMrVYVptR5FZ1P5K1sbtSvVT/PVDNhG5VdEUiZ0Hqw0DuLzvB2nnt3CSk
+         B7/A==
+X-Forwarded-Encrypted: i=1; AFNElJ9wbHpi239yEcFGEYofVoNh2gN0lCCm3IBnreoWtEXld/bBe8Ky1jG2TVtqbhwtdYpzXwd698HkJyYwKiTnNA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfqSiRdZW1RjWeGYj3G3G/mSpljss/2u5iB77A3In0NQNUkdrV
+	PD6mCetT9MruJTlxk2To/AE0nbhdZZpEWs6ED6FZqQ1WmYixBj66NIAwKr+fih5QZr87F++w6SU
+	93PW8tFnxO3pldHFv1Ea4HS0+6PjblGglP8C2fDfSyJ9iudKCVikufdg4xmc=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: mt76: mt7996: Fix possible token leak in
- mt7996_tx_prepare_skb()
-To: Lorenzo Bianconi <lorenzo@kernel.org>, Felix Fietkau <nbd@nbd.name>,
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>, Matthias Brugger
- <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org
-References: <20260531-mt7996_tx_prepare_skb-token-leack-v1-1-2b9c9f59ceb1@kernel.org>
-Content-Language: en-US
-From: Dylan Eskew <dylan.eskew@candelatech.com>
-In-Reply-To: <20260531-mt7996_tx_prepare_skb-token-leack-v1-1-2b9c9f59ceb1@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MDID: 1780426717-WQhNphcM8TUz
-X-PPE-STACK: {"stack":"us5"}
-X-MDID-O:
- us5;ut7;1780426717;WQhNphcM8TUz;<dylan.eskew@candelatech.com>;40f3b03bb24907b736a33b345f288e14
-X-PPE-TRUSTED: V=1;DIR=OUT;
+X-Received: by 2002:a05:6820:4d87:b0:69e:35a5:136e with SMTP id
+ 006d021491bc7-69e47ecb87cmr326459eaf.24.1780432347870; Tue, 02 Jun 2026
+ 13:32:27 -0700 (PDT)
+Date: Tue, 02 Jun 2026 13:32:27 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a1f3ddb.7b89b7e1.205e57.000b.GAE@google.com>
+Subject: [syzbot] Monthly wireless report (Jun 2026)
+From: syzbot <syzbot+list14f4c43fd705908896b8@syzkaller.appspotmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Lore,
+Hello wireless maintainers/developers,
 
-We have been seeing the token memory leak in our custom kernel. After 
-pulling your patch in, we are still getting the leak (validated with 
-kmemleak). How did you figure out where this potential leak was? I want 
-to determine if we are leaking because of our changes or if there's more 
-areas for token leakage.
+This is a 31-day syzbot report for the wireless subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/wireless
 
--- Dylan
+During the period, 1 new issues were detected and 1 were fixed.
+In total, 31 issues are still open and 176 have already been fixed.
+There are also 17 low-priority issues.
 
-On 5/31/26 2:10 AM, Lorenzo Bianconi wrote:
-> If link_conf or link_sta lookup fails in mt7996_tx_prepare_skb routine,
-> mt7996 driver leaks an already allocated tx token. Fix the issue
-> releasing the token in case of error.
->
-> Fixes: 7ef0c7ad735b0 ("wifi: mt76: mt7996: Implement MLD address translation for EAPOL")
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> ---
->   drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 8 ++++++--
->   drivers/net/wireless/mediatek/mt76/tx.c         | 2 +-
->   2 files changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-> index c98446057282..8c56344d211b 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
-> @@ -1067,11 +1067,11 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
->   
->   		link_conf = rcu_dereference(vif->link_conf[wcid->link_id]);
->   		if (!link_conf)
-> -			return -EINVAL;
-> +			goto error_relase_token;
->   
->   		link_sta = rcu_dereference(sta->link[wcid->link_id]);
->   		if (!link_sta)
-> -			return -EINVAL;
-> +			goto error_relase_token;
->   
->   		dma_sync_single_for_cpu(mdev->dma_dev, tx_info->buf[1].addr,
->   					tx_info->buf[1].len, DMA_TO_DEVICE);
-> @@ -1176,6 +1176,10 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
->   	tx_info->nbuf = MT_CT_DMA_BUF_NUM;
->   
->   	return 0;
-> +
-> +error_relase_token:
-> +	mt76_token_release(mdev, id, NULL);
-> +	return -EINVAL;
->   }
->   
->   u32 mt7996_wed_init_buf(void *ptr, dma_addr_t phys, int token_id)
-> diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-> index 22f9690634c9..f96d9c471853 100644
-> --- a/drivers/net/wireless/mediatek/mt76/tx.c
-> +++ b/drivers/net/wireless/mediatek/mt76/tx.c
-> @@ -933,7 +933,7 @@ mt76_token_release(struct mt76_dev *dev, int token, bool *wake)
->   #endif
->   	}
->   
-> -	if (dev->token_count < dev->token_size - MT76_TOKEN_FREE_THR &&
-> +	if (wake && dev->token_count < dev->token_size - MT76_TOKEN_FREE_THR &&
->   	    dev->phy.q_tx[0]->blocked)
->   		*wake = true;
->   
->
-> ---
-> base-commit: 4913f44167cf35a9536e9eec7352e15b2de0c573
-> change-id: 20260531-mt7996_tx_prepare_skb-token-leack-82e240d8c66f
->
-> Best regards,
+Some of the still happening issues:
+
+Ref  Crashes Repro Title
+<1>  6959    Yes   WARNING in __cfg80211_ibss_joined (2)
+                   https://syzkaller.appspot.com/bug?extid=7f064ba1704c2466e36d
+<2>  1127    Yes   INFO: task hung in reg_process_self_managed_hints
+                   https://syzkaller.appspot.com/bug?extid=1f16507d9ec05f64210a
+<3>  628     Yes   INFO: task hung in crda_timeout_work (8)
+                   https://syzkaller.appspot.com/bug?extid=d41f74db64598e0b5016
+<4>  316     Yes   INFO: task hung in ath9k_hif_usb_firmware_cb (3)
+                   https://syzkaller.appspot.com/bug?extid=e9b1ff41aa6a7ebf9640
+<5>  48      No    WARNING in cfg80211_switch_netns
+                   https://syzkaller.appspot.com/bug?extid=3515319a302224e081b4
+<6>  39      Yes   WARNING: ODEBUG bug in ieee80211_led_exit (2)
+                   https://syzkaller.appspot.com/bug?extid=e84ecca6d1fa09a9b3d9
+<7>  38      Yes   KASAN: stack-out-of-bounds Write in carl9170_handle_command_response
+                   https://syzkaller.appspot.com/bug?extid=5c1ca6ccaa1215781cac
+<8>  34      Yes   INFO: task hung in nl80211_pre_doit (3)
+                   https://syzkaller.appspot.com/bug?extid=da14e8c0ada830335981
+<9>  19      Yes   WARNING in __cfg80211_bss_update (2)
+                   https://syzkaller.appspot.com/bug?extid=1a797e1c81be78a2ace7
+<10> 954     Yes   INFO: task hung in reg_check_chans_work (7)
+                   https://syzkaller.appspot.com/bug?extid=a2de4763f84f61499210
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
