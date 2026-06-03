@@ -1,88 +1,80 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 708D946AF37;
-	Wed,  3 Jun 2026 12:10:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2827347D933
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2026 12:36:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780488613; cv=none; b=rAPvN3ZYeEm7YmSlcGLrZMOQ68ZXXUZ3PY+R4NOC6M8ukXg4Fq3WJXjRq44SaXlTGgnlvylKdRACxhlHHJ5lcCoGWRbLxtbxd+Ab+T2WeEwmqM8AsHfnQ26ZxNJlMQ5Ken1dX/JCf7uAgUQ/CrOitfCoyLSgCICtG4Ghrwc0jtk=
+	t=1780490191; cv=none; b=hJVhucHLbVsngVJK7CklLVcUi0AWh1RG1gBacd9gcxQR+J1pIGd5hEBXfFnMAsJFKNlmJPycsynVYJ6f925VcxAfUaDxE7uhUmdiVekL2KEZF+vrDUqpnzzQL9cs0DB8lMkOoDRfiAl6nStKR8qqNViAMZE2lDw7RFSi+fu8CeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780488613; c=relaxed/simple;
-	bh=E53t0GX/q0rfd2pSXpToIBYHwBQUqiT01aMUKreh3Jk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=edRF+xowYZNhQabj0dXRDKDyMh0j3FjUY0bmGh1BCUnSkx7vM+QENxYQykSmBmnkHAb7mid8XkdR4pcFJlODk67f8Mw52JryRgrB7KwU0YHZ4O6aAjsuj3Cwai7Q1YVjSYBpsUVlLhtRuREweJNgHu/9BZtusFax5ObvVPHOACg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=keEAZASF; arc=none smtp.client-ip=168.119.38.16
+	s=arc-20240116; t=1780490191; c=relaxed/simple;
+	bh=QBtH6fUIReqErdu7wV6vyMYB40y6HKLBr0zbOxU+/fM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eTIc+vdh0xtBh0DlagxWMKjZKMCBD4l9KXaJkDZfLd2z3tR1kDiWclZRKZtGV0SgpYSf3z5MJUSST9NW+lfO1/Yg8u3xuaP3oB+SnUIYaqJHKT5xu+vx3SWe/XVX7xPGqvyh6JD9M/rBj495Si+q0FwYDSqDsZF54gA92y1SkwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=I2p2SLEm; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="keEAZASF"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="I2p2SLEm"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=+PlzdCER/RcjA0HQ3AgtKopayR3MXsHpT+3IgIX4iOI=;
-	t=1780488612; x=1781698212; b=keEAZASFmyNChkK4Q6g2K76nZgLQAiaZZNnZx+hczgaUs8/
-	xp8GEoH+fP08CGxro8wWlojDFOfCz9nK2vvepIiewV2tf6NOCTVOG9+xl10g0qjm+4OoUQ8Mc3iQf
-	dh62zPgKn8vOMQAjTsGzEE6IxJjcumXJQ6Q7m1ljAdSL6kennVsyqeai2i14Ysku4UxC9FmIADd2d
-	pgsJyW6ka1+5V8GGj9cHwyP7JptJyyplLDZjCmVTkTGGkdZZuHeRAvaKNUn8/PkTZ2yd2HiCCCWvH
-	Cdr3QLF1DSgZwvRCEBaY+i41uce/W320JMS7g1M8snvJ9h0If2t5Db41Ikb6lAfg==;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=VXNq8mYiLQZSLVxY+Ulawwo72Mxm9lg2zd9mT4enDkI=; t=1780490189; x=1781699789; 
+	b=I2p2SLEmj+R69qg6s3M8zL0YLKAn21tSvvt0rXKrF6eCVi3guy1gKpwZYUXcT0rF1VVjpOuRpdM
+	gfoVfBsGxVv3SV1SiCtWsj6zKUQ/ktODlajGkcFHplk88yeOhHYvEJRcWyTqDG1JR8405IGkGY9MH
+	U4yfK+WKF1Bmgg48q6rpJq7ylbVvZLPMoL/ao+M5AN5ws7sJ+lVdCUStnen7tjGDZaBvSyQCxZvvL
+	wuX3t6tP3lo+k1uTjvl7riAVgIlFlmfxPmrVzkmpoAu3F69KD57ZFdrzrFzFyOxtMwStOTJpS4ZwV
+	fyVc7qv/JrAC8f4nw9sINnCa096F+O7DZnHg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wUkQD-0000000H6do-3qUU;
-	Wed, 03 Jun 2026 14:10:10 +0200
-Message-ID: <978c9a11cf836680b1fd9365f3b90f028ddf5372.camel@sipsolutions.net>
-Subject: Re: [PATCH v4] wifi: mac80211: fix monitor mode frame capture for
- real chanctx drivers
+	id 1wUkpe-0000000H7UU-1BzC;
+	Wed, 03 Jun 2026 14:36:26 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>, 
-	linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org, Oscar Alfonso Diaz
-	 <oscar.alfonso.diaz@gmail.com>, fjhhz1997@gmail.com
-Date: Wed, 03 Jun 2026 14:10:09 +0200
-In-Reply-To: <20260519235713.49109-2-lucid_duck@justthetip.ca>
-References: <20260518170147.13885-1-lucid_duck@justthetip.ca>
-	 <20260519235713.49109-1-lucid_duck@justthetip.ca>
-	 <20260519235713.49109-2-lucid_duck@justthetip.ca>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+To: linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH wireless-next] wifi: mac80211: Free keys associated with NAN Device
+Date: Wed,  3 Jun 2026 14:36:24 +0200
+Message-ID: <20260603143624.c6c771885383.I929410cb8efec4fab2d42ead396bfefaf9f803f1@changeid>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
 
-On Tue, 2026-05-19 at 16:57 -0700, Devin Wittmayer wrote:
->=20
-> Cc: stable@vger.kernel.org # 6.9+
+From: Ilan Peer <ilan.peer@intel.com>
 
-No. It's known to crash drivers on some versions, so it should
-explicitly opt out of stable by
+A NAN Device interface can have keys associated with it, e.g.,
+IGTK and BIGTK used for Tx. When a NAN Device interface is stopped,
+we need to clear these keys.
 
-Cc: <stable+noautosel@kernel.org> # causes some older drivers to crash
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 56400c22d8bc..086272c3ec08 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -648,6 +648,12 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+ 
+ 			spin_unlock_bh(&sdata->u.nan.de.func_lock);
+ 		}
++
++		/*
++		 * Free the remaining keys that might be associated with the
++		 * NAN interface, e.g., IGTK and BIGTK used for Tx.
++		 */
++		ieee80211_free_keys(sdata, true);
+ 		break;
+ 	case NL80211_IFTYPE_NAN_DATA:
+ 		RCU_INIT_POINTER(sdata->u.nan_data.nmi, NULL);
+-- 
+2.53.0
 
-> -	if (chanctx_conf)
-> +	if (chanctx_conf) {
->  		chandef =3D &chanctx_conf->def;
-> -	else if (local->emulate_chanctx)
-> -		chandef =3D &local->hw.conf.chandef;
-> -	else
-> -		goto fail_rcu;
-> +	} else {
-> +		struct ieee80211_chanctx *ctx;
-> +
-> +		ctx =3D list_first_or_null_rcu(&local->chanctx_list,
-> +					     struct ieee80211_chanctx, list);
-> +		if (!ctx ||
-> +		    rcu_access_pointer(ctx->list.next) !=3D &local->chanctx_list)
-> +			goto fail_rcu;
-
-This results in a sparse warning, maybe my loop approach was better
-after all.
-
-johannes
