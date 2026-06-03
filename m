@@ -1,113 +1,157 @@
-Received: from mail.bues.ch (bues.ch [116.203.120.240])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1305D3AC0FA;
-	Wed,  3 Jun 2026 16:06:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.120.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C2C4351C34
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2026 16:13:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780502771; cv=none; b=AQVouf7CJSDa4SeM9098eixqQBkOgpCFiJ8IscThzicQyqvswf7j8XPim/zLpPfivjEi4+8t8IYFe92wFmlePAQxHapTT4TDs39BpfWjoS/Cbul6Eyh8u7ZOHlOKXiidDAdu8kJjc76Yq/UYZA0j2Z1Lp0XBLGnPynZzODm+Ct0=
+	t=1780503230; cv=none; b=Qi9yOBVx6pyTvuevQs5p9MRymM0+HkS/WT9fudE2PIv3hB4CM14YKtXAhlARJ7mVuezA6rYXP/iuKs02kYfiZ8Xz2T25H1MPsRD6w40TyRbhXutlyyAoqM0u9VLn67rZg1AMK4UnsOfLYdPNXN+jJpdTBBVC3Zxm7JFwI57MMXQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780502771; c=relaxed/simple;
-	bh=o+VHwJshp/4g4QPqIYPVm1Z0Wc1eNwBIFQwc1W+uTm8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r5bCOlhGMG+ob5H3W3aYkqTIx8ecgoFinO3huYX0sj11EvP1jDbqkPkYaNlwHxrv1ZaqikzzFxy8mLHBu0nSO9mgAOgV7np8oKhvhBpnbRedjOhmqvbpftfwItKLmszOc2Xz3WrOI62PV2hhn5opn+afX0ixaKcu9mo58+xYnCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch; spf=pass smtp.mailfrom=bues.ch; dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b=LdRqLtvB; arc=none smtp.client-ip=116.203.120.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bues.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bues.ch
+	s=arc-20240116; t=1780503230; c=relaxed/simple;
+	bh=NQGda+ldp72jCROfqHpVqZFXJq6f6BXsKUN8lXV3OIk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e4LRCNKICdmA8JGb60d/w7bfA7ecFlxBQ0QPieR/yA6hV7s/AQcZu7es5GSljZKbQZMuNbCHYja+BME8acaJBsBRTA2ItFXDIklwGp8M45FCNqQTafsLDfXQy1dHdXcaheyQxR2AyGNj5hyJieCSEdSVsr+P5/t0hfjWIMJkU9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bjrjSJc7; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bues.ch header.i=@bues.ch header.b="LdRqLtvB"
-Date: Wed, 3 Jun 2026 17:56:22 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bues.ch; s=main;
-	t=1780502222;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zrNSRM1Z4CEXimJhWlKdTHX8Qi2VKmaYmJepC+k/Uh8=;
-	b=LdRqLtvBCwu7MaAyQ4Y+4digiuhV8Mss/XeLrk8/j4X0oDmXjjWYklrdknUGNwT1SBOrQY
-	OvHj3EoQcEWDM758+GoVX/4seeTGR47vvR0ojtnyOY5xjlsQio+X0fIOqfTKnSIDOeE0w1
-	ciyd/lMGXziERPaf/ZXjKsgrfkxh0SOQ+fKvRpavQjMJlt76HpQLLV6VeF1iq+letpA27m
-	9vOaKpoA83WXqMN8gvsC6oXM/me0IVLuTODofhtEhghAuv6L7+b2MgjB/hXfrM3kXE2doX
-	bNMu1OQOkW4DmDpI0smlN5IERvQ6fVHPLaDVac06EcWddv+DeYcTMj8+p4SIQQ==
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Jeeva Anandh <anandhjeeva215@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: remove redundant mask bit set
-Message-ID: <20260603175622.3816e48d@barney>
-In-Reply-To: <20260603125331.6310-1-anandhjeeva215@gmail.com>
-References: <20260603125331.6310-1-anandhjeeva215@gmail.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bjrjSJc7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1780503228; x=1812039228;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=NQGda+ldp72jCROfqHpVqZFXJq6f6BXsKUN8lXV3OIk=;
+  b=bjrjSJc7eP0HYzxdTMuM+aGB49gSaKX1cNTqyqQEemF9KVGpC7a1qTfW
+   r0hArhmn4oJArYkWEZpd2PAZSTjTekMWLOOBbQ1RgOEAGnMDdF0Yj2Zt/
+   y0GJpnFMv3AjOIrqPu37+CcDTbKX6uUP/OHh7OAG/9v1yZMQpakMrgdoH
+   L1SzsmD1H3ZswH4qtwK1ulnwHwKjmRZ3SF9xkZwD8Ac6GvXZO7NiE7TE3
+   k9vWTm2FdW4o+XK4WEnxGjjL/8NhXtiOyatrDARicFtnQL+9U82TY8zfG
+   a3p4s2P1W2Sw2Oorf4USHY+GEM4POa3Bv83zQSHwkjhGCcEe0mvzGEgZZ
+   Q==;
+X-CSE-ConnectionGUID: 1cEQ9riaQEOlneBDFpmQ2A==
+X-CSE-MsgGUID: 4wfphkiISSupEkHSUnrNGQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11806"; a="81225135"
+X-IronPort-AV: E=Sophos;i="6.24,185,1774335600"; 
+   d="scan'208";a="81225135"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2026 09:13:47 -0700
+X-CSE-ConnectionGUID: k6LN7mBHR++zHn/j+ieAWQ==
+X-CSE-MsgGUID: Ux6O5Lk7RXigtCnUbBF23Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,185,1774335600"; 
+   d="scan'208";a="241293620"
+Received: from igk-lkp-server01.igk.intel.com (HELO 892db79562d4) ([10.211.93.152])
+  by fmviesa007.fm.intel.com with ESMTP; 03 Jun 2026 09:13:45 -0700
+Received: from kbuild by 892db79562d4 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wUoDv-0000000026z-2aBv;
+	Wed, 03 Jun 2026 16:13:43 +0000
+Date: Wed, 3 Jun 2026 18:13:06 +0200
+From: kernel test robot <lkp@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Johannes Berg <johannes.berg@intel.com>, Xiang Mei <xmei5@asu.edu>
+Subject: Re: [PATCH] wifi: cfg80211: enforce HE/EHT cap/oper consistency
+Message-ID: <202606031815.lqRk4eKB-lkp@intel.com>
+References: <20260603091812.101894-2-johannes@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/DwH1_DYjyQLfw_tQzHJPZ2i";
- protocol="application/pgp-signature"; micalg=pgp-sha512
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260603091812.101894-2-johannes@sipsolutions.net>
 
---Sig_/DwH1_DYjyQLfw_tQzHJPZ2i
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi Johannes,
 
-On Wed,  3 Jun 2026 12:53:31 +0000
-Jeeva Anandh <anandhjeeva215@gmail.com> wrote:
+kernel test robot noticed the following build errors:
 
-> mask is initialized to 0x0000001F, which already contains
-> the 0x0010 bit. Therefore the conditional OR operation is
-> redundant and can be removed.
->=20
-> Signed-off-by: Jeeva Anandh <anandhjeeva215@gmail.com>
-> ---
->  drivers/net/wireless/broadcom/b43legacy/main.c | 2 --
->  1 file changed, 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net=
-/wireless/broadcom/b43legacy/main.c
-> index 6b3e0b2bbca7..d32bffa6f009 100644
-> --- a/drivers/net/wireless/broadcom/b43legacy/main.c
-> +++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-> @@ -1904,8 +1904,6 @@ static int b43legacy_gpio_init(struct b43legacy_wld=
-ev *dev)
->  		mask |=3D 0x0200;
->  		set |=3D 0x0200;
->  	}
-> -	if (dev->dev->id.revision >=3D 2)
-> -		mask  |=3D 0x0010; /* FIXME: This is redundant. */
-> =20
->  #ifdef CONFIG_SSB_DRIVER_PCICORE
->  	pcidev =3D bus->pcicore.dev;
+[auto build test ERROR on wireless-next/main]
+[also build test ERROR on wireless/main linus/master v7.1-rc6 next-20260602]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-No, please don't just remove these things.
-There is a FIXME in the comment, because the author already noticed that th=
-is
-was strange and that there probably is an unknown reason for this.
-Just removing this FIXME without clarifying the underlying reason
-does not improve the code quality.
+url:    https://github.com/intel-lab-lkp/linux/commits/Johannes-Berg/wifi-cfg80211-enforce-HE-EHT-cap-oper-consistency/20260603-173706
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+patch link:    https://lore.kernel.org/r/20260603091812.101894-2-johannes%40sipsolutions.net
+patch subject: [PATCH] wifi: cfg80211: enforce HE/EHT cap/oper consistency
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260603/202606031815.lqRk4eKB-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project f43d6834093b19baf79beda8c0337ab020ac5f17)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260603/202606031815.lqRk4eKB-lkp@intel.com/reproduce)
 
---=20
-Michael B=C3=BCsch
-https://bues.ch/
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202606031815.lqRk4eKB-lkp@intel.com/
 
---Sig_/DwH1_DYjyQLfw_tQzHJPZ2i
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+All errors (new ones prefixed by >>):
 
------BEGIN PGP SIGNATURE-----
+>> net/wireless/nl80211.c:12054:8: error: use of undeclared identifier 'params'
+    12054 |         if (!!params->he_cap != !!params->he_oper)
+          |               ^~~~~~
+   net/wireless/nl80211.c:12054:28: error: use of undeclared identifier 'params'
+    12054 |         if (!!params->he_cap != !!params->he_oper)
+          |                                   ^~~~~~
+   net/wireless/nl80211.c:12057:8: error: use of undeclared identifier 'params'
+    12057 |         if (!!params->eht_cap != !!params->eht_oper)
+          |               ^~~~~~
+   net/wireless/nl80211.c:12057:29: error: use of undeclared identifier 'params'
+    12057 |         if (!!params->eht_cap != !!params->eht_oper)
+          |                                    ^~~~~~
+   4 errors generated.
 
-iQIzBAEBCgAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAmogTqYACgkQ9TK+HZCN
-iw4rIw/7BmJ/cX5IldAqIHP1+YokL2qpD0dZ5HPwnGDcMV0ftM0+akuzV2xtxQPW
-jr31qZOMDOOlEJ0QivrsGKDpWI4iBKNYKygOfnztdHYCfjIesuz9Mx8zNroNog9A
-3LlNyAmAk9xghW0dd0ehu71rGvshY3UATCZXxcyIhqNhsmODck5RWSfdYaUCI+s/
-R/ns6t/A1cVgm6NqeSgWyEnUYtXXIiWrGL59O34pbxwIK6XsQ2n4p9XBqV5q56eu
-bnISEdgaGSUUilfW1jHMIIvBA1OAr/ZMpp/MISWr04AnUQtpHKFQDUl+OoHpaBJj
-J9rONGQdHV4LTJpOQyvS6ujIlEvdR8EtSxc3fKa9btjGMS1uoJJrqIAi9brrNfR7
-myPzTjArQJFLVtplGLKdDwRvIYGIQ0HP8sD5+MRzL1Nnc1v6UQacmSwK+llMW8EM
-O5Y/gk+S9lYRaVcjKtn5S0N82a4+gPWkVZ8oL0siGOJCCNMLQk2dW0xBS4BQiw2T
-BUt6yzV+NTk9iqSyqkWGhY2ZNg/BvC/2M7Iyogy/f4W3/03JgoZH3tbKId93+1wB
-eL2gyqfFezjuVuKMnUTS75ygkdEC9ea2octVN5OtTYcvKWlyJQORE/Uv2LJHKdpl
-f3eSBLhlz2g0c96cXyw2HfWqOsYNnl8vEddu5x5VgBE2yr4DuG4=
-=m2BT
------END PGP SIGNATURE-----
 
---Sig_/DwH1_DYjyQLfw_tQzHJPZ2i--
+vim +/params +12054 net/wireless/nl80211.c
+
+ 12020	
+ 12021	static int nl80211_parse_counter_offsets(struct cfg80211_registered_device *rdev,
+ 12022						 const u8 *data, size_t datalen,
+ 12023						 int first_count, struct nlattr *attr,
+ 12024						 const u16 **offsets, unsigned int *n_offsets)
+ 12025	{
+ 12026		int i;
+ 12027	
+ 12028		*n_offsets = 0;
+ 12029	
+ 12030		if (!attr)
+ 12031			return 0;
+ 12032	
+ 12033		if (!nla_len(attr) || (nla_len(attr) % sizeof(u16)))
+ 12034			return -EINVAL;
+ 12035	
+ 12036		*n_offsets = nla_len(attr) / sizeof(u16);
+ 12037		if (rdev->wiphy.max_num_csa_counters &&
+ 12038		    (*n_offsets > rdev->wiphy.max_num_csa_counters))
+ 12039			return -EINVAL;
+ 12040	
+ 12041		*offsets = nla_data(attr);
+ 12042	
+ 12043		/* sanity checks - counters should fit and be the same */
+ 12044		for (i = 0; i < *n_offsets; i++) {
+ 12045			u16 offset = (*offsets)[i];
+ 12046	
+ 12047			if (offset >= datalen)
+ 12048				return -EINVAL;
+ 12049	
+ 12050			if (first_count != -1 && data[offset] != first_count)
+ 12051				return -EINVAL;
+ 12052		}
+ 12053	
+ 12054		if (!!params->he_cap != !!params->he_oper)
+ 12055			return -EINVAL;
+ 12056	
+ 12057		if (!!params->eht_cap != !!params->eht_oper)
+ 12058			return -EINVAL;
+ 12059	
+ 12060		return 0;
+ 12061	}
+ 12062	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
