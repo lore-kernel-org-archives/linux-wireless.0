@@ -1,35 +1,35 @@
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64EA03A1D07
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2026 09:28:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 936993F58C5
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2026 09:30:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780478899; cv=none; b=qri5IUUmAFHRCl7fc6RKt4y0ALqJmxXSFFXI2bD5pFAjHs7EUqtJNN2rJyNIK+zj9foTidEqTswPmpf/nvOQfN8te1cxI0tUK5KnTs78wYqXICMGmgDXab4ncBRVgvv746p2eD5lgVqSNFwbPd3PVGjYM4tbuP+OXqFiIZEG5hE=
+	t=1780479001; cv=none; b=lC+9QSlsfgQcl3LBvTQEcOUldmhLOmm79kkrCyXBjq2vjq0NJQFFVimVCIicjdgtxEjpurx923VR1hEZ1oNENYoiFOsSgL6KtfYWrxi/BFQGpiqFwgNGPCa6eMeXYgQoifIf+NQdNKhLPRGB4Nk1eJ1/G/vhj7gqV76NBdbjNyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780478899; c=relaxed/simple;
-	bh=0INONot60+NB/3Y6SrZWLNmW13aQx5ky62mxcs8WEoI=;
+	s=arc-20240116; t=1780479001; c=relaxed/simple;
+	bh=iZd1OibMe75xCmPPb03hmfw7qE0OpJdDXoswov6g6C0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ijl6eZJ8GjQtd6h7kkKCLHbwJ0mT1OCWZgXbNC7BAB7dkBf2JwReDYuW7EfwSIvVnpOyhL8vApmmwLnwFigV8eB0Nh/dkggNReG1tUZaPW4V+CCfkVqJS4RphRapyEAK7WcZQ/FGIfrLvDIVdX8XRgTcdPK0cUhuu+FpKFPFDMc=
+	 Content-Type:MIME-Version; b=VoCTTFYA2BSaMZda5VkwTthMM3yQ4k3BPyius7VDiBGtaFUHKKuicTcnS1f6Degl0ZNSe82BVdnc/eOvy6+6HGJv1AxKKBzkMZgh8p+m8UdUMesu09t46Zin8984fxqtTIh+YjLmC2tzyzYmciuosrBV2yXWZZJrg0aiYMjUo7Q=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
 	by metis.whiteo.stw.pengutronix.de with esmtp (Exim 4.92)
 	(envelope-from <p.zabel@pengutronix.de>)
-	id 1wUhtT-0002Zh-Sg; Wed, 03 Jun 2026 11:28:11 +0200
+	id 1wUhv8-0002lO-C5; Wed, 03 Jun 2026 11:29:54 +0200
 Received: from lupine.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::4e] helo=lupine)
 	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <p.zabel@pengutronix.de>)
-	id 1wUhtT-000tGs-0y;
-	Wed, 03 Jun 2026 11:28:11 +0200
+	id 1wUhv8-000tH7-0z;
+	Wed, 03 Jun 2026 11:29:54 +0200
 Received: from pza by lupine with local (Exim 4.98.2)
 	(envelope-from <p.zabel@pengutronix.de>)
-	id 1wUhtT-000000004kG-0vVD;
-	Wed, 03 Jun 2026 11:28:11 +0200
-Message-ID: <67d859a23c788e2d74606c9be65cf2114ef45ad2.camel@pengutronix.de>
-Subject: Re: [PATCH 4/4] bus: add BCM6362 on-chip WLAN SHIM bridge driver
+	id 1wUhv8-000000004mc-0y0H;
+	Wed, 03 Jun 2026 11:29:54 +0200
+Message-ID: <f66d479a4f97e1768067b6dc83b23a78cff8cb7c.camel@pengutronix.de>
+Subject: Re: [PATCH 3/4] dt-bindings: bus: add brcm,bcm6362-wlan
 From: Philipp Zabel <p.zabel@pengutronix.de>
 To: Alessio Ferri <alessio.ferri@mythread.it>, 
  =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=
@@ -38,10 +38,10 @@ To: Alessio Ferri <alessio.ferri@mythread.it>,
 	 <florian.fainelli@broadcom.com>
 Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
 	devicetree@vger.kernel.org
-Date: Wed, 03 Jun 2026 11:28:11 +0200
-In-Reply-To: <20260529-add-bcm6362-wlan-v1-4-722242777f58@gmail.com>
+Date: Wed, 03 Jun 2026 11:29:54 +0200
+In-Reply-To: <20260529-add-bcm6362-wlan-v1-3-722242777f58@gmail.com>
 References: <20260529-add-bcm6362-wlan-v1-0-722242777f58@gmail.com>
-	 <20260529-add-bcm6362-wlan-v1-4-722242777f58@gmail.com>
+	 <20260529-add-bcm6362-wlan-v1-3-722242777f58@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.56.2-0+deb13u1 
@@ -57,99 +57,41 @@ X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expand
 X-PTX-Original-Recipient: linux-wireless@vger.kernel.org
 
 On Fr, 2026-05-29 at 02:06 +0200, Alessio Ferri wrote:
-> Add the bridge driver that brings up the BCM6362 on-chip WLAN SHIM
-> and then populates a brcm,bus-axi child whose backplane is
-> enumerated by drivers/bcma/host_soc.c.
->=20
-> Add myself as MANTAINER for this shim.
->
-[...]
+> Document the binding for the SHIM bridge that gates the on-chip
+> 2.4 GHz WLAN block of the Broadcom BCM6362 SoC. The bridge owns the
+> SHIM peephole, a single clock for the macro, and two resets (the
+> SHIM macro itself and its ubus side). It is also a bus: it carries
+> one brcm,bus-axi child describing the bcma backplane behind the
+> SHIM, with a standard interrupt-map routing the d11 core's IRQ to
+> the SoC interrupt controller.
 >=20
 > Assisted-by: Claude:claude-4.8-opus
 > Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
 > ---
->  MAINTAINERS                     |   7 ++
->  drivers/bus/Kconfig             |  13 +++
->  drivers/bus/Makefile            |   1 +
->  drivers/bus/bcm6362-wlan-shim.c | 252 ++++++++++++++++++++++++++++++++++=
+>  .../devicetree/bindings/bus/brcm,bcm6362-wlan.yaml | 106 +++++++++++++++=
 ++++++
->  4 files changed, 273 insertions(+)
+>  1 file changed, 106 insertions(+)
 >=20
-[...]
-> diff --git a/drivers/bus/bcm6362-wlan-shim.c b/drivers/bus/bcm6362-wlan-s=
-him.c
+> diff --git a/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml=
+ b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
 > new file mode 100644
-> index 000000000000..a2de03cf8ff7
+> index 000000000000..c8d49ccdd2c1
 > --- /dev/null
-> +++ b/drivers/bus/bcm6362-wlan-shim.c
-> @@ -0,0 +1,252 @@
+> +++ b/Documentation/devicetree/bindings/bus/brcm,bcm6362-wlan.yaml
+> @@ -0,0 +1,106 @@
 [...]
-> +static int bcm6362_wlan_bringup(struct bcm6362_wlan *priv)
-> +{
-> +	int ret;
+> +  resets:
+> +    items:
+> +      - description: SHIM macro reset
+> +      - description: SHIM ubus reset
 > +
-> +	dev_info(priv->dev, "bring-up: start\n");
+> +  reset-names:
+> +    items:
+> +      - const: shim
+> +      - const: shim-ubus
 
-Too verbose.
-
-> +
-> +	ret =3D clk_prepare_enable(priv->clk);
-> +	if (ret) {
-> +		dev_err(priv->dev, "clk_prepare_enable failed: %d\n", ret);
-> +		return ret;
-> +	}
-> +	dev_info(priv->dev, "bring-up: clock enabled, rate=3D%lu Hz\n",
-> +		 clk_get_rate(priv->clk));
-> +	mdelay(10);
-
-Why is this a delay instead of a sleep? Why is it there at all?
-Prefer using msleep() or fsleep() if possible.
-
-> +
-> +	/* Reset toggle (brcm,bcm6345-reset hides the active-low softResetB
-> +	 * encoding, so assert/deassert read naturally here).
-> +	 */
-> +	reset_control_assert(priv->rst_shim_ubus);
-> +	reset_control_assert(priv->rst_shim);
-> +	mdelay(1);
-> +	reset_control_deassert(priv->rst_shim_ubus);
-> +	reset_control_deassert(priv->rst_shim);
-
-Switch deassert order for consistency with teardown, if possible.
-Or use reset_control_bulk_(de)assert() API.
-
-[...]
-
-> +static int bcm6362_wlan_probe(struct platform_device *pdev)
-> +{
-> +	struct device *dev =3D &pdev->dev;
-> +	struct of_dev_auxdata auxdata[2];
-> +	struct bcm6362_wlan *priv;
-> +	int ret;
-> +
-> +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> +	if (!priv)
-> +		return -ENOMEM;
-> +	priv->dev =3D dev;
-> +
-> +	priv->shim =3D devm_platform_ioremap_resource_byname(pdev, "shim");
-> +	if (IS_ERR(priv->shim))
-> +		return PTR_ERR(priv->shim);
-> +
-> +	priv->clk =3D devm_clk_get(dev, NULL);
-> +	if (IS_ERR(priv->clk))
-> +		return PTR_ERR(priv->clk);
-> +
-> +	priv->rst_shim =3D devm_reset_control_get_exclusive(dev, "shim");
-> +	if (IS_ERR(priv->rst_shim))
-> +		return PTR_ERR(priv->rst_shim);
-> +
-> +	priv->rst_shim_ubus =3D devm_reset_control_get_exclusive(dev,
-> +							       "shim-ubus");
-> +	if (IS_ERR(priv->rst_shim_ubus))
-> +		return PTR_ERR(priv->rst_shim_ubus);
-
-Consider using devm_reset_control_bulk_get_exclusive().
+The "shim" prefix is superfluous. Why not call them "macro" and "ubus"
+and match the description?
 
 regards
 Philipp
