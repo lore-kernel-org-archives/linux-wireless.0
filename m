@@ -1,46 +1,50 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 494BD4C97
-	for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2026 10:58:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3BA0305696
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2026 11:02:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780570740; cv=none; b=h2ezkNszE1vlHbXBUaLJsbI/S/B/H0MRLbUkNScuqnN8GzWjJH98dULz8ehLfco+bSOeU6Cqy8WRn6nz3wwxJLfX6irKi2ISgpoKFtVdjHejPE75khnHNx7vDG/PoABsJQLJNFwPdOutPdv/2gGunJdBHTrouMZzmRu2hq9/dfI=
+	t=1780570951; cv=none; b=j6qHSoOkwUbVLnAKu7f32fR2MhdcKBXa+40uFuZZQs2Ry5/DrOL3oyU9B9y/YkPffsaKcOJojhhO9WLgdJI4bej70B+HqxmKYAgdccx8hdhaDrMkjTIU2NclYLoNdx9OR5JAEGgP4YO2lKjW/9Tp7eXDyNBhjc9vW3redMmgZlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780570740; c=relaxed/simple;
-	bh=crMnSAGpr5/5EtAwev19o4ZDeMUVB5tGnPe8q46DeEo=;
+	s=arc-20240116; t=1780570951; c=relaxed/simple;
+	bh=C+RfC3kcC5jGSP2ehVJ/y1oBokVSArcpGVZD6oI1LIg=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=o3RdhzMAyUerS8UKeZb2NNMxVrJsNV1QCjIgiQXoZXvBDUOEeWY4EnuZ98sTLp0slvcQcaAIPxDV9cp56747TzI56byAWEF2V2BQBza+ILLjXyBAEyA1rHLRu8wJbID+ZFs3hra4nqbnN+WrBwqbIJ8/9GMKnm3C7nzdUFl6Y+g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=a1m7VGIM; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=eXKd9mI5oXBRpKPi9Qokrdp/NFY+qlCYvlruPioM0gokJg34rLFVm4d+qqNCvtJ+9ZYTRfbvMkoO32ZCegtuEGm3AREEk7qRz5cjB82HhWcHmmuxNyoJUcp85St2d0W25OBnlN9Z0fzRBkcXRUZ6cgzpBxVgBj+RMIy7V4Xkucs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=juoCsuBv; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="a1m7VGIM"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="juoCsuBv"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=p66z/WdpD+nRpKuR+nmwCjd44ndaQDJnBGQKktoO/Ko=;
-	t=1780570739; x=1781780339; b=a1m7VGIM//Dzeo0Hy3PXVziF36Apoft0Ht+Ob2EK7yWnKnU
-	XN+E7GJjOcWeS54V//eAlrUn+kTMfMoYS9FbtqOODuJU5ta50UuRJtOXr/KUXEdN2/+9F3/KBOy4M
-	WckHgpUL4zVIG9gGiQk3RN8r+sSs88Xb20upxDRespnqrG2tN0NdJyCBuqizTa40bRe+YMfDHzf7T
-	ebTTkNfv6e1Gg1q8H72VNu+uZeYVIwMXP+zWrR5G/ody+1gUSJ6N7qiSso2lIBDm5+Q8I5/6our2J
-	2rdRmDQlrO4H7o34hQ1n2BeF5fV/BGVoqSl8KnvFhQ9Nepm3ht5gHjRESTDN4LZA==;
+	Resent-Cc:Resent-Message-ID; bh=QoUl+iy4Q0l0d3iPZTSd3uGPnK7pDKJYC3R3dIC27+w=;
+	t=1780570949; x=1781780549; b=juoCsuBvoLZQQvS+q/FbpKC2/A6w3UVbIJVALcjXr3QEHwM
+	kjVdinIjib4OJLhlFXGGkdSL3WKkVbfQTk+ysrxH+gzebkM87a4o0uUGM4Jm8tNwlntAgyRUVp3+d
+	Crs0c25h7b9KfQmqRhzViVZBktww8Iki/i1whwgWKu76LzSJoirIxdeb3rleJQ9zV3tNOGUwoAiz1
+	qIB6+ZwRC6lXjlZH0Qt9tohPM9Ms23HHqim1eV+XMjvXJHutc8XRQRN5MEUj090os9FYwgQ+rhITu
+	tsMtZGjIqKgw0LIq7VhwGSbgo6/AGFojEwXVqX18YgyPnWOHe+7cTv0PkzVd7c8g==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wV5mp-00000000Rbj-2joi;
-	Thu, 04 Jun 2026 12:58:55 +0200
-Message-ID: <3b3319752ce919b5e767fbc5be8c4b7916efe828.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 3/3] wifi: mac80211: Add 802.3 multicast
- encapsulation offload support
+	id 1wV5qD-00000000Rhy-3iHH;
+	Thu, 04 Jun 2026 13:02:26 +0200
+Message-ID: <09e2bd29cf9f8ad3fe64776343fd1e06426ea362.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 1/2] wifi: nl80211: Add
+ NL80211_ATTR_MAX_CH_SWITCH_TIME attribute
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 04 Jun 2026 12:58:54 +0200
-In-Reply-To: <20260516162900.1981500-4-tamizh.raja@oss.qualcomm.com>
-References: <20260516162900.1981500-1-tamizh.raja@oss.qualcomm.com>
-	 <20260516162900.1981500-4-tamizh.raja@oss.qualcomm.com>
+To: Shashikala Prabhu <shashikala.prabhu@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, vikram@qti.qualcomm.com, 
+	kiranv@qti.qualcomm.com, pshashik@qti.qualcomm.com, cgopi@qti.qualcomm.com,
+ 	ybasamma@qti.qualcomm.com, vthiagar@qti.qualcomm.com,
+ sivad@qti.qualcomm.com, 	uvignesh@qti.qualcomm.com,
+ mohathan@qti.qualcomm.com, abishekg@qti.qualcomm.com
+Date: Thu, 04 Jun 2026 13:02:25 +0200
+In-Reply-To: <20260518103106.1462604-2-shashikala.prabhu@oss.qualcomm.com>
+References: <20260518103106.1462604-1-shashikala.prabhu@oss.qualcomm.com>
+	 <20260518103106.1462604-2-shashikala.prabhu@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -52,46 +56,44 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sat, 2026-05-16 at 21:59 +0530, Tamizh Chelvam Raja wrote:
-> mac80211 currently converts 802.3 multicast packets to 802.11 format befo=
-re
+On Mon, 2026-05-18 at 16:01 +0530, Shashikala Prabhu wrote:
+> From: Chandru Gopi <cgopi@qti.qualcomm.com>
+>=20
+> IEEE Std 802.11-2024 subclause 9.4.2.216 (Max Channel Switch Time element=
+)
+> defines a Switch Time field in the Channel Switch Announcement (CSA)
+> element that indicates the time delta between the time the last beacon
+> is transmitted by the AP in the current channel and the expected time
+> of the first beacon transmitted by the AP in the new channel.
+>=20
+> Add a new u32 nl80211 attribute, NL80211_ATTR_MAX_CH_SWITCH_TIME,
+> to carry this value in the NL80211_CMD_CH_SWITCH_STARTED_NOTIFY
+> event. Userspace can use this information to decide whether to
+> remain connected or disconnect before the AP moves to the new
+> channel.
 
+This really confused me a lot because that event is used on both sides
+... don't include the new netlink attribute when it's on the AP side.
 
-that line got really long
+Also bad split with the patches - make one cfg/nl80211 API patch, and
+one mac80211 patch.
 
-> @@ -4751,6 +4772,25 @@ static void __ieee80211_subif_start_xmit_8023(stru=
-ct sk_buff *skb,
->  		goto out;
->  	}
+>  	NL80211_ATTR_NPCA_PUNCT_BITMAP,
 > =20
-> +	/*
-> +	 * For station mode sta is valid even though dest address
-> +	 * is multicast and that will be sent in eth mode only.
-> +	 * So, add error check for sta pointer before choosing
-> +	 * multicast offload path.
-> +	 */
-> +	if (IS_ERR_OR_NULL(sta) &&
-> +	    unlikely(ieee80211_check_mcast_offload(sdata, skb))) {
+> +	NL80211_ATTR_MAX_CH_SWITCH_TIME,
+>  	/* add attributes here, update the policy in nl80211.c */
 
-That's not really a good way to write a comment ... it's describing the
-_change_, not the _state_. Also the code inside the if:
+nit: looks odd without the blank line
 
-> +		sta =3D NULL;
-> +		if (ieee80211_vif_get_num_mcast_if(sdata) <=3D 0) {
-> +			/* No associated STAs - no need to send multicast frames. */
-> +			kfree_skb(skb);
-> +			goto out;
-> +		}
-> +		link =3D &sdata->deflink;
-> +		key =3D rcu_dereference(link->default_multicast_key);
-> +		goto tx_offload;
-> +	}
+> +++ b/net/wireless/nl80211.c
+> @@ -1093,6 +1093,7 @@ static const struct nla_policy nl80211_policy[NUM_N=
+L80211_ATTR] =3D {
+>  	[NL80211_ATTR_NPCA_PRIMARY_FREQ] =3D { .type =3D NLA_U32 },
+>  	[NL80211_ATTR_NPCA_PUNCT_BITMAP] =3D
+>  		NLA_POLICY_FULL_RANGE(NLA_U32, &nl80211_punct_bitmap_range),
+> +	[NL80211_ATTR_MAX_CH_SWITCH_TIME] =3D { .type =3D NLA_U32 },
 
-is clearly for AP mode, so I'm not really sure what you intended to say
-there.
-
-Also don't really like yet another goto in this function, especially
-with the ones that are there now, it's really confusing. There are only
-a few lines that can be in an else branch?
+That seems wrong since it's output only, it shouldn't even be accepted
+on input.
 
 johannes
