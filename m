@@ -1,60 +1,63 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAFB48A2BF
-	for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2026 16:24:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85E3F481FCD
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2026 16:24:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780590271; cv=none; b=Poqwrdw1Sr9NBh6tJdnnaNJJOaceJhS0xhqh6RsXVuzoJuVZny06ceOMYPF7dmnfs3Adj3LkXELyjrRmRb3e1yV2NDfoZ/ywgSnY9ZOvsb0Zoxal3ftKMR+jn5uBCAHmkoIAXW656/E47sj/I8yvCPp0hrvmZGKeAywCk7qKch4=
+	t=1780590273; cv=none; b=Z/LEY8scgAnY9Nubw7cOgz5tlk866XZjUQ3CQE6nS/uKnnmskNKsasD+ElAKFSV65Wv5YuyOtZc1pUd5vZhtbTSVljrx3qNLZYz2cRV69WMNNtlcSKK9crt1gNXvrF+/fYaaU1w7oRGqCHJUwhiyopB8rV6PPc13DFMz1VYgwxw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780590271; c=relaxed/simple;
-	bh=DZvpXTBvJmQMQjAQYRAT7u0i1B8yODPMtFGoBCA606s=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KHcl29hCXUu80LxPmoc4duFEQsOeGR1yPcKz2ETcGCn5Lgh6cnw/WKC56zAT6SsWSWaSto8VTuhnaKL41SbFUXUKMHn2TjsPO9f6D7FHaAlWw6E1/iZlZxkMZTlIQNLJ7fcP4mG3jHol3BIAwZKoO05tqH0L33xx2dArIsQwYNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=P9Zm78Tv; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1780590273; c=relaxed/simple;
+	bh=ZsQdIAy+meq4G/2Eba7T26HA0RhSzoYIH5XfOMuaX6Q=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=DgzmDeQuTUri77oXjNLSVW2/SUWQnUGYKuM9QE19EoUfUSeh6hlWUPPfWzjGuL6oflpnPOlPYjkcCPTDjd5S/MWTRS1xctKl5qDxBqGCsfkeGPuk9pXvHXTUlEMJASugMcwI6TMmCyKKrGirOQOWTSIBDBOzs9yiEQjeeovIqtQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IOcig9Mi; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="P9Zm78Tv"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 654CPiQL2477908;
-	Thu, 4 Jun 2026 16:24:23 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IOcig9Mi"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 654BYooi995280;
+	Thu, 4 Jun 2026 16:24:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=9AP3ucK8HyQMpA0IoJm7JX16o0UkCuxlc02
-	e45Be4eg=; b=P9Zm78TvIuPJr5Gj1JXDm2pmpPiFsGVuPFNn2DM9DIWc+mX3FB+
-	phHYOhbZOTAn6sYVnMxyWgRxtB2ucbj+K4egWIsL02vg7b9g6bSCZM2XM0hPtCf8
-	FgvXYUdBBNmfA8hUVv9zk/h8fJWAGnhTWDxejqQFxWk+PVrjLiLMPduGjmpgozyP
-	EtYGBLoTlhqfj3RzV/Cel9oRXN7oe89PIfb+5iKsELWFJOkhqYALnEfcx/m36m5v
-	BYs+SYYdyClPF9PX9Ze76ag0DNbxnrsp7tYFuMeS7QxMKjQrA9CKm8EgJOk+/AnD
-	RH88+YMkQNdZaJuURQ0beCTOWmi7ZNU483g==
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=vJGhDZx5uEr
+	ihcZ1++ElaaqlkWEIkedmkgJdPCzoy8w=; b=IOcig9MiKPHIx2W5ag6+L1dCWAG
+	VoySADrOYn+Dqv/GnYMAn23/i4ze7/J2zHRHPhchk4foVI1xh5SuaQsoUO/wq5Np
+	ugFP0n8S6KEXARLgWVB9AdN+rBCiY5YOgCHdQOwD4/bSaoxN431d3frG54iNKhsF
+	P8LYpNCobjegfYi6tkWHYoU5t05zZsxLHS4PNQtIWZ47QxPWARf6nsyp/m7fUQk/
+	P31TiQ0jynReevbSTDnNfyQIWsihZnbCV3Go5ykN+dLHFkPlyUHaQJFbru4t3yfU
+	FqKhCB7JhYGZmCCTF+p3htCHDMr9L6oSSUFPXWmNW3gPPeqcAV9STPOegVA==
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ek4hvjcgg-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ek374tng2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 04 Jun 2026 16:24:22 +0000 (GMT)
+	Thu, 04 Jun 2026 16:24:23 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 654GOILL020800;
-	Thu, 4 Jun 2026 16:24:18 GMT
+	by APBLRPPMTA02.qualcomm.com (8.18.1.7/8.18.1.7) with ESMTP id 654GOKm3020836;
+	Thu, 4 Jun 2026 16:24:20 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4efrykcnm9-1
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4efrykcnmv-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 04 Jun 2026 16:24:18 +0000 (GMT)
+	Thu, 04 Jun 2026 16:24:20 +0000 (GMT)
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 654GOI4x020795;
-	Thu, 4 Jun 2026 16:24:18 GMT
+	by pps.reinject (8.18.1.12/8.18.1.12) with ESMTP id 654GOKeg020831;
+	Thu, 4 Jun 2026 16:24:20 GMT
 Received: from hu-devc-blr-u22-a.qualcomm.com (hu-tamizhr-blr.qualcomm.com [10.190.110.180])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 654GOIlR020794
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 654GOKHh020830
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 04 Jun 2026 16:24:18 +0000 (GMT)
+	Thu, 04 Jun 2026 16:24:20 +0000 (GMT)
 Received: by hu-devc-blr-u22-a.qualcomm.com (Postfix, from userid 380741)
-	id 5A00542107; Thu,  4 Jun 2026 21:54:17 +0530 (+0530)
+	id 2FB0142107; Thu,  4 Jun 2026 21:54:19 +0530 (+0530)
 From: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
         Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>
-Subject: [PATCH wireless-next v2 0/3] wifi: mac80211: Add 802.3 multicast encapsulation offload support
-Date: Thu,  4 Jun 2026 21:54:00 +0530
-Message-Id: <20260604162403.1563729-1-tamizh.raja@oss.qualcomm.com>
+Subject: [PATCH wireless-next v2 2/3] wifi: mac80211: Add multicast to unicast support for 802.3 path
+Date: Thu,  4 Jun 2026 21:54:02 +0530
+Message-Id: <20260604162403.1563729-3-tamizh.raja@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260604162403.1563729-1-tamizh.raja@oss.qualcomm.com>
+References: <20260604162403.1563729-1-tamizh.raja@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -64,51 +67,104 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-QCInternal: smtphost
 X-QCInternal: smtphost
-X-Proofpoint-GUID: Vi2vaK9W4fnGEXDW3oyAmx0vIpSiJkoP
-X-Proofpoint-ORIG-GUID: Vi2vaK9W4fnGEXDW3oyAmx0vIpSiJkoP
-X-Authority-Analysis: v=2.4 cv=Zp/d7d7G c=1 sm=1 tr=0 ts=6a21a6b6 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA0MDE2MCBTYWx0ZWRfX3jujAnNHbWXD
+ 6kBZlXhTe6K33OezRszh8YkwT7FelF8RWvCDkfzz9Y9VKvYJ9q86cSxLJ9Ra3qpBtOIn6b994nm
+ et/RjMpskgkpkUuKZ/rPUj6ldk36+SOqfuHY2ECa8AmI7IIGf7qpD2yuQl88XaxRoUFL7eDeGRr
+ x3/1Pf/2pl93O88YOpe6wD0XTMFixAixEOgIsZ8pKM97QwoNmBAd7SyV4kPZ7Z+6cZwIkL9uZ6Y
+ NpSBI+ts606J9h517RtpKJFYqXCPfnGsuP8nyc/hlrEhXiuKX08yivBZZDQC1EYc7XqzP+Zm8Kc
+ LSMFxaHE+a7oRZbvImm/3pDpXAdQqyZXIGDN5b+VXs77cu0oXQSABuW/wfvtuX1ndsu/WWadpAB
+ q6r3IoEPhiCHNCRSHUfdjYybH63rfjErSKpKkAdkmFJna8gMdbA07mmQfPp2B7bKWRkSPaJeOW0
+ nT8XqsUNaipd1Op4sFQ==
+X-Proofpoint-GUID: DHAVx_Hz2hbDej1FZb-fuSR6guFnLVTq
+X-Proofpoint-ORIG-GUID: DHAVx_Hz2hbDej1FZb-fuSR6guFnLVTq
+X-Authority-Analysis: v=2.4 cv=eJsjSnp1 c=1 sm=1 tr=0 ts=6a21a6b7 cx=c_pps
  a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=_K5XuSEh1TEqbUxoQ0s3:22 a=k9boe5s0Preo3kyLpH4A:9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA0MDE2MCBTYWx0ZWRfXxdtIk3Txy7rt
- KO11J/62X/cDUMGhPZEVdb97i1SgZrfcXIe71VDj9kJdt7YMHilH0Ud2QLTam7LH+tbTyVz22v0
- YzPLHuUVGz31KoHNSYQOikpVDtKx1sbB/hHokg6pHM6N/OJv97Adk24V3nc61J0J6TH9czWoSE4
- btBcMMlaKVGMdq+iImsFJmMOm8jZGATkt9YreKSJk1eWbqfrIYvxStFTfvIVRbcmSwq1/8/HZoM
- omLOVZhaWp2VGscvdb82OOquosI1WJAi6k0cGjV29zfm1VS6CFwiNTJ9NztBRE5VDIPcjispYYu
- 3g/XR4VkqBedWsfoGQ02UtSLq1saJAzPp7PrrdG0W+nmOPTwhSj2KvoNrsKlY5EruX/tzDDuYVN
- g2bC+d/pCvl7v2l6v+Gv00kUmF2x/kKZhIszgBhS3zO4eESY/1iCR0+/zWGAp6SqXunkpsAqKzN
- Zxe4vMzHWSJu8w76XvA==
+ a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8 a=hy-MqIdau6L9KCk-2joA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-04_04,2026-05-28_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- bulkscore=0 adultscore=0 suspectscore=0 priorityscore=1501 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606040160
+ malwarescore=0 spamscore=0 phishscore=0 bulkscore=0 impostorscore=0
+ lowpriorityscore=0 priorityscore=1501 clxscore=1015 adultscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605210000
+ definitions=main-2606040160
 
-This patch series add support for multicast eth offload, particularly
-for drivers supporting multicast offload functionality.
+mac80211 already supports multicast-to-unicast conversion for
+native 802.11 TX paths, but this handling is missing for the
+802.3 transmit path. Due to that the packet never converted to
+unicast and directly pass it to 802.11 Tx path by checking the
+destination address as multicast.
 
-Adding sanity check to handle sta pointer in ieee80211_8023_xmit().
-And add multicast to unicast support in 802.3 Tx path.
-Skip 802.11 conversion for the multicast packets for the driver
-advertising IEEE80211_OFFLOAD_ENCAP_MCAST vif offload flag.
+Extend ieee80211_subif_start_xmit_8023() to honor the
+multicast_to_unicast setting by cloning and converting multicast
+Ethernet frames into per-station unicast transmissions, following
+the same behavior of the native 802.11 TX path and allow it
+to take 802.3 path.
 
-Tamizh Chelvam Raja (3):
-  wifi: mac80211: Add sta pointer sanity check in ieee80211_8023_xmit()
-  wifi: mac80211: Add multicast to unicast support for 802.3 path
-  wifi: mac80211: Add 802.3 multicast encapsulation offload support
+Signed-off-by: Tamizh Chelvam Raja <tamizh.raja@oss.qualcomm.com>
+---
+ net/mac80211/tx.c | 33 ++++++++++++++++++++++++++-------
+ 1 file changed, 26 insertions(+), 7 deletions(-)
 
- include/net/mac80211.h |  4 ++
- net/mac80211/tx.c      | 95 ++++++++++++++++++++++++++++++++++--------
- 2 files changed, 82 insertions(+), 17 deletions(-)
-
-v2:
-  * Fixed comment section and commit log in
-    wifi: mac80211: Add 802.3 multicast encapsulation offload support patch
-
-base-commit: a26c2a22e7e88b2b5afb1349f3994fc564c988b1
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 15ec77255c3f..a353758f53ff 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4746,19 +4746,14 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	kfree_skb(skb);
+ }
+ 
+-netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
+-					    struct net_device *dev)
++static void __ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
++					      struct net_device *dev)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
+ 	struct ieee80211_key *key;
+ 	struct sta_info *sta;
+ 
+-	if (unlikely(!ieee80211_sdata_running(sdata) || skb->len < ETH_HLEN)) {
+-		kfree_skb(skb);
+-		return NETDEV_TX_OK;
+-	}
+-
+ 	rcu_read_lock();
+ 
+ 	if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
+@@ -4787,6 +4782,30 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
+ 	ieee80211_subif_start_xmit(skb, dev);
+ out:
+ 	rcu_read_unlock();
++}
++
++netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
++					    struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
++
++	if (unlikely(!ieee80211_sdata_running(sdata) || skb->len < ETH_HLEN)) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	if (unlikely(is_multicast_ether_addr(ehdr->h_dest) &&
++		     ieee80211_multicast_to_unicast(skb, dev))) {
++		struct sk_buff_head queue;
++
++		__skb_queue_head_init(&queue);
++		ieee80211_convert_to_unicast(skb, dev, &queue);
++		while ((skb = __skb_dequeue(&queue)))
++			__ieee80211_subif_start_xmit_8023(skb, dev);
++	} else {
++		__ieee80211_subif_start_xmit_8023(skb, dev);
++	}
+ 
+ 	return NETDEV_TX_OK;
+ }
 -- 
 2.34.1
 
