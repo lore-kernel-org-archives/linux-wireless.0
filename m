@@ -1,46 +1,46 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012008.outbound.protection.outlook.com [52.101.66.8])
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013057.outbound.protection.outlook.com [52.101.83.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB14D3F23A3;
-	Fri,  5 Jun 2026 16:14:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319303B42D4;
+	Fri,  5 Jun 2026 16:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.57
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780676078; cv=fail; b=ba8ULdfgodetQUq8dDRrzRqpFg6vukL8J58Smnvjs/Si5iMDG1NirPBXxt4nS5hTFuLRMIr+UhaJHUTbAIz7soz+CEeT+oUE9MeS43yMm9EeFFXOP1m2/1VBB9tWJdurWuc6Wo86uXh2Ltr4/doE+hdRslckBvdDq6tGip+aL54=
+	t=1780676081; cv=fail; b=a34x70ypPHITyZuUdb2LQBwTkuPm5KddCMHaox7HVQpD79r34FAbmTpsZouprHk5bf/bV+yuz8imvtVLoYmy2gclZFX8ZebBL/+sl7aUaU7iwxB5mlq2yhmeXEgFPlarpZrQgxZaXNBdVnCvGKKgh10SBngNIAZ2k3lXJqcvM3c=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780676078; c=relaxed/simple;
-	bh=SXHizlsSSoUGTtxIK/UAqDAk1P4NMxIHraomEbc+408=;
+	s=arc-20240116; t=1780676081; c=relaxed/simple;
+	bh=j9TYpPjU53g8I0BxDtDKNfDXUEjSyCuls/4mfuPP4iI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IaI7J33KRjFii0FkBy6Zd+FQ2tIgUrYyDS0w438EluLTI69O+UVNIeVJJ+CrxRBzIWwP/Zu/9s1/YNgHASxkZZv60WcMphaOEDL74VGhOAv70nxDtIOJwKRNaav+aNRgmDZwSFnbHkH2hK7KJO4JT3RArkq3/WVmLISw9eLXRW4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=lpU+CVJr; arc=fail smtp.client-ip=52.101.66.8
+	 Content-Type:MIME-Version; b=TItHYMsP06TZj236VD5jdehVjMcedxnqV4LsiBGoNEEFLbaOC5QRq7Ugzi4adfMs741NczX9x9kYszydmCoX+lsAXgxCYOg9LSZpdHeenv8Diish99gXe64PXWX/SfbfY/5UvZeKj9aveM+mN6Fdb1FYDYV6HcuvjqH2dk8LOZY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=kwksMQOu; arc=fail smtp.client-ip=52.101.83.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="lpU+CVJr"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="kwksMQOu"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bU/C1lDQMldKx+6kqyZpNUZ8zQgiL1SZQS940WUpHXweuOVCQfKE++rXTWP1ul+pivbmq+EOdtgxodLR7H+Wesy1gw6oNFj5BMgmsEMZeFWyScqz5/dWCdI5vQ+Of+8kXFUWKOZehrVJSpGrMZTLsFBYVvBKLBYMrJobsMBGxJeJpmShfRT3AjafDzJy5VOm1BgRM39iKClGGKz4VLhbnI2DpaMZcrANz6RHw9aJjiLr5JKOC0yf5GIGiYO3rGPy2DTBg0X+dB+OX+Wd7+S+FCCfcnydXO4IYwCl0mI5JV7YzOliyabXIM8q6zpDYZz453a+R/VyWAiLM1u2mRz3SA==
+ b=zKCy8AAfBALQ/Tt6eITFSomh8++Y0XDUvq/bpEJZObDCtGPWD4SaFiQ6cvEd2hpww2GLLy3bnYVjfVob2pUaowr0EYo2KSbuMZClWrxduhmo/W1PsPjX5q4jtptv7bmvoGf4dAOryXTrzPm6h1TlsK7kpKkUlfhYAhi8BEEaLAGsaELM4dB2jweoUmttNMAHb6c29pxnhdIQfV3MwTcrJ6H/8CBpouFNS1duhlxH3xvpfyswcWo1Thl4Bu64XlCRZpBYy9NngoMJf2Q2b37vSUTuVjQZFi8rmaprwYh2gk8AQQlkAAuMt6g19uoLV4PxdzIa3S/3JnXeE2HQ7r69HA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=k46rYRuq6T7xUquauoAzQyW+wlVJEElPk93nXE+l1/M=;
- b=zLujC3vB9keBLBlRJLmXoZYPQhhHrP1UaSKskpSG+JQxwKXFTls5ZWhFJ4M0YNnCy2FOWwZBSDmUd4ZJEXk+Re103WU4/mkcAZHWhmvkZjuBRyUJEgoTMuhw0wbXlRv7EzfjUousP10zw5EF+DXOff+n/80pKwq1tGGixDLEPaTayoW9wJWZ4kgHLbfeUml5oyMAQ5ptpV5leRjzaVaKce7qbaZzA5Enfm3MAidIBvlKXKWUCeC95984WJa6G4yIx7WVf1k0L6wsxTeFOzQ1I8azdpwMHwaQGRy1k1X2PWOxQuVanzb3OJbJQVumz6I4DO6sIlMquGiiyQNy7fqSuA==
+ bh=Zib8ja1mPNkdq8tpCNrxE/e0j1W0O0EXQ0QpLdlOvRE=;
+ b=cZJkx36kHh9qAkHyicIGZsPnchwCcOhfjTORFPENl7gOeSiaad161d/saLPugD6BP8wzmSukyV9Cm023WAtdW54OQOarVNYdVXXf3EDDpnquZ2EfS+xvypTZ06AL4D9caw7cR1/00Bs/uh0XCzUrdi4aM2cbKXsy0cnRLvRPC3+68QMpY24kQq14Rx/l6pzD/qgODsVimbyuN8Z1zz2N2Sh915nxj9ogscYRZavzmBoo1lIalTLlv74G4UdSa5aePdJNmkKFYXNN3hkDNiDWY7sVoqIEOntUTA2Qxf/nMp12fW8dapbkODFOjKMkW6zP4w6XBUBllhUqr+DLYwRtOg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=k46rYRuq6T7xUquauoAzQyW+wlVJEElPk93nXE+l1/M=;
- b=lpU+CVJrhA57EX63AD2Fr1OaFFJLQfjgDJkbkbUyJbLaVkMfsciUV8VHPnnUTlPW73bpYWA4a769qrk2GLoqELiGaGhjKvCkFAmf2NbYWS20k9bUgf/NM0Ybg9IPxGcpdaJtj4l+O+h9p/rWWaJ4F7eDQPogep82hApIOLax5mZvlnoDb6gNHLzdy919y8PA0nbYtrv7/BUoJD51CDX/ejxRmi9frC6YCglIfOfXpOkIyAx4rODVJ8PYo2VbBJVsG6IImIUKmzqxh5Yo3Lc+MyeOMq40bcdxSaNtNzOcpI9t86dbTUC3WV/qy9zeV+ozASEzCJ4dGfk+k0CutJJa/Q==
+ bh=Zib8ja1mPNkdq8tpCNrxE/e0j1W0O0EXQ0QpLdlOvRE=;
+ b=kwksMQOuju7u2UStt2cEXThbVv2fHM2SNn6fnH16LxIPuNBHa0+9+GqKvWzWyjFsH6SJa0aV7W10nU21kJH3wQZWqjab+afuDlw40wcbvV/etOY0IHhOLMlqxNPdY7beU1WA1p2z9LbIw7Wuz+hn3soOqk1Adt8KAPUtLXOSevYFiShZv88Ai5wYaf+NoTsP0vkvvaCcARTJfxW8e4lU0Lhlm9kpA0TKf0cNmVWWNYuEhzNvli9Ufaa0iDfcse9GJLSNg6VczaJvHOnvp0CXcnFW0CmzGxPExA70yzqACQEtSoqsUxr6fLK7d6FtMKKqrZKDuaunnV9m5ES4kWWStw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from AM6PR04MB5239.eurprd04.prod.outlook.com (2603:10a6:20b:7::12)
- by AS8PR04MB8436.eurprd04.prod.outlook.com (2603:10a6:20b:347::23) with
+ by DU0PR04MB9225.eurprd04.prod.outlook.com (2603:10a6:10:350::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.8; Fri, 5 Jun 2026
- 16:14:16 +0000
+ 16:14:33 +0000
 Received: from AM6PR04MB5239.eurprd04.prod.outlook.com
  ([fe80::fa76:ead:9e21:f84e]) by AM6PR04MB5239.eurprd04.prod.outlook.com
  ([fe80::fa76:ead:9e21:f84e%6]) with mapi id 15.21.0092.007; Fri, 5 Jun 2026
- 16:14:16 +0000
+ 16:14:33 +0000
 From: Jeff Chen <jeff.chen_1@nxp.com>
 To: linux-wireless@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -51,9 +51,9 @@ Cc: linux-kernel@vger.kernel.org,
 	s.hauer@pengutronix.de,
 	ulf.hansson@linaro.org,
 	Jeff Chen <jeff.chen_1@nxp.com>
-Subject: [PATCH v12 11/22] wifi: nxpwifi: add firmware command and TLV definitions
-Date: Sat,  6 Jun 2026 00:13:24 +0800
-Message-Id: <20260605161335.2415583-12-jeff.chen_1@nxp.com>
+Subject: [PATCH v12 16/22] wifi: nxpwifi: add utility functions and element handling support
+Date: Sat,  6 Jun 2026 00:13:29 +0800
+Message-Id: <20260605161335.2415583-17-jeff.chen_1@nxp.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260605161335.2415583-1-jeff.chen_1@nxp.com>
 References: <20260605161335.2415583-1-jeff.chen_1@nxp.com>
@@ -69,2541 +69,2119 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM6PR04MB5239:EE_|AS8PR04MB8436:EE_
-X-MS-Office365-Filtering-Correlation-Id: 81e4e06d-64f6-40ac-ab6c-08dec31d7dca
+X-MS-TrafficTypeDiagnostic: AM6PR04MB5239:EE_|DU0PR04MB9225:EE_
+X-MS-Office365-Filtering-Correlation-Id: be904808-4004-445f-5fce-08dec31d87e1
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|52116014|376014|1800799024|19092799006|366016|11063799006|5023799004|56012099006|6133799003|18002099003|22082099003|3023799007|38350700014;
+	BCL:0;ARA:13230040|52116014|366016|376014|19092799006|1800799024|38350700014|6133799003|22082099003|18002099003|56012099006|11063799006|3023799007;
 X-Microsoft-Antispam-Message-Info:
-	alH1NTrQBkpZVGe/YBuH9HjBmteocHWlCRsApDo0wP3KKJBKO3Z0Tte8DB2QdJup2M53rTl2eiV7f38KcdAGqTWZKocVFwTBo8B7ejG7XWT7vytM786u5aSoKwNxsnKOUeyDbTmjr6QZHaAV4zmCwfBZkfNSDZ/aGQsYnorvWIzPXqrZQbnN0YH17DEVvNvDvr+P6bh6LqwK1xBcb6gFhqLsmxaKq4KGxi3JodALJRirdZQASVdSW1GYi69/K6CrPXBevXTad77TaWmsnrz99CvOe9bZtk/Pej2Ph/zDaOoAIzstnKNIaU3dwFbIW303JSgwIEQshYiUZmKp7x/K73IQYo4tvc8N7GGVtO7KCxIDB4riK6OOyC7D3mabdr6xQq5V2uZY+FBAdd6WoFz8pSQslMEXF+BHnhnGP/rj7/oFnorRC5+tRAZlFzovC6auMVuRaBtfE2VnWGJddE0Fw+2ZHjlOoI98vlrJWIRfpFhINQr1FtaVwgXyD6fu7VJ7nwa1qZ+PE2lXPOBI2UE54etit25N+juth+SBlT9D5JAfU1kfwAinb4hVkUFONNpaPQibFCcZ+bhLO1rOsyH3U2qbMZ8DDZMBpcnLbMFamcroefaSvALp94bSbdyF9bnkAN3K4NtzJqU+SULmWAibADEdgPPfmAYZYJ/I8/pwzd4F+GnLGFU7iE9iIeWh5t49ROxR0i/uR5Pzar53xIhBtpTvRu3khcJzaLNrjF27vmyA57astFCFoHuFhnv/zpdV
+	LzF/Dt61GylOMiXsP9al0OWVUk3QEtIc90Sp2dKT1fZ1cS5ugcYCm6eN7sDsl0KD1yeGukfMn9IFR/l4ouRmka8yWR8oAl46fjigC/2Itjks9aVpm6sE33Wc3q94CfDTZwJ6qnZuOdwQQU8T9YwON3oe713yYorrtW5jBWoXAK7ajLeL9FWVjJ4gp2pl9yaTHWMNABuB5VOPl+bJAyFTJrJtAjXIdzXoCp/sxbgg5cSRrt5+50QZMUP/cJZw35CBjB3EzOCRtap9sGjET8LVGohvNDEuhcjpafXpwXy5cyuptCNSnPF5yIXuksZDft0p08MYt22l5zW3CTtVxdVbKmDNYp0asABNM5hfTEogZq1qgfRWuD22YYLEjX9KDBQldXAQeAgQ5SeSNcsyLTWUf9kGL9sEeddLodwohiA7GHBsOufz7No2eI3cUrnSu9VtMzzAL+4hwyiy65M0Sv9zKwCfdOuvMI2XLD8Q2ZgSLycBHMF5L+u5NQN20UUjHc2eEoFUzNGh8c4+uXihNuXVnK3skUdzROwmpn6A2zTp+0PY5xQ2dzttJ0/EAAfw46eYN61S9pN+VXSKUBWeC1CMxioHkyWL52e7N2dnNVhTwbJI+Xy3ezDvsX0gZrbrezfjelggkvS2T0mzzpDgEy0qmpl5gCUEOtoQg4jdQjCswTPR0wAfCWfIF0yi3NHueH+Zp+1m3oqe4p6Y4GCjdLjEslAVjLugDs3RzsljCQxyTMJ62+OAcVJibCn7e2mhCOEw
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB5239.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(376014)(1800799024)(19092799006)(366016)(11063799006)(5023799004)(56012099006)(6133799003)(18002099003)(22082099003)(3023799007)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB5239.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(366016)(376014)(19092799006)(1800799024)(38350700014)(6133799003)(22082099003)(18002099003)(56012099006)(11063799006)(3023799007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?5iY240QRzxYNyVxEyqMCVeyA/8ts/09wIlz3xh81UoKfKfc7xzks3AqD0BfA?=
- =?us-ascii?Q?KaODDQW8uym+kyDLUgXlQ+Iq1AHfCYnvCEy+Vek2d+/6OeMjPtR2CKMKNYdd?=
- =?us-ascii?Q?OiHHVMmiVTQAxVSHFxVtNehSOlH5HAGEaGt4PZlGNCwQinSFR4bn/dNN0hpK?=
- =?us-ascii?Q?iw40PpPPkijLTenhFgv00Vstfm1AFVOUCc3V3sbooE+NeZv5MHeaPGfHpDY8?=
- =?us-ascii?Q?09P65UYCQzMxy7HtD5M90tWkRDRjcn+RESw1j7gBO+WhmUFYtqzZww0YTRus?=
- =?us-ascii?Q?2QaAtVVz4/SLgoQGrW6Czh1GvsQaq+wbrO+B5au6podS1JEqUG8u6QrfkA0b?=
- =?us-ascii?Q?eugOKLKHZ3KMSEEqyO/87O4VOmdbIgitAdG2AcQbpfK7S9rr0dLqh1m4ezNX?=
- =?us-ascii?Q?c/Qe8lGwNHVTUG73GA5ob+7SKme+ihQTZytRWaBioehpa7RsUUdR8Ab/0OBy?=
- =?us-ascii?Q?aTO+s4IezIHaZG5rYxWU+jXAeqq/YclZp7ciXhgbGEe3MNHxVQ+w24GorqaR?=
- =?us-ascii?Q?Xiwm5Nl2xZm6HBtv4qMnhwc3NOnYqAuMWVUV5IWMMpbGu1mvHdI9I5OFN4KA?=
- =?us-ascii?Q?dnwn6N5CLHMuwX+MFogaDIdPXugL6zLiZKxwUi/5zk+5JbYgHnKcqGNaL2wB?=
- =?us-ascii?Q?xb03saj+6RrG+hqoIiKhNxKRNg+GoJ0PtA8y7LzDLBnTc1xeiQtFC99KoJEd?=
- =?us-ascii?Q?tJZjCtqPsIu+szQOvafHqzjFs+JJ3TXaKIfClSWwtpdaxb2ZfU30Dvfgzbjc?=
- =?us-ascii?Q?ql3vEKGqgkmabQhNkrX8AyiEjlrgqq1yoKIR7fXmVSv7qu1fGJMimOSj1ebO?=
- =?us-ascii?Q?g9Ad81JgxHVGYS09Gmc09IUMtQqoBUtujLOAucfiqm72hPFRibdfH5SWgWHj?=
- =?us-ascii?Q?AMwLtQAbh+JxsbAL3JWDZtVDr+N9r49AyUe6l7JA7kN/vZwfcT67BMoZ6P8W?=
- =?us-ascii?Q?XQfxt2//dogwZTezOzNEWMKWc4obDTbviEPZYkhaKdKmnZIbU9qoIjdrSONQ?=
- =?us-ascii?Q?iVCK6sz3Tzr+HdcF0JF2g7CjbgJ2OW9Kb/igIq2/tck+G9auV/DhbFubMnau?=
- =?us-ascii?Q?KTzWBWMXfFG+uiVvoJ6ff5JGwjFwg82ascKgGooGEc1cdivehBJvCxmvqT2K?=
- =?us-ascii?Q?IkKTy57aDGdxfXMTSIolTD9Dc5cJevDIDGTIVBiB1C5W/qFjx9KnwJH01L08?=
- =?us-ascii?Q?T2WuD4eUUBge6Uhx+cPpJUAs/WvYv2E/K7bbB6I86CTyDJ/ykSaBSK9J/0lh?=
- =?us-ascii?Q?pRhMyKyfb1MuFnbZNnDmXhAc+ilsgGJG465RhkQQYENeNwQMnuGLk+05PLuf?=
- =?us-ascii?Q?A7oOetMvwamKJe2iMwVp5C8Ake1uBFMSJqxPWRxq0FGhyLH87pBJr5OOFBB0?=
- =?us-ascii?Q?Fw/iQ860RhQO4FYv4JeOBl0mN5CoYAGZCmsgyp3nzJSzyhY4FnfPLQ7HGI1d?=
- =?us-ascii?Q?o8cHkCV5LiNbEIipDrwpEUWbV6+pKSZiBTwxxJGJr/i8RTvG74GGluOQDNI1?=
- =?us-ascii?Q?9Fq6uEdpP6RqIs/B++RCUS7pbsqnA3xtj9j4XOo5Th5yTvypdUtU6ObPU1TA?=
- =?us-ascii?Q?KryOQka+PSKGIFfS7ep4h2/5qeFGBc7mrevI0oNIp8fwcVDPNJGay23cY3Rg?=
- =?us-ascii?Q?2f4dxVPo59KcTg5BZr5dVS7ojMOOR7AvwETnNTzXY4J01EYnGP3LEIURgNUp?=
- =?us-ascii?Q?mwuTLvXasUkm9Y73zZeDgS8LrcASPLMyZ7dbc9EpNEgYOSQirSA+gLhsDt8K?=
- =?us-ascii?Q?tK/Pwg+QZw=3D=3D?=
+	=?us-ascii?Q?+yLqr4yTw1a+vVCrATDgNPQz9mDhhSmTde4/3wqqlSweM+18JmOfUKH5vCLe?=
+ =?us-ascii?Q?7uxpIuQk+VAdBKBDob1ajf3hPXfTMLQXWBlzb9RZ1GQEEvLiGLLi42yaWgvU?=
+ =?us-ascii?Q?47CMKWDwAga4MPOdGqZik8xDrzk35puAFA24Atd8EtcS/HhSXLrITB8fG5Mb?=
+ =?us-ascii?Q?6UUPmbd+aOeECx+u1CGXZNWyqqrzEgUIPBXTKtAI0w/UfUxxSJEINawj+cIW?=
+ =?us-ascii?Q?AUw2qJcvEL9s5TJfgzMnzvb7NtnGhf/jpaBWtZlNXlLe9WxLYVBTExA0HsH1?=
+ =?us-ascii?Q?yH6RwOahjcsVpjO8mIra9jb+gbMr3keIOXrzrrrGZFf6Ph3JSV09HXdH4pBP?=
+ =?us-ascii?Q?wQ4z3il7vu0qRjJSZGgwfHv0nP3GFsGYwDohkcfobadPX9okxB68R9sZmfip?=
+ =?us-ascii?Q?dtVDbb8Y3vh/2TD2SbHEg95/EsJh44SaaTjLL6yJTtJ69Vo7uusphuezOrpd?=
+ =?us-ascii?Q?OgQuyvz2KYu4ETZth9oDdR6eqHyzulycb/YxlDeMVV6/CNMlunvON02A/6E9?=
+ =?us-ascii?Q?0Qs967b/Jq01CSdr+YwN6iKYWCLosxRyMqgDJwLqJJ7gvckq6yDpmx1NGqJK?=
+ =?us-ascii?Q?S7+5vhxczUNJVObt0qW4HuZLf5gkZcTJ8MyfETy4Sfc3+oNJoEbPqfmX5dc+?=
+ =?us-ascii?Q?vz7YLEEK7HSlX88sl6AybC09ky8k4DEczkmsmiXyYH4ZbrsbjjOIKntUlMTw?=
+ =?us-ascii?Q?brX/f4ZKAySmVTu8mWCt1hg2CVqRom/YdV0i6uRcGwEgy9OGPxFNWPqbbzcW?=
+ =?us-ascii?Q?ogUoQuUJ3iA6YzNdyo57Drto9quucRUYyxrMpXEfbAEGiamzaQQ6Mx6J7/m/?=
+ =?us-ascii?Q?4L4gOhzckww8JnY9qHm++sj1ZYn7AlB5PLE0NTqBm0EmjB6Ig0fhCPmE/C3z?=
+ =?us-ascii?Q?RfPtk7Aw7pjZoJ0abft2neztlQdLGLLudRWBlDt/SyDchfGJFLYgJohOI7OV?=
+ =?us-ascii?Q?WHo/nX4SU7rnXJM8MzRrFnme7C1uhjBq38wI285hHBsJYpYEEWkK/AMMeN64?=
+ =?us-ascii?Q?O1h0Npi9024nDna6FmNMAcsexmzPRlOjtrDaz391R+hTqv/uCrZegRoYcCqi?=
+ =?us-ascii?Q?BaeJ37ZA+u9fRQ3TuYwBBoct0xc4WpoKJYYDEBfTOF1jB2lG2NNv3dRL5Ut/?=
+ =?us-ascii?Q?UqwvtEcvSGpAcqKlC2qRJgVAekrXKkZqELvxiLBiMzfHUR98WMJIVFmmaG3Y?=
+ =?us-ascii?Q?yoGoy4vTt5SxaEZRgk/fqz6tZX3Wi6FqYP9EheObLtAglTArmaBNc8r8aAlW?=
+ =?us-ascii?Q?bifClYwtKRcvJ5Cfe6Uu5dgcCweeZRCXnBHULTtAAzEUBQiMZ1+Wavtpqu2q?=
+ =?us-ascii?Q?B+RMGbfq1qa1fm4bP6TbQdKlpgx1xS5jKzbqZblXix21gN/zt0YGf/Pc0EEW?=
+ =?us-ascii?Q?1MY86xVJZORjFpu8+cjWUypANT3+1n80OlwqBNJ7VVom4jkDaiuAP0yJIhwx?=
+ =?us-ascii?Q?PKXtSX5E7pWOtG02QQ79UwKANncawk2HMIy6kwMoOCLDcDhNRVtDM0O3uBbs?=
+ =?us-ascii?Q?zvgWqqxYs9K0aRATDi4+lNDVray6GtEFZQk+ac4f22Mpoyoj3juI+eflemNq?=
+ =?us-ascii?Q?Rk6RJiu0InFkrM3qNpxi9F1pW75F4SPaCkF2tVcFppX11NuEiD1RBrvYcnO0?=
+ =?us-ascii?Q?ntztq6EZz4N2htUdV5MOtQPsxiemIq3+OmwFGCc/NqT/ILLuOSEmkZKgcWwi?=
+ =?us-ascii?Q?6fsGVQPjL86t+v329DnoOcNYpFrZFE1/ddLGZZrI1scnl0IZnaWJ7bC1sPCr?=
+ =?us-ascii?Q?e/t0d3+ODg=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 81e4e06d-64f6-40ac-ab6c-08dec31d7dca
+X-MS-Exchange-CrossTenant-Network-Message-Id: be904808-4004-445f-5fce-08dec31d87e1
 X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB5239.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 16:14:16.7142
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 16:14:33.6924
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lAd+HEY+O37YfZWkUsKZmaXsosDD0/kyxx0vmyRuOhQtZsZngHuL/081uOYtFUq63geDlBoqz/fO/AVGJ8jm5Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB8436
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9TsHgWPqpqRJEN3GzUj5romqMHLzI+DxlMeP63vvmoBJlxF9spkDQGVNu/sehr92kGr8hG9ieBw9ZNK8eeoxCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR04MB9225
 
-Add fw.h to define host command structures, NXP specific TLV types, and
-related constants used for communication with the firmware.
+Add utility infrastructure for the nxpwifi driver, including common
+helpers and management-element handling.
 
-Define host command IDs, result codes, TLV type values, and data
-structures for command payloads and firmware events. Provide macros for
-advertised firmware capabilities and feature flags.
+Add util.c/h for general-purpose utilities such as memory helpers,
+debug output, workqueue support, channel validation, histogram tracking,
+and VDLL firmware block download.
 
-Provide the foundational definitions for firmware interaction in the
-nxpwifi driver.
+Add ie.c for setting, updating, and removing management elements for
+beacon, probe response, and association response frames, including
+vendor-specific elements such as WPS and P2P. Provide automatic element
+index allocation and per-interface element tracking.
+
+Provide the shared utilities required by AP mode, debugging facilities,
+and firmware interaction.
 
 Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/fw.h | 2459 +++++++++++++++++++++++++
- 1 file changed, 2459 insertions(+)
- create mode 100644 drivers/net/wireless/nxp/nxpwifi/fw.h
+ drivers/net/wireless/nxp/nxpwifi/ie.c   |  480 ++++++++
+ drivers/net/wireless/nxp/nxpwifi/util.c | 1381 +++++++++++++++++++++++
+ drivers/net/wireless/nxp/nxpwifi/util.h |  155 +++
+ 3 files changed, 2016 insertions(+)
+ create mode 100644 drivers/net/wireless/nxp/nxpwifi/ie.c
+ create mode 100644 drivers/net/wireless/nxp/nxpwifi/util.c
+ create mode 100644 drivers/net/wireless/nxp/nxpwifi/util.h
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/fw.h b/drivers/net/wireless/nxp/nxpwifi/fw.h
+diff --git a/drivers/net/wireless/nxp/nxpwifi/ie.c b/drivers/net/wireless/nxp/nxpwifi/ie.c
 new file mode 100644
-index 000000000000..db4b7b7425a5
+index 000000000000..158755c0c905
 --- /dev/null
-+++ b/drivers/net/wireless/nxp/nxpwifi/fw.h
-@@ -0,0 +1,2459 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
++++ b/drivers/net/wireless/nxp/nxpwifi/ie.c
+@@ -0,0 +1,480 @@
++// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * nxpwifi: Firmware-specific macros and structures
++ * nxpwifi: management element handling - set/delete elements.
 + *
 + * Copyright 2011-2024 NXP
 + */
 +
-+#ifndef _NXPWIFI_FW_H_
-+#define _NXPWIFI_FW_H_
++#include "main.h"
++#include "cmdevt.h"
 +
-+#include <linux/if_ether.h>
++/* Return true if the IE index is used by another interface. */
++static bool
++nxpwifi_ie_index_used_by_other_intf(struct nxpwifi_private *priv, u16 idx)
++{
++	int i;
++	struct nxpwifi_adapter *adapter = priv->adapter;
++	struct nxpwifi_ie *ie;
 +
-+#define INTF_HEADER_LEN     4
++	for (i = 0; i < adapter->priv_num; i++) {
++		if (adapter->priv[i] != priv) {
++			ie = &adapter->priv[i]->mgmt_ie[idx];
++			if (ie->mgmt_subtype_mask && ie->ie_length)
++				return true;
++		}
++	}
 +
-+struct rfc_1042_hdr {
-+	u8 llc_dsap;
-+	u8 llc_ssap;
-+	u8 llc_ctrl;
-+	u8 snap_oui[3];
-+	__be16 snap_type;
-+} __packed;
++	return false;
++}
 +
-+struct rx_packet_hdr {
-+	struct ethhdr eth803_hdr;
-+	struct rfc_1042_hdr rfc1042_hdr;
-+} __packed;
++/* Pick an unused IE index for a new element. */
++static int
++nxpwifi_ie_get_autoidx(struct nxpwifi_private *priv, u16 subtype_mask,
++		       struct nxpwifi_ie *ie, u16 *index)
++{
++	u16 mask, len, i;
 +
-+struct tx_packet_hdr {
-+	struct ethhdr eth803_hdr;
-+	struct rfc_1042_hdr rfc1042_hdr;
-+} __packed;
++	for (i = 0; i < priv->adapter->max_mgmt_ie_index; i++) {
++		mask = le16_to_cpu(priv->mgmt_ie[i].mgmt_subtype_mask);
++		len = le16_to_cpu(ie->ie_length);
 +
-+struct nxpwifi_fw_header {
-+	__le32 dnld_cmd;
-+	__le32 base_addr;
-+	__le32 data_length;
-+	__le32 crc;
-+} __packed;
++		if (mask == NXPWIFI_AUTO_IDX_MASK)
++			continue;
 +
-+struct nxpwifi_fw_data {
-+	struct nxpwifi_fw_header header;
-+	__le32 seq_num;
-+	u8 data[];
-+} __packed;
++		if (mask == subtype_mask) {
++			if (len > IEEE_MAX_IE_SIZE)
++				continue;
 +
-+struct nxpwifi_fw_dump_header {
-+	__le16 seq_num;
-+	__le16 reserved;
-+	__le16 type;
-+	__le16 len;
-+} __packed;
++			*index = i;
++			return 0;
++		}
 +
-+#define FW_DUMP_INFO_ENDED 0x0002
++		if (!priv->mgmt_ie[i].ie_length) {
++			if (nxpwifi_ie_index_used_by_other_intf(priv, i))
++				continue;
 +
-+#define NXPWIFI_FW_DNLD_CMD_1 0x1
-+#define NXPWIFI_FW_DNLD_CMD_5 0x5
-+#define NXPWIFI_FW_DNLD_CMD_6 0x6
-+#define NXPWIFI_FW_DNLD_CMD_7 0x7
++			*index = i;
++			return 0;
++		}
++	}
 +
-+#define B_SUPPORTED_RATES               5
-+#define G_SUPPORTED_RATES               9
-+#define BG_SUPPORTED_RATES              13
-+#define A_SUPPORTED_RATES               9
-+#define HOSTCMD_SUPPORTED_RATES         14
-+#define N_SUPPORTED_RATES               3
-+#define ALL_802_11_BANDS \
-+	(BAND_A | BAND_B | BAND_G | BAND_GN | BAND_AN | BAND_AAC | BAND_GAC)
-+#define FW_MULTI_BANDS_SUPPORT \
-+	(BIT(8) | BIT(9) | BIT(10) | BIT(11) | BIT(12) | BIT(13))
-+#define IS_SUPPORT_MULTI_BANDS(adapter) \
-+	((adapter)->fw_cap_info & FW_MULTI_BANDS_SUPPORT)
++	return -ENOENT;
++}
++
++/* Build IE list and resolve AUTO index before sending to FW. */
++static int
++nxpwifi_update_autoindex_ies(struct nxpwifi_private *priv,
++			     struct nxpwifi_ie_list *ie_list)
++{
++	u16 travel_len, index, mask;
++	s16 input_len, tlv_len;
++	struct nxpwifi_ie *ie;
++	u8 *tmp;
++
++	input_len = le16_to_cpu(ie_list->len);
++	travel_len = sizeof(struct nxpwifi_ie_types_header);
++
++	ie_list->len = 0;
++
++	while (input_len >= sizeof(struct nxpwifi_ie_types_header)) {
++		ie = (struct nxpwifi_ie *)(((u8 *)ie_list) + travel_len);
++		tlv_len = le16_to_cpu(ie->ie_length);
++		travel_len += tlv_len + NXPWIFI_IE_HDR_SIZE;
++
++		if (input_len < tlv_len + NXPWIFI_IE_HDR_SIZE)
++			return -EINVAL;
++		index = le16_to_cpu(ie->ie_index);
++		mask = le16_to_cpu(ie->mgmt_subtype_mask);
++
++		if (index == NXPWIFI_AUTO_IDX_MASK) {
++			/* automatic addition */
++			if (nxpwifi_ie_get_autoidx(priv, mask, ie, &index))
++				return -ENOENT;
++			if (index == NXPWIFI_AUTO_IDX_MASK)
++				return -EINVAL;
++
++			tmp = (u8 *)&priv->mgmt_ie[index].ie_buffer;
++			memcpy(tmp, &ie->ie_buffer, le16_to_cpu(ie->ie_length));
++			priv->mgmt_ie[index].ie_length = ie->ie_length;
++			priv->mgmt_ie[index].ie_index = cpu_to_le16(index);
++			priv->mgmt_ie[index].mgmt_subtype_mask =
++							cpu_to_le16(mask);
++
++			ie->ie_index = cpu_to_le16(index);
++		} else {
++			if (mask != NXPWIFI_DELETE_MASK)
++				return -EINVAL;
++			/*
++			 * Check if this index is being used on any
++			 * other interface.
++			 */
++			if (nxpwifi_ie_index_used_by_other_intf(priv, index))
++				return -EPERM;
++
++			ie->ie_length = 0;
++			memcpy(&priv->mgmt_ie[index], ie,
++			       sizeof(struct nxpwifi_ie));
++		}
++
++		le16_unaligned_add_cpu
++		(&ie_list->len,
++		 le16_to_cpu(priv->mgmt_ie[index].ie_length) +
++		 NXPWIFI_IE_HDR_SIZE);
++		input_len -= tlv_len + NXPWIFI_IE_HDR_SIZE;
++	}
++
++	if (GET_BSS_ROLE(priv) == NXPWIFI_BSS_ROLE_UAP)
++		return nxpwifi_send_cmd(priv, HOST_CMD_UAP_SYS_CONFIG,
++					HOST_ACT_GEN_SET,
++					UAP_CUSTOM_IE_I, ie_list, true);
++
++	return 0;
++}
++
++/* Pack beacon/probe/assoc IEs into one list and update auto-assigned indices. */
++static int
++nxpwifi_update_uap_custom_ie(struct nxpwifi_private *priv,
++			     struct nxpwifi_ie *beacon_ie, u16 *beacon_idx,
++			     struct nxpwifi_ie *pr_ie, u16 *probe_idx,
++			     struct nxpwifi_ie *ar_ie, u16 *assoc_idx)
++{
++	struct nxpwifi_ie_list *ap_custom_ie;
++	u8 *pos;
++	u16 len;
++	int ret;
++
++	ap_custom_ie = kzalloc_obj(*ap_custom_ie, GFP_KERNEL);
++	if (!ap_custom_ie)
++		return -ENOMEM;
++
++	ap_custom_ie->type = cpu_to_le16(TLV_TYPE_MGMT_IE);
++	pos = (u8 *)ap_custom_ie->ie_list;
++
++	if (beacon_ie) {
++		len = sizeof(struct nxpwifi_ie) - IEEE_MAX_IE_SIZE +
++		      le16_to_cpu(beacon_ie->ie_length);
++		memcpy(pos, beacon_ie, len);
++		pos += len;
++		le16_unaligned_add_cpu(&ap_custom_ie->len, len);
++	}
++	if (pr_ie) {
++		len = sizeof(struct nxpwifi_ie) - IEEE_MAX_IE_SIZE +
++		      le16_to_cpu(pr_ie->ie_length);
++		memcpy(pos, pr_ie, len);
++		pos += len;
++		le16_unaligned_add_cpu(&ap_custom_ie->len, len);
++	}
++	if (ar_ie) {
++		len = sizeof(struct nxpwifi_ie) - IEEE_MAX_IE_SIZE +
++		      le16_to_cpu(ar_ie->ie_length);
++		memcpy(pos, ar_ie, len);
++		pos += len;
++		le16_unaligned_add_cpu(&ap_custom_ie->len, len);
++	}
++
++	ret = nxpwifi_update_autoindex_ies(priv, ap_custom_ie);
++
++	pos = (u8 *)(&ap_custom_ie->ie_list[0].ie_index);
++	if (beacon_ie && *beacon_idx == NXPWIFI_AUTO_IDX_MASK) {
++		/* save beacon element index after auto-indexing */
++		*beacon_idx = le16_to_cpu(ap_custom_ie->ie_list[0].ie_index);
++		len = sizeof(*beacon_ie) - IEEE_MAX_IE_SIZE +
++		      le16_to_cpu(beacon_ie->ie_length);
++		pos += len;
++	}
++	if (pr_ie && le16_to_cpu(pr_ie->ie_index) == NXPWIFI_AUTO_IDX_MASK) {
++		/* save probe resp element index after auto-indexing */
++		*probe_idx = *((u16 *)pos);
++		len = sizeof(*pr_ie) - IEEE_MAX_IE_SIZE +
++		      le16_to_cpu(pr_ie->ie_length);
++		pos += len;
++	}
++	if (ar_ie && le16_to_cpu(ar_ie->ie_index) == NXPWIFI_AUTO_IDX_MASK)
++		/* save assoc resp element index after auto-indexing */
++		*assoc_idx = *((u16 *)pos);
++
++	kfree(ap_custom_ie);
++	return ret;
++}
++
++/* Append vendor IE (if present) into nxpwifi_ie, allocating as needed. */
++static int nxpwifi_update_vs_ie(const u8 *ies, int ies_len,
++				struct nxpwifi_ie **ie_ptr, u16 mask,
++				unsigned int oui, u8 oui_type)
++{
++	struct element *vs_ie;
++	struct nxpwifi_ie *ie = *ie_ptr;
++	const u8 *vendor_ie;
++
++	vendor_ie = cfg80211_find_vendor_ie(oui, oui_type, ies, ies_len);
++	if (vendor_ie) {
++		if (!*ie_ptr) {
++			*ie_ptr = kzalloc_obj(struct nxpwifi_ie, GFP_KERNEL);
++			if (!*ie_ptr)
++				return -ENOMEM;
++			ie = *ie_ptr;
++		}
++
++		vs_ie = (struct element *)vendor_ie;
++		if (le16_to_cpu(ie->ie_length) + vs_ie->datalen + 2 >
++			IEEE_MAX_IE_SIZE)
++			return -EINVAL;
++		memcpy(ie->ie_buffer + le16_to_cpu(ie->ie_length),
++		       vs_ie, vs_ie->datalen + 2);
++		le16_unaligned_add_cpu(&ie->ie_length, vs_ie->datalen + 2);
++		ie->mgmt_subtype_mask = cpu_to_le16(mask);
++		ie->ie_index = cpu_to_le16(NXPWIFI_AUTO_IDX_MASK);
++	}
++
++	*ie_ptr = ie;
++	return 0;
++}
++
++/* Parse beacon/probe/assoc IEs from cfg80211 and push them to FW. */
++static int nxpwifi_set_mgmt_beacon_data_ies(struct nxpwifi_private *priv,
++					    struct cfg80211_beacon_data *data)
++{
++	struct nxpwifi_ie *beacon_ie = NULL, *pr_ie = NULL, *ar_ie = NULL;
++	u16 beacon_idx = NXPWIFI_AUTO_IDX_MASK, pr_idx = NXPWIFI_AUTO_IDX_MASK;
++	u16 ar_idx = NXPWIFI_AUTO_IDX_MASK;
++	int ret = 0;
++
++	if (data->beacon_ies && data->beacon_ies_len) {
++		nxpwifi_update_vs_ie(data->beacon_ies, data->beacon_ies_len,
++				     &beacon_ie, MGMT_MASK_BEACON,
++				     WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		nxpwifi_update_vs_ie(data->beacon_ies, data->beacon_ies_len,
++				     &beacon_ie, MGMT_MASK_BEACON,
++				     WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P);
++	}
++
++	if (data->proberesp_ies && data->proberesp_ies_len) {
++		nxpwifi_update_vs_ie(data->proberesp_ies,
++				     data->proberesp_ies_len, &pr_ie,
++				     MGMT_MASK_PROBE_RESP, WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		nxpwifi_update_vs_ie(data->proberesp_ies,
++				     data->proberesp_ies_len, &pr_ie,
++				     MGMT_MASK_PROBE_RESP,
++				     WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P);
++	}
++
++	if (data->assocresp_ies && data->assocresp_ies_len) {
++		nxpwifi_update_vs_ie(data->assocresp_ies,
++				     data->assocresp_ies_len, &ar_ie,
++				     MGMT_MASK_ASSOC_RESP |
++				     MGMT_MASK_REASSOC_RESP,
++				     WLAN_OUI_MICROSOFT,
++				     WLAN_OUI_TYPE_MICROSOFT_WPS);
++		nxpwifi_update_vs_ie(data->assocresp_ies,
++				     data->assocresp_ies_len, &ar_ie,
++				     MGMT_MASK_ASSOC_RESP |
++				     MGMT_MASK_REASSOC_RESP, WLAN_OUI_WFA,
++				     WLAN_OUI_TYPE_WFA_P2P);
++	}
++
++	if (beacon_ie || pr_ie || ar_ie) {
++		ret = nxpwifi_update_uap_custom_ie(priv, beacon_ie,
++						   &beacon_idx, pr_ie,
++						   &pr_idx, ar_ie, &ar_idx);
++		if (ret)
++			goto done;
++	}
++
++	priv->beacon_idx = beacon_idx;
++	priv->proberesp_idx = pr_idx;
++	priv->assocresp_idx = ar_idx;
++
++done:
++	kfree(beacon_ie);
++	kfree(pr_ie);
++	kfree(ar_ie);
++
++	return ret;
++}
++
++/* Parse head/tail IEs from cfg80211_beacon_data and send them to FW. */
++static int nxpwifi_uap_parse_tail_ies(struct nxpwifi_private *priv,
++				      struct cfg80211_beacon_data *info)
++{
++	struct nxpwifi_ie *gen_ie;
++	struct element *hdr;
++	struct ieee80211_vendor_ie *vendorhdr;
++	u16 gen_idx = NXPWIFI_AUTO_IDX_MASK, ie_len = 0;
++	int left_len, parsed_len = 0;
++	unsigned int token_len;
++	int ret = 0;
++
++	if (!info->tail || !info->tail_len)
++		return 0;
++
++	gen_ie = kzalloc_obj(*gen_ie, GFP_KERNEL);
++	if (!gen_ie)
++		return -ENOMEM;
++
++	left_len = info->tail_len;
++
++	/* Skip IEs generated by FW from bss configuration to avoid duplicates. */
++	while (left_len > sizeof(struct element)) {
++		hdr = (void *)(info->tail + parsed_len);
++		token_len = hdr->datalen + sizeof(struct element);
++		if (token_len > left_len) {
++			ret = -EINVAL;
++			goto done;
++		}
++
++		switch (hdr->id) {
++		case WLAN_EID_SSID:
++		case WLAN_EID_SUPP_RATES:
++		case WLAN_EID_COUNTRY:
++		case WLAN_EID_PWR_CONSTRAINT:
++		case WLAN_EID_ERP_INFO:
++		case WLAN_EID_EXT_SUPP_RATES:
++		case WLAN_EID_HT_CAPABILITY:
++		case WLAN_EID_HT_OPERATION:
++		case WLAN_EID_VHT_CAPABILITY:
++			break;
++		case WLAN_EID_VENDOR_SPECIFIC:
++			/* Skip only Microsoft WMM element */
++			if (cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WMM,
++						    (const u8 *)hdr,
++						    token_len))
++				break;
++			fallthrough;
++		default:
++			if (ie_len + token_len > IEEE_MAX_IE_SIZE) {
++				ret = -EINVAL;
++				goto done;
++			}
++			memcpy(gen_ie->ie_buffer + ie_len, hdr, token_len);
++			ie_len += token_len;
++			break;
++		}
++		left_len -= token_len;
++		parsed_len += token_len;
++	}
++
++	/*
++	 * parse only WPA vendor element from tail, WMM element is configured by
++	 * bss_config command
++	 */
++	vendorhdr = (void *)cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++						    WLAN_OUI_TYPE_MICROSOFT_WPA,
++						    info->tail, info->tail_len);
++	if (vendorhdr) {
++		token_len = vendorhdr->len + sizeof(struct element);
++		if (ie_len + token_len > IEEE_MAX_IE_SIZE) {
++			ret = -EINVAL;
++			goto done;
++		}
++		memcpy(gen_ie->ie_buffer + ie_len, vendorhdr, token_len);
++		ie_len += token_len;
++	}
++
++	if (!ie_len)
++		goto done;
++
++	gen_ie->ie_index = cpu_to_le16(gen_idx);
++	gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
++						MGMT_MASK_PROBE_RESP |
++						MGMT_MASK_ASSOC_RESP);
++	gen_ie->ie_length = cpu_to_le16(ie_len);
++
++	ret = nxpwifi_update_uap_custom_ie(priv, gen_ie, &gen_idx, NULL,
++					   NULL, NULL, NULL);
++
++	if (ret)
++		goto done;
++
++	priv->gen_idx = gen_idx;
++
++ done:
++	kfree(gen_ie);
++	return ret;
++}
++
++/* Parse head/tail/beacon/probe/assoc IEs and program the FW. */
++int nxpwifi_set_mgmt_ies(struct nxpwifi_private *priv,
++			 struct cfg80211_beacon_data *info)
++{
++	int ret;
++
++	ret = nxpwifi_uap_parse_tail_ies(priv, info);
++
++	if (ret)
++		return ret;
++
++	return nxpwifi_set_mgmt_beacon_data_ies(priv, info);
++}
++
++/* Remove previously set management IEs. */
++int nxpwifi_del_mgmt_ies(struct nxpwifi_private *priv)
++{
++	struct nxpwifi_ie *beacon_ie = NULL, *pr_ie = NULL;
++	struct nxpwifi_ie *ar_ie = NULL, *gen_ie = NULL;
++	int ret = 0;
++
++	if (priv->gen_idx != NXPWIFI_AUTO_IDX_MASK) {
++		gen_ie = kmalloc_obj(*gen_ie, GFP_KERNEL);
++		if (!gen_ie)
++			return -ENOMEM;
++
++		gen_ie->ie_index = cpu_to_le16(priv->gen_idx);
++		gen_ie->mgmt_subtype_mask = cpu_to_le16(NXPWIFI_DELETE_MASK);
++		gen_ie->ie_length = 0;
++		ret = nxpwifi_update_uap_custom_ie(priv, gen_ie, &priv->gen_idx,
++						   NULL, &priv->proberesp_idx,
++						   NULL, &priv->assocresp_idx);
++		if (ret)
++			goto done;
++
++		priv->gen_idx = NXPWIFI_AUTO_IDX_MASK;
++	}
++
++	if (priv->beacon_idx != NXPWIFI_AUTO_IDX_MASK) {
++		beacon_ie = kmalloc_obj(*beacon_ie, GFP_KERNEL);
++		if (!beacon_ie) {
++			ret = -ENOMEM;
++			goto done;
++		}
++		beacon_ie->ie_index = cpu_to_le16(priv->beacon_idx);
++		beacon_ie->mgmt_subtype_mask = cpu_to_le16(NXPWIFI_DELETE_MASK);
++		beacon_ie->ie_length = 0;
++	}
++	if (priv->proberesp_idx != NXPWIFI_AUTO_IDX_MASK) {
++		pr_ie = kmalloc_obj(*pr_ie, GFP_KERNEL);
++		if (!pr_ie) {
++			ret = -ENOMEM;
++			goto done;
++		}
++		pr_ie->ie_index = cpu_to_le16(priv->proberesp_idx);
++		pr_ie->mgmt_subtype_mask = cpu_to_le16(NXPWIFI_DELETE_MASK);
++		pr_ie->ie_length = 0;
++	}
++	if (priv->assocresp_idx != NXPWIFI_AUTO_IDX_MASK) {
++		ar_ie = kmalloc_obj(*ar_ie, GFP_KERNEL);
++		if (!ar_ie) {
++			ret = -ENOMEM;
++			goto done;
++		}
++		ar_ie->ie_index = cpu_to_le16(priv->assocresp_idx);
++		ar_ie->mgmt_subtype_mask = cpu_to_le16(NXPWIFI_DELETE_MASK);
++		ar_ie->ie_length = 0;
++	}
++
++	if (beacon_ie || pr_ie || ar_ie)
++		ret = nxpwifi_update_uap_custom_ie(priv,
++						   beacon_ie, &priv->beacon_idx,
++						   pr_ie, &priv->proberesp_idx,
++						   ar_ie, &priv->assocresp_idx);
++
++done:
++	kfree(gen_ie);
++	kfree(beacon_ie);
++	kfree(pr_ie);
++	kfree(ar_ie);
++
++	return ret;
++}
+diff --git a/drivers/net/wireless/nxp/nxpwifi/util.c b/drivers/net/wireless/nxp/nxpwifi/util.c
+new file mode 100644
+index 000000000000..29ef031f8ec9
+--- /dev/null
++++ b/drivers/net/wireless/nxp/nxpwifi/util.c
+@@ -0,0 +1,1381 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * NXP Wireless LAN device driver: utility functions
++ *
++ * Copyright 2011-2024 NXP
++ */
++
++#include "cfg.h"
++#include "util.h"
++#include "fw.h"
++#include "main.h"
++#include "cmdevt.h"
++#include "wmm.h"
++#include "11n.h"
++#include <net/netlink.h>
++#include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/bitfield.h>
++#include <net/ieee80211_radiotap.h>
++
++#define RX_RATE_FORMAT_MASK   GENMASK(1, 0)
++#define RX_RATE_BW_MASK       GENMASK(3, 2)
++#define RX_RATE_GI_MASK       BIT(4)
++#define RX_RATE_STBC_MASK     BIT(5)
++#define RX_RATE_LDPC_MASK     BIT(6)
++
++static struct nxpwifi_debug_data items[] = {
++	{"debug_mask", item_size(debug_mask),
++	 item_addr(debug_mask), 1},
++	{"int_counter", item_size(int_counter),
++	 item_addr(int_counter), 1},
++	{"wmm_ac_vo", item_size(packets_out[WMM_AC_VO]),
++	 item_addr(packets_out[WMM_AC_VO]), 1},
++	{"wmm_ac_vi", item_size(packets_out[WMM_AC_VI]),
++	 item_addr(packets_out[WMM_AC_VI]), 1},
++	{"wmm_ac_be", item_size(packets_out[WMM_AC_BE]),
++	 item_addr(packets_out[WMM_AC_BE]), 1},
++	{"wmm_ac_bk", item_size(packets_out[WMM_AC_BK]),
++	 item_addr(packets_out[WMM_AC_BK]), 1},
++	{"tx_buf_size", item_size(tx_buf_size),
++	 item_addr(tx_buf_size), 1},
++	{"curr_tx_buf_size", item_size(curr_tx_buf_size),
++	 item_addr(curr_tx_buf_size), 1},
++	{"ps_mode", item_size(ps_mode),
++	 item_addr(ps_mode), 1},
++	{"ps_state", item_size(ps_state),
++	 item_addr(ps_state), 1},
++	{"is_deep_sleep", item_size(is_deep_sleep),
++	 item_addr(is_deep_sleep), 1},
++	{"wakeup_dev_req", item_size(pm_wakeup_card_req),
++	 item_addr(pm_wakeup_card_req), 1},
++	{"wakeup_tries", item_size(pm_wakeup_fw_try),
++	 item_addr(pm_wakeup_fw_try), 1},
++	{"hs_configured", item_size(is_hs_configured),
++	 item_addr(is_hs_configured), 1},
++	{"hs_activated", item_size(hs_activated),
++	 item_addr(hs_activated), 1},
++	{"num_tx_timeout", item_size(num_tx_timeout),
++	 item_addr(num_tx_timeout), 1},
++	{"is_cmd_timedout", item_size(is_cmd_timedout),
++	 item_addr(is_cmd_timedout), 1},
++	{"timeout_cmd_id", item_size(timeout_cmd_id),
++	 item_addr(timeout_cmd_id), 1},
++	{"timeout_cmd_act", item_size(timeout_cmd_act),
++	 item_addr(timeout_cmd_act), 1},
++	{"last_cmd_id", item_size(last_cmd_id),
++	 item_addr(last_cmd_id), DBG_CMD_NUM},
++	{"last_cmd_act", item_size(last_cmd_act),
++	 item_addr(last_cmd_act), DBG_CMD_NUM},
++	{"last_cmd_index", item_size(last_cmd_index),
++	 item_addr(last_cmd_index), 1},
++	{"last_cmd_resp_id", item_size(last_cmd_resp_id),
++	 item_addr(last_cmd_resp_id), DBG_CMD_NUM},
++	{"last_cmd_resp_index", item_size(last_cmd_resp_index),
++	 item_addr(last_cmd_resp_index), 1},
++	{"last_event", item_size(last_event),
++	 item_addr(last_event), DBG_CMD_NUM},
++	{"last_event_index", item_size(last_event_index),
++	 item_addr(last_event_index), 1},
++	{"last_mp_wr_bitmap", item_size(last_mp_wr_bitmap),
++	 item_addr(last_mp_wr_bitmap), NXPWIFI_DBG_SDIO_MP_NUM},
++	{"last_mp_wr_ports", item_size(last_mp_wr_ports),
++	 item_addr(last_mp_wr_ports), NXPWIFI_DBG_SDIO_MP_NUM},
++	{"last_mp_wr_len", item_size(last_mp_wr_len),
++	 item_addr(last_mp_wr_len), NXPWIFI_DBG_SDIO_MP_NUM},
++	{"last_mp_curr_wr_port", item_size(last_mp_curr_wr_port),
++	 item_addr(last_mp_curr_wr_port), NXPWIFI_DBG_SDIO_MP_NUM},
++	{"last_sdio_mp_index", item_size(last_sdio_mp_index),
++	 item_addr(last_sdio_mp_index), 1},
++	{"num_cmd_h2c_fail", item_size(num_cmd_host_to_card_failure),
++	 item_addr(num_cmd_host_to_card_failure), 1},
++	{"num_cmd_sleep_cfm_fail",
++	 item_size(num_cmd_sleep_cfm_host_to_card_failure),
++	 item_addr(num_cmd_sleep_cfm_host_to_card_failure), 1},
++	{"num_tx_h2c_fail", item_size(num_tx_host_to_card_failure),
++	 item_addr(num_tx_host_to_card_failure), 1},
++	{"num_evt_deauth", item_size(num_event_deauth),
++	 item_addr(num_event_deauth), 1},
++	{"num_evt_disassoc", item_size(num_event_disassoc),
++	 item_addr(num_event_disassoc), 1},
++	{"num_evt_link_lost", item_size(num_event_link_lost),
++	 item_addr(num_event_link_lost), 1},
++	{"num_cmd_deauth", item_size(num_cmd_deauth),
++	 item_addr(num_cmd_deauth), 1},
++	{"num_cmd_assoc_ok", item_size(num_cmd_assoc_success),
++	 item_addr(num_cmd_assoc_success), 1},
++	{"num_cmd_assoc_fail", item_size(num_cmd_assoc_failure),
++	 item_addr(num_cmd_assoc_failure), 1},
++	{"cmd_sent", item_size(cmd_sent),
++	 item_addr(cmd_sent), 1},
++	{"data_sent", item_size(data_sent),
++	 item_addr(data_sent), 1},
++	{"cmd_resp_received", item_size(cmd_resp_received),
++	 item_addr(cmd_resp_received), 1},
++	{"event_received", item_size(event_received),
++	 item_addr(event_received), 1},
++
++	/* variables defined in struct nxpwifi_adapter */
++	{"cmd_pending", adapter_item_size(cmd_pending),
++	 adapter_item_addr(cmd_pending), 1},
++	{"tx_pending", adapter_item_size(tx_pending),
++	 adapter_item_addr(tx_pending), 1},
++	{"rx_pending", adapter_item_size(rx_pending),
++	 adapter_item_addr(rx_pending), 1},
++};
++
++static int num_of_items = ARRAY_SIZE(items);
++
++/* Send init or shutdown command to firmware. */
++int nxpwifi_init_shutdown_fw(struct nxpwifi_private *priv,
++			     u32 func_init_shutdown)
++{
++	u16 cmd;
++
++	if (func_init_shutdown == NXPWIFI_FUNC_INIT) {
++		cmd = HOST_CMD_FUNC_INIT;
++	} else if (func_init_shutdown == NXPWIFI_FUNC_SHUTDOWN) {
++		cmd = HOST_CMD_FUNC_SHUTDOWN;
++	} else {
++		nxpwifi_dbg(priv->adapter, ERROR,
++			    "unsupported parameter\n");
++		return -EINVAL;
++	}
++
++	return nxpwifi_send_cmd(priv, cmd, HOST_ACT_GEN_SET, 0, NULL, true);
++}
++EXPORT_SYMBOL_GPL(nxpwifi_init_shutdown_fw);
++
++/* Handle IOCTL get/set of debug info across driver structures. */
++int nxpwifi_get_debug_info(struct nxpwifi_private *priv,
++			   struct nxpwifi_debug_info *info)
++{
++	struct nxpwifi_adapter *adapter = priv->adapter;
++
++	if (info) {
++		info->debug_mask = adapter->debug_mask;
++		memcpy(info->packets_out,
++		       priv->wmm.packets_out,
++		       sizeof(priv->wmm.packets_out));
++		info->curr_tx_buf_size = (u32)adapter->curr_tx_buf_size;
++		info->tx_buf_size = (u32)adapter->tx_buf_size;
++		info->rx_tbl_num = nxpwifi_get_rx_reorder_tbl(priv,
++							      info->rx_tbl);
++		info->tx_tbl_num = nxpwifi_get_tx_ba_stream_tbl(priv,
++								info->tx_tbl);
++		info->ps_mode = adapter->ps_mode;
++		info->ps_state = adapter->ps_state;
++		info->is_deep_sleep = adapter->is_deep_sleep;
++		info->pm_wakeup_card_req = adapter->pm_wakeup_card_req;
++		info->pm_wakeup_fw_try = adapter->pm_wakeup_fw_try;
++		info->is_hs_configured = test_bit(NXPWIFI_IS_HS_CONFIGURED,
++						  &adapter->work_flags);
++		info->hs_activated = adapter->hs_activated;
++		info->is_cmd_timedout = test_bit(NXPWIFI_IS_CMD_TIMEDOUT,
++						 &adapter->work_flags);
++		info->num_cmd_host_to_card_failure =
++			adapter->dbg.num_cmd_host_to_card_failure;
++		info->num_cmd_sleep_cfm_host_to_card_failure =
++			adapter->dbg.num_cmd_sleep_cfm_host_to_card_failure;
++		info->num_tx_host_to_card_failure =
++			adapter->dbg.num_tx_host_to_card_failure;
++		info->num_event_deauth = adapter->dbg.num_event_deauth;
++		info->num_event_disassoc = adapter->dbg.num_event_disassoc;
++		info->num_event_link_lost = adapter->dbg.num_event_link_lost;
++		info->num_cmd_deauth = adapter->dbg.num_cmd_deauth;
++		info->num_cmd_assoc_success =
++			adapter->dbg.num_cmd_assoc_success;
++		info->num_cmd_assoc_failure =
++			adapter->dbg.num_cmd_assoc_failure;
++		info->num_tx_timeout = adapter->dbg.num_tx_timeout;
++		info->timeout_cmd_id = adapter->dbg.timeout_cmd_id;
++		info->timeout_cmd_act = adapter->dbg.timeout_cmd_act;
++		memcpy(info->last_cmd_id, adapter->dbg.last_cmd_id,
++		       sizeof(adapter->dbg.last_cmd_id));
++		memcpy(info->last_cmd_act, adapter->dbg.last_cmd_act,
++		       sizeof(adapter->dbg.last_cmd_act));
++		info->last_cmd_index = adapter->dbg.last_cmd_index;
++		memcpy(info->last_cmd_resp_id, adapter->dbg.last_cmd_resp_id,
++		       sizeof(adapter->dbg.last_cmd_resp_id));
++		info->last_cmd_resp_index = adapter->dbg.last_cmd_resp_index;
++		memcpy(info->last_event, adapter->dbg.last_event,
++		       sizeof(adapter->dbg.last_event));
++		info->last_event_index = adapter->dbg.last_event_index;
++		memcpy(info->last_mp_wr_bitmap, adapter->dbg.last_mp_wr_bitmap,
++		       sizeof(adapter->dbg.last_mp_wr_bitmap));
++		memcpy(info->last_mp_wr_ports, adapter->dbg.last_mp_wr_ports,
++		       sizeof(adapter->dbg.last_mp_wr_ports));
++		memcpy(info->last_mp_curr_wr_port,
++		       adapter->dbg.last_mp_curr_wr_port,
++		       sizeof(adapter->dbg.last_mp_curr_wr_port));
++		memcpy(info->last_mp_wr_len, adapter->dbg.last_mp_wr_len,
++		       sizeof(adapter->dbg.last_mp_wr_len));
++		info->last_sdio_mp_index = adapter->dbg.last_sdio_mp_index;
++		info->data_sent = adapter->data_sent;
++		info->cmd_sent = adapter->cmd_sent;
++		info->cmd_resp_received = adapter->cmd_resp_received;
++	}
++
++	return 0;
++}
++
++int nxpwifi_debug_info_to_buffer(struct nxpwifi_private *priv, char *buf,
++				 struct nxpwifi_debug_info *info)
++{
++	char *p = buf;
++	struct nxpwifi_debug_data *d = &items[0];
++	size_t size, addr;
++	long val;
++	int i, j;
++
++	if (!info)
++		return 0;
++
++	for (i = 0; i < num_of_items; i++) {
++		p += sprintf(p, "%s=", d[i].name);
++
++		size = d[i].size / d[i].num;
++
++		if (i < (num_of_items - 3))
++			addr = d[i].addr + (size_t)info;
++		else /* The last 3 items are struct nxpwifi_adapter variables */
++			addr = d[i].addr + (size_t)priv->adapter;
++
++		for (j = 0; j < d[i].num; j++) {
++			switch (size) {
++			case 1:
++				val = *((u8 *)addr);
++				break;
++			case 2:
++				val = get_unaligned((u16 *)addr);
++				break;
++			case 4:
++				val = get_unaligned((u32 *)addr);
++				break;
++			case 8:
++				val = get_unaligned((long long *)addr);
++				break;
++			default:
++				val = -1;
++				break;
++			}
++
++			p += sprintf(p, "%#lx ", val);
++			addr += size;
++		}
++
++		p += sprintf(p, "\n");
++	}
++
++	if (info->tx_tbl_num) {
++		p += sprintf(p, "Tx BA stream table:\n");
++		for (i = 0; i < info->tx_tbl_num; i++)
++			p += sprintf(p, "tid = %d, ra = %pM\n",
++				     info->tx_tbl[i].tid, info->tx_tbl[i].ra);
++	}
++
++	if (info->rx_tbl_num) {
++		p += sprintf(p, "Rx reorder table:\n");
++		for (i = 0; i < info->rx_tbl_num; i++) {
++			p += sprintf(p, "tid = %d, ta = %pM, ",
++				     info->rx_tbl[i].tid,
++				     info->rx_tbl[i].ta);
++			p += sprintf(p, "start_win = %d, ",
++				     info->rx_tbl[i].start_win);
++			p += sprintf(p, "win_size = %d, buffer: ",
++				     info->rx_tbl[i].win_size);
++
++			for (j = 0; j < info->rx_tbl[i].win_size; j++)
++				p += sprintf(p, "%c ",
++					     info->rx_tbl[i].buffer[j] ?
++					     '1' : '0');
++
++			p += sprintf(p, "\n");
++		}
++	}
++
++	return p - buf;
++}
++
++bool nxpwifi_is_channel_setting_allowable(struct nxpwifi_private *priv,
++					  struct ieee80211_channel *check_chan)
++{
++	struct nxpwifi_adapter *adapter = priv->adapter;
++	int i;
++	struct nxpwifi_private *tmp_priv;
++	u8 bss_role = GET_BSS_ROLE(priv);
++	struct ieee80211_channel *set_chan;
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		tmp_priv = adapter->priv[i];
++		if (tmp_priv == priv)
++			continue;
++
++		set_chan = NULL;
++		if (bss_role == NXPWIFI_BSS_ROLE_STA) {
++			if (GET_BSS_ROLE(tmp_priv) == NXPWIFI_BSS_ROLE_UAP &&
++			    netif_carrier_ok(tmp_priv->netdev) &&
++			    cfg80211_chandef_valid(&tmp_priv->bss_chandef))
++				set_chan = tmp_priv->bss_chandef.chan;
++		} else if (bss_role == NXPWIFI_BSS_ROLE_UAP) {
++			struct nxpwifi_current_bss_params *bss_params =
++				&tmp_priv->curr_bss_params;
++			int channel = bss_params->bss_descriptor.channel;
++			enum nl80211_band band =
++				nxpwifi_band_to_radio_type(bss_params->band);
++			int freq =
++				ieee80211_channel_to_frequency(channel, band);
++
++			if (GET_BSS_ROLE(tmp_priv) == NXPWIFI_BSS_ROLE_STA &&
++			    tmp_priv->media_connected)
++				set_chan = ieee80211_get_channel(adapter->wiphy, freq);
++		}
++
++		if (set_chan && !ieee80211_channel_equal(check_chan, set_chan)) {
++			nxpwifi_dbg(adapter, ERROR,
++				    "AP/STA must run on the same channel\n");
++			return false;
++		}
++	}
++
++	return true;
++}
++
++void nxpwifi_convert_chan_to_band_cfg(struct nxpwifi_private *priv,
++				      u8 *band_cfg,
++				      struct cfg80211_chan_def *chan_def)
++{
++	u8 chan_band = 0, chan_width = 0, chan2_offset = 0;
++
++	switch (chan_def->chan->band) {
++	case NL80211_BAND_2GHZ:
++		chan_band = BAND_2GHZ;
++		break;
++	case NL80211_BAND_5GHZ:
++		chan_band = BAND_5GHZ;
++		break;
++	default:
++		break;
++	}
++
++	switch (chan_def->width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_20:
++		chan_width = CHAN_BW_20MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		chan_width = CHAN_BW_40MHZ;
++		if (chan_def->center_freq1 > chan_def->chan->center_freq)
++			chan2_offset = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		else
++			chan2_offset = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		chan2_offset =
++			nxpwifi_get_sec_chan_offset(chan_def->chan->hw_value);
++		chan_width = CHAN_BW_80MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++	default:
++		nxpwifi_dbg(priv->adapter,
++			    WARN, "Unknown channel width: %d\n",
++			    chan_def->width);
++		break;
++	}
++
++	*band_cfg = ((chan2_offset << BAND_CFG_CHAN2_SHIFT_BIT) &
++		     BAND_CFG_CHAN2_OFFSET_MASK) |
++		    ((chan_width << BAND_CFG_CHAN_WIDTH_SHIFT_BIT) &
++		     BAND_CFG_CHAN_WIDTH_MASK) |
++		    ((chan_band << BAND_CFG_CHAN_BAND_SHIFT_BIT) &
++		     BAND_CFG_CHAN_BAND_MASK);
++}
++
++static int
++nxpwifi_parse_mgmt_packet(struct nxpwifi_private *priv, u8 *payload, u16 len,
++			  struct rxpd *rx_pd)
++{
++	u16 stype;
++	u8 category;
++	struct ieee80211_hdr *ieee_hdr = (void *)payload;
++
++	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
++
++	switch (stype) {
++	case IEEE80211_STYPE_ACTION:
++		category = *(payload + sizeof(struct ieee80211_hdr));
++		switch (category) {
++		case WLAN_CATEGORY_BACK:
++			/*we dont indicate BACK action frames to cfg80211*/
++			nxpwifi_dbg(priv->adapter, INFO,
++				    "drop BACK action frames");
++			return -EINVAL;
++		default:
++			nxpwifi_dbg(priv->adapter, INFO,
++				    "unknown public action frame category %d\n",
++				    category);
++		}
++		break;
++	default:
++		nxpwifi_dbg(priv->adapter, INFO,
++			    "unknown mgmt frame subtype %#x\n", stype);
++		return 0;
++	}
++
++	return 0;
++}
++
++/* Send deauth frame to cfg80211. */
++void nxpwifi_host_mlme_disconnect(struct nxpwifi_private *priv,
++				  u16 reason_code, u8 *sa)
++{
++	u8 frame_buf[100];
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)frame_buf;
++
++	memset(frame_buf, 0, sizeof(frame_buf));
++	mgmt->frame_control = cpu_to_le16(IEEE80211_STYPE_DEAUTH);
++	mgmt->duration = 0;
++	mgmt->seq_ctrl = 0;
++	mgmt->u.deauth.reason_code = cpu_to_le16(reason_code);
++
++	if (GET_BSS_ROLE(priv) == NXPWIFI_BSS_ROLE_STA) {
++		eth_broadcast_addr(mgmt->da);
++		memcpy(mgmt->sa,
++		       priv->curr_bss_params.bss_descriptor.mac_address,
++		       ETH_ALEN);
++		memcpy(mgmt->bssid, priv->cfg_bssid, ETH_ALEN);
++		priv->auth_flag = 0;
++		priv->auth_alg = WLAN_AUTH_NONE;
++	} else {
++		memcpy(mgmt->da, priv->curr_addr, ETH_ALEN);
++		memcpy(mgmt->sa, sa, ETH_ALEN);
++		memcpy(mgmt->bssid, priv->curr_addr, ETH_ALEN);
++	}
++
++	if (GET_BSS_ROLE(priv) != NXPWIFI_BSS_ROLE_UAP) {
++		cfg80211_rx_mlme_mgmt(priv->netdev, frame_buf, 26);
++	} else {
++		cfg80211_rx_mgmt(&priv->wdev,
++				 priv->bss_chandef.chan->center_freq,
++				 0, frame_buf, 26, 0);
++	}
++}
++
++/* Parse and forward received management packet to cfg80211. */
++int
++nxpwifi_process_mgmt_packet(struct nxpwifi_private *priv,
++			    struct sk_buff *skb)
++{
++	struct nxpwifi_adapter *adapter = priv->adapter;
++	struct rxpd *rx_pd;
++	u16 pkt_len;
++	struct ieee80211_hdr *ieee_hdr;
++	int ret;
++
++	if (!skb)
++		return -ENOMEM;
++
++	if (!priv->mgmt_frame_mask ||
++	    priv->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED) {
++		nxpwifi_dbg(adapter, ERROR,
++			    "do not receive mgmt frames on uninitialized intf");
++		return -EINVAL;
++	}
++
++	rx_pd = (struct rxpd *)skb->data;
++	pkt_len = le16_to_cpu(rx_pd->rx_pkt_length);
++	if (pkt_len < sizeof(struct ieee80211_hdr) + sizeof(pkt_len)) {
++		nxpwifi_dbg(adapter, ERROR, "invalid rx_pkt_length");
++		return -EINVAL;
++	}
++
++	skb_pull(skb, le16_to_cpu(rx_pd->rx_pkt_offset));
++	skb_pull(skb, sizeof(pkt_len));
++	pkt_len -= sizeof(pkt_len);
++
++	ieee_hdr = (void *)skb->data;
++	if (ieee80211_is_mgmt(ieee_hdr->frame_control)) {
++		ret = nxpwifi_parse_mgmt_packet(priv, (u8 *)ieee_hdr,
++						pkt_len, rx_pd);
++		if (ret)
++			return ret;
++	}
++	/* Remove address4 */
++	memmove(skb->data + sizeof(struct ieee80211_hdr_3addr),
++		skb->data + sizeof(struct ieee80211_hdr),
++		pkt_len - sizeof(struct ieee80211_hdr));
++
++	pkt_len -= ETH_ALEN;
++	rx_pd->rx_pkt_length = cpu_to_le16(pkt_len);
++
++	if (priv->host_mlme_reg &&
++	    (GET_BSS_ROLE(priv) != NXPWIFI_BSS_ROLE_UAP) &&
++	    (ieee80211_is_auth(ieee_hdr->frame_control) ||
++	     ieee80211_is_deauth(ieee_hdr->frame_control) ||
++	     ieee80211_is_disassoc(ieee_hdr->frame_control))) {
++		struct nxpwifi_rxinfo *rx_info;
++
++		if (ieee80211_is_auth(ieee_hdr->frame_control)) {
++			if (priv->auth_flag & HOST_MLME_AUTH_PENDING) {
++				if (priv->auth_alg != WLAN_AUTH_SAE) {
++					priv->auth_flag &=
++						~HOST_MLME_AUTH_PENDING;
++					priv->auth_flag |=
++						HOST_MLME_AUTH_DONE;
++				}
++			} else {
++				return 0;
++			}
++
++			nxpwifi_dbg(adapter, MSG,
++				    "auth: receive authentication from %pM\n",
++				    ieee_hdr->addr3);
++		} else {
++			if (!priv->wdev.connected)
++				return 0;
++
++			if (ieee80211_is_deauth(ieee_hdr->frame_control)) {
++				nxpwifi_dbg(adapter, MSG,
++					    "auth: receive deauth from %pM\n",
++					    ieee_hdr->addr3);
++				priv->auth_flag = 0;
++				priv->auth_alg = WLAN_AUTH_NONE;
++			} else {
++				nxpwifi_dbg(adapter, MSG,
++					    "assoc: receive disassoc from %pM\n",
++					    ieee_hdr->addr3);
++			}
++		}
++
++		rx_info = NXPWIFI_SKB_RXCB(skb);
++		rx_info->pkt_len = pkt_len;
++		skb_queue_tail(&adapter->rx_mlme_q, skb);
++		nxpwifi_queue_wiphy_work(adapter, &adapter->host_mlme_work);
++		return -EINPROGRESS;
++	}
++
++	if (GET_BSS_ROLE(priv) == NXPWIFI_BSS_ROLE_UAP) {
++		if (ieee80211_is_auth(ieee_hdr->frame_control))
++			nxpwifi_dbg(adapter, MSG,
++				    "auth: receive auth from %pM\n",
++				    ieee_hdr->addr2);
++		if (ieee80211_is_deauth(ieee_hdr->frame_control))
++			nxpwifi_dbg(adapter, MSG,
++				    "auth: receive deauth from %pM\n",
++				    ieee_hdr->addr2);
++		if (ieee80211_is_disassoc(ieee_hdr->frame_control))
++			nxpwifi_dbg(adapter, MSG,
++				    "assoc: receive disassoc from %pM\n",
++				    ieee_hdr->addr2);
++		if (ieee80211_is_assoc_req(ieee_hdr->frame_control))
++			nxpwifi_dbg(adapter, MSG,
++				    "assoc: receive assoc req from %pM\n",
++				    ieee_hdr->addr2);
++		if (ieee80211_is_reassoc_req(ieee_hdr->frame_control))
++			nxpwifi_dbg(adapter, MSG,
++				    "assoc: receive reassoc req from %pM\n",
++				    ieee_hdr->addr2);
++	}
++
++	cfg80211_rx_mgmt(&priv->wdev, priv->roc_cfg.chan.center_freq,
++			 CAL_RSSI(rx_pd->snr, rx_pd->nf), skb->data, pkt_len,
++			 0);
++
++	return 0;
++}
++
++#define RTAP_MAX_LEN 128
++
++int nxpwifi_recv_packet_to_monif(struct nxpwifi_private *priv,
++				 struct sk_buff *skb)
++{
++	struct rxpd *rxpd;
++	struct rxpd_extra_info ext;
++	struct ieee80211_hdr *dot11;
++	struct ieee80211_radiotap_header *hdr;
++	int freq, band;
++	bool has_ext = false, has_ts = false, use_tsft = false;
++	u16 rx_flags = 0, off, chan_flags, rx_pkt_offset;
++	__le16 freq_le, flags_le;
++	u8 rthdr[RTAP_MAX_LEN] = {0};
++	s8 signal, noise;
++	u8 flags = 0, chan, ant, format, bw, gi, ldpc, mcs, nss, stbc;
++
++	if (!skb)
++		return -EINVAL;
++
++	rxpd = (struct rxpd *)skb->data;
++	rx_pkt_offset = le16_to_cpu(rxpd->rx_pkt_offset);
++
++	if (rx_pkt_offset > skb->len || rx_pkt_offset < sizeof(struct rxpd))
++		return -EINVAL;
++
++	if (skb->len - rx_pkt_offset < sizeof(struct ieee80211_hdr))
++		return -EINVAL;
++
++	has_ext = rxpd->flags & RXPD_FLAG_EXTRA_HEADER;
++
++	if (has_ext)
++		memcpy((void *)&ext, (void *)(rxpd + 1), sizeof(ext));
++
++	dot11 = (void *)skb->data + rx_pkt_offset;
++	memset(rthdr, 0, sizeof(rthdr));
++	hdr = (void *)rthdr;
++	hdr->it_version = 0;
++	hdr->it_pad = 0;
++	hdr->it_present = 0;
++	off = sizeof(*hdr);
++	hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_FLAGS));
++
++	if (has_ext) {
++		has_ts = true;
++		use_tsft = (ext.timestamp.position == 0);
++
++		if (has_ts) {
++			if (use_tsft)
++				hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_TSFT));
++			else
++				hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_TIMESTAMP));
++		}
++
++		flags = ext.flags & ~IEEE80211_RADIOTAP_F_BADFCS;
++		/* reverse fail fcs, 1 means pass FCS in FW,
++		 * but means fail FCS in radiotap
++		 */
++		flags &= ~((~ext.flags) & IEEE80211_RADIOTAP_F_BADFCS);
++
++		if (ext.plcp_crc_failed)
++			rx_flags |= IEEE80211_RADIOTAP_F_RX_BADPLCP;
++	}
++
++	if (has_ts && use_tsft) {
++		off = ALIGN(off, 8);
++		memcpy(rthdr + off, &ext.timestamp.device_timestamp, 8);
++		off += 8;
++	}
++
++	if (ieee80211_has_morefrags(dot11->frame_control))
++		flags |= IEEE80211_RADIOTAP_F_FRAG;
++
++	if (ieee80211_has_protected(dot11->frame_control))
++		flags |= IEEE80211_RADIOTAP_F_WEP;
++
++	rthdr[off++] = flags;
++	off = ALIGN(off, 2);
++	hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_CHANNEL));
++	chan = (le32_to_cpu(rxpd->rx_info) >> 5) & 0xff;
++	band = (chan <= 14) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
++	freq = ieee80211_channel_to_frequency(chan, band);
++
++	if (has_ext)
++		chan_flags = ext.channel_flags;
++	else if (band == NL80211_BAND_2GHZ)
++		chan_flags = IEEE80211_CHAN_2GHZ;
++	else
++		chan_flags = IEEE80211_CHAN_5GHZ;
++
++	freq_le  = cpu_to_le16(freq);
++	flags_le = cpu_to_le16(chan_flags);
++	memcpy(rthdr + off, &freq_le, 2);
++	off += 2;
++	memcpy(rthdr + off, &flags_le, 2);
++	off += 2;
++	hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_DBM_ANTSIGNAL));
++	signal = -(rxpd->nf - rxpd->snr);
++	rthdr[off++] = signal;
++	hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_DBM_ANTNOISE));
++	noise = -rxpd->nf;
++	rthdr[off++] = noise;
++	hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_ANTENNA));
++	ant = rxpd->antenna >> 1;
++	rthdr[off++] = ant;
++
++	if (rx_flags) {
++		hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_RX_FLAGS));
++		off = ALIGN(off, 2);
++		memcpy(rthdr + off, &rx_flags, 2);
++		off += 2;
++	}
++
++	format = FIELD_GET(RX_RATE_FORMAT_MASK, rxpd->rate_info);
++	bw = FIELD_GET(RX_RATE_BW_MASK, rxpd->rate_info);
++	ldpc = FIELD_GET(RX_RATE_LDPC_MASK, rxpd->rate_info) ? 1 : 0;
++	stbc = FIELD_GET(RX_RATE_STBC_MASK, rxpd->rate_info) ? 1 : 0;
++
++	if (format == NXPWIFI_RATE_FORMAT_HE) {
++		gi = ((rxpd->rate_info >> 7) & 0x1) << 1 |
++			((rxpd->rate_info >> 4) & 0x1);
++	} else {
++		gi = FIELD_GET(RX_RATE_GI_MASK, rxpd->rate_info);
++	}
++
++	mcs = rxpd->rx_rate & 0xf;
++	nss = ((rxpd->rx_rate >> 4) & 0xf) + 1;
++
++	if (format == NXPWIFI_RATE_FORMAT_HT) {
++		u8 mcs_flags = 0;
++
++		hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_MCS));
++		rthdr[off++] = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
++					IEEE80211_RADIOTAP_MCS_HAVE_BW |
++					IEEE80211_RADIOTAP_MCS_HAVE_GI;
++
++		if (bw == 1)
++			mcs_flags |= IEEE80211_RADIOTAP_MCS_BW_40;
++
++		if (gi)
++			mcs_flags |= IEEE80211_RADIOTAP_MCS_SGI;
++
++		if (ldpc)
++			mcs_flags |= IEEE80211_RADIOTAP_MCS_FEC_LDPC;
++
++		if (stbc)
++			mcs_flags |= (1 << IEEE80211_RADIOTAP_MCS_STBC_SHIFT);
++
++		rthdr[off++] = mcs_flags;
++		rthdr[off++] = mcs;
++	}
++
++	if (format == NXPWIFI_RATE_FORMAT_VHT && has_ext) {
++		struct ieee80211_radiotap_vht vht = {0};
++		u32 vht_sig1 = 0, vht_sig2 = 0;
++		__le16 partial_aid = 0;
++		u8 bw_field = 0;
++
++		vht_sig1 = ext.vht_he_sig1;
++		vht_sig2 = ext.vht_he_sig2;
++		hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_VHT));
++		vht.known = cpu_to_le16(IEEE80211_RADIOTAP_VHT_KNOWN_GI |
++					IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH |
++					IEEE80211_RADIOTAP_VHT_KNOWN_STBC |
++					IEEE80211_RADIOTAP_VHT_KNOWN_BEAMFORMED |
++					IEEE80211_RADIOTAP_VHT_KNOWN_GROUP_ID);
++
++		if (stbc)
++			vht.flags |= IEEE80211_RADIOTAP_VHT_FLAG_STBC;
++
++		if (gi)
++			vht.flags |= IEEE80211_RADIOTAP_VHT_FLAG_SGI;
++
++		if (vht_sig2 & BIT(1))
++			vht.flags |= IEEE80211_RADIOTAP_VHT_FLAG_SGI_NSYM_M10_9;
++
++		if (vht_sig2 & BIT(8))
++			vht.flags |= IEEE80211_RADIOTAP_VHT_FLAG_BEAMFORMED;
++
++		switch (bw) {
++		case 1:
++			bw_field = 1; /* 40 MHz */
++			break;
++		case 2:
++			bw_field = 4; /* 80 MHz */
++			break;
++		case 3:
++			bw_field = 11; /* 160 MHz */
++			break;
++		default:
++			bw_field = 0; /* 20 MHz */
++		}
++
++		vht.bandwidth = bw_field;
++		vht.mcs_nss[0] = (nss & 0xf) | (mcs << 4);
++
++		if (vht_sig2 & BIT(2))
++			vht.coding |= IEEE80211_RADIOTAP_CODING_LDPC_USER0;
++
++		vht.group_id = (vht_sig1 >> 4) & 0x3f;
++		memcpy(&vht.partial_aid, &partial_aid, 2);
++		off = ALIGN(off, 2);
++		memcpy(rthdr + off, &vht, sizeof(vht));
++		off += sizeof(vht);
++	}
++
++	/* TIMESTAMP */
++	if (has_ts && !use_tsft) {
++		u64 ts;
++		__le64 ts_le;
++		u16 accuracy = 0;
++		__le16 acc_le;
++		u8 flags = 0;
++
++		if (ext.timestamp.position <= 15) {
++			hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_TIMESTAMP));
++			off = ALIGN(off, 8);
++
++			if (ext.timestamp.flags & 0x01) {
++				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_32BIT;
++				ts = (u32)ext.timestamp.device_timestamp;
++			} else {
++				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT;
++				ts = ext.timestamp.device_timestamp;
++			}
++
++			ts_le = cpu_to_le64(ts);
++			memcpy(rthdr + off, &ts_le, sizeof(ts_le));
++			off += sizeof(ts_le);
++
++			if (ext.timestamp.flags & 0x02) {
++				accuracy = ext.timestamp.accuracy;
++				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY;
++			}
++
++			acc_le = cpu_to_le16(accuracy);
++			memcpy(rthdr + off, &acc_le, sizeof(acc_le));
++			off += sizeof(acc_le);
++			rthdr[off++] = (ext.timestamp.unit & 0x0f) |
++					((ext.timestamp.position & 0x0f) << 4);
++			rthdr[off++] = flags;
++		}
++	}
++
++	if (format == NXPWIFI_RATE_FORMAT_HE && has_ext) {
++		struct ieee80211_radiotap_he he = {0};
++		u16 data1 = 0, data2 = 0, data3 = 0, data5 = 0, data6 = 0;
++		u8 bw_val = 0;
++
++		memcpy((void *)&ext, (void *)(rxpd + 1), sizeof(ext));
++
++		off = ALIGN(off, 2);
++		hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_HE));
++		data1 |= IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN;
++		data1 |= IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN;
++		data1 |= IEEE80211_RADIOTAP_HE_DATA1_STBC_KNOWN;
++		data1 |= IEEE80211_RADIOTAP_HE_DATA1_CODING_KNOWN;
++		data2 |= IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN;
++		data3 = mcs << 8;
++		data3 |= FIELD_PREP(IEEE80211_RADIOTAP_HE_DATA3_DATA_MCS, mcs);
++
++		if (stbc)
++			data3 |= IEEE80211_RADIOTAP_HE_DATA3_STBC;
++
++		switch (bw) {
++		case 0:
++			bw_val |= IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_20MHZ;
++			break;
++		case 1:
++			bw_val |= IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_40MHZ;
++			break;
++		case 2:
++			bw_val |= IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_80MHZ;
++			break;
++		case 3:
++			bw_val |= IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC_160MHZ;
++			break;
++		}
++
++		data5 |= FIELD_PREP(IEEE80211_RADIOTAP_HE_DATA5_DATA_BW_RU_ALLOC,
++						    bw_val);
++
++		switch (gi) {
++		case 0:
++			data5 |= IEEE80211_RADIOTAP_HE_DATA5_GI_0_8;
++			break;
++		case 1:
++			data5 |= IEEE80211_RADIOTAP_HE_DATA5_GI_1_6;
++			break;
++		case 2:
++			data5 |= IEEE80211_RADIOTAP_HE_DATA5_GI_3_2;
++			break;
++		}
++
++		data6 |= FIELD_PREP(IEEE80211_RADIOTAP_HE_DATA6_NSTS, nss);
++		he.data1 = cpu_to_le16(data1);
++		he.data2 = cpu_to_le16(data2);
++		he.data3 = cpu_to_le16(data3);
++		he.data5 = cpu_to_le16(data5);
++		he.data6 = cpu_to_le16(data6);
++		memcpy(rthdr + off, &he, sizeof(he));
++		off += sizeof(he);
++	}
++
++	hdr->it_len = cpu_to_le16(off);
++
++	if (off > sizeof(rthdr))
++		return -EINVAL;
++
++	/* Remove RXPD */
++	skb_pull(skb, rx_pkt_offset);
++
++	/* Ensure enough headroom */
++	if (skb_cow_head(skb, off))
++		return -ENOMEM;
++
++	/* Push radiotap header */
++	skb_push(skb, off);
++	memcpy(skb->data, rthdr, off);
++	skb_reset_mac_header(skb);
++	skb->ip_summed = CHECKSUM_NONE;
++	skb->pkt_type  = PACKET_OTHERHOST;
++	skb->dev       = priv->netdev;
++	skb->protocol  = htons(ETH_P_802_2);
++	netif_rx(skb);
++	return 0;
++}
++
++/* Process received packet and pass to net stack; reuse or build skb as needed. */
++int nxpwifi_recv_packet(struct nxpwifi_private *priv, struct sk_buff *skb)
++{
++	struct nxpwifi_sta_node *src_node;
++	struct ethhdr *p_ethhdr;
++
++	if (!skb)
++		return -ENOMEM;
++
++	priv->stats.rx_bytes += skb->len;
++	priv->stats.rx_packets++;
++
++	if (GET_BSS_ROLE(priv) == NXPWIFI_BSS_ROLE_UAP) {
++		p_ethhdr = (void *)skb->data;
++		rcu_read_lock();
++		src_node = nxpwifi_get_sta_entry(priv, p_ethhdr->h_source);
++		if (src_node) {
++			src_node->stats.last_rx = jiffies;
++			src_node->stats.rx_bytes += skb->len;
++			src_node->stats.rx_packets++;
++		}
++		rcu_read_unlock();
++	}
++
++	skb->dev = priv->netdev;
++	skb->protocol = eth_type_trans(skb, priv->netdev);
++	skb->ip_summed = CHECKSUM_NONE;
++
++	netif_rx(skb);
++	return 0;
++}
++
++/* IOCTL completion callback: wake waiters or process response as needed. */
++int nxpwifi_complete_cmd(struct nxpwifi_adapter *adapter,
++			 struct cmd_ctrl_node *cmd_node)
++{
++	WARN_ON(!cmd_node->wait_q_enabled);
++	nxpwifi_dbg(adapter, CMD, "cmd completed: status=%d\n",
++		    adapter->cmd_wait_q.status);
++
++	*cmd_node->condition = true;
++	wake_up_interruptible(&adapter->cmd_wait_q.wait);
++
++	return 0;
++}
++
++/* Find STA entry by MAC under rcu_read_lock(); return NULL if not found. */
++struct nxpwifi_sta_node *
++nxpwifi_get_sta_entry(struct nxpwifi_private *priv, const u8 *mac)
++{
++	struct nxpwifi_sta_node *node;
++	struct nxpwifi_sta_node *found = NULL;
++
++	if (!mac)
++		return NULL;
++	list_for_each_entry_rcu(node, &priv->sta_list, list) {
++		if (!memcmp(node->mac_addr, mac, ETH_ALEN)) {
++			found = node;
++			break;
++		}
++	}
++
++	return found;
++}
++
++struct nxpwifi_sta_node *
++nxpwifi_get_sta_entry_rcu(struct nxpwifi_private *priv, const u8 *mac)
++{
++	struct nxpwifi_sta_node *node;
++
++	rcu_read_lock();
++	node = nxpwifi_get_sta_entry(priv, mac);
++	rcu_read_unlock();
++
++	return node;
++}
++
++/* Add STA entry by MAC; return existing entry or NULL on invalid MAC. */
++struct nxpwifi_sta_node *
++nxpwifi_add_sta_entry(struct nxpwifi_private *priv, const u8 *mac)
++{
++	struct nxpwifi_sta_node *node;
++
++	if (!mac)
++		return NULL;
++
++	spin_lock_bh(&priv->sta_list_spinlock);
++	node = nxpwifi_get_sta_entry_rcu(priv, mac);
++
++	if (node)
++		goto done;
++
++	node = kzalloc_obj(*node, GFP_ATOMIC);
++	if (!node)
++		goto done;
++
++	memcpy(node->mac_addr, mac, ETH_ALEN);
++	list_add_tail_rcu(&node->list, &priv->sta_list);
++
++done:
++	spin_unlock_bh(&priv->sta_list_spinlock);
++	return node;
++}
++
++/* Parse HT cap IE from association IEs and set STA HT parameters. */
++void
++nxpwifi_set_sta_ht_cap(struct nxpwifi_private *priv, const u8 *ies,
++		       int ies_len, struct nxpwifi_sta_node *node)
++{
++	struct element *ht_cap_ie;
++	const struct ieee80211_ht_cap *ht_cap;
++
++	if (!ies)
++		return;
++
++	ht_cap_ie = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies,
++					     ies_len);
++	if (ht_cap_ie) {
++		ht_cap = (void *)(ht_cap_ie + 1);
++		node->is_11n_enabled = 1;
++		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
++				  IEEE80211_HT_CAP_MAX_AMSDU ?
++				  NXPWIFI_TX_DATA_BUF_SIZE_8K :
++				  NXPWIFI_TX_DATA_BUF_SIZE_4K;
++	} else {
++		node->is_11n_enabled = 0;
++	}
++}
++
++/* Delete a station from list; called under cfg80211 mutex. */
++
++void nxpwifi_del_sta_entry(struct nxpwifi_private *priv, const u8 *mac)
++{
++	struct nxpwifi_sta_node *node;
++
++	list_for_each_entry_rcu(node, &priv->sta_list, list) {
++		if (!memcmp(node->mac_addr, mac, ETH_ALEN)) {
++			list_del_rcu(&node->list);
++			kfree_rcu(node, rcu);
++			break;
++		}
++	}
++}
++
++/* Delete all stations from list. */
++void nxpwifi_del_all_sta_list(struct nxpwifi_private *priv)
++{
++	struct nxpwifi_sta_node *node, *tmp;
++
++	spin_lock_bh(&priv->sta_list_spinlock);
++
++	list_for_each_entry_safe(node, tmp, &priv->sta_list, list) {
++		list_del_rcu(&node->list);
++		kfree_rcu(node, rcu);
++	}
++
++	INIT_LIST_HEAD(&priv->sta_list);
++	spin_unlock_bh(&priv->sta_list_spinlock);
++}
++
++/* Add one histogram sample. */
++void nxpwifi_hist_data_add(struct nxpwifi_private *priv,
++			   u8 rx_rate, s8 snr, s8 nflr)
++{
++	struct nxpwifi_histogram_data *phist_data = priv->hist_data;
++
++	if (atomic_read(&phist_data->num_samples) > NXPWIFI_HIST_MAX_SAMPLES)
++		nxpwifi_hist_data_reset(priv);
++	nxpwifi_hist_data_set(priv, rx_rate, snr, nflr);
++}
++
++/* function to add histogram record */
++void nxpwifi_hist_data_set(struct nxpwifi_private *priv, u8 rx_rate, s8 snr,
++			   s8 nflr)
++{
++	struct nxpwifi_histogram_data *phist_data = priv->hist_data;
++	s8 nf   = -nflr;
++	s8 rssi = snr - nflr;
++
++	atomic_inc(&phist_data->num_samples);
++	atomic_inc(&phist_data->rx_rate[rx_rate]);
++	atomic_inc(&phist_data->snr[snr + 128]);
++	atomic_inc(&phist_data->noise_flr[nf + 128]);
++	atomic_inc(&phist_data->sig_str[rssi + 128]);
++}
++
++/* function to reset histogram data during init/reset */
++void nxpwifi_hist_data_reset(struct nxpwifi_private *priv)
++{
++	int ix;
++	struct nxpwifi_histogram_data *phist_data = priv->hist_data;
++
++	atomic_set(&phist_data->num_samples, 0);
++	for (ix = 0; ix < NXPWIFI_MAX_AC_RX_RATES; ix++)
++		atomic_set(&phist_data->rx_rate[ix], 0);
++	for (ix = 0; ix < NXPWIFI_MAX_SNR; ix++)
++		atomic_set(&phist_data->snr[ix], 0);
++	for (ix = 0; ix < NXPWIFI_MAX_NOISE_FLR; ix++)
++		atomic_set(&phist_data->noise_flr[ix], 0);
++	for (ix = 0; ix < NXPWIFI_MAX_SIG_STRENGTH; ix++)
++		atomic_set(&phist_data->sig_str[ix], 0);
++}
++
++void *nxpwifi_alloc_dma_align_buf(int rx_len, gfp_t flags)
++{
++	struct sk_buff *skb;
++	int buf_len, pad;
++
++	buf_len = rx_len + NXPWIFI_RX_HEADROOM + NXPWIFI_DMA_ALIGN_SZ;
++
++	skb = __dev_alloc_skb(buf_len, flags);
++
++	if (!skb)
++		return NULL;
++
++	skb_reserve(skb, NXPWIFI_RX_HEADROOM);
++
++	pad = NXPWIFI_ALIGN_ADDR(skb->data, NXPWIFI_DMA_ALIGN_SZ) -
++	      (long)skb->data;
++
++	skb_reserve(skb, pad);
++
++	return skb;
++}
++EXPORT_SYMBOL_GPL(nxpwifi_alloc_dma_align_buf);
++
++void nxpwifi_fw_dump_event(struct nxpwifi_private *priv)
++{
++	nxpwifi_send_cmd(priv, HOST_CMD_FW_DUMP_EVENT, HOST_ACT_GEN_SET,
++			 0, NULL, true);
++}
++EXPORT_SYMBOL_GPL(nxpwifi_fw_dump_event);
++
++int nxpwifi_append_data_tlv(u16 id, u8 *data, int len, u8 *pos, u8 *cmd_end)
++{
++	struct nxpwifi_ie_types_data *tlv;
++	u16 header_len = sizeof(struct nxpwifi_ie_types_header);
++
++	tlv = (struct nxpwifi_ie_types_data *)pos;
++	tlv->header.len = cpu_to_le16(len);
++
++	if (id == WLAN_EID_EXT_HE_CAPABILITY) {
++		if ((pos + header_len + len + 1) > cmd_end)
++			return 0;
++
++		tlv->header.type = cpu_to_le16(WLAN_EID_EXTENSION);
++		tlv->data[0] = WLAN_EID_EXT_HE_CAPABILITY;
++		memcpy(tlv->data + 1, data, len);
++	} else {
++		if ((pos + header_len + len) > cmd_end)
++			return 0;
++
++		tlv->header.type = cpu_to_le16(id);
++		memcpy(tlv->data, data, len);
++	}
++
++	return (header_len + len);
++}
++
++static int nxpwifi_get_vdll_image(struct nxpwifi_adapter *adapter, u32 vdll_len)
++{
++	struct vdll_dnld_ctrl *ctrl = &adapter->vdll_ctrl;
++	bool req_fw = false;
++	u32 offset;
++
++	if (ctrl->vdll_mem) {
++		nxpwifi_dbg(adapter, EVENT,
++			    "VDLL mem is not empty: %p old_len=%d new_len=%d\n",
++			    ctrl->vdll_mem, ctrl->vdll_len, vdll_len);
++		vfree(ctrl->vdll_mem);
++		ctrl->vdll_mem = NULL;
++		ctrl->vdll_len = 0;
++	}
++
++	ctrl->vdll_mem = vmalloc(vdll_len);
++	if (!ctrl->vdll_mem)
++		return -ENOMEM;
++
++	if (!adapter->firmware) {
++		req_fw = true;
++		if (request_firmware(&adapter->firmware, adapter->fw_name,
++				     adapter->dev))
++			return -ENOENT;
++	}
++
++	if (adapter->firmware) {
++		if (vdll_len < adapter->firmware->size) {
++			offset = adapter->firmware->size - vdll_len;
++			memcpy(ctrl->vdll_mem, adapter->firmware->data + offset,
++			       vdll_len);
++		} else {
++			nxpwifi_dbg(adapter, ERROR,
++				    "Invalid VDLL length = %d, fw_len=%d\n",
++				    vdll_len, (int)adapter->firmware->size);
++			return -EINVAL;
++		}
++		if (req_fw) {
++			release_firmware(adapter->firmware);
++			adapter->firmware = NULL;
++		}
++	}
++
++	ctrl->vdll_len = vdll_len;
++	nxpwifi_dbg(adapter, MSG, "VDLL image: len=%d\n", ctrl->vdll_len);
++
++	return 0;
++}
++
++int nxpwifi_download_vdll_block(struct nxpwifi_adapter *adapter,
++				u8 *block, u16 block_len)
++{
++	struct vdll_dnld_ctrl *ctrl = &adapter->vdll_ctrl;
++	struct host_cmd_ds_command *host_cmd;
++	u16 msg_len = block_len + S_DS_GEN;
++	int ret = 0;
++
++	skb_trim(ctrl->skb, 0);
++	skb_put_zero(ctrl->skb, msg_len);
++
++	host_cmd = (struct host_cmd_ds_command *)(ctrl->skb->data);
++
++	host_cmd->command = cpu_to_le16(HOST_CMD_VDLL);
++	host_cmd->seq_num = cpu_to_le16(0xFF00);
++	host_cmd->size = cpu_to_le16(msg_len);
++	memcpy(ctrl->skb->data + S_DS_GEN, block, block_len);
++
++	skb_push(ctrl->skb, adapter->intf_hdr_len);
++	ret = adapter->if_ops.host_to_card(adapter, NXPWIFI_TYPE_VDLL,
++					   ctrl->skb, NULL);
++	skb_pull(ctrl->skb, adapter->intf_hdr_len);
++
++	if (ret)
++		nxpwifi_dbg(adapter, ERROR,
++			    "Fail to download VDLL: block: %p, len: %d\n",
++			    block, block_len);
++
++	return ret;
++}
++
++int nxpwifi_process_vdll_event(struct nxpwifi_private *priv,
++			       struct sk_buff *skb)
++{
++	struct nxpwifi_adapter *adapter = priv->adapter;
++	struct vdll_ind_event *vdll_evt =
++		(struct vdll_ind_event *)(skb->data + sizeof(u32));
++	u16 type = le16_to_cpu(vdll_evt->type);
++	u16 vdll_id = le16_to_cpu(vdll_evt->vdll_id);
++	u32 offset = le32_to_cpu(vdll_evt->offset);
++	u16 block_len = le16_to_cpu(vdll_evt->block_len);
++	struct vdll_dnld_ctrl *ctrl = &adapter->vdll_ctrl;
++	int ret = 0;
++
++	switch (type) {
++	case VDLL_IND_TYPE_REQ:
++		nxpwifi_dbg(adapter, EVENT,
++			    "VDLL IND (REG): ID: %d, offset: %#x, len: %d\n",
++			    vdll_id, offset, block_len);
++		if (offset <= ctrl->vdll_len) {
++			block_len =
++				min((u32)block_len, ctrl->vdll_len - offset);
++			if (!adapter->cmd_sent) {
++				ret = nxpwifi_download_vdll_block(adapter,
++								  ctrl->vdll_mem
++								  + offset,
++								  block_len);
++				if (ret)
++					nxpwifi_dbg(adapter, ERROR,
++						    "Download VDLL failed\n");
++			} else {
++				nxpwifi_dbg(adapter, EVENT,
++					    "Delay download VDLL block\n");
++				ctrl->pending_block_len = block_len;
++				ctrl->pending_block = ctrl->vdll_mem + offset;
++			}
++		} else {
++			nxpwifi_dbg(adapter, ERROR,
++				    "Err Req: offset=%#x, len=%d, vdll_len=%d\n",
++				    offset, block_len, ctrl->vdll_len);
++			ret = -EINVAL;
++		}
++		break;
++	case VDLL_IND_TYPE_OFFSET:
++		nxpwifi_dbg(adapter, EVENT,
++			    "VDLL IND (OFFSET): offset: %#x\n", offset);
++		ret = nxpwifi_get_vdll_image(adapter, offset);
++		break;
++	case VDLL_IND_TYPE_ERR_SIG:
++	case VDLL_IND_TYPE_ERR_ID:
++	case VDLL_IND_TYPE_SEC_ERR_ID:
++		nxpwifi_dbg(adapter, ERROR, "VDLL IND: error: %d\n", type);
++		break;
++	case VDLL_IND_TYPE_INTF_RESET:
++		nxpwifi_dbg(adapter, EVENT, "VDLL IND: interface reset\n");
++		break;
++	default:
++		nxpwifi_dbg(adapter, ERROR, "VDLL IND: unknown type: %d", type);
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++u64 nxpwifi_roc_cookie(struct nxpwifi_adapter *adapter)
++{
++	adapter->roc_cookie_counter++;
++
++	/* wow, you wrapped 64 bits ... more likely a bug */
++	if (WARN_ON(adapter->roc_cookie_counter == 0))
++		adapter->roc_cookie_counter++;
++
++	return adapter->roc_cookie_counter;
++}
++
++static bool nxpwifi_can_queue_work(struct nxpwifi_adapter *adapter)
++{
++	if (test_bit(NXPWIFI_SURPRISE_REMOVED, &adapter->work_flags) ||
++	    test_bit(NXPWIFI_IS_CMD_TIMEDOUT, &adapter->work_flags) ||
++	    test_bit(NXPWIFI_IS_SUSPENDED, &adapter->work_flags)) {
++		nxpwifi_dbg(adapter, WARN,
++			    "queueing nxpwifi work while going to suspend\n");
++		return false;
++	}
++
++	return true;
++}
++
++void nxpwifi_queue_work(struct nxpwifi_adapter *adapter,
++			struct work_struct *work)
++{
++	if (!nxpwifi_can_queue_work(adapter))
++		return;
++
++	queue_work(adapter->workqueue, work);
++}
++EXPORT_SYMBOL(nxpwifi_queue_work);
++
++void nxpwifi_queue_delayed_work(struct nxpwifi_adapter *adapter,
++				struct delayed_work *dwork,
++				unsigned long delay)
++{
++	if (!nxpwifi_can_queue_work(adapter))
++		return;
++
++	queue_delayed_work(adapter->workqueue, dwork, delay);
++}
++EXPORT_SYMBOL(nxpwifi_queue_delayed_work);
++
++void nxpwifi_queue_wiphy_work(struct nxpwifi_adapter *adapter,
++			      struct wiphy_work *work)
++{
++	if (!nxpwifi_can_queue_work(adapter))
++		return;
++
++	wiphy_work_queue(adapter->wiphy, work);
++}
++
++void nxpwifi_queue_delayed_wiphy_work(struct nxpwifi_adapter *adapter,
++				      struct wiphy_delayed_work *dwork,
++				      unsigned long delay)
++{
++	if (!nxpwifi_can_queue_work(adapter))
++		return;
++
++	wiphy_delayed_work_queue(adapter->wiphy, dwork, delay);
++}
+diff --git a/drivers/net/wireless/nxp/nxpwifi/util.h b/drivers/net/wireless/nxp/nxpwifi/util.h
+new file mode 100644
+index 000000000000..1a47c8c5b530
+--- /dev/null
++++ b/drivers/net/wireless/nxp/nxpwifi/util.h
+@@ -0,0 +1,155 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * NXP Wireless LAN device driver: utility functions
++ *
++ * Copyright 2011-2024 NXP
++ */
++
++#ifndef _NXPWIFI_UTIL_H_
++#define _NXPWIFI_UTIL_H_
++#include "fw.h"
++
++struct nxpwifi_adapter;
++
++struct nxpwifi_private;
++
++struct nxpwifi_dma_mapping {
++	dma_addr_t addr;
++	size_t len;
++};
++
++struct nxpwifi_cb {
++	struct nxpwifi_dma_mapping dma_mapping;
++	union {
++		struct nxpwifi_rxinfo rx_info;
++		struct nxpwifi_txinfo tx_info;
++	};
++};
++
++/* size/addr for nxpwifi_debug_info */
++#define item_size(n)		(sizeof_field(struct nxpwifi_debug_info, n))
++#define item_addr(n)		(offsetof(struct nxpwifi_debug_info, n))
++
++/* size/addr for struct nxpwifi_adapter */
++#define adapter_item_size(n)	(sizeof_field(struct nxpwifi_adapter, n))
++#define adapter_item_addr(n)	(offsetof(struct nxpwifi_adapter, n))
++
++struct nxpwifi_debug_data {
++	char name[32];		/* variable/array name */
++	u32 size;		/* size of the variable/array */
++	size_t addr;		/* address of the variable/array */
++	int num;		/* number of variables in an array */
++};
++
++static inline struct nxpwifi_rxinfo *NXPWIFI_SKB_RXCB(struct sk_buff *skb)
++{
++	struct nxpwifi_cb *cb = (struct nxpwifi_cb *)skb->cb;
++
++	BUILD_BUG_ON(sizeof(struct nxpwifi_cb) > sizeof(skb->cb));
++	return &cb->rx_info;
++}
++
++static inline struct nxpwifi_txinfo *NXPWIFI_SKB_TXCB(struct sk_buff *skb)
++{
++	struct nxpwifi_cb *cb = (struct nxpwifi_cb *)skb->cb;
++
++	return &cb->tx_info;
++}
++
++static inline void nxpwifi_store_mapping(struct sk_buff *skb,
++					 struct nxpwifi_dma_mapping *mapping)
++{
++	struct nxpwifi_cb *cb = (struct nxpwifi_cb *)skb->cb;
++
++	memcpy(&cb->dma_mapping, mapping, sizeof(*mapping));
++}
++
++static inline void nxpwifi_get_mapping(struct sk_buff *skb,
++				       struct nxpwifi_dma_mapping *mapping)
++{
++	struct nxpwifi_cb *cb = (struct nxpwifi_cb *)skb->cb;
++
++	memcpy(mapping, &cb->dma_mapping, sizeof(*mapping));
++}
++
++static inline dma_addr_t NXPWIFI_SKB_DMA_ADDR(struct sk_buff *skb)
++{
++	struct nxpwifi_dma_mapping mapping;
++
++	nxpwifi_get_mapping(skb, &mapping);
++
++	return mapping.addr;
++}
++
++int nxpwifi_debug_info_to_buffer(struct nxpwifi_private *priv, char *buf,
++				 struct nxpwifi_debug_info *info);
++
++static inline void le16_unaligned_add_cpu(__le16 *var, u16 val)
++{
++	put_unaligned_le16(get_unaligned_le16(var) + val, var);
++}
 +
 +/*
-+ * Map fw_cap_info for default bands: shift 11ac flags so bits
-+ * 11:GN, 12:AN, 13:GAC, 14:AAC match driver layout after >>8.
++ * Iterate over TLVs safely.
++ * Ensures no out-of-bound access even if firmware sends malformed data.
 + */
-+#define GET_FW_DEFAULT_BANDS(adapter) ({\
-+	typeof(adapter) (_adapter) = adapter; \
-+	(((((_adapter->fw_cap_info & 0x3000) << 1) | \
-+	   (_adapter->fw_cap_info & ~0xF000)) \
-+	  >> 8) & \
-+	 ALL_802_11_BANDS); \
-+	})
++#define nxpwifi_for_each_tlv(tlv, buf, buf_len)				\
++	for (tlv = (const struct nxpwifi_tlv *)(buf);				\
++	     (u8 *)(tlv) + sizeof(*tlv) <= (u8 *)(buf) + (buf_len) &&		\
++	     (u8 *)(tlv) + sizeof(*tlv) + le16_to_cpu(tlv->len) <=		\
++	     (u8 *)(buf) + (buf_len);					\
++	     tlv = (const struct nxpwifi_tlv *)((u8 *)(tlv) + sizeof(*tlv) +	\
++	     le16_to_cpu(tlv->len)))
 +
-+#define HOST_WEP_KEY_INDEX_MASK 0x3fff
++/* Return first TLV matching @type in given buffer. */
++static inline const struct nxpwifi_tlv *
++nxpwifi_find_tlv(u16 type, const u8 *buf, u32 buf_len)
++{
++	const struct nxpwifi_tlv *tlv;
 +
-+#define KEY_INFO_ENABLED        0x01
-+enum KEY_TYPE_ID {
-+	KEY_TYPE_ID_WEP = 0,
-+	KEY_TYPE_ID_TKIP,
-+	KEY_TYPE_ID_AES,
-+	KEY_TYPE_ID_WAPI,
-+	KEY_TYPE_ID_AES_CMAC,
-+	KEY_TYPE_ID_GCMP,
-+	KEY_TYPE_ID_GCMP_256,
-+	KEY_TYPE_ID_CCMP_256,
-+	KEY_TYPE_ID_BIP_GMAC_128,
-+	KEY_TYPE_ID_BIP_GMAC_256,
-+};
++	nxpwifi_for_each_tlv(tlv, buf, buf_len)	{
++		if (le16_to_cpu(tlv->type) == type)
++			return tlv;
++	}
 +
-+#define WPA_PN_SIZE		8
-+#define KEY_PARAMS_FIXED_LEN	10
-+#define KEY_INDEX_MASK		0xf
-+#define KEY_API_VER_MAJOR_V2	2
++	return NULL;
++}
 +
-+#define KEY_MCAST	BIT(0)
-+#define KEY_UNICAST	BIT(1)
-+#define KEY_ENABLED	BIT(2)
-+#define KEY_DEFAULT	BIT(3)
-+#define KEY_TX_KEY	BIT(4)
-+#define KEY_RX_KEY	BIT(5)
-+#define KEY_IGTK	BIT(10)
++int nxpwifi_append_data_tlv(u16 id, u8 *data, int len, u8 *pos, u8 *cmd_end);
 +
-+#define MAX_POLL_TRIES			10000
-+#define MAX_FIRMWARE_POLL_TRIES		300
++int nxpwifi_download_vdll_block(struct nxpwifi_adapter *adapter,
++				u8 *block, u16 block_len);
 +
-+#define FIRMWARE_READY_SDIO		0xfedc
-+#define FIRMWARE_READY_PCIE		0xfedcba00
++int nxpwifi_process_vdll_event(struct nxpwifi_private *priv,
++			       struct sk_buff *skb);
 +
-+#define NXPWIFI_COEX_MODE_TIMESHARE	0x01
-+#define NXPWIFI_COEX_MODE_SPATIAL	0x82
++u64 nxpwifi_roc_cookie(struct nxpwifi_adapter *adapter);
 +
-+enum nxpwifi_usb_ep {
-+	NXPWIFI_USB_EP_CMD_EVENT = 1,
-+	NXPWIFI_USB_EP_DATA = 2,
-+	NXPWIFI_USB_EP_DATA_CH2 = 3,
-+};
++void nxpwifi_queue_work(struct nxpwifi_adapter *adapter,
++			struct work_struct *work);
 +
-+enum NXPWIFI_802_11_PRIVACY_FILTER {
-+	NXPWIFI_802_11_PRIV_FILTER_ACCEPT_ALL,
-+	NXPWIFI_802_11_PRIV_FILTER_8021X_WEP
-+};
++void nxpwifi_queue_delayed_work(struct nxpwifi_adapter *adapter,
++				struct delayed_work *dwork,
++				unsigned long delay);
 +
-+#define CAL_SNR(RSSI, NF)           ((s16)((s16)(RSSI) - (s16)(NF)))
-+#define CAL_RSSI(SNR, NF)           ((s16)((s16)(SNR) + (s16)(NF)))
++void nxpwifi_queue_wiphy_work(struct nxpwifi_adapter *adapter,
++			      struct wiphy_work *work);
 +
-+#define UAP_BSS_PARAMS_I            0
-+#define UAP_CUSTOM_IE_I             1
-+#define NXPWIFI_AUTO_IDX_MASK       0xffff
-+#define NXPWIFI_DELETE_MASK         0x0000
-+#define MGMT_MASK_ASSOC_REQ         0x01
-+#define MGMT_MASK_REASSOC_REQ       0x04
-+#define MGMT_MASK_ASSOC_RESP        0x02
-+#define MGMT_MASK_REASSOC_RESP      0x08
-+#define MGMT_MASK_PROBE_REQ         0x10
-+#define MGMT_MASK_PROBE_RESP        0x20
-+#define MGMT_MASK_BEACON            0x100
-+
-+#define TLV_TYPE_UAP_SSID           0x0000
-+#define TLV_TYPE_UAP_RATES          0x0001
-+#define TLV_TYPE_PWR_CONSTRAINT     0x0020
-+#define TLV_TYPE_HT_CAPABILITY      0x002d
-+#define TLV_TYPE_EXTENSION_ID       0x00ff
-+
-+#define PROPRIETARY_TLV_BASE_ID     0x0100
-+#define TLV_TYPE_KEY_MATERIAL       (PROPRIETARY_TLV_BASE_ID + 0)
-+#define TLV_TYPE_CHANLIST           (PROPRIETARY_TLV_BASE_ID + 1)
-+#define TLV_TYPE_NUMPROBES          (PROPRIETARY_TLV_BASE_ID + 2)
-+#define TLV_TYPE_RSSI_LOW           (PROPRIETARY_TLV_BASE_ID + 4)
-+#define TLV_TYPE_PASSTHROUGH        (PROPRIETARY_TLV_BASE_ID + 10)
-+#define TLV_TYPE_WMMQSTATUS         (PROPRIETARY_TLV_BASE_ID + 16)
-+#define TLV_TYPE_WILDCARDSSID       (PROPRIETARY_TLV_BASE_ID + 18)
-+#define TLV_TYPE_TSFTIMESTAMP       (PROPRIETARY_TLV_BASE_ID + 19)
-+#define TLV_TYPE_RSSI_HIGH          (PROPRIETARY_TLV_BASE_ID + 22)
-+#define TLV_TYPE_BGSCAN_START_LATER (PROPRIETARY_TLV_BASE_ID + 30)
-+#define TLV_TYPE_AUTH_TYPE          (PROPRIETARY_TLV_BASE_ID + 31)
-+#define TLV_TYPE_STA_MAC_ADDR       (PROPRIETARY_TLV_BASE_ID + 32)
-+#define TLV_TYPE_BSSID              (PROPRIETARY_TLV_BASE_ID + 35)
-+#define TLV_TYPE_CHANNELBANDLIST    (PROPRIETARY_TLV_BASE_ID + 42)
-+#define TLV_TYPE_UAP_MAC_ADDRESS    (PROPRIETARY_TLV_BASE_ID + 43)
-+#define TLV_TYPE_UAP_BEACON_PERIOD  (PROPRIETARY_TLV_BASE_ID + 44)
-+#define TLV_TYPE_UAP_DTIM_PERIOD    (PROPRIETARY_TLV_BASE_ID + 45)
-+#define TLV_TYPE_UAP_BCAST_SSID     (PROPRIETARY_TLV_BASE_ID + 48)
-+#define TLV_TYPE_UAP_PREAMBLE_CTL   (PROPRIETARY_TLV_BASE_ID + 49)
-+#define TLV_TYPE_UAP_RTS_THRESHOLD  (PROPRIETARY_TLV_BASE_ID + 51)
-+#define TLV_TYPE_UAP_AO_TIMER       (PROPRIETARY_TLV_BASE_ID + 57)
-+#define TLV_TYPE_UAP_WEP_KEY        (PROPRIETARY_TLV_BASE_ID + 59)
-+#define TLV_TYPE_UAP_WPA_PASSPHRASE (PROPRIETARY_TLV_BASE_ID + 60)
-+#define TLV_TYPE_UAP_ENCRY_PROTOCOL (PROPRIETARY_TLV_BASE_ID + 64)
-+#define TLV_TYPE_UAP_AKMP           (PROPRIETARY_TLV_BASE_ID + 65)
-+#define TLV_TYPE_UAP_FRAG_THRESHOLD (PROPRIETARY_TLV_BASE_ID + 70)
-+#define TLV_TYPE_RATE_DROP_CONTROL  (PROPRIETARY_TLV_BASE_ID + 82)
-+#define TLV_TYPE_RATE_SCOPE         (PROPRIETARY_TLV_BASE_ID + 83)
-+#define TLV_TYPE_POWER_GROUP        (PROPRIETARY_TLV_BASE_ID + 84)
-+#define TLV_TYPE_BSS_SCAN_RSP       (PROPRIETARY_TLV_BASE_ID + 86)
-+#define TLV_TYPE_BSS_SCAN_INFO      (PROPRIETARY_TLV_BASE_ID + 87)
-+#define TLV_TYPE_CHANRPT_11H_BASIC  (PROPRIETARY_TLV_BASE_ID + 91)
-+#define TLV_TYPE_UAP_RETRY_LIMIT    (PROPRIETARY_TLV_BASE_ID + 93)
-+#define TLV_TYPE_ROBUST_COEX        (PROPRIETARY_TLV_BASE_ID + 96)
-+#define TLV_TYPE_UAP_MGMT_FRAME     (PROPRIETARY_TLV_BASE_ID + 104)
-+#define TLV_TYPE_MGMT_IE            (PROPRIETARY_TLV_BASE_ID + 105)
-+#define TLV_TYPE_AUTO_DS_PARAM      (PROPRIETARY_TLV_BASE_ID + 113)
-+#define TLV_TYPE_PS_PARAM           (PROPRIETARY_TLV_BASE_ID + 114)
-+#define TLV_TYPE_UAP_PS_AO_TIMER    (PROPRIETARY_TLV_BASE_ID + 123)
-+#define TLV_TYPE_PWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 145)
-+#define TLV_TYPE_GWK_CIPHER         (PROPRIETARY_TLV_BASE_ID + 146)
-+#define TLV_TYPE_TX_PAUSE           (PROPRIETARY_TLV_BASE_ID + 148)
-+#define TLV_TYPE_RXBA_SYNC          (PROPRIETARY_TLV_BASE_ID + 153)
-+#define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
-+#define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
-+#define TLV_TYPE_REGION_DOMAIN_CODE (PROPRIETARY_TLV_BASE_ID + 171)
-+#define TLV_TYPE_REPEAT_COUNT       (PROPRIETARY_TLV_BASE_ID + 176)
-+#define TLV_TYPE_PS_PARAMS_IN_HS    (PROPRIETARY_TLV_BASE_ID + 181)
-+#define TLV_TYPE_MULTI_CHAN_INFO    (PROPRIETARY_TLV_BASE_ID + 183)
-+#define TLV_TYPE_MC_GROUP_INFO      (PROPRIETARY_TLV_BASE_ID + 184)
-+#define TLV_TYPE_SCAN_CHANNEL_GAP   (PROPRIETARY_TLV_BASE_ID + 197)
-+#define TLV_TYPE_API_REV            (PROPRIETARY_TLV_BASE_ID + 199)
-+#define TLV_TYPE_CHANNEL_STATS      (PROPRIETARY_TLV_BASE_ID + 198)
-+#define TLV_BTCOEX_WL_AGGR_WINSIZE  (PROPRIETARY_TLV_BASE_ID + 202)
-+#define TLV_BTCOEX_WL_SCANTIME      (PROPRIETARY_TLV_BASE_ID + 203)
-+#define TLV_TYPE_BSS_MODE           (PROPRIETARY_TLV_BASE_ID + 206)
-+#define TLV_TYPE_RANDOM_MAC         (PROPRIETARY_TLV_BASE_ID + 236)
-+#define TLV_TYPE_CHAN_ATTR_CFG      (PROPRIETARY_TLV_BASE_ID + 237)
-+#define TLV_TYPE_MAX_CONN           (PROPRIETARY_TLV_BASE_ID + 279)
-+#define TLV_TYPE_HOST_MLME          (PROPRIETARY_TLV_BASE_ID + 307)
-+#define TLV_TYPE_UAP_STA_FLAGS      (PROPRIETARY_TLV_BASE_ID + 313)
-+#define TLV_TYPE_FW_CAP_INFO        (PROPRIETARY_TLV_BASE_ID + 318)
-+#define TLV_TYPE_AX_ENABLE_SR       (PROPRIETARY_TLV_BASE_ID + 322)
-+#define TLV_TYPE_AX_OBSS_PD_OFFSET  (PROPRIETARY_TLV_BASE_ID + 323)
-+#define TLV_TYPE_SAE_PWE_MODE       (PROPRIETARY_TLV_BASE_ID + 339)
-+#define TLV_TYPE_6E_INBAND_FRAMES   (PROPRIETARY_TLV_BASE_ID + 345)
-+#define TLV_TYPE_SECURE_BOOT_UUID   (PROPRIETARY_TLV_BASE_ID + 348)
-+
-+#define NXPWIFI_TX_DATA_BUF_SIZE_2K 2048
-+
-+#define SSN_MASK                    0xfff0
-+
-+#define BA_RESULT_SUCCESS           0x0
-+#define BA_RESULT_TIMEOUT           0x2
-+
-+#define IS_BASTREAM_SETUP(ptr)      ((ptr)->ba_status)
-+
-+#define BA_STREAM_NOT_ALLOWED       0xff
-+
-+#define IS_11N_ENABLED(priv) ({ \
-+	typeof(priv) (_priv) = priv; \
-+	(((_priv)->config_bands & BAND_GN || \
-+	 (_priv)->config_bands & BAND_AN) && \
-+	 (_priv)->curr_bss_params.bss_descriptor.bcn_ht_cap && \
-+	 !(_priv)->curr_bss_params.bss_descriptor.disable_11n); \
-+	})
-+#define INITIATOR_BIT(del_ba_param_set) (((del_ba_param_set) &\
-+	BIT(DELBA_INITIATOR_POS)) >> DELBA_INITIATOR_POS)
-+
-+#define NXPWIFI_TX_DATA_BUF_SIZE_4K  4096
-+#define NXPWIFI_TX_DATA_BUF_SIZE_8K  8192
-+#define NXPWIFI_TX_DATA_BUF_SIZE_12K 12288
-+
-+#define ISSUPP_11NENABLED(fw_cap_info) ((fw_cap_info) & BIT(11))
-+#define ISSUPP_DRCS_ENABLED(fw_cap_info) ((fw_cap_info) & BIT(15))
-+#define ISSUPP_SDIO_SPA_ENABLED(fw_cap_info) ((fw_cap_info) & BIT(16))
-+#define ISSUPP_RANDOM_MAC(fw_cap_info) ((fw_cap_info) & BIT(27))
-+#define ISSUPP_FIRMWARE_SUPPLICANT(fw_cap_info) ((fw_cap_info) & BIT(21))
-+
-+#define NXPWIFI_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
-+				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
-+				 IEEE80211_HT_CAP_SM_PS)
-+
-+#define NXPWIFI_DEF_11N_TX_BF_CAP	0x09E1E008
-+
-+#define NXPWIFI_DEF_AMPDU	IEEE80211_HT_AMPDU_PARM_FACTOR
-+
-+#define RXPD_FLAG_EXTRA_HEADER BIT(1)
-+/* channel number at bit 5-13 */
-+#define RXPD_CHAN_MASK 0x3FE0
-+/* DCM at bit 16 */
-+#define RXPD_DCM_MASK 0x10000
++void nxpwifi_queue_delayed_wiphy_work(struct nxpwifi_adapter *adapter,
++				      struct wiphy_delayed_work *dwork,
++				      unsigned long delay);
 +
 +/*
-+ * dot11n dev_cap bits: 17:20/40MHz, 23:SGI20, 24:SGI40, 25:TXSTBC,
-+ * 26:RXSTBC, 29:Greenfield.
++ * Firmware cannot run AP and STA on different channels simultaneously,
++ * and doing so may trigger a crash. Check whether check_chan can be set
++ * safely; return true if allowed, false if another channel is already
++ * active in firmware.
 + */
-+#define ISSUPP_CHANWIDTH40(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(17))
-+#define ISSUPP_SHORTGI20(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(23))
-+#define ISSUPP_SHORTGI40(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(24))
-+#define ISSUPP_TXSTBC(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(25))
-+#define ISSUPP_RXSTBC(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(26))
-+#define ISSUPP_GREENFIELD(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(29))
-+#define ISENABLED_40MHZ_INTOLERANT(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(8))
-+#define ISSUPP_RXLDPC(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(22))
-+#define ISSUPP_BEAMFORMING(dot_11n_dev_cap) ((dot_11n_dev_cap) & BIT(30))
-+#define ISALLOWED_CHANWIDTH40(ht_param) ((ht_param) & BIT(2))
-+#define GETSUPP_TXBASTREAMS(dot_11n_dev_cap) (((dot_11n_dev_cap) >> 18) & 0xF)
++bool nxpwifi_is_channel_setting_allowable(struct nxpwifi_private *priv,
++					  struct ieee80211_channel *check_chan);
 +
-+/* AMPDU factor size */
-+#define AMPDU_FACTOR_64K 0x03
-+/* hw_dev_cap : MPDU DENSITY */
-+#define GET_MPDU_DENSITY(hw_dev_cap) ((hw_dev_cap) & 0x7)
++void nxpwifi_convert_chan_to_band_cfg(struct nxpwifi_private *priv,
++				      u8 *band_cfg,
++				      struct cfg80211_chan_def *chan_def);
 +
-+/* httxcfg bits: 1:20/40, 4:GF, 5:SGI20, 6:SGI40. */
-+#define NXPWIFI_FW_DEF_HTTXCFG (BIT(1) | BIT(4) | BIT(5) | BIT(6))
-+
-+/* 11ac MCS map (1x1): stream0 supports 0-9, others not supported. */
-+#define NXPWIFI_11AC_MCS_MAP_1X1	0xfffefffe
-+
-+/* 11ac MCS map (2x2): stream0/1 support 0-9, others not supported. */
-+#define NXPWIFI_11AC_MCS_MAP_2X2	0xfffafffa
-+
-+#define GET_TXMCSSUPP(dev_mcs_supported) ((dev_mcs_supported) >> 4)
-+#define GET_RXMCSSUPP(dev_mcs_supported) ((dev_mcs_supported) & 0x0f)
-+#define SETHT_MCS32(x) (x[4] |= 1)
-+#define HT_STREAM_1X1	0x11
-+#define HT_STREAM_2X2	0x22
-+
-+#define SET_SECONDARYCHAN(radio_type, sec_chan) \
-+	((radio_type) |= ((sec_chan) << 4))
-+
-+#define LLC_SNAP_LEN    8
-+
-+/* HW_SPEC fw_cap_info */
-+
-+#define ISSUPP_11ACENABLED(fw_cap_info) ((fw_cap_info) & BIT(13))
-+#define NO_NSS_SUPPORT 0x3
-+#define GET_VHTNSSMCS(mcs_mapset, nss) \
-+	(((mcs_mapset) >> (2 * ((nss) - 1))) & 0x3)
-+#define SET_VHTNSSMCS(mcs_mapset, nss, value) \
-+	((mcs_mapset) |= ((value) & 0x3) << (2 * ((nss) - 1)))
-+#define GET_DEVTXMCSMAP(dev_mcs_map) ((dev_mcs_map) >> 16)
-+#define GET_DEVRXMCSMAP(dev_mcs_map) ((dev_mcs_map) & 0xFFFF)
-+
-+/* Clear SU/MU beamformer/beamformee and sounding dimension bits. */
-+#define NXPWIFI_DEF_11AC_CAP_BF_RESET_MASK \
-+	(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE | \
-+	 IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE | \
-+	 IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE | \
-+	 IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK)
-+
-+#define MOD_CLASS_HR_DSSS       0x03
-+#define MOD_CLASS_OFDM          0x07
-+#define MOD_CLASS_HT            0x08
-+#define HT_BW_20    0
-+#define HT_BW_40    1
-+
-+#define DFS_CHAN_MOVE_TIME      10000
-+
-+#define ISSUPP_11AXENABLED(fw_cap_ext) ((fw_cap_ext) & BIT(7))
-+
-+#define HOST_CMD_GET_HW_SPEC                       0x0003
-+#define HOST_CMD_802_11_SCAN                       0x0006
-+#define HOST_CMD_802_11_GET_LOG                    0x000b
-+#define HOST_CMD_MAC_MULTICAST_ADR                 0x0010
-+#define HOST_CMD_802_11_ASSOCIATE                  0x0012
-+#define HOST_CMD_802_11_SNMP_MIB                   0x0016
-+#define HOST_CMD_MAC_REG_ACCESS                    0x0019
-+#define HOST_CMD_BBP_REG_ACCESS                    0x001a
-+#define HOST_CMD_RF_REG_ACCESS                     0x001b
-+#define HOST_CMD_RF_TX_PWR                         0x001e
-+#define HOST_CMD_RF_ANTENNA                        0x0020
-+#define HOST_CMD_802_11_DEAUTHENTICATE             0x0024
-+#define HOST_CMD_MAC_CONTROL                       0x0028
-+#define HOST_CMD_802_11_MAC_ADDRESS                0x004D
-+#define HOST_CMD_802_11_EEPROM_ACCESS              0x0059
-+#define HOST_CMD_802_11D_DOMAIN_INFO               0x005b
-+#define HOST_CMD_802_11_KEY_MATERIAL               0x005e
-+#define HOST_CMD_802_11_BG_SCAN_CONFIG             0x006b
-+#define HOST_CMD_802_11_BG_SCAN_QUERY              0x006c
-+#define HOST_CMD_WMM_GET_STATUS                    0x0071
-+#define HOST_CMD_802_11_SUBSCRIBE_EVENT            0x0075
-+#define HOST_CMD_802_11_TX_RATE_QUERY              0x007f
-+#define HOST_CMD_MEM_ACCESS                        0x0086
-+#define HOST_CMD_CFG_DATA                          0x008f
-+#define HOST_CMD_VERSION_EXT                       0x0097
-+#define HOST_CMD_MEF_CFG                           0x009a
-+#define HOST_CMD_RSSI_INFO                         0x00a4
-+#define HOST_CMD_FUNC_INIT                         0x00a9
-+#define HOST_CMD_FUNC_SHUTDOWN                     0x00aa
-+#define HOST_CMD_PMIC_REG_ACCESS                   0x00ad
-+#define HOST_CMD_APCMD_SYS_RESET                   0x00af
-+#define HOST_CMD_UAP_SYS_CONFIG                    0x00b0
-+#define HOST_CMD_UAP_BSS_START                     0x00b1
-+#define HOST_CMD_UAP_BSS_STOP                      0x00b2
-+#define HOST_CMD_APCMD_STA_LIST                    0x00b3
-+#define HOST_CMD_UAP_STA_DEAUTH                    0x00b5
-+#define HOST_CMD_11N_CFG                           0x00cd
-+#define HOST_CMD_11N_ADDBA_REQ                     0x00ce
-+#define HOST_CMD_11N_ADDBA_RSP                     0x00cf
-+#define HOST_CMD_11N_DELBA                         0x00d0
-+#define HOST_CMD_TXPWR_CFG                         0x00d1
-+#define HOST_CMD_TX_RATE_CFG                       0x00d6
-+#define HOST_CMD_RECONFIGURE_TX_BUFF               0x00d9
-+#define HOST_CMD_CHAN_REPORT_REQUEST               0x00dd
-+#define HOST_CMD_AMSDU_AGGR_CTRL                   0x00df
-+#define HOST_CMD_ROBUST_COEX                       0x00e0
-+#define HOST_CMD_802_11_PS_MODE_ENH                0x00e4
-+#define HOST_CMD_802_11_HS_CFG_ENH                 0x00e5
-+#define HOST_CMD_CAU_REG_ACCESS                    0x00ed
-+#define HOST_CMD_SET_BSS_MODE                      0x00f7
-+#define HOST_CMD_PCIE_DESC_DETAILS                 0x00fa
-+#define HOST_CMD_802_11_NET_MONITOR                0x0102
-+#define HOST_CMD_802_11_SCAN_EXT                   0x0107
-+#define HOST_CMD_COALESCE_CFG                      0x010a
-+#define HOST_CMD_MGMT_FRAME_REG                    0x010c
-+#define HOST_CMD_REMAIN_ON_CHAN                    0x010d
-+#define HOST_CMD_GTK_REKEY_OFFLOAD_CFG             0x010f
-+#define HOST_CMD_11AC_CFG                          0x0112
-+#define HOST_CMD_HS_WAKEUP_REASON                  0x0116
-+#define HOST_CMD_MC_POLICY                         0x0121
-+#define HOST_CMD_FW_DUMP_EVENT                     0x0125
-+#define HOST_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
-+#define HOST_CMD_STA_CONFIGURE                     0x023f
-+#define HOST_CMD_VDLL                              0x0240
-+#define HOST_CMD_CHAN_REGION_CFG                   0x0242
-+#define HOST_CMD_PACKET_AGGR_CTRL                  0x0251
-+#define HOST_CMD_ADD_NEW_STATION                   0x025f
-+#define HOST_CMD_11AX_CFG                          0x0266
-+#define HOST_CMD_11AX_CMD                          0x026d
-+#define HOST_CMD_TWT_CFG                           0x0270
-+
-+#define PROTOCOL_NO_SECURITY        0x01
-+#define PROTOCOL_STATIC_WEP         0x02
-+#define PROTOCOL_WPA                0x08
-+#define PROTOCOL_WPA2               0x20
-+#define PROTOCOL_WPA2_MIXED         0x28
-+#define PROTOCOL_EAP                0x40
-+#define KEY_MGMT_EAP                0x01
-+#define KEY_MGMT_PSK                0x02
-+#define KEY_MGMT_NONE               0x04
-+#define KEY_MGMT_PSK_SHA256         0x100
-+#define KEY_MGMT_OWE                0x200
-+#define KEY_MGMT_SAE                0x400
-+#define CIPHER_TKIP                 0x04
-+#define CIPHER_AES_CCMP             0x08
-+#define VALID_CIPHER_BITMAP         0x0c
-+
-+enum ENH_PS_MODES {
-+	EN_PS = 1,
-+	DIS_PS = 2,
-+	EN_AUTO_DS = 3,
-+	DIS_AUTO_DS = 4,
-+	SLEEP_CONFIRM = 5,
-+	GET_PS = 0,
-+	EN_AUTO_PS = 0xff,
-+	DIS_AUTO_PS = 0xfe,
-+};
-+
-+enum nxpwifi_channel_flags {
-+	NXPWIFI_CHANNEL_PASSIVE = BIT(0),
-+	NXPWIFI_CHANNEL_DFS = BIT(1),
-+	NXPWIFI_CHANNEL_NOHT40 = BIT(2),
-+	NXPWIFI_CHANNEL_NOHT80 = BIT(3),
-+	NXPWIFI_CHANNEL_DISABLED = BIT(7),
-+};
-+
-+#define HOST_RET_BIT                       0x8000
-+#define HOST_ACT_GEN_GET                   0x0000
-+#define HOST_ACT_GEN_SET                   0x0001
-+#define HOST_ACT_GEN_REMOVE                0x0004
-+#define HOST_ACT_BITWISE_SET               0x0002
-+#define HOST_ACT_BITWISE_CLR               0x0003
-+#define HOST_RESULT_OK                     0x0000
-+#define HOST_ACT_MAC_RX_ON                 BIT(0)
-+#define HOST_ACT_MAC_TX_ON                 BIT(1)
-+#define HOST_ACT_MAC_WEP_ENABLE            BIT(3)
-+#define HOST_ACT_MAC_ETHERNETII_ENABLE     BIT(4)
-+#define HOST_ACT_MAC_PROMISCUOUS_ENABLE    BIT(7)
-+#define HOST_ACT_MAC_ALL_MULTICAST_ENABLE  BIT(8)
-+#define HOST_ACT_MAC_DYNAMIC_BW_ENABLE     BIT(16)
-+
-+#define HOST_BSS_MODE_IBSS               0x0002
-+#define HOST_BSS_MODE_ANY                0x0003
-+
-+#define HOST_SCAN_RADIO_TYPE_BG          0
-+#define HOST_SCAN_RADIO_TYPE_A           1
-+
-+#define HS_CFG_CANCEL			0xffffffff
-+#define HS_CFG_COND_DEF			0x00000000
-+#define HS_CFG_GPIO_DEF			0xff
-+#define HS_CFG_GAP_DEF			0xff
-+#define HS_CFG_COND_BROADCAST_DATA	0x00000001
-+#define HS_CFG_COND_UNICAST_DATA	0x00000002
-+#define HS_CFG_COND_MAC_EVENT		0x00000004
-+#define HS_CFG_COND_MULTICAST_DATA	0x00000008
-+
-+#define CONNECT_ERR_AUTH_ERR_STA_FAILURE	0xFFFB
-+#define CONNECT_ERR_ASSOC_ERR_TIMEOUT		0xFFFC
-+#define CONNECT_ERR_ASSOC_ERR_AUTH_REFUSED	0xFFFD
-+#define CONNECT_ERR_AUTH_MSG_UNHANDLED		0xFFFE
-+#define CONNECT_ERR_STA_FAILURE			0xFFFF
-+
-+#define CMD_F_HOSTCMD                BIT(0)
-+
-+#define HOST_CMD_ID_MASK             0x0fff
-+
-+#define HOST_SEQ_NUM_MASK            0x00ff
-+
-+#define HOST_BSS_NUM_MASK            0x0f00
-+
-+#define HOST_BSS_TYPE_MASK           0xf000
-+
-+#define HOST_ACT_SET_RX              0x0001
-+#define HOST_ACT_SET_TX              0x0002
-+#define HOST_ACT_SET_BOTH            0x0003
-+#define HOST_ACT_GET_RX              0x0004
-+#define HOST_ACT_GET_TX              0x0008
-+#define HOST_ACT_GET_BOTH            0x000c
-+
-+#define HOST_ACT_REMOVE_STA          0x0
-+#define HOST_ACT_ADD_STA             0x1
-+
-+#define RF_ANTENNA_AUTO                 0xFFFF
-+
-+#define HOST_SET_SEQ_NO_BSS_INFO(seq, num, type) \
-+	((((seq) & 0x00ff) |                        \
-+	 (((num) & 0x000f) << 8)) |                 \
-+	(((type) & 0x000f) << 12))
-+
-+#define HOST_GET_SEQ_NO(seq)       \
-+	((seq) & HOST_SEQ_NUM_MASK)
-+
-+#define HOST_GET_BSS_NO(seq)         \
-+	(((seq) & HOST_BSS_NUM_MASK) >> 8)
-+
-+#define HOST_GET_BSS_TYPE(seq)       \
-+	(((seq) & HOST_BSS_TYPE_MASK) >> 12)
-+
-+#define EVENT_DUMMY_HOST_WAKEUP_SIGNAL  0x00000001
-+#define EVENT_LINK_LOST                 0x00000003
-+#define EVENT_LINK_SENSED               0x00000004
-+#define EVENT_MIB_CHANGED               0x00000006
-+#define EVENT_INIT_DONE                 0x00000007
-+#define EVENT_DEAUTHENTICATED           0x00000008
-+#define EVENT_DISASSOCIATED             0x00000009
-+#define EVENT_PS_AWAKE                  0x0000000a
-+#define EVENT_PS_SLEEP                  0x0000000b
-+#define EVENT_MIC_ERR_MULTICAST         0x0000000d
-+#define EVENT_MIC_ERR_UNICAST           0x0000000e
-+#define EVENT_DEEP_SLEEP_AWAKE          0x00000010
-+#define EVENT_WMM_STATUS_CHANGE         0x00000017
-+#define EVENT_BG_SCAN_REPORT            0x00000018
-+#define EVENT_RSSI_LOW                  0x00000019
-+#define EVENT_SNR_LOW                   0x0000001a
-+#define EVENT_MAX_FAIL                  0x0000001b
-+#define EVENT_RSSI_HIGH                 0x0000001c
-+#define EVENT_SNR_HIGH                  0x0000001d
-+#define EVENT_DATA_RSSI_LOW             0x00000024
-+#define EVENT_DATA_SNR_LOW              0x00000025
-+#define EVENT_DATA_RSSI_HIGH            0x00000026
-+#define EVENT_DATA_SNR_HIGH             0x00000027
-+#define EVENT_LINK_QUALITY              0x00000028
-+#define EVENT_PORT_RELEASE              0x0000002b
-+#define EVENT_UAP_STA_DEAUTH            0x0000002c
-+#define EVENT_UAP_STA_ASSOC             0x0000002d
-+#define EVENT_UAP_BSS_START             0x0000002e
-+#define EVENT_PRE_BEACON_LOST           0x00000031
-+#define EVENT_ADDBA                     0x00000033
-+#define EVENT_DELBA                     0x00000034
-+#define EVENT_BA_STREAM_TIEMOUT         0x00000037
-+#define EVENT_AMSDU_AGGR_CTRL           0x00000042
-+#define EVENT_UAP_BSS_IDLE              0x00000043
-+#define EVENT_UAP_BSS_ACTIVE            0x00000044
-+#define EVENT_WEP_ICV_ERR               0x00000046
-+#define EVENT_HS_ACT_REQ                0x00000047
-+#define EVENT_BW_CHANGE                 0x00000048
-+#define EVENT_UAP_MIC_COUNTERMEASURES   0x0000004c
-+#define EVENT_HOSTWAKE_STAIE		0x0000004d
-+#define EVENT_CHANNEL_SWITCH_ANN        0x00000050
-+#define EVENT_RADAR_DETECTED		0x00000053
-+#define EVENT_CHANNEL_REPORT_RDY        0x00000054
-+#define EVENT_TX_DATA_PAUSE             0x00000055
-+#define EVENT_EXT_SCAN_REPORT           0x00000058
-+#define EVENT_RXBA_SYNC                 0x00000059
-+#define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
-+#define EVENT_UNKNOWN_DEBUG             0x00000063
-+#define EVENT_BG_SCAN_STOPPED           0x00000065
-+#define EVENT_MULTI_CHAN_INFO           0x0000006a
-+#define EVENT_FW_DUMP_INFO		0x00000073
-+#define EVENT_TX_STATUS_REPORT		0x00000074
-+#define EVENT_BT_COEX_WLAN_PARA_CHANGE	0X00000076
-+#define EVENT_VDLL_IND			0x00000081
-+
-+#define EVENT_ID_MASK                   0xffff
-+#define BSS_NUM_MASK                    0xf
-+
-+#define EVENT_GET_BSS_NUM(event_cause)          \
-+	(((event_cause) >> 16) & BSS_NUM_MASK)
-+
-+#define EVENT_GET_BSS_TYPE(event_cause)         \
-+	(((event_cause) >> 24) & 0x00ff)
-+
-+#define NXPWIFI_MAX_PATTERN_LEN		40
-+#define NXPWIFI_MAX_OFFSET_LEN		100
-+#define NXPWIFI_MAX_ND_MATCH_SETS	10
-+
-+#define STACK_NBYTES			100
-+#define TYPE_DNUM			1
-+#define TYPE_BYTESEQ			2
-+#define MAX_OPERAND			0x40
-+#define TYPE_EQ				(MAX_OPERAND + 1)
-+#define TYPE_EQ_DNUM			(MAX_OPERAND + 2)
-+#define TYPE_EQ_BIT			(MAX_OPERAND + 3)
-+#define TYPE_AND			(MAX_OPERAND + 4)
-+#define TYPE_OR				(MAX_OPERAND + 5)
-+#define MEF_MODE_HOST_SLEEP			1
-+#define MEF_ACTION_ALLOW_AND_WAKEUP_HOST	3
-+#define MEF_ACTION_AUTO_ARP                    0x10
-+#define NXPWIFI_CRITERIA_BROADCAST	BIT(0)
-+#define NXPWIFI_CRITERIA_UNICAST	BIT(1)
-+#define NXPWIFI_CRITERIA_MULTICAST	BIT(3)
-+#define NXPWIFI_MAX_SUPPORTED_IPADDR              4
-+
-+#define NXPWIFI_DEF_CS_UNIT_TIME	2
-+#define NXPWIFI_DEF_CS_THR_OTHERLINK	10
-+#define NXPWIFI_DEF_THR_DIRECTLINK	0
-+#define NXPWIFI_DEF_CS_TIME		10
-+#define NXPWIFI_DEF_CS_TIMEOUT		16
-+#define NXPWIFI_DEF_CS_REG_CLASS	12
-+#define NXPWIFI_DEF_CS_PERIODICITY	1
-+
-+#define NXPWIFI_FW_V15		   15
-+
-+#define NXPWIFI_MASTER_RADAR_DET_MASK BIT(1)
-+
-+struct nxpwifi_ie_types_header {
-+	__le16 type;
-+	__le16 len;
-+} __packed;
-+
-+struct nxpwifi_ie_types_data {
-+	struct nxpwifi_ie_types_header header;
-+	u8 data[];
-+} __packed;
-+
-+/* Generic TLV wrapper for firmware data */
-+struct nxpwifi_tlv {
-+	__le16 type;
-+	__le16 len;
-+	u8 data[];
-+} __packed;
-+
-+#define NXPWIFI_TxPD_POWER_MGMT_NULL_PACKET 0x01
-+#define NXPWIFI_TxPD_POWER_MGMT_LAST_PACKET 0x08
-+#define NXPWIFI_TXPD_FLAGS_REQ_TX_STATUS    0x20
-+
-+enum HS_WAKEUP_REASON {
-+	NO_HSWAKEUP_REASON = 0,
-+	BCAST_DATA_MATCHED,
-+	MCAST_DATA_MATCHED,
-+	UCAST_DATA_MATCHED,
-+	MASKTABLE_EVENT_MATCHED,
-+	NON_MASKABLE_EVENT_MATCHED,
-+	NON_MASKABLE_CONDITION_MATCHED,
-+	MAGIC_PATTERN_MATCHED,
-+	CONTROL_FRAME_MATCHED,
-+	MANAGEMENT_FRAME_MATCHED,
-+	GTK_REKEY_FAILURE,
-+	RESERVED
-+};
-+
-+struct txpd {
-+	u8 bss_type;
-+	u8 bss_num;
-+	__le16 tx_pkt_length;
-+	__le16 tx_pkt_offset;
-+	__le16 tx_pkt_type;
-+	__le32 tx_control;
-+	u8 priority;
-+	u8 flags;
-+	u8 pkt_delay_2ms;
-+	u8 reserved1[2];
-+	u8 tx_token_id;
-+	u8 reserved[2];
-+} __packed;
-+
-+struct rxpd {
-+	u8 bss_type;
-+	u8 bss_num;
-+	__le16 rx_pkt_length;
-+	__le16 rx_pkt_offset;
-+	__le16 rx_pkt_type;
-+	__le16 seq_num;
-+	u8 priority;
-+	u8 rx_rate;
-+	s8 snr;
-+	s8 nf;
-+	/*
-+	 * rate_info bit definition (FW encoded)
-+	 *
-+	 * [1:0]  format
-+	 *        00 = legacy
-+	 *        01 = HT
-+	 *        10 = VHT
-+	 *        11 = HE
-+	 *
-+	 * [3:2]  bandwidth
-+	 *        00 = 20 MHz
-+	 *        01 = 40 MHz
-+	 *        10 = 80 MHz
-+	 *        11 = 160 MHz
-+	 *
-+	 * [4]    GI (HT/VHT) / HE GI LSB
-+	 *        HT/VHT:
-+	 *          0 = LGI
-+	 *          1 = SGI
-+	 *
-+	 *        HE:
-+	 *          used as GI[0]
-+	 *
-+	 * [5]    STBC
-+	 *        0 = no STBC
-+	 *        1 = STBC enabled
-+	 *
-+	 * [6]    LDPC
-+	 *        0 = BCC
-+	 *        1 = LDPC
-+	 *
-+	 * [7]    HE GI MSB
-+	 *
-+	 * HE GI encoding (combined from bit7:bit4):
-+	 *        GI[1:0] = {bit7, bit4}
-+	 *
-+	 *        00 = 0.8 us
-+	 *        01 = 1.6 us
-+	 *        10 = 3.2 us
-+	 *        11 = reserved / undefined
-+	 */
-+	u8 rate_info;
-+	u8 reserved[3];
-+	u8 flags;
-+	u8 antenna;
-+	/* toa_tod_tstamps: [31:0] ToA, [63:32] ToD (ns). */
-+	__le64 toa_tod_tstamps;
-+	/* rx info */
-+	__le32 rx_info;
-+	/* Reserved */
-+	u8  reserved3[8];
-+	u8 ta_mac[6];
-+	u8 reserved4[2];
-+} __packed;
-+
-+struct radiotap_timestamp {
-+	/* device timestamp */
-+	u64 device_timestamp;
-+	/* accuracy */
-+	u16 accuracy;
-+	/*
-+	 * unit:
-+	 * 0 milliseconds,
-+	 * 1 microseconds,
-+	 * 2 nanoseconds,
-+	 * 3-15 reserved
-+	 */
-+	u8 unit : 4;
-+	/*
-+	 * position:
-+	 * 0 first bit (or symbol containing it) of MPDU - matches TSFT field
-+	 * 1 signal acquisition at start of PLCP
-+	 * 2 end of PPDU
-+	 * 3 end of MPDU (after FCS)
-+	 * 4-14 reserved
-+	 * 15 unknown or vendor/OOB defined
-+	 */
-+	u8 position : 4;
-+	/*
-+	 * flags
-+	 * 0x01 32-bit counter (high 32 bits are unused)
-+	 * 0x02 accuracy known
-+	 * 0xFC reserved
-+	 */
-+	u8 flags;
-+} __packed;
-+
-+struct rxpd_extra_info {
-+	/* flags */
-+	u8 flags;
-+	/* channel.flags */
-+	u16 channel_flags;
-+	/* mcs.known */
-+	u8 mcs_known;
-+	/* mcs.flags */
-+	u8 mcs_flags;
-+	/* vht/he sig1 */
-+	u32 vht_he_sig1;
-+	/* vht/he sig2 */
-+	u32 vht_he_sig2;
-+	/* HE user idx */
-+	u32 user_idx;
-+	/** timestamp */
-+	struct radiotap_timestamp timestamp;
-+	/** PLCP CRC Failed */
-+	u8 plcp_crc_failed;
-+	u8 rssi_dbm_a;
-+	u8 rssi_dbm_b;
-+} __packed;
-+
-+struct uap_txpd {
-+	u8 bss_type;
-+	u8 bss_num;
-+	__le16 tx_pkt_length;
-+	__le16 tx_pkt_offset;
-+	__le16 tx_pkt_type;
-+	__le32 tx_control;
-+	u8 priority;
-+	u8 flags;
-+	u8 pkt_delay_2ms;
-+	u8 reserved1[2];
-+	u8 tx_token_id;
-+	u8 reserved[2];
-+} __packed;
-+
-+struct uap_rxpd {
-+	u8 bss_type;
-+	u8 bss_num;
-+	__le16 rx_pkt_length;
-+	__le16 rx_pkt_offset;
-+	__le16 rx_pkt_type;
-+	__le16 seq_num;
-+	u8 priority;
-+	u8 rx_rate;
-+	s8 snr;
-+	s8 nf;
-+	u8 ht_info;
-+	u8 reserved[3];
-+	u8 flags;
-+} __packed;
-+
-+struct nxpwifi_auth {
-+	__le16 auth_alg;
-+	__le16 auth_transaction;
-+	__le16 status_code;
-+	/* possibly followed by Challenge text */
-+	u8 variable[];
-+} __packed;
-+
-+struct nxpwifi_ieee80211_mgmt {
-+	__le16 frame_control;
-+	__le16 duration;
-+	u8 da[ETH_ALEN];
-+	u8 sa[ETH_ALEN];
-+	u8 bssid[ETH_ALEN];
-+	__le16 seq_ctrl;
-+	u8 addr4[ETH_ALEN];
-+	struct nxpwifi_auth auth;
-+} __packed;
-+
-+struct nxpwifi_fw_chan_stats {
-+	u8 chan_num;
-+	u8 bandcfg;
-+	u8 flags;
-+	s8 noise;
-+	__le16 total_bss;
-+	__le16 cca_scan_dur;
-+	__le16 cca_busy_dur;
-+} __packed;
-+
-+enum nxpwifi_chan_scan_mode_bitmasks {
-+	NXPWIFI_PASSIVE_SCAN = BIT(0),
-+	NXPWIFI_DISABLE_CHAN_FILT = BIT(1),
-+	NXPWIFI_HIDDEN_SSID_REPORT = BIT(4),
-+};
-+
-+struct nxpwifi_chan_scan_param_set {
-+	u8 band_cfg;
-+	u8 chan_number;
-+	u8 chan_scan_mode_bmap;
-+	__le16 min_scan_time;
-+	__le16 max_scan_time;
-+} __packed;
-+
-+struct nxpwifi_ie_types_chan_list_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	struct nxpwifi_chan_scan_param_set chan_scan_param[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_rxba_sync {
-+	struct nxpwifi_ie_types_header header;
-+	u8 mac[ETH_ALEN];
-+	u8 tid;
-+	u8 reserved;
-+	__le16 seq_num;
-+	__le16 bitmap_len;
-+	u8 bitmap[];
-+} __packed;
-+
-+struct chan_band_param_set {
-+	u8 radio_type;
-+	u8 chan_number;
-+};
-+
-+struct nxpwifi_ie_types_chan_band_list_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	struct chan_band_param_set chan_band_param[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_rates_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 rates[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_ssid_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ssid[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_host_mlme {
-+	struct nxpwifi_ie_types_header header;
-+	u8 host_mlme;
-+} __packed;
-+
-+struct nxpwifi_ie_types_num_probes {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 num_probes;
-+} __packed;
-+
-+struct nxpwifi_ie_types_repeat_count {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 repeat_count;
-+} __packed;
-+
-+struct nxpwifi_ie_types_min_rssi_threshold {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 rssi_threshold;
-+} __packed;
-+
-+struct nxpwifi_ie_types_bgscan_start_later {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 start_later;
-+} __packed;
-+
-+struct nxpwifi_ie_types_scan_chan_gap {
-+	struct nxpwifi_ie_types_header header;
-+	/* time gap in TUs to be used between two consecutive channels scan */
-+	__le16 chan_gap;
-+} __packed;
-+
-+struct nxpwifi_ie_types_random_mac {
-+	struct nxpwifi_ie_types_header header;
-+	u8 mac[ETH_ALEN];
-+} __packed;
-+
-+struct nxpwifi_ietypes_chanstats {
-+	struct nxpwifi_ie_types_header header;
-+	struct nxpwifi_fw_chan_stats chanstats[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_wildcard_ssid_params {
-+	struct nxpwifi_ie_types_header header;
-+	u8 max_ssid_length;
-+	u8 ssid[];
-+} __packed;
-+
-+#define TSF_DATA_SIZE            8
-+struct nxpwifi_ie_types_tsf_timestamp {
-+	struct nxpwifi_ie_types_header header;
-+	u8 tsf_data[];
-+} __packed;
-+
-+struct nxpwifi_cf_param_set {
-+	u8 cfp_cnt;
-+	u8 cfp_period;
-+	__le16 cfp_max_duration;
-+	__le16 cfp_duration_remaining;
-+} __packed;
-+
-+struct nxpwifi_ibss_param_set {
-+	__le16 atim_window;
-+} __packed;
-+
-+struct nxpwifi_ie_types_ss_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	union {
-+		struct nxpwifi_cf_param_set cf_param_set[1];
-+		struct nxpwifi_ibss_param_set ibss_param_set[1];
-+	} cf_ibss;
-+} __packed;
-+
-+struct nxpwifi_fh_param_set {
-+	__le16 dwell_time;
-+	u8 hop_set;
-+	u8 hop_pattern;
-+	u8 hop_index;
-+} __packed;
-+
-+struct nxpwifi_ds_param_set {
-+	u8 current_chan;
-+} __packed;
-+
-+struct nxpwifi_ie_types_phy_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	union {
-+		struct nxpwifi_fh_param_set fh_param_set[1];
-+		struct nxpwifi_ds_param_set ds_param_set[1];
-+	} fh_ds;
-+} __packed;
-+
-+struct nxpwifi_ie_types_auth_type {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 auth_type;
-+} __packed;
-+
-+struct nxpwifi_ie_types_vendor_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ie[NXPWIFI_MAX_VSIE_LEN];
-+};
-+
-+#define NXPWIFI_AUTHTYPE_SAE 6
-+
-+struct nxpwifi_ie_types_sae_pwe_mode {
-+	struct nxpwifi_ie_types_header header;
-+	u8 pwe[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_rsn_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 rsn_ie[];
-+} __packed;
-+
-+#define KEYPARAMSET_FIXED_LEN 6
-+
-+#define IGTK_PN_LEN           8
-+
-+struct nxpwifi_cmac_param {
-+	u8 ipn[IGTK_PN_LEN];
-+	u8 key[WLAN_KEY_LEN_AES_CMAC];
-+} __packed;
-+
-+struct nxpwifi_wep_param {
-+	__le16 key_len;
-+	u8 key[WLAN_KEY_LEN_WEP104];
-+} __packed;
-+
-+struct nxpwifi_tkip_param {
-+	u8 pn[WPA_PN_SIZE];
-+	__le16 key_len;
-+	u8 key[WLAN_KEY_LEN_TKIP];
-+} __packed;
-+
-+struct nxpwifi_aes_param {
-+	u8 pn[WPA_PN_SIZE];
-+	__le16 key_len;
-+	u8 key[WLAN_KEY_LEN_CCMP_256];
-+} __packed;
-+
-+struct nxpwifi_cmac_aes_param {
-+	u8 ipn[IGTK_PN_LEN];
-+	__le16 key_len;
-+	u8 key[WLAN_KEY_LEN_AES_CMAC];
-+} __packed;
-+
-+struct nxpwifi_gmac_aes_param {
-+	u8 ipn[IGTK_PN_LEN];
-+	__le16 key_len;
-+	u8 key[WLAN_KEY_LEN_BIP_GMAC_256];
-+} __packed;
-+
-+struct nxpwifi_ie_type_key_param_set {
-+	__le16 type;
-+	__le16 len;
-+	u8 mac_addr[ETH_ALEN];
-+	u8 key_idx;
-+	u8 key_type;
-+	__le16 key_info;
-+	union {
-+		struct nxpwifi_wep_param wep;
-+		struct nxpwifi_tkip_param tkip;
-+		struct nxpwifi_aes_param aes;
-+		struct nxpwifi_cmac_aes_param cmac_aes;
-+		struct nxpwifi_gmac_aes_param gmac_aes;
-+	} key_params;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_key_material {
-+	__le16 action;
-+	struct nxpwifi_ie_type_key_param_set key_param_set;
-+} __packed;
-+
-+struct host_cmd_ds_gen {
-+	__le16 command;
-+	__le16 size;
-+	__le16 seq_num;
-+	__le16 result;
-+};
-+
-+#define S_DS_GEN        sizeof(struct host_cmd_ds_gen)
-+
-+enum sleep_resp_ctrl {
-+	RESP_NOT_NEEDED = 0,
-+	RESP_NEEDED,
-+};
-+
-+struct nxpwifi_ps_param {
-+	__le16 null_pkt_interval;
-+	__le16 multiple_dtims;
-+	__le16 bcn_miss_timeout;
-+	__le16 local_listen_interval;
-+	__le16 reserved;
-+	__le16 mode;
-+	__le16 delay_to_ps;
-+} __packed;
-+
-+#define HS_DEF_WAKE_INTERVAL          100
-+#define HS_DEF_INACTIVITY_TIMEOUT      50
-+
-+struct nxpwifi_ps_param_in_hs {
-+	struct nxpwifi_ie_types_header header;
-+	__le32 hs_wake_int;
-+	__le32 hs_inact_timeout;
-+} __packed;
-+
-+#define BITMAP_AUTO_DS         0x01
-+#define BITMAP_STA_PS          0x10
-+
-+struct nxpwifi_ie_types_auto_ds_param {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 deep_sleep_timeout;
-+} __packed;
-+
-+struct nxpwifi_ie_types_ps_param {
-+	struct nxpwifi_ie_types_header header;
-+	struct nxpwifi_ps_param param;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_ps_mode_enh {
-+	__le16 action;
-+
-+	union {
-+		struct nxpwifi_ps_param opt_ps;
-+		__le16 ps_bitmap;
-+	} params;
-+} __packed;
-+
-+enum API_VER_ID {
-+	KEY_API_VER_ID = 1,
-+	FW_API_VER_ID = 2,
-+	UAP_FW_API_VER_ID = 3,
-+	CHANRPT_API_VER_ID = 4,
-+	FW_HOTFIX_VER_ID = 5,
-+};
-+
-+struct hw_spec_api_rev {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 api_id;
-+	u8 major_ver;
-+	u8 minor_ver;
-+} __packed;
-+
-+struct hw_spec_max_conn {
-+	struct nxpwifi_ie_types_header header;
-+	u8 reserved;
-+	u8 max_sta_conn;
-+} __packed;
-+
-+struct hw_spec_extension {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ext_id;
-+	u8 tlv[];
-+} __packed;
-+
-+/* HE MAC Capabilities Information field BIT 1 for TWT Req */
-+#define HE_MAC_CAP_TWT_REQ_SUPPORT BIT(1)
-+/* HE MAC Capabilities Information field BIT 2 for TWT Resp*/
-+#define HE_MAC_CAP_TWT_RESP_SUPPORT BIT(2)
-+
-+struct nxpwifi_ie_types_he_cap {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ext_id;
-+	u8 he_mac_cap[6];
-+	u8 he_phy_cap[11];
-+	__le16 rx_mcs_80;
-+	__le16 tx_mcs_80;
-+	__le16 rx_mcs_160;
-+	__le16 tx_mcs_160;
-+	__le16 rx_mcs_80p80;
-+	__le16 tx_mcs_80p80;
-+	u8 val[20];
-+} __packed;
-+
-+struct nxpwifi_ie_types_he_op {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ext_id;
-+	__le16 he_op_param1;
-+	u8 he_op_param2;
-+	u8 bss_color_info;
-+	__le16 basic_he_mcs_nss;
-+	u8 option[9];
-+} __packed;
-+
-+struct hw_spec_secure_boot_uuid {
-+	struct nxpwifi_ie_types_header header;
-+	__le64 uuid_lo;
-+	__le64 uuid_hi;
-+} __packed;
-+
-+struct hw_spec_fw_cap_info {
-+	struct nxpwifi_ie_types_header header;
-+	__le32 fw_cap_info;
-+	__le32 fw_cap_ext;
-+} __packed;
-+
-+struct host_cmd_ds_get_hw_spec {
-+	__le16 hw_if_version;
-+	__le16 version;
-+	__le16 reserved;
-+	__le16 num_of_mcast_adr;
-+	u8 permanent_addr[ETH_ALEN];
-+	__le16 region_code;
-+	__le16 number_of_antenna;
-+	__le32 fw_release_number;
-+	__le32 hw_dev_cap;
-+	__le32 reserved_1;
-+	__le32 reserved_2;
-+	__le32 fw_cap_info;
-+	__le32 dot_11n_dev_cap;
-+	u8 dev_mcs_support;
-+	__le16 mp_end_port;	/* SDIO only, reserved for other interfaces */
-+	__le16 mgmt_buf_count;	/* mgmt element buffer count */
-+	__le32 reserved_3;
-+	__le32 reserved_4;
-+	__le32 dot_11ac_dev_cap;
-+	__le32 dot_11ac_mcs_support;
-+	u8 tlv[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_rssi_info {
-+	__le16 action;
-+	__le16 ndata;
-+	__le16 nbcn;
-+	__le16 reserved[9];
-+	long long reserved_1;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_rssi_info_rsp {
-+	__le16 action;
-+	__le16 ndata;
-+	__le16 nbcn;
-+	__le16 data_rssi_last;
-+	__le16 data_nf_last;
-+	__le16 data_rssi_avg;
-+	__le16 data_nf_avg;
-+	__le16 bcn_rssi_last;
-+	__le16 bcn_nf_last;
-+	__le16 bcn_rssi_avg;
-+	__le16 bcn_nf_avg;
-+	long long tsf_bcn;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_mac_address {
-+	__le16 action;
-+	u8 mac_addr[ETH_ALEN];
-+} __packed;
-+
-+struct host_cmd_ds_mac_control {
-+	__le32 action;
-+};
-+
-+struct host_cmd_ds_mac_multicast_adr {
-+	__le16 action;
-+	__le16 num_of_adrs;
-+	u8 mac_list[NXPWIFI_MAX_MULTICAST_LIST_SIZE][ETH_ALEN];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_deauthenticate {
-+	u8 mac_addr[ETH_ALEN];
-+	__le16 reason_code;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_associate {
-+	u8 peer_sta_addr[ETH_ALEN];
-+	__le16 cap_info_bitmap;
-+	__le16 listen_interval;
-+	__le16 beacon_period;
-+	u8 dtim_period;
-+} __packed;
-+
-+struct ieee_types_assoc_rsp {
-+	__le16 cap_info_bitmap;
-+	__le16 status_code;
-+	__le16 a_id;
-+	u8 ie_buffer[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_associate_rsp {
-+	struct ieee_types_assoc_rsp assoc_rsp;
-+} __packed;
-+
-+struct ieee_types_cf_param_set {
-+	u8 element_id;
-+	u8 len;
-+	u8 cfp_cnt;
-+	u8 cfp_period;
-+	__le16 cfp_max_duration;
-+	__le16 cfp_duration_remaining;
-+} __packed;
-+
-+struct ieee_types_fh_param_set {
-+	u8 element_id;
-+	u8 len;
-+	__le16 dwell_time;
-+	u8 hop_set;
-+	u8 hop_pattern;
-+	u8 hop_index;
-+} __packed;
-+
-+struct ieee_types_ds_param_set {
-+	u8 element_id;
-+	u8 len;
-+	u8 current_chan;
-+} __packed;
-+
-+union ieee_types_phy_param_set {
-+	struct ieee_types_fh_param_set fh_param_set;
-+	struct ieee_types_ds_param_set ds_param_set;
-+} __packed;
-+
-+struct ieee_types_oper_mode_ntf {
-+	u8 element_id;
-+	u8 len;
-+	u8 oper_mode;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_get_log {
-+	__le32 mcast_tx_frame;
-+	__le32 failed;
-+	__le32 retry;
-+	__le32 multi_retry;
-+	__le32 frame_dup;
-+	__le32 rts_success;
-+	__le32 rts_failure;
-+	__le32 ack_failure;
-+	__le32 rx_frag;
-+	__le32 mcast_rx_frame;
-+	__le32 fcs_error;
-+	__le32 tx_frame;
-+	__le32 reserved;
-+	__le32 wep_icv_err_cnt[4];
-+	__le32 bcn_rcv_cnt;
-+	__le32 bcn_miss_cnt;
-+} __packed;
-+
-+/* Enumeration for rate format */
-+enum nxpwifi_rate_format {
-+	NXPWIFI_RATE_FORMAT_LG = 0,
-+	NXPWIFI_RATE_FORMAT_HT,
-+	NXPWIFI_RATE_FORMAT_VHT,
-+	NXPWIFI_RATE_FORMAT_HE,
-+	NXPWIFI_RATE_FORMAT_AUTO = 0xFF,
-+};
-+
-+struct host_cmd_ds_tx_rate_query {
-+	u8 tx_rate;
-+	/*
-+	 * Tx Rate Info: For 802.11 AC cards
-+	 *
-+	 * [Bit 0-1] tx rate format: LG = 0, HT = 1, VHT = 2
-+	 * [Bit 2-3] HT/VHT Bandwidth: BW20 = 0, BW40 = 1, BW80 = 2, BW160 = 3
-+	 * [Bit 4]   HT/VHT Guard Interval: LGI = 0, SGI = 1
-+	 *
-+	 * For non-802.11 AC cards
-+	 * Ht Info [Bit 0] RxRate format: LG=0, HT=1
-+	 * [Bit 1]  HT Bandwidth: BW20 = 0, BW40 = 1
-+	 * [Bit 2]  HT Guard Interval: LGI = 0, SGI = 1
-+	 */
-+	u8 ht_info;
-+} __packed;
-+
-+struct nxpwifi_tx_pause_tlv {
-+	struct nxpwifi_ie_types_header header;
-+	u8 peermac[ETH_ALEN];
-+	u8 tx_pause;
-+	u8 pkt_cnt;
-+} __packed;
-+
-+enum host_sleep_action {
-+	HS_CONFIGURE = 0x0001,
-+	HS_ACTIVATE  = 0x0002,
-+};
-+
-+struct nxpwifi_hs_config_param {
-+	__le32 conditions;
-+	u8 gpio;
-+	u8 gap;
-+} __packed;
-+
-+struct hs_activate_param {
-+	__le16 resp_ctrl;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_hs_cfg_enh {
-+	__le16 action;
-+
-+	union {
-+		struct nxpwifi_hs_config_param hs_config;
-+		struct hs_activate_param hs_activate;
-+	} params;
-+} __packed;
-+
-+enum SNMP_MIB_INDEX {
-+	OP_RATE_SET_I = 1,
-+	DTIM_PERIOD_I = 3,
-+	RTS_THRESH_I = 5,
-+	SHORT_RETRY_LIM_I = 6,
-+	LONG_RETRY_LIM_I = 7,
-+	FRAG_THRESH_I = 8,
-+	DOT11D_I = 9,
-+	DOT11H_I = 10,
-+};
-+
-+enum nxpwifi_assocmd_failurepoint {
-+	NXPWIFI_ASSOC_CMD_SUCCESS = 0,
-+	NXPWIFI_ASSOC_CMD_FAILURE_ASSOC,
-+	NXPWIFI_ASSOC_CMD_FAILURE_AUTH,
-+	NXPWIFI_ASSOC_CMD_FAILURE_JOIN
-+};
-+
-+#define MAX_SNMP_BUF_SIZE   128
-+
-+struct host_cmd_ds_802_11_snmp_mib {
-+	__le16 query_type;
-+	__le16 oid;
-+	__le16 buf_size;
-+	u8 value[];
-+} __packed;
-+
-+struct nxpwifi_rate_scope {
-+	__le16 type;
-+	__le16 length;
-+	__le16 hr_dsss_rate_bitmap;
-+	__le16 ofdm_rate_bitmap;
-+	__le16 ht_mcs_rate_bitmap[8];
-+	__le16 vht_mcs_rate_bitmap[8];
-+} __packed;
-+
-+struct nxpwifi_rate_drop_pattern {
-+	__le16 type;
-+	__le16 length;
-+	__le32 rate_drop_mode;
-+} __packed;
-+
-+struct host_cmd_ds_tx_rate_cfg {
-+	__le16 action;
-+	__le16 cfg_index;
-+} __packed;
-+
-+struct nxpwifi_power_group {
-+	u8 modulation_class;
-+	u8 first_rate_code;
-+	u8 last_rate_code;
-+	s8 power_step;
-+	s8 power_min;
-+	s8 power_max;
-+	u8 ht_bandwidth;
-+	u8 reserved;
-+} __packed;
-+
-+struct nxpwifi_types_power_group {
-+	__le16 type;
-+	__le16 length;
-+} __packed;
-+
-+struct host_cmd_ds_txpwr_cfg {
-+	__le16 action;
-+	__le16 cfg_index;
-+	__le32 mode;
-+} __packed;
-+
-+struct host_cmd_ds_rf_tx_pwr {
-+	__le16 action;
-+	__le16 cur_level;
-+	u8 max_power;
-+	u8 min_power;
-+} __packed;
-+
-+struct host_cmd_ds_rf_ant_mimo {
-+	__le16 action_tx;
-+	__le16 tx_ant_mode;
-+	__le16 action_rx;
-+	__le16 rx_ant_mode;
-+} __packed;
-+
-+struct host_cmd_ds_rf_ant_siso {
-+	__le16 action;
-+	__le16 ant_mode;
-+} __packed;
-+
-+#define BAND_CFG_CHAN_BAND_MASK		0x03
-+#define BAND_CFG_CHAN_BAND_SHIFT_BIT	0
-+#define BAND_CFG_CHAN_WIDTH_MASK	0x0C
-+#define BAND_CFG_CHAN_WIDTH_SHIFT_BIT	2
-+#define BAND_CFG_CHAN2_OFFSET_MASK	0x30
-+#define BAND_CFG_CHAN2_SHIFT_BIT	4
-+
-+struct nxpwifi_chan_desc {
-+	__le16 start_freq;
-+	u8 band_cfg;
-+	u8 chan_num;
-+} __packed;
-+
-+struct host_cmd_ds_chan_rpt_req {
-+	struct nxpwifi_chan_desc chan_desc;
-+	__le32 msec_dwell_time;
-+} __packed;
-+
-+struct host_cmd_ds_chan_rpt_event {
-+	__le32 result;
-+	__le64 start_tsf;
-+	__le32 duration;
-+	u8 tlvbuf[];
-+} __packed;
-+
-+struct host_cmd_sdio_sp_rx_aggr_cfg {
-+	u8 action;
-+	u8 enable;
-+	__le16 block_size;
-+} __packed;
-+
-+struct nxpwifi_fixed_bcn_param {
-+	__le64 timestamp;
-+	__le16 beacon_period;
-+	__le16 cap_info_bitmap;
-+} __packed;
-+
-+struct nxpwifi_event_scan_result {
-+	__le16 event_id;
-+	u8 bss_index;
-+	u8 bss_type;
-+	u8 more_event;
-+	u8 reserved[3];
-+	__le16 buf_size;
-+	u8 num_of_set;
-+} __packed;
-+
-+struct tx_status_event {
-+	u8 packet_type;
-+	u8 tx_token_id;
-+	u8 status;
-+} __packed;
-+
-+#define NXPWIFI_USER_SCAN_CHAN_MAX             50
-+
-+#define NXPWIFI_MAX_SSID_LIST_LENGTH         10
-+
-+struct nxpwifi_scan_cmd_config {
-+	/* BSS mode to be sent in the firmware command */
-+	u8 bss_mode;
-+
-+	/* Specific BSSID used to filter scan results in the firmware */
-+	u8 specific_bssid[ETH_ALEN];
-+
-+	/* Length of TLVs sent in command starting at tlvBuffer */
-+	u32 tlv_buf_len;
-+
-+	/*
-+	 * SSID TLV(s) and ChanList TLVs to be sent in the firmware command
-+	 *
-+	 * TLV_TYPE_CHANLIST, nxpwifi_ie_types_chan_list_param_set
-+	 * WLAN_EID_SSID, nxpwifi_ie_types_ssid_param_set
-+	 */
-+	u8 tlv_buf[];	/* SSID TLV(s) and ChanList TLVs are stored here */
-+} __packed;
-+
-+struct nxpwifi_user_scan_chan {
-+	u8 chan_number;
-+	u8 radio_type;
-+	u8 scan_type;
-+	u8 reserved;
-+	u32 scan_time;
-+} __packed;
-+
-+struct nxpwifi_user_scan_cfg {
-+	/* BSS mode to be sent in the firmware command */
-+	u8 bss_mode;
-+	/* Configure the number of probe requests for active chan scans */
-+	u8 num_probes;
-+	u8 reserved;
-+	/* BSSID filter sent in the firmware command to limit the results */
-+	u8 specific_bssid[ETH_ALEN];
-+	/* SSID filter list used in the firmware to limit the scan results */
-+	struct cfg80211_ssid *ssid_list;
-+	u8 num_ssids;
-+	/* Variable number (fixed maximum) of channels to scan up */
-+	struct nxpwifi_user_scan_chan chan_list[NXPWIFI_USER_SCAN_CHAN_MAX];
-+	u16 scan_chan_gap;
-+	u8 random_mac[ETH_ALEN];
-+} __packed;
-+
-+#define NXPWIFI_BG_SCAN_CHAN_MAX 38
-+#define NXPWIFI_BSS_MODE_INFRA 1
-+#define NXPWIFI_BGSCAN_ACT_GET     0x0000
-+#define NXPWIFI_BGSCAN_ACT_SET     0x0001
-+#define NXPWIFI_BGSCAN_ACT_SET_ALL 0xff01
-+/** ssid match */
-+#define NXPWIFI_BGSCAN_SSID_MATCH          0x0001
-+/** ssid match and RSSI exceeded */
-+#define NXPWIFI_BGSCAN_SSID_RSSI_MATCH     0x0004
-+/**wait for all channel scan to complete to report scan result*/
-+#define NXPWIFI_BGSCAN_WAIT_ALL_CHAN_DONE  0x80000000
-+
-+struct nxpwifi_bg_scan_cfg {
-+	u16 action;
-+	u8 enable;
-+	u8 bss_type;
-+	u8 chan_per_scan;
-+	u32 scan_interval;
-+	u32 report_condition;
-+	u8 num_probes;
-+	u8 rssi_threshold;
-+	u8 snr_threshold;
-+	u16 repeat_count;
-+	u16 start_later;
-+	struct cfg80211_match_set *ssid_list;
-+	u8 num_ssids;
-+	struct nxpwifi_user_scan_chan chan_list[NXPWIFI_BG_SCAN_CHAN_MAX];
-+	u16 scan_chan_gap;
-+} __packed;
-+
-+struct ie_body {
-+	u8 grp_key_oui[4];
-+	u8 ptk_cnt[2];
-+	u8 ptk_body[4];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_scan {
-+	u8 bss_mode;
-+	u8 bssid[ETH_ALEN];
-+	u8 tlv_buffer[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_scan_rsp {
-+	__le16 bss_descript_size;
-+	u8 number_of_sets;
-+	u8 bss_desc_and_tlv_buffer[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_scan_ext {
-+	u32   reserved;
-+	u8    tlv_buffer[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_bss_mode {
-+	struct nxpwifi_ie_types_header  header;
-+	u8 bss_mode;
-+} __packed;
-+
-+struct nxpwifi_ie_types_scan_rsp {
-+	struct nxpwifi_ie_types_header header;
-+	u8 bssid[ETH_ALEN];
-+	u8 frame_body[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_scan_inf {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 rssi;
-+	__le16 anpi;
-+	u8 cca_busy_fraction;
-+	u8 radio_type;
-+	u8 channel;
-+	u8 reserved;
-+	__le64 tsf;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_bg_scan_config {
-+	__le16 action;
-+	u8 enable;
-+	u8 bss_type;
-+	u8 chan_per_scan;
-+	u8 reserved;
-+	__le16 reserved1;
-+	__le32 scan_interval;
-+	__le32 reserved2;
-+	__le32 report_condition;
-+	__le16 reserved3;
-+	u8 tlv[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_bg_scan_query {
-+	u8 flush;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_bg_scan_query_rsp {
-+	__le32 report_condition;
-+	struct host_cmd_ds_802_11_scan_rsp scan_resp;
-+} __packed;
-+
-+struct nxpwifi_ietypes_domain_code {
-+	struct nxpwifi_ie_types_header header;
-+	u8 domain_code;
-+	u8 reserved;
-+} __packed;
-+
-+struct nxpwifi_ietypes_domain_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
-+	struct ieee80211_country_ie_triplet triplet[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11d_domain_info {
-+	__le16 action;
-+	struct nxpwifi_ietypes_domain_param_set domain;
-+} __packed;
-+
-+struct host_cmd_ds_802_11d_domain_info_rsp {
-+	__le16 action;
-+	struct nxpwifi_ietypes_domain_param_set domain;
-+} __packed;
-+
-+struct host_cmd_ds_11n_addba_req {
-+	u8 add_req_result;
-+	u8 peer_mac_addr[ETH_ALEN];
-+	u8 dialog_token;
-+	__le16 block_ack_param_set;
-+	__le16 block_ack_tmo;
-+	__le16 ssn;
-+} __packed;
-+
-+struct host_cmd_ds_11n_addba_rsp {
-+	u8 add_rsp_result;
-+	u8 peer_mac_addr[ETH_ALEN];
-+	u8 dialog_token;
-+	__le16 status_code;
-+	__le16 block_ack_param_set;
-+	__le16 block_ack_tmo;
-+	__le16 ssn;
-+} __packed;
-+
-+struct host_cmd_ds_11n_delba {
-+	u8 del_result;
-+	u8 peer_mac_addr[ETH_ALEN];
-+	__le16 del_ba_param_set;
-+	__le16 reason_code;
-+	u8 reserved;
-+} __packed;
-+
-+struct host_cmd_ds_11n_batimeout {
-+	u8 tid;
-+	u8 peer_mac_addr[ETH_ALEN];
-+	u8 origninator;
-+} __packed;
-+
-+struct host_cmd_ds_11n_cfg {
-+	__le16 action;
-+	__le16 ht_tx_cap;
-+	__le16 ht_tx_info;
-+	__le16 misc_config;	/* Needed for 802.11AC cards only */
-+} __packed;
-+
-+struct host_cmd_ds_txbuf_cfg {
-+	__le16 action;
-+	__le16 buff_size;
-+	__le16 mp_end_port;	/* SDIO only, reserved for other interfaces */
-+	__le16 reserved3;
-+} __packed;
-+
-+struct host_cmd_ds_amsdu_aggr_ctrl {
-+	__le16 action;
-+	__le16 enable;
-+	__le16 curr_buf_size;
-+} __packed;
-+
-+struct host_cmd_ds_sta_deauth {
-+	u8 mac[ETH_ALEN];
-+	__le16 reason;
-+} __packed;
-+
-+struct nxpwifi_ie_types_sta_info {
-+	struct nxpwifi_ie_types_header header;
-+	u8 mac[ETH_ALEN];
-+	u8 power_mfg_status;
-+	s8 rssi;
-+};
-+
-+struct host_cmd_ds_sta_list {
-+	__le16 sta_count;
-+	u8 tlv[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_pwr_capability {
-+	struct nxpwifi_ie_types_header header;
-+	s8 min_pwr;
-+	s8 max_pwr;
-+};
-+
-+struct nxpwifi_ie_types_local_pwr_constraint {
-+	struct nxpwifi_ie_types_header header;
-+	u8 chan;
-+	u8 constraint;
-+};
-+
-+struct nxpwifi_ie_types_wmm_param_set {
-+	struct nxpwifi_ie_types_header header;
-+	u8 wmm_ie[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_mgmt_frame {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 frame_control;
-+	u8 frame_contents[];
-+};
-+
-+struct nxpwifi_ie_types_wmm_queue_status {
-+	struct nxpwifi_ie_types_header header;
-+	u8 queue_index;
-+	u8 disabled;
-+	__le16 medium_time;
-+	u8 flow_required;
-+	u8 flow_created;
-+	u32 reserved;
-+};
-+
-+struct ieee_types_wmm_info {
-+	/*
-+	 * WMM Info element - Vendor Specific Header:
-+	 *   element_id  [221/0xdd]
-+	 *   Len         [7]
-+	 *   Oui         [00:50:f2]
-+	 *   OuiType     [2]
-+	 *   OuiSubType  [0]
-+	 *   Version     [1]
-+	 */
-+	struct ieee80211_vendor_ie vend_hdr;
-+	u8 oui_subtype;
-+	u8 version;
-+
-+	u8 qos_info_bitmap;
-+} __packed;
-+
-+struct host_cmd_ds_wmm_get_status {
-+	u8 queue_status_tlv[sizeof(struct nxpwifi_ie_types_wmm_queue_status) *
-+			      IEEE80211_NUM_ACS];
-+	u8 wmm_param_tlv[sizeof(struct ieee80211_wmm_param_ie) + 2];
-+} __packed;
-+
-+struct nxpwifi_wmm_ac_status {
-+	u8 disabled;
-+	u8 flow_required;
-+	u8 flow_created;
-+};
-+
-+struct nxpwifi_ie_types_htcap {
-+	struct nxpwifi_ie_types_header header;
-+	struct ieee80211_ht_cap ht_cap;
-+} __packed;
-+
-+struct nxpwifi_ie_types_vhtcap {
-+	struct nxpwifi_ie_types_header header;
-+	struct ieee80211_vht_cap vht_cap;
-+} __packed;
-+
-+struct nxpwifi_ie_types_aid {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 aid;
-+} __packed;
-+
-+struct nxpwifi_ie_types_oper_mode_ntf {
-+	struct nxpwifi_ie_types_header header;
-+	u8 oper_mode;
-+} __packed;
-+
-+/* VHT Operations element */
-+struct nxpwifi_ie_types_vht_oper {
-+	struct nxpwifi_ie_types_header header;
-+	u8 chan_width;
-+	u8 chan_center_freq_1;
-+	u8 chan_center_freq_2;
-+	/* Basic MCS set map, each 2 bits stands for a NSS */
-+	__le16 basic_mcs_map;
-+} __packed;
-+
-+struct nxpwifi_ie_types_wmmcap {
-+	struct nxpwifi_ie_types_header header;
-+	struct nxpwifi_types_wmm_info wmm_info;
-+} __packed;
-+
-+struct nxpwifi_ie_types_htinfo {
-+	struct nxpwifi_ie_types_header header;
-+	struct ieee80211_ht_operation ht_oper;
-+} __packed;
-+
-+struct nxpwifi_ie_types_2040bssco {
-+	struct nxpwifi_ie_types_header header;
-+	u8 bss_co_2040;
-+} __packed;
-+
-+struct nxpwifi_ie_types_extcap {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ext_capab[];
-+} __packed;
-+
-+struct host_cmd_ds_mem_access {
-+	__le16 action;
-+	__le16 reserved;
-+	__le32 addr;
-+	__le32 value;
-+} __packed;
-+
-+struct nxpwifi_ie_types_qos_info {
-+	struct nxpwifi_ie_types_header header;
-+	u8 qos_info;
-+} __packed;
-+
-+struct host_cmd_ds_mac_reg_access {
-+	__le16 action;
-+	__le16 offset;
-+	__le32 value;
-+} __packed;
-+
-+struct host_cmd_ds_bbp_reg_access {
-+	__le16 action;
-+	__le16 offset;
-+	u8 value;
-+	u8 reserved[3];
-+} __packed;
-+
-+struct host_cmd_ds_rf_reg_access {
-+	__le16 action;
-+	__le16 offset;
-+	u8 value;
-+	u8 reserved[3];
-+} __packed;
-+
-+struct host_cmd_ds_pmic_reg_access {
-+	__le16 action;
-+	__le16 offset;
-+	u8 value;
-+	u8 reserved[3];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_eeprom_access {
-+	__le16 action;
-+
-+	__le16 offset;
-+	__le16 byte_count;
-+	u8 value;
-+} __packed;
-+
-+struct nxpwifi_assoc_event {
-+	u8 sta_addr[ETH_ALEN];
-+	__le16 type;
-+	__le16 len;
-+	__le16 frame_control;
-+	__le16 cap_info;
-+	__le16 listen_interval;
-+	u8 data[];
-+} __packed;
-+
-+struct host_cmd_ds_sys_config {
-+	__le16 action;
-+	u8 tlv[];
-+};
-+
-+struct host_cmd_11ac_vht_cfg {
-+	__le16 action;
-+	u8 band_config;
-+	u8 misc_config;
-+	__le32 cap_info;
-+	__le32 mcs_tx_set;
-+	__le32 mcs_rx_set;
-+} __packed;
-+
-+struct host_cmd_tlv_akmp {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 key_mgmt;
-+	__le16 key_mgmt_operation;
-+} __packed;
-+
-+struct host_cmd_tlv_pwk_cipher {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 proto;
-+	u8 cipher;
-+	u8 reserved;
-+} __packed;
-+
-+struct host_cmd_tlv_gwk_cipher {
-+	struct nxpwifi_ie_types_header header;
-+	u8 cipher;
-+	u8 reserved;
-+} __packed;
-+
-+struct host_cmd_tlv_passphrase {
-+	struct nxpwifi_ie_types_header header;
-+	u8 passphrase[];
-+} __packed;
-+
-+struct host_cmd_tlv_wep_key {
-+	struct nxpwifi_ie_types_header header;
-+	u8 key_index;
-+	u8 is_default;
-+	u8 key[];
-+};
-+
-+struct host_cmd_tlv_auth_type {
-+	struct nxpwifi_ie_types_header header;
-+	u8 auth_type;
-+	u8 pwe_derivation;
-+	u8 transition_disable;
-+} __packed;
-+
-+struct host_cmd_tlv_encrypt_protocol {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 proto;
-+} __packed;
-+
-+struct host_cmd_tlv_ssid {
-+	struct nxpwifi_ie_types_header header;
-+	u8 ssid[];
-+} __packed;
-+
-+struct host_cmd_tlv_rates {
-+	struct nxpwifi_ie_types_header header;
-+	u8 rates[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_bssid_list {
-+	struct nxpwifi_ie_types_header header;
-+	u8 bssid[ETH_ALEN];
-+} __packed;
-+
-+struct host_cmd_tlv_bcast_ssid {
-+	struct nxpwifi_ie_types_header header;
-+	u8 bcast_ctl;
-+} __packed;
-+
-+struct host_cmd_tlv_beacon_period {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 period;
-+} __packed;
-+
-+struct host_cmd_tlv_dtim_period {
-+	struct nxpwifi_ie_types_header header;
-+	u8 period;
-+} __packed;
-+
-+struct host_cmd_tlv_frag_threshold {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 frag_thr;
-+} __packed;
-+
-+struct host_cmd_tlv_rts_threshold {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 rts_thr;
-+} __packed;
-+
-+struct host_cmd_tlv_retry_limit {
-+	struct nxpwifi_ie_types_header header;
-+	u8 limit;
-+} __packed;
-+
-+struct host_cmd_tlv_mac_addr {
-+	struct nxpwifi_ie_types_header header;
-+	u8 mac_addr[ETH_ALEN];
-+} __packed;
-+
-+struct host_cmd_tlv_channel_band {
-+	struct nxpwifi_ie_types_header header;
-+	u8 band_config;
-+	u8 channel;
-+} __packed;
-+
-+struct host_cmd_tlv_ageout_timer {
-+	struct nxpwifi_ie_types_header header;
-+	__le32 sta_ao_timer;
-+} __packed;
-+
-+struct host_cmd_tlv_power_constraint {
-+	struct nxpwifi_ie_types_header header;
-+	u8 constraint;
-+} __packed;
-+
-+struct nxpwifi_ie_types_btcoex_scan_time {
-+	struct nxpwifi_ie_types_header header;
-+	u8 coex_scan;
-+	u8 reserved;
-+	__le16 min_scan_time;
-+	__le16 max_scan_time;
-+} __packed;
-+
-+struct nxpwifi_ie_types_btcoex_aggr_win_size {
-+	struct nxpwifi_ie_types_header header;
-+	u8 coex_win_size;
-+	u8 tx_win_size;
-+	u8 rx_win_size;
-+	u8 reserved;
-+} __packed;
-+
-+struct nxpwifi_ie_types_robust_coex {
-+	struct nxpwifi_ie_types_header header;
-+	__le32 mode;
-+} __packed;
-+
-+#define NXPWIFI_VERSION_STR_LENGTH  128
-+
-+struct host_cmd_ds_version_ext {
-+	u8 version_str_sel;
-+	char version_str[NXPWIFI_VERSION_STR_LENGTH];
-+} __packed;
-+
-+struct host_cmd_ds_mgmt_frame_reg {
-+	__le16 action;
-+	__le32 mask;
-+} __packed;
-+
-+struct host_cmd_ds_remain_on_chan {
-+	__le16 action;
-+	u8 status;
-+	u8 reserved;
-+	u8 band_cfg;
-+	u8 channel;
-+	__le32 duration;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_ibss_status {
-+	__le16 action;
-+	__le16 enable;
-+	u8 bssid[ETH_ALEN];
-+	__le16 beacon_interval;
-+	__le16 atim_window;
-+	__le16 use_g_rate_protect;
-+} __packed;
-+
-+struct nxpwifi_fw_mef_entry {
-+	u8 mode;
-+	u8 action;
-+	__le16 exprsize;
-+	u8 expr[];
-+} __packed;
-+
-+struct host_cmd_ds_mef_cfg {
-+	__le32 criteria;
-+	__le16 num_entries;
-+	u8 mef_entry_data[];
-+} __packed;
-+
-+#define CONNECTION_TYPE_INFRA   0
-+#define CONNECTION_TYPE_AP      2
-+
-+struct host_cmd_ds_set_bss_mode {
-+	u8 con_type;
-+} __packed;
-+
-+struct host_cmd_ds_pcie_details {
-+	/* TX buffer descriptor ring address */
-+	__le32 txbd_addr_lo;
-+	__le32 txbd_addr_hi;
-+	/* TX buffer descriptor ring count */
-+	__le32 txbd_count;
-+
-+	/* RX buffer descriptor ring address */
-+	__le32 rxbd_addr_lo;
-+	__le32 rxbd_addr_hi;
-+	/* RX buffer descriptor ring count */
-+	__le32 rxbd_count;
-+
-+	/* Event buffer descriptor ring address */
-+	__le32 evtbd_addr_lo;
-+	__le32 evtbd_addr_hi;
-+	/* Event buffer descriptor ring count */
-+	__le32 evtbd_count;
-+
-+	/* Sleep cookie buffer physical address */
-+	__le32 sleep_cookie_addr_lo;
-+	__le32 sleep_cookie_addr_hi;
-+} __packed;
-+
-+struct nxpwifi_ie_types_rssi_threshold {
-+	struct nxpwifi_ie_types_header header;
-+	u8 abs_value;
-+	u8 evt_freq;
-+} __packed;
-+
-+#define NXPWIFI_DFS_REC_HDR_LEN		8
-+#define NXPWIFI_DFS_REC_HDR_NUM		10
-+#define NXPWIFI_BIN_COUNTER_LEN		7
-+
-+struct nxpwifi_radar_det_event {
-+	__le32 detect_count;
-+	u8 reg_domain;  /*1=fcc, 2=etsi, 3=mic*/
-+	u8 det_type;  /*0=none, 1=pw(chirp), 2=pri(radar)*/
-+	__le16 pw_chirp_type;
-+	u8 pw_chirp_idx;
-+	u8 pw_value;
-+	u8 pri_radar_type;
-+	u8 pri_bincnt;
-+	u8 bin_counter[NXPWIFI_BIN_COUNTER_LEN];
-+	u8 num_dfs_records;
-+	u8 dfs_record_hdr[NXPWIFI_DFS_REC_HDR_NUM][NXPWIFI_DFS_REC_HDR_LEN];
-+	__le32 passed;
-+} __packed;
-+
-+struct nxpwifi_ie_types_multi_chan_info {
-+	struct nxpwifi_ie_types_header header;
-+	__le16 status;
-+	u8 tlv_buffer[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_mc_group_info {
-+	struct nxpwifi_ie_types_header header;
-+	u8 chan_group_id;
-+	u8 chan_buf_weight;
-+	u8 band_config;
-+	u8 chan_num;
-+	__le32 chan_time;
-+	__le32 reserved;
-+	union {
-+		u8 sdio_func_num;
-+		u8 usb_ep_num;
-+	} hid_num;
-+	u8 intf_num;
-+	u8 bss_type_numlist[];
-+} __packed;
-+
-+#define MEAS_RPT_MAP_RADAR_MASK		0x08
-+#define MEAS_RPT_MAP_RADAR_SHIFT_BIT	3
-+
-+struct nxpwifi_ie_types_chan_rpt_data {
-+	struct nxpwifi_ie_types_header header;
-+	u8 meas_rpt_map;
-+} __packed;
-+
-+struct host_cmd_ds_802_11_subsc_evt {
-+	__le16 action;
-+	__le16 events;
-+} __packed;
-+
-+struct chan_switch_result {
-+	u8 cur_chan;
-+	u8 status;
-+	u8 reason;
-+} __packed;
-+
-+struct nxpwifi_ie {
-+	__le16 ie_index;
-+	__le16 mgmt_subtype_mask;
-+	__le16 ie_length;
-+	u8 ie_buffer[IEEE_MAX_IE_SIZE];
-+} __packed;
-+
-+#define MAX_MGMT_IE_INDEX	16
-+struct nxpwifi_ie_list {
-+	__le16 type;
-+	__le16 len;
-+	struct nxpwifi_ie ie_list[MAX_MGMT_IE_INDEX];
-+} __packed;
-+
-+struct coalesce_filt_field_param {
-+	u8 operation;
-+	u8 operand_len;
-+	__le16 offset;
-+	u8 operand_byte_stream[4];
-+};
-+
-+struct coalesce_receive_filt_rule {
-+	struct nxpwifi_ie_types_header header;
-+	u8 num_of_fields;
-+	u8 pkt_type;
-+	__le16 max_coalescing_delay;
-+	struct coalesce_filt_field_param params[];
-+} __packed;
-+
-+struct host_cmd_ds_coalesce_cfg {
-+	__le16 action;
-+	__le16 num_of_rules;
-+	u8 rule_data[];
-+} __packed;
-+
-+struct host_cmd_ds_multi_chan_policy {
-+	__le16 action;
-+	__le16 policy;
-+} __packed;
-+
-+struct host_cmd_ds_robust_coex {
-+	__le16 action;
-+	__le16 reserved;
-+} __packed;
-+
-+struct host_cmd_ds_wakeup_reason {
-+	__le16  wakeup_reason;
-+} __packed;
-+
-+struct host_cmd_ds_gtk_rekey_params {
-+	__le16 action;
-+	u8 kck[NL80211_KCK_LEN];
-+	u8 kek[NL80211_KEK_LEN];
-+	__le32 replay_ctr_low;
-+	__le32 replay_ctr_high;
-+} __packed;
-+
-+struct host_cmd_ds_chan_region_cfg {
-+	__le16 action;
-+} __packed;
-+
-+struct host_cmd_ds_pkt_aggr_ctrl {
-+	__le16 action;
-+	__le16 enable;
-+	__le16 tx_aggr_max_size;
-+	__le16 tx_aggr_max_num;
-+	__le16 tx_aggr_align;
-+} __packed;
-+
-+struct host_cmd_ds_sta_configure {
-+	__le16 action;
-+	u8 tlv_buffer[];
-+} __packed;
-+
-+struct nxpwifi_ie_types_sta_flag {
-+	struct nxpwifi_ie_types_header header;
-+	__le32 sta_flags;
-+} __packed;
-+
-+struct host_cmd_ds_add_station {
-+	__le16 action;
-+	__le16 aid;
-+	u8 peer_mac[ETH_ALEN];
-+	__le32 listen_interval;
-+	__le16 cap_info;
-+	u8 tlv[];
-+} __packed;
-+
-+struct host_cmd_11ax_cfg {
-+	__le16 action;
-+	u8 band_config;
-+	u8 tlv[];
-+} __packed;
-+
-+struct host_cmd_11ax_cmd {
-+	__le16 action;
-+	__le16 sub_id;
-+	u8 val[];
-+} __packed;
-+
-+struct nxpwifi_802_11_net_monitor {
-+	u32 enable_net_mon;
-+	u32 filter_flag;
-+	u32 band;
-+	u32 channel;
-+	u32 chan_bandwidth;
-+};
-+
-+struct band_config {
-+	/* Band: 00=2.4, 01=5, 10=6 GHz */
-+	u8 chan_band : 2;
-+	/* Width: 00=20, 10=40, 11=80 MHz */
-+	u8 chan_width : 2;
-+	/* Sec offset: 00=None, 01=Above, 11=Below */
-+	u8 chan_2O_ffset : 2;
-+	/* Chan sel: 00=manual, 01=ACS, 02=Adoption */
-+	u8 scan_mode : 2;
-+} __packed;
-+
-+struct chan_band_param {
-+	struct band_config band_cfg;
-+	u8 chan_number;
-+} __packed;
-+
-+struct nxpwifi_ie_types_chan_band_list {
-+	struct nxpwifi_ie_types_header header;
-+	struct chan_band_param chan_band_param[];
-+} __packed;
-+
-+struct host_cmd_ds_802_11_net_monitor {
-+	__le16 action;
-+	__le16 enable_net_mon;
-+	__le16 filter_flag;
-+	struct nxpwifi_ie_types_chan_band_list monitor_chan;
-+} __packed;
-+
-+struct host_cmd_twt_cfg {
-+	__le16 action;
-+	__le16 sub_id;
-+	u8 val[];
-+} __packed;
-+
-+struct host_cmd_ds_command {
-+	__le16 command;
-+	__le16 size;
-+	__le16 seq_num;
-+	__le16 result;
-+	union {
-+		struct host_cmd_ds_get_hw_spec hw_spec;
-+		struct host_cmd_ds_mac_control mac_ctrl;
-+		struct host_cmd_ds_802_11_mac_address mac_addr;
-+		struct host_cmd_ds_mac_multicast_adr mc_addr;
-+		struct host_cmd_ds_802_11_get_log get_log;
-+		struct host_cmd_ds_802_11_rssi_info rssi_info;
-+		struct host_cmd_ds_802_11_rssi_info_rsp rssi_info_rsp;
-+		struct host_cmd_ds_802_11_snmp_mib smib;
-+		struct host_cmd_ds_tx_rate_query tx_rate;
-+		struct host_cmd_ds_tx_rate_cfg tx_rate_cfg;
-+		struct host_cmd_ds_txpwr_cfg txp_cfg;
-+		struct host_cmd_ds_rf_tx_pwr txp;
-+		struct host_cmd_ds_rf_ant_mimo ant_mimo;
-+		struct host_cmd_ds_rf_ant_siso ant_siso;
-+		struct host_cmd_ds_802_11_ps_mode_enh psmode_enh;
-+		struct host_cmd_ds_802_11_hs_cfg_enh opt_hs_cfg;
-+		struct host_cmd_ds_802_11_scan scan;
-+		struct host_cmd_ds_802_11_scan_ext ext_scan;
-+		struct host_cmd_ds_802_11_scan_rsp scan_resp;
-+		struct host_cmd_ds_802_11_bg_scan_config bg_scan_config;
-+		struct host_cmd_ds_802_11_bg_scan_query bg_scan_query;
-+		struct host_cmd_ds_802_11_bg_scan_query_rsp bg_scan_query_resp;
-+		struct host_cmd_ds_802_11_associate associate;
-+		struct host_cmd_ds_802_11_associate_rsp associate_rsp;
-+		struct host_cmd_ds_802_11_deauthenticate deauth;
-+		struct host_cmd_ds_802_11d_domain_info domain_info;
-+		struct host_cmd_ds_802_11d_domain_info_rsp domain_info_resp;
-+		struct host_cmd_ds_11n_addba_req add_ba_req;
-+		struct host_cmd_ds_11n_addba_rsp add_ba_rsp;
-+		struct host_cmd_ds_11n_delba del_ba;
-+		struct host_cmd_ds_txbuf_cfg tx_buf;
-+		struct host_cmd_ds_amsdu_aggr_ctrl amsdu_aggr_ctrl;
-+		struct host_cmd_ds_11n_cfg htcfg;
-+		struct host_cmd_ds_wmm_get_status get_wmm_status;
-+		struct host_cmd_ds_802_11_key_material key_material;
-+		struct host_cmd_ds_version_ext verext;
-+		struct host_cmd_ds_mgmt_frame_reg reg_mask;
-+		struct host_cmd_ds_remain_on_chan roc_cfg;
-+		struct host_cmd_ds_802_11_ibss_status ibss_coalescing;
-+		struct host_cmd_ds_mef_cfg mef_cfg;
-+		struct host_cmd_ds_mem_access mem;
-+		struct host_cmd_ds_mac_reg_access mac_reg;
-+		struct host_cmd_ds_bbp_reg_access bbp_reg;
-+		struct host_cmd_ds_rf_reg_access rf_reg;
-+		struct host_cmd_ds_pmic_reg_access pmic_reg;
-+		struct host_cmd_ds_set_bss_mode bss_mode;
-+		struct host_cmd_ds_pcie_details pcie_host_spec;
-+		struct host_cmd_ds_802_11_eeprom_access eeprom;
-+		struct host_cmd_ds_802_11_subsc_evt subsc_evt;
-+		struct host_cmd_ds_sys_config uap_sys_config;
-+		struct host_cmd_ds_sta_deauth sta_deauth;
-+		struct host_cmd_ds_sta_list sta_list;
-+		struct host_cmd_11ac_vht_cfg vht_cfg;
-+		struct host_cmd_ds_coalesce_cfg coalesce_cfg;
-+		struct host_cmd_ds_chan_rpt_req chan_rpt_req;
-+		struct host_cmd_sdio_sp_rx_aggr_cfg sdio_rx_aggr_cfg;
-+		struct host_cmd_ds_multi_chan_policy mc_policy;
-+		struct host_cmd_ds_robust_coex coex;
-+		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
-+		struct host_cmd_ds_gtk_rekey_params rekey;
-+		struct host_cmd_ds_chan_region_cfg reg_cfg;
-+		struct host_cmd_ds_pkt_aggr_ctrl pkt_aggr_ctrl;
-+		struct host_cmd_ds_sta_configure sta_cfg;
-+		struct host_cmd_ds_add_station sta_info;
-+		struct host_cmd_11ax_cfg ax_cfg;
-+		struct host_cmd_11ax_cmd ax_cmd;
-+		struct host_cmd_ds_802_11_net_monitor net_mon;
-+		struct host_cmd_twt_cfg twt_cfg;
-+	} params;
-+} __packed;
-+
-+struct nxpwifi_opt_sleep_confirm {
-+	__le16 command;
-+	__le16 size;
-+	__le16 seq_num;
-+	__le16 result;
-+	__le16 action;
-+	__le16 resp_ctrl;
-+} __packed;
-+
-+#define VDLL_IND_TYPE_REQ		0
-+#define VDLL_IND_TYPE_OFFSET		1
-+#define VDLL_IND_TYPE_ERR_SIG		2
-+#define VDLL_IND_TYPE_ERR_ID		3
-+#define VDLL_IND_TYPE_SEC_ERR_ID	4
-+#define VDLL_IND_TYPE_INTF_RESET	5
-+
-+struct vdll_ind_event {
-+	__le16 type;
-+	__le16 vdll_id;
-+	__le32 offset;
-+	__le16 block_len;
-+} __packed;
-+#endif /* !_NXPWIFI_FW_H_ */
++#endif /* !_NXPWIFI_UTIL_H_ */
 -- 
 2.34.1
 
