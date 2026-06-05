@@ -1,45 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116601CEAC2
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Jun 2026 12:31:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DAB631D759
+	for <linux-wireless@vger.kernel.org>; Fri,  5 Jun 2026 12:31:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780662663; cv=none; b=ovmU8/QE0bQkjobPXbyRcOO6xqc8Gj2WPbA+frL31t6aHq29pT2v+T8bSdM8hrEWv7AUdlqwx0eOFnoDMQN8eN6n9mzHi5AYjkFHzAdVorRhZaJR1sMQZK/7mBbS8zOolgRQMF98wW1nv1cAGdsPpfSqyGdN6giJeg6/Xlyl+bg=
+	t=1780662664; cv=none; b=B+V6L3m/LISXZAyW2AEazymCUqmXV5Pi2rMlZcOYVw6R8S+tDD06dEYqgWC2gtv2so+9QaBknaTDKPPgBuyewoxvwxiGRRwxBY9sj2hHduYUHlB6Fwte73fl+HSc6LPdSESSjmxU7a7qXbtvPA9lEKjBMWqNV9gwkTKE1G30AIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780662663; c=relaxed/simple;
-	bh=KvORtdao10zVrBEVWBv8LaVkBQAhMqJYa6/XWRqMfbU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qXOSp7eft4lrmrUXwwYTzzHY1V5QRfjM51j5O0tB0t59W69UP8dx1wluMO0FKsX/oM8CrJzoD1HVB9UzkN8TaoTHrb/UjLdfX+sSQCT+GqRqENnypcgBxZ2GT+o5uszhJLiKZPOdMxaF49rsbiP0DV7HQRlT51b4KOvRpK2nWLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=UXL5Wknd; arc=none smtp.client-ip=46.4.11.11
+	s=arc-20240116; t=1780662664; c=relaxed/simple;
+	bh=aN7O/9JOkB/W5Sa4kZM/lrcVrMvKrxOWCtuVkdEGxSc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sle45hJpx/5QtJKHrhXc7MlM4gqh0LU00+eUSMJD1YqOpHls4/RxYiPJ52oQDi0e1AQG+S4hYqDct2aWnwIwc6za6aB3LzUjxq7Z5p2m9RMLWxjk/9bumohmhNYpxeKBs+zvWoaQ/3dmX7araDjC+ncRAJEflMdABOgL8fI0Mfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=BOLZWJsd; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UXL5Wknd"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BOLZWJsd"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=jdg6tr3ZGDfzADuFmjNsgstUtQjlO+7dbOdU86wUuis=; b=UXL5WkndeAOG/LOKfVfqeFZzZL
-	/raH4G2TYZ+pyqOTB3RanLw3hIaQsreAq2q09rmgyVxp527AvYhPxO6p3qzjTEm/KzTDww0twXocH
-	oipXFiUPJC3b+YKOoYzOEJwp60IauB1G3EAjEOPKxKRTLI/lyyqtzmKmepUPE3u+zmwE=;
+	bh=fv6+DUlClQU8LV8EwPunpfEQqxkL+zJsp2cnE+4ryiM=; b=BOLZWJsdw/ODCIwqlbagJdK/Bb
+	QAch2jxVez+hkz9OValbbhYjWuAqjHBoJ5xRj+HBD6ltxlpTxTC6cWXwozB6EkcyDPXl6228YSIcP
+	7olteb8Y6GoL9DojSIv1o335SArqXck3qnHUlAWNMswJt7DFTqce2Fb7IQA1HXhcEZ9k=;
 Received: from p200300cadf03d5009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df03:d500:9ebf:dff:fe00:fa2d] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1wVThO-0090er-2E;
+	id 1wVThO-0090er-0U;
 	Fri, 05 Jun 2026 14:30:54 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next v3 4/4] wifi: mac80211: add ieee80211_txq_aql_pending()
-Date: Fri,  5 Jun 2026 12:30:49 +0000
-Message-ID: <20260605123049.1128869-4-nbd@nbd.name>
+Subject: [PATCH wireless-next v3 1/4] wifi: mac80211: factor out part of ieee80211_calc_expected_tx_airtime
+Date: Fri,  5 Jun 2026 12:30:46 +0000
+Message-ID: <20260605123049.1128869-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260605123049.1128869-1-nbd@nbd.name>
-References: <20260605123049.1128869-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,71 +45,148 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a function to allow drivers to query the pending AQL airtime
-for a given txq, for both unicast and broadcast.
-This will be used for mt76 to limit buffering in AP mode for power-save
-stations.
+Create ieee80211_rate_expected_tx_airtime helper function, which returns
+the expected tx airtime for a given rate and packet length in units of
+1/1024 usec, for more accuracy.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-v2: reorder txq->tid check
-v3: fix compile error - adjust for changes in previous patch
+ net/mac80211/airtime.c     | 87 ++++++++++++++++++++++----------------
+ net/mac80211/ieee80211_i.h |  5 +++
+ 2 files changed, 56 insertions(+), 36 deletions(-)
 
- include/net/mac80211.h | 11 +++++++++++
- net/mac80211/tx.c      | 18 ++++++++++++++++++
- 2 files changed, 29 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 77409e4e28e8..a97d800c2e1f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6871,6 +6871,17 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
- bool
- ieee80211_txq_airtime_check(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index c61df637232a..0c54cdbd753c 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -685,7 +685,7 @@ static int ieee80211_fill_rx_status(struct ieee80211_rx_status *stat,
+ 	if (ieee80211_fill_rate_info(hw, stat, band, ri))
+ 		return 0;
  
-+/**
-+ * ieee80211_txq_aql_pending - get pending AQL airtime for a txq
-+ *
-+ * @hw: pointer obtained from ieee80211_alloc_hw()
-+ * @txq: pointer obtained from station or virtual interface
-+ *
-+ * Return: pending airtime (in usec) for the given txq.
-+ */
-+u32 ieee80211_txq_aql_pending(struct ieee80211_hw *hw,
-+			      struct ieee80211_txq *txq);
-+
- /**
-  * ieee80211_iter_keys - iterate keys programmed into the device
-  * @hw: pointer obtained from ieee80211_alloc_hw()
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d1c8398584af..fdfbc92ecdeb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4225,6 +4225,24 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
+-	if (!ieee80211_rate_valid(rate))
++	if (!rate || !ieee80211_rate_valid(rate))
+ 		return -1;
+ 
+ 	if (rate->flags & IEEE80211_TX_RC_160_MHZ_WIDTH)
+@@ -753,6 +753,53 @@ u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
  }
- EXPORT_SYMBOL(ieee80211_txq_airtime_check);
+ EXPORT_SYMBOL_GPL(ieee80211_calc_tx_airtime);
  
-+u32 ieee80211_txq_aql_pending(struct ieee80211_hw *hw,
-+			      struct ieee80211_txq *txq)
++u32 ieee80211_rate_expected_tx_airtime(struct ieee80211_hw *hw,
++				       struct ieee80211_tx_rate *tx_rate,
++				       struct rate_info *ri,
++				       enum nl80211_band band,
++				       bool ampdu, int len)
 +{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct sta_info *sta;
++	struct ieee80211_rx_status stat;
++	u32 duration, overhead;
++	u8 agg_shift;
 +
-+	if (unlikely(txq->tid == IEEE80211_NUM_TIDS))
++	if (ieee80211_fill_rx_status(&stat, hw, tx_rate, ri, band, len))
 +		return 0;
 +
-+	if (!txq->sta)
-+		return atomic_read(&local->aql_mc_pending_airtime);
++	if (stat.encoding == RX_ENC_LEGACY || !ampdu)
++		return ieee80211_calc_rx_airtime(hw, &stat, len) * 1024;
 +
-+	sta = container_of(txq->sta, struct sta_info, sta);
++	duration = ieee80211_get_rate_duration(hw, &stat, &overhead);
 +
-+	return atomic_read(&sta->airtime[txq->ac].aql_tx_pending);
++	/*
++	 * Assume that HT/VHT transmission on any AC except VO will
++	 * use aggregation. Since we don't have reliable reporting
++	 * of aggregation length, assume an average size based on the
++	 * tx rate.
++	 * This will not be very accurate, but much better than simply
++	 * assuming un-aggregated tx in all cases.
++	 */
++	if (duration > 400 * 1024) /* <= VHT20 MCS2 1S */
++		agg_shift = 1;
++	else if (duration > 250 * 1024) /* <= VHT20 MCS3 1S or MCS1 2S */
++		agg_shift = 2;
++	else if (duration > 150 * 1024) /* <= VHT20 MCS5 1S or MCS2 2S */
++		agg_shift = 3;
++	else if (duration > 70 * 1024) /* <= VHT20 MCS5 2S */
++		agg_shift = 4;
++	else if (stat.encoding != RX_ENC_HE ||
++		 duration > 20 * 1024) /* <= HE40 MCS6 2S */
++		agg_shift = 5;
++	else
++		agg_shift = 6;
++
++	duration *= len;
++	duration /= AVG_PKT_SIZE;
++	duration += (overhead * 1024 >> agg_shift);
++
++	return duration;
 +}
-+EXPORT_SYMBOL(ieee80211_txq_aql_pending);
 +
- static bool
- ieee80211_txq_schedule_airtime_check(struct ieee80211_local *local, u8 ac)
- {
+ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_sta *pubsta,
+@@ -775,45 +822,13 @@ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 	if (pubsta) {
+ 		struct sta_info *sta = container_of(pubsta, struct sta_info,
+ 						    sta);
+-		struct ieee80211_rx_status stat;
+ 		struct ieee80211_tx_rate *tx_rate = &sta->deflink.tx_stats.last_rate;
+ 		struct rate_info *ri = &sta->deflink.tx_stats.last_rate_info;
+-		u32 duration, overhead;
+-		u8 agg_shift;
++		u32 duration;
+ 
+-		if (ieee80211_fill_rx_status(&stat, hw, tx_rate, ri, band, len))
+-			return 0;
+-
+-		if (stat.encoding == RX_ENC_LEGACY || !ampdu)
+-			return ieee80211_calc_rx_airtime(hw, &stat, len);
+-
+-		duration = ieee80211_get_rate_duration(hw, &stat, &overhead);
+-		/*
+-		 * Assume that HT/VHT transmission on any AC except VO will
+-		 * use aggregation. Since we don't have reliable reporting
+-		 * of aggregation length, assume an average size based on the
+-		 * tx rate.
+-		 * This will not be very accurate, but much better than simply
+-		 * assuming un-aggregated tx in all cases.
+-		 */
+-		if (duration > 400 * 1024) /* <= VHT20 MCS2 1S */
+-			agg_shift = 1;
+-		else if (duration > 250 * 1024) /* <= VHT20 MCS3 1S or MCS1 2S */
+-			agg_shift = 2;
+-		else if (duration > 150 * 1024) /* <= VHT20 MCS5 1S or MCS2 2S */
+-			agg_shift = 3;
+-		else if (duration > 70 * 1024) /* <= VHT20 MCS5 2S */
+-			agg_shift = 4;
+-		else if (stat.encoding != RX_ENC_HE ||
+-			 duration > 20 * 1024) /* <= HE40 MCS6 2S */
+-			agg_shift = 5;
+-		else
+-			agg_shift = 6;
+-
+-		duration *= len;
+-		duration /= AVG_PKT_SIZE;
++		duration = ieee80211_rate_expected_tx_airtime(hw, tx_rate, ri,
++							      band, true, len);
+ 		duration /= 1024;
+-		duration += (overhead >> agg_shift);
+ 
+ 		return max_t(u32, duration, 4);
+ 	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 18a101710432..896397e9408f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2916,6 +2916,11 @@ u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
+ 
+ extern const struct ethtool_ops ieee80211_ethtool_ops;
+ 
++u32 ieee80211_rate_expected_tx_airtime(struct ieee80211_hw *hw,
++				       struct ieee80211_tx_rate *tx_rate,
++				       struct rate_info *ri,
++				       enum nl80211_band band,
++				       bool ampdu, int len);
+ u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_sta *pubsta,
 -- 
 2.53.0
 
