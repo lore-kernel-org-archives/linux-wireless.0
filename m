@@ -1,53 +1,52 @@
 Received: from mailtransmit05.runbox.com (mailtransmit05.runbox.com [185.226.149.38])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BAC53C4B8D;
-	Sat,  6 Jun 2026 20:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 858C63CB2E5;
+	Sat,  6 Jun 2026 20:27:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780777645; cv=none; b=THOjreRSjUAEK0nDz+CDizWuJl2TZr0Eyu0G2MN/49yhCtQu3Ewcu2L+x+kVCwe+7cgS/3KRw/Y0yo1C3e6O6Ypy100eGQyzCRkVRFay2D8v/UaIyHZX0OlAur7MHuIyxndVYtCi5H2cxrFDnskGzVbhw2RTGkYtc51x1wkmFZU=
+	t=1780777646; cv=none; b=a0Y1OMAh71wSEibAibf6RfTqgPUMIaGcET6IGj61+toUu4o49SD3zD124qMbr2lfD2+VeXC0iVdQjQz8pPdiVoGVJA4lnRcu/JzvcWo8hQNloJQ2jCOe9G4bYLU1+Fre/kekUm4UbLTVAKrLCm/Btr0d/T1gTeld4XtAkU+WwEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780777645; c=relaxed/simple;
-	bh=uSHaNvTOe+QCtHj00I9igqcwTFrdh/QdZfN2j94IGqM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VhmXhRzbNfAI0Gya6VZS3cbcq1tPUrTcm5cM+bHVFExZHsESRpz9kL4PQiqzXyH6QVBoTP17E9GpA1IzW8PirQHdthYF2Z3elS+nMfuBlUq0fQaOubbpQf4wPzzu43XffZ9scNnzCEcG18pSNaBtvPb4V0RgSHVPKXhxV9rrna4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=h8orFUGF; arc=none smtp.client-ip=185.226.149.38
+	s=arc-20240116; t=1780777646; c=relaxed/simple;
+	bh=eCCKzflE/VkI8fQZqfi2+WTPlncXDVoav0KhiEbF2/I=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nDaYR8gjiSOm/TRNAEACnOWHM7MgR126CSTKUAlUW+JC5+oXjgE/HXEglML62JcqqxTlb23ZXfl/7e93aw+XjeiPQK6s5YzdvAyrvQdnL8hDCmUGDzTOa98e7F8FSH08ZIqHm7Dg3153C9QDHGvhSQ+FhaIwP+10SEnxL8pVJb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=runbox.com; dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b=moUAUrYi; arc=none smtp.client-ip=185.226.149.38
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=runbox.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="h8orFUGF"
-Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
+	dkim=pass (2048-bit key) header.d=runbox.com header.i=@runbox.com header.b="moUAUrYi"
+Received: from mailtransmit02.runbox ([10.9.9.162] helo=aibo.runbox.com)
 	by mailtransmit05.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.93)
 	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wVxbx-007cIv-VH; Sat, 06 Jun 2026 22:27:17 +0200
+	id 1wVxc1-007cKh-U4; Sat, 06 Jun 2026 22:27:21 +0200
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=runbox.com;
 	 s=selector1; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:
-	Subject:Cc:To:From; bh=EsiSusHmKbsuS9wX85eZ852sXDJ3CmjPutJp5AFLAoQ=; b=h8orFU
-	GFra3nES6Bqiw5WC9V0047HZ8NM1obIUOHvKN2y2cBwy33fKk0K/iuLfAb5cEKR5lcwZ+AtL6qCVi
-	n6UUj2NX6b0t5LjXAgJXy1yQ3wHP5c6ZlSqyLWqkB7a/pqClX43R5xLGXtvCQyfgy0DNCaiQ00I82
-	9PN8S6TzgYYTHEZKlOBWpVejFGGpuiEeQMYMBPQkRo2FSTxe68rPzi6w1+Aaj3Drcu05FtvsuUH/X
-	nDHyKqRs+fVRSSFN02VsAXF9332LFtLmvlEs7F6iR5ywYdYLleyO1G3H7oOc3S+mAKJtUp/UGMIXo
-	FGdypqwbtVBkC691XarUQF094knA==;
+	Subject:Cc:To:From; bh=UW4f4UkAl+P0I7lIPRNtIDszxiyneFrhBfATX8XyfXM=; b=moUAUr
+	YihHApM1rzQAXgjTTMMTXYClFg6TlWL2fW+a0wGp/O2S/dptcIvjXLPPdjx+WmA1xXxfrL73zVuEC
+	sgC/m5StqxIpnMLju/KR7ZOFA2ah41uxf9dbYUdhWIEr2L/8aYXq6w8L11xfe5+silNtuWrKpBbU6
+	SMojk2XYHAly9qCgrb8Nd+1XV2T7MU6kH8M8c+R7JpqjY+Gt2JWAzonO1Koefp36U1LCLNgTTc8vE
+	SSF9c1QdsViXjzUhNT15MaJ8iam74QRZxWTdJdDUC9NocTsTIlx1ZYs8QJKUtMWnKiPi8ASwsQT+f
+	ISywsPR1WdakduT56EzpiKZptXCQ==;
 Received: from [10.9.9.72] (helo=submission01.runbox)
-	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
+	by mailtransmit02.runbox with esmtp (Exim 4.86_2)
 	(envelope-from <david.laight.linux_spam@runbox.com>)
-	id 1wVxbx-0005Dl-Dg; Sat, 06 Jun 2026 22:27:17 +0200
+	id 1wVxbw-0000uU-If; Sat, 06 Jun 2026 22:27:16 +0200
 Received: by submission01.runbox with esmtpsa  [Authenticated ID (1493616)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.95)
-	id 1wVxbh-006V18-RL;
-	Sat, 06 Jun 2026 22:27:01 +0200
+	id 1wVxbc-006V18-1l;
+	Sat, 06 Jun 2026 22:26:56 +0200
 From: david.laight.linux@gmail.com
 To: Kees Cook <kees@kernel.org>,
 	linux-hardening@vger.kernel.org,
 	Arnd Bergmann <arnd@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Cc: Ajay Singh <ajay.kathat@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	David Laight <david.laight.linux@gmail.com>
-Subject: [PATCH net-next] drivers/net/wireless/microchip/wilc1000: Use strscpy() to copy device name
-Date: Sat,  6 Jun 2026 21:26:15 +0100
-Message-Id: <20260606202633.5018-21-david.laight.linux@gmail.com>
+Subject: [PATCH next] rfkill: Replace strcpy() with memcpy()
+Date: Sat,  6 Jun 2026 21:26:02 +0100
+Message-Id: <20260606202633.5018-8-david.laight.linux@gmail.com>
 X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -58,6 +57,9 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 From: David Laight <david.laight.linux@gmail.com>
+
+The length of the string is calculated in order to allocate the correct
+sized memory block, use the same length to copy the string.
 
 Signed-off-by: David Laight <david.laight.linux@gmail.com>
 ---
@@ -83,22 +85,39 @@ All the patches are being sent individually to avoid very long cc lists.
 Apologies for the terse commit messages and likely unexpected tags.
 (There are about 100 patches in total.)
 
- drivers/net/wireless/microchip/wilc1000/netdev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/rfkill/core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net/wireless/microchip/wilc1000/netdev.c
-index 956cb578bf37..66580233646d 100644
---- a/drivers/net/wireless/microchip/wilc1000/netdev.c
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -960,7 +960,7 @@ struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 4827e1fb8804..9e143c4bfe6a 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1000,6 +1000,7 @@ struct rfkill * __must_check rfkill_alloc(const char *name,
+ {
+ 	struct rfkill *rfkill;
+ 	struct device *dev;
++	size_t name_len;
  
- 	vif = netdev_priv(ndev);
- 	ndev->ieee80211_ptr = &vif->priv.wdev;
--	strcpy(ndev->name, name);
-+	strscpy(ndev->name, name);
- 	vif->wilc = wl;
- 	vif->ndev = ndev;
- 	ndev->ml_priv = vif;
+ 	if (WARN_ON(!ops))
+ 		return NULL;
+@@ -1013,14 +1014,15 @@ struct rfkill * __must_check rfkill_alloc(const char *name,
+ 	if (WARN_ON(type == RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES))
+ 		return NULL;
+ 
+-	rfkill = kzalloc(sizeof(*rfkill) + strlen(name) + 1, GFP_KERNEL);
++	name_len = strlen(name);
++	rfkill = kzalloc(sizeof(*rfkill) + name_len + 1, GFP_KERNEL);
+ 	if (!rfkill)
+ 		return NULL;
+ 
+ 	spin_lock_init(&rfkill->lock);
+ 	INIT_LIST_HEAD(&rfkill->node);
+ 	rfkill->type = type;
+-	strcpy(rfkill->name, name);
++	memcpy(rfkill->name, name, name_len);
+ 	rfkill->ops = ops;
+ 	rfkill->data = ops_data;
+ 
 -- 
 2.39.5
 
