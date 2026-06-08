@@ -1,46 +1,45 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFB9F3876C1;
-	Mon,  8 Jun 2026 07:02:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D283026AF4
+	for <linux-wireless@vger.kernel.org>; Mon,  8 Jun 2026 07:16:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780902173; cv=none; b=Cvoz48FwNi6iqO2jWhLfnsL89xy3Qqg7XjEGJZyzU5Dfx6ifwKUW/d2E1QB7gX0J8AZmOATqzpiHPTYGQT6ITMks5VQFysDthibv66H4VXJ0/IdAGXCl+XrnuxXSeYP7MMm9oFKLcR5Lzjkkx4iHxwbHoZR4xOhiMyX3cShfMf0=
+	t=1780903005; cv=none; b=sXx3dEz+X4ycmGZwm8r8b8iptjbhr+dDrojo8dEYkQfRxDWn8DiNzbIQLelnZAbhw9zqozoiawz03q+AzZf1yhgfLcLoGf/EiByY+fThcAu1WT+kc74X3WmRhC6yUCJdjSZ0Ljj4BgukS0tkkFYAzbP5VR0QslOst0HjmAzWIYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780902173; c=relaxed/simple;
-	bh=wRghMpT235GXEl1TbhyuxwYqE0P/NK7WwDJy9fQ4rjU=;
+	s=arc-20240116; t=1780903005; c=relaxed/simple;
+	bh=eZr9c63Eqe/h1mY0Rf7aRp7l7jcHbcrxr7ojL9lKdHs=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=jWtibi3wC8QQC4ZDZWvIES+opIqXDE3rVnneh12wDA3K2eO4wkLf1IG9K19JfCJEWVoh6hw44bO1mYP10CYdrNNmO/nwicdfUmrxo1+CtuCZMfZ9pmpyVITUAjiCU3GdW63HWIDgV/kRSZv42nNiAQ/ZNfa5LKnWQlVVT1WUYVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=nxlILKUV; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=VqrxRKW8ZTMsy04SYJIDyGSwlbUndd8uKZciiSgBF41BhYwTUE9Y9/TMNf0oImbqsGfWzMKTRo3/MAfKws1XGMg+42jeH011Qv+0UHgZ5hYAyUj/4Oxf3DCqP9JeEAntCtyQiwQbuOHPbiCrBf+DWSUfWKKpUBzzJ8GRKFUw3ns=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Ms3NH5gs; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="nxlILKUV"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Ms3NH5gs"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=wRghMpT235GXEl1TbhyuxwYqE0P/NK7WwDJy9fQ4rjU=;
-	t=1780902170; x=1782111770; b=nxlILKUVOcmYqnvmu5P/FmVlgcXkEqmFjtQXNT0qqaSjHuB
-	g5Qvn7JLuE4fY3eYVuv+O8wl/O/tIAqCw5ZoSvFGAPsi+vBaQJIc1uAkF9Pr99nBpFH2R8i+FRTF4
-	zfR2cGTE8frx4hQ/oERxnqTDkr4Lht9X60VqzyFr8HG1s8P+P/8FsgaTmOIAGl5KoQYx0RG0BwLSr
-	Kd6BgK5jzETHH76vxyd6d1x02KQsMC07IAaC6Y05XiCkprvnSgVx/Pgg71+fC7VD3d3+4/iUFixZW
-	XzueKNzx9p+jq0uwf5gzG3i+DbLkHER1yLtaiHYrzkJRO4KkgcBF20yckDVhK41A==;
+	Resent-Cc:Resent-Message-ID; bh=UIZJExVAW/SiQTfvjS5WGXHRXQJ/5VxQHzaox57JJlw=;
+	t=1780903003; x=1782112603; b=Ms3NH5gsMqmhJgAhi0fbCCr91ps+cOGW/p8BqH7CXh7ZsI2
+	LBl9+6XrChUeSuPOULswDz3VE5PSflHWCQpYiNs+CQFuDOB+tJxPv20dNpftzHk42gIj29Eop96l4
+	K7tpQKsMn00Ji0V1sTSHvfzVVjfb4UOc/tFAkYtif6YyRQtt1EnclNKMnGKm1zwe5vfBITkPsoS1L
+	p/JR/o22zx1Iwvmuzah+eIW7hOeh4e2+T9sBqaUVl1Un5m2r8XPFAWmGFd53u87bN+a6HYLYHK7d3
+	OFe09WxPzPUwaCaSfSLivpW7Lwl8/VKaQlJ98S/9tMRcTQLbzv0gfd3HKCwD4siw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wWTdt-00000005WkD-41kV;
-	Mon, 08 Jun 2026 08:39:26 +0200
-Message-ID: <dea3dc8bee50dd5eaa1327fb8ea83658f73d323d.camel@sipsolutions.net>
-Subject: Re: [PATCH v12 00/22] wifi: nxpwifi: create nxpwifi to support
+	id 1wWUDw-00000005Yx2-0xCr;
+	Mon, 08 Jun 2026 09:16:40 +0200
+Message-ID: <7d251045171a4146604b8788479efc0e99224ff8.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 0/5] wifi: cfg80211: Add fragmented
+ per-link station stats in MLO
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Chen <jeff.chen_1@nxp.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, briannorris@chromium.org, 
-	francesco@dolcini.it, wyatt.hsu@nxp.com, s.hauer@pengutronix.de, 
-	ulf.hansson@linaro.org
-Date: Mon, 08 Jun 2026 08:39:24 +0200
-In-Reply-To: <20260605161335.2415583-1-jeff.chen_1@nxp.com>
-References: <20260605161335.2415583-1-jeff.chen_1@nxp.com>
+To: P Praneesh <praneesh.p@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+Date: Mon, 08 Jun 2026 09:16:39 +0200
+In-Reply-To: <20260607175912.2266215-1-praneesh.p@oss.qualcomm.com>
+References: <20260607175912.2266215-1-praneesh.p@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -52,15 +51,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sat, 2026-06-06 at 00:13 +0800, Jeff Chen wrote:
+On Sun, 2026-06-07 at 23:29 +0530, P Praneesh wrote:
+> This series introduces fragmentation support for Multi-Link Operation
+> (MLO) station statistics in nl80211.
 >=20
-> Firmware binaries can be obtained from:
-> https://github.com/nxp-imx/imx-firmware/tree/lf-6.12.34_2.1.0/nxp/FwImage=
-_IW612_SD/
+> The current nl80211_dump_station() implementation works well for legacy
+> (single-link) stations, but it does not scale for MLO peers. With
+> multiple links per station, dumping all per-link information in a single
+> netlink message can exceed size limits, resulting in -EMSGSIZE errors
+> and incomplete dumps.
+>=20
+> With 802.11be (Wi=E2=80=91Fi 7), a single station may have multiple links=
+, each
+> with its own statistics. To address this, this series introduces a
+> stateful dump mechanism that splits station information into multiple
+> messages when required.
+>=20
+> The dump is performed in two phases:
+>   - Phase 0: Aggregated (station-level) statistics
+>   - Phase 1: Per-link statistics sent in separate messages
 
-Are you going to send this for inclusion in linux-firmware with an
-appropriate (redistributable) license? I'm not entirely convinced that
-the license (that appears to be attached to) the repository is really
-one that could be used there?
+[snip]
+
+Overall, this approach seems (mostly?) right. I have a couple of
+comments reading the code itself, but also:
+
+> Aggregated Stats (Phase 0)
+>=20
+> NL80211_CMD_NEW_STATION
+>  =E2=94=9C=E2=94=80 NL80211_ATTR_IFINDEX
+>  =E2=94=9C=E2=94=80 NL80211_ATTR_MAC
+>  =E2=94=9C=E2=94=80 NL80211_ATTR_GENERATION
+>  =E2=94=94=E2=94=80 NL80211_ATTR_STA_INFO
+>       =E2=94=9C=E2=94=80 <aggregated station attributes>
+>       =E2=94=94=E2=94=80 ...
+>=20
+> Note: No NL80211_ATTR_MLO_LINKS is included in this phase.
+> Per=E2=80=91link stats are sent in Phase 1.
+>=20
+> Per-Link Stats (Phase 1)
+>=20
+> NL80211_CMD_NEW_STATION
+>   =E2=94=9C=E2=94=80 NL80211_ATTR_IFINDEX
+>   =E2=94=9C=E2=94=80 NL80211_ATTR_MAC                 (MLO MAC)
+>   =E2=94=9C=E2=94=80 NL80211_ATTR_GENERATION
+>   =E2=94=94=E2=94=80 NL80211_ATTR_STA_INFO
+>        =E2=94=94=E2=94=80 NL80211_ATTR_MLO_LINKS
+>             =E2=94=9C=E2=94=80 [link0]
+>             =E2=94=82    =E2=94=9C=E2=94=80 NL80211_ATTR_MLO_LINK_ID =3D =
+0
+>             =E2=94=82    =E2=94=9C=E2=94=80 NL80211_ATTR_MAC =3D <link0 M=
+AC>
+>             =E2=94=82    =E2=94=9C=E2=94=80 NL80211_STA_INFO_RX_BYTES
+>             =E2=94=82    =E2=94=9C=E2=94=80 NL80211_STA_INFO_TX_BYTES
+>             =E2=94=82    =E2=94=94=E2=94=80 ... more link0 stats ...
+
+This description is missing another nesting level as
+NL80211_ATTR_STA_INFO no?
 
 johannes
