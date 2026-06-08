@@ -1,46 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE41E38F938
-	for <linux-wireless@vger.kernel.org>; Mon,  8 Jun 2026 07:30:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A49B38F945
+	for <linux-wireless@vger.kernel.org>; Mon,  8 Jun 2026 07:42:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780903850; cv=none; b=N43l2t/l2uTHL2NLFCdWWidF1xG7pFuFAUbQHFfI1PpnVRBPug6yyQQw1giLJ65fYF6wLRc5ZjGPHS25ObCxXZ4Sdnkp46eDIungvrf3fq6edRePDx09V2oSvyNR+9zq+R1I2hqdafKvxUccRy2hpXNIrrhrniqJTNCmlh/82YY=
+	t=1780904568; cv=none; b=gxnpVV57tVWoMAsh40W7qTz+81HapJO1V/p0PW491tB06qPVkFwU+YhF5TmBM0+xPgQT2n8HFBFrieXFKbkvLk3myHQYTtiFjmhZpFshJxiLzdhNLPHofgmC6ApbEvAfbTc0LfHaz0APkUpo0tblNWQ5T3lnU8tOPs8Bj2r73kk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780903850; c=relaxed/simple;
-	bh=G+NJlSbabxnkRbE1W48V1WYZLjMDjijNvinKVGMZaag=;
+	s=arc-20240116; t=1780904568; c=relaxed/simple;
+	bh=NKW8uXKChpH7ZwaUIBE9cXLDKB5rJ+mePdXf/C639gY=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bQcYAPIJLvV2a9Au97uoVx0Vuel+f+kzElTyCRDycNXzchyDbZFIxLVcoeMvvx3gEsaOvUOqJZWLslPh9kqCe5ROUFWpQm4rwIZinNhqs62Hb0Vj/CgvjdspymnZkM1gpsOWczCEQ/bcVd7bBhK5DS+lltwMrQbTEvlj6HEGUa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=WLxUD0YC; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=ZHtdcFKl/9sKGm61ppLwItYl4j5gVjG+8v73/AZowCfpGojQzp6uWXViStMCM1drXwGzi6f5vTYZHepNgMez5pTs+J2Ulfl0I0xBrKSnILXdmB4oMvJaDBPMhkyTgThKOcG6M86VtlDyT/f5wOeCVsmLAfuB1gMGNhog6GFh2Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=GdJkj5nV; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="WLxUD0YC"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="GdJkj5nV"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=IGAs3kf3DqIJWdQ39BL7xCjyKdgupdA/VtxFLplKKMU=;
-	t=1780903848; x=1782113448; b=WLxUD0YCY1L0JN1P1yv9jSpGElHhgn0NG6cr0fQyvmaaSkm
-	c+umr9k5mxCTCVtLJt/q1PSdeRrkltojRWwQUWjXpQMaCMe+HEQPdJQjbW5XMGBLSv2GL51wm6lIG
-	SzVqxxLtXanQ1ECD0pUDzbzNFeuWqtvonG7/fJGUa807bqr/3pe+f8mIo0//OYuoJ1R4pTHIF+Ufr
-	NA+3pBLpPvM7feCPYggRJZu8zdjUwICdisG4rWxJhfwXR8ggz5l5NDBs9hdx043+sJNOUboPXivzz
-	tMGr42le2pIbsUkuTS00CObeydyGn89bDgDiA+dIqsfRSRTV6jr6JxVfclus44Ow==;
+	Resent-Cc:Resent-Message-ID; bh=uhDeRmileUJXcl1fvdlAJxA6CEwCjrZVRNbCymhRyUU=;
+	t=1780904567; x=1782114167; b=GdJkj5nV0nr1l6v+ss/5d/RfpQfnpxutH5S62NJzAXKFBPs
+	+qeZQ18CZdq8WFWoWs2olJq76HMUK/yJ4PALmY/gsJNndXxFsXB2MJgv/L8UOyvRV8mVrR1Th+HYs
+	OxU2kXJsJrZXkjiRBm9zH6aLg47YYJ2dS4N/QUlkWUynGFmjvql3W0KhC8bl+PHvylhsZ+mxAnHc3
+	CYQlU0OtYcWxCVB9PfKrLN0eGcZqJf75qgIOOzdf7SLP9A3n/nKLcr979rNTs6c6Vujj7u7cFOpPP
+	ZLXlxqrzUui7yo/SvLSBbt5YRDbmeJfAMIcepWndyzcm25o9lMnGuRn2qVe7uhMw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wWURZ-00000005ZMS-1EVx;
-	Mon, 08 Jun 2026 09:30:45 +0200
-Message-ID: <39d12d9ae3b18495ed634715c93ede2f68c5bbf0.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless-next 3/5] wifi: cfg80211: Refactor
- nl80211_dump_station() to prepare for per-link stats
+	id 1wWUd9-00000005Zjo-3oQp;
+	Mon, 08 Jun 2026 09:42:44 +0200
+Message-ID: <88c183f827eb184e6d471964662b7ee89caf63ad.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next 4/5] wifi: cfg80211: Fragment per-link
+ station stats in nl80211_dump_station()
 From: Johannes Berg <johannes@sipsolutions.net>
 To: P Praneesh <praneesh.p@oss.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
-Date: Mon, 08 Jun 2026 09:30:44 +0200
-In-Reply-To: <20260607175912.2266215-4-praneesh.p@oss.qualcomm.com>
+Date: Mon, 08 Jun 2026 09:42:43 +0200
+In-Reply-To: <20260607175912.2266215-5-praneesh.p@oss.qualcomm.com>
 References: <20260607175912.2266215-1-praneesh.p@oss.qualcomm.com>
-	 <20260607175912.2266215-4-praneesh.p@oss.qualcomm.com>
+	 <20260607175912.2266215-5-praneesh.p@oss.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -54,117 +54,207 @@ X-malware-bazaar: not-scanned
 
 On Sun, 2026-06-07 at 23:29 +0530, P Praneesh wrote:
 >=20
-> +++ b/net/wireless/nl80211.c
-> @@ -39,6 +39,39 @@ static int nl80211_crypto_settings(struct cfg80211_reg=
-istered_device *rdev,
 > =20
->  /* the netlink family */
->  static struct genl_family nl80211_fam;
-> +/**
-> + * enum nl80211_dump_station_phase - station dump fragmentation phases
-> + * @NL80211_DUMP_STA_PHASE_AGGREGATED: send aggregated (MLO-combined) st=
-ation
-> + *	statistics for the station entry
-> + * @NL80211_DUMP_STA_PHASE_PER_LINK: send per-link statistics for each a=
-ctive
-> + *	MLO link of the station; only used when dump_link_stats is set
-> + */
-> +enum nl80211_dump_station_phase {
-> +	NL80211_DUMP_STA_PHASE_AGGREGATED =3D 0,
-> +	NL80211_DUMP_STA_PHASE_PER_LINK   =3D 1,
-> +};
-
-[snip]
-
-probably nicer to move this stuff to closer to the dump code that needs
-it; at the very least it's missing a blank line.
-
-Also I think the whole 'phase' introduction etc. seems to more belong to
-patch 4 instead of this one? We can still do the structure allocation
-etc. here.
-
-> +struct nl80211_dump_station_ctx {
-> +	int sta_idx;
-> +	enum nl80211_dump_station_phase phase;
-> +	u8 mac_addr[ETH_ALEN];
-> +	struct station_info sinfo;
-> +};
+> +static int nl80211_fill_link_station(struct sk_buff *msg,
+> +				     struct cfg80211_registered_device *rdev,
+> +				     struct link_station_info *link_sinfo)
+> +{
+> +	struct nlattr *bss_param, *link_sinfoattr;
 > +
-> +/**
-> + * struct nl80211_dump_station_cb - state stored in netlink_callback::ct=
-x
-> + * @wiphy_idx: args[0] - wiphy index from nl80211_prepare_wdev_dump
-> + * @wdev_id: args[1] - wdev identifier from nl80211_prepare_wdev_dump
-> + * @ctx: args[2] - dump station context pointer
-> + *
-> + * args[0] and args[1] are reserved by nl80211_prepare_wdev_dump().
-> + * The ctx pointer must live at args[2] to avoid corrupting those fields=
-.
-> + */
-> +struct nl80211_dump_station_cb {
-> +	long wiphy_idx;
-> +	long wdev_id;
-> +	struct nl80211_dump_station_ctx *ctx;
-> +};
+> +#define PUT_LINK_SINFO(attr, memb, type) do {				\
+> +	BUILD_BUG_ON(sizeof(type) =3D=3D sizeof(u64));			\
+> +	if (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_ ## attr) &&	\
+> +	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
+> +			     link_sinfo->memb))				\
+> +		goto nla_put_failure;					\
+> +	} while (0)
+> +#define PUT_LINK_SINFO_U64(attr, memb) do {				\
+> +	if (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_ ## attr) &&	\
+> +	    nla_put_u64_64bit(msg, NL80211_STA_INFO_ ## attr,		\
+> +			      link_sinfo->memb, NL80211_STA_INFO_PAD))	\
+> +		goto nla_put_failure;					\
+> +	} while (0)
+> +
+> +	link_sinfoattr =3D nla_nest_start_noflag(msg, NL80211_ATTR_STA_INFO);
 
-I'm not sure I'm happy with this - better to just use args[2] directly
-for a pointer to struct nl80211_dump_station_ctx?
+See previous note about _noflag() in all of this code - that shouldn't
+be there.
 
->  static int nl80211_dump_station(struct sk_buff *skb,
->  				struct netlink_callback *cb)
->  {
-> -	struct station_info sinfo;
->  	struct cfg80211_registered_device *rdev;
+> +static int nl80211_send_link_station(struct sk_buff *msg,
+> +				     struct netlink_callback *cb,
+> +				     struct cfg80211_registered_device *rdev,
+> +				     struct wireless_dev *wdev,
+> +				     const u8 *mac_addr,
+> +				     struct station_info *sinfo,
+> +				     int link_idx)
+> +{
+> +	void *hdr;
+> +	struct nlattr *links, *link;
+> +	struct link_station_info *link_sinfo;
+> +	struct nlattr *sinfoattr;
+> +	int err;
+> +
+> +	hdr =3D nl80211hdr_put(msg, NETLINK_CB(cb->skb).portid,
+> +			     cb->nlh->nlmsg_seq, NLM_F_MULTI,
+> +			     NL80211_CMD_NEW_STATION);
+> +	if (!hdr)
+> +		return -EMSGSIZE;
+> +
+> +	if ((wdev->netdev &&
+> +	     nla_put_u32(msg, NL80211_ATTR_IFINDEX, wdev->netdev->ifindex)) ||
+> +	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
+> +			      NL80211_ATTR_PAD) ||
+> +	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr) ||
+> +	    nla_put_u32(msg, NL80211_ATTR_GENERATION, sinfo->generation)) {
+> +		err =3D -EMSGSIZE;
+> +		goto err_cancel;
+> +	}
+> +
+> +	sinfoattr =3D nla_nest_start_noflag(msg, NL80211_ATTR_STA_INFO);
+> +	if (!sinfoattr) {
+> +		err =3D -EMSGSIZE;
+> +		goto err_cancel;
+> +	}
+> +
+> +	link_sinfo =3D sinfo->links[link_idx];
+> +	if (!link_sinfo) {
+> +		err =3D -ENOENT;
+> +		goto err_cancel;
+> +	}
+> +
+> +	nla_nest_end(msg, sinfoattr);
+> +	if (!is_valid_ether_addr(link_sinfo->addr)) {
+> +		err =3D -EADDRNOTAVAIL;
+> +		goto err_cancel;
+
+That seems really odd? why even bother going into the whole thing if
+it's invalid? Also, doesn't that ENOENT get propagated all the way and
+it aborts? I guess it does but it should never happen because of
+valid_links? Still seems a bit odd.
+
+>=20
+> @@ -8354,13 +8616,22 @@ static int nl80211_dump_station(struct sk_buff *s=
+kb,
 >  	struct wireless_dev *wdev;
-> -	u8 mac_addr[ETH_ALEN];
-> -	int sta_idx =3D cb->args[2];
-> -	bool sinfo_alloc =3D false;
-> -	int err, i;
-> +	struct nl80211_dump_station_cb *cb_data =3D (void *)cb->ctx;
-> +	struct nl80211_dump_station_ctx *ctx =3D cb_data->ctx;
+>  	struct nl80211_dump_station_cb *cb_data =3D (void *)cb->ctx;
+>  	struct nl80211_dump_station_ctx *ctx =3D cb_data->ctx;
+> +	struct nlattr **attrbuf =3D NULL;
+>  	int err, ret;
+> =20
+>  	NL_ASSERT_CTX_FITS(struct nl80211_dump_station_cb);
+> =20
+> -	err =3D nl80211_prepare_wdev_dump(cb, &rdev, &wdev, NULL);
+> -	if (err)
+> +	if (!ctx) {
+> +		attrbuf =3D kzalloc_objs(*attrbuf, NUM_NL80211_ATTR);
+> +		if (!attrbuf)
+> +			return -ENOMEM;
+> +	}
+> +
+> +	err =3D nl80211_prepare_wdev_dump(cb, &rdev, &wdev, attrbuf);
+> +	if (err) {
+> +		kfree(attrbuf);
+>  		return err;
+> +	}
+> =20
+>  	/* nl80211_prepare_wdev_dump acquired it in the successful case */
+>  	__acquire(&rdev->wiphy.mtx);
+> @@ -8369,15 +8640,22 @@ static int nl80211_dump_station(struct sk_buff *s=
+kb,
+>  	if (!ctx) {
+>  		ctx =3D kzalloc_obj(*ctx);
+>  		if (!ctx) {
+> +			kfree(attrbuf);
 
-This doesn't really seem better than just doing
+perhaps better to __free(kfree) instead of doing all these kfree()
+calls?
 
-	struct nl80211_dump_station_ctx *ctx =3D cb->args[2];
+> -	/* Phase 0: dump aggregated station info */
+> -	if (ctx->phase =3D=3D NL80211_DUMP_STA_PHASE_AGGREGATED) {
+> -		while (true) {
+> +	while (true) {
+> +		/* Phase 0: dump aggregated station info */
+> +		if (ctx->phase =3D=3D NL80211_DUMP_STA_PHASE_AGGREGATED) {
 
-given the overlay with generic code.
+changing it now also kind of argues for not having it in the first patch
+in the first place ;-)
 
-Alternatively we could change the _whole_ nl80211 code (as a separate
-commit, perhaps even converting other things later) to have
-
-struct nl80211_dump_cb {
-	long wiphy_idx;
-	long wdev_id;
-	union {
-		long wiphy_filter;
-		int mpath_idx;
-		int reg_idx;
-		int bss_idx;
-		int survey_idx;
-		//...
-
-		// and later add
-		struct nl80211_dump_station_ctx *sta_ctx;
-	};
-};
-
-or so, and then we don't have the args[0]/... problem at all.
-
-But I'm not convinced mixing the structs with "must have this type at
-this offset" etc. is a good idea if it's going to stay this way.
-
-> +	/* Phase 0: dump aggregated station info */
-> +	if (ctx->phase =3D=3D NL80211_DUMP_STA_PHASE_AGGREGATED) {
-> +		while (true) {
-> +			memset(&ctx->sinfo, 0, sizeof(ctx->sinfo));
+>  			memset(&ctx->sinfo, 0, sizeof(ctx->sinfo));
+>  			for (int i =3D 0; i < IEEE80211_MLD_MAX_NUM_LINKS; i++) {
+>  				ctx->sinfo.links[i] =3D
+> @@ -8428,15 +8706,45 @@ static int nl80211_dump_station(struct sk_buff *s=
+kb,
+>  				goto out_err_release;
+>  			}
+> =20
+> -			/* Reset ctx for next station */
+> -			cfg80211_sinfo_release_content(&ctx->sinfo);
+> -			ctx->sta_idx++;
+> +			ctx->phase =3D NL80211_DUMP_STA_PHASE_PER_LINK;
+>  		}
+> -	}
+> =20
+> -	ctx->phase =3D NL80211_DUMP_STA_PHASE_AGGREGATED;
+> -	err =3D skb->len;
+> -	goto out_err;
+> +		/* Phase 1: dump per-link station info */
+> +		if (ctx->phase =3D=3D NL80211_DUMP_STA_PHASE_PER_LINK &&
+> +		    ctx->dump_link_stats && ctx->sinfo.valid_links) {
+> +			while (ctx->link_idx < IEEE80211_MLD_MAX_NUM_LINKS) {
+> +				if (!(ctx->sinfo.valid_links &
+> +				      BIT(ctx->link_idx))) {
+> +					ctx->link_idx++;
+> +					continue;
+> +				}
+> +
+> +				ret =3D nl80211_send_link_station(skb, cb, rdev,
+> +								wdev,
+> +								ctx->mac_addr,
+> +								&ctx->sinfo,
+> +								ctx->link_idx);
 >=20
 
-if you have this memset, why do you need this one:
+I think conceptually this code is structured a bit strangely. It would
+seem a lot simpler to me to do something like
 
-> +out_err_release:
-> +	cfg80211_sinfo_release_content(&ctx->sinfo);
-> +	memset(&ctx->sinfo, 0, sizeof(ctx->sinfo));
 
-Seems a bit odd?
+	// not literally such a macro, just the while (true) loop
+	for_each_station_starting_from_idx(...) {
+		if (ctx->phase =3D=3D 0) {
+			// fill sinfo etc.
+		}
+
+		// common stuff
+		nl80211hdr_put()
+		nla_put_u32(msg, NL80211_ATTR_IFINDEX...)
+		nla_put_u64_64bit(msg, NL80211_ATTR_WDEV..)
+		nla_put(msg, NL80211_ATTR_MAC...)
+		nla_put_u32(msg, NL80211_ATTR_GENERATION...)
+
+		switch (phase) {
+		case 0:
+			nl80211_put_sta_info_common(...);
+			phase++;
+			ctx->link_id =3D 0;
+			break;
+		case 1:
+			if (!multi-phase-requested)
+				break;
+			nl80211_put_link_station(..., ctx->link_id);
+			ctx->link_id++;
+			if (link_id =3D=3D NUM_LINKS)
+				ctx->phase =3D 0; // next sta
+			break;
+		}
+	}
+
+
+or something like that, more like we handle wiphy dump with all the
+messages, for example?
+
+I think it'd be better to have just one place that creates the header
+and all the common info.
+
+But maybe it's just my brain pathways being trained for that scheme.
 
 johannes
