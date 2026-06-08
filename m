@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41CBB3B14AC;
-	Mon,  8 Jun 2026 10:03:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D8B1419A4;
+	Mon,  8 Jun 2026 10:06:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780913039; cv=none; b=I5aop/Fh/KQgNte06otuoASIMh2bfK9zYG/CJZ6dqLt2B5MLaicJCE/ubWSBE9BZdKtQmhULBV1Fm1u5jv4ReA+3EJe0w9ltbCH41veXtHTsEJ992kQa056jGovZJtq3A8cCAjAYgr3QNv9ndC1LGMrROZtbMG8b442t0G5RRYg=
+	t=1780913162; cv=none; b=qbeAKAdMogJkRIr8lnCbNETxq4ev2inJlG7KIR6ic11k40YKkuWfPYy0WF3sfaPi7TRL1/NZgStFKv3zTtGoyW7eUg9xCqgtrnefSMTzKzVvRNc4QSo1OkohKXn1TmGnFXpKXyHByMltISUgZufOTUHqp2JLK/5IQHKkTYo7FFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780913039; c=relaxed/simple;
-	bh=HlxrOBOCO31Lt3lEbkQvcyDeJ8raUyhSC7+FYG/OGSk=;
+	s=arc-20240116; t=1780913162; c=relaxed/simple;
+	bh=DtUctrJnalFiNpO6pNf5UJhrtB12L1KZ3pnTMR9p/4s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A3w5Nh1Nqat6eqbUhPF0B/g3yCjuaL7G4mJnNFlvkZVsIlhWNCCdV58HsALP2119ddM+LqRoSM/0alnO2cK+EwXwx9jIjEGIenyzYEM5cyiUwT7dQGqOB90iDfXyr6I1WCgWpQzaQyCC4nZouNJ4G0q5ZGfgrmmH0Hl0gX+8ggk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lLs6Jzro; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=sxlblmR+dDfcF8BZtNLlyOXPVZ8ODWmN/SpOywkEyQ+SdbnmAzBhonkytqlZu3rQZkX1mfdQWnqVolXWaPn0136eVinEjw+InQW7dJ+/c7mRA7vSCPLJDG1dwUUejaogTX3YjLqpN8+RZxzMl+wtpvVc4Nk1k7oKaIbaG6iWnj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WjZA/1yF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lLs6Jzro"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E513A1F00893;
-	Mon,  8 Jun 2026 10:03:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WjZA/1yF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CF5B1F00893;
+	Mon,  8 Jun 2026 10:06:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780913037;
-	bh=syxAqA1GpHDDzXsNOy0fUEopeINEejRQ7IctKWUkbK0=;
+	s=k20260515; t=1780913161;
+	bh=987+ZkDZJxNuFnm2MmcF2sfXZO6A3YzQGr1a0DWPqhE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=lLs6JzroULacjuDhh+j6BEMxqMvGaSNLLlS+EgKPDn66NrtTLIALRjC352qlREBul
-	 M1PeJ/dB297qBslVWaiGKQqja5XXBx7eFCirUyVAe9Ojr8h/I9M/Aw+FMhLY+obZ8H
-	 BCqzoWaknh+0GUQymm0YpROl3LGKuCNcn2oHPenLtjJFn7xoWmo7WfV1koaxk4Gvj1
-	 n2XlO766dQbpPY+o4sjL7p+1ygWh0laT8GrBGqbgud8s1menxONvPvxBK/1eIbvtoH
-	 SNlEbDJC4IYngpX3N+28ZOem+yfTehhzNxKsuOhBt4ztZx21D2HJcpabdIFIsdsxoX
-	 uS6Ednx0sKAQg==
-Date: Mon, 8 Jun 2026 12:03:54 +0200
+	b=WjZA/1yFpnWI5gu9okoF7ljichwl5GJx8v58SXaOA7svy6lfCG4P+BQyc1MDtzJkv
+	 E9Tx9VzimZsN9NlMBWTlom0SDBhUDUJXYSg9neGYr3JKD8mVgoyDoNEWzdopRBXFx0
+	 oSW4UY6Lhio6akwHEolIh/fZrbztHA60ccRTGNgcGZkEEDhVoeUeChHT5vD+3qxlZ0
+	 6vEI81rk4gDdcEwByiFM+ir2gyYcySsP4uacN1fY41UWHESE3T6EL4qhizsYuJvpho
+	 viZko6JkuoqC/3YIrRws3h744SybNGcH0osiUH+AflKw72p9/kVham3jMI3Ox3ZNVa
+	 vYK0Ly3Ch/dJA==
+Date: Mon, 8 Jun 2026 12:05:58 +0200
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 Cc: Manivannan Sadhasivam <mani@kernel.org>, 
@@ -42,11 +42,11 @@ Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
 	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org
-Subject: Re: [PATCH 3/7] regulator: dt-bindings: qcom,qca6390-pmu: document
+Subject: Re: [PATCH 4/7] dt-bindings: bluetooth: qcom,wcn6855-bt: document
  WCN6851
-Message-ID: <20260608-grateful-armadillo-of-potency-d8aad0@quoll>
+Message-ID: <20260608-robust-ringtail-of-atheism-5f2ece@quoll>
 References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com>
- <20260601-sm8350-wifi-v1-3-242917d88031@oss.qualcomm.com>
+ <20260601-sm8350-wifi-v1-4-242917d88031@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,17 +55,17 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260601-sm8350-wifi-v1-3-242917d88031@oss.qualcomm.com>
+In-Reply-To: <20260601-sm8350-wifi-v1-4-242917d88031@oss.qualcomm.com>
 
-On Mon, Jun 01, 2026 at 12:46:51PM +0300, Dmitry Baryshkov wrote:
+On Mon, Jun 01, 2026 at 12:46:52PM +0300, Dmitry Baryshkov wrote:
 > WCN6851 is an earlier version of WCN6855 WiFi/BT chip, compatible with
 > it. Add a device-specific compat string with the fallback to WCN6855
 > one.
 > 
 > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 > ---
->  Documentation/devicetree/bindings/regulator/qcom,qca6390-pmu.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
+>  .../devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml        | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
