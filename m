@@ -1,89 +1,89 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CEC3F39E3
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Jun 2026 07:53:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 931473EBF2F
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Jun 2026 07:53:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780991619; cv=none; b=f4reH50m2hyXxGepNa3+Gdmh3X/9Aj4vEDvULyKtI6jArk3Qg0ZBDiuHu+/oQGoRoSlO1QVsmlBIR+AYIUb0qE3cqSWptwvahiTUMSkgdGJWA3QBMtLKI7R4NZS71CJzvE+2v37p6BZdyk6y1RMz7sTniS3Vrmk9pJ0j6OFowhc=
+	t=1780991625; cv=none; b=GmcEXnI8lXK2nLnbA2xDlUtjATuhirCC8fmq4VINbRbOM69+nTjS9UdTThJXRPaOwdOzuKldenlKW0H/WHfhnopE/OA5eIB3CprxC2ft1Bn1z/7HJ0ZqVYlqRHn5f/IXWavzeiYpWnARYefw7Ukowjm+YHHRGxYQ+fmM0le71U0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780991619; c=relaxed/simple;
-	bh=45LaNgBPxbRtyHZ0FmSbWF4XyTOkfAE6p0u9C1oK9dk=;
+	s=arc-20240116; t=1780991625; c=relaxed/simple;
+	bh=jD3L8jwoh7BLSovJJN4zvcH6m1V/AR7MZ04B9wQ9s00=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=rs71gCUv2cpjVzzZCxOky7f7Zif0WX4I7W/7WkRKNX0+nd/rVe62xtbaEGH31LN2GN2R+OH/EFscnfUTa4ONjBopJuo92icK6sC961cdwa5gDixh5A1bLF0dJbfqy1gySPxG65t2sPvHIEixVAUxArVqcMfNZFzSvifEU3PSZQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=e5bwKaDP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cq6vcQdk; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:Cc; b=j9XYCXwsZXxPnnLOs4lmNj7c+TkKAWFrJjAJETD9khKlW9ExF+WV0gK4XQCODyw54BXYq8u9zJ5AnWADdCFmLOqP593xi4JG0b/XkDQRGXwZ7PqrYTjju4oyWBYdsg+QfRB4zxV+ZliTv+nykPRV98SLLH3MTo1zkT4+27HPYTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HCH16y7k; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BV3nU0QN; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="e5bwKaDP";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cq6vcQdk"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6597rMgi1585684
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Jun 2026 07:53:38 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HCH16y7k";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BV3nU0QN"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6597rf7D1568413
+	for <linux-wireless@vger.kernel.org>; Tue, 9 Jun 2026 07:53:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8JbaVcxwuW0pNu9X0F52ZmLiaxV03v+NOG21Kfuhl0U=; b=e5bwKaDPTzMnR0Ul
-	MMl9KzjZPAO3D4cvHAhIzVz5+f4NuKCH3NhSokxJwdcgSWREJa/zXZS5EPkGnu/v
-	2upG/2b6d4I4pjpXyUWeoPuNUMw5ILcpskCSIhx0HctiPPzjwKXY77Avs1KS3VYY
-	fwvSS2wn4zQTvD2/dYODCRHpHEf7Q7VyyraHdWxMiMrmOzdZIby9H6hSBumpiZr3
-	e+2kNnMcK7x3Wh1ZK+RKbxXDtLVxBkmhO228D+HagLcgN7zUKFCf/KHFHx0DS2f4
-	iEJ713MhrnSeyuh2tPSmwvibmfErZu0q87CTcDk2VP5UXNLz7UVWcNQpnAlpRkoq
-	KH2lSQ==
+	41nbnSBEwQElk6GtkzYHQTOlycyPOuLRHHoqlbc4AwM=; b=HCH16y7kViKLrFhs
+	7UsBAF+HpVtfvq6yHiDLxz+pt8PFwySxN8mnpW1Gdfh0XVDOyxaWimOZPRIb9Y6l
+	WuYg/+wd1oCH6AjumAJ2aPpG7xkNc2YACExFChrPhea6T72oOfpaFljXnqD0+aUD
+	Z1fYgJzF6FAhZKI16j4THgQ7UwvIjlAQTd7Xifd428Jf/bnFybCjkE9lIi+uqpaj
+	o7nWVA2f5XcNAgEXv+ZaYAZxwkA4+j4eYpdeLUIcZNmJkqcI6sDBCvKiKnQhx+A1
+	LsgMIy0sOAE7ML6VDQ5/2TQqt8u86ih7bH1BBDHRJ8S0ExMqnVRPrbZrU2TtWXee
+	bcEBug==
 Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4epeqgg17h-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4enxx45g8w-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2026 07:53:37 +0000 (GMT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-517d766e05aso3260721cf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2026 00:53:37 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2026 07:53:41 +0000 (GMT)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-517ac42d958so52121591cf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Jun 2026 00:53:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780991617; x=1781596417; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1780991608; x=1781596408; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=8JbaVcxwuW0pNu9X0F52ZmLiaxV03v+NOG21Kfuhl0U=;
-        b=cq6vcQdkavbKfLWnJIEooJjNFcIdfFqokkGpJTGGpXVRdwqhHKz7REBg4BDbZeIh9Z
-         1lXcCCWh8sL0wD35Fx4e9mkCLNqdhZ94Pq+TRXZRCW5ej/GrWgx8C0hZzFGfgMi+aJYu
-         ftZVW0foB/P7QXd3vhZAG/svVg9PCHwXfuPvFGVJeAtUHQauS56TQEWrG0a8SzuBBfj9
-         vwcIidWIfZcnhZ1MyvYuVIBzEIWFB2YBmeYpOAIz7FjVQJP8Q7CHVnL+MhmjGaFmGZzW
-         +h58YItGZ5camg2SIOeq0zFpupM5KENiG+utAuqXHbIPT9ZZd+YwanPS+pOmzzUvPzm3
-         72oA==
+        bh=41nbnSBEwQElk6GtkzYHQTOlycyPOuLRHHoqlbc4AwM=;
+        b=BV3nU0QNgD8Z+bgP0Hh0w+aaqs6p19Loj2q/6Pe1t9pGd6+wqaM2rthY1M4VWbKpGd
+         tpCcTJQ2gPzvdSdZAN0uqHbLkcJbvG8rLpIo2DFHClz1wdKGaeYTzRcE3GzXwxrdrjoR
+         iSLZESwwxUhvbjl8JQqEKbBimA3FnF+fSsHtc0UtiW9tx3bYv1qO1ryEe+XO4388/ZQG
+         dWOyD6pbRity/HpaRbcKUsEyUqfK77jKTvwbmGsIeBPB48sOCaza7Knt1sj5qB45kQuZ
+         Q93yZL6ruXPcDzL59ivbsJdIY8xyhaFQM7epV9GTu/DpvCvm3XS7LwJEV2h49RkfXW68
+         UQDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780991617; x=1781596417;
+        d=1e100.net; s=20251104; t=1780991608; x=1781596408;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=8JbaVcxwuW0pNu9X0F52ZmLiaxV03v+NOG21Kfuhl0U=;
-        b=SD3gbVJTEou1cj0oNmSXqoFQmw8e1cDnpuRExxci7wdO5z5oh/yooY6hUM95l0Z4Dj
-         l6ubYLsZOiPAYC5q+9Y8ycj9rexI9XtSh2YyXlfsUoaXF/ArB8DwoGD8Xqjkvy13zSTa
-         hotkcT8YPjmHlHy87SFsB5Zx8/bM+6YC6o94KEizRymiC0BowK5SYHBmUGTGvdmgA1jz
-         1B1SZBIwqj85MGxly59Wtn7sKicH2o6soRqjBZBBzBBHJfWQYNhFePtqdkLhyPdvN6dM
-         DRR/auXmtVMhfwvos854SofAMVWn3za/zpkAUqhWXj6Nr8NfExcUzEFb7sA/hGQoawgE
-         FvBw==
-X-Forwarded-Encrypted: i=1; AFNElJ8FJ59+7C85lGAD8mXSEFQFvuENlg9O2K9INDpHb4ITUdCBNTkWV5ada/zKablcissoMtQae5PfqeSZzzETdw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+luJdFdM1MgDhpxKIirQwu2Zot4EFYpYte8vTflNAIwlLiHx/
-	5NGYbW0CBEoVuFFtqU81eIPn+Se6Kyq3dBt5APCwgr1yUUL4P6Xazk/LxNkJifiweHZQgP7NUi5
-	xSUeVSCTaSL8yex9HssPHjJbvGL6YKeH6bnOuFupwuZRvJY9NNLRgncw0iqTX00ZOIjq0ZQ==
-X-Gm-Gg: Acq92OFD/rajprq0IryzwHH3x7ayr4hbY+Wq9cYgKOcBB5F8QtFdbaH5JOSktVv5GgV
-	wlv6WqAAj14I8gnyYcOQgSZT+J9hypETZ3AmiJMbdZ0prXbrH6xL3BZLqaxyhi6beU/zGq11XiS
-	ruyP6t4ODXEUGZUYJdhEG6++ZdmKv86P98RYiVh0khg5gU4EKCe3nVgSx5+PRtMKQfeoP2Hub+m
-	chdgKDVLNlG1M1cWE1MQ9mRgZTQVbGmJuIFfJ9Dfhx27g9tfaVdQhPnh3icQjazBYQagjIBQwf0
-	NKInBIAz1hFB0zbEa9D5d1CnxopXfi8zQLKSwTkTDc1r9eVWhEb89mALWuT2eOKTzmkf/tyYk/y
-	tWoBEvG3gOs2nqVyAAIrxDVztyp2TFnHM2PLVsgm/9c670GL/z1dpHcW8A5yzdovUPiDKIMZbcV
-	xf1NYEEC/yh0oXCDn4VW9Rx8+FNBluDL2XKeWpilHqLKTU8SBMv0lZMbOc1Qwtt8gmUFLN2Xzg6
-	gJjjxEein6a
-X-Received: by 2002:a05:622a:1b03:b0:516:d7a5:afdd with SMTP id d75a77b69052e-5179867241dmr191571661cf.3.1780991616866;
-        Tue, 09 Jun 2026 00:53:36 -0700 (PDT)
-X-Received: by 2002:a05:622a:1b03:b0:516:d7a5:afdd with SMTP id d75a77b69052e-5179867241dmr191571431cf.3.1780991616438;
-        Tue, 09 Jun 2026 00:53:36 -0700 (PDT)
+        bh=41nbnSBEwQElk6GtkzYHQTOlycyPOuLRHHoqlbc4AwM=;
+        b=lU8Gjx2Ygz/tvrVFKjx78hUcWLJAMsPu5OE+gd1rwLW5TSytTJngcFEalJYduhqaof
+         sjPr9850Mu47e1o01WZF7loWunxSOtvfUES/HT9od0aNVHPRwUMyP29IdMBAQHsZVzxC
+         MneAABX/jDtU0gc5rWX0EPwczmArf+RP10n7gZZ3oFbAhbqWdMZaO2Cz5AIRnmuWuNxc
+         p2oFrEguCKxAuB0ZOwqNGJp4ZtOd+D4f5Vgz/xginDK2ltFDDG1JQfN+43w5g8o/8ru9
+         eJf24yFFa47zJlvrPXbEtlTB4VJZqOBTCc42DMbfaAraXKC+6t+dEXlJR5FX+b1PL5HE
+         nV1w==
+X-Forwarded-Encrypted: i=1; AFNElJ/RnxbsaPOsgiXv349BiXDNSiINXZ55+rtrLgX2JRfoPLSAHNzxg+whYpNMRQIDKxUwVFbzo6aoagbZ8HOC2A==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxH1mGrhqNYu4JQ6bZa5S/EJOIofBos6C9uiv4PA3yKOm0WuQkc
+	tw/DkhlpwxeBM/7xWqAaHbvL3FptUDXizZfFhiEuJHeYo+UZk3smBsx7HwOyI4iTn37vA9IE1qV
+	S5byQXgBDNdYCsphG1Pto+mP6keP5r9WqgnRDcQLg/TM/ipBG6GF8zaK1XvA8Nk1Jvk6/zg==
+X-Gm-Gg: Acq92OECZwF2FN2G2rh3guI8yMb+JgoPY7w6pwi7qqlRV6cjeuTXFDJbGnTq+K4tPmZ
+	s5peYHPiikffWpLkv+eO9RFXLLFAAcrvsSkZIrLudreLXhSiSMcR1UBT7UAUa5+ms3qz4RZk82+
+	2YuNf32YSCAWBPmlxSjFOf2uS8pr5xtcMNk/pnd/+cbTGf7dtAPpoQAFyH6C66NszIAGGD11Zjd
+	Nx6UbfERbH6kUnqT3Ya97ZLpBc3pXexpKnoiyBp+5Xe+KymbqxYbnIeF3akEqQh+EnISSKDw7Su
+	o2rzajS6ttpFEYQMiGf4RvXbSMQHo8JtCTJpZWI21HD4uoGYPf4O79GprL2ifPB/6nh6WacnAQ9
+	PeyLSUdhSwGyPRM214FYgNO5cIhPEK9NtFvMRsND/n9ba9sFDznFb/SannXNmda8sMVl868CFx0
+	Ig88rqXaZ5B9Yd1Z27dei1Uvk/NKK+EIlMXzEhkk1Hu0dCk9rDzfCxscAgxODMgzXXDfibxf/HB
+	tshgGqEVk96
+X-Received: by 2002:ac8:7612:0:b0:517:a02f:171a with SMTP id d75a77b69052e-517a02f1d7bmr164821571cf.36.1780991608574;
+        Tue, 09 Jun 2026 00:53:28 -0700 (PDT)
+X-Received: by 2002:ac8:7612:0:b0:517:a02f:171a with SMTP id d75a77b69052e-517a02f1d7bmr164821031cf.36.1780991608169;
+        Tue, 09 Jun 2026 00:53:28 -0700 (PDT)
 Received: from QCOM-eG0v1AUPpu.na.qualcomm.com ([2a01:e0a:830:450:cc96:22ae:323b:9eff])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-68e64303892sm8121631a12.0.2026.06.09.00.53.34
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-68e64303892sm8121631a12.0.2026.06.09.00.53.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 00:53:35 -0700 (PDT)
+        Tue, 09 Jun 2026 00:53:25 -0700 (PDT)
 From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Tue, 09 Jun 2026 09:52:33 +0200
-Subject: [PATCH v4 8/8] arm64: dts: qcom: arduino-imola: Describe NVMEM
- layout for WiFi/BT addresses
+Date: Tue, 09 Jun 2026 09:52:30 +0200
+Subject: [PATCH v4 5/8] net: of_net: Add of_get_nvmem_eui48() helper for
+ EUI-48 lookup
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -92,7 +92,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260609-block-as-nvmem-v4-8-45712e6b22c6@oss.qualcomm.com>
+Message-Id: <20260609-block-as-nvmem-v4-5-45712e6b22c6@oss.qualcomm.com>
 References: <20260609-block-as-nvmem-v4-0-45712e6b22c6@oss.qualcomm.com>
 In-Reply-To: <20260609-block-as-nvmem-v4-0-45712e6b22c6@oss.qualcomm.com>
 To: Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -120,120 +120,151 @@ Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
         ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org,
         netdev@vger.kernel.org, daniel@makrotopia.org,
         Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
         Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDA3NCBTYWx0ZWRfX86v8lq+NdEan
- 7Kqg08AtqmD1YOFkSz7nQvcDRbyIFl2Kz22sRhG8L3p/Ont1BNuU5vvwsARR+/Eka3U0QkFEECz
- VCJxSFkCiN8zR2MlAbbud6olBkOC12WXMGGCQvDdgRVEiUI/K1U96VCC2XR0+oRF2QrcxPI3St/
- m8bd+kcrZUyp05mEl5Z2as0AL4+MIzb363XzOtGYc3eDqotY9Wof2tz3jKD50QMQxiKZPO2gxbu
- 68aKVcaNWwso6Il/eRnFHJFIGFtAgVjOx4o+llH89i/vEtpSAgkWKjJIKJtmapaZa1S09SlTHnU
- EehG4P3SgJmZQytuw6Z5lWe+o8xvAb1Ipm8QoaL/efdF6R/DFyNwv1k/pgYgd4aXY+UzJoxuQgz
- ysVzQ8eopwyKTxM2Gx2W/M7ZvB3GyiFUtSGELb1lmo8o49z9F056XfefyiAHHr2bBYSek8t1vlA
- mdmHNC2U+ffhBh7AuTQ==
-X-Proofpoint-ORIG-GUID: TcqNoCnjhM7eiQj1HJVeH6Yb-ukumnz-
-X-Authority-Analysis: v=2.4 cv=KdHidwYD c=1 sm=1 tr=0 ts=6a27c681 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=cverVV4i c=1 sm=1 tr=0 ts=6a27c685 cx=c_pps
  a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
  a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
- a=1BEw5LmG3YzgyHxDt7YA:9 a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22
-X-Proofpoint-GUID: TcqNoCnjhM7eiQj1HJVeH6Yb-ukumnz-
+ a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=EUspDBNiAAAA:8
+ a=bEbww9rD5qa0LKludeoA:9 a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22
+X-Proofpoint-ORIG-GUID: KCM5MbiUjzmtti4nbLuEO-PZKauPkbEa
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDA3NCBTYWx0ZWRfXyzTdlLhL13n/
+ Ki8qiLemKHpfmyw/HxX+ZcQNDXY8S68CiT85ecpCmp0PuEg0CmKn1reJX3WMApqB4VXApxYgXJf
+ iMG1zhfmqAknqZBLxQXQASKvwTDwSIrlXwTHibHkIppHeoAnjDL/NPg7Pd1vLqDyK9iMNHVPo68
+ 53a8oVZdi/fSttOvyU01sAPK8QHZdj5V8WgyuAlO2L4nt3ZVLRI4AQVCJWx3/Z5rpnA+/suFkSu
+ JwE3qC9Bg2KK4cc31reZQz9lloF1a07vnQnnuEKimVkp3LPlhEJ/E4q+ztR7jhVjOI1DNAkugPX
+ C9Nx6lueyY/w7LD+smIX8cAPvHAiAedscLePK7FGLG9w9d8M6tjuK6ISXp4gbaut0v1DMRmEElN
+ ueO0KVWpqAm10MktFulshb1SviSU1Q==
+X-Proofpoint-GUID: KCM5MbiUjzmtti4nbLuEO-PZKauPkbEa
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-09_02,2026-06-09_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0 suspectscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 adultscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606090074
+ adultscore=0 bulkscore=0 suspectscore=0 phishscore=0 spamscore=0
+ malwarescore=0 lowpriorityscore=0 classifier=typeunknown authscore=0 authtc=
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.22.0-2605210000 definitions=main-2606090074
 
-On Arduino Uno-Q, the eMMC boot1 partition is factory provisioned
-with device-specific information such as the WiFi MAC address
-and the Bluetooth BD address. This partition can serve as an
-alternative to additional non-volatile memory, such as a
-dedicated EEPROM.
+Factor out the common NVMEM EUI-48 retrieval logic from
+of_get_mac_address_nvmem() into a new of_get_nvmem_eui48() helper that
+accepts the NVMEM cell name as a parameter. This allows other subsystems
+(e.g. Bluetooth) to reuse the same lookup-validate-copy pattern with a
+different cell name, without duplicating code.
 
-The eMMC boot partitions are typically good candidates, as they
-are relatively small, read-only by default (and can be enforced
-as hardware read-only), and are not affected by board reflashing
-procedures, which generally target the eMMC user or GP partitions.
+of_get_mac_address_nvmem() is updated to call of_get_nvmem_eui48() with
+"mac-address", preserving its existing behavior.
 
-Describe the corresponding nvmem-layout for the WiFi and Bluetooth
-addresses, and point the WiFi and Bluetooth nodes to the appropriate
-NVMEM cells to retrieve them.
-
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 ---
- arch/arm64/boot/dts/qcom/qrb2210-arduino-imola.dts | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ include/linux/of_net.h |  7 +++++++
+ net/core/of_net.c      | 49 +++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 44 insertions(+), 12 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/qrb2210-arduino-imola.dts b/arch/arm64/boot/dts/qcom/qrb2210-arduino-imola.dts
-index bf088fa9807f040f0c8f405f9111b01790b09377..128c7a7e76b5b089044745f5d6407d6391055fc2 100644
---- a/arch/arm64/boot/dts/qcom/qrb2210-arduino-imola.dts
-+++ b/arch/arm64/boot/dts/qcom/qrb2210-arduino-imola.dts
-@@ -409,7 +409,40 @@ &sdhc_1 {
- 	no-sdio;
- 	no-sd;
+diff --git a/include/linux/of_net.h b/include/linux/of_net.h
+index d88715a0b3a52f87af23d47791bea3baf5be5200..7854ba555d9a55f3d020a37fe00a27ae52e0e5dc 100644
+--- a/include/linux/of_net.h
++++ b/include/linux/of_net.h
+@@ -15,6 +15,7 @@ struct net_device;
+ extern int of_get_phy_mode(struct device_node *np, phy_interface_t *interface);
+ extern int of_get_mac_address(struct device_node *np, u8 *mac);
+ extern int of_get_mac_address_nvmem(struct device_node *np, u8 *mac);
++int of_get_nvmem_eui48(struct device_node *np, const char *cell_name, u8 *addr);
+ int of_get_ethdev_address(struct device_node *np, struct net_device *dev);
+ extern struct net_device *of_find_net_device_by_node(struct device_node *np);
+ #else
+@@ -34,6 +35,12 @@ static inline int of_get_mac_address_nvmem(struct device_node *np, u8 *mac)
+ 	return -ENODEV;
+ }
  
-+	#address-cells = <1>;
-+	#size-cells = <0>;
++static inline int of_get_nvmem_eui48(struct device_node *np,
++				      const char *cell_name, u8 *addr)
++{
++	return -ENODEV;
++}
 +
- 	status = "okay";
-+
-+	card@0 {
-+		compatible = "mmc-card";
-+		reg = <0>;
-+
-+		partitions-boot1 {
-+			compatible = "fixed-partitions";
-+
-+			#address-cells = <1>;
-+			#size-cells = <1>;
-+
-+			nvmem-layout {
-+				compatible = "fixed-layout";
-+				#address-cells = <1>;
-+				#size-cells = <1>;
-+
-+				wifi_mac_addr: mac-addr@4400 {
-+					compatible = "mac-base";
-+					reg = <0x4400 0x6>;
-+					#nvmem-cell-cells = <1>;
-+				};
-+
-+				bd_addr: bd-addr@5400 {
-+					compatible = "mac-base";
-+					reg = <0x5400 0x6>;
-+					#nvmem-cell-cells = <1>;
-+				};
-+			};
-+		};
-+	};
- };
+ static inline int of_get_ethdev_address(struct device_node *np, struct net_device *dev)
+ {
+ 	return -ENODEV;
+diff --git a/net/core/of_net.c b/net/core/of_net.c
+index 93ea425b9248a23f4f95a336e9cdbf0053248e32..75341c186123e949fbe21f1e51fce3ac74d4f56b 100644
+--- a/net/core/of_net.c
++++ b/net/core/of_net.c
+@@ -61,9 +61,7 @@ static int of_get_mac_addr(struct device_node *np, const char *name, u8 *addr)
+ int of_get_mac_address_nvmem(struct device_node *np, u8 *addr)
+ {
+ 	struct platform_device *pdev = of_find_device_by_node(np);
+-	struct nvmem_cell *cell;
+-	const void *mac;
+-	size_t len;
++	u8 mac[ETH_ALEN];
+ 	int ret;
  
- &spi5 {
-@@ -512,6 +545,9 @@ bluetooth {
- 		vddch0-supply = <&pm4125_l22>;
- 		enable-gpios = <&tlmm 87 GPIO_ACTIVE_HIGH>;
- 		max-speed = <3000000>;
+ 	/* Try lookup by device first, there might be a nvmem_cell_lookup
+@@ -75,27 +73,54 @@ int of_get_mac_address_nvmem(struct device_node *np, u8 *addr)
+ 		return ret;
+ 	}
+ 
+-	cell = of_nvmem_cell_get(np, "mac-address");
++	ret = of_get_nvmem_eui48(np, "mac-address", mac);
++	if (ret)
++		return ret;
 +
-+		nvmem-cells = <&bd_addr 0>;
-+		nvmem-cell-names = "local-bd-address";
- 	};
- };
- 
-@@ -557,6 +593,9 @@ &wifi {
- 	qcom,ath10k-calibration-variant = "ArduinoImola";
- 	firmware-name = "qcm2290";
- 
-+	nvmem-cells = <&wifi_mac_addr 0>;
-+	nvmem-cell-names = "mac-address";
++	if (!is_valid_ether_addr(mac))
++		return -EINVAL;
 +
- 	status = "okay";
- };
++	ether_addr_copy(addr, mac);
++	return 0;
++}
++EXPORT_SYMBOL(of_get_mac_address_nvmem);
++
++/**
++ * of_get_nvmem_eui48 - Read a 6-byte EUI-48 address from a named NVMEM cell.
++ * @np:		Device node to look up the NVMEM cell from.
++ * @cell_name:	Name of the NVMEM cell (e.g. "mac-address", "local-bd-address").
++ * @addr:	Output buffer for the 6-byte address.
++ *
++ * Reads the named NVMEM cell and validates that it contains a non-zero 6-byte
++ * address. Returns 0 on success, negative errno on failure.
++ */
++int of_get_nvmem_eui48(struct device_node *np, const char *cell_name, u8 *addr)
++{
++	struct nvmem_cell *cell;
++	const void *eui48;
++	size_t len;
++
++	cell = of_nvmem_cell_get(np, cell_name);
+ 	if (IS_ERR(cell))
+ 		return PTR_ERR(cell);
  
+-	mac = nvmem_cell_read(cell, &len);
++	eui48 = nvmem_cell_read(cell, &len);
+ 	nvmem_cell_put(cell);
+ 
+-	if (IS_ERR(mac))
+-		return PTR_ERR(mac);
++	if (IS_ERR(eui48))
++		return PTR_ERR(eui48);
+ 
+-	if (len != ETH_ALEN || !is_valid_ether_addr(mac)) {
+-		kfree(mac);
++	if (len != ETH_ALEN || !memchr_inv(eui48, 0, ETH_ALEN)) {
++		kfree(eui48);
+ 		return -EINVAL;
+ 	}
+ 
+-	memcpy(addr, mac, ETH_ALEN);
+-	kfree(mac);
++	memcpy(addr, eui48, ETH_ALEN);
++	kfree(eui48);
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(of_get_mac_address_nvmem);
++EXPORT_SYMBOL_GPL(of_get_nvmem_eui48);
+ 
+ /**
+  * of_get_mac_address()
 
 -- 
 2.34.1
