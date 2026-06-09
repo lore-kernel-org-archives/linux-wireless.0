@@ -1,109 +1,119 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from fout-a1-smtp.messagingengine.com (fout-a1-smtp.messagingengine.com [103.168.172.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B95CF47ECE6
-	for <linux-wireless@vger.kernel.org>; Tue,  9 Jun 2026 16:37:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABFE8481AAD;
+	Tue,  9 Jun 2026 16:44:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781023053; cv=none; b=Mf4iQ4+3LiwuYPeKvLcc5wOkLtH23d4EKDm6wexKG+NAbJSrCg13bThV2rtYYLNdW2TTGOStBmtDZ7Lk5JswwMsTHHi9cqux/BKGwJxQiNsM6CD2LEnmJvc/YjIx0hgZemC2MbJfyrjo4oQi7zUjCmjJL3ndkXhmwAz5DdzAhfc=
+	t=1781023468; cv=none; b=t7kBfG3qjyCVf9u2El/gloExV9EPHTJgAmcPMJyKdkerABknH4J9iE7i/W007Y6SI6cdPMInYDyRNTMCWxlfXmjCpzerbDZLuZ/QcGNTHtViylFVulK5ESIMNNPa9l0KkLLJjTyf0XH1oO6sLNQ1VB1Fm7xAOw6jMRqYcW/xqJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781023053; c=relaxed/simple;
-	bh=koDhQnTHKJ+v0eTO9QzSKdnaMX7L/wzR9sJrVKnJcKQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CZiB+8qbPGJsA5tsSLoet8N8D0owH1GZAi0fycVzAYBXv9U4VIuctU/KzQNsy9abPk5WCcucc4ys6JWCR+cGfhDSUl66LkD3gMM3OxtKgRn84X5tS6Ft6T56RbdXIdLjcly2EZDk/ihm+idSzVITanfpQf3Dg0t054dlEYHNM5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ALK3uFl4; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781023468; c=relaxed/simple;
+	bh=I6CesmfoIlfOdot1WU2Sgz7jy9kVlptUq6uVqJoEokE=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=piblot62XRlARWhBYOYNXxdmiUFZlXgDM3r0cf9Lp7YCNjS5sGQ6EYKIbbIWdxpBUHtK6wlYN8LteN6bkLuCqMdOZND7b1Q0fZX+kyHCKQX7cdYS9g4OdxvfmJYg4hsraPLwRwsVcGL8Ty3KH2fFEZ5CgWF7rKqmQi5eI9xWnVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=ZxnRPF2L; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=K1jznXHS; arc=none smtp.client-ip=103.168.172.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ALK3uFl4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781023050;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yNPShK3Woy5WMT8W9QOvEiCBBwIllxtHV+VvB5QtD9w=;
-	b=ALK3uFl4pj882vN8+PWSLwp+r7hE0+lbUzo1oJL9NluroG9wcSn4yiq3X2b6BlJUGExSJN
-	s+5rgtcwwz//zfohxklgKA8irgscYgBouqhOqsRQ9gJr+x4Um5lpRVwO+3ZKA/1HYk69hm
-	11P62//Vv3Blnwbs9VF6gaJNymxOphE=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-68-fWQzA6GMOYCOx6xgw1VLcw-1; Tue,
- 09 Jun 2026 12:37:26 -0400
-X-MC-Unique: fWQzA6GMOYCOx6xgw1VLcw-1
-X-Mimecast-MFC-AGG-ID: fWQzA6GMOYCOx6xgw1VLcw_1781023044
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A13B21955F08;
-	Tue,  9 Jun 2026 16:37:24 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.32.77])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 471741800662;
-	Tue,  9 Jun 2026 16:37:21 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org
-Cc: jjohnson@kernel.org,
-	mani@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v8 3/3] PCI: Disable broken bus reset on Qualcomm devices
-Date: Tue,  9 Jun 2026 18:36:49 +0200
-Message-ID: <20260609163649.319755-4-jtornosm@redhat.com>
-In-Reply-To: <20260609163649.319755-1-jtornosm@redhat.com>
-References: <20260609163649.319755-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="ZxnRPF2L";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="K1jznXHS"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfout.phl.internal (Postfix) with ESMTP id CC922EC0112;
+	Tue,  9 Jun 2026 12:44:24 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-03.internal (MEProxy); Tue, 09 Jun 2026 12:44:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781023464;
+	 x=1781109864; bh=ZvpGOg0McmFFQ0JmTAfnzIXcmaEu3YPVXxWgHR7A9Ks=; b=
+	ZxnRPF2L17v/Dqu7N++8AdvVHdCSK1wdxl9F4d8xRO++wcMOMuDO0XXKYxtjuRXn
+	5tpeZHvhuH123wT4BUCOaxOXq4NOCIzr6ol4te1AUHT/dzObm3+eykp4cMOzkdLs
+	qflJGDc3CueMJzNVl2FPzG8Ri45V36qs1fJoi+gLVaoYjGY80VC6ZLqt8JUsJfaC
+	X7Wyx8SnQ3CEQ1aoWr5c4jQkABw3pM+W+bX8npn6sQ9id+gw1BTJIT1Mh0Fos6bc
+	eZin1NM9cuiSEzXg03fTIkbMlL+cHB/97hXBnprriWn02IVu5INCYg2jfqVYsm0f
+	8xwq31c6H7D4xenVJMsuQQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781023464; x=
+	1781109864; bh=ZvpGOg0McmFFQ0JmTAfnzIXcmaEu3YPVXxWgHR7A9Ks=; b=K
+	1jznXHShtA5II0txNCpN51TNboW05+Iq2er7ALudNxujAJrr42fx8vKhRgzvj2ru
+	rygw7iSl1znk0O9oPMjtP97OeaRGB+sa/A0YPftuCamnVOpgnVVRP7Ff0H2IWZre
+	rZfJHWSa9i+BGXpuodPLBDQqmh7t2y/JBk/EDsKyhVrxUnXhXor+6CfnZc/CfjxY
+	vdGuKx0OmsepCHML4vBJmYmPqULS2YDXoNo/w5YXEArEpHdiGssiZ8ScLGD1IVb0
+	fAjU9sr5+/R62C/FNRuj3hINDkaNQxIEmDFNrWm4hdTVZNWhcjl4YWBTNtoW5hF+
+	TrWSvYXhWm/6CyFl84YWQ==
+X-ME-Sender: <xms:6EIoakWSzzaKgrD0czDWoDBPH-U1Q5o0U-SpmzDiOukxpClMHe4WDw>
+    <xme:6EIoanxgMlHiHI496wBJZDKaOPVGJVs2OwpmPs80gxj4qUCaiw6iI8KzeM72kLxcg
+    ZfDyAT8ycySiRyO5rWzL6Vlh0vCWac-PiGLB-DXPxEJ6VnqvVKRIA>
+X-ME-Received: <xmr:6EIoarHnowyCZ3wvlfZyVV-7BAP3J9apY9hDOqKxltKOCGKUyoog-0SHr-g>
+X-ME-Proxy-Cause: dmFkZTGknTG+NctqFLBA1TpgQfMpv0S7zWjXCtRugjLVg39zSEs5ow92+YqXpIC4OvYOJx
+    lA27PNvLOzkb92cL9V4gUoy5SIrj5uIZg1fEBX91/++cdnzfOnrCS9STL8qCbVksB1cPJn
+    JzxPCVH27I7O5MbzARzArrub8la5CVxNts2uVvPxtwIfg1L7HHajiPaN3pzbEusZ2a0lqR
+    2BKiYqg42mwwReIuv3BCfwTUYK/h407l6BW1j7itXLTUDNJ8eRtsMIMxCl2oovM+i2N6A9
+    CVrM/92xI4N1ZVhaXHMR4+CuwwVQBYeYbzDHIqciVHHB/TjTFoLdxacQTvD47tjrBlcKmX
+    brmje2APsyFdBULj/i15mj3w0PvNU86TjOwtbxQiG4rUHouiWVGkMkv4UXdJE6kf7PFJ7u
+    4Ozq39yp0TaaVhSJasPUyL68wJkA2XJvVtME90tl2DIsMbjysMQp10iM9NLWpl2+KW63uv
+    oJgmI3ds77KpQptXJ1hKsJ2G8zxNCUNIJGDWAIDGwOGxcAZp7ZecozlE1iMo4uubtMARU0
+    ztP0TEoZPaXidEm/IaqhMTeUv3ndeQCd9zMqomumLmplD7cjSZWs9Pyl1YDYLqfXpM+OLs
+    fEI0jvndXsp+BzMl+2i8exbhyUye8AjuSfbNhXmxlr4nhKMJurJ3uG26N7Hw
+X-ME-Proxy: <xmx:6EIoasvlb4FUCWG2Mpd3RDssxOCVNYhep8S6pqqKe9BVTtFhuFgOMA>
+    <xmx:6EIoarB267h9_vS1Y-0V0jWor0RMDbFN29FLdAd0enCmlN9AHYy6CA>
+    <xmx:6EIoanA_rpnqdy-8rbUBxPyZt5uoSMKUAkw1yyyY0_3TXln8a4dP5Q>
+    <xmx:6EIoalp0bsLYIid6VkPswu0p0zTi-sGRrUv7IPuFdBXiXSniPaqicg>
+    <xmx:6EIoaieEz5NyEBtshnWmimh7TqAP0Rlgy4qmRiogVtbWSvkMnGa2mB9d>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 9 Jun 2026 12:44:23 -0400 (EDT)
+Date: Tue, 9 Jun 2026 10:44:22 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: helgaas@kernel.org, bhelgaas@google.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+ lorenzo@kernel.org, nbd@nbd.name, sean.wang@mediatek.com,
+ shayne.chen@mediatek.com, alex@shazbot.org
+Subject: Re: [PATCH v4] PCI: Disable broken FLR on MediaTek MT7925
+Message-ID: <20260609104422.19c9580d@shazbot.org>
+In-Reply-To: <20260609153333.70991-1-jtornosm@redhat.com>
+References: <20260609144532.GA104629@bhelgaas>
+	<20260609153333.70991-1-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-do not properly support Secondary Bus Reset (SBR).
+On Tue,  9 Jun 2026 17:33:33 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
-Testing confirms this is device-specific, not deployment-specific:
-MediaTek MT7925e successfully uses bus reset through the same passive
-M.2-to-PCIe adapters where Qualcomm devices fail, proving PERST# is
-properly wired through the adapters.
+> Hello Bjorn,
+> 
+> 
+> > Alex, are you OK with this?  The v2 conversation talks about SBR also
+> > being broken, but maybe that turned out to be a red herring?
+> > 
+> >  https://lore.kernel.org/linux-pci/20260508145153.717641-1-jtornosm@redhat.com/t/#u  
+> Alex can answer better, but to clarify: SBR works correctly for MT7925e.
+> The confusion in v2 was because I initially grouped MT7925e together with
+> Qualcomm devices (WCN6855, WCN7850, SDX modems) to try to fix their reset
+> issues. Alex suggested testing SBR for all of them, which revealed they
+> have different issues:
+> - MT7925e: FLR advertised but broken, SBR works fine (this patch - quirk_no_flr)
+> - Qualcomm devices: No FLR capability, SBR is broken (separate series with
+>   quirk_no_bus_reset + device-specific reset)
+> So I split them into separate patches since the root causes are different.
+> This fix for MT7925e (quirk_no_flr) removes the broken FLR and allows the
+> working SBR to be used.
 
-This quirk acts as a safety net, preventing the broken bus reset from being
-attempted if users override reset methods (device_specific or d3cold when
-available) via sysfs.
+Yes, this patch follows our standard practice of quirking out known
+broken reset mechanisms and the qcom devices are now handled in a
+different series.  I'm ok with this.  Thanks,
 
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v8: code unchanged from v7
-v7: https://lore.kernel.org/all/20260603105853.326290-4-jtornosm@redhat.com/
-
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 000000000000..111111111111 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3789,6 +3789,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1103, quirk_no_bus_reset); /* WCN6855 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1107, quirk_no_bus_reset); /* WCN7850 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x0308, quirk_no_bus_reset); /* SDX62/SDX65 */
-
- /*
-  * Root port on some Cavium CN8xxx chips do not successfully complete a bus
---
-2.53.0
-
+Alex
