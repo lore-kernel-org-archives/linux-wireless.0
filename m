@@ -1,55 +1,53 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 774A329BDBF;
-	Wed, 10 Jun 2026 07:16:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5145F2D063E;
+	Wed, 10 Jun 2026 07:41:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781075794; cv=none; b=Z5uR95V4zeM7uxKifoeHL2ZwxcyLAbGnq5JW4mmZfVgGoNUVJog6elSxZdhjxI5rnaIhPRut5QgIzTuuOCYVKPdKTQH6y9uglasWAeAnSYiLuTD7NxF2DehxCzs7EMNJBl0phJmODMGIPm+X7d/SCczfvmKS8HCRHnZX/jMuzo8=
+	t=1781077292; cv=none; b=pjAiy97C7xLxI5hP0S7/El/I00y0xo29cEQ+RoJ0cFkmKYDiB1Q4UkIwFpateyrGR+5VhNmAqdu5laMxG48Oj5986tRalOINoJRlBvwWGCFzyppjGFHZeSLBCAm2/tWym4ZrKW465OO7EDPY5bW8Udn48S8NUeSH55ryGb/sZEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781075794; c=relaxed/simple;
-	bh=IKSvTWxUBmjeVnmCYv6+YZYdwIrH5X0fWcQqB93TaLY=;
+	s=arc-20240116; t=1781077292; c=relaxed/simple;
+	bh=NtOTToasxCE2jc40iWisPgV2xK93NZ0NraMiA5sg/Rk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l74r0pDxocGYUH4yEG0+qFsHemgDu/qje9L5oVc6rWCVO6gu2KocX+YpENy62wXA3B0iFTRG3y4chl5IiGFgVVTIQUnVeDcPCTRcHzWz+hhIRI3Wm8sc3c3pMNvgGt0ZR3LkYPaeS6uQzlwBpgJi8jecVwg5rtAsHZ+ZMGx5mvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kEh5J4MY; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=SzIHchE3mvZvr8Z6Uj7X8y49/Unma8/VStQ8irooWY75vOfewj+S+pPz2hRGpCG07+CHUZ4cUKBp3AyOZOJ7PBBSd62Ux7rCaO8HC3YP5cXGYUtib3MKDRjNIwwxCrwswAWVNkn5osxYDu+StYHlhTeWlSWOI/JFXtbeSqbI1kY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3yauVZS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kEh5J4MY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E4511F00893;
-	Wed, 10 Jun 2026 07:16:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3yauVZS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DBC11F00893;
+	Wed, 10 Jun 2026 07:41:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781075793;
-	bh=f3pyLsJp/Pig7PJGNaXCWFzykMjoyznELiFBpvDKD50=;
+	s=k20260515; t=1781077291;
+	bh=EgV/NjGFw2TBnGNu1grd25blD1KwYsPIRIqEutCfpzc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kEh5J4MYt6AOcTW92yTfwHs7vsfXTGiCqD9ezn/PNbI3JWrXg4/8tr03WT6qdTNpS
-	 PAtYXXZDgPka9aZwUbI+DBa6wtCiTAIsQGRmXXaBPgcpzA28huYukZQXWGyz0yvVIW
-	 MJU9oHaPP9viU8aSsW6rlLH6xGNGZACpXj7MiV0FtCcymsGKjvyVqZD18HVrh5Eb9c
-	 H0by8hO8bDMIkvcQuscIdnJgzExUBtpjrNV0ge9SvQmhZMxLrkH1RoKe2C0aYinjXB
-	 BQpQmxWyxvNkGUNbqj0qSQ3R2MiTBOBLx5T2FPGE5kaSM8Ii3Iz+GHR5Vp3Kh5qxah
-	 rslGwKgr5JbDw==
-Date: Wed, 10 Jun 2026 09:16:29 +0200
+	b=N3yauVZSBrf47qf05zumLqq/Yg56bWYcjmWs3qicj1JFe4cQx7KkFLZPodz/lycsr
+	 aaihNpg+Vq43zVq9abn/EkBkSOeY3BhN+4R/JyLPYnTCAXRRSrzc7GlCb/bmOA7IfK
+	 qyzerJOFwCiszfXk4wEbGDQSN6abHyem5iag0vy1PPECpR8Ca5aZeoiP456d50WmXn
+	 2tTdFGkVLD/lFEZKqu5b28jYpNGpKdzy35aB1qQxAn8OsOtI0jOBUK938yHgyoFvvT
+	 VacH128cjlgDJz6a765Ae/xyrfrmsCtj2rJ11InHyeZCjsQ3XJbdv50WWFjoGujyv6
+	 mxUHxrjjhwdvw==
+Date: Wed, 10 Jun 2026 09:41:27 +0200
 From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Cc: Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Johannes Berg <johannes@sipsolutions.net>, 
-	Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
 	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
 	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
-	Srinivas Kandagatla <srini@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	Saravana Kannan <saravanak@kernel.org>, linux-mmc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org, 
-	netdev@vger.kernel.org, daniel@makrotopia.org, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org, 
 	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v4 2/8] dt-bindings: net: wireless: qcom,ath10k: Document
- NVMEM cells
-Message-ID: <20260610-funny-paper-warthog-25fa0a@quoll>
-References: <20260609-block-as-nvmem-v4-0-45712e6b22c6@oss.qualcomm.com>
- <20260609-block-as-nvmem-v4-2-45712e6b22c6@oss.qualcomm.com>
+Subject: Re: [PATCH v2 4/7] dt-bindings: bluetooth: qcom,wcn6855-bt: document
+ WCN6851
+Message-ID: <20260610-lush-mellow-dragon-3ed9fd@quoll>
+References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
+ <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -58,49 +56,20 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260609-block-as-nvmem-v4-2-45712e6b22c6@oss.qualcomm.com>
+In-Reply-To: <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
 
-On Tue, Jun 09, 2026 at 09:52:27AM +0200, Loic Poulain wrote:
-> Document the NVMEM cells supported by the ath10k driver, the
-> mac-address, pre-calibration data, and calibration data.
+On Mon, Jun 08, 2026 at 09:59:22AM +0300, Dmitry Baryshkov wrote:
+> WCN6851 is an earlier version of WCN6855 WiFi/BT chip, compatible with
+> it. Add a device-specific compat string with the fallback to WCN6855
+> one.
 > 
 > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 > ---
->  .../devicetree/bindings/net/wireless/qcom,ath10k.yaml    | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
-> index c21d66c7cd558ab792524be9afec8b79272d1c87..7391df5e7071e626af4c64b9919d48c41ac09f1e 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
-> @@ -92,6 +92,22 @@ properties:
->  
->    ieee80211-freq-limit: true
->  
-> +  nvmem-cells:
-> +    minItems: 1
-> +    maxItems: 3
-> +    description: |
+>  .../devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml        | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 
-If there is going to be resend:
-Do not need '|' unless you need to preserve formatting.
-
-> +      References to nvmem cells for MAC address and/or calibration data.
-> +      Supported cell names are mac-address, calibration, and pre-calibration.
-> +
-> +  nvmem-cell-names:
-> +    minItems: 1
-> +    maxItems: 3
-> +    items:
-> +      enum:
-> +        - mac-address
-> +        - calibration
-> +        - pre-calibration
-
-This means you expect random order with variable number of items. Is
-that intentional? If yes, please provide short explanation in the commit
-msg.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
