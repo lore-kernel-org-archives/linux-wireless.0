@@ -1,76 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from air.basealt.ru (air.basealt.ru [193.43.8.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5145F2D063E;
-	Wed, 10 Jun 2026 07:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5709238E8D5;
+	Wed, 10 Jun 2026 08:10:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.43.8.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781077292; cv=none; b=pjAiy97C7xLxI5hP0S7/El/I00y0xo29cEQ+RoJ0cFkmKYDiB1Q4UkIwFpateyrGR+5VhNmAqdu5laMxG48Oj5986tRalOINoJRlBvwWGCFzyppjGFHZeSLBCAm2/tWym4ZrKW465OO7EDPY5bW8Udn48S8NUeSH55ryGb/sZEQ=
+	t=1781079023; cv=none; b=ei70NOHIu3bdduvKwBOp//jpNhNBbnjcmWF1bogYAVtqF6e6AS3sM5CtftQDgq36NVZcBWYSkLqpJY9Ngn12bffFoWE8nJhNjq03TFXcA2MiMIhn1vcuADVITqQHvwujItxAVGOxHy3PDF+e8LzgtrK2ihliKujsiYW3rju6kgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781077292; c=relaxed/simple;
-	bh=NtOTToasxCE2jc40iWisPgV2xK93NZ0NraMiA5sg/Rk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SzIHchE3mvZvr8Z6Uj7X8y49/Unma8/VStQ8irooWY75vOfewj+S+pPz2hRGpCG07+CHUZ4cUKBp3AyOZOJ7PBBSd62Ux7rCaO8HC3YP5cXGYUtib3MKDRjNIwwxCrwswAWVNkn5osxYDu+StYHlhTeWlSWOI/JFXtbeSqbI1kY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3yauVZS; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3yauVZS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DBC11F00893;
-	Wed, 10 Jun 2026 07:41:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781077291;
-	bh=EgV/NjGFw2TBnGNu1grd25blD1KwYsPIRIqEutCfpzc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=N3yauVZSBrf47qf05zumLqq/Yg56bWYcjmWs3qicj1JFe4cQx7KkFLZPodz/lycsr
-	 aaihNpg+Vq43zVq9abn/EkBkSOeY3BhN+4R/JyLPYnTCAXRRSrzc7GlCb/bmOA7IfK
-	 qyzerJOFwCiszfXk4wEbGDQSN6abHyem5iag0vy1PPECpR8Ca5aZeoiP456d50WmXn
-	 2tTdFGkVLD/lFEZKqu5b28jYpNGpKdzy35aB1qQxAn8OsOtI0jOBUK938yHgyoFvvT
-	 VacH128cjlgDJz6a765Ae/xyrfrmsCtj2rJ11InHyeZCjsQ3XJbdv50WWFjoGujyv6
-	 mxUHxrjjhwdvw==
-Date: Wed, 10 Jun 2026 09:41:27 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
-	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v2 4/7] dt-bindings: bluetooth: qcom,wcn6855-bt: document
- WCN6851
-Message-ID: <20260610-lush-mellow-dragon-3ed9fd@quoll>
-References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
- <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
+	s=arc-20240116; t=1781079023; c=relaxed/simple;
+	bh=XgRaR7RscjELrgEdoW7HIc4P4cxDZHxqOO9V0bqMw3M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VuNYqbw9yzQekRyAEYaMg6mhUhdLyYaKKSEwprBdY3Wvjm6KKhgN13QNqFP9ODGYHRUUl8Z1l8G4Lg5M9tTc5M/7YytIiaU30oBp9AWvbMJP+P5SmthRc+cksVeG24SrogeY3/whFvVYCN3pvrjiuEODrkEToXxs5PWspqeFDwI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=193.43.8.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
+Received: from ajratkogda.malta.altlinux.ru (obninsk.basealt.ru [217.15.195.17])
+	(Authenticated sender: ajratma)
+	by air.basealt.ru (Postfix) with ESMTPSA id 5417423374;
+	Wed, 10 Jun 2026 11:10:20 +0300 (MSK)
+From: Ajrat Makhmutov <rauty@altlinux.org>
+To: stable@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org
+Subject: [stable request] mt7921e: backport two mt76 fixes to 6.12.y
+Date: Wed, 10 Jun 2026 11:09:43 +0300
+Message-ID: <20260610080943.17734-1-rauty@altlinux.org>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jun 08, 2026 at 09:59:22AM +0300, Dmitry Baryshkov wrote:
-> WCN6851 is an earlier version of WCN6855 WiFi/BT chip, compatible with
-> it. Add a device-specific compat string with the fallback to WCN6855
-> one.
-> 
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml        | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
+Hi,
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Please consider backporting the following two upstream commits to the
+6.12.y stable tree. Both are in Linus' tree and both cherry-pick cleanly
+onto 6.12.y:
 
-Best regards,
-Krzysztof
+  2425dc7beaadc ("wifi: mt76: mt7921: avoid undesired changes of the preset regulatory domain")
+  5ed54896b6bd4 ("wifi: mt76: mt7921: fix a potential scan no APs")
 
+Together they fix a hard-to-reproduce MT7921e (MT7921 PCIe) lockup we have
+been tracking on ALT Linux: after a disconnect (signal loss / AP deauth) or
+repeated reconnects the chip ends up in a wrong firmware state and stops
+scanning/associating to any network, recoverable only by a chip reset or a
+module reload. The symptom is reproducible on 6.12.y and gone on 7.1. We
+could not bisect the symptom to a single upstream commit, but these two are
+the relevant fixes on the mt7921e path:
+
+  - 5ed54896b6bd4 aborts the granted ROC channel before station removal, so
+    the firmware is not left in a wrong state that makes subsequent scans
+    return no APs.
+
+  - 2425dc7beaadc stops a connected AP's country IE from re-triggering
+    regulatory/CLC reprogramming once the user has already set a regdomain,
+    which we observed leaving the firmware power/regulatory tables in a bad
+    state.
+
+Neither commit carries a Cc: stable tag, which is why they were not picked
+up automatically.
+
+Both have been tested on real MT7921e hardware (Acer Aspire 5 A517-52,
+ASUS VivoBook S14, Lenovo IdeaPad Slim 5 14AHP9) running the 6.12 kernel.
+
+BugLink: https://bugzilla.altlinux.org/54853
+
+Thanks,
+Ajrat Makhmutov
