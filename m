@@ -1,34 +1,51 @@
-Received: from air.basealt.ru (air.basealt.ru [193.43.8.18])
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5709238E8D5;
-	Wed, 10 Jun 2026 08:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.43.8.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E12853AD50F;
+	Wed, 10 Jun 2026 09:23:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781079023; cv=none; b=ei70NOHIu3bdduvKwBOp//jpNhNBbnjcmWF1bogYAVtqF6e6AS3sM5CtftQDgq36NVZcBWYSkLqpJY9Ngn12bffFoWE8nJhNjq03TFXcA2MiMIhn1vcuADVITqQHvwujItxAVGOxHy3PDF+e8LzgtrK2ihliKujsiYW3rju6kgY=
+	t=1781083427; cv=none; b=KySCsdz3COOvX6VOv14QgC2PX5ffQLU3rccSWn0IVq86Y6aLfPTDa/A+r/PEHXOeSo5T6qc7o0iKTp1Ei8ETz42fvAhAhV8CfVkBow/PapV2LM00fMp7G8g2UiWNwFgzocG7SHb2b/ZIyakT/Y5yv5MrtdQHdMwvDLk5I8CiKtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781079023; c=relaxed/simple;
-	bh=XgRaR7RscjELrgEdoW7HIc4P4cxDZHxqOO9V0bqMw3M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VuNYqbw9yzQekRyAEYaMg6mhUhdLyYaKKSEwprBdY3Wvjm6KKhgN13QNqFP9ODGYHRUUl8Z1l8G4Lg5M9tTc5M/7YytIiaU30oBp9AWvbMJP+P5SmthRc+cksVeG24SrogeY3/whFvVYCN3pvrjiuEODrkEToXxs5PWspqeFDwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=193.43.8.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
-Received: from ajratkogda.malta.altlinux.ru (obninsk.basealt.ru [217.15.195.17])
-	(Authenticated sender: ajratma)
-	by air.basealt.ru (Postfix) with ESMTPSA id 5417423374;
-	Wed, 10 Jun 2026 11:10:20 +0300 (MSK)
-From: Ajrat Makhmutov <rauty@altlinux.org>
-To: stable@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org
-Subject: [stable request] mt7921e: backport two mt76 fixes to 6.12.y
-Date: Wed, 10 Jun 2026 11:09:43 +0300
-Message-ID: <20260610080943.17734-1-rauty@altlinux.org>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1781083427; c=relaxed/simple;
+	bh=fbksk0r+l9gUbaGDi2ftc2FYLTOsSKnUCY5rdrXJtvc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Qao2v+8SfdmgdihBk7m34eEr5XW4cLbXXKvf/Iak/F45q1eC/K0I7iRttN5rlTb6Sd5Mr/QYWxD87unCZ6D0wuk9kAAORwwlO9+K6qWAo5u+YiwAzgns0CftRDYmCah4llrTqj0Oxjz7kNR7jF1fTUwS8GRsKSpn32VUs1QUXRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=Gs7Fho2s; arc=none smtp.client-ip=54.207.22.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="Gs7Fho2s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1781083385;
+	bh=4/9GXdd9QofpntZUP+2Yz31YkZfX5I5OmChfTdC5E9c=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=Gs7Fho2sf4pthFTCs9Gl7EZjBYiIwi1p3HhVZgOg9uYSdhxmlYGtfFzs97OeoU+P7
+	 NBNx0Tt8jP3bfzIEAAkX5Xecz3UA7DgBydd6vkGy44pYBxmeqU4ZfAPNbI07pVfNJZ
+	 zJ0Cj+F/wkfsPd+DPQpAoCWXpcu0HdFVSeGKozQQ=
+X-QQ-mid: zesmtpsz3t1781083367t60c1950c
+X-QQ-Originating-IP: uUJTKHLDiyboehVIb+VaTl5+nJDih1sIucCSx6/mUPs=
+Received: from localhost.localdomain ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 10 Jun 2026 17:22:44 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 15373450884566247854
+EX-QQ-RecipientCnt: 10
+From: wuyankun <wuyankun@uniontech.com>
+To: linux-wireless@vger.kernel.org
+Cc: jeff.johnson@oss.qualcomm.com,
+	johan@kernel.org,
+	kees@kernel.org,
+	wuyankun@uniontech.com,
+	sumanth.gavini@yahoo.com,
+	linux-kernel@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	syzbot+f80c62f371ba6a1e7d79@syzkaller.appspotmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: ath6kl: fix invalid workqueue flags in ath6kl_usb_create()
+Date: Wed, 10 Jun 2026 17:22:36 +0800
+Message-Id: <20260610092236.40026-1-wuyankun@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -36,40 +53,62 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz5b-1
+X-QQ-XMAILINFO: MjqaYNLY8QZGud07TBn/4w7nutsls2aMgVqYMXa6nKkxJNcOotmaBjKz
+	D24n+zZ9B1w0VQ6tGXCjUrEJpy+nV08eOSMqzkP8XUVkhOKYeh6qBmkV/Q4w7SfDP+hc8h7
+	cm87y3ipjxfQoFnSiViTj1Ad3IHqFCeloAn4irfGit9N0exjZH9avFghyHNqODpQWKutrqv
+	a+bSWlVnOAj5MvJTJuckqaQ61WmUwPa1ZjzK6UnwbTxpSKO2Txy6Rn6YycOUZk7HCVbxBqE
+	JmE/BO/KP5kvJlOpV97WgrnpzsWScNQbHFI1n5bNkNblk8hJT++3/Tty2/lY/lAeYpsIJA3
+	HYdA4KEzrquB4WWqZvpBjPOsrp70c4NNBwOBK7bQseK/zk6EFMp6ZOYtYlNSyVwnqh9T+8m
+	FctzZnUAy0Exhxmf07toxw6vYqyNkGEfMmiindsoph6BXw7wo+X2mJlNr5vfYKzeH80eg8f
+	2decbQAklQziHhxEf0oBk/YH2DKDYnE/YVVPx98Uerc5GC9vv/r6tXiwe2VvMPPdpiCEB0j
+	LtSzswlxeMbTyOWY17YKx2x8lt3gEbgR6ez/ERhjvUame3ZruBpapH1HTHKok8RgLQyXT8u
+	NynYxsXB5FnDj0hbBt5Nhr9/V0Rhe1j3hi7kVUHZGTuEW0X0dyFsc/VZ3hpohfq38RFR1QW
+	Os75Y275YGJjybFlP32VIEBI1yHpPGYhncZ3qKCd9BkxbGyKngjqgtlXQMVMrL4Xa/xL1WI
+	YNI6NeUncGsmypeGQUyxh8DkWlrAcptQVBrY9aySb++jZQq/z8sPFRckZz9pcywZ6BNwsFR
+	RtU+Sejr6qy/dLf7U0sC+vh8bIf8+wVVOO70hE+BE2AF+eAwzcCjcZKSvdNP9kMn3heM/1R
+	gzA9zJoWhaE1/xVvklhZZYRWotL6cOIlQOr+/oWimIgUEGsqS0dPvp40hFehHfxCBUVwkhy
+	U0V3kJKmeITGErv5IS2ny5Iripak9mzvC7eqjO3LxgkIym7uCi7dL1tL9oJDkTPb/JJLqEf
+	NYQ5XQuVWPqn3MckbTxZLHwbWZg45bSwTs/tI1UP4YyyFFmmQmSPjT+gpHpnc=
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
-Hi,
+ath6kl_usb_create() currently creates ath6kl_wq with flags set to 0:
 
-Please consider backporting the following two upstream commits to the
-6.12.y stable tree. Both are in Linus' tree and both cherry-pick cleanly
-onto 6.12.y:
+  alloc_workqueue("ath6kl_wq", 0, 0)
 
-  2425dc7beaadc ("wifi: mt76: mt7921: avoid undesired changes of the preset regulatory domain")
-  5ed54896b6bd4 ("wifi: mt76: mt7921: fix a potential scan no APs")
+This triggers a runtime warning in __alloc_workqueue() because the queue is
+created with neither WQ_PERCPU nor WQ_UNBOUND set:
 
-Together they fix a hard-to-reproduce MT7921e (MT7921 PCIe) lockup we have
-been tracking on ALT Linux: after a disconnect (signal loss / AP deauth) or
-repeated reconnects the chip ends up in a wrong firmware state and stops
-scanning/associating to any network, recoverable only by a chip reset or a
-module reload. The symptom is reproducible on 6.12.y and gone on 7.1. We
-could not bisect the symptom to a single upstream commit, but these two are
-the relevant fixes on the mt7921e path:
+  workqueue: ath6kl_wq is using neither WQ_PERCPU or WQ_UNBOUND.
+  Setting WQ_PERCPU.
 
-  - 5ed54896b6bd4 aborts the granted ROC channel before station removal, so
-    the firmware is not left in a wrong state that makes subsequent scans
-    return no APs.
+Set WQ_PERCPU explicitly to match the actual execution model and remove the
+warning during device probe. No functional change intended.
 
-  - 2425dc7beaadc stops a connected AP's country IE from re-triggering
-    regulatory/CLC reprogramming once the user has already set a regdomain,
-    which we observed leaving the firmware power/regulatory tables in a bad
-    state.
+Fixes: 62ebaf2f9261 ("ath6kl: avoid flush_scheduled_work() usage")
+Reported-by: syzbot+f80c62f371ba6a1e7d79@syzkaller.appspotmail.com
+Link: https://lore.kernel.org/all/6a289c01.39669fcc.33b062.00aa.GAE@google.com/T/
+Cc: stable@vger.kernel.org
+Signed-off-by: wuyankun <wuyankun@uniontech.com>
+---
+ drivers/net/wireless/ath/ath6kl/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Neither commit carries a Cc: stable tag, which is why they were not picked
-up automatically.
+diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
+index 79c18f5ee02b..945984c3dbe6 100644
+--- a/drivers/net/wireless/ath/ath6kl/usb.c
++++ b/drivers/net/wireless/ath/ath6kl/usb.c
+@@ -636,7 +636,7 @@ static struct ath6kl_usb *ath6kl_usb_create(struct usb_interface *interface)
+ 	ar_usb = kzalloc_obj(struct ath6kl_usb);
+ 	if (ar_usb == NULL)
+ 		return NULL;
+-	ar_usb->wq = alloc_workqueue("ath6kl_wq", 0, 0);
++	ar_usb->wq = alloc_workqueue("ath6kl_wq", WQ_PERCPU, 0);
+ 	if (!ar_usb->wq) {
+ 		kfree(ar_usb);
+ 		return NULL;
+-- 
+2.20.1
 
-Both have been tested on real MT7921e hardware (Acer Aspire 5 A517-52,
-ASUS VivoBook S14, Lenovo IdeaPad Slim 5 14AHP9) running the 6.12 kernel.
-
-BugLink: https://bugzilla.altlinux.org/54853
-
-Thanks,
-Ajrat Makhmutov
