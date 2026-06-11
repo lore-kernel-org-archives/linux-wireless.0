@@ -1,103 +1,95 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+Received: from mail-m2441.xmail.ntesmail.com (mail-m2441.xmail.ntesmail.com [45.195.24.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFCB829C328;
-	Thu, 11 Jun 2026 14:29:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3A43FCB1F;
+	Thu, 11 Jun 2026 15:19:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.195.24.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781188197; cv=none; b=mHzw3Yv0F0XDBoC7UGd4dU6GNz8DGx/++nz8YIGGCdSA0onh8c3v9HOzqPKYoeyjetQDWdm/5Y6SJsk9MjEsDF7tvW21XZhCFuUqA9VoSNlRH4gYMgPtDL26av1OgWBuJvlQUFLG4lhXj/xXo6oLPudrxTJ+vKVuoaC2IidnL4c=
+	t=1781191149; cv=none; b=QD4hHq84yMRF193JUOaZNt23W66DRapQomrA8snXN/Y+BL20nYwZOpGH61PzERwPlVhToCoCCBbjUhXMFeMPBiEmaBoVzC/zC3s4nEfAZPVjCcwIbd1Mw3vmTilrTkm5QstwyrE705wVjZNqefpaxE5NrvLXrdrp6jxMaDQqljI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781188197; c=relaxed/simple;
-	bh=5PLKPAmVaLvUJC4z5tkbTyARHNTEluXPAGsDGR03CFQ=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=eWGuTXjcJ1QrRSkpGWNzK36KOMaxVHD+En8SNrdEF24yoc+Bnd7UTmCmD0UDN+JX/j5MqMdMj5mQ4qC6tLenmMN8+/ahn0ASWKo5OU2d1J82Rn1UvkKrdevUWyIn55rbmnpbnZ2lkTs0Kb3ibqYhevBVopYOPrLFV/ZPs7yLMdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Authentication-Results: mail.toke.dk; dkim=none
-To: xiaoblac <teel4res@gmail.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com, Cheng
- Yongkang <teel4res@gmail.com>,
- syzbot+50122cbc2874b1eb25b0@syzkaller.appspotmail.com
-Subject: Re: [PATCH] wifi: ath9k: hif_usb: don't dereference hif_dev after
- re-arming firmware request
-In-Reply-To: <20260605153210.20471-1-1020691186@qq.com>
-References: <20260605153210.20471-1-1020691186@qq.com>
-Date: Thu, 11 Jun 2026 16:29:45 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87h5n98812.fsf@toke.dk>
+	s=arc-20240116; t=1781191149; c=relaxed/simple;
+	bh=b5Yaa5D9Q9tacvKyv70XltCPg/lllDC98RpZ+toEmtc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kVBFqsY9E6icAR4RL4eonbdLyHuZdb1xcQWRbnonfKQ3Dl22EbFsCCSOI/qnKyq0BR1WP4NW6pr9FP02+15Qv1LJONqlOI0RjPeIippk0aB0ZuaCIDqw8pPYd3BTYcfUp6ZoKf618iPdIjk+RQYXuEXEPca7UIQ14MtnxCAwBdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=c4DBG+YC; arc=none smtp.client-ip=45.195.24.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="c4DBG+YC"
+Received: from PC-202605011814.localdomain (unknown [222.191.246.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 42068ba35;
+	Thu, 11 Jun 2026 23:18:57 +0800 (GMT+08:00)
+From: Runyu Xiao <runyu.xiao@seu.edu.cn>
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org,
+	linville@tuxdriver.com,
+	luisca@cozybit.com,
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	runyu.xiao@seu.edu.cn,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: libertas_tf: kill shared URB before resubmitting it
+Date: Thu, 11 Jun 2026 23:18:48 +0800
+Message-Id: <20260611151848.2573316-1-runyu.xiao@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9eb743d90803a1kunm78d9ab71169c51
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZHh8eVkgaSU8aQ0NCShodTFYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkJKVUlPTVVJT0lZV1kWGg8SFR0UWUFZT0tIVUpLSE
+	pPSExVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=c4DBG+YC26VyKqRdOEIWQXAFyicGtWJ2umJ2JVbcdIGrwLf+rqi65w8HFgHKRNKX7ihqPj7SVB6UZY5vWmwKbqTlmS9cgClFzMD/WHHAan58Gyddawo+HweDuzPC8NjF2GDNuMtdzzv2j17vNZ/DzQ8WOZnmuNsUEsstKdOnd+I=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=rpUA/+FiAP1Fr1OdfUX65iVV1Nwx0bLdkSoyPLe/t0Y=;
+	h=date:mime-version:subject:message-id:from;
 
-xiaoblac <teel4res@gmail.com> writes:
+libertas_tf's usb_tx_block() reuses a shared send URB and immediately
+does usb_fill_bulk_urb() plus usb_submit_urb() on it. Depending on the
+caller, that shared carrier is either cardp->tx_urb or cardp->cmd_urb.
+There is no patch-local usb_kill_urb() before reuse, and the file-local
+completion path provides no busy flag, completion, or other ownership
+handoff that would make active reuse safe.
 
-> From: Cheng Yongkang <teel4res@gmail.com>
->
-> ath9k_hif_request_firmware() re-arms an asynchronous firmware load via
-> request_firmware_nowait(), passing hif_dev as the completion context, and
-> then still dereferences hif_dev:
->
-> 	dev_info(&hif_dev->udev->dev, "ath9k_htc: Firmware %s requested\n",
-> 		 hif_dev->fw_name);
->
-> The re-armed callback ath9k_hif_usb_firmware_cb() runs on the "events"
-> workqueue and, when the firmware is missing, walks the retry chain into
-> ath9k_hif_usb_firmware_fail() -> complete_all(&hif_dev->fw_done). That
-> releases the wait_for_completion(&hif_dev->fw_done) in a concurrent
-> ath9k_hif_usb_disconnect(), which then kfree()s hif_dev. The trailing
-> dev_info() in the frame that re-armed the request can therefore read freed
-> memory (hif_dev->udev, the first field of struct hif_device_usb):
->
->   BUG: KASAN: slab-use-after-free in ath9k_hif_request_firmware
->   Read of size 8 ... by task kworker/...
->    ath9k_hif_request_firmware
->    ath9k_hif_usb_firmware_cb           drivers/net/wireless/ath/ath9k/hif=
-_usb.c:1247
->    request_firmware_work_func
->   Allocated by ...:
->    ath9k_hif_usb_probe                 drivers/net/wireless/ath/ath9k/hif=
-_usb.c
->   Freed by ...:
->    ath9k_hif_usb_disconnect -> kfree   drivers/net/wireless/ath/ath9k/hif=
-_usb.c
->
-> The fw_done barrier only makes disconnect wait for the firmware chain to
-> *terminate*; it does not protect the outer ath9k_hif_request_firmware()
-> frame that re-armed the request and keeps touching hif_dev afterwards.
->
-> Drop the post-request dev_info(): it is the only use of hif_dev after the
-> async request is armed, and it is purely informational (the dev_err() on =
-the
-> failure path runs only when request_firmware_nowait() did not arm a callb=
-ack,
-> so hif_dev is still alive there).
->
-> This was first reported by syzbot as a single, non-reproduced crash that =
-was
-> later auto-obsoleted, and was independently rediscovered by the reFuzz fu=
-zzer,
-> which produced a C reproducer (USB-gadget connect/disconnect of an ath9k_=
-htc
-> device whose firmware download fails). The vulnerable code is unchanged a=
-nd
-> still present in v7.1-rc6, where the slab-use-after-free reproduces under=
- KASAN
-> once the (sub-microsecond) race window is widened.
->
-> Fixes: e904cf6fe230 ("ath9k_htc: introduce support for different fw versi=
-ons")
-> Reported-by: syzbot+50122cbc2874b1eb25b0@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=3D50122cbc2874b1eb25b0
-> Signed-off-by: Cheng Yongkang <teel4res@gmail.com>
+A running system can reach this through if_usb_host_to_card() for normal
+data or command traffic, if_usb_issue_boot_command() for firmware boot
+commands, and if_usb_send_fw_pkt() for firmware download packets. Those
+paths all feed back into the same helper, so a second submission can
+refill and resubmit an URB while the previous transfer is still active.
 
-Thank you for the fix!
+The issue was found by our static analysis tool and manually audited on
+Linux v6.18.21. It was further validated with a focused QEMU no-device KCSAN
+harness, which reproduced active reuse of both shared carriers:
+cardp->tx_urb through if_usb_host_to_card(), and cardp->cmd_urb through
+if_usb_issue_boot_command() and if_usb_send_fw_pkt().
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+Call usb_kill_urb(urb) after selecting the shared target URB and before
+refilling it, so both tx_urb and cmd_urb are quiesced before reuse.
+
+Fixes: c305a19a0d0a ("libertas_tf: usb specific functions")
+Cc: stable@vger.kernel.org
+Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+---
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index 5662a244f82a..7542956d3c47 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -387,6 +387,8 @@ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
+ 	else
+ 		urb = cardp->cmd_urb;
+ 
++	usb_kill_urb(urb);
++
+ 	usb_fill_bulk_urb(urb, cardp->udev,
+ 			  usb_sndbulkpipe(cardp->udev,
+ 					  cardp->ep_out),
+-- 
+2.34.1
