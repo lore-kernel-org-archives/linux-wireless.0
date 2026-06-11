@@ -1,69 +1,75 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED67A1E7660;
-	Thu, 11 Jun 2026 00:45:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 727AE35893
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Jun 2026 00:58:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781138757; cv=none; b=e4LwkCGMV5YZqIulOl3Usy7WSf/LqM1rCTeajwRfkVb6bynGz1Wii05mnfheTDoNV2/ozI2Yswrjg9jRRUZrGBZ1DN0YpjOhtArj1UAzZWUZTBa8//4DXC7FXN+GOaS5XXtToOw1LECiFe9iZqcN/YbOVh8lXNZQrnsClyr27zU=
+	t=1781139502; cv=none; b=un5BERxqA61Rs17F4COodDM0iccTQfWK0DRQNJ21BoD1CUBfF3LCW4LMYWjHAgGS5ldRfszqql0bAZiaSNN9twTvwL6QD8B1OL+JZBfHVcF/ofC9dbIB7+c6gTubkoxpXxAypMumx2SLZjq1KUn1fdYst8tlLJJmqgFVfckQf0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781138757; c=relaxed/simple;
-	bh=gScZvmFNCIbsaB8hGl7ro2smwAQIdPTmDjW80PbH9fw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WL78JxHkt5ZoXk10aDTFEOTBvwkrh5etG7eGQjMT1pdHiXndxBPVBFv/z8k63N0UuK3Lu6njXc1JhNdi/9ATtG9UuxgcVwuq4LsFzDp7eLpOVqCE7Y3IHHPxYbfF2+qjNSn2scUCEwBBse5OGXoKxPRNohfnIZ8hHvZkn400nkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=crLZqNOv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781139502; c=relaxed/simple;
+	bh=0zaxIiB2SsBHCQV2pACYWwjSYi8Qlqwgyj7G/Zrp9Ck=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tz5AV/L2td4YF3cPbvG1jsRePMIPVFMSMSzXdqFytv4e3LYw0I8jowUOc2pFH5wNsZQNAQelglKb6gWdURW7viowkDdcQJpjSajrXLUYdiABaXFsAP9CDGrnY4dJPc04qGMpgNYGEJ0zgqpRBvSAfPdnD8RBgJ9qtOGBkM1jVto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=GebO+4O7; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="crLZqNOv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8C991F0089C;
-	Thu, 11 Jun 2026 00:45:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781138746;
-	bh=Rz7r393CVmwuTcN3F9sCaR4ab1crKIHvHMF5mdpAUTE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=crLZqNOvmyJv3eoUlKUEUP18KLvhdS0jCyGR4YdF1vmp+YRTTC+kwJOSHK0kUhQyn
-	 za35zlMKACIojmV769SaNBV/Yj+Nd5BdwWQ53Z5Wi3jGQSArOpI8kV+Ju6YmSwjpjo
-	 gkAZ7khknpF8mlCJbufeWKaAIcuyv6PgSCLiig+HiInNSbnXLnWXDIOwmEcF5iRA60
-	 ymSQvMEM0e9/IK43L+p0HqKke8HpI6ogiNgvZ5Y/kbHEh54GiI/QhaocaZZkWql1dJ
-	 jlFcaqJ3xXkFWOEvO1+isajJXSzmDVAiAmv2uHTWVGHlIoTq+nbeZl8m1JUyncR2s0
-	 sHP+YknEOxlcg==
-From: Sasha Levin <sashal@kernel.org>
-To: stable@vger.kernel.org
-Cc: Sasha Levin <sashal@kernel.org>,
-	Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	Ajrat Makhmutov <rauty@altlinux.org>
-Subject: Re: [stable request] mt7921e: backport two mt76 fixes to 6.12.y
-Date: Wed, 10 Jun 2026 20:45:27 -0400
-Message-ID: <20260610-stable-reply-0014@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260610080943.17734-1-rauty@altlinux.org>
-References: <20260610080943.17734-1-rauty@altlinux.org>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="GebO+4O7"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65B0wFD411496963, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1781139495; bh=0zaxIiB2SsBHCQV2pACYWwjSYi8Qlqwgyj7G/Zrp9Ck=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=GebO+4O7wdHMf+tYDkMAg/RtraXrQdaURatp35GlBGogS2jalD54/qp2ugRqJ5V3c
+	 5BBpyXKGcCKu2e1uY6uzNxN5Us0YmIE8U0VCkr+lFEmU/G58wTGI9rmGK1kjXNjL6e
+	 VUohv8V1Qiqbl4rZXDsAy0YTq17/cCz4Sl14SO1x8Y7XLnYcRzkckfa7an5Kq845bh
+	 NXDDaFThMHHYjzSNMuTiqlrIcjrd28MQROB51bqu5HG+EFNn9VZtpbuCR6km5SWmMf
+	 ONk9ApGDbEcjOzOM1S0RZtumbnTAQABCRO4s8LsW8nB0HJreqX5Cghht9byads6Hnj
+	 SFXqN2tjB1X0w==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65B0wFD411496963
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 11 Jun 2026 08:58:15 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 11 Jun 2026 08:58:16 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 11 Jun 2026 08:58:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Thu, 11 Jun 2026 08:58:15 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH rtw-next 1/2] wifi: rtw88: 8822c: Don't process RF path C
+ in query_phy_status_page{0,1}
+Thread-Topic: [PATCH rtw-next 1/2] wifi: rtw88: 8822c: Don't process RF path C
+ in query_phy_status_page{0,1}
+Thread-Index: AQHc+NlIBbceEAuLBkKiaLeBIwZl5bY4iNmg
+Date: Thu, 11 Jun 2026 00:58:15 +0000
+Message-ID: <2916142fe261429c9351e9513c49474a@realtek.com>
+References: <ee30b95f-bc68-4711-9b15-cf5fd23c3c48@gmail.com>
+In-Reply-To: <ee30b95f-bc68-4711-9b15-cf5fd23c3c48@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 10, 2026 at 11:09:43AM +0300, Ajrat Makhmutov wrote:
-> Please backport to 6.12.y:
->   2425dc7beaad wifi: mt76: mt7921: avoid undesired changes of the preset regulatory domain
->   5ed54896b6bd wifi: mt76: mt7921: fix a potential scan no APs
-
-I'm going to hold off on this one. The second commit, 5ed54896b6bd,
-introduces a reachable dev->mutex self-deadlock on STA-remove-while-ROC;
-the follow-up that cures it (d5059e52) isn't in any stable tree and was
-never marked for stable (it's only in linux-next so far).
-
-So taking these two alone would queue a deadlock. If d5059e52 lands
-upstream (or you can confirm it's headed to stable), please resend the
-request as all three together and I'll take them for 6.12.y.
-
---
-Thanks,
-Sasha
+Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiBSZXBs
+YWNlIDw9IHdpdGggPCBpbiB0aGUgbG9vcHMgaW4gcXVlcnlfcGh5X3N0YXR1c19wYWdlezAsMX0o
+KS4gVGhleQ0KPiB3ZXJlIHByb2Nlc3NpbmcgZGF0YSByZWxhdGVkIHRvIFJGIHBhdGggQywgd2hp
+Y2ggdGhpcyBjaGlwIGRvZXNuJ3QgaGF2ZS4NCj4gVGhlIG9ubHkgYmFkIGVmZmVjdCBzZWVtcyB0
+byBiZSB0aGF0IHRoZSBwaHlfaW5mbyBmaWxlIGluIGRlYnVnZnMgd2FzDQo+IHByaW50aW5nIHVu
+ZXhwZWN0ZWQgdmFsdWVzIGZvciBSRiBwYXRoIEMuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBCaXR0
+ZXJibHVlIFNtaXRoIDxydGw4ODIxY2VyZmUyQGdtYWlsLmNvbT4NCg0KQWNrZWQtYnk6IFBpbmct
+S2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KDQoNCg==
