@@ -1,102 +1,64 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4550D36EA82;
-	Fri, 12 Jun 2026 15:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862DF2D238A;
+	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781277139; cv=none; b=Qx0+xRp+EccslXxViLorQxwVtCcr1I6ODCx4/FVeSyv5tL3Wmg5lKeCjZcXgOIL9OsxDPVVtKfyUsbAB1QKDJZCsxmgN4OoMqNN0UTLpiwzwaBZpzj28KYG0XWDLJhjGGRdxwjZ2dTcSTWaR2p6Pz6/iZxuCbkSsOKX2QNW0Trc=
+	t=1781277472; cv=none; b=WCpWW/RBUCUgsav267q73Naub0Ly48YhF5TEZlNv0Cf/34yY8RGmd77+cX6vooVXPy6BiPu+Ml7dBsBq/JSaawW0TLrDRETmgVqsFOtegmFcko3WSVKu/hSFdy1VpRLAAWkxo4EFzynwi0glKaNYo50g/v5HDmizygIHz5trs84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781277139; c=relaxed/simple;
-	bh=txyrxT8yboQMDQ5xaGacmeJbEnSicxk+P9F60nr2898=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gt2HyBzJmF3dR5U7oZB9edBefuLwlizJOSBQoD5i3URiS01Q3/6yT0aE3i5PxzTahmKp2FxjiclVyKPyRvnY4skU+oe8RgskEUmMew/uXhogLIMXZWg0aHBNYpP2IUO9kbdaQquvf+jsSIEkrGIVXC4MExqWYMZLdrEwkiME1kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=IfyvRcoU; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Q+QS1wjE; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1781277472; c=relaxed/simple;
+	bh=U4O+P7MXQot0uopxFWZ0QHzHbnym462DP/joRZT0bv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=kGr0MqoB4PtwVczDeMYH3g/feZNJbCP/JLERq9kkGQR7CqPxeImbwVXqvXtvKwP4FBBrE4pj22yCPqcPo0NWH5AM8kOfzmG69pw0vrPjZ/MDC6UdSHkQj59c3gAb0v03TcZel4wqTV8IZlJI5jDyXmN3bZgJXXNjFYXLY7QL448=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRS8UoxT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="IfyvRcoU";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Q+QS1wjE"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id 5B470EC01FA;
-	Fri, 12 Jun 2026 11:12:16 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Fri, 12 Jun 2026 11:12:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1781277136;
-	 x=1781363536; bh=kCZGhFktK5I+Rd85vY1rnYGowRfHuOl4vJ+wXdl1bFk=; b=
-	IfyvRcoUnzGp1tOUTqkNLcO3Wcc8D8dm0UNFS2E2nVyl/GDtW9v3gdpGNjRfIfF0
-	ulWQFmmIia0uVlKpdpN86jxiYBjyfckuiBtOn0HQPmswkm2HhtlRQwX/dJ57yWMD
-	m3JGaBnEGUB4Bq8l+e2zik/3mSG4uofkGz2p0S65zJZlx2auFw8xC+l/wmmejtak
-	fL00hnW4hKoTCv7HP7zIwzE9j1YvrduNVmebOyG/r7UqwWXXysf2PuSem3OvMWME
-	v23M78lEEuesHz1gvyDTVetZQPimp0IDerAuLPNffsUu0WMvOp/A921TJe/lsrqA
-	Iyo7cQtGdG/FcXEVJx2WAw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781277136; x=
-	1781363536; bh=kCZGhFktK5I+Rd85vY1rnYGowRfHuOl4vJ+wXdl1bFk=; b=Q
-	+QS1wjEEttGbj4DTZNzem3+nTtifIQQqK9DFTHSWSKp4iccaKs9OfXQr0wETFin0
-	9Uit7BUNDbtqG+qrblUSYAQFTNKdW+zhCSpOSxGIj/0D+EgAhUEMhb/uMFa0F0Dx
-	jGEQAXvwd5Wof7eAaygP3AfY1ueF52Ae7sVwSAKroQErrP/cjlFzTWpxzO4euw71
-	zWMvN4VVnMb7V7hzbeLFYKztHT6CmXNZqzzqhOg34b94FK00Ytbbk/L5hzrQUBi3
-	huvvdiX5WM/YORhySL4CNJNhk+O2YHK07HW3hVQsCov+N6ryILKi+qf2FA3CIigr
-	F+OdIsNYgGATsqd7o8l6Q==
-X-ME-Sender: <xms:zyEsauS7o0p0XsvnBltMVZSTFd3UapsTS4K6J3tTdErr-R63wshkCQ>
-    <xme:zyEsar6ptPtlg7hdk8cZGIZfT9yS1pV2Vo13BLRqCxdpLlfHIiCtFAw_G9PDmX3_X
-    7Dcf8pTHbBibGeSngz9N93v0XE2QduLx1BkO8pRX5pzl_nZnp3qAQ>
-X-ME-Received: <xmr:zyEsarUHLoVgmMt75ciFQXohSG0EKZL6hnBhFgn_pJZ7Ck2sPdvOqaHJXG8>
-X-ME-Proxy-Cause: dmFkZTEhPZaTC5WJocVUz5p5x0OW7AO+PJl65exHIc4Skl9u7+pCIASypwnZ2mEtrsFjVd
-    nAfGYOfgwVEG7Zck9yOtoDUwnm3G0j/e0qgulx3823I9tWTC/B/GDf3mRot4aYYObkOqax
-    Wn484U1gesW3V20fygsVoDQ2FgRl6KKkCUBHDXDUfYJIboONNnLbM0J/4de0z9gBp2Sor4
-    oXI57Wy1cuV5E2BkFQMI7FmRf2kQp0wHEtzSsXEUWDPo1EPVbOz3OLD2gDAW8V7So8zC5j
-    yZCiv0IRwN5Q7xB8h/b3oS4idkhxxZKhVjo1aKWDiIgbfCbaefLLuazkONhY4t5LiB2RPT
-    sDXgC091zSfc/Aa4/vRolhXA7u9HOFswKXvU0crPiGqsHevBawOuXIgivjl++1GvYBvh7h
-    sy0RAMDpQd5le+cGaXVqFHIUVKFgYM5l6A8FRtwdmURbZZqmU5k6IT+MlcgFJzSRvTa8LP
-    hErtaApFyLC1Dewo6rLv9g/EHrMOgHZcSUPq+HUFRAswPxDaO5+VC2XC1/l8u96zlIsU7+
-    NGTAk8lYTPzWEcY/cxNS8X5lIJQIDfVVSdSWls2jJ2LzHlmct5J+zGROScUvJc6pu6tSv7
-    XPVghDqVNSLLVxiPQ2PrutL4Zc1Kx6AhCtEUwSAeUa0ZpZJTV5onbaL6Of3Q
-X-ME-Proxy: <xmx:zyEsap9kzHKg_LrhUXmOrDBPM5oo_86flSWGUSA_ihQGmEktc9z26g>
-    <xmx:zyEsajrT8aQdWUZXjlvWGviCXlde0e1mh0lRHc96ZAdRyugRRogk4A>
-    <xmx:zyEsakKroulvIZeTvpN4JhHSKPxFEVEKqgvOsNeUBo4XkcG8RigiOg>
-    <xmx:zyEsauNB4lU9fXK8hyd6TL3ny-TBiPddrekpS_WnfSv7WZd7P7zJ0w>
-    <xmx:0CEsav_yNxm_0aJmrBPDTiAhBvUfsHE43ZEvwMvNzWAy7dNExeuNxlH6>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 12 Jun 2026 11:12:13 -0400 (EDT)
-Date: Fri, 12 Jun 2026 09:12:11 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRS8UoxT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36F791F000E9;
+	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781277471;
+	bh=6XpxeIXcm0bcntaNBOITL3pX8sOGQ/dSwg/AQ/P7ms4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=fRS8UoxTBVb4rjGnYIwpI1u8mm+LKqLs/UKIe2+xv44fYHk8PoTevfj9MV/O1HD+H
+	 OLVwNhdiVr/PDit8ZkqapCQ4Kd3HwfDtPOq7ldw4enMG9cH25buCz/2Fff5FHTdQQw
+	 MeJRzZv4oKxo6RKAyS7nMh1vxIBPA8Ucxwv+Flv3qYlOYDd+Q1/fGxcovQKFqArt2T
+	 WeuEJUALKmD7dJzVnz5ifVEnIIfmbTwxiCZyPwlt8v1CVvGgVy4tZL4k/7bd3sKNWD
+	 tmwDmp62wqcZ6VKiLv4HGRhnGesNFX5jt5lm6HYOs60imYuOy3mRBvAKjmsuWzN+xU
+	 tOR09zOWG5emw==
+Date: Fri, 12 Jun 2026 10:17:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
+	Alex Williamson <alex@shazbot.org>
 Cc: bhelgaas@google.com, jjohnson@kernel.org, mani@kernel.org,
- linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, ath12k@lists.infradead.org,
- mhi@lists.linux.dev, linux-kernel@vger.kernel.org, alex@shazbot.org
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	mhi@lists.linux.dev, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260612091211.53856fbe@shazbot.org>
-In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
-References: <20260612142638.1243895-1-jtornosm@redhat.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+Message-ID: <20260612151749.GA603817@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
 
-On Fri, 12 Jun 2026 16:26:38 +0200
-Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
+[+to: Alex, VFIO resets]
 
+On Fri, Jun 12, 2026 at 04:26:38PM +0200, Jose Ignacio Tornos Martinez wrote:
 > Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
 > lack working reset methods for VFIO passthrough scenarios. These devices
 > have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
 > broken bus reset.
-> 
+
+I guess "bus reset" here refers to Secondary Bus Reset being asserted
+by the bridge upstream from these devices?  Seems a bit surprising if
+that doesn't work.  Or is it just that we can't use SBR because there
+are multiple devices below that bridge?
+
 > The problem manifests in VFIO passthrough scenarios:
 > 
 > - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
@@ -104,7 +66,11 @@ Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 >   (crash, force-off), VFIO attempts to reset the device before it can
 >   be assigned to another VM. Without a working reset method, the device
 >   remains in an undefined state, preventing reuse.
-> 
+
+I don't know enough about VFIO, but I sort of expected that VFIO would
+reset devices between reassignment regardless of how a VM terminates.
+I guess that's not true?
+
 > - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
 > 
 > - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
@@ -115,7 +81,13 @@ Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 > transition provides sufficient reset for VFIO reuse, particularly after
 > unexpected VM termination. While not a complete reset (BARs preserved),
 > it provides the only viable reset mechanism for these devices.
-> 
+
+Since the device claims to preserve internal state across D3hot->D0
+(and it sounds like at least BARs *are* preserved), is this a
+potential leak of state between VMs?  To play devil's advocate, how do
+we convince a customer that none of their data is ever leaked to a
+subsequent tenant using this device?
+
 > Testing was performed on desktop platforms with M.2 WiFi and modem cards
 > using M.2-to-PCIe adapters, including extensive force-reset cycling to
 > verify stability.
@@ -177,6 +149,15 @@ Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 > +	msleep(200);
 > +
 > +	return 0;
+
+If we think this is a viable method, it seems like we should use
+pci_pm_reset(), which takes care of IOMMU and device readiness issues.
+
+We would have to change pci_pm_reset() to deal with the fact that
+PCI_PM_CTRL_NO_SOFT_RESET seems wrong on these devices.  Maybe we
+could cache PCI_PM_CTRL_NO_SOFT_RESET in pci_pm_init(), then override
+it with quirks for these devices?
+
 > +}
 > +
 >  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
@@ -192,11 +173,6 @@ Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 >  	{ 0 }
 >  };
 >  
-
-Comment and scope is better, but this is duplicating the body of
-pci_pm_reset() using a different mechanism with different timeouts. It
-would be better to extract the core of pci_pm_reset() to a
-pci_do_pm_reset() function that's used both here and by the
-pci_pm_reset() function. Thanks,
-
-Alex
+> -- 
+> 2.54.0
+> 
