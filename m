@@ -1,156 +1,122 @@
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E41AA391512
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:29:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781249377; cv=pass; b=PCUGLVxEP4wFV2cVZle+O6jPejiK/7kCaYdxIXjXrklHeuFodOAN8tEe/OP/MjV5gMvyb7ONxEIanVw1x+XfRU9Ho9RltzqxU15L5qRqcbCwQ0aWzG8oJJoNDku2xHOcdqr84Pq8e/7KocmO/S2PicYDSlcRxxBdIdkDzf6pYQw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781249377; c=relaxed/simple;
-	bh=tVg2r7SH40s0Z53c3qQyY3QGfxdt6vvxr86cv2zFvew=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ah+Z6QYL4zzZl8jeAABCkyJWLQUW9OhSdvRwe6qhiw5R/ZGov0Qhr2OhrFGwdphLB4WeVzLUif1eQxNWqi0FUg3l/0HyWggaQVL7bU6OB2iLTAoelcwCiJ/1rLgGz9flGHfD0y4Uzs8G0DL17GPPQDB5GFgaR+RlIeJYQqOWj1c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aerlync.com; spf=pass smtp.mailfrom=aerlync.com; dkim=fail (0-bit key) header.d=aerlync.com header.i=@aerlync.com header.b=SDB/9BVI reason="key not found in DNS"; arc=pass smtp.client-ip=209.85.208.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aerlync.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aerlync.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3693E1235
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781250653; cv=none; b=ZQhvLzGFLwuRFnm+8sIwR+n65jApNf9MEI7AnGrrf4hDfHUgKhHKlGj36kTsjaVLDJVUbR5ZoIW048DobYAL1o9ffACHtP9vv2desybFPb8Jk5pIG/C0RAEo1lvTcn8e7iQB5FIMtv1f7xtyR7Umakj5XfUS3knBH1IjIHCSG8w=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781250653; c=relaxed/simple;
+	bh=Br84Ghy1WGiL5wQrPBDBfUSzritlgclI2JJbuZnsoPM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lVWIZ4D6+KhGngvbR6eyiY3vpqJb3C0GwDeIjAgTSJzuUcdc8KRIMvFXf/zT/k+RT0kcZ2XxrQ9jTBpsazCVc5zstxqBcOPcMW7DXY4UFQZGwvO3dyLqznltlxKLGuXzVig65MXMb2V1xCELxuk1Qc+cJxOpFKpTmBWm8tKFRr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=bkIvKWu2; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=aerlync.com header.i=@aerlync.com header.b="SDB/9BVI"
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-3965d76090bso6268471fa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 00:29:35 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781249374; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Z98iLX+aSHF6dYjO3i9WYzR/HG+sel3toY3FMOY0JB2MHdjTiSn2ljBBDSNZXOVNqz
-         fSrwfdSNlqJCjx+Z5qJtKyJt9m4EfC7PEJB1IKHFX8PxE6FRG0V2+UnzQkHrekZOreBF
-         xunzgg0J7ZmFlacS5iZMqmYR9Dezjfnj9imsSg5w0bpeJmlM5PU3FN8JOuqLcZT8sx/C
-         2dEdfHeqDmoQALWWpCzfVy0WisZxkoJO2JO38EP5xgZSns6Ts6NpHcK8u/glLyn57yPq
-         9815Vl8RQeV+qBCh0hZtSsG6C+olPFHG1AhQMG6wiqZCUI8seyrZpHKak6/T07yeMjk6
-         7GDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Z6ZI6tLmZUTFZyjC3DvxkYL28Mk3M9noRZhE0JUJwEc=;
-        fh=NXLQsPJj6pN9gik7YYOd3mwl531tCVr8SgZnNQ65P0Q=;
-        b=iJwYmxPZ8WKJOnCCSJBxv/8MDf1sIM/J7CkMVf5M/rdzy7iIYtxGEokpot2G3UAIIT
-         6cuEZdq1zlVfH+8THbO9EwiiDIdfGiAotFx5y9bH6hzktPVuHVtxogyvOFPUfcRWvPKQ
-         +SjJYNjWpy8wuP5OuwOAtg52WkqNcTPEN+urQpDqj6KYN3xx02w+ws1Mtwv32cBUZpOn
-         oSgZ0GrMaKTNluloH1hT6JCTmRTwIwsgGIwYKV0ZedLdAK4ZOczwXLGlN4chjMHlvMq5
-         SITmS8GCYl/XxtC3P0HunWi0IohdSQhYknUGECA+4GxmZcbaRcp+P9zZHKQ8B5DeFPpN
-         lHHw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=aerlync.com; s=google; t=1781249374; x=1781854174; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Z6ZI6tLmZUTFZyjC3DvxkYL28Mk3M9noRZhE0JUJwEc=;
-        b=SDB/9BVIHwx+DUPmdxfNYZn6udJBzI1oEFCaxU2WzJoLSMFwmGTaROcLCxGthN6f3K
-         2WB3wYiUu3NYPRM4zBXKwRiXoDJ2TbImKHMqxqRWpwt2lGkU19PgPqSFrDJi/K1xL0Dj
-         OwE0vve5bPnXI0BVRrhktnE/9s9mLycnL8AJmhjzd4S6vcMCT45Pk1jITr6EiJs4m+o7
-         0QaGb2yF34NkXU4d4N1GM9rauzas1IlYbbGhPTT8g3FDfLMyMOVF7evfT6Wx+aKSX1Z0
-         MQkf2H7AZoVTRHzPtjvFqsOUeiLtEnk+KUxiJQQo7U8q6W9fc5/E79YqZOn1zi1gZ6bv
-         pKig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781249374; x=1781854174;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Z6ZI6tLmZUTFZyjC3DvxkYL28Mk3M9noRZhE0JUJwEc=;
-        b=Wq1Dktzx7jPrVvR0FCR659PKVG8BVJQPymI5Ck0pF9JbMJ9FQ2CJYmfUbHYuczkobq
-         8do8l0pO2kykTElat9rd5/N+blcOTuK5EZ5xEvV7cxTYqNxobc1X1L8OvUO2C83a/QLp
-         39try0DtANpIlAT3ZDzLryIfAAmfWxyDbe2fN+wazyMcUHBZXK34/OF2Hud68vIaLnku
-         6GJ2uANoq2azmuNFkr4GsFFm3IBuKstNMkp6tlQ7FjlTcgvBVemEApE6zzIStK9XuiKn
-         GLz6rT5CJ9xURcA0AIR6mKuRr4kIlaHba3K9S3IQStPCmojO7lR6x2TuKH8y8baKxbDP
-         swug==
-X-Forwarded-Encrypted: i=1; AFNElJ+Ue0jmkV+8qK3o3yh3HEVERkhjc7Q4n1558FQTe7jKqtuoI4iqp6AFfRK7c+5DtZEbRJWR4tvdpcynvNtL+w==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0PnHlj62isZLvdDTInPSOgmvqOEk3i5hRozRH9PBGkn0zfEDh
-	oGLsafWSuJljQFIlBr1RsHD9vWdOEwLvaeYtxQ1eQvO3AAAb6Cm7toAnqF1K8V681MRyruqIZ9+
-	RCO4CInaUAbwyQ/YKg+3UxDTuiBCm2hqwqqDp6eM35m+tg1ZX7hkB
-X-Gm-Gg: Acq92OGkBGd0sgEj9MWhHtKe6mmq+ahKQhf5JWaWQThese58VVakqdp9HTQxeLCk9+7
-	1Ou2EpwAE/LMPZy74HlDIGLy6mtgvyaa9ILEYMHOuOQcSRdmrvCN3zOgG6hfmJpA63Z6vhA0oU7
-	2xRQGWXcImWmOM9p24+LVVtKxqnwASDz7BgHgTn+cFn2BffDLVDsqu3SZJBnGREN99irdB9DjII
-	fFXRmoi8T/w3m62ubcUi5YndHpo/SzkrHFdr+ZYKy8gJ5exoO5Wkw2FQ+k0S2nHTUZ14dcRnEml
-	8u0eUds=
-X-Received: by 2002:a05:651c:24c7:b0:396:75ac:457a with SMTP id
- 38308e7fff4ca-3992afba022mr2593921fa.8.1781249374144; Fri, 12 Jun 2026
- 00:29:34 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bkIvKWu2"
+X-UUID: 6b47ad40663311f18dc8c9802ae25ab1-20260612
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=78Ug6vEoSPYBuHxW/IGawc2CU9Z+jCIkSbMm+dDEYvg=;
+	b=bkIvKWu2RPwoC9m9jbzkOtxK03r0DmbcMknCTSNPBInEBVVjdH70tnz6R0dVQh2rhjmRQaWTdRm+6GYViwJeLaYOeD69guYo7oUvRoY8DGu4ZnKMvL1pNtF8czzQRJswd+hIV+7aspmz7Kj541h8EYUjrUauvf3GvHftaiZFWF8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.15,REQID:ed53c46e-dbeb-4fda-b10f-6cb4521bdfe0,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:e276073,CLOUDID:0d4b6397-22d1-4176-b420-d0d82ac3f01a,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|865|888|898,TC:-5,Cont
+	ent:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0
+	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 6b47ad40663311f18dc8c9802ae25ab1-20260612
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 194431172; Fri, 12 Jun 2026 15:50:45 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 12 Jun 2026 15:50:44 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 15:50:44 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Deren.Wu@mediatek.com>, <Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>,
+	<Ryder.Lee@mediatek.com>, <Leon.Yen@mediatek.com>,
+	<litien.chang@mediatek.com>, <emery.hsin@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH 02/20] wifi: mt76: connac2: apply new rx all_complete_mask
+Date: Fri, 12 Jun 2026 15:50:39 +0800
+Message-ID: <20260612075042.2577193-2-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260612075042.2577193-1-jb.tsai@mediatek.com>
+References: <20260612075042.2577193-1-jb.tsai@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260605054307.427874-1-thiyagarajan@aerlync.com>
-In-Reply-To: <20260605054307.427874-1-thiyagarajan@aerlync.com>
-From: Thiyagarajan Pandiyan <thiyagarajan@aerlync.com>
-Date: Fri, 12 Jun 2026 12:59:17 +0530
-X-Gm-Features: AVVi8CdTzevzyoeXKAxtGy5Prp3DA55ak9AsJownX2IlzA2E4kcPVgB3F2rjH6E
-Message-ID: <CAL3EHw6QcuFAw5FwbF2O593jESqsWZpaxyynSFctKUWV15R1hg@mail.gmail.com>
-Subject: Re: [PATCH] wifi: nl80211: Increase ie_len size to prevent truncated
- IEs in new peer notifications
-To: johannes@sipsolutions.net
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	Thiyagarajan Pandiyan <thiyagarajan@aerlync.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Hi Johannes,
-Could you please review this patch and provide feedback?
+From: Emery Hsin <emery.hsin@mediatek.com>
 
-Thanks,
-Thiyagarajan
+Populate all_complete_mask in MT7921 irq_map and update pci_resume()
+and mac_reset() to use irq_map->rx.all_complete_mask instead of the
+hardcoded MT_INT_RX_DONE_ALL macro.
 
+This is a preparation patch before enabling MT7928 PCIe support.
 
-Thiyagarajan
+Signed-off-by: Emery Hsin <emery.hsin@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/pci.c     | 4 +++-
+ drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c | 3 ++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+index 49a37185f056..067f6b4142b6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
+@@ -292,6 +292,7 @@ static int mt7921_pci_probe(struct pci_dev *pdev,
+ 			.mcu_complete_mask = MT_INT_TX_DONE_MCU,
+ 		},
+ 		.rx = {
++			.all_complete_mask = MT_INT_RX_DONE_ALL,
+ 			.data_complete_mask = MT_INT_RX_DONE_DATA,
+ 			.wm_complete_mask = MT_INT_RX_DONE_WM,
+ 			.wm2_complete_mask = MT_INT_RX_DONE_WM2,
+@@ -559,7 +560,8 @@ static int mt7921_pci_resume(struct device *device)
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
+ 	mt76_connac_irq_enable(&dev->mt76,
+ 			       dev->irq_map->tx.all_complete_mask |
+-			       MT_INT_RX_DONE_ALL | MT_INT_MCU_CMD);
++			       dev->irq_map->rx.all_complete_mask |
++			       MT_INT_MCU_CMD);
+ 	mt76_set(dev, MT_MCU2HOST_SW_INT_ENA, MT_MCU_CMD_WAKE_RX_PCIE);
+ 
+ 	/* put dma enabled */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+index 0db7acb3a637..98b3469ac597 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c
+@@ -96,7 +96,8 @@ int mt7921e_mac_reset(struct mt792x_dev *dev)
+ 
+ 	mt76_wr(dev, dev->irq_map->host_irq_enable,
+ 		dev->irq_map->tx.all_complete_mask |
+-		MT_INT_RX_DONE_ALL | MT_INT_MCU_CMD);
++		dev->irq_map->rx.all_complete_mask |
++		MT_INT_MCU_CMD);
+ 	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
+ 
+ 	err = mt7921e_driver_own(dev);
+-- 
+2.45.2
 
-On Fri, Jun 5, 2026 at 11:13=E2=80=AFAM Thiyagarajan Pandiyan
-<thiyagarajan@aerlync.com> wrote:
->
-> Currently, ie_len in cfg80211_notify_new_peer_candidate is defined as
-> 1-byte field, capping the maximum IE list size at 255 bytes. When a
-> large beacon is received, the IE list is truncated, passing incomplete
-> data to wpa_supplicant. This causes supplicant to fail parsing the IEs.
->
-> Increasing the size of ie_len to allow the full length of the IE list to
-> be forwarded properly.
->
-> Signed-off-by: Thiyagarajan Pandiyan <thiyagarajan@aerlync.com>
-> ---
->  include/net/cfg80211.h | 2 +-
->  net/wireless/nl80211.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 9d3639ff9c28..36af36533cac 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -8445,7 +8445,7 @@ void cfg80211_ibss_joined(struct net_device *dev, c=
-onst u8 *bssid,
->   * cfg80211 then sends a notification to userspace.
->   */
->  void cfg80211_notify_new_peer_candidate(struct net_device *dev,
-> -               const u8 *macaddr, const u8 *ie, u8 ie_len,
-> +               const u8 *macaddr, const u8 *ie, size_t ie_len,
->                 int sig_dbm, gfp_t gfp);
->
->  /**
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 7db9cd433801..0d97a47c35fb 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -20958,7 +20958,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_regi=
-stered_device *rdev,
->  }
->
->  void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8=
- *addr,
-> -                                       const u8 *ie, u8 ie_len,
-> +                                       const u8 *ie, size_t ie_len,
->                                         int sig_dbm, gfp_t gfp)
->  {
->         struct wireless_dev *wdev =3D dev->ieee80211_ptr;
-> --
-> 2.43.0
->
