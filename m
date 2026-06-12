@@ -1,30 +1,30 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3E2C3E4507
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:51:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 710153E4507
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:51:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781250710; cv=none; b=fiFLU98JJ2b2IG8+gpezQOQU2x9KJ/JEeOuCfi9sMwtJwjo5AtnGG7KRJDrakwfjuj5GKQdJTqmUa//LGGB4qceSyfJrh9rXof3neghjmTmfNYT6wXwfpg4Ap86usEug5J0kNInyp13vA7JPSouIKn9GEUec9aIMUvirEZTbSN4=
+	t=1781250713; cv=none; b=A9rZFN1YWf8+zrsaUHRKIVZFW2B1KEzRdHAahS8aKwPRXmuGQz9eFmBkUaah1+HlpSXlL10IQbEMMFOwDTFU1GRlBooQ8hBwGhRuMc+DLWVbcKZTzEURCqBSOTLL9jMWPJUMNWANbcXdl/Vd7GeckVYN6ZhvZte17oNTms32Iq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781250710; c=relaxed/simple;
-	bh=dupvXjL1YC+0tpuXfMIOT2tCsrO5SnvZ+mmJx3ubJmQ=;
+	s=arc-20240116; t=1781250713; c=relaxed/simple;
+	bh=0UAAbu/alRSQqgcka/4iO2YkrwY5ReupqbrLkM+gOGw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JyYU4gkjoG4RJi0kh1BjODyy4SGCpmGThB7raBk4+fAxLKv0tRIiaTQkOial3kvtFGkkFcJBfM/GJPIwzx1qRbMrz+3bS2qhe91B9p4Qxm8LAQUxRiBAf11b/AamANrWX/Oz79BYRuWMax1H68uJOPw+jRuEDRqxIbQPYkVoFuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kVejCrlu; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=GpLiNWUaowlnNYSwp5/wIjAEEPxgDejFntVyH8fRwH2IeHj0tTVFSWA/MxJlxKvHnMHEgUFKxakWiBPMzUQr5i+yQMRZAVh2bgWFxQY1sHgLFCXHx9jDjc2mIk+nT5Dro3ASvdElGxN8lphU9KEGDz5Y7Glod7L8PgeIX5N/bN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=q57fILqV; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kVejCrlu"
-X-UUID: 8c47513a663311f1b1788b6acf885367-20260612
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="q57fILqV"
+X-UUID: 8b89d182663311f18dc8c9802ae25ab1-20260612
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=O0kfyfv4ta4qYQpadkoa8xGJxSxkjjSObeU1cL1n3M4=;
-	b=kVejCrlukeycXMMz08J2CPKKMN2iAi9wRvAE1RSreoot4QMRNGa4bkMqFuuwEJqrFPi6bsftPIF6XC+fb80vttPUGMzPZCGp6CFaUa2uwUtNRumPcLxEEmIe3qywz9zU52EhuRwrv3jOyGvmF40ZdmqW5lcyNVkPMirzGXoQOfM=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Tr/pocFYdumnRAiTS0oIGp7DfNRxlNOnmimYddYie18=;
+	b=q57fILqVThWfjc1ePfeD6bMBwi2PYtmcHG8jvHgokaAjJvC/SCZEt18whB2d0KYtJhVlSoXkqvIb5RgaKd5vSM2JLs4HY1W/FYIDaRLV4Y5PmvWz92xFcG+p93+yzISxsxfZbfj2fTA5rNP9NtWW7hAop6wrmYh4ST+9R88QGmI=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:1c79154b-7716-4534-9736-2e0ec2929a63,IP:0,U
+X-CID-O-INFO: VERSION:1.3.15,REQID:a737b462-e28c-475b-bc46-5f5e8b1e7ed8,IP:0,U
 	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
 	N:release,TS:-25
-X-CID-META: VersionHash:e276073,CLOUDID:c248fda4-9ef7-4489-861a-e83b251ece46,B
+X-CID-META: VersionHash:e276073,CLOUDID:ddd47654-902f-47df-afe3-f34f8d753c22,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|865|888|898,TC:-5,Cont
 	ent:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0
 	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,28 +32,28 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 8c47513a663311f1b1788b6acf885367-20260612
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
+X-UUID: 8b89d182663311f18dc8c9802ae25ab1-20260612
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
 	(envelope-from <jb.tsai@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1307775472; Fri, 12 Jun 2026 15:51:40 +0800
+	with ESMTP id 686046318; Fri, 12 Jun 2026 15:51:39 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Fri, 12 Jun 2026 15:51:39 +0800
+ 15.2.2562.29; Fri, 12 Jun 2026 15:51:38 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 15:51:39 +0800
+ 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 15:51:38 +0800
 From: JB Tsai <jb.tsai@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<Deren.Wu@mediatek.com>, <Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>,
 	<Ryder.Lee@mediatek.com>, <Leon.Yen@mediatek.com>,
 	<litien.chang@mediatek.com>, <emery.hsin@mediatek.com>,
-	<jb.tsai@mediatek.com>
-Subject: [PATCH 09/20] wifi: mt76: mt7925: rename WTBL registers to chip-specific format
-Date: Fri, 12 Jun 2026 15:51:35 +0800
-Message-ID: <20260612075136.2577553-4-jb.tsai@mediatek.com>
+	<jb.tsai@mediatek.com>, Xiong <xiong.huang@mediatek.com>
+Subject: [PATCH 07/20] wifi: mt76: mt7925: add per-chip PCIe register definitions
+Date: Fri, 12 Jun 2026 15:51:33 +0800
+Message-ID: <20260612075136.2577553-2-jb.tsai@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20260612075136.2577553-1-jb.tsai@mediatek.com>
 References: <20260612075136.2577553-1-jb.tsai@mediatek.com>
@@ -69,65 +69,124 @@ X-MTK: N
 
 From: Emery Hsin <emery.hsin@mediatek.com>
 
-Rename MT_WTBLON_TOP_WDUCR and MT_WTBL_UPDATE to MT7925-prefixed
-versions since MT7928 uses different WTBL register offsets.
+Add MT7925_PCIE_MAC_{INT_ENABLE,PM} macros and mt7925_pcie_reg
+struct. Update all PCIe register accesses in pci.c, pci_mac.c, and
+pci_mcu.c to use dev->pcie_reg->{imask,pm}.
 
 This is a preparation patch before enabling MT7928 PCIe support.
 
+Signed-off-by: Xiong <xiong.huang@mediatek.com>
 Signed-off-by: Emery Hsin <emery.hsin@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c  | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt7925/mac.h  | 2 +-
- drivers/net/wireless/mediatek/mt76/mt7925/regs.h | 4 ++--
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/pci.c   | 15 ++++++++++-----
+ .../net/wireless/mediatek/mt76/mt7925/pci_mac.c   |  4 ++--
+ .../net/wireless/mediatek/mt76/mt7925/pci_mcu.c   |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt7925/regs.h  |  5 +++++
+ 4 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 5dd895c3f205..44d5a1e7e415 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -12,10 +12,10 @@
- 
- bool mt7925_mac_wtbl_update(struct mt792x_dev *dev, int idx, u32 mask)
- {
--	mt76_rmw(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_WLAN_IDX,
-+	mt76_rmw(dev, MT7925_WTBL_UPDATE, MT_WTBL_UPDATE_WLAN_IDX,
- 		 FIELD_PREP(MT_WTBL_UPDATE_WLAN_IDX, idx) | mask);
- 
--	return mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY,
-+	return mt76_poll(dev, MT7925_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY,
- 			 0, 5000);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+index 8a4fb53c718f..61349c260b12 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
+@@ -298,6 +298,11 @@ static int mt7925_dma_init(struct mt792x_dev *dev)
+ 	return mt792x_dma_enable(dev);
  }
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.h b/drivers/net/wireless/mediatek/mt76/mt7925/mac.h
-index 83ea9021daea..67148c87de76 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.h
-@@ -14,7 +14,7 @@
++static const struct mt792x_pcie_reg mt7925_pcie_reg = {
++	.imask = MT7925_PCIE_MAC_INT_ENABLE,
++	.pm = MT7925_PCIE_MAC_PM,
++};
++
+ static const struct mt792x_irq_map mt7925_irq_map = {
+ 	.host_irq_enable = MT_WFDMA0_HOST_INT_ENA,
+ 	.tx = {
+@@ -413,6 +418,8 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
+ 	dev->fw_features = features;
+ 	dev->hif_ops = &mt7925_pcie_ops;
+ 	dev->irq_map = is_mt7927_hw ? &mt7927_irq_map : &mt7925_irq_map;
++	dev->pcie_reg = &mt7925_pcie_reg;
++
+ 	mt76_mmio_init(&dev->mt76, pcim_iomap_table(pdev)[0]);
+ 	tasklet_init(&mdev->irq_tasklet, mt792x_irq_tasklet, (unsigned long)dev);
  
- static inline u32 mt7925_mac_wtbl_lmac_addr(struct mt792x_dev *dev, u16 wcid, u8 dw)
- {
--	mt76_wr(dev, MT_WTBLON_TOP_WDUCR,
-+	mt76_wr(dev, MT7925_WTBLON_TOP_WDUCR,
- 		FIELD_PREP(MT_WTBLON_TOP_WDUCR_GROUP, (wcid >> 7)));
+@@ -462,8 +469,7 @@ static int mt7925_pci_probe(struct pci_dev *pdev,
+ 		goto err_free_dev;
  
- 	return MT_WTBL_LMAC_OFFS(wcid, dw);
+ 	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+-
+-	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
++	mt76_wr(dev, dev->pcie_reg->imask, 0xff);
+ 
+ 	ret = devm_request_irq(mdev->dev, pdev->irq, mt792x_irq_handler,
+ 			       IRQF_SHARED, KBUILD_MODNAME, dev);
+@@ -564,8 +570,7 @@ static int mt7925_pci_suspend(struct device *device)
+ 
+ 	/* disable interrupt */
+ 	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+-
+-	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0x0);
++	mt76_wr(dev, dev->pcie_reg->imask, 0x0);
+ 
+ 	synchronize_irq(pdev->irq);
+ 	tasklet_kill(&mdev->irq_tasklet);
+@@ -615,7 +620,7 @@ static int _mt7925_pci_resume(struct device *device, bool restore)
+ 	mt792x_wpdma_reinit_cond(dev);
+ 
+ 	/* enable interrupt */
+-	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
++	mt76_wr(dev, dev->pcie_reg->imask, 0xff);
+ 	mt76_connac_irq_enable(&dev->mt76,
+ 			       dev->irq_map->tx.all_complete_mask |
+ 			       dev->irq_map->rx.all_complete_mask |
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
+index d288739e1307..8477d21abc66 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c
+@@ -78,7 +78,7 @@ int mt7925e_mac_reset(struct mt792x_dev *dev)
+ 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
+ 
+ 	mt76_wr(dev, dev->irq_map->host_irq_enable, 0);
+-	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0x0);
++	mt76_wr(dev, dev->pcie_reg->imask, 0x0);
+ 
+ 	set_bit(MT76_RESET, &dev->mphy.state);
+ 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
+@@ -121,7 +121,7 @@ int mt7925e_mac_reset(struct mt792x_dev *dev)
+ 		dev->irq_map->tx.all_complete_mask |
+ 		dev->irq_map->rx.all_complete_mask |
+ 		MT_INT_MCU_CMD);
+-	mt76_wr(dev, MT_PCIE_MAC_INT_ENABLE, 0xff);
++	mt76_wr(dev, dev->pcie_reg->imask, 0xff);
+ 
+ 	err = mt792xe_mcu_fw_pmctrl(dev);
+ 	if (err)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c
+index 6cceff88c656..72707eddc3db 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c
+@@ -43,7 +43,7 @@ int mt7925e_mcu_init(struct mt792x_dev *dev)
+ 	if (err)
+ 		return err;
+ 
+-	mt76_rmw_field(dev, MT_PCIE_MAC_PM, MT_PCIE_MAC_PM_L0S_DIS, 1);
++	mt76_rmw_field(dev, dev->pcie_reg->pm, MT_PCIE_MAC_PM_L0S_DIS, 1);
+ 
+ 	err = mt7925_run_firmware(dev);
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/regs.h b/drivers/net/wireless/mediatek/mt76/mt7925/regs.h
-index 85adde2ad597..0bcfd1cf0338 100644
+index bb5969689337..85adde2ad597 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/regs.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/regs.h
-@@ -90,10 +90,10 @@
- 
- #define MT_WFSYS_SW_RST_B		0x7c000140
- 
--#define MT_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x370)
-+#define MT7925_WTBLON_TOP_WDUCR		MT_WTBLON_TOP(0x370)
- #define MT_WTBLON_TOP_WDUCR_GROUP	GENMASK(4, 0)
- 
--#define MT_WTBL_UPDATE			MT_WTBLON_TOP(0x380)
-+#define MT7925_WTBL_UPDATE		MT_WTBLON_TOP(0x380)
+@@ -97,4 +97,9 @@
  #define MT_WTBL_UPDATE_WLAN_IDX		GENMASK(11, 0)
  #define MT_WTBL_UPDATE_ADM_COUNT_CLEAR	BIT(14)
  
++#define MT7925_PCIE_MAC_BASE		0x10000
++#define MT7925_PCIE_MAC(ofs)		(MT7925_PCIE_MAC_BASE + (ofs))
++#define MT7925_PCIE_MAC_INT_ENABLE	MT7925_PCIE_MAC(0x188)
++#define MT7925_PCIE_MAC_PM		MT7925_PCIE_MAC(0x194)
++
+ #endif
 -- 
 2.45.2
 
