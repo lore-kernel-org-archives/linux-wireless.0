@@ -1,49 +1,49 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFF23E316F
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:51:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2900B72623
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Jun 2026 07:52:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781250713; cv=none; b=QdwY26sl+5xvjpgMXTi32c/Q3ggRdX2CvEXkwYgXEztLYy6tEw1w0cprELK33xAN5cIynYZsQWHciTumxJjBx5BIAulJJyucKseh31/qoJ2dVk4xaWC+FB25KBSYGQfXllaN+rv3916bzNT3505t5jmBs2Rixce/wxFbtJnMCBE=
+	t=1781250727; cv=none; b=EYfrpWlLnxOaykM8bwAtSLpowyX7uAepS4v1xMn6yZzfG4+y0VH9JTaYB7b6I2pLLIgTYjLP/+intwfcRFNqYxKaYhm3CtkQJ+CIc1p/JPBQNBafMZemGW8euR+E4O1qJGgAgJXiiYtD7fENNwlXUvzrYdT91VRUATgS2Nbmeq8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781250713; c=relaxed/simple;
-	bh=e0EFIV6hJpLxxs0y8+Tj8zK1yomdLOvqCjoMWirMlM4=;
+	s=arc-20240116; t=1781250727; c=relaxed/simple;
+	bh=OEbiFow1BCW3hbMeEWhb/P6oAozZPJqgGh2RcJizXRk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bHmvP6cZrzHKYBf3PDhfn3zywvPl1e1HtY1U/NZdupZ4/S07/m6/gR4xRNCYEcm9bMo7vuPntMcibnFNFo303Fv+jgAwtYywVXlItKI4oM2YDSQQQxMAgAq+k2475191Hr6Ys7W/Ip4/Ks1wWuOaOsO4Zs3tNAJjRwQrZC3i0Yk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=E1toj5jQ; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=qVDI7wH2ammQxGPOLCePC7uquU6T/nZcOtCMUgjK/imNY95Sv4bBQvwHfV4iqIi4QX+GYyo0VcWytz3FTBmGqtmN+rlJzU6mFQOWDEsFzs2Tvt8D5BCirStcSosBK9mZyhfFROThpgQWcHLdCghKrh6M7xDA3fzoE0UQxAIUxIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=BImHrCvs; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="E1toj5jQ"
-X-UUID: 8be83fe2663311f18dc8c9802ae25ab1-20260612
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BImHrCvs"
+X-UUID: 96452194663311f1b1788b6acf885367-20260612
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=BZnmJte4v8474P4zQy6/pcaMY8gQNVScjCNTTpJ8TAg=;
-	b=E1toj5jQv5FsidopJYlYg+EU6P2OI5Joo3wv8mCFdnZG973K+MPQ3MKzuK9IMSdP1iVOcfHWtl6zoOSfcJ+1ZGQ898XMMmXiWuR0HdmCRU52DZ9AWR/77Or7b9JKyxKC8XCFOlm3colDngjveZEVGgjB+0ulkAa1u8FmZNMO7a0=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=vW9s2uK4yqEEKil/Yz4y+xvIzPhvNufGHRY46xQ6Vk8=;
+	b=BImHrCvsofQUfC3aaxvrK7NirDQEOm2bRlnjw8RHhHvuK4GgFRl9eooRmA7Ok7F1z5u+AmzhMmQHaOWgukxjjmNdoaWxXCM/kcxT7buhG5Cy9j0qj3zjrK9ybJrdFzy961IZ30oenPHPz2BZgDmz2MhAfP4wd7Rc31bmyHoRMJU=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.15,REQID:ef4b7c27-e00d-40d9-8df2-e5a05c53b76c,IP:0,U
+X-CID-O-INFO: VERSION:1.3.15,REQID:4cd84d82-9d38-41d1-bbe4-864570552754,IP:0,U
 	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
 	:release,TS:-5
-X-CID-META: VersionHash:e276073,CLOUDID:914d6397-22d1-4176-b420-d0d82ac3f01a,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|865|888|898,TC:-5,Cont
-	ent:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-META: VersionHash:e276073,CLOUDID:75d57654-902f-47df-afe3-f34f8d753c22,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|136|836|865|888|898,TC:-5,
+	Content:0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,C
+	OL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 8be83fe2663311f18dc8c9802ae25ab1-20260612
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+X-UUID: 96452194663311f1b1788b6acf885367-20260612
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
 	(envelope-from <jb.tsai@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2138267849; Fri, 12 Jun 2026 15:51:40 +0800
+	with ESMTP id 858183887; Fri, 12 Jun 2026 15:51:57 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Fri, 12 Jun 2026 15:51:39 +0800
+ 15.2.2562.29; Fri, 12 Jun 2026 15:51:40 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 15:51:39 +0800
+ 15.2.2562.29 via Frontend Transport; Fri, 12 Jun 2026 15:51:40 +0800
 From: JB Tsai <jb.tsai@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
@@ -51,9 +51,9 @@ CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<Ryder.Lee@mediatek.com>, <Leon.Yen@mediatek.com>,
 	<litien.chang@mediatek.com>, <emery.hsin@mediatek.com>,
 	<jb.tsai@mediatek.com>
-Subject: [PATCH 08/20] wifi: mt76: mt792x: rename WFDMA DMASHDL enable bit to follow the convention
-Date: Fri, 12 Jun 2026 15:51:34 +0800
-Message-ID: <20260612075136.2577553-3-jb.tsai@mediatek.com>
+Subject: [PATCH 10/20] wifi: mt76: mt792x: add tx_done ring to common DMA queue allocation
+Date: Fri, 12 Jun 2026 15:51:36 +0800
+Message-ID: <20260612075136.2577553-5-jb.tsai@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20260612075136.2577553-1-jb.tsai@mediatek.com>
 References: <20260612075136.2577553-1-jb.tsai@mediatek.com>
@@ -69,44 +69,52 @@ X-MTK: N
 
 From: Emery Hsin <emery.hsin@mediatek.com>
 
-Rename MT_WFDMA0_CSR_TX_DMASHDL_ENABLE to
-MT_WFDMA0_GLO_CFG_EXT0_CSR_TX_DMASHDL_EN to follow the register
-naming convention (parent register name as prefix).
+Add a tx_done field to mt792x_dma_layout and extend
+mt792x_dma_alloc_queues() to allocate the MT_RXQ_MCU_WA queue when
+tx_done.ring_base is configured.
 
 This is a preparation patch before enabling MT7928 PCIe support.
 
 Signed-off-by: Emery Hsin <emery.hsin@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt792x_dma.c  | 2 +-
- drivers/net/wireless/mediatek/mt76/mt792x_regs.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt792x.h     |  1 +
+ drivers/net/wireless/mediatek/mt76/mt792x_dma.c | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index eacee63e13f3..b8dc7ce38c87 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -217,6 +217,7 @@ struct mt792x_dma_layout {
+ 	struct mt792x_dma_ring tx_data0;
+ 	struct mt792x_dma_ring tx_mcu;
+ 	struct mt792x_dma_ring tx_fwdl;
++	struct mt792x_dma_ring tx_done;
+ 	struct mt792x_dma_ring rx_data;
+ 	struct mt792x_dma_ring rx_mcu;
+ };
 diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-index 2947504ef20b..b090ba9cd676 100644
+index b090ba9cd676..4d4c62bb0a77 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt792x_dma.c
-@@ -386,7 +386,7 @@ int mt792x_dma_disable(struct mt792x_dev *dev, bool force)
+@@ -122,6 +122,17 @@ int mt792x_dma_alloc_queues(struct mt792x_dev *dev,
+ 	if (ret)
+ 		return ret;
  
- 	/* disable dmashdl */
- 	mt76_clear(dev, MT_WFDMA0_GLO_CFG_EXT0,
--		   MT_WFDMA0_CSR_TX_DMASHDL_ENABLE);
-+		   MT_WFDMA0_GLO_CFG_EXT0_CSR_TX_DMASHDL_EN);
- 	mt76_set(dev, MT_DMASHDL_SW_CONTROL, MT_DMASHDL_DMASHDL_BYPASS);
- 
- 	if (force) {
-diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-index 6d174b158915..0e297fd9468a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt792x_regs.h
-@@ -335,7 +335,7 @@
- #define MT_WFDMA0_INT_RX_PRI		MT_WFDMA0(0x298)
- #define MT_WFDMA0_INT_TX_PRI		MT_WFDMA0(0x29c)
- #define MT_WFDMA0_GLO_CFG_EXT0		MT_WFDMA0(0x2b0)
--#define MT_WFDMA0_CSR_TX_DMASHDL_ENABLE	BIT(6)
-+#define MT_WFDMA0_GLO_CFG_EXT0_CSR_TX_DMASHDL_EN		BIT(6)
- #define MT_WFDMA0_PRI_DLY_INT_CFG0	MT_WFDMA0(0x2f0)
- 
- #define MT_WFDMA0_TX_RING0_EXT_CTRL	MT_WFDMA0(0x600)
++	/* tx done */
++	if (layout->tx_done.ring_base) {
++		ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU_WA],
++				       layout->tx_done.qid,
++				       layout->tx_done.n_desc,
++				       MT_RX_BUF_SIZE,
++				       layout->tx_done.ring_base);
++		if (ret)
++			return ret;
++	}
++
+ 	/* rx event */
+ 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU],
+ 			       layout->rx_mcu.qid,
 -- 
 2.45.2
 
