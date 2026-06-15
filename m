@@ -1,57 +1,58 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE02223DFB;
-	Mon, 15 Jun 2026 01:41:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 649FD2CCC5;
+	Mon, 15 Jun 2026 01:55:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781487710; cv=none; b=nYM03ozmpnOg1qq2IXmtNjJ+iCyQxJKWMOF1NBK7x7nZMfNOwik9NrqMttizJSBY9ctHdTqc6GPFHSsNUzyP/QGThugdh+W6264YkkhcM6R7rexyhe7M2dhwDp8tnl35iOBMeDQz0so6jsqbxXoa9r2nMC4lMCeuIHsj46APNAk=
+	t=1781488512; cv=none; b=kJXsUo82E9Udd5puaJjeh7/cENN2vRkLWQzeJt6AuTAA3cOPtFNz4Y/GS0S2szgLYhxje/KAeiLMuwudCCc76WfD551IbzPHZzUtSa2abCMDUulpxoKKSyRW6bP3rIhevSCTNxtiyrQEhvwtSJBUfYAmSCvx1k2Aa4rLS/TT3kU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781487710; c=relaxed/simple;
-	bh=spMW0Sxc8Z4hzyaBNABTIpy5N9Kplp/47JzZuuaLzGk=;
+	s=arc-20240116; t=1781488512; c=relaxed/simple;
+	bh=pfYtKVRrgMH7lIX8B9Mg/Z677wGRoDxJcKMb61N2YKI=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=cAkijo6jNr9aXuwmPEJlEVr8KeLNsQyXvsHy3ZvTp67zGshADZV0bcfXcbr2wezRlV6BKYFRo5CJY6RZLe6EK+7wFaSKaTD8MJkMASUPJr5R3+F1NEhGDnVgJK19cMdjJFcUaNztmjwXMt97w+apAXBH+3sP81nkfaUYJmxEhzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=MBOEvbq9; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=nKq38DztS8xVnPl8yD5vsRn+q27NajRjhTXLc85RxfhqlhtkzzveWLj4XwDwnTga3Au/SKdKw9EMHhrjUyQRvnQFevMsPv/rlhbjJKcZqUEUiTHbgBepRKTNkrL8ejJjX3iEXJY9X0YkSS4OsUoudbB1PGrxgV8MrgRk5p682E0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dMHrEQ8+; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="MBOEvbq9"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65F1feV93393303, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dMHrEQ8+"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65F1styyF401899, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1781487700; bh=cjMk7fWbRRVZRH7SbP4xYWCFTIFImYoWdtieT+ZDbxc=;
+	t=1781488495; bh=pfYtKVRrgMH7lIX8B9Mg/Z677wGRoDxJcKMb61N2YKI=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=MBOEvbq96jkLFZ1nUCJ1+ylA1GD+1hkYW8NtRoKQB7ENVgvpnqp2x3nNxga07t3Bs
-	 7f+KlSkoC/tVnTY03MS7CYHzIAUQjBt7P8bJYX36OAUvsbKT9TY73S9jLaqFC+bUHI
-	 b3z3iTLCm2I8NRzQbltQYvbcqyLlzoweTnga9Z7nD0hO+PbwGvIULIGGqF2qiCWr3b
-	 mVzQy8UaPhRNNMMzHI0E1wr2MnjbrUD7QzTSSLXfmSxPjGc83yaqr2dFNW+sm+9R1/
-	 0xUTtSpbSfHK8NNREng/oNTcTKX4uKGUl0uCvM6kwO89ceKesC7IsZzxW+kKHYVD9L
-	 YMyhcqIMQm6Qw==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65F1feV93393303
+	b=dMHrEQ8+cTW9/Sww/8fez3VfhddS+fFJR2eeLFLYbpoZmx/Sfe+Xq831UdlOwtsYy
+	 8WfJljkAw3/DeJYUqHhVLKZwr8+DkOya9TIFMyVNhqb+/vgQ3tcWuuaTR9t/EH8Z0u
+	 5s1HOBDqkjF9+KszqZTOwCuaENLEsETgqLGZxf5bYIG2Auif5SuOjlkS+zH5qMPfKh
+	 uG0Y1m3XN1Q/ry76BZlIgtU6WPtDH4MDw3u2iGx5oGCDCIKlDGLkCvFhTWzFTe49bW
+	 Uh+C8fNeG3P93QUUiVz5hMV5Jj2VPeOJWLTDcVOeRrqwE0cqyX6h73Ax4vuQUC/PxC
+	 FSSAuus5jsLHg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65F1styyF401899
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 15 Jun 2026 09:41:40 +0800
+	Mon, 15 Jun 2026 09:54:55 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 15 Jun 2026 09:41:40 +0800
+ 15.2.2562.17; Mon, 15 Jun 2026 09:54:55 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 15 Jun 2026 09:41:40 +0800
+ 15.02.2562.017; Mon, 15 Jun 2026 09:54:55 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: William Hansen-Baird <william.hansen.baird@gmail.com>
+To: Chen Jung Ku <ku.loong@gapp.nthu.edu.tw>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next 3/3] wifi: rtlwifi: disable ASPM for RTL8723BE
- with subsystem ID 17aa:b736
-Thread-Topic: [PATCH rtw-next 3/3] wifi: rtlwifi: disable ASPM for RTL8723BE
- with subsystem ID 17aa:b736
-Thread-Index: AQHc/AV/IKHRv9u+uUC9TTRlRkHg9bY+1wlA
-Date: Mon, 15 Jun 2026 01:41:40 +0000
-Message-ID: <eb874df08873478b8f2ad373e8b2ca05@realtek.com>
-References: <20260614135508.70307-1-william.hansen.baird@gmail.com>
- <20260614135508.70307-4-william.hansen.baird@gmail.com>
-In-Reply-To: <20260614135508.70307-4-william.hansen.baird@gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chen Jung Ku
+	<cjku@proton.me>
+Subject: RE: [PATCH] wifi: realtek: rtw8822c: replace msleep() with fsleep()
+ for DPK delays
+Thread-Topic: [PATCH] wifi: realtek: rtw8822c: replace msleep() with fsleep()
+ for DPK delays
+Thread-Index: AQHc+1bXUI9lQ3CMLU216yjwQVY3JbY+x5IggAAVGvA=
+Date: Mon, 15 Jun 2026 01:54:55 +0000
+Message-ID: <8e0121a2437547dd812ded7f5ee4e4f7@realtek.com>
+References: <20260613170434.23645-1-ku.loong@gapp.nthu.edu.tw>
+ <5183c87219e2489eb99c9015cb96a7f8@realtek.com>
+In-Reply-To: <5183c87219e2489eb99c9015cb96a7f8@realtek.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -63,29 +64,25 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-William Hansen-Baird <william.hansen.baird@gmail.com> wrote:
->  drivers/net/wireless/realtek/rtlwifi/pci.c | 1 +
->  1 file changed, 1 insertion(+)
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+> Chen Jung Ku <ku.loong@gapp.nthu.edu.tw> wrote:
+> > Replace msleep() with fsleep(), because msleep() may oversleep
+> > to as much as 20 ms when used for a 10 ms delay.
+> > According to the kernel documentation, fsleep() is more suitable
+> > and aligns better with modern kernel style.
+> >
+> > Documentation link: https://docs.kernel.org/timers/delay_sleep_function=
+s.html
+> >
+> > Signed-off-by: Chen Jung Ku <ku.loong@gapp.nthu.edu.tw>
 >=20
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> index 03b743809258..bbcd1922acb2 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> @@ -33,6 +33,7 @@ static const u8 ac_to_hwq[] =3D {
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 >=20
->  static const struct pci_device_id rtl8723be_aspm_quirks[] =3D {
 
-Please change to rtl_aspm_quirks[] by patch 2/3.=20
+Oops. The subject prefix should be "wifi: rtw88: ..."
 
->         { PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, 0x11ad, 0x1723) },
-> +       { PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, 0x17aa, 0xb736) },
+I'll correct subject as below during getting merged:
 
-As opinion in patch 2/3, fill VID/PID "PCI_VENDOR_ID_REALTEK, 0xB723".=20
+wifi: rtw88: 8822c: replace msleep() with fsleep() for DPK delays
 
->         { 0 }
->  };
->=20
-> --
-> 2.54.0
 
