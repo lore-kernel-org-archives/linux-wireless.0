@@ -1,57 +1,57 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8FB6155757;
-	Mon, 15 Jun 2026 01:37:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DE02223DFB;
+	Mon, 15 Jun 2026 01:41:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781487444; cv=none; b=gFCxRApH2otUH3eF3YJMPgeRVwOfYa9S/lZtBZWllACUPUQWHk3zzBhPe3U6XKL5pKmMghtPCD5fkM32EKYPKUj6o8/ty1WoHbFUSgqLMNJU4/+EiaZluITfUfmlT71m2SBsobif5B4YKEoQA1DA8Ehn1lP/cmUkpaAkNnQwUqY=
+	t=1781487710; cv=none; b=nYM03ozmpnOg1qq2IXmtNjJ+iCyQxJKWMOF1NBK7x7nZMfNOwik9NrqMttizJSBY9ctHdTqc6GPFHSsNUzyP/QGThugdh+W6264YkkhcM6R7rexyhe7M2dhwDp8tnl35iOBMeDQz0so6jsqbxXoa9r2nMC4lMCeuIHsj46APNAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781487444; c=relaxed/simple;
-	bh=YlSpNxln56HQp9vQ/Njn8ifHEz47hyyFBatuEANc56g=;
+	s=arc-20240116; t=1781487710; c=relaxed/simple;
+	bh=spMW0Sxc8Z4hzyaBNABTIpy5N9Kplp/47JzZuuaLzGk=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=jMq2wYY35xYOJMIthMJ+xljQ+4J4UHMFmZ2oGGMH/5EDEt+DQk/yV1BUVKKNePyPEwHtWGQTdmjXCoAJl8IXO4J/azPZJfpEVXnQaM6Qhvhq/tBcNZOnf7NsColqa2zbT4wo4TRbak5dqQPiapCWVm4gHpd5B0+hOVDl0MLNLhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=k63/4ZrN; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=cAkijo6jNr9aXuwmPEJlEVr8KeLNsQyXvsHy3ZvTp67zGshADZV0bcfXcbr2wezRlV6BKYFRo5CJY6RZLe6EK+7wFaSKaTD8MJkMASUPJr5R3+F1NEhGDnVgJK19cMdjJFcUaNztmjwXMt97w+apAXBH+3sP81nkfaUYJmxEhzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=MBOEvbq9; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="k63/4ZrN"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65F1bIZe9391908, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="MBOEvbq9"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65F1feV93393303, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1781487438; bh=KgHxx/dunUug6rZJsIQvflVa6unPV1ZGuPI0K0Lm9z0=;
+	t=1781487700; bh=cjMk7fWbRRVZRH7SbP4xYWCFTIFImYoWdtieT+ZDbxc=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=k63/4ZrNZW+RpCUYOjpwRCBWTwvUgPLbqQBnnm4zxydzDIxtP45TU9IcPpXZFmGDB
-	 WtSHi4Z3wsIbcC3Jrzwc8IZ7cxe+cqw4L7x/gNU7Gycu1edpr6Uw4GaY038qcnSwmX
-	 YV1HLI+EAPUkPnF7WfshL7cBTEUOoNtu4srOMJw5PI1JFRFphCSDlwGC/uBEJHFr6d
-	 qOoiZww8MobO5VoNemc6AOVPsgbiOPv23CZhXkDWF9kIQuvJ0Z81t2dbF0yXMFRHfF
-	 cTVfXlTLO40YBkYeJ1ntugEYSxGrLurwVNAu3+uNperDL6UU/w7x48XYatsPBM6dHI
-	 XhT61/2+aBK7A==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65F1bIZe9391908
+	b=MBOEvbq96jkLFZ1nUCJ1+ylA1GD+1hkYW8NtRoKQB7ENVgvpnqp2x3nNxga07t3Bs
+	 7f+KlSkoC/tVnTY03MS7CYHzIAUQjBt7P8bJYX36OAUvsbKT9TY73S9jLaqFC+bUHI
+	 b3z3iTLCm2I8NRzQbltQYvbcqyLlzoweTnga9Z7nD0hO+PbwGvIULIGGqF2qiCWr3b
+	 mVzQy8UaPhRNNMMzHI0E1wr2MnjbrUD7QzTSSLXfmSxPjGc83yaqr2dFNW+sm+9R1/
+	 0xUTtSpbSfHK8NNREng/oNTcTKX4uKGUl0uCvM6kwO89ceKesC7IsZzxW+kKHYVD9L
+	 YMyhcqIMQm6Qw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65F1feV93393303
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 15 Jun 2026 09:37:18 +0800
+	Mon, 15 Jun 2026 09:41:40 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 15 Jun 2026 09:37:18 +0800
+ 15.2.2562.17; Mon, 15 Jun 2026 09:41:40 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 15 Jun 2026 09:37:18 +0800
+ 15.02.2562.017; Mon, 15 Jun 2026 09:41:40 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: William Hansen-Baird <william.hansen.baird@gmail.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH rtw-next 2/3] wifi: rtlwifi: convert pci ID if-statement
- to table
-Thread-Topic: [PATCH rtw-next 2/3] wifi: rtlwifi: convert pci ID if-statement
- to table
-Thread-Index: AQHc/AV7d8hv++F+JEmlUz56L50GHLY+1A+A
-Date: Mon, 15 Jun 2026 01:37:18 +0000
-Message-ID: <fe088e4d7ffe497d992db5ee09df6a43@realtek.com>
+Subject: RE: [PATCH rtw-next 3/3] wifi: rtlwifi: disable ASPM for RTL8723BE
+ with subsystem ID 17aa:b736
+Thread-Topic: [PATCH rtw-next 3/3] wifi: rtlwifi: disable ASPM for RTL8723BE
+ with subsystem ID 17aa:b736
+Thread-Index: AQHc/AV/IKHRv9u+uUC9TTRlRkHg9bY+1wlA
+Date: Mon, 15 Jun 2026 01:41:40 +0000
+Message-ID: <eb874df08873478b8f2ad373e8b2ca05@realtek.com>
 References: <20260614135508.70307-1-william.hansen.baird@gmail.com>
- <20260614135508.70307-3-william.hansen.baird@gmail.com>
-In-Reply-To: <20260614135508.70307-3-william.hansen.baird@gmail.com>
+ <20260614135508.70307-4-william.hansen.baird@gmail.com>
+In-Reply-To: <20260614135508.70307-4-william.hansen.baird@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -64,52 +64,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 William Hansen-Baird <william.hansen.baird@gmail.com> wrote:
-
-[...]
-
+>  drivers/net/wireless/realtek/rtlwifi/pci.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c
+> b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> index 03b743809258..bbcd1922acb2 100644
 > --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
 > +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> @@ -31,6 +31,11 @@ static const u8 ac_to_hwq[] =3D {
->         BK_QUEUE
+> @@ -33,6 +33,7 @@ static const u8 ac_to_hwq[] =3D {
+>=20
+>  static const struct pci_device_id rtl8723be_aspm_quirks[] =3D {
+
+Please change to rtl_aspm_quirks[] by patch 2/3.=20
+
+>         { PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, 0x11ad, 0x1723) },
+> +       { PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, 0x17aa, 0xb736) },
+
+As opinion in patch 2/3, fill VID/PID "PCI_VENDOR_ID_REALTEK, 0xB723".=20
+
+>         { 0 }
 >  };
 >=20
-> +static const struct pci_device_id rtl8723be_aspm_quirks[] =3D {
-> +       { PCI_DEVICE_SUB(PCI_ANY_ID, PCI_ANY_ID, 0x11ad, 0x1723) },
-
-Why not filling VID/PID explicitly? As there is only one listed in
-rtl8723be_pci_ids[].
-
-	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB723, ...)},
-
-> +       { 0 }
-> +};
-> +
->  static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *s=
-kb)
->  {
->         struct rtl_hal *rtlhal =3D rtl_hal(rtl_priv(hw));
-> @@ -327,14 +332,12 @@ static void rtl_pci_init_aspm(struct ieee80211_hw *=
-hw)
->=20
->         _rtl_pci_update_default_setting(hw);
->=20
-> -       /* RTL8723BE found on some ASUSTek laptops, such as F441U and
-> -        * X555UQ with subsystem ID 11ad:1723 are known to output large
-> +       /* RTL8723BE with certain subsytem IDs are known to output large
->          * amounts of PCIe AER errors during and after boot up, causing
->          * heavy lags, poor network throughput, and occasional lock-ups.
->          */
->         if (rtlpriv->rtlhal.hw_type =3D=3D HARDWARE_TYPE_RTL8723BE &&
-
-With above opinion, here just check pci_match_id(), no need to check RTL872=
-3BE.
-
-> -           (rtlpci->pdev->subsystem_vendor =3D=3D 0x11ad &&
-> -            rtlpci->pdev->subsystem_device =3D=3D 0x1723)) {
-> +               pci_match_id(rtl8723be_aspm_quirks, rtlpci->pdev)) {
->                 rtl_pci_disable_aspm(hw);
->                 ppsc->support_aspm =3D false;
->         }
 > --
 > 2.54.0
 
