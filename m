@@ -1,102 +1,83 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 566343EAC75;
-	Wed, 17 Jun 2026 11:23:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C08FC3B7752;
+	Wed, 17 Jun 2026 12:56:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781695400; cv=none; b=aYKbov84uXxrlbu0lfdNTIGtsPGlh97sUVRTS69RZBjJdB0TXkwVIEAXpTb67eTb8DHUxF7rd4h7OMJlZWJIpqoHSeOn7beT161rl/KZWFyKLe+bQzD55q+HQDnl7mzFTPWYjVn9bDgi+NEYMqLPgMJ02TNA5TOByZq/44n4d2o=
+	t=1781700984; cv=none; b=HL71EHKWcVw8KV9dVKQ/mx7QqPldlZqTikPGdFv7ioUJ5kwZsGCZ9hEi0c3BsnQDdHgBuetYchERspuUI+3YGLgNaGB3PLb/sibS7A3fuzv3p5615hB11cw+QRdGnOZ2FfxA2wt6SnecoO1UoYBwt0C9RfTb88TDgS1YlLNJjqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781695400; c=relaxed/simple;
-	bh=ADETP/5rknY2UjBxNiyrsJCYzC5BqaPaUNbks176lQw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LVYZ0apqGniWgK5B+EqYPhvTTPh9lLvKDcCfz7EIfKrBqw9SyOzF5QO8F3IwpztEQ836Rr3sxjT2W/pBGVAAAonzYK0Rh7TEuUbYE8cm6f3ecLokjC0+pVE1KJmPeaPKkAOu84utAg2ONtzTYez15ejujXKE8uKLT+cproSJUvM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E1s8+Qgz; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1781700984; c=relaxed/simple;
+	bh=4kX7Vgcf7HCZZi909HYoz8IJ7SLc9IU0Ws8WvYg36t4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=PFDUzBchTcyuT/HajIdmWyrrEXZqiwVqJgrr1AkrS79fk2i6iWUxOe1pNLMKPRC0qc6BrtKQCwz4Mf5FQY4UGxvW4r86n9EgDYWqXezi5DZZF+MX2YfJ6j0pvFAU5CsLUc2FcLO3RQ651TTtH1zDteSCXp4zCcAFxeNY7s3v42g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=fvgB/gNz; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E1s8+Qgz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781695388; x=1813231388;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ADETP/5rknY2UjBxNiyrsJCYzC5BqaPaUNbks176lQw=;
-  b=E1s8+QgzZEG+7wKcqeml49if5eCKc2MOTXuiqCEhFE4+X+CEZopkLPsZ
-   /agddaGEglUaLCDfAS/jPOCu3kavxiAuPDhXgYooJ7ydhBMByzluPd9DL
-   IVRaHxLVcSRj6i/ird1wULBezMIKKk6pw/Zd7tUMNx3TLoXkbCLU0H6wJ
-   AYkBI2Kz9z9AmX3T6Ti2lhpfoGYApi+TAmRji0EYI2ljzVawWoN2nG1vw
-   1Pc9eYQQwIquNzsBbUr63omSHz4XwGvyUPWuzrlNRBmBeHbu9/rtYIRrG
-   sIMP3tXE8Z9NY+NvQTI7OE93jz1bp4F2RGMiOlMffuXSueMqvmBCs5F85
-   A==;
-X-CSE-ConnectionGUID: xGRCgwu/T8+Eo1Z2RjXlhQ==
-X-CSE-MsgGUID: dNNTUyokSEul6KzI9mkUvA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11819"; a="100048615"
-X-IronPort-AV: E=Sophos;i="6.24,209,1774335600"; 
-   d="scan'208";a="100048615"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 04:22:58 -0700
-X-CSE-ConnectionGUID: kEnLJ2iLTK+RnrCRShVrdg==
-X-CSE-MsgGUID: 9ogJGVmcTAWezYPsqjp0Cg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,209,1774335600"; 
-   d="scan'208";a="271756531"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa002.fm.intel.com with ESMTP; 17 Jun 2026 04:22:56 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 76FAF95; Wed, 17 Jun 2026 13:22:55 +0200 (CEST)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Johannes Berg <johannes.berg@intel.com>,
-	linux-hardening@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fvgB/gNz"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=VA99D5bK8lnbrqdc2poWyS2qPB2HZZGsDz4JLTRMe/U=;
+	t=1781700981; x=1782910581; b=fvgB/gNz/4FsaajvjT0ocSqITeDxtasaCQ1eyozZdCWVjJ8
+	7etV+dYiLMk/XVLoP0iSORFx2OBp522QwCPDNF6SJesOar5LgMOINwAMYM3RxcAilefx+RqxFR1+k
+	VB6nyADoRj1jl/wyYEeITmzS0HFLfBKqIs+kxS1su48F8uIrwgTKFzKsclMU0INoSSGNPs8N2Hezj
+	7CR27hoYEI24dPJJlcfg+kbNMrYmxGLScWcz3L5v0YQVH1FcGhk7HlUuDBWncyYPq4tfQ7WYCRLtf
+	I+N/+JQG/ezaPXoW3PDqMCNqHl/Ujx9tsC37e/QXW+IzK3aCcliAACPgH85tjDCg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wZpoQ-00000001C8x-2nsJ;
+	Wed, 17 Jun 2026 14:56:10 +0200
+Message-ID: <1e656f5798a9f2f36daa00aba60d2196b2456335.camel@sipsolutions.net>
+Subject: Re: [PATCH v1 1/2] overflow: Allow to sum a few arguments at once
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	linux-wireless@vger.kernel.org
-Cc: Kees Cook <kees@kernel.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [rfc, PATCH v1 0/2] overflow: Convert size_add() to take variadic arguments
-Date: Wed, 17 Jun 2026 13:12:35 +0200
-Message-ID: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.50.1
+Cc: Kees Cook <kees@kernel.org>, "Gustavo A. R. Silva"
+ <gustavoars@kernel.org>
+Date: Wed, 17 Jun 2026 14:56:09 +0200
+In-Reply-To: <20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
+References: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
+	 <20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-This is an RFC!
+On Wed, 2026-06-17 at 13:12 +0200, Andy Shevchenko wrote:
+> Convert size_add() to take variadic argument, so we can simplify users
+> with using a macro only once.
 
-We have already users that want add sizes of up to 5 arguments and
-I know about at least one that also wants 3 or 4.
+> +#define __size_add3(addend1, addend2, addend3, addend4, ...)			\
+> +	__size_add(__size_add2(addend1,  addend2, addend3), addend4)
+> +#define __size_add4(addend1, addend2, addend3, addend4, addend5, ...)		\
+> +	__size_add(__size_add3(addend1,  addend2, addend3, addend4), addend5)
 
-This is brave move to make size_add() to take variadic arguments.
-The second patch is an example of use.
+I guess it's not going to really matter, but it would generate fewer
+calls to have something more like
 
-The implementation includes a case with a single argument on a purpose.
-In the future it might be extended to take an array as an argument,
-something like
+#define __size_add3(a1, a2, a3, a4) \
+	size_add(size_add(a1, a2), size_add(a3, a4))
+#define __size_add4(a1, a2, a3, a4, a5) \
+	size_add(size_add(a1, a2), size_add(a3, a4, a5))
 
-	int sizes[21];
-	size_add(sizes);
+as a binary tree, rather than only cutting one off every time. Not sure
+that results in hugely different code though - maybe fewer overflow
+checks?
 
-where the first element is amount of entries in the array (the same format
-as used in get_options() call) or other possible variants. This can be
-distinguished by _Generic().
+Although your version make it really completely equivalent to the
+nl80211.c code, clearly it doesn't matter if all the values are "good",
+and I believe the overflow behaviour means it doesn't matter for the
+overflow case either?
 
-But it may be dropped and we require always two arguments at minimum.
-
-The RFC just to collect opinions and perception. Note, array3*(), min3()/max3()
-and all like that also can use similar approach.
-
-Andy Shevchenko (2):
-  overflow: Allow to sum a few arguments at once
-  wifi: nl80211: Call size_add() only once
-
- include/linux/overflow.h | 37 ++++++++++++++++++++++++++-----------
- net/wireless/nl80211.c   | 11 ++++-------
- 2 files changed, 30 insertions(+), 18 deletions(-)
-
--- 
-2.50.1
-
+johannes
