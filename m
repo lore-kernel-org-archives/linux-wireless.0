@@ -1,125 +1,84 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpcmd14162.aruba.it (smtpcmd14162.aruba.it [62.149.156.162])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C549637B00F
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2026 21:30:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2DB139DBC0
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2026 21:46:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.149.156.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781731861; cv=none; b=nOEcMmMfgYV92O0qfuKP/VbqVXLgJzyTB/T0YjcZkwpLKIEZUH5Jlvk3Bu1+CdTuSaL8FKEtoZ+5P+uRn03chjROzXVnCzrUOJUgiDtvCV/ZVHzAQ811KlDbqUT1qzMteNtOeR2CpfvojJtFSAwv7ZOHF7ins86BGTPUXVNaeeM=
+	t=1781732764; cv=none; b=lHVx0kK0ZZUnN6yvoiweSdG+uDBFLTuHc29yH0WFsrBxJF4gqV60u60VNTBoNrYVy920uUHrFJG4WL1h4vqXd6TEVg6WYYM6IqcedM/dzdF2nlrdqsAeOTrjljDt0UfyPS8ibjODPX+RHRc0iZ65+JQff+ceyt21IxCRmUtCWc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781731861; c=relaxed/simple;
-	bh=VKPsWynGDM9pys60QuVcwARe1tdFU7Czo0xoqGYlLAo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i7yoGfUafd+04BmVsItNv6dTcTrtD7rPoB6R28NJlRdlWpkexHX10w23YSb1YO2Qp06GYxzcwruGzIpRg+SdHMYd/Y838XKGf/ZZCyvBbDNW6TvaAk1BuBbJ0IwQtK3euOqfSpfixIeMctUs8tUwpAGVRp2EozdCrHerFheu+Uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GZ3fenMF; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1781732764; c=relaxed/simple;
+	bh=wbPr2nXaCc8pvhEHTa71CECEb28g9TLw8qb1ftmdqDk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=cTeCL97sPfRK5voOIqkm1LVzRIsmIu02CJ7QJa6PAj+ftgzx/skrV3r4iH0OzPcWbY9QzI++XlQsnOlqxlcqid+npFdS46KYFqff+MlV74PaJ7hYgraEbgh1qCAEIZXvFnqoupRDaH+VG4fXAhocWjOBZj6V2DQYnDSvHWEq4UE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it; spf=pass smtp.mailfrom=mythread.it; dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b=D6kXGsZl; arc=none smtp.client-ip=62.149.156.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mythread.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mythread.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GZ3fenMF"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-45ef29c5561so160406f8f.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Jun 2026 14:30:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781731858; x=1782336658; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qeHK9f7qxiC+a+aM8unHOfffPeCuNSMjZHypTzZC9QE=;
-        b=GZ3fenMF+Ea8FGHAhsl7ZsvaYtVff0Nyzw2jccXIO9pgZNGLQ4lKQLfE2JT2yQnGba
-         qxBQrvw8ODKfuYyHkoG7DT+lrs/dziZLTJTIAjkRrI7zaYpWqV+MMbn9yQibp9Apo4qd
-         S7F/4uEje0Vz5bib2jcz1gJ8E5C5TZYG0lFnFcKMNSy1EKL2CVXFvGsvDtri0QvhWHKU
-         Ji34NQPFtq8ll+vkHyofOzCQSo72ataJOGP1EezZwSG/uNSz7AWcxVk3LE2GA9g3RN+Y
-         SNfT5GgvS2ttS2x4ypLZUHpqaxfFtW3PINyDw9rcyAYT6NxdkiyFYA75hR0bqLhL2Kst
-         WlfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781731858; x=1782336658;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=qeHK9f7qxiC+a+aM8unHOfffPeCuNSMjZHypTzZC9QE=;
-        b=YXNCFp3pvLyksWXitoKC6S5neVfWqljtXxdq3OxWZl0ChZ8ww0unrfwzYCujT0XwmJ
-         m24UeY+CowKXoVrvjI8RfzYcz02v91Ffk8tjiELX7ZUlK+/G25MBs8UBVImYL5Iw0/K7
-         2GA5Ap0SsTfK+M299i3MqS+R/u75M2sRny4hX24Rn8Cln66SHSDFYTqKmq9UBXEkVV/a
-         643BGj7c5k5y7SUaAEO4AMqyAk5QgGWZ/DR8XpRDbsD7gUUMCaHhdBvFZmkdO1oumVsL
-         5kSI8pm0afYidN0Wm6/fyNQZhtMyqLkylMb0XdBa3WabW+ftOIFsd0vMrT5gszPic3j6
-         hBpg==
-X-Forwarded-Encrypted: i=1; AFNElJ9wmnV4y8UVmgcNvmbBTN3XbcddCc0p791QEEUGKq2aMB8mX4aNYGWuemnejLJY7WxnUyW9Y5Y8mVNlWVBlQQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwDgRrKufn7wfJH7oNa0ZRij22uYvxETWQYZKCLvYKAr6Ctkliv
-	JmeymEI/+ie7Q4eDv1/kqWFEkAX0Y6Bf5P3wfJ5tAW0G7ORgU4stxS8aLkwd7KeR
-X-Gm-Gg: AfdE7ckgpPwvj/2D/QezIdHbCAD4aG14SSMYNSIzfJeWyCuQACfAHBs/bQtKe1yMJIO
-	s7YeOSG1bEaqg26ZymaVA8eaQ6D1DNksdCcpyxdTrspZ+ufSjvBbvs3FQld2NeiwCzm5lMVTWIe
-	ef4GZwPqHAyxS1s9SLplPotO2QIwYH4W7CTYzBoxiWvelGpGUj8URYsYZmdZ6sAdDcGxNMX7mVt
-	Kf95mdko3a6H+xcadqUQ5F/8uzZEtAr8yC8rpHiGDhZXoxJMQgMUisbcB0nQug3UyTsdaeCbQsk
-	Th53sb4nD7CbiwmkDTmy2tDquUriwzK2VIII4rdw/ppW6PHQjpMR5B8jn+hVtanYAt4e7IUBvoP
-	LAK/O9HSPcQ/Za5f9ALpwtaDjucvAIf+I9qycQauzaFLgiGuwLH3UxeUSTbbbr/Zg2POz5rNiCe
-	Gk9V7GKJMwaA7xt4CVgdRtCOK4cIJ6bGNTzRpqe2f8zL8sMz9rDEeRB9aifbka
-X-Received: by 2002:a05:6000:288c:b0:460:3233:f994 with SMTP id ffacd0b85a97d-463adc9232fmr1301938f8f.43.1781731857875;
-        Wed, 17 Jun 2026 14:30:57 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4620b3ed0d2sm18936916f8f.22.2026.06.17.14.30.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Jun 2026 14:30:57 -0700 (PDT)
-Date: Wed, 17 Jun 2026 22:30:56 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, Kees Cook <kees@kernel.org>, "Gustavo A. R.
- Silva" <gustavoars@kernel.org>
-Subject: Re: [PATCH v1 1/2] overflow: Allow to sum a few arguments at once
-Message-ID: <20260617223056.754bfcb8@pumpkin>
-In-Reply-To: <1e656f5798a9f2f36daa00aba60d2196b2456335.camel@sipsolutions.net>
-References: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
-	<20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
-	<1e656f5798a9f2f36daa00aba60d2196b2456335.camel@sipsolutions.net>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	dkim=pass (2048-bit key) header.d=mythread.it header.i=@mythread.it header.b="D6kXGsZl"
+Received: from [192.168.1.237] ([94.34.125.0])
+	by Aruba SMTP with ESMTPSA
+	id Zy28wJnjp4OeoZy28w4699; Wed, 17 Jun 2026 23:42:52 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mythread.it; s=a1;
+	t=1781732572; bh=wbPr2nXaCc8pvhEHTa71CECEb28g9TLw8qb1ftmdqDk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:To;
+	b=D6kXGsZlSYC05UaNjXwV8d23mIMMuKslM7yA0k0Hh7OaIosmov8nkaKBexdSqGi0P
+	 yVJO0T4y9FEvwwupSe+hcgcdIGXhkYqouW7YhmaRR2Vmm8Tpb37drPzebVx8EYLY3N
+	 Eb/3CteJubEYdgGMZLpq+84Kjkgv+ghTExkV4d6f8kZYkX8vXbKtuUHMsYHyNm8x2O
+	 0mVPuftiPMqAIVMS+BNilZU1z56AP9QV4nGMyDp0eP7j5X0DMgqQAUxhH3KezK6qEN
+	 hNoEoMpS0deGyrciE4vhJHU4BddCH6tobZaB5+1lik1SWpKgWjNmtb2XzDKAJDanrF
+	 ygaA6rd62VzDA==
+From: Alessio Ferri <alessio.ferri@mythread.it>
+Date: Wed, 17 Jun 2026 23:42:08 +0200
+Subject: [PATCH 1/4] bcma: host_pci: add BCM4352 device ID 0x43b3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20260617-b43-add-4352-wip-v1-1-c81323496720@gmail.com>
+References: <20260617-b43-add-4352-wip-v1-0-c81323496720@gmail.com>
+In-Reply-To: <20260617-b43-add-4352-wip-v1-0-c81323496720@gmail.com>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, 
+ Michael Buesch <m@bues.ch>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ b43-dev@lists.infradead.org, Alessio Ferri <alessio.ferri@mythread.it>, 
+ Alessio Ferri <alessio.ferri.3012@gmail.com>
+X-Mailer: b4 0.14.3
+X-CMAE-Envelope: MS4xfLXwwPZf+zvRvaxi04KLBEA+7NwsGZPt9cEHom9ia9PgTlNGuLphhMD0DYzzhzekT46IGqoJ5Ci+Kv0ZjxbyfCH3JefsPZwnhqNHbOgW39uO49hQBP5p
+ Splrew9fv0Oh69c1jydST3GMK31ZUjC2UNWnoBedbHQHGbshruON6Pz7A298As4uFC4oG9gmHfKSkUFr2W+nN1X4HXptdwrPjekUYgEDcY6s8vUJt6eqj0Fv
+ NkbAHhct2USse8BkK/cgGQoJ+B8SKA7b8l4bZrIvCqox+9UWYLSs2vcQlRgCxJ6rHt3v1JXYEPfKlyHmPkRDv/93Wu1CrnlNm0XJ5MFzVYv2fi8zEwrBkUPR
+ w39iFSpaFaIwlk86rmDfMUFWpRSJQHuJ7f6yX/k1jmw6tW/Ke63EXNVeykJ/I3AUlt4Rk1n3
 
-On Wed, 17 Jun 2026 14:56:09 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Alessio Ferri <alessio.ferri.3012@gmail.com>
 
-> On Wed, 2026-06-17 at 13:12 +0200, Andy Shevchenko wrote:
-> > Convert size_add() to take variadic argument, so we can simplify users
-> > with using a macro only once.  
-> 
-> > +#define __size_add3(addend1, addend2, addend3, addend4, ...)			\
-> > +	__size_add(__size_add2(addend1,  addend2, addend3), addend4)
-> > +#define __size_add4(addend1, addend2, addend3, addend4, addend5, ...)		\
-> > +	__size_add(__size_add3(addend1,  addend2, addend3, addend4), addend5)  
-> 
-> I guess it's not going to really matter, but it would generate fewer
-> calls to have something more like
-> 
-> #define __size_add3(a1, a2, a3, a4) \
-> 	size_add(size_add(a1, a2), size_add(a3, a4))
-> #define __size_add4(a1, a2, a3, a4, a5) \
-> 	size_add(size_add(a1, a2), size_add(a3, a4, a5))
-> 
-> as a binary tree, rather than only cutting one off every time. Not sure
-> that results in hugely different code though - maybe fewer overflow
-> checks?
+The BCM4352 is an AC PHY. It is missing from bcma_pci_bridge_tbl[],
+so bcma-pci-bridge does not bind. Add the ID.
 
-The binary tree stands a chance of executing less slowly because the leaf
-adds can be executed in parallel.
-Excluding the saturation checks (wtf is it called size_add() not
-saturating_add() ?) (a + b) + (c + d) will usually execute faster than
-((a + b) + c) + d because the (a + b) and (c + d) can execute at the
-same time; unfortunately gcc will always generate the latter.
+The chip identifies as BCM4352 (chip rev 3, PHY type AC); b43 with AC-PHY
+support handles it once bcma reaches the D11 core.
 
-	David
+Signed-off-by: Alessio Ferri <alessio.ferri@mythread.it>
+---
+ drivers/bcma/host_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> 
-> Although your version make it really completely equivalent to the
-> nl80211.c code, clearly it doesn't matter if all the values are "good",
-> and I believe the overflow behaviour means it doesn't matter for the
-> overflow case either?
-> 
-> johannes
-> 
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 3dc2985063f1..f6cf722a3798 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -298,6 +298,7 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b3) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
+
+-- 
+2.54.0
 
