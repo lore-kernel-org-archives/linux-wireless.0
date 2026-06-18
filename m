@@ -1,135 +1,119 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CC703290A5
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Jun 2026 06:33:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 155C033A702;
+	Thu, 18 Jun 2026 06:39:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781764407; cv=none; b=kXYzaDwJLFi7LrYG8LU4V8khrwYMI5k9JaUA83U626Js+M1vdcZ1vt07vsLMHLpJMZejqhofq+B/XIPFXuJT/vkVkuE35YOWPNiK1C6siyQgFrDe9XLz12+9wxLhSRVABE45DlYgbtfkwielj64mBfioGUS09z7e4ir5rk/ASv0=
+	t=1781764783; cv=none; b=nPBwC06asrDZztA/znC0Qgb2CdNUCGAp8lgFydxF58ULCPbFk3VawtH2J8RoR2L0q4S2fL5dIdcOO9e41MRCpzewLtyMvPU6E3tbr3z1MhhOukZFxzpXpIYGGIhfwfxka189ZiNxmvTceCP5sfyji3y1qWZAwyN/1/a+h2mALrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781764407; c=relaxed/simple;
-	bh=cl0Kc/B05k+HbszsSbmzQUNh8ZJ5DFzrvMKvTt36hOA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ageZ9uVE8NxuaPMF2dtuYmkuOT06WejkzGxEByiwJzD6yu8glTxbxdjPglA017+RBDubYgIUBZe7mfclGlRgiPuknQsZ+c67vYiXTD1+jAFPvQGQifZz/+iwXPBypFeEPOUCIMPL+XaVSl/sDXq+xhJHi0feLqWVy8WFy/CTb0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NpWxmvY3; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781764783; c=relaxed/simple;
+	bh=WVKYPs6mwbbo0IIgXseFHrnvYSBlOvJSny2gfO4hewk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MTv9YB0QQ6o7hmLCFiBeM5SlHmaADwyHFuE5csAqt3WH20qpSoCbh3XXLfNh5gJEnYHi0i01hZWcnr+MXSH+pDzGrr5+cxWg8gFCKl3GSMMEf23yAUQYlqojiTzLqlzcgF5zpZx4DbEHQKoR7dSpadJNXgp15omamXbDWi7PkLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DAEmYcMo; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NpWxmvY3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781764404;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fxEPUDJEb/E2TNBGBdy1DqfUWhcoKOjLbBcYOBP7BPY=;
-	b=NpWxmvY38xDrb5s73/nxxYyTbh4iLxNill4ykUtVV65D2+Xa+dG5EGtMi3qvZsD9nFUrEl
-	oMleBaXcrhublmnzZ4zkqrH5Ne2ePnU4fiDu4/sy7ctSOia9OydXF2MA14khcp9s0+TEOm
-	LiXPl+uTqtg0BsqOdIJM2wtj1lYs2X4=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-220-sZX7nJgjPVaSpqNJyJkT1w-1; Thu,
- 18 Jun 2026 02:33:20 -0400
-X-MC-Unique: sZX7nJgjPVaSpqNJyJkT1w-1
-X-Mimecast-MFC-AGG-ID: sZX7nJgjPVaSpqNJyJkT1w_1781764399
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 54C011955F0A;
-	Thu, 18 Jun 2026 06:33:18 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.32.28])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 589073000238;
-	Thu, 18 Jun 2026 06:33:13 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: mani@kernel.org
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Date: Thu, 18 Jun 2026 08:33:08 +0200
-Message-ID: <20260618063309.9536-1-jtornosm@redhat.com>
-In-Reply-To: <n3maiuu5cctivlal4fozysz37ir6ecdfws5u2xxw2neclsfdfj@nsvwvlh7b4j5>
-References: <n3maiuu5cctivlal4fozysz37ir6ecdfws5u2xxw2neclsfdfj@nsvwvlh7b4j5>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DAEmYcMo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781764782; x=1813300782;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WVKYPs6mwbbo0IIgXseFHrnvYSBlOvJSny2gfO4hewk=;
+  b=DAEmYcMoDAERW+hdnlzPQUHDZEn+31PGwWcd6KrG50NR8gwnfAhD5kpt
+   WBq7XUUmcVFYyv/tp7ZgCzqbXmTo6CB1+OJLj5zl7K+vzseZHxvJmyDsu
+   S0GVTVbXQruHW/MZUP/nacZX8OW82Y6ddu+UPOydJh3I7aQ+Agu2ZQc2L
+   N8v9sc2ZXHtU2qxE16AYf1TQVJdvt7NASPWw2zfg3gkyE5DSHV3m9cz15
+   mqHWGwFts1xkCvcGIYzAUaOxmB1JJp33NmOqYfPcrBSn1vwNY5QTXMml+
+   mu4QnX6xuJzGLW32ItQ+eLqxf8TTaF1Rl1nSaijpu5xz9joHD7eL9k66D
+   g==;
+X-CSE-ConnectionGUID: stJe1aY7RgepXJzN9Tgfwg==
+X-CSE-MsgGUID: 59GatvCnQ1mSHXj26JQvWg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11820"; a="93242643"
+X-IronPort-AV: E=Sophos;i="6.24,211,1774335600"; 
+   d="scan'208";a="93242643"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 23:39:41 -0700
+X-CSE-ConnectionGUID: YKG+zQSfS1uCRgDbLkOXtg==
+X-CSE-MsgGUID: sWsJuKwiQ6iXuUUEtMgDGw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,211,1774335600"; 
+   d="scan'208";a="271975355"
+Received: from ettammin-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.244.10])
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2026 23:39:39 -0700
+Date: Thu, 18 Jun 2026 09:39:37 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: Re: [PATCH v1 1/2] overflow: Allow to sum a few arguments at once
+Message-ID: <ajOSqWpYUhFTVqP-@ashevche-desk.local>
+References: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
+ <20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
+ <1e656f5798a9f2f36daa00aba60d2196b2456335.camel@sipsolutions.net>
+ <20260617223056.754bfcb8@pumpkin>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260617223056.754bfcb8@pumpkin>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Hi Mani,
+On Wed, Jun 17, 2026 at 10:30:56PM +0100, David Laight wrote:
+> On Wed, 17 Jun 2026 14:56:09 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Wed, 2026-06-17 at 13:12 +0200, Andy Shevchenko wrote:
+> > > Convert size_add() to take variadic argument, so we can simplify users
+> > > with using a macro only once.  
+> > 
+> > > +#define __size_add3(addend1, addend2, addend3, addend4, ...)			\
+> > > +	__size_add(__size_add2(addend1,  addend2, addend3), addend4)
+> > > +#define __size_add4(addend1, addend2, addend3, addend4, addend5, ...)		\
+> > > +	__size_add(__size_add3(addend1,  addend2, addend3, addend4), addend5)  
+> > 
+> > I guess it's not going to really matter, but it would generate fewer
+> > calls to have something more like
+> > 
+> > #define __size_add3(a1, a2, a3, a4) \
+> > 	size_add(size_add(a1, a2), size_add(a3, a4))
+> > #define __size_add4(a1, a2, a3, a4, a5) \
+> > 	size_add(size_add(a1, a2), size_add(a3, a4, a5))
+> > 
+> > as a binary tree, rather than only cutting one off every time. Not sure
+> > that results in hugely different code though - maybe fewer overflow
+> > checks?
 
-Let me clarify the exact scenario and where the reset is necessary:
+Good question. I'm also thinking that one-by-one may expand in too much of
+preprocessor code (haven't checked myself).
 
-* For the commented WiFi devices (WCN6855/WCN7850):
+> The binary tree stands a chance of executing less slowly because the leaf
+> adds can be executed in parallel.
+> Excluding the saturation checks (wtf is it called size_add() not
+> saturating_add() ?) (a + b) + (c + d) will usually execute faster than
+> ((a + b) + c) + d because the (a + b) and (c + d) can execute at the
+> same time; unfortunately gcc will always generate the latter.
 
-Standard VFIO passthrough flow (this works fine):
-  1. Unbind native driver (ath11k/ath12k/MHI)
-  2. Bind vfio-pci driver
-  3. Assign device to VM
-  4. VM boots, loads its own driver → device works perfectly
-  5. VM shuts down cleanly → device can be reassigned → works fine
+I'm confused. "unfortunately... the latter"? You meant "the former"?
 
-The problem occurs with unclean VM termination:
-  1. VM crashes or is force-terminated
-  2. VFIO tries to reset the device before reassignment
-  3. Without a working PCI reset method, reset fails
-  4. Device stuck in undefined state → cannot be reassigned to another VM
-  
-     Unbinding the driver again doesn't help because the device hardware
-     itself is in a bad state. From hypervisor:
-     $ lspci -vvv -s 0000:03:00.0
-        03:00.0 Network controller: Qualcomm Technologies, Inc (rev ff) (prog-if ff)
-            !!! Unknown header type 7f
-     And a full host power-cycle is necessary to recover.
-     
-* For the commented modem devices (SDX62/SDX65): 
+> > Although your version make it really completely equivalent to the
+> > nl80211.c code, clearly it doesn't matter if all the values are "good",
+> > and I believe the overflow behaviour means it doesn't matter for the
+> > overflow case either?
 
-Even worse because it fails during the first VM boot without proper reset
-capability, standard VFIO passthrough flow:
-  1. Unbind native driver (MHI)
-  2. Bind vfio-pci driver
-  3. Assign device to VM
-  4. VM boots, loads its own driver and crashes:
-     [   24.024165] mhi mhi0: Device failed to enter MHI Ready
-     [   24.024168] mhi mhi0: MHI did not enter READY state
-     
-     Unbind/rebind attempts fail:
-     [  352.643601] mhi mhi0: Requested to power ON
-     [  352.643611] mhi mhi0: Power on setup success
-     [  373.442954] mhi mhi0: Device failed to clear MHI Reset
-     [  373.442970] mhi mhi0: MHI did not enter READY state
-     And requires a full host power cycle to recover,
-     even outside of VFIO scenarios.
+Indeed. Whenever the value is saturated, the rest is just matter of sequential
+unlikely branches taken.
 
-* MHI Host driver's remove callback may handle clean software state
-teardown, but it doesn't provide a PCI reset capability that VFIO can
-invoke. VFIO needs a reset method registered in the PCI reset hierarchy
-(device_specific, pm, flr, bus, etc.). VFIO invokes this reset both during
-initial device binding (before the VM starts) and when reassigning the
-device between VMs - without a working reset method, the device cannot
-reach a clean state for initialization.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-
-
-I hope this clarifies the scenario better. Please let me know if I can
-provide more information or run any specific tests to help investigate this
-further.
-
-Thanks
-
-Best regards
-José Ignacio
 
