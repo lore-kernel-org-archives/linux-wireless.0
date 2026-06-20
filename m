@@ -1,89 +1,82 @@
-Received: from mail-m60231.netease.com (mail-m60231.netease.com [210.79.60.231])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1180B64A8D;
-	Sat, 20 Jun 2026 02:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.79.60.231
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54074134CF;
+	Sat, 20 Jun 2026 03:27:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781924212; cv=none; b=ZfKtaAJkJ+TYdUrO66HBDD6gk49dtkSixDKLGe0oH8UQlE3JaSRX0FF2BLpUVwj3JF/uqP+6D3L6gvXDNUNGbraUtGKbHHibRPcCyQBWuBcmS9DN/MvMfZjObp/NHjjlDc5C3yu1boOcjhq6f8DT7X1p8H/NSTa9cfIETjo7NZk=
+	t=1781926055; cv=none; b=qHVxESfjCZTG8j5k3DEPnMTn6j7B/wM/SFy6gvFzdzATccFb9EJ0HRSUORbbytvrZNTnq1eFsBK95YXWgPTQbzK6bNIIz7TA12N61uji5S7EGbfKhDsP6i5Tjl3IuSJv9h63KTBBSeDJybzfzcjecosc+NWov9h5rAoEV2cJU7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781924212; c=relaxed/simple;
-	bh=JNpBd+uZkP6DfCrlhTY/drlL03eMzz5KkGj4NbXGVJI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iAXRJMNGcQ5CURrcmimJuPr45bjfTdhckqFJouO9fCLfv8rZfIdzeWfPR38KsJ41zdqBB7MPvQ8/mQPizdkQR3QtucG66CI+1Tx2SGqrRD6PQZOABMt5jzQXKZWlsr3K2/85zhgZ3b2WRxtuyB6rmN9awB0XlkGcM0xNT2dgl+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=H8n47/0A; arc=none smtp.client-ip=210.79.60.231
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1781926055; c=relaxed/simple;
+	bh=E/5kuHeAYlfdj2TZPAiaTlgOOgVKilt3ryiOSyDwS9U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=isqJJWVf+8UUaiPb4MI291VslEjLNllH43chfWuF31U6sNQ8bYQsUdLxiL4uhIGV8rV6P3Tf12friR2vsZwao32d5sye77mpl13A/uOfUIocmD4DTO+14ugd0YKmeeuoJld9+hc6ZII35pKdmhCTEJetd2vOSF+e8+KiZBv9cU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hrklvlxj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="H8n47/0A"
-Received: from PC-202605011814.localdomain (unknown [223.112.146.162])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4314e50de;
-	Sat, 20 Jun 2026 10:56:37 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH wireless] wifi: rtlwifi: rtl8192du: check QoS TID before indexing tids
-Date: Sat, 20 Jun 2026 10:56:32 +0800
-Message-Id: <20260620025632.46206-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hrklvlxj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA4DC1F000E9;
+	Sat, 20 Jun 2026 03:27:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781926054;
+	bh=rW/RwYcFdOwQjj9zGaADk3mUcpZcjdLAWoDhbrPe84Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=HrklvlxjFZsY6i4qnuOfJjCIa2Z6wUU3qYVd+KraOjvx1KuIDfQVgM9fQAAqwjI3R
+	 JOOy9rfDqEkIbKSsmCUQ4aRFQvxjS4wZ63QFbNWSRQUSnzOGSqqFcD6asupf6TUKW6
+	 SJPRNDOYWN/CEEWUNl8Xqi/M7HZQMO6WshMVC7SZwhHLykoQlcRulzCPVKpRXlIkiU
+	 QrxN918GwPNyqfCS2ETlAlBW4XKMCWZAYH+ID72ikNqMyMaZOoH7veR11Wb1MrnPk5
+	 cqy0LSiiAsXmlE4Clly7zE1zjMb+KDivz79dtIOzEyWXfUv3gKxBmkt+TbYz4kbmeY
+	 1v3mVZBQFRGwQ==
+Date: Fri, 19 Jun 2026 20:27:33 -0700
+From: Kees Cook <kees@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v1 1/2] overflow: Allow to sum a few arguments at once
+Message-ID: <202606192025.CF68F2E@keescook>
+References: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
+ <20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
+ <202606182046.AE5F6A241@keescook>
+ <ajTlfuOFHXlA7xdu@ashevche-desk.local>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0a9ee2f574f803a1kunm08c4dea4e65b2
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGB8YVkwYHk1MS0sZQk5LSFYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=H8n47/0AWazikQVEYseH7wOscfM60hPCE0l7xvqUy6iVyAqg6DFz0fT5NPEOuUWvLn9tW+qBo/5R9GMDKWD42OlPZn/YdeEq8cG752Mnws48Pt/q/rwuYxgrvCoxJnzB/e/NLSL8IKGOsSZ1lBCfnyRHquw6S+z1zgWONT++0Tg=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
-	bh=1IWZ9O+Sl5aFiIfjp0uZas22aqensvgdoia6QJQRyjY=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ajTlfuOFHXlA7xdu@ashevche-desk.local>
 
-rtl92du_tx_fill_desc() uses ieee80211_get_tid() to read the QoS TID
-from the 802.11 header and then uses it as an index into
-sta_entry->tids[]. ieee80211_get_tid() returns the low 4-bit QoS TID
-value, so the result can be in the range 0..15.
+On Fri, Jun 19, 2026 at 09:45:18AM +0300, Andy Shevchenko wrote:
+> On Thu, Jun 18, 2026 at 08:47:34PM -0700, Kees Cook wrote:
+> > On Wed, Jun 17, 2026 at 01:12:36PM +0200, Andy Shevchenko wrote:
+> > > Convert size_add() to take variadic argument, so we can simplify users
+> > > with using a macro only once.
+> > 
+> > Oh, this is fun. I like it. :)
+> 
+> He-he :-)
+> 
+> ...
+> 
+> > > +#define __size_add4(addend1, addend2, addend3, addend4, addend5, ...)		\
+> > > +	__size_add(__size_add3(addend1,  addend2, addend3, addend4), addend5)
+> > 
+> > Is 4 the max seen in practice?
+> 
+> In patch 2 there are 5! In cover letter I also mentioned a new user
+> (there are actually three). And I remember seeing 3 somewhere else.
 
-rtlwifi only allocates MAX_TID_COUNT entries for sta_entry->tids[], and
-MAX_TID_COUNT is 9. A QoS TID greater than 8 therefore indexes past the
-aggregation state array. Keep the default RTL_AGG_STOP state for
-out-of-range TIDs, matching rtl92cu_tx_fill_desc().
+I feel like we should allow size_mul() to work this way too, though I
+don't find any users that would need it, so I guess just size_add()?
 
-This issue was detected by our static analysis tool and confirmed by
-manual audit. UBSAN validation for the same bug pattern reports an
-array-index-out-of-bounds access with index 10 for type
-'rtl_tid_data [9]'.
+I'm fine for this to go via whatever tree is first to use it:
 
-Fixes: 8321424134a4 ("wifi: rtlwifi: Add rtl8192du/trx.{c,h}")
-Cc: stable@vger.kernel.org
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192du/trx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Acked-by: Kees Cook <kees@kernel.org>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/trx.c
-index 743ce0cfffe6..c608c51f1b78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/trx.c
-@@ -106,7 +106,8 @@ void rtl92du_tx_fill_desc(struct ieee80211_hw *hw,
- 	if (sta) {
- 		sta_entry = (struct rtl_sta_info *)sta->drv_priv;
- 		tid = ieee80211_get_tid(hdr);
--		agg_state = sta_entry->tids[tid].agg.agg_state;
-+		if (tid < MAX_TID_COUNT)
-+			agg_state = sta_entry->tids[tid].agg.agg_state;
- 		ampdu_density = sta->deflink.ht_cap.ampdu_density;
- 	}
- 
+
 -- 
-2.34.1
-
+Kees Cook
