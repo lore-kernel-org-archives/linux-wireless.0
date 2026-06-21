@@ -1,70 +1,74 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1D21B142D
-	for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2026 09:35:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD32526D4DD
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2026 09:35:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782034551; cv=none; b=qcxl9VsZQ9QQ9g7xKqYKEADsFlGvDlwoYLucQGPUfz/ci7WaS1M/+ciLJF/sh9gXZx3ILjQBtJuYWarmc/lenrezqG7nnKQr556i3CHflHsCGKV+uMUn3dWQIeAoXw6iJSgHemSTnsrhGvFtCiXceViIIGOG+q9uyBQjs1PhPKk=
+	t=1782034553; cv=none; b=fH46YmHQscuBa2BtNEyuGn+WyY619Rj/cNZXBCUcSKa92/h+cvs8Io8KGQpTg4iyxevQPsEbANQhu2fq+aIRSnzXhp9ytz1Fo3AxtpN85IvW2udccDCtmBf7eTL2UFfm6ang+m+QuBKs3BYGMkrmoTMdVaWclt0Sz7+W6Oo0YjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782034551; c=relaxed/simple;
-	bh=kxlJ27RuML17of6OkCir3HZ8g90/kbn8TJZLwT7Ch/I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kRab6RlGrQ+iutCa2H7dTp9uRqPL7Wwr8D/sqjeY8EHcwrF9tRS6ho1U6gkmzUO7ZiiuuuRE+RtdoxfZuGH/RbP+P1tl2T4k1ATtbTKrfqsyfZkAmZz/JJYuS+piKhlFoClb6u3aWsPDtUynAcuLWUKHK9mO50Qb/g4jPv+i9pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=l8C/SGoe; arc=none smtp.client-ip=209.85.210.177
+	s=arc-20240116; t=1782034553; c=relaxed/simple;
+	bh=qqmQTmbfcoOQX/GWpDJx1gBR2flP9S/8tkKBIqf7Ozo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BuCoOMftCfL6Iq2fSlOLQuucWdnx/JBi71xQQU8EVikwQwtGeUE3FrPojh1PhDUWOfpbIZ7aQIj2AKj+vVxFocQrblHYY8K52+E0I3q7DLsR33bVo15iAsTJPOBxqQIIcStvHKidFbMxpkasN4PLbe85R1QMbOzjmm2amJSDYbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu; spf=pass smtp.mailfrom=asu.edu; dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b=UhWqZqX3; arc=none smtp.client-ip=209.85.210.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=asu.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=asu.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="l8C/SGoe"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-84536ecfc5bso3067366b3a.2
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2026 02:35:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=asu.edu header.i=@asu.edu header.b="UhWqZqX3"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-8453f568e84so3176602b3a.0
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Jun 2026 02:35:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=asu.edu; s=google; t=1782034549; x=1782639349; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=N5vc/NdjXesB9jkRNJ8XJ8hP5JNiEf0N2brRizf1Yl0=;
-        b=l8C/SGoelhR7+tlDRjYtCQB5qOIBZO6frI/mWpuMWRf5tNYV9v7FVJDT0oG1ifdGRN
-         ASNKMGxpK28W6/mp6za67OkBfQ7HP0Q/IahSNsrOUy430PuW+A6rWTLNEoOMrYvfdJ6a
-         nFM9lKbl/PhEK9GUoRBljpz+R5LajfUc5m7CJ6t54leXebsAU1KZlA/IH0KBkhS/gdYB
-         b19X70IfQF7nJy5lRrk0uCg3fTmQ1NOpi5VQEh/J0N6Oy4mw087wBOC/OfKxbjZP9YEi
-         51pE2sgItEaguRUinUoU7Mj153IxvV6RKtLva7/wbhj/bQX6Sfc2bvqMvztN6KedyMMo
-         7S5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782034549; x=1782639349;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=asu.edu; s=google; t=1782034551; x=1782639351; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=N5vc/NdjXesB9jkRNJ8XJ8hP5JNiEf0N2brRizf1Yl0=;
-        b=B16Y//UZeeoeNXn4mYE0AYbelePd8kfWQoQoNP8CW/zUqNquz4maCdYMYzz3XKYUmf
-         uVMdRluBdg6PXCD3qlpQe7pLRWmgLK0yHQ7aYx2nKTJGsMZRNYQ3Uj1NSsdENOY0z9qW
-         8JdLWzuz9+qRcpv8D3OCDP+1T5wliCa1oHlMzNn+qOv/XdVK+BwbfwH9nz56rlpvAqry
-         Hh3CtOBP9YNZyhR6XEfWjb1TdJ9xNfebSpyzbpPqgnpulbdlJIBxlXCyNZbM5fDFMY5k
-         EGEhyf4NUUVXVQg3byKoftyFzr/23oaZ/jB8iSV8GV9FwFanKwecG7FqyxPzAT4r+i00
-         VxQA==
-X-Forwarded-Encrypted: i=1; AFNElJ8oC6PABH32cE9XNVn7P3X9ZjN1MxrXR4vT1rcvOkOruoypqbc+XHybs036b2HxBlsfW6OJURXOcvVK+ONeUA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4y/9QeSPtFEnX6/8E1gnqdeeKYb9u0xLu4g/5vsG5vmwhKIfa
-	ig48zS/PBJQLYbTgHSUDDLiMCgdorEyi43XXuS2FtyH9pGwM0KKqVLsBYRB6QnnzgA==
-X-Gm-Gg: AfdE7cnz9myhR141btzLhEKVvJxte23+Dz+pHQrfTG1XvtpYirvhCkrulLzE6gTVJli
-	p88M8Uykgk1GGwZlk8mNru8g7CQLLoYgkrba8S/dNU5bEhTDwnsyOTZD3vlKanzmG9z2vn8Mowb
-	SMVkA0Nflnl7gumvRTxQsXdXZTlRpwjEIERWiIahEnw6djWOrJDliuvPmPuIxu5bi8sbpkpUVka
-	CnAz4T2dKnQLv2VrFOELF1cDwms4wQHau6m/qg8p1t0uWrIzrlbK7sy7fA2RMOI7P+QpWzjB9YF
-	CSC12x/x4qMYuNsS0xb75hxQENJfZGfKSxBkLdwQ4UzikT1As02MzSe1rasPIr+aoWhr97lZE8b
-	6Vyvv0Heb1XKOij7pOcEs3BUy62nXmPF24YqOp+pONa/tyZnwiUt5E279Cq4bZqUKtICJqw==
-X-Received: by 2002:a05:6a00:2a0c:b0:842:5d9b:d590 with SMTP id d2e1a72fcca58-84550887d3cmr12196574b3a.30.1782034549300;
-        Sun, 21 Jun 2026 02:35:49 -0700 (PDT)
+        bh=3hGBmDovjgqqL0Zw35Gq17sjpjRPB0ygbzBv1yQLFbM=;
+        b=UhWqZqX3m1pYR3Y892CTVWqz89q7NWuG2BfEimQlr+2w33iXaY4X9jNRCvUYEglblw
+         7mfJ0IVf+IOgcBKjnH+wiffDDtzuWasJuUWY7Zx2loS3iWSyCXr7C2bmQv2ig/Y/pGB0
+         zE8wKTFX55lTFaZlqc6Z7OJ6eM9Wac4NsOG6XG04zDPeEy/j2vGo5XdTLfVh9S/T0oZv
+         k1pa7A7dHKZMx/k0vN6lV7fntUNe5dJ0toRthT7RV+OxPPJgwGTX6BL8qBqYQ225gjXY
+         8jm67IOIneAL6QYOhBWjArb7V7GeAWE5yKJ44doLj+2ESNoOrRrqq1G1Ho2BNuku8wkt
+         ephQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782034551; x=1782639351;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=3hGBmDovjgqqL0Zw35Gq17sjpjRPB0ygbzBv1yQLFbM=;
+        b=DOSuAZbWX0xwXwmTSTfrOlbsnRnUrFtu2MGln83SuozEfpIyLdT+BruMdT0+iK/yqS
+         nTHVsXPhSYANwQkJuktIMgOGOCQ8gmf/OBQc7Z08jAYnVDAz9PiomfdwkfYqbGN1voF2
+         se9W0eVywX6OOMNDLrjsOrlEXB8qPE7kv47aIiEdp6co/gXTqgtQjgEyfASoxBlT/WRv
+         1/A3coi8Xt/Rwepy/x2qVJOaoisy0ZUp6yMszmkr39EY+af7HksZsL3OvZ6oNilOvLLh
+         cXBhziYkhT3iI94KZt0aRpEglvQFIWZkPiWvrdKrr95KArR+mZNa1NlQl/8RWa15kN7w
+         tc/g==
+X-Forwarded-Encrypted: i=1; AFNElJ/gGqRMXxZTcRi7PSQ6bFXGzGR1dBQDVuZz2dOoj5hKp7AlxKPhDStmsnCuYGy+SHDHP03AYIHTu+hQ6MMckw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxOaMiFx2/vN/iDNxAcwuWYOkV0UhZS95OhfxJY+cFtNC6gQvke
+	QsceDS+9tUdteJX7XnrzWwz1c5FACtyBRgosSbQ2hL/KgpFrAifp4cWJweSMvapS7A==
+X-Gm-Gg: AfdE7cmhs/u5Nhn7JGyIDF3it9Kg0TdaSnbXzS4OqULvtXnY3wg82pRJ4R6k5eENwnz
+	SuvgXlvMkMyADy7k0Pp4Zjy6AgI1ndpg8QMgDZebvqWwD1kj0rS1Dk1nUZYKLSG4JQuPSYtXwND
+	ciAehNIvDWx3ARO6UhUTWkRam7mikPuXbuZMFdXm87eEx//l/20dtlvdMc+xxDPtvZ9QO/qgO3d
+	TOinOcCYksAmP0oRsRCC83dPQRULWRkFEE8bPugKEePt03IeXdmwMGC1goxNCOfnULVp7SEHv5r
+	xIHL5uMbzrr36aRPs3MzHGMiB280DvdwvIvJoJA3q3Ujp47CFq+YCo3jGYQsBZcTqAgAQh/D434
+	Djex+8jgfORhAkD6T5DUZpJJI/z7R3NQDWXQmCauChJljXKaZppiMECOenE1GioyNDjGD2A==
+X-Received: by 2002:a05:6a00:c8b:b0:845:1715:3b1b with SMTP id d2e1a72fcca58-8455616a5a6mr10463647b3a.35.1782034551120;
+        Sun, 21 Jun 2026 02:35:51 -0700 (PDT)
 Received: from p1.. ([73.140.210.38])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84564ecad79sm4619364b3a.50.2026.06.21.02.35.48
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84564ecad79sm4619364b3a.50.2026.06.21.02.35.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Jun 2026 02:35:49 -0700 (PDT)
+        Sun, 21 Jun 2026 02:35:50 -0700 (PDT)
 From: Xiang Mei <xmei5@asu.edu>
 To: johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org
 Cc: Weiming Shi <bestswngs@gmail.com>,
 	linux-kernel@vger.kernel.org,
 	Xiang Mei <xmei5@asu.edu>
-Subject: [PATCH wireless 1/2] wifi: mac80211: fix unsol_bcast_probe_resp double free on alloc failure
-Date: Sun, 21 Jun 2026 02:35:31 -0700
-Message-ID: <20260621093532.884188-1-xmei5@asu.edu>
+Subject: [PATCH wireless 2/2] wifi: mac80211: fix fils_discovery double free on alloc failure
+Date: Sun, 21 Jun 2026 02:35:32 -0700
+Message-ID: <20260621093532.884188-2-xmei5@asu.edu>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260621093532.884188-1-xmei5@asu.edu>
+References: <20260621093532.884188-1-xmei5@asu.edu>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -73,21 +77,21 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ieee80211_set_unsol_bcast_probe_resp() calls kfree_rcu() on the old
-template before allocating the replacement. If the kzalloc() then fails,
-it returns -ENOMEM while link->u.ap.unsol_bcast_probe_resp still points
-at the object already queued for freeing. A later update or AP teardown
-re-queues that same rcu_head; the second free is caught by KASAN when the
-RCU sheaf is processed in softirq:
+ieee80211_set_fils_discovery() calls kfree_rcu() on the old template
+before allocating the replacement. If the kzalloc() then fails, it
+returns -ENOMEM while link->u.ap.fils_discovery still points at the
+object already queued for freeing. A later update or AP teardown
+(ieee80211_stop_ap()) re-queues that same rcu_head; the second free is
+caught by KASAN when the RCU sheaf is processed in softirq:
 
   BUG: KASAN: double-free in rcu_free_sheaf (mm/slub.c:5850)
-  Free of addr ffff88800d06f300 by task exploit/145
+  Free of addr ffff88800c065280 by task swapper/0/0
    ...
    __rcu_free_sheaf_prepare (mm/slub.c:2634 mm/slub.c:2940)
    rcu_free_sheaf (mm/slub.c:5850)
    rcu_core (kernel/rcu/tree.c:2617 kernel/rcu/tree.c:2869)
    handle_softirqs (kernel/softirq.c:622)
-  The buggy address belongs to the cache kmalloc-128 of size 128
+  The buggy address belongs to the cache kmalloc-96 of size 96
 
 Queue the old object for kfree_rcu() only after the new one is published,
 matching ieee80211_set_probe_resp() and ieee80211_set_s1g_short_beacon().
@@ -97,30 +101,31 @@ Reported-by: Weiming Shi <bestswngs@gmail.com>
 Assisted-by: Claude:claude-opus-4-8
 Signed-off-by: Xiang Mei <xmei5@asu.edu>
 ---
- net/mac80211/cfg.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f9ee9947a..e926bced6 100644
+index e926bced6..0bc10136b 100644
 --- a/net/mac80211/cfg.c
 +++ b/net/mac80211/cfg.c
-@@ -1178,8 +1178,6 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	link_conf->unsol_bcast_probe_resp_interval = params->interval;
+@@ -1145,9 +1145,6 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
+ 	fd->max_interval = params->max_interval;
  
- 	old = sdata_dereference(link->u.ap.unsol_bcast_probe_resp, sdata);
+ 	old = sdata_dereference(link->u.ap.fils_discovery, sdata);
 -	if (old)
 -		kfree_rcu(old, rcu_head);
- 
+-
  	if (params->tmpl && params->tmpl_len) {
  		new = kzalloc(sizeof(*new) + params->tmpl_len, GFP_KERNEL);
-@@ -1192,6 +1190,9 @@ ieee80211_set_unsol_bcast_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		RCU_INIT_POINTER(link->u.ap.unsol_bcast_probe_resp, NULL);
+ 		if (!new)
+@@ -1159,6 +1156,9 @@ static int ieee80211_set_fils_discovery(struct ieee80211_sub_if_data *sdata,
+ 		RCU_INIT_POINTER(link->u.ap.fils_discovery, NULL);
  	}
  
 +	if (old)
 +		kfree_rcu(old, rcu_head);
 +
- 	*changed |= BSS_CHANGED_UNSOL_BCAST_PROBE_RESP;
+ 	*changed |= BSS_CHANGED_FILS_DISCOVERY;
  	return 0;
  }
 -- 
