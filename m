@@ -1,103 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 339C3379EC1;
-	Mon, 22 Jun 2026 11:07:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55CAC28CF6F;
+	Mon, 22 Jun 2026 11:16:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782126470; cv=none; b=R2vXo4oQJRHtrdnmmT27gSh/ofPI/bcUMfHqX1Rkz7MCfJwYp7CUuwTn3+vXw83B4lJxKdAeJa6Av1FYR8JGkMy/Xxre8C7K6kDbf4qCpwUmoWF8maq4vqfcODRFoM+C+srCRHBmE7PkCranq/+TOrzBcQVzeNmT06YiSLqOyvQ=
+	t=1782127003; cv=none; b=SlUD8Ny+FLawe9ctxYV+3Sy2kSz6dqbVjsOvniDy+VyJUl0OunD+X63D7WfLaCCqI2FlZY6ixYw12vqkyNHhQbxVoAaOA2rxfkbaGR9FSWIsLp+W5tSxeYxDLv57gSaw84GktqO+2Aqhs7sqIYarHOrXHOKCl3wCh4BPiAIJaUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782126470; c=relaxed/simple;
-	bh=+sUs033RCzPqgG4D0WKAQvJtW9ijh/ekE1r3w+eHkus=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=YyMKDVowgKx2w04a9V1/puIZyCy2rTeg4AmjZdG3syj2BDUi/NpFYNnVoLQafFdJKlZl+rr8k8IToQPAM/BOAE9g4st4mXXHJ5fj1vDCrk6ghSUZ+ADhfkgpnIA7GvsEVQBkeQm4ZMUk7qYwQsGPGy/k/5jN5YstnSHoCb35LNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P+fhj6gv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782127003; c=relaxed/simple;
+	bh=kBKzLAJCRkq24se/DjbI2sU50SBkMjoVg6kw+7bEAaE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=iJC7ZNSEuqz4l1kwIM6d0DwCP4cx3Wu2dM7rriwOPSySV2F8gSCOvbPBEDjW9WbzsSVZtk6lT0CCOEBu4RyzPydV+/OKLTzJZPdiwpHbvJL48r/KpbTuh38bR+VemrOVcJBCvlZ6P8GNzBCHYktPplB6fURjeqJSnaWnnBAAe1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=ROuDB9Zs; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P+fhj6gv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324221F000E9;
-	Mon, 22 Jun 2026 11:07:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782126468;
-	bh=wgVMVHa2k0yY+2/n/waYjplt/Z+GwM/2A/ABlT/a+Gk=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date;
-	b=P+fhj6gv5NDqwQfr40nDoCFoUhpzVIJ9PXgrDr0Orq1OXGvPaifaOJqMs8rMqIv8j
-	 4QV0TvJWYvdBGBf/IPIs5ZlLfOpILEiCJSHUSLqYTUeP2EzWffaNTy5jwhT6tUtNym
-	 8o9fPL4/1oNiFX/7dcFihCb9TT4I+Odqq/LjLd+AbgXPQcEF4ssL5iOIB9DiQQuW+8
-	 34YGR/nHma7q+4yCl1DuYdkr8uRJiLfu0jWeqS0gmB+fQazKMwWsdJeDvxPLn3MmzS
-	 CL+/b1kKuTbKR+r38RJ+y6CjShiijqNcnhwcmz5ZCDLZvu2jZmyZqI8LN7wzXQ23Wc
-	 iLlcyx1t4IfnA==
-From: Thomas Gleixner <tglx@kernel.org>
-To: David Woodhouse <dwmw2@infradead.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Miroslav Lichvar <mlichvar@redhat.com>, John Stultz
- <jstultz@google.com>, Stephen Boyd <sboyd@kernel.org>, Anna-Maria Behnsen
- <anna-maria@linutronix.de>, Frederic Weisbecker <frederic@kernel.org>,
- thomas.weissschuh@linutronix.de, Arthur Kiyanovski <akiyano@amazon.com>,
- Rodolfo Giometti <giometti@enneenne.com>, Vincent Donnefort
- <vdonnefort@google.com>, Marc Zyngier <maz@kernel.org>, Oliver Upton
- <oliver.upton@linux.dev>, kvmarm@lists.linux.dev, Oliver Upton
- <oupton@kernel.org>, Richard Cochran <richardcochran@gmail.com>,
- netdev@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, Miri Korenblit
- <miriam.rachel.korenblit@intel.com>, Johannes Berg
- <johannes.berg@intel.com>, Jacob Keller <jacob.e.keller@intel.com>, Tony
- Nguyen <anthony.l.nguyen@intel.com>, Saeed Mahameed <saeedm@nvidia.com>,
- Peter Hilber <peter.hilber@oss.qualcomm.com>, "Michael S. Tsirkin"
- <mst@redhat.com>, virtualization@lists.linux.dev,
- linux-wireless@vger.kernel.org, linux-sound@vger.kernel.org, Vadim
- Fedorenko <vadim.fedorenko@linux.dev>
-Subject: Re: [patch V2 18/25] timekeeping: Prepare for cross timestamps on
- arbitrary clock IDs
-In-Reply-To: <b296182e2e2c1ed2fe1c4879fd6f12d67a7ad22f.camel@infradead.org>
-References: <20260529193435.921555544@kernel.org>
- <20260529195557.846634842@kernel.org>
- <b296182e2e2c1ed2fe1c4879fd6f12d67a7ad22f.camel@infradead.org>
-Date: Mon, 22 Jun 2026 13:07:46 +0200
-Message-ID: <87se6eltod.ffs@fw13>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="ROuDB9Zs"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=kBKzLAJCRkq24se/DjbI2sU50SBkMjoVg6kw+7bEAaE=;
+	t=1782127001; x=1783336601; b=ROuDB9Zs8EOcvQdskOjsHporwBVKStmJBAbzwalO0+zr4jn
+	WvAF4+nSRzxwoaa1o8HM4LA3jFm/FuX2sDcYjimQimhfEdA9o9oUE5uHorTeHyJZQt1dYOR3gRj+I
+	IaUauSnFx3GusQXZHAHEoKDuip7flPU5lsUgq6nfn8FMyrVlO34TL0x5uegY2J6TWKQKI2Hm3W3hX
+	aCWM6XrvdJOhN5hv1gcOBigMWzZwgyJDtnXF73C/suDY7h5YBjqb7512b8If6jrVYnbuicPk/Mng3
+	OuiJSLGYG9Q1krqUtVX/uVzNOSD0+Zr+c47Zztwzzi/Y3n+An7bnDjyPEKs0/A7A==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wbcdi-0000000CWhV-2Z32;
+	Mon, 22 Jun 2026 13:16:30 +0200
+Message-ID: <54974e4298efd26a52c9c0e9ada88d57e8695a09.camel@sipsolutions.net>
+Subject: Re: [PATCH v1 1/2] overflow: Allow to sum a few arguments at once
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Kees Cook
+	 <kees@kernel.org>
+Cc: linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, "Gustavo A. R. Silva"
+ <gustavoars@kernel.org>
+Date: Mon, 22 Jun 2026 13:16:29 +0200
+In-Reply-To: <ajY5hg0f34C-iV3R@ashevche-desk.local>
+References: <20260617112250.2791461-1-andriy.shevchenko@linux.intel.com>
+	 <20260617112250.2791461-2-andriy.shevchenko@linux.intel.com>
+	 <202606182046.AE5F6A241@keescook> <ajTlfuOFHXlA7xdu@ashevche-desk.local>
+	 <202606192025.CF68F2E@keescook> <ajY5hg0f34C-iV3R@ashevche-desk.local>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+X-malware-bazaar: not-scanned
 
-On Mon, Jun 22 2026 at 09:55, David Woodhouse wrote:
-> On Fri, 2026-05-29 at 22:01 +0200, Thomas Gleixner wrote:
->> From: Thomas Gleixner <tglx@kernel.org>
->>=20
->> PTP device system crosstime stamps support only CLOCK_REALTIME, which is
->> meaningless for AUX clocks. The PTP core hands in the clock ID already, =
-so
->> prepare the core code to honor it.
->>=20
->> =C2=A0- Add a new sys_systime field to struct system_device_crosststamp =
-which
->> =C2=A0=C2=A0 aliases the sys_realtime field. Once all users are converted
->> =C2=A0=C2=A0 sys_realtime can be removed.
->>=20
->> =C2=A0- Prepare get_device_system_crosststamp() and the related code for=
- it by
->> =C2=A0=C2=A0 switching to sys_systime and providing the initial changes =
-to utilize
->> =C2=A0=C2=A0 different time keepers.
->>=20
->> No functional change intended.
->
-> We ended up with ktime_get_snapshot_id() also supporting CLOCK_BOOTTIME
-> and CLOCK_MONOTONIC_RAW, but not get_device_system_crosststamp().
-> Should we make that consistent?
+On Sat, 2026-06-20 at 09:56 +0300, Andy Shevchenko wrote:
+> Johannes, are you okay to take a new version (I assume the wish is to hav=
+e
+> the balanced additions)? If so, I will prepare one.
 
-Maybe. The BOOTTIME support is only there for that ARM64 hyper trace muck,
-but has no other relevance.
+Sure, I can take the patches, sounds good to me.
 
-MONORAW is there for the PTP EXTENDED IOCTL, but with PRECISE the
-snapshot already contains the raw value and you'd have to prevent the
-historical adjustment part for RAW. So I don't see the actual value, but
-I don't have a strong opinion either.
-
-Thanks,
-
-        tglx
-
-
-
+johannes
