@@ -1,47 +1,176 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f208.google.com (mail-oi1-f208.google.com [209.85.167.208])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E94A2D9EFB;
-	Mon, 22 Jun 2026 11:49:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EBF94086A
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2026 12:15:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.208
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782128980; cv=none; b=tGYNnPCb2WLIRYsNuQwwSe3E9mi022mtH4MW81SwX/1KB99EkZmuRlvy0mYDuuV3xlVUQY6rZVw5dUcYA5YPnwnwdRObwrLyQRogDbcjGyvIdDNqeCz/cOHrmuVSFgJG1aq9rcnn4TAkyEyDndmmT2dLz3Mh38nCTKgBtUlkP00=
+	t=1782130526; cv=none; b=YM++aSj3iA+xNuq0sKZFbSsT8ERKwfLmgIAI9KR/NmS60tbZsdGCLR7hoX741B0k4TnIGY5fhA3bQaJLfuIYBrv8KmvvgEGhFk2s4XKyQMFOvDiN5WGohUSVUMEEn558vYpP1TFcNHkF2/kFv43/7nVq8f5V+MozgAZyXpeb9zM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782128980; c=relaxed/simple;
-	bh=WqPNF1cxscolSasfFJVnJxbimxvRGyc6aiwQN9WKgCA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=S1u00lXHlnIlhItyt/FcMGxNnubJ9kTLuKUZMwmml5rBaSQ1Hd5Rsh2u7zAG5fsutxeA7FUq2Lt45t441qeMtmMOu5wjGOpvmD0cTgWyd7uTEupvjmnLN3mUsEjGquOGxNGhuVGfqb8iTNEt1gOv+hRHQy1RLXWaaezwDJ+Utgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; arc=none smtp.client-ip=45.145.95.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Authentication-Results: mail.toke.dk; dkim=none
-To: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org
-Cc: open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCHv2 ath-next] wifi: ath9k: mark static arrays as const
-In-Reply-To: <20260619175210.5348-1-rosenp@gmail.com>
-References: <20260619175210.5348-1-rosenp@gmail.com>
-Date: Mon, 22 Jun 2026 13:49:28 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <87se6eeqwn.fsf@toke.dk>
+	s=arc-20240116; t=1782130526; c=relaxed/simple;
+	bh=WKpGS9JSJbK0ZzMQsOn+ipFHr1d2DVPDrp1OyoJaLwY=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=C3an4KfJ+Xq7wkHs18K3BpxwBQ2u508ouFtExB0FR9FmcMeiMz0vIz7SMiNSqVdByNhbrbWF2hMduRCm8zxlv5Qik3UoEPcH1o5arGpeZJst8d3Hnyn5eb9aPldI3v1zjm5LnFjLQM6UDKfRjSrMZbHZD602MmCS/owp8Is6ylw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.208
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f208.google.com with SMTP id 5614622812f47-48b60638021so4340844b6e.1
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Jun 2026 05:15:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782130524; x=1782735324;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=oNgP9SBR5rvPWzeZce32iGMVrc3C61O1viJd6KKeyOs=;
+        b=Ubd1MeiV/OphS7W1AYNpYMoUcJ+YmeWELSl8DGtJmKj9AnAha2s9C4+wBIhm3s7PvT
+         Ke0414oaQ9E+bnJHwQuUwp++57p41Sx9rvlA8VadBKBpjDNqspspzN2wNZW4UP20Q4aE
+         NFa1jMu5mOY1M3LcDA+Lb7H2x/QXjuWF8oLoCTfwWyKG0WgGAjYEnUqEF8rbXbYtU/Yo
+         SrSFvLSRNbRjpl9nMYd+JQLh8M7dzK6ZnGYBJS1XZ5rM9eOCIA0LDIepju8S1EQx6yB/
+         R0bAiwLZaCSmnkGJBp3j7CdQvIeSaTJwkAZTanoluB4377l7/sZOsMNHAJjvv1UGYlBg
+         ROrA==
+X-Forwarded-Encrypted: i=1; AFNElJ/YUwCj7ONTSZ1uDCHiz0XkcXrqhTayl6DNzGCANjPshBf+qWkvLGh9yh1CasRKtFRxKWP3QWT1hSgLyU266w==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxy4u8pgLqWY4mdHrUvyN0UtKmeVTf5F/FveGEGYk7Y4FhzgQwn
+	j7hhGKZDIRthGgen30qJUiBQ/u3fuWTPDCKLwLxjUMQ7FYcN9DL12sVmPiy6UZQ63q4327ktNQi
+	MZMVwZMpLwWDejCLdx3Rwg/I5mHy2x7E8N2U7dngYjb1o+kk/NVYd9eyzqT8=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Received: by 2002:a05:6808:bd3:b0:487:4d3f:7364 with SMTP id
+ 5614622812f47-4896a79e01dmr12059027b6e.0.1782130523702; Mon, 22 Jun 2026
+ 05:15:23 -0700 (PDT)
+Date: Mon, 22 Jun 2026 05:15:23 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a39275b.5031c61f.34f2da.0002.GAE@google.com>
+Subject: [syzbot] [wireless?] divide error in mac80211_hwsim_write_tsf
+From: syzbot <syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Rosen Penev <rosenp@gmail.com> writes:
+Hello,
 
-> PN9Data is a read-only lookup table and is never modified.  Adding const
-> lets the compiler place it in .rodata and prevents accidental writes.
->
-> Use the same treatment for bits_per_symbol. It's not modified either.
->
-> Assisted-by: opencode:big-pickle
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+syzbot found the following issue on:
 
-Again, which actual bug are you fixing here?
+HEAD commit:    83f1454877cc Merge tag 'ext4_for_linus-7.2-rc1' of git://g..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=17956aae580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=8deb4438448ed47a
+dashboard link: https://syzkaller.appspot.com/bug?extid=21629c14aa749636db9d
+compiler:       Debian clang version 22.1.6 (++20260514074242+fc4aad7b5db3-1~exp1~20260514074407.73), Debian LLD 22.1.6
 
--Toke
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image (non-bootable): https://storage.googleapis.com/syzbot-assets/d900f083ada3/non_bootable_disk-83f14548.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/06b66919e887/vmlinux-83f14548.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/3dedd791b7cd/bzImage-83f14548.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com
+
+Oops: divide error: 0000 [#1] SMP KASAN NOPTI
+CPU: 0 UID: 0 PID: 5321 Comm: syz.0.0 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:mac80211_hwsim_write_tsf+0x3a3/0x590 drivers/net/wireless/virtual/mac80211_hwsim_main.c:1628
+Code: 81 c4 e8 49 00 00 4c 89 e0 48 c1 e8 03 42 80 3c 30 00 74 08 4c 89 e7 e8 1b bb 22 fb 48 8b 34 24 41 03 34 24 66 b8 20 03 31 d2 <66> f7 f5 0f b7 d8 4d 8d 65 0a 49 83 c5 0d 4c 89 e0 48 c1 e8 03 42
+RSP: 0018:ffffc900037aedf0 EFLAGS: 00010246
+RAX: 1ffff110080a0320 RBX: 000000000000001c RCX: 0000000000100000
+RDX: 0000000000000000 RSI: 0000000005e6b00c RDI: 0000000000000230
+RBP: 0000000000000000 R08: 0000000000000003 R09: 0000000000000004
+R10: dffffc0000000000 R11: fffff520006f5dac R12: ffff888040547c08
+R13: ffff88803d7fadda R14: dffffc0000000000 R15: 0000000000000020
+FS:  00007f2f6aff66c0(0000) GS:ffff88808c852000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000200000002280 CR3: 0000000013282000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ mac80211_hwsim_tx_frame_no_nl+0x16b/0x1760 drivers/net/wireless/virtual/mac80211_hwsim_main.c:1902
+ mac80211_hwsim_tx+0x1784/0x2500 drivers/net/wireless/virtual/mac80211_hwsim_main.c:2261
+ drv_tx net/mac80211/driver-ops.h:38 [inline]
+ ieee80211_tx_frags+0x3df/0x890 net/mac80211/tx.c:1746
+ __ieee80211_tx+0x267/0x580 net/mac80211/tx.c:1801
+ ieee80211_tx+0x312/0x4b0 net/mac80211/tx.c:1984
+ ieee80211_monitor_start_xmit+0xb33/0x1280 net/mac80211/tx.c:2479
+ __netdev_start_xmit include/linux/netdevice.h:5387 [inline]
+ netdev_start_xmit include/linux/netdevice.h:5396 [inline]
+ xmit_one net/core/dev.c:3889 [inline]
+ dev_hard_start_xmit+0x2cd/0x830 net/core/dev.c:3905
+ __dev_queue_xmit+0x1435/0x37f0 net/core/dev.c:4872
+ packet_snd net/packet/af_packet.c:3082 [inline]
+ packet_sendmsg+0x3d95/0x5040 net/packet/af_packet.c:3114
+ sock_sendmsg_nosec net/socket.c:775 [inline]
+ __sock_sendmsg net/socket.c:790 [inline]
+ __sys_sendto+0x626/0x6c0 net/socket.c:2252
+ __do_sys_sendto net/socket.c:2259 [inline]
+ __se_sys_sendto net/socket.c:2255 [inline]
+ __x64_sys_sendto+0xde/0x100 net/socket.c:2255
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f2f6a19ce59
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f2f6aff5fe8 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
+RAX: ffffffffffffffda RBX: 00007f2f6a415fa0 RCX: 00007f2f6a19ce59
+RDX: 0000000000000026 RSI: 0000200000000640 RDI: 0000000000000007
+RBP: 00007f2f6a232e6f R08: 0000200000000380 R09: 0000000000000014
+R10: 0000000004000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f2f6a416038 R14: 00007f2f6a415fa0 R15: 00007ffff9cddab8
+ </TASK>
+Modules linked in:
+---[ end trace 0000000000000000 ]---
+RIP: 0010:mac80211_hwsim_write_tsf+0x3a3/0x590 drivers/net/wireless/virtual/mac80211_hwsim_main.c:1628
+Code: 81 c4 e8 49 00 00 4c 89 e0 48 c1 e8 03 42 80 3c 30 00 74 08 4c 89 e7 e8 1b bb 22 fb 48 8b 34 24 41 03 34 24 66 b8 20 03 31 d2 <66> f7 f5 0f b7 d8 4d 8d 65 0a 49 83 c5 0d 4c 89 e0 48 c1 e8 03 42
+RSP: 0018:ffffc900037aedf0 EFLAGS: 00010246
+RAX: 1ffff110080a0320 RBX: 000000000000001c RCX: 0000000000100000
+RDX: 0000000000000000 RSI: 0000000005e6b00c RDI: 0000000000000230
+RBP: 0000000000000000 R08: 0000000000000003 R09: 0000000000000004
+R10: dffffc0000000000 R11: fffff520006f5dac R12: ffff888040547c08
+R13: ffff88803d7fadda R14: dffffc0000000000 R15: 0000000000000020
+FS:  00007f2f6aff66c0(0000) GS:ffff88808c852000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000200000002280 CR3: 0000000013282000 CR4: 0000000000352ef0
+----------------
+Code disassembly (best guess):
+   0:	81 c4 e8 49 00 00    	add    $0x49e8,%esp
+   6:	4c 89 e0             	mov    %r12,%rax
+   9:	48 c1 e8 03          	shr    $0x3,%rax
+   d:	42 80 3c 30 00       	cmpb   $0x0,(%rax,%r14,1)
+  12:	74 08                	je     0x1c
+  14:	4c 89 e7             	mov    %r12,%rdi
+  17:	e8 1b bb 22 fb       	call   0xfb22bb37
+  1c:	48 8b 34 24          	mov    (%rsp),%rsi
+  20:	41 03 34 24          	add    (%r12),%esi
+  24:	66 b8 20 03          	mov    $0x320,%ax
+  28:	31 d2                	xor    %edx,%edx
+* 2a:	66 f7 f5             	div    %bp <-- trapping instruction
+  2d:	0f b7 d8             	movzwl %ax,%ebx
+  30:	4d 8d 65 0a          	lea    0xa(%r13),%r12
+  34:	49 83 c5 0d          	add    $0xd,%r13
+  38:	4c 89 e0             	mov    %r12,%rax
+  3b:	48 c1 e8 03          	shr    $0x3,%rax
+  3f:	42                   	rex.X
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
