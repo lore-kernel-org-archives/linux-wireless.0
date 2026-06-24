@@ -1,138 +1,102 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19283388382
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2026 08:33:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A5E2ED870;
+	Wed, 24 Jun 2026 08:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782290008; cv=none; b=Npe89fnQv7MUDnLcMEFKDw4n9SdTXEUtzjz4EB3IgcPy02sLdpOaGRe38DrfQB8kccDcsfVDWBV/LqMh/HDNKIIUOQQ0hPTy5DCXWLgbinxe4cWGUh+0lK/ElVu0uEeYIz3OrRnlWx5L3xnpoiFwvqYJ38uV+pDlJOab7SY1hHI=
+	t=1782290664; cv=none; b=G+yL96o00aUUrTwhVMmceP6cN7ACIb3slqsd2evEWdQjkZGD8R2dIjYvF8CwdR7k2NceKs+4swdSHxVv3CT14HmkdrJd7GyxkIZiEYcwLtgcFABxW9tJCUszXLqWbDZFsN4zGArafovM/W4sQKtnnMKSuUgJRYrL1+rDNE9pMso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782290008; c=relaxed/simple;
-	bh=BR2OXalzh0Di7uLslOZDITGTZsESQpM6moTCztzlMHQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pnlxe1pgT8epBCgDjRzmrvFTkBNecqWGqQwWLAYTPzdgwQPLJ/xkxIh1sPuqtiCXzFZhvzCpy2HC/qhCqvlS/U18/kRQLGeGaj65/m3A4KwF63f4Cdjf9i1rMIhiJkMxpzFYnFZ2NGytYmW51lb/rs+Od47+U0GSgbYkUPME8LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=OHrfbIAj; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Ftc5y3iR; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1782290664; c=relaxed/simple;
+	bh=GiLBcw8TCw+pVIQKZkGejqL1bTdwhOul8NVSKDP3Lx8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Rq83CeKe+ilo0DC9U4DIuFWZxrBFEe9/EsN6PdNkPFmInUEBgK/HEv0HZeFCEKycUxeiEPXCEJDvkWsHv8s8np3jo6dPY2tuy+6Q6ap9uTwJrqmm8k5KfvvJSzHmP5nO1+zr93V3E53qrcK+Hn6AD/CdOdBF3G5s8LschQatqgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=kzQ+1fdn; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="OHrfbIAj";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Ftc5y3iR"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65O5txW11892330
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2026 08:33:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	r6YjZTAkz39e4oM5Dzx6I/b4gSdwG3hszZGxP8QBONc=; b=OHrfbIAjZis+NOpc
-	cIJGBoUUmUTti+/3dMthJMg4N57NXnFOxvBTHRruHsgJlJH+oEpV68yJ7V2QjV1/
-	tsdmStuRxW6XCVw0g4KoYlUXpVXVgtIVtTmIxHWc8mudU+8jrx4nwQG0yNWeDgU/
-	LNSdf+erMORjMjf/UHyyWbyQmYb9W43XtJIw5fuyi3G5UoSK7mSLoWQlGKMD7MoZ
-	QCbK6PcVCKaFWiyhU1xqo8Q2VK18lOFg7YKe1IlzAIk7G16rGJOcc/n1yQ3bRH/T
-	btNPpPpR1o890uPr23G1n2zmEbjGgieyvKn/pFVaNXMqgR4lHth/0sDMIW1g9ns3
-	wqIWgw==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4f05bf99rq-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2026 08:33:26 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2c7edb8505dso1023915ad.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jun 2026 01:33:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1782290006; x=1782894806; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=r6YjZTAkz39e4oM5Dzx6I/b4gSdwG3hszZGxP8QBONc=;
-        b=Ftc5y3iRyp3MG5fKlPNpduE/76PoiqDbGbSJNzasF1+fErcYK8Y0oXRJQtkWUZy2Vu
-         98kStXJIb5xTyzx0ZzM/2VE8ggolwjb9IxDYMSx0eJrNNZRxRJMIIBRiQrD8VlaxLETM
-         Hq2Do6bfX7QQTgvFq1bSGBFKOUsQTOXQVTtdUgRa8iX+C/0qstNy7DljYqoEpOsgIiVN
-         Vat9dyTfKeUuAfUDacR0Vr+AorsR9sXGZC9zc4gzCsmbkQw1rlA37jyU6lcTK1BBox5I
-         Z3ySb4QWgXWcDdrUzZ9Pd9WogFXXgqM+yJvnzL6Z7c0S62qvPefrVqIXOL+4pxSFIFgR
-         kxuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782290006; x=1782894806;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=r6YjZTAkz39e4oM5Dzx6I/b4gSdwG3hszZGxP8QBONc=;
-        b=FJw5b+ROTJVJqIRAKk9Tk9bMySy5PrNYkVicMzjY1xkOkW/9M65/TYJfEfOsqBOrP9
-         Ni6Br7XsOWrOeUyWuiOk2INspCrN8e8YZl/CqQG3eyx7dojbN7YFRegnMosj0k/l00Xw
-         Bv7nSWFqKMcweAiQYcFscgO85F1XCxr8ZFBJxb520WYePtKyHqtAJ9bGOnacmr201hfi
-         qFoDt9u6GRGqeUwtsPk/7Rl0PtEjtMwnwI+9Uzz9MHcp/uge86WKpDuIkbJ+tyaO5qsH
-         hXS/uuTHyDDRJb6C1nr/elgrZMuxFDvIv1hgo9aVwuW0r6Q7ax+ZGr4ZDvlUhdc5jsbo
-         rZzA==
-X-Gm-Message-State: AOJu0YzvpcG/RTIGY64cbnBYsz+CDl/LRq1oVpnHcq6rg/bieI3+Sr7E
-	uTzKIP+9OoXcZoNz72rjdvx41oU59zzSVlmMB8GiE58EUHsYD3vXryqsYUfsQgZYXgdjS9boH80
-	euQWW9Guhgk4YGpSHkFAgZ9xPKpN7kGvxfYHH6cXsrUiQ1UrcwubxjHWk4vBzgVXG3GhH4w==
-X-Gm-Gg: AfdE7clelDjyR86oHnTpmbRWoXASXhq28pYx2TsIA1sX2SXxeDVbFUBTxhsXuOKtjUQ
-	w0tVTDUi24/8lOzxyL8J/cNFSbrq/Y86fMvvGDxtL0Y45ogaEfWc2fxfivWJUcx7Y3U7xRTBWrj
-	J14C1Irrv84PAG7MCkEs0J+BPCiCtKMI8GEypp8OPe20cYiIM4GuB5AYK1ztaLEQlYwEWRvjXc0
-	1vmyQ56qMIYOttYlGdx0/OYeZhfQVjerMOA/YaIsIIHxTErJgb36RouX45dfGL9d3vZdZo8w9Ni
-	ebb/bug0beD8W/OGCuegbUn+4rf7gmf/vZYmbejEJj9/GlLmZbj5L6JsLqBmt3L5IjHN6qfSAEU
-	zqO8mhXRUUwJPb+dt+akjKtYqieOx/w/ABpruvdkZj2to4ammeLn55ihU2b81hDY=
-X-Received: by 2002:a17:903:4b08:b0:2c7:ebfb:6176 with SMTP id d9443c01a7336-2c7ebfb6545mr5504775ad.16.1782290005699;
-        Wed, 24 Jun 2026 01:33:25 -0700 (PDT)
-X-Received: by 2002:a17:903:4b08:b0:2c7:ebfb:6176 with SMTP id d9443c01a7336-2c7ebfb6545mr5504305ad.16.1782290004930;
-        Wed, 24 Jun 2026 01:33:24 -0700 (PDT)
-Received: from [192.168.106.30] ([157.50.13.229])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c7c1ac80b1sm46483995ad.73.2026.06.24.01.33.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Jun 2026 01:33:24 -0700 (PDT)
-Message-ID: <18d19f3f-f6b3-4dec-bff9-ae3dbb8dff07@oss.qualcomm.com>
-Date: Wed, 24 Jun 2026 14:03:19 +0530
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="kzQ+1fdn"
+Received: from DESKTOP-SUEFNF9.taila7e912.ts.net (unknown [58.241.16.34])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 43926e916;
+	Wed, 24 Jun 2026 16:44:07 +0800 (GMT+08:00)
+From: Dawei Feng <dawei.feng@seu.edu.cn>
+To: miriam.rachel.korenblit@intel.com
+Cc: tglx@kernel.org,
+	mingo@kernel.org,
+	jiasheng@iscas.ac.cn,
+	kees@kernel.org,
+	johannes.berg@intel.com,
+	error27@gmail.com,
+	emmanuel.grumbach@intel.com,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	zilin@seu.edu.cn,
+	Dawei Feng <dawei.feng@seu.edu.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH wireless] wifi: iwlwifi: dvm: fix memory leak in iwl_op_mode_dvm_start()
+Date: Wed, 24 Jun 2026 16:44:04 +0800
+Message-Id: <20260624084404.570703-1-dawei.feng@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next] wifi: ath12k: use %u for unsigned variables in
- QMI debug logs
-To: Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-References: <20260623-qmi-debug-log-v1-1-79471aa8b898@oss.qualcomm.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260623-qmi-debug-log-v1-1-79471aa8b898@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=X8Bi7mTe c=1 sm=1 tr=0 ts=6a3b9656 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=DysFi5wBN3dAxe50r5uYmQ==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=tGGASSKubhSInVnLuO8A:9 a=QEXdDO2ut3YA:10
- a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-GUID: r-NmQRGK7EW-naeEcws6HP-1Yy5MDt-d
-X-Proofpoint-ORIG-GUID: r-NmQRGK7EW-naeEcws6HP-1Yy5MDt-d
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjI0MDA3MCBTYWx0ZWRfX1g5DTeOKmQe+
- CfGir8Bw1wiHnIV6hxVPYq390+E7Va5upW78SX6iLlGDBwFRBm5HZsBRfr1RHesVQIhZhxra8rx
- CWJeLfpvNavYMMMryHXMRRUukAz0ey4=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjI0MDA3MCBTYWx0ZWRfX+guOaRkLIQOC
- JafaSUeumwoThy7hoYc5RXkuK7qPPb8swyFHqdBW7uziPhA0qF4qFPkBprzv6LbJtjp8nWbxaWl
- 1XV2yuHM2Lzbw03osKcLQiTwz7nIP9O747OPeMIN00NJDHY/KiiiIpn1xJCEHkA+mhf6j1CWQ6N
- CGyffrxfGhOEgZ3XDYDpUNf+tHmMFkRDtXUJdMUd7Vn3xPRF6cy7QBJOLfA+BVX6wRjh3FqE4Gs
- ilWvgjW9rmmuq54aMAQ91y1G0dGAQ5TSague/6U6poPi7xBPR9xJ0wsPLw6ZTjkhRT7VTrk5Se2
- gwNahI/a5NcuSHk+Dbqj58cnwgcGFT3XLzsj6okCaCmDNyKPucAiEIvMjk8qOnCqj+FpiiqspcR
- /WYEj9kV4Uhig3363wkXvrw8YVG0aZcpk7LEiAsURJHRtwh3HrWyip3of+IkEAS7z948pYIxcsm
- og3Bvxr3h1bXXxX2GGg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-24_02,2026-06-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 suspectscore=0 phishscore=0 bulkscore=0 malwarescore=0
- adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2606240070
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9ef8cd079903a2kunm5ff92ad636308
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSE8YVhhJQ0sfSkxLTE5CGlYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSEpPSE
+	xVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=kzQ+1fdnsm3AFFJ6Gl8toa4l6PtX+AkmQQI6hqWRy24LXBPElgAMf81sZW1/B8kKd0eLAS99z/Xwh6bj6a2YM5/yRUfyZU4KCavFNaEyh0I1yx8/6t0ypKnC+VrM43lOtgH0kGdCHCVrf7tWVcodWnxmuIih4exPFKq0B5EyFjI=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=YjFfP6DtapMx5m8xVLPsWef0pIE5jMQeuP0d1YNaFjE=;
+	h=date:mime-version:subject:message-id:from;
 
-On 6/23/2026 9:34 AM, Raj Kumar Bhagat wrote:
-> Replace incorrect %d format specifiers with %u for unsigned variables
-> in qmi.c debug messages. Also add missing trailing '\n' in log messages
-> to ensure proper termination. No functional change intended.
-> 
-> Tested-on: Compile tested only.
-> 
-> Signed-off-by: Raj Kumar Bhagat <raj.bhagat@oss.qualcomm.com>
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+In iwl_op_mode_dvm_start(), jumping to out_free_eeprom currently bypasses
+the out_free_eeprom_blob label. Consequently, error paths triggered after
+successfully parsing the EEPROM free priv->nvm_data but leak
+priv->eeprom_blob.
+
+Fix this memory leak by reordering the error handling labels so
+that out_free_eeprom falls through to out_free_eeprom_blob.
+
+The bug was first flagged by an experimental analysis tool we are
+developing for kernel memory-management bugs while analyzing
+v6.13-rc1. The tool is still under development and is not yet publicly
+available. Manual inspection confirms that the bug is still
+present in v7.1-rc6.
+
+An x86_64 allyesconfig build showed no new warnings. As we do not have
+supported Intel DVM wireless hardware and firmware to test with, no
+runtime testing was able to be performed.
+
+Fixes: 26a7ca9a71a3 ("iwlwifi: refactor EEPROM reading/parsing")
+Cc: stable@vger.kernel.org
+Signed-off-by: Dawei Feng <dawei.feng@seu.edu.cn>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index ca5a8140908a..6bd5b6d84b2a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1511,10 +1511,10 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	priv->workqueue = NULL;
+ out_uninit_drv:
+ 	iwl_uninit_drv(priv);
+-out_free_eeprom_blob:
+-	kfree(priv->eeprom_blob);
+ out_free_eeprom:
+ 	kfree(priv->nvm_data);
++out_free_eeprom_blob:
++	kfree(priv->eeprom_blob);
+ out_leave_trans:
+ 	iwl_trans_op_mode_leave(priv->trans);
+ out_free_hw:
+-- 
+2.34.1
+
