@@ -1,246 +1,405 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40BB22192F9;
-	Thu, 25 Jun 2026 13:47:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ECC133A9C1;
+	Thu, 25 Jun 2026 14:10:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782395233; cv=none; b=SI7In7HyGZCTO8706QCqCX4cA30HSWwkclspGVhzF1lmt70gdvj6pBj3CVEzwjqguvpq5tG0Xn2mdmO415evO6PGgILvW+prrmebAFd0AMxuYO3mT/dIDQedjUeWLzQcSFw+OqpaQ+pAv2HBAg+iJXCK40+EZAR+M/ueqX53Xrg=
+	t=1782396631; cv=none; b=SsM5iswd06nAfYa6KcZeKMGMXMClYrynQBtEplqfKSuNC1X/OsGRGHLLxb4hVlKiapFsbHZAd4I4/7Tqu8GMPjZ95kq9bh2Wg7ftmQvgdSCmB/vlTHssIdh+44CdbmIaB8r3uY2fBBACMQCCnfqHxicWnH9dX4zjomeWSz4VrNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782395233; c=relaxed/simple;
-	bh=sUrOudAXU9Br8QRIcbTjpO5nSiOe9O7QbWrp03EBHQY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D2nKhp3NhTN3VTHvGKm4o+IgcyR00G5n4pIfijHm2CDWFk7hIWbFupBa1T9ybmQOB99pjhNPmBtB/d8yRuDQq0mIQXIeWWQ+3zLLKZXqGaQF+LBl9qJeCS4QJA/kiExFE75cBpetdMlDPl66Q02b89vlt5ZYq3pzICdXdLsU4dA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K/H+kk7M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782396631; c=relaxed/simple;
+	bh=ycC+GQix4zQ36UL1Ou2055qToVbPC0zOEtny3bFYU/c=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=R007zCAsRtkl8nSh9m+HkqAeuLzSbJEJaP1CEdK/yK4fQjJ8fzdWcuWr1nZ4g0UILiFkkNYvcyDPdgKBCH2HbJUIpeYTf2D2JYmTEezapGaAPHQkAvUjooc02gBT3db6ljUkNWrBYJcM20OIrSpMtsb+w6xJGLaVAvV82bppIN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dfg3lqIS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K/H+kk7M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32B801F00A3A;
-	Thu, 25 Jun 2026 13:47:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782395231;
-	bh=9NPVPzLEscImUoRdY5p2atD0bm47zYNmsCtx2fosl9o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=K/H+kk7MthuGsNEfqZX+0NpLwSxSB2ve+MSOzeYm1/fz1UksvGAbxJ83Zjz3ns77X
-	 6HX/4N7e1UuuitUfBmgSFd8xbuJhqew2TzB3EZfWbR0XlKVal/F69vk17OTflQNavQ
-	 RBIz8Q2dlR+5hDkj6Aun86vywlcpbqI4IazraZMHLbrKfhzujWUHBM7V8OGtqF7oHy
-	 nT18jckB2HY6skJLxkkl2o4fAYPjo25oQs0xG5lnK2Gdgl1c8+kuaGF5cvGx2+hRbq
-	 Cm17eH8lDLCzDpJWHzoVJeNWYqdwRLTFn13c3A+F6lQjZwSlyPp2P/9kqYCgK06FFA
-	 1Qjqa+J9IPUXA==
-Date: Thu, 25 Jun 2026 15:46:55 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org, 
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	ath12k@lists.infradead.org, mhi@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
-Message-ID: <mxarrodtocadpq3yu4nkbs6g7u5tzpk3vg5ot2tmlw442eg2hg@nlcdcinamlah>
-References: <20260623183115.1585273-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dfg3lqIS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0F51FC2BCF4;
+	Thu, 25 Jun 2026 14:10:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1782396631;
+	bh=ycC+GQix4zQ36UL1Ou2055qToVbPC0zOEtny3bFYU/c=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=Dfg3lqISRYsdB1QuAap/8IMQhqIk6dy4vFYBtJJRdUNINYPRItDtIWsmqMjS2VP5L
+	 egt9PpUiXqYddeFnD7hQveFHF4wQmg5xrRjuyuIRMej006U1UCQlCWTUKeWa+VJ1jR
+	 cdaz4xA3t2VXmqWEN7Og/s6kZCmk74hSs6Nx9pSA/I2FD6u3NvJfbO8H27hxlCxD8i
+	 0GJtyIGldKfhBHF+/qq3SZo4xztTay1QM+ZQSVxuGsO6Y0qTMrkMyLKptdCjiPNWAA
+	 CbYtz9lp5e5Cd9VCvTacFnw4oyRA3iXtFXjonT2CUFoGwroh0xtr4uwX2sNtMDXA7d
+	 dfnzTsvhzRlUA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3625CDB479;
+	Thu, 25 Jun 2026 14:10:30 +0000 (UTC)
+From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
+Date: Thu, 25 Jun 2026 18:10:06 +0400
+Subject: [PATCH 2/6] remoteproc: qcom: Add M0 BTSS secure PIL driver
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260623183115.1585273-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260625-ipq5018-bluetooth-v1-2-d999be0e04f7@outlook.com>
+References: <20260625-ipq5018-bluetooth-v1-0-d999be0e04f7@outlook.com>
+In-Reply-To: <20260625-ipq5018-bluetooth-v1-0-d999be0e04f7@outlook.com>
+To: Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulfh@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Johannes Berg <johannes@sipsolutions.net>, 
+ Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+ Marcel Holtmann <marcel@holtmann.org>, 
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+ Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
+ Rocky Liao <quic_rjliao@quicinc.com>, 
+ Saravana Kannan <saravanak@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
+ Heiner Kallweit <hkallweit1@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Simon Horman <horms@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>, 
+ Mathieu Poirier <mathieu.poirier@linaro.org>, 
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-mmc@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+ netdev@vger.kernel.org, linux-remoteproc@vger.kernel.org, 
+ George Moussalem <george.moussalem@outlook.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782396628; l=8999;
+ i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
+ bh=DZrXVK9colzil8YwnbWNpyUvIkVtTOuT3yHRPJJIldk=;
+ b=n725LM65DoAVovuOcG8uKJk15Whq6Z31EW4GDb8U1hdzvtIw+Rlvj/+vEjRLDxtR9pzzg8iGn
+ ntT1YRZwizbBdtz2xFBuXctxI3hwoJr0TEoXJuGlQva41nCV38yXvIu
+X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
+ pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
+X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
+ with auth_id=364
+X-Original-From: George Moussalem <george.moussalem@outlook.com>
+Reply-To: george.moussalem@outlook.com
 
-On Tue, Jun 23, 2026 at 08:31:15PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-> lack working reset methods for VFIO passthrough scenarios. These devices
-> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-> broken bus reset.
-> 
-> The problem manifests in VFIO passthrough scenarios:
-> 
-> - WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WiFi devices:
->   Normal VM operation works fine, including clean shutdown/reboot.
->   However, when the VM terminates uncleanly (crash, force-off), VFIO
->   attempts to reset the device before it can be assigned to another VM.
->   Without a working reset method, the device remains in an undefined state,
->   preventing reuse.
-> 
-> - SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
->   on first VM assignment without proper reset capability.
-> 
-> Add device-specific reset methods using BAR-space hardware reset registers
-> that exist in these devices:
-> 
-> - WCN6855/WCN7850 WiFi devices use SoC global reset via BAR0 (sequence from
->   ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
->   ath11k_mhi_set_mhictrl_reset()):
->   - Write/clear reset bit at offset 0x3008
->   - Wait for PCIe link recovery (up to 5 seconds)
->   - Clear MHI controller SYSERR status at offset 0x38
-> 
-> - SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
->   driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
->   - Write reset request to offset 0xb0
->   - Wait 2 seconds for reset completion
-> 
-> These are true hardware reset mechanisms (not power management or firmware
-> error recovery), providing proper device reset for VFIO scenarios.
-> 
-> Testing was performed on desktop platforms with M.2 WiFi and modem cards
-> using M.2-to-PCIe adapters, including extensive force-reset cycling to
-> verify stability.
-> 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
-> v10:
->   - Complete redesign based on maintainer feedback (Manivannan Sadhasivam,
->     Alex Williamson): use actual hardware reset registers from
->     device drivers instead of D3hot power cycling
-> v9: https://lore.kernel.org/all/20260612142638.1243895-1-jtornosm@redhat.com/
-> 
->  drivers/pci/quirks.c | 118 +++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 118 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 431c021d7414..8ad3f214e520 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4240,6 +4240,121 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->  	return 0;
->  }
->  
-> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET	0x3008
-> +#define QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
-> +#define QUALCOMM_WIFI_MHISTATUS			0x48
+From: George Moussalem <george.moussalem@outlook.com>
 
-This macro is unused.
+Add support to bring up the M0 core of the bluetooth subsystem found in
+the IPQ5018 SoC.
 
-> +#define QUALCOMM_WIFI_MHICTRL			0x38
-> +#define QUALCOMM_WIFI_MHICTRL_RESET_MASK	0x2
-> +
-> +/*
-> + * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
-> + * registers.
-> + */
-> +static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
-> +{
-> +	bool link_recovered = false;
-> +	unsigned long timeout;
-> +	void __iomem *bar;
-> +	u32 val;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar = pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +	val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-> +	iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +	ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +
-> +	msleep(10);
-> +
-> +	timeout = jiffies + msecs_to_jiffies(5000);
-> +	while (time_before(jiffies, timeout)) {
-> +		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> +		if (val != 0xffffffff) {
+The signed firmware loaded is authenticated by TrustZone. If successful,
+the M0 core boots the firmware and the peripheral is taken out of reset
+using a Secure Channel Manager call to TrustZone.
 
-s/0xffffffff/PCI_ERROR_RESPONSE
+Signed-off-by: George Moussalem <george.moussalem@outlook.com>
+---
+ drivers/remoteproc/Kconfig            |  12 ++
+ drivers/remoteproc/Makefile           |   1 +
+ drivers/remoteproc/qcom_m0_btss_pil.c | 261 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 274 insertions(+)
 
-> +			link_recovered = true;
-> +			break;
-> +		}
-> +		msleep(20);
-> +	}
-> +
-> +	if (!link_recovered) {
-> +		pci_err(pdev, "PCIe link failed to recover after reset\n");
-> +		goto out_restore;
-> +	}
-> +
-> +	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-> +	 * and thus need to set MHICTRL_RESET to clear SYSERR.
-> +	 */
-> +	iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
-> +	ioread32(bar + QUALCOMM_WIFI_MHICTRL);
-> +
-> +	msleep(10);
-> +
-> +out_restore:
-> +	pci_iounmap(pdev, bar);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +
-> +	return link_recovered ? 0 : -ETIMEDOUT;
-> +}
-> +
-> +#define MHI_SOC_RESET_REQ_OFFSET		0xb0
-> +#define MHI_SOC_RESET_REQ			BIT(0)
-> +
-> +/*
-> + * Qualcomm modem device-specific reset using MHI SoC reset via BAR0
-> + * register.
-> + */
-> +static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
-> +{
-> +	void __iomem *bar;
-> +	u16 cmd;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (pdev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-> +
-> +	bar = pci_iomap(pdev, 0, 0);
-> +	if (!bar) {
-> +		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +		return -ENODEV;
-> +	}
-> +
-> +	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
-> +	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
-> +
-> +	/* Be sure device reset has been executed */
-> +	msleep(2000);
-> +
-> +	pci_iounmap(pdev, bar);
-> +	pci_write_config_word(pdev, PCI_COMMAND, cmd);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -4255,6 +4370,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  		reset_chelsio_generic_dev },
->  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->  		reset_hinic_vf_dev },
-> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_wifi },  /* WCN6855 WiFi */
-> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_wifi },  /* WCN7850 WiFi */
-> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_modem }, /* SDX62/SDX65 modems */
-
-Not an issue and the existing entries are not sorted, but can you atleast keep
-these IDs sorted in ascending order?
-
-- Mani
+diff --git a/drivers/remoteproc/Kconfig b/drivers/remoteproc/Kconfig
+index c521c744e7db..6b52f78f1427 100644
+--- a/drivers/remoteproc/Kconfig
++++ b/drivers/remoteproc/Kconfig
+@@ -163,6 +163,18 @@ config PRU_REMOTEPROC
+ 	  processors on various TI SoCs. It's safe to say N here if you're
+ 	  not interested in the PRU or if you are unsure.
+ 
++config QCOM_M0_BTSS_PIL
++	tristate "Qualcomm M0 BTSS Peripheral Image Loader"
++	depends on OF && ARCH_QCOM
++	select QCOM_MDT_LOADER
++	select QCOM_RPROC_COMMON
++	select QCOM_SCM
++	help
++	  Say y here to support the Secure Peripheral Imager Loader for the
++	  Qualcomm Bluetooth Subsystem running on the M0 remote processor found
++	  in the IPQ5018 SoC. The M0 core is started and stopped using a
++	  Secure Channel Manager call to TrustZone.
++
+ config QCOM_PIL_INFO
+ 	tristate
+ 
+diff --git a/drivers/remoteproc/Makefile b/drivers/remoteproc/Makefile
+index 1c7598b8475d..df80faf8d0df 100644
+--- a/drivers/remoteproc/Makefile
++++ b/drivers/remoteproc/Makefile
+@@ -21,6 +21,7 @@ obj-$(CONFIG_DA8XX_REMOTEPROC)		+= da8xx_remoteproc.o
+ obj-$(CONFIG_KEYSTONE_REMOTEPROC)	+= keystone_remoteproc.o
+ obj-$(CONFIG_MESON_MX_AO_ARC_REMOTEPROC)+= meson_mx_ao_arc.o
+ obj-$(CONFIG_PRU_REMOTEPROC)		+= pru_rproc.o
++obj-$(CONFIG_QCOM_M0_BTSS_PIL)		+= qcom_m0_btss_pil.o
+ obj-$(CONFIG_QCOM_PIL_INFO)		+= qcom_pil_info.o
+ obj-$(CONFIG_QCOM_RPROC_COMMON)		+= qcom_common.o
+ obj-$(CONFIG_QCOM_Q6V5_COMMON)		+= qcom_q6v5.o
+diff --git a/drivers/remoteproc/qcom_m0_btss_pil.c b/drivers/remoteproc/qcom_m0_btss_pil.c
+new file mode 100644
+index 000000000000..7168e270e4d4
+--- /dev/null
++++ b/drivers/remoteproc/qcom_m0_btss_pil.c
+@@ -0,0 +1,261 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (c) 2026 The Linux Foundation. All rights reserved.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/elf.h>
++#include <linux/firmware/qcom/qcom_scm.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/of_reserved_mem.h>
++#include <linux/platform_device.h>
++#include <linux/reset.h>
++#include <linux/soc/qcom/mdt_loader.h>
++
++#include "qcom_common.h"
++
++#define BTSS_PAS_ID	0xc
++
++struct m0_btss {
++	struct device *dev;
++	phys_addr_t mem_phys;
++	phys_addr_t mem_reloc;
++	void __iomem *mem_region;
++	size_t mem_size;
++	struct reset_control *btss_reset;
++};
++
++static int m0_btss_start(struct rproc *rproc)
++{
++	int ret;
++
++	if (!qcom_scm_pas_supported(BTSS_PAS_ID)) {
++		dev_err(rproc->dev.parent,
++			"PAS is not available for peripheral: 0x%x\n",
++			BTSS_PAS_ID);
++		return -ENODEV;
++	}
++
++	ret = qcom_scm_pas_auth_and_reset(BTSS_PAS_ID);
++	if (ret) {
++		dev_err(rproc->dev.parent, "Failed to start rproc: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int m0_btss_stop(struct rproc *rproc)
++{
++	int ret;
++
++	if (rproc->state == RPROC_RUNNING || rproc->state == RPROC_CRASHED) {
++		ret = qcom_scm_pas_shutdown(BTSS_PAS_ID);
++		if (ret) {
++			dev_err(rproc->dev.parent, "Failed to stop rproc: %d\n",
++				ret);
++			return ret;
++		}
++
++		dev_info(rproc->dev.parent, "Successfully stopped rproc\n");
++	}
++
++	return 0;
++}
++
++static int m0_btss_load(struct rproc *rproc, const struct firmware *fw)
++{
++	struct m0_btss *desc = rproc->priv;
++	const struct elf32_phdr *phdrs;
++	const struct firmware *seg_fw;
++	const struct elf32_phdr *phdr;
++	const struct elf32_hdr *ehdr;
++	void __iomem *metadata;
++	size_t metadata_size;
++	int i, ret;
++
++	ehdr = (const struct elf32_hdr *)fw->data;
++	phdrs = (const struct elf32_phdr *)(ehdr + 1);
++
++	ret = request_firmware(&fw, rproc->firmware, rproc->dev.parent);
++	if (ret) {
++		dev_err(rproc->dev.parent, "Failed to request firmware: %d\n",
++			ret);
++		return ret;
++	}
++
++	metadata = qcom_mdt_read_metadata(fw, &metadata_size, rproc->firmware,
++					  rproc->dev.parent);
++	if (IS_ERR(metadata)) {
++		ret = PTR_ERR(metadata);
++		dev_err(rproc->dev.parent,
++			"Failed to read firmware metadata: %d\n", ret);
++		goto release_fw;
++	}
++
++	ret = qcom_scm_pas_init_image(BTSS_PAS_ID, metadata,
++				      metadata_size, NULL);
++	if (ret) {
++		dev_err(rproc->dev.parent, "PAS init image failed: %d\n", ret);
++		goto free_metadata;
++	}
++
++	for (i = 0; i < ehdr->e_phnum; i++) {
++		char *seg_name __free(kfree) = kstrdup(rproc->firmware,
++						       GFP_KERNEL);
++		if (!seg_name)
++			return -ENOMEM;
++
++		phdr = &phdrs[i];
++
++		/* Only process valid loadable data segments */
++		if (phdr->p_type != PT_LOAD || !phdr->p_memsz)
++			continue;
++
++		if (phdr->p_vaddr + phdr->p_filesz > desc->mem_size) {
++			dev_err(rproc->dev.parent,
++				"Segment data exceeds the reserved memory area!\n");
++			goto free_metadata;
++		}
++
++		/* Check if firmware is split across multiple segment files */
++		if (phdr->p_offset > fw->size ||
++		    phdr->p_offset + phdr->p_filesz > fw->size) {
++			sprintf(seg_name + strlen(seg_name) - 3, "b%02d", i);
++			ret = request_firmware(&seg_fw, seg_name,
++					       rproc->dev.parent);
++			if (ret) {
++				dev_err(rproc->dev.parent,
++					"Could not find split segment binary: %s\n",
++					seg_name);
++				goto free_metadata;
++			}
++
++			/*
++			 * Use the virtual instead of the physical address as
++			 * the offset
++			 */
++			memcpy_toio(desc->mem_region + phdr->p_vaddr,
++				    seg_fw->data, phdr->p_filesz);
++
++			release_firmware(seg_fw);
++		} else {
++			memcpy_toio(desc->mem_region + phdr->p_vaddr,
++				    fw->data + phdr->p_offset, phdr->p_filesz);
++		}
++	}
++
++	return 0;
++
++free_metadata:
++	kfree(metadata);
++release_fw:
++	release_firmware(fw);
++	return ret;
++}
++
++static const struct rproc_ops m0_btss_ops = {
++	.start = m0_btss_start,
++	.stop = m0_btss_stop,
++	.load = m0_btss_load,
++	.get_boot_addr = rproc_elf_get_boot_addr,
++};
++
++static int m0_btss_alloc_memory_region(struct m0_btss *desc)
++{
++	struct device *dev = desc->dev;
++	struct resource res;
++	int ret;
++
++	ret = of_reserved_mem_region_to_resource(dev->of_node, 0, &res);
++	if (ret) {
++		dev_err(dev, "unable to acquire memory-region resource\n");
++		return ret;
++	}
++
++	desc->mem_phys = res.start;
++	desc->mem_reloc = res.start;
++	desc->mem_size = resource_size(&res);
++	desc->mem_region = devm_ioremap(dev, desc->mem_phys, desc->mem_size);
++	if (!desc->mem_region) {
++		dev_err(dev, "unable to map memory region: %pR\n", &res);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static int m0_btss_pil_probe(struct platform_device *pdev)
++{
++	// struct reset_control *btss_reset;
++	struct device *dev = &pdev->dev;
++	const char *fw_name = NULL;
++	struct m0_btss *desc;
++	struct clk *lpo_clk;
++	struct rproc *rproc;
++	int ret;
++
++	ret = of_property_read_string(dev->of_node, "firmware-name",
++				      &fw_name);
++	if (ret < 0)
++		return ret;
++
++	rproc = devm_rproc_alloc(dev, "m0btss", &m0_btss_ops,
++				 fw_name, sizeof(*desc));
++	if (!rproc) {
++		dev_err(dev, "failed to allocate rproc\n");
++		return -ENOMEM;
++	}
++
++	desc = rproc->priv;
++	desc->dev = dev;
++
++	ret = m0_btss_alloc_memory_region(desc);
++	if (ret)
++		return ret;
++
++	lpo_clk = devm_clk_get_enabled(dev, "btss_lpo_clk");
++	if (IS_ERR(lpo_clk))
++		return dev_err_probe(dev, PTR_ERR(lpo_clk),
++				     "Failed to get lpo clock\n");
++
++	desc->btss_reset = devm_reset_control_get(dev, "btss_reset");
++	if (IS_ERR_OR_NULL(desc->btss_reset))
++		return dev_err_probe(dev, PTR_ERR(desc->btss_reset),
++				     "unable to acquire btss_reset\n");
++
++	ret = reset_control_deassert(desc->btss_reset);
++	if (ret)
++		return dev_err_probe(rproc->dev.parent, ret,
++				     "Failed to deassert reset\n");
++
++	rproc->auto_boot = false;
++	ret = devm_rproc_add(dev, rproc);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, rproc);
++
++	return 0;
++}
++
++static const struct of_device_id m0_btss_of_match[] = {
++	{ .compatible = "qcom,ipq5018-btss-pil" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, m0_btss_of_match);
++
++static struct platform_driver m0_btss_pil_driver = {
++	.probe = m0_btss_pil_probe,
++	.driver = {
++		.name = "qcom-m0-btss-pil",
++		.of_match_table = m0_btss_of_match,
++	},
++};
++
++module_platform_driver(m0_btss_pil_driver);
++
++MODULE_DESCRIPTION("Qualcomm M0 Bluetooth Subsystem Peripheral Image Loader");
++MODULE_LICENSE("GPL");
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.53.0
+
+
