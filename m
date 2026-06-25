@@ -1,65 +1,95 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C2B3C2B9C;
-	Thu, 25 Jun 2026 11:22:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B11C3DDDA8;
+	Thu, 25 Jun 2026 12:10:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782386538; cv=none; b=iclXSAMvIN1UH3VM5c+xS/iVgA1bBTms0rYz2aBbmpmdPOOLL95EtrS0UmFacrt/UmqUOSqlAODUv79Qy22Yjl1/gVmPYKEzI35Dn6jxdI6etW3Fs5q515OnkJcK46Slt1MKmDKmriYtyEEDWCPbO90gExi42332y2m4ue/wk0c=
+	t=1782389427; cv=none; b=pqjngWpotIaBCfjCPK6W3P4ZT94R63RQpbGXP7PEzThnqRA9olX8CoIc19tjRv5Mg+SE+CnBW5/q0GSdKD2fsR7SVLDkW17gMYwzK7Oe7IXS64nBcy4CMuVVpClND1UJWDSyyu9hUCOqT8DAttvOF186gigmrPMawSyV54w8TvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782386538; c=relaxed/simple;
-	bh=3MAxlbAg+83kx3PssMy/RSzbT4R3vIZ1wpn8AplK51Q=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=G+XycAemmDSWUmq14XbbF4fwLTCvSvDXl5oI0jw3Z8qCzz+2KyW95Wa06LbmGM3GUoie/j4bxVqjuJP5N/Ft9ZF5lnHY4kuTOtrCjglr1lKmwwyn4SFa/TGKhnTs2XNK9bSkgmthTqzpWWbVv91W4ahBbfqjc/MAYw4kHTJ3f00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LrjCy1My; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1782389427; c=relaxed/simple;
+	bh=aEqGl/t2oeE3z5GCNLJYJ3vk5L2f28hG2tdsN4d5BLI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=klJbIGnNZOzjkP2VE5/xFeWixqXYsDq/OCuB9W8J+B2h23SGFFqvABKYZbLdiAt/EaVYGZgao92OOXj9bxM6EgtPVQfHuhpR52j7u6IVyVEO5+vxELCAgd34NQ/3tOy7DLawT26aaqzAR6lPaOyTyjG2RNH9OEalP9ikv3SPOMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qS4jsola; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LrjCy1My"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=3MAxlbAg+83kx3PssMy/RSzbT4R3vIZ1wpn8AplK51Q=;
-	t=1782386536; x=1783596136; b=LrjCy1My/IfGdP5s//ELo8tlsb7pgdCKvBnXHQ59IYuwTq4
-	hHhaNNJ8/V5CXkanp62YcFLJdBq890y2U/F79DbE38rlFcU9RAlgPAYymEl1x6Sq6dfNJVwKC+jKJ
-	tXhMsCEW+LzRwFQ+JssBpMIcYsjCnzf7Zz5rzXlpuyk6MOdqiLXve4aaAACwEG8nmOqBJ8gdzSOFc
-	d9kDBlx6XR93X4pg+bIU7CN0V9D+gf4DrNBDe56IfqQRvRVf4omFFac/4X50d2j1kHwPOD3SmOA6p
-	WUeQf3AYF2LQDhrs+nIZxZqk0AJY740bn+AGrfnqbOiQ+BlbM1eMHcb3+UyZoraw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wci9n-00000001fk6-3b65;
-	Thu, 25 Jun 2026 13:22:08 +0200
-Message-ID: <d1db2391fe528c4e79b1afd9c80e49f44b948beb.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: cfg80211: replace BOOL_TO_STR macro with
- str_true_false()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Serhat Kumral <serhatkumral1@gmail.com>, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Date: Thu, 25 Jun 2026 13:22:07 +0200
-In-Reply-To: <20260624204938.15222-1-serhatkumral1@gmail.com> (sfid-20260624_225014_090719_0EFB4145)
-References: <20260624204938.15222-1-serhatkumral1@gmail.com>
-	 (sfid-20260624_225014_090719_0EFB4145)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qS4jsola"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 150BCC2BCB4;
+	Thu, 25 Jun 2026 12:10:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1782389427;
+	bh=aEqGl/t2oeE3z5GCNLJYJ3vk5L2f28hG2tdsN4d5BLI=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=qS4jsolariue/Qa5Yhu/dzHltsP3icGVPnQ4OcO2wQdkYLCDeC0SrPcTo/OawaO3u
+	 qFC5xGZVAsARGHikM+dk528euNhbeLaMwgoO4bOWLVN4VBzWp6KCI6faaFRSPtP7ML
+	 3zfN1q2i1E5RIZiRsvVOqd9CW5JK4syGKlMnuO92FuKDy/6P23cwF0xGoMPwjKw3BK
+	 8+mo+Z9vui1DDdbGuoa8P84GOWrva4CECt8pJo8VS06Uurkmf/gNY3i2YoBv7r/EOm
+	 5TrEZjd01D23FkSr9PfEhoXXPTpdRgBrq5UsUZMA+ajYSrm/fpBDslVnFWIbZmyG8O
+	 qNgaUp7O13KSw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BED9BCDB479;
+	Thu, 25 Jun 2026 12:10:26 +0000 (UTC)
+From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
+Subject: [PATCH 0/2] wifi: mt76: bound the device-reported EEPROM address
+Date: Thu, 25 Jun 2026 07:10:25 -0500
+Message-Id: <20260625-b4-disp-16f99062-v1-0-aee52ecf61b9@proton.me>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIALEaPWoC/x2MQQqAMAzAviI9W9iGVuZXxIOzVXuZsoEIsr87P
+ CaQvJAlqWQYmxeS3Jr1jBVs28B6LHEXVK4Mzjgy5HoMHbLmCy1t3leDhpkseQ5+CFCzK8mmz7+
+ c5lI+pfRdiGIAAAA=
+To: Lorenzo Bianconi <lorenzo@kernel.org>, 
+ Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>
+Cc: Sean Wang <sean.wang@mediatek.com>, linux-mediatek@lists.infradead.org, 
+ Shayne Chen <shayne.chen@mediatek.com>, linux-wireless@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1782389425; l=1450;
+ i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
+ bh=aEqGl/t2oeE3z5GCNLJYJ3vk5L2f28hG2tdsN4d5BLI=;
+ b=WbuVeuUOSSAzABLV05jlMQnSZpj/raKBFDPyhwD8be073heZMHbwiVoYI6fAQpTaqNsazavWJ
+ 23UyCJqyU2hAq4LnYOQK+5yYicaiaORXEMLHfn0uQiomcyovRq4UWmY
+X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
+ pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
+X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
+ auth_id=814
+X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
+Reply-To: hexlabsecurity@proton.me
 
-On Wed, 2026-06-24 at 23:49 +0300, Serhat Kumral wrote:
-> Remove the local BOOL_TO_STR macro and replace all its usages with
-> the kernel's str_true_false() helper from <linux/string_choices.h>.
->=20
-> No functional change intended.
->=20
+Both mt76 get_eeprom handlers copy a device-reported EFUSE block into
+dev->mt76.eeprom.data at an offset taken from the MCU response (res->addr /
+event->addr, a device-controlled __le32). They clamp the copy length but
+never the destination offset, so an adapter that reports an out-of-range
+address drives an out-of-bounds write past eeprom.data -- 16 bytes on mt7915,
+up to 1024 on mt7996. Both patches reject such an address before deriving the
+pointer; a device that echoes the requested in-bounds offset is unaffected.
 
-I believe this breaks trace-cmd reporting. Please check and resend
-indicating that you have.
+It is adapter-side only -- there is no unprivileged user path -- so this
+hardens against a malicious or compromised device, not a remote attacker.
 
-johannes
+An out-of-tree KASAN module that reproduces each handler's destination
+arithmetic faults the unpatched path (slab-out-of-bounds write past
+eeprom.data) and runs clean both with the bound and on an in-range control.
+
+---
+Bryam Vargas (2):
+      wifi: mt76: mt7915: bound the device EEPROM address before the EFUSE copy
+      wifi: mt76: mt7996: bound the device EEPROM address before the EFUSE copy
+
+ drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 11 +++++++++--
+ drivers/net/wireless/mediatek/mt76/mt7996/mcu.c |  9 ++++++++-
+ 2 files changed, 17 insertions(+), 3 deletions(-)
+---
+base-commit: 502d801f0ab03e4f32f9a33d203154ce84887921
+change-id: 20260625-b4-disp-16f99062-0dd6169db97b
+
+Best regards,
+-- 
+Bryam Vargas <hexlabsecurity@proton.me>
+
+
