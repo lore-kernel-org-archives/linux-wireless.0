@@ -1,51 +1,51 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3E9A2DB7A3
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 06:17:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B8BB27707
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 06:17:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782368237; cv=none; b=CMRXc8VI6e9mMUF+j7M799SMD4aWLoaHLCkWCKSghUhOQ84wTwQxHECYRWOYpE0l9XjzLUrfwmVUXfVL9T10PzBUl0S47pSTeamN2vaBiPnQXFnTGS/lhg60Ve31YGDQE+V128MeIiufUVsgTQmwbcz57n/umjrY1CtGNpJQxOg=
+	t=1782368243; cv=none; b=hY33uGcdtkKLszt0g80aW6wdSEhzvrzVKMfsCUANHolfno54L623LywHzs3VwRv0z+2KW8Dsh/lRwVAVhCA3I1Tr91nrXXvOm9M6K6PH72wD8VWV2tB92BULifs+j7hwfe1hf1p7C0Y8Jz508kSgm2NjFi4J7ZgOHhRCAPqCwDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782368237; c=relaxed/simple;
-	bh=0R7v/QpeqJDLhcUuiQQ5KNipxpWDi6pe1YhIxxlVf9M=;
+	s=arc-20240116; t=1782368243; c=relaxed/simple;
+	bh=D/B8T4pxyWcQrHvr+l1ppAexUUlyMRF+OGlPFW0o8To=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=J6hkTIef8lDkt9uNqOXQxdmCJD2kuYJaSG+wyOjcurvRqwsVtsKo5kX+Zb2GXWxLOd22Yf4SYXV69ND0YXVggxmRLeRzTGUgJoPXqvEtu68Bs8QK/fLy5PMkb/EsvRieD3RKWXZUKpLI9hcw5qY22IeUJWcK2YEjhzEBEL78+Vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=BexKKU1k; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=Xzh2LcmUQ2gdFlQ6smaOe5cAHo0O4iRim/7io7l/a/H8dEh+yUEvj2JtNQrtrEaWAaqdGYKEhbZ+TeH/rNoZ0nN34Wx97ee0335FDATv0HFc1oeFFxoZ64UdShPivLEb73hgmNAqLzE62DU25tM6KKX1nj2WAuDRMDcb0qnibAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=qklmls2D; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="BexKKU1k"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65P6HDLS0584462, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="qklmls2D"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65P6HKpcC584486, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1782368233; bh=nbrwoc8VDFhf7pRvM4ujbjByOcbF/mYqQVa5CPakxTc=;
+	t=1782368240; bh=xGoZrkDeGc/qKnsBTj9tKPDuABkJaIjJo3bmKSqxoTI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=BexKKU1kUo2Tc30tHxJITwdeYzmZp7eqcFnXT2wdQAo4a/4KbRXblxbxfXVJQ0tUl
-	 XHQ1nTNiloie/xNyBA0YKgclSalviN3jv14JAtapYZSBsRWlVrv4zSbdVsvqMSsXN6
-	 lUzRuXneCPiwneaCXd8mKUokLItbrIZa3+wEorzt4B1AlonJlYtvt+pa29PFiUCxKw
-	 JegOrXBpNlHwtSR6d/4ehJofFssR7jsvPhEkTdxeGQN2EuNnTpsjOnd7jlPqFv/hc7
-	 1a/2y7Nf0qB7Eykvzf1z9gOaJveAvuP8e9qiZpkToOMHSXMUOsG/tWrtLexq0j++mq
-	 Fu2/Lz1dYfLoQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65P6HDLS0584462
+	b=qklmls2D1htWZU8XHb672cX0a3GwpQe1FNnkJ4N/Z2rD1xHl1nWMX6f3ISVlc4XKQ
+	 Yt+2MJucGDk0n+GWdry3DGXW9OQ85ocSe0oOhyMbH0HthqkOh/9JuNt+2MpPBmn/04
+	 Pv50fL2Tiii8vq35y5sEweYv8BbfSlBBHCplP0DhOMFLqmP9GnxQKqHm4MNRY+8x3V
+	 oKRr4Emt5BQNUPG9Oa1wGINYXrjrSS6DrLgsXPxaQGlA6hLQJLba92zNEswA71N6n/
+	 6ATvbW8AenOH+AeuGs1PCxfYQqWghaqgmCRJm50Xh8roYP+1X4ALRNpm0QI4+lTTFs
+	 vX/HYKJ+WzLPw==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65P6HKpcC584486
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 14:17:13 +0800
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 14:17:20 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 25 Jun 2026 14:17:13 +0800
+ 15.2.2562.17; Thu, 25 Jun 2026 14:17:19 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
  (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Thu, 25 Jun 2026 14:17:13 +0800
+ Transport; Thu, 25 Jun 2026 14:17:19 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <gary.chang@realtek.com>, <timlee@realtek.com>,
 	<dian_syuan0116@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 07/10] wifi: rtw89: fw: fix link ID filling for LPS MLO common info
-Date: Thu, 25 Jun 2026 14:15:42 +0800
-Message-ID: <20260625061545.44808-8-pkshih@realtek.com>
+Subject: [PATCH rtw-next 08/10] wifi: rtw89: wow: use MLD address in WoWLAN ARP replies for MLO stations
+Date: Thu, 25 Jun 2026 14:15:43 +0800
+Message-ID: <20260625061545.44808-9-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260625061545.44808-1-pkshih@realtek.com>
 References: <20260625061545.44808-1-pkshih@realtek.com>
@@ -58,54 +58,41 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-The link ID field in H2C command of LPS MLO common info is incorrectly
-filled with the PHY index. Fix it with the target link ID.
+Currently, WoWLAN ARP replies for MLO stations use the link address in
+the ARP hardware address fields.
 
-Fixes: 20380a039ddd ("wifi: rtw89: phy: add H2C command to send detail RX gain and link parameters for PS mode")
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+As a result, peers may learn the link address from the ARP reply and
+use it as the destination address for subsequent traffic. Some APs may
+not forward frames addressed to the link address, causing connectivity
+issues.
+
+Use the MLD address instead when generating WoWLAN ARP replies so peers
+learn the correct address for MLO stations.
+
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
  drivers/net/wireless/realtek/rtw89/fw.c | 4 ++--
- drivers/net/wireless/realtek/rtw89/fw.h | 2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 342f95d41c02..4f5995f2cb13 100644
+index 4f5995f2cb13..5d335105b589 100644
 --- a/drivers/net/wireless/realtek/rtw89/fw.c
 +++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -3439,7 +3439,7 @@ int rtw89_fw_h2c_lps_ml_cmn_info_v1(struct rtw89_dev *rtwdev,
- 	h2c->rfe_type = efuse->rfe_type;
- 	h2c->rssi_main = U8_MAX;
+@@ -2967,9 +2967,9 @@ static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
+ 	arp_hdr->ar_pln = 4;
+ 	arp_hdr->ar_op = htons(ARPOP_REPLY);
  
--	memset(h2c->link_id, 0xfe, RTW89_BB_PS_LINK_BUF_MAX);
-+	memset(h2c->link_id, RTW89_BB_PS_LINK_ID_SKIP, RTW89_BB_PS_LINK_BUF_MAX);
+-	ether_addr_copy(arp_skb->sender_hw, rtwvif_link->mac_addr);
++	ether_addr_copy(arp_skb->sender_hw, rtwvif->mac_addr);
+ 	arp_skb->sender_ip = rtwvif->ip_addr;
+-	ether_addr_copy(arp_skb->target_hw, rtwvif_link->mac_addr);
++	ether_addr_copy(arp_skb->target_hw, rtwvif->mac_addr);
+ 	arp_skb->target_ip = rtwvif->ip_addr;
  
- 	rtw89_vif_for_each_link(rtwvif, rtwvif_link, link_id) {
- 		u8 phy_idx = rtwvif_link->phy_idx;
-@@ -3447,7 +3447,7 @@ int rtw89_fw_h2c_lps_ml_cmn_info_v1(struct rtw89_dev *rtwdev,
- 		bb = rtw89_get_bb_ctx(rtwdev, phy_idx);
- 		chan = rtw89_chan_get(rtwdev, rtwvif_link->chanctx_idx);
- 
--		h2c->link_id[phy_idx] = phy_idx;
-+		h2c->link_id[phy_idx] = link_id;
- 		h2c->central_ch[phy_idx] = chan->channel;
- 		h2c->pri_ch[phy_idx] = chan->primary_channel;
- 		h2c->band[phy_idx] = chan->band_type;
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index 20721d5209aa..5873301fc472 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -2053,6 +2053,8 @@ enum rtw89_bb_link_rx_gain_table_type {
- 	RTW89_BB_PS_LINK_RX_GAIN_TAB_MAX,
- };
- 
-+#define RTW89_BB_PS_LINK_ID_SKIP 0xfe
-+
- enum rtw89_bb_ps_link_buf_id {
- 	RTW89_BB_PS_LINK_BUF_0 = 0x00,
- 	RTW89_BB_PS_LINK_BUF_1 = 0x01,
+ 	return skb;
 -- 
 2.25.1
 
