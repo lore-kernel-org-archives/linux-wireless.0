@@ -1,102 +1,65 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ECCA3D332C
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 10:35:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C2B3C2B9C;
+	Thu, 25 Jun 2026 11:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782383726; cv=none; b=lCYo3cM9j4j5WVOYmFJtVnn0JkLvXMrxivrTWBLp01qItXhROSrEq6Qrtd8ymAzXM0GPjRdvaXPbujYg5572KQGQ28/amWi5cTOrARP1kPlcnndV6eB76NF1cbnXnBZ+spdMj+RMpIXTL3KtVB8t7jD/eGfosHcSZd+YZj4ilFo=
+	t=1782386538; cv=none; b=iclXSAMvIN1UH3VM5c+xS/iVgA1bBTms0rYz2aBbmpmdPOOLL95EtrS0UmFacrt/UmqUOSqlAODUv79Qy22Yjl1/gVmPYKEzI35Dn6jxdI6etW3Fs5q515OnkJcK46Slt1MKmDKmriYtyEEDWCPbO90gExi42332y2m4ue/wk0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782383726; c=relaxed/simple;
-	bh=Y3Miu2YhT7SrtUsYIL8AYGPh3SjyCfmCKsBa9nRtp8Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TplHvKjZ9EZ4+GcnbAsxKLQLXGaHUYAj8ppPTfoMP+R8PsgNgYxeCKeHKDFzyVQpdK4ehy2/COReurGTbUn0yEslvnzA9ueCRye3H7nLnpm+4PQERHicUnf1iDER6A9awJsmLTBbqXsRDqOqKDvrp5AJ8cKNOyjA9UT17nCf3u0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ihH3YPAF; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1782386538; c=relaxed/simple;
+	bh=3MAxlbAg+83kx3PssMy/RSzbT4R3vIZ1wpn8AplK51Q=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=G+XycAemmDSWUmq14XbbF4fwLTCvSvDXl5oI0jw3Z8qCzz+2KyW95Wa06LbmGM3GUoie/j4bxVqjuJP5N/Ft9ZF5lnHY4kuTOtrCjglr1lKmwwyn4SFa/TGKhnTs2XNK9bSkgmthTqzpWWbVv91W4ahBbfqjc/MAYw4kHTJ3f00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LrjCy1My; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ihH3YPAF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1782383724;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=r1RjNSxi6/DZ1slyVUbnnH4tQHsFe5xiJqc+dcxVOzE=;
-	b=ihH3YPAFHcWjnaE+katKXZLlAJXbFSU3x5fE91y7d5E4hCZLtsvkKEa8foC/IHkvxCeFiq
-	pIt12LMu+RBU9CcuopJoQpW/YskN7Y4gkOOTEChm/n6d4XuFnt3zdqTbkl4s4U6Ggom+iE
-	nH2pVeDLytDYXZRk7Jp3sg39Z5UCfQo=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-634-XJDlf0bfPs-KqjrzTaxxaQ-1; Thu,
- 25 Jun 2026 06:35:22 -0400
-X-MC-Unique: XJDlf0bfPs-KqjrzTaxxaQ-1
-X-Mimecast-MFC-AGG-ID: XJDlf0bfPs-KqjrzTaxxaQ_1782383721
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9E0931955F75;
-	Thu, 25 Jun 2026 10:35:20 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.32.60])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A052630003B6;
-	Thu, 25 Jun 2026 10:35:15 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: baochen.qiang@oss.qualcomm.com
-Cc: alex@shazbot.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	bhelgaas@google.com,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	mani@kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v10] Add device-specific reset for Qualcomm devices
-Date: Thu, 25 Jun 2026 12:35:14 +0200
-Message-ID: <20260625103514.602783-1-jtornosm@redhat.com>
-In-Reply-To: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
-References: <4cdfb71b-2ef8-4985-8294-c4a29e37faa3@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LrjCy1My"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=3MAxlbAg+83kx3PssMy/RSzbT4R3vIZ1wpn8AplK51Q=;
+	t=1782386536; x=1783596136; b=LrjCy1My/IfGdP5s//ELo8tlsb7pgdCKvBnXHQ59IYuwTq4
+	hHhaNNJ8/V5CXkanp62YcFLJdBq890y2U/F79DbE38rlFcU9RAlgPAYymEl1x6Sq6dfNJVwKC+jKJ
+	tXhMsCEW+LzRwFQ+JssBpMIcYsjCnzf7Zz5rzXlpuyk6MOdqiLXve4aaAACwEG8nmOqBJ8gdzSOFc
+	d9kDBlx6XR93X4pg+bIU7CN0V9D+gf4DrNBDe56IfqQRvRVf4omFFac/4X50d2j1kHwPOD3SmOA6p
+	WUeQf3AYF2LQDhrs+nIZxZqk0AJY740bn+AGrfnqbOiQ+BlbM1eMHcb3+UyZoraw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wci9n-00000001fk6-3b65;
+	Thu, 25 Jun 2026 13:22:08 +0200
+Message-ID: <d1db2391fe528c4e79b1afd9c80e49f44b948beb.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: cfg80211: replace BOOL_TO_STR macro with
+ str_true_false()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Serhat Kumral <serhatkumral1@gmail.com>, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Thu, 25 Jun 2026 13:22:07 +0200
+In-Reply-To: <20260624204938.15222-1-serhatkumral1@gmail.com> (sfid-20260624_225014_090719_0EFB4145)
+References: <20260624204938.15222-1-serhatkumral1@gmail.com>
+	 (sfid-20260624_225014_090719_0EFB4145)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+X-malware-bazaar: not-scanned
 
-Hello Baochen and Mani,
+On Wed, 2026-06-24 at 23:49 +0300, Serhat Kumral wrote:
+> Remove the local BOOL_TO_STR macro and replace all its usages with
+> the kernel's str_true_false() helper from <linux/string_choices.h>.
+>=20
+> No functional change intended.
+>=20
 
-> QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET is beyond the first 4K bar area hence requires MHI
-> wakeup before accessing, see [1]. the wakeup callback for WCN6855 is
-> ath11k_pci_bus_wake_up() which calls mhi_device_get_sync(). Not sure how this can be done
-> here. Maybe Mani can provide some hints?
+I believe this breaks trace-cmd reporting. Please check and resend
+indicating that you have.
 
-I've analyzed the driver code and see that ath11k_pci_power_down() calls
-ath11k_pci_force_wake() before sw_reset(). 
-I can add the same force_wake sequence to the WiFi quirk before accessing
-the reset register:
-
-/* Force wake before accessing registers beyond 4K boundary */
-iowrite32(1, bar + QUALCOMM_WIFI_PCIE_SOC_WAKE_PCIE_LOCAL_REG);  // 0x3004
-ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_WAKE_PCIE_LOCAL_REG);      // Flush
-msleep(5);
-
-With this addition, both WCN6855 (ath11k) and WCN7850 (ath12k) show successful
-reset and shutdown cycles in VFIO scenarios, same stability as without it.
-
-Do you consider this addition necessary, or is the current v10 implementation
-sufficient given that testing shows direct register access works without
-wakeup in VFIO scenarios (where no driver is loaded)?
-If you recommend including it, I can send v11 with the force_wake sequence
-added.
-
-Thanks
-
-Best regards
-Jose Ignacio
-
+johannes
