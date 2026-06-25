@@ -1,114 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from workdog.hb.i-no.de (unknown [37.17.237.91])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B1BC3DDDAE;
-	Thu, 25 Jun 2026 12:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C1DA3E0C57;
+	Thu, 25 Jun 2026 12:23:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.17.237.91
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782389427; cv=none; b=S1GW8GNSHicZLA0Pfkny3e3i+ZnIku1EYSe5lgmfCwoM6qvQNug8Mu8NslATyJmH0xQicyw2Qw8RC/XIknjJeHwirwtNcMRHGlZJVdWOfmt9oc4N9YlblqEqtL5HWf35+sX9Pcdekusoks8q+WTfnmir0ylwzRwh0xrhn8t4zCY=
+	t=1782390191; cv=none; b=eVXd9F7WV5lzZKKbN2TOj4puN0t706lPTWmLueDPb0LcvfJipDRwpvyAQM8fyzsA94RFa2U/54CTkNNfhLxEt1tA396WtHW82umDXBzicLSCHxjUL5nFRg8o1HZ+5GZWJjbHWt7Nflk02Iyj6KDC+6Q60NBpywwFUOXO6eM3dF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782389427; c=relaxed/simple;
-	bh=ba/68qyLW4RJgqhb23CSgIV/K9uiVqn6kZrVBreVKm4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=oti3YK4XycQWhOYldldlaSBkeASt1F7y7uHTf51imSJb8+Ok2rOUWjbWmCYkkTi/U4KpoALHkmew9pR8XG5STsss2nihdYGQBymvrbZRtjyMGFsAGI0pRDaUibWz3aUfMVywat+A5/maTlBZJImUSCTkk4RxmdyJ2s/hs/+GrB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcbDSo07; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcbDSo07"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4070FC2BCF4;
-	Thu, 25 Jun 2026 12:10:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1782389427;
-	bh=ba/68qyLW4RJgqhb23CSgIV/K9uiVqn6kZrVBreVKm4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=IcbDSo0759wPfaItgWUYu6iNa0PiJe8/f0a2fRkgIkghvRn4Ywa1cHiegqcS8TpMc
-	 ky6ARcjXOFGnGPLNXBVNQWK3Fo2OdUZpAvy+M5qu2AObGIrm32q9TZylhKsROnTQuZ
-	 lJrjCjM7qdFz3RSzbNNKIVavB1PyILN2en91Huyd/5C6OrNuBsBK2HPqU0pdHypCwr
-	 /8L4OAEjHOynA989XxMjJ6GWpVc2nB5cd/HRY6bnppfJE2ZTKQ6OQioPzQJ4ZrkCGo
-	 DEnvAT6tgW1Tf2+UV65ccsLYb/vfVapYUBR1Jo78X4T/dYATgpfD2KJINXpzaHwjqs
-	 lg7clX9MHMA6g==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 344BCCDE001;
-	Thu, 25 Jun 2026 12:10:27 +0000 (UTC)
-From: Bryam Vargas via B4 Relay <devnull+hexlabsecurity.proton.me@kernel.org>
-Date: Thu, 25 Jun 2026 07:10:27 -0500
-Subject: [PATCH 2/2] wifi: mt76: mt7996: bound the device EEPROM address
- before the EFUSE copy
+	s=arc-20240116; t=1782390191; c=relaxed/simple;
+	bh=bCCHjqTQ4kBBj6wQWvP+FH6UGzsEZRIFRGdEfKn9Enk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=X+O1ka524fpQBFePl51GG4/Sgl02fsu8244Gzyk4nLKB+NUNv8dNEMx3gwglTS6uTXU919bpTfi3BiTaLW7/bucCfOeOGhSqNsszPkbsRxywC7ltsWxOB5eyaO9FHwm9CLOy5bad39thNDlh6bOCOd6zfJfgbtR0W8upZHFyaJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=schwarzvogel.de; spf=fail smtp.mailfrom=i-no.de; arc=none smtp.client-ip=37.17.237.91
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=schwarzvogel.de
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=i-no.de
+Received: from klausman by workdog.hb.i-no.de with local (Exim 4.99.4 2 (workog))
+	id 1wcidp-000000028Me-3Pbr;
+	Thu, 25 Jun 2026 13:53:09 +0200
+From: Tobias Klausmann <klausman@schwarzvogel.de>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tobias Klausmann <klausman@schwarzvogel.de>
+Subject: [PATCH wireless-next] wifi: iwlwifi: mvm: demote "Unhandled alg" warning to debug
+Date: Thu, 25 Jun 2026 13:53:00 +0200
+Message-ID: <20260625115300.508794-1-klausman@schwarzvogel.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260625-b4-disp-16f99062-v1-2-aee52ecf61b9@proton.me>
-References: <20260625-b4-disp-16f99062-v1-0-aee52ecf61b9@proton.me>
-In-Reply-To: <20260625-b4-disp-16f99062-v1-0-aee52ecf61b9@proton.me>
-To: Lorenzo Bianconi <lorenzo@kernel.org>, 
- Ryder Lee <ryder.lee@mediatek.com>, Felix Fietkau <nbd@nbd.name>
-Cc: Sean Wang <sean.wang@mediatek.com>, linux-mediatek@lists.infradead.org, 
- Shayne Chen <shayne.chen@mediatek.com>, linux-wireless@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1782389425; l=1841;
- i=hexlabsecurity@proton.me; s=proton; h=from:subject:message-id;
- bh=5P3fKrvZnuhhzy5SyS2bn1gs3Kjjy/aad3X2rpiBcW8=;
- b=TzCsJWAssrI7MlgIxRUv7fUA8WIpBL8zgXK9SEJ+kpD7XCKVFah0X2W0VMmAPNTcyBz8sGKgd
- EwFEZjQZrSUA/ZEhUDno/MD/fCtQkyxLt0J5Z8GlzaSOiITTVCGO6/4
-X-Developer-Key: i=hexlabsecurity@proton.me; a=ed25519;
- pk=dmppBMZNLLoPzxHi9l8tZDzEZUunPbgsYqIZYXeUrL0=
-X-Endpoint-Received: by B4 Relay for hexlabsecurity@proton.me/proton with
- auth_id=814
-X-Original-From: Bryam Vargas <hexlabsecurity@proton.me>
-Reply-To: hexlabsecurity@proton.me
+Content-Transfer-Encoding: 8bit
+Sender: Tobias Klausmann <klausman@i-no.de>
 
-From: Bryam Vargas <hexlabsecurity@proton.me>
+The RX crypto paths emit an IWL_WARN "Unhandled alg" whenever a frame
+arrives that the firmware did not decrypt. This is expected and benign
+(e.g. multicast frames received before the GTK is installed), is not
+actionable, and floods the kernel log.
 
-mt7996_mcu_get_eeprom() derives the destination of the EFUSE/EXT block
-copy from the address reported by the MCU response (event->addr, a
-device-controlled __le32) and clamps only the copy length, never the
-destination offset into dev->mt76.eeprom.data. A malicious or
-malfunctioning device can report an arbitrary address and drive an
-out-of-bounds write of up to MT7996_EXT_EEPROM_BLOCK_SIZE bytes past
-eeprom.data.
+Keep the diagnostic but move it from IWL_WARN to the driver's existing
+debug facility under the IWL_DL_DROP class, so it is silent by default
+and can be re-enabled at runtime via the debug_level bitmask. The
+multi-queue path uses IWL_DEBUG_DROP_LIMIT, which provides the same
+rate limiting the open-coded net_ratelimit() check did.
 
-Reject a response whose address would place the copy outside eeprom.data
-before deriving the destination pointer. Devices that echo the requested
-in-bounds offset are unaffected.
-
-Fixes: 98686cd21624 ("wifi: mt76: mt7996: add driver for MediaTek Wi-Fi 7 (802.11be) devices")
-Cc: stable@vger.kernel.org
-Signed-off-by: Bryam Vargas <hexlabsecurity@proton.me>
+Signed-off-by: Tobias Klausmann <klausman@schwarzvogel.de>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mcu.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 5 +++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-index f119f023bcd5..01c9adbca68b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
-@@ -4345,11 +4345,18 @@ int mt7996_mcu_get_eeprom(struct mt7996_dev *dev, u32 offset, u8 *buf, u32 buf_l
- 	event = (struct mt7996_mcu_eeprom_access_event *)skb->data;
- 	if (event->valid) {
- 		u32 ret_len = le32_to_cpu(event->eeprom.ext_eeprom.data_len);
-+		u32 block = mode == EEPROM_MODE_EXT ? MT7996_EXT_EEPROM_BLOCK_SIZE :
-+						      MT7996_EEPROM_BLOCK_SIZE;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index d0c0faae0122..8b037e52eae3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -190,7 +190,8 @@ static u32 iwl_mvm_set_mac80211_rx_flag(struct iwl_mvm *mvm,
+ 	default:
+ 		/* Expected in monitor (not having the keys) */
+ 		if (!mvm->monitor_on)
+-			IWL_WARN(mvm, "Unhandled alg: 0x%x\n", rx_pkt_status);
++			IWL_DEBUG_DROP(mvm, "Unhandled alg: 0x%x\n",
++				       rx_pkt_status);
+ 	}
  
- 		addr = le32_to_cpu(event->addr);
+ 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 7f0b4f5daa21..4eded44a104e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -504,8 +504,9 @@ static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		 * Also drop un-decrypted frames in monitor mode.
+ 		 */
+ 		if (!is_multicast_ether_addr(hdr->addr1) &&
+-		    !mvm->monitor_on && net_ratelimit())
+-			IWL_WARN(mvm, "Unhandled alg: 0x%x\n", status);
++		    !mvm->monitor_on)
++			IWL_DEBUG_DROP_LIMIT(mvm, "Unhandled alg: 0x%x\n",
++					     status);
+ 	}
  
--		if (!buf)
-+		if (!buf) {
-+			if (addr > dev->mt76.eeprom.size - block) {
-+				dev_kfree_skb(skb);
-+				return -EINVAL;
-+			}
- 			buf = (u8 *)dev->mt76.eeprom.data + addr;
-+		}
- 
- 		switch (mode) {
- 		case EEPROM_MODE_EFUSE:
-
+ 	return 0;
 -- 
-2.43.0
-
+2.53.0
 
