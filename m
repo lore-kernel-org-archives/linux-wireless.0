@@ -1,51 +1,51 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA3D32E7367
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 06:17:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 594352E7367
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 06:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782368250; cv=none; b=Dka8j8Z8QLkiw4vj8tBEtdDgfkSxl9bvFNTolS6C2dozUPyGUddGmi2Z4KKgTU6LlFS5DRgUaYrn7WCXnGCbRk5ahlDqjb5JwxdGgvpoTAtojq4SDkdQUie74+g8BzCgClfZcxhhG5cP4ORaJJt/t8TlnMcbfdcQgwEmr4fxeho=
+	t=1782368254; cv=none; b=T2bF7nGRGKeM8aUJznAuivrAa47J5VzZ3MB5IrbrhXBJKrYJ8+qCRLSuOwSFWNbu47/GimNSRmiJUL0scZ5Cu7Z7NuInpjbdvATWAziT6nEBf1hv+izp4kUSfW4bXUf+WCx6wTEfqX5SDEoi9CR88AqSntBsdIQqi34BsNsr3NQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782368250; c=relaxed/simple;
-	bh=AENJB3+EFjMiMwElfxA7lhLZ48yiapoC0VdYVaWULgk=;
+	s=arc-20240116; t=1782368254; c=relaxed/simple;
+	bh=7l8FEEiRgtKE4ywo42hCh2Ha7dOJ5qCGQ+aZ0LYgOok=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nZOLtCyzWvRVGlqCV3rhWk3gXqO1JQkD26AkFNzAvKZGw0W+eNZNQ12lkdO3YQCOt7Y4AInRfIZDEE88YfZR9YyKMs56Mp1sdSJpYW1UIamRpeYrOh/l29LWnTPpDGOedzzgF5u+ROv+utphsqHJVieicYUnEbxTm+jaTaXVKF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=rME+WTl0; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=nryGUY86/BEC4hbfiP+k3+bE6DFuJ7qksYgmK4rov0isiH2+jB91N9mAI88VlwGjsdb6+/VZZqMS8gnOUf/Kni8w3nkD8HaNefkG8eLwPe91C3P3ILKO2ceS+wLhcUPkcJ/guW5n1jbzU5JSIy5IWi1Mo/MmhY9C8nrb36sBVBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=qfEAtXtz; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="rME+WTl0"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65P6HPupC584505, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="qfEAtXtz"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 65P6HVUA0584530, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1782368245; bh=XBhCdOO18GoG0WG1ZxB+9U5haosEik5Nnfy2oe774FA=;
+	t=1782368251; bh=JAN9vlRlYcdpse+bpKWATxsLUWsBLzlBTakaTfHBdjU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=rME+WTl0G8OfHFJTA8DthU3SsSvP6JT+tRTlWZSqwBtFc2WsIyC+EspQMyPVh08bn
-	 w3uTkCyWzG03+KfUuiQ7zhNkmChN4WgNQ3TFAECP4dnHADE+V+HFgAaEGNtooQrgYf
-	 qjKDERExcGUL+qbHB94pKiW9GUkqwRg2dSaBAGfCgQkyEAH8OoQ+B1snYTLTb6s+92
-	 HyqWeLRDE8wky4Ilb0LutOhTzP8LdCl/HaESVlxSY0fPgPVuO7Oszyr+Cv6+gCPrA2
-	 tRnY1yesV8tle4w7UW4dPFyZL42JtpL4CALoMETj50Evo03JihNHsYiOOXEs2uAKou
-	 Qvroayq1dv+kQ==
+	b=qfEAtXtzMPA019UDVUwbmTGdchUPdw16+bIIkOoRLV7OfpCiRZgzuRrVWr476pxsB
+	 PneL3v92q8Ze6gTGjb9IvULwpxn8M3LXiLI5Dfvj6hmpZuK5mONumBFw2zPDKMGTPh
+	 m8iKYGoB4r5hViJ4zAGymqQANEqFHrOiqznlZk86PknasabPtGT0vWTs4dybIYlPzj
+	 P5DGDV+vtR1i6gnxN1OIPAd4j+LFA8mzglQrG69w0gY+HeH78H64G+SouKgAzvCFBJ
+	 Qcwub+BrwYJrcozHbX0InoHn14Cav1J0xmR3UV9aXX4xGFlZdmDTO9Pu4a4D7Y0KvV
+	 b0V7OmS4HmK7w==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65P6HPupC584505
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 65P6HVUA0584530
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 14:17:25 +0800
+	for <linux-wireless@vger.kernel.org>; Thu, 25 Jun 2026 14:17:31 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 25 Jun 2026 14:17:25 +0800
+ 15.2.2562.17; Thu, 25 Jun 2026 14:17:30 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
  (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Thu, 25 Jun 2026 14:17:25 +0800
+ Transport; Thu, 25 Jun 2026 14:17:30 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <gary.chang@realtek.com>, <timlee@realtek.com>,
 	<dian_syuan0116@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next 09/10] wifi: rtw89: wow: add QoS control field to WoWLAN ARP response for MLO
-Date: Thu, 25 Jun 2026 14:15:44 +0800
-Message-ID: <20260625061545.44808-10-pkshih@realtek.com>
+Subject: [PATCH rtw-next 10/10] wifi: rtw89: wow: only WiFi 6 chips initialize RF registers in WoWLAN mode
+Date: Thu, 25 Jun 2026 14:15:45 +0800
+Message-ID: <20260625061545.44808-11-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260625061545.44808-1-pkshih@realtek.com>
 References: <20260625061545.44808-1-pkshih@realtek.com>
@@ -58,87 +58,39 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: Chin-Yen Lee <timlee@realtek.com>
+From: Chih-Kang Chang <gary.chang@realtek.com>
 
-Some MLO APs expect WoWLAN ARP response frames to be transmitted as
-QoS data frames and may discard frames that do not contain a QoS
-Control field.
+Only the WiFi 6 chips need to initialize RF register when WoWLAN download
+FW for some power save issue. Applying the same initialization flow to
+WiFi 7 chips might trigger the error
+'RF parameters exceed size. path=1, idx=1500.'.
 
-Add a QoS Control field and use the QoS Data subtype when generating
-WoWLAN ARP responses for MLD vifs. Keep the existing frame format
-unchanged for non-MLO connections.
+This happens because normal mode uses rtw89_phy_config_rf_reg_v1(), which
+skips registers with addresses below 0x100. However, WoWLAN mode uses
+rtw89_phy_config_rf_reg_noio(), and WiFi 7 chips do not satisfy the
+rtw89_chip_rf_v1() condition. As a result, more RF registers are
+configured, causing the size overflow error.
 
-This allows WoWLAN ARP responses to be accepted by MLO APs while
-preserving compatibility with legacy APs.
-
-Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/fw.c | 31 +++++++++++++++++++------
- 1 file changed, 24 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtw89/wow.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 5d335105b589..f40c2f1c4dd7 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -2928,6 +2928,7 @@ static struct sk_buff *rtw89_sa_query_get(struct rtw89_dev *rtwdev,
- static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
- 					      struct rtw89_vif_link *rtwvif_link)
- {
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif_link->rtwvif);
- 	struct rtw89_vif *rtwvif = rtwvif_link->rtwvif;
- 	u8 sec_hdr_len = rtw89_wow_get_sec_hdr_len(rtwdev);
- 	struct rtw89_wow_param *rtw_wow = &rtwdev->wow;
-@@ -2935,26 +2936,42 @@ static struct sk_buff *rtw89_arp_response_get(struct rtw89_dev *rtwdev,
- 	struct rtw89_arp_rsp *arp_skb;
- 	struct arphdr *arp_hdr;
- 	struct sk_buff *skb;
--	__le16 fc;
-+	bool with_qos;
-+	u16 fc;
+diff --git a/drivers/net/wireless/realtek/rtw89/wow.c b/drivers/net/wireless/realtek/rtw89/wow.c
+index 8dadd8df4fc6..a7539f91264d 100644
+--- a/drivers/net/wireless/realtek/rtw89/wow.c
++++ b/drivers/net/wireless/realtek/rtw89/wow.c
+@@ -1299,7 +1299,8 @@ static int rtw89_wow_swap_fw(struct rtw89_dev *rtwdev, bool wow)
+ 	if (disable_intr_for_dlfw)
+ 		rtw89_hci_enable_intr(rtwdev);
  
--	skb = dev_alloc_skb(sizeof(*hdr) + sec_hdr_len + sizeof(*arp_skb));
-+	with_qos = ieee80211_vif_is_mld(vif);
-+
-+	rtw89_debug(rtwdev, RTW89_DBG_WOW, "[arp_reply] with qos field: %s\n",
-+		    str_yes_no(with_qos));
-+
-+	skb = dev_alloc_skb(sizeof(*hdr) + sec_hdr_len + sizeof(*arp_skb) +
-+			    (with_qos ? 2 : 0));
- 	if (!skb)
- 		return NULL;
+-	rtw89_phy_init_rf_reg(rtwdev, true);
++	if (chip->chip_gen == RTW89_CHIP_AX)
++		rtw89_phy_init_rf_reg(rtwdev, true);
  
- 	hdr = skb_put_zero(skb, sizeof(*hdr));
- 
-+	fc = IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS;
-+
- 	if (rtw_wow->ptk_alg)
--		fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS |
--				 IEEE80211_FCTL_PROTECTED);
-+		fc |= IEEE80211_FCTL_PROTECTED;
-+
-+	if (with_qos)
-+		fc |= IEEE80211_STYPE_QOS_DATA;
- 	else
--		fc = cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS);
-+		fc |= IEEE80211_STYPE_DATA;
-+
-+	hdr->frame_control = cpu_to_le16(fc);
- 
--	hdr->frame_control = fc;
- 	ether_addr_copy(hdr->addr1, rtwvif_link->bssid);
- 	ether_addr_copy(hdr->addr2, rtwvif_link->mac_addr);
- 	ether_addr_copy(hdr->addr3, rtwvif_link->bssid);
- 
--	skb_put_zero(skb, sec_hdr_len);
-+	if (with_qos)
-+		skb_put_zero(skb, sizeof(__le16));
-+
-+	if (sec_hdr_len)
-+		skb_put_zero(skb, sec_hdr_len);
- 
- 	arp_skb = skb_put_zero(skb, sizeof(*arp_skb));
- 	memcpy(arp_skb->llc_hdr, rfc1042_header, sizeof(rfc1042_header));
+ 	ret = rtw89_fw_h2c_role_maintain(rtwdev, rtwvif_link, rtwsta_link,
+ 					 RTW89_ROLE_FW_RESTORE);
 -- 
 2.25.1
 
