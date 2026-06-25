@@ -1,122 +1,135 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm2-f0.google.com (mail-wm2-f0.google.com [74.125.225.128])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF62388397;
-	Fri, 26 Jun 2026 11:03:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEFD37CD40
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 11:12:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782471786; cv=none; b=SCh7ULWTDdWPnCkXh6R0PBqF82w3b/sHRzWLU1ncI9W2dDYKF66cI9c8u0/XRBxsb7Qj7vrH0Qx5AePH6mP3iIaVHKOERnA4MCYNQYpqsPzfM8+NlLCGEBT+7ib6XqNzJreYHybQhoSVBhPnYb1g8x+1cbcT535LH4UlQwmCrUI=
+	t=1782472329; cv=none; b=rZ2cq4eONVhTVA/CIoLQ5BZJ79bJ15oZLpCwjCkjs2fKloM63glKCi22isWuiFC4KXEqJku6SRP4ZIfTI9o8qXyOlG/Yu3hXmQxOBtl7eUAB1a8gXY47Tf0plOro4YKMa6Fvzc9GMtkUOELTNyUoypHa3HUzBE6ETCYbb902iy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782471786; c=relaxed/simple;
-	bh=4xhENnZVz/hdk7ZqW2LTM+Brps5lFoVyNoXxRb45eQs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=elFKo/R94ZTBbVBIf9vo9pr2PlvD6JQDnwayWdWW1Uh0DM8D8dNGj4dJkbnrGjYbA0JUzA5/9t5PfaKaPBUufDV4hHg+plvBtk4yOxbv3AD3rXtq0YoGsSMmKxzIrqdJPfa7tgRuxeV5AqRc+hyyzlDN3sa+uiFWl7sq3ye2768=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=VV20kC8s; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=VD0cw75g; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1782472329; c=relaxed/simple;
+	bh=+Msa4E+bz5dtBLHnYKgrFLPtkbZd5C0/STBltE5z0Ec=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GF1ZuT4puSQUZl1zunbSQ1iKXGjvYbjUzPgJdoRFOtDwU1KgRugulV44MT1fJY3lB+R1KRVOah7bgThpa/b/KcGDnpPWVm8lm1JSzky/w3iwFYP82S9MxbTNAW9F2FyKs2OxibqTBnK5xk3dgQFMasYuGUkQkCZHbmQqvMCY9Tw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y8ofQI0j; arc=none smtp.client-ip=74.125.225.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VV20kC8s";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="VD0cw75g"
-Date: Fri, 26 Jun 2026 13:03:00 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1782471783;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgyG4JYr6Vz+QgoLYeDfXMNz2G667R6u0Wnv+qmfHYs=;
-	b=VV20kC8sI1KhN1xrUd12GIm4/ufvjTTeGzq1YZqPfrkX05CDqlXNT6/VNsOei7WgrqHmEl
-	VTGheMYRboFZj8o5lNiqjrsRUbyvwDwOJdumd+jPauJcoYnuMMTWfdvmdziBpNAL7T/Ua6
-	7WnEEUSWlVZOIrUJf4Zvod837Zntq6++4qfeT8q0DzM7dD7u4s1sxk77fC48ujuwURpr2a
-	AFwXVYK04GZ6Ee05Ki/eEyivi5JwtgMcVgNHuD2308sLsuqw8WdEQXP4i90wAT9akFtUgN
-	IejmztjUkC0bGzk7jycYNeETVCUb7vTRHgI2vXec4RXJpJLpjDE5C1LWc8l6YA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1782471783;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vgyG4JYr6Vz+QgoLYeDfXMNz2G667R6u0Wnv+qmfHYs=;
-	b=VD0cw75gmuwO8c0fdsJwZsj6ROZ9uCOzpzatMkjVmqqbuatKXXwevrrx+szNIH4sxsRkjN
-	VxWr8Ld4nl248HBA==
-From: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
-To: Thomas Gleixner <tglx@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, 
-	David Woodhouse <dwmw2@infradead.org>, Miroslav Lichvar <mlichvar@redhat.com>, 
-	John Stultz <jstultz@google.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Anna-Maria Behnsen <anna-maria@linutronix.de>, Frederic Weisbecker <frederic@kernel.org>, 
-	Arthur Kiyanovski <akiyano@amazon.com>, Rodolfo Giometti <giometti@enneenne.com>, 
-	Vincent Donnefort <vdonnefort@google.com>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oliver.upton@linux.dev>, kvmarm@lists.linux.dev, Oliver Upton <oupton@kernel.org>, 
-	Richard Cochran <richardcochran@gmail.com>, netdev@vger.kernel.org, Takashi Iwai <tiwai@suse.com>, 
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>, Johannes Berg <johannes.berg@intel.com>, 
-	Jacob Keller <jacob.e.keller@intel.com>, Tony Nguyen <anthony.l.nguyen@intel.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Peter Hilber <peter.hilber@oss.qualcomm.com>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, virtualization@lists.linux.dev, linux-wireless@vger.kernel.org, 
-	linux-sound@vger.kernel.org
-Subject: Re: [patch 09/24] timekeeping: Add CLOCK_AUX support for
- ktime_get_snapshot_id()
-Message-ID: <20260626125819-d8b197fc-7671-4d12-a578-9025affc52d9@linutronix.de>
-References: <20260526165826.392227559@kernel.org>
- <20260526171223.374814973@kernel.org>
- <20260626103359-66ab2b54-d36f-416b-94a4-3f3708dccced@linutronix.de>
- <87echtk24a.ffs@fw13>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y8ofQI0j"
+Received: by mail-wm2-f0.google.com with SMTP id 5b1f17b1804b1-492367ed75cso142085e9.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 04:12:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782472325; x=1783077125; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=V6cKfkRrepHIUsrrBVwXQjNxoni88MPu9YukKZzg9ig=;
+        b=Y8ofQI0j0OQ6W7NxJHexms/aDHe705eDVhSvZBgra69Hs9ux4l2WkgeRkNEHsKC0c4
+         0o3EwzMDmuxuQtDDMW3rvAP4BmT01h1lI7ZiKyZWYsjmFfuoZuV+a6K5zadB1xgQgUOq
+         lCc0+NlDYokK94W8SjNENm8IILBi5M7oHf1x8TIfnkMzmH86SXNphL7oMJyTN4ZsjiEw
+         uTNN94uxICfDAMTupAzkScySnEp/lb3vsZtmCFK3fonqhxZxxsMuCIMasxOmsqaaO/L3
+         tZ0ZSRl0JCYk4U+bzSog7hcWackRZgFiuzR64xSikBkErONwhNYcsG/401tydEZ29cLf
+         36CA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782472325; x=1783077125;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=V6cKfkRrepHIUsrrBVwXQjNxoni88MPu9YukKZzg9ig=;
+        b=YY1S3bARkvjhRFN1c83QD+6p948Qe0zQ+K+Gzfx7ISl3vyTH1xL8XuzweP0wX5+C14
+         bvvgE5cR9flt8/BNNGz0met2/LoVsSUcWTmp+mYZgnZu3avCEF1+v7QtetzFQXTYd1t7
+         YC8QTIip+Bojlwk7ZFE4zt/SdWNnJjEjzfO0SC9oLgIfl/r1WgIWCn986KDmprn1Ckne
+         uys2u8JJyrPQJ3NtspD2JCcOlJZU89HWRFXDpGpN5H6RLyxNMV8kXLWJxK5YIISyhcRF
+         6zz6hn060dA1UPZgRDkJWu24BBIZJYkg2rN8UnZ3Hb1OShEbqnNyQ8Yz9N2lwlbgMcIV
+         OhsQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8NBOSMOmwFlWAqd3D7zOLLCpVJCxcVupQuoUM7NCJjhX9LNmpZkAR3UaCXi5eUevHO7qD317LqBPeP/dFHbA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxV8IQRD2JDnWTktXvn5+BAOeMWPMkZv4Vj4QqVdlbYvFwZ/N22
+	KyKhmpbeK/AT6qrBLTQ/WgcYAixGn2WKH2MwsT53Y1Kb3oh6pXvgEERR
+X-Gm-Gg: AfdE7clrt3shtJntnGxzyW2ggmGq5e2lPXZd+eQv23boNG1E1F/P13g4AxRNj5veie7
+	c3bNy+/b9BrvyQ2Ltp/qgxKy69CQ9SEGxwS9yYPFoT/h9tLw3zfzQuheRlt924hljqD6hT5B/Ua
+	8MtiAbr/YpgKOhYUDC6jyE+4IAeieRscKyT3D4/CJq0OaoEOp5LhBqAU6pfvVDAE+kpOJh/tzBe
+	wPZQ39TxzkQb6KzLn7OaGQlmpr39l+OH9T8Y1ix7dRuH53KMaJH3qPok3YfdNieZ8vzgNAmLiS1
+	gBMkOdrVaRE8GdKrF0v3jy+k1aqId+2AM80woOhMB9mFk9HREiir14XcmdfE07sDAs+SRvPlTjy
+	awFULlAbtPGkaHGIbQOlrN6JmGd2gBsy8GL8I9uwNlTmHgR1uy1xoLtrHEodruXjbWjH0lXxDXp
+	X6q/8sQ0gSkHU=
+X-Received: by 2002:a05:600c:4e0b:b0:490:44eb:c1ea with SMTP id 5b1f17b1804b1-4926fc78e30mr4843235e9.24.1782472325018;
+        Fri, 26 Jun 2026 04:12:05 -0700 (PDT)
+Received: from fedora ([212.253.209.56])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4926c28673dsm43659175e9.2.2026.06.26.04.12.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Jun 2026 04:12:04 -0700 (PDT)
+From: Serhat Kumral <serhatkumral1@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Benjamin Berg <benjamin.berg@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	linux-kernel@vger.kernel.org,
+	syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com,
+	Serhat Kumral <serhatkumral1@gmail.com>
+Subject: [PATCH wireless] wifi: mac80211_hwsim: avoid division by zero in mac80211_hwsim_write_tsf()
+Date: Fri, 26 Jun 2026 00:56:06 +0300
+Message-ID: <20260625215606.11049-1-serhatkumral1@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <87echtk24a.ffs@fw13>
 
-On Fri, Jun 26, 2026 at 12:49:41PM +0200, Thomas Gleixner wrote:
-> On Fri, Jun 26 2026 at 10:48, Thomas Weißschuh wrote:
-> > On Tue, May 26, 2026 at 07:14:13PM +0200, Thomas Gleixner wrote:
-> > (...)
-> >
-> >>  static inline void tk_update_aux_offs(struct timekeeper *tk, ktime_t offs)
-> >> @@ -1218,6 +1223,12 @@ bool ktime_get_snapshot_id(struct system
-> >>  		tkd = &tk_core;
-> >>  		offs = &tk_core.timekeeper.offs_boot;
-> >>  		break;
-> >> +	case CLOCK_AUX ... CLOCK_AUX_LAST:
-> >> +		tkd = aux_get_tk_data(clock_id);
-> >> +		if (!tkd)
-> >> +			return false;
-> >> +		offs = &tkd->timekeeper.offs_aux;
-> >> +		break;
-> >
-> > 'tkd' is also used to compute 'monoraw'. However 'tkr_raw' and 'tkr_mono'
-> > are the same for auxilary clocks, so this will compute a wrong 'monoraw'.
-> 
-> AUX clocks are independent in the first place and the MONORAW part is
-> the "MONORAW" related to the AUX clock itself. 
-> 
-> > Instead 'monoraw' should be computed based on 'tk_core'.
-> > Which then also requires the sequence locking of 'tk_core'.
-> 
-> No. From a PTP and steering point of view you want the "raw" value which
-> is related to the AUX clock itself and not the global one.
+mac80211_hwsim_write_tsf() adjusts the timestamp of beacon, probe
+response and S1G beacon frames by dividing a constant by the legacy
+bitrate of the selected tx rate, e.g.:
 
-Ack.
+	mgmt->u.probe_resp.timestamp =
+		cpu_to_le64(sim_time + data->tsf_offset +
+			    24 * 8 * 10 / bitrate);
 
-However the kdocs call it 'CLOCK_MONOTONIC_RAW'. Can we clean this up?
+bitrate is taken from ieee80211_get_tx_rate(), which indexes the band's
+legacy bitrates[] table by control.rates[0].idx without checking the
+HT/VHT/S1G MCS flags or the table bounds. For an MCS rate the idx is not
+a legacy-rate index, so the returned rate can have a bitrate of 0. The
+code only guarded against a NULL rate, not a zero bitrate, so the
+division can divide by zero. As the call trace shows, this is reachable
+from user space by injecting a frame on a monitor interface:
 
-> The global MONORAW and the AUX clock MONORAW are related obviously as
-> they share the same conversion factors.
-> 
->      MONORAW(AUX$N) = MONORAW(GLOBAL) + OFFSET(AUX$N)
-> 
-> We don't have that information anywhere right now and we might want to
-> expose it to allow user space a proper correlation, but that's an
-> orthogonal problem.
-> 
-> From a PTP/steering point of view the code is correct as is.
+	divide error: 0000 [#1] SMP KASAN NOPTI
+	RIP: 0010:mac80211_hwsim_write_tsf+0x3a3/0x590
+	Call Trace:
+	 mac80211_hwsim_tx_frame_no_nl+0x16b/0x1760
+	 mac80211_hwsim_tx+0x1784/0x2500
+	 ieee80211_tx_frags+0x3df/0x890
+	 ieee80211_monitor_start_xmit+0xb33/0x1280
+	 __dev_queue_xmit+0x1435/0x37f0
+	 packet_sendmsg+0x3d95/0x5040
 
-Thanks for the clarifications.
+Fixing this in ieee80211_get_tx_rate() is not viable: callers such as
+ath5k and adm8211 dereference its return value without a NULL check, so
+making it return NULL for MCS rates would only move the crash elsewhere.
+Keep the fix local and fall back to the existing default of 100 whenever
+the reported bitrate is zero, in line with the existing "/* TODO: get
+MCS */" note above.
 
+Fixes: e75129031f1c ("wifi: mac80211_hwsim: move timestamp writing later in the datapath")
+Reported-by: syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=21629c14aa749636db9d
+Signed-off-by: Serhat Kumral <serhatkumral1@gmail.com>
+---
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thomas
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index 0dd8a6c85953..c745395d2042 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -1604,7 +1604,7 @@ static void mac80211_hwsim_write_tsf(struct mac80211_hwsim_data *data,
+ 	spin_lock_bh(&data->tsf_offset_lock);
+ 
+ 	txrate = ieee80211_get_tx_rate(data->hw, info);
+-	if (txrate)
++	if (txrate && txrate->bitrate)
+ 		bitrate = txrate->bitrate;
+ 
+ 	if (skb->len >= offsetofend(typeof(*mgmt), u.probe_resp.timestamp) &&
+-- 
+2.54.0
+
