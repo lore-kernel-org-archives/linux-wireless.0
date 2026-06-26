@@ -1,32 +1,36 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 429943E5585;
-	Fri, 26 Jun 2026 15:36:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6675E258EE9
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 16:58:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782488186; cv=none; b=MVHMmKZzWF01Me7AGyBFXacr/O6WQodQ+fU6SkpntSZV/A36iHUCZrJs6+yrGNWC2dLYr2dZeyJPcnVmkHGge2KwkWDbiqN+x/lJJdCc1IIAnd8WsyH78G9LjN9FLWUWcIUu0oHIP0h5BEGCi1Kl6Fv7Xo4N1Xi9fV/aiJIjfZI=
+	t=1782493134; cv=none; b=Q/giqYzzA10v7wcuP+ZjkZkm4re8CnufVxTjtZojLCagWnz4JGi9M78Dz3WDqpEFZXko9ow+MRoTIxxSefQ8kE+9rJ1rF2H3w5jPjihQt/vL1xpDmpQPiWuPmOtv8EquFLtUX4ayEy7tlAFIHpbv1vj8yvWpdJGPKw3TO6RsgGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782488186; c=relaxed/simple;
-	bh=/lHn2yo7qKCSiurYaJfJnlNQ96+XtgR0fCTpfvQfz3o=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=YyIXKGhHbjDBv4CcT9lBRIBIhE/JTUbU9BeKhkcMtL1GP2sshjU0CD+8iNJXTtCsPXH9iiQ7EWRsxJQ5S1EnMNCEk/p+CGaFlcTu2cXYWcaThqnkhD1s5uOQ0cakg0BFjGZxRyCASiu9u4gE1JEB8CAMArgXu7rUXyJYfYXHo0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [117.182.75.66])
-	by APP-01 (Coremail) with SMTP id qwCowAAnwcl0nD5qZHdsAw--.4527S2;
-	Fri, 26 Jun 2026 23:36:20 +0800 (CST)
-From: WenTao Liang <vulab@iscas.ac.cn>
-To: Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	stable@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	WenTao Liang <vulab@iscas.ac.cn>
-Subject: [PATCH] fix: ath11k: ath11k_ahb_fw_resources_init: fix device_node reference leak   on setup failure
-Date: Fri, 26 Jun 2026 23:36:19 +0800
-Message-Id: <20260626153619.52954-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+	s=arc-20240116; t=1782493134; c=relaxed/simple;
+	bh=ecKU70uSiEjiAu15YfOIEXvWWXh6UDcc6k8qippsop8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VQy6MhWBrOCR6Vr1IOTNcg8MrssiF6IFqxb8XLvIabqPyA+ntX6h8jSyKzC8KT4WFSeq5wU+zIkraBdBZ+08SICX6tGbIu1jBorXjtUqnFPLw6iWAu8HEbBbvafLLR4J5Dm/mbWmBmJdejgi3h32NQ5kxCOm7I5tWeqrw2r5y7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lzu.edu.cn; spf=pass smtp.mailfrom=lzu.edu.cn; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lzu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lzu.edu.cn
+Received: from enjou-Legion-Y7000P-2019 (unknown [172.23.56.36])
+	by app3 (Coremail) with SMTP id ywmowAA3dv7Brz5qXhYyAA--.45566S3;
+	Sat, 27 Jun 2026 00:58:44 +0800 (CST)
+From: Ren Wei <n05ec@lzu.edu.cn>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	linville@tuxdriver.com,
+	yuantan098@gmail.com,
+	yifanwucs@gmail.com,
+	tomapufckgml@gmail.com,
+	bird@lzu.edu.cn,
+	roxy520tt@gmail.com,
+	n05ec@lzu.edu.cn
+Subject: [PATCH 1/1] wifi: mac80211: free ack status frame on TX header build failure
+Date: Sat, 27 Jun 2026 00:58:30 +0800
+Message-ID: <9de0423da840e92084915b8f92e66a421245c4b8.1782462409.git.roxy520tt@gmail.com>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <cover.1782462409.git.roxy520tt@gmail.com>
+References: <cover.1782462409.git.roxy520tt@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -34,51 +38,95 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAAnwcl0nD5qZHdsAw--.4527S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrur4rCF4kXF43Jw1ftw4fZrb_yoWDurg_GF
-	4Sg3Z7Zry2kF4jgrW3GF43ZwsayF9rWF97G3y2qayfGay7CFyDAry5Zr13JrZFkr48Zr15
-	GFnrXry8Zw1q9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4AFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
-	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWxJVW8Jr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	AVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
-	JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbPrcD
-	UUUUU==
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRQKA2o+iCg4GwAAsD
+X-CM-TRANSID:ywmowAA3dv7Brz5qXhYyAA--.45566S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7uF13CFy3XrW8Gr1rGF1fCrg_yoW5Jr45pF
+	y7GrZ8KFykXF13ZF1fGr1IqFWakr4kG34SvrsrAan7ZFnagF1v9F10kFZFvFyFyFWjgF1f
+	uF4vyF15Ca1qkrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvC1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+	IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2
+	jsIE14v26F4j6r4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UM2AIxVAIcxkEcV
+	Aq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j
+	6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
+	vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v26r1q6r43MxkIecxEwVCm
+	-wCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26r48MxC20s026xCaFVCjc4AY6r
+	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
+	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0x
+	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
+	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
+	nxnUUI43ZEXa7VUbGQ6JUUUUU==
+X-CM-SenderInfo: zqqvvuo6o23hxhgxhubq/1tbiAQEKCWo+NlQIEgAAsv
 
-of_get_child_by_name acquires a device_node reference. When the
-  subsequent ath11k_ahb_setup_msa_resources call fails, the function
-  returns immediately without calling of_node_put, leaking the node
-  reference.
+From: Zhiling Zou <roxy520tt@gmail.com>
 
-Add of_node_put before returning on the setup failure error path.
+ieee80211_build_hdr() stores an ACK status frame before it has
+finished all validation and header construction. If a later error path
+is taken, the transmit skb is freed but the stored ACK status frame
+remains in local->ack_status_frames.
 
+This can happen for control port frames when the requested MLO link ID
+does not match the link selected for a non-MLO station. Repeated
+failures can fill the ACK status IDR and leave pending ACK frames until
+hardware teardown.
+
+Remove any stored ACK status frame before returning an error after it
+has been inserted into the IDR.
+
+Fixes: a729cff8ad51 ("mac80211: implement wifi TX status")
 Cc: stable@vger.kernel.org
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: WenTao Liang <vulab@iscas.ac.cn>
+Reported-by: Yuan Tan <yuantan098@gmail.com>
+Reported-by: Yifan Wu <yifanwucs@gmail.com>
+Reported-by: Juefei Pu <tomapufckgml@gmail.com>
+Reported-by: Xin Liu <bird@lzu.edu.cn>
+Assisted-by: Codex:gpt-5.4
+Signed-off-by: Zhiling Zou <roxy520tt@gmail.com>
+Signed-off-by: Ren Wei <n05ec@lzu.edu.cn>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/tx.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 08d3a0c8f105..8a08275db40a 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -996,6 +996,7 @@ static int ath11k_ahb_fw_resources_init(struct ath11k_base *ab)
- 	ret = ath11k_ahb_setup_msa_resources(ab);
- 	if (ret) {
- 		ath11k_err(ab, "failed to setup msa resources\n");
-+		of_node_put(node);
- 		return ret;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ea7f63e1fc17..8e7f43ee10e5 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2597,6 +2597,18 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
+ 	return info_id;
+ }
+ 
++static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)
++{
++	struct sk_buff *ack_skb;
++	unsigned long flags;
++
++	spin_lock_irqsave(&local->ack_status_lock, flags);
++	ack_skb = idr_remove(&local->ack_status_frames, info_id);
++	spin_unlock_irqrestore(&local->ack_status_lock, flags);
++
++	kfree_skb(ack_skb);
++}
++
+ /**
+  * ieee80211_build_hdr - build 802.11 header in the given frame
+  * @sdata: virtual interface to build the header for
+@@ -2972,7 +2984,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 		if (ieee80211_skb_resize(sdata, skb, head_need, ENCRYPT_DATA)) {
+ 			ieee80211_free_txskb(&local->hw, skb);
+ 			skb = NULL;
+-			return ERR_PTR(-ENOMEM);
++			ret = -ENOMEM;
++			goto free;
+ 		}
  	}
  
+@@ -3040,6 +3053,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 
+ 	return skb;
+  free:
++	if (info_id)
++		ieee80211_remove_ack_skb(local, info_id);
+ 	kfree_skb(skb);
+ 	return ERR_PTR(ret);
+ }
 -- 
-2.39.5 (Apple Git-154)
+2.43.0
 
