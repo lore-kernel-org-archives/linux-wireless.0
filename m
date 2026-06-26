@@ -1,135 +1,132 @@
-Received: from mail-wm2-f0.google.com (mail-wm2-f0.google.com [74.125.225.128])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEFD37CD40
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 11:12:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856CC3164A9;
+	Fri, 26 Jun 2026 11:16:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782472329; cv=none; b=rZ2cq4eONVhTVA/CIoLQ5BZJ79bJ15oZLpCwjCkjs2fKloM63glKCi22isWuiFC4KXEqJku6SRP4ZIfTI9o8qXyOlG/Yu3hXmQxOBtl7eUAB1a8gXY47Tf0plOro4YKMa6Fvzc9GMtkUOELTNyUoypHa3HUzBE6ETCYbb902iy0=
+	t=1782472605; cv=none; b=jryBLc/o6C69Y/4w3zmgsifOqAwpHW0C/dFTY/bHFMg57KMCU6QBxPoSC/kvUKW1cwWd6RCQM5azcc0ALRmMVFO3t/2+O4M3h4nUYh1tUohPBTqMDwnf7bFmECg4wQN+O6ULGkSEE4Ho3YBxaS90sfTbn7Ld1CMMqpxn/G1mxuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782472329; c=relaxed/simple;
-	bh=+Msa4E+bz5dtBLHnYKgrFLPtkbZd5C0/STBltE5z0Ec=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GF1ZuT4puSQUZl1zunbSQ1iKXGjvYbjUzPgJdoRFOtDwU1KgRugulV44MT1fJY3lB+R1KRVOah7bgThpa/b/KcGDnpPWVm8lm1JSzky/w3iwFYP82S9MxbTNAW9F2FyKs2OxibqTBnK5xk3dgQFMasYuGUkQkCZHbmQqvMCY9Tw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y8ofQI0j; arc=none smtp.client-ip=74.125.225.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1782472605; c=relaxed/simple;
+	bh=pULAGn7gd9jrBHpRvgi7iMYk6v+UnrkTMVy0gC9jTNk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SD31jP7rk20fUaDDzS+SVNMTqCHNjWueKRtC/x5ZlS66/+9LHYVHCsj58GhnhGRRFwmkGK+uQmQVwPzOs4q9LSKMb5KU5LcqdPiJQ9F73NKeY1Q/gonLi2TXEzsWSZSfKDy3OaPxQgIc92AUFByvERXF6LlFyN5OzHzPBfRp1lo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hc+dtlOb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y8ofQI0j"
-Received: by mail-wm2-f0.google.com with SMTP id 5b1f17b1804b1-492367ed75cso142085e9.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 04:12:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782472325; x=1783077125; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=V6cKfkRrepHIUsrrBVwXQjNxoni88MPu9YukKZzg9ig=;
-        b=Y8ofQI0j0OQ6W7NxJHexms/aDHe705eDVhSvZBgra69Hs9ux4l2WkgeRkNEHsKC0c4
-         0o3EwzMDmuxuQtDDMW3rvAP4BmT01h1lI7ZiKyZWYsjmFfuoZuV+a6K5zadB1xgQgUOq
-         lCc0+NlDYokK94W8SjNENm8IILBi5M7oHf1x8TIfnkMzmH86SXNphL7oMJyTN4ZsjiEw
-         uTNN94uxICfDAMTupAzkScySnEp/lb3vsZtmCFK3fonqhxZxxsMuCIMasxOmsqaaO/L3
-         tZ0ZSRl0JCYk4U+bzSog7hcWackRZgFiuzR64xSikBkErONwhNYcsG/401tydEZ29cLf
-         36CA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782472325; x=1783077125;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V6cKfkRrepHIUsrrBVwXQjNxoni88MPu9YukKZzg9ig=;
-        b=YY1S3bARkvjhRFN1c83QD+6p948Qe0zQ+K+Gzfx7ISl3vyTH1xL8XuzweP0wX5+C14
-         bvvgE5cR9flt8/BNNGz0met2/LoVsSUcWTmp+mYZgnZu3avCEF1+v7QtetzFQXTYd1t7
-         YC8QTIip+Bojlwk7ZFE4zt/SdWNnJjEjzfO0SC9oLgIfl/r1WgIWCn986KDmprn1Ckne
-         uys2u8JJyrPQJ3NtspD2JCcOlJZU89HWRFXDpGpN5H6RLyxNMV8kXLWJxK5YIISyhcRF
-         6zz6hn060dA1UPZgRDkJWu24BBIZJYkg2rN8UnZ3Hb1OShEbqnNyQ8Yz9N2lwlbgMcIV
-         OhsQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8NBOSMOmwFlWAqd3D7zOLLCpVJCxcVupQuoUM7NCJjhX9LNmpZkAR3UaCXi5eUevHO7qD317LqBPeP/dFHbA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxV8IQRD2JDnWTktXvn5+BAOeMWPMkZv4Vj4QqVdlbYvFwZ/N22
-	KyKhmpbeK/AT6qrBLTQ/WgcYAixGn2WKH2MwsT53Y1Kb3oh6pXvgEERR
-X-Gm-Gg: AfdE7clrt3shtJntnGxzyW2ggmGq5e2lPXZd+eQv23boNG1E1F/P13g4AxRNj5veie7
-	c3bNy+/b9BrvyQ2Ltp/qgxKy69CQ9SEGxwS9yYPFoT/h9tLw3zfzQuheRlt924hljqD6hT5B/Ua
-	8MtiAbr/YpgKOhYUDC6jyE+4IAeieRscKyT3D4/CJq0OaoEOp5LhBqAU6pfvVDAE+kpOJh/tzBe
-	wPZQ39TxzkQb6KzLn7OaGQlmpr39l+OH9T8Y1ix7dRuH53KMaJH3qPok3YfdNieZ8vzgNAmLiS1
-	gBMkOdrVaRE8GdKrF0v3jy+k1aqId+2AM80woOhMB9mFk9HREiir14XcmdfE07sDAs+SRvPlTjy
-	awFULlAbtPGkaHGIbQOlrN6JmGd2gBsy8GL8I9uwNlTmHgR1uy1xoLtrHEodruXjbWjH0lXxDXp
-	X6q/8sQ0gSkHU=
-X-Received: by 2002:a05:600c:4e0b:b0:490:44eb:c1ea with SMTP id 5b1f17b1804b1-4926fc78e30mr4843235e9.24.1782472325018;
-        Fri, 26 Jun 2026 04:12:05 -0700 (PDT)
-Received: from fedora ([212.253.209.56])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4926c28673dsm43659175e9.2.2026.06.26.04.12.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Jun 2026 04:12:04 -0700 (PDT)
-From: Serhat Kumral <serhatkumral1@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	linux-kernel@vger.kernel.org,
-	syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com,
-	Serhat Kumral <serhatkumral1@gmail.com>
-Subject: [PATCH wireless] wifi: mac80211_hwsim: avoid division by zero in mac80211_hwsim_write_tsf()
-Date: Fri, 26 Jun 2026 00:56:06 +0300
-Message-ID: <20260625215606.11049-1-serhatkumral1@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hc+dtlOb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CACB51F000E9;
+	Fri, 26 Jun 2026 11:16:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1782472604;
+	bh=+pjkC367Ll/gzzPWQk4yEj/jwA/X88/o2EzLb1kHUUU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Hc+dtlObmw4fBNFgub/XBvDDJXNpCQzAPPWXVJz2E/6orIM72j7cLM1lK4VyOG58y
+	 EmrdWQG8ywxiR/WlX32oLHNBaoQE8+RIw/DKrhL9C+0UBHQ/R1lWvHFDiZk2bK0l7b
+	 OiKfvy1JKx8neW8R71XN5XBlWoNjVLFLsPG0tk7Zwpwj1zptuxTbEQ5owdJDSFH/f1
+	 XiyIPcm6053bOdFZqEmYk8+Cy7bDs8v2KrkGar1+yo1TdJMQbH/eY53M4b38F4cEzA
+	 WwY7M5DydgLJt4Zp2IxTtknJLHQ8Zvki2QmRmVjP3cLEMXGYrsESPMScfPPUp8y06q
+	 ZZdrA1qC6s36A==
+Message-ID: <4531e20d-13ad-4493-8447-d09b9b91be7f@kernel.org>
+Date: Fri, 26 Jun 2026 13:16:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/6] dt-bindings: remoteproc: document M0 Bluetooth
+ Subsystem secure PIL
+To: George Moussalem <george.moussalem@outlook.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulfh@kernel.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Johannes Berg
+ <johannes@sipsolutions.net>, Jeff Johnson <jjohnson@kernel.org>,
+ Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann
+ <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+ Rocky Liao <quic_rjliao@quicinc.com>, Saravana Kannan
+ <saravanak@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
+ Heiner Kallweit <hkallweit1@gmail.com>, Russell King
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Mathieu Poirier <mathieu.poirier@linaro.org>,
+ Philipp Zabel <p.zabel@pengutronix.de>, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ath10k@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
+ linux-remoteproc@vger.kernel.org
+References: <20260625-ipq5018-bluetooth-v1-0-d999be0e04f7@outlook.com>
+ <20260625-ipq5018-bluetooth-v1-1-d999be0e04f7@outlook.com>
+ <20260626-tiny-warm-jerboa-3ba57a@quoll>
+ <SN7PR19MB67364ADE8CDD7C31297AE18D9DEB2@SN7PR19MB6736.namprd19.prod.outlook.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <SN7PR19MB67364ADE8CDD7C31297AE18D9DEB2@SN7PR19MB6736.namprd19.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-mac80211_hwsim_write_tsf() adjusts the timestamp of beacon, probe
-response and S1G beacon frames by dividing a constant by the legacy
-bitrate of the selected tx rate, e.g.:
+On 26/06/2026 12:51, George Moussalem wrote:
+>>
+>> No supplies? no address space? How do you actually trigger remoteproc
+>> startup?
+> 
+> No supplied and no address space. The core is booted by a
+> qcom_scm_auth_and_reset call to TrustZone which authenticated the
+> firmware, takes it out of reset and boots it.
 
-	mgmt->u.probe_resp.timestamp =
-		cpu_to_le64(sim_time + data->tsf_offset +
-			    24 * 8 * 10 / bitrate);
+Then commit msg could be improved:
 
-bitrate is taken from ieee80211_get_tx_rate(), which indexes the band's
-legacy bitrates[] table by control.rates[0].idx without checking the
-HT/VHT/S1G MCS flags or the table bounds. For an MCS rate the idx is not
-a legacy-rate index, so the returned rate can have a bitrate of 0. The
-code only guarded against a NULL rate, not a zero bitrate, so the
-division can divide by zero. As the call trace shows, this is reachable
-from user space by injecting a frame on a monitor interface:
+"Firmware loaded is authenticated via TrustZone." ->
+"Firmware is loaded and authenticated via TrustZone."
 
-	divide error: 0000 [#1] SMP KASAN NOPTI
-	RIP: 0010:mac80211_hwsim_write_tsf+0x3a3/0x590
-	Call Trace:
-	 mac80211_hwsim_tx_frame_no_nl+0x16b/0x1760
-	 mac80211_hwsim_tx+0x1784/0x2500
-	 ieee80211_tx_frags+0x3df/0x890
-	 ieee80211_monitor_start_xmit+0xb33/0x1280
-	 __dev_queue_xmit+0x1435/0x37f0
-	 packet_sendmsg+0x3d95/0x5040
 
-Fixing this in ieee80211_get_tx_rate() is not viable: callers such as
-ath5k and adm8211 dereference its return value without a NULL check, so
-making it return NULL for MCS rates would only move the crash elsewhere.
-Keep the fix local and fall back to the existing default of 100 whenever
-the reported bitrate is zero, in line with the existing "/* TODO: get
-MCS */" note above.
-
-Fixes: e75129031f1c ("wifi: mac80211_hwsim: move timestamp writing later in the datapath")
-Reported-by: syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=21629c14aa749636db9d
-Signed-off-by: Serhat Kumral <serhatkumral1@gmail.com>
----
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 0dd8a6c85953..c745395d2042 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -1604,7 +1604,7 @@ static void mac80211_hwsim_write_tsf(struct mac80211_hwsim_data *data,
- 	spin_lock_bh(&data->tsf_offset_lock);
- 
- 	txrate = ieee80211_get_tx_rate(data->hw, info);
--	if (txrate)
-+	if (txrate && txrate->bitrate)
- 		bitrate = txrate->bitrate;
- 
- 	if (skb->len >= offsetofend(typeof(*mgmt), u.probe_resp.timestamp) &&
--- 
-2.54.0
-
+Best regards,
+Krzysztof
