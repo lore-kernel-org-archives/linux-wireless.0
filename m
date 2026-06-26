@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD193F23D7;
-	Fri, 26 Jun 2026 13:38:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C86113F58C7;
+	Fri, 26 Jun 2026 13:38:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782481083; cv=none; b=SZbFwClkDl8cds7MulWv/+pZmquzohvrUOYjLKSGDu7Y6cjdQKGxHsm8SZQPSw1AaWrJVjNlyUEAn2rsbbUIpfurNexK90j81WWHj10owG4W2kYU4STX+KKTsDRw5mUhvO3N2hOn0jovuSWqOGrHQd6JL6A2eV8Unsr9bEzAXdE=
+	t=1782481116; cv=none; b=rY770lPcCeF9Xq3Y8hxXLlNhtE1yaeQyByebJ2RZZwYv9dh8vPLYla2/OOryNjBtTDsCcP9rP7oxJV9s4D4cJhj/iz5tpXpR9sIQ2wuNe7594nzdALdSqygU9YAl5kTiEpT02FjxG8H2ZEjLvvwcGfuglT/B2agqfKzkZkwyHqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782481083; c=relaxed/simple;
-	bh=CWzjxofT51d/7Jh9TIJ+t+j7D7AxrnjtWXRf/UhKxyM=;
+	s=arc-20240116; t=1782481116; c=relaxed/simple;
+	bh=o0bkaOdpgJk5ChA2YdFTX4+7uig/oW79V2PdyVUtLqs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kEwvnvAy4e6FsW54mXYNaLKMcxWcVmudnHGXLQTHzuAQhyEyJLXVx3/k1NrXqavemFyDQnu2wlUlgn/m21cRy9+DfSTgOvZZfls/BSIOLO3lZZYK55at6Uww9mRjb5CvHP06KoxMoMYcYdQ2IdLsucEsOkdigVvDnUghcvE51uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HwFpMxvR; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=S7TIajFq/gUE2B08oq7c6AsjPco5KMqBo5mlfw18lFwYdIKe8mfoptZUnIPBcFlMyd84kg9T8JdpMmyIRgEYtHRbqVaBIXmNfW9oD3DyHa6IKp+gjAuezVgZanS//HHpLK1s/LYky4YObUWxLSvtGRCsTp9qH8OqPCvBGHrCyxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kz8kKem4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HwFpMxvR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ACC21F00A3D;
-	Fri, 26 Jun 2026 13:37:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kz8kKem4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A67E1F00A3A;
+	Fri, 26 Jun 2026 13:38:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782481081;
-	bh=iyRP6bU8GJwZIUhpMbHL1XggSQuYlDgwK1TwcImYTrg=;
+	s=k20260515; t=1782481115;
+	bh=oB5HFy71aB1ePhxjt4gqZ5TfT2Ja/3SuN8FpeiGT1tE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=HwFpMxvRpfAKkvj84g44PYk1X91/f7jZs29AVgqKOoefwXZDvMmVya/eboUtgdE3N
-	 KjUOkoCFVUsKThToHZcT/rKczr7Ee4DBurfFDGw5fiIq26oeBZaLI0oGPJH6YRR96J
-	 DY11bXS5pPOYvWTpbwVqB3l2eJdPdB4DLOQrMIyIpje95SGZjctigUszFsc04K7b7i
-	 lohQnA/b3YtSFaDNvjdyd4aEN7n1ex/5NC6kAVF4qbQrLlkIHYrRK8h538Vg65sPx9
-	 5wY2CvwhTR9ikKAWntRNQmB6fnmhu6gRsGpDc6VXFZ+pUKxkmMGS45p0xvekdKf0cl
-	 joPXCQpsCWRkA==
+	b=kz8kKem4ONpn/DiV+/IyZxCjQy3Mx1WKNPQzfMjQ2R14tGV5TckLH/AYmjJNH645+
+	 Iu68Xwj2MIc5h7niVoNgEDiZBS3qB0F1/vbCx+QcdGOwK7biNJytczOWhijkWKJIrl
+	 IxsmG82TFoqaDH+sUphmc0mzYYDjhoutv8ycuzKUf8Vmu/5PbX6L18WnAn4QfEqQ8X
+	 dnTeHtgBu4E/dZ+HZ/KDgMUM4LdK+CXyxLofD1dsyVR5qmeL0gR5nTvEEaxuvof5l4
+	 cABb7UgT5jidLLZpLwsfb50XPBVJQiN31XX3WzLTYWxRAuLL8lBWQDGJ8Bz7Ij67W+
+	 D1GJzjsDmDGiQ==
 From: Sumit Garg <sumit.garg@kernel.org>
 To: andersson@kernel.org
 Cc: linux-arm-msm@vger.kernel.org,
@@ -74,9 +74,9 @@ Cc: linux-arm-msm@vger.kernel.org,
 	skare@qti.qualcomm.com,
 	linux-kernel@vger.kernel.org,
 	Sumit Garg <sumit.garg@oss.qualcomm.com>
-Subject: [PATCH v8 05/14] remoteproc: qcom_q6v5_mss: Switch to generic PAS TZ APIs
-Date: Fri, 26 Jun 2026 19:04:25 +0530
-Message-ID: <20260626133440.692849-6-sumit.garg@kernel.org>
+Subject: [PATCH v8 06/14] remoteproc: qcom_wcnss: Switch to generic PAS TZ APIs
+Date: Fri, 26 Jun 2026 19:04:26 +0530
+Message-ID: <20260626133440.692849-7-sumit.garg@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260626133440.692849-1-sumit.garg@kernel.org>
 References: <20260626133440.692849-1-sumit.garg@kernel.org>
@@ -90,7 +90,7 @@ Content-Transfer-Encoding: 8bit
 
 From: Sumit Garg <sumit.garg@oss.qualcomm.com>
 
-Switch qcom_q6v5_mss client driver over to generic PAS TZ APIs. Generic PAS
+Switch qcom_wcnss client driver over to generic PAS TZ APIs. Generic PAS
 TZ service allows to support multiple TZ implementation backends like QTEE
 based SCM PAS service, OP-TEE based PAS service and any further future TZ
 backend service.
@@ -99,39 +99,62 @@ Reviewed-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
 Tested-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com> # Lemans
 Signed-off-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
 ---
- drivers/remoteproc/qcom_q6v5_mss.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/remoteproc/qcom_wcnss.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/remoteproc/qcom_q6v5_mss.c b/drivers/remoteproc/qcom_q6v5_mss.c
-index ae78f5c7c1b6..96888007faa8 100644
---- a/drivers/remoteproc/qcom_q6v5_mss.c
-+++ b/drivers/remoteproc/qcom_q6v5_mss.c
-@@ -34,6 +34,7 @@
- #include "qcom_pil_info.h"
- #include "qcom_q6v5.h"
- 
+diff --git a/drivers/remoteproc/qcom_wcnss.c b/drivers/remoteproc/qcom_wcnss.c
+index 4add9037dbd5..0dbdd18ab3dd 100644
+--- a/drivers/remoteproc/qcom_wcnss.c
++++ b/drivers/remoteproc/qcom_wcnss.c
+@@ -19,7 +19,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
+ #include <linux/pm_runtime.h>
+-#include <linux/firmware/qcom/qcom_scm.h>
 +#include <linux/firmware/qcom/qcom_pas.h>
- #include <linux/firmware/qcom/qcom_scm.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/remoteproc.h>
+ #include <linux/soc/qcom/mdt_loader.h>
+@@ -257,7 +257,7 @@ static int wcnss_start(struct rproc *rproc)
+ 	wcnss_indicate_nv_download(wcnss);
+ 	wcnss_configure_iris(wcnss);
  
- #define MPSS_CRASH_REASON_SMEM		421
-@@ -1480,7 +1481,7 @@ static int q6v5_mpss_load(struct q6v5 *qproc)
+-	ret = qcom_scm_pas_auth_and_reset(WCNSS_PAS_ID);
++	ret = qcom_pas_auth_and_reset(WCNSS_PAS_ID);
+ 	if (ret) {
+ 		dev_err(wcnss->dev,
+ 			"failed to authenticate image and release reset\n");
+@@ -269,7 +269,7 @@ static int wcnss_start(struct rproc *rproc)
+ 	if (wcnss->ready_irq > 0 && ret == 0) {
+ 		/* We have a ready_irq, but it didn't fire in time. */
+ 		dev_err(wcnss->dev, "start timed out\n");
+-		qcom_scm_pas_shutdown(WCNSS_PAS_ID);
++		qcom_pas_shutdown(WCNSS_PAS_ID);
+ 		ret = -ETIMEDOUT;
+ 		goto disable_iris;
+ 	}
+@@ -311,7 +311,7 @@ static int wcnss_stop(struct rproc *rproc)
+ 					    0);
  	}
  
- 	if (qproc->need_pas_mem_setup) {
--		ret = qcom_scm_pas_mem_setup(MPSS_PAS_ID, qproc->mpss_phys, qproc->mpss_size);
-+		ret = qcom_pas_mem_setup(MPSS_PAS_ID, qproc->mpss_phys, qproc->mpss_size);
- 		if (ret) {
- 			dev_err(qproc->dev,
- 				"setting up mpss memory failed: %d\n", ret);
-@@ -2077,7 +2078,7 @@ static int q6v5_probe(struct platform_device *pdev)
- 	if (!desc)
- 		return -EINVAL;
+-	ret = qcom_scm_pas_shutdown(WCNSS_PAS_ID);
++	ret = qcom_pas_shutdown(WCNSS_PAS_ID);
+ 	if (ret)
+ 		dev_err(wcnss->dev, "failed to shutdown: %d\n", ret);
  
--	if (desc->need_mem_protection && !qcom_scm_is_available())
-+	if (desc->need_mem_protection && !qcom_pas_is_available())
+@@ -557,10 +557,10 @@ static int wcnss_probe(struct platform_device *pdev)
+ 
+ 	data = of_device_get_match_data(&pdev->dev);
+ 
+-	if (!qcom_scm_is_available())
++	if (!qcom_pas_is_available())
  		return -EPROBE_DEFER;
  
- 	mba_image = desc->hexagon_mba_image;
+-	if (!qcom_scm_pas_supported(WCNSS_PAS_ID)) {
++	if (!qcom_pas_supported(WCNSS_PAS_ID)) {
+ 		dev_err(&pdev->dev, "PAS is not available for WCNSS\n");
+ 		return -ENXIO;
+ 	}
 -- 
 2.53.0
 
