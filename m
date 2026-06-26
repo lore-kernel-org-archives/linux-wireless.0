@@ -1,124 +1,143 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E34A401494
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 17:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF51F3BB123
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 21:23:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782493564; cv=none; b=q2RIjH6HKNLPWsPy+YtBDw7KGE+HAiQOlOHqldIUu8IACtbHAT/pfbfLfc2XM+B5eiI5cwxUaO+hRrVTXZj5b7WzsXrHeEuHLI+7y/EufAXt2uyqvdvB+3GSzu0hECzPjfHCLcH7lcUgxL95fFHZe6d42TzFkOZERqhk6VFY79g=
+	t=1782509038; cv=none; b=jYGsFH0VITKURAX9sLJHqzb/MOsN+Gp6TuEjqdraTfVMw/WkxubEYXCdQnInHT3B6/Jy6gFxVNE9pO88x9U7Ex0ymznamB+FH0z3VYENmrSMZYMDWYaRfJVyrPeDrzpGSWjJcijuOzckMZSBxTAX0uzdZTg4oSOWndou3yxbhA8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782493564; c=relaxed/simple;
-	bh=GQKFAfjK37kURb8eXgj/bP3eu1MfUrZ2X80i3UfUWBU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p2y1jZT6v8sta7bvJeMfIjhkk+jNtV9jgPNLgXIKqs88ApRCVEPJuSRe79hQTusrGBcpU4nvHTKVAoR8g38kygzgOL0VuevjfqMIQrWr7DCp2n+477jv/sPw0CeHOCI2EZykM3qa6uSIa47C596tsQI3MwXSwPtvxdM3vZD6hRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PfGGy3dD; arc=none smtp.client-ip=209.85.128.47
+	s=arc-20240116; t=1782509038; c=relaxed/simple;
+	bh=hgAYpxuY7k8UBXXuFP8STp8Vq5a9D2vgYK7ggh+Fl0s=;
+	h=Message-ID:Date:Subject:To:Cc:Content-Type:MIME-Version:From; b=Wu7A9vsxlcm5INvhFK/9Ml7Uff4EV9ucAZJlyEgHbAyq0E48rjIc7Gczd99Udmi8PyNLZ0ZFrhLyPcZLk6IwROEqL1voDBJMo3hm80w4vLulTL2L8w0buKl4eafSJCjYpK00u4u9CVm2dgouesNxI4jhncpCyEzepdaxNow2ips=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jcxo0kSF; arc=none smtp.client-ip=209.85.222.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PfGGy3dD"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4926046fbc5so13851535e9.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 10:06:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jcxo0kSF"
+Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-968f67499deso29457241.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Jun 2026 14:23:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782493559; x=1783098359; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=ctcxDsWWE5CsrZTwx1xGnbf39A7pUyPEOclo5R2hslQ=;
-        b=PfGGy3dDJntvUAhwdN74MoQyZ7Kb76WVRvfiYiz1r1uk3V/wjmc0ccylG8JVhL0+aO
-         9WSY+r+SENhfxJL8CUeOB1pmR59D9qbmsIm0QL0geqEQ3IJNFp5Fq7qrY/5fyGWdsqG0
-         nIyYMLaVYge3kigQjmdxvMGDVbUqMNI+4R/I6uQ1sMOrczr5lwCRWg+mi2S0BVuQYDKL
-         dDgqcqfyH8rsZo98a4Dkff0WHyw9Af1jwt2qhjUEWTtw3ws3bdrW5rBD3IoBPhrQQzZE
-         8/ce3DSxR7gM6HlnWvwnjDorWuEU3FMzRK5nbfmPEGSUPopV0SrDeRoc0yqUq7qQ+8gO
-         PhKw==
+        d=gmail.com; s=20251104; t=1782509036; x=1783113836; darn=vger.kernel.org;
+        h=from:mime-version:content-transfer-encoding:content-type:cc:to
+         :subject:date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DYD2nkO5yO0H/hkft5/6wEQAqgHy2trdmVTQ8fmB0e8=;
+        b=Jcxo0kSFapQgheSrwqI61kSZqvuplFa6LA97Gi3i7b0TBOCpSMQAIqZQeYJce/HX3z
+         2yvz+OzHUvxRy/1EAq+WSNAlDgEsf2xL263OB0j3KFuze+/4ItTGURSqb4M3qfAvBfgZ
+         R+Ir45nNrEngq5ZLgVHAAziZmrByhs2iqAfLd52q1B4xteAWYyoCzKpmtYHR81MXVK88
+         VtvJxJOJfSGYnLwVzBDqQZAuwT8xrudINEDctq6h2vRJ/WFDiuLcHkzLwdYhBvjWt2zu
+         t/m+Oi6FrHyld/pRjv8cku7g0JOv1wGa2w2uId0a6f0ey3DnyszLLkOeyoG2Kimrjvhe
+         e3YQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782493559; x=1783098359;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ctcxDsWWE5CsrZTwx1xGnbf39A7pUyPEOclo5R2hslQ=;
-        b=QUlF+Hz54IhBdc3SCU6h0TJIZMvD+lyj17HiScT/tTaTXu/zAnFr53gr7aUDhceZfM
-         ybJJtMl1ippxuz3NnXaXRviKLEKAWhxLZ0ZRrEd+MNuWsIR0EmMuqfzTauTGRClt2IM+
-         0hl5h/4U+F7TJ8SRSIyC6h3ZntxsmgofS6UYakG0HwWL5dY7VbHbybwYTc2sU8rOTEhV
-         MnqITA2jzdn7vVLSYrRa2CM1eocWsrIgHNxCqlDsam65cXqDk+Y/jK2eg8KdtuxY3mtf
-         CKfhCFzo8YXMkZrDzmvnUF2F0FsbNxvjQBK/Vgg/VEQE4AcAcd2V9w610Uo6dfCzCshr
-         RIFA==
-X-Forwarded-Encrypted: i=1; AFNElJ8NNhVtOgUojQC615XJ5OgBx7dkm38WS7obo3KcjZZrb8gtPF6ZbZUTwdSc2JOEBlu/fKM++0rRGsAuiEeLzw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzkqvPyDAsQBEqcIuBPUfnrm5YYuDI477yJfFTTwQRIIvTlKgr8
-	ZTEBHM8mMBxaDgVGPEzHNh5iA8PlzTDdEVNU7vzVZCBygVN2ortbLgiQ
-X-Gm-Gg: AfdE7ckevCKxDZAcqYGTiLqbXqQZI5evFk8o1cTEp8tObfoF+wCmpxCkgWUWDIyWmE+
-	EIY1FR7DQzzOiDQbXE5+OASjceOoNAt7HvRElHxFdDijbQTayWi2l+mtlID0HY+svRWvBUMO86i
-	M+9X5bCgol/VlWlzNrk5KtntyyuTwqObiNjirQvi2dBgZWsl3hF5KeKV1dkDYS6Q1rj6slD4gVx
-	vast+u4dYqUUTOi+YnE1eGYe+AwJ12StC5KwR+EhrJWGqyuoCw/HO2hakc+Ujguv1jtVaLO3Q4G
-	Xep8CDjG+7FB09yv5uVlGAl7OmgXGJlflQEvDT5BFPdejkTY0NP1BQKSM1hOitEaZ8f3Tqbo07T
-	BXBgZNmrfDmF3MltQUi59CE7Oq+efdVY6bcAwUqB609h6o7ConAFeoBLDSetByvjzMyJCP6Ax5N
-	HMILkvO3946DgHSpu2o5WCahAL9J6UaEPMc0UJkEJHB1qQq68QrYZ5fwmiCDnldW6Nz6PAOoORe
-	B0L40kv
-X-Received: by 2002:a05:600d:864a:20b0:492:5bf9:d149 with SMTP id 5b1f17b1804b1-4925bf9d18amr186215685e9.5.1782493559068;
-        Fri, 26 Jun 2026 10:05:59 -0700 (PDT)
-Received: from [10.128.11.240] (195-23-151-163.net.novis.pt. [195.23.151.163])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46fe25429d5sm1694876f8f.7.2026.06.26.10.05.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 26 Jun 2026 10:05:57 -0700 (PDT)
-Sender: Julian Braha <julian.braha@gmail.com>
-Message-ID: <ac8c92cb-21f2-4274-8fe6-f771fe48eec7@gmail.com>
-Date: Fri, 26 Jun 2026 18:05:54 +0100
+        d=1e100.net; s=20251104; t=1782509036; x=1783113836;
+        h=from:mime-version:content-transfer-encoding:content-type:cc:to
+         :subject:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=DYD2nkO5yO0H/hkft5/6wEQAqgHy2trdmVTQ8fmB0e8=;
+        b=ULMSb4kpUl6RXorCyUQr8vr2ujp6571Ik7Ydp7iRoVocnLIatKyuYVUcZQURVKpY5V
+         IiCtYFItdoN1xgPqcbx81HpfCuiFyBo2nESekeyCt7a5HQWtmeAs33R06po1HT79Ywa6
+         BSlwEaQWer21B2/ln+MyM5wQv9KNyPap586An0HMRd9XGaMJXEWWfXoYCcN5wSiAj560
+         xS1/k6IymjtV8gkGpYv+z1/C+G0TGKmeQiUDtq7z3vIo9sZLJMpaRtA/ItiLA7CL6PE8
+         fP8VwTQVRdaRI1fuhhNr3afzVRPivAXB9uN0vEiwm3Hz8fX6nxZ4DSIqvKz0tEyT+cD/
+         mgHA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr61fsUfy2mIlvFyferXxSebJomdN5oXpiMuys4tFlr2sSmNdgTMPpBTwxfrQEkOKbTUW+RTq1ffWIWBd4LJA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwhyY0Q/pUSZDYZ7SwmYK35fKTtqWB9Qvjgj7yqmCrVatEq5IlU
+	iPCmqvVMvEJk/O1d6SGCs9Yuubry0DzFq/nzo9/SRCRxeJTQmpjjdALd
+X-Gm-Gg: AfdE7ckfqhui77abrChSJeev/YrqNGZ68x0dLFtd5KG/7Rimja1IZlUAbPfgPHwD7wU
+	bxaH+FETshna+0aQyMgg21IiYO90YdgZYBvZBEbG5kppoPH9/LJQYJKUYJOPpkmSXOCYQzlrmhE
+	B0XeCBVuO2o14QKjb8iE4jzJI9uQrl+SNTkay5SSvGquGnoVQWsg8xnKmVB5pY3XQCArEu/J+Mv
+	37tgBiFESHs8nIkQkoeBxOP9gYgiFBy2y993Z1/4WxLdw8mvr0liDFdKwLrM6AQETMzJDpj3Qkh
+	4Ge+1j9yY3iHl2y3NlvyiusvRROb7HHqnLBuxcGGSgSsWkVSB9p4wDAawEx12pNAXSCbNg/82+l
+	w6LsV7Su6sm5wdLa5XFVQgr5I+tc4QeUdvUH/v4/cCZW+TLBGO9PaZYvhaMyeyqgFvdRMenPmFd
+	KZX+JSw7UyLokEoesmDfNh/pbe2N/Hp/aiOxbwk1Ee+FebYdcX0FOny67l9q8LONVqerLIwNEn6
+	NC0b48IThwu
+X-Received: by 2002:a05:6102:50aa:b0:634:11ac:12ca with SMTP id ada2fe7eead31-734362a85b9mr1518937137.5.1782509035878;
+        Fri, 26 Jun 2026 14:23:55 -0700 (PDT)
+Received: from [192.168.10.115] ([132.170.207.48])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-96916e88e59sm1895811241.6.2026.06.26.14.23.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Jun 2026 14:23:55 -0700 (PDT)
+Message-ID: <6a3eedeb.87857ece.10923b.5b31@mx.google.com>
+Date: Fri, 26 Jun 2026 14:23:55 -0700 (PDT)
+Subject: WARNING: at rate_control_rate_init, CPU: syz.NUM.NUM/NUM
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Cc: syzkaller@googlegroups.com, contact@pgazz.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 02/14] firmware: qcom_scm: Migrate to generic PAS
- service
-To: Sumit Garg <sumit.garg@kernel.org>, andersson@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
- freedreno@lists.freedesktop.org, linux-media@vger.kernel.org,
- netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath12k@lists.infradead.org, linux-remoteproc@vger.kernel.org,
- konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, robin.clark@oss.qualcomm.com, sean@poorly.run,
- akhilpo@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
- jesszhan0024@gmail.com, marijn.suijten@somainline.org, airlied@gmail.com,
- simona@ffwll.ch, vikash.garodia@oss.qualcomm.com, bod@kernel.org,
- mchehab@kernel.org, elder@kernel.org, andrew+netdev@lunn.ch,
- davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
- pabeni@redhat.com, jjohnson@kernel.org, mathieu.poirier@linaro.org,
- trilokkumar.soni@oss.qualcomm.com, mukesh.ojha@oss.qualcomm.com,
- pavan.kondeti@oss.qualcomm.com, jorge.ramirez@oss.qualcomm.com,
- tonyh@qti.qualcomm.com, vignesh.viswanathan@oss.qualcomm.com,
- srinivas.kandagatla@oss.qualcomm.com, amirreza.zarrabi@oss.qualcomm.com,
- jens.wiklander@linaro.org, op-tee@lists.trustedfirmware.org,
- apurupa@qti.qualcomm.com, skare@qti.qualcomm.com,
- linux-kernel@vger.kernel.org, Sumit Garg <sumit.garg@oss.qualcomm.com>,
- Harshal Dev <harshal.dev@oss.qualcomm.com>
-References: <20260626133440.692849-1-sumit.garg@kernel.org>
- <20260626133440.692849-3-sumit.garg@kernel.org>
-Content-Language: en-US
-From: Julian Braha <julianbraha@gmail.com>
-In-Reply-To: <20260626133440.692849-3-sumit.garg@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: sanan.hasanou@gmail.com
 
-Hi Sumit,
+Good day, dear maintainers,
 
-On 6/26/26 14:34, Sumit Garg wrote:
+We found a bug using a modified version of syzkaller.
 
->  config QCOM_SCM
-> +	tristate "Qualcomm PAS SCM interface driver"
-> +	select QCOM_PAS
->  	select QCOM_TZMEM
-> -	tristate
-I think QCOM_SCM is missing a 'select IRQ_DOMAIN'. Right now I get a
-build error without it:
+Kernel Branch: 7.0-rc1
+Kernel Config: <https://drive.google.com/open?id=173DLEAEPKPhhR1TcqofdnkLpdoK7PMFl>
+Unfortunately, we don't have any reproducer for this bug yet.
+Thank you!
 
-drivers/firmware/qcom/qcom_scm.c: In function ‘qcom_scm_get_waitq_irq’:
-  drivers/firmware/qcom/qcom_scm.c:2512:16: error: implicit declaration
-of function ‘irq_create_fwspec_mapping’; did you mean
-‘irq_create_of_mapping’? [-Wimplicit-function-declaration]
-   2512 |         return irq_create_fwspec_mapping(&fwspec);
-        |                ^~~~~~~~~~~~~~~~~~~~~~~~~
-        |                irq_create_of_mapping
+Best regards,
+Sanan Hasanov
 
-- Julian Braha
+------------[ cut here ]------------
+WARNING: at rate_control_rate_init+0x3a4/0x420 net/mac80211/rate.c:53, CPU#0: syz.7.23087/97240
+Modules linked in:
+CPU: 0 UID: 0 PID: 97240 Comm: syz.7.23087 Tainted: G             L      7.0.0-rc1 #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+RIP: 0010:rate_control_rate_init+0x3a4/0x420 net/mac80211/rate.c:53
+Code: 25 f7 f0 80 8b 0a 01 00 00 20 48 83 c4 18 5b 41 5c 41 5d 41 5e 41 5f 5d c3 e8 f8 ad b9 f6 90 0f 0b 90 eb e6 e8 ed ad b9 f6 90 <0f> 0b 90 e9 f3 fe ff ff 89 e9 80 e1 07 fe c1 38 c1 0f 8c 80 fd ff
+RSP: 0018:ffffc9000238efb8 EFLAGS: 00010283
+RAX: ffffffff8b08a3e3 RBX: ffff888046d9c050 RCX: 0000000000080000
+RDX: ffffc9001071a000 RSI: 00000000000015af RDI: 00000000000015b0
+RBP: 0000000000000000 R08: ffff888046d9c10f R09: 1ffff11008db3821
+R10: dffffc0000000000 R11: ffffed1008db3822 R12: 0000000000000000
+R13: ffff888041e30a00 R14: ffff88804121e660 R15: ffff888037ebe7e0
+FS:  00007f10205186c0(0000) GS:ffff8880d98df000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f101f78beb8 CR3: 000000001d065000 CR4: 00000000000006f0
+Call Trace:
+ <TASK>
+ rate_control_rate_init_all_links+0x52/0x380 net/mac80211/rate.c:86
+ sta_apply_auth_flags+0x1c7/0x400 net/mac80211/cfg.c:1967
+ sta_apply_parameters+0xe9a/0x1600 net/mac80211/cfg.c:2354
+ ieee80211_add_station+0x38e/0x5d0 net/mac80211/cfg.c:2420
+ rdev_add_station+0xa7/0x170 net/wireless/rdev-ops.h:201
+ nl80211_new_station+0x1878/0x1cb0 net/wireless/nl80211.c:8904
+ genl_family_rcv_msg_doit+0x20d/0x2f0 net/netlink/genetlink.c:1114
+ genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
+ genl_rcv_msg+0x607/0x790 net/netlink/genetlink.c:1209
+ netlink_rcv_skb+0x206/0x460 net/netlink/af_netlink.c:2550
+ genl_rcv+0x2d/0x40 net/netlink/genetlink.c:1218
+ netlink_unicast_kernel net/netlink/af_netlink.c:1318 [inline]
+ netlink_unicast+0x930/0xae0 net/netlink/af_netlink.c:1344
+ netlink_sendmsg+0x7e0/0xb10 net/netlink/af_netlink.c:1894
+ sock_sendmsg_nosec net/socket.c:727 [inline]
+ __sock_sendmsg net/socket.c:742 [inline]
+ ____sys_sendmsg+0x603/0xa20 net/socket.c:2592
+ ___sys_sendmsg+0x224/0x2a0 net/socket.c:2646
+ __sys_sendmsg net/socket.c:2678 [inline]
+ __do_sys_sendmsg net/socket.c:2683 [inline]
+ __se_sys_sendmsg net/socket.c:2681 [inline]
+ __x64_sys_sendmsg+0x1a0/0x260 net/socket.c:2681
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x19a/0x7b0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x4b/0x53
+RIP: 0033:0x7f101f5a3b6d
+Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f1020518018 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
+RAX: ffffffffffffffda RBX: 00007f101f815fa0 RCX: 00007f101f5a3b6d
+RDX: 0000000000000000 RSI: 0000200000001080 RDI: 0000000000000005
+RBP: 00007f101f647c3e R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007f101f816038 R14: 00007f101f815fa0 R15: 00007ffcdf1409d0
+ </TASK>
+
+<<<<<<<<<<<<<<< tail report >>>>>>>>>>>>>>>
