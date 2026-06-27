@@ -1,78 +1,48 @@
-Received: from mail-wm1-f68.google.com (mail-wm1-f68.google.com [209.85.128.68])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51343112BD
-	for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2026 17:14:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6104533508E
+	for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2026 19:13:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782580455; cv=none; b=SNyODkSaq+DQ8suZ8m59nREfzwYyh+TNDMm3C4Lt8I8M7xL/U4QrwmcKI3RM0ZpEQW7fVRH3My7/yzs0xsxmInLSw1vzO8agCzmBN2w0n65I5pBhB4t4MWSySjs45PsnhTmwMHYgsLF9e8LUgsHpVEzuRjHN37ZwtrhbNiGvm+I=
+	t=1782587627; cv=none; b=IchN7+7ke9ciiQufZfgX2sWX3qZ/VCVmJNN7YkHr/cdj/fMq3NFIhrizDYX3OBW8FNAadz4WNbg8MBrWNztkndI1XMvXijkeAlP2I6NTvtwR/v1zjgwhkBvh4VKPIvUvw9DbK4VkfqBClNyAvPkZslCDsxmtKL5kcBl9tlr4PDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782580455; c=relaxed/simple;
-	bh=QDFyZHocWkxENJp1COzHVpR5fHLV0dBsGKtbxKxkCP0=;
+	s=arc-20240116; t=1782587627; c=relaxed/simple;
+	bh=Qfj9XkfE4e4BbIIfe+u5LMWdJAq3Rx5SvyyQlt1A2EU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mKfF2w4SMtkwLRsoonAz4ogg1p7VW+i1JE1GBlfH33tYcGRhfBRf5BfGyxTMVLpJLPltXO4XD5eSgMIVPO0OJpBzraTX2o/HF78gqoTYbPW60dV9w/zFLl/7cowyxI+I05GTZgOjuGb1KZRy1XRuW+tVDYoaN3KCgcr/nUJCe68=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mag9dObb; arc=none smtp.client-ip=209.85.128.68
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version; b=bpDoXXMoYwg5fnFzyIUkiEaLkBZ+8axifdOnOiiB+CTyO1KZun26JitxsONVtI5aPzAFfn/cA5E6kZQ+WUocHAJhBKfCBha93aPBpwhMYObeyd79auvqA173pqR/DYr8uVVlMi5KJ+Iag9HNs1CwoINmrDTbyuQoqSydePDJLl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=kxX1DVn7; arc=none smtp.client-ip=91.218.175.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mag9dObb"
-Received: by mail-wm1-f68.google.com with SMTP id 5b1f17b1804b1-4938d60c035so4538435e9.0
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Jun 2026 10:14:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782580452; x=1783185252; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QDFyZHocWkxENJp1COzHVpR5fHLV0dBsGKtbxKxkCP0=;
-        b=mag9dObbcEBoH1+H6DWdvzW0foyFHxzX6lqKXY/wEr/8Do6MbhaBhMq8pesvRNxrKh
-         44zIQuyFtCpcQyLmymevnkQBDbfBV/TtXbatsCI1XzxTsBl3IRlhIyCdDLR+uhf6wCpl
-         d2qu+B7zg2a0va5B7BnNfVE6Ti3K7Lw9q+woS0mmUOiR2Z/h/peXuJTg9144rnsueaWf
-         GkkKzZ/as1qiE+uTSNm7GDWUTt8U+BZIHOQPpVKupKki55+WgMFJhCbEd4SsfWVj5POi
-         edlH9XUJDEidgh7EopK2Wi3O3Bt1DTRZGpmdLnp5bOIV8SA/ueAxX7u52XtTc0KQsBkd
-         MNiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782580452; x=1783185252;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=QDFyZHocWkxENJp1COzHVpR5fHLV0dBsGKtbxKxkCP0=;
-        b=FT7Dv5XaJQyZ0H7A6dd0LdfeA9LJ+db3IaSMj0wR4x9bjD06fqs4nSj5oDml9gfgqq
-         25ZKaiZAyDVbx91lJo9cb49DMmosFWiOfH4031lCvDlg0Reln8NdsPVtJlaUwcHwfI/U
-         jPMLooMEK0ZM3gPF/1dorPCFSjVc8oFdaD74gVCwwUOaNyYMwPvJ+dGa8ar6oW6pQ6O/
-         PNjgNPd11zLm+BybAUHhMEuxWuOvQ/tBEIwyC8BiyovAVQUW+bhKgmAw6U917udMbwuL
-         vsKLBoI7Hpm1RlmuWqGi+GC/dBsQ3nS1vZMjWZUXQhJr2lpXx8fAWDmZjAb+lQH7Ymq9
-         Txig==
-X-Forwarded-Encrypted: i=1; AFNElJ/sxcNQs+1HGXFTit07CUR/j9FfoIY83BvkxMEk+it2EN3pM/bAqF/BRvrYcVnMJbxlEAycfkgoOeUI9xECPw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxkPcoiFfGkZR2QwWCeQoMm+MaiFol0DSRwTARR6fvt1h8wckTW
-	7z0vAFuH76zw9UTmm57oKZGAH24XM22NqdjTNoeYGwXQ5aP7JVNcyStn
-X-Gm-Gg: AfdE7cn0j7iYfiFNh1v7wg7Rsrn8qv3hFp3t7U1SzkO84/gKuquOnJ+1Lm6F1EKWc3n
-	AzQLkBxoBDk1WgDG//iQUBK1Z8yWfbgnq2O3w8kmH3o7pf2yG9XDdOeA7uxaiJyjSQl/UB+mxcF
-	LOoQ4MHhSIiFXCpq6R4skQgBO0nB+4KWoUK89JUVQ9EFl+O3MbSFrEZ7g11XlBLzvzYV0cwjEXv
-	4lzs7BkE4MoC8PE1aOCcZz3iTnc8dJKARR5lBAKHOUlANaGKgEc/A0zOnCCXk1jMhY/V18Gpzam
-	o/AvNdjm8WErE6zQGD5DpJ5o7nXFRYY04h5NaTwf5SPFSd64OFRzh+gBEp45+JG1YbtHJFUWxlr
-	qh9JSKMx7sxene28YJ9Vzu3WMVRtLDR/Om5AzBTmRzTO2Pnnzc9p+Uqt46AmHFjug/uLRmvczH3
-	F/Pym4HPl3iM4=
-X-Received: by 2002:a05:600c:8411:b0:492:3172:bcf0 with SMTP id 5b1f17b1804b1-4926683880emr154263455e9.3.1782580452046;
-        Sat, 27 Jun 2026 10:14:12 -0700 (PDT)
-Received: from fedora ([212.253.209.56])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-46c221d9371sm36799668f8f.21.2026.06.27.10.14.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Jun 2026 10:14:11 -0700 (PDT)
-From: Serhat Kumral <serhatkumral1@gmail.com>
-To: ghwns6743@gmail.com
-Cc: benjamin.berg@intel.com,
-	johannes@sipsolutions.net,
-	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	miriam.rachel.korenblit@intel.com,
-	serhatkumral1@gmail.com,
-	syzbot+21629c14aa749636db9d@syzkaller.appspotmail.com
-Subject: Re: [PATCH wireless] wifi: mac80211_hwsim: avoid division by zero in mac80211_hwsim_write_tsf()
-Date: Fri, 26 Jun 2026 10:37:38 +0300
-Message-ID: <20260626073738.13014-1-serhatkumral1@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260627134827.12531-1-ghwns6743@gmail.com>
-References: <20260627134827.12531-1-ghwns6743@gmail.com>
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="kxX1DVn7"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
+	s=key1; t=1782587622;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JwEPrF1Hg86jGTRv0FKtMMASUsr/hG3K5Vpsyc4UX90=;
+	b=kxX1DVn7mvxmk6FeHYXkbAbi/1gPQqFTZMwh//+ixZCLy9rxBucPsle76eSl1hNAZDNc0x
+	9VZBmIMC17xjnEum/j2xjvjk2UixX5EvjRqQjMZtnEf6nTu1RCyOEo4UC9B8vZhmS4pxR2
+	ZGhpezzavwFx0mqNBIphBTtRK6HqMxysjuaHeAVepBtC1Y8DF9uDb9hZMP/RYWm0o5ne9A
+	BzKpjQ0alDqzNGQn8c9AAiCqJuK2nvp1J2VrteuIjnMYJFiqNhXJiNq2hlJLExoBlGDekS
+	b4LPB9LDqTePdPL4SPiIPlOcOTcLGFad3X7sBvrKljKZ2YCCeel0AoXAcDo0pQ==
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	linux-wireless@vger.kernel.org
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] wifi: mt76: mt7921: drop TXRX_NOTIFY on non-mmio buses
+Date: Sat, 27 Jun 2026 12:13:34 -0700
+Message-ID: <20260627191336.20223-2-lucid_duck@justthetip.ca>
+In-Reply-To: <20260627191336.20223-1-lucid_duck@justthetip.ca>
+References: <20260627191336.20223-1-lucid_duck@justthetip.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,15 +50,61 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Thanks a lot for the independent confirmation and for tracking down the
-exact mechanism -- the OOB read landing inside struct mac80211_hwsim_data
-(via sband->bitrates = data->rates) explains precisely why KASAN stays
-quiet. Appreciate you sharing the reproducer too.
+PKT_TYPE_TXRX_NOTIFY is an mmio-only event, but mt7921_rx_check() and
+mt7921_queue_rx_skb() dispatch it to mt7921_mac_tx_free() on every bus.
+mt7921_mac_tx_free() cleans the DMA tx queues with
+mt76_queue_tx_cleanup(), which calls queue_ops->tx_cleanup(). Only the
+mmio queue ops implement that callback; on USB and SDIO it is NULL, so
+a TXRX_NOTIFY there calls a NULL pointer in the RX worker:
 
-On hardening ieee80211_get_tx_rate() centrally: I'd defer to Johannes on
-the preferred direction, since it touches callers across several drivers
-(ath5k, adm8211, and likely others) that currently dereference the
-return value without a NULL check -- any change there needs an audit of
-all of them, which felt out of scope for this fix. If it's considered
-worth doing, I'd be happy to help with that audit.
+  BUG: kernel NULL pointer dereference, address: 0000000000000000
+  RIP: 0010:0x0
+  Call Trace:
+   mt7921_mac_tx_free+0x64/0x310 [mt7921_common]
+   mt7921_rx_check+0x5f/0xf0 [mt7921_common]
+   mt76u_rx_worker+0x1b9/0x620 [mt76_usb]
+
+Drop the event on non-mmio buses via mt76_is_mmio(), as in
+commit 5683e1488aa9 ("wifi: mt76: connac: do not check WED status for
+non-mmio devices").
+
+Fixes: 48fab5bbef40 ("mt76: mt7921: introduce mt7921s support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+index 1c2377d0a53d..f7d54472da1b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
+@@ -570,8 +570,9 @@ bool mt7921_rx_check(struct mt76_dev *mdev, void *data, int len)
+ 
+ 	switch (type) {
+ 	case PKT_TYPE_TXRX_NOTIFY:
+-		/* PKT_TYPE_TXRX_NOTIFY can be received only by mmio devices */
+-		mt7921_mac_tx_free(dev, data, len); /* mmio */
++		if (!mt76_is_mmio(mdev))
++			return false;
++		mt7921_mac_tx_free(dev, data, len);
+ 		return false;
+ 	case PKT_TYPE_TXS:
+ 		for (rxd += 2; rxd + 8 <= end; rxd += 8)
+@@ -600,7 +601,10 @@ void mt7921_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
+ 
+ 	switch (type) {
+ 	case PKT_TYPE_TXRX_NOTIFY:
+-		/* PKT_TYPE_TXRX_NOTIFY can be received only by mmio devices */
++		if (!mt76_is_mmio(mdev)) {
++			napi_consume_skb(skb, 1);
++			break;
++		}
+ 		mt7921_mac_tx_free(dev, skb->data, skb->len);
+ 		napi_consume_skb(skb, 1);
+ 		break;
+-- 
+2.54.0
+
