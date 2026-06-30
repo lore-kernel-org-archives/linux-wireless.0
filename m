@@ -1,70 +1,70 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9823B419314
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 14:16:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E8CF426699
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 14:16:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782828976; cv=none; b=DJgYG7CJn2nDBN4G7gWKWArqPwfcfFnAkdsiF5VGfHwzzp0OvRlh1nSJDHOaRksi6N1QZZipET6b+8nTtdj7/9k6P0Wqdikl6fo0RU33ESst7/hVCU9KgLECMH3X+sbpFiSLYPjWEwO16Qdv3IJIUSJPxsAfsIH7CSGM1G5CXS8=
+	t=1782828982; cv=none; b=qyT7BWCxj+a+olfLxQhHjsTTS6sOhpGK6jJcmq57Y26yPlDoHxHdxm2MA1Qz+FCcXLp+LbHcaHA0JiUQOKv3QvCt8Se3/suCvR8+UFOMZQguipCLqOSHUZoBdDFei8m+0N0Kdc/2J2fU3QLzC/ZIVvhzTN7ifDxjadFfYIygCpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782828976; c=relaxed/simple;
-	bh=hecuA/M4wyHtxy2jfoYNxWdWdqE6q2SRRxQRDlq9Mlo=;
+	s=arc-20240116; t=1782828982; c=relaxed/simple;
+	bh=Jwaz5+P5JLELYSiQoBrjlChk/VXwwTGdI4LLbp2RcGA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kMxBLO20t7U17ORTyG0ZQMhJecclu/LWbqGVrlnWyNbugsq5ORWonDLgU3SCt/7+Vl2PeW5M97B9EFQFw9Xl/sRonHSxAjbEId9wQo6a9Koa+lIt5WuyQFwlTYhCikV9uP00CBCyb44nS+CpJRQV4c76yGeuMu7/KQMP3IsMpdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H090Aedv; arc=none smtp.client-ip=209.85.218.48
+	 MIME-Version; b=u08PotVCoBg3fX1DhB60ai/5uwFGVcvOVi+5XtU2St+Oa3zLaBiurSNOjxZ3YGVynWxl7DWLDjCtdYSfTW1EEhOIOasFgJeTkDplGkrbSwJR81JkoC02eI1lyh3rPRuYxqiblhaRYzWOXzfCj0JOKFRJZb+PCvac55xKcqBIAfE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K1XRhGvu; arc=none smtp.client-ip=209.85.208.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H090Aedv"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c125fbfbae0so284882866b.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 07:16:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K1XRhGvu"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-697df404e32so9569608a12.0
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 07:16:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1782828973; x=1783433773; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1782828979; x=1783433779; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3Hvl1tVUpvwT3K0Y2brCZLwhdqznUZBwd64pb6xOUcw=;
-        b=H090Aedvvisih6ZPl7n8ymMmGbhypOKnHlRfVwyMrYxA9xpEnqhetox7QorjRmonLh
-         elnsvWs85qI1k0aiHxgaIn0cZzmcAMQjQwcjR4+32Zx8Ri4F0pig6VQDcfOiYcgG2m+q
-         6OqFcZwH4fHTwXmAQp7hjtAjxKxWg/sqNpYIB7nRphWrZ7owpqKMm34VAcHcXsA91lAz
-         J+rvOSCuj8kVChuPYs8r5ClU95gLSp+JKSFBiLGS7MvX/Oo61hl9gCSIFRShfzVmmf4p
-         09XQdgwxS0wWIbOWKR28kMmNg31UBKqLcklEtHuq/evAxQ0Yjvtj23OJWHsd2QFxZA08
-         SnlQ==
+        bh=uDnrMt5EbmXvXJEQ9FwkKXed3+1otjrG3rcRHcpz/mI=;
+        b=K1XRhGvuO9paqcPOjHfyscXHcT6jj+HecjNlbub7s3VQwP59nOMHzIqx0H+CzQBJiF
+         d5fnCT+eaTFW98VwULDQ1yU28BV6wl+y9++ZD/jbaMTjw1hTmTJoY7E38nFDOfRa57n0
+         0rsYTEDRiHiWzmR2oil6N8DmW/sWf5POAe5fz0iMUL79E3AD+DjnlQ+qpT83vkxfIrtU
+         lNhbNW0O6mTw32PE9H6ncFzNCJFDPtL8Q8/SjDkGsL2qSnoSMcfhnSGieQf1H89byp9n
+         I3UVDmceH8Z5inYGTsFC/NWu4luATcy/7ECTHrRDwgbbaUD42qfahusH+78sG3YWsnmJ
+         2CpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1782828973; x=1783433773;
+        d=1e100.net; s=20251104; t=1782828979; x=1783433779;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=3Hvl1tVUpvwT3K0Y2brCZLwhdqznUZBwd64pb6xOUcw=;
-        b=s3oCliwp1+spOtHJl+IgoKjArQ7VwDpGso9i6hHxYP4ulmae6uk/R5xmLusWHBer54
-         IYAjTlu9Hk/m9jYJp9lk5mhk3c7x+B7ne0aO6/8r4AHuWIvBTiU527kBBLkPh3TgAKBm
-         gkBZhYiV0P8bqebw1jDRXIdox4FQGgPHX28virSrnw+Ij1Qu0e/sPhNpgG033pXQjstp
-         Ljun9Ljcc+OFXMwLoBAmcOWN8eUykFadIwIbx6TThYxBPUY7HzVdNr5sX+djuGuw/3/C
-         4Vt+US7r9QKH9ypiUjVqIYWxjTNeG6oR/Iw6PqL3Vs5em6wcsKpqiqDsK9VidVHATnYx
-         zePA==
-X-Gm-Message-State: AOJu0YyLNh1jd5rm996eZ3M7Y5mG4tslhM+2XP3MsLW0WicR4UI9To7E
-	0B++9+G0PzrFLX/59IsvQoWpymJnO/RSpl2sRgzqnVucQ+0MlwGVy+pbeRYAuYNWwHk=
-X-Gm-Gg: AfdE7ckdP53gxlJb6hASBSQgjT0asu67/tIiFtwgutw6pgUacHLhdNiSXw4uma2HNnd
-	23TIIM3qTN5/aT7KDA4vlRYfohf9ApK2S3AQQs0g3SQnJk8pbqW/FrvRXFeEjMeL+ugoX/ZrYNN
-	MTwZV/GDPdjkb1+M0QP+9BzfHqHBZ7xnDLeSVaHMhHoGunba82SzUAQ/pPLwsqzvnI1r65VDXIM
-	x6QmN7maqSdVX5pw4uEP/cM0JIXUZPBmxF9g+mEDNTGferLIHkjNQyEDBdj9GLkZtcaDT8ytJjh
-	k5k9hNS/Z8r7KvcQ20FJIVkH7p7jFB17aIF9//dd1nBnLic2iE7aE9aAA8uc0gAnZXPA1iaBM+G
-	07UYEtew4Lle2S1Qz3GyASimqOVaW7SnqB4IeLRwiyYGCF0H+MZ4yrtVcoz30jICRixQRrgKCve
-	NrMVojksSa9bFKd89MIuna3Qm5tsXrQB8Z4Q==
-X-Received: by 2002:a17:906:3ad2:b0:c12:48dc:43c9 with SMTP id a640c23a62f3a-c12871929e8mr136814766b.23.1782828971229;
-        Tue, 30 Jun 2026 07:16:11 -0700 (PDT)
+        bh=uDnrMt5EbmXvXJEQ9FwkKXed3+1otjrG3rcRHcpz/mI=;
+        b=aVrvXqCxt1u7/tQ7fckNtUvRfPOMMBN9oGGvJT+0I74REjlHlsV8vZqC3tU6WVJUIp
+         +qGZOJFpNMrKxGqYCMk/KQJ2eMOpGixngY+X/esURT7acckNPhNowkZuXArjeH0JUiqC
+         cNMB1ago6m9wFLgbl9fWmlvyy/uTtIZKXJGdUeRfaR0encysRIZVYRMXI6Ah8GnIWxZY
+         WXvq6SCcY9fg9oFxonrxyq8ecVSToqYGxrYW/Kuez7cqarIubbQSAqx05XutD5RunxvS
+         ZUACSDiMK6h5H4L06fQZlxAYLjHJUaSUJYd7AQf1OPKXYk6QHEAMKCuOXPkVM++S7OEB
+         pHcQ==
+X-Gm-Message-State: AOJu0YwB7osdlUoMvf5gOtOfaWrHez2HYqmsahxmaFUKZZjp7xDL5JvE
+	WDbGyUnkEya8zKysedpOszJA6MpzUnpbOXDToWNf1zNj2WJk7tpx61fk
+X-Gm-Gg: AfdE7ckPlkjyH52pPfz1lzpUZ8mOwcVJtE+r4hjGUeznRl8+hM4eNwYRUJkjVW8HsHZ
+	WHhmAUKSprGA644462E1M9qWy5bfyQc6ymbjtMhRZqWadNmNwCasU703TjFc8+XVSJYXiQiLxlc
+	uksrImiU+ghVNbEIqBfgPYPb1siw7N2F/z5VnDItK6BobuMiHAMrQuSKkh56X47iq2Vzszi0mYM
+	JoCrCYHw1XP5VVD5+cNRog7Uvjjby6ftevSidrRmeD4eqkSYNZr95QJ17GRY0y6pEk+k7ikjr/q
+	mHzdiuWZQ3GCTdCw5gJGIdsF1qoDR1KXaeswLp8kyGjC3/UhJIl7apbt54rdZWBKSoie/n2i+Cu
+	UGctNNeCr092mh2v2ax/c+60EoXGOgIMylbdz2Ib5tOuggQBTBpquNSlxd7IbTXnZ6s2emXhJ1c
+	tTMg7YkW6ppxbfLE/D9O8WE+A=
+X-Received: by 2002:a17:907:3d43:b0:bd1:ba38:c724 with SMTP id a640c23a62f3a-c1297ee260amr47680066b.32.1782828978275;
+        Tue, 30 Jun 2026 07:16:18 -0700 (PDT)
 Received: from localhost ([80.208.66.169])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c12891741e8sm134974266b.55.2026.06.30.07.16.10
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1288d6a400sm136421566b.20.2026.06.30.07.16.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Jun 2026 07:16:10 -0700 (PDT)
+        Tue, 30 Jun 2026 07:16:17 -0700 (PDT)
 From: William Hansen-Baird <william.hansen.baird@gmail.com>
 To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	William Hansen-Baird <william.hansen.baird@gmail.com>
-Subject: [PATCH rtw-next v4 2/3] wifi: rtlwifi: convert pci if-statement to ID table
-Date: Tue, 30 Jun 2026 16:15:52 +0200
-Message-ID: <20260630141553.785769-3-william.hansen.baird@gmail.com>
+Subject: [PATCH rtw-next v4 3/3] wifi: rtlwifi: disable ASPM for RTL8723BE with subsystem ID 17aa:b736
+Date: Tue, 30 Jun 2026 16:15:53 +0200
+Message-ID: <20260630141553.785769-4-william.hansen.baird@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260630141553.785769-1-william.hansen.baird@gmail.com>
 References: <20260626095648.1124924-1-william.hansen.baird@gmail.com>
@@ -77,55 +77,41 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Refactor the ASUSTek quirk logic from an if-statement to a standard
-rtl_aspm_quirks pci_device_id table. This allows future devices with
-the same quirk to be added more easily while avoiding a large if-chain.
+RTL8723BE outputs a large amount of PCIe AER errors during and
+after boot, even before probe and when driver is never loaded.
+This causes significant system slowdown.
+
+The errors are the same as reported by
+commit 77a6407c6ab2 ("wifi: rtlwifi: disable ASPM for RTL8723BE with subsystem ID 11ad:1723")
+
+Add the RTL8723BE with subsystem ID 17aa:b736 to the rtl_aspm_quirks
+table to stop the AER errors. AER errors can still be present prior to
+pci probe, as the device by default may have ASPM enabled.
+
+Testing on a Razer Blade 14 2017 which shipped from the
+OEM equipped with an RTL8723BE card with this subsystem ID
+confirms that this patch resolves the AER flood and allows the
+wireless card to function normally once the driver takes over.
 
 Signed-off-by: William Hansen-Baird <william.hansen.baird@gmail.com>
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/pci.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index f706575f92ce..9a9c895b0bef 100644
+index 9a9c895b0bef..220fb4dc7927 100644
 --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
 +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -31,6 +31,12 @@ static const u8 ac_to_hwq[] = {
- 	BK_QUEUE
+@@ -34,6 +34,8 @@ static const u8 ac_to_hwq[] = {
+ static const struct pci_device_id rtl_aspm_quirks[] = {
+ 	/* ASUSTek F441U/X555UQ */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_REALTEK, 0xb723, 0x11ad, 0x1723) },
++	/* Razer Blade 14 2017 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_REALTEK, 0xb723, 0x17aa, 0xb736) },
+ 	{}
  };
  
-+static const struct pci_device_id rtl_aspm_quirks[] = {
-+	/* ASUSTek F441U/X555UQ */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_REALTEK, 0xb723, 0x11ad, 0x1723) },
-+	{}
-+};
-+
- static u8 _rtl_mac_to_hwqueue(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -330,19 +336,15 @@ static void rtl_pci_init_aspm(struct ieee80211_hw *hw)
- {
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
- 	_rtl_pci_update_default_setting(hw);
- 
- 	/*
--	 * RTL8723BE found on some ASUSTek laptops, such as F441U and
--	 * X555UQ with subsystem ID 11ad:1723 are known to output large
-+	 * Certain pci devices are known to output large
- 	 * amounts of PCIe AER errors during and after boot up, causing
- 	 * heavy lags, poor network throughput, and occasional lock-ups.
- 	 */
--	if (rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8723BE &&
--	    (rtlpci->pdev->subsystem_vendor == 0x11ad &&
--	     rtlpci->pdev->subsystem_device == 0x1723)) {
-+	if (pci_match_id(rtl_aspm_quirks, rtlpci->pdev)) {
- 		__rtl_pci_disable_aspm(hw);
- 		ppsc->support_aspm = false;
- 	}
 -- 
 2.54.0
 
