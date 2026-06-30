@@ -1,162 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68292D8390
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 21:46:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48F07266576;
+	Tue, 30 Jun 2026 21:51:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782855969; cv=none; b=m3JnKK2PJtwknyZMtIpw0DMU98byU0h7Hm3DHe5SYd1fWpt/IEoVjLL8ad2FNmG28LTMOVPaFhMgd2Y1VcOBsO8k+B0VNCBIl5sdOGlVBMJfYW3lEw8O6C8XKrKWndumiplYH2tHtz6vSNkN35/6M21ZMgKZB/tABmMuzfwy3CQ=
+	t=1782856290; cv=none; b=ZrAUTAXDtB1dYOeaHOJJgNHJhT3UByBd6YJ84BmtF9xlpbMa8ho8kCMwfxTlQfIzkHTN5kSCpfqqo4OXgcYxX/0WpZZgKMxTjryAmD3MHbgu8gZ4C0Veq6XHsY+tpzTwbgyMbf2ljo1OCdMDnpBmpQ9dJjQl7wU89U0gUQCgE6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782855969; c=relaxed/simple;
-	bh=QWuxanpR96XxW/AQtuxKdVFi5wsx2VqMS5+/jhKwVBE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=u4VQ396hGwVwkPWx45PUioZF6k2060T16veCAyDqKaSxxeuBQb9dm8qmO6y5NC7yqHJzySwbTEXgnCoPIscaoOTO94KIf8sKKQbFPowl5Il//qQyH/8Vp+o/a+Y18IUYeuQ/MKm1YB+AvtjaaHAZNvabLEzKYc7NtuJnj0so1+k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D7/fwntI; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782856290; c=relaxed/simple;
+	bh=edpMslYdQ4suQQYZ0fpPVhs3/NvftDGtLCzkTzvy+84=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:To:From:Subject:
+	 References:In-Reply-To; b=FPad9nBl62KobG22mSh8/pGqrI1/oh5gJ5AnONTNm1UM+SpF9+rgLChE051PDl49Z9j3mjrkWMoB6pYudqBZB5nj7hoLEKHk11+QP2lovQCZsXDWurq+1UszzhzzI3i9dVvoYMjF3CcTzryI9/gFt36op4RJ+Fb42RYKqtuO+jE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m7A/Hc15; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D7/fwntI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BFB91F00ADB
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 21:46:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m7A/Hc15"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 267DC1F000E9;
+	Tue, 30 Jun 2026 21:51:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782855968;
-	bh=pUvDaNXzQAJTqE61fbo+DfZd1bDU6D/qLMCG5IKiMGk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=D7/fwntI/3EHRu1rhEkf/Sxm5cxtWYBPvIyeiHr4BbeE+U3AC8KziRAH/U9R2kZMS
-	 qnVlrScxXMTR+aij1253AguCwtOB36ZJlqGONrgVB0aIem+0zGFOPt2bkghO19pNQA
-	 0L11F8QdXG3xIS9oH+cULaOedAwOQpsrBZ8+RmrxF+WXYCsMkF8ip8T0M2sh/dSMah
-	 zEJrNBRx53ziG79D5Bk6qHq/Ay1OkwovDv8nf9b1+5iqiKFwvZNA6/ZlQIlt+gGpli
-	 OcoR5vcOBHqTjCfrBl6hNTosFoPsoO5PxYZ505Drx/3wDSyHCEo3Fw7RyinOJ8sFFX
-	 N8ihdn7Dk2vHA==
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c029505b389so159088166b.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Jun 2026 14:46:08 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RruOoJlW2DqCrlzxigWb89/zXeJGg50mGQj+XWUbXYs/thchcGK1ec6+Hfy1Rm/wbWmpmKJqgVj46FxYYyz+g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx2Qnq16KB4y7z8+laEuF8dTheEkp4pttoKuIO2p4l4UvjO+BwI
-	sHRgNygq7cyb4hyge546ymA73iA14z32kb1y/Dq+yHEU/jHVFtwOn0BEApbgZR2gT0nYGlnq9WJ
-	T+aSbmFIxrKprZokvXO7c+xbn5bKjLQ==
-X-Received: by 2002:a17:907:6d06:b0:c08:580e:899a with SMTP id
- a640c23a62f3a-c129042e82emr232092166b.10.1782855967114; Tue, 30 Jun 2026
- 14:46:07 -0700 (PDT)
+	s=k20260515; t=1782856289;
+	bh=edpMslYdQ4suQQYZ0fpPVhs3/NvftDGtLCzkTzvy+84=;
+	h=Date:Cc:To:From:Subject:References:In-Reply-To;
+	b=m7A/Hc15Pch7waVVQKngS9RUrdfRy+Y28mzmEEV0fYso7nyI2LEg8JJDyIh+7Bqbd
+	 zn/QkdLOYItfq9DetZPC4qNCVUh4irtsoHOIW3Fo+Jd4xbvNtsTFAOb403AJIv5DOc
+	 X09FAz/TsOu1+kATHxURNSMVYD95h75E4OprToGt5G4ahyq81ZMvQMFGgbR9COG2B7
+	 J7KIuJcfktkd34iqE85FervA9z5WOiLQzOUL+EGn3rRp1NJgEbe966LOL0c0/H8DT7
+	 ZLb8gtC6rNHEwo1bd3F7gd7PNAavY/aid1LYSfM1asAIxr/dH7Qa1guBpqVOUH5GRJ
+	 uSLaJuk60ixhA==
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260629-block-as-nvmem-v6-0-f02513dcd46d@oss.qualcomm.com>
- <20260629-block-as-nvmem-v6-1-f02513dcd46d@oss.qualcomm.com>
- <20260630180219.GA4139943-robh@kernel.org> <CAFEp6-163adAq8-H_pCzGnq+Fo4jpyKGs6Jv25j3fSpZg3COjQ@mail.gmail.com>
-In-Reply-To: <CAFEp6-163adAq8-H_pCzGnq+Fo4jpyKGs6Jv25j3fSpZg3COjQ@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 30 Jun 2026 16:45:54 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqKFjk-mdaAAOzNB6rFiJbw5gd4eDpRBLQL-4q+uJKnp3g@mail.gmail.com>
-X-Gm-Features: AVVi8Cc4MorOqwfKhUItBpWtyYeUsNNDkbig_T10OqzF2nSF1JgV4ariSeJFQ-w
-Message-ID: <CAL_JsqKFjk-mdaAAOzNB6rFiJbw5gd4eDpRBLQL-4q+uJKnp3g@mail.gmail.com>
-Subject: Re: [PATCH v6 1/9] block: partitions: of: Skip child nodes without
- reg property
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Cc: Ulf Hansson <ulfh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Johannes Berg <johannes@sipsolutions.net>, Jeff Johnson <jjohnson@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
-	Rocky Liao <quic_rjliao@quicinc.com>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Simon Horman <horms@kernel.org>, Srinivas Kandagatla <srini@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	Saravana Kannan <saravanak@kernel.org>, Christian Marangi <ansuelsmth@gmail.com>, linux-mmc@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
-	linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org, 
-	daniel@makrotopia.org, stable@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 30 Jun 2026 23:51:25 +0200
+Message-Id: <DJMPT2QY8TTO.39DLGWZ2Z21U2@kernel.org>
+Cc: "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?=
+ <toke@toke.dk>, "Johan Hovold" <johan@kernel.org>,
+ <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-usb@vger.kernel.org>, <driver-core@lists.linux.dev>
+To: "Gary Guo" <gary@garyguo.net>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH 1/4] wifi: ath9k_htc: don't keep usb_device_id
+References: <20260630-usb_dyn_id_uaf-v1-0-160a02be5ac2@garyguo.net>
+ <20260630-usb_dyn_id_uaf-v1-1-160a02be5ac2@garyguo.net>
+In-Reply-To: <20260630-usb_dyn_id_uaf-v1-1-160a02be5ac2@garyguo.net>
 
-On Tue, Jun 30, 2026 at 2:59=E2=80=AFPM Loic Poulain
-<loic.poulain@oss.qualcomm.com> wrote:
+On Tue Jun 30, 2026 at 1:38 PM CEST, Gary Guo wrote:
+> usb_device_id is not guaranteed to live longer than probe due to presence
+> of dynamic ID. All information apart from driver_data can be easily
+> retrieved from usb_device, so just store driver_data.
 >
-> Hi Rob,
->
-> On Tue, Jun 30, 2026 at 8:02=E2=80=AFPM Rob Herring <robh@kernel.org> wro=
-te:
-> >
-> > On Mon, Jun 29, 2026 at 10:55:20AM +0200, Loic Poulain wrote:
-> > > Child nodes of a fixed-partitions node are not necessarily partition
-> > > entries, for example an nvmem-layout node has no reg property. The
-> > > current code passes a NULL reg pointer and uninitialized len to the
-> > > length check, which can result in a kernel panic or silent failure to
-> > > register any partitions.
-> >
-> > That does not sound right to me. A fixed-partitions node should only be
-> > defining partitions with address ranges. I would expect a partition nod=
-e
-> > could be nvmem-layout, but not the whole address range. If you wanted
-> > the latter, then just do:
-> >
-> > partitions {
-> >   ...
-> > };
-> >
-> > nvmem-layout {
-> >   ...
-> > };
->
-> In our case, the nvmem-layout needs to be associated with a specific
-> eMMC hardware partition, nvmem cells can be a simple sub-range within
-> the global eMMC, each hardware partition (boot0, boot1, user...)
-> having its own address spaces.
->
-> That said, your point about not abusing fixed-partitions is valid. I
-> initially dropped the compatible =3D "fixed-partitions" from the
-> partitions-boot1 node when it only carries an nvmem-layout and no
-> actual partition entries, making it a plain named container node. But
-> it's a bit fragile if we want to support both nvmem-layout and
-> fixed-partitions.
->
-> Regarding your expectation of a partition node being a nvmem-layout,
-> do you mean that the nvmem-layout should live under a fixed-partitions
-> node? Something along these lines:
->
-> partitions-boot1 {
->       compatible =3D "fixed-partitions";
->       #address-cells =3D <1>;
->       #size-cells =3D <1>;
->
->       nvmem@4400 {
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-partition@4400
-
->           reg =3D <0x4400 0x1000>;
->
->           nvmem-layout {
->               compatible =3D "fixed-layout";
->               #address-cells =3D <1>;
->               #size-cells =3D <1>;
->
->               wifi_mac_addr: mac-addr@0 {
->                   compatible =3D "mac-base";
->                   reg =3D <0x0 0x6>;
->                   #nvmem-cell-cells =3D <1>;
->               };
->       [...]
-
-Either this or replacing "fixed-partitions" with "fixed-layout" if you
-want to make the whole boot1 partition nvmem-layout looks like the
-right way to me.
-
-> That makes some sense, this would require extra work for the
-> emmc/block layer to also associate fwnodes with logical partitions,
-> not just the whole disk/hw (hw part), Is that the direction you'd like
-> us to go?
-
-Yes.
-
-> Also, Note that regardless of which approach we settle on, this
-> specific fix/patch remains necessary to validate the partition node
-> and prevent NULL-deref.
-
-Fair enough, though the reasoning for it would be different and
-perhaps should give a warning.
-
-Rob
+Reviewed-by: Danilo Krummrich <dakr@kernel.org>
