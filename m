@@ -1,137 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 132173624B3;
-	Wed,  1 Jul 2026 05:37:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5D337FF7B;
+	Wed,  1 Jul 2026 05:38:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782884228; cv=none; b=NqUy+ma3iu6JnsFWhDNPSkuSZZsSB6HxZw5/1lNEhFA/BttjOwXlSFkjaAfWriMMNnWOkMvLcG0pD165Me2r2jpdNiBJgsXUq/AA8zMZcvi07PsEcld3ncQGs3nVg+p+/2LR8GypTxipBHR42v4uNpW036TMGbst62T+oRbeK6U=
+	t=1782884309; cv=none; b=MWOCzT1T6hBgwePzziTpCrMQ05uES9WPq28Qlprq9t9RFCIcLcAJ1geM6WODQta8Vkj3IM+ENdhjLx1ZmYCA/+XUY++xOaS0R9A/teXvZc9FugZwLsryPT72AuCfvBlkhepv+c3FAj7LHG6tOcCNUfEOaU6i3n0NtuW355QMT7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782884228; c=relaxed/simple;
-	bh=32HqC6YK7qwV+gA/FX6GsxiHJbXny44ENICuqdqO7JU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RcVU393VS/mG8ATAm9IaWh4k01YvUP305QZq/SqKKtF21dDRW9NFVY6NnLpcCf2ms1Ga5KmfZsrtUEfu9b0T5hockqu68geTUQfFaKmJMMukkyMvikpYsJiqpXinYU+07Z3PhNl3PULbGSaJ0hMXIesDhZ93S9TkYj3nRpNsb7A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cvu3oWYo; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cvu3oWYo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE451F000E9;
-	Wed,  1 Jul 2026 05:36:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782884226;
-	bh=AxpIkGUR3B/YQ+use+jlgeTg1Rp3sEV28YNx2zBhiBo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cvu3oWYo7MvnOYf+fng4McUfNgKTxtvvPTsKPCovTBnop/zsHeV+5xoq0S0wGuQZo
-	 NDZ/50FVKK/c7equFbh2mTBsm3B29ywpsQc7MUicYWLPOHp8ftk9d9ou6Zv0h4vwHa
-	 ugxgIZwqihSxbLQza8Y2Nn5x9szQNgH9/m5QPvQqhqn3FzhFRIfZfYWnjNOof6axQ1
-	 2x/nCi1CTOmOHj9Qw8wI7wirCSVR4hautUVK6XcunMFvOL2XkSU1vdll90oJhAKJQJ
-	 cEJNcPPoUNVKPx85p8uZdSen2xELIsFevFn4unA0DyKIxqgE8XgZ71e8f/yYhQLTLT
-	 mJp/klMAcBY8A==
-Date: Wed, 1 Jul 2026 11:06:49 +0530
-From: Sumit Garg <sumit.garg@kernel.org>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: andersson@kernel.org, linux-arm-msm@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-media@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-	linux-remoteproc@vger.kernel.org, konradybcio@kernel.org,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	robin.clark@oss.qualcomm.com, sean@poorly.run,
-	akhilpo@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
-	jesszhan0024@gmail.com, marijn.suijten@somainline.org,
-	airlied@gmail.com, simona@ffwll.ch, vikash.garodia@oss.qualcomm.com,
-	bod@kernel.org, mchehab@kernel.org, elder@kernel.org,
-	andrew+netdev@lunn.ch, davem@davemloft.net, edumazet@google.com,
-	kuba@kernel.org, pabeni@redhat.com, jjohnson@kernel.org,
-	mathieu.poirier@linaro.org, trilokkumar.soni@oss.qualcomm.com,
-	mukesh.ojha@oss.qualcomm.com, pavan.kondeti@oss.qualcomm.com,
-	jorge.ramirez@oss.qualcomm.com, tonyh@qti.qualcomm.com,
-	vignesh.viswanathan@oss.qualcomm.com,
-	srinivas.kandagatla@oss.qualcomm.com,
-	amirreza.zarrabi@oss.qualcomm.com, jens.wiklander@linaro.org,
-	op-tee@lists.trustedfirmware.org, apurupa@qti.qualcomm.com,
-	skare@qti.qualcomm.com, linux-kernel@vger.kernel.org,
-	Sumit Garg <sumit.garg@oss.qualcomm.com>
-Subject: Re: [PATCH v8 07/14] remoteproc: qcom: Select QCOM_PAS generic
- service
-Message-ID: <akSncWwMc9tntyD4@sumit-xelite>
-References: <20260626133440.692849-1-sumit.garg@kernel.org>
- <20260626133440.692849-8-sumit.garg@kernel.org>
- <64e425ab-dddc-4221-81d3-3283e2961bea@oss.qualcomm.com>
+	s=arc-20240116; t=1782884309; c=relaxed/simple;
+	bh=2sPq3wmLq+FV50dMtt62sdvcf86H5SVwNrL1pSyTf+4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GNAU27JmT/owGh9fxYi4LaoJzyRxilpzDa+OKZDqT/BIUaS4UDlboL9GSyQzT9xX2swGfq8D3KG+GZmAHLsk3HKfZ/Ax6xa42Y09GCV0CLuSrfW2PXV0lRJpPliCWJtDQ2LEmRGjj8uyXGZNE45pbJjQY8Ki7Rk0SjQY2oj1EDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.245.140])
+	by APP-03 (Coremail) with SMTP id rQCowACXaZDQp0RqJtmHFg--.51781S2;
+	Wed, 01 Jul 2026 13:38:24 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: ath9k: validate RX stream lengths before copying
+Date: Wed,  1 Jul 2026 13:38:23 +0800
+Message-ID: <20260701053823.49801-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <64e425ab-dddc-4221-81d3-3283e2961bea@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowACXaZDQp0RqJtmHFg--.51781S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF48Zw1DZw1fXr4kCrWUXFb_yoW5Gr48pF
+	WSq3WayrW3XFnrJw45J34xXF1rGa4Ig3yagFyxCw1xur1DAr98KFyxKFyUtrZ8CFWxAF48
+	Zr4DZw43CFy5W3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyl14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+	14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYwIDUUUUU
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-Hi Konrad,
+ath9k_hif_usb_rx_stream() reads RX stream headers and copies payload
+bytes from the current skb into newly allocated skbs. It also completes
+packets that span two URBs by copying the remaining bytes from the next
+skb into hif_dev->remain_skb.
 
-On Tue, Jun 30, 2026 at 02:37:59PM +0200, Konrad Dybcio wrote:
-> On 6/26/26 3:34 PM, Sumit Garg wrote:
-> > From: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > 
-> > Select PAS generic service driver to enable support for multiple PAS
-> > backends like OP-TEE in addition to SCM.
-> > 
-> > Tested-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com> # Lemans
-> > Tested-by: Vignesh Viswanathan <vignesh.viswanathan@oss.qualcomm.com> # IPQ9650
-> > Signed-off-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
-> > ---
-> >  drivers/remoteproc/Kconfig | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/remoteproc/Kconfig b/drivers/remoteproc/Kconfig
-> > index c521c744e7db..65befdbfa5f7 100644
-> > --- a/drivers/remoteproc/Kconfig
-> > +++ b/drivers/remoteproc/Kconfig
-> > @@ -210,6 +210,7 @@ config QCOM_Q6V5_MSS
-> >  	select QCOM_Q6V5_COMMON
-> >  	select QCOM_RPROC_COMMON
-> >  	select QCOM_SCM
-> > +	select QCOM_PAS
-> 
-> This is a NOP, SCM already requires QCOM_PAS
+The parser checked the stream tag and an upper bound on pkt_len, but it
+did not first prove that the fixed header, the non-fragmented payload,
+or the bytes needed to complete a fragmented packet are present in the
+current skb. Reject malformed RX stream data before reading or copying
+beyond the received buffer.
 
-That's true but I think we should rather have explicit modules
-dependencies whose APIs are being used by their clients. QCOM_SCM is a
-special module in this case exporting direct SCM calls apart from being
-the backend for the PAS service.
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-I would prefer explicit dependencies but let me know if you feel
-strongly otherwise.
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 821909b8..f47b0ae0 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -571,6 +571,16 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 			ptr = (u8 *) remain_skb->data;
+ 
+ 			index = rx_remain_len;
++			if (rx_remain_len < hif_dev->rx_pad_len ||
++			    len < rx_remain_len - hif_dev->rx_pad_len) {
++				dev_kfree_skb_any(remain_skb);
++				hif_dev->remain_skb = NULL;
++				hif_dev->rx_remain_len = 0;
++				RX_STAT_INC(hif_dev, skb_dropped);
++				spin_unlock(&hif_dev->rx_lock);
++				return;
++			}
++
+ 			rx_remain_len -= hif_dev->rx_pad_len;
+ 			ptr += rx_pkt_len;
+ 
+@@ -597,6 +607,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 
+ 		ptr = (u8 *) skb->data;
+ 
++		if (len - index < 4) {
++			RX_STAT_INC(hif_dev, skb_dropped);
++			goto invalid_pkt;
++		}
++
+ 		pkt_len = get_unaligned_le16(ptr + index);
+ 		pkt_tag = get_unaligned_le16(ptr + index + 2);
+ 
+@@ -625,6 +640,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 		index = index + 4 + pkt_len + pad_len;
+ 
+ 		if (index > MAX_RX_BUF_SIZE) {
++			if (len < MAX_RX_BUF_SIZE) {
++				RX_STAT_INC(hif_dev, skb_dropped);
++				goto invalid_pkt;
++			}
++
+ 			spin_lock(&hif_dev->rx_lock);
+ 			nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
+ 			if (!nskb) {
+@@ -649,6 +669,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 			hif_dev->remain_skb = nskb;
+ 			spin_unlock(&hif_dev->rx_lock);
+ 		} else {
++			if (pkt_len > len - chk_idx - 4) {
++				RX_STAT_INC(hif_dev, skb_dropped);
++				goto invalid_pkt;
++			}
++
+ 			if (pool_index == MAX_PKT_NUM_IN_TRANSFER) {
+ 				dev_err(&hif_dev->udev->dev,
+ 					"ath9k_htc: over RX MAX_PKT_NUM\n");
 
-> 
-> >  	help
-> >  	  Say y here to support the Qualcomm self-authenticating modem
-> >  	  subsystem based on Hexagon V5. The TrustZone based system is
-> > @@ -230,6 +231,7 @@ config QCOM_Q6V5_PAS
-> >  	select QCOM_Q6V5_COMMON
-> >  	select QCOM_RPROC_COMMON
-> >  	select QCOM_SCM
-> > +	select QCOM_PAS
-> 
-> Likewise
-> 
-> >  	help
-> >  	  Say y here to support the TrustZone based Peripheral Image Loader for
-> >  	  the Qualcomm remote processors. This is commonly used to control
-> > @@ -282,7 +284,7 @@ config QCOM_WCNSS_PIL
-> >  	select QCOM_MDT_LOADER
-> >  	select QCOM_PIL_INFO
-> >  	select QCOM_RPROC_COMMON
-> > -	select QCOM_SCM
-> > +	select QCOM_PAS
-> 
-> This is OK
-> 
-> _however_
-> 
-> It leads to a situation where no back-ends can be enabled
-
-The TEE backend is enabled by default if ARCH_QCOM is enabled, if you
-agree then we can similarly enable SCM backend too.
-
--Sumit
