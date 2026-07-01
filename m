@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38EE936213D;
-	Wed,  1 Jul 2026 07:21:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBC863BBFBC;
+	Wed,  1 Jul 2026 07:35:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782890495; cv=none; b=bvjHgmVrUGRR1EvMhAVsrsx9MFodEpbg1u5QWRjPanINki6pfL22fSMRI/DmH88quZ7TX8fSsHueMy6dTCb1Z22zRSOCdXd0F61UWKmlyHNzjfQq9iTRGAxTsMBDx2PZQMdno+837XMAokHK/8pA3criqiGqKH5eH5ckmKHbOxU=
+	t=1782891331; cv=none; b=aRSwdz/JYBuTVA4VVGNuHHBfoLFXNvVP8z2RJwMxDxroc0fBVpTTDsJK9jZKyFho+vY0xr7r28XJqSkjDpayr1yB9flORckADEoHDogdkydpNMjw4v2R4jgYBv17peXK3OZWqHl/1nyGEeeqAuxvAZFG3nt8wZzZ96KQXufyFGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782890495; c=relaxed/simple;
-	bh=neWw/w4EX9F38zhPoyj1HtuOZ8Di8LOjkelZG5mxbEM=;
+	s=arc-20240116; t=1782891331; c=relaxed/simple;
+	bh=AS/o9NhNXcOqBn4KHzybhUDDFTKtJyf5CY6etHArtWc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dkQO4rAbu59gNYDxGQczU17rg8p6k+vw6zCQlbJUE145JprtaqpDz8HMZWzniB79XwnHEh5dUp/iDF/3S835VILtmpLbpkkikeBKiQE6sm4Jz7aIcuTAkbeJc8DS8vTmqKPA02Ou/gnWV93OzcVhM2ZfvXXS9+16DC4D1mKwe8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxnOmPYi; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=RblTjHInc8NU7TXw/KM/oMN3Y0H+l6LS+aq6bl5JSaw8ZLzSYNDy/KDR1SnSt+jfEeOVKnCrVtj5Z54lgQeS2M43NxM+5hgf1OobkEpKd2W1eK0ZPPeMvNGvp0hPD3p8lD1MLuPpMVhUce9LFWhX8qgEwy/3d5tQOCOD+oHkdmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EZXazlFd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxnOmPYi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 192F21F000E9;
-	Wed,  1 Jul 2026 07:21:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EZXazlFd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 644DB1F000E9;
+	Wed,  1 Jul 2026 07:35:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782890493;
-	bh=E8QuM5x7gXGTaLLIIkxCkvrp1Q5hGaoiUi54XE05gBE=;
+	s=k20260515; t=1782891329;
+	bh=kGEf3SeZYgm8dFwF9x3Ecpp2cSEz1doIyoAXcK2ExLk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=lxnOmPYiTm5nMcXoRupb4T809lC2MPU9MotfSPQqFnkS0hl7wSnlOIbrJDt7bYekA
-	 sVI7f9YSbJwxbO3u0XfHBURHRZlAAzBwjcRa7ShoFl4mSAzdL250vAQBhsVYHLxYOz
-	 lJ7pSTB5tl4owIgtmPSU9hPFWTm9fZYAtim76KJHfRmZutumZgDE16fIPAKf8KLzGa
-	 zVY3+Rs/vv9nPdSM0Sa5+CPx4HzOg9SPN/Q04wZ7M/iIGeGJECFNKF6x+a/WnF5n0v
-	 t4eo5mj5Bhhv0l95T8RNDIP4NtlQqGPv6v66blXrshDRtF6evB4iQ39jw3D4Nl6tV3
-	 sixI5cetuXoTg==
-Date: Wed, 1 Jul 2026 12:51:14 +0530
+	b=EZXazlFdkvJYULlF2W57c/IBuIHM5bksnlkhn4JZaEZIsV9u2rxfmgVZDWz/sZzM9
+	 TqD+fNJP5Gg69c84izlEtOmv1hXtdA+ae6nzZAfzliStrhO5HzV2wLG4qKigklMyQv
+	 q28Z1sdgYOeeXbjkxyXoJBjXn2qaEFZMf68fviUkyMhpHgkLiOBmo+aVmig+ldi9vy
+	 o6htvUykVi39Ey/ZaVPRgmG7pTTIyJ8j7dR3CBapLqAzJnt7VK0UPPNcDN8kaUUbyn
+	 XLt68BOXBx0lyB/fVegvFbVv6Y+rwjzrNI8Hs+1xo1QRp6g/qlg07x/zc2QicnMnSz
+	 GHT3VNckuu4Qw==
+Date: Wed, 1 Jul 2026 13:05:12 +0530
 From: Sumit Garg <sumit.garg@kernel.org>
-To: Julian Braha <julianbraha@gmail.com>
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 Cc: andersson@kernel.org, linux-arm-msm@vger.kernel.org,
 	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
 	linux-media@vger.kernel.org, netdev@vger.kernel.org,
@@ -50,48 +50,52 @@ Cc: andersson@kernel.org, linux-arm-msm@vger.kernel.org,
 	amirreza.zarrabi@oss.qualcomm.com, jens.wiklander@linaro.org,
 	op-tee@lists.trustedfirmware.org, apurupa@qti.qualcomm.com,
 	skare@qti.qualcomm.com, linux-kernel@vger.kernel.org,
-	Sumit Garg <sumit.garg@oss.qualcomm.com>,
-	Harshal Dev <harshal.dev@oss.qualcomm.com>
-Subject: Re: [PATCH v8 02/14] firmware: qcom_scm: Migrate to generic PAS
- service
-Message-ID: <akS_6izxrhgK-I22@sumit-xelite>
+	Sumit Garg <sumit.garg@oss.qualcomm.com>
+Subject: Re: [PATCH v8 04/14] remoteproc: qcom_q6v5_pas: Switch over to
+ generic PAS TZ APIs
+Message-ID: <akTDMOvu5H9qMDUK@sumit-xelite>
 References: <20260626133440.692849-1-sumit.garg@kernel.org>
- <20260626133440.692849-3-sumit.garg@kernel.org>
- <ac8c92cb-21f2-4274-8fe6-f771fe48eec7@gmail.com>
+ <20260626133440.692849-5-sumit.garg@kernel.org>
+ <594cf827-819e-4262-9dff-a35c7f69f86b@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ac8c92cb-21f2-4274-8fe6-f771fe48eec7@gmail.com>
+In-Reply-To: <594cf827-819e-4262-9dff-a35c7f69f86b@oss.qualcomm.com>
 
-On Fri, Jun 26, 2026 at 06:05:54PM +0100, Julian Braha wrote:
-> Hi Sumit,
+On Tue, Jun 30, 2026 at 02:34:59PM +0200, Konrad Dybcio wrote:
+> On 6/26/26 3:34 PM, Sumit Garg wrote:
+> > From: Sumit Garg <sumit.garg@oss.qualcomm.com>
+> > 
+> > Switch qcom_q6v5_pas client driver over to generic PAS TZ APIs. Generic PAS
+> > TZ service allows to support multiple TZ implementation backends like QTEE
+> > based SCM PAS service, OP-TEE based PAS service and any further future TZ
+> > backend service.
+> > 
+> > Since qcom_q6v5_pas depends on MDT loader for PAS firmware loading, it
+> > has to be switched over to generic PAS APIs in this commit to avoid any
+> > build issues.
+> > 
+> > Reviewed-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+> > Tested-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com> # Lemans
+> > Tested-by: Vignesh Viswanathan <vignesh.viswanathan@oss.qualcomm.com> # IPQ9650
+> > Signed-off-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+> > ---
 > 
-> On 6/26/26 14:34, Sumit Garg wrote:
-> 
-> >  config QCOM_SCM
-> > +	tristate "Qualcomm PAS SCM interface driver"
-> > +	select QCOM_PAS
-> >  	select QCOM_TZMEM
-> > -	tristate
-> I think QCOM_SCM is missing a 'select IRQ_DOMAIN'. Right now I get a
-> build error without it:
-> 
-> drivers/firmware/qcom/qcom_scm.c: In function ‘qcom_scm_get_waitq_irq’:
->   drivers/firmware/qcom/qcom_scm.c:2512:16: error: implicit declaration
-> of function ‘irq_create_fwspec_mapping’; did you mean
-> ‘irq_create_of_mapping’? [-Wimplicit-function-declaration]
->    2512 |         return irq_create_fwspec_mapping(&fwspec);
->         |                ^~~~~~~~~~~~~~~~~~~~~~~~~
->         |                irq_create_of_mapping
->
+> I assume that the leftover qcom_scm_assign_mem() will be handled
+> in a separate effort, presumably through something like FF-A lend
+> on the backend
 
-This issue should be independent of this patch-set. Please submit a
-standalone fix for this.
+The qcom_scm_assign_mem() is already handled as a SiP call in TF-A.
+
+> 
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> 
+
+Thanks.
 
 -Sumit
