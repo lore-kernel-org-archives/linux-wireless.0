@@ -1,139 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E15F2C21DD;
-	Wed,  1 Jul 2026 13:59:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12AA125B0B3
+	for <linux-wireless@vger.kernel.org>; Wed,  1 Jul 2026 14:02:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782914368; cv=none; b=rlb82NbQMk9f4udB6qPUHXMPQlZt9OjVhg9KoMZeCHVZnNRZ1naehBDGZan1tNGZenJFvUuU9eyt/EUK7HLRAce9w7UovhHxzZoC+KVzCbxTjlUtRhal+HR/wd5fYdYuQ45JL/hLgMyCiKCMxElZamHUObH8/GC9ynpX3rqVISU=
+	t=1782914560; cv=none; b=bmYO86Az9SNm7fPsZTNohwkmel6YNI4C/HF0loTe9yDX3c0XOAu+JXNDU7oCkKaOAcZUDWd/6jmt9WZxiswB+tycpgTvssPB0S+vYQ1BnP43DOTBHF1rzkDK2Dgerym++a1LAcKLmftw+h2iB2imJtoSnnc6azbeum2RS9YzXkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782914368; c=relaxed/simple;
-	bh=53C0hSBqn3/zw2gZnbvrSpHA3r3Vy8iowj7NMITMB+I=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=t2SGkZAGxy9jE4f4fdVPb1KpYUtXLpE0wRF2kCW3jwhwMA9pFJH4q91aIi8W5+mwwUoy87+5bg98DUrIVvWuYFNQXkgprgYxnwsbtkbhVN9nx685CBfqdKyBHXSphzwFkMyMgriSVpH5e4qD/qe/QUfZNMYf4lhXt4R6RC/OaD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PSnLRdMb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782914560; c=relaxed/simple;
+	bh=b87QwzvJSe0F2yHr23QZcSdKxJvHN4AUenNq2ATH7gk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YQZaCK7s9dKFOOo+7e1daWcXrXjFJmyOyGMvw7gMdN1e1jfaW4vcbGH/TDy0oGLmqLNcaTGT67sL5zCbUmHWDOXZvr/nOJRILwv43G5p+0eHs+GVu7pdBAkHQQu+0z1OWcDoUAOHTHNZF6YTeGYwezJ3dkVKLxjgKb6GiiEhOg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QFnBNt1E; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PSnLRdMb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEFB91F000E9;
-	Wed,  1 Jul 2026 13:59:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782914367;
-	bh=nCZadshr+DzQYVkCBh6cy/RM40zwNi0ZS4nnwSr8GpY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=PSnLRdMbR+/yV7sSYLzPyLddnesEXsHa1tBDjdiRgJT4rOf5OL2e33EkaPOeSrqBi
-	 2Tm+z4xZD2lBf7dMRHzTrj5eWLbvtZMnczL8DW3YjVrf5XcEdmCe1VUGYmjF8mtOu2
-	 eEeo1cVlB7kWz40qdftC/LKcS7vMHHQrrWEOItqbaKKl5qWlYQsxtbr19+jTMWYBcX
-	 YvvLtr0f1Xki4tTem74NG014lbPR+AC8nABvleVYXXXWo+WN9hhZRT5RUWYHEF4+FR
-	 e3yd5jNY7jeR8NpZCmx55WG12xLJJkCKLwlobeiFmfuG9Tgt0O2hm9njCVYAczS7Tk
-	 9Y6YPGJE+O7Ew==
-From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Date: Wed, 01 Jul 2026 16:59:13 +0300
-Subject: [PATCH 4/4] wlcore: allocate aggregation and firmware log buffers
- with kzalloc()
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QFnBNt1E"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-49253e951cdso278195e9.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jul 2026 07:02:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1782914557; x=1783519357; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=smlUF8PDysGUPRBW5n55dDuKs8Qygu7ujB0Z7MC5VhQ=;
+        b=QFnBNt1E7VtbH5E0Frx7D/7CpoIoKNMNWAa6dT5XIaEPiNF9WWctMWEgNAFkK1VIAw
+         Mc7SupMbhkq5ga0g3TujuG/37g7Vd2ilFPhuaCe4CacbkmcPpa5Hn6iYfMDspaWNF9cJ
+         ybBeuaGSmMx/ky13JbjEB3HJbrBMLPs/ZutYqLV5vIDPPPIvC+/MCcFaZ+PpDS8uuLau
+         2NiRM9U9JPE76fQ34r2pjwCNg6QDgQb7sKvVsrT9Yw6BNNPWDolEJVKEUHhADGoJf1gs
+         huzJSHqvXeCBUQogIrYRQWaOmQUhnQVrKQjlVHR4byNtyoE2SuPM9g7gypqETBnG4wN/
+         KBxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1782914557; x=1783519357;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=smlUF8PDysGUPRBW5n55dDuKs8Qygu7ujB0Z7MC5VhQ=;
+        b=Z6sERe8OBEXxb0aSLUIrWTkUzHifT3d7FR8WT5UEhS0xF3AMn0BQE+un8stFsOXzGT
+         Gn4NfCYW0XEHXr4vCHDSgaHfN8vRNsa9aJ4VIXR36ZvW3mP6XopMRfg8J8P8/zHqWncJ
+         sG/lUBAC+I3T3All4UgNi82vTDGrxF8YH+Wkt+A7adRcNsCZTqFN1OZqD2RD9+3C9819
+         5IK+1HYdznyHdR/skE6m4X6hW635/DfCWEz6YOGmIhuk7DpgRFUd6dS5SP0MQBJmUq0c
+         61/k2b0BtkTLvdV8J+WI73qRwhfyJKM4yZk5p9YRXDoPRzrHO10WcNWNlCchoAyLtF3e
+         tuaw==
+X-Forwarded-Encrypted: i=1; AFNElJ8HRC3zSWKbSJJUpflOj6x4fkaXfdrQqKAgvT65tBZ9nMQmtbbC/lqtNJ12lyv3xauwQcxKqZ0dZp62JrOgeQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyG0AkkAEYmYAeHc8jRItUjChrFLIu1GV5ztGvF76wxV7Z69Iwo
+	03Jx3Kc0AZfiVCRVWLGM8m/68O6L7nBlDS7TLypyI6fcDsJnOGFmtmEB
+X-Gm-Gg: AfdE7clxeTOtIzwVjxvwmY+vi5AhvV/1qJKpqFtu8SeKlStUHJ8qCAu5TUZoLZiLFk9
+	OA5L4edq+baLbjrPQZnYQuPO6KBIgne3Lu8NJPUR8mcQeIXLHDHgADewed8twqHeGDQs1zPKcCy
+	yoaNfHsAVG3MXXF8xVzcczDEwlqi3DPuH14fos4ufvmn/z/TRG2dxDtfFOdC0AFNOw/nsNo+D9d
+	2/8DcSX020O/Kw45zP6IzUbgnohK6em1wCJMyx/T6JVjJOCQiAud/al7JDokd7omSBd3QxWceEF
+	G2s928IooPH5vTyZCXmT9VJkI7CMDHyRL1SSylJr+qQZ7PzpSdl0hemxJa079BT4/87QPqgJFs/
+	SkyEOPFEUQmcOLw9/AB7fC9hAzrRzA3E3xP6MDFz977k5NJk85n1hh8VEutZOSfMCiQa/nB4rCk
+	6b5iCRW7UKC9W5+8cIAsXaCmNWOCRAWNERWCX5MMhZ3CfowOAUZphKX+YZc7/Ci9jF4OMNjeogl
+	yIFzkLyPw==
+X-Received: by 2002:a05:600c:5493:b0:493:c26e:d5e6 with SMTP id 5b1f17b1804b1-493c2b906damr16598955e9.5.1782914557070;
+        Wed, 01 Jul 2026 07:02:37 -0700 (PDT)
+Received: from thomas-precision3591.paris.inria.fr (wifi-pro-82-131.paris.inria.fr. [128.93.82.131])
+        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-477dde1a4fdsm85f8f.26.2026.07.01.07.02.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jul 2026 07:02:36 -0700 (PDT)
+From: Thomas Fourier <fourier.thomas@gmail.com>
+To: 
+Cc: Thomas Fourier <fourier.thomas@gmail.com>,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Kalle Valo <kvalo@kernel.org>,
+	Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mt76: Fix missing barrier after initialization check in ath9k_wmi_event_tasklet()
+Date: Wed,  1 Jul 2026 15:57:44 +0200
+Message-ID: <20260701135745.43208-2-fourier.thomas@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260701-b4-drivers-wireless-v1-4-60264cdf2efe@kernel.org>
-References: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
-In-Reply-To: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Brian Norris <briannorris@chromium.org>, 
- Francesco Dolcini <francesco@dolcini.it>, Jakub Kicinski <kuba@kernel.org>, 
- Mike Rapoport <rppt@kernel.org>, b43-dev@lists.infradead.org, 
- libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org, 
- linux-mm@kvack.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-X-Mailer: b4 0.16-dev
+Content-Transfer-Encoding: 8bit
 
-wlcore_alloc_hw() uses __get_free_pages() to  allocate TX aggregation
-and firmware log buffers used for software data staging.
+The write memory barrier in ath9k_htc_probe_device() before writing to
+priv->initialized, so it seems like one is also needed after reading it,
+but seems like there is none after reading priv->initialized.
 
-These buffer can be allocated with kmalloc() as there's nothing special
-about them to go directly to the page allocator.
+Add a read barrier after reading the priv->initialized flag to prevent
+reordering of reads.
 
-kmalloc() provides a better API that does not require ugly casts and
-kfree() does not need to know the size of the freed object.
-
-Performance difference between kmalloc() and __get_free_pages() is not
-measurable as both allocators take an object/page from a per-CPU list for
-fast path allocations.
-
-For the slow path the performance is anyway determined by the amount of
-reclaim involved rather than by what allocator is used.
-
-Replace use of __get_free_pages() with kzalloc() and free_pages() with
-kfree().
-
-Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
-Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
+Fixes: 8b3046abc99e ("ath9k_htc: fix NULL pointer dereference at ath9k_htc_tx_get_packet()")
+Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/wmi.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index be583ae331c0..5595f7a1fc0c 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -6354,7 +6354,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	struct ieee80211_hw *hw;
- 	struct wl1271 *wl;
- 	int i, j, ret;
--	unsigned int order;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 284e8c13b043..1e28599a6146 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -160,6 +160,11 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
+ 			kfree_skb(skb);
+ 			continue;
+ 		}
++		/*
++		 * Make sure ath9k_htc_probe_device() initialization is
++		 * committed to memory before processing skb.
++		 */
++		smp_rmb();
  
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1271_ops);
- 	if (!hw) {
-@@ -6434,8 +6433,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	mutex_init(&wl->flush_mutex);
- 	init_completion(&wl->nvs_loading_complete);
- 
--	order = get_order(aggr_buf_size);
--	wl->aggr_buf = (u8 *)__get_free_pages(GFP_KERNEL, order);
-+	wl->aggr_buf = kmalloc(round_up(aggr_buf_size, PAGE_SIZE), GFP_KERNEL);
- 	if (!wl->aggr_buf) {
- 		ret = -ENOMEM;
- 		goto err_wq;
-@@ -6449,7 +6447,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	}
- 
- 	/* Allocate one page for the FW log */
--	wl->fwlog = (u8 *)get_zeroed_page(GFP_KERNEL);
-+	wl->fwlog = kzalloc(PAGE_SIZE, GFP_KERNEL);
- 	if (!wl->fwlog) {
- 		ret = -ENOMEM;
- 		goto err_dummy_packet;
-@@ -6474,13 +6472,13 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size, u32 aggr_buf_size,
- 	kfree(wl->mbox);
- 
- err_fwlog:
--	free_page((unsigned long)wl->fwlog);
-+	kfree(wl->fwlog);
- 
- err_dummy_packet:
- 	dev_kfree_skb(wl->dummy_packet);
- 
- err_aggr:
--	free_pages((unsigned long)wl->aggr_buf, order);
-+	kfree(wl->aggr_buf);
- 
- err_wq:
- 	destroy_workqueue(wl->freezable_wq);
-@@ -6509,9 +6507,9 @@ int wlcore_free_hw(struct wl1271 *wl)
- 
- 	kfree(wl->buffer_32);
- 	kfree(wl->mbox);
--	free_page((unsigned long)wl->fwlog);
-+	kfree(wl->fwlog);
- 	dev_kfree_skb(wl->dummy_packet);
--	free_pages((unsigned long)wl->aggr_buf, get_order(wl->aggr_buf_size));
-+	kfree(wl->aggr_buf);
- 
- 	wl1271_debugfs_exit(wl);
- 
-
+ 		hdr = (struct wmi_cmd_hdr *) skb->data;
+ 		cmd_id = be16_to_cpu(hdr->command_id);
 -- 
-2.53.0
+2.43.0
 
