@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2CF127B353;
-	Wed,  1 Jul 2026 13:59:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBEEE2DA76C;
+	Wed,  1 Jul 2026 13:59:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1782914356; cv=none; b=lCZz2t6kmisiOnWOSD2bFC8eIHU8Wruj5kM8K21eWfhVDoRenuvzPm/jRgx0EdtNdUREma1Q/kPpNCtGnho7Mz3JA+1JGuLVEZ0ud+96UwVh0GrjFJoEMCdoVBJHr072wC10VGbutCqQO6FKnEsoEY8K6cd/ln+ed9EPs867atA=
+	t=1782914360; cv=none; b=fK6Whjb8lm60bHyS42k/L+7Kag3TJAYg1C9/caA+k0Vg8jw6mxlsiC1vufKN/oLy/rlsrX7fpmE9DPe1xQOJjgl0pu8wTbi8ScwICqMdY2y78NZBZRcmsG0lWm7fT6zhYI915gFt47Waf2oeRsXOcxMV3m22wuYn3yfjO6Ge17Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1782914356; c=relaxed/simple;
-	bh=b2o/Gm9lcosREEItsHlflwLY3iaZob3hfsur+AmRd4U=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=WYEkNjVHvciW6VZ5qLIbes1Qtx4va9zeDO4+88Fnp5ErNWogyD2iExMrcBoXjngty+7NGbBk1xSQSaSTkWQaGEaJKiA2h0YxmF+htXmPwfAOXIBU9EXvlw+sNs06KPI3dmFfpCIj/NtWz4rLVeN+y/JGqqZVpEd0INLCrjxpgwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vlm+1lqn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1782914360; c=relaxed/simple;
+	bh=08ykB7fIvE69EgFDBC6aGudd3atLrrCx3Y/JP8JnJEM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ZTAMIeIuU0SyEAm60qWo2qyIfmpMBbqOLGXpHCxwfHy6UOPoaK8PAgm15P8XfqaHri4S7Lmi3SfjXYvnvCbM4LZzfaXOisaecEFn7FulrDhfAqB5OI/BpdWUflx8NBW2ez9KzeEju34ErZteCcu7rhf+Lo8ZN8xTGp1w+vvmSRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cu3l05zC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vlm+1lqn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14DD11F000E9;
-	Wed,  1 Jul 2026 13:59:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cu3l05zC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BA281F00A3A;
+	Wed,  1 Jul 2026 13:59:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1782914355;
-	bh=LpfnkoRQ/FIEnyqT9WtrevlR/4ONd3yok9y5wj54j9M=;
-	h=From:Subject:Date:To:Cc;
-	b=Vlm+1lqnw0+3/DGTRCUIaNB1c1zYGlJAGjdv2/E5QfdeDDPjsHdM1kPXDdHsF5YGN
-	 3x+fE/ceoDxA2tEV8/6vz4ccOiZvAE/g9lTu2ggMVY1LIdW3rhPgzy/P4cP/22X4BB
-	 e933TZn2T+RhdEai0fwPXAXP4mxuvEnuJzpZf1423uKckJhVeWxNLhNyPKFFLugtpO
-	 ibOOET9A4lUzyeY0V052OdR+CYiehh/YbhQXoMUgjvT6n8e6TkvedxIdZ2xmNyoGyM
-	 6CYy+C1j1qyNX5QZjxiIaInB2gjnLS2PpWBJqFvMmZS3sqI03ko3i7uEC6tFbztQqh
-	 BEVYL8FVMTU4w==
+	s=k20260515; t=1782914358;
+	bh=xHs6OlXAq+nMv2o/knd4pQu7oA8n+V4gayHSkVMilCw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=cu3l05zCJydWaCb6XZleI8j4SchsHom65b6soJbENEKe9cMFPDoR05KBkYA6O0BqV
+	 U/ym3E0Sw51sEY+n/5JJId5v4wFHFCXPa+hJS2OKnLkTMZ4jfnCLdHXRG4fMmMUkNb
+	 374SuCaAnYJfVw+DfMSj6j6S5QtH2Dmp+M0MjO+hMgdHDY5iHQXdy7MImJ7i4sQA2E
+	 STsMPyxBDpSX7NtcYjSV2Gi4BYa084wrEHJsD0AwRYS6rD6at3YLyEOfIdoJkcls49
+	 Beb/26klLPEQ10mPDSUY4SukxC17acg3+oE8gSfBuh7c5ZhKWnGTskGeNSpzm+J/gI
+	 3f/Pf6DR4MmUQ==
 From: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Subject: [PATCH 0/4] drivers/net: replace __get_free_pages() with kmalloc()
-Date: Wed, 01 Jul 2026 16:59:09 +0300
-Message-Id: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
+Date: Wed, 01 Jul 2026 16:59:10 +0300
+Subject: [PATCH 1/4] b43, b43legacy: debugfs: use kzalloc() to allocate
+ formatting buffers
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -37,10 +38,9 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAC0dRWoC/yXMwQrCMBAE0F8pe3YhxjSgvyIesunWrkiU3VqF0
- n830eMbZmYFYxU2OHUrKC9i8igV+10HeUrlyihDNXjno4sHhxRwUFlYDd+ifGcz7P0x9D6MiUK
- Eunwqj/L5vZ4vf9uLbpzndtUalIyRNJU8tagRtu0LbS7gOI4AAAA=
-X-Change-ID: 20260630-b4-drivers-wireless-5294524fab46
+Message-Id: <20260701-b4-drivers-wireless-v1-1-60264cdf2efe@kernel.org>
+References: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
+In-Reply-To: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
 To: Johannes Berg <johannes.berg@intel.com>
 Cc: Brian Norris <briannorris@chromium.org>, 
  Francesco Dolcini <francesco@dolcini.it>, Jakub Kicinski <kuba@kernel.org>, 
@@ -49,65 +49,142 @@ Cc: Brian Norris <briannorris@chromium.org>,
  linux-mm@kvack.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 X-Mailer: b4 0.16-dev
 
-This is a (small) part of larger work of replacing page allocator calls
-with kmalloc.
+b43* debugfs functions allocate 16 KiB buffers for formatting debug output
+text using __get_free_pages().
 
-My initial intention a few month ago was to remove ugly casts [1], but then
-willy pointed out that Linus objected to something like this [2] and it
-looks like more than a decade old technical debt.
+kzalloc() provides a better API that does not require ugly casts and
+kfree() does not need to know the size of the freed object and for 16 Kib
+allocation kzalloc() will anyway delegate it to buddy.
 
-Largely, anything that doesn't need struct page (or a memdesc in the
-future) should just use kmalloc() or kvmalloc() to allocate memory.
-kmalloc() guarantees alignment, physical contiguity and working
-virt_to_phys() and beside nicer API that returns void * on alloc and
-doesn't require to know the allocation size on free, kmalloc() provides
-better debugging capabilities than page allocator.
+Replace use of __get_free_pages() with kzalloc().
 
-Another thing is that touching these allocation sites gives the reviewers
-opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
-another size is appropriate.
-
-For larger allocations that don't need physically contiguous memory
-kvmalloc() can be a better option that __get_free_pages() because under
-memory pressure it's is easier to allocate several order-0 pages than a
-physically contiguous chunk with the same number of pages.
-
-And last, but not least, removing needless calls to page allocator should
-help with memdesc (aka project folio) conversion. There will be way less
-places to audit to see if the user was actually using struct page.
-
-Also in git:
-https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/drivers-net-wireless
-
-[1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
-[2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/
-
+Link: https://lore.kernel.org/all/635405e4-9423-4a25-a6e7-e03c8ea0bcbe@redhat.com
+Signed-off-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
 ---
-Changes in v2:
-- split out wireless drivers from a larger set 
-- use kzalloc() instead of kmalloc() + memset in b43legacy
+ drivers/net/wireless/broadcom/b43/debugfs.c       | 12 +++++-------
+ drivers/net/wireless/broadcom/b43legacy/debugfs.c | 12 +++++-------
+ 2 files changed, 10 insertions(+), 14 deletions(-)
 
-v1: https://patch.msgid.link/20260630-b4-drivers-net-v1-0-672162a91f37@kernel.org
+diff --git a/drivers/net/wireless/broadcom/b43/debugfs.c b/drivers/net/wireless/broadcom/b43/debugfs.c
+index acddae68947a..31a1ff00c1a4 100644
+--- a/drivers/net/wireless/broadcom/b43/debugfs.c
++++ b/drivers/net/wireless/broadcom/b43/debugfs.c
+@@ -495,7 +495,6 @@ static ssize_t b43_debugfs_read(struct file *file, char __user *userbuf,
+ 	ssize_t ret;
+ 	char *buf;
+ 	const size_t bufsize = 1024 * 16; /* 16 kiB buffer */
+-	const size_t buforder = get_order(bufsize);
+ 	int err = 0;
+ 
+ 	if (!count)
+@@ -518,15 +517,14 @@ static ssize_t b43_debugfs_read(struct file *file, char __user *userbuf,
+ 	dfile = fops_to_dfs_file(dev, dfops);
+ 
+ 	if (!dfile->buffer) {
+-		buf = (char *)__get_free_pages(GFP_KERNEL, buforder);
++		buf = kzalloc(bufsize, GFP_KERNEL);
+ 		if (!buf) {
+ 			err = -ENOMEM;
+ 			goto out_unlock;
+ 		}
+-		memset(buf, 0, bufsize);
+ 		ret = dfops->read(dev, buf, bufsize);
+ 		if (ret <= 0) {
+-			free_pages((unsigned long)buf, buforder);
++			kfree(buf);
+ 			err = ret;
+ 			goto out_unlock;
+ 		}
+@@ -538,7 +536,7 @@ static ssize_t b43_debugfs_read(struct file *file, char __user *userbuf,
+ 				      dfile->buffer,
+ 				      dfile->data_len);
+ 	if (*ppos >= dfile->data_len) {
+-		free_pages((unsigned long)dfile->buffer, buforder);
++		kfree(dfile->buffer);
+ 		dfile->buffer = NULL;
+ 		dfile->data_len = 0;
+ 	}
+@@ -577,7 +575,7 @@ static ssize_t b43_debugfs_write(struct file *file,
+ 		goto out_unlock;
+ 	}
+ 
+-	buf = (char *)get_zeroed_page(GFP_KERNEL);
++	buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
+ 	if (!buf) {
+ 		err = -ENOMEM;
+ 		goto out_unlock;
+@@ -591,7 +589,7 @@ static ssize_t b43_debugfs_write(struct file *file,
+ 		goto out_freepage;
+ 
+ out_freepage:
+-	free_page((unsigned long)buf);
++	kfree(buf);
+ out_unlock:
+ 	mutex_unlock(&dev->wl->mutex);
+ 
+diff --git a/drivers/net/wireless/broadcom/b43legacy/debugfs.c b/drivers/net/wireless/broadcom/b43legacy/debugfs.c
+index 3ad99124d522..a04d90d7307c 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/debugfs.c
++++ b/drivers/net/wireless/broadcom/b43legacy/debugfs.c
+@@ -192,7 +192,6 @@ static ssize_t b43legacy_debugfs_read(struct file *file, char __user *userbuf,
+ 	ssize_t ret;
+ 	char *buf;
+ 	const size_t bufsize = 1024 * 16; /* 16 KiB buffer */
+-	const size_t buforder = get_order(bufsize);
+ 	int err = 0;
+ 
+ 	if (!count)
+@@ -215,12 +214,11 @@ static ssize_t b43legacy_debugfs_read(struct file *file, char __user *userbuf,
+ 	dfile = fops_to_dfs_file(dev, dfops);
+ 
+ 	if (!dfile->buffer) {
+-		buf = (char *)__get_free_pages(GFP_KERNEL, buforder);
++		buf = kzalloc(bufsize, GFP_KERNEL);
+ 		if (!buf) {
+ 			err = -ENOMEM;
+ 			goto out_unlock;
+ 		}
+-		memset(buf, 0, bufsize);
+ 		if (dfops->take_irqlock) {
+ 			spin_lock_irq(&dev->wl->irq_lock);
+ 			ret = dfops->read(dev, buf, bufsize);
+@@ -228,7 +226,7 @@ static ssize_t b43legacy_debugfs_read(struct file *file, char __user *userbuf,
+ 		} else
+ 			ret = dfops->read(dev, buf, bufsize);
+ 		if (ret <= 0) {
+-			free_pages((unsigned long)buf, buforder);
++			kfree(buf);
+ 			err = ret;
+ 			goto out_unlock;
+ 		}
+@@ -240,7 +238,7 @@ static ssize_t b43legacy_debugfs_read(struct file *file, char __user *userbuf,
+ 				      dfile->buffer,
+ 				      dfile->data_len);
+ 	if (*ppos >= dfile->data_len) {
+-		free_pages((unsigned long)dfile->buffer, buforder);
++		kfree(dfile->buffer);
+ 		dfile->buffer = NULL;
+ 		dfile->data_len = 0;
+ 	}
+@@ -279,7 +277,7 @@ static ssize_t b43legacy_debugfs_write(struct file *file,
+ 		goto out_unlock;
+ 	}
+ 
+-	buf = (char *)get_zeroed_page(GFP_KERNEL);
++	buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
+ 	if (!buf) {
+ 		err = -ENOMEM;
+ 		goto out_unlock;
+@@ -298,7 +296,7 @@ static ssize_t b43legacy_debugfs_write(struct file *file,
+ 		goto out_freepage;
+ 
+ out_freepage:
+-	free_page((unsigned long)buf);
++	kfree(buf);
+ out_unlock:
+ 	mutex_unlock(&dev->wl->mutex);
+ 
 
----
-Mike Rapoport (Microsoft) (4):
-      b43, b43legacy: debugfs: use kzalloc() to allocate formatting buffers
-      libertas: debugfs: use kzalloc() to allocate formatting buffers
-      mwifiex: debugfs: use kzalloc() to allocate formatting buffers
-      wlcore: allocate aggregation and firmware log buffers with kzalloc()
-
- drivers/net/wireless/broadcom/b43/debugfs.c       | 12 ++---
- drivers/net/wireless/broadcom/b43legacy/debugfs.c | 12 ++---
- drivers/net/wireless/marvell/libertas/debugfs.c   | 39 ++++++--------
- drivers/net/wireless/marvell/mwifiex/debugfs.c    | 62 ++++++++++-------------
- drivers/net/wireless/ti/wlcore/main.c             | 14 +++--
- 5 files changed, 59 insertions(+), 80 deletions(-)
----
-base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
-change-id: 20260630-b4-drivers-wireless-5294524fab46
-
-Best regards,
---  
-Sincerely yours,
-Mike.
+-- 
+2.53.0
 
