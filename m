@@ -1,54 +1,56 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95013A1B5
-	for <linux-wireless@vger.kernel.org>; Fri,  3 Jul 2026 02:55:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E58F30566B
+	for <linux-wireless@vger.kernel.org>; Fri,  3 Jul 2026 03:28:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783047322; cv=none; b=jaizSJY7WMokmZCccIrlxUaQFZZuA83lWanCEJ7WhRmP1PngUf9rjd4ygm357qxgGRcMcTZXuaderov8fOACLZO5ygDuOYb65BdBALAkf+aMbqRds3O/B8asgz/XlkzlcIUVLQ2JijeN496Pt4wcBZHSbVlO9f+ueWG8S0cvKiU=
+	t=1783049308; cv=none; b=XD6XivZTgfr7a9kveJvlbQU5xhY3RNKtzWygd9b6GSvnJZB4x7RYFPuWLUnOr2QzH0lwqcuST6h4NULOCGM6izGC+hR825nFsy1yHDPzK+3ujt+S/X2hYJhY7V5/AYRZLFDh5lvQxujKrL/6DJnhOEhYWZ5I99Vl6u7AC1fK8LE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783047322; c=relaxed/simple;
-	bh=DASLVWcwXx86+bpXJZBj39BT0GGeN+Hw8Uradrb1Wrs=;
+	s=arc-20240116; t=1783049308; c=relaxed/simple;
+	bh=U0xL/cnvdN04xjRjALmZE+0rhjZ4anv2VlwT0ib3zv8=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=l19UwhrhPfTPTu0PiEjVaA6UTrwsHHuxhWHdPu3+y5Sz8HeUjcay+DAuzcNDJwlGAWLnG+3Fj1ji2P6H/jQJfJZs69mhuc/AI5aBr/jDrW6evNC+4z3VbklKo4TuGLqAqBbP9No8V8usckBX7DF2LtzpNYi0MQ9W+a7pSB0IhIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ByDCE7O9; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=qcMkhiAEPK6DgrMM7HfXPl6h2nmBNEHJqo7hLVMDAQ7xcnOsFC1l1v7E5yneKjmdP+K3grkHDl9hvWGD8of0JBl7YxcVjiBjcKPNP8xRyQHS4OTXV3bKc3Lpm1E+se1jysEaJ959fyoKu5u5h+3LfvuWqW4dxuB4H3IMItQ3FrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=IuPWvvU0; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ByDCE7O9"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6632tA1312402834, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="IuPWvvU0"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6633SGJ502417722, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1783047310; bh=ueypNIeZJ1L5Xq7KGzlN11Are+yyW8Zox1yJVo3XBg0=;
+	t=1783049296; bh=WdqTn6MANZGTo6klshnrp2gKizUyhfCmSZYAKOAmQFA=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=ByDCE7O9HXBzuDv8Z4XOG10yEKFRgeuDKpr88nQ2Xvnf5Wu4GeQA3v//a30JzSWtU
-	 Sn/I5OJWStCKhh1eYCQd+uPdhPMYma7IqT2hEVTro3GPzNipg3t29XDWoPp0zunzah
-	 0oTX4SJDq1vnR9HdcJNvsIMP9ctSX+Fhb8jvp29XeSdzC3j8RuqkohalOUgMwVIj0D
-	 K5OfaRA0668JkWVXB60CN+dV01LYOY7vM158lLUjZ3g/bzb46Q8Zz4KBpi63qBj+8g
-	 5UDIleYhZgZVID9h9S5IvXsEjzbVfPIlVp3BR183DYraQGaXe09BxzdgPMdNDz1iXL
-	 xebugeItyOPBA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6632tA1312402834
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 3 Jul 2026 10:55:10 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+	b=IuPWvvU0PIvCX5Ry3mzq0WQNkUyuI13i6+3vZ+ooG37gXsQa0xsKEpNNMWQkhNNEe
+	 BgDZ9bzYJuXHqF+G+kvh5DcAQyMgxWL+2rC1/dBx4gI1fd1KUWDquxEyZubfPjxxex
+	 VplfKpxXHMzMqjWLNW4/4ibxQOAmnihbeQNYvlGBIej+WIGFr8yGPBplcxY6hSAchT
+	 9zZiOR9Ih/pWqKd/X+ZY97Igk4Gh22roclVHMsyhIsy3gIYoe3V+/XlQpBcIUZiVG9
+	 cW/8sFPq2PsrkchbOCUEyc2XZGL57Z22py6FXhrfSPDJ+ayIz1J5UIQ6aURu0ZP3pQ
+	 bOE6W1cjSVdSg==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6633SGJ502417722
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Fri, 3 Jul 2026 11:28:16 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 3 Jul 2026 10:55:10 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
- (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
+ 15.2.2562.17; Fri, 3 Jul 2026 11:28:16 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Fri, 3 Jul 2026 11:28:16 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
+ (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 3 Jul 2026 10:55:10 +0800
+ Transport; Fri, 3 Jul 2026 11:28:16 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Ping-Ke Shih <pkshih@realtek.com>, =?utf-8?q?Georg_Bi=C3=9Feling?=
-	<georg.bisseling@sea-gmbh.com>
-Subject: Re: [PATCH rtw-next] wifi: rtw88: Enable receiving control frames in monitor mode
-In-Reply-To: <2a52d718-9e46-47f2-84a1-d8e7b1ed89a8@gmail.com>
-References: <2a52d718-9e46-47f2-84a1-d8e7b1ed89a8@gmail.com>
-Message-ID: <00fbcdc2-4d26-4cb8-9448-f62e6ec42063@RTKEXHMBS03.realtek.com.tw>
-Date: Fri, 3 Jul 2026 10:55:10 +0800
+To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
+CC: <ku920601@realtek.com>
+Subject: Re: [PATCH rtw-next 01/10] wifi: rtw89: coex: force to exit Wi-Fi LPS while Bluetooth profile exist
+In-Reply-To: <20260624033941.45918-2-pkshih@realtek.com>
+References: <20260624033941.45918-1-pkshih@realtek.com> <20260624033941.45918-2-pkshih@realtek.com>
+Message-ID: <8bd21c8c-39e8-4491-a653-6ab5fd644746@RTKEXHMBS05.realtek.com.tw>
+Date: Fri, 3 Jul 2026 11:28:16 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,26 +59,29 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Bitterblue Smith (S.E.A. Datentechnik GmbH) <rtl8821cerfe2@gmail.com>
+> From: Ching-Te Ku <ku920601@realtek.com>
 > 
-> By default RTL8723D, RTL8703B, RTL8812A, RTL8821A, and RTL8814A are
-> configured to filter out all control frames except PS-Poll, even in
-> monitor mode.
+> Wi-Fi can not reach LPS leave threshold while Wi-Fi only throughput
+> not good & Bluetooth share bandwidth. Add logic to let force leave
+> Wi-Fi LPS while Bluetooth profile exist. Update COEX version to 9.0.1.
 > 
-> Handle FIF_CONTROL in rtw_ops_configure_filter(). When it's set,
-> configure REG_RXFLTMAP1 to let all control frames through. When it's
-> unset, restore the original value. Because some drivers configure
-> REG_RXFLTMAP1 differently, keep track of its value in a new member of
-> struct rtw_hal.
-> 
-> Signed-off-by: Bitterblue Smith (S.E.A. Datentechnik GmbH) <rtl8821cerfe2@gmail.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+10 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-ed51a86b787f wifi: rtw88: Enable receiving control frames in monitor mode
+04e91bb237a4 wifi: rtw89: coex: force to exit Wi-Fi LPS while Bluetooth profile exist
+ce9b6ca8f4ba wifi: rtw89: coex: offset current BT info to BT0 for dual BT configuration
+6ca62c49a679 wifi: rtw89: coex: Move wifi related counters to wifi info
+257cdb2c6e38 wifi: rtw89: coex: Extend bt_slot_req for dual MAC wifi
+77e219a25501 wifi: rtw89: coex: Move Bluetooth related counters to BT info
+195ce7889423 wifi: rtw89: coex: Refine third party module related coexistence
+ebb69df34148 wifi: rtw89: coex: Add TX/RX RF parameter format version 9
+600649fa9c10 wifi: rtw89: coex: Renaming drvinfo_type to drvinfo_ver
+5c071a06bbba wifi: rtw89: coex: Add Wi-Fi firmware 0.35.94.1 support for RTL8922D
+9a149cf572e9 wifi: rtw89: coex: Add RTL8922D chip string
 
 ---
 https://github.com/pkshih/rtw.git
