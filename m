@@ -1,30 +1,29 @@
 Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8DE8217659;
-	Sat,  4 Jul 2026 01:10:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF046176238;
+	Sat,  4 Jul 2026 01:11:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783127446; cv=none; b=SBVGAbEzvmKGV5f18mA4a9lrERnF/XrBFNL0e5SxEERSiSueB3GVH6R2tcEDPhVdTXyNh5t7WN3GTKh2/hXzZFIeL/IrvXA040m5rJDW/HCGfDDa/f2O1lo0Tr49E6ir+sKZ32BVRiUNnz7xG0GWVNv4fVQXQcILsf0/chRhHqw=
+	t=1783127506; cv=none; b=oZLXWQpGvZYsOWKPxtydRSNpokfXUXvCoq9HiZzcGW2ZiDg/9V3coUOb2QxrXeOnlzTDi7xcgDHhxc79vqfZ4lnZZIzAMFNZ9YDHxQFo8uXMhgMHDJyGzkl8BHp1cgxHjFBpsLe/CY7X5ZadGq0yPIT9dEHBXik6FesZx3hf58Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783127446; c=relaxed/simple;
-	bh=wFB6vIweQGWlEM9z3yZCzg5uHxXxNlG0khSVuyXCQCw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ft1+GOzBhu8VgWWr9HyNtFiqTWPmrocA2wR3JLK39ieBaiq5aqtMeRFda9CvbbAl7H+W6Q5mowxXZLOiu48l/3uKqScUkX/URCC0kfOIqKh8rGZ6PnrNx14TNq5r++wjxtF83zJH4eNNoNWcXrA/WH3UPqkLifatzK1ceaMzK3A=
+	s=arc-20240116; t=1783127506; c=relaxed/simple;
+	bh=s53fsSLclPa+i+inq+qezR1LdzPubSOA/8UJT/gHyfY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dhocPVviuGohVMiQpIMHP2mOnaQkN0lZLUKyd4HmgZI9UYnQnXt76ootyiUpXrjtFoEp6Wp/gM1XcAiwY56wFDo0bZuOYT0tCMw9TZpmiI1RWIA3yYSrKvTNRAOvdpLMS4pblbtbaMDAFFHX95lmzvpZ7acdxHn6EumlRSOCom4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowABX0vWSXUhqPp_EFg--.11755S2;
-	Sat, 04 Jul 2026 09:10:42 +0800 (CST)
+	by APP-05 (Coremail) with SMTP id zQCowAB3zhHOXUhqyKbEFg--.11664S2;
+	Sat, 04 Jul 2026 09:11:42 +0800 (CST)
 From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH] wifi: ath11k: validate regulatory capability phy_id
-Date: Sat,  4 Jul 2026 09:10:40 +0800
-Message-ID: <20260704011040.26233-1-pengpeng@iscas.ac.cn>
+Subject: [PATCH] wifi: libertas: reject short monitor TX frames
+Date: Sat,  4 Jul 2026 09:11:40 +0800
+Message-ID: <20260704011140.37639-1-pengpeng@iscas.ac.cn>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -33,52 +32,52 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowABX0vWSXUhqPp_EFg--.11755S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7XrWUZF1ftrW7Cw1fuw4rKrg_yoWDGrX_Gr
-	1YvF1q9w18G3WjqryUKF4UZr9a9rsFgas8WFyqvFWfCan7CrsrAr95Ar4YyrZ5uFyIvrn5
-	Cr15ZrWxZ34j9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4AFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+X-CM-TRANSID:zQCowAB3zhHOXUhqyKbEFg--.11664S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw48Cw47XFWkAr17Ww45KFg_yoWkuwcEqr
+	W3Z34xtF45ta43Kr429FW7W34akFWjv3WkGr4Iq3s3JrZ7WrZ3XrZ5urn8Gr9rur429rsx
+	KwnrXw1Fy343WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzxFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
 	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
 	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
 	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
 	0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUbb_-P
-	UUUUU==
+	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw2
+	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+	67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUb4v3UUUUUU==
 X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-ath11k_wmi_tlv_ext_hal_reg_caps() copies firmware regulatory
-capability records into soc->hal_reg_cap[] using reg_cap.phy_id as
-the destination index.  The loop count is bounded by num_phy, but the
-phy_id embedded in each record is not checked against the fixed
-MAX_RADIOS-sized destination array.
+In monitor mode, lbs_hard_start_xmit() casts skb->data to a
+radiotap TX header, skips that header, and then copies the 802.11
+destination address from offset 4 in the remaining frame.  The
+generic length check only rejects zero-length and oversized skbs, so
+a short monitor frame can be read past the end of the skb data.
 
-Reject firmware records whose phy_id does not fit soc->hal_reg_cap[]
-before copying the parsed capability.
+Require enough bytes for the radiotap TX header and the destination
+address field before using the monitor-mode header layout.
 
 Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/marvell/libertas/tx.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -4856,6 +4856,12 @@
- 		if (ret) {
- 			ath11k_warn(soc, "failed to extract reg cap %d\n", i);
- 			return ret;
+--- a/drivers/net/wireless/marvell/libertas/tx.c
++++ b/drivers/net/wireless/marvell/libertas/tx.c
+@@ -117,6 +117,13 @@
+ 	if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR) {
+ 		struct tx_radiotap_hdr *rtap_hdr = (void *)skb->data;
+ 
++		if (skb->len < sizeof(*rtap_hdr) + 4 + ETH_ALEN) {
++			lbs_deb_tx("tx err: short monitor frame %u\n", skb->len);
++			dev->stats.tx_dropped++;
++			dev->stats.tx_errors++;
++			goto free;
 +		}
 +
-+		if (reg_cap.phy_id >= ARRAY_SIZE(soc->hal_reg_cap)) {
-+			ath11k_warn(soc, "invalid reg cap phy_id %u\n",
-+				    reg_cap.phy_id);
-+			return -EINVAL;
- 		}
+ 		/* set txpd fields from the radiotap header */
+ 		txpd->tx_control = cpu_to_le32(convert_radiotap_rate_to_mv(rtap_hdr->rate));
  
- 		memcpy(&soc->hal_reg_cap[reg_cap.phy_id],
 
