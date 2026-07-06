@@ -1,46 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 818933148BF;
-	Mon,  6 Jul 2026 10:39:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE33D303C9C
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2026 10:54:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783334397; cv=none; b=CjgLb85CYJGq0MGrGNwUG9OKEWLIIbA8HBBs/TTOuvb3/8nwmyrKqQbdL1+FODv0gbXbQaUWQQym+PHopciEKrY1xhjvzrsuS2VhVnQB+sUjauqjid8FVNrhG3iDC2Cao1PffXR4NfCcx4uMdYllq/goeg2TEO/3IhcGBM1hWvI=
+	t=1783335250; cv=none; b=nBjxOpPySr1exlwMfd/pdVPrunlU2vjcSIDj0p1t5IeqNXp9Msq7mvb4U7MEaAHYXwXIXDOo6g4E2nhFC1gLXNP9WNivFg3nE0zGiBat2lTlKrbOI6S1amb2mqJNYvUlhw44FglblA8moqGlVVOgUNBaVU8Jj2V97xwqi8K03+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783334397; c=relaxed/simple;
-	bh=Z61jGkp5iFcPQET9lNUJyKDn6inWB8ly1nt4Sljy5WQ=;
+	s=arc-20240116; t=1783335250; c=relaxed/simple;
+	bh=1VfGwQyqm85kRlTDkyURvifgwc43LbuOrgXR/ZdODdM=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GxSEZZR+K4MG4TkUOhQioBHzNvm0Tscqn2R/181Z9/eFA2sRaiGbx2RUYYtIP7tNMKyz6qemaF/H2qdeM1enZznOHaFXFAtGY42/GLixK9T/vguuOPSJRWqA0/4v4eXYccF0gsD8Agkw6uJL2zYlF7su9Ra9kACqtRLn1NUFwXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=A+jsS6/h; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=a4HR6gWU+nCTIAWrGWRTIalgj2BmrU345SO3vP0yiBFrP1vVST5p5SF1WIkaiuN8WPSRx8QmxpJcQMpkpJ0q6wMNylZDSHgXJbbPBSfBx7KmAplqoa/ZZoGsN5v+/OIUqpoDCf8c/nndQUqEgprFqu1E6uFNzVdo8lqExXd7AWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qOqq4odu; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="A+jsS6/h"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qOqq4odu"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Z61jGkp5iFcPQET9lNUJyKDn6inWB8ly1nt4Sljy5WQ=;
-	t=1783334396; x=1784543996; b=A+jsS6/h3JqwK6+ZV9DXmxoxaEcwN/qM6hlxmri7m+4LvPR
-	ey3iE4exlQOQzcS0I08bqA2qEplZfiaMi1CRK3v3UKX8x4Zg8BNg49JQU0tSfZmjB4ayFAxTcMZQX
-	Cj6T2qCXSx9cMlHfWcwNK21mCBmrmPBEdiGYZPVr7HwZRqhjn8dgKVhkeUDcd90B6Ivb/tLlp7XCV
-	pfZAd17v/SCZszeNympfQuh7yuYXa3vjZRSreiiGzr4FukZo+sqEyV8OEtNbfBm0owlU7/IZ6DJGZ
-	rLVFIuSgi/YyPXzVKCcGkh3jozSCr1i8xKJvCgeInqbopoJgxUZm6+V4A38g1Ywg==;
+	Resent-Cc:Resent-Message-ID; bh=fjyw2jFaTKSFHNWY2CKEBOo8aO2mOl6RpigxW+MdlmA=;
+	t=1783335248; x=1784544848; b=qOqq4odufQcHpzdCdCpEXl+SmPyLecS6+q1p94yvIkyQ2+o
+	8QIkOCF6SVEabl+HxUye/8u5DtFvQyZGioVE+jHROy5eaPTKqvl3F5EiEe+VCH/jS/RVbKWVaXDuw
+	UdIIjVHOWgKdvujIYNqsyYKh3EhcGUFHB+IN1vk2PP/NYtJEt7oRIns4dmT1foMnsbdvYd6Yn2Yy4
+	Z1l5vsbFdTYLvOor9tKjGz27rZONsT49nTD3dpf6QX0tq4+4QfM1tdkxSYOeUwZxNZku6O2bFBFJt
+	mk8GaVMadMVs+vzd+PG5XlK85CONn7bJf8BDcYYt1kBdu7/sbZWM8wbhBVjF/PzA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wggjx-0000000D66y-1Qic;
-	Mon, 06 Jul 2026 12:39:53 +0200
-Message-ID: <c967e7897f421fde56ca4367c9e10d0c6d9f7ec4.camel@sipsolutions.net>
-Subject: Re: [PATCH 2/3] wifi: cfg80211: validate assoc response length
- before status and IE access
+	id 1wggxb-0000000DE4m-3hDD;
+	Mon, 06 Jul 2026 12:54:03 +0200
+Message-ID: <b1d6bff2709e5368b635b956b435cccf4606cb66.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless-next v5 3/4] wifi: mac80211: implement STA-mode
+ peer probing
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhao Li <enderaoelyther@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 06 Jul 2026 12:39:52 +0200
-In-Reply-To: <20260612185042.66260-5-enderaoelyther@gmail.com>
-References: <20260612185042.66260-4-enderaoelyther@gmail.com>
-	 <20260612185042.66260-5-enderaoelyther@gmail.com>
+To: Priyansha Tiwari <priyansha.tiwari@oss.qualcomm.com>
+Cc: veerendranath.jakkam@oss.qualcomm.com, linux-wireless@vger.kernel.org, 
+	quic_drohan@quicinc.com
+Date: Mon, 06 Jul 2026 12:53:58 +0200
+In-Reply-To: <20260611062225.2144241-4-pritiwa@qti.qualcomm.com>
+References: <20260611062225.2144241-1-pritiwa@qti.qualcomm.com>
+	 <20260611062225.2144241-4-pritiwa@qti.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -52,14 +53,27 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sat, 2026-06-13 at 02:50 +0800, Zhao Li wrote:
-> cfg80211_rx_assoc_resp() initialises the status and response-IE fields
-> of cfg80211_connect_resp_params from the management frame before
-> proving that the frame is long enough for those offsets. S1G and
-> regular association responses also have different IE offsets, but the
-> S1G path only patched resp_ie after the unsafe initialiser had already
-> run.
+On Thu, 2026-06-11 at 11:52 +0530, Priyansha Tiwari wrote:
+>=20
+> @@ -1396,7 +1396,7 @@ struct ieee80211_tx_info {
+>  			u8 pad;
+>  			u16 tx_time;
+>  			u8 flags;
+> -			u8 pad2;
+> +			u8 link_valid:1, link_id:4;
 
-What makes you claim "unsafe"?
+[...]
+
+>  	info->control.flags |=3D u32_encode_bits(link_id,
+>  					       IEEE80211_TX_CTRL_MLO_LINK);
+> +	if (link_id !=3D IEEE80211_LINK_UNSPECIFIED) {
+> +		info->status.link_valid =3D 1;
+> +		info->status.link_id =3D link_id;
+> +	}
+
+These changes seem so *obviously* wrong that I can't believe you're
+actually trying to achieve what it looks like.
+
+I guess I'll apply patches 1 and 2.
 
 johannes
