@@ -1,47 +1,47 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CC8241D4F9;
-	Mon,  6 Jul 2026 11:38:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA6DF37BE72;
+	Mon,  6 Jul 2026 11:42:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783337901; cv=none; b=U2gNMcP2xFI3CkVO2OJI2e2zwAB4Wa/nz9lkAfK42hXzNWhyCVOHsRnxRxu9pyvWDbL+qk05IEwcpqh+O56J6nfo8PGxg5rp9SYkzuc341gIuU72XB4xa4Tuz381U8z23t5A3XLPMtHBXDVB/6GvCPQyVsanWz2WERfQ7oJB+EU=
+	t=1783338133; cv=none; b=ahBY0EpvN6jc3VLZQz/8S/EmMOL7x8xnyXE90La+6ui9PioU2P0Dj2PptQzAIJ7rEbH8xyvIC75Dk4CXhNq0tG5Qm4Xzp1EkrK1MRQsBfM6ASEYEAGUMATkXw4WYH+WUyDEXY1atwg9mgwOjaNCsSJc9KgVfWSX1NpeqRIrGXnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783337901; c=relaxed/simple;
-	bh=YD/PfIkg7d1y75W7QSsj27iMVEP16aYBeUafAwZZ0zM=;
+	s=arc-20240116; t=1783338133; c=relaxed/simple;
+	bh=ASsx8UfH0FIFGAP7FDWXSjd3lC1BEJYoUZ4zwFNSkZY=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cAZLT5Y21hjwTCa/oKLhdx8yilPyDdbezGPpLCaQbB+IYRbyLVcENdSIZlgABFl6puw2UvwTUvIhBeoVewQpZZnqiFWIbinHLiwWISbKCfpsdshszxXNAGOpdRaAWLwmdyQAMkwwBsKmPo3wtIjGBwR//e0NGIU7VApQwMm+vAI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=n2W8N7GC; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=C89bcuVu6NnNCCe3AkQxgt4AdGwOFdFR6uaCqNra1NgKcXIjCBNG+agUO1UaRl+eg+O4tQbwJHzO/tdgHU5E4zewy5+oLLFuq9eJwSCxcLxLXQ7BeBWfrFNV3wQ/6se03h1djCF95X2jh19Xz+7GYoak4aQAjVURG2WHc8C3TqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=C61h+jvF; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="n2W8N7GC"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="C61h+jvF"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=YD/PfIkg7d1y75W7QSsj27iMVEP16aYBeUafAwZZ0zM=;
-	t=1783337899; x=1784547499; b=n2W8N7GCts3txWbThQjf2I7tVH8w6ukR+j7Fa5614BuNJYN
-	NFMZdihc+B8b2ELBr0wPV9dzNrwxnUFCIkcjNs0vjOQox+tsRZp77hCtbOpWkqZXaax8jZ3fCTisP
-	3bjU8PiRk2wVHHx3S0KcM49T9Bo76bvJ49+WtVm9vs/6XohKs9/XDQOZS497BeLHTgGZO38/LuOTq
-	uOCv0gmfmJM2kPkmId/bEm3A0PVKZF68bh6P1m7QyBN2tYJ2RokvU4S3hvGf/OaL4NMDYg+8W3NfC
-	kCOngqc1DppO1xn9MF/18UxzSZjkhLYVe7HUs/oNHBC0t//mv8hvPYwi53XswoAA==;
+	Resent-Cc:Resent-Message-ID; bh=ASsx8UfH0FIFGAP7FDWXSjd3lC1BEJYoUZ4zwFNSkZY=;
+	t=1783338131; x=1784547731; b=C61h+jvFrN/usxNtNBgh/NG9FFwFRPwYTBDwdKROPmyzJ5a
+	/6ptj0x6Ae5tWUTr09d3B0dj/Q8LcxbI4i2wWhuwMNsj3af/hwygY05x2ZPrl5Rl0OkjeXjbTLTSG
+	PmLwVnksMfpBS7GMorRMhzQBqmDb9VOknnXSKFkksOtjJKHy/xBp13gNgCxLnIggqpz0zp1EYrh2N
+	5NpSwmM2qZ6EO1rIHG1K9Idb62+zZze9NuW4G5ZXkKjSsMrqCVPwNwYFp4qjxQAyjPnjPcNGPXl/i
+	Nztem25HTwDdR286Pu8C5VpktxelgtS+qvqHFwwm4oQqPHdENhh2hOwLsDTqbEaw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wgheS-0000000DLoP-1u4d;
-	Mon, 06 Jul 2026 13:38:16 +0200
-Message-ID: <ab97c01b73b96bf36527007e19743d3bb5a07634.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211_hwsim: remove radios from rhashtable
- before freeing
+	id 1wghiB-0000000DMAe-0yF1;
+	Mon, 06 Jul 2026 13:42:07 +0200
+Message-ID: <4fc7e89b3203e9bc8843c848268519d34585a038.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: nl80211: serialize socket owner release with
+ netdev teardown
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Cen Zhang <zzzccc427@gmail.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
 	baijiaju1990@gmail.com
-Date: Mon, 06 Jul 2026 13:38:15 +0200
-In-Reply-To: <20260619162419.3874564-1-zzzccc427@gmail.com> (sfid-20260619_182429_647709_7678E401)
-References: <20260619162419.3874564-1-zzzccc427@gmail.com>
-	 (sfid-20260619_182429_647709_7678E401)
+Date: Mon, 06 Jul 2026 13:42:06 +0200
+In-Reply-To: <20260619162500.3876325-1-zzzccc427@gmail.com> (sfid-20260619_182509_015809_D905BC2E)
+References: <20260619162500.3876325-1-zzzccc427@gmail.com>
+	 (sfid-20260619_182509_015809_D905BC2E)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
@@ -53,20 +53,29 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sat, 2026-06-20 at 00:24 +0800, Cen Zhang wrote:
-> mac80211_hwsim_new_radio() publishes each registered radio on the
-> hwsim_radios list and in hwsim_radios_rht. The generic-netlink and
-> virtio command paths use the rhashtable to find radios by address.
->=20
-> Most radio removal paths remove the hash entry while holding
-> hwsim_radio_lock before unregistering and freeing the radio. However,
-> mac80211_hwsim_free() only removes the list entry. During init error
-> unwinding after hwsim netlink and virtio registration, this can leave a
-> freed radio reachable from hwsim_radios_rht until the callback surfaces
-> are unpublished and the rhashtable is destroyed.
+On Sat, 2026-06-20 at 00:25 +0800, Cen Zhang wrote:
+> NETDEV_GOING_DOWN tears the interface down and cancels disconnect_wk, and
+> NETDEV_UNREGISTER removes the wireless device from the cfg80211 list. The=
+re
+> is no ordering between those paths today,
 
-How does the init even fail? I think this is fairly contrived,
-especially in a test tool. The whole thing is maybe worth a cleanup, but
-the whole scary commit message is nonsense.
+What's that supposed to mean? Of course there's ordering between those
+two things?
+
+> so the netlink notifier can pass
+> the conn_owner_nlportid check before teardown clears it, then queue
+> disconnect_wk after the NETDEV_GOING_DOWN cancel has already returned.
+
+Yeah I guess that seems like it could happen.
+
+> Take RTNL while the notifier walks cfg80211 devices and schedules owner
+> cleanup work. Netdevice notifier delivery already runs under RTNL, so the
+> schedule and cancel are ordered: either the work is queued before
+> NETDEV_GOING_DOWN and the existing cancel drains it, or teardown runs fir=
+st
+> and the notifier no longer queues work for that connection owner.
+
+That seems a bit over the top vs. just moving the cancel - why is this
+the only correct fix?
 
 johannes
