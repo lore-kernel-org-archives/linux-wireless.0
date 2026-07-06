@@ -1,70 +1,39 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B638B2BEC5F
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Jul 2026 14:08:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B442F37A849;
+	Mon,  6 Jul 2026 14:25:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783346931; cv=none; b=XQvEASnqj7Yhx3ogw6xNPa2PT2oHbL+uiCvXFrZQviPP4aAByWA2d9O0l1UyYKjtRqOZdFdBU/Rw2V4eRbCq8HUJrfUBeNwyVN43/25H2ULbhIHaIcqqD9/zY75viHr3XqZXNbkPp5um0E3vD46ECdpVsIAtSb6sjsRhk/IcRMQ=
+	t=1783347907; cv=none; b=IRgI9nSszNlsO7oD6Kxm+JTEmYYL/yOWoDUYhokAs8945Pyw8fIWC8VatqYGLfuIwG2qTQAvWW35IXb6TcE+7hJXaIo4tcIzdOqP9N00xE1E2JZUFgQ0lG78PeZApL/Z6dOfAELK5luSUtecvDcPJPzDyMJLcxRqwGiA3X+caxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783346931; c=relaxed/simple;
-	bh=OvcBXbb6svnS9dw+2GJsgsoZ6wtG7buzXxSzu/ncMi8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=I2kEHF0Fkqa+57WlxdmfmOkw0ycghXcgKvIdJeTjPWi2RQfuclKctwLiz23vd3ph52ZihMVvG7MPvjVJdVcCXe/x9dwS9aP2BNfrtkyP+7DrAc5llFYyy52V8fS+ghrbBCqLKPQjum6TtIGWFDaf+8pAH6oZRuGw9ld7Q5hvFj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QBo2DLrH; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783347907; c=relaxed/simple;
+	bh=C2Saa5XpV03/C4HkVOGMRTqdRTVQbwGa+2F/73MPLWo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Et4oyt4NIu5q6XgTjzCUR1TjWztP2RnSo7IalmT07vMZfUk2Ss6zKtF1JroLtnqynq0mtP8OXyKXKvwIX1Qs0Y1RJtunucuLfzJx9ZZVAJ2/zglQpIYiUbt1mj+2dg6XKYjrzfv4CCwxrBGsTebnTuosaSlXNjhSfDkKy+WplzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=ltcHrTS6; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QBo2DLrH"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-847aebc56b6so2358733b3a.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jul 2026 07:08:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783346929; x=1783951729; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2IBS76Mn/jkVR/fb7F7t2ovJU0n/S9uOhgPtwi9Ts4o=;
-        b=QBo2DLrH8f0YhWuwwVB+PIu+h0C6TnhI8B0z2N411WZ0dV34ZF+ey4dLQFoQKVaCt+
-         xC9hlSdwjnWRg1kmC0Dwd7chQ3NOaqxp1BMYuELC50FoO55lgV9j/S7AC4E8PiY/rpmY
-         WJgrZVsGsIt7kpgoi5KHUESaW+oMSm8QPmELd6Du7de7E1NevOEmeIsCsK7lLOnzF9+y
-         VaMOFAum+fM7e14Gqs8d5pmfFK60I/iZb2/o2T9iuBZPYFuYlbv7mygSrG0BKeR3kNn6
-         jf/H9Ool8osc5z6lMtAv4rc8qbfghiT8hxE77QOJjT+7ruVi9RrBAzJRE3nuz1/QMlwm
-         pB2A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783346929; x=1783951729;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2IBS76Mn/jkVR/fb7F7t2ovJU0n/S9uOhgPtwi9Ts4o=;
-        b=fXyBU/55jEnSVw3hb72AplduteyVKGOqjYDS2p2/5/ktcAoZz1WXF7I6IGvyMkJpAN
-         aN/SwSbg/+qenn4cpeMuternrFabQ3T4tZ8lk//JwyYPkTxHf4VoZbJ0tm31NbgxaSTq
-         RqhWjOjjZonKzcZys/iC488lajbqv2yybNcj59uLGd2YxTu9tI+zlClUvOJOpAs7b+Y0
-         x8nAzsgitGNIpSeB+wQLT+vlyKf5HuLPeiNppyCZMKPCBtpvKOPdrYUUJYKLx2BjwHuV
-         I5at2/9qWjZbxPuOtIArAqSx08h+AyMSCN2gUvcqFXoiROBU3EaU9fdEYCvSbc+mVXUA
-         6eiw==
-X-Gm-Message-State: AOJu0Yx2Kfwr54/lQ73yv7ibwcNhmKitJTG2WdcBstHBtN1Kr+Q0mzYi
-	0HpkxwpNPc5wQpQg5jukE+pKE4Ay0gpmvwlMrTeZoX5Xf0rrSHRpyUW1
-X-Gm-Gg: AfdE7ckAEYN1erZxhFJBj5njG5kOCwLiBxwQ+S2tW2ybHNeyFp+qvLQ9n3Lvagu9ftd
-	tEOXrSM6UCIWH1alwsNorG9Frzhbrq/wYkU5kdkv0m0Kwewq5CzosArnXu5NBgemKVj+WMbw1HK
-	M2SWM5csrrEndqNAEH49GXK1LwiWhtScZnZo49/IFcHy1jnq+lIBkeq9maPnfc/kJRVAyjBuO07
-	hOUJjDDrH0B4Zuna15rV7LZeotRWWsKLcjuDBu3IimbgNi6jX/wk8OBkGhGFnfEN5AZVEcNG2IV
-	yJUDOSUzKNLGqsc2o4cb+fLbssPEIu34woD5lStg23RIztlfyaQRcTcQ4axIEhVQgIzHChsBuvH
-	a/uA6ioghXcQldL7TetV4SJsYQl0qibBd9uTxM8loCkdj1WvKcmT3WdRcMvqwfofrtHdIOcrvie
-	DgsMlcX/A=
-X-Received: by 2002:a05:6a00:4fcb:b0:847:770f:da4c with SMTP id d2e1a72fcca58-84826c9765dmr647961b3a.16.1783346928949;
-        Mon, 06 Jul 2026 07:08:48 -0700 (PDT)
-Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-847f6bd1078sm3875262b3a.24.2026.07.06.07.08.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Jul 2026 07:08:48 -0700 (PDT)
-From: Cen Zhang <zzzccc427@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="ltcHrTS6"
+Received: from DESKTOP-SUEFNF9.taila7e912.ts.net (unknown [223.112.146.162])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4516bc2c4;
+	Mon, 6 Jul 2026 22:24:54 +0800 (GMT+08:00)
+From: Dawei Feng <dawei.feng@seu.edu.cn>
+To: johannes@sipsolutions.net
+Cc: dawei.feng@seu.edu.cn,
+	jeff.johnson@oss.qualcomm.com,
+	jianhao.xu@seu.edu.cn,
 	linux-kernel@vger.kernel.org,
-	baijiaju1990@gmail.com,
-	zzzccc427@gmail.com
-Subject: [PATCH] wifi: mac80211: free AP_VLAN bc_buf SKBs outside IRQ lock
-Date: Mon,  6 Jul 2026 22:08:41 +0800
-Message-Id: <20260706140841.581566-1-zzzccc427@gmail.com>
+	linux-wireless@vger.kernel.org,
+	stable@vger.kernel.org,
+	zilin@seu.edu.cn
+Subject: Re: [PATCH net] wifi: mac80211: fix memory leak in ieee80211_register_hw()
+Date: Mon,  6 Jul 2026 22:24:54 +0800
+Message-Id: <20260706142454.143798-1-dawei.feng@seu.edu.cn>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <986fff6416ba2acd8d7a4e5fb2f6a89eb40e10d1.camel@sipsolutions.net>
+References: <986fff6416ba2acd8d7a4e5fb2f6a89eb40e10d1.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -72,69 +41,33 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9f37d1571303a2kunm313b7b15960e
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGh5OVh1OHh9OSR5KQ0lDGFYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSE
+	pPSExVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=ltcHrTS6LrY53O1dpuK+Fteeim+QCEHdmqPgnpnRt4IPML1KRoELNidIVgnQGNWdeU+uoR3ik9yJoIQdS4/b+VMkvTLplMx40KHji3+1leYzZFS1b2lBRD9fAobg/IOH9LUC+pdlWYf7v+ct7eJRdB32syJzJu91niikwTZ9Icg=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=C2Saa5XpV03/C4HkVOGMRTqdRTVQbwGa+2F/73MPLWo=;
+	h=date:mime-version:subject:message-id:from;
 
-ieee80211_do_stop() removes AP_VLAN packets from the parent AP
-ps->bc_buf while holding ps->bc_buf.lock with IRQs disabled. It then
-calls ieee80211_free_txskb() before dropping the lock.
+On Mon, 06 Jul 2026 13:47:22 +0200, Johannes Berg wrote:
+> Reported-by? Reviewed-by?
+>
+>> To better align with the kernel submission guidelines, I will add a
+>> "Co-developed-by:" tag in the v2 patch for Zilin to properly reflect his
+>> contributions. Would this be acceptable?
+>
+> If he did development, I guess?
+>
+> Anyway you didn't do that for v2, so please resend after you figure out
+> what you want :-)
 
-ieee80211_free_txskb() is not just a passive SKB release. For SKBs with
-TX status state it can report a dropped frame through cfg80211/nl80211,
-and that path can reach netlink tap transmit. This is the same reason
-the pending queue cleanup in ieee80211_do_stop() already unlinks SKBs
-under the queue lock and frees them after IRQ state is restored.
+Hi, Johannes,
 
-The buggy scenario involves two paths, with each column showing the
-order within that path:
+Thank you for pointing out my omission. I will use Reviewed-by tags for
+Zilin in v3 patch.
 
-AP_VLAN management TX:             AP_VLAN stop:
-1. attach ACK-status state         1. clear the running state
-2. queue a multicast SKB on        2. take ps->bc_buf.lock with IRQs
-   parent ps->bc_buf                  disabled
-                                   3. unlink the AP_VLAN SKB
-                                   4. call ieee80211_free_txskb()
-
-Unlink matching AP_VLAN SKBs from ps->bc_buf under the existing lock,
-but move them to a local free queue. Drop the lock and restore IRQ state
-before calling ieee80211_free_txskb().
-
-WARNING: kernel/softirq.c:430 at __local_bh_enable_ip
-
-Fixes: 397a7a24ef8c ("mac80211: free ps->bc_buf skbs on vlan device stop")
-Assisted-by: Codex:gpt-5.5
-Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
----
- net/mac80211/iface.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 086272c3ec08..43460a705a6b 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -588,6 +588,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 		WARN_ON(!list_empty(&sdata->u.ap.vlans));
- 	} else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
- 		/* remove all packets in parent bc_buf pointing to this dev */
-+		__skb_queue_head_init(&freeq);
- 		ps = &sdata->bss->ps;
- 
- 		spin_lock_irqsave(&ps->bc_buf.lock, flags);
-@@ -595,10 +596,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
- 			if (skb->dev == sdata->dev) {
- 				__skb_unlink(skb, &ps->bc_buf);
- 				local->total_ps_buffered--;
--				ieee80211_free_txskb(&local->hw, skb);
-+				__skb_queue_tail(&freeq, skb);
- 			}
- 		}
- 		spin_unlock_irqrestore(&ps->bc_buf.lock, flags);
-+
-+		skb_queue_walk_safe(&freeq, skb, tmp) {
-+			__skb_unlink(skb, &freeq);
-+			ieee80211_free_txskb(&local->hw, skb);
-+		}
- 	}
- 
- 	if (going_down)
--- 
-2.43.0
-
+Best regards,
+Dawei
