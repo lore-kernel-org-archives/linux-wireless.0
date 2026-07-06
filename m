@@ -1,83 +1,75 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6628F3BE17F;
-	Mon,  6 Jul 2026 11:50:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B4B13033F5;
+	Mon,  6 Jul 2026 12:08:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783338647; cv=none; b=EU6QPovESJbc3eQgz3aEDLlYgfMF6a5AOB/gAmc0iGyNCQmcucuQFWFgmtsMWwLYH5rq7cWte5CS78pXBx2RYqhvSO2NbygS8H1jE8DhaY1JssEMKI7KcV56jhDxbMJyAtn3lAHB5BHeE8m6/xcqir03GeMrZ4bFI2has5sRG1w=
+	t=1783339715; cv=none; b=nPRp/vG+RSl+YZvMdsqtw287cPFL/f6uuTLctf++KPAQBQ76Lqa5ucGN1MXggv1qHgeSZcsnRU1szSdpCjHy6hCxSNKN9ylc4WmzWqZyNKuNUra41SFcAwikzIzYBPr49H2gdoJ4+eOI1Ct6gI0ZHyRa64Koa/JBGe7QO4dTaDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783338647; c=relaxed/simple;
-	bh=HXUcfuHOZrrP1VZnW2aHgFlqkUZyaY85JueyXtjKaPw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XX3lIVl8mgP9OAmRSthW+J2nhvM3P0GfSvCnQUl+xhGAei70RwTVTsJk9HfS7te3MdGnQ2Ldi04RuFoYPY2xrehwwjKg3Y1Fnx2Uzm87ufJilW1BQuRegxgOnPES0BHH8WhNYYt7oX4shthoFo5A3ehHzJABAYQx2UgMbI63JSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=V/alNT4L; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1783339715; c=relaxed/simple;
+	bh=uB3HF3lokezskor+Db7VUtdp2pkQLE+PkzjxyYapK3Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=FuhTDr41ZvnL3mdcPaXY+LEAwg3JNMKFIs3CcxJuKXdyIhF5l2n9R4S/VFiJFn96RlwRtWd3xMtq7VeoFdKhPb5reC56zt6Oj/DdCOQyhcdjClPmq0KlDt7zj1NE6khsTu4SQ0vAnHFlwwekjUhojcf1J5EwNNuoVUrlNGgFv90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FmTW4gq6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="V/alNT4L"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=HXUcfuHOZrrP1VZnW2aHgFlqkUZyaY85JueyXtjKaPw=;
-	t=1783338645; x=1784548245; b=V/alNT4LGUqQMgZcTpSV8K+CRIVJPrgxOvaP1BOjo2YAraA
-	6TOG/Hfxz7rEb7ZDY0kzEXRKlJ56QACU6SAbG8N2BOWx+K3iW1SkQGRQra7Op38nBwFMgY8dxpDbh
-	ArHHfoQFF05FksFLPSM95G+sTAbG8V2amTtXhB1NRVimXFUZgF16RYFSHXGnZ0yvbqxHcaLssb2Gf
-	gdo+O2LlhORowCW94PyEFcgnXTu9KL7Kb4Wc7iC+YDofeZPbjzX+uGR1QDmtHPXYrg/CnJr3xh/oU
-	lxiGCzlE0UDa1b+vQ4HCgFD3vo8jK9SlMNyC2vit6vt2678sB8mqgyYsL3UNahew==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wghqU-0000000DNmg-2eGs;
-	Mon, 06 Jul 2026 13:50:42 +0200
-Message-ID: <daa380b58ab0cea0c496cdb04c5b6c8b10fd6ee0.camel@sipsolutions.net>
-Subject: Re: [PATCH wireless] wifi: mac80211: clear beaconing state in
- ieee80211_do_stop()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hojun Choi <ghwns6743@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, Deepak
- Karn	 <dkarn@redhat.com>,
- syzbot+ca7a2759caaa6cd4e3db@syzkaller.appspotmail.com
-Date: Mon, 06 Jul 2026 13:50:41 +0200
-In-Reply-To: <20260628141311.12488-1-ghwns6743@gmail.com> (sfid-20260628_161235_921778_27378788)
-References: <20260628130802.7698-1-ghwns6743@gmail.com>
-	 <20260628141311.12488-1-ghwns6743@gmail.com>
-	 (sfid-20260628_161235_921778_27378788)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FmTW4gq6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D83E1F000E9;
+	Mon,  6 Jul 2026 12:08:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783339714;
+	bh=PAxzJfr/8WC9bfBeHItPe09+0OJRAW/8N54/h+mUpQc=;
+	h=Date:From:To:Cc:Subject;
+	b=FmTW4gq63FRkHNpl5kdZyv/6TZvoVsac3bTA0esVgdGuzTm4wRYRwgFsBMjStlkOQ
+	 GzV/cAnKHRe76ygepAHtQUjsYGaQade6CO6odvLjuXRIySHhDAlQZjvDfHOptL5n2D
+	 syA7KjDrVBF2xgDxu4HkpE5azOlfPfOSn6+7VrCI5QqNnTQilq1f4iiox/ahN2o/dx
+	 s+ODtNmVjmEcjz2sgz93cKp5KN/P8CLw3ms+Jsju9S/yAGJsUZpH7JJzr24XIV3/3b
+	 rpj+sdSYriMBdn7S7G6NOcSZ9w8wAJ5iVOUg5car/UPqUcSZObtV6kkej0SMHU9QkT
+	 vOhPc13EPWlEw==
+Date: Mon, 6 Jul 2026 13:08:30 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Subject: Missing signoff in the wireless tree
+Message-ID: <akuavl61ipORt5b0@sirena.org.uk>
+Mail-Followup-To: Johannes Berg <johannes@sipsolutions.net>,
+	Wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="DIzVpnLYhWxdCOJQ"
+Content-Disposition: inline
 
-On Sun, 2026-06-28 at 23:13 +0900, Hojun Choi wrote:
-> Following up with the concrete path, since the question is whether
-> cfg80211_leave() already covers this. It does not for AP start failure:
-> ieee80211_start_ap() sets enable_beacon before its fail-able steps, but
-> its error path (cfg.c:1930) only releases the channel, never clearing it
-> (unlike the IBSS/mesh paths), while cfg80211 leaves ap.beacon_interval at
-> 0. A later interface-down then makes ___cfg80211_stop_ap() short-circuit
-> (-ENOENT, net/wireless/ap.c:30) and skip the stop_ap clear, so
-> ieee80211_do_stop() runs with enable_beacon still set. I could not get a
-> driver to fail start_ap() there, so this is by inspection, not a
-> reproducer.
 
-How did syzbot hit it then?
+--DIzVpnLYhWxdCOJQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> I can fold this into the commit message in a v2, or instead fix the
-> producer by clearing enable_beacon on the start_ap() error path
-> (mirroring IBSS/mesh) - whichever you prefer. I used do_stop() since
-> you suggested it might need to clear that bit.
+Commit
 
-Who is "you" here? I guess not me?
+  e4fa2545a610d ("wifi: cfg80211: cancel sched scan results work on unregister")
 
-It seems to me the cleanup paths make more sense though? This looks
-really quite out-of-place in do_stop() I think, especially the
-offchannel bit? How would that even happen?
+is missing a Signed-off-by from its committer
 
-johannes
+--DIzVpnLYhWxdCOJQ
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmpLmr0ACgkQJNaLcl1U
+h9DJ3Qf8CexnQJ2Hn9DMEG2s3wbMItHI8VHv1oPe4VUYZ+ke+S/U0Sx8tqquk+If
+2wLETy8t2gNG8ToUvCkTMqLBeeywV+Es2QsEO39JrDCpCLqL1+rVKNgXFlY7qEaA
+56f+R4Th7k/u7b423d5fiNjj2zMJ66BwI1ZWt5zzKHuQZPGO3Y7+0Q/iHkVvWpTf
+4mwwPnU4pnjfkNLVrJForv9ItJjBv2Y+ctJDkkuYelYagWjx4i6hDjCsMdI9joa2
+O10WHXpoMiBhPVAm/UBq2CnLSvl43zDeTBfAiS7iDg+OdJkfwn/6V9SP1OBTpVpg
+fhaFbcHNqLSllYXMtWrnp2sudf2c1g==
+=Nlf+
+-----END PGP SIGNATURE-----
+
+--DIzVpnLYhWxdCOJQ--
