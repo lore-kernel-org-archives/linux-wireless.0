@@ -1,54 +1,53 @@
-Received: from LO3P265CU004.outbound.protection.outlook.com (mail-uksouthazon11020124.outbound.protection.outlook.com [52.101.196.124])
+Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022114.outbound.protection.outlook.com [52.101.96.114])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F55B40A943;
-	Tue,  7 Jul 2026 12:27:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.196.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6993D41A784;
+	Tue,  7 Jul 2026 12:27:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.114
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783427230; cv=fail; b=tLxF21MQ164q/cy/209xS8n9uhq53gClnmtANvTFgunSixrRX6tr7WvjuSByJEBWuIpinbreNqGaE/7BTr3niX7hpYPZlaLZaL0qXmFa+DP/K75hK8bIE/h33DILbb+JOtqtelVw+Wmh8RE7HTU06unbqLfZBhFnnPfXPn5NyeM=
+	t=1783427230; cv=fail; b=Juy9kEyBCPbQ6kbIUDGJCmLoxCTruoHm2SWmlvqc62W7eUzIZ2knOvxU62De+OVjHcy8aSqKI790iZmRfaXBtS8Fv1Vv+rbsIC8aJyAMyqrF+A+iU/NDjjfSvKkRdJ8AZtgxj3mn8iLdW5C29qL9qfoUBswtITgoE43NJmrsa20=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1783427230; c=relaxed/simple;
-	bh=++nTjvaUlIlFlL8D8AcF4vnmvP7p2rLheSDLnLOiYcU=;
+	bh=H5JFKotXcRvBL+j9x2gVWjs5di3esqntHjg/n1H0gL0=;
 	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=K42MJba3Y9T4Nrdl5cYvid/cxximpk2MxBNOOUYbfSW7ITmUf1yM3DzO756XDOhXElRzz9K/b20BZJ8oYG2rZn4CSkuemmnK0TyUn6rVMWCu3W0oYeSHc88gifwizrreOek5shhFu4hItJUDXVix3k/QfKBMufyW8eKsx+zonaE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=Ii9bOIak; arc=fail smtp.client-ip=52.101.196.124
+	 To:Cc:MIME-Version; b=ZLLEbvLl4HpdKJ9IsjMR2UFlKnc9eh4ldoqGTgDVHFiIZZgyrx4uoxEbBRhVhkbpwlSMGbuV70Ft1E5777SypirBgD4FkedtZ1Wjxs03QRq6Fmup59Kwq4O/FP74YRDQNgm36mV2NlCMgBGLIVqcfXOTM07btHKk7j/KRiwmj0k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=z42VeGru; arc=fail smtp.client-ip=52.101.96.114
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="Ii9bOIak"
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="z42VeGru"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=n/SuwLhjGR8uHBpf6f3oY97U4ZvHj1kxkfKmrH6rPargFkV25/WNCUcFwlkVHi5BImoguG/93vnE/JogXB6Vz6EIKrJ3Dl2MP5rWaPbfrKHtHCwcyUaf9s0fVkhdf5D/JsPjwje1ITJt4TpgdFCIyp4UGgfUmtL0vIF7PBgDznI/11WAzM6wkwjFOjkq4/N/qkeFFNJLJpsh6GOkaFkwCl2i3hfY8TEQeG58rljtdz8y2TyDFA5+4SOQ7re+SUON/7j3njn+LApuEnijmVG+vbDr4Wd3zvDxeNCAl4wDhSZMCD347fwVX+MhZXom/79HCaZ9CMnQKnSyuod5B1v8Jw==
+ b=TohsxdBIOgpDr8RViM7yp75sRD3r0oExuAuvfUsWrgXaOpLhpruVCPIb6+KDTR5RCQhLDykrEgyNYHCcu6KciypkHPZyRNwUnTUjZRiyMzTR3gN3taWnHyneEquabdFYgDHat2fAV/VdpPxRoWILc7UxmBR3AhoWtT/maHkx7AHIZSqjtqIIdYl8QVAy1qZ4h4FiliGrYoJH/OOy1f1LeRPPOvnKBCn45cck9XEVSiWExMkkBAq7SuD0qU9lJUeOUj0K2aeRgoxaJdCac007wrQfDRjsE+WZvSsyd3Wv3WsXLTRNhNzLydw4g/drdXwCSgZEBx42Br8usHEEhk048Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IcmrvPCu1eFMNzTDwg4KQVgOQZlZ+T1ehfcBf4+kdj4=;
- b=DBMb5/IrLRuUULAeVGTtJmJ1S+LxQO5lKgN9cDjNVFuxTor1V8+7yNeDPyKa52Ze4z/bWSQzMxyl9keFJeeIksFqLbryRBadPSHJKOOVPQYDRHtZtL0eupuzXn7RACK4Rm7bPNVdPrtY8j+9TIfZq2dbv1M8Beai/0bqCR9MfmE/si9lac3hPyAwvAbnLBGpPpDIW2mbUgfOVcAUvBWT52T5cfXkSNtseg6FNIrbU2Mo+yP6acSzZXhLw8EQ6p/7nskFL+rcZ5STEO//F1AhY9BMKu7dFxHqQxFswGBBeJl/s9iHj4emLUYZNpoyg61Ft1/D/2wgNijRng9OinwjpA==
+ bh=wKJZ67QQ885SkqS0B0nB7uW1qr5umZrpZ5Tc2Hd5MW8=;
+ b=JI5ux/4Lp5FKG0f2uYOOe5mXpoRjWgAt3ImXTdM4/TogmjRamimX4GP3tE6Y6YCpOWptu5kc8XGWrKPu2Xv7ipQRI/ZFnYEpz8egGnqItx6D/fL1+d7e3GITP8AjEHt5G8Y1UZPsZb8NOz+IN946/pyAGhUX9riBMH5yQAbgpvnG9zNMes8FnoCcnHZ59Hkvntj0Cu5LHYXqv6gEooRAEyk5bDgPxra4xcGMk5/mlryxUtHSUNKNgx5gPGqCCefSCazmhW7FgdT709NhlWR8xFusrTZs8egS9jm00fcg3oNFzI3+b2uyB94oM4GYJNMrr2X1KMrmfQa2lmqZ/dJWoA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
  dkim=pass header.d=garyguo.net; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IcmrvPCu1eFMNzTDwg4KQVgOQZlZ+T1ehfcBf4+kdj4=;
- b=Ii9bOIakE7dadlnm4i/nWPAi3shAKMUGERkhlrSaSsUmMOwP03agWByJZKSXNpeWsJsgqcFCEM5t6RmQsRWIOPhJ+faFbIoS+VXmSSrG3SS8NxfYSg1jlmCyqpC69sQlwsh7YFx23E9+D/61TMQKwqr2jWLB99nt89wvjzNxCX4=
+ bh=wKJZ67QQ885SkqS0B0nB7uW1qr5umZrpZ5Tc2Hd5MW8=;
+ b=z42VeGruNK4lmS1r+HGwadOmX3eK86J2QcZB+5fndA7r51s8JEmXfMA93wZw0UEEFP0SNSkatsbfYI1ah+06QuzKc8sSPNb6wF0SXyqBFKCWGOG09NmQUbjuJj2P+MxZWITAZjqtuN3c65wZ5HPUJf0eRjevG0zlZMFgUfS31hg=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=garyguo.net;
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by CWLP265MB6339.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:1e5::6) with
+ by CWXP265MB2615.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:8b::7) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.11; Tue, 7 Jul
- 2026 12:26:59 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.181.13; Tue, 7 Jul
+ 2026 12:26:57 +0000
 Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
  ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0181.008; Tue, 7 Jul 2026
- 12:26:59 +0000
+ 12:26:57 +0000
 From: Gary Guo <gary@garyguo.net>
-Date: Tue, 07 Jul 2026 13:26:46 +0100
-Subject: [PATCH v2 7/7] usb: fix UAF when probe runs concurrent to dyn ID
- removal
+Date: Tue, 07 Jul 2026 13:26:42 +0100
+Subject: [PATCH v2 3/7] usb: serial: spcp8x5: don't store usb_device_id
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260707-usb_dyn_id_uaf-v2-7-632dcf3adfba@garyguo.net>
+Message-Id: <20260707-usb_dyn_id_uaf-v2-3-632dcf3adfba@garyguo.net>
 References: <20260707-usb_dyn_id_uaf-v2-0-632dcf3adfba@garyguo.net>
 In-Reply-To: <20260707-usb_dyn_id_uaf-v2-0-632dcf3adfba@garyguo.net>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
@@ -63,13 +62,13 @@ Cc: linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
  linux-wireless@vger.kernel.org, linux-media@vger.kernel.org, 
  linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, 
  usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org, 
- Gary Guo <gary@garyguo.net>
+ Gary Guo <gary@garyguo.net>, Manuel Ebner <manuelebner@mailbox.org>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1783427215; l=3274;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1783427215; l=1552;
  i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=++nTjvaUlIlFlL8D8AcF4vnmvP7p2rLheSDLnLOiYcU=;
- b=dnz5iXX4/7k5x0lB+IMPVjTlSf0/sAMci3uHVlMmv2lhQSqqeWV3nl90BOgHll0GfWlegw7YO
- 9fvJnP1wIrGCEgm72dwO7Suc5Tga23Nk4N39khDrwugsRA76Ec/X7CW
+ bh=H5JFKotXcRvBL+j9x2gVWjs5di3esqntHjg/n1H0gL0=;
+ b=P77tZzMnJYZxzDerSi4XVJcO0FMK+FnQt7iSZRf88ngqZR5Pu+Addl4UxgGA9ZA0cREr+5UFV
+ 6W9EZxeAzNsB6mzcy6Uw50sf4JFew+UYZXlx6g0kKxMdqUL18YRSBzi
 X-Developer-Key: i=gary@garyguo.net; a=ed25519;
  pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
 X-ClientProxiedBy: LO4P265CA0166.GBRP265.PROD.OUTLOOK.COM
@@ -82,155 +81,111 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB6339:EE_
-X-MS-Office365-Filtering-Correlation-Id: b668a805-e605-4d5d-55da-08dedc230a8f
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWXP265MB2615:EE_
+X-MS-Office365-Filtering-Correlation-Id: b3803309-9abc-4c79-b58b-08dedc230986
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|376014|10070799003|1800799024|366016|56012099006|22082099003|18002099003|921020;
+	BCL:0;ARA:13230040|376014|23010399003|7416014|10070799003|366016|1800799024|921020|18002099003|22082099003|56012099006|6133799003;
 X-Microsoft-Antispam-Message-Info:
-	pkWAZT/X+f3Ry0wy1FnZ2Q6nTZM2BYjmm6tX+n9YUwnzEKEjlM6hjSwakJAbUoC4iL0MD4Iubq0tYS3pw+JS6yVxKH9tSXFxvkmnQZZPNR5lTawNot/TlxzcMhkN/190kdo6skonpRQ0Om9GlT4J54OelpDaHzzwffEc0zmu6JMyyuMF9x18MAt698w9zUbbvkwd5bTTDz01Lt9GsM1Fk3MDFg50nlVMpBzR7G35fbsXNzhrG1oL4ofHyMjijF0afIp2I3KK37xBMYyRZPYZzJiaKWYGFnEbBIOflAGXcX0ghsOrdGQ4j48MkZrx3/Wf4sFbDO8DjYjP5ZSE0N5QwQaFRzzat0UvGeaOaa/2kNgpKXwCXDmw6dZCXInCU2lX9ZD5btFlLReDMIavp1XDfguTAyB4qEh8a9PuzxQ6R82JgIPh4QftabfY6paMLQ0rMZr7qfrqyqF/NHrQRu/YXp5ogqaAbXqSlPbzWtXsTJXqikpIjjCor4AaNpoQDXT6v1hyZUMNco4/kCKK/RpCOhhuLYN9EhWWcLiBEQASeAnQh+CKV7GEk8dg2W+9DGQmHBkuS3p/N2Gqx6yTe2aq6e6eIOuzHFHqbXyAWL/U/L7o4xnB8CH6R5jj7iwqVbdKziVZiHv1oXqxq/KCAzJy1SJwiae6Az/unjtj9gpxRxPz7+7ReOi8tJBGVP8621vXd3JwCrxV5Y/DTIoZ8u2kfA==
+	iBgRhaO94C7HyKtHQ+28p9hIgLtM11+cgntsD+nQrCDUjBLC7j642xf8q7MObKBWGWRxxjgfR2y4YL21uOa9vkzUUkjABfwJZiD0xfijVJKMm9du+LnjoDPc9QrROaxDddN+YI7dNK8gGrH2Y/QRwihOrQ4JVE12F3GWMpMsHU0Qj3GaPUSYXOCrIOsCSr5XmmqOslNWTBPh0YmyVAzEcFxVRvV3oNULSM2I4qvl1e4/loXpmpslxs1E6iheatMWocZD7FdbvIp8QRKjftZnoJlu2f0gJsNbNfl1z3i7yHpBYnPikkWZYQp/T2T932DWAdmP1AAyVugeVfdLRzR/OFWi1S/Bp/mSuueL35ORBcpEhousbAS9moQrdQDgRuUXQ2n7lyW+fD/TC1q3sFJQze7zdW8PAlkGQhAsYURbugSnxdrzDy3D6Ydxt032pCP+eaQHH7vD62bSvYTmFFhIdTByNl/foO0VbSvhTrEs97xho6lJBMcK2XyZxBqyWxJlaaGEFG3CEsLvpeYfoddu01dmEKcHm7q4OdYnwoFRYa2AdxLaQB/SCwX01JZB4kBFLfl79JT5OjjVvUXMFwhyLHzzh3CLECGUe3VmoQ7PuhWflP09DlLqwMSPsBtmYUIBPzZbvVnHljGlmuVafhYNaVjGdXbJo7qY0SKp4TbPcZCV/21/m0B+4IAbrVMuOHuUImP5H80xHI2NtTkCSz4BBA==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(10070799003)(1800799024)(366016)(56012099006)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(23010399003)(7416014)(10070799003)(366016)(1800799024)(921020)(18002099003)(22082099003)(56012099006)(6133799003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UElIV2JJMmZHN3N1anhFTWVzaXRjL1p1LzlzWlBCeXNBWGJMNFlTQmhXRW9v?=
- =?utf-8?B?OFNuWjN0NkpoRTFENkY2d1ZpUFNpYzl3SDhzODlwWFFubVRiaGZXdFpwblVU?=
- =?utf-8?B?NFZaY0hCZW5uVHNqaHdocCtLeHc0dGhHMnB4dUpQWWxkN3BNck9hdk1UYkZF?=
- =?utf-8?B?N2JBa29wYnRrZHdwbW1LNnpSbGpkbk05aHBlTng0aWxTWk9hVWxXRTVSZ0xN?=
- =?utf-8?B?YWV4T2YrYjl1OHcyK3h1emxudElhdWNiVU1GVmpYem9acTV6MGhnUEFzZjIw?=
- =?utf-8?B?Sjh6aU51ZG44UG5sSDE4VW5XNXNHbGVQR3lxOFdFb0JQSnNvRGNzOVYzOFJ3?=
- =?utf-8?B?YkJrNVJlaGkvdklud216WE1ZbUdqYWtxKzl3bUxDcDRWMG1wbHpWWFIvS3Rx?=
- =?utf-8?B?aUd3aW1IbngwZTZkc3VBakk1YWQvVitCZC8xTEsrNDhzTlB0VzgvUXNuaWg4?=
- =?utf-8?B?K1Z6ZkdYVERrR0plMFVRLzBsdW1JMVRlMURrL1MvMXVZNFZKTG5LZ2JET2pN?=
- =?utf-8?B?Q3l0ZDhjNEZYc2x1cm04blZZUmlHMkMwZGVleWUrRTRlZDd6L05DeHpxOEwz?=
- =?utf-8?B?aFdORlBETDZmQWxuWVo5UjYwbzFiMHNTN1ZYRnlyKytVWU5sZVJMVk0wa3hE?=
- =?utf-8?B?ZGEyUktFQ2VpeGh0ZU0xOGNrS1FTcCtqU0VkYkhQbENubjVTQWJlSGE2OVQ4?=
- =?utf-8?B?by9lQTE3S0ovT3pURGlDN3NvVlg3UGRha1UvYlRiM0tyZHR1VEExbDRrekpO?=
- =?utf-8?B?QUNJRjBEUEd6SGN2ZDVFKy80Qk5ocnB2Um9SQ2tmRzBaS2QvV3NCdm9oYjBm?=
- =?utf-8?B?dVJWVXJMY3hCT1FFdkhyQzB3N2FHL29SSjlqend6azVTbHpyYWVVQUlPRFE4?=
- =?utf-8?B?eWlMVjQrWGJua2RUeFkvdmMxMFlVbWNDOVhoSTEwbnZLNE1ZcG5IaG05Vko2?=
- =?utf-8?B?LzQzQTN5N09oRWx0T0xzM2RPRWQ5d1c3UTJabitCRWR1cEVDbG5zNVlvVU5X?=
- =?utf-8?B?L0JpR00yVDlTcGF1bndkZndEOFFKN2JRM05kYjR0L3BsVlI5UnJBK1k2Um8r?=
- =?utf-8?B?RTJUMEhmMVVjL3lPZWNkMVlVZ1M0L1hiYkJyTENPQU5CNWR0TWgyeU02K29G?=
- =?utf-8?B?TDRrSlBvUnpqNUpRT0lNc1hRTEJQVVVoMy9MaFVMRDhmS1VqVzRDYTg2aS9x?=
- =?utf-8?B?ZHBEUVNNcVgraWNnTXlSZWY3aCt6WnVjY2drMzFFY29KVFRzbFN0c21JS1pY?=
- =?utf-8?B?amM2V2ZwazQvTTl4VFlFU01zMzZXZFljNWgrdHJGRXdoQ1JFZTdBQ3pEOExr?=
- =?utf-8?B?bGc3OG1uRk45UkkxUEs0aFNFMmEwVU50WVJnSFEwRzFtY2c1TVloRDJIV1dj?=
- =?utf-8?B?N1RKZXVwMlZVYktQUW5KdkNFNGhiL2ZacXlQSktTR21BNXlMZklZbGQ4QUhr?=
- =?utf-8?B?Y3Zkd2lrc01TdEowbU9NMllhY1ptY2RiWFJCMnd1UmxDK0JDeU1MUEJRT0c1?=
- =?utf-8?B?RDNXZVlqVjVtYWNnUEFVMzV3eS9vTTQzZURHWWJTbVdmdFJrb1RJcXFyNGRr?=
- =?utf-8?B?VHVWZjlJRStKaitOVU44cWZvYVcxOXNITk1SL2IvWlkyK3NHV283TzFIZmhI?=
- =?utf-8?B?T252c1lCV3B5am54WVgrL1RrTUM1OFY2ZS9ZUit6N09FOGJSS1lHOEphS3Zi?=
- =?utf-8?B?UUR1TUxXdVZDOTBsRmc3RStBUjE1M0NWTHlud292NFpGVVd5aVMvbzZRTTh2?=
- =?utf-8?B?QjlDWUpIeEVGWHBtY2RzTkJoemtTQm9EbDF2c0lRWU9kTVlySUQwOUZqQmgx?=
- =?utf-8?B?NXNsNDFKWmJRZk1ZQU50TXVoREdQaVc0UmxnWFp3RXpXQk95MzBjZDRJMFMw?=
- =?utf-8?B?S2hvVXVIVkpXek5Ub1JoRHZGZDQxMTI5b1ZsYmRBVnVEMHJobzVlejB1dGJJ?=
- =?utf-8?B?Qll5eFU0NjRlcXVLd3BZOU9KdEtMTGtrS0dKc2dyV2tLMDRWVFpBNVNmcTlU?=
- =?utf-8?B?UHhBTlVyK1hSaWltajNpTUxpNUxMNEE2NTFkVDJWbFZvUkh2NzFjK0hrU0FV?=
- =?utf-8?B?bFE4Sjl3SFJ2ck5HZ0NUdUthQU5mcjdjNXpxRUY2KzQrKzZZWVYzd1FFVElL?=
- =?utf-8?B?dWVTdldRdE1EL25JWUZoZ2wzMHF0UStQUU5aUndHY0krWHBsL1JySHhtR2xa?=
- =?utf-8?B?OUFLK1Q0cldHYzkwTHU3NzlFZmxvS0dBRWpWOTJvY3RGbElJdWpTSmhkdnBC?=
- =?utf-8?B?c1FHNGtFUUpWcjlHTFo2S0xadS9nKzN1NTJRV2dkQWF6S3psL0l5QkRicGN5?=
- =?utf-8?B?R2RSTjZTMmpLWDd0Sjl4bm1WMmJQRHR0OFZuVitzR0pucTNnRmRwQT09?=
+	=?utf-8?B?d0V1K2JqR2liMEFXTVU5T3ZoRHM2dUlkUDZwSG0wcklsSHhQd1RRQ3prTm1t?=
+ =?utf-8?B?QWhTTzUvaG5VZjZFQlo1OVRUemxoWS9mMGRSbktpRUZza3hrMDE4N1hxVHFj?=
+ =?utf-8?B?RTl1Z3BIbm9YTERaZTRyN1VhOUFLYk82MGovVmlRdUd0TEQxd0I0YmtBclMx?=
+ =?utf-8?B?Tk82aWRndERBdXI0MFg4L3lMU0NOeWdOTkRyNVdqK2pIbXBiZjN5Z3lMYUtE?=
+ =?utf-8?B?TFF2d25ueEF0c0wxVmJKN2IzQXRaY1VpR0kyWmtKU3ZUOVZXVDB1bHF5R0Qr?=
+ =?utf-8?B?L2NlOTBJNWFWR3FJeFNHQ1IwQlM3dHVxZ1AzQzU5L0FLdjJTNVVVTk1BZ0tv?=
+ =?utf-8?B?cFJ5SUdqd01FNjRPdHBwUzJzUGRRUzRLYXU2ZVAwdkpIaEhIYTNWbm9XWiti?=
+ =?utf-8?B?dTlsQ3JjMnE2SlVHb0xEdUd0eVF2QzBlUEFPZ3BaWEEzc2NITUtTOFora1NU?=
+ =?utf-8?B?WGRuYjZKTG8wSFJWdTU5Nk9uVTVTd3ZSMmFYLzZIVE1ja05vUGJvSEVzRlYw?=
+ =?utf-8?B?M2tSNUUzWGdLRzhKYjVaWStEbFdKRVRzVUpRdXE3Y3BHVGtENkhOSVlOb0NK?=
+ =?utf-8?B?VEhadmlhbVFFKy83bVNWdVNXWk5MekV0VkdPV3dGMzdCSEFyaGY3aTZLbXhI?=
+ =?utf-8?B?WGdtZzN2UlR2MDZQb3VDOE42TVBGTkxITjlxeHpHbDF3c0piOEFhbUdPWXhi?=
+ =?utf-8?B?Y2pFMzRPSTNyZXJVRmk2cFVVaTlrUS96YzU4Q3YvU0dJZEtzTG5wSUtCUUhW?=
+ =?utf-8?B?NjJNQVA0eERwSlU3RWpsK3JMaEYxZFM1bG02VENhVHJMMHI4K2s0ejN1WWRS?=
+ =?utf-8?B?d1p0dmdTR1phV3AzQ0kyTk9idXdtMHY5dzJPTnVjWXdDMmxUZUJJcFRVTWUv?=
+ =?utf-8?B?bGlBTTJPM3ZMcUVkUksvZWljbVhwNmlKUUhDcEVWdU1pTzlMVU5LRnV0Rkk4?=
+ =?utf-8?B?ZDZMeTNtRXJINFRFcmU1c3FHQXZJTDBHd240RmFmYTdMS0MwRWJESk5zRGhy?=
+ =?utf-8?B?MG40MVR5aWtOMER2SEtLdXpVcUh1czNIVUpNZDB1OW4zd2pRaUo1bE5SRXdz?=
+ =?utf-8?B?QzFMS29QUW9jWlZjUGFxZnBCdDcxWjlvVGozSW4zMHRkMG1OK3ZBV0lwd3dj?=
+ =?utf-8?B?clNlbC9lOXVlcUoxazNzdVZ6cVB1T1hvbXJ2RVFBWmJ1VU8ySUJmOXhha0J5?=
+ =?utf-8?B?YjU2dUhXZ2JtTXptR3RtSTVtd25UUTdEbHFvSmhKcmNvNms4ZVA2TDdmT0N3?=
+ =?utf-8?B?TmJveGVrbjZQNHdLbS9SV2JlVFBGQVh2SDFwbnB6QjgvNnNxZmt2R0hQR21q?=
+ =?utf-8?B?cG83T05aMEh5cTRnbnFmUUV1RG1GelJnbGtRL3YzcWdMTk02ZmhicDhWN0JE?=
+ =?utf-8?B?Zm5EV0FCaDRmMy9vbUFWSDNlL0U5R0JpcG1KYXFhZUFPcSttenJST09HVlhZ?=
+ =?utf-8?B?NlRndjZNMURYZDdSVmJ2Wm1vYUtOYWl2dWpXRDFTbWljMXJzSkZweWhWVklz?=
+ =?utf-8?B?WEw5SkNNUWhIdXRhK0NEb0F1QVNHbVlqSVJvR3BqRnNVVzFLZVZuMkQrb2k2?=
+ =?utf-8?B?cmNWNFcrelVSbDk2R1pSVDkvTmcxVG16WVZDVWpYRkxqYktSTmtjWUc4eFZL?=
+ =?utf-8?B?VGpScHhaWE1keHVxbWwwREZCVVlRR0NTMlRqMmtXS1JpSzlidS9KUUVJOVJJ?=
+ =?utf-8?B?NnZEUGpld3kwSGxMYzg5VndtaXhDTTc0c0VGNHhEZE9QemNrTDJjOVI0ZUVQ?=
+ =?utf-8?B?eHNoUUg4WGxTdzNjVlNscEh3cW1rNkN4RHR2aUFnNTRDNFZPVml5SDBTc0gw?=
+ =?utf-8?B?OERRbjU1dVhoYzF0aXh3SXJXTS81YnFzY1VSMTJSOVcxL040aFJibWw5Y3lQ?=
+ =?utf-8?B?dTVkejFZQ2FVcEwwbmYrOTArYW5KY2NIaGF4MmRjTGVSNVhnY25JeTJuMktZ?=
+ =?utf-8?B?R1Q5S1FNMUFrcDhyMUhVRWtQcHQvb2ZnMkxHSTZLeGZRQ1Q4ekxOV2V6bTc3?=
+ =?utf-8?B?UWR1MllnQWhYVkZteVZxR0gwUWsydWRHNm9OZ2dmbkZDaDgvRU95SkVlU2ky?=
+ =?utf-8?B?cEM4eHNieVBJdFQxZGJrYVdNakZCSGVrZDlIQWdkMStoT0xwdGJuYlg5TmpW?=
+ =?utf-8?B?bUJVaytDZnIrMDhxWmt5VTFGaXB3OFJIZjV1R2lROEpNWmtoVnk2TzV3R0RB?=
+ =?utf-8?B?ZUlDOWVPa3BpYnZ2REtaK0RRSE1KbXp0a1pwZ2NsSGRUalhHTmxqcUVmd2dU?=
+ =?utf-8?B?NFc1RWZDUml1OTRzczZlOEtuT2xsczB5RFBwUDlHZ2V2ZFQrRllwMkIvbmlu?=
+ =?utf-8?B?VFBiQzZReGtmVDEzUEY4R01icSt5L2NkOFo1WFBaU0wxbys4QkNvQT09?=
 X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: b668a805-e605-4d5d-55da-08dedc230a8f
+X-MS-Exchange-CrossTenant-Network-Message-Id: b3803309-9abc-4c79-b58b-08dedc230986
 X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2026 12:26:59.3086
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jul 2026 12:26:57.5692
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dGsgTcxn7akOHePhETSc1Tt1aBPHYlDfANmayJ0oXBLVB2Jkx3AdXyH6xSeW41tDAcPgIgbmv+I/3v+8qQYzEQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB6339
+X-MS-Exchange-CrossTenant-UserPrincipalName: xR2/SlvL6TxTNo2cvYalnOFnH+ugagL+PaWBtCnVb0+VZ8ritgx+MRPBKbL1t615t9mIXpRl1I4q0BWUVNV2HQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB2615
 
-Dynamic IDs are only guaranteed to be valid when usb_dynids_lock is held,
-as remove_id_store can free the node. Thus, make a copy in
-usb_probe_interface. Clarify the documentation that the id parameter is
-only valid during the probe.
+USB probe functions should not keep usb_device_id for longer than probe due
+to presence of dynamic ID removal. USB serial does not support ID removal,
+however in this case only driver_data is ever needed, there is no reason
+keeping the usb_device_id in the first place, so convert it as well.
 
-USB serial has the same pattern, but it does not need fixing as the IDs
-cannot be removed via sysfs.
-
-Fixes: 0c7a2b72746a ("USB: add remove_id sysfs attr for usb drivers")
+Reviewed-by: Manuel Ebner <manuelebner@mailbox.org>
+Reviewed-by: Danilo Krummrich <dakr@kernel.org>
 Signed-off-by: Gary Guo <gary@garyguo.net>
 ---
- drivers/usb/core/driver.c | 12 ++++++++----
- include/linux/usb.h       |  3 ++-
- 2 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/usb/serial/spcp8x5.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/usb/core/driver.c b/drivers/usb/core/driver.c
-index f63004417058..7f33fe5ba03b 100644
---- a/drivers/usb/core/driver.c
-+++ b/drivers/usb/core/driver.c
-@@ -228,14 +228,16 @@ static void usb_free_dynids(struct usb_driver *usb_drv)
+diff --git a/drivers/usb/serial/spcp8x5.c b/drivers/usb/serial/spcp8x5.c
+index c11d64bf08fb..0e7715a02df4 100644
+--- a/drivers/usb/serial/spcp8x5.c
++++ b/drivers/usb/serial/spcp8x5.c
+@@ -133,14 +133,14 @@ struct spcp8x5_private {
+ static int spcp8x5_probe(struct usb_serial *serial,
+ 						const struct usb_device_id *id)
+ {
+-	usb_set_serial_data(serial, (void *)id);
++	usb_set_serial_data(serial, (void *)id->driver_info);
+ 
+ 	return 0;
  }
  
- static const struct usb_device_id *usb_match_dynamic_id(struct usb_interface *intf,
--							const struct usb_driver *drv)
-+							const struct usb_driver *drv,
-+							struct usb_device_id *id_copy)
+ static int spcp8x5_port_probe(struct usb_serial_port *port)
  {
- 	struct usb_dynid *dynid;
+-	const struct usb_device_id *id = usb_get_serial_data(port->serial);
++	unsigned int quirks = (unsigned int)(unsigned long)usb_get_serial_data(port->serial);
+ 	struct spcp8x5_private *priv;
  
- 	guard(mutex)(&usb_dynids_lock);
- 	list_for_each_entry(dynid, &drv->dynids.list, node) {
- 		if (usb_match_one_id(intf, &dynid->id)) {
--			return &dynid->id;
-+			*id_copy = dynid->id;
-+			return id_copy;
- 		}
- 	}
- 	return NULL;
-@@ -321,6 +323,7 @@ static int usb_probe_interface(struct device *dev)
- 	struct usb_interface *intf = to_usb_interface(dev);
- 	struct usb_device *udev = interface_to_usbdev(intf);
- 	const struct usb_device_id *id;
-+	struct usb_device_id id_copy;
- 	int error = -ENODEV;
- 	int lpm_disable_error = -ENODEV;
+ 	priv = kzalloc_obj(*priv);
+@@ -148,7 +148,7 @@ static int spcp8x5_port_probe(struct usb_serial_port *port)
+ 		return -ENOMEM;
  
-@@ -340,7 +343,7 @@ static int usb_probe_interface(struct device *dev)
- 		return error;
- 	}
+ 	spin_lock_init(&priv->lock);
+-	priv->quirks = id->driver_info;
++	priv->quirks = quirks;
  
--	id = usb_match_dynamic_id(intf, driver);
-+	id = usb_match_dynamic_id(intf, driver, &id_copy);
- 	if (!id)
- 		id = usb_match_id(intf, driver->id_table);
- 	if (!id)
-@@ -892,6 +895,7 @@ static int usb_device_match(struct device *dev, const struct device_driver *drv)
- 		struct usb_interface *intf;
- 		const struct usb_driver *usb_drv;
- 		const struct usb_device_id *id;
-+		struct usb_device_id id_copy;
+ 	usb_set_serial_port_data(port, priv);
  
- 		/* device drivers never match interfaces */
- 		if (is_usb_device_driver(drv))
-@@ -904,7 +908,7 @@ static int usb_device_match(struct device *dev, const struct device_driver *drv)
- 		if (id)
- 			return 1;
- 
--		id = usb_match_dynamic_id(intf, usb_drv);
-+		id = usb_match_dynamic_id(intf, usb_drv, &id_copy);
- 		if (id)
- 			return 1;
- 	}
-diff --git a/include/linux/usb.h b/include/linux/usb.h
-index 1da4ad1610bc..49ab8dbb885f 100644
---- a/include/linux/usb.h
-+++ b/include/linux/usb.h
-@@ -1185,7 +1185,8 @@ extern ssize_t usb_show_dynids(struct usb_dynids *dynids, char *buf);
-  *	interface.  It may also use usb_set_interface() to specify the
-  *	appropriate altsetting.  If unwilling to manage the interface,
-  *	return -ENODEV, if genuine IO errors occurred, an appropriate
-- *	negative errno value.
-+ *	negative errno value.  The usb_device_id parameter is only valid during
-+ *	probe.
-  * @disconnect: Called when the interface is no longer accessible, usually
-  *	because its device has been (or is being) disconnected or the
-  *	driver module is being unloaded.
 
 -- 
 2.54.0
