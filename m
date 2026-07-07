@@ -1,119 +1,97 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 516503EDAA6
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2026 13:49:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A221512CDBE;
+	Tue,  7 Jul 2026 14:46:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783432177; cv=none; b=WptrGEU5PhW7r0cDUZQp98ujJm/KeJpMHeRkDisNZRUOv32CPOZ6q0L4i7c9FS98etVsKWY80vZLnuFYJDnKcwWMX7vXwkU3TYehkZxBuj+hc4stDVwhXlyENjL2pwHp19qEd/HU960KJ004kxuBlwpwEA1Fg8eYXnZVbZzqwWo=
+	t=1783435567; cv=none; b=CWHoeF2GU7ixGxPwIWr6n49WO1okJDoLH+c6bsQIKoyG5FLLU2H4Z7wbvCcdr3NtewwhTeMeUchMwUcbgL1I1z6XpoEszqOP8Y+3TWltF5fxbs8FPrW2keqtmicDqBb4YJqLquFZ5pJ0jy5Gm7pDejLMqPFQJGSp+QuKt3vrPbU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783432177; c=relaxed/simple;
-	bh=3qVUcr1acVvc4AVR+5GMPV/urBc+jS6lkvNCsiQ4uWg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=L/KWXJHlElQjBA9bh84eq2jq18b0oIPpkf8Q0iOR7fH0181GxXt+2VcrP6063OfsULjX8gzbdauJTpps929CyQ60kv2lyZtGYlbUHHQKgZ7KTKAWa1LHdYe0c+TZyLg4GSV4/cZ+z42mEHEAxEOI1doNewVRDFKn4TsyIo3C8Ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p6buScci; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1783435567; c=relaxed/simple;
+	bh=LEyF9w8SPCzfdrRD+YDZIfJow2IM6iqVN/nTK27WsnM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L1/y1gdg1PdebtRkELdRCifLJUBDKEqBLAahg0wXJ2d1cfVRwrStu83zCDPCRtMdCepw+LCQ5yb3/NuNwYaRIKb2M3i6iUNYylJE+PkAoNySQ6NdMGw3OL7jSGpBEH0HSvJdI/1m51VOKmykC4poi2NaY+y4gCJouibvxLCyh7o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BpkPQxRV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p6buScci"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ccdb73f0e1so2498425ad.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jul 2026 06:49:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1783432174; x=1784036974; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/xcduOpXa5czs+0FrVopF6m8A23j8FD0rB2iLn0HvMs=;
-        b=p6buScciifvzx9hLrbv0DVwlKD7SN6tPdBz5buuOljeULOAM6u2Ri9Ju2ObZCyvE2n
-         wd3L4XEvm6qGSwiszME+4TBZOmwx5SIs0ufJRcXH4jkDgqRIKzOjqM0hnt+JMJPZ0ppH
-         80yiMRG/IhaIjqoYbGGNJEaLHug0w8wlw2QgxH0fucy+/WG0U3mMR0C5m4MgTn8Pw4bo
-         fxPbi5XaIvPoVam2PYJL4cr7v8MYnuPkrfU3HZaYUvHyIWEwfnPmzaFPu96nxuETuWtw
-         PihZbqbX2Xc9l4hu4RASnTaayjTwhyejlIunuwef0A/fx6VnSZWcGOMXrIwpWzrwkWX0
-         hhdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1783432174; x=1784036974;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/xcduOpXa5czs+0FrVopF6m8A23j8FD0rB2iLn0HvMs=;
-        b=QhTMVFGqJcvJsFBLjPHsCiicW0V7q3rXPFFWmAfbh2RfMvaFsE+xDLw2UUQZ5rb2Ns
-         YQVxapq+WEOHc3IGxuPy4HNUJl8HJNjm/WTqkR3s2INowj8Z2zENcG2SqIMavwRw9Im5
-         vg/1D5me7D1j2SOjp4khk6GSqRcM8bb/MRie6pkrtxZSVgDAmsXmT1QODu8/uk20PgaD
-         TuoUCyf+sWXgWYM8I11IfjIlJXv6nGnVuvqjhzarlsgwFpdIwu89pewtFfqCBww+L5hP
-         RVqXorpOIvM9SaE9iXYAum7/NuEtL6NZF5KO7Uo+Xp9Hr5DUAMGvUhdoozhYzN3JfxGG
-         U0MA==
-X-Gm-Message-State: AOJu0YwimU9Yq/VWI4K+aWws6lpq4ZAQj+aj8ch5JekZldUo8PB7Hi6o
-	xv3xQTnC02NSFsPYeaZwEeXI5e/JCqsouZKYfegPozN3Jx4n6+iJnGST1H+0GA66eTNvBw==
-X-Gm-Gg: AfdE7cnTjURa9f4MvWijbQc/r5Ux8GG8iS7KrQhVBv25xoVUluyqZciSATxiOG/EdPx
-	44fsBqmLjQzoMUkfefjcEohhAwC8pH7vMke73Iuo1vCdK4oDbDtIzIiga4tVEKO7MaiKJz0zemP
-	COMzZ4B4vsqHZdzUX5XgdXhlbuQ/SYcgmLzWQbNqg7wewgcA6JbarSKm1Rhe3LZ7FJQ/1ZlbCpI
-	FK7xTnx23I7Zrcq5XpgyCw+LQWL3tDP5wrSBepYC0Yhc9Ut9IyD1YUkON2POffnexG4I7A/eKfi
-	78OLEL1dCw7BO9cfO8lRQysgj65ZFLyxMgTD4UforkNJvAY5J02QGKf1KZr2C4JVUEbjsmhrDow
-	O/6z1aRuTI18yJcP4ek5h0pJSqlCdDFt4vybbDJbO2cSccvpD1sEh5DbdX7+h1CTgxZQRYSqS4r
-	PcEQQS1CI=
-X-Received: by 2002:a17:903:3246:b0:2ca:1bbe:c3d0 with SMTP id d9443c01a7336-2ccbf1ae616mr50648605ad.43.1783432174025;
-        Tue, 07 Jul 2026 06:49:34 -0700 (PDT)
-Received: from localhost ([111.228.63.84])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ccc9bdb72fsm12531715ad.6.2026.07.07.06.49.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2026 06:49:33 -0700 (PDT)
-From: Cen Zhang <zzzccc427@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	baijiaju1990@gmail.com,
-	zzzccc427@gmail.com
-Subject: [PATCH] wifi: cfg80211: reinit wiphy work entries on runaway drain
-Date: Tue,  7 Jul 2026 21:49:25 +0800
-Message-Id: <20260707134925.106972-1-zzzccc427@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpkPQxRV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2066F1F000E9;
+	Tue,  7 Jul 2026 14:46:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783435566;
+	bh=38uJr8hVPGVJpV7RT0QtVixAplTyJQKOmyP/3Wvejkk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=BpkPQxRVjX7WXA/JEprOiZavYtpKUwCoXkGlay8OFTxOO3pBbm4Srga6ztyH+1G9J
+	 lK186j+V1CMVof8L6JnsbKESfM9aIozW2Fx5vLrzsSg8fNxMP82rXmD1RvGKwxmWTR
+	 toZSpjPZFfeMKf8ftXcFnxIWjZ59vBwOUbLfRcTdXK9hM4AdfUY23GHcs17g8mi4Km
+	 sYOaH1qvo7ncsQHtpLwY+T5IIOGF8UlSyExgMxbNm0iIpp7tzTLzlWINFiO2aFZki5
+	 mTuTothfBivZ9KvlFwlGUoGRccKPFG9tF5Q8RAWeV0x0tDP9G04KiXwRTm3QUUMy9E
+	 m4/nOvrkforfQ==
+Date: Tue, 7 Jul 2026 15:46:01 +0100
+From: Simon Horman <horms@kernel.org>
+To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Jakub Kicinski <kuba@kernel.org>, b43-dev@lists.infradead.org,
+	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 0/4] drivers/net: replace __get_free_pages() with
+ kmalloc()
+Message-ID: <20260707144601.GH1364329@horms.kernel.org>
+References: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
 
-cfg80211_process_wiphy_works() has a runaway guard for the process-all
-case. When the guard fires, it drops the remaining queued work by
-reinitializing rdev->wiphy_work_list.
+On Wed, Jul 01, 2026 at 04:59:09PM +0300, Mike Rapoport (Microsoft) wrote:
+> This is a (small) part of larger work of replacing page allocator calls
+> with kmalloc.
+> 
+> My initial intention a few month ago was to remove ugly casts [1], but then
+> willy pointed out that Linus objected to something like this [2] and it
+> looks like more than a decade old technical debt.
+> 
+> Largely, anything that doesn't need struct page (or a memdesc in the
+> future) should just use kmalloc() or kvmalloc() to allocate memory.
+> kmalloc() guarantees alignment, physical contiguity and working
+> virt_to_phys() and beside nicer API that returns void * on alloc and
+> doesn't require to know the allocation size on free, kmalloc() provides
+> better debugging capabilities than page allocator.
+> 
+> Another thing is that touching these allocation sites gives the reviewers
+> opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
+> another size is appropriate.
+> 
+> For larger allocations that don't need physically contiguous memory
+> kvmalloc() can be a better option that __get_free_pages() because under
+> memory pressure it's is easier to allocate several order-0 pages than a
+> physically contiguous chunk with the same number of pages.
+> 
+> And last, but not least, removing needless calls to page allocator should
+> help with memdesc (aka project folio) conversion. There will be way less
+> places to audit to see if the user was actually using struct page.
+> 
+> Also in git:
+> https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/drivers-net-wireless
+> 
+> [1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
+> [2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/
+> 
+> ---
+> Changes in v2:
+> - split out wireless drivers from a larger set 
+> - use kzalloc() instead of kmalloc() + memset in b43legacy
+> 
+> v1: https://patch.msgid.link/20260630-b4-drivers-net-v1-0-672162a91f37@kernel.org
 
-That only resets the list head. The queued struct wiphy_work entries are
-embedded in their owners, and their entry fields still point at the old
-list neighbors. Later queue or cancel checks can then see a work item as
-listed even though the rdev list has been cleared.
+For the series:
 
-Drain the remaining list with list_del_init() under wiphy_work_lock
-instead of reinitializing only the head. This keeps the existing WARN and
-drop behavior while leaving each work item in the same state as normal
-wiphy work removal.
-
-Fixes: a3ee4dc84c4e ("wifi: cfg80211: add a work abstraction with special semantics")
-Assisted-by: Codex:gpt-5.5
-Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
----
- net/wireless/core.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 3dcf63b04c41..a7e011ed455d 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1278,8 +1278,14 @@ void cfg80211_process_wiphy_works(struct cfg80211_registered_device *rdev,
- 		if (wk == end)
- 			break;
- 
--		if (WARN_ON(--runaway_limit == 0))
--			INIT_LIST_HEAD(&rdev->wiphy_work_list);
-+		if (WARN_ON(--runaway_limit == 0)) {
-+			while (!list_empty(&rdev->wiphy_work_list)) {
-+				wk = list_first_entry(&rdev->wiphy_work_list,
-+						      struct wiphy_work,
-+						      entry);
-+				list_del_init(&wk->entry);
-+			}
-+		}
- 	}
- 	spin_unlock_irqrestore(&rdev->wiphy_work_lock, flags);
- }
--- 
-2.43.0
+Reviewed-by: Simon Horman <horms@kernel.org>
 
