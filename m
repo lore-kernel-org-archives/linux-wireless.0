@@ -1,72 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out28-149.mail.aliyun.com (out28-149.mail.aliyun.com [115.124.28.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F9B3F23C5;
-	Tue,  7 Jul 2026 13:41:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F30141DEF4;
+	Tue,  7 Jul 2026 13:49:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783431698; cv=none; b=VxEXUuxXPT8bwTIl+Ab1r8i/b83ZUqeB4G3hs79PhT5206029Zku23hcJFAvSgz66XcjOaWbkZ5edBwlBdKoqMwbGqFkRxAEPjfEqTCMwGhgPruqzCJyCR2qnA2/5Cnx7/jZAlfyWV6F1GVdkZiGTn6GzkJ9YLo5ahtBM2HKY4U=
+	t=1783432155; cv=none; b=BUSY9kfzsyq8nGRlt8YLFZGD6wXt7opmGrMwX2AS2MtsWMkhfaldzq97sQqCNCigpTxeeG7cTH25jUad78Cm9dl3rNhflY+CqoaVT7nrSZVY1/C7i9NJWb/t8B9QEridaI1XfQqkBqiSQLeTx0UIKvt0RBAihmNGB5fkDM3Or/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783431698; c=relaxed/simple;
-	bh=Q8bZHt7yJ+qnecwmMvVMWaD1rJjvWnisLULY4A4dVgo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iBovhx/ZotK9uLegLGk/0sT/HdVNE56/1cFNpvCb4jZHfSoHYpHrB12wuORfyelS+rg37/rdypN0biPy8nQ/IY+83ypDURpxvRfuxeZAkRnyIWlwmI3W8rjj5/K+is0Ib8XenejJ2vE7oQY85lxyCoKFDuGTAB1N/qiW1qfAj5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L6RLv5oa; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783432155; c=relaxed/simple;
+	bh=YnlyOtnw3PgpfSljpllY6ScClDIFiZB9tlpFCSxjMyU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=FBQ0V0hWb5UI2XOMqUktawxe6yen6tSIdLpT25xnMLrX6cvAu3WKDbYVDQMGtrZSRv/u1kA0j9oljnkD74PLrNaGeaPMkV3nqAzfXoHYPbmi2xBBI5Kg0IyVW2bxmQS9ukHvtCU3rWaq/d/3k/5z6FW6lCOZ1X2wuhya+YN2Svg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sigvoid.com; spf=pass smtp.mailfrom=sigvoid.com; dkim=pass (2048-bit key) header.d=sigvoid.com header.i=@sigvoid.com header.b=fJmYMUTh; arc=none smtp.client-ip=115.124.28.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sigvoid.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sigvoid.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L6RLv5oa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE74E1F000E9;
-	Tue,  7 Jul 2026 13:41:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783431696;
-	bh=bBAfp/1WTjfXkIXmaMektccP3AUgen/qc3sIQcub5vg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=L6RLv5oae/GlbVM6EYEtzsV9gqOUqvIJWoGIE98a2DdQvknAOzsyPGZddYbOUK52i
-	 rBVz61LGnWjQWhah+Wtqx91WphWRQvAPOQkW/M9APuFZuZRhnv8vLK4WMWYowF1eKs
-	 g0sTD7nNUpPn5jBUh36uh5+UmrYcJvtoNroBp7g8IsY1Z7tUaoGExPcX4yKNiF5RfS
-	 Oxn2i/vEarvAHnn0Nme6i+cqPKmFcHVJADCmNUztm7Cdiq2T8nmj+NK04cLRSGEZdo
-	 6E7IZdnuPRvfVQovGpzi2WuwPwpSSlh3HxkqdwICYdefbhMQ1oofZNUGNcc2mwyaZL
-	 w6as4tFkpYf+Q==
-Message-ID: <25951ecd-53e1-439e-92a2-8de3ff471d8a@kernel.org>
-Date: Tue, 7 Jul 2026 15:41:31 +0200
+	dkim=pass (2048-bit key) header.d=sigvoid.com header.i=@sigvoid.com header.b="fJmYMUTh"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=sigvoid.com; s=default;
+	t=1783432143; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=YnlyOtnw3PgpfSljpllY6ScClDIFiZB9tlpFCSxjMyU=;
+	b=fJmYMUThO/EEsRW6kmBrN57ejNUoTnYcAxK8IiK2A9dc1v6/lJfZDS3+ugEpg5JYuqMK3q1FEBdIFmNNp+Yy7wcgLqHj0rmafZpXuifMJ9dgpH0rXcN0rW556icvmKp/eStD64b2gJeMTfJlzEU5EX7mGnmOYqWNeYb5ErsATWWSCFJRUTE+BX3pXz4Le+Tfpr/Hx2qNhgg0HHgdxejhkRZ0wVPgxVxXDAsoPVinK4I+CukMBtqfrBBS2zyRC8Pv9k5S6KBm1Ton0R8kNO7WjqxZFtSB/hW/B1kmi1FFP+wH9Mn4zFoTH0KQEmXIIjGUEvzmUOUfgZwC1cKD772Z+g==
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.1065582|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_social|0.0106749-0.00619437-0.983131;FP=8386079198753556468|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033037021217;MF=yingjcao@sigvoid.com;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.iFXH90z_1783431804;
+Received: from localhost.localdomain(mailfrom:yingjcao@sigvoid.com fp:SMTPD_---.iFXH90z_1783431804 cluster:ay29)
+          by smtp.aliyun-inc.com;
+          Tue, 07 Jul 2026 21:43:37 +0800
+From: Yingjie Cao <yingjcao@sigvoid.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nathan Howard <kernel@nhoward.dev>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: mac80211: only accept IBSS channel switch from our own BSSID
+Date: Tue,  7 Jul 2026 21:43:22 +0800
+Message-Id: <20260707134322.70942-1-yingjcao@sigvoid.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <b7dab24792025a5a95b719ef7d508fb109859ec1.camel@sipsolutions.net>
+References: <20260623090437.13198-1-yingjcao@sigvoid.com> <c3fd8617849368e579a56c4397b7ee8624ef27ad.camel@sipsolutions.net> <9201d828365fa2b11fb6a83d1ff66365435a9072.camel@sipsolutions.net> <ajrfKAmdZnPPkGKE@gpu1> <b7dab24792025a5a95b719ef7d508fb109859ec1.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 7/7] usb: fix UAF when probe runs concurrent to dyn ID
- removal
-To: Gary Guo <gary@garyguo.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- =?UTF-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
- Johan Hovold <johan@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>,
- Petko Manolov <petkan@nucleusys.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Chas Williams <3chas3@gmail.com>, Alan Stern <stern@rowland.harvard.edu>,
- linux-usb@vger.kernel.org, driver-core@lists.linux.dev,
- linux-wireless@vger.kernel.org, linux-media@vger.kernel.org,
- linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
- usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
-References: <20260707-usb_dyn_id_uaf-v2-0-632dcf3adfba@garyguo.net>
- <20260707-usb_dyn_id_uaf-v2-7-632dcf3adfba@garyguo.net>
-From: Danilo Krummrich <dakr@kernel.org>
-Content-Language: en-US
-In-Reply-To: <20260707-usb_dyn_id_uaf-v2-7-632dcf3adfba@garyguo.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 7/7/26 2:26 PM, Gary Guo wrote:
-> Dynamic IDs are only guaranteed to be valid when usb_dynids_lock is held,
-> as remove_id_store can free the node. Thus, make a copy in
-> usb_probe_interface. Clarify the documentation that the id parameter is
-> only valid during the probe.
-> 
-> USB serial has the same pattern, but it does not need fixing as the IDs
-> cannot be removed via sysfs.
-> 
-> Fixes: 0c7a2b72746a ("USB: add remove_id sysfs attr for usb drivers")
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-Reviewed-by: Danilo Krummrich <dakr@kernel.org>
+Hi Johannes,
+
+Thank you for the feedback, and sorry for the delayed follow-up.
+
+I did use AI assistance while preparing this patch, and I should have
+been more careful and responsible before submitting it. In particular, I
+agree that the commit message overstated the security impact, and that
+adding Cc: stable was not appropriate for this submission.
+
+I am currently learning the kernel patch submission process and the IBSS
+code paths involved here. Going forward, I will make sure any future
+submissions are reviewed and verified by me personally before sending,
+and I will include the proper Assisted-by tag when AI tools materially
+contribute to the work.
+
+For this patch, I will drop it until I have a fuller understanding of
+the code involved.
+
+Thanks,
+Yingjie
