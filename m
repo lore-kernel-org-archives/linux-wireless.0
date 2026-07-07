@@ -1,81 +1,140 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A94E32EDD7D;
-	Tue,  7 Jul 2026 08:19:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F2438F251
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2026 09:11:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783412349; cv=none; b=qrcE5MnJj856NBB2v0PCRNWgCn+H5XQ/hJ4utoanEFS7QtbXvMr1wooT67iuBEHXns/NzbPJNBw7r86gtdbYJ72iYRKIdEB7LPuCeFaNwfi8kC1GNx1Z6NaENHvT7R19Oe/Id6v8sMumqM6xY1Qqc+wxiblRu+IsNw/s7w9g1F4=
+	t=1783415516; cv=none; b=JGSPAbtZgH5k5U0kfNNwP+dTDgvOzfwHUZ03Yps/L0CQgfkY1zz7L38h0OVNNhpi66XRNv3jGoaff4GmLTfJXyc50yzcyrzmsAqECJfYUAa0GbcMqxGm+q/L/ylSiCYpzDkv92AgfhU85/wJFX3WYfPA43HtdAJ3Ly7IsL7k0mQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783412349; c=relaxed/simple;
-	bh=5QLkLIV6dWz+yM8AXGu8lDkyyoQEzGcB9XsMrlJbli4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ArGHk9YyEaDqMtCHuk0aTbLIQOhU8IlA3241XHp38hcBER2IouNjv219o6bXRBgiGBqV5QVWOQbiqGBQRfz4vPQnB0E8y/NshtnJD6fol9MrzF7CU6xwhDN13OeeLryhk2fsgBTOeI+Trbon23mp03h6QDk5OqwNRkbI4TPdrlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=vwx7+Pw7; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1783415516; c=relaxed/simple;
+	bh=8eDzQWPjoqL5O0CJt7ZfdMpD3OBrstj8P2EmEctvAJ4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NQyJ46JFKbzIPQpBlgdeSXeAVa2BJSVIWeUO243j8GIVcVQecEw+28w0YT5M4pbG5lDYKoHEqvI+V/eO09G2lb8LFc7NCFNXBUiItHVIrhUVyWlXnHoN1HEEvVie88F/HzxPkgIvAzZpSo1IlgFmQVRKQh2ApbzvZOK6w1F2stw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=akqVaOn/; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="vwx7+Pw7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=j9g61QJ16IaAdUYswmT5n+XykLyw2Vj431tO+JQ6hDY=;
-	t=1783412347; x=1784621947; b=vwx7+Pw7842ZAm0GYZOHB0iGTxDD974PSM3jIz4CNVa1QlY
-	0pUtm7sa0hhsX4mHIhL4KY3vblQUwvkAxW7WBXiDwqJEl2dZO2q/alASrDM7ltalILWou8eWwOfn6
-	DJ4ZEfN1MIr+cIkYVA4rJYwAdagb1FcgIfsMBQUq3snKhZ33fY1g3JcVIWdGTcv5ikXSsFcpUhCFY
-	dFo6pH1FFBvOjORd5VyGjSdayAp0U3uESj/H+PS3M590OJr5n9bKoR+5jHCdDXjVsqRs9OJu+/pTP
-	b7Cw4LkdCeUe9BnV8lbUZEx4S4eSSrNWZnCod+6Ods4TZf7zzxR3Y1zBMrg0mEUQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wh11D-0000000HRe4-0mFW;
-	Tue, 07 Jul 2026 10:19:03 +0200
-Message-ID: <2d0a7285a8e90ee2de658b564b739ed735fb3fd1.camel@sipsolutions.net>
-Subject: Re: [PATCH 0/3] MIPS: BCM47XX: convert buttons to software nodes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
- =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?=	 <zajec5@gmail.com>, Michael Buesch
- <m@bues.ch>, Hauke Mehrtens <hauke@hauke-m.de>,  Thomas Bogendoerfer
- <tsbogend@alpha.franken.de>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mips@vger.kernel.org
-Date: Tue, 07 Jul 2026 10:19:02 +0200
-In-Reply-To: <20260704-b4-bcm47xx-swnode-v1-0-730d59340237@gmail.com>
-References: <20260704-b4-bcm47xx-swnode-v1-0-730d59340237@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="akqVaOn/"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6679BqbT61359400, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1783415512; bh=qUggzElK38QK6LwvAvrEERcnHF5e3ydTZjXGbE+LqMg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=akqVaOn/L/PO3T0It8o5NF5icLd95bg40Dk+/Mt9Hsc3XSWZIQVp5FyZ3zS2i6ajK
+	 E6EDpSJ4vMPmADaTTZolAuFqbRt1EY9g97T5SMvmFkgYE38OgBlMtk1I3aYf4PB/wm
+	 9xy0gBQUB0l0D1LiOmWP4565qmVMdDgj6DjjMEYFaHjcD5C3mHF00BFb4iWyJ6HNsS
+	 jDtuS+QR8KIH3GOed7pTCYt7EMMR7vkG/Lj6tXxtUoP2bF54GOKar09TMTkjijZxq+
+	 FTR56nsorO/GpI8JqPqSIARlmZ+339foIYiCVNKpse8xgwD7mWqS7yrokAnh7JoNvz
+	 dVu9sTbq/cziQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6679BqbT61359400
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Tue, 7 Jul 2026 17:11:52 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Tue, 7 Jul 2026 17:11:52 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Tue, 7 Jul 2026 17:11:52 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Tue, 7 Jul 2026 17:11:52 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <gary.chang@realtek.com>, <echuang@realtek.com>
+Subject: [PATCH rtw-next 00/15] wifi: rtw89: add voltage thermal protect and some random patches for RTL8922D
+Date: Tue, 7 Jul 2026 17:10:41 +0800
+Message-ID: <20260707091056.42771-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On Sat, 2026-07-04 at 22:25 -0700, Dmitry Torokhov wrote:
-> This series converts the legacy gpio-keys platform device on BCM47XX
-> boards to use software nodes and static properties.
->=20
-> To do this properly without relying on legacy name-based matching
-> (which is being removed from gpiolib), we introduce and register
-> software nodes for the underlying GPIO controllers (BCMA and SSB)
-> and reference them in the button properties.
->=20
-> The first two patches add the software nodes to bcma-gpio and
-> ssb-gpio respectively. The third patch performs the conversion
-> for the BCM47XX buttons.
->=20
-> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> ---
-> Dmitry Torokhov (3):
->       bcma: gpio: Add and register software node for GPIO controller
->       ssb: gpio: Add and register software node for GPIO controller
->       MIPS: BCM47XX: Convert buttons to software nodes
+First 5 patches and patch 11 and 13 are related to PHY settings to
+improve PHY performance.
 
-Seems like most of the change in in MIPS and it should all go through
-that tree. For the record, that's OK with wireless regarding bcma/ssb.
+Patches 6-9 are main change to support voltage thermal protection, which
+adjusts voltage according to thermal value to reduce power consumption.
 
-johannes
+Patch 10 is to adjust hardware clock for ANA circuit.
+
+Patch 12 is a improvement of RTL8852A.
+
+Since we have prepared firmware containing BB/RF parameters and etc, notify
+users that we are going to remove built-in tables of BB/RF parameters from
+driver. Patches 14-15 are to add transition state to notify users to update
+their old firmware. Currently users can still use old firmware, and we plan
+to remove built-in tables years later.
+
+Chih-Kang Chang (1):
+  wifi: rtw89: 8852a: fix RSSI report when average beacon RSSI is not
+    ready
+
+Eric Huang (4):
+  wifi: rtw89: 8922d: remove CCK bandwidth compensation
+  wifi: rtw89: 8922d: dynamic adjust channel smoothing
+  wifi: rtw89: 8922d: fix EMLSR BB switch sequence for MLO mode
+    transition
+  wifi: rtw89: phy: fix bandedge primary channel for 2.4GHz 40MHz and
+    6GHz
+
+Ping-Ke Shih (10):
+  wifi: rtw89: 8922d: set TX compensation by format v2
+  wifi: rtw89: efuse: no need to export rtw89_efuse_read_ecv_be()
+  wifi: rtw89: efuse: read thermal calibration value for RTL8922D
+  wifi: rtw89: 8922d: read default digital voltage calibration values
+  wifi: rtw89: add thermal protect by digital voltage reduction
+  wifi: rtw89: 8922d: set ANA CLK enter to 500KHz
+  wifi: rtw89: 8922d: update scaling factor for RX path
+  wifi: rtw89: phy: add NCTL check for WiFi 7 chips
+  wifi: rtw89: unify access struct of TX power track tables
+  wifi: rtw89: set needed firmware elements for early chips transition
+
+ drivers/net/wireless/realtek/rtw89/core.c     |  17 ++
+ drivers/net/wireless/realtek/rtw89/core.h     |  34 +++
+ drivers/net/wireless/realtek/rtw89/debug.c    |   1 +
+ drivers/net/wireless/realtek/rtw89/efuse.h    |   7 +
+ drivers/net/wireless/realtek/rtw89/efuse_be.c | 117 ++++++++++-
+ drivers/net/wireless/realtek/rtw89/fw.c       |  10 +
+ drivers/net/wireless/realtek/rtw89/fw.h       |  27 ++-
+ drivers/net/wireless/realtek/rtw89/mac.c      |   7 +
+ drivers/net/wireless/realtek/rtw89/mac.h      |  47 +++++
+ drivers/net/wireless/realtek/rtw89/mac_be.c   |  40 ++++
+ drivers/net/wireless/realtek/rtw89/phy.c      |  33 +++
+ drivers/net/wireless/realtek/rtw89/phy.h      |  25 +--
+ drivers/net/wireless/realtek/rtw89/phy_be.c   |  45 +++-
+ drivers/net/wireless/realtek/rtw89/reg.h      |  53 +++++
+ drivers/net/wireless/realtek/rtw89/rtw8851b.c |   4 +-
+ .../net/wireless/realtek/rtw89/rtw8851b_rfk.c |  20 +-
+ .../wireless/realtek/rtw89/rtw8851b_table.c   |  15 +-
+ .../wireless/realtek/rtw89/rtw8851b_table.h   |   2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852a.c |   6 +-
+ .../net/wireless/realtek/rtw89/rtw8852a_rfk.c |  36 ++--
+ .../wireless/realtek/rtw89/rtw8852a_table.c   |  27 +--
+ .../wireless/realtek/rtw89/rtw8852a_table.h   |   2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8852b.c |   4 +-
+ .../net/wireless/realtek/rtw89/rtw8852b_rfk.c |  36 ++--
+ .../wireless/realtek/rtw89/rtw8852b_table.c   |  27 +--
+ .../wireless/realtek/rtw89/rtw8852b_table.h   |   2 +-
+ .../net/wireless/realtek/rtw89/rtw8852bt.c    |   1 +
+ drivers/net/wireless/realtek/rtw89/rtw8852c.c |   4 +-
+ .../net/wireless/realtek/rtw89/rtw8852c_rfk.c | 101 ++++-----
+ .../wireless/realtek/rtw89/rtw8852c_table.c   |  35 ++--
+ .../wireless/realtek/rtw89/rtw8852c_table.h   |   2 +-
+ drivers/net/wireless/realtek/rtw89/rtw8922a.c |   1 +
+ drivers/net/wireless/realtek/rtw89/rtw8922d.c | 196 ++++++++++++++----
+ 33 files changed, 750 insertions(+), 234 deletions(-)
+
+
+base-commit: 2b7858891b100587c10c136cf07205335a897be0
+-- 
+2.25.1
+
