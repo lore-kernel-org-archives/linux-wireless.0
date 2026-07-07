@@ -1,97 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A221512CDBE;
-	Tue,  7 Jul 2026 14:46:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBBC33A1C9
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2026 14:46:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783435567; cv=none; b=CWHoeF2GU7ixGxPwIWr6n49WO1okJDoLH+c6bsQIKoyG5FLLU2H4Z7wbvCcdr3NtewwhTeMeUchMwUcbgL1I1z6XpoEszqOP8Y+3TWltF5fxbs8FPrW2keqtmicDqBb4YJqLquFZ5pJ0jy5Gm7pDejLMqPFQJGSp+QuKt3vrPbU=
+	t=1783435612; cv=none; b=V1oTfkL3L2A6Yx8z6WJLlck01DCp0jxMk9gAOf/bplcy01COy4fLXNoXcBLWz0cvbU+KoU1n+g4oaYDfU04oVy9yValAFH5+Ug9yYxxLXGEFRdVZMGJu7kInOddy0geP4Xd0u0eCpNP46zOukx2HTMrHZa69TkUD2jeT1pKOLfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783435567; c=relaxed/simple;
-	bh=LEyF9w8SPCzfdrRD+YDZIfJow2IM6iqVN/nTK27WsnM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L1/y1gdg1PdebtRkELdRCifLJUBDKEqBLAahg0wXJ2d1cfVRwrStu83zCDPCRtMdCepw+LCQ5yb3/NuNwYaRIKb2M3i6iUNYylJE+PkAoNySQ6NdMGw3OL7jSGpBEH0HSvJdI/1m51VOKmykC4poi2NaY+y4gCJouibvxLCyh7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BpkPQxRV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1783435612; c=relaxed/simple;
+	bh=sQivW2Zp72ACivnnfajY3oMecyV+TQ05SmB+ANg4rwM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C5p4akeNoPgdLihbPA+ff+BpajJ+QY7Aid2F3fmYZG27K/qrdjFBYecm8rC00M4D1C3yK468IR1CkWmzg4NU9CdKPJ1pwLP3EUsUQKvf/phxrZL/qgq9QL3hGtlW6ba1W5zPa0LCuZRQc3/id4aFg+SPk+Itwq8b1hKhjxkyZAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=BSLLeQgA; arc=none smtp.client-ip=148.163.129.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BpkPQxRV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2066F1F000E9;
-	Tue,  7 Jul 2026 14:46:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1783435566;
-	bh=38uJr8hVPGVJpV7RT0QtVixAplTyJQKOmyP/3Wvejkk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BpkPQxRVjX7WXA/JEprOiZavYtpKUwCoXkGlay8OFTxOO3pBbm4Srga6ztyH+1G9J
-	 lK186j+V1CMVof8L6JnsbKESfM9aIozW2Fx5vLrzsSg8fNxMP82rXmD1RvGKwxmWTR
-	 toZSpjPZFfeMKf8ftXcFnxIWjZ59vBwOUbLfRcTdXK9hM4AdfUY23GHcs17g8mi4Km
-	 sYOaH1qvo7ncsQHtpLwY+T5IIOGF8UlSyExgMxbNm0iIpp7tzTLzlWINFiO2aFZki5
-	 mTuTothfBivZ9KvlFwlGUoGRccKPFG9tF5Q8RAWeV0x0tDP9G04KiXwRTm3QUUMy9E
-	 m4/nOvrkforfQ==
-Date: Tue, 7 Jul 2026 15:46:01 +0100
-From: Simon Horman <horms@kernel.org>
-To: "Mike Rapoport (Microsoft)" <rppt@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Jakub Kicinski <kuba@kernel.org>, b43-dev@lists.infradead.org,
-	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 0/4] drivers/net: replace __get_free_pages() with
- kmalloc()
-Message-ID: <20260707144601.GH1364329@horms.kernel.org>
-References: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="BSLLeQgA"
+Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
+	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id B856E2C3034
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Jul 2026 14:38:57 +0000 (UTC)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id C4BD4AC0076;
+	Tue,  7 Jul 2026 14:38:48 +0000 (UTC)
+Received: from [192.168.1.23] (unknown [98.97.38.238])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail3.candelatech.com (Postfix) with ESMTPSA id A228313C2B0;
+	Tue,  7 Jul 2026 07:38:42 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A228313C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1783435126;
+	bh=sQivW2Zp72ACivnnfajY3oMecyV+TQ05SmB+ANg4rwM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=BSLLeQgAIg39p0dMYSJ5blF5Valw0Al3HBQ4l325r4F3d3g6uZdGKt4NVR7lMKBCn
+	 gQmiS3hZTxZZwivuqlF+oXDyb2DQ9FGobWlqSPCRJTOBavSQYiOZsf2sXk9LmWn4n9
+	 y4O96v3PVTYhKtgbXCEdvPFCR1cEw5lKFynv8ov8=
+Message-ID: <d39f212a-5161-4d00-bc38-bcdc5fee2658@candelatech.com>
+Date: Tue, 7 Jul 2026 07:38:39 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260701-b4-drivers-wireless-v1-0-60264cdf2efe@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: cfg80211: reinit wiphy work entries on runaway
+ drain
+To: Cen Zhang <zzzccc427@gmail.com>, Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, baijiaju1990@gmail.com
+References: <20260707134925.106972-1-zzzccc427@gmail.com>
+Content-Language: en-MW
+From: Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+In-Reply-To: <20260707134925.106972-1-zzzccc427@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MDID: 1783435129-5AQR00P3Cyri
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;ut7;1783435129;5AQR00P3Cyri;<greearb@candelatech.com>;42964693c53d782159cd6d1d1559cb6f
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-On Wed, Jul 01, 2026 at 04:59:09PM +0300, Mike Rapoport (Microsoft) wrote:
-> This is a (small) part of larger work of replacing page allocator calls
-> with kmalloc.
+On 7/7/26 06:49, Cen Zhang wrote:
+> cfg80211_process_wiphy_works() has a runaway guard for the process-all
+> case. When the guard fires, it drops the remaining queued work by
+> reinitializing rdev->wiphy_work_list.
+
+Even this likely leaves the system in a bad state since requested work
+items would be skipped.  Probably should also increase runaway_limit quite
+a bit as well (that has worked OK for me), maybe remove it entirely.
+
+Thanks,
+Ben
+
 > 
-> My initial intention a few month ago was to remove ugly casts [1], but then
-> willy pointed out that Linus objected to something like this [2] and it
-> looks like more than a decade old technical debt.
+> That only resets the list head. The queued struct wiphy_work entries are
+> embedded in their owners, and their entry fields still point at the old
+> list neighbors. Later queue or cancel checks can then see a work item as
+> listed even though the rdev list has been cleared.
 > 
-> Largely, anything that doesn't need struct page (or a memdesc in the
-> future) should just use kmalloc() or kvmalloc() to allocate memory.
-> kmalloc() guarantees alignment, physical contiguity and working
-> virt_to_phys() and beside nicer API that returns void * on alloc and
-> doesn't require to know the allocation size on free, kmalloc() provides
-> better debugging capabilities than page allocator.
+> Drain the remaining list with list_del_init() under wiphy_work_lock
+> instead of reinitializing only the head. This keeps the existing WARN and
+> drop behavior while leaving each work item in the same state as normal
+> wiphy work removal.
 > 
-> Another thing is that touching these allocation sites gives the reviewers
-> opportunity to see if a PAGE_SIZE buffer is actually needed or maybe
-> another size is appropriate.
-> 
-> For larger allocations that don't need physically contiguous memory
-> kvmalloc() can be a better option that __get_free_pages() because under
-> memory pressure it's is easier to allocate several order-0 pages than a
-> physically contiguous chunk with the same number of pages.
-> 
-> And last, but not least, removing needless calls to page allocator should
-> help with memdesc (aka project folio) conversion. There will be way less
-> places to audit to see if the user was actually using struct page.
-> 
-> Also in git:
-> https://git.kernel.org/pub/scm/linux/kernel/git/rppt/linux.git gfp-to-kmalloc/drivers-net-wireless
-> 
-> [1] https://lore.kernel.org/all/20251018093002.3660549-1-rppt@kernel.org/
-> [2] https://lore.kernel.org/all/CA+55aFwp4iy4rtX2gE2WjBGFL=NxMVnoFeHqYa2j1dYOMMGqxg@mail.gmail.com/
-> 
+> Fixes: a3ee4dc84c4e ("wifi: cfg80211: add a work abstraction with special semantics")
+> Assisted-by: Codex:gpt-5.5
+> Signed-off-by: Cen Zhang <zzzccc427@gmail.com>
 > ---
-> Changes in v2:
-> - split out wireless drivers from a larger set 
-> - use kzalloc() instead of kmalloc() + memset in b43legacy
+>   net/wireless/core.c | 10 ++++++++--
+>   1 file changed, 8 insertions(+), 2 deletions(-)
 > 
-> v1: https://patch.msgid.link/20260630-b4-drivers-net-v1-0-672162a91f37@kernel.org
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 3dcf63b04c41..a7e011ed455d 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -1278,8 +1278,14 @@ void cfg80211_process_wiphy_works(struct cfg80211_registered_device *rdev,
+>   		if (wk == end)
+>   			break;
+>   
+> -		if (WARN_ON(--runaway_limit == 0))
+> -			INIT_LIST_HEAD(&rdev->wiphy_work_list);
+> +		if (WARN_ON(--runaway_limit == 0)) {
+> +			while (!list_empty(&rdev->wiphy_work_list)) {
+> +				wk = list_first_entry(&rdev->wiphy_work_list,
+> +						      struct wiphy_work,
+> +						      entry);
+> +				list_del_init(&wk->entry);
+> +			}
+> +		}
+>   	}
+>   	spin_unlock_irqrestore(&rdev->wiphy_work_lock, flags);
+>   }
 
-For the series:
-
-Reviewed-by: Simon Horman <horms@kernel.org>
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
