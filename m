@@ -1,95 +1,76 @@
-Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5AF2E762C;
-	Fri, 10 Jul 2026 14:23:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC553DCDB5;
+	Fri, 10 Jul 2026 14:40:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1783693398; cv=none; b=q/OgGrAeswvhuusrY7lI6VaSD9Axl6vNo6df7yocQY8C3O8vITimIJd4HVmnkS0rI+vov7oMIfjMAHOZHvQ9vRqK7J85Nu5Gs9Z/hB5ucCv4uXZNVOPFbCY2GgHNaAPzWtmUPlLeudFJOXIKnEzr+mSkP3b5gPtMnBsrPcFTb8U=
+	t=1783694458; cv=none; b=Ptf2Jvo+KNcanVzPERO2WP+gOhhxjW2YtwwNe1yTPJNEpfQFj7QqUyCaByzeeK7sv08QDvB6VIKJFiXR4kOvNdVsE/6KkZkCC0SJCU3da2i6ojI9o9n3ha+esdY4gP+UZ504T/Lnq4jiIG4g3+FPFu8axGlddJTedEQBV/qHm+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1783693398; c=relaxed/simple;
-	bh=r7/9LOboyLHHkT/0tArXdh/IvtIzxUswzEgA8gjenPM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=EU1Ar6C3LnvNceMqxppSdeoMjOtwSG31mD0ZRcFsX8oWkq20Of60J1h73unBZZREGrF1Md+ipGQX6uO6ZP5ivlqvaLj70rSCOMVGYnTZMSMfInZv3REoPbJdZ9btVzLVd2jxMTHAuqQFMJEZa1kBBqSr3HVGwQCoHzgh/5L/aXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=kz6NjpeR; arc=none smtp.client-ip=217.194.8.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+	s=arc-20240116; t=1783694458; c=relaxed/simple;
+	bh=zFaJ+IyWbtAcxsb+8hHCHRf5N5/Rulr6q2RW2+K4cmY=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=HYSb94WCEdcW4fYZWk7vZLnND68SjdQe8iyf1Xfi4x345BDZSXUrzwkFE+WaLJ006MoUuXELeEST/fr4c+hXNxnkHP5bEDOUwfW+kZmRmJ9QRy22P2H+aM0gn2ZeGLpfdgHlxkUMxzY7AG5vq7BAbfm5r1ay3yO/x5qFlCOF6hY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IUbGiUxd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="kz6NjpeR"
-Received: from francesco-nb (93-49-2-63.ip317.fastwebnet.it [93.49.2.63])
-	by mail11.truemail.it (Postfix) with ESMTPA id 38E9422DFC;
-	Fri, 10 Jul 2026 16:23:11 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1783693391;
-	bh=JlXhDK3SpK/AwHtqfGwbsNmOHHv27/h4myvZJQX2l3Q=; h=From:To:Subject;
-	b=kz6NjpeRbTYmnfuDSIt8IL2piA7VkTT8eogW4xffawLKWHPrTsiiLLiqC5YZUrc94
-	 wV1D27ma7RHGY+kFRiABCthGssea+3chpcUtqZ5FoCAhMvzi4n1D6TkHI+ZmqIBGFw
-	 SMaKOTJnUCu1sHC6FfLid7nR6f1oB9h+G91mpfeoHrjyCf20I/3pQ6Z7D4aE+Y4eOl
-	 Ym0Vl/m8OUA+b/9HBUzmPq+BdAZWPgil0AiNkLzr+GsU0WQC0Zv3sgotYlltXAY3y/
-	 fL99RSPJt2brJnx/+yLgdqDDC3Um4dY5ZsGESQkmmS5FclCXOTeplB2fTUQWclwMkA
-	 2xmOrLlV4gAxg==
-Date: Fri, 10 Jul 2026 16:23:07 +0200
-From: Francesco Dolcini <francesco@dolcini.it>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	skyexpoc <skyexpoc@gmail.com>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Brian Norris <briannorris@chromium.org>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Kalle Valo <kvalo@kernel.org>, Kees Cook <kees@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: mwifiex: bound uAP association event IEs to the
- event buffer
-Message-ID: <20260710142307.GA77999@francesco-nb>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IUbGiUxd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1105B1F000E9;
+	Fri, 10 Jul 2026 14:40:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1783694457;
+	bh=Ux+CmZMRRr4+801cKNR9wHEU/SAGIcxMzBRQf2BPDXQ=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc;
+	b=IUbGiUxduFIwDIq4hwvuStI9jNFwX5cszC9bY1vBp8IMKrTRod5MMbzpllLAKPEWr
+	 m9GQZj1JFGmHzXW+7m2m05qGvZvk+orrkiDB/od4BimgGco5mxkHffypWYFBKuiwhw
+	 GDhtmBcSg4wrkX3d36nGTQIYB6JqMTSGWTB74cr9kB7BnE79990bT6j9yO6CD1tPzs
+	 loCRvbHOGKoIqbtGhhfAHM732onc5eCq1hGXnKEInZlZTHhbn8aTLT9FUbK0aR8utG
+	 fDdu9rNWk7oFkv/LsZQ2Fg1gDQsZjdCTxwjXsK5mVz8S0Dg5+cZwY1a0rpd3lX0gow
+	 cbjwvLBgv0Mwg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 1995A3924F98;
+	Fri, 10 Jul 2026 14:40:36 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8b98582b-1120-46ff-8fa6-fd30a6b13016@Canary>
- <1462bcdb0944bfd3ae7ac9618cc59ab6cf75dfc6.camel@sipsolutions.net>
+Content-Transfer-Encoding: 8bit
+Subject: Re: [GIT PULL] wireless-2026-07-09
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <178369443465.714934.14339027434959871822.git-patchwork-notify@kernel.org>
+Date: Fri, 10 Jul 2026 14:40:34 +0000
+References: <20260709115038.243870-3-johannes@sipsolutions.net>
+In-Reply-To: <20260709115038.243870-3-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 
-On Fri, Jul 10, 2026 at 09:41:26AM +0200, Johannes Berg wrote:
-> On Fri, 2026-07-10 at 09:21 +0200, Francesco Dolcini wrote:
-> > I think we received a few patches that are validating the data received
-> > from the firmware (including this one).
-> > 
-> > I did not review any of them yet, what is your opinion on those?
-> > 
-> > Should we consider the firmware trust-worth or should we validate
-> > everything we receive from it? Is there some agreement on this topic in
-> > general?
+Hello:
+
+This pull request was applied to netdev/net.git (main)
+by Paolo Abeni <pabeni@redhat.com>:
+
+On Thu,  9 Jul 2026 13:49:05 +0200 you wrote:
+> Hi,
 > 
-> I don't really know fully "in general", but I/we generally treat these
-> as issues. I'm not going to worry too much about them, but I think we
-> should fix them.
-
-Ack
-
-
-On Fri, Jul 10, 2026 at 07:44:27PM +0900, skyexpoc wrote:
-> > Should we consider the firmware trust-worthy or should we validate
-> > everything we receive from it? Is there some agreement on this topic
-> > in general?
+> Sorry, I meant to send this yesterday, hoping it'd get
+> in/out before netdevconf and all that, because it's
+> actually really big. Mostly I've now collected many
+> random LLM-induced robustness fixes (I can't really
+> call most of them security fixes, though there likely
+> are a few).
 > 
-> For mwifiex there's a concrete reason not to trust it: besides the
-> SDIO/PCIe parts, mwifiex also drives USB dongles (8797/8801/8997), so the
-> "firmware" can sit on a hot-pluggable, potentially attacker-supplied
-> device. A malformed event from such a device is the same threat model as
-> any other malicious USB peripheral, not just a hypothetical firmware bug.
+> [...]
 
-...
+Here is the summary with links:
+  - [GIT,PULL] wireless-2026-07-09
+    https://git.kernel.org/netdev/net/c/a0d82fb85053
 
-> So I'd say it's consistent with how the driver already treats
-> firmware-reported lengths and agreed, worth fixing.
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-... and ack.
-
-
-Johannes, Brian: I will try to review those patches, unless someone
-gets to them earlier and they are merged.
-
-Francesco
 
