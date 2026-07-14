@@ -1,40 +1,40 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166881A9F87
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 17:52:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0EE93128B6
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 17:52:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784051536; cv=none; b=mTbYXcWVsS2SjiCJjL6VkvczZAl0w7nqexkb89PkFeBJ+fRRXp11PpvNxKXYA6MlGSGY2kO9T/NihsPoidoMKvHnOjXtE68WSQ+LuW1Nsfu4qMA+J+DDXLIazZMGt+pBu43XqG+Dawvy9t1hXicyBe3Fwd1mXFshnCv5DhSwnYc=
+	t=1784051537; cv=none; b=jivxYVzNb+MMtkMHHz4apKXC/o+9ZzWMHVq5d+z6W7TpQJh7D/DXjRbA9sZ/hHjue3I1kzAgAH42w/kghSY8Sc1o73BdfgiKN7KtQEj8E+EB6v8xy6X296ypsoWwOeRHPfmv/CLdAERUxIFoChPZBUznheVJC/MiwiypJCcSZl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784051536; c=relaxed/simple;
-	bh=bzny1nsXtTZZpXzvVY60/2RKit2GowUZ5Gx+W1mKIoQ=;
+	s=arc-20240116; t=1784051537; c=relaxed/simple;
+	bh=Rn/Dv4dPQpHwIL9Mpu3mdoed2AHF0zLTyiTdnBkMBkM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aMV4guFEf0fbg2x0WI5DVqbvHBgNIX6MbLBBqeP0uwuKEZcmx+SDRJ9NnuJ5gZxKSWh9BLE1gupinzEbVfTwpffqCE6aMTCBwjhOnEaIhmKogIVz+QxkxMnqtkV+B3PrV5WHf2+9fC3swljB3a9OPlLxV0oz4VfER7X6Spze+pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fqNzrlgW; arc=none smtp.client-ip=95.215.58.171
+	 MIME-Version; b=JZF/6AEdiKX6DTdZ8jf6h1hvyYSuOa85z41+Nmc588/eIHFBl6iKHgr0/pUAxl3fl7TU4FeMWmvZX3sYyDo25CkRt9x5Q4QZV0hwL48jBeZpjIEgY8a8yf/7KTOY4137qUcJFMldrAvxoenQLBtEUp/HnPVRGQnUJULZCTsfIRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=U/EX9a4X; arc=none smtp.client-ip=95.215.58.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fqNzrlgW"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="U/EX9a4X"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784051529;
+	t=1784051531;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VRU0+t+7h1CBmRFv6+gJSvHrc2yCYySi/K/KzXsr6BM=;
-	b=fqNzrlgWdoNhmfrVQkhKWx8Pze0mnS0Uq4jWHzYPrZHO0Kt6Kd0ga3C7YbXF16yl7k4E5e
-	HCyvyqGhcBCZJiAW0JP/XCwg6w8uHzQQD2QflnVnoXUBn/NdDZYwtal8lObBPxCBboWlwf
-	TS4lGRJHAHPfLt5Jxb7kminU/QAwoB8=
+	bh=6sU86FyXQ63B960w6tvcJM6JHwSQ9yAwZejoq8tzotc=;
+	b=U/EX9a4X3aecC4DIXLiEbo84wwFoNwL38VNseiFzivrACkBPbybbETfDTgkAsLTB0MpbGL
+	WKYyTg03zKbqAknJhBPSBZWxcqk4t8+idITQeZu0bGy7JZf06yL3uvRFDSRevGxAhPxIU6
+	yMpWySxjHiZgEahYfFCQJL+E0ftDxyc=
 From: luka.gejak@linux.dev
 To: linux-wireless@vger.kernel.org
 Cc: pkshih@realtek.com,
 	straube.linux@gmail.com,
 	luka.gejak@linux.dev
-Subject: [RFC PATCH v1 5/9] wifi: rtw88: 8723bs: keep the chip powered between scan and connect
-Date: Tue, 14 Jul 2026 19:51:03 +0200
-Message-ID: <8c24a47ae730f5369a2ba0b9ad809aab3950f5e1.1784047561.git.luka.gejak@linux.dev>
+Subject: [RFC PATCH v1 9/9] MAINTAINERS: add entry for the RTL8723B rtw88 driver
+Date: Tue, 14 Jul 2026 19:51:07 +0200
+Message-ID: <c965013543e399bdd08fc8eafffe9bc8c0914ea7.1784047561.git.luka.gejak@linux.dev>
 In-Reply-To: <cover.1784047561.git.luka.gejak@linux.dev>
 References: <cover.1784047561.git.luka.gejak@linux.dev>
 Precedence: bulk
@@ -48,95 +48,33 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-A full power-off/on cycle between scan and connect corrupts the RTL8723BS
-8051 firmware's management TX scheduler; the vendor driver keeps the chip
-powered across that boundary. Implement a "soft IPS" that keeps the chip
-powered and the coex/RF state intact, and re-establish the PTA antenna
-path and RF bus on IPS leave (the first channel program after a power-on
-IQK needs a second pass once the RF PLL has settled).
+Add Luka Gejak as the maintainer for the RTL8723B/RTL8723BS support in
+rtw88.
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/ps.c | 50 ++++++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 1 deletion(-)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
-index add5a20b8432..f620a8a7fdec 100644
---- a/drivers/net/wireless/realtek/rtw88/ps.c
-+++ b/drivers/net/wireless/realtek/rtw88/ps.c
-@@ -18,9 +18,33 @@ static int rtw_ips_pwr_up(struct rtw_dev *rtwdev)
- 	if (ret)
- 		rtw_err(rtwdev, "leave idle state failed\n");
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 15011f5752a9..c9fbf99be92f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -22735,6 +22735,14 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/net/dsa/realtek.yaml
+ F:	drivers/net/dsa/realtek/*
  
--	rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
-+	if (rtw_is_8723bs_sdio(rtwdev)) {
-+		/* The BT-side coex init in rtw_power_on switches 8723BS SDIO to
-+		 * the BT antenna path (BB_SEL_BTG=0x280), corrupting the RF
-+		 * 3-wire bus. Run the scan-path PS-TDMA/coex-table/PTA setup
-+		 * (which restores the WiFi PTA path) instead of the generic
-+		 * COEX_IPS_LEAVE notify that would re-run the BT-path init.
-+		 */
-+		rtwdev->coex.stat.wl_under_ips = false;
-+		rtw_coex_write_scbd(rtwdev,
-+				    COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, true);
-+		rtw_coex_8723bs_scan_workaround(rtwdev);
-+	} else {
-+		rtw_coex_ips_notify(rtwdev, COEX_IPS_LEAVE);
-+	}
++REALTEK RTL8723B WIRELESS DRIVER (rtw88)
++M:	Luka Gejak <luka.gejak@linux.dev>
++L:	linux-wireless@vger.kernel.org
++S:	Maintained
++F:	drivers/net/wireless/realtek/rtw88/rtw8723b*.c
++F:	drivers/net/wireless/realtek/rtw88/rtw8723b*.h
++F:	drivers/net/wireless/realtek/rtw88/rtw8723bs.c
 +
- 	rtw_set_channel(rtwdev);
- 
-+	if (rtw_is_8723bs_sdio(rtwdev)) {
-+		/* The first set_channel after IPS-leave can read back an
-+		 * incorrect RF00 because power_on wrote RF registers on the BT
-+		 * antenna path. Re-run set_channel after a settling delay so
-+		 * the RF PLL re-locks from a clean baseline.
-+		 */
-+		usleep_range(1500, 2000);
-+		rtw_set_channel(rtwdev);
-+	}
-+
- 	return ret;
- }
- 
-@@ -29,6 +53,17 @@ int rtw_enter_ips(struct rtw_dev *rtwdev)
- 	if (!test_bit(RTW_FLAG_POWERON, rtwdev->flags))
- 		return 0;
- 
-+	/* 8723BS SDIO: a full power-off/on cycle between scan and connect
-+	 * corrupts the 8051 firmware's management TX scheduler. The vendor
-+	 * driver keeps the chip powered on across that boundary. Enter a
-+	 * "soft IPS" instead: keep the chip powered and the coex/RF state
-+	 * intact, so leave-IPS needs no power-on / phy_set_param reload.
-+	 */
-+	if (rtw_is_8723bs_sdio(rtwdev)) {
-+		set_bit(RTW_FLAG_SOFT_IPS, rtwdev->flags);
-+		return 0;
-+	}
-+
- 	rtw_coex_ips_notify(rtwdev, COEX_IPS_ENTER);
- 
- 	rtw_core_stop(rtwdev);
-@@ -50,6 +85,19 @@ int rtw_leave_ips(struct rtw_dev *rtwdev)
- {
- 	int ret;
- 
-+	/* 8723BS SDIO soft IPS: the chip was never powered off. Clear the
-+	 * soft-IPS flag and refresh the active WLAN scoreboard / PTA antenna
-+	 * path; no power-on / phy_set_param is needed.
-+	 */
-+	if (test_bit(RTW_FLAG_SOFT_IPS, rtwdev->flags)) {
-+		clear_bit(RTW_FLAG_SOFT_IPS, rtwdev->flags);
-+		rtwdev->coex.stat.wl_under_ips = false;
-+		rtw_coex_write_scbd(rtwdev,
-+				    COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, true);
-+		rtw_coex_8723bs_scan_workaround(rtwdev);
-+		return 0;
-+	}
-+
- 	if (test_bit(RTW_FLAG_POWERON, rtwdev->flags))
- 		return 0;
- 
+ REALTEK SPI-NAND
+ M:	Chris Packham <chris.packham@alliedtelesis.co.nz>
+ S:	Maintained
 -- 
 2.55.0
 
