@@ -1,55 +1,56 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 076E843F8C1
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 14:03:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72D2243F8AF
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 14:03:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784037795; cv=none; b=Z04YbciEFHHXCHyZO3Ir9dPxCrK/4o4SI7opOnt7HLALISe07TQkeaMnIvjWyGKMZ5DFw6Vv+0x3t+4x+NZARLAIg1dzj1gmQRgAhmbTNRfPgx5uEd+8+Js3wCFWdzKgZHwrLBw0YKgqJ2R1J/TKhBgOKAOf0PxGLs7tk+h5o7U=
+	t=1784037797; cv=none; b=SUb+MT1WPEfGxBRraiBGENRF3W+rQz2dipsZNKzymmh5Fc0WCpaUMcEtxa2QNE9pNyCcYrZ5XT92cGEZZIccuLyES6KfsuzgskC8/U+40MBhOa5g9up6TGUNY3HB+uNa/9mz+77SlSTEt2oYow0ij0bECs+Zx08sWabWjPvZLt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784037795; c=relaxed/simple;
-	bh=1HvxOKRoC2RgvIRDOh1hcHySWgqC2hYScovbLBQf7MM=;
+	s=arc-20240116; t=1784037797; c=relaxed/simple;
+	bh=PRo/kvv+9pQX55NDqj7VShwqpZDABAHCq7UyjgjbFRU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oCfeDjyqbcw1OHtedW4i5iike8S16SqObx/XFJbDQekVoyWJdkL9yBUvOTVEwDIu28F9P/RJco5nTV0eroEqN9d+ueymdnC/C8bLrg2oLl77x2ueWEM9ONF3gInaLMUUjpeX9qFJZYCOO/nZv28t1yNV1l8Ze3D6rju7IGi4jzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Whxpqp5z; arc=none smtp.client-ip=198.175.65.16
+	 MIME-Version; b=anYMxv76MdRPsehFV+zfO+vgnMOyfzLqoTHKSd2U+DMTvf1AalZQs2uOSEu33aOoLDUyoZpkUA2kNPShTK9GgXeUJJzhXEB85BVyFFWhOFbyi4vA/TeZdxPrHscf6x78cF/0JYd0LI09DXjSwpMRJ9F6pjmktRYMlOjQ8XmG+Yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lNmsL18K; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Whxpqp5z"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lNmsL18K"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784037793; x=1815573793;
+  t=1784037795; x=1815573795;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=1HvxOKRoC2RgvIRDOh1hcHySWgqC2hYScovbLBQf7MM=;
-  b=Whxpqp5zwafGFiiNFsRBbkMfRUn0HoCBsEsXQMdRWMGXXeOWNHyvpYUs
-   4G2XuX1dIZmAzJsPTEl+J9pv5oGsahqol5CNIYJgxMts0aJFoCdNbbb1Y
-   xMiP+piIWKbQiDr/N9v5e/OBRG33pFUsOysUwmJMr5kjWFNmphwd8GH0P
-   UR38XXQLgaLSJpaHM/Mz53FplTKwx3D1xSVMpxMzoH3qgyh9BecJhoF6w
-   GE3MWhoUsJU78o+To3QUfeGMb1Q3BRSxgG8PpmAwkxR0QO0uwIqzEWMR3
-   Mf1duDBuL9Gik7f+mjQdcbX/Vhs87lEijmtv1MeMZtYJyUnKIS1bzpZL6
-   Q==;
-X-CSE-ConnectionGUID: XdsIOfFST0Cbet2bBQ5KYg==
-X-CSE-MsgGUID: KQ0Arsx1QImOCeAMt/BJRw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855118"
+  bh=PRo/kvv+9pQX55NDqj7VShwqpZDABAHCq7UyjgjbFRU=;
+  b=lNmsL18KjpBC5/efSz6wPnoO+dq93Y1CSVmgkDUxgEc4c0gBmulUqK9i
+   +KMEirqe6PvfZiILS/3IapScPXAe+i64299VAAxABR/2LGHHGmEctGLBT
+   6N1GKV7iOAN2WzEw2MO9NuoCY122XE/oI31otoH6vuyMpEbrhCTE1K5Hq
+   0h01iPHp+GkwoqWL+z1OrB0tqz7f296JgPiReuS+S52wJVWxJAb5gyLZe
+   FNbNRvrA9zVo3ikpKmN8doWiLO3bxX+ezVttUjqiLdycNJz8Yef1wj4vN
+   RZ5KsBESyZREeWEtBNXoHupltG/lWl/+CK8CnmKSJ0E5OqlQ4KwE5Mnoj
+   w==;
+X-CSE-ConnectionGUID: Ahe9O7QiR/+/RnPc1yKcJg==
+X-CSE-MsgGUID: 2lhGvrjNTXK2DmkYFwAS6Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855139"
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="84855118"
+   d="scan'208";a="84855139"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:55 -0700
-X-CSE-ConnectionGUID: rEnHxhCbTECy0wgZZl03HA==
-X-CSE-MsgGUID: DRTkyj4ZRT2K+LfLIfVqnw==
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:58 -0700
+X-CSE-ConnectionGUID: ghnsunhcT861hvt925rzUA==
+X-CSE-MsgGUID: 2rmEkwpDTRaOEKe913lnJA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="254737881"
+   d="scan'208";a="254737911"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:53 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:57 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2 iwlwifi-next 09/15] wifi: iwlwifi: mld: validate D3_END notif size
-Date: Tue, 14 Jul 2026 17:02:12 +0300
-Message-Id: <20260714165826.db2df8b6b6bb.I6163bbdf433379bf1dbf9eb46fb9562892217bd7@changeid>
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
+	Avinash Bhatt <avinash.bhatt@intel.com>
+Subject: [PATCH v2 iwlwifi-next 11/15] wifi: iwlwifi: ignore raw-DSM TLV for LARI cmd version 13 and above
+Date: Tue, 14 Jul 2026 17:02:14 +0300
+Message-Id: <20260714165826.12c8b407e115.I6809041f1eb52b7fafe9172ca3e47323d43cc30a@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
 References: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
@@ -62,41 +63,75 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-Check D3_END_NOTIFICATION payload length before reading notif->flags.
-On short payloads, mark notif handling as failed.
-Avoid out-of-bounds reads from malformed notifications.
+LARI_CONFIG_CHANGE command version 13 and above accepts raw DSM
+values by default in firmware, so FW_ACCEPTS_RAW_DSM_TABLE should
+not gate DSM bitmap handling for these versions.
 
-Assisted-by: GitHubCopilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Set has_raw_dsm_capa based on command version (version 13 and above
+is true) with TLV fallback for older command versions. Also update TLV
+kernel-doc to mark this capability obsolete for LARI command
+version 13 and above.
+
+Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Reviewed-by: Avinash Bhatt <avinash.bhatt@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h     |  5 +++--
+ .../net/wireless/intel/iwlwifi/mld/regulatory.c  | 16 +++++++++++-----
+ 2 files changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index 458a668ba916..b5fed6090340 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -1449,8 +1449,16 @@ static bool iwl_mld_handle_d3_notif(struct iwl_notif_wait_data *notif_wait,
- 	}
- 	case WIDE_ID(PROT_OFFLOAD_GROUP, D3_END_NOTIFICATION): {
- 		struct iwl_d3_end_notif *notif = (void *)pkt->data;
-+		u32 len = iwl_rx_packet_payload_len(pkt);
-+
-+		if (IWL_FW_CHECK(mld, len < sizeof(*notif),
-+				 "Invalid D3_END notification (expected=%zu got=%u)\n",
-+				 sizeof(*notif), len)) {
-+			resume_data->notif_handling_err = true;
-+		} else {
-+			resume_data->d3_end_flags = le32_to_cpu(notif->flags);
-+		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index a26ed82a8106..664ac25754e9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -448,8 +448,9 @@ typedef unsigned int __bitwise iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_EXT_FSEQ_IMAGE_SUPPORT: external FSEQ image support
+  * @IWL_UCODE_TLV_CAPA_RESET_DURING_ASSERT: FW reset handshake is needed
+  *	during assert handling even if the dump isn't split
+- * @IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE: Firmware has capability of
+- *	handling raw DSM table data.
++ * @IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE: Firmware can handle raw DSM
++ *	table data. For LARI_CONFIG_CHANGE command version 13 and above, this
++ *	capability is obsolete since raw DSM values are accepted by default.
+  * @IWL_UCODE_TLV_CAPA_NAN_SYNC_SUPPORT: Supports NAN synchronization
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+index 659243ada86c..858635607f5d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+@@ -325,8 +325,16 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	struct iwl_lari_config_change_cmd cmd = {
+ 		.config_bitmap = iwl_mld_get_lari_config_bitmap(fwrt),
+ 	};
+-	bool has_raw_dsm_capa = fw_has_capa(&fwrt->fw->ucode_capa,
+-					    IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE);
++	u8 cmd_ver = iwl_fw_lookup_cmd_ver(mld->fw,
++					   WIDE_ID(REGULATORY_AND_NVM_GROUP,
++						   LARI_CONFIG_CHANGE), 12);
++	/*
++	 * For LARI_CONFIG_CHANGE command version 13 and above, firmware accepts
++	 * raw DSM values by default and this TLV is no longer needed.
++	 */
++	bool has_raw_dsm_capa = cmd_ver >= 13 ||
++		fw_has_capa(&fwrt->fw->ucode_capa,
++			    IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE);
+ 	int ret;
+ 	u32 value;
  
--		resume_data->d3_end_flags = le32_to_cpu(notif->flags);
- 		resume_data->notifs_received |= IWL_D3_NOTIF_D3_END_NOTIF;
- 		break;
- 	}
+@@ -428,9 +436,7 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 			"sending LARI_CONFIG_CHANGE, oem_unii9_enable=0x%x\n",
+ 			le32_to_cpu(cmd.oem_unii9_enable));
+ 
+-	if (iwl_fw_lookup_cmd_ver(mld->fw,
+-				  WIDE_ID(REGULATORY_AND_NVM_GROUP,
+-					  LARI_CONFIG_CHANGE), 12) == 12) {
++	if (cmd_ver == 12) {
+ 		int cmd_size = offsetof(typeof(cmd), oem_11bn_allow_bitmap);
+ 
+ 		ret = iwl_mld_send_cmd_pdu(mld,
 -- 
 2.34.1
 
