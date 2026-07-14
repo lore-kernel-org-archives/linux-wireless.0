@@ -1,38 +1,42 @@
-Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
+Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE4282EEE92
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 17:52:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6031330D416
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 17:52:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784051531; cv=none; b=KiqwM+XblW/fi9ESYoJjyGg8U0Cg9Ub+9LoRW4kE1R9VDnsdJgLP59O03pm0285D5j2rM+jnXv/Mq6c/83CLIH7Vk/lb0RukV9szCZuAGVjwQ79Y+9Nt8A43SPU0UG/YO7fJOlhQGY4awku7NYkZ6MX2ueG1QTBH+2fN78149i4=
+	t=1784051534; cv=none; b=n2zURdfe4JhwJEk7x1VHN/ZIXi9iBdVPYshtRoP8g9rNcBrD9CGJ7J7XX5vt2HxUf5OjTqFjEcVxzqung7c9RADRBq6AIkDrBOTnpftbphr7WcUUUO58GPovxWjFmi+2ifHbvDzHxpxBwe0rb//Q7Pk6CuJ2UnHc3MiRJnZwZys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784051531; c=relaxed/simple;
-	bh=NVMCowhCbdeNYjSHuUsYvNBGDkxqTIZpF/yK+D4huxA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=h9cTVh5HNzjaoEaw3XkZLaXD8CmnlgPhwhxJ6I6LGTdLp+iPHZWnO+FbZ3Cwz581IhItAkaEfJQr5PpKBqawi+aY8lWAcOX8q1Miy6DEAiCU91pwbeoC/77eGMoxJ8YlNDiTbetJPXmDqxcajAErW8HA6CitMYqO7c/skeiAoOI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Sitzl96j; arc=none smtp.client-ip=95.215.58.170
+	s=arc-20240116; t=1784051534; c=relaxed/simple;
+	bh=2l6k1tDmPIeesZLJbTLgVMVyZfpGtebGZfEt02TZUdk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=oQPq3w61XlUjqOYFRTjUBF0yYzY04DSoLo9njA7btm+3E511Kgdw+1B4E3KXjbnWUbf5IpMVInmFj8aCDF6WUklyF+20Bf0KZ+QhBCchpFPwgRhM4lirRJQJOFWqFkXUAt5hEJK/YI1PQJUjpgq70efo7txwFGCMeHNpQ+UHDfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=C3g4Iph2; arc=none smtp.client-ip=95.215.58.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Sitzl96j"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="C3g4Iph2"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784051524;
+	t=1784051527;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=z4RknWvMaIDcU/hbkk3+dVUuldTE+TwncJ3Y/5OoE/k=;
-	b=Sitzl96j3Q3CMIDA/eJT0ZNY97u5jxZYV/V9DEKj2APqjpWmjoyz2B1HU0/CJZhy+JcqTH
-	YQBXITVzEeJQFuFoS1/0FJLwgsAosMlzgx6TMSO36S0m2gwo0rnofrFZrlpmDoz2ywjveI
-	+iX2UX8J3+7Gv4k89ov3h36Nw4wwOrQ=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4L5U6Yd3DyZO330yBEkA2k88mf2F5i9MLHgKwqO/084=;
+	b=C3g4Iph2pTs8tA/pqTNmwWjXLrkaSGAjHhdo0gu8j2EEYNPO3Us0yWTZ7p08DA4mfI/X2f
+	AWDWL3mGhAFyXb8oDh9mkgmiu8YxaKj9lDFmgRUdWnDmQoPEEDVzja/CNx/kADmfYqKpgb
+	nFUC7j8UKi4PWfCy78JKG/vNL7PiEvQ=
 From: luka.gejak@linux.dev
 To: linux-wireless@vger.kernel.org
 Cc: pkshih@realtek.com,
 	straube.linux@gmail.com,
 	luka.gejak@linux.dev
-Subject: [RFC PATCH v1 0/9] wifi: rtw88: add RTL8723B/RTL8723BS support
-Date: Tue, 14 Jul 2026 19:50:58 +0200
-Message-ID: <cover.1784047561.git.luka.gejak@linux.dev>
+Subject: [RFC PATCH v1 2/9] wifi: rtw88: 8723bs: handle SDIO management and data TX
+Date: Tue, 14 Jul 2026 19:51:00 +0200
+Message-ID: <1ac8fad97e3fcdea41f20963f771fbf5efbe6f6a.1784047561.git.luka.gejak@linux.dev>
+In-Reply-To: <cover.1784047561.git.luka.gejak@linux.dev>
+References: <cover.1784047561.git.luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,99 +48,381 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-This RFC adds support for the Realtek RTL8723B 802.11n chipset and its
-RTL8723BS SDIO variant to rtw88. The series is SDIO-only; untested PCIe
-and USB variants are intentionally left for future work.
+The RTL8723BS SDIO firmware expects the vendor TX-descriptor contract for
+management frames: SPE_RPT set so the 8051 schedules the frame on air, a
+fixed data retry limit, and management frames carried on the shared BCMC
+station context. Program the descriptor accordingly and select the
+management rate (CCK on 2.4 GHz, following the BSS basic-rate set), and add
+rtw_tx_report_handle_8723b() to consume the vendor CCX TX reports.
 
-RTL8723BS predates rtw88 and uses the available Realtek vendor firmware
-(version 41), whose H2C/C2H and association behavior differs from the
-firmware used by the existing rtw88 8723-family devices. Supporting it
-therefore needs both the common RTL8723B chip implementation and an
-8723BS-specific SDIO path for firmware commands, coexistence, power,
-association, and TX/RX handling.
+Mark non-management packets as complete first/last segments and transmit
+EAPOL at the lowest basic rate so the four-way handshake follows the
+vendor data descriptor contract.
 
-The series includes:
+Also apply the firmware-reported TX rate through the descriptor: on this
+chip the hardware otherwise keys the CCK floor on air regardless of the
+rate mask, so force the rate the firmware last reported via C2H while
+leaving rate fallback enabled for recovery after a power-save wake.
 
-  - RTL8723B BB/RF/AGC tables, power sequences and chip operations;
-  - the RTL8723BS SDIO binding;
-  - the vendor-firmware H2C/C2H interface;
-  - management/EAPOL descriptor handling and rate adaptation;
-  - WiFi/BT PTA antenna handling during scan and association;
-  - soft IPS across the scan-to-connect boundary;
-  - the vendor association register sequence; and
-  - the RTL8723BS SDIO transfer contract, including RX aggregation,
-    FIFO/OQT/free-page accounting, management TX scheduling and bounded
-    mac80211 queue back-pressure.
+Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+---
+ drivers/net/wireless/realtek/rtw88/tx.c | 225 +++++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/tx.h |   5 +
+ 2 files changed, 223 insertions(+), 7 deletions(-)
 
-This series is based on the rtw-next branch from pkshih/rtw.
-
-The implementation is based on the initial RTL8723B work by Michael
-Straube <straube.linux@gmail.com>. The SDIO integration and subsequent
-hardware bring-up were developed and tested on an RTL8723BS system.
-
-Hardware validation covered repeated scan, authentication, association,
-WPA2 key negotiation, DHCP, bidirectional traffic, reconnects, link
-cycles, module reloads, scans under traffic and a sustained stability
-run. The final series also builds cleanly with W=1 at every intermediate
-commit. RTL8703B, RTL8723CS/DS and the other rtw88 bus modules continue to
-build.
-
-The driver requests this firmware file:
-
-  rtw88/rtw8723b_fw.bin
-
-It is not included in this kernel series. I would appreciate guidance
-from Realtek and the linux-firmware maintainers on whether the existing
-LICENCE.rtlwifi_firmware.txt redistribution terms cover this version 41
-blob, or whether Realtek should submit the firmware directly.
-
-Feedback on the series structure, the placement of the association and
-coexistence logic, and the firmware submission path would be appreciated.
-
-Luka Gejak (9):
-  wifi: rtw88: add RTL8723B chip support
-  wifi: rtw88: 8723bs: handle SDIO management and data TX
-  wifi: rtw88: 8723bs: add the firmware host-to-chip interface
-  wifi: rtw88: 8723bs: add WiFi/BT coexistence antenna handling
-  wifi: rtw88: 8723bs: keep the chip powered between scan and connect
-  wifi: rtw88: 8723bs: add scan, calibration and rate-adaptation
-    handling
-  wifi: rtw88: 8723bs: implement the SDIO association sequence
-  wifi: rtw88: 8723bs: implement the SDIO transfer contract
-  MAINTAINERS: add entry for the RTL8723B rtw88 driver
-
- MAINTAINERS                                   |    8 +
- drivers/net/wireless/realtek/rtw88/Kconfig    |   18 +
- drivers/net/wireless/realtek/rtw88/Makefile   |    6 +
- drivers/net/wireless/realtek/rtw88/coex.c     |  237 ++
- drivers/net/wireless/realtek/rtw88/coex.h     |    4 +
- drivers/net/wireless/realtek/rtw88/fw.c       |  171 +-
- drivers/net/wireless/realtek/rtw88/fw.h       |   17 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |  538 ++-
- drivers/net/wireless/realtek/rtw88/main.c     |  191 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   35 +
- drivers/net/wireless/realtek/rtw88/ps.c       |   50 +-
- drivers/net/wireless/realtek/rtw88/reg.h      |    6 +
- drivers/net/wireless/realtek/rtw88/rtw8723b.c | 3382 +++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723b.h |   16 +
- .../wireless/realtek/rtw88/rtw8723b_table.c   |  858 +++++
- .../wireless/realtek/rtw88/rtw8723b_table.h   |   15 +
- .../net/wireless/realtek/rtw88/rtw8723bs.c    |   36 +
- drivers/net/wireless/realtek/rtw88/rx.c       |    8 +-
- drivers/net/wireless/realtek/rtw88/sdio.c     |  443 ++-
- drivers/net/wireless/realtek/rtw88/sdio.h     |   18 +
- drivers/net/wireless/realtek/rtw88/sec.h      |    1 +
- drivers/net/wireless/realtek/rtw88/tx.c       |  225 +-
- drivers/net/wireless/realtek/rtw88/tx.h       |    5 +
- 23 files changed, 6205 insertions(+), 83 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
-
-
-base-commit: 6c080026ecc17eecb103f8927c64ea73a74bb818
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 9d747a060b98..5b4d4713be6f 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -37,14 +37,20 @@ void rtw_tx_fill_tx_desc(struct rtw_dev *rtwdev,
+ {
+ 	struct rtw_tx_desc *tx_desc = (struct rtw_tx_desc *)skb->data;
+ 	bool more_data = false;
++	bool first_seg = false;
+ 
+ 	if (pkt_info->qsel == TX_DESC_QSEL_HIGH)
+ 		more_data = true;
+ 
++	if (rtw_is_8723bs_sdio(rtwdev) &&
++	    pkt_info->qsel != TX_DESC_QSEL_MGMT)
++		first_seg = true;
++
+ 	tx_desc->w0 = le32_encode_bits(pkt_info->tx_pkt_size, RTW_TX_DESC_W0_TXPKTSIZE) |
+ 		      le32_encode_bits(pkt_info->offset, RTW_TX_DESC_W0_OFFSET) |
+ 		      le32_encode_bits(pkt_info->bmc, RTW_TX_DESC_W0_BMC) |
+ 		      le32_encode_bits(pkt_info->ls, RTW_TX_DESC_W0_LS) |
++		      le32_encode_bits(first_seg, RTW_TX_DESC_W0_FS) |
+ 		      le32_encode_bits(pkt_info->dis_qselseq, RTW_TX_DESC_W0_DISQSELSEQ);
+ 
+ 	tx_desc->w1 = le32_encode_bits(pkt_info->mac_id, RTW_TX_DESC_W1_MACID) |
+@@ -68,9 +74,15 @@ void rtw_tx_fill_tx_desc(struct rtw_dev *rtwdev,
+ 
+ 	tx_desc->w4 = le32_encode_bits(pkt_info->rate, RTW_TX_DESC_W4_DATARATE);
+ 
+-	if (rtwdev->chip->old_datarate_fb_limit)
++	if (rtwdev->chip->old_datarate_fb_limit &&
++	    !pkt_info->disable_data_rate_fb_limit)
+ 		tx_desc->w4 |= le32_encode_bits(0x1f, RTW_TX_DESC_W4_DATARATE_FB_LIMIT);
+ 
++	if (pkt_info->retry_limit_en)
++		tx_desc->w4 |= le32_encode_bits(true, RTW_TX_DESC_W4_RETRY_LIMIT_EN) |
++			       le32_encode_bits(pkt_info->data_retry_limit,
++						RTW_TX_DESC_W4_DATA_RETRY_LIMIT);
++
+ 	tx_desc->w5 = le32_encode_bits(pkt_info->short_gi, RTW_TX_DESC_W5_DATA_SHORT) |
+ 		      le32_encode_bits(pkt_info->bw, RTW_TX_DESC_W5_DATA_BW) |
+ 		      le32_encode_bits(pkt_info->ldpc, RTW_TX_DESC_W5_DATA_LDPC) |
+@@ -262,6 +274,36 @@ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src)
+ 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
+ }
+ 
++/* 8723BS SDIO v41 firmware reports management TX through the vendor CCX C2H
++ * (0x12 for auth/assoc/data, 0x32 for scan probe). Payload byte 0 is the
++ * report type/status (bit 6 lifetime-over, bit 7 retry-over); byte 6 is the
++ * W6 SW_DEFINE (sequence number) the vendor driver reads back.
++ */
++void rtw_tx_report_handle_8723b(struct rtw_dev *rtwdev, u8 report_type,
++				u8 *payload, u8 len)
++{
++	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
++	struct sk_buff *cur, *tmp;
++	unsigned long flags;
++	bool failed = len > 0 && (payload[0] & (BIT(6) | BIT(7)));
++	u8 sn = len >= 7 ? payload[6] : 0xff;
++	u8 *n;
++
++	if (len < 7)
++		return;
++
++	spin_lock_irqsave(&tx_report->q_lock, flags);
++	skb_queue_walk_safe(&tx_report->queue, cur, tmp) {
++		n = (u8 *)IEEE80211_SKB_CB(cur)->status.status_driver_data;
++		if (*n == sn) {
++			__skb_unlink(cur, &tx_report->queue);
++			rtw_tx_report_tx_status(rtwdev, cur, !failed);
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&tx_report->q_lock, flags);
++}
++
+ static u8 rtw_get_mgmt_rate(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 			    u8 lowest_rate, bool ignore_rate)
+ {
+@@ -275,15 +317,118 @@ static u8 rtw_get_mgmt_rate(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 	return __ffs(vif->bss_conf.basic_rates) + lowest_rate;
+ }
+ 
++static bool rtw_tx_8723bs_sdio_2g(struct rtw_dev *rtwdev)
++{
++	return rtw_is_8723bs_sdio(rtwdev) &&
++	       rtwdev->hal.current_band_type == RTW_BAND_2G;
++}
++
++static bool rtw_tx_8723bs_rates_have_cck(const u8 *ie)
++{
++	int i;
++
++	if (!ie)
++		return false;
++
++	for (i = 2; i < ie[1] + 2; i++) {
++		switch (ie[i] & 0x7f) {
++		case 2:  /* 1 Mbps */
++		case 4:  /* 2 Mbps */
++		case 11: /* 5.5 Mbps */
++		case 22: /* 11 Mbps */
++			return true;
++		default:
++			break;
++		}
++	}
++
++	return false;
++}
++
++static bool rtw_tx_8723bs_bss_has_cck(struct rtw_dev *rtwdev,
++				      struct ieee80211_vif *vif,
++				      const u8 *bssid,
++				      bool *known)
++{
++	struct cfg80211_bss *bss;
++	const u8 *rates;
++	const u8 *ext_rates;
++	bool has_cck = false;
++
++	*known = false;
++
++	if (!vif || !bssid || !is_valid_ether_addr(bssid))
++		return false;
++
++	bss = cfg80211_get_bss(rtwdev->hw->wiphy, NULL, bssid, NULL, 0,
++			       IEEE80211_BSS_TYPE_ESS, IEEE80211_PRIVACY_ANY);
++	if (!bss)
++		return false;
++
++	rcu_read_lock();
++	rates = ieee80211_bss_get_ie(bss, WLAN_EID_SUPP_RATES);
++	ext_rates = ieee80211_bss_get_ie(bss, WLAN_EID_EXT_SUPP_RATES);
++	if (rates || ext_rates) {
++		*known = true;
++		has_cck = rtw_tx_8723bs_rates_have_cck(rates) ||
++			  rtw_tx_8723bs_rates_have_cck(ext_rates);
++	}
++	rcu_read_unlock();
++
++	cfg80211_put_bss(rtwdev->hw->wiphy, bss);
++
++	return has_cck;
++}
++
++/* 8723BS SDIO follows the vendor driver's tx_rate rule: the initial scan
++ * default is 1 Mbps CCK, and join-time update_wireless_mode() keeps 1 Mbps
++ * whenever the selected BSS rate set includes CCK; only pure-G BSSes use 6
++ * Mbps OFDM.
++ */
++static void rtw_tx_8723bs_sdio_rate(struct rtw_dev *rtwdev,
++				    struct rtw_tx_pkt_info *pkt_info,
++				    struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_vif *vif = tx_info->control.vif;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	const u8 *bssid = NULL;
++	bool known = false;
++	bool has_cck = true;
++
++	if (ieee80211_is_data(hdr->frame_control) ||
++	    ieee80211_is_mgmt(hdr->frame_control))
++		bssid = hdr->addr1;
++
++	has_cck = rtw_tx_8723bs_bss_has_cck(rtwdev, vif, bssid, &known);
++	if (!known && vif && vif->bss_conf.basic_rates)
++		has_cck = vif->bss_conf.basic_rates & 0xf;
++	else if (!known)
++		has_cck = true;
++
++	if (has_cck) {
++		pkt_info->rate_id = RTW_RATEID_B_20M;
++		pkt_info->rate = DESC_RATE1M;
++	} else {
++		pkt_info->rate_id = RTW_RATEID_G;
++		pkt_info->rate = DESC_RATE6M;
++	}
++}
++
+ static void rtw_tx_pkt_info_update_rate(struct rtw_dev *rtwdev,
+ 					struct rtw_tx_pkt_info *pkt_info,
+ 					struct sk_buff *skb,
+ 					bool ignore_rate)
+ {
+ 	if (rtwdev->hal.current_band_type == RTW_BAND_2G) {
+-		pkt_info->rate_id = RTW_RATEID_B_20M;
+-		pkt_info->rate = rtw_get_mgmt_rate(rtwdev, skb, DESC_RATE1M,
+-						   ignore_rate);
++		if (rtw_tx_8723bs_sdio_2g(rtwdev)) {
++			rtw_tx_8723bs_sdio_rate(rtwdev, pkt_info, skb);
++		} else {
++			pkt_info->rate_id = RTW_RATEID_B_20M;
++			pkt_info->rate = rtw_get_mgmt_rate(rtwdev, skb,
++							   DESC_RATE1M,
++							   ignore_rate);
++		}
+ 	} else {
+ 		pkt_info->rate_id = RTW_RATEID_G;
+ 		pkt_info->rate = rtw_get_mgmt_rate(rtwdev, skb, DESC_RATE6M,
+@@ -292,6 +437,12 @@ static void rtw_tx_pkt_info_update_rate(struct rtw_dev *rtwdev,
+ 
+ 	pkt_info->use_rate = true;
+ 	pkt_info->dis_rate_fallback = true;
++
++	/* 8723BS SDIO 2.4 GHz: the vendor path leaves dis_rate_fallback=0 for
++	 * MGNT_FRAMETAG and EAPOL/ARP data frames.
++	 */
++	if (rtw_tx_8723bs_sdio_2g(rtwdev))
++		pkt_info->dis_rate_fallback = false;
+ }
+ 
+ static void rtw_tx_pkt_info_update_sec(struct rtw_dev *rtwdev,
+@@ -326,7 +477,30 @@ static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
+ 					struct ieee80211_sta *sta,
+ 					struct sk_buff *skb)
+ {
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++
+ 	rtw_tx_pkt_info_update_rate(rtwdev, pkt_info, skb, false);
++
++	if (rtw_is_8723bs_sdio(rtwdev)) {
++		/* The vendor v41 firmware requires SPE_RPT=1 in the TX
++		 * descriptor to schedule a management frame for air
++		 * transmission (report=true), with SW_DEFINE/sn=0. Keep the
++		 * retry limit and rate-fallback control aligned with the
++		 * vendor rtl8723b_fill_default_txdesc() contract.
++		 */
++		pkt_info->seq = (le16_to_cpu(hdr->seq_ctrl) &
++				 IEEE80211_SCTL_SEQ) >> 4;
++		pkt_info->en_hwseq = true;
++		pkt_info->hw_ssn_sel = 0;
++		pkt_info->dis_rate_fallback = false;
++		pkt_info->retry_limit_en = true;
++		pkt_info->data_retry_limit = 6;
++		pkt_info->disable_data_rate_fb_limit = true;
++		pkt_info->report = true;
++		pkt_info->sn = 0;
++		return;
++	}
++
+ 	pkt_info->dis_qselseq = true;
+ 	pkt_info->en_hwseq = true;
+ 	pkt_info->hw_ssn_sel = 0;
+@@ -396,6 +570,30 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
+ 	pkt_info->stbc = stbc;
+ 	pkt_info->ldpc = ldpc;
+ 
++	/* 8723BS SDIO keys the CCK floor on air regardless of the rate mask
++	 * unless the firmware-reported rate is forced through the descriptor.
++	 * Apply the rate the firmware last reported via C2H as the initial TX
++	 * rate. Leave rate fallback enabled (dis_rate_fallback stays 0): the
++	 * applied rate is only the initial one, so a transiently-stale value -
++	 * e.g. right after a power-save wake - can still step down and recover.
++	 */
++	if (sta && rtw_is_8723bs_sdio(rtwdev)) {
++		si = (struct rtw_sta_info *)sta->drv_priv;
++		if (si->ra_report.desc_rate >= DESC_RATEMCS0 &&
++		    si->ra_report.desc_rate < DESC_RATE_MAX) {
++			pkt_info->rate = si->ra_report.desc_rate;
++			pkt_info->use_rate = true;
++		}
++	}
++
++	if (skb->protocol == cpu_to_be16(ETH_P_PAE)) {
++		rtw_tx_pkt_info_update_rate(rtwdev, pkt_info, skb, true);
++
++		if (rtw_is_8723bs_sdio(rtwdev) && info->control.vif &&
++		    info->control.vif->bss_conf.use_short_preamble)
++			pkt_info->short_gi = true;
++	}
++
+ 	fix_rate = dm_info->fix_rate;
+ 	if (fix_rate < DESC_RATE_MAX) {
+ 		pkt_info->rate = fix_rate;
+@@ -416,6 +614,7 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 	struct rtw_sta_info *si;
+ 	struct rtw_vif *rtwvif;
+ 	__le16 fc = hdr->frame_control;
++	bool is_mgmt = ieee80211_is_mgmt(fc);
+ 	bool bmc;
+ 
+ 	if (sta) {
+@@ -426,7 +625,14 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 		pkt_info->mac_id = rtwvif->mac_id;
+ 	}
+ 
+-	if (ieee80211_is_mgmt(fc) || ieee80211_is_any_nullfunc(fc))
++	/* The vendor 8723BS SDIO path sends management frames through the
++	 * shared BCMC station context (macid 1 in station mode). Data frames
++	 * keep the normal peer/vif macid.
++	 */
++	if (rtw_is_8723bs_sdio(rtwdev) && is_mgmt)
++		pkt_info->mac_id = 1;
++
++	if (is_mgmt || ieee80211_is_any_nullfunc(fc))
+ 		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, sta, skb);
+ 	else if (ieee80211_is_data(fc))
+ 		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, sta, skb);
+@@ -434,7 +640,12 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 	bmc = is_broadcast_ether_addr(hdr->addr1) ||
+ 	      is_multicast_ether_addr(hdr->addr1);
+ 
+-	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
++	/* 8723BS SDIO management frames carry the vendor SPE_RPT/sn=0 contract
++	 * set above; skip rtw_tx_report_enable() so the sn stays 0. Data
++	 * frames still use the normal CCX TX-report path.
++	 */
++	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
++	    !(rtw_is_8723bs_sdio(rtwdev) && is_mgmt))
+ 		rtw_tx_report_enable(rtwdev, pkt_info);
+ 
+ 	pkt_info->bmc = bmc;
+@@ -442,7 +653,7 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 	pkt_info->tx_pkt_size = skb->len;
+ 	pkt_info->offset = chip->tx_pkt_desc_sz;
+ 	pkt_info->qsel = skb->priority;
+-	pkt_info->ls = true;
++	pkt_info->ls = !(rtw_is_8723bs_sdio(rtwdev) && is_mgmt);
+ 
+ 	/* maybe merge with tx status ? */
+ 	rtw_tx_stats(rtwdev, vif, skb);
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index d34cdeca16f1..d7e1fa83bbae 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -26,6 +26,7 @@ struct rtw_tx_desc {
+ #define RTW_TX_DESC_W0_OFFSET GENMASK(23, 16)
+ #define RTW_TX_DESC_W0_BMC BIT(24)
+ #define RTW_TX_DESC_W0_LS BIT(26)
++#define RTW_TX_DESC_W0_FS BIT(27)
+ #define RTW_TX_DESC_W0_DISQSELSEQ BIT(31)
+ #define RTW_TX_DESC_W1_MACID GENMASK(7, 0)
+ #define RTW_TX_DESC_W1_QSEL GENMASK(12, 8)
+@@ -45,6 +46,8 @@ struct rtw_tx_desc {
+ #define RTW_TX_DESC_W3_MAX_AGG_NUM GENMASK(21, 17)
+ #define RTW_TX_DESC_W4_DATARATE GENMASK(6, 0)
+ #define RTW_TX_DESC_W4_DATARATE_FB_LIMIT GENMASK(12, 8)
++#define RTW_TX_DESC_W4_RETRY_LIMIT_EN BIT(17)
++#define RTW_TX_DESC_W4_DATA_RETRY_LIMIT GENMASK(23, 18)
+ #define RTW_TX_DESC_W4_RTSRATE GENMASK(28, 24)
+ #define RTW_TX_DESC_W5_DATA_SHORT BIT(4)
+ #define RTW_TX_DESC_W5_DATA_BW GENMASK(6, 5)
+@@ -99,6 +102,8 @@ void rtw_tx_fill_tx_desc(struct rtw_dev *rtwdev,
+ 			 struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
+ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
+ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src);
++void rtw_tx_report_handle_8723b(struct rtw_dev *rtwdev, u8 report_type,
++				u8 *payload, u8 len);
+ void rtw_tx_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
+ 				      struct rtw_tx_pkt_info *pkt_info,
+ 				      struct sk_buff *skb,
 -- 
 2.55.0
 
