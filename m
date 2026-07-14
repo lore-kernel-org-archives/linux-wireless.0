@@ -1,106 +1,102 @@
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A8693EF0DC
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 07:25:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
+Received: from mxs2.meta.ua (mxs2.meta.ua [194.0.131.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B86A22DB7BD
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 07:44:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.0.131.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784013960; cv=none; b=XlOymCJKTvifJLgkir3B5q2saoQxL/YRJh7hX5ZDZBPFlnJey5+Mb4Cg/u1OeFxsVCC1HK39KpPK3H2cDpxaxHEu5/fHoOIyl0+jx5+R9dwAigmHwM0aj51GAIyRBpJE+azLyquO2GiKyzd9nHogHhAcdMwQ2ImFaMIDEWiqAGs=
+	t=1784015071; cv=none; b=BYCPc3rxMzGqryi9c5aB8r2GyBFhRI5HOowONixDS3Dm1MtDqSyGjp3Y9ztjWufwcAvw2t5lIBeK+V2DS19zg1pLTT5z6KMj/D5EQrPHELTI75zoKoOWPN8WVHHb7N7+Ede9gmVk2S7crrolAtcAbTYe+VQ+fMLioZnmvb6hnUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784013960; c=relaxed/simple;
-	bh=4kWN8i5WG2aZ6TS5qt7L/NnlrW4kegRYjpjRROVGCKk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pqBwouY+zv7RmnsG7mS71U2yR31JOXviS0bXjqX/CtGGqJ5aTG2dHNjgSJ9OBLVpCsKIlt+WUlNBpX+3zn+Q/q2l97h6B52xpVXa3gokJSOJVjyfhRFqthST5qEqKRxtfUTfWwEM0bC5P5djfksqXkogdLlunOOvZn1Cz6pGhXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aerlync.com; spf=pass smtp.mailfrom=aerlync.com; dkim=fail (0-bit key) header.d=aerlync.com header.i=@aerlync.com header.b=c9osQ/fI reason="key not found in DNS"; arc=none smtp.client-ip=209.85.216.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aerlync.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aerlync.com
+	s=arc-20240116; t=1784015071; c=relaxed/simple;
+	bh=CGIA2b8VVmuOx8ikveP3bcf/O+15i9BfBHmAkLgVBCM=;
+	h=Message-ID:Date:Subject:From:To:Cc:MIME-Version:Content-Type; b=htI5f3iRBqtCxR9wfcnl6ILYBBnisRkeN5AyXYhuFCir2F5gEAgRNBXB2BqfxqF9CZfeezkqSTUcXloT4coM3BtCw8C1m0he7qZ9E3pQlVhaqnDj9sIp+DN5tYInAcZOFe5vNhcbPOVGv+qvuHzu2VE95yHWpkbu936HwHknIkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=meta.ua; spf=pass smtp.mailfrom=meta.ua; dkim=pass (2048-bit key) header.d=meta.ua header.i=@meta.ua header.b=CgmA6oG1; arc=none smtp.client-ip=194.0.131.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=meta.ua
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.ua
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=aerlync.com header.i=@aerlync.com header.b="c9osQ/fI"
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-384422b05b5so540250a91.2
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 00:25:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=aerlync.com; s=google; t=1784013957; x=1784618757; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SD2nFU6NCHKwpbdAwfHsil7BT76dH6vyRFobrrPfBSY=;
-        b=c9osQ/fIodHK7W7SPwtf1xos6UIuQF5cnWS7SI7nsbmzqkxxcH7FKEkh88KOA5W21Z
-         pPVltg2+iQKqg1G1ePjQC1CzvZp4n+/CWnz4NkOM9veOJV9VAa6yTJJKHrG+6qViICGX
-         o8VsVj+AO08KGcUqlaatlnuX6hYQg2/uc98fAe2+w+dkhLV5DYdTiZ4jLpMpNzb60wMW
-         2pARa4Ww0FhpXHyl4F5H48tqh+pb07TjJsSnabyGGdAqrYEGV8r7Xyf11JRGn/KSheas
-         +TT7ow2sOD5pAQc2sqJyQ9w0KTcdRO2VBJR4aUjbyGMRLpoUbXR2TSAd4l3STQ8PUcbK
-         e/Jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784013957; x=1784618757;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=SD2nFU6NCHKwpbdAwfHsil7BT76dH6vyRFobrrPfBSY=;
-        b=bBjYoZt4JUGLQr/HBTlpB5hmjARt/N+Go0knKFeUsgTou4HOA2P8fhZzkuPOBULPEn
-         M6WfxccomxZoBeKfp4xxcO1Tt7kQNWLDIw83kAEQL6MRdpS7WtWYSzDWS00lUrQDJwoo
-         vPpjLmf9VeTSW4ELXlu1ylqlmhFwqYVFN7vREA+ABv+epRLUDbHNOjXgfXkWQnI2Jqzd
-         vp0+Rh3LoTzMzpy2gsTc/eIiN1j8+S6N06ohP0c5ASqEQLctPacOcZZmHOoNfFNewryI
-         X101aoZhQ/mFXpYJ867gXPIBnrUjxUZbtMzG7Ds0WPPg/tbRr/AuQpf1RX+UyaQ1uPeu
-         imow==
-X-Gm-Message-State: AOJu0YxV2UUskWBtrx+dN3+NWfnJ+UCyn/Ch8NHB5tUk7c7BmE8E8DKo
-	mSPKWzFWVBpQ+yVXBJ1n2Jt9I7vRTQHHDtlrJkE/4juL62yaTE+w5uFiUz1zhGNt1iem5lAczww
-	iKrR/
-X-Gm-Gg: AfdE7cnRbkF03Kh2+BC30+xwR/RjNVobS/wna3PZDZ/EZkuWQ/ZzoYmNM5525pMpXeJ
-	TDZQWsS/isPLu0I+NnDvqiPddknNMiTTWu2L9nEAv3/rBL/k+bxR6XjhJFn2PmxR3NlJWOFLXuZ
-	+4E255CpP5OBtUeBCTYLzdChV4nQxDGACdEgCnJzAjgp5jjpiV9/I93xh7K4jnbO/9sdc1WkJXY
-	Yk2U+1XLGWfgPdZguuZfLKkdlrHNhAzSR5NgGCs4veIn4rpBZVwCJGmaCe17DEd8uOUAG8FRKJv
-	mQtUzzoe3WToL00TTUrfsbCn4NNe6zjAHDpFE3wj807FoJrYXhG8NCiFbJM6DmYe7PREHrHnS/Y
-	pxI2HGhB6SGZnLVrNnzZFg3BPf1CGuEFq84UTJf6HXzIz412k3EbEKFiFWDRE9s7MxCozAkmdks
-	c5NJ3c/ZCoYJ7GtRsP/pMwZufUOT++4rTqBspW
-X-Received: by 2002:a17:90b:3890:b0:383:5a16:bd67 with SMTP id 98e67ed59e1d1-38dc7754e8amr9983631a91.4.1784013956874;
-        Tue, 14 Jul 2026 00:25:56 -0700 (PDT)
-Received: from localhost.localdomain ([60.243.50.177])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-313b4b97661sm45284701eec.7.2026.07.14.00.25.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2026 00:25:56 -0700 (PDT)
-From: Srinivas Achary <srinivas@aerlync.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	ramakrishnan@aerlync.com,
-	Srinivas Achary <srinivas@aerlync.com>
-Subject: [PATCH] cfg80211: use size_t for mesh_setup::ie_len
-Date: Tue, 14 Jul 2026 12:55:38 +0530
-Message-Id: <20260714072538.142642-1-srinivas@aerlync.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=meta.ua header.i=@meta.ua header.b="CgmA6oG1"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=meta.ua;
+	s=mail; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Reply-To:Cc:To:
+	From:Subject:Date:Message-ID:Sender:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Vu7tMDh+hyGXe1mtCCC9wzVvrkvdBl3/KuK0YMVgM74=; b=CgmA6oG1ZD9rlwV2fYPiWy2sOG
+	QG23syQydXJ0h4SgUdry4F+/WC/CoZcEAly5L1J5tvbGdwIxU4IfceEhSOMw1Typ7HSw9mmOoauKn
+	xXb6/IKfwZgMETB2rLr7xjOzHZHaio/YjO/Hnvwjhi2ri3bUKCGzkGlgv+RY4QfUnfLu99lIr0wq3
+	5QvqE24sjJ0Bn0SxAh12jixJyd2HNdGepcIQX4NhnbXHEU4NhlH418mhLzSZQPn/L9zkh2C8tjRq1
+	qcpLib/MmDzCUPvD1zIZgyGSQYuf8FOaKTx2YFzX7cPzoyUaRa/kudoGdw+1i8f2sYOFUsT+dchAs
+	oeHNfksA==;
+Received: from 185.222.23.114
+        (MetaMail authenticated user nurofen55@meta.ua)
+        by mail.meta.ua with HTTP;
+        Tue, 14 Jul 2026 10:43:10 +0300 (EEST)
+Message-ID: <60828.185.222.23.114.1784014990.metamail@mail.meta.ua>
+Date: Tue, 14 Jul 2026 10:43:10 +0300 (EEST)
+Subject: [BUG] rtw89: 8852be intermittent 2.4GHz packet loss regression
+ 7.0.12 -> 7.1.x
+From: nurofen55@meta.ua
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com
+Reply-To: nurofen55@meta.ua
+User-Agent: MetaMail/1.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Priority: 3 (Normal)
+Importance: Normal
+X-Browser: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like
+ Gecko) Chrome/150.0.0.0 Safari/537.36
+MetaPassport-Id: 11250186
+X-HddSpool: 1
+X-Gen: 0078195ddc5d4f825a8f28daa7541649
 
-mesh_setup::ie_len is currently declared as u8, limiting the maximum
-IE length to 255 bytes. Callers may provide larger IE buffers, causing
-the length to be truncated and resulting in incomplete or incorrect
-processing of mesh information elements.
+Hi,
+I'd like to report a regression in the rtw89 driver (RTL8852BE) affecting 2.4GHz stability, introduced somewhere between kernel 7.0.12 and 7.1.x. This was originally filed on openSUSE bugzilla (bug 1271359), and Jiri Slaby suggested I forward it here for visibility with the driver maintainers:
+https://bugzilla.opensuse.org/show_bug.cgi?id=1271359
+Summary:
 
-Use size_t for ie_len to correctly represent the buffer size and align
-the field with the kernel's convention for memory lengths.
+After updating from kernel 7.0.12 to the 7.1.x series (tested on 7.1.2 and 7.1.3) on openSUSE Tumbleweed, intermittent connectivity issues appear specifically on the 2.4GHz band. On kernel 7.0.12, both 2.4GHz and 5GHz bands were equally stable at the same physical location. On kernel 7.1.x, the 5GHz band remains fully stable at the same location, while the 2.4GHz band exhibits intermittent high-latency/packet-loss events.
+Hardware:
 
-Signed-off-by: Srinivas Achary <srinivas@aerlync.com>
-Co-authored-by: Ramakrishnan Rathinasamy <ramakrishnan@aerlync.com>
----
- include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+- Laptop: Lenovo IdeaPad Slim 3 15ARP10
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8188ad200de5..ec715d10d98f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2803,7 +2803,7 @@ struct mesh_setup {
- 	u8 path_metric;
- 	u8 auth_id;
- 	const u8 *ie;
--	u8 ie_len;
-+	size_t ie_len;
- 	bool is_authenticated;
- 	bool is_secure;
- 	bool user_mpm;
--- 
-2.34.1
+- CPU: AMD Ryzen 7 7735HS
+
+- Wi-Fi: Realtek RTL8852BE (rtw89_8852be), PCIe
+
+- Firmware: rtw89/rtw8852b_fw-2.bin, version 0.29.29.18 (9e3d777f) - unchanged throughout all testing (ruled out as a factor)
+Steps to reproduce:
+
+1. Boot into kernel 7.1.x (reproduced on both 7.1.2 and 7.1.3)
+
+2. Connect to the 2.4GHz SSID at a location with moderate signal (around -70 dBm)
+
+3. Run continuous monitoring (mtr/ping) while using the connection normally
+
+4. Intermittent packet loss / latency spikes occur; the same location/conditions on the 5GHz SSID show no such issue
+Captured evidence of one event (kernel 7.1.3), mtr output during the drop:
+HOST: localhost.localdomain    Loss%   Snt   Last   Avg   Best  Wrst  StDev
+
+1.|-- 192.168.0.109            20.0%    10   3018.  958.6  9.0  3018. 1234.6
+
+     192.168.0.1
+A single packet showed about 3018 ms latency with 20% loss recorded during the sample.
+Notably, no corresponding entries appear in dmesg/journalctl during this event - no deauth, no driver error, no firmware timeout. iw dev wlp2s0 station dump immediately after showed the link as fully healthy: 0 tx retries, 0 tx failed, beacon loss 0. This suggests the packet loss happens at a level not surfaced by driver logging (possibly interference handling, channel contention, or power-save logic specific to 2.4GHz), rather than a link-layer disconnect.
+Expected behavior:
+
+2.4GHz stability matching kernel 7.0.12 behavior (equivalent to current 5GHz stability on 7.1.x).
+Actual behavior:
+
+Intermittent high-latency/packet-loss events on 2.4GHz only, with kernel 7.1.x; not reproduced on 5GHz under the same conditions; not reproduced on 2.4GHz under kernel 7.0.12.
+Additional info:
+
+Kernel 7.0.12 is no longer installable via zypper in the current Tumbleweed OSS repo, so I'm currently unable to do further direct A/B testing against 7.0.12 - this report is based on testing done while 7.0.12 was still available. I understand older builds may still be available via download.opensuse.org/history if a fresh comparison is needed.
+I'm happy to test patches, run bisection guidance, or gather any additional debug output (debugfs, ethtool stats, etc.) if that would help narrow this down.
+Thanks,
+
+Sviatoslav
 
