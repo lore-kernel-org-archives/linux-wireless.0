@@ -1,117 +1,95 @@
-Received: from fhigh-b5-smtp.messagingengine.com (fhigh-b5-smtp.messagingengine.com [202.12.124.156])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-78.smtpout.orange.fr [80.12.242.78])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DA923033E6;
-	Tue, 14 Jul 2026 07:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.156
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5358A1A6816;
+	Tue, 14 Jul 2026 07:15:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784013184; cv=none; b=aDQPq1T9FJD2ODUkL43CI6Z2ofPwX9cdsm9ts6HYgHgxTWal+J88X4uq5K4cNvET/VuquYX3yDW6U2b+C93tsTiv0EqHjK6M0sdwXvIXy7clEdy9lKwtcfk9n58b4+hdG3sNUbIeTKX9bfJlizLN2CotKO/Yi3Dpo2zE27s/3mU=
+	t=1784013328; cv=none; b=Z/pu8tJuZoscfB5a56J5UWM+9lfSpSeVtDP2SeWbaX7dgVtnwQRv84lI1sF4AZlxs1+xCqSLVIIcPxtJU/twb2jk47qtP+2GwD+CTixL5+b99V+6mXvwQxi8XdN8+CbWZ4WcWJK1iNQ+pyYm9y/4xAesUaF1God0Hi2asFLjtYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784013184; c=relaxed/simple;
-	bh=hjMnmBy5eiiroY+WM19jerjrD4NSfqSbySltKRYbT18=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=jRyCofIY8n8TmgVi6hIXg6n0ZQLoBrvluEOev/q/93JmTjrMDazStTMzknUEGsBCp3Q4y7YhAZ57IN8/CPJ/pzS+kzRtaZ4Cwh5Ud3s4+mn2CJVz5DdjjIUcWhQZVfc2slZTnDiW5dr1MWkt71J46IaUjYooN/r5LEE4CcJQV3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=b+Mk3si1; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=bhfPs3jA; arc=none smtp.client-ip=202.12.124.156
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1784013328; c=relaxed/simple;
+	bh=8IFavZNqMx+KPefxR+v2kQGGi+5On0u6SVSae6DGdO8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kqx7m5qGRISqkB7NvJyX+zX575mgMO5SMK/6Uq7G3ww0VsA+w0eZLvK1fMlrhmP9sucLJbfVzlkhNOnA9Zdj67K4FmrUWW2hdUDk6cUc+FmHeacdCxITBcnB4yBIfTq5/t2agdYdkvASrx124soS0sAN3CzTPzPO+/7CEV+cR4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=SHhVFq1d; arc=none smtp.client-ip=80.12.242.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="b+Mk3si1";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="bhfPs3jA"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 77AD47A0145;
-	Tue, 14 Jul 2026 03:13:01 -0400 (EDT)
-Received: from phl-imap-05 ([10.202.2.95])
-  by phl-compute-04.internal (MEProxy); Tue, 14 Jul 2026 03:13:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1784013181;
-	 x=1784099581; bh=U2JleBMEyaN4TrOpJxl78gYeo4UTolhpSNMUutN3PbQ=; b=
-	b+Mk3si1dnGvDUxCX9dTarczfqQV3U7abc1fyV2eDgAIbKaUw3MjuSXk2Oqq7tmY
-	UpIWr83ATb+ggnNsoltuRUOSQYeYEeVOHoz58QR6l69cZqBJNxjyrMr3Z8lAR7eO
-	MFAAoSnYXp3GU/GafGxwRrWxxjwkhI86zUXTZTqu1nyG4WMOvn3W85pdzf0TFYKa
-	dx1NNAokYbrd9ijeY22UPlKYfeTbl5yMKPAeRnNDCWFlAlLyGD4QU6qj8ay9804a
-	JMbcyyMN6j9BmM4Y5QrQDhUXO+4GCGEeuJq/GYge/YAvIQxu+xfc6J12teCW6l+D
-	/DHvHQ6ZbYdAjQ5EsQZCtw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1784013181; x=
-	1784099581; bh=U2JleBMEyaN4TrOpJxl78gYeo4UTolhpSNMUutN3PbQ=; b=b
-	hfPs3jAdSBOSwUdaX0N7VbhDiPF8bSclHADKfVOLu6xGnOFzGNs5+B5UnMIQg6r3
-	YqnZDfDfjg4vQghwz6hERGqzCedtPGWn2I/9bCF0WX80CQ9wwTZ1qylm9yWY491n
-	F+2HikMrt6YL7iFpxnqjjpWdC7KN+vqB222T3ZdWnaj37Z389p7GoVp5oWVusilN
-	btuiMGhNgKtSy5OppNp764PmYtbw3XbhczRKw5UkHuXI9DOYJPp7LPz8A42icZL3
-	ToHG8ZnHlM/KsLf77njfG3c/kpcPGGdRVpAq12tx3w50f866aGA6+fd1/2zH50f7
-	wFWiriK+5mu3gooWbEQXQ==
-X-ME-Sender: <xms:e-FValZnF0Gh6-pAID_JiLxPlTDjBGclM6GAV3G27FnNXk-IpL90Eg>
-    <xme:e-FVanMXpXC3qqZNUcvWp7yEN8J7RcjhXA-2zOnvib5prccOgarvRWUCASpm_We4P
-    yb2h3rl5oXJs_Ot5cs1dErZtofN0Hlui9IuH5qEDGf3S3Y1npf8DT0>
-X-ME-Proxy-Cause: dmFkZTEi623NeAIToclec5fEpZtjqETttKPLxvck5S7cX8ia4shMWBc5B04a00kNzETMhG
-    nd8QZoxSuQqg7t9Lydv4FxzZSEPTOxk12aNxSKOoFr8X/jY9bz1l2ODa4aRqaT1RVYvKcQ
-    XxIM/PA7ZmApHQNm17gbEVR51QX4FHkwHHLN3uDYfaNEFMnvcj01jbxs/9NRZGYpones3u
-    b6rYdbijILeHfskKZWrZo2NNC+vK8LvenPGViV5grJFIWAjmoWKnWboj1Q7en0ruyiKaNd
-    Xj1vnDHRJfz5hZo2LJcQUP9TzxdEsmVLW0LMiySucSZVvHlawGdj0/xaB9FbPkk1YbjJpO
-    oXt7Ggj0nQHoVszgKLkHzX7luk1W+CiwVOazhwL5uk2ETUvbcfA5J4MOxeM0q/RkWYFQ9L
-    Cyul8AJvkw/t3xrpM0w4ur3qe8mmQozCI9nKwHmCR9wxr4lLVqNfWA896ccQv/E1gcEzzT
-    iPqBxORi1I1T3QskB63RB5IFIlQAYC0GtoqHrnMqNgwl4BJ1gkckjEtv0RIHyKA2AXQx0f
-    MsrxvKjJT4FUiec7RvpZg89kjBNFWNoQGX5DFrteQzwzeyR1aTnxs7fdSJYqIYC9IrVXNZ
-    v+C+24/ozwlT37VRZ6OdZA7LLPmbLRPtmj3P35V88MnbZE0MiTUXBibyX8JA
-X-ME-Proxy: <xmx:e-FVakTFdwwuk9BuBWXPFofooOE_sma9W5OC_u-qDa5tc3ti212pbg>
-    <xmx:e-FVap7n6Oe8ZBc0gMm-Kh4GWMsLF8uSxoiT6U4_mEM0EssT5lat9w>
-    <xmx:e-FVahWgg1FTAP2U9xYwa12ptUfo8srFJhw05lTZ0nCrRO3NDd93zg>
-    <xmx:e-FVan-FpBLhrhR3yWTq29pa26fYrkkP4IuzjJdcha-QFXqVcufTKA>
-    <xmx:feFVagmAILd35LAyioF_Mgc-izHf2yIj0Bq0ei8Aw_o1BO44NB9ATcaK>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id D17C4182007E; Tue, 14 Jul 2026 03:12:59 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="SHhVFq1d"
+Received: from device-97.home ([10.65.86.66])
+	by smtp.orange.fr with ESMTP
+	id jXLIw4eumHyPqjXLIwbIOb; Tue, 14 Jul 2026 09:14:12 +0200
+Received: from device-97.home ([IPv6:2a01:cb10:785:b00:26fb:aefb:6cd2:db0e])
+	by smtp.orange.fr with ESMTPSA
+	id jXLAwudi5Dc2NjXLAwN20p; Tue, 14 Jul 2026 09:14:05 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1784013245;
+	bh=f7yHgKxBlZE3sw5vpiwyp79xhFrzLpHFWzdnwoYHduM=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=SHhVFq1dD33m9xnj8gMep3IBP2MqrlNKpyI7HGpArTUHhSUaVhFgoLWhf/l4V25le
+	 VMVKItQU8Yseiri57z6bBlaq+50YrS3iutHlFfF9OykbGHU5HXopSNiKklOMnqBGRi
+	 Zd3dsQHlDT5zUs5mS37m1uqg+XN68mKWpZWAfpxQgDrt6tOSsBLZfiov3uwhw84pvK
+	 Tbgb3D3nbR8sSwsFMhodf9478FNp2BQgZr31ev7RPyQa+q8YXLevBvwjoXIIq8Y3n6
+	 UBi8Af27WAbq1nwQkyYLNZM+mJQ/7woxpvtz5pafWT5td+h0zyFpcWMlJd+yYaGp3O
+	 ynHq8YJ3Wh5yg==
+X-ME-Helo: device-97.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Tue, 14 Jul 2026 09:14:05 +0200
+X-ME-IP: 2a01:cb10:785:b00:26fb:aefb:6cd2:db0e
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: 
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: cfg80211: Constify struct cfg80211_ops
+Date: Tue, 14 Jul 2026 09:14:00 +0200
+Message-ID: <5aace954b6ef5c42017b83a1bffb859618e9498a.1784013180.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AR7AWmfjl_6V
-Date: Tue, 14 Jul 2026 09:12:39 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Dmitry Torokhov" <dmitry.torokhov@gmail.com>,
- =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
- =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
- "Hauke Mehrtens" <hauke@hauke-m.de>,
- "Thomas Bogendoerfer" <tsbogend@alpha.franken.de>,
- "Waldemar Brodkorb" <wbx@openadk.org>
-Cc: "Bartosz Golaszewski" <brgl@kernel.org>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
- "Bartosz Golaszewski" <bartosz.golaszewski@oss.qualcomm.com>
-Message-Id: <4a8d64e1-5f8c-4ac0-afb0-2d68c3f53ada@app.fastmail.com>
-In-Reply-To: <20260713-b4-bcm47xx-swnode-v2-0-2b879f0c193c@gmail.com>
-References: <20260713-b4-bcm47xx-swnode-v2-0-2b879f0c193c@gmail.com>
-Subject: Re: [PATCH v2 0/3] MIPS: BCM47XX: convert buttons to software nodes
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jul 13, 2026, at 23:58, Dmitry Torokhov wrote:
-> This series converts the legacy gpio-keys platform device on BCM47XX
-> boards to use software nodes and static properties.
->
-> To do this properly without relying on legacy name-based matching
-> (which is being removed from gpiolib), we introduce and register
-> software nodes for the underlying GPIO controllers (BCMA and SSB)
-> and reference them in the button properties.
->
-> The first two patches add the software nodes to bcma-gpio and
-> ssb-gpio respectively. The third patch performs the conversion
-> for the BCM47XX buttons.
->
-> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> ---
-> As Johannes mentioned on v1 this best should go through MIPS tree.
+'struct cfg80211_ops' is not modified in this driver.
 
-Adding Waldemar to Cc. He has recently done some work to
-get this platform working again in FreeWRT and should
-be able to test your patches on hardware.
+Constifying this structure moves some data to a read-only section, so
+increases overall security, especially when the structure holds some
+function pointers.
 
-       Arnd
+On a x86_64, with allmodconfig, as an example:
+Before:
+======
+   text	   data	    bss	    dec	    hex	filename
+ 143726	  34579	    192	 178497	  2b941	drivers/net/wireless/ath/ath6kl/cfg80211.o
+
+After:
+=====
+   text	   data	    bss	    dec	    hex	filename
+ 144814	  33491	    192	 178497	  2b941	drivers/net/wireless/ath/ath6kl/cfg80211.o
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Compile tested only.
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index cc0f2c45fc3a..ecde91159b54 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3437,7 +3437,7 @@ ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
+ 	},
+ };
+ 
+-static struct cfg80211_ops ath6kl_cfg80211_ops = {
++static const struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.add_virtual_intf = ath6kl_cfg80211_add_iface,
+ 	.del_virtual_intf = ath6kl_cfg80211_del_iface,
+ 	.change_virtual_intf = ath6kl_cfg80211_change_iface,
+-- 
+2.55.0
+
