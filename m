@@ -1,54 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C46544160F
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 14:02:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C5247CC82
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 14:02:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784037765; cv=none; b=no6KA5Um7PEAJx3mmQUzLAmo33xjx2FwEjIPPiJay/QoslDmFh5TT8DtDVNrI01APOpQAJT7AI0IKVEgKeLxS7bauLJGQkMEtbsDgXfVyWCCNbK/PhjvXZXTJIsW1znna7zLy9+4OstlF1M4IJxPXtAqM9Nqibbhefcl6UXpdbc=
+	t=1784037767; cv=none; b=FrEu1em2NaWWWOh9YkxBKfsz84PYQFTGJYTbC4AngvVoSPIAigVCQ9YM6WtIGCvlUJfgOVO1LaHJgZuf7RZxesgWJwUvrkg4lsH/NVouaKJmOzCZaKopoMTyoNe0F9WdqM8vYBf/zL4Axy5KPGqrqTkJHehJ60077loZ9bu+ijY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784037765; c=relaxed/simple;
-	bh=ssOes/gDOzh4JySWLZ1Me8sXtQsshqtcUsbLBH8XzrY=;
+	s=arc-20240116; t=1784037767; c=relaxed/simple;
+	bh=tmxEyTcXROyKdpIierbb17z4+7NdnESHQvFLHjJ3FGg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CGh6FhZBDBDhfRkbnKQRG4cGKDBB4+QJLkGkk4F5aYEQTJk0fRtx5jmzvizTOFWakkdgosnjTJVE1LT5THtMZ+Kti17siDY+mqmuGq5TXaqkUlE1vqzOkoOE/kUhf523/6IGu9pUaBnGco0kXTJugfiovmnbPUt+SXe3rZ94E3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rn9Q3UPh; arc=none smtp.client-ip=198.175.65.16
+	 MIME-Version; b=XZXuK6MBIYdrDln+vku3pNL+z4/jaMt5asyvjpsY1cak8MonhX3cY1dBqhXYos59dAaceehhF1BLKXXgsGpmml3wZHDiwsdAbQJmU5GyUCjJb6RyC35d1ehlq+g+5wl4vsO6Ec8q5GxYaDgRYWVoQD79uv/WOv9e/jJdA3191Zs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P70vUJLT; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rn9Q3UPh"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P70vUJLT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784037764; x=1815573764;
+  t=1784037765; x=1815573765;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ssOes/gDOzh4JySWLZ1Me8sXtQsshqtcUsbLBH8XzrY=;
-  b=Rn9Q3UPhWVU1TYfvsUNXFES0LsQjhKxb/6KgcNMLBj4LArcTZCPo11Cu
-   7NzuxXmkWazcYMhNYwIkNROwE5C/VDzsx2d0pbtl0DawVxamLZcW/EC9X
-   oXvrwwsNG7PrOxTq4AHuPK+qGPGxIAVi/xdri7lsl0WF4AvvWRB2aVlE7
-   IrUILnaNZDJME1IV5BxKp++SY9qQcrA34zo9gsdB0OCzfnuqKvTlX6KMH
-   9I0oSY+lblzqvB10IMM/C5jJBXxCyhVexvwO6fnSAfeLSlxJ1BplQVjVK
-   /3y+JxEnd77H+aIxPV5JJ/+aD9Q0OpT0j4u2cY+uO3HduBUzu7krpEXx3
-   g==;
-X-CSE-ConnectionGUID: YrUzl/glToyTcVVe68mnag==
-X-CSE-MsgGUID: LILWAvTASrGqm8aWziaCbA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855063"
+  bh=tmxEyTcXROyKdpIierbb17z4+7NdnESHQvFLHjJ3FGg=;
+  b=P70vUJLTYqZDZkRf3reG2Nyl/50tvunh7WWgQLNh1hLyVtMtBAKikS4/
+   GSLyT8OzlF46mGcg/M6Wl8SjryyPP3TSfPNswTCInItPXIKHIslrFdGp9
+   OUcrQS6mPxEZxcNdV2KPncp9Lb0P/pasjrBEx8mzFv3iVglf+AXqMPLeM
+   L/NjDj9/lpwDnRnX9X3PbV8ozBkPOYZAcpVWfbmXbX1PvbPXbILUFHIGB
+   Fl3F6WuUjmaE+UXPj45c2BJfKH5zZALbHDYKzr/L/kjIL80XfHALzKO5T
+   x3Bz45ZUoZjQl8+FECoewEoIOYhZJHi56x5DqIBiMIld5k5P+vlGTluGc
+   A==;
+X-CSE-ConnectionGUID: VrKirX17SaK1Zni0niHanw==
+X-CSE-MsgGUID: QusRE4wBRrOQbRXbenB5ew==
+X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855072"
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="84855063"
+   d="scan'208";a="84855072"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:43 -0700
-X-CSE-ConnectionGUID: WHzQsOWTSimAQAc1+CYV3A==
-X-CSE-MsgGUID: +P204XImQUmB1VlX9o2GHg==
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:45 -0700
+X-CSE-ConnectionGUID: BL31WU9STBeJ1jOFg476kA==
+X-CSE-MsgGUID: Eae96TUrTYubhGrHnkff7w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="254737841"
+   d="scan'208";a="254737845"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:42 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:44 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 iwlwifi-next 02/15] wifi: iwlwifi: mvm: remove iwl_mvm_recalc_tcm()
-Date: Tue, 14 Jul 2026 17:02:05 +0300
-Message-Id: <20260714165826.dd9f49714128.I65fbe6890d67ec424d333c362aa7041a117aed44@changeid>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 iwlwifi-next 03/15] wifi: iwlwifi: claim UHR DBE capability for UHR devices
+Date: Tue, 14 Jul 2026 17:02:06 +0300
+Message-Id: <20260714165826.435828046f11.I538b2d90a4c282118ca2e56292cf5615d477a44c@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
 References: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
@@ -61,72 +62,32 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes@sipsolutions.net>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This function is only called in the worker, so it doesn't
-need to exist at all, simply move the code there.
+When an Intel device supports UHR it also supports DBE
+(dynamic bandwidth extension) since that's handled in
+mac80211. Claim support for it for client mode.
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 16 +++++-----------
- 2 files changed, 5 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 1b56a2695bde..4420005ef69e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -2412,7 +2412,6 @@ bool iwl_mvm_is_vif_assoc(struct iwl_mvm *mvm);
- #define MVM_TCM_PERIOD (HZ * MVM_TCM_PERIOD_MSEC / 1000)
- #define MVM_LL_PERIOD (10 * HZ)
- void iwl_mvm_tcm_work(struct work_struct *work);
--void iwl_mvm_recalc_tcm(struct iwl_mvm *mvm);
- void iwl_mvm_pause_tcm(struct iwl_mvm *mvm, bool with_cancel);
- void iwl_mvm_resume_tcm(struct iwl_mvm *mvm);
- void iwl_mvm_tcm_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 849342c96ae7..7eae10982869 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1055,7 +1055,7 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 	/*
- 	 * If the current load isn't low we need to force re-evaluation
- 	 * in the TCM period, so that we can return to low load if there
--	 * was no traffic at all (and thus iwl_mvm_recalc_tcm didn't get
-+	 * was no traffic at all (and thus iwl_mvm_tcm_work() didn't get
- 	 * triggered by traffic).
- 	 */
- 	if (load != IWL_MVM_TRAFFIC_LOW)
-@@ -1081,8 +1081,11 @@ static unsigned long iwl_mvm_calc_tcm_stats(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
--void iwl_mvm_recalc_tcm(struct iwl_mvm *mvm)
-+void iwl_mvm_tcm_work(struct work_struct *work)
- {
-+	struct delayed_work *delayed_work = to_delayed_work(work);
-+	struct iwl_mvm *mvm = container_of(delayed_work, struct iwl_mvm,
-+					   tcm.work);
- 	unsigned long ts = jiffies;
- 	bool handle_uapsd =
- 		time_after(ts, mvm->tcm.uapsd_nonagg_ts +
-@@ -1119,15 +1122,6 @@ void iwl_mvm_recalc_tcm(struct iwl_mvm *mvm)
- 	iwl_mvm_tcm_results(mvm);
- }
- 
--void iwl_mvm_tcm_work(struct work_struct *work)
--{
--	struct delayed_work *delayed_work = to_delayed_work(work);
--	struct iwl_mvm *mvm = container_of(delayed_work, struct iwl_mvm,
--					   tcm.work);
--
--	iwl_mvm_recalc_tcm(mvm);
--}
--
- void iwl_mvm_pause_tcm(struct iwl_mvm *mvm, bool with_cancel)
- {
- 	spin_lock_bh(&mvm->tcm.lock);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index d47b4ae2f486..761424812609 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -699,7 +699,8 @@ static const struct ieee80211_sband_iftype_data iwl_iftype_cap[] = {
+ 			.mac.mac_cap = {
+ 				[0] = IEEE80211_UHR_MAC_CAP0_NPCA_SUPP |
+ 				      IEEE80211_UHR_MAC_CAP0_DPS_SUPP,
+-				[1] = IEEE80211_UHR_MAC_CAP1_DUO_SUPP,
++				[1] = IEEE80211_UHR_MAC_CAP1_DUO_SUPP |
++				      IEEE80211_UHR_MAC_CAP1_DBE_SUPP,
+ 			},
+ 		},
+ 	},
 -- 
 2.34.1
 
