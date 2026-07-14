@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 406E7441022
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1F2A47CC67
 	for <linux-wireless@vger.kernel.org>; Tue, 14 Jul 2026 14:03:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784037802; cv=none; b=FBsdQ27U9FjkzJDQ2KzuMJHZbX7GfMMiLRwE9lO5uXbgbnAJBG/05y03c3vDQxtHusOwBwJIlMix2+UkfiLfnmyPX0Y0mcsYEF4NTvIKew0KIPr14/ChsMuCQTu2LST3EMA7dJEoa9sdRxp97k1GUx+wrGVsP0UwLQTU5d8QECk=
+	t=1784037803; cv=none; b=cQgkqVBZkYC1gi77HUomaSiVoWYZtU1R60FMZ0NOCPGEBVG3Dvcqz1jPmfOLAq1YAN5H9j22HxZlCl9HhnLP+EeWmC+0VwI25hBzepoTPoGrZ035mZdM6v1hnf0NFq+apYa4jn5/8lmEUxCkdRyGW+j75I8ilfTW5/XQ3S9Xemc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784037802; c=relaxed/simple;
-	bh=HBu8PlSRn2ZR8PsmR4sfTdOq2xxnJD5YP8it0W0I7hM=;
+	s=arc-20240116; t=1784037803; c=relaxed/simple;
+	bh=qZ+e8JH/4dYMFns7Kk4u62WW51GSv7rgxwQGKlGTY1o=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OqJ6rKB9MaR4L86WThCqg7VLoubcE8ifGpUr6tqA9KIuGxVTzShAbIw+C2whiX/VZ5kfVWOXBzDDBTrTXcctGngZKxbqWAFc6bqu5xKtWHxCuTaCMtq/BerkLBLyj+G5uc85f1rxU28uBW4ajL//T3X+mlFC54rVJ3K7OvG+OxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HxYijmXM; arc=none smtp.client-ip=198.175.65.16
+	 MIME-Version; b=mCPteYknKE855/N0VLlMniZn2RHtMBiZOBsPz22NYkaeYAsez13P7abnUijQD3hdR3LD89V1TdbnB1Um/E+dvneu4VGE6GEJ15v+Ttbl8A6NN+Sr1oAX9xqWqtrQvp1dXtF+AJ48mgTBHUl1W10HAk0OzXqQ3vmUN1jfynby2Ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b6rVxkxP; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HxYijmXM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b6rVxkxP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1784037799; x=1815573799;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=HBu8PlSRn2ZR8PsmR4sfTdOq2xxnJD5YP8it0W0I7hM=;
-  b=HxYijmXM3FTRFjpiaO8GtH3WrkHhgmZcNQ3FVE3ysW+MdotCabH3yaz5
-   0nILgZw3tmRie/zEB1KRopIjtSBAOd04vSTdrAXXTrQ1yVG9/JvBpFftG
-   baOreTUdZ2GPEeR+6xa9PjvVRS4GgA90ACW0z9j13jwQuiY0tm22lE/nz
-   JM8R8GE6h99PY2UioU2NOxd+Q4cfXFmlnz1ihSg0PDi/8UjtUo5zVyGte
-   yfr751XTwTeaeQAZtZSQ4ZWzRQnRDrXSVGvawjAULyyYNGljvebemTDah
-   Sct/6XrMnPdX2+L+hpTyGmIvv3Po2/5KaTKIAng+wR0O2jXEdx+nAIbUG
-   w==;
-X-CSE-ConnectionGUID: zD68bmfNSFSV9BP1334P9w==
-X-CSE-MsgGUID: ytyM1cFnQ4aBEfviLugCZw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855166"
+  bh=qZ+e8JH/4dYMFns7Kk4u62WW51GSv7rgxwQGKlGTY1o=;
+  b=b6rVxkxPJs/LLPB5uJnFI8vtxKZIFBUFn+8+3KzwQ+uajR8WCJ//RRj5
+   a3yAvPoMZCPr4R/XDicDhV3g5+5lRLVqRQCpSAC2Ade88Tk4YJyOp7VcX
+   /7i5WHYpmGMjEslMRz2OpRS2MZs1wIncvgRkw8cMj+XeHxeB0y+Rzy3jd
+   jlSOcaZ8DEAA0m4tQbuuvwoD4DtK8Mlm3pGvFEBzOFWfMcprmdb+a8Zp+
+   eRjQeP69hzaqtKedmqPzJ7FBN1/aC/rm0Rw1idz6KAV+G+2VPZViS2P32
+   aRiB67v11Rl9Dz9kqCOL022ORq6b16IB3pdZOOEGed2S3fluGjDjVM4ff
+   Q==;
+X-CSE-ConnectionGUID: n2i2cErCQzKVNGCe2CBsdQ==
+X-CSE-MsgGUID: hmKJFA9oTi2tEUNbZHJ4Tg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11846"; a="84855149"
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="84855166"
+   d="scan'208";a="84855149"
 Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:03:03 -0700
-X-CSE-ConnectionGUID: +b8g4M2SRGy2JcVLpuVPMA==
-X-CSE-MsgGUID: wDZZF4jkSC6RoAyNZ4cBoQ==
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:03:00 -0700
+X-CSE-ConnectionGUID: 9m414HsSQo25ZLCjXgjY2g==
+X-CSE-MsgGUID: bDlARdvtQCahBXB1UAR4YQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,163,1779174000"; 
-   d="scan'208";a="254737978"
+   d="scan'208";a="254737923"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:03:02 -0700
+  by orviesa010-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2026 07:02:58 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2 iwlwifi-next 14/15] wifi: iwlwifi: mvm: cleanup the driver state after device_powered_off
-Date: Tue, 14 Jul 2026 17:02:17 +0300
-Message-Id: <20260714165826.dc33533ac962.I6d7cca9c4e5643a477eae1d0a4f5fc83a10d0ee7@changeid>
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Subject: [PATCH v2 iwlwifi-next 12/15] wifi: iwlwifi: regulatory: add LARI_CONFIG_CHANGE command v14 support
+Date: Tue, 14 Jul 2026 17:02:15 +0300
+Message-Id: <20260714165826.c73d2fbebbfe.I93af7c456f04ef10d03646a43aaeb1858ecdc36d@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
 References: <20260714140218.2887000-1-miriam.rachel.korenblit@intel.com>
@@ -62,63 +62,380 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-If the device was powered off during suspend, we need to reload the
-firmware in resume which also means that we need to reconfigure it.
+Add support for LARI_CONFIG_CHANGE version 14 and populate
+the newly added BIOS-related fields in the command payload.
 
-It could be tempting to just set IWL_MVM_STATUS_HW_RESTART_REQUESTED
-but that would leave IWL_MVM_STATUS_IN_HW_RESTART set forever since that
-recovery is not managed by mac80211.
+Extend the version 14 command layout with UHB extension, puncturing and
+WBEM metadata fields, update command-size handling for version negotiation,
+and wire the new data into the LARI configuration flow. Track WBEM and
+puncturing source/revision in fw runtime, set them when loading ACPI or
+UEFI tables, and pass the headers to firmware. Update send conditions,
+debug traces, and related documentation/comments to match the new format.
 
-Just call iwl_mvm_restart_cleanup() from device_powered_off().
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c  |  4 +-
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 15 ++++-
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   | 13 +++-
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c  | 20 ++++---
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.h  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/mcc.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/mld.c  |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/mld.h  |  2 -
+ .../wireless/intel/iwlwifi/mld/regulatory.c   | 60 ++++++++++++++-----
+ 9 files changed, 88 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 74bd4038fd56..fd2a50563ab5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1129,7 +1129,7 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
- 	RCU_INIT_POINTER(mvmvif->deflink.probe_resp_data, NULL);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+index bf0f851a9075..9f2f4a6af1ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+  * Copyright (C) 2017 Intel Deutschland GmbH
+- * Copyright (C) 2019-2025 Intel Corporation
++ * Copyright (C) 2019-2026 Intel Corporation
+  */
+ #include <linux/uuid.h>
+ #include "iwl-drv.h"
+@@ -1188,6 +1188,8 @@ int iwl_acpi_get_wbem(struct iwl_fw_runtime *fwrt, u32 *value)
  
--static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
-+void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	*value = wifi_pkg->package.elements[1].integer.value &
+ 		 IWL_ACPI_WBEM_REV0_MASK;
++	fwrt->wbem_source = BIOS_SOURCE_ACPI;
++	fwrt->wbem_revision = tbl_rev;
+ 	IWL_DEBUG_RADIO(fwrt, "Loaded WBEM config from ACPI\n");
+ 	ret = 0;
+ out_free:
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 443a9a416325..d8ec9934a9b6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -662,6 +662,12 @@ struct iwl_lari_config_change_cmd_v8 {
+  *	get the data from the BIOS.
+  * @oem_unii9_enable: UNII-9 enablement as read from the BIOS
+  * @bios_hdr: bios config header
++ * @oem_uhb_allow_extension_bitmap: DSM Function 4 data as an extension of UHB
++ *	enabled MCC sets
++ * @bios_wcpe_hdr: puncturing config header
++ * @wcpe_bitmap: bitmap of puncturing enablement per MCC
++ * @bios_wbem_hdr: 320 MHz per-MCC WBEM config header
++ * @reserved: reserved
+  */
+ struct iwl_lari_config_change_cmd {
+ 	__le32 config_bitmap;
+@@ -679,9 +685,16 @@ struct iwl_lari_config_change_cmd {
+ 	__le32 oem_unii9_enable;
+ 	/* since version 13 */
+ 	struct iwl_bios_config_hdr bios_hdr;
++	/* All the below are since version 14 */
++	__le32 oem_uhb_allow_extension_bitmap;
++	struct iwl_bios_config_hdr bios_wcpe_hdr;
++	__le32 wcpe_bitmap;
++	struct iwl_bios_config_hdr bios_wbem_hdr;
++	__le32 reserved[10];
+ } __packed;
+ /* LARI_CHANGE_CONF_CMD_S_VER_12
+  * LARI_CHANGE_CONF_CMD_S_VER_13
++ * LARI_CHANGE_CONF_CMD_S_VER_14
+  */
+ 
+ /* Activate UNII-1 (5.2GHz) for World Wide */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index d80ae610e56c..ac01ac0092ee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+  * Copyright (C) 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2025 Intel Corporation
++ * Copyright (C) 2018-2026 Intel Corporation
+  */
+ #ifndef __iwl_fw_runtime_h__
+ #define __iwl_fw_runtime_h__
+@@ -144,6 +144,11 @@ struct iwl_txf_iter_data {
+  * @tpc_enabled: TPC enabled
+  * @dsm_source: one of &enum bios_source. UEFI, ACPI or NONE
+  * @dsm_revision: the revision of the DSM table
++ * @wbem_source: one of &enum bios_source for the WBEM table
++ * @wbem_revision: the revision of the WBEM table
++ * @puncturing_source: one of &enum bios_source for the puncturing table
++ * @puncturing_revision: the revision of the puncturing table
++ * @bios_puncturing: per-country puncturing enablement bitmap from BIOS
+  */
+ struct iwl_fw_runtime {
+ 	struct iwl_trans *trans;
+@@ -226,6 +231,12 @@ struct iwl_fw_runtime {
+ 	u32 dsm_funcs_valid;
+ 	u32 dsm_values[DSM_FUNC_NUM_FUNCS];
+ #endif
++
++	enum bios_source wbem_source;
++	u8 wbem_revision;
++	enum bios_source puncturing_source;
++	u8 puncturing_revision;
++	u32 bios_puncturing;
+ };
+ 
+ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+index 2ef0a7a920ad..1046d4fecb72 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright(c) 2021-2025 Intel Corporation
++ * Copyright(c) 2021-2026 Intel Corporation
+  */
+ 
+ #include "iwl-drv.h"
+@@ -884,6 +884,8 @@ int iwl_uefi_get_wbem(struct iwl_fw_runtime *fwrt, u32 *value)
+ 		goto out;
+ 	}
+ 	*value = data->wbem_320mhz_per_mcc & IWL_UEFI_WBEM_REV0_MASK;
++	fwrt->wbem_source = BIOS_SOURCE_UEFI;
++	fwrt->wbem_revision = data->revision;
+ 	IWL_DEBUG_RADIO(fwrt, "Loaded WBEM config from UEFI\n");
+ out:
+ 	kfree(data);
+@@ -970,29 +972,29 @@ int iwl_uefi_get_dsm(struct iwl_fw_runtime *fwrt, enum iwl_dsm_funcs func,
+ int iwl_uefi_get_puncturing(struct iwl_fw_runtime *fwrt)
  {
- 	iwl_mvm_stop_device(mvm);
+ 	struct uefi_cnv_var_puncturing_data *data;
+-	/* default value is not enabled if there is any issue in reading
+-	 * uefi variable or revision is not supported
+-	 */
+-	int puncturing = 0;
++	int ret = 0;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 979b39314981..d6bed2c08606 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1660,6 +1660,7 @@ void iwl_mvm_hwrate_to_tx_rate(u32 rate_n_flags,
- u8 iwl_mvm_rate_idx_to_fw_idx(const struct iwl_fw *fw, int rate_idx);
- u8 iwl_mvm_mac80211_ac_to_ucode_ac(enum ieee80211_ac_numbers ac);
- bool iwl_mvm_is_nic_ack_enabled(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
-+void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm);
+ 	data = iwl_uefi_get_verified_variable(fwrt->trans,
+ 					      IWL_UEFI_PUNCTURING_NAME,
+ 					      "UefiCnvWlanPuncturing",
+ 					      sizeof(*data), NULL);
+ 	if (IS_ERR(data))
+-		return puncturing;
++		return -EINVAL;
  
- static inline void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 09150feb330d..6ae9f87d5221 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -2091,7 +2091,7 @@ static void iwl_op_mode_mvm_device_powered_off(struct iwl_op_mode *op_mode)
+ 	if (data->revision != IWL_UEFI_PUNCTURING_REVISION) {
+ 		IWL_DEBUG_RADIO(fwrt, "Unsupported UEFI PUNCTURING rev:%d\n",
+ 				data->revision);
++		ret = -EINVAL;
+ 	} else {
+-		puncturing = data->puncturing & IWL_UEFI_PUNCTURING_REV0_MASK;
++		fwrt->puncturing_source = BIOS_SOURCE_UEFI;
++		fwrt->puncturing_revision = data->revision;
++		fwrt->bios_puncturing = data->puncturing;
+ 		IWL_DEBUG_RADIO(fwrt, "Loaded puncturing bits from UEFI: %d\n",
+-				puncturing);
++				fwrt->bios_puncturing);
+ 	}
  
- 	mutex_lock(&mvm->mutex);
- 	clear_bit(IWL_MVM_STATUS_IN_D3, &mvm->status);
--	iwl_mvm_stop_device(mvm);
-+	iwl_mvm_restart_cleanup(mvm);
- 	mvm->fast_resume = false;
- 	mutex_unlock(&mvm->mutex);
+ 	kfree(data);
+-	return puncturing;
++	return ret;
  }
+ IWL_EXPORT_SYMBOL(iwl_uefi_get_puncturing);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+index 474f06db4d43..386ca3744408 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright(c) 2021-2025 Intel Corporation
++ * Copyright(c) 2021-2026 Intel Corporation
+  */
+ #ifndef __iwl_fw_uefi__
+ #define __iwl_fw_uefi__
+@@ -275,8 +275,6 @@ enum iwl_uefi_cnv_puncturing_flags {
+ 	IWL_UEFI_CNV_PUNCTURING_CANADA_EN_MSK	= BIT(1),
+ };
+ 
+-#define IWL_UEFI_PUNCTURING_REV0_MASK (IWL_UEFI_CNV_PUNCTURING_USA_EN_MSK | \
+-				       IWL_UEFI_CNV_PUNCTURING_CANADA_EN_MSK)
+ /**
+  * struct uefi_cnv_var_puncturing_data - controlling channel
+  *	puncturing for few countries.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mcc.c b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
+index 8502129abe49..7649ae794dfd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
+@@ -131,7 +131,7 @@ iwl_mld_get_regdomain(struct iwl_mld *mld,
+ 
+ 	/* FM follows BIOS/MCC policy, WH disallows puncturing only in US/CA. */
+ 	if (CSR_HW_RFID_TYPE(mld->trans->info.hw_rf_id) == IWL_CFG_RF_TYPE_FM) {
+-		if (!iwl_puncturing_is_allowed_in_bios(mld->bios_enable_puncturing,
++		if (!iwl_puncturing_is_allowed_in_bios(mld->fwrt.bios_puncturing,
+ 						       le16_to_cpu(resp->mcc)))
+ 			ieee80211_hw_set(mld->hw, DISALLOW_PUNCTURING);
+ 		else
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+index 5a6c9ab20fd6..99506f354bfa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+@@ -419,7 +419,7 @@ iwl_op_mode_mld_start(struct iwl_trans *trans, const struct iwl_rf_cfg *cfg,
+ 
+ 	iwl_mld_get_bios_tables(mld);
+ 	iwl_uefi_get_sgom_table(trans, &mld->fwrt);
+-	mld->bios_enable_puncturing = iwl_uefi_get_puncturing(&mld->fwrt);
++	iwl_uefi_get_puncturing(&mld->fwrt);
+ 
+ 	iwl_mld_hw_set_regulatory(mld);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.h b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
+index 922aa3dbff54..37f41b504b54 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mld.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.h
+@@ -172,7 +172,6 @@
+  * @debug_max_sleep: maximum sleep time in D3 (for debug purposes)
+  * @led: the led device
+  * @mcc_src: the source id of the MCC, comes from the firmware
+- * @bios_enable_puncturing: is puncturing enabled by bios
+  * @fw_id_to_ba: maps a fw (BA) id to a corresponding Block Ack session data.
+  * @num_rx_ba_sessions: tracks the number of active Rx Block Ack (BA) sessions.
+  *	the driver ensures that new BA sessions are blocked once the maximum
+@@ -279,7 +278,6 @@ struct iwl_mld {
+ 	struct led_classdev led;
+ #endif
+ 	enum iwl_mcc_source mcc_src;
+-	bool bios_enable_puncturing;
+ 
+ 	struct iwl_mld_baid_data __rcu *fw_id_to_ba[IWL_MAX_BAID];
+ 	u8 num_rx_ba_sessions;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+index 858635607f5d..4a93ccbef495 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
+@@ -13,6 +13,23 @@
+ #include "mld.h"
+ #include "hcmd.h"
+ 
++static ssize_t iwl_mld_get_lari_config_cmd_size(u8 cmd_ver)
++{
++	switch (cmd_ver) {
++	case 14:
++		return sizeof(struct iwl_lari_config_change_cmd);
++	case 13:
++		return offsetof(struct iwl_lari_config_change_cmd,
++				oem_uhb_allow_extension_bitmap);
++	case 12:
++		return offsetof(struct iwl_lari_config_change_cmd,
++				oem_11bn_allow_bitmap);
++	default:
++		WARN(true, "unsupported version: %d", cmd_ver);
++		return -EINVAL;
++	}
++}
++
+ void iwl_mld_get_bios_tables(struct iwl_mld *mld)
+ {
+ 	int ret;
+@@ -335,9 +352,13 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	bool has_raw_dsm_capa = cmd_ver >= 13 ||
+ 		fw_has_capa(&fwrt->fw->ucode_capa,
+ 			    IWL_UCODE_TLV_CAPA_FW_ACCEPTS_RAW_DSM_TABLE);
++	ssize_t cmd_len = iwl_mld_get_lari_config_cmd_size(cmd_ver);
+ 	int ret;
+ 	u32 value;
+ 
++	if (cmd_len < 0)
++		return;
++
+ 	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_11AX_ENABLEMENT, &value);
+ 	if (!ret) {
+ 		if (!has_raw_dsm_capa)
+@@ -379,8 +400,11 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	}
+ 
+ 	ret = iwl_bios_get_wbem(fwrt, &value);
+-	if (!ret)
++	if (!ret) {
+ 		cmd.oem_320mhz_allow_bitmap = cpu_to_le32(value);
++		cmd.bios_wbem_hdr.table_source = fwrt->wbem_source;
++		cmd.bios_wbem_hdr.table_revision = fwrt->wbem_revision;
++	}
+ 
+ 	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_ENABLE_11BE, &value);
+ 	if (!ret)
+@@ -394,8 +418,17 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	if (!ret)
+ 		cmd.oem_unii9_enable = cpu_to_le32(value);
+ 
++	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG, &value);
++	if (!ret)
++		cmd.oem_uhb_allow_extension_bitmap = cpu_to_le32(value);
++
++	cmd.bios_wcpe_hdr.table_source = fwrt->puncturing_source;
++	cmd.bios_wcpe_hdr.table_revision = fwrt->puncturing_revision;
++	cmd.wcpe_bitmap = cpu_to_le32(fwrt->bios_puncturing);
++
+ 	if (!cmd.config_bitmap &&
+ 	    !cmd.oem_uhb_allow_bitmap &&
++	    !cmd.oem_uhb_allow_extension_bitmap &&
+ 	    !cmd.oem_11ax_allow_bitmap &&
+ 	    !cmd.oem_unii4_allow_bitmap &&
+ 	    !cmd.chan_state_active_bitmap &&
+@@ -404,7 +437,8 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	    !cmd.oem_320mhz_allow_bitmap &&
+ 	    !cmd.oem_11be_allow_bitmap &&
+ 	    !cmd.oem_11bn_allow_bitmap &&
+-	    !cmd.oem_unii9_enable)
++	    !cmd.oem_unii9_enable &&
++	    !cmd.wcpe_bitmap)
+ 		return;
+ 
+ 	cmd.bios_hdr.table_source = fwrt->dsm_source;
+@@ -422,6 +456,9 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 			"sending LARI_CONFIG_CHANGE, oem_uhb_allow_bitmap=0x%x, force_disable_channels_bitmap=0x%x\n",
+ 			le32_to_cpu(cmd.oem_uhb_allow_bitmap),
+ 			le32_to_cpu(cmd.force_disable_channels_bitmap));
++	IWL_DEBUG_RADIO(mld,
++			"sending LARI_CONFIG_CHANGE, oem_uhb_allow_extension_bitmap=0x%x\n",
++			le32_to_cpu(cmd.oem_uhb_allow_extension_bitmap));
+ 	IWL_DEBUG_RADIO(mld,
+ 			"sending LARI_CONFIG_CHANGE, edt_bitmap=0x%x, oem_320mhz_allow_bitmap=0x%x\n",
+ 			le32_to_cpu(cmd.edt_bitmap),
+@@ -435,20 +472,13 @@ void iwl_mld_configure_lari(struct iwl_mld *mld)
+ 	IWL_DEBUG_RADIO(mld,
+ 			"sending LARI_CONFIG_CHANGE, oem_unii9_enable=0x%x\n",
+ 			le32_to_cpu(cmd.oem_unii9_enable));
++	IWL_DEBUG_RADIO(mld,
++			"sending LARI_CONFIG_CHANGE, wcpe_bitmap=0x%x\n",
++			le32_to_cpu(cmd.wcpe_bitmap));
+ 
+-	if (cmd_ver == 12) {
+-		int cmd_size = offsetof(typeof(cmd), oem_11bn_allow_bitmap);
+-
+-		ret = iwl_mld_send_cmd_pdu(mld,
+-					   WIDE_ID(REGULATORY_AND_NVM_GROUP,
+-						   LARI_CONFIG_CHANGE),
+-					   &cmd, cmd_size);
+-	} else {
+-		ret = iwl_mld_send_cmd_pdu(mld,
+-					   WIDE_ID(REGULATORY_AND_NVM_GROUP,
+-						   LARI_CONFIG_CHANGE),
+-					   &cmd);
+-	}
++	ret = iwl_mld_send_cmd_pdu(mld,
++				   WIDE_ID(REGULATORY_AND_NVM_GROUP,
++					   LARI_CONFIG_CHANGE), &cmd, cmd_len);
+ 	if (ret)
+ 		IWL_DEBUG_RADIO(mld,
+ 				"Failed to send LARI_CONFIG_CHANGE (%d)\n",
 -- 
 2.34.1
 
