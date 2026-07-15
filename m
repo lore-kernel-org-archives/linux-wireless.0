@@ -1,53 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AA4042D76C
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:58:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9151B417D81
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:58:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784141889; cv=none; b=WL5y0nSyxXHk+kDs/+ZQoVS+o/6PM0r9hhYJVehvjUFGAimzMm1lQJLzvIJcwysC8E5c91jJ2lQcWAMyH2kFCRv/07fLFcluQR5gIZvowbDMGuSClw66XIBIeCg3LFJ9CR0kXufOkC6V9uUFDZ4r/O3LNJwCrJwvQIG2B+ywDx8=
+	t=1784141890; cv=none; b=J+IOLhxA6i/l04smNQEPwgOShOPXz/oHvwX753WlMfkb0TLmAdzyPIrUSqQ6e+4wqhhNg6K94+a6fGqYsVT3/7UtpL6R/v/GZ6iBnadSPvEOlTcS32/47ckrac0XqOFezpwJOh/UBWjr8HbutkVBc1O5b0cwactWFXeqIuiW0zY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784141889; c=relaxed/simple;
-	bh=U4TTmthro0fIsetoYlZk4kOXlcWPhRl2RjLKvbGG1as=;
+	s=arc-20240116; t=1784141890; c=relaxed/simple;
+	bh=qDZNihaZxUEaDPTDFpeVgXtqevJevwf2/7dVOlusKio=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=inD5DHKJQ0ybCWTG2/ea4OThQwPsTWAPigP5vV24pgug2pqqcwPfPaNc3eKLDbCglzCcYJO7VtNGHV2nosTnipvJI4vX0EL9m2FYbr4Z9tIet5v1qNFGTdXyGXs6Vx0HOFNUkqo54txwvg29ed7hl2LbmDDs8ZZ6XQjeDlcStS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mMzolnwQ; arc=none smtp.client-ip=192.198.163.10
+	 MIME-Version; b=lZkYPUWEq5rNN0rL1oK5QNlfEnCIe2SOJ0oCZBrYJjTPNtEsCj9U2WZBaEk3n7nRVFlY4dB3R4sg5BcOkwk5wPhpUtGbmu/Euftv0AyUmIg1u8Q/eFvHmyUDBCYZvjAJKMYS6d4CuRCnWH/7JF1uSoT+mo2y7kedtYRZBu+besc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S+1/nMpT; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mMzolnwQ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S+1/nMpT"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784141884; x=1815677884;
+  t=1784141883; x=1815677883;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=U4TTmthro0fIsetoYlZk4kOXlcWPhRl2RjLKvbGG1as=;
-  b=mMzolnwQD4Qbv4tg0gt720i9IczYGbWt02TQgyQaW8XukfW+aMCIAQWf
-   yTFwuJTDhg7a5fjCTJ2XjPtS4yBKRW3pLht6TV5CS0hlAgkdmuCmfMFJH
-   2ZPrMJTcFjWMG/V++s5OGZNiG1hLwseUq0YGOsWGxIeE85jkbqma90aYn
-   eAqSww3Ih7U+ivAhcO8+Mc69SGBO9YORI2a7kBQL9vW72OwituEgAyEqv
-   zXohv5lVsvUmD2A6SK8UmrVUrKTGqIo05UjTNbOHZVs2O+Uu2oiCAwnLL
-   M7SEL1xPy2luCJdQ/Kdf9cRUKCe024BlDmN8+TcyYFym3BKN26c87TQhS
-   A==;
-X-CSE-ConnectionGUID: RO2bd++JRZCihNJ0aoW1yg==
-X-CSE-MsgGUID: FvfnKaQAQ2SDSYuuq2vtCw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160915"
+  bh=qDZNihaZxUEaDPTDFpeVgXtqevJevwf2/7dVOlusKio=;
+  b=S+1/nMpTwWu1ePlcqweuNg+0JWHj5RIdV7KLP9l9DLQ+qsPiNzhcncRh
+   wKQPr0h15E3kxmnyegc1auj0r9kjtBwe6z3A5rZ45DQd+9A2/JdPG4Qo6
+   ijp/SbqoOHQBrPbuO5wqZxK/E5WzXXKij4IOmLJdfEHdYL4gPAFfd1slM
+   CuYeORnASNDtMjI7lnHApd1J0d3x2RrjQ42kaYBBeRY99HHw3gRz3iolX
+   nyCJlAL8egODniCgtZhcOevEptsuU1n/O3N5AK0YcdUQbM+Sm0E9cJfjt
+   FtM32ViIK/1e7M/wH2wU5QTGywp321YwK8WP9az/aD+wXjoJjkGJ+phU2
+   g==;
+X-CSE-ConnectionGUID: SNOsbB4FRtiHG82niGR+4A==
+X-CSE-MsgGUID: BYEu4QYtRDqIxXAv/dgCpw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160912"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="96160915"
+   d="scan'208";a="96160912"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:53 -0700
-X-CSE-ConnectionGUID: FTGIDGEzR9mUoHSSdkGMKw==
-X-CSE-MsgGUID: kYjOneeJR/aiHYu9FWVbrA==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:51 -0700
+X-CSE-ConnectionGUID: dY0A4gmTSbSQifM5lp5udQ==
+X-CSE-MsgGUID: RswX63sBQySDSwrKzKElsQ==
 X-ExtLoop1: 1
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:52 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:50 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-fixes 10/15] wifi: iwlwifi: pcie: validate FW section counts in iwl_pcie_init_fw_sec
-Date: Wed, 15 Jul 2026 21:57:10 +0300
-Message-Id: <20260715215523.34db46ca12f3.I1aa225492a62f25293c147aa7293afa80a5d4215@changeid>
+Subject: [PATCH iwlwifi-fixes 09/15] wifi: iwlwifi: mvm: ptp: free response on success path
+Date: Wed, 15 Jul 2026 21:57:09 +0300
+Message-Id: <20260715215523.31b38bef398b.Ib6a5a8bdd800779c8911da6859fd450d3d19c9e9@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
 References: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
@@ -62,49 +62,37 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-iwl_pcie_init_fw_sec() iterates over LMAC, UMAC, and paging
-firmware sections and writes to ctxt_dram->lmac_img[i],
-ctxt_dram->umac_img[i], and ctxt_dram->virtual_img[i] without
-first verifying that the counts derived from the firmware image
-do not exceed the array size. An oversized firmware image could
-cause out-of-bounds writes into the fixed-size context-info DRAM
-arrays.
+Release CMD_WANT_SKB response buffer after successful timestamp parsing
+to avoid leaking response allocations.
 
-Add explicit WARN_ON checks for all three section counts and
-return -EINVAL if any is exceeded.
-
-Assisted-by: GitHubCopilot:gpt-5.3-codex
+Assisted-by: GitHubCopilot:GPT-5.3-Codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ptp.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-index d5eb895144ef..7f886200d693 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.c
-@@ -1,7 +1,7 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
+index f39eb48864eb..49dcb1388007 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
+@@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-  * Copyright (C) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2025 Intel Corporation
-+ * Copyright (C) 2018-2026 Intel Corporation
+- * Copyright (C) 2021 - 2023, 2025 Intel Corporation
++ * Copyright (C) 2021 - 2023, 2025-2026 Intel Corporation
   */
- #include "iwl-trans.h"
- #include "iwl-fh.h"
-@@ -99,6 +99,11 @@ int iwl_pcie_init_fw_sec(struct iwl_trans *trans,
- 	/* add 2 due to separators */
- 	paging_cnt = iwl_pcie_get_num_sections(fw, lmac_cnt + umac_cnt + 2);
  
-+	if (WARN_ON(lmac_cnt > ARRAY_SIZE(ctxt_dram->lmac_img) ||
-+		    umac_cnt > ARRAY_SIZE(ctxt_dram->umac_img) ||
-+		    paging_cnt > ARRAY_SIZE(ctxt_dram->virtual_img)))
-+		return -EINVAL;
+ #include "mvm.h"
+@@ -121,6 +121,8 @@ iwl_mvm_get_crosstimestamp_fw(struct iwl_mvm *mvm, u32 *gp2, u64 *sys_time)
+ 	*sys_time = (u64)le32_to_cpu(resp->platform_timestamp_hi) << 32 |
+ 		le32_to_cpu(resp->platform_timestamp_lo);
+ 
++	iwl_free_resp(&cmd);
 +
- 	dram->fw = kzalloc_objs(*dram->fw, umac_cnt + lmac_cnt);
- 	if (!dram->fw)
- 		return -ENOMEM;
+ 	return ret;
+ }
+ 
 -- 
 2.34.1
 
