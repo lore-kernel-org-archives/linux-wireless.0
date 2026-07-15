@@ -1,53 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCDCC43F09C
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:57:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08424417D76
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:57:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784141882; cv=none; b=gAw3ugEk2cUfidBGUjPHXCWot4+T//kf7gM8EHZML4RAa24fgCOwpHBRI8hj6MIDgNUwTA7OWxMeJsfU7gTbYtXSQqgiVHQ1KE5A4aew0m1ypmLgMJCBcybY3hWEsDdiAyR6S7emsBLsq8qFuNU0qv3pm5CC11ME+lJCCJgAV4E=
+	t=1784141879; cv=none; b=siPZyedhyYKwBOHIhTAZoVvL1G4uS2wzqyQ07mHd70B30AuaBHfTNdZZoH5Zj0EUwGV7gd+IW8Cc+Aj3bhCsZASQuxPnWMP1wIrArYynwd6xNruLTsm1D7vsxU+NV8V1XeCPNZFFHu/PkHYful3QE0gS6KmoxVxrBNa0d9k04Xc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784141882; c=relaxed/simple;
-	bh=aBUC5pDlwBmPGMKeETrtQkzDCPN3DbRY2GMNO4PfkGg=;
+	s=arc-20240116; t=1784141879; c=relaxed/simple;
+	bh=gNv9btb2dYt3GNQPf3PgYAmQPlNZN8pb7RodKg/h78w=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mV6K938SruGCqybGIPDJ1olyplYeGsFDvoIEF9U48bVmKwEnGidnN8k/rEHeiqdElth42PrRzA6MozYDNCwu1nd5Q1bm9TAr1Yga6/3Ui9dlz4d0IPTCnZ5klK3KVYTBjX4KlTSH4PHDDMb/Rm7mqplhOu7AI28yHSHybQ63iaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=V2lBTKxa; arc=none smtp.client-ip=192.198.163.10
+	 MIME-Version; b=KOj37UrgPcnEkF/ShDCCcrjelTQnv4jEKAvhbeiAyK6p4u/bHBBTPTQUScwsp/w17JNQA8QiiI7AaDGsg9cnJhJTGBiIJZaEGNDOzduEK2epr+sfE2C9hju5UkR92mIp0YofOeSl0iBSE5E/RmzsMmpOyLTYpt2b6TtHQwi84lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GL4O+Zd+; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="V2lBTKxa"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GL4O+Zd+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784141878; x=1815677878;
+  t=1784141874; x=1815677874;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=aBUC5pDlwBmPGMKeETrtQkzDCPN3DbRY2GMNO4PfkGg=;
-  b=V2lBTKxam4cplK4tASL1nLboAz1Vslq4sqQq6ehSWa/6deQdYy9XLlQt
-   ZaZ9ASG07lKncJQL/8o1NG1yS0EtMmrbnmAGbwLYIGAL4ZweqcQRnD71w
-   V7cqkCDi/PVZ8HPsmKOvElsELjJZrnhYoMsP6LFcHa+st7q1T+Y8pZaAW
-   edzUv9Crm4Li5h4/LkS4gp2++fAMDxL4lncrmm9zOdIA8m0PPGmRjyCSp
-   oeBm538wCHSYcQiVbjbkoijge7KUUZr89kBhdLV/Rt6QZETmYWSy0xlls
-   NPDmdR6Kt2RffKFau06oMqDHOAl9JIRSLR9H2UlQQTy9Ua6OayQswCmVp
-   w==;
-X-CSE-ConnectionGUID: m4uyUPI7QiafEs8oj3qidg==
-X-CSE-MsgGUID: s8R0anLMRVya0sXYN9rG9w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160902"
+  bh=gNv9btb2dYt3GNQPf3PgYAmQPlNZN8pb7RodKg/h78w=;
+  b=GL4O+Zd+rV2l7qtOBTnw8clCly2ybOP90Yl8/v/zmGLQE8bWc2TiEGxN
+   HzBc3/3ckTi8jPdY79+jrXjMraXdrZKT1pmnstq10ejAOwtoRjt12K4zG
+   SA7vaKhTiDO/UkteqNEJ//4oaIfp5Yg+t2p57h+DJkWLoc9pxjHmMlplw
+   fAA8b5uHLgmoJAsartaBirEqUuC2PtBJ/lDlX0gDXCfY5IAji71waOB0e
+   IAsPLcPKLpgNp4dUKsvkGiOT4MC79gO78eHZ1V97LmgKu1oshdDua0DFc
+   2v4A5t/GhjcEhXCAcwqZjfrdGvaU3dKrvqh4uyG/++si2BqfLHzQ5RAiA
+   Q==;
+X-CSE-ConnectionGUID: oH0PGBXkSc+BBJhgdZMV0w==
+X-CSE-MsgGUID: IRG8HxywRJWR2tD7hoIzLQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160900"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="96160902"
+   d="scan'208";a="96160900"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:48 -0700
-X-CSE-ConnectionGUID: Nwc+a3aCQGiZ0LvHV7oJ0g==
-X-CSE-MsgGUID: 5fe7CUXFTzeyP4saY1UEZQ==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:46 -0700
+X-CSE-ConnectionGUID: DdW5MBKhQ9S/LzX7APnYTQ==
+X-CSE-MsgGUID: yaIU9SYlQpWjHlK9jpDPYw==
 X-ExtLoop1: 1
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:47 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:46 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-fixes 07/15] wifi: iwlwifi: validate payload length in iwl_pnvm_complete_fn
-Date: Wed, 15 Jul 2026 21:57:07 +0300
-Message-Id: <20260715215523.7f2a669e5c75.I00465dcfcbccb250ae9af2d9bb305e24de1ba394@changeid>
+Subject: [PATCH iwlwifi-fixes 06/15] wifi: iwlwifi: fix pointer arithmetic in iwl_add_mcc_to_tas_block_list
+Date: Wed, 15 Jul 2026 21:57:06 +0300
+Message-Id: <20260715215523.d2cd92242582.Ife4140a4e27be2a1cd9f886c5a9b376ce182a019@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
 References: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
@@ -62,56 +62,37 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-iwl_pnvm_complete_fn() casts pkt->data directly to
-struct iwl_pnvm_init_complete_ntfy and reads the status field
-without first verifying that the firmware notification payload
-is large enough to contain that structure.
+The expression list[*size++] increments the pointer 'size'
+rather than the u8 value it points to (operator precedence: ++
+binds to the pointer before the dereference). As a result the
+block-list entry is written at the correct index but *size is
+never incremented, so the caller's count stays at zero and
+subsequent calls overwrite slot 0 every time.
 
-Add a WARN_ON_ONCE check against sizeof(*pnvm_ntf) and return
-early without reading uninitialised memory if the payload is too
-short.
+Change to list[(*size)++] so that the value pointed to by size
+is incremented after use as the array index.
 
-Fixes: b3e4c0f34c17 ("iwlwifi: move PNVM implementation to common code")
+Fixes: 5f4656610edb ("wifi: iwlwifi: extend TAS_CONFIG cmd support for v5")
 Assisted-by: GitHubCopilot:gpt-5.3-codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/pnvm.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/regulatory.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-index afff8d51ca95..ec0ff58ab312 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/pnvm.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright(c) 2020-2025 Intel Corporation
-+ * Copyright(c) 2020-2026 Intel Corporation
-  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+index 8d9ff36e30f5..1d6d38ee55b4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.c
+@@ -389,7 +389,7 @@ bool iwl_add_mcc_to_tas_block_list(u16 *list, u8 *size, u16 mcc)
+ 	if (*size >= IWL_WTAS_BLACK_LIST_MAX)
+ 		return false;
  
- #include "iwl-drv.h"
-@@ -12,6 +12,7 @@
- #include "fw/api/alive.h"
- #include "fw/uefi.h"
- #include "fw/img.h"
-+#include "fw/dbg.h"
- 
- #define IWL_PNVM_REDUCED_CAP_BIT BIT(25)
- 
-@@ -26,6 +27,12 @@ static bool iwl_pnvm_complete_fn(struct iwl_notif_wait_data *notif_wait,
- 	struct iwl_trans *trans = (struct iwl_trans *)data;
- 	struct iwl_pnvm_init_complete_ntfy *pnvm_ntf = (void *)pkt->data;
- 
-+	if (IWL_FW_CHECK(trans,
-+			 iwl_rx_packet_payload_len(pkt) < sizeof(*pnvm_ntf),
-+			 "Bad notif len: %d\n",
-+			 iwl_rx_packet_payload_len(pkt)))
-+		return true;
-+
- 	IWL_DEBUG_FW(trans,
- 		     "PNVM complete notification received with status 0x%0x\n",
- 		     le32_to_cpu(pnvm_ntf->status));
+-	list[*size++] = mcc;
++	list[(*size)++] = mcc;
+ 	return true;
+ }
+ IWL_EXPORT_SYMBOL(iwl_add_mcc_to_tas_block_list);
 -- 
 2.34.1
 
