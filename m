@@ -1,99 +1,127 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f98.google.com (mail-qv1-f98.google.com [209.85.219.98])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 377F6442FDD
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:34:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42822446C0F
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.98
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784140451; cv=none; b=ja41qcnVNAiDHBsvcCf6KNkeiLXImDr867qUWJTlqImAB6OdA5kOaGPxG/4mwCHnC6IYh+dnTWzBUvjVfPjrF4efeKDRhLV+OiPOfjkbIcM7Pa9TXixLsTEyOIvcEqYMgbn/dbBUM4J+8Vz5jFdTMbI6ZZq1jjMR0ezmzTqfMZ0=
+	t=1784141217; cv=none; b=uxeVsqNHWJLIoms7Lr2qNim+3t5wN4osSYg1NHL8FHYj2j5KQMwehDYWLYcWaD2wYfSZnxbIDK5/wLkRUkn4NktKtJgYTRiod+Vbmza5i18PZxjKY3AUqH/AdAa8ZyDS88w59jOCAFlhSGUu/CLnPPt4mzNF1YmcrK/vVfywMxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784140451; c=relaxed/simple;
-	bh=5UZY5gfNquLX5qI4vfxSxdH3Hq7K7JEyX3VmHZ7mSdM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sP3MF30dMqwIfsYreOlBlDrUOpxoC1DL3PtCP8gSX17laZMYT/ldNbDWvE7DbcbW3ybrT74cF9XhUc6lgYvyQNHzpTLi0VCAUNzstGoserCSRLs3gtHnXYY1VANSt5v6xjQ/dZqmPE8J4padlOFaQIoiIvh7tJM8staQPeieub4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FAM72H8I; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1784141217; c=relaxed/simple;
+	bh=pSGfxDBu/bTKUCbXwEE12hQsnPigII/3rhV06KMBMj0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a7N7fpbIGZKckRj6X+HWeMcDqYwC5R4RvCVssrMJbs/OZeqqH1d3UTuMUveLcpudDsH2R7ApdhKwBtXFDPype24zuJbF9c3RT6gNT5znoBWItNCm2deuRFjyUmFNPOLcvHGvP6a6qYgCMlFVk78Kc/19fnhsNNe8o9U2fFtOi/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=QdZ7x9T+; arc=none smtp.client-ip=209.85.219.98
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FAM72H8I"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784140446; x=1815676446;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=5UZY5gfNquLX5qI4vfxSxdH3Hq7K7JEyX3VmHZ7mSdM=;
-  b=FAM72H8I2POZSqRVpSvMhVS+RofgmlwrKhiyXBOpxlfk/X+rowQSyKpd
-   BV40n0tfhLed2rR24i282uPs7PzQaqReCyiiXdQxp4FE+DinFv8DZ+LJD
-   vhtNt70JFditl+2dRnBtsbsR4pEk+5lUaWNJPmjsbkWCzjvbu22WNk2wV
-   gq5J6/QIohzZXA+mRJaA/UFilFeswomQW5DFReWEp/fkx5rkPyFtazzAr
-   IIghj3WzM3VQpwQJrd+ViYWdUF/Bmb4Oh/67Bqk5f2M1UiI1Wca/br5AI
-   gFCS6PDhCOSof76cfr7hzEc+w6HFvKNHow+k9dv/uvjLrEyCkAv7Xmnez
-   Q==;
-X-CSE-ConnectionGUID: AJwIC7WTR8W0Rm0N3IXyBQ==
-X-CSE-MsgGUID: hHnfMEIRRbKEW6F0tDEEIQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="84753016"
-X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="84753016"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:34:00 -0700
-X-CSE-ConnectionGUID: VQIln3IyTgeFQAPw8yWO6A==
-X-CSE-MsgGUID: CEVFx7PoT4GoJp3md0UFzA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="251847543"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:33:59 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: fix monitor min_def bandwidth
-Date: Wed, 15 Jul 2026 21:33:38 +0300
-Message-Id: <20260715213312.9fe95421689d.I24e08f95e97deb46c6393ee732057d63e6436a2e@changeid>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QdZ7x9T+"
+Received: by mail-qv1-f98.google.com with SMTP id 6a1803df08f44-8efb708b1a0so49570856d6.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 11:46:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784141209; x=1784746009;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=b+JMc1wO40ou3EWMyWhSvMrcBgYYX5J3x/eL2eHwCT4=;
+        b=E0GfdLqxlsiE+opzjOqp55NfQPDdG/412fUS+1DKEuFxic+hCRj6sYvxCCoYmLcZJv
+         5tduPop3L5HLYhWg9/Yd2WX7FmrfGi1mwjY4CobrPqfi5Xu8tq3V/9zMF08FYIUJ2I68
+         Y9NQRBRecwfw0TzLbXIvCJvy7r39/krQS4lqckqTiE44f8MwMUuw1z2jGOU+pVpOXRpO
+         8XsE50ZaZaBY4hetHxidUprj8hpipNbEKhz1hU9qCyPkY01JU+RrJ4B7pMFo8eFQcSL7
+         jDQFZPVxpXu0nYOHXp/85u2orPVriajz2xQN3W/Y/1VusPp95ZBxUrIpMlsdODdzqN4K
+         X7Tw==
+X-Gm-Message-State: AOJu0YwpMesl12OJmXN2/k2MkHnrImoGX1ynJAIvSrN22vox04SRftps
+	kj9IjNtuV/T4eUb83wL9URUP3qHiODnkyl6LGEOJgmMdPO+cHH6KYoF0bPQs0NBZLf/MJ1NyFSU
+	xwkCfNSosaJ6apLkjIt/whR6+UGOUqPuQeSl5PHbYQfSXMvCiq7dPEFfLj0UA7K4Cb4qw47gruL
+	pCOoRcyQSu4LQApV+2npsoVc5Dw/wvKpptg1fUbY9HqI9m9eAAJjO2D8mCXxrGTAIxdfS1U2Jpw
+	LA5wkjrU2lIow1rKhy9axOt6lsO
+X-Gm-Gg: AfdE7cn6RoRDc9NKw7bveTRaVikFAGvjEbjA0u1TG/4+sslY7VI80VRsZKlqAzgz5+f
+	P5NQa6ROJ9/ln7hm/wFP1AVQkzk2d+lt0XfgZKSU8weyDly3LJbtehlJpotCGZK8W5e+JzCOgHj
+	83iuvNVPafxooinuemfVJfC1/6RVKGoq2zUtNbylYeac5uGdJsYpjsKho9X8hwRWTbM2mJt6KaU
+	aM/vcuPo5stjLmKc7adSZSaXR5H/K7CHAPsUFkqb6yOPXUvHBT2OC/dvv6syEn3aAtU9TsmOxkL
+	BwSNJtUmuos/k+mNj1JrGqQVdkI+d32YMfbTlkRYe1t6rJhbmNYCAZmuZd0tgxushcjC4OOSEdf
+	jfQDXxfUone2Gh+t6z474LZA7omdm/ol7uX23Z93RP4np37QvtoScLRoGKa7HVSp8RGWIOSI/1Z
+	G4tM6whcmCADxly+uOxV/eQC4vOHhWxMLlU4Av5yIzTzU4lwIPPWwA
+X-Received: by 2002:a05:6214:3f82:b0:8fd:6e32:1aa4 with SMTP id 6a1803df08f44-9074c894fb7mr88002976d6.62.1784141208985;
+        Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-117.dlp.protect.broadcom.com. [144.49.247.117])
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-8ffd61b7815sm10827946d6.8.2026.07.15.11.46.48
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38d7fcd1f66so8504822a91.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1784141208; x=1784746008; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=b+JMc1wO40ou3EWMyWhSvMrcBgYYX5J3x/eL2eHwCT4=;
+        b=QdZ7x9T+eYVGU7OlsU5zsw3oas0PuQnclUUBeLkvqu0YGNSN5sO5yxPhkmXBgwNxiR
+         FrSGJXNz2bzqa2UN5K5qcy563E5PxtdzS/LNq4EeTK46y4b5C6UJaUu4ztiw78VypWyi
+         8jzcOlqtq2pohiEVkJIhMnK8ljoRYHwuE3PTc=
+X-Received: by 2002:a17:90b:4cc5:b0:38e:2524:7272 with SMTP id 98e67ed59e1d1-38e25247950mr4460087a91.39.1784141207615;
+        Wed, 15 Jul 2026 11:46:47 -0700 (PDT)
+X-Received: by 2002:a17:90b:4cc5:b0:38e:2524:7272 with SMTP id 98e67ed59e1d1-38e25247950mr4460056a91.39.1784141206995;
+        Wed, 15 Jul 2026 11:46:46 -0700 (PDT)
+Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e538368sm5941438eec.12.2026.07.15.11.46.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Jul 2026 11:46:46 -0700 (PDT)
+Message-ID: <8c4d66db-b7cd-4fdc-90f8-b22e4b571179@broadcom.com>
+Date: Wed, 15 Jul 2026 20:46:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] wifi: brcmfmac: add DPP support
+To: HungTsung Huang <Jason.Huang2@infineon.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
+ Johannes Berg <johannes@sipsolutions.net>
+References: <20260708071230.312836-1-Jason.Huang2@infineon.com>
+ <20260712223314.2182929-1-arend.vanspriel@broadcom.com>
+ <20260715092229.GA667683@ISCN5CG5251XQT.infineon.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260715092229.GA667683@ISCN5CG5251XQT.infineon.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 15/07/2026 11:22, HungTsung Huang wrote:
+> Hi Arend,
+> 
+> Thanks for the clarification.
+> 
+> Could you please confirm whether it is OK to submit the standalone P2P fix
+> to wireless in parallel to wireless-next origin/main? My understanding is
+> that the P2P fix does not need to wait for the DPP support patch to be
+> accepted, since it fixes pre-existing bugs and the DPP patch no longer
+> depends on it.
 
-Due to reshuffling, the min_def is no longer calculated
-taking a newly created monitor interface into account as
-link->conf->chanctx_conf is only assigned after the new
-bandwidth has been calculated. To handle this, rsvd_for
-is assigned, but the monitor code didn't handle that.
-Fix this by checking rsvd_for for monitor explicitly.
+Yes. You can submit the P2P fix in parallel. I am not sure if 
+wireless-next is rebased against wireless in a release cycle. Maybe this 
+kind of scenario is a reason to do so.
 
-Fixes: 3f451a2cf56c ("wifi: mac80211: use for_each_chanctx_user_* in one more place")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- net/mac80211/chan.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> The reason I added:
+>>> +         p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif &&
+>>>            p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->saved_ie.probe_req_ie_len) {
+> 
+> was that DPP public action frames can be sent through the primary interface
+> without a P2P device vif being created. The existing peer channel search path
+> assumed the P2P device vif was always available before accessing saved
+> Probe Request IEs, which could dereference a NULL vif in that case. However,
+> I agree this is a pre-existing P2P bug rather than part of DPP support, so I
+> moved it into the standalone P2P fix patch.
+Thanks.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 5152b84a3357..75bb204ad743 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -607,10 +607,12 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
- 		max_bw = max(max_bw, width);
- 	}
- 
--	if (!rsvd_for ||
--	    rsvd_for->sdata == rcu_access_pointer(local->monitor_sdata))
-+	if (!rsvd_for)
- 		goto check_monitor;
- 
-+	if (rsvd_for->sdata == rcu_access_pointer(local->monitor_sdata))
-+		return max(max_bw, ctx->conf.def.width);
-+
- 	/* Consider the link for which this chanctx is reserved/going to be assigned */
- 	width = ieee80211_get_width_of_link(rsvd_for);
- 	max_bw = max(max_bw, width);
--- 
-2.34.1
-
+Regards,
+Arend
