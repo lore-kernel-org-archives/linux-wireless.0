@@ -1,127 +1,176 @@
-Received: from mail-qv1-f98.google.com (mail-qv1-f98.google.com [209.85.219.98])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42822446C0F
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:46:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71B7A41A572
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:55:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784141217; cv=none; b=uxeVsqNHWJLIoms7Lr2qNim+3t5wN4osSYg1NHL8FHYj2j5KQMwehDYWLYcWaD2wYfSZnxbIDK5/wLkRUkn4NktKtJgYTRiod+Vbmza5i18PZxjKY3AUqH/AdAa8ZyDS88w59jOCAFlhSGUu/CLnPPt4mzNF1YmcrK/vVfywMxM=
+	t=1784141749; cv=none; b=e+GCoz/b+Hco9c8AHQSMDaAMYdhhgr3SnBONazdPcj1nzhgMgUDj4GG/GuK24GjXKlndl+p9LnvQZHKUqDb+g7OqQOyadzHrkL6mIB+Uh4zfAdIp6gGELD+boxsoK8JJk1ab675KurDMx2cboIxghd0/t3fjtwVdyTSTPefyjsw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784141217; c=relaxed/simple;
-	bh=pSGfxDBu/bTKUCbXwEE12hQsnPigII/3rhV06KMBMj0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a7N7fpbIGZKckRj6X+HWeMcDqYwC5R4RvCVssrMJbs/OZeqqH1d3UTuMUveLcpudDsH2R7ApdhKwBtXFDPype24zuJbF9c3RT6gNT5znoBWItNCm2deuRFjyUmFNPOLcvHGvP6a6qYgCMlFVk78Kc/19fnhsNNe8o9U2fFtOi/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=QdZ7x9T+; arc=none smtp.client-ip=209.85.219.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1784141749; c=relaxed/simple;
+	bh=7xBH/qlb9XYZQzIUvmR9CxJESOG3KhM08+kyoV4tfm4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Bk4+i+L1ZLBstrz3Y/UBF/K3BVdpIkSayYJS7392pJa3mXMcorb3802y7oeioaRp8ms2THo+VBZg9mNutkYDDaOplXE0VTEZ4Ph5qY5WNak91hek5XB3P69P6Tb5t+75+f+fd0aEl0X7ar+dbcLLjUbnGsdES/vARPTgCWTfPeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0sec.ai; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=RbTm8SxL; arc=none smtp.client-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0sec.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QdZ7x9T+"
-Received: by mail-qv1-f98.google.com with SMTP id 6a1803df08f44-8efb708b1a0so49570856d6.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 11:46:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784141209; x=1784746009;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=b+JMc1wO40ou3EWMyWhSvMrcBgYYX5J3x/eL2eHwCT4=;
-        b=E0GfdLqxlsiE+opzjOqp55NfQPDdG/412fUS+1DKEuFxic+hCRj6sYvxCCoYmLcZJv
-         5tduPop3L5HLYhWg9/Yd2WX7FmrfGi1mwjY4CobrPqfi5Xu8tq3V/9zMF08FYIUJ2I68
-         Y9NQRBRecwfw0TzLbXIvCJvy7r39/krQS4lqckqTiE44f8MwMUuw1z2jGOU+pVpOXRpO
-         8XsE50ZaZaBY4hetHxidUprj8hpipNbEKhz1hU9qCyPkY01JU+RrJ4B7pMFo8eFQcSL7
-         jDQFZPVxpXu0nYOHXp/85u2orPVriajz2xQN3W/Y/1VusPp95ZBxUrIpMlsdODdzqN4K
-         X7Tw==
-X-Gm-Message-State: AOJu0YwpMesl12OJmXN2/k2MkHnrImoGX1ynJAIvSrN22vox04SRftps
-	kj9IjNtuV/T4eUb83wL9URUP3qHiODnkyl6LGEOJgmMdPO+cHH6KYoF0bPQs0NBZLf/MJ1NyFSU
-	xwkCfNSosaJ6apLkjIt/whR6+UGOUqPuQeSl5PHbYQfSXMvCiq7dPEFfLj0UA7K4Cb4qw47gruL
-	pCOoRcyQSu4LQApV+2npsoVc5Dw/wvKpptg1fUbY9HqI9m9eAAJjO2D8mCXxrGTAIxdfS1U2Jpw
-	LA5wkjrU2lIow1rKhy9axOt6lsO
-X-Gm-Gg: AfdE7cn6RoRDc9NKw7bveTRaVikFAGvjEbjA0u1TG/4+sslY7VI80VRsZKlqAzgz5+f
-	P5NQa6ROJ9/ln7hm/wFP1AVQkzk2d+lt0XfgZKSU8weyDly3LJbtehlJpotCGZK8W5e+JzCOgHj
-	83iuvNVPafxooinuemfVJfC1/6RVKGoq2zUtNbylYeac5uGdJsYpjsKho9X8hwRWTbM2mJt6KaU
-	aM/vcuPo5stjLmKc7adSZSaXR5H/K7CHAPsUFkqb6yOPXUvHBT2OC/dvv6syEn3aAtU9TsmOxkL
-	BwSNJtUmuos/k+mNj1JrGqQVdkI+d32YMfbTlkRYe1t6rJhbmNYCAZmuZd0tgxushcjC4OOSEdf
-	jfQDXxfUone2Gh+t6z474LZA7omdm/ol7uX23Z93RP4np37QvtoScLRoGKa7HVSp8RGWIOSI/1Z
-	G4tM6whcmCADxly+uOxV/eQC4vOHhWxMLlU4Av5yIzTzU4lwIPPWwA
-X-Received: by 2002:a05:6214:3f82:b0:8fd:6e32:1aa4 with SMTP id 6a1803df08f44-9074c894fb7mr88002976d6.62.1784141208985;
-        Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-117.dlp.protect.broadcom.com. [144.49.247.117])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-8ffd61b7815sm10827946d6.8.2026.07.15.11.46.48
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38d7fcd1f66so8504822a91.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 11:46:48 -0700 (PDT)
+	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="RbTm8SxL"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4921eed3fa2so48996625e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 11:55:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1784141208; x=1784746008; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=b+JMc1wO40ou3EWMyWhSvMrcBgYYX5J3x/eL2eHwCT4=;
-        b=QdZ7x9T+eYVGU7OlsU5zsw3oas0PuQnclUUBeLkvqu0YGNSN5sO5yxPhkmXBgwNxiR
-         FrSGJXNz2bzqa2UN5K5qcy563E5PxtdzS/LNq4EeTK46y4b5C6UJaUu4ztiw78VypWyi
-         8jzcOlqtq2pohiEVkJIhMnK8ljoRYHwuE3PTc=
-X-Received: by 2002:a17:90b:4cc5:b0:38e:2524:7272 with SMTP id 98e67ed59e1d1-38e25247950mr4460087a91.39.1784141207615;
-        Wed, 15 Jul 2026 11:46:47 -0700 (PDT)
-X-Received: by 2002:a17:90b:4cc5:b0:38e:2524:7272 with SMTP id 98e67ed59e1d1-38e25247950mr4460056a91.39.1784141206995;
-        Wed, 15 Jul 2026 11:46:46 -0700 (PDT)
-Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e538368sm5941438eec.12.2026.07.15.11.46.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jul 2026 11:46:46 -0700 (PDT)
-Message-ID: <8c4d66db-b7cd-4fdc-90f8-b22e4b571179@broadcom.com>
-Date: Wed, 15 Jul 2026 20:46:44 +0200
+        d=0sec.ai; s=google; t=1784141743; x=1784746543; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=dBgT7C1VmTGs+SwffDnQ7vaSRKMxVj5a9hN2s5RO2E8=;
+        b=RbTm8SxLrHDzDOaG8kAqe+wR/eKZNYM7FL8r9s6z6If0k0Dadj3qEfU7vGLjfrHkTw
+         06y4fodzGaZhhz7oGZ9IT1o0d3R6Rs14EDwcm/k54Hegu5ENwqEwfqmPrVNGDGF0yyWI
+         vHfcaFwHPGOsZtYsGbP7Iz0Nk+2BAFflJHJzTZpPyjlRxqlNTlc4/Xv56QuYhDZz6EK/
+         iqw6VFjb71OaJMyUfuWZUBd4MJo8hzM1epxscmD3BUPTE7ENo2PRFy6J/DpI/fxZBZOb
+         Ef2xyFMlWA0mG7ydsBwOKCX2Y7/R35vF/cCfAo/oYXbzIt6X1cl6TCZnVF62oGo5gw9l
+         EHWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784141743; x=1784746543;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dBgT7C1VmTGs+SwffDnQ7vaSRKMxVj5a9hN2s5RO2E8=;
+        b=a34WIHPQtvOZLEyw4ngJA+gWKP4OY07iLzAL1NpjHvuszcGzaS40NJG2AGTxgiBmM8
+         +xSHNhu27lDHNVJ6Y0UdVpHPaW0h/+s6PdUYujoXTGkyLaiwaMn9jsfTgTIYd7JDHSBb
+         BzWXQ0g8f/kUpFsFr42RbhmkWcIIyoXRIuqg0EKOGeVLrKHqOoaBH+kdAmV0glM9DCr1
+         2gX2YkVQwKYvjeEqx9FixjxYPIFPpczI2L5P39SsOpIi5IZGtQYym5yfHXGDRwLYdBE6
+         0BEfPhCHsBqjNGGrp+/6ZjUtQ/kP9FDc7x76y/dd8JhY6X4JhoiciwJ8mPLcrVhGRSn9
+         cMgg==
+X-Forwarded-Encrypted: i=1; AHgh+RpMtzRkRC9tBzul+Uyr9WiXuM0KEuCzBnJg/3diUC8j+xg/PulU2EYvFXEMN2d1Sqgxw9fP15T8g8VXth2zpA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPp4DgEcIccUhaeIrGVqvhIsmcVmO5d56q4D5J6Cf/atQEmjIT
+	qXamrU9LjQ3Qm0orBR/eg1hnHGpGNLf1b/BSqUF6SnA/fFuQ1b7xA4sLJMZ5tchVD0Tr
+X-Gm-Gg: AfdE7ckJGbycFIqtBXt5frnzCB5K0K0lqfkNXDS5C8H2/1a2YPYM4nqBBM8y7kdZFj+
+	1mc16jZeriEYO/uqW0utVoxwMUI7FCvSEZnJ4+J8FcHCJ1I1jkdK1/IYrueo5YmpLBLCJtAWNYL
+	XGH+mAyox4VwvHrlIBgOGG40z+EIfYzL41FZ/O2/SeLVMtp+krlwpzuJM/AzINw/BmdXAf+gkSa
+	rwoO40bmK9mnzDIbrRSJ7quUYmcemGpoe0pWJmeevt/vKd8IDV9eSEXhjSDK1R1yPPfuLVihHix
+	Yq4b8Gai1j9uU7Xm17cAougff6dmC+f5nUTfl9t41gnWfmQsd7KguWq3JXUfOHGaXGrKeLLgKlt
+	c7rPMtsBO/76qInv9ZgfYV65I5pErcPCO+QIpTxswYa2Q6938E6NqF20+5gkOoOd73X/kXOsXQE
+	Bp2w6IXYb8qV21+a8/oGW7Mch55pdl1V30YDY7oD4m/XUMkGBxDdf1n+mTwn2Hk2SZVqt1/mP7U
+	JBY7JabsActimW8Y9ewKROxUdxmAfA4W2o=
+X-Received: by 2002:a05:600c:548a:b0:495:3f0f:d515 with SMTP id 5b1f17b1804b1-4953f0fd576mr33398805e9.36.1784141743212;
+        Wed, 15 Jul 2026 11:55:43 -0700 (PDT)
+Received: from PeakBook-Mini.tail8e484.ts.net ([178.197.218.188])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f464c89e5sm18280933f8f.34.2026.07.15.11.55.42
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 15 Jul 2026 11:55:42 -0700 (PDT)
+From: Doruk Tan Ozturk <doruk@0sec.ai>
+To: briannorris@chromium.org
+Cc: francesco@dolcini.it,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v2] wifi: mwifiex: bound the pairwise-cipher OUI walk to the IE length
+Date: Wed, 15 Jul 2026 20:55:41 +0200
+Message-ID: <20260715185541.14350-1-doruk@0sec.ai>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260711071334.58307-1-doruk@0sec.ai>
+References: <20260711071334.58307-1-doruk@0sec.ai>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] wifi: brcmfmac: add DPP support
-To: HungTsung Huang <Jason.Huang2@infineon.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
- Johannes Berg <johannes@sipsolutions.net>
-References: <20260708071230.312836-1-Jason.Huang2@infineon.com>
- <20260712223314.2182929-1-arend.vanspriel@broadcom.com>
- <20260715092229.GA667683@ISCN5CG5251XQT.infineon.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260715092229.GA667683@ISCN5CG5251XQT.infineon.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
 
-On 15/07/2026 11:22, HungTsung Huang wrote:
-> Hi Arend,
-> 
-> Thanks for the clarification.
-> 
-> Could you please confirm whether it is OK to submit the standalone P2P fix
-> to wireless in parallel to wireless-next origin/main? My understanding is
-> that the P2P fix does not need to wait for the DPP support patch to be
-> accepted, since it fixes pre-existing bugs and the DPP patch no longer
-> depends on it.
+mwifiex_search_oui_in_ie() reads the pairwise-cipher (PTK) count from a
+beacon/probe-response RSN or WPA information element:
 
-Yes. You can submit the P2P fix in parallel. I am not sure if 
-wireless-next is rebased against wireless in a release cycle. Maybe this 
-kind of scenario is a reason to do so.
+	count = iebody->ptk_cnt[0];
 
-> The reason I added:
->>> +         p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif &&
->>>            p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->saved_ie.probe_req_ie_len) {
-> 
-> was that DPP public action frames can be sent through the primary interface
-> without a P2P device vif being created. The existing peer channel search path
-> assumed the P2P device vif was always available before accessing saved
-> Probe Request IEs, which could dereference a NULL vif in that case. However,
-> I agree this is a pre-existing P2P bug rather than part of DPP support, so I
-> moved it into the standalone P2P fix patch.
-Thanks.
+and then walks "count" 4-byte OUIs from the element, comparing each with
+memcmp(). The count byte comes straight from the (attacker-supplied) IE
+and is never checked against the element's own length. The callers admit
+the element on element_id alone (has_ieee_hdr() / has_vendor_hdr(), no
+length check), so a crafted RSN/WPA IE with a large pairwise count makes
+the walk read up to 255 * 4 bytes past the element -- an out-of-bounds
+read of the kmemdup()'d beacon buffer, reachable from any AP whose
+beacon/probe response is processed during scan result parsing.
 
-Regards,
-Arend
+Pass the number of available IE bytes to the walk and reject a count
+whose OUI list would not fit, keeping the loop within the element.
+
+Found by 0sec automated security-research tooling (https://0sec.ai).
+
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Cc: stable@vger.kernel.org
+Assisted-by: 0sec:multi-model
+Signed-off-by: Doruk Tan Ozturk <doruk@0sec.ai>
+---
+
+Changes in v2 (per Francesco Dolcini's review):
+ - store offsetof(struct ie_body, ptk_body) in a named variable
+   (ptk_body_offset) and reuse it in both bounds checks; no
+   functional change.
+ - switch the Assisted-by trailer to 0sec:multi-model.
+ drivers/net/wireless/marvell/mwifiex/scan.c | 22 ++++++++++++++++++---
+ 1 file changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 97c0ec3b822e..33ef8af0a5e1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -104,12 +104,21 @@ has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
+  * a given oui in PTK.
+  */
+ static u8
+-mwifiex_search_oui_in_ie(struct ie_body *iebody, u8 *oui)
++mwifiex_search_oui_in_ie(struct ie_body *iebody, u8 *oui, int ie_len)
+ {
++	const size_t ptk_body_offset = offsetof(struct ie_body, ptk_body);
+ 	u8 count;
+ 
++	/* Need grp_key_oui[4] + ptk_cnt[2] before reading the OUI count. */
++	if (ie_len < (int)ptk_body_offset)
++		return MWIFIEX_OUI_NOT_PRESENT;
++
+ 	count = iebody->ptk_cnt[0];
+ 
++	/* Reject an OUI count whose list would run past the element. */
++	if (ptk_body_offset + count * sizeof(iebody->ptk_body) > (size_t)ie_len)
++		return MWIFIEX_OUI_NOT_PRESENT;
++
+ 	/* There could be multiple OUIs for PTK hence
+ 	   1) Take the length.
+ 	   2) Check all the OUIs for AES.
+@@ -143,11 +152,14 @@ mwifiex_is_rsn_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+ 	if (has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
++		int ie_len = (int)bss_desc->bcn_rsn_ie->ieee_hdr.len -
++			     RSN_GTK_OUI_OFFSET;
++
+ 		iebody = (struct ie_body *)
+ 			 (((u8 *) bss_desc->bcn_rsn_ie->data) +
+ 			  RSN_GTK_OUI_OFFSET);
+ 		oui = &mwifiex_rsn_oui[cipher][0];
+-		ret = mwifiex_search_oui_in_ie(iebody, oui);
++		ret = mwifiex_search_oui_in_ie(iebody, oui, ie_len);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -169,10 +181,14 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+ 	if (has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)) {
++		int ie_len = (int)bss_desc->bcn_wpa_ie->vend_hdr.len -
++			     (int)sizeof(bss_desc->bcn_wpa_ie->vend_hdr.oui) -
++			     WPA_GTK_OUI_OFFSET;
++
+ 		iebody = (struct ie_body *)((u8 *)bss_desc->bcn_wpa_ie->data +
+ 					    WPA_GTK_OUI_OFFSET);
+ 		oui = &mwifiex_wpa_oui[cipher][0];
+-		ret = mwifiex_search_oui_in_ie(iebody, oui);
++		ret = mwifiex_search_oui_in_ie(iebody, oui, ie_len);
+ 		if (ret)
+ 			return ret;
+ 	}
+-- 
+2.43.0
+
