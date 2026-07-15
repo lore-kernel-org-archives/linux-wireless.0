@@ -1,88 +1,101 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A0E367B94;
-	Wed, 15 Jul 2026 14:12:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26D15243376;
+	Wed, 15 Jul 2026 14:17:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784124762; cv=none; b=GCI8KtEhBSJKqOF3vAkYZiApHTsWqCBdmF/a8D2GWQhU67necaCEf0mUkc3RRVXdTdBp35Oh0LQ7tpHGepayiS7IAywlCUWJQWUagKTMC9AdcCnX2Tfhwd3tHUJK0Bd3V6vUJRon1q81meSpYRF+GDICBvwzt6dpX012efdWjPg=
+	t=1784125063; cv=none; b=BK0gmWq4e+JrAAMtdpQz0VgN2dJ67t4FP9rgpXmW/slq/hUWIl+XJjAUqh1QU94AWUaGsUSCiLWmxyHd2HwYqTFx6NJh4Je9vgf7t2njgP0a9gY91FNQrtJoHj4AqM/OmUeR0AhM8R4KX41oBHKuMYeQhlAegpi2pamgbJqhM0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784124762; c=relaxed/simple;
-	bh=gg1zaIrUmgq50fNEggpWUFxxx42Oc7MwkbuAHF63Ap8=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=N49PSnq7Z6NppwXRN/eUB4naYWxAZSYskAquRc5z+OefOKPGj2rZWi5k5LKhBf7yfXC6B/E/OLtd4t7m+gOEvM62Gyzs4dE/Sl/pBiiTlr7WQsqStn0+RjavMt3SwWpLbuWkIduDgaiq0Jimcf07S5YJdCWclJKWHcQ7tqVdu84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from 0002-iwlwifi-uefi-v2.eml (unknown [111.196.245.140])
-	by APP-03 (Coremail) with SMTP id rQCowADXo0FVlVdqsTsCAA--.2549S2;
-	Wed, 15 Jul 2026 22:12:37 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH v2] wifi: iwlwifi: validate UEFI reduced-power SKU TLV length
-Date: Wed, 15 Jul 2026 21:57:50 +0800
-Message-ID: <20260715135916.24417-2-pengpeng@iscas.ac.cn>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	s=arc-20240116; t=1784125063; c=relaxed/simple;
+	bh=eUsxV9weROURKJhWM7sZwb363sk5RJ6P7JOi+awgSAQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UKl//EMkhm9ULOSZtAap6KWStJngDy9hRYio08oYRyvSu/V/3/e0YqRE4Oz2xiOY2QM3FJmeJZrXBHXJAs64v4DwCz+qQEndXxwUNdCgnpkPPzBEawJf/uuy6pQNazonEjK8bk8CENOGTrUYCQ/4eTL8d1X5v3KkuFpfEsh0Sb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=qXOfj4L9; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="qXOfj4L9"
+Received: from francesco-nb (xcpe-178-82-120-96.dyn.res.sunrise.net [178.82.120.96])
+	by mail11.truemail.it (Postfix) with ESMTPA id EB6F42231A;
+	Wed, 15 Jul 2026 16:17:38 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784125059;
+	bh=RjDzoNblLRiJ5ZY8XoYVhbx1+13946VqvT4TZc/ReNY=; h=From:To:Subject;
+	b=qXOfj4L9g0w0KlJpa9AcOx+AgttUdP7L3kISiZmxEKsGSxGrX31jGEOV3F0U0Vi9Z
+	 RHYjKUtCJpLlk9BH1s703GiGPZ2APbolLGqY8kkXIUzafPK1mgaH/WyKrzHJpnwzA3
+	 HEw8ckkf03XiQsZqLTXNR78C6a1cW9Y79J6Axcgg1X8pAxvntDocZskxAFnmqqbNUu
+	 8QNEQLCCGZEJI6bGurfb+oBKWauXbkonlCZNRjk9L7PDPBh1533ImzoxMnLo7mIayz
+	 pNpkuMCNtnR/toEG4O/ODAPRbYr7g8i52+52Q2htqe9loOzwELH79Z1qAI23ISngpX
+	 SCmNm8eMjj3XA==
+Date: Wed, 15 Jul 2026 16:17:37 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Kees Cook <kees@kernel.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: mwifiex: validate scan TLV result arrays
+Message-ID: <20260715141737.GD56330@francesco-nb>
+References: <20260706092654.79403-1-pengpeng@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CM-TRANSID:rQCowADXo0FVlVdqsTsCAA--.2549S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxJr4kKr4rtw18GFyUury7Awb_yoW8GFyfpF
-	4jgF12gFs8Xw47ua40yF4fCF9Yga15K39xuFyqqwn09rZaqry5ArWUuFW2qw15Jr48G34Y
-	krWUAF4UGr90gFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyS14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
-	6F4UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
-	jxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
-	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAKI48JMxC2
-	0s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI
-	0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE
-	14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20x
-	vaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8
-	Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUdEfOUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260706092654.79403-1-pengpeng@iscas.ac.cn>
 
-iwl_uefi_reduce_power_parse() reads an iwl_sku_id from an
-IWL_UCODE_TLV_PNVM_SKU payload after only checking that the generic TLV
-payload is present.
+On Mon, Jul 06, 2026 at 05:26:54PM +0800, Pengpeng Hou wrote:
+> mwifiex_ret_802_11_scan() indexes TSF and channel-band TLV
+> arrays by the reported number of BSS result sets.
+> 
+> Ignore TSF or channel-band TLVs whose payload length cannot provide one
+> entry per reported BSS set.
+> 
+> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 
-A short type-specific payload can therefore make the three data[] reads
-extend beyond the TLV. Reject SKU TLVs shorter than the structure before
-accessing it.
+Was this tested?
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
-Changes since v1: https://lore.kernel.org/all/2026063008051412.5-ccfa108-0020-wifi-iwlwifi-validate-UEFI--pengpeng@iscas.ac.cn/
-- use sizeof(*tlv_sku_id) as requested by Miri Korenblit
----
- drivers/net/wireless/intel/iwlwifi/fw/uefi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+> ---
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 97c0ec3b822e..7416756ada3b 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -2165,6 +2165,15 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+>  					     (struct mwifiex_ie_types_data **)
+>  					     &chan_band_tlv);
+>  
+> +	if (tsf_tlv &&
+> +	    le16_to_cpu(tsf_tlv->header.len) / TSF_DATA_SIZE <
+> +	    scan_rsp->number_of_sets)
+> +		tsf_tlv = NULL;
+> +	if (chan_band_tlv &&
+> +	    le16_to_cpu(chan_band_tlv->header.len) /
+> +	    sizeof(*chan_band_tlv->chan_band_param) < scan_rsp->number_of_sets)
+> +		chan_band_tlv = NULL;
+> +
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-index 2ef0a7a..4cd36b4 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/uefi.c
-@@ -248,6 +248,12 @@ int iwl_uefi_reduce_power_parse(struct iwl_trans *trans,
- 			IWL_DEBUG_FW(trans,
- 				     "Got IWL_UCODE_TLV_PNVM_SKU len %d\n",
- 				     tlv_len);
-+			if (tlv_len < sizeof(*tlv_sku_id)) {
-+				IWL_ERR(trans, "invalid PNVM SKU TLV len: %u\n",
-+					tlv_len);
-+				return -EINVAL;
-+			}
-+
- 			IWL_DEBUG_FW(trans, "sku_id 0x%0x 0x%0x 0x%0x\n",
- 				     le32_to_cpu(tlv_sku_id->data[0]),
- 				     le32_to_cpu(tlv_sku_id->data[1]),
--- 
-2.50.1 (Apple Git-155)
+If something like that happen we should return an error, and return from
+the function
 
+a few lines before we do
+
+	if (scan_rsp->number_of_sets > MWIFIEX_MAX_AP) {
+		mwifiex_dbg(adapter, ERROR,
+			    "SCAN_RESP: too many AP returned (%d)\n",
+			    scan_rsp->number_of_sets);
+		ret = -1;
+		goto check_next_scan;
+	}
+
+why not doing something similar when this buffer from the fw is
+corrupted?
+
+Francesco
 
