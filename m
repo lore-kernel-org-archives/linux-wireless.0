@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5ACA442FD9
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:05:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BBA247A0B8
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:05:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784142349; cv=none; b=ZIWy+lPBLi94GMA2r/Al4EthTKi29IwiCCsx3+s+EbJvQAs6yhi9CxFIy4SLtVkNAKyYbh7mHwyq7uxoJrDQPqq3ZuxcwJsfh9/PY8iS/AKBJxo6gBJtT334ENAEeZ77tzQ3glCKtUmK9nerM7J8amOh2MvKHip8QC+kaj4789Q=
+	t=1784142365; cv=none; b=oYrSjW3QfQ26DTapqJ3RJHujB47GytidZNHUkm+lmQ+5ci+wrO8ztgZ/a1drvg0gbKmeUocWcESA8qI8G5kuxNfiJcNitD7SnAllr9mUjOm7doNH5LK+sEW3l5DJ9bKcs1TTUvP/1Zqox6OjwsQ3A+50wZi/M8v/yAyQAajD8dM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784142349; c=relaxed/simple;
-	bh=e7/4RZ7o0hYwtd79bnw94pRaZXV+RWUCVslOJKISg4w=;
+	s=arc-20240116; t=1784142365; c=relaxed/simple;
+	bh=rBPAzR0nw9+0tnWw1womk16kizEZfdeliYgwPgjoSdM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LVHiHaAdwu+KBc6T7CS7QRH1dCDEPWt7YE+X5gL36rtjzufQdM+zuUtuHM+yKF7gVS1cPFlxu/aHnb17zsAxqySInVE7tGK48jzABtEyKq23t68ZOb5HUFWSzW9857WhQzsbRw/UyE2YP9w4gYnFsZJAyHFpobuIxGb2ltoFn28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mfOjSRLm; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=XQhRkck8H4BTaAGw4La3hxvHpNpu8dWaJUnHho3gUxs+j6NwBWana2RlN296sTYsgLWKbx+tg9dw/PJ0Q8AauE5scGAcul8+uGRiw/I5YpJuUjxJhh3WVyLhyGjDF1oBJPgK79B5156Ubk2S14HROOM5hVoq2ccDCejb/SdxctY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cVtZOWeP; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mfOjSRLm"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cVtZOWeP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784142333; x=1815678333;
+  t=1784142354; x=1815678354;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=e7/4RZ7o0hYwtd79bnw94pRaZXV+RWUCVslOJKISg4w=;
-  b=mfOjSRLmxMLNR1+fc+Dh1FSiV82T9aLdZ2MU3w6oV0j2vU0NdyUhgre7
-   N+PJXjJo7HObVRSx7kr9vVVKxSkJ8DssMjAIO9Ph9r4K/OzNmHbiSQi4d
-   E4e+I5zYru/9LQLjONXz8YzMmSuYhMM1Rc3s59UzuLO0DSY+p3wLQzRrA
-   3pbZ9qNDu7lic3WNex1Hv4U6eHh9bRXudkV75G2ho2wQn4IRYDMJzsR/T
-   hgoDY4uWU005CMOhmAMUg+Zi2y+awI4YsSMXZJ6epOkGGksCvhfR/LL4I
-   B8pmZuLdbrbHIbeV5VQbCooI5axpQQQaO1rln7TKPQLkK6nfQauUZIDWN
+  bh=rBPAzR0nw9+0tnWw1womk16kizEZfdeliYgwPgjoSdM=;
+  b=cVtZOWePhzpMAKOmyOWzsUWV975k3U8wSAs7wy9GzoJu/o/mkUwd8jAG
+   fYF5s8X9JFGxNkFw1lRNpRy5cBWjoiVKdqFKWKhaXqWQ8mA3JCKJP2tKW
+   kdbPLSb8UeImOHwKkoI/bU2EI9bUQbeKmgvjD2kfvDZcE6+GTz0kt0kGS
+   xllyrdTPH/SaKtB8l08n8gNEFjeA6xbc8oZJdSeovEVMY+d/28dg9KLTh
+   9O3NmJPK9Zea5xXm+1JouFV3/dVrP+Z6yFmYeEBmkoQVEQokA1K9F+MR6
+   UM24mlxAdwypXYsfhEWLuODU+nMJT3ZL+iJDTk55kQgxAsbSL+b28mJbU
    A==;
-X-CSE-ConnectionGUID: Ibhr4aU7TfaorhWIe4mgVQ==
-X-CSE-MsgGUID: 15gEVNlqTZSMciOz8sVRGA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340734"
+X-CSE-ConnectionGUID: iQuIJA+2Tou+hb1bqzUGwQ==
+X-CSE-MsgGUID: gp5uiHW+RVmLZ2xmV5vqhg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340747"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="87340734"
+   d="scan'208";a="87340747"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:07 -0700
-X-CSE-ConnectionGUID: jiPGlhnXQ5e64+TssC2cvQ==
-X-CSE-MsgGUID: uqmneGNRRvKs79dscLkGMw==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:14 -0700
+X-CSE-ConnectionGUID: hUd38K1jTaKsS1bV/jrAcQ==
+X-CSE-MsgGUID: L0zfEHRTSByd8zNDV5L0tw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="251852018"
+   d="scan'208";a="251852060"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:06 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:13 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Shahar Tzarfati <shahar.tzarfati@intel.com>
-Subject: [PATCH iwlwifi-next 10/15] wifi: iwlwifi: mld: fix read in wake packet notification handler
-Date: Wed, 15 Jul 2026 22:04:26 +0300
-Message-Id: <20260715220243.94c526d2c66e.I065a19a9dcc7f45a7457667c0f625fcd2c7bf6b6@changeid>
+	Avraham Stern <avraham.stern@intel.com>
+Subject: [PATCH iwlwifi-next 15/15] wifi: iwlwifi: mei: pass correct argument to function
+Date: Wed, 15 Jul 2026 22:04:31 +0300
+Message-Id: <20260715220243.24cea60c6428.I42301010c31487b1458faa967b22c8320b0cfd23@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
 References: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
@@ -62,43 +62,31 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Shahar Tzarfati <shahar.tzarfati@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-In iwl_mld_handle_wake_pkt_notif(), expected_size was initialized from
-notif->wake_packet_length before the IWL_FW_CHECK that validates the
-payload covers sizeof(*notif).
+The first argument to iwl_mei_write_cyclic_buf() should be the cldev
+but the q_head pointer is passed instead. Fix it.
 
-Move the assignment of expected_size to after the size check so that
-notif->wake_packet_length is only accessed once the payload length has
-been validated.
-
-Signed-off-by: Shahar Tzarfati <shahar.tzarfati@intel.com>
+Fixes: 652291601459 ("iwlwifi: mei: don't rely on the size from the shared area")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index c9c0e3c729c9..3b785c53948f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -705,7 +705,7 @@ iwl_mld_handle_wake_pkt_notif(struct iwl_mld *mld,
- {
- 	const struct iwl_wowlan_wake_pkt_notif *notif = (void *)pkt->data;
- 	u32 actual_size, len = iwl_rx_packet_payload_len(pkt);
--	u32 expected_size = le32_to_cpu(notif->wake_packet_length);
-+	u32 expected_size;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+index c462c3b22ec1..ce92e26c42d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+@@ -458,7 +458,7 @@ static int iwl_mei_send_sap_msg_payload(struct mei_cl_device *cldev,
+ 	notif_q = &dir->q_ctrl_blk[SAP_QUEUE_IDX_NOTIF];
+ 	q_head = mei->shared_mem.q_head[SAP_DIRECTION_HOST_TO_ME][SAP_QUEUE_IDX_NOTIF];
+ 	q_sz = mei->shared_mem.q_size[SAP_DIRECTION_HOST_TO_ME][SAP_QUEUE_IDX_NOTIF];
+-	ret = iwl_mei_write_cyclic_buf(q_head, notif_q, q_head, hdr, q_sz);
++	ret = iwl_mei_write_cyclic_buf(cldev, notif_q, q_head, hdr, q_sz);
  
- 	if (IWL_FW_CHECK(mld, len < sizeof(*notif),
- 			 "Invalid WoWLAN wake packet notification (expected size=%zu got=%u)\n",
-@@ -718,6 +718,7 @@ iwl_mld_handle_wake_pkt_notif(struct iwl_mld *mld,
- 			 wowlan_status->wakeup_reasons))
- 		return true;
- 
-+	expected_size = le32_to_cpu(notif->wake_packet_length);
- 	actual_size = len - offsetof(struct iwl_wowlan_wake_pkt_notif,
- 				     wake_packet);
- 
+ 	if (ret < 0)
+ 		return ret;
 -- 
 2.34.1
 
