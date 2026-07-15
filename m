@@ -1,74 +1,79 @@
 Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407A03B19D8;
-	Wed, 15 Jul 2026 16:28:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D949935DA43;
+	Wed, 15 Jul 2026 16:35:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784132941; cv=none; b=BjoJFuckFTW+mLD3Q5YPQDbdiVSpwV6dvKG6h6mjN0hFGV0YK5Cwke0wCp+CLPI6iD5Zl/JPaQjXFPvsUdAxSmSjumputI1/0Qkoo7wVTOYaJEmM1JaPTcZWCYkjeLfoA0QaJj3LvPAC5ZSCWfXWHn1BU2dhQZ7El2tGJ/Gr6XA=
+	t=1784133306; cv=none; b=Aa0eZyhmsJmA8YTj/Av1wblUArneKeflqCYLP+HvJVmjDoFpDpLEclieVExTsBWQeqf3UpACnd/+YcSDGqbK7a4iBeecjIi+WfLC/Yd6dikFVvaWspbk8b+m9AY9+CXnxPIceDupjqwH7AroyjPRczPu1VKg9XOvFgCIYqQk2/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784132941; c=relaxed/simple;
-	bh=OFXx8sWRRcJTkg/6K4X2CCS9AQUbhAjhmIy63QOF3ao=;
+	s=arc-20240116; t=1784133306; c=relaxed/simple;
+	bh=8bqmPG4IEM3bcUy0+Pz8nomt5fYXodsqpb0p2yu3P0I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HQG2Ak5a2bTrxamLX6a7J7BYS5Mfira0EWWgFo6tU26hCcrlcmBCn+7pc8Ryn8SllhPVlzqFPlCrinaX4mptP8CNgYZKR6RdR/BC/Hn5OAzBEOWVf2/33hsrAUfVI6DK3W84VjrYxeQFkBu8fHQYV+PDcrI3clmdxILTNIkxNIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=Z/qsbjXB; arc=none smtp.client-ip=217.194.8.81
+	 Content-Type:Content-Disposition:In-Reply-To; b=gK2j2h922DI/orA8TRV7JimupPse690e3kkoACIAzeppljIuAvH9y069SznxfyBnsf8VDoe9BMqBMNMpmQ5Zb53X4LcUrrpt9pYWxIlzw8PwKD02+EzzZfz4jD56cXldk+GnCj6CQV9Aul6n8wLNzfkPIoUVcczglFRk0+d8CZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=whFCOvtJ; arc=none smtp.client-ip=217.194.8.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="Z/qsbjXB"
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="whFCOvtJ"
 Received: from francesco-nb (xcpe-178-82-120-96.dyn.res.sunrise.net [178.82.120.96])
-	by mail11.truemail.it (Postfix) with ESMTPA id E9C5A22BC2;
-	Wed, 15 Jul 2026 18:28:56 +0200 (CEST)
+	by mail11.truemail.it (Postfix) with ESMTPA id 7542E1F8BF;
+	Wed, 15 Jul 2026 18:35:02 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
-	s=default; t=1784132937;
-	bh=BzHouKF0ABdx7pMe6qeJ9755jHJTLM6hrPhImlN3t3A=; h=From:To:Subject;
-	b=Z/qsbjXBAfEHnQoyuzTwO8/o5PIZBA6E6BiQXpaK7+WDqRGRPg8sdjpuRVBEy5/7a
-	 bd641FE1496uIXD3XF7TuxDBbKOBH+gz9KapjihxGzfeVX2nVj2lxCzkVckAXJ6Te+
-	 P+bsxlNbkIJhddFSVWXOYAkIuqAwI8qT86ospH035B2EeOwsqeu4Qaqs47ABv62JO6
-	 5LzSKO2mNc7VttAvYun1LvwPuW3g4Qhh2lw+ZttqcZNzvsglnMDuCT7PShaFLGg/8K
-	 iNWEF5nawSLxwrD2/nvPLeX4F6Bk1NJczj6WJw0yg9gD1DSKIzGPJKtizPeLL2uxpb
-	 9x0tQpV/JhkcQ==
-Date: Wed, 15 Jul 2026 18:28:55 +0200
+	s=default; t=1784133302;
+	bh=mLy+AxIZdAZSn5ruUCN8ovCQjC731IjigUxz+gP0av4=; h=From:To:Subject;
+	b=whFCOvtJW4AcfTVTzpHIVQBG6qPD4UOrwU7h35w7pl3uZTUvRPheBCcQ8h4+CuJY0
+	 8ghAa1D8IY2as0EHX15rDIqhcevNa5E42msQ1ySyoI2/CjPd1Lp4a5zH6FBshAvtrJ
+	 ECZd3D0kdPyCnpnUYXnmmWFRgktipGvZAVbK05Xq8Wb/df2kUXUaI0VznqyQZXwyTG
+	 cmUhOwHJ9llunZsAmpCaw9Qc+G1RDerRJdrpMFGYUn1vh5Q1sQ+dqb+jhje0716X3T
+	 Ev0Atfp6peFHX/TkKevO+F7LUiuDWQnHAhy7J3BSR9dJzlEzmxup4aMymLzq7wmDlT
+	 vadzH/V2xHD9g==
+Date: Wed, 15 Jul 2026 18:34:58 +0200
 From: Francesco Dolcini <francesco@dolcini.it>
-To: HE WEI =?utf-8?B?KOOCruOCq+OCryk=?= <skyexpoc@gmail.com>
-Cc: Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kees Cook <kees@kernel.org>, Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] wifi: mwifiex: bound uAP association event IEs to the
- event buffer
-Message-ID: <20260715162855.GB86836@francesco-nb>
-References: <20260715135711.34688-1-skyexpoc@gmail.com>
+To: Doruk Tan Ozturk <doruk@0sec.ai>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	Brian Norris <briannorris@chromium.org>,
+	Kees Cook <kees@kernel.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] wifi: mwifiex: validate HT/VHT capability and operation
+ IE lengths
+Message-ID: <20260715163458.GA149147@francesco-nb>
+References: <20260715144021.GE56330@francesco-nb>
+ <20260715162800.1922-1-doruk@0sec.ai>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260715135711.34688-1-skyexpoc@gmail.com>
+In-Reply-To: <20260715162800.1922-1-doruk@0sec.ai>
 
-On Wed, Jul 15, 2026 at 10:57:11PM +0900, HE WEI (ギカク) wrote:
-> mwifiex_process_uap_event() handles EVENT_UAP_STA_ASSOC by exposing the
-> (re)association request IEs that the firmware copies into the event:
+On Wed, Jul 15, 2026 at 06:28:00PM +0200, Doruk Tan Ozturk wrote:
+> > why break and not return -EINVAL? (this in general, not only on this
+> > specific one).
 > 
-> 	sinfo->assoc_req_ies = &event->data[len];
-> 	len = (u8 *)sinfo->assoc_req_ies - (u8 *)&event->frame_control;
-> 	sinfo->assoc_req_ies_len = le16_to_cpu(event->len) - (u16)len;
-> 
-> event->len is supplied by the device firmware and is never validated,
-> and the subtraction is unchecked.  assoc_req_ies points into
-...
+> To skip the one malformed optional element and keep parsing the rest of the
+> beacon, like the FH/DS/CF/IBSS cases just above in the same loop. Happy to
+> switch to -EINVAL if you'd rather reject the whole BSS.
 
-> 
-> Fixes: e568634ae7ac ("mwifiex: add AP event handling framework")
-> Signed-off-by: HE WEI (ギカク) <skyexpoc@gmail.com>
+maybe I am missing something, but I see return -EINVAL; when the packet
+is malformed. see for example
 
-Where you able to test this? It looks ok, but you never know ...
+		case WLAN_EID_VENDOR_SPECIFIC:
+			vendor_ie = (struct ieee_types_vendor_specific *)
+					current_ptr;
 
-Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+			/* 802.11 requires at least 3-byte OUI. */
+			if (element_len < sizeof(vendor_ie->vend_hdr.oui.oui))
+				return -EINVAL;
+
+
+My advise would be to do the same we are already doing, and unless I am
+wrong, it means that we skip the whole frame if a corruption is
+detected.
+
+Francesco
+
 
