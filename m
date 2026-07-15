@@ -1,77 +1,77 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 714523B1013
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 16:28:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD013B2FF7
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 16:28:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784132884; cv=none; b=ODhkcOvXLyVm5xRgFUB8CPwpqRkHpk13l8n/IbIHdZ0Qxq3VOEWxYCA3Bak1pYiRoQ2l1UlNvnBJcD3g8pIE0vaWPJz7XA3j5iRgZ6OQ/MTKiJlx7rS7S9fKNWljbBEvjKTy8Qeq6JcWdbri+MOc1feAvvd2Yjyt8ei8y5ZI8FI=
+	t=1784132886; cv=none; b=gxCVUrerA58YBEUzM0DcP5HUlZPLYyCkTVIbGsW7sr2SJX/wHI2qwkD451AnLTUOldef+8xQ5RztZ0efgNnWELS2oKTDaSqJ+CTpmY6FFttDrDqebv+aSrUV3Tu7Ce9mx8i6VwhgR4Zrxt16O5UBG0USZX1Mf7B1IznQXCnNS1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784132884; c=relaxed/simple;
-	bh=whbeM1Ql/RDLLR1NnOzpt+hHqQRUALuIobIOc7I4+VE=;
+	s=arc-20240116; t=1784132886; c=relaxed/simple;
+	bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tvXQ9+S+xMMnF/2s5itMLNMkhiZKCETBnmswP4esS5XjM8ni7RMAPujsZEF3+sLUyzDbg/d4UbFHxQVacquie9nINGCB8cKCLG5G7pS7ICdy6pJKd946KrpMDqdK5PYDs20clT1HUrhLbfGj4rjrQFaVtUNfyrONLwtWnQ9oqg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0sec.ai; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=oDyZsiG7; arc=none smtp.client-ip=209.85.221.43
+	 MIME-Version; b=oRlJ2mH3v1hm4dI6xEL5Eow+Cnz2+PfluPoBMBbTWUhubXdsYEBE6/dERm1DrXjeL73YQGFKwcfwSBhsleYaA9i4e8bDbJZ3U1AK+mTEPoaftNTHq4TrVu9P4PihDjJ6vpZfDIx9raMAPUJAb0vIux7wAiDy84C4EeZnZHboBGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0sec.ai; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=lTjQ+76d; arc=none smtp.client-ip=209.85.128.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0sec.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="oDyZsiG7"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-47362928f65so5144560f8f.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 09:28:02 -0700 (PDT)
+	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="lTjQ+76d"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-493e4ccccc2so35841555e9.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 09:28:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=0sec.ai; s=google; t=1784132881; x=1784737681; darn=vger.kernel.org;
+        d=0sec.ai; s=google; t=1784132883; x=1784737683; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=whbeM1Ql/RDLLR1NnOzpt+hHqQRUALuIobIOc7I4+VE=;
-        b=oDyZsiG7wiOfWqhQ8BRe1ed0vb1ZHCXw4JU7iYbeNZs+nFCbEB0LFbiaYxvz76l0l5
-         Y+O5A9/QNrieEHrCFenP0EtJvuFMFYs4zPy5ATNHyRl3XVEN0i/ojqrMPV0iigchW6oB
-         FzAjChBFRsmXMhmHW20aa93RUJxcGG2xnfRNJ0yEnQQOnY/85J++MnjJ3pqNOmiZLIw/
-         V3XFeo5DQn+dZXcWhI+Nnqed2i2fjXMn1X6tDMNkU9Az4hyb6tIEin+57W2ig8xmzUs5
-         lnbZdA3xp4GZ80YIt2lp0HX1RJFT7OB8fTYBze/Y2b5MkInHH1o6/H+tqrte9neBbPzL
-         inuA==
+        bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
+        b=lTjQ+76dDNnxMKnz3PquFQnbQNK9JgbYf/axe60O2u8ydZuUKN4pSytt+EDnGsZHuA
+         OzKfU0UemRvB63LTTT+7stZEBYp2NMkGTNwm2bXm8VA0C6+8kbypAFRyDx52FbSypddJ
+         g2GGA4yqno9RQ1gYW+M5nMv9vr2Go1rDDau5qhdlcsT15dsbKiiG1Fs69dUSQ9xhR5cq
+         7O70yglDObYvz5106xA87W7i6+Dm6DWiAhV2zSNzlzK7gngu8r7YeHVDqqR6SI2xNTxu
+         EZ/f4JBKStXGqh8y9San8O5ZNZL+q0LKAgSrjz3riOoRRptqqYjZetIjnMKZUQGwlwkx
+         9xMw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784132881; x=1784737681;
+        d=1e100.net; s=20251104; t=1784132883; x=1784737683;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=whbeM1Ql/RDLLR1NnOzpt+hHqQRUALuIobIOc7I4+VE=;
-        b=LNIITvJJJWnYB4Yr1GUxrq34+tQOJSBexD2earcrdS/EhKWa77j5TvZSjv3uJmyKD3
-         TwEI4Z6NlDolLgpnMvnjT1HXZ9vo6ynZnx5HwpmqJgXcqEIHk1+lqo0oXLj3Dq9wg8wP
-         QjNB5f0Lhx0j+NtvEp+eYX+333lg4qL9ukUoL8Hq6XRY6Qx2QDv5sgqMHpY+7aZxrzb0
-         +pOYUDs0tFYaSSvbRt4HUMCxxRklKJhlIkudXiyScxJu74atwYuzqnjfBfss0f4rmIRI
-         wF87Zfh9G3c0KX7Z6ksdtXi20ZySsn5rRh+rLxNiLbpsctMmfzPO3IHc/S/Apv6svAsb
-         hifQ==
-X-Forwarded-Encrypted: i=1; AHgh+RppGnKcidZjFIOYISEpxO2n8H5IQ2fduLNblwwttCOK3rKo86U4M64cvSOWRWZ60COGbsKAAwLa+5cZgfC7zw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3vEeIE66VVtGASUN5sk5Z5tbYXIB+2SUM8Vqh4brcI/H1bgHb
-	E+chlU0OO1O8MHwUeltASW0rEr/sVR6ru/I6lxtsVg/F9gshCP7JvOBpu3U1rrUb1gRO2Kb4HFC
-	BsSBL4nDl
-X-Gm-Gg: AfdE7ckDiFE2YEeQC5JvNEwMVIIdEHkVBWg4NGU1iOJ90p8Jt1bsmrRw0GvTiktU5am
-	9y2AE8Y0j+DT1I4wDpAnhgEx+TCjjJ63NLrbucX5gh3l9/agppn17wEnTSU19JVzOZxcfIDgnU7
-	pyZnygGZa89MV6AshW0F11xmUiyWmZDFS1Wggywy4el+Lsl/aqVnkrM/IO5xpvM4QKVFhlMbmbC
-	ctGhvMNeQs3GjQfkrQpD4mqfv/uLG3ukRb+lItZ3TVqtwDMnMIUOYPManBkSVKy+GjkNh23wXn3
-	pV8ujERMPuAoEvbR9oOY8QIZuRenjJqsg/QkHEKGuIVwVOIBsel6/XcIpO4FdmruUDIvmlDjTts
-	PrHKgVkyX9wCfeOCTKl192IWZBMC5vijf/fNjbU89Pk0atqQ0qpdzznRx4G2dMHk6vQm0LACnIo
-	5lVJhSn6B+ZxOuE5KK6AUxCaN67oJNH+p/6orj3x1cm3aOj+i1CiRvSYfp3w6HOrhHYDAtoOvYF
-	UVJepFoJZkcIxmZVF/QwA6k/3RgrA==
-X-Received: by 2002:a5d:5f87:0:b0:47d:f445:9490 with SMTP id ffacd0b85a97d-47f488c6b08mr8260998f8f.60.1784132880500;
-        Wed, 15 Jul 2026 09:28:00 -0700 (PDT)
+        bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
+        b=Em/6VrBPATP7BTBS34kWKaQUtb8ch0AaAqj3pw24OGjIIpnNdCF8WEmZOEveHKiR/e
+         H/fswfvLmFBmI7+UUC2yBoEeYtM24aVq24YM9mMc2vcR8BgLSezigV1U1Hhgoaiz2IJM
+         VACobVMiM/K6IG09HXQhDPomHtwam5/dhMZbOmrbAsqgj6OLz8QF1A7XBSRHzHW35mKY
+         SUJmdPoD/MCOWmDCdlWR6wUEUZlh6Va6WhVjyXJWIw0XgL2VOSz3taCnEb9flZ1+s1Iu
+         SLyQg33XwSnYTthgpV/Wtt8He1P2iM1DuJ0daZw5xZHhxPKLwMor32Tm+Mnv0aJc/rZD
+         mM9Q==
+X-Forwarded-Encrypted: i=1; AHgh+Rq2EEt4co1T6LF9x+0iq/yJTbBVvvC9RED8g667cyVQNQrteMZaD9liU9FCqAJ3bxIEXiZVk51/GA6NDwfz/g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoIod9a3QVcQ5ySnn7WOSjP34zF/3RTkaquxt1kbOSF+VraYd9
+	XGiFZL+TfEIkg/eYPkGAVCqOVP2bbZhGIGuvLCPdPqIiMKO5pIlJ8ydY1jIu4fK5PVha
+X-Gm-Gg: AfdE7cnPlHxvQhPmmwCi9kfePLoP5RsuzGxQ2/f3V3taOvcyev/W6LazuAhJLqM3edI
+	U9soos1F2/3zbTFhTTUym0EEair5dsNpzbQqYl3wwuOYen8QVZF4mn9xB+p+O+1/ofkUBmm4UXz
+	Em28dXkx0/ylOE6tRPpunhkLAGfyieQCdnHLqOMDdjRJIKbw8xEA1QKfrVd2IvD24O9vxiGaZtl
+	eaOyCfHMX3delHZbuatsdawss5tpDqRwdOqUBltZs9eyeSBFNUwhORQAjNqtUx4bQ4nLaoe1I1y
+	7dFohOARwePvM3ZEY1w0H7vGPOwuy0RPA6qm4xWd99MKbYdnEqr9qvCCX4EIvzYsZSlViUtqd+J
+	1uH4Lq315ezGPO7EDFUwVyLT+d2cGImru72tgTjmws51+ZQ0FV19IAmkHnIlP3UUl2aB2LcDtu/
+	mXIav71Y4eFJxK6SCzqH9U5UPnMnUtxfSiY9skNmgZBjvsU7ZT5FdihADTtChFrQLdkwIiFwjgb
+	94BhLfckSOvThi4UanjCuz92v+dJw==
+X-Received: by 2002:a05:600c:3218:b0:493:e81c:fc9 with SMTP id 5b1f17b1804b1-495389a2301mr50045645e9.15.1784132882816;
+        Wed, 15 Jul 2026 09:28:02 -0700 (PDT)
 Received: from PeakBook-Mini.tail8e484.ts.net ([178.197.218.188])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f4635a9cesm18065381f8f.14.2026.07.15.09.27.59
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49508731fcdsm142523185e9.4.2026.07.15.09.28.01
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 15 Jul 2026 09:28:00 -0700 (PDT)
+        Wed, 15 Jul 2026 09:28:02 -0700 (PDT)
 From: Doruk Tan Ozturk <doruk@0sec.ai>
 To: Francesco Dolcini <francesco@dolcini.it>
 Cc: Brian Norris <briannorris@chromium.org>,
+	Kees Cook <kees@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: mwifiex: bound the pairwise-cipher OUI walk to the IE length
-Date: Wed, 15 Jul 2026 18:27:57 +0200
-Message-ID: <20260715162757.1886-1-doruk@0sec.ai>
+Subject: Re: [PATCH] wifi: mwifiex: validate HT/VHT capability and operation IE lengths
+Date: Wed, 15 Jul 2026 18:28:00 +0200
+Message-ID: <20260715162800.1922-1-doruk@0sec.ai>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260715144752.GF56330@francesco-nb>
-References: <20260715144752.GF56330@francesco-nb>
+In-Reply-To: <20260715144021.GE56330@francesco-nb>
+References: <20260715144021.GE56330@francesco-nb>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,9 +80,18 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-> maybe define an intermediate variable to store `offsetof(struct ie_body, ptk_body)`
-> so that it is clear what this is, and you also can re-use it later?
+> Were you able to test that this is not breaking the driver functionality?
 
-Good idea, will do in v2. Thanks.
+Unfortunately I don't own one of these cards, and mwifiex is fullmac so
+there's no hwsim either, so it was source and compile only. The added checks
+only skip elements too short for what the driver later reads, so they
+shouldn't affect a well-formed beacon.
+
+> why break and not return -EINVAL? (this in general, not only on this
+> specific one).
+
+To skip the one malformed optional element and keep parsing the rest of the
+beacon, like the FH/DS/CF/IBSS cases just above in the same loop. Happy to
+switch to -EINVAL if you'd rather reject the whole BSS.
 
 -Doruk
