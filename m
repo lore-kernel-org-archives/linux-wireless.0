@@ -1,173 +1,68 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6BA837BE72
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 13:57:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6985D2F39B4;
+	Wed, 15 Jul 2026 14:01:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784123846; cv=none; b=KWcuDylC211dBurVFy3SNV/Pl6Qm88UgElT9P4Ai0yp1di1G9W322cXVi4fhCd/0NMHdO40YaVvu5MtXww+FV5z55mihNaxRQX2xMjIW6AMU3pkDm87gLWDNHWLWSvuiBrIHOVB41aeXl0QXJ/OUUWSe0kQ0+ee2sltMMTVdOzw=
+	t=1784124112; cv=none; b=H/PNKBIincTDlHSSl+ejWq0TWdAJ603BsaberbKrzFkJuOeI+4i9yjL9BHg3ql0eI/jDmqiHOqIlEf6hAOYFjPuaS7KCicSgWVjJiw99Yx0tX3iLaMN32JQOrqtdgUE7ofPJWOobs6GSv1l15hUCgkbt0cHoyS0tiXJ/i9TwIlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784123846; c=relaxed/simple;
-	bh=Kg5pQpuMzJ9sk/GlC7mPts5jsxjfpe/GLhONcI3X9co=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ihTYlffmD4fWV2kB00czztamcYQSv+ZV+AIKGxz3fs/RTJPI1Wjdn8nMXiNs0UoUt9d+XEoeKFQBcdoH5+2yP0bVC/3I4ymdv+hOjQDD332goSwHPv82utRPlNg4JXy4tRlBc8UGK41TAB7DreiN6uWoX5doKAeWApnJDArxAfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OBcCryxL; arc=none smtp.client-ip=209.85.216.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784124112; c=relaxed/simple;
+	bh=uTMNPCRq8D0flY48pJnXGpzKYNKCwlS1FHUUgYwgar0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hiQtL/TfLiSJc5lU7JCoF2EufYZnv3StOm6u2GUNTpbqFSqor8ySjE8Ob6w0As373c0rjZIBj2AqeR/KQcpHZ3g5pOvLgDBxW14B9hyD9xNsfYvJD4YGz6HYKwsRR6V/7oKhUCFIWODE1lYjuGuH/P1hcSf6+kcnAQYMiv+e1ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=Sib5nQDY; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OBcCryxL"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-38e3617ba36so135339a91.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 06:57:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784123844; x=1784728644; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=J1GlOyoJIFNgjl08SobaOhXV338mc62hPFF+7xVBCrM=;
-        b=OBcCryxLWw0UXvtoiNBKlcIr2XK512YQ6QTr1PxT8plYNIG4Im9raHe80jhJdgud9+
-         DRv2sUMPQArzfkhevQc9Q+OgJOo+W+P0dEPhYrQMvxM7BLvoMkT6gZ0/KXe2Hka/9DXL
-         1VuIPeqpCWDEwE6o9aHwZLGsKFEbXf0FIJh9Rh0Yws5eugk9VA4t58eb4czdeFOPp4YA
-         /p8MZfXiXrr+7VJFQJ+dsIs09BDEe7TsbzEZMIVHtSy0/AN0PW4QmQPTT6pOnNX82+ap
-         4eKV/ErUcpQ/BlkUt+4mQlyJWQyicVz33kbDNGdFNegXGPt8dQTbhJAHR/d7X7rvkaJF
-         MepQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784123844; x=1784728644;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=J1GlOyoJIFNgjl08SobaOhXV338mc62hPFF+7xVBCrM=;
-        b=HskNlbjSO34gV31Z+eou0cbCrsDt2FZ3Zlu+AsvKIKQbH5aJWI26YvCam5GQ3EvCL7
-         RusDbg9hNuFQmIKpfyvBX3A6WaXtvnEeiq19bXdadhZdCIOXJLgSzk3RP4SoelQxdSFz
-         Rj/nf2CaKam2SQHkDR4C0zcRscFIe9i2T/FwNMkroYY5YI090/Ha3KLxV4que+gRA3FE
-         HwbXfxm2Vi+0ELyzfYn/Ldnzm+GChXN8caUetBcjT0P5zjuLYlZ2FNOl89745bGwLXkC
-         kDckE58ajMj1xAne2O00LooHV/5yZx+CRYQVxNBnyNcatNCkylUPesW0vDGMf7FXZd1a
-         kZmQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoqL+vkAZ9R1/ZXYIJr5inf5CEGHl2d4jxaWdnYrHtZkzM53e5yZ7/+9AoWVJ9RCRpoQX/SiuTiER/b3EBL0A==@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywncd6wMQ+IISmoLontJ3f3uWdNQzI3mTxAM26VdSEikEHcSRP8
-	7sHOHF8QYc6NmcsvyDgqL5oDrShClF3mIixAk0LumUJrHCG1VNX/7eEd
-X-Gm-Gg: AfdE7cmQiY3tfvYqTR40jfvfOghF/vvWPnnANnu7lwmnfla+DV21BDSHipNZ/N1Gwo6
-	oPCfeLw76zankD2XF9rCHg/3c1hXhX/okbxGfkrBdofm6L4zrAH+7OAp73hbrTi0vAIv03utP7w
-	BueuVf/BsaTxM0W9hZ/qfLL7uSUzXNgao8BgZWMqzdiAZQS5VszZoKv5FvOejwn/vciRr9ky0xq
-	fK77znXqeXEFjkKAzkzj+whEuDR7UGzgUJ/vwN932UXHlWxgw9cLWqU7PFp0PRZitpV4AK7cZ9r
-	ZquwIlQB6B3A0sjz+mp7uqRTS9i8KxC45WDCWiuoVPhZuvHN2q+G0MV5Xsf1omK9k9utLDCtUft
-	kg4oEvaQh3uq+JApaiZW/TXrH6KFKkgMmwEk4yQ/dlWE4jFW1fF7yEdw8zNLeMq21ddF8eWqnkJ
-	SP/0n8Z2YKtKWSMFuAtbwUQfrKJ7FvZXjNKQMiMadv
-X-Received: by 2002:a17:90b:180d:b0:37f:9ce1:736a with SMTP id 98e67ed59e1d1-38e1af3481amr6527165a91.32.1784123843763;
-        Wed, 15 Jul 2026 06:57:23 -0700 (PDT)
-Received: from localhost.localdomain ([192.197.201.174])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e6c08eesm2234881eec.21.2026.07.15.06.57.21
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 15 Jul 2026 06:57:23 -0700 (PDT)
-From: =?UTF-8?q?HE=20WEI=20=28=E3=82=AE=E3=82=AB=E3=82=AF=29?= <skyexpoc@gmail.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kees Cook <kees@kernel.org>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	=?UTF-8?q?HE=20WEI=20=28=E3=82=AE=E3=82=AB=E3=82=AF=29?= <skyexpoc@gmail.com>
-Subject: [PATCH v2] wifi: mwifiex: bound uAP association event IEs to the event buffer
-Date: Wed, 15 Jul 2026 22:57:11 +0900
-Message-ID: <20260715135711.34688-1-skyexpoc@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="Sib5nQDY"
+Received: from francesco-nb (xcpe-178-82-120-96.dyn.res.sunrise.net [178.82.120.96])
+	by mail11.truemail.it (Postfix) with ESMTPA id 12CED1FC12;
+	Wed, 15 Jul 2026 16:01:48 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784124108;
+	bh=o9e56pBy+caxR+Chcucx0VwaDuQlyH1PFgilBztsuSw=; h=From:To:Subject;
+	b=Sib5nQDY+Bj+oCMJJ5JdKrMn/z3dotAqATE4QLmZAswoVlu2XApO5y479nYKQyCCk
+	 biBP+/65qTNmxRQDTonv2eusULiYYSqCG5K9FVjTMSnO9GnhlfFbw5d+Z2q/LuFqQs
+	 Mq0leaFK7F/sidN2ACpJhHunClxtULQBufiwMiQttE7cb0yqtb3UxaiXszKlTosKot
+	 QyZ62Fk2XYxYMCUzW+VOAlLZEhkVP+HiamhrEUBZKN2j+U/b5twp096QJjJcU/5BCU
+	 RmiKdQ6+FVvl4N2LdbE+9lF2+5qCj6bSKWYGlEhEJQd9QHiv5/1Mpyzjuuf36tY73X
+	 huOoN8kPDYJ0A==
+Date: Wed, 15 Jul 2026 16:01:46 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Kees Cook <kees@kernel.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: mwifiex: validate rate scope TLV length
+Message-ID: <20260715140146.GC56330@francesco-nb>
+References: <20260706091346.76985-1-pengpeng@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260706091346.76985-1-pengpeng@iscas.ac.cn>
 
-mwifiex_process_uap_event() handles EVENT_UAP_STA_ASSOC by exposing the
-(re)association request IEs that the firmware copies into the event:
+On Mon, Jul 06, 2026 at 05:13:46PM +0800, Pengpeng Hou wrote:
+> From: Pengpeng <pengpeng@iscas.ac.cn>
+> 
+> mwifiex_ret_tx_rate_cfg() verifies that a TLV stays within the command
+> response, then parses RATE_SCOPE as struct mwifiex_rate_scope. The
+> type-specific parser also needs to prove that the declared TLV payload
+> covers the bitmap fields that it reads.
+> 
+> Check the RATE_SCOPE payload length before copying the legacy bitmaps,
+> and require the VHT bitmap area only for firmware API version 15 where
+> it is consumed.
+> 
+> Signed-off-by: Pengpeng <pengpeng@iscas.ac.cn>
 
-	sinfo->assoc_req_ies = &event->data[len];
-	len = (u8 *)sinfo->assoc_req_ies - (u8 *)&event->frame_control;
-	sinfo->assoc_req_ies_len = le16_to_cpu(event->len) - (u16)len;
+Is this change tested? On which device? How?
 
-event->len is supplied by the device firmware and is never validated,
-and the subtraction is unchecked.  assoc_req_ies points into
-adapter->event_body[MAX_EVENT_SIZE], a fixed-size array embedded in the
-kmalloc()'d struct mwifiex_adapter.
-
-On the ap_11n_enabled path mwifiex_set_sta_ht_cap() walks these IEs with
-cfg80211_find_ie(), whose for_each_element() loop dereferences each
-element header.  A firmware-reported event->len larger than the bytes
-actually received makes assoc_req_ies_len describe IEs that extend past
-event_body, so the walk reads out of the adapter slab object, a
-slab-out-of-bounds read (KASAN: slab-out-of-bounds in cfg80211_find_ie).
-An event->len smaller than the header instead makes the int subtraction
-negative, which wraps to a huge size_t when stored in assoc_req_ies_len.
-The same length is handed to cfg80211_new_sta(), so a more modest
-over-claim can also copy stale event_body bytes into the
-NL80211_CMD_NEW_STATION notification.
-
-A malicious or malfunctioning mwifiex device (USB/SDIO/PCIe) can deliver
-such an event while the interface is in AP/uAP mode.
-
-Validate event->len before use: reject a length that underflows the
-header or that would place the IEs outside the event_body[] buffer the
-event was copied into.  event->len here is struct mwifiex_assoc_event.len,
-a payload field internal to this event, not the transport frame length,
-so it is validated in this handler rather than at the generic
-MWIFIEX_TYPE_EVENT receive path, which only sees the event cause and the
-transport frame length.  The bound is against event_body[MAX_EVENT_SIZE]
-rather than the actually-received length because the transports store the
-event differently (USB and SDIO leave the 4-byte event header in
-event_skb, PCIe strips it via skb_pull), whereas event_body is the single
-fixed buffer all of them copy the event into.  This is the event-path
-analogue of the receive-path bounds checks added in commit 119585281617
-("wifi: mwifiex: Fix OOB and integer underflow when rx packets").
-
-Fixes: e568634ae7ac ("mwifiex: add AP event handling framework")
-Signed-off-by: HE WEI (ギカク) <skyexpoc@gmail.com>
----
-v2: fold le16_to_cpu(event->len) into a local evt_len as requested, which
-    also shortens the bounds check.  No functional change.
-
- .../net/wireless/marvell/mwifiex/uap_event.c  | 24 +++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_event.c b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-index 679fdae0f001..ba1bdbbff687 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_event.c
-@@ -123,11 +123,31 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 				len = ETH_ALEN;
- 
- 			if (len != -1) {
-+				u16 evt_len = le16_to_cpu(event->len);
-+
- 				sinfo->assoc_req_ies = &event->data[len];
- 				len = (u8 *)sinfo->assoc_req_ies -
- 				      (u8 *)&event->frame_control;
--				sinfo->assoc_req_ies_len =
--					le16_to_cpu(event->len) - (u16)len;
-+
-+				/*
-+				 * event->len is reported by the device firmware
-+				 * and is not otherwise validated.  Reject a
-+				 * length that underflows the header, or that
-+				 * would place the association request IEs
-+				 * outside the fixed-size event_body[] buffer the
-+				 * event was copied into; otherwise the IE walk
-+				 * in mwifiex_set_sta_ht_cap() reads past
-+				 * event_body and out of the adapter slab object.
-+				 */
-+				if (evt_len < len ||
-+				    (u8 *)&event->frame_control + evt_len >
-+				    adapter->event_body + MAX_EVENT_SIZE) {
-+					mwifiex_dbg(adapter, ERROR,
-+						    "invalid STA assoc event length\n");
-+					kfree(sinfo);
-+					return -1;
-+				}
-+				sinfo->assoc_req_ies_len = evt_len - (u16)len;
- 			}
- 		}
- 		cfg80211_new_sta(priv->netdev->ieee80211_ptr, event->sta_addr,
--- 
-2.54.0
+Francesco
 
