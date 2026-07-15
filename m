@@ -1,97 +1,74 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD013B2FF7
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 16:28:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407A03B19D8;
+	Wed, 15 Jul 2026 16:28:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784132886; cv=none; b=gxCVUrerA58YBEUzM0DcP5HUlZPLYyCkTVIbGsW7sr2SJX/wHI2qwkD451AnLTUOldef+8xQ5RztZ0efgNnWELS2oKTDaSqJ+CTpmY6FFttDrDqebv+aSrUV3Tu7Ce9mx8i6VwhgR4Zrxt16O5UBG0USZX1Mf7B1IznQXCnNS1s=
+	t=1784132941; cv=none; b=BjoJFuckFTW+mLD3Q5YPQDbdiVSpwV6dvKG6h6mjN0hFGV0YK5Cwke0wCp+CLPI6iD5Zl/JPaQjXFPvsUdAxSmSjumputI1/0Qkoo7wVTOYaJEmM1JaPTcZWCYkjeLfoA0QaJj3LvPAC5ZSCWfXWHn1BU2dhQZ7El2tGJ/Gr6XA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784132886; c=relaxed/simple;
-	bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oRlJ2mH3v1hm4dI6xEL5Eow+Cnz2+PfluPoBMBbTWUhubXdsYEBE6/dERm1DrXjeL73YQGFKwcfwSBhsleYaA9i4e8bDbJZ3U1AK+mTEPoaftNTHq4TrVu9P4PihDjJ6vpZfDIx9raMAPUJAb0vIux7wAiDy84C4EeZnZHboBGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0sec.ai; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=lTjQ+76d; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0sec.ai
+	s=arc-20240116; t=1784132941; c=relaxed/simple;
+	bh=OFXx8sWRRcJTkg/6K4X2CCS9AQUbhAjhmIy63QOF3ao=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HQG2Ak5a2bTrxamLX6a7J7BYS5Mfira0EWWgFo6tU26hCcrlcmBCn+7pc8Ryn8SllhPVlzqFPlCrinaX4mptP8CNgYZKR6RdR/BC/Hn5OAzBEOWVf2/33hsrAUfVI6DK3W84VjrYxeQFkBu8fHQYV+PDcrI3clmdxILTNIkxNIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=Z/qsbjXB; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="lTjQ+76d"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-493e4ccccc2so35841555e9.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 09:28:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=0sec.ai; s=google; t=1784132883; x=1784737683; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
-        b=lTjQ+76dDNnxMKnz3PquFQnbQNK9JgbYf/axe60O2u8ydZuUKN4pSytt+EDnGsZHuA
-         OzKfU0UemRvB63LTTT+7stZEBYp2NMkGTNwm2bXm8VA0C6+8kbypAFRyDx52FbSypddJ
-         g2GGA4yqno9RQ1gYW+M5nMv9vr2Go1rDDau5qhdlcsT15dsbKiiG1Fs69dUSQ9xhR5cq
-         7O70yglDObYvz5106xA87W7i6+Dm6DWiAhV2zSNzlzK7gngu8r7YeHVDqqR6SI2xNTxu
-         EZ/f4JBKStXGqh8y9San8O5ZNZL+q0LKAgSrjz3riOoRRptqqYjZetIjnMKZUQGwlwkx
-         9xMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784132883; x=1784737683;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vlc6n0wucwwzcyFpYrDIRDUbt+XJH5Ilzdk8lMP19vE=;
-        b=Em/6VrBPATP7BTBS34kWKaQUtb8ch0AaAqj3pw24OGjIIpnNdCF8WEmZOEveHKiR/e
-         H/fswfvLmFBmI7+UUC2yBoEeYtM24aVq24YM9mMc2vcR8BgLSezigV1U1Hhgoaiz2IJM
-         VACobVMiM/K6IG09HXQhDPomHtwam5/dhMZbOmrbAsqgj6OLz8QF1A7XBSRHzHW35mKY
-         SUJmdPoD/MCOWmDCdlWR6wUEUZlh6Va6WhVjyXJWIw0XgL2VOSz3taCnEb9flZ1+s1Iu
-         SLyQg33XwSnYTthgpV/Wtt8He1P2iM1DuJ0daZw5xZHhxPKLwMor32Tm+Mnv0aJc/rZD
-         mM9Q==
-X-Forwarded-Encrypted: i=1; AHgh+Rq2EEt4co1T6LF9x+0iq/yJTbBVvvC9RED8g667cyVQNQrteMZaD9liU9FCqAJ3bxIEXiZVk51/GA6NDwfz/g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyoIod9a3QVcQ5ySnn7WOSjP34zF/3RTkaquxt1kbOSF+VraYd9
-	XGiFZL+TfEIkg/eYPkGAVCqOVP2bbZhGIGuvLCPdPqIiMKO5pIlJ8ydY1jIu4fK5PVha
-X-Gm-Gg: AfdE7cnPlHxvQhPmmwCi9kfePLoP5RsuzGxQ2/f3V3taOvcyev/W6LazuAhJLqM3edI
-	U9soos1F2/3zbTFhTTUym0EEair5dsNpzbQqYl3wwuOYen8QVZF4mn9xB+p+O+1/ofkUBmm4UXz
-	Em28dXkx0/ylOE6tRPpunhkLAGfyieQCdnHLqOMDdjRJIKbw8xEA1QKfrVd2IvD24O9vxiGaZtl
-	eaOyCfHMX3delHZbuatsdawss5tpDqRwdOqUBltZs9eyeSBFNUwhORQAjNqtUx4bQ4nLaoe1I1y
-	7dFohOARwePvM3ZEY1w0H7vGPOwuy0RPA6qm4xWd99MKbYdnEqr9qvCCX4EIvzYsZSlViUtqd+J
-	1uH4Lq315ezGPO7EDFUwVyLT+d2cGImru72tgTjmws51+ZQ0FV19IAmkHnIlP3UUl2aB2LcDtu/
-	mXIav71Y4eFJxK6SCzqH9U5UPnMnUtxfSiY9skNmgZBjvsU7ZT5FdihADTtChFrQLdkwIiFwjgb
-	94BhLfckSOvThi4UanjCuz92v+dJw==
-X-Received: by 2002:a05:600c:3218:b0:493:e81c:fc9 with SMTP id 5b1f17b1804b1-495389a2301mr50045645e9.15.1784132882816;
-        Wed, 15 Jul 2026 09:28:02 -0700 (PDT)
-Received: from PeakBook-Mini.tail8e484.ts.net ([178.197.218.188])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49508731fcdsm142523185e9.4.2026.07.15.09.28.01
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 15 Jul 2026 09:28:02 -0700 (PDT)
-From: Doruk Tan Ozturk <doruk@0sec.ai>
-To: Francesco Dolcini <francesco@dolcini.it>
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="Z/qsbjXB"
+Received: from francesco-nb (xcpe-178-82-120-96.dyn.res.sunrise.net [178.82.120.96])
+	by mail11.truemail.it (Postfix) with ESMTPA id E9C5A22BC2;
+	Wed, 15 Jul 2026 18:28:56 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784132937;
+	bh=BzHouKF0ABdx7pMe6qeJ9755jHJTLM6hrPhImlN3t3A=; h=From:To:Subject;
+	b=Z/qsbjXBAfEHnQoyuzTwO8/o5PIZBA6E6BiQXpaK7+WDqRGRPg8sdjpuRVBEy5/7a
+	 bd641FE1496uIXD3XF7TuxDBbKOBH+gz9KapjihxGzfeVX2nVj2lxCzkVckAXJ6Te+
+	 P+bsxlNbkIJhddFSVWXOYAkIuqAwI8qT86ospH035B2EeOwsqeu4Qaqs47ABv62JO6
+	 5LzSKO2mNc7VttAvYun1LvwPuW3g4Qhh2lw+ZttqcZNzvsglnMDuCT7PShaFLGg/8K
+	 iNWEF5nawSLxwrD2/nvPLeX4F6Bk1NJczj6WJw0yg9gD1DSKIzGPJKtizPeLL2uxpb
+	 9x0tQpV/JhkcQ==
+Date: Wed, 15 Jul 2026 18:28:55 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: HE WEI =?utf-8?B?KOOCruOCq+OCryk=?= <skyexpoc@gmail.com>
 Cc: Brian Norris <briannorris@chromium.org>,
-	Kees Cook <kees@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: mwifiex: validate HT/VHT capability and operation IE lengths
-Date: Wed, 15 Jul 2026 18:28:00 +0200
-Message-ID: <20260715162800.1922-1-doruk@0sec.ai>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260715144021.GE56330@francesco-nb>
-References: <20260715144021.GE56330@francesco-nb>
+	Francesco Dolcini <francesco@dolcini.it>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kees Cook <kees@kernel.org>, Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] wifi: mwifiex: bound uAP association event IEs to the
+ event buffer
+Message-ID: <20260715162855.GB86836@francesco-nb>
+References: <20260715135711.34688-1-skyexpoc@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260715135711.34688-1-skyexpoc@gmail.com>
 
-> Were you able to test that this is not breaking the driver functionality?
+On Wed, Jul 15, 2026 at 10:57:11PM +0900, HE WEI (ギカク) wrote:
+> mwifiex_process_uap_event() handles EVENT_UAP_STA_ASSOC by exposing the
+> (re)association request IEs that the firmware copies into the event:
+> 
+> 	sinfo->assoc_req_ies = &event->data[len];
+> 	len = (u8 *)sinfo->assoc_req_ies - (u8 *)&event->frame_control;
+> 	sinfo->assoc_req_ies_len = le16_to_cpu(event->len) - (u16)len;
+> 
+> event->len is supplied by the device firmware and is never validated,
+> and the subtraction is unchecked.  assoc_req_ies points into
+...
 
-Unfortunately I don't own one of these cards, and mwifiex is fullmac so
-there's no hwsim either, so it was source and compile only. The added checks
-only skip elements too short for what the driver later reads, so they
-shouldn't affect a well-formed beacon.
+> 
+> Fixes: e568634ae7ac ("mwifiex: add AP event handling framework")
+> Signed-off-by: HE WEI (ギカク) <skyexpoc@gmail.com>
 
-> why break and not return -EINVAL? (this in general, not only on this
-> specific one).
+Where you able to test this? It looks ok, but you never know ...
 
-To skip the one malformed optional element and keep parsing the rest of the
-beacon, like the FH/DS/CF/IBSS cases just above in the same loop. Happy to
-switch to -EINVAL if you'd rather reject the whole BSS.
+Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
 
--Doruk
