@@ -1,56 +1,54 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C985438030
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:58:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D0C33B9DB6
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:04:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784141903; cv=none; b=WdmoRYZRR/dqP2tYFGgKILSS+4N48oHOs0bDw6IXNaf7byZWw+6yTt7A13okdom8BQE9Az1uUkS1p8n1u7duIUE0dNYJ8qV2tv9GL8ekN9CbDTrO8+ULxxhciCXRKWbMtXBrpDRm5yXGDrIcWqSMoIlSJ3enJg+JtiAauijORCQ=
+	t=1784142299; cv=none; b=tVKW4Qoumdsi4JWJMpgf8MzYmXtpM7MaE6PJTHyYGBb9a55YBIWaGHzrObADz+d0PwCNepyplLBpaAARswmMxedGxrseLV6ezws/2Y6CxTRjneYRvXOcTENfqX6ONGh5cxC9OMET5ykepQqvILgx9JWAO7XfYeZjSJnGZb8C0HQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784141903; c=relaxed/simple;
-	bh=SrL7Uwtj30YP+vPU2uFuJsboj+XtmHVfh1COGjef0vY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ld/4M52OmOYJZzEMOf5gMmmMoP6HdD0+PCDlt318GrEFxtkhKZpNew85IC1yr18bwDjln1hrMsKpX94EUzamjAtavUDxQS9llnarFGnz1Y9Hx8nKeogsNUdnzhMIefvEPXRIFgZE6EanQSicx+JcoYK9IvC/yE122bmtF7V6zNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FKkQraHn; arc=none smtp.client-ip=192.198.163.10
+	s=arc-20240116; t=1784142299; c=relaxed/simple;
+	bh=Nu3X9+ljQVC+K9NUxzHGEUXEvZs5V/nnvLOEepvJMFI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dA+psBWBUrENT+ZWAev4mSTOV6EXYkaLQ0igbshxD9wzgegzJhKPdcbVMg/qgDHn6CdWPojdeeuo7gLR2QcYexfFrcFVucQ33SUXOR6G7nqSEepR2lbxt+dJFmRE+ReB9h71MsR1oI+3DfmgzsoV8jxdwtZhwb7Lo7AYF2YeKFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eC8uQQKv; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FKkQraHn"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eC8uQQKv"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784141897; x=1815677897;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=SrL7Uwtj30YP+vPU2uFuJsboj+XtmHVfh1COGjef0vY=;
-  b=FKkQraHnSR5MqqgMxotlJpQZfjJvtOVPBSpthAYBwTVdDCDJJvgUxeWT
-   lshxopwCdDpwpmFvAicOk5Fqn2m0SmvIQ0L1v3/xy1FabKjL9vkovi9RB
-   U8zM3NY1kfu+5amLSPVvNqgpkt58nhahfzimeddoRgOaFWSHxa09x0Z4M
-   L0Hli/hM7B+ZPhvuzXCqo7bg+EOsF/LTuRWTmCYuB1/iSJ642bw1IycDG
-   L7ScEpR+YIVeamK2mEdpZiplO5OSjd23dQf4YKrqJae+5ktZ0bSpU/J4T
-   BnloMF+cGkQXVuJI8B8RPOcEs66OTDYhtUNZx3gMbzSAuJ59bsp+7FkS2
-   A==;
-X-CSE-ConnectionGUID: 7EUoQ3rcTDy/IZxNR5Ahjw==
-X-CSE-MsgGUID: u4BoS9HLTaGeQqJqgnQaRg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160934"
+  t=1784142295; x=1815678295;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Nu3X9+ljQVC+K9NUxzHGEUXEvZs5V/nnvLOEepvJMFI=;
+  b=eC8uQQKv5nHR+Lxtk2RpObuQZvzz5Q9s5n1QmOsm0yAeuGH/QtxjnLeu
+   63DKuBvU4/7vG5jMt9MBckeEbrErj1CtCfayXgBpE23OhuPeWZTGe8jbM
+   5n+1OLaE34QhpQyl9JK40fT/Mq2iWIRqNw5oiSXYEgLgdTEx7NorybR2a
+   lwFVALjWz2EA8fon/Z7/fia++Hnk3huE4fKBlc9O6bl5jmdcWoQh7u5Ho
+   1tMamusD2bNOoh/u/KBnjJ7V7n2bpH29Zv2NnPb7aTHCYKvdBr8eVqEuU
+   Oi67RAxr84cEhOO//+v7P7FdSzuzcGrBhHCg5JFXxMBJ1XQZi5l+XS6EZ
+   g==;
+X-CSE-ConnectionGUID: sRSR2CQoQvaQKhEKvpOUeg==
+X-CSE-MsgGUID: S3dgtexYQ0O7fdxn5FL3Iw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340686"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="96160934"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:58:00 -0700
-X-CSE-ConnectionGUID: uWzrWtPESu6GLgvi19YjDA==
-X-CSE-MsgGUID: Dcf68JBaQ1uYzTHg7+BjBg==
+   d="scan'208";a="87340686"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:04:52 -0700
+X-CSE-ConnectionGUID: m0E1o2vFSCm9liFxrHVPqg==
+X-CSE-MsgGUID: xq+INGpTQY6uvoVfxe30Mg==
 X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
+   d="scan'208";a="251851886"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:59 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:04:52 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-fixes 15/15] wifi: iwlwifi: adapt ND match notif sizing to fixed matches array
-Date: Wed, 15 Jul 2026 21:57:15 +0300
-Message-Id: <20260715215523.4c4346140bcc.I44313ac41daca352e6aecdba09a1c3570c3eea06@changeid>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH iwlwifi-next 00/15] wifi: iwlwifi: updates - 07-15-2026
+Date: Wed, 15 Jul 2026 22:04:16 +0300
+Message-Id: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
-References: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,82 +58,62 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi,
 
-Switch iwl_scan_offload_match_info::matches to a fixed-size array and
-adjust D3 netdetect size handling accordingly.
+Cleanups, features, and fixes from our internal tree.
 
-In MVM D3 paths, compute expected payload size as
-offsetof(struct iwl_scan_offload_match_info, matches) + matches_len to
-preserve previous behavior after the struct layout change.
+Thanks,
+Miri
 
-In MLD D3 netdetect handling, keep the simple full-notification size
-assumption and validate against sizeof(*notif) before accessing data.
+Avraham Stern (4):
+  wifi: iwlwifi: mld: support aborting an ongoing ftm request
+  wifi: iwlwifi: mei: check SAP message length before reading it
+  wifi: iwlwifi: mei: skip data read if length is too short
+  wifi: iwlwifi: mei: pass correct argument to function
 
-This keeps scan offload / netdetect functionality unchanged while
-making length checks consistent with the new struct definition.
+Emmanuel Grumbach (5):
+  wifi: iwlwifi: mld: validate WoWLAN notif header
+  wifi: iwlwifi: fix counter type in iwl_fwrt_dump_error_logs
+  wifi: iwlwifi: mld: fix validation fallback in iwl_mld_notif_is_valid
+  wifi: iwlwifi: mvm: fix off-by-one in TXF key sanitiser
+  wifi: iwlwifi: guard against division by zero in
+    iwl_dbg_tlv_alloc_fragments
 
-Assisted-by: GitHubCopilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c      | 9 ++++++---
- 2 files changed, 8 insertions(+), 5 deletions(-)
+Ilan Peer (1):
+  wifi: iwlwifi: mld: Do not cleanup FW state when the device is dead
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 08f4cc3ea1c3..ee78371082b0 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
-+ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -1319,7 +1319,7 @@ struct iwl_scan_offload_match_info {
- 	u8 resume_while_scanning;
- 	u8 self_recovery;
- 	__le16 reserved;
--	struct iwl_scan_offload_profile_match matches[];
-+	struct iwl_scan_offload_profile_match matches[IWL_SCAN_MAX_PROFILES_V2];
- } __packed; /* SCAN_OFFLOAD_PROFILES_QUERY_RSP_S_VER_3 and
- 	     * SCAN_OFFLOAD_MATCH_INFO_NOTIFICATION_S_VER_1
- 	     */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 109265149963..6b11fa32ea5c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -2459,13 +2459,15 @@ iwl_mvm_netdetect_query_results(struct iwl_mvm *mvm,
- 
- 	if (fw_has_api(&mvm->fw->ucode_capa,
- 		       IWL_UCODE_TLV_API_SCAN_OFFLOAD_CHANS)) {
--		query_len = sizeof(struct iwl_scan_offload_match_info);
- 		matches_len = sizeof(struct iwl_scan_offload_profile_match) *
- 			max_profiles;
-+		query_len = offsetof(struct iwl_scan_offload_match_info,
-+				     matches) + matches_len;
- 	} else {
--		query_len = sizeof(struct iwl_scan_offload_profiles_query_v1);
- 		matches_len = sizeof(struct iwl_scan_offload_profile_match_v1) *
- 			max_profiles;
-+		query_len = sizeof(struct iwl_scan_offload_profiles_query_v1) +
-+			matches_len;
- 	}
- 
- 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
-@@ -2819,7 +2821,8 @@ static void iwl_mvm_nd_match_info_handler(struct iwl_mvm *mvm,
- 	if (IS_ERR_OR_NULL(vif))
- 		return;
- 
--	if (len < sizeof(struct iwl_scan_offload_match_info) + matches_len) {
-+	if (len < offsetof(struct iwl_scan_offload_match_info, matches) +
-+		    matches_len) {
- 		IWL_ERR(mvm, "Invalid scan match info notification\n");
- 		return;
- 	}
+Johannes Berg (1):
+  wifi: iwlwifi: mvm/mld: fix PPE threshold debug print loop
+
+Miri Korenblit (1):
+  wifi: iwlwifi: mld: add PNVM_INIT_COMPLETE_NTFY to the hcmd names
+
+Pagadala Yesu Anjaneyulu (2):
+  wifi: iwlwifi: mld: honor FW puncturing capability in MCC response
+  wifi: iwlwifi: mvm: add LARI_CONFIG_EXTENSION command
+
+Shahar Tzarfati (1):
+  wifi: iwlwifi: mld: fix read in wake packet notification handler
+
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 26 ++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/dump.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  8 ++-
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 30 +++++++++-
+ .../wireless/intel/iwlwifi/iwl-nvm-parse.h    | 22 ++++++-
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 28 ++++++---
+ drivers/net/wireless/intel/iwlwifi/mld/d3.c   | 60 ++++++++++++-------
+ .../intel/iwlwifi/mld/ftm-initiator.c         | 21 +++++++
+ .../intel/iwlwifi/mld/ftm-initiator.h         |  1 +
+ .../net/wireless/intel/iwlwifi/mld/mac80211.c | 16 ++++-
+ drivers/net/wireless/intel/iwlwifi/mld/mcc.c  | 24 +++++---
+ drivers/net/wireless/intel/iwlwifi/mld/mld.c  |  1 +
+ .../net/wireless/intel/iwlwifi/mld/notif.c    |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mld/sta.c  |  5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 36 +++++++++++
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  7 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  3 +-
+ 17 files changed, 242 insertions(+), 50 deletions(-)
+
 -- 
 2.34.1
 
