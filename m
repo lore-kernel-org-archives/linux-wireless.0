@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 703A7439918
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2B241F5FD
 	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:05:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784142333; cv=none; b=LgGOi4NTtLE93sC0okPnsJCwYklv0E0yTL/2l3aHtGoCbQREeUcJ9M57gYFjTBMPurZB5Lsc0z8L21A856I9WDI4hj0r5GHZtFR8AcJ9eslbBb8YOhYh0ZWn53H01CtCrQJpTOR8JQv0dfO/ty0ZZ0g93h6CQ75vbgJCWO0Zpz8=
+	t=1784142336; cv=none; b=TfV0aBNQeWLYm9Od6vGpQN/Cigo5G/t6HdVAjGcx8jsu5EVpmg3V4Q4+zlpk/mFq8brEnBk1crUGHXH2SBUu8XQeOleTYFs1t2u8mb5duhiO4ul09rzZU/xXrHqunP+01GXP2eeWWlmaPYOBUCOgiJpRvkT9yXptmrtUH1FWGag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784142333; c=relaxed/simple;
-	bh=pH1lFCRIGKHV2in1v5ZyU1HFY1QfiDCELSusSokwAQQ=;
+	s=arc-20240116; t=1784142336; c=relaxed/simple;
+	bh=Uk53ZR4IkZdt2ymn1uUcqo4XaAUXY6wx/ZbD03q8IVw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rqi3/YrhYUE2teBS2bSrIiyvHMKIbcDpY25s+nk0HtFY6iT/txwCWgS7NeUpOewoLc/0l2zXPOwCKnleZ+HYf1BTm2E/nYiuCIUDq+Rfx56/zeFEl0rsTbjUgefTaFPqcoyp0D2/+T3UmJ7145D9tDUqmMkTnFFswGi3JZVbovY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bvagC4EK; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=RKTA6h6lZdyssxa8Cc6++s8wbH5wsQXYW2R4UHt/myVHzGS+L2vl/RrPHhuOBTdAlR1f8Bd96KOuQV2iHt2UWPZj2m9/YBHLUqKtjFkJJRWHI5o+MA4DgRonBpM6uzi24q8HTRBz38duY+r57DpqngOuSYsQC+pCjwOa6Tdr9Po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KPhAcvOr; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bvagC4EK"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KPhAcvOr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784142322; x=1815678322;
+  t=1784142324; x=1815678324;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=pH1lFCRIGKHV2in1v5ZyU1HFY1QfiDCELSusSokwAQQ=;
-  b=bvagC4EKeeskjNxdk2kfQsz/XJFuYC5nGBvCAy0NtnacqB1XfZ6YBaxM
-   zxuvvXHRCA43yMwCdhyrCfXygxldDfkMG0C/xVLyH8inkw9VYxaWIxA1N
-   urNUwOvcJ45/9j3DEXbTM7NJD115tVm1HqRwhzcHNxasvfKKr1eyL8jJz
-   3c/mMIC3wvmA1KU20hiy/emFzZoTdHfedHBl67T3VPQRdYbfchx0vfequ
-   vOVkbaGiY0LcF40lDKnPRu3BW34KVvaOblrmp4/9NDV1olNypASpqQL53
-   KQUphV6RvQ+DvLappA5OxBOtgmS1569xEh05wSNbxdnhG5H1nzEVDgdJS
+  bh=Uk53ZR4IkZdt2ymn1uUcqo4XaAUXY6wx/ZbD03q8IVw=;
+  b=KPhAcvOrZe/s0kt0Dj5YJnI2HBbBXXgZnm1X3CJq2QvBnZTvhXWz3Ekk
+   B/+UW4aOBs7vn7nR82gBJWoNXRJDwy7EsjeB057QZGDHTt5RdRXGFFNtB
+   Ch3KOeyLpKzaWR4bbJRBVbqJsQKWDAeIVK9aFSJ448i0iebGTRumlhCDp
+   5n5FZvmyF8NHNraE/iwm7hXv4K74aGkmelMbQ/2lCREfCy2YeUkibDE7j
+   Jtk9rc2dtnGBqgybzstv+SrCgykarsq+sbPfIakiPIqB7HI3aTbqrNwn+
+   Pt32UvMA+l6jcp/KnCLYdV7tShnbUAWzEqJyBUaRMuOYw0+QryZbcg1Cu
    w==;
-X-CSE-ConnectionGUID: 2yz+etgBSDyq3t3c1COWig==
-X-CSE-MsgGUID: FV/ZLYgmQWaVpho1taqi9A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340721"
+X-CSE-ConnectionGUID: B8G/svSfQCGanZfT7u5BJg==
+X-CSE-MsgGUID: YYtzp6lCS3e0w4sBona7zw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340726"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="87340721"
+   d="scan'208";a="87340726"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:03 -0700
-X-CSE-ConnectionGUID: a6Ai1JaPTw2jLLQxnIRPJg==
-X-CSE-MsgGUID: NnsI5CCqQdK9nJ3X95EXBQ==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:04 -0700
+X-CSE-ConnectionGUID: 05NBcVjHSCCzF0p2fIHj3A==
+X-CSE-MsgGUID: cdr4wFOlToihgaBeVGse/w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="251851978"
+   d="scan'208";a="251851988"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:02 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:03 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH iwlwifi-next 07/15] wifi: iwlwifi: mld: honor FW puncturing capability in MCC response
-Date: Wed, 15 Jul 2026 22:04:23 +0300
-Message-Id: <20260715220243.47d1389fa134.I5c7921d6e3c065e3962c5927991498c2d277fd8f@changeid>
+Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: mvm: add LARI_CONFIG_EXTENSION command
+Date: Wed, 15 Jul 2026 22:04:24 +0300
+Message-Id: <20260715220243.551f40ee2de3.I3e32a5d5c9aa13cbb0e599bef630cdb8e3b031c4@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
 References: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
@@ -64,226 +64,135 @@ Content-Transfer-Encoding: 8bit
 
 From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-New MCC response versions expose puncturing support directly in the
-regulatory capability flags. Propagate that information from NVM MCC
-parsing to MLD MCC handling and fall back to legacy FM/WH MCC-specific
-policy when puncturing status is unknown.
+There is a new UHB extension bitmap that is part of the LARI
+configuration, which needs to be sent to the FW - also frozen ones.
+But in frozen FWs we cannot increase the version of an API, since the
+driver assumes a specific version, depending on the core number.
+In case of a (new) FW that expects the new version and a (old) driver
+that doesn't support that new version, the driver will send a default
+old version, causing a fw assert about its bad size.
+
+To mitigate this, there is a special command which will be supported
+only on those frozen FWs. Old drivers will simply not support/send it,
+and new driver will send it if supported by fw.
 
 Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    | 30 ++++++++++++++++++-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.h    | 22 ++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mld/mcc.c  | 24 ++++++++++-----
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  2 +-
- 4 files changed, 67 insertions(+), 11 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 26 ++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 36 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  1 +
+ 3 files changed, 63 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 761424812609..2f38eea42963 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -230,6 +230,18 @@ enum iwl_reg_capa_flags_v5 {
- 	REG_CAPA_V5_11BN_DISABLED		= BIT(17),
- }; /* GEO_CHANNEL_CAPABILITIES_API_S_VER_4, 5 */
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index d8ec9934a9b6..360b626a9572 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -46,6 +46,11 @@ enum iwl_regulatory_and_nvm_subcmd_ids {
+ 	 */
+ 	MCC_ALLOWED_AP_TYPE_CMD = 0x5,
+ 
++	/**
++	 * @LARI_CONFIG_EXTENSION: &struct iwl_lari_config_extension_cmd
++	 */
++	LARI_CONFIG_EXTENSION = 0x8,
++
+ 	/**
+ 	 * @PNVM_INIT_COMPLETE_NTFY: &struct iwl_pnvm_init_complete_ntfy
+ 	 */
+@@ -514,6 +519,27 @@ struct iwl_bios_config_hdr {
+ 	u8 reserved[2];
+ } __packed; /* BIOS_CONFIG_HDR_API_S_VER_1 */
  
 +/**
-+ * enum iwl_reg_capa_flags_v6 - global capability flags,
-+ *	applicable from MCC response version 10 onwards.
-+ * Response v6 includes all members of iwl_reg_capa_flags_v5; only v6-specific
-+ * additions are listed here.
-+ * @REG_CAPA_V6_EHT_PUNCTURING_ENABLED: EHT puncturing is enabled for this
-+ *	regulatory domain.
++ * struct iwl_lari_config_extension_cmd - extend LARI configuration
++ *
++ * LARI_CONFIG_CHANGE's version must remain stable for frozen firmware.
++ * Because the driver might not know this version but still load that
++ * frozen FW and then send some default old version of LARI, causing the FW to
++ * assert about the bad size of it. To handle this, we do the following:
++ * 1. For newer firmware: increase the LARI_CONFIG_CHANGE version to support the
++ *	new firmware API with extra UHB bits.
++ * 2. For frozen firmware: add a special alternative API that doesn't require
++ *	modifying the frozen LARI_CONFIG_CHANGE's version.
++ * @dsm_table_hdr: BIOS DSM table source and revision
++ * @oem_uhb_allow_extension_bitmap: extension bitmap for OEM UHB config
++ * @reserved: reserved
 + */
-+enum iwl_reg_capa_flags_v6 {
-+	REG_CAPA_V6_EHT_PUNCTURING_ENABLED	= BIT(18),
-+}; /* GEO_CHANNEL_CAPABILITIES_API_S_VER_6 */
++struct iwl_lari_config_extension_cmd {
++	struct iwl_bios_config_hdr dsm_table_hdr;
++	__le32 oem_uhb_allow_extension_bitmap;
++	__le32 reserved[10];
++} __packed; /* LARI_CONFIG_EXTENSION_CMD_API_S_VER_1 */
 +
- /*
- * API v2 for reg_capa_flags is relevant from version 6 and onwards of the
- * MCC update command response.
-@@ -241,6 +253,11 @@ enum iwl_reg_capa_flags_v5 {
-  */
- #define REG_CAPA_V4_RESP_VER	8
+ /**
+  * struct bios_value_u32 - BIOS configuration.
+  * @hdr: bios config header
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 6e507d6dcdd2..187f39aa6249 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1507,12 +1507,48 @@ static int iwl_mvm_fill_lari_config(struct iwl_fw_runtime *fwrt,
+ 	return 0;
+ }
  
-+/* API v6 for reg_capa_flags is relevant from version 10 and onwards of the
-+ * MCC update command response.
-+ */
-+#define REG_CAPA_V6_RESP_VER	10
++static void iwl_mvm_send_lari_cfg_extension(struct iwl_mvm *mvm)
++{
++	struct iwl_fw_runtime *fwrt = &mvm->fwrt;
++	struct iwl_lari_config_extension_cmd cmd = {};
++	u32 cmd_id = WIDE_ID(REGULATORY_AND_NVM_GROUP,
++			     LARI_CONFIG_EXTENSION);
++	u32 value;
++	int ret;
 +
- static inline void iwl_nvm_print_channel_flags(struct device *dev, u32 level,
- 					       int chan, u32 flags)
++	if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 0) < 1)
++		return;
++
++	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG, &value);
++	if (ret)
++		return;
++
++	cmd.dsm_table_hdr.table_source = fwrt->dsm_source;
++	cmd.dsm_table_hdr.table_revision = fwrt->dsm_revision;
++	cmd.oem_uhb_allow_extension_bitmap = cpu_to_le32(value);
++
++	IWL_DEBUG_RADIO(mvm,
++			"sending LARI_CONFIG_EXTENSION, oem_uhb_allow_extension_bitmap=0x%x\n",
++			le32_to_cpu(cmd.oem_uhb_allow_extension_bitmap));
++	ret = iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0, sizeof(cmd), &cmd);
++	if (ret < 0)
++		IWL_DEBUG_RADIO(mvm,
++				"Failed to send LARI_CONFIG_EXTENSION (%d)\n",
++				ret);
++}
++
+ static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
  {
-@@ -1686,6 +1703,13 @@ static struct iwl_reg_capa iwl_get_reg_capa(u32 flags, u8 resp_ver)
- {
- 	struct iwl_reg_capa reg_capa = {};
+ 	struct iwl_lari_config_change_cmd cmd;
+ 	size_t cmd_size;
+ 	int ret;
  
-+	if (resp_ver >= REG_CAPA_V6_RESP_VER) {
-+		if (flags & REG_CAPA_V6_EHT_PUNCTURING_ENABLED)
-+			reg_capa.puncturing_status = IWL_PUNCTURING_STATUS_ENABLED;
-+		else
-+			reg_capa.puncturing_status = IWL_PUNCTURING_STATUS_DISABLED;
-+	}
-+
- 	if (resp_ver >= REG_CAPA_V4_RESP_VER) {
- 		reg_capa.allow_40mhz = true;
- 		reg_capa.allow_80mhz = flags & REG_CAPA_V5_80MHZ_ALLOWED;
-@@ -1712,7 +1736,8 @@ static struct iwl_reg_capa iwl_get_reg_capa(u32 flags, u8 resp_ver)
- struct ieee80211_regdomain *
- iwl_parse_nvm_mcc_info(struct iwl_trans *trans,
- 		       int num_of_ch, __le32 *channels, u16 fw_mcc,
--		       u16 geo_info, u32 cap, u8 resp_ver)
-+		       u16 geo_info, u32 cap, u8 resp_ver,
-+		       enum iwl_puncturing_status *puncturing_status)
- {
- 	const struct iwl_rf_cfg *cfg = trans->cfg;
- 	struct device *dev = trans->dev;
-@@ -1772,6 +1797,9 @@ iwl_parse_nvm_mcc_info(struct iwl_trans *trans,
- 	/* parse regulatory capability flags */
- 	reg_capa = iwl_get_reg_capa(cap, resp_ver);
- 
-+	if (puncturing_status)
-+		*puncturing_status = reg_capa.puncturing_status;
-+
- 	for (ch_idx = 0; ch_idx < num_of_ch; ch_idx++) {
- 		enum nl80211_band band =
- 			iwl_nl80211_band_from_channel_idx(ch_idx);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index e676d7c2d6cc..9ebb72d3726a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2015, 2018-2025 Intel Corporation
-+ * Copyright (C) 2005-2015, 2018-2026 Intel Corporation
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
- #ifndef __iwl_nvm_parse_h__
-@@ -21,6 +21,19 @@ enum iwl_nvm_sbands_flags {
- 	IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ	= BIT(1),
++	/*
++	 * LARI_CONFIG_CHANGE triggers a profile update, so send
++	 * LARI_CONFIG_EXTENSION first to make sure its data is applied
++	 * in the same update.
++	 */
++	iwl_mvm_send_lari_cfg_extension(mvm);
+ 	ret = iwl_mvm_fill_lari_config(&mvm->fwrt, &cmd, &cmd_size);
+ 	if (!ret) {
+ 		ret = iwl_mvm_send_cmd_pdu(mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index da4c67a91113..1dd27292af9b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -707,6 +707,7 @@ static const struct iwl_hcmd_names iwl_mvm_regulatory_and_nvm_names[] = {
+ 	HCMD_NAME(NVM_ACCESS_COMPLETE),
+ 	HCMD_NAME(NVM_GET_INFO),
+ 	HCMD_NAME(TAS_CONFIG),
++	HCMD_NAME(LARI_CONFIG_EXTENSION),
  };
  
-+/**
-+ * enum iwl_puncturing_status - EHT puncturing status from MCC capabilities
-+ * @IWL_PUNCTURING_STATUS_UNKNOWN: puncturing status is not provided by FW
-+ *	or is not initialized yet
-+ * @IWL_PUNCTURING_STATUS_ENABLED: puncturing is enabled for the current MCC
-+ * @IWL_PUNCTURING_STATUS_DISABLED: puncturing is disabled for the current MCC
-+ */
-+enum iwl_puncturing_status {
-+	IWL_PUNCTURING_STATUS_UNKNOWN,
-+	IWL_PUNCTURING_STATUS_ENABLED,
-+	IWL_PUNCTURING_STATUS_DISABLED,
-+};
-+
- /**
-  * struct iwl_reg_capa - struct for global regulatory capabilities, Used for
-  * handling the different APIs of reg_capa_flags.
-@@ -36,6 +49,8 @@ enum iwl_nvm_sbands_flags {
-  * @disable_11ax: 11ax is forbidden for this regulatory domain.
-  * @disable_11be: 11be is forbidden for this regulatory domain.
-  * @disable_11bn: UHR/11bn is not allowed for this regulatory domain
-+ * @puncturing_status: EHT puncturing status for the current MCC.
-+ *	See &enum iwl_puncturing_status.
-  */
- struct iwl_reg_capa {
- 	bool allow_40mhz;
-@@ -45,6 +60,7 @@ struct iwl_reg_capa {
- 	bool disable_11ax;
- 	bool disable_11be;
- 	bool disable_11bn;
-+	enum iwl_puncturing_status puncturing_status;
- };
- 
- /**
-@@ -131,11 +147,13 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_rf_cfg *cfg,
-  * @geo_info: geo info value
-  * @cap: capability
-  * @resp_ver: FW response version
-+ * @puncturing_status: FW puncturing status for current MCC, when available
-  */
- struct ieee80211_regdomain *
- iwl_parse_nvm_mcc_info(struct iwl_trans *trans,
- 		       int num_of_ch, __le32 *channels, u16 fw_mcc,
--		       u16 geo_info, u32 cap, u8 resp_ver);
-+		       u16 geo_info, u32 cap, u8 resp_ver,
-+		       enum iwl_puncturing_status *puncturing_status);
- 
- /**
-  * struct iwl_nvm_section - describes an NVM section in memory.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mcc.c b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
-index 7649ae794dfd..e3d1fa370616 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mcc.c
-@@ -89,6 +89,8 @@ iwl_mld_get_regdomain(struct iwl_mld *mld,
- 	struct iwl_mcc_update_resp_v8 *resp;
- 	u8 resp_ver = iwl_fw_lookup_notif_ver(mld->fw, IWL_ALWAYS_LONG_GROUP,
- 					      MCC_UPDATE_CMD, 0);
-+	enum iwl_puncturing_status puncturing_status;
-+	u16 mcc;
- 
- 	IWL_DEBUG_LAR(mld, "Getting regdomain data for %s from FW\n", alpha2);
- 
-@@ -110,12 +112,13 @@ iwl_mld_get_regdomain(struct iwl_mld *mld,
- 	}
- 	IWL_DEBUG_LAR(mld, "MCC update response version: %d\n", resp_ver);
- 
-+	mcc = le16_to_cpu(resp->mcc);
- 	regd = iwl_parse_nvm_mcc_info(mld->trans,
- 				      __le32_to_cpu(resp->n_channels),
--				      resp->channels,
--				      __le16_to_cpu(resp->mcc),
-+				      resp->channels, mcc,
- 				      __le16_to_cpu(resp->geo_info),
--				      le32_to_cpu(resp->cap), resp_ver);
-+				      le32_to_cpu(resp->cap), resp_ver,
-+				      &puncturing_status);
- 
- 	if (IS_ERR(regd)) {
- 		IWL_DEBUG_LAR(mld, "Could not get parse update from FW %ld\n",
-@@ -129,18 +132,25 @@ iwl_mld_get_regdomain(struct iwl_mld *mld,
- 
- 	mld->mcc_src = resp->source_id;
- 
-+	if (puncturing_status == IWL_PUNCTURING_STATUS_ENABLED)
-+		__clear_bit(IEEE80211_HW_DISALLOW_PUNCTURING,
-+			    mld->hw->flags);
-+	else if (puncturing_status == IWL_PUNCTURING_STATUS_DISABLED)
-+		ieee80211_hw_set(mld->hw, DISALLOW_PUNCTURING);
-+
-+	if (resp_ver >= 10)
-+		goto out;
-+
- 	/* FM follows BIOS/MCC policy, WH disallows puncturing only in US/CA. */
- 	if (CSR_HW_RFID_TYPE(mld->trans->info.hw_rf_id) == IWL_CFG_RF_TYPE_FM) {
- 		if (!iwl_puncturing_is_allowed_in_bios(mld->fwrt.bios_puncturing,
--						       le16_to_cpu(resp->mcc)))
-+						       mcc))
- 			ieee80211_hw_set(mld->hw, DISALLOW_PUNCTURING);
- 		else
- 			__clear_bit(IEEE80211_HW_DISALLOW_PUNCTURING,
- 				    mld->hw->flags);
- 	} else if (CSR_HW_RFID_TYPE(mld->trans->info.hw_rf_id) ==
--			IWL_CFG_RF_TYPE_WH) {
--		u16 mcc = le16_to_cpu(resp->mcc);
--
-+		   IWL_CFG_RF_TYPE_WH) {
- 		if (mcc == IWL_MCC_US || mcc == IWL_MCC_CANADA)
- 			ieee80211_hw_set(mld->hw, DISALLOW_PUNCTURING);
- 		else
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 14aec0bfd173..37e2e2c6b716 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -152,7 +152,7 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
- 				      resp->channels,
- 				      __le16_to_cpu(resp->mcc),
- 				      __le16_to_cpu(resp->geo_info),
--				      le32_to_cpu(resp->cap), resp_ver);
-+				      le32_to_cpu(resp->cap), resp_ver, NULL);
- 	/* Store the return source id */
- 	src_id = resp->source_id;
- 	if (IS_ERR_OR_NULL(regd)) {
+ /* Please keep this array *SORTED* by hex value.
 -- 
 2.34.1
 
