@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2B241F5FD
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:05:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4310A41BA62
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 19:05:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784142336; cv=none; b=TfV0aBNQeWLYm9Od6vGpQN/Cigo5G/t6HdVAjGcx8jsu5EVpmg3V4Q4+zlpk/mFq8brEnBk1crUGHXH2SBUu8XQeOleTYFs1t2u8mb5duhiO4ul09rzZU/xXrHqunP+01GXP2eeWWlmaPYOBUCOgiJpRvkT9yXptmrtUH1FWGag=
+	t=1784142339; cv=none; b=rs8uAmui2cxEci/hdKcui9eQLXhg7jWwcdF55Pea54OuJ6t0TqNIE9l7Q5s3Dae1V3UBtK8J/dxKSCX+ggChQyCzlAU3ZrJTUJPETVqWrR5FAQSci+f1FsHaIWUQcNfh+1FXGICNVIFAaCTxIOfolRBTIzP85ENGVeOxASTXrkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784142336; c=relaxed/simple;
-	bh=Uk53ZR4IkZdt2ymn1uUcqo4XaAUXY6wx/ZbD03q8IVw=;
+	s=arc-20240116; t=1784142339; c=relaxed/simple;
+	bh=SnSXQrwlULFm5a8+r62EvUlWQG0tQroNXztCQP+QTYI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RKTA6h6lZdyssxa8Cc6++s8wbH5wsQXYW2R4UHt/myVHzGS+L2vl/RrPHhuOBTdAlR1f8Bd96KOuQV2iHt2UWPZj2m9/YBHLUqKtjFkJJRWHI5o+MA4DgRonBpM6uzi24q8HTRBz38duY+r57DpqngOuSYsQC+pCjwOa6Tdr9Po=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KPhAcvOr; arc=none smtp.client-ip=192.198.163.13
+	 MIME-Version; b=j1ME+ih81DSmD74bNKkfUhVuLnntr4BX3cqSTP0Csc1Tk4kcLjyDahFELBI7Y9qU35wWxUa5yaSV30ZzUbizdyofbnZgiECkX9yaEtT7yJ5Xx1lp+eFkLBjy3O13dKQ6blXy1FcQzxHznyeERAHbsCkNjtqQkaJgd6svW/i2FgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iNRLDeQ4; arc=none smtp.client-ip=192.198.163.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KPhAcvOr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iNRLDeQ4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784142324; x=1815678324;
+  t=1784142335; x=1815678335;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Uk53ZR4IkZdt2ymn1uUcqo4XaAUXY6wx/ZbD03q8IVw=;
-  b=KPhAcvOrZe/s0kt0Dj5YJnI2HBbBXXgZnm1X3CJq2QvBnZTvhXWz3Ekk
-   B/+UW4aOBs7vn7nR82gBJWoNXRJDwy7EsjeB057QZGDHTt5RdRXGFFNtB
-   Ch3KOeyLpKzaWR4bbJRBVbqJsQKWDAeIVK9aFSJ448i0iebGTRumlhCDp
-   5n5FZvmyF8NHNraE/iwm7hXv4K74aGkmelMbQ/2lCREfCy2YeUkibDE7j
-   Jtk9rc2dtnGBqgybzstv+SrCgykarsq+sbPfIakiPIqB7HI3aTbqrNwn+
-   Pt32UvMA+l6jcp/KnCLYdV7tShnbUAWzEqJyBUaRMuOYw0+QryZbcg1Cu
-   w==;
-X-CSE-ConnectionGUID: B8G/svSfQCGanZfT7u5BJg==
-X-CSE-MsgGUID: YYtzp6lCS3e0w4sBona7zw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340726"
+  bh=SnSXQrwlULFm5a8+r62EvUlWQG0tQroNXztCQP+QTYI=;
+  b=iNRLDeQ4zipl13DQQ2xxrWf5RIO/Y1brXhMZpxZ18wBVHnzLP1UTvNdp
+   /qkmLMKzmWjjLUfAZfiRErm0CPh0mNk31kcoB3JpNA2gP0N2NFqxc4OCl
+   y4BWkslqY0+tNTTZz2UGtt+Oojyu3ldeHyUanx71+XcFpUbsK2GjIHNeK
+   0ZBbfVEgpK+EO+QB0R+UHVvmIGgP5WyzYB2z/+SmEzIuEy5t0CSskkgVp
+   1MhAjAuN030Q49jFWlktvRokO0/iY/jWIwDjyE+zE4XZWg1c4UM43xkPA
+   0o6e7gC/63IfpObIicOOApR076Xim4VjXznTJwx90p3gHHjUwDUlxx9rx
+   g==;
+X-CSE-ConnectionGUID: y6jRtdIeSS2z4M1K4rntWg==
+X-CSE-MsgGUID: c8+2AaEJTsS23O1LPybm7Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="87340738"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="87340726"
+   d="scan'208";a="87340738"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:04 -0700
-X-CSE-ConnectionGUID: 05NBcVjHSCCzF0p2fIHj3A==
-X-CSE-MsgGUID: cdr4wFOlToihgaBeVGse/w==
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:08 -0700
+X-CSE-ConnectionGUID: R26VQLyDQzeOiPdsqQOwvw==
+X-CSE-MsgGUID: S0a2m+mNRqKkfg6Ft4bOUQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="251851988"
+   d="scan'208";a="251852034"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:03 -0700
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 12:05:08 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: [PATCH iwlwifi-next 08/15] wifi: iwlwifi: mvm: add LARI_CONFIG_EXTENSION command
-Date: Wed, 15 Jul 2026 22:04:24 +0300
-Message-Id: <20260715220243.551f40ee2de3.I3e32a5d5c9aa13cbb0e599bef630cdb8e3b031c4@changeid>
+	Avraham Stern <avraham.stern@intel.com>
+Subject: [PATCH iwlwifi-next 11/15] wifi: iwlwifi: mei: check SAP message length before reading it
+Date: Wed, 15 Jul 2026 22:04:27 +0300
+Message-Id: <20260715220243.f0026ce26218.I00a856d3aacae1caac605c708f7362689b734234@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
 References: <20260715190431.327910-1-miriam.rachel.korenblit@intel.com>
@@ -62,137 +62,42 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-There is a new UHB extension bitmap that is part of the LARI
-configuration, which needs to be sent to the FW - also frozen ones.
-But in frozen FWs we cannot increase the version of an API, since the
-driver assumes a specific version, depending on the core number.
-In case of a (new) FW that expects the new version and a (old) driver
-that doesn't support that new version, the driver will send a default
-old version, causing a fw assert about its bad size.
+Verify the SAP message size is not larger than the local buffer before
+reading the message to avoid buffer overflow.
 
-To mitigate this, there is a special command which will be supported
-only on those frozen FWs. Old drivers will simply not support/send it,
-and new driver will send it if supported by fw.
-
-Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Fixes: bcd68b3dbe78 ("wifi: iwlwifi: mei: fix tx DHCP packet for devices with new Tx API")
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/nvm-reg.h   | 26 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 36 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  1 +
- 3 files changed, 63 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mei/main.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-index d8ec9934a9b6..360b626a9572 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
-@@ -46,6 +46,11 @@ enum iwl_regulatory_and_nvm_subcmd_ids {
- 	 */
- 	MCC_ALLOWED_AP_TYPE_CMD = 0x5,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mei/main.c b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+index c5ff1b1b720f..c01435859349 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mei/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/mei/main.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+  * Copyright (C) 2021-2024 Intel Corporation
++ * Copyright (C) 2026 Intel Corporation
+  */
  
-+	/**
-+	 * @LARI_CONFIG_EXTENSION: &struct iwl_lari_config_extension_cmd
-+	 */
-+	LARI_CONFIG_EXTENSION = 0x8,
-+
- 	/**
- 	 * @PNVM_INIT_COMPLETE_NTFY: &struct iwl_pnvm_init_complete_ntfy
- 	 */
-@@ -514,6 +519,27 @@ struct iwl_bios_config_hdr {
- 	u8 reserved[2];
- } __packed; /* BIOS_CONFIG_HDR_API_S_VER_1 */
+ #include <linux/etherdevice.h>
+@@ -1147,6 +1148,11 @@ static void iwl_mei_handle_sap_rx_cmd(struct mei_cl_device *cldev,
+ 		iwl_mei_read_from_q(q_head, q_sz, &rd, wr, hdr, sizeof(*hdr));
+ 		valid_rx_sz -= sizeof(*hdr);
+ 		len = le16_to_cpu(hdr->len);
++		if (len + sizeof(*hdr) > PAGE_SIZE) {
++			dev_err(&cldev->dev,
++				"SAP message is too big: %u\n", len);
++			break;
++		}
  
-+/**
-+ * struct iwl_lari_config_extension_cmd - extend LARI configuration
-+ *
-+ * LARI_CONFIG_CHANGE's version must remain stable for frozen firmware.
-+ * Because the driver might not know this version but still load that
-+ * frozen FW and then send some default old version of LARI, causing the FW to
-+ * assert about the bad size of it. To handle this, we do the following:
-+ * 1. For newer firmware: increase the LARI_CONFIG_CHANGE version to support the
-+ *	new firmware API with extra UHB bits.
-+ * 2. For frozen firmware: add a special alternative API that doesn't require
-+ *	modifying the frozen LARI_CONFIG_CHANGE's version.
-+ * @dsm_table_hdr: BIOS DSM table source and revision
-+ * @oem_uhb_allow_extension_bitmap: extension bitmap for OEM UHB config
-+ * @reserved: reserved
-+ */
-+struct iwl_lari_config_extension_cmd {
-+	struct iwl_bios_config_hdr dsm_table_hdr;
-+	__le32 oem_uhb_allow_extension_bitmap;
-+	__le32 reserved[10];
-+} __packed; /* LARI_CONFIG_EXTENSION_CMD_API_S_VER_1 */
-+
- /**
-  * struct bios_value_u32 - BIOS configuration.
-  * @hdr: bios config header
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 6e507d6dcdd2..187f39aa6249 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1507,12 +1507,48 @@ static int iwl_mvm_fill_lari_config(struct iwl_fw_runtime *fwrt,
- 	return 0;
- }
- 
-+static void iwl_mvm_send_lari_cfg_extension(struct iwl_mvm *mvm)
-+{
-+	struct iwl_fw_runtime *fwrt = &mvm->fwrt;
-+	struct iwl_lari_config_extension_cmd cmd = {};
-+	u32 cmd_id = WIDE_ID(REGULATORY_AND_NVM_GROUP,
-+			     LARI_CONFIG_EXTENSION);
-+	u32 value;
-+	int ret;
-+
-+	if (iwl_fw_lookup_cmd_ver(mvm->fw, cmd_id, 0) < 1)
-+		return;
-+
-+	ret = iwl_bios_get_dsm(fwrt, DSM_FUNC_REGULATORY_CONFIG, &value);
-+	if (ret)
-+		return;
-+
-+	cmd.dsm_table_hdr.table_source = fwrt->dsm_source;
-+	cmd.dsm_table_hdr.table_revision = fwrt->dsm_revision;
-+	cmd.oem_uhb_allow_extension_bitmap = cpu_to_le32(value);
-+
-+	IWL_DEBUG_RADIO(mvm,
-+			"sending LARI_CONFIG_EXTENSION, oem_uhb_allow_extension_bitmap=0x%x\n",
-+			le32_to_cpu(cmd.oem_uhb_allow_extension_bitmap));
-+	ret = iwl_mvm_send_cmd_pdu(mvm, cmd_id, 0, sizeof(cmd), &cmd);
-+	if (ret < 0)
-+		IWL_DEBUG_RADIO(mvm,
-+				"Failed to send LARI_CONFIG_EXTENSION (%d)\n",
-+				ret);
-+}
-+
- static void iwl_mvm_lari_cfg(struct iwl_mvm *mvm)
- {
- 	struct iwl_lari_config_change_cmd cmd;
- 	size_t cmd_size;
- 	int ret;
- 
-+	/*
-+	 * LARI_CONFIG_CHANGE triggers a profile update, so send
-+	 * LARI_CONFIG_EXTENSION first to make sure its data is applied
-+	 * in the same update.
-+	 */
-+	iwl_mvm_send_lari_cfg_extension(mvm);
- 	ret = iwl_mvm_fill_lari_config(&mvm->fwrt, &cmd, &cmd_size);
- 	if (!ret) {
- 		ret = iwl_mvm_send_cmd_pdu(mvm,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index da4c67a91113..1dd27292af9b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -707,6 +707,7 @@ static const struct iwl_hcmd_names iwl_mvm_regulatory_and_nvm_names[] = {
- 	HCMD_NAME(NVM_ACCESS_COMPLETE),
- 	HCMD_NAME(NVM_GET_INFO),
- 	HCMD_NAME(TAS_CONFIG),
-+	HCMD_NAME(LARI_CONFIG_EXTENSION),
- };
- 
- /* Please keep this array *SORTED* by hex value.
+ 		if (valid_rx_sz < len)
+ 			break;
 -- 
 2.34.1
 
