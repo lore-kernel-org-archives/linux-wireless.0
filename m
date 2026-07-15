@@ -1,54 +1,54 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7CF443E36
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:11:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CD08314B76
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:25:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784139112; cv=none; b=nEk1PAn2bz3TCR+YvmojJVzOl4qvQPWdYv4FA3YXZcQuV0iOXErVZZh395//EyZ9hbk9K6d2pOlSQod/RBDrhf+5KNvYOeIf3Qp1UX6b+yVYnOm44Ie2thYxjIBpR6JFflGjQc4VyAhl+BxMOaVA/s9vHSkfGW4r7yHAI4Fupr0=
+	t=1784139950; cv=none; b=slY7CqcfYnmYPEWgHc0Y9dQtrfSYhQMuqHVOJC4c9ZYWuyNCujZg7IF2riunDlGkTQej8NEZYG4nW60b1Z+y8OxaN6MsNPNGqqdWaBkQx5ip2TLtUd74wVvPbOpTAsZaIgRKzeD/NTxU925vkiXF9Z+HCkk0cvDKHGbdFB8T9rU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784139112; c=relaxed/simple;
-	bh=QJ6x+PMvXamM8JOg9pmYAJEj1g1N2cgXZKQjiTgPwdQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=SywsjSGonfZ3U7bBLGs35wdjXub2VEQ7artEbaAO9xIrMEEz8q42yzNPDXFrcPc2k+uH8XWJHcC3inSBz6CPrPLcvLe54Kp+j9tIZRO4pknrccnmfts1T/Behicro7bNgNQHnZD/dG4ly8waIBU3MuozbQfdgCm2FZRLoxll1r4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JGfeMrJN; arc=none smtp.client-ip=192.198.163.14
+	s=arc-20240116; t=1784139950; c=relaxed/simple;
+	bh=VBjH+uPqik3APzkjgbfebj+9gpVSMy8ewjGki+ucESM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lCSp9fTUmVxkAZcMhpTlxM1YnGpJ8Vomzpae6dEvwOQt4YKcOdU/W5LOhpkmggxeN5WgWv4a1SCu5Wasnw5rbWcsopXW2rxbDh8OQm3iPcJv0nzIFC04hFDf55Ux5l4pDNXLDM9p4su2DkpMr2GJpYi4Ge0o6Fc1dwXboXGD2jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Y8MJelOo; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JGfeMrJN"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Y8MJelOo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784139112; x=1815675112;
+  t=1784139943; x=1815675943;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=QJ6x+PMvXamM8JOg9pmYAJEj1g1N2cgXZKQjiTgPwdQ=;
-  b=JGfeMrJNuB9zvxQgeL1UwYcX5yMXXlfzNx87AgAafyh0eD8y5jR7SS6c
-   CozynprtbSAizGNhJOuBU1IAi6VBgHapNWMgAXOyuKtcOO0vxOkPcpaxX
-   gv36ijQ+RdF8LpVg4YxQ9i0at36/TkC/2dCYCOZ2uYQrVCz9gjHfQdm8p
-   uj5MAhx7TCTdsLtXkuRuc9k6iKrtf/9TkN+mf2TbAlPO0XJgumS4DRpWE
-   7xLcV0agKDoaEuGY2FLkhcz124K1KUyYXMwSanGeSLW6i2o9slbSbVi0G
-   vK1eiPR11B+L6ThebM90Zazt3cz79E4RMirAg3TgI6YKFmKwR17xfJv1H
-   A==;
-X-CSE-ConnectionGUID: 1ULqzluzRY6yGxJpt8uwKg==
-X-CSE-MsgGUID: qJu20wWZQeq8azua9HOCXg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="84829497"
-X-IronPort-AV: E=Sophos;i="6.25,165,1779174000"; 
-   d="scan'208";a="84829497"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:11:51 -0700
-X-CSE-ConnectionGUID: 8syNYC+HRPW0Ix0TbafMSw==
-X-CSE-MsgGUID: 0YMoDxULRnWRnRMmKCWFGg==
+  bh=VBjH+uPqik3APzkjgbfebj+9gpVSMy8ewjGki+ucESM=;
+  b=Y8MJelOoX1eKUIQqg+YrgUh7Ef11ENaKQE7rN4TkEGmb6IFAcCW3NCaN
+   +ZwXdd+GeE+AXKpXxVwVU9SYZNG66H4woa61inmmdeaF1rdij8jiMLXSo
+   wzP3Oj+CPWGCgAjXTUxvEV0+94Hb3EePN2VAuA8l9Aac+HHfAlHPZz8BL
+   BUQun4JFerRw0CXIDWTkNg5dqaG1pQRGJS3rQveDUmYsRvuiffI7xaICe
+   0aZvg9L9H0IsEViITnaEAdMWSmgv3gEP9wvs/TBAd88WW4jL0tZbpJPwd
+   k0gYM4lfpoVw5AzKx/z4NBFmYUX2jBMrz0pGkSfxHzzdayqqRD7rJQtSG
+   g==;
+X-CSE-ConnectionGUID: 32bwpC51SiylQAvLDmc57w==
+X-CSE-MsgGUID: 81HYul+WQde5pwr1Cqhxbg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="107589729"
+X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
+   d="scan'208";a="107589729"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:25:37 -0700
+X-CSE-ConnectionGUID: f6xlPPzXSqaK09VcgO6oKQ==
+X-CSE-MsgGUID: K+vSudR9Ri+asCVW2z3jYw==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,165,1779174000"; 
-   d="scan'208";a="259835639"
+X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
+   d="scan'208";a="249902665"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:11:49 -0700
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:25:16 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: cfg80211: improve multi-BSSID profile continuation parser
-Date: Wed, 15 Jul 2026 21:11:25 +0300
-Message-Id: <20260715211048.04877081fd0a.I48f0135ba83dcc5f0b736b61f8f9e86ecc72583f@changeid>
+Subject: [PATCH wireless-next] wifi: cfg80211: clarify and tighten key checks
+Date: Wed, 15 Jul 2026 21:24:40 +0300
+Message-Id: <20260715212403.725e6b63e890.I24684374112bb94d0633d61ef76ecb8a1517f7f1@changeid>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -61,114 +61,244 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The previous change from John Walker fixed the loop iteration,
-but the code is written in a bad way. Pass the pointers needed
-for the iteration to the function instead.
+Currently, we accept per-STA GTK for any interface type
+if the IBSS_RSN flag is set, which doesn't make sense,
+and also accept various key indices that aren't really
+(meant to be) supported, such as IGTK/BIGTK on IBSS or
+AP_VLAN etc.
+
+For MESH and NAN_DATA interface types, per-STA GTKs are
+required, so their support shouldn't depend on IBSS_RSN.
+
+Conversely a driver setting IBSS_RSN doesn't really say
+it also accepts per-STA GTK for other interface types.
+
+Move more checks into cfg80211_valid_key_idx() and make
+them more precise:
+ - allow IGTK and, if supported, BIGTK for NAN
+ - allow per-STA (RX) GTK only for
+   - NAN_DATA
+   - IBSS if IBSS_RSN is supported
+   - MESH
+ - allow B/I/GTK for station/P2P-client without mac_addr
+   for RX with the current AP (historic API quirk),
+   subject to support
+ - allow TX GTK for AP/P2P-GO/AP_VLAN
+ - allow TX IGTK/BIGTK for AP/P2P-GO subject to support
+
+Other settings are rejected, clearing up corner cases
+and disallowing unexpected settings.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- net/wireless/scan.c | 49 +++++++++++++++++++++------------------------
- 1 file changed, 23 insertions(+), 26 deletions(-)
+ net/wireless/core.h        |   5 +-
+ net/wireless/nl80211.c     |  11 ++--
+ net/wireless/util.c        | 105 +++++++++++++++++++++++++++----------
+ net/wireless/wext-compat.c |   3 +-
+ 4 files changed, 86 insertions(+), 38 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 05b7dc6b766c..e62b7dd2b7c2 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -2403,12 +2403,11 @@ cfg80211_inform_single_bss_data(struct wiphy *wiphy,
- 	return NULL;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index df47ed6208a5..399037514943 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -443,8 +443,9 @@ void cfg80211_sme_abandon_assoc(struct wireless_dev *wdev);
+ 
+ /* internal helpers */
+ bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher);
+-bool cfg80211_valid_key_idx(struct cfg80211_registered_device *rdev,
+-			    int key_idx, bool pairwise);
++bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
++			    int key_idx, bool pairwise,
++			    const u8 *mac_addr);
+ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 				   struct wireless_dev *wdev,
+ 				   struct key_params *params, int key_idx,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 242071ad10d6..99a1c0174bdb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5409,7 +5409,7 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->get_key)
+ 		return -EOPNOTSUPP;
+ 
+-	if (!pairwise && mac_addr && !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
++	if (!cfg80211_valid_key_idx(wdev, key_idx, pairwise, mac_addr))
+ 		return -ENOENT;
+ 
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+@@ -5663,8 +5663,9 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
+ 	    key.type != NL80211_KEYTYPE_GROUP)
+ 		return -EINVAL;
+ 
+-	if (!cfg80211_valid_key_idx(rdev, key.idx,
+-				    key.type == NL80211_KEYTYPE_PAIRWISE))
++	if (!cfg80211_valid_key_idx(wdev, key.idx,
++				    key.type == NL80211_KEYTYPE_PAIRWISE,
++				    mac_addr))
+ 		return -EINVAL;
+ 
+ 	if (!rdev->ops->del_key)
+@@ -5672,10 +5673,6 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	err = nl80211_key_allowed(wdev);
+ 
+-	if (key.type == NL80211_KEYTYPE_GROUP && mac_addr &&
+-	    !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
+-		err = -ENOENT;
+-
+ 	if (!err)
+ 		err = nl80211_validate_key_link_id(info, wdev, link_id,
+ 				key.type == NL80211_KEYTYPE_PAIRWISE);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 24527bf321b2..3e584d0ca3e2 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -241,10 +241,8 @@ bool cfg80211_supported_cipher_suite(struct wiphy *wiphy, u32 cipher)
+ 	return false;
  }
  
--static const struct element
--*cfg80211_get_profile_continuation(const u8 *ie, size_t ielen,
--				   const struct element *mbssid_elem,
--				   const struct element *sub_elem)
-+static bool cfg80211_iter_profile_continuation(const u8 *ie, size_t ielen,
-+					       const struct element **mbssid,
-+					       const struct element **sub_elem)
+-static bool
+-cfg80211_igtk_cipher_supported(struct cfg80211_registered_device *rdev)
++static bool cfg80211_igtk_cipher_supported(struct wiphy *wiphy)
  {
--	const u8 *mbssid_end = mbssid_elem->data + mbssid_elem->datalen;
-+	const u8 *mbssid_end = (*mbssid)->data + (*mbssid)->datalen;
- 	const struct element *next_mbssid;
- 	const struct element *next_sub;
+-	struct wiphy *wiphy = &rdev->wiphy;
+ 	int i;
  
-@@ -2420,30 +2419,34 @@ static const struct element
- 	 * If it is not the last subelement in current MBSSID IE or there isn't
- 	 * a next MBSSID IE - profile is complete.
- 	*/
--	if ((sub_elem->data + sub_elem->datalen < mbssid_end - 1) ||
-+	if (((*sub_elem)->data + (*sub_elem)->datalen < mbssid_end - 1) ||
- 	    !next_mbssid)
--		return NULL;
+ 	for (i = 0; i < wiphy->n_cipher_suites; i++) {
+@@ -260,27 +258,86 @@ cfg80211_igtk_cipher_supported(struct cfg80211_registered_device *rdev)
+ 	return false;
+ }
+ 
+-bool cfg80211_valid_key_idx(struct cfg80211_registered_device *rdev,
+-			    int key_idx, bool pairwise)
++bool cfg80211_valid_key_idx(struct wireless_dev *wdev,
++			    int key_idx, bool pairwise,
++			    const u8 *mac_addr)
+ {
+-	int max_key_idx;
+-
+-	if (pairwise)
+-		max_key_idx = 3;
+-	else if (wiphy_ext_feature_isset(&rdev->wiphy,
+-					 NL80211_EXT_FEATURE_BEACON_PROTECTION) ||
+-		 wiphy_ext_feature_isset(&rdev->wiphy,
+-					 NL80211_EXT_FEATURE_BEACON_PROTECTION_CLIENT))
+-		max_key_idx = 7;
+-	else if (cfg80211_igtk_cipher_supported(rdev))
+-		max_key_idx = 5;
+-	else
+-		max_key_idx = 3;
++	if (WARN_ON(!wdev))
 +		return false;
  
--	/* For any length error, just return NULL */
-+	/* For any length error, just return false to stop iteration */
+-	if (key_idx < 0 || key_idx > max_key_idx)
++	if (key_idx < 0)
+ 		return false;
  
- 	if (next_mbssid->datalen < 4)
--		return NULL;
-+		return false;
- 
- 	next_sub = (void *)&next_mbssid->data[1];
- 
- 	if (next_mbssid->data + next_mbssid->datalen <
- 	    next_sub->data + next_sub->datalen)
--		return NULL;
-+		return false;
- 
- 	if (next_sub->id != 0 || next_sub->datalen < 2)
--		return NULL;
-+		return false;
- 
- 	/*
- 	 * Check if the first element in the next sub element is a start
- 	 * of a new profile
- 	 */
--	return next_sub->data[0] == WLAN_EID_NON_TX_BSSID_CAP ?
--	       NULL : next_mbssid;
-+	if (next_sub->data[0] == WLAN_EID_NON_TX_BSSID_CAP)
-+		return false;
+-	return true;
++	/*
++	 * Can't differentiate ciphers here so allow 0..3.
++	 * Pairwise keys must be for a station (MAC address given).
++	 */
++	if (pairwise) {
++		if (!mac_addr)
++			return false;
 +
-+	*mbssid = next_mbssid;
-+	*sub_elem = next_sub;
-+	return true;
++		return key_idx < 4;
++	}
++
++	/*
++	 * For group keys, mac_addr==NULL means setting a group key
++	 * for TX, which is only supported on some interface types,
++	 * except for STATION/P2P_CLIENT, where it's setting the RX
++	 * key with the current AP (for legacy reasons.)
++	 *
++	 * Apart from that exception, a non-NULL mac_addr means RX
++	 * key being set.
++	 */
++
++	switch (wdev->iftype) {
++	case NL80211_IFTYPE_ADHOC:
++		if (!(wdev->wiphy->flags & WIPHY_FLAG_IBSS_RSN))
++			return false;
++		fallthrough;
++	case NL80211_IFTYPE_MESH_POINT:
++		/* no support for IGTK/BIGTK (yet?) */
++		return key_idx < 4;
++	case NL80211_IFTYPE_NAN_DATA:
++		/* these always need to support per-STA GTK */
++		return key_idx < 4;
++	case NL80211_IFTYPE_NAN:
++		/* no data */
++		if (key_idx < 4)
++			return false;
++		/* NAN reused this flag */
++		if (wiphy_ext_feature_isset(wdev->wiphy,
++					    NL80211_EXT_FEATURE_BEACON_PROTECTION))
++			return key_idx <= 7;
++		return key_idx <= 5;
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		/* see note about exception above */
++		if (mac_addr)
++			return false;
++		/* BIGTK support implies IGTK support */
++		if (wiphy_ext_feature_isset(wdev->wiphy,
++					    NL80211_EXT_FEATURE_BEACON_PROTECTION_CLIENT))
++			return key_idx <= 7;
++		fallthrough;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		/* no RX with [B]IGTK */
++		if (mac_addr)
++			return false;
++		if (wiphy_ext_feature_isset(wdev->wiphy,
++					    NL80211_EXT_FEATURE_BEACON_PROTECTION))
++			return key_idx <= 7;
++		fallthrough;
++	case NL80211_IFTYPE_AP_VLAN:
++		/* no RX with GTK */
++		if (mac_addr)
++			return false;
++		if (cfg80211_igtk_cipher_supported(wdev->wiphy))
++			return key_idx <= 5;
++		return key_idx <= 3;
++	default:
++		return false;
++	}
  }
  
- size_t cfg80211_merge_profile(const u8 *ie, size_t ielen,
-@@ -2452,26 +2455,20 @@ size_t cfg80211_merge_profile(const u8 *ie, size_t ielen,
- 			      u8 *merged_ie, size_t max_copy_len)
+ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+@@ -288,13 +345,7 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 				   struct key_params *params, int key_idx,
+ 				   bool pairwise, const u8 *mac_addr)
  {
- 	size_t copied_len = sub_elem->datalen;
--	const struct element *next_mbssid;
- 
- 	if (sub_elem->datalen > max_copy_len)
- 		return 0;
- 
- 	memcpy(merged_ie, sub_elem->data, sub_elem->datalen);
- 
--	while ((next_mbssid = cfg80211_get_profile_continuation(ie, ielen,
--								mbssid_elem,
--								sub_elem))) {
--		const struct element *next_sub = (void *)&next_mbssid->data[1];
+-	if (!cfg80211_valid_key_idx(rdev, key_idx, pairwise))
+-		return -EINVAL;
 -
--		if (copied_len + next_sub->datalen > max_copy_len)
-+	while (cfg80211_iter_profile_continuation(ie, ielen,
-+						  &mbssid_elem,
-+						  &sub_elem)) {
-+		if (copied_len + sub_elem->datalen > max_copy_len)
- 			break;
--		memcpy(merged_ie + copied_len, next_sub->data,
--		       next_sub->datalen);
--		copied_len += next_sub->datalen;
+-	if (!pairwise && mac_addr && !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
+-		return -EINVAL;
 -
--		mbssid_elem = next_mbssid;
--		sub_elem = next_sub;
-+		memcpy(merged_ie + copied_len, sub_elem->data,
-+		       sub_elem->datalen);
-+		copied_len += sub_elem->datalen;
- 	}
+-	if (pairwise && !mac_addr)
++	if (!cfg80211_valid_key_idx(wdev, key_idx, pairwise, mac_addr))
+ 		return -EINVAL;
  
- 	return copied_len;
+ 	switch (params->cipher) {
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 5dbf3ef4b257..d45bc08c0de4 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -454,8 +454,7 @@ static int cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 				rejoin = true;
+ 			}
+ 
+-			if (!pairwise && addr &&
+-			    !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
++			if (!cfg80211_valid_key_idx(wdev, idx, pairwise, addr))
+ 				err = -ENOENT;
+ 			else
+ 				err = rdev_del_key(rdev, wdev, -1, idx, pairwise,
 -- 
 2.34.1
 
