@@ -1,53 +1,53 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9151B417D81
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:58:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCF4425899
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:58:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784141890; cv=none; b=J+IOLhxA6i/l04smNQEPwgOShOPXz/oHvwX753WlMfkb0TLmAdzyPIrUSqQ6e+4wqhhNg6K94+a6fGqYsVT3/7UtpL6R/v/GZ6iBnadSPvEOlTcS32/47ckrac0XqOFezpwJOh/UBWjr8HbutkVBc1O5b0cwactWFXeqIuiW0zY=
+	t=1784141894; cv=none; b=MXoJtHv/Oe5B9TCg5LxwvslTJcfVouIf1njGf6zqwF6pGV51DPl2KEpePoiRQ8vJL6EnvH+AkFXDZmk9pPxAHV8guiva9wMxOk9V60spwxxgZ55jyquAzupQtzI0QlwvTH00gSGwjN4TNzWE9YJW08bl3929qU0QE2a60ICaz0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784141890; c=relaxed/simple;
-	bh=qDZNihaZxUEaDPTDFpeVgXtqevJevwf2/7dVOlusKio=;
+	s=arc-20240116; t=1784141894; c=relaxed/simple;
+	bh=olTH6GCwomYaR+KEBAhpxk843jgJOE3D41FGWj3xetA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lZkYPUWEq5rNN0rL1oK5QNlfEnCIe2SOJ0oCZBrYJjTPNtEsCj9U2WZBaEk3n7nRVFlY4dB3R4sg5BcOkwk5wPhpUtGbmu/Euftv0AyUmIg1u8Q/eFvHmyUDBCYZvjAJKMYS6d4CuRCnWH/7JF1uSoT+mo2y7kedtYRZBu+besc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S+1/nMpT; arc=none smtp.client-ip=192.198.163.10
+	 MIME-Version; b=leWzFaQEOceLGwoBcvUsLdC7025nFfwyfMAs3TSOjDyh3k/7ZJb5ezRtGQKrBf+mRmQdml+C56wCOyzgqjiSg5tdvD9exLMGf5eXK+N9dsKN7a8eqOP17rVt2FaOctA4GvM87D1J8sveDJUVjrqPG3T1NNC4zf4cBRcX+h1dUcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OZUsctLS; arc=none smtp.client-ip=192.198.163.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S+1/nMpT"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OZUsctLS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784141883; x=1815677883;
+  t=1784141887; x=1815677887;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qDZNihaZxUEaDPTDFpeVgXtqevJevwf2/7dVOlusKio=;
-  b=S+1/nMpTwWu1ePlcqweuNg+0JWHj5RIdV7KLP9l9DLQ+qsPiNzhcncRh
-   wKQPr0h15E3kxmnyegc1auj0r9kjtBwe6z3A5rZ45DQd+9A2/JdPG4Qo6
-   ijp/SbqoOHQBrPbuO5wqZxK/E5WzXXKij4IOmLJdfEHdYL4gPAFfd1slM
-   CuYeORnASNDtMjI7lnHApd1J0d3x2RrjQ42kaYBBeRY99HHw3gRz3iolX
-   nyCJlAL8egODniCgtZhcOevEptsuU1n/O3N5AK0YcdUQbM+Sm0E9cJfjt
-   FtM32ViIK/1e7M/wH2wU5QTGywp321YwK8WP9az/aD+wXjoJjkGJ+phU2
-   g==;
-X-CSE-ConnectionGUID: SNOsbB4FRtiHG82niGR+4A==
-X-CSE-MsgGUID: BYEu4QYtRDqIxXAv/dgCpw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160912"
+  bh=olTH6GCwomYaR+KEBAhpxk843jgJOE3D41FGWj3xetA=;
+  b=OZUsctLSxWdw6W2sZK+zaEkV8JnKXXqkFsgCmAHK4Qpyi0XOI4h+osaR
+   x0oFQpx79wQtplfcPP6zY8/zArpJwn12k3izZ0NAAVFsduPXwsB85mqU5
+   fJJyxX9vwRkiQCju1KFQEsC6ySVtu6NpSYbZREg9mfFKLXVwgRXXf1I66
+   ret8n3nFDcTAEDCLJL4vYvJletqdLHzMlQJYJiIXkVVfeK+Mlk5TyNckr
+   We6kYcB1qxA8JkmWVL9juLGzKmZ9wYUT249DvbXMncoRScURhSv8Q8m9F
+   m0/uTmnJjiVgi4TVxWbm0jzaKx47u09rKpMRANutOm4pGO/kbSIdhf+tU
+   A==;
+X-CSE-ConnectionGUID: GKCh38rEQLqkK7l3wTtt4Q==
+X-CSE-MsgGUID: uv8mqPmdSe2zn4mN7yYmTQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11847"; a="96160917"
 X-IronPort-AV: E=Sophos;i="6.25,166,1779174000"; 
-   d="scan'208";a="96160912"
+   d="scan'208";a="96160917"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:51 -0700
-X-CSE-ConnectionGUID: dY0A4gmTSbSQifM5lp5udQ==
-X-CSE-MsgGUID: RswX63sBQySDSwrKzKElsQ==
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:54 -0700
+X-CSE-ConnectionGUID: q/rWws7LRWKSPwq3LrfGYA==
+X-CSE-MsgGUID: Cr4fIeadTum5CHdSm0krfw==
 X-ExtLoop1: 1
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:50 -0700
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2026 11:57:53 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-fixes 09/15] wifi: iwlwifi: mvm: ptp: free response on success path
-Date: Wed, 15 Jul 2026 21:57:09 +0300
-Message-Id: <20260715215523.31b38bef398b.Ib6a5a8bdd800779c8911da6859fd450d3d19c9e9@changeid>
+Subject: [PATCH iwlwifi-fixes 11/15] wifi: iwlwifi: mvm: fix out-of-bounds tid_data access in BA notif
+Date: Wed, 15 Jul 2026 21:57:11 +0300
+Message-Id: <20260715215523.919edee567eb.Ie85c350e3afe2b39709d0039072740d86660f8ae@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
 References: <20260715185715.321797-1-miriam.rachel.korenblit@intel.com>
@@ -62,37 +62,40 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Release CMD_WANT_SKB response buffer after successful timestamp parsing
-to avoid leaking response allocations.
+mvmsta->tid_data was indexed by the TFD loop counter 'i' instead of
+the actual TID value 'tid'. This writes lq_color into a random tid_data
+slot unrelated to the BA entry.
+Since multi-TID blockack is not really in use, 'i' was always 0 and no
+harm was done.
+Add a out-of-bound check before accessing the array.
 
-Assisted-by: GitHubCopilot:GPT-5.3-Codex
+Assisted-by: GitHubCopilot:gpt-5.3-codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ptp.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-index f39eb48864eb..49dcb1388007 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ptp.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2021 - 2023, 2025 Intel Corporation
-+ * Copyright (C) 2021 - 2023, 2025-2026 Intel Corporation
-  */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index d8b088e7c250..e02c376296c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -2134,8 +2134,14 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 			if (tid == IWL_MGMT_TID)
+ 				tid = IWL_MAX_TID_COUNT;
  
- #include "mvm.h"
-@@ -121,6 +121,8 @@ iwl_mvm_get_crosstimestamp_fw(struct iwl_mvm *mvm, u32 *gp2, u64 *sys_time)
- 	*sys_time = (u64)le32_to_cpu(resp->platform_timestamp_hi) << 32 |
- 		le32_to_cpu(resp->platform_timestamp_lo);
- 
-+	iwl_free_resp(&cmd);
++			if (IWL_FW_CHECK(mvm, tid >=
++					 ARRAY_SIZE(mvmsta->tid_data),
++					 "invalid TID %d in compressed BA\n",
++					 tid))
++				continue;
 +
- 	return ret;
- }
+ 			if (mvmsta)
+-				mvmsta->tid_data[i].lq_color = lq_color;
++				mvmsta->tid_data[tid].lq_color = lq_color;
  
+ 			iwl_mvm_tx_reclaim(mvm, sta_id, tid,
+ 					   (int)(le16_to_cpu(ba_tfd->q_num)),
 -- 
 2.34.1
 
