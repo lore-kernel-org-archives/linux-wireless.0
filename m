@@ -1,132 +1,117 @@
-Received: from helium.openadk.org (helium.openadk.org [89.238.66.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D79B30E84F;
-	Thu, 16 Jul 2026 22:17:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.238.66.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1FC3D647C
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 22:24:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784240225; cv=none; b=rOMUXcBReWQBETlBQO7ZRIUQKUZ6Ne44PUXFi2dXrwt1IuQzovObYg0dHrviXYDuxIN9Ohb+ciT1JDs5o1W02BqpDbRywGKfPwm50BptcJUlojPtoXCFAqKHMwac6XnEUZg83UKwLYZJudIOcBv8ErIV+FulXth0ldTYA8g0maw=
+	t=1784240674; cv=none; b=fIczallWyFrI4tqRhsRkE6zI7rHsCKefleFvgUqIHAEfpLyZC3qdlNpBpXTtOqnrifBfbT8eKYhtvYjeLMsxN5/sC6p29f4gBDXMw1P+WdsKQJuyJd6o0iz0YGEW+nuAA5OfUG12dRXkceXmZomb5aYYjgudkxy8m43G+watwRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784240225; c=relaxed/simple;
-	bh=AltTvc/TLqbsT2epEE94vx4WMX3H56zKHtx3vgICEI8=;
+	s=arc-20240116; t=1784240674; c=relaxed/simple;
+	bh=tY5kO68rCs5HDRAHbRnGR5V/lZbXU+QUuaEDKnD915Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=apjxYcYdHjds3RMTuuVXmpt9JDwsMmVMuBKURBA5sza6dFPvSCbtceRkHn3BIKv/EiTKzcrHde+nZCjQYZc3OZxjnwhB577XyC4djtlDUI9onCC2lpapK24UnbSYl51cK4Bu7Y3YTAQ56+kpLajRZVZzZw1zC077xZPLgeraoGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=openadk.org; spf=pass smtp.mailfrom=openadk.org; dkim=fail (0-bit key) header.d=openadk.org header.i=@openadk.org header.b=XtDZ/xCJ reason="key not found in DNS"; arc=none smtp.client-ip=89.238.66.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=openadk.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=openadk.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=q4Zamnm9B96CVqvmasi0xK8p2iPl8Lv2Bg/9Fb5iXRFdzSRIslQ4mz2nGHMuGyrJ2imrpbYNjHzwLnUzu6ii+iZJHNMlNUij2n35plpu1MV3bCO2e+g5VWILmPyLiEDgEpi/gV6Di3EzxbIU4mnWdCrUuxw2G+9ijieZDX3jIVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iE2sVe85; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=openadk.org header.i=@openadk.org header.b="XtDZ/xCJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=openadk.org; s=2022;
-	t=1784240215; bh=AltTvc/TLqbsT2epEE94vx4WMX3H56zKHtx3vgICEI8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XtDZ/xCJVJ5yE3LW7jnkOI8NUiIdFjdenoKEJYSCKpjUyvxNVw/toXHG3T35dNp04
-	 sEL6SCbSGx9faLd+7fHKMwiMYlgI9XgcIVUEAYSr6XfuN4B7D2bwzuLhx+2q4wG4tr
-	 zVmh4hj0LlLxY4d5SkxpSwR1z+SW6SV+d6HVk0KALGtKWmI4IeLghfbBwr7OIxYpep
-	 3CmzY4mwf+8cc+n/dGtCVh20JDgIC6aIkJF3XO81UrVOviy4YjFCHAv8tWwuLmxT87
-	 jSAMDuvO4w/2wLawTy3Xgla+cWLmOEtCHPgeZFXBXf5Xm6PDnOPvfLNZUE41akW4P0
-	 r79zuIHlxfceQ==
-Received: by helium.openadk.org (Postfix, from userid 1000)
-	id A818331E0B32; Fri, 17 Jul 2026 00:16:55 +0200 (CEST)
-Date: Fri, 17 Jul 2026 00:16:55 +0200
-From: Waldemar Brodkorb <wbx@openadk.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Michael =?utf-8?B?QsO8c2No?= <m@bues.ch>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Waldemar Brodkorb <wbx@openadk.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mips@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v2 0/3] MIPS: BCM47XX: convert buttons to software nodes
-Message-ID: <allYV8D0vmepaIKl@waldemar-brodkorb.de>
-Mail-Followup-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Michael =?utf-8?B?QsO8c2No?= <m@bues.ch>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	Waldemar Brodkorb <wbx@openadk.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mips@vger.kernel.org,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-References: <20260713-b4-bcm47xx-swnode-v2-0-2b879f0c193c@gmail.com>
- <4a8d64e1-5f8c-4ac0-afb0-2d68c3f53ada@app.fastmail.com>
- <ala9C6XMB3-ywpph@waldemar-brodkorb.de>
- <alci_45CzdVznaN2@google.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iE2sVe85"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2cc6dd436c6so47563435ad.2
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 15:24:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784240672; x=1784845472; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=9PybPTeqqbJDW21nWTn74STz945nRwE+oCCkAETAhAs=;
+        b=iE2sVe85QIWzuA7Bqz+2/1r6wdl36yZF/HPmv7gSAZLllO1TDW7Z5uRaYU0SLItRiJ
+         icNnpOe78FCF3raiT6cY/wNy/bppJJuOVBZlomI/jCGT7qiKw9+HKZEzAITSHOY3bTzr
+         G7LLCXa277HwHFogcTDYa1jw2qW01Ou7i1lQ5FY4z7Vf6hV/8sU0eyH/M6fsilNxhH3+
+         dhNqcyqUxEoeQrYwKRp4U6khy3DiVuh29/5ZTM1mNN5tOw1YbG/Nj4kzfX1K8wQH9ogM
+         RRnDchl/x/i5f9ftaPQ+xZzzRn5LJjHBNMRnKID4RYwGYXIKn86fTP6zMazRu4ri81Hp
+         /I6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784240672; x=1784845472;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9PybPTeqqbJDW21nWTn74STz945nRwE+oCCkAETAhAs=;
+        b=qco+Ei96B0PqEDvne/zLeiQnMW4kZkzRX1lPNb3UJBF9d8EZDuoYAX1IArwAIiEFHm
+         BD30r7Hhqz8+6g28UZTTy6Kdd7hBTJE7DqSCm9viyG+RudcDAlNzWShWos6q/QAz6c5N
+         E98kgucPf+VsNHCyUhr/kj6AJgxmKYNMIjl5vBX3g7dA2NL0MEeECpGbwmxV0aBLQeDQ
+         59mrkPrp6lDARXCS2R/dmcK0VsnSB43qLXA2fo0zgLSO2jc/Zmcq8+61tlc70xkMNn+5
+         g8C27PXcDWNbjdJ8D3HfgPn3oVBq/VwM6WV8USjc8dv1VEDXQSd0Uy+qEjFo+FOhoWbK
+         X9Sw==
+X-Forwarded-Encrypted: i=1; AHgh+Ro/utWrxxCIDUTwa2/l8e1N4GG7CyqC5x1eKnh2HTAzNUoNuTYBEeQbdfuyTz3cC4ZO5zpolLaAD3vc7jYnAA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzRBt0f2C4D19BGfnzT+EQUSLNGWcdl1qupxXcdRQhjyiETu0Lw
+	HEQFmlAp2RBpzkwFlXQWp51sHFJLeBDt9cM4dPRQ/rFeRNF8/uIqGKIN
+X-Gm-Gg: AfdE7cloaYc6exkbOBFBsyZo5HffM3OsEQmneTSawlUXvPp9Z7sqZV85JpnZtPNwhxx
+	0nwFRMU5zRA/w4WZQpUvpeA3JL81on5y6q8Uf9e0KbDaXSi6lCFWMKTgcAujBPQ/SCsWvToorCe
+	RNVl3dQY4ZiKZYufHRi1zarj4oauPq+CGdk9lb8r6kKdiIjqPDqbIFEFKyCRGDlqp5TsxROntHE
+	9dpAS1JZCgRES6smYFUsQAggBMRvavFWPwGpDN3GFDo20na3K3AChgNZ4sYZbnh4zG9I3+zwiRT
+	Kp9W/922KrPCO8UAr96wIgQHGulM5eCr2ZbsnzqogMuTzk/Pt8neXPXRaZ7+aOut/X7TC0Ep/jp
+	PoFlvUIvtd7Iq7UThMLEsMdRXPzhfregoKBGVdvTJJOKHLbkbfFJKog==
+X-Received: by 2002:a17:903:3c46:b0:2ca:17a8:cfce with SMTP id d9443c01a7336-2cf2ec27781mr13004505ad.29.1784240672371;
+        Thu, 16 Jul 2026 15:24:32 -0700 (PDT)
+Received: from localhost ([2001:da8:7001:11::cb])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13cd4341a37sm12337420c88.12.2026.07.16.15.24.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Jul 2026 15:24:31 -0700 (PDT)
+Date: Fri, 17 Jul 2026 06:23:42 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, 
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Inochi Amaoto <inochiama@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>, "spacemit@lists.linux.dev" <spacemit@lists.linux.dev>, 
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] wifi: rtw89: pci: enable 36-bit DMA on spacemit K3
+Message-ID: <allZOmTRIvot39Gj@inochi.infowork>
+References: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
+ <20260715-rtw89-spacemit-k3-v1-2-e577bc63706b@oss.tenstorrent.com>
+ <e7a43955e41c4dbdb864e89edc3d9fe6@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alci_45CzdVznaN2@google.com>
-X-Operating-System: Linux 6.12.90+deb13.1-amd64 x86_64
+In-Reply-To: <e7a43955e41c4dbdb864e89edc3d9fe6@realtek.com>
 
-Hi Dmitry, all,
-Dmitry Torokhov wrote,
-
-> Hi Waldemar,
+On Thu, Jul 16, 2026 at 09:22:17AM +0000, Ping-Ke Shih wrote:
+> Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com> wrote:
+> > The Spacemit K3 Pico ITX Board has a RTL8852BE pcie card behind a PCIe
+> > root port, but the SoC doesn't have any 32 DMA addreseses which the
+> > rtw89 seems to use by default. Enable 36 bit DMA ability that the driver
+> > has when this particular root port is detected so that the driver can
+> > probe on this SoC.
+> > 
+> > Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
 > 
-> On Wed, Jul 15, 2026 at 12:49:47AM +0200, Waldemar Brodkorb wrote:
-> > Hi,
-> > Arnd Bergmann wrote,
-> > 
-> > > On Mon, Jul 13, 2026, at 23:58, Dmitry Torokhov wrote:
-> > > > This series converts the legacy gpio-keys platform device on BCM47XX
-> > > > boards to use software nodes and static properties.
-> > > >
-> > > > To do this properly without relying on legacy name-based matching
-> > > > (which is being removed from gpiolib), we introduce and register
-> > > > software nodes for the underlying GPIO controllers (BCMA and SSB)
-> > > > and reference them in the button properties.
-> > > >
-> > > > The first two patches add the software nodes to bcma-gpio and
-> > > > ssb-gpio respectively. The third patch performs the conversion
-> > > > for the BCM47XX buttons.
-> > > >
-> > > > Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> > > > ---
-> > > > As Johannes mentioned on v1 this best should go through MIPS tree.
-> > > 
-> > > Adding Waldemar to Cc. He has recently done some work to
-> > > get this platform working again in FreeWRT and should
-> > > be able to test your patches on hardware.
-> > 
-> > I normally use LTS kernel on the hardware (Linksys WRT54GS v1.0).
-> > But for testing I updated to 7.1.3. Attached is the dmesg without
-> > Dmitry's patches.  Button works, I can go into failsafe mode after
-> > pressing the reset button on bootup.
-> > 
-> > With Dmitry's three patches applied I directly getting into failsafe
-> > mode without pressing any button. Dmesg looks similar, but I get
-> > following kernel message:
-> > platform gpio-keys.0: deferred probe pending: gpio-keys: failed to get gpio
-> > 
-> > Looking at /dev I see no /dev/input/event0 device node anymore.
-> > 
-> > Attached is the small failsafe script I use on bootup.
-> > Hope this helps.
-> > 
-> > Do I need to change my failsafe script for the new stuff or is
-> > something else broken now? Do I miss some new kernel config option?
-> > Or is the patch only for latest Linus git repo.
+> This patch looks good to me:
 > 
-> Thank you very much for testing. I think 7.1 should work. Could you
-> please apply the test patch below and send me new dmesg? Hopefully I'll
-> be able to figure out where I messed up.
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> But I wonder how this patchset goes via which tree. I'm happy to merge
+> them into rtw tree and then wireless-next tree if people can ack
+> patch 1/2.
+> 
+> 
 
-We found the reason it was not working for me with 7.1.3.
-The commit fe221742e388 is needed for 7.1.3. With that applied the
-reset button works as usual.
+These IDs are from my patchset.
+https://lore.kernel.org/spacemit/20260709040027.958400-1-inochiama@gmail.com/
 
-So you can add:
-Tested-by: Waldemar Brodkorb <wbx@openadk.org>
+I think Anirudh can move this ID and add them to the pci_ids.h
+directly, And I can adjust my patch to depend on this. It still
+needs some improvement to be merged.
 
-best regards
- Waldemar
+Regards,
+Inochi
+
+
