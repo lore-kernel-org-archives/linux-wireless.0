@@ -1,228 +1,172 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6126319CD0A
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 00:18:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE72282F3F
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 00:59:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784161084; cv=none; b=QAkYhWSrGCXaA6JTIwKvd8/vvt6h7fZrJ/C+3lHhVogt/Q7RxdgDPjM9sfAgaYE4/RrH+YDRZ3XrxEuih04OaKu/D530QgZnyNCOl2tuvyMHTcY8Zl7Wkl07JwJR7sxCtrqbvpbIU4t9Acrwa0rgy+kSG4r+L63vcwvgGPR8rPE=
+	t=1784163550; cv=none; b=LesJ+wOy8maj8r9x/PSvVBZu5fKowyOAz7CC8pbWbc0T+8ZSimrJ3HsOIcltW6XR+NcsLvIUYmLYgWg5hD3RjST5UVe0lF4XlDQrpWMrBVWERwOqJ2CzdK8qAkPvL1qLvtuz2jqa0Me8pYlmp6M12zxood+LD+2ZEtlTb+uDx24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784161084; c=relaxed/simple;
-	bh=g17dHcWS+jsSUKoyhr2RQjmSJNm6P0XrFpUqfAE87gM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YPKZQVxKGuph+eIYPPtJ64LdiCBe5iDgCt4EfXcazGmvCw4j6N/Xsat244NLYHy3XLZWKytZlePpzNYNNmvzVWzK6xN1wLL5xbYSiMy+6neImmBmo+RtINh/aZgPZvUp1Znvcan9LcdNrB6yvBEmCpACfqEyff2QaMsNWkt5HAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d77tdbP3; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784163550; c=relaxed/simple;
+	bh=7WCmgTvezj+FpmS1E9fln81nR4vRY6G729L+61O1sNo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=bJ7Tp3+x+dMDLOD8Or6yDolT8cyI5o6toueVuzNlNmhJuxNtBbPzhaJ8aUwHjgx6eerl4s4U68ddzDgnti0ufkHRvxNKCqgbT342ejTuEtYA5WAIa+w8MdUQHhSOe8BS7y/vNGhNABGJp/6OTw6aHbZbGZjSp0Jzr7shiw5Gxhc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kCYoa4PF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=R52NGkpd; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d77tdbP3"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-493ba701891so21718015e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 17:18:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kCYoa4PF";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="R52NGkpd"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66G0XY2X1305006
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 00:59:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	fxSym0MG0DTsfrTZy5yY04eAKQV5OakSQtDa3iUK2PI=; b=kCYoa4PF/NvUiTHG
+	6+87jHuqfpW/wdcMJteLafDiQmob/cw49hw6YAq7hUvZOwCNFjhgsP8w1uRWviTI
+	KnOpag0pnRAYExClazyWzGCoQNiPvBis0M+wrUlU6x1j76cm8ZoL3Nu9Q5KpUn5B
+	scF0S2pR8yb4i65bbJmobSmccSNLnttQkvM9DFh4wVX6an6uPh0zPF9c42ZSjedC
+	iStyp4B7J6g6P76jvuQhVEA20JkilZfCBgS9KvExMdTJ6hGMq2bMoiZukp8AWQG8
+	bZT3rRBKrqoxQTk0EpjbkbA5i6wFt+wf/JQ4ZVYjq0zh/FDEdZrHE11YYr0nMm5x
+	8EIMCw==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fe855bay6-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 00:59:08 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c856470fe9fso2480734a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 17:59:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784161080; x=1784765880; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Q2GsLfGNapFzMWQG14eqqxipuP9UERarjO5kgcBEMgo=;
-        b=d77tdbP3hDwfcRIukQhLeQUjS3HY3SGvC8npHsXR1e+MWb3r/axB4FtYMS4qh2A66+
-         TzULNp7P+mJiMSXLwDQUK24is3jPfzN3qi+WIdl6ErRhBnptAzFU56p6sBfAofp+5/21
-         rh0ihjzUPnUnVduU7TBqUQivn5zDmeI8WK/tDkzmWJMTCSsN9s7+W10o5pVEFG/3Fem9
-         xFgSIeKK6Mbu7WYRENuxrsALSijHqZXsx/B5P06lf98Lm+tyWHADu+8JtfsvocLw3xNa
-         DRIrGiw3il9y1PHafm0OO3SeYjRG7GqfUt99Acu8qccWH8cGXT5AWUXr1nQ0x74ju7ka
-         NxFA==
+        d=oss.qualcomm.com; s=google; t=1784163548; x=1784768348; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=fxSym0MG0DTsfrTZy5yY04eAKQV5OakSQtDa3iUK2PI=;
+        b=R52NGkpdZHWxwiAxNxC/DeAB1TaXU++fmCGDecfbpTQBs/1HUOgf7at+aPa79+TDC9
+         HlStFZz9vRGQu6B4HNkag74e7a2a5JXES9R3oJUpYUQ4VNo2JMaiXYYCW+1TXLcnot8v
+         U6TcmJ7ecS3tpEbdYVU3ikFyEecav9xLH5N7AKM3xc2Dl6AISnjmKbwFcqlbMVGFk91D
+         ujkOF8AiiqQSlWh0eHPkayN3/K9q8dgBXEceb6q8yhIagWpcpV4isCBTal09lvaXOLrz
+         fdroXHpY1mZeW7BMVKRBKoZW2vR5jiaZXNnXScBI6vJiYy1QnBZHUehRwATFnr0SbvGO
+         iQxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784161080; x=1784765880;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Q2GsLfGNapFzMWQG14eqqxipuP9UERarjO5kgcBEMgo=;
-        b=PT/g05n8glpXMAvGdndovbuYPbheosqpGyG4r/x40oArJZk2gH1JP3H8DkHGS1rAiH
-         eHwXJw18U3ixtgNTJo6eAYIt9JtFVMOPU2X7s88xP+o4q3Jc/gwNNhvdiAoWyAYGPzUx
-         Hff9i8HqrFKB95MRxpX2e/++X3b2NDzzRJjpFYxUqblQm26tHXJmDdbmqzxT+KaCEh+C
-         +mKezZOw6IVLoWdZhrcs0Q5nzniGyAhgrCHbypPQlCCCdslaXQArBbJazV4Hc9DLSIJc
-         5m3JsKyBKYYnai1hgUBv/jJgtUP+A537fNu0vQQD5nQtGiWjf4EizsLwjxeUTsDUzq6z
-         HCOQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpZf9wS3GWAPt9JE+yXtlOtyWHk42xv0JN5dZY1y2tG0wz4VoU++t7pcK3m0GG7xx028zir8D5x42P2g5d7Zw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzFjyVMPd0r8KXdxezc/ou1nQhx54V6JeCGtreF6Qx5QoD5+n7r
-	Nl1xI8XhSZYwXL+RiwwHlSWlnVDkB82gQISbBDvLKtTpt7TeXxsYfUcO
-X-Gm-Gg: AfdE7cmBQpaBb6INZb7Kx6HxB61QuRo/X3xNqeYQyMufbm+UX/6w0EGLMUpzsWbIOiC
-	04GyZ6iBtdbZj1msk59qRVWLt8w+2xcHLlxdPiQhViya73aTezCavl/GILbq0V/G8swmb5vB6hB
-	4gXNyKWwuBlM4jDLx8phOgoD0VC/S1J4BD7Df0s/384dcrKg+FmhiyEErtT5qCpUVOJG6nubvbH
-	0JEgAE28tc35IsXLWX1IMdq01/P8mxCa5uAO2m0aHasbLrTvSbR3Lf3yMpSTDE4m/eZ5zVrAUUs
-	N5BiINv++PW7yz+MPtpAxxn0TDSrdWH2sTqKNY7uzzC5PYxH1WHZgY+vdZ4sc7a7mSMeqJwXGFC
-	dhZ324Q58vhm6fg//i9hqlwrwk2753FclbYrpeSrqgSqBXt3JoYjih0RflYLmeMBoMxKuGkkp0r
-	EhlOpg7f2d3LTamooiI/4GtilhC99A/z5WoO4kV1Gc1S49sI46ER4XaeWQc7Ku0LIZZNBxX1/J0
-	rZ18DDr
-X-Received: by 2002:a05:600c:2e15:b0:493:eb71:5cc6 with SMTP id 5b1f17b1804b1-493f88280bamr133149225e9.27.1784161080431;
-        Wed, 15 Jul 2026 17:18:00 -0700 (PDT)
-Received: from localhost.localdomain ([151.251.240.229])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49541e9a7bbsm17503925e9.13.2026.07.15.17.17.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jul 2026 17:18:00 -0700 (PDT)
-From: Georgi Valkov <gvalkov@gmail.com>
-To: briannorris@chromium.org,
-	kees@kernel.org
-Cc: francesco@dolcini.it,
-	johannes.berg@intel.com,
-	bhelgaas@google.com,
-	error27@gmail.com,
-	s.kerkmann@pengutronix.de,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	gvalkov@gmail.com
-Subject: [PATCH v3] wifi: mwifiex: replace one-element arrays with flexible array members
-Date: Thu, 16 Jul 2026 03:17:28 +0300
-Message-ID: <20260716001728.57799-1-gvalkov@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <202607150932.F2A0836@keescook>
-References: <202607150932.F2A0836@keescook>
+        d=1e100.net; s=20251104; t=1784163548; x=1784768348;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=fxSym0MG0DTsfrTZy5yY04eAKQV5OakSQtDa3iUK2PI=;
+        b=sStl1GBOEFRquXIV58KoO+3YwwvaPCNCLdL3pS8WmXiqkupOhMdZe6xXfcQHa4jqV1
+         bZvHxuZIQA9ad5X5BqQNTHa7Ms9bIoSiNEnEUt5N4gu3CqEoMOi0U7/LBF5Dm0uKtqnK
+         3AcUr0vfHa/ERAmR5ZvHZQkD7Do2qRjBVkbY/lKkpk09CvqCFjvuCikWtw8W16/xIXYK
+         ennHRpxcCQdZfF33XiMdOI6SSpRhTa312R1yp4HqktStdI8QCOwHCp3z7CJ5XF6/hl5e
+         buW74CszWseGHar0iwwgWn50cJq0DDXDECf6vdLvWC0eeQVA/ZytLcZB75ql7c386VmF
+         DZ4Q==
+X-Forwarded-Encrypted: i=1; AHgh+RrWM6hqfh29/qE7GbIv2DWZn9FwsLJV1vroH+8P8TM0ouPj7c7VhX0xe1f94cPDe55g1M6RbeUg9iqdQtBntQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwV6aK46MRL44NbWpzWE9UZyIm+/bVs9dmeI2d5aa0eAzYnR7Xo
+	zMXAXnMVtLTpKCx6B9jOjZOvyh+apMu17Uu80eyXyxRRICkZv48wxdE09X2TcJDHm4rk4OFrrsr
+	2CZdF9wOYbYMbRY64G3fgKtk6TWZdw0Xddmg6BppgmUF4Qzev6sqdPQsVTMtQoPyOwLUqbg==
+X-Gm-Gg: AfdE7clAQ5f/82PmLSTrhfjyChhgW2dfaci4vADj+bf94d880dEAhqM+9ev4/GZUxUu
+	zPp0iMJdgBLvD7h0t5Qs6wFLwSCJ5irZwulSvELf9+Wet+10OEU5UXNkIb3+PIHAF7XtxeQdvKo
+	I8ij1EF5SVWjvQQ5ssjiybxcUieJD/8l5EDoI0/oYt3l/e7JUlRU1fW780HSqdfG1LzCqIDB+mv
+	sVGN/7Oa8TY3YT7sqhjAVi+b5K866uWG1C2KVAYcxJZxIZBmhwaAO0YqXM2EyEnhX/d+EHRRZMS
+	BYfUCqSMgFMzQ/vNINBOQm9KNr4pybu3LN9JgINa3jOl4AN0tnVS4yaReAOoQG/Leh6MXR7mXc4
+	lKpq0kPI5oPJ+OxcmmLOabVbWWaa0PSEi8loPZxQr5NJj5rOnh/X3zTNRfA==
+X-Received: by 2002:a05:6a20:4307:b0:3c3:7dfd:22c6 with SMTP id adf61e73a8af0-3c37dfd2500mr2681264637.73.1784163548069;
+        Wed, 15 Jul 2026 17:59:08 -0700 (PDT)
+X-Received: by 2002:a05:6a20:4307:b0:3c3:7dfd:22c6 with SMTP id adf61e73a8af0-3c37dfd2500mr2681244637.73.1784163547629;
+        Wed, 15 Jul 2026 17:59:07 -0700 (PDT)
+Received: from [192.168.1.11] (15.sub-75-218-246.myvzw.com. [75.218.246.15])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3140e5306afsm5588023eec.9.2026.07.15.17.59.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Jul 2026 17:59:07 -0700 (PDT)
+Message-ID: <faf48c76-373a-42c1-9c69-cfbc5178640a@oss.qualcomm.com>
+Date: Wed, 15 Jul 2026 17:59:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: ath11k/ath12k: release QMI handles on late init
+ failures
+To: Guangshuo Li <lgs201920130244@gmail.com>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Anilkumar Kolli
+ <quic_akolli@quicinc.com>,
+        Sriram R <quic_srirrama@quicinc.com>,
+        Shashidhar Lakkavalli <slakkavalli@datto.com>,
+        Kalle Valo
+ <kvalo@kernel.org>,
+        Venkateswara Naralasetty <quic_vnaralas@quicinc.com>,
+        Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>,
+        Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-kernel@vger.kernel.org, ath12k@lists.infradead.org
+References: <20260715064042.1988288-1-lgs201920130244@gmail.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260715064042.1988288-1-lgs201920130244@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: FKUESnrmksLytkt3g2zoTYLy1MR69nV8
+X-Authority-Analysis: v=2.4 cv=KOlqylFo c=1 sm=1 tr=0 ts=6a582cdc cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=6VQYfvmiyQ8t40WkS/mQdw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=pGLkceISAAAA:8 a=jDosp7zG289F-1VKxZYA:9 a=QEXdDO2ut3YA:10
+ a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE2MDAwNiBTYWx0ZWRfX5/+f3pupmbAm
+ NjtxA+StSPk5fxRvZ2Mv0IwypVgijQxozXyawQCRqoSx3v5A8VKwFZNDtB5idtIgEYiByFkc/AW
+ VVin/2OBx0nXsijFCL3JqIJ6PQUy4zSPFjFPEKOQ+98DTJoWMAMRVIzSidBgkj37ccun0oKuBjL
+ QQNCIqvybPcTmAn0nIhJcmX0d8WqrNYNl8Eua4OU3pEpVUAe9nwt7lkVukIezHkFVYd2HZHsSDJ
+ exLqcfVPfTpj6F4rs1+Zbbb/1vZjoutL3NAo6qGbH39j3nDbHCKD7Gsh/eK5pkOJ6xjDSK8fVXl
+ aGBl9uIteePh9ivU7Tsfwo2KxUyJKpfGInXaFgjy8lZCJMyQLxQKIE8HEKGcQR4VdhpZuRzPBpQ
+ xnw2GfdLx8B1sv8nN7IUouhyVnlW6NpAxr0jUDqUDK5b44lFsBJIDgRCy5EKOVBfcOs+NpoN56x
+ qz+NKsH1m86vDJRiOcA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE2MDAwNiBTYWx0ZWRfX4NoHJzeo68Vb
+ cI+u0z6AQSAulFYmKQp0l6sJ4SwuCy2apALR2EWKrz2GqJqv8T/xm2r5z5u64wxoTglKhxSo3Ez
+ lbU/e/DTrDNnNNqn9+zxweRFKl2SRcM=
+X-Proofpoint-ORIG-GUID: FKUESnrmksLytkt3g2zoTYLy1MR69nV8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-16_01,2026-07-15_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 impostorscore=0 malwarescore=0 spamscore=0
+ clxscore=1015 priorityscore=1501 adultscore=0 lowpriorityscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607160006
 
-Replace deprecated one-element arrays with flexible array members.
-CONFIG_FORTIFY_SOURCE reports the following warning when
-one-element arrays are used as variable-length buffers:
+On 7/14/2026 11:40 PM, Guangshuo Li wrote:
+> ath11k and ath12k initialize their QMI handles before allocating the QMI
+> event workqueues and registering the service lookups.
+> 
+> If either of these later initialization steps fails, the functions
+> return without releasing the initialized QMI handles, leaking their
+> resources.
+> 
+> Release the QMI handles on the late failure paths in both drivers.
+> 
+> ath12k_qmi_deinit_service() uses ab->qmi.ab to determine whether QMI
+> service initialization completed successfully. Set it only after all
+> initialization steps succeed. Keep the ath11k assignment unchanged
+> because ath11k does not use it as an initialization-success guard.
+> 
+> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+> Fixes: 088a099690e4 ("wifi: ath12k: fix error handling in creating hardware group")
+> Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+> ---
+> v2:
+>   - Set ath12k ab->qmi.ab only after QMI service initialization succeeds,
+>     as suggested by Baochen Qiang.
+>   - Fix the same late initialization QMI handle leak in ath11k, as
+>     suggested by Vasanthakumar Thiagarajan.
+>   - Drop the Reviewed-by tag due to the code changes.
+> 
+>  drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++++--
+>  drivers/net/wireless/ath/ath12k/qmi.c | 13 ++++++++++---
+>  2 files changed, 18 insertions(+), 5 deletions(-)
 
-sta_cmd.c:1033 mwifiex_sta_prepare_cmd
-memcpy: detected field-spanning write (size 84) of single field
-"domain->triplet" at .../marvell/mwifiex/sta_cmd.c:1033 (size 3)
-
-Convert affected structs to use flexible array members.
-- Preserve existing wire layouts.
-- Use DECLARE_FLEX_ARRAY() for structs inside affected unions.
-
-Tested-on: WRT3200ACM, OpenWrt
-Signed-off-by: Georgi Valkov <gvalkov@gmail.com>
----
-Thank you for your help!
-Please backport to 6.18 and 6.12, which are used by OpenWrt.
-
-v3:
-- resend, please ignore v2 (corrupted by mail client)
-
-v2:
-- restore the unions and use DECLARE_FLEX_ARRAY
-  for the flexible arrays inside
-- restore use of sizeof(*member) instead of sizeof(struct)
-
- drivers/net/wireless/marvell/mwifiex/fw.h      | 18 +++++++++---------
- drivers/net/wireless/marvell/mwifiex/join.c    |  8 ++++----
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  2 +-
- 3 files changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index e9e896606912..93561116959a 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -823,7 +823,7 @@ struct chan_band_param_set {
- 
- struct mwifiex_ie_types_chan_band_list_param_set {
- 	struct mwifiex_ie_types_header header;
--	struct chan_band_param_set chan_band_param[1];
-+	struct chan_band_param_set chan_band_param[];
- } __packed;
- 
- struct mwifiex_ie_types_rates_param_set {
-@@ -886,7 +886,7 @@ struct mwifiex_ie_types_wildcard_ssid_params {
- #define TSF_DATA_SIZE            8
- struct mwifiex_ie_types_tsf_timestamp {
- 	struct mwifiex_ie_types_header header;
--	u8 tsf_data[1];
-+	u8 tsf_data[];
- } __packed;
- 
- struct mwifiex_cf_param_set {
-@@ -903,8 +903,8 @@ struct mwifiex_ibss_param_set {
- struct mwifiex_ie_types_ss_param_set {
- 	struct mwifiex_ie_types_header header;
- 	union {
--		struct mwifiex_cf_param_set cf_param_set[1];
--		struct mwifiex_ibss_param_set ibss_param_set[1];
-+		DECLARE_FLEX_ARRAY(struct mwifiex_cf_param_set, cf_param_set);
-+		DECLARE_FLEX_ARRAY(struct mwifiex_ibss_param_set, ibss_param_set);
- 	} cf_ibss;
- } __packed;
- 
-@@ -922,8 +922,8 @@ struct mwifiex_ds_param_set {
- struct mwifiex_ie_types_phy_param_set {
- 	struct mwifiex_ie_types_header header;
- 	union {
--		struct mwifiex_fh_param_set fh_param_set[1];
--		struct mwifiex_ds_param_set ds_param_set[1];
-+		DECLARE_FLEX_ARRAY(struct mwifiex_fh_param_set, fh_param_set);
-+		DECLARE_FLEX_ARRAY(struct mwifiex_ds_param_set, ds_param_set);
- 	} fh_ds;
- } __packed;
- 
-@@ -1383,7 +1383,7 @@ struct host_cmd_ds_802_11_snmp_mib {
- 	__le16 query_type;
- 	__le16 oid;
- 	__le16 buf_size;
--	u8 value[1];
-+	u8 value[];
- } __packed;
- 
- struct mwifiex_rate_scope {
-@@ -1551,7 +1551,7 @@ struct mwifiex_scan_cmd_config {
- 	 *  TLV_TYPE_CHANLIST, mwifiex_ie_types_chan_list_param_set
- 	 *  WLAN_EID_SSID, mwifiex_ie_types_ssid_param_set
- 	 */
--	u8 tlv_buf[1];	/* SSID TLV(s) and ChanList TLVs are stored
-+	u8 tlv_buf[];	/* SSID TLV(s) and ChanList TLVs are stored
- 				   here */
- } __packed;
- 
-@@ -1683,7 +1683,7 @@ struct host_cmd_ds_802_11_bg_scan_query_rsp {
- struct mwifiex_ietypes_domain_param_set {
- 	struct mwifiex_ie_types_header header;
- 	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
--	struct ieee80211_country_ie_triplet triplet[1];
-+	struct ieee80211_country_ie_triplet triplet[];
- } __packed;
- 
- struct host_cmd_ds_802_11d_domain_info {
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index 5a1a0287c1d5..a83f4d081fe2 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -421,15 +421,15 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 
- 	phy_tlv = (struct mwifiex_ie_types_phy_param_set *) pos;
- 	phy_tlv->header.type = cpu_to_le16(WLAN_EID_DS_PARAMS);
--	phy_tlv->header.len = cpu_to_le16(sizeof(phy_tlv->fh_ds.ds_param_set));
--	memcpy(&phy_tlv->fh_ds.ds_param_set,
-+	phy_tlv->header.len = cpu_to_le16(sizeof(*phy_tlv->fh_ds.ds_param_set));
-+	memcpy(phy_tlv->fh_ds.ds_param_set,
- 	       &bss_desc->phy_param_set.ds_param_set.current_chan,
--	       sizeof(phy_tlv->fh_ds.ds_param_set));
-+	       sizeof(*phy_tlv->fh_ds.ds_param_set));
- 	pos += sizeof(phy_tlv->header) + le16_to_cpu(phy_tlv->header.len);
- 
- 	ss_tlv = (struct mwifiex_ie_types_ss_param_set *) pos;
- 	ss_tlv->header.type = cpu_to_le16(WLAN_EID_CF_PARAMS);
--	ss_tlv->header.len = cpu_to_le16(sizeof(ss_tlv->cf_ibss.cf_param_set));
-+	ss_tlv->header.len = cpu_to_le16(sizeof(*ss_tlv->cf_ibss.cf_param_set));
- 	pos += sizeof(ss_tlv->header) + le16_to_cpu(ss_tlv->header.len);
- 
- 	/* Get the common rates supported between the driver and the BSS Desc */
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 623ddde8c8e5..071f7cb305e1 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -108,7 +108,7 @@ static int mwifiex_cmd_802_11_snmp_mib(struct mwifiex_private *priv,
- 		    "cmd: SNMP_CMD: cmd_oid = 0x%x\n", cmd_oid);
- 	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_SNMP_MIB);
- 	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_802_11_snmp_mib)
--				- 1 + S_DS_GEN);
-+				+ S_DS_GEN);
- 
- 	snmp_mib->oid = cpu_to_le16((u16)cmd_oid);
- 	if (cmd_action == HostCmd_ACT_GEN_GET) {
--- 
-2.55.0
+Please split into two patches, one for ath11k and one for ath12k
 
