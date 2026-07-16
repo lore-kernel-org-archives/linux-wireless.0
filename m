@@ -1,153 +1,228 @@
-Received: from mail-yx1-f41.google.com (mail-yx1-f41.google.com [74.125.224.41])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE6E227FB05
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 23:00:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784156429; cv=pass; b=hrs3P/akl0TSgN0H/xW2rJmXU0BDumugPQDWRKscwzI8rUnOq8GUaciDEGgnp8Ku8H2p9TkeD/FiDP7xv6cSuc3D3+9tWdEPyBLnqG3FDAunkoIfWL4sbmyRMob5wo0PQr/+jVV2nTUlzlOKSzb7ZPrHdIcJUZyKWt6qLqCzbbY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784156429; c=relaxed/simple;
-	bh=fiYOlFWMU4WKOC95vQ2TdtlOTdRO1GdeSfHMOyfJSrc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JTmSFhtRlz1/Og5YU5WIzFSRrJVUfgIOccWNzby6R0geptZvlHhUeoA0q7VjONNS5e7E4r0xusnW0BnlxSLBTkqp3O/wP76AnYIcbuR3h9DXt+xMA8kuTs46vtLY28aUH3/v+/BMnrIxpEXFw+g00ySPaw89Gysm0nTe35XYZXE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Pq1pfx6D; arc=pass smtp.client-ip=74.125.224.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6126319CD0A
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 00:18:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784161084; cv=none; b=QAkYhWSrGCXaA6JTIwKvd8/vvt6h7fZrJ/C+3lHhVogt/Q7RxdgDPjM9sfAgaYE4/RrH+YDRZ3XrxEuih04OaKu/D530QgZnyNCOl2tuvyMHTcY8Zl7Wkl07JwJR7sxCtrqbvpbIU4t9Acrwa0rgy+kSG4r+L63vcwvgGPR8rPE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784161084; c=relaxed/simple;
+	bh=g17dHcWS+jsSUKoyhr2RQjmSJNm6P0XrFpUqfAE87gM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YPKZQVxKGuph+eIYPPtJ64LdiCBe5iDgCt4EfXcazGmvCw4j6N/Xsat244NLYHy3XLZWKytZlePpzNYNNmvzVWzK6xN1wLL5xbYSiMy+6neImmBmo+RtINh/aZgPZvUp1Znvcan9LcdNrB6yvBEmCpACfqEyff2QaMsNWkt5HAM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d77tdbP3; arc=none smtp.client-ip=209.85.128.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Pq1pfx6D"
-Received: by mail-yx1-f41.google.com with SMTP id 956f58d0204a3-667b0ced2d3so7524642d50.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 16:00:27 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784156426; cv=none;
-        d=google.com; s=arc-20260327;
-        b=bUp9nnDMIhRC0JjTIsO9JF69rZ7NsAln8eVbFyaNwEbWBOznUgpYoGotX1DZ+xehL4
-         klGPnlmydU0AR8vAK+mLo7AjTP0q4jbtuvM76reVhFW40J+Z3lZKVwfKNgOxvMgYFWb7
-         bCHL6scWxMtOWI6Y7EaJNCGq3yq6ME5AomB5HNoS38h2nhXzPDdi3tlwy3xn6cySCdYI
-         lP4aImmmjVhvolTJGFLpn8WJxRE50hXR6ngP50QKbzoJsfRIAzXZekaI32JqcneMGdYw
-         4Bk8c97D4aChEBF7kwCpFOzGkyjOohIlk6TPi9rkV3wm9xfqi4up2BLPR5Tv2OxRNSgW
-         sO/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=0bIFAaCz/Ybe2Wc8at9yfOIMc7MyThjXtraPrvowyZQ=;
-        fh=pdBFibnjt2oXMLxfVrFveR5m0f1WI/HWJWCY3hZPcNk=;
-        b=YiqZwEYhI8V4SYbF3D56lc0r0+4Pb4YRRu8xqhHZn8BBdf+ODQqkdooYMWWVBn6mYy
-         eh4UsGadIPUICVu0XzBblFf6euiDlPAFw2J2+uPme7CzQw3G0Tb2n1LuxyuOMSDI6wwi
-         h1pK922naWAcx52QOknTWnMx6TmcRBQt32y3macK6n9HzQz3Lv84WHGcl6UM1PTc67Rz
-         Gn9sJMcXtRkSmQrkjHF2CbHKzHGhMakArTfGYxaFWEkZtIH0cL2AFDtMDIzmbnGDzqTn
-         4glPMFeZjWdtrpaqxy+lwdxLbsk/MuQl3CAsPHNm7+gFrOnBN0+f9KrcOOoTwGKdM/0h
-         i2VA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d77tdbP3"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-493ba701891so21718015e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 17:18:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784156426; x=1784761226; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=0bIFAaCz/Ybe2Wc8at9yfOIMc7MyThjXtraPrvowyZQ=;
-        b=Pq1pfx6Drjbm5+k7fANHqcz7JHZuy71LpSn2inGxiVlMOLf51cmto4bfzNiV0mw30I
-         WxImLHmTbYVMGHM6ZX51kPGWKwYGPck3yPf2n1f7ANYejeyR4cXnvckFALRr/pNvBWTG
-         1YMw4fJW8HbSMWEhDOkaN5JFJEiKngzo93dmuj/04+C9Ye2XGpjviEwMem+1gxaAmIMo
-         02T5csdFv5cSbBwnZ1X8vIw6FLdg6jm0sNTriiGmgZ3R8NkEstTTCVJAuPP8kpZucxvg
-         2r8kl5AHDNOPB9W8aeyTdaujs1H5s0HAqcgMA5gbTSqoH74zMt1yxv3T9KACQ+RAcnYh
-         R7xg==
+        d=gmail.com; s=20251104; t=1784161080; x=1784765880; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Q2GsLfGNapFzMWQG14eqqxipuP9UERarjO5kgcBEMgo=;
+        b=d77tdbP3hDwfcRIukQhLeQUjS3HY3SGvC8npHsXR1e+MWb3r/axB4FtYMS4qh2A66+
+         TzULNp7P+mJiMSXLwDQUK24is3jPfzN3qi+WIdl6ErRhBnptAzFU56p6sBfAofp+5/21
+         rh0ihjzUPnUnVduU7TBqUQivn5zDmeI8WK/tDkzmWJMTCSsN9s7+W10o5pVEFG/3Fem9
+         xFgSIeKK6Mbu7WYRENuxrsALSijHqZXsx/B5P06lf98Lm+tyWHADu+8JtfsvocLw3xNa
+         DRIrGiw3il9y1PHafm0OO3SeYjRG7GqfUt99Acu8qccWH8cGXT5AWUXr1nQ0x74ju7ka
+         NxFA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784156426; x=1784761226;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0bIFAaCz/Ybe2Wc8at9yfOIMc7MyThjXtraPrvowyZQ=;
-        b=BjTHSB/oZwMwguMDmm9rFLcPNf5OV2UBo95xkv1/noqFwlOrccLMfsvGTqhMjZ8DKG
-         YsSRzvAeqOMxchwgDbXUhQV5PC6i41W0Jcq+3su0BI4pi5xa1mUYKFpZ5+CFYcRvY1Dt
-         0Pc/0kPp/mq3TWgOqyAwp7IbbT4yoVOUrLdQCnHh4R3K6gxSrkZONn1IoHPXdisEq8+O
-         hZ7Kd7SQIA17WzP1Uo4SK7Kfd7GG3knqTv+iO7tfvCNaLT1dC1Gh9xbT/FND0/8yqljO
-         5ldvTd8XqUHi05OdiyVm6wRFSMIZwnXt7FeuaVAhbTCnAulPKpfMWPNFWZb0duubKjgo
-         +uEQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoPH1kSwt+7s1fiIFtJe+nskolMfStzYvcd89GFaEZ6oESugMhgM1NlAgBQhtVyftMA5LdsinPEzjFxOlSBiw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkDeM8xoChPSjuO9VwLlBaTpRvmeCOoRpOJLq33OmseBUlSGO3
-	Ps8HRKGwgN7YYvqtVwegHdDMWz8RuNIeKtUuCAF7GX7BX4Ptzl5DYvn7FIv80pQX5SoBPDjQmgF
-	Bv6+O/kTniwMbFWNawfMT7iuRFqw2ANA=
-X-Gm-Gg: AfdE7cmVZiplNS/k8Aqq8HQdMbNKlmPSqRYBWp5HSdRVgyqKvhACfhWh7EdDYtuR2KU
-	WxKJsbD2cgSQxupfUrJGRhf2OL4Ds1wEmYziXF36l9kLrWEpoiE6TF+SXxoS+oSKf6s7LNgubSc
-	OXbbB3YGeed/xEREsfPhrg9HqmLoOYUz73BHr44hAa0un6ht+9GnUrR5xGdIIg6Gm+9r4i80g8i
-	bGoc6qMjfDopuRTCeCUpc/+v9UBfqmOeZ7GiMCVrIz9H/atIq8mPvNqX0RTmXi908cxtp9Cr8/q
-	YuJsGr9uXBAH69C51A==
-X-Received: by 2002:a05:690c:998e:b0:81e:51aa:ff79 with SMTP id
- 00721157ae682-81ecf7eeef9mr36834447b3.18.1784156426262; Wed, 15 Jul 2026
- 16:00:26 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1784161080; x=1784765880;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Q2GsLfGNapFzMWQG14eqqxipuP9UERarjO5kgcBEMgo=;
+        b=PT/g05n8glpXMAvGdndovbuYPbheosqpGyG4r/x40oArJZk2gH1JP3H8DkHGS1rAiH
+         eHwXJw18U3ixtgNTJo6eAYIt9JtFVMOPU2X7s88xP+o4q3Jc/gwNNhvdiAoWyAYGPzUx
+         Hff9i8HqrFKB95MRxpX2e/++X3b2NDzzRJjpFYxUqblQm26tHXJmDdbmqzxT+KaCEh+C
+         +mKezZOw6IVLoWdZhrcs0Q5nzniGyAhgrCHbypPQlCCCdslaXQArBbJazV4Hc9DLSIJc
+         5m3JsKyBKYYnai1hgUBv/jJgtUP+A537fNu0vQQD5nQtGiWjf4EizsLwjxeUTsDUzq6z
+         HCOQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpZf9wS3GWAPt9JE+yXtlOtyWHk42xv0JN5dZY1y2tG0wz4VoU++t7pcK3m0GG7xx028zir8D5x42P2g5d7Zw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzFjyVMPd0r8KXdxezc/ou1nQhx54V6JeCGtreF6Qx5QoD5+n7r
+	Nl1xI8XhSZYwXL+RiwwHlSWlnVDkB82gQISbBDvLKtTpt7TeXxsYfUcO
+X-Gm-Gg: AfdE7cmBQpaBb6INZb7Kx6HxB61QuRo/X3xNqeYQyMufbm+UX/6w0EGLMUpzsWbIOiC
+	04GyZ6iBtdbZj1msk59qRVWLt8w+2xcHLlxdPiQhViya73aTezCavl/GILbq0V/G8swmb5vB6hB
+	4gXNyKWwuBlM4jDLx8phOgoD0VC/S1J4BD7Df0s/384dcrKg+FmhiyEErtT5qCpUVOJG6nubvbH
+	0JEgAE28tc35IsXLWX1IMdq01/P8mxCa5uAO2m0aHasbLrTvSbR3Lf3yMpSTDE4m/eZ5zVrAUUs
+	N5BiINv++PW7yz+MPtpAxxn0TDSrdWH2sTqKNY7uzzC5PYxH1WHZgY+vdZ4sc7a7mSMeqJwXGFC
+	dhZ324Q58vhm6fg//i9hqlwrwk2753FclbYrpeSrqgSqBXt3JoYjih0RflYLmeMBoMxKuGkkp0r
+	EhlOpg7f2d3LTamooiI/4GtilhC99A/z5WoO4kV1Gc1S49sI46ER4XaeWQc7Ku0LIZZNBxX1/J0
+	rZ18DDr
+X-Received: by 2002:a05:600c:2e15:b0:493:eb71:5cc6 with SMTP id 5b1f17b1804b1-493f88280bamr133149225e9.27.1784161080431;
+        Wed, 15 Jul 2026 17:18:00 -0700 (PDT)
+Received: from localhost.localdomain ([151.251.240.229])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49541e9a7bbsm17503925e9.13.2026.07.15.17.17.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jul 2026 17:18:00 -0700 (PDT)
+From: Georgi Valkov <gvalkov@gmail.com>
+To: briannorris@chromium.org,
+	kees@kernel.org
+Cc: francesco@dolcini.it,
+	johannes.berg@intel.com,
+	bhelgaas@google.com,
+	error27@gmail.com,
+	s.kerkmann@pengutronix.de,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	gvalkov@gmail.com
+Subject: [PATCH v3] wifi: mwifiex: replace one-element arrays with flexible array members
+Date: Thu, 16 Jul 2026 03:17:28 +0300
+Message-ID: <20260716001728.57799-1-gvalkov@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <202607150932.F2A0836@keescook>
+References: <202607150932.F2A0836@keescook>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715135711.34688-1-skyexpoc@gmail.com> <20260715162855.GB86836@francesco-nb>
-In-Reply-To: <20260715162855.GB86836@francesco-nb>
-From: =?UTF-8?B?SEUgV0VJ77yI44Ku44Kr44Kv77yJ?= <skyexpoc@gmail.com>
-Date: Thu, 16 Jul 2026 08:00:14 +0900
-X-Gm-Features: AUfX_mwd9Y9G5dTaVdj6oa-orBxOlinndhyG7NeWeGUxpDvqKgFPUGbaS-r6IGo
-Message-ID: <CAOC0qyJQvgkGAL0VK-uevygnQpH8jVrt0x58PqOBA3d7EKVw3A@mail.gmail.com>
-Subject: Re: [PATCH v2] wifi: mwifiex: bound uAP association event IEs to the
- event buffer
-To: Francesco Dolcini <francesco@dolcini.it>
-Cc: Brian Norris <briannorris@chromium.org>, 
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>, Johannes Berg <johannes.berg@intel.com>, 
-	Kees Cook <kees@kernel.org>, Kalle Valo <kvalo@kernel.org>, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-> Where you able to test this? It looks ok, but you never know ...
->
-> Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
+Replace deprecated one-element arrays with flexible array members.
+CONFIG_FORTIFY_SOURCE reports the following warning when
+one-element arrays are used as variable-length buffers:
 
-Thanks for the review and the tag. Honest answer: not on real
-hardware. I don't have a mwifiex device, and the event is delivered by
-the device firmware, so I could not drive EVENT_UAP_STA_ASSOC through
-an actual association.
+sta_cmd.c:1033 mwifiex_sta_prepare_cmd
+memcpy: detected field-spanning write (size 84) of single field
+"domain->triplet" at .../marvell/mwifiex/sta_cmd.c:1033 (size 3)
 
-What I did verify: the driver builds on arm64 with W=3D1 and KASAN
-enabled, no new warnings. And I checked the logic with an
-AddressSanitizer userspace model of the exact arithmetic and the
-cfg80211_find_ie() / for_each_element() walk. Without the patch it
-faults with a heap-buffer-overflow READ one byte past the region that
-stands in for the end of event_body. With this bound check applied to
-the same model, the underflow and the over-claim that would run past
-event_body[MAX_EVENT_SIZE] are rejected before the walk, so ASan is
-clean.
+Convert affected structs to use flexible array members.
+- Preserve existing wire layouts.
+- Use DECLARE_FLEX_ARRAY() for structs inside affected unions.
 
-A full in-kernel KASAN reproduction would need an emulated mwifiex
-device (raw-gadget plus dummy_hcd for the USB case) to inject the
-crafted event, which I have not set up. If anyone with the hardware
-sees a uAP STA association, dumping event->len for a normal client
-would also confirm that honest firmware stays well under the bound.
+Tested-on: WRT3200ACM, OpenWrt
+Signed-off-by: Georgi Valkov <gvalkov@gmail.com>
+---
+Thank you for your help!
+Please backport to 6.18 and 6.12, which are used by OpenWrt.
 
-No change is requested, so I was not planning a respin; please tell me
-if you would prefer one.
+v3:
+- resend, please ignore v2 (corrupted by mail client)
 
-Francesco Dolcini <francesco@dolcini.it> =E4=BA=8E2026=E5=B9=B47=E6=9C=8816=
-=E6=97=A5=E5=91=A8=E5=9B=9B 01:28=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Wed, Jul 15, 2026 at 10:57:11PM +0900, HE WEI (=E3=82=AE=E3=82=AB=E3=
-=82=AF) wrote:
-> > mwifiex_process_uap_event() handles EVENT_UAP_STA_ASSOC by exposing the
-> > (re)association request IEs that the firmware copies into the event:
-> >
-> >       sinfo->assoc_req_ies =3D &event->data[len];
-> >       len =3D (u8 *)sinfo->assoc_req_ies - (u8 *)&event->frame_control;
-> >       sinfo->assoc_req_ies_len =3D le16_to_cpu(event->len) - (u16)len;
-> >
-> > event->len is supplied by the device firmware and is never validated,
-> > and the subtraction is unchecked.  assoc_req_ies points into
-> ...
->
-> >
-> > Fixes: e568634ae7ac ("mwifiex: add AP event handling framework")
-> > Signed-off-by: HE WEI (=E3=82=AE=E3=82=AB=E3=82=AF) <skyexpoc@gmail.com=
->
->
-> Where you able to test this? It looks ok, but you never know ...
->
-> Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
->
+v2:
+- restore the unions and use DECLARE_FLEX_ARRAY
+  for the flexible arrays inside
+- restore use of sizeof(*member) instead of sizeof(struct)
+
+ drivers/net/wireless/marvell/mwifiex/fw.h      | 18 +++++++++---------
+ drivers/net/wireless/marvell/mwifiex/join.c    |  8 ++++----
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  2 +-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index e9e896606912..93561116959a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -823,7 +823,7 @@ struct chan_band_param_set {
+ 
+ struct mwifiex_ie_types_chan_band_list_param_set {
+ 	struct mwifiex_ie_types_header header;
+-	struct chan_band_param_set chan_band_param[1];
++	struct chan_band_param_set chan_band_param[];
+ } __packed;
+ 
+ struct mwifiex_ie_types_rates_param_set {
+@@ -886,7 +886,7 @@ struct mwifiex_ie_types_wildcard_ssid_params {
+ #define TSF_DATA_SIZE            8
+ struct mwifiex_ie_types_tsf_timestamp {
+ 	struct mwifiex_ie_types_header header;
+-	u8 tsf_data[1];
++	u8 tsf_data[];
+ } __packed;
+ 
+ struct mwifiex_cf_param_set {
+@@ -903,8 +903,8 @@ struct mwifiex_ibss_param_set {
+ struct mwifiex_ie_types_ss_param_set {
+ 	struct mwifiex_ie_types_header header;
+ 	union {
+-		struct mwifiex_cf_param_set cf_param_set[1];
+-		struct mwifiex_ibss_param_set ibss_param_set[1];
++		DECLARE_FLEX_ARRAY(struct mwifiex_cf_param_set, cf_param_set);
++		DECLARE_FLEX_ARRAY(struct mwifiex_ibss_param_set, ibss_param_set);
+ 	} cf_ibss;
+ } __packed;
+ 
+@@ -922,8 +922,8 @@ struct mwifiex_ds_param_set {
+ struct mwifiex_ie_types_phy_param_set {
+ 	struct mwifiex_ie_types_header header;
+ 	union {
+-		struct mwifiex_fh_param_set fh_param_set[1];
+-		struct mwifiex_ds_param_set ds_param_set[1];
++		DECLARE_FLEX_ARRAY(struct mwifiex_fh_param_set, fh_param_set);
++		DECLARE_FLEX_ARRAY(struct mwifiex_ds_param_set, ds_param_set);
+ 	} fh_ds;
+ } __packed;
+ 
+@@ -1383,7 +1383,7 @@ struct host_cmd_ds_802_11_snmp_mib {
+ 	__le16 query_type;
+ 	__le16 oid;
+ 	__le16 buf_size;
+-	u8 value[1];
++	u8 value[];
+ } __packed;
+ 
+ struct mwifiex_rate_scope {
+@@ -1551,7 +1551,7 @@ struct mwifiex_scan_cmd_config {
+ 	 *  TLV_TYPE_CHANLIST, mwifiex_ie_types_chan_list_param_set
+ 	 *  WLAN_EID_SSID, mwifiex_ie_types_ssid_param_set
+ 	 */
+-	u8 tlv_buf[1];	/* SSID TLV(s) and ChanList TLVs are stored
++	u8 tlv_buf[];	/* SSID TLV(s) and ChanList TLVs are stored
+ 				   here */
+ } __packed;
+ 
+@@ -1683,7 +1683,7 @@ struct host_cmd_ds_802_11_bg_scan_query_rsp {
+ struct mwifiex_ietypes_domain_param_set {
+ 	struct mwifiex_ie_types_header header;
+ 	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+-	struct ieee80211_country_ie_triplet triplet[1];
++	struct ieee80211_country_ie_triplet triplet[];
+ } __packed;
+ 
+ struct host_cmd_ds_802_11d_domain_info {
+diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
+index 5a1a0287c1d5..a83f4d081fe2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/join.c
++++ b/drivers/net/wireless/marvell/mwifiex/join.c
+@@ -421,15 +421,15 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
+ 
+ 	phy_tlv = (struct mwifiex_ie_types_phy_param_set *) pos;
+ 	phy_tlv->header.type = cpu_to_le16(WLAN_EID_DS_PARAMS);
+-	phy_tlv->header.len = cpu_to_le16(sizeof(phy_tlv->fh_ds.ds_param_set));
+-	memcpy(&phy_tlv->fh_ds.ds_param_set,
++	phy_tlv->header.len = cpu_to_le16(sizeof(*phy_tlv->fh_ds.ds_param_set));
++	memcpy(phy_tlv->fh_ds.ds_param_set,
+ 	       &bss_desc->phy_param_set.ds_param_set.current_chan,
+-	       sizeof(phy_tlv->fh_ds.ds_param_set));
++	       sizeof(*phy_tlv->fh_ds.ds_param_set));
+ 	pos += sizeof(phy_tlv->header) + le16_to_cpu(phy_tlv->header.len);
+ 
+ 	ss_tlv = (struct mwifiex_ie_types_ss_param_set *) pos;
+ 	ss_tlv->header.type = cpu_to_le16(WLAN_EID_CF_PARAMS);
+-	ss_tlv->header.len = cpu_to_le16(sizeof(ss_tlv->cf_ibss.cf_param_set));
++	ss_tlv->header.len = cpu_to_le16(sizeof(*ss_tlv->cf_ibss.cf_param_set));
+ 	pos += sizeof(ss_tlv->header) + le16_to_cpu(ss_tlv->header.len);
+ 
+ 	/* Get the common rates supported between the driver and the BSS Desc */
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 623ddde8c8e5..071f7cb305e1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -108,7 +108,7 @@ static int mwifiex_cmd_802_11_snmp_mib(struct mwifiex_private *priv,
+ 		    "cmd: SNMP_CMD: cmd_oid = 0x%x\n", cmd_oid);
+ 	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_SNMP_MIB);
+ 	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_802_11_snmp_mib)
+-				- 1 + S_DS_GEN);
++				+ S_DS_GEN);
+ 
+ 	snmp_mib->oid = cpu_to_le16((u16)cmd_oid);
+ 	if (cmd_action == HostCmd_ACT_GEN_GET) {
+-- 
+2.55.0
+
