@@ -1,79 +1,105 @@
-Received: from postout1.mail.lrz.de (postout1.mail.lrz.de [129.187.255.137])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 819A042FCAD;
-	Thu, 16 Jul 2026 16:41:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.187.255.137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9096A4302E1;
+	Thu, 16 Jul 2026 16:43:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784220112; cv=none; b=LA6tYB2AkCILARW3jV+Ooc/+ehdQ7eVyY2q/v1V37VF/yhG8UTQvLNy5wKWTmkMe7Be2wu7sLwdcG39ZOPAwzvdj2FS6+hFmianCFAtqxyOrPGH1gJPyMA5JVFj4LXVRh8kYsRvsOcV56XmpfC2xq/iG5lOrDaiM9OEinyrpC9c=
+	t=1784220227; cv=none; b=EWCgNrwpcSe0D1PtDG7W2esGiZLRzB0erEw9GAKFVgDV/m7WmOr2F+vxx5m7Z+JysrPP3NIUOZOFs9n/RGZhOcy4hMUTBIcmfE0V19ZK2E6zVOnZDyjM9J+Xn0P9klyLOtxEK2XRVz5NRR52PKoh3jlzlnnXgJvi5u2tIPm3UVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784220112; c=relaxed/simple;
-	bh=GsjqK00vty3gLiC6+1ggvcMs8Ih99rPRxq6K3Aa/nSU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XsQvd05Khc85zYaAedZNSKAseFQX4l60Ql3I8WWp6YeEr/HMmcOHtNxplWDyT2Cd8lDWo+XyLNvbTX4I9RkeMu/xhLt4QzkXOlvQ6NrU82K+2d8sjfovtuWSxmfF7p44/bfZ24E7tD+DmyCa5STGMbWVCvIQFqmmJSJYCJU81D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hs-ansbach.de; spf=pass smtp.mailfrom=hs-ansbach.de; dkim=pass (2048-bit key) header.d=hs-ansbach.de header.i=@hs-ansbach.de header.b=JPyKgsV2; arc=none smtp.client-ip=129.187.255.137
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hs-ansbach.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hs-ansbach.de
+	s=arc-20240116; t=1784220227; c=relaxed/simple;
+	bh=SnP8QQIUdNZrOqvASHOtouNYTYwfv/BR4v1iwdm4dEA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=lvKUPrM6d0/jr5B0h2UN2Sn6GqLStx/wEDLSYiUYe7GtcZXUAFj3NM7BpikHwxl2b05mzWo+SNqiB7ahxSp8IK4N5MN350sd17a4dEJJdmTKnwP7ubJwbitZ1ZI0ncFoQkcEv4V8T6BuaYj9sanfeLPJj5qy1ftERw3jq/GNbf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kGu44Drr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hs-ansbach.de header.i=@hs-ansbach.de header.b="JPyKgsV2"
-Received: from lxmhs51.srv.lrz.de (localhost [127.0.0.1])
-	by postout1.mail.lrz.de (Postfix) with ESMTP id 4h1Jhy0c2kzyV3;
-	Thu, 16 Jul 2026 18:41:38 +0200 (CEST)
-Authentication-Results: postout.lrz.de (amavis); dkim=pass (2048-bit key)
- reason="pass (just generated, assumed good)" header.d=hs-ansbach.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hs-ansbach.de;
-	 h=content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=an-postout22; t=1784220097; bh=GsjqK00vty3
-	gLiC6+1ggvcMs8Ih99rPRxq6K3Aa/nSU=; b=JPyKgsV27ZIYlIX4MO26HkXLei1
-	SKQl3iPx1+R5utAqLRMjkDRnE9wH1mNm9fq4IP5pjZWCd39HhDSCxjGhnyDdX/nJ
-	gImcZ0FzDKlOBXfTxEECFJ8RsnzV3+8nFQ/iOgi5Qp86ShaJT8hVPLK5IDwdR9RQ
-	HBFt9lBVZRy1cFHXzK72FaNGrFnNbsQOxGVwJtB08U84tZq/3VjR6cPp+MKqoKlU
-	ze8VPrKUWsrZA1vLSaHi+NU8MKjmo4eN8RE8tWl2TJWSTyJnmoQR4AVz2EFpVgCM
-	QdYyufJRjN9y2q+vBldVwAh1WdqfNKvDydreR50ZbPzrfEGxleuY2v4+qTg==
-X-Virus-Scanned: by amavisd-new at lrz.de in lxmhs51.srv.lrz.de
-X-Spam-Flag: NO
-X-Spam-Score: -2.886
-X-Spam-Level:
-Received: from postout1.mail.lrz.de ([127.0.0.1])
- by lxmhs51.srv.lrz.de (lxmhs51.srv.lrz.de [127.0.0.1]) (amavis, port 20024)
- with LMTP id hyvuV5U-DyrD; Thu, 16 Jul 2026 18:41:37 +0200 (CEST)
-Received: from chimchar.fritz.box (p200300eeb7001900d36d09bcf7cd0c19.dip0.t-ipconnect.de [IPv6:2003:ee:b700:1900:d36d:9bc:f7cd:c19])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by postout1.mail.lrz.de (Postfix) with ESMTPSA id 4h1Jhx05SyzySF;
-	Thu, 16 Jul 2026 18:41:36 +0200 (CEST)
-From: Simon Dietz <dietz23838@hs-ansbach.de>
-To: simon.dietz@plantwatch.de
-Cc: andrew+netdev@lunn.ch,
-	davem@davemloft.net,
-	dietz23838@hs-ansbach.de,
-	edumazet@google.com,
-	johannes@sipsolutions.net,
-	kuniyu@google.com,
-	linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [RFC PATCH net-next v0 6/6] net: apply RCS to GeoNetworking
-Date: Thu, 16 Jul 2026 18:39:55 +0200
-Message-ID: <20260716163955.3709443-1-dietz23838@hs-ansbach.de>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260716162152.3616762-1-dietz23838@hs-ansbach.de>
-References: <20260716162152.3616762-1-dietz23838@hs-ansbach.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kGu44Drr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9CF91F000E9;
+	Thu, 16 Jul 2026 16:43:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784220217;
+	bh=uqfDMBky8ltos50nXdtqbBp/S+h2mdqQ130ynwz+gXE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=kGu44DrrjOKxlgbOcTiOuR1I/XNU2QiBR684H1vljQJXdas5Tzoj8WFgGq18y8Mlb
+	 FTAtzUdlbr/OsvG55DWfX3M0V/K678nWbV4pH4Xcu0NY10xioGPGfxM3yFVRXieYbd
+	 9Jtb68tARNAkX2cHgedXpUU9r44uDsW48K6q38H6hhxDbxfjbL+iqTar6vahWDD/hA
+	 URrFDmx/r7ROje1vVzSFPhRpYQoYQYCKFAjzmbQmO4bplQzKYnuFT96LwM9a0N6Y1n
+	 UcmE0g19yVWfd0PcPbKERL1iST9NijbSaMtQuf5KkQy6h5/ZRBn164en3PGbxv0oiX
+	 A87mCkzrLrSbg==
+Date: Thu, 16 Jul 2026 11:43:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: Move Spacemit vendor and device ID to
+ linux/pci_Ids.h
+Message-ID: <20260716164336.GA40813@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260715-rtw89-spacemit-k3-v1-1-e577bc63706b@oss.tenstorrent.com>
 
-I am sorry for the now misformatted patch series tree and for the
-partial transmission of this patch series. It turned out that because
-I used git send-email --dry-run before actually sending the patch
-series, which drained the email send limit per hour of my mail/hosting
-provider. I now use(d) my university email address, which enforces a
-(much higher) daily email send limit, instead and it worked. I hope
-not to have caused too much inconvenience.
+On Wed, Jul 15, 2026 at 10:21:54PM -0500, Anirudh Srinivasan wrote:
+> Move the vendor and device IDs for Spacemit PCIe Root Complexes to
+> include/linux/pci_ids.h so that they can be referenced elsewhere.
+> 
+> Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
 
-Simon
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+To help motivate this patch, it would be nice to say specifically
+where PCI_VENDOR_ID_SPACEMIT will be used.
+
+In subject line, s/pci_Ids.h/pci_ids.h/
+
+> ---
+>  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 4 ----
+>  include/linux/pci_ids.h                       | 4 ++++
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> index 680acc93f5395..7b0bc1802954a 100644
+> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> @@ -21,10 +21,6 @@
+>  
+>  #include "pcie-designware.h"
+>  
+> -#define PCI_VENDOR_ID_SPACEMIT		0x201f
+> -#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
+> -#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
+> -
+>  /* Offsets and field definitions for link management registers */
+>  #define K1_PHY_AHB_IRQ_EN			0x0000
+>  #define PCIE_INTERRUPT_EN		BIT(0)
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 1c9d40e09107d..d6f26cacc8e35 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2640,6 +2640,10 @@
+>  #define PCI_VENDOR_ID_SUNIX		0x1fd4
+>  #define PCI_DEVICE_ID_SUNIX_1999	0x1999
+>  
+> +#define PCI_VENDOR_ID_SPACEMIT		0x201f
+> +#define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
+> +#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
+> +
+>  #define PCI_VENDOR_ID_HINT             0x3388
+>  #define PCI_DEVICE_ID_HINT_VXPROII_IDE 0x8013
+>  
+> 
+> -- 
+> 2.43.0
+> 
