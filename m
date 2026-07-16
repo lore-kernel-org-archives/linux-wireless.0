@@ -1,322 +1,147 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11012049.outbound.protection.outlook.com [40.107.75.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9615C31328E
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 01:57:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2371515A864;
+	Thu, 16 Jul 2026 03:16:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.49
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784167067; cv=pass; b=AUtX16/ruAfeL0rqlmzA+7mLBYyL6m5AVtLerbkd/HY6Yrg78l0PL1K7w+bJjIFLW6q+rtBn+nOY80eMqWZuKQUGGrch2D/bRdK/QQAv7s3KtIep63ikrWnctsV8GS8Lf0gXp2cI7/w2ksG9cR24DdJQDpr+yCXavp/JTNMeU3E=
+	t=1784171789; cv=fail; b=dIWdX5QHIkFdo8T7xewfD7njTS659jiUnGJGCZHuX4a0pINcG8CGu+VrF8Tx6KnQAxTmBjDUu+EI9guj7DVFETrT0gxWo3MJdXvCn+cZpPZyrwcY9HXsXceXMPrFZR/37YI9zBLLQwCabi8acjXOjgXqyuFb5t9rkTuo+tdbtLo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784167067; c=relaxed/simple;
-	bh=Er46m88ZGrH4fiXayReTOMnUahxt+9FZGQ4jHFrylqA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Tr5CRcqk13JTSfUP8aXR9NT41Wb78pL2bHJAIIsv9TLMm/gXmQwCofAlMrPBOrZUUuxnlFW1XIJBlOg9g7ybQV0Kfsu9H70SPycZjib7A5V6fllrdktKTeZX9loULZzR2uTo3poS+iVOitkbWfOosfMDnvy3d4DtH9+ZbC9nupg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=eC/gUW6t; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bMOYI1nO; arc=pass smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1784171789; c=relaxed/simple;
+	bh=lkqYWbvRWwatnalxo/CTXdF43jeSBuXZSVQzRUlSe14=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=JJqR33rG92JdNsCDcWk06XuiB2sLsydCIWJ2RW+xnwmtVTtnOydtpjay9YMLjYh/cWogd2qr0U9knv+2Ab59ThUbGlyq67H+vtC3PGms4m1o1RkqwVfyym9tmzWjo88M89PXzh5jqnxKXTnnFIQ/bhjcJ/MUQRqR3H3G/rihvOY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=qc3y0ZYB; arc=fail smtp.client-ip=40.107.75.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="eC/gUW6t";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bMOYI1nO"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66G0Xlc21125168
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 01:57:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	FcJOtzH5ZQPgdth/24g7ATlf0K+lEyfhd7GpxU8dSaQ=; b=eC/gUW6tCgDbZDyM
-	v9NCuygzxPGI9CJ2e1fdQemuN0QQWuF7aWk5MoBNjQdZ7FtRrCyE7dDY2u3sqqca
-	sbkLRcKZZbHKfcIS6LPjMoFi8GOVUukK5mfxwE+qcNa+9RnD4LwRaAVg12ysDR+S
-	nzk79Sl11jugfrQukPXbGR4Clifl9itiIg9CC5u3M9kAQqpY2JCZgvQOpaesHzL7
-	kAcg+p0oJNzOMNsRocSml1dFXUj7AeBu9oDTNZvPXi9m18aS9B993P+ky9x6W/YC
-	dWMNsywj8sERF5+NTk53Qhn5CDhf6zjLCMfx8cw4kiSIdS+fi6KP7k5++VqFwBrI
-	Cd9DiQ==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fe7q63egg-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 01:57:44 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3811343bd68so1843093a91.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 18:57:44 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784167063; cv=none;
-        d=google.com; s=arc-20260327;
-        b=gCoBKVf9BCwvVEPZ2eqMThXiI5wcZRy2cykaAXQLlNIIFZMzDJdQ4QUxqUJUitJUMx
-         Yz3q2EURUXZcGBmUBeGXk/uVAneqcuhcQ4UA/WWBOVIpkm5/lw3T+DTl5pPJgJFYsGHc
-         MpMiOHt+JaASfMrtKhyoLVf7im8Iyc72ymLa/0hPCmDNT/gMhdarrVIrUB7mj+2ogEew
-         tGM07XvSkQAXrWlUGlOztakEb8hLWTib4ZYXF00lrZiRd4uapqiCIqysbq5FUHrNH00M
-         VkGPKfn90uKVWIKi55nixILIPOtnynXpgOq0l5ILnABX78xPX8A1RKCI8ddrWoT/74oh
-         UN5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=FcJOtzH5ZQPgdth/24g7ATlf0K+lEyfhd7GpxU8dSaQ=;
-        fh=+ZqWxDZEIQrJBinrzGJ7fR+sSAJRlYqCv2LqmOasiCA=;
-        b=stNbRjplj5iKs4yoZOOJ870sRuO2lyQ7zK6JzF0lT8QnwVefvZU/peOp+kRCM8Qm0X
-         foNcp1s3OnSrxdWCBDWR2dqgdLRj6A+hPuzw54+awvMo4rADuuU1QR1cVvI8mfxzhEjW
-         U+fnWMYJYf1v08G8+CZm7H9ghtEedS5DKqshuLq5ZCwVsgmrYkdsBQqTbE7Ad2WhBwP2
-         yYqdbrA1y9la2vYyLoWckmp8eTLLMpOS4IRZzQV/ELvwLpU56qYY3Rb7uC7z4X0reG24
-         yUX6S/+lVSmehzUrXqdB+oq6jGj0EgdeIezQInSrLDq0rRqwDedSZcqOx7EK6kVn4MpO
-         EF0A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784167063; x=1784771863; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FcJOtzH5ZQPgdth/24g7ATlf0K+lEyfhd7GpxU8dSaQ=;
-        b=bMOYI1nOtYMKo7wlz3v3EcRnyVskRtvXLPPljOsNs8uiKbDg+2nfQqLFRgyOAIwSD5
-         Z/DczREJz+Q5KzuHDFZOU/dD5vYdUddvepiSg5/A58ytSW7wZsHiYjzOdt4xgxtIOW8X
-         kIKPjVbndAyAOybW/qRxuFViUpP+EmckD0KIF+Q9xgmGE2D1vKk/xdCTGeQDu0j2QN9u
-         QVuZyaHvp8GJgm8vC40J7OD2CyzVFIc9FLpaxDKiW1i2mzFDQnhWE0Ee+wv0f+gK39tl
-         N0vyMIxA1PIHfOqtq8ABMeBy/oI12UBHcLiyA445Rt/Y2ZYHVdzQ91Pvv4xgcL3knJKU
-         VoVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784167063; x=1784771863;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FcJOtzH5ZQPgdth/24g7ATlf0K+lEyfhd7GpxU8dSaQ=;
-        b=ILBysh33+DmyXMTzBT20ELdUxeVeSS0Tnt2OBCSlO2uqenehkhooeLU0ur3kpY3GBO
-         Ykn+2ftmhITPT7PEuoGJuqsql9Qp0OS28x6kYrv5tEw0Xmz2FuLF/NoxHt4lyMZ4nAxK
-         srlK8rhmM7IOPkNN347yQGRApx97RBzSUNltcd9EFVdJlxg+eiXSRhTsxM+MYLuZU2+J
-         XJSUmWSNqifG6ZR8N2Eah+dW973sd/NrjJZC4gEV1yPlz7h/rqHBJ67mKsBM9T++hdK0
-         RNho67r7U9KpfLGFUq/3XrvNA5f4XAIULMZzGygjQXxHJA8lBhhXe8lY0C6z4ieQ1P+e
-         IRlg==
-X-Forwarded-Encrypted: i=1; AHgh+Rr8i3mT6NuEwJJ+W9fhbAe2Ta6lpb2UJDon1Xo2LTr+mnIoGltz42Bud4X9kC1OCpQHE9WLep+qOUnCHPS/9g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxmuxk9BUvS9LsMLSjtfilp8NiT7BAfakXEIULBg1YsXpu5SPzd
-	SYVeoNUwLds6WnDnzUE4igJ2sBJ9aJZWLkyVFkhoGTdCWyeS1hVBLTvlHGCJMvZmyoJnbktoqZk
-	fa42hDi3RY2M76ijykyK3D7NaWQqvQb6qv2PfOKHRIUdOFccwF/FZmVUd5ofGL31BfGHTo28Vag
-	ebkn8HY4a0nUBK+qzLJ4vTU4ffhsIv3vD3jixoUvZTo6xN
-X-Gm-Gg: AfdE7cnG2bYUNJOkRYwC+iE/Q6esZO0LKND1ca9g4xqVaGdT8SBB1JQu01o+BwWLkVc
-	KCERWvUqBhR3ycnQxDfApQoGddU7frj7M/eQSxruELFdleP7PwTYpz73Yr1rxNgeaKp/4j2ikz5
-	8MGFoFWCCYjJ5nLIXjF145jgitbSyXnF0p2agNjanIWwY6sYhKq/dK0/ScBxaZZSTfyG66JKdL5
-	KqqHFEb8FylwepM+OM=
-X-Received: by 2002:a17:90b:3d87:b0:381:fa5:5217 with SMTP id 98e67ed59e1d1-38dc7848a6amr15709340a91.7.1784167063273;
-        Wed, 15 Jul 2026 18:57:43 -0700 (PDT)
-X-Received: by 2002:a17:90b:3d87:b0:381:fa5:5217 with SMTP id
- 98e67ed59e1d1-38dc7848a6amr15709314a91.7.1784167062784; Wed, 15 Jul 2026
- 18:57:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="qc3y0ZYB"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mJhIwf2oyXORZOakafaEROZEIONpcqBMIi/ihQAN6hSgnv8XH6J/0cxPgC0tBWKgZnYKYTF2mFNp01Bg6AoLc6cuicP9fEduIP2jCQ8jvIMll9p+hpbJXiZlQu/CNdoY4JyalCPweC1mRTS9oVLdoCM6xFz+5Rxzjiy95hBVM9Z7ZI9xcoHGn9t6pDnwhtJwBNitGHt3v8RKgPUCaWKbrMOzSgP3KKav7f6tb51JNrazaLYZQJoze8wB6FozaGRb+TRijPWJ5bjPBIZ65ktzOhkzHyevbSgqQsi8B+iRre0TAl0M57dxsR0Hc0Mzk6ak06CySuidGXuHh4cV+UbzEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KUzoTqNzR+DVJgi2RwF2dr0K8QBgwfFSPRHb0ogLoBQ=;
+ b=KVTGINQZsrkX8GlW9u4faIQm5yPUSq57o+3msNdKObYHX1j7bqwdsiBgQE+5JLGYQ2nxPfDIX+9HWrB9UWYhHLgyEKiNfZdbKtAVHw4weCEUHt5VLDf45XVpAORQhQq7IpzP/x8HNEiRIiEdEkjPL76Bx0RVU+9y0FYk8PG/IQf8sbFLam2Co1DOrjDV6M0Q1IDq0weqbalAOdwi9bNhvKc0QZcSD/qVmDzpz4AyXhHEPFNUKAyccvAwG+5PBbOvotu+jpvpU6FjaDqVHJDrmkFZyCUX+i2RIzbtPoY1hRGKcFuDzb01/7JEpwxTqFOAzYxDTlxecegITkfj3gUXzQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KUzoTqNzR+DVJgi2RwF2dr0K8QBgwfFSPRHb0ogLoBQ=;
+ b=qc3y0ZYBCkEuw+AZHOShJGx7RxLoFu4PH0t5lgD4zFDpTX0MpgLlGOzPIul/Iv8V4rXXzlfi3xaQDeRq96qyFloWL1zGu6E9OuOCpA63p8i9LJiii79WPG9OyKdL5W/WQN332VxyPOzx2Ya2cQhD3MMnTGnhheK7DpgemRzY6FOQe2ITsVlzGcq8Xvdw7HKaWOe0m+shglgiMfYjMg4bSWejrYT3WTZyg+y9pcCFrBx79RfPQPqMZR3LoXX3upUYqob9AHuAWQ+4udFmQjLMm5dB3oWK0lpEtMuideyxEmNy2yucyTqR0PXmnt1sUqYwo52g1Z7WzRss0VbxyyQw+Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SEZPR06MB5832.apcprd06.prod.outlook.com (2603:1096:101:c8::12)
+ by SEYPR06MB5915.apcprd06.prod.outlook.com (2603:1096:101:dc::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.223.10; Thu, 16 Jul
+ 2026 03:16:20 +0000
+Received: from SEZPR06MB5832.apcprd06.prod.outlook.com
+ ([fe80::f98:5e32:4ccb:d07b]) by SEZPR06MB5832.apcprd06.prod.outlook.com
+ ([fe80::f98:5e32:4ccb:d07b%6]) with mapi id 15.21.0223.011; Thu, 16 Jul 2026
+ 03:16:20 +0000
+From: Pan Chuang <panchuang@vivo.com>
+To: Mark Greer <mgreer@animalcreek.com>,
+	David Heidelberg <david@ixit.cz>,
+	linux-wireless@vger.kernel.org (open list:TI TRF7970A NFC DRIVER),
+	oe-linux-nfc@lists.linux.dev (open list:NFC SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list)
+Cc: Pan Chuang <panchuang@vivo.com>
+Subject: [PATCH] NFC: trf7970a: Remove redundant dev_err()
+Date: Thu, 16 Jul 2026 11:16:08 +0800
+Message-Id: <20260716031608.137119-1-panchuang@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2P153CA0015.APCP153.PROD.OUTLOOK.COM (2603:1096::25) To
+ SEZPR06MB5832.apcprd06.prod.outlook.com (2603:1096:101:c8::12)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260715125017.277242-1-jtornosm@redhat.com> <20260715125017.277242-4-jtornosm@redhat.com>
-In-Reply-To: <20260715125017.277242-4-jtornosm@redhat.com>
-From: Tamizh Raja <tamizh.raja@oss.qualcomm.com>
-Date: Thu, 16 Jul 2026 07:27:30 +0530
-X-Gm-Features: AUfX_mwzFnOaWEdPGknbaBHXtvjCifI0N1LyjfWnkPVHNRa7lXOSWWzCDn6Dj7g
-Message-ID: <CABkEBKa26vR52mX85t4xuZbrXz0FiRc0O_NeDFSNAQpSx=RR7g@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] wifi: ath12k: implement custom wake_tx_queue with
- flow control
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: jjohnson@kernel.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE2MDAxNiBTYWx0ZWRfX8HINGh2VOLgH
- BEQrtgXhKxwC1lNYE4ttJeHYWdIytp0qXAMMl4U6Jwr3u78oCjvLAFxfEW3Z5Km3J2OaIMAz/xS
- 90s9BqCXVMnnqJ+hLV6xPM2ROI9HWVE=
-X-Proofpoint-ORIG-GUID: aMncAn6gffHxoPWAeHelntsZFWKxoE-0
-X-Proofpoint-GUID: aMncAn6gffHxoPWAeHelntsZFWKxoE-0
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE2MDAxNiBTYWx0ZWRfXwuBEvAiLHUVI
- z+s+7h/BK1AWBfSjr6H/H1hxrxkyHVch63mWCfEAZKZ+NbhHwhAURMUDJfCij3ruCBTeQPdOgx4
- xhJHo69SkgqVJmvIdrFPAJ2VvuSbNzuLpLglcNanKshtse/MCnbCubmapawSerBs6Cma45Q9CnJ
- Hr2bzftypzTjmMwLdTMftN+MaKfkLLSqPMIbocYZcRm5nnSXnr9VPvC1Ulehy1Ab2//o1SGAcjL
- /R3D25Ll9Agpn2eljZJQMFC+po7QGkTzXJptFWlbNb24ZVuhPp/mPeqTbmk0Xq89YZp1jujMf6H
- JzGmkGvnXx8wylpNWe6YqGm1l6qrYrc/ixqY5NmUEkz1dCB+GBAsDf55l7Nib7ZC20CA3V+EFfd
- IWAGr4vKaIW06PUIPLDK68XDfvCPVZLE0kkF4JELiBmQFrvqwf3rx3zGUE78R++ge1HDyeJEzYe
- 2kvQRaVA10kw5BSFa9A==
-X-Authority-Analysis: v=2.4 cv=BajoFLt2 c=1 sm=1 tr=0 ts=6a583a98 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=ZpdpYltYx_vBUK5n70dp:22 a=20KFwNOVAAAA:8 a=M3vVt1PL3_miW-qGmNYA:9
- a=QEXdDO2ut3YA:10 a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-16_01,2026-07-15_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 malwarescore=0 clxscore=1015 bulkscore=0
- impostorscore=0 adultscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607160016
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SEZPR06MB5832:EE_|SEYPR06MB5915:EE_
+X-MS-Office365-Filtering-Correlation-Id: fc1a2099-28da-436c-88ad-08dee2e89b12
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|52116014|23010399003|11063799006|56012099006|6133799003|18002099003|10067099003|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	ZBVh/jJyO4I/kbqliX0dXPIOkEt8Hl3/ozEX1NBEUObYOXMfpDQVcl9alyG/ae3RB4TQ01SQ16tEcLKEHWsqdvZh80SnZzv2YBJkyTmxj49dsRHs8ynKjIfAne3EKA1GuKI63wXFwzWaMwtiYouGZdMFeyMnPRRRqPzJKD1lCn3mZXitd9086URJi19BWI1WGPVqKvdcYWRiUUCL7HYCkQnsvaUt+rnJwXIHA17Av0LoN/t+/C2XHPxCkB5A9Dl8Lq8x63DcfCX7NKonTbi4ROtoD1e4dQRdxvTD9y3T1quONvvkqNdfQleqFRhntNG+9rEAnT6MGYxN802WW5n2xX8NK8qUQ6vqualMgMIKZO+n032gMC4TVLxl3Xd/TN1Aow+U1IJXlA+Kd6Ca8qz7Wq4KD0jg57oMLpwZEPH3AYo34DaenanisV1gnbLucDiLnt2NQi5zlMAZjZfuUcXIPUg3DfFkSnrqme0cyWq1xBAgaT5jEbaCyqKdqu4bP0BKYD2+g+F1ZaJ8i5fvM0eOjMam0OTDNCyjTQd0ZG8HIzR/v9ii7ve32hICcG2bMDhPGYDmgWElFRqqtsfuZPHBJYCxHbQZxoSokqbnsEm5txQOkLBN92giMeOasg4NTYI/BynNaPCMgJsLF1AcrZs0fDLbVOohcOhpEmuAKLIJ48vUdP9N872THeC7lV8GMETa4NHuNRZaU0Tb05JMjQD6r97u5QjQK0Ly13SQg4i72zg=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SEZPR06MB5832.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(52116014)(23010399003)(11063799006)(56012099006)(6133799003)(18002099003)(10067099003)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?MgmnpmybMp88ypyvOvNnyYCdyVvKmkKUd+hYPwfLN6C02zb/sFomsUZEerkN?=
+ =?us-ascii?Q?ndsDiVwn4Nk6MTyrD0I+A1D+nYHDUcFlhkX7cgQI7XsaDALX906UYf4IYWxR?=
+ =?us-ascii?Q?ihAZlJAEZMdpsFellXUFFpMCBi/03gPORVolM9QGebzjPKhy7nxuUYgGl5c0?=
+ =?us-ascii?Q?vBAsBcfG55H6vD1MCQjNI29GS/H7Hx5uoqj1Blmb2LoySM8QkYzBgKUsqbHR?=
+ =?us-ascii?Q?WTmI0Q9yliGU42vNeQnyOQMULL+c3F/HAJZWFT93lzvw2IhBmJ7QUuoLSdR9?=
+ =?us-ascii?Q?S+tSseJaBXbKjBH/uSNFwg3QTAus5W27NH0Ky/FJecdsYxYHsfl6ja1g2KKB?=
+ =?us-ascii?Q?P0JpLttj9Tvs/LcPqFWtPM1LW2u507BBNKh/+ha5md5i9/nwkytpO0VEc+6U?=
+ =?us-ascii?Q?ykXrMfmrVzulL6MUaNqLvQ6tTbuNs8ZlKMvtX5NgrWbzxCeOpRwrQdrF18vQ?=
+ =?us-ascii?Q?Xd3OnONONkIGf/MiReLO+kI1L2aQ9mm9svAcSQBQis0rl9oKhFSDHQkUOCI/?=
+ =?us-ascii?Q?5oEr8jAsoEz945ZcDpe9qdxHSvnWfhgbqko9O8FacQLIoazNXt/xwXelDyW2?=
+ =?us-ascii?Q?mcEBPY3XslPO5NkpytFbhKEdVIhjd364jJKFnfU6yFRLPjNDOMULcTB7vGaf?=
+ =?us-ascii?Q?m0uQW78FF8Dzcr4mGmg6PNIWGTwmuPjeBmqOOZM48eQVl/mrlpR5B+SlIDDC?=
+ =?us-ascii?Q?2da3gsE7qHtGK41qlVA+0uXGov6O+NF+5EqnTzDZJSiv+wuXf261x2N8/Y9K?=
+ =?us-ascii?Q?rNIic857kB1Djex55o2T4SmZO0767Fa29msw7tFduOgqggVp1+yvYE5tUXfC?=
+ =?us-ascii?Q?gZmAYkbuXAUuYoR4BsmPRZ+xFjenP5QX7x9H3FQQcXVm/oNSDBIafRp6nWvc?=
+ =?us-ascii?Q?hCbrz608dsW/or6gf0/BloQ7qGh9fGoJ7zqAkCKoypiHjfUpmnQMtGBSdGQJ?=
+ =?us-ascii?Q?FRKM+Vdz/UcyAPeDxi77O8S4rTqmdUcdQ8PsTRkoy6Gx2bPLcvfxvyW32kIz?=
+ =?us-ascii?Q?dj372KVhwK5eAf8beKP82Rl3FfTjtWZ2BRjOE/uO9IINkwFNrlX+QIuW2Sma?=
+ =?us-ascii?Q?75hpHbukCbwT9ATRWdoQllyMkgxs+rhhDwh/e9UAU5u6hdSE3LKHATl7SaS6?=
+ =?us-ascii?Q?zaxY7Q8Bw046f9hziedlcNVOnm30l17IV1Bo1oZ2qvuzlTADy6sdEHOTbraU?=
+ =?us-ascii?Q?YUM8bz2tnTs1+wJ9BLo3u2kaeJo9gQv8B0bP/aKswKrszunBsYrrZ9feCmPo?=
+ =?us-ascii?Q?3XhGy7fIbzixwq/KxpwqB5diR1i2JZqsUXRe//QOR4tmsoirxTpMnMBA44OC?=
+ =?us-ascii?Q?T8yxn07PfRm7OfR266OAGsbISJbPW3k+wflG0KELNfqSklZnMgi5O+Uwopb3?=
+ =?us-ascii?Q?RFfaRyp9RtNnM6at9DuHCMAxiZZKKXIh9J3LNqJVlNjAuqSsV9xjWzSAJiSw?=
+ =?us-ascii?Q?4X0fGiYOHF2wcw1y+A1o0VuCIgGGnXgffAC3HP7GnC49leE+EMoDLIpOLCLU?=
+ =?us-ascii?Q?QiYr/mj898m3o8rknbqZdw7NnP3cEWmZJ3dqCQrpFXRmFFpmiTYqBJGP5pyS?=
+ =?us-ascii?Q?GmfBtSmA2NRCHDN7K+o+9QNo9UxdvBMmOm0Uv293K+YkMHXm6jn0x4LBl8+T?=
+ =?us-ascii?Q?s+cbwnIWrzYV58HhBaJzfiLEAFlVY0vhbgR0WTkglhfflrHRxl28oB1Kr1pH?=
+ =?us-ascii?Q?ACoHvBPyAWQhWYMksUX//oOk++SvZA1+HcbrketNGVaZnJ+ZMJnUkRwYbkLu?=
+ =?us-ascii?Q?O/qQf2nx/Q=3D=3D?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fc1a2099-28da-436c-88ad-08dee2e89b12
+X-MS-Exchange-CrossTenant-AuthSource: SEZPR06MB5832.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Jul 2026 03:16:19.7413
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WyMh/YtHSSN3Btw+o1k6oMqaRyqNJVpdpu0XmgXtrnakB9UgVf2a12EzhCGa7IEakPxCIDqwIC5nBuGbBsrXFg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR06MB5915
 
-On Wed, Jul 15, 2026 at 6:21=E2=80=AFPM Jose Ignacio Tornos Martinez
-<jtornosm@redhat.com> wrote:
->
-> Under heavy traffic, ath12k can hang and experiences -ENOMEM errors
-> ("failed to transmit frame -12") when the hardware TCL ring fills up.
-> This issue is more commonly observed in VMs with PCIe passthrough but
-> also occurs on bare metal systems.
->
-> Implement a custom wake_tx_queue operation that:
->
-> 1. Checks hardware ring space before dequeuing packets from mac80211
-> 2. Uses per-ring locking to serialize ring access and prevent races
-> 3. Syncs with hardware state to get accurate free slot count
-> 4. Uses ieee80211_tx_peek() to determine the exact target ring via
->    get_ring_selector(), matching dp_tx on all platforms
-> 5. Returns early during firmware crash in the same way as other
->    tx paths
->
-> This approach follows the pattern used in the iwlwifi driver, adapted
-> for ath12k's hardware ring architecture.
->
-> This prevents hangs, eliminates -ENOMEM errors, and improves throughput
-> by optimizing resource usage and preventing unnecessary packet drops.
->
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-.....
->  drivers/net/wireless/ath/ath12k/dp.c       |  1 +
->  drivers/net/wireless/ath/ath12k/dp.h       |  2 +
->  drivers/net/wireless/ath/ath12k/hal.c      |  1 +
->  drivers/net/wireless/ath/ath12k/wifi7/hw.c | 65 +++++++++++++++++++++-
->  4 files changed, 68 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath12k/dp.c b/drivers/net/wireless/=
-ath/ath12k/dp.c
-> index af5f11fc1d84..3d46cfbf0a1c 100644
-> --- a/drivers/net/wireless/ath/ath12k/dp.c
-> +++ b/drivers/net/wireless/ath/ath12k/dp.c
-> @@ -1539,6 +1539,7 @@ static int ath12k_dp_setup(struct ath12k_base *ab)
->         }
->
->         for (i =3D 0; i < ab->hw_params->max_tx_ring; i++) {
-> +               spin_lock_init(&dp->tx_ring[i].wake_tx_lock);
->                 dp->tx_ring[i].tcl_data_ring_id =3D i;
->
->                 dp->tx_ring[i].tx_status_head =3D 0;
-> diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/=
-ath/ath12k/dp.h
-> index f8cfc7bb29dd..68d2020be9b8 100644
-> --- a/drivers/net/wireless/ath/ath12k/dp.h
-> +++ b/drivers/net/wireless/ath/ath12k/dp.h
-> @@ -58,6 +58,8 @@ struct dp_tx_ring {
->         u8 tcl_data_ring_id;
->         struct dp_srng tcl_data_ring;
->         struct dp_srng tcl_comp_ring;
-> +       /* Serializes wake_tx_queue operations for this ring */
-> +       spinlock_t wake_tx_lock;
->         struct hal_wbm_completion_ring_tx *tx_status;
->         int tx_status_head;
->         int tx_status_tail;
-> diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless=
-/ath/ath12k/hal.c
-> index a164563fff28..c1c656e4550b 100644
-> --- a/drivers/net/wireless/ath/ath12k/hal.c
-> +++ b/drivers/net/wireless/ath/ath12k/hal.c
-> @@ -390,6 +390,7 @@ int ath12k_hal_srng_src_num_free(struct ath12k_base *=
-ab, struct hal_srng *srng,
->         else
->                 return ((srng->ring_size - hp + tp) / srng->entry_size) -=
- 1;
->  }
-> +EXPORT_SYMBOL(ath12k_hal_srng_src_num_free);
->
->  void *ath12k_hal_srng_src_next_peek(struct ath12k_base *ab,
->                                     struct hal_srng *srng)
-> diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wir=
-eless/ath/ath12k/wifi7/hw.c
-> index d9fdd2fc8298..306d51da3ea1 100644
-> --- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-> +++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-> @@ -1100,9 +1100,72 @@ static void ath12k_wifi7_mac_op_tx(struct ieee8021=
-1_hw *hw,
->         }
->  }
->
-> +static void ath12k_wifi7_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
-> +                                             struct ieee80211_txq *txq)
-> +{
-> +       struct ath12k_vif *ahvif =3D ath12k_vif_to_ahvif(txq->vif);
+Since commit 55b48e23f5c4 ("genirq/devres: Add error handling in
+devm_request_*_irq()"), devm_request_threaded_irq() automatically logs
+detailed error messages on failure. Remove the now-redundant
+driver-specific dev_err() calls.
 
-Is txq->vif always valid? Do we need a NULL check here?
+Signed-off-by: Pan Chuang <panchuang@vivo.com>
+---
+ drivers/nfc/trf7970a.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> +       struct ath12k_link_vif *arvif =3D &ahvif->deflink;
-> +       struct ieee80211_tx_control control =3D {
-> +               .sta =3D txq->sta,
-> +       };
-> +       const struct sk_buff *peek_skb;
-> +       struct dp_tx_ring *tx_ring;
-> +       struct hal_srng *tcl_ring;
-> +       struct ath12k_dp *dp;
-> +       struct sk_buff *skb;
-> +       struct ath12k *ar;
-> +       u32 ring_selector;
-> +       int num_free;
-> +       u8 ring_id;
-> +
-> +       ar =3D arvif->ar;
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index f22e091019de..277483b7a110 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2128,10 +2128,8 @@ static int trf7970a_probe(struct spi_device *spi)
+ 					trf7970a_irq,
+ 					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+ 					"trf7970a", trf);
+-	if (ret) {
+-		dev_err(trf->dev, "Can't request IRQ#%d: %d\n", spi->irq, ret);
++	if (ret)
+ 		return ret;
+-	}
+ 
+ 	mutex_init(&trf->lock);
+ 	INIT_DELAYED_WORK(&trf->timeout_work, trf7970a_timeout_work_handler);
+-- 
+2.34.1
 
-Shouldn't we check the link_id for fetching proper arvif? this code
-always chooses deflink ar and dp for packet transmission.
-This needs to use the same link selection logic as op_tx.
-
-> +       if (!ar)
-> +               return;
-> +
-> +       dp =3D ar->ab->dp;
-> +
-> +       while (1) {
-> +               if (unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH,
-> +                                     &ar->ab->dev_flags)))
-> +                       break;
-> +
-> +               peek_skb =3D ieee80211_tx_peek(hw, txq);
-> +               if (!peek_skb)
-> +                       break;
-> +
-> +               ring_selector =3D dp->hw_params->hw_ops->get_ring_selecto=
-r(
-> +                                       (struct sk_buff *)peek_skb);
-> +               ring_id =3D ring_selector % dp->hw_params->max_tx_ring;
-> +
-> +               tx_ring =3D &dp->tx_ring[ring_id];
-> +               tcl_ring =3D &dp->hal->srng_list[tx_ring->tcl_data_ring.r=
-ing_id];
-> +
-> +               spin_lock_bh(&tx_ring->wake_tx_lock);
-> +
-> +               spin_lock(&tcl_ring->lock);
-> +               num_free =3D ath12k_hal_srng_src_num_free(ar->ab, tcl_rin=
-g, true);
-> +               spin_unlock(&tcl_ring->lock);
-> +
-> +               if (num_free =3D=3D 0) {
-> +                       spin_unlock_bh(&tx_ring->wake_tx_lock);
-> +                       break;
-> +               }
-> +
-> +               skb =3D ieee80211_tx_dequeue(hw, txq);
-> +               if (!skb) {
-> +                       spin_unlock_bh(&tx_ring->wake_tx_lock);
-> +                       break;
-> +               }
-> +
-> +               ath12k_wifi7_mac_op_tx(hw, &control, skb);
-> +
-> +               spin_unlock_bh(&tx_ring->wake_tx_lock);
-> +       }
-> +}
-> +
->  static const struct ieee80211_ops ath12k_ops_wifi7 =3D {
->         .tx                             =3D ath12k_wifi7_mac_op_tx,
-> -       .wake_tx_queue                  =3D ieee80211_handle_wake_tx_queu=
-e,
-> +       .wake_tx_queue                  =3D ath12k_wifi7_mac_op_wake_tx_q=
-ueue,
->         .start                          =3D ath12k_mac_op_start,
->         .stop                           =3D ath12k_mac_op_stop,
->         .reconfig_complete              =3D ath12k_mac_op_reconfig_comple=
-te,
-> --
-> 2.54.0
->
->
-
-
---=20
-- Tamizh.
