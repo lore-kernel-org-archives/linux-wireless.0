@@ -1,117 +1,183 @@
-Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A590232F75B
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 03:22:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784172142; cv=none; b=DpIF/YQ/F7QLMq5PeHbQVXVIy5I3L9Nk4/hp63douMe3s1JaD2PY1XeiKR42mSRX5csVllcuccHoNeE9/zCBTsNe3y6NT3haWfhCEjJ4MNoPwkz6IHspQRnI1BfUMzJs1A1D8dlR12E7t6TDjBp1OccEKp3TNW+L6ULl2oYSl6E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784172142; c=relaxed/simple;
-	bh=5D1qVSBbWfn7Tpv6gHBIf1HEIkdpFl8pWYg+EmhZk/o=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=OgCUWASrmBANZIST/cn9tyqehZ/+rMxpmFBtHCCEtqiI4Q9i/XNoFbUYmskD/hp75iPn6qQrNbscVNuozj4Jt/BM91n6FRm3kiE8SIoDky26zHyMkXE0t9QEmzFE3jj1dXl6aJCPT0xF+1hReQj6EueEOXk3QELsQ0e5zX6M0Jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com; spf=pass smtp.mailfrom=tenstorrent.com; dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b=APx6jKgy; arc=none smtp.client-ip=209.85.128.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.tenstorrent.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tenstorrent.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5857B262FF8
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jul 2026 03:37:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.175
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784173022; cv=pass; b=FXmuvZgCzg4l0l5eBH5TfNEGMuxf4iRQwp6chxhD0oDYQSUNy18aMzaAdci1yVlOc30KOaXjj2IA2YPKbENUYbVHS2vp2wLLLKnzoJgrkGwy80DQdcm5kI/nfZyQ38QZezo5eRuYTdKCArcE9hPa8z2Rdm1WQ1kblEPOfBiyv9o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784173022; c=relaxed/simple;
+	bh=SOyE9cp3+o/CWnjamglQIYbeQsb/nLegiKSIjZyugKU=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=Blguv4rx3aGyXCDjCnOg6SCkoi28J2KQ3cwsn8B0C/CNutrGspVHYds73kPzVCJQVtDMC6RuukTOHZbcRwny9I7pLByDS+tISxAVN1cu5pjlnHyRGaKAjIlj/ScrD+aLEkRRlAZuZeE/uGbZ+TXl2HNiZfTNmZw8JIkVC9klInk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=km1PDbMo; arc=pass smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tenstorrent.com header.i=@tenstorrent.com header.b="APx6jKgy"
-Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-81ed2a00f12so24446867b3.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 20:22:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="km1PDbMo"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-ca12086c06eso5163319a12.0
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Jul 2026 20:37:01 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784173021; cv=none;
+        d=google.com; s=arc-20260327;
+        b=szUAcgkDAMfl1nT6tzVaaVjRROBcPtyCzjZkX968jA/1WzG3wFtUN7L4AmjNL6Pp7v
+         07Vcbb8uA1PtV8qQR/q4F6UA4DE9nPgIYyL57WQr7rXmgR58aXKlzYjfBFO2IteHlyff
+         uRCqr+DPoNQaf3qj1cImNft7ZZpWzEXaE3FqnEvdn6ID0HhbkSND+AxOhnDdVaCjfz8u
+         jIAKJ/J6Uaypkeol5L+d6pk2QOipgxmD66O4K6c36iuspS3bgnp0N/0fVeoXZqosID3F
+         7efw7ZXOX/B4lqfs+LnmosQ5JnzFFZS6D53nFw0lSZt2xF0dpduF4NYz9rrCAZCBOl4Z
+         XahA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=++xPNOPeREpY4gCo4ajCNGLsmjHdnRGu+s5z8t1lDAw=;
+        fh=3Wh7BGHdb3PxEJScgAGGZIxiQnxRxVF/Odmwd1X6W2M=;
+        b=FFdW7+FJsA7ouygEbtD79E1aj8PGLnMC/AlCcLA7ykAYDeEVFSFVp5aMMd+swj4JDA
+         e6VskksROD/8+RnZh7rV7u6vY8iKB74TOJJOLvlw13beIOO0EoKF0iuCOUyyDiE/uWX+
+         1Vpu1OtXK+fT1pSIAdzVNBGG+prfaaLezrTn1ryuVvvk+BVbHwAw4bAghlk3MskDD/Vs
+         PgQYLuODwS0qtoiH+1SgTz8sVH4kANpwLiamn7iKIehvv2KeHN9uKiMGWpYUFMQ0bUen
+         pFfFJW1HJNLADrpnOFoF/Tqqi6ScWeugVj+Ikc7fr/fSujgCfoRZiutEWeqFF2boGwgw
+         1JhA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tenstorrent.com; s=google; t=1784172140; x=1784776940; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=48efBL+/zgjdRX5eeYvPyEwynq80yeCCfHgWW6gkRZI=;
-        b=APx6jKgy3e3irQbP7akXPxudNatD3FbH8rTwQY1L/YzoFVygepfHdKg/wqPdaqfmCi
-         zN1ETIo9hWn7pteW4wWRp4zosDU4GlBe5oIX1LnX/su/HzCSOlME+x6exnuhGhVsD5ER
-         vxLudYLeGPOQvPVVkI13tdZOpTho+aVGpNsJpBLx++997HaD+Yl27Re5VbqdXIWecVlV
-         UmI2ixb7+wYYcRg6QMiAS7Kaw3dJWkrUalHWlPsVL7p310zEk6oLv4A4i0R/xV0754cU
-         Ivs5EYGtMA0IqNNj6bTGOm0EjuF4coy8r8mPT51FIjmgojD+3Na6qOzdCJ9YULe7WbTa
-         /F+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784172140; x=1784776940;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1784173021; x=1784777821; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=48efBL+/zgjdRX5eeYvPyEwynq80yeCCfHgWW6gkRZI=;
-        b=dd+qQ4MislHMoP6X+vOfn7SbJO2EJ2hq0L1HujoVW6CEz3cp1A1Ur+xfEUt1zmzABc
-         11bB+iEIu1TnGVzy0MftzIWt9DpIwLu0yfF9IlxCEjqVNdBUQwcP0dk3scB9ITnLWAQ0
-         l+opVU3CX2byKKRHk0PrYMjZXe55LsDQ1nRWq+jr4PuV+iZpgvs6P/vgBIQ9Ypyondn7
-         TfLgRwh8BbQ1yl+MG14dTtB6CrmbpIHMl0+3UIUOThpf+woToGs6M0g+rZhCSy5/eHtL
-         Kbt4vdTIHX0NYWQ5xBHkH/3L6eXhAgusr1mlNpzDCYqUnVwpCmTPGVIfedPnCscQc1y6
-         M8mA==
-X-Forwarded-Encrypted: i=1; AHgh+RoVVxaEveMWtxrXJ/kR629whUkdL8syDB8vBicHha9sWVQt/Lt9r/C8uPvY2/wboHIy9R9MEbAJVk4q4j0USg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YybGzBGs7GbQ7R3jHzFVfFIDtsez8XY7M5BWkUTm98k1aw8pr5O
-	Bl4xKLAbfjdV0dWKzAbU1zom6fpHvwSJiRGp7jXf2HAzpISL3YtsN5wkqyFaCrDbRlk=
-X-Gm-Gg: AfdE7cmTVcvKYYxYr/djGkF2noFaOUOf9fH8feKOjuy0X+MJrTGwjdNx5ejJ0Rhnz+r
-	wqEBr9z1xD0QbZMfT3K5XaPLa99O3+Ukt59G/+xiPMVEK0l7M3MzLhT0zws02Kcki4qZpQOueim
-	ESvKCi6hDnFPLRQ6memkNFm9Ey1XuvVhi3vd1HgUIVEBLNMUhSiMKz6ZpZvob3wo/nBRcTFpjll
-	fI+Zf7WtIRWmXOT850TNM7qddXzTIgyutN69oF4Nk2OatFDzpluaBiwhgxrVCW7LQEcFSGBku4h
-	u2QbF1D5wxr/9O4/f0pPS65ysnfpN6lVyQ3B+7dznFgJEm/7f4252HALb0BzxvwsccnvwwmyeIR
-	wbVOy6Q8pblp9T+F+8KLvMkuxkjxIcyl6VH94o2jsL2KlaReuZS4BRVOAKQJlPRBak86TZnEXhh
-	HKsLN8HXPtFEH0ST8oHQFdKTUwa1Cy3hK63LQRJReUFAmp+d9ZY8XmdjBEyQ==
-X-Received: by 2002:a05:690c:9313:b0:81e:d300:f427 with SMTP id 00721157ae682-81ed300f4f5mr29106957b3.5.1784172139650;
-        Wed, 15 Jul 2026 20:22:19 -0700 (PDT)
-Received: from [192.168.2.129] ([2600:1700:220:59e0:56e1:f9cd:8869:2218])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-81e6befb688sm185039127b3.14.2026.07.15.20.22.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Jul 2026 20:22:19 -0700 (PDT)
-From: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-Date: Wed, 15 Jul 2026 22:21:55 -0500
-Subject: [PATCH 2/2] wifi: rtw89: pci: enable 36-bit DMA on spacemit K3
+        bh=++xPNOPeREpY4gCo4ajCNGLsmjHdnRGu+s5z8t1lDAw=;
+        b=km1PDbMoCcPmKiVZmQM3q9VYxDnUkIzoN4+IdeJKt60Ewk+mcwywpMq+8QL6Bxmv4E
+         LuG4sWOYjf47GQGAFGS3fi31w8zySSLoaMZwRMU/TahpFOAkQa/ktcNSmuM/GkaUZ057
+         F+KBniAZgIXezNpYC1QY+ttrsBxai9mrZa78/UWRXTwjFZEnxANIQClO8KiIYZ/LrhFz
+         nbPcWW2W5JlUMqaW4zqqsjKxOrVzHYQ94djwcp4VKNt89Y0M+i0ySXlzXmjE7zhOpe0/
+         uCAUXNgnwPZprx/1PpbCrE8CoHtMqOR0lCfjvy9Kb4YxBozrmNVzWROneZOlAryDQpP5
+         9sUg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784173021; x=1784777821;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=++xPNOPeREpY4gCo4ajCNGLsmjHdnRGu+s5z8t1lDAw=;
+        b=rbXIbTi4+Vr24wiCwMqeDF4FnIpGIPQLLJRVnsgdNLgBnmk4YkTM1WobGeTv/EKdMP
+         vEciEdePXDXTn0TspNRGAzqVYshItlWTTbIKhSy0FCcGZnVOH1NkuGJU8viHoS1yZDSI
+         ugRBGYGpfHYEBxzv6SSudnxH6QvOUecHzWhpfJFDtDRT2T3IRiLxi3UjGpN111uTgiPw
+         /iUTEDpLo57qOY7TuuhZlO3WXLymfBV0MoIq+Iyj4wAmY8Mr8ADu0kTENnasj/5KB9M7
+         qMKOoUKqZ97o+BCi4ObUXbDIn/R/i0V4to9qIsj3qjKS0+hIMNFYriK2o7uHfCCCNW2/
+         2Nng==
+X-Gm-Message-State: AOJu0YxcLQtku/M5Z4s1UOKI/KAIzWq0U78c4BSMFHDo2qqKDpZ7oL9U
+	KJQQeJylMTFrT7qDPvcLyO7XVe8/FZTl9AMc7D4LGtY1pr23omGoq+4wT6O8ZXUMwzaiUtPQaxs
+	gnUwLd0yJ/+UH0ek0Qrpo6ZEL5no4nYk=
+X-Gm-Gg: AfdE7clxCShb0d/9JaJIEL40dwHQDI0abG9ii7C8IVUZYWPn1hF+0uO78vsDe2FdR1e
+	rZh2+zYZxrbjuZMbn5peig3YcNSfYjbXeo+ZBS03VYUPUaJ+JSvLe10G7PG+3F0NFuMeqPEEZsc
+	d5wy4/DN4g6tnYkB/HEaudedZwxHK1NP2/3Bfgaog6F6Bjjbuvaxq0iZaYpj+EdaWyzcEwkOiba
+	DLjU+xhBlwGD8nSr73oXnQf+0CZJ3UI9l0QXZj0sWCOa1unvU1uyTL8AwNTT0f8jaMw+lkTJxsF
+	buFd9/uem6yHE+bJuwCE/f+V/DNWKLs=
+X-Received: by 2002:a05:6a20:7347:b0:3b4:c9d5:cd5b with SMTP id
+ adf61e73a8af0-3c36c0f6d1bmr5645717637.13.1784173020542; Wed, 15 Jul 2026
+ 20:37:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260715-rtw89-spacemit-k3-v1-2-e577bc63706b@oss.tenstorrent.com>
-References: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
-In-Reply-To: <20260715-rtw89-spacemit-k3-v1-0-e577bc63706b@oss.tenstorrent.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, 
- Ping-Ke Shih <pkshih@realtek.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Inochi Amaoto <inochiama@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, 
- linux-wireless@vger.kernel.org, 
- Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
-X-Mailer: b4 0.15.1
+From: Mike Garuccio <mgaruccio@gmail.com>
+Date: Wed, 15 Jul 2026 23:36:47 -0400
+X-Gm-Features: AUfX_myaWIWReqY2lk9gfQSj8KILG7qLkd2EhVi6NUrAOKnpUQG3B49UdOvqG7k
+Message-ID: <CACfdPNH1Hgz70gYNRFBupxzjpOyBAVBPdxF+f_OLRUwMwXmXFg@mail.gmail.com>
+Subject: ath12k: WCN7850 fw stats permanently wedge after AP channel switch
+ (v7.1.3, includes 8f153eb74546)
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, baochen.qiang@oss.qualcomm.com, 
+	jjohnson@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The Spacemit K3 Pico ITX Board has a RTL8852BE pcie card behind a PCIe
-root port, but the SoC doesn't have any 32 DMA addreseses which the
-rtw89 seems to use by default. Enable 36 bit DMA ability that the driver
-has when this particular root port is detected so that the driver can
-probe on this SoC.
+Hi,
 
-Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
----
- drivers/net/wireless/realtek/rtw89/pci.c | 4 ++++
- 1 file changed, 4 insertions(+)
+  On WCN7850, an AP channel switch (CSA) can permanently wedge the
+  firmware stats path: after the CSA, every WMI_REQUEST_VDEV_STAT
+  request times out with
 
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 102bae4881805..c5b82fc46d063 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -3326,6 +3326,10 @@ static bool rtw89_pci_is_dac_compatible_bridge(struct rtw89_dev *rtwdev)
- 		if (bridge->device == 0x2806)
- 			return true;
- 		break;
-+	case PCI_VENDOR_ID_SPACEMIT:
-+		if (bridge->device == PCI_DEVICE_ID_SPACEMIT_K3)
-+			return true;
-+		break;
- 	}
- 
- 	return false;
+    ath12k_wifi7_pci 0000:0d:00.0: time out while waiting for fw stats done
 
--- 
-2.43.0
+  repeating on every request until reboot or driver reload. The data
+  path is unaffected (still associated, traffic flows). Because
+  ath12k_mac_op_sta_statistics() falls back to the fw stats path exactly
+  when the cached rssi_comb is 0 (the post-CSA state), every station
+  statistics poll from NetworkManager then blocks ~6s in the driver,
+  producing a continuous stream of these messages (~14k/day) and
+  D-state polling processes.
 
+  Environment:
+  - WCN7850 hw2.0 PCI, chip_id 0x2 chip_family 0x4 board_id 0xff
+    soc_id 0x40170200
+  - fw_version 0x1103006c fw_build_timestamp 2026-03-06 09:10
+    fw_build_id QC_IMAGE_VERSION_STRING=3DWLAN.HMT.1.1.c7-00108-
+    QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+  - Observed on 7.0.12 and 7.1.3 (distro-built stable kernels,
+    CachyOS). I verified v7.1.3 already contains 8f153eb74546
+    ("wifi: ath12k: use correct pdev id when requesting firmware
+    stats") and 7259b1a0e54c, so the duplicate-reply issue fixed
+    there is not the cause here.
+  - STA mode, single vdev, 5 GHz.
+
+  Reproducer / correlation: three occurrences over five days, each one
+  starting seconds after a CSA from the AP, e.g.:
+
+    Jul 14 03:48:01 wpa_supplicant[1403]: wlan0:
+CTRL-EVENT-STARTED-CHANNEL-SWITCH freq=3D5765 ht_enabled=3D1 ch_offset=3D0
+ch_width=3D20 MHz cf1=3D5765 cf2=3D0
+    Jul 14 03:48:02 wpa_supplicant[1403]: wlan0:
+CTRL-EVENT-CHANNEL-SWITCH freq=3D5765 ht_enabled=3D1 ch_offset=3D0
+ch_width=3D20 MHz cf1=3D5765 cf2=3D0
+    Jul 14 03:48:06 kernel: ath12k_wifi7_pci 0000:0d:00.0: time out
+while waiting for fw stats done
+    (then repeats every ~6s for the remaining 4h20m of that boot)
+
+    Jul 15 00:10:01 wpa_supplicant[1273]: wlan0:
+CTRL-EVENT-STARTED-CHANNEL-SWITCH freq=3D5765 ht_enabled=3D1 ch_offset=3D-1
+ch_width=3D80 MHz cf1=3D5775 cf2=3D0
+    Jul 15 00:10:02 wpa_supplicant[1273]: wlan0:
+CTRL-EVENT-CHANNEL-SWITCH freq=3D5765 ht_enabled=3D1 ch_offset=3D-1
+ch_width=3D80 MHz cf1=3D5775 cf2=3D0
+    Jul 15 00:10:10 kernel: ath12k_wifi7_pci 0000:0d:00.0: time out
+while waiting for fw stats done
+    (then repeats every ~6s for ~23h until I reloaded the module)
+
+  Boots without a CSA never show a single timeout. Uptime before the
+  CSA doesn't matter (one wedge happened 40 minutes into a boot, one
+  after ~2 days).
+
+  Additional observations:
+  - It is always "time out while waiting for fw stats done", never
+    "time out while waiting for get fw stats" =E2=80=94 i.e. fw_stats_compl=
+ete
+    still fires, firmware is still sending WMI_UPDATE_STATS_EVENTID.
+  - The WMI pdev temperature path keeps working while wedged.
+  - Recovery: reloading the driver modules recovers immediately.
+    From code reading, nothing in the SSR/restart path resets
+    ar->fw_stats, so firmware recovery would not clear it.
+
+  Analysis: this looks like ar->fw_stats.num_vdev_recvd getting out of
+  sync. In ath12k_wmi_fw_stats_process():
+
+    is_end =3D ((++ar->fw_stats.num_vdev_recvd) =3D=3D total_vdevs_started)=
+;
+
+  num_vdev_recvd is only zeroed by ath12k_fw_stats_reset(), which
+  callers invoke only on the success path, and ath12k_mac_get_fw_stats()
+  does not reset it at request start. A CSA is executed as a vdev
+  restart; if a stats event is lost/late or arrives while
+  num_started_vdevs is transitioning, the request times out (no reset)
+  or a stray event increments the counter with no consumer. Either way
+  the counter is left non-zero, and since completion requires exact
+  equality and the counter only ever increments, no subsequent request
+  can ever complete =E2=80=94 matching the observed permanent wedge on a ke=
+rnel
+  that already has 8f153eb74546.
+
+  Happy to test patches =E2=80=94 the AP in question does a CSA roughly dai=
+ly,
+  so I can usually confirm within a day or two.
+
+  Thanks,
+  Mike Garuccio
