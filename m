@@ -1,90 +1,152 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from out03-fra1-mx.uberspace.de (out03-fra1-mx.uberspace.de [185.139.157.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4D2D3FBED7
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 15:24:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45BE733ADAC;
+	Fri, 17 Jul 2026 15:42:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.139.157.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784301895; cv=none; b=GnsAH9qt4gDYl1k5ThupRlX26LPlsHtjBBtJPqDGTNIntlfsk+j7HFsnpmHG3dT7XV5e95CofILYaGP8bb/cuQFj0Fp5ZR8qgRc4dQ1Nqv1Dc3nYW29rHy8g4kX4Zqkb4EgzAkCzLJeytTa2vGwxOvCVQzKL+/3oe3+Le52XjR8=
+	t=1784302950; cv=none; b=FtrqdXfgRO1AszGA4tgzUK6UKoqmuaeyLIN2nA7OpHGlbAPrvdK/c9iU4Yo7cVvO1lnbJxxwPvIs4187CqevKYTdG0xWFbrxKvuzIokxqMBYtXZPGNzNyYptC6ESo3uHBSiktr8VsyEtadjg+3eA+mq17Y0HicpoxFQlwXj6Ryk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784301895; c=relaxed/simple;
-	bh=A10EGDsM7fnlda5quAJGXi662WwFMP2QKJ0NHlL8aYA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gb+f5fxO3GpZCPSxtTU8Qnq3MrEZY2MB+uTaTg4lNHUxTo3PIcG+23N+Q4L2fB/NU2dDvWrpR6TJZN9HOG0ecFwOl2N9tV99Zbr6x43KzxUuDUxAW4xAMq1Fc+g7DIWPmA2zbzE595wXFEKQGLcPXexEC2ycGz5yb1eevHgocfQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ByGqIq8/; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784302950; c=relaxed/simple;
+	bh=0zDAeGaeN++KZl5iGbdTvfyEPMfCz1Pd2QVxgBqFuyc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Lz9thArmQP6rcuJ/uVohpgOAD7oGpdi+670DfBcYkBoorpRxY/CBTGjI7mA9mEb7ga1NX7APhCC1HtIXbftUIGjXyvzjfKCBqS5xXUcpssfIrR1kMOnIafBO0PgPskNpD6aGWv2shjpGZYy9vy56dIhUJfh+GLovq3q0LYtz1kg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de; spf=pass smtp.mailfrom=plantwatch.de; dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b=jMg6UvX1; arc=none smtp.client-ip=185.139.157.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plantwatch.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ByGqIq8/"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-38dc69c74b8so5982856a91.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:24:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784301894; x=1784906694; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FJVdc1kiVvVGnfbOizavZ8Ol26pZFn/sLDtAlJRqRqI=;
-        b=ByGqIq8/Pp0L4Yp954BClegYk782jXFl0PGTbR12OnFNj3ZrZZi62AMJvDrwnxyfSG
-         EPFA8Mn1qaQjpTVxKJUhgwg09lTmFN09AAQV82XeZWiIM6ZBaMGDp5qMGdnpdCjCtFNR
-         4q3AoI20R4RBmBshOF7I8c3kIcBr/bVc62aTUR6RxoTO22QNi/4s6iWCtND/jIGAlMze
-         jtADuk6MU/HmTkPTHfQh85z5RC9ZQDRBPLeSgV0jE5bmxmRBLK/vcL26+opqQARSm3hw
-         TgAZpHPHWVWNRSHqFmUSeXPT8pjg8dSQ1djYvU84QznHSG3L3gf1/ZSW0ep1JbHWR+eu
-         nh6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784301894; x=1784906694;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FJVdc1kiVvVGnfbOizavZ8Ol26pZFn/sLDtAlJRqRqI=;
-        b=a2QTAdCgR3Sctgnn7d59SDLcESHdFkanBI48KXNx/lldFVjpOieR1OWQP00AyGE3TI
-         /gK5E3YocLHKl/YQHv1haqWT50LobjIohAnTjzcUZ9V25IMCpP4xjfL22/31zWDFYgnF
-         F0nzbuLy1iR8YOBbmHk57ksvVj0QYcE7YOS4PMeAaQtAucLwYMj4QWOItKtLgb9FIQ7i
-         FFdPymgQFzn16YG3EtYBcvJJqYC//ecV+OMOtKFu0QoyzcXgrwW5EYCBVFDY33y29q2N
-         5vyXSy7EHbjm0saU+NM3PKLB9xxpRK0Lryi9Rf0lf57jqArXs0gtGhRD4Cmtbb6X9u/d
-         X0Eg==
-X-Gm-Message-State: AOJu0YyVgJ/u3D9vnNimJcSSufMaHxhJFf83cHFT0O0ERN7lD4DogfHn
-	4MJWSqOWCE7aMqnpLGpPCoJc/MJIXPfx3hC7CYfcRXPNgKv1vAQPPJu6
-X-Gm-Gg: AfdE7cmsJ/c/DN8J4cVspQlRrZR1EjewSBoXgUtEZaYdclQERB0VjmD6c0/iCOv4Q4f
-	n6n4qJIFIvL1WRYgIj6sjSlEGBxBnqo4zNbYTeib8eAKaFm5MSu9R45rSSi9Lx1vALvyz3jeZhu
-	MDRamNmEpwK5+zbUOjUZbC60lwqpFwbBeWBEh+MzTypvKKRdSalnM+EhZy0p24dbgCQ1KdjzFhK
-	nBVsGcOQkhykf0dtZtKdKa2OetZFa2IfxiLKhsBIRz+z3JoKWmxdRJF3Jh/RCP60DWMsLsVFrBo
-	auqLWzz4xmrgDWEti9+vuVJZHl2dx77m7LPR7b3zyHuk1xoOhV8L47JzP0IxuWzriFKhEdvTPWU
-	xa990N2tNejMLq42oFbfNEb/vjW6Yu822RSSwC7imS+3H3PPitscRKV453a6WxQI9KdoHMhEkan
-	rmpBReug==
-X-Received: by 2002:a17:90b:224e:b0:37f:9ce0:af36 with SMTP id 98e67ed59e1d1-38e4b5a823bmr3108631a91.33.1784301893953;
-        Fri, 17 Jul 2026 08:24:53 -0700 (PDT)
-Received: from embed-PC ([2406:b400:d4:bfd7:14c7:7a3a:e3a9:7bf1])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1ddeb6sm10026606eec.20.2026.07.17.08.24.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 08:24:53 -0700 (PDT)
-Date: Fri, 17 Jul 2026 20:54:46 +0530
-From: Abhishek Tamboli <abhishektamboli9@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: rtw89: 8852au: Add support for Mercusys MA72XH
-Message-ID: <alpJPj6m5rjIBFNf@embed-PC>
-References: <20260710030055.57438-1-abhishektamboli9@gmail.com>
- <9bfdb983981d4bb98a4692ac6f1711f6@realtek.com>
- <8fb9ced500144618b7f43e54c12a25ff@realtek.com>
+	dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b="jMg6UvX1"
+Received: from janus.uberspace.de (janus.uberspace.de [IPv6:2a0b:20c0:2000:62:be24:11ff:fe50:5107])
+	by out03-fra1-mx.uberspace.de (Postfix) with ESMTPS id 6FACB1003DD;
+	Fri, 17 Jul 2026 17:42:18 +0200 (CEST)
+From: Simon Dietz <simon.dietz@plantwatch.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=plantwatch.de;
+	s=uberspace1; t=1784302938;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0zDAeGaeN++KZl5iGbdTvfyEPMfCz1Pd2QVxgBqFuyc=;
+	b=jMg6UvX1XHT/lzV8mq+pqCEukt51n6p6OcWPIiVBesC9ApTBsFCnlR4r8BIAFVj8On4Qgb
+	OluuA4Vxe0SQVk+LvA5te1GLyTjUGFq5LdJySBsEX8kAQezd7/zX3gvgrcDsrdxj/ssDX9
+	hAtiP1KgZQ71eusskJ6GdMW8+A5IkEb/o4NB+rpgtkgWuwJDPfgPmwzToDubI/yMS3wrqB
+	UqZhAOer/GaVFIzGQLqf1J7qn3Eehu8I/p8ggplSEZ73mVdSEmzOekV5rbPN24cm7mQevh
+	pGX+raRb2Afb5KUk9imbGmePmhWsdL1r7Rn/vToXxE1PgghZN4N5VJCsdG7C2A==
+Authentication-Results: ORIGINATING;
+	auth=pass smtp.auth=simon.dietz@plantwatch.de smtp.mailfrom=simon.dietz@plantwatch.de
+To: andrew@lunn.ch
+Cc: andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	dietz23838@hs-ansbach.de,
+	edumazet@google.com,
+	johannes@sipsolutions.net,
+	kuniyu@google.com,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	simon.dietz@plantwatch.de
+Subject: Re: [RFC PATCH net-next 0/6] net: add GeoNetworking protocol
+Date: Fri, 17 Jul 2026 17:40:33 +0200
+Message-ID: <20260717154033.2092529-1-simon.dietz@plantwatch.de>
+In-Reply-To: <9db571aa-4d5c-456a-ab24-796119c9807b@lunn.ch>
+References: <9db571aa-4d5c-456a-ab24-796119c9807b@lunn.ch>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8fb9ced500144618b7f43e54c12a25ff@realtek.com>
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [2.89 / 999.00];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	R_MISSING_CHARSET(0.50)[];
+	MIME_GOOD(-0.10)[text/plain];
+	BAYES_HAM(-0.01)[50.88%];
+	TO_DN_NONE(0.00)[];
+	TAGGED_RCPT(0.00)[netdev];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	ASN(0.00)[asn:3320, ipnet:2003::/19, country:DE];
+	LOCAL_OUTBOUND(0.00)[];
+	RCVD_COUNT_ZERO(0.00)[0];
+	MIME_TRACE(0.00)[0:+];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[10];
+	TO_MATCH_ENVRCPT_SOME(0.00)[];
+	ALIAS_RESOLVED(0.00)[];
+	DKIM_SIGNED(0.00)[plantwatch.de:s=uberspace1];
+	FROM_HAS_DN(0.00)[]
 
-On Wed, Jul 15, 2026 at 09:16:09AM +0000, Ping-Ke Shih wrote:
-> I seems that my Windows desktop can't access this link, but
-> Ubuntu is fine. I have not idea why. 
-> 
-> Anyway, the reporter is still not confirmed if this patch works.
-> Can you post the update here when getting acked?
-Sure, I will update here.
+> I'm probably doing a deep dive too early, but ...
+Thanks for your time and the fast response.
 
-And sorry for the late reply.
+> Nothing new has been added to /proc for a long time. Please consider
+> a different interface. I've not yet looked to see what is there, but
+> networking now pretty much only uses netlink.
 
-Abhishek
+/proc has been used during the development of the gn module for passing
+gps data from the user space to the kernel. This behaviour has been
+changed to ioctl. Procfs has only been kept for debugging reasons. It
+can safely be removed and will be in the next patch version.
+
+> New IOCTL code is also very likely to be rejected. The functionality
+> should go through netlink.
+
+I'll take a look into netlink and rewrite the new IOCTL code.
+
+> Generally, inline functions in a .c file are rejected. It is better
+> to let the compiler decide. The exception would be if you have a
+> benchmark which shows inline actually helps.
+
+Noted. No inline functions (besides proven by benchmarks).
+
+> This seems like debug. At minimum, it should be _dbg(), but maybe it
+> should be removed altogether.
+
+I thought to have changed all pr_info to pr_debug, this one slipped
+through.
+
+> When does this wrap around? Maybe add it as a comment.
+
+Noted.
+
+> Commented out code is not something we want in the kernel.
+
+Indeed all BUG calls should have been removed with one of the
+subsequent patches together with most of the commented out code. I'll
+take another look to ensure all comment out code is removed.
+
+> Maybe one of your later patches fixes this. We might want to consider
+> squashing them, so the review is done on the final clean code.
+
+That's good advice. I'll adhere to it.
+
+> netdev uses reverse christmas tree, longest lines first, shortest
+> last. It should apply to all functions.
+
+Fixed in patch 6/6. And partially included in squashing subsequent
+patches so they fully adhere to the coding style from the start.
+
+> Not the sort of thing you normally see in the kernel.
+> I've not looked at the code enough to see the big picture, but
+> generally, the kernel routing table is static, and fed from a user
+> space daemon. Should all this code be in user space?
+
+In GeoNetworking routing decisions can be and are in non broadcast
+situations based on the distance to the other vehicle/host. To be more
+precise routing is based on if the reciever is in the same area as the
+sender. If the sender needs to forward a packet to a reciever outside
+its own range, it is forward to the intermediary closest to the
+reciever.
+
+That's kind of the core idea/feature of GeoNetworking. I don't see the
+possibility to move this part into the userspace. But this does not
+mean that there is no option at all.
+
+>> static void debug_loc_te(void) ...
+> debugfs? a netlink dump operation?
+
+I'd like to keep this debug function for now. I agree that it should be
+removed/changed in the final patch before an actual merge to net-next.
+
+Simon
