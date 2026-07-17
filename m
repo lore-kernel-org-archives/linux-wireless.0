@@ -1,54 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0BC3CF96D
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:59:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C0D3988FA
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:59:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784271558; cv=none; b=hVPTqnHDbZmb/y6BYbq3q/ZCOY9s6ijJHKzqKacRfOb5P24Pq0LCcu+w3Ny5DRtmXKSKfuem3jKiuawr9tZESqv+WX+/GXniXeMbgtYMLMfDY2S4jrDku9BePJUO9AIk4/pmTR3qKGzVz5Ad/olPueF79zLPGJgejYXZcgWwiL0=
+	t=1784271563; cv=none; b=vEI44oy+hK8Yegjk0I5lWyq1iX4f+qPWMBrNvCJiy6bE1DLwYUpRt4SGNJPM8ZQaF/4Ij802TfZ1HfgZoYFQlz7w+EXgWMiOBsMNm+j0hAu7H+moRU1QCAcDYOCdcCH9QYlksoeueS1E3lKroMNs0Jou5hn1wGAC8MzqMIAUYgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784271558; c=relaxed/simple;
-	bh=c0wMiVdR0oKlsbuqRrr3Otkb3anP0K39geKa3bobX8A=;
+	s=arc-20240116; t=1784271563; c=relaxed/simple;
+	bh=2H3Jo28V+9bzWoiHbzAu19slbnxyyJRWyYyET3b0oeI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tiKr+w6GKnKv3sDmJiZTDr5n0FW2P8wA04GaPnOjH6MbHHarrq7wEpHrTgZJA38G/qbrLGQwz7eInpXG57Rc1xvoeTSssEpt7ocAiVgKWNhfhtSJEXf/bmx2GvoVjvexBbg3RgOkNsSevay9Rpkj4P94bx+JUuvCS/c1wdk+1Hk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=CMRuM7w/; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=AD+8CnrXIp/1oCABy4UcHnNQWH8a7pUB8BwW9mWsoCfZWoXrc5Yg4lETmhjEwnbbCEao+FV3YsM6UWbKrh+fimF26vWHp7lf6glHQNylRqNyB0HkQIXBTzF+D9Fwy2/mNcAP7Tf1FlrfOj7jn0CGRLTnzmz1ipTxy1XawxudfYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=tim8Pmkb; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="CMRuM7w/"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6xExcD4176592, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="tim8Pmkb"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6xJtG54176618, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1784271554; bh=PnL2W9amZYgu+aWPQTfNsptlrtwZC+eb5QcQ4rAwdio=;
+	t=1784271559; bh=2vyy80u/sigzaDP6g1ztrauxCFxxNDaKgc7xg5SrjUg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=CMRuM7w/PBAz9GhuUC0Z25CzZGlv6gflBk4j0ZulRV7NFeCqSlfHPdgM6AZNlwQrj
-	 49KU7zfBpTOTBAm5sa/6o5iXTQxyJwRIh6r1q/oJk++VV5klbjRl3ig3/WlHMg/oI8
-	 lpYVwXRENmMaPA/+O0VBimLte724EupNvmw2vNqialutPXiHvMnSut2h/yniv9ZALT
-	 5FVg/xWktayyGmjtgCW+ZrQhyawfAR/4qMq7BjyIdbbPcbxsAmFcbrkU4JTd8OR4D2
-	 mLHNfxWlLU8a7Kku8DWupTruUAJeM8+Fivyfn9ri6wq/LOuqn8UPX8uSzPQ1bneiwN
-	 xzar56TQo6NQA==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6xExcD4176592
+	b=tim8Pmkb8Dh8tIT2RaZ/j6C9yuCDXjO10VwDkzT4bjnWVu459wmd629ufNZxffSAM
+	 FuatM6Glo86aJeBPKnBLg0NdGTn6ETnXsqV80gm7Sqig+DHvXYRViMUEY5+2jkzEvI
+	 O8bTxxOe17LQ2n2/SIy77XDQn6vhp3kiWIgiEFVqFOU3sOLuFFzETOiTXi3vQjaGLE
+	 DalF3MQVtKuUbaeH3ya59mkS5u+2z5cjg+GbjMqDy0uc/AFcEO71V3lO3g4d7h7WXJ
+	 BEYRT+yLpdOfAJj4oxW+vyx5s8nwKpzUEGTmJhHy3zqbrD1fYk1uNNsvQXkDscSrhD
+	 zquvXT3YuAt2Q==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6xJtG54176618
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:59:14 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:59:14 +0800
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:59:19 +0800
 Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:59:14 +0800
+ 15.2.2562.17; Fri, 17 Jul 2026 14:59:19 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 17 Jul 2026 14:59:14 +0800
+ Transport; Fri, 17 Jul 2026 14:59:19 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>
-Subject: [PATCH rtw-next 06/13] wifi: rtw89: coex: Add driver info H2C command index version 103
-Date: Fri, 17 Jul 2026 14:57:32 +0800
-Message-ID: <20260717065739.64124-7-pkshih@realtek.com>
+Subject: [PATCH rtw-next 07/13] wifi: rtw89: coex: Fix Wi-Fi role info H2C command header issue
+Date: Fri, 17 Jul 2026 14:57:33 +0800
+Message-ID: <20260717065739.64124-8-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260717065739.64124-1-pkshih@realtek.com>
 References: <20260717065739.64124-1-pkshih@realtek.com>
@@ -63,62 +59,51 @@ Content-Type: text/plain
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The 0.29.133.X firmware driver info H2C index maximum is 5, to prevent
-switch case fall through and send unexpected H2C commands, add version
-code 103 as judgment.
+The function to filled up H2C command data is the last step in the driver,
+the next step is going to firmware. So the structure version number should
+not included driver local branch number (like firmware is v5, but driver
+branch to v105), it should be assigned as a explicit version number which
+paired with firmware.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtw89/fw.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index ad52274a3979..10699c92273a 100644
---- a/drivers/net/wireless/realtek/rtw89/coex.c
-+++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -3138,7 +3138,7 @@ static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 index)
- 		rtw89_fw_h2c_cxdrv_rfk(rtwdev, index);
- 		break;
- 	case CXDRVINFO_TXPWR:
--		if (ver->drvinfo_ver == 3)
-+		if (ver->drvinfo_ver == 3 || ver->drvinfo_ver == 103)
- 			index = 4;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index 53ec6efb1cb2..34bc52519ea2 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -6255,6 +6255,10 @@ int rtw89_fw_h2c_cxdrv_role_v7(struct rtw89_dev *rtwdev, u8 type)
+ 	skb_put(skb, len);
+ 	h2c = (struct rtw89_h2c_cxrole_v7 *)skb->data;
  
- 		if (ver->fcxtrx == 7 || ver->fcxtrx == 107)
-@@ -3147,26 +3147,27 @@ static void _fw_set_drv_info(struct rtw89_dev *rtwdev, u8 index)
- 			rtw89_fw_h2c_cxtxpwr_v9(rtwdev, index);
- 		break;
- 	case CXDRVINFO_FDDT:
--		if (ver->drvinfo_ver == 3)
-+		if (ver->drvinfo_ver == 3 || ver->drvinfo_ver == 103)
- 			index = 5;
- 		else
- 			return;
- 
--		rtw89_debug(rtwdev, RTW89_DBG_BTC, "drv_info FDDT index=%d\n", index);
- 		break;
- 	case CXDRVINFO_MLO:
-+		if (!ver->fcxmlo || ver->drvinfo_ver == 103)
-+			return;
++	h2c->hdr.type = type;
++	h2c->hdr.ver = 7;
++	h2c->hdr.len = len - H2C_LEN_CXDRVHDR_V7;
 +
- 		if (ver->drvinfo_ver == 3)
- 			index = 6;
- 		else
- 			return;
+ 	h2c->r.connect_cnt = r->connect_cnt;
+ 	h2c->r.link_mode = r->link_mode;
+ 	h2c->r.link_mode_chg = r->link_mode_chg;
+@@ -6323,7 +6327,7 @@ int rtw89_fw_h2c_cxdrv_role_v8(struct rtw89_dev *rtwdev, u8 type)
+ 	h2c = (struct rtw89_h2c_cxrole_v8 *)skb->data;
  
--		rtw89_debug(rtwdev, RTW89_DBG_BTC, "drv_info MLO index=%d\n", index);
- 		break;
- 	case CXDRVINFO_OSI:
--		if (!ver->fcxosi)
-+		if (!ver->fcxosi || ver->drvinfo_ver == 103)
- 			return;
+ 	h2c->hdr.type = type;
+-	h2c->hdr.ver = rtwdev->btc.ver->fwlrole;
++	h2c->hdr.ver = 8;
+ 	h2c->hdr.len = len - H2C_LEN_CXDRVHDR_V7;
+ 	h2c->r.connect_cnt = r->connect_cnt;
+ 	h2c->r.link_mode = r->link_mode;
+@@ -6397,7 +6401,7 @@ int rtw89_fw_h2c_cxdrv_role_v10(struct rtw89_dev *rtwdev, u8 type)
+ 	h2c = (struct rtw89_h2c_cxrole_v10 *)skb->data;
  
--		if (ver->drvinfo_ver > 1)
-+		if (ver->drvinfo_ver == 3)
- 			index = 7;
- 		else
- 			return;
+ 	h2c->hdr.type = type;
+-	h2c->hdr.ver = rtwdev->btc.ver->fwlrole;
++	h2c->hdr.ver = 10;
+ 	h2c->hdr.len = len - H2C_LEN_CXDRVHDR_V7;
+ 
+ 	for (j = RTW89_MAC_0; j <= RTW89_MAC_1; j++) {
 -- 
 2.25.1
 
