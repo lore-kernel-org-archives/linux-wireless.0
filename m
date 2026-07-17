@@ -1,89 +1,111 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A1735E92F
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 03:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5CB5375ACF;
+	Fri, 17 Jul 2026 03:23:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784257638; cv=none; b=eo8qRBhbGrqpTZPWbS+dyWrE/mVlJRfC+RMccG68yJCPfWR/VkXjNAh0SAdmNwFvMMs2amARD/55fNL18D3ly9nxXZ+Rty+BbYYtyIGM4uIK5ObwwKVgAUMWEElRPB0S+quvO0akpQGum89X/EnFIknE/4Eq/mTB84VKH6UsunE=
+	t=1784258628; cv=none; b=lq3/ha9bSQ+G9xBbrkpBwEZVUQR6bn1gmg1NNWsjF6pBTZsaa2WIxGG4k6L4zL8YPDILVJSwx6ALLh+fsAgFfinKXRu/vZmy/ybGbyWHweF1q3BFvawc0SfsJvE38ym3bzytPpyZHTQ9UXkSaqbVbw734kjOlHqqUAxxY7MaU5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784257638; c=relaxed/simple;
-	bh=AwfFokggYEJZ/SumhrEL52YExz0bwyHph0C4I5Rq4d4=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=iY9TWFdCmuZl4lxLoZpwE95Dklb2b8XxSAu8fIY8ZEQgAfzvROiXL+u9qJ596Bsm6OAt/mHVRxXpeDHmffyCO09U5FEVhADRbNF3oh3og/VhMVey6EEv9C11ALnq3W6CAw8vHxALy8fxmSTeZq53ErhMzXv4Gx1fHSFbQQsL4Tc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=jhsk7cb/; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1784258628; c=relaxed/simple;
+	bh=ODwML5rJqM3Y9J+1dv0JFw4+OGMl1ouYw+zwW7IM/k4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tJIltS9OvNzFNJRsXg9dlZg2P3NrWZYH5vjD9jh3bGHFqgGzK0g3j+Ar7N2PJ3tNPq3inYe/y0d+gekmJ+nYWx5kfX7dS8eD1SrzkZ9VDyre09sHV2zQTg9cTyDE5sWNVQZD7A73k/6qp8LER5KoY4Gl1RfLohcv+1yaPUBBGp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JUqzZrRQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="jhsk7cb/"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H37DZ904082208, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1784257633; bh=zKB2Uc8hOo4PdenKl814qSoK7tEQd9XSdmgJJSGhHPo=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=jhsk7cb/nzPODhPdElOKu3XEJAWrUX3BXNG6glMHACdvsW0xeWT6Eazj/TZQrvi3B
-	 1D9B8dqkRR7tDpw4uTdwY56gyAp2uQa5C/vl9gsp4xDd1eZ8MqfQFp5nhBk7wH/Snq
-	 0mRt3cOYnJrtjIjcJuz3toJJ3EsswDoC8R6EFWW5nm9HeKp6HyVLauEwGBNPgHeP9q
-	 jDf7wcyCqoA2k9LRye4C9dmo6HSnDkNSVL6fIDRt/fJtavZ4J/QYTmrv8wDA4A6+GC
-	 OuZNGPno4FQZQr2pJOlTyhAId/QI84OTmgyVpp18/PkLTyk/gWmN/QPusDqZJX5FIv
-	 lA9nZc/zrHp9Q==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H37DZ904082208
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 11:07:13 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 11:07:12 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 11:07:12 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS06.realtek.com.tw
- (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 17 Jul 2026 11:07:11 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-CC: <ku920601@realtek.com>
-Subject: Re: [PATCH rtw-next 01/11] wifi: rtw89: coex: Add Wi-Fi role info version 10
-In-Reply-To: <20260712030506.43438-2-pkshih@realtek.com>
-References: <20260712030506.43438-1-pkshih@realtek.com> <20260712030506.43438-2-pkshih@realtek.com>
-Message-ID: <52121bc9-de20-45a4-934c-df7ceb9ea158@RTKEXHMBS06.realtek.com.tw>
-Date: Fri, 17 Jul 2026 11:07:11 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JUqzZrRQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B2FA1F00A3E;
+	Fri, 17 Jul 2026 03:23:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784258621;
+	bh=2Sawr9XzpFp2rxdJvgZDvuQs9ByLR9DjNmLMSBWdSiQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=JUqzZrRQ35Qd5vZtf84WVjc55Pe+9QyiuUlC2fPQI3Emosr2TfhiCPsVYcjYv6Y+9
+	 7rB2f9bUmKXUDcOq6jq6c6twbVnweBxRJJ1w1c7zm3pP7tZ4ZTknIgYVUjtAvwRXoo
+	 h8wTaCURvriVcBDQKHRFsf12bXNYqFxWHuemCFAJ9C6G1fcAOA6uBs+0llH5+Lls1Q
+	 nZKUKxnkmN+C5L5L2sDBIE3/mLvt/V9WuJcXXuvkuv0h7JMX7LFHA6a3h1PxoWcd/J
+	 J4xYNaMSSSGcCBM2ZIGkBsnMh2rsw3k1b/fDJWL864fh9m8H1D0rhr3kvaZ54101+W
+	 cMArFnvJ2P4Fg==
+From: Bjorn Andersson <andersson@kernel.org>
+To: konradybcio@kernel.org,
+	Sumit Garg <sumit.garg@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-media@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-remoteproc@vger.kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	robin.clark@oss.qualcomm.com,
+	sean@poorly.run,
+	akhilpo@oss.qualcomm.com,
+	lumag@kernel.org,
+	abhinav.kumar@linux.dev,
+	jesszhan0024@gmail.com,
+	marijn.suijten@somainline.org,
+	airlied@gmail.com,
+	simona@ffwll.ch,
+	vikash.garodia@oss.qualcomm.com,
+	bod@kernel.org,
+	mchehab@kernel.org,
+	elder@kernel.org,
+	andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	jjohnson@kernel.org,
+	mathieu.poirier@linaro.org,
+	trilokkumar.soni@oss.qualcomm.com,
+	mukesh.ojha@oss.qualcomm.com,
+	pavan.kondeti@oss.qualcomm.com,
+	jorge.ramirez@oss.qualcomm.com,
+	tonyh@qti.qualcomm.com,
+	vignesh.viswanathan@oss.qualcomm.com,
+	srinivas.kandagatla@oss.qualcomm.com,
+	amirreza.zarrabi@oss.qualcomm.com,
+	jenswi@kernel.org,
+	op-tee@lists.trustedfirmware.org,
+	apurupa@qti.qualcomm.com,
+	skare@qti.qualcomm.com,
+	linux-kernel@vger.kernel.org,
+	Sumit Garg <sumit.garg@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH v9 00/14] firmware: qcom: Add OP-TEE PAS service support
+Date: Thu, 16 Jul 2026 22:23:28 -0500
+Message-ID: <178425854615.1084804.10241911437238961566.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260702115835.167602-1-sumit.garg@kernel.org>
+References: <20260702115835.167602-1-sumit.garg@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
 
-> From: Ching-Te Ku <ku920601@realtek.com>
+On Thu, 02 Jul 2026 17:28:16 +0530, Sumit Garg wrote:
+> From: Sumit Garg <sumit.garg@oss.qualcomm.com>
 > 
-> Because the new generation Bluetooth will able to work on 5/6GHz band,
-> it will suffer 5/6GHz Wi-Fi, the mechanism need to cover more scenario
-> with different Wi-Fi/Bluetooth combination.
+> Qcom platforms has the legacy of using non-standard SCM calls
+> splintered over the various kernel drivers. These SCM calls aren't
+> compliant with the standard SMC calling conventions which is a
+> prerequisite to enable migration to the FF-A specifications from Arm.
 > 
-> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> [...]
 
-11 patch(es) applied to rtw-next branch of rtw.git, thanks.
+Applied, thanks!
 
-af7f59e8e876 wifi: rtw89: coex: Add Wi-Fi role info version 10
-3b6dd05aee28 wifi: rtw89: coex: Rearrange coexistence control structure
-404edeea3b18 wifi: rtw89: coex: Update driver outsource info to firmware version 6
-a20edfbc15a5 wifi: rtw89: ceox: Update antenna & grant signal setting
-5d5a5eb7ae2e wifi: rtw89: coex: Rearrange Bluetooth firmware report entry
-a67bb858ba4d wifi: rtw89: coex: Refine send firmware command function
-aaba33e780f5 wifi: rtw89: coex: Refine _reset_btc_var()
-f59f0767348a wifi: rtw89: coex: Correct SET_RFE settings
-578f9b48276c wifi: rtw89: coex: Add firmware report control report v11
-aed0d7771d52 wifi: rtw89: coex: update external control length by case
-c2d96cd05c17 wifi: rtw89: coex: Update coexistence version to 9.24.0
+[11/14] net: ipa: Switch to generic PAS TZ APIs
+        commit: 85b88ceeeeb7bb93cd0af7ccaf2a4b010d5bc5c6
 
----
-https://github.com/pkshih/rtw.git
-
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
