@@ -1,54 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249CF3D1AA2
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:59:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C0153B3BEC
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:59:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784271542; cv=none; b=UIyXzTmSZHHJmoevo0b/JqLTdmPrjGRp090PKjQrxu41XJ3/6FL0+3mrUPsSPYLwm+MaqcTRS/ItTRUZJzrDLJgMYfBGNK7mnxD/W1h2dgYQ2NkMCiwKjVSo9t1RrppJOEyqboCYzjThyUrMB+47HPB5WvF2xFHLRdBcfquUXe0=
+	t=1784271547; cv=none; b=Pb3FBYI4mt+YBMSogVEh9LlKdHYNAJ3tGHKW0nIu7bDOTpQf78d+ScmNvwjsxtQNzVPpS4x0jHo7NYhecf1QOgE3zVVh4rHaTaDL603wlvK8K+z6nbVXac1kGSU0AhewjodyUQR+CqIkmyluQH/kKnSZC58vZdTPTLMn3l9Aydw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784271542; c=relaxed/simple;
-	bh=Fpm2RbwkkCe8co+LWhqN+gcN+P72zDIwZMGcqWBkNpo=;
+	s=arc-20240116; t=1784271547; c=relaxed/simple;
+	bh=WEtCjNfKwj642LrZ4jB4tBTaa2HtqbNV4H9+34BDpnA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VZRxjK+kjZkIOZlDGRTPL5nwdkNP0BzPaRah/YKWO9Q1gRHl0a30FLKJ0I5FhshxTEWHATn2H4Zkk1LoJIEyddvNUrA/vexfH8c5RSYYaFAMmmdeuOUPDbOgZ9aOrzlhiyapPmLX4S18G2N8npi8WAel2TYdOfCOsvWfV0T0nY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=rNavMAFP; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=Kq8IEAZIWCVmSJGP9bLpTuXKnnKTsW6YoxjRLjaCQZR77SYzFXylqUrXNlT5+hMBcFdaNx7ugbR3K5Vy6TXiZuBE7sCBlQSlVlzvcS2kTPJ3hASTNozCuvGM8ofNrccISzcYNrYR4hxY6d6SDKwrOloQx18kQEs/X/JkWIkmhYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=rfyNxp+/; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="rNavMAFP"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6wwGiB4176351, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="rfyNxp+/"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6x3J714176467, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1784271538; bh=3ryGbHcLF84oEqBxLR0dPUAGtL7YdCPWQ7BFdUNkJBU=;
+	t=1784271543; bh=5GXmVXTnbwJS0oUvlaQJWAWqDdPp0zIy3Y0feD/eddU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=rNavMAFPE3KNOySZJ8wGGbrUrnha3IpsPo0KWtEqovz1t1+SNC1iMhh5IK/9PBoYO
-	 kd8Aw1CtnTKOUVI5EqHLJocq6cMbfZNQYJhE7Emfi+ARBuAZrrnM43cj3enDShtAsT
-	 DVmViyW6Qbl+RvblSgKx3MX0UMimau6PDYg/XbLxKbqY0Xa8fuygXLPiWAM2JCN6Jq
-	 gSYv+AurnOH1i6znl6bBJvpNBENp9B3cWaHYyEONnbQrvO/S+m7gLGgBFA5b9UXIxG
-	 BGE1qebWkd9x1koKqRsDb5TJ3BIFkpCYqiT2TtSozmPUtYLzCVJZYBUPUXlVie/Dfu
-	 GpTDYeGyYGjQw==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6wwGiB4176351
+	b=rfyNxp+/skxWuhhcsEpKO7FSprZ/N+La7kGzCwAPCP3jiBEnZkP9f6RXW2qIqggZ+
+	 umiPjmTdJb/mEsXRPLMOFEqczoFY4cJoFQkXbLzCJrst1zbNIBrkd8Ki89Yl1MsJ0+
+	 7DFTaFwjqPbnefa628xKI/QPVfosSgcSTPzBofG+3D0dsVtpHzsnPdkTfCJ2TWpWTO
+	 clfN4HCPvf6p+SfyRheCNFgLtgYuq3OaP6q+KuSIYFIiutcu086zCefvM1HUm4DLac
+	 1SHcVfF9ff5rypcd7l4NtVXhehE5U3qOI8dfO+/YVU+Xjm2/ws0YeoEx7vPzdDiDBL
+	 TlsZEo38tegMg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6x3J714176467
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:58:58 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:58:59 +0800
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:59:03 +0800
 Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:58:58 +0800
+ 15.2.2562.17; Fri, 17 Jul 2026 14:59:03 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 17 Jul 2026 14:58:58 +0800
+ Transport; Fri, 17 Jul 2026 14:59:03 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <ku920601@realtek.com>
-Subject: [PATCH rtw-next 03/13] wifi: rtw89: coex: Fix unexpected grant-signal assignee
-Date: Fri, 17 Jul 2026 14:57:29 +0800
-Message-ID: <20260717065739.64124-4-pkshih@realtek.com>
+Subject: [PATCH rtw-next 04/13] wifi: rtw89: coex: Branch out version 105 firmware report map index
+Date: Fri, 17 Jul 2026 14:57:30 +0800
+Message-ID: <20260717065739.64124-5-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260717065739.64124-1-pkshih@realtek.com>
 References: <20260717065739.64124-1-pkshih@realtek.com>
@@ -63,85 +59,100 @@ Content-Type: text/plain
 
 From: Ching-Te Ku <ku920601@realtek.com>
 
-The C2H report is for knowing what the grant-signal setting is now,
-not for applying new grant-signal setting.
+RTL8852B in firmware 0.29.133.X do not support BT-TX-PWR report, re-index
+and branch out to version 105.
 
 Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/coex.c | 24 +++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/realtek/rtw89/coex.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/coex.c b/drivers/net/wireless/realtek/rtw89/coex.c
-index 1bfd3f3d67de..5f2658eb516c 100644
+index 5f2658eb516c..b73040428c58 100644
 --- a/drivers/net/wireless/realtek/rtw89/coex.c
 +++ b/drivers/net/wireless/realtek/rtw89/coex.c
-@@ -1935,8 +1935,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			dm->wl_fw_cx_offload = !!le32_to_cpu(prpt->v4.wl_fw_info.cx_offload);
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v4.gnt_val[i],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v4.gnt_val[i],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
- 				le32_to_cpu(prpt->v4.bt_cnt[BTC_BCNT_HI_TX]);
-@@ -1967,8 +1967,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			dm->wl_fw_cx_offload = 0;
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v5.gnt_val[i],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v5.gnt_val[i],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
- 				le16_to_cpu(prpt->v5.bt_cnt[BTC_BCNT_HI_TX]);
-@@ -1994,8 +1994,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			dm->wl_fw_cx_offload = 0;
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v105.gnt_val[i],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v105.gnt_val[i],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
- 				le16_to_cpu(prpt->v105.bt_cnt[BTC_BCNT_HI_TX_V105]);
-@@ -2020,8 +2020,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			wl->ver_info.fw = le32_to_cpu(prpt->v7.rpt_info.fw_ver);
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v7.gnt_val[i],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v7.gnt_val[i],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
- 				le16_to_cpu(prpt->v7.bt_cnt[BTC_BCNT_HI_TX_V105]);
-@@ -2052,8 +2052,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			wl->ver_info.fw = le32_to_cpu(prpt->v8.rpt_info.fw_ver);
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v8.gnt_val[i],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v8.gnt_val[i],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			bt->bcnt[BTC_BCNT_HIPRI_TX] =
- 				le16_to_cpu(prpt->v8.bt_cnt[BTC_BCNT_HI_TX_V105]);
-@@ -2137,8 +2137,8 @@ static u32 _chk_btc_report(struct rtw89_dev *rtwdev,
- 			       sizeof(wl->ver_info.build_date));
- 
- 			for (i = RTW89_PHY_0; i < RTW89_PHY_NUM; i++)
--				memcpy(&dm->gnt_set[i], &prpt->v11.gnt_val[i][0],
--				       sizeof(dm->gnt_set[i]));
-+				memcpy(&dm->gnt_val[i], &prpt->v11.gnt_val[i][0],
-+				       sizeof(dm->gnt_val[i]));
- 
- 			for (i = BTC_BT_1ST; i <= BTC_BT_EXT; i++) {
- 				if (i == BTC_BT_EXT) {
+@@ -2707,6 +2707,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 		case 3:
+ 		case 4:
+ 		case 5:
++		case 105:
+ 			bit_map = BIT(5);
+ 			break;
+ 		default:
+@@ -2723,6 +2724,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 		case 3:
+ 		case 4:
+ 		case 5:
++		case 105:
+ 			bit_map = BIT(6);
+ 			break;
+ 		default:
+@@ -2737,6 +2739,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 		case 3:
+ 		case 4:
+ 		case 5:
++		case 105:
+ 			bit_map = BIT(7);
+ 			break;
+ 		default:
+@@ -2749,6 +2752,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 		case 1:
+ 		case 2:
+ 		case 3:
++		case 105:
+ 			break;
+ 		case 4:
+ 		case 5:
+@@ -2765,6 +2769,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 			bit_map = BIT(7);
+ 			break;
+ 		case 3:
++		case 105:
+ 			bit_map = BIT(8);
+ 			break;
+ 		case 4:
+@@ -2778,6 +2783,8 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 	case RPT_EN_TEST:
+ 		if (ver->frptmap == 5)
+ 			bit_map = BIT(10);
++		else if (ver->frptmap == 105)
++			bit_map = BIT(9);
+ 		else
+ 			bit_map = BIT(31);
+ 		break;
+@@ -2789,6 +2796,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 			bit_map = GENMASK(2, 0);
+ 			break;
+ 		case 3:
++		case 105:
+ 			bit_map = GENMASK(2, 0) | BIT(8);
+ 			break;
+ 		case 4:
+@@ -2809,6 +2817,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 			bit_map = GENMASK(6, 3) | BIT(8);
+ 			break;
+ 		case 3:
++		case 105:
+ 			bit_map = GENMASK(7, 3);
+ 			break;
+ 		case 4:
+@@ -2833,6 +2842,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 			break;
+ 		case 4:
+ 		case 5:
++		case 105:
+ 			bit_map = GENMASK(9, 0);
+ 			break;
+ 		default:
+@@ -2849,6 +2859,7 @@ static u32 rtw89_btc_fw_rpt_ver(struct rtw89_dev *rtwdev, u32 rpt_map)
+ 			bit_map = GENMASK(6, 2) | BIT(8);
+ 			break;
+ 		case 3:
++		case 105:
+ 			bit_map = GENMASK(8, 2);
+ 			break;
+ 		case 4:
 -- 
 2.25.1
 
