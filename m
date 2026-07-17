@@ -1,57 +1,54 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D183D418A42
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:31:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2EC3FB7DE
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:34:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784298709; cv=none; b=HOvOlpcyDHkRufG8lbu4vOWpPLo6B0GAD3c53fa9b5cxJiBCBOqXTLGAyXoMH1WNFi01tSVud28NfbKJKFXYrDudvu8yykihavvu535g4O2WzTFEpzQZ3Piizb6i6E2Bx1JR9NbGiWnVhz3GmCwNV3/qlp0OFZHIsfO1Harp/18=
+	t=1784298844; cv=none; b=TOAndtNU7er4EjounYSALqYPpYKs5FbgUz4vTykYiBRUaJQK4EdhaKwts3+VHKiWIoehX8bMGYhSDCc1iOC3McKVvxTGORXw4wcoP3DqIgavGnZoq1pRw6cDRq2joeP6fcVmVoMrAJv5DoYbpHqh2ug63Q/q6lrYURrdZ0IAO80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784298709; c=relaxed/simple;
-	bh=fxb/rDolbrWv2G1FIIUHNFAq9eaueRXykYUnhOogRxc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=f2Lf0i4yHqsXwsDSsJLUiEjf8Q3g5LdlSXLFN4rfs7ttGfNln6zXmdeRQSweuMZp7lL9wX2VQ8yuce/VLKnYB7jJzt6sB/wI1FRn4r4ndDsQUQopJVS1rdJRyNSzLek1Gk8lGVC2oEj3Ij6cGXHWH+uGX4rnSfzl5FvkTbPsVT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TTlJuhL0; arc=none smtp.client-ip=198.175.65.19
+	s=arc-20240116; t=1784298844; c=relaxed/simple;
+	bh=RJ7Cgw6Pe8KzUkl5x2cA8hYWw7V0epZ6NvRtFHmR/Vk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CA9dMN2U5WUAdjNnUJqpJzuPHbLKmn/iuLMLGzFd5elT/hhhC0Qv40LHSF3/pl2YX9zOCekit6N1/1eO3PFAT26mGg5fEzCpWl/iS+rAS2VWfJ937zksHv3oAi+AXtS8JyHdIoV6V08QTqmkhjhym7CxUYN+A0J2zSQQZqgZXR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Kdh/NsLQ; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TTlJuhL0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Kdh/NsLQ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784298708; x=1815834708;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=fxb/rDolbrWv2G1FIIUHNFAq9eaueRXykYUnhOogRxc=;
-  b=TTlJuhL0najW/Dj5YfWfDZuPOJJA1LSCo1j6VtwapjBJwx8XG81HsGRw
-   w5bNyHUPVD0PSHWlCT+iAgVWPN4UMaic0jsSEfN/iIj4O6QZ26hb7Q/Oo
-   1f+8/lsIseY9h3VCc4bjW2Ea+0JLkgoLpewiIEkWpxJhY4vJQLYUUTM3d
-   lVK9KHLbkZbB1irps2PsDq81RC016R1UVRU5d+aqkUKY6AduEprTld0FG
-   6k6nsYRHFdf1NVDWGvQb0fF6Uorq9uKqGtDV8cIyy2aWyX1h15yZ2Necx
-   wBtQdH1pX0tFVWjBxFdKbYJgW12fgOlVIhPd4tMqntZgxYc00YildS8Nm
-   g==;
-X-CSE-ConnectionGUID: ZqFRWSzwQoWznDoYz8VYAA==
-X-CSE-MsgGUID: EpzQZsEwTe67juDzWkRb/Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="84926013"
+  t=1784298844; x=1815834844;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=RJ7Cgw6Pe8KzUkl5x2cA8hYWw7V0epZ6NvRtFHmR/Vk=;
+  b=Kdh/NsLQgo/8LbOq2O4ojQ5JGtXiKq/LTzkGBuxCKNj9xaG7z0Zz97ER
+   vISxzkclP1Cgx4R2RwMrjCkNQifj6oRoGFuIHxqxS2Vmc+5qfykzDU1/m
+   QneBkJV0OguQW7abjoMebpdi8UI48uXuxvF97i80FdMcPxWOJz7VvIWFM
+   rX+9h6ZkfbfCgFZ/ff0HVawZAYk0GCx28w7nXDafqMZHqplBTAV/Y6oUJ
+   4SshtAtWb5wjHTfNQKccwcSQDcfwxs3aNktDseXH9WJgTTI4op+mNNAQF
+   oSDp7enFISjrjMQdyfQI8yMVLlWWEo8hgrEBsnnlOwpOZCSVb/NKjtbCw
+   Q==;
+X-CSE-ConnectionGUID: B01D24NoQjWELDj2RZJBbA==
+X-CSE-MsgGUID: jI/gDU3tR5uh8zgV+In5MQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="95571395"
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="84926013"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:48 -0700
-X-CSE-ConnectionGUID: Wfv/Fz73QT6XeUKMX3LIUA==
-X-CSE-MsgGUID: 9pp2+PQrSny7fBVFL8lDCA==
+   d="scan'208";a="95571395"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:03 -0700
+X-CSE-ConnectionGUID: KvFuh549Rp2lZokQwZVkoQ==
+X-CSE-MsgGUID: 9Er9N3QpSa2wMMnePmQyxQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="256885752"
+   d="scan'208";a="255035078"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:46 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:02 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 8/8] wifi: iwlwifi: mld: move BIOS reading code to where it belongs
-Date: Fri, 17 Jul 2026 17:31:12 +0300
-Message-Id: <20260717172958.b19a33e0b507.I73f6b5e6a81d0f411f12589ceb30afa655c0a16b@changeid>
+Subject: [PATCH iwlwifi-fixes 0/5] wifi: iwlwifi: fixes - 07-17-2026
+Date: Fri, 17 Jul 2026 17:33:35 +0300
+Message-Id: <20260717143340.2321964-1-miriam.rachel.korenblit@intel.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260717143112.2314116-1-miriam.rachel.korenblit@intel.com>
-References: <20260717143112.2314116-1-miriam.rachel.korenblit@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -61,46 +58,26 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-We have a dedicated function to fetch all the BIOS tables when the opmode
-starts, and yet we read a couple of tables directly from
-iwl_op_mode_mld_start, which is already a large function that does
-multiple things.
-Move the reading of the sgom, puncturing, and RFI enablement to the
-dedicated iwl_mld_get_bios_tables.
+Hi,
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+A few fixes from our internal tree.
+
+Miri
 ---
- drivers/net/wireless/intel/iwlwifi/mld/mld.c        | 2 --
- drivers/net/wireless/intel/iwlwifi/mld/regulatory.c | 3 +++
- 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-index 7c49d0441fdf..6e991fb99ff3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-@@ -419,8 +419,6 @@ iwl_op_mode_mld_start(struct iwl_trans *trans, const struct iwl_rf_cfg *cfg,
- 	iwl_mld_construct_fw_runtime(mld, trans, fw, dbgfs_dir);
- 
- 	iwl_mld_get_bios_tables(mld);
--	iwl_uefi_get_sgom_table(trans, &mld->fwrt);
--	iwl_uefi_get_puncturing(&mld->fwrt);
- 
- 	iwl_mld_hw_set_regulatory(mld);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-index be311f6c3d9f..ad899ce5c64a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/regulatory.c
-@@ -84,6 +84,9 @@ void iwl_mld_get_bios_tables(struct iwl_mld *mld)
- 	iwl_uefi_get_uneb_table(mld->trans, &mld->fwrt);
- 
- 	iwl_bios_get_phy_filters(&mld->fwrt);
-+
-+	iwl_uefi_get_sgom_table(mld->trans, &mld->fwrt);
-+	iwl_uefi_get_puncturing(&mld->fwrt);
- }
- 
- static int iwl_mld_geo_sar_init(struct iwl_mld *mld)
+Emmanuel Grumbach (5):
+  wifi: iwlwifi: bound aligned TLV advance in FW parser
+  wifi: iwlwifi: dbg-tlv: bound aligned TLV walk length
+  wifi: iwlwifi: acpi: validate WGDS table revision index
+  wifi: iwlwifi: uefi: bound PPAG revision bitmap shift
+  wifi: iwlwifi: validate SEC_RT TLV minimum size
+
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c   |  5 +++++
+ drivers/net/wireless/intel/iwlwifi/fw/uefi.c   |  2 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c   | 13 +++++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c   | 18 +++++++++++++++---
+ 4 files changed, 32 insertions(+), 6 deletions(-)
+
 -- 
 2.34.1
 
