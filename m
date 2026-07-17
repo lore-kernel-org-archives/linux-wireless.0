@@ -1,114 +1,144 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A05A23E0758
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:02:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C9C3E169E
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784275334; cv=none; b=n7a3CxSd0TwT/BuzV+2gTFWrU4rJuQ65jaSC0/X75c+qs1gm3EZVE3hZ9U2M3p1B85BvyQvsQziO3AFPghRu5fXkLhk7Tes0yVxdiSezPc56rnebuhQUn/9xxlpta1ettBybojEkuCou1dORjRfEqMl3cPxEq/E5Js1Zd7X4bIc=
+	t=1784276971; cv=none; b=QWugxeaw0dVWNfYaq0bNjG/uskphD8053SIntjaJ7HJYunawuGtXQtmvG3NycmmmbgTey8SUSgm3f0424Dl9PrW+rKcaeoZbGMnKorCRTZYkP9+xvKAOKvbKh6oLY0IUVLuZ/P5Vc+sN/C1Bi54mEgarMCfX2HjNB36wpwoVbz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784275334; c=relaxed/simple;
-	bh=7Mu0EhtB43qJQzBdB1aFm1c6mclUcg/caZb089tchUM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WRPFyvsh6TxB8JJD9GvFgq3xHmGkunp9nkRP+wEpCgzPHxePSk5V62YxoIyWt/W0rqOAn0YUN4TUsd3lc9gBuFquF958FTIyr4IG6iGDet3ROPYTrI3UeTSel0pn9pPxrppEdaBcXdh1gujL9CWQ4JXWogsXDUWnsFVWEgDXABI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=awP5H0OC; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784276971; c=relaxed/simple;
+	bh=gYJGpWPn3e3bGCIfGgtUOZeACOMhz8yVeCqfuC3c2zs=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=InQM4J0nPDdtylPcAxmT9AMQPQMwf6KgReilrzdSphSS9wQy8C9GflXBVw2ugN6/uNO+MCgIiQ7TM0TG4L1pH2wgB3J0Qsv3+/N0uK+gruzwXFemcnFg3Jz/skjE1Bexah3QNDzEt00XOHHMKq7aNFDca4X+7Zhb8SDHJrPQ6o4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOxgN5Vw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="awP5H0OC"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-493bfe9f886so41546955e9.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 01:02:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784275330; x=1784880130; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=f5BpFTf9mdjyMKNXMvmwTPv2PyUehO/uFHWs1x9kFi4=;
-        b=awP5H0OCHc7QdjNbPucZNsAsvV3D+0v5Eh7DEyHzTiNyMDD8oXayEq9MEhHQAsqlaC
-         4F3FPyU5S/R0AFFs5yB3ltD1lbiOenVAvy1yvdVgwHw++iIQyNG5vEGZrS01BT669Av6
-         Wjnp4spy2GoWTAQ0Sr3d23uT8AKJhJfIp5ksgcjjrvjJ7rV0F3xjd8EJjzIPDgA9vnZq
-         326uRyZn4WGiMLvVd+ArRrRL12kcXUZaA6dseFa0pX87522rUtcbU06GwDzOsaaUldJD
-         BsLgo33LxYaQUNrijecGOvWD7ukkUWRjLDFxUs4GgaqpLYv9l+Xo6f2vdCcwzNe68DCi
-         G2rw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784275330; x=1784880130;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=f5BpFTf9mdjyMKNXMvmwTPv2PyUehO/uFHWs1x9kFi4=;
-        b=a1Wy5smEEkkWBWEJZSYqjNf6I/fPCWEqHlytz/TFNxEsFwWb0u9fSy32coMtrOG+5w
-         vQI54vfyXXiw2mjsPHK0dQ/fp2g/cwe0vvfXMz4/wSGrMdR5ThYR+s+FkMqbkAqu0Pay
-         buzPMeixLAxd+XmUs6noFZ5kd9ov24OPQ4Ychf+DRMIsMD3+UvQVjD3FK+nU9K7BPYGQ
-         6pkLrI96CBu5jh03wPRaS22ALwfDyQsde5+zOeHnRp/If/n7BQ5fMXqWJ0YbFUM2FD5d
-         3IojgXq14F8444iS8ADVrbgbIFZw4NrO3dIVzUeqd1/eS/YPGg6ip1W+DPpWFGxbbLSc
-         YYuA==
-X-Forwarded-Encrypted: i=1; AHgh+RrX6C1HfkfVMpvFPm1BRFrHrUQV6ANr9brRGyyBTUJX0rAdIMJMdC3m6p8vsozyJeHKn6/jM2ffqh/Al6xkmQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzDB54GMj67v9bATXYe77TYT7iycesr2M75p4Gl9nNfzzu6CVCr
-	MRapB9ORg0k8GiYEO2zV3ZDYuaJ2G16Rhhv7PqP3ZbbqtD6Y/eWPEoSK
-X-Gm-Gg: AfdE7clYqAc/kfEgeGzJ3OXXyx0UAdoYKqf6IfkzwLatcqNp1t1dC3ha+FSRjtKSD6+
-	V/QpVo9D/o50Hm6VfDW+jOlMemYRwp8AcCFDQzU2HvaJpk+Ezj0m8WGGDzdlg4aqe84JogJiGxB
-	fzZidPDovDUePF4yhlo+sesi3w2ZpbBRmx+NXdv7lEjO+qpSZnBi3H6CUWRrwxCPP+0gcxqToY0
-	Um6whyOnZUNhuQshHZNvybTiWJhY1ECGoqRa9gKllGt2sMwAmA5S9XyENQfAItVspRsOhyYpR/9
-	ORLEyxhtxQB9HtPYslGsbVH6VzNOX9QW38wYEe1ZUd5T7YLu8GJF1E2T6DbB+1fM+QQSwYvUxpF
-	UWXjA/vEUPX1kwSWD1jClr27PMIPMCntfYSbCbI4JGfqee47UKdlnxy4BgWxGn6F0D/rbpRIXNW
-	3reKikV+wG
-X-Received: by 2002:a05:600c:1d15:b0:495:43df:39c0 with SMTP id 5b1f17b1804b1-4954a513abfmr15712185e9.27.1784275330284;
-        Fri, 17 Jul 2026 01:02:10 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4954a2f210csm30817965e9.15.2026.07.17.01.02.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jul 2026 01:02:09 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: =?UTF-8?q?Georg=20M=C3=BCller?= <georgmueller@gmx.net>
-Cc: Jes.Sorensen@gmail.com,
-	rtl8821cerfe2@gmail.com,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v3 0/4] wifi: rtl8xxxu: implement AP mode for 8188EU
-Date: Fri, 17 Jul 2026 10:02:08 +0200
-Message-ID: <20260717080208.3270786-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260313131849.3148013-1-georgmueller@gmx.net>
-References: <20260313131849.3148013-1-georgmueller@gmx.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOxgN5Vw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33D2E1F01567
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:29:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784276968;
+	bh=EPZgr4u40Ey253+h5jZaWa/6ga/57quCqeZN6Y3LbLs=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=MOxgN5Vw0ExTWFj/csnN0Eq1CWmvQhK4Uhi0Qmu6WfKTz7ScXP5gKOZ+DjIv5XEbD
+	 KK55g99Uh9TRYVscAXPiRqO8rbSGR0St22hqW8n+UbyQlNEN3VTeGuiPVlB4mxsc/i
+	 UWN46RdUqAoVguX6rv619gIPbCqrt+i2pT8hIRnK7AorfCbHOebHnq9jceHyuPuvrn
+	 UK3Wo5pzjCVV9Rw1CE+7EC+EJlWXR1CDJXu/TPc3kCbtpF7qXyAzaA853jV0ot6UQj
+	 hheX2Hg/Kq5E6zplZEjKU9Hk8SPU1IOCdZV3V+fN8UY8ylt8ewWgPKllCZzUBZCLB1
+	 SZe6ydnUs4ZoA==
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5b0117d49dcso7173074e87.3
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 01:29:28 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RqtR9j3NpdluJXk6Ls6cEw9K779ERpmu8yBvrJ1wxytuevSAo0tnojV2x9vLtPApIScqLUEaNdMx0sw4tXwtw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyF3ij+JgiDxoOobMfGaXGOpAyeyTogZ0fLi8kgccRd7nfdPhJO
+	FdwwG/ss/w3Byazd3gokHJEOqXUMQ5MKMm6L1UUZg9HGIgdWDz1LbBV4xZtg8ybNQ4/gw88w5Pr
+	USiO59xUVFvIsuEn4f1S0Gkqy0Okx7DMdqYI89pUhpg==
+X-Received: by 2002:a05:6512:6d0:b0:5b0:1359:3dd4 with SMTP id
+ 2adb3069b0e04-5b28f8471b5mr432020e87.5.1784276966788; Fri, 17 Jul 2026
+ 01:29:26 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 17 Jul 2026 01:29:25 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 17 Jul 2026 01:29:25 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <CAMRc=MdNehSRQT3MUs+QtbZsHcUCS8YjyZchTgHCVv-HaLQkeA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260703-block-as-nvmem-v8-0-98ae32bfc49a@oss.qualcomm.com>
+ <20260703-block-as-nvmem-v8-4-98ae32bfc49a@oss.qualcomm.com> <CAMRc=MdNehSRQT3MUs+QtbZsHcUCS8YjyZchTgHCVv-HaLQkeA@mail.gmail.com>
+Date: Fri, 17 Jul 2026 01:29:25 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MeNHzEn+pizmbTUCU6YCiTWZS7cr_yEBSNis8NuYqYjig@mail.gmail.com>
+X-Gm-Features: AUfX_mzH2Q0kFyO4TFR4vp1sRhWEa1QLfB0S2bP-OIJE8-QcpGQ5uxWfAzjRRCI
+Message-ID: <CAMRc=MeNHzEn+pizmbTUCU6YCiTWZS7cr_yEBSNis8NuYqYjig@mail.gmail.com>
+Subject: Re: [PATCH v8 4/9] nvmem: layouts: Support fixed-layout as the nvmem
+ device node itself
+To: Bartosz Golaszewski <brgl@kernel.org>
+Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org, 
+	netdev@vger.kernel.org, daniel@makrotopia.org, 
+	Loic Poulain <loic.poulain@oss.qualcomm.com>, Ulf Hansson <ulfh@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jeff Johnson <jjohnson@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
+	Rocky Liao <quic_rjliao@quicinc.com>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Simon Horman <horms@kernel.org>, Srinivas Kandagatla <srini@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
+	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
+	Saravana Kannan <saravanak@kernel.org>, Christian Marangi <ansuelsmth@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Georg,
+On Wed, 15 Jul 2026 14:07:24 +0200, Bartosz Golaszewski <brgl@kernel.org> said:
+> On Fri, 3 Jul 2026 15:45:17 +0200, Loic Poulain <loic.poulain@oss.qualcomm.com> said:
+>> of_nvmem_layout_get_container() only looks for a child node named
+>> "nvmem-layout" to locate the cell definitions. This does not cover
+>> providers whose device tree node is itself the fixed-layout container,
+>> such as an eMMC boot partition block device whose fwnode points directly
+>> at a "fixed-layout" compatible partitions node.
+>>
+>> When no "nvmem-layout" child is present, fall back to returning the nvmem
+>> device node itself if it is compatible with "fixed-layout", so that its
+>> cells are parsed by nvmem_add_cells_from_fixed_layout().
+>>
+>> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+>> ---
+>>  drivers/nvmem/layouts.c | 13 ++++++++++++-
+>>  1 file changed, 12 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/nvmem/layouts.c b/drivers/nvmem/layouts.c
+>> index b90584e1b99eab4217cbe7ec48373e18a7caf0dc..efa631ce7283bdd6c8ecda75915911b5e3a33c99 100644
+>> --- a/drivers/nvmem/layouts.c
+>> +++ b/drivers/nvmem/layouts.c
+>> @@ -167,7 +167,18 @@ static int nvmem_layout_bus_populate(struct nvmem_device *nvmem,
+>>
+>>  struct device_node *of_nvmem_layout_get_container(struct nvmem_device *nvmem)
+>>  {
+>> -	return of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
+>> +	struct device_node *np;
+>> +
+>> +	/* Search for nvmem-layout child */
+>> +	np = of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
+>> +	if (np)
+>> +		return np;
+>> +
+>> +	/* The nvmem of_node is itself a fixed-layout node */
+>> +	if (of_device_is_compatible(nvmem->dev.of_node, "fixed-layout"))
+>> +		return of_node_get(nvmem->dev.of_node);
+>> +
+>> +	return NULL;
+>>  }
+>>  EXPORT_SYMBOL_GPL(of_nvmem_layout_get_container);
+>>
+>>
+>> --
+>> 2.34.1
+>>
+>>
+>
+> I have it on my TODO list to convert nvmem layouts to be fwnode-agnostic. While
+> I'm not sure when I'll have the time to look into it, I think it makes sense
+> to not introduce any new OF-specific interfaces. Can you make it into:
+>
+>   struct fwnode_handle *nvmem_layout_get_container_node(struct nvmem_device *nvmem);
+>
+> by replacing of_get_child_by_name() with fwnode_get_name_child_node() and
+> of_device_is_compatible() with device_is_compatible()? That would mean less
+> churn in the future.
+>
+> Other than that, it looks good.
+>
+> Bart
+>
 
-Is there any progress on this series since v3? We are very interested in
-seeing AP mode land for the 8188EU and can offer testing and debugging
-help.
+Scratch that, I didn't realize this isn't a new function but a rework of an
+existing one.
 
-Our situation: we ship embedded ARM devices (i.MX/Vybrid based) that use
-the Edimax EW-7811Un V2 (USB 7392:b811, RTL8188EU) as a WiFi AP dongle
-with hostapd. On our older kernel we run the out-of-tree vendor rtl8188eu
-driver, where multi-client AP mode works reliably with its per-MACID rate
-adaptation. On recent kernels we had to drop this dongle because rtl8xxxu
-has no AP support for this chip, so your series is exactly what we are
-missing.
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 
-What we can offer:
-- Testing on the exact hardware (EW-7811Un V2), both single and
-  multi-client scenarios, with iOS/Windows/Linux clients.
-- A/B comparison against the working vendor driver on the same board
-  (register-level or behavioral differences, e.g. beacon/rsvd page setup,
-  RA behavior), which may help pinpoint why clients fail to associate in
-  your setup.
-- Over-the-air sniffer captures and hostapd/driver debug logs from both
-  drivers.
-
-If you share your current WIP branch (or v4 draft) and describe how the
-connection failure manifests on your side (no auth response? assoc
-timeout? works open but fails WPA2?), we can try to reproduce it here and
-compare against the vendor driver behavior.
-
-Happy to provide Tested-by tags once it works.
-
-Best regards,
-Mehmet Fide
-Screening Eagle Technologies
+Bart
