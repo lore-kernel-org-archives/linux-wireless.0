@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81E343B813D
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:31:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7E3C246BCD
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:31:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784298705; cv=none; b=qQ/Fj8U1vMtYkAcRwVJnBsxYBuUduqnu+oOGZxV1ZqaDydN+Odu5AL1Px0bgJxAyJhKgUkOYS4t8Ke3R0aThLy5CqpRIjdTFI+SVksfqC0YC2ooCkJpFWGa+hDkfgiZd4LYcA0tG/sb9KyS5MJc2Io8U8XZWTHqnSg8ipOCmoTc=
+	t=1784298707; cv=none; b=iXzCa9sv1HchPmxaJURXI86plkL8TQs8SEBPvC3WbW8KExI1+zZIqkMYh8lRUi8RGfKkr5VmfydQoO8H5WrTiwx/7JmeVJAYDMP3mlX2H4etYxnqlNlIkt9VIZSxfrk8Svd1i+G2LuG0rk23jN0LwN9dk/+ihE0KDFcXFmyp1+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784298705; c=relaxed/simple;
-	bh=7/zN3H+wSLwAjgfoVRwp5I9WChlCaHtetgr/xnNX+VY=;
+	s=arc-20240116; t=1784298707; c=relaxed/simple;
+	bh=qeJL6cAZe4mOf4rpqhF9puyQ0mwIzxtTqTHrZnWgI4Q=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=biTMPHBrHjC/9dEizEWxK7reNCpf+8KEawM1yGweF69T0iqoL4xGYlFXBWBS2io8m13Mo3Zh8Mm62ufzgsrv3LCN/jpIjzearlM0D1CNQwfGZg2NwNdfgzFR4tuedX4pn2eOFiinODWPlxYaYSgX+jxWg3KSVxtLlk5Nimbbazw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=L48jxRds; arc=none smtp.client-ip=198.175.65.19
+	 MIME-Version; b=bqe9yssMY6pN67NzaJK34IIbej8PyQR0lLLKE/AWMgj5FGPsaC7mKodtOVEBnX8yhnBxbBxQkCk8XqXS2mPA1V2DjEoEOFVz5li3goWYrHwTgP5Xyj2n2Mp2XhX9b4KRGa8+QR5EpRBkbBXA1vNYtZ4Wu9Q+8n6OjrDeDZ1G9uE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NbYf0rMY; arc=none smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="L48jxRds"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NbYf0rMY"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784298703; x=1815834703;
+  t=1784298705; x=1815834705;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7/zN3H+wSLwAjgfoVRwp5I9WChlCaHtetgr/xnNX+VY=;
-  b=L48jxRdsb5PlshwMbrw5chOTHSdjEHamw5gcRYNI7z8N8130nvAGuQ+l
-   Hp5AdePvX7YUR8nymuoFjjcc/wWMtBNy4npatMsm304bJIGDRimZRj5Ty
-   +K7kQrKkbBHn/KnV67i2OiMr4dekf9WiTVMPqPcsYQMS2LI1WccmW2cdK
-   VGT10R6zAQf+yAS9PanhMD1U3CnnpK8SoJeJWzi/S/8iNos1fzg2DtN/f
-   wo38yT3ZffUvOoahO2bMyzIO8Be9tcipQcQWBvZF/4DFrlLvj/qGddBTB
-   HJ1lf7pKntrOUlKu59Jl0BFAwa3IkTKbgMMmzd4W7gRznpI2pwVNOiJRh
-   w==;
-X-CSE-ConnectionGUID: Lph8qS89Tqy/6huyV4FcWg==
-X-CSE-MsgGUID: IuWUjMfFRDalYmDeQqnlUA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="84925994"
+  bh=qeJL6cAZe4mOf4rpqhF9puyQ0mwIzxtTqTHrZnWgI4Q=;
+  b=NbYf0rMY5hMIimczEBOC9qofsufrEhztTMrsuO640CcUr75NZHowf7tR
+   DYxvdSay2n0PLgTswHFXtXilZXiy6EFd+0Eucj2Skfl7KvodAGRmU12ms
+   dPn2exEjIjphT02unzQiXt8r/0HpigH7t7BshGiI0aUOfoC+NaRQRJo0L
+   393C82kKjN72ABNDc56/LMR1OuTo5vZBpzSwmEMCkLX0s5EJUKP2iXTZ3
+   SEjiVAVzdK/XU7EHKVWSoxwbFJy6sLGRUMKJnqJHtIRkaG4oLwDGi8yM9
+   AEmU7acu5G/1nlBMBUR7tfLPsMSdngp/et27jxtnpop5Qwfsx4d71XMSa
+   A==;
+X-CSE-ConnectionGUID: UP+LdUdKRrm2lRs0S6QYHw==
+X-CSE-MsgGUID: xdQlcRtZSb2JtHRdl+U+iA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="84925999"
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="84925994"
+   d="scan'208";a="84925999"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:43 -0700
-X-CSE-ConnectionGUID: QZRNuuk1Sjqyn6/K6ioa9g==
-X-CSE-MsgGUID: nQ7za11WSFyNE+PZ6g+L+w==
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:45 -0700
+X-CSE-ConnectionGUID: lpiGmFkXSymJPaR/iYkjXg==
+X-CSE-MsgGUID: GO5xr6A/Reuz4VZqlYiL/Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="256885740"
+   d="scan'208";a="256885744"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:41 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:31:43 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Avinash Bhatt <avinash.bhatt@intel.com>
-Subject: [PATCH iwlwifi-next 5/8] wifi: iwlwifi: fw: move SAR defines from acpi.h to regulatory.h
-Date: Fri, 17 Jul 2026 17:31:09 +0300
-Message-Id: <20260717172958.32e5dcde4b90.I420c58b05ab6ab011c4c771ca9e4eb62740de549@changeid>
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Subject: [PATCH iwlwifi-next 6/8] wifi: iwlwifi: mld: support update_mcc notification v2
+Date: Fri, 17 Jul 2026 17:31:10 +0300
+Message-Id: <20260717172958.9c5a940d37dc.I955800c2377b802ffb99003349552cc4036ca4bd@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260717143112.2314116-1-miriam.rachel.korenblit@intel.com>
 References: <20260717143112.2314116-1-miriam.rachel.korenblit@intel.com>
@@ -62,72 +62,56 @@ MIME-Version: 1.0
 Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-From: Avinash Bhatt <avinash.bhatt@intel.com>
+From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-IWL_SAR_ENABLE_MSK and IWL_REDUCE_POWER_FLAGS_POS describe the layout
-of the shared WRDS/SAR table format. They are not ACPI-specific: the
-same bit positions are used regardless of whether the data originates
-from ACPI, UEFI, or another BIOS source.
+New firmware will support version 2 of the update_mcc notification. The
+extra field is used for a new feature, but we does not support it.
 
-IWL_SAR_ENABLE_MSK was already duplicated in regulatory.h; remove it
-from acpi.h to eliminate the duplication.
+Keep the existing payload definition compatible with both versions and
+register version 2 in the MLD notification version table so the driver
+accepts the newer notification without changing the behavior.
 
-Move IWL_REDUCE_POWER_FLAGS_POS to regulatory.h alongside
-IWL_SAR_ENABLE_MSK so that both SAR field descriptors live in the
-shared regulatory header, accessible to all BIOS configuration sources.
+This preserves version 1 support and adds compatibility with firmware
+that sends version 2.
 
-No functional change.
+Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-Signed-off-by: Avinash Bhatt <avinash.bhatt@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h       | 5 +----
- drivers/net/wireless/intel/iwlwifi/fw/regulatory.h | 3 ++-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h | 5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mld/notif.c      | 3 ++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index 51a57e57de7a..45eb35ffb637 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -1,7 +1,7 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-  * Copyright (C) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2023, 2025 Intel Corporation
-+ * Copyright (C) 2018-2023, 2025-2026 Intel Corporation
-  */
- #ifndef __iwl_fw_acpi__
- #define __iwl_fw_acpi__
-@@ -111,9 +111,6 @@
- #define ACPI_PPAG_WIFI_DATA_SIZE_V3	((ACPI_PPAG_NUM_CHAINS * \
- 					  ACPI_PPAG_NUM_BANDS_V3) + 2)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+index 360b626a9572..9fbdb45e88db 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/nvm-reg.h
+@@ -411,7 +411,10 @@ struct iwl_mcc_chub_notif {
+ 	__le16 mcc;
+ 	u8 source_id;
+ 	u8 reserved1;
+-} __packed; /* LAR_MCC_NOTIFY_S */
++} __packed;
++/* LAR_MCC_NOTIFY_S_VER_1
++ * LAR_MCC_NOTIFY_S_VER_2
++ */
  
--#define IWL_SAR_ENABLE_MSK		BIT(0)
--#define IWL_REDUCE_POWER_FLAGS_POS	1
--
- /* The Inidcator whether UEFI WIFI GUID tables are locked is read from ACPI */
- #define UEFI_WIFI_GUID_UNLOCKED		0
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-index 6fffc032efd3..22c97c75b83c 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/regulatory.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2023-2025 Intel Corporation
-+ * Copyright (C) 2023-2026 Intel Corporation
-  */
- 
- #ifndef __fw_regulatory_h__
-@@ -30,6 +30,7 @@
- #define BIOS_GEO_MIN_PROFILE_NUM	3
- 
- #define IWL_SAR_ENABLE_MSK		BIT(0)
-+#define IWL_REDUCE_POWER_FLAGS_POS	1
- 
- /* PPAG gain value bounds in 1/8 dBm */
- #define IWL_PPAG_MIN_LB	-16
+ enum iwl_mcc_update_status {
+ 	MCC_RESP_NEW_CHAN_PROFILE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/notif.c b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+index b3a899828db9..90733bbaf733 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/notif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+@@ -298,7 +298,8 @@ CMD_VERSIONS(channel_survey_notif,
+ CMD_VERSIONS(mfuart_notif,
+ 	     CMD_VER_ENTRY(2, iwl_mfuart_load_notif))
+ CMD_VERSIONS(update_mcc,
+-	     CMD_VER_ENTRY(1, iwl_mcc_chub_notif))
++	     CMD_VER_ENTRY(1, iwl_mcc_chub_notif)
++	     CMD_VER_ENTRY(2, iwl_mcc_chub_notif))
+ CMD_VERSIONS(session_prot_notif,
+ 	     CMD_VER_ENTRY(3, iwl_session_prot_notif))
+ CMD_VERSIONS(missed_beacon_notif,
 -- 
 2.34.1
 
