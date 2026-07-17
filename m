@@ -1,55 +1,55 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F19642903D
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:34:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D2793FB7DE
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:34:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784298846; cv=none; b=HKE96yDdQ79n3viC8J7gF+tSuhX+8qDUAkMlUnHAaSrRtuztYmqDBNAGuk8lf2fkk5FvWSN2wgmngo4kDtGeEfzlP0CBPsf24HSC1kRHVeyphBCnkbi5mTgtEE4fP3rrdJQ+xQ5QazQz4RTeN/9Te39zVMTcHhn6ylaWjmnA5eM=
+	t=1784298847; cv=none; b=FSjKgv9fQV0/on5nrNUkoW1dRXYX+M8mEbxaqBMOKC5SH3zOtwLsswL0kjnaqE1/Bua40tb2h/VN4dPge9qUK+aHNqlEmhdvyyhyhes3BkdqyABpx62s5atiqASNCQr9SXU0MmevZ3hih5l58+1FhLT7SrUYCSVV/uuGTVg/FQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784298846; c=relaxed/simple;
-	bh=AfaBYPrCZUlGUSeVo4WwQSEKyUlhOo/nLX5r3DFjoqk=;
+	s=arc-20240116; t=1784298847; c=relaxed/simple;
+	bh=b2jc8rZsmFoYw9VrzllVXEFJb0MNG3GtWEE+K89MEqs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=X2Dxc/DtQah44vVt82lCCfm3D9Bsd7nPg8qQbPLtiA2Q7z/7F2FcGdRdC8r6rbWEAZk3irPAqc+/A8WnDPESczdSgsgni9f/B+fWc9OcvAeDApNAOvN1IIVdTSYr8dCj50INNB1y6Ekx8irjjYNLE1cZcOzsoxUnAyceg3z9eAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YGpXeg3A; arc=none smtp.client-ip=192.198.163.11
+	 MIME-Version; b=rRExTnjaZrnjrlN99hV2kaMcte5ygtq1bvkoBqnkwmcz7eETmVvMsuivXuK5xdbdE/BuoZLGZ6YpYYM2uY5E2q9T7kenj6bkCJ/RmnBA84N9Cra6f+xt0zBp5lKfl25AUOWqcGxHN4WiJYckoLVThdCQIcr6a4g8yosxqlL6UR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LTN8OnhP; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YGpXeg3A"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LTN8OnhP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784298845; x=1815834845;
+  t=1784298846; x=1815834846;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=AfaBYPrCZUlGUSeVo4WwQSEKyUlhOo/nLX5r3DFjoqk=;
-  b=YGpXeg3AJSyY3lTbvxIshjDbW9XD0H0X1iE8I47IobOO4jl18hyBzVNh
-   7wMUTDzIUrAdEWDrqb02dvQbvglDdH6sCIWiD/FQqGP6mr5qHEG/wYULX
-   yTPJrX2uAs/pJa/SiMvNnO5CjFWlk3l0K8WmT6SxdLE8Nsr2Zan1JGEQB
-   dVDGgdOh1jhLSzhG3pORluafcWOJ80h3sVQE0j/fUHR9KK+azAKKZGKoi
-   fWxrwJm/vyPLiBwHPuZIg0lZa2Gtq+yD5sajTQSGqTUmGOGQKSiK6O1Ut
-   rco1vRSnWpDb5wVqP8tb8945sV2lHMzrWmCkt58a9ZotdtKB6Eqzm+kdH
+  bh=b2jc8rZsmFoYw9VrzllVXEFJb0MNG3GtWEE+K89MEqs=;
+  b=LTN8OnhP5nk1jLPX1BBWoq2sJwFdYABEykKgaWUN/xmNXkqaay9ucEJM
+   dD37WBIA27aIW2HXFs3RerPhnCuJshqLEdYezSNIhQ/SJ6/Gwv3XuT03E
+   yn9PgZIC+vCCtE0sr0rXlOaq8j1isFXaNNk9ZyrNAbQe28Wwd6iYnRev+
+   Jq2up/OmTmXbGk2sXkerCtbCwVbS+sx8M16fiFqiml9amTyYiEwJy3r7N
+   4zabdFECVuagFaCvMIwmmDB0BAfrbmE8+ImfRWxByvu8g/JctYcdVIaDv
+   pic0JQYnkdzhne2oEWT2iSrFfWzFeUSNFM6B4MQjCzhrcOJX3qDNijkwi
    w==;
-X-CSE-ConnectionGUID: BhoUCwzZTiGDLvNFqH1S4A==
-X-CSE-MsgGUID: pdQ0PBOuTU+rzRpH+1bSxQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="95571403"
+X-CSE-ConnectionGUID: aftfGGRqR/OgbVKtQl1KAw==
+X-CSE-MsgGUID: WF+NJtWQRoazo0khyMxQwQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11848"; a="95571410"
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="95571403"
+   d="scan'208";a="95571410"
 Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:04 -0700
-X-CSE-ConnectionGUID: ZA0nAGdQRuyZzgXNubmloA==
-X-CSE-MsgGUID: tV7a4Aj2TXKCHevZ+CgA0w==
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:06 -0700
+X-CSE-ConnectionGUID: Kp3WYJWfQIq5yDc3emdvOw==
+X-CSE-MsgGUID: EKAodU+zRy2ZTV2xrMfOgw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,169,1779174000"; 
-   d="scan'208";a="255035083"
+   d="scan'208";a="255035086"
 Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:03 -0700
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2026 07:34:04 -0700
 From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH iwlwifi-fixes 1/5] wifi: iwlwifi: bound aligned TLV advance in FW parser
-Date: Fri, 17 Jul 2026 17:33:36 +0300
-Message-Id: <20260717173215.393c286488f9.Ia39144dc3ca334325ee4eacb7420901e2446fc23@changeid>
+Subject: [PATCH iwlwifi-fixes 2/5] wifi: iwlwifi: dbg-tlv: bound aligned TLV walk length
+Date: Fri, 17 Jul 2026 17:33:37 +0300
+Message-Id: <20260717173215.e08d6550c6ec.Iad64190a7d5cded553aff41973120396aef1b557@changeid>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260717143340.2321964-1-miriam.rachel.korenblit@intel.com>
 References: <20260717143340.2321964-1-miriam.rachel.korenblit@intel.com>
@@ -64,31 +64,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Validate ALIGN(tlv_len, 4) against remaining parser length before
-consuming bytes from the firmware image.
-
-This avoids length underflow on malformed TLVs.
+Validate ALIGN(tlv_len, 4) before advancing through external debug
+TLVs to prevent parser length underflow.
 
 Assisted-by: GitHubCopilot:GPT-5.3-Codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 13 +++++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 13 +++++++++++--
  1 file changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 842586d4fc5c..001895f4f4bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -804,6 +804,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 	u32 build, paging_mem_size;
- 	int num_of_cpus;
- 	bool usniffer_req = false;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index d021b24d04d6..b1a55909f0d4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -475,6 +475,7 @@ static int iwl_dbg_tlv_parse_bin(struct iwl_trans *trans, const u8 *data,
+ {
+ 	const struct iwl_ucode_tlv *tlv;
+ 	u32 tlv_len;
 +	size_t aligned_tlv_len;
  
- 	if (len < sizeof(*ucode)) {
- 		IWL_ERR(drv, "uCode has invalid length: %zd\n", len);
-@@ -852,8 +853,16 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 	while (len >= sizeof(*tlv)) {
+ 		len -= sizeof(*tlv);
+@@ -487,8 +488,16 @@ static int iwl_dbg_tlv_parse_bin(struct iwl_trans *trans, const u8 *data,
  				len, tlv_len);
  			return -EINVAL;
  		}
@@ -97,7 +95,7 @@ index 842586d4fc5c..001895f4f4bd 100644
 +
 +		aligned_tlv_len = ALIGN(tlv_len, 4);
 +		if (len < aligned_tlv_len) {
-+			IWL_ERR(drv, "invalid aligned TLV len: %zd/%zu\n",
++			IWL_ERR(trans, "invalid aligned TLV len: %zd/%zu\n",
 +				len, aligned_tlv_len);
 +			return -EINVAL;
 +		}
@@ -105,8 +103,8 @@ index 842586d4fc5c..001895f4f4bd 100644
 +		len -= aligned_tlv_len;
 +		data += sizeof(*tlv) + aligned_tlv_len;
  
- 		switch (tlv_type) {
- 		case IWL_UCODE_TLV_INST:
+ 		iwl_dbg_tlv_alloc(trans, tlv, true);
+ 	}
 -- 
 2.34.1
 
