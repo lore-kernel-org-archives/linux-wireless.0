@@ -1,54 +1,50 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 892272F28EA
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:20:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 103492F28EA
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 06:20:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784269239; cv=none; b=SoaSh8Kq6bvME6jy86YCf3k/IWWue46JSor89FnP/lDVCtVjcD9mk8/JZARB5+sOLlaPb74dFYrzbGJucKtb9JbIfOqq6s+QasBoeOZHotOCUdDAXbmskU5qU80ua2vgUT3NE11K8tUH2pkbqsCHWy4mX0nw7Mj4q80Bu1n2V7Y=
+	t=1784269244; cv=none; b=kQBVmlyu/RUc1wbFZTLhGit/VDjxICb6oBQIPGpWzzw/WEH/MHI6N8LeD+K5BSn/B3HHNBOfPQBE2lDVyq6QEm/o04bgFpIFY8bUa17/wYuIwVD9DWo4MXAb8UH9P9u8QRPa2hjd/4lEMfj6C8iN73+Z/PKM7BQwur8M4h1iv8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784269239; c=relaxed/simple;
-	bh=pFDyThlAK4WkLwsBQcmORL1wjUxr7K5LmQ/A6w/u4mI=;
+	s=arc-20240116; t=1784269244; c=relaxed/simple;
+	bh=/lkTyXySJFgEH/rMOkHuGoxosLKB8MnqDjQX30e8j5c=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KgqdzqL9S+S8F85+U9XZnhRjRsQQ8iMLyehOWkDLy8/xJIWI9gnhGbYpBzWIVyJWkmUpoYwhGyd2MOryabZkFQJJz5GpO2lJ661AtvNTVoDJHJoouwk89Sqn4CBPB1elbehUjqjZ7A3Vat1IMT2a4mEs5+oYZRWonpsXWuJP5rs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HGI1yE7t; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=nl+mRLoo9vO9ZMrfehi+GtFXUlXNXTb/wUe5x94K7aKophhzZVobFvRjwK9vID+YGqiXBykjngVxEjWxW+E7yi7+ZYxAkYN14RRuQlp4R65+d15tJncWxaApfYEJ8cvA+nWcRS+TPO/iN2X4C3n/BgvxQ0ew5Pjt3cVtFLZSh20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=EIrEbG09; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HGI1yE7t"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6KZ7X04163435, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="EIrEbG09"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66H6KeWF24163641, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1784269235; bh=myTsXSvoQjU/zqGS9qslzkcx11L6WPJyEHSHtt0x7cI=;
+	t=1784269240; bh=tbj8xK5UEIM+uvXV6FjUZsf1ETu+uFA+aG29rxPWGhk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=HGI1yE7tiOJCd+UU7yIrzOUFJmM0bKmG3BfFNCTI5ToYeHw7yHi6V3v+4ngl1AaCO
-	 5E9K+gGieOsATg0k/3eW3uqa96zS7U/TCoYG6yvzUbuzRcW1DeldNquc1J5dWiZXP0
-	 zwMITJjVXSdMiQWg89jV6sWs2wqTSFtN4fYJ7zWvivM0Quv0qKQek5pzyVEETovc7R
-	 yI+UjSx6UMqgkBXTHE/myEgBas8wM4rmmxifYTaNXYkvD13AWFPIqlTbu3DfSY5XUL
-	 97pI79DYjMhR3LRVx18Q5Yjdm8l8Q5odTYtLCOxkvTjPZnlThNdI0xVKUSHiiPN8WV
-	 7C9Tk/rx11MKA==
+	b=EIrEbG09AvhoQ3Tw+HGEbu1q6RRe5aKRBy1nMKoHmM8IMtUUhCqL7gQ8R5vDq3Sqi
+	 T8Y4HMYgcm2KUShVMZECtZ9g0i70Qrew7MAIgLRGfcMrEbaJPCP3v4imOjAEw+RNCk
+	 bdmoYkJxs125fYAKIVQeQ1o6fQmY1oFkH0xYpVt+iF3xKUmc+mzG0keeu+87awgP9N
+	 8djEH9ISwf4zT5KiRzlR1jcxVBOgx+nxDrkyZpHNVGx+ZnWw9OKokOniTVA2b8lRn3
+	 exAf7jJtgRU2MpldH/OwxTIWVM43j/2TDRjDN+hVp/eBprxFbfMf/W10/+/ouaU9ec
+	 IFS/ChxtX0Q9A==
 Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6KZ7X04163435
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66H6KeWF24163641
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:20:35 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:20:40 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
  RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:20:35 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 17 Jul 2026 14:20:35 +0800
+ 15.2.2562.17; Fri, 17 Jul 2026 14:20:40 +0800
 Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
  (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 17 Jul 2026 14:20:35 +0800
+ Transport; Fri, 17 Jul 2026 14:20:40 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <gary.chang@realtek.com>, <sc.lee@realtek.com>, <wenjie.tsai@realtek.com>
-Subject: [PATCH rtw-next 4/9] wifi: rtw89: rfk: update TXIQK H2C command format to v1
-Date: Fri, 17 Jul 2026 14:19:05 +0800
-Message-ID: <20260717061910.54466-5-pkshih@realtek.com>
+Subject: [PATCH rtw-next 5/9] wifi: rtw89: 8922d: bypass TXIQK when scan
+Date: Fri, 17 Jul 2026 14:19:06 +0800
+Message-ID: <20260717061910.54466-6-pkshih@realtek.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20260717061910.54466-1-pkshih@realtek.com>
 References: <20260717061910.54466-1-pkshih@realtek.com>
@@ -63,121 +59,140 @@ Content-Type: text/plain
 
 From: Chih-Kang Chang <gary.chang@realtek.com>
 
-TX IQK is a RF calibration, the v1 format adds a field for the thermal
-re-calibration parameter for RTL8922D after FW 0.35.113.0. Update the
-format accordingly.
+When connected to an AP and a scan is triggered, the FW may fail to
+transmit probe request because switching channels may load an
+uninitialized TXIQK table. Therefore, bypass TXIQK during scanning
+to avoid using invalid calibration values.
 
 Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw89/core.h |  1 +
- drivers/net/wireless/realtek/rtw89/fw.c   | 35 ++++++++++++++++-------
- drivers/net/wireless/realtek/rtw89/fw.h   |  7 ++++-
- 3 files changed, 32 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.h     |  1 +
+ drivers/net/wireless/realtek/rtw89/reg.h      | 10 +++
+ drivers/net/wireless/realtek/rtw89/rtw8922d.c | 64 ++++++++++++++++++-
+ 3 files changed, 73 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 9d782cbfee70..9b7f197a3af2 100644
+index 9b7f197a3af2..2d9113cb43f9 100644
 --- a/drivers/net/wireless/realtek/rtw89/core.h
 +++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5599,6 +5599,7 @@ enum rtw89_fw_feature {
- 	),
- 	RTW89_FW_FEATURE_RFK_RXDCK_V0,
- 	RTW89_FW_FEATURE_RFK_IQK_V0,
-+	RTW89_FW_FEATURE_RFK_TXIQK_V0,
- 	RTW89_FW_FEATURE_NO_WOW_CPU_IO_RX,
- 	RTW89_FW_FEATURE_NOTIFY_AP_INFO,
- 	RTW89_FW_FEATURE_CH_INFO_BE_V0,
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 0db77120298f..ad87484f51a7 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -948,6 +948,7 @@ static const struct __fw_feat_cfg fw_feat_tbl[] = {
- 	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 104, 0, TX_HISTORY_V1),
- 	__CFG_FW_FEAT(RTL8922D, ge, 0, 35, 108, 0, SIM_SER_L0L1_BY_HALT_H2C),
- 	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 109, 1, SCAN_OFFLOAD_BE_V1),
-+	__CFG_FW_FEAT(RTL8922D, lt, 0, 35, 113, 0, RFK_TXIQK_V0),
+@@ -6284,6 +6284,7 @@ struct rtw89_iqk_info {
+ 	u8 iqk_table_idx[RTW89_IQK_PATH_NR];
+ 	u32 lok_idac[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
+ 	u32 lok_vbuf[RTW89_IQK_CHS_NR][RTW89_IQK_PATH_NR];
++	u32 iqc_bak[2];
  };
  
- static void rtw89_fw_iterate_feature_cfg(struct rtw89_fw_info *fw,
-@@ -8464,29 +8465,43 @@ int rtw89_fw_h2c_rf_tas_trigger(struct rtw89_dev *rtwdev, bool enable)
- int rtw89_fw_h2c_rf_txiqk(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy_idx,
- 			  const struct rtw89_chan *chan)
+ #define RTW89_DPK_RF_PATH 2
+diff --git a/drivers/net/wireless/realtek/rtw89/reg.h b/drivers/net/wireless/realtek/rtw89/reg.h
+index 053028b9ef16..756b94dcd475 100644
+--- a/drivers/net/wireless/realtek/rtw89/reg.h
++++ b/drivers/net/wireless/realtek/rtw89/reg.h
+@@ -10121,6 +10121,7 @@
+ #define B_S1_DACKQ8_K GENMASK(15, 8)
+ #define R_NCTL_CFG 0x8000
+ #define R_NCTL_CFG_BE4 0x38000
++#define B_NCTL_CFG_BE4_SPAGE GENMASK(25, 24)
+ #define B_NCTL_CHK_EN BIT(3)
+ #define B_NCTL_CFG_SPAGE GENMASK(2, 1)
+ #define R_NCTL_RPT 0x8008
+@@ -11061,6 +11062,15 @@
+ #define B_KTBL0_MLD_IDX0 GENMASK(25, 24)
+ #define B_KTBL0_MLD_IDX1 GENMASK(27, 26)
+ #define B_KTBL0_RST BIT(31)
++#define R_CFIR_CTRL_A_BE4 0x38124
++#define R_CFIR_CTRL_B_BE4 0x38224
++#define B_CFIR_CTRL_KIDX0_EN BIT(8)
++#define B_CFIR_CTRL_KIDX1_EN BIT(24)
++#define R_TX_IQC_A_BE4 0x38138
++#define R_TX_IQC_B_BE4 0x38238
++#define B_TX_IQC_X GENMASK(31, 20)
++#define B_TX_IQC_Y GENMASK(19, 8)
++#define B_TX_IQC_DPK BIT(3)
+ #define R_KTBL1A_BE4 0x38154
+ #define R_KTBL1B_BE4 0x38254
+ #define B_KTBL1_TBL0 BIT(3)
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922d.c b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
+index 929bcfc8089d..fde4117bcd49 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8922d.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
+@@ -2765,14 +2765,74 @@ static void rtw8922d_rfk_band_changed(struct rtw89_dev *rtwdev,
  {
-+	struct rtw89_h2c_rf_txiqk_v0 *h2c_v0;
- 	struct rtw89_h2c_rf_txiqk *h2c;
- 	u32 len = sizeof(*h2c);
- 	struct sk_buff *skb;
-+	u8 ver = U8_MAX;
- 	int ret;
+ }
  
-+	if (RTW89_CHK_FW_FEATURE(RFK_TXIQK_V0, &rtwdev->fw)) {
-+		len = sizeof(*h2c_v0);
-+		ver = 0;
++static void __rtw8922d_txiqk_disable(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_iqk_info *iqk_info = &rtwdev->iqk;
++	u8 path, kidx;
++
++	for (path = RF_PATH_A; path <= RF_PATH_B; path++) {
++		kidx = rtw89_phy_read32_mask(rtwdev, R_KTBL0A_BE4 + (path << 8),
++					     B_KTBL0_IDX0);
++		if (kidx == 0) {
++			rtw89_phy_write32_clr(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX0_EN);
++		} else if (kidx == 1) {
++			rtw89_phy_write32_clr(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX1_EN);
++		} else {
++			rtw89_phy_write32_mask(rtwdev, R_NCTL_CFG_BE4,
++					       B_NCTL_CFG_BE4_SPAGE, 0x1);
++			rtw89_phy_write32_clr(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX0_EN);
++			rtw89_phy_write32_mask(rtwdev, R_NCTL_CFG_BE4,
++					       B_NCTL_CFG_BE4_SPAGE, 0x0);
++		}
++
++		iqk_info->iqc_bak[path] =
++			rtw89_phy_read32(rtwdev, R_TX_IQC_A_BE4 + (path << 8));
++		rtw89_phy_write32(rtwdev, R_TX_IQC_A_BE4 + (path << 8), 0x40000002);
 +	}
++}
 +
- 	skb = rtw89_fw_h2c_alloc_skb_with_hdr(rtwdev, len);
- 	if (!skb) {
- 		rtw89_err(rtwdev, "failed to alloc skb for h2c RF TXIQK\n");
- 		return -ENOMEM;
- 	}
- 	skb_put(skb, len);
--	h2c = (struct rtw89_h2c_rf_txiqk *)skb->data;
-+	h2c_v0 = (struct rtw89_h2c_rf_txiqk_v0 *)skb->data;
++static void __rtw8922d_txiqk_enable(struct rtw89_dev *rtwdev)
++{
++	struct rtw89_iqk_info *iqk_info = &rtwdev->iqk;
++	u8 path, kidx;
 +
-+	h2c_v0->len = len;
-+	h2c_v0->phy = phy_idx;
-+	h2c_v0->txiqk_enable = true;
-+	h2c_v0->is_wb_txiqk = true;
-+	h2c_v0->kpath = RF_AB;
-+	h2c_v0->cur_band = chan->band_type;
-+	h2c_v0->cur_bw = chan->band_width;
-+	h2c_v0->cur_ch = chan->channel;
-+	h2c_v0->txiqk_dbg_en = rtw89_debug_is_enabled(rtwdev, RTW89_DBG_RFK);
- 
--	h2c->len = len;
--	h2c->phy = phy_idx;
--	h2c->txiqk_enable = true;
--	h2c->is_wb_txiqk = true;
--	h2c->kpath = RF_AB;
--	h2c->cur_band = chan->band_type;
--	h2c->cur_bw = chan->band_width;
--	h2c->cur_ch = chan->channel;
--	h2c->txiqk_dbg_en = rtw89_debug_is_enabled(rtwdev, RTW89_DBG_RFK);
-+	if (ver == 0)
-+		goto hdr;
++	for (path = RF_PATH_A; path <= RF_PATH_B; path++) {
++		kidx = rtw89_phy_read32_mask(rtwdev, R_KTBL0A_BE4 + (path << 8),
++					     B_KTBL0_IDX0);
++		if (kidx == 0) {
++			rtw89_phy_write32_set(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX0_EN);
++		} else if (kidx == 1) {
++			rtw89_phy_write32_set(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX1_EN);
++		} else {
++			rtw89_phy_write32_mask(rtwdev, R_NCTL_CFG_BE4,
++					       B_NCTL_CFG_BE4_SPAGE, 0x1);
++			rtw89_phy_write32_set(rtwdev, R_CFIR_CTRL_A_BE4 + (path << 8),
++					      B_CFIR_CTRL_KIDX0_EN);
++			rtw89_phy_write32_mask(rtwdev, R_NCTL_CFG_BE4,
++					       B_NCTL_CFG_BE4_SPAGE, 0x0);
++		}
 +
-+	h2c = (struct rtw89_h2c_rf_txiqk *)skb->data;
-+	h2c->is_ther_rek = false;
- 
-+hdr:
- 	rtw89_h2c_pkt_set_hdr(rtwdev, skb, FWCMD_TYPE_H2C,
- 			      H2C_CAT_OUTSRC, H2C_CL_OUTSRC_RF_FW_RFK,
- 			      H2C_FUNC_RFK_TXIQK_OFFOAD, 0, 0, len);
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.h b/drivers/net/wireless/realtek/rtw89/fw.h
-index a1aab8293c14..2654f8fd0e51 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.h
-+++ b/drivers/net/wireless/realtek/rtw89/fw.h
-@@ -5042,7 +5042,7 @@ struct rtw89_h2c_rf_rxdck {
- 	u8 is_chl_k;
- } __packed;
- 
--struct rtw89_h2c_rf_txiqk {
-+struct rtw89_h2c_rf_txiqk_v0 {
- 	u8 len;
- 	u8 phy;
- 	u8 txiqk_enable;
-@@ -5054,6 +5054,11 @@ struct rtw89_h2c_rf_txiqk {
- 	u8 txiqk_dbg_en;
- } __packed;
- 
-+struct rtw89_h2c_rf_txiqk {
-+	struct rtw89_h2c_rf_txiqk_v0 v0;
-+	u8 is_ther_rek;
-+} __packed;
++		rtw89_phy_write32(rtwdev, R_TX_IQC_A_BE4 + (path << 8),
++				  iqk_info->iqc_bak[path]);
++	}
++}
 +
- struct rtw89_h2c_rf_cim3k {
- 	u8 len;
- 	u8 phy;
+ static void rtw8922d_rfk_scan(struct rtw89_dev *rtwdev,
+ 			      struct rtw89_vif_link *rtwvif_link,
+ 			      bool start)
+ {
+-	if (start)
++	if (start) {
+ 		__rtw8922d_tssi_disable(rtwdev, rtwvif_link->phy_idx);
+-	else
++		__rtw8922d_txiqk_disable(rtwdev);
++	} else {
+ 		__rtw8922d_tssi_enable(rtwdev, rtwvif_link->phy_idx);
++		__rtw8922d_txiqk_enable(rtwdev);
++	}
+ }
+ 
+ static void rtw8922d_rfk_track(struct rtw89_dev *rtwdev)
 -- 
 2.25.1
 
