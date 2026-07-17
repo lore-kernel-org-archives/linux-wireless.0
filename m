@@ -1,144 +1,204 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1C9C3E169E
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:29:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 170B938B12C
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 10:56:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784276971; cv=none; b=QWugxeaw0dVWNfYaq0bNjG/uskphD8053SIntjaJ7HJYunawuGtXQtmvG3NycmmmbgTey8SUSgm3f0424Dl9PrW+rKcaeoZbGMnKorCRTZYkP9+xvKAOKvbKh6oLY0IUVLuZ/P5Vc+sN/C1Bi54mEgarMCfX2HjNB36wpwoVbz4=
+	t=1784285770; cv=none; b=LgHHH6m7iUhBO+ORgfdzBjdHFtYkr3y++AYtHcPS2S5QNrgPDjOB7FP2V+x2GO1lhQRCsRkQjPXLHm/F1BzbtgprKU4L9XeJMCD3tSfiQu9Wu3irtKwu/8LZfvpC/PzS+Y+krP7PYnD7R7QrFuoAxeegGIUyXG/iAngDoziMHmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784276971; c=relaxed/simple;
-	bh=gYJGpWPn3e3bGCIfGgtUOZeACOMhz8yVeCqfuC3c2zs=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=InQM4J0nPDdtylPcAxmT9AMQPQMwf6KgReilrzdSphSS9wQy8C9GflXBVw2ugN6/uNO+MCgIiQ7TM0TG4L1pH2wgB3J0Qsv3+/N0uK+gruzwXFemcnFg3Jz/skjE1Bexah3QNDzEt00XOHHMKq7aNFDca4X+7Zhb8SDHJrPQ6o4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MOxgN5Vw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784285770; c=relaxed/simple;
+	bh=lBe8rQlMZtGxtAWiz6v0Y25g27Z68UzmBj/9L3bt+5E=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Wsx76/0ui0O5q1/mawaRc2PgZSlQpE4i6p9tiMaLCpERAU8J+PVuxSA1j6DgjFrS3bFfCD8Jr3UtCJD7xusuj7SrzIjcoKAAslGy8RT/WA+1poNLt10wMkS9ga0CmtoSdHfLSY37ukckr6JMea3/G3cejYz16C9edjhdFHklClY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=M5vN/rBi; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MOxgN5Vw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33D2E1F01567
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:29:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784276968;
-	bh=EPZgr4u40Ey253+h5jZaWa/6ga/57quCqeZN6Y3LbLs=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=MOxgN5Vw0ExTWFj/csnN0Eq1CWmvQhK4Uhi0Qmu6WfKTz7ScXP5gKOZ+DjIv5XEbD
-	 KK55g99Uh9TRYVscAXPiRqO8rbSGR0St22hqW8n+UbyQlNEN3VTeGuiPVlB4mxsc/i
-	 UWN46RdUqAoVguX6rv619gIPbCqrt+i2pT8hIRnK7AorfCbHOebHnq9jceHyuPuvrn
-	 UK3Wo5pzjCVV9Rw1CE+7EC+EJlWXR1CDJXu/TPc3kCbtpF7qXyAzaA853jV0ot6UQj
-	 hheX2Hg/Kq5E6zplZEjKU9Hk8SPU1IOCdZV3V+fN8UY8ylt8ewWgPKllCZzUBZCLB1
-	 SZe6ydnUs4ZoA==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5b0117d49dcso7173074e87.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 01:29:28 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RqtR9j3NpdluJXk6Ls6cEw9K779ERpmu8yBvrJ1wxytuevSAo0tnojV2x9vLtPApIScqLUEaNdMx0sw4tXwtw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyF3ij+JgiDxoOobMfGaXGOpAyeyTogZ0fLi8kgccRd7nfdPhJO
-	FdwwG/ss/w3Byazd3gokHJEOqXUMQ5MKMm6L1UUZg9HGIgdWDz1LbBV4xZtg8ybNQ4/gw88w5Pr
-	USiO59xUVFvIsuEn4f1S0Gkqy0Okx7DMdqYI89pUhpg==
-X-Received: by 2002:a05:6512:6d0:b0:5b0:1359:3dd4 with SMTP id
- 2adb3069b0e04-5b28f8471b5mr432020e87.5.1784276966788; Fri, 17 Jul 2026
- 01:29:26 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 17 Jul 2026 01:29:25 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Fri, 17 Jul 2026 01:29:25 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <CAMRc=MdNehSRQT3MUs+QtbZsHcUCS8YjyZchTgHCVv-HaLQkeA@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="M5vN/rBi"
+X-UUID: 14f4252a81ce11f1b1788b6acf885367-20260717
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=pkNNPMc+4Y/lU1Tqxe5npoC2NL+iAxIPrmi/UsZfjSo=;
+	b=M5vN/rBiIkC5EzRrLaCRvgmT1T96atFqks3vMFppCQfJ5HdBdHALV3fY7dxPRDKaFjha7SdKyktgj29MwpPrXrG3o+X8VkevSrgmi2tMQBAE/HY9VXXvoX11MKTx+hwxG68JYS/3zUqEvejwTWtXnw3ddqDV0UAIHJZCHCFbSps=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.18,REQID:972afbcf-7ead-45f5-a142-e31fd80286d2,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:8a735a6,CLOUDID:d5fd3c19-ab14-4403-9336-76696324c5a8,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 14f4252a81ce11f1b1788b6acf885367-20260717
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
+	(envelope-from <shayne.chen@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1936401022; Fri, 17 Jul 2026 18:55:53 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 17 Jul 2026 18:55:52 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 17 Jul 2026 18:55:52 +0800
+From: Shayne Chen <shayne.chen@mediatek.com>
+To: Felix Fietkau <nbd@nbd.name>
+CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
+	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
+	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
+	linux-mediatek <linux-mediatek@lists.infradead.org>, Shayne Chen
+	<shayne.chen@mediatek.com>, Rex Lu <rex.lu@mediatek.com>
+Subject: [PATCH mt76] wifi: mt76: fix handling channel context with different bands in mt76_switch_vif_chanctx()
+Date: Fri, 17 Jul 2026 18:54:58 +0800
+Message-ID: <20260717105458.3005812-1-shayne.chen@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260703-block-as-nvmem-v8-0-98ae32bfc49a@oss.qualcomm.com>
- <20260703-block-as-nvmem-v8-4-98ae32bfc49a@oss.qualcomm.com> <CAMRc=MdNehSRQT3MUs+QtbZsHcUCS8YjyZchTgHCVv-HaLQkeA@mail.gmail.com>
-Date: Fri, 17 Jul 2026 01:29:25 -0700
-X-Gmail-Original-Message-ID: <CAMRc=MeNHzEn+pizmbTUCU6YCiTWZS7cr_yEBSNis8NuYqYjig@mail.gmail.com>
-X-Gm-Features: AUfX_mzH2Q0kFyO4TFR4vp1sRhWEa1QLfB0S2bP-OIJE8-QcpGQ5uxWfAzjRRCI
-Message-ID: <CAMRc=MeNHzEn+pizmbTUCU6YCiTWZS7cr_yEBSNis8NuYqYjig@mail.gmail.com>
-Subject: Re: [PATCH v8 4/9] nvmem: layouts: Support fixed-layout as the nvmem
- device node itself
-To: Bartosz Golaszewski <brgl@kernel.org>
-Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org, 
-	netdev@vger.kernel.org, daniel@makrotopia.org, 
-	Loic Poulain <loic.poulain@oss.qualcomm.com>, Ulf Hansson <ulfh@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Johannes Berg <johannes@sipsolutions.net>, 
-	Jeff Johnson <jjohnson@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
-	Rocky Liao <quic_rjliao@quicinc.com>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Simon Horman <horms@kernel.org>, Srinivas Kandagatla <srini@kernel.org>, Andrew Lunn <andrew@lunn.ch>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	Saravana Kannan <saravanak@kernel.org>, Christian Marangi <ansuelsmth@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Wed, 15 Jul 2026 14:07:24 +0200, Bartosz Golaszewski <brgl@kernel.org> said:
-> On Fri, 3 Jul 2026 15:45:17 +0200, Loic Poulain <loic.poulain@oss.qualcomm.com> said:
->> of_nvmem_layout_get_container() only looks for a child node named
->> "nvmem-layout" to locate the cell definitions. This does not cover
->> providers whose device tree node is itself the fixed-layout container,
->> such as an eMMC boot partition block device whose fwnode points directly
->> at a "fixed-layout" compatible partitions node.
->>
->> When no "nvmem-layout" child is present, fall back to returning the nvmem
->> device node itself if it is compatible with "fixed-layout", so that its
->> cells are parsed by nvmem_add_cells_from_fixed_layout().
->>
->> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
->> ---
->>  drivers/nvmem/layouts.c | 13 ++++++++++++-
->>  1 file changed, 12 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/nvmem/layouts.c b/drivers/nvmem/layouts.c
->> index b90584e1b99eab4217cbe7ec48373e18a7caf0dc..efa631ce7283bdd6c8ecda75915911b5e3a33c99 100644
->> --- a/drivers/nvmem/layouts.c
->> +++ b/drivers/nvmem/layouts.c
->> @@ -167,7 +167,18 @@ static int nvmem_layout_bus_populate(struct nvmem_device *nvmem,
->>
->>  struct device_node *of_nvmem_layout_get_container(struct nvmem_device *nvmem)
->>  {
->> -	return of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
->> +	struct device_node *np;
->> +
->> +	/* Search for nvmem-layout child */
->> +	np = of_get_child_by_name(nvmem->dev.of_node, "nvmem-layout");
->> +	if (np)
->> +		return np;
->> +
->> +	/* The nvmem of_node is itself a fixed-layout node */
->> +	if (of_device_is_compatible(nvmem->dev.of_node, "fixed-layout"))
->> +		return of_node_get(nvmem->dev.of_node);
->> +
->> +	return NULL;
->>  }
->>  EXPORT_SYMBOL_GPL(of_nvmem_layout_get_container);
->>
->>
->> --
->> 2.34.1
->>
->>
->
-> I have it on my TODO list to convert nvmem layouts to be fwnode-agnostic. While
-> I'm not sure when I'll have the time to look into it, I think it makes sense
-> to not introduce any new OF-specific interfaces. Can you make it into:
->
->   struct fwnode_handle *nvmem_layout_get_container_node(struct nvmem_device *nvmem);
->
-> by replacing of_get_child_by_name() with fwnode_get_name_child_node() and
-> of_device_is_compatible() with device_is_compatible()? That would mean less
-> churn in the future.
->
-> Other than that, it looks good.
->
-> Bart
->
+When performing channel switches on different radios within a short
+timeframe, channel contexts with different bands can be carried for
+each struct ieee80211_vif_chanctx_switch.
 
-Scratch that, I didn't realize this isn't a new function but a rework of an
-existing one.
+Rework mt76_switch_vif_chanctx() to properly handle this scenario.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Fixes: 82334623af0c ("wifi: mt76: add chanctx functions for multi-channel phy support")
+Co-developed-by: Rex Lu <rex.lu@mediatek.com>
+Signed-off-by: Rex Lu <rex.lu@mediatek.com>
+Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/channel.c | 93 ++++++++++----------
+ 1 file changed, 48 insertions(+), 45 deletions(-)
 
-Bart
+diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
+index 6edcb3b8f279..37894b78fd08 100644
+--- a/drivers/net/wireless/mediatek/mt76/channel.c
++++ b/drivers/net/wireless/mediatek/mt76/channel.c
+@@ -186,68 +186,71 @@ int mt76_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 			    int n_vifs,
+ 			    enum ieee80211_chanctx_switch_mode mode)
+ {
+-	struct mt76_chanctx *old_ctx = (struct mt76_chanctx *)vifs->old_ctx->drv_priv;
+-	struct mt76_chanctx *new_ctx = (struct mt76_chanctx *)vifs->new_ctx->drv_priv;
+-	struct ieee80211_chanctx_conf *conf = vifs->new_ctx;
+-	struct mt76_phy *old_phy = old_ctx->phy;
+-	struct mt76_phy *phy = hw->priv;
++	struct ieee80211_vif_chanctx_switch *v;
++	struct mt76_chanctx *old_ctx, *new_ctx;
++	struct mt76_phy *old_phy, *phy = hw->priv;
+ 	struct mt76_dev *dev = phy->dev;
+ 	struct mt76_vif_link *mlink;
+-	bool update_chan;
++	bool need_update[__MT_MAX_BAND] = {};
+ 	int i, ret = 0;
+ 
+-	if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS)
+-		phy = new_ctx->phy = dev->band_phys[conf->def.chan->band];
+-	else
+-		phy = new_ctx->phy;
+-	if (!phy)
+-		return -EINVAL;
+-
+-	update_chan = phy->chanctx != new_ctx;
+-	if (update_chan) {
+-		if (dev->scan.phy == phy)
+-			mt76_abort_scan(dev);
+-
+-		cancel_delayed_work_sync(&phy->mac_work);
++	for (i = 0; i < n_vifs; i++) {
++		v = &vifs[i];
++		new_ctx = (struct mt76_chanctx *)v->new_ctx->drv_priv;
++		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS)
++			phy = new_ctx->phy = dev->band_phys[v->new_ctx->def.chan->band];
++		else
++			phy = new_ctx->phy;
++
++		if (!phy)
++			return -EINVAL;
++
++		if (phy->chanctx != new_ctx) {
++			if (dev->scan.phy == phy)
++				mt76_abort_scan(dev);
++
++			cancel_delayed_work_sync(&phy->mac_work);
++			need_update[phy->band_idx] = true;
++		}
+ 	}
+ 
+ 	mutex_lock(&dev->mutex);
+ 
+-	if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS &&
+-	    phy != old_phy && old_phy->chanctx == old_ctx)
+-		old_phy->chanctx = NULL;
++	for (i = 0; i < n_vifs; i++) {
++		v = &vifs[i];
++		old_ctx = (struct mt76_chanctx *)v->old_ctx->drv_priv;
++		old_phy = old_ctx->phy;
+ 
+-	if (update_chan)
+-		ret = mt76_phy_update_channel(phy, vifs->new_ctx);
++		new_ctx = (struct mt76_chanctx *)v->new_ctx->drv_priv;
++		phy = new_ctx->phy;
+ 
+-	if (ret)
+-		goto out;
++		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS && old_phy->chanctx &&
++		    old_phy->chanctx == old_ctx && phy != old_phy)
++			old_phy->chanctx = NULL;
+ 
+-	if (old_phy == phy)
+-		goto skip_link_replace;
++		if (need_update[phy->band_idx]) {
++			ret = mt76_phy_update_channel(phy, v->new_ctx);
++			if (ret)
++				goto out;
+ 
+-	for (i = 0; i < n_vifs; i++) {
+-		mlink = mt76_vif_conf_link(dev, vifs[i].vif, vifs[i].link_conf);
++			need_update[phy->band_idx] = false;
++		}
++
++		mlink = mt76_vif_conf_link(dev, v->vif, v->link_conf);
+ 		if (!mlink)
+ 			continue;
+ 
+-		dev->drv->vif_link_remove(old_phy, vifs[i].vif,
+-					  vifs[i].link_conf, mlink);
++		if (old_phy != phy) {
++			dev->drv->vif_link_remove(old_phy, v->vif, v->link_conf,
++						  mlink);
+ 
+-		ret = dev->drv->vif_link_add(phy, vifs[i].vif,
+-					     vifs[i].link_conf, mlink);
+-		if (ret)
+-			goto out;
+-
+-	}
+-
+-skip_link_replace:
+-	for (i = 0; i < n_vifs; i++) {
+-		mlink = mt76_vif_conf_link(dev, vifs[i].vif, vifs[i].link_conf);
+-		if (!mlink)
+-			continue;
++			ret = dev->drv->vif_link_add(phy, v->vif, v->link_conf,
++						     mlink);
++			if (ret)
++				goto out;
++		}
+ 
+-		mlink->ctx = vifs->new_ctx;
++		mlink->ctx = v->new_ctx;
+ 		if (mlink->beacon_mon_interval)
+ 			WRITE_ONCE(mlink->beacon_mon_last, jiffies);
+ 	}
+-- 
+2.51.0
+
