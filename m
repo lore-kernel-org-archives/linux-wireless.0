@@ -1,428 +1,151 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3FF42A145
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0084426738C
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 15:06:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784299222; cv=none; b=PrbaKjkrBdGaHigAwiw/DSMGOL3nURyVyAddidvVXeIi/0AU5Lp0t9QXpGUinbT0hJR73wYlj5UDF37EDIdbYFeoVqKn0kuRgLpk1yq4x2kjeyaLtL/q6TWZnIt3pqJ9Y8hOFgQn5U2axcRp46gP6alx7F6u2VoR9UDQrEGkWmw=
+	t=1784300767; cv=none; b=ORE+dqL2sjxYSJdaPtEFJ1vYubobhgl96EVLjcjUB8OVEBuOSXNcM482QHJgAxbvs4iZ1f8oJjeyXP3+WFZFNOw3G76M818DeCtCUEnJAEJpBkLlRIv57hiAVIiao1Gfz+d0DLq8JqhkbM9WxuQYUpfUSVgVcPeCUEutpPeYuB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784299222; c=relaxed/simple;
-	bh=93ALLyGWsN51G7lcm8PzYm4i0+algZTmxo1Z2xbO/EA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FVsUJSKnwlB6+vHERYdjk+1e4eIB7oQymyHzguBjusDWjW6IUHYzWC7QuDfSeZckb84cNq6a2LTm5AR7NG4s4TAtX1dRioXuaTO2hWiH7FIcmXFFzkP1ZNH+fv+b/iTaJaZNXvYyBolSm1mPA5/uJrgfjAzffwL++gy6M0+l+oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Txmp1rsd; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=D66ZeJDG; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1784300767; c=relaxed/simple;
+	bh=NPTgNFPbqWCchHrM89MnoOIPS7vR0SwERYhOD/351Wk=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=HYecTao53Agfy7jd9Zr5nhELOJveKoaIE/kOWzvhTgEjKeL6NbVUcREPIzWqn0GWkgmJtrCowpi6LB5I6VGZ2pb2tXgtYe1QphQAgkrZKW91Xkdlg8xJoWXkeL8u8PLswyCPj2GpUluj/2S5YNJzVCc/6F0khfdTPOjXRBb5tlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FcdHTkYl; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=iMO9aISg; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Txmp1rsd";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="D66ZeJDG"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66HE7lIZ1875049
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:40:18 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FcdHTkYl";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="iMO9aISg"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66HE7rZA1675759
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 15:06:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8Qt1djWNsoZvxOfSlqVXOUPZ0wf3R2BBKcU7CUAFuzA=; b=Txmp1rsdZoSWW1/Y
-	KW6n54vVyz6pydNVVY/UB74nBC8QG0A8gnkGuyLeQWoOLXZZQin8e3nbZ884kQuH
-	9IC7dqH9n+rDvIIOFXLgrdvgg5mqQNCFsEawF09fNIjc2ZV18z3Y0cirDDCDa+X8
-	d9aqe2QA4u9IqgHzIji3XeNh7WQTQVeztDQ3k0OrgqyL7wd8uBQRJLoVb/G7LIfE
-	AIl29CQTAjtjYUJgpi6ZF0u/fa9fJCoL9pycf58dVmULT4DKkXzUtC6zyiZlqdGa
-	Zfh5teKAhn83goIA1F2UY5VH+sRiuEiNI+HeXhhSNtkeeq/cnDiMUF0wfuHWWFJl
-	6H5yJw==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fff9p9t05-1
+	AZ8k+2HIR0sWnAIb7M4o9ugipG6/uVcMWV28VfxSnv8=; b=FcdHTkYlRiRCYsaH
+	T1UF/0x+W2mTGuuqTJTZRPSZM85x/s7oBTIsZ2lgj3E/Ch/HgfXGvoNkjPQLrYZ9
+	p7I4l619uoFYNH6x2d3XV7+jPYiy0qQz6UPQt8e2YuP1ElvEEPXwznHH0bnQLseY
+	mbqIZPjpIeDTPg24z0+tNgvyODTRnM56KAReaFu8m56zZVrnz1kn05sT+jz4rWtQ
+	T082W0BQ8KC6jHB0QlYHCAVP2p3iqbQsFZEt1DSNpB3cME1jYba5i9dL1NT5VwZ7
+	21eXkwYExCXZagxg2JMAwQK3myPDxVUGKzCm8qUuL6FwMDTUEbQmGiJbcxSJfmhf
+	vNTyrA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ffj78s4ea-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 14:40:18 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c8924f4d0a4so11199633a12.2
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 07:40:18 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 15:06:05 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38127ae6b99so2293552a91.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jul 2026 08:06:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784299218; x=1784904018; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8Qt1djWNsoZvxOfSlqVXOUPZ0wf3R2BBKcU7CUAFuzA=;
-        b=D66ZeJDG56VqMhcJ5GeIEC0QYb1u5g+UfceMxitEP2jBBxOu1bKYHHsMxTtHHd4Ws4
-         Co5hXJFTYEYx09Itzm34CunreNxNlracKcypwOJbNAkF+2mBwKjERnLGk5WFnRWc4RBP
-         cBMW3Zgwc5/KE1FP/XeMBtBXWiheug4PQCu1+nBHoOLBHGc5AkXZp0VA/Mdl47GabzZe
-         VXJKafFsQS93IrelYgF17zfOHuc3Uz3dudcqE3JzvGBP77390yItFJeBKZmNtW12cVzp
-         hNNmVHHa8nLR1eC+jpcjtzRH1/jWveMiDCUZTvea8zdPK4pSrUOaWzF9Y+eOVREkyPlG
-         IvNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784299218; x=1784904018;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=oss.qualcomm.com; s=google; t=1784300764; x=1784905564; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=8Qt1djWNsoZvxOfSlqVXOUPZ0wf3R2BBKcU7CUAFuzA=;
-        b=hi+coIpHVKlzvNI7Aq8VWh5CdI+wyPtBBqUQofIiZbo4wELk/g2eJIAE/BuDmy9ZzM
-         yhqZ2H+Exyqx3QR/9HqeqCxBCPaab15bgpNopMgkhriLxkl3n1iALrg9PMj8TlHmMIx6
-         CsaiIuU0qgRbhEbqjBccoUSD2EWTu08+RhVM28bt5yiVB1lC2f1vS5MhxRHCn0vGY1Ha
-         1dE2l9lDsm/c3XJR2DSAmkL1RBBGB21lZMoEye4h6rcV0SVVrh9QN/bzM6V7vpmIF+hq
-         De3YRtUje3pMtUFUtaz9mT9vPlGCy21IEhXhfBpvwouwBXmKnxZZibZ5Q562RDNm/RdR
-         axhg==
-X-Gm-Message-State: AOJu0YyF5Yw0pPtXmgM2c0own2pkXyDnmsk5Tex1Ha5hYN5ykoE/GeSt
-	Gp0fTOSmwVPJXf29prZ+1Dp6/RRR1aIg3oooSEfr0j+opiH11zBfaOnTPUydLJRkKQ4RJyn4wHF
-	LZlDRRQFisbPltDKbEYe6mjWivGkeQR3oPYc8M2Kk4rEqwSzqpWFjUsUCyd/t5nLRkEnjBQ==
-X-Gm-Gg: AfdE7clkqqQJeAT3OtiRxNnOwdDbeCd1ZkqtIt3sO6jZ7NZDwWL5WHJLie94IZ67Pws
-	NFas73Q/QtGq7IoDT6X42Pkz05Kp7082Gh5NTZCtpcfqyfNuHQdUcdfxNzoyD54uroc8fBeEqzm
-	JPxzcsXr7NY9K4Ppu606/Ft3LpOkRm8f6XKBbTqBY/ECF4lFe8hbuPzEOLn7mfbhqrD8JLlQKXc
-	aSsyhs1X9TojKfx9coAM9C3SPSgmUfz+7ApV2/x6owL/R4tGkvDcKFgYJagP5kXlF8IoXQYmxH5
-	PWMucI6GvewKPVvVXmWwA251UlO5GWjW1sX2LGfA39jqHKPSeW1YjTxGoqGgJCPDEtq4tafyGLV
-	UO909+Q7/r1i8jorWBh/o+twwRQpB52mfmoCLepTZnYEzE+HxZxjT8020sg==
-X-Received: by 2002:a05:6300:4047:b0:3ab:2fa:756c with SMTP id adf61e73a8af0-3c3ad795790mr3459111637.1.1784299217443;
-        Fri, 17 Jul 2026 07:40:17 -0700 (PDT)
-X-Received: by 2002:a05:6300:4047:b0:3ab:2fa:756c with SMTP id adf61e73a8af0-3c3ad795790mr3459059637.1.1784299216792;
-        Fri, 17 Jul 2026 07:40:16 -0700 (PDT)
-Received: from [192.168.1.11] (15.sub-75-218-246.myvzw.com. [75.218.246.15])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13ce2cbb6e8sm5852602c88.9.2026.07.17.07.40.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Jul 2026 07:40:16 -0700 (PDT)
-Message-ID: <49600545-3e13-452c-8940-c3e775ac3856@oss.qualcomm.com>
-Date: Fri, 17 Jul 2026 07:40:14 -0700
+        bh=AZ8k+2HIR0sWnAIb7M4o9ugipG6/uVcMWV28VfxSnv8=;
+        b=iMO9aISglebOOVcgbKFJz9mLfAlBYKBWRD4FEwwdBcdL7JouUx/vzFrORenxo4Km0o
+         Z3/qY8Ymw7RyRiLZ1n/CMUL/ZcGIzn/kI1qwplNVzFG4bFOIt2jHYAhiLdC44TT5ickS
+         LPuUuxFaHyq3o+2LCtP/Xm8qvZHerZqhyZC3hdtGXblPgQafaJ7iDEMb1J+hw0uCPOuh
+         fcpF0GltNI8zJzEQ7iRwI+CahHK0WKsIhyd1hTyNtoOjZAebrwPHeDtIvYQEj73Zbsx4
+         G5Mzw2RvtPvHs7XaTm5wZDH3bDPqb+yZb8AR7FfZoIVLyw3wI5Eg2NSjRzgtxwxm40tZ
+         ve+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784300764; x=1784905564;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=AZ8k+2HIR0sWnAIb7M4o9ugipG6/uVcMWV28VfxSnv8=;
+        b=j8u//Eu9oipQGhIlOGh091UXNuV95BEd+l38dLV5y9octSetgrCucmEU9U3QWiAubV
+         89tkD0P3th5ygiz2LgUjwH0KhHjXBZ6GQPG7eF9tlQXRYPyz7pUu/iNl08imIx+bMIn4
+         duXtdM48IvhN1Mf6UoaQ/ryMCkqas+FBcfg9oLcNXeWbzCewL3y4uih5e96TpNFM9wAC
+         KiYC1hWqf7x4UYRw4IKJhAOXXZTRHnkePe7ccJ1ppFmspjL0vb5cTCzvJbUv68yrKLz/
+         wbFMepmQcaOhMFixGoE+ekFeEUdsWBxT40zLRmaB7d1ZxKMXM7TUfLRMFwOVWcPsNv44
+         qBEg==
+X-Gm-Message-State: AOJu0Yy5GjrdAGKpMeE0xb31pgRcbuxi0WPDeaHl7vy/NCKnaYh4eLGt
+	nL3Gkoyn2HlZ6cx0iW9SiDkb6p8xV/OgXXbJS6YYIdbDMWueOMpgd8pQ9vRWhz/xOUWYi6ftaq3
+	Jxa5P4sYXs2qdK3nNzfONYW53w5b3AQgKoVu33ofrt4ROEn8B2R3YGjOdv2rd/v6CKUsEwg==
+X-Gm-Gg: AfdE7cmw+Kbb022roxRXbyGT45fA1vLY/vpgjvwTKoHcmXvR1VooW6ZVAbJqHZxyB/T
+	BVGOiP72ahMI/EeQu+ytlHHclOKCxDsav9WX/URBn9+qdth8ROi1vl2I/u/49K7JzVtc1mIoOsM
+	hUNSiKMcT3Rr9ujLEqv3TmkxMIDtIs73tI+zYvjM5/OlNHzN76M2BGHfOKeiXu6cPVnW096DrnZ
+	cPWWIC6iiHPJWsBnd3A5+kz3yyKgMH8g49lJs9WjiF4RhMe0YENb+IE1ZAx7SdOKhwV6E/6av0v
+	rdW2lgyCmAe9dzqf2UJspodPA/VVmnehuaY2oaucfO/1LfTiqaJ+Kd2lUkg6tIyahBEfZsb17w2
+	45n1+JjRIEZYL2N4mAHa94lAOTOjPTmLQgZ0xmI70cnHteLz+gbRmikM=
+X-Received: by 2002:a17:90b:5686:b0:38d:ee5a:63 with SMTP id 98e67ed59e1d1-38e3d175d29mr8152974a91.7.1784300764348;
+        Fri, 17 Jul 2026 08:06:04 -0700 (PDT)
+X-Received: by 2002:a17:90b:5686:b0:38d:ee5a:63 with SMTP id 98e67ed59e1d1-38e3d175d29mr8152929a91.7.1784300763828;
+        Fri, 17 Jul 2026 08:06:03 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3142a1dde81sm15681190eec.21.2026.07.17.08.06.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Jul 2026 08:06:03 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+To: ath12k@lists.infradead.org,
+        Thiraviyam Mariyappan <thiraviyam.mariyappan@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20260622062614.760166-1-thiraviyam.mariyappan@oss.qualcomm.com>
+References: <20260622062614.760166-1-thiraviyam.mariyappan@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next] wifi: ath12k: Set congestion control max MSDU
+ count
+Message-Id: <178430076296.128359.11405301359241550671.b4-ty@oss.qualcomm.com>
+Date: Fri, 17 Jul 2026 08:06:02 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 ath-current] wifi: ath12k: convert scan timeout to
- wiphy delayed work
-To: Runyu Xiao <runyu.xiao@seu.edu.cn>, Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jianhao Xu <jianhao.xu@seu.edu.cn>, stable@vger.kernel.org
-References: <20260717025602.262916-1-runyu.xiao@seu.edu.cn>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260717025602.262916-1-runyu.xiao@seu.edu.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 0TedaTneb-O4uGZDCzWyB9hnuft_JfiP
-X-Proofpoint-ORIG-GUID: 0TedaTneb-O4uGZDCzWyB9hnuft_JfiP
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDE0OSBTYWx0ZWRfX9rLb5uu+75n2
- WoCM/2TCy4gd0uj1cRZV1hvWBoI6cn+Y2sUMZxytaiFcDBnPh/8+j0RYqOjM89E7yHyvRGyxMvT
- CxoYJDVW8ifYoArHqS3DcOp+KBawqiEZ7NaeD0ozTtuCR7ZGs/uwbHNdz/Rh9EbSDbr9wrTcN90
- 5MGDlZO2trhs2n3vDVbvZFefiM/Dxup3BnnLxpHjSiyaBZfaDQoPqSLRA40WND6bU7j1pzkrsfG
- hAVzLYSD4sgwl7BQ9b45Pvj3Mtq7JmUbapnNyqgdEb98xIu6MhgVA+lP3D+zxpG5PYwq9MDJSRM
- OutE2HJQD6C/Jmxpb7MYq2owhBfy7b+ZkqXNDaCQKDU77fHB4CSC9MqipulIEX7efArXbUTA6i2
- G7xhNbSduoTsbnw9tp2hQw68GSBIcY5goR/BF5PzmVQQYBemjz+4+5p39+tS+57Eglr1eGKRjJZ
- uAn1ycych8ZhVgjhJNQ==
-X-Authority-Analysis: v=2.4 cv=TaqmcxQh c=1 sm=1 tr=0 ts=6a5a3ed2 cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=6VQYfvmiyQ8t40WkS/mQdw==:17
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzE3MDE1NCBTYWx0ZWRfX/kbyterAfRA5
+ BMrEgJZaa2zT/zkLe8cROZRorO0UG0Afomuk0w7Kg6EmzkBj9nTXf1rk65M0BZjcFFP+f5Fg64i
+ bci1lX9Hl2XiP3tY70N9wL3wZ3rfLpevuBxT/1ZxQv0HdhxYlG5w8MMD6Z3bMNXQzxgDhkMA2Oc
+ bGWfRqhG5enObwZpvxgfBVlgnwwrscy0vX0lvTFBM4Sen+vIDXEAOXVozHXf3NYq5F22Bvde1gb
+ renPnJeXP+DhAxLczIbGtfk4mju8I+V7jgP8NkSGGvgLRBKmyCMjmEoUPZT4JXNZEp9HEkLJ0oK
+ 3he2KQlCjXgMU35Cj0wTvgKNmTxeZfKVmVzvtYfnHbEAQ0UIc0hgkCTZDH6I9oVFtnuoQja0KjN
+ pv7uuYVF6TfyXLNUCTDY0b8VPcbzuDkgLPybCik2Dr0vrTfzXbwmcaRhHhEzlsEC3eOyBIRgEeo
+ vomwBmo5MDL1WxKXejQ==
+X-Proofpoint-ORIG-GUID: 7Qi1KkttOAUctD2ywI86YJlcD4syWWOV
+X-Authority-Analysis: v=2.4 cv=U9Ciy+ru c=1 sm=1 tr=0 ts=6a5a44dd cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=VwQbUJbxAAAA:8 a=stkexhm8AAAA:8 a=IGpawK0pLUKNoA5DvegA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=3WC7DwWrALyhR5TkjVHa:22 a=pIW3pCRaVxJDc-hWtpF8:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDE0OSBTYWx0ZWRfX7fTh4n9IByps
- 8QFY9kAyjD8n0uFsKVcZ0zBeQC5/VooVBSeaXZyskdIVtIyUk6UkLBKeKHl9PqFCXauvfzBnyjO
- u3E2vE+q4arMebYSJ693gdoQiwuVqV0=
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=yr5zLEcqeAOy5eNwxqgA:9 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-GUID: 7Qi1KkttOAUctD2ywI86YJlcD4syWWOV
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzE3MDE1NCBTYWx0ZWRfX4mGJ07UPHn8+
+ m3FGDQqFAG4Hmy+e+7Ltc5IaAv9/spgZVonf9BF0cPN50OfOlEHWHTxCia2oMEsJedmAqS336YV
+ +ZhAzazQVWeocS6N45TQtAK4e4K02So=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-17_04,2026-07-17_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 suspectscore=0 lowpriorityscore=0 phishscore=0
- adultscore=0 spamscore=0 bulkscore=0 priorityscore=1501 malwarescore=0
+ adultscore=0 suspectscore=0 phishscore=0 spamscore=0 lowpriorityscore=0
+ clxscore=1015 priorityscore=1501 malwarescore=0 impostorscore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607170149
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607170154
 
-On 7/16/2026 7:56 PM, Runyu Xiao wrote:
-> ath12k_mac_op_stop() is called with the wiphy mutex held and calls
-> ath12k_mac_stop(), which cancels ar->scan.timeout. The timeout worker
 
-you are missing a very important detail, namely it is a synchronous cancel
-
-> also takes the wiphy mutex before aborting the scan, so synchronously
-> cancelling it from the stop path can deadlock if the worker has started
-> and is waiting for the same mutex.
+On Mon, 22 Jun 2026 11:56:14 +0530, Thiraviyam Mariyappan wrote:
+> Currently when running 128 clients UDP DL test in 5 GHz HE80 (NSS 2x2),
+> firmware uses the default max MSDU count (16K MSDUs). This lower limit
+> causes the firmware to compute a smaller TQM drop threshold, aggregate
+> packets at a reduced rate, and results in increased packet drops with
+> TQM drop threshold as the completion reason.
 > 
-> Do not drop the wiphy mutex inside the mac80211 stop callback. Convert
-
-What does this mean? Where are we currently dropping the wiphy mutex?
-
-You should describe the patch in terms of the current code, not in terms of
-any prior versions of your patch.
-
-> ar->scan.timeout to wiphy_delayed_work instead, so the timeout callback
-> runs in wiphy work context with the wiphy mutex held. This matches the
-> locking model used by the scan vdev cleanup work and lets stop/cancel
-> paths use wiphy_delayed_work_cancel() while they already hold the wiphy
-> mutex.
+> To fix this issue, set WMI_PDEV_PARAM_SET_CONG_CTRL_MAX_MSDUS to the TX
+> descriptor count using ath12k_wmi_pdev_set_param(). This increases the
+> TQM drop threshold, reduces drop events, and improves throughput from
+> ~722 Mbps to ~1060 Mbps with 1200 Mbps ingress.
 > 
-> The old scan-finish path could cancel the delayed work directly from WMI
+> [...]
 
-what is "old"? There is the current code and the new proposed code.
+Applied, thanks!
 
-> event context. With wiphy_delayed_work that cancellation must happen from
-> wiphy context, so keep it in scan.vdev_clean_wk. Mark scans whose cleanup
-> work has been queued so a timeout work item that was already queued before
-> cleanup runs does not abort a scan that is already finishing.
+[1/1] wifi: ath12k: Set congestion control max MSDU count
+      commit: 78ad50d9071d07510e190d858a76b27a8339932f
 
-My AI review agent thinks this logic is unnecessary, but I haven't looked at
-this in detail.
-
-"summary": "finish_queued flag is a redundant substitute for
-wiphy_delayed_work_cancel: __ath12k_mac_scan_finish is always called under
-wiphy lock, making direct cancellation safe",
-
-"failure_scenario": "Every caller of __ath12k_mac_scan_finish holds the wiphy
-lock (directly or via wiphy_work dispatch), so wiphy_delayed_work_cancel could
-be called there directly — as the old cancel_delayed_work was. The new
-finish_queued flag instead defers suppression to the timeout work itself.
-Since ath12k_scan_abort already has an explicit ATH12K_SCAN_IDLE bail-out path
-(line 5232) with a comment covering the timeout-vs-completion race, the
-finish_queued guard in ath12k_scan_timeout_work provides no additional safety.
-The cost is 8 reset sites (lines 5337, 5624, 5681, 5775, 10971, 13969, 14012,
-15061) where a future error path that forgets the reset leaves
-finish_queued=true, silently suppressing the next legitimate timeout abort and
-leaving the driver wedged in SCAN_RUNNING with no recovery."
-> 
-> Fixes: d889913205cf ("wifi: ath12k: driver for Qualcomm Wi-Fi 7 devices")
-> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
-> ---
-> Changes in v3:
->   - Convert scan.timeout to wiphy_delayed_work instead of dropping the
->     mac80211-owned wiphy lock in ath12k_mac_op_stop().
->   - Cancel the timeout from scan.vdev_clean_wk to preserve the
->     scan-finish cancellation from wiphy context.
->   - Add scan.finish_queued so an already queued timeout work item does not
->     abort a scan that has already queued its cleanup work.
-> 
-> Changes in v2:
->   - Rebase on ath.git ath-current.
->   - Use ath-current subject tag as requested.
->   - Move the synchronous scan timeout drain out of the locked stop path
->     instead of adding it in the wrong start-path context.
->   - Update Fixes to the ath12k commit that introduced the stop-time
->     scan.timeout drain.
-
-FWIW I'd suggest looking into using the 'b4' tool for future contributions.
-It will help you with patch history, including providing links to the prior
-versions
-
-https://b4.docs.kernel.org/en/latest/#for-developers
-
-> 
->  drivers/net/wireless/ath/ath12k/core.c |  2 +-
->  drivers/net/wireless/ath/ath12k/core.h |  3 +-
->  drivers/net/wireless/ath/ath12k/mac.c  | 50 ++++++++++++++++++--------
->  3 files changed, 38 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
-> index 742d4fd1b598..95673d3be9da 100644
-> --- a/drivers/net/wireless/ath/ath12k/core.c
-> +++ b/drivers/net/wireless/ath/ath12k/core.c
-> @@ -1463,7 +1463,7 @@ void ath12k_core_halt(struct ath12k *ar)
->  
->  	ath12k_mac_scan_finish(ar);
->  	ath12k_mac_peer_cleanup_all(ar);
-> -	cancel_delayed_work_sync(&ar->scan.timeout);
-> +	wiphy_delayed_work_cancel(ath12k_ar_to_hw(ar)->wiphy, &ar->scan.timeout);
->  	cancel_work_sync(&ar->regd_update_work);
->  	cancel_work_sync(&ar->regd_channel_update_work);
->  	cancel_work_sync(&ab->rfkill_work);
-> diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-> index fc5127b5c1a3..b6fd5e9dfdb7 100644
-> --- a/drivers/net/wireless/ath/ath12k/core.h
-> +++ b/drivers/net/wireless/ath/ath12k/core.h
-> @@ -635,11 +635,12 @@ struct ath12k {
->  		struct completion started;
->  		struct completion completed;
->  		struct completion on_channel;
-> -		struct delayed_work timeout;
-> +		struct wiphy_delayed_work timeout;
->  		enum ath12k_scan_state state;
->  		bool is_roc;
->  		int roc_freq;
->  		bool roc_notify;
-> +		bool finish_queued;
->  		struct wiphy_work vdev_clean_wk;
->  		struct ath12k_link_vif *arvif;
->  	} scan;
-> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-> index 51c4df32e716..f53df8d4c808 100644
-> --- a/drivers/net/wireless/ath/ath12k/mac.c
-> +++ b/drivers/net/wireless/ath/ath12k/mac.c
-> @@ -5162,7 +5162,7 @@ void __ath12k_mac_scan_finish(struct ath12k *ar)
->  			ieee80211_remain_on_channel_expired(hw);
->  		fallthrough;
->  	case ATH12K_SCAN_STARTING:
-> -		cancel_delayed_work(&ar->scan.timeout);
-> +		ar->scan.finish_queued = true;
->  		complete_all(&ar->scan.completed);
->  		wiphy_work_queue(ar->ah->hw->wiphy, &ar->scan.vdev_clean_wk);
->  		break;
-> @@ -5254,14 +5254,23 @@ static void ath12k_scan_abort(struct ath12k *ar)
->  	spin_unlock_bh(&ar->data_lock);
->  }
->  
-> -static void ath12k_scan_timeout_work(struct work_struct *work)
-> +static void ath12k_scan_timeout_work(struct wiphy *wiphy,
-> +				     struct wiphy_work *work)
->  {
-> -	struct ath12k *ar = container_of(work, struct ath12k,
-> -					 scan.timeout.work);
-> +	struct wiphy_delayed_work *dwork;
-> +	struct ath12k *ar;
-> +
-> +	dwork = container_of(work, struct wiphy_delayed_work, work);
-> +	ar = container_of(dwork, struct ath12k, scan.timeout);
-> +
-> +	spin_lock_bh(&ar->data_lock);
-> +	if (ar->scan.finish_queued) {
-> +		spin_unlock_bh(&ar->data_lock);
-> +		return;
-> +	}
-> +	spin_unlock_bh(&ar->data_lock);
-
-if the flag is necessary, all of that could become:
-	scoped_guard(spinlock_bh, &ar->data_lock)
-		if (ar->scan.finish_queued)
-			return;
-
->  
-> -	wiphy_lock(ath12k_ar_to_hw(ar)->wiphy);
->  	ath12k_scan_abort(ar);
-> -	wiphy_unlock(ath12k_ar_to_hw(ar)->wiphy);
->  }
->  
->  static void ath12k_mac_scan_send_complete(struct ath12k *ar,
-> @@ -5292,6 +5301,8 @@ static void ath12k_scan_vdev_clean_work(struct wiphy *wiphy, struct wiphy_work *
->  
->  	arvif = ar->scan.arvif;
->  
-> +	wiphy_delayed_work_cancel(wiphy, &ar->scan.timeout);
-> +
->  	/* The scan vdev has already been deleted. This can occur when a
->  	 * new scan request is made on the same vif with a different
->  	 * frequency, causing the scan arvif to move from one radio to
-> @@ -5323,6 +5334,7 @@ static void ath12k_scan_vdev_clean_work(struct wiphy *wiphy, struct wiphy_work *
->  	}
->  
->  	ar->scan.state = ATH12K_SCAN_IDLE;
-> +	ar->scan.finish_queued = false;
->  	ar->scan_channel = NULL;
->  	ar->scan.roc_freq = 0;
->  	spin_unlock_bh(&ar->data_lock);
-> @@ -5609,6 +5621,7 @@ static int ath12k_mac_initiate_hw_scan(struct ieee80211_hw *hw,
->  		reinit_completion(&ar->scan.completed);
->  		ar->scan.state = ATH12K_SCAN_STARTING;
->  		ar->scan.is_roc = false;
-> +		ar->scan.finish_queued = false;
->  		ar->scan.arvif = arvif;
->  		ret = 0;
->  		break;
-> @@ -5665,6 +5678,7 @@ static int ath12k_mac_initiate_hw_scan(struct ieee80211_hw *hw,
->  
->  		spin_lock_bh(&ar->data_lock);
->  		ar->scan.state = ATH12K_SCAN_IDLE;
-> +		ar->scan.finish_queued = false;
->  		spin_unlock_bh(&ar->data_lock);
->  		goto exit;
->  	}
-> @@ -5672,9 +5686,10 @@ static int ath12k_mac_initiate_hw_scan(struct ieee80211_hw *hw,
->  	ath12k_dbg(ar->ab, ATH12K_DBG_MAC, "mac scan started");
->  
->  	/* Add a margin to account for event/command processing */
-> -	ieee80211_queue_delayed_work(ath12k_ar_to_hw(ar), &ar->scan.timeout,
-> -				     msecs_to_jiffies(arg->max_scan_time +
-> -						      ATH12K_MAC_SCAN_TIMEOUT_MSECS));
-> +	wiphy_delayed_work_queue(ath12k_ar_to_hw(ar)->wiphy,
-> +				 &ar->scan.timeout,
-> +				 msecs_to_jiffies(arg->max_scan_time +
-> +						  ATH12K_MAC_SCAN_TIMEOUT_MSECS));
->  
->  exit:
->  	if (arg) {
-> @@ -5757,6 +5772,7 @@ int ath12k_mac_op_hw_scan(struct ieee80211_hw *hw,
->  				spin_lock_bh(&ar->data_lock);
->  				ar->scan.arvif = NULL;
->  				ar->scan.state = ATH12K_SCAN_IDLE;
-> +				ar->scan.finish_queued = false;
->  				ar->scan_channel = NULL;
->  				ar->scan.roc_freq = 0;
->  				spin_unlock_bh(&ar->data_lock);
-> @@ -5792,7 +5808,7 @@ void ath12k_mac_op_cancel_hw_scan(struct ieee80211_hw *hw,
->  
->  		ath12k_scan_abort(ar);
->  
-> -		cancel_delayed_work_sync(&ar->scan.timeout);
-> +		wiphy_delayed_work_cancel(hw->wiphy, &ar->scan.timeout);
->  	}
->  }
->  EXPORT_SYMBOL(ath12k_mac_op_cancel_hw_scan);
-> @@ -9935,7 +9951,7 @@ static void ath12k_mac_stop(struct ath12k *ar)
->  
->  	clear_bit(ATH12K_FLAG_CAC_RUNNING, &ar->dev_flags);
->  
-> -	cancel_delayed_work_sync(&ar->scan.timeout);
-> +	wiphy_delayed_work_cancel(ath12k_ar_to_hw(ar)->wiphy, &ar->scan.timeout);
->  	wiphy_work_cancel(ath12k_ar_to_hw(ar)->wiphy, &ar->scan.vdev_clean_wk);
->  	cancel_work_sync(&ar->regd_channel_update_work);
->  	cancel_work_sync(&ar->regd_update_work);
-> @@ -10962,6 +10978,7 @@ void ath12k_mac_op_remove_interface(struct ieee80211_hw *hw,
->  			}
->  
->  			ar->scan.state = ATH12K_SCAN_IDLE;
-> +			ar->scan.finish_queued = false;
->  			ar->scan_channel = NULL;
->  			ar->scan.roc_freq = 0;
->  			spin_unlock_bh(&ar->data_lock);
-> @@ -13876,7 +13893,7 @@ int ath12k_mac_op_cancel_remain_on_channel(struct ieee80211_hw *hw,
->  
->  	ath12k_scan_abort(ar);
->  
-> -	cancel_delayed_work_sync(&ar->scan.timeout);
-> +	wiphy_delayed_work_cancel(hw->wiphy, &ar->scan.timeout);
->  	wiphy_work_flush(hw->wiphy, &ar->scan.vdev_clean_wk);
->  
->  	return 0;
-> @@ -13956,6 +13973,7 @@ int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
->  		reinit_completion(&ar->scan.on_channel);
->  		ar->scan.state = ATH12K_SCAN_STARTING;
->  		ar->scan.is_roc = true;
-> +		ar->scan.finish_queued = false;
->  		ar->scan.arvif = arvif;
->  		ar->scan.roc_freq = chan->center_freq;
->  		ar->scan.roc_notify = true;
-> @@ -13998,6 +14016,7 @@ int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
->  
->  		spin_lock_bh(&ar->data_lock);
->  		ar->scan.state = ATH12K_SCAN_IDLE;
-> +		ar->scan.finish_queued = false;
->  		spin_unlock_bh(&ar->data_lock);
->  		return ret;
->  	}
-> @@ -14011,8 +14030,8 @@ int ath12k_mac_op_remain_on_channel(struct ieee80211_hw *hw,
->  		return -ETIMEDOUT;
->  	}
->  
-> -	ieee80211_queue_delayed_work(hw, &ar->scan.timeout,
-> -				     msecs_to_jiffies(duration));
-> +	wiphy_delayed_work_queue(hw->wiphy, &ar->scan.timeout,
-> +				 msecs_to_jiffies(duration));
->  
->  	return 0;
->  }
-> @@ -15052,6 +15071,7 @@ static void ath12k_mac_setup(struct ath12k *ar)
->  	ar->num_tx_chains = hweight32(pdev->cap.tx_chain_mask);
->  	ar->num_rx_chains = hweight32(pdev->cap.rx_chain_mask);
->  	ar->scan.arvif = NULL;
-> +	ar->scan.finish_queued = false;
->  	ar->vdev_id_11d_scan = ATH12K_11D_INVALID_VDEV_ID;
->  
->  	spin_lock_init(&ar->data_lock);
-> @@ -15077,7 +15097,7 @@ static void ath12k_mac_setup(struct ath12k *ar)
->  	ar->thermal.temperature = 0;
->  	ar->thermal.hwmon_dev = NULL;
->  
-> -	INIT_DELAYED_WORK(&ar->scan.timeout, ath12k_scan_timeout_work);
-> +	wiphy_delayed_work_init(&ar->scan.timeout, ath12k_scan_timeout_work);
->  	wiphy_work_init(&ar->scan.vdev_clean_wk, ath12k_scan_vdev_clean_work);
->  	INIT_WORK(&ar->regd_channel_update_work, ath12k_regd_update_chan_list_work);
->  	INIT_LIST_HEAD(&ar->regd_channel_update_queue);
+Best regards,
+-- 
+Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 
