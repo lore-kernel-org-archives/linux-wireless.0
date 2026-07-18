@@ -1,143 +1,125 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [46.38.247.119])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F076285072;
-	Fri, 17 Jul 2026 22:48:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.38.247.119
+Received: from zg8tmja2lje4os43os4xodqa.icoremail.net (zg8tmja2lje4os43os4xodqa.icoremail.net [206.189.79.184])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id ABED025B09F;
+	Sat, 18 Jul 2026 02:44:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.79.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784328517; cv=none; b=MTnv/il80eXcgrYds/k0s1Qwk0waftqZ7BWH7Cs9wGw2yKgo0/gFCsfJfm+AB7cB1pMp4kX+mHGyPw1/PczBUAgMNOSnX/Zi9D9DgXf6QIv5Qi38dbrZzWgkTXtbz8LI0tkAQRSN4ahK1TfayE7NwyH/LXSaJ+1scMoBb5pJaUk=
+	t=1784342699; cv=none; b=bfM08KBp4+fSaXnSxwIn5JQThHBTmRIakfCkPTslO9Ejax4G7REVJgzpVo+MDg0y7xRWq7+6Pgy1QPzk5yDAAuiTiJAIhLqevNNYCWEd4WYNosYNajjVJQAt+NW/NHyKesNGJY8fE6gBUyXUjaBwDdOH6vAfnT/XHXD33YIuFmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784328517; c=relaxed/simple;
-	bh=iNZz33SPNtqeO4sw3tXln8CKF04wkLp0SkIy8XRzAME=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=poERY2k1RXO18Wu3TNgJ/q+lkyavkv+uN8efrLjQGcf0q1NepWzvVFLx/YncIBBNk/jocPT2E/CFhtKh7aI/oEDjgl2QhR4ASBUJBgTq1SAwanlEi9YeDxNdOwd7rcKp3AO5iGnXRIasUKYyHTSCAkQlCskBVu4EBvLVFvf27Rc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=breiteneder.me; spf=pass smtp.mailfrom=breiteneder.me; dkim=pass (2048-bit key) header.d=breiteneder.me header.i=@breiteneder.me header.b=RZDGg7kv; arc=none smtp.client-ip=46.38.247.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=breiteneder.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=breiteneder.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=breiteneder.me header.i=@breiteneder.me header.b="RZDGg7kv"
-Received: from mors-relay-8404.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8404.netcup.net (Postfix) with ESMTPS id 4h24nZ09WXz8G2j;
-	Sat, 18 Jul 2026 00:48:18 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=breiteneder.me;
-	s=key2; t=1784328498;
-	bh=iNZz33SPNtqeO4sw3tXln8CKF04wkLp0SkIy8XRzAME=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=RZDGg7kvCyGRyiIIqkzL5lT8PrRldIJkeKFXFpIMx8sp270ERR4Mukbttb70LbCdR
-	 PHmJvIBxk3Pvr+7BkgZ2S2l/8EEvR0Dd0QbozC9+/ae+OvhKAcFW31nmPwhefPAXp2
-	 ab1ys2gzvqYh9SK1ocr65nmkSQq/LjruuMJqTUNrwbwrXlsIeg88lyYcEhP47LaIrR
-	 eY5VjT7Gp60FN6IXvbr7PPgpWJ3mc25lR+Jbr2X2lloxdc6u+mIzQEqp615TwtqVYM
-	 XBSyMSafof5sDiew7HHAqi0abQpYc6bbMplHX+7camQ87pCyfsq2usG6nY3q3lgm1L
-	 fMMScS7kowqlw==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8404.netcup.net (Postfix) with ESMTPS id 4h24nY6ZM1z4y1T;
-	Sat, 18 Jul 2026 00:48:17 +0200 (CEST)
-Received: from mxe81b.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4h24nY3zRXz8sWT;
-	Sat, 18 Jul 2026 00:48:17 +0200 (CEST)
-Received: from [192.168.178.143] (unknown [185.151.22.188])
-	by mxe81b.netcup.net (Postfix) with ESMTPSA id D7B7DC0087;
-	Sat, 18 Jul 2026 00:48:16 +0200 (CEST)
-Authentication-Results: mxe81b;
-        spf=pass (sender IP is 185.151.22.188) smtp.mailfrom=armin@breiteneder.me smtp.helo=[192.168.178.143]
-Received-SPF: pass (mxe81b: connection is authenticated)
-Message-ID: <0f6d921f-1026-4d9a-bad5-7e5b9485c4a2@breiteneder.me>
-Date: Sat, 18 Jul 2026 00:48:16 +0200
+	s=arc-20240116; t=1784342699; c=relaxed/simple;
+	bh=67J5Fgv1g+WjNPQavQi2nkbOwU2YuDTAPjsDdjDvZk4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=TZIuV2SuI94pW3oWI0TDL7SeB65uUL46CfGQJwLKiRxa05GRm7oXxHgDe5g+AaiEmPXGKc1RFdowAN4puUNOYSVcxvOuYSY/GOv0LryL/uCFgTGO8xUHmbaZblTWSQnkcD//AlvtbCkCDZMHvWuCW8zQ0Lj3YgDtHf97MYKd3Og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=206.189.79.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wC3NjWi6FpqgykLAA--.4810S3;
+	Sat, 18 Jul 2026 10:44:50 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app3 (Coremail) with SMTP id zS_KCgBnMXWg6Fpq+aBHAw--.27942S3;
+	Sat, 18 Jul 2026 10:44:50 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: arend.vanspriel@broadcom.com,
+	kvalo@kernel.org
+Cc: eddiephillips@google.com,
+	franky.lin@broadcom.com,
+	hante.meuleman@broadcom.com,
+	wright.feng@infineon.com,
+	linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	SHA-cyfmac-dev-list@infineon.com,
+	linux-kernel@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2 1/2] wifi: brcmfmac: make release_scratchbuffers idempotent
+Date: Sat, 18 Jul 2026 02:43:52 +0000
+Message-Id: <20260718024353.3147201-2-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260718024353.3147201-1-fanwu01@zju.edu.cn>
+References: <20260718024353.3147201-1-fanwu01@zju.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [regression] rtw89_8852be: silent RX stalls since v7.1; reverting
- bda294ed0ed0 appears to fix it
-From: Armin Breiteneder <armin@breiteneder.me>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: o-Hao Huang <phhuang@realtek.com>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <7de74e5c-3ad4-4264-a250-fcb1e66675be@breiteneder.me>
-Content-Language: de-AT
-In-Reply-To: <7de74e5c-3ad4-4264-a250-fcb1e66675be@breiteneder.me>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: <178432849709.1077806.9489022866371157896@mxe81b.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: D7B7DC0087
-X-NC-CID: kRrkI88LYGuQPe3QllqY7qI5l/UzV1B2ZxBkaE6Yg95F/eHj
+X-CM-TRANSID:zS_KCgBnMXWg6Fpq+aBHAw--.27942S3
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?CIqjvQXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnZPoDCNGYdHSfuFmYJL54WNxrLdUUyojjsh/MFpH0EOURAe6WXmf9rU7cGu361cagswD
+	49fJYyanNG7eGj/tRo8nLJuT1O+x+sR/9gt+BHM5
+X-Coremail-Antispam: 1Uk129KBj93XoW7ZryUKFW7tw4DCrWxAr4fWFX_yoW8KF1xpF
+	y3KFWjyF4UArWkW393uF13ZFyFkanYy345C3yxJ34fu3y5AryrXr40kFy0vrZ8ArWftay2
+	qw48t345Xr15WacCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUP0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r106r15M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
+	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
+	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
+	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxM4IIrI8v6xkF7I0E8cxan2IY04v7
+	MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
+	0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0E
+	wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JV
+	WxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
+	cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8D5r7UUUUU==
 
-Hi,
+brcmf_pcie_release_scratchbuffers() frees the shared.scratch and
+shared.ringupd DMA buffers with dma_free_coherent() but does not clear
+the pointers afterwards, unlike the sibling release_ringbuffers() which
+NULLs commonrings/flowrings/idxbuf on release.
 
-I am hitting a reproducible WiFi regression with rtw89_8852be 
-(RTL8852BE, 10ec:b852, CV:1 RFE:1, firmware 0.29.29.18) on Fedora 44.
+Both the bus_reset .reset callback (brcmf_pcie_reset) and
+brcmf_pcie_remove() call release_scratchbuffers.  When reset teardown
+has run before removal, remove's own teardown would call
+dma_free_coherent() a second time on the already-freed DMA allocation.
 
-Good: 7.0.14-201.fc44
-Bad:  7.1.3-200.fc44, and v7.1 vanilla
+NULL the pointers after free, matching release_ringbuffers(), so a later
+release observes that the allocation has already been released.  This
+patch makes repeated sequential release safe; the reset-work lifetime is
+handled separately by the following patch.
 
-Reverting bda294ed0ed0 ("wifi: rtw89: Drop malformed AMPDU frames with 
-abnormal PN") on top of v7.1 appears to fix it -- the stalls are gone.
+This issue was found by an in-house static analysis tool.
 
-Symptom: every few minutes the RX data path stalls silently for 1-7 
-minutes at a time. The radio link stays perfectly healthy -- still 
-associated, signal unchanged (~-62 dBm), "tx failed" and "tx retries" 
-both 0 (the AP ACKs every frame we send), "beacon loss" 0 -- and the 
-station's rx_packets counter keeps climbing at ~23 frames/s. Yet almost 
-nothing is delivered to the network stack. The kernel logs nothing at 
-all. Then it recovers on its own, without re-association, and the whole 
-backlog is delivered in one burst.
+Fixes: 4684997d9eea ("brcmfmac: reset PCIe bus on a firmware crash")
+Cc: stable@vger.kernel.org
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+Assisted-by: Codex:gpt-5.6
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Quantified over one 54-second stall (mac80211 station counter vs. the 
-napi_gro_receive tracepoint):
-   frames received and counted from the AP : ~1230
-   frames delivered to the network stack   :  ~211
-   frames withheld                         : ~1000
-   delivered in one interval on recovery   : +5070
-
-Everything that does get through during the stall is broadcast/multicast 
-only (ARP, IPv6 multicast, vendor ethertypes) -- exactly the traffic 
-that bypasses Block-Ack reordering.
-
-That fits the suspected commit: dropping a frame inside an A-MPDU leaves 
-a hole in the sequence numbers, so the RX reorder buffer waits for 
-something that never arrives, everything behind it piles up, and it is 
-only released once a timeout fires. I have not verified this in the code 
-beyond reading the commit, so please treat the mechanism as a hypothesis 
--- the revert result is the solid part.
-
-The AP is a FRITZ!Box 4040 on channel 36 (5180 MHz, VHT80), non-DFS.
-
-Already ruled out:
-- Powersave: disabled (NetworkManager wifi.powersave=2, confirmed via iw).
-- ASPM: disable_clkreq=y disable_aspm_l1=y disable_aspm_l1ss=y 
-disable_ps_mode=y
-   all set and confirmed active. The stall still occurs -- note this is the
-   workaround that reportedly fixes the CachyOS case below; it does not 
-help here.
-- Signal / range / DFS: signal constant across the stall, channel is 
-non-DFS.
-- TX path: txf=0 and txr=0 throughout.
-- Stable patches: "git log v7.1..v7.1.3 -- net/mac80211/ 
-drivers/net/wireless/
-   realtek/rtw89/" is empty, so this came in with the v7.1 merge window.
-
-I could not find a way to trigger the stall on demand, so I could not 
-bisect; the suspect was found by reading the v7.0..v7.1 commits touching 
-the RX/AMPDU path and running a targeted revert test.
-
-A regression with the same version boundary was reported against the 
-CachyOS kernel: https://github.com/CachyOS/linux-cachyos/issues/921
-
-Fedora bug: https://bugzilla.redhat.com/show_bug.cgi?id=2501974
-
-Happy to run a debug build or test patches -- I have the affected 
-hardware and the failure shows up within minutes of normal use, so 
-turnaround is fast.
-
-#regzbot introduced: bda294ed0ed0
-
-Thanks,
-Armin
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 13662aa4b..9f10b3fff 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1383,16 +1383,20 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
+ static void
+ brcmf_pcie_release_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+ {
+-	if (devinfo->shared.scratch)
++	if (devinfo->shared.scratch) {
+ 		dma_free_coherent(&devinfo->pdev->dev,
+ 				  BRCMF_DMA_D2H_SCRATCH_BUF_LEN,
+ 				  devinfo->shared.scratch,
+ 				  devinfo->shared.scratch_dmahandle);
+-	if (devinfo->shared.ringupd)
++		devinfo->shared.scratch = NULL;
++	}
++	if (devinfo->shared.ringupd) {
+ 		dma_free_coherent(&devinfo->pdev->dev,
+ 				  BRCMF_DMA_D2H_RINGUPD_BUF_LEN,
+ 				  devinfo->shared.ringupd,
+ 				  devinfo->shared.ringupd_dmahandle);
++		devinfo->shared.ringupd = NULL;
++	}
+ }
+ 
+ static int brcmf_pcie_init_scratchbuffers(struct brcmf_pciedev_info *devinfo)
+-- 
+2.34.1
 
