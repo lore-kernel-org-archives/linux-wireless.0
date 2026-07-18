@@ -1,60 +1,62 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B8E381B05
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 07:40:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463E71427A
+	for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 07:45:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784360443; cv=none; b=mh6IslB+5BqbX11FDQBIS3AARFln19UwOYt+YR5UTSOekLl4m98G4HhGAyP9yc59TNRIZQz6qH5t0ojjJimUrh58NqO+VEaWGVH7p/3XQmuukJZDK1OxGwFWAEnwQYlO6mMKS8+peJ9MY655fvEqG5uLMCZJm+Ch3Pqgk/js8Gk=
+	t=1784360727; cv=none; b=Je+kPMnDiU1urZ81aQB0fp+7p34ivleFyY2XNKj0bu53y2G8AOB2Zhglm0ZbnlKZih+3MrlZY5YcK7BJhegqTeKyAHan+Vc5cScktxrIIrCbbWoiM9WCHekL1mtKKCbH4yOKJ3cjG6iIOMF8RsxeEAU2bE5MNoqOM2SsfzbZ8rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784360443; c=relaxed/simple;
-	bh=8x97xjwLxespb4H+FhB+Dvs3hO8uXE8rUqn6BLua+Nk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ocEp3hjNYhf53Y1FAitpSAalpBB+nEuileKCUXcYewUqfix6tdUYGJLJqSWSTp9S+iJWFB4yvGVMgxEpr98j5R+CtF7hC7uCCmxHpVWv0GGMxGUwiyBWS0uwnmNufbSn2k5E7wxU5p0CuRIX++56GVsz9IkTdwy5Gji5X7Fxd8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c71awKc9; arc=none smtp.client-ip=209.85.214.173
+	s=arc-20240116; t=1784360727; c=relaxed/simple;
+	bh=vLJMBFwSvHTV7ro0RMeZwMqseUJXnE7dHXV5exqOQi4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=BfXtYtBzgGu/HuN3k4MzxyGQGkyM80PkCJ8+mrK4psc/rDIk6C79MhQlUTjJwA3HZLhIQfNaGuTEbm72A8Ai+JCol0vpcoaYrbYjAOH6cOTrt1JL+ZOnGn0G2cWwSULEOCJNUW6nmElUPOpBj/dX75267I8uJC4kUXJC+pe+mZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mEwBcpbH; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c71awKc9"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2ca64c3ce5fso96434515ad.3
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 00:40:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mEwBcpbH"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2cf52d15d88so155105ad.2
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 00:45:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784360441; x=1784965241; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uaPspb0vOFkRyG1Ra2k3lDnMsVMESB6T2yn/LNmYQss=;
-        b=c71awKc9UE55h5yYxKh6zPSA9Hw9EJLCLHmhwjxE8GYSy9UjqQKN7oEPQUQrngQCNx
-         TVFJ8cmFqWLIvcULKc1TbG/ypspNHaq+21bjqhTiQrEqPUWBt6xtJTc2jXNVgWeacPg2
-         MiuGk5qQhbUWDIhjTSD76Bwrbr7D0opxHFganWtlFolKaBtv8/30Cr6mPt4YJDcALrt6
-         Mgu1U4s/dJVA/pRysl6LhHAlxA1tGecLQjExPPBuVk0LkRm2Tjf+NKpCkJEBLy7iEhmu
-         Lf2+aCXM6ve72xfR9hh0RxeeKvVH+rIxStbDKM2TwAHLpzZli+n0T6uHODmSWWR9yXI3
-         wDxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784360441; x=1784965241;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1784360726; x=1784965526; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=uaPspb0vOFkRyG1Ra2k3lDnMsVMESB6T2yn/LNmYQss=;
-        b=hVPuOAFFwC9Xd9RowMWFvIR8WazoCKe0DPft7R74ekObQh7xWjNyqBJrD6Gol5co8I
-         1p85754ILn+3KF2X0NzoD3xgUe0WfrnzRWPSIufSiNrAgSVxKyCEURWEaoBQYYdUmc45
-         k/SU7M0ItAxyHWd0yOn/+Yk6ugKaD3Z7isc4IkNVY3LCasxIGGZjzBInHUgi9Yo5NSng
-         ujI6Am9ttCbbc63iLLc2PHR62ezQfwU55xNozeWEWd242FWj3qwUBbAm9upf+0SxX8nS
-         xoGVmvxvGmmEHz0ytUbNLu9SnJ7Vnq9tBmR4hxvmWehLj/MQtjFRXo97V8R65Ce+2sO7
-         3V5g==
-X-Forwarded-Encrypted: i=1; AHgh+RpAjfgaunImrHr8Fr8JdN2aeCVloKfNDM9lB9oNWo+SgoWP+7Nb+lKhv1mJYl2Z7K+tv0emAwQHJoqj8wD/rg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8K/yxWEPMLDRM2/+k8F7wr/WHeO+l0/1/WykQ1oiS468XdD7M
-	2KRgz5EWLVkZOL6WsWt3SHfrSDDxzNt3SxsSX+wuOM7knns8yQA7o1Q7
-X-Gm-Gg: AfdE7cnXOQ6beQ4i7NMBzvXtXAEqQloIGVyHiJCt4HSmaddgqLkeYK2/75Yuh73/QTk
-	UDDlZSeE1hy9II2GCmWVFv1ff/M1lHuIBlDFbb0GpJHQSHGnI9QMLAQDk1oJHRe5uIte8Gl8HwS
-	GUmUvYb5L4uegRYThy7AnawNkf4lYaOgxt2tk6HoZ82kh27htzhF2lMQQdD+9hxQtSeMusYz6u2
-	1NLaoUut/EPIYOuUrsaC1P2dWeMRKtH8U9uwe7JDfL3AIT/YsirsUOieOBZ37M727gjvImhY/00
-	BahQU5W0JbZYHGvO/8xU67MdFHWcCC75fRgQ6S99YlbQPr51a1ybfcswYsf6Vta+3QUbTF7pHLd
-	G3pLcmTzJ2N4qq3LWFK2kAG11FgI8zDKidGgihskNJTvlhawd2KpbyXEt9Iw5oLX6e7s=
-X-Received: by 2002:a17:903:1210:b0:2c9:d298:6c06 with SMTP id d9443c01a7336-2cf34a0a6c0mr62046285ad.25.1784360441199;
-        Sat, 18 Jul 2026 00:40:41 -0700 (PDT)
+        bh=OFyV2Rkgf5HtfQYv0w6PI4pQpZkaJeMYAvZn1zRWRf4=;
+        b=mEwBcpbHzGJ0op6afW6hCsjqyO2emHJcv1Ou2P37Y9sDsZYa7on3Sm9w9ma/CsNmsP
+         XK4UFaxyhNkcr7LySZTbOwJWdswS0nhliolv3Kq5itrskqI5fzcN6a1agAJISq8N6Vg7
+         8JfZS+G7tau+voHG0+o3vMdPxW9PHeoMFMI1yRngIfHVKz3yFJ3vy6wjhuAqrDmPWFYq
+         YiDNxQ0l1nxgxYFIdUvuI75XyOsyDGv399G8MU1L/BMQG30qL+wgtwQeoXEKpIgnKOLD
+         kEv+AIcaE+AQzs0bH8XSRltCw+1bByZf1HMarNY2qr0QUGw6w2rRrMvsewgYIErSk0fd
+         F/mg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784360726; x=1784965526;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OFyV2Rkgf5HtfQYv0w6PI4pQpZkaJeMYAvZn1zRWRf4=;
+        b=YlEwG/4nqkaDKCNAu3tldNSGd3injSFk/fSlGDipxW7+9wXf0sW5qTwZY4rcN3W3U7
+         YsBVIUW5F9hmX2vCZrwXRBZ6BXmu4QGJc5AMGZen4IlhwMGpStFOtHNhBNh/6NnLh3Sd
+         Ll5Ht3w8gBA7N31vpR4r18lKnOt09RGAr6MRavRyIZpE6SyzfTmg0r0jFJr1f8to/7ke
+         5zCaH3kddLhFSm23o1uMevBmV6A8NYSxWQiSPqMcIIwmV/WOU0CH2bPvAYDQfBiHy9F4
+         wd+Tw6FEEuSc0Grti+0eQ89NbF2An6WudZFUse8jGxj7K60cvc80G7MPC9SX3Leket/Q
+         PhKw==
+X-Forwarded-Encrypted: i=1; AHgh+RrLNvhBGcH/obzb23urbCaek+hfN9SSDWMd+tTOfj5p+Pza/+R2EiJdlaUBmZ0BiFhEXx8KJzzD0ZZt06h7UQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4bBGmS5BkQvAr4nDxr7frvEb5uF1MBaMIRvbTFdVWm4Tf/vNu
+	SwKw+3AxYAI6Nsn6ZZNEnCuGL7Nut6JetXTfA03P6v3QsH3eBt5a5xcs
+X-Gm-Gg: AfdE7cm7Llm0yAIdHTyFFdJHvZ0npZDIiNdlbXt4Q1euA/bA7FBH38sBKjuwqPgQl+S
+	kAecK3z5zcwwkagMpTvRkIFJ96JoaIj3WiNOdAygL7C6xoZkSKLYK/e4RZJXTXtjAyZWdPt/UNl
+	r4c1sOSvrn1w4TM9tlKlAmd/J+ZNYs5u244jEf0zH4kTHFXL4VBR2uEL6GX4eGnz3rQk8be/jjc
+	trWHQzgu7p6ep4AfJYr/VI+7NA+sp/893AxfkBwA4ouQlKbkL5W2MAUIcZG8sDWr7Pf2NKsUnaq
+	Ng7HqPPcrZPzDu7FsXnv6imP0MYxif5ZujD6H5yKypak2gBaQ/t/86L8nzg8xOUYfquqWyFPAeW
+	RYYkZ4a/RSGouMKiqLUxumXqBEPq/qXhE3p61V5UCaYm84tlBQsfKB1dV1EYYle8+N6w=
+X-Received: by 2002:a17:903:1aeb:b0:2c9:b8b7:5d1c with SMTP id d9443c01a7336-2cf3486ef6emr68540395ad.16.1784360725629;
+        Sat, 18 Jul 2026 00:45:25 -0700 (PDT)
 Received: from lgs.. ([152.32.188.52])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf346da07csm23399685ad.52.2026.07.18.00.40.37
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf346da07csm23399685ad.52.2026.07.18.00.45.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Jul 2026 00:40:40 -0700 (PDT)
+        Sat, 18 Jul 2026 00:45:25 -0700 (PDT)
 From: Guangshuo Li <lgs201920130244@gmail.com>
 To: Jeff Johnson <jjohnson@kernel.org>,
 	Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>,
@@ -68,10 +70,12 @@ To: Jeff Johnson <jjohnson@kernel.org>,
 	linux-kernel@vger.kernel.org,
 	ath12k@lists.infradead.org
 Cc: Guangshuo Li <lgs201920130244@gmail.com>
-Subject: [PATCH v3 0/2] wifi: ath11k/ath12k: release QMI handles on late init failures
-Date: Sat, 18 Jul 2026 15:40:24 +0800
-Message-ID: <20260718074026.3085688-1-lgs201920130244@gmail.com>
+Subject: [PATCH v3 1/2] wifi: ath11k: release QMI handle on late init failures
+Date: Sat, 18 Jul 2026 15:40:25 +0800
+Message-ID: <20260718074026.3085688-2-lgs201920130244@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260718074026.3085688-1-lgs201920130244@gmail.com>
+References: <20260718074026.3085688-1-lgs201920130244@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,37 +84,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series fixes QMI handle leaks in the late initialization failure
-paths of ath11k and ath12k.
+ath11k_qmi_init_service() initializes the QMI handle before allocating
+the QMI event workqueue and registering the service lookup.
 
-Both drivers initialize the QMI handle before allocating the QMI event
-workqueue and registering the service lookup. If either of these later
-steps fails, the initialized QMI handle is not released.
+If either of these later initialization steps fails, the function
+returns without releasing the initialized QMI handle, leaking its
+resources.
 
-Patch 1 fixes the leak in ath11k.
+Release the QMI handle on the late failure paths.
 
-Patch 2 fixes the leak in ath12k and sets ab->qmi.ab only after QMI
-service initialization completes successfully.
-
-v3:
-  - Split the ath11k and ath12k changes into separate patches, as
-    requested by Jeff Johnson.
-
-v2:
-  - Set ath12k ab->qmi.ab only after QMI service initialization succeeds,
-    as suggested by Baochen Qiang.
-  - Fix the same late initialization QMI handle leak in ath11k, as
-    suggested by Vasanthakumar Thiagarajan.
-  - Drop the Reviewed-by tag due to the code changes.
-
-Guangshuo Li (2):
-  wifi: ath11k: release QMI handle on late init failures
-  wifi: ath12k: release QMI handle on late init failures
-
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
+---
  drivers/net/wireless/ath/ath11k/qmi.c | 10 ++++++++--
- drivers/net/wireless/ath/ath12k/qmi.c | 13 ++++++++++---
- 2 files changed, 18 insertions(+), 5 deletions(-)
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/qmi.c b/drivers/net/wireless/ath/ath11k/qmi.c
+index 410a7ee076a0..6e3f82169d24 100644
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -3329,7 +3329,8 @@ int ath11k_qmi_init_service(struct ath11k_base *ab)
+ 	ab->qmi.event_wq = alloc_ordered_workqueue("ath11k_qmi_driver_event", 0);
+ 	if (!ab->qmi.event_wq) {
+ 		ath11k_err(ab, "failed to allocate workqueue\n");
+-		return -EFAULT;
++		ret = -EFAULT;
++		goto err_release_qmi_handle;
+ 	}
+ 
+ 	INIT_LIST_HEAD(&ab->qmi.event_list);
+@@ -3342,9 +3343,14 @@ int ath11k_qmi_init_service(struct ath11k_base *ab)
+ 	if (ret < 0) {
+ 		ath11k_warn(ab, "failed to add qmi lookup: %d\n", ret);
+ 		destroy_workqueue(ab->qmi.event_wq);
+-		return ret;
++		goto err_release_qmi_handle;
+ 	}
+ 
++	return ret;
++
++err_release_qmi_handle:
++	qmi_handle_release(&ab->qmi.handle);
++
+ 	return ret;
+ }
+ 
 -- 
 2.43.0
 
