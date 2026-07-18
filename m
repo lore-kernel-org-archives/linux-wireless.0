@@ -1,149 +1,139 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 450A81427A
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 07:45:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D219734B66F
+	for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 11:55:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784360736; cv=none; b=Ck9PM/Zxl0Y+m19h2eZCSYKxhoWLeWECUfBojZCjtS47C9euDgLZ1jbmHoGKYftpvb0NN5X5Gfh6srsNqgtRKVYxIaFn3CDHT6fT4GaBjHxjbZ58aCYxYDB1smiotVQDOKCkgg41x7Fq6tJTDiULffcNffZjAJx1E3YpduFYF2k=
+	t=1784375713; cv=none; b=E+DVlPdPdqDhSIO3ZDm7t4RGq2hm3a9wEQbicPXFYhQ6gE8OYaQGYCuQIuXIXuptZiAKu2LldhcmnejK2QBRllQyoakICVIEfpnsSE9DoH12/I6dXg5IyCEIykm9EQ7HFYJ0BsKvnOBYnWV/KxLxQHj0W3XqJlDMSjFRqxTKz30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784360736; c=relaxed/simple;
-	bh=z6yAepMcHqHIO6UCMXqsAEl4y5azk4w8xeHZF5gYDHk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tOuIXJQQcbRvQt3H11XCZ06bHTxwoWXNuVI8YfQ4KifMI9MoaOlVcxuSVowquuJ/t089CE/Mu858OfP51QM09NLL7hcsU7lSicOIg6+gqdYIJAfxSdSAolJnaexoZt+5+5XOdm+gbsgI/boIpSbVbDTedLdzGrcTai5XvdRERvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iHMpIHlL; arc=none smtp.client-ip=209.85.214.182
+	s=arc-20240116; t=1784375713; c=relaxed/simple;
+	bh=wWH/JneNNCFrzvvIrktJAtBFuvYyUpgDsJ01yaJiHSo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PV8QSQlNWS8qnqXrKrP9kJprwYcZqpbJ9ntLNIcd2Yl6NDTdI5MVsJ7wfwtUHEdxEFp73VgTisOBktz9fz4yQyChc94ORBYGLd2SqM7DK5zLGOw6UNDRZoLqtlZd8PZaMavW5cuLn2ZP+899tRB1IVOTCf82W6nPEhkcFruhJSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bSBkO1Xt; arc=none smtp.client-ip=209.85.221.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iHMpIHlL"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ceae1ed204so63045065ad.0
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 00:45:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bSBkO1Xt"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-47c6e9a694bso4744019f8f.1
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 04:55:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784360735; x=1784965535; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=o6FMRb6Ton81+XDkPtgEkIQhf4bCKKZGg7F18DbjTnE=;
-        b=iHMpIHlLcgDKg6CotKgnsjTFkWmSE0/BVkCqYoa0FHZDaAcVudaFDq3Do8qBUoT2B1
-         npWLXkWzIlQZfNHw1TkV0pOmvQ3nQa7TKVJTn42eRSfsvnp4VTEMEUrAuOrSD+ihvSwN
-         wCpsepeR3zJJucFv6llTteF875WiSTtzEpuUqqh/odJj8FqYFVhHWuLaNbAmlzHB+vZ0
-         I81YKJswtf6WuymJt6iv9+4c2GbbfmViF28m2O7qVitQzM9ChXaQp/nT2O/vzRpN5mw5
-         D/C4wOceenS8yrO8R6yBCIz/enUMfOHBicfiGOvf1ekb0UpISf4PPiWFPygVTuLh9hvl
-         ToLg==
+        d=gmail.com; s=20251104; t=1784375710; x=1784980510; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=6SMAM6Jg8v3g+Q7U5GrJYeYdSrEr5GHNyPrzfLyMPog=;
+        b=bSBkO1XthfC4v80smmgbfekqOA15BOBJxyiUIE1qEenZ2/4LTgAKd8uIfoV/RaqM2V
+         qtfSaFHi1WtXDSnSrOb0aoU7oANVf+P+mUOWY/9kMsQyTcn5MOzTrfzE/a4X07hhs8Sy
+         MlEHssrQmJqW/Cr1JVY6rbwju5NHwOmVVQHjJTgw2aGOUAI/0JGaBeI/rYsRRWAoAx4r
+         1CbMcXH/5tXC+75dYgmENGT36HrRATtBurZlQXOL+0FMTrWXMDja4vY4jqS69NIxK/A2
+         NqnYxG1uqSZVMgX9lwUQYrKiczFr1n5tnrDRbL2GFLhCsHVhjlK6Fnz/nzkbawW1xshM
+         5NLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784360735; x=1784965535;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=o6FMRb6Ton81+XDkPtgEkIQhf4bCKKZGg7F18DbjTnE=;
-        b=H1B3mIuc1R+yeM1X8tR2yxe6bmVtcjTYcPHuY9Y9CVm49hahmk3Sg91ff7+Y16kmov
-         1tlJ9m0qLTyQRXqDyyvmIsxEjLsYftQdbb/Dy5qFdatkI8FM9igeV6jKzu64CbLewRuT
-         1Uv9JFhpgxxhp1U/cnwLkNOsBvY43+NUavEzbqvXYsP1GrE96eg7B1VVlCD5OKjYEujv
-         jg4y3Qla877ENpCGwQPqjfKlJFtL+p8WZnli3iXCwnU9p7a8cirk7S6eV+6Iz3K74oY2
-         YcTbayNHC6Wmzb5vLu2AyKyqS7BpD1A3sTI2GM+FDrv62ypLVnw3wCd3M8nJA21e46Ir
-         QbVw==
-X-Forwarded-Encrypted: i=1; AHgh+Rr6Eoj5rRijP/WcXmC5NoYi4G9qVbewl47kCk9aXf11rZEsrg4cCMU4X92/wihhtEAsmPx7YBMFYMXgCPOADw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbKesmCamJfsDr/RXmeLrT55H8nziEHe8LjGPcjDP/c20nrDS4
-	DfqiE2fGvvr3vpxYEzq7LJp8U4pL4yaVEGzYoySAnSL1lO+peHcYCVcl
-X-Gm-Gg: AfdE7cmFfC14H91SGMsAFlGROaV1RPboINgd7JnPCPrQKAXYyGiCxQXM0fCgJQjbR7n
-	3hIiXUCQEUnQ5czr3ionxwN0noYm2LfIny3XkNe3I1XXjkTrbcigFdtL7ckej2JTPL2PNqePNed
-	Q5FUUif7KML1+q9AiVNhRGHAacJFwT/LoTRedWOPODHeQ3WxUgWc+VFkpMRV5U1F0FJpHjZqH+3
-	88wvwG+064NqbTOBS/pv8xOJYtVnIOctUns0wtprTithWRGM2p96sGTkdE/idArbfGDqHf69kq4
-	WLdtfQWr9GCoRWPjZMvZlHzE4Zr4H16L0Yd/5jHEiZXyaQkvvs2U+slAQJ9RM4JeUHUdOayDE8A
-	euUeZCucdxR3sw3IiZBKn6DxAAROhwUFQ9J8gjFcmUEDjGFOfu/ofLiZ7RyKfPf9XmB0=
-X-Received: by 2002:a17:903:234d:b0:2cc:f4d4:29a7 with SMTP id d9443c01a7336-2cf3499781cmr65687175ad.24.1784360734636;
-        Sat, 18 Jul 2026 00:45:34 -0700 (PDT)
-Received: from lgs.. ([152.32.188.52])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf346da07csm23399685ad.52.2026.07.18.00.45.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 18 Jul 2026 00:45:34 -0700 (PDT)
-From: Guangshuo Li <lgs201920130244@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>,
-	Pradeep Kumar Chitrapu <quic_pradeepc@quicinc.com>,
-	Vasanthakumar Thiagarajan <quic_vthiagar@quicinc.com>,
-	Sathishkumar Muruganandam <quic_murugana@quicinc.com>,
-	Anilkumar Kolli <quic_akolli@quicinc.com>,
-	Ganesh Sesetti <gseset@codeaurora.org>,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	ath12k@lists.infradead.org
-Cc: Guangshuo Li <lgs201920130244@gmail.com>
-Subject: [PATCH v3 2/2] wifi: ath12k: release QMI handle on late init failures
-Date: Sat, 18 Jul 2026 15:40:26 +0800
-Message-ID: <20260718074026.3085688-3-lgs201920130244@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260718074026.3085688-1-lgs201920130244@gmail.com>
-References: <20260718074026.3085688-1-lgs201920130244@gmail.com>
+        d=1e100.net; s=20251104; t=1784375710; x=1784980510;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6SMAM6Jg8v3g+Q7U5GrJYeYdSrEr5GHNyPrzfLyMPog=;
+        b=HaJKzVARJEn3BUjyWRkmySQwXbZVD7tTdmkP0itDeEvwfgH+xwif+CVcNIe5XXAoVr
+         DutUda7boB6nENNOjsWf+9ff87TEnMn492Idure4jMpIwz3o5CY/b1wJ+GpG33tyZlFX
+         VZ1KVGmRKBTCq8MslFsTsJPEXehxvgawUVT9hmHBK3ahMbGXShTvXk14kG5SGUHXWFgC
+         6Pd//S463Vp0YKtsOhd0BwhlSc2ngPvUJUX1h/gBKRKOK4cFsloavk2rdLUQh+Ik5g+v
+         gX6Kxs3kOFXdhaJM4pp7qBpBNuxoYTUwzOyrVgbULxqaBFlaAzUXV/2gAh6tyTXXw67v
+         hVOQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoXw01TSgcJPOhKFJpBE3WL7Iu3nC984iWLM/FKQpcswN9MJcJ480Hpr2INAhXuyMzjIXmz/JXC1r1a4f+sxQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzOkRjVh+6SZoNAawqBnliZPIztAfRBzEI600JzkNdm4oky8I90
+	vAIJb2xvjnc4xYSdHMT9WY4/Zdb+sgDAMbWDE6p/3yjBtz4l5IwxxAEg
+X-Gm-Gg: AfdE7cmkCTCMVUxBVjzIea4sd3/y5TTHaS8NDNbF1IouUcTfkezTRiIMbaN0pIYk37X
+	99ZPm5mH2xS+e/+nUhablfoztzff/ePlJmzoL/YjC42dTHBmKUHRjx1EeOOuCLsPCUar2FOq9sh
+	duZcdhphWOPwCUytyMZSB+nJSdXEE8oB1Dt3V/Tgt2g7nnMVhc3rvHYJ8EA/5ezq1Su/oX8nfrr
+	fXxAUjg4ML99HnWzdP8n4iR44hzvw0JTImyK1d+eYlbClkBcnvLEj9/HivJb3Q93pangWR1Lbz5
+	raLYkDZFp1S2M5IgRmrw0fNxoC8wkMsdD2FfDy7k8wGbPvvXOQCoAxVV+8B7IR4M3jZ34DlJqFP
+	EZ692dFbCUc8jqLPjRogohZbDAHDGXzbqbICepuNdlFD4Uer949Pi9kXjyakUdIVpxuA/BEQOVq
+	bEJarO2SMADA==
+X-Received: by 2002:a05:6000:4a19:b0:475:f100:3607 with SMTP id ffacd0b85a97d-47f623391c8mr7801229f8f.54.1784375709845;
+        Sat, 18 Jul 2026 04:55:09 -0700 (PDT)
+Received: from [192.168.1.50] ([79.118.68.203])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f63e496afsm12682419f8f.1.2026.07.18.04.55.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 18 Jul 2026 04:55:09 -0700 (PDT)
+Message-ID: <4d8ac018-ce77-4e30-9596-bbc28d18c18f@gmail.com>
+Date: Sat, 18 Jul 2026 14:55:08 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [regression] rtw89_8852be: silent RX stalls since v7.1; reverting
+ bda294ed0ed0 appears to fix it
+To: Armin Breiteneder <armin@breiteneder.me>,
+ Ping-Ke Shih <pkshih@realtek.com>
+Cc: o-Hao Huang <phhuang@realtek.com>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <7de74e5c-3ad4-4264-a250-fcb1e66675be@breiteneder.me>
+ <0f6d921f-1026-4d9a-bad5-7e5b9485c4a2@breiteneder.me>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <0f6d921f-1026-4d9a-bad5-7e5b9485c4a2@breiteneder.me>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-ath12k_qmi_init_service() initializes the QMI handle before allocating
-the QMI event workqueue and registering the service lookup.
+On 18/07/2026 01:48, Armin Breiteneder wrote:
+> Hi,
+> 
+> I am hitting a reproducible WiFi regression with rtw89_8852be (RTL8852BE, 10ec:b852, CV:1 RFE:1, firmware 0.29.29.18) on Fedora 44.
+> 
+> Good: 7.0.14-201.fc44
+> Bad:  7.1.3-200.fc44, and v7.1 vanilla
+> 
+> Reverting bda294ed0ed0 ("wifi: rtw89: Drop malformed AMPDU frames with abnormal PN") on top of v7.1 appears to fix it -- the stalls are gone.
+> 
+> Symptom: every few minutes the RX data path stalls silently for 1-7 minutes at a time. The radio link stays perfectly healthy -- still associated, signal unchanged (~-62 dBm), "tx failed" and "tx retries" both 0 (the AP ACKs every frame we send), "beacon loss" 0 -- and the station's rx_packets counter keeps climbing at ~23 frames/s. Yet almost nothing is delivered to the network stack. The kernel logs nothing at all. Then it recovers on its own, without re-association, and the whole backlog is delivered in one burst.
+> 
+> Quantified over one 54-second stall (mac80211 station counter vs. the napi_gro_receive tracepoint):
+>   frames received and counted from the AP : ~1230
+>   frames delivered to the network stack   :  ~211
+>   frames withheld                         : ~1000
+>   delivered in one interval on recovery   : +5070
+> 
+> Everything that does get through during the stall is broadcast/multicast only (ARP, IPv6 multicast, vendor ethertypes) -- exactly the traffic that bypasses Block-Ack reordering.
+> 
+> That fits the suspected commit: dropping a frame inside an A-MPDU leaves a hole in the sequence numbers, so the RX reorder buffer waits for something that never arrives, everything behind it piles up, and it is only released once a timeout fires. I have not verified this in the code beyond reading the commit, so please treat the mechanism as a hypothesis -- the revert result is the solid part.
+> 
+> The AP is a FRITZ!Box 4040 on channel 36 (5180 MHz, VHT80), non-DFS.
+> 
+> Already ruled out:
+> - Powersave: disabled (NetworkManager wifi.powersave=2, confirmed via iw).
+> - ASPM: disable_clkreq=y disable_aspm_l1=y disable_aspm_l1ss=y disable_ps_mode=y
+>   all set and confirmed active. The stall still occurs -- note this is the
+>   workaround that reportedly fixes the CachyOS case below; it does not help here.
+> - Signal / range / DFS: signal constant across the stall, channel is non-DFS.
+> - TX path: txf=0 and txr=0 throughout.
+> - Stable patches: "git log v7.1..v7.1.3 -- net/mac80211/ drivers/net/wireless/
+>   realtek/rtw89/" is empty, so this came in with the v7.1 merge window.
+> 
+> I could not find a way to trigger the stall on demand, so I could not bisect; the suspect was found by reading the v7.0..v7.1 commits touching the RX/AMPDU path and running a targeted revert test.
+> 
+> A regression with the same version boundary was reported against the CachyOS kernel: https://github.com/CachyOS/linux-cachyos/issues/921
+> 
+> Fedora bug: https://bugzilla.redhat.com/show_bug.cgi?id=2501974
+> 
+> Happy to run a debug build or test patches -- I have the affected hardware and the failure shows up within minutes of normal use, so turnaround is fast.
+> 
+> #regzbot introduced: bda294ed0ed0
+> 
+> Thanks,
+> Armin
+> 
+> 
 
-If either of these later initialization steps fails, the function
-returns without releasing the initialized QMI handle. Since the failed
-device is skipped by the hardware group rollback path, the handle is
-leaked.
+Hi!
 
-Release the QMI handle on the late failure paths.
+This commit from 7.2 should fix it: https://github.com/torvalds/linux/commit/63ccdfac8677387dfdbd9d4336089e9823280704
 
-ath12k_qmi_deinit_service() uses ab->qmi.ab to determine whether QMI
-service initialization completed successfully. Set it only after all
-initialization steps succeed.
-
-Fixes: 088a099690e4 ("wifi: ath12k: fix error handling in creating hardware group")
-Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
----
- drivers/net/wireless/ath/ath12k/qmi.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
-index fd762b5d7bb5..692f1b2c2031 100644
---- a/drivers/net/wireless/ath/ath12k/qmi.c
-+++ b/drivers/net/wireless/ath/ath12k/qmi.c
-@@ -4041,7 +4041,6 @@ int ath12k_qmi_init_service(struct ath12k_base *ab)
- 
- 	memset(&ab->qmi.target, 0, sizeof(struct target_info));
- 	memset(&ab->qmi.target_mem, 0, sizeof(struct target_mem_chunk));
--	ab->qmi.ab = ab;
- 
- 	ab->qmi.target_mem_mode = ab->target_mem_mode;
- 	ret = qmi_handle_init(&ab->qmi.handle, ATH12K_QMI_RESP_LEN_MAX,
-@@ -4054,7 +4053,8 @@ int ath12k_qmi_init_service(struct ath12k_base *ab)
- 	ab->qmi.event_wq = alloc_ordered_workqueue("ath12k_qmi_driver_event", 0);
- 	if (!ab->qmi.event_wq) {
- 		ath12k_err(ab, "failed to allocate workqueue\n");
--		return -EFAULT;
-+		ret = -EFAULT;
-+		goto err_release_qmi_handle;
- 	}
- 
- 	INIT_LIST_HEAD(&ab->qmi.event_list);
-@@ -4067,9 +4067,16 @@ int ath12k_qmi_init_service(struct ath12k_base *ab)
- 	if (ret < 0) {
- 		ath12k_warn(ab, "failed to add qmi lookup\n");
- 		destroy_workqueue(ab->qmi.event_wq);
--		return ret;
-+		goto err_release_qmi_handle;
- 	}
- 
-+	ab->qmi.ab = ab;
-+
-+	return ret;
-+
-+err_release_qmi_handle:
-+	qmi_handle_release(&ab->qmi.handle);
-+
- 	return ret;
- }
- 
--- 
-2.43.0
-
+It's queued for 7.1.x as well.
