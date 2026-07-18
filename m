@@ -1,144 +1,192 @@
-Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+Received: from out02-fra1-mx.uberspace.de (out02-fra1-mx.uberspace.de [185.139.157.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DC3C2FD7B1
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 17:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.222.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784396345; cv=pass; b=P9yZauQBtNS3Cld2Ca5pgiMz1RNeVgo32rvIVW2B/zL9PNwqagwg97e37mk5aoATiILaIVcNcE1/WBgjiw23+CL0+WTSyQrP2PEknT5o9kxT2r9zSO9HsnToyfVgbmrCaIZ7JPU0+acnldrZjoi/HMCyCCJf8yffQa/e224jcnY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784396345; c=relaxed/simple;
-	bh=5WC35L7Iv1EnkbiZDr7ZHCQ3R0J2NLJkqYIJ2Ez6/Bo=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=YlCa7tPZst854zjYiBvCKGVb0J51buIBAgnswPGbiHituA3DsME+GbFBjkVgHKxQxJXkRbezy+qvc3gSx/fMATYI8UwJsB9LfM76+Mik6R5/s2i5dsN3hy2kvxBt+Fm2wYuid/STDctP+Jxd6AJqZL+iYFtMNxtC2ig9556UvcE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UlQmaisR; arc=pass smtp.client-ip=209.85.222.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40CF71A0BE0;
+	Sat, 18 Jul 2026 21:03:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.139.157.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784408617; cv=none; b=ItTb6jQu4fq9ZCEeemJDflHxm7bZH3MUeH7YBWRHatI7VUJFL5nLIkJSCu0AcV6eF6VrKHsW1cqCh2nbbcb+UBwplngOa3OQK3QuYgo8qJ/1dwEyV7DdvyjyY/fPnKf505kZ3Qm6gS3m05DA+gtNhbHvCLf8cz6eRYuSkwtGjmk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784408617; c=relaxed/simple;
+	bh=VckANWSJSbDp8WF4GvWn19eK+VZqN1+Vc6BshpWTd1A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lht9p7aTZPv8u5whNC+RvWZsOIXzQGExDswUx+YMi0gJGJJ6Cg86ol7pihtO2rdN9fPB67Hv9PdGyht1J6qK0RRihWhtAklKoJHkNozlmykbK1zYU5CbTm83wUj2xIYGOk4k4kmicWqN6cgTByI2y8hPNepz1GJB20N+xW8jv9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de; spf=pass smtp.mailfrom=plantwatch.de; dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b=Exfuk9aQ; arc=none smtp.client-ip=185.139.157.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plantwatch.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UlQmaisR"
-Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-92e6391b114so452855385a.3
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Jul 2026 10:39:03 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784396342; cv=none;
-        d=google.com; s=arc-20260327;
-        b=q+6bL314UtQbbjzXUSM9FCJ2lsxNWt+LqVl/m12zlB4IQZLDPs518xdTXLpERj+kNt
-         uiwb5dW/uT55m9FD8zWyYyE2jsDLoZa26uXLdWokDVsu7BkL+isCSVOfjyuQ+Onfhy0F
-         64bcoiBRkt5mc14PPpTQu5y+tPMJUF7M7evdydP/C6lUm5BxYebYhRGYqoJ2AfO8sctq
-         yGBIwDvvs1l9HQK26rmfnUEdansOJviYafnndC213sxtQUMCdnfGlJ7HX1wCdWiP4Dd2
-         rslzBpZ5lXo5ktL839IDjMZ+ZVzzXpNfZSxQzkOtpE9kBXDkzn+tF6m5GkYJk2I86QJZ
-         7jNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=mdH+D//T2JL/1hYWCoVD9zXsafdlcW0Rf+V0DeWKlfw=;
-        fh=HwEDsXFY9GqDxlPZMG/IFpR2ehYXnMh/V0QsVOtQwEI=;
-        b=GdevD5cGlxOOfPKO6/5gsMQ21uwu70Y610muVzQ1VRHHbFt7xHKJZVcJbGyFpVKaId
-         zTzsqG+fiHW4tpVKa5FgYimsalwbiffXXhK5bXiRvEG/aKCoNkehqLIztadNLyZeHryx
-         kytDfBYt7gOOaZ1n5fTcyPTW+qaHcOQbwzpkOWN38lqR2pq1sV38Kz6Yc917fuBeCmuP
-         vvacwam7oU9yL+AXvpUZpn0ONZ7dRpvRdlskJxSSJiBOD4uVEYkOU5WXHTnXnltxbx4X
-         1wZuDuvhm3+VWJsVpT50IFXWtnehY63l3UsEobmNY62QmpnlJtNJ2EiGOE+FJdjAYt1s
-         yPew==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784396342; x=1785001142; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mdH+D//T2JL/1hYWCoVD9zXsafdlcW0Rf+V0DeWKlfw=;
-        b=UlQmaisR2MyJQ3BSgmXpMUf3q9/F32hAIpM7R+TVV8GrE4BVq8QwEeazWjpzRaYIyp
-         RyQ28rxvnAkU35O2fy/WurJMfG2mpuAE2qqyRNDMuNfoucqZ+XnFA1TsjE5GrcCefg7c
-         jxbi7epGdMsr0QkERXXSn53j7zBgPmfGAFPVK85o0UT04FALrLP/TfHrTbCrLRdgyfE7
-         k/B1cJJ+mIBwDy3GmTv3UB3lE4nw4rtAOcfIEHn/53CAvXfKmNYgMncDk4jEAEdsU8Ey
-         q4t/MtnatwAJEId9DqKrLG+NhgeIrIkFx49J1tBhZuBLw1Di3yoQecwCcWcQxXeh5q1m
-         J0GA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784396342; x=1785001142;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=mdH+D//T2JL/1hYWCoVD9zXsafdlcW0Rf+V0DeWKlfw=;
-        b=B7LvWHmg4WwWPN0TDomftox9bmwHXg3ZuqkHY4crJQZwp9p5TO0ExBYPAeQ1aeiFdp
-         OQj0vx9YQMk/9Oi8/yziAR0u0lEPCekZReJsBzF2UcvKQABK8vZUJcI0xgPscC+LJ3nv
-         bwpsDSH4w0UzWyDqAhRMY+PPR4kTbXT1X7zoz9MuQ+CYzItx32w9SV83FSQ/4jAwnDzj
-         CcQhKj8FnKUrxexYM5u52UdS5SKyW/yTj/bodhRn+gREQiHJ46jXrQyWIY/vn1jszYZ0
-         /1kpyE0p/ZGXfU3wPeKR8y8qpGNwgq79/V81EDynBrbkvEW8NqM5BfwQfP+3p+vtt/Io
-         Pu9w==
-X-Forwarded-Encrypted: i=1; AHgh+RrGgGkcrEleGijvI8nZGYqPtptg8oVDPfGmnyQXsZo6gNNqubp+25h1GbxHBXK6PcT53j7/T/VH+RT8R1sHIw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzSFnbjCD7FPRVeJQKnxqvNWnf0huO/Y0+fZl1MZTOK8WtucYEV
-	f8juVABda9oppb+0TVJtNIt9A1GIB3V3b2bEJcxTjYx2AQYWZOHVxXjU+ap7H+jQxbsKxyFqDaW
-	VFhU8jBBst2bPjXwAtjqzYxCHS1Wv5t0=
-X-Gm-Gg: AfdE7ckveneFE0xejKjIXyxByvL4qFWpb92FgU+zOaIJXAigIo+VmyJeyq3W0Jzv5AQ
-	/FhimN00a2G8fzERbuHnTLE0eT9WWiSbCX4LqISWMMljMq19V89H2Ucr31LqEeVmpHVRn/BPjoe
-	XeDn7JWbAsRReH/UnqDY+R+t4NRzCicMRvNnfS7bkO/tgITMEYuADgCxscWhDBJeEhw/U6nfIPP
-	lYZCs7GuuH1QyPUdMwbCX9QRqP5rxN//2XykN7XcdsASQV+Xmoo6vqChTfm78L3FQb58W3fDkzy
-	6IZhYn899SHwel0Z+WVYhqOCzt+02qsNAf/ocl/cyeXLrwUs0z/JWqFEcKPDhBIsR+znWOdT7Ed
-	Ly2+V2jK7PCpRrulxMRuM4tlsHKFSuTh6sBB10ESFT2SKP2f0rGKPC/GR
-X-Received: by 2002:a05:620a:371d:b0:92e:70e9:687d with SMTP id
- af79cd13be357-930b419edcemr853747485a.57.1784396342408; Sat, 18 Jul 2026
- 10:39:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b="Exfuk9aQ"
+Received: from janus.uberspace.de (janus.uberspace.de [IPv6:2a0b:20c0:2000:62:be24:11ff:fe50:5107])
+	by out02-fra1-mx.uberspace.de (Postfix) with ESMTPS id CC869C00E9;
+	Sat, 18 Jul 2026 23:03:20 +0200 (CEST)
+From: Simon Dietz <simon.dietz@plantwatch.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=plantwatch.de;
+	s=uberspace1; t=1784408599;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=q5KCGS25M/mKrk1w8GgnzR5mL+po+UkU7f+oYxSYsHE=;
+	b=Exfuk9aQxHnpDewKggseosyIA58/fkazdIakCnXIotitVNS3crOGLAuaEGLyMob85gI4uR
+	jNzJNR3GJ2rl+rIuax98bJ98F2OzRg6Ctg5Z5dwn6G2JHEuJ6b7ZzgCTgVtFQ+sfTu+Qx7
+	OV3ShMhZYT5F/t40EsbeKyJiYtDB513q2Wwd0wNJNtokWJr6IPzWvUJl+nWEq/gVNqtNPW
+	BVMuOX9/3h9zKJpFwH2GF+P3VLJZQoqerFKkZqENjCVXrTlz4p7KCop7ZUanple2crVTBJ
+	r0VwyJUcbomf0TOPpdNGloDskVuQkqFiXH+neJyJ6TQuX/+szKNvlwCt4hXoow==
+Authentication-Results: ORIGINATING;
+	auth=pass smtp.auth=simon.dietz@plantwatch.de smtp.mailfrom=simon.dietz@plantwatch.de
+To: netdev@vger.kernel.org
+Cc: andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	johannes@sipsolutions.net,
+	kuniyu@google.com,
+	linux-wireless@vger.kernel.org,
+	simon.dietz@plantwatch.de,
+	dietz23838@hs-ansbach.de
+Subject: [RFC PATCH net-next v0.1 0/1] add GeoNetworking protocol
+Date: Sat, 18 Jul 2026 23:00:32 +0200
+Message-ID: <20260718210046.2357882-1-simon.dietz@plantwatch.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Peter Robinson <pbrobinson@gmail.com>
-Date: Sat, 18 Jul 2026 18:38:50 +0100
-X-Gm-Features: AUfX_mzerzJFMzBZusY7ri-XiZxklgZflQ3_wY33chXzrGlcMPOXboioOsT19_A
-Message-ID: <CALeDE9PgQmpMfDt1DgfLD4tBFGH0MZ7GncV6RUEOHhHbKF+TdQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 0/9] wifi: rtw88: add RTL8723B/RTL8723BS support
-To: luka.gejak@linux.dev, linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com, straube.linux@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [2.89 / 999.00];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	R_MISSING_CHARSET(0.50)[];
+	MIME_GOOD(-0.10)[text/plain];
+	BAYES_HAM(-0.01)[51.21%];
+	FROM_HAS_DN(0.00)[];
+	TAGGED_RCPT(0.00)[netdev];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	ASN(0.00)[asn:3320, ipnet:2003::/19, country:DE];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_ZERO(0.00)[0];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_NONE(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	ALIAS_RESOLVED(0.00)[];
+	DKIM_SIGNED(0.00)[plantwatch.de:s=uberspace1];
+	LOCAL_OUTBOUND(0.00)[]
 
-Hi Luka,
+Implement the GeoNetworking / ETSI ITS-G5 ('net/gn') protocol which
+is based on 802.11p wifi and used for vehicle2x applications. It is
+standardized by the ETSI and used by some car manufacturers
+(especially in europe). It enables ad-hoc, multi-hop geographical
+communication and routing among vehicles (and road- or railside
+infrastructure).
 
-> RTL8723BS predates rtw88 and uses the available Realtek vendor firmware
-> (version 41), whose H2C/C2H and association behavior differs from the
-> firmware used by the existing rtw88 8723-family devices. Supporting it
-> therefore needs both the common RTL8723B chip implementation and an
-> 8723BS-specific SDIO path for firmware commands, coexistence, power,
-> association, and TX/RX handling.
+Most work of this implementation has been done by the bachelor
+project 2018/2019 of the operating systems and middleware group of
+the Hasso Plattner Institute, University of Potsdam, which the author
+was part of.
 
-Over all the driver works quite well on the Pine64+ and Pine64-LTS
-against a 7.1.3 kernel that I tested it on. I get the following errors
-in dmesg, they don't appear to be detrimental to the operation with
-some basic testing:
+The code [1] is published under the GPL v2 at this location:
+https://gitlab.com/hpi-potsdam/osm/g5-on-linux/linux-geonetworking/
 
-rtw88_8723bs mmc0:0001:1: Firmware version 41.0.0, H2C version 0
-rtw88_8723bs mmc0:0001:1: firmware failed to leave lps state
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: firmware failed to leave lps state
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
-rtw88_8723bs mmc0:0001:1: firmware failed to leave lps state
-rtw88_8723bs mmc0:0001:1: firmware failed to leave lps state
-rtw88_8723bs mmc0:0001:1: firmware failed to leave lps state
-rtw88_8723bs mmc0:0001:1: failed to get tx report from firmware
+This patch set is not merge-ready, yet. E.g. network namespaces are
+not supported at all, documentation is missing, ...
 
-Overall for the series you can add:
-Tested-by: Peter Robinson <pbrobinson@gmail.com>
-Pine64+ / Pine64-LTS on Fedora 44 with a 7.1.x kernel
+Purpose of this RFC is to determine if GeoNetworking support in the
+linux kernel is desirable and if so what steps would have to be done
+next.
 
-> The driver requests this firmware file:
->
->  rtw88/rtw8723b_fw.bin
->
-> It is not included in this kernel series. I would appreciate guidance
-> from Realtek and the linux-firmware maintainers on whether the existing
-> LICENCE.rtlwifi_firmware.txt redistribution terms cover this version 41
-> blob, or whether Realtek should submit the firmware directly.
+In the original implementation new ioctl calls have been used. For the
+removal of them and changing their functionality to use netlink (and
+only this change) help of AI has been used as stated in the commit.
 
-There's precedent for including the realtek firmware in linux-firmware
-like this, you should include in the notes where you got the firmware
-from and how it was extracted so it's verifiable, as well as cc:ing
-Ping-Ke Shih who will then ACK/review it. That's been done for a
-number of the realtek firmware that were extracted from official
-realtek windows drivers.
+Changes since v0:
+* replace ioctl interface changes with netlink
+* remove profcs
+* remove magic value in unix/ETSI epoch conversion
+* add _HLEN macros
+* remove inline from static functions
+* remove commented out code
+* change default log level to debug
+* adhere to line limit of 80
 
-I am happy to see this, I had started to play around with a similar
-patchset but still had a way to go and little time to move it on.
+Changes in v0:
+* rebase to current-net next
+* fix (most) of coding style violations
+* fix SPDX-License Identifiers
+* use kzalloc_obj instead of kzalloc
+* change __attribute__((packed)) to __packed
+* (partially?) fix locking
+* adhere to kernel error code conventions
+* add various bounds, 0, NULL, ... checks
+* use has_for_each_safe
+* refactor forward_packet helper functions
+* document -EEXIST return on existing dev
+* add gn_fill_depv and ls_flush logic
+* add nexthop query logic
+* replace timespec64 with uapi conform __kernel_timespec
+* fix default hop limit
 
-Cheers,
-Peter
+Detailed explaination of the changes:
+
+net: gn: remove procfs
+
+Remove any procfs usage for debugging purposes. Procfs has been used
+during the development of the gn module for passing gps data from the
+user space to the kernel. This behaviour has been changed to ioctl.
+Procfs has only been kept for debugging reasons and is removed hereby.
+
+net: gn: remove magic value in unix/ETSI epoc conversion
+
+ETSI uses a different epoch than the unix default 1970-01-01 00:00:00.
+For epoch conversion a magic value has been used, which now is replaced
+by a constant.
+
+net: gn: add _HLEN macros
+
+Add _HLEN macros and use them to shorten code lines.
+
+net: gn: remove inline from static functions
+net: gn: remove commented out code
+net: gn: change default log level to debug
+net: gn: enforce line lenght limit of 80
+
+For an explaination of changes in v0 compared to the original code base
+[1] consult the patch series v0.
+
+Greetings,
+Simon
+
+PS: The commit message date is off, because I squashed the commits.
+
+Simon Dietz (1):
+  net: add GeoNetworking protocol
+
+ include/linux/gn.h                  |  363 +++++
+ include/linux/gn_routing.h          |   68 +
+ include/linux/socket.h              |    6 +-
+ include/uapi/linux/gn.h             |   84 ++
+ include/uapi/linux/if_ether.h       |    1 +
+ include/uapi/linux/if_link.h        |   10 +
+ net/Kconfig                         |    2 +
+ net/Makefile                        |    1 +
+ net/gn/Kconfig                      |    4 +
+ net/gn/Makefile                     |    7 +
+ net/gn/gn_netlink.c                 |  266 ++++
+ net/gn/gn_prot.c                    | 1908 +++++++++++++++++++++++++++
+ net/gn/gn_routing.c                 |  646 +++++++++
+ net/gn/sysctl_net_gn.c              |   33 +
+ security/selinux/hooks.c            |    5 +-
+ security/selinux/include/classmap.h |    3 +-
+ 16 files changed, 3403 insertions(+), 4 deletions(-)
+ create mode 100644 include/linux/gn.h
+ create mode 100644 include/linux/gn_routing.h
+ create mode 100644 include/uapi/linux/gn.h
+ create mode 100644 net/gn/Kconfig
+ create mode 100644 net/gn/Makefile
+ create mode 100644 net/gn/gn_netlink.c
+ create mode 100644 net/gn/gn_prot.c
+ create mode 100644 net/gn/gn_routing.c
+ create mode 100644 net/gn/sysctl_net_gn.c
+
+-- 
+2.55.0
+
