@@ -1,208 +1,217 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx2-f3.google.com (mail-yx2-f3.google.com [74.125.224.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FEB03033E3
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 09:01:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784538102; cv=none; b=BXSP94a1m6D0dKnlpuyH3ucl426ACOPIV0fAlFqYxlCXQ09L58zwwmo7tquTVtSDaN8L59tsX6z/GWYCeLecD49Fb5CVXqHSuIO/r+uuLaOhehgLxJF5KzWovGkZ0EnuMo9+A90jAEGGwDzDc0WO2HpTcufmtId/SLnLP3s/2Ck=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784538102; c=relaxed/simple;
-	bh=I52o3Lu3qJCy6W4mAx1kAFeefGxkyLnTq/n63gAojDc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=L9dXoR5WpofgPIS01KJqkxjv7dJtTAf3WfMZi1bZJxQSED7OrWYhG2bOCq/b+d3lMP9MLKKFgpmw3ksAeyVutc1Te+UDKBcGroos4sL8K6/DGzhE2VRM/GHM9AzlZE77/Rc6FuVOGTSItweX+IlNmooG8Anu1KPKp2Qqh0qk9lU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Z1ihBfMA; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 267063DB622
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 09:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784539566; cv=pass; b=ioIA559wW2w6LT60gbHoHWesHABbXbNlTAXh/JUCxJNBStuNSBjTTVvZcyQvmTLqRBvCqZzmXwn/WruxgXol8O0rT91hKKrTGxstdq8+iUQWhFrbBOxQvaj44LO6t0eHB8/oqRYyjvy4SYp+l10gYgYw9kyQlL+8BIp6S0seVfM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784539566; c=relaxed/simple;
+	bh=T7SpG46De35LmcpDGTp1cn9NtPrirF+SxoA6obO7GKw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=D70ReB06yQowoBhZTma74iCZO7K/OugxBtNXNLo38APmDjstj/T/nRsFhiFJXDE9Vy0MB/o1eMCG8S20JuasmwIw8I+zjcTxvSk1EQ8yBdwhPXZcvCsYR3Rv2MOzy7qo15ondidtAFrnCjTPrNb57+Pbs1C0zvvVyiBNI6BkZIg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ki5DtPJu; arc=pass smtp.client-ip=74.125.224.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Z1ihBfMA"
-X-UUID: 9a612d50841911f1b1788b6acf885367-20260720
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=SCLhNCoAB2PalqKjb5jY9rfLDLC28fnCEChZsD820lc=;
-	b=Z1ihBfMARzsWS32r77iXGImS+JK8ieyuJB9IJ3JZWid5YP11KIAOihegTroH8CLWemAXeg2SRK7//Wgw9eyulF9ZI/L+6bIQEx+0c5UWGCx+MOo4/p1ahg1Y7GallZTU//osiERpfO7zGoo6gA9c7pujv43V7UApnKbc5QXuiU4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.18,REQID:4ff7bb4f-f96e-44ba-8bf2-ac683d956d16,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:8a735a6,CLOUDID:64f8d013-9783-4648-a7c6-8d1b40365792,B
-	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
-	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
-	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 9a612d50841911f1b1788b6acf885367-20260720
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
-	(envelope-from <shayne.chen@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 538345319; Mon, 20 Jul 2026 17:01:32 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 20 Jul 2026 17:01:31 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 20 Jul 2026 17:01:31 +0800
-From: Shayne Chen <shayne.chen@mediatek.com>
-To: Felix Fietkau <nbd@nbd.name>
-CC: linux-wireless <linux-wireless@vger.kernel.org>, Lorenzo Bianconi
-	<lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Evelyn Tsai
-	<evelyn.tsai@mediatek.com>, Money Wang <money.wang@mediatek.com>,
-	linux-mediatek <linux-mediatek@lists.infradead.org>, Shayne Chen
-	<shayne.chen@mediatek.com>, Rex Lu <rex.lu@mediatek.com>
-Subject: [PATCH mt76 v2] wifi: mt76: fix handling channel context with different bands in mt76_switch_vif_chanctx()
-Date: Mon, 20 Jul 2026 17:01:02 +0800
-Message-ID: <20260720090102.190729-1-shayne.chen@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ki5DtPJu"
+Received: by mail-yx2-f3.google.com with SMTP id 956f58d0204a3-6664ce5db57so2080273d50.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 02:26:02 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784539559; cv=none;
+        d=google.com; s=arc-20260327;
+        b=rGhZSabafbZalx9si5JGAp8I7nwb/mzTKMoZ5TO+VTFDBYSO/gZsOc9rnOoVhwIahO
+         wERa/0LDXpIUk9kalvDU/wASYbRVmNatqxp9aaxkYO086T9q8d59faMEN/o+NN0QRGiR
+         zHFlnzHLhJD9yaokU7fAio0LnNm7Lvi1fkwkjFmYwzE4LvA+EX/r2mQBQ9m4Jyjkyk7t
+         1tDWA+CCAFH48TNFj3GbKbC1euFcKREIKgotgon3mIMADhhQaDYO+neZcuA21pqQWRqj
+         XwVLStU9WNZrjvo9RbFZJ0uYFKuPNSsDm9NjCxL/I+UwKHqxANTn3EV4rwmh/7FlNHFF
+         2RfQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Lb3rvNERG6Trh6qQOAy5/wRaGSHQwfEXmqSq+iCr7LI=;
+        fh=sFJBlFmUGDCKacwC5WBMmeWTX+GEX38fm396yGIPiBM=;
+        b=cnNgEjaF5XinRZEsFi8qzOv2uM/b+MuGBGJkFKqFdtu6y7Qzj28SNL8VRrxObc5d4H
+         5ooEbvrlxZsm6rP7+rfSv/WTMVsicyPg6DZ/hrmx6HhLU3TkhzJJj2tsZmu8f1u06YB5
+         cuT7u4nB/8HoMhB9mZVWUmW0eIWhVs7cMBj+7rmSpIQ2ecTQPfQk8YoE1kQG/owFZAn+
+         XMfAwYpmchWck0nHZ2Zi78VyPh73XcCO1IZxQ3PQqyae7Vw93P9TMraZsVKmNxcfz53n
+         yQ5Kik8CbEn9WrUjVpMDVFQUGGLuOQ/9z88Qn52SLTwDAts036MO1JMt7+u12MSDGUMe
+         j8cA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784539559; x=1785144359; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Lb3rvNERG6Trh6qQOAy5/wRaGSHQwfEXmqSq+iCr7LI=;
+        b=Ki5DtPJud6hwi1kt2koUT900KQEMSHVb7yQ6SZBTNiN3rX8SddgHjqkjB419hYoiKE
+         oJ18wVgE2gqpEPGM2agCkVS7vnEn8MF9Xuuzug8oqFQczxyb+CYyzgZkHKD4WdxJS3/r
+         /YVNPMbC325h9ckhGqV75qkwt8AwxDaiKRex5F5dAdunUQ7cFV38SOBHwLrpRk0DJFBt
+         vvX98AM9KsI1Wyx15dbE+VUlk1gLzb+muhcDgHr+AFVWTm/AtvaUm5bpliy8ANkee3ha
+         bLMCpif1kGEEgV+/bcGP6FyEiBUTkJLambhk29m8CeF1soiBAwsc08ghPw1621NyvQxM
+         Q0Jw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784539559; x=1785144359;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Lb3rvNERG6Trh6qQOAy5/wRaGSHQwfEXmqSq+iCr7LI=;
+        b=V1XsOihrAs9P5ETdwVyrAHOTFmdfHUJBfkjMafgPpr7ZaGoYzCwuA1y3UmeiC8b1F9
+         CkT/9GLddLAAmB9PXDPbAPRvw/LTO6/VxZmICEF2UG63ru2OvvpS1LJ0bjw6ZSES+jkd
+         kBszGib1vf1MG6Fv3KsxNyvKNnConf79pTmcbd9JxsMum7memylxf9y1VltAq9X+UJrP
+         Fs1LHp+es9qoF/4MtdBXe1eZS3c/qYAvCXDaJnsRqKW5H/T/Zh7eOmvW41R3UoF5Fzbp
+         t7etla/JJsYfV5SBr4N3pZHhFu6eJK7gc9aFDXfDmOamvrZNlfcT3l1gdi4MB4PPF0hf
+         S1uQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rr6V+3GQWiBwQsxT71KNizyxrNVRjrd0lOms8Qwku01hlWJ1G4vSqy0rQ6wEcuAN24YdbN0aqVYVHlZKte5kw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywh3Isw91AcdNemOPpttnRg+GZldryhevJYTMsqbXc71WJ9sedt
+	hfLf0QzobXoOyZ6MZwfa79nKVe6aDe5GntGeRoq5FLvowfPfg4EOaKnQbBI0xo1iLBFLLb2htlR
+	7LuoqTsBTRIBExcDXv1BRmdN+j58a/CgAEeLaTVY=
+X-Gm-Gg: AR+sD11jCvIp8bXbkPwUVnYxpmlZ/7RRWPsHwYVxh4he7Qu2DHwDrPloJj1fuZl3Htu
+	o1pO6OLZF1zs8D9IHa2SHT4O/w8ce11yJEg4peMtDl+c59noxrk4+v/FvtVsurRNY+7INyYE7Bf
+	lUc5EToTbuLj8n89KCiu3glz16VkM9EYf/zHUDZT+ChMeDFsP7roGZcXlsPcXvb95Fi1QYIOgd/
+	RiC1/G7uC1pIuAcYaHvGkUZIv9XZcmXwmf2VQqXQ0yhRa36YWI6zXo/6s4=
+X-Received: by 2002:a05:690e:43cf:b0:667:8db3:f121 with SMTP id
+ 956f58d0204a3-6683ac68ccemr2490841d50.54.1784539558649; Mon, 20 Jul 2026
+ 02:25:58 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+References: <20260715065218.41232-1-gsh20040816@gmail.com> <5ca16013-e8a0-4403-a2b3-b3b43ea2bb2d@oss.qualcomm.com>
+In-Reply-To: <5ca16013-e8a0-4403-a2b3-b3b43ea2bb2d@oss.qualcomm.com>
+From: Shenghan Gao <gsh20040816@gmail.com>
+Date: Mon, 20 Jul 2026 17:25:47 +0800
+X-Gm-Features: AUfX_mz1h558I-KD1cpQBjn39rZY5EPNkCbsv8QW-re0Y30za8AwBWztM33ZCjM
+Message-ID: <CAMVcGaDKC626A6=VC+10vtw3KVNm2NM_yPXTbgnA9Efd5eyL7A@mail.gmail.com>
+Subject: Re: [PATCH ath-current] wifi: ath12k: fix frequency range for
+ single-pdev devices
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: Jeff Johnson <jjohnson@kernel.org>, 
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>, linux-wireless@vger.kernel.org, 
+	ath12k@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-When performing channel switches on different radios within a short
-timeframe, channel contexts with different bands can be carried for
-each struct ieee80211_vif_chanctx_switch.
+The update sequence is as follows.
 
-Rework mt76_switch_vif_chanctx() to properly handle this scenario.
+ath12k_regd_update() first resets ar->freq_range to zero. On the
+tested WCN7850 under the CN regulatory domain, the 2 GHz branch
+calculates a valid range, so the first call to
+ath12k_mac_update_freq_range() sets ar->freq_range to 2402-2482 MHz.
 
-Fixes: 82334623af0c ("wifi: mt76: add chanctx functions for multi-channel phy support")
-Co-developed-by: Rex Lu <rex.lu@mediatek.com>
-Signed-off-by: Rex Lu <rex.lu@mediatek.com>
-Signed-off-by: Shayne Chen <shayne.chen@mediatek.com>
----
-v2:
-  - prevent from doing duplicated works if need_update[band] is marked
----
- drivers/net/wireless/mediatek/mt76/channel.c | 92 +++++++++++---------
- 1 file changed, 49 insertions(+), 43 deletions(-)
+The existing 5 GHz branch is skipped because ar->supports_6ghz is true.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
-index 6edcb3b8f279..28ad7bcaffd4 100644
---- a/drivers/net/wireless/mediatek/mt76/channel.c
-+++ b/drivers/net/wireless/mediatek/mt76/channel.c
-@@ -186,68 +186,74 @@ int mt76_switch_vif_chanctx(struct ieee80211_hw *hw,
- 			    int n_vifs,
- 			    enum ieee80211_chanctx_switch_mode mode)
- {
--	struct mt76_chanctx *old_ctx = (struct mt76_chanctx *)vifs->old_ctx->drv_priv;
--	struct mt76_chanctx *new_ctx = (struct mt76_chanctx *)vifs->new_ctx->drv_priv;
--	struct ieee80211_chanctx_conf *conf = vifs->new_ctx;
--	struct mt76_phy *old_phy = old_ctx->phy;
--	struct mt76_phy *phy = hw->priv;
-+	struct ieee80211_vif_chanctx_switch *v;
-+	struct mt76_chanctx *old_ctx, *new_ctx;
-+	struct mt76_phy *old_phy, *phy = hw->priv;
- 	struct mt76_dev *dev = phy->dev;
- 	struct mt76_vif_link *mlink;
--	bool update_chan;
-+	bool need_update[__MT_MAX_BAND] = {};
- 	int i, ret = 0;
- 
--	if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS)
--		phy = new_ctx->phy = dev->band_phys[conf->def.chan->band];
--	else
--		phy = new_ctx->phy;
--	if (!phy)
--		return -EINVAL;
-+	for (i = 0; i < n_vifs; i++) {
-+		v = &vifs[i];
-+		new_ctx = (struct mt76_chanctx *)v->new_ctx->drv_priv;
-+		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS)
-+			phy = new_ctx->phy = dev->band_phys[v->new_ctx->def.chan->band];
-+		else
-+			phy = new_ctx->phy;
- 
--	update_chan = phy->chanctx != new_ctx;
--	if (update_chan) {
--		if (dev->scan.phy == phy)
--			mt76_abort_scan(dev);
-+		if (!phy)
-+			return -EINVAL;
- 
--		cancel_delayed_work_sync(&phy->mac_work);
-+		if (need_update[phy->band_idx])
-+			continue;
-+
-+		if (phy->chanctx != new_ctx) {
-+			if (dev->scan.phy == phy)
-+				mt76_abort_scan(dev);
-+
-+			cancel_delayed_work_sync(&phy->mac_work);
-+			need_update[phy->band_idx] = true;
-+		}
- 	}
- 
- 	mutex_lock(&dev->mutex);
- 
--	if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS &&
--	    phy != old_phy && old_phy->chanctx == old_ctx)
--		old_phy->chanctx = NULL;
-+	for (i = 0; i < n_vifs; i++) {
-+		v = &vifs[i];
-+		old_ctx = (struct mt76_chanctx *)v->old_ctx->drv_priv;
-+		old_phy = old_ctx->phy;
-+
-+		new_ctx = (struct mt76_chanctx *)v->new_ctx->drv_priv;
-+		phy = new_ctx->phy;
- 
--	if (update_chan)
--		ret = mt76_phy_update_channel(phy, vifs->new_ctx);
-+		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS && old_phy->chanctx &&
-+		    old_phy->chanctx == old_ctx && phy != old_phy)
-+			old_phy->chanctx = NULL;
- 
--	if (ret)
--		goto out;
-+		if (need_update[phy->band_idx]) {
-+			ret = mt76_phy_update_channel(phy, v->new_ctx);
-+			if (ret)
-+				goto out;
- 
--	if (old_phy == phy)
--		goto skip_link_replace;
-+			need_update[phy->band_idx] = false;
-+		}
- 
--	for (i = 0; i < n_vifs; i++) {
--		mlink = mt76_vif_conf_link(dev, vifs[i].vif, vifs[i].link_conf);
-+		mlink = mt76_vif_conf_link(dev, v->vif, v->link_conf);
- 		if (!mlink)
- 			continue;
- 
--		dev->drv->vif_link_remove(old_phy, vifs[i].vif,
--					  vifs[i].link_conf, mlink);
--
--		ret = dev->drv->vif_link_add(phy, vifs[i].vif,
--					     vifs[i].link_conf, mlink);
--		if (ret)
--			goto out;
--
--	}
-+		if (old_phy != phy) {
-+			dev->drv->vif_link_remove(old_phy, v->vif, v->link_conf,
-+						  mlink);
- 
--skip_link_replace:
--	for (i = 0; i < n_vifs; i++) {
--		mlink = mt76_vif_conf_link(dev, vifs[i].vif, vifs[i].link_conf);
--		if (!mlink)
--			continue;
-+			ret = dev->drv->vif_link_add(phy, v->vif, v->link_conf,
-+						     mlink);
-+			if (ret)
-+				goto out;
-+		}
- 
--		mlink->ctx = vifs->new_ctx;
-+		mlink->ctx = v->new_ctx;
- 		if (mlink->beacon_mon_interval)
- 			WRITE_ONCE(mlink->beacon_mon_last, jiffies);
- 	}
--- 
-2.51.0
+When the new regulatory domain is built, reg_freq_6ghz.end_freq is
+reset to zero. Since the CN regulatory event contains no 6 GHz rules,
+it remains zero. The 6 GHz branch therefore calculates freq_high as
+zero, and ath12k_mac_update_freq_range() returns without extending the
+existing range.
 
+Consequently, ar->freq_range remains 2402-2482 MHz, and the subsequent
+channel-list update filters out all 5 GHz channels.
+
+With this patch, the 5 GHz branch also runs for single-pdev devices and
+merges the valid 5 GHz range, extending ar->freq_range to
+2402-5835 MHz.
+
+Baochen Qiang <baochen.qiang@oss.qualcomm.com> =E4=BA=8E2026=E5=B9=B47=E6=
+=9C=8820=E6=97=A5=E5=91=A8=E4=B8=80 16:34=E5=86=99=E9=81=93=EF=BC=9A
+>
+>
+>
+> On 7/15/2026 2:52 PM, Shenghan Gao wrote:
+> > Commit 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update=
+")
+> > made ath12k_regd_update() handle each supported band independently.
+> > However, it uses WMI band capability values as indices into
+> > pdev->cap.band[]. Those values are bit flags, while cap.band[] is index=
+ed
+> > by enum nl80211_band. As a result, the 2.4 GHz lookup reads the
+> > 5 GHz entry, while the 5 GHz lookup reads the 60 GHz entry.
+> >
+> > Also, the 5 GHz range is skipped whenever the radio supports 6 GHz. Thi=
+s
+> > is valid when 5 and 6 GHz belong to separate pdevs, but not for single-=
+pdev
+> > devices such as WCN7850, where the same pdev covers both bands. After a
+> > regulatory update, 5 GHz is therefore omitted from ar->freq_range and l=
+ater
+> > filtered out of the channel list sent to firmware.
+> >
+> > On the tested WCN7850, the 11d regulatory update left the frequency ran=
+ge
+> > at 2402-2482 MHz and sent 13 channels to firmware. A subsequent 5 GHz s=
+can
+>
+> can you share more details on how the frequency range is updated to cover=
+ only 2 GHz band ?
+>
+> > failed with WMI_SCAN_REASON_INTERNAL_FAILURE. With both ranges combined=
+,
+> > the range is 2402-5835 MHz and 26 channels are sent to firmware.
+> >
+> > Index cap.band[] with NL80211_BAND_* and update 5 GHz for single-pdev
+> > devices even when 6 GHz is supported.
+> >
+> > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0=
+_SILICONZ_UPSTREAM-3
+> >
+> > Fixes: 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update=
+")
+> > Cc: stable@vger.kernel.org
+> > Assisted-by: Codex:GPT-5.6 Sol
+> > Signed-off-by: Shenghan Gao <gsh20040816@gmail.com>
+> > ---
+> > Testing notes:
+> >
+> > - Runtime testing was performed on WCN7850 under the CN regulatory doma=
+in.
+> > - 2.4 and 5 GHz scanning and 5 GHz association were verified.
+> > - 6 GHz operation was not tested because it is unavailable under the CN
+> >   regulatory domain.
+> > - QCC2072 was not tested because the hardware was not available.
+> >
+> >  drivers/net/wireless/ath/ath12k/reg.c | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wirele=
+ss/ath/ath12k/reg.c
+> > index 89abf2e87ad1..c3bb1df2b1e2 100644
+> > --- a/drivers/net/wireless/ath/ath12k/reg.c
+> > +++ b/drivers/net/wireless/ath/ath12k/reg.c
+> > @@ -300,7 +300,7 @@ int ath12k_regd_update(struct ath12k *ar, bool init=
+)
+> >
+> >       if (supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
+> >               if (ab->hw_params->single_pdev_only) {
+> > -                     phy_id =3D ar->pdev->cap.band[WMI_HOST_WLAN_2GHZ_=
+CAP].phy_id;
+> > +                     phy_id =3D ar->pdev->cap.band[NL80211_BAND_2GHZ].=
+phy_id;
+> >                       reg_cap =3D &ab->hal_reg_cap[phy_id];
+> >               }
+> >
+> > @@ -310,9 +310,10 @@ int ath12k_regd_update(struct ath12k *ar, bool ini=
+t)
+> >               ath12k_mac_update_freq_range(ar, freq_low, freq_high);
+> >       }
+> >
+> > -     if (supported_bands & WMI_HOST_WLAN_5GHZ_CAP && !ar->supports_6gh=
+z) {
+> > +     if (supported_bands & WMI_HOST_WLAN_5GHZ_CAP &&
+> > +         (!ar->supports_6ghz || ab->hw_params->single_pdev_only)) {
+> >               if (ab->hw_params->single_pdev_only) {
+> > -                     phy_id =3D ar->pdev->cap.band[WMI_HOST_WLAN_5GHZ_=
+CAP].phy_id;
+> > +                     phy_id =3D ar->pdev->cap.band[NL80211_BAND_5GHZ].=
+phy_id;
+> >                       reg_cap =3D &ab->hal_reg_cap[phy_id];
+> >               }
+> >
+> >
+> > base-commit: a1a21995c2e1cc2ca6b2226cfe4f5f018370182a
+>
