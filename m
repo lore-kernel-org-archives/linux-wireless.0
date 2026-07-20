@@ -1,172 +1,138 @@
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 584F83BBFD3;
-	Mon, 20 Jul 2026 20:16:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784578614; cv=none; b=e1k4in6M+ioPrarTXVrLFRY/+6GwgRFbWxHmC8VGzZc+jBd9eUC7AwTjOq4+kdiT/Y01Jx6oG9s0e1e1zXVccP05ayDAPoAgRty+V/N0jtS345t+hta0mvP992BEzkmvLbw90LRIU1nMcFlFO31mnkCokwecp2J3ujCHRw0d+tQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784578614; c=relaxed/simple;
-	bh=RCCc6wUnb7eRLMFWNp0Ap0THoK08GCD9mtVB3fVxdIQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jjXT2sAE3BkysV+816uaCQu5ARkN1zx2QhdiRQX5LX2m+uZvUnfQFbxMFzWhGHMulgLR7aM2lSW6oo0/NV1Te40ephaie23BF2nHAhOTn0RcJVVQIqV2a0TzEcaH0CtuLzmnaLwKRB5Qu+cKwDwEaNxYOgEPbuWWTtaN2VsrphI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=KCZKTTY/; arc=none smtp.client-ip=156.67.10.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1D642A80
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 21:31:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784583077; cv=pass; b=tdRgsLcwpWHXBNegliEUf339R1s5e1Anw63ih1gG5KfqjFc+c5AWUlubp3E1l67RRvrRDN+mLuPI8oEAWK+MW4L3YoCLLVOKRhSDmytoUzKWEdE01h/sTlf0mDdMybCSQGKVwYSVtfAOPwlfOXSwtzPW2ugOeE8zS8AbIWtYE2Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784583077; c=relaxed/simple;
+	bh=LyVE2RfK4OPyFdZqMYkgAm8eoo2PwftW/lLocRBSoYk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=U79OWld8OsXDnEadBumO1E9cMvBfmpfeRbD4wUtvAKC3fX4VA2Bvk5OMUPRDCFxIVDLVgFaN82IGoUVC49JVn/s7E2r0Xt4B7jd9RyDK3jtVE2Z+YOCEWF9BeZSRLs9UnrKNi1WVVSWRxMFL9o/PM7Vio8bIRvfc5MBE7DXxjfw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ah8JG4xs; arc=pass smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="KCZKTTY/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=X6si59MHAC2aF8OSuOresxDGb43YZ6XnzLFCCvh2a34=; b=KCZKTTY/a+cI31Zp+vBJohP4zj
-	hpSTz8spJvsLTRalxJRaIDGNqIFb6FELZx3w6FkKkLZfaJd1FzpaYGOpAR0omNdOXKylSdfgW396F
-	cm+CWveuqdaW8LmKUteGeczsTwfAggPSBeqb/xXvoAhvkOJ27EM2/VSXoVreZlBzAcBw=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1wluPh-00DJmg-Lz; Mon, 20 Jul 2026 22:16:33 +0200
-Date: Mon, 20 Jul 2026 22:16:33 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Simon Dietz <simon.dietz@plantwatch.de>
-Cc: andrew+netdev@lunn.ch, davem@davemloft.net, dietz23838@hs-ansbach.de,
-	edumazet@google.com, johannes@sipsolutions.net, kuniyu@google.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: short description of GeoNetworking
-Message-ID: <937e2942-3c0d-4583-a741-8a96c4e0bbc4@lunn.ch>
-References: <89b3aa8c-f2ec-4b27-b5b0-5891d870e001@lunn.ch>
- <20260720183613.2020886-1-simon.dietz@plantwatch.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ah8JG4xs"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-698c1df9651so1550928a12.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 14:31:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784583075; cv=none;
+        d=google.com; s=arc-20260327;
+        b=mP8y08OGL/3TMqMwg5qMv1VNO+A3RyRVONdlIZbV6PeY8hhHVVBNpFdjxQQD3V0OXe
+         Zi9m0bwRrPzp87rsgxIhu8vLq1oixKMP6BKgj0FlCneG3RWdkrYFqLjuPI3yGDZOldFO
+         MS1F66HLuUShO4qMJiS7+MrvfSxnYQ+UgCeSYvsQnBEYcm6XWa7cbZiP1oO6YoR2FStC
+         Qog/sDyxE5T3o05r/x2kB/ag7UoZAPzBTi8ZUTo1G03cufakiW492JLgnVoQzQbJNCa/
+         UjXhm4PcZTv7YLLiTbix4w0G3wdilwV6VlZp5o2c6SwL5ukAwaU4+PlMFWeShX3xs78c
+         KXlw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
+        fh=aKOTxJi4jyrNN3r/Yy2VFHZ2mojm9enz4CpKF2bOF+Y=;
+        b=UbKAo0kX/rMc9HHDZoYZlakbVWyi+oNvYULANpybFBIe45HwGUVqbafJybdOBJgEyt
+         yZJrzq0NNiz6YADsAt5XW4fELJ8MrQK9GntW3Z2XmVn8ILlYqNg3LeBQPcwXmkn6sEBq
+         PMCvvpt/nBxqCYDEapvcpbvzmnAsycZkafcvmbn+J7nUN7s0cV9jeNRm1+V3GM70k6Q3
+         JZ52POJjYv209lwZ8TTsdGlU1G3n7vK83sLfv/9ZYz7ihVyWD75pa6T405jMKJMHXbTa
+         6edTHO7wbjafVtwutfgWhPmLalc1BYBjHfDD1SkUcOqdtvKNAzdBE31D+z9Zc3eLPztk
+         ZR6A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784583075; x=1785187875; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
+        b=ah8JG4xs9buFkJRFEy0iLeNfQkx8oIG0NuY7cZY0uFsIIYb8bBT7VLP3RwE7XCrGeb
+         met95OCSOp48UCLCQ4OkJG3AINPwJqFaKSMDBAByGo/okaJaaebmrh1n0K2G9xsrpm2q
+         C/9tyVWTFaXD2700C6PKeaB5YKbalgufOV1wscUkfnaSrBdTeGKdANHU36ACnwJfVo5M
+         FW8pRUuxaeUIk0Wnx8HzNTVoBHiNTTbHB8Ce3O99p+W4ra/78wU/zG8vBqOkhPYLkcm7
+         dXT21Fysx08wM/COB8HinGpJUkLnFlVtWXqmix7xKWezEHJWvLc4a1oFZ3wUI695OAws
+         iTYg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784583075; x=1785187875;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
+        b=ADkBMmUBkcRGGM/JEvR+2aCMy1My1PfCl07y1Gq1wgGKBKJs4Rc9qp5B9ELDkI6ijE
+         /k8EeiuCQX04MdgaYL1KhEAx2XaHOrUxXipfzbHcAnOQEV/v3cDp9TsuR/IHYoe6YMOt
+         k3v2kTtUJx+sScYkKnFUxa/GB63ydQl3V2KxAsUOooHfaHgz2QXA7LwXPeFFR+qc1mRo
+         CZN5+e87YU5aizTzzE/9Zjwa6SmsWDWX3CZGYZKwAJSWmy/HUi9UeSKluwRMMg1KL3Qe
+         e4aPkPyrhTpMbSVGnitxAe7UhkDx2lmjxPb9E15G9/2eJXOw453J/JtBQg0KO5zINZWk
+         IYdw==
+X-Gm-Message-State: AOJu0YytE7Kry+AO2KA6G/5MStAsm5nSGiNhcSS2G8lY1mrBEVWNAt/b
+	apqyl3gz3S6RSFkI0E4GxQLa605xG27b1S6IqIMUMk/v71mK+xV/PP8s5fwvbXO8ewC0VYzns5u
+	N9FUuP8lsyMwIwRX/PoB7drlM20emoRw=
+X-Gm-Gg: AR+sD12jhQUQTryqaYoaDsHHgTQFPrJt8DRY17XjydseZxxcPpp8z0PqgD4HTcoGi48
+	Pk5Rm9qPsz7qfc8UiBZi2ioRuBuiSKNvjY2AdsAVBs115sCxgLoXPdrPuwOVCeCLkn4yrpnVYgL
+	9KBVsShP1wrOO32z9+B2Mchoplx47VtLJ4lX6oQv/gAxg5W4o2aSIq1ZhZgw4qouY0SwcqXjZU7
+	qET5xF8H9wyg6Ittg82V4K1Fhz72nZCauAMuUDaDFMAaWy1Y1YSGAATIvpQAYx6+dZIDN0S9EXO
+	NxCkjinm3n4epDEmz/IkrVqVZJRN1Pw1qicQCW9V/HWBWNw5gn4MR7cO0PvE4g==
+X-Received: by 2002:a05:6402:360f:b0:69e:1246:a86a with SMTP id
+ 4fb4d7f45d1cf-69e65164544mr3489726a12.0.1784583074543; Mon, 20 Jul 2026
+ 14:31:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260720183613.2020886-1-simon.dietz@plantwatch.de>
+References: <20260714150423.53960-1-bogdan.nicolae@gmail.com> <20260720194900.2356442-2-arend.vanspriel@broadcom.com>
+In-Reply-To: <20260720194900.2356442-2-arend.vanspriel@broadcom.com>
+From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Date: Mon, 20 Jul 2026 16:30:45 -0500
+X-Gm-Features: AUfX_mwDL3jRFZM-mHkbrMM7Nz61SmsjwFBr2eIOv9ZsHK2PbNfTWiOWo4cXzOE
+Message-ID: <CA+ORkNQcUjZ7ufoR5ULN8UDTzxXccFcmD8=rYe=UWVV3-M15Ug@mail.gmail.com>
+Subject: Re: [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
+	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 20, 2026 at 08:36:13PM +0200, Simon Dietz wrote:
-> Hi Andrew,
-> 
-> > Is there an architecture documentation somewhere?
-> No really available one, at least not public. The ETSI ITS standard is
-> public available and there are research papers, but that would be a lot
-> to read.
+Arend,
 
-Sorry, i was meaning Linux architecture. Something is feeding in GPS
-location information. I assume there is some daemon talking to gpsd on
-one side, and the kernel and the other? What other user space pieces
-are there?
+Sounds good. Do you prefer two patches in a single email or two separate em=
+ails?
 
-> > One of my comments was about routing tables.
-> I agree that cosine calculations may not belong to the kernel space.
-> Before we continue talking about routing tables, let me give a short
-> 
-> Description of the GeoNetworking (gn) protocol
-> 
-> GeoNetworking is used in a vehicle2x context where vehicles exchange
-> position information (and other data in higher protocol layers like
-> BTP) for use cases like trafic jam notifications, or railroad crossing
+Best,
+Bogdan
 
-BTP?
-
-> communication with cars or trains.
-> 
-> gn transmitts packets in various possible 'modes', including:
-> * broadcast (all recievers in range, like ip)
-
-Hold on. IP broadcast, not L2 broadcast. So if you have a mash, this
-broadcast is L2 multi hop, but stays within the same IP subnet.
-
-> * single hop broadcast (all recievers in direct range, like ip, if the
->   reviever is in the same network and no default gateway is used)
-
-Given the previous definition, this makes no sense. IP broadcast never
-leaves the IP subnet. You need to use IP multicast, and an IP
-multicast gateway for such packets to go into other subnets. And then
-you need PIM or some other multicast routing protocol.
-
-> * unicast (one reciever out of range, packet is sent to the closest
->   intermediary; only here a routing decision is involved)
-
-Closest intermediary. So the idea is the maximise the number of L2
-hops?  That can make sense, assuming the underlying WiFi network is
-using different coding rates. A short hop can use a high coding rate,
-making the use of air time shorter. If the furthest intermediary was
-used, you need to use a lower coding rate, which takes up more air
-time.
-
-And only unicast needs routing? So broadcast is dumb flood everywhere,
-and the receiver needs to remove duplicates, and not reflood
-duplicates. And broadcast uses the lowest coding rate, so giving the
-biggest coverage, but takes up the most air time.
-
-> gn packets contain a gps position and a geographic target scope, which
-> can be one of predefined shapes (rectangle, circle, ellipsis) and
-> dimensions of that shape (radius if circle, length and width if
-> rectangle). Hosts with a position outside the shape may recieve, e.g.
-> a broadcast, but drop the packet (because it's out of the target scope)
-
-So the sender does not care about the shape, it is the receiver which
-does the filtering. And there is no concept of a receiver which is
-outside the shape being able to fill dead spots by transmitting back
-towards the shape?
-
-> There are location service (ls) requests, which are used to query
-> nearby hosts for the location of a host out of the sender's own range,
-> which are answered with ls reply packets.
-
-So this is a flood search? Is the outward path recorded in each LS
-request packet as it hops away from the sender?  So when it reaches
-the target, the reply can be hop-by-hop unicast back to the requester?
-
-> I would suggest to handle them in kernel space and only notify the user
-> space, if something happens (previously unknown beacon recieved, ls
-> reply recieved, ...) instead of passing all the beacon and ls packets
-> to user space.
-
-We generally split policy from mechanical actions. Doing a routing
-table lookup is mechanical, and goes in the kernel. The policy of what
-to put in the routing table is generally in userspace. If you think
-about IP routing, we have a couple of different OSPF versions, BGP,
-IS-IS, RIP, EIGRP, etc. Each implement a different policy.
-
-It also seems like there is some scope for experimentation here with
-routing. A node at the edge of the shape receiving from a node in the
-middle of the shape could consider where its neighbours are within the
-same, and set the coding rate for the broadcast based on the unicast
-coding rates to pick the highest rate which should work for all
-neighbours, so saving air time? And rather than trying to maximise
-hops, you could try to find an intermediary somewhere in the middle,
-so you balance hops and coding rate/air time?
-
-That sort of experimentation is a lot harder to do in the kernel, it
-is more natural to do in userspace.
-
-> > There also seems to be a need for location information. How does that
-> > get into the kernel? Is there a daemon for that? Patches to gpsd?
-> In the first version /proc has been used, after that ioctl; today
-> netlink generic seems to be the most reasonable option. We used
-> standard u-blox gps recievers and wrote a little userspace tool to
-> inject the location information into the kernel space (via ioctl).
-
-So it would be good to include a link to your git repo. We generally
-want open user spaces tools. And i would expect a generic solution,
-e.g. using gpsd, so any of the GPSes supported by gpds can be used.
-However, given the simplicity of the API, this is not a GPU after all,
-this is less important.
-
-> That brings me to the question, how the ideal interface between user
-> and kernel space should look like for this module/functionality.
-> 
-> For short term, it should be possible to strip the routing stuff incl.
-> the cos table from the module and return -EOPNOTSUPP and/or -EINVAL
-> when using advanced stuff like routing and only support recieving gn
-> packets and send broadcast and beacon packets. Routing could then be
-> added in a v2 patch series.
-
-How useful is the stack without unicast?
-
-    Andrew
+On Mon, Jul 20, 2026 at 2:49=E2=80=AFPM Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+> On Tue, 14 Jul 2026, bogdan.nicolae@gmail.com wrote:
+>
+> > [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
+>
+> The code itself is correct, but there are process issues that need to be
+> fixed before I can accept this:
+>
+> 1. This is a resubmission of the patch sent on 2026-07-09 [1]. A
+>    resubmission must carry a version tag: the subject line should read
+>    "[PATCH v2] wifi: brcmfmac: ..." not "[PATCH] wifi: brcmfmac: ...".
+>
+> 2. A v2 submission must include a "Changes in v2:" section below the ---
+>    line documenting what changed from v1.
+>
+> 3. The From: address (bogdan.nicolae@gmail.com) does not match the
+>    Signed-off-by address (bogdan.nicolae@acm.org). Please use a
+>    consistent address or add a second Signed-off-by for the sending
+>    address.
+>
+> 4. The patch addresses two independent issues: fixing the packet_id in
+>    brcmf_cyw_mgmt_tx() (SAE auth frame TX) and fixing the zero-init and
+>    PMKID copy in brcmf_cyw_external_auth() (auth completion). Please
+>    split these into two separate patches.
+>
+> Please send a v2 addressing these points.
+>
+> [1] https://lore.kernel.org/linux-wireless/20260709122315.11400-1-bogdan.=
+nicolae@gmail.com/
+>
+> Regards,
+> Arend
