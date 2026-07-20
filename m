@@ -1,138 +1,113 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1D642A80
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 21:31:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784583077; cv=pass; b=tdRgsLcwpWHXBNegliEUf339R1s5e1Anw63ih1gG5KfqjFc+c5AWUlubp3E1l67RRvrRDN+mLuPI8oEAWK+MW4L3YoCLLVOKRhSDmytoUzKWEdE01h/sTlf0mDdMybCSQGKVwYSVtfAOPwlfOXSwtzPW2ugOeE8zS8AbIWtYE2Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784583077; c=relaxed/simple;
-	bh=LyVE2RfK4OPyFdZqMYkgAm8eoo2PwftW/lLocRBSoYk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=U79OWld8OsXDnEadBumO1E9cMvBfmpfeRbD4wUtvAKC3fX4VA2Bvk5OMUPRDCFxIVDLVgFaN82IGoUVC49JVn/s7E2r0Xt4B7jd9RyDK3jtVE2Z+YOCEWF9BeZSRLs9UnrKNi1WVVSWRxMFL9o/PM7Vio8bIRvfc5MBE7DXxjfw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ah8JG4xs; arc=pass smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E51D138D014;
+	Mon, 20 Jul 2026 22:46:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784587619; cv=none; b=hzrH52hORFsQt/DrN2IkUy6J1woLoBqiu6GDVrDwBBzTicn5PBqina8T7YGbDumhxm823n7J4kT9wmx/DlnnOKy6wCN5R1qRbfqS42x+2YyHSl2VSNwTH1bKLvLhU5LHXbueEN2wQDgnhhaq80Ox7Vd09volLmnJU6AlaGW6P38=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784587619; c=relaxed/simple;
+	bh=G28jyeTFq6CtIFaSECPw6bRj9dZ5++FHmZLh1y+5jRQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Z6Nr6UVebPE98PniMqKMro6MmjJE2tMv/Af+SAhCOthPFj4kacyLHSkFw+gCcEJjWsLH0mAUTOr3PU6//48eZ0txWPnk6gCWKoVJjGCPPbQTY1gnJUF3PcVssYyTyfy0OeDmg7MrREsjcnQIU6Sv7H5Psa1plfq7TAXs76JP13M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=Ij/94th7; arc=none smtp.client-ip=80.241.56.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ah8JG4xs"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-698c1df9651so1550928a12.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 14:31:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784583075; cv=none;
-        d=google.com; s=arc-20260327;
-        b=mP8y08OGL/3TMqMwg5qMv1VNO+A3RyRVONdlIZbV6PeY8hhHVVBNpFdjxQQD3V0OXe
-         Zi9m0bwRrPzp87rsgxIhu8vLq1oixKMP6BKgj0FlCneG3RWdkrYFqLjuPI3yGDZOldFO
-         MS1F66HLuUShO4qMJiS7+MrvfSxnYQ+UgCeSYvsQnBEYcm6XWa7cbZiP1oO6YoR2FStC
-         Qog/sDyxE5T3o05r/x2kB/ag7UoZAPzBTi8ZUTo1G03cufakiW492JLgnVoQzQbJNCa/
-         UjXhm4PcZTv7YLLiTbix4w0G3wdilwV6VlZp5o2c6SwL5ukAwaU4+PlMFWeShX3xs78c
-         KXlw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
-        fh=aKOTxJi4jyrNN3r/Yy2VFHZ2mojm9enz4CpKF2bOF+Y=;
-        b=UbKAo0kX/rMc9HHDZoYZlakbVWyi+oNvYULANpybFBIe45HwGUVqbafJybdOBJgEyt
-         yZJrzq0NNiz6YADsAt5XW4fELJ8MrQK9GntW3Z2XmVn8ILlYqNg3LeBQPcwXmkn6sEBq
-         PMCvvpt/nBxqCYDEapvcpbvzmnAsycZkafcvmbn+J7nUN7s0cV9jeNRm1+V3GM70k6Q3
-         JZ52POJjYv209lwZ8TTsdGlU1G3n7vK83sLfv/9ZYz7ihVyWD75pa6T405jMKJMHXbTa
-         6edTHO7wbjafVtwutfgWhPmLalc1BYBjHfDD1SkUcOqdtvKNAzdBE31D+z9Zc3eLPztk
-         ZR6A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784583075; x=1785187875; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
-        b=ah8JG4xs9buFkJRFEy0iLeNfQkx8oIG0NuY7cZY0uFsIIYb8bBT7VLP3RwE7XCrGeb
-         met95OCSOp48UCLCQ4OkJG3AINPwJqFaKSMDBAByGo/okaJaaebmrh1n0K2G9xsrpm2q
-         C/9tyVWTFaXD2700C6PKeaB5YKbalgufOV1wscUkfnaSrBdTeGKdANHU36ACnwJfVo5M
-         FW8pRUuxaeUIk0Wnx8HzNTVoBHiNTTbHB8Ce3O99p+W4ra/78wU/zG8vBqOkhPYLkcm7
-         dXT21Fysx08wM/COB8HinGpJUkLnFlVtWXqmix7xKWezEHJWvLc4a1oFZ3wUI695OAws
-         iTYg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784583075; x=1785187875;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=nNwA6ao6NzwbPSAsYgBOx8qGkJlRMW3TZGLPQCknqik=;
-        b=ADkBMmUBkcRGGM/JEvR+2aCMy1My1PfCl07y1Gq1wgGKBKJs4Rc9qp5B9ELDkI6ijE
-         /k8EeiuCQX04MdgaYL1KhEAx2XaHOrUxXipfzbHcAnOQEV/v3cDp9TsuR/IHYoe6YMOt
-         k3v2kTtUJx+sScYkKnFUxa/GB63ydQl3V2KxAsUOooHfaHgz2QXA7LwXPeFFR+qc1mRo
-         CZN5+e87YU5aizTzzE/9Zjwa6SmsWDWX3CZGYZKwAJSWmy/HUi9UeSKluwRMMg1KL3Qe
-         e4aPkPyrhTpMbSVGnitxAe7UhkDx2lmjxPb9E15G9/2eJXOw453J/JtBQg0KO5zINZWk
-         IYdw==
-X-Gm-Message-State: AOJu0YytE7Kry+AO2KA6G/5MStAsm5nSGiNhcSS2G8lY1mrBEVWNAt/b
-	apqyl3gz3S6RSFkI0E4GxQLa605xG27b1S6IqIMUMk/v71mK+xV/PP8s5fwvbXO8ewC0VYzns5u
-	N9FUuP8lsyMwIwRX/PoB7drlM20emoRw=
-X-Gm-Gg: AR+sD12jhQUQTryqaYoaDsHHgTQFPrJt8DRY17XjydseZxxcPpp8z0PqgD4HTcoGi48
-	Pk5Rm9qPsz7qfc8UiBZi2ioRuBuiSKNvjY2AdsAVBs115sCxgLoXPdrPuwOVCeCLkn4yrpnVYgL
-	9KBVsShP1wrOO32z9+B2Mchoplx47VtLJ4lX6oQv/gAxg5W4o2aSIq1ZhZgw4qouY0SwcqXjZU7
-	qET5xF8H9wyg6Ittg82V4K1Fhz72nZCauAMuUDaDFMAaWy1Y1YSGAATIvpQAYx6+dZIDN0S9EXO
-	NxCkjinm3n4epDEmz/IkrVqVZJRN1Pw1qicQCW9V/HWBWNw5gn4MR7cO0PvE4g==
-X-Received: by 2002:a05:6402:360f:b0:69e:1246:a86a with SMTP id
- 4fb4d7f45d1cf-69e65164544mr3489726a12.0.1784583074543; Mon, 20 Jul 2026
- 14:31:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="Ij/94th7"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA512)
+	(No client certificate requested)
+	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4h3wcW55sszKn65;
+	Tue, 21 Jul 2026 00:46:51 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1784587611;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eo+9+4t/XF8wxVM2KHRZKUCNyv2OchmaEckT5QN/S/I=;
+	b=Ij/94th7YYbgHBRyVHOahYsl8rkSBNtGUZwdiCvBSAC1Q8j1Z7JESgPz44piNJrAmlOP0k
+	1uiC4uBmBbK+g5wTmdczuO5T/y8tho/+4Wd53XqBH6rCK9bXzQhCaOFYhEkXhAKR7C+0um
+	WUB2T+xyXtR3djxwMo70wDFbgQKdIJwJzKNBEv7x1pTd78NtWEapTtCw4VgzqDULShcg+z
+	Wm8Y2olnj/fLTbARpbolvxoMlppymj1b/J5BNEvlc+/Mi6gI0Q6pSKJw5WpK8RU0BycR2n
+	o7cd0VZcczumDE7JwVWkhIs4zQleQTiKrEZ40YwdHwUp7M6yAN0LOzl9JNXj8w==
+Message-ID: <d1ae2d8c-43af-4a59-ad8e-fe5ab1f0a2d2@mailbox.org>
+Date: Tue, 21 Jul 2026 00:46:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260714150423.53960-1-bogdan.nicolae@gmail.com> <20260720194900.2356442-2-arend.vanspriel@broadcom.com>
-In-Reply-To: <20260720194900.2356442-2-arend.vanspriel@broadcom.com>
-From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-Date: Mon, 20 Jul 2026 16:30:45 -0500
-X-Gm-Features: AUfX_mwDL3jRFZM-mHkbrMM7Nz61SmsjwFBr2eIOv9ZsHK2PbNfTWiOWo4cXzOE
-Message-ID: <CA+ORkNQcUjZ7ufoR5ULN8UDTzxXccFcmD8=rYe=UWVV3-M15Ug@mail.gmail.com>
-Subject: Re: [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
-	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH do not merge 0/4] wifi: mwifiex: add iw61x support
+To: Sascha Hauer <s.hauer@pengutronix.de>,
+ Brian Norris <briannorris@chromium.org>,
+ Francesco Dolcini <francesco@dolcini.it>,
+ Ulf Hansson <ulf.hansson@linaro.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mmc@vger.kernel.org
+References: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20250326-mwifiex-iw61x-v1-0-ff875ed35efc@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: jtkc5g1yefost6y1o99j5kbqexk3ogz6
+X-MBO-RS-ID: 9b924e6a7eed59363d5
 
-Arend,
+Hello Sascha,
 
-Sounds good. Do you prefer two patches in a single email or two separate em=
-ails?
+On 3/26/25 1:18 PM, Sascha Hauer wrote:
+> This series adds iw61x support to the mwifiex driver. It works for me,
+> but is not yet ready to be merged. Some people showed interest in it, so
+> I am sending it here.
+> 
+> All testing and review feedback appreciated.
+> 
+> During startup I get these messages:
+> 
+> [   12.078010] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0xff
+> [   12.078018] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0xff
+> [   12.078024] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0x23e
+> [   12.078029] mwifiex_sdio mmc1:0001:1: Unknown GET_HW_SPEC TLV type: 0x25c
+> 
+> Not sure what these are about, I can't see these handled in the
+> downstream mwifiex driver as well. Could also be there is some parsing
+> error. Nevertheless the driver seems to work.
+> 
+> The series applies to v6.14, but should apply to my mwifiex cleanup
+> series as well.
 
-Best,
-Bogdan
+I was able to test these patches with IW610G based muRata 2LL SDIO 
+device. I used firmware from [1] and I had to add SDIO ID for that 
+IW610G device (trivial patch is below). Besides that, I am adding my:
 
-On Mon, Jul 20, 2026 at 2:49=E2=80=AFPM Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
-> On Tue, 14 Jul 2026, bogdan.nicolae@gmail.com wrote:
->
-> > [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
->
-> The code itself is correct, but there are process issues that need to be
-> fixed before I can accept this:
->
-> 1. This is a resubmission of the patch sent on 2026-07-09 [1]. A
->    resubmission must carry a version tag: the subject line should read
->    "[PATCH v2] wifi: brcmfmac: ..." not "[PATCH] wifi: brcmfmac: ...".
->
-> 2. A v2 submission must include a "Changes in v2:" section below the ---
->    line documenting what changed from v1.
->
-> 3. The From: address (bogdan.nicolae@gmail.com) does not match the
->    Signed-off-by address (bogdan.nicolae@acm.org). Please use a
->    consistent address or add a second Signed-off-by for the sending
->    address.
->
-> 4. The patch addresses two independent issues: fixing the packet_id in
->    brcmf_cyw_mgmt_tx() (SAE auth frame TX) and fixing the zero-init and
->    PMKID copy in brcmf_cyw_external_auth() (auth completion). Please
->    split these into two separate patches.
->
-> Please send a v2 addressing these points.
->
-> [1] https://lore.kernel.org/linux-wireless/20260709122315.11400-1-bogdan.=
-nicolae@gmail.com/
->
-> Regards,
-> Arend
+Tested-by: Marek Vasut <marek.vasut@mailbox.org> # muRata 2LL
+
+Do you plan to finish upstreaming these patches ?
+
+"
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c 
+b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 84e3946cc4e4e..54fc82a6e3458 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1049,6 +1049,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
+                 .driver_data = (unsigned long)&mwifiex_sdio_sd8987},
+         {SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 
+SDIO_DEVICE_ID_MARVELL_8997_WLAN),
+                 .driver_data = (unsigned long)&mwifiex_sdio_sd8997},
++       {SDIO_DEVICE(SDIO_VENDOR_ID_NXP, 0x0215),
++               .driver_data = (unsigned long)&mwifiex_sdio_iw612},
+         {SDIO_DEVICE(SDIO_VENDOR_ID_NXP, SDIO_DEVICE_ID_NXP_IW612_WLAN),
+                 .driver_data = (unsigned long)&mwifiex_sdio_iw612},
+         {},
+"
+
+[1] 
+https://github.com/nxp-imx/imx-firmware/tree/lf-6.18.20_2.0.0/FwImage_IW610_SD
+
+Thank you for your help !
