@@ -1,32 +1,44 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mailtransmit05.runbox.com (mailtransmit05.runbox.com [185.226.149.38])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4017405C3B;
-	Mon, 20 Jul 2026 11:51:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48A940E8C2
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 12:16:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784548285; cv=none; b=m4TJp7pR0nsIPrIIRgk0vnK93XzOcL14EgMItKyAyVieFN/iNqL3Yw9DmlOrqxcFW2w9gpdPGIizXEauRveNImpXnqkvtGd/zV9oTfubKzz6E2YS8yZpxjOBZ1sohxB8Vda7BoCDU63MFyvYUGyRySTazrnTwAw84BwVe2eaw5Y=
+	t=1784549806; cv=none; b=lJKsRrZTUNkppgg+W0UPcncYjXp8LsRNhSQie0ElnkxYQ3djg2qag223fBYy7SWZEU2QeodkI6TEhfo7xCMbFLjPllWDZXZfNg0nBulNVT/3kRme3Kqd+p8gQxmdXQjvyLwAgDBPoDMuKGztOaJSwy4GFK8v8WCzrAdYbCrnQ98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784548285; c=relaxed/simple;
-	bh=vrqjl7xj9tbN8anlV3EwPeSZ0vL9AZXbiHbEmbNQVxQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=rg/aubUrTZVGmHvaZnvRfnJve9jQn6r0uvRjH9ytXbfnhChhwJGGMmy4NYWr+NUAgDfFzefBRXAY5aPeHg+Oq9+udPKRmNpGdY9LZF6U0LZBeN+ip/Mxh7QYlU4GRneICCM8ySChBKknau83Jp0NyWAojAId/u8GU9ivOhLUz7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowADHND+3C15qdsGIAA--.52444S2;
-	Mon, 20 Jul 2026 19:51:20 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH v2] wifi: mwifiex: validate event lengths before copying bodies
-Date: Mon, 20 Jul 2026 19:51:19 +0800
-Message-ID: <20260720115119.80059-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
-Content-Type: text/plain; charset="utf-8"
+	s=arc-20240116; t=1784549806; c=relaxed/simple;
+	bh=JqUrzWVWxHZ5K5VtyNF2MOzrB4NLY1FHBDIwYs8eNFI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ilq82u5iJfVuzwGDTSQXo4Fc+nsHhHPL6J3Zvp/knY8HGQXSY359AD+JnTCxcijh5Mqhxd7xBf/bkyPDhlzpnF7DZ0DHeCp3uh1oGWN05Y3032hhOBIIHRugCDZwmRZhjY3wJZ7oePKb6/xUzUowCFOz17uLzaOOzCVt6EQ/8cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pokerfj.es; spf=pass smtp.mailfrom=pokerfj.es; arc=none smtp.client-ip=185.226.149.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pokerfj.es
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pokerfj.es
+Received: from mailtransmit02.runbox ([10.9.9.162] helo=aibo.runbox.com)
+	by mailtransmit05.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <stian@pokerfj.es>)
+	id 1wlmuw-00GPpW-Ac; Mon, 20 Jul 2026 14:16:18 +0200
+Received: from [10.9.9.74] (helo=submission03.runbox)
+	by mailtransmit02.runbox with esmtp (Exim 4.86_2)
+	(envelope-from <stian@pokerfj.es>)
+	id 1wlmuv-0006wl-TN; Mon, 20 Jul 2026 14:16:18 +0200
+Received: by submission03.runbox with esmtpsa  [Authenticated ID (1471791)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.95)
+	id 1wlmuT-00FXfm-JJ;
+	Mon, 20 Jul 2026 14:15:49 +0200
+From: Stian Knudsen <stian@pokerfj.es>
+To: Jeff Johnson <jjohnson@kernel.org>,
+	ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Stian Knudsen <stian@pokerfj.es>
+Subject: [PATCH v2] wifi: ath12k: restore country code during resume
+Date: Mon, 20 Jul 2026 14:09:13 +0200
+Message-ID: <20260720120913.100604-1-stian@pokerfj.es>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <df37460e-f8ba-4e11-b412-4aa8b17cd32e@oss.qualcomm.com>
+References: <df37460e-f8ba-4e11-b412-4aa8b17cd32e@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -34,87 +46,77 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowADHND+3C15qdsGIAA--.52444S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxJF4DJw43urWDWr1kJF4DCFg_yoW5Xw1xpa
-	nxCrZYgw48twnrZ3yfJF18A3Wqga1rAr97CFWkZw1rur4rG3WSva40gFy0gr15Xw4vq34j
-	yr1jq345Zr1DX37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkG14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWU
-	AVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14
-	v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkG
-	c2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI
-	0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4U
-	MIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU6v38UUU
-	UU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-mwifiex event packets contain a four-byte event cause followed by the
-event body. The USB and SDIO paths copy from data after that header using
-the full packet length, so the source range extends four bytes beyond the
-skb. The SDIO path also reads the event cause before validating the
-packet and publishes oversized events without a copied body.
+The country code configured before suspend is lost after resume:
+the device is powered down in suspend_late and powered back up in
+resume_early, so firmware reboots with its default regulatory
+settings and the previously set country code is no longer applied.
 
-Reject SDIO events that are shorter than the header or larger than the
-event buffer limit, using the same skb-release path for both failures.
-Retain the equivalent USB bounds and copy only the bytes after the event
-header in both paths.
+On WCN7850 the firmware comes back in the world regulatory domain
+(country 00) and takes ~7 seconds to rediscover the country code
+from AP beacons, part of a ~16 second total delay before wifi
+reconnects after resume.
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Restore it by resending WMI_SET_CURRENT_COUNTRY_CMDID during resume
+if a country code was set before suspend, i.e. when ar->alpha2 is
+valid. This follows the same approach as ath11k commit 7f0343b7b871
+("wifi: ath11k: restore country code during resume").
+
+Note that only single_pdev_only devices support suspend/resume (see
+ath12k_core_continue_suspend_resume()), so handling the first and
+only pdev is sufficient.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+
+Fixes: 8d5f4da8d70b ("wifi: ath12k: support suspend/resume")
+Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/-_iDJ_M5RrqACWB0qmtleg@pokerfj.es
+Signed-off-by: Stian Knudsen <stian@pokerfj.es>
 ---
-Changes since v1: https://lore.kernel.org/all/20260704011317.50900-1-pengpeng@iscas.ac.cn/
-- reject both short and oversized SDIO events through one cleanup path
-- copy only the body length in the SDIO and USB paths
-- rebase onto v7.2-rc4
+v2:
+- Add Fixes tag, per Baochen's review comment.
+- Link to v1: https://lore.kernel.org/r/20260717130254.36732-1-stian@pokerfj.es
+---
+ drivers/net/wireless/ath/ath12k/core.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 15 +++++++++++----
- drivers/net/wireless/marvell/mwifiex/usb.c  |  3 ++-
- 2 files changed, 13 insertions(+), 5 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -197,6 +197,7 @@ EXPORT_SYMBOL(ath12k_core_resume_early);
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index f039d6f19183..4101bf1edca1 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1712,12 +1712,19 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
- 	case MWIFIEX_TYPE_EVENT:
- 		mwifiex_dbg(adapter, EVENT,
- 			    "info: --- Rx: Event ---\n");
-+		if (skb->len < MWIFIEX_EVENT_HEADER_LEN ||
-+		    skb->len > MAX_EVENT_SIZE) {
-+			mwifiex_dbg(adapter, ERROR,
-+				    "EVENT: invalid skb->len %u\n", skb->len);
-+			dev_kfree_skb_any(skb);
-+			return -1;
-+		}
+ int ath12k_core_resume(struct ath12k_base *ab)
+ {
++	struct ath12k *ar;
+ 	long time_left;
+ 	int ret;
+
+@@ -211,6 +212,26 @@ int ath12k_core_resume(struct ath12k_base *ab)
+ 		return -ETIMEDOUT;
+ 	}
+
++	/* So far only single_pdev_only devices can reach here,
++	 * so it is valid to handle the first, and the only, pdev.
++	 */
++	ar = ab->pdevs[0].ar;
++	if (ab->hw_params->current_cc_support &&
++	    ar->alpha2[0] != 0 && ar->alpha2[1] != 0) {
++		struct wmi_set_current_country_arg arg = {};
 +
- 		adapter->event_cause = get_unaligned_le32(skb->data);
- 
--		if ((skb->len > 0) && (skb->len  < MAX_EVENT_SIZE))
--			memcpy(adapter->event_body,
--			       skb->data + MWIFIEX_EVENT_HEADER_LEN,
--			       skb->len);
-+		memcpy(adapter->event_body,
-+		       skb->data + MWIFIEX_EVENT_HEADER_LEN,
-+		       skb->len - MWIFIEX_EVENT_HEADER_LEN);
- 
- 		/* event cause has been saved to adapter->event_cause */
- 		adapter->event_received = true;
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index f4b94a1054f6..a6ed82e7228b 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -110,7 +110,8 @@ static int mwifiex_usb_recv(struct mwifiex_adapter *adapter,
- 			}
- 
- 			memcpy(adapter->event_body, skb->data +
--			       MWIFIEX_EVENT_HEADER_LEN, skb->len);
-+			       MWIFIEX_EVENT_HEADER_LEN,
-+			       skb->len - MWIFIEX_EVENT_HEADER_LEN);
- 
- 			adapter->event_received = true;
- 			adapter->event_skb = skb;
-
++		memcpy(&arg.alpha2, ar->alpha2, 2);
++
++		reinit_completion(&ar->regd_update_completed);
++
++		ret = ath12k_wmi_send_set_current_country_cmd(ar, &arg);
++		if (ret) {
++			ath12k_warn(ab, "failed to set country code during resume: %d\n",
++				    ret);
++			return ret;
++		}
++	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ath12k_core_resume);
+--
+2.50.0
