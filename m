@@ -1,22 +1,22 @@
-Received: from mail-yx1-f97.google.com (mail-yx1-f97.google.com [74.125.224.97])
+Received: from mail-ot1-f97.google.com (mail-ot1-f97.google.com [209.85.210.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4C423822BF
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94A3334DCCD
 	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 19:49:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.97
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784576948; cv=none; b=Fv0GlrM1N2pYQsM9CKAVr7zi4gx4Cc6h1i0g5Z4l7vhyawbeHBfdj0GnPazlU4ryuKFvHe3QLc0X6tdI880noFNTNDafRMhD3bg3GeYnqo+K8QCf0Kffy2j9uF3Yzjl9osPZhjiFWHTty7/Dj+kRpLArOlhL1ZF7D6+JExuGMqk=
+	t=1784576949; cv=none; b=lO5D5IrPpGf7Y3cKD/92H0lW0Iw7m1qOSstapgz72NzWttG6ZZQMMme8RuxNUuB6S3JFgfyQ6+w4gVD5lkyQgGL83d3dQAt5IqjVgSlbaRVUNVD7cd0bo79MbHuffI4355QsWiZdOizAR2aQfaP2r+2qYRg08fu44LFMwtJGdg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784576948; c=relaxed/simple;
-	bh=ILZ1OXSqpg0YJAMnH1L7KR62EaBTj6ncEaDP3DDL3YQ=;
+	s=arc-20240116; t=1784576949; c=relaxed/simple;
+	bh=GpwzMcCRlrGCMNpB+RWtFToyJqACpU98Z/yPN70gqNg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qfdjho34IuWL1dScYUT1j5wa+DDyY8GBGGRs/M9xZa/tQPRk6nnUE+FO//ABM8b5u+U6O2CAcOKPf2zK+nhz5VzIfuFXvsSUpUD28MiIat58ZkPpO+0dEReXCiwvBHPDEk/df4hcuS/M2tvtYu647IhJoW4V77KcOSFbWzvm9jA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=cARFAA1W; arc=none smtp.client-ip=74.125.224.97
+	 MIME-Version; b=WM2sR/LUr58583MmY2dg69QPlf3MX3C0/dk6ZbXll/rs69b/a+PS5DJw8be8OH30DnaUHBweJ3c2izqSn8fRqm+F3WCaXmV30L/CKNtwcm/dnkeKLNENnc2DitM82COzm7Lc76BIdZpAHtBNyKY9v4JaKQpYYfH5uR6evlCA6D0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=iGN6H64Y; arc=none smtp.client-ip=209.85.210.97
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cARFAA1W"
-Received: by mail-yx1-f97.google.com with SMTP id 956f58d0204a3-668432fe416so1960159d50.0
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iGN6H64Y"
+Received: by mail-ot1-f97.google.com with SMTP id 46e09a7af769-7eb64371a2aso4409776a34.0
         for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 12:49:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20251104; t=1784576945; x=1785181745;
@@ -24,69 +24,67 @@ X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tRt6BPmnSIJVDlX+Tp6C58k9HWDHbAncJG4jnoURZe8=;
-        b=Fg78ezMXX8EugmtVyXW3zwhkwtl5dOv8LY8KPNC3Wwdai9MYpRwMB5J2XPibLII6Wx
-         t7ARhFFGpfw+9SUGZ0v4ABtPe0eTN05JTAaD3kouZhBGHtdhkUWbmvQt7lIlDZtXqfJC
-         FUmoYLntnmJbuEJxQsTwmDC8gAM4eDLOYE2ViU7guwictBX1T4Vhp0fb+psrtZVexQwx
-         ZjPeiu2c65gBPp4nUqzUNPqbsV7tvsXbSwfW5Hn8wL4vfw6BhSy3FfmRTNC53cv7ZSBx
-         XFQP/tDZxYAk3cxCpXNToDIm1QgfoDI02/Vr/j2euc+NZMT4PpY/eByqoiARuElpx/G6
-         KEpw==
-X-Forwarded-Encrypted: i=1; AHgh+RqBh8Apz/Z5fW3Nk/JHeYmwek3xbCgXgdSIVW882ftnMbzH39RLVd6LWGKTpJebjsPYLNu9Xrd0k6IOtrFutA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx5ptX0feR8NCUJaMJqRG/0xT6SpCKwF36oCaCAM6jUcjJLz9l+
-	rXKSEx6gEvIJF+XKHVoqfbIVjSdXZ/Gl/Bsg8GOd8ADWRHCh5zaFfwff5abOu1J6BuylZLYIGwt
-	I8AVy9KPYrUFQZqYFnsthswmHm1Fdgr8W4t2fcK3eMchQ/zFbUQiXFBY0mK2yZeud2csSPbqp4E
-	WGOX2uvuIO+D4+Sq+drJl/taOMG8pMt6nmYEA3xLz/9QD5uuuGmWc7i215MbP7lTEAUzYpYHldk
-	tRPSBBQSypODMoYRMTD/QINRuP2
-X-Gm-Gg: AR+sD10bQ7Ev0SBsotG35fEGBtijqOqaeosEC8cROGDu6fHMmPo0MVRB0EHhprImmJL
-	TB8+o8deRJBK+UJFqi1eR/eHdxGgnBXFSPh8MItBYl3NeNXIBJaKI0CKArFJwtds1+sZMGE00jQ
-	7ejuPiUW1zu9fn88eEpvgaRpa/EyOqgI+MJ7gUwRwl76wgZAZNs0fJ3Yl3uTh57RYKv3oPn/0GI
-	mSataE4fR6NFknNwDEsS1ccYWDR2WIyIB4ZFjfkVuIJt+zXDbDx0gvVxpUrWxfWi7kco1f8mV45
-	S/OccD0zD0RWVdD0iI1qckb8kecRaER81lSVBNsEPn8Bn9PLp2lS0HSyA+R+dCFbQkr7Tb8PwH9
-	5WGVt7R8GFGZ9rja42kQBG4nwmJCELDpaUbaXTTwgN4RmIlD9QwxJZkF3Ru1D9GsQ9LTjhTI5fA
-	gG1gqrnDxcUhVw1pxMyWIqQX6ftOFe4vGU5w21IBQ=
-X-Received: by 2002:a05:690e:4009:b0:667:8de6:785f with SMTP id 956f58d0204a3-6683b6cc39emr4161900d50.0.1784576945345;
+        bh=iU1p0NoD+yje6AFqPCJghg44m+FupeiwPUYO76Klhto=;
+        b=QeVqVBN9dF6NX2hp8VgVJWybj18dcczPmZPeYIe13HjQO8TMCBf1XNq4Utrehenb2v
+         9UxCsJNgcmW2Q9FBEucRqYy4zjFAddrGMCJYb6bmw58LFq3pK1u7+JWRaL56TADrqLCW
+         jelyBN9blrulE7Y887MANmuZmrtMhnnNQ21qpuVVSjgD3CgFwWmXueBBGeJaUSRtbTXl
+         KK2AmvFX4f2LuRuggT5gIRNTT9ihxoaI1TPlcc7yzv62vZrgc3HCV+UFT28xkefJOXlz
+         AdI+JCGIKpWY22KCJLfRydGE8iE7BjSuab6wGUK5mOyndFz1I8t8oE1QRSbGi7pNaTem
+         mNzQ==
+X-Gm-Message-State: AOJu0YwMUPBpo0ceQejDW9S7gwwDUr3NggfyLqGjEUJrvCdrz4CUb+e1
+	IjugQrBdX60GHS5qIzj4K0G8GtVEumNHFJ3mh6muagBoxA4gy7kfsUCGi0s3fMjU7imq2c/auOj
+	mPeoHZpHMtCbWyTRkciOqAo+4P5sgDCcQu9oVE52c0pOrzN4OdwnmgD35Dk+rTFUbSGENVGxMOW
+	3HUOoxRWsWHC/hTkCvZycjKh5JsKZX/mECPhewRgSpi3UCBPjbawXN1c3O9k5De7LfGjCyHp34+
+	DKfPumyO4vaBdtHL6T1yBVDZodQ
+X-Gm-Gg: AfdE7ckKwsDYSvEVcaFz9aJXxWp1a/7uXMUh0e8mstmLf0Nh9UhP8nDRCT5/oEELWO/
+	EvxSpLgh3iD7tfImR404gIdwztNmYhZOVSw7S1MS+AKewMbDUBzIFlUT3/AXMKDq+aJUia0CapU
+	cn+h0IjlsDP4QEbkyBY2dTKBLjyhgROr04PLsDZNNU3GVQuAe9gcXywx6c4neTvBnuK+gCEvVZp
+	ZjhjZ0vRBMePrBVT4DNv8fRI8y+tDdPuzlz+Y0xaPtBe8JinesmscRnQDlIOOHclkmKH5APdsGT
+	VECxlg2VzXknIfIqArLvuJ3IBsYCOTI54HU731/ftMq8w5/nDwHFeV+ksNs1vSyTZ7J6L+tmIUj
+	92My+5pDbxK9rNi1Q2L6gd6dDdSMSonUAoywowWK+zfwuLRK7B8W6sHx0HdkaZx/HhFdqV2j+vn
+	9sFyZnrhxWykRuPtghN5sCv9HtQzlK3BP2QqTSzA8=
+X-Received: by 2002:a05:6820:180a:b0:6a1:5d32:a2f9 with SMTP id 006d021491bc7-6a5366cdc63mr7056559eaf.27.1784576945355;
         Mon, 20 Jul 2026 12:49:05 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-12.dlp.protect.broadcom.com. [144.49.247.12])
-        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-6683b54f547sm829090d50.11.2026.07.20.12.49.04
+        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-4568e6918c1sm958855fac.10.2026.07.20.12.49.03
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
         Mon, 20 Jul 2026 12:49:05 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-c15e555a164so554145766b.1
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 12:49:04 -0700 (PDT)
+Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c1662ffbf57so767746866b.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 12:49:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1784576943; x=1785181743; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1784576942; x=1785181742; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=tRt6BPmnSIJVDlX+Tp6C58k9HWDHbAncJG4jnoURZe8=;
-        b=cARFAA1WyyW/L+HMoKQcCEDUN8lrDoldF4n4CQ514Dmmg5M5fhe50t9m8JPKY/uKya
-         PfVjTc+yl/PaisioXJCFp36+XG4Hci6mj8mozeAWmKcujb4A4a0plN5VZszXv7PRT9lL
-         crYmjek3Dr06l+cIl+aZc34y7O3w9Q+Z5gXjs=
-X-Forwarded-Encrypted: i=1; AHgh+RrWjNmJzIU4C0QGIfmiPx5KsdA7tWTBQR78ssrBa+k4aDxxXHqm3iQcpPuf5nprcopt8pF79qYdBTKdYs0FPA==@vger.kernel.org
-X-Received: by 2002:a17:907:9816:b0:c12:58c0:db2 with SMTP id a640c23a62f3a-c16922d74c7mr845558866b.18.1784576943712;
-        Mon, 20 Jul 2026 12:49:03 -0700 (PDT)
-X-Received: by 2002:a17:907:9816:b0:c12:58c0:db2 with SMTP id a640c23a62f3a-c16922d74c7mr845558666b.18.1784576943308;
-        Mon, 20 Jul 2026 12:49:03 -0700 (PDT)
-Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1705912972sm506543066b.14.2026.07.20.12.49.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=iU1p0NoD+yje6AFqPCJghg44m+FupeiwPUYO76Klhto=;
+        b=iGN6H64YTvtZD4qYvvN8xlnCLToQ1ENVU5sc4uymw9CmMmYdDs0gQUZk+TSaWn2BaO
+         m2Y8RPfAoHawDiysoBYDlYkhWjb6gnAKajaajuFI4U/vN5IsidsDxwdkUW823qBOw7mM
+         rIdx/O17WhLyUrAfZt8lekD4b1Q/LOl9MtII0=
+X-Received: by 2002:a17:907:c70c:b0:c12:894e:501a with SMTP id a640c23a62f3a-c16b4572167mr651063166b.2.1784576942608;
         Mon, 20 Jul 2026 12:49:02 -0700 (PDT)
+X-Received: by 2002:a17:907:c70c:b0:c12:894e:501a with SMTP id a640c23a62f3a-c16b4572167mr651061566b.2.1784576942178;
+        Mon, 20 Jul 2026 12:49:02 -0700 (PDT)
+Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1705912972sm506543066b.14.2026.07.20.12.49.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Jul 2026 12:49:01 -0700 (PDT)
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: bogdan.nicolae@gmail.com
+To: linux-wireless@vger.kernel.org
 Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
-	Bogdan Nicolae <bogdan.nicolae@acm.org>
-Subject: Re: [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
-Date: Mon, 20 Jul 2026 21:48:57 +0200
-Message-ID: <20260720194900.2356442-2-arend.vanspriel@broadcom.com>
+	Jason Huang <jason.huang2@infineon.com>,
+	Kurt Lee <kurt.lee@cypress.com>
+Subject: Re: [PATCH v5] wifi: brcmfmac: add DPP support
+Date: Mon, 20 Jul 2026 21:48:56 +0200
+Message-ID: <20260720194900.2356442-1-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260714150423.53960-1-bogdan.nicolae@gmail.com>
-References: <20260714150423.53960-1-bogdan.nicolae@gmail.com>
+In-Reply-To: <20260715084718.667522-1-Jason.Huang2@infineon.com>
+References: <20260715084718.667522-1-Jason.Huang2@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -96,33 +94,24 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Tue, 14 Jul 2026, bogdan.nicolae@gmail.com wrote:
+On Wed, 15 Jul 2026, Jason Huang wrote:
 
-> [PATCH] wifi: brcmfmac: cyw: clean up PMKID and cookie code
+> [PATCH v5] wifi: brcmfmac: add DPP support
+>
+> Add DPP AKM handling and RSN parsing support ...
+>
+> Changes since v4:
+> - Drop the pre-existing P2P device vif fixes; they are now a standalone
+>   wireless patch.
 
-The code itself is correct, but there are process issues that need to be
-fixed before I can accept this:
+The DPP code looks good. The P2P fixes have been removed as requested and
+the changelog is present.
 
-1. This is a resubmission of the patch sent on 2026-07-09 [1]. A
-   resubmission must carry a version tag: the subject line should read
-   "[PATCH v2] wifi: brcmfmac: ..." not "[PATCH] wifi: brcmfmac: ...".
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-2. A v2 submission must include a "Changes in v2:" section below the ---
-   line documenting what changed from v1.
-
-3. The From: address (bogdan.nicolae@gmail.com) does not match the
-   Signed-off-by address (bogdan.nicolae@acm.org). Please use a
-   consistent address or add a second Signed-off-by for the sending
-   address.
-
-4. The patch addresses two independent issues: fixing the packet_id in
-   brcmf_cyw_mgmt_tx() (SAE auth frame TX) and fixing the zero-init and
-   PMKID copy in brcmf_cyw_external_auth() (auth completion). Please
-   split these into two separate patches.
-
-Please send a v2 addressing these points.
-
-[1] https://lore.kernel.org/linux-wireless/20260709122315.11400-1-bogdan.nicolae@gmail.com/
+This ack is conditional on the standalone P2P device vif guard patch being
+submitted. When you post it, please reply here with the lore.kernel.org
+link so I can track it.
 
 Regards,
 Arend
