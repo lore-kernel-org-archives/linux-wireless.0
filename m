@@ -1,298 +1,205 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A58C43B7756
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 07:09:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BCFE21ABAA
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 08:34:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784531366; cv=none; b=R+A+avwEbejI4M6DCh7yFCUiOsZInBqUGkBh0CZgW0aSGvgTeAyXBezUirI/eayDAQQVWeS2rtDPlJpRMfeq4b78jV5IIj6saTF+EIVLLDtS8aGhdo74aTL16BIZ4ReSMAdUZkRipnzkyphD5fALVarBpE4MmBIK1S6OwYVFxpU=
+	t=1784536484; cv=none; b=jmQD7p0gP0Rk2LnnoWte7hphH+HXBKFab2OwXk/DgxA/U0FGl2CUqkCYEbS4lycVa1oKg4/hlsZHuHvfDbnhpW2JhTqlvFpXiBL2sN9mvQildXdhX61Khmcje2iqP+E6j8DzD3pWKyVDYlRD1fa1561re7WcGCGcNhWtELEzq5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784531366; c=relaxed/simple;
-	bh=PCt2uuCyK/gIRYFPGgmteAhY0F6S4OPMSLaGabX0acc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fcTp9XGNUUeVn0hW/32rqLzhRIBNaSvXOhOmGDHHgx91qsOh1iVJZ8hsbzEEArPGYuyfr/WvaI8Kvw75nbDYLD12Lc1sd5pNjvW7nIjowhqJ3HSa2Z+KvFrqNHSQ3rIVTEN4lRKRhJdJao/W7JVgJbWb2/L5JT8hE3f+YtouNA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CIPOZ1si; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1784536484; c=relaxed/simple;
+	bh=sXO9mVb6GJecmguZUeJG/AzaDxhWpeNqvdVRm/eo3YA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ECPzTUMLweiEvtlN4BIYLsiwBHqdSnQqvQfaJyuc3QdV6OKCm9vP8BBx0iTrsilE3x6MmNvzi604tokjmgOY6ARru8hrQ5XvA8e56Bu1nl/3fD1wPVv7kIpGtNPWlMLiSJbE1jHx/mqUe4cm75Q1h3fsI4V2tYgVXq5ZXA75arQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=P9YCTXYs; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=bDgN1K+t; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CIPOZ1si"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784531363;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ItVte48j2cfPO1m44LhBPhM+Ix/JT2D7ZKzubkk1kfg=;
-	b=CIPOZ1si9+4lg0o3Ss7szieosT1Pfh4ZgCai/mqPYbZcchV0Nk1GZRZEQrT9ekvSAgELMP
-	X3KDK3KTVc4oLbjsDjGbtaXREGTGXtt2GV9yMs5MqPIA3KBxecMpgsNyLwpk1XT7MicfTS
-	TyKzAb2U+7ka2E79wOVAnblLo31EPnM=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-457-d72ivhm9POeYtwKMbp4s_w-1; Mon,
- 20 Jul 2026 03:09:20 -0400
-X-MC-Unique: d72ivhm9POeYtwKMbp4s_w-1
-X-Mimecast-MFC-AGG-ID: d72ivhm9POeYtwKMbp4s_w_1784531359
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 14D5A1953961;
-	Mon, 20 Jul 2026 07:09:18 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.69])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ADC06180034F;
-	Mon, 20 Jul 2026 07:09:15 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: jjohnson@kernel.org
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v3 3/3] wifi: ath12k: implement custom wake_tx_queue with flow control
-Date: Mon, 20 Jul 2026 09:08:51 +0200
-Message-ID: <20260720070852.206495-4-jtornosm@redhat.com>
-In-Reply-To: <20260720070852.206495-1-jtornosm@redhat.com>
-References: <20260720070852.206495-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="P9YCTXYs";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="bDgN1K+t"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66K87W0Q2000791
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 08:34:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	jjExmZ+ZBvgP5brGvJupDhlln576J9vFP8VTLvapH2A=; b=P9YCTXYsUlgkGE24
+	aLX6y0hij2swfq/Od6UKUsNmYKcPtLwDgSK89P84D9JRI0ru8xWo26ofTLq0TIuT
+	2fyK+EEu/6Ph3+rSEmCrtExwiOEXbzucYPMBpogRoqzC/S6TutuHgiDheyQNutqz
+	4wFBwWrVDay6BCelyeVyPIWmkyPfDY3+2UaCn4Pmkpi2qII42oFW239MVU6CKlsM
+	ow88KoEoR2wRZfq5XtzuE4It4ldF8YMerz4X0GAEAJGYnEtgd2ZD4ONRTfSQDEO4
+	7aKqhbJs2htSNcVqDKUfJowzGh74A7PlHBdkD6X+1uI8QktsE+DpbaHZ7sdnjmvc
+	ONKUfg==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fhfvxg3kc-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 08:34:42 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cea6a46766so149990595ad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 01:34:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784536482; x=1785141282; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=jjExmZ+ZBvgP5brGvJupDhlln576J9vFP8VTLvapH2A=;
+        b=bDgN1K+tU/YPgOrBvLuyoB9YPpSlDSGvY2doNJrO2GfvcJ9pBr1mPI4T0p4v/02ips
+         FJueZnTv1jnSqL5hKX8UB1yujfljOX/KBGEM3KB8nPZqn2DS455YWQdJcr4qwN/x2/fE
+         c8ViVlze9yD0PptY1i6r7ecLBrqo1Kz5l+YWEOKN4QDwOscglVlzJ4Xw1vs/bGWc2fi7
+         5fqtyIDTH54xYAIE4oNgeBjEVIQt/lkrsHLDWQvH1m5463ekG79gZBZdCPixLj916Gm0
+         bduwmR+jlyg+xlPn/+k7zJXGfM8mqt6sJUsq81f2iDq1zw24ne227NqmOQQSHfmkLTjC
+         TDFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784536482; x=1785141282;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=jjExmZ+ZBvgP5brGvJupDhlln576J9vFP8VTLvapH2A=;
+        b=bcKOpPi7p0h5/E3us+5DyynOSCaADbNhWDWWMet6OSZ2BQ7ETBRulWKeeQpxJsfX51
+         zvtlAngC2awxKVRfPzfZVsNtCvi7xcx5Y4IiBsYAMe4BGz9pJYca2ICpR6BVsQcJC4N8
+         y8/+e0/U+gahRs/taVs/m8uIOBfDdvUh7k7LunyTkCKZVDlZCBCfq9qoxmfjg2l3n1fq
+         mXJh7c0VwnQzfMYg5fdHQvyd6+qCsD5iB8YFZZQKWCCft3NiEx2HeI/c1nBxG34Eag5F
+         pYvyA3HnUAB2jfDmVSjmgAHp1HXjNWJmFP65v/yY6OlHPNIOXl+uxRZOc2HXrVa7GHFj
+         sNLQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpBj2/zU++mKKjYBIAx/1052OXxtC/+RbCJHAoNPOoJn+Bgt5qgVLPbX6mkL7lccqcdu5MZ71hUPlSYELfxLA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy7HYwcHCEVNjjcEXRAoqQkJVUA618vHXmnNJfQOlM97GEvc5ZR
+	9E8fEYtWZ6ED23t2fG2eBNG+cSc540icKW09qP7AxiSqOUwCxEpop+YsSc6w0O9nAUKStaq7yHg
+	Q9qgG/uRbqz+5zvc2zKQ2z1OmiY3OpYKLyU6GyYwQ2QqbbslijzvU70qh71T9YcwA58FHfg==
+X-Gm-Gg: AfdE7cnU/NY4LUaOXByBONQ7ej5hvyb8EwUaBqq1C45pz1oXehkjvnxmhwKHGv+nkoV
+	Q4Kpokh2vz7vFECEHBHWs2GmaxmYQlKUZhm/y+J0JKnZyUaZQ4IkzWfBJkKtas/hWXhMZ31yTig
+	1/3yfsPGWa2Pd61/EY0ceBOuSUEo0K6yNXr9fo6Mcb3EvG6w+Ayco4BGwxIuvnkVsOTley1P/qn
+	Wmo294UZBq6/dfmfasdC4oMwYaclg1OYGAobo79z0f4LLkgIG08jt8iX5qFJgsVYsxT93Wujr3w
+	BIjCMn606JGQ1e7hVJFBLxbf0ZhVJfjT1gzxTvolWiXcC012UYsi5pQypg3McBK7/Fnjl7Eo2Ar
+	29jbT6ewsknPnUx/rJbwg5f6R9OlBtdl++ysCSoCm+l1efVRzUn7k8R7kjai4v4vlxcqDI8Vc
+X-Received: by 2002:a05:6a21:4edb:20b0:3c3:bbe6:95c9 with SMTP id adf61e73a8af0-3c3bbe69a7cmr8385777637.16.1784536482167;
+        Mon, 20 Jul 2026 01:34:42 -0700 (PDT)
+X-Received: by 2002:a05:6a21:4edb:20b0:3c3:bbe6:95c9 with SMTP id adf61e73a8af0-3c3bbe69a7cmr8385757637.16.1784536481606;
+        Mon, 20 Jul 2026 01:34:41 -0700 (PDT)
+Received: from [10.133.33.82] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cb519de2fb2sm4237277a12.24.2026.07.20.01.34.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Jul 2026 01:34:40 -0700 (PDT)
+Message-ID: <5ca16013-e8a0-4403-a2b3-b3b43ea2bb2d@oss.qualcomm.com>
+Date: Mon, 20 Jul 2026 16:34:37 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-current] wifi: ath12k: fix frequency range for
+ single-pdev devices
+To: Shenghan Gao <gsh20040816@gmail.com>, Jeff Johnson <jjohnson@kernel.org>
+Cc: Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>,
+        Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <20260715065218.41232-1-gsh20040816@gmail.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260715065218.41232-1-gsh20040816@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=HKLz0Itv c=1 sm=1 tr=0 ts=6a5ddda2 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=ptET_oXVa2BxEO8-YBQA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIwMDA5NCBTYWx0ZWRfX/AQXfA3ZuR6D
+ bO2JW2RBrW5ZW0phYOtAtT8alTl88iLBR+ZI0pB2deUcA3k99VeJiXaVlmEy+foYUgyqizPel1G
+ OQhNFsJL9G7xw33m8nsH/6LeXTNZlkQ=
+X-Proofpoint-GUID: RBhRJRPWlN9WYdbOhtzNGbfUDJjda3Cu
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIwMDA5NCBTYWx0ZWRfX4ajoDSCA/FTp
+ VL+/55UKKGoEHwi9okR5qc/d2nIoJaFHCKngVa/b+kMjI0yw4tZ01KhndYl9hVxucPrrzCBgeK6
+ NYvCPC9IBOZF7uDiMt8Kcdqrk5kUWV/77gDgL6qwpM8DzOQp7dJbt3/iuHSpLm/zUKvCUcY5DH7
+ OFp7/UT6q1ACfiT6ELRRwVSsCDdi0Lqr2f18h9/++kZob3CwCXd1InkTJ5a2oSHGXWDKjXjUK2d
+ RfzWXsf/2xiHAVhn+g/+ERn6uu/YR44SpCgmuh1NENaAu8SAYeXXRXzM5rXCbY3NYaN4MHlXBFO
+ TiQN3jEwv7884KC7EVe4g1ZmUE3bXMnd9pYMvw8YS100V7MJylgNZiqIXlobJOVqAbFzC1Uld7H
+ 3ai/AjLzXUEoOrUkAyUPIswNxnTcdlvTvBbh2aK41C6hR1Qv5dGkZ+BXaJmO0UHULgUhCD7WY2F
+ bBzikNPzZqLnTm/wsHg==
+X-Proofpoint-ORIG-GUID: RBhRJRPWlN9WYdbOhtzNGbfUDJjda3Cu
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-20_01,2026-07-17_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 impostorscore=0 clxscore=1015 malwarescore=0 bulkscore=0
+ spamscore=0 lowpriorityscore=0 suspectscore=0 priorityscore=1501 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607200094
 
-Under heavy traffic, ath12k can hang and experiences -ENOMEM errors
-("failed to transmit frame -12") when the hardware TCL ring fills up.
-This issue is more commonly observed in VMs with PCIe passthrough but
-also occurs on bare metal systems.
 
-Implement a custom wake_tx_queue operation that:
 
-1. Checks hardware ring space before dequeuing packets from mac80211
-2. Uses per-txq locking via txq->drv_priv to serialize peek and
-   dequeue operations for the same txq, preventing use-after-free
-   races between ieee80211_tx_peek() and ieee80211_tx_dequeue() when
-   multiple CPUs process the same txq concurrently, while keeping
-   different txqs fully parallel
-3. Syncs with hardware state to get accurate free slot count
-4. Uses ieee80211_tx_peek() to determine the exact target ring via
-   get_ring_selector(), matching dp_tx on all platforms
-5. Returns early during firmware crash in the same way as other
-   tx paths
+On 7/15/2026 2:52 PM, Shenghan Gao wrote:
+> Commit 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update")
+> made ath12k_regd_update() handle each supported band independently.
+> However, it uses WMI band capability values as indices into
+> pdev->cap.band[]. Those values are bit flags, while cap.band[] is indexed
+> by enum nl80211_band. As a result, the 2.4 GHz lookup reads the
+> 5 GHz entry, while the 5 GHz lookup reads the 60 GHz entry.
+> 
+> Also, the 5 GHz range is skipped whenever the radio supports 6 GHz. This
+> is valid when 5 and 6 GHz belong to separate pdevs, but not for single-pdev
+> devices such as WCN7850, where the same pdev covers both bands. After a
+> regulatory update, 5 GHz is therefore omitted from ar->freq_range and later
+> filtered out of the channel list sent to firmware.
+> 
+> On the tested WCN7850, the 11d regulatory update left the frequency range
+> at 2402-2482 MHz and sent 13 channels to firmware. A subsequent 5 GHz scan
 
-This approach follows the pattern used in the iwlwifi driver, adapted
-for ath12k's hardware ring architecture.
+can you share more details on how the frequency range is updated to cover only 2 GHz band ?
 
-This prevents hangs, eliminates -ENOMEM errors, and improves throughput
-by optimizing resource usage and preventing unnecessary packet drops.
-
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v3: Address the review comments from Tamizh Raja:
-    - Replace per-ring wake_tx_lock with per-txq spinlock via
-      txq->drv_priv to fix race condition between ieee80211_tx_peek() and
-      ieee80211_tx_dequeue() when multiple CPUs process the same txq
-    - Fix MLO link selection in wake_tx_queue to use
-      rcu_dereference(ahvif->link[link_id]) instead of deflink, matching
-      the link selection logic in op_tx
-v2: https://lore.kernel.org/all/20260715125017.277242-4-jtornosm@redhat.com/
-
- drivers/net/wireless/ath/ath12k/hal.c      |  1 +
- drivers/net/wireless/ath/ath12k/mac.c      | 17 +++++
- drivers/net/wireless/ath/ath12k/mac.h      |  5 ++
- drivers/net/wireless/ath/ath12k/wifi7/hw.c | 87 +++++++++++++++++++++-
- 4 files changed, 109 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
-index a164563fff28..c1c656e4550b 100644
---- a/drivers/net/wireless/ath/ath12k/hal.c
-+++ b/drivers/net/wireless/ath/ath12k/hal.c
-@@ -390,6 +390,7 @@ int ath12k_hal_srng_src_num_free(struct ath12k_base *ab, struct hal_srng *srng,
- 	else
- 		return ((srng->ring_size - hp + tp) / srng->entry_size) - 1;
- }
-+EXPORT_SYMBOL_GPL(ath12k_hal_srng_src_num_free);
- 
- void *ath12k_hal_srng_src_next_peek(struct ath12k_base *ab,
- 				    struct hal_srng *srng)
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 51c4df32e716..03618a8d3e65 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -7705,10 +7705,12 @@ int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
- 	struct ath12k_link_vif *arvif;
- 	struct ath12k_link_sta *arsta;
- 	unsigned long valid_links;
-+	struct ath12k_txq *atxq;
- 	u16 selected_links = 0;
- 	u8 link_id = 0, i;
- 	struct ath12k *ar;
- 	int ret = -EINVAL;
-+	int tid;
- 	struct ath12k_dp_peer_create_params dp_params = {};
- 
- 	lockdep_assert_wiphy(hw->wiphy);
-@@ -7728,6 +7730,14 @@ int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
- 		memset(ahsta, 0, sizeof(*ahsta));
- 		ahsta->free_logical_link_idx_map = U16_MAX;
- 
-+		for (tid = 0; tid < ARRAY_SIZE(sta->txq); tid++) {
-+			if (!sta->txq[tid])
-+				continue;
-+
-+			atxq = (void *)sta->txq[tid]->drv_priv;
-+			spin_lock_init(&atxq->lock);
-+		}
-+
- 		arsta = &ahsta->deflink;
- 
- 		/* ML sta */
-@@ -10790,6 +10800,7 @@ int ath12k_mac_op_add_interface(struct ieee80211_hw *hw,
- 	struct ath12k_vif *ahvif = ath12k_vif_to_ahvif(vif);
- 	struct ath12k_reg_info *reg_info;
- 	struct ath12k_link_vif *arvif;
-+	struct ath12k_txq *atxq;
- 	struct ath12k_base *ab;
- 	struct ath12k *ar;
- 	int i;
-@@ -10802,6 +10813,11 @@ int ath12k_mac_op_add_interface(struct ieee80211_hw *hw,
- 	ahvif->vif = vif;
- 	arvif = &ahvif->deflink;
- 
-+	if (vif->txq) {
-+		atxq = (void *)vif->txq->drv_priv;
-+		spin_lock_init(&atxq->lock);
-+	}
-+
- 	ath12k_mac_init_arvif(ahvif, arvif, -1);
- 
- 	/* Allocate Default Queue now and reassign during actual vdev create */
-@@ -14899,6 +14915,7 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
- 
- 	hw->vif_data_size = sizeof(struct ath12k_vif);
- 	hw->sta_data_size = sizeof(struct ath12k_sta);
-+	hw->txq_data_size = sizeof(struct ath12k_txq);
- 	hw->extra_tx_headroom = ab->hw_params->iova_mask;
- 
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
-diff --git a/drivers/net/wireless/ath/ath12k/mac.h b/drivers/net/wireless/ath/ath12k/mac.h
-index aba98afd4365..2855d8fdb99d 100644
---- a/drivers/net/wireless/ath/ath12k/mac.h
-+++ b/drivers/net/wireless/ath/ath12k/mac.h
-@@ -17,6 +17,11 @@ struct ath12k_hw;
- struct ath12k_hw_group;
- struct ath12k_pdev_map;
- 
-+struct ath12k_txq {
-+	/* protects ieee80211_tx_peek/dequeue serialization per txq */
-+	spinlock_t lock;
-+};
-+
- struct ath12k_generic_iter {
- 	struct ath12k *ar;
- 	int ret;
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index d9fdd2fc8298..86c3e9a8b87c 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -1100,9 +1100,94 @@ static void ath12k_wifi7_mac_op_tx(struct ieee80211_hw *hw,
- 	}
- }
- 
-+static void ath12k_wifi7_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
-+					      struct ieee80211_txq *txq)
-+{
-+	struct ath12k_vif *ahvif = ath12k_vif_to_ahvif(txq->vif);
-+	struct ath12k_txq *atxq = (void *)txq->drv_priv;
-+	struct ath12k_hw *ah = ath12k_hw_to_ah(hw);
-+	struct ieee80211_tx_control control = {
-+		.sta = txq->sta,
-+	};
-+	struct ieee80211_vif *vif = txq->vif;
-+	const struct ath12k_hw_ops *ops;
-+	const struct sk_buff *peek_skb;
-+	struct ath12k_link_vif *arvif;
-+	struct dp_tx_ring *tx_ring;
-+	struct hal_srng *tcl_ring;
-+	struct ath12k_sta *ahsta;
-+	struct ath12k_dp *dp;
-+	struct sk_buff *skb;
-+	struct ath12k *ar;
-+	u32 ring_selector;
-+	int num_free;
-+	u8 ring_id;
-+	u8 link_id;
-+
-+	while (1) {
-+		if (unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH,
-+				      &ah->radio[0].ab->dev_flags)))
-+			break;
-+
-+		spin_lock_bh(&atxq->lock);
-+
-+		peek_skb = ieee80211_tx_peek(hw, txq);
-+		if (!peek_skb) {
-+			spin_unlock_bh(&atxq->lock);
-+			break;
-+		}
-+
-+		if (ieee80211_vif_is_mld(vif) && txq->sta) {
-+			ahsta = ath12k_sta_to_ahsta(txq->sta);
-+			link_id = ahsta->assoc_link_id;
-+		} else {
-+			link_id = ahvif->deflink.link_id;
-+		}
-+
-+		rcu_read_lock();
-+
-+		arvif = rcu_dereference(ahvif->link[link_id]);
-+		if (!arvif || !arvif->ar) {
-+			rcu_read_unlock();
-+			spin_unlock_bh(&atxq->lock);
-+			break;
-+		}
-+
-+		ar = arvif->ar;
-+		dp = ar->ab->dp;
-+
-+		ops = dp->hw_params->hw_ops;
-+		ring_selector = ops->get_ring_selector((struct sk_buff *)peek_skb);
-+		ring_id = ring_selector % dp->hw_params->max_tx_ring;
-+
-+		tx_ring = &dp->tx_ring[ring_id];
-+		tcl_ring = &dp->hal->srng_list[tx_ring->tcl_data_ring.ring_id];
-+
-+		spin_lock(&tcl_ring->lock);
-+		num_free = ath12k_hal_srng_src_num_free(ar->ab, tcl_ring, true);
-+		spin_unlock(&tcl_ring->lock);
-+
-+		if (num_free == 0) {
-+			rcu_read_unlock();
-+			spin_unlock_bh(&atxq->lock);
-+			break;
-+		}
-+
-+		skb = ieee80211_tx_dequeue(hw, txq);
-+
-+		rcu_read_unlock();
-+		spin_unlock_bh(&atxq->lock);
-+
-+		if (!skb)
-+			break;
-+
-+		ath12k_wifi7_mac_op_tx(hw, &control, skb);
-+	}
-+}
-+
- static const struct ieee80211_ops ath12k_ops_wifi7 = {
- 	.tx				= ath12k_wifi7_mac_op_tx,
--	.wake_tx_queue			= ieee80211_handle_wake_tx_queue,
-+	.wake_tx_queue			= ath12k_wifi7_mac_op_wake_tx_queue,
- 	.start                          = ath12k_mac_op_start,
- 	.stop                           = ath12k_mac_op_stop,
- 	.reconfig_complete              = ath12k_mac_op_reconfig_complete,
--- 
-2.54.0
+> failed with WMI_SCAN_REASON_INTERNAL_FAILURE. With both ranges combined,
+> the range is 2402-5835 MHz and 26 channels are sent to firmware.
+> 
+> Index cap.band[] with NL80211_BAND_* and update 5 GHz for single-pdev
+> devices even when 6 GHz is supported.
+> 
+> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+> 
+> Fixes: 0d777aa2ca77 ("wifi: ath12k: fix mac pdev frequency range update")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Codex:GPT-5.6 Sol
+> Signed-off-by: Shenghan Gao <gsh20040816@gmail.com>
+> ---
+> Testing notes:
+> 
+> - Runtime testing was performed on WCN7850 under the CN regulatory domain.
+> - 2.4 and 5 GHz scanning and 5 GHz association were verified.
+> - 6 GHz operation was not tested because it is unavailable under the CN
+>   regulatory domain.
+> - QCC2072 was not tested because the hardware was not available.
+> 
+>  drivers/net/wireless/ath/ath12k/reg.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/reg.c b/drivers/net/wireless/ath/ath12k/reg.c
+> index 89abf2e87ad1..c3bb1df2b1e2 100644
+> --- a/drivers/net/wireless/ath/ath12k/reg.c
+> +++ b/drivers/net/wireless/ath/ath12k/reg.c
+> @@ -300,7 +300,7 @@ int ath12k_regd_update(struct ath12k *ar, bool init)
+>  
+>  	if (supported_bands & WMI_HOST_WLAN_2GHZ_CAP) {
+>  		if (ab->hw_params->single_pdev_only) {
+> -			phy_id = ar->pdev->cap.band[WMI_HOST_WLAN_2GHZ_CAP].phy_id;
+> +			phy_id = ar->pdev->cap.band[NL80211_BAND_2GHZ].phy_id;
+>  			reg_cap = &ab->hal_reg_cap[phy_id];
+>  		}
+>  
+> @@ -310,9 +310,10 @@ int ath12k_regd_update(struct ath12k *ar, bool init)
+>  		ath12k_mac_update_freq_range(ar, freq_low, freq_high);
+>  	}
+>  
+> -	if (supported_bands & WMI_HOST_WLAN_5GHZ_CAP && !ar->supports_6ghz) {
+> +	if (supported_bands & WMI_HOST_WLAN_5GHZ_CAP &&
+> +	    (!ar->supports_6ghz || ab->hw_params->single_pdev_only)) {
+>  		if (ab->hw_params->single_pdev_only) {
+> -			phy_id = ar->pdev->cap.band[WMI_HOST_WLAN_5GHZ_CAP].phy_id;
+> +			phy_id = ar->pdev->cap.band[NL80211_BAND_5GHZ].phy_id;
+>  			reg_cap = &ab->hal_reg_cap[phy_id];
+>  		}
+>  
+> 
+> base-commit: a1a21995c2e1cc2ca6b2226cfe4f5f018370182a
 
