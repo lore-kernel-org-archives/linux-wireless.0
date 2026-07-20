@@ -1,87 +1,87 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C46C03AFD12
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 786DE3AEF3F
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784529829; cv=none; b=nm7V7uPOPQepjtds0JhMWvhgc/nNSDJwZ0zVvDOh6HdOQyPLhPgZoVx5eBfvERMSbsD3rnqClXBUzPRaD7edBmhSSqTKrtsCeuIwwnQIGqYky/u53cPG9HL1zuylZdc7xJ7m978d2U2+iWk3X0fUsH6K+KSw6zP97q8GEC5OkOg=
+	t=1784529830; cv=none; b=UYrGVJH2hPd4rGLyX0WlJqOy05TAKJsvX5IZ1c+0DE0rU7yHblNwbw4+TyvHeNL/3IsShMp4mgjVHEDt4nbaCvTsBpPl32Ka2C0eutdDNqvizJX3WjF71FWgtlsi48A0RsD3NPTTup3w3kqePbCawcDHWjyXjSbltI2gsAYRAFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784529829; c=relaxed/simple;
-	bh=Rj+ZkhKxkDGfpSccmuXcadOEU2KYD5e3q/T2Y9uymLU=;
+	s=arc-20240116; t=1784529830; c=relaxed/simple;
+	bh=K5UaOAM4SpWrqsSOvbKzeBWP9A54e4c84fwHDDXood8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=kLZ+8zEcczwu+cNns3vmJHp5lZqnp0AZnzHxVQL/t8+sEilH72S/vxCPxsiyTpjbUop2n86I+a29pM9myooFwwX/f+9m/rPBeZLYVEIPN4BmCX0l3+PlR3HAU2ginTxCXhAQ7PEt0mQhaNmU4qqd8wCXt5J1fY5qC/3zfI1gHQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=oHmaijl6; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Azn0PPwI; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:Cc; b=e3zuBGIxg/5b6PebHkEuOgIDTbE7lWEPLELc64U+mUVYXjo3i5eBKLcy1VuTiLszoGmODHTUA0QjV+L5K7uKbuLMHtcwTzn4gKu7CynOAeazMh6V7BCw5lNcXhO9MQMRCdoLfpsA+JVY6y3Dh9cKiMqFnKuaCUQoW54q6rNhc0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=aeCe45qy; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WgaT9qoO; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="oHmaijl6";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Azn0PPwI"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66K6Riwn1713664
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:44 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="aeCe45qy";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WgaT9qoO"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66K6RNZ72771253
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8wYSefXJspKu/F33bCo7jnk3E3ZSEwxIqexvka0grbs=; b=oHmaijl6FucFRQ0b
-	0Ja/5vbGpbW+8uffe2aejYSzcaOEGqqBX5Dy+TBg239bETUZLDvu0XUYea4Nuv4S
-	FxAXS4R6bGs9vvhXGsfgv2RYDWrHejtnMm3QVRNlobkYS3uQeJ6X4I/FIkGJ7E73
-	XiyJIjBAEIdEODOoR4UkRv2rDtINZTf2ikrzwuOd4iSc+rg6j1uaHO0L0cQXyYXj
-	E9cMqWzYdm1T4wSXgSyl9uv6lpSFWU2WzeRuu5kbSnyT1QQNfE0mn2Jx1IeedksM
-	s12UHadCsgKNhr2XlFI1mywBX9sC6u6UQ4U2LTdV7qskLH1e1eBJ5J0mnCnDkBLZ
-	FHiVsg==
+	uOHSQiMKVR1IwBDP6bunGeFjzNHHpa4oZ3vKtcA1gOA=; b=aeCe45qysGX5X3sy
+	TEVOhdiDYp1TDUcUFdd8hNxeumEu7fJP/YBFIat4ygTDHVUzt8ffgj47UHB2zHVB
+	bRM3VVPnx/a4RqATXvYDCl+8f3kXCs9o6C3KQoXBFByxwqHY4dTtV/s1yZR0LdP4
+	e2Tde42pSe2fP1OHilhFt0okEHwxxk6QnSuh88qsXQyxK7nmDlQaEA9Cul93uVxh
+	VyiT5pIuZjpuZfMJc0K5uIf+04UvzcWRfXH067pWqGzuDpzmjTtLAzkGpIOJO6Dm
+	77mMs91T9xslDw6ZSVraQqH7MqYfxY5EF9iMQ85452xc1VrrMU0C1DWdVXjP8EuT
+	nkBw0A==
 Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fg2dc4u0v-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fg2aavsa0-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:43 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8486ffba174so16249638b3a.1
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2026 23:43:43 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 06:43:46 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-84a251c2e3eso3765177b3a.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jul 2026 23:43:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784529823; x=1785134623; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1784529826; x=1785134626; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=8wYSefXJspKu/F33bCo7jnk3E3ZSEwxIqexvka0grbs=;
-        b=Azn0PPwILHbPJR4dEz/7YH5ONwUXKXNLMR2HQnkfa46Vy5qDcX1XlLXuTaka+sRuvA
-         Y1qfF+vpO6dqxwTYfBvFoNTiPbcUy7/Y+sVMiCYLmvQ4+ny6cUB4JGnk4rOlW9svv3jz
-         RPy0hTN+qyBMKuv2P1ZLFuiM1G910vzilSw8QYTkfYOdJzA5ul3NJ0VpGvHxYKpdYewp
-         QRFv2+MNEZFGZyxzZMhbcAcsfQvfbMi6VHHzQY7h3bnsX5m1LktH1wnpvrByJpiAVKxY
-         hIUPHNhEk2RxLuaO6e3++UY94Bt2o2TJPadbSz2eMTrKqOCWz5wn4p+PWtNWpFEWkkrd
-         ncgQ==
+        bh=uOHSQiMKVR1IwBDP6bunGeFjzNHHpa4oZ3vKtcA1gOA=;
+        b=WgaT9qoOAH6hwEb+asSkZpaCjczBNVkJKLzvnTml630cNx/dr4V5YBDDxpA2GZ1Mm5
+         zvIL0gaK/Qk1J/Jm7a0O0S161SJo4WEkg9uja0c9hmmmwHEyBKMyGHMv9d64vzLs6j7d
+         1YMrEDaHV7Vnpf8TEG8BrQ2AXvL84Arq0FHqmLew3dxqVsWhtwPPI0LhNmS7GnwHmWyp
+         JxMQ0lD+kwCKWT+j+5sLm/h0QdqnkpxvDs2ml3CIwGAnyziIOdSRtRsvY++CQRfRL4a8
+         NEa3A8+lG+IPN1vcYVHtoaGfrnCXlJExmIpQwB5fSNHQVAAWbznVPyB/UZ9XI/3HGPZi
+         dkLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784529823; x=1785134623;
+        d=1e100.net; s=20251104; t=1784529826; x=1785134626;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=8wYSefXJspKu/F33bCo7jnk3E3ZSEwxIqexvka0grbs=;
-        b=ECKhIHPsJtotYGLxaoe9coQ/Ys7DGHkHT4MJI2raZ93N6vrV2aUZslZwEvuzzohwy5
-         P5FCSv7/Q5JLb9XR6DWpx9F2Pu6CEeoB/PQoHaL46F9nthcg7Up6vv9nIt4CS88UhfDL
-         88fbfeuuK1UGoVPgM9Fhls21LWrmaH7I+Dyg4vJlofwIjMqALjKvZxkw7Rs09hfexPTP
-         HvHLDhPBaipX2XgF/OmIo9etixO14H0pGfFImFcl1E5QOWRBqBr0ggePy/WfeNF0RmYy
-         fUS6mcBbbyI6zAZGZSjRPAbfBfAfdo5ZrEfsZjDMBmLKcziW5DsRIqFAdxX9TYB5i5g/
-         eurw==
-X-Gm-Message-State: AOJu0Yw4d7ykscT9iuKLHkZyFq+BlNJCHqonmFaOCRGOiFg5Us1vf8sh
-	BDh7VZhe20iyHKHQ9Z3m49UY5B0b1FK5bGiJkroJGb7K+SM7dHIJO163zmpwTHS8P0vho9Q7rjB
-	Z0+J0Uqgsk8idTxHSkHSeRTdmFyiWHWBzDEwNoTn2zrLftXMf8vRKjvleRKnugr/ZAchuXg==
-X-Gm-Gg: AfdE7cmtENx3JXb584qdGNIs7l/tgC6g5oC7wwn1P8jGLDz8WOCKJg8WQOVvELZR4Ot
-	Zu1QyR1amzForsBljD2jdv/fYXlEQ4BFqkGbNiHUfLuwx306gVPIr5zp00N1Fm32dNCuGr9+A40
-	IixFh2VwkFbcSkoBT1WdPep7bDYDXp/EhNEBXuteODZyd8nO3hMx7J4GtSROVqXiOjJNJU1dPaq
-	w0qjgnaDOlXHJ4RVcy/hK9/c0YZujTfLfe57BlBdQ8yrJMCDAS+GuSUi1DPUzGmvT2bUAMA/ULt
-	oO2xhxxktJnSXdPFdG2pHEMwwvQrzTI8cwfLhS9OV74tUTa8R83T5CR4jPhLE3H2zPi2/hRhsKM
-	a3TsOXyANUforbteNvlHtmoT9msdfoftrnjqNejKcn1Dsu6MvR49QDQ==
-X-Received: by 2002:a05:6a00:a88f:b0:847:9151:3409 with SMTP id d2e1a72fcca58-84c294fb467mr13402964b3a.55.1784529822725;
-        Sun, 19 Jul 2026 23:43:42 -0700 (PDT)
-X-Received: by 2002:a05:6a00:a88f:b0:847:9151:3409 with SMTP id d2e1a72fcca58-84c294fb467mr13402939b3a.55.1784529822079;
-        Sun, 19 Jul 2026 23:43:42 -0700 (PDT)
+        bh=uOHSQiMKVR1IwBDP6bunGeFjzNHHpa4oZ3vKtcA1gOA=;
+        b=NiMPKieLmS9FN8HkppUSQ5+uFGb+dksHCRDJImltLJH3PQwZRSncL2FEV7Ljx42cEw
+         a/jhnQFRFazvgBIQJ3IYBO6aX/VGwaCrY046qXaFKd+9aUYm8x6dMl5J7RvQi4DcOHvG
+         dqLlPNTE6wH4XoBjDykHeZoAzsUKkKGtY5IOY//p+ZX2aov3DtQB7jzH9r55DcK5AMax
+         LC2DNWKIwEVDh+xGSOio/GlmEkXCE1nsj8L4WoqVSafkxd9MjtExZ9ur4dbRVIO4mrr2
+         FUcKtSYCYErmdkLUX/nEYfEu6wg8YDc6TTob9Rn5wlnVO2zuV5LCOftX7DFC4ESkB8/N
+         YUTQ==
+X-Gm-Message-State: AOJu0YwuXllZQ6OWQlWwBNNve4omELs4omOJWjP8n+nD7l8h2aasIoJ2
+	pGaazD56cEhJXLRKjJfQMghpPfLq91UDL3jJl4Ea0s8jj0mww43FWu3g8HDegKeL+wdmD7uKFJX
+	9Wj6JoFN1xr1z1hmDWDQV0r9rqTJhcE9tizF0Ma5/0qIvaXVMPfaVv4nXc1orlP3Vuh7asg==
+X-Gm-Gg: AfdE7clwRSc6mP7pL8ILU79j3JKzaJ3j1VpQ26PB5ZRNuRUPxs0L1dZIx4YzfGsS9/r
+	weL0n65x94OIJmqms8Ilr37bMO6cq4A4EkodMP7j1O2k5aq2wcWn/Fcx+PHGxDL5imppRUMeU+p
+	4CiJWSohwtN30hNmaRSAly0LFv5cXuqkzgO3zKLKi4ZHfbpG8I4Jc1AQ0k3VBaD40fOfGrxYt75
+	dPio6DgXGDI2p0U8x7+3fYB4m6m5YMqh4UHFXz/LUTqGEjo0a07ECRqHTZ7/+RatMT8uiZ26ABl
+	0NKgTk8Q1qvRJqQQmS58BSOpPSFtbssZFuqv6IRxUnVmfoYE1Tu7UkRw0+BHICwgnox6++OOexl
+	3zZUsLv3KTM0bts0QItq/mMPd0So8peJStBuL/BJCaWkqIYhyKVYHTA==
+X-Received: by 2002:a05:6a00:2394:b0:847:8bd0:1b96 with SMTP id d2e1a72fcca58-84c28aa6e58mr11631400b3a.23.1784529825645;
+        Sun, 19 Jul 2026 23:43:45 -0700 (PDT)
+X-Received: by 2002:a05:6a00:2394:b0:847:8bd0:1b96 with SMTP id d2e1a72fcca58-84c28aa6e58mr11631382b3a.23.1784529825163;
+        Sun, 19 Jul 2026 23:43:45 -0700 (PDT)
 Received: from [127.0.1.1] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84c3793ec61sm3812097b3a.42.2026.07.19.23.43.39
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84c3793ec61sm3812097b3a.42.2026.07.19.23.43.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Jul 2026 23:43:40 -0700 (PDT)
+        Sun, 19 Jul 2026 23:43:43 -0700 (PDT)
 From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Date: Mon, 20 Jul 2026 14:43:26 +0800
-Subject: [PATCH ath-current v2 5/8] wifi: ath12k: introduce
- host_alloc_ml_id hardware parameter
+Date: Mon, 20 Jul 2026 14:43:27 +0800
+Subject: [PATCH ath-current v2 6/8] wifi: ath12k: do not advertise MLD peer
+ ID for firmware-allocate devices
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -90,198 +90,125 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260720-ath12k-fw-allocated-ml-peer-id-v2-5-630632758a80@oss.qualcomm.com>
+Message-Id: <20260720-ath12k-fw-allocated-ml-peer-id-v2-6-630632758a80@oss.qualcomm.com>
 References: <20260720-ath12k-fw-allocated-ml-peer-id-v2-0-630632758a80@oss.qualcomm.com>
 In-Reply-To: <20260720-ath12k-fw-allocated-ml-peer-id-v2-0-630632758a80@oss.qualcomm.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
         Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIwMDA3MiBTYWx0ZWRfX/JXo8fd/lRgo
- CMNIPTOxjDSwf5nDmYRFCNcoseVXZy9An1ndoMz63UJWTR0nzFxsuq2vfIHdlGWTarQfdkGPO/N
- mlN3lyjsBF0uXq0Y8sdwFw9Z0X9+3hw=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIwMDA3MiBTYWx0ZWRfX2OxdUeM8B03J
- xcX3V/IQ0Ljl8OnVb7ZontURSDdO5vQwbHmfNLLAk9NliBaszMd//xWJUAkfd9mITlpHJkShTM9
- zGfIgu5/q76t6t2XpKQ3oHcw+KhNz8g7MdDXYQH4EDCxNEe7hgXaK8FkSoVPNc5goCpsFvxABT5
- GosuPNfR8aWoRiy+s3fA99iF7vVE1zWDBaoTvm7MmCMKQPNJxe1U5O7QUYKlYbKy2JRSHb6Ue1b
- m7b6DYe0RuFdt6YA9Dcr9FWRgAtFi9EKMzZRbNG+3Dcs2R5SnWom4dsLdDVjch2aR20xzm0716m
- aeac1Bjoo/C3VKl1dkhinvTzFVTA0Y6LRHU5lWFyEL78HGIkAv7KYXUzUcWCHhDO6k9AdYB3eiY
- gl9/D0VvsvTb9BQUfyfeHaTb4M88egNTtap7p9xu9Ogao7mQs/ESOxRGR2pR5eNeYkL9kbj1H21
- gizHZ1hxHUaxCQoMwKQ==
-X-Proofpoint-ORIG-GUID: cad63vLeOYqHonr31BZ80dWLHJP_sYjO
-X-Proofpoint-GUID: cad63vLeOYqHonr31BZ80dWLHJP_sYjO
-X-Authority-Analysis: v=2.4 cv=FOQrAeos c=1 sm=1 tr=0 ts=6a5dc39f cx=c_pps
+X-Proofpoint-GUID: JrOHiUUP572mAo03pL_2KGQpNy1LTRPR
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIwMDA3MiBTYWx0ZWRfX2yZpYoVEA0Ux
+ u+Irpa51+/Co0eiusWFkAvmEM0GZzIW34e9suyR+m2grIuVjQya5Uzst+sC9vMlmiP8o1R67jNs
+ 8rgjG8gCFjTh708HIiiBnJj9HDycWuc=
+X-Authority-Analysis: v=2.4 cv=b9aCJNGx c=1 sm=1 tr=0 ts=6a5dc3a2 cx=c_pps
  a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=2Mqij7SlxvU2Fhucnr4A:9 a=QEXdDO2ut3YA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=EUspDBNiAAAA:8 a=zO7lKvSgDLHZEP5-WbMA:9 a=QEXdDO2ut3YA:10
  a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-ORIG-GUID: JrOHiUUP572mAo03pL_2KGQpNy1LTRPR
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIwMDA3MiBTYWx0ZWRfX3nUXa4eBaF2X
+ ZRg+DwLSfB3WWz7Fv5FpjnkAZw+2cAOGka6BK6GW7CIbIGnGSA7bjEoJvmTSEJahaDmwUU+pKlh
+ Kk9FKKgS5W+LcE4Cq5unMxLlNMVI1R9SdLDguJ0LJC4MzlCwtiu2eIatsQP9gpP8aSNo+aSlXH0
+ 6neFcTK7cpNCQ09HRBibEiYbkK0seUHRFXsk7lw5Bd2qzJZt5IwmCNyMU8Ee+yt9NM+EeBamyaU
+ luMjZyeZoTRmpIoSHqCjrXJeLGszZhSEPVfQaV0S+XLEgwz33pRgh9IH7t6tpLrapnsSeeuzJmB
+ +mBSzzVOfDYU13IJIi/dcIWGLGwtlLPL0Bynr0tE0wU0Slw/OYZ5zgAt47V0K1MLYH1fS0PZLqF
+ uV8QXfDIEQNNeRBSr5GA0o1XaFlf/0UEWJxa05/zeTpB23PTKDuoekPQ28MGvdv80NrYe9C7A7G
+ JT3bgXHXd0YP082ReOg==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-20_01,2026-07-17_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 suspectscore=0 adultscore=0 bulkscore=0 spamscore=0
- malwarescore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
- clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ impostorscore=0 suspectscore=0 phishscore=0 priorityscore=1501
+ lowpriorityscore=0 clxscore=1015 adultscore=0 malwarescore=0 bulkscore=0
+ spamscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
  definitions=main-2607200072
 
-Different ath12k devices diverge on who allocates MLD peer id:
-WCN7850/QCC2072 have the firmware allocate it and notify the host via
-HTT_T2H_MSG_TYPE_MLO_RX_PEER_MAP event; While others let the host allocate
-it and pass it down through WMI_PEER_ASSOC_CMDID with
-ATH12K_WMI_FLAG_MLO_PEER_ID_VALID set.
+ath12k_peer_assoc_h_mlo() unconditionally sets ml->peer_id_valid and copies
+ahsta->ml_peer_id (with the ATH12K_PEER_ML_ID_VALID bookkeeping bit masked
+off) into the WMI_PEER_ASSOC_CMDID ML params, which causes
+ath12k_wmi_send_peer_assoc_cmd() to set ATH12K_WMI_FLAG_MLO_PEER_ID_VALID.
+This needs to be gated on chips where the firmware allocates the MLD peer
+ID:
 
-Currently ath12k host allocates this ID and sends it to firmware by
-default for all devices. This breaks WCN7850/QCC2072, because the host
-maintained ID may be different from the firmware-allocated one.
-Consequently data path may fail to find the dp peer and drop some received
-packets. From user point of view, this results in bugs reported in [1] or
-the 4-way handshake timeout issue.
+  - WCN7850/QCC2072 firmware always picks the ID itself and does not honor
+    a host-supplied one, so the value would be silently ignored anyway;
+  - QCC2072 firmware additionally crashes during MLO disconnect when
+    ATH12K_WMI_FLAG_MLO_PEER_ID_VALID was set in the preceding peer assoc,
+    so the bit must not be sent at all.
 
-Add host_alloc_ml_id flag to struct ath12k_hw_params (and a copy on struct
-ath12k_hw for hot-path access) so subsequent patches can branch on it. Set
-true for QCN9274/IPQ5332/IPQ5424, false for WCN7850/QCC2072. The flag will
-be consumed by subsequent patches.
+Branch on ah->host_alloc_ml_id:
+
+  - When true (QCN9274 etc.), behavior is unchanged: peer_id_valid is set
+    and the raw ahsta->ml_peer_id (without the VALID bit) is sent down.
+  - When false (WCN7850, QCC2072), peer_id_valid stays unset and
+    ml_peer_id is sent as 0. The firmware ignores both fields and reports
+    the ID it allocated through HTT_T2H_MSG_TYPE_MLO_RX_PEER_MAP.
+
+The early-return on ahsta->ml_peer_id == ATH12K_MLO_PEER_ID_INVALID only
+applies on the host-alloc path, since on the firmware-alloc path the value
+is ATH12K_MLO_PEER_ID_PENDING here, not INVALID.
 
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=221039 # 1
 Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath12k/core.h     |  1 +
- drivers/net/wireless/ath/ath12k/hw.h       |  2 ++
- drivers/net/wireless/ath/ath12k/mac.c      | 18 +++++++++++++++++-
- drivers/net/wireless/ath/ath12k/wifi7/hw.c | 12 ++++++++++++
- 4 files changed, 32 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index fc5127b5c1a3..1f56474efbea 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -793,6 +793,7 @@ struct ath12k_hw {
- 	enum ath12k_hw_state state;
- 	bool regd_updated;
- 	bool use_6ghz_regd;
-+	bool host_alloc_ml_id;
- 
- 	u8 num_radio;
- 
-diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
-index d135b2936378..8091501cf742 100644
---- a/drivers/net/wireless/ath/ath12k/hw.h
-+++ b/drivers/net/wireless/ath/ath12k/hw.h
-@@ -232,6 +232,8 @@ struct ath12k_hw_params {
- 		u32 max_client_dbs;
- 		u32 max_client_dbs_sbs;
- 	} client;
-+
-+	bool host_alloc_ml_id;
- };
- 
- struct ath12k_hw_ops {
 diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 7d0d7d5fbf53..1ae21618afb6 100644
+index 1ae21618afb6..485be2998180 100644
 --- a/drivers/net/wireless/ath/ath12k/mac.c
 +++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -15382,8 +15382,9 @@ int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- 	int mac_id, device_id, total_radio, num_hw;
- 	struct ath12k_base *ab;
- 	struct ath12k_hw *ah;
--	int ret, i, j;
-+	bool conf = false;
- 	u8 radio_per_hw;
-+	int ret, i, j;
+@@ -3529,11 +3529,16 @@ static void ath12k_peer_assoc_h_mlo(struct ath12k_link_sta *arsta,
+ 	struct ath12k_sta *ahsta = arsta->ahsta;
+ 	struct ath12k_link_sta *arsta_p;
+ 	struct ath12k_link_vif *arvif;
++	struct ath12k_hw *ah = arsta->arvif->ar->ah;
+ 	unsigned long links;
+ 	u8 link_id;
+ 	int i;
  
- 	total_radio = 0;
- 	for (i = 0; i < ag->num_devices; i++) {
-@@ -15423,6 +15424,20 @@ int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- 			}
+-	if (!sta->mlo || ahsta->ml_peer_id == ATH12K_MLO_PEER_ID_INVALID)
++	if (!sta->mlo)
++		return;
++
++	if (ah->host_alloc_ml_id &&
++	    ahsta->ml_peer_id == ATH12K_MLO_PEER_ID_INVALID)
+ 		return;
  
- 			ab = ag->ab[device_id];
-+
-+			/*
-+			 * the assumption is all devices within an ah
-+			 * share the same host_alloc_ml_id configuration
-+			 */
-+			if (j == 0) {
-+				conf = ab->hw_params->host_alloc_ml_id;
-+			} else if (conf != ab->hw_params->host_alloc_ml_id) {
-+				ath12k_warn(ab, "inconsistent ML ID config within ah, device 0 uses %s allocated ID, while device %u doesn't\n",
-+					    conf ? "host" : "firmware", device_id);
-+				ret = -EINVAL;
-+				goto err;
-+			}
-+
- 			pdev_map[j].ab = ab;
- 			pdev_map[j].pdev_idx = mac_id;
- 			mac_id++;
-@@ -15447,6 +15462,7 @@ int ath12k_mac_allocate(struct ath12k_hw_group *ag)
- 		}
+ 	ml->enabled = true;
+@@ -3541,16 +3546,25 @@ static void ath12k_peer_assoc_h_mlo(struct ath12k_link_sta *arsta,
  
- 		ah->dev = ab->dev;
-+		ah->host_alloc_ml_id = conf;
+ 	/* For now considering the primary umac based on assoc link */
+ 	ml->primary_umac = arsta->is_assoc_link;
+-	ml->peer_id_valid = true;
++	/*
++	 * Only chips that allocate the MLD peer ID on the host send a valid
++	 * ml_peer_id in WMI_PEER_ASSOC_CMDID. For chips where the firmware
++	 * picks the ID, leave peer_id_valid false to avoid unexpected issues.
++	 */
++	ml->peer_id_valid = ah->host_alloc_ml_id;
+ 	ml->logical_link_idx_valid = true;
  
- 		ag->ah[i] = ah;
- 		ag->num_hw++;
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index e5bf9d218104..0c277f51d99c 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -439,6 +439,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = true,
- 	},
- 	{
- 		.name = "wcn7850 hw2.0",
-@@ -530,6 +532,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = false,
- 	},
- 	{
- 		.name = "qcn9274 hw2.0",
-@@ -617,6 +621,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = true,
- 	},
- 	{
- 		.name = "ipq5332 hw1.0",
-@@ -697,6 +703,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = true,
- 	},
- 	{
- 		.name = "qcc2072 hw1.0",
-@@ -789,6 +797,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = false,
- 	},
- 	{
- 		.name = "ipq5424 hw1.0",
-@@ -873,6 +883,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
- 			.max_client_dbs = 128,
- 			.max_client_dbs_sbs = 128,
- 		},
-+
-+		.host_alloc_ml_id = true,
- 	},
- };
- 
+ 	ether_addr_copy(ml->mld_addr, sta->addr);
+ 	ml->logical_link_idx = arsta->link_idx;
+ 	/*
+ 	 * WMI_MLO_PEER_ASSOC_PARAMS expects the raw ML peer ID without
+-	 * the host-side ATH12K_PEER_ML_ID_VALID bookkeeping bit.
++	 * the host-side ATH12K_PEER_ML_ID_VALID bookkeeping bit. For chips
++	 * where the firmware allocates the ID, the field is unused (the
++	 * firmware always allocates regardless of the value here); send 0
++	 * to make that intent explicit.
+ 	 */
+-	ml->ml_peer_id = ahsta->ml_peer_id & ~ATH12K_PEER_ML_ID_VALID;
++	ml->ml_peer_id = ah->host_alloc_ml_id ?
++			 (ahsta->ml_peer_id & ~ATH12K_PEER_ML_ID_VALID) : 0;
+ 	ml->ieee_link_id = arsta->link_id;
+ 	ml->num_partner_links = 0;
+ 	ml->eml_cap = sta->eml_cap;
 
 -- 
 2.25.1
