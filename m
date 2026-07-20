@@ -1,114 +1,109 @@
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8632531326F;
-	Sun, 19 Jul 2026 23:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 062D157C9F
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 01:32:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784503996; cv=none; b=aze2i5Sbw05yMb6RogtMc7PUaquTPOCxe+bFbSr9tmFRap5a+l1L1Vcdx/NRfjvDfARKAngN3tuWX9pSxHHNi4YPg/xgvOdpagNrmVQJpaZya1zkT/1cQ5E11yUWIj8gEC7vO82c51isC96CO4yN1ndRKTtMXjDX7p1wudIRT9g=
+	t=1784511141; cv=none; b=TZBY4tmTRfeRTmMkSkLUbNtLS1IYoYcy1djezRzPg++0CtM37+I/QKoQcGn1fhfzsMtzyV7/C1as/eSowofjrfOiRNSNfsKTvsR8BuAfftXienGlai7+6fUl3U/sF4UMWBx8KIDjXgtoqhDfQSO2Z8CUWqcFW5M7i8WkfJFwbRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784503996; c=relaxed/simple;
-	bh=JohItgFDYNvTSCz5of/d/eWIF2FkzAlhthyyjzl99RI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sJzoWkfQCqvA5lTgXRhp7orjVc36mfkqxVDSmeVCDspocbw3/iUCpqTtVFiX/G/d0xXBCLX+/kB4yXMYph2iJlJ1hc/MWpFdVsyYonL4W0PlUl13I6ClNwAIAMNLg9XUomuQ696fIWI3i91Ere32KY2xI0AJLwvjaZPHeUSNkig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=i8VUhAz3; arc=none smtp.client-ip=156.67.10.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+	s=arc-20240116; t=1784511141; c=relaxed/simple;
+	bh=SJhVikg0W48uyvU20BGtMfjTBTlr6TTujFwctoROICE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=nptTBoTAtPSdnv32UjIVJoJ2lLBgCtZxkxZ7nOjk/t4HyLgrOvCHxlkp0ao202jID8rhVlhCQHoKlJs18QFBx6mhS2ZJG6qcrmoR1rk2DOWUAlxUDqXws4o44fcn5ZreRTH/XtS8tpT+J6hgpv8PjbTL5PJilwEKOiZVWQkHfeY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Aqt0jXas; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="i8VUhAz3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=XzeshPSykIh3zVnXJaep6Cq/qVYSj3kEQobSYdnqTI4=; b=i8VUhAz3db8XRFBh4un+Y8LE6K
-	OhBDiwDHm0FX61xR3UPe7EHYP1B9LhRI3kUOFLVHyUZPUK8f5f5FWBH939rseyY5d3/k1R300YMmQ
-	tEmpC9ldC07zxJ+1aVZQ3LMHaaYxZ1A72dzHLNuxG0NhWGrAJALQF4ZJ5QnRE5QLdz/s=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1wlb0I-00DA2P-0n; Mon, 20 Jul 2026 01:33:02 +0200
-Date: Mon, 20 Jul 2026 01:33:02 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Simon Dietz <simon.dietz@plantwatch.de>
-Cc: netdev@vger.kernel.org, andrew+netdev@lunn.ch, davem@davemloft.net,
-	edumazet@google.com, johannes@sipsolutions.net, kuniyu@google.com,
-	linux-wireless@vger.kernel.org, dietz23838@hs-ansbach.de
-Subject: Re: [RFC PATCH net-next v0.1 1/1] net: add GeoNetworking protocol
-Message-ID: <88182be4-f7c2-4012-8661-881415124a15@lunn.ch>
-References: <20260718210046.2357882-1-simon.dietz@plantwatch.de>
- <20260718210046.2357882-2-simon.dietz@plantwatch.de>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Aqt0jXas"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66K1Vtt662082723, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1784511115; bh=Eq1MdNSPYuGelvumB9KCOSTq9slampyHeK18z/v5fUo=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=Aqt0jXasUA5PfyAonIC5oA3mbwOQlOnZDqdjacNl/LdtQ8lAnkjwPB56UaIyojQmj
+	 2+jYVx7Ccm1RL8C/v7twdBpxZ8CjCbfWkw3N4Co1vMcsHqwRg4BDoDmFaXIqbFDyo8
+	 ampCDFo8lkriiLrxC2OBn1JtPDLFL4h93n4f2wzd/NhG1RryyUide6F67a04LY+VVW
+	 osIAMAIFCVY+h9QRGerU1aEHWxIutsSqcicZ0zSQ7SaupMbyhwjaHt59j6T3OwLXtR
+	 V7tW1kfmkuc9wqwGZjtRpNlqCMvPQ5Hp6RzMmdBQ5sX7yJ/Pg/HzK1NREWVvE0Ncv5
+	 Oc3t58FOfPIqA==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66K1Vtt662082723
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 20 Jul 2026 09:31:55 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 20 Jul 2026 09:31:54 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Mon, 20 Jul 2026 09:31:54 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>, "linux-firmware@kernel.org"
+	<linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] rtw88: add firmware v41.0.0 for RTL8723B
+Thread-Topic: [PATCH] rtw88: add firmware v41.0.0 for RTL8723B
+Thread-Index: AQHdF6iIRMUpMZ62skKcRyubJgLa1bZ1nxpw
+Date: Mon, 20 Jul 2026 01:31:54 +0000
+Message-ID: <9e5ea4e2cf52446fb05ce66c0413d6fb@realtek.com>
+References: <20260719180033.66867-1-luka.gejak@linux.dev>
+In-Reply-To: <20260719180033.66867-1-luka.gejak@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260718210046.2357882-2-simon.dietz@plantwatch.de>
 
-> +struct gn_coord {
-> +	__s32 lat;
-> +	__s32 lon;
-> +};
-> +
+luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
+> From: Luka Gejak <luka.gejak@linux.dev>
+>=20
+> Add the RTL8723B NIC firmware image used by the rtw88 driver. Support for
+> the RTL8723BS (SDIO) device that uses it is being added to the mainline
+> rtw88 driver.
+>=20
+> The image was extracted from the Realtek "rtl8723bs" vendor driver,
+> version v5.2.17.1_26955.20180307_COEX20180201-6f52, from the C array
+> array_mp_8723b_fw_nic[] in hal/rtl8723b/hal8723b_fw.c, using the
+> convert_firmware.c tool. A public copy of that vendor driver is at
+> https://github.com/MocLG/rtl8723bs-5.2.17
+>=20
+> The image reports version 41.0.0 and is covered by the existing Realtek
+> redistribution licence (LICENCE.rtlwifi_firmware.txt).
+>=20
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 
-> +struct gn_position {
-> +	struct __kernel_timespec tst;
-> +	struct gn_coord coord;
-> +	__u8 flags;
-> +};
+I checked firmware binary with official release. They are identical.=20
 
-> +static int gn_set_link_af(struct net_device *dev, const struct nlattr *attr,
-> +			  struct netlink_ext_ack *extack)
-> +{
-> +	struct nlattr *tb[IFLA_GN_MAX + 1];
-> +	struct gn_position pos;
-> +	struct gn_iface *gnif;
-> +	int rc;
-> +
-> +	rc = nla_parse_nested(tb, IFLA_GN_MAX, attr, ifla_gn_policy, extack);
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	if (!tb[IFLA_GN_POSITION])
-> +		return 0;
-> +
-> +	if (!capable(CAP_NET_ADMIN))
-> +		return -EPERM;
-> +
-> +	if (nla_len(tb[IFLA_GN_POSITION]) < sizeof(struct gn_position))
-> +		return -EINVAL;
-> +
-> +	memcpy(&pos, nla_data(tb[IFLA_GN_POSITION]), sizeof(pos));
+Except to a nit below,
 
-Passing a binary structure as a netlink attribute is not going to fly.
+Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Netlink messages are meant to be built up from a number of attributes
-using its fundamental types. That gives you extendability. New
-attributes can be added later without breaking backwards
-compatibility. And i think you need this. As far as i can see, you are
-only passing coordinates, but no indication of direction and
-speed. NMEA sentences do support this, and if the GPS does not, you
-can calculate it. So at some point new attributes are going to be
-needed.
+> ---
+>  WHENCE                |   1 +
+>  rtw88/rtw8723b_fw.bin | Bin 0 -> 32272 bytes
+>  2 files changed, 1 insertion(+)
+>  create mode 100644 rtw88/rtw8723b_fw.bin
+>=20
+> diff --git a/WHENCE b/WHENCE
+> index 6cfe142d4e91..b4b7e6acda1c 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -3352,6 +3352,7 @@ File: rtw88/rtw8822c_fw.bin
+>  File: rtw88/rtw8822c_wow_fw.bin
+>  File: rtw88/README
 
-> +	rc = gn_validate_pos(&pos);
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	gnif = gn_find_interface_by_dev(dev);
-> +	if (!gnif)
-> +		return -EADDRNOTAVAIL;
-> +
-> +	memcpy(&gnif->pos, &pos, sizeof(pos));
+Why not putting rtw8723b_fw.bin here in alphabetic order?
 
-This also does not feel correct. Why is location a property of an
-interface? Can one machines interfaces be in different locations?
+>  File: rtw88/rtw8723d_fw.bin
+> +File: rtw88/rtw8723b_fw.bin
+>  File: rtw88/rtw8821c_fw.bin
+>  File: rtw88/rtw8703b_fw.bin
+>  File: rtw88/rtw8703b_wow_fw.bin
 
-I suppose you might have one interface pointing forwards, another
-pointing backwards, both shaped to be mostly unidirectional. And a
-third omni directional interface on the roof? The interfaces can then
-be a couple of meters apart. But is that sufficient to matter?
 
-   Andrew
