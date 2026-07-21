@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299E1472520
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82BA847127E
 	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 19:42:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784662932; cv=none; b=i44w4YStlwM2KDRfRVb6RB5ffbZ7WdQd/+4KwZycJNxZRoJZ2CjZYk5pYVjI/ChJ/a//Q+HgRRRKt3qney9MBz7gwHMl5gpTndlXWZvu4ebEdCewTY/SReM1c8StgdDHo6cYDG8qZRbYDcKXVB71d4yQIQeNPU47KqcBvS8VsK4=
+	t=1784662933; cv=none; b=Jia/9TpdC57+3FOHFBAtRNXt6coPGhFr7/TACjIsSUo4WySqrFtgkk0vt5+gWZmhg1ff1vtE656S3DdAvrm/3AxGjogolhUvrQfpxmzGfYGn667q7uZBooTw2+UlcXxX9zQCqNPqKUr8Nv9Dp0V9PDFKVIPuyvo2BvDIYcqiY00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784662932; c=relaxed/simple;
-	bh=smIaFlMWpJN4ZO7OhuNp1b13MfRCLI1/h58VCaN0OyI=;
+	s=arc-20240116; t=1784662933; c=relaxed/simple;
+	bh=DoZOp6Yg4uG3w2Zo1iFmEqQfMVH3PGMGDypbO62C4tI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SGTFBv+iqDGi09z3KQHyoq6Zpa59LCUBCyEpnEoZAyhh9hoXOmZ7eZF4pKZuMnPCbMQf9DbmkcNrQ4aCRmnhp55PRfW8dWOyfYQ8R+UAqZfRbuOaTAgebaWhePF3PTvkX8XfzmOgiBgq+9qfVryi2DBPmaCz809vOl+vs43WBb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=TsyCyUz7; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=rz8YbDEeKFyh28H3WjjrxCrzAmlcZ8v5hh4hy87F9PwA7NWbYtDOnCNsK9yI9aYDyBsyivappDDSbyTKcGECodWBrHuOoyLsFETv3XpvAvo2Zys0vJb8LuI07V2ygZbcum4+rAL58ijHvN0z8s1Oe6Nk6eZFjspvNm4TYIwUe54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=dxG0b8RN; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="TsyCyUz7"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="dxG0b8RN"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=Pntc3OXDY7wjLnr8IFB+NpBIROgksKgKGxwNxTUPa0M=; b=TsyCyUz7WOpHx6KkPuIjlnqJhg
-	Y2ElsluHoIE2en42aaoGcHjzuPhWE3DxDPykKSHeRu6UYvovzAu/0QP898uoeO7BjMDTR/ZCISfYy
-	VtsjB4aR7mAy6DAEblGq2TtN+8roJYe/PzxMeNI2iZf1sSqtjiPbxcB++xrgzbOVLiys=;
+	bh=NLv9Y7PGlPVhlmeAq8Xy0jN+zqCA/lhOCW1wS7BXWIY=; b=dxG0b8RNRgBlMdT5OY8gD+0fAN
+	HYg8DE78SThCkTypOZL/nEowy4A9W5en3zVs+5pMfvIqhZGzDVU79J7t1cNJQbPhM5QnsLJk4LZwe
+	lsfAUk51cZR3xhm0eq6sO7uermGVoetR6kqRA01EGl5MyJ0jYM4zWRL2TcBy/3YtMr2s=;
 Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1wmGLx-004wLC-0y;
+	id 1wmGLx-004wLC-27;
 	Tue, 21 Jul 2026 21:42:09 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next v4 2/4] wifi: mac80211: estimate expected throughput if not provided by driver/rc
-Date: Tue, 21 Jul 2026 19:42:05 +0000
-Message-ID: <20260721194207.2431113-2-nbd@nbd.name>
+Subject: [PATCH wireless-next v4 4/4] wifi: mac80211: add ieee80211_txq_aql_pending()
+Date: Tue, 21 Jul 2026 19:42:07 +0000
+Message-ID: <20260721194207.2431113-4-nbd@nbd.name>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260721194207.2431113-1-nbd@nbd.name>
 References: <20260721194207.2431113-1-nbd@nbd.name>
@@ -48,114 +48,71 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Estimate the tx throughput based on the expected per-packet tx time.
-This is useful for mesh implementations that rely on expected throughput,
-e.g. 802.11s or batman-adv.
+Add a function to allow drivers to query the pending AQL airtime
+for a given txq, for both unicast and broadcast.
+This will be used for mt76 to limit buffering in AP mode for power-save
+stations.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-v3: avoid band=0 default, return 0 if no chanctx
-v4: rename lsi to link_sinfo
+v2: reorder txq->tid check
+v3: fix compile error - adjust for changes in previous patch
 
- net/mac80211/sta_info.c | 49 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 46 insertions(+), 3 deletions(-)
+ include/net/mac80211.h | 11 +++++++++++
+ net/mac80211/tx.c      | 18 ++++++++++++++++++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 9c69c5ba0d3f..877117929f5b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2795,6 +2795,28 @@ void sta_set_accumulated_removed_links_sinfo(struct sta_info *sta,
- 	}
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 17cc970c02dc..365122f9e08c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -6881,6 +6881,17 @@ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+ bool
+ ieee80211_txq_airtime_check(struct ieee80211_hw *hw, struct ieee80211_txq *txq);
  
-+static u32 sta_estimate_expected_throughput(struct sta_info *sta,
-+					    struct rate_info *ri,
-+					    struct ieee80211_bss_conf *bss_conf)
++/**
++ * ieee80211_txq_aql_pending - get pending AQL airtime for a txq
++ *
++ * @hw: pointer obtained from ieee80211_alloc_hw()
++ * @txq: pointer obtained from station or virtual interface
++ *
++ * Return: pending airtime (in usec) for the given txq.
++ */
++u32 ieee80211_txq_aql_pending(struct ieee80211_hw *hw,
++			      struct ieee80211_txq *txq);
++
+ /**
+  * ieee80211_iter_keys - iterate keys programmed into the device
+  * @hw: pointer obtained from ieee80211_alloc_hw()
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1bba49d0b6bf..04307d6ac923 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -4244,6 +4244,24 @@ bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_txq_airtime_check);
+ 
++u32 ieee80211_txq_aql_pending(struct ieee80211_hw *hw,
++			      struct ieee80211_txq *txq)
 +{
-+	struct ieee80211_hw *hw = &sta->sdata->local->hw;
-+	struct ieee80211_chanctx_conf *conf;
-+	u32 duration;
-+	u8 band;
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct sta_info *sta;
 +
-+	conf = rcu_dereference(bss_conf->chanctx_conf);
-+	if (!conf)
-+		return 0;
-+	band = conf->def.chan->band;
-+
-+	duration = ieee80211_rate_expected_tx_airtime(hw, NULL, ri, band, true, 1024);
-+	duration += duration >> 4; /* add assumed packet error rate of ~6% */
-+	if (!duration)
++	if (unlikely(txq->tid == IEEE80211_NUM_TIDS))
 +		return 0;
 +
-+	return ((1024 * USEC_PER_SEC) / duration) * 8;
++	if (!txq->sta)
++		return atomic_read(&local->aql_mc_pending_airtime);
++
++	sta = container_of(txq->sta, struct sta_info, sta);
++
++	return atomic_read(&sta->airtime[txq->ac].aql_tx_pending);
 +}
++EXPORT_SYMBOL(ieee80211_txq_aql_pending);
 +
- static void sta_set_link_sinfo(struct sta_info *sta,
- 			       struct link_station_info *link_sinfo,
- 			       struct ieee80211_link_data *link,
-@@ -3009,6 +3031,10 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 	link_sinfo->bss_param.beacon_interval = link->conf->beacon_int;
- 
- 	thr = sta_get_expected_throughput(sta);
-+	if (!thr && (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
-+		thr = sta_estimate_expected_throughput(sta,
-+						      &link_sinfo->txrate,
-+						      link->conf);
- 
- 	if (thr != 0) {
- 		link_sinfo->filled |=
-@@ -3262,6 +3288,14 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (thr != 0) {
- 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
- 		sinfo->expected_throughput = thr;
-+	} else if (!sta->sta.valid_links &&
-+		   (sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))) {
-+		thr = sta_estimate_expected_throughput(sta, &sinfo->txrate,
-+						      &sdata->vif.bss_conf);
-+		if (thr) {
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+			sinfo->expected_throughput = thr;
-+		}
- 	}
- 
- 	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL)) &&
-@@ -3282,6 +3316,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (sta->sta.valid_links) {
- 		struct ieee80211_link_data *link;
- 		struct link_sta_info *link_sta;
-+		u32 est_thr = 0;
- 		int link_id;
- 
- 		sinfo->mlo_params_valid = true;
-@@ -3293,17 +3328,25 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		sinfo->valid_links = sta->sta.valid_links;
- 
- 		for_each_valid_link(sinfo, link_id) {
-+			struct link_station_info *link_sinfo = sinfo->links[link_id];
-+
- 			link_sta = wiphy_dereference(sta->local->hw.wiphy,
- 						     sta->link[link_id]);
- 			link = wiphy_dereference(sdata->local->hw.wiphy,
- 						 sdata->link[link_id]);
- 
--			if (!link_sta || !sinfo->links[link_id] || !link) {
-+			if (!link_sta || !link_sinfo || !link) {
- 				sinfo->valid_links &= ~BIT(link_id);
- 				continue;
- 			}
--			sta_set_link_sinfo(sta, sinfo->links[link_id],
--					   link, tidstats);
-+			sta_set_link_sinfo(sta, link_sinfo, link, tidstats);
-+			if (!thr &&
-+			    (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+				est_thr += link_sinfo->expected_throughput;
-+		}
-+		if (est_thr) {
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+			sinfo->expected_throughput = est_thr;
- 		}
- 	}
- }
+ static bool
+ ieee80211_txq_schedule_airtime_check(struct ieee80211_local *local, u8 ac)
+ {
 -- 
 2.53.0
 
