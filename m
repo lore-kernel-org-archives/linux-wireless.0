@@ -1,35 +1,45 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B880535DA40;
-	Tue, 21 Jul 2026 19:40:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299E1472520
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 19:42:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784662856; cv=none; b=GAi6iSuWEtPIa9YyJWwI3ftFupA/+ZshcsFDSE2Pptl26KuktmQvSM6T/bMZssMx7bkmmToOwSZbwzOcjpnvOnJBC8sE4JjcJ1+W6kHyfqH+Ex9Lo0uS4vWAntMF57rTP+u5YDLghNq+/wcQgOoZaBRdol5iGZxNGCgJNqG17eI=
+	t=1784662932; cv=none; b=i44w4YStlwM2KDRfRVb6RB5ffbZ7WdQd/+4KwZycJNxZRoJZ2CjZYk5pYVjI/ChJ/a//Q+HgRRRKt3qney9MBz7gwHMl5gpTndlXWZvu4ebEdCewTY/SReM1c8StgdDHo6cYDG8qZRbYDcKXVB71d4yQIQeNPU47KqcBvS8VsK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784662856; c=relaxed/simple;
-	bh=mLndIzFzABmlklm5FdH4epA9skLmDxTmhuz2UM1/aAk=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=VRvt0Wkw8U9XQ0lCUXrisSBpjdEKh5PQj910+kjOllefSumHHTGxTwJmHxH6SUA9JI9lZoiH3XzqFNJBJzHIdjk9Md7Bvq9gaPr1IWyRnvE/9BXAhUKPgZAcDjm8oBM3B8xtyYx/B9NhlI0Pt7wZ3TiI0S3JgXjMfVMeSd/qJIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ezzXYzWY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784662932; c=relaxed/simple;
+	bh=smIaFlMWpJN4ZO7OhuNp1b13MfRCLI1/h58VCaN0OyI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SGTFBv+iqDGi09z3KQHyoq6Zpa59LCUBCyEpnEoZAyhh9hoXOmZ7eZF4pKZuMnPCbMQf9DbmkcNrQ4aCRmnhp55PRfW8dWOyfYQ8R+UAqZfRbuOaTAgebaWhePF3PTvkX8XfzmOgiBgq+9qfVryi2DBPmaCz809vOl+vs43WBb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=TsyCyUz7; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ezzXYzWY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BDBA1F000E9;
-	Tue, 21 Jul 2026 19:40:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784662855;
-	bh=osUbJg5zacfOql4e5w3uR0b08xBhV45dDVnEgTWUGdE=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc;
-	b=ezzXYzWY8cPuBi1rf9oA/zwKRvNwOIzTpnTMrf9bL+SLDOvbJjn1WQCpeK2X/fNZ1
-	 snU1iWALahPLCdd7mpBsRDFrbd1ukYtipkSGeb5cL7FjmXtCyrGmWOFCKVrkbfaP1/
-	 g2G0hXrbSVWBQPCE/3shiuVzxVlR/9vfsvvyd0O4uYZteenmDduQfycLT/tzTMGsgC
-	 TramDRU8/yFlAR3q734EIZLZaa5a9Aoy41EcxBYnEpcW+ZJPsqOlqSKxSAwXMaXpWS
-	 v9maxsl/ANk1Z+zmHwcwYFv7jRdZhJ+/EePRT9eNMOdSu+vG1zQqBFg/lZDRzg74aY
-	 /BgsWtRMoCtcg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 56B9739253FD;
-	Tue, 21 Jul 2026 19:40:26 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="TsyCyUz7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=Pntc3OXDY7wjLnr8IFB+NpBIROgksKgKGxwNxTUPa0M=; b=TsyCyUz7WOpHx6KkPuIjlnqJhg
+	Y2ElsluHoIE2en42aaoGcHjzuPhWE3DxDPykKSHeRu6UYvovzAu/0QP898uoeO7BjMDTR/ZCISfYy
+	VtsjB4aR7mAy6DAEblGq2TtN+8roJYe/PzxMeNI2iZf1sSqtjiPbxcB++xrgzbOVLiys=;
+Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1wmGLx-004wLC-0y;
+	Tue, 21 Jul 2026 21:42:09 +0200
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH wireless-next v4 2/4] wifi: mac80211: estimate expected throughput if not provided by driver/rc
+Date: Tue, 21 Jul 2026 19:42:05 +0000
+Message-ID: <20260721194207.2431113-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260721194207.2431113-1-nbd@nbd.name>
+References: <20260721194207.2431113-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -37,51 +47,115 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net-next v2 0/3] align IPv4 teardown with IPv6 and fix
- driver
- regressions
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <178466282488.1001510.7257007307370291814.git-patchwork-notify@kernel.org>
-Date: Tue, 21 Jul 2026 19:40:24 +0000
-References: <20260711005405.2861680-1-yuyanghuang@google.com>
-In-Reply-To: <20260711005405.2861680-1-yuyanghuang@google.com>
-To: Yuyang Huang <yuyanghuang@google.com>
-Cc: davem@davemloft.net, andrew+netdev@lunn.ch, dsahern@kernel.org,
- enachman@marvell.com, edumazet@google.com, idosch@nvidia.com,
- kuba@kernel.org, johannes@sipsolutions.net, pabeni@redhat.com,
- horms@kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 
-Hello:
+Estimate the tx throughput based on the expected per-packet tx time.
+This is useful for mesh implementations that rely on expected throughput,
+e.g. 802.11s or batman-adv.
 
-This series was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+v3: avoid band=0 default, return 0 if no chanctx
+v4: rename lsi to link_sinfo
 
-On Sat, 11 Jul 2026 09:54:01 +0900 you wrote:
-> This series aligns the IPv4 address teardown sequence with IPv6 by clearing
-> dev->ip_ptr early in inetdev_destroy() before freeing the multicast list and
-> individual IP addresses. This prevents RCU readers from accessing a partially
-> destroyed in_device structure.
-> 
-> However, clearing dev->ip_ptr early causes __in_dev_get_rtnl() to return NULL
-> during the notifier loop in inetdev_destroy(). This causes regressions in
-> some drivers (prestera and mac80211) that use this lookup helper in their
-> inetaddr notifier callbacks.
-> 
-> [...]
+ net/mac80211/sta_info.c | 49 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 46 insertions(+), 3 deletions(-)
 
-Here is the summary with links:
-  - [net-next,v2,1/3] net: prestera: ignore duplicate RIF destruction events
-    https://git.kernel.org/netdev/net-next/c/3cbbc9fa3338
-  - [net-next,v2,2/3] wifi: mac80211: use ifa_dev from event argument
-    https://git.kernel.org/netdev/net-next/c/e5b14e9ae82b
-  - [net-next,v2,3/3] net: ipv4: clear dev->ip_ptr before destroying inetdev
-    https://git.kernel.org/netdev/net-next/c/aa22336b76b7
-
-You are awesome, thank you!
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 9c69c5ba0d3f..877117929f5b 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2795,6 +2795,28 @@ void sta_set_accumulated_removed_links_sinfo(struct sta_info *sta,
+ 	}
+ }
+ 
++static u32 sta_estimate_expected_throughput(struct sta_info *sta,
++					    struct rate_info *ri,
++					    struct ieee80211_bss_conf *bss_conf)
++{
++	struct ieee80211_hw *hw = &sta->sdata->local->hw;
++	struct ieee80211_chanctx_conf *conf;
++	u32 duration;
++	u8 band;
++
++	conf = rcu_dereference(bss_conf->chanctx_conf);
++	if (!conf)
++		return 0;
++	band = conf->def.chan->band;
++
++	duration = ieee80211_rate_expected_tx_airtime(hw, NULL, ri, band, true, 1024);
++	duration += duration >> 4; /* add assumed packet error rate of ~6% */
++	if (!duration)
++		return 0;
++
++	return ((1024 * USEC_PER_SEC) / duration) * 8;
++}
++
+ static void sta_set_link_sinfo(struct sta_info *sta,
+ 			       struct link_station_info *link_sinfo,
+ 			       struct ieee80211_link_data *link,
+@@ -3009,6 +3031,10 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+ 	link_sinfo->bss_param.beacon_interval = link->conf->beacon_int;
+ 
+ 	thr = sta_get_expected_throughput(sta);
++	if (!thr && (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
++		thr = sta_estimate_expected_throughput(sta,
++						      &link_sinfo->txrate,
++						      link->conf);
+ 
+ 	if (thr != 0) {
+ 		link_sinfo->filled |=
+@@ -3262,6 +3288,14 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 	if (thr != 0) {
+ 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
+ 		sinfo->expected_throughput = thr;
++	} else if (!sta->sta.valid_links &&
++		   (sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))) {
++		thr = sta_estimate_expected_throughput(sta, &sinfo->txrate,
++						      &sdata->vif.bss_conf);
++		if (thr) {
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
++			sinfo->expected_throughput = thr;
++		}
+ 	}
+ 
+ 	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL)) &&
+@@ -3282,6 +3316,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 	if (sta->sta.valid_links) {
+ 		struct ieee80211_link_data *link;
+ 		struct link_sta_info *link_sta;
++		u32 est_thr = 0;
+ 		int link_id;
+ 
+ 		sinfo->mlo_params_valid = true;
+@@ -3293,17 +3328,25 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 		sinfo->valid_links = sta->sta.valid_links;
+ 
+ 		for_each_valid_link(sinfo, link_id) {
++			struct link_station_info *link_sinfo = sinfo->links[link_id];
++
+ 			link_sta = wiphy_dereference(sta->local->hw.wiphy,
+ 						     sta->link[link_id]);
+ 			link = wiphy_dereference(sdata->local->hw.wiphy,
+ 						 sdata->link[link_id]);
+ 
+-			if (!link_sta || !sinfo->links[link_id] || !link) {
++			if (!link_sta || !link_sinfo || !link) {
+ 				sinfo->valid_links &= ~BIT(link_id);
+ 				continue;
+ 			}
+-			sta_set_link_sinfo(sta, sinfo->links[link_id],
+-					   link, tidstats);
++			sta_set_link_sinfo(sta, link_sinfo, link, tidstats);
++			if (!thr &&
++			    (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
++				est_thr += link_sinfo->expected_throughput;
++		}
++		if (est_thr) {
++			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
++			sinfo->expected_throughput = est_thr;
+ 		}
+ 	}
+ }
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.53.0
 
