@@ -1,256 +1,186 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from out-173.mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC933346AFD
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 10:53:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.11
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784631208; cv=fail; b=a/W4VJNpYSGg6xVeAigPFCk6WbHwGEdDTCmPYVlBbk0apD0zGmyAw9cvhgKKNtKRf1SOcuY3Vh5dDqQGSFrLvkysjO0M1LRmeh79KvuYoXkpb4WE3io2PVKtsmPrCPlxqP7fGLQcX53g2Yv8TrsiUf0TPHedWS1XeeH25JvE+ps=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784631208; c=relaxed/simple;
-	bh=s9tyPR7b3pKjGx/H07Y2R/UHsDHJmhhyEYQafim8pZM=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=JA0Qc3ljuO3csXILO+feQM81Yi2G9ZaqDOlxTR2ZXdTRRYMSwdIzVt2+jUg82b+BdDR6HXR6O/KzO5TcA589odANLzcuU+rHtUQjKzSQsmUPV7dWdd3fLTflNsqBeiZa61bgOiNptWauPS3NXoBDUTAcvH76z1bT68DnVB+5FIg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Vz7+8zCP; arc=fail smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB8C82866
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 10:56:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784631418; cv=none; b=SwGVMb3pCCxuKmKOyIlbY/8XHbvNFtLTmPE4tJPeGpBU/0E50SZ6u+S45SQCBAOJIBDtFAXcxt/McZurJuB1zqjO5/kvn+oKnFvSRKB2ng8YCeLrxTFxm8FgFBEcXKHiE92AIM6jcys1gYnCEu4F5il3sLo/P7B7lMxu63NO140=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784631418; c=relaxed/simple;
+	bh=B8V3MC/E2EL0au/EiKI/zAihAfC3IarWgYUy4Lgk/LA=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=sAT1Wj7PGB4K5WSLFXF9R0bIjV3ISwvIX3nc5qRc4a4Tqw7j4QzL449ZvR7oh1HoMzPP0jP2lN87DqEa4ouWpirJEZAOn4mp5B70/mztWNjjk2Jt75m5vNSeExfPBD0CRUYIJVveIZ4sHUSaE2lc+WCUbMniravnnfvnzbES9LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NjYzCyjZ; arc=none smtp.client-ip=95.215.58.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Vz7+8zCP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784631207; x=1816167207;
-  h=from:to:subject:date:message-id:
-   content-transfer-encoding:mime-version;
-  bh=s9tyPR7b3pKjGx/H07Y2R/UHsDHJmhhyEYQafim8pZM=;
-  b=Vz7+8zCPV3ygFO0CVb3cgDIgTnT7RmxXmzlfVhe6POYuPeey+NJI9xgd
-   bgMoRwpDP78VhSZ5bYnK/qase5wmGD/oNxRf4IYhwJMizzO8rjdzl2mQd
-   701ySrEcd7J30JwxT8gWKWkRJtW4ntZg/BGBKei2RD+QxgsXGjuLg1L4n
-   yjn/JJFBI/9F5qVtQZQQcELT1MA5p4ojLlL+Ssk54yAe9NSUB1nLecXd4
-   CzsA2uWKlaZgq5ux/K0gi0EE7getQN1qhY6RjSFXI/1g7aWmH6Eja/3YV
-   X4OcdIs/4365Wtc1bgEp7cLkfzVQlig4AMrXrd7UaMMKmpCy7i9UUvFMn
-   Q==;
-X-CSE-ConnectionGUID: DTHCvMnLTdC3f3CmWlyDgw==
-X-CSE-MsgGUID: 8lpsQIogTiGfPcqxRoHO9w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11852"; a="95821977"
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="95821977"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 03:53:26 -0700
-X-CSE-ConnectionGUID: 7A2GoOQkS9mUSA22m/Us6Q==
-X-CSE-MsgGUID: 66EXReSzRCq6J4PTDo0o8g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,176,1779174000"; 
-   d="scan'208";a="257800619"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa007.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2026 03:53:26 -0700
-Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 21 Jul 2026 03:53:25 -0700
-Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43 via Frontend Transport; Tue, 21 Jul 2026 03:53:25 -0700
-Received: from SA9PR02CU001.outbound.protection.outlook.com (40.93.196.57) by
- edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 21 Jul 2026 03:53:25 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=L3ZPlmr5cg2bcEKBmOiWbk7pAGR8MGJkeAKkPLWQi19fVgqQ/iA/F7AH9byCAU3lXBMuW1lGsqPWmDF/whnueKhw5N1l+VWU8eVJZozYa1W5lP/3aINi8URj9SueaYkULNp48fbgZnP+eIVg2V3qkY+ZAPbvLFt5NUoIPGDAiUqdDoCF7j/RXbm42OGyDuwKcPwD3GEU4UPQ0PmPBJtwFAkg16r2beiK/dpc6rifya/PLUBmUuVXelKjIdBoH2C8xg5s/Rlbh1XveISWrBiOIxV9fbowIyjlIX7fGzwgUZRVdeYYg1471kSxVDinXFN+WaENRGpBUkew52do3sbNlA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=s9tyPR7b3pKjGx/H07Y2R/UHsDHJmhhyEYQafim8pZM=;
- b=xsdlJoLUcKvkQngDSOclph0zfDxqqNHIcWou6doVfNHmP59xMpflQ4VB5atDw1iiDbUlrxzQUHWV1i/4fXQkVo271Z04AjP527ID516lutIrYz0QGW2UZ9VVNnqP9iZLJUjnG8IA8jYNmXkNAE7LyITBvxOAP/7IytyBYNLc3RzsodJu5MP+g/cuAnV+ryDo4A2pafi+0N4LNDyNFSOoX0PWHI8KIXX35a7nqZnqSF22CSHh8IkaNXAk9UM0pEFBGGBz8k5LTS/mFoJ1D3wbq3SVBk/MihL2T7T11r6whbc38LWgj6P4CdHPKt7bFiwjOfyh4psDhUPAlGbUPzr0KQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from DS0PR11MB7880.namprd11.prod.outlook.com (2603:10b6:8:f3::14) by
- SJ0PR11MB7155.namprd11.prod.outlook.com (2603:10b6:a03:48d::6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.245.10; Tue, 21 Jul 2026 10:53:21 +0000
-Received: from DS0PR11MB7880.namprd11.prod.outlook.com
- ([fe80::7485:4354:e91d:2]) by DS0PR11MB7880.namprd11.prod.outlook.com
- ([fe80::7485:4354:e91d:2%2]) with mapi id 15.21.0245.009; Tue, 21 Jul 2026
- 10:53:21 +0000
-From: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: pull-request: wifi: iwlwifi: fixes - 2026-07-21
-Thread-Topic: pull-request: wifi: iwlwifi: fixes - 2026-07-21
-Thread-Index: Ad0Y/oD/ujgbxx3UTK+TJtKxPU3hPg==
-Date: Tue, 21 Jul 2026 10:53:21 +0000
-Message-ID: <DS0PR11MB7880FD3B7633D0FDD6BC26FCA3C22@DS0PR11MB7880.namprd11.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DS0PR11MB7880:EE_|SJ0PR11MB7155:EE_
-x-ms-office365-filtering-correlation-id: 2623b5d7-1540-4d4c-3eaa-08dee7164802
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|11063799006|38070700021|10067099003|56012099006|6133799003|18002099003;
-x-microsoft-antispam-message-info: 95ggWMIZKlYSeZ3P3x0q149KbsXuO55AvqsUemEy8JdjBEVlhu/dmYqJvUagXHbwVCTcOwwLmE9v9P8/3wDB2g4Ov62iqGLVZQealRdGzU2/r6ITTQlkBiLL6x5cWl3mgLJgTCelUIwQxfGgAkseIk4ON295HAJRDfwCurD20GQd4ahK4wGqBYGZIiC/rcOzw5LFzi+XmSI7VOmYhYVyB2+Ftyr4ESDsBvYM521pWKtaqPKFlWEZNQxoCr25rlIYRPiILhyHOI7mEGBq3VxQVb3hvsWdhC3LBOCr6OHJEFBcY+1dFVhlKLRHx45E8iUjEKyK9wNXHWtthxIBnmY21sjHMmmgVRnowyIsKuYAwKCunSc22xpMsruHwAs0nRXIMx7cPMb86edoEbNKxcPVQzL4j47GXhG3Y+aXtgPEv8+turyD1TAbiLSeLqwNhSr3QfAx+if8qwleOJVmkrLddfGqZuE9WfKw26lM8HUk0mKcmoy7rEAGT0Qa4uw4HBZbm8XDJTiwdFrhOG4qgzvtQex7xIEjz+nDzS9sgmvxi4R8Go3Ds4BNh3GUGNWQ4PzqsF/jqMYd8YgKClD4X5qmwFneioMUErb2zipDgsKFYBzJF937WLxQxdGnGUPeE3pc5G07Xnbo9WIfEbBm3Uzj6IISM5bKZPKD+jio6ARnj70NbIPi/II8SWveccvoEy8GrgCUBe2kQV0POaWDCVkldnJoJe2rT5f7SImajBvmaPQ=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR11MB7880.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(11063799006)(38070700021)(10067099003)(56012099006)(6133799003)(18002099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?VnRRMVN3OTJJWjVyQld4a1l3Z2hSMFozNWJxNm5IKzQ0cEd6TTErQlhLcDYz?=
- =?utf-8?B?ek94ZXF5Q0x2L0thWHh3MUVSNHlJckdSRjR2YkJiTFBBZG1FZXk2LzB4cWhq?=
- =?utf-8?B?OUJCNFh0TnorTlpWSGd6aTdSYTBtNnAxenU0b3N2d3FFZ1pJWndGZE5XelB6?=
- =?utf-8?B?Ry92M2IrVjZVMGQ5ZnozYW1XTzZwamllaEN3TVFJV2xZUVB2VmZ0RThnVSs2?=
- =?utf-8?B?ZldyNE9hWXU2OVJkc0JuaU10YkVSR3REdHF2dFN3WFIvZzNPOXR6NTRiSzFY?=
- =?utf-8?B?RmhCWm5mdmJqRkJ0enJIZ0lBWXBOY0hrYkE5ei9CMWd1aU9qaUpqM2c4NGpI?=
- =?utf-8?B?SHZJM21kVWpkU3U2TmJheWM2OFUyYWlHNDNQK21Fdk0rQkdhQlJFV2pXaGNn?=
- =?utf-8?B?ZWdDbkhtcUd0L25La3IvNUpydkhLSWNSMU1nb2loQ081WVR5Y3E2RzlVNWcw?=
- =?utf-8?B?YXppWXBnTm9kOXJ0T2NyYThYZjJxcjFCU0tLT1gvdDZmSDZRUVJmWk5LRndh?=
- =?utf-8?B?dE9QQ1lxSUZXVHY2REdmS2dzRkxpVEpJZkYyYkdJYWFDUExVSnFKM1lYeUxC?=
- =?utf-8?B?U25JRGJIc01aMEdnWnpPemU0V0RwUFMyOENVOTU4bk9yaEowVnhESDNxbmtL?=
- =?utf-8?B?a3F6SnhOVE8yM3hFVy9lZnYyQ0IwT2Z4Z20yL1lBU0UyU2h5MmJmNWJMTEFh?=
- =?utf-8?B?aG5jUElvMEdPdlliWC9vNGpuZW4vcVVhMTZrbWxZTkFlYW9ORktLd25wK0tZ?=
- =?utf-8?B?MUFxdzFMUVd1MUlmcGxHM2Z2TTA5TWJkU1Q2cE44R3VZZUxzUUlheStrb2lq?=
- =?utf-8?B?Wll4RUZmT3J0S2lrVVEvNTF0c3c5U09abFZXZnQ0R0txMktGMGRwV3prUDlq?=
- =?utf-8?B?SkgrUGVmQ2xXU3N3S3ZhNkdEN2o5UE15VXJFWlhHVXloVDNkSFdvUXk4azVx?=
- =?utf-8?B?YXo2dXlKcllXN2ZLR0FYQ05vRXNlMnBKUlRLMHZrbDBHMHFJcUpxYmdIWS9G?=
- =?utf-8?B?dDNLdHZtRHROUnJ4am94aDViZS9RUVEwbWZyMG9pVXA1a0FSaERRSW1iVWE0?=
- =?utf-8?B?R2R0bkRtWUM1U1Jhb09tWTBMMnNQZ0YzaGFXM3lSZGJGb0hxOVRsSW9xVlBE?=
- =?utf-8?B?T0lrR1NVRnR4RWo0b05kZG9UaXdHSmt4ZmF4S2lHczlyOVRnaHF2K3FZWmhQ?=
- =?utf-8?B?dW9lcE1PaCtJaDRqRDRib0UzNW5NK2xYckp0UDU5VTZQQUU4UkF5K3NKQzNz?=
- =?utf-8?B?UE9TUFVyWHhvTDJ3NCtjb2JvTXNwd3V4V1BXSlVxdUE2RURZZG5LRHp5ZXhC?=
- =?utf-8?B?eEErRVkwa0tFdXJ6Y0paMkFiR3ljb3FMK2lQWWpzTFlBcnFQakxiQ3ZCcTk4?=
- =?utf-8?B?a1FTa0tiVkw4Mi9QM3JoakpqRXpzM1l0SHlxQXg2MHVHeW1ZdXVVeWx4RGxX?=
- =?utf-8?B?dEJvMFV3RU05eGoyNGZ5OGpmaEMrV29YT2hqYkhtS2VQZDVUcG42cVZKQmd0?=
- =?utf-8?B?d0pKV3dJdVd2UjBFdFJnQWtQT3p5NmtvUklQRnpQdlB4SERoRnBXVjQrNURI?=
- =?utf-8?B?WWphWkI4WUhEZzlYWFF5d1dlRzVHMFhHSnhvVGVYdWNINGUrdjg1TjFFL2Y3?=
- =?utf-8?B?ek5aR3o0WDNBQTJwWnhrNGZ3NUFSajREVVBOS1NSZEk2NTJTYWFvY2Q4c0JQ?=
- =?utf-8?B?RDZ2MkhucnVkWVVoMlFndWtVUmJwakpJZHFvV3dQZG9YQ2JGYm9McThGaDhr?=
- =?utf-8?B?TXZvL2dpV0tIT3l4eEI1dTJmMFRyRSsxTEtjakFzb2NUaG5OT0lsTGk5OWQ1?=
- =?utf-8?B?Zk1XNWVjQ2p2eDNFeHR4VWtSclJqR3lYT3VWNTRIQjR6RGhhK25MNytSdEdp?=
- =?utf-8?B?MnoyQWUvVmxrckR1Q3BoNkp3RTNoZVg4TVp3dWJKQVpNRktEbmdPa2RqYmQx?=
- =?utf-8?B?amUrdU5UOEZnRjU2RlhyaFo1ZEE3VlJ2RFNEeU9CcUR6Ujk3dXM5TGJSZjIr?=
- =?utf-8?B?L0trbjV3c0ROSjhpdVZ0dGhZaHlUa0xueFpic2ZZSHNGNzZWZklqRnlrQ0wr?=
- =?utf-8?B?b2VXVjRTRm1aeDZlYmVBeGFBNll6K3FOSVIzbzlDa1hSVWl3RktWU25mK1F3?=
- =?utf-8?B?eUVXZXJhL24wdk8weVU3MHYrZHVScEhiNlVTQUNHd2dvaVdJTGVRZ1ZwRzhO?=
- =?utf-8?B?V2cwVVBmdmFsalBla0haRFZRZnNBUVovZGtXUE1TUFh0QkU3VlFxVlllUWN5?=
- =?utf-8?B?dmdSTXZ1UnprVVZrbzRSUTI1S3JNYnR6aDV4NjNBeXVNSTNMWUtnVW5JNXMy?=
- =?utf-8?B?ZHpVYTVFUUlRYjh6cW5Ha01MUHovamk4dUkxcEdtUk9VUjlXOUpzeldHZDQ4?=
- =?utf-8?Q?AzrqOYbrhW9WJpSk=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NjYzCyjZ"
+Date: Tue, 21 Jul 2026 12:55:49 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784631407;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RG8mGvYSJiMb8Fh2NHwzWjz+x8iWfd4SkexY/wGOHLc=;
+	b=NjYzCyjZBdB4OB349V8mF81Ry8OYJL/BfzfFnlghg7GEXu8qykFdG2kvqZSYOqAlF91pLA
+	+KOSapM76+vDVF6gklcAaH9fsfyKKKnmMvun0XDs26pfrV4//oaVYljCBNDLWoZTl5rIzl
+	lXXxJx9ByUZOZO4xs4WjvAFJp1Po8gk=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "straube.linux@gmail.com" <straube.linux@gmail.com>,
+ "pbrobinson@gmail.com" <pbrobinson@gmail.com>, luka.gejak@linux.dev
+Subject: RE: [RFC PATCH v1 0/9] wifi: rtw88: add RTL8723B/RTL8723BS support
+In-Reply-To: <cbaa891f94ce41c7a6a1d576db50b75c@realtek.com>
+References: <cover.1784047561.git.luka.gejak@linux.dev> <1800080a275f4421b16bd3a028131e8a@realtek.com> <3EA0A653-D15F-4DD4-8DA6-C9CFFFF38205@linux.dev> <cbaa891f94ce41c7a6a1d576db50b75c@realtek.com>
+Message-ID: <9DAF08C8-7661-4AFB-8676-70AA856E1D0F@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: GVI9DnWGFfub+ma/gOXygqiGAblCUtOmt5B/fuEqdndbmeW0cNwC7lv4KC43GsDYXsFBg59rSTcfcj7s1ZdIpue1GFYzJhgx4u2rm4GcTIXXG+tVAbhkFYYYRvkNr2gJ99NU+kf9x8YzydngxBnYJTCEkbn5i3PfnQxRWyuPFFh14BzOZwzmTIxKHSNDMkLtOB4iXQcueLdtmJj4ZFEjlK/tcDK/UiCrUqylG86yTBqMUnMmqYE3OACiub+Sm4QzcDxP/MQ9o2cqB0Pa0wt6NyUUxYjiUqVQ9U5tu8AKioa7fy/ia8cv3yL9TjVZFWRz5+UV7yCQcNkQxlGpFsbA4g==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR11MB7880.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2623b5d7-1540-4d4c-3eaa-08dee7164802
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jul 2026 10:53:21.6169
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ua1tOtPIXLVPAcq+b0KV6fzOoNFhM6OjbG4kW+b6FkdqlW/wTyPmgL1shKHcsiGQa6HgzXgFUFrkaa7NiNPpvDldae7KLTKziBkfQAA8cy4JfrP6h0Lg6zI1rjlzkmbs
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR11MB7155
-X-OriginatorOrg: intel.com
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Migadu-Flow: FLOW_OUT
 
-VGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBhMGQ4MmZiODUwNTMyNmNiYzUzZGM5
-YTBjMDhmOTdkMTExOTdiYjMwOg0KDQogIE1lcmdlIHRhZyAnd2lyZWxlc3MtMjAyNi0wNy0wOScg
-b2YgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvd2lyZWxl
-c3Mvd2lyZWxlc3MgKDIwMjYtMDctMTAgMTY6Mjc6NDUgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUg
-aW4gdGhlIEdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHVi
-L3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1uZXh0LmdpdC8gaXdsd2lmaS1m
-aXhlcy0yMDI2LTA3LTIxDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBkMTNkNWQy
-OTljMTFiN2JkMzM2MmQ1NjkyYzU2MjI1ZDllMTc2NjY0Og0KDQogIHdpZmk6IGl3bHdpZmk6IHZh
-bGlkYXRlIFNFQ19SVCBUTFYgbWluaW11bSBzaXplICgyMDI2LTA3LTE4IDIyOjM3OjM4ICswMzAw
-KQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tDQp3aWZpOiBpd2x3aWY6IGZpeGVzIC0gMjAyNi0wNy0yMQ0KDQpUaGlzIFBS
-IGNvbnRhaW5zIHF1aXRlIGEgZmV3IGZpeGVzLCBtb3N0bHkgZm91bmQgYnkgTExNcy4gTm90YWJs
-eToNCi0gbWlzc2luZyB2YWxpZGF0aW9uIG9mIFRMVnMgbGVuZ3RoDQotIG1pc3NpbmcgdmFsaWRh
-dGlvbiBvbiB0aGUgcmV2aXNpb24gb2YgQklPUyB0YWJsZXMNCi0gbWlzc2luZyB2YWxpZGF0aW9u
-IG9mIGZ3IHJlc3BvbnNlcyBsZW5ndGgNCi0gcHJvdGVjdCBhZ2FpbnN0IGRvdWJsZSBmcmVlIG9m
-IFJYIHBvaW50ZXJzDQotIGF2b2lkIGRvdWJsZSBkZXJlZ2lzdHJhdGlvbiBvZiB0aGUgdHpvbmUg
-Y29yZQ0KLSB2YWxpZGF0ZSBmaWVsZHMgaW4gRlcgcmVzcG9uc2VzIGJlZm9yZSB1c2luZyB0aGVt
-DQotIGZpeCBvZmYtYnktb25lIGluIFdMQU5fRUlEX0VYVF9DQVBBQklMSVRZIHBhcnNpbmcNCi0g
-QWRkIG1pc3Npbmcgc3VwcG9ydCBmb3IgVU5JSS05DQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkF2cmFoYW0gU3Rlcm4g
-KDIpOg0KICAgICAgd2lmaTogaXdsd2lmaTogbXZtOiB2ZXJpZnkgc2NhbiBpZCByZXBvcnRlZCBi
-eSBmaXJtd2FyZQ0KICAgICAgd2lmaTogaXdsd2lmaTogbXZtOiBjb3B5IHRoZSBjb3JyZWN0IFRL
-IGxlbmd0aCBmb3IgcmFuZ2luZw0KDQpFbW1hbnVlbCBHcnVtYmFjaCAoMzApOg0KICAgICAgd2lm
-aTogaXdsd2lmaTogbXZtOiBmaXggYW4gb2ZmLWJ5LTEgYm91bmRhcnkgY2hlY2sNCiAgICAgIHdp
-Zmk6IGl3bHdpZmk6IG1sZDogZml4IGFuIG9mZi1ieS0xIGJvdW5kYXJ5IGNoZWNrDQogICAgICB3
-aWZpOiBpd2x3aWZpOiBtbGQ6IGRvbid0IHBhcnNlIGEgbm90aWYgYmVmb3JlIGNoZWNraW5nIGl0
-cyBsZW5ndGgNCiAgICAgIHdpZmk6IGl3bHdpZmk6IG12bTogZml4IHRoZSBGQ1MgdHJ1bmNhdGlv
-biBsb2dpYyBpbiBkMw0KICAgICAgd2lmaTogaXdsd2lmaTogbWxkOiB2YWxpZGF0ZSByZW9yZGVy
-IEJBSUQNCiAgICAgIHdpZmk6IGl3bHdpZmk6IG12bTogcGFyc2UgYmVhY29uIG5vdGlmIHBlciBs
-YXlvdXQNCiAgICAgIHdpZmk6IGl3bHdpZmk6IG12bTogdmFsaWRhdGUgTUNDIGhlYWRlciBiZWZv
-cmUgbl9jaGFubmVscw0KICAgICAgd2lmaTogaXdsd2lmaTogbXZtOiB2YWxpZGF0ZSBzdGFfaWQg
-aW4gVExDIG5vdGlmDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06IHZhbGlkYXRlIHN0YV9pZCBp
-biBCQSB3aW5kb3cgc3RhdHVzIG5vdGlmDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06IHZhbGlk
-YXRlIG1hY19saW5rX2lkIGluIHNlc3Npb24gcHJvdGVjdCBub3RpZg0KICAgICAgd2lmaTogaXds
-d2lmaTogbWxkOiBjbGVhciB0em9uZSBvbiBmYWlsDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06
-IGZpeCBzY2hlZCBzY2FuIElFIHNpemluZw0KICAgICAgd2lmaTogaXdsd2lmaTogcGNpZTogbnVs
-bCBSWCBwb2ludGVycyBhZnRlciBmcmVlDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06IGQzOiB2
-YWxpZGF0ZSBEMyByZXN1bWUgbm90aWZpY2F0aW9uIHBheWxvYWRzDQogICAgICB3aWZpOiBpd2x3
-aWZpOiBtbGQ6IHZhbGlkYXRlIHR4cV9pZCBpbiBUWCByZXNwb25zZSBoYW5kbGVyDQogICAgICB3
-aWZpOiBpd2x3aWZpOiBhZGQgc3VwcG9ydCBmb3IgYWRkaXRpb25hbCBjaGFubmVscyBpbiBOVk1f
-R0VUX0lORk8NCiAgICAgIHdpZmk6IGl3bHdpZmk6IG12bTogdmFsaWRhdGUgVFhfQ01EIHJlc3Bv
-bnNlIGxheW91dA0KICAgICAgd2lmaTogaXdsd2lmaTogZml4IHBvaW50ZXIgYXJpdGhtZXRpYyBp
-biBpd2xfYWRkX21jY190b190YXNfYmxvY2tfbGlzdA0KICAgICAgd2lmaTogaXdsd2lmaTogdmFs
-aWRhdGUgcGF5bG9hZCBsZW5ndGggaW4gaXdsX3Budm1fY29tcGxldGVfZm4NCiAgICAgIHdpZmk6
-IGl3bHdpZmk6IG12bTogcHRwOiBmcmVlIHJlc3BvbnNlIG9uIHN1Y2Nlc3MgcGF0aA0KICAgICAg
-d2lmaTogaXdsd2lmaTogcGNpZTogdmFsaWRhdGUgRlcgc2VjdGlvbiBjb3VudHMgaW4gaXdsX3Bj
-aWVfaW5pdF9md19zZWMNCiAgICAgIHdpZmk6IGl3bHdpZmk6IG12bTogZml4IG91dC1vZi1ib3Vu
-ZHMgdGlkX2RhdGEgYWNjZXNzIGluIEJBIG5vdGlmDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06
-IGFkZCBhIGNoZWNrIG9uIHRoZSB0aWQgY29taW5nIGZyb20gdGhlIGZpcm13YXJlDQogICAgICB3
-aWZpOiBpd2x3aWZpOiBtdm06IGZpeCBhIHBvc3NpYmxlIHVuZGVyZmxvdw0KICAgICAgd2lmaTog
-aXdsd2lmaTogYWRhcHQgTkQgbWF0Y2ggbm90aWYgc2l6aW5nIHRvIGZpeGVkIG1hdGNoZXMgYXJy
-YXkNCiAgICAgIHdpZmk6IGl3bHdpZmk6IGJvdW5kIGFsaWduZWQgVExWIGFkdmFuY2UgaW4gRlcg
-cGFyc2VyDQogICAgICB3aWZpOiBpd2x3aWZpOiBkYmctdGx2OiBib3VuZCBhbGlnbmVkIFRMViB3
-YWxrIGxlbmd0aA0KICAgICAgd2lmaTogaXdsd2lmaTogYWNwaTogdmFsaWRhdGUgV0dEUyB0YWJs
-ZSByZXZpc2lvbiBpbmRleA0KICAgICAgd2lmaTogaXdsd2lmaTogdWVmaTogYm91bmQgUFBBRyBy
-ZXZpc2lvbiBiaXRtYXAgc2hpZnQNCiAgICAgIHdpZmk6IGl3bHdpZmk6IHZhbGlkYXRlIFNFQ19S
-VCBUTFYgbWluaW11bSBzaXplDQoNClBhZ2FkYWxhIFllc3UgQW5qYW5leXVsdSAoMSk6DQogICAg
-ICB3aWZpOiBpd2x3aWZpOiBtdm06IHZhbGlkYXRlIFNBUiBHRU8gcmVzcG9uc2UgcGF5bG9hZCBz
-aXplDQoNClNoYWhhciBUemFyZmF0aSAoMik6DQogICAgICB3aWZpOiBpd2x3aWZpOiBmdzogdmFs
-aWRhdGUgU01FTSByZXNwb25zZSBzaXplDQogICAgICB3aWZpOiBpd2x3aWZpOiBtdm06IGZpeCBy
-ZWFkIGluIHdha2UgcGFja2V0IG5vdGlmaWNhdGlvbiBoYW5kbGVyDQoNCiBkcml2ZXJzL25ldC93
-aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2NmZy9yZi1wZS5jICAgICB8ICAxICsNCiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2Z3L2FjcGkuYyAgICAgICB8ICA1ICsrDQogLi4uL25l
-dC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2Z3L2FwaS9udm0tcmVnLmggICAgfCAzMyArKysrKysr
-KysrLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvZncvYXBpL3NjYW4uaCAg
-IHwgIDQgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2Z3L3Budm0uYyAg
-ICAgICB8ICA5ICsrLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvZncvcmVn
-dWxhdG9yeS5jIHwgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL2Z3
-L3NtZW0uYyAgICAgICB8IDI4ICsrKysrKysrLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRl
-bC9pd2x3aWZpL2Z3L3VlZmkuYyAgICAgICB8ICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aW50ZWwvaXdsd2lmaS9pd2wtY29uZmlnLmggICAgfCAgMiArDQogZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaW50ZWwvaXdsd2lmaS9pd2wtZGJnLXRsdi5jICAgfCAxMyArKysrLQ0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLWRydi5jICAgICAgIHwgMTggKysrKystDQogZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9pd2wtbnZtLXBhcnNlLmMgfCA2NCArKysr
-KysrKysrKysrKy0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9t
-bGQvYWdnLmMgICAgICAgfCAgNyArKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3
-aWZpL21sZC9tYWM4MDIxMS5jICB8ICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwv
-aXdsd2lmaS9tbGQvbWNjLmMgICAgICAgfCAxMCArKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-aW50ZWwvaXdsd2lmaS9tbGQvdGhlcm1hbC5jICAgfCAgOSArKy0NCiBkcml2ZXJzL25ldC93aXJl
-bGVzcy9pbnRlbC9pd2x3aWZpL21sZC90eC5jICAgICAgICB8ICA0ICsrDQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vZDMuYyAgICAgICAgfCA0NiArKysrKysrKysrKy0t
-LS0tDQogLi4uL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9mdG0taW5pdGlhdG9yLmMg
-fCA1NSArKysrKysrKysrKysrLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXds
-d2lmaS9tdm0vZncuYyAgICAgICAgfCAxMCArKysrDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50
-ZWwvaXdsd2lmaS9tdm0vbWFjLWN0eHQuYyAgfCAyNSArKysrKy0tLS0NCiBkcml2ZXJzL25ldC93
-aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9tYWM4MDIxMS5jICB8ICA3ICstLQ0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL212bS5oICAgICAgIHwgIDMgLQ0KIGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL252bS5jICAgICAgIHwgNDMgKysrKysr
-KysrKysrLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vcHRwLmMg
-ICAgICAgfCAgNCArLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL3Jz
-LWZ3LmMgICAgIHwgIDkgKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9t
-dm0vcnguYyAgICAgICAgfCAgNSArKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdp
-ZmkvbXZtL3NjYW4uYyAgICAgIHwgMTAgKysrLQ0KIC4uLi9uZXQvd2lyZWxlc3MvaW50ZWwvaXds
-d2lmaS9tdm0vdGltZS1ldmVudC5jICAgIHwgIDUgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
-bnRlbC9pd2x3aWZpL212bS90eC5jICAgICAgICB8IDQ1ICsrKysrKysrKysrKysrLQ0KIC4uLi9u
-ZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2llL2N0eHQtaW5mby5jICAgIHwgIDcgKystDQog
-Li4uL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL3BjaWUvZ2VuMV8yL3J4LmMgICAgfCAgOSAr
-Ky0NCiAzMiBmaWxlcyBjaGFuZ2VkLCAzODEgaW5zZXJ0aW9ucygrKSwgMTE1IGRlbGV0aW9ucygt
-KQ0K
+Hi Ping-Ke,
+
+Thanks, and noted on stopping the v1 review=2E Before I send v2 I want to
+report two things: the firmware experiment you suggested, and what I
+found when I tried to work out which patches are actually droppable=2E
+
+1=2E Firmware
+
+I tried all of them, plus the staging blob:
+
+  rtlwifi/rtl8723befw=2Ebin      loads, version 15=2E17=2E0, associates
+  rtlwifi/rtl8723befw_36=2Ebin   loads, version 36=2E0=2E0,  associates
+  rtlwifi/rtl8723bs_nic=2Ebin    loads, version 35=2E0=2E0,  associates
+
+So the driver runs on all of them=2E But the coex reading does not change:
+BT Rpt stays 0x00000069 on every one, byte for byte=2E That makes sense in
+hindsight, since the version is reported by the BT firmware
+(rtl_bt/rtl8723bs_fw=2Ebin) and relayed through, so no WiFi firmware can
+move it=2E rtl8723bs_nic=2Ebin additionally produced 72 RA report WARNs,
+because the driver sets c2h_ra_report_size =3D 4 for the v41 report format
+where the siblings use 7=2E
+
+Since the driver was developed and tuned against v41 and swapping the
+blob does not help coex, I am keeping v41 and leaving the linux-firmware
+submission as it is rather than withdrawing it=2E If you would still
+rather I hold it, say so and I will=2E
+,
+I have not closed the coex question, and I no longer think it can be
+closed from this driver=2E
+
+The driver does ask: rtw_fw_query_bt_info() goes out on the connect and
+scan paths and at power on=2E The BT side answers, so this is not a
+missing or timed out request=2E The answer is the problem=2E With A2DP
+streaming it reports conn-idle and an empty profile list,
+BT_RSP =3D 01 01 40 12, while the same dump shows 440 low priority packets
+each way=2E The profile byte stays 0x01 (CONNECTION) and never sets A2DP
+or ACL_BUSY=2E I checked the decode against the vendor driver, which reads
+the same byte, so this is not a parsing error on my side, and the coex
+algorithm itself is clearly running: TDMA case-3, table 10, reason
+BTINFO=2E
+
+Those profile bits originate in the BT firmware and reach the WiFi side
+over the chip internal link, so no change in this driver can supply
+them=2E I am not going to infer a profile or pin a TDMA case to
+compensate, because that means guessing at BT state I cannot observe,
+and it is the same kind of unjustified special case I have just spent
+this round removing=2E I will document the limitation in the cover letter
+instead=2E I can say the empty profile list would explain why WiFi is left
+with almost nothing, but I have not proven that it is the cause=2E
+
+2=2E Which patches are hard required
+
+You suggested keeping the first version minimal and adding special cases
+after it merges, so I tried to find out what the minimum actually is,
+by building reduced sets and testing each on hardware=2E
+
+The result is that there is less to defer than I expected=2E
+
+Building only the chip body plus Kconfig and MAINTAINERS compiles clean
+with W=3D1, the firmware loads, and RX works: a scan finds the APs around
+me=2E But it never associates, because nothing implements the SDIO TX
+path=2E
+
+Adding that back pulls in the rest, because the shared code is
+interlocked:
+
+  SDIO transfer contract  needs  the association sequence
+                                 (rtw_sdio_rx_skb calls into it)
+  association sequence    needs  the coex antenna handling, the H2C
+                                 interface and the scan/calibration
+                                 patch
+  scan/calibration        needs  the H2C interface
+
+Taking any one of them without the others does not build=2E Measured on
+hardware, with all of them in but without the TX retry patch:
+
+  uplink 11=2E9 Mbit/s, 204 TCP retransmits
+
+and with the TX retry patch added:
+
+  uplink 20=2E1 Mbit/s, 2 TCP retransmits
+
+Downlink is ~40 Mbit/s either way=2E So the retry patch is not a
+refinement, it is worth most of the uplink on this hardware=2E
+
+That leaves exactly one patch I can defer, the TX report purge timeout,
+and it is this:
+
+  -	if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D &&
+  -	    rtwdev->hci=2Etype =3D=3D RTW_HCI_TYPE_USB)
+  +	if ((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8723D &&
+  +	     rtwdev->hci=2Etype =3D=3D RTW_HCI_TYPE_USB) ||
+  +	    rtw_is_8723bs(rtwdev))
+   		timeout =3D msecs_to_jiffies(2500);
+
+Three lines, and it only adds one condition to a case that is already in
+tree=2E Without it the "failed to get tx report" warning comes back on
+slower SDIO hosts, which is what Peter reported on his Pine64 boards=2E I
+would rather keep it than defer it, but I will drop it if you disagree=2E
+
+One correction to something I told you earlier=2E I said the auth_sync
+mechanism tested removable, and its wait does=2E But the SDIO RX path
+calls rtw8723bs_auth_sync_rx(), so it cannot simply be deferred without
+also changing the SDIO patch=2E If you want it gone I will remove the hook
+with it, I just did not want to imply it was free=2E
+
+3=2E Shape of v2
+
+Unless you prefer otherwise, I will restructure to what you sketched:
+
+  1 add hard required handling for RTL8723BS   (the shared code: main=2Eh,
+    reg=2Eh, sec=2Eh, fw=2Ec/h, coex=2Ec/h, main=2Ec, mac80211=2Ec, sdio=
+=2Ec/h)
+  2 add RTL8723B main body                     (rtw8723b=2Ec/h, tables,
+    rtw8723bs=2Ec)
+  3 add Kconfig and Makefile
+  4 MAINTAINERS
+
+That means splitting the current chip patch, which today carries both
+the shared definitions and the chip body, and squashing the shared code
+patches together=2E No code is removed by this, it is only re-shaping=2E
+
+The one thing I would like your opinion on before I do it: patch 1 above
+touches six shared files and will be large=2E Would you rather have it as
+one patch, or split into two or three smaller ones, for example the H2C
+interface, then coex, then the SDIO path? I will go with a single patch
+if I do not hear otherwise, since the dependency analysis says they
+belong together, but it is easier to review split up=2E
+
+Peter has said he will retest v2 on his Pine64 boards and get others
+with the hardware to test as well=2E That covers the main gap in what I
+can measure here, since his hosts are slower than mine and are where the
+timing sensitive paths actually show up=2E
+
+Best regards,
+Luka Gejak
