@@ -1,93 +1,95 @@
-Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail11.truemail.it (mail11.truemail.it [217.194.8.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D87B93D9521
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Jul 2026 23:28:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4C32DEA8F;
+	Tue, 21 Jul 2026 05:15:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.194.8.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784590082; cv=none; b=BpHtzqbJgw3FeJlJftAtHAK1f5zBL2wQbVciylZYhRfAT6rV7gTGnW1IakhQHPuThJZMB00KOQ+cuN2GawJXm1WGAKiFpaXozV8Q6TTwQ5rda78GWA92ISR7AzEJeVKNuHKsyaTsX1OyKF3FyJK61VpfHPd/djhNxrGPLFvOZFg=
+	t=1784610928; cv=none; b=CZ8jRrkU2lMXC69Wg5Sz0gAN/lO6/kDVU+pTO4Lw4WNifl+gXaj78Ggl3GT/nU8bxXEiQrGzuvg9vSi6pftny9WzEbW5iJyUwtYUXvkVpqiamfpv/SbkiDZe2Dypl2uvSMB3DFoLKm0nGCU/THyrs4/eXlsPLabyv+YQQ55xHyw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784590082; c=relaxed/simple;
-	bh=F0YKP0rtoD0MZK99XrKtmQEktL1n62Dpb2rcauw/G7U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=avhc04GXhT3JMJdMv0VmT6cBGdwWg9U57ioHrA25rqlFppIre4XOPDSOTEcFIx3oBu34OjS/C56bNGgvDE4e4MpVfYAuRWhBzRMp32grDXMeZCAsvGpTytf+iBHsN/TFIYkvgVqF0KTimH2UUWcNfIoBn1xQkEoqqbIozfaqA4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=OeQx/STO; arc=none smtp.client-ip=95.215.58.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1784610928; c=relaxed/simple;
+	bh=92iS+igxokzatGe34DnFy7AWq69/Qx1WJpRAwsFUtUQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DgWsYXuJVbQyyQ+lZI63KI1IofTSe5VGOjlVwadjxNA6g0kfBgh4ZQT/XhJDaT0ZQHn0THNowgKQlczsIsNu4mIueIYSAqwwmUPQtzjFBh7SALWpiNV+3u9f0/2asq+sKC1Qpkbfa6LKtUDqtoH8daRl/VxQ9fz6AljOtY/6Ym4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it; spf=pass smtp.mailfrom=dolcini.it; dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b=F9wXR33z; arc=none smtp.client-ip=217.194.8.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dolcini.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dolcini.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="OeQx/STO"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1784590078;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=9a6DuitCJL6N4gMGmNvwMHBy9Nw77LmfpwFVp8GiUD0=;
-	b=OeQx/STOwQBzyYnQ7RMWbVzsxK2pC8hgBbnor7/IyLHy8mnladzTmPuLMdcjCmwhghLYwV
-	V/gYtWP9FWcjshzAfpALtbS4Q7wQCkO3KuQM9Guj5uuzoCY21Rrn0L47+E/PJoeHw5lyfh
-	CjZ1/F/07mcfkKpbVf2CGXm9jFKRmosDSQr+a+xaa32Zg5/td01eZYXnpUJKSGcgxUjk7B
-	EKdVrSxGf7OcEwuW+sB2V/hNmHTrGcNsaYC9i7e32XM/DstpsUZRLz4NeL5dmKIYkMHbmr
-	vugkQ8J2iOKq1D0S6ofuY2wNiCdXbOY/DevivVEdXY/DPgp7+mWKWPLWzCRQOA==
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: mt76: restrict NPU/PPE active checks to MMIO devices
-Date: Mon, 20 Jul 2026 16:27:36 -0700
-Message-ID: <20260720232640.41293-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key) header.d=dolcini.it header.i=@dolcini.it header.b="F9wXR33z"
+Received: from francesco-nb (xcpe-178-82-120-96.dyn.res.sunrise.net [178.82.120.96])
+	by mail11.truemail.it (Postfix) with ESMTPA id EE5601F939;
+	Tue, 21 Jul 2026 07:15:20 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dolcini.it;
+	s=default; t=1784610921;
+	bh=rIBP+cfCWHY4nS3wNo6qMF2a2hGT7OtXRAy7W4xo9Qs=; h=From:To:Subject;
+	b=F9wXR33zoLkgdM5YAxz0z8QzuAFOPbHd7Q5mMJUZlAMr/lILRqVXUWVuqwBDuSHYL
+	 o/m85BMPCDWXIvrs5d6s6tUKs0iOI4hPlHPAaW8qyDvyUzOVUHxBedzQQzPor9sLIz
+	 7tWSN/YAUT5Gs/E/sHYcVc6stg7AOxHa6E6Y0TesEvI6nox/JUecYoxcbWBxI1WY01
+	 hptGlFW7wb+QdnRe6qKkOahYaFS8kYG4gqkeoDLmG/JQsdL1up6Wqi7Lldi3mSnkwE
+	 9pJJ7vW+O7AcHLA7JHQIwIQtxNZWou8lZHVHxwT/PNXschL+GFL8MEMJiypnLdwfVQ
+	 bjKQhltjcwdxA==
+Date: Tue, 21 Jul 2026 07:15:16 +0200
+From: Francesco Dolcini <francesco@dolcini.it>
+To: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] wifi: mwifiex: validate event lengths before copying
+ bodies
+Message-ID: <20260721051516.GA7903@francesco-nb>
+References: <20260720115119.80059-1-pengpeng@iscas.ac.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260720115119.80059-1-pengpeng@iscas.ac.cn>
 
-mt76_npu_device_active() and mt76_ppe_device_active() read dev->mmio.npu
-and dev->mmio.ppe_dev. The mmio, usb and sdio bus structs share a union in
-struct mt76_dev, so on USB and SDIO these read unrelated data from the
-usb/sdio struct, which is non-NULL in practice.
+On Mon, Jul 20, 2026 at 07:51:19PM +0800, Pengpeng Hou wrote:
+> mwifiex event packets contain a four-byte event cause followed by the
+> event body. The USB and SDIO paths copy from data after that header using
+> the full packet length, so the source range extends four bytes beyond the
+> skb. The SDIO path also reads the event cause before validating the
+> packet and publishes oversized events without a copied body.
+> 
+> Reject SDIO events that are shorter than the header or larger than the
+> event buffer limit, using the same skb-release path for both failures.
+> Retain the equivalent USB bounds and copy only the bytes after the event
+> header in both paths.
+> 
+> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+> ---
+> Changes since v1: https://lore.kernel.org/all/20260704011317.50900-1-pengpeng@iscas.ac.cn/
+> - reject both short and oversized SDIO events through one cleanup path
+> - copy only the body length in the SDIO and USB paths
+> - rebase onto v7.2-rc4
+> 
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 15 +++++++++++----
+>  drivers/net/wireless/marvell/mwifiex/usb.c  |  3 ++-
+>  2 files changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index f039d6f19183..4101bf1edca1 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -1712,12 +1712,19 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+>  	case MWIFIEX_TYPE_EVENT:
+>  		mwifiex_dbg(adapter, EVENT,
+>  			    "info: --- Rx: Event ---\n");
+> +		if (skb->len < MWIFIEX_EVENT_HEADER_LEN ||
+> +		    skb->len > MAX_EVENT_SIZE) {
+> +			mwifiex_dbg(adapter, ERROR,
+> +				    "EVENT: invalid skb->len %u\n", skb->len);
+> +			dev_kfree_skb_any(skb);
+> +			return -1;
 
-mt76_npu_device_active() then returns true on USB, and
-mt76_rx_poll_complete() takes the offload path and skips
-mt76_rx_aggr_reorder(). RX A-MPDU subframes are delivered out of order and
-the peer's TCP stack treats that as loss: heavy retransmissions and reduced
-throughput in AP mode. Seen on mt7921u, mt7925u, mt76x2u and mt76x0u.
+break instead of return -1?
 
-Gate both helpers on mt76_is_mmio() so they only run for the bus type that
-owns the mmio union member.
+mwifiex_decode_rx_packet() never return -1 in similar situations, why
+doing this only in this case?
 
-Fixes: 7fb554b1b623 ("wifi: mt76: Introduce the NPU generic layer")
-Cc: stable@vger.kernel.org
-Tested-by: Nick Morrow <morrownr@gmail.com>
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
- drivers/net/wireless/mediatek/mt76/mt76.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 07955555f84d..a32ba7c23f92 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -1736,12 +1736,12 @@ static inline int mt76_npu_send_txrx_addr(struct mt76_dev *dev, int ifindex,
- 
- static inline bool mt76_npu_device_active(struct mt76_dev *dev)
- {
--	return !!rcu_access_pointer(dev->mmio.npu);
-+	return mt76_is_mmio(dev) && !!rcu_access_pointer(dev->mmio.npu);
- }
- 
- static inline bool mt76_ppe_device_active(struct mt76_dev *dev)
- {
--	return !!rcu_access_pointer(dev->mmio.ppe_dev);
-+	return mt76_is_mmio(dev) && !!rcu_access_pointer(dev->mmio.ppe_dev);
- }
- 
- static inline int mt76_npu_send_msg(struct airoha_npu *npu, int ifindex,
--- 
-2.55.0
+Francesco
 
