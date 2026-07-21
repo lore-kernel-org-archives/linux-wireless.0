@@ -1,50 +1,34 @@
-Received: from sender-op-o14.zoho.eu (sender-op-o14.zoho.eu [136.143.169.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BA6E367B91;
-	Tue, 21 Jul 2026 11:53:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784634838; cv=pass; b=rehSyZCPsRl+rJqtLds+5KpE2sX5CrAjMg4QecPerRHsP95Tf4WpjwyA8IwG3pCVYlm1n76GUwCAvrBNBFJ4RP14ZZ80myespOqESSycwEANQhXQhUSnOuLurjuPk95Vklo/iFM9RkHGVteNrccUOrxP1dYL/F+NZcqbxCU+la8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784634838; c=relaxed/simple;
-	bh=uTNoa6lDL951+VrXFtqB8boZt2XAVc0sPNk62nN8eHk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=a4njzaketDZdUQVYaknYY+F8bygHZEKHj4lftq7brXBzMHdvXZZmX4Du6ZlFHOfv5G8S2Ew8/ljjZfDjnKfove16WcX6YcOZFskbywfGwipdaJQUEdaefingWzgO/1Xwu3G8YtsIgEVsLCtVZI8TQzsdLz5Uc7WL2/55wa9EQTI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai; spf=pass smtp.mailfrom=auditcode.ai; dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b=TkZeXLq0; arc=pass smtp.client-ip=136.143.169.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=auditcode.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=auditcode.ai
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=auditcode.ai header.i=security@auditcode.ai header.b="TkZeXLq0"
-ARC-Seal: i=1; a=rsa-sha256; t=1784634832; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=iTNGu6ktd4WbvC3tt7sZAVrDp1KNinmMsQdBasvI6TMD2sk8cIvGf9HQCSDNfXVbp98g3my6qPabhMoSTFTLsHYyLNfzQA1w3RAcAVeKQY/Jsz170w8MXm3vZQBl10vvdM4yv+Ugrg5vLyMcyAuCt2PDvoFCUiBwAJcrP7szL8w=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1784634832; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=rU1WkHQOb3meklTzuM7p6qtpmGsfsNjM5cpcbGKHx9U=; 
-	b=ORx5V0N1D1av5NXUbihcZ+U+floAF6deiZWK5yqWdQPYOMEiE4apOPvMPuZItQlTcdzbrpSzqO485MP7V4ATRYa2mO6LMs86v+MMJzY8TA+dEvuP2XrAiqJGkB+ALP1jqEwmzOYJFHdnnfzwCmpOyvBmTQEkDqUJFejoAogVAKM=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=auditcode.ai;
-	spf=pass  smtp.mailfrom=security@auditcode.ai;
-	dmarc=pass header.from=<security@auditcode.ai>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1784634832;
-	s=zmail; d=auditcode.ai; i=security@auditcode.ai;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=rU1WkHQOb3meklTzuM7p6qtpmGsfsNjM5cpcbGKHx9U=;
-	b=TkZeXLq0Wix7SPg6MQF1bmRta5xhhDMGHPusu39d+z4qD29Au+BBmTn2PEFh6v7c
-	VuTFm0dmzpTJANlXakojF2qnsqk66d83/1bcCyqzjB4zFzOW1Uav/MQJp+ELdn60WO4
-	vjKxzzNEcx6Jaaq6W7+5OziBc7wB3/6arffTAK6k=
-Received: by mx.zoho.eu with SMTPS id 1784634829901515.1672491023868;
-	Tue, 21 Jul 2026 13:53:49 +0200 (CEST)
-From: Ibrahim Hashimov <security@auditcode.ai>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 03AE728CF6F;
+	Tue, 21 Jul 2026 13:36:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784641007; cv=none; b=kbsrY8tVnVVnvOwIZebdAl5oHexoqy9VyYBV5qkQvKYTvTweX65WkO/63HG6Us6b8G7mPOJlNk9VrnGTH6w+W+bkoIIMmiZUWjkvZYzy3ThHpb7QOjrxiah7VHu+cCSWP8vC821beHoi54qO9PJq2arbwyTKQr1HmGLavLo0JUw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784641007; c=relaxed/simple;
+	bh=xXWoiA/IMfvo2fW9+qs8oWUF2c8s/TNEzS5/ImXfWMg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=evlZpMa6Au4bbbWqDccStfLJBdPt5zxFXV4IoofQP7IKz84K7Anpi8xzgNFpyvVmGSWkZWYXRuj2bXvfJ+D7qBRLhAnWmgMFxFmMfZ//+9bPWhcW0eoMw58M4NBp9mmnMW3Er7IyE96xq6hj3McBgFFZemG9XB0rsudCgh4FSyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wAHBCnidV9qG4AjAA--.8678S3;
+	Tue, 21 Jul 2026 21:36:35 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app4 (Coremail) with SMTP id zi_KCgAH7DTidV9qi7B7Ag--.20377S2;
+	Tue, 21 Jul 2026 21:36:34 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: netdev@vger.kernel.org
+Cc: mgreer@animalcreek.com,
+	sameo@linux.intel.com,
+	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH wireless v2] wifi: mac80211_hwsim: reject undersized HWSIM_ATTR_TX_INFO
-Date: Tue, 21 Jul 2026 13:53:46 +0200
-Message-ID: <20260721115346.17236-1-security@auditcode.ai>
-X-Mailer: git-send-email 2.50.1
+	stable@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH net] nfc: trf7970a: drain timeout_work and keep trf->lock valid across teardown
+Date: Tue, 21 Jul 2026 13:35:39 +0000
+Message-Id: <20260721133539.3195899-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -52,46 +36,83 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-ZohoMailClient: External
+X-CM-TRANSID:zi_KCgAH7DTidV9qi7B7Ag--.20377S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?u8kamQXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnXz+g1OQfMo27QHy5TwQyZyWPJIMTh2S86tM1FUWwcRMjYzo4cl47poEdWNGrONdVUDq
+	RYexNMRr1jkTlqoxcW6p9E6mavGmQbzmcFsnzP86
+X-Coremail-Antispam: 1Uk129KBj93XoW7WF15WrW8Cr1fKw4rKry3GFX_yoW8CF4rpr
+	4fWFyq9ry8uFWUAF4DAFZ2qFyrJw48J3yxC34Uu3y3Xws8JF1xJ34xAa4jvFy8ArykZ3W2
+	vrW2vr48WF40vFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUU9Gb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
+	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
+	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
+	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
+	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
+	I_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
+	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
+	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
+	JrUvcSsGvfC2KfnxnUUI43ZEXa7IU85l1PUUUUU==
 
-hwsim_tx_info_frame_received_nl() casts the HWSIM_ATTR_TX_INFO payload
-to a struct hwsim_tx_rate * and unconditionally reads
-IEEE80211_TX_MAX_RATES entries (8 bytes) from it. The policy only bounds
-the attribute from above (NLA_BINARY .len is a maximum) and the op sets
-GENL_DONT_VALIDATE_STRICT, so a short or zero-length attribute is
-accepted and the loop reads past the payload.
+The threaded IRQ handler and timeout work can wait on trf->lock while
+teardown destroys it. The timeout handler can also access the digital
+device after it has been freed.
 
-Require the exact length in the policy, so a malformed attribute is
-rejected before the handler runs.
+Synchronize timeout_work before releasing the digital device, and leave
+the embedded mutex alive for devres cleanup to synchronize the IRQ
+handler before trf is freed: devm_request_threaded_irq() is registered
+after devm_kzalloc(), so devm_free_irq() runs before trf is released.
 
-Fixes: 7882513bacb1 ("mac80211_hwsim driver support userspace frame tx/rx")
+This issue was found by an in-house static analysis tool.
+
+Fixes: 165063f1dac4 ("NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2 Tag Support")
 Cc: stable@vger.kernel.org
-Signed-off-by: Ibrahim Hashimov <security@auditcode.ai>
-Assisted-by: AuditCode-AI:2026.07
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
 ---
-v2: enforce the length via NLA_POLICY_EXACT_LEN in the policy instead of
-    a manual nla_len() check in the handler, and trim the changelog, per
-    Johannes Berg's review.
-
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 6 +++---
+ drivers/nfc/trf7970a.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 0dd8a6c85953..836dd25e5c61 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -870,9 +870,9 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_FLAGS] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_RX_RATE] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_SIGNAL] = { .type = NLA_U32 },
--	[HWSIM_ATTR_TX_INFO] = { .type = NLA_BINARY,
--				 .len = IEEE80211_TX_MAX_RATES *
--					sizeof(struct hwsim_tx_rate)},
-+	[HWSIM_ATTR_TX_INFO] =
-+		NLA_POLICY_EXACT_LEN(IEEE80211_TX_MAX_RATES *
-+				     sizeof(struct hwsim_tx_rate)),
- 	[HWSIM_ATTR_COOKIE] = { .type = NLA_U64 },
- 	[HWSIM_ATTR_CHANNELS] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_RADIO_ID] = { .type = NLA_U32 },
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index d17c701..fa2f75a 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2206,13 +2206,13 @@ static int trf7970a_probe(struct spi_device *spi)
+ err_shutdown:
+ 	trf7970a_shutdown(trf);
+ err_free_ddev:
++	cancel_delayed_work_sync(&trf->timeout_work);
+ 	nfc_digital_free_device(trf->ddev);
+ err_disable_vddio_regulator:
+ 	regulator_disable(trf->vddio_regulator);
+ err_disable_vin_regulator:
+ 	regulator_disable(trf->vin_regulator);
+ err_destroy_lock:
+-	mutex_destroy(&trf->lock);
+ 	return ret;
+ }
+ 
+@@ -2226,13 +2226,13 @@ static void trf7970a_remove(struct spi_device *spi)
+ 
+ 	mutex_unlock(&trf->lock);
+ 
++	cancel_delayed_work_sync(&trf->timeout_work);
++
+ 	nfc_digital_unregister_device(trf->ddev);
+ 	nfc_digital_free_device(trf->ddev);
+ 
+ 	regulator_disable(trf->vddio_regulator);
+ 	regulator_disable(trf->vin_regulator);
+-
+-	mutex_destroy(&trf->lock);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
 -- 
-2.50.1 (Apple Git-155)
+2.34.1
+
