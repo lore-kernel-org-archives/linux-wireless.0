@@ -1,139 +1,141 @@
-Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C46B46A603
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 16:02:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49AD33E49D3
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 16:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784649725; cv=none; b=QuWPQ3lN46p/9IA6pn90AbpzYGLb2yx7b5mlq6h6KUeeJy3nHN9B8Xfd3z0XYKD4GA95N+8lfWORcfrRdZFGNC5I5KsohzobfVxWF8RV204RDLxMbkLMUE687olBBJjlAbw/yQDnW3DoWBAOE8zx1/5Rq3Lll4MXrhNSxvPJHj0=
+	t=1784650307; cv=none; b=qI5/ml0wYJHW+p5/MfCpellQMn/q9f/paD4FPwQharVKwy9yY582xWMuH22Mp0lBMFvkXXebzsRtIT0P3tRswa1ErySzH5moCej1bX4+KmzEZNw87a0c4NU2/IGzQdXN4QdSHNsH/2ezD6bQ+6dsl5gjT0sy2RR9sI1TzLsCfwg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784649725; c=relaxed/simple;
-	bh=p8YTM6xTfMhnQGiBcN3CWDDwhvFQiglVybyirCIq3y4=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=n9q89q45q9RuV/EOmtEL7j9b4Rij9dYqsssqzuCq/sq4U8XebzCcbVYc+OHa3/DeaGwJLHr7gOjh5CnuLv/tlEVlF4ND3C3LnjNb6pqm+h2Y7+q6ZimiQpbKqoROz+5TKCW0/Q6v39/tHiEGmTD6z8uRhJEPXXhbDJOLvXpWSDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xCrsA7lm; arc=none smtp.client-ip=91.218.175.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784650307; c=relaxed/simple;
+	bh=ZRbPLeIdH12xY5JpoxBgTHWFEu8GrtyKzCgS9tWtGrw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fGzEz22WY+IFw+B/E8l47iqabHbGMbxyUxMxbjwM/2iAuomP37XFHO2eeegbMkn1Xd38iWhlTfUz2+CgnsyXaL1+jyGjzsyBkMCs9p619iCBsA2JZ7rNK4WXcSJvIQ0RMKIjlQaha5410Is3FZ76bniuh/TklNAgVLRlWHDk77I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=LEk/9VJe; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XHLNwd28; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xCrsA7lm"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="LEk/9VJe";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XHLNwd28"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66LDfpYp1590953
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 16:11:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	mYflFeJGiDlHHnobo387r0vJX1+Zy6ipWPbVmTEI7xs=; b=LEk/9VJeNAlW0YbT
+	5OLIhpcDjPQP01Eoab907ZsoC1wOzRqWursRoG9O5RKt5YcNEH2CRiFrmvIRH6L2
+	S+KUtsMHdmklfsnaHaihhIcFnBzCOHrjuqK8nG3+C+01OA5tuBi0Ksb6hNuo5XMe
+	Ia6cm8Rg5TUiHlu4HLXwqojHz0XETOEYJ6RmJMHa6e7iSXsi9Z9dJBQsOwx/VWb9
+	q1r1JZpmczPmCn6DmJo+FsAQTIKtg8Y8AasB7f3Tpa5i5KLP6Wh7xlJq/GvxLTBC
+	zaimcB0T8ClTbka9oXJrv2bzzUFWORNgVlatCcZnAMN5m7cMqnDRtE9gfimnt0QZ
+	1AzJcw==
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fj0as3rjc-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 16:11:45 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cb7049fa552so2151043a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 09:11:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784650305; x=1785255105; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mYflFeJGiDlHHnobo387r0vJX1+Zy6ipWPbVmTEI7xs=;
+        b=XHLNwd28xXxy3+EvRonslC90V8c/hMI1WXtlALYf5U4RtvCi8rznrZXKdWUGPD15Wp
+         k1wA1gTHmnGKkGfJQnhy06EG7Qq6mNd5eePT29iz3OZmov7QkKx1Jc8oaKBB+bVwGZKv
+         /VIPptGWSFF8w3rp4s3E8Al2lHiPxM1mrJ8ThbsD+KR5AztjMiHoWhGIULuLcGbZpivz
+         d106TaeuNC/uljKu6+EpB6tfmUUUk0WsXidY0TSA/YqnnVFXYTpCHyeGWgDFvnOjkeMS
+         /K8nld2TKxSZTaRgkuIXP/YQ2Ep5CFbEHrHgcM0o9Xr7w9aM6EyR7f79hPX/OOjIq8ng
+         t3/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784650305; x=1785255105;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mYflFeJGiDlHHnobo387r0vJX1+Zy6ipWPbVmTEI7xs=;
+        b=cjS9mn4b7SzGERrA9B9Tzzgbje6mV4SUy3wJx/nHMkFSapk0eq7FGkuHnli99xVJST
+         p4p1KCyO/4x4/Uk9UIQObLr4m12YNeJ/dUErmsUOBl5abFL0xjN5b/k1sD+894w18l+E
+         NDK9ZOLZ67N6HcANep/ZuEeXGOtNxp7n0DnjW9RpKumyF9GCWVH/2KXsbCtIfpCYU9A1
+         7lnvhLm38C7cHxr9v4Q1xbJDCZZ5nc34WJjd7s/AW1O3/9ECtnwATzOKy8FWcH4zwFnp
+         4+GoIVOc9f4N+TfdT1Lfbhx2+5KnJAwCPpxrr41kbR+pOdcCbY+ja4ChKdguaR0s0v2D
+         7bsg==
+X-Gm-Message-State: AOJu0Yw04x4m/07EE9NKLi425nel6CIzyiEQCo6+RrFts2opQLpWqre3
+	Rjcg0zuIxnH+SOQsCcAx+ksykQI2CdM3OyyEGf2/tsudBFpcfuqhu4SgUbcI1yDk6M847R3KndB
+	be0RJDksKOag4uQMd9KXaDQWo1HfDt2bOypIZ4/Mw3fj4gWBJXz/fEiT93//WEb54E8ltGRd2vT
+	rXCg==
+X-Gm-Gg: AfdE7cnh9VYwX1ZpayyNmzwqb/LVJtnCBpLymg4sqAfLjEddHOQRWp/2l8dsUBVQ5F2
+	6FTKcwp5wLxoObDUSH0S4X/wuvPbgmvoZHh1BdUAqL3/HZoRxx1ilYXRSm47pEiKXi3Z3ldMLme
+	nQ/zJdzzhSzuFRLxAaZ/XXh9z6UJQTNS/mmvh9X7hcV0yD/5Nt/jl8sTewInGVyjWpbfgBXf3HE
+	tKZgHEdpafegQYtCdM+tyndR08HoIg5qlMng/iEwk9iiWcV5G+rsg1ZLDT+82y7xlr7Ndp88KH5
+	pAuKzAdodd2yTc6xfFHLIWM4ovB0snW6GURqxMbgnMT7AkrEgLJnBdU3YAJyUFEx4KpRYP5tBbK
+	+6IO5q/EsxsEHWMDLlYz6z8N7qK4y/VQPfRiEkRFf+lZ8Q7x+I22kfgVu1aej
+X-Received: by 2002:a05:6a21:1506:b0:3c3:81c2:fa47 with SMTP id adf61e73a8af0-3c3ad7a3880mr21206287637.12.1784650304762;
+        Tue, 21 Jul 2026 09:11:44 -0700 (PDT)
+X-Received: by 2002:a05:6a21:1506:b0:3c3:81c2:fa47 with SMTP id adf61e73a8af0-3c3ad7a3880mr21206260637.12.1784650304209;
+        Tue, 21 Jul 2026 09:11:44 -0700 (PDT)
+Received: from [10.227.110.203] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e07000fsm678017eec.21.2026.07.21.09.11.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Jul 2026 09:11:43 -0700 (PDT)
+Message-ID: <90548090-8609-4068-bcdc-814963edbf71@oss.qualcomm.com>
+Date: Tue, 21 Jul 2026 09:11:42 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784649721;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3kgqo9p7Y06WA2YxlsqGlLDIGvv1oqAkj767wqdoPcQ=;
-	b=xCrsA7lmK6Tx4zr5hmisMwUPP7sFJA+QjCjxX1k7p5gFKJziatiYoqpRg/AyI6M2v7GJd0
-	k9SlscBLiuJ4TzMlC6CFAOa7rhwwLDgdn9IyyT7zV9G4W/okWqpv+tXsjsVMKnhgx6VrN0
-	/Om4QTXUHM3OSkd8vtlTcwE9W9RUCpo=
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [DESIGN RFC] EHT/UHR Critical update handling
+To: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+References: <20260625050326.2946848-1-manish.dharanenthiran@oss.qualcomm.com>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260625050326.2946848-1-manish.dharanenthiran@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Date: Tue, 21 Jul 2026 18:01:35 +0200
-Message-Id: <DK4DINWYSQQK.3687NKGCC6EJE@linux.dev>
-Cc: "straube.linux@gmail.com" <straube.linux@gmail.com>,
- "pbrobinson@gmail.com" <pbrobinson@gmail.com>
-Subject: Re: [RFC PATCH v1 0/9] wifi: rtw88: add RTL8723B/RTL8723BS support
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Luka Gejak" <luka.gejak@linux.dev>
-To: "Bitterblue Smith" <rtl8821cerfe2@gmail.com>, "Luka Gejak"
- <luka.gejak@linux.dev>, "Ping-Ke Shih" <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <cover.1784047561.git.luka.gejak@linux.dev>
- <1800080a275f4421b16bd3a028131e8a@realtek.com>
- <3EA0A653-D15F-4DD4-8DA6-C9CFFFF38205@linux.dev>
- <cbaa891f94ce41c7a6a1d576db50b75c@realtek.com>
- <9DAF08C8-7661-4AFB-8676-70AA856E1D0F@linux.dev>
- <7b9bf365-d07c-481a-8c9e-c2e03e326d5f@gmail.com>
-In-Reply-To: <7b9bf365-d07c-481a-8c9e-c2e03e326d5f@gmail.com>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIxMDE3MSBTYWx0ZWRfX47cGVeyT4szZ
+ z4pQft7TkXG1qyCweF8o673H8J8c05ZunFbDZMIAbyS2hIm/PaXxQKg5VwSVJITufIvkfnSaWR3
+ o2ev1QAj0OutfaKm979L9vJjCL4PjEr4SqagXU7BH/jKLNM4ju+Qx83iFLVCNFZbNJl6OgfleMe
+ /BGh8wUlTbZTw/VVCxG+pvheAzjUmw/7l+Sc5gX7EmPlJc2L7MWbe1PB/bSpBDobf0z1T4o4LuC
+ Pg10sF7flXdOS2cYDvtPMO8hcVE52XMj0AxDZGbrk25f4902gbr3532Z6bGw6G27YxYcClUypPZ
+ rzs47Zjk9pOeGEYvV9AshAPXknwzv6g7vEkfot+3hlYzIwy8P1O7Jt+u+Oha4jHmuC3iiDUa475
+ 2uUNP2mVi8C5IvLymjqsgYguIHrkxvt3EjLkZ6iWUDEEI0/8+lRvu3DQrkISGTouG1RjqwsQEhU
+ NyK4CxqB+l6SV57AjLA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIxMDE3MSBTYWx0ZWRfXw3CIW+j3KR2e
+ QXM5uL8WVCKT/jat2zzMMp7aiOSJI3ICsoAuxja7lxjrJ6vpfXhLPehs4wjMTBlFQJbXX4goqxB
+ QhKu2JUYgjguY8k+xUoJ80SsAu6vESM=
+X-Authority-Analysis: v=2.4 cv=DoFmPm/+ c=1 sm=1 tr=0 ts=6a5f9a41 cx=c_pps
+ a=rz3CxIlbcmazkYymdCej/Q==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=pIbJr0qklbRdVuy0jGYA:9 a=QEXdDO2ut3YA:10 a=bFCP_H2QrGi7Okbo017w:22
+X-Proofpoint-GUID: UnOpv3lgqy6_qNqUdzIxj62PMr8JCJJr
+X-Proofpoint-ORIG-GUID: UnOpv3lgqy6_qNqUdzIxj62PMr8JCJJr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-21_03,2026-07-20_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 malwarescore=0 lowpriorityscore=0 clxscore=1015 phishscore=0
+ suspectscore=0 impostorscore=0 bulkscore=0 priorityscore=1501 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607210171
 
-On Tue Jul 21, 2026 at 4:47 PM CEST, Bitterblue Smith wrote:
-> On 21/07/2026 13:55, Luka Gejak wrote:
->> Hi Ping-Ke,
->>=20
->> Thanks, and noted on stopping the v1 review. Before I send v2 I want to
->> report two things: the firmware experiment you suggested, and what I
->> found when I tried to work out which patches are actually droppable.
->>=20
->> 1. Firmware
->>=20
->> I tried all of them, plus the staging blob:
->>=20
->>   rtlwifi/rtl8723befw.bin      loads, version 15.17.0, associates
->>   rtlwifi/rtl8723befw_36.bin   loads, version 36.0.0,  associates
->>   rtlwifi/rtl8723bs_nic.bin    loads, version 35.0.0,  associates
->>=20
->> So the driver runs on all of them. But the coex reading does not change:
->> BT Rpt stays 0x00000069 on every one, byte for byte. That makes sense in
->> hindsight, since the version is reported by the BT firmware
->> (rtl_bt/rtl8723bs_fw.bin) and relayed through, so no WiFi firmware can
->> move it. rtl8723bs_nic.bin additionally produced 72 RA report WARNs,
->> because the driver sets c2h_ra_report_size =3D 4 for the v41 report form=
-at
->> where the siblings use 7.
->>=20
->> Since the driver was developed and tuned against v41 and swapping the
->> blob does not help coex, I am keeping v41 and leaving the linux-firmware
->> submission as it is rather than withdrawing it. If you would still
->> rather I hold it, say so and I will.
->> ,
->> I have not closed the coex question, and I no longer think it can be
->> closed from this driver.
->>=20
->> The driver does ask: rtw_fw_query_bt_info() goes out on the connect and
->> scan paths and at power on. The BT side answers, so this is not a
->> missing or timed out request. The answer is the problem. With A2DP
->> streaming it reports conn-idle and an empty profile list,
->> BT_RSP =3D 01 01 40 12, while the same dump shows 440 low priority packe=
-ts
->> each way. The profile byte stays 0x01 (CONNECTION) and never sets A2DP
->> or ACL_BUSY. I checked the decode against the vendor driver, which reads
->> the same byte, so this is not a parsing error on my side, and the coex
->> algorithm itself is clearly running: TDMA case-3, table 10, reason
->> BTINFO.
->
-> Does the driver receive BTINFO regularly after you connect the headphones=
-?
->
-> If it doesn't, maybe rtw_coex_active_query_bt_info() can help. Currently
-> it only does something for RTL8821A.
+On 6/24/2026 10:03 PM, Manish Dharanenthiran wrote:
+> Hi,
+> 
+> This RFC outlines a proposed approach for handling EHT/UHR Critical Update (CU)
+> procedures across different driver models. The focus is on ensuring correct and
+> consistent behavior of beacon and management frames, while addressing timing
+> constraints and scalability challenges observed in the previously discussed
+> approaches.
 
-Hi Bitterblue,
+The Qualcomm team would appreciate any feedback to this RFC. We are eager to
+have an upstream implementation of this functionality that can be leveraged by
+all AP vendors.
 
-Thanks, that was worth checking. I measured it with debug_mask=3D0x40.
-
-It does receive BTINFO regularly. With the headphones connected and A2DP
-actually streaming I get 19 Bt_info arrivals in a 30 second window, so
-roughly one every 1.5 seconds, and the values do change between them:
-
-  [BTCoex], Bt_info[1], len=3D7, data=3D[01 40 0e 00 00 00]
-  [BTCoex], Bt_info[2], len=3D7, data=3D[01 40 11 00 00 00]
-  [BTCoex], Bt_info[2], len=3D7, data=3D[01 40 0e 00 00 00]
-  [BTCoex], Bt_info[1], len=3D7, data=3D[01 40 0f 00 00 00]
-  [BTCoex], Bt_info[2], len=3D7, data=3D[01 41 0f 00 00 00]
-
-For comparison, with BT disconnected it is 1 arrival in 30 seconds. So
-this firmware does not go quiet the way the RTL8821AU one does, and
-rtw_coex_active_query_bt_info() would not add anything here. Good idea
-though, it was the obvious thing to rule out first.
-
-The problem is what is in the reports rather than how often they come.
-bt_info_lb2 is 0x01 in all 19 of them: BIT(0) CONNECTION set, BIT(3)
-ACL_BUSY never set, no profile bits. So bt_acl_busy stays false and
-rtw_coex_update_bt_link_info() logs CON_IDLE 18 times, which is the
-correct conclusion from that input. Meanwhile the same coex_info dump
-shows Lo-Pri TX/RX at 419/418, so BT is clearly moving traffic.
-
-In other words the BT firmware reports connected, not busy, no profile,
-so I do not think this one is fixable from the WiFi driver, therefore I=20
-am documenting it as a known limitation rather than guessing at BT state
-in coex.
-
-Best regards,
-Luka Gejak
+/jeff
