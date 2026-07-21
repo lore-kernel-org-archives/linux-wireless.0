@@ -1,253 +1,262 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1AA9435536
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 07:56:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 332BE441616
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Jul 2026 08:13:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784620599; cv=none; b=ILIMiwqpYHMicnuRucJ+rzi5KSLX2IeVRAtudow4JJy5jWOEpHX1y1cTOx5PtlYj5aGrVs/NeF3X6Q/XHdW8FcAk5OwMgh3gx2ulXMcTT674rJacolCUXauKUsJz+/Wzoo6Zhsmf5MKC1OPQJZzW3+GS9dDyQbY/2hcr1TN1YdM=
+	t=1784621611; cv=none; b=B9d447q5RCk/VTx1sLlfZBfvk6nAss7Sxwu8FMh15BvBuZ6wxWN3qqk99KU3Z8bg9V+ak7jUorYXsF4fhTYa4AjGG9vxAFmlCgcJKCusxqpypOM+JmlDTebGLIbLyD8qM5+9jfJlgSFyVtNUHPBP04qgPQs9U2KRUC0UZ3FfDPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784620599; c=relaxed/simple;
-	bh=XFvWmf7qSR/0Q1aXbkilJmiLtGmljOPOlZK3RiAh5mg=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=rdC8BBW7noWJFEN8EbwcT55MOJT2FhP9ZA8M5iHAoKYj93jwpumaLi1TgdtQLa9LJoVxuG3UIbLUljDVpQmU/2slybkz6GUAyX9ZA2Lsz8Qm60yJNd1Noyv0Y69ziAoP0qFda3hvF6IHbwrvGv7VDHYQ31HK13asJAMytUnwwMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hZFI88qA; arc=none smtp.client-ip=91.218.175.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1784621611; c=relaxed/simple;
+	bh=okiV2lgU63vpPMUGj570DhVjS0AbVKX8tHA2pdYZkoQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G9MhUPm9+hdxXlpSK8z9MYS85pAEVcHVUzjAchNPaKy8JmLrXmV3j8Oo2LVSYthVdALuei1/BorTHSlWe5mLQ5lqPKPxfLK4exK/sAz1yH4YUIt8zLyW/mUzalrk6R8G5b7wLpXyzyxkYu84iKeS6FQMCeQxRyg3S+yh81MknL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QM7s1aUl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hZFI88qA"
-Date: Tue, 21 Jul 2026 09:56:27 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784620595;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QM7s1aUl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784621595;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QKAWT/cxSc1ZWpBEIsu9+GuZeK2Ze/WKX7uyQzqjbTU=;
-	b=hZFI88qASMDuw7/5sGqVVSZb9/saosON+vgwwUNPN6eL2Q1FWFbxTeUrsf3qbiPAeOPiG6
-	2i/tXuG9ZVC1ubA87whNPIf2dwMtJgrims0JGyT4RYfzX1E/U6pZdjJ8l3vFPs0MQL/Piw
-	fQE7RZL2dlSY9MOTo0Ytlj1fXQyyo+I=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "straube.linux@gmail.com" <straube.linux@gmail.com>, pbrobinson@gmail.com,
- luka.gejak@linux.dev
-Subject: RE: [RFC PATCH v1 0/9] wifi: rtw88: add RTL8723B/RTL8723BS support
-In-Reply-To: <1800080a275f4421b16bd3a028131e8a@realtek.com>
-References: <cover.1784047561.git.luka.gejak@linux.dev> <1800080a275f4421b16bd3a028131e8a@realtek.com>
-Message-ID: <3EA0A653-D15F-4DD4-8DA6-C9CFFFF38205@linux.dev>
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=PK82L8THiWroAM1HPt8oRK7uxjYuYOO7+GgX16DnT3s=;
+	b=QM7s1aUlUsdxLVYsB/vq2eGP4h3tKALTNRcBccjHNkWXviWA7kj8klgCF63cNv9nXIRxvm
+	cBF1eiJxIlkeUdTouB5/+t4YJNoc6QBHXqyI2VpQ8fCb1NvmUqWYsfCMPs3ElJniIDlZ7E
+	XR5VVPup8xdU8TmQyHQO5/s3VTZP55s=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-202-EPuHpqaqN2-PDPOFbCqpvw-1; Tue,
+ 21 Jul 2026 04:13:12 -0400
+X-MC-Unique: EPuHpqaqN2-PDPOFbCqpvw-1
+X-Mimecast-MFC-AGG-ID: EPuHpqaqN2-PDPOFbCqpvw_1784621591
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CD7F7180A9A4;
+	Tue, 21 Jul 2026 08:13:09 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.59])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5BF4C1954231;
+	Tue, 21 Jul 2026 08:13:04 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org,
+	mani@kernel.org
+Cc: jjohnson@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
+Date: Tue, 21 Jul 2026 10:13:01 +0200
+Message-ID: <20260721081301.205374-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Hi Ping-Ke,
+Some Qualcomm PCIe devices (WCN6855/WCN7850 WLAN cards, SDX62/SDX65 modems)
+lack working reset methods for VFIO passthrough scenarios. These devices
+have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+broken bus reset.
 
-Thanks for the review, and for taking the time on a series this size=2E
+The problem manifests in VFIO passthrough scenarios:
 
-Before I send v2 I want to report what changed, because the result of
-your comments is that the series gets noticeably smaller=2E I would
-rather tell you now than have you spend review time on patches I am
-about to delete=2E
+- WCN6855 (17cb:1103) and WCN7850 (17cb:1107) WLAN devices:
+  Normal VM operation works fine, including clean shutdown/reboot.
+  However, when the VM terminates uncleanly (crash, force-off), VFIO
+  attempts to reset the device before it can be assigned to another VM.
+  Without a working reset method, the device remains in an undefined state,
+  preventing reuse.
 
-Answers to your questions from the cover letter first=2E
+- SDX62/SDX65 (17cb:0308) 5G modems: Never successfully initialize even
+  on first VM assignment without proper reset capability.
 
-1=2E The link=2E Michael Straube's original work is now referenced in the
-   chip patch:
+Add device-specific reset methods using BAR-space hardware reset registers
+that exist in these devices:
 
-     https://github=2Ecom/mistraube/rtw88/tree/rtl8723bs
+- WCN6855/WCN7850 WLAN devices use SoC global reset via BAR0 (sequence from
+  ath11k/ath12k driver: ath11k_pci_soc_global_reset(), ath11k_pci_sw_reset(),
+  ath11k_mhi_set_mhictrl_reset()):
+  - Write/clear reset bit at offset 0x3008
+  - Wait for PCIe link recovery (up to 5 seconds)
+  - Clear MHI controller SYSERR status at offset 0x38
 
-   The current state of my series is here, if it is easier to read than
-   mail:
+- SDX62/SDX65 modem devices use MHI SoC reset via BAR0 (sequence from MHI
+  driver: mhi_soc_reset(), mhi_pci_reset_prepare()):
+  - Write reset request to offset 0xb0
+  - Wait 2 seconds for reset completion
 
-     https://github=2Ecom/MocLG/rtw/tree/8723bs-upstream
+These are true hardware reset mechanisms (not power management or firmware
+error recovery), providing proper device reset for VFIO scenarios.
 
-2=2E sparse and smatch=2E Both re-run on the new series, clean, no finding=
-s
-   in the 8723b/8723bs files=2E
+Testing was performed on desktop platforms with M.2 WLAN and modem cards
+using M.2-to-PCIe adapters, including extensive force-reset cycling to
+verify stability.
 
-3=2E Bluetooth coexistence=2E Tested as you asked: WiFi download while an
-   A2DP sink plays music, shared antenna, 2=2E4 GHz HT40=2E
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+v13: Address Alex Williamson feedback:
+  - Validate initial ioread32() with PCI_POSSIBLE_ERROR() before
+    read-modify-write to avoid writing error response back to device
+    on platforms with APEI/GHES error escalation
+  - Replace time_before()/msleep() polling loop with read_poll_timeout()
+    for robustness against scheduling delays and code simplification
+v12: https://lore.kernel.org/all/20260630065815.199693-1-jtornosm@redhat.com/
 
-   The audio side is good=2E Music played for the whole run with no
-   underruns reported by the audio stack=2E The WiFi side is not good:
-   download throughput went from 42=2E0 Mbit/s with Bluetooth idle to
-   0=2E21 Mbit/s with A2DP active, a 99=2E5% drop=2E So BT wins the air
-   almost completely rather than sharing it=2E
+ drivers/pci/quirks.c | 116 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 116 insertions(+)
 
-   While looking into that I found two chip config values of mine were
-   wrong, both now fixed:
-
-     - scbd_support was true=2E The vendor driver has no scoreboard
-       implementation for 8723b at all (it exists only for 8703b,
-       8723d and 8821c), so this is now false=2E With it false the TDMA
-       case moves off case-0, which it never did before=2E
-
-     - bt_desired_ver was 0x6f, which is glcoex_ver_8723b_1ant, the
-       driver's own coex version rather than the desired BT version=2E
-       It is now 0x6d (glcoex_ver_btdesired_8723b_1ant, shared
-       antenna)=2E
-
-   With those two fixed the coex mechanism itself is clearly running=2E
-   During the A2DP run it sits on TDMA case-3 (61 30 03 11 11), coex
-   table 10, and the run reason is BTINFO, so it is reacting to BT
-   status rather than sitting idle=2E
-
-   What it is reacting to looks wrong, and this is the part I cannot
-   answer from outside=2E With music actively streaming, coex_info shows:
-
-     Coex Ver/ BT Dez/ BT Rpt   =3D 0133ece9/ 0x6d/ 0x00000069 (Mismatch)
-     BT status/ rssi/ retry/pop =3D conn-idle/ -54dBm/ 0/ 9
-     Profiles                   =3D  (multi-link 0)
-     BT_RSP                     =3D 01 01 40 12 00 00 00
-     Hi-Pri TX/RX, Lo-Pri TX/RX =3D 0/3, 440/440
-
-   So the BT side reports conn-idle with an empty profile list while it
-   is demonstrably moving traffic (440 low priority packets each way),
-   and the profile byte stays 0x01 (CONNECTION) with A2DP (BIT 6) and
-   ACL_BUSY (BIT 3) never set=2E Coex is therefore arbitrating for an
-   idle link that is not idle, which would explain why WiFi gets
-   almost nothing=2E
-
-   The reported BT coex version is 0x69, below the 0x6d the 1ant
-   parameters expect=2E Is the rtl8723bs BT firmware currently shipped in
-   linux-firmware older than the coex protocol these parameters were
-   written for, and should I be using a different blob? If this is a
-   known gap I am happy to document the limitation rather than chase it
-   in the WiFi driver=2E
-
-Now the larger change=2E
-
-Several of your comments were variants of "does the existing logic not
-work, why do you need this"=2E Rather than argue from the vendor driver I
-tested it=2E For each of those special cases I reverted it to the generic
-rtw88 path, rebuilt, reloaded and measured association, WPA2 handshake
-and throughput in both directions=2E
-
-Every one of them turned out to be unnecessary=2E I have dropped these
-five patches:
-
-  - apply the firmware-reported TX rate
-  - program the management TX descriptor contract
-  - add first-segment and retry-limit TX descriptor bits
-  - select the management and EAPOL TX rate
-  - keep the chip powered between scan and connect (soft IPS)
-
-Specifically, to your questions:
-
-  - "Why does it need report?" and the mac_id question=2E It does not=2E
-    With SPE_RPT not set and mac_id taken from si/vif as you suggested,
-    association still completes normally through the generic management
-    path=2E My claim that the firmware will not schedule a management
-    frame without SPE_RPT was wrong=2E
-
-  - First/last segment and the four-way handshake=2E You were right that
-    these are unrelated=2E With the first-segment bit removed the WPA2
-    four-way completes and data flows unchanged=2E
-
-  - The two rate patches=2E Not needed=2E The generic rtw_get_mgmt_rate
-    path carries auth, assoc and EAPOL fine, and without forcing the
-    firmware-reported rate the TX rate still climbs to MCS7=2E The CCK
-    floor behaviour I described does not reproduce=2E
-
-  - IPS=2E You were right to question this too, though not for the reason
-    I expected=2E IPS is entered here=2E With the soft-IPS special case
-    removed the chip does a real power off and on, which I confirmed by
-    tracing the power state across the transition, and it still
-    reconnects every time and passes full throughput=2E So the power
-    cycle does not corrupt the management TX path the way I claimed=2E
-
-Result, measured on the reduced series: association fine, WPA2
-reconnect 3/3, 20 Mbit/s up and about 32 Mbit/s down, no warnings and
-no TX report failures=2E That matches the full series, so nothing was
-lost by removing them=2E The series goes from 15 patches to 10=2E
-
-Two caveats I want to state plainly rather than have you find them=2E
-
-First, this was measured on one AP at strong signal (-32 dBm), 2=2E4 GHz
-HT40, on a single board=2E If any of those five patches guards a case I
-cannot reach here, a weaker link, a different AP, another firmware, you
-will know it and I will not=2E Please say so and I will put it back=2E
-
-Second, I kept one you asked about: the auth_sync mechanism in the SDIO
-association sequence=2E It also tested removable here, association and
-repeated rejoins all succeeded without it, but its whole purpose is to
-wait for a beacon or probe response before authenticating, which is
-exactly the thing a strong-signal AP will hide=2E I did not want to drop
-it on the strength of a test that cannot show the problem it solves=2E If
-you think the driver has no business doing that and mac80211 should
-handle the timing, I will drop it too=2E
-
-The remaining changes since v1, in short=2E Details will be in the v2
-per-patch changelogs:
-
-  - rtw_is_8723bs_sdio() renamed to rtw_is_8723bs()=2E
-  - Kconfig and Makefile moved to the end of the series, before
-    MAINTAINERS, so the driver only becomes buildable once the
-    supporting patches are in=2E
-  - Struct fields, flags and function declarations moved out of the
-    chip patch into the patch that first uses them=2E
-  - The vendor-reference comments removed throughout=2E You were right
-    that they were notes to myself=2E
-  - Local register defines moved to reg=2Eh, and RF_RCK_OS / RF_TXPA_G1 /
-    RF_TXPA_G2 replaced with the existing RF_MODE_TABLE_* definitions=2E
-  - Copyright headers corrected to include Realtek, includes reordered,
-    comment style switched to the current form, forward declarations
-    removed, reverse christmas tree and the alignment and mdelay
-    issues fixed=2E
-  - The old patch 2 split into smaller patches as you asked=2E What is
-    left of it after the removals above is the TX report purge timeout
-    change=2E
-  - Peter Robinson tested the RFC and reported two warnings=2E The
-    "failed to get tx report" one is what the purge timeout patch
-    addresses: the 500 ms default is too short for this firmware, the
-    same reasoning as the 8723D USB case already in tree=2E The
-    "firmware failed to leave lps state" one I could not reproduce
-    here, including with forced LPS enter and leave cycles, so I have
-    not added a workaround for something I cannot demonstrate=2E Peter is
-    on CC and I have asked him about it at the end of this mail=2E
-  - checkpatch --strict is clean apart from one TRANS_SEQ_END macro
-    warning, which is byte for byte the same as the existing one in
-    rtw8703b=2Ec=2E
-  - Every commit builds with W=3D1 with no warnings=2E
-
-I will hold v2 until you have had a chance to react to the removals, in
-case any of them should stay, and to pick up whatever else you find in
-the patches that remain=2E
-
-
-Peter, the rest of this is for you, hence the CC=2E
-
-Since your Tested-by the series has lost the five patches listed above,
-so what you tested is not quite what v2 will be=2E I would rather not
-carry the tag forward without asking=2E Say so if you would prefer I drop
-it until you have had a look at v2=2E
-
-There is a better reason to ask you than tag hygiene though=2E Both
-warnings you hit are timing races I cannot reproduce here, and the
-difference looks like host speed: your Pine64 SDIO hosts are slower than
-the board I test on=2E That also makes them the right place to check the
-five removals, because I validated those on a single fast host against a
-strong signal AP, which is the least likely setup to expose a timing
-regression=2E If any of those patches was quietly covering for a slow
-host, your boards will show it and mine will not=2E
-
-The tx report warning should be gone with the longer purge timeout=2E
-
-For the LPS one, the driver gives the firmware 100 ms to send its null
-packet, get the ACK back from the AP and restore REG_TCR=2E If that
-warning still fires on v2, could you say roughly how often it happens,
-and if it is easy to tell, how far past 100 ms it goes? I would rather
-extend that poll by a measured amount than guess a number, and I do not
-want to just silence the message=2E
-
-Best regards,
-Luka Gejak
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 431c021d7414..bd1e0742052e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -22,6 +22,7 @@
+ #include <linux/isa-dma.h> /* isa_dma_bridge_buggy */
+ #include <linux/init.h>
+ #include <linux/iommu.h>
++#include <linux/iopoll.h>
+ #include <linux/delay.h>
+ #include <linux/acpi.h>
+ #include <linux/dmi.h>
+@@ -4240,6 +4241,118 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+ 	return 0;
+ }
+ 
++#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET	0x3008
++#define QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V	BIT(0)
++#define QUALCOMM_WLAN_MHICTRL			0x38
++#define QUALCOMM_WLAN_MHICTRL_RESET_MASK	0x2
++
++/*
++ * Qualcomm WLAN device-specific reset using SoC global reset via BAR0
++ * registers.
++ */
++static int reset_qualcomm_wlan(struct pci_dev *pdev, bool probe)
++{
++	void __iomem *bar;
++	u32 val;
++	u16 cmd;
++	int ret;
++
++	if (probe)
++		return 0;
++
++	if (pdev->current_state != PCI_D0)
++		return -EINVAL;
++
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
++
++	bar = pci_iomap(pdev, 0, 0);
++	if (!bar) {
++		pci_write_config_word(pdev, PCI_COMMAND, cmd);
++		return -ENODEV;
++	}
++
++	val = ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++	if (PCI_POSSIBLE_ERROR(val)) {
++		ret = -ENODEV;
++		goto out_restore;
++	}
++	val |= QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
++	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++
++	msleep(10);
++
++	val &= ~QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET_V;
++	iowrite32(val, bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++	ioread32(bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++
++	msleep(10);
++
++	ret = read_poll_timeout(ioread32, val,
++				!PCI_POSSIBLE_ERROR(val),
++				20 * USEC_PER_MSEC,
++				5 * USEC_PER_SEC, false,
++				bar + QUALCOMM_WLAN_PCIE_SOC_GLOBAL_RESET);
++	if (ret) {
++		pci_err(pdev, "PCIe link failed to recover after reset\n");
++		goto out_restore;
++	}
++
++	/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
++	 * and thus need to set MHICTRL_RESET to clear SYSERR.
++	 */
++	iowrite32(QUALCOMM_WLAN_MHICTRL_RESET_MASK, bar + QUALCOMM_WLAN_MHICTRL);
++	ioread32(bar + QUALCOMM_WLAN_MHICTRL);
++
++	msleep(10);
++
++out_restore:
++	pci_iounmap(pdev, bar);
++	pci_write_config_word(pdev, PCI_COMMAND, cmd);
++
++	return ret;
++}
++
++#define MHI_SOC_RESET_REQ_OFFSET		0xb0
++#define MHI_SOC_RESET_REQ			BIT(0)
++
++/*
++ * Qualcomm modem device-specific reset using MHI SoC reset via BAR0
++ * register.
++ */
++static int reset_qualcomm_modem(struct pci_dev *pdev, bool probe)
++{
++	void __iomem *bar;
++	u16 cmd;
++
++	if (probe)
++		return 0;
++
++	if (pdev->current_state != PCI_D0)
++		return -EINVAL;
++
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
++
++	bar = pci_iomap(pdev, 0, 0);
++	if (!bar) {
++		pci_write_config_word(pdev, PCI_COMMAND, cmd);
++		return -ENODEV;
++	}
++
++	iowrite32(MHI_SOC_RESET_REQ, bar + MHI_SOC_RESET_REQ_OFFSET);
++	ioread32(bar + MHI_SOC_RESET_REQ_OFFSET);
++
++	/* Be sure device reset has been executed */
++	msleep(2000);
++
++	pci_iounmap(pdev, bar);
++	pci_write_config_word(pdev, PCI_COMMAND, cmd);
++
++	return 0;
++}
++
+ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+ 		 reset_intel_82599_sfp_virtfn },
+@@ -4255,6 +4368,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 		reset_chelsio_generic_dev },
+ 	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+ 		reset_hinic_vf_dev },
++	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_modem }, /* SDX62/SDX65 modems */
++	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_wlan },  /* WCN6855 WLAN */
++	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_wlan },  /* WCN7850 WLAN */
+ 	{ 0 }
+ };
+ 
+-- 
+2.54.0
 
