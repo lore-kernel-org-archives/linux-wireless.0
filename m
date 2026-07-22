@@ -1,45 +1,54 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3D647043D
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 08:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B202C473C6F;
+	Wed, 22 Jul 2026 08:28:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784708784; cv=none; b=gEDmEXUyOJ2FoGKqwNviBzyqNQ4rBzUNHP0wCWePfYS2Cqg3tx/QMRuPQ1sBZ1K9R85t2WinjvlgFXR8oK1Iig0poB0PQ+3ritV10qMVGR5OtBB112saRQMudU0RrZPrp86ErziyGdk3eUCDOBrR9tQxOOSRnO2yn1hfFpiyZ00=
+	t=1784708913; cv=none; b=czn/6MXojt5X0m2nyWbf5VvUl3avpZRZZeXATw9huATNjMehqUK/L59TcpB4vEZ05ec3dJUIUmFNKXeL2U7UG42/LyJo7DFLpw3HiHpzRieKipUlLOQqCY2fV9ZA1Fxkv29C778t63qkLSldjsStv+bS4up9PpmY+FZrNnqBMyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784708784; c=relaxed/simple;
-	bh=kpRGL4dCgan4z3IleKZzkrOrDlcP695ssfJVUGIpLd8=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tDhbl3QSHBm0dwLDujp6HFYjBIfCLclELflmf0ZBRMQKmHcD+OJTx1P467tNntO9XyThL2PvH4s3N0wYnfw3zgmjohoMTuqXUWPLNh1maolKXzEnk/fKh1SDbXXP5mPU0SV7bFQkkPuxj37RasNm4oxDklA7JJ+KkUEerNHTaS4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=DeEJGr3X; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1784708913; c=relaxed/simple;
+	bh=EixoOQ7z6M70FC6xow3sUPIAwW+cfs5a/52T3oyotk4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=suhtUfQCaKEhTMHysEL5GMXPckqEbjIiXgvQ0TklGvzOiFWeaSSOkZD3y/8RyHPd8wp7U6Eh5IMrobAkUizPqsjioj4mFWq0RQR7ykzEYcRlRJ95cbIJ59+64EKA9nyp/XyIrFP+hfZd7niAnFpuk3gGt4MfqvbQyShW5Nz7rHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=ozTIYxe+; arc=none smtp.client-ip=217.10.52.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="DeEJGr3X"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=hss8D3IzvnHSkQvpc6ACTOR1XDBrCW6HOWz3f9sCwM4=; b=DeEJGr3XkjSAmi5Z0jw1IZL/DH
-	fyVhx3P+R/lk/wK7oofGA8EKSy/n416DRUByk4sToMPgEgKNe40dpdqTX4mnn+cG+6FQpPI1rmEKw
-	UY+ggUTPhDM9Dkb6kjdgHMey3califdMtVCnC1HvdTo1HjTmXjhyOVUyGdvhowh2geGI=;
-Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1wmSHQ-005AHx-2A
-	for linux-wireless@vger.kernel.org;
-	Wed, 22 Jul 2026 10:26:16 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/18] wifi: mt76: mt7915: write RX header translation bit to the correct register
-Date: Wed, 22 Jul 2026 08:26:03 +0000
-Message-ID: <20260722082610.2699628-11-nbd@nbd.name>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260722082610.2699628-1-nbd@nbd.name>
-References: <20260722082610.2699628-1-nbd@nbd.name>
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="ozTIYxe+"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1784708910; x=1816244910;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=EixoOQ7z6M70FC6xow3sUPIAwW+cfs5a/52T3oyotk4=;
+  b=ozTIYxe+VcJcVGjEwui9i2Dmg16h8IyhLsd39lwgeEDde3b+Z9C6KZ9n
+   pbiGBtwUJtomPUzI99BADH1PwBXk2HHedbgmluHzxNGJkKCqKbj9XkBYl
+   qcLzWC2RTh4z+vH9Y17sQucyofniytzBuHxLdfLs4MVCVi+N/r98QNCKG
+   U=;
+X-CSE-ConnectionGUID: +Fjbd8AoQAK97Dyf0VrqgA==
+X-CSE-MsgGUID: IGo3ju6GSlezfUvYRr7D/A==
+X-IronPort-AV: E=McAfee;i="6800,10657,11853"; a="138945297"
+X-IronPort-AV: E=Sophos;i="6.25,178,1779141600"; 
+   d="scan'208";a="138945297"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 10:27:14 +0200
+Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE819.infineon.com
+ (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Wed, 22 Jul
+ 2026 10:27:13 +0200
+Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
+ MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 22 Jul 2026 10:27:11 +0200
+From: Jason Huang <Jason.Huang2@infineon.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>,
+	<linux-kernel@vger.kernel.org>, Jason Huang <jason.huang2@infineon.com>
+Subject: [PATCH] wifi: brcmfmac: fix P2P action frame handling without device vif
+Date: Wed, 22 Jul 2026 16:26:08 +0800
+Message-ID: <20260722082608.412472-1-Jason.Huang2@infineon.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -47,32 +56,51 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
+ MUCSE809.infineon.com (172.23.29.35)
 
-MT_MDP_DCR0_RX_HDR_TRANS_EN is a field of MT_MDP_DCR0, but monitor-mode
-handling applied it to the per-band MT_DMA_DCR0 register instead. As a
-result RX header translation was never disabled in the MDP when entering
-monitor mode, and an undocumented bit of MT_DMA_DCR0 was toggled. Target
-MT_MDP_DCR0, matching the mt7996 driver.
+From: Jason Huang <jason.huang2@infineon.com>
 
-Fixes: b2491018587a ("wifi: mt76: mt7915: fix monitor mode issues")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Some P2P action frame paths assume the P2P device vif is always
+available. That is not true when userspace sends non-P2P public action
+frames through the primary interface, or when action-frame abort runs
+after the P2P device vif has not been created.
+
+Fall back to the primary vif when aborting an action frame without a P2P
+device vif, and guard P2P device saved IE access before using it for
+peer channel search.
+
+Fixes: 30fb1b272909 ("brcmfmac: use actframe_abort to cancel ongoing action frame")
+Fixes: 6eda4e2c5425 ("brcmfmac: Add tx p2p off-channel support.")
+
+Signed-off-by: Jason Huang <jason.huang2@infineon.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index 8ff85cfbb936..2475ddbf1098 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -503,7 +503,7 @@ static int mt7915_config(struct ieee80211_hw *hw, int radio_idx,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 92c16a317328..66557be28e7b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -1283,6 +1283,9 @@ static s32 brcmf_p2p_abort_action_frame(struct brcmf_cfg80211_info *cfg)
+ 	brcmf_dbg(TRACE, "Enter\n");
  
- 		mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_DMA_DCR0_RXD_G5_EN,
- 			       enabled);
--		mt76_rmw_field(dev, MT_DMA_DCR0(band), MT_MDP_DCR0_RX_HDR_TRANS_EN,
-+		mt76_rmw_field(dev, MT_MDP_DCR0, MT_MDP_DCR0_RX_HDR_TRANS_EN,
- 			       !dev->monitor_mask);
- 		mt76_testmode_reset(phy->mt76, true);
- 		mt76_wr(dev, MT_WF_RFCR(band), rxfilter);
+ 	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
++	if (!vif)
++		vif = p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
++
+ 	err = brcmf_fil_bsscfg_data_set(vif->ifp, "actframe_abort", &int_val,
+ 					sizeof(s32));
+ 	if (err)
+@@ -1819,6 +1822,7 @@ bool brcmf_p2p_send_action_frame(struct brcmf_if *ifp,
+ 	/* validate channel and p2p ies */
+ 	if (config_af_params.search_channel &&
+ 	    IS_P2P_SOCIAL_CHANNEL(le32_to_cpu(af_params->channel)) &&
++	    p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif &&
+ 	    p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->saved_ie.probe_req_ie_len) {
+ 		afx_hdl = &p2p->afx_hdl;
+ 		afx_hdl->peer_listen_chan = le32_to_cpu(af_params->channel);
 -- 
-2.53.0
+2.25.1
 
