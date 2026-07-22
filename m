@@ -1,209 +1,143 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from nbd.name (nbd.name [46.4.11.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19BBC3EDE76;
-	Wed, 22 Jul 2026 04:20:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B113C10AB
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 06:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784694033; cv=none; b=XL39KHvPkAS+YYUb0IeB7zm07knyUc/FK7P9SEt51XaBz70XAAfRHbV8prafSqPFhcJcgEWW/B4p6QHtJTIrj8/ixVAEGUs8kP2Q3xOpRGP/CZFLGar6yh44couOT2jOZFeG0BopTDMhli5WdSMDR+DeSaN+hxznp4Z445aQgqk=
+	t=1784702230; cv=none; b=hm50CjJc5MKLYAXpSpudQ+SeV2YT1h+DhILjhGCYLXh49WqSucFk12H0uOhS5l9xn6rT8QN5DTOESzJe+wkwU6LsHNxL4Of4ccCV9U6g9IB2j+Hxv+subn/fq+4mFjYEKyGnEfiUuo5Abe1wO9VJAFm+XIeUNcPA13AL4CJkVc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784694033; c=relaxed/simple;
-	bh=oUAmOLmNGXp0Tln9zfz/CVEVtwESMAIAFoov3RAW6oY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J8AYOSMYaZ3Xuvwfw+zj5ftzD3rYt13wPXUCrEpaWnfKvoHClm5ehftRmgZyzZx+i7HtGQ8RsAzwRwbCHc4I1wg4fE2sevT7q7Ij1hNoB3q2Gf8ynr1j0jKEOY9BSA9qBNftTgPqS+fyWJsm2lEmUFi7M49hPE0lAgm6kNYcE1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.245.140])
-	by APP-05 (Coremail) with SMTP id zQCowAB35T8NRWBqQ0W7AA--.34153S2;
-	Wed, 22 Jul 2026 12:20:29 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH] wifi: ath10k: validate WMI header before reading it
-Date: Wed, 22 Jul 2026 12:20:29 +0800
-Message-ID: <20260722042029.36066-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1784702230; c=relaxed/simple;
+	bh=Hqt2c6vCC8J80fptgf8ifLlPQCuPMFsCa56ntsSAIWw=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=aom8lV3b8jmMATrqnOG+WKXItoQyIg8PHym91RPFmny1INfAOOUl0xo8zQf+8NHLW+zwiCLHmM3EXY6903Adp1/wYbDy+1hU9KIAE/ZYm5ydYk0NvKfqvqTo3Z+nBCrYiYg4bIkTjtH3GidqZ5sWDmqYBgkPdxgEdIfrNZ8bLVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=hEu+6hc7; arc=none smtp.client-ip=46.4.11.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hEu+6hc7"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:Cc:To:Subject:From:
+	MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=xObv0IeEv5bIjrcCZJOWk+O7jFM9/+bORNsCHem/yuA=; b=hEu+6hc7UUKhzf95SjSFkeCu+C
+	DyjDZVaXCBglYGBQSdqe8eCQNwcfm9uC14nJcv78DgPkgZkBDNew0na/Up7cgEbQoFaeTN2AaFgrd
+	vEId6wLwQR6rU13a0BuXhBPob2nKRis/2mUBG0i0FI4qB7IP0/dhfb0XTAKBTkJrkce8=;
+Received: from p5b015c4b.dip0.t-ipconnect.de ([91.1.92.75] helo=nf.local)
+	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <nbd@nbd.name>)
+	id 1wmQZl-00589h-28;
+	Wed, 22 Jul 2026 08:37:05 +0200
+Message-ID: <f40382cf-9f75-4793-88b9-c50be5dad191@nbd.name>
+Date: Wed, 22 Jul 2026 08:37:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAB35T8NRWBqQ0W7AA--.34153S2
-X-Coremail-Antispam: 1UD129KBjvJXoW3WF47Jw1fXr15Cw4UAryDGFg_yoW7Cr45pF
-	1Uur1xXFWkur4Uur1UZF4kCws0qa4kJ3sIkFyUKw4fZF1vvr1FgFs0gayUJrZIyF13Gr12
-	va1jyFW7Grn7t3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvY14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26F
-	4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
-	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r
-	1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AK
-	xVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
-	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1l
-	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxV
-	AFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
-	U2Q6JUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
+User-Agent: Mozilla Thunderbird
+From: Felix Fietkau <nbd@nbd.name>
+Subject: pull request: mt76-fixes 2026-07-22
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Language: en-US
+Autocrypt: addr=nbd@nbd.name; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
+ cL98efvrjdstUfTCP2pfetyN
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The WMI receive handlers read cmd_id from skb->data before checking that
-the skb contains a complete struct wmi_cmd_hdr. The outer HTC payload
-check does not establish the nested WMI header length.
+Hi,
 
-Centralize current-item header validation with pskb_may_pull() and use it
-in every WMI receive variant before parsing cmd_id.
+Here's my mt76-fixes pull request for 7.2
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  8 ++--
- drivers/net/wireless/ath/ath10k/wmi.c     | 46 +++++++++++++----------
- drivers/net/wireless/ath/ath10k/wmi.h     |  2 +
- 3 files changed, 31 insertions(+), 25 deletions(-)
+- Felix
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 01f2d1fa9d7d..345401b97ffb 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -638,15 +638,13 @@ static int ath10k_wmi_tlv_event_peer_delete_resp(struct ath10k *ar,
- 
- static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_tlv_event_id id;
- 	bool consumed;
-+	u32 cmd_id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &cmd_id))
- 		goto out;
-+	id = MS(cmd_id, WMI_CMD_HDR_CMD_ID);
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index e57588c19c80..5b64b5f9bff7 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5873,16 +5873,28 @@ static inline void ath10k_wmi_queue_set_coverage_class_work(struct ath10k *ar)
- 	}
- }
- 
-+bool ath10k_wmi_pull_cmd_hdr(struct sk_buff *skb, u32 *cmd_id)
-+{
-+	const struct wmi_cmd_hdr *cmd_hdr;
-+
-+	if (!pskb_may_pull(skb, sizeof(*cmd_hdr)))
-+		return false;
-+
-+	cmd_hdr = (const void *)skb->data;
-+	*cmd_id = __le32_to_cpu(cmd_hdr->cmd_id);
-+	skb_pull(skb, sizeof(*cmd_hdr));
-+
-+	return true;
-+}
-+
- static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_event_id id;
-+	u32 cmd_id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &cmd_id))
- 		goto out;
-+	id = MS(cmd_id, WMI_CMD_HDR_CMD_ID);
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-@@ -6002,15 +6014,13 @@ static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- static void ath10k_wmi_10_1_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10x_event_id id;
- 	bool consumed;
-+	u32 cmd_id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &cmd_id))
- 		goto out;
-+	id = MS(cmd_id, WMI_CMD_HDR_CMD_ID);
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-@@ -6133,15 +6143,13 @@ static void ath10k_wmi_10_1_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_2_event_id id;
- 	bool consumed;
-+	u32 cmd_id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &cmd_id))
- 		goto out;
-+	id = MS(cmd_id, WMI_CMD_HDR_CMD_ID);
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-@@ -6282,15 +6290,13 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_4_event_id id;
- 	bool consumed;
-+	u32 cmd_id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (!skb_pull(skb, sizeof(struct wmi_cmd_hdr)))
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &cmd_id))
- 		goto out;
-+	id = MS(cmd_id, WMI_CMD_HDR_CMD_ID);
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7f50a1de6b97..7c787173b187 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -7440,6 +7440,7 @@ struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
- struct ath10k_fw_stats_peer;
- struct ath10k_fw_stats;
-+struct sk_buff;
- 
- int ath10k_wmi_attach(struct ath10k *ar);
- void ath10k_wmi_detach(struct ath10k *ar);
-@@ -7449,6 +7450,7 @@ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
- 
- struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len);
- int ath10k_wmi_connect(struct ath10k *ar);
-+bool ath10k_wmi_pull_cmd_hdr(struct sk_buff *skb, u32 *cmd_id);
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
- int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
--- 
-2.43.0
+The following changes since commit 29ab31f3f27157648f2f7e6d5e1fd9792fdf0614:
 
+   wifi: brcmfmac: set F2 blocksize to 256 for BCM43752 (2026-07-21 18:55:36 +0200)
+
+are available in the Git repository at:
+
+   https://github.com/nbd168/wireless tags/mt76-fixes-2026-07-22
+
+for you to fetch changes up to 2fffc472bec490c8357defcee9c075ca74467352:
+
+   wifi: mt76: mt7996: fix possible NULL-pointer deref in mt7996_mcu_sta_bfer_eht() (2026-07-22 06:20:08 +0000)
+
+----------------------------------------------------------------
+mt76 fixes for 7.2
+
+- fix warnings on removing device
+- null pointer deref fixes
+- fix for data structure confusion on USB/SDIO devices
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+       wifi: mt76: fix airoha_npu dependency tracking
+
+Devin Wittmayer (4):
+       wifi: mt76: mt7921: drop TXRX_NOTIFY on non-mmio buses
+       wifi: mt76: mt7925: drop TXRX_NOTIFY on non-mmio buses
+       wifi: mt76: mt7615: drop TXRX_NOTIFY on non-mmio buses
+       wifi: mt76: restrict NPU/PPE active checks to MMIO devices
+
+Guangshuo Li (1):
+       wifi: mt76: mt7925: guard link STA in decap offload
+
+Lorenzo Bianconi (4):
+       wifi: mt76: connac: fix possible NULL-pointer deref in mt76_connac_mcu_uni_bss_he_tlv()
+       wifi: mt76: mt7925: fix possible NULL-pointer deref in mt7925_mcu_bss_he_tlv()
+       wifi: mt76: mt7996: check pointer returned by mt76_connac_get_he_phy_cap()
+       wifi: mt76: mt7996: fix possible NULL-pointer deref in mt7996_mcu_sta_bfer_eht()
+
+Nicolas Cavallari (1):
+       wifi: mt76: Disable napi when removing device
+
+Rosen Penev (1):
+       wifi: mt76: fix MAC address for non OF pcie cards
+
+Ruoyu Wang (1):
+       wifi: mt76: mt7915: guard HE capability lookups
+
+Sean Wang (1):
+       wifi: mt76: mt7925: fix crash in reset link replay
+
+  drivers/net/wireless/mediatek/mt76/Kconfig           |  4 ++--
+  drivers/net/wireless/mediatek/mt76/Makefile          |  6 +++++-
+  drivers/net/wireless/mediatek/mt76/dma.c             |  5 ++++-
+  drivers/net/wireless/mediatek/mt76/eeprom.c          |  2 +-
+  drivers/net/wireless/mediatek/mt76/mt76.h            |  6 +++---
+  drivers/net/wireless/mediatek/mt76/mt7615/mac.c      |  6 ++++++
+  drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c |  2 ++
+  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c      | 18 +++++++++++++-----
+  drivers/net/wireless/mediatek/mt76/mt7921/mac.c      | 10 +++++++---
+  drivers/net/wireless/mediatek/mt76/mt7925/mac.c      | 13 ++++++++++---
+  drivers/net/wireless/mediatek/mt76/mt7925/main.c     |  3 +++
+  drivers/net/wireless/mediatek/mt76/mt7925/mcu.c      |  2 ++
+  drivers/net/wireless/mediatek/mt76/mt7996/Kconfig    |  2 +-
+  drivers/net/wireless/mediatek/mt76/mt7996/mcu.c      | 19 +++++++++++++------
+  14 files changed, 72 insertions(+), 26 deletions(-)
