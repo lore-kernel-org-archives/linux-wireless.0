@@ -1,160 +1,205 @@
-Received: from mail-oo1-f78.google.com (mail-oo1-f78.google.com [209.85.161.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D223DD52B
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 15:42:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABEB3F327D
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 15:51:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784734949; cv=none; b=FASEVY4vbder9ENYcPAaBAnhxA2HNMOfUjdO+99B6Sn0AE6ii1i9Qk0WOb2a0msqh2Juh20K7RAFKmYdL41aDjGQo+SVAvtggNSLGWN6ye+T6FOuGm/tuzE80qhICddGPaB3i3i/DwYPGFTLapvUjTJgECGWHRO/eqTl9VrUGvY=
+	t=1784735507; cv=none; b=SY10BsljtiAPIsLTypdGhF9RPuW13K7g/X0Rj5sBhMHNeghFXdC6GyUou1mCxAysoPElen2rUBYO4mt4OdKF6rTj43R6h1aL6K7Q4mw4PW9axmzMfATcNKhDHi0RIFr+91XxlhHX4BzoXf0DKWQemmdlRBOGgAI4qOK6KAqYhgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784734949; c=relaxed/simple;
-	bh=V/CQbT4cG8PgvTKQzeaJ54oebvYZdOM4cDO7MD3EZ6E=;
-	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
-	 Content-Type; b=KaaHLwlyfL+PboyLJ4YUdJhwT4nxxeMaFsUF0vhTehzGzhREAlcrV/JgHDpoew1+N0o+ihLeeJA9rGwVdGv4ovZiJPS8DMVyJTkgY0hbdUZasf1a1niE7528ssxGBF/h7fbVpFwZuHFKSd+AlOU/OQwnmxF3nTfOXYgw1QA3f20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oo1-f78.google.com with SMTP id 006d021491bc7-6a37685f41aso15589824eaf.3
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 08:42:26 -0700 (PDT)
+	s=arc-20240116; t=1784735507; c=relaxed/simple;
+	bh=g0RQ1VseOu8D8mX8OMGBRzcOkCsTj/6FhNtlImfHfPs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IhVqYhvV5UcR86R7TyKYdiqzLyKKRICQANKJASO6vYx24rN/K8x1MUyEtNlLmL2Ofr0gx/lrGA6yDIUoNd3CO0eRwa6v5Erm3n5AsxeARscAY2cOoz5PyIrn5LGow2BqE/YimlN2jVzJmMls9KKcFWl5rS1QRp0zWZbEJFo2Fsw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UXD4in6l; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VUBTmvk0; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UXD4in6l";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VUBTmvk0"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66MFY02g1146397
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 15:51:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	hOS8C9O2mpDSWwcI2U+Die3+r9YuIRHaNSGUW96C7PU=; b=UXD4in6lEx65asPm
+	4IOzpayhTLQ0PJAfzip4L2A1hYHhdMy+4AXS34TJkQr1ptkgob8lqPuPFd0IBa0G
+	Awf0peLgEYF9hncGxu8Tx+vggFPcE7rK8w6eYxthHV2+vQFPfREC9L6o4GlUmUne
+	Wy6aCMkCXk8c8XEjf6D4wasmul7r4duMeFmpJPZgv6DyLQPxi92eUcddLrL1+ZHs
+	rJ8NkgleV8u76dlkzHo4ko4ubT2uD2F8mRjp2+Kik5eKBQtu0VguAGVxlW7rbKVj
+	1wssL+hD0alBP8JS5A40Z0YkERo94/7ugJa57xOr5GgEAvT5b+skLXT/9zBto2cn
+	FnySQA==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fjntn30gd-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 15:51:43 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb711c88f2eso2565690a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 08:51:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784735503; x=1785340303; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hOS8C9O2mpDSWwcI2U+Die3+r9YuIRHaNSGUW96C7PU=;
+        b=VUBTmvk0r4+lynetOPS3fSaTPhfYvOZoV9jNo10SbToUM020r3Ew7I3SosnCyxqNTM
+         NRy/PKPPAj0+7Rad44bOPKLKXC6In3U6K97L0Y0foWaUn71krBdkwxkSPt0M2GVZNDUG
+         5/G4jKl9f/GsCfrlMXnhUeqWzd5jyCnUzWNcjZxL8RnAyAjhsr3AIt1XDM+QWEelVxVC
+         kDeMjN+GBHJ2mfOUJRB8KEjT7RPJzz9DvGCCfl/LeyED7/CcESJ0Jo1qDiy5GasK048U
+         +ovS6jXn0OJA2sJpaV2tTIPPB662Z6bamhMzxQfmAI+95ZBxFBMYdCwrDSQk4Qh/gs/x
+         kl3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784734945; x=1785339745;
-        h=content-type:to:from:subject:message-id:in-reply-to:date
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=G8kIQWvUiIWF94Q4aGyO9Xh0mRTexcHO5dZFZn3R9Jg=;
-        b=o61mAFu8J41B+SBJ7ngciQD4TZ+JPJnO3Mrkpc8a0j1hMcbqP5RNSt6Ve9eZ2r5lQL
-         Lp8HxLo8pUyna8WBfd0SjKUBn4pzJ26wqzm5sTuRbM0ezr2TsvhTJGRwv3QTALg4fLKB
-         ihXHZ/IXqygh4lmGtttHrviDgWxlVu3RQC/N7vvl/elag/A7X+qP1aD2ONQxKtLT2vcv
-         DDTzP3SaQXqR1+Sjx7JFYEWdRLIqG9EXnyBVKCRxbxZDKRRjewRNiyFmEKRtmOphVfTK
-         WScIABhzpFNMxDYSC6nq5EHJcpTzxFWuti81TB0iowrp4gPyjoNIEyVoGPDO7HYCcgHy
-         s6jg==
-X-Forwarded-Encrypted: i=1; AHgh+RoCqzXlQCQtyZOxxi+3f1/aQyuRWKnZP/vIX/ns5MWKPIGdG29/bRD0DlDoyyP9Mt3DLAKBSupIvSyyc2Atfw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBu80lCXUmqJWYPIiAzlTm6BugimFQX/ZhtbpoHuxK7akwALKx
-	ShHw+RBpHfR2ihAiA28Tw2tttBKkx59RlVwauOAmrmRU36oF34oY5bbknaTbSQbMiOixa9XFW8K
-	hhI1273HNTbShbHsayuOc7mAYUsVtQDQkuYJqrzgly4RtEet6S2KU0mFmt84=
+        d=1e100.net; s=20251104; t=1784735503; x=1785340303;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hOS8C9O2mpDSWwcI2U+Die3+r9YuIRHaNSGUW96C7PU=;
+        b=G/QfZg8iRcof6XC9keReR2zNfBDglwfITTHsI5HJk4wcm+RRmtd5e+vtH48vWq+P0P
+         FllpyKIq5eQ1Vo2Jbu6mmBrLMfmztPdoUAPdM9HXvOIQ7qde/mlYpyhr5R9GjZvtvdsH
+         M5ZnOHw6NhWxUIrW7RwWOXWpmEqbZpbSRWDUsp543xrttcMOXS9IqJFHLbFGxy4UX2b0
+         CfIRXhbCKnLq4zTCMSi2+DDfcTxYtuPNkQAonoQLkt6nW03ITlivFu+CelYNVDMEMkY3
+         LiyfajummhHePpA7ZQybzzBKXxoLJogCHDDSGvnyeQ84mBtgP4IRczXB8cSgRIHuf0oP
+         M6iA==
+X-Forwarded-Encrypted: i=1; AHgh+RqLNoR2whVQcIx0CJATIIKSA48smUSRK6I2O6Qnlxs3yk9wiLyt+I3sjM63yJQIFUE52O8x0uzuudacH+dMNQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/M7eTbMk9/TjcsBgcuTs7N5ALY3OPnd3DhgERfgtMmWJNcpY3
+	wN0lm51+w0S0fOjJp4NOxVIAd2xymcb54RIQKm/P+KBr9tIHkrcnKp7pTrMNQ8BiNXYGWKu6EkB
+	AygPQZvPyI/z1uNEVi26KXWqCFYQr0KNTz1DfEQtZmC08N0vqHi+vfqznTlFY0L0eh747ew==
+X-Gm-Gg: AR+sD13r/XEODe45JAp+cNG5h2GzVpX4GwtaCAPho4YntGjy2EiZiv1KkiJW6EPHr4D
+	Grdk4VEc5Qg33DOvR8HZZ3pdzcWyi5A1FEqmZktFLC794rWIJaVhSOTLeWmlj/Ky5HF7HbkfwdY
+	b/84dYkBYpB4Zg2mmYxL/1bOjFLaQyvs41qMeWLu5q9I7PCl0iLiXo8qUVqv7+AC+dlg/a2Q6GW
+	w33laMcYkJS0F7VdjhyOotjyQa8CaPcrKGsF6epYbnRHFzlhN+HbIQcIs1sKwN0gjYx0ZdpdgBN
+	Ofht4i8B/Ivho0avGbI6n4Epmbvm97lQpusuYnj6+Z9ytzpa4bIhNAoF21wLpZ30LxF3Uz+wijs
+	cbPidgi8fKliHmXpXef4VrT1lyQJ1T+0G64+2zOkTMyHng/gmITcX8fK6ZG4v
+X-Received: by 2002:a05:6a20:2d07:b0:3c4:3112:45 with SMTP id adf61e73a8af0-3c431120182mr4018438637.1.1784735502580;
+        Wed, 22 Jul 2026 08:51:42 -0700 (PDT)
+X-Received: by 2002:a05:6a20:2d07:b0:3c4:3112:45 with SMTP id adf61e73a8af0-3c431120182mr4018400637.1.1784735502119;
+        Wed, 22 Jul 2026 08:51:42 -0700 (PDT)
+Received: from [10.227.110.203] (i-global254.qualcomm.com. [199.106.103.254])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147e088d3fsm10913111eec.25.2026.07.22.08.51.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Jul 2026 08:51:41 -0700 (PDT)
+Message-ID: <0833afbd-4a25-4e7d-8e77-ab9fac9d36cf@oss.qualcomm.com>
+Date: Wed, 22 Jul 2026 08:51:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:198b:b0:6a1:7fa0:1151 with SMTP id
- 006d021491bc7-6a536a8b1ffmr11337244eaf.66.1784734945067; Wed, 22 Jul 2026
- 08:42:25 -0700 (PDT)
-Date: Wed, 22 Jul 2026 08:42:25 -0700
-In-Reply-To: <6877daee.a70a0220.693ce.002d.GAE@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a60e4e1.16bfb6d0.3c48cb.0003.GAE@google.com>
-Subject: Re: [syzbot] [bpf?] [sctp?] [tipc?] INFO: rcu detected stall in
- sock_close (5)
-From: syzbot <syzbot+9a29e1dba699b6f46a03@syzkaller.appspotmail.com>
-To: andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, 
-	daniel@iogearbox.net, davem@davemloft.net, edumazet@google.com, 
-	horms@kernel.org, jmaloy@redhat.com, kuba@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-sctp@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, lucien.xin@gmail.com, 
-	marcelo.leitner@gmail.com, netdev@vger.kernel.org, pabeni@redhat.com, 
-	syzkaller-bugs@googlegroups.com, tipc-discussion@lists.sourceforge.net
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: pull-request: ath-next-20260721
+To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, jjohnson@kernel.org,
+        Bjorn Andersson <andersson@kernel.org>,
+        Sumit Garg <sumit.garg@oss.qualcomm.com>
+References: <f73b76bb-dc27-42d0-8e47-b617eec766a6@oss.qualcomm.com>
+ <67b88a3cc68473a1ee9d2816c4b5fe07c378434f.camel@sipsolutions.net>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <67b88a3cc68473a1ee9d2816c4b5fe07c378434f.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=AJsSZ1gA c=1 sm=1 tr=0 ts=6a60e70f cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=XsDMgvtJpxJmlFumrWkA:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-GUID: bi-WQZVE24VMjs9ygYPZCOAEcjRvHy1f
+X-Proofpoint-ORIG-GUID: bi-WQZVE24VMjs9ygYPZCOAEcjRvHy1f
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIyMDE1NiBTYWx0ZWRfX73Fdbz6PlaAP
+ pyAU5RiIH2vCDpW3qTyW5I19J5Ay7CioSS+K1D/mnYKaQbdo+LeOB3SmsW/6DrFcfGuOtxQkhX6
+ /p0kxptsbPuO6EvtxWozowu9Yd9cN8U=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIyMDE1NiBTYWx0ZWRfX2zohDaLARpWY
+ kSizDQ4CSKhw8GqnOpgufyu8xNfwcp/KpRBHFBigaYLCt5OgMzv22vxtliyKggBknmRAe/KaFcD
+ 2veq4l7IDqHa3EnjjR9wJxQcsyt3Hm+9uTFELWDN9TI6Nfbq98Z5euSViqNs8rQ76lk061hl/Dp
+ TRLj7Pp4IPThK5fWPxjpYu+5kjzw/gXSArkBqn/hm8IZnRBFHG/e87Sq7F9YlBfLnySB7KFsshO
+ trnh+NxEhHfqLudTdW2PtF7apIWE7bX20knzbdXzZeUTxUeMpuUAg5tAn9juHWJ6gnj8TNBFhZE
+ uhTCXRxsZX6QaebYF1HRVe+A3w2qdhv7HMjNF50fASePNxNH2J9MRxbN6HEX/7iakeVLwO3+fEv
+ ZsJhXibclTWnwWR4T9QSQZOAQictBc+N96+ZVW5afRwBedCeysWXYlzrIzGox2dJvpS93h22bkn
+ MbHlzkCLog3Sq9M7W6w==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-22_04,2026-07-22_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 spamscore=0 clxscore=1015 phishscore=0 lowpriorityscore=0
+ bulkscore=0 adultscore=0 priorityscore=1501 suspectscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607220156
 
-syzbot has found a reproducer for the following issue on:
+On 7/22/2026 7:08 AM, Johannes Berg wrote:
+> On Tue, 2026-07-21 at 16:46 -0700, Jeff Johnson wrote:
+>>
+>> ----------------------------------------------------------------
+>>
+>> NOTE TO UPSTREAM MAINTAINERS
+>> This PR includes the merge of an immutable branch from the qcom tree
+>> https://lore.kernel.org/all/178362521364.2422497.1305957434056184382.b4-ty@kernel.org/
+> 
+> That's annoying, it added a kernel-doc warning that now shows up on our
+> output... I guess we need to ignore that.
+> 
+>> New warnings added:
+>> Warning: drivers/firmware/qcom/qcom_scm.c:1055 No description found for return value of 'qcom_scm_is_pas_available'
+>> Warning: drivers/firmware/qcom/qcom_scm.c:1055 No description found for return value of 'qcom_scm_is_pas_available'
+>> Per-file breakdown:
+>>      2 drivers/firmware/qcom/qcom_scm.c
 
-HEAD commit:    248951ddc14d Merge tag 'hwmon-for-v7.2-rc5' of git://git.k..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=15080ab9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=98da55a882774dfe
-dashboard link: https://syzkaller.appspot.com/bug?extid=9a29e1dba699b6f46a03
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=165d9746580000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15ba2ab9580000
+:(
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/cbba9d9c5929/disk-248951dd.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/84360c1cd7aa/vmlinux-248951dd.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/c128dc7a62e1/bzImage-248951dd.xz
+I run kernel-doc on the patches I process, but since I didn't directly process
+that series I didn't see it.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9a29e1dba699b6f46a03@syzkaller.appspotmail.com
+Bjorn/Sumit: looks like there are a lot of those that need cleaning up...
+% scripts/kernel-doc -Wall -Werror -none drivers/firmware/qcom/qcom_scm.c
+Warning: drivers/firmware/qcom/qcom_scm.c:317 No description found for return value of 'qcom_scm_call'
+Warning: drivers/firmware/qcom/qcom_scm.c:343 No description found for return value of 'qcom_scm_call_atomic'
+Warning: drivers/firmware/qcom/qcom_scm.c:440 No description found for return value of 'qcom_scm_set_warm_boot_addr'
+Warning: drivers/firmware/qcom/qcom_scm.c:453 No description found for return value of 'qcom_scm_set_cold_boot_addr'
+Warning: drivers/firmware/qcom/qcom_scm.c:1055 No description found for return value of 'qcom_scm_is_pas_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1147 No description found for return value of 'qcom_scm_restore_sec_cfg_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1325 No description found for return value of 'qcom_scm_assign_mem'
+Warning: drivers/firmware/qcom/qcom_scm.c:1396 No description found for return value of 'qcom_scm_ocmem_lock_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1413 No description found for return value of 'qcom_scm_ocmem_lock'
+Warning: drivers/firmware/qcom/qcom_scm.c:1437 No description found for return value of 'qcom_scm_ocmem_unlock'
+Warning: drivers/firmware/qcom/qcom_scm.c:1767 No description found for return value of 'qcom_scm_hdcp_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1792 No description found for return value of 'qcom_scm_hdcp_req'
+Warning: drivers/firmware/qcom/qcom_scm.c:2526 No description found for return value of 'qcom_scm_is_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:317 No description found for return value of 'qcom_scm_call'
+Warning: drivers/firmware/qcom/qcom_scm.c:343 No description found for return value of 'qcom_scm_call_atomic'
+Warning: drivers/firmware/qcom/qcom_scm.c:440 No description found for return value of 'qcom_scm_set_warm_boot_addr'
+Warning: drivers/firmware/qcom/qcom_scm.c:453 No description found for return value of 'qcom_scm_set_cold_boot_addr'
+Warning: drivers/firmware/qcom/qcom_scm.c:1055 No description found for return value of 'qcom_scm_is_pas_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1147 No description found for return value of 'qcom_scm_restore_sec_cfg_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1325 No description found for return value of 'qcom_scm_assign_mem'
+Warning: drivers/firmware/qcom/qcom_scm.c:1396 No description found for return value of 'qcom_scm_ocmem_lock_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1413 No description found for return value of 'qcom_scm_ocmem_lock'
+Warning: drivers/firmware/qcom/qcom_scm.c:1437 No description found for return value of 'qcom_scm_ocmem_unlock'
+Warning: drivers/firmware/qcom/qcom_scm.c:1767 No description found for return value of 'qcom_scm_hdcp_available'
+Warning: drivers/firmware/qcom/qcom_scm.c:1792 No description found for return value of 'qcom_scm_hdcp_req'
+Warning: drivers/firmware/qcom/qcom_scm.c:2526 No description found for return value of 'qcom_scm_is_available'
+26 warnings as errors
 
-rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-rcu: 	Tasks blocked on level-0 rcu_node (CPUs 0-1): P5985
-rcu: 	(detected by 0, t=10502 jiffies, g=18453, q=4003 ncpus=2)
-task:syz.0.20        state:R  running task     stack:22176 pid:5985  tgid:5984  ppid:5819   task_flags:0x400040 flags:0x00080002
-Call Trace:
- <IRQ>
- sched_show_task+0x4aa/0x5f0 kernel/sched/core.c:8184
- rcu_print_detail_task_stall_rnp kernel/rcu/tree_stall.h:292 [inline]
- print_other_cpu_stall+0xf7b/0x1310 kernel/rcu/tree_stall.h:680
- check_cpu_stall kernel/rcu/tree_stall.h:855 [inline]
- rcu_pending kernel/rcu/tree.c:3708 [inline]
- rcu_sched_clock_irq+0x93d/0x1050 kernel/rcu/tree.c:2744
- update_process_times+0x234/0x2d0 kernel/time/timer.c:2475
- tick_sched_handle kernel/time/tick-sched.c:296 [inline]
- tick_nohz_handler+0x38f/0x6b0 kernel/time/tick-sched.c:317
- __run_hrtimer kernel/time/hrtimer.c:2032 [inline]
- __hrtimer_run_queues+0x3a0/0xaf0 kernel/time/hrtimer.c:2096
- hrtimer_interrupt+0x44a/0x900 kernel/time/hrtimer.c:2215
- local_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1051 [inline]
- __sysvec_apic_timer_interrupt+0x102/0x430 arch/x86/kernel/apic/apic.c:1068
- instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1062 [inline]
- sysvec_apic_timer_interrupt+0xa1/0xc0 arch/x86/kernel/apic/apic.c:1062
- </IRQ>
- <TASK>
- asm_sysvec_apic_timer_interrupt+0x1a/0x20 arch/x86/include/asm/idtentry.h:674
-RIP: 0010:__local_bh_enable_ip+0x1c2/0x2b0 kernel/softirq.c:307
-Code: f7 89 df e8 60 01 00 00 41 f7 c4 00 02 00 00 74 05 e8 c2 9e 45 00 9c 58 a9 00 02 00 00 75 23 41 f7 c4 00 02 00 00 74 01 fb 5b <41> 5c 41 5d 41 5e 41 5f 5d e9 00 97 be 09 cc 90 0f 0b 90 e9 66 fe
-RSP: 0018:ffffc900040ee0f0 EFLAGS: 00000206
-RAX: 0000000000000006 RBX: dffffc0000000000 RCX: 0000000000000046
-RDX: 0000000000000002 RSI: ffffffff8d883356 RDI: ffffffff8bca6680
-RBP: 1ffff11005252d1e R08: ffffffff8faf8df7 R09: 1ffffffff1f5f1be
-R10: dffffc0000000000 R11: fffffbfff1f5f1bf R12: 0000000000000282
-R13: dffffc0000000000 R14: ffff8880292968f4 R15: 0000000000000001
- local_bh_enable include/linux/bottom_half.h:33 [inline]
- spin_unlock_bh include/linux/spinlock_rt.h:116 [inline]
- tipc_skb_peek_port net/tipc/msg.h:1235 [inline]
- tipc_sk_rcv+0x44d/0x2b30 net/tipc/socket.c:2495
- tipc_node_xmit+0x218/0xf10 net/tipc/node.c:1701
- tipc_node_xmit_skb+0x139/0x1b0 net/tipc/node.c:1766
- tipc_sk_rcv+0x2926/0x2b30 net/tipc/socket.c:2526
- tipc_node_xmit+0x218/0xf10 net/tipc/node.c:1701
- tipc_sk_push_backlog net/tipc/socket.c:1313 [inline]
- tipc_sk_filter_connect net/tipc/socket.c:2259 [inline]
- tipc_sk_filter_rcv+0x1811/0x3240 net/tipc/socket.c:2368
- tipc_sk_enqueue net/tipc/socket.c:2449 [inline]
- tipc_sk_rcv+0x8c4/0x2b30 net/tipc/socket.c:2501
- tipc_node_xmit+0x218/0xf10 net/tipc/node.c:1701
- tipc_node_xmit_skb net/tipc/node.c:1766 [inline]
- tipc_node_distr_xmit+0x2da/0x420 net/tipc/node.c:1781
- tipc_sk_backlog_rcv+0x1b6/0x280 net/tipc/socket.c:2416
- sk_backlog_rcv include/net/sock.h:1190 [inline]
- __release_sock+0x2b2/0x3d0 net/core/sock.c:3261
- release_sock+0x1be/0x290 net/core/sock.c:3860
- tipc_release+0x1abe/0x2500 net/tipc/socket.c:651
- __sock_release net/socket.c:710 [inline]
- sock_close+0xad/0x220 net/socket.c:1501
- __fput+0x42a/0xa80 fs/file_table.c:512
- task_work_run+0x1d9/0x270 kernel/task_work.c:233
- resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
- __exit_to_user_mode_loop kernel/entry/common.c:70 [inline]
- exit_to_user_mode_loop+0x1fa/0x730 kernel/entry/common.c:101
- __exit_to_user_mode_prepare include/linux/irq-entry-common.h:207 [inline]
- syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:230 [inline]
- syscall_exit_to_user_mode include/linux/entry-common.h:318 [inline]
- do_syscall_64+0x353/0x580 arch/x86/entry/syscall_64.c:100
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f7460e5de99
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f74604be028 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: 00000000000203a0 RBX: 00007f74610e5fa0 RCX: 00007f7460e5de99
-RDX: 0000000000000000 RSI: 00002000000003c0 RDI: 0000000000000003
-RBP: 00007f7460ef3eaf R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f74610e6038 R14: 00007f74610e5fa0 R15: 00007ffc753a57c8
- </TASK>
+> 
+> I also get two fixes tag reports:
+> 
+>> Commit: b127f79a4933 ("wifi: ath12k: Correctly copy the hint BSSID in WMI scan request")
+>> 	Fixes tag: Fixes: f40abb4788a2 ("ath12k: New driver for Qualcomm 11be hw family")
+>> 	Has these problem(s):
+>> 		- Target SHA1 does not exist
+>> Commit: fde37c064641 ("wifi: ath12k: Set IEEE80211_OFFLOAD_ENCAP_4ADDR after tx_encap_type vdev param")
+>> 	Fixes tag: Fixes: 729cad3c3c9e ("wifi: ath12k: Add 4-address mode support for eth offload")
+>> 	Has these problem(s):
+>> 		- empty lines surround the Fixes tag
+> 
+> Note that the first of those ... the commit exists, but not in the right
+> tree. It's in some ath12k-bringup-start tag in your tree, but not in
+> mainline, got a different sha1 there. So checking locally is confusing.
 
+Let me rewrite those and send another PR
 
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+> 
+> johannes
+
