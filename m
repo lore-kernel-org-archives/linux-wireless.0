@@ -1,47 +1,89 @@
-Received: from smtpbgjp3.qq.com (smtpbgjp3.qq.com [54.92.39.34])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC0C473C89;
-	Wed, 22 Jul 2026 09:55:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.92.39.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE307435A86
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 09:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784714128; cv=none; b=UcmuSd8qJ/lpKeiTAnjk96HAS/ozi7jVFP10ulruAfAhiza/ujdroy6ikyeSZBfpeqzuptPQFR8nLMKhdtrsszat7kg++O+IPDtPnVq4gZxNH22FY0kjHfTETuUqSsEMoVS/plAEN8aoCLTt8W1Z463s+gQ8+rKcvD/+YIfi4Cs=
+	t=1784714326; cv=none; b=n+80WQeZIxgrq5NauEDZ/Sfc9o2nDC0rTFM+YlNAK5bjOhDDDKffHUwkiZfj//7CFokdyekJn+/bJOILRw6ef9Ufnphd/snJSKbinJmUEAgMLznSx7iIaZp3LS8+Pd1PZum20pSQlcJxi4F1FpgsPz559s/PjVT7W4r1VuZfNNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784714128; c=relaxed/simple;
-	bh=Vji1V8JpOzdcPu514MX0j/+Im7SlkTT3W8MIYCAX/uU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ZU4Db8oe8NuNn+i+yTDi5dmb+59BOiZL/Bb5H1EF6sKpIk5t23kV2MurQAgYRamF8OovRVuI0CzSToLJV28UG05nQNZ/r+PpFGqTJgi1Wqh8mbPL1lx57IPfFVLNHCPP4Qj4yPPzVzz/5rtre59u5aTYO+vkdEB6HnpG6C51EUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=d4oI8DAy; arc=none smtp.client-ip=54.92.39.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1784714326; c=relaxed/simple;
+	bh=2BGwanOIyMNjbsRycQDCVW6MBsaeJHjHli0BXyUTCWA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=RKLimZFS5PRdUwMQAgDioSndNrYsfBXTN9Pe4v6WOqgZUeVgrRNVDYn0WuYhFMfjz0gBWXFzYuvUREX9fOtcp6m261bToUk+YfT/5fkza5duE0grXMIaLFXmLXVkgpO+Tb+Xj3zBzgXsSuyn957YsnyjhzZAKjWdeeANnjcNung=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hwrVs9NH; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=h+q+9TUN; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="d4oI8DAy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1784714076;
-	bh=Ss/nWa/pahTed7gehVQPHqqDpxTkq68vTxA4pvKZoEc=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=d4oI8DAyeKaTRGbCSHOKZesGPSrncThFBTWeM9OIvfy1xXPFZRQP1OaQvP1tKMOSm
-	 KcmFteQAX06RUpkbC0od+MWiONnuxnBcAP+KRjfR9oujNifBMkGEtnMkkvcOi+VbtK
-	 +CiWIzsZrirpc7nceff1lyWLldhFdFloLJNRHMOw=
-X-QQ-mid: esmtpsz20t1784714071t7adea1de
-X-QQ-Originating-IP: i1P51o8fmN+VvUAjrLDcP+Jkmu8bvqpj6wwdKGDcflM=
-Received: from localhost.localdomain ( [1.202.39.170])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 22 Jul 2026 17:54:23 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 5174629714768160000
-EX-QQ-RecipientCnt: 6
-From: ZhaoJinming <zhaojinming@uniontech.com>
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	ZhaoJinming <zhaojinming@uniontech.com>
-Subject: [PATCH v4] wifi: ath11k: fix resource leak on error in ext IRQ setup
-Date: Wed, 22 Jul 2026 17:54:19 +0800
-Message-Id: <20260722095419.1411003-1-zhaojinming@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hwrVs9NH";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="h+q+9TUN"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66M8x5Ux1400169
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 09:58:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=WyHN62RuRdrRHFOMXTSlAjFQ2fpF50vbFaQ
+	Boq5Mw/4=; b=hwrVs9NHmOUXRPR8x0bYCNuF7OhVIU9QQgE5vtyzEF5nzj/Yrt6
+	NA6omqWw2un2ZESHu3XR2MlYhUADlhcCI2cjxXCeI7oV5LO8SKb364Y0tXqRHQa4
+	85OkhU1rh1iFx1KTqwIifSpeN2tX75X2ZloKg0Rrpuch0fjtBZpgVouoB751V+fj
+	JIeb05au98uCME3vXukJaOZdEVQ95NGnGoIIsivl+aIeK/bjBrxETJc2H+zVYBuO
+	69P5esTqascxmVNHesivIIx/DzALwMaq9mjx41CxWgc/8wkhcG15nH9zD1cJWgWJ
+	v8igVhdr4P17WFuqIEoDDBfYEbPvA7RNoZw==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fjr83901d-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 09:58:44 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-caf5fa127d4so13609653a12.0
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 02:58:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784714324; x=1785319124; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=WyHN62RuRdrRHFOMXTSlAjFQ2fpF50vbFaQBoq5Mw/4=;
+        b=h+q+9TUNZdrWE5vf7WpOT7yzrD/5pWdSD6EFhNwqbzihz/3OzCcUItun/ijQ4OCe+6
+         Ip38SRIhrO3Rzbobdzio77yH6SxY8QDRptBNjUHEG+xD6dfdzEVwqtHzHV7k8VoHQozV
+         JMrCfzhlXAfMQHErkucmS/c9GSUHrEussvrfFiRtlJcoH/60uyC3+oE6e7DSVDFDfl8l
+         j//pPIoT4SvNMr59jPyxXE/aPpVVLESr5Q+2rbb44glTHATLKLtErP8CJc63boolOSog
+         edD5108JnjIsrvyH+dVO0kqhzRo8Gnp3QYCuKrDXp7HwhTfKwtW9PAFY91hZOKBiYmoh
+         n/EQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784714324; x=1785319124;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=WyHN62RuRdrRHFOMXTSlAjFQ2fpF50vbFaQBoq5Mw/4=;
+        b=VnPYwxyRH44X1YumpKYlYFGBZg/Ltkz5zdI2Hkp+EId172G0NjQ3MTl+f/lWWzq0Lr
+         OAgZHnw3H3hAi7/86MZBQTOhghVXlzhKI2F7A60X2NtysfsQSms3kCZi7o70KtuU9ZVz
+         uKI9uHw4j9rnZsDahXOkP0jtL2+nmZ5SVRDDCVQA7+VTZv1t4QllSjiivab1bed1dqeE
+         uo6/DlsDdA2F2oHjsL3p06iXDEP0XeDK6dKdeNDfpky8q0CWtOusIR5pX5o/JaZSKIus
+         83fFeyJRO/TyR89I9u6xG3kfyD9+LCqkbepFuHDO5XWqGuma3z8Lt+SFSS8IuJakRBb7
+         ZGNg==
+X-Gm-Message-State: AOJu0YyTk4CuTOteHLTNc6URwO6y1G8y4Jfy7Jbsi5oN/ur4n5Zur7Hu
+	DnJAoryPbCORkstcpMwB56z/X2CGwJCBp5q/eyb8J+DYbuvG/3qhXowGbIW0weyaXpx4oyxaWz1
+	P4RMbMjce7ZuyuKZXtkch79VU0kqPylJOXsNNTraV3sGqZlgehoD0t6WC/6A12OG82MvJUDNVnO
+	1pdw==
+X-Gm-Gg: AR+sD13ZLYc9i2XwCZNmYmJOIeP0UxMsIZe9nUMjZLQcDAj7iev5lK9iYSpwnURYv9M
+	ENFiM0lgAV5YwhXIGUhz1AgZlWn8KNDf+Z18Y5cvqAtMwz0eryhw1PNhEBOWVIpu09awlYZx32G
+	kkP68T2cSEqE5vxDhkipNYhlIPiF4TXHfY1WBnuYP0H/fTDQ4tkXbXizOyPHGapfqVSf+xZMABL
+	gQLeNJYCmhgNzQN/VwxGTiDM6AUmMjkd5/piwsfFWjCE7Q6tDRiT5SA5TAa04AeRYmrCpWjrGE4
+	dOBR1l5qoB0C68YJsfAOl9TzajnxLGeZQQEx+kgn2h6nDzZiiHoEw5eTtC6wLRcL6tNASZDgEJc
+	etCkO+w35ZGJC/JnmVsGFkT3Zf0XPaFiSf1iI+aUppDyyJuQ/TCY/YG9qips+DKTokit4i3PmMp
+	lE1n8DLhpbg/7fMXg=
+X-Received: by 2002:a05:6a21:4d92:b0:3af:6704:18ca with SMTP id adf61e73a8af0-3c3ad8e8573mr24016147637.35.1784714323915;
+        Wed, 22 Jul 2026 02:58:43 -0700 (PDT)
+X-Received: by 2002:a05:6a21:4d92:b0:3af:6704:18ca with SMTP id adf61e73a8af0-3c3ad8e8573mr24016126637.35.1784714323447;
+        Wed, 22 Jul 2026 02:58:43 -0700 (PDT)
+Received: from hu-hbijlani-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3147dc1b99esm7816711eec.3.2026.07.22.02.58.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 02:58:43 -0700 (PDT)
+From: Harsh Kumar Bijlani <harsh.bijlani@oss.qualcomm.com>
+X-Google-Original-From: Harsh Kumar Bijlani <hbijlani@qti.qualcomm.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH ath-next] wifi: ath12k: Guard dp_peer dereference in ath12k_mac_peer_cleanup_all()
+Date: Wed, 22 Jul 2026 15:28:28 +0530
+Message-Id: <20260722095828.2930377-1-hbijlani@qti.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,230 +91,97 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: esmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: NI6mNDRHoM9VD1c+4JYEnDIaH8eArf7l0st1daqA0RCLpzdNp9bQSrRl
-	Fr7ijjzYYDUy0zCyTbuOiq96YqSQscWQY5pNZ8vB7kDXuYw5+ABukb8BKDFY10gCusxzYly
-	tVKteHe4YR/ZZFYa7NruR2+cPUo7obOFVAeNIaBw+cGHB1MwRuVsevRY96I91cMhTwrHEJ2
-	IxrXQSrsJQTIVg3JjcT5V2AmwCeXMu8yq6EkwE9Ml4ShjaPB6UMpUw877hiUk16iIulaGyU
-	B4qUoNu0Wa6drHjp6YLsE4ZKcfVcf4qME9pJP/WoNhxhQEraB16MqNWTdrtjiL+mlOJGNjv
-	bxxo9abqkW0BUHybLy9cUVSv6jwe+gFw+8hpGo7DQ+4E5CEjqMazqaYxEzkHxoYEhshHfGJ
-	aG/TP/eMYAItkfHqp7+pnuL65m9DweLQTJTplzwQ8XNM9Iuu8PQDQ7k9bzS9nzJnT4KT9Fi
-	kgh+kahpK/coG4IO2Bo6tdVybbHha4lqHOFelZjhsWqPkG86tKd/PCSddEaZt6pcaNFchUe
-	pnX0Y8Q7iCXi5D2tGK8w4WOGEl4nrxDwitERSuzO4KYrCIFRLV0mA7/l/9gEJC/pzNyQkhy
-	DQUApvrnOlq+pXaBYXhQCpzPtMARj3hMiC0aghr1jBsfcp8iOGk+QpsDCWQHCMhKTXEmuI6
-	r6oaseflFcj2sAX+SDP2hl7/A3MIqPLjVciLT1ctJhP3JHjrPyPTUJ88iCPDmFDUiQk+FdW
-	NhI3OHuxPYX1//syJF7d66wxRWcgtx2624KwbtS7Izs+/N6vW77jmPiq5jRULOJlsZWg27j
-	zQ8ZeB7pQp/Jews31I2O6vCyuTFx/RH/c+KYHZUdmlNqQXkYrRjcl/PlYN4+dqqxUSozFCI
-	srpTtIhiLv2hYEVAn6et40Y+IHzGSeLNq/Ob2JXwM9Pa9tSSaciYNJcmtwAdGYuNPPXN6lf
-	DPXNuH9ieCD1LKYCCoLQXM+Do/+uNC6WccwBHOH+zGAFddbugBe9WbmaPco9XSMd61zAXTB
-	ce/VZr259gtPNZ/kbsiSX+sH1Cfx5JtaqgfCmZPg==
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
-X-QQ-RECHKSPAM: 0
+X-Proofpoint-ORIG-GUID: E5n-Rt7660DNofgM5LmlzSWpcatwq4kQ
+X-Authority-Analysis: v=2.4 cv=VfrH+lp9 c=1 sm=1 tr=0 ts=6a609454 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
+ a=pHrGrg7HEta1e1VtBTQA:9 a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-GUID: E5n-Rt7660DNofgM5LmlzSWpcatwq4kQ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIyMDA5NSBTYWx0ZWRfX10UwmSpjN14h
+ 66AxaWBF2rx2hkyRsHR3RiSsnwAfK+tU2qwEE6bek1KWY0YjsLBu0WWRNVE5+mF8O4/LX+VCCxN
+ fA0XCT8Xfj1Kw5QFk9LKEHfFKOUQa9lapz4FyeKm9eeQZUdpmi74UQUIrteorfMWCspYdvqxjS9
+ +a1AtYi2yDiMxjjpfVgY+JMhfTHbGSlt2SQ4riW1MwqWLpsWo1v7tCPHIjfZ2wNDe9IXOrPQbRM
+ WdKhWBJnoamV+4OW/nQ6dp7+IhpuJknIAROxnaZ9dvwwVJNKJNWZHMnGaBTwbqEX1mr+pkwmO72
+ asBHG6pvqVO2bEc7YeEq9hZIbEcREtXP7ghfC8TYlqRgtKBrgmLkQiFrnqdVvuYvmI1LTJePsDN
+ n164SdqPJKgbZZrcSOJ99LTS21hx2G6/kqPASvPpfDHtlcQiWvBzGvCnf61zgxJCfewBWDqk79l
+ NxctbrDKYIIyN0ZtOCw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIyMDA5NSBTYWx0ZWRfXxbUu7KSK1XaI
+ OYooP7ejSfw74qqkYq7Y7pFpQVx/QqpvZYHoz6M7BCUFsS9gab8pwlsX6Fq7tzM0VJVbARk7gOc
+ qnoJ/uSPrsCDD8JHqOiWUisD5/4xc1Q=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-22_03,2026-07-21_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 suspectscore=0 malwarescore=0 lowpriorityscore=0 clxscore=1011
+ priorityscore=1501 spamscore=0 bulkscore=0 impostorscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607220095
 
-In ath11k_ahb_config_irq(), when a CE request_irq() fails, the function
-returns the error immediately without freeing the CE IRQs that were
-successfully registered in previous loop iterations. The probe error
-path does not call ath11k_ahb_free_irq() either, so the previously
-registered CE IRQ handlers remain attached to the interrupt lines and
-are never released.
+From: Harsh Kumar Bijlani <harsh.bijlani@oss.qualcomm.com>
 
-In ath11k_ahb_config_ext_irq(), when an external request_irq() fails,
-the error is only logged and the loop continues. The function then
-returns 0 indicating success, leaving the device in a partially
-configured state where some external IRQs are not registered. This
-causes enable_irq()/disable_irq()/free_irq() to be called on
-unregistered IRQs during runtime and remove/shutdown, triggering
-WARN_ON(!desc->action), and missing interrupt handlers lead to data
-loss.
+In ath12k_mac_peer_cleanup_all(), the code iterates over all
+ath12k_dp_link_peer entries in the dp->peers list and performs
+datapath peer cleanup. For each peer, it accesses peer->dp_peer
+to clear the link_peers[] and dp_peers[] RCU pointers.
 
-Additionally, if alloc_netdev_dummy() fails for a later IRQ group, the
-function returns -ENOMEM without freeing the ext IRQs and napi_ndev
-that were successfully set up for earlier groups.
+However, peer->dp_peer can legitimately be NULL. The
+ath12k_dp_link_peer structure is allocated and added to dp->peers
+during peer creation (ath12k_peer_create()), but the dp_peer
+assignment happens later via ath12k_dp_link_peer_assign(), which
+is called only when a valid dp_peer is found or created. If the
+peer creation sequence is interrupted, for example, due to a
+firmware crash, a race during interface teardown, or a failure
+in the HTT peer-map event processing, then a link peer entry can
+exist in dp->peers with dp_peer still NULL.
 
-Fix all three issues: propagate the error up to the caller and unwind
-all successfully registered IRQs and allocated resources on failure.
+Accessing peer->dp_peer without a NULL check in this path leads
+to a NULL pointer dereference kernel crash during the mac cleanup
+path, which is invoked on radio stop or firmware recovery.
 
-Signed-off-by: ZhaoJinming <zhaojinming@uniontech.com>
+This is consistent with how the rest of the driver handles this
+field: ath12k_dp_link_peer_unassign(), ath12k_dp_peer_cleanup(),
+and several other paths all guard access to peer->dp_peer with
+an explicit NULL check before dereferencing it.
+
+Fix this by wrapping the dp_peer dereference block inside a
+NULL check, mirroring the pattern already used in the same
+function for the Rx TID cleanup:
+
+    if (peer->sta && peer->dp_peer)
+        ath12k_dp_rx_peer_tid_cleanup(ar, peer);
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3
+
+Signed-off-by: Harsh Kumar Bijlani <harsh.bijlani@oss.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath12k/mac.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Changes in v4:
-- Drop the napi_ndev NULL guard in ath11k_ahb_free_ext_irq_grp() as it
-  is unreachable in all existing call paths. A silent guard against an
-  impossible condition hides bugs instead of exposing them.
-
-Changes in v3:
-- Extract ath11k_ahb_free_ext_irq_grp() to handle per-group ext IRQ
-  cleanup and refactor ath11k_ahb_free_ext_irq() to use it.
-- On request_irq() failure in ath11k_ahb_config_ext_irq(), immediately
-  clean up the current group via ath11k_ahb_free_ext_irq_grp() before
-  jumping to the error label to unwind earlier groups.
-- Move u32 num_irq declaration before the irq_grp assignment to follow
-  declaration-before-statement ordering.
-- Extract ath11k_ahb_free_ce_irqs() to handle partial/full CE IRQ cleanup
-  and refactor ath11k_ahb_free_irq() to use it, replacing the duplicated
-  err_ce_irq cleanup loop in ath11k_ahb_config_irq().
-
-Changes in v2:
-- Move `irq_grp` declaration from for-loop body to function scope to fix
-  compile error in err_request_irq error path.
-- Set ret = -ENOMEM before goto err_request_irq on alloc_netdev_dummy()
-  failure to avoid returning uninitialized value.
-- When ath11k_ahb_config_ext_irq() fails, unwind the already-registered
-  CE IRQs via a shared err_ce_irq cleanup path to avoid leaking them.
-
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index f566d699d074..bdf53aa7ddf1 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -431,36 +431,44 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
- 	ab->qmi.service_ins_id = ab->hw_params.qmi_service_ins_id;
- }
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 956414b953ec..18c1c809ae4d 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1237,10 +1237,12 @@ void ath12k_mac_peer_cleanup_all(struct ath12k *ar)
  
--static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
-+static void ath11k_ahb_free_ext_irq_grp(struct ath11k_base *ab,
-+				      struct ath11k_ext_irq_grp *irq_grp)
- {
--	int i, j;
--
--	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
--		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
-+	int j;
- 
--		for (j = 0; j < irq_grp->num_irq; j++)
--			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
-+	for (j = 0; j < irq_grp->num_irq; j++)
-+		free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
- 
--		netif_napi_del(&irq_grp->napi);
--		free_netdev(irq_grp->napi_ndev);
--	}
-+	netif_napi_del(&irq_grp->napi);
-+	free_netdev(irq_grp->napi_ndev);
- }
- 
--static void ath11k_ahb_free_irq(struct ath11k_base *ab)
-+static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
- {
--	int irq_idx;
- 	int i;
- 
--	if (ab->hw_params.hybrid_bus_type)
--		return ath11k_pcic_free_irq(ab);
-+	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++)
-+		ath11k_ahb_free_ext_irq_grp(ab, &ab->ext_irq_grp[i]);
-+}
- 
--	for (i = 0; i < ab->hw_params.ce_count; i++) {
-+static void ath11k_ahb_free_ce_irqs(struct ath11k_base *ab, int max_idx)
-+{
-+	int irq_idx, i;
-+
-+	for (i = 0; i < max_idx; i++) {
- 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
- 			continue;
- 		irq_idx = ATH11K_IRQ_CE0_OFFSET + i;
- 		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
- 	}
-+}
-+
-+static void ath11k_ahb_free_irq(struct ath11k_base *ab)
-+{
-+	if (ab->hw_params.hybrid_bus_type)
-+		return ath11k_pcic_free_irq(ab);
- 
-+	ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
- 	ath11k_ahb_free_ext_irq(ab);
- }
- 
-@@ -524,20 +532,25 @@ static irqreturn_t ath11k_ahb_ext_interrupt_handler(int irq, void *arg)
- static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- {
- 	struct ath11k_hw_params *hw = &ab->hw_params;
-+	struct ath11k_ext_irq_grp *irq_grp;
- 	int i, j;
- 	int irq;
- 	int ret;
- 
- 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
--		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
- 		u32 num_irq = 0;
- 
-+		irq_grp = &ab->ext_irq_grp[i];
-+
- 		irq_grp->ab = ab;
- 		irq_grp->grp_id = i;
- 
- 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
--		if (!irq_grp->napi_ndev)
--			return -ENOMEM;
-+		if (!irq_grp->napi_ndev) {
-+			ret = -ENOMEM;
-+			irq_grp->num_irq = 0;
-+			goto err_request_irq;
+ 		/* cleanup dp peer */
+ 		spin_lock_bh(&dp_hw->peer_lock);
+-		dp_peer = peer->dp_peer;
+-		peerid_index = ath12k_dp_peer_get_peerid_index(dp, peer->peer_id);
+-		rcu_assign_pointer(dp_peer->link_peers[peer->link_id], NULL);
+-		rcu_assign_pointer(dp_hw->dp_peers[peerid_index], NULL);
++		if (peer->dp_peer) {
++			dp_peer = peer->dp_peer;
++			peerid_index = ath12k_dp_peer_get_peerid_index(dp, peer->peer_id);
++			rcu_assign_pointer(dp_peer->link_peers[peer->link_id], NULL);
++			rcu_assign_pointer(dp_hw->dp_peers[peerid_index], NULL);
 +		}
+ 		spin_unlock_bh(&dp_hw->peer_lock);
  
- 		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
- 			       ath11k_ahb_ext_grp_napi_poll);
-@@ -585,9 +598,7 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- 				}
- 			}
- 		}
--		irq_grp->num_irq = num_irq;
--
--		for (j = 0; j < irq_grp->num_irq; j++) {
-+		for (j = 0; j < num_irq; j++) {
- 			int irq_idx = irq_grp->irqs[j];
- 
- 			irq = platform_get_irq_byname(ab->pdev,
-@@ -600,11 +611,23 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- 			if (ret) {
- 				ath11k_err(ab, "failed request_irq for %d\n",
- 					   irq);
-+				irq_grp->num_irq = j;
-+				ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
-+				goto err_request_irq;
- 			}
- 		}
-+
-+		irq_grp->num_irq = num_irq;
- 	}
- 
- 	return 0;
-+
-+err_request_irq:
-+	for (i--; i >= 0; i--) {
-+		irq_grp = &ab->ext_irq_grp[i];
-+		ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
-+	}
-+	return ret;
- }
- 
- static int ath11k_ahb_config_irq(struct ath11k_base *ab)
-@@ -629,16 +652,24 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
- 		ret = request_irq(irq, ath11k_ahb_ce_interrupt_handler,
- 				  IRQF_TRIGGER_RISING, irq_name[irq_idx],
- 				  ce_pipe);
--		if (ret)
-+		if (ret) {
-+			ath11k_err(ab, "failed request_irq for %d\n", irq);
-+			ath11k_ahb_free_ce_irqs(ab, i);
- 			return ret;
-+		}
- 
- 		ab->irq_num[irq_idx] = irq;
- 	}
- 
- 	/* Configure external interrupts */
- 	ret = ath11k_ahb_config_ext_irq(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to configure ext irq: %d\n", ret);
-+		ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
-+		return ret;
-+	}
- 
--	return ret;
-+	return 0;
- }
- 
- static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
+ 		ath12k_dp_link_peer_rhash_delete(dp, peer);
+
+base-commit: ca27e3c2284a7a43ba390ed5ce0d68b3c869c0ce
+-- 
+2.34.1
+
