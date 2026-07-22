@@ -1,66 +1,72 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D5A3C8716
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 11:28:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3640C298CC4
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 11:52:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784719724; cv=none; b=aM2K+4o50eNYvrG79lz/buAmISuqRywstkILd+wjCVqxkrPKFWPkyouMsQePd9OQCny5tY94UuNgYeQYtqI0j9Qx3jNRBcyVkQhZYvZ8YLRbR+tbhE2sldr75RsixnrcV5ro4setOKjcf3+YO1csrK6EwKR8cwbl/e9bmKr7F0Y=
+	t=1784721147; cv=none; b=FKeBiam41U4qkBRTaNm36NfckYEJSOlLZcLQRsrGSsrW5hw8L8QqyNfE+h/6HPxzA7IsCj1aNf8s4SzR8DwEgNzvDjY3bmeHxSUX/nQezsqdKIO3QUrQ8Sheb0d77omrZm6T5Qqua3IdQm6UaVDUr7RsnD6YYpt/yNw/3M0FtPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784719724; c=relaxed/simple;
-	bh=hOkzl25QMkR31KWjR8NOxhwtgyg0bzm7KtlMeuS5bG4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SQ5VwAj3+L8gyXgB/qEWKf5Sp6xBS87iITJqEqtkC9PiCClW6KV/f66rTAZmgT3W/cOUYpC2bBd8syQDq5phOzqlK4QRIKWraeQ8eB9RBL1decdR6TGfwU+zv0Z4AaxWcuwGgLLr0YJaZXWrLxxZoByrMnMvx7Y89nTjFSvn5yo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZpKGNJNB; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1784721147; c=relaxed/simple;
+	bh=+C3ZRgNpPegs5K3UW4ksuKAEQAzCJx6g/de+0vlz5uE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pcDGtHrmXKK7Mp6VK5Y6G7d4t+3EamX/IeSjQ8kjnuy/JX/i2394h/cRnMhaata9d/UFJ9s6zU9PO3IjlcwD+FVbHiw/GZuoYvEFsjVhzZja9t8s+KrNpv2Qjfb9ReQBOUBcgcpzwwsm9LbfGySTDSCHXdSbdCM6Hy9CXiSu0N0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=Lw8dFRDB; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZpKGNJNB"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784719707;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hOkzl25QMkR31KWjR8NOxhwtgyg0bzm7KtlMeuS5bG4=;
-	b=ZpKGNJNBOnZGU+uBIn4OzvD4acdY97Ma+MrCkht7wgEVGJr5kcgIUxgthqPftcvpZ30mDH
-	dkN2o3pPot4GxeamrmziwqJ3GG91e2Jnx/JLa7VU4ijzSsXRqHugB9bmE9f3yten2JDwaL
-	gfpBq1zwWuC/P4IHok228MkT+0OJEUA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-623-Uzggo0ZANlGaYbji_F0fhQ-1; Wed,
- 22 Jul 2026 07:28:23 -0400
-X-MC-Unique: Uzggo0ZANlGaYbji_F0fhQ-1
-X-Mimecast-MFC-AGG-ID: Uzggo0ZANlGaYbji_F0fhQ_1784719701
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BA896191DFEB;
-	Wed, 22 Jul 2026 11:28:20 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.27])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C8B96195423C;
-	Wed, 22 Jul 2026 11:28:14 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org,
-	mani@kernel.org
-Cc: jtornosm@redhat.com,
-	sashiko-bot@kernel.org,
-	sashiko-reviews@lists.linux.dev,
-	jjohnson@kernel.org,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="Lw8dFRDB"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-38101f85591so5025347a91.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 04:52:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784721145; x=1785325945; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=269EtdxCHJWuu+Iv/X7Dxw9E+WzL2+4KdhP0CYuICuU=;
+        b=Lw8dFRDBYes7MJ5RSuEEiSREwIE0trIEsCSIsdRWahma9/oydnul51SfA70Qj6H52c
+         BWHdc8j3T6rCefyuGUEZsI+lf8Gsgple44jlOgV7fXIYk74oAJKm1vDSJwstUlYdVoBs
+         0VE9SOnSdD2aYBsxQQj3cbDJS2GjCAqMZsIL/PvmFQ8tmjL3jje4ax24nHhBzmTz0BXJ
+         2qCQfFxZd2WnMdphDiAbwMHU6i9QXcqgcW+omdOOF7n+2z/rC3Y0dU/RIQg7h6PCbk0l
+         sjlRWgHZGCTKMZpyVG/fiRGM9Eb76BcOC+AMtS8/yxyVIAI7u1zk/K6OgZAa5bg1n83L
+         ZC2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784721145; x=1785325945;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=269EtdxCHJWuu+Iv/X7Dxw9E+WzL2+4KdhP0CYuICuU=;
+        b=MHfWzMzUjPzeXdFelht/a9TVZGHvUTeedTv8/smFYc9Vd2BJoSi+LJpqAnMyGjjUMp
+         075iXJa2loi9AGG5jab3R+q0oHgj2wIJE+NuCdz9s4ZnvrT3G9u8R1KhA5FjW0Gg7AuG
+         D48aB0veWU7tls6aMP4mBWMWSEgO+peQrefD3WMmJQl9ECv5uixhDyANQX3AdhX4Juir
+         cDQyTy35u3HFbxTf2pqcFSh+AVqihxIKJaU2MZI+NMYJOUFMow/Ax32u+xo9qEzsqFlo
+         PjHGtsI53quJk3/aP5NNv0n58Hwdnv3F39PB1L6/sKRm0HpiMIucTal+B+dN8zPteFYQ
+         nGZw==
+X-Forwarded-Encrypted: i=1; AHgh+RofkGdi4W+R1XlQt1tsixpzIAVK4hV+9VRqenMDSDtXvrgSR03FNyC6WsO4vtDfvN16o3fVCbuhc8mjCkTd1g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxfDIppaMBn5HRr3PHbuxLP/oBd6ABOM96RwiRgXxeQatIx8z/K
+	jT7iddXmcoCyraQcU6z6IjjrUf/zUsFSC8NXc43EmGc9noF5rEHNIL63jaB37sam4jyc3k5mLjj
+	ekE+VC9347g==
+X-Gm-Gg: AR+sD10XVJWCNqu3kMgR8dMvkURstWDgqk3y1A/eczMT7ITKaS7aKTLZEyOU3amPP1d
+	4w4jI9Brw/YXJX2QSTGmTk5sSVfctXWxhzZr6Sr3Znfij9JHtnkbbGt+9A4JiOVuQgw0do5+34i
+	+YCPtbLukLrlJ6S7XA3q2/pSp+QqO1Q+QuV3JOuTuPmRYvdJ/0XelXJ8VuX6eLf3lH1XpcKXI/H
+	83cDXwdGmix/2IfHAtZGVnq5jsNAewl0emLDtia1Q3z+tQzQKsKQ4uyM5/o6b5H/8DuHwzyY8Oz
+	eIBh6g8HpygkBWq36ogwB+jiUAZMcw4aqXNGEhkQnNiwFluAer28HKGLUB2NEushTMy0paiocgh
+	SK0O6NJVhPjxEBqScXSnJfRXntGLPX1qbD7S3UxJVDIx2D4KjEkuKR9lVSefbsVdHZYPQnnCVYJ
+	XevvyWBMXkbpCinwjQbO/FWP0QiI1xbuHhN/Z3BQjkEXFr0Sg8iDCXRL05/wqfKMjQHFx5yTl7v
+	mFf/Jf26zkJS8v91H+fMEYm8mF5cLKg
+X-Received: by 2002:a17:90b:1645:b0:38d:eaed:4adb with SMTP id 98e67ed59e1d1-38ea391acb0mr3383557a91.20.1784721145493;
+        Wed, 22 Jul 2026 04:52:25 -0700 (PDT)
+Received: from Metius.iitm.ac.in ([103.158.43.43])
+        by smtp.googlemail.com with ESMTPSA id a92af1059eb24-13d1300401fsm8434349c88.3.2026.07.22.04.52.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 04:52:24 -0700 (PDT)
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: pkshih@realtek.com
+Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
 	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	mhi@lists.linux.dev,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
-Date: Wed, 22 Jul 2026 13:28:13 +0200
-Message-ID: <20260722112813.33153-1-jtornosm@redhat.com>
-In-Reply-To: <20260721082933.7B5A41F000E9@smtp.kernel.org>
-References: <20260721082933.7B5A41F000E9@smtp.kernel.org>
+Subject: [PATCH] wifi: rtlwifi: pci: fix error path in rtl_pci_probe()
+Date: Wed, 22 Jul 2026 17:22:16 +0530
+Message-ID: <20260722115217.131458-1-nihaal@cse.iitm.ac.in>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,50 +74,43 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-> [Severity: High]
-> Will this sequence of ioread32 flush reads and
-> read_poll_timeout trigger Master Aborts on architectures
-> with strict error handling?
->
-> The SoC global reset explicitly drops the device PCIe link.
-> Performing ioread32 flush reads immediately after asserting
-> the reset, and then actively polling the disconnected MMIO
-> space with read_poll_timeout while the link recovers, can
-> result in Unsupported Request errors.
->
-> On strict platforms like ARM64 or x86 servers with APEI/GHES
-> Firmware First error handling, these can escalate to fatal
-> Uncorrectable Errors and cause a host kernel panic when a
-> guest VM exits.
->
-> Should this avoid MMIO flush reads during these reset
-> sequences and instead use fixed delays to safely bridge the
-> link-down period?
+In the last error path in rtl_pci_probe(), the cleanup functions are
+skipped due to a wrong goto label. Moreover, the successful call to
+rtl_init_rfkill() and ieee80211_register_hw() have to be reverted.
+Fix this issue by updating the labels and adding the relevant cleanup
+functions to the last error path.
 
-The SoC global reset at 0x3008 does not immediately drop the
-PCIe link. The flush reads execute while the device is still
-responsive - the actual reset takes effect during the
-subsequent msleep. The ath11k/ath12k drivers perform the same
-register accesses during this reset sequence, including on
-ARM64 Qualcomm platforms, without issues.
+Fixes: 0c8173385e54 ("rtl8192ce: Add new driver")
+Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+---
+Compile tested only. Issue found using static analysis.
 
-The read_poll_timeout polling for link recovery follows the
-same pattern used elsewhere in the PCI subsystem for waiting
-on device responses after reset.
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Tested over 100+ VM crash/reset cycles on x86 with VFIO
-passthrough without errors.
-
-> [Severity: High]
-> Could this immediate ioread32 flush read also trigger a
-> fatal Master Abort if the link drops instantly after writing
-> the MHI SoC reset request?
-
-Same as above - the MHI SoC reset does not instantly drop the
-PCIe link. The flush read completes before the reset takes
-effect, and the 2-second delay covers the actual reset period.
-This replicates the MHI driver behavior
-(mhi_pci_reset_prepare()).
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 73018a0498b4..98365176a901 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -2227,13 +2227,16 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
+ 			"%s: failed to register IRQ handler\n",
+ 			wiphy_name(hw->wiphy));
+-		goto fail3;
++		goto fail6;
+ 	}
+ 	rtlpci->irq_alloc = 1;
+ 
+ 	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
+ 	return 0;
+ 
++fail6:
++	rtl_deinit_rfkill(hw);
++	ieee80211_unregister_hw(hw);
+ fail5:
+ 	rtl_pci_deinit(hw);
+ fail4:
+-- 
+2.43.0
 
