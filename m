@@ -1,71 +1,72 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3640C298CC4
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 11:52:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441DC38B7C3
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 12:12:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784721147; cv=none; b=FKeBiam41U4qkBRTaNm36NfckYEJSOlLZcLQRsrGSsrW5hw8L8QqyNfE+h/6HPxzA7IsCj1aNf8s4SzR8DwEgNzvDjY3bmeHxSUX/nQezsqdKIO3QUrQ8Sheb0d77omrZm6T5Qqua3IdQm6UaVDUr7RsnD6YYpt/yNw/3M0FtPk=
+	t=1784722367; cv=none; b=dwBM4CGqtpJi/M8bNIpVmzmB/+EKythLLsGb50LH0uHDE0GlkJr4g1zXmEr9cc6V160HzP0FGHMGzjoI3mdV6DVSnbFo9t9jx/Lh4CNVsHyuwkGWCh6Iju4RJNfsLtcwpci4q72wlvSRsGaxiOX+9/cSW5C4Ck0ESTwLhJKzfNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784721147; c=relaxed/simple;
-	bh=+C3ZRgNpPegs5K3UW4ksuKAEQAzCJx6g/de+0vlz5uE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pcDGtHrmXKK7Mp6VK5Y6G7d4t+3EamX/IeSjQ8kjnuy/JX/i2394h/cRnMhaata9d/UFJ9s6zU9PO3IjlcwD+FVbHiw/GZuoYvEFsjVhzZja9t8s+KrNpv2Qjfb9ReQBOUBcgcpzwwsm9LbfGySTDSCHXdSbdCM6Hy9CXiSu0N0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=Lw8dFRDB; arc=none smtp.client-ip=209.85.216.50
+	s=arc-20240116; t=1784722367; c=relaxed/simple;
+	bh=79j7NnDjv0QihjdfhzUpWvNFrgM+H6kwI0tyHE/S/UI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oRnSAtfRXoD0KGaQZ3L09uDpqyMRsYWQkf75Mrtwj6/471VxQ2isULUwFropngay13slpAyUmagKRZcADYAf5149s8kAHlaGtAYY4G54HHmldiLb4keFjOu61rldlAYPKEU0y8Subt5viklHBB3H4BxSdnKTs/X/BO59Me5/CU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=SlGU3Cqk; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="Lw8dFRDB"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-38101f85591so5025347a91.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 04:52:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="SlGU3Cqk"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-8453427d3f4so11646041b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 05:12:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784721145; x=1785325945; darn=vger.kernel.org;
+        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784722364; x=1785327164; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=269EtdxCHJWuu+Iv/X7Dxw9E+WzL2+4KdhP0CYuICuU=;
-        b=Lw8dFRDBYes7MJ5RSuEEiSREwIE0trIEsCSIsdRWahma9/oydnul51SfA70Qj6H52c
-         BWHdc8j3T6rCefyuGUEZsI+lf8Gsgple44jlOgV7fXIYk74oAJKm1vDSJwstUlYdVoBs
-         0VE9SOnSdD2aYBsxQQj3cbDJS2GjCAqMZsIL/PvmFQ8tmjL3jje4ax24nHhBzmTz0BXJ
-         2qCQfFxZd2WnMdphDiAbwMHU6i9QXcqgcW+omdOOF7n+2z/rC3Y0dU/RIQg7h6PCbk0l
-         sjlRWgHZGCTKMZpyVG/fiRGM9Eb76BcOC+AMtS8/yxyVIAI7u1zk/K6OgZAa5bg1n83L
-         ZC2A==
+        bh=fHYM3ypwNgSEsVx6UcghJ4+KBn7vHb7BLLcIj3NJUsk=;
+        b=SlGU3CqksJg3LxVsi+nxHv8sxnQpEwiv9+Y5xp4ofUPM+SjmiXbhzdEN3eoOlJ+5M8
+         guUcnA8ztpiPUrn1CVvkDGnZQj4VDuyhOcPLobRSDprOrrij0lMet5u5AHyEsSmuMAZr
+         otrAr0560Sr3IcJUkd6qZ4zibcZ1vDHRXmThKdVRIbNwSBc+WrUC3MgEK/PeSVyPBrhm
+         E6A0qp2j6I7GrZjO1VD4GNJd6v3wr6500klIVLgcE4p2W+InyqXXFz1kwH6gawIuNcxC
+         k4bNpcSxe+melEFNfo3QBpYewkVuPCp7H3Ib9b8XCluDgMxyRpN42AzqO+y+Rk1cBHu3
+         c9ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784721145; x=1785325945;
+        d=1e100.net; s=20251104; t=1784722364; x=1785327164;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=269EtdxCHJWuu+Iv/X7Dxw9E+WzL2+4KdhP0CYuICuU=;
-        b=MHfWzMzUjPzeXdFelht/a9TVZGHvUTeedTv8/smFYc9Vd2BJoSi+LJpqAnMyGjjUMp
-         075iXJa2loi9AGG5jab3R+q0oHgj2wIJE+NuCdz9s4ZnvrT3G9u8R1KhA5FjW0Gg7AuG
-         D48aB0veWU7tls6aMP4mBWMWSEgO+peQrefD3WMmJQl9ECv5uixhDyANQX3AdhX4Juir
-         cDQyTy35u3HFbxTf2pqcFSh+AVqihxIKJaU2MZI+NMYJOUFMow/Ax32u+xo9qEzsqFlo
-         PjHGtsI53quJk3/aP5NNv0n58Hwdnv3F39PB1L6/sKRm0HpiMIucTal+B+dN8zPteFYQ
-         nGZw==
-X-Forwarded-Encrypted: i=1; AHgh+RofkGdi4W+R1XlQt1tsixpzIAVK4hV+9VRqenMDSDtXvrgSR03FNyC6WsO4vtDfvN16o3fVCbuhc8mjCkTd1g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxfDIppaMBn5HRr3PHbuxLP/oBd6ABOM96RwiRgXxeQatIx8z/K
-	jT7iddXmcoCyraQcU6z6IjjrUf/zUsFSC8NXc43EmGc9noF5rEHNIL63jaB37sam4jyc3k5mLjj
-	ekE+VC9347g==
-X-Gm-Gg: AR+sD10XVJWCNqu3kMgR8dMvkURstWDgqk3y1A/eczMT7ITKaS7aKTLZEyOU3amPP1d
-	4w4jI9Brw/YXJX2QSTGmTk5sSVfctXWxhzZr6Sr3Znfij9JHtnkbbGt+9A4JiOVuQgw0do5+34i
-	+YCPtbLukLrlJ6S7XA3q2/pSp+QqO1Q+QuV3JOuTuPmRYvdJ/0XelXJ8VuX6eLf3lH1XpcKXI/H
-	83cDXwdGmix/2IfHAtZGVnq5jsNAewl0emLDtia1Q3z+tQzQKsKQ4uyM5/o6b5H/8DuHwzyY8Oz
-	eIBh6g8HpygkBWq36ogwB+jiUAZMcw4aqXNGEhkQnNiwFluAer28HKGLUB2NEushTMy0paiocgh
-	SK0O6NJVhPjxEBqScXSnJfRXntGLPX1qbD7S3UxJVDIx2D4KjEkuKR9lVSefbsVdHZYPQnnCVYJ
-	XevvyWBMXkbpCinwjQbO/FWP0QiI1xbuHhN/Z3BQjkEXFr0Sg8iDCXRL05/wqfKMjQHFx5yTl7v
-	mFf/Jf26zkJS8v91H+fMEYm8mF5cLKg
-X-Received: by 2002:a17:90b:1645:b0:38d:eaed:4adb with SMTP id 98e67ed59e1d1-38ea391acb0mr3383557a91.20.1784721145493;
-        Wed, 22 Jul 2026 04:52:25 -0700 (PDT)
+        bh=fHYM3ypwNgSEsVx6UcghJ4+KBn7vHb7BLLcIj3NJUsk=;
+        b=ZF0LT/vzMbNyAJ1/ycjQllLqxCu8vQVyQSc2oxQJBNW+Dx7BooAHtpxCd0drk6RwWC
+         jXjXo1viMOiRolzJw8ReObzbEjJQ/NGAoD5rYNIphAlh6GEB+8Y4PfhRE/iUGd8cbS7y
+         yMOOu5AnBtPUKLc+UCyKd12PZToY68/KktlKjNAOALTh6Lpeh3Y2xlXt7BhH9liZJKzm
+         5LIcFVbGfYl6+B5RryaM5ftupZDXd+yymF9GkfFb3Tn6k4QJwXc100IyolRU0UE3nnjp
+         c2npitnSRZ4fvEYGbRSNI306+9ziV8mi7cfINkyJp1N0EoMEgGx63aQPu9ltMDoF5OBJ
+         mAvQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rr4XJUp9SlsJMv3yIy+dTwd6GwEXzKXpl5WZJSRnW1Gj176bcAO5ekLMf7wTlyPY08ndDHWx7qJDrncjow0iw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeSJhtdUF+XpdOCopK1xC6cWnQc8rLcql7wNDQi1sR4KY6kLRB
+	AipzNHSbq4rzEVxhPXo6P/t71LjIwnM5kBYxV+Y4k1ljlEG+0vZRu5ee1RzqjGNEfUnubN1dHq6
+	CHTZCccnZsg==
+X-Gm-Gg: AR+sD11JOAmDmAI6r8M3HNudxu6cIeQkQFxfWqPoXbZf6lktQb96Whflf3/eshbSYSR
+	TG7zjAGDzaraNdbtiW+tD0gcXTpHGNxKWU5kKeOdWg/LxtFTBFn0OA2FON3jSoARhUTJD+Q/zf1
+	eT7XJ38tbCVW9jWcEcM0fU2BJxn/sCgR4RtQUnrFfDrQRTi5ME6wF3rRzB7E2CTlLYg9MRx/QrV
+	yhV0PB+EBfyO0m0V/xYf9mRzj5f37AiANWfPSwMu1+YPmshe7m32vsmm2G0DgEQhzBBUETNCtqe
+	gFIvd5VyrOpCiFWnh94IL3x/9yZ77ep6O6GI0rSaW68ufZcNBexrtF1ZRyxUqNWNTZqpTGLcMpH
+	6GyXE+Y7XI6PYD0sjeC8F6JZASM6FgQ6ujLBYRdXkd90fAvRNFYPqmFbUXF4OrQ+U15ufBdF6fP
+	Uddo5y4pP/gjMy7zW8RjkRrNqlynv0qfXXrMg2YFvPk2uOr4ZhzOnx4IslbwFN2BtaETpJ9nEuw
+	KszLm+5U+nhkJV4o9O3RX3Ote8mIhSS8kGO64uEs1w=
+X-Received: by 2002:a05:6a00:a10:b0:847:926c:582c with SMTP id d2e1a72fcca58-84c292bc6aemr24736309b3a.29.1784722363558;
+        Wed, 22 Jul 2026 05:12:43 -0700 (PDT)
 Received: from Metius.iitm.ac.in ([103.158.43.43])
-        by smtp.googlemail.com with ESMTPSA id a92af1059eb24-13d1300401fsm8434349c88.3.2026.07.22.04.52.23
+        by smtp.googlemail.com with ESMTPSA id d2e1a72fcca58-84e1757488csm1205304b3a.33.2026.07.22.05.12.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jul 2026 04:52:24 -0700 (PDT)
+        Wed, 22 Jul 2026 05:12:42 -0700 (PDT)
 From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
 To: pkshih@realtek.com
 Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: rtlwifi: pci: fix error path in rtl_pci_probe()
-Date: Wed, 22 Jul 2026 17:22:16 +0530
-Message-ID: <20260722115217.131458-1-nihaal@cse.iitm.ac.in>
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: rtlwifi: rtl8192du: Fix possible memory leak in rtl92du_init_sw_vars()
+Date: Wed, 22 Jul 2026 17:42:35 +0530
+Message-ID: <20260722121236.136754-1-nihaal@cse.iitm.ac.in>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -75,42 +76,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In the last error path in rtl_pci_probe(), the cleanup functions are
-skipped due to a wrong goto label. Moreover, the successful call to
-rtl_init_rfkill() and ieee80211_register_hw() have to be reverted.
-Fix this issue by updating the labels and adding the relevant cleanup
-functions to the last error path.
+The memory allocated inside rtl92du_init_shared_data() is not freed in
+any of the subsequent error paths in rtl92du_init_sw_vars().
+Fix that by adding a call to rtl92du_deinit_shared_data() in the error
+path.
 
-Fixes: 0c8173385e54 ("rtl8192ce: Add new driver")
+Fixes: b5dc8873b6ff ("wifi: rtlwifi: Add rtl8192du/sw.c")
+Cc: stable@vger.kernel.org
 Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
 ---
-Compile tested only. Issue found using static analysis.
+Compile tested only. Issue found with static analysis.
 
- drivers/net/wireless/realtek/rtlwifi/pci.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192du/sw.c    | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 73018a0498b4..98365176a901 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -2227,13 +2227,16 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 		rtl_dbg(rtlpriv, COMP_INIT, DBG_DMESG,
- 			"%s: failed to register IRQ handler\n",
- 			wiphy_name(hw->wiphy));
--		goto fail3;
-+		goto fail6;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
+index 7bafb051d5ec..c7eab3382b73 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
+@@ -118,7 +118,7 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
+ 
+ 	err = rtl92du_init_shared_data(hw);
+ 	if (err)
+-		return err;
++		goto error;
+ 
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+ 	rtlpriv->dm.dm_flag = 0;
+@@ -145,8 +145,10 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
+ 
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = kmalloc(0x8000, GFP_KERNEL);
+-	if (!rtlpriv->rtlhal.pfirmware)
+-		return -ENOMEM;
++	if (!rtlpriv->rtlhal.pfirmware) {
++		err = -ENOMEM;
++		goto error;
++	}
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+ 	pr_info("Driver for Realtek RTL8192DU WLAN interface\n");
+@@ -160,10 +162,14 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
+ 		pr_err("Failed to request firmware!\n");
+ 		kfree(rtlpriv->rtlhal.pfirmware);
+ 		rtlpriv->rtlhal.pfirmware = NULL;
+-		return err;
++		goto error;
  	}
- 	rtlpci->irq_alloc = 1;
  
- 	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
  	return 0;
++
++error:
++	rtl92du_deinit_shared_data(hw);
++	return err;
+ }
  
-+fail6:
-+	rtl_deinit_rfkill(hw);
-+	ieee80211_unregister_hw(hw);
- fail5:
- 	rtl_pci_deinit(hw);
- fail4:
+ static void rtl92du_deinit_sw_vars(struct ieee80211_hw *hw)
 -- 
 2.43.0
 
