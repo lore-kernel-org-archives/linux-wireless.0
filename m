@@ -1,80 +1,73 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12CCD36212F
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 07:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E34F386571
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 07:07:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784703854; cv=none; b=oNYDbM8CuPDB9GYlB8rEgOCJk2PkyLCXt/VTJCvRN3rQNUvwRK/pJWZz90k5P4U7rEnd7NxjP1/x0Et9Y1bLpitowL5lDIfPvJ+B0/AM/2tITuN71Hjtgb6pjASlHDYzoyKHCxNGUSKzzedRVTZI1jogMAUl8niDM9yh70GtyXM=
+	t=1784704047; cv=none; b=hN9ojhusX+J13OjdbknJhb11qM7y0uE/W7bj+oCxJk0vCu19SsDCUwoXAOhgjUBRuEbmdRYdIr+4cxRyIlHxoe+/h7dM7yWVpODxiqgaxlqHB6ESD/5AZU7Wbma5hhosTUg5Uy+meLmBfuFJwJJIRCjUtMM7N/iU9ZsHfqR3eoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784703854; c=relaxed/simple;
-	bh=83gSPMppkIBdi3KJ54tc7FfH3R8OAWjFNfADpRQix+s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ld713TkTA/6jGQ1tnaECUFnmP+G+xnRbXG5SlA+vXc+HJm18GEPQUPmRp+6z2EQ0c5c9LPbA2LFsnd3oTUeg2ByeHEXUestkMIvRUm9scnqEDfIEiQ4nj53BqmzYGpx2dqFj5LgYuDIoodQEzMq4iTevIew9caDD10BoJtPS+Vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=j+6fGdUR; arc=none smtp.client-ip=209.85.216.51
+	s=arc-20240116; t=1784704047; c=relaxed/simple;
+	bh=re/speWcOGwko6/FivO1AH7qay8ysB1ntlnYj2wNFUY=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SaVMFOeuR0/TYRa5yzj928QFfvcpJ8oil/7OVlokGyRtsEHqalVWIkYnuIMn7QWsoFhh6LYc4NZfdmgWcjVlCHetl7DPZoR4M7/5cY/2reGUaVwUdJ3e64Sjf3RSYjfkYBbZSSeybPAA1TxJ7rUbTaYKvVvMrMhqHIzAC9r5H0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nDUFEQfT; arc=none smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j+6fGdUR"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38dc69c74b8so9830859a91.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 00:04:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nDUFEQfT"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-47f7872abb6so1492196f8f.3
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 00:07:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784703852; x=1785308652; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=8bdrG0QFqxIH5pXZGRRRAY6FI2BH/CW3w4wZSetZqPY=;
-        b=j+6fGdUR1EN4QVfODYrerrWAbqdRQv4lFE9+D97va8hANJgoJQPOaNdWs2fmll13U5
-         Jjwbshxw6fcG8d9jxYbJkLrmmthJql19Adko6/985sHwIs0qxZwp+4EKvnk5BPyPxLWp
-         RL3kjdvIWYVYQswbDAXT4/8yXqsHc8G3prfZWrcLhg58imQe4aZa2ZZ1IoHPJ99uvWhP
-         y4nm0woGxB9wX0EB0S9LAkyj681bM3wGs0gBZ6+b5eV0IdUInmYZvbbNYyMeyGXba+3e
-         /gykE+aLzBuVINhq8+OjN7MUgwuJd6I+szQg+D14SCmpbDVMDm1y6+0eQ9j4DHNmjLTV
-         XOlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784703852; x=1785308652;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1784704044; x=1785308844; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=8bdrG0QFqxIH5pXZGRRRAY6FI2BH/CW3w4wZSetZqPY=;
-        b=ROu2cQSuyIXkONB2KQ35ksWvxGopjIZROxnpNR3UaGdb9gT5VB27GVStBfyIoxNuQM
-         hBkknZ0wxciciUZTcCCMFf3XL/ti1kdlpIzP4Ak6AsTc0fOqTVDdotU/0bnHk690OQlJ
-         NDW+yWhJsykBYZE31/OaYG+lzKSBcNPFGHK2Uh53PFOplxfDApUoHFuYvH8E3wpZr5RX
-         t67QGvoGgvK6q0Yq3BxqbieN0libFIzNanzDxJf8cPTX21PzY0HIoW7goKsLB1yJRYSn
-         Vunu+HNZ43lJXFGwE7jmm1L6t+SUwdjtXub7Y1fVypGy45HGUol2ylWdNIsW5tC6dywK
-         8GYQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rq19pfy5gBDMNATZoot2fU9BsxhAZmRgxytjjVYMTLR0mWfjwAP0+d5Me5ziDP8igvjVLxtF1n6Y2LgLyWtbg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVsr5M8FujoEBKzyVwU9jfhWeESVzcfgbbfDjNkRy+QzWhLe0+
-	THHJ/jTQEAgZdJGoy8d6NxYWKN53fyr33+iQzJr4N1jzD+7hS9onOpPLb0LIdE27vN4=
-X-Gm-Gg: AR+sD12k0eYJHnm9nfez0AK8a1gAVAc1qTy6z1bXHXtq8lq9LV3Ndje3FN/QuguzFBS
-	gKcsQ67VKSQUMoQ8EHBmALdJ3VykktYkF+8Mo6jbQ7Y9W0etLi93HGaJ66ajWaOUCQmKf1qgJXX
-	phbihIWWFwIjZMxYMj0Dl/GciIS+M9r2STRRkIKQ19MImyasstooh1X6rZARwt1HIVHnyO4DHKz
-	54arEnWmj2qOg1cFEod9AT+8O0egRSmJdyDjvXXIkXBcr+uboWdr/Uy4/mJVUh3yJ8w1dWbFTJQ
-	yzoKklT5lMK2yXJuAPVGE/MS1dJx5JXPHJxXw3BG9bKiEr4UwAp9FAR82pD4MZNZk2TFEXDvV4i
-	5IYG8leHHcGi/UwVqwMETtiDsIYdhX9m3wSYqXDnx5r6TSeXS3mydH9D80bcAJsnfz16lj/CMqS
-	dYvp/uGGSkHkLnQa/jFNMq7EgnZgpzznXeQU58lCXWBECjL6DBoCvRykbEMtT3OI3jxSTWw+4XS
-	A1AE7oLcsyeu0hv/0IHBVY=
-X-Received: by 2002:a17:90b:2e90:b0:368:ed26:15b2 with SMTP id 98e67ed59e1d1-38e4b43c408mr21798100a91.8.1784703851941;
-        Wed, 22 Jul 2026 00:04:11 -0700 (PDT)
-Received: from localhost.localdomain ([101.251.7.10])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d130a8421sm3203259c88.10.2026.07.22.00.04.06
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 22 Jul 2026 00:04:11 -0700 (PDT)
-From: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-wireless@vger.kernel.org,
+        bh=6PxNNHc80S4oYsV0n6VwB4u3z9k7dWvx3UfOOSVFbyM=;
+        b=nDUFEQfTFkk1n+fMkTDqFpGEX5ARYCkjK5p/+qsUR3seHL64CXTmrE3ofShuUpvafD
+         7A+IpO33oIWqDVYsNiXUOBFVwFE/4icw21pvKKU5CyP3gtkhPdIn0ykzZ2BPl/3uZYi9
+         ErEZzOgV3MisQ8jqCHSK10+lj3kuN0gIj4e3T5IE/u8zG/h7HE3/83WCY6xYXG0OQlix
+         OGgbOhaDtaCzpwWZHJIxMmNhvWQ/vTq2SxErWPTblxw2ddcyjYwkWKLpYLFABdBn7n1m
+         rlBIHTA7OaR9uPAAfuhEbyhFHPApO5nV7cF+R75PUH041qWaOU3v9ITodqsbuc3Y7bYO
+         SZKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784704044; x=1785308844;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6PxNNHc80S4oYsV0n6VwB4u3z9k7dWvx3UfOOSVFbyM=;
+        b=kdYYB7zvhj4ahEMcd6a+40WQq5BFTP2sOEZl2yZJbANybjCcmhtlXABFXpvU0C+mNF
+         lguQxYGz/P8B6oIfBL6bm8oCzuWpn0nbC3+zMRyIzUoa4GCa11jmbneGM++BOO7me2Kv
+         VoWY910DBmlk2aoL4smEgnJoh9lwI8d7nTGcb8Rplz5xS2jzMsHsOZJirZngGSmeMStI
+         8DqQt7JtOKxe3NmFnanwNeXLPO9uh+nfchgmD0vSimbfj3sD0zMSP6JT+6SEJ9app74+
+         rFWvOiorWjR7Jz6HOqMISsr1z9+x0SVV0F4E+Mq+zlCHBaGT8D/nC7FS/gHNkeLSTdv2
+         giLA==
+X-Gm-Message-State: AOJu0YyvijsYJC7/1GxfkPmyaH7yPSlifkmFSsEpvHq5tSJqKqXKc2D9
+	JW8RkU22dL0gJ5Vp0O21sHk6dm35GnLHD0CXPC/dwC/xqggnMrWC411X
+X-Gm-Gg: AR+sD100P833E/TlO2VR9a61ENx2kqgO+8FZalJ4nHydXLNYJXtCZPSxaRT/ceFHI9t
+	GsxYLroKge8l+NOAaURF8B6MH59wE67OgrcdbGxTjnolyBFVFnz2RXLvWb3L2iKxg9Bu0UMKnOL
+	hil9vpZbOyRDprlmLxonFIYVYyiJvguvnqTH45y8whdXS77hDJUd3tHe4LFwyV4vMrk+gRAECRF
+	MG2TkiFT5yfal508IIHU7s9JwuMzHv3NzUVPEb9ioDSlyIW4X4pG//0N/hCHFZtu9nd1Y5Z6sx0
+	B3NNSC969ZL90trDLOGZ93Ae+p4tJhcBO7PcJZ3RzYobRj7HNNadn25etkaybJSqIYf92aClXwi
+	AhCkRtXghjirEN5FcoQzx2/lZDznXvqv5hzWQyDARG4ODBg+oXAtRZf59nGslYVrclmmmDFM+Jb
+	8qvhyG7sscQ7rlfG/IL3U8PlpaZDDSwUAx15dx
+X-Received: by 2002:adf:e004:0:10b0:47d:fc20:f6f9 with SMTP id ffacd0b85a97d-47f62320eabmr17459538f8f.45.1784704043822;
+        Wed, 22 Jul 2026 00:07:23 -0700 (PDT)
+Received: from localhost ([102.128.173.0])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85b9a64dsm3363403f8f.1.2026.07.22.00.07.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 00:07:23 -0700 (PDT)
+From: Louis Kotze <loukot@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	stable@vger.kernel.org,
-	Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
-Subject: [PATCH] wifi: mt76: mt7925: validate CLC firmware records
-Date: Wed, 22 Jul 2026 12:49:02 +0545
-Message-ID: <20260722070402.45328-1-acharyalaxman8848@gmail.com>
-X-Mailer: git-send-email 2.51.2
+	loukot@gmail.com
+Subject: Re: [PATCH v2 1/2] wifi: cfg80211: say why the auth/assoc BSS lookup failed
+Date: Wed, 22 Jul 2026 09:07:20 +0200
+Message-ID: <20260722070720.3610942-1-loukot@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <bbb15b0ae332d7344f5b69da5e993acc6813aca7.camel@sipsolutions.net>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -83,91 +76,55 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The CLC region is supplied by firmware, but the loader trusts the region
-count and each record length. A malformed image can make the region table
-pointer precede the firmware buffer, make the record loop fail to advance,
-or index phy->clc past its end. Validate the table and record bounds
-before dereferencing or copying.
+On Wed, 2026-07-22 at 00:10 +0200, Johannes Berg wrote:
+> > +	if (!attrs[NL80211_ATTR_MAC] || !attrs[NL80211_ATTR_WIPHY_FREQ]) {
+> > +		NL_SET_ERR_MSG(info->extack, "BSSID or frequency missing");
+>
+> could use the GENL versions and save some characters :)
 
-Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
-Cc: stable@vger.kernel.org
-Signed-off-by: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
----
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 32 ++++++++++++++-----
- 1 file changed, 24 insertions(+), 8 deletions(-)
+Done in v3.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index e94fa544ff20..76e30bf4ce0f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -803,8 +803,9 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
- 	struct mt76_dev *mdev = &dev->mt76;
- 	struct mt792x_phy *phy = &dev->phy;
- 	const struct firmware *fw;
-+	size_t clc_len, fw_data_len, len, offset = 0;
- 	u8 *clc_base = NULL, hw_encap = 0;
--	int ret, i, len, offset = 0;
-+	int ret, i;
- 
- 	dev->phy.clc_chan_conf = 0xff;
- 	dev->regd_user = false;
-@@ -829,13 +830,21 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
- 	}
- 
- 	hdr = (const void *)(fw->data + fw->size - sizeof(*hdr));
-+	if (hdr->n_region > (fw->size - sizeof(*hdr)) / sizeof(*region)) {
-+		dev_err(mdev->dev, "Invalid firmware region table\n");
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+	fw_data_len = fw->size - sizeof(*hdr) -
-+		      hdr->n_region * sizeof(*region);
-+
- 	for (i = 0; i < hdr->n_region; i++) {
- 		region = (const void *)((const u8 *)hdr -
- 					(hdr->n_region - i) * sizeof(*region));
- 		len = le32_to_cpu(region->len);
- 
- 		/* check if we have valid buffer size */
--		if (offset + len > fw->size) {
-+		if (len > fw_data_len - offset) {
- 			dev_err(mdev->dev, "Invalid firmware region\n");
- 			ret = -EINVAL;
- 			goto out;
-@@ -852,11 +861,19 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
- 	if (!clc_base)
- 		goto out;
- 
--	for (offset = 0; offset < len; offset += le32_to_cpu(clc->len)) {
--		clc = (const struct mt7925_clc *)(clc_base + offset);
-+	for (offset = 0; offset < len; offset += clc_len) {
-+		if (len - offset < sizeof(*clc)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
- 
--		if (clc->idx >= ARRAY_SIZE(phy->clc))
--			break;
-+		clc = (const struct mt7925_clc *)(clc_base + offset);
-+		clc_len = le32_to_cpu(clc->len);
-+		if (clc_len < sizeof(*clc) || clc_len > len - offset ||
-+		    clc->idx >= ARRAY_SIZE(phy->clc)) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
- 
- 		/* do not init buf again if chip reset triggered */
- 		if (phy->clc[clc->idx])
-@@ -869,8 +886,7 @@ static int mt7925_load_clc(struct mt792x_dev *dev, const char *fw_name)
- 			continue;
- 
- 		phy->clc[clc->idx] = devm_kmemdup(mdev->dev, clc,
--						  le32_to_cpu(clc->len),
--						  GFP_KERNEL);
-+						  clc_len, GFP_KERNEL);
- 
- 		if (!phy->clc[clc->idx]) {
- 			ret = -ENOMEM;
--- 
-2.51.2
+> > -			NL_SET_ERR_MSG_ATTR(info->extack, link,
+> > -					    "Error fetching BSS for link");
+> > +			NL_SET_BAD_ATTR(info->extack, link);
+>
+> why remove the message, it's possible to have both?
 
+There still is a message here: __cfg80211_get_bss() has already set
+the specific one by the time this runs, and NL_SET_ERR_MSG_ATTR()
+would overwrite it with the generic text again. Added a comment in
+v3 to make that visible.
+
+> > -		req.bss = nl80211_assoc_bss(rdev, ssid, ssid_len, info->attrs,
+> > -					    -1, -1);
+> > +		req.bss = nl80211_assoc_bss(rdev, info, ssid, ssid_len,
+> > +					    info->attrs, -1, -1);
+>
+> entirely unrelated (whitespace) change?
+
+The call gains the new "info" argument; v3 keeps the original
+wrapping so only that shows in the diff.
+
+> That code should probably have a comment that the is_bss() must come
+> first...
+
+Added.
+
+> Also however, it could result in having *both* 'unusable' and
+> 'expired' set, and then
+> [...]
+> you prefer the 'unusable' message... not sure that makes sense?
+
+Right. v3 sets a combined message when matching entries were rejected
+for different reasons, so neither is preferred or hidden.
+
+> I also don't think the "scan again" instruction makes any sense here -
+> this is meant to provide an error message, not instructions how to fix
+> it?
+
+Dropped, the messages are purely descriptive now.
+
+Sending v3 shortly.
+
+thanks,
+Louis
