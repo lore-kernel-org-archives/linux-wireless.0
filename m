@@ -1,69 +1,91 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD4283655C9;
-	Wed, 22 Jul 2026 14:36:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B4F635677C;
+	Wed, 22 Jul 2026 14:38:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784731003; cv=none; b=juww+PmsL9yOYbPrp9JxINla8w0qaG3ASeEuBrK6/Cd6BoMovkOkz/TXWpbWLGOcZCj3BaB9iGb3K9gsuc7G9OBivQ0LKPcxA8PcJuAmbWCDlpGorX2Wkyug7RqwIRTPLTdxTcu1Y2xrmdOdbd8P9bLi7pQVMjpkPHlE6AbIpAM=
+	t=1784731084; cv=none; b=lB/Ub643hRF5FSZhM6/gvyDmS85EOYqhvHMqySoWfFcp384p3WfN4BX+1T1AJbhoxScdyq6mrSPlKuGZ3glZlLFbooDSujZ1eToh5dkOGcZeQdAVv9IKvQyBJnPkwzLkVQdWRNiWskhfGtM8CAVGel6EGTJZi/CjqjSM504oX2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784731003; c=relaxed/simple;
-	bh=m8MOcbLnaFoQyHbktdJ8V1S0Nm7WfE1ZCB0ssjpvzSE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XKDkr6QvSAfF0ZGo6mUcaDMKzW0YPU1HdCsE7tEPDukSrkjFs42S7xv1LOPHaO5zR0iR1ovFCTTcOd2FcqerdX+Ajz4y5C3KMhzfoMJksTHDp0rpAMRdvdQhqYafWCL+L+lULPMnL1Y+uDr+gBOfdxmh/+jPlX16EmVB63c+Udg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 97FC5C14;
-	Wed, 22 Jul 2026 16:36:37 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 5E7CD62749FA; Wed, 22 Jul 2026 16:36:37 +0200 (CEST)
-Date: Wed, 22 Jul 2026 16:36:37 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>
-Subject: Re: [PATCH] PCI: Disable NoSnoop and Relaxed ordering for Intel
- wireless BE200
-Message-ID: <amDVdTzCkNDuIc5c@wunner.de>
-References: <20260621065451.21650-1-emmanuel.grumbach@intel.com>
- <ajecdx3HYj5rqJBZ@wunner.de>
- <9eeb29c6b7986797eec0af6c7ef42cb8c9feefd2.camel@intel.com>
+	s=arc-20240116; t=1784731084; c=relaxed/simple;
+	bh=r8f5eYG9ioT88pmYRHpstHvcoDyxSLck72FFiIgJWjo=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=GkrONhemRN6Vn+87QvdIdvsZaIJ0ezJU5bOkPNFpdmOxgMSaONmdpPOjDw3uBybkumwBRJNBp0DNQytZ3REB1vbHg/RkbonzScggRoqaYbYeiYadDWWXhLZhWGhwY6aSF1VbYH7AIGYCmyzA2FBbt0E9WA7wOjPb8MJRRle/lX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LTs0MFnn; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LTs0MFnn"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=PtnqHHUsJuyHsoYni1AzPj3QObVgRkIeo9oy/UHQTwA=;
+	t=1784731082; x=1785940682; b=LTs0MFnnw+xQMmufyge3t3Umzu/ZJTPkClC6w8DordWDrUG
+	bseYyphxMeHU9XDtrBfdsAsc05pvnMOYPBjUXkuAVUNHWcxk3UGuzoEIc2/8BotK63LwoWHdVzrlc
+	CV4EBUX64+08MZcgl2V3miZ47QtFN8DdN53fC2EkpcT0NSNpvqYS6+LDc5C7kIgOxiodV9LWbV/Di
+	wDvowbLNc4VqpzK0ZzU1buD9HupuQvN/kYuyHhx87MK6R6XUsBYtbwI0V+n32TegVar9pbheye2ld
+	/93kZBAfq4zJpk5f29IZLctflCZ/R1m44QFE7JXt3IWtw20FKxQeH3/Hf6GXIZYw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wmY56-00000004om4-3dVS;
+	Wed, 22 Jul 2026 16:37:57 +0200
+Message-ID: <209a011cf5f87881881cd338e1d3ec6baa75bef6.camel@sipsolutions.net>
+Subject: Re: [PATCH 0/8] wifi: fix PMSR lifetime and frame validation issues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhao Li <enderaoelyther@gmail.com>, linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Miri Korenblit	
+ <miriam.rachel.korenblit@intel.com>, Brian Norris
+ <briannorris@chromium.org>,  Francesco Dolcini <francesco@dolcini.it>,
+ Jaewan Kim <jaewan@google.com>, Daniel Gabay <daniel.gabay@intel.com>, 
+ Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Benjamin Berg
+ <benjamin.berg@intel.com>, Anjaneyulu	
+ <pagadala.yesu.anjaneyulu@intel.com>, Peddolla Harshavardhan Reddy	
+ <peddolla.reddy@oss.qualcomm.com>, Lorenzo Bianconi <lorenzo@kernel.org>, 
+ John Crispin <john@phrozen.org>, Avinash Patil <patila@marvell.com>, Cathy
+ Luo <cluo@marvell.com>, "John W. Linville" <linville@tuxdriver.com>, Aloka
+ Dixit <quic_alokad@quicinc.com>
+Date: Wed, 22 Jul 2026 16:37:55 +0200
+In-Reply-To: <573e7a49f4e9763b0cdb22bb4fc875bca1335c70.camel@sipsolutions.net>
+References: <20260708195911.84365-1-enderaoelyther@gmail.com>
+		 (sfid-20260708_215930_683827_CD8CF763) <573e7a49f4e9763b0cdb22bb4fc875bca1335c70.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9eeb29c6b7986797eec0af6c7ef42cb8c9feefd2.camel@intel.com>
+X-malware-bazaar: not-scanned
 
-On Wed, Jul 22, 2026 at 11:01:40AM +0000, Grumbach, Emmanuel wrote:
-> On Sun, 2026-06-21 at 10:10 +0200, Lukas Wunner wrote:
-> > On Sun, Jun 21, 2026 at 09:54:51AM +0300, Emmanuel Grumbach wrote:
-> > > The Intel wireless BE200 device fails to copy the TLP Attributes
-> > > from a
-> > > Request to the Completion.
-> > > Since there is no caching involved the device anyway, disable the
-> > > NoSnoop and Relaxed ordering on the root port.
-> > 
-> > Is there a public Specification Update which could be linked in the
-> > commit message and/or code comment?
-> 
-> I replied to this already. Anything needed from my side?
-> We'd like to allow those users to work with BE200.
-> 
-> Not pushing or anything, just making sure you're not waiting for me.
+On Tue, 2026-07-21 at 18:00 +0200, Johannes Berg wrote:
+>=20
+> >   wifi: mac80211: validate probe response countdown offsets
+>=20
+> I think this one is falling into a typical LLM pattern patching trap, it
+> describes [0] as being out-of-bounds for some allocated data, and
+> neglects that the offsets have already been checked by cfg80211. Please
+> describe more why it's actually an issue beyond "there's a similar
+> pattern elsewhere".
+>=20
+> >   wifi: mac80211: validate S1G TWT params before driver setup
+>=20
+> I don't know about this, you should probably resend it. Anyway I'm not
+> loosing sleep over it since there's no driver with the callback, tracing
+> is mostly not enabled, and while a potential 12 bytes OOB read at the
+> end of the SKB is a bug, it's not a very important one since there
+> should be stuff there anyway.
+>=20
+> >   wifi: mwifiex: validate action frame fixed fields
+>=20
+> Francesco should look at that - again, sending it all together makes
+> this really hard - but it seems to me it should use MIN_ACTION_SIZE()?
 
-I guess you need an Acked-by from Bjorn, or have the patch applied
-to pci.git.  I can't do either I'm afraid, but if it helps:
+Also in addition - please resend these, the s1g should go also to
+Lachlan I think who wrote it, and I don't think anyone is paying
+attention to this patchset :)
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+johannes
