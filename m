@@ -1,37 +1,38 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B113C10AB
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 06:37:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FD2234B437;
+	Wed, 22 Jul 2026 06:41:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784702230; cv=none; b=hm50CjJc5MKLYAXpSpudQ+SeV2YT1h+DhILjhGCYLXh49WqSucFk12H0uOhS5l9xn6rT8QN5DTOESzJe+wkwU6LsHNxL4Of4ccCV9U6g9IB2j+Hxv+subn/fq+4mFjYEKyGnEfiUuo5Abe1wO9VJAFm+XIeUNcPA13AL4CJkVc8=
+	t=1784702471; cv=none; b=uq5aizxWtTxKLLscZV15WARn9sWOrKY5X1O+VHMCZjMmFL7tN39XB2xKLcHuFZAsm1knLM0I1o7SfXKkFaDwBiFiSOaI+RJzYTTNg+C4mvhW9Qwaa1cofO29POX8xgCmJiOlrTeByjCHl4lt+czauNTC/go4y7PY0zr5ZxiwSJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784702230; c=relaxed/simple;
-	bh=Hqt2c6vCC8J80fptgf8ifLlPQCuPMFsCa56ntsSAIWw=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=aom8lV3b8jmMATrqnOG+WKXItoQyIg8PHym91RPFmny1INfAOOUl0xo8zQf+8NHLW+zwiCLHmM3EXY6903Adp1/wYbDy+1hU9KIAE/ZYm5ydYk0NvKfqvqTo3Z+nBCrYiYg4bIkTjtH3GidqZ5sWDmqYBgkPdxgEdIfrNZ8bLVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=hEu+6hc7; arc=none smtp.client-ip=46.4.11.11
+	s=arc-20240116; t=1784702471; c=relaxed/simple;
+	bh=WSYe0La1gRuhpyNx4z9/mNcR0cTInkHLUzStLoxrmhU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HL+flXd+MuzjxXAjtbEMjgSMUU2y9eIxjF2xiPlc59hL3BXQ2rTXlCy17ryMvKfeuKHgT8F/qSkw975C16sb8c8SZ0IuJ+R2T3RBWuqZVORlB2dAtRICvNoe7AaQF2L4hV/UzPsHl8bD0iS5gRTDPzp4NHE1Fx7u1AEQ8x70pgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=qFBMeaTq; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hEu+6hc7"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="qFBMeaTq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:Cc:To:Subject:From:
-	MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=xObv0IeEv5bIjrcCZJOWk+O7jFM9/+bORNsCHem/yuA=; b=hEu+6hc7UUKhzf95SjSFkeCu+C
-	DyjDZVaXCBglYGBQSdqe8eCQNwcfm9uC14nJcv78DgPkgZkBDNew0na/Up7cgEbQoFaeTN2AaFgrd
-	vEId6wLwQR6rU13a0BuXhBPob2nKRis/2mUBG0i0FI4qB7IP0/dhfb0XTAKBTkJrkce8=;
+	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
+	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+	List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=WAHJwsvuNwWHxOZ2ym/PXilLLiyxaq+5NfqHmwiGlIM=; b=qFBMeaTqF5hK6TtOJkb3hFA0qj
+	kxn2ab55F4hkCd86K2h5UfX9aKiGo3XCpj2Esouvo0znsA8fs4V6wkWZEg51zah3FPasodFN3KOGu
+	kwbo5khuQNCjwH/dWHfiCmUYqHhd6jr4jU+aEOA3ZDldjl5AG4pwJMSbQ9g/lMj/1gcA=;
 Received: from p5b015c4b.dip0.t-ipconnect.de ([91.1.92.75] helo=nf.local)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1wmQZl-00589h-28;
-	Wed, 22 Jul 2026 08:37:05 +0200
-Message-ID: <f40382cf-9f75-4793-88b9-c50be5dad191@nbd.name>
-Date: Wed, 22 Jul 2026 08:37:04 +0200
+	id 1wmQdU-0058IB-2S;
+	Wed, 22 Jul 2026 08:40:56 +0200
+Message-ID: <a0c1178f-86e5-4193-9d9c-767abbdee076@nbd.name>
+Date: Wed, 22 Jul 2026 08:40:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -39,10 +40,22 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCHv2 wireless] wifi: mt76: fix MAC address for non OF pcie
+ cards
+To: Klara Modin <klarasmodin@gmail.com>, Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Lorenzo Bianconi <lorenzo@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>, Matthias Brugger
+ <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "open list:ARM/Mediatek SoC support" <linux-kernel@vger.kernel.org>,
+ "moderated list:ARM/Mediatek SoC support"
+ <linux-arm-kernel@lists.infradead.org>,
+ "moderated list:ARM/Mediatek SoC support"
+ <linux-mediatek@lists.infradead.org>
+References: <20260706232857.807044-1-rosenp@gmail.com>
+ <al_SAwiLmgT6D_tS@soda.int.kasm.eu>
 From: Felix Fietkau <nbd@nbd.name>
-Subject: pull request: mt76-fixes 2026-07-22
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
 Content-Language: en-US
 Autocrypt: addr=nbd@nbd.name; keydata=
  xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
@@ -67,77 +80,51 @@ Autocrypt: addr=nbd@nbd.name; keydata=
  TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
  GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
  cL98efvrjdstUfTCP2pfetyN
+In-Reply-To: <al_SAwiLmgT6D_tS@soda.int.kasm.eu>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 Hi,
 
-Here's my mt76-fixes pull request for 7.2
+On 21.07.26 22:22, Klara Modin wrote:
+> On 2026-07-06 16:28:57 -0700, Rosen Penev wrote:
+>> If seems the check for err is wrong as the proper macaddr gets written
+>> to from the EEPROM itself. Meaning checking err from of_get_mac_address is
+>> wrong as the proper macaddr has been written by this point.
+>> 
+>> Reported-by: Klara Modin <klarasmodin@gmail.com>
+>> Closes: https://lore.kernel.org/all/ajRmlyx_AEGybykL@soda.int.kasm.eu/
+>> Reported-by: Tobias Klausmann <klausman@schwarzvogel.de>
+>> Closes:
+>> https://lore.kernel.org/linux-wireless/30a90714-02d8-45f2-a7f1-4cfe0627d50b@skade.local/
+>> Fixes: 31ee1582717e ("wifi: mt76: fix of_get_mac_address error handling")
+>> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+>> Tested-by: Tobias Klausmann <klausman@schwarzvogel.de>
+>> Tested-by: Klara Modin <klarasmodin@gmail.com>
+>> ---
+>>  v2: add extra tags and target wireless
+>>  drivers/net/wireless/mediatek/mt76/eeprom.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+>> index b99d7452800f..afdb73661866 100644
+>> --- a/drivers/net/wireless/mediatek/mt76/eeprom.c
+>> +++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+>> @@ -181,7 +181,7 @@ mt76_eeprom_override(struct mt76_phy *phy)
+>>  	if (err == -EPROBE_DEFER)
+>>  		return err;
+>>  
+>> -	if (err) {
+>> +	if (!is_valid_ether_addr(phy->macaddr)) {
+>>  		eth_random_addr(phy->macaddr);
+>>  		dev_info(dev->dev,
+>>  			 "Invalid MAC address, using random address %pM\n",
+>> -- 
+>> 2.55.0
+>> 
+> 
+> Ping. No one seems to have picked this up yet, but I suppose it is
+> holiday season.
+It's in the mt76-fixes pull request that I just sent.
 
 - Felix
-
-The following changes since commit 29ab31f3f27157648f2f7e6d5e1fd9792fdf0614:
-
-   wifi: brcmfmac: set F2 blocksize to 256 for BCM43752 (2026-07-21 18:55:36 +0200)
-
-are available in the Git repository at:
-
-   https://github.com/nbd168/wireless tags/mt76-fixes-2026-07-22
-
-for you to fetch changes up to 2fffc472bec490c8357defcee9c075ca74467352:
-
-   wifi: mt76: mt7996: fix possible NULL-pointer deref in mt7996_mcu_sta_bfer_eht() (2026-07-22 06:20:08 +0000)
-
-----------------------------------------------------------------
-mt76 fixes for 7.2
-
-- fix warnings on removing device
-- null pointer deref fixes
-- fix for data structure confusion on USB/SDIO devices
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-       wifi: mt76: fix airoha_npu dependency tracking
-
-Devin Wittmayer (4):
-       wifi: mt76: mt7921: drop TXRX_NOTIFY on non-mmio buses
-       wifi: mt76: mt7925: drop TXRX_NOTIFY on non-mmio buses
-       wifi: mt76: mt7615: drop TXRX_NOTIFY on non-mmio buses
-       wifi: mt76: restrict NPU/PPE active checks to MMIO devices
-
-Guangshuo Li (1):
-       wifi: mt76: mt7925: guard link STA in decap offload
-
-Lorenzo Bianconi (4):
-       wifi: mt76: connac: fix possible NULL-pointer deref in mt76_connac_mcu_uni_bss_he_tlv()
-       wifi: mt76: mt7925: fix possible NULL-pointer deref in mt7925_mcu_bss_he_tlv()
-       wifi: mt76: mt7996: check pointer returned by mt76_connac_get_he_phy_cap()
-       wifi: mt76: mt7996: fix possible NULL-pointer deref in mt7996_mcu_sta_bfer_eht()
-
-Nicolas Cavallari (1):
-       wifi: mt76: Disable napi when removing device
-
-Rosen Penev (1):
-       wifi: mt76: fix MAC address for non OF pcie cards
-
-Ruoyu Wang (1):
-       wifi: mt76: mt7915: guard HE capability lookups
-
-Sean Wang (1):
-       wifi: mt76: mt7925: fix crash in reset link replay
-
-  drivers/net/wireless/mediatek/mt76/Kconfig           |  4 ++--
-  drivers/net/wireless/mediatek/mt76/Makefile          |  6 +++++-
-  drivers/net/wireless/mediatek/mt76/dma.c             |  5 ++++-
-  drivers/net/wireless/mediatek/mt76/eeprom.c          |  2 +-
-  drivers/net/wireless/mediatek/mt76/mt76.h            |  6 +++---
-  drivers/net/wireless/mediatek/mt76/mt7615/mac.c      |  6 ++++++
-  drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c |  2 ++
-  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c      | 18 +++++++++++++-----
-  drivers/net/wireless/mediatek/mt76/mt7921/mac.c      | 10 +++++++---
-  drivers/net/wireless/mediatek/mt76/mt7925/mac.c      | 13 ++++++++++---
-  drivers/net/wireless/mediatek/mt76/mt7925/main.c     |  3 +++
-  drivers/net/wireless/mediatek/mt76/mt7925/mcu.c      |  2 ++
-  drivers/net/wireless/mediatek/mt76/mt7996/Kconfig    |  2 +-
-  drivers/net/wireless/mediatek/mt76/mt7996/mcu.c      | 19 +++++++++++++------
-  14 files changed, 72 insertions(+), 26 deletions(-)
