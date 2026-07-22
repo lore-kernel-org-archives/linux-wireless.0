@@ -1,106 +1,134 @@
-Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B202C473C6F;
-	Wed, 22 Jul 2026 08:28:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D4953BE659
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 09:21:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784708913; cv=none; b=czn/6MXojt5X0m2nyWbf5VvUl3avpZRZZeXATw9huATNjMehqUK/L59TcpB4vEZ05ec3dJUIUmFNKXeL2U7UG42/LyJo7DFLpw3HiHpzRieKipUlLOQqCY2fV9ZA1Fxkv29C778t63qkLSldjsStv+bS4up9PpmY+FZrNnqBMyk=
+	t=1784712071; cv=none; b=HQop7Dmldn3AdelHcfEwiAg1SfteVuOTId1HL+IrSJaoXrVqZXu39DxnJDritZkRFvXrHp5tDIETP9bO4IeXDmM8wURd+WY9TMbtNRATVnG3wUjTwA2FUfK3Nb6B4p/CrN8sJCDE+nMp99wNMaWznR0jpIrGVy4JsgxFc+7vS5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784708913; c=relaxed/simple;
-	bh=EixoOQ7z6M70FC6xow3sUPIAwW+cfs5a/52T3oyotk4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=suhtUfQCaKEhTMHysEL5GMXPckqEbjIiXgvQ0TklGvzOiFWeaSSOkZD3y/8RyHPd8wp7U6Eh5IMrobAkUizPqsjioj4mFWq0RQR7ykzEYcRlRJ95cbIJ59+64EKA9nyp/XyIrFP+hfZd7niAnFpuk3gGt4MfqvbQyShW5Nz7rHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=ozTIYxe+; arc=none smtp.client-ip=217.10.52.160
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
+	s=arc-20240116; t=1784712071; c=relaxed/simple;
+	bh=32rOwesH+gwjrg9sBYG4YxAQXufT8hneixwX2YjRdDA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XNCNpNxFpnp3PZWKaViEM8iOn93dO4QHTY/qoQT4XeaMxzAJJSkP5jRX1W14a0e9t1AYf6X/JDRQ8LJX5iPrLDskbegn9Uc2HiIqCU6At6VDEr084AwI02RKPHUj8aRBEla9w5UcB8Aqb0Mk4cZe2tRtFFfX5T3IDiXUakwZWiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RDBIRUjO; arc=none smtp.client-ip=209.85.167.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="ozTIYxe+"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1784708910; x=1816244910;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=EixoOQ7z6M70FC6xow3sUPIAwW+cfs5a/52T3oyotk4=;
-  b=ozTIYxe+VcJcVGjEwui9i2Dmg16h8IyhLsd39lwgeEDde3b+Z9C6KZ9n
-   pbiGBtwUJtomPUzI99BADH1PwBXk2HHedbgmluHzxNGJkKCqKbj9XkBYl
-   qcLzWC2RTh4z+vH9Y17sQucyofniytzBuHxLdfLs4MVCVi+N/r98QNCKG
-   U=;
-X-CSE-ConnectionGUID: +Fjbd8AoQAK97Dyf0VrqgA==
-X-CSE-MsgGUID: IGo3ju6GSlezfUvYRr7D/A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11853"; a="138945297"
-X-IronPort-AV: E=Sophos;i="6.25,178,1779141600"; 
-   d="scan'208";a="138945297"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
-  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2026 10:27:14 +0200
-Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE819.infineon.com
- (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43; Wed, 22 Jul
- 2026 10:27:13 +0200
-Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
- MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 22 Jul 2026 10:27:11 +0200
-From: Jason Huang <Jason.Huang2@infineon.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>,
-	<linux-kernel@vger.kernel.org>, Jason Huang <jason.huang2@infineon.com>
-Subject: [PATCH] wifi: brcmfmac: fix P2P action frame handling without device vif
-Date: Wed, 22 Jul 2026 16:26:08 +0800
-Message-ID: <20260722082608.412472-1-Jason.Huang2@infineon.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RDBIRUjO"
+Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5b2a8e4c77eso1140640e87.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 02:21:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784712068; x=1785316868; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=TzPYGGCsB/JnvYbiM7iDCIZYRT+Lm8x4cI/RrcLbCt0=;
+        b=RDBIRUjO+FMmOIG0vm4tX/IBUNBSoy+iV2kRUFXTaWwR1RZxhTaRFq/ZG6ntknm78Z
+         vBAOXmyTfpoCiS1O8sQeicv9TAnos7JbeNMjgYpa1Qw6GHmXxSFRgpAyciPVm97axY7w
+         mID9M11jP1W8xMTbSymWoJLf++qfskLh2BG7EwVOlTLIE9p2ogOci+Deso01cyDN7iJj
+         bCrI5pJoU+5FD9gDCIWOUciqcO8NJ7+5gfBLJ0SLA2v7iWLkbGEyPLwYq+k44EMNuOEZ
+         U2pCmdTbJgxUGdw/zD5TiKBZYpfUNRLaR8qqcfR6lOP0cevhMM6fD/zj7L4ciIfRgwPV
+         bp4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784712068; x=1785316868;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=TzPYGGCsB/JnvYbiM7iDCIZYRT+Lm8x4cI/RrcLbCt0=;
+        b=ENeX4AVvwA2kaSWx12fGmqNOzYcRsPmpTlRyiUH5mdJ/rboQMl6B5ouUJ5BQwNmJaB
+         t7rTLxBd6Se2kGi7FQFuriYe0R/CoiG/Ebswa33eY5CJhX6EkwPGttX9ehN5OrhIHEkR
+         W+aotwrFkdIOo7KKM9rLoEdKXLVmQsk25akVvbkwDbmCg+V74qUzivC+kkgUKE0k3Oqj
+         VUo/QxVPC3BxqEzo985nisxk6KUjA1vS7oznONOexLzkXUC/sC0lRcqd2/PoYXoOkMv+
+         C/f6byit1248JCdVwCCW+2xK+VJicIGQVYmEtKHyV95ldoe9XJQlJoV9bqO+AEeiaY3r
+         +fyg==
+X-Forwarded-Encrypted: i=1; AHgh+RqSoStyfsYcfZxIjYPXMl+EF8wWdq6zdx/V1jHSdr3v7PuVbzo1udQM8/4PRh6gUujdaltVfI5ecxjfGbFbOQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+ObkO2Xkvt1sMgj9LOmP/KXjty06K7x0fu7wkzH1G/exMxa/V
+	RoIIz+fAT/FPir6co1LWHWTR51YkDPiXN3OE5jWg9bsynYaANB3bUcAq
+X-Gm-Gg: AR+sD12o58pYdxWVaKcG3hW9GuwymmY30HdK5ZbIvwjAB+tfEY0UvAePbCyNY95glJx
+	7C62euYpNIUKKcB2TeOmrrDsdKHY4U8cXTMuMNRbbUXPdzCm9/xiQ/SZkYgGXC/dqp2dC5RdHB2
+	6vaK9QqKDxLqgbGSVtxHXarwZNmxMgr5iDw6L4sBEBocMNGxlTjDMb5nlhgeZkGn4D54t6/v6tW
+	DnM8B7H4BKyXWKMGIPWDUQgMszd9Z7ByWPciZpW5HL7TQ6YdukY6QIZOx/LBAwfELzQs5AFCyuO
+	AvWDoOjvX6g+q4sPJYhEDvlU1HLKbSP8a4Kt/LeXjcJtCv/RFSFu4T38lB90I8Tf38uNuP6mC6Y
+	m1JNVLg6gp5DWKxnYlOUXMPH6x1Q+3SWghO3DgqEymQujvo5hfGywwaGAZqNaUKEAEFsZy2qiRP
+	WtByERGGC6ltIciuyE
+X-Received: by 2002:a05:6512:708:b0:5b0:1b0f:7a60 with SMTP id 2adb3069b0e04-5b28f9ba3e3mr2907126e87.32.1784712067687;
+        Wed, 22 Jul 2026 02:21:07 -0700 (PDT)
+Received: from localhost (soda.int.kasm.eu. [2001:678:a5c:1202:7b92:9ac1:b9ef:5287])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2a9d303dfsm380919e87.47.2026.07.22.02.21.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Jul 2026 02:21:07 -0700 (PDT)
+Date: Wed, 22 Jul 2026 11:21:06 +0200
+From: Klara Modin <klarasmodin@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Rosen Penev <rosenp@gmail.com>, linux-wireless@vger.kernel.org, 
+	Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+	"open list:ARM/Mediatek SoC support" <linux-kernel@vger.kernel.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-arm-kernel@lists.infradead.org>, 
+	"moderated list:ARM/Mediatek SoC support" <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCHv2 wireless] wifi: mt76: fix MAC address for non OF pcie
+ cards
+Message-ID: <amCLcgSap5ShOiUT@soda.int.kasm.eu>
+References: <20260706232857.807044-1-rosenp@gmail.com>
+ <al_SAwiLmgT6D_tS@soda.int.kasm.eu>
+ <a0c1178f-86e5-4193-9d9c-767abbdee076@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
- MUCSE809.infineon.com (172.23.29.35)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a0c1178f-86e5-4193-9d9c-767abbdee076@nbd.name>
 
-From: Jason Huang <jason.huang2@infineon.com>
+On 2026-07-22 08:40:56 +0200, Felix Fietkau wrote:
+> Hi,
+> 
+> On 21.07.26 22:22, Klara Modin wrote:
+> > On 2026-07-06 16:28:57 -0700, Rosen Penev wrote:
+> > > If seems the check for err is wrong as the proper macaddr gets written
+> > > to from the EEPROM itself. Meaning checking err from of_get_mac_address is
+> > > wrong as the proper macaddr has been written by this point.
+> > > 
+> > > Reported-by: Klara Modin <klarasmodin@gmail.com>
+> > > Closes: https://lore.kernel.org/all/ajRmlyx_AEGybykL@soda.int.kasm.eu/
+> > > Reported-by: Tobias Klausmann <klausman@schwarzvogel.de>
+> > > Closes:
+> > > https://lore.kernel.org/linux-wireless/30a90714-02d8-45f2-a7f1-4cfe0627d50b@skade.local/
+> > > Fixes: 31ee1582717e ("wifi: mt76: fix of_get_mac_address error handling")
+> > > Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> > > Tested-by: Tobias Klausmann <klausman@schwarzvogel.de>
+> > > Tested-by: Klara Modin <klarasmodin@gmail.com>
+> > > ---
+> > >  v2: add extra tags and target wireless
+> > >  drivers/net/wireless/mediatek/mt76/eeprom.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
+> > > index b99d7452800f..afdb73661866 100644
+> > > --- a/drivers/net/wireless/mediatek/mt76/eeprom.c
+> > > +++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
+> > > @@ -181,7 +181,7 @@ mt76_eeprom_override(struct mt76_phy *phy)
+> > >  	if (err == -EPROBE_DEFER)
+> > >  		return err;
+> > > -	if (err) {
+> > > +	if (!is_valid_ether_addr(phy->macaddr)) {
+> > >  		eth_random_addr(phy->macaddr);
+> > >  		dev_info(dev->dev,
+> > >  			 "Invalid MAC address, using random address %pM\n",
+> > > -- 
+> > > 2.55.0
+> > > 
+> > 
+> > Ping. No one seems to have picked this up yet, but I suppose it is
+> > holiday season.
+> It's in the mt76-fixes pull request that I just sent.
+> 
+> - Felix
 
-Some P2P action frame paths assume the P2P device vif is always
-available. That is not true when userspace sends non-P2P public action
-frames through the primary interface, or when action-frame abort runs
-after the P2P device vif has not been created.
-
-Fall back to the primary vif when aborting an action frame without a P2P
-device vif, and guard P2P device saved IE access before using it for
-peer channel search.
-
-Fixes: 30fb1b272909 ("brcmfmac: use actframe_abort to cancel ongoing action frame")
-Fixes: 6eda4e2c5425 ("brcmfmac: Add tx p2p off-channel support.")
-
-Signed-off-by: Jason Huang <jason.huang2@infineon.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 92c16a317328..66557be28e7b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1283,6 +1283,9 @@ static s32 brcmf_p2p_abort_action_frame(struct brcmf_cfg80211_info *cfg)
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	vif = p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif;
-+	if (!vif)
-+		vif = p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif;
-+
- 	err = brcmf_fil_bsscfg_data_set(vif->ifp, "actframe_abort", &int_val,
- 					sizeof(s32));
- 	if (err)
-@@ -1819,6 +1822,7 @@ bool brcmf_p2p_send_action_frame(struct brcmf_if *ifp,
- 	/* validate channel and p2p ies */
- 	if (config_af_params.search_channel &&
- 	    IS_P2P_SOCIAL_CHANNEL(le32_to_cpu(af_params->channel)) &&
-+	    p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif &&
- 	    p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif->saved_ie.probe_req_ie_len) {
- 		afx_hdl = &p2p->afx_hdl;
- 		afx_hdl->peer_listen_chan = le32_to_cpu(af_params->channel);
--- 
-2.25.1
-
+Thanks!
