@@ -1,74 +1,66 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9134BCAB2
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 11:07:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D5A3C8716
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 11:28:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784718443; cv=none; b=JfuPkTuF0d1Ww/sYNpHPSQ+SIiMH+vgfGMFnLnWU3QpnSS49WR66YgOEPgCBNtH0I+zK3o2SfUAoSsFdDzN1EavzjNEKNUfhi4fEvGg8ddbSgU/j/zved5V1QHbXY+Y8xdYNzPqu7Hf4st6meTdKzYE6mWCjF2IqmJRD1/LX9C4=
+	t=1784719724; cv=none; b=aM2K+4o50eNYvrG79lz/buAmISuqRywstkILd+wjCVqxkrPKFWPkyouMsQePd9OQCny5tY94UuNgYeQYtqI0j9Qx3jNRBcyVkQhZYvZ8YLRbR+tbhE2sldr75RsixnrcV5ro4setOKjcf3+YO1csrK6EwKR8cwbl/e9bmKr7F0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784718443; c=relaxed/simple;
-	bh=Gvq8bn9U5dieapHENn6/tVPX84MtSWPT3qgQXTSmcc0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Eg7UCLlPsEP6MBH2tMAhQIlkJsLVj60WhWOwc7FRyahxYk57sxw3DiORlWTuvjaYiVAEQqkUV1Lqzq5s4CLI2F+aNvx9fLOc80Ubgmke8LJuVnjMlaVipQBpZwwX9ZGc566QbbLpDYDHarFyQk94cqsqR2hQxKdGBu1y7lsnJVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=nhul7KZ5; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
+	s=arc-20240116; t=1784719724; c=relaxed/simple;
+	bh=hOkzl25QMkR31KWjR8NOxhwtgyg0bzm7KtlMeuS5bG4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SQ5VwAj3+L8gyXgB/qEWKf5Sp6xBS87iITJqEqtkC9PiCClW6KV/f66rTAZmgT3W/cOUYpC2bBd8syQDq5phOzqlK4QRIKWraeQ8eB9RBL1decdR6TGfwU+zv0Z4AaxWcuwGgLLr0YJaZXWrLxxZoByrMnMvx7Y89nTjFSvn5yo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZpKGNJNB; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="nhul7KZ5"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-ca7c1176317so9113211a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 04:07:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784718441; x=1785323241; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Pn78C/RraBqASlFsZzfGipH4Pd/7ButyH44MMOGEmn8=;
-        b=nhul7KZ5qD0HjlCk6J4jD9jUHvB5LRm5qIKfGa2iyt3dnJS4hHWlwHcQyqMc0o4Ds+
-         hxr2Nyg8o6004vR3tGdZFJEOuq2A9HE9NdzkWg2KD4i8kjndLQ/vqqkD/oDLFT25gqfE
-         vfQg4asLj3/S463ZVccc+dRF9/EXrKEwwhyQIlr5ZwRLtS8er5Ps3MEQZuVXiMCLChmF
-         Lp4Z0SwpTNZUT9JD5LZL5khVzTQbEoJVHe8R6DtlQ/RCaS3/YtG3O1yOI+zyrbpKsLWZ
-         3QZVQW2GP/z2BGxOAzXUcg39RCtlRPeGhP2A8RnSVzohQ0UcGTKlD7XKZPCO0GMF8YUX
-         vEzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784718441; x=1785323241;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Pn78C/RraBqASlFsZzfGipH4Pd/7ButyH44MMOGEmn8=;
-        b=VKS+DTd3xu/XYQqergJX3RuYmUWvtkopaGTsntCrX4hKtumG45+fw9KOvASduPSmpC
-         R365T6TnJlkYTt93lHRixHKI0kEAuMrUX7kDAint88yJu1EC2NnDYWeTcqAOhyk+YgRy
-         t6YFIYpXdzGyt9hJpdtX3wYiDA+sz8D34rbqNoKBNaxBPiGR2YGnihcw2oZIXl6DJpdf
-         9Nzm/m9JWsRYLlqWtNygVI8YvopmctvQYoUVq5EtqgNwBd37M+fWjiMgJTYezIvuSlQg
-         dvutMX1fgpbVX74ng72AbI0y0NhGnrKklJU5UiBcpbGRCCER6QL1StYW9fulJotYKkKW
-         Styw==
-X-Forwarded-Encrypted: i=1; AHgh+Rq6/EhXSK52EB6PI5kcMaWbuWlJWaVPIp11skwpTts0Jsc68M97sRAwD6jftdZMAybO8PrLEZ2smSBolcOeUA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw8HolmjU+/EJGesaQgXxdFFpjotfWAEtsFdpj1BylOEtDDJQSu
-	QBLw/nRQMLZmOykQTsBVhfhfr/ClVlIdurraQbzudvl/v0Y9VH1vkNXHfEbhiPb7pQM=
-X-Gm-Gg: AR+sD13j9M6aLKsIT3xXYKweRNExbNak5PyhRbLncmVqoG64O9/+5GbF9/D0PchbUjm
-	IPlLxS9Yhl9uHfhvjGYLnBkwI83UhQdrL3ZJmlfefCl7f//nwmXqY2hMdEBM9ZpzY+Q8b/Hfk8g
-	i83nP6e6qKZ31IsKG27LXX+6nLtAVcxVFiJF2mJavV2XaOL6t5SjVKDSqVE7IqFA8CdLhk4OI5X
-	4v8Ipo8xx93M7KgXOlwqAewfrYq6zYLs+2+H9Gcec6jZUMmZRmUXiQUue7fk9Clh1MTG+Q3Byqo
-	RDyopdu/pjUkvFuljEtByN2YigVWv3DpmYfH/SLKM02TL2oMDF6hyV2uhUbCcQur5SYCLfRrsbH
-	jIp7q3F8cru77AfKORkln81NQQOM5AVFCFgO70/v3MwxZi8PWdp0Y1NwtJEdOfJmrCchxAtRAsy
-	mwgOaaOeqL6Ico3Y2uEMFzGmL+a7ga4KN1k67FGdcpbmWUDyAqsEezon5eJLkBauPfyhVavGvif
-	7zrqdnMHrRSzd/L+gpc/37JIazDWZEa
-X-Received: by 2002:a05:6a21:b94:b0:3bc:5284:5445 with SMTP id adf61e73a8af0-3c3ad7d7fc8mr25322681637.21.1784718441385;
-        Wed, 22 Jul 2026 04:07:21 -0700 (PDT)
-Received: from Metius.iitm.ac.in ([103.158.43.43])
-        by smtp.googlemail.com with ESMTPSA id 5a478bee46e88-3147e07000fsm15952879eec.21.2026.07.22.04.07.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Jul 2026 04:07:20 -0700 (PDT)
-From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-To: arend.vanspriel@broadcom.com
-Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZpKGNJNB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1784719707;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hOkzl25QMkR31KWjR8NOxhwtgyg0bzm7KtlMeuS5bG4=;
+	b=ZpKGNJNBOnZGU+uBIn4OzvD4acdY97Ma+MrCkht7wgEVGJr5kcgIUxgthqPftcvpZ30mDH
+	dkN2o3pPot4GxeamrmziwqJ3GG91e2Jnx/JLa7VU4ijzSsXRqHugB9bmE9f3yten2JDwaL
+	gfpBq1zwWuC/P4IHok228MkT+0OJEUA=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-623-Uzggo0ZANlGaYbji_F0fhQ-1; Wed,
+ 22 Jul 2026 07:28:23 -0400
+X-MC-Unique: Uzggo0ZANlGaYbji_F0fhQ-1
+X-Mimecast-MFC-AGG-ID: Uzggo0ZANlGaYbji_F0fhQ_1784719701
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BA896191DFEB;
+	Wed, 22 Jul 2026 11:28:20 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.27])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C8B96195423C;
+	Wed, 22 Jul 2026 11:28:14 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org,
+	mani@kernel.org
+Cc: jtornosm@redhat.com,
+	sashiko-bot@kernel.org,
+	sashiko-reviews@lists.linux.dev,
+	jjohnson@kernel.org,
+	linux-pci@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: brcmfmac: Fix memory leak in brcmf_sdio_read_control()
-Date: Wed, 22 Jul 2026 16:37:12 +0530
-Message-ID: <20260722110713.115988-1-nihaal@cse.iitm.ac.in>
-X-Mailer: git-send-email 2.43.0
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v13] PCI: Add device-specific reset for Qualcomm devices
+Date: Wed, 22 Jul 2026 13:28:13 +0200
+Message-ID: <20260722112813.33153-1-jtornosm@redhat.com>
+In-Reply-To: <20260721082933.7B5A41F000E9@smtp.kernel.org>
+References: <20260721082933.7B5A41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,47 +68,50 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-The memory allocated for buf is not freed in some of the error paths in
-brcmf_sdio_read_control(). Fix that by adding vfree() calls.
+> [Severity: High]
+> Will this sequence of ioread32 flush reads and
+> read_poll_timeout trigger Master Aborts on architectures
+> with strict error handling?
+>
+> The SoC global reset explicitly drops the device PCIe link.
+> Performing ioread32 flush reads immediately after asserting
+> the reset, and then actively polling the disconnected MMIO
+> space with read_poll_timeout while the link recovers, can
+> result in Unsupported Request errors.
+>
+> On strict platforms like ARM64 or x86 servers with APEI/GHES
+> Firmware First error handling, these can escalate to fatal
+> Uncorrectable Errors and cause a host kernel panic when a
+> guest VM exits.
+>
+> Should this avoid MMIO flush reads during these reset
+> sequences and instead use fixed delays to safely bridge the
+> link-down period?
 
-Fixes: dd43a01c5cdb ("brcmfmac: use dynamically allocated control frame buffer")
-Cc: stable@vger.kernel.org
-Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
----
-Compile tested only. Issue found using static analysis.
+The SoC global reset at 0x3008 does not immediately drop the
+PCIe link. The flush reads execute while the device is still
+responsive - the actual reset takes effect during the
+subsequent msleep. The ath11k/ath12k drivers perform the same
+register accesses during this reset sequence, including on
+ARM64 Qualcomm platforms, without issues.
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
- 1 file changed, 3 insertions(+)
+The read_poll_timeout polling for link recovery follows the
+same pattern used elsewhere in the PCI subsystem for waiting
+on device responses after reset.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index b725c64e5b5c..0900211ba2fe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1792,6 +1792,7 @@ brcmf_sdio_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 		brcmf_err("%d-byte control read exceeds %d-byte buffer\n",
- 			  rdlen, bus->sdiodev->bus_if->maxctl);
- 		brcmf_sdio_rxfail(bus, false, false);
-+		vfree(buf);
- 		goto done;
- 	}
- 
-@@ -1800,6 +1801,7 @@ brcmf_sdio_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 			  len, len - doff, bus->sdiodev->bus_if->maxctl);
- 		bus->sdcnt.rx_toolong++;
- 		brcmf_sdio_rxfail(bus, false, false);
-+		vfree(buf);
- 		goto done;
- 	}
- 
-@@ -1813,6 +1815,7 @@ brcmf_sdio_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 			  rdlen, sdret);
- 		bus->sdcnt.rxc_errors++;
- 		brcmf_sdio_rxfail(bus, true, true);
-+		vfree(buf);
- 		goto done;
- 	} else
- 		memcpy(buf + BRCMF_FIRSTREAD, rbuf, rdlen);
--- 
-2.43.0
+Tested over 100+ VM crash/reset cycles on x86 with VFIO
+passthrough without errors.
+
+> [Severity: High]
+> Could this immediate ioread32 flush read also trigger a
+> fatal Master Abort if the link drops instantly after writing
+> the MHI SoC reset request?
+
+Same as above - the MHI SoC reset does not instantly drop the
+PCIe link. The flush read completes before the reset takes
+effect, and the 2-second delay covers the actual reset period.
+This replicates the MHI driver behavior
+(mhi_pci_reset_prepare()).
 
