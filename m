@@ -1,32 +1,32 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3E041D4EA
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 20:04:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9279A41D10C
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 20:04:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784750660; cv=none; b=o02/4GKp8Nc/Y2vRhgMTswOcR5LQ+SM7PQz/5NptaQIY7aZJuFmgZByioRqwngIm9Nmo436yeVjhMLXfqRIJttPiW2pDkJJT9zsLnOrlCUMBh1GW2XtxFswAimwsMAK+/TAaeGjosGunmhoAf3/hUgzgBdtODiw/1QvpdmwMhRs=
+	t=1784750663; cv=none; b=BeDAbC5XjbcNEPAWp7ETWk8dDSfHF0uNIuCwfDkqB1SOVtmSrE1a7ERJ9j4ihA4g1JSPlz26DU4iKwf/+mprt0eP74ATOiEDkUM0EHrzozXLhbk/Tm6oLxboSnGTFekfRiG9CHslcZIcoqtpAE6TzYiu1Ud3Vl+zyh3eOBLUmaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784750660; c=relaxed/simple;
-	bh=puLx88GSh2ylBpOjXVmimrvGLSys6bm+2nAyJsXpIH0=;
+	s=arc-20240116; t=1784750663; c=relaxed/simple;
+	bh=ijKiw39JWHYiHz9TmcuSWw4iMuSFa/FP/N9ggjFIZ/Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QWePxWS0Zplpf8f/u9qkVnREiQh5l08pd5LlMiRWTyzw1E5FTdLR/2zLN0r3GvRW8gc1vadw8t2XVU0U4V/82BCCHj+YB2mWxUvio2RDxxxPB/Xqnv/tb/kyGuhqY7curifTzX6QVOZRy3km7pwEO7+jq26m0Qx0UmS2HJ1HrBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qWJ5IkDh; arc=none smtp.client-ip=95.215.58.178
+	 MIME-Version:Content-Type; b=n2IDZwbVFxkdnxerHlIkI6stajtBbQElNJoUDIVgICTge7sRmYkET0uPuZakxu3HlhcvwGkomDoGNqp5cVEuLlU6OigCxsUZ/tRNZQxMSvptfKuj/4yUsp0UIoQ6pOvy02MvXh5cFOFf9RLni/DlsKxVOAqt+HCxDkfpEOJX+AY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LlC3YAcI; arc=none smtp.client-ip=95.215.58.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qWJ5IkDh"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LlC3YAcI"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784750651;
+	t=1784750652;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Y/rUPGsrnk3b70cOt8o+Ksjyvg8Zw3XA46ou9iTDg9Y=;
-	b=qWJ5IkDhLuz03AuU1IgZqzPOUw4i/zmA04UUkRJs+93nZGCBOAvJd0qAvbVfcgJBbtoAlB
-	teJeOXW1GrPEL2p9O0/J7qkesC/Z6pigLm+fxfuvlbfsST31oDwg4MHvtQd1BGXJ8jG+71
-	hV9rjqs8Zvla5epYf5pYfhd8poTNM2I=
+	bh=y+kdaUNuwQ//BvL2CkNnI5tiZ5XMPnkBBZNnM4A/LK8=;
+	b=LlC3YAcIKqEt5wcuq/DKygFw/NErn3ux+hK5aQW1SLeep685cfLbLEexfOeH2/5CApStGo
+	ElU+H1yZxVpjBUSRNtDvQTwsVtfY/KkvNGyM0M+/uudBg/r1iiYSKRF/YbLPju0moS6oNB
+	/ZitA7qlkFnQ8HIoe1o3KV5Mk7naQK4=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v2 1/4] wifi: rtw88: 8723bs: add the core handling required by RTL8723BS
-Date: Wed, 22 Jul 2026 22:03:28 +0200
-Message-ID: <20260722200337.135150-2-luka.gejak@linux.dev>
+Subject: [PATCH v2 2/4] wifi: rtw88: 8723b: add RTL8723B chip support
+Date: Wed, 22 Jul 2026 22:03:29 +0200
+Message-ID: <20260722200337.135150-3-luka.gejak@linux.dev>
 In-Reply-To: <20260722200337.135150-1-luka.gejak@linux.dev>
 References: <20260722200337.135150-1-luka.gejak@linux.dev>
 Precedence: bulk
@@ -46,166 +46,987 @@ List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-The RTL8723BS predates rtw88 and runs the Realtek vendor firmware
-(version 41), whose H2C/C2H protocol and association behaviour differ
-from the firmware used by the existing rtw88 8723-family devices. It
-therefore needs a set of changes in the shared rtw88 code before the
-chip driver itself can work.
+Add the Realtek RTL8723B 802.11n chip driver: the chip operations, the
+BB/RF/AGC parameter tables, the power sequences, and the RTL8723BS SDIO
+bind.
 
-Add the RTW_CHIP_TYPE_8723B chip type, the rtw_is_8723bs() helper, the
-register and security-config definitions, and the per-vif and
-per-station state the paths below use. Everything else is gated on
-rtw_is_8723bs(), so the other chips are unaffected.
+The shared core handling this builds on was added by the previous patch.
+The driver is not built yet; the Kconfig and Makefile entries follow.
 
-Covered here are the vendor H2C/C2H interface, including the
-reserved-page BIT_BCN_VALID handshake for SDIO; WiFi/BT antenna
-handling, because on these boards the scan and authentication windows
-route through the PTA mux even when BT is disabled; scan, calibration
-and rate adaptation; the vendor association sequence, which the firmware
-expects the driver to drive the way vendor start_clnt_join() does; and
-the RTL8723BS SDIO transfer contract.
-
-Several of those need explaining, because the reason is not visible in
-the code:
-
-The chip does not append an RX FCS, so RX_INCLUDES_FCS must not be
-advertised; otherwise mac80211 trims four bytes of real frame data and
-corrupts the last beacon or probe-response IE. The firmware has no
-hardware-feature report either, so the stream and antenna count are
-derived from the RF-path count and the single-stream MCS 0-7 set is
-advertised along with the 20/40 MHz capability. An empty MCS set makes
-APs drop the station immediately after association.
-
-Low-power-save entry is gated on sustained idle rather than on a single
-quiet window, because the firmware's per-packet wake latency out of LPS
-throttles bursty traffic hard.
-
-Management completion is reported at SDIO DMA completion, as the vendor
-dump_mgntframe_and_wait() path does, because the vendor SW_DEFINE value
-cannot uniquely match asynchronous TX reports.
-
-The per-AC software TX FIFO is bounded by stopping a mac80211 queue at a
-high watermark and resuming it at a low one, which prevents unbounded
-queueing latency and uplink congestion collapse. That in turn needs a
-retry path: when the write path hits a temporary free-page shortage it
-requeues the skb at the queue head, and rtw88 enables no free-page
-(AVAL) interrupt on any SDIO chip, so a retry can only come from newly
-enqueued traffic. RTL8723BS is the only SDIO chip that applies
-backpressure, so once the queue is stopped nothing re-kicks the worker
-and the requeued skb stays stuck even after the hardware frees pages.
-The TX handler therefore uses delayed work, with a short retry when the
-write path returns -EBUSY.
-
-Finally, the TX report purge timeout is extended to cover this chip,
-reusing the longer window already used for 8723D USB, because the
-firmware delivers its CCX reports later than the 500 ms default on
-slower SDIO hosts.
+The RTL8723B chip support is based on the initial work by
+Michael Straube <straube.linux@gmail.com>.
+Link: https://github.com/mistraube/rtw88/tree/rtl8723bs
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c     | 237 ++++++++
- drivers/net/wireless/realtek/rtw88/coex.h     |   4 +
- drivers/net/wireless/realtek/rtw88/fw.c       | 166 +++++-
- drivers/net/wireless/realtek/rtw88/fw.h       |  17 +
- drivers/net/wireless/realtek/rtw88/mac80211.c | 542 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/main.c     | 186 +++++-
- drivers/net/wireless/realtek/rtw88/main.h     |  35 ++
- drivers/net/wireless/realtek/rtw88/reg.h      |  31 +
- drivers/net/wireless/realtek/rtw88/rx.c       |   8 +-
- drivers/net/wireless/realtek/rtw88/sdio.c     | 462 +++++++++++++--
- drivers/net/wireless/realtek/rtw88/sdio.h     |  20 +-
- drivers/net/wireless/realtek/rtw88/sec.h      |   1 +
- drivers/net/wireless/realtek/rtw88/tx.c       |   5 +-
- 13 files changed, 1637 insertions(+), 77 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8723b.c | 3094 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723b.h |   16 +
+ .../wireless/realtek/rtw88/rtw8723b_table.c   |  862 +++++
+ .../wireless/realtek/rtw88/rtw8723b_table.h   |   18 +
+ .../net/wireless/realtek/rtw88/rtw8723bs.c    |   39 +
+ 5 files changed, 4029 insertions(+)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723bs.c
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 37c336def419..641cfa1181b2 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1443,6 +1443,205 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
- #define case_ALGO(src) \
- 	case COEX_ALGO_##src: return #src
- 
-+/* 8723BS SDIO WiFi/BT coexistence antenna handling. On BT-disabled boards the
-+ * scan/auth window still routes through the PTA mux; these helpers force the
-+ * vendor-shaped WiFi-owned antenna path so directed management TX reaches air.
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.c b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+new file mode 100644
+index 000000000000..ef9ac4548ad9
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.c
+@@ -0,0 +1,3094 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/*
++ * Copyright(c) 2007-2017  Realtek Corporation
++ * Copyright(c) Michael Straube <straube.linux@gmail.com>
++ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
 + */
-+#define REG_8723BS_BT_COEX_CTRL		0x0039
-+#define REG_8723BS_BB_ANT_CFG		0x0930
-+#define REG_8723BS_BB_ANT_CFG1		0x0944
-+#define REG_8723BS_BB_ANT_BUF		0x0974
-+#define RTW8723BS_COEX_H_WLAN_ACTIVE	0x1800101b
 +
-+static bool rtw_coex_8723bs_ant_is_aux(struct rtw_dev *rtwdev)
-+{
-+	return !!(rtwdev->efuse.bt_setting & BIT(6));
-+}
++#include <linux/unaligned.h>
++#include "main.h"
++#include "coex.h"
++#include "fw.h"
++#include "mac.h"
++#include "phy.h"
++#include "rtw8703b.h"
++#include "rtw8723b.h"
++#include "rtw8723b_table.h"
++#include "sdio.h"
++#include "tx.h"
 +
-+static bool rtw_coex_8723bs_bt_disabled(struct rtw_dev *rtwdev)
-+{
-+	return rtw_is_8723bs(rtwdev) && rtwdev->coex.stat.bt_disabled;
-+}
++#define TRANS_SEQ_END			\
++	0xFFFF,				\
++	RTW_PWR_CUT_ALL_MSK,		\
++	RTW_PWR_INTF_ALL_MSK,		\
++	0,				\
++	RTW_PWR_CMD_END, 0, 0
 +
-+static u32 rtw_coex_8723bs_pta_ant_path(struct rtw_dev *rtwdev)
-+{
-+	return rtw_coex_8723bs_ant_is_aux(rtwdev) ? 0x80 : 0x200;
-+}
-+
-+/* Write BB_SEL_BTG (0x948), retrying once with SYS_FUNC BB reset if the first
-+ * write does not stick (RF/BB clock may have been gated).
++#define TBTT_PROHIBIT_SETUP_TIME		0x04
++#define TBTT_PROHIBIT_HOLD_TIME_STOP_BCN	0x64
++#define WLAN_BCN_DMA_TIME			0x02
++#define WLAN_ANT_SEL				0x82
++#define WLAN_BAR_VAL				0x0201ffff
++#define WLAN_SLOT_TIME				0x09
++#define WLAN_SYS_FUNC_BB_ENABLE			(BIT_FEN_BB_GLB_RST | \
++						 BIT_FEN_BB_RSTB)
++#define WLAN_RF_CTRL_ENABLE			(BIT_RF_EN | BIT_RF_RSTB | \
++						 BIT_RF_SDM_RSTB)
++/*
++ * Staging and the BB table use 0x03a05611 as the normal RX path. 0x03a05600
++ * is only an IQK temporary value and must not be reasserted during scan.
 + */
-+static u32 rtw_coex_8723bs_write_bb_sel_btg(struct rtw_dev *rtwdev, u32 value)
++#define WLAN_RX_PATH_A_8723B			0x03a05611
++
++#define ADDA_ON_VAL_8723B			0x01c00014
++
++#define MASK_NETTYPE	0x30000
++#define _NETTYPE(x)	(((x) & 0x3) << 16)
++#define NT_LINK_AP	0x2
++
++#define WLAN_RX_FILTER0			0xFFFF
++#define WLAN_RX_FILTER1			0x400
++#define WLAN_RX_FILTER2			0xFFFF
++#define WLAN_RCR_CFG			(0x700060CE | BIT_AMF)
++
++#define IQK_DELAY_TIME_8723B		20
++
++/* REG_EARLY_MODE_CONTROL for 8723B is now in reg.h */
++
++/* local page-layout constants (no rtw88 equivalents exist); used below */
++#define BCNQ_PAGE_NUM_8723B	0x08
++#define BCNQ1_PAGE_NUM_8723B		0x00
++#define WOWLAN_PAGE_NUM_8723B		0x00
++#define TX_TOTAL_PAGE_NUMBER_8723B\
++	(0xFF - BCNQ_PAGE_NUM_8723B - BCNQ1_PAGE_NUM_8723B - \
++	 WOWLAN_PAGE_NUM_8723B)
++
++/* local TXPKTBUF boundary regs (no rtw88 equivalents exist); used below */
++
++/* rssi in percentage % (dbm = % - 100) */
++/*
++ * These are used to select simple signal quality levels, might need
++ * tweaking. Same for rf_para tables below.
++ */
++static const u8 wl_rssi_step_8723b[] = {60, 50, 44, 30};
++static const u8 bt_rssi_step_8723b[] = {30, 30, 30, 30};
++static const struct coex_5g_afh_map afh_5g_8723b[] = { {0, 0, 0} };
++
++static const struct coex_rf_para rf_para_tx_8723b[] = {
++	{0, 0, false, 7},  /* for normal */
++	{0, 10, false, 7}, /* for WL-CPT */
++	{1, 0, true, 4},
++	{1, 2, true, 4},
++	{1, 10, true, 4},
++	{1, 15, true, 4}
++};
++
++static const struct coex_rf_para rf_para_rx_8723b[] = {
++	{0, 0, false, 7},  /* for normal */
++	{0, 10, false, 7}, /* for WL-CPT */
++	{1, 0, true, 5},
++	{1, 2, true, 5},
++	{1, 10, true, 5},
++	{1, 15, true, 5}
++};
++
++static_assert(ARRAY_SIZE(rf_para_tx_8723b) == ARRAY_SIZE(rf_para_rx_8723b));
++
++static const u32 rtw8723b_ofdm_swing_table[] = {
++	0x0b40002d, /* 0, -15.0dB */
++	0x0c000030, /* 1, -14.5dB */
++	0x0cc00033, /* 2, -14.0dB */
++	0x0d800036, /* 3, -13.5dB */
++	0x0e400039, /* 4, -13.0dB */
++	0x0f00003c, /* 5, -12.5dB */
++	0x10000040, /* 6, -12.0dB */
++	0x11000044, /* 7, -11.5dB */
++	0x12000048, /* 8, -11.0dB */
++	0x1300004c, /* 9, -10.5dB */
++	0x14400051, /* 10, -10.0dB */
++	0x15800056, /* 11, -9.5dB */
++	0x16c0005b, /* 12, -9.0dB */
++	0x18000060, /* 13, -8.5dB */
++	0x19800066, /* 14, -8.0dB */
++	0x1b00006c, /* 15, -7.5dB */
++	0x1c800072, /* 16, -7.0dB */
++	0x1e400079, /* 17, -6.5dB */
++	0x20000080, /* 18, -6.0dB */
++	0x22000088, /* 19, -5.5dB */
++	0x24000090, /* 20, -5.0dB */
++	0x26000098, /* 21, -4.5dB */
++	0x288000a2, /* 22, -4.0dB */
++	0x2ac000ab, /* 23, -3.5dB */
++	0x2d4000b5, /* 24, -3.0dB */
++	0x300000c0, /* 25, -2.5dB */
++	0x32c000cb, /* 26, -2.0dB */
++	0x35c000d7, /* 27, -1.5dB */
++	0x390000e4, /* 28, -1.0dB */
++	0x3c8000f2, /* 29, -0.5dB */
++	0x40000100, /* 30, +0dB */
++	0x43c0010f, /* 31, +0.5dB */
++	0x47c0011f, /* 32, +1.0dB */
++	0x4c000130, /* 33, +1.5dB */
++	0x50800142, /* 34, +2.0dB */
++	0x55400155, /* 35, +2.5dB */
++	0x5a400169, /* 36, +3.0dB */
++	0x5fc0017f, /* 37, +3.5dB */
++	0x65400195, /* 38, +4.0dB */
++	0x6b8001ae, /* 39, +4.5dB */
++	0x71c001c7, /* 40, +5.0dB */
++	0x788001e2, /* 41, +5.5dB */
++	0x7f8001fe, /* 42, +6.0dB */
++};
++
++static const u32 rtw8723b_cck_pwr_regs[] = {
++	0x0a22, 0x0a23, 0x0a24, 0x0a25, 0x0a26, 0x0a27, 0x0a28, 0x0a29,
++};
++
++static const u8 rtw8732b_cck_swing_table_ch1_ch13[][8] = {
++	{0x09, 0x08, 0x07, 0x06, 0x04, 0x03, 0x01, 0x01},	/* 0, -16.0dB */
++	{0x09, 0x09, 0x08, 0x06, 0x05, 0x03, 0x01, 0x01},	/* 1, -15.5dB */
++	{0x0a, 0x09, 0x08, 0x07, 0x05, 0x03, 0x02, 0x01},	/* 2, -15.0dB */
++	{0x0a, 0x0a, 0x09, 0x07, 0x05, 0x03, 0x02, 0x01},	/* 3, -14.5dB */
++	{0x0b, 0x0a, 0x09, 0x08, 0x06, 0x04, 0x02, 0x01},	/* 4, -14.0dB */
++	{0x0b, 0x0b, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x01},	/* 5, -13.5dB */
++	{0x0c, 0x0c, 0x0a, 0x09, 0x06, 0x04, 0x02, 0x01},	/* 6, -13.0dB */
++	{0x0d, 0x0c, 0x0b, 0x09, 0x07, 0x04, 0x02, 0x01},	/* 7, -12.5dB */
++	{0x0d, 0x0d, 0x0c, 0x0a, 0x07, 0x05, 0x02, 0x01},	/* 8, -12.0dB */
++	{0x0e, 0x0e, 0x0c, 0x0a, 0x08, 0x05, 0x02, 0x01},	/* 9, -11.5dB */
++	{0x0f, 0x0f, 0x0d, 0x0b, 0x08, 0x05, 0x03, 0x01},	/* 10, -11.0dB */
++	{0x10, 0x10, 0x0e, 0x0b, 0x08, 0x05, 0x03, 0x01},	/* 11, -10.5dB */
++	{0x11, 0x11, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01},	/* 12, -10.0dB */
++	{0x12, 0x12, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01},	/* 13, -9.5dB */
++	{0x13, 0x13, 0x10, 0x0d, 0x0a, 0x06, 0x03, 0x01},	/* 14, -9.0dB */
++	{0x14, 0x14, 0x11, 0x0e, 0x0b, 0x07, 0x03, 0x02},	/* 15, -8.5dB */
++	{0x16, 0x15, 0x12, 0x0f, 0x0b, 0x07, 0x04, 0x01},	/* 16, -8.0dB */
++	{0x17, 0x16, 0x13, 0x10, 0x0c, 0x08, 0x04, 0x02},	/* 17, -7.5dB */
++	{0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02},	/* 18, -7.0dB */
++	{0x1a, 0x19, 0x16, 0x12, 0x0d, 0x09, 0x04, 0x02},	/* 19, -6.5dB */
++	{0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02},	/* 20, -6.0dB */
++	{0x1d, 0x1c, 0x18, 0x14, 0x0f, 0x0a, 0x05, 0x02},	/* 21, -5.5dB */
++	{0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02},	/* 22, -5.0dB */
++	{0x20, 0x20, 0x1b, 0x16, 0x11, 0x08, 0x05, 0x02},	/* 23, -4.5dB */
++	{0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02},	/* 24, -4.0dB */
++	{0x24, 0x23, 0x1f, 0x19, 0x13, 0x0c, 0x06, 0x03},	/* 25, -3.5dB */
++	{0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03},	/* 26, -3.0dB */
++	{0x28, 0x28, 0x22, 0x1c, 0x15, 0x0d, 0x07, 0x03},	/* 27, -2.5dB */
++	{0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03},	/* 28, -2.0dB */
++	{0x2d, 0x2d, 0x27, 0x1f, 0x18, 0x0f, 0x08, 0x03},	/* 29, -1.5dB */
++	{0x30, 0x2f, 0x29, 0x21, 0x19, 0x10, 0x08, 0x03},	/* 30, -1.0dB */
++	{0x33, 0x32, 0x2b, 0x23, 0x1a, 0x11, 0x08, 0x04},	/* 31, -0.5dB */
++	{0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04},	/* 32, +0dB */
++};
++
++static const u8 rtw8732b_cck_swing_table_ch14[][8] = {
++	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00},	/* 0, -16.0dB */
++	{0x09, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00},	/* 1, -15.5dB */
++	{0x0a, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00},	/* 2, -15.0dB */
++	{0x0a, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00},	/* 3, -14.5dB */
++	{0x0b, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00},	/* 4, -14.0dB */
++	{0x0b, 0x0b, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00},	/* 5, -13.5dB */
++	{0x0c, 0x0c, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00},	/* 6, -13.0dB */
++	{0x0d, 0x0c, 0x0b, 0x06, 0x00, 0x00, 0x00, 0x00},	/* 7, -12.5dB */
++	{0x0d, 0x0d, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00},	/* 8, -12.0dB */
++	{0x0e, 0x0e, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00},	/* 9, -11.5dB */
++	{0x0f, 0x0f, 0x0d, 0x08, 0x00, 0x00, 0x00, 0x00},	/* 10, -11.0dB */
++	{0x10, 0x10, 0x0e, 0x08, 0x00, 0x00, 0x00, 0x00},	/* 11, -10.5dB */
++	{0x11, 0x11, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00},	/* 12, -10.0dB */
++	{0x12, 0x12, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00},	/* 13, -9.5dB */
++	{0x13, 0x13, 0x10, 0x0a, 0x00, 0x00, 0x00, 0x00},	/* 14, -9.0dB */
++	{0x14, 0x14, 0x11, 0x0a, 0x00, 0x00, 0x00, 0x00},	/* 15, -8.5dB */
++	{0x16, 0x15, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00},	/* 16, -8.0dB */
++	{0x17, 0x16, 0x13, 0x0b, 0x00, 0x00, 0x00, 0x00},	/* 17, -7.5dB */
++	{0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00},	/* 18, -7.0dB */
++	{0x1a, 0x19, 0x16, 0x0d, 0x00, 0x00, 0x00, 0x00},	/* 19, -6.5dB */
++	{0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00},	/* 20, -6.0dB */
++	{0x1d, 0x1c, 0x18, 0x0e, 0x00, 0x00, 0x00, 0x00},	/* 21, -5.5dB */
++	{0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00},	/* 22, -5.0dB */
++	{0x20, 0x20, 0x1b, 0x10, 0x00, 0x00, 0x00, 0x00},	/* 23, -4.5dB */
++	{0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00},	/* 24, -4.0dB */
++	{0x24, 0x23, 0x1f, 0x12, 0x00, 0x00, 0x00, 0x00},	/* 25, -3.5dB */
++	{0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00},	/* 26, -3.0dB */
++	{0x28, 0x28, 0x24, 0x14, 0x00, 0x00, 0x00, 0x00},	/* 27, -2.5dB */
++	{0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00},	/* 28, -2.0dB */
++	{0x2d, 0x2d, 0x17, 0x17, 0x00, 0x00, 0x00, 0x00},	/* 29, -1.5dB */
++	{0x30, 0x2f, 0x29, 0x18, 0x00, 0x00, 0x00, 0x00},	/* 30, -1.0dB */
++	{0x33, 0x32, 0x2b, 0x19, 0x00, 0x00, 0x00, 0x00},	/* 31, -0.5dB */
++	{0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00},	/* 32, +0dB */
++};
++
++static_assert(ARRAY_SIZE(rtw8732b_cck_swing_table_ch1_ch13) ==
++	      ARRAY_SIZE(rtw8732b_cck_swing_table_ch14));
++
++#define RTW_OFDM_SWING_TABLE_SIZE	ARRAY_SIZE(rtw8723b_ofdm_swing_table)
++#define RTW_CCK_SWING_TABLE_SIZE	ARRAY_SIZE(rtw8732b_cck_swing_table_ch14)
++
++static const struct rtw_pwr_seq_cmd trans_pre_enable_8723b[] = {
++	/* unlock ISO/CLK/power control register */
++	{REG_RSV_CTRL,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xff, 0},
++
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8723b[] = {
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(7), 0},
++
++	{0x0086,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_SDIO,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++
++	{0x0086,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_SDIO,
++	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
++
++	{0x004A,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4), 0},
++
++	{0x0023,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(4), 0},
++
++	{0x0301,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0},
++
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_cardemu_to_act_8723b[] = {
++	{0x0020,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0067,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(4), 0},
++
++	{0x0001,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_DELAY, 1, RTW_PWR_DELAY_MS},
++
++	{0x0000,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(5), 0},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, (BIT(4) | BIT(3) | BIT(2)), 0},
++
++	{0x0075,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0006,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, BIT(1), BIT(1)},
++
++	{0x0075,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++
++	{0x0006,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(7), 0},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(4) | BIT(3), 0},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, BIT(0), 0},
++
++	{0x0010,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(6), BIT(6)},
++
++	{0x0049,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
++
++	{0x0063,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
++
++	{0x0062,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++
++	{0x0058,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x005A,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
++
++	{0x0068,
++	 RTW_PWR_CUT_TEST_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(3), BIT(3)},
++
++	{0x0069,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(6), BIT(6)},
++
++	 {TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_act_to_lps_8723b[] = {
++	{0x0301,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0xFF},
++
++	{0x0522,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0xFF},
++
++	{0x05F8,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, 0xFF, 0},
++
++	{0x05F9,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, 0xFF, 0},
++
++	{0x05FA,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, 0xFF, 0},
++
++	{0x05FB,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, 0xFF, 0},
++
++	{0x0002,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++
++	{0x0002,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_DELAY, 0, RTW_PWR_DELAY_US},
++
++	{0x0002,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++
++	{0x0100,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x03},
++
++	{0x0101,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++
++	{0x0093,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x00},
++
++	{0x0553,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
++
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_act_to_reset_mcu_8723b[] = {
++	{REG_SYS_FUNC_EN + 1,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT_FEN_CPUEN, 0},
++	/* reset MCU ready */
++	{REG_MCUFW_CTRL,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xff, 0},
++	/* reset MCU IO wrapper */
++	{REG_RSV_CTRL + 1,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++	{REG_RSV_CTRL + 1,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 1},
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_act_to_cardemu_8723b[] = {
++	{0x001F,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0},
++
++	{0x0049,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++
++	{0x0006,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_POLLING, BIT(1), 0},
++
++	{0x0010,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(6), 0},
++
++	{0x0000,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(5), BIT(5)},
++
++	{0x0020,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 0},
++
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd trans_cardemu_to_carddis_8723b[] = {
++	{0x0007,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x20},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(3) | BIT(4), BIT(3)},
++
++	{0x0005,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
++
++	{0x004A,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_USB_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(0), 1},
++
++	{0x0023,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(4), BIT(4)},
++
++	{0x0086,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_SDIO,
++	 RTW_PWR_CMD_WRITE, BIT(0), BIT(0)},
++
++	{0x0086,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_SDIO_MSK,
++	 RTW_PWR_ADDR_SDIO,
++	 RTW_PWR_CMD_POLLING, BIT(1), 0},
++
++	{TRANS_SEQ_END},
++};
++
++static const struct rtw_pwr_seq_cmd * const card_enable_flow_8723b[] = {
++	trans_pre_enable_8723b,
++	trans_carddis_to_cardemu_8723b,
++	trans_cardemu_to_act_8723b,
++	NULL
++};
++
++static const struct rtw_pwr_seq_cmd * const card_disable_flow_8723b[] = {
++	trans_act_to_lps_8723b,
++	trans_act_to_reset_mcu_8723b,
++	trans_act_to_cardemu_8723b,
++	trans_cardemu_to_carddis_8723b,
++	NULL
++};
++
++static const struct rtw_page_table page_table_8723b[] = {
++	{12, 2, 2, 0, 1}, /* SDIO */
++	{12, 2, 2, 0, 1},
++	{12, 2, 2, 0, 1},
++	{12, 2, 2, 0, 1},
++	{12, 2, 2, 0, 1},
++};
++
++static const struct rtw_rqpn rqpn_table_8723b[] = {
++	/* SDIO maps VO, MGMT and HI to the high queue. */
++	{RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_NORMAL,
++	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
++	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
++	/* PCIE */
++	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
++	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
++	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
++	/* USB bulkout 2 */
++	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
++	 RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_HIGH,
++	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
++	/* USB bulkout 3 */
++	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
++	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
++	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
++	/* USB bulkout 4 */
++	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
++	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
++	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
++};
++
++static const u8 rtw8723b_pwrtrk_2gb_n[] = {
++	0, 0, 1, 2, 2, 2, 3, 3, 3, 4, 5, 5, 6, 6, 6, 6,
++	7, 7, 7, 8, 8, 9, 9, 10, 10, 11, 12, 13, 14, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2gb_p[] = {
++	0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 8, 8,
++	9, 9, 10, 10, 10, 11, 11, 12, 12, 13, 13, 14, 15, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2ga_n[] = {
++	0, 0, 1, 2, 2, 2, 3, 3, 3, 4, 5, 5, 6, 6, 6, 6,
++	7, 7, 7, 8, 8, 9, 9, 10, 10, 11, 12, 13, 14, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2ga_p[] = {
++	0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7, 8, 8,
++	9, 9, 10, 10, 10, 11, 11, 12, 12, 13, 13, 14, 15, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2g_cck_b_n[] = {
++	0, 0, 1, 2, 2, 3, 3, 4, 4, 5, 6, 6, 7, 7, 7, 8,
++	8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 13, 14, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2g_cck_b_p[] = {
++	0, 0, 1, 2, 2, 2, 3, 3, 3, 4, 5, 5, 6, 6, 7, 7,
++	8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 13, 14, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2g_cck_a_n[] = {
++	0, 0, 1, 2, 2, 3, 3, 4, 4, 5, 6, 6, 7, 7, 7, 8,
++	8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 13, 14, 15
++};
++
++static const u8 rtw8723b_pwrtrk_2g_cck_a_p[] = {
++	0, 0, 1, 2, 2, 2, 3, 3, 3, 4, 5, 5, 6, 6, 7, 7,
++	8, 8, 9, 9, 9, 10, 10, 11, 11, 12, 12, 13, 14, 15
++};
++
++static const struct rtw_pwr_track_tbl rtw8723b_rtw_pwr_track_tbl = {
++	.pwrtrk_2gb_n = rtw8723b_pwrtrk_2gb_n,
++	.pwrtrk_2gb_p = rtw8723b_pwrtrk_2gb_p,
++	.pwrtrk_2ga_n = rtw8723b_pwrtrk_2ga_n,
++	.pwrtrk_2ga_p = rtw8723b_pwrtrk_2ga_p,
++	.pwrtrk_2g_cckb_n = rtw8723b_pwrtrk_2g_cck_b_n,
++	.pwrtrk_2g_cckb_p = rtw8723b_pwrtrk_2g_cck_b_p,
++	.pwrtrk_2g_ccka_n = rtw8723b_pwrtrk_2g_cck_a_n,
++	.pwrtrk_2g_ccka_p = rtw8723b_pwrtrk_2g_cck_a_p,
++	/* rtw8723x_pwrtrack_set_xtal() is not used on this chip. */
++	.pwrtrk_xtal_n = NULL,
++	.pwrtrk_xtal_p = NULL,
++};
++
++static const struct rtw_rfe_def rtw8723b_rfe_defs[] = {
++	[0] = { .phy_pg_tbl	= &rtw8723b_bb_pg_tbl,
++		.txpwr_lmt_tbl	= &rtw8723b_txpwr_lmt_tbl,
++		.pwr_track_tbl	= &rtw8723b_rtw_pwr_track_tbl, },
++};
++
++/* Shared-Antenna Coex Table */
++static const struct coex_table_para table_sant_8723b[] = {
++	{0xffffffff, 0xffffffff}, /* case-0 */
++	{0x55555555, 0x55555555},
++	{0x66555555, 0x66555555},
++	{0xaaaaaaaa, 0xaaaaaaaa},
++	{0x5a5a5a5a, 0x5a5a5a5a},
++	{0xfafafafa, 0xfafafafa}, /* case-5 */
++	{0x6a5a5555, 0xaaaaaaaa},
++	{0x6a5a56aa, 0x6a5a56aa},
++	{0x6a5a5a5a, 0x6a5a5a5a},
++	{0x66555555, 0x5a5a5a5a},
++	{0x66555555, 0x6a5a5a5a}, /* case-10 */
++	{0x66555555, 0x6a5a5aaa},
++	{0x66555555, 0x5a5a5aaa},
++	{0x66555555, 0x6aaa5aaa},
++	{0x66555555, 0xaaaa5aaa},
++	{0x66555555, 0xaaaaaaaa}, /* case-15 */
++	{0xffff55ff, 0xfafafafa},
++	{0xffff55ff, 0x6afa5afa},
++	{0xaaffffaa, 0xfafafafa},
++	{0xaa5555aa, 0x5a5a5a5a},
++	{0xaa5555aa, 0x6a5a5a5a}, /* case-20 */
++	{0xaa5555aa, 0xaaaaaaaa},
++	{0xffffffff, 0x5a5a5a5a},
++	{0xffffffff, 0x5a5a5a5a},
++	{0xffffffff, 0x55555555},
++	{0xffffffff, 0x5a5a5aaa}, /* case-25 */
++	{0x55555555, 0x5a5a5a5a},
++	{0x55555555, 0xaaaaaaaa},
++	{0x55555555, 0x6a5a6a5a},
++	{0x66556655, 0x66556655},
++	{0x66556aaa, 0x6a5a6aaa}, /* case-30 */
++	{0xffffffff, 0x5aaa5aaa},
++	{0x56555555, 0x5a5a5aaa},
++};
++
++/* Non-Shared-Antenna Coex Table */
++static const struct coex_table_para table_nsant_8723b[] = {
++	{0xffffffff, 0xffffffff}, /* case-100 */
++	{0x55555555, 0x55555555},
++	{0x66555555, 0x66555555},
++	{0xaaaaaaaa, 0xaaaaaaaa},
++	{0x5a5a5a5a, 0x5a5a5a5a},
++	{0xfafafafa, 0xfafafafa}, /* case-105 */
++	{0x5afa5afa, 0x5afa5afa},
++	{0x55555555, 0xfafafafa},
++	{0x66555555, 0xfafafafa},
++	{0x66555555, 0x5a5a5a5a},
++	{0x66555555, 0x6a5a5a5a}, /* case-110 */
++	{0x66555555, 0xaaaaaaaa},
++	{0xffff55ff, 0xfafafafa},
++	{0xffff55ff, 0x5afa5afa},
++	{0xffff55ff, 0xaaaaaaaa},
++	{0xffff55ff, 0xffff55ff}, /* case-115 */
++	{0xaaffffaa, 0x5afa5afa},
++	{0xaaffffaa, 0xaaaaaaaa},
++	{0xffffffff, 0xfafafafa},
++	{0xffffffff, 0x5afa5afa},
++	{0xffffffff, 0xaaaaaaaa}, /* case-120 */
++	{0x55ff55ff, 0x5afa5afa},
++	{0x55ff55ff, 0xaaaaaaaa},
++	{0x55ff55ff, 0x55ff55ff}
++};
++
++/* Shared-Antenna TDMA */
++static const struct coex_tdma_para tdma_sant_8723b[] = {
++	{ {0x00, 0x00, 0x00, 0x00, 0x00} }, /* case-0 */
++	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-1 */
++	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x10, 0x03, 0x11, 0x11} }, /* case-5 */
++	{ {0x61, 0x45, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x3a, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x30, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x20, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x10, 0x03, 0x11, 0x10} }, /* case-10 */
++	{ {0x61, 0x08, 0x03, 0x11, 0x14} },
++	{ {0x61, 0x08, 0x03, 0x10, 0x14} },
++	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
++	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
++	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-15 */
++	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-20 */
++	{ {0x51, 0x4a, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x0c, 0x03, 0x10, 0x54} },
++	{ {0x55, 0x08, 0x03, 0x10, 0x54} },
++	{ {0x65, 0x10, 0x03, 0x11, 0x10} },
++	{ {0x51, 0x10, 0x03, 0x10, 0x51} }, /* case-25 */
++	{ {0x51, 0x08, 0x03, 0x10, 0x50} },
++	{ {0x61, 0x08, 0x03, 0x11, 0x11} }
++};
++
++/* Non-Shared-Antenna TDMA */
++static const struct coex_tdma_para tdma_nsant_8723b[] = {
++	{ {0x00, 0x00, 0x00, 0x00, 0x01} }, /* case-100 */
++	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-101 */
++	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
++	{ {0x61, 0x10, 0x03, 0x11, 0x11} }, /* case-105 */
++	{ {0x61, 0x45, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x3a, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x30, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x20, 0x03, 0x11, 0x10} },
++	{ {0x61, 0x10, 0x03, 0x11, 0x10} }, /* case-110 */
++	{ {0x61, 0x08, 0x03, 0x11, 0x14} },
++	{ {0x61, 0x08, 0x03, 0x10, 0x14} },
++	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
++	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
++	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-115 */
++	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
++	{ {0x51, 0x10, 0x03, 0x10, 0x50} }, /* case-120 */
++	{ {0x51, 0x08, 0x03, 0x10, 0x50} }
++};
++
++static void rtw8723b_efuse_grant(struct rtw_dev *rtwdev, bool on)
 +{
-+	u8 sys_func_before;
-+	u32 readback;
++	/*
++	 * The BT power-cut and output-isolation writes are part of the WiFi
++	 * efuse power switch on this chip, so the common
++	 * __rtw8723x_efuse_grant() cannot be used here.
++	 */
++	if (on) {
++		/* enable BT power cut 0x6A[14] = 1 */
++		rtw_write8_set(rtwdev, 0x6b, BIT(6));
 +
-+	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	if ((sys_func_before & (BIT(0) | BIT(1))) != (BIT(0) | BIT(1))) {
-+		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+		usleep_range(10, 11);
-+	}
++		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_ON);
 +
-+	rtw_write32(rtwdev, 0x948, value);
-+	readback = rtw_read32(rtwdev, 0x948);
-+	if (readback == value)
-+		return readback;
-+
-+	usleep_range(10, 11);
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+	rtw_write32(rtwdev, 0x948, value);
-+
-+	return rtw_read32(rtwdev, 0x948);
-+}
-+
-+static u32 rtw_coex_8723bs_reassert_pta_ant(struct rtw_dev *rtwdev)
-+{
-+	return rtw_coex_8723bs_write_bb_sel_btg(rtwdev,
-+						rtw_coex_8723bs_pta_ant_path(rtwdev));
-+}
-+
-+static void rtw_coex_8723bs_set_cck_pri(struct rtw_dev *rtwdev, bool high)
-+{
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
-+		return;
-+
-+	if (high) {
-+		rtw_write32(rtwdev, REG_BT_COEX_TABLE_H,
-+			    RTW8723BS_COEX_H_WLAN_ACTIVE);
++		rtw_write16_set(rtwdev, REG_SYS_FUNC_EN, BIT_FEN_ELDR);
++		rtw_write16_set(rtwdev, REG_SYS_CLKR, BIT_LOADER_CLK_EN | BIT_ANA8M);
 +	} else {
-+		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_TX_CCK, false);
-+		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_RX_CCK, false);
++		/* enable BT output isolation 0x6A[15] = 1 */
++		rtw_write8_set(rtwdev, 0x6b, BIT(7));
++
++		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_OFF);
 +	}
 +}
 +
-+static void rtw_coex_8723bs_restore_pad_ctrl(struct rtw_dev *rtwdev,
-+					     bool keep_pta_owner)
++static u8 rtw8723b_default_ofdm_index(struct rtw_dev *rtwdev)
 +{
-+	u32 before, after;
++	u8 i;
++	u32 val32;
++	u32 swing;
++
++	swing = rtw_read32_mask(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE, 0xffc00000);
++
++	for (i = 0; i < RTW_OFDM_SWING_TABLE_SIZE; i++) {
++		val32 = rtw8723b_ofdm_swing_table[i];
++
++		if (val32 >= 0x100000)
++			val32 >>= 22;
++
++		if (val32 == swing)
++			break;
++	}
++
++	if (i >= RTW_OFDM_SWING_TABLE_SIZE)
++		i = 30;
++
++	return i;
++}
++
++static u8 rtw8723b_default_cck_index(struct rtw_dev *rtwdev)
++{
++	u8 i;
++	u8 swing;
++
++	swing = rtw_read8(rtwdev, rtw8723b_cck_pwr_regs[0]);
++
++	for (i = 0; i < RTW_CCK_SWING_TABLE_SIZE; i++) {
++		if (rtw8732b_cck_swing_table_ch1_ch13[i][0] == swing)
++			break;
++	}
++
++	if (i >= RTW_CCK_SWING_TABLE_SIZE)
++		i = 20;
++
++	return i;
++}
++
++static void rtw8723b_pwrtrack_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 path;
++
++	dm_info->default_ofdm_index = rtw8723b_default_ofdm_index(rtwdev);
++	dm_info->default_cck_index = rtw8723b_default_cck_index(rtwdev);
++
++	/* thermal/power-track init is identical to rtw8723d dm_init */
++	for (path = RF_PATH_A; path < rtwdev->hal.rf_path_num; path++) {
++		ewma_thermal_init(&dm_info->avg_thermal[path]);
++		dm_info->delta_power_index[path] = 0;
++	}
++	dm_info->pwr_trk_triggered = false;
++	dm_info->pwr_trk_init_trigger = true;
++	dm_info->thermal_meter_k = rtwdev->efuse.thermal_meter_k;
++	dm_info->txagc_remnant_cck = 0;
++	dm_info->txagc_remnant_ofdm[RF_PATH_A] = 0;
++}
++
++static bool rtw8723b_sdio_needs_rx_path_fix(struct rtw_dev *rtwdev)
++{
++	return rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO;
++}
++
++static void rtw8723b_sdio_restore_pad_ctrl(struct rtw_dev *rtwdev,
++					   bool keep_pta_owner)
++{
++	u32 before;
++	u32 after;
++
++	if (!rtw8723b_sdio_needs_rx_path_fix(rtwdev))
++		return;
 +
 +	before = rtw_read32(rtwdev, REG_PAD_CTRL1);
 +	after = before & ~(BIT_LNAON_WLBT_SEL | BIT_SW_DPDT_SEL_DATA);
@@ -213,2438 +1034,3108 @@ index 37c336def419..641cfa1181b2 100644
 +		after |= BIT_PAPE_WLBT_SEL;
 +	else
 +		after &= ~BIT_PAPE_WLBT_SEL;
-+	if (after != before)
-+		rtw_write32(rtwdev, REG_PAD_CTRL1, after);
-+}
-+
-+static void rtw_coex_8723bs_fw_gnt_bt_low(struct rtw_dev *rtwdev)
-+{
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
++	if (after == before)
 +		return;
 +
-+	if (rtw_read8(rtwdev, 0x765) == 0x00 &&
-+	    rtw_read8(rtwdev, 0x76e) == 0x0c)
-+		return;
-+
-+	rtw_fw_set_gnt_bt(rtwdev, 0);
++	rtw_write32(rtwdev, REG_PAD_CTRL1, after);
 +}
 +
-+static void rtw_coex_8723bs_force_assoc_pta_ant(struct rtw_dev *rtwdev)
++static void rtw8723b_post_enable_flow(struct rtw_dev *rtwdev)
 +{
-+	u32 ant_target;
++	u32 value32;
 +
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
-+		return;
++	/* These two are also done in card_enable_flow. */
++	rtw_write8_set(rtwdev, 0x0049, BIT(1));
++	rtw_write8_set(rtwdev, 0x0063, BIT(1));
 +
-+	ant_target = rtw_coex_8723bs_pta_ant_path(rtwdev);
++	rtw_write16_set(rtwdev, REG_APS_FSMCO, BIT_EN_PDN);
 +
-+	rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
-+	rtw_coex_set_ant_switch(rtwdev, COEX_SWITCH_CTRL_BY_PTA,
-+				COEX_SWITCH_TO_NOCARE);
-+	rtw_coex_8723bs_set_cck_pri(rtwdev, true);
-+	rtw_coex_8723bs_write_bb_sel_btg(rtwdev, ant_target);
-+	rtw_coex_8723bs_restore_pad_ctrl(rtwdev, true);
-+}
-+
-+static void rtw_coex_8723bs_reassert_ant_buffer(struct rtw_dev *rtwdev)
-+{
-+	u8 sys_func_before;
-+
-+	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	if ((sys_func_before & (BIT(0) | BIT(1))) != (BIT(0) | BIT(1))) {
-+		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+		usleep_range(10, 11);
-+	}
-+
-+	rtw_write8_mask(rtwdev, REG_8723BS_BT_COEX_CTRL, BIT(3), 0x1);
-+	rtw_write8(rtwdev, REG_8723BS_BB_ANT_BUF, 0xff);
-+	rtw_write8_mask(rtwdev, REG_8723BS_BB_ANT_CFG1, 0x3, 0x3);
-+	rtw_write8(rtwdev, REG_8723BS_BB_ANT_CFG, 0x77);
-+}
-+
-+static void rtw_coex_8723bs_apply_scan_table(struct rtw_dev *rtwdev)
-+{
-+	rtwdev->coex.dm.cur_table = 2;
-+	rtw_coex_set_table(rtwdev, true, 0x5a5a5a5a, 0x5a5a5a5a);
-+}
-+
-+/* Non-connected scan/auth workaround: PS-TDMA type 8 off, PTA antenna path,
-+ * coex table type 2 (matches the vendor non-connected arbitration).
-+ */
-+void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_coex_dm *coex_dm = &rtwdev->coex.dm;
-+	struct rtw_coex_stat *coex_stat = &rtwdev->coex.stat;
-+
-+	if (!rtw_is_8723bs(rtwdev))
-+		return;
-+
-+	coex_dm->cur_ps_tdma_on = false;
-+	coex_dm->cur_ps_tdma = 8;
-+	coex_dm->ps_tdma_para[0] = 0x08;
-+	coex_dm->ps_tdma_para[1] = 0x00;
-+	coex_dm->ps_tdma_para[2] = 0x00;
-+	coex_dm->ps_tdma_para[3] = 0x00;
-+	coex_dm->ps_tdma_para[4] = 0x00;
-+
-+	rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+	rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
-+	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
-+	rtw_coex_8723bs_reassert_ant_buffer(rtwdev);
-+	rtw_coex_8723bs_apply_scan_table(rtwdev);
-+	if (coex_stat->bt_disabled)
-+		rtw_coex_8723bs_set_cck_pri(rtwdev, true);
-+	rtw_coex_8723bs_reassert_pta_ant(rtwdev);
-+	rtw_coex_8723bs_restore_pad_ctrl(rtwdev, true);
-+}
-+
-+/* Replayed immediately before start_clnt_join()/auth: BT_INFO + PS-TDMA type 8
-+ * then the forced WiFi PTA antenna path, so the auth window is clean.
-+ */
-+void rtw_coex_8723bs_pre_auth_h2c(struct rtw_dev *rtwdev)
-+{
-+	lockdep_assert_held(&rtwdev->mutex);
-+
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
-+		return;
-+
-+	rtw_fw_query_bt_info(rtwdev);
-+	rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+	rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+	rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+	rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
-+	rtw_coex_8723bs_force_assoc_pta_ant(rtwdev);
-+}
-+
-+/* Minimal PTA antenna path so RF register writes reach the chip after IPS
-+ * leave / power-on (before rtw_set_channel()).
-+ */
-+void rtw_coex_8723bs_ensure_pta_path(struct rtw_dev *rtwdev)
-+{
-+	if (!rtw_is_8723bs(rtwdev))
-+		return;
-+
-+	rtw_coex_8723bs_reassert_ant_buffer(rtwdev);
-+	rtw_coex_8723bs_write_bb_sel_btg(rtwdev,
-+					 rtw_coex_8723bs_pta_ant_path(rtwdev));
-+	rtw_coex_8723bs_restore_pad_ctrl(rtwdev, false);
-+}
-+
- static const char *rtw_coex_get_algo_string(u8 algo)
- {
- 	switch (algo) {
-@@ -2877,6 +3076,33 @@ void rtw_coex_scan_notify(struct rtw_dev *rtwdev, u8 type)
- 	coex->freeze = false;
- 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, true);
- 
-+	/* 8723BS SDIO BT-disabled: keep the scan/auth PTA antenna state the
-+	 * vendor uses and skip the generic coex run. At scan start (firmware
-+	 * has been up long enough for stable RX DMA) replay the vendor BT_MP /
-+	 * BT_INFO queries, then re-establish the scan-path PTA setup.
++	/*
++	 * The RQPN page split is already latched at this point. Writing CR to
++	 * zero would reset the hardware free-page counters and leave the TX
++	 * DMA with no allocatable pages, so only OR in the missing enables.
 +	 */
-+	if (rtw_coex_8723bs_bt_disabled(rtwdev)) {
-+		if (type == COEX_SCAN_START_2G || type == COEX_SCAN_START) {
-+			struct rtw_coex_info_req req = {};
++	rtw_write16_set(rtwdev, REG_CR, MAC_TRX_ENABLE | BIT_MAC_SEC_EN |
++				       BIT_32K_CAL_TMR_EN);
 +
-+			coex_stat->cnt_wl[COEX_CNT_WL_SCANAP] = 0;
-+			coex_stat->wl_hi_pri_task2 = true;
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO) {
++		rtw_write16_set(rtwdev, REG_PWR_DATA, BIT(11));
 +
-+			req.seq = 0x0e;
-+			req.op_code = BT_MP_INFO_OP_SUPP_VER;
-+			rtw_fw_query_bt_mp_info(rtwdev, &req);
-+			req.seq = 0x0f;
-+			req.op_code = BT_MP_INFO_OP_PATCH_VER;
-+			rtw_fw_query_bt_mp_info(rtwdev, &req);
-+			rtw_fw_query_bt_info(rtwdev);
-+
-+			rtw_coex_8723bs_scan_workaround(rtwdev);
-+		} else {
-+			coex_stat->wl_hi_pri_task2 = false;
-+		}
-+		return;
-+	}
-+
- 	if (type == COEX_SCAN_START_5G) {
- 		rtw_dbg(rtwdev, RTW_DBG_COEX,
- 			"[BTCoex], SCAN START notify (5G)\n");
-@@ -2938,6 +3164,17 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwdev, u8 type)
- 	if (coex->manual_control || coex->stop_dm)
- 		return;
- 
-+	/* 8723BS SDIO BT-disabled: the vendor ConnectNotify() early-returns
-+	 * without sending H2Cs; scan_workaround already established the PTA
-+	 * path / coex table / PS-TDMA. Keep only the register-level PTA
-+	 * reassertion at associate-start.
-+	 */
-+	if (rtw_coex_8723bs_bt_disabled(rtwdev)) {
-+		if (type == COEX_ASSOCIATE_START)
-+			rtw_coex_8723bs_force_assoc_pta_ant(rtwdev);
-+		return;
-+	}
-+
- 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, true);
- 
- 	if (type == COEX_ASSOCIATE_5G_START) {
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wireless/realtek/rtw88/coex.h
-index c398be8391f7..1f0aa17d4050 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.h
-+++ b/drivers/net/wireless/realtek/rtw88/coex.h
-@@ -430,4 +430,8 @@ static inline void rtw_coex_active_query_bt_info(struct rtw_dev *rtwdev)
- 		rtw_coex_query_bt_info(rtwdev);
- }
- 
-+void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev);
-+void rtw_coex_8723bs_pre_auth_h2c(struct rtw_dev *rtwdev);
-+void rtw_coex_8723bs_ensure_pta_path(struct rtw_dev *rtwdev);
-+
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 945fedcd375b..20f196752381 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -317,6 +317,15 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 	case C2H_CCX_TX_RPT:
- 		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
- 		break;
-+	case C2H_VENDOR_TX_RPT:
-+	case C2H_WLAN_RFON:
 +		/*
-+		 * The RTL8723BS firmware reports management TX through these
-+		 * two events instead, using the same payload layout.
++		 * rtw_mac_power_on() sets generic PAD mux bits that this chip
++		 * needs cleared, so restore the SDIO PAD mux before RF and
++		 * coex setup.
 +		 */
-+		if (rtw_is_8723bs(rtwdev))
-+			rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
-+		break;
- 	case C2H_BT_INFO:
- 		rtw_coex_bt_info_notify(rtwdev, c2h->payload, len);
- 		break;
-@@ -365,6 +374,15 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
- 		rtw_coex_info_response(rtwdev, skb);
- 		break;
- 	case C2H_WLAN_RFON:
-+		/* On 8723BS SDIO with v41 firmware, C2H 0x32 carries a scan TX
-+		 * report, not a WLAN_RFON event: defer it to rtw_fw_c2h_cmd_handle().
-+		 */
-+		if (rtw_is_8723bs(rtwdev)) {
-+			*((u32 *)skb->cb) = pkt_offset;
-+			skb_queue_tail(&rtwdev->c2h_queue, skb);
-+			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
-+			break;
-+		}
- 		complete(&rtwdev->lps_leave_check);
- 		dev_kfree_skb_any(skb);
- 		break;
-@@ -726,9 +744,19 @@ void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
- 
- 	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RSSI_MONITOR);
- 
--	SET_RSSI_INFO_MACID(h2c_pkt, si->mac_id);
--	SET_RSSI_INFO_RSSI(h2c_pkt, rssi);
--	SET_RSSI_INFO_STBC(h2c_pkt, stbc_en);
-+	if (rtw_is_8723bs(rtwdev)) {
-+		/* Vendor v5.2.17 RA_INFO byte layout (H2C 0x42):
-+		 * [1] mac_id, [2] 0x00, [3] rssi, [4] stbc?0x04:0x00.
-+		 */
-+		h2c_pkt[1] = si->mac_id & 0x7f;
-+		h2c_pkt[2] = 0x00;
-+		h2c_pkt[3] = rssi;
-+		h2c_pkt[4] = stbc_en ? 0x04 : 0x00;
-+	} else {
-+		SET_RSSI_INFO_MACID(h2c_pkt, si->mac_id);
-+		SET_RSSI_INFO_RSSI(h2c_pkt, rssi);
-+		SET_RSSI_INFO_STBC(h2c_pkt, stbc_en);
-+	}
- 
- 	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
- }
-@@ -742,6 +770,37 @@ void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si,
- 
- 	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RA_INFO);
- 
-+	if (rtw_is_8723bs(rtwdev)) {
-+		/* The v41 firmware parses the vendor v5.2.17 MACID_CFG (0x40)
-+		 * byte layout, not the bit-packed rtw88 RA_INFO below:
-+		 * [1] mac_id, [2] rate_id | sgi_en(bit7),
-+		 * [3] bw(bits 1-0) | no_update(bit3), [4..7] 4-byte mask.
-+		 *
-+		 * no_update(bit3)=1 tells the firmware to keep its existing
-+		 * rate mask, so a mask that changes under no_update is dropped.
-+		 * Force no_update=0 whenever the mask actually changes so the
-+		 * update is applied, and keep no_update=1 for identical
-+		 * refreshes so the firmware retains the rate it has learned.
-+		 */
-+		bool apply = reset_ra_mask || si->ra_mask != si->ra_mask_last;
++		rtw8723b_sdio_restore_pad_ctrl(rtwdev, false);
 +
-+		h2c_pkt[1] = si->mac_id & 0x7f;
-+		h2c_pkt[2] = (si->rate_id & 0x1f) |
-+			     (si->sgi_enable ? BIT(7) : 0);
-+		h2c_pkt[3] = ((si->bw_mode ? 3 : 1) & 0x3) |
-+			     (apply ? 0 : BIT(3));
-+		h2c_pkt[4] = si->ra_mask & 0xff;
-+		h2c_pkt[5] = (si->ra_mask >> 8) & 0xff;
-+		h2c_pkt[6] = (si->ra_mask >> 16) & 0xff;
-+		h2c_pkt[7] = (si->ra_mask >> 24) & 0xff;
-+
-+		si->ra_mask_last = si->ra_mask;
-+		si->init_ra_lv = 0;
-+
-+		rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+		return;
++		/*
++		 * The firmware needs this bit set to deliver CCX TX reports;
++		 * without it management TX reports are not generated.
++		 */
++		value32 = rtw_read32(rtwdev, REG_FWHW_TXQ_CTRL);
++		value32 |= BIT(12);
++		rtw_write32(rtwdev, REG_FWHW_TXQ_CTRL, value32);
 +	}
 +
- 	SET_RA_INFO_MACID(h2c_pkt, si->mac_id);
- 	SET_RA_INFO_RATE_ID(h2c_pkt, si->rate_id);
- 	SET_RA_INFO_INIT_RA_LVL(h2c_pkt, si->init_ra_lv);
-@@ -780,8 +839,78 @@ void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool connect)
- 	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
- 
- 	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_MEDIA_STATUS_RPT);
--	MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, connect);
--	MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, mac_id);
++	rtw_write8(rtwdev, REG_EARLY_MODE_CONTROL, 0);
 +
-+	if (rtw_is_8723bs(rtwdev)) {
-+		/* Vendor v5.2.17 MEDIA_STATUS_RPT: connect = 21 00 00,
-+		 * disconnect = 00 00 00. Byte1[0]=OPMODE, [5]=ROLE(STA=0),
-+		 * [1]=MACID_IND; byte2=MACID; byte3=MACID_END.
-+		 */
-+		h2c_pkt[1] = connect ? 0x21 : 0x00;
-+		h2c_pkt[2] = mac_id & 0x7f;
-+		h2c_pkt[3] = 0x00;
-+	} else {
-+		MEDIA_STATUS_RPT_SET_OP_MODE(h2c_pkt, connect);
-+		MEDIA_STATUS_RPT_SET_MACID(h2c_pkt, mac_id);
-+	}
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+/* 8723BS SDIO: post-assoc rate-adaptation config in the vendor v5.2.17
-+ * MACID_CFG byte layout. disra (bit7 of [2]) must stay 0 so the firmware keeps
-+ * running rate adaptation for this mac_id.
-+ */
-+void rtw_fw_macid_cfg(struct rtw_dev *rtwdev, u8 mac_id, u8 raid, u8 bw,
-+		      u8 sgi, u32 rate_mask)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RA_INFO);
-+
-+	h2c_pkt[1] = mac_id & 0x7f;
-+	h2c_pkt[2] = (raid & 0x1f) | (sgi ? BIT(7) : 0) | 0x60;
-+	h2c_pkt[3] = (bw ? 3 : 1) & 0x3;
-+	h2c_pkt[4] = rate_mask & 0xff;
-+	h2c_pkt[5] = (rate_mask >> 8) & 0xff;
-+	h2c_pkt[6] = (rate_mask >> 16) & 0xff;
-+	h2c_pkt[7] = (rate_mask >> 24) & 0xff;
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+/* 8723BS SDIO: report the connected channel/bandwidth to the vendor firmware. */
-+void rtw_fw_send_wl_ch_info(struct rtw_dev *rtwdev, u8 ch, u8 bw)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+	u8 bw_byte = bw == RTW_CHANNEL_WIDTH_40 ? 0x30 : 0x20;
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_WL_CH_INFO);
-+	h2c_pkt[1] = 0x00;
-+	h2c_pkt[2] = ch;
-+	h2c_pkt[3] = bw_byte;
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+/* 8723BS SDIO: set the firmware GNT_BT state (0 = WiFi owns the antenna). */
-+void rtw_fw_set_gnt_bt(struct rtw_dev *rtwdev, u8 state)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_GNT_BT);
-+	SET_GNT_BT_STATE(h2c_pkt, state);
-+
-+	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-+}
-+
-+/* 8723BS SDIO: vendor coex antenna-select reserve H2C (part of the init toggle). */
-+void rtw_fw_coex_ant_sel_rsv(struct rtw_dev *rtwdev, u8 inverse, u8 type)
-+{
-+	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-+
-+	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_COEX_ANT_SEL_RSV);
-+	SET_COEX_ANT_SEL_RSV_INVERSE(h2c_pkt, inverse);
-+	SET_COEX_ANT_SEL_RSV_TYPE(h2c_pkt, type);
- 
- 	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
- }
-@@ -1466,10 +1595,14 @@ void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev,
- 	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_LPS_PG_INFO, true);
- }
- 
-+/* REG_DWBCN1_CTRL bit 20 (SW_BCN_SEL for port 0), relative to byte +2 */
-+#define BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0	(20 - 16)
-+
- int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 				u8 *buf, u32 size)
- {
--	u8 bckp[3];
-+	const bool is_8723bs_sdio = rtw_is_8723bs(rtwdev);
-+	u8 bckp[4];
- 	u8 val;
- 	u16 rsvd_pg_head;
- 	u32 bcn_valid_addr;
-@@ -1499,13 +1632,28 @@ int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 	rtw_write8(rtwdev, REG_BCN_CTRL,
- 		   (bckp[2] & ~BIT_EN_BCN_FUNCTION) | BIT_DIS_TSF_UDT);
- 
--	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE) {
-+	/* Clear BIT_EN_BCNQ_DL so the chip does not treat the reserved-page
-+	 * upload as a real beacon; otherwise BIT_BCN_VALID never asserts. The
-+	 * vendor rtl8723bs driver does this unconditionally; rtw88 only did it
-+	 * for PCIe, which left 8723BS SDIO's BCN_VALID handshake failing.
++	/*
++	 * Keep every MACID eligible for firmware-scheduled TX at power-on;
++	 * mac80211 and firmware state handle the real peer lifetime.
 +	 */
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE || is_8723bs_sdio) {
- 		val = rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL + 2);
- 		bckp[1] = val;
- 		val &= ~(BIT_EN_BCNQ_DL >> 16);
- 		rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, val);
- 	}
- 
-+	/* 8723BS SDIO: point the SW beacon download path at port 0, else
-+	 * BIT_BCN_VALID is never asserted after the SDIO upload completes.
-+	 */
-+	if (is_8723bs_sdio) {
-+		val = rtw_read8(rtwdev, REG_DWBCN1_CTRL + 2);
-+		bckp[3] = val;
-+		val &= ~BIT(BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0);
-+		rtw_write8(rtwdev, REG_DWBCN1_CTRL + 2, val);
-+	}
-+
- 	ret = rtw_hci_write_data_rsvd_page(rtwdev, buf, size);
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to write data to rsvd page\n");
-@@ -1526,11 +1674,13 @@ int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 	}
- 
- restore:
-+	if (is_8723bs_sdio)
-+		rtw_write8(rtwdev, REG_DWBCN1_CTRL + 2, bckp[3]);
- 	rsvd_pg_head = rtwdev->fifo.rsvd_boundary;
- 	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2,
- 		    rsvd_pg_head | BIT_BCN_VALID_V1);
- 	rtw_write8(rtwdev, REG_BCN_CTRL, bckp[2]);
--	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE)
-+	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE || is_8723bs_sdio)
- 		rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, bckp[1]);
- 	rtw_write8(rtwdev, REG_CR + 1, bckp[0]);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 48ad9ceab6ea..8b238b41decf 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -54,6 +54,10 @@ enum rtw_c2h_cmd_id {
- 	C2H_BT_MP_INFO = 0x0b,
- 	C2H_BT_HID_INFO = 0x45,
- 	C2H_RA_RPT = 0x0c,
-+	/* 8723BS SDIO vendor v41 firmware management TX report (0x32 is
-+	 * reported as C2H_WLAN_RFON, handled per-chip in the C2H dispatch).
-+	 */
-+	C2H_VENDOR_TX_RPT = 0x12,
- 	C2H_HW_FEATURE_REPORT = 0x19,
- 	C2H_WLAN_INFO = 0x27,
- 	C2H_WLAN_RFON = 0x32,
-@@ -568,10 +572,12 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- #define H2C_CMD_QUERY_BT_INFO		0x61
- #define H2C_CMD_FORCE_BT_TX_POWER	0x62
- #define H2C_CMD_IGNORE_WLAN_ACTION	0x63
-+#define H2C_CMD_COEX_ANT_SEL_RSV	0x65
- #define H2C_CMD_WL_CH_INFO		0x66
- #define H2C_CMD_QUERY_BT_MP_INFO	0x67
- #define H2C_CMD_BT_WIFI_CONTROL		0x69
- #define H2C_CMD_WIFI_CALIBRATION	0x6d
-+#define H2C_CMD_GNT_BT			0x6e
- #define H2C_CMD_QUERY_BT_HID_INFO	0x73
- 
- #define H2C_CMD_KEEP_ALIVE		0x03
-@@ -684,6 +690,12 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 24))
- #define SET_QUERY_BT_INFO(h2c_pkt, value)                                      \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-+#define SET_GNT_BT_STATE(h2c_pkt, value)                                       \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-+#define SET_COEX_ANT_SEL_RSV_INVERSE(h2c_pkt, value)                           \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
-+#define SET_COEX_ANT_SEL_RSV_TYPE(h2c_pkt, value)                              \
-+	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
- #define SET_WL_CH_INFO_LINK(h2c_pkt, value)                                    \
- 	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
- #define SET_WL_CH_INFO_CHNL(h2c_pkt, value)                                    \
-@@ -849,6 +861,11 @@ void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
- void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si,
- 			 bool reset_ra_mask);
- void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
-+void rtw_fw_macid_cfg(struct rtw_dev *rtwdev, u8 mac_id, u8 raid, u8 bw,
-+		      u8 sgi, u32 rate_mask);
-+void rtw_fw_send_wl_ch_info(struct rtw_dev *rtwdev, u8 ch, u8 bw);
-+void rtw_fw_set_gnt_bt(struct rtw_dev *rtwdev, u8 state);
-+void rtw_fw_coex_ant_sel_rsv(struct rtw_dev *rtwdev, u8 inverse, u8 type);
- void rtw_fw_update_wl_phy_info(struct rtw_dev *rtwdev);
- void rtw_fw_beacon_filter_config(struct rtw_dev *rtwdev, bool connect,
- 				 struct ieee80211_vif *vif);
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index b01b98d24b0a..2e25dd0409ca 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -15,6 +15,463 @@
- #include "wow.h"
- #include "sar.h"
- 
-+/* 8723BS SDIO: record a beacon/probe-resp seen from the target BSSID during
-+ * the pre-auth window so the join sequence (mgd_prepare_tx) can wait for it,
-+ * mirroring the vendor start_clnt_join(). Called from the SDIO RX path.
-+ */
-+void rtw8723bs_auth_sync_rx(struct rtw_dev *rtwdev,
-+			    const struct ieee80211_hdr *hdr, u32 len,
-+			    const struct rtw_rx_pkt_stat *pkt_stat,
-+			    const struct ieee80211_rx_status *rx_status)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+	__le16 fc = hdr->frame_control;
-+
-+	if (!rtw_is_8723bs(rtwdev) ||
-+	    test_bit(RTW_FLAG_SCANNING, rtwdev->flags) ||
-+	    pkt_stat->crc_err || pkt_stat->icv_err)
-+		return;
-+
-+	if (!ieee80211_is_beacon(fc) && !ieee80211_is_probe_resp(fc))
-+		return;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	if (sync->active && ether_addr_equal(hdr->addr3, sync->bssid)) {
-+		sync->seen = true;
-+		sync->seen_count++;
-+		wake_up(&sync->wait);
-+	}
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+}
-+EXPORT_SYMBOL(rtw8723bs_auth_sync_rx);
-+
-+/* ---- 8723BS SDIO association sequence (vendor start_clnt_join) ---- */
-+
-+#define RTW8723BS_JOIN_RETRY_LIMIT		0x30
-+#define RTW8723BS_AUTH_SYNC_WAIT_FALLBACK_MS	120
-+#define RTW8723BS_AUTH_SYNC_WAIT_MIN_MS		80
-+#define RTW8723BS_AUTH_SYNC_WAIT_MAX_MS		160
-+#define RTW8723BS_ACK_PREAMBLE_SHORT		BIT(7)
-+#define RTW8723BS_SHORT_SLOT_TIME		9
-+#define RTW8723BS_LONG_SLOT_TIME		20
-+#define RTW8723BS_RRSR_1M			BIT(0)
-+#define RTW8723BS_RRSR_2M			BIT(1)
-+#define RTW8723BS_RRSR_5_5M			BIT(2)
-+#define RTW8723BS_RRSR_11M			BIT(3)
-+#define RTW8723BS_RRSR_6M			BIT(4)
-+#define RTW8723BS_RRSR_9M			BIT(5)
-+#define RTW8723BS_RRSR_12M			BIT(6)
-+#define RTW8723BS_RRSR_18M			BIT(7)
-+#define RTW8723BS_RRSR_24M			BIT(8)
-+#define RTW8723BS_RRSR_36M			BIT(9)
-+#define RTW8723BS_RRSR_48M			BIT(10)
-+#define RTW8723BS_RRSR_54M			BIT(11)
-+#define RTW8723BS_RRSR_CCK_RATES \
-+	(RTW8723BS_RRSR_1M | RTW8723BS_RRSR_2M | \
-+	 RTW8723BS_RRSR_5_5M | RTW8723BS_RRSR_11M)
-+#define RTW8723BS_RRSR_2G_FORCE			RTW8723BS_RRSR_CCK_RATES
-+#define RTW8723BS_RRSR_2G_ALLOW \
-+	(RTW8723BS_RRSR_CCK_RATES | RTW8723BS_RRSR_6M | \
-+	 RTW8723BS_RRSR_12M | RTW8723BS_RRSR_24M)
-+
-+/* Keep the RCR at the vendor target-only state (AMF + CBSSID) across the whole
-+ * connect window, matching the vendor STA path. accept_all is kept only for the
-+ * caller's intent; both paths converge the filter to target-only.
-+ */
-+static void rtw8723bs_auth_rx_filter(struct rtw_dev *rtwdev, bool accept_all)
-+{
-+	rtwdev->hal.rcr |= BIT_AMF | BIT_CBSSID_DATA | BIT_CBSSID_BCN;
-+	rtwdev->hal.rcr &= ~BIT_AAP;
-+	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
++	rtw_write32(rtwdev, REG_MACID_PKT_DROP0, 0);
++	rtw_write32(rtwdev, REG_MACID_PKT_SLEEP, 0);
 +}
 +
-+static void rtw8723bs_config_sec_cfg(struct rtw_dev *rtwdev)
++static void rtw8723b_phy_bb_config(struct rtw_dev *rtwdev)
 +{
-+	u16 sec = rtw_read16(rtwdev, RTW_SEC_CONFIG);
++	u8 xtal_cap;
 +
-+	sec |= RTW_SEC_CHK_KEYID | RTW_SEC_TX_DEC_EN | RTW_SEC_RX_DEC_EN;
-+	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec);
-+}
++	/* Enable BB and RF */
++	rtw_write16_set(rtwdev, REG_SYS_FUNC_EN,
++			BIT_FEN_EN_25_1 | BIT_FEN_BB_GLB_RST | BIT_FEN_BB_RSTB);
 +
-+static void rtw8723bs_config_default_key_search(struct rtw_dev *rtwdev,
-+						bool enable)
-+{
-+	u16 sec = rtw_read16(rtwdev, RTW_SEC_CONFIG);
-+
-+	if (enable)
-+		sec |= RTW_SEC_TX_BC_USE_DK | RTW_SEC_TX_UNI_USE_DK |
-+		       RTW_SEC_RX_UNI_USE_DK;
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB)
++		rtw_write32(rtwdev, REG_BB_SEL_BTG, 0x0);
 +	else
-+		sec &= ~(RTW_SEC_TX_UNI_USE_DK | RTW_SEC_RX_UNI_USE_DK |
-+			 RTW_SEC_TX_BC_USE_DK | RTW_SEC_RX_BC_USE_DK);
-+	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec);
-+}
++		rtw_write32(rtwdev, REG_BB_SEL_BTG, 0x280);
 +
-+static void rtw8723bs_enable_tsf_update(struct rtw_dev *rtwdev)
-+{
-+	rtw_write8_clr(rtwdev, REG_BCN_CTRL, BIT_DIS_TSF_UDT);
-+}
-+
-+static void rtw8723bs_set_ack_preamble(struct rtw_dev *rtwdev,
-+				       bool short_preamble)
-+{
-+	u8 val = rtw_read8(rtwdev, REG_RRSR + 2) & ~RTW8723BS_ACK_PREAMBLE_SHORT;
-+
-+	if (short_preamble)
-+		val |= RTW8723BS_ACK_PREAMBLE_SHORT;
-+	rtw_write8(rtwdev, REG_RRSR + 2, val);
-+}
-+
-+static void rtw8723bs_set_slot_time(struct rtw_dev *rtwdev, bool short_slot)
-+{
-+	rtw_write8(rtwdev, REG_SLOT,
-+		   short_slot ? RTW8723BS_SHORT_SLOT_TIME :
-+				RTW8723BS_LONG_SLOT_TIME);
-+}
-+
-+static u16 rtw8723bs_rrsr_from_ie_rate(u8 rate)
-+{
-+	switch (rate & 0x7f) {
-+	case 2:   return RTW8723BS_RRSR_1M;
-+	case 4:   return RTW8723BS_RRSR_2M;
-+	case 11:  return RTW8723BS_RRSR_5_5M;
-+	case 22:  return RTW8723BS_RRSR_11M;
-+	case 12:  return RTW8723BS_RRSR_6M;
-+	case 18:  return RTW8723BS_RRSR_9M;
-+	case 24:  return RTW8723BS_RRSR_12M;
-+	case 36:  return RTW8723BS_RRSR_18M;
-+	case 48:  return RTW8723BS_RRSR_24M;
-+	case 72:  return RTW8723BS_RRSR_36M;
-+	case 96:  return RTW8723BS_RRSR_48M;
-+	case 108: return RTW8723BS_RRSR_54M;
-+	default:  return 0;
-+	}
-+}
-+
-+static void rtw8723bs_collect_basic_rates(const u8 *ie, u16 *basic_rates,
-+					  bool *valid)
-+{
-+	int i;
-+
-+	if (!ie)
-+		return;
-+
-+	for (i = 0; i < ie[1]; i++) {
-+		u16 r;
-+
-+		if (!(ie[i + 2] & 0x80))
-+			continue;
-+		r = rtw8723bs_rrsr_from_ie_rate(ie[i + 2]);
-+		if (!r)
-+			continue;
-+		*basic_rates |= r;
-+		*valid = true;
-+	}
-+}
-+
-+static void rtw8723bs_reset_response_rates(struct rtw_dev *rtwdev)
-+{
-+	rtw_write32(rtwdev, REG_RRSR, 0xffff1);
-+	rtwdev->dm_info.rrsr_val_init = 0xffff1;
-+}
-+
-+static void rtw8723bs_apply_basic_rates(struct rtw_dev *rtwdev,
-+					struct ieee80211_vif *vif,
-+					const u8 *bssid)
-+{
-+	struct ieee80211_bss_conf *conf = &vif->bss_conf;
-+	struct cfg80211_bss *lookup_bss = NULL;
-+	struct cfg80211_bss *bss = NULL;
-+	bool valid = false;
-+	u16 basic_rates = 0;
-+
-+	if (!rtw_is_8723bs(rtwdev) || vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (conf->bss) {
-+		bss = conf->bss;
-+	} else if (bssid && is_valid_ether_addr(bssid)) {
-+		lookup_bss = cfg80211_get_bss(rtwdev->hw->wiphy, NULL,
-+					      bssid, NULL, 0,
-+					      IEEE80211_BSS_TYPE_ESS,
-+					      IEEE80211_PRIVACY_ANY);
-+		bss = lookup_bss;
-+	}
-+
-+	if (bss) {
-+		const u8 *rates, *ext;
-+
-+		rcu_read_lock();
-+		rates = ieee80211_bss_get_ie(bss, WLAN_EID_SUPP_RATES);
-+		ext = ieee80211_bss_get_ie(bss, WLAN_EID_EXT_SUPP_RATES);
-+		rtw8723bs_collect_basic_rates(rates, &basic_rates, &valid);
-+		rtw8723bs_collect_basic_rates(ext, &basic_rates, &valid);
-+		rcu_read_unlock();
-+	}
-+
-+	if (valid) {
-+		basic_rates |= RTW8723BS_RRSR_2G_FORCE;
-+		basic_rates &= RTW8723BS_RRSR_2G_ALLOW;
-+		rtw_write16(rtwdev, REG_RRSR, basic_rates);
-+		rtw_write8(rtwdev, REG_RRSR + 2,
-+			   rtw_read8(rtwdev, REG_RRSR + 2) & 0xf0);
-+		rtwdev->dm_info.rrsr_val_init = basic_rates;
-+	}
-+
-+	if (lookup_bss)
-+		cfg80211_put_bss(rtwdev->hw->wiphy, lookup_bss);
-+}
-+
-+/* Program response slot time (and, when set_preamble, the ACK preamble) from
-+ * the selected scan BSS capabilities; the AP capabilities are not yet in
-+ * bss_conf at mgd_prepare_tx() time.
-+ */
-+static void rtw8723bs_apply_bss_cap(struct rtw_dev *rtwdev,
-+				    struct ieee80211_vif *vif,
-+				    const u8 *bssid, bool set_preamble)
-+{
-+	struct ieee80211_bss_conf *conf = &vif->bss_conf;
-+	struct cfg80211_bss *lookup_bss = NULL;
-+	struct cfg80211_bss *bss = NULL;
-+	bool short_preamble, short_slot;
-+	u16 cap = 0;
-+
-+	if (!rtw_is_8723bs(rtwdev) || vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (conf->bss) {
-+		bss = conf->bss;
-+	} else if (bssid && is_valid_ether_addr(bssid)) {
-+		lookup_bss = cfg80211_get_bss(rtwdev->hw->wiphy, NULL,
-+					      bssid, NULL, 0,
-+					      IEEE80211_BSS_TYPE_ESS,
-+					      IEEE80211_PRIVACY_ANY);
-+		bss = lookup_bss;
-+	}
-+
-+	if (bss) {
-+		cap = bss->capability;
-+	} else if (conf->assoc_capability) {
-+		cap = conf->assoc_capability;
-+	} else {
-+		short_preamble = conf->use_short_preamble;
-+		short_slot = conf->use_short_slot;
-+		goto program;
-+	}
-+	short_preamble = !!(cap & WLAN_CAPABILITY_SHORT_PREAMBLE);
-+	short_slot = !!(cap & WLAN_CAPABILITY_SHORT_SLOT_TIME);
-+
-+program:
-+	if (set_preamble)
-+		rtw8723bs_set_ack_preamble(rtwdev, short_preamble);
-+	rtw8723bs_set_slot_time(rtwdev, short_slot);
-+
-+	if (lookup_bss)
-+		cfg80211_put_bss(rtwdev->hw->wiphy, lookup_bss);
-+}
-+
-+static unsigned int rtw8723bs_auth_sync_wait_ms(struct ieee80211_vif *vif)
-+{
-+	u16 beacon_int = vif->bss_conf.beacon_int;
-+	unsigned int wait_ms;
-+
-+	if (!beacon_int)
-+		return RTW8723BS_AUTH_SYNC_WAIT_FALLBACK_MS;
-+
-+	wait_ms = DIV_ROUND_UP(beacon_int * 1024, 1000) + 20;
-+	return clamp_t(unsigned int, wait_ms, RTW8723BS_AUTH_SYNC_WAIT_MIN_MS,
-+		       RTW8723BS_AUTH_SYNC_WAIT_MAX_MS);
-+}
-+
-+static void rtw8723bs_auth_sync_start(struct rtw_dev *rtwdev, const u8 *bssid)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	ether_addr_copy(sync->bssid, bssid);
-+	sync->seen = false;
-+	sync->seen_count = 0;
-+	sync->active = true;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+}
-+
-+static void rtw8723bs_auth_sync_stop(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	sync->active = false;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+}
-+
-+static bool rtw8723bs_auth_sync_seen(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+	bool seen;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	seen = sync->seen;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+
-+	return seen;
-+}
-+
-+static bool rtw8723bs_auth_sync_wait(struct rtw_dev *rtwdev,
-+				     unsigned int wait_ms)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+
-+	return wait_event_timeout(sync->wait, rtw8723bs_auth_sync_seen(rtwdev),
-+				  msecs_to_jiffies(wait_ms)) > 0;
-+}
-+
-+static bool rtw8723bs_mgd_prepare_is_auth(struct rtw_dev *rtwdev,
-+					  struct ieee80211_prep_tx_info *info)
-+{
-+	return rtw_is_8723bs(rtwdev) && info &&
-+	       info->subtype == IEEE80211_STYPE_AUTH;
-+}
-+
-+/* Replicate the vendor start_clnt_join() register programming right before
-+ * auth. Returns true for a fresh join (BSSID changed).
-+ */
-+static bool rtw8723bs_mgd_prepare_join(struct rtw_dev *rtwdev,
-+				       struct ieee80211_vif *vif,
-+				       const u8 *bssid)
-+{
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	bool fresh_join;
-+	u16 retry_limit;
-+
-+	if (!is_valid_ether_addr(bssid))
-+		return false;
-+
-+	fresh_join = !ether_addr_equal(rtwvif->bssid, bssid);
-+
-+	ether_addr_copy(rtwvif->bssid, bssid);
-+	rtwvif->aid = 0;
-+	rtwvif->net_type = RTW_NET_MGD_LINKED;
-+	rtw_vif_port_config(rtwdev, rtwvif,
-+			    PORT_SET_BSSID | PORT_SET_AID | PORT_SET_NET_TYPE);
-+
-+	/* Do not narrow RRSR or switch to short-preamble responses before the
-+	 * exchange: the whole auth/assoc runs on the init response set
-+	 * (0xffff1, long preamble). Only slot time is programmed early.
++	/*
++	 * Use a full write rather than a read-modify-write: preserving
++	 * spuriously set bits can leave the RF bus in an unexpected state.
 +	 */
-+	rtw8723bs_apply_bss_cap(rtwdev, vif, bssid, false);
++	rtw_write8(rtwdev, REG_RF_CTRL,
++		   BIT_RF_EN | BIT_RF_RSTB | BIT_RF_SDM_RSTB);
++	usleep_range(1000, 1100);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK, 0x0780);
++	rtw_write8(rtwdev, REG_SYS_FUNC_EN,
++		   BIT_FEN_PPLL | BIT_FEN_PCIEA | BIT_FEN_DIO_PCIE |
++		   BIT_FEN_BB_GLB_RST | BIT_FEN_BB_RSTB); /* 0xe3 */
++	rtw_write8(rtwdev, REG_AFE_CTRL1 + 1, 0x80);
 +
-+	rtw_fw_beacon_filter_config(rtwdev, false, vif);
-+
-+	/* Match the vendor start_clnt_join() TX state (set_msr directly, keep
-+	 * BCN_CTRL / BCNQ_DL set, reassert TBTT/RESP_SIFS every join).
-+	 */
-+	rtw_write8(rtwdev, REG_BCN_CTRL,
-+		   BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION);
-+	rtw_write32_set(rtwdev, REG_FWHW_TXQ_CTRL, BIT_EN_BCNQ_DL);
-+	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 1, 0x64 & 0xff);
-+	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 2,
-+		   (rtw_read8(rtwdev, REG_TBTT_PROHIBIT + 2) & 0xf0) | (0x64 >> 8));
-+	rtw_write16(rtwdev, REG_RESP_SIFS_CCK, 0x0808);
-+	rtw_write16(rtwdev, REG_RESP_SIFS_OFDM, 0x0a0a);
-+
-+	rtw_write16(rtwdev, REG_RXFLTMAP0, 0xffff);
-+	rtw_write16(rtwdev, REG_RXFLTMAP2, 0xffff);
-+	rtw8723bs_auth_rx_filter(rtwdev, true);
-+
-+	retry_limit = (RTW8723BS_JOIN_RETRY_LIMIT << 8) |
-+		      RTW8723BS_JOIN_RETRY_LIMIT;
-+	rtw_write16(rtwdev, REG_RETRY_LIMIT, retry_limit);
-+
-+	rtw8723bs_config_sec_cfg(rtwdev);
-+
-+	return fresh_join;
++	xtal_cap = rtwdev->efuse.crystal_cap & 0x3f;
++	rtw_write32_mask(rtwdev,  REG_AFE_CTRL3, BIT_MASK_XTAL,
++			 xtal_cap | (xtal_cap << 6));
 +}
 +
-+/* The vendor sends a deauth to the target before auth to clear stale AP-side
-+ * state; synthesize and TX one, then let the AP settle.
-+ */
-+static void rtw8723bs_tx_pre_auth_deauth(struct rtw_dev *rtwdev,
-+					 struct ieee80211_vif *vif,
-+					 const u8 *bssid)
-+{
-+	struct ieee80211_tx_control control = {};
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_mgmt *mgmt;
-+	struct sk_buff *skb;
-+	unsigned int frame_len, headroom;
-+
-+	frame_len = sizeof(struct ieee80211_hdr_3addr) + sizeof(mgmt->u.deauth);
-+	headroom = rtwdev->chip->tx_pkt_desc_sz + 8;
-+
-+	skb = dev_alloc_skb(headroom + frame_len);
-+	if (!skb)
-+		return;
-+
-+	skb_reserve(skb, headroom);
-+	mgmt = skb_put_zero(skb, frame_len);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_DEAUTH);
-+	memcpy(mgmt->da, bssid, ETH_ALEN);
-+	memcpy(mgmt->sa, vif->addr, ETH_ALEN);
-+	memcpy(mgmt->bssid, bssid, ETH_ALEN);
-+	mgmt->u.deauth.reason_code = cpu_to_le16(WLAN_REASON_DEAUTH_LEAVING);
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	memset(info, 0, sizeof(*info));
-+	info->control.vif = vif;
-+
-+	rtw_tx(rtwdev, &control, skb);
-+	msleep(100);
-+}
-+
-+/* Orchestrate the pre-auth join: program the vendor join state, send the
-+ * pre-auth deauth, wait for a beacon from the target, then replay the
-+ * pre-auth coex H2Cs - once per fresh BSSID.
-+ */
-+static void rtw8723bs_mgd_prepare_auth_join(struct rtw_dev *rtwdev,
-+					    struct ieee80211_vif *vif,
-+					    struct ieee80211_prep_tx_info *info)
-+{
-+	struct rtw_vif *rtwvif;
-+	const u8 *bssid = NULL;
-+	bool fresh_join;
-+
-+	if (!rtw8723bs_mgd_prepare_is_auth(rtwdev, info) || !vif ||
-+	    test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
-+		return;
-+
-+	rtwvif = (struct rtw_vif *)vif->drv_priv;
-+
-+	if (!is_zero_ether_addr(vif->cfg.ap_addr))
-+		bssid = vif->cfg.ap_addr;
-+	else if (vif->bss_conf.bssid && !is_zero_ether_addr(vif->bss_conf.bssid))
-+		bssid = vif->bss_conf.bssid;
-+
-+	if (!bssid)
-+		return;
-+
-+	fresh_join = rtw8723bs_mgd_prepare_join(rtwdev, vif, bssid);
-+
-+	if (fresh_join || !rtwvif->pre_auth_join_done) {
-+		unsigned int wait_ms = rtw8723bs_auth_sync_wait_ms(vif);
-+
-+		rtw8723bs_auth_sync_start(rtwdev, bssid);
-+		rtw8723bs_tx_pre_auth_deauth(rtwdev, vif, bssid);
-+		rtw8723bs_auth_sync_wait(rtwdev, wait_ms);
-+		rtw8723bs_auth_sync_stop(rtwdev);
-+		rtwvif->pre_auth_join_done = true;
-+	}
-+
-+	if (!rtwvif->pre_auth_h2c_sent) {
-+		rtw_coex_8723bs_pre_auth_h2c(rtwdev);
-+		rtwvif->pre_auth_h2c_sent = true;
-+	}
-+}
-+
- static void rtw_ops_tx(struct ieee80211_hw *hw,
- 		       struct ieee80211_tx_control *control,
- 		       struct sk_buff *skb)
-@@ -393,6 +850,28 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		rtw_vif_assoc_changed(rtwvif, conf);
- 		if (vif->cfg.assoc) {
-+			if (rtw_is_8723bs(rtwdev) &&
-+			    vif->type == NL80211_IFTYPE_STATION) {
-+				rtw8723bs_auth_rx_filter(rtwdev, false);
-+				rtw8723bs_apply_bss_cap(rtwdev, vif, NULL, true);
-+				rtw8723bs_apply_basic_rates(rtwdev, vif, NULL);
-+				rtw8723bs_enable_tsf_update(rtwdev);
-+				/* Vendor mlmeext_joinbss sends MACID_CFG before
-+				 * MEDIA_STATUS_RPT, then WL_CH_INFO.
-+				 */
-+				rtw_fw_macid_cfg(rtwdev, rtwvif->mac_id,
-+						 1, 0, 1, 0x0ff015);
-+				if (!rtwvif->fw_media_connected) {
-+					rtw_fw_media_status_report(rtwdev,
-+								   rtwvif->mac_id,
-+								   true);
-+					rtwvif->fw_media_connected = true;
-+				}
-+				rtw_fw_send_wl_ch_info(rtwdev,
-+						       rtwdev->hal.current_channel,
-+						       rtwdev->hal.current_band_width);
-+			}
-+
- 			rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FINISH);
- 
- 			rtw_fw_download_rsvd_page(rtwdev);
-@@ -414,6 +893,13 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 			if (test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
- 				rtw_hw_scan_abort(rtwdev);
- 
-+			if (rtw_is_8723bs(rtwdev) &&
-+			    vif->type == NL80211_IFTYPE_STATION) {
-+				rtw8723bs_auth_rx_filter(rtwdev, false);
-+				rtw8723bs_reset_response_rates(rtwdev);
-+				rtwvif->pre_auth_h2c_sent = false;
-+				rtwvif->pre_auth_join_done = false;
-+			}
- 		}
- 
- 		config |= PORT_SET_NET_TYPE;
-@@ -421,8 +907,26 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_BSSID) {
-+		bool bssid_cleared = is_zero_ether_addr(conf->bssid);
-+		bool bssid_changed = !ether_addr_equal(rtwvif->bssid,
-+						       conf->bssid);
-+
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION && bssid_changed) {
-+			rtwvif->pre_auth_h2c_sent = false;
-+			rtwvif->pre_auth_join_done = false;
-+		}
- 		ether_addr_copy(rtwvif->bssid, conf->bssid);
- 		config |= PORT_SET_BSSID;
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION && bssid_cleared) {
-+			rtwvif->aid = 0;
-+			rtwvif->net_type = RTW_NET_NO_LINK;
-+			config |= PORT_SET_NET_TYPE | PORT_SET_AID;
-+			rtw_write8(rtwdev, REG_BCN_CTRL,
-+				   BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION |
-+				   BIT_DIS_ATIM);
-+		}
- 		if (!rtw_core_check_sta_active(rtwdev))
- 			rtw_clear_op_chan(rtwdev);
- 		else
-@@ -454,8 +958,17 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_MU_GROUPS)
- 		rtw_chip_set_gid_table(rtwdev, vif, conf);
- 
--	if (changed & BSS_CHANGED_ERP_SLOT)
-+	if (changed & BSS_CHANGED_ERP_PREAMBLE &&
-+	    rtw_is_8723bs(rtwdev) &&
-+	    vif->type == NL80211_IFTYPE_STATION)
-+		rtw8723bs_set_ack_preamble(rtwdev, conf->use_short_preamble);
-+
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION)
-+			rtw8723bs_set_slot_time(rtwdev, conf->use_short_slot);
- 		rtw_conf_tx(rtwdev, rtwvif);
-+	}
- 
- 	if (changed & BSS_CHANGED_PS)
- 		rtw_recalc_lps(rtwdev, NULL);
-@@ -615,11 +1128,19 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key->hw_key_idx = hw_key_idx;
- 		rtw_sec_write_cam(rtwdev, sec, sta, key,
- 				  hw_key_type, hw_key_idx);
-+		if (rtw_is_8723bs(rtwdev) && vif &&
-+		    vif->type == NL80211_IFTYPE_STATION &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+			rtw8723bs_config_default_key_search(rtwdev, true);
- 		break;
- 	case DISABLE_KEY:
- 		rtw_hci_flush_all_queues(rtwdev, false);
- 		rtw_mac_flush_all_queues(rtwdev, false);
- 		rtw_sec_clear_cam(rtwdev, sec, key->hw_key_idx);
-+		if (rtw_is_8723bs(rtwdev) && vif &&
-+		    vif->type == NL80211_IFTYPE_STATION &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+			rtw8723bs_config_default_key_search(rtwdev, false);
- 		break;
- 	}
- 
-@@ -709,8 +1230,23 @@ static void rtw_ops_mgd_prepare_tx(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&rtwdev->mutex);
- 	rtw_leave_lps_deep(rtwdev);
--	rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
--	rtw_chip_prepare_tx(rtwdev);
-+
-+	if (rtw_is_8723bs(rtwdev)) {
-+		/* Wake from soft IPS and run the vendor join sequence. The RFK
-+		 * is handled by the once-only power-on IQK plus the ps.c
-+		 * post-IPS RF-bus recovery, not a fresh calibration here.
-+		 */
-+		if (rtw_leave_ips(rtwdev)) {
-+			rtw_err(rtwdev, "failed to leave idle state for mgd tx\n");
-+			goto out;
-+		}
-+		rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
-+		rtw8723bs_mgd_prepare_auth_join(rtwdev, vif, info);
-+	} else {
-+		rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
-+		rtw_chip_prepare_tx(rtwdev);
-+	}
-+out:
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index cd9254370fcc..e2f0fd367beb 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -43,6 +43,108 @@ MODULE_PARM_DESC(disable_lps_deep, "Set Y to disable Deep PS");
- MODULE_PARM_DESC(support_bf, "Set Y to enable beamformee support");
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- 
-+#define RTW8723BS_REG_BB_SEL_BTG	0x0948
-+#define RTW8723BS_SCAN_IGI		0x1e
-+
-+struct rtw8723bs_txagc_entry {
-+	u8 rate;
-+	u8 pwr_idx;
-+};
-+
-+/* Vendor/staging per-rate TXAGC PG bytes for 8723BS 2.4 GHz. */
-+static const struct rtw8723bs_txagc_entry rtw8723bs_pg_txagc[] = {
-+	{ DESC_RATE1M, 0x38 }, { DESC_RATE2M, 0x36 },
-+	{ DESC_RATE5_5M, 0x34 }, { DESC_RATE11M, 0x32 },
-+	{ DESC_RATE6M, 0x44 }, { DESC_RATE9M, 0x44 },
-+	{ DESC_RATE12M, 0x42 }, { DESC_RATE18M, 0x40 },
-+	{ DESC_RATE24M, 0x38 }, { DESC_RATE36M, 0x36 },
-+	{ DESC_RATE48M, 0x32 }, { DESC_RATE54M, 0x28 },
-+	{ DESC_RATEMCS0, 0x44 }, { DESC_RATEMCS1, 0x42 },
-+	{ DESC_RATEMCS2, 0x40 }, { DESC_RATEMCS3, 0x38 },
-+	{ DESC_RATEMCS4, 0x36 }, { DESC_RATEMCS5, 0x34 },
-+	{ DESC_RATEMCS6, 0x30 }, { DESC_RATEMCS7, 0x26 },
-+};
-+
-+/* Lower the scan-time initial gain so the 8723BS SDIO site-survey hears the AP. */
-+static void rtw_scan_set_8723bs_igi(struct rtw_dev *rtwdev)
-+{
-+	if (!rtw_is_8723bs(rtwdev))
-+		return;
-+
-+	rtw_write32_mask(rtwdev, REG_RXIGI_A, MASKBYTE0, RTW8723BS_SCAN_IGI);
-+}
-+
-+/* rtw_load_table() only populates the by-rate cache; restore the staging
-+ * 8723BS PG bytes after the generic channel power update and push them to the
-+ * chip TXAGC registers.
-+ */
-+static void rtw8723bs_reapply_pg_txagc(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	u8 path;
-+	int i;
-+
-+	if (!rtw_is_8723bs(rtwdev) || hal->current_band_type != RTW_BAND_2G)
-+		return;
-+
-+	mutex_lock(&hal->tx_power_mutex);
-+	for (path = 0; path < hal->rf_path_num && path < RTW_RF_PATH_MAX; path++)
-+		for (i = 0; i < ARRAY_SIZE(rtw8723bs_pg_txagc); i++)
-+			hal->tx_pwr_tbl[path][rtw8723bs_pg_txagc[i].rate] =
-+				rtw8723bs_pg_txagc[i].pwr_idx;
-+	rtwdev->chip->ops->set_tx_power_index(rtwdev);
-+	mutex_unlock(&hal->tx_power_mutex);
-+}
-+
-+/* Staging runs PHY_IQCalibrate_8723B() only during initial hal_init, never on
-+ * IPS leave. Match that: run IQK once on the first power-on, then on later
-+ * (IPS-leave) power-ons just restore the PTA antenna path and reset RF_WLINT.
-+ */
-+static void rtw_power_on_8723bs_sdio_rfk(struct rtw_dev *rtwdev)
++static void rtw8723b_phy_load_bb_tables(struct rtw_dev *rtwdev)
 +{
 +	const struct rtw_chip_info *chip = rtwdev->chip;
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	u32 pta_path;
-+	u32 saved_path;
++	const struct rtw_rfe_def *rfe_def = rtw_get_rfe_def(rtwdev);
 +
-+	if (!rtw_is_8723bs(rtwdev) || !chip->ops->phy_calibration)
-+		return;
-+
-+	pta_path = (efuse->bt_setting & BIT(6)) ? 0x80 : 0x200;
-+
-+	if (rtwdev->initial_rfk_done) {
-+		rtw_write32(rtwdev, RTW8723BS_REG_BB_SEL_BTG, pta_path);
-+		rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK, 0x0780);
-+		return;
-+	}
-+
-+	saved_path = rtw_read32(rtwdev, RTW8723BS_REG_BB_SEL_BTG);
-+	rtw_write32(rtwdev, RTW8723BS_REG_BB_SEL_BTG, pta_path);
-+	chip->ops->phy_calibration(rtwdev);
-+	rtwdev->need_rfk = false;
-+	rtw_write32(rtwdev, RTW8723BS_REG_BB_SEL_BTG, saved_path);
-+	rtwdev->initial_rfk_done = true;
++	rtw_load_table(rtwdev, chip->bb_tbl);
++	rtw_load_table(rtwdev, chip->agc_tbl);
++	if (rfe_def && rfe_def->agc_btg_tbl)
++		rtw_load_table(rtwdev, rfe_def->agc_btg_tbl);
 +}
 +
-+static bool rtw8723bs_station_media_status(struct rtw_dev *rtwdev,
-+					   struct ieee80211_sta *sta,
-+					   struct ieee80211_vif *vif)
++static void rtw8723b_phy_rf6052_config(struct rtw_dev *rtwdev)
 +{
-+	return rtw_is_8723bs(rtwdev) &&
-+	       vif->type == NL80211_IFTYPE_STATION && !sta->tdls;
-+}
++	struct rtw_hal *hal = &rtwdev->hal;
++	u32 intf_s, intf_oe, hssi_2;
++	u32 val32, mask;
++	u8 path;
 +
-+/* 8723BS SDIO: defer the connect MEDIA_STATUS_RPT until the STA is actually
-+ * associated (the vendor firmware sends it at assoc completion, not sta-add).
-+ */
-+static bool rtw8723bs_defer_sta_media_status(struct rtw_dev *rtwdev,
-+					     struct ieee80211_sta *sta,
-+					     struct ieee80211_vif *vif)
-+{
-+	return rtw8723bs_station_media_status(rtwdev, sta, vif) &&
-+	       !vif->cfg.assoc;
-+}
-+
- static struct ieee80211_channel rtw_channeltable_2g[] = {
- 	{.center_freq = 2412, .hw_value = 1,},
- 	{.center_freq = 2417, .hw_value = 2,},
-@@ -299,6 +401,18 @@ static void rtw_watch_dog_work(struct work_struct *work)
- 	 * get that vif and check if device is having traffic more than the
- 	 * threshold.
- 	 */
-+
-+	/* On 8723BS SDIO the firmware's per-packet wake latency out of LPS
-+	 * throttles bursty traffic hard. The stock check enters LPS after a
-+	 * single quiet 2s window, which a normal bursty session hits
-+	 * constantly. Gate LPS on the smoothed throughput instead so the chip
-+	 * only sleeps after sustained idle and stays awake through an active
-+	 * session. Other chips keep the normal behaviour.
-+	 */
-+	if (rtw_is_8723bs(rtwdev) &&
-+	    (stats->tx_throughput || stats->rx_throughput))
-+		ps_active = true;
-+
- 	if (rtwdev->ps_enabled && data.rtwvif && !ps_active &&
- 	    !rtwdev->beacon_loss && !rtwdev->ap_active)
- 		rtw_enter_lps(rtwdev, data.rtwvif->port);
-@@ -367,7 +481,13 @@ int rtw_sta_add(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
- 	INIT_WORK(&si->rc_work, rtw_sta_rc_work);
- 
- 	rtw_update_sta_info(rtwdev, si, true);
--	rtw_fw_media_status_report(rtwdev, si->mac_id, true);
-+	if (rtw8723bs_defer_sta_media_status(rtwdev, sta, vif)) {
-+		rtwvif->fw_media_connected = false;
-+	} else {
-+		rtw_fw_media_status_report(rtwdev, si->mac_id, true);
-+		if (rtw8723bs_station_media_status(rtwdev, sta, vif))
-+			rtwvif->fw_media_connected = true;
-+	}
- 
- 	rtwdev->sta_cnt++;
- 	rtwdev->beacon_loss = false;
-@@ -382,14 +502,21 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
- {
- 	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
- 	struct ieee80211_vif *vif = si->vif;
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
- 	int i;
- 
- 	cancel_work_sync(&si->rc_work);
- 
- 	if (vif->type != NL80211_IFTYPE_STATION || sta->tdls)
- 		rtw_release_macid(rtwdev, si->mac_id);
--	if (fw_exist)
-+	if (fw_exist && rtw8723bs_station_media_status(rtwdev, sta, vif) &&
-+	    !rtwvif->fw_media_connected) {
-+		/* connect status was deferred and never sent; nothing to undo */
-+	} else if (fw_exist) {
- 		rtw_fw_media_status_report(rtwdev, si->mac_id, false);
-+		if (rtw8723bs_station_media_status(rtwdev, sta, vif))
-+			rtwvif->fw_media_connected = false;
-+	}
- 
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		rtw_txq_cleanup(rtwdev, sta->txq[i]);
-@@ -904,6 +1031,8 @@ void rtw_set_channel(struct rtw_dev *rtwdev)
- 
- 	rtw_phy_set_tx_power_level(rtwdev, center_chan);
- 
-+	rtw8723bs_reapply_pg_txagc(rtwdev);
-+
- 	/* if the channel isn't set for scanning, we will do RF calibration
- 	 * in ieee80211_ops::mgd_prepare_tx(). Performing the calibration
- 	 * during scanning on each channel takes too long.
-@@ -1429,6 +1558,34 @@ int rtw_power_on(struct rtw_dev *rtwdev)
- 	rtw_fw_send_phydm_info(rtwdev);
- 
- 	wifi_only = !rtwdev->efuse.btcoex;
-+
-+	/* 8723BS SDIO: on an IPS-leave power-on (IQK already done once) skip the
-+	 * BT-path coex init entirely - scan_workaround re-establishes the PTA /
-+	 * coex state. Run the once-only IQK via the RFK helper; on the first
-+	 * power-on, finalise coex with the vendor init H2C toggle that enables
-+	 * the 8051 management TX scheduler.
-+	 */
-+	if (rtw_is_8723bs(rtwdev)) {
-+		bool ips_wake = rtwdev->initial_rfk_done;
-+
-+		if (!ips_wake)
-+			rtw_coex_power_on_setting(rtwdev);
-+
-+		rtw_power_on_8723bs_sdio_rfk(rtwdev);
-+
-+		if (!ips_wake) {
-+			rtw_coex_init_hw_config(rtwdev, wifi_only);
-+			rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+			rtw_fw_set_gnt_bt(rtwdev, 1);
-+			rtw_fw_coex_ant_sel_rsv(rtwdev, 0, 0);
-+			rtw_fw_query_bt_info(rtwdev);
-+			rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+			rtw_fw_set_gnt_bt(rtwdev, 0);
-+		}
-+
-+		return 0;
-+	}
-+
- 	rtw_coex_power_on_setting(rtwdev);
- 	rtw_coex_init_hw_config(rtwdev, wifi_only);
- 
-@@ -1485,6 +1642,7 @@ void rtw_core_scan_start(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
- 	set_bit(RTW_FLAG_SCANNING, rtwdev->flags);
- 
- 	rtw_phy_dig_set_max_coverage(rtwdev);
-+	rtw_scan_set_8723bs_igi(rtwdev);
- }
- 
- void rtw_core_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
-@@ -1965,8 +2123,21 @@ static int rtw_dump_hw_feature(struct rtw_dev *rtwdev)
- 	u8 bw;
- 	int i;
- 
--	if (!rtwdev->chip->hw_feature_report)
-+	if (!rtwdev->chip->hw_feature_report) {
-+		/* 8723BS has neither a firmware feature report nor an efuse hw_cap
-+		 * parser, so hw_cap is otherwise left at zero. A zero stream count
-+		 * produces an HT capability with no usable RX MCS rates, which makes
-+		 * APs drop the station immediately after a successful association.
-+		 * Other report-less chips fill hw_cap in when parsing the efuse.
-+		 */
-+		if (rtw_is_8723bs(rtwdev)) {
-+			efuse->hw_cap.nss = rtwdev->hal.rf_path_num ? : 1;
-+			efuse->hw_cap.ant_num = rtwdev->hal.rf_path_num ? : 1;
-+			efuse->hw_cap.bw = BIT(RTW_CHANNEL_WIDTH_20) |
-+					   BIT(RTW_CHANNEL_WIDTH_40);
-+		}
- 		return 0;
-+	}
- 
- 	id = rtw_read8(rtwdev, REG_C2HEVT);
- 	if (id != C2H_HW_FEATURE_REPORT) {
-@@ -2174,11 +2345,13 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 
- 	spin_lock_init(&rtwdev->txq_lock);
- 	spin_lock_init(&rtwdev->tx_report.q_lock);
-+	spin_lock_init(&rtwdev->auth_sync.lock);
- 
- 	mutex_init(&rtwdev->mutex);
- 	mutex_init(&rtwdev->hal.tx_power_mutex);
- 
- 	init_waitqueue_head(&rtwdev->coex.wait);
-+	init_waitqueue_head(&rtwdev->auth_sync.wait);
- 	init_completion(&rtwdev->lps_leave_check);
- 	init_completion(&rtwdev->fw_scan_density);
- 
-@@ -2270,7 +2443,12 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 	hw->vif_data_size = sizeof(struct rtw_vif);
- 
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
--	ieee80211_hw_set(hw, RX_INCLUDES_FCS);
-+	/* RTL8723BS keeps BIT_APP_FCS clear, so received frames do not contain
-+	 * the FCS. Advertising RX_INCLUDES_FCS would make mac80211 trim four
-+	 * bytes of frame data and corrupt the tail IE in beacons/probe responses.
-+	 */
-+	if (!rtw_is_8723bs(rtwdev))
-+		ieee80211_hw_set(hw, RX_INCLUDES_FCS);
- 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 	ieee80211_hw_set(hw, MFP_CAPABLE);
- 	ieee80211_hw_set(hw, REPORTS_TX_ACK_STATUS);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6e981ba7986..c6d993e989dd 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -194,6 +194,7 @@ enum rtw_chip_type {
- 	RTW_CHIP_TYPE_8723D,
- 	RTW_CHIP_TYPE_8821C,
- 	RTW_CHIP_TYPE_8703B,
-+	RTW_CHIP_TYPE_8723B,
- 	RTW_CHIP_TYPE_8821A,
- 	RTW_CHIP_TYPE_8812A,
- 	RTW_CHIP_TYPE_8814A,
-@@ -781,6 +782,8 @@ struct rtw_sta_info {
- 	bool vht_enable;
- 	u8 init_ra_lv;
- 	u64 ra_mask;
-+	/* Last rate mask sent to the firmware, to gate no_update. */
-+	u64 ra_mask_last;
- 
- 	DECLARE_BITMAP(tid_ba, IEEE80211_NUM_TIDS);
- 
-@@ -828,6 +831,10 @@ struct rtw_vif {
- 	u8 bssid[ETH_ALEN];
- 	u8 port;
- 	u8 bcn_ctrl;
-+	/* Set once the firmware has been told the STA is connected. */
-+	bool fw_media_connected;
-+	bool pre_auth_h2c_sent;
-+	bool pre_auth_join_done;
- 	struct list_head rsvd_page_list;
- 	struct ieee80211_tx_queue_params tx_params[IEEE80211_NUM_ACS];
- 	const struct rtw_vif_port *conf;
-@@ -2057,6 +2064,20 @@ struct rtw_hw_scan_info {
- 	u8 op_bw;
- };
- 
-+/*
-+ * Synchronises the pre-auth wait on a beacon or probe response from the
-+ * target BSSID before the join sequence continues.
-+ */
-+struct rtw_auth_sync {
-+	wait_queue_head_t wait;
-+	/* Protects the fields below. */
-+	spinlock_t lock;
-+	u8 bssid[ETH_ALEN];
-+	bool active;
-+	bool seen;
-+	u32 seen_count;
-+};
-+
- struct rtw_dev {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
-@@ -2130,9 +2151,13 @@ struct rtw_dev {
- 	struct rtw_wow_param wow;
- 
- 	bool need_rfk;
-+	/* Run the initial IQK once, not on every IPS leave. */
-+	bool initial_rfk_done;
- 	struct completion fw_scan_density;
- 	bool ap_active;
- 
-+	struct rtw_auth_sync auth_sync;
-+
- 	bool led_registered;
- 	char led_name[32];
- 	struct led_classdev led_cdev;
-@@ -2194,6 +2219,12 @@ static inline bool rtw_chip_has_tx_stbc(struct rtw_dev *rtwdev)
- 	return rtwdev->chip->tx_stbc;
- }
- 
-+static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->chip->id == RTW_CHIP_TYPE_8723B &&
-+	       rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
-+}
-+
- static inline u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
- {
- 	unsigned long mac_id;
-@@ -2284,4 +2315,8 @@ bool rtw_core_check_sta_active(struct rtw_dev *rtwdev);
- void rtw_core_enable_beacon(struct rtw_dev *rtwdev, bool enable);
- void rtw_set_ampdu_factor(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 			  struct ieee80211_bss_conf *bss_conf);
-+void rtw8723bs_auth_sync_rx(struct rtw_dev *rtwdev,
-+			    const struct ieee80211_hdr *hdr, u32 len,
-+			    const struct rtw_rx_pkt_stat *pkt_stat,
-+			    const struct ieee80211_rx_status *rx_status);
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 08e9494977e0..463058134534 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -8,7 +8,9 @@
- #define REG_SYS_FUNC_EN		0x0002
- #define BIT_FEN_EN_25_1		BIT(13)
- #define BIT_FEN_ELDR		BIT(12)
-+#define BIT_FEN_PPLL		BIT(7)
- #define BIT_FEN_PCIEA		BIT(6)
-+#define BIT_FEN_DIO_PCIE	BIT(5)
- #define BIT_FEN_CPUEN		BIT(2)
- #define BIT_FEN_USBA		BIT(2)
- #define BIT_FEN_BB_GLB_RST	BIT(1)
-@@ -19,6 +21,7 @@
- #define BIT_PFM_WOWL		BIT(3)
- #define BIT_APFM_OFFMAC		BIT(9)
- #define REG_APS_FSMCO		0x0004
-+#define BIT_EN_PDN		BIT(4)
- #define APS_FSMCO_MAC_ENABLE	BIT(8)
- #define APS_FSMCO_MAC_OFF	BIT(9)
- #define APS_FSMCO_HW_POWERDOWN	BIT(15)
-@@ -61,6 +64,8 @@
- 
- #define REG_LDO_EFUSE_CTRL	0x0034
- #define BIT_MASK_EFUSE_BANK_SEL	(BIT(8) | BIT(9))
-+#define REG_PWR_DATA		0x0038
-+#define REG_BT_COEX_CTRL_8723B	0x0039
- 
- #define BIT_LDO25_VOLTAGE_V25	0x03
- #define BIT_MASK_LDO25_VOLTAGE	GENMASK(6, 4)
-@@ -105,6 +110,7 @@
- #define BIT_BTGP_SPI_EN		BIT(20)
- #define BIT_LED1DIS		BIT(15)
- #define BIT_SW_DPDT_SEL_DATA	BIT(0)
-+#define REG_BT_ANT_SEL_8723B	0x0067
- #define REG_WL_BT_PWR_CTRL	0x0068
- #define BIT_BT_FUNC_EN		BIT(18)
- #define BIT_BT_DIG_CLK_EN	BIT(8)
-@@ -301,6 +307,8 @@
- #define REG_HMEBOX3		0x01DC
- #define REG_LLT_INIT		0x01E0
- #define BIT_LLT_WRITE_ACCESS	BIT(30)
-+#define REG_RFK_FW_ACK_8723B	0x01e7
-+#define BIT_RFK_FW_ACK_8723B	BIT(0)
- #define REG_HMEBOX0_EX		0x01F0
- #define REG_HMEBOX1_EX		0x01F4
- #define REG_HMEBOX2_EX		0x01F8
-@@ -429,6 +437,8 @@
- #define REG_ARFRH5		0x04A8
- #define REG_SW_AMPDU_BURST_MODE_CTRL 0x04BC
- #define BIT_PRE_TX_CMD		BIT(6)
-+#define REG_PKT_VO_VI_LIFE_TIME	0x04C0
-+#define REG_PKT_BE_BK_LIFE_TIME	0x04C2
- #define REG_QUEUE_CTRL		0x04C6
- #define BIT_PTA_WL_TX_EN	BIT(4)
- #define BIT_PTA_EDCCA_EN	BIT(5)
-@@ -437,6 +447,8 @@
- #define REG_PROT_MODE_CTRL	0x04C8
- #define REG_MAX_AGGR_NUM	0x04CA
- #define REG_BAR_MODE_CTRL	0x04CC
-+#define REG_MACID_PKT_DROP0	0x04D0
-+#define REG_MACID_PKT_SLEEP	0x04D4
- #define REG_PRECNT_CTRL		0x04E5
- #define BIT_BTCCA_CTRL		(BIT(0) | BIT(1))
- #define BIT_EN_PRECNT		BIT(11)
-@@ -479,6 +491,7 @@
- #define BIT_DIS_TSF_UDT		BIT(4)
- #define BIT_EN_BCN_FUNCTION	BIT(3)
- #define BIT_EN_TXBCN_RPT	BIT(2)
-+#define BIT_DIS_ATIM		BIT(0)
- #define REG_BCN_CTRL_CLINT0	0x0551
- #define REG_DRVERLYINT		0x0558
- #define REG_BCNDMATIM		0x0559
-@@ -495,6 +508,8 @@
- #define REG_TIMER0_SRC_SEL	0x05B4
- #define BIT_TSFT_SEL_TIMER0	(BIT(4) | BIT(5) | BIT(6))
- 
-+#define REG_BWOPMODE		0x0603
-+#define BIT_BWOPMODE_20MHZ	BIT(2)
- #define REG_TCR			0x0604
- #define BIT_PWRMGT_HWDATA_EN	BIT(7)
- #define BIT_TCR_UPDATE_TIMIE	BIT(5)
-@@ -518,6 +533,7 @@
- #define BIT_UC_MD_EN		BIT(16)
- #define BIT_RXSK_PERPKT		BIT(15)
- #define BIT_HTC_LOC_CTRL	BIT(14)
-+#define BIT_AMF			BIT(13)
- #define BIT_RPFM_CAM_ENABLE	BIT(12)
- #define BIT_TA_BCN		BIT(11)
- #define BIT_RCR_ADF		BIT(11)
-@@ -544,6 +560,7 @@
- #define REG_ACKTO		0x0640
- #define REG_EIFS		0x0642
- #define REG_NAV_CTRL		0x0650
-+#define REG_NAV_UPPER		0x0652
- #define REG_WMAC_TRXPTCL_CTL	0x0668
- #define BIT_RFMOD		(BIT(7) | BIT(8))
- #define BIT_RFMOD_80M		BIT(8)
-@@ -579,6 +596,7 @@
- #define REG_BT_COEX_V2		0x0762
- #define BIT_GNT_BT_POLARITY	BIT(12)
- #define BIT_LTE_COEX_EN		BIT(7)
-+#define REG_BT_CONTROL_8723B	0x0764
- #define REG_GNT_BT		0x0765
- #define BIT_PTA_SW_CTL		GENMASK(4, 3)
- #define REG_BT_COEX_ENH_INTR_CTRL	0x76E
-@@ -604,12 +622,21 @@
- #define BIT_RX_PSEL_RST		(BIT(28) | BIT(29))
- #define REG_TXPSEL		0x080C
- #define REG_RX_GAIN_EN		0x081c
-+#define REG_FPGA0_XA_HSSI_PARM2	0x0824
-+#define HSSI_3WIRE_ADDR_LEN	0x400
-+#define HSSI_3WIRE_DATA_LEN	0x800
- #define REG_CCASEL		0x082C
-+#define REG_FPGA0_XB_HSSI_PARM2	0x082c
- #define REG_PDMFTH		0x0830
- #define REG_BWINDICATION	0x0834
- #define REG_CCA2ND		0x0838
- #define REG_L1PKTH		0x0848
- #define REG_CLKTRK		0x0860
-+#define REG_FPGA0_XA_RF_INT_OE	0x0860
-+#define REG_FPGA0_XB_RF_INT_OE	0x0864
-+#define REG_FPGA0_XA_RF_SW_CTRL	0x0870
-+#define RFSI_RFENV		0x10
-+#define REG_FPGA0_XB_RF_SW_CTRL	0x0872
- #define REG_CSI_MASK_SETTING1	0x0874
- #define REG_NBI_SETTING		0x087c
- #define BIT_NBI_ENABLE		BIT(13)
-@@ -628,6 +655,9 @@
- #define REG_PSD			0x0910
- #define BIT_PSD_INI		GENMASK(23, 22)
- #define REG_SINGLE_TONE_CONT_TX	0x0914
-+#define REG_BB_ANT_CFG_8723B	0x0930
-+#define REG_BB_ANT_CFG1_8723B	0x0944
-+#define BIT_BT_SEL_BY_WIFI_8723B	BIT(5)
- #define REG_AGC_TABLE		0x0958
- #define REG_RFE_CTRL_E		0x0974
- #define REG_2ND_CCA_CTRL	0x0976
-@@ -681,6 +711,7 @@
- #define REG_RX_IQC_AB_A		0x0c10
- #define REG_RX_IQC_CD_A		0x0c14
- #define REG_TXSCALE_A		0x0c1c
-+#define REG_B_RXIQI		0x0c1c
- #define BB_SWING_MASK		GENMASK(31, 21)
- #define REG_TX_AGC_A_CCK_11_CCK_1		0xc20
- #define REG_TX_AGC_A_OFDM18_OFDM6		0xc24
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
-index 01fd299abb7f..57facbc1b41f 100644
---- a/drivers/net/wireless/realtek/rtw88/rx.c
-+++ b/drivers/net/wireless/realtek/rtw88/rx.c
-@@ -253,10 +253,12 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
- 
- 	rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
- 
--	/* Rtl8723cs driver checks for size < 14 or size > 8192 and
--	 * simply drops the packet.
-+	/* Rtl8723cs and rtl8723bs drivers check for size < 14 or size > 8192
-+	 * and simply drop the packet.
- 	 */
--	if (rtwdev->chip->id == RTW_CHIP_TYPE_8703B && pkt_stat->pkt_len == 0) {
-+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8703B ||
-+	     rtwdev->chip->id == RTW_CHIP_TYPE_8723B) &&
-+	    pkt_stat->pkt_len == 0) {
- 		rx_status->flag |= RX_FLAG_NO_PSDU;
- 		rtw_dbg(rtwdev, RTW_DBG_RX, "zero length packet");
- 	}
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 5b40d74b16ee..dd059e562e14 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -20,6 +20,16 @@
- #include "tx.h"
- 
- #define RTW_SDIO_INDIRECT_RW_RETRIES			50
-+#define RTW_SDIO_OQT_TIMEOUT_MS				1000
-+
-+/* 8723BS SDIO TX FIFO back-pressure watermarks: stop the mac80211 queue once
-+ * the per-AC software FIFO fills past the high watermark, and wake it from the
-+ * TX drain path once it falls back to the low one. Bounds the queueing latency
-+ * that otherwise causes uplink bufferbloat / congestion collapse.
-+ */
-+#define RTW_SDIO_TX_FIFO_HIWATER			16
-+#define RTW_SDIO_TX_FIFO_LOWATER			8
-+#define RTW_SDIO_TX_RETRY_DELAY			msecs_to_jiffies(1)
- 
- static bool rtw_sdio_is_bus_addr(u32 addr)
- {
-@@ -479,8 +489,14 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
- 		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
- 				    REG_SDIO_CMD_ADDR_TXFF_HIGH);
- 		break;
--	case RTW_TX_QUEUE_VI:
- 	case RTW_TX_QUEUE_VO:
-+		if (rtw_is_8723bs(rtwdev)) {
-+			txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
-+					    REG_SDIO_CMD_ADDR_TXFF_HIGH);
++	for (path = RF_PATH_A; path < hal->rf_path_num; path++) {
++		switch (path) {
++		case RF_PATH_A:
++			intf_s = REG_FPGA0_XA_RF_SW_CTRL;
++			intf_oe = REG_FPGA0_XA_RF_INT_OE;
++			hssi_2 = REG_FPGA0_XA_HSSI_PARM2;
++			mask = RFSI_RFENV;
 +			break;
++		case RF_PATH_B:
++			intf_s = REG_FPGA0_XB_RF_SW_CTRL;
++			intf_oe = REG_FPGA0_XB_RF_INT_OE;
++			hssi_2 = REG_FPGA0_XB_HSSI_PARM2;
++			mask = RFSI_RFENV << 16;
++			break;
++		default:
++			rtw_err(rtwdev, "invalid rf path %c\n", path + 'A');
++			return;
 +		}
-+		fallthrough;
-+	case RTW_TX_QUEUE_VI:
- 		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
- 				    REG_SDIO_CMD_ADDR_TXFF_NORMAL);
- 		break;
-@@ -491,6 +507,8 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
- 		break;
- 	case RTW_TX_QUEUE_MGMT:
- 		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
-+				    rtw_is_8723bs(rtwdev) ?
-+				    REG_SDIO_CMD_ADDR_TXFF_HIGH :
- 				    REG_SDIO_CMD_ADDR_TXFF_EXTRA);
- 		break;
- 	default:
-@@ -548,40 +566,111 @@ static int rtw_sdio_read_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
- 	return ret;
- }
- 
-+static void rtw_sdio_init_free_txpg(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	const struct rtw_page_table *pg_tbl;
-+	u32 free_txpg;
-+	u16 pubq_num;
 +
-+	if (!rtw_is_8723bs(rtwdev))
-+		return;
++		val32 = rtw_read32_mask(rtwdev, intf_s, mask);
 +
-+	pg_tbl = &rtwdev->chip->page_table[0];
-+	pubq_num = rtwdev->fifo.acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
-+		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
-+	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+	if (free_txpg) {
-+		atomic_set(&rtwsdio->free_pg_high, free_txpg & 0xff);
-+		atomic_set(&rtwsdio->free_pg_normal, (free_txpg >> 8) & 0xff);
-+		atomic_set(&rtwsdio->free_pg_low, (free_txpg >> 16) & 0xff);
-+		atomic_set(&rtwsdio->free_pg_pub, (free_txpg >> 24) & 0xff);
-+	} else {
-+		atomic_set(&rtwsdio->free_pg_high, pg_tbl->hq_num);
-+		atomic_set(&rtwsdio->free_pg_normal, pg_tbl->nq_num);
-+		atomic_set(&rtwsdio->free_pg_low, pg_tbl->lq_num);
-+		atomic_set(&rtwsdio->free_pg_pub, pubq_num);
++		rtw_write32_mask(rtwdev, intf_oe, RFSI_RFENV << 16, 0x1);
++		udelay(1);
++
++		rtw_write32_mask(rtwdev, intf_oe, RFSI_RFENV, 0x1);
++		udelay(1);
++
++		rtw_write32_mask(rtwdev, hssi_2, HSSI_3WIRE_ADDR_LEN, 0x0);
++		udelay(1);
++
++		rtw_write32_mask(rtwdev, hssi_2, HSSI_3WIRE_DATA_LEN, 0x0);
++		udelay(1);
++
++		/*
++		 * NOTE: path A only, there is no table for path B
++		 * The radio_a table is used for both paths.
++		 */
++		rtw_load_table(rtwdev, rtwdev->chip->rf_tbl[RF_PATH_A]);
++
++		rtw_write32_mask(rtwdev, intf_s, mask, val32);
 +	}
 +
-+	atomic_set(&rtwsdio->tx_oqt_free,
-+		   rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG));
++	/* 3 Configuration of Tx Power Tracking */
 +}
 +
-+static void rtw_sdio_sync_free_txpg(struct rtw_dev *rtwdev)
++static void rtw8723b_phy_lck(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	u32 free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+
-+	if (!free_txpg)
-+		return;
-+
-+	atomic_set(&rtwsdio->free_pg_high, free_txpg & 0xff);
-+	atomic_set(&rtwsdio->free_pg_normal, (free_txpg >> 8) & 0xff);
-+	atomic_set(&rtwsdio->free_pg_low, (free_txpg >> 16) & 0xff);
-+	atomic_set(&rtwsdio->free_pg_pub, (free_txpg >> 24) & 0xff);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdfbe0);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, 0x8c01);
++	fsleep(200 * 1000);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdffe0);
 +}
 +
-+static int rtw_sdio_8723bs_free_txpg(struct rtw_dev *rtwdev, u8 queue)
++static void rtw8723b_phy_rf_config(struct rtw_dev *rtwdev)
 +{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	rtw8723b_phy_rf6052_config(rtwdev);
 +
-+	switch (queue) {
-+	case RTW_TX_QUEUE_BCN:
-+	case RTW_TX_QUEUE_H2C:
-+	case RTW_TX_QUEUE_HI0:
-+	case RTW_TX_QUEUE_MGMT:
-+	case RTW_TX_QUEUE_VO:
-+		return atomic_read(&rtwsdio->free_pg_high);
-+	case RTW_TX_QUEUE_VI:
-+		return atomic_read(&rtwsdio->free_pg_normal);
-+	case RTW_TX_QUEUE_BE:
-+	case RTW_TX_QUEUE_BK:
-+		return atomic_read(&rtwsdio->free_pg_low);
-+	default:
-+		return -EINVAL;
-+	}
++	/* LCK must run as part of the RF configuration. */
++	rtw8723b_phy_lck(rtwdev);
 +}
 +
- static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
- 				    size_t count)
- {
- 	unsigned int pages_free, pages_needed;
- 
--	if (rtw_chip_wcpu_8051(rtwdev)) {
--		u32 free_txpg;
-+	if (rtw_is_8723bs(rtwdev)) {
-+		struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+		int dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
- 
--		free_txpg = rtw_sdio_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+		if (dedicated < 0)
-+			return dedicated;
-+		pages_free = dedicated + atomic_read(&rtwsdio->free_pg_pub);
-+		pages_needed = DIV_ROUND_UP(count, rtwdev->chip->page_size);
-+		if (pages_needed <= pages_free)
-+			return 0;
-+
-+		rtw_sdio_sync_free_txpg(rtwdev);
-+		dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
-+		pages_free = dedicated + atomic_read(&rtwsdio->free_pg_pub);
-+	} else if (rtw_chip_wcpu_8051(rtwdev)) {
-+		u32 free_txpg = rtw_sdio_read32(rtwdev, REG_SDIO_FREE_TXPG);
- 
- 		switch (queue) {
- 		case RTW_TX_QUEUE_BCN:
- 		case RTW_TX_QUEUE_H2C:
- 		case RTW_TX_QUEUE_HI0:
- 		case RTW_TX_QUEUE_MGMT:
--			/* high */
- 			pages_free = free_txpg & 0xff;
- 			break;
- 		case RTW_TX_QUEUE_VI:
- 		case RTW_TX_QUEUE_VO:
--			/* normal */
- 			pages_free = (free_txpg >> 8) & 0xff;
- 			break;
- 		case RTW_TX_QUEUE_BE:
- 		case RTW_TX_QUEUE_BK:
--			/* low */
- 			pages_free = (free_txpg >> 16) & 0xff;
- 			break;
- 		default:
--			rtw_warn(rtwdev, "Unknown mapping for queue %u\n", queue);
- 			return -EINVAL;
- 		}
--
--		/* add the pages from the public queue */
- 		pages_free += (free_txpg >> 24) & 0xff;
- 	} else {
- 		u32 free_txpg[3];
-@@ -632,44 +721,137 @@ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
- 	return 0;
- }
- 
-+static int rtw_sdio_wait_tx_oqt(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	int i;
-+	u8 free;
-+
-+	if (!rtw_is_8723bs(rtwdev))
-+		return 0;
-+
-+	if (atomic_add_unless(&rtwsdio->tx_oqt_free, -1, 0))
-+		return 0;
-+
-+	for (i = 0; i < RTW_SDIO_OQT_TIMEOUT_MS; i++) {
-+		free = rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG);
-+		if (free) {
-+			atomic_set(&rtwsdio->tx_oqt_free, free - 1);
-+			return 0;
-+		}
-+		usleep_range(1000, 2000);
-+	}
-+
-+	return -EBUSY;
-+}
-+
-+static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
-+					 unsigned int pages)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	atomic_t *dedicated;
-+	int free;
-+
-+	switch (queue) {
-+	case RTW_TX_QUEUE_VI:
-+		dedicated = &rtwsdio->free_pg_normal;
-+		break;
-+	case RTW_TX_QUEUE_BE:
-+	case RTW_TX_QUEUE_BK:
-+		dedicated = &rtwsdio->free_pg_low;
-+		break;
-+	default:
-+		dedicated = &rtwsdio->free_pg_high;
-+		break;
-+	}
-+
-+	free = atomic_read(dedicated);
-+	if (pages <= free) {
-+		atomic_sub(pages, dedicated);
-+	} else {
-+		atomic_set(dedicated, 0);
-+		atomic_sub(pages - free, &rtwsdio->free_pg_pub);
-+	}
-+}
-+
-+static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb);
-+
- static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
- 			       enum rtw_tx_queue_type queue)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
-+	unsigned int orig_len = skb->len;
-+	bool rtl8723bs = rtw_is_8723bs(rtwdev);
-+	bool quiet = rtl8723bs && tx_data->is_mgmt;
-+	unsigned int pages;
- 	bool bus_claim;
- 	size_t txsize;
-+	size_t write_size;
- 	u32 txaddr;
- 	int ret;
- 
--	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
--	if (!txaddr)
--		return -EINVAL;
-+	if (rtl8723bs) {
-+		txsize = round_up(orig_len, 4);
-+		write_size = txsize > RTW_SDIO_BLOCK_SIZE ?
-+			     round_up(txsize, RTW_SDIO_BLOCK_SIZE) : txsize;
-+	} else {
-+		txsize = sdio_align_size(rtwsdio->sdio_func, orig_len);
-+		write_size = txsize;
-+	}
-+
-+	if (write_size > orig_len) {
-+		unsigned int padding = write_size - orig_len;
- 
--	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
-+		if (skb_tailroom(skb) < padding) {
-+			ret = pskb_expand_head(skb, 0,
-+					       padding - skb_tailroom(skb),
-+					       GFP_KERNEL);
-+			if (ret)
-+				return ret;
-+		}
-+		skb_put_zero(skb, padding);
-+	}
-+
-+	txaddr = rtw_sdio_get_tx_addr(rtwdev, txsize, queue);
-+	if (!txaddr) {
-+		ret = -EINVAL;
-+		goto out_trim;
-+	}
- 
- 	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
- 	if (ret)
--		return ret;
-+		goto out_trim;
-+	ret = rtw_sdio_wait_tx_oqt(rtwdev);
-+	if (ret)
-+		goto out_trim;
- 
- 	if (!IS_ALIGNED((unsigned long)skb->data, RTW_SDIO_DATA_PTR_ALIGN))
- 		rtw_warn(rtwdev, "Got unaligned SKB in %s() for queue %u\n",
- 			 __func__, queue);
- 
- 	bus_claim = rtw_sdio_bus_claim_needed(rtwsdio);
--
- 	if (bus_claim)
- 		sdio_claim_host(rtwsdio->sdio_func);
--
--	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data, txsize);
--
-+	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data,
-+			       write_size);
- 	if (bus_claim)
- 		sdio_release_host(rtwsdio->sdio_func);
- 
-+	if (!ret && quiet)
-+		usleep_range(1000, 2000);
-+	if (!ret && rtl8723bs) {
-+		pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
-+		rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
-+	}
- 	if (ret)
- 		rtw_warn(rtwdev,
- 			 "Failed to write %zu byte(s) to SDIO port 0x%08x",
--			 txsize, txaddr);
-+			 write_size, txaddr);
- 
-+out_trim:
-+	if (write_size > orig_len)
-+		skb_trim(skb, orig_len);
- 	return ret;
- }
- 
-@@ -677,7 +859,11 @@ static void rtw_sdio_init(struct rtw_dev *rtwdev)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 
--	rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CPWM1;
-+	if (rtw_is_8723bs(rtwdev))
-+		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST;
-+	else
-+		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST |
-+				       REG_SDIO_HIMR_CPWM1;
- }
- 
- static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
-@@ -685,6 +871,7 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
- 	u8 size, timeout;
- 
- 	switch (rtwdev->chip->id) {
-+	case RTW_CHIP_TYPE_8723B:
- 	case RTW_CHIP_TYPE_8703B:
- 	case RTW_CHIP_TYPE_8821A:
- 	case RTW_CHIP_TYPE_8812A:
-@@ -712,6 +899,8 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
- 		    FIELD_PREP(BIT_DMA_AGG_TO_V1, timeout));
- 
- 	rtw_write8_set(rtwdev, REG_RXDMA_MODE, BIT_DMA_MODE);
-+	if (rtw_is_8723bs(rtwdev))
-+		rtw_write8_set(rtwdev, REG_RXDMA_MODE, 3 << 2);
- }
- 
- static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev)
-@@ -749,9 +938,50 @@ static int rtw_sdio_setup(struct rtw_dev *rtwdev)
- 	return 0;
- }
- 
-+static void rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
++static void rtw8723b_init_available_page_threshold(struct rtw_dev *rtwdev)
 +{
 +	const struct rtw_chip_info *chip = rtwdev->chip;
 +	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	const struct rtw_page_table *pg_tbl;
-+	u32 free_txpg;
++	const struct rtw_page_table *pg_tbl = NULL;
++	u16 hq_threshold, nq_threshold, lq_threshold;
 +	u16 pubq_num;
 +
-+	if (!rtw_is_8723bs(rtwdev))
++	/*
++	 * Only initialize these page thresholds for SDIO devices.
++	 * PCIe and USB handle TX FIFO/thresholds differently (DMA/host
++	 * scheduling) and writing these registers on those buses can be
++	 * unnecessary or counter-productive.
++	 */
++	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_SDIO)
 +		return;
 +
-+	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
-+	if (free_txpg || !fifo->acq_pg_num)
++	pg_tbl = &chip->page_table[0]; /* SDIO */
++
++	/* fifo must be initialized before this is called */
++	if (fifo->acq_pg_num == 0)
 +		return;
 +
-+	pg_tbl = &chip->page_table[0];
-+	if (fifo->acq_pg_num <= pg_tbl->hq_num + pg_tbl->lq_num +
-+				    pg_tbl->nq_num + pg_tbl->exq_num +
-+				    pg_tbl->gapq_num)
++	/* ensure we don't underflow if tables are misconfigured */
++	if (fifo->acq_pg_num <= (pg_tbl->hq_num + pg_tbl->lq_num +
++				   pg_tbl->nq_num + pg_tbl->exq_num +
++				   pg_tbl->gapq_num))
 +		return;
 +
 +	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
 +		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
-+	rtw_write32(rtwdev, REG_RQPN_NPQ,
-+		    BIT_RQPN_NE(pg_tbl->nq_num, pg_tbl->exq_num));
-+	rtw_write32(rtwdev, REG_RQPN,
-+		    BIT_RQPN_HLP(pg_tbl->hq_num, pg_tbl->lq_num, pubq_num));
++
++	hq_threshold = (pubq_num + pg_tbl->hq_num + 1) >> 1;
++	hq_threshold |= hq_threshold << 8;
++
++	nq_threshold = (pubq_num + pg_tbl->nq_num + 1) >> 1;
++	nq_threshold |= nq_threshold << 8;
++
++	lq_threshold = (pubq_num + pg_tbl->lq_num + 1) >> 1;
++	lq_threshold |= lq_threshold << 8;
++
++	rtw_write16(rtwdev, 0x218, hq_threshold);
++	rtw_write16(rtwdev, 0x21a, nq_threshold);
++	rtw_write16(rtwdev, 0x21c, lq_threshold);
 +}
 +
- static int rtw_sdio_start(struct rtw_dev *rtwdev)
- {
-+	u32 clear;
-+
-+	rtw_sdio_8723bs_check_rqpn(rtwdev);
-+	rtw_sdio_init_free_txpg(rtwdev);
- 	rtw_sdio_enable_rx_aggregation(rtwdev);
-+
-+	if (rtw_is_8723bs(rtwdev)) {
-+		clear = rtw_read32(rtwdev, REG_SDIO_HISR) &
-+			RTW_SDIO_HISR_CLEAR_MASK;
-+		if (clear)
-+			rtw_write32(rtwdev, REG_SDIO_HISR, clear);
-+	}
-+
- 	rtw_sdio_enable_interrupt(rtwdev);
- 
- 	return 0;
-@@ -815,7 +1045,7 @@ static void rtw_sdio_tx_kick_off(struct rtw_dev *rtwdev)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 
--	queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
-+	mod_delayed_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work, 0);
- }
- 
- static void rtw_sdio_link_ps(struct rtw_dev *rtwdev, bool enter)
-@@ -831,6 +1061,8 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
- 
- 	val = rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
- 	val &= 0xfff8;
-+	if (rtw_is_8723bs(rtwdev))
-+		val |= BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE;
- 	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
- }
- 
-@@ -844,42 +1076,82 @@ static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb)
- 	return (struct rtw_sdio_tx_data *)info->status.status_driver_data;
- }
- 
--static void rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
--				    struct rtw_tx_pkt_info *pkt_info,
--				    struct sk_buff *skb,
--				    enum rtw_tx_queue_type queue)
-+static int rtw_sdio_align_tx_skb(struct sk_buff *skb, unsigned int headroom)
++static void rtw8723b_init_queue_reserved_page(struct rtw_dev *rtwdev)
 +{
-+	unsigned int misalign, needed;
++	/*
++	 * The reserved-page and RQPN setup is handled by
++	 * __priority_queue_cfg_legacy(). The available-page thresholds must
++	 * not be programmed on 8723BS SDIO: against the small SDIO page pools
++	 * they end up larger than the pool and the MAC never releases pages.
++	 */
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO &&
++	    rtwdev->chip->id == RTW_CHIP_TYPE_8723B)
++		return;
++
++	rtw8723b_init_available_page_threshold(rtwdev);
++}
++
++static void rtw8723b_init_tx_buffer_boundary(struct rtw_dev *rtwdev)
++{
++	u8 val8 = TX_TOTAL_PAGE_NUMBER_8723B + 1; /* 0xf7 */
++
++	rtw_write8(rtwdev, REG_BCNQ_BDNY, val8);
++	rtw_write8(rtwdev, REG_MGQ_BDNY, val8);
++	rtw_write8(rtwdev, REG_WMAC_LBK_BF_HD, val8);
++	rtw_write8(rtwdev, REG_TRXFF_BNDY, val8);
++	rtw_write8(rtwdev, REG_DWBCN0_CTRL + 1, val8);
++}
++
++static void rtw8723b_init_llt_table(struct rtw_dev *rtwdev)
++{
++	/* Handled by __priority_queue_cfg_legacy(). */
++}
++
++static void rtw8723b_init_page_boundary(struct rtw_dev *rtwdev)
++{
++	 /*
++	  * NOTE: this is also done in __priority_queue_cfg_legacy,
++	  * maybe we can remove it
++	  */
++	rtw_write16(rtwdev, REG_TRXFF_BNDY + 2, 0x4000 - REPORT_BUF - 1);
++}
++
++static void rtw8723b_init_transfer_page_size(struct rtw_dev *rtwdev)
++{
++	rtw_write8(rtwdev, REG_PBP, 0x11);
++}
++
++static void rtw8723b_init_driver_info_size(struct rtw_dev *rtwdev)
++{
++	/* NOTE: also is done in rtw_drv_info_cfg */
++	rtw_write8(rtwdev, REG_RX_DRVINFO_SZ, PHY_STATUS_SIZE);
++}
++
++static void rtw8723b_init_network_type(struct rtw_dev *rtwdev)
++{
++	u32 val32;
++
++	val32 = rtw_read32(rtwdev, REG_CR);
++	val32 = (val32 & ~MASK_NETTYPE) | _NETTYPE(NT_LINK_AP);
++	rtw_write32(rtwdev, REG_CR, val32);
++}
++
++static void rtw8723b_init_wmac_setting(struct rtw_dev *rtwdev)
++{
++	/* Override the default rcr filter for 8723B */
++	rtwdev->hal.rcr = WLAN_RCR_CFG;
++	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
++
++	rtw_write32(rtwdev, REG_MAR, 0xffffffff);
++	rtw_write32(rtwdev, REG_MAR + 4, 0xffffffff);
++
++	rtw_write16(rtwdev, REG_RXFLTMAP2, WLAN_RX_FILTER2);
++	rtw_write16(rtwdev, REG_RXFLTMAP1, WLAN_RX_FILTER1);
++	rtw_write16(rtwdev, REG_RXFLTMAP0, WLAN_RX_FILTER0);
++}
++
++static void rtw8723b_init_adaptive_ctrl(struct rtw_dev *rtwdev)
++{
++	/*
++	 * REG_RRSR selects the rates used for ACK/CTS and response duration.
++	 * The firmware validates it during init, and narrowing it to the
++	 * mandatory rates here makes the firmware silently discard all
++	 * management TX, so keep the full rate set.
++	 */
++	rtw_write32_mask(rtwdev, REG_RRSR, 0xfffff, 0xffff1);
++	rtwdev->dm_info.rrsr_val_init = 0xffff1;
++	rtw_write16(rtwdev, REG_RETRY_LIMIT, 0x3030);
++}
++
++static void rtw8723b_init_edca(struct rtw_dev *rtwdev)
++{
++	rtw_write16(rtwdev, REG_SPEC_SIFS, 0x100a);
++	rtw_write16(rtwdev, REG_MAC_SPEC_SIFS, 0x100a);
++	rtw_write16(rtwdev, REG_SIFS, 0x100a);
++	rtw_write16(rtwdev, REG_SIFS + 2, 0x100a);
++
++	/*
++	 * RESP_SIFS controls how soon an ACK follows a received unicast
++	 * frame. The chip default leaves too little slack inside the SIFS
++	 * window, so the AP can time out before the ACK reaches the air.
++	 * Shorten it so the unicast handshake completes reliably.
++	 */
++	rtw_write16(rtwdev, REG_RESP_SIFS_CCK, 0x0808);
++	rtw_write16(rtwdev, REG_RESP_SIFS_OFDM, 0x0a0a);
++
++	/* TXOP */
++	rtw_write32(rtwdev, REG_EDCA_BE_PARAM, 0x005EA42B);
++	rtw_write32(rtwdev, REG_EDCA_BK_PARAM, 0x0000A44F);
++	rtw_write32(rtwdev, REG_EDCA_VI_PARAM, 0x005EA324);
++	rtw_write32(rtwdev, REG_EDCA_VO_PARAM, 0x002FA226);
++}
++
++static void rtw8723b_init_retry_function(struct rtw_dev *rtwdev)
++{
++	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL, BIT(7));
++	rtw_write8(rtwdev, REG_ACKTO, 0x40);
++}
++
++static void rtw8723b_init_operation_mode(struct rtw_dev *rtwdev)
++{
++	rtw_write8(rtwdev, REG_BWOPMODE, BIT_BWOPMODE_20MHZ);
++}
++
++static void rtw8723b_init_beacon_parameters(struct rtw_dev *rtwdev)
++{
++	/*
++	 * Program port-0 and port-1 BCN_CTRL with DIS_TSF_UDT and
++	 * EN_BCN_FUNCTION only. DIS_BCNQ_SUB belongs to the AP and IBSS
++	 * paths and must stay clear for station mode.
++	 */
++	rtw_write16(rtwdev, REG_BCN_CTRL,
++		    (BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION) |
++		    ((BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION) << 8));
++	rtw_write8(rtwdev, REG_TBTT_PROHIBIT, TBTT_PROHIBIT_SETUP_TIME);
++	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 1,
++		   TBTT_PROHIBIT_HOLD_TIME_STOP_BCN & 0xff);
++	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 2,
++		   (rtw_read8(rtwdev, REG_TBTT_PROHIBIT + 2) & 0xf0) |
++		   (TBTT_PROHIBIT_HOLD_TIME_STOP_BCN >> 8));
++
++	rtw_write8(rtwdev, REG_BCNDMATIM, WLAN_BCN_DMA_TIME);
++	/*
++	 * Use the largest beacon AIFS, since the chip does not contend for
++	 * the medium before sending a beacon.
++	 */
++	rtw_write16(rtwdev, REG_BCNTCFG, 0x660F);
++}
++
++static void rtw8723b_init_burst_pkt_len(struct rtw_dev *rtwdev)
++{
++	rtw_write8_set(rtwdev, REG_SINGLE_AMPDU_CTRL, BIT_EN_SINGLE_APMDU);
++	rtw_write8(rtwdev, REG_RX_PKT_LIMIT, 0x18);
++	rtw_write8(rtwdev, REG_MAX_AGGR_NUM, 0x1F);
++	rtw_write8(rtwdev, REG_PIFS, 0x00);
++	rtw_write8_clr(rtwdev, REG_FWHW_TXQ_CTRL, BIT(7));
++	rtw_write8(rtwdev, REG_AMPDU_MAX_TIME, 0x70);
++}
++
++static void rtw8723b_init_antenna_selection(struct rtw_dev *rtwdev)
++{
++	/* BIT(7) lets the 8051 control antenna selection, BIT(1) is LED2_CM. */
++	rtw_write8(rtwdev, REG_LEDCFG2, BIT(7) | BIT(1));
++}
++
++#define RF_AC	0x00
++
++static void rtw8723b_lck(struct rtw_dev *rtwdev)
++{
++	u32 rf_mode = 0, lc_cal;
++	u8 val_ctx;
++	u8 rf_val;
 +	int ret;
 +
-+	misalign = (unsigned long)skb->data & (RTW_SDIO_DATA_PTR_ALIGN - 1);
-+	if (!misalign)
-+		return 0;
++	val_ctx = rtw_read8(rtwdev, REG_CTX);
 +
-+	needed = headroom + RTW_SDIO_DATA_PTR_ALIGN - 1;
-+	if (skb_headroom(skb) < needed) {
-+		ret = pskb_expand_head(skb, needed - skb_headroom(skb), 0,
-+				       GFP_KERNEL);
-+		if (ret)
-+			return ret;
++	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0)
++		rtw_write8(rtwdev, REG_CTX, val_ctx & ~BIT_MASK_CTX_TYPE);
++	else
++		rtw_write8(rtwdev, REG_TXPAUSE, 0xff);
 +
-+		misalign = (unsigned long)skb->data &
-+			   (RTW_SDIO_DATA_PTR_ALIGN - 1);
-+		if (!misalign)
-+			return 0;
++	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0) {
++		/* 1. Read original RF mode */
++		rf_mode = rtw_read_rf(rtwdev, RF_PATH_A, RF_AC, MASK12BITS);
++		/* 2. Set RF mode = standby mode */
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_AC, MASK12BITS, (rf_mode & 0x8ffff) | 0x10000);
 +	}
 +
-+	needed = headroom + misalign;
-+	if (skb_headroom(skb) < needed)
-+		return -ENOSPC;
++	/* 3. Read RF reg18 */
++	lc_cal = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, MASK12BITS);
 +
-+	skb_push(skb, misalign);
-+	memmove(skb->data, skb->data + misalign, skb->len - misalign);
-+	skb_trim(skb, skb->len - misalign);
++	/* 4. Set LC calibration begin	bit15 */
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdfbe0); /* LDO ON */
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, MASK12BITS, lc_cal | BIT_LCK);
++
++	ret = read_poll_timeout(rtw_read_rf, rf_val, rf_val != 0x1,
++				10000, 1000000, false,
++			 rtwdev, RF_PATH_A, RF_CFGCH, BIT_LCK);
++	if (ret)
++		rtw_warn(rtwdev, "failed to poll LCK status bit\n");
++
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xb0, RFREG_MASK, 0xdffe0); /* LDO OFF */
++
++	/* Restore original situation */
++	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0) {
++		rtw_write8(rtwdev, REG_CTX, val_ctx);
++
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_AC, MASK12BITS, rf_mode);
++	} else {
++		rtw_write8(rtwdev, REG_TXPAUSE, 0x00);
++	}
++}
++
++static void rtw8723b_inform_rfk_status(struct rtw_dev *rtwdev, bool start)
++{
++	u8 val8;
++	int ret;
++
++	rtw_fw_inform_rfk_status(rtwdev, start);
++
++	if (!start)
++		return;
++
++	ret = read_poll_timeout(rtw_read8, val8,
++				val8 & BIT_RFK_FW_ACK_8723B,
++				50000, 400000, false,
++				rtwdev, REG_RFK_FW_ACK_8723B);
++	if (ret)
++		rtw_warn(rtwdev, "failed to poll firmware RFK start ack\n");
++}
++
++static int rtw8723b_mac_init(struct rtw_dev *rtwdev)
++{
++	rtw8723b_init_wmac_setting(rtwdev);
++
++	rtw_write32(rtwdev, REG_INT_MIG, 0);
++	rtw_write32(rtwdev, REG_MCUTST_1, 0x0);
++
++	rtw_write8(rtwdev, REG_MISC_CTRL, 0x3); /* CCA */
++	rtw_write8(rtwdev, REG_2ND_CCA_CTRL, 0x0);
 +
 +	return 0;
 +}
 +
-+static int rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
-+				   struct rtw_tx_pkt_info *pkt_info,
-+				   struct sk_buff *skb,
-+				   enum rtw_tx_queue_type queue)
- {
- 	const struct rtw_chip_info *chip = rtwdev->chip;
- 	unsigned long data_addr, aligned_addr;
-+	bool fixed_8723bs_offset;
- 	size_t offset;
- 	u8 *pkt_desc;
-+	int ret;
++static void rtw8723b_phy_set_param(struct rtw_dev *rtwdev)
++{
++	const struct rtw_chip_info *chip = rtwdev->chip;
++	u32 val32;
 +
-+	fixed_8723bs_offset = rtw_is_8723bs(rtwdev) &&
-+			      (queue == RTW_TX_QUEUE_MGMT ||
-+			       queue == RTW_TX_QUEUE_BCN);
++	rtw8723b_post_enable_flow(rtwdev);
 +
-+	if (fixed_8723bs_offset) {
-+		ret = rtw_sdio_align_tx_skb(skb, chip->tx_pkt_desc_sz);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
- 
- 	data_addr = (unsigned long)pkt_desc;
- 	aligned_addr = ALIGN(data_addr, RTW_SDIO_DATA_PTR_ALIGN);
- 
--	if (data_addr != aligned_addr) {
-+	if (!fixed_8723bs_offset && data_addr != aligned_addr) {
- 		/* Ensure that the start of the pkt_desc is always aligned at
- 		 * RTW_SDIO_DATA_PTR_ALIGN.
- 		 */
- 		offset = RTW_SDIO_DATA_PTR_ALIGN - (aligned_addr - data_addr);
--
- 		pkt_desc = skb_push(skb, offset);
--
--		/* By inserting padding to align the start of the pkt_desc we
--		 * need to inform the firmware that the actual data starts at
--		 * a different offset than normal.
--		 */
- 		pkt_info->offset += offset;
-+		memset(pkt_desc + chip->tx_pkt_desc_sz, 0, offset);
- 	}
- 
- 	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
--
- 	pkt_info->qsel = rtw_sdio_get_tx_qsel(rtwdev, skb, queue);
--
- 	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
- 	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
++	rtw_load_table(rtwdev, chip->mac_tbl);
++	rtw8723b_phy_bb_config(rtwdev);
++	rtw8723b_phy_load_bb_tables(rtwdev);
++	rtw8723b_phy_rf_config(rtwdev);
 +
-+	return 0;
- }
- 
- static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
-@@ -889,9 +1161,10 @@ static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
- {
- 	int ret;
- 
--	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
--
--	ret = rtw_sdio_write_port(rtwdev, skb, queue);
-+	memset(rtw_sdio_get_tx_data(skb), 0, sizeof(struct rtw_sdio_tx_data));
-+	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-+	if (!ret)
-+		ret = rtw_sdio_write_port(rtwdev, skb, queue);
- 	dev_kfree_skb_any(skb);
- 
- 	return ret;
-@@ -929,14 +1202,37 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
- 	struct rtw_sdio_tx_data *tx_data;
--
--	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-+	int ret;
- 
- 	tx_data = rtw_sdio_get_tx_data(skb);
-+	memset(tx_data, 0, sizeof(*tx_data));
-+	if (skb->len >= sizeof(struct ieee80211_hdr_3addr)) {
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	/* enable CCK and OFDM block */
++	rtw_write32_set(rtwdev, REG_FPGA0_RFMOD, BIT_CCKEN | BIT_OFDMEN);
 +
-+		tx_data->is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
-+	}
++	rtw8723b_init_queue_reserved_page(rtwdev);
++	rtw8723b_init_tx_buffer_boundary(rtwdev);
++	rtw8723b_init_llt_table(rtwdev);
 +
-+	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-+	if (ret)
-+		return ret;
++	rtw8723b_init_page_boundary(rtwdev);
++	rtw8723b_init_transfer_page_size(rtwdev);
++	rtw8723b_init_driver_info_size(rtwdev);
++	rtw8723b_init_network_type(rtwdev);
 +
- 	tx_data->sn = pkt_info->sn;
-+	tx_data->tx_pkt_offset = pkt_info->offset;
- 
- 	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
- 
-+	/* Back-pressure on the data ACs (BK/BE/VI/VO): once the FIFO fills past
-+	 * the high watermark, stop the corresponding mac80211 queue so it stops
-+	 * handing us frames, bounding the queueing latency. Resumed from the TX
-+	 * drain path once the FIFO drains below the low watermark.
++	rtw8723b_init_wmac_setting(rtwdev);
++
++	rtw8723b_init_adaptive_ctrl(rtwdev);
++	rtw8723b_init_edca(rtwdev);
++	rtw8723b_init_retry_function(rtwdev);
++
++	/*
++	 * Set up RX aggregation. sdio.c also sets DMA mode, but not
++	 * the burst parameters.
 +	 */
-+	if (rtw_is_8723bs(rtwdev) && queue < RTW_TX_QUEUE_BCN &&
-+	    !rtwsdio->queue_stopped[queue] &&
-+	    skb_queue_len(&rtwsdio->tx_queue[queue]) >= RTW_SDIO_TX_FIFO_HIWATER) {
-+		rtwsdio->queue_stopped[queue] = true;
-+		ieee80211_stop_queue(rtwdev->hw, skb_get_queue_mapping(skb));
++	rtw_write8(rtwdev, REG_RXDMA_MODE,
++		   BIT_DMA_MODE |
++		   FIELD_PREP_CONST(BIT_MASK_AGG_BURST_NUM, AGG_BURST_NUM) |
++		   FIELD_PREP_CONST(BIT_MASK_AGG_BURST_SIZE, AGG_BURST_SIZE));
++
++	rtw8723b_init_operation_mode(rtwdev);
++	rtw8723b_init_beacon_parameters(rtwdev);
++	rtw8723b_init_burst_pkt_len(rtwdev);
++
++	/*
++	 * Program the per-AC packet lifetime to 256 ms. The ROM default of
++	 * ~1 s lets the chip retry data frames well past the supplicant
++	 * EAPOL retry window, which reorders TX during the connect exchange.
++	 */
++	rtw_write16(rtwdev, REG_PKT_VO_VI_LIFE_TIME, 0x0400);
++	rtw_write16(rtwdev, REG_PKT_BE_BK_LIFE_TIME, 0x0400);
++
++	rtw_write8(rtwdev, REG_SLOT, WLAN_SLOT_TIME);
++
++	/* disable BAR */
++	rtw_write32(rtwdev, REG_BAR_MODE_CTRL, WLAN_BAR_VAL);
++
++	/* Enable hardware sequence numbering for all queues. */
++	rtw_write8(rtwdev, REG_HWSEQ_CTRL, 0xff);
++
++	/*
++	 * Configure SDIO TxRx Control to enable Rx DMA timer masking. Only
++	 * clear the necessary bits 0x0[2:0] and 0x2[15:0], keeping 0x0[15:3].
++	 */
++	val32 = rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
++	val32 &= 0x0000fff8;
++	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val32);
++
++	rtw_write16(rtwdev, REG_ATIMWND, 0x2);
++
++	rtw8723b_init_antenna_selection(rtwdev);
++
++	/* NOTE: the following is also done in rtw8723b_post_enable_flow */
++	/* Enable MACTXEN/MACRXEN block */
++	rtw_write8_set(rtwdev, REG_CR, BIT_MACTXEN | BIT_MACRXEN);
++
++	rtw_write8(rtwdev, REG_NAV_UPPER, 0xeb); /* ((30000 + 128 - 1) / 128) */
++
++	/* ack for xmit mgmt frames */
++	rtw_write32_set(rtwdev, REG_FWHW_TXQ_CTRL, BIT(12));
++
++	rtw_phy_init(rtwdev);
++
++	/*
++	 * 8723d does these two alongside its cck_pd_set, but chip_ops.cck_pd_set
++	 * is NULL on 8723b (REG_CSRATIO does not exist on this generation - see
++	 * the chip_ops comment), so they stay disabled.  Kept for reference in
++	 * case cck_pd is ever wired up; the registers/constants would then need
++	 * checking against rtl8723b.
++	 */
++
++	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x50);
++	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x20);
++
++	rtw8723b_pwrtrack_init(rtwdev);
++}
++
++static u32 rtw8723b_iqk_ant_switch_path(struct rtw_dev *rtwdev)
++{
++	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_SDIO)
++		return rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB ? 0x280 : 0x0;
++
++	/*
++	 * Scan and connect run through the PTA mux, so run IQK through the
++	 * same mux and calibrate the path actually used for auth/assoc TX.
++	 */
++	return (rtwdev->efuse.bt_setting & BIT(6)) ? 0x80 : 0x200;
++}
++
++static void rtw8723b_reassert_rx_path(struct rtw_dev *rtwdev)
++{
++	u32 rf_wlint_before;
++	u32 rx_path_before;
++	u32 fpga0_before;
++	u8 sys_func_before;
++	u8 rf_ctrl_before;
++	bool changed = false;
++
++	if (!rtw8723b_sdio_needs_rx_path_fix(rtwdev))
++		return;
++
++	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
++	rf_ctrl_before = rtw_read8(rtwdev, REG_RF_CTRL);
++	fpga0_before = rtw_read32(rtwdev, REG_FPGA0_RFMOD);
++	rx_path_before = rtw_read32(rtwdev, REG_BB_RX_PATH_11N);
++	rf_wlint_before = rtw_read_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK);
++
++	if ((sys_func_before & WLAN_SYS_FUNC_BB_ENABLE) !=
++	    WLAN_SYS_FUNC_BB_ENABLE) {
++		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
++			       WLAN_SYS_FUNC_BB_ENABLE);
++		changed = true;
 +	}
 +
- 	return 0;
- }
- 
-@@ -965,6 +1261,11 @@ static void rtw_sdio_rx_skb(struct rtw_dev *rtwdev, struct sk_buff *skb,
- 	rtw_update_rx_freq_for_invalid(rtwdev, skb, rx_status, pkt_stat);
- 	rtw_rx_stats(rtwdev, pkt_stat->vif, skb);
- 
-+	if (skb->len >= sizeof(struct ieee80211_hdr_3addr))
-+		rtw8723bs_auth_sync_rx(rtwdev,
-+				       (struct ieee80211_hdr *)skb->data,
-+				       skb->len, pkt_stat, rx_status);
++	if ((rf_ctrl_before & WLAN_RF_CTRL_ENABLE) != WLAN_RF_CTRL_ENABLE) {
++		rtw_write8_set(rtwdev, REG_RF_CTRL, WLAN_RF_CTRL_ENABLE);
++		usleep_range(10, 11);
++		changed = true;
++	}
 +
- 	ieee80211_rx_irqsafe(rtwdev->hw, skb);
- }
- 
-@@ -1079,15 +1380,14 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
- 	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
- 	struct rtw_sdio *rtwsdio;
- 	struct rtw_dev *rtwdev;
-+	u32 clear;
- 	u32 hisr;
- 
- 	rtwdev = hw->priv;
- 	rtwsdio = (struct rtw_sdio *)rtwdev->priv;
--
- 	rtwsdio->irq_thread = current;
- 
- 	hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
--
- 	if (hisr & REG_SDIO_HISR_TXERR)
- 		rtw_sdio_tx_err_isr(rtwdev);
- 	if (hisr & REG_SDIO_HISR_RX_REQUEST) {
-@@ -1095,7 +1395,12 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
- 		rtw_sdio_rx_isr(rtwdev);
- 	}
- 
--	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
-+	if (rtw_is_8723bs(rtwdev))
-+		clear = hisr & rtwsdio->irq_mask & RTW_SDIO_HISR_CLEAR_MASK;
++	if ((fpga0_before & (BIT_CCKEN | BIT_OFDMEN)) !=
++	    (BIT_CCKEN | BIT_OFDMEN)) {
++		rtw_write32_set(rtwdev, REG_FPGA0_RFMOD,
++				BIT_CCKEN | BIT_OFDMEN);
++		changed = true;
++	}
++
++	if (rx_path_before != WLAN_RX_PATH_A_8723B) {
++		rtw_write32(rtwdev, REG_BB_RX_PATH_11N,
++			    WLAN_RX_PATH_A_8723B);
++		changed = true;
++	}
++
++	if (rf_wlint_before != 0x0780) {
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK,
++			     0x0780);
++		changed = true;
++	}
++
++	if (!changed)
++		return;
++}
++
++static void rtw8723b_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
++{
++	u32 rf_cfgch_a;
++	u32 rf_cfgch_b = 0;
++
++	rf_cfgch_a = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK);
++	if (rtwdev->hal.rf_path_num > 1)
++		rf_cfgch_b = rtw_read_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK);
++
++	rf_cfgch_a &= ~RFCFGCH_CHANNEL_MASK;
++	if (rtwdev->hal.rf_path_num > 1)
++		rf_cfgch_b &= ~RFCFGCH_CHANNEL_MASK;
++
++	rf_cfgch_a |= (channel & RFCFGCH_CHANNEL_MASK);
++	if (rtwdev->hal.rf_path_num > 1)
++		rf_cfgch_b |= (channel & RFCFGCH_CHANNEL_MASK);
++
++	rf_cfgch_a &= ~RFCFGCH_BW_MASK;
++
++	switch (bw) {
++	case RTW_CHANNEL_WIDTH_20:
++		rf_cfgch_a |= RFCFGCH_BW_20M;
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		rf_cfgch_a |= RFCFGCH_BW_40M;
++		break;
++	default:
++		break;
++	}
++
++	if (rtwdev->hal.rf_path_num > 1) {
++		/* Path B takes the same value as path A. */
++		rf_cfgch_b = rf_cfgch_a;
++	}
++
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, rf_cfgch_a);
++	if (rtwdev->hal.rf_path_num > 1)
++		rtw_write_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK, rf_cfgch_b);
++
++	rf_cfgch_a = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK);
++	if (rtwdev->hal.rf_path_num > 1)
++		rf_cfgch_b = rtw_read_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK);
++}
++
++static void rtw8723b_set_channel_bb(struct rtw_dev *rtwdev, u8 bw,
++				    u8 primary_ch_idx)
++{
++	switch (bw) {
++	case RTW_CHANNEL_WIDTH_20:
++		rtw_write32_mask(rtwdev, REG_FPGA0_RFMOD, BIT_MASK_RFMOD, 0x0);
++		rtw_write32_mask(rtwdev, REG_FPGA1_RFMOD, BIT_MASK_RFMOD, 0x0);
++		rtw_write32_mask(rtwdev, REG_OFDM0_TX_PSD_NOISE,
++				 GENMASK(31, 30), 0x0);
++		break;
++	case RTW_CHANNEL_WIDTH_40:
++		rtw_write32_mask(rtwdev, REG_FPGA0_RFMOD, BIT_MASK_RFMOD, 0x1);
++		rtw_write32_mask(rtwdev, REG_FPGA1_RFMOD, BIT_MASK_RFMOD, 0x1);
++		rtw_write32_mask(rtwdev, REG_CCK0_SYS, BIT_CCK_SIDE_BAND,
++				 primary_ch_idx == RTW_SC_20_UPPER ? 1 : 0);
++		rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, 0xc00,
++				 primary_ch_idx == RTW_SC_20_UPPER ? 2 : 1);
++		rtw_write32_mask(rtwdev, REG_BB_PWR_SAV5_11N, GENMASK(27, 26),
++				 primary_ch_idx == RTW_SC_20_UPPER ? 1 : 2);
++		break;
++	default:
++		break;
++	}
++}
++
++static void rtw8723b_set_channel(struct rtw_dev *rtwdev, u8 channel,
++				 u8 bw, u8 primary_chan_idx)
++{
++	rtw8723b_set_channel_rf(rtwdev, channel, bw);
++	rtw_set_channel_mac(rtwdev, channel, bw, primary_chan_idx);
++	rtw8723b_set_channel_bb(rtwdev, bw, primary_chan_idx);
++	rtw8723b_reassert_rx_path(rtwdev);
++
++	if (rtw8723b_sdio_needs_rx_path_fix(rtwdev)) {
++		bool keep_pta_owner;
++
++		keep_pta_owner = test_bit(RTW_FLAG_SCANNING, rtwdev->flags) ||
++				 (rtw_read32(rtwdev, REG_PAD_CTRL1) &
++				  BIT_PAPE_WLBT_SEL);
++		rtw8723b_sdio_restore_pad_ctrl(rtwdev, keep_pta_owner);
++
++		/*
++		 * RF_WLINT bits 0-1 gate the data path into the BB and a
++		 * prior IQK or coex run can leave them blocking TX, so re-arm
++		 * the RF block and restore the known-good value. REG_RF_CTRL
++		 * is never cleared to zero here: the RF does not recover from
++		 * a cold disable on every channel switch.
++		 */
++		rtw_write8(rtwdev, REG_RF_CTRL,
++			   WLAN_RF_CTRL_ENABLE | BIT_RF_RSTB |
++			   BIT_RF_SDM_RSTB);
++		usleep_range(1000, 1100);
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK,
++			     0x0780);
++	}
++}
++
++static s8 rtw8723b_cck_rx_power(u8 lna_idx, u8 vga_idx)
++{
++	s8 rx_power = 0;
++
++	switch (lna_idx) {
++	case 6:
++		rx_power = -40 - (2 * vga_idx);
++		break;
++	case 4:
++		rx_power = -20 - (2 * vga_idx);
++		break;
++	case 1:
++		rx_power = 0 - (2 * vga_idx);
++		break;
++	case 0:
++		rx_power = 10 - (2 * vga_idx);
++		break;
++	default:
++		break;
++	}
++
++	return rx_power;
++}
++
++static void rtw8723b_query_phy_status_cck(struct rtw_dev *rtwdev, u8 *phy_raw,
++					  struct rtw_rx_pkt_stat *pkt_stat)
++{
++	struct phy_status_8703b *phy_status = (struct phy_status_8703b *)phy_raw;
++	u8 lna_idx = (phy_status->cck_agc_rpt_ofdm_cfosho_a & 0xE0) >> 5;
++	u8 vga_idx = (phy_status->cck_agc_rpt_ofdm_cfosho_a & 0x1F);
++	s8 rx_power = rtw8723b_cck_rx_power(lna_idx, vga_idx);
++	s8 min_rx_power = -120;
++
++	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
++
++	pkt_stat->rx_power[RF_PATH_A] = rx_power;
++	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
++				     min_rx_power);
++	rtwdev->dm_info.rssi[RF_PATH_A] = pkt_stat->rssi;
++}
++
++static void rtw8723b_query_phy_status_ofdm(struct rtw_dev *rtwdev, u8 *phy_raw,
++					   struct rtw_rx_pkt_stat *pkt_stat)
++{
++	struct phy_status_8703b *phy_status = (struct phy_status_8703b *)phy_raw;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s8 val_s8;
++
++	/*
++	 * pkt_stat->bw is left at its default (RTW_CHANNEL_WIDTH_20), which is
++	 * correct while the driver only operates at 20 MHz.  Parsing the RX
++	 * bandwidth out of phy_status is only needed once HT40 is enabled.
++	 */
++
++	val_s8 = phy_status->path_agc[RF_PATH_A].gain & 0x3F;
++	pkt_stat->rx_power[RF_PATH_A] = (val_s8 * 2) - 110;
++
++	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	pkt_stat->rx_snr[RF_PATH_A] = (s8)(phy_status->path_rxsnr[RF_PATH_A] / 2);
++
++	/* signal power reported by HW */
++	val_s8 = phy_status->cck_sig_qual_ofdm_pwdb_all >> 1;
++	pkt_stat->signal_power = (val_s8 & 0x7f) - 110;
++
++	pkt_stat->rx_evm[RF_PATH_A] = phy_status->stream_rxevm[RF_PATH_A];
++	pkt_stat->cfo_tail[RF_PATH_A] = phy_status->path_cfotail[RF_PATH_A];
++
++	dm_info->curr_rx_rate = pkt_stat->rate;
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
++	dm_info->rx_snr[RF_PATH_A] = pkt_stat->rx_snr[RF_PATH_A] >> 1;
++	dm_info->cfo_tail[RF_PATH_A] = (pkt_stat->cfo_tail[RF_PATH_A] * 5) >> 1;
++
++	val_s8 = (s8)pkt_stat->rx_evm[RF_PATH_A];
++	val_s8 = clamp_t(s8, -val_s8 >> 1, 0, 64);
++	val_s8 &= 0x3F; /* 64->0: second path of 1SS rate is 64 */
++	dm_info->rx_evm_dbm[RF_PATH_A] = val_s8;
++}
++
++static void rtw8723b_query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
++				      struct rtw_rx_pkt_stat *pkt_stat)
++{
++	/*
++	 * The 8723B PHY status does not report the channel, so we must
++	 * mark it invalid to allow mac80211/rtw88 to parse it from the IE
++	 * during scanning.
++	 */
++	pkt_stat->channel_invalid = true;
++
++	if (pkt_stat->rate <= DESC_RATE11M)
++		rtw8723b_query_phy_status_cck(rtwdev, phy_status, pkt_stat);
 +	else
-+		clear = hisr & RTW_SDIO_HISR_CLEAR_MASK;
-+	if (clear)
-+		rtw_write32(rtwdev, REG_SDIO_HISR, clear);
- 
- 	rtwsdio->irq_thread = NULL;
- }
-@@ -1212,11 +1517,20 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
- 	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hw *hw = rtwdev->hw;
--
--	skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
--
--	/* enqueue to wait for tx report */
--	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-+	u8 tx_pkt_offset = tx_data->tx_pkt_offset;
++		rtw8723b_query_phy_status_ofdm(rtwdev, phy_status, pkt_stat);
++}
 +
-+	if (!tx_pkt_offset)
-+		tx_pkt_offset = rtwdev->chip->tx_pkt_desc_sz;
-+	skb_pull(skb, tx_pkt_offset);
++static void rtw8723b_set_iqk_matrix_by_result(struct rtw_dev *rtwdev,
++					      u32 ofdm_swing, u8 path)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s32 ele_A, ele_D, ele_C, ele_A_ext;
++	s32 iqk_result_x;
++	s32 iqk_result_y;
++	s32 value32;
 +
-+	/* The RTL8723BS vendor descriptor uses SW_DEFINE/sn=0 for management
-+	 * frames, so there is no unique key for matching asynchronous C2H TX
-+	 * reports. Report completion at SDIO DMA completion, as the vendor
-+	 * dump_mgntframe_and_wait() path does; data frames keep the normal C2H
-+	 * report queue.
-+	 */
-+	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
-+	    !(rtw_is_8723bs(rtwdev) && tx_data->is_mgmt)) {
- 		rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
- 		return;
- 	}
-@@ -1231,32 +1545,48 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
- 
--static void rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
--				      enum rtw_tx_queue_type queue)
-+static int rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
-+				     enum rtw_tx_queue_type queue,
-+				     bool *processed)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	struct sk_buff *skb;
-+	u16 q_map;
- 	int ret;
- 
-+	*processed = false;
- 	skb = skb_dequeue(&rtwsdio->tx_queue[queue]);
- 	if (!skb)
--		return;
-+		return 0;
- 
-+	*processed = true;
-+	q_map = skb_get_queue_mapping(skb);
- 	ret = rtw_sdio_write_port(rtwdev, skb, queue);
- 	if (ret) {
- 		skb_queue_head(&rtwsdio->tx_queue[queue], skb);
--		return;
-+		return ret;
- 	}
- 
- 	rtw_sdio_indicate_tx_status(rtwdev, skb);
-+
-+	if (rtw_is_8723bs(rtwdev) && queue < RTW_TX_QUEUE_BCN &&
-+	    rtwsdio->queue_stopped[queue] &&
-+	    skb_queue_len(&rtwsdio->tx_queue[queue]) <= RTW_SDIO_TX_FIFO_LOWATER) {
-+		rtwsdio->queue_stopped[queue] = false;
-+		ieee80211_wake_queue(rtwdev->hw, q_map);
++	switch (path) {
++	default:
++	case RF_PATH_A:
++		iqk_result_x = dm_info->iqk.result.s1_x;
++		iqk_result_y = dm_info->iqk.result.s1_y;
++		break;
++	case RF_PATH_B:
++		iqk_result_x = dm_info->iqk.result.s0_x;
++		iqk_result_y = dm_info->iqk.result.s0_y;
++		break;
 +	}
++
++	/* new element D */
++	ele_D = OFDM_SWING_D(ofdm_swing);
++
++	/* new element A */
++	iqk_result_x = iqkxy_to_s32(iqk_result_x);
++	ele_A = iqk_mult(iqk_result_x, ele_D, &ele_A_ext);
++
++	/* new element C */
++	iqk_result_y = iqkxy_to_s32(iqk_result_y);
++	ele_C = iqk_mult(iqk_result_y, ele_D, NULL);
++
++	switch (path) {
++	case RF_PATH_A:
++	default:
++		/* write new elements A, C, D, element B is always 0 */
++		value32 = BIT_SET_TXIQ_ELM_ACD(ele_A, ele_C, ele_D);
++		rtw_write32(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE, value32);
++		value32 = BIT_SET_TXIQ_ELM_C1(ele_C);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N, MASKH4BITS,
++				 value32);
++		rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(24),
++				 ele_A_ext);
++		break;
++
++	case RF_PATH_B:
++		/* write new elements A, C, D, element B is always 0 */
++		value32 = BIT_SET_TXIQ_ELM_ACD(ele_A, ele_C, ele_D);
++		rtw_write32(rtwdev, REG_OFDM_0_XB_TX_IQ_IMBALANCE, value32);
++		value32 = BIT_SET_TXIQ_ELM_C1(ele_C);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXB_LSB2_11N, MASKH4BITS,
++				 value32);
++		rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(28),
++				 ele_A_ext);
++		break;
++	}
++}
++
++static void rtw8723b_set_iqk_matrix(struct rtw_dev *rtwdev, s8 ofdm_index,
++				    u8 path)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u32 ofdm_swing;
++
++	ofdm_index = clamp_t(s8, ofdm_index, 0, RTW_OFDM_SWING_TABLE_SIZE - 1);
++
++	ofdm_swing = rtw8723b_ofdm_swing_table[ofdm_index];
++
++	if (dm_info->iqk.done) {
++		rtw8723b_set_iqk_matrix_by_result(rtwdev, ofdm_swing, path);
++		return;
++	}
++
++	switch (path) {
++	case RF_PATH_A:
++	default:
++		rtw_write32(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE, ofdm_swing);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N, MASKH4BITS,
++				 0x00);
++		rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(24),
++				 0x00);
++		break;
++
++	case RF_PATH_B:
++		rtw_write32(rtwdev, REG_OFDM_0_XB_TX_IQ_IMBALANCE, ofdm_swing);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXB_LSB2_11N, MASKH4BITS,
++				 0x00);
++		rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(28),
++				 0x00);
++		break;
++	}
++}
++
++static u8 rtw8723b_iqk_check_tx_failed(struct rtw_dev *rtwdev)
++{
++	s32 tx_x, tx_y;
++	u32 tx_fail;
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] 0xeac = 0x%x\n",
++		rtw_read32(rtwdev, REG_IQK_RES_RY));
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] 0xe94 = 0x%x, 0xe9c = 0x%x\n",
++		rtw_read32(rtwdev, REG_IQK_RES_TX),
++		rtw_read32(rtwdev, REG_IQK_RES_TY));
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK] 0xe90(before IQK) = 0x%x, 0xe98(after IQK) = 0x%x\n",
++		rtw_read32(rtwdev, 0xe90),
++		rtw_read32(rtwdev, 0xe98));
++
++	tx_fail = rtw_read32_mask(rtwdev, REG_IQK_RES_RY, BIT_IQK_TX_FAIL);
++	tx_x = rtw_read32_mask(rtwdev, REG_IQK_RES_TX, BIT_MASK_RES_TX);
++	tx_y = rtw_read32_mask(rtwdev, REG_IQK_RES_TY, BIT_MASK_RES_TY);
++
++	if (!tx_fail && tx_x != IQK_TX_X_ERR && tx_y != IQK_TX_Y_ERR)
++		return IQK_TX_OK; /* BIT(0) */
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] A TX IQK failed\n");
 +
 +	return 0;
- }
- 
- static void rtw_sdio_tx_handler(struct work_struct *work)
- {
- 	struct rtw_sdio_work_data *work_data =
--		container_of(work, struct rtw_sdio_work_data, work);
-+		container_of(to_delayed_work(work), struct rtw_sdio_work_data,
-+			     work);
- 	struct rtw_sdio *rtwsdio;
- 	struct rtw_dev *rtwdev;
-+	bool processed;
- 	int limit, queue;
- 
- 	rtwdev = work_data->rtwdev;
-@@ -1267,7 +1597,24 @@ static void rtw_sdio_tx_handler(struct work_struct *work)
- 
- 	for (queue = RTK_MAX_TX_QUEUE_NUM - 1; queue >= 0; queue--) {
- 		for (limit = 0; limit < 1000; limit++) {
--			rtw_sdio_process_tx_queue(rtwdev, queue);
-+			int ret;
++}
 +
-+			ret = rtw_sdio_process_tx_queue(rtwdev, queue, &processed);
-+			if (ret) {
-+				if (rtw_is_8723bs(rtwdev) && ret == -EBUSY) {
-+					mod_delayed_work(rtwsdio->txwq,
-+							 &work_data->work,
-+							 RTW_SDIO_TX_RETRY_DELAY);
-+					return;
-+				}
-+				break;
-+			}
++static u8 rtw8723b_iqk_check_rx_failed(struct rtw_dev *rtwdev)
++{
++	s32 rx_x, rx_y;
++	u32 rx_fail;
 +
-+			if (rtw_is_8723bs(rtwdev) &&
-+			    queue == RTW_TX_QUEUE_MGMT && processed) {
-+				mod_delayed_work(rtwsdio->txwq, &work_data->work, 0);
-+				return;
-+			}
- 
- 			if (skb_queue_empty(&rtwsdio->tx_queue[queue]))
- 				break;
-@@ -1294,14 +1641,16 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
- 		return -ENOMEM;
- 	}
- 
--	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
- 		skb_queue_head_init(&rtwsdio->tx_queue[i]);
-+		rtwsdio->queue_stopped[i] = false;
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] 0xea4 = 0x%x, 0xeac = 0x%x\n",
++		rtw_read32(rtwdev, REG_IQK_RES_RX),
++		rtw_read32(rtwdev, REG_IQK_RES_RY));
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK] 0xea0(before IQK) = 0x%x, 0xea8(after IQK) = 0x%x\n",
++		rtw_read32(rtwdev, 0xea0),
++		rtw_read32(rtwdev, 0xea8));
++
++	rx_fail = rtw_read32_mask(rtwdev, REG_IQK_RES_RY, BIT_IQK_RX_FAIL);
++	rx_x = rtw_read32_mask(rtwdev, REG_IQK_RES_RX, BIT_MASK_RES_RX);
++	rx_y = rtw_read32_mask(rtwdev, REG_IQK_RES_RY, BIT_MASK_RES_RY);
++	rx_y = abs(iqkxy_to_s32(rx_y));
++
++	if (!rx_fail && rx_x != IQK_RX_X_ERR && rx_y != IQK_RX_Y_ERR &&
++	    rx_x < IQK_RX_X_UPPER && rx_x > IQK_RX_X_LOWER &&
++	     rx_y < IQK_RX_Y_LMT)
++		return IQK_RX_OK; /* BIT(1) */
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] A RX IQK failed\n");
++
++	return 0;
++}
++
++static u8 rtw8723b_iqk_tx_path_a(struct rtw_dev *rtwdev)
++{
++	bool sdio_iqk = rtw8723b_sdio_needs_rx_path_fix(rtwdev);
++	u8 status;
++	u32 path_sel;
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A TX IQK!\n");
++
++	/* Save RF path */
++	path_sel = rtw_read32(rtwdev, REG_BB_SEL_BTG);
++
++	/* leave IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++
++	/* enable path A PA in TX IQK mode */
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
++		     sdio_iqk ? 0x18000 : 0x20000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0003f);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xc7f87);
++
++	/* Tx IQK setting */
++	rtw_write32(rtwdev, REG_TXIQK_11N, 0x01007c00);
++	rtw_write32(rtwdev, REG_RXIQK_11N, 0x01004800);
++
++	/* path-A IQK setting */
++	rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x18008c1c);
++	rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x38008c1c);
++	rtw_write32(rtwdev, REG_TX_IQK_TONE_B, 0x38008c1c);
++	rtw_write32(rtwdev, REG_RX_IQK_TONE_B, 0x38008c1c);
++
++	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N,
++		    sdio_iqk ? 0x821303ea : 0x821403ea);
++	rtw_write32(rtwdev, REG_RXIQK_PI_A_11N, 0x28110000);
++	rtw_write32(rtwdev, REG_TXIQK_PI_B, 0x82110000);
++	rtw_write32(rtwdev, REG_RXIQK_PI_B, 0x28110000);
++
++	/* LO calibration setting */
++	rtw_write32(rtwdev, REG_IQK_AGC_RSP_11N, 0x00462911);
++
++	/* enter IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x808000);
++
++	/* ant switch */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG,
++		    rtw8723b_iqk_ant_switch_path(rtwdev));
++
++	/* GNT_BT = 0 */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00000800);
++
++	/* One shot, path A LOK & IQK */
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf9000000);
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf8000000);
++
++	mdelay(IQK_DELAY_TIME_8723B);
++
++	/* restore ant path */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, path_sel);
++
++	/* GNT_BT = 1 */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00001800);
++
++	/* leave IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++
++	/* Check failed */
++	status = rtw8723b_iqk_check_tx_failed(rtwdev);
++
++	return status;
++}
++
++static u8 rtw8723b_iqk_rx_path_a(struct rtw_dev *rtwdev)
++{
++	bool sdio_iqk = rtw8723b_sdio_needs_rx_path_fix(rtwdev);
++	u32 reg_e94, reg_e9c, val32, path_sel;
++	u8 status;
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A RX IQK step1!\n");
++
++	/* Save RF path */
++	path_sel = rtw_read32(rtwdev, REG_BB_SEL_BTG);
++
++	/* leave IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
++		     sdio_iqk ? 0x18000 : 0x30000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0001f);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xf7fb7);
++
++	/* IQK setting */
++	rtw_write32(rtwdev, REG_TXIQK_11N, 0x01007c00);
++	rtw_write32(rtwdev, REG_RXIQK_11N, 0x01004800);
++
++	/* path-A IQK setting */
++	rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x18008c1c);
++	rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x38008c1c);
++	rtw_write32(rtwdev, REG_TX_IQK_TONE_B, 0x38008c1c);
++	rtw_write32(rtwdev, REG_RX_IQK_TONE_B, 0x38008c1c);
++
++	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N,
++		    sdio_iqk ? 0x82130ff0 : 0x82160ff0);
++	rtw_write32(rtwdev, REG_RXIQK_PI_A_11N, 0x28110000);
++	rtw_write32(rtwdev, REG_TXIQK_PI_B, 0x82110000);
++	rtw_write32(rtwdev, REG_RXIQK_PI_B, 0x28110000);
++
++	/* LO calibration setting */
++	rtw_write32(rtwdev, REG_IQK_AGC_RSP_11N, 0x0046a911);
++
++	/* enter IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x808000);
++
++	/* ant switch */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG,
++		    rtw8723b_iqk_ant_switch_path(rtwdev));
++
++	/* GNT_BT = 0 (disable BT) */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00000800);
++
++	/* One shot, path A LOK & IQK */
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf9000000);
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf8000000);
++
++	mdelay(IQK_DELAY_TIME_8723B);
++
++	/* restore ant path */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, path_sel);
++
++	/* GNT_BT = 1 */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00001800);
++
++	/* leave IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++
++	/* Check failed */
++	status = rtw8723b_iqk_check_tx_failed(rtwdev);
++
++	/* if Tx not OK, ignore Rx */
++	if (!status)
++		return status;
++
++	reg_e94 = rtw_read32(rtwdev, REG_IQK_RES_TX);
++	reg_e9c = rtw_read32(rtwdev, REG_IQK_RES_TY);
++	val32 = 0x80007c00 | (reg_e94 & 0x3ff0000) |
++	((reg_e9c & 0x3ff0000) >> 16);
++	rtw_write32(rtwdev, REG_TXIQK_11N, val32);
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A RX IQK step2!");
++
++	/* modify RX IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK,
++		     sdio_iqk ? 0x18000 : 0x30000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0001f);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xf7d77);
++
++	/* PA, PAD setting */
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xdf, RFREG_MASK, 0xf80);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0x55, RFREG_MASK, 0x4021f);
++
++	/* IQK setting */
++	rtw_write32(rtwdev, REG_RXIQK_11N, 0x01004800);
++
++	/* path-A IQK setting */
++	rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x38008c1c);
++	rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x18008c1c);
++	rtw_write32(rtwdev, REG_TX_IQK_TONE_B, 0x38008c1c);
++	rtw_write32(rtwdev, REG_RX_IQK_TONE_B, 0x38008c1c);
++
++	rtw_write32(rtwdev, REG_TXIQK_PI_A_11N, 0x82110000);
++	rtw_write32(rtwdev, REG_RXIQK_PI_A_11N,
++		    sdio_iqk ? 0x2813001f : 0x2816001f);
++	rtw_write32(rtwdev, REG_TXIQK_PI_B, 0x82110000);
++	rtw_write32(rtwdev, REG_RXIQK_PI_B, 0x28110000);
++
++	/* LO calibration setting */
++	rtw_write32(rtwdev, REG_IQK_AGC_RSP_11N, 0x0046a8d1);
++
++	/* enter IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x808000);
++
++	/* ant switch */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG,
++		    rtw8723b_iqk_ant_switch_path(rtwdev));
++
++	/* GNT_BT = 0 */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00000800);
++
++	/* One shot, path A LOK & IQK */
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf9000000);
++	rtw_write32(rtwdev, REG_IQK_AGC_PTS_11N, 0xf8000000);
++
++	mdelay(IQK_DELAY_TIME_8723B);
++
++	/* restore ant path */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, path_sel);
++
++	/* GNT_BT = 1 */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, 0x00001800);
++
++	/* leave IQK mode */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++
++	/* Check failed */
++
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xdf, RFREG_MASK, 0x780);
++
++	status |= rtw8723b_iqk_check_rx_failed(rtwdev);
++
++	return status;
++}
++
++static
++void rtw8723b_iqk_fill_a_matrix(struct rtw_dev *rtwdev, const s32 result[])
++{
++	s32 tx1_a, tx1_a_ext;
++	s32 tx1_c, tx1_c_ext;
++	s32 oldval_1;
++	s32 x, y;
++
++	if (result[IQK_S1_TX_X] == 0)
++		return;
++
++	oldval_1 = rtw_read32_mask(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE,
++				   BIT_MASK_TXIQ_ELM_D);
++
++	x = iqkxy_to_s32(result[IQK_S1_TX_X]);
++	tx1_a = iqk_mult(x, oldval_1, &tx1_a_ext);
++	rtw_write32_mask(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE,
++			 BIT_MASK_TXIQ_ELM_A, tx1_a);
++	rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD,
++			 BIT_MASK_OFDM0_EXT_A, tx1_a_ext);
++
++	y = iqkxy_to_s32(result[IQK_S1_TX_Y]);
++	tx1_c = iqk_mult(y, oldval_1, &tx1_c_ext);
++	rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N, MASKH4BITS,
++			 BIT_SET_TXIQ_ELM_C1(tx1_c));
++	rtw_write32_mask(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE,
++			 BIT_MASK_TXIQ_ELM_C, BIT_SET_TXIQ_ELM_C2(tx1_c));
++	rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD,
++			 BIT_MASK_OFDM0_EXT_C, tx1_c_ext);
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK] X = 0x%x, TX1_A = 0x%x, oldval_1 0x%x\n",
++		x, tx1_a, oldval_1);
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK] Y = 0x%x, TX1_C = 0x%x\n", y, tx1_c);
++
++	if (result[IQK_S1_RX_X] == 0)
++		return;
++
++	rtw_write32_mask(rtwdev, REG_A_RXIQI, BIT_MASK_RXIQ_S1_X,
++			 result[IQK_S1_RX_X]);
++	rtw_write32_mask(rtwdev, REG_A_RXIQI, BIT_MASK_RXIQ_S1_Y1,
++			 BIT_SET_RXIQ_S1_Y1(result[IQK_S1_RX_Y]));
++	rtw_write32_mask(rtwdev, REG_RXIQK_MATRIX_LSB_11N, BIT_MASK_RXIQ_S1_Y2,
++			 BIT_SET_RXIQ_S1_Y2(result[IQK_S1_RX_Y]));
++}
++
++static
++void rtw8723b_iqk_fill_b_matrix(struct rtw_dev *rtwdev, const s32 result[])
++{
++	s32 tx0_a, tx0_a_ext;
++	s32 tx0_c, tx0_c_ext;
++	s32 oldval_0;
++	s32 x, y;
++
++	if (result[IQK_S0_TX_X] == 0)
++		return;
++
++	oldval_0 = rtw_read32_mask(rtwdev, REG_OFDM_0_XB_TX_IQ_IMBALANCE,
++				   BIT_MASK_TXIQ_ELM_D);
++
++	x = iqkxy_to_s32(result[IQK_S0_TX_X]);
++	tx0_a = iqk_mult(x, oldval_0, &tx0_a_ext);
++
++	rtw_write32_mask(rtwdev, REG_OFDM_0_XB_TX_IQ_IMBALANCE,
++			 BIT_MASK_TXIQ_ELM_A, tx0_a);
++	rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(27),
++			 tx0_a_ext);
++
++	y = iqkxy_to_s32(result[IQK_S0_TX_Y]);
++	tx0_c = iqk_mult(y, oldval_0, &tx0_c_ext);
++
++	rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXB_LSB2_11N, MASKH4BITS,
++			 BIT_SET_TXIQ_ELM_C1(tx0_c));
++	rtw_write32_mask(rtwdev, REG_OFDM_0_XB_TX_IQ_IMBALANCE,
++			 BIT_MASK_TXIQ_ELM_C, BIT_SET_TXIQ_ELM_C2(tx0_c));
++	rtw_write32_mask(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, BIT(25),
++			 tx0_c_ext);
++
++	if (result[IQK_S0_RX_X] == 0)
++		return;
++
++	rtw_write32_mask(rtwdev, REG_B_RXIQI, BIT_MASK_RXIQ_X_S0,
++			 result[IQK_S0_RX_X]);
++	rtw_write32_mask(rtwdev, REG_B_RXIQI, BIT_MASK_RXIQ_S1_Y1,
++			 BIT_SET_RXIQ_S1_Y1(result[IQK_S0_RX_Y]));
++}
++
++static
++void rtw8723b_iqk_config_mac(struct rtw_dev *rtwdev,
++			     const struct rtw8723x_iqk_backup_regs *backup)
++{
++	int i;
++
++	rtw_write8(rtwdev, rtw8723x_common.iqk_mac8_regs[0], 0x3f);
++
++	for (i = 1; i < RTW8723X_IQK_MAC8_REG_NUM; i++)
++		rtw_write8(rtwdev, rtw8723x_common.iqk_mac8_regs[i],
++			   backup->mac8[i] & (~BIT(3)));
++
++	/* This MAC backup register needs a byte-wide write. */
++	rtw_write8(rtwdev, rtw8723x_common.iqk_mac32_regs[0],
++		   backup->mac32[0] & (~BIT(5)));
++}
++
++static
++void rtw8723b_iqk_one_round(struct rtw_dev *rtwdev, s32 result[][IQK_NR], u8 t,
++			    const struct rtw8723x_iqk_backup_regs *backup)
++{
++	u32 i;
++	u8 a_ok;
++	/* u8 b_ok; */
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK] IQ Calibration for 1T1R_S0/S1 for %d times\n", t);
++
++	rtw8723x_iqk_path_adda_on(rtwdev, ADDA_ON_VAL_8723B);
++	rtw8723b_iqk_config_mac(rtwdev, backup);
++
++	rtw_write32_mask(rtwdev, REG_CCK_ANT_SEL_11N, 0x0f000000, 0xf);
++	rtw_write32(rtwdev, REG_BB_RX_PATH_11N, 0x03a05600);
++	rtw_write32(rtwdev, REG_TRMUX_11N, 0x000800e4);
++	rtw_write32(rtwdev, REG_BB_PWR_SAV1_11N, 0x22204000);
++
++	/*
++	 * RX IQ calibration setting for 8723B D cut large current issue
++	 * when leaving IPS
++	 */
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK, 0x30000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0001f);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xf7fb7);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xed, 0x20, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0x43, RFREG_MASK, 0x60fbd);
++
++	for (i = 0; i < PATH_IQK_RETRY; i++) {
++		a_ok = rtw8723b_iqk_tx_path_a(rtwdev);
++		if (a_ok == IQK_TX_OK) {
++			rtw_dbg(rtwdev, RTW_DBG_RFK,
++				"[IQK] path A TX IQK success!\n");
++
++			rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N,
++					 MASKH3BYTES, 0x000000);
++
++			result[t][IQK_S1_TX_X] =
++				rtw_read32_mask(rtwdev, REG_IQK_RES_TX,
++						BIT_MASK_RES_TX);
++			result[t][IQK_S1_TX_Y] =
++				rtw_read32_mask(rtwdev, REG_IQK_RES_TY,
++						BIT_MASK_RES_TY);
++			break;
++		}
++
++		rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A TX IQK fail!\n");
++		result[t][IQK_S1_TX_X] = 0x100;
++		result[t][IQK_S1_TX_Y] = 0x0;
 +	}
- 	rtwsdio->tx_handler_data = kmalloc_obj(*rtwsdio->tx_handler_data);
- 	if (!rtwsdio->tx_handler_data)
- 		goto err_destroy_wq;
- 
- 	rtwsdio->tx_handler_data->rtwdev = rtwdev;
--	INIT_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
-+	INIT_DELAYED_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
- 
- 	return 0;
- 
-@@ -1315,6 +1664,7 @@ static void rtw_sdio_deinit_tx(struct rtw_dev *rtwdev)
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	int i;
- 
-+	cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
- 	destroy_workqueue(rtwsdio->txwq);
- 	kfree(rtwsdio->tx_handler_data);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-index 457e8b02380e..3dd0f44676bf 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.h
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-@@ -22,6 +22,7 @@
- 
- /* SDIO Tx Control */
- #define REG_SDIO_TX_CTRL			(SDIO_LOCAL_OFFSET + 0x0000)
-+#define BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE	BIT(4)
- 
- /*SDIO status timeout*/
- #define REG_SDIO_TIMEOUT			(SDIO_LOCAL_OFFSET + 0x0002)
-@@ -77,6 +78,14 @@
- /* the following two are RTL8188 SDIO Specific */
- #define REG_SDIO_HISR_MCU_ERR			BIT(28)
- #define REG_SDIO_HISR_TSF_BIT32_TOGGLE		BIT(29)
-+#define RTW_SDIO_HISR_CLEAR_MASK		\
-+	(REG_SDIO_HISR_TXERR | REG_SDIO_HISR_RXERR | \
-+	 REG_SDIO_HISR_TXFOVW | REG_SDIO_HISR_RXFOVW | \
-+	 REG_SDIO_HISR_TXBCNOK | REG_SDIO_HISR_TXBCNERR | \
-+	 REG_SDIO_HISR_C2HCMD | REG_SDIO_HISR_CPWM1 | \
-+	 REG_SDIO_HISR_CPWM2 | REG_SDIO_HISR_HSISR_IND | \
-+	 REG_SDIO_HISR_GTINT3_IND | REG_SDIO_HISR_GTINT4_IND | \
-+	 REG_SDIO_HISR_PSTIMEOUT | REG_SDIO_HISR_OCPINT)
- 
- /* HCI Current Power Mode */
- #define REG_SDIO_HCPWM				(SDIO_LOCAL_OFFSET + 0x0019)
-@@ -140,10 +149,12 @@ struct sdio_device_id;
- 
- struct rtw_sdio_tx_data {
- 	u8 sn;
-+	u8 tx_pkt_offset;
-+	bool is_mgmt;
- };
- 
- struct rtw_sdio_work_data {
--	struct work_struct work;
-+	struct delayed_work work;
- 	struct rtw_dev *rtwdev;
- };
- 
-@@ -159,6 +170,13 @@ struct rtw_sdio {
- 	struct workqueue_struct *txwq;
- 	struct rtw_sdio_work_data *tx_handler_data;
- 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
-+	bool queue_stopped[RTK_MAX_TX_QUEUE_NUM];
 +
-+	atomic_t free_pg_high;
-+	atomic_t free_pg_normal;
-+	atomic_t free_pg_low;
-+	atomic_t free_pg_pub;
-+	atomic_t tx_oqt_free;
- };
- 
- extern const struct dev_pm_ops rtw_sdio_pm_ops;
-diff --git a/drivers/net/wireless/realtek/rtw88/sec.h b/drivers/net/wireless/realtek/rtw88/sec.h
-index efcf45433999..73f2af66effe 100644
---- a/drivers/net/wireless/realtek/rtw88/sec.h
-+++ b/drivers/net/wireless/realtek/rtw88/sec.h
-@@ -22,6 +22,7 @@
- #define RTW_SEC_RX_DEC_EN		BIT(3)
- #define RTW_SEC_TX_BC_USE_DK		BIT(6)
- #define RTW_SEC_RX_BC_USE_DK		BIT(7)
-+#define RTW_SEC_CHK_KEYID		BIT(8)
- 
- #define RTW_SEC_ENGINE_EN		BIT(9)
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 9d747a060b98..797c1e0402f2 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -208,8 +208,9 @@ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn)
- 	__skb_queue_tail(&tx_report->queue, skb);
- 	spin_unlock_irqrestore(&tx_report->q_lock, flags);
- 
--	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
--	    rtwdev->hci.type == RTW_HCI_TYPE_USB)
-+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8723D &&
-+	     rtwdev->hci.type == RTW_HCI_TYPE_USB) ||
-+	    rtw_is_8723bs(rtwdev))
- 		timeout = msecs_to_jiffies(2500);
- 
- 	mod_timer(&tx_report->purge_timer, jiffies + timeout);
++	for (i = 0; i < PATH_IQK_RETRY; i++) {
++		a_ok = rtw8723b_iqk_rx_path_a(rtwdev);
++		if (a_ok == (IQK_TX_OK | IQK_RX_OK)) {
++			rtw_dbg(rtwdev, RTW_DBG_RFK,
++				"[IQK] path A RX IQK success!\n");
++			result[t][IQK_S1_RX_X] =
++				rtw_read32_mask(rtwdev, REG_IQK_RES_RX,
++						BIT_MASK_RES_RX);
++			result[t][IQK_S1_RX_Y] =
++				rtw_read32_mask(rtwdev, REG_IQK_RES_RY,
++						BIT_MASK_RES_RY);
++			break;
++		}
++
++		rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A RX IQK fail!\n");
++		result[t][IQK_S1_RX_X] = 0x100;
++		result[t][IQK_S1_RX_Y] = 0x0;
++	}
++
++	if (a_ok == 0x0)
++		rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] path A IQK fail!\n");
++
++	/* rtl8723b is 1T1R, so path B is not calibrated. */
++
++	rtw_write32_mask(rtwdev, REG_FPGA0_IQK_11N, MASKH3BYTES, 0x000000);
++}
++
++static void rtw8723b_phy_calibration(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw8723x_iqk_backup_regs backup;
++	s32 result[IQK_ROUND_SIZE][IQK_NR];
++	u8 final_candidate = IQK_ROUND_INVALID;
++	u32 bt_control;
++	bool good;
++	u8 i, j;
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] Start!\n");
++	memset(result, 0, sizeof(result));
++
++	rtw8723b_lck(rtwdev);
++	rtw8723b_inform_rfk_status(rtwdev, true);
++
++	/* The LTE path GNT backup that 8723d does is not needed on SDIO. */
++	rtw8723x_iqk_backup_path_ctrl(rtwdev, &backup);
++	rtw8723x_iqk_backup_regs(rtwdev, &backup);
++
++	/* save default GNT_BT */
++	bt_control = rtw_read32(rtwdev, REG_BT_CONTROL_8723B);
++
++	for (i = IQK_ROUND_0; i <= IQK_ROUND_2; i++) {
++		if (!rtw8723b_sdio_needs_rx_path_fix(rtwdev))
++			rtw8723x_iqk_config_path_ctrl(rtwdev);
++
++		rtw8723b_iqk_one_round(rtwdev, result, i, &backup);
++
++		rtw_dbg(rtwdev, RTW_DBG_RFK,
++			"[IQK] back to BB mode, load original value!\n");
++
++		if (i > IQK_ROUND_0) {
++			rtw8723x_iqk_restore_regs(rtwdev, &backup);
++
++			/* Restore RX initial gain */
++			rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x50);
++			rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, backup.igia);
++
++			/* path B; only for 2T */
++
++			/* load 0xe30 IQC default value */
++			rtw_write32(rtwdev, REG_TXIQK_TONE_A_11N, 0x01008c00);
++			rtw_write32(rtwdev, REG_RXIQK_TONE_A_11N, 0x01008c00);
++		}
++
++		if (!rtw8723b_sdio_needs_rx_path_fix(rtwdev))
++			rtw8723x_iqk_restore_path_ctrl(rtwdev, &backup);
++
++		for (j = IQK_ROUND_0; j < i; j++) {
++			good = rtw8723x_iqk_similarity_cmp(rtwdev, result, j, i);
++			if (good) {
++				final_candidate = j;
++				rtw_dbg(rtwdev, RTW_DBG_RFK,
++					"[IQK] cmp %d:%d final_candidate is %x\n",
++					j, i, final_candidate);
++				goto iqk_done;
++			}
++		}
++	}
++
++	if (final_candidate == IQK_ROUND_INVALID) {
++		s32 reg_tmp = 0;
++
++		for (i = 0; i < IQK_NR; i++)
++			reg_tmp += result[IQK_ROUND_HYBRID][i];
++
++		if (reg_tmp != 0) {
++			final_candidate = IQK_ROUND_HYBRID;
++		} else {
++			WARN(1, "IQK failed\n");
++			goto out;
++		}
++	}
++
++iqk_done:
++	if (result[final_candidate][IQK_S1_TX_X])
++		rtw8723b_iqk_fill_a_matrix(rtwdev, result[final_candidate]);
++	if (result[final_candidate][IQK_S0_TX_X])
++		rtw8723b_iqk_fill_b_matrix(rtwdev, result[final_candidate]);
++
++	dm_info->iqk.result.s1_x = result[final_candidate][IQK_S1_TX_X];
++	dm_info->iqk.result.s1_y = result[final_candidate][IQK_S1_TX_Y];
++	dm_info->iqk.result.s0_x = result[final_candidate][IQK_S0_TX_X];
++	dm_info->iqk.result.s0_y = result[final_candidate][IQK_S0_TX_Y];
++	dm_info->iqk.done = true;
++
++out:
++	/* restore RF path */
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, backup.bb_sel_btg);
++
++	/* restore GNT_BT */
++	rtw_write32(rtwdev, REG_BT_CONTROL_8723B, bt_control);
++
++	/* Restore RX mode table parameter */
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, 0x80000, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_ADDR, RFREG_MASK, 0x18000);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA0, RFREG_MASK, 0x0001f);
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_MODE_TABLE_DATA1, RFREG_MASK, 0xe6177);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0xed, 0x20, 0x1);
++	rtw_write_rf(rtwdev, RF_PATH_A, 0x43, RFREG_MASK, 0x300bd);
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] final_candidate is %x\n",
++		final_candidate);
++
++	for (i = IQK_ROUND_0; i < IQK_ROUND_SIZE; i++)
++		rtw_dbg(rtwdev, RTW_DBG_RFK,
++			"[IQK] Result %u: rege94_s1=%x rege9c_s1=%x regea4_s1=%x regeac_s1=%x rege94_s0=%x rege9c_s0=%x regea4_s0=%x regeac_s0=%x %s\n",
++			i,
++			result[i][0], result[i][1], result[i][2], result[i][3],
++			result[i][4], result[i][5], result[i][6], result[i][7],
++			final_candidate == i ? "(final candidate)" : "");
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK]0xc80 = 0x%x 0xc94 = 0x%x 0xc14 = 0x%x 0xca0 = 0x%x\n",
++	rtw_read32(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE),
++		rtw_read32(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N),
++		rtw_read32(rtwdev, REG_A_RXIQI),
++		rtw_read32(rtwdev, REG_RXIQK_MATRIX_LSB_11N));
++	rtw_dbg(rtwdev, RTW_DBG_RFK,
++		"[IQK]0xcd0 = 0x%x 0xcd4 = 0x%x 0xcd8 = 0x%x\n",
++	rtw_read32(rtwdev, REG_TXIQ_AB_S0),
++		rtw_read32(rtwdev, REG_TXIQ_CD_S0),
++		rtw_read32(rtwdev, REG_RXIQ_AB_S0));
++
++	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] finished\n");
++
++	rtw8723b_inform_rfk_status(rtwdev, false);
++}
++
++static void rtw8723b_pwrtrack_set_ofdm_pwr(struct rtw_dev *rtwdev, s8 swing_idx,
++					   s8 txagc_idx)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	dm_info->txagc_remnant_ofdm[RF_PATH_A] = txagc_idx;
++
++	rtw8723b_set_iqk_matrix(rtwdev, swing_idx, RF_PATH_A);
++}
++
++static void rtw8723b_pwrtrack_set_cck_pwr(struct rtw_dev *rtwdev, s8 swing_idx,
++					  s8 txagc_idx)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	dm_info->txagc_remnant_cck = txagc_idx;
++
++	swing_idx = clamp_t(s8, swing_idx, 0, RTW_CCK_SWING_TABLE_SIZE - 1);
++
++	BUILD_BUG_ON(ARRAY_SIZE(rtw8723b_cck_pwr_regs) !=
++		     ARRAY_SIZE(rtw8732b_cck_swing_table_ch1_ch13[0]));
++
++	/*
++	 * Only the ch1-13 CCK swing table is wired up. Channel 14 needs its
++	 * own table but is Japan-only and not reachable here.
++	 */
++	for (int i = 0; i < ARRAY_SIZE(rtw8723b_cck_pwr_regs); i++)
++		rtw_write8(rtwdev, rtw8723b_cck_pwr_regs[i],
++			   rtw8732b_cck_swing_table_ch1_ch13[swing_idx][i]);
++}
++
++static void rtw8723b_pwrtrack_set(struct rtw_dev *rtwdev, u8 path)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 limit_ofdm;
++	/* 8703b and 8723d seem to use RTW_CCK_SWING_TABLE_SIZE */
++	u8 limit_cck = 28; /* -2dB */
++	s8 final_ofdm_swing_index;
++	s8 final_cck_swing_index;
++
++	limit_ofdm = rtw8723x_pwrtrack_get_limit_ofdm(rtwdev);
++
++	final_ofdm_swing_index = dm_info->default_ofdm_index +
++				 dm_info->delta_power_index[path];
++	final_cck_swing_index = dm_info->default_cck_index +
++				dm_info->delta_power_index[path];
++
++	if (final_ofdm_swing_index > limit_ofdm)
++		rtw8723b_pwrtrack_set_ofdm_pwr(rtwdev, limit_ofdm,
++					       final_ofdm_swing_index - limit_ofdm);
++	else if (final_ofdm_swing_index < 0)
++		rtw8723b_pwrtrack_set_ofdm_pwr(rtwdev, 0,
++					       final_ofdm_swing_index);
++	else
++		rtw8723b_pwrtrack_set_ofdm_pwr(rtwdev, final_ofdm_swing_index, 0);
++
++	if (final_cck_swing_index > limit_cck)
++		rtw8723b_pwrtrack_set_cck_pwr(rtwdev, limit_cck,
++					      final_cck_swing_index - limit_cck);
++	else if (final_cck_swing_index < 0)
++		rtw8723b_pwrtrack_set_cck_pwr(rtwdev, 0,
++					      final_cck_swing_index);
++	else
++		rtw8723b_pwrtrack_set_cck_pwr(rtwdev, final_cck_swing_index, 0);
++
++	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
++}
++
++static void rtw8723b_phy_pwrtrack(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_swing_table swing_table;
++	u8 thermal_value, delta, path;
++	bool do_iqk = false;
++
++	rtw_phy_config_swing_table(rtwdev, &swing_table);
++
++	if (rtwdev->efuse.thermal_meter[0] == 0xff)
++		return;
++
++	thermal_value = rtw_read_rf(rtwdev, RF_PATH_A, RF_T_METER, 0xfc00);
++
++	/* Average the thermal meter readings. */
++	rtw_phy_pwrtrack_avg(rtwdev, thermal_value, RF_PATH_A);
++
++	do_iqk = rtw_phy_pwrtrack_need_iqk(rtwdev);
++
++	/*
++	 * matches rtw8723d power tracking: LCK via the common helper on the
++	 * IQK trigger, then the IQK itself below
++	 */
++	if (do_iqk)
++		rtw8723x_lck(rtwdev);
++
++	if (dm_info->pwr_trk_init_trigger)
++		dm_info->pwr_trk_init_trigger = false;
++	else if (!rtw_phy_pwrtrack_thermal_changed(rtwdev, thermal_value,
++						   RF_PATH_A))
++		goto iqk;
++
++	delta = rtw_phy_pwrtrack_get_delta(rtwdev, RF_PATH_A);
++
++	/* NOTE: also done in rtw_phy_pwrtrack_get_delta */
++	delta = min_t(u8, delta, RTW_PWR_TRK_TBL_SZ - 1);
++
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		s8 delta_cur, delta_last;
++
++		delta_last = dm_info->delta_power_index[path];
++		delta_cur = rtw_phy_pwrtrack_get_pwridx(rtwdev, &swing_table,
++							path, RF_PATH_A, delta);
++		if (delta_last == delta_cur)
++			continue;
++
++		dm_info->delta_power_index[path] = delta_cur;
++		rtw8723b_pwrtrack_set(rtwdev, path);
++	}
++
++iqk:
++	if (do_iqk)
++		rtw8723b_phy_calibration(rtwdev);
++}
++
++static void rtw8723b_pwr_track(struct rtw_dev *rtwdev)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	if (efuse->power_track_type != 0) {
++		rtw_warn(rtwdev, "unsupported power track type");
++		return;
++	}
++
++	if (!dm_info->pwr_trk_triggered) {
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_T_METER,
++			     GENMASK(17, 16), 0x03);
++		dm_info->pwr_trk_triggered = true;
++		return;
++	}
++
++	rtw8723b_phy_pwrtrack(rtwdev);
++	dm_info->pwr_trk_triggered = false;
++}
++
++static void rtw8723b_coex_cfg_init(struct rtw_dev *rtwdev)
++{
++	/* enable TBTT nterrupt */
++	rtw_write8_mask(rtwdev, 0x550, 0x8, 0x1);
++
++	/* 0x790[5:0]= 0x5 */
++	rtw_write8(rtwdev, 0x790, 0x5);
++
++	/* enable counter statistics */
++	rtw_write8(rtwdev, 0x778, 0x1);
++	rtw_write8_mask(rtwdev, 0x40, 0x20, 0x1);
++}
++
++static void rtw8723b_coex_set_gnt_fix(struct rtw_dev *rtwdev)
++{
++	/* intentionally empty: rtw8723d's coex_set_gnt_fix is empty too */
++}
++
++static void rtw8723b_coex_set_gnt_debug(struct rtw_dev *rtwdev)
++{
++	/*
++	 * Not implemented: rtw8723d routes GNT_BT to debug GPIOs here
++	 * (REG_LEDCFG2/REG_PAD_CTRL1/REG_GPIO_*).  That is coex debug
++	 * instrumentation only and is not needed for normal operation.
++	 */
++}
++
++static bool rtw8723b_coex_ant_is_aux(struct rtw_dev *rtwdev)
++{
++	return !!(rtwdev->efuse.bt_setting & BIT(6));
++}
++
++static void rtw8723b_coex_write8_verify(struct rtw_dev *rtwdev, u32 addr,
++					u8 value)
++{
++	u8 readback;
++
++	rtw_write8(rtwdev, addr, value);
++	readback = rtw_read8(rtwdev, addr);
++	if (readback == value)
++		return;
++
++	usleep_range(10, 11);
++	rtw_write8(rtwdev, addr, value);
++}
++
++static void rtw8723b_coex_set_ant_ctrl_by_wifi(struct rtw_dev *rtwdev)
++{
++	/* 0x4c[23] = 1, 0x4c[24] = 0: antenna control by 0x64. */
++	rtw_write32_clr(rtwdev, REG_LED_CFG, BIT(24));
++	rtw_write32_set(rtwdev, REG_LED_CFG, BIT(23));
++}
++
++static void rtw8723b_coex_set_ant_ctrl_by_bt(struct rtw_dev *rtwdev)
++{
++	/* 0x4c[24:23] = 0: antenna control by BT_RFE_CTRL. */
++	rtw_write32_clr(rtwdev, REG_LED_CFG, BIT(23) | BIT(24));
++}
++
++static void rtw8723b_coex_cfg_ant_buffer(struct rtw_dev *rtwdev)
++{
++	u8 sys_func_before;
++
++	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
++	if ((sys_func_before & WLAN_SYS_FUNC_BB_ENABLE) !=
++	    WLAN_SYS_FUNC_BB_ENABLE) {
++		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
++			       WLAN_SYS_FUNC_BB_ENABLE);
++		usleep_range(10, 11);
++	}
++
++	rtw_write8_set(rtwdev, REG_BT_COEX_CTRL_8723B, BIT(3));
++	rtw8723b_coex_write8_verify(rtwdev, REG_RFE_CTRL_E, 0xff);
++	rtw_write8_mask(rtwdev, REG_BB_ANT_CFG1_8723B, 0x3, 0x3);
++	rtw_write8(rtwdev, REG_BB_ANT_CFG_8723B, 0x77);
++}
++
++static u32 rtw8723b_coex_write_bb_sel_btg(struct rtw_dev *rtwdev, u32 value)
++{
++	u8 sys_func_before;
++	u32 readback;
++
++	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_SDIO) {
++		rtw_write32(rtwdev, REG_BB_SEL_BTG, value);
++		return rtw_read32(rtwdev, REG_BB_SEL_BTG);
++	}
++
++	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
++	if ((sys_func_before & WLAN_SYS_FUNC_BB_ENABLE) !=
++	    WLAN_SYS_FUNC_BB_ENABLE) {
++		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
++			       WLAN_SYS_FUNC_BB_ENABLE);
++		usleep_range(10, 11);
++	}
++
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, value);
++	readback = rtw_read32(rtwdev, REG_BB_SEL_BTG);
++	if (readback == value)
++		return readback;
++
++	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, WLAN_SYS_FUNC_BB_ENABLE);
++	usleep_range(10, 11);
++	rtw_write32(rtwdev, REG_BB_SEL_BTG, value);
++
++	return rtw_read32(rtwdev, REG_BB_SEL_BTG);
++}
++
++static u32 rtw8723b_coex_ant_path_value(struct rtw_dev *rtwdev, u8 pos_type)
++{
++	bool aux = rtw8723b_coex_ant_is_aux(rtwdev);
++
++	switch (pos_type) {
++	case COEX_SWITCH_TO_BT:
++		return aux ? 0x0 : 0x280;
++	case COEX_SWITCH_TO_WLG:
++	case COEX_SWITCH_TO_WLA:
++		return aux ? 0x280 : 0x0;
++	case COEX_SWITCH_TO_WLG_BT:
++	case COEX_SWITCH_TO_NOCARE:
++	default:
++		return aux ? 0x80 : 0x200;
++	}
++}
++
++static void rtw8723b_coex_cfg_ant_switch(struct rtw_dev *rtwdev,
++					 u8 ctrl_type, u8 pos_type)
++{
++	u32 ant_path;
++
++	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_SDIO)
++		return;
++
++	if (ctrl_type == COEX_SWITCH_CTRL_BY_BT) {
++		rtw_write8(rtwdev, REG_GNT_BT, 0x18);
++		rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL, 0x4);
++		rtw_write8_clr(rtwdev, REG_BT_ANT_SEL_8723B,
++			       BIT_BT_SEL_BY_WIFI_8723B);
++		rtw8723b_coex_set_ant_ctrl_by_bt(rtwdev);
++		ant_path = rtw8723b_coex_ant_path_value(rtwdev,
++							COEX_SWITCH_TO_BT);
++		rtw8723b_coex_write_bb_sel_btg(rtwdev, ant_path);
++
++		rtw_dbg(rtwdev, RTW_DBG_COEX,
++			"[BTCoex], 8723bs ant switch by BT BB_SEL_BTG=0x%08x 0x4c=0x%08x 0x67=0x%02x 0x765=0x%02x 0x76e=0x%02x\n",
++			rtw_read32(rtwdev, REG_BB_SEL_BTG),
++			rtw_read32(rtwdev, REG_LED_CFG),
++			rtw_read8(rtwdev, REG_BT_ANT_SEL_8723B),
++			rtw_read8(rtwdev, REG_GNT_BT),
++			rtw_read8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL));
++		return;
++	}
++
++	rtw8723b_coex_set_ant_ctrl_by_wifi(rtwdev);
++	rtw_write8(rtwdev, REG_BT_ANT_SEL_8723B, 0x20);
++
++	if (ctrl_type == COEX_SWITCH_CTRL_BY_BBSW &&
++	    pos_type == COEX_SWITCH_TO_BT) {
++		rtw_write8(rtwdev, REG_GNT_BT, 0x18);
++		rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL, 0x4);
++	} else {
++		if (rtw_read8(rtwdev, REG_GNT_BT) != 0)
++			rtw_write8(rtwdev, REG_GNT_BT, 0x0);
++
++		if (rtw_read8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL) != 0xc)
++			rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL, 0xc);
++	}
++
++	if (ctrl_type == COEX_SWITCH_CTRL_BY_BBSW)
++		ant_path = rtw8723b_coex_ant_path_value(rtwdev, pos_type);
++	else
++		ant_path = rtw8723b_coex_ant_path_value(rtwdev,
++							COEX_SWITCH_TO_NOCARE);
++
++	rtw8723b_coex_write_bb_sel_btg(rtwdev, ant_path);
++	rtw8723b_sdio_restore_pad_ctrl(rtwdev,
++				       ctrl_type == COEX_SWITCH_CTRL_BY_PTA);
++
++	rtw_dbg(rtwdev, RTW_DBG_COEX,
++		"[BTCoex], 8723bs ant switch ctrl=%u pos=%u BB_SEL_BTG=0x%08x 0x4c=0x%08x 0x67=0x%02x 0x765=0x%02x 0x76e=0x%02x\n",
++		ctrl_type, pos_type, rtw_read32(rtwdev, REG_BB_SEL_BTG),
++		rtw_read32(rtwdev, REG_LED_CFG),
++		rtw_read8(rtwdev, REG_BT_ANT_SEL_8723B),
++		rtw_read8(rtwdev, REG_GNT_BT),
++		rtw_read8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL));
++}
++
++static void rtw8723b_coex_set_rfe_type(struct rtw_dev *rtwdev)
++{
++	struct rtw_coex *coex = &rtwdev->coex;
++	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
++	enum rtw_hci_type hci_type = rtw_hci_type(rtwdev);
++	bool aux = rtw8723b_coex_ant_is_aux(rtwdev);
++	u32 reg;
++
++	coex_rfe->rfe_module_type = rtwdev->efuse.rfe_option;
++	coex_rfe->ant_switch_polarity = aux ? 1 : 0;
++	coex_rfe->ant_switch_exist = hci_type == RTW_HCI_TYPE_SDIO;
++	coex_rfe->ant_switch_with_bt = false;
++	coex_rfe->ant_switch_diversity = false;
++	coex_rfe->wlg_at_btg = true;
++
++	rtw_write8(rtwdev, REG_BT_ANT_SEL_8723B, 0x20);
++
++	/* set GRAN_BT = 1 */
++	rtw_write8(rtwdev, REG_GNT_BT, 0x18);
++
++	/* set WLAN_ACT = 0 */
++	rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL, 0x4);
++
++	switch (hci_type) {
++	case RTW_HCI_TYPE_USB:
++		rtw8723b_coex_write_bb_sel_btg(rtwdev, 0x0);
++		rtw_write8(rtwdev, 0xfe08, 0x1); /* antenna inverse */
++		break;
++	case RTW_HCI_TYPE_PCIE:
++		reg = 0x384;
++		/*
++		 * efuse 0xc3[6] == 0, S1(Main), RF_PATH_A
++		 * efuse 0xc3[6] == 1, S0(Aux), RF_PATH_B
++		 */
++		if (aux) {
++			rtw8723b_coex_write_bb_sel_btg(rtwdev, 0x0);
++			rtw_write8(rtwdev, reg, 0x1);
++		} else {
++			rtw8723b_coex_write_bb_sel_btg(rtwdev, 0x280);
++			rtw_write8(rtwdev, reg, 0x0);
++		}
++		break;
++	case RTW_HCI_TYPE_SDIO:
++		/*
++		 * Internal antenna switch: keep WiFi TRx enabled, let WiFi
++		 * drive S0/S1, and program the firmware antenna-inverse hint.
++		 */
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_WLINT, RFREG_MASK, 0x0780);
++
++		rtw_write8(rtwdev, REG_BT_ANT_SEL_8723B, 0x20);
++		rtw_write8(rtwdev, REG_GNT_BT, 0x18);
++		rtw_write8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL, 0x4);
++
++		if (aux) {
++			rtw8723b_coex_write_bb_sel_btg(rtwdev, 0x0);
++			rtw_write8(rtwdev, REG_SDIO_H2C, 0x1);
++		} else {
++			rtw8723b_coex_write_bb_sel_btg(rtwdev, 0x280);
++			rtw_write8(rtwdev, REG_SDIO_H2C, 0x0);
++		}
++
++		rtw8723b_coex_set_ant_ctrl_by_wifi(rtwdev);
++		rtw_write8_mask(rtwdev, REG_PAD_CTRL1,
++				BIT_SW_DPDT_SEL_DATA, 0x0);
++		rtw8723b_coex_cfg_ant_buffer(rtwdev);
++		rtw8723b_sdio_restore_pad_ctrl(rtwdev, false);
++
++		/*
++		 * COEX_ANT_SEL_RSV is sent later from rtw_power_on(). The
++		 * register writes above stay here so the RFE and antenna
++		 * hardware are initialised before IQK.
++		 */
++		break;
++	default:
++		break;
++	}
++}
++
++static void rtw8723b_coex_set_wl_tx_power(struct rtw_dev *rtwdev, u8 wl_pwr)
++{
++	/*
++	 * Not implemented: rtw8723d adjusts WL Tx power (0xb2/0x90) when BT is
++	 * active.  Coexistence quality only, not needed for basic operation;
++	 * deferred like coex_set_wl_rx_gain.
++	 */
++}
++
++static void rtw8723b_coex_set_wl_rx_gain(struct rtw_dev *rtwdev, bool low_gain)
++{
++	/*
++	 * Not implemented: rtw8723d lowers the WL Rx AGC via gain tables when
++	 * BT is active.  This only affects WiFi/BT coexistence quality under
++	 * concurrent BT traffic, not basic operation; deferred.
++	 */
++}
++
++static void rtw8723b_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
++{
++	/*
++	 * Intentionally empty: the 2.5V efuse LDO is only needed when writing
++	 * the efuse, and rtw88 only ever reads it.
++	 */
++}
++
++static void rtw8723b_fill_txdesc_checksum(struct rtw_dev *rtwdev,
++					  struct rtw_tx_pkt_info *pkt_info,
++					  u8 *txdesc)
++{
++	struct rtw_tx_desc *tx_desc = (struct rtw_tx_desc *)txdesc;
++	const u8 *data = txdesc;
++	u16 checksum = 0;
++	int words = 32 / 2;
++
++	/*
++	 * Unlike the shared 8723x helper, the 8723B does not invert the XOR
++	 * checksum over the first 16 half-words of the TX descriptor.
++	 */
++	le32p_replace_bits(&tx_desc->w7, 0, RTW_TX_DESC_W7_TXDESC_CHECKSUM);
++
++	while (words--) {
++		checksum ^= get_unaligned_le16(data);
++		data += sizeof(__le16);
++	}
++
++	le32p_replace_bits(&tx_desc->w7, checksum,
++			   RTW_TX_DESC_W7_TXDESC_CHECKSUM);
++}
++
++static const struct rtw_chip_ops rtw8723b_ops = {
++	.power_on		= rtw_power_on,
++	.power_off		= rtw_power_off,
++
++	.mac_init		= rtw8723b_mac_init,
++	.mac_postinit		= rtw8723x_mac_postinit,
++
++	.dump_fw_crash		= NULL,
++	/*
++	 * 8723d sets REG_HCI_OPT_CTRL to BIT_USB_SUS_DIS in
++	 * its shutdown fubction, not needed for SDIO devices.
++	 */
++	.shutdown		= NULL,
++	.read_efuse		= rtw8723x_read_efuse,
++	.phy_set_param		= rtw8723b_phy_set_param,
++
++	.set_channel		= rtw8723b_set_channel,
++
++	.query_phy_status	= rtw8723b_query_phy_status,
++	.read_rf		= rtw_phy_read_rf_sipi,
++	.write_rf		= rtw_phy_write_rf_reg_sipi,
++	.set_tx_power_index	= rtw8723x_set_tx_power_index,
++	.rsvd_page_dump		= NULL,
++	.set_antenna		= NULL,
++	.cfg_ldo25		= rtw8723b_cfg_ldo25,
++	.efuse_grant		= rtw8723b_efuse_grant,
++	.set_ampdu_factor	= NULL,
++	.false_alarm_statistics	= rtw8723x_false_alarm_statistics,
++	.phy_calibration	= rtw8723b_phy_calibration,
++	.dpk_track		= NULL,
++	/*
++	 * REG_CSRATIO does not exist on this chip generation, so there is
++	 * nothing to read back for cck_pd_set. rtw8703b leaves this NULL too.
++	 */
++	.cck_pd_set		= NULL,
++	.pwr_track		= rtw8723b_pwr_track,
++	.config_bfee		= NULL,
++	.set_gid_table		= NULL,
++	.cfg_csi_rate		= NULL,
++	.adaptivity_init	= NULL,
++	.adaptivity		= NULL,
++	.cfo_init		= NULL,
++	.cfo_track		= NULL,
++	.config_tx_path		= NULL,
++	.config_txrx_mode	= NULL,
++	.led_set		= NULL,
++	.fill_txdesc_checksum	= rtw8723b_fill_txdesc_checksum,
++
++	.coex_set_init		= rtw8723b_coex_cfg_init,
++	.coex_set_ant_switch	= rtw8723b_coex_cfg_ant_switch,
++	.coex_set_gnt_fix	= rtw8723b_coex_set_gnt_fix,
++	.coex_set_gnt_debug	= rtw8723b_coex_set_gnt_debug,
++	.coex_set_rfe_type	= rtw8723b_coex_set_rfe_type,
++	.coex_set_wl_tx_power	= rtw8723b_coex_set_wl_tx_power,
++	.coex_set_wl_rx_gain	= rtw8723b_coex_set_wl_rx_gain,
++};
++
++const struct rtw_chip_info rtw8723b_hw_spec = {
++	.ops = &rtw8723b_ops,
++	.id = RTW_CHIP_TYPE_8723B,
++	.fw_name = "rtw88/rtw8723b_fw.bin",
++	.wlan_cpu = RTW_WCPU_8051,
++	.tx_pkt_desc_sz = 40,
++	.tx_buf_desc_sz = 16,
++	.rx_pkt_desc_sz = 24,
++	.rx_buf_desc_sz = 8,
++	.phy_efuse_size = 512,
++	.log_efuse_size = 512,
++	.ptct_efuse_size = 15,
++
++	.txff_size = 32768,
++	.rxff_size = 16384,
++	.rsvd_drv_pg_num = 8,
++
++	.txgi_factor = 1,
++	.is_pwr_by_rate_dec = true,
++	.rx_ldpc = false,
++	.tx_stbc = false,
++
++	.max_power_index = 0x3f,
++
++	.csi_buf_pg_num = 0,
++	.band = RTW_BAND_2G,
++	.page_size = TX_PAGE_SIZE,
++
++	.dig_min = 0x20,
++	.usb_tx_agg_desc_num = 1,
++
++	/*
++	 * The firmware reports id 0xfd instead of C2H_HW_FEATURE_REPORT, so
++	 * the hardware feature report is not supported on this chip.
++	 */
++	.hw_feature_report = false,
++
++	.c2h_ra_report_size = 4,	/* rtw88/rtw8723b_fw.bin v41 emits the
++					 * legacy 8051 4-byte rate report
++					 * (rate_sgi, mac_id, byte2, status).
++					 * Setting this to 7 — like the upstream
++					 * default — caused every C2H_RA_REPORT
++					 * to be dropped with
++					 * "short ra report c2h length 4
++					 * expected 7" on every connect attempt
++					 * so the firmware-driven rate adaptation
++					 * feedback path
++					 * never updated si->ra_report. The
++					 * legacy 8051 8723b/8703b/8723d firmware
++					 * uses the same 4-byte format as the
++					 * older 8821a/8812a chips. byte4..bw fall
++					 * back to the per-station defaults in
++					 * rtw_fw_ra_report_iter(), which matches
++					 * what those chips already do safely.
++					 */
++	.old_datarate_fb_limit = true,	/* likely true; see main-line commit c7706b1 */
++
++	.path_div_supported = false,
++	.ht_supported = true,
++	.vht_supported = false,
++	.lps_deep_mode_supported = 0,
++
++	.sys_func_en = 0xfd,
++	.pwr_on_seq = card_enable_flow_8723b,
++	.pwr_off_seq = card_disable_flow_8723b,
++	.page_table = page_table_8723b,
++
++	.rqpn_table = rqpn_table_8723b,
++	/* same shared table as the sibling rtw8703b and rtw8723d */
++	.prioq_addrs = &rtw8723x_common.prioq_addrs,
++
++	/* used only in pci.c, not needed for SDIO devices */
++	.intf_table = NULL,
++
++	.dig = rtw8723x_common.dig,
++	.dig_cck = rtw8723x_common.dig_cck,
++
++	.rf_sipi_addr = {0x840, 0x844},
++	.rf_sipi_read_addr = rtw8723x_common.rf_sipi_addr,
++
++	.fix_rf_phy_num = 2,
++
++	/* This chip has no LTE coex registers. */
++	.ltecoex_addr = NULL,
++
++	.mac_tbl = &rtw8723b_mac_tbl,
++	.agc_tbl = &rtw8723b_agc_tbl,
++	.bb_tbl = &rtw8723b_bb_tbl,
++	.rf_tbl = {&rtw8723b_rf_a_tbl},
++
++	.rfe_defs = rtw8723b_rfe_defs,
++	.rfe_defs_size = ARRAY_SIZE(rtw8723b_rfe_defs),
++	.iqk_threshold = 8,
++	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_16,
++	.max_scan_ie_len = IEEE80211_MAX_DATA_LEN,
++
++	.coex_para_ver = 20180201,
++	.bt_desired_ver = 0x6d,
++	.scbd_support = false,
++	.new_scbd10_def = true,
++	.ble_hid_profile_support = false,
++	.wl_mimo_ps_support = false,
++	.pstdma_type = COEX_PSTDMA_FORCE_LPSOFF,
++	.bt_rssi_type = COEX_BTRSSI_RATIO,
++	.ant_isolation = 15,
++	.rssi_tolerance = 2,
++	.wl_rssi_step = wl_rssi_step_8723b,
++	.bt_rssi_step = bt_rssi_step_8723b,
++	.table_sant_num = ARRAY_SIZE(table_sant_8723b),
++	.table_sant = table_sant_8723b,
++	.table_nsant_num = ARRAY_SIZE(table_nsant_8723b),
++	.table_nsant = table_nsant_8723b,
++	.tdma_sant_num = ARRAY_SIZE(tdma_sant_8723b),
++	.tdma_sant = tdma_sant_8723b,
++	.tdma_nsant_num = ARRAY_SIZE(tdma_nsant_8723b),
++	.tdma_nsant = tdma_nsant_8723b,
++	.wl_rf_para_num = ARRAY_SIZE(rf_para_tx_8723b),
++	.wl_rf_para_tx = rf_para_tx_8723b,
++	.wl_rf_para_rx = rf_para_rx_8723b,
++	.bt_afh_span_bw20 = 0x20,
++	.bt_afh_span_bw40 = 0x30,
++	.afh_5g_num =  ARRAY_SIZE(afh_5g_8723b),
++	.afh_5g = afh_5g_8723b,
++	/* BTG_SEL is driven by the cardemu_to_act power sequence instead. */
++	.btg_reg = NULL,
++
++	/*
++	 * These registers are used to read (and print) from if
++	 * CONFIG_RTW88_DEBUGFS is enabled.
++	 */
++	.coex_info_hw_regs_num = 0,
++	.coex_info_hw_regs = NULL,
++};
++EXPORT_SYMBOL(rtw8723b_hw_spec);
++
++MODULE_FIRMWARE("rtw88/rtw8723b_fw.bin");
++
++MODULE_AUTHOR("Luka Gejak <luka.gejak@linux.dev>");
++MODULE_AUTHOR("Michael Straube <straube.linux@gmail.com>");
++MODULE_DESCRIPTION("Realtek 802.11n wireless 8723b driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b.h b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
+new file mode 100644
+index 000000000000..2880d41e4b01
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b.h
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright(c) 2018-2019  Realtek Corporation
++ */
++
++#ifndef __RTW8723B_H__
++#define __RTW8723B_H__
++
++#include "rtw8723x.h"
++
++extern const struct rtw_chip_info rtw8723b_hw_spec;
++
++/* shared with rtw8703b.c; could move to rtw8723x.h */
++#define REG_TXIQK_MATRIXB_LSB2_11N 0x0c9c
++#define REG_BB_PWR_SAV5_11N 0x0818
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
+new file mode 100644
+index 000000000000..49989da3b8aa
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.c
+@@ -0,0 +1,862 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/*
++ * Copyright(c) 2007-2017  Realtek Corporation
++ * Copyright(c) Michael Straube <straube.linux@gmail.com>
++ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
++ */
++
++#include "main.h"
++#include "phy.h"
++#include "rtw8723b_table.h"
++
++static const u32 rtw8723b_mac[] = {
++	0x02F, 0x00000030,
++	0x035, 0x00000000,
++	0x039, 0x00000008,
++	0x064, 0x00000000,
++	0x067, 0x00000020,
++	0x421, 0x0000000F,
++	0x428, 0x0000000A,
++	0x429, 0x00000010,
++	0x430, 0x00000000,
++	0x431, 0x00000000,
++	0x432, 0x00000000,
++	0x433, 0x00000001,
++	0x434, 0x00000004,
++	0x435, 0x00000005,
++	0x436, 0x00000007,
++	0x437, 0x00000008,
++	0x43C, 0x00000004,
++	0x43D, 0x00000005,
++	0x43E, 0x00000007,
++	0x43F, 0x00000008,
++	0x440, 0x0000005D,
++	0x441, 0x00000001,
++	0x442, 0x00000000,
++	0x444, 0x00000010,
++	0x445, 0x00000000,
++	0x446, 0x00000000,
++	0x447, 0x00000000,
++	0x448, 0x00000000,
++	0x449, 0x000000F0,
++	0x44A, 0x0000000F,
++	0x44B, 0x0000003E,
++	0x44C, 0x00000010,
++	0x44D, 0x00000000,
++	0x44E, 0x00000000,
++	0x44F, 0x00000000,
++	0x450, 0x00000000,
++	0x451, 0x000000F0,
++	0x452, 0x0000000F,
++	0x453, 0x00000000,
++	0x456, 0x0000005E,
++	0x460, 0x00000066,
++	0x461, 0x00000066,
++	0x4C8, 0x000000FF,
++	0x4C9, 0x00000008,
++	0x4CC, 0x000000FF,
++	0x4CD, 0x000000FF,
++	0x4CE, 0x00000001,
++	0x500, 0x00000026,
++	0x501, 0x000000A2,
++	0x502, 0x0000002F,
++	0x503, 0x00000000,
++	0x504, 0x00000028,
++	0x505, 0x000000A3,
++	0x506, 0x0000005E,
++	0x507, 0x00000000,
++	0x508, 0x0000002B,
++	0x509, 0x000000A4,
++	0x50A, 0x0000005E,
++	0x50B, 0x00000000,
++	0x50C, 0x0000004F,
++	0x50D, 0x000000A4,
++	0x50E, 0x00000000,
++	0x50F, 0x00000000,
++	0x512, 0x0000001C,
++	0x514, 0x0000000A,
++	0x516, 0x0000000A,
++	0x525, 0x0000004F,
++	0x550, 0x00000010,
++	0x551, 0x00000010,
++	0x559, 0x00000002,
++	0x55C, 0x00000050,
++	0x55D, 0x000000FF,
++	0x605, 0x00000030,
++	0x608, 0x0000000E,
++	0x609, 0x0000002A,
++	0x620, 0x000000FF,
++	0x621, 0x000000FF,
++	0x622, 0x000000FF,
++	0x623, 0x000000FF,
++	0x624, 0x000000FF,
++	0x625, 0x000000FF,
++	0x626, 0x000000FF,
++	0x627, 0x000000FF,
++	0x638, 0x00000050,
++	0x63C, 0x0000000A,
++	0x63D, 0x0000000A,
++	0x63E, 0x0000000E,
++	0x63F, 0x0000000E,
++	0x640, 0x00000040,
++	0x642, 0x00000040,
++	0x643, 0x00000000,
++	0x652, 0x000000C8,
++	0x66E, 0x00000005,
++	0x700, 0x00000021,
++	0x701, 0x00000043,
++	0x702, 0x00000065,
++	0x703, 0x00000087,
++	0x708, 0x00000021,
++	0x709, 0x00000043,
++	0x70A, 0x00000065,
++	0x70B, 0x00000087,
++	0x765, 0x00000018,
++	0x76E, 0x00000004,
++};
++
++RTW_DECL_TABLE_PHY_COND(rtw8723b_mac, rtw_phy_cfg_mac);
++
++static const u32 rtw8723b_agc[] = {
++	0xC78, 0xFD000001,
++	0xC78, 0xFC010001,
++	0xC78, 0xFB020001,
++	0xC78, 0xFA030001,
++	0xC78, 0xF9040001,
++	0xC78, 0xF8050001,
++	0xC78, 0xF7060001,
++	0xC78, 0xF6070001,
++	0xC78, 0xF5080001,
++	0xC78, 0xF4090001,
++	0xC78, 0xF30A0001,
++	0xC78, 0xF20B0001,
++	0xC78, 0xF10C0001,
++	0xC78, 0xF00D0001,
++	0xC78, 0xEF0E0001,
++	0xC78, 0xEE0F0001,
++	0xC78, 0xED100001,
++	0xC78, 0xEC110001,
++	0xC78, 0xEB120001,
++	0xC78, 0xEA130001,
++	0xC78, 0xE9140001,
++	0xC78, 0xE8150001,
++	0xC78, 0xE7160001,
++	0xC78, 0xE6170001,
++	0xC78, 0xE5180001,
++	0xC78, 0xE4190001,
++	0xC78, 0xE31A0001,
++	0xC78, 0xA51B0001,
++	0xC78, 0xA41C0001,
++	0xC78, 0xA31D0001,
++	0xC78, 0x671E0001,
++	0xC78, 0x661F0001,
++	0xC78, 0x65200001,
++	0xC78, 0x64210001,
++	0xC78, 0x63220001,
++	0xC78, 0x4A230001,
++	0xC78, 0x49240001,
++	0xC78, 0x48250001,
++	0xC78, 0x47260001,
++	0xC78, 0x46270001,
++	0xC78, 0x45280001,
++	0xC78, 0x44290001,
++	0xC78, 0x432A0001,
++	0xC78, 0x422B0001,
++	0xC78, 0x292C0001,
++	0xC78, 0x282D0001,
++	0xC78, 0x272E0001,
++	0xC78, 0x262F0001,
++	0xC78, 0x0A300001,
++	0xC78, 0x09310001,
++	0xC78, 0x08320001,
++	0xC78, 0x07330001,
++	0xC78, 0x06340001,
++	0xC78, 0x05350001,
++	0xC78, 0x04360001,
++	0xC78, 0x03370001,
++	0xC78, 0x02380001,
++	0xC78, 0x01390001,
++	0xC78, 0x013A0001,
++	0xC78, 0x013B0001,
++	0xC78, 0x013C0001,
++	0xC78, 0x013D0001,
++	0xC78, 0x013E0001,
++	0xC78, 0x013F0001,
++	0xC78, 0xFC400001,
++	0xC78, 0xFB410001,
++	0xC78, 0xFA420001,
++	0xC78, 0xF9430001,
++	0xC78, 0xF8440001,
++	0xC78, 0xF7450001,
++	0xC78, 0xF6460001,
++	0xC78, 0xF5470001,
++	0xC78, 0xF4480001,
++	0xC78, 0xF3490001,
++	0xC78, 0xF24A0001,
++	0xC78, 0xF14B0001,
++	0xC78, 0xF04C0001,
++	0xC78, 0xEF4D0001,
++	0xC78, 0xEE4E0001,
++	0xC78, 0xED4F0001,
++	0xC78, 0xEC500001,
++	0xC78, 0xEB510001,
++	0xC78, 0xEA520001,
++	0xC78, 0xE9530001,
++	0xC78, 0xE8540001,
++	0xC78, 0xE7550001,
++	0xC78, 0xE6560001,
++	0xC78, 0xE5570001,
++	0xC78, 0xE4580001,
++	0xC78, 0xE3590001,
++	0xC78, 0xA65A0001,
++	0xC78, 0xA55B0001,
++	0xC78, 0xA45C0001,
++	0xC78, 0xA35D0001,
++	0xC78, 0x675E0001,
++	0xC78, 0x665F0001,
++	0xC78, 0x65600001,
++	0xC78, 0x64610001,
++	0xC78, 0x63620001,
++	0xC78, 0x62630001,
++	0xC78, 0x61640001,
++	0xC78, 0x48650001,
++	0xC78, 0x47660001,
++	0xC78, 0x46670001,
++	0xC78, 0x45680001,
++	0xC78, 0x44690001,
++	0xC78, 0x436A0001,
++	0xC78, 0x426B0001,
++	0xC78, 0x286C0001,
++	0xC78, 0x276D0001,
++	0xC78, 0x266E0001,
++	0xC78, 0x256F0001,
++	0xC78, 0x24700001,
++	0xC78, 0x09710001,
++	0xC78, 0x08720001,
++	0xC78, 0x07730001,
++	0xC78, 0x06740001,
++	0xC78, 0x05750001,
++	0xC78, 0x04760001,
++	0xC78, 0x03770001,
++	0xC78, 0x02780001,
++	0xC78, 0x01790001,
++	0xC78, 0x017A0001,
++	0xC78, 0x017B0001,
++	0xC78, 0x017C0001,
++	0xC78, 0x017D0001,
++	0xC78, 0x017E0001,
++	0xC78, 0x017F0001,
++	0xC50, 0x69553422,
++	0xC50, 0x69553420,
++	0x824, 0x00390204,
++};
++
++RTW_DECL_TABLE_PHY_COND(rtw8723b_agc, rtw_phy_cfg_agc);
++
++static const u32 rtw8723b_bb[] = {
++	0x800, 0x80040000,
++	0x804, 0x00000003,
++	0x808, 0x0000FC00,
++	0x80C, 0x0000000A,
++	0x810, 0x10001331,
++	0x814, 0x020C3D10,
++	0x818, 0x02200385,
++	0x81C, 0x00000000,
++	0x820, 0x01000100,
++	0x824, 0x00190204,
++	0x828, 0x00000000,
++	0x82C, 0x00000000,
++	0x830, 0x00000000,
++	0x834, 0x00000000,
++	0x838, 0x00000000,
++	0x83C, 0x00000000,
++	0x840, 0x00010000,
++	0x844, 0x00000000,
++	0x848, 0x00000000,
++	0x84C, 0x00000000,
++	0x850, 0x00000000,
++	0x854, 0x00000000,
++	0x858, 0x569A11A9,
++	0x85C, 0x01000014,
++	0x860, 0x66F60110,
++	0x864, 0x061F0649,
++	0x868, 0x00000000,
++	0x86C, 0x27272700,
++	0x870, 0x07000760,
++	0x874, 0x25004000,
++	0x878, 0x00000808,
++	0x87C, 0x00000000,
++	0x880, 0xB0000C1C,
++	0x884, 0x00000001,
++	0x888, 0x00000000,
++	0x88C, 0xCCC000C0,
++	0x890, 0x00000800,
++	0x894, 0xFFFFFFFE,
++	0x898, 0x40302010,
++	0x89C, 0x00706050,
++	0x900, 0x00000000,
++	0x904, 0x00000023,
++	0x908, 0x00000000,
++	0x90C, 0x81121111,
++	0x910, 0x00000002,
++	0x914, 0x00000201,
++	0xA00, 0x00D047C8,
++	0xA04, 0x80FF800C,
++	0xA08, 0x8C838300,
++	0xA0C, 0x2E7F120F,
++	0xA10, 0x9500BB78,
++	0xA14, 0x1114D028,
++	0xA18, 0x00881117,
++	0xA1C, 0x89140F00,
++	0xA20, 0x1A1B0000,
++	0xA24, 0x090E1317,
++	0xA28, 0x00000204,
++	0xA2C, 0x00D30000,
++	0xA70, 0x101FBF00,
++	0xA74, 0x00000007,
++	0xA78, 0x00000900,
++	0xA7C, 0x225B0606,
++	0xA80, 0x21806490,
++	0xB2C, 0x00000000,
++	0xC00, 0x48071D40,
++	0xC04, 0x03A05611,
++	0xC08, 0x000000E4,
++	0xC0C, 0x6C6C6C6C,
++	0xC10, 0x08800000,
++	0xC14, 0x40000100,
++	0xC18, 0x08800000,
++	0xC1C, 0x40000100,
++	0xC20, 0x00000000,
++	0xC24, 0x00000000,
++	0xC28, 0x00000000,
++	0xC2C, 0x00000000,
++	0xC30, 0x69E9AC44,
++	0xC34, 0x469652AF,
++	0xC38, 0x49795994,
++	0xC3C, 0x0A97971C,
++	0xC40, 0x1F7C403F,
++	0xC44, 0x000100B7,
++	0xC48, 0xEC020107,
++	0xC4C, 0x007F037F,
++	0xC50, 0x69553420,
++	0xC54, 0x43BC0094,
++	0xC58, 0x00013147,
++	0xC5C, 0x00250492,
++	0xC60, 0x00000000,
++	0xC64, 0x5112848B,
++	0xC68, 0x47C00BFF,
++	0xC6C, 0x00000036,
++	0xC70, 0x2C7F000D,
++	0xC74, 0x020610DB,
++	0xC78, 0x0000001F,
++	0xC7C, 0x00B91612,
++	0xC80, 0x390000E4,
++	0xC84, 0x21F60000,
++	0xC88, 0x40000100,
++	0xC8C, 0x20200000,
++	0xC90, 0x00020E1A,
++	0xC94, 0x00000000,
++	0xC98, 0x00020E1A,
++	0xC9C, 0x00007F7F,
++	0xCA0, 0x00000000,
++	0xCA4, 0x000300A0,
++	0xCA8, 0x00000000,
++	0xCAC, 0x00000000,
++	0xCB0, 0x00000000,
++	0xCB4, 0x00000000,
++	0xCB8, 0x00000000,
++	0xCBC, 0x28000000,
++	0xCC0, 0x00000000,
++	0xCC4, 0x00000000,
++	0xCC8, 0x00000000,
++	0xCCC, 0x00000000,
++	0xCD0, 0x00000000,
++	0xCD4, 0x00000000,
++	0xCD8, 0x64B22427,
++	0xCDC, 0x00766932,
++	0xCE0, 0x00222222,
++	0xCE4, 0x00000000,
++	0xCE8, 0x37644302,
++	0xCEC, 0x2F97D40C,
++	0xD00, 0x00000740,
++	0xD04, 0x40020401,
++	0xD08, 0x0000907F,
++	0xD0C, 0x20010201,
++	0xD10, 0xA0633333,
++	0xD14, 0x3333BC53,
++	0xD18, 0x7A8F5B6F,
++	0xD2C, 0xCC979975,
++	0xD30, 0x00000000,
++	0xD34, 0x80608000,
++	0xD38, 0x00000000,
++	0xD3C, 0x00127353,
++	0xD40, 0x00000000,
++	0xD44, 0x00000000,
++	0xD48, 0x00000000,
++	0xD4C, 0x00000000,
++	0xD50, 0x6437140A,
++	0xD54, 0x00000000,
++	0xD58, 0x00000282,
++	0xD5C, 0x30032064,
++	0xD60, 0x4653DE68,
++	0xD64, 0x04518A3C,
++	0xD68, 0x00002101,
++	0xD6C, 0x2A201C16,
++	0xD70, 0x1812362E,
++	0xD74, 0x322C2220,
++	0xD78, 0x000E3C24,
++	0xE00, 0x2D2D2D2D,
++	0xE04, 0x2D2D2D2D,
++	0xE08, 0x0390272D,
++	0xE10, 0x2D2D2D2D,
++	0xE14, 0x2D2D2D2D,
++	0xE18, 0x2D2D2D2D,
++	0xE1C, 0x2D2D2D2D,
++	0xE28, 0x00000000,
++	0xE30, 0x1000DC1F,
++	0xE34, 0x10008C1F,
++	0xE38, 0x02140102,
++	0xE3C, 0x681604C2,
++	0xE40, 0x01007C00,
++	0xE44, 0x01004800,
++	0xE48, 0xFB000000,
++	0xE4C, 0x000028D1,
++	0xE50, 0x1000DC1F,
++	0xE54, 0x10008C1F,
++	0xE58, 0x02140102,
++	0xE5C, 0x28160D05,
++	0xE60, 0x00000048,
++	0xE68, 0x001B2556,
++	0xE6C, 0x00C00096,
++	0xE70, 0x00C00096,
++	0xE74, 0x01000056,
++	0xE78, 0x01000014,
++	0xE7C, 0x01000056,
++	0xE80, 0x01000014,
++	0xE84, 0x00C00096,
++	0xE88, 0x01000056,
++	0xE8C, 0x00C00096,
++	0xED0, 0x00C00096,
++	0xED4, 0x00C00096,
++	0xED8, 0x00C00096,
++	0xEDC, 0x000000D6,
++	0xEE0, 0x000000D6,
++	0xEEC, 0x01C00016,
++	0xF14, 0x00000003,
++	0xF4C, 0x00000000,
++	0xF00, 0x00000300,
++	0x820, 0x01000100,
++	0x800, 0x83040000,
++};
++
++RTW_DECL_TABLE_PHY_COND(rtw8723b_bb, rtw_phy_cfg_bb);
++
++static const struct rtw_phy_pg_cfg_pair rtw8723b_bb_pg[] = {
++	{ 0, 0, 0, 0x00000e08, 0x0000ff00, 0x00003800, },
++	{ 0, 0, 0, 0x0000086c, 0xffffff00, 0x32343600, },
++	{ 0, 0, 0, 0x00000e00, 0xffffffff, 0x40424444, },
++	{ 0, 0, 0, 0x00000e04, 0xffffffff, 0x28323638, },
++	{ 0, 0, 0, 0x00000e10, 0xffffffff, 0x38404244, },
++	{ 0, 0, 0, 0x00000e14, 0xffffffff, 0x26303436, },
++};
++
++RTW_DECL_TABLE_BB_PG(rtw8723b_bb_pg);
++
++static const u32 rtw8723b_rf_a[] = {
++	0x000, 0x00010000,
++	0x0B0, 0x000DFFE0,
++	0xFFE, 0x00000000,
++	0xFFE, 0x00000000,
++	0xFFE, 0x00000000,
++	0x0B1, 0x00000018,
++	0xFFE, 0x00000000,
++	0xFFE, 0x00000000,
++	0xFFE, 0x00000000,
++	0x0B2, 0x00084C00,
++	0x0B5, 0x0000D2CC,
++	0x0B6, 0x000925AA,
++	0x0B7, 0x00000010,
++	0x0B8, 0x0000907F,
++	0x05C, 0x00000002,
++	0x07C, 0x00000002,
++	0x07E, 0x00000005,
++	0x08B, 0x0006FC00,
++	0x0B0, 0x000FF9F0,
++	0x01C, 0x000739D2,
++	0x01E, 0x00000000,
++	0x0DF, 0x00000780,
++	0x050, 0x00067435,
++	0x80002000, 0x00000000, 0x40000000, 0x00000000,
++	0x051, 0x0006F10E,
++	0x052, 0x000007D3,
++	0x90003000, 0x00000000, 0x40000000, 0x00000000,
++	0x051, 0x0006F10E,
++	0x052, 0x000007D3,
++	0x90004000, 0x00000000, 0x40000000, 0x00000000,
++	0x051, 0x0006F10E,
++	0x052, 0x000007D3,
++	0xA0000000, 0x00000000,
++	0x051, 0x0006B04E,
++	0x052, 0x000007D2,
++	0xB0000000, 0x00000000,
++	0x053, 0x00000000,
++	0x054, 0x00050400,
++	0x055, 0x0004026E,
++	0x0DD, 0x0000004C,
++	0x070, 0x00067435,
++	0x80002000, 0x00000000, 0x40000000, 0x00000000,
++	0x071, 0x0006F10E,
++	0x072, 0x000007D3,
++	0x90003000, 0x00000000, 0x40000000, 0x00000000,
++	0x071, 0x0006F10E,
++	0x072, 0x000007D3,
++	0x90004000, 0x00000000, 0x40000000, 0x00000000,
++	0x071, 0x0006F10E,
++	0x072, 0x000007D3,
++	0xA0000000, 0x00000000,
++	0x071, 0x0006B04E,
++	0x072, 0x000007D2,
++	0xB0000000, 0x00000000,
++	0x073, 0x00000000,
++	0x074, 0x00050400,
++	0x075, 0x0004026E,
++	0x0EF, 0x00000100,
++	0x034, 0x0000ADD7,
++	0x035, 0x00005C00,
++	0x034, 0x00009DD4,
++	0x035, 0x00005000,
++	0x034, 0x00008DD1,
++	0x035, 0x00004400,
++	0x034, 0x00007DCE,
++	0x035, 0x00003800,
++	0x034, 0x00006CD1,
++	0x035, 0x00004400,
++	0x034, 0x00005CCE,
++	0x035, 0x00003800,
++	0x034, 0x000048CE,
++	0x035, 0x00004400,
++	0x034, 0x000034CE,
++	0x035, 0x00003800,
++	0x034, 0x00002451,
++	0x035, 0x00004400,
++	0x034, 0x0000144E,
++	0x035, 0x00003800,
++	0x034, 0x00000051,
++	0x035, 0x00004400,
++	0x0EF, 0x00000000,
++	0x0EF, 0x00000100,
++	0x0ED, 0x00000010,
++	0x044, 0x0000ADD7,
++	0x044, 0x00009DD4,
++	0x044, 0x00008DD1,
++	0x044, 0x00007DCE,
++	0x044, 0x00006CC1,
++	0x044, 0x00005CCE,
++	0x044, 0x000044D1,
++	0x044, 0x000034CE,
++	0x044, 0x00002451,
++	0x044, 0x0000144E,
++	0x044, 0x00000051,
++	0x0EF, 0x00000000,
++	0x0ED, 0x00000000,
++	0x07F, 0x00020080,
++	0x0EF, 0x00002000,
++	0x03B, 0x000389EF,
++	0x03B, 0x000302FE,
++	0x03B, 0x00028CE6,
++	0x03B, 0x000200BC,
++	0x03B, 0x000188A5,
++	0x03B, 0x00010FBC,
++	0x03B, 0x00008F71,
++	0x03B, 0x00000900,
++	0x0EF, 0x00000000,
++	0x0ED, 0x00000001,
++	0x040, 0x000380EF,
++	0x040, 0x000302FE,
++	0x040, 0x00028CE6,
++	0x040, 0x000200BC,
++	0x040, 0x000188A5,
++	0x040, 0x00010FBC,
++	0x040, 0x00008F71,
++	0x040, 0x00000900,
++	0x0ED, 0x00000000,
++	0x082, 0x00080000,
++	0x083, 0x00008000,
++	0x084, 0x00049F80,
++	0x085, 0x00068000,
++	0x0A2, 0x00080000,
++	0x0A3, 0x00008000,
++	0x0A4, 0x00048D80,
++	0x0A5, 0x00068000,
++	0x0ED, 0x00000002,
++	0x0EF, 0x00000002,
++	0x056, 0x00000032,
++	0x076, 0x00000032,
++	0x01F, 0x00001008,
++	0x001, 0x00000780,
++};
++
++RTW_DECL_TABLE_RF_RADIO(rtw8723b_rf_a, A);
++
++/*
++ * Regd: FCC -> 0, ETSI -> 2, MKK -> 1
++ * Band: 2.4G -> 0, 5G -> 1
++ * Bandwidth (bw): 20M -> 0, 40M -> 1, 80M -> 2, 160M -> 3
++ * Rate Section (rs): CCK -> 0, OFDM -> 1, HT -> 2, VHT -> 3
++ */
++static const struct rtw_txpwr_lmt_cfg_pair rtw8723b_txpwr_lmt[] = {
++	{0, 0, 0, 0, 1, 30},
++	{2, 0, 0, 0, 1, 26},
++	{1, 0, 0, 0, 1, 32},
++	{0, 0, 0, 0, 2, 30},
++	{2, 0, 0, 0, 2, 26},
++	{1, 0, 0, 0, 2, 32},
++	{0, 0, 0, 0, 3, 30},
++	{2, 0, 0, 0, 3, 26},
++	{1, 0, 0, 0, 3, 32},
++	{0, 0, 0, 0, 4, 30},
++	{2, 0, 0, 0, 4, 26},
++	{1, 0, 0, 0, 4, 32},
++	{0, 0, 0, 0, 5, 30},
++	{2, 0, 0, 0, 5, 26},
++	{1, 0, 0, 0, 5, 32},
++	{0, 0, 0, 0, 6, 30},
++	{2, 0, 0, 0, 6, 26},
++	{1, 0, 0, 0, 6, 32},
++	{0, 0, 0, 0, 7, 30},
++	{2, 0, 0, 0, 7, 26},
++	{1, 0, 0, 0, 7, 32},
++	{0, 0, 0, 0, 8, 30},
++	{2, 0, 0, 0, 8, 26},
++	{1, 0, 0, 0, 8, 32},
++	{0, 0, 0, 0, 9, 30},
++	{2, 0, 0, 0, 9, 26},
++	{1, 0, 0, 0, 9, 32},
++	{0, 0, 0, 0, 10, 30},
++	{2, 0, 0, 0, 10, 26},
++	{1, 0, 0, 0, 10, 32},
++	{0, 0, 0, 0, 11, 30},
++	{2, 0, 0, 0, 11, 26},
++	{1, 0, 0, 0, 11, 32},
++	{0, 0, 0, 0, 12, 63},
++	{2, 0, 0, 0, 12, 26},
++	{1, 0, 0, 0, 12, 32},
++	{0, 0, 0, 0, 13, 63},
++	{2, 0, 0, 0, 13, 26},
++	{1, 0, 0, 0, 13, 32},
++	{0, 0, 0, 0, 14, 63},
++	{2, 0, 0, 0, 14, 63},
++	{1, 0, 0, 0, 14, 32},
++	{0, 0, 0, 1, 1, 28},
++	{2, 0, 0, 1, 1, 28},
++	{1, 0, 0, 1, 1, 28},
++	{0, 0, 0, 1, 2, 28},
++	{2, 0, 0, 1, 2, 32},
++	{1, 0, 0, 1, 2, 32},
++	{0, 0, 0, 1, 3, 32},
++	{2, 0, 0, 1, 3, 32},
++	{1, 0, 0, 1, 3, 32},
++	{0, 0, 0, 1, 4, 32},
++	{2, 0, 0, 1, 4, 32},
++	{1, 0, 0, 1, 4, 32},
++	{0, 0, 0, 1, 5, 32},
++	{2, 0, 0, 1, 5, 32},
++	{1, 0, 0, 1, 5, 32},
++	{0, 0, 0, 1, 6, 32},
++	{2, 0, 0, 1, 6, 32},
++	{1, 0, 0, 1, 6, 32},
++	{0, 0, 0, 1, 7, 32},
++	{2, 0, 0, 1, 7, 32},
++	{1, 0, 0, 1, 7, 32},
++	{0, 0, 0, 1, 8, 32},
++	{2, 0, 0, 1, 8, 32},
++	{1, 0, 0, 1, 8, 32},
++	{0, 0, 0, 1, 9, 32},
++	{2, 0, 0, 1, 9, 32},
++	{1, 0, 0, 1, 9, 32},
++	{0, 0, 0, 1, 10, 28},
++	{2, 0, 0, 1, 10, 32},
++	{1, 0, 0, 1, 10, 32},
++	{0, 0, 0, 1, 11, 28},
++	{2, 0, 0, 1, 11, 32},
++	{1, 0, 0, 1, 11, 32},
++	{0, 0, 0, 1, 12, 63},
++	{2, 0, 0, 1, 12, 32},
++	{1, 0, 0, 1, 12, 32},
++	{0, 0, 0, 1, 13, 63},
++	{2, 0, 0, 1, 13, 28},
++	{1, 0, 0, 1, 13, 28},
++	{0, 0, 0, 1, 14, 63},
++	{2, 0, 0, 1, 14, 63},
++	{1, 0, 0, 1, 14, 63},
++	{0, 0, 0, 2, 1, 26},
++	{2, 0, 0, 2, 1, 26},
++	{1, 0, 0, 2, 1, 28},
++	{0, 0, 0, 2, 2, 26},
++	{2, 0, 0, 2, 2, 32},
++	{1, 0, 0, 2, 2, 32},
++	{0, 0, 0, 2, 3, 32},
++	{2, 0, 0, 2, 3, 32},
++	{1, 0, 0, 2, 3, 32},
++	{0, 0, 0, 2, 4, 32},
++	{2, 0, 0, 2, 4, 32},
++	{1, 0, 0, 2, 4, 32},
++	{0, 0, 0, 2, 5, 32},
++	{2, 0, 0, 2, 5, 32},
++	{1, 0, 0, 2, 5, 32},
++	{0, 0, 0, 2, 6, 32},
++	{2, 0, 0, 2, 6, 32},
++	{1, 0, 0, 2, 6, 32},
++	{0, 0, 0, 2, 7, 32},
++	{2, 0, 0, 2, 7, 32},
++	{1, 0, 0, 2, 7, 32},
++	{0, 0, 0, 2, 8, 32},
++	{2, 0, 0, 2, 8, 32},
++	{1, 0, 0, 2, 8, 32},
++	{0, 0, 0, 2, 9, 32},
++	{2, 0, 0, 2, 9, 32},
++	{1, 0, 0, 2, 9, 32},
++	{0, 0, 0, 2, 10, 26},
++	{2, 0, 0, 2, 10, 32},
++	{1, 0, 0, 2, 10, 32},
++	{0, 0, 0, 2, 11, 26},
++	{2, 0, 0, 2, 11, 32},
++	{1, 0, 0, 2, 11, 32},
++	{0, 0, 0, 2, 12, 63},
++	{2, 0, 0, 2, 12, 32},
++	{1, 0, 0, 2, 12, 32},
++	{0, 0, 0, 2, 13, 63},
++	{2, 0, 0, 2, 13, 26},
++	{1, 0, 0, 2, 13, 28},
++	{0, 0, 0, 2, 14, 63},
++	{2, 0, 0, 2, 14, 63},
++	{1, 0, 0, 2, 14, 63},
++	{0, 0, 0, 2, 1, 30},
++	{2, 0, 0, 2, 1, 32},
++	{1, 0, 0, 2, 1, 32},
++	{0, 0, 0, 2, 2, 32},
++	{2, 0, 0, 2, 2, 32},
++	{1, 0, 0, 2, 2, 32},
++	{0, 0, 0, 2, 3, 32},
++	{2, 0, 0, 2, 3, 32},
++	{1, 0, 0, 2, 3, 32},
++	{0, 0, 0, 2, 4, 32},
++	{2, 0, 0, 2, 4, 32},
++	{1, 0, 0, 2, 4, 32},
++	{0, 0, 0, 2, 5, 32},
++	{2, 0, 0, 2, 5, 32},
++	{1, 0, 0, 2, 5, 32},
++	{0, 0, 0, 2, 6, 32},
++	{2, 0, 0, 2, 6, 32},
++	{1, 0, 0, 2, 6, 32},
++	{0, 0, 0, 2, 7, 32},
++	{2, 0, 0, 2, 7, 32},
++	{1, 0, 0, 2, 7, 32},
++	{0, 0, 0, 2, 8, 32},
++	{2, 0, 0, 2, 8, 32},
++	{1, 0, 0, 2, 8, 32},
++	{0, 0, 0, 2, 9, 32},
++	{2, 0, 0, 2, 9, 32},
++	{1, 0, 0, 2, 9, 32},
++	{0, 0, 0, 2, 10, 32},
++	{2, 0, 0, 2, 10, 32},
++	{1, 0, 0, 2, 10, 32},
++	{0, 0, 0, 2, 11, 30},
++	{2, 0, 0, 2, 11, 32},
++	{1, 0, 0, 2, 11, 32},
++	{0, 0, 0, 2, 12, 63},
++	{2, 0, 0, 2, 12, 32},
++	{1, 0, 0, 2, 12, 32},
++	{0, 0, 0, 2, 13, 63},
++	{2, 0, 0, 2, 13, 32},
++	{1, 0, 0, 2, 13, 32},
++	{0, 0, 0, 2, 14, 63},
++	{2, 0, 0, 2, 14, 63},
++	{1, 0, 0, 2, 14, 63},
++	{0, 0, 1, 2, 1, 63},
++	{2, 0, 1, 2, 1, 63},
++	{1, 0, 1, 2, 1, 63},
++	{0, 0, 1, 2, 2, 63},
++	{2, 0, 1, 2, 2, 63},
++	{1, 0, 1, 2, 2, 63},
++	{0, 0, 1, 2, 3, 26},
++	{2, 0, 1, 2, 3, 26},
++	{1, 0, 1, 2, 3, 26},
++	{0, 0, 1, 2, 4, 26},
++	{2, 0, 1, 2, 4, 28},
++	{1, 0, 1, 2, 4, 26},
++	{0, 0, 1, 2, 5, 28},
++	{2, 0, 1, 2, 5, 28},
++	{1, 0, 1, 2, 5, 26},
++	{0, 0, 1, 2, 6, 28},
++	{2, 0, 1, 2, 6, 28},
++	{1, 0, 1, 2, 6, 26},
++	{0, 0, 1, 2, 7, 28},
++	{2, 0, 1, 2, 7, 28},
++	{1, 0, 1, 2, 7, 26},
++	{0, 0, 1, 2, 8, 26},
++	{2, 0, 1, 2, 8, 28},
++	{1, 0, 1, 2, 8, 26},
++	{0, 0, 1, 2, 9, 26},
++	{2, 0, 1, 2, 9, 28},
++	{1, 0, 1, 2, 9, 26},
++	{0, 0, 1, 2, 10, 26},
++	{2, 0, 1, 2, 10, 28},
++	{1, 0, 1, 2, 10, 26},
++	{0, 0, 1, 2, 11, 26},
++	{2, 0, 1, 2, 11, 26},
++	{1, 0, 1, 2, 11, 26},
++	{0, 0, 1, 2, 12, 63},
++	{2, 0, 1, 2, 12, 26},
++	{1, 0, 1, 2, 12, 26},
++	{0, 0, 1, 2, 13, 63},
++	{2, 0, 1, 2, 13, 26},
++	{1, 0, 1, 2, 13, 26},
++	{0, 0, 1, 2, 14, 63},
++	{2, 0, 1, 2, 14, 63},
++	{1, 0, 1, 2, 14, 63},
++	{0, 0, 1, 2, 1, 63},
++	{2, 0, 1, 2, 1, 63},
++	{1, 0, 1, 2, 1, 63},
++	{0, 0, 1, 2, 2, 63},
++	{2, 0, 1, 2, 2, 63},
++	{1, 0, 1, 2, 2, 63},
++	{0, 0, 1, 2, 3, 30},
++	{2, 0, 1, 2, 3, 30},
++	{1, 0, 1, 2, 3, 30},
++	{0, 0, 1, 2, 4, 32},
++	{2, 0, 1, 2, 4, 30},
++	{1, 0, 1, 2, 4, 30},
++	{0, 0, 1, 2, 5, 32},
++	{2, 0, 1, 2, 5, 30},
++	{1, 0, 1, 2, 5, 30},
++	{0, 0, 1, 2, 6, 32},
++	{2, 0, 1, 2, 6, 30},
++	{1, 0, 1, 2, 6, 30},
++	{0, 0, 1, 2, 7, 32},
++	{2, 0, 1, 2, 7, 30},
++	{1, 0, 1, 2, 7, 30},
++	{0, 0, 1, 2, 8, 32},
++	{2, 0, 1, 2, 8, 30},
++	{1, 0, 1, 2, 8, 30},
++	{0, 0, 1, 2, 9, 32},
++	{2, 0, 1, 2, 9, 30},
++	{1, 0, 1, 2, 9, 30},
++	{0, 0, 1, 2, 10, 32},
++	{2, 0, 1, 2, 10, 30},
++	{1, 0, 1, 2, 10, 30},
++	{0, 0, 1, 2, 11, 30},
++	{2, 0, 1, 2, 11, 30},
++	{1, 0, 1, 2, 11, 30},
++	{0, 0, 1, 2, 12, 63},
++	{2, 0, 1, 2, 12, 32},
++	{1, 0, 1, 2, 12, 32},
++	{0, 0, 1, 2, 13, 63},
++	{2, 0, 1, 2, 13, 32},
++	{1, 0, 1, 2, 13, 32},
++	{0, 0, 1, 2, 14, 63},
++	{2, 0, 1, 2, 14, 63},
++	{1, 0, 1, 2, 14, 63},
++};
++
++RTW_DECL_TABLE_TXPWR_LMT(rtw8723b_txpwr_lmt);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+new file mode 100644
+index 000000000000..49291fd1dd9d
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723b_table.h
+@@ -0,0 +1,18 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/*
++ * Copyright(c) 2007-2017  Realtek Corporation
++ * Copyright(c) Michael Straube <straube.linux@gmail.com>
++ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
++ */
++
++#ifndef __RTW8723B_TABLE_H__
++#define __RTW8723B_TABLE_H__
++
++extern const struct rtw_table rtw8723b_mac_tbl;
++extern const struct rtw_table rtw8723b_agc_tbl;
++extern const struct rtw_table rtw8723b_bb_tbl;
++extern const struct rtw_table rtw8723b_bb_pg_tbl;
++extern const struct rtw_table rtw8723b_rf_a_tbl;
++extern const struct rtw_table rtw8723b_txpwr_lmt_tbl;
++
++#endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723bs.c b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+new file mode 100644
+index 000000000000..95bff0357b31
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723bs.c
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/*
++ * Copyright(c) 2007-2017  Realtek Corporation
++ * Copyright(c) Michael Straube <straube.linux@gmail.com>
++ * Copyright(c) 2024-2026 Luka Gejak <luka.gejak@linux.dev>
++ */
++
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/sdio_ids.h>
++#include <linux/module.h>
++#include "main.h"
++#include "rtw8723b.h"
++#include "sdio.h"
++
++static const struct sdio_device_id rtw_8723bs_id_table[] = {
++	{
++		SDIO_DEVICE(SDIO_VENDOR_ID_REALTEK,
++			    SDIO_DEVICE_ID_REALTEK_RTW8723BS),
++		.driver_data = (kernel_ulong_t)&rtw8723b_hw_spec,
++	},
++	{}
++};
++MODULE_DEVICE_TABLE(sdio, rtw_8723bs_id_table);
++
++static struct sdio_driver rtw_8723bs_driver = {
++	.name = KBUILD_MODNAME,
++	.id_table = rtw_8723bs_id_table,
++	.probe = rtw_sdio_probe,
++	.remove = rtw_sdio_remove,
++	.shutdown = rtw_sdio_shutdown,
++	.drv = {
++		.pm = &rtw_sdio_pm_ops,
++	}};
++module_sdio_driver(rtw_8723bs_driver);
++
++MODULE_AUTHOR("Michael Straube <straube.linux@gmail.com>");
++MODULE_AUTHOR("Luka Gejak <luka.gejak@linux.dev>");
++MODULE_DESCRIPTION("Realtek 802.11n wireless 8723bs driver");
++MODULE_LICENSE("Dual BSD/GPL");
 -- 
 2.55.0
 
