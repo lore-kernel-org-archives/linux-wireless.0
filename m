@@ -1,148 +1,85 @@
-Received: from mail-4319.protonmail.ch (mail-4319.protonmail.ch [185.70.43.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93ED122538F
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 03:52:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D6543C5837;
+	Wed, 22 Jul 2026 04:07:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784692324; cv=none; b=Xy9sORvX0KkXYmpcJyacymKZkSY9qgb6UtU3/NAh2w7bM7qUpbZKTdlP4SsqASeYiIi9FHkjq4ceLvWFgRj6lwNZe+DfNmb8ZRHqhCeJP++NoPfd+6NbHNGGXysOvjOreAri9ygtqnjxPl6WBNVu+L9941L8hF631U4ZRQL6cAg=
+	t=1784693256; cv=none; b=b1X1OCrGK6JJKZ9HLHQGsBhGc5Qb6UvOQjVMIg9r1O14yucKQKJtQ/HarEp7E2LvCWYFFCczwOHtsr6oTGSorWgTkr8YDxUADJMh50BHDCxgaTM1Yq+pbKvo5WJqCpYSHujRb0cF7USjKqmW56ozs5SFdgNghe0lZ53H3dYkriY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784692324; c=relaxed/simple;
-	bh=vSxGFDlbEU1RRx3jUyUpS0gSdxx/H6VlavpluyUUsS4=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=qzHmToS52BskLY6N3dzSzn5OA4uP96srB7ATVXhXs8OKrGWWGewDnhpxK9HmKCKEDiFHlmmNM5hqD3o7mX8H+K/tW5hIaPFCC4rRxQh9jp8HqwIrU9oH/ZhYbixIdgfFAJrI2GuQw9/H21CAoNHYtYhMNYDcjiSnKS61d/moEOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=narpR5eI; arc=none smtp.client-ip=185.70.43.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="narpR5eI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1784692314; x=1784951514;
-	bh=T9UUSEVoX23+teHyHVc4XnhVE7Bddxb84RHflEA9fy0=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=narpR5eI5Dv7nRg39pOtG91KL4+Z/eaWBUeoCzoR5r0rRoFgA/4E2GItrEfmdKLF3
-	 JAx6yzJdT2aswrUNP6GQ7b0I1h7AFjcwDDwXDS2DPt28CYyi4eRS+Ageu6lz3Q29Ok
-	 xWw2hMYMWh961eHo5f83WjQJepZSZAmktjML6bvLl7edMoriJGWsY+F6gG6K7DfWw1
-	 9FUuLR9Fe0i4U+aDpsLTMR0nB2iVb/TzwDJW6D2YTevx2O3vT2b1m8by5WdyNQwOl6
-	 ZKzZZ6spVIOHGOTEWWKN9p3TrKMHxNu9Pltsk4sm33yofS+YdAVS1SMM2Stle5AKwb
-	 s6EVEw234BUfA==
-Date: Wed, 22 Jul 2026 03:51:50 +0000
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-From: Ryan Leung <untilscour@protonmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
-Subject: [PATCH] wifi: mt76: mt7996: add thermal zone device registration
-Message-ID: <20260722-mt7996-thermal-zone-v1-1-88896e6e9985@protonmail.com>
-Feedback-ID: 184418679:user:proton
-X-Pm-Message-ID: 9e14f46cfdb4bf39a41e6629e5d0f893ba5c57c3
+	s=arc-20240116; t=1784693256; c=relaxed/simple;
+	bh=9k1+dnpfmtAWF0KXRcKDakGmXWB/ADwzlyGhjbNb12Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EBElP6/guhV2TtAQzll4eONUt0k0uyYCnjzBQA30GyM81j9E6v9dRBCYjk2IYfOOfb4Td8EDq0tL94BKfCygD4/vCrdf081oLXffmEQX/PWF4rtKnlcNjKlNrz2mTzoT1DILsc4MD9C3lSsOrb0ZRMbfctbOZaCSLZH5vUsHA4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.245.140])
+	by APP-05 (Coremail) with SMTP id zQCowAAnlT_6QWBqMf26AA--.23657S2;
+	Wed, 22 Jul 2026 12:07:23 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>
+Subject: [PATCH] ath6kl: avoid advancing node count past node map
+Date: Wed, 22 Jul 2026 12:07:21 +0800
+Message-ID: <20260722040721.74876-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowAAnlT_6QWBqMf26AA--.23657S2
+X-Coremail-Antispam: 1UD129KBjvJXoWrtry3Gr48WrW8Wr4kKrWUtwb_yoW8Jr1xpF
+	4xK395Ar1qqr4UW3yIya18JF98tay5trZrCF4jy3y3Cr1DAryrKFn8WFy7Wrn8tF48Wa1a
+	vF42qryDJF90q3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUym14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1Y6r17MIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
+	14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x0JUywZ7UUUUU=
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-Register the mt7996 phy as a thermal zone sensor using
-devm_thermal_of_zone_register() so that device tree thermal-zones
-nodes can reference the Wi-Fi chip as a temperature source. This
-allows the kernel thermal governor to control external cooling
-devices such as PWM fans based on Wi-Fi chip temperature.
+node_map has MAX_NODE_NUM entries. When a new IBSS peer arrives after
+the map is full, ath6kl_ibss_map_epid() currently increments node_num
+before rejecting the mapping. The failed request therefore leaves
+node_num one larger than the array.
 
-Registration is non-fatal: -ENODEV is returned when no
-thermal-sensors DT property references this device, which is the
-expected case on platforms without a thermal zone configured.
+A later call walks node_map up to node_num while looking for an existing
+peer, which can read beyond the array. Reject the new mapping before
+advancing node_num.
 
-Signed-off-by: Ryan Leung <untilscour@protonmail.com>
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 ---
-This is essentially the same as the previous patch for mt7915 [1] but calls
-mt7996_mcu_get_temperature without mutex, consistent with the existing hwmo=
-n
-mt7996_thermal_temp_show callback.
+ drivers/net/wireless/ath/ath6kl/txrx.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-I don't know if mt7996 also needs mutex locks such as those in commit
-e733647566ec ("wifi: mt76: mt7915: hold dev->mutex while interacting with t=
-he thermal state") [2]
-
-[1] https://patch.msgid.link/20260719-mt7915-thermal-zone-device-registrati=
-on-v2-1-0eac68c2741e@protonmail.com
-[2] https://patch.msgid.link/20241230194202.95065-10-nbd@nbd.name
----
- drivers/net/wireless/mediatek/mt76/mt7996/init.c   | 28 ++++++++++++++++++=
-++++
- drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  1 +
- 2 files changed, 29 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net=
-/wireless/mediatek/mt76/mt7996/init.c
-index d6f9aa1ab52d..115145f993d0 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -236,6 +236,23 @@ static const struct thermal_cooling_device_ops mt7996_=
-thermal_ops =3D {
- =09.set_cur_state =3D mt7996_thermal_set_cur_throttle_state,
- };
-=20
-+static int mt7996_thermal_get_temp(struct thermal_zone_device *tz, int *te=
-mp)
-+{
-+=09struct mt7996_phy *phy =3D thermal_zone_device_priv(tz);
-+=09int val;
-+
-+=09val =3D mt7996_mcu_get_temperature(phy);
-+=09if (val < 0)
-+=09=09return val;
-+
-+=09*temp =3D val * 1000;
-+=09return 0;
-+}
-+
-+static const struct thermal_zone_device_ops mt7996_tz_ops =3D {
-+=09.get_temp =3D mt7996_thermal_get_temp,
-+};
-+
- static void mt7996_unregister_thermal(struct mt7996_phy *phy)
- {
- =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
-@@ -277,6 +294,17 @@ static int mt7996_thermal_init(struct mt7996_phy *phy)
- =09phy->throttle_temp[MT7996_CRIT_TEMP_IDX] =3D MT7996_CRIT_TEMP;
- =09phy->throttle_temp[MT7996_MAX_TEMP_IDX] =3D MT7996_MAX_TEMP;
-=20
-+=09phy->tzone =3D devm_thermal_of_zone_register(phy->dev->mt76.dev,
-+=09=09=09=09=09=09   phy->mt76->band_idx, phy,
-+=09=09=09=09=09=09   &mt7996_tz_ops);
-+=09if (IS_ERR(phy->tzone)) {
-+=09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
-+=09=09=09dev_warn(phy->dev->mt76.dev,
-+=09=09=09=09 "failed to register thermal zone%d: %ld\n",
-+=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
-+=09=09phy->tzone =3D NULL;
-+=09}
-+
- =09if (!IS_REACHABLE(CONFIG_HWMON))
- =09=09return 0;
-=20
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/n=
-et/wireless/mediatek/mt76/mt7996/mt7996.h
-index 0d6488522ba7..1207b5c7e98b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -372,6 +372,7 @@ struct mt7996_phy {
-=20
- =09struct ieee80211_sband_iftype_data iftype[NUM_NL80211_BANDS][NUM_NL8021=
-1_IFTYPES];
-=20
-+=09struct thermal_zone_device *tzone;
- =09struct thermal_cooling_device *cdev;
- =09u8 cdev_state;
- =09u8 throttle_state;
-
----
-base-commit: 69bd85e933c617a84fa54fcc80e628e98afdc45d
-change-id: 20260722-mt7996-thermal-zone-a1de7cb1d728
-
-Best regards,
--- =20
-Ryan Leung <untilscour@protonmail.com>
-
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 97fdac7237e2..3b0033431b29 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -67,10 +67,9 @@ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
+ 	}
+ 
+ 	if (ep_map == -1) {
+-		ep_map = ar->node_num;
+-		ar->node_num++;
+-		if (ar->node_num > MAX_NODE_NUM)
++		if (ar->node_num >= MAX_NODE_NUM)
+ 			return ENDPOINT_UNUSED;
++		ep_map = ar->node_num++;
+ 	}
+ 
+ 	memcpy(ar->node_map[ep_map].mac_addr, eth_hdr->h_dest, ETH_ALEN);
+-- 
+2.43.0
 
