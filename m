@@ -1,114 +1,125 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB2546E019
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:24:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C6C43612F6;
+	Thu, 23 Jul 2026 11:39:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784805844; cv=none; b=BYvjprfIGL92cZtEYABGkV6gA9yYVjAXEB/CMhEn1Ro4tr1eyi2FWUgcsZpSBXdf4rUPXrkIzwtPzVp+/7XxLa74MyoKWkrMBP+PCG2SEMAST+7CNLtAfD3Nd2hcw9grmN25mKEcMbqFfIjdoYXOShKkpkCTer8CR8XQ+p1lM38=
+	t=1784806781; cv=none; b=Bxj1hv/cTS/ar7q68TE66PuBQ03xjZeJGAeA1C5OLW686zg05W/pnz/9JDlSPqv4e3R4Op+9Pf8tR8sGfKs30spmmxXHlAUYSZvzRrAEMPd9DfgIQ6mdI95eOUcZUbQOfsEFN+3QNMu/e9p4dP5VS+eZGPfd45SDjyEJ0wUzgL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784805844; c=relaxed/simple;
-	bh=QMRie0Bd/g14faPiyIsEh19E1kHmEa5B7+5L25/YE9Q=;
+	s=arc-20240116; t=1784806781; c=relaxed/simple;
+	bh=575TBu6W2+tCfGbckTNcNd0wohcBX07RjBlg1Xg27ek=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tlH1zsK/Cq+TyH5whhxt6RKjne0EoZBCMkFzsHjhVv1x8Kj12owGYeAP6A0+gR4nw4quV9VlL/why+sOYlLtP8fJGc65336XEzDG7+UOazBQcOc+9WdVDJZnAaKVXajCrXzstnGHwRabenFN80SK6jPc15yTwRgZl1K16oLDJ5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=G9clNpM+; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="G9clNpM+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784805842; x=1816341842;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=QMRie0Bd/g14faPiyIsEh19E1kHmEa5B7+5L25/YE9Q=;
-  b=G9clNpM+65rsoaL5RZud4cDF8FvRia7VbIjE5B6JgK9VNbyvWrt5D/xZ
-   vp4txTVxzDsmCdEgLMHqCKO02/H22uejw1htMI6+Qnz//U9XQrRBs8yJs
-   oCLQFxlOiniggjb5PaIeuleJ0GEqS7hilAXInUZQIK1bWQExBeN4zDrrn
-   6pIuMvdQHnWG69BPGYZjl3i9rHQVbqunNzVApEdmSU+0LQB00B8JTdjCG
-   m1Fw1dk4LwV+K7ykqUc6zX8KLn7Gg/UY10TPJf1wpWU4gIIfxvOgE8x/k
-   dMEY/5Yo6Ehc6BequNGkFlROeOTTyckon3o+DxJwo0niPd2Z0uJTmsqDk
-   Q==;
-X-CSE-ConnectionGUID: EWgl31ABSi+MnCj5P9b25A==
-X-CSE-MsgGUID: HQWLBl5QQ+STfG+OAwn9RA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="87999889"
-X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
-   d="scan'208";a="87999889"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 04:24:01 -0700
-X-CSE-ConnectionGUID: y6f/jAQwR8qqQzGCEI2WVw==
-X-CSE-MsgGUID: ap62dCdYT/qbWUOF3p+ZJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,180,1779174000"; 
-   d="scan'208";a="256581998"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 04:24:00 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH iwlwifi-next 2/2] wifi: iwlwifi: bump core version for BZ/SC/DR
-Date: Thu, 23 Jul 2026 14:23:37 +0300
-Message-Id: <20260723142324.ed92b1d7f927.I6dd10d2f9a04a36751aea9e238fecfa62fe280a6@changeid>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260723142324.c576a8c7560b.I5cc1277d0ef31409f6a3364342a3f35cd9318ceb@changeid>
-References: <20260723142324.c576a8c7560b.I5cc1277d0ef31409f6a3364342a3f35cd9318ceb@changeid>
+	 MIME-Version; b=JURukIOgi5CPVkGcYj+a0ie9/z/1bozx1HQDMnH/FmhvuHG2kjhh73vb7zHbdXaNxlVL0Io6mrDWIssqYC8KavenKZqN+0fpy5ilACq0ZozIHLVcXgqqMxNEv1Mk1GaODuutCl9UE2KSMTmwrYj3SSZE41fps3WTWWg/WOf1he8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 2bd985d4868b11f1aa26b74ffac11d73-20260723
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:bcb6bdb2-3946-4ab7-ad6c-c8e6bb8310c5,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:e7bac3a,CLOUDID:cf0cbd2d3325b150b81db5541750b712,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|850|865|898,TC:nil,Content:0|1
+	5|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI
+	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 2bd985d4868b11f1aa26b74ffac11d73-20260723
+X-User: lilinmao@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1811612323; Thu, 23 Jul 2026 19:39:31 +0800
+From: Linmao Li <lilinmao@kylinos.cn>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
+	Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Arien Judge <arien.judge@morsemicro.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Linmao Li <lilinmao@kylinos.cn>
+Subject: [PATCH v2] wifi: mm81x: prevent timers from outliving teardown
+Date: Thu, 23 Jul 2026 19:39:27 +0800
+Message-Id: <20260723113927.2370301-1-lilinmao@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20260723092357.2362744-1-lilinmao@kylinos.cn>
+References: <20260723092357.2362744-1-lilinmao@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
 
-Start supporting Core 107 FW on these devices.
+The three timer teardown paths call timer_delete_sync_try() and ignore
+its return value. If a callback is running on another CPU it returns -1
+without waiting, and it does not prevent a later rearm even when it does
+deactivate a pending timer. mm81x_skbq_tx_complete() can rearm the
+stale-status timer, and the rc and yaps callbacks queue work that rearms
+their timers. Teardown can therefore continue with a callback still
+running or the timer rearmed, so it fires after the associated state has
+been freed.
 
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Use timer_shutdown_sync() for these permanent teardowns: it waits for an
+in-flight callback and prevents any future rearm. In mm81x_rc_deinit()
+shut the timer down before cancel_work_sync() so the work can no longer
+recreate the timer/work cycle.
+
+Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
+Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/bz.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/dr.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/cfg/sc.c | 2 +-
+v2:
+- reword the subject to describe the fix (Lachlan Hodges)
+
+ drivers/net/wireless/morsemicro/mm81x/mac.c  | 2 +-
+ drivers/net/wireless/morsemicro/mm81x/rc.c   | 2 +-
+ drivers/net/wireless/morsemicro/mm81x/yaps.c | 2 +-
  3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-index 606362463dc7..1099d8cfe6aa 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/bz.c
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
+diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
+index 392dae5d7ce9..08ca116a68b4 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/mac.c
++++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
+@@ -2349,7 +2349,7 @@ static void mm81x_stale_tx_status_timer(struct timer_list *t)
  
- /* Highest firmware core release supported */
--#define IWL_BZ_UCODE_CORE_MAX	106
-+#define IWL_BZ_UCODE_CORE_MAX	107
+ static void mm81x_stale_tx_status_timer_finish(struct mm81x *mors)
+ {
+-	timer_delete_sync_try(&mors->stale_status.timer);
++	timer_shutdown_sync(&mors->stale_status.timer);
+ }
  
- /* Lowest firmware core release supported */
- #define IWL_BZ_UCODE_CORE_MIN	102
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-index 946975294b4f..a89a2c75687f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/dr.c
-@@ -9,7 +9,7 @@
- #include "fw/api/txq.h"
+ static void mm81x_mac_stale_tx_status_timer_init(struct mm81x *mors)
+diff --git a/drivers/net/wireless/morsemicro/mm81x/rc.c b/drivers/net/wireless/morsemicro/mm81x/rc.c
+index 04aff66de4bd..28dd293df966 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/rc.c
++++ b/drivers/net/wireless/morsemicro/mm81x/rc.c
+@@ -60,8 +60,8 @@ void mm81x_rc_init(struct mm81x *mors)
  
- /* Highest firmware core release supported */
--#define IWL_DR_UCODE_CORE_MAX	106
-+#define IWL_DR_UCODE_CORE_MAX	107
+ void mm81x_rc_deinit(struct mm81x *mors)
+ {
++	timer_shutdown_sync(&mors->mrc.timer);
+ 	cancel_work_sync(&mors->mrc.work);
+-	timer_delete_sync_try(&mors->mrc.timer);
+ }
  
- /* Lowest firmware core release supported */
- #define IWL_DR_UCODE_CORE_MIN	102
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-index e8240c1782ac..16abf0147fe4 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/sc.c
-@@ -10,7 +10,7 @@
- #include "fw/api/txq.h"
+ static void mm81x_rc_sta_config_guard_per_bw(struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/morsemicro/mm81x/yaps.c b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+index bdadb822bf9a..e98a2a58726f 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/yaps.c
++++ b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+@@ -597,7 +597,7 @@ static void mm81x_yaps_q_chip_full_timer_init(struct mm81x_yaps *yaps)
  
- /* Highest firmware core release supported */
--#define IWL_SC_UCODE_CORE_MAX	106
-+#define IWL_SC_UCODE_CORE_MAX	107
+ static void mm81x_yaps_q_chip_full_timer_finish(struct mm81x_yaps *yaps)
+ {
+-	timer_delete_sync_try(&yaps->chip_queue_full.timer);
++	timer_shutdown_sync(&yaps->chip_queue_full.timer);
+ }
  
- /* Lowest firmware core release supported */
- #define IWL_SC_UCODE_CORE_MIN	102
+ int mm81x_yaps_init(struct mm81x *mors)
 -- 
-2.34.1
+2.25.1
 
