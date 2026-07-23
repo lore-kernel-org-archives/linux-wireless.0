@@ -1,68 +1,70 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6EF12C534
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:09:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD322BEC34
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:09:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784768965; cv=none; b=sSnLECD8VLRuGVihrYqiaHA0OxLhdK9D8Bxyqv2yBmW2q8Hf51dpg9vh/0u3f3dyjQ/U4ksADMSyl95keJ0WsH4euY4m7gOfZpI3cQODymrJio2+ojgUqd/n9hmZB1Z9eV/ml5s29Ng1g7hsGoWBlIk8Q8uBLOAG0foW04Vorpk=
+	t=1784768978; cv=none; b=Dww09qN35oy3mEScWHolwV0Ufy7hSJoTCh6wowF6+0vQ00ABRxfr5tkboGpTxdoy+xRPdsbPu8byj9M8zaix95VH+DJujYT5Ud0Cr5h6rrjeU/0dIdE9JGDzUrWKd6PtxPuumCUdeyJZvuZjSPMhDugJ1HKvBL0HGD0SjBjkQy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784768965; c=relaxed/simple;
-	bh=yNbi8MQpsTQ3PMK8Nhe/XHDQlPfbrrLl1OGxvluchAo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TQqdWqvYZT8Pm7zBMg6YDw5oFTZpXu92hT1WbKXFIeZRdv4C6j0UE+DeX3M8/xCewN5dy6hb/W+ZPeafNodZnCLpRZeReOZLji8fSozrBy1x2IYuIDQX2QU4Zv/n25O6y+c30o4MQaP3e+d5RmLCm3SouQoY5sCGB78bIBLhpbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c7sTaBX4; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1784768978; c=relaxed/simple;
+	bh=/g5GZQYVBQ/CQ49fp4PAdaN34b1qiSmo5DIQk8nt8Sg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KmPqXbmxcaMXFi7CW6ly5aax4L/+AhFEBQGvHEfv76oF5CgY4cTW4IsLiRCiqt8gimNqvotZEKL7bvtSt1utFNalLCrDI2XGvmEauudrzAmvZtfWNTA8EALjJeFEMr3TZ1jIBPdzAbvdF4QqMM4iIMc5DQLuiwJ9mLeljCAN2ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EwDH09Un; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c7sTaBX4"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2caced6038eso723635ad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:09:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EwDH09Un"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2ce98cb8165so713395ad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:09:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784768963; x=1785373763; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784768976; x=1785373776; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DUKN5sPrRvuKbWGXM5C8TwKRW+R8k9MDgafaHsafP5M=;
-        b=c7sTaBX4d+OTgGuaDsYP6zNrsmDB9IVPw81KnNd+iP0HAFvBN/KRmCeCN4A7ZPuYJT
-         rsKN59UjYcu8F6+18CMIDvzZrlmyMX3CysPdOTWygAG1arkuH2985Z/6b1UqxGq1dTed
-         mtPSjJyeSVKlEVlyvC60gwv5yx7gBdRFbXxStkYvWACj6qL89UQVoTpcl2ARRq3vscfZ
-         kZBZz882NyQbcnkomv3RE663EPWx0It3MMUInouoz9GDxay/kWwd9cFnHIczmUMNd9Lb
-         yKFI4BIkJt5jVY0w4EA8VqxUw4eTAf83U3hGfj5Sb7RurO88HL3sgPe3BjhOkAufDDwj
-         jVVQ==
+        bh=f+ZqAtAmv4uQzLrMzeqzPb4YqVdPJrtC68NMrjWT2dg=;
+        b=EwDH09UnYcbzzYn6EbNcKgrAJ6Vaz0KqEMq0Y2OU6wEAHnVo2jsKXjdecUmQxJ1DMW
+         OCnnHWYH3m1eJu4KNEJh3PT/T7Oz8bpjmOGwJB25goa/H+PGc4eESpiFNvaRquE5A+hU
+         75/j5yzKociJahXA4kyjxNvTH0dWovyf1BQYSHJH4OspqgMwc+U7rBr+iZu/549dSKig
+         TvbgIld3cSVcQCn7Vbh83q02dcbstffz69J5Gw5S5A2gZgFRpdsjRzGc/N3VWGpZ+gos
+         kljhJgktEh5H9PboDOLktYek1yU//U4UL+5bdOIsNl8L6FnvNyIeBOJOhAMFcnAXUt9p
+         Bgmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784768963; x=1785373763;
+        d=1e100.net; s=20251104; t=1784768976; x=1785373776;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=DUKN5sPrRvuKbWGXM5C8TwKRW+R8k9MDgafaHsafP5M=;
-        b=l2Eyqe8/00mltPSeaK7K895yM1bmUxymstqhS/raE2BIaeYTQnxXNqbvp1CBJL9Blb
-         UFOtwkeIO33OjmIyOAR4eaaqrAcHdHQjnGkY/zBy9qKNIjBo5AOLFpfvGrv0lu9ompJg
-         Boi7SPmJiowkbq47ll9b9WzW0eJR5EoBjCHpohbbd/DPD2h5hPj8W7CINutacmKvbI82
-         tNv/DwRu/oSl11FHXbgeAHLR+D22iPi9jX6c/tBP6Hz9f4tKvnoSKz7ZZKxZIBXBXi+h
-         b63r8B2fXYGihNQqsnXHYW+8fz1QdMu87FdS3FQ7oM6JFP3lvNXKpAHErKVktQ7Lj61S
-         350g==
-X-Gm-Message-State: AOJu0YwfOb5RC15q+Px0wGvFBpz/tEm6lOaiZnzSfNQGcXUI5Kq7zdh/
-	Z+nRB4hPKbiczH7WmQfzjx6zRK7Xay3IR+FTZPy/6ySQrpsMYhPtsrUQ
-X-Gm-Gg: AR+sD123jQPwoYDrNrMlI54VNVb5hE97K55e2S2oHJdvv9IhciBiZ8ogq2yTzsKUFFC
-	yYm1cJYrH8ICXPcRCI/aErTZD+q6e3eborWfiFK3LgANlPZSIqCa9lWDGhUGxvfnv5TaFrIBR4j
-	jnOLU+HPgR6h/8Cg5m/QcllFwuecpXI4utwVZYDsHYxo3VD8Jeni1ttHSbI6/+zQnmM3BQh78LZ
-	PlvM57xDr7sMaXit2Uv7RCVf9vYh3XysLXo3PX1abUupzUjeRM+S+rbfvzkYhHXzu7q/zEa7vqC
-	FSr9WZ0OGLUvbqWEOCDKhj5zl6yxrxwOrORXf5vWT7OVpX72tEndc9lNcPqjcqFP3YzuEINRTLj
-	DvY/skPiIrwnq64RNEtFTSWca5lW9xm5HbQtoj4q+kjmGxSn/XU+H5TsqkubgE1/N3pXxzU7Ran
-	qxyfNwNsKWIGmRqq/8jhXuMdnw13EkIInbMMNBM4XBm77FBGbaX2Q=
-X-Received: by 2002:a17:903:2306:b0:2c9:994c:9a5 with SMTP id d9443c01a7336-2cfa9588d7emr6808925ad.30.1784768963146;
-        Wed, 22 Jul 2026 18:09:23 -0700 (PDT)
+        bh=f+ZqAtAmv4uQzLrMzeqzPb4YqVdPJrtC68NMrjWT2dg=;
+        b=IDTK5Glv3WVuwe7gF2Y/Mqk5kjPMJetLksQ+GAeshXirekO9Vmu1eUfdZy29ZyDWvy
+         C54Mi4Jy7iR+xzjMUEpyZisRmSpK6EgcLtdf9w0wTZgku5Xh8wKKUfdiiNrILsTlJ34O
+         cFF+70vlgF390blBTJ9OcLDeH5VDMVYiT9Drd4/pVOgOvWgJff48eYDid3OWYHznmuAn
+         bi2aa9SeIcGVajy2xxs5eMqrgZkMxhgkaZOpD1i2m4bEl6sJQ+Vvhx+NB7mi9pyYDbzH
+         CPimvDS6mT/b8PH54omf1ZveP4uarnrK7QNPCn04dflfqDb2o5wv6OaERNf0y1Rc3pS1
+         tvsQ==
+X-Gm-Message-State: AOJu0YyY3nj5tnfXLC5vMGprr0nnECW+Yjni3NxlzqnqKTRImPFVJBlB
+	Yj41JmJ7N2Yp8rhaaGSEYkn8MSQkWnr0xKO6KpHVmwn5phfvT9Vq83Dp
+X-Gm-Gg: AR+sD11OA0rN4y5ozP1/xj2esDrt7Ff7TAQTsNajQtseTKrfHAidw+3t2WXTLBHhTeq
+	u10X5Zk3y312pNRzdLr0775tzCRspKvUR1ab35vVFxo+Lo9atipHAPLOWRnCr7Kf4xYxDKKN+b8
+	rdag9RqAuLyj5EpuqmXJJl4/WdrJOHVyWcPxUtnudRjVxx2QyDxpe1wyrIY8ZMz2+o91RlE7qAG
+	9yXJ2dar+N6Oo7Rmu1OG3KlhR7yXOoLfq54welhy17CPkGTnqB4g0yJxSLnuUpKoTfokxaAPXXq
+	n8kfNTeUcrurqxjcr92I5Rf9BP3nfZt1PePtCocZAxia021TVd6QmlcCaBiS/3teJJQAlzghIof
+	2KPDvh05TIpoRyO6Mht4Vs5WiJEZJjjIkuV+bHHlBox1z167KtXmo/V1QzaPG33HmQJOZUfv/EA
+	oV8yySqjZzj8OccLnDE9hV73PoBBPU8T+m6eXsp1Cj
+X-Received: by 2002:a17:902:ef0a:b0:2cc:80d6:b72 with SMTP id d9443c01a7336-2cfa95286dcmr6311455ad.20.1784768976073;
+        Wed, 22 Jul 2026 18:09:36 -0700 (PDT)
 Received: from KRHW1CJW23.bytedance.net ([203.208.189.11])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8f350554sm22562085ad.66.2026.07.22.18.09.20
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8f350475sm22649365ad.70.2026.07.22.18.09.33
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 22 Jul 2026 18:09:22 -0700 (PDT)
+        Wed, 22 Jul 2026 18:09:35 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
+	lachlan.hodges@morsemicro.com,
+	lorenzo@kernel.org,
 	Zhao Li <enderaoelyther@gmail.com>
-Subject: [PATCH] wifi: cfg80211: publish PMSR request before starting the driver
-Date: Thu, 23 Jul 2026 09:09:16 +0800
-Message-ID: <20260723010916.76433-1-enderaoelyther@gmail.com>
+Subject: [PATCH v2] wifi: mac80211: validate individual TWT params before driver setup
+Date: Thu, 23 Jul 2026 09:09:28 +0800
+Message-ID: <20260723010928.76551-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -72,115 +74,51 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-nl80211_pmsr_start() assigns the request cookie, calls the driver's
-->start_pmsr() callback, and only then adds the request to
-wdev->pmsr_list, without holding pmsr_lock for the addition.
+ieee80211_process_rx_twt_action() validates a received S1G TWT setup
+frame only through the control byte and 2-byte req_type before queueing it.
+An individual agreement can therefore reach ieee80211_s1g_rx_twt_setup()
+with twt->length too short for the full struct ieee80211_twt_params.
 
-mac80211_hwsim saves the request in its start callback and returns. Since
-nl80211 uses parallel_ops, an immediate REPORT_PMSR can then run before
-nl80211_pmsr_start() reaches its post-start list_add_tail(). hwsim also
-dispatches reports from its virtio receive workqueue. Completion removes
-the request from wdev->pmsr_list under pmsr_lock and frees it.
+The individual path passes twt to drv_add_twt_setup(). Both the tracepoint
+and the driver callback consume the complete parameters block, not merely
+req_type. Do not pass a short individual agreement to the driver.
+Broadcast agreements remain unchanged because they are rejected locally
+after accessing only req_type.
 
-Thus completion can precede publication, race the unlocked list mutation,
-or free the request before nl80211_pmsr_start() reads req->cookie for the
-netlink reply.
+No in-tree driver both implements .add_twt_setup and exposes S1G
+operation, so this is a robustness fix rather than a fix for an observed
+crash.
 
-Add the request to wdev->pmsr_list under pmsr_lock before calling the
-driver, and use a cookie value saved before the call so the request is not
-dereferenced after a successful start. On an error return the driver has
-not retained or completed the request, so remove it from the list under the
-lock and free it.
-
-This ordering also permits a successful driver callback to complete the
-request synchronously. Document the resulting start_pmsr lifetime contract.
-
-Fixes: 9bb7e0f24e7e ("cfg80211: add peer measurement with FTM initiator API")
+Fixes: f5a4c24e689f ("mac80211: introduce individual TWT support in AP mode")
+Cc: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Cc: Lorenzo Bianconi <lorenzo@kernel.org>
+Link: https://lore.kernel.org/all/20260708195911.84365-7-enderaoelyther@gmail.com/
 Assisted-by: Codex:gpt-5
 Assisted-by: Claude:opus-4.8
 Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
- include/net/cfg80211.h |  6 +++++-
- include/net/mac80211.h |  6 +++++-
- net/wireless/pmsr.c    | 21 +++++++++++++++++----
- 3 files changed, 27 insertions(+), 6 deletions(-)
+Changes in v2:
+  - Validate the full parameter block only for individual agreements,
+    leaving broadcast rejection handling unchanged.
+  - Add the relevant driver maintainers.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f5abf1db7558..a8ba484ecad6 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5202,7 +5202,11 @@ struct mgmt_frame_regs {
-  *
-  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
-  *	Statistics should be cumulative, currently no way to reset is provided.
-- * @start_pmsr: start peer measurement (e.g. FTM)
-+ * @start_pmsr: start peer measurement (e.g. FTM). The callback may
-+ *	complete the request before returning success. After completing it,
-+ *	the driver must not access the request. If the callback returns an
-+ *	error, the driver must not retain the request or later report results
-+ *	or completion for it.
-  * @abort_pmsr: abort peer measurement
-  *
-  * @update_owe_info: Provide updated OWE info to driver. Driver implementing SME
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4f95da023746..64600e7bd251 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4661,7 +4661,11 @@ struct ieee80211_prep_tx_info {
-  * @get_ftm_responder_stats: Retrieve FTM responder statistics, if available.
-  *	Statistics should be cumulative, currently no way to reset is provided.
-  *
-- * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep)
-+ * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep).
-+ *	The callback may complete the request before returning success.
-+ *	After completing it, the driver must not access the request. If the
-+ *	callback returns an error, the driver must not retain the request or
-+ *	later report results or completion for it.
-  * @abort_pmsr: abort peer measurement (this call can sleep)
-  * @set_tid_config: Apply TID specific configurations. This callback may sleep.
-  * @reset_tid_config: Reset TID specific configuration for the peer.
-diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
-index d1e2fae5bc0e..3484956ebb50 100644
---- a/net/wireless/pmsr.c
-+++ b/net/wireless/pmsr.c
-@@ -420,6 +420,7 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
- 	const struct cfg80211_pmsr_capabilities *capa;
- 	struct cfg80211_pmsr_request *req;
- 	struct nlattr *peers, *peer;
-+	u64 cookie;
+ net/mac80211/s1g.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/net/mac80211/s1g.c b/net/mac80211/s1g.c
+index 5af4a0c6c642..abc338e22e59 100644
+--- a/net/mac80211/s1g.c
++++ b/net/mac80211/s1g.c
+@@ -101,6 +101,10 @@ ieee80211_s1g_rx_twt_setup(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_twt_setup *twt = (void *)mgmt->u.action.s1g.variable;
+ 	struct ieee80211_twt_params *twt_agrt = (void *)twt->params;
  
- 	capa = rdev->wiphy.pmsr_capa;
- 
-@@ -521,14 +522,26 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
- 	}
- 	req->cookie = cfg80211_assign_cookie(rdev);
- 	req->nl_portid = info->snd_portid;
-+	cookie = req->cookie;
++	if (!(twt->control & IEEE80211_TWT_CONTROL_NEG_TYPE_BROADCAST) &&
++	    twt->length < sizeof(twt->control) + sizeof(*twt_agrt))
++		return;
 +
-+	/*
-+	 * Publish before the driver can complete the request. Completion may free
-+	 * it before rdev_start_pmsr() returns, so use the cookie snapshot below.
-+	 */
-+	spin_lock_bh(&wdev->pmsr_lock);
-+	list_add_tail(&req->list, &wdev->pmsr_list);
-+	spin_unlock_bh(&wdev->pmsr_lock);
+ 	twt_agrt->req_type &= cpu_to_le16(~IEEE80211_TWT_REQTYPE_REQUEST);
  
- 	err = rdev_start_pmsr(rdev, wdev, req);
--	if (err)
-+	if (err) {
-+		/* An error return leaves the request owned by this path. */
-+		spin_lock_bh(&wdev->pmsr_lock);
-+		list_del(&req->list);
-+		spin_unlock_bh(&wdev->pmsr_lock);
- 		goto out_err;
-+	}
- 
--	list_add_tail(&req->list, &wdev->pmsr_list);
--
--	nl_set_extack_cookie_u64(info->extack, req->cookie);
-+	nl_set_extack_cookie_u64(info->extack, cookie);
- 	return 0;
- out_err:
- 	kfree(req);
+ 	/* broadcast TWT not supported yet */
 -- 
 2.50.1 (Apple Git-155)
