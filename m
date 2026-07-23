@@ -1,33 +1,58 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6FB530DECE;
-	Thu, 23 Jul 2026 02:41:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E7B733A9CF
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 03:11:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784774464; cv=none; b=tS/vVAtk+ZZBoAUCW/jootzArucXVl0UHfkGcV+5O8x+98G5gBZuZ/1j7DlZZexxIb3UrXvR9TUOD3WugyRhYZtLRCEio/OZOpytKKFRZFuDocEAO6u8Th9/IbfLBoeCkkOAg8LpbYU2M1ALGhk5yzC0LUpnvyoVSIllcaGg9Sw=
+	t=1784776285; cv=none; b=crKJtC5Z3wCexbSYu35moYk6FmJXd7JGWSNH/BM9uPKsUT3hFKdhphXArhgeKeA5lpcJbpM0yUbEnUMjx+AiFz7A9q/bPZDdT233Pxj/8U+iBJnqNzVKzAi/TG+PMmkTE6TbskqgCQYYaHX9Py9cJwriotT5+nD9XZKUjqAhjn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784774464; c=relaxed/simple;
-	bh=StqknlPWqAXox/yq7yE7/5mA18DJNeIxYZ/kraE0LmY=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=bWDup1ltkm3gZIm2cGSajWEWYCqxT2qDC+vHXd544dvDE72awIkxBYs4F1VU/wbYLUBOQZjuW+ALYF/jWjOzNj0jJtYrNXXaf+ooaNQh959FGO2Cq/hBPjNXxTM8fJjl5K5qft9+g1i/l3Kp+Q/etfHP7Kh/X/KZtRVzu6tSA6Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-03 (Coremail) with SMTP id rQCowABHUD43f2FqNKnWAA--.28126S2;
-	Thu, 23 Jul 2026 10:40:56 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH v2] wifi: ath10k: validate WMI header before reading it
-Date: Thu, 23 Jul 2026 10:40:55 +0800
-Message-ID: <20260723103511.4-ath10k-wmi-v2-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
-Content-Type: text/plain; charset="utf-8"
+	s=arc-20240116; t=1784776285; c=relaxed/simple;
+	bh=LrIj+VI9qdPz4umzDvLg8sj9h5IVD0JQI/aJ3yOF8Nw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=B+wTvR2mBWCm4vl6jtOUtnh2e1t99sN6y2UI1yLdGdhfLDR6vlIjJE8QPEdTaLDdPlcwIvWm4GKFz14cHv2RMhZcQud6UzdZTLC7I88m/oMYZWGstDeNSLXjjVpQSJOgYTRacGQJLndeQWtwEWh38VY1RjSvxN85ayh6GIIbiQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kNrvTi7c; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kNrvTi7c"
+X-UUID: 27ae83ac864411f1b1788b6acf885367-20260723
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=vXAAn7AG46pDpO/9QgriNaLdYfh06COEGdalmGLYbbY=;
+	b=kNrvTi7cvG2xobIAC+YNKXvklhQr+7K/W5GXn83/j9M/50LxAu1w8WeqLK7Aas8cNbEKWuDsWclkOZcxehCvH/RsqL3rybknAjIgJ8eaMF6NsK7nUDWNeY9OW0ot4gaIJdg9xRmXPlaeMMXfcnW4qdnv9EtsbeVGS8cCJLlFWec=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.18,REQID:b5beb589-9eb8-4e98-81f9-245d62544367,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:8a735a6,CLOUDID:940e37d6-1078-4cd9-8e6f-a9a3d1715936,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 27ae83ac864411f1b1788b6acf885367-20260723
+Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 757809576; Thu, 23 Jul 2026 11:11:10 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 23 Jul 2026 11:11:09 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 23 Jul 2026 11:11:09 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<Shengwei.Lu@mediatek.com>, <litien.chang@mediatek.com>,
+	<jb.tsai@mediatek.com>, shengwei.lu <shengwei.lu@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7925: Fix EHT Beamformee SS subfields to meet 802.11be minimum
+Date: Thu, 23 Jul 2026 11:11:08 +0800
+Message-ID: <20260723031108.2017653-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,174 +60,58 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABHUD43f2FqNKnWAA--.28126S2
-X-Coremail-Antispam: 1UD129KBjvJXoW3WF4xJFW8uF15WFy7GrW8tFb_yoW7ury5pF
-	1Uuw1xXFWkur4DWr43uF4kCwn0qa4kJ3sIyFyDKw1fZFyvvr1FgFs0gayUJrWayF13GF12
-	vF4qya47Jr1ktrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvj14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
-	4UJVWxJr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2Wl
-	Yx0E2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbV
-	WUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AF
-	wI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1D
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUeK
-	sjUUUUU
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
+Content-Type: text/plain
+X-MTK: N
 
-The WMI receive handlers read cmd_id from skb->data before checking that
-the skb contains a complete struct wmi_cmd_hdr. The outer HTC payload
-check does not establish the nested WMI header length.
+From: "shengwei.lu" <shengwei.lu@mediatek.com>
 
-Add one helper that uses skb_pull_data() to validate and consume the
-header before reading it. Decode and mask the command ID in the helper,
-then use it in all five WMI receive variants. Each caller keeps its
-existing skb ownership on a short packet.
+Per IEEE 802.11be, the Beamformee SS <= 80/160/320 MHz 3-bit subfields
+in the EHT PHY Capabilities are encoded as (Nss - 1) and are required
+to be >= 3 (i.e. at least 4 SS receive capability) whenever SU
+Beamformee is advertised.
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+MT7925 is a 2x2 STA (sts = 2), so directly filling (sts - 1) = 1
+violates the spec minimum. Clamp the encoded value to 3 when sts <= 3,
+otherwise use (sts - 1). This is applied consistently to the
+BEAMFORMEE_SS <= 80 MHz (split across phy_cap_info[0]/[1]), <= 160 MHz
+and <= 320 MHz (6 GHz only) subfields.
+
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Signed-off-by: shengwei.lu <shengwei.lu@mediatek.com>
 ---
-Changes since v1: https://lore.kernel.org/all/20260722042029.36066-1-pengpeng@iscas.ac.cn/
-- use skb_pull_data() following the established ath12k receive pattern
-- mask the command ID in the shared helper
-- preserve all five callers' existing short-packet cleanup
-- rebase onto the current ath-next tree
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  8 ++---
- drivers/net/wireless/ath/ath10k/wmi.c     | 45 +++++++++++++++----------------
- drivers/net/wireless/ath/ath10k/wmi.h     |  2 ++
- 3 files changed, 25 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 01f2d1fa9d7d..272dab37dc19 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -638,14 +638,10 @@ static int ath10k_wmi_tlv_event_peer_delete_resp(struct ath10k *ar,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index ddb637d6a3c3..dbe67ce2e4a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -188,19 +188,21 @@ mt7925_init_eht_caps(struct mt792x_phy *phy, enum nl80211_band band,
+ 		eht_cap_elem->phy_cap_info[0] |=
+ 			IEEE80211_EHT_PHY_CAP0_320MHZ_IN_6GHZ;
  
- static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
--	enum wmi_tlv_event_id id;
- 	bool consumed;
-+	u32 id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &id))
- 		goto out;
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index e57588c19c80..296a89106736 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5873,15 +5873,24 @@ static inline void ath10k_wmi_queue_set_coverage_class_work(struct ath10k *ar)
- 	}
- }
- 
--static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
-+bool ath10k_wmi_pull_cmd_hdr(struct sk_buff *skb, u32 *id)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
--	enum wmi_event_id id;
-+	const struct wmi_cmd_hdr *cmd_hdr;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-+	cmd_hdr = skb_pull_data(skb, sizeof(*cmd_hdr));
-+	if (!cmd_hdr)
-+		return false;
++	val = (sts > 3) ? sts - 1 : 3;
 +
-+	*id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-+
-+	return true;
-+}
-+
-+static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	u32 id;
+ 	eht_cap_elem->phy_cap_info[0] |=
+-		u8_encode_bits(u8_get_bits(sts - 1, BIT(0)),
++		u8_encode_bits(u8_get_bits(val, BIT(0)),
+ 			       IEEE80211_EHT_PHY_CAP0_BEAMFORMEE_SS_80MHZ_MASK);
  
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &id))
- 		goto out;
+ 	eht_cap_elem->phy_cap_info[1] =
+-		u8_encode_bits(u8_get_bits(sts - 1, GENMASK(2, 1)),
++		u8_encode_bits(u8_get_bits(val, GENMASK(2, 1)),
+ 			       IEEE80211_EHT_PHY_CAP1_BEAMFORMEE_SS_80MHZ_MASK) |
+-		u8_encode_bits(sts - 1,
++		u8_encode_bits(val,
+ 			       IEEE80211_EHT_PHY_CAP1_BEAMFORMEE_SS_160MHZ_MASK);
  
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-@@ -6002,14 +6011,10 @@ static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (band == NL80211_BAND_6GHZ && is_320mhz_supported(&phy->dev->mt76))
+ 		eht_cap_elem->phy_cap_info[1] |=
+-			u8_encode_bits(sts - 1,
++			u8_encode_bits(val,
+ 				       IEEE80211_EHT_PHY_CAP1_BEAMFORMEE_SS_320MHZ_MASK);
  
- static void ath10k_wmi_10_1_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
--	enum wmi_10x_event_id id;
- 	bool consumed;
-+	u32 id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &id))
- 		goto out;
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-@@ -6133,14 +6138,10 @@ static void ath10k_wmi_10_1_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
--	enum wmi_10_2_event_id id;
- 	bool consumed;
-+	u32 id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (skb_pull(skb, sizeof(struct wmi_cmd_hdr)) == NULL)
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &id))
- 		goto out;
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-@@ -6282,14 +6283,10 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
--	struct wmi_cmd_hdr *cmd_hdr;
--	enum wmi_10_4_event_id id;
- 	bool consumed;
-+	u32 id;
- 
--	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
--	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
--
--	if (!skb_pull(skb, sizeof(struct wmi_cmd_hdr)))
-+	if (!ath10k_wmi_pull_cmd_hdr(skb, &id))
- 		goto out;
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7f50a1de6b97..4ecc94712f76 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -7440,6 +7440,7 @@ struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
- struct ath10k_fw_stats_peer;
- struct ath10k_fw_stats;
-+struct sk_buff;
- 
- int ath10k_wmi_attach(struct ath10k *ar);
- void ath10k_wmi_detach(struct ath10k *ar);
-@@ -7449,6 +7450,7 @@ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar);
- 
- struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len);
- int ath10k_wmi_connect(struct ath10k *ar);
-+bool ath10k_wmi_pull_cmd_hdr(struct sk_buff *skb, u32 *id);
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
- int ath10k_wmi_cmd_send_nowait(struct ath10k *ar, struct sk_buff *skb,
+ 	eht_cap_elem->phy_cap_info[2] =
 -- 
-2.50.1 (Apple Git-155)
+2.45.2
 
