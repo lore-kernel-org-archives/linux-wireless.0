@@ -1,135 +1,284 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtpbguseast3.qq.com (smtpbguseast3.qq.com [54.243.244.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98A8929992A
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:27:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44BC7304BA3;
+	Thu, 23 Jul 2026 01:39:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.243.244.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784770034; cv=none; b=Unw/chVvxqghrslNDzFbZ5xXpxpbIN6n7ZVUHkV6yU77ynsWKD2/3+MECCgqqA+H45jfvkxsOV/DvZtn9jR8uHAy+6rsaumlfMrzJ0t+ki2kiCSh7u3gXtx6mU27LeOBdoLBFy4yXFZBJ13wnauqcTdrExPx6ZDZb7A6l1p/lB8=
+	t=1784770767; cv=none; b=hlQSegS2WQ2VZ1x/6wtSjSY08Wqjrf9+aX6BeAy9IvWSmdPB55md4O0A2YsY+/hPSMm5TRdcJfWZsO31USgXfEurZ9jiJm6yniznb1o+j0yWDuYPzqTWrKHDQXoa4YYuAD52v/EF+azgUrRLIPAQQpW8nMp3TSWGUhKBwAGzRjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784770034; c=relaxed/simple;
-	bh=kNH7Voj4BrMj4vL4hKl3TEX7nxgdpyHnc9326Sz5g2Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uXo9J3PP1zzJT9QIh8Bw124XpzzraDsrhPjmBvdr7LjrN9pWL8DoR/o2ZCyyWQPAoU45VFhXBrM2fL37oHt8u9DZX+Z08/diahUnQbfHnSLsfO71/nGg0hKPq522EzaGxFq/QL62qR5Z1/wc8k5qBXd+moOU68lJUuwgEx+BrW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=f8VCzNbs; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EXxMiOLb; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1784770767; c=relaxed/simple;
+	bh=BOqqBFnPpVANiD8OON81zfenD+3YnZ5x7wsLOPv25zs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pQ4AffF3ObQC0bbTr95FocnJO1N9oNd9wIA2SrlDQu6Ah73AyZdYiFSjYR/Gj7DTSdAPa8NlRjN/NkwdzzOkitb1YTDuy4U9gz9QfEf91oy6g0D7yvPC8CQCAssN9tRQci8rGJ7RJ1HWCbOLRnKy6NkkjiOWkPJAzGjf+8K/IR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=EyWYNLBV; arc=none smtp.client-ip=54.243.244.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="f8VCzNbs";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EXxMiOLb"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66N0X29a2264410
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:27:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	kNH7Voj4BrMj4vL4hKl3TEX7nxgdpyHnc9326Sz5g2Q=; b=f8VCzNbsyFyVwbUT
-	axprXy31irDE6miHTWLDvY8slz8skAzzZmXFwXjL5TK2s/aAoIdZ7pJmqjf4rQqI
-	UEIbJyuZmf0miU2fYVabpGCHTcUtA8vg6kzQMUssIMMa0DkHYA7SvdODXHINog3a
-	C30IMC96+k7xGEXrN+yJJmG5P+/4+XutGW/IfHcmQ4YO1dvzOblBq6Lcgv2QI8CP
-	jnUV5AhMTeiBU7+YQEofUdLdGw94a5uiVtVugidPl9YFU3W8ofbHg1/lGpB7cMmK
-	ZbUd5HIvlcw6g2r1ABjkbAzH3T28uVFslwe9178G0NxBXilwR5qZUHJvchWSSVK/
-	sjnOCg==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fjtn2uues-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:27:12 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-ca8aee88725so328728a12.3
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:27:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1784770031; x=1785374831; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=kNH7Voj4BrMj4vL4hKl3TEX7nxgdpyHnc9326Sz5g2Q=;
-        b=EXxMiOLbMTLr+IkJZFSGGSC0hbMA41pZONX4XwULvQ5OWxXGy9YBreQJLARNsuJhI8
-         tBfg5Gf5NxahlnoBj55KZb/4dhry/vsaAWVS+IbQf8settgW/UAZAge9d6ImUWeaNtml
-         8KF42fIrlK38vhXUlXR8QnDEJp6tV+GWWqtugDS+Ch5T0vstdZTfBOoIHJ4qfsNI9lkN
-         l9oP1roloWUlp8CpQ/SJQ/aSHMLTqcN6R+SXHlPvvj2PnfmKXu3hBFY7HU6hSKdhgC2d
-         jdExMQRw3r5lqe5UTaoKjPdLJV98k5Aen+gLpC6xVjlXdUd+hH9DKsXGEMjl0du2H3Ti
-         V9pA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784770031; x=1785374831;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kNH7Voj4BrMj4vL4hKl3TEX7nxgdpyHnc9326Sz5g2Q=;
-        b=Ev4BXdp68YjW7rHS73Ch46SOp80YD5ilYfuEEsQfkC3uGixySXracJyQxwc28wwe6I
-         aaHNBTH5KKCHY6FWmF6kH4+VvXLXZrXMLqBbSPMWBKOfU30gFjClxwSnxvElzHnzMsqZ
-         M7CPDqubopdnh/lkgK5F16YtNnMxcn3ZLnDugGRZM4NdFNxpjJqh26T84/XN2mXvGFI/
-         XRjPxtb2KSwQZ9rd1uevw/by4iKowSAx40Llv4+um2FJgy3njzK1azqGtcN+RXsgmYx3
-         fvsuOlphTTUciRcGLv8tdTL7g2rBMamWjY7KFA8m4K5jKlPzE4XR1p6a2S8EufhY7Ixq
-         R2Bg==
-X-Gm-Message-State: AOJu0YymgQG+fGBHAtgd8qXdjNwT4I+d7CrMoJ7ruGtpqcak3gKkggA4
-	3K7m3WlBfbYbiYUvt+23Xe61zw+C1l2Yx4v0vVEVFqXf/QQUGclrqSKzUu2EpMr+Tpd857paKJt
-	L+M64dELJxkUOT4dE5R+RnYrmuLz/rBlN8kkXbH1gSAqLKBiJ3kkFHNCfcqM7AIwugfHUVg==
-X-Gm-Gg: AR+sD12UZp8kJSTyILI3al7O1ugXevAX0wx2Zp3oFI66cR//00W/xLT69rARgoZTfVh
-	d/FKrxVkZlYJGd7XLyiNRzgMR45eDI3kcmQCU51bnFX9CaFJgnqYFxqjGmekloeYISWfMw2j2Q4
-	r806oILTttqKBPw7hUUhpF1je2vORNS9hPHXUJLyRnqtES6Ligyha9HRIWBXuzwaazkDl3qPLSP
-	aFRdtCW3EbngZRXW8i3SPTpoC4lDzIKRhCIJWLJkZgefuVIMOHhMNgUxl7oMR1xhRsrtbV4zfir
-	6aF4XP7Hah76TNFtq+ndjyMitcYqwhuY1HIqsjqmjw5jMiI222lHL2NY00jN0ERfmC88k5NqOVI
-	tbUEnGeo8VjeZ3j1eG/7pGxOEW6dzy1T1cOeDwJr48v4J7eIPoDES64nN+g==
-X-Received: by 2002:a05:6a20:4387:b0:3bf:6c05:ab with SMTP id adf61e73a8af0-3c44b21f1e1mr1034482637.58.1784770031400;
-        Wed, 22 Jul 2026 18:27:11 -0700 (PDT)
-X-Received: by 2002:a05:6a20:4387:b0:3bf:6c05:ab with SMTP id adf61e73a8af0-3c44b21f1e1mr1034457637.58.1784770030951;
-        Wed, 22 Jul 2026 18:27:10 -0700 (PDT)
-Received: from [192.168.1.11] (15.sub-75-218-246.myvzw.com. [75.218.246.15])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d12f267fdsm10579220c88.0.2026.07.22.18.27.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Jul 2026 18:27:10 -0700 (PDT)
-Message-ID: <c8634216-e35a-4d01-8f76-d6951e4689b5@oss.qualcomm.com>
-Date: Wed, 22 Jul 2026 18:27:09 -0700
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="EyWYNLBV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1784770713;
+	bh=BZZCMgTc6Qpm90dVS5kUlCRBNWLrsac5twh5hXLhuJ8=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=EyWYNLBVyZN/tHM4lM+AQz+Kq6rHYeKcbmMG1oA7Cjd5S4EHtdHhDikzNzy5C65PC
+	 r2u3+9Tp0P4vcdiuNY2XYGpRiC5NjRmSSPAVGFVLvEHJD5NR8CSkcMWy/BfOV+DeK4
+	 ADm6GgdkUxmDR1Zev1pQuQIOEOzjZaY7H0gXSvNo=
+X-QQ-mid: esmtpgz14t1784770708ta189610b
+X-QQ-Originating-IP: A6DQINafxgQzSQyXQu+pza8+iljXGTqtrScNmwKObvY=
+Received: from localhost.localdomain ( [124.126.19.250])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 23 Jul 2026 09:38:21 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 18330324833723850564
+EX-QQ-RecipientCnt: 6
+From: ZhaoJinming <zhaojinming@uniontech.com>
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	ZhaoJinming <zhaojinming@uniontech.com>
+Subject: [PATCH v5] wifi: ath11k: fix resource leak on error in ext IRQ setup
+Date: Thu, 23 Jul 2026 09:38:18 +0800
+Message-Id: <20260723013818.393470-1-zhaojinming@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] wifi: ath11k: fix resource leak on error in ext IRQ
- setup
-To: ZhaoJinming <zhaojinming@uniontech.com>,
-        Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-References: <20260722095419.1411003-1-zhaojinming@uniontech.com>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260722095419.1411003-1-zhaojinming@uniontech.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzIzMDAxMSBTYWx0ZWRfX0DCfR+xZWv62
- CQKJ9UCGwXfnVC85pVCszn0sAVz8eOPCckmt9SB7jMjtXlw5lH8w04vLstFnM4XyAUGJFoVTHIx
- k/gK6Dn074Qe9lwwtOivfsdEilWcnnrOgyPeO5rcCtFKlG03i8P52NkRaZ/I7VqhciIIuFo8OvI
- X9sdN1UHXAoH4PzniPId1L9lxH/nhYq7foLojQJ+kgwK71113c0d/5xnB9VKAq2yaoGAVpEwFOe
- MfGcb+3j4QzXlRs8BWsGOoxViGSEGXrzLI+EAMWZWs41Id/s8WjIYlVVGVjI1+/iTs4A2Jywuw4
- wWgqrdf8GmN3glhNHfAF+F1MJOVj4XJeVw0OyUpJKnxifSz5TyZ/LH4ADIX5h9oaKGRQpVPngyV
- ryc6Z+Rpz1vggS8PKmCx/Jmd+3hBR6t7eGn/2G194UkYLk7nsbcz5DG7VfNyvfrMUF8gt7cGCmQ
- 7cGm8kEE5P/na7oJi0w==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzIzMDAxMSBTYWx0ZWRfXwH0LcHGkTRv+
- IceeTAWTwJ5z35fFoovBx67cr25/AR3vmBBmJSgQHr3ZMoiPvC7vdTy8Qi3efmKA6MxDw9PBfGi
- tNYhVFR8KN3iu8t3vTq7qgC/Q6Y+BWg=
-X-Proofpoint-GUID: VMGbR0F4r76Og0RTF67O0OkH6PYp4UfA
-X-Proofpoint-ORIG-GUID: VMGbR0F4r76Og0RTF67O0OkH6PYp4UfA
-X-Authority-Analysis: v=2.4 cv=T+28ifKQ c=1 sm=1 tr=0 ts=6a616df0 cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=6VQYfvmiyQ8t40WkS/mQdw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=nIXYEoMg1qDLEO0gg3wA:9 a=QEXdDO2ut3YA:10 a=3WC7DwWrALyhR5TkjVHa:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-23_01,2026-07-22_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 impostorscore=0 malwarescore=0 spamscore=0
- clxscore=1015 bulkscore=0 lowpriorityscore=0 adultscore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607230011
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: esmtpgz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
+X-QQ-XMAILINFO: OGYfdWl7iR1yuPssp9Zj6CgFvXNk12OhlBepBYU2f1Ib5JzMeHaNC4Ck
+	pMU0xJgCL/cAJsc2E4DlGxYjtjFtQWnE2VJiO4Wpcf00Lvq21qf3hC0q5QkNKPFlgT5y8x2
+	/bq2+CRz0XB9OwghecMzf5KhS0XZE7Dc8FiYvX3qcpQtqi8Ie41tAlKrJNB/DE7PDcuzelO
+	Wqs4qf3vxIRYEKYkZecTR5b2qaE7+7IXgv8raNvmuBuMglPLR6aMdb8yrfIDlEPtndhyNP7
+	LgXtG5r4LmN2pCgNpLzP08A16fhVak8K9aXYulLwiP94T69V6Vk11V/aLP+uoyZS9OjFIWX
+	nrXC02WswP56uE0P/2wK5VRXi4u25uhwjbEelP6bwjgDDkGD0MPfWXUpgqFPcZNENzD9i6K
+	ktf4hzPR6LF2/1j6Kdf19ne3KHZ66JkcjCFgrBhzWUODQGKJhnwK7Rr/FYiqy3w1MiQA1qX
+	Nfx6e/6Qrk5Sqo4aSITY/n8EjzYMzs9EW6aXLZwH4JjyXjydMGMtxAJXyLONRw0c6gGAzvn
+	SgoIoJ/l3CYZ1sBi7umDJz+lskNmIGJMZAzqa8TFxYrztyRb30AQB1TiAOzhXumKoSqfVWb
+	5dzrkKJBeARCTyAmrzWNQUMP0l3jDYwao4M5pYCINhkzDrQNaUy7LL9k47JwZkCKcNfts+W
+	TcdOlslS/39FYO1hrPkARCizSqStkc30qpQa38/suMLvUw0uvjwa1BV5cuhz6a/caDqQbY4
+	fz3C/iA/3/MJasojH8QbzIcMfkweyiR1wpOE1A6AHsxjhBE8p6tNmz2l9AQOS3N4tZRSqjt
+	LKGFhgiz2MBk5g3yR1IGpc4RXzh79YShGKALuBYROwscTaBky1x8pGUkJPBA48pi+TGc08L
+	Ut/V2/yFWoVvxRajbEbntqcxT2f0VXtsmYEmMyNgbrO4cC+8WhPjqzc22IRFpVaF3QrCxRo
+	6vnbXXe1dUud7N0ftZxWBTyFruslq5OGgHLoMMmhj4bS84SLSoBmSE7N76457EYbDyaoQAO
+	uOiEbBYKSmyr8exvWXbjcTVxzvg0yjjerHPO74U1+hEIpy1WzjVWVpHUnGDHDiVx80SHf5u
+	3vyXNGq40Q/lT1qvRw9ft1huB3Ea8X6Mg==
+X-QQ-XMRINFO: NS+P29fieYNwqS3WCnRCOn9D1NpZuCnCRA==
+X-QQ-RECHKSPAM: 0
 
-And now there are two patches with the exact same subject.
+In ath11k_ahb_config_irq(), when a CE request_irq() fails, the function
+returns the error immediately without freeing the CE IRQs that were
+successfully registered in previous loop iterations. The probe error
+path does not call ath11k_ahb_free_irq() either, so the previously
+registered CE IRQ handlers remain attached to the interrupt lines and
+are never released.
 
-If you repost, you should either add a REPOST tag or you should bump the
-version number.
+In ath11k_ahb_config_ext_irq(), when an external request_irq() fails,
+the error is only logged and the loop continues. The function then
+returns 0 indicating success, leaving the device in a partially
+configured state where some external IRQs are not registered. This
+causes enable_irq()/disable_irq()/free_irq() to be called on
+unregistered IRQs during runtime and remove/shutdown, triggering
+WARN_ON(!desc->action), and missing interrupt handlers lead to data
+loss.
 
-/jeff
+Additionally, if alloc_netdev_dummy() fails for a later IRQ group, the
+function returns -ENOMEM without freeing the ext IRQs and napi_ndev
+that were successfully set up for earlier groups.
+
+Fix all three issues: propagate the error up to the caller and unwind
+all successfully registered IRQs and allocated resources on failure.
+
+Signed-off-by: ZhaoJinming <zhaojinming@uniontech.com>
+---
+
+Changes in v5:
+- Version bump only. Same content as v4, resent as a fresh thread per
+  maintainer request to avoid subject collision with the v4 reply.
+- Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+
+Changes in v4:
+- Drop the napi_ndev NULL guard in ath11k_ahb_free_ext_irq_grp() as it
+  is unreachable in all existing call paths. A silent guard against an
+  impossible condition hides bugs instead of exposing them.
+
+Changes in v3:
+- Extract ath11k_ahb_free_ext_irq_grp() to handle per-group ext IRQ
+  cleanup and refactor ath11k_ahb_free_ext_irq() to use it.
+- On request_irq() failure in ath11k_ahb_config_ext_irq(), immediately
+  clean up the current group via ath11k_ahb_free_ext_irq_grp() before
+  jumping to the error label to unwind earlier groups.
+- Move u32 num_irq declaration before the irq_grp assignment to follow
+  declaration-before-statement ordering.
+- Extract ath11k_ahb_free_ce_irqs() to handle partial/full CE IRQ cleanup
+  and refactor ath11k_ahb_free_irq() to use it, replacing the duplicated
+  err_ce_irq cleanup loop in ath11k_ahb_config_irq().
+
+Changes in v2:
+- Move `irq_grp` declaration from for-loop body to function scope to fix
+  compile error in err_request_irq error path.
+- Set ret = -ENOMEM before goto err_request_irq on alloc_netdev_dummy()
+  failure to avoid returning uninitialized value.
+- When ath11k_ahb_config_ext_irq() fails, unwind the already-registered
+  CE IRQs via a shared err_ce_irq cleanup path to avoid leaking them.
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index f566d699d074..bdf53aa7ddf1 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -431,36 +431,44 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
+ 	ab->qmi.service_ins_id = ab->hw_params.qmi_service_ins_id;
+ }
+ 
+-static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
++static void ath11k_ahb_free_ext_irq_grp(struct ath11k_base *ab,
++				      struct ath11k_ext_irq_grp *irq_grp)
+ {
+-	int i, j;
+-
+-	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+-		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
++	int j;
+ 
+-		for (j = 0; j < irq_grp->num_irq; j++)
+-			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
++	for (j = 0; j < irq_grp->num_irq; j++)
++		free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
+ 
+-		netif_napi_del(&irq_grp->napi);
+-		free_netdev(irq_grp->napi_ndev);
+-	}
++	netif_napi_del(&irq_grp->napi);
++	free_netdev(irq_grp->napi_ndev);
+ }
+ 
+-static void ath11k_ahb_free_irq(struct ath11k_base *ab)
++static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
+ {
+-	int irq_idx;
+ 	int i;
+ 
+-	if (ab->hw_params.hybrid_bus_type)
+-		return ath11k_pcic_free_irq(ab);
++	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++)
++		ath11k_ahb_free_ext_irq_grp(ab, &ab->ext_irq_grp[i]);
++}
+ 
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++static void ath11k_ahb_free_ce_irqs(struct ath11k_base *ab, int max_idx)
++{
++	int irq_idx, i;
++
++	for (i = 0; i < max_idx; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		irq_idx = ATH11K_IRQ_CE0_OFFSET + i;
+ 		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
+ 	}
++}
++
++static void ath11k_ahb_free_irq(struct ath11k_base *ab)
++{
++	if (ab->hw_params.hybrid_bus_type)
++		return ath11k_pcic_free_irq(ab);
+ 
++	ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
+ 	ath11k_ahb_free_ext_irq(ab);
+ }
+ 
+@@ -524,20 +532,25 @@ static irqreturn_t ath11k_ahb_ext_interrupt_handler(int irq, void *arg)
+ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ {
+ 	struct ath11k_hw_params *hw = &ab->hw_params;
++	struct ath11k_ext_irq_grp *irq_grp;
+ 	int i, j;
+ 	int irq;
+ 	int ret;
+ 
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+-		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 		u32 num_irq = 0;
+ 
++		irq_grp = &ab->ext_irq_grp[i];
++
+ 		irq_grp->ab = ab;
+ 		irq_grp->grp_id = i;
+ 
+ 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+-		if (!irq_grp->napi_ndev)
+-			return -ENOMEM;
++		if (!irq_grp->napi_ndev) {
++			ret = -ENOMEM;
++			irq_grp->num_irq = 0;
++			goto err_request_irq;
++		}
+ 
+ 		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
+ 			       ath11k_ahb_ext_grp_napi_poll);
+@@ -585,9 +598,7 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ 				}
+ 			}
+ 		}
+-		irq_grp->num_irq = num_irq;
+-
+-		for (j = 0; j < irq_grp->num_irq; j++) {
++		for (j = 0; j < num_irq; j++) {
+ 			int irq_idx = irq_grp->irqs[j];
+ 
+ 			irq = platform_get_irq_byname(ab->pdev,
+@@ -600,11 +611,23 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ 			if (ret) {
+ 				ath11k_err(ab, "failed request_irq for %d\n",
+ 					   irq);
++				irq_grp->num_irq = j;
++				ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
++				goto err_request_irq;
+ 			}
+ 		}
++
++		irq_grp->num_irq = num_irq;
+ 	}
+ 
+ 	return 0;
++
++err_request_irq:
++	for (i--; i >= 0; i--) {
++		irq_grp = &ab->ext_irq_grp[i];
++		ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
++	}
++	return ret;
+ }
+ 
+ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
+@@ -629,16 +652,24 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
+ 		ret = request_irq(irq, ath11k_ahb_ce_interrupt_handler,
+ 				  IRQF_TRIGGER_RISING, irq_name[irq_idx],
+ 				  ce_pipe);
+-		if (ret)
++		if (ret) {
++			ath11k_err(ab, "failed request_irq for %d\n", irq);
++			ath11k_ahb_free_ce_irqs(ab, i);
+ 			return ret;
++		}
+ 
+ 		ab->irq_num[irq_idx] = irq;
+ 	}
+ 
+ 	/* Configure external interrupts */
+ 	ret = ath11k_ahb_config_ext_irq(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to configure ext irq: %d\n", ret);
++		ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
++		return ret;
++	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
