@@ -1,137 +1,85 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8457D1C3F0C
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382FA2BB13;
+	Thu, 23 Jul 2026 01:12:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784769022; cv=none; b=qngnP73utffz50Dj56TLc1r73YCW8BbwnFmIMGdLeIWv38LBTXQPvXsCq0LxlRP8S+M08tbaa5RYh+ISJn3PincvLmuXYuHf/sCWQBkzHqwrELlx+qFHxYu7nY1FSFRMA66NAXg8nHGMOmUfhT59ktm2+Fk9zu/hlJrirHI9mRA=
+	t=1784769186; cv=none; b=j9deJpIyLbdlT9BONM4Rf6MDo+Qkg4m2lr9tubCGZ3D1gY/YzSD7yql6WYvFRv62rJLWtw4csAcf5U4WDfBtt1eXCW271gH0WMgC/lto1bSrT6hWkyMbp+do2Lnc2u15FZXT5k2HTBa9Fyyw+pbOQ45qIbl5BP9Bm4lO0Lp1pSc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784769022; c=relaxed/simple;
-	bh=SHYCWBQRYcbeMUNkhNZcYPbpD/drfADhAkDqNrEPbEo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OxU77dOall9gtyh9g1uRScrrE4xd+ayJaa/Dxc5yI7D1n8cRW0Ag1XYHTc8fm61AQLd+X9jriqmzMl7x09e/W5yeUvzvy6DtS29pnwRysUQFlucqbKUqBpmUVnUTyRI1MB07NtozLaAdUeKn1hV9Vkw5EqDrLDlYXeqLOtc+euo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kMucKhLN; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784769186; c=relaxed/simple;
+	bh=PYkSapDs7gVYLipbpFGEaU+VL3bLc5ddWrLrLCEqQZM=;
+	h=Date:From:To:Cc:Subject:References:Mime-Version:Message-ID:
+	 Content-Type; b=pM96/YdSF3QTdWPtxgAw6wsKhxBtcmzugeSlujbp2A9BSkqWIpV2JCUAY8mcwyXi0xZsS6up3KRL/wxaV0Nqgs/78ByC2Z1Tqc++zxelBDnxmTwL5jE3hKDWGAlewyeuLF9Xp0/2j9+Iz01j2b2VJ0ZEsHMr2eFEHoDI1mlgK2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=kBxjnbVt; arc=none smtp.client-ip=18.132.163.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kMucKhLN"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2cf6d65d8a7so1682815ad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:10:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784769021; x=1785373821; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7X81Rbyibvh6xqN/yaT9IUi74PeKJQjUFG+D5wQw2cc=;
-        b=kMucKhLN8ovOfgt9ctkB/RtC9+bsZFd6T4hGXfcWml1GFhql+crjEOA9zWOdgZvmP2
-         +lgd9MYLkcja7/0TYJyjc/4atolEPAZozJ7LwQfCvI7K+xuqii98BRRiYOwN/i4nAy+W
-         9RpN+W7Xsd0uknMbVs/hCwGAnskCWDGNCcDGjLJBJMsaNAU9pAcdmHo2aGxPUfNugZ6G
-         YZBUjPL4NWF9TXy4TKZmus1GorBkd3Ny/cuwOghJncKKErBekOBvoZCdvU19Iv7+U7DC
-         eUcsi0MQJ5vC+lgRDrB1WtPEFQflYYgc0VFEVNHIHKE7mJJlXthYNXhOOo4ImS+ZEwAE
-         lFTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784769021; x=1785373821;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7X81Rbyibvh6xqN/yaT9IUi74PeKJQjUFG+D5wQw2cc=;
-        b=DzQaO+Hx00T+hOyveDWYxEPeGShRiCPovMDynQuQoEBJtO+hwKJyQVHPU9YMyLStgL
-         IHX2FiPPw7zYDZQjHkodbHhLcgNB1kd92dPAFeO+R0raHCUN7p6db2mvNeki6P1LYnQK
-         JxWJ5W08NDdCvTTC5iWrSUrSvUoIWbG/l71nbt6L9u0X+/lasfoH/QPAnmoAgsZVwUrd
-         Zt9L0Ccibdsl0iUpNVCZ5Lb5Ndl4UMEukg/CCu15VZCivarHp8xTrF+CP3coHHqGW4CT
-         05I0XGG6gqIX87aY49HSr5M8myk9W6eiW2USIwjpY487nWD57agobwWDQrAkSy7OCaI+
-         NX+w==
-X-Gm-Message-State: AOJu0Ywc1oND1p0mC6J6oqve2a3euJuId2xh2J5MQ9vsO6hBBXhamQpf
-	GKlMLZD32lGFn4FEOfCm0NZB788YjKsjkve6LenHS7MRxMJIzuCtmk3M+hJhlnGkj9q73w==
-X-Gm-Gg: AR+sD10UruYRbVQ431Kw35Vdf/2OiMYwfrrGicPAmvuI8kS0tvuYSiwCNk85+SC5DL4
-	Bo3SmR2FGOtFlGae3pjuXfnd8ZBgSVidk6uWS0DREbCMfY/gKWx611S7MQ6s9XpX0GrqmeuFC2k
-	iHJ9iijwE8lsL0gEolBojKS9rQZfrshFr/hGWnjB/vddvTtqSj1pBY9Kd6EXqWW3emxdeHa+Z3T
-	aNEFAYzy5qgEanJP3f12YJU89+eyjVB+WZZEGYQt4be4SSOkO6Zsk44LfkUBca7IJIPnPSMSLSD
-	Ea/GspxrvPXPmvondSW4x5DtEcKVAE4C6IN6ITfcKXNq9xdNbPyENtcOT5+yf5xxpSjjsocui/i
-	26DIVBOXlXJGrRzUDKnZ3oBUdGG7M4Vs+ti/mdwDGf1lK39GrcNHUR0xr8dVKet234aN1FR4bxt
-	XoM4TxSAe3cMVVm17WMFeuVWLOr+zgz1bGOXZkQ27hJqzE/6R9WCU=
-X-Received: by 2002:a17:903:2c08:b0:2ca:d31e:ac50 with SMTP id d9443c01a7336-2cfa71d95c0mr14363935ad.17.1784769020838;
-        Wed, 22 Jul 2026 18:10:20 -0700 (PDT)
-Received: from KRHW1CJW23.bytedance.net ([203.208.189.11])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2cf8efd828asm23053005ad.19.2026.07.22.18.10.17
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 22 Jul 2026 18:10:20 -0700 (PDT)
-From: Zhao Li <enderaoelyther@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	johannes@sipsolutions.net,
-	briannorris@chromium.org,
-	francesco@dolcini.it,
-	Zhao Li <enderaoelyther@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: mwifiex: validate action frame fixed fields
-Date: Thu, 23 Jul 2026 09:10:13 +0800
-Message-ID: <20260723011013.76968-1-enderaoelyther@gmail.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="kBxjnbVt"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1784769132;
+	bh=PYkSapDs7gVYLipbpFGEaU+VL3bLc5ddWrLrLCEqQZM=;
+	h=Date:From:To:Subject:Mime-Version:Message-ID;
+	b=kBxjnbVtCtAoVs3rIDTkzNnvRWNOzmWOYfNz7zpuIjBvHUFOYXPr4quXAFvzzcp8r
+	 LYgBfklroIfMCFQ4vvT4YGrot5tDycR2y0g+s0NP6Lq9xNvvHDiJRaR5bbShFtN1EV
+	 PBpO9gW/OiaERo+X78LsP8U0cWUUYdhNSYFv8BvQ=
+X-QQ-mid: zesmtpsz7t1784769123t6360587c
+X-QQ-Originating-IP: yYjmTf2iaKGi23u9FNOyf7hM0f6iS/1kcv6aSjsYu0E=
+Received: from PEN002676 ( [1.202.39.170])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 23 Jul 2026 09:12:01 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 9086336731519733227
+Date: Thu, 23 Jul 2026 09:12:02 +0800
+From: =?GB2312?B?1dS98MP3?= <zhaojinming@uniontech.com>
+To: "Jeff Johnson" <jeff.johnson@oss.qualcomm.com>, 
+	baochen.qiang <baochen.qiang@oss.qualcomm.com>, 
+	jjohnson <jjohnson@kernel.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>, 
+	ath11k <ath11k@lists.infradead.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4] wifi: ath11k: fix resource leak on error in ext IRQ setup
+References: <181b5ee0-f002-4f5e-93ff-49b6aa0a6e61@oss.qualcomm.com>, 
+	<20260721072128.142668-1-zhaojinming@uniontech.com>, 
+	<a85bf89e-5a4d-40f7-9797-66f078427f96@oss.qualcomm.com>
+X-Priority: 3
+X-GUID: 20D9622D-8241-4E97-B2B7-CE9E7F885D5A
+X-Has-Attach: no
+X-Mailer: Foxmail 7.2.25.375[cn]
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Message-ID: <D1E55E3E9CC1685E+202607230912010225815@uniontech.com>
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
+X-QQ-XMAILINFO: NMB3uNxca02mAaaZKl/rhqidUwFfJ1IUMqhj6rrpPrkXrIEwrcYuy3QM
+	1CbNLy25vVkSTjf7AOan+Y9y51RSOfFKTk+0PZ7vR0JuBMmCxdYYcGZaKCxe7OyoilK5D4C
+	jptNHxfx0vVD+Rym+ad4ee/qIoe37UrKh248Tm3BGx0knSh3ux62YGYQ/FZiD0QMZpnaMXV
+	A9Owcud38thOz0WNHAdjQJqCEWK35xZQ0JNHburCYjNaPgagasmLJTNn3RGDbTilQqr8d75
+	TyEwyzi2djE1Iywsx11oBuuyW+VUT/kA32Fmwx6MA+qBygC5Tojyj8KCx5srTGBJRtoKeTY
+	JUd1igSw1jteAKZIbAE5Dd4qAJn0ZIngvs1Cwt+Yg2DNw4nzzxOR7qRR/ptdoBuopY8fHUZ
+	AVFaiYgBScgHDqM0hwrbU6BH91vbaO+d2/JUPK+62yy5qF4vgOEbSI9aREjzVkIM4RavpBq
+	//yUAzOsVnGkISsS538CgW81z1ZUA2/6sXXP32AuD5JzYSlY3mnqbAv4vKZLeDefGW2AZcJ
+	jjEkfQy/YgJTn2VioKxI2Wkg5dS6qK/U1YOJEjRyHkvMWu0ZMaC+xSBCBx8Gym6+4PyBDSX
+	yGnc/WL1xjJuh/tz4ikc+2owTFcX7zU0GurZbKD8nRRRfLgcHUocO/h5YslEx2i1wdxyY+1
+	tdEEpg6r94c+hMIfrXBrrSZr82la5uCQMnMlh5IeRoIsBBw37OoNSWvPh0KwRM6HsLZtxGu
+	7msgwvmr7r1LQ+E92RcMXxFCdKllO7LzfOy6qAkP3WOS7dGon8ttYnI0l3wjwmAL9s39u+R
+	1MTSYvJ+4uN2ggWjl8iF8T7tchImvd4AOYhzeCiTnBSuzf8CSUPrzAFVxFCT17Y9gtuGI7+
+	nWecVgzUTUZweCrq1c9jQVVEfAv/PgV1bey7iVbpCbRbYaoQbSFz8gX9QA7hu94HkMYH4iF
+	WivuX5ZmEwhRJsc/RlZWrfS5iSWCmg0OSWFqzzjMevAtEm7d+mdg2+Pfg
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
-mwifiex_process_mgmt_packet() accepts an rx_pkt_length as small as a
-four-address struct ieee80211_hdr plus the two-byte firmware length prefix.
-After stripping the prefix, mwifiex_parse_mgmt_packet() can receive a
-buffer equal to sizeof(struct ieee80211_hdr).
+SGmjrAoKSSBzZW50IHRoZSBsYXN0IHY0IHZlcnNvbiBpbiBhIG5ldyB0aHJlYWQuCmh0dHBzOi8v
+bG9yZS5rZXJuZWwub3JnL2xpbnV4LXdpcmVsZXNzLzIwMjYwNzIyMDk1NDE5LjE0MTEwMDMtMS16
+aGFvamlubWluZ0B1bmlvbnRlY2guY29tLyAKClJlZ2FyZHMsClpoYW9KaW5taW5nCgoKCgo+SW4g
+dGhlIGZ1dHVyZSBwbGVhc2UgcG9zdCBuZXcgdmVyc2lvbnMgb2YgcGF0Y2hlcyBhcyBhIHNlcGFy
+YXRlIHRocmVhZC4KCgoKPgoKCgo+L2plZmYKCgoKPgoKCg==
 
-For action frames, the parser reads the category immediately after that
-header and, for a public action frame, reads the following action code
-without verifying that either field is present. A minimal frame therefore
-reads one or two bytes beyond the RX buffer.
-
-Validate the header and require the category and public action-code fields
-before reading them. mwifiex parses the firmware four-address layout before
-removing addr4, so add ETH_ALEN to the standard
-IEEE80211_MIN_ACTION_SIZE() offsets.
-
-Suggested-by: Johannes Berg <johannes@sipsolutions.net>
-Fixes: 72e5aa8d2a6d ("mwifiex: support for parsing TDLS discovery frames")
-Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/66f148d83eb9f0970b9abbccc85d1b61244e54ad.camel@sipsolutions.net/
-Link: https://lore.kernel.org/all/20260708195911.84365-8-enderaoelyther@gmail.com/
-Assisted-by: Codex:gpt-5
-Assisted-by: Claude:opus-4.8
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
----
-Changes in v2:
-  - Add a local header check and express the action field sizes with
-    IEEE80211_MIN_ACTION_SIZE(), accounting for the firmware layout.
-
- drivers/net/wireless/marvell/mwifiex/util.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-index 7d3631d212236..4043590137391 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -313,13 +313,22 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
- 	u8 category, action_code, *addr2;
- 	struct ieee80211_hdr *ieee_hdr = (void *)payload;
- 
-+	if (len < sizeof(*ieee_hdr))
-+		return -1;
-+
- 	stype = (le16_to_cpu(ieee_hdr->frame_control) & IEEE80211_FCTL_STYPE);
- 
- 	switch (stype) {
- 	case IEEE80211_STYPE_ACTION:
-+		if (len < IEEE80211_MIN_ACTION_SIZE(category) + ETH_ALEN)
-+			return -1;
-+
- 		category = *(payload + sizeof(struct ieee80211_hdr));
- 		switch (category) {
- 		case WLAN_CATEGORY_PUBLIC:
-+			if (len < IEEE80211_MIN_ACTION_SIZE(action_code) + ETH_ALEN)
-+				return -1;
-+
- 			action_code = *(payload + sizeof(struct ieee80211_hdr)
- 					+ 1);
- 			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
--- 
-2.50.1 (Apple Git-155)
