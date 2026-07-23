@@ -1,154 +1,117 @@
-Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E88E1C3F0C
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:09:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.217.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784768998; cv=pass; b=Xz5VfPCcaUydMhvQk86HEo7aFiJJYD5zqzrDEE/iTk+0uqrHIXU00U05QB+NGSSHNk+PrTQ/fDkPazJHzrC5IwG+Bx51o4aTH312TnMBV3jkV9WJjfy4OTSTMNXiChfhlU47wJ5g+G3b+rVqoy1ZfuiB4V4csbbcHvtmmfpLOWo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784768998; c=relaxed/simple;
-	bh=XQgUFJcHrVYt/gu00yuydgpqEscujZmrmC++SBTuV1o=;
-	h=In-Reply-To:References:MIME-Version:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Ktjkd5t4m5bA7Qh9EwJ47ZV1cZ/TSUwu9hrs1W6TRXEol+LOmrnpSK2UNHuzDnRxyNPlzqsOawsZ0SvecogDQqpxJUx9JXGhCNraEcEvfGFXXi/FRqpELRfbV3dbzJFk10v74p2lM/i/m/wdxCU4Wm/YzyoryIVWsTFUVCyTbsE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WKHplWdX; arc=pass smtp.client-ip=209.85.217.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327431C3F0C
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 01:10:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784769010; cv=none; b=FOxd/pgoXC45Ftg5LgGcJYc8MczJuvK6l+aqJrEBsjPSPZgpQGhmWN1o71J6fXUnOJNpXiqbhCAgaAAV8gtIGO4K4r+qjyOwC/frnAYGCa1kI5/vYPsL30glWn8n9Q9Ya0BtQsjclk4xluF4Tnl9TsrDR2ADwJIzsesKcbGO7+8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784769010; c=relaxed/simple;
+	bh=Sy16K24qDpp7PICHqfmOrd5cZptXz9xLQaMlgu6spd0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lD7WQ3riynFclE15SBBNojVcnrreaH3P2MPdwfz3cLwo/zCGVUu1V+J89l1NZnaL+N57PmU2s7tom04l3EWRykLyh2vUzzIqnDBAtYmOtP+1Z8JKtrGrKYJuOahTdQO5ykLm7Ejj2G2JgytaAvur/EezD2ORhrX3MhWpYwoiUJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PP9Lhz8i; arc=none smtp.client-ip=209.85.215.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WKHplWdX"
-Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-74ac3ea9c9fso23830137.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:09:57 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1784768996; cv=none;
-        d=google.com; s=arc-20260327;
-        b=FW/utEW7uxyvuwWTzijWeEnirE26Gh8LYOh2vuDw36TdizigFpTqpZ+YbqPlOjrJNu
-         whtLOI4EoX60IkrVVJCUs9lFKFG1N7nRItld9vjQdwTls4LpcGkwE/u+97L+cLPA4h0e
-         /w3T6jb47S8A4AhKhnA1OYADpQaoH3lxmreOZCVXnkjkY/GLZrasb0PDDGG6UDGf30Ar
-         /1G4KJIrPaEMriIv+HwW9T9yRHUZWoaNQ8v6BvtbM1NEA1O/qMphORRQcE+P96HItpuX
-         3ejIDz1Uf6FOo/48bhQxEOuAvDUOUE2+2Wtt3Wf5hFeKgsVmjleMqFpCjl8yMHlpi86E
-         55tw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:references
-         :in-reply-to:dkim-signature;
-        bh=cknJ4Y9jl+Hlu1GsDY602pJfVvZ6G49X7vzHwgawibQ=;
-        fh=uRFnZbxsUgPvc+Hwmr6ETAp26wBMl5gQLAhq97u+714=;
-        b=kPdP4gtZ2Y+LxKaT4iRuchZOy4lFIb8PtuEOXjw13T6W5aMggd0W7Mfz1tRS0XPfgt
-         x3tKML6iqqMPh+eVnh0rUVkwQ43L0WF+QKbtuIr094Y2sampCvvVnjPXykijSUgyeSEZ
-         l+4pZQHuGYaPY1pWUjtMnvjPdlaPR8AYL74tCcI0uXkUc0tzyKyA58B/GRgIiQJlDNma
-         R2qck5+JiYxmzqEU3wJUgtu+lrgDbK7IwUSH6sIXdS6ABPh8y5xjzkM17DBRUYHKnXkb
-         VX6QhRLHh6G4b57yiWFXyd9ZnwQuVwWXv4EgYgeHEs+lzaejV8GLgc10NqNV5M3goNUg
-         FXsg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PP9Lhz8i"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-ca00f126b7eso84399a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jul 2026 18:10:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784768996; x=1785373796; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :references:in-reply-to:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cknJ4Y9jl+Hlu1GsDY602pJfVvZ6G49X7vzHwgawibQ=;
-        b=WKHplWdXseyKwWXOA4nbDTALiDdg1w4WEVvEp5Zcn2kuqA33N3130dOoOrQg6O/mby
-         mefZy626iAIxr4GfC5LkLJJ0SWfhxLzQuEzZUc/BqmsnDGjP8M6cD1T2u84H4Wgl9lXy
-         6Qgn68+1ohBninXHwwKwztgD7RFIfiO/3+dP5yr2DEmncWJHNCRECWZqoTRyJatnKKJX
-         1ln3piG8Gu98epv3r0MZdbCMtVT6m8si+fd9Nl2/q6NUODNPKJ4TrP+OTgXVf/Swv/H2
-         L2HPEPf4CB4bBItSV1Tm0WPHTCU4IbGkzJuMlhVdWjij857hYCk8NPGV+gR8d11RDhdH
-         BfOg==
+        d=gmail.com; s=20251104; t=1784769008; x=1785373808; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=XV45lch4j6NlWc5z+lGZFxIZUMUzY2iGbKyDWLWuSmI=;
+        b=PP9Lhz8ieXDxBG0omPHhG0fLIyjVKthZ/OFugjeUbiF38mzlVmYTVEwiWbZGcgRnvN
+         /dNJkuRQ63qNp2NYG/ZyvZh8oGghLbxcYqINCKUYSSVdsb/4zKEsVRhHbQ+msQJ2DrsW
+         nqblEg5rpcArJMxd00uvyIRQAYSa4V1VTXX1NqULVKL7qzPz0V6eK8ajfH+iSsK2v5P2
+         1BWFsJnspJX4l9wLtwhpojDgvyRs7A3te69Y96Ui4Y5zliLqdmkBD4KnosncYOAtBD1T
+         N2pQCiPraO5gtLxdxgI88Dmxkikl+fpKiq93T1WCpfYj3Jgc1AiRl2tW/KxU36meuR+y
+         TElA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784768996; x=1785373796;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :references:in-reply-to:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=cknJ4Y9jl+Hlu1GsDY602pJfVvZ6G49X7vzHwgawibQ=;
-        b=gaadhT9grVIZz65db8lwO9CDYE//BgquVKK3CtT2ED6+EOTNToXIxjKBySxEPzO8bk
-         GVQWtINp5zmr2tbDJblD6Ap2DBbaTfxQAPaZE77T1PaZfchbd+n2cbL9VAsAVOPmrP2k
-         0+JACAF/Rcf1C1/EvI8I1u9MgoK2nsBzVgeTmne2RwYXesfe357LrSlaZFfeshlie8Eq
-         DGnJSk8Way0+8MWcjVfDqw9nM08DPauhVwMNcvUwCcEE3h9ogkCINCSccruNgE3mSq8X
-         PZCQp1cMH6/PCtU7me3WB5QwDUmNuXtNrEeQwIMyFTzXijMgi0vcI1yVJG1TNgZEWA/C
-         q5DQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrOS5KNBem/jBPQLyvB7KdGw+8amqnSXsynbGtLWrOvpdM6PieXRXF38W8icn24qMC8wXeBLRDOtjXDh8+6nw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyA5VXkbwvqUr3YfaopvLBkLkU62I87Sp210znxRUNpwSyLkjpM
-	Iy1t2XY5yQmDfgaCGvYDHGxzRieC60foOOm3F4qeWSkQ8wVUbt9tKsYA8dbh1X0sdh01s446VQs
-	ZKBalyfbR6Enn+8RvMeoOr2zuKy9aOdw=
-X-Gm-Gg: AR+sD11CPjuSy7VZmdw/JmTceKcwDy1mCWLNYAvedGF0LbPgzfXCEFv5rcx4qTFCFX8
-	1rrFhIY/+lhUzUEmG7qiiL2ai76WGDIJx6SjoIMiNLV8sIYDCqoiggVhtlU74pn5NSTO62NIDX6
-	lgb63H4I0Jsl1+wO9UDiI/YdrgPzMdQvL5gFIq3APXP+E2vSS5qYxEQrvFhkehvWK5NV5RoA59j
-	HEUz3UvtOLhLGYQa0HBmqwiFii0d3hgNnGaqq/rb8SlKSEPfar3DIOQ2Vg=
-X-Received: by 2002:a05:6102:5125:b0:737:491:5e49 with SMTP id
- ada2fe7eead31-74d5fdd01b4mr337902137.18.1784768996111; Wed, 22 Jul 2026
- 18:09:56 -0700 (PDT)
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Thu, 23 Jul 2026 01:09:55 +0000
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Thu, 23 Jul 2026 01:09:55 +0000
-In-Reply-To: <209a011cf5f87881881cd338e1d3ec6baa75bef6.camel@sipsolutions.net>
-References: <20260708195911.84365-1-enderaoelyther@gmail.com>
-		 (sfid-20260708_215930_683827_CD8CF763) <573e7a49f4e9763b0cdb22bb4fc875bca1335c70.camel@sipsolutions.net>
- <209a011cf5f87881881cd338e1d3ec6baa75bef6.camel@sipsolutions.net>
+        d=1e100.net; s=20251104; t=1784769008; x=1785373808;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=XV45lch4j6NlWc5z+lGZFxIZUMUzY2iGbKyDWLWuSmI=;
+        b=Vf1YfDcjG2Dq5X8U47FrcuXEjb07U+GrpCmMfgsEEsbeYLJ7B/reAziyVuZ1pFCFKk
+         urRyUFyhnOBWbBpUU14ADKmEku5IuiYIXV7wX7lSvbZg0qdNOXVZk/ZT74m8MJREzOzG
+         HnjaTnO+MwCmRWvsAWtjpHwlaRrGwApjR8MkPbFHHz1eq5OSUkKL0JUuYKxgNW04jB22
+         158JQhlPRjLeGme4sGs3nOT0zjzONcNWBQYAho0qSHoELyJheaLkri7oJWD1WA3srZS4
+         zPZ3OKxN73beBNCOwy5tNfbMeYndNXiphBfJDJYrHoQeX27HCqLpjGw6BISGnv8SXDnZ
+         0ghw==
+X-Gm-Message-State: AOJu0Yx8rxEYIcoPT7UWn/1oyIWdwv4BgdlDNoGxqEmE8g8QbplCgHJY
+	PNvcM1bLX0U9K6EugcqBtQOmb7oWVmhYmF1xVQZQIs9PUX98IKU5+dnL
+X-Gm-Gg: AR+sD10QmR1LbNplbtJrn71VOBNAxkV7k5JlQBTPrzZ6x/jFcO9T0MRtmRNrPpRtT2o
+	ugjz/YDLuIMuFwfTpoKiACUQxrELo/OVlvY2J6w0G8varFSOdnKsVf2+CnOdp5Ut08hAdzIQY0i
+	3/4zDJ3Z9vtUvV1pYjzoaBVMyuQvOReL8xe979K3V2g0Q4Ug/VCUTxs1DjomNKwvxi5kEHU8haK
+	07pxPVlQfiPAFtA3S5JsKFA1cyJbhkGu/3fWAHs11IjMEfHLRY5nIRQk7lEIwan5g/FulbGOdL5
+	m0WhFY6DW3TAqOsYAX1mFUCVeHI/DYp0uaCWJrKcjHg4mjZhI29Gl6UzRuhfDFsUYbCOkhgqAAn
+	BEGJUWTDDHVW3BztvU13D69PnR9KSOPDKb7E2QPoellT+ECI2pAZpW8ZWvch5JMh3I9H/pJz/3i
+	gjYfKPHpjAWBoXa+3xrQqr2bG+GFuUwk8q8BbMVg3f
+X-Received: by 2002:a05:6a00:2ea6:b0:84c:4b58:2cec with SMTP id d2e1a72fcca58-84e2b7e3879mr1357215b3a.15.1784769008136;
+        Wed, 22 Jul 2026 18:10:08 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([203.208.189.11])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e17262d82sm2148975b3a.15.2026.07.22.18.10.05
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 22 Jul 2026 18:10:07 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	michal.kazior@tieto.com,
+	Zhao Li <enderaoelyther@gmail.com>
+Subject: [PATCH v2] wifi: mac80211: skip unused probe response countdown offsets
+Date: Thu, 23 Jul 2026 09:10:01 +0800
+Message-ID: <20260723011001.76851-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Enderaoe Lyther <enderaoelyther@gmail.com>
-Date: Thu, 23 Jul 2026 01:09:55 +0000
-X-Gm-Features: AUfX_myxa6PfvDlkMrJSoOiR7oAWMKClMqTF58wA1hK_VXYOgnN8pphvAlqoRIQ
-Message-ID: <CACHPgzwFVrpntk6sz8-iukmu=+-6-Eb9qU5MR11iASa_RH85mg@mail.gmail.com>
-Subject: Re: [PATCH 0/8] wifi: fix PMSR lifetime and frame validation issues
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, miriam.rachel.korenblit@intel.com, 
-	briannorris@chromium.org, francesco@dolcini.it, jaewan@google.com, 
-	daniel.gabay@intel.com, emmanuel.grumbach@intel.com, benjamin.berg@intel.com, 
-	pagadala.yesu.anjaneyulu@intel.com, peddolla.reddy@oss.qualcomm.com, 
-	lorenzo@kernel.org, john@phrozen.org, patila@marvell.com, cluo@marvell.com, 
-	linville@tuxdriver.com, quic_alokad@quicinc.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hi Johannes,
+mac80211 copies cfg80211's variable-length countdown offset list into a
+zero-initialized fixed-size array, leaving unused entries at zero. The
+beacon branch already skips those zero entries, but the AP probe-response
+branch writes through them unconditionally.
 
-Thanks for the reminder. They should never be a patchset. Patch 3/8 is with
-the Intel maintainers, and 4/8 is applied. I'll send the remaining patches
-individually after rebasing each one.
+When a probe-response template has no countdown offset, the write through
+an unused zero entry overwrites resp->data[0], corrupting the first byte of
+the template. cfg80211 already bounds explicitly supplied non-zero offsets
+in nl80211_parse_counter_offsets(), so this is a zero-sentinel bug, not an
+out-of-bounds write.
 
-- 5/8 (probe-response countdown): cfg80211 already bounds a nonzero offset
-  so original out-of-bounds explanation was totally wrong. But
-  zero-initialized probe-response offsets are treated as valid, which
-  corrupts resp->data[0]. The v2 skips zero offsets instead.
+Skip zero probe-response offsets, matching the beacon path.
 
-- 6/8 (S1G TWT): added a guard before the driver callback, with Lachlan
-  and Lorenzo copied, sent to wireless-next.
+Fixes: af296bdb8da4 ("mac80211: move csa counters from sdata to beacon/presp")
+Link: https://lore.kernel.org/all/20260708195911.84365-6-enderaoelyther@gmail.com/
+Assisted-by: Codex:gpt-5
+Assisted-by: Claude:opus-4.8
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+---
+Changes in v2:
+  - Describe offset zero as the unused-entry sentinel; do not claim an
+    out-of-bounds access.
 
-- 7/8 (mwifiex action frame): will use IEEE80211_MIN_ACTION_SIZE() and go
-  to the mwifiex maintainers.
+ net/mac80211/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards,
-Zhao
-
-On Wed, 22 Jul 2026 16:37:55 +0200, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2026-07-21 at 18:00 +0200, Johannes Berg wrote:
-> >
-> > > wifi: mac80211: validate probe response countdown offsets
-> >
-> > I think this one is falling into a typical LLM pattern patching trap, it
-> > describes [0] as being out-of-bounds for some allocated data, and
-> > neglects that the offsets have already been checked by cfg80211. Please
-> > describe more why it's actually an issue beyond "there's a similar
-> > pattern elsewhere".
-> >
-> > > wifi: mac80211: validate S1G TWT params before driver setup
-> >
-> > I don't know about this, you should probably resend it. Anyway I'm not
-> > loosing sleep over it since there's no driver with the callback, tracing
-> > is mostly not enabled, and while a potential 12 bytes OOB read at the
-> > end of the SKB is a bug, it's not a very important one since there
-> > should be stuff there anyway.
-> >
-> > > wifi: mwifiex: validate action frame fixed fields
-> >
-> > Francesco should look at that - again, sending it all together makes
-> > this really hard - but it seems to me it should use MIN_ACTION_SIZE()?
->
-> Also in addition - please resend these, the s1g should go also to
-> Lachlan I think who wrote it, and I don't think anyone is paying
-> attention to this patchset :)
->
-> johannes
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 91b14112e24f0..fd4c379b3f201 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -5249,7 +5249,8 @@ static void ieee80211_set_beacon_cntdwn(struct ieee80211_sub_if_data *sdata,
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP && resp) {
+ 			u16 *resp_offsets = resp->cntdwn_counter_offsets;
+ 
+-			resp->data[resp_offsets[i]] = count;
++			if (resp_offsets[i])
++				resp->data[resp_offsets[i]] = count;
+ 		}
+ 	}
+ }
+-- 
+2.50.1 (Apple Git-155)
