@@ -1,85 +1,113 @@
-Received: from smtpbg150.qq.com (smtpbg150.qq.com [18.132.163.193])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382FA2BB13;
-	Thu, 23 Jul 2026 01:12:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.132.163.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A6C2BCF46;
+	Thu, 23 Jul 2026 01:21:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784769186; cv=none; b=j9deJpIyLbdlT9BONM4Rf6MDo+Qkg4m2lr9tubCGZ3D1gY/YzSD7yql6WYvFRv62rJLWtw4csAcf5U4WDfBtt1eXCW271gH0WMgC/lto1bSrT6hWkyMbp+do2Lnc2u15FZXT5k2HTBa9Fyyw+pbOQ45qIbl5BP9Bm4lO0Lp1pSc=
+	t=1784769674; cv=none; b=jK7QpTK2jbUl99oi1rG5R2dgTOQXHVZphwAT2pwMrg7xItl7ggwXOx9H+srKdHjpFMIaKd3QPOXK9Z8fuwhQo5iliryhSb+nFpTOcHuoHBMDynMn99vRGsTbrLLMoKiUOk5xYQyUK9CD/4LDMSHp5yiknqIspsoxtCrLLu8jI3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784769186; c=relaxed/simple;
-	bh=PYkSapDs7gVYLipbpFGEaU+VL3bLc5ddWrLrLCEqQZM=;
-	h=Date:From:To:Cc:Subject:References:Mime-Version:Message-ID:
-	 Content-Type; b=pM96/YdSF3QTdWPtxgAw6wsKhxBtcmzugeSlujbp2A9BSkqWIpV2JCUAY8mcwyXi0xZsS6up3KRL/wxaV0Nqgs/78ByC2Z1Tqc++zxelBDnxmTwL5jE3hKDWGAlewyeuLF9Xp0/2j9+Iz01j2b2VJ0ZEsHMr2eFEHoDI1mlgK2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=kBxjnbVt; arc=none smtp.client-ip=18.132.163.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1784769674; c=relaxed/simple;
+	bh=l+BcWxEYxghnenlldtXOwu+zC99qYehVhMZWM49Kkzk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=On6T/Tt7LaKEjyhiWfgOQUb2DZYaD1Irof5mXfqyA33GRGZ3dcKxq501M6Xvd10UffSCRhzW9WzRoxmbEFmGzuz9jyQiRTFmuJoHsO8TdCsQmOnQaUhYAUi/jQR+fv4AZACE+ZMo8bPvr8xglU5uey9QXLNY77xbD0KLcR1N2cY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=HV/hg6pu; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="kBxjnbVt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1784769132;
-	bh=PYkSapDs7gVYLipbpFGEaU+VL3bLc5ddWrLrLCEqQZM=;
-	h=Date:From:To:Subject:Mime-Version:Message-ID;
-	b=kBxjnbVtCtAoVs3rIDTkzNnvRWNOzmWOYfNz7zpuIjBvHUFOYXPr4quXAFvzzcp8r
-	 LYgBfklroIfMCFQ4vvT4YGrot5tDycR2y0g+s0NP6Lq9xNvvHDiJRaR5bbShFtN1EV
-	 PBpO9gW/OiaERo+X78LsP8U0cWUUYdhNSYFv8BvQ=
-X-QQ-mid: zesmtpsz7t1784769123t6360587c
-X-QQ-Originating-IP: yYjmTf2iaKGi23u9FNOyf7hM0f6iS/1kcv6aSjsYu0E=
-Received: from PEN002676 ( [1.202.39.170])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 23 Jul 2026 09:12:01 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 9086336731519733227
-Date: Thu, 23 Jul 2026 09:12:02 +0800
-From: =?GB2312?B?1dS98MP3?= <zhaojinming@uniontech.com>
-To: "Jeff Johnson" <jeff.johnson@oss.qualcomm.com>, 
-	baochen.qiang <baochen.qiang@oss.qualcomm.com>, 
-	jjohnson <jjohnson@kernel.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>, 
-	ath11k <ath11k@lists.infradead.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] wifi: ath11k: fix resource leak on error in ext IRQ setup
-References: <181b5ee0-f002-4f5e-93ff-49b6aa0a6e61@oss.qualcomm.com>, 
-	<20260721072128.142668-1-zhaojinming@uniontech.com>, 
-	<a85bf89e-5a4d-40f7-9797-66f078427f96@oss.qualcomm.com>
-X-Priority: 3
-X-GUID: 20D9622D-8241-4E97-B2B7-CE9E7F885D5A
-X-Has-Attach: no
-X-Mailer: Foxmail 7.2.25.375[cn]
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="HV/hg6pu"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66N1JmFU2096485, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1784769588; bh=l+BcWxEYxghnenlldtXOwu+zC99qYehVhMZWM49Kkzk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=HV/hg6puvpwQe9ORCUlxRgkV/B22MlLrGYspS1yYlv80QkBDjvjTBORNAWpBvckxP
+	 hcf3621kkn+yWd8jQiKIbCzljy1OpmY9yGZiGD7ZSk0rSovfktxcUKiJESd7162HCK
+	 OEZ4mmxIHg7iA9qXia99x9Rn82qU39ewR0CuGvRCJTPoAR+sa/jM026szBRPb0JQlY
+	 2R/0Ie1yW3L9pW/XMQuFefhditcPVTdUOmVH6bwcgynk17W89d9FAMBifc94kfxXPD
+	 HHi7dbOtXZ0aTBy1jlBcnoQFLk9u45FELFf4xMrlxUhxWy04AaWSv/n2T28NxMncSs
+	 I6WM2YNJz5DnA==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66N1JmFU2096485
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 23 Jul 2026 09:19:48 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Thu, 23 Jul 2026 09:19:48 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>, Lorenzo Pieralisi
+	<lpieralisi@kernel.org>, =?utf-8?B?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?=
+	<kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, "Rob
+ Herring" <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>, "Aurelien
+ Jarno" <aurelien@aurel32.net>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"spacemit@lists.linux.dev" <spacemit@lists.linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v2 1/2] PCI: Move Spacemit vendor and device IDs to
+ linux/pci_ids.h
+Thread-Topic: [PATCH v2 1/2] PCI: Move Spacemit vendor and device IDs to
+ linux/pci_ids.h
+Thread-Index: AQHdFXehTbmbDPtnB0KyE0vFNWAFDLZ6Vr7g
+Date: Thu, 23 Jul 2026 01:19:47 +0000
+Message-ID: <073fbf4b41804285b2df6fbb4efce0ed@realtek.com>
+References: <20260716-rtw89-spacemit-k3-v2-0-392b577ebf75@oss.tenstorrent.com>
+ <20260716-rtw89-spacemit-k3-v2-1-392b577ebf75@oss.tenstorrent.com>
+In-Reply-To: <20260716-rtw89-spacemit-k3-v2-1-392b577ebf75@oss.tenstorrent.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Message-ID: <D1E55E3E9CC1685E+202607230912010225815@uniontech.com>
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: NMB3uNxca02mAaaZKl/rhqidUwFfJ1IUMqhj6rrpPrkXrIEwrcYuy3QM
-	1CbNLy25vVkSTjf7AOan+Y9y51RSOfFKTk+0PZ7vR0JuBMmCxdYYcGZaKCxe7OyoilK5D4C
-	jptNHxfx0vVD+Rym+ad4ee/qIoe37UrKh248Tm3BGx0knSh3ux62YGYQ/FZiD0QMZpnaMXV
-	A9Owcud38thOz0WNHAdjQJqCEWK35xZQ0JNHburCYjNaPgagasmLJTNn3RGDbTilQqr8d75
-	TyEwyzi2djE1Iywsx11oBuuyW+VUT/kA32Fmwx6MA+qBygC5Tojyj8KCx5srTGBJRtoKeTY
-	JUd1igSw1jteAKZIbAE5Dd4qAJn0ZIngvs1Cwt+Yg2DNw4nzzxOR7qRR/ptdoBuopY8fHUZ
-	AVFaiYgBScgHDqM0hwrbU6BH91vbaO+d2/JUPK+62yy5qF4vgOEbSI9aREjzVkIM4RavpBq
-	//yUAzOsVnGkISsS538CgW81z1ZUA2/6sXXP32AuD5JzYSlY3mnqbAv4vKZLeDefGW2AZcJ
-	jjEkfQy/YgJTn2VioKxI2Wkg5dS6qK/U1YOJEjRyHkvMWu0ZMaC+xSBCBx8Gym6+4PyBDSX
-	yGnc/WL1xjJuh/tz4ikc+2owTFcX7zU0GurZbKD8nRRRfLgcHUocO/h5YslEx2i1wdxyY+1
-	tdEEpg6r94c+hMIfrXBrrSZr82la5uCQMnMlh5IeRoIsBBw37OoNSWvPh0KwRM6HsLZtxGu
-	7msgwvmr7r1LQ+E92RcMXxFCdKllO7LzfOy6qAkP3WOS7dGon8ttYnI0l3wjwmAL9s39u+R
-	1MTSYvJ+4uN2ggWjl8iF8T7tchImvd4AOYhzeCiTnBSuzf8CSUPrzAFVxFCT17Y9gtuGI7+
-	nWecVgzUTUZweCrq1c9jQVVEfAv/PgV1bey7iVbpCbRbYaoQbSFz8gX9QA7hu94HkMYH4iF
-	WivuX5ZmEwhRJsc/RlZWrfS5iSWCmg0OSWFqzzjMevAtEm7d+mdg2+Pfg
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
-X-QQ-RECHKSPAM: 0
+MIME-Version: 1.0
 
-SGmjrAoKSSBzZW50IHRoZSBsYXN0IHY0IHZlcnNvbiBpbiBhIG5ldyB0aHJlYWQuCmh0dHBzOi8v
-bG9yZS5rZXJuZWwub3JnL2xpbnV4LXdpcmVsZXNzLzIwMjYwNzIyMDk1NDE5LjE0MTEwMDMtMS16
-aGFvamlubWluZ0B1bmlvbnRlY2guY29tLyAKClJlZ2FyZHMsClpoYW9KaW5taW5nCgoKCgo+SW4g
-dGhlIGZ1dHVyZSBwbGVhc2UgcG9zdCBuZXcgdmVyc2lvbnMgb2YgcGF0Y2hlcyBhcyBhIHNlcGFy
-YXRlIHRocmVhZC4KCgoKPgoKCgo+L2plZmYKCgoKPgoKCg==
-
+SGkgUENJIG1haW50YWluZXJzLA0KDQpBbmlydWRoIFNyaW5pdmFzYW4gPGFzcmluaXZhc2FuQG9z
+cy50ZW5zdG9ycmVudC5jb20+IHdyb3RlOg0KPiBNb3ZlIHRoZSB2ZW5kb3IgYW5kIGRldmljZSBJ
+RCBmb3IgdGhlIGV4aXN0aW5nIFNwYWNlbWl0IEsxIFBDSWUgUm9vdA0KPiBDb21wbGV4IHRvIGlu
+Y2x1ZGUvbGludXgvcGNpX2lkcy5oLiBBbHNvIGFkZCBLMydzIFJvb3QgQ29tcGxleCBkZXZpY2Ug
+SUQNCj4gdG8gdGhpcyBoZWFkZXIuIFRoaXMgaXMgZG9uZSBzbyB0aGF0IHRoZXNlIHZhbHVlcyBj
+YW4gYmUgcmVmZXJlbmNlZCBpbg0KPiB0aGUgcnR3ODkgZHJpdmVyIHRvIGVuYWJsZSAzNi1iaXQg
+RE1BIGFiaWxpdHkgaW4gaXQgZm9yIFdpRmkgdG8gZnVuY3Rpb24NCj4gb24gdGhlIEszIFBpY28g
+SVRYIGJvYXJkLg0KPiANCj4gQWNrZWQtYnk6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2ds
+ZS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEFuaXJ1ZGggU3Jpbml2YXNhbiA8YXNyaW5pdmFzYW5A
+b3NzLnRlbnN0b3JyZW50LmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3
+Yy9wY2llLXNwYWNlbWl0LWsxLmMgfCAzIC0tLQ0KPiAgaW5jbHVkZS9saW51eC9wY2lfaWRzLmgg
+ICAgICAgICAgICAgICAgICAgICAgIHwgNCArKysrDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDQgaW5z
+ZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Bj
+aS9jb250cm9sbGVyL2R3Yy9wY2llLXNwYWNlbWl0LWsxLmMNCj4gYi9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL2R3Yy9wY2llLXNwYWNlbWl0LWsxLmMNCj4gaW5kZXggYmUyMGE1MjAyNTViNi4uZjg5
+YzZkNDZjNzY4NCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNp
+ZS1zcGFjZW1pdC1rMS5jDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUt
+c3BhY2VtaXQtazEuYw0KPiBAQCAtMjEsOSArMjEsNiBAQA0KPiANCj4gICNpbmNsdWRlICJwY2ll
+LWRlc2lnbndhcmUuaCINCj4gDQo+IC0jZGVmaW5lIFBDSV9WRU5ET1JfSURfU1BBQ0VNSVQgICAg
+ICAgICAweDIwMWYNCj4gLSNkZWZpbmUgUENJX0RFVklDRV9JRF9TUEFDRU1JVF9LMSAgICAgIDB4
+MDAwMQ0KPiAtDQo+ICAvKiBPZmZzZXRzIGFuZCBmaWVsZCBkZWZpbml0aW9ucyBmb3IgbGluayBt
+YW5hZ2VtZW50IHJlZ2lzdGVycyAqLw0KPiAgI2RlZmluZSBLMV9QSFlfQUhCX0lSUV9FTiAgICAg
+ICAgICAgICAgICAgICAgICAweDAwMDANCj4gICNkZWZpbmUgUENJRV9JTlRFUlJVUFRfRU4gICAg
+ICAgICAgICAgIEJJVCgwKQ0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgg
+Yi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiBpbmRleCAxYzlkNDBlMDkxMDdkLi5kNmYyNmNh
+Y2M4ZTM1IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiArKysgYi9p
+bmNsdWRlL2xpbnV4L3BjaV9pZHMuaA0KPiBAQCAtMjY0MCw2ICsyNjQwLDEwIEBADQo+ICAjZGVm
+aW5lIFBDSV9WRU5ET1JfSURfU1VOSVggICAgICAgICAgICAweDFmZDQNCj4gICNkZWZpbmUgUENJ
+X0RFVklDRV9JRF9TVU5JWF8xOTk5ICAgICAgIDB4MTk5OQ0KPiANCj4gKyNkZWZpbmUgUENJX1ZF
+TkRPUl9JRF9TUEFDRU1JVCAgICAgICAgIDB4MjAxZg0KPiArI2RlZmluZSBQQ0lfREVWSUNFX0lE
+X1NQQUNFTUlUX0sxICAgICAgMHgwMDAxDQo+ICsjZGVmaW5lIFBDSV9ERVZJQ0VfSURfU1BBQ0VN
+SVRfSzMgICAgICAweDAwMDINCj4gKw0KPiAgI2RlZmluZSBQQ0lfVkVORE9SX0lEX0hJTlQgICAg
+ICAgICAgICAgMHgzMzg4DQo+ICAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfSElOVF9WWFBST0lJX0lE
+RSAweDgwMTMNCg0KQXMgcGF0Y2ggMi8yIG9idmlvdXNseSBnb2VzIHRvIHdpcmVsZXNzLW5leHQg
+dHJlZSwgY2FuIEkgdGFrZSB0aGlzIA0KZGVwZW5kZW5jeSBwYXRjaCB0byBteSB0cmVlPyANCg0K
+UGluZy1LZQ0KDQoNCg==
