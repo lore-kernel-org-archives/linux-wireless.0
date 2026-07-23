@@ -1,161 +1,76 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79AA0488DAD
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 18:46:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB2B4EA378
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 18:46:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784832372; cv=none; b=qE6bkOSm9mhvTZytTuuvPEcwVKrzU9ZHxZLf+oKEynS++ru11th3jQ11AttIZ+Ny7C//WOHe715Pj1SJZ4AQxP+0Y8kKgHldYpfX11i7VidkjCP3XwGSUq7e52ix0IbDBwwwyQ446//+0kV867eQEP9tz9fT02Yyto1/HXv2+WI=
+	t=1784832392; cv=none; b=bJlkySiQ7OgkBc8zPEPfQXYc9nfu15fb3S/wePQdkjx9jH5dyRXRJVgOtg3gm22dTXWC07tN4HknZQf+UQ/tZ8/LbNX041dHbmioM5ep4BkFZ6Ee+kxfUGje1ud76ymzX91XSSv1LwKRuF94GMOj5pYutSE9LxOidql3hqsebak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784832372; c=relaxed/simple;
-	bh=0DUXMETFOiPrjHj0I+f8Jjf1hUhgRxwBlToSkMOuX8E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SfW5YW47KiVmHDu3Xd2Et1Vtooc28A9uca5H756kz5lUxIxZMoco98VBljVzukexRcFTuxpt+7Ru+4YOmumTM/ZYUNqfSjMspsOfgF83NsIjPHgzrWFBzZmDQTsrCIssUs571gB6xakcJQLRZ7jRMTVh4cjGdP/9LsSkbyoK3YA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UcuaoKRQ; arc=none smtp.client-ip=209.85.216.51
+	s=arc-20240116; t=1784832392; c=relaxed/simple;
+	bh=l5cYumQSVda6TM4im2zMBBHJR+B+/MjRxhrS0PQEpUU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=pukTYMT+Cqyvq1f6WE+c4uq4TRVr/tKHv49DnO0cIy/+4fAhbSUics0vZuuWz30JHFVFDFG0ftSQK3xZhpbd5pxOuekvuNta8Nnu3nyvldK9GQ/AgQPBrh4Q7gqzDqupUuXeRzna2bzPjbfzCpimkokeLwOF6AX//bhuX4SwGBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lyXgxQGh; arc=none smtp.client-ip=209.85.216.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UcuaoKRQ"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38e08baf860so1121003a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:46:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lyXgxQGh"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-38dfe7eb825so819898a91.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:46:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784832355; x=1785437155; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+cqQ6sQJkvsR3VtIbpEjUXStuHRs0SJj4jk7Uojzitk=;
-        b=UcuaoKRQCbsReVhzJf/ZGJlXbh64b3U6AAC/KmroIrAb+XqaMu03L72UQmO1UfiKoH
-         v5t8SdZGnnvGRm0kSFNoBBew4GakZFP6aUp0kui6MrYim7VuZY25y/41yO+xQdCUuVSt
-         AYyG4u/HZr03V71uuN4Tg/H5roah86A3Hs7n7D/0j87fgcqbgrsjvKIgirqEL8EVhOiX
-         7gOxTc3j6W0PsrZth3785bq/XUTCNFWLPQqtgqJpSDa8IKj5CH876rkjW/PMTVdQUJ0V
-         ZoxYoGuEX+u+JYgBv4Zw44W3wGn4VBag2holCYN7hZ6yV5iHWiGOKFKN5GFOZqwlTJyB
-         wTzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784832355; x=1785437155;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1784832384; x=1785437184; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=+cqQ6sQJkvsR3VtIbpEjUXStuHRs0SJj4jk7Uojzitk=;
-        b=YI81LdSQelafAeLjq0vcZgM7ExlA6qgyuB2nYyK5cHVsyu657f9p/shxA24Hacy3QS
-         MBL7bdosYH9oWnVAxOg2vA7q4rJvWh7oKVYVWlZr5Pt7DYClsrW68I9e+y9UuWVpX0hI
-         hTLtkVwSKCwhBmI6WSYpiwwEqMcKEXvnjDTY+oU39vKlFb5Kv/uVd/zCmKOBfdj96U3r
-         y23ItsRGq1+3drzjMdxnzPiSCQvVEBEe294Kcn+JkOcEI+D01PA7/hIpaDorzPcYdjA+
-         9OqSXLTWIFMvwV148lESUXT/4uHOG6BMLfUTtN84sQ3LIcym4WgDIrx+4fetEEBdeoeP
-         AFGg==
-X-Forwarded-Encrypted: i=1; AHgh+RqyyYDBmqf4RWrSss3RWvY91Uf+qgIAOswV4Zce9OoXrwJ7v/5H7NdYw5y9sFhT9SOAWLZzTFgjwMMTNv5ppQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxeq9xtZo2gSiAOPsPphf6hiazS1uqxd88lb6mJui2tJUWJxCqb
-	nrVg7XxHjSGPBcGp0Kxmi73Kz+PjEYzUjriXHhBoMky+z1RLAJvjMlbp
-X-Gm-Gg: AR+sD11wP2mEv9z288OAY5M7wu2JKuJkwOn9Zci6xC5C5oEmPsHgyEE8uiBCkrX5GPu
-	XiF5Tp5Bi8bjYBnlHIZdca+3+17J+WyQDQGx6qPkZB5ljsS0cCxceMO+Xm1FlttQZRT0V5Cq31Y
-	CW8N/oqaG10AEDGaD1BlC4er6XlBjXhDnWll8dDoPAzc6V7HIZrpFs4cfLbpBpDoa8hdd2odTis
-	WSeHFIhWFTiLfV41YtQLpQchfUwo3CWYHl11q5xvTfh+8ap5U4jqNSpb04F5xJ9hPs/+qANZol5
-	3Ie7c8FeBsFTHl7X+1CIGRiebv11UTk13+m3V7/LIa3XJ0izsOo9BlZvFE5+dnP6wVVFHjL2HcC
-	jQQV0tEejKiwBG6YeN8EJM9NW9igCBAEidnWBiKGiVcycrdxJLgQLdgcbWyGQWtXU56+2sHL2
-X-Received: by 2002:a17:90b:1350:b0:36d:66d4:270e with SMTP id 98e67ed59e1d1-38ec6455120mr4430242a91.5.1784832354540;
-        Thu, 23 Jul 2026 11:45:54 -0700 (PDT)
+        bh=POBnk8e7cjMk5Mm303buRI06BRywbPO3M0j5oTpXzt4=;
+        b=lyXgxQGh9f+VamZrV+xgiT6KkvluQa2NES/CmEJfyGCuZAf3R3FD7VJp9UTpEViBTR
+         Zmy7k9dMebw5e1gmYup45nFbL0n17qewT7bssTZEGGUm6nmmF+zArf54uBIBuXn9WW69
+         wgeY9ZpRjEolfMK5RCKhLKb3oMljv4sb1nvBtpjia8/54xCmFvopu3AKQi9s/OWLC5ZP
+         jLh1pdf95PR+xEbtKgMLwVTOXrgomcK228DFkSwriRRCxCL8RjpHJkKQ7Ac7reksyG9r
+         KKd6kPw6jpZjoCcIyoL0/SxyEj6iQ+NPjIlpj8kxo3lI0L8eLRKF2QJiG9K1rliHb7zq
+         b3MA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784832384; x=1785437184;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=POBnk8e7cjMk5Mm303buRI06BRywbPO3M0j5oTpXzt4=;
+        b=P8XSRgc4Ya9elvZtsCaHfXkAKw+6ptxrLjdmwzppp8718WHSUPKV165tfbej9tHpWP
+         0t2g2qSPcyAzQq7kzeOuC0UcMehTBTXbXRHPjs1G9FAeMwI5PhbGkIwZFBiiiGhql+ux
+         4UntnKcLkFJv3akkTnMX66AM7M8NBXmASB3/A/uq+w/A8z/M9PTI8Q+y2onXRGt5uj81
+         bENuvXsc9D9YOfi0C2IhogpBgMZ9gb4zLFf8BbXkieuwub6qBeITUDLMaQTlczvA3E+W
+         DnBqnxVvznZjKl7yMJxrkFnecxTV6XMPFk3LSCBIfXU9K8VWd85dQ0ZHgEw9eK9xOOUm
+         9Rdw==
+X-Forwarded-Encrypted: i=1; AHgh+RrMWbNF7OPTrjncAY+oAKRMUP0GyBd1MmWSSad1TX9iujeyVHCuR0t20wQv4kJVweXIbbq3SC2fLUlghc771Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLkdoTjw5HWVQdMuYleoqTgpMWgl9U5B0OXVT1XdzN/4X9ryKk
+	IhcS/lSZxRVoRxpNS7eF/R3YUbMdWb0cgh1+7LqX/zNNUR2LTfShQ9jm
+X-Gm-Gg: AR+sD13yCEp2IA6JGDUe2krOnsYOsLiQS+lEogN/7Kob6sUWXlxTr1kF2MpUUasLGM1
+	YqfoNiqtq0/cWxwun54ReSpD/UEra5PuP6HvDW4vlAF7K1botIywo9f2UbUazoCW59ZQyfdD0Uk
+	Dj8aveWaeiE3wpUfDEokeNiuJl7mrZTpXxcNC4OVYcO3E2JJyyVGR12TNT65qnfxWoGWsSNz99G
+	LIIJ5l9uFu06Tvo0T/dz+hmza2gd0Lyee54vTvhysSFtulr0kU+1cidCzFLdnFIbMvbjtVwHwse
+	sPgMqlV9LbJkWuAWpiMRmRjB9IWbKyCNgtKcd0vQnznnvcF9lZOhAuksYBipim7lDd+ydp7szBv
+	MNvJnAtexkWlLr7Edgn/MxMc4zPsor7ON3gN+P3mB1xmqRZT5DkEPJItxAUJYH5Pj6/rSprcyok
+	cq7SPWBnA=
+X-Received: by 2002:a17:90b:314e:b0:381:5a08:6291 with SMTP id 98e67ed59e1d1-38ec658fc68mr3549005a91.20.1784832383927;
+        Thu, 23 Jul 2026 11:46:23 -0700 (PDT)
 Received: from ubuntu.. ([110.9.142.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f03af8a45sm308155a91.10.2026.07.23.11.45.40
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f03af8a45sm308155a91.10.2026.07.23.11.46.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 11:45:53 -0700 (PDT)
+        Thu, 23 Jul 2026 11:46:23 -0700 (PDT)
 From: Sang-Heon Jeon <ekffu200098@gmail.com>
 To: Julia.Lawall@inria.fr,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	David Airlie <airlied@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Florian Westphal <fw@strlen.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Hans de Goede <hansg@kernel.org>,
-	Hans Verkuil <hverkuil@kernel.org>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Jaroslav Kysela <perex@perex.cz>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Jiri Pirko <jiri@resnulli.us>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Johan Hovold <johan@kernel.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Julian Anastasov <ja@ssi.bg>,
-	Leon Romanovsky <leon@kernel.org>,
-	Liam Girdwood <lgirdwood@gmail.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Matthew Sakai <msakai@redhat.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Maxime Ripard <mripard@kernel.org>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Mike Rapoport <rppt@kernel.org>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Nicolas Palix <nicolas.palix@imag.fr>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Shuah Khan <shuah@kernel.org>,
-	Simona Vetter <simona@ffwll.ch>,
-	Simon Horman <horms@verge.net.au>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Steve French <sfrench@samba.org>,
-	Takashi Iwai <tiwai@suse.com>,
-	Thomas Renninger <trenn@suse.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	Vinod Koul <vkoul@kernel.org>,
-	Will Deacon <will@kernel.org>,
-	Yazen Ghannam <Yazen.Ghannam@amd.com>
+	Ping-Ke Shih <pkshih@realtek.com>
 Cc: cocci@inria.fr,
-	amd-gfx@lists.freedesktop.org,
-	dmaengine@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org,
-	intel-wired-lan@lists.osuosl.org,
-	iommu@lists.linux.dev,
-	linux-cifs@vger.kernel.org,
-	linux-clk@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-edac@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-iio@vger.kernel.org,
-	linux-input@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-pm@vger.kernel.org,
-	linux-rdma@vger.kernel.org,
-	linux-rtc@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	lvs-devel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	nouveau@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org
-Subject: [PATCH 00/36] treewide: remove conditional returns with no effect
-Date: Fri, 24 Jul 2026 03:45:02 +0900
-Message-ID: <20260723184538.3888637-1-ekffu200098@gmail.com>
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 10/36] wifi: remove conditional return with no effect
+Date: Fri, 24 Jul 2026 03:45:12 +0900
+Message-ID: <20260723184538.3888637-11-ekffu200098@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -164,181 +79,107 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hello,
+Both branches of the check return the same value, so the check has
+no effect. Remove it and return the value directly.
 
-While reading mm/memblock, I found a conditional return where both
-branches return the same value:
+This is the result of running the Coccinelle script from
+scripts/coccinelle/misc/cond_return_no_effect.cocci.
 
-	err = do_something();
-	if (err)
-		return err;
-	return err;
+Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c              | 6 +-----
+ drivers/net/wireless/intel/iwlwifi/mvm/link.c       | 6 +-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 7 +------
+ drivers/net/wireless/realtek/rtw89/mac.c            | 6 +-----
+ drivers/net/wireless/realtek/rtw89/mac_be.c         | 6 +-----
+ 5 files changed, 5 insertions(+), 26 deletions(-)
 
-Such code is usually a leftover from removing a statement between
-the two returns, and the tree has about a hundred of these.
-
-Patch 1 adds a Coccinelle script that matches the pattern, including
-negation and constant-comparison variants. Where a local variable is
-assigned right before the check, the assignment and the two returns
-turn into a single return of the assigned expression.
-
-Patches 2-36 are generated by the script, with hand fixes to restore
-unexpectedly removed comments and to fix the formatting checkpatch.pl
-complained about.
-
-The patches are grouped by subsystem instead of split per file. If
-you would rather split, merge or drop your part, just let me know
-and I will address it in the next version.
-
-All patches are independent and can be applied separately, but for
-everyone's convenience, it would be nice if they were merged through
-a single tree.
-
-The series is based on next-20260721.
-
-Sang-Heon Jeon (36):
-  coccinelle: misc: add cond_return_no_effect.cocci
-  drm/amd: remove conditional return with no effect
-  drm/radeon: remove conditional return with no effect
-  dpll: zl3073x: remove conditional return with no effect
-  drm/i915: remove conditional return with no effect
-  drm: remove conditional return with no effect
-  net: ethernet: remove conditional return with no effect
-  net: remove conditional return with no effect
-  net: intel: remove conditional return with no effect
-  wifi: remove conditional return with no effect
-  ipvs: remove conditional return with no effect
-  media: remove conditional return with no effect
-  ALSA: remove conditional return with no effect
-  ASoC: remove conditional return with no effect
-  iio: remove conditional return with no effect
-  Input: remove conditional return with no effect
-  clk: remove conditional return with no effect
-  crypto: drivers - remove conditional return with no effect
-  dmaengine: qcom_hidma: remove conditional return with no effect
-  stm class: remove conditional return with no effect
-  RDMA/ocrdma: remove conditional return with no effect
-  iommu/s390: remove conditional return with no effect
-  dm vdo: remove conditional return with no effect
-  pinctrl: mediatek: remove conditional return with no effect
-  platform/x86: toshiba_haps: remove conditional return with no effect
-  power: supply: pm8916_lbc: remove conditional return with no effect
-  RAS/AMD/ATL: remove conditional return with no effect
-  regulator: wm831x-isink: remove conditional return with no effect
-  rtc: pcf2127: remove conditional return with no effect
-  scsi: mpt3sas: remove conditional return with no effect
-  thermal/drivers/k3_bandgap: remove conditional return with no effect
-  USB: serial: ch341: remove conditional return with no effect
-  usb: typec: fusb302: remove conditional return with no effect
-  smb: client: remove conditional return with no effect
-  cpupower: remove conditional return with no effect
-  memblock: remove conditional return with no effect
-
- drivers/clk/clk-cs2000-cp.c                   |   6 +-
- drivers/clk/clk-lmk04832.c                    |  12 +-
- .../intel/qat/qat_common/adf_gen2_config.c    |   8 +-
- .../marvell/octeontx2/otx2_cpt_mbox_common.c  |   7 +-
- drivers/dma/qcom/hidma_ll.c                   |   6 +-
- drivers/dpll/zl3073x/dpll.c                   |   6 +-
- drivers/dpll/zl3073x/out.c                    |   8 +-
- drivers/gpu/drm/amd/amdgpu/gfx_v7_0.c         |   6 +-
- drivers/gpu/drm/amd/amdgpu/gfx_v9_0.c         |   6 +-
- drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c       |   6 +-
- drivers/gpu/drm/amd/amdgpu/sdma_v4_4_2.c      |   6 +-
- drivers/gpu/drm/amd/amdgpu/sdma_v5_0.c        |   6 +-
- drivers/gpu/drm/amd/amdgpu/sdma_v5_2.c        |   6 +-
- drivers/gpu/drm/amd/amdgpu/sdma_v6_0.c        |   6 +-
- drivers/gpu/drm/amd/amdgpu/uvd_v4_2.c         |   6 +-
- drivers/gpu/drm/amd/amdgpu/uvd_v5_0.c         |   6 +-
- drivers/gpu/drm/amd/amdgpu/uvd_v7_0.c         |   6 +-
- drivers/gpu/drm/amd/amdgpu/vce_v4_0.c         |   6 +-
- drivers/gpu/drm/amd/pm/legacy-dpm/kv_dpm.c    |  32 ++---
- drivers/gpu/drm/amd/pm/legacy-dpm/si_dpm.c    |   6 +-
- drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c   |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu11/smu_v11_0.c    |  19 +--
- .../gpu/drm/amd/pm/swsmu/smu11/vangogh_ppt.c  |   7 +-
- .../gpu/drm/amd/pm/swsmu/smu12/renoir_ppt.c   |   7 +-
- .../drm/amd/pm/swsmu/smu13/aldebaran_ppt.c    |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c    |  19 +--
- .../drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c  |   6 +-
- .../drm/amd/pm/swsmu/smu13/smu_v13_0_6_ppt.c  |  10 +-
- .../drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c  |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu14/smu_v14_0.c    |  19 +--
- .../drm/amd/pm/swsmu/smu14/smu_v14_0_2_ppt.c  |   6 +-
- .../gpu/drm/amd/pm/swsmu/smu15/smu_v15_0.c    |   9 +-
- .../drm/amd/pm/swsmu/smu15/smu_v15_0_8_ppt.c  |  16 +--
- drivers/gpu/drm/i915/display/intel_hdmi.c     |   7 +-
- drivers/gpu/drm/i915/gvt/gtt.c                |   8 +-
- drivers/gpu/drm/imx/ipuv3/imx-drm-core.c      |   6 +-
- drivers/gpu/drm/nouveau/dispnv50/disp.c       |  14 +-
- .../drm/panel/panel-osd-osd101t2587-53ts.c    |   7 +-
- drivers/gpu/drm/radeon/ci_dpm.c               |   6 +-
- drivers/gpu/drm/radeon/kv_dpm.c               |  30 ++---
- drivers/gpu/drm/radeon/si_dpm.c               |  14 +-
- drivers/gpu/drm/tilcdc/tilcdc_drv.c           |   6 +-
- drivers/hwtracing/stm/core.c                  |   8 +-
- drivers/iio/light/isl29028.c                  |   6 +-
- drivers/iio/light/tsl2583.c                   |  14 +-
- drivers/iio/magnetometer/ak8974.c             |   6 +-
- drivers/infiniband/hw/ocrdma/ocrdma_verbs.c   |   7 +-
- drivers/input/keyboard/pmic8xxx-keypad.c      |   8 +-
- drivers/input/mouse/synaptics_i2c.c           |   6 +-
- drivers/input/rmi4/rmi_smbus.c                |   7 +-
- drivers/iommu/s390-iommu.c                    |   8 +-
- drivers/md/dm-vdo/encodings.c                 |   8 +-
- drivers/media/i2c/mt9p031.c                   |   6 +-
- .../microchip/microchip-sama7g5-isc.c         |   7 +-
- .../media/platform/qcom/iris/iris_resources.c |   6 +-
- .../media/platform/qcom/venus/pm_helpers.c    |   7 +-
- drivers/media/platform/renesas/rcar-csi2.c    |   6 +-
- .../platform/samsung/s3c-camif/camif-core.c   |   7 +-
- drivers/media/usb/dvb-usb-v2/mxl111sf.c       |  12 +-
- drivers/media/usb/gspca/jl2005bcd.c           |   7 +-
- drivers/net/ethernet/amazon/ena/ena_netdev.c  |   6 +-
- .../ethernet/aquantia/atlantic/aq_macsec.c    |   6 +-
- .../ethernet/freescale/dpaa2/dpaa2-switch.c   |   6 +-
- drivers/net/ethernet/freescale/gianfar.c      |   6 +-
- drivers/net/ethernet/intel/i40e/i40e_main.c   |   8 +-
- drivers/net/ethernet/intel/igb/e1000_i210.c   |   6 +-
- drivers/net/ethernet/intel/igc/igc_phy.c      |   6 +-
- .../ethernet/qlogic/netxen/netxen_nic_hw.c    |   7 +-
- .../ethernet/qlogic/qlcnic/qlcnic_83xx_init.c |   6 +-
- drivers/net/ethernet/renesas/rtsn.c           |   7 +-
- drivers/net/phy/microchip_t1.c                |   6 +-
- drivers/net/pse-pd/tps23881.c                 |   6 +-
- drivers/net/wireless/ath/ath6kl/init.c        |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/link.c |   6 +-
- .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   |   7 +-
- drivers/net/wireless/realtek/rtw89/mac.c      |   6 +-
- drivers/net/wireless/realtek/rtw89/mac_be.c   |   6 +-
- .../pinctrl/mediatek/pinctrl-mtk-common-v2.c  |   6 +-
- drivers/platform/x86/toshiba_haps.c           |   6 +-
- drivers/power/supply/pm8916_lbc.c             |   8 +-
- drivers/ras/amd/atl/map.c                     |   6 +-
- drivers/regulator/wm831x-isink.c              |   6 +-
- drivers/rtc/rtc-pcf2127.c                     |   7 +-
- drivers/scsi/mpt3sas/mpt3sas_base.c           |   6 +-
- drivers/thermal/k3_bandgap.c                  |   7 +-
- drivers/usb/serial/ch341.c                    |   8 +-
- drivers/usb/typec/tcpm/fusb302.c              |  14 +-
- fs/smb/client/smb1maperror.c                  |   6 +-
- mm/memblock.c                                 |   7 +-
- net/netfilter/ipvs/ip_vs_sync.c               |   7 +-
- .../misc/cond_return_no_effect.cocci          | 121 ++++++++++++++++++
- sound/pci/echoaudio/echoaudio_dsp.c           |   6 +-
- sound/pci/echoaudio/layla24_dsp.c             |   6 +-
- sound/pci/riptide/riptide.c                   |   5 +-
- sound/soc/amd/acp/acp-mach-common.c           |  11 +-
- sound/soc/intel/atom/sst-mfld-platform-pcm.c  |   7 +-
- sound/soc/samsung/smdk_spdif.c                |   8 +-
- sound/soc/sof/intel/hda-dsp.c                 |   6 +-
- sound/usb/mixer_scarlett.c                    |  26 ++--
- tools/power/cpupower/utils/powercap-info.c    |   2 -
- 102 files changed, 295 insertions(+), 643 deletions(-)
- create mode 100644 scripts/coccinelle/misc/cond_return_no_effect.cocci
-
---
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 782209dcb782..61fa10d88714 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1566,11 +1566,7 @@ static int ath6kl_init_upload(struct ath6kl *ar)
+ 
+ 	address = MBOX_BASE_ADDRESS + LOCAL_SCRATCH_ADDRESS;
+ 	param = options | 0x20;
+-	status = ath6kl_bmi_reg_write(ar, address, param);
+-	if (status)
+-		return status;
+-
+-	return status;
++	return ath6kl_bmi_reg_write(ar, address, param);
+ }
+ 
+ int ath6kl_init_hw_params(struct ath6kl *ar)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/link.c b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+index b5d252ece2d9..76a548f9aea2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/link.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/link.c
+@@ -278,11 +278,7 @@ int iwl_mvm_disable_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = iwl_mvm_remove_link(mvm, vif, link_conf);
+-	if (ret)
+-		return ret;
+-
+-	return ret;
++	return iwl_mvm_remove_link(mvm, vif, link_conf);
+ }
+ 
+ void iwl_mvm_init_link(struct iwl_mvm_vif_link_info *link)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 9b119a51bc30..1ba53e671207 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -1462,12 +1462,7 @@ static bool _rtl8821ae_init_llt_table(struct ieee80211_hw *hw, u32 boundary)
+ 			return status;
+ 	}
+ 
+-	status = _rtl8821ae_llt_write(hw, last_entry_of_txpktbuf,
+-				      txpktbuf_bndy);
+-	if (!status)
+-		return status;
+-
+-	return status;
++	return _rtl8821ae_llt_write(hw, last_entry_of_txpktbuf, txpktbuf_bndy);
+ }
+ 
+ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
+diff --git a/drivers/net/wireless/realtek/rtw89/mac.c b/drivers/net/wireless/realtek/rtw89/mac.c
+index 8c395517bd2f..967b42f2b6fb 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac.c
++++ b/drivers/net/wireless/realtek/rtw89/mac.c
+@@ -1706,11 +1706,7 @@ static int sys_init_ax(struct rtw89_dev *rtwdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = chip_func_en_ax(rtwdev);
+-	if (ret)
+-		return ret;
+-
+-	return ret;
++	return chip_func_en_ax(rtwdev);
+ }
+ 
+ const struct rtw89_mac_size_set rtw89_mac_size = {
+diff --git a/drivers/net/wireless/realtek/rtw89/mac_be.c b/drivers/net/wireless/realtek/rtw89/mac_be.c
+index f24c119b99f1..b7ba8de9cc78 100644
+--- a/drivers/net/wireless/realtek/rtw89/mac_be.c
++++ b/drivers/net/wireless/realtek/rtw89/mac_be.c
+@@ -924,11 +924,7 @@ static int sys_init_be(struct rtw89_dev *rtwdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = chip_func_en_be(rtwdev);
+-	if (ret)
+-		return ret;
+-
+-	return ret;
++	return chip_func_en_be(rtwdev);
+ }
+ 
+ static int mac_func_en_be(struct rtw89_dev *rtwdev)
+-- 
 2.43.0
 
