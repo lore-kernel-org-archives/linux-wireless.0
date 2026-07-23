@@ -1,124 +1,119 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABB8E3C3C15
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 09:23:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2FF8406812;
+	Thu, 23 Jul 2026 09:24:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784798607; cv=none; b=kAueJWcEDkd+FNAlc1jwK5EhA0YkbzwcJjmSSQMTZfowReLjfyB9qD1zKpEt4JnWqpyCePhffcjmV3mxgsp3hlCKRUMkrX6vz2cbPtYUb7r3daJWeKmtdw0x9d/EUWc2YJU3rSbFX5OtlZVDrJNelFbTWKWy+HpefeKWc62LhOk=
+	t=1784798651; cv=none; b=Nn1S/oXc6SC7Cg7dS2g2ofE8i5zauLegJi30Zk9dCvr8LpyC2nxlBJHvy9hnmdb4hiKGxKCaA2T97XNzhrRXgJCYwqRsqjG3xbTmj2vldTgQOU4doW01DvzQkWHkZ0o0FK/5gwL3GSowWMYXu6NetFJpY+rCiwraJhwrdPsxWl8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784798607; c=relaxed/simple;
-	bh=UuWU14RrqrYHqcamOKypXwqzu8lVvpVuj0zo7lDdmrQ=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nkORCEaaqkhspBThU9wbinAw/YHcrrnab+sl5tELLaJ0FmpM6JeP6oncTVERHN4dOLP8RenjXuCvbpXrSEfd5+vqrhDNTpXHuaXxChN/BE26AGwenXCQq6ihO6GdGNW4R5kCtEnscNYBZnLDYfsduyVzqptc9rCIpDIBoYrw5js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=slropv/e; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="slropv/e"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-38759bcd877so378029a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 02:23:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784798606; x=1785403406; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=s+63IXBW/hPn74oYRNKsdJ0IozU9pSKHV5tOID1oTJM=;
-        b=slropv/eSl3NzMNA+UPCgDqwK8H7LvCJEjrEnaUL5Z2Z1E+CfSVzp7GKNm5WlS3V7G
-         U7IPXH49ic3U+oEUFPrXSdnzsHAOhIsqEpuxs3Jg1ClgLz1n+hdBpZlv4NaF+ZH1Rbjt
-         SyLvQteeWRJjhpLXdo3WLBmxLuA2x0DgySuXauolKxF7ILdgYNA53+fGcmBBhobteUOi
-         N9opYK1fOusvafu9rJtv2MACIYtcsn6unUItxovalmOj1m/FOrMUz6ofmU07P2UaNh7m
-         GWab7P1DZPl0tkVnTXMxPxj4QVNG5DXbELN+2VLpncZmxeYsv4IbRcdHBnayHKoqasH6
-         nXpQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784798606; x=1785403406;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=s+63IXBW/hPn74oYRNKsdJ0IozU9pSKHV5tOID1oTJM=;
-        b=V+RFGm8GciZWlVuH2tDu5wfDw0QciVXpmowgsihHsF2dakg7SwARl2TzrNttdsQ6T3
-         r4SxTXBuGTYGgojUO/6uJ+/kDY/zbOOKJ8d8V/bUGNTAeE8t2ga5L7kXf7te6hW0Uh7y
-         OKDrkAP04KENASPRXfXQeZUVBe8G64bM1B5qkMVnhqkp+CedzemJtb5QbhVAJ9B9RbuV
-         sMipyViLvIVAenbcVBkIeNeFlQMZ7TxzpD2EiHOpvIq2PJ1oJ1Ij2Q62pYow82ZxyvfX
-         q9pe0tQYDxwu8O4+/9ojXtoJNdRY17M7bPjdHvgzaA3bxpqYUlDSHV/HopuCaPZd0MT/
-         /vBA==
-X-Forwarded-Encrypted: i=1; AHgh+RqZYVJuLjr4E2xYtOzpPCe7B37koYXI7k0UaUwAEEQuIkESl8fDkYTIEWWumJaVxjXGReCq+WGZgiF11wTZWA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyM/fJHFyR8m+8IN5EbzwVN3xG+X2G/7tyCrpRx8P177YkVz+cp
-	DJP0yn2UmR/XEPiCVaegzbBDFIML02gs6xIiU8T4snDbsEYn1Q0wgrZyKaYSgWKF
-X-Gm-Gg: AR+sD11sJ3RdcIP01qJ9xloBx3ANeH2xcm7WaAt9oTMwjvMmUjOjeXL+5YhZ3MmTWw3
-	x0SC6ZY4uXEsRAHkr4Om6DF7zgCtFX++5dnK3ZYZ5qQmjvy3a8GQ/hQKD+zj9Fo4TsB9/aWzSF1
-	LpO3MtpaeDtpIgnpgfxPP1t1O6II7lyCK0R0lANkzwQdQv9Rw9r+T2XtbqS/67CRfc83tEXvc3I
-	9uQaDtQ2/EIT3duJFT4MDgQNCJ+F8nfXSqKW1C61ANagKc2h+ByBbcPVUpOx2lw88iLxgM1oRme
-	IDM+64hQ35R1NcHFsJSYewcqOHk+Qstsqc7gHcEKd3G72kWYJeBTTCkUdJ0qaEsP0AkanM0xW4+
-	1OJB6XE1jkFl1lHDa0GYSXd4wXgucMzd+HysCzTCR6cEwXuO9USVCOEDdg9l1Pm5NCg37C9X87v
-	2hnDvHWYNbOMr+a8JjQrzpAM7jfqUExaGygQcqOeHXetdYH9hUATTIUWw09PbQBQVl0nyFxCs/A
-	9dtY0Q=
-X-Received: by 2002:a05:6300:95:b0:3c4:42d9:58e3 with SMTP id adf61e73a8af0-3c44afcd237mr2411249637.13.1784798605970;
-        Thu, 23 Jul 2026 02:23:25 -0700 (PDT)
-Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-225-163.dynamic-ip.hinet.net. [61.228.225.163])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbb8f18c39csm2406904a12.15.2026.07.23.02.23.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 02:23:25 -0700 (PDT)
-From: Jeff Chen <chunfan.chen@gmail.com>
-X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
-Date: Thu, 23 Jul 2026 17:23:23 +0800
-To: Pengpeng Hou <pengpeng@iscas.ac.cn>
-Cc: Brian Norris <briannorris@chromium.org>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] wifi: mwifiex: validate event lengths before copying
- bodies
-Message-ID: <amHdiy0tuh55F0ug@nxpwireless-Inspiron-14-Plus-7440>
-References: <20260723103510.3-mwifiex-event-v3-pengpeng@iscas.ac.cn>
+	s=arc-20240116; t=1784798651; c=relaxed/simple;
+	bh=sdhy5LLb+ay1eEMxhAOXp1+Oah+v8iz2WlAdwemyam0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c++sxt2dOsH4yIjetufEsisXURks53NNGvGPlT13UHAc6gHv8IJEOVgn3RZI4uunQk9dm1eEe6AnIveQaLigI1YCDkI396zBl6oH54NgyqwIoo83PSVuJtHv/blYivSvFq9AKVTS1X+aIChH4Yw8bQcjDhRxrTzg6H3EkkMrEgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 3dcbc832867811f1aa26b74ffac11d73-20260723
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.12,REQID:30a06d98-baa1-4146-91d4-f1bf3ef8c904,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:e7bac3a,CLOUDID:85269dbe12788262b89db28bb3b5bd30,BulkI
+	D:nil,BulkQuantity:0,Recheck:0,SF:102|850|865|898,TC:nil,Content:0|15|50,E
+	DM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA
+	:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 3dcbc832867811f1aa26b74ffac11d73-20260723
+X-User: lilinmao@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 523359413; Thu, 23 Jul 2026 17:24:01 +0800
+From: Linmao Li <lilinmao@kylinos.cn>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
+	Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Arien Judge <arien.judge@morsemicro.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Linmao Li <lilinmao@kylinos.cn>
+Subject: [PATCH] wifi: mm81x: shut down timers during teardown
+Date: Thu, 23 Jul 2026 17:23:57 +0800
+Message-Id: <20260723092357.2362744-1-lilinmao@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260723103510.3-mwifiex-event-v3-pengpeng@iscas.ac.cn>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jul 23, 2026 at 10:40:05 AM +0800, Pengpeng Hou wrote:
-> mwifiex event packets contain a four-byte event cause followed by the
-> event body. The USB and SDIO paths copy from data after that header using
-> the full packet length, so the source range extends four bytes beyond the
-> skb. The SDIO path also reads the event cause before validating the
-> packet and publishes oversized events without a copied body.
-> 
-> Reject SDIO events that are shorter than the header or larger than the
-> event buffer limit. Discard them through the same free-and-break contract
-> used for unknown upload types. Retain USB's existing error path and copy
-> only the bytes after the event header in both paths.
-> 
-> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
-> ---
-> Changes since v2: https://lore.kernel.org/all/20260720115119.80059-1-pengpeng@iscas.ac.cn/
-> - replace the new SDIO return -1 with free plus break as requested
-> - preserve USB's established error return contract
-> - rebase onto the current wireless tree
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index f039d6f19183..3588c36f64cf 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -1712,12 +1712,19 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
->  	case MWIFIEX_TYPE_EVENT:
->  		mwifiex_dbg(adapter, EVENT,
->  			    "info: --- Rx: Event ---\n");
-> +		if (skb->len < MWIFIEX_EVENT_HEADER_LEN ||
-> +		    skb->len > MAX_EVENT_SIZE) {
-> +			mwifiex_dbg(adapter, ERROR,
-> +				    "EVENT: invalid skb->len %u\n", skb->len);
-> +			dev_kfree_skb_any(skb);
-> +			break;
-> +		}
+The three timer teardown paths call timer_delete_sync_try() and ignore
+its return value. If a callback is running on another CPU it returns -1
+without waiting, and it does not prevent a later rearm even when it does
+deactivate a pending timer. mm81x_skbq_tx_complete() can rearm the
+stale-status timer, and the rc and yaps callbacks queue work that rearms
+their timers. Teardown can therefore continue with a callback still
+running or the timer rearmed, so it fires after the associated state has
+been freed.
 
-skb->len includes the 4-byte header, so the body size is
-skb->len - MWIFIEX_EVENT_HEADER_LEN. The upper bound should be:
-skb->len - MWIFIEX_EVENT_HEADER_LEN > MAX_EVENT_SIZE
+Use timer_shutdown_sync() for these permanent teardowns: it waits for an
+in-flight callback and prevents any future rearm. In mm81x_rc_deinit()
+shut the timer down before cancel_work_sync() so the work can no longer
+recreate the timer/work cycle.
 
-Otherwise packets with a full MAX_EVENT_SIZE body are incorrectly
-rejected.
+Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
+Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+---
+ drivers/net/wireless/morsemicro/mm81x/mac.c  | 2 +-
+ drivers/net/wireless/morsemicro/mm81x/rc.c   | 2 +-
+ drivers/net/wireless/morsemicro/mm81x/yaps.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
+index 392dae5d7ce9..08ca116a68b4 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/mac.c
++++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
+@@ -2349,7 +2349,7 @@ static void mm81x_stale_tx_status_timer(struct timer_list *t)
+ 
+ static void mm81x_stale_tx_status_timer_finish(struct mm81x *mors)
+ {
+-	timer_delete_sync_try(&mors->stale_status.timer);
++	timer_shutdown_sync(&mors->stale_status.timer);
+ }
+ 
+ static void mm81x_mac_stale_tx_status_timer_init(struct mm81x *mors)
+diff --git a/drivers/net/wireless/morsemicro/mm81x/rc.c b/drivers/net/wireless/morsemicro/mm81x/rc.c
+index 04aff66de4bd..28dd293df966 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/rc.c
++++ b/drivers/net/wireless/morsemicro/mm81x/rc.c
+@@ -60,8 +60,8 @@ void mm81x_rc_init(struct mm81x *mors)
+ 
+ void mm81x_rc_deinit(struct mm81x *mors)
+ {
++	timer_shutdown_sync(&mors->mrc.timer);
+ 	cancel_work_sync(&mors->mrc.work);
+-	timer_delete_sync_try(&mors->mrc.timer);
+ }
+ 
+ static void mm81x_rc_sta_config_guard_per_bw(struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/morsemicro/mm81x/yaps.c b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+index bdadb822bf9a..e98a2a58726f 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/yaps.c
++++ b/drivers/net/wireless/morsemicro/mm81x/yaps.c
+@@ -597,7 +597,7 @@ static void mm81x_yaps_q_chip_full_timer_init(struct mm81x_yaps *yaps)
+ 
+ static void mm81x_yaps_q_chip_full_timer_finish(struct mm81x_yaps *yaps)
+ {
+-	timer_delete_sync_try(&yaps->chip_queue_full.timer);
++	timer_shutdown_sync(&yaps->chip_queue_full.timer);
+ }
+ 
+ int mm81x_yaps_init(struct mm81x *mors)
+-- 
+2.25.1
+
