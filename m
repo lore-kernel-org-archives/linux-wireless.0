@@ -1,93 +1,87 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BD8835C685;
-	Thu, 23 Jul 2026 08:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1E32AD2E
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 08:33:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784794718; cv=none; b=NBb0/qYHoZwdn1HMan53n7MVaqlcaPXgoqVlj+4HK97dAWWLGXipryV50ZujNBpS0KJ1JL3PWWNU/jsm0Wh5y4vXn1uoDQyEkBW5j0cvWx3mhq0zJjei0adTruieY6Tm2YKh0gLb0Rn8RnP1n6oMf4n6M6qZbSu5vm5W5NHsfF0=
+	t=1784795596; cv=none; b=i++fShqbfs6NrpSIq9aUTpUkUUCCpcxbIXt8Hf0s86GNta9sRxQvlqePTsKIs9aVCHVOKw+DIX0TQdS1QDrljkb2tkc+NfG0Uc/sLZiq4mIpI1tyoB9oFBV/0hh9OVAX/tFptu88hMhJj87KV2amox5WIhNmAaS3lw0lza0a59k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784794718; c=relaxed/simple;
-	bh=Y64mjaCtGxTIF9N/SBXI/tAFigLZlbf6RLFxEq9KUlA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oN/51AOz/YdGRV8ZWdIipV0SmeWEf1gwNch9LkQKRltsJi6U6zJxwkggvKPJALUKp9viOh4lq3cUaW9lPwmLjvEFh3/ug3z4El6mJelv4dF4MskEeJe0XK1UXEypZ58XvV7y+jacf1Wc1KHmkeKp1th4UktrpczQT0bKzPGzcz8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=khFPwYLe; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1784795596; c=relaxed/simple;
+	bh=UGeOF6Qgse1F02GFrP8rFb3Y+xAc13XsQLnd7/VOuDA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=g2uFMO9IiTwzktLkuKj8kdsLKlMoMjjmBtjO8nlxJtoQcR8JmN7qUhPw3FY9pvAndZDIDv322gvnxvGMi+G4ECjGMSYd6ajSVbC327z45N+T8i9OJYaheELmklXN927PrO1IucKlKCCIcYrIQdq+TKxIKyKXqQTuAyWgBh0nwCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=Ms/xoC2z; arc=none smtp.client-ip=212.77.101.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="khFPwYLe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=NUfFR+3Bsy542uS2ZqJBKBvjn9UDk1KCrkWlGxWZ2Qs=;
-	t=1784794717; x=1786004317; b=khFPwYLe9J99Z6xQAFbMuP2yqKwkIUqmI+vRYi0gG8Ah6gI
-	2O3E2C3AnyQrXF9MkxpAM2yv89gHZcSHuDFx0IqIJAn44FHXK0UCC6v3Oii+7INXlZYKabAc6koPo
-	P5Nvghmx560l2FBPc/NrqLv7q1KkJjPpsGrqhQr4vuvDK22p2nSnP/f1WmWUiZmY3AVUANY7VUEQA
-	gEN0cuMSmtmq/9yZvwUj5M61uyaFUkeAFmzVDjC0MEciKkirhXUKkIzroUxJUO9mx9TvZK/cG/Voa
-	VYyVasjZm2ynKsopFvyWsEZvqNss1AvQbWIoHh6UYqunuAlrjPelZtB0Y/Y2jDKw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wmodW-0000000AJa9-0xAt;
-	Thu, 23 Jul 2026 10:18:34 +0200
-Message-ID: <3552acdf7839106b152edfd13502684306ea42a3.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: cfg80211: publish PMSR request before starting
- the driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhao Li <enderaoelyther@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 23 Jul 2026 10:18:33 +0200
-In-Reply-To: <20260723010916.76433-1-enderaoelyther@gmail.com> (sfid-20260723_030932_237420_AA10BE01)
-References: <20260723010916.76433-1-enderaoelyther@gmail.com>
-	 (sfid-20260723_030932_237420_AA10BE01)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="Ms/xoC2z"
+Received: (wp-smtpd smtp.wp.pl 22432 invoked from network); 23 Jul 2026 10:33:11 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1784795591; bh=Ri5m/BcfITOpl40vNOHEdVtvGXnlsWi7fcTjJcW7gBs=;
+          h=From:To:Cc:Subject;
+          b=Ms/xoC2zV48629GLfFxH9DnY9z66nJ2OKmkIYR9M0ip22HXiGrmhBO60XmKQttS2m
+           L4/JTRReQivtljmhZ40SWqXNwSr7sH3rshVn3imwF+btBWRfja4TA73byu6rWzu494
+           dQ/qFnChVfEdclfGWeY45KYb1yaOcWeDWod/MvJYuvwmwHs3JVMwxJmsL/JCCsW4qh
+           zXb5IHoyvO7gpJFugmLdnLmmh1lo2QFVHiSaYHCno4Q+cI16YSVB2JebWbGJ1W0lGc
+           ZiSaTdD3frHSQKKoHhqdTOTmNJzqZg2PTAdRh18Sg1/F1uXXt4cOOyUlac5a5ZmCwE
+           qLKyv2NcmW0vw==
+Received: from 77-236-11-167.static.play.pl (HELO localhost) (stf_xl@wp.pl@[77.236.11.167])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <rosenp@gmail.com>; 23 Jul 2026 10:33:11 +0200
+Date: Thu, 23 Jul 2026 10:33:10 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH wireless-next] wifi: rt2x00: Use device-managed register
+ buffers
+Message-ID: <20260723083310.GC4577@wp.pl>
+References: <20260717220052.824624-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260717220052.824624-1-rosenp@gmail.com>
+X-WP-MailID: 99da899a07fd48a92231d014ce85229b
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [cQNB]                               
 
-On Thu, 2026-07-23 at 09:09 +0800, Zhao Li wrote:
->=20
-> This ordering also permits a successful driver callback to complete the
-> request synchronously. Document the resulting start_pmsr lifetime contrac=
-t.
+On Fri, Jul 17, 2026 at 03:00:52PM -0700, Rosen Penev wrote:
+> The rt2x00 PCI and USB probe paths allocate EEPROM and RF storage with
+> plain kzalloc() and then free it from bus-specific teardown helpers.  The
+> USB path also manages the CSR cache the same way.  These buffers are
+> tied to the device lifetime, so the explicit free paths add probe and
+> disconnect cleanup without providing separate ownership.
+> 
+> Allocate the buffers with devm_kzalloc() before the mac80211 hardware is
+> allocated, then attach the resulting storage to struct rt2x00_dev after
+> the driver-private state exists.  This lets driver detach and probe
+> failure rely on device-managed cleanup and removes the duplicated
+> bus-specific buffer freeing.
+> 
+> Assisted-by: Codex:GPT-5.5
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
 
-From a locking perspective perhaps yes, but cfg80211_pmsr_complete()
-sends the results to userspace immediately, so userspace might see a
-completion with a cookie before it even got the cookie as the request
-response, which (semantically) makes no sense.
+>  int rt2x00usb_probe(struct usb_interface *usb_intf,
+>  		    const struct rt2x00_ops *ops)
+>  {
+>  	struct usb_device *usb_dev = interface_to_usbdev(usb_intf);
+> -	struct ieee80211_hw *hw;
+>  	struct rt2x00_dev *rt2x00dev;
+> +	struct ieee80211_hw *hw;
+> +	__le16 *eeprom;
+> +	void *cache;
+>  	int retval;
+> +	u32* rf;
 
-Given that measurement requests are always going to take some time, I
-don't think this is an issue in practice that we really need to work
-hard to prevent (we'd have to do something like attaching the result to
-the request on the list, pivot to a wiphy locked worker, etc.)
+Nit, u32 *rf;
 
-However, I don't think it makes sense to actually *document* that it's
-now possible - it's only possible from the kernel's locking POV, from
-userspace's POV it's still highly confusing at best, and it makes no
-sense semantically either.
-
-At best the documentation would be something like "the kernel doesn't
-crash if the request is completed before returning success" but that's
-not useful either :)
-
-> +	/*
-> +	 * Publish before the driver can complete the request. Completion may f=
-ree
-> +	 * it before rdev_start_pmsr() returns, so use the cookie snapshot belo=
-w.
-> +	 */
-
-That comment then should call out how it's really about preventing races
-with drivers from doing UAF (we could technically be preempted here
-too), rather than making that sound like a reasonable order - just
-saying "Under races and/or broken drivers immediate completion might
-free it ..." or something along those lines would be better I think.
-
-johannes
+Regards
+Stanislaw
