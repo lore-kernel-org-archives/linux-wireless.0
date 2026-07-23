@@ -1,143 +1,108 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CA233E51DE
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 21:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A01653E49CC;
+	Thu, 23 Jul 2026 22:01:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784843015; cv=none; b=dYxnPDX6palHFZfAAeqjVUQq74HN4MM441yChIbGqnnoXHN9CeaSKqty6eXUvvprpwkKJXP7MpBQUQSJx2VrsVXqWsQiotyuV23++NynME96ecgTQzkVkY62qcDiECgL31SO/PAG3pzmEZjOBukBAq5ZvRLhoXkrt/co1a7qHrw=
+	t=1784844111; cv=none; b=dlhrP9ddO9yXUEX4CtaeFBTSnNwj+BUyiEC8ftdx4iSYzAw2S9woeNM/UYkSDQCSawndRcfwilAjR7rK9O2kRf3HpbCZS/Nv1gG7WaEoKIxlWuuB/cHI2BpjIoWAAGdI2BqYPjrKvuvvlLdoRw0zZDph1umC9x6UuT2fxjofczI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784843015; c=relaxed/simple;
-	bh=t+rGoCZY2sHqccaAiALTddytC1TpKIZn0a5q2pJrh+A=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=lDhCoLF4Zu2ojCc/ZIUSp/5DK/YM9EMjWPYFzDaWo6B+ypk36by+dB3CtP4MO3JGybzCoh9VxuZVQW8Bw0+7BbGvlImYzfut5TSN/vhEA7hxhyfcnqS3yQD6Mei94/WxLkCXDWDHDLlqT3JJhRUhBc6cy8UOb4Dt+L9soT89uMs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XFyobQmL; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1784844111; c=relaxed/simple;
+	bh=Ap+PKXa1rjxNyMD62UgZFXIzLqfyrb6ywhI4s6UIhRc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=mQ2tZ7q4mFbv8YjiE0DKEnjOW5EWiquHZW/pxzcnwaVfcJt6YQ3BBs39r55mTngOb4OR+arrOcoP376Wjn+49tLIMJYsobEXzH/X8RgfH8F+cCniQigLoi2qJQcftnCDiiuFos7u+1fUfMy6Mvtx9sLw4GgaqJQx/Y4L5Yf/Jzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MjSCNQcV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XFyobQmL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1784843012; x=1816379012;
-  h=date:from:to:cc:subject:message-id;
-  bh=t+rGoCZY2sHqccaAiALTddytC1TpKIZn0a5q2pJrh+A=;
-  b=XFyobQmLXp6AePUYKmL9+HJ9idLsrFycQz2fQF2C29iPfPVCLwHW0lGW
-   eNm7z0U8ittN3/LOoA6hOj1Jjg9boMOhalSASLxmrTlNK+yPTU2DS4dgA
-   j8Ct7FywPn9WUI6ND/ILPeMpr9aLMhA4CuNW8CCXSkjLSN9xhUH8SntKT
-   UmN9ARZm62Qi5lUBfW+ObtwhF/yYULxwxLsOHvf9Fbl+r9pcmKuUVLLW2
-   0XuzT/HOWiijvB/01QGxTSFV87PboL5+lUjyZ02ZHQ7NNtvwZACFKJqo4
-   wyYQcbMYJ7odG4SnckOUmx+Wqh32NBDZnU7ALpXgxims6GanTpqZMPo5H
-   Q==;
-X-CSE-ConnectionGUID: 3KBT7nLxSZeYaukR4EapDw==
-X-CSE-MsgGUID: hVIigcL2Sfy9AFkJRfzHNg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11854"; a="85271150"
-X-IronPort-AV: E=Sophos;i="6.25,181,1779174000"; 
-   d="scan'208";a="85271150"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2026 14:43:30 -0700
-X-CSE-ConnectionGUID: dmSTZz36QuablvY17kezMQ==
-X-CSE-MsgGUID: K7KpBpj6RzahT6VbdtUBNw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,181,1779174000"; 
-   d="scan'208";a="258599189"
-Received: from lkp-server02.sh.intel.com (HELO ea128546eb3d) ([10.239.97.151])
-  by orviesa007.jf.intel.com with ESMTP; 23 Jul 2026 14:43:29 -0700
-Received: from kbuild by ea128546eb3d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wn1CQ-00000000a60-38NF;
-	Thu, 23 Jul 2026 21:43:26 +0000
-Date: Fri, 24 Jul 2026 05:42:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jakub Kicinski <kuba@kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org
-Subject: [wireless:for-next] BUILD SUCCESS
- fec15bb3dab0c88dd513a5198173de66f830f289
-Message-ID: <202607240501.dyxnO89i-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MjSCNQcV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 776E01F000E9;
+	Thu, 23 Jul 2026 22:01:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784844101;
+	bh=OW/+87f6scqS9+baO5oS3wrBMXJyQ9fPEVbIi5XahiE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=MjSCNQcVKVQv+ToMyLY8eAAyNOGdd5VUcZhTZEBbmzpXEiCMKNHyapzKUeB7ue6NA
+	 org747FcrPp40vt7dWhc/j5vWPqZCR053IQzlYSKYJ5XkJvvahiW1zNE++zdFLAxf0
+	 AaYuUGttAQzLVKNq7tsg4HyVnKqKZIa+3hTft3p6NYpcSWT/4SPnpE/rzyBlFYJHOe
+	 eo00KRTion3zzkR5b3mggyKVtjlVWd1AMg4zpPNxrj7pB/L8asp/3SReYNPRyTdvfx
+	 Vxnoj6/VA+iGK+IQKjNbTKt5vOz2z2pV9Ley4Zen/zaNFoYdgtnPtguCkZcKc+Q43J
+	 ZSgdG7WZP1LHw==
+Date: Thu, 23 Jul 2026 17:01:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Yixun Lan <dlan@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"spacemit@lists.linux.dev" <spacemit@lists.linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] PCI: Move Spacemit vendor and device IDs to
+ linux/pci_ids.h
+Message-ID: <20260723220140.GA865834@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <073fbf4b41804285b2df6fbb4efce0ed@realtek.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git for-next
-branch HEAD: fec15bb3dab0c88dd513a5198173de66f830f289  Merge tag 'wireless-2026-07-22' of https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless
+On Thu, Jul 23, 2026 at 01:19:47AM +0000, Ping-Ke Shih wrote:
+> Hi PCI maintainers,
+> 
+> Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com> wrote:
+> > Move the vendor and device ID for the existing Spacemit K1 PCIe Root
+> > Complex to include/linux/pci_ids.h. Also add K3's Root Complex device ID
+> > to this header. This is done so that these values can be referenced in
+> > the rtw89 driver to enable 36-bit DMA ability in it for WiFi to function
+> > on the K3 Pico ITX board.
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 3 ---
+> >  include/linux/pci_ids.h                       | 4 ++++
+> >  2 files changed, 4 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > index be20a520255b6..f89c6d46c7684 100644
+> > --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
+> > @@ -21,9 +21,6 @@
+> > 
+> >  #include "pcie-designware.h"
+> > 
+> > -#define PCI_VENDOR_ID_SPACEMIT         0x201f
+> > -#define PCI_DEVICE_ID_SPACEMIT_K1      0x0001
+> > -
+> >  /* Offsets and field definitions for link management registers */
+> >  #define K1_PHY_AHB_IRQ_EN                      0x0000
+> >  #define PCIE_INTERRUPT_EN              BIT(0)
+> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > index 1c9d40e09107d..d6f26cacc8e35 100644
+> > --- a/include/linux/pci_ids.h
+> > +++ b/include/linux/pci_ids.h
+> > @@ -2640,6 +2640,10 @@
+> >  #define PCI_VENDOR_ID_SUNIX            0x1fd4
+> >  #define PCI_DEVICE_ID_SUNIX_1999       0x1999
+> > 
+> > +#define PCI_VENDOR_ID_SPACEMIT         0x201f
+> > +#define PCI_DEVICE_ID_SPACEMIT_K1      0x0001
+> > +#define PCI_DEVICE_ID_SPACEMIT_K3      0x0002
+> > +
+> >  #define PCI_VENDOR_ID_HINT             0x3388
+> >  #define PCI_DEVICE_ID_HINT_VXPROII_IDE 0x8013
+> 
+> As patch 2/2 obviously goes to wireless-next tree, can I take this 
+> dependency patch to my tree? 
 
-elapsed time: 803m
-
-configs tested: 65
-configs skipped: 7
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allnoconfig    gcc-16.1.0
-alpha                           allyesconfig    gcc-16.1.0
-alpha                              defconfig    gcc-16.1.0
-arc                             allmodconfig    gcc-16.1.0
-arc                             allyesconfig    gcc-16.1.0
-arc                  randconfig-001-20260723    gcc-8.5.0
-arc                  randconfig-002-20260723    gcc-11.5.0
-arm                  randconfig-002-20260723    gcc-13.4.0
-arm                  randconfig-003-20260723    gcc-8.5.0
-arm                  randconfig-004-20260723    gcc-13.4.0
-arm64                randconfig-002-20260723    gcc-15.2.0
-arm64                randconfig-003-20260723    gcc-13.4.0
-arm64                randconfig-004-20260723    gcc-8.5.0
-csky                            allmodconfig    gcc-16.1.0
-csky                 randconfig-001-20260723    gcc-15.2.0
-csky                 randconfig-002-20260723    gcc-16.1.0
-i386                            allmodconfig    gcc-14
-loongarch                          defconfig    clang-24
-loongarch            randconfig-002-20260723    gcc-16.1.0
-nios2                           allmodconfig    gcc-11.5.0
-nios2                            allnoconfig    gcc-11.5.0
-nios2                randconfig-001-20260723    gcc-8.5.0
-nios2                randconfig-002-20260723    gcc-11.5.0
-parisc                          allmodconfig    gcc-16.1.0
-parisc                          allyesconfig    gcc-16.1.0
-parisc                             defconfig    gcc-16.1.0
-parisc               randconfig-001-20260723    gcc-8.5.0
-parisc               randconfig-002-20260723    gcc-10.5.0
-powerpc              randconfig-001-20260723    gcc-8.5.0
-powerpc              randconfig-002-20260723    clang-24
-powerpc                        wii_defconfig    gcc-16.1.0
-powerpc64            randconfig-001-20260723    gcc-10.5.0
-powerpc64            randconfig-002-20260723    clang-18
-riscv                randconfig-001-20260723    clang-24
-riscv                randconfig-002-20260723    gcc-15.2.0
-s390                 randconfig-001-20260723    gcc-8.5.0
-s390                 randconfig-002-20260723    gcc-10.5.0
-sh                                 defconfig    gcc-16.1.0
-sh                   randconfig-001-20260723    gcc-15.2.0
-sh                   randconfig-002-20260723    gcc-16.1.0
-sparc                randconfig-001-20260723    gcc-8.5.0
-sparc                randconfig-002-20260723    gcc-8.5.0
-sparc64              randconfig-002-20260723    gcc-8.5.0
-um                   randconfig-002-20260723    clang-24
-x86_64     buildonly-randconfig-001-20260723    gcc-14
-x86_64     buildonly-randconfig-002-20260723    gcc-14
-x86_64     buildonly-randconfig-003-20260723    clang-22
-x86_64     buildonly-randconfig-004-20260723    gcc-14
-x86_64     buildonly-randconfig-005-20260723    gcc-14
-x86_64     buildonly-randconfig-006-20260723    gcc-12
-x86_64               randconfig-001-20260723    clang-22
-x86_64               randconfig-002-20260723    clang-22
-x86_64               randconfig-003-20260723    clang-22
-x86_64               randconfig-004-20260723    clang-22
-x86_64               randconfig-005-20260723    clang-22
-x86_64               randconfig-006-20260723    gcc-14
-x86_64                        randconfig-011    gcc-14
-x86_64               randconfig-011-20260723    gcc-14
-x86_64               randconfig-012-20260723    gcc-14
-x86_64               randconfig-013-20260723    clang-22
-x86_64               randconfig-014-20260723    gcc-14
-x86_64               randconfig-015-20260723    gcc-14
-x86_64               randconfig-016-20260723    gcc-14
-xtensa               randconfig-001-20260723    gcc-8.5.0
-xtensa               randconfig-002-20260723    gcc-8.5.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Yes, that's what my Acked-by at
+https://lore.kernel.org/all/20260716164336.GA40813@bhelgaas means.
