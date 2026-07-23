@@ -1,135 +1,122 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65677471439
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:45:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59BAD470449;
+	Thu, 23 Jul 2026 11:51:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784807151; cv=none; b=O7fYC9AI2QS3gt+8wm2M7ebAHAah/jbXi/gODWSva4Ypj/AnirKqb0Ik+qW1X+ePzVeLbl2I7tP1EcM+E+sBtIaBBNrg3np5eCDT3qFbBrPUAonjct18t0sjZWrh8lMOqGqxqv8GzNlNy0l5LLSyoRVDOF6/eHd9QPLIwjKOnoU=
+	t=1784807495; cv=none; b=N95zYVlPjpYELiFoRA8w1SyhdMyZv7mNPjgQPEcL+HGxwV5Fpq3nSwrWgFp03wUysSCqCcgyUXL90516UWDvdkJ8fgoGUjYoE3NWQPgnYBdB7zuIjxPfjty8Dx8SE6CCjT5gvUCtAoccDyUZDtIqrr3KDwcaDO+G3pKyuNVN3d0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784807151; c=relaxed/simple;
-	bh=rnQRIx9nr5Pt9psdgxOkFunoRdX6Lj3wKYuEaoFGItM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aUsFTW0uar+6Qh+qNCga79h23hskCiWE6BwKX2fTWqiJn5Ge0Y7V/1ojVEW1fDENjpI7TJHtxBIrJIOciaEXT/AqrzI+sSZYqmKviAJQTUwDGr8NChm7hLlobUmRw5gm3wX+H5fpJ2b8om5XGVpt+a/0hUGcPAU2bLXAszDOi0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=zRSwyafH; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="zRSwyafH"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cc7ef7ec27so5849055ad.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 04:45:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784807146; x=1785411946; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qW5FtRGSlPIuifYqC0uvc8wKrWKuGaKd/2/4BPZB+Yw=;
-        b=zRSwyafHeEBVEgI0lXX37qd8vyO0T2BR5gC2Hah9+rBG8ExIARFVe6GB8Gk6ujmeh8
-         3rjss4wDFlLmdmLnZPULpwQutc+GDEMqJTugY7Yz9qV5Qy+t9+FGk4z/hssRNR9yeZO/
-         EmmwE2B8sBMwsvfYgb5hLjStarLm5ylj+DtDdQ9Y5P2K6SUqW//qkJIxBgagW4eMB1//
-         VjnoToNZ1TY0Q/gF0jdBGSXm8eQYA0jMmCzA9SehQneUBJbOvy8j8B64G7D99uvSG/Dg
-         RiVkQpapN4VG68nQqlxDFAabNwtbdwbf6UnNGeHo5VPf2L4VGzKcNCETRdwbUQuF3Z1O
-         y7Fw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784807146; x=1785411946;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qW5FtRGSlPIuifYqC0uvc8wKrWKuGaKd/2/4BPZB+Yw=;
-        b=s5E62+rAGyJUt2HGGmwk4pQ+YPhhPdq0a7HOwr9Ytr0dCMV80bdyPJlK3qE7Az5q83
-         hfom9FagZ/0kxVSsq259/xdep06WtJ9lD/GoRUwpZu7MPzcph1sq/3+m6KZwQhRjmkky
-         Ve3HQw0Wq/0YfLson2zR+R3HG7iGCG7ADBaKVvmzoQxnc8n34vPniK+tD0BOHmYmDAj2
-         a48eKoN3pX3Bkj9PBjqnu+glZFtV4VWPgIMdICtnAql9iVelGBe4jnMN08/CFl4cM/QJ
-         6oWtpBTCUlE2ZFy7gNHkpED+OFRQCu20D14Qtcj95B0+uFoodM5c1HyYXn6SVMBOkCpn
-         RlCg==
-X-Forwarded-Encrypted: i=1; AHgh+RpD6wllkUBuIsY9CjMzSUvE0P01hjBRbGQiQvl+QciZsQ9917Qf88gqJ4SvNaCRMFpJ9FdrELnXNyZChm1DBw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxvciqFi3BQhTwU1NHgMmu8P9oMHhzVZ2ZTBsBhmwDBe8dfR8xK
-	9lEpznenWg/KHI32OSFEPWS1P8U+E3VbQG73bvJHjEMBwMe633ClBfFlIuxe8JPbHsw=
-X-Gm-Gg: AR+sD10ZRmQjOkiRS5ivaQPVWr/DCWfvUYHk7ugK0C1dFauGJXrYIFupwzhXDl7tPHh
-	1DU0jPgXKz6NFFVlAcko3kugX8FiEcD8cCnId/9wKjBNRfNIoZ8+/251TxjA2wxLDG4uBaluh8V
-	JcAKRSA/MYRr08fMa/Y4cM0itfOBC5zfsjTTnMvgJVoCY4+H6J+4Ci199ndK1HmdDCfjt5eLz0T
-	yWdnck1lCaapeT7RqLm8u5ID/jgsAconrxP7CbTR068fWgqf+AsNF5JKeiHjkFbzz4qoM2i2bhN
-	MNYMf3C0k5I6XUm61DVmrhCIxNFLwAJ1fC+ltearv/n3+VbbzglENCsO1XqVP3OdbGPCfe/ZKlj
-	FbluFuc37/REIjfJId74UCZX3fFKj8uU77DFpkOIlZE/gkditnJ36a799E4qLsTWVp4wRm82cHD
-	2347d3lZdf7qJfkARE+L45ttB85YiNYRYXPAxnO6yuc6Y/a0yIcARyeBUh63uOI41nMSKa9uV3y
-	EaeHZmqWttl6sO5QQQHevDSIjcUiWiI
-X-Received: by 2002:a17:903:3bc7:b0:2cf:4c0f:5116 with SMTP id d9443c01a7336-2cfa6c5e50bmr34449455ad.28.1784807146525;
-        Thu, 23 Jul 2026 04:45:46 -0700 (PDT)
-Received: from Metius.iitm.ac.in ([103.158.43.43])
-        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-2cf8f310644sm32175005ad.55.2026.07.23.04.45.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Jul 2026 04:45:45 -0700 (PDT)
-From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-To: pkshih@realtek.com
-Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
+	s=arc-20240116; t=1784807495; c=relaxed/simple;
+	bh=4cremXzyNwOkOqPxCxyprtBbUCrYRn3SXpK0utExZv4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EuLg3Cds4w8ax3k5bE7svZeSpL9z2nHtjKJWNPW6RF9IDkgX4XyjSGgEu03PfbSoucTQeoce0ltfIq5SFoX26sl6zpbWcdbwOufvFubWd9Mo57oIy4aarhDfx7+XB59wsGqyTYfvrAPqRi+fjatubveOPiwkJ/lTIwRtk49vApU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 928C61F000E9;
+	Thu, 23 Jul 2026 11:51:24 +0000 (UTC)
+Date: Thu, 23 Jul 2026 12:51:20 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Enderaoe Lyther <enderaoelyther@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rtl8821cerfe2@gmail.com,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: rtlwifi: rtl8192du: Fix possible memory leak in rtl92du_init_sw_vars()
-Date: Thu, 23 Jul 2026 17:15:37 +0530
-Message-ID: <20260723114539.136986-1-nihaal@cse.iitm.ac.in>
-X-Mailer: git-send-email 2.43.0
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Subject: Re: linux-next: manual merge of the wireless-next tree with the
+ origin tree
+Message-ID: <ac48f782-3fbd-4c61-89d0-4dd032ca81b9@sirena.org.uk>
+Mail-Followup-To: Enderaoe Lyther <enderaoelyther@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+References: <amDoh8ypkkAY-vvc@sirena.org.uk>
+ <CACHPgzzDmfDii3MVsjukiGYqZrd+iKur6T2+iRV11YBdqof3=w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="TPcIYLsJMIho0AIz"
+Content-Disposition: inline
+In-Reply-To: <CACHPgzzDmfDii3MVsjukiGYqZrd+iKur6T2+iRV11YBdqof3=w@mail.gmail.com>
+X-Cookie: (null cookie
 
-The memory allocated inside rtl92du_init_shared_data() is not freed in
-any of the subsequent error paths in rtl92du_init_sw_vars().
-Fix that by adding a call to rtl92du_deinit_shared_data() in the error
-path.
 
-Fixes: b5dc8873b6ff ("wifi: rtlwifi: Add rtl8192du/sw.c")
-Cc: stable@vger.kernel.org
-Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
----
-Compile tested only. Issue found using static analysis.
+--TPcIYLsJMIho0AIz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-v1->v2:
-- Avoid jumping to error path when rtl92du_init_shared_data() fails,
-  since in that error path, the memory is already freed even on error.
-  Thanks to Ping-Ke Shih for pointing this out.
+On Wed, Jul 22, 2026 at 03:53:59PM -0500, Enderaoe Lyther wrote:
 
-v1 link: https://patchwork.kernel.org/project/linux-wireless/patch/20260722121236.136754-1-nihaal@cse.iitm.ac.in/
+> Thanks for carrying the conflict resolution.
+>=20
+> I noticed one semantic conflict later in ieee80211_rx_mgmt_assoc_resp().
+>=20
+> Commit 035ed430ce6a2 ("wifi: mac80211: avoid non-S1G AID fallback for S1G
+> assoc") added:
+>=20
+> 	else if (status_code =3D=3D WLAN_STATUS_SUCCESS)
+> 		goto abandon_assoc;
+>=20
+> where abandon_assoc destroyed the association data with ASSOC_ABANDON and
+> notified the driver.
+>=20
+> After f13e573ab3f12 ("wifi: mac80211: notify driver before destroying
+> assoc link") folds the driver notification into
+> ieee80211_destroy_assoc_data(), the equivalent target is
+> destroy_assoc_data, since assoc_status is initialized to ASSOC_ABANDON.
+>=20
+> next-20260722 instead has:
+>=20
+> 	else if (status_code =3D=3D WLAN_STATUS_SUCCESS)
+> 		goto notify_driver;
+>=20
+> which bypasses ieee80211_destroy_assoc_data(). I believe this should
+> instead be:
+>=20
+> 	else if (status_code =3D=3D WLAN_STATUS_SUCCESS)
+> 		goto destroy_assoc_data;
 
- drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+I can't tell which bit of code you are talking about here.  I see there
+is a block at line 7274 of -next:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
-index 7bafb051d5ec..88e8cc590c54 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
-@@ -145,8 +145,10 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
- 
- 	/* for firmware buf */
- 	rtlpriv->rtlhal.pfirmware = kmalloc(0x8000, GFP_KERNEL);
--	if (!rtlpriv->rtlhal.pfirmware)
--		return -ENOMEM;
-+	if (!rtlpriv->rtlhal.pfirmware) {
-+		err = -ENOMEM;
-+		goto error;
-+	}
- 
- 	rtlpriv->max_fw_size = 0x8000;
- 	pr_info("Driver for Realtek RTL8192DU WLAN interface\n");
-@@ -160,10 +162,14 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
- 		pr_err("Failed to request firmware!\n");
- 		kfree(rtlpriv->rtlhal.pfirmware);
- 		rtlpriv->rtlhal.pfirmware = NULL;
--		return err;
-+		goto error;
- 	}
- 
- 	return 0;
-+
-+error:
-+	rtl92du_deinit_shared_data(hw);
-+	return err;
- }
- 
- static void rtl92du_deinit_sw_vars(struct ieee80211_hw *hw)
--- 
-2.43.0
+        if (elems->aid_resp)
+                aid =3D le16_to_cpu(elems->aid_resp->aid);
+        else if (!assoc_data->s1g)
+                aid =3D le16_to_cpu(mgmt->u.assoc_resp.aid);
+        else if (status_code =3D=3D WLAN_STATUS_SUCCESS)
+                goto notify_driver;
 
+but that is immediately after another goto notify_driver, there's
+further notify_driver error handling afterwards and all the earlier
+error handling is return statements so it looks at least unclear what's
+supposed to be going on.
+
+Please don't top post, reply in line with needed context.  This allows
+readers to readily follow the flow of conversation and understand what
+you are talking about and also helps ensure that everything in the
+discussion is being addressed.
+
+--TPcIYLsJMIho0AIz
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmpiADcACgkQJNaLcl1U
+h9CQfAf+MBSPPrNS+xcyPKnQI8hhoKpCpl3HE4M/nXx05QkgdAVw2Etk7eVbIw0H
+kbd8Yj9E0LzglqInONMuTT/MJocmgmVm5W/8YD8CJZlT73Bl2xGukdKXC9JXMm24
+dA35Z42OnYsYbwxrY9k1M6Nj/tT+Wb8D1A0z61kJ5iq1XVyIpdmV0ZWecNRqpHTL
+O8HAudm2yo0Y9JOknJdJiVMTv0OucDr8FBK71mTFldRSrTbMR8PXYXDrMRQSc9S4
+JiQ8Aa7jsDPOcbdgn3/hoD0UOaVNZjFoU41TfTmrNu0qXMr/iVENaiURUxsDzSCh
+chsxIcLSgcNXTNCyaAJjzzlLktalRg==
+=TA/c
+-----END PGP SIGNATURE-----
+
+--TPcIYLsJMIho0AIz--
