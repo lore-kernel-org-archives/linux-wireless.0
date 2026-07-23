@@ -1,52 +1,73 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C6C43612F6;
-	Thu, 23 Jul 2026 11:39:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65677471439
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:45:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784806781; cv=none; b=Bxj1hv/cTS/ar7q68TE66PuBQ03xjZeJGAeA1C5OLW686zg05W/pnz/9JDlSPqv4e3R4Op+9Pf8tR8sGfKs30spmmxXHlAUYSZvzRrAEMPd9DfgIQ6mdI95eOUcZUbQOfsEFN+3QNMu/e9p4dP5VS+eZGPfd45SDjyEJ0wUzgL4=
+	t=1784807151; cv=none; b=O7fYC9AI2QS3gt+8wm2M7ebAHAah/jbXi/gODWSva4Ypj/AnirKqb0Ik+qW1X+ePzVeLbl2I7tP1EcM+E+sBtIaBBNrg3np5eCDT3qFbBrPUAonjct18t0sjZWrh8lMOqGqxqv8GzNlNy0l5LLSyoRVDOF6/eHd9QPLIwjKOnoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784806781; c=relaxed/simple;
-	bh=575TBu6W2+tCfGbckTNcNd0wohcBX07RjBlg1Xg27ek=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JURukIOgi5CPVkGcYj+a0ie9/z/1bozx1HQDMnH/FmhvuHG2kjhh73vb7zHbdXaNxlVL0Io6mrDWIssqYC8KavenKZqN+0fpy5ilACq0ZozIHLVcXgqqMxNEv1Mk1GaODuutCl9UE2KSMTmwrYj3SSZE41fps3WTWWg/WOf1he8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 2bd985d4868b11f1aa26b74ffac11d73-20260723
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:bcb6bdb2-3946-4ab7-ad6c-c8e6bb8310c5,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:e7bac3a,CLOUDID:cf0cbd2d3325b150b81db5541750b712,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|850|865|898,TC:nil,Content:0|1
-	5|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 2bd985d4868b11f1aa26b74ffac11d73-20260723
-X-User: lilinmao@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lilinmao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1811612323; Thu, 23 Jul 2026 19:39:31 +0800
-From: Linmao Li <lilinmao@kylinos.cn>
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
-	Dan Callaghan <dan.callaghan@morsemicro.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Arien Judge <arien.judge@morsemicro.com>,
+	s=arc-20240116; t=1784807151; c=relaxed/simple;
+	bh=rnQRIx9nr5Pt9psdgxOkFunoRdX6Lj3wKYuEaoFGItM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aUsFTW0uar+6Qh+qNCga79h23hskCiWE6BwKX2fTWqiJn5Ge0Y7V/1ojVEW1fDENjpI7TJHtxBIrJIOciaEXT/AqrzI+sSZYqmKviAJQTUwDGr8NChm7hLlobUmRw5gm3wX+H5fpJ2b8om5XGVpt+a/0hUGcPAU2bLXAszDOi0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=zRSwyafH; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="zRSwyafH"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2cc7ef7ec27so5849055ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 04:45:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1784807146; x=1785411946; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=qW5FtRGSlPIuifYqC0uvc8wKrWKuGaKd/2/4BPZB+Yw=;
+        b=zRSwyafHeEBVEgI0lXX37qd8vyO0T2BR5gC2Hah9+rBG8ExIARFVe6GB8Gk6ujmeh8
+         3rjss4wDFlLmdmLnZPULpwQutc+GDEMqJTugY7Yz9qV5Qy+t9+FGk4z/hssRNR9yeZO/
+         EmmwE2B8sBMwsvfYgb5hLjStarLm5ylj+DtDdQ9Y5P2K6SUqW//qkJIxBgagW4eMB1//
+         VjnoToNZ1TY0Q/gF0jdBGSXm8eQYA0jMmCzA9SehQneUBJbOvy8j8B64G7D99uvSG/Dg
+         RiVkQpapN4VG68nQqlxDFAabNwtbdwbf6UnNGeHo5VPf2L4VGzKcNCETRdwbUQuF3Z1O
+         y7Fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784807146; x=1785411946;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qW5FtRGSlPIuifYqC0uvc8wKrWKuGaKd/2/4BPZB+Yw=;
+        b=s5E62+rAGyJUt2HGGmwk4pQ+YPhhPdq0a7HOwr9Ytr0dCMV80bdyPJlK3qE7Az5q83
+         hfom9FagZ/0kxVSsq259/xdep06WtJ9lD/GoRUwpZu7MPzcph1sq/3+m6KZwQhRjmkky
+         Ve3HQw0Wq/0YfLson2zR+R3HG7iGCG7ADBaKVvmzoQxnc8n34vPniK+tD0BOHmYmDAj2
+         a48eKoN3pX3Bkj9PBjqnu+glZFtV4VWPgIMdICtnAql9iVelGBe4jnMN08/CFl4cM/QJ
+         6oWtpBTCUlE2ZFy7gNHkpED+OFRQCu20D14Qtcj95B0+uFoodM5c1HyYXn6SVMBOkCpn
+         RlCg==
+X-Forwarded-Encrypted: i=1; AHgh+RpD6wllkUBuIsY9CjMzSUvE0P01hjBRbGQiQvl+QciZsQ9917Qf88gqJ4SvNaCRMFpJ9FdrELnXNyZChm1DBw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxvciqFi3BQhTwU1NHgMmu8P9oMHhzVZ2ZTBsBhmwDBe8dfR8xK
+	9lEpznenWg/KHI32OSFEPWS1P8U+E3VbQG73bvJHjEMBwMe633ClBfFlIuxe8JPbHsw=
+X-Gm-Gg: AR+sD10ZRmQjOkiRS5ivaQPVWr/DCWfvUYHk7ugK0C1dFauGJXrYIFupwzhXDl7tPHh
+	1DU0jPgXKz6NFFVlAcko3kugX8FiEcD8cCnId/9wKjBNRfNIoZ8+/251TxjA2wxLDG4uBaluh8V
+	JcAKRSA/MYRr08fMa/Y4cM0itfOBC5zfsjTTnMvgJVoCY4+H6J+4Ci199ndK1HmdDCfjt5eLz0T
+	yWdnck1lCaapeT7RqLm8u5ID/jgsAconrxP7CbTR068fWgqf+AsNF5JKeiHjkFbzz4qoM2i2bhN
+	MNYMf3C0k5I6XUm61DVmrhCIxNFLwAJ1fC+ltearv/n3+VbbzglENCsO1XqVP3OdbGPCfe/ZKlj
+	FbluFuc37/REIjfJId74UCZX3fFKj8uU77DFpkOIlZE/gkditnJ36a799E4qLsTWVp4wRm82cHD
+	2347d3lZdf7qJfkARE+L45ttB85YiNYRYXPAxnO6yuc6Y/a0yIcARyeBUh63uOI41nMSKa9uV3y
+	EaeHZmqWttl6sO5QQQHevDSIjcUiWiI
+X-Received: by 2002:a17:903:3bc7:b0:2cf:4c0f:5116 with SMTP id d9443c01a7336-2cfa6c5e50bmr34449455ad.28.1784807146525;
+        Thu, 23 Jul 2026 04:45:46 -0700 (PDT)
+Received: from Metius.iitm.ac.in ([103.158.43.43])
+        by smtp.googlemail.com with ESMTPSA id d9443c01a7336-2cf8f310644sm32175005ad.55.2026.07.23.04.45.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2026 04:45:45 -0700 (PDT)
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: pkshih@realtek.com
+Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Linmao Li <lilinmao@kylinos.cn>
-Subject: [PATCH v2] wifi: mm81x: prevent timers from outliving teardown
-Date: Thu, 23 Jul 2026 19:39:27 +0800
-Message-Id: <20260723113927.2370301-1-lilinmao@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260723092357.2362744-1-lilinmao@kylinos.cn>
-References: <20260723092357.2362744-1-lilinmao@kylinos.cn>
+	rtl8821cerfe2@gmail.com,
+	stable@vger.kernel.org
+Subject: [PATCH v2] wifi: rtlwifi: rtl8192du: Fix possible memory leak in rtl92du_init_sw_vars()
+Date: Thu, 23 Jul 2026 17:15:37 +0530
+Message-ID: <20260723114539.136986-1-nihaal@cse.iitm.ac.in>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,71 +76,60 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The three timer teardown paths call timer_delete_sync_try() and ignore
-its return value. If a callback is running on another CPU it returns -1
-without waiting, and it does not prevent a later rearm even when it does
-deactivate a pending timer. mm81x_skbq_tx_complete() can rearm the
-stale-status timer, and the rc and yaps callbacks queue work that rearms
-their timers. Teardown can therefore continue with a callback still
-running or the timer rearmed, so it fires after the associated state has
-been freed.
+The memory allocated inside rtl92du_init_shared_data() is not freed in
+any of the subsequent error paths in rtl92du_init_sw_vars().
+Fix that by adding a call to rtl92du_deinit_shared_data() in the error
+path.
 
-Use timer_shutdown_sync() for these permanent teardowns: it waits for an
-in-flight callback and prevents any future rearm. In mm81x_rc_deinit()
-shut the timer down before cancel_work_sync() so the work can no longer
-recreate the timer/work cycle.
-
-Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
-Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+Fixes: b5dc8873b6ff ("wifi: rtlwifi: Add rtl8192du/sw.c")
+Cc: stable@vger.kernel.org
+Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
 ---
-v2:
-- reword the subject to describe the fix (Lachlan Hodges)
+Compile tested only. Issue found using static analysis.
 
- drivers/net/wireless/morsemicro/mm81x/mac.c  | 2 +-
- drivers/net/wireless/morsemicro/mm81x/rc.c   | 2 +-
- drivers/net/wireless/morsemicro/mm81x/yaps.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+v1->v2:
+- Avoid jumping to error path when rtl92du_init_shared_data() fails,
+  since in that error path, the memory is already freed even on error.
+  Thanks to Ping-Ke Shih for pointing this out.
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
-index 392dae5d7ce9..08ca116a68b4 100644
---- a/drivers/net/wireless/morsemicro/mm81x/mac.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
-@@ -2349,7 +2349,7 @@ static void mm81x_stale_tx_status_timer(struct timer_list *t)
+v1 link: https://patchwork.kernel.org/project/linux-wireless/patch/20260722121236.136754-1-nihaal@cse.iitm.ac.in/
+
+ drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
+index 7bafb051d5ec..88e8cc590c54 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192du/sw.c
+@@ -145,8 +145,10 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
  
- static void mm81x_stale_tx_status_timer_finish(struct mm81x *mors)
- {
--	timer_delete_sync_try(&mors->stale_status.timer);
-+	timer_shutdown_sync(&mors->stale_status.timer);
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = kmalloc(0x8000, GFP_KERNEL);
+-	if (!rtlpriv->rtlhal.pfirmware)
+-		return -ENOMEM;
++	if (!rtlpriv->rtlhal.pfirmware) {
++		err = -ENOMEM;
++		goto error;
++	}
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+ 	pr_info("Driver for Realtek RTL8192DU WLAN interface\n");
+@@ -160,10 +162,14 @@ static int rtl92du_init_sw_vars(struct ieee80211_hw *hw)
+ 		pr_err("Failed to request firmware!\n");
+ 		kfree(rtlpriv->rtlhal.pfirmware);
+ 		rtlpriv->rtlhal.pfirmware = NULL;
+-		return err;
++		goto error;
+ 	}
+ 
+ 	return 0;
++
++error:
++	rtl92du_deinit_shared_data(hw);
++	return err;
  }
  
- static void mm81x_mac_stale_tx_status_timer_init(struct mm81x *mors)
-diff --git a/drivers/net/wireless/morsemicro/mm81x/rc.c b/drivers/net/wireless/morsemicro/mm81x/rc.c
-index 04aff66de4bd..28dd293df966 100644
---- a/drivers/net/wireless/morsemicro/mm81x/rc.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/rc.c
-@@ -60,8 +60,8 @@ void mm81x_rc_init(struct mm81x *mors)
- 
- void mm81x_rc_deinit(struct mm81x *mors)
- {
-+	timer_shutdown_sync(&mors->mrc.timer);
- 	cancel_work_sync(&mors->mrc.work);
--	timer_delete_sync_try(&mors->mrc.timer);
- }
- 
- static void mm81x_rc_sta_config_guard_per_bw(struct ieee80211_sta *sta,
-diff --git a/drivers/net/wireless/morsemicro/mm81x/yaps.c b/drivers/net/wireless/morsemicro/mm81x/yaps.c
-index bdadb822bf9a..e98a2a58726f 100644
---- a/drivers/net/wireless/morsemicro/mm81x/yaps.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/yaps.c
-@@ -597,7 +597,7 @@ static void mm81x_yaps_q_chip_full_timer_init(struct mm81x_yaps *yaps)
- 
- static void mm81x_yaps_q_chip_full_timer_finish(struct mm81x_yaps *yaps)
- {
--	timer_delete_sync_try(&yaps->chip_queue_full.timer);
-+	timer_shutdown_sync(&yaps->chip_queue_full.timer);
- }
- 
- int mm81x_yaps_init(struct mm81x *mors)
+ static void rtl92du_deinit_sw_vars(struct ieee80211_hw *hw)
 -- 
-2.25.1
+2.43.0
 
