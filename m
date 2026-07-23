@@ -1,46 +1,161 @@
-Received: from forward206d.mail.yandex.net (forward206d.mail.yandex.net [178.154.239.215])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D15824734C2
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 18:11:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.215
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79AA0488DAD
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 18:46:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784830286; cv=none; b=Vkp9b3mBFdPz64zjfg8qIxU2Zq8kZe8oQJnMxZ6OLCFVhyUoAVWG6MvQLkmDL4bWB7BLo0t90r5GdMFl01xPIlCDeU9DzfqWoXtMlEKF2fF3ywixzYC5f7fcLDN6pxTpjwvVAfn+11TRKXrjmfe1DeCFvKFeBZL5VCgmDnORU44=
+	t=1784832372; cv=none; b=qE6bkOSm9mhvTZytTuuvPEcwVKrzU9ZHxZLf+oKEynS++ru11th3jQ11AttIZ+Ny7C//WOHe715Pj1SJZ4AQxP+0Y8kKgHldYpfX11i7VidkjCP3XwGSUq7e52ix0IbDBwwwyQ446//+0kV867eQEP9tz9fT02Yyto1/HXv2+WI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784830286; c=relaxed/simple;
-	bh=nN2rmeDqtuJLBAwFomzmrJGf4f2S6Xj/kYwRXrhX5N4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=k+GX90SflR02DLjo+znugmC/u5gldE52By5BW2ivGpWUBMqNXC89QaeSx5lNHEo8LtKvgMcqoWePAdaGj0SV9H4dCYz/vpxaeXEF3Ao8CxaTW7KBsaA1mx2MQl39TPEDJYOxfK/IQMS5mG65YOpVCoYs4P3iMCDIWJR9xJ51Azc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=pCQOtPbC; arc=none smtp.client-ip=178.154.239.215
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
+	s=arc-20240116; t=1784832372; c=relaxed/simple;
+	bh=0DUXMETFOiPrjHj0I+f8Jjf1hUhgRxwBlToSkMOuX8E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SfW5YW47KiVmHDu3Xd2Et1Vtooc28A9uca5H756kz5lUxIxZMoco98VBljVzukexRcFTuxpt+7Ru+4YOmumTM/ZYUNqfSjMspsOfgF83NsIjPHgzrWFBzZmDQTsrCIssUs571gB6xakcJQLRZ7jRMTVh4cjGdP/9LsSkbyoK3YA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UcuaoKRQ; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="pCQOtPbC"
-Received: from forward100d.mail.yandex.net (forward100d.mail.yandex.net [IPv6:2a02:6b8:c41:1300:1:45:d181:d100])
-	by forward206d.mail.yandex.net (postfix) with ESMTPS id E9513813A2
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 21:05:03 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:2007:0:640:5fb2:0])
-	by forward100d.mail.yandex.net (postfix) with ESMTPS id 726A8C0065;
-	Thu, 23 Jul 2026 21:04:56 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net (smtp) with ESMTPSA id s4dcgYDfHqM0-UpKgTCD0;
-	Thu, 23 Jul 2026 21:04:55 +0300
-X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
-	t=1784829895; bh=2KdwqloDW2pTVUmGqHmXmt34ydml6Ogyj9Ke41PfZmk=;
-	h=Message-ID:Date:Cc:Subject:To:From;
-	b=pCQOtPbCNTCMuGGHsnhum4UYE0Iw5OaQIsXY8ToXudMNiF3h8o0RbXYbWCGM4aeBf
-	 kDJyyZmDeKaDBhSr6jLDTdRqXZYFT4G77UbKuQrj2h6RVESR2U2ZQuutQ/uEdruG8D
-	 OKvdr7qAld+6OzfYPZto1qYeV+73ESPV1p8J8LB4=
-Authentication-Results: mail-nwsmtp-smtp-production-main-77.iva.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
-From: Dmitry Antipov <dmantipov@yandex.ru>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: linux-wireless@vger.kernel.org,
-	Dmitry Antipov <dmantipov@yandex.ru>
-Subject: [PATCH] mt76: mt7915: simplify mt7915_sys_recovery_set()
-Date: Thu, 23 Jul 2026 21:04:30 +0300
-Message-ID: <20260723180430.747789-1-dmantipov@yandex.ru>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UcuaoKRQ"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38e08baf860so1121003a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 11:46:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784832355; x=1785437155; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+cqQ6sQJkvsR3VtIbpEjUXStuHRs0SJj4jk7Uojzitk=;
+        b=UcuaoKRQCbsReVhzJf/ZGJlXbh64b3U6AAC/KmroIrAb+XqaMu03L72UQmO1UfiKoH
+         v5t8SdZGnnvGRm0kSFNoBBew4GakZFP6aUp0kui6MrYim7VuZY25y/41yO+xQdCUuVSt
+         AYyG4u/HZr03V71uuN4Tg/H5roah86A3Hs7n7D/0j87fgcqbgrsjvKIgirqEL8EVhOiX
+         7gOxTc3j6W0PsrZth3785bq/XUTCNFWLPQqtgqJpSDa8IKj5CH876rkjW/PMTVdQUJ0V
+         ZoxYoGuEX+u+JYgBv4Zw44W3wGn4VBag2holCYN7hZ6yV5iHWiGOKFKN5GFOZqwlTJyB
+         wTzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784832355; x=1785437155;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+cqQ6sQJkvsR3VtIbpEjUXStuHRs0SJj4jk7Uojzitk=;
+        b=YI81LdSQelafAeLjq0vcZgM7ExlA6qgyuB2nYyK5cHVsyu657f9p/shxA24Hacy3QS
+         MBL7bdosYH9oWnVAxOg2vA7q4rJvWh7oKVYVWlZr5Pt7DYClsrW68I9e+y9UuWVpX0hI
+         hTLtkVwSKCwhBmI6WSYpiwwEqMcKEXvnjDTY+oU39vKlFb5Kv/uVd/zCmKOBfdj96U3r
+         y23ItsRGq1+3drzjMdxnzPiSCQvVEBEe294Kcn+JkOcEI+D01PA7/hIpaDorzPcYdjA+
+         9OqSXLTWIFMvwV148lESUXT/4uHOG6BMLfUTtN84sQ3LIcym4WgDIrx+4fetEEBdeoeP
+         AFGg==
+X-Forwarded-Encrypted: i=1; AHgh+RqyyYDBmqf4RWrSss3RWvY91Uf+qgIAOswV4Zce9OoXrwJ7v/5H7NdYw5y9sFhT9SOAWLZzTFgjwMMTNv5ppQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxeq9xtZo2gSiAOPsPphf6hiazS1uqxd88lb6mJui2tJUWJxCqb
+	nrVg7XxHjSGPBcGp0Kxmi73Kz+PjEYzUjriXHhBoMky+z1RLAJvjMlbp
+X-Gm-Gg: AR+sD11wP2mEv9z288OAY5M7wu2JKuJkwOn9Zci6xC5C5oEmPsHgyEE8uiBCkrX5GPu
+	XiF5Tp5Bi8bjYBnlHIZdca+3+17J+WyQDQGx6qPkZB5ljsS0cCxceMO+Xm1FlttQZRT0V5Cq31Y
+	CW8N/oqaG10AEDGaD1BlC4er6XlBjXhDnWll8dDoPAzc6V7HIZrpFs4cfLbpBpDoa8hdd2odTis
+	WSeHFIhWFTiLfV41YtQLpQchfUwo3CWYHl11q5xvTfh+8ap5U4jqNSpb04F5xJ9hPs/+qANZol5
+	3Ie7c8FeBsFTHl7X+1CIGRiebv11UTk13+m3V7/LIa3XJ0izsOo9BlZvFE5+dnP6wVVFHjL2HcC
+	jQQV0tEejKiwBG6YeN8EJM9NW9igCBAEidnWBiKGiVcycrdxJLgQLdgcbWyGQWtXU56+2sHL2
+X-Received: by 2002:a17:90b:1350:b0:36d:66d4:270e with SMTP id 98e67ed59e1d1-38ec6455120mr4430242a91.5.1784832354540;
+        Thu, 23 Jul 2026 11:45:54 -0700 (PDT)
+Received: from ubuntu.. ([110.9.142.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f03af8a45sm308155a91.10.2026.07.23.11.45.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2026 11:45:53 -0700 (PDT)
+From: Sang-Heon Jeon <ekffu200098@gmail.com>
+To: Julia.Lawall@inria.fr,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	David Airlie <airlied@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Florian Westphal <fw@strlen.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Hans de Goede <hansg@kernel.org>,
+	Hans Verkuil <hverkuil@kernel.org>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Jaroslav Kysela <perex@perex.cz>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jiri Pirko <jiri@resnulli.us>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Johan Hovold <johan@kernel.org>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Julian Anastasov <ja@ssi.bg>,
+	Leon Romanovsky <leon@kernel.org>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Matthew Sakai <msakai@redhat.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Maxime Ripard <mripard@kernel.org>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Mike Rapoport <rppt@kernel.org>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Shuah Khan <shuah@kernel.org>,
+	Simona Vetter <simona@ffwll.ch>,
+	Simon Horman <horms@verge.net.au>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Steve French <sfrench@samba.org>,
+	Takashi Iwai <tiwai@suse.com>,
+	Thomas Renninger <trenn@suse.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+	Vinod Koul <vkoul@kernel.org>,
+	Will Deacon <will@kernel.org>,
+	Yazen Ghannam <Yazen.Ghannam@amd.com>
+Cc: cocci@inria.fr,
+	amd-gfx@lists.freedesktop.org,
+	dmaengine@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org,
+	intel-wired-lan@lists.osuosl.org,
+	iommu@lists.linux.dev,
+	linux-cifs@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-edac@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-iio@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-pm@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	linux-rtc@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	lvs-devel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	nouveau@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org
+Subject: [PATCH 00/36] treewide: remove conditional returns with no effect
+Date: Fri, 24 Jul 2026 03:45:02 +0900
+Message-ID: <20260723184538.3888637-1-ekffu200098@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,45 +164,181 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use convenient ' kstrtou16_from_user()'
-to simplify 'mt7915_sys_recovery_set()'.
+Hello,
 
-Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
----
- .../net/wireless/mediatek/mt76/mt7915/debugfs.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+While reading mm/memblock, I found a conditional return where both
+branches return the same value:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-index 4d0854fe785b..0413b4fd2d9c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
-@@ -52,23 +52,12 @@ mt7915_sys_recovery_set(struct file *file, const char __user *user_buf,
- 	struct mt7915_phy *phy = file->private_data;
- 	struct mt7915_dev *dev = phy->dev;
- 	bool band = phy->mt76->band_idx;
--	char buf[16];
- 	int ret = 0;
- 	u16 val;
- 
--	if (count >= sizeof(buf))
--		return -EINVAL;
--
--	if (copy_from_user(buf, user_buf, count))
--		return -EFAULT;
--
--	if (count && buf[count - 1] == '\n')
--		buf[count - 1] = '\0';
--	else
--		buf[count] = '\0';
--
--	if (kstrtou16(buf, 0, &val))
--		return -EINVAL;
-+	ret = kstrtou16_from_user(user_buf, count, 0, &val);
-+	if (ret)
-+		return ret;
- 
- 	switch (val) {
- 	/*
--- 
-2.55.0
+	err = do_something();
+	if (err)
+		return err;
+	return err;
+
+Such code is usually a leftover from removing a statement between
+the two returns, and the tree has about a hundred of these.
+
+Patch 1 adds a Coccinelle script that matches the pattern, including
+negation and constant-comparison variants. Where a local variable is
+assigned right before the check, the assignment and the two returns
+turn into a single return of the assigned expression.
+
+Patches 2-36 are generated by the script, with hand fixes to restore
+unexpectedly removed comments and to fix the formatting checkpatch.pl
+complained about.
+
+The patches are grouped by subsystem instead of split per file. If
+you would rather split, merge or drop your part, just let me know
+and I will address it in the next version.
+
+All patches are independent and can be applied separately, but for
+everyone's convenience, it would be nice if they were merged through
+a single tree.
+
+The series is based on next-20260721.
+
+Sang-Heon Jeon (36):
+  coccinelle: misc: add cond_return_no_effect.cocci
+  drm/amd: remove conditional return with no effect
+  drm/radeon: remove conditional return with no effect
+  dpll: zl3073x: remove conditional return with no effect
+  drm/i915: remove conditional return with no effect
+  drm: remove conditional return with no effect
+  net: ethernet: remove conditional return with no effect
+  net: remove conditional return with no effect
+  net: intel: remove conditional return with no effect
+  wifi: remove conditional return with no effect
+  ipvs: remove conditional return with no effect
+  media: remove conditional return with no effect
+  ALSA: remove conditional return with no effect
+  ASoC: remove conditional return with no effect
+  iio: remove conditional return with no effect
+  Input: remove conditional return with no effect
+  clk: remove conditional return with no effect
+  crypto: drivers - remove conditional return with no effect
+  dmaengine: qcom_hidma: remove conditional return with no effect
+  stm class: remove conditional return with no effect
+  RDMA/ocrdma: remove conditional return with no effect
+  iommu/s390: remove conditional return with no effect
+  dm vdo: remove conditional return with no effect
+  pinctrl: mediatek: remove conditional return with no effect
+  platform/x86: toshiba_haps: remove conditional return with no effect
+  power: supply: pm8916_lbc: remove conditional return with no effect
+  RAS/AMD/ATL: remove conditional return with no effect
+  regulator: wm831x-isink: remove conditional return with no effect
+  rtc: pcf2127: remove conditional return with no effect
+  scsi: mpt3sas: remove conditional return with no effect
+  thermal/drivers/k3_bandgap: remove conditional return with no effect
+  USB: serial: ch341: remove conditional return with no effect
+  usb: typec: fusb302: remove conditional return with no effect
+  smb: client: remove conditional return with no effect
+  cpupower: remove conditional return with no effect
+  memblock: remove conditional return with no effect
+
+ drivers/clk/clk-cs2000-cp.c                   |   6 +-
+ drivers/clk/clk-lmk04832.c                    |  12 +-
+ .../intel/qat/qat_common/adf_gen2_config.c    |   8 +-
+ .../marvell/octeontx2/otx2_cpt_mbox_common.c  |   7 +-
+ drivers/dma/qcom/hidma_ll.c                   |   6 +-
+ drivers/dpll/zl3073x/dpll.c                   |   6 +-
+ drivers/dpll/zl3073x/out.c                    |   8 +-
+ drivers/gpu/drm/amd/amdgpu/gfx_v7_0.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/gfx_v9_0.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c       |   6 +-
+ drivers/gpu/drm/amd/amdgpu/sdma_v4_4_2.c      |   6 +-
+ drivers/gpu/drm/amd/amdgpu/sdma_v5_0.c        |   6 +-
+ drivers/gpu/drm/amd/amdgpu/sdma_v5_2.c        |   6 +-
+ drivers/gpu/drm/amd/amdgpu/sdma_v6_0.c        |   6 +-
+ drivers/gpu/drm/amd/amdgpu/uvd_v4_2.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/uvd_v5_0.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/uvd_v7_0.c         |   6 +-
+ drivers/gpu/drm/amd/amdgpu/vce_v4_0.c         |   6 +-
+ drivers/gpu/drm/amd/pm/legacy-dpm/kv_dpm.c    |  32 ++---
+ drivers/gpu/drm/amd/pm/legacy-dpm/si_dpm.c    |   6 +-
+ drivers/gpu/drm/amd/pm/swsmu/amdgpu_smu.c     |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu11/arcturus_ppt.c |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu11/navi10_ppt.c   |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu11/smu_v11_0.c    |  19 +--
+ .../gpu/drm/amd/pm/swsmu/smu11/vangogh_ppt.c  |   7 +-
+ .../gpu/drm/amd/pm/swsmu/smu12/renoir_ppt.c   |   7 +-
+ .../drm/amd/pm/swsmu/smu13/aldebaran_ppt.c    |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu13/smu_v13_0.c    |  19 +--
+ .../drm/amd/pm/swsmu/smu13/smu_v13_0_0_ppt.c  |   6 +-
+ .../drm/amd/pm/swsmu/smu13/smu_v13_0_6_ppt.c  |  10 +-
+ .../drm/amd/pm/swsmu/smu13/smu_v13_0_7_ppt.c  |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu14/smu_v14_0.c    |  19 +--
+ .../drm/amd/pm/swsmu/smu14/smu_v14_0_2_ppt.c  |   6 +-
+ .../gpu/drm/amd/pm/swsmu/smu15/smu_v15_0.c    |   9 +-
+ .../drm/amd/pm/swsmu/smu15/smu_v15_0_8_ppt.c  |  16 +--
+ drivers/gpu/drm/i915/display/intel_hdmi.c     |   7 +-
+ drivers/gpu/drm/i915/gvt/gtt.c                |   8 +-
+ drivers/gpu/drm/imx/ipuv3/imx-drm-core.c      |   6 +-
+ drivers/gpu/drm/nouveau/dispnv50/disp.c       |  14 +-
+ .../drm/panel/panel-osd-osd101t2587-53ts.c    |   7 +-
+ drivers/gpu/drm/radeon/ci_dpm.c               |   6 +-
+ drivers/gpu/drm/radeon/kv_dpm.c               |  30 ++---
+ drivers/gpu/drm/radeon/si_dpm.c               |  14 +-
+ drivers/gpu/drm/tilcdc/tilcdc_drv.c           |   6 +-
+ drivers/hwtracing/stm/core.c                  |   8 +-
+ drivers/iio/light/isl29028.c                  |   6 +-
+ drivers/iio/light/tsl2583.c                   |  14 +-
+ drivers/iio/magnetometer/ak8974.c             |   6 +-
+ drivers/infiniband/hw/ocrdma/ocrdma_verbs.c   |   7 +-
+ drivers/input/keyboard/pmic8xxx-keypad.c      |   8 +-
+ drivers/input/mouse/synaptics_i2c.c           |   6 +-
+ drivers/input/rmi4/rmi_smbus.c                |   7 +-
+ drivers/iommu/s390-iommu.c                    |   8 +-
+ drivers/md/dm-vdo/encodings.c                 |   8 +-
+ drivers/media/i2c/mt9p031.c                   |   6 +-
+ .../microchip/microchip-sama7g5-isc.c         |   7 +-
+ .../media/platform/qcom/iris/iris_resources.c |   6 +-
+ .../media/platform/qcom/venus/pm_helpers.c    |   7 +-
+ drivers/media/platform/renesas/rcar-csi2.c    |   6 +-
+ .../platform/samsung/s3c-camif/camif-core.c   |   7 +-
+ drivers/media/usb/dvb-usb-v2/mxl111sf.c       |  12 +-
+ drivers/media/usb/gspca/jl2005bcd.c           |   7 +-
+ drivers/net/ethernet/amazon/ena/ena_netdev.c  |   6 +-
+ .../ethernet/aquantia/atlantic/aq_macsec.c    |   6 +-
+ .../ethernet/freescale/dpaa2/dpaa2-switch.c   |   6 +-
+ drivers/net/ethernet/freescale/gianfar.c      |   6 +-
+ drivers/net/ethernet/intel/i40e/i40e_main.c   |   8 +-
+ drivers/net/ethernet/intel/igb/e1000_i210.c   |   6 +-
+ drivers/net/ethernet/intel/igc/igc_phy.c      |   6 +-
+ .../ethernet/qlogic/netxen/netxen_nic_hw.c    |   7 +-
+ .../ethernet/qlogic/qlcnic/qlcnic_83xx_init.c |   6 +-
+ drivers/net/ethernet/renesas/rtsn.c           |   7 +-
+ drivers/net/phy/microchip_t1.c                |   6 +-
+ drivers/net/pse-pd/tps23881.c                 |   6 +-
+ drivers/net/wireless/ath/ath6kl/init.c        |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/link.c |   6 +-
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   |   7 +-
+ drivers/net/wireless/realtek/rtw89/mac.c      |   6 +-
+ drivers/net/wireless/realtek/rtw89/mac_be.c   |   6 +-
+ .../pinctrl/mediatek/pinctrl-mtk-common-v2.c  |   6 +-
+ drivers/platform/x86/toshiba_haps.c           |   6 +-
+ drivers/power/supply/pm8916_lbc.c             |   8 +-
+ drivers/ras/amd/atl/map.c                     |   6 +-
+ drivers/regulator/wm831x-isink.c              |   6 +-
+ drivers/rtc/rtc-pcf2127.c                     |   7 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.c           |   6 +-
+ drivers/thermal/k3_bandgap.c                  |   7 +-
+ drivers/usb/serial/ch341.c                    |   8 +-
+ drivers/usb/typec/tcpm/fusb302.c              |  14 +-
+ fs/smb/client/smb1maperror.c                  |   6 +-
+ mm/memblock.c                                 |   7 +-
+ net/netfilter/ipvs/ip_vs_sync.c               |   7 +-
+ .../misc/cond_return_no_effect.cocci          | 121 ++++++++++++++++++
+ sound/pci/echoaudio/echoaudio_dsp.c           |   6 +-
+ sound/pci/echoaudio/layla24_dsp.c             |   6 +-
+ sound/pci/riptide/riptide.c                   |   5 +-
+ sound/soc/amd/acp/acp-mach-common.c           |  11 +-
+ sound/soc/intel/atom/sst-mfld-platform-pcm.c  |   7 +-
+ sound/soc/samsung/smdk_spdif.c                |   8 +-
+ sound/soc/sof/intel/hda-dsp.c                 |   6 +-
+ sound/usb/mixer_scarlett.c                    |  26 ++--
+ tools/power/cpupower/utils/powercap-info.c    |   2 -
+ 102 files changed, 295 insertions(+), 643 deletions(-)
+ create mode 100644 scripts/coccinelle/misc/cond_return_no_effect.cocci
+
+--
+2.43.0
 
