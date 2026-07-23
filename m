@@ -1,106 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E73A1233938;
-	Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BD8835C685;
+	Thu, 23 Jul 2026 08:18:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784794270; cv=none; b=aEZGBrsiEENpKldD4VyGg7UNv5UWEhBS4NWH0oyOMNzGu++IzCmY0fDm6WOtmEfbDi23TEuRjmbrH76kqL+vbdgIH1WKAQYCG/YarMj7ThKIkJP/fjHs+dDBIFCcx28xZWGPFPdM6NkHEFz4d40uRDkotz3/hpnN+EudoIQTva4=
+	t=1784794718; cv=none; b=NBb0/qYHoZwdn1HMan53n7MVaqlcaPXgoqVlj+4HK97dAWWLGXipryV50ZujNBpS0KJ1JL3PWWNU/jsm0Wh5y4vXn1uoDQyEkBW5j0cvWx3mhq0zJjei0adTruieY6Tm2YKh0gLb0Rn8RnP1n6oMf4n6M6qZbSu5vm5W5NHsfF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784794270; c=relaxed/simple;
-	bh=D24F/surn0I7mnGy7WPuUdK47eQw0RJ1Da3KhCNwG5g=;
-	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=szOcD5CMhF/3ErtJMjqgn+yZaseFMhmEeYOpcbRNpaT+GBV9a3VJrgh7Y0ZDfcZcX9+TKxrKdGKvJMPoETZuEhK4rnc5Zhue2LT18pQrWWV8UJ/F1OXB5kfBjzy+p/PqGnupGPrI1VAR29gpY3rZbIYWmIEMxJ8/aXcPDS9qhLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opkJHdMi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1784794718; c=relaxed/simple;
+	bh=Y64mjaCtGxTIF9N/SBXI/tAFigLZlbf6RLFxEq9KUlA=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=oN/51AOz/YdGRV8ZWdIipV0SmeWEf1gwNch9LkQKRltsJi6U6zJxwkggvKPJALUKp9viOh4lq3cUaW9lPwmLjvEFh3/ug3z4El6mJelv4dF4MskEeJe0XK1UXEypZ58XvV7y+jacf1Wc1KHmkeKp1th4UktrpczQT0bKzPGzcz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=khFPwYLe; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opkJHdMi"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2BB431F000E9;
-	Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1784794268;
-	bh=RrQHTWac9VgLobZzZjtsR4JzkWKpBUuAKD7mXqYh8cc=;
-	h=From:To:Cc:Subject:Date;
-	b=opkJHdMikpC16ZSU9rSmOqeX4QnP6trCACLnLavVwPgXEvz0rjNrhHIGxjWhzh6if
-	 ccOmKlTzkHuRBvHA+2TMx8Ku1h1XhQDRyE7F7J2KHuMH3v9MsG+RPtuiakW2Eg5HCM
-	 K6mW10+BqQt1xHBzlDjQtlEyb2s1hJtIlaeAuzOecpuyAEz686acm2GzpU+p7LEDgq
-	 iIOnAsYLx5VD/yt1/+bRKmE0TJYaXYqvneeBXdEJeJRsfsdByPlCTcUvAfUYJ0ZHGp
-	 i6IB31fiHRFr9FvgK8c09U4oKv5CMT3LeI52Q1bGbSoiI/Ift9gZ5PoL2NSi4WCcA+
-	 IO673HuJPMdgA==
-From: "syzbot" <syzbot@kernel.org>
-To: syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>, "Johannes Berg" <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev
-Subject: [PATCH] wifi: mac80211: reject station association if AP is not started
-Message-ID: <373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="khFPwYLe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=NUfFR+3Bsy542uS2ZqJBKBvjn9UDk1KCrkWlGxWZ2Qs=;
+	t=1784794717; x=1786004317; b=khFPwYLe9J99Z6xQAFbMuP2yqKwkIUqmI+vRYi0gG8Ah6gI
+	2O3E2C3AnyQrXF9MkxpAM2yv89gHZcSHuDFx0IqIJAn44FHXK0UCC6v3Oii+7INXlZYKabAc6koPo
+	P5Nvghmx560l2FBPc/NrqLv7q1KkJjPpsGrqhQr4vuvDK22p2nSnP/f1WmWUiZmY3AVUANY7VUEQA
+	gEN0cuMSmtmq/9yZvwUj5M61uyaFUkeAFmzVDjC0MEciKkirhXUKkIzroUxJUO9mx9TvZK/cG/Voa
+	VYyVasjZm2ynKsopFvyWsEZvqNss1AvQbWIoHh6UYqunuAlrjPelZtB0Y/Y2jDKw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wmodW-0000000AJa9-0xAt;
+	Thu, 23 Jul 2026 10:18:34 +0200
+Message-ID: <3552acdf7839106b152edfd13502684306ea42a3.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: cfg80211: publish PMSR request before starting
+ the driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhao Li <enderaoelyther@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 23 Jul 2026 10:18:33 +0200
+In-Reply-To: <20260723010916.76433-1-enderaoelyther@gmail.com> (sfid-20260723_030932_237420_AA10BE01)
+References: <20260723010916.76433-1-enderaoelyther@gmail.com>
+	 (sfid-20260723_030932_237420_AA10BE01)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Date: Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
+X-malware-bazaar: not-scanned
 
-From: Slawomir Stepien <sst@poczta.fm>
+On Thu, 2026-07-23 at 09:09 +0800, Zhao Li wrote:
+>=20
+> This ordering also permits a successful driver callback to complete the
+> request synchronously. Document the resulting start_pmsr lifetime contrac=
+t.
 
-If an interface is changed to AP mode but not started, its channel context
-configuration (chanctx_conf) remains NULL. If a station is then added to
-this interface, the kernel may automatically set the
-NL80211_STA_FLAG_ASSOCIATED flag for compatibility with older userspace
-applications.
+From a locking perspective perhaps yes, but cfg80211_pmsr_complete()
+sends the results to userspace immediately, so userspace might see a
+completion with a cookie before it even got the cookie as the request
+response, which (semantically) makes no sense.
 
-When this flag is set, sta_apply_auth_flags() attempts to initialize rate
-control for the station by calling rate_control_rate_init_all_links(). This
-eventually leads to rate_control_rate_init(), which dereferences the NULL
-chanctx_conf, triggering a WARN_ON:
+Given that measurement requests are always going to take some time, I
+don't think this is an issue in practice that we really need to work
+hard to prevent (we'd have to do something like attaching the result to
+the request on the list, pivot to a wiphy locked worker, etc.)
 
-WARNING: net/mac80211/rate.c:51 at rate_control_rate_init+0x5a6/0x630
-...
-Call Trace:
- <TASK>
- rate_control_rate_init_all_links+0xf4/0x190 net/mac80211/rate.c:84
- sta_apply_auth_flags+0x1bc/0x430 net/mac80211/cfg.c:2152
- sta_apply_parameters+0x126d/0x1b10 net/mac80211/cfg.c:2618
- ieee80211_add_station+0x3de/0x700 net/mac80211/cfg.c:2684
- rdev_add_station+0xfc/0x290 net/wireless/rdev-ops.h:201
- nl80211_new_station+0x1b4e/0x1fd0 net/wireless/nl80211.c:9505
+However, I don't think it makes sense to actually *document* that it's
+now possible - it's only possible from the kernel's locking POV, from
+userspace's POV it's still highly confusing at best, and it makes no
+sense semantically either.
 
-Fix this by rejecting the addition or modification of a station to the
-associated state if the AP has not been started (chanctx_conf is NULL).
-Exempt Multi-Link Operation (MLO) interfaces from this check, as they
-handle chanctx_conf per-link rather than globally on the VIF.
+At best the documentation would be something like "the kernel doesn't
+crash if the request is completed before returning success" but that's
+not useful either :)
 
-Fixes: 55de908ab292 ("mac80211: use channel contexts")
-Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
-Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
-Link: https://syzkaller.appspot.com/ai_job?id=64f3e3ae-e43e-4917-b403-f9b7799fe1bc
-Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+> +	/*
+> +	 * Publish before the driver can complete the request. Completion may f=
+ree
+> +	 * it before rdev_start_pmsr() returns, so use the cookie snapshot belo=
+w.
+> +	 */
 
----
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3b58af59f..830c9fc95 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2148,8 +2148,13 @@ static int sta_apply_auth_flags(struct ieee80211_local *local,
- 		 * well. Some drivers require rate control initialized
- 		 * before drv_sta_state() is called.
- 		 */
--		if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-+		if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
-+			if (!ieee80211_vif_is_mld(&sta->sdata->vif) &&
-+			    !rcu_access_pointer(sta->sdata->vif.bss_conf.chanctx_conf))
-+				return -EINVAL;
-+
- 			rate_control_rate_init_all_links(sta);
-+		}
- 
- 		ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
- 		if (ret)
+That comment then should call out how it's really about preventing races
+with drivers from doing UAF (we could technically be preempted here
+too), rather than making that sound like a reasonable order - just
+saying "Under races and/or broken drivers immediate completion might
+free it ..." or something along those lines would be better I think.
 
-
-base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
--- 
-See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
-You can comment on the patch as usual, syzbot will try to address
-the comments and send a new version of the patch if necessary.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+johannes
