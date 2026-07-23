@@ -1,73 +1,75 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439C23DAAD9
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 20:22:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31203D7D69
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 20:22:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784838158; cv=none; b=KhOKhebFXwWbZ814s7nymMwU+kcMi0RY5wUiYy4p8ScIChWPpjNkKEKsL21cQqGE1W7xNcxj47gZT5U1qpRD36FHvVALUEi/t9yTxo/5unjcvvozxp56pgEIAusTboMsUDpImj8zRZawZP7CDEphcnZRJ4o4nrE66AuuM6kHUxk=
+	t=1784838170; cv=none; b=Qq40Y3PTUkRODq27B4bTtPsRH9odo2/ftAdWs6vIT3xo1Azt8VJ0eFu98L1TnnRM6Gnzwu2IN5zYQ2kVs894y+zMi2vGarNeoBXmBJgcjdImQs2qFeAJoztpU6L3WWEZKlp5/l+UEYrhIzlQQEdcYBFry5YjXGzYtlJ7JWmW9e8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784838158; c=relaxed/simple;
-	bh=KWcKP2geASN3jo8/dE06oUF8rjQfnBcpV2Gx2J0AGTM=;
+	s=arc-20240116; t=1784838170; c=relaxed/simple;
+	bh=V1hSLIbjJIafMetq/iu7GVV4opdCYHpidy44iIwNch8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mDDsvT5jiDRPiRcVcJdBWwAVtSsN8g8U4pIJgGWbOVM+GClRqHjanr3wqMdku2go5XTm8KTRN1f8d/mI89UY7jyZJQpEJMK+RAe2sfdkmixmK/4btRdsiSY6P3FgSZ7yx00jpBk2nXk9kIkueg2q5o2/V+yrf1ru6ueJnyDgIjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ks9YL6b2; arc=none smtp.client-ip=209.85.215.174
+	 MIME-Version; b=SffzjZ2oM+fF9naRB+9nKssgmsfQScvTnTFMDroEIf8b/ztVOJtoqp8hvGu2sjjNH7+7A0GbNDHLRmSEmq8yk1xgg6XbfoyHpT4glB55oWkxaZPJWihkZjE+Ailx3xMfuXoK1VooPJPuyNZuPyHjWomtm7uFJyjI4Q4Xjok3H2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TilODulu; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ks9YL6b2"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-c981c2c37cbso892856a12.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 13:22:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TilODulu"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-38ea87caafeso898259a91.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 13:22:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784838153; x=1785442953; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784838168; x=1785442968; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=1uRexGHLvlqsOKL6vO2NQvFV//36xeGbmQtRnRdGXPo=;
-        b=ks9YL6b2wcV1Z/EO0atHpiS9aGR2S+qXRKLk2aMi5D2CBigRX4GBNyU81EFroI3jlA
-         oU2Xdrr2Iopizqg30NeKoGCMklLp8nSKrjrt++D9FHw3pPHfN9jh/JE2nsH0geAJhkQc
-         icd9vAWOBEuTu+AIBrurXJnUD+ExCRXx6YkNFz7vOzVofevRh/nvw3ZUTzQBQYC0Gsz3
-         Ib1xSgaRK8lRdrH/jFt9r59wIwbr8fC0TQLEqM4/36qQmZO8Bo4Dsgx3lNhD6KuTQINT
-         vIR6gEjM4RyW9F8H4HiY5gbMBEN3/WQwbQ5Lj3+j2Ws+T8j9IrRIiqPG+8gGpirxWFhy
-         nDtA==
+        bh=RH1XbIQ8E22rKZgx9gpnUFs1WJC3giaIlWrSChX8/Ts=;
+        b=TilODulueoL/PJBkHi8xBYdEPsnMCNT50kBf3ENkkPC/+yKfM74WUpIqb1so5fSe0L
+         BfflNomGSL0KdJf7B3EvrnuQi4pL02NW2J/x4ONUqibxRoMEoj8QaIgG2qV3VAfdcIse
+         Pmy6pPOhFfw/W3vc5j1/OXy9D6LqzpsKNHApmM+HqvEHwYcXNQ5RiUtsUyoDPeyL1ovg
+         a9ADAyu5UrbMKg6kOdc2L3fJf6ScvlN4ez//IMr6Thuh9H80Zvd3U2TcirVNVO7E0w6z
+         85toKncOq/KSvl1DKYcudcwWWpvdeM+0oE8C+1xxbd4kt7xagBzwq7d/EzS2NqB7EwGE
+         UMyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784838153; x=1785442953;
+        d=1e100.net; s=20251104; t=1784838168; x=1785442968;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1uRexGHLvlqsOKL6vO2NQvFV//36xeGbmQtRnRdGXPo=;
-        b=BCz9hLqhS96GnPduIwia0RVUiJY/9a9aYszV1jtRddsSWKFKaQrifAxPLaiiZODxm4
-         hFHZGsCNIJFlKNSqZuAJWMQRlw1Ek73uLCI0nCAU5pIAqkSQApeYLy/2HcEweSH5ExN8
-         7vETZaLRRmrYUBFHgnrdOdXGgjGpufnxvSKGi5S20jYp9Y2FrZuFFVXuXVML9qsQ8dMI
-         f0ImQxPZMcAGk51gXQBcqFZc74EhKciYR5QetiAyjr0uIaSEtaLO3+9T2xDysVun/nOu
-         Gadvja2yOnbH280Zd23rLuViRZwC3YuXn/AH0b3RpL2p/PmUr9DLUFZ6ku6Y4AhvleSm
-         OkOA==
-X-Gm-Message-State: AOJu0YyE4vRIeD9aTl7RUlE1tHVeJEeLpeN7Gfjmn+7CHdNUphMxENCw
-	FIrZtBxQkRQQFDhwX5sui5uPZjrgaCzn/epNHAtyCy8RfdyDHYT/dp/Vy/PUHZQWyZDbng==
-X-Gm-Gg: AR+sD12oNIBBEQCV5nHKba3KiC/YPHAVdPaiBqImNA6cyrS5jldlTV1FXF2+zXniBxJ
-	x85JI+82GLdNP5kHn+EVCvCsCK8iT/2YqIHXfrmkSjkQNl75UVw6P88AHIcO+vbSXx4sAeqX7Is
-	w/RktEwneIrVJxtFab1Olu2F8EfA7m3j2lNaxbtx9CigSXuEGIUNZrmtzj0cnpADzmhh/Ttq2hf
-	tWYwaJJ8j7wb+49mgfM+mXWkbp8j0aYsitsxbwuZK/8zkjg95RH9ObD3Tja5nXLaqOb38NW+wTp
-	BqKLWNUfr4HbGxxiin85OQU1C162GPbFEC3FIiz8pDCWzFIr/XI6kpijYiPfEN0YJwji/twlp5o
-	c6gEsSPdcjMtuc0+FlBXl1IJEOr24v4GAFFIDYPSqZQVNRXlsL7eyf/V4eH+KmT6je3nq7AjSLb
-	wHI0eyPJ+1OpJ8pwC1J1BknCOBzAVLPWrG4AjPr/oo
-X-Received: by 2002:a05:6a20:9c8c:b0:3bf:6c08:4ebb with SMTP id adf61e73a8af0-3c44b18ac6cmr5289759637.48.1784838153196;
-        Thu, 23 Jul 2026 13:22:33 -0700 (PDT)
-Received: from KRHW1CJW23.bytedance.net ([58.250.106.104])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbb8f0ebfcesm3364119a12.11.2026.07.23.13.22.29
+        bh=RH1XbIQ8E22rKZgx9gpnUFs1WJC3giaIlWrSChX8/Ts=;
+        b=XWbSMwQBxkzvrYwYtgOxgIA05tsS05A0LOTuveXzTgwnBJZqIx0K2iXVioLwXooKc6
+         RHSOrbJJNEBb+j8yIvxvntWRKlpkb0Df2a79Z7aEg1w9Bqj2ZQEe1lzfgQaX30ToC1wv
+         eQwq81ryS16lwXVlvrg0/3+pHnRsgi3M6rodcmIKWWWLx+/Ct9ntQ4rQEK37M2U+2RE8
+         9hDFPGivJj/3GFMt+qHniojjvz85j1+KX1YcsQtMrf+T5fvyo+rz96kOHJq51eX9KZX9
+         ShJF8iKqSYnkxvoiKFPpGrC43Gs1vrEwv3Xsh12vCOTAWBEAymVnGUy0D+VlhiSJczoK
+         5srQ==
+X-Gm-Message-State: AOJu0YwI7rGw8UlKwu1R0FBwqm7CMLmgtuD4KDNQFJbE8Gz/Fh85obpx
+	JLR6STZQRAZrzt7ze3Y9vtUQRekeC3hy6dRi/maMRUkXw6Fc8DI8YboQ
+X-Gm-Gg: AR+sD11ZGOi0cxG5tgmruiu3ink4RSgrmwJC13kusdi12ttnM+s4N1Eg/+a6fRU+JKJ
+	yQGuxj27kJDMUBPq0JGBqRT1CdL97oiXDxnUHvR8R1lYXZuH+5lHbNB3W2tRRwUpOngktb1j/8Y
+	mRCLgSGSj7yOJtIXpwdvQiii8fmpoHq1FawC+fsn9PlYhACydJgASgXauGF3IaaZZFYXDsu8F/v
+	tXyPJRltNrpHp3Vgw2PsTu6C2CfLWOsfZSjx2gh7mIFwZDnIS5jMTxYW7PZj92FRONz8GQSzjQE
+	Vmi/kkXl+eGdku23HuGzDbMNGjs9hut2CXDQKWyEpc0bvc1D0lcos+WDzJ4tAb5fhXtVtNyz4Nf
+	0mGli5EtGsSG0BHhBX2RrUPSJU9JQwujgHlECPK4lvUIvVMAQVoe5fCZny8Zku6zPjzbXPpuVt9
+	VyH1MHeJ2GyYpt8g8OVPvHjbHay9CHI2NMxaN3ISog
+X-Received: by 2002:a17:90b:5588:b0:38e:6a44:671b with SMTP id 98e67ed59e1d1-38ec6281ddemr4527010a91.0.1784838168031;
+        Thu, 23 Jul 2026 13:22:48 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([61.141.241.112])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-38f058118f2sm140429a91.1.2026.07.23.13.22.44
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 23 Jul 2026 13:22:32 -0700 (PDT)
+        Thu, 23 Jul 2026 13:22:47 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
+To: Francesco Dolcini <francesco@dolcini.it>
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Zhao Li <enderaoelyther@gmail.com>
-Subject: [PATCH v2] wifi: cfg80211: publish PMSR request before starting the driver
-Date: Fri, 24 Jul 2026 04:22:23 +0800
-Message-ID: <20260723202223.99661-1-enderaoelyther@gmail.com>
+	Johannes Berg <johannes@sipsolutions.net>,
+	Brian Norris <briannorris@chromium.org>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] wifi: mwifiex: validate action frame fixed fields
+Date: Fri, 24 Jul 2026 04:22:39 +0800
+Message-ID: <20260723202239.158-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260723010916.76433-1-enderaoelyther@gmail.com>
-References: <20260723010916.76433-1-enderaoelyther@gmail.com>
+In-Reply-To: <20260723144127.GA234631@francesco-nb>
+References: <20260723144127.GA234631@francesco-nb>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,85 +78,26 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-nl80211_pmsr_start() assigns the request cookie, calls the driver's
-->start_pmsr() callback, and only then adds the request to
-wdev->pmsr_list, without holding pmsr_lock for the addition.
+On Thu, 23 Jul 2026 at 16:41:27 +0200, Francesco Dolcini wrote:
+> I am confused, why is this check needed here, and not done in
+> mwifiex_process_mgmt_packet()?
 
-mac80211_hwsim saves the request in its start callback and returns. Since
-nl80211 uses parallel_ops, an immediate REPORT_PMSR can then run before
-nl80211_pmsr_start() reaches its post-start list_add_tail(). hwsim also
-dispatches reports from its virtio receive workqueue. Completion removes
-the request from wdev->pmsr_list under pmsr_lock and frees it.
+I double-checked the arithmetic and, yes, I made a mistake. The header
+check is redundant while the other two checks are needed.
 
-Thus completion can precede publication, race the unlocked list mutation,
-or free the request before nl80211_pmsr_start() reads req->cookie for the
-netlink reply.
+mwifiex_process_mgmt_packet() already validates:
 
-Add the request to wdev->pmsr_list under pmsr_lock before calling the
-driver, and use a cookie value saved before the call so the request is not
-dereferenced after a successful start. On an error return the driver has
-not retained or completed the request, so remove it from the list under the
-lock and free it.
+	if (pkt_len < sizeof(struct ieee80211_hdr) + sizeof(pkt_len)) {
 
-Fixes: 9bb7e0f24e7e ("cfg80211: add peer measurement with FTM initiator API")
-Link: https://lore.kernel.org/all/20260723010916.76433-1-enderaoelyther@gmail.com/
-Assisted-by: Codex:gpt-5
-Assisted-by: Claude:opus-4.8
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
----
-Changes in v2:
-- Drop callback documentation that implied synchronous completion was
-  supported.
-- Reword the local comment as defensive handling for races or broken
-  drivers that complete the request before ->start_pmsr() returns.
----
- net/wireless/pmsr.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+After subtracting sizeof(pkt_len), the len passed into
+mwifiex_parse_mgmt_packet() is at least sizeof(struct ieee80211_hdr).
+So the if (len < sizeof(*ieee_hdr)) guard is redundant.
 
-diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
-index d1e2fae5bc0e..97449bcb9a22 100644
---- a/net/wireless/pmsr.c
-+++ b/net/wireless/pmsr.c
-@@ -420,6 +420,7 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
- 	const struct cfg80211_pmsr_capabilities *capa;
- 	struct cfg80211_pmsr_request *req;
- 	struct nlattr *peers, *peer;
-+	u64 cookie;
- 
- 	capa = rdev->wiphy.pmsr_capa;
- 
-@@ -521,14 +522,27 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info)
- 	}
- 	req->cookie = cfg80211_assign_cookie(rdev);
- 	req->nl_portid = info->snd_portid;
-+	cookie = req->cookie;
-+
-+	/*
-+	 * Add to the list before the driver call; under races or broken
-+	 * drivers, completion may free the request before rdev_start_pmsr()
-+	 * returns. Use the saved cookie below.
-+	 */
-+	spin_lock_bh(&wdev->pmsr_lock);
-+	list_add_tail(&req->list, &wdev->pmsr_list);
-+	spin_unlock_bh(&wdev->pmsr_lock);
- 
- 	err = rdev_start_pmsr(rdev, wdev, req);
--	if (err)
-+	if (err) {
-+		/* An error return leaves the request owned by this path. */
-+		spin_lock_bh(&wdev->pmsr_lock);
-+		list_del(&req->list);
-+		spin_unlock_bh(&wdev->pmsr_lock);
- 		goto out_err;
-+	}
- 
--	list_add_tail(&req->list, &wdev->pmsr_list);
--
--	nl_set_extack_cookie_u64(info->extack, req->cookie);
-+	nl_set_extack_cookie_u64(info->extack, cookie);
- 	return 0;
- out_err:
- 	kfree(req);
--- 
-2.50.1 (Apple Git-155)
+The remaining two guards check that the category and action_code bytes
+are present beyond the header. Keeping these subtype-specific checks in
+the parser places them next to the corresponding reads.
 
+I will drop the redundant header check and resend as v3.
+
+Thanks,
+Zhao
