@@ -1,87 +1,106 @@
-Received: from e3i380.smtp2go.com (e3i380.smtp2go.com [158.120.85.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87533DAAD4
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Jul 2026 08:08:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=158.120.85.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E73A1233938;
+	Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784794088; cv=none; b=QK1IbvnCCmrjkfPbr44R+G5lJ0w+NHNkDk8jUx3GDBJg/uG4rgGEPVAtyOpD2vqx5JwZRwDvklIlqPniGEUYJ53mtCSQj5zPtYLngfVUmxeN8ICWosqIKxFryymMyxWJdYgrtyZuTpbwBi8wMlBMorYEPam6U/F0jF+2DpunZmU=
+	t=1784794270; cv=none; b=aEZGBrsiEENpKldD4VyGg7UNv5UWEhBS4NWH0oyOMNzGu++IzCmY0fDm6WOtmEfbDi23TEuRjmbrH76kqL+vbdgIH1WKAQYCG/YarMj7ThKIkJP/fjHs+dDBIFCcx28xZWGPFPdM6NkHEFz4d40uRDkotz3/hpnN+EudoIQTva4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784794088; c=relaxed/simple;
-	bh=NqZ186Tf4Io+hsVU7W4WYNfEnYHJt9s8fB3CEa8D3lk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qG4Xf7Hlo2ttx4NBFTZOdtoKYxIod7ZVPNyGIopSRHUQsah1AH35I+KudQ/y6rdm8lRboQZmKXLpdLbsyLzWF0cV1kO49wfeVSVYmROZsHGk/7T5mnAEGGGrxEnd6XIiNq67kYWjSQRbkYyDIuLyuRliH9XKsb1yvVUX94yA6XE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt; spf=pass smtp.mailfrom=em510616.triplefau.lt; dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b=KiWMnHMF; arc=none smtp.client-ip=158.120.85.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=triplefau.lt
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=em510616.triplefau.lt
+	s=arc-20240116; t=1784794270; c=relaxed/simple;
+	bh=D24F/surn0I7mnGy7WPuUdK47eQw0RJ1Da3KhCNwG5g=;
+	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=szOcD5CMhF/3ErtJMjqgn+yZaseFMhmEeYOpcbRNpaT+GBV9a3VJrgh7Y0ZDfcZcX9+TKxrKdGKvJMPoETZuEhK4rnc5Zhue2LT18pQrWWV8UJ/F1OXB5kfBjzy+p/PqGnupGPrI1VAR29gpY3rZbIYWmIEMxJ8/aXcPDS9qhLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opkJHdMi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=triplefau.lt header.i=@triplefau.lt header.b="KiWMnHMF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=triplefau.lt;
- i=@triplefau.lt; q=dns/txt; s=s510616; t=1784794078; h=from : subject
- : to : message-id : date;
- bh=rNpq27tB3nSmwYwX0wcczUDMon2N3d5uNtInLRxUpos=;
- b=KiWMnHMF51yF3Blc0yddghCjFk0LIEqNGoEwJmwTyWQxTULicBQ0JZAWc8TwFyW4ZSpZ2
- j1tShDEx9iuOX0U5wgTQXqy08gv14HiLfrOEBKGN467qXoYmwBol+hTNvj7mfTMiryhPgTA
- Ip+muYwoOpwE9Jm8WI1eQaprGnImVjsh89bX4unlQwE2RTqrh1d/YDR5Eq8prVFIydchu5I
- jOp5q8hfFUSm+WXWMMPtukQHPkjr87wDau9RVq3EfIp1+9Hm9CAYx+I1tx4r4CIIXsz7TYy
- l7bV4Te78z1fnZSmRXEk2bOYMmoHr60FF6sHK7dJFuaMPcBDyD5wH72dFRbw==
-Received: from [10.12.239.196] (helo=localhost)
-	by smtpcorp.com with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.99.4)
-	(envelope-from <repk@triplefau.lt>)
-	id 1wmoTE-4o5NDgrtH57-qbVX;
-	Thu, 23 Jul 2026 08:07:56 +0000
-From: Remi Pommarel <repk@triplefau.lt>
-To: ath11k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH] wifi: ath11k: Avoid adding the same peer twice to a pdev
-Date: Thu, 23 Jul 2026 09:43:09 +0200
-Message-ID: <1316ed692b84f1d956e4854d9e974569a3961795.1784792420.git.repk@triplefau.lt>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opkJHdMi"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 2BB431F000E9;
+	Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1784794268;
+	bh=RrQHTWac9VgLobZzZjtsR4JzkWKpBUuAKD7mXqYh8cc=;
+	h=From:To:Cc:Subject:Date;
+	b=opkJHdMikpC16ZSU9rSmOqeX4QnP6trCACLnLavVwPgXEvz0rjNrhHIGxjWhzh6if
+	 ccOmKlTzkHuRBvHA+2TMx8Ku1h1XhQDRyE7F7J2KHuMH3v9MsG+RPtuiakW2Eg5HCM
+	 K6mW10+BqQt1xHBzlDjQtlEyb2s1hJtIlaeAuzOecpuyAEz686acm2GzpU+p7LEDgq
+	 iIOnAsYLx5VD/yt1/+bRKmE0TJYaXYqvneeBXdEJeJRsfsdByPlCTcUvAfUYJ0ZHGp
+	 i6IB31fiHRFr9FvgK8c09U4oKv5CMT3LeI52Q1bGbSoiI/Ift9gZ5PoL2NSi4WCcA+
+	 IO673HuJPMdgA==
+From: "syzbot" <syzbot@kernel.org>
+To: syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>, "Johannes Berg" <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev
+Subject: [PATCH] wifi: mac80211: reject station association if AP is not started
+Message-ID: <373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Report-Abuse: Please forward a copy of this message, including all headers, to <abuse-report@smtp2go.com>
-Feedback-ID: 510616m:510616apGKSTK:510616sUWJ1d39r3
-X-smtpcorp-track: t9dQWDfZYSKE.-xEadgTFImF7.9QfAWw6Dt-g
+Date: Thu, 23 Jul 2026 08:11:08 +0000 (UTC)
 
-Adding a peer that already exists on the same pdev, even if it belongs
-to a different vdev, appears to trigger a firmware crash.
+From: Slawomir Stepien <sst@poczta.fm>
 
-Some devices authenticate with multiple BSSs simultaneously to gather
-more information about their wireless environment. When multiple BSSs
-are hosted on the same PHY, the same station may be added as a peer
-multiple times for the same pdev, which causes the ath11k firmware to
-crash.
+If an interface is changed to AP mode but not started, its channel context
+configuration (chanctx_conf) remains NULL. If a station is then added to
+this interface, the kernel may automatically set the
+NL80211_STA_FLAG_ASSOCIATED flag for compatibility with older userspace
+applications.
 
-Prevent the same peer from being added more than once per pdev to avoid
-this issue.
+When this flag is set, sta_apply_auth_flags() attempts to initialize rate
+control for the station by calling rate_control_rate_init_all_links(). This
+eventually leads to rate_control_rate_init(), which dereferences the NULL
+chanctx_conf, triggering a WARN_ON:
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-01977-QCAHKSWPL_SILICONZ-1
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+WARNING: net/mac80211/rate.c:51 at rate_control_rate_init+0x5a6/0x630
+...
+Call Trace:
+ <TASK>
+ rate_control_rate_init_all_links+0xf4/0x190 net/mac80211/rate.c:84
+ sta_apply_auth_flags+0x1bc/0x430 net/mac80211/cfg.c:2152
+ sta_apply_parameters+0x126d/0x1b10 net/mac80211/cfg.c:2618
+ ieee80211_add_station+0x3de/0x700 net/mac80211/cfg.c:2684
+ rdev_add_station+0xfc/0x290 net/wireless/rdev-ops.h:201
+ nl80211_new_station+0x1b4e/0x1fd0 net/wireless/nl80211.c:9505
+
+Fix this by rejecting the addition or modification of a station to the
+associated state if the AP has not been started (chanctx_conf is NULL).
+Exempt Multi-Link Operation (MLO) interfaces from this check, as they
+handle chanctx_conf per-link rather than globally on the VIF.
+
+Fixes: 55de908ab292 ("mac80211: use channel contexts")
+Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
+Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
+Link: https://syzkaller.appspot.com/ai_job?id=64f3e3ae-e43e-4917-b403-f9b7799fe1bc
+Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+
 ---
- drivers/net/wireless/ath/ath11k/peer.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 3b58af59f..830c9fc95 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2148,8 +2148,13 @@ static int sta_apply_auth_flags(struct ieee80211_local *local,
+ 		 * well. Some drivers require rate control initialized
+ 		 * before drv_sta_state() is called.
+ 		 */
+-		if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
++		if (!test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
++			if (!ieee80211_vif_is_mld(&sta->sdata->vif) &&
++			    !rcu_access_pointer(sta->sdata->vif.bss_conf.chanctx_conf))
++				return -EINVAL;
++
+ 			rate_control_rate_init_all_links(sta);
++		}
+ 
+ 		ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+ 		if (ret)
 
-diff --git a/drivers/net/wireless/ath/ath11k/peer.c b/drivers/net/wireless/ath/ath11k/peer.c
-index b30a90698544..b7277e4b188b 100644
---- a/drivers/net/wireless/ath/ath11k/peer.c
-+++ b/drivers/net/wireless/ath/ath11k/peer.c
-@@ -386,7 +386,7 @@ int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
- 	spin_lock_bh(&ar->ab->base_lock);
- 	peer = ath11k_peer_find_by_addr(ar->ab, param->peer_addr);
- 	if (peer) {
--		if (peer->vdev_id == param->vdev_id) {
-+		if (peer->pdev_idx == ar->pdev_idx) {
- 			spin_unlock_bh(&ar->ab->base_lock);
- 			mutex_unlock(&ar->ab->tbl_mtx_lock);
- 			return -EINVAL;
+
+base-commit: dc59e4fea9d83f03bad6bddf3fa2e52491777482
 -- 
-2.52.0
-
+See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
+You can comment on the patch as usual, syzbot will try to address
+the comments and send a new version of the patch if necessary.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
