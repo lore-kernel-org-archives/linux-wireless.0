@@ -1,297 +1,224 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D580244163D;
-	Fri, 24 Jul 2026 15:14:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784906089; cv=none; b=lmQL2s/KhVFdPo0AxUP9zLTpbh5sgqbTjCDKTRjfQiCyQAdxa9xPvTmjwY+MpI/6+dcvxfs0XFJZP1M/okPaqCQ1PJpynxH3xUcrAS09oa7wSNVFFVkkA2cCMMH7QkvMi0+BDPms/E5XIy+VqS2QjKmBtxZ5G/iMQtcwAUp4rWw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784906089; c=relaxed/simple;
-	bh=JdSyClpuJ8Rch/NR8MGVNW7c/VIqy3seqViQ9BpFdfw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TEj2eV42JIEkBbbjCjw+2j/mid2w1uAW6zEC2+05rQ4B3JEEx+hMFSKVUbQ64KOmvSxifuH0NOZDFHb+duPOJoY9/rn9tg3yuEnVJpghIWOS+CVfa4Xg5t3eqiYVxy9nj37vYy1PeabpIDMtzwHXj2/emdUhro8V/j/bo7/K8ro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b=JZKtIBid; arc=none smtp.client-ip=212.227.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65E20349CE7
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 15:35:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.180.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1784907347; cv=pass; b=ixi4hQedKOb+KejIn0yHeK80vXoprjn/r5lTRgE1Q0i8l7d6wfmoyNgdREymy9iVxgnQpM4B8/8EtDHPdzjo4zYTZOhY9lOeGVbEEV0xaAeVqg9pJ6sAY8bbRc5ARLOCKPj3G4lzgK7FgjBEzArI/8gwZ/JfHUe7KH9WEi1n+JY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1784907347; c=relaxed/simple;
+	bh=0AxRvCjS4SeGauYtGrq3Gxj0CFvSuzE9MU+SB8VxZqM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=RWSPFlIUZ5DKkFsvjEmeUr78E7PiAWuxb328gZe11qtYg/8KSeo8uE1cDopbkhFHL8rXN4NZu0JUVsjE3Imv6Z/pQTpAwMgNF7jDBqBGXGGEGqUmCPzxYJ9XMcoNPBcJoUnaVmXndHHi0mJvT5No8slvCql1wIzN/8IHVEBlK9w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=U0UZBLpm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Mh26x3LK; arc=pass smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b="JZKtIBid"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1784906061; x=1785510861; i=spasswolf@web.de;
-	bh=m8CpHjTwlWzbdvJf4ktY9WwzJkRyzi7WFbcKxGcO7XI=;
-	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=JZKtIBidvzT3MGUfrPGiOF6RFeDUmqJOmFraw2CG8INY4gr/ipWhyJKZ/fk4m321
-	 Ku372TncQbf5dyepkt1IzXMQdpqSIn0evBOyvKArL2E+zBYUqLlCrPeC8UXe3XXQg
-	 ZFdqi4upkkJFDEZZ8VNSUIVHlu61fz98jQu/gs2UyirZvPspG1K+j7jBrCFEd68gY
-	 XThq4XXKm6PUHHHt54ptoHR0rC3bEv0Y0fWv9Zvha5qp1uId2G9WBPONNW4FWdxyV
-	 f5F9DkJ4Q5rAbluR422QmVEDF73FFR9H8sgRjfAY7qOA3gDpKifZYJwrAu4LuB5gk
-	 aqlnYvtYLK4Wq6J2dw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1M8Bw1-1wqsNK1lxL-00Ft7E; Fri, 24
- Jul 2026 17:14:21 +0200
-From: Bert Karwatzki <spasswolf@web.de>
-To: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-Cc: Bert Karwatzki <spasswolf@web.de>,
-	linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@nbd.name>,
-	ryder.lee@mediatek.com,
-	lorenzo@kernel.org,
-	legale.legale@gmail.com,
-	sean.wang@mediatek.com,
-	shayne.chen@mediatek.com
-Subject: hang during shutdown in next-20260722+ with MT7925
-Date: Fri, 24 Jul 2026 17:14:17 +0200
-Message-ID: <20260724151419.26014-1-spasswolf@web.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260708144615.24092-1-nicolas.cavallari@green-communications.fr>
-References: 
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="U0UZBLpm";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Mh26x3LK"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66ODbOdZ3178447
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 15:35:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	0AxRvCjS4SeGauYtGrq3Gxj0CFvSuzE9MU+SB8VxZqM=; b=U0UZBLpmLfPDvk4s
+	5VVXy1GRsf9VjasKo9AZa15zarTyGa1QjJqnsNNIcbBeIhq1YHNQb+NLdvyNnDBN
+	7R2Qp6iSbQ65AuK6J6JrFFQ1KCQdPr2+h/xLiVb0Y/MG478NDq04DnEdkLa8RE0C
+	q+9xAuEvlxgPwplct6yAF7BlP/BSC51W0qX4xC1wqPCC2kNiVj4k938GrWe9if+u
+	71b3BDT2ouTx0lPbmDcd2jAvWSKlChEuLO3YlNrfAItJPh+7d33op3mu57wYkF5k
+	m5xvoz86F6mTz6U79nCSLiaxF3eZb68e4/ZCxZPnHU/bjNLEQ39PFmoJr1mgXWyD
+	Gn0Tzg==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fm5yah6xt-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 15:35:44 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-51c26012cd0so7547631cf.0
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 08:35:44 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1784907343; cv=none;
+        d=google.com; s=arc-20260327;
+        b=GtpoeuoZHaXHH5d5yjTUUGSmn5IVfAz1TXevg6AZpKwkUiIHIYA9PlJM7wPnalpOvZ
+         IfgCdZ1OGFHb0fHHZ1qsuud0vHdsqp53bZ9PKo8+mfeouzuMbMzj+YHq0ij5eOOuiQb+
+         nl3KRLkxK6QPz8WfO7RlSN1sOiqbO7sX9hU5T7uELInjYRsnCWvaSU1IYAnHA1Zc4FGi
+         jbR8xOELHXfdOOEr9qqQY3BRCyQJN8toq8e+h4M2PjeOJMmsYi4ThqBaq23UEAcdY2ls
+         17SCmqEVpPO8yMH+ckSUtFumO1zQLf3ozFVxdfiVNWyCeAMw9rwdacaeWQBfNf6fAlRV
+         of6Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0AxRvCjS4SeGauYtGrq3Gxj0CFvSuzE9MU+SB8VxZqM=;
+        fh=EAnziJ0cwJbXGt8JTMHCTF7aVSBOPy3/C4lLkW+f16g=;
+        b=YvskOqqaQnSS0KhUMxsn3s/6X/io0HPj87q+CjCT1Q+MsB1DrE14FK33jibabXe2e+
+         FxCWdlOO7Qbnz1yv+Wa6ishReoRZ69dDBkbZf0ZNIrHZC8oWs+zgyulSdV+G0HbgixSS
+         FW229pm04MdpOysRjf187wQGECQy3B9B0mBX2zP5gEfO9L/TzBbikL7U83pwzjj0Vr4Q
+         6dE8l5QJNJfVCDnuinhWp/5kOUT4xQ7d5kDMh8YhbOTgegc2lmpJVPbj23Grf+MDf7v0
+         tAaUy/chxuEyCS5ufyFqr3iKxMyO8BEkNV8fA+RtrTsNMOGvUpMAJD4+X/EKbS9gABum
+         4Osw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1784907343; x=1785512143; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=0AxRvCjS4SeGauYtGrq3Gxj0CFvSuzE9MU+SB8VxZqM=;
+        b=Mh26x3LKlUfjMyUTMsdPzBsSIeHZkdI+mvNO7yint5/pGl5OhGKGzyUhVm4cwzUhP8
+         ByS+yjWITK1i3sYzP0P77bSL6q6Vr0M5GLkpA6K0FB9VXq6660zEBGCsjMZi0ZgKaEyF
+         gWvk4HYyBCw9GSwJVBa1EQB6KJxkUcxFZamUuH2IRWXAtfdcL3SuFVwWMh4tx4OXMZH3
+         Md7ZkQvgwbnuaG1kyvFOiB3SRvHuQi7whrPblAn6CuEp9/NRGs4eky9fg0R783/J79sN
+         1mnUAWmrAxBie3kHUD9RnHxWTycPzad+sEga7XvGUy95zriVZo/XQBC03Ya41b3iKMIZ
+         Hqlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784907343; x=1785512143;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0AxRvCjS4SeGauYtGrq3Gxj0CFvSuzE9MU+SB8VxZqM=;
+        b=U9IedxhDplHYP73Gqr/d94PbaxhdEZNwA7pJSSb4Va7YXaVw5qN6jfbjpv1gPPXrD6
+         R3Am9YEuRc/g5vNxn1QOjz/ffYQPdzq9+oVKoOl6TS8QfRzCAxTo6yI8Cb12/V5ECrvl
+         8MhneYM+tQj3r5woo4hYlCZtNjLEVtA2jjP71saOHlqb6LVy5ZoV6oLEwr1eC2nsK+KN
+         9NSoaXE5N4tZRHl+I27T4ubnQZtPcesDF3vrWJTD4TyJIxXjJwB4BV05KTNZLSCqRFVg
+         A8/QTuP6oGu7C8bQ/LxXoe4Jxfiw8kl551kcpHlw571ZWrB9EJgLxBxi+ID5ArSlkTpm
+         X5Iw==
+X-Forwarded-Encrypted: i=1; AHgh+Rr5CA78zGXM990igJYnmbwYxphoprqMJVGNWM+A425rmpGtd+LGgXkViPdgssH1hbdS5qO3kFMMO8iSD2OfJQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy845Vn5yQY6AH6qqtzXFZKc98LEGag8Yghw3jcTthKAX05SVy6
+	407OcguBIqkZrVkLuY1T/S4LmDTI9M5coQlrEzOC9jXEpcOowuNIRmm9kv2uim7A4QoIeNpYzNr
+	2OSZczqIdiv+i50eCcQUsVQ7yOqmbE1K5IzbwPwr2Lx/Bq+b2SZSBUJCucC2tYc77vwQQcXzI0P
+	lHrJUMmZ33Y9MfcLylcbFdh9yAj0T9AqPq6b1mwvfolmLA
+X-Gm-Gg: AR+sD11BzbC0plFgv2llaqycw3U9nJER85ok9N4aeDe/c+nw6bdfBy5ocv7xc59H6DF
+	TId2gDe7UPJPU8kZqc0IXgHaFCuAc/Vy+nNxiB1tozlz8r0v7TxpQY/pGFoGoBffsOCM3yIVwbh
+	QytAe9+gKM7R4vidiUy9wdW1Uu5O52cI5uwtEkWQxNfkzpP0+hJ2/St+pPaw==
+X-Received: by 2002:a05:622a:228a:b0:51c:1241:3b09 with SMTP id d75a77b69052e-5283de54e1fmr76891181cf.39.1784907343493;
+        Fri, 24 Jul 2026 08:35:43 -0700 (PDT)
+X-Received: by 2002:a05:622a:228a:b0:51c:1241:3b09 with SMTP id
+ d75a77b69052e-5283de54e1fmr76890551cf.39.1784907342860; Fri, 24 Jul 2026
+ 08:35:42 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20260703-block-as-nvmem-v8-0-98ae32bfc49a@oss.qualcomm.com> <3d954cdd-6dde-4be6-84c9-2f2f7d008f5b@kernel.org>
+In-Reply-To: <3d954cdd-6dde-4be6-84c9-2f2f7d008f5b@kernel.org>
+From: Ulf Hansson <ulf.hansson@oss.qualcomm.com>
+Date: Fri, 24 Jul 2026 17:35:31 +0200
+X-Gm-Features: AUfX_mwd1WNIZvdvXqoWeMIN9Hp4kEAy8VC-hn59NszviBxEKOIP4_juVgFnXVE
+Message-ID: <CAPx+jO8-9YSJtXNfnTrUX_JiCyddXHn=wHek9=c99+fNp22Zog@mail.gmail.com>
+Subject: Re: [PATCH v8 0/9] Support for block device NVMEM providers
+To: Srinivas Kandagatla <srini@kernel.org>
+Cc: Loic Poulain <loic.poulain@oss.qualcomm.com>,
+        Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+        Rocky Liao <quic_rjliao@quicinc.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
+        Andrew Lunn <andrew@lunn.ch>, Heiner Kallweit <hkallweit1@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Saravana Kannan <saravanak@kernel.org>,
+        Christian Marangi <ansuelsmth@gmail.com>, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
+        daniel@makrotopia.org,
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+        Piotr Kwapulinski <piotr.kwapulinski@intel.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:L0o6vs2M3X+OfLlySQDCjUl8hA/JMhBiDPdXPHWIdNQY9PJ6g7N
- k2Y4JPIcnqvB1GN9nfHYKQxyYe1SSPaos8h/H/Xa9bkGjyj2HEsKhjQbkQz8sWKB/+Qw3p8
- ucW0OYcoN31GsgTJImNRyHOXU8wOJygTUVAZ2GcFmsZ0RarMLi9O1m3w/uMnRxXLbpnWpG8
- 7ACj+xStBVwGSj9Hymb2Q==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:jwnulZxzJ48=;zn2kulkkuNngZQfPZt3beLnaYzW
- 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
- jhTE3LUv0=
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI0MDEzOSBTYWx0ZWRfX9/tSRRPAPTJ1
+ wE8gSPfYfR0wtYYnRaS+jgPhQGX1+QX35oCN0IxwlLt2Ypw68Dbdahq50vPI9JHggsic75+cmrn
+ 3nGQwKrI0Y/zK7dCRk0RdDOTknYlCUM=
+X-Authority-Analysis: v=2.4 cv=Rtz16imK c=1 sm=1 tr=0 ts=6a638650 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8 a=VT4XjZGOAAAA:8 a=EUspDBNiAAAA:8
+ a=XoVDlNqzt-XzKL8N3f0A:9 a=QEXdDO2ut3YA:10 a=uxP6HrT_eTzRwkO_Te1X:22
+ a=6CpsfURP9XNmmWg3j1mJ:22
+X-Proofpoint-GUID: 5JX4Vnsl-Bj-lOFwQ46DLZjA4z2ABLPV
+X-Proofpoint-ORIG-GUID: 5JX4Vnsl-Bj-lOFwQ46DLZjA4z2ABLPV
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI0MDEzOSBTYWx0ZWRfX4AYmUfe43quF
+ X4czFBE1f/Ax19sS3eUVHUx2lWGjY+xvMpN8QDQclY4lZZILFNTKOJvBtPgWLtWtKCdiHH83WPu
+ TMDYo1GMH9nht8emIqAeiWSVEM9cFrh5S5ec/DzAyMLrP29ZQomjYYYM8/EI17vhYnq0zDFPAOJ
+ hUWroox1YamhA5oT38KZhhg+zSHI4K03XAWqcVJLo96pMJGDwo7KDmLZkIqDRbmEGgdOlSpxreg
+ O0cvEMqUsfv08L7Yurl6pyJTFMpp3nZ82XYSp/ckujUR25DrmR8w51jPnB+NGZn3cc33PZs4ahT
+ +iM1EUt8lUDTt9lO5elJd7BaDBDQ1EW5lcPAasiZ+MNov/CIlbjev+4tsLBfMW6uwyGzQQ6igL9
+ ZPEmoSlIU5nPw0sPVMs33tLtMWpK6k2ZuszBS8p28BQjJorczNG90aUPTmawH2RY1Scoc1gT36i
+ zeThJ4aAGWLLcRWJfWA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-24_03,2026-07-24_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 phishscore=0 priorityscore=1501 suspectscore=0
+ lowpriorityscore=0 bulkscore=0 spamscore=0 malwarescore=0 clxscore=1015
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607240139
 
-Since next-20260722 my debian sid system hangs when shutting down or
-rebooting (No error message when monitoring the shutdown process via
-netconsole). I bisected the error to commit
-13b7e6a96a00 ("wifi: mt76: Disable napi when removing device")
-and reverting this commit in next-20260723 makes shutting down or
-rebooting work normally again.
+On Wed, Jul 22, 2026 at 3:56=E2=80=AFPM Srinivas Kandagatla <srini@kernel.o=
+rg> wrote:
+>
+>
+>
+> On 7/3/26 2:45 PM, Loic Poulain wrote:
+> > On embedded devices, it is common for factory provisioning to store
+> > device-specific information, such as Ethernet or WiFi MAC addresses,
+> > in a dedicated area of an eMMC partition. This avoids the need for
+> > and additional EEPROM/OTP and leverages the persistence of eMMC.
+> >
+> > One example is the Arduino UNO-Q, where the WiFi MAC address and the
+> > Bluetooth Device address are stored in the eMMC Boot1 partition.
+> >
+> > Until now, accessing this information required a custom bootloader
+> > to read the data and inject it into the Device Tree before handing
+> > control over to the kernel. This approach is fragile and leads to
+> > device-specific workarounds.
+> >
+> > Rather than adding a new NVMEM provider specifically to the eMMC
+> > subsystem, the new support operates at the block layer, allowing any
+> > block device to behave like other non-volatile memories such as EEPROM
+> > or OTP.
+> >
+> > This series builds on earlier work by Daniel Golle that enables block
+> > devices to act as NVMEM providers:
+> > https://lore.kernel.org/all/6061aa4201030b9bb2f8d03ef32a564fdb786ed1.17=
+09667858.git.daniel@makrotopia.org/
+> >
+> > It also introduces an NVMEM layout description for the Arduino UNO-Q,
+> > allowing device-specific data stored in the eMMC Boot1 partition to
+> > be accessed in a standard way.
+> >
+> > WiFi and Ethernet already support retrieving MAC addresses from NVMEM.
+> > Bluetooth requires similar support, which is also addressed.
+> >
+> > Note that this is currently limited to MMC-backed block devices, as
+> > only the MMC core associates a firmware node with the block device
+> > (add_disk_fwnode). This can be easily extended in the future to
+> > support additional block drivers.
+> >
+> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+>
+> What is the merge strategy here, Am happy to take it via nvmem tree if
+> all the non nvmem patches are acked or reviewed-by.
 
-Wifi device:
-09:00.0 Network controller [0280]: MEDIATEK Corp. MT7925 802.11be 160MHz 2x=
-2 PCIe Wireless Network Adapter [Filogic 360] [14c3:7925]
+I am planning to pick up patch1 (dt), but waiting until all the
+complete series is ready to go.
 
-Cpu:
-$ cat /proc/cpuinfo
-processor	: 0
-vendor_id	: AuthenticAMD
-cpu family	: 26
-model		: 68
-model name	: AMD Ryzen 9 9950X 16-Core Processor
-stepping	: 0
-microcode	: 0xb404035
-cpu MHz		: 624.194
-cache size	: 1024 KB
-physical id	: 0
-siblings	: 32
-core id		: 0
-cpu cores	: 16
-apicid		: 0
-initial apicid	: 0
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 16
-wp		: yes
-flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat =
-pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtsc=
-p lm constant_tsc rep_good amd_lbr_v2 nopl xtopology nonstop_tsc cpuid extd=
-_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 =
-movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_l=
-egacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext p=
-erfctr_core perfctr_nb bpext perfctr_llc mwaitx cpuid_fault cpb cat_l3 cdp_=
-l3 hw_pstate ssbd mba perfmon_v2 ibrs ibpb stibp ibrs_enhanced vmmcall fsgs=
-base tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq=
- rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512=
-vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_m=
-bm_local user_shstk avx_vnni avx512_bf16 clzero irperf xsaveerptr rdpru wbn=
-oinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasi=
-d decodeassists pausefilter pfthreshold avic v_vmsave_vmload vgif x2avic v_=
-spec_ctrl vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq =
-avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid bus_lock_detect movdiri mo=
-vdir64b overflow_recov succor smca fsrm avx512_vp2intersect flush_l1d amd_l=
-br_pmc_freeze
-bugs		: sysret_ss_attrs spectre_v1 spectre_v2 spec_store_bypass srso spectr=
-e_v2_user vmscape
-bogomips	: 8599.52
-TLB size	: 192 4K pages
-clflush size	: 64
-cache_alignment	: 64
-address sizes	: 48 bits physical, 48 bits virtual
-power management: ts ttp tm hwpstate cpb eff_freq_ro [13] [14]
+[...]
 
-Other pci hardware:
-$ lspci
-00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Root Complex
-00:00.2 IOMMU: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridge IOM=
-MU
-00:01.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Dummy Host Bridge
-00:01.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridg=
-e GPP Bridge
-00:01.2 PCI bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridg=
-e GPP Bridge
-00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Dummy Host Bridge
-00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridg=
-e GPP Bridge
-00:03.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Dummy Host Bridge
-00:04.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Dummy Host Bridge
-00:08.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Dummy Host Bridge
-00:08.1 PCI bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridg=
-e Internal GPP Bridge to Bus [C:A]
-00:08.3 PCI bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Ridg=
-e Internal GPP Bridge to Bus [C:A]
-00:14.0 SMBus: Advanced Micro Devices, Inc. [AMD] FCH SMBus Controller (rev=
- 71)
-00:14.3 ISA bridge: Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge (rev =
-51)
-00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 0
-00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 1
-00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 2
-00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 3
-00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 4
-00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 5
-00:18.6 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 6
-00:18.7 Host bridge: Advanced Micro Devices, Inc. [AMD] Raphael/Granite Rid=
-ge Data Fabric; Function 7
-01:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] Navi 10 XL Upstr=
-eam Port of PCI Express Switch (rev 25)
-02:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] Navi 10 XL Downs=
-tream Port of PCI Express Switch (rev 25)
-03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] N=
-avi 44 [Radeon RX 9060 XT] (rev c0)
-03:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Navi 48 HDMI/D=
-P Audio Controller
-04:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD=
- 9100 PRO [PM9E1]
-05:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Upstream Port (rev 01)
-06:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-06:06.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-06:07.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-06:08.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-06:0c.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-06:0d.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series Chipset P=
-CIe Switch Downstream Port (rev 01)
-08:00.0 Ethernet controller: Intel Corporation Ethernet Controller I226-V (=
-rev 06)
-09:00.0 Network controller: MEDIATEK Corp. MT7925 802.11be 160MHz 2x2 PCIe =
-Wireless Network Adapter [Filogic 360]
-0b:00.0 USB controller: Advanced Micro Devices, Inc. [AMD] 800 Series Chips=
-et USB 3.x XHCI Controller (rev 01)
-0c:00.0 SATA controller: Advanced Micro Devices, Inc. [AMD] 600 Series Chip=
-set SATA Controller (rev 01)
-0d:00.0 Non-Essential Instrumentation [1300]: Advanced Micro Devices, Inc. =
-[AMD] Raphael/Granite Ridge PCIe Dummy Function (rev c1)
-0d:00.2 Encryption controller: Advanced Micro Devices, Inc. [AMD] Family 19=
-h PSP/CCP
-0d:00.3 USB controller: Advanced Micro Devices, Inc. [AMD] Raphael/Granite =
-Ridge USB 3.1 xHCI
-0d:00.4 USB controller: Advanced Micro Devices, Inc. [AMD] Raphael/Granite =
-Ridge USB 3.1 xHCI
-0e:00.0 USB controller: Advanced Micro Devices, Inc. [AMD] Raphael/Granite =
-Ridge USB 2.0 xHCI
-
-
-Bert Karwatzki
+Kind regards
+Uffe
