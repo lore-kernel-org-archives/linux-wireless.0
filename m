@@ -1,161 +1,79 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtpo49.interia.pl (smtpo49.interia.pl [217.74.67.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AD673E3DA4
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 11:54:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C34A404BE0
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 12:05:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784894084; cv=none; b=Ew0x6XHgDnNTHq0bEmnRaUWqgTm8G72NeBei1XBbZVfgx/T2434Qq1rBsXx9D9/zpNaQmGLVZVLbL99LfQIXOW6g4fR/v8vhySpRPBE+8f2mKW1bZjErk4tAU3aczwrjQy8wSO5cK3lNhSj27/2sAGPnP6eQ+WY9GBcYZnonQnU=
+	t=1784894736; cv=none; b=PSpMJ5mUaihgyaRRDzB1VfKneiL+X5/FHO1KJQ5z1W+1LaoRtKjhegdz1/NuV0ONTxxFZGx4S8h+ytGNflJAh74Z+48OSCGuvxhgYHj6LkerCZiM+Kd0XzYdA1GWExki3uXDbSIJpyTqyurR2fRXgN948aoDnbdjvD7BQDPJwaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784894084; c=relaxed/simple;
-	bh=smIaFlMWpJN4ZO7OhuNp1b13MfRCLI1/h58VCaN0OyI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ox5qU9+3BZ27x6XkYqnLyiLJ0JlXPWSPGFd9lWv6WhTddO08JNcnDTlE0eBuYZR8D18iCCGwmRH9uiWFYUcU5d6YHqMdCPqdWoAw4vK45nSFyDJEeMvJ4GYT7GmcL7iO9leAW7noSiaN7kMbUdxNYDD1YOJw0h1SkH17jzRvpuM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=aP6PUTEW; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1784894736; c=relaxed/simple;
+	bh=6JWqdbeXuwxuJ3OgX9YlJ7Klum5SgMtFIEHAD2O/UcQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pztmZ4VMhXHjFkBUZXXbNUrF1hkkcdsaMGtp1CBpAB4V2w5s74W1DHpTmP7LEOTV1tvwIMh/U/Kz7dhYCGATtsfohNR1F2XWLu31pTwjWizqj/69olzxJqS0gG+9zc8PqxOWTBrtdsHIjc6rwXRxTuvL/6noJ6BGj/uC1ynhTxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=BX1nQulB; arc=none smtp.client-ip=217.74.67.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aP6PUTEW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=Pntc3OXDY7wjLnr8IFB+NpBIROgksKgKGxwNxTUPa0M=; b=aP6PUTEWfig17BLFUPk5HZjEeK
-	XJdnGbblxP+Wd5Uaow2xpN+6gqlnReqjJYHS8O0+kOYWDpz73+EWKO8nQswke+e3ZPjrbS+Kd5fpE
-	0byAJEqZpc/fh9aLFJ51Sj5IybwhEtgjFdSAEXWC7S7XzUdi+tud0PrlzHN/359zImNo=;
-Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1wnEU3-006KUB-2X;
-	Fri, 24 Jul 2026 13:54:31 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH wireless-next v5 2/4] wifi: mac80211: estimate expected throughput if not provided by driver/rc
-Date: Fri, 24 Jul 2026 11:54:27 +0000
-Message-ID: <20260724115429.3921457-2-nbd@nbd.name>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260724115429.3921457-1-nbd@nbd.name>
-References: <20260724115429.3921457-1-nbd@nbd.name>
+	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="BX1nQulB"
+Received: from nr200 (unknown [80.68.231.31])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
+	Fri, 24 Jul 2026 14:03:20 +0200 (CEST)
+Date: Fri, 24 Jul 2026 14:02:58 +0200
+From: Slawomir Stepien <sst@poczta.fm>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: syzbot <syzbot@kernel.org>, syzkaller-bugs@googlegroups.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzbot@lists.linux.dev
+Subject: Re: [PATCH] wifi: mac80211: reject station association if AP is not
+ started
+Message-ID: <amNUcscgkmCjJdnT@nr200>
+References: <373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org>
+ <c9fa1c083ef9878240c2ee2fb223413153d93a68.camel@sipsolutions.net>
+ <amMLPgO8Yv1wjMGa@nr200>
+ <86efc46da2c0c5cf73ca262f8be8c5086d626ee7.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <86efc46da2c0c5cf73ca262f8be8c5086d626ee7.camel@sipsolutions.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
+	t=1784894730; bh=9WCcUBpcZugisq07q9owkL/cyHa7KP34+EFlP4Tgs1M=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	b=BX1nQulB7njOGni5MWKWw025B7m/y3cZfvjjUuoNhYJSP09cqKqasSE/XqsckiXcB
+	 5koJHZ/CauhtM0y/hoV4BpMaaw/EmW8rI9e+mwRYwMSdard6emcKpCBtg1AaYG/yCN
+	 wqQWxne+Kr5AP/uqUT5pWH7wyHDedruMFzslvqFY=
 
-Estimate the tx throughput based on the expected per-packet tx time.
-This is useful for mesh implementations that rely on expected throughput,
-e.g. 802.11s or batman-adv.
+On lip 24, 2026 09:15, Johannes Berg wrote:
+> On Fri, 2026-07-24 at 08:50 +0200, Slawomir Stepien wrote:
+> > On lip 23, 2026 11:14, Johannes Berg wrote:
+> > > On Thu, 2026-07-23 at 08:11 +0000, syzbot wrote:
+> > > > From: Slawomir Stepien <sst@poczta.fm>
+> > > 
+> > > I'm a bit confused? Did syzbot just pick up another patch?
+> > 
+> > Hi Johannes!
+> > 
+> > No, this issue has been found by syzbot while doing fuzzing testing.
+> 
+> Yeah, but the email? It's "From: syzbot <...>" and actually was
+> delivered to me by sea.source.kernel.org, whereas your other mail was
+> delivered to me by smtpo49.interia.pl, so I'm confused as to who sent
+> the mail and how :)
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
-v3: avoid band=0 default, return 0 if no chanctx
-v4: rename lsi to link_sinfo
+The initial e-mail with patch was sent by the syzbot on my request, that's why I'm in the added From
+and Signed-off-by (bot can't be the Author of commit and I'm responsible for handling this patch on
+mailing list).
 
- net/mac80211/sta_info.c | 49 ++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 46 insertions(+), 3 deletions(-)
+You can read more about this here:
+https://github.com/google/syzkaller/blob/master/docs/syzbot_ai_patches.md.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 9c69c5ba0d3f..877117929f5b 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2795,6 +2795,28 @@ void sta_set_accumulated_removed_links_sinfo(struct sta_info *sta,
- 	}
- }
- 
-+static u32 sta_estimate_expected_throughput(struct sta_info *sta,
-+					    struct rate_info *ri,
-+					    struct ieee80211_bss_conf *bss_conf)
-+{
-+	struct ieee80211_hw *hw = &sta->sdata->local->hw;
-+	struct ieee80211_chanctx_conf *conf;
-+	u32 duration;
-+	u8 band;
-+
-+	conf = rcu_dereference(bss_conf->chanctx_conf);
-+	if (!conf)
-+		return 0;
-+	band = conf->def.chan->band;
-+
-+	duration = ieee80211_rate_expected_tx_airtime(hw, NULL, ri, band, true, 1024);
-+	duration += duration >> 4; /* add assumed packet error rate of ~6% */
-+	if (!duration)
-+		return 0;
-+
-+	return ((1024 * USEC_PER_SEC) / duration) * 8;
-+}
-+
- static void sta_set_link_sinfo(struct sta_info *sta,
- 			       struct link_station_info *link_sinfo,
- 			       struct ieee80211_link_data *link,
-@@ -3009,6 +3031,10 @@ static void sta_set_link_sinfo(struct sta_info *sta,
- 	link_sinfo->bss_param.beacon_interval = link->conf->beacon_int;
- 
- 	thr = sta_get_expected_throughput(sta);
-+	if (!thr && (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
-+		thr = sta_estimate_expected_throughput(sta,
-+						      &link_sinfo->txrate,
-+						      link->conf);
- 
- 	if (thr != 0) {
- 		link_sinfo->filled |=
-@@ -3262,6 +3288,14 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (thr != 0) {
- 		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
- 		sinfo->expected_throughput = thr;
-+	} else if (!sta->sta.valid_links &&
-+		   (sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE))) {
-+		thr = sta_estimate_expected_throughput(sta, &sinfo->txrate,
-+						      &sdata->vif.bss_conf);
-+		if (thr) {
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+			sinfo->expected_throughput = thr;
-+		}
- 	}
- 
- 	if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_ACK_SIGNAL)) &&
-@@ -3282,6 +3316,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 	if (sta->sta.valid_links) {
- 		struct ieee80211_link_data *link;
- 		struct link_sta_info *link_sta;
-+		u32 est_thr = 0;
- 		int link_id;
- 
- 		sinfo->mlo_params_valid = true;
-@@ -3293,17 +3328,25 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
- 		sinfo->valid_links = sta->sta.valid_links;
- 
- 		for_each_valid_link(sinfo, link_id) {
-+			struct link_station_info *link_sinfo = sinfo->links[link_id];
-+
- 			link_sta = wiphy_dereference(sta->local->hw.wiphy,
- 						     sta->link[link_id]);
- 			link = wiphy_dereference(sdata->local->hw.wiphy,
- 						 sdata->link[link_id]);
- 
--			if (!link_sta || !sinfo->links[link_id] || !link) {
-+			if (!link_sta || !link_sinfo || !link) {
- 				sinfo->valid_links &= ~BIT(link_id);
- 				continue;
- 			}
--			sta_set_link_sinfo(sta, sinfo->links[link_id],
--					   link, tidstats);
-+			sta_set_link_sinfo(sta, link_sinfo, link, tidstats);
-+			if (!thr &&
-+			    (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT)))
-+				est_thr += link_sinfo->expected_throughput;
-+		}
-+		if (est_thr) {
-+			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+			sinfo->expected_throughput = est_thr;
- 		}
- 	}
- }
 -- 
-2.53.0
-
+Slawomir Stepien
