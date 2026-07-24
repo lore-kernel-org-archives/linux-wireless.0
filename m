@@ -1,74 +1,108 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D564908CE;
-	Fri, 24 Jul 2026 07:15:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C5A3DD500
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 08:47:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784877318; cv=none; b=bHUzQmn0YcvKhI/ckG99oVjhne+1kqzZb+RBAnVTQbUegS7d26qX+7+8QgiOjnkcI8p366ZMi2L8yijzxz9SY072XD5s9/2UYZRkk34oYXR+l+kQtXAOBQ4Jt8+qdaUz/rryboNXR0v5VN2IWsROnQNCGLfgbE3n7wzNVLNqDP4=
+	t=1784882881; cv=none; b=BMhG823VJDlfU/paey4zPnUwJT54aWbFV2IRNBorbJUtNykFjyf2b8V56fJwKbrhzhGRpMdAKiCN1W3thvYATGZT0Rfp3DzaapNJKAlExKsJtI26xvuG1YY7PqomVAxw+ebbDhMxI7pjvSbtWw+asXQynTaMKwwYhI/vPpvWkjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784877318; c=relaxed/simple;
-	bh=YLZe1Vd6SPoS1P8/C59OJ7Dc009J18QvBwwUp0g053E=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=tAfxoyaMkQWMSeBDOKDWW7o6s+bySmNdslS6Nwe9Z1LaLXRarGp00JStvoZBT+L8sLKtU7NtROrvRP3NzTWjciEpQtUeIVr/Wf6lzS3Nt4dtNxePhNOIYjmRUYEJzvRyS+I8Tvr7NYVQpXrqPZ88zXrQFTKuxqRDiRIdS4nDmYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=none smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oqTm+InP; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1784882881; c=relaxed/simple;
+	bh=uAe/+Uhl9j83VQYP6zqSD7uS3a1Db1UFyWa8WRR6VLU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mMqXc3GQafsktFLiMq1HjkDuyIDxktGRmLTxg0beow9LRHnGbAsGyiuzj/55QpOuDsqo9sOD4ssTUeaYxtXI4XA9cesin1I4auM64suNQRqvR9sgAZSmtLMw3hAxyXi4msmqljQBNw8iT/419fyUB0TChi8gcR+6G1sUcQkSbGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=qPGNf5kJ; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oqTm+InP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=YLZe1Vd6SPoS1P8/C59OJ7Dc009J18QvBwwUp0g053E=;
-	t=1784877316; x=1786086916; b=oqTm+InP25VyoNoPCnggvBYkhlvFBYcEFF7RoGDPd+bRbJp
-	/hRPIHsh9H/WEl/SQk3iJ9Krploo+6GXcFK95wKveRNPfWkXrybuJ+/wB+aFc1IhLzvekT/uMD67x
-	q/9INdyKQN5i0sSy3D1UZktNLrU9uRXC6K4aaVYCprHq21CsfCToWwTU2F5Wyp7YA/FRuM0sQdoKT
-	AAonZTenv1zhp80fH3BBYgwQVsBZCFvJKu1DDlL0TBviNsuEEZIkYSyDDcMSP0wXWejZBtg0M4dXC
-	N4nNtoYFPNU7NRQsmT8W+GyVf4B0wdTkrQgQP5UMuaydqx0zZeBoGbIbHwb59zcA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wnA7e-000000021nm-3tiK;
-	Fri, 24 Jul 2026 09:15:07 +0200
-Message-ID: <86efc46da2c0c5cf73ca262f8be8c5086d626ee7.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211: reject station association if AP is not
- started
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Slawomir Stepien <sst@poczta.fm>
-Cc: syzbot <syzbot@kernel.org>, syzkaller-bugs@googlegroups.com, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzbot@lists.linux.dev
-Date: Fri, 24 Jul 2026 09:15:06 +0200
-In-Reply-To: <amMLPgO8Yv1wjMGa@nr200>
-References: <373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org>
-	 <c9fa1c083ef9878240c2ee2fb223413153d93a68.camel@sipsolutions.net>
-	 <amMLPgO8Yv1wjMGa@nr200>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="qPGNf5kJ"
+X-UUID: 56efdff0873c11f18dc8c9802ae25ab1-20260724
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=eOVR+sd2QVsPchDnrXInGMX9n7ResH6jilnddaFJ3mU=;
+	b=qPGNf5kJw+HBhIjlBdRDGD7PrhIu2Lyl8mnRAv+8gx9nvhMtIAtMmPa0guftpHZTXZE7HX30V2u1CCjL/MB9xS5pbBTdrK8u+RK4z+9YJw+8B7hOfo/K90jC2j4YauoLxRPlIXvcD61mN1W0B7h2jwWdO4MplPX2opPWPvmHwDY=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.18,REQID:947f21c5-7983-47fa-a010-995b0a32ba47,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:8a735a6,CLOUDID:1b084254-ba59-46c6-b844-86065e9edbd3,B
+	ulkID:nil,BulkQuantity:0,SF:102|136|836|865|888|898,TC:-5,Content:0|15|50|
+	99|100|102|156,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
+	-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 56efdff0873c11f18dc8c9802ae25ab1-20260724
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 172492752; Fri, 24 Jul 2026 16:47:45 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 24 Jul 2026 16:47:43 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 24 Jul 2026 16:47:43 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH] wifi: mt76: connac2: add CLC regulatory domain support
+Date: Fri, 24 Jul 2026 16:47:42 +0800
+Message-ID: <20260724084742.3153813-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Fri, 2026-07-24 at 08:50 +0200, Slawomir Stepien wrote:
-> On lip 23, 2026 11:14, Johannes Berg wrote:
-> > On Thu, 2026-07-23 at 08:11 +0000, syzbot wrote:
-> > > From: Slawomir Stepien <sst@poczta.fm>
-> >=20
-> > I'm a bit confused? Did syzbot just pick up another patch?
->=20
-> Hi Johannes!
->=20
-> No, this issue has been found by syzbot while doing fuzzing testing.
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-Yeah, but the email? It's "From: syzbot <...>" and actually was
-delivered to me by sea.source.kernel.org, whereas your other mail was
-delivered to me by smtpo49.interia.pl, so I'm confused as to who sent
-the mail and how :)
+Add MT7921_CLC_REGD index definition and corresponding hardware
+encapsulation type check in CLC loading flow to support regulatory
+domain configuration via CLC (Country/Local Configuration) data.
 
-johannes
+Fixes: 058f274fb55f ("wifi: mt76: mt7921: add regulatory wiphy self manager support")
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c    | 4 ++++
+ drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h | 1 +
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index 2e0769d18f87..c6af7f00ca59 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -476,6 +476,10 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 		    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
+ 			continue;
+ 
++		if (clc->idx == MT7921_CLC_REGD &&
++		    u8_get_bits(clc->type, MT_EE_HW_TYPE_ENCAP) != hw_encap)
++			continue;
++
+ 		phy->clc[clc->idx] = devm_kmemdup(mdev->dev, clc,
+ 						  le32_to_cpu(clc->len),
+ 						  GFP_KERNEL);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+index fb8654b7c5e7..f5628fb6bfbf 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mt7921.h
+@@ -136,6 +136,7 @@ struct mt7921_dma_layout {
+ enum {
+ 	MT7921_CLC_POWER,
+ 	MT7921_CLC_CHAN,
++	MT7921_CLC_REGD = 3,
+ 	MT7921_CLC_MAX_NUM,
+ };
+ 
+-- 
+2.18.0
+
