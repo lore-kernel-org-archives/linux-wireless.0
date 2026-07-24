@@ -1,94 +1,110 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AE74334CC
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 12:48:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C964E2931FF;
+	Fri, 24 Jul 2026 13:11:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784897305; cv=none; b=t9gzmAf4vx92zyAGIqspi1TPVQne+o7m6Z/O7kIojL0lEm7EL9CGjmu+FIJte6XBz+p2o0QgLQuj0XPkArRcqfm6W3N+F0W9T2HMqovUTxrkyHv9qTwh76olO0QGBJujYPQZNtd8HErt6wgTFZdgJtOmySJ6PCBh8U/xXLq8qr8=
+	t=1784898685; cv=none; b=IsJoK7iVxs36yW8TULdFye/ssh1PwUMW1ywznYkew3IoMcxCNxFMnL3zHPsLuWlUPi/nhN4/16TM8yOFLnd9COgarab5ca6p5eNonIAXpviU8iyA9RcQ3L61rFP2Pe7dH5A0SIntRWZgtfKUuq7D3GesHN6P1VrQRaVyheinoxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784897305; c=relaxed/simple;
-	bh=gaMbrGtdPKUqhZboEN8HMoDoI8eFa82Ygxy16n5Vmlw=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j/0uSkM2Rd2/4GvHpAs7vjyP7AL692dxvpwpPB9xuCUuA+zb9zqJtPJristLddJEzEJ+RHF213BbhOEKhBbyhb5SqkrYG6fgEeExjd3CLoktzH1Hk4/35YeI7cGuncx48mwzw3Yy3wg4MosSqSxsq+YjgJisu790OxzyWjOudzg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=RAE7wB3n; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1784898685; c=relaxed/simple;
+	bh=NUna20UvecMvvldvWQK7l6dRgL5Kg++Jc2/WPoM8vog=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CmE6i2H6wfDw/dT3+vA8CzUYWybGPYCP/gIQCwOltLK0oftErJQXCv82YgsBc8r8b1UM0J+s1KXIvQKnPrtr7oIDSL6mRm9xQRFaRM4e6v9zwSUApeU4Gc07fH5krZ7ezR59T1sI6Z+Ps5WXemVtYSNNJjm1I6RpSXK9WZRqJZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eVQW4YyH; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="RAE7wB3n"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=5go9WEnCwjyrq2+jdjqZzqpw9Bytf0la5PjjEC36T+Y=; b=RAE7wB3nGLX2gmQdW+IA6i2Di6
-	qriEKFU+Ddb6b2PbTBGY4R+EkIA3K4dFzONsT/Q184+zsbYKNUAsTkbEoX9DOXKrxrn1k758xAWjx
-	77EfLobLWs/dHiApMJHK4yBN60FJr91pMSM5O0ePF9TWgHTELmKaRsOTDEVNAV/+DrFI=;
-Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1wnFK8-006LeO-3A
-	for linux-wireless@vger.kernel.org;
-	Fri, 24 Jul 2026 14:48:21 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 29/29] wifi: mt76: mt7996: hold dev->mutex in remove_interface teardown
-Date: Fri, 24 Jul 2026 12:48:13 +0000
-Message-ID: <20260724124813.3961474-29-nbd@nbd.name>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260724124813.3961474-1-nbd@nbd.name>
-References: <20260724124813.3961474-1-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eVQW4YyH"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=tIGeMUsaNb0y93vr8pcc7knEo2f51EGekAs0IIpo/eY=; b=eVQW4YyHf2n+7nUYlm9j9OoqmW
+	93jEEsn1tgghZPGu21TlFvfxft/ALHG/mcJ4p2P/W/aubzHwD5nZtVcahmZaQw6D3DVgoEHKXTTrQ
+	NTVlYkiTW41de23zdPu1kvTfNTe8DuxdK4P0Uq4beMSHQ22WvPeuvI0drpbOvsZt4C8PJgXi6m/4A
+	jhZLQ13UK8c6cUqXfoFqsaW/24ALutRbfEWvhyrM4Gi3ngVRbOdVBRYP1+ZTqC7A6cYQ/KjSw7y5u
+	LfrmaxaUtxKbK5ASxHwjBB/eX2I41fzVQwewAD4AgLl/JDI6lPDDchhWsILYnKSegrrYGZtkoSzCD
+	gd+/Lzzw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wnFfz-0000000GSAN-1qmn;
+	Fri, 24 Jul 2026 13:10:55 +0000
+Date: Fri, 24 Jul 2026 06:10:55 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ulf Hansson <ulfh@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jeff Johnson <jjohnson@kernel.org>,
+	Bartosz Golaszewski <brgl@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
+	Rocky Liao <quic_rjliao@quicinc.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>,
+	Srinivas Kandagatla <srini@kernel.org>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Christian Marangi <ansuelsmth@gmail.com>, linux-mmc@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
+	daniel@makrotopia.org,
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v8 5/9] block: implement NVMEM provider
+Message-ID: <amNkX6HV7c_8jRUa@infradead.org>
+References: <20260703-block-as-nvmem-v8-0-98ae32bfc49a@oss.qualcomm.com>
+ <20260703-block-as-nvmem-v8-5-98ae32bfc49a@oss.qualcomm.com>
+ <amLwz6WuHYUwKKJo@infradead.org>
+ <CAFEp6-1_iariDyqWj0KezHAtULSO+piPHX0F=Z46Rx4KDNLmXw@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFEp6-1_iariDyqWj0KezHAtULSO+piPHX0F=Z46Rx4KDNLmXw@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Chad Monroe <chad@monroe.io>
+On Fri, Jul 24, 2026 at 11:10:58AM +0200, Loic Poulain wrote:
+> Right, I was planning to add partition support in a follow-up series.
+> But since this is really supposed to be a block-agnostic feature,
+> whether it's a disk or a partition, I'll include partition in v8.
 
-mt7996_remove_interface() destroys the remaining vif links, clearing
-omac_mask, vif_mask and mld_idx_mask, with only the wiphy mutex held.
-Those masks are modified under dev->mutex everywhere else, so the
-unlocked clears can race the scan-link teardown and the reset work
-and lose updates.
+Please include the partitions, as including them or not matters for
+the interfaces.  What is holding that support back now?  fwnode
+magic?
 
-Take dev->mutex around the link destroy loop, matching
-mt7996_add_interface() and mt7915_remove_interface(). The mutex is
-released before mt76_vif_cleanup(), which aborts a pending scan and
-takes the mutex itself.
+> > Also once you register the whole devices as nvmem provider, we really
+> > should keep it from being used a block device, shouldn't we?
+> 
+> 
+> I'm not sure, the whole concept is block backed NVMEM, so we still
+> need to add that block as base layer, though we could discuss
+> suppressing uevent for it. Preventing block usage would make the
+> feature much more intrusive than other NVMEM providers like MTD, where
+> the underlying device stays accessible. And we may genuinely still
+> want to write the disk (e.g. for factory provisioning), updating the
+> very data the cells point to, etc. There's also the layering aspect,
+> if a disk (e.g. mmcblk0) has logical partitions on top (mmcblk0pX), we
+> still register/expose the whole disk mmcblk0 as a block device
+> regardless. So if a disk contains NVMEM cells, I think it should still
+> be exposed as a block device as well.
 
-Signed-off-by: Chad Monroe <chad@monroe.io>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index ce7aede6201e..97be70c23753 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -606,6 +606,8 @@ static void mt7996_remove_interface(struct ieee80211_hw *hw,
- 	unsigned int link_id;
- 	int i;
- 
-+	mutex_lock(&dev->mt76.mutex);
-+
- 	/* Remove all active links */
- 	for_each_set_bit(link_id, &rem_links, IEEE80211_MLD_MAX_NUM_LINKS) {
- 		struct mt7996_vif_link *link;
-@@ -622,6 +624,8 @@ static void mt7996_remove_interface(struct ieee80211_hw *hw,
- 		mt7996_vif_link_destroy(phy, link, vif, NULL);
- 	}
- 
-+	mutex_unlock(&dev->mt76.mutex);
-+
- 	ieee80211_iterate_active_interfaces_mtx(hw, 0, mt7996_remove_iter,
- 						&rdata);
- 	mt76_vif_cleanup(&dev->mt76, vif);
--- 
-2.53.0
+So we now get two unsynchronized ways to access the same device?
+At least we need to prevent exclusive openers on the block device
+side.  And document the side channel very well.
 
