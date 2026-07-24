@@ -1,110 +1,93 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C964E2931FF;
-	Fri, 24 Jul 2026 13:11:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E292D2FFDFC
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 13:56:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784898685; cv=none; b=IsJoK7iVxs36yW8TULdFye/ssh1PwUMW1ywznYkew3IoMcxCNxFMnL3zHPsLuWlUPi/nhN4/16TM8yOFLnd9COgarab5ca6p5eNonIAXpviU8iyA9RcQ3L61rFP2Pe7dH5A0SIntRWZgtfKUuq7D3GesHN6P1VrQRaVyheinoxc=
+	t=1784901406; cv=none; b=b3h7lm9greoGq3R8L9xogk9S5zuQ52KH4isUhjcjdI4K83RYSmR2SCUYGtZ+nBMJpXCkf04CCNXvo7lk55os/JuwhkbWHwdytXIMAZCDoc2ZRgD0hyPcJmfS0y1Fq53X0zzpBk+ReL6Y7Y5SzMiR1IzzsrsQN9AM0uWzWRJifMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784898685; c=relaxed/simple;
-	bh=NUna20UvecMvvldvWQK7l6dRgL5Kg++Jc2/WPoM8vog=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CmE6i2H6wfDw/dT3+vA8CzUYWybGPYCP/gIQCwOltLK0oftErJQXCv82YgsBc8r8b1UM0J+s1KXIvQKnPrtr7oIDSL6mRm9xQRFaRM4e6v9zwSUApeU4Gc07fH5krZ7ezR59T1sI6Z+Ps5WXemVtYSNNJjm1I6RpSXK9WZRqJZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eVQW4YyH; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1784901406; c=relaxed/simple;
+	bh=MZw4ugHr5mPKT58YjWW6vwtGGy2PbVQmvq5/awUc1yk=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=htMSwg02SBMXiLvZ3NKUypjNMXagZwOTUn168BAhU7NjBbhVhSVtMuSpbK8rgAOFogyqh6Ev1fNq/rIAoySXSknp+/Rkk/svpx4Td9f5WOqWJTCe32ZA+gW4Em84ErIEq++A94c8TaTEH9tWyrpbxiXkStruVW2vvwCqdvWr1yY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=sy8vjujj; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eVQW4YyH"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=tIGeMUsaNb0y93vr8pcc7knEo2f51EGekAs0IIpo/eY=; b=eVQW4YyHf2n+7nUYlm9j9OoqmW
-	93jEEsn1tgghZPGu21TlFvfxft/ALHG/mcJ4p2P/W/aubzHwD5nZtVcahmZaQw6D3DVgoEHKXTTrQ
-	NTVlYkiTW41de23zdPu1kvTfNTe8DuxdK4P0Uq4beMSHQ22WvPeuvI0drpbOvsZt4C8PJgXi6m/4A
-	jhZLQ13UK8c6cUqXfoFqsaW/24ALutRbfEWvhyrM4Gi3ngVRbOdVBRYP1+ZTqC7A6cYQ/KjSw7y5u
-	LfrmaxaUtxKbK5ASxHwjBB/eX2I41fzVQwewAD4AgLl/JDI6lPDDchhWsILYnKSegrrYGZtkoSzCD
-	gd+/Lzzw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wnFfz-0000000GSAN-1qmn;
-	Fri, 24 Jul 2026 13:10:55 +0000
-Date: Fri, 24 Jul 2026 06:10:55 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ulf Hansson <ulfh@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Bartosz Golaszewski <brgl@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-	Rocky Liao <quic_rjliao@quicinc.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>,
-	Srinivas Kandagatla <srini@kernel.org>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Christian Marangi <ansuelsmth@gmail.com>, linux-mmc@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
-	daniel@makrotopia.org,
-	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v8 5/9] block: implement NVMEM provider
-Message-ID: <amNkX6HV7c_8jRUa@infradead.org>
-References: <20260703-block-as-nvmem-v8-0-98ae32bfc49a@oss.qualcomm.com>
- <20260703-block-as-nvmem-v8-5-98ae32bfc49a@oss.qualcomm.com>
- <amLwz6WuHYUwKKJo@infradead.org>
- <CAFEp6-1_iariDyqWj0KezHAtULSO+piPHX0F=Z46Rx4KDNLmXw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="sy8vjujj"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66ODufbI71179647, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1784901401; bh=+/aKP2L9ecsLYPuZPprsGk3K772Lit/e5bYO98AnWyA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	b=sy8vjujjjMv9TiqZgoUprkvl1LL5gZvz1grwxa7h3io257LJVu9wQZelOEckAFt++
+	 KWEDeZhooGd4omg8u2vSXUxXlMlTffhU7KKZcaxvqOm3YeZpETc4ukz/R9yJWDVjw0
+	 O9gDBdOw9+DR7uWKB+qGguBtH/Mib6lLyeeoi8ESWcp0yiLr3tyl8hs6T+TV7lZCTP
+	 5Aqj8a+S0td6Iev7xLH/XxTLti2+avtK0J753Jia135kKqz1LmSUy7lavPDIrzIhpG
+	 JmbygZAQue7yAR0SgGZh76M7qocdXMSNWvdGnTi1IqQ9Vodz3rD+kJqUuzRvRcdbY1
+	 saqZRWov7sbxA==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66ODufbI71179647
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 21:56:41 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Fri, 24 Jul 2026 21:56:41 +0800
+Received: from [127.0.1.1] (172.21.40.76) by RTKEXHMBS06.realtek.com.tw
+ (10.21.1.56) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
+ Transport; Fri, 24 Jul 2026 21:56:41 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ku920601@realtek.com>
+Subject: [PATCH rtw-next 00/14] wifi: rtw89: coex: add more command / event formats for coming RTL8922D
+Date: Fri, 24 Jul 2026 21:56:26 +0800
+Message-ID: <20260724135640.3195044-1-pkshih@realtek.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAFEp6-1_iariDyqWj0KezHAtULSO+piPHX0F=Z46Rx4KDNLmXw@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
-On Fri, Jul 24, 2026 at 11:10:58AM +0200, Loic Poulain wrote:
-> Right, I was planning to add partition support in a follow-up series.
-> But since this is really supposed to be a block-agnostic feature,
-> whether it's a disk or a partition, I'll include partition in v8.
+To support BT-coexistence including dual Bluetooth for coming RTL8922D,
+it adds more command and event formats to carry more information for
+the more complex application combinations. More, introduce to show two
+Bluetooth states for debugging.
 
-Please include the partitions, as including them or not matters for
-the interfaces.  What is holding that support back now?  fwnode
-magic?
+Ching-Te Ku (14):
+  wifi: rtw89: coex: Add chip initial info version 11 for RTL8922A/D
+  wifi: rtw89: coex: Add Wi-Fi MLO info version 2 H2C command
+  wifi: rtw89: coex: Add firmware 0.35.111.X support for RTL8922A/D
+  wifi: rtw89: coex: Rearrange _ntfy_role_info info
+  wifi: rtw89: coex: Separate _ntfy_role_info into two function
+  wifi: rtw89: coex: Decrease Wi-Fi special packet protect time
+  wifi: rtw89: coex: complete GPIO debug configuration handler
+  wifi: rtw89: coex: Refine RF calibration notify flow
+  wifi: rtw89: coex: Fix log dump format with proper newline
+  wifi: rtw89: coex: Add BTC report version 8 support for BT sub-reports
+  wifi: rtw89: coex: Add dual Bluetooth debug info dump
+  wifi: rtw89: coex: Fix TDMA v8 handling to unblock BTC report parsing
+  wifi: rtw89: coex: Fix H2C command redundant send & version fall
+    through
+  wifi: rtw89: coex: Handle Bluetooth LE-Audio related coexistence
+    feature
 
-> > Also once you register the whole devices as nvmem provider, we really
-> > should keep it from being used a block device, shouldn't we?
-> 
-> 
-> I'm not sure, the whole concept is block backed NVMEM, so we still
-> need to add that block as base layer, though we could discuss
-> suppressing uevent for it. Preventing block usage would make the
-> feature much more intrusive than other NVMEM providers like MTD, where
-> the underlying device stays accessible. And we may genuinely still
-> want to write the disk (e.g. for factory provisioning), updating the
-> very data the cells point to, etc. There's also the layering aspect,
-> if a disk (e.g. mmcblk0) has logical partitions on top (mmcblk0pX), we
-> still register/expose the whole disk mmcblk0 as a block device
-> regardless. So if a disk contains NVMEM cells, I think it should still
-> be exposed as a block device as well.
+ drivers/net/wireless/realtek/rtw89/coex.c     | 908 +++++++++++++++---
+ drivers/net/wireless/realtek/rtw89/coex.h     |  56 +-
+ drivers/net/wireless/realtek/rtw89/core.h     | 297 +++++-
+ drivers/net/wireless/realtek/rtw89/fw.c       | 133 +++
+ drivers/net/wireless/realtek/rtw89/fw.h       |  22 +
+ drivers/net/wireless/realtek/rtw89/rtw8922a.c |  88 +-
+ drivers/net/wireless/realtek/rtw89/rtw8922d.c |  40 +-
+ 7 files changed, 1322 insertions(+), 222 deletions(-)
 
-So we now get two unsynchronized ways to access the same device?
-At least we need to prevent exclusive openers on the block device
-side.  And document the side channel very well.
+
+base-commit: b0034a2e415603daa1cf00363b407cc145bbcd31
+-- 
+2.25.1
 
