@@ -1,77 +1,107 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AB8041DE0A
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 09:42:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FC1141DDF6
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 09:55:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784886163; cv=none; b=DhzYsE80e7renZdOQfXmyadbb4rGTU+oI/nge/vnUVSom0DDqExRmgflusz9zTh7uZKWGT665rSVqfeLM+i16fsJsXDAVbqTOBjStbHrJR3aaEgtrsx1YwfZLN4ej+h3nabVCKlpRL/8pVw9rfu+usTp1i/cm1MsoG2tULu4zw4=
+	t=1784886952; cv=none; b=lD5Zn2c7BmrFyQRRb2bi1pQIno72oZNDC7uUO983ARBAH/QEjRjLMY6SU1PhRE2HyNgn7VlCFFuuq304KCQZlEQ2YYg/ypL0mVEqeVODwQCEU9HrfkqnNVVBBxkbyNy9IFrXGMXjrWvKG+pXhzZq+VT1SvQ58bSSD84tUOfqFoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784886163; c=relaxed/simple;
-	bh=YY8zT4JmqSPdATyDqCCVUYQ0HFP8LkYhfzBPXdqUyvA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wy/tI3PBQreN4bAbTMGkyCeGRlJ2GlPgs1oWrEwc0kPj4xE9hUpDc7pr+Ngp3WleJUsiFVPRcI42i4dszfzkhJY8BIjkHhcQknc5l4JWgYwO+/WvWj+TN+xzc/TaSMuzrGurCTGBV+gY8HGbbMBziUMm2knNGODik9UWLa9y5tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MP/wdmBl; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1784886952; c=relaxed/simple;
+	bh=jI1n47RpNNejcH4SOlOwA/KtDnNOVmfB6Gg1xBZL4I4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=syzZcGcbAFNdDOggJqSaNXBSyQzp6/IAAb3XoM3D1Mf09kVLasTonNSxzIosa1mAy4ZvDAEm5e+nkEEwcF9lPDtn3FEoHKlTSvHfqOjqdvd+GitCuh7Y8W+5JX44MIj1cFYp66sYQMtbpo80H7iwszgKUHwXhbc55UzQn0oWtGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=Y7oAfXfc; arc=none smtp.client-ip=212.77.101.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MP/wdmBl"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1784886160;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YY8zT4JmqSPdATyDqCCVUYQ0HFP8LkYhfzBPXdqUyvA=;
-	b=MP/wdmBl/5bnv66DDwnbxvmi9TOcuWF3UlUcr7+8oWLcBJdzDjzdGrSEbUjsiAhXX8Ot5Z
-	yRJFx5C1GJm/2CA0IpS45/R3xogn5991NlJz8tHqtWz7rtTsLdeLxAlhfhmmKIf4M2YZfP
-	tmBtfNIsTC5QOrMDlgReC6CmOg6fty8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-380-4kBllGYVNnGpIMs-uDq9KA-1; Fri,
- 24 Jul 2026 05:42:33 -0400
-X-MC-Unique: 4kBllGYVNnGpIMs-uDq9KA-1
-X-Mimecast-MFC-AGG-ID: 4kBllGYVNnGpIMs-uDq9KA_1784886152
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D29D81801201;
-	Fri, 24 Jul 2026 09:42:31 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.50])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5667A1954226;
-	Fri, 24 Jul 2026 09:42:28 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: tamizh.raja@oss.qualcomm.com
-Cc: ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	jjohnson@kernel.org,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/4] wifi: ath11k: use queue mapping for WCN6750 ring selection
-Date: Fri, 24 Jul 2026 11:42:10 +0200
-Message-ID: <20260724094226.227200-1-jtornosm@redhat.com>
-In-Reply-To: <CABkEBKaZOEh4OrZTYfFOj8QZHY8Ruxn2rcXL-axWHwK4o6MECA@mail.gmail.com>
-References: <CABkEBKaZOEh4OrZTYfFOj8QZHY8Ruxn2rcXL-axWHwK4o6MECA@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="Y7oAfXfc"
+Received: (wp-smtpd smtp.wp.pl 18014 invoked from network); 24 Jul 2026 11:55:46 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1784886946; bh=O6IsGZtAEXs0+n+pzO2WNxX2Bcfwoav9CaKGPNBE6jU=;
+          h=From:To:Cc:Subject;
+          b=Y7oAfXfcbX2N9ZG2KNfHpwK9yQlfORDXkR08R06rEXCkbmNluWhaimDvQjwMfFwoU
+           1aTtwAAb/8K8pNclWYIa7ki2Yg7vAfv2HZRJlYxAwx9LPRHpteCWg6has6dhYdeYeC
+           bciORZNSDGd4xkM0F/A7aGXsZuejwPLqkRPhdmPzGkbsd8LXtMx4Cyo36Vpn1q/URR
+           LpY5fABrGSz2NvlUctRh8588/YrgUGS67lQNbhVwMMKjWmdoaY/gJ6xoKJ9Ckox3Hg
+           euEYn9daOcuY74f094bhiCxxOhTt5IekLYOgjXZu48noYqSteT5YHYjEbtqkS3aeNb
+           NhjEUHRAYEeDQ==
+Received: from 77-236-11-167.static.play.pl (HELO localhost) (stf_xl@wp.pl@[77.236.11.167])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <linux-wireless@vger.kernel.org>; 24 Jul 2026 11:55:46 +0200
+From: stf_xl@wp.pl
+To: linux-wireless@vger.kernel.org
+Cc: martin-eric.racine@iki.fi
+Subject: [PATCH] wifi: iwlegacy: replace BUG_ON() with WARN_ON() on num_stations check
+Date: Fri, 24 Jul 2026 11:55:45 +0200
+Message-Id: <20260724095545.33647-1-stf_xl@wp.pl>
+X-Mailer: git-send-email 2.25.4
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+X-WP-MailID: b58354c86236c08990ab6c47f9ed8a94
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000001 [oUJH]                               
 
-Hello Tamizh,
+From: Stanislaw Gruszka <stf_xl@wp.pl>
 
-This is the same mapping already used by WCN7850 via skb_get_queue_mapping().
-The patch only aligns WCN6750 with that existing approach.
+BUG_ON() for il->num_stations < 0 can happen in real word, see
+https://bugzilla.kernel.org/show_bug.cgi?id=221733
 
-Thanks
+Replace BUG_ON() with WARN_ON() (and reset the counter to 0) to
+do not put whole system to inconsistent state on the condition.
 
-Best regards
-José Ignacio
+Also allocate debugfs buffer for all stations (32 or 25)
+to do not use num_stations since it can not be valid number.
+
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
+---
+ drivers/net/wireless/intel/iwlegacy/common.c | 7 ++++---
+ drivers/net/wireless/intel/iwlegacy/debug.c  | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index 8d0ff339ad08..0bb807ff8edf 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -2179,8 +2179,8 @@ il_remove_station(struct il_priv *il, const u8 sta_id, const u8 * addr)
+ 	il->stations[sta_id].used &= ~IL_STA_DRIVER_ACTIVE;
+ 
+ 	il->num_stations--;
+-
+-	BUG_ON(il->num_stations < 0);
++	if (WARN_ON(il->num_stations < 0))
++		il->num_stations = 0;
+ 
+ 	spin_unlock_irqrestore(&il->sta_lock, flags);
+ 
+@@ -2328,7 +2328,8 @@ il_dealloc_bcast_stations(struct il_priv *il)
+ 
+ 		il->stations[i].used &= ~IL_STA_UCODE_ACTIVE;
+ 		il->num_stations--;
+-		BUG_ON(il->num_stations < 0);
++		if (WARN_ON(il->num_stations < 0))
++			il->num_stations = 0;
+ 		kfree(il->stations[i].lq);
+ 		il->stations[i].lq = NULL;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlegacy/debug.c b/drivers/net/wireless/intel/iwlegacy/debug.c
+index d998a3f1b056..8a9f79ff1c6e 100644
+--- a/drivers/net/wireless/intel/iwlegacy/debug.c
++++ b/drivers/net/wireless/intel/iwlegacy/debug.c
+@@ -396,7 +396,7 @@ il_dbgfs_stations_read(struct file *file, char __user *user_buf, size_t count,
+ 	int i, j, pos = 0;
+ 	ssize_t ret;
+ 	/* Add 30 for initial string */
+-	const size_t bufsz = 30 + sizeof(char) * 500 * (il->num_stations);
++	const size_t bufsz = 30 + sizeof(char) * 500 * max_sta;
+ 
+ 	buf = kmalloc(bufsz, GFP_KERNEL);
+ 	if (!buf)
+-- 
+2.50.1
 
