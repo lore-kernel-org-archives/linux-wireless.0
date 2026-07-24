@@ -1,72 +1,75 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F11B3B3BFA
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 20:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7AD3B42F7
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 20:33:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784925215; cv=none; b=cJH3iIPha9U+shD4YbvyqC7un0w6FFz1ea4f+/DzrOuI0ZVwD0QlpMp6JWEj5FcJGN+hwDOTvyD2Oc46cx0SKWM8MWMA4xxkDvUANTdLYYAQU4DjnFfP2qD+u2dWN6UiFDZMsBJrvPrHhN9tTdKryNxKi61o8aPQU+XOb9qYv1o=
+	t=1784925217; cv=none; b=NJPkg8YZoMdDO2GTt2W6UL0Gre0jOMcCfURWwOcALvVFljFWcZ9h8dk0JPu7M73bEbb+hgrzKZO1I8ZYMK15oFjeCUHeioz2tYt5GI6JWYPrRGF3bSNhByU4Cb7oaoqfOI1a58Ec4sosnbJiR9gAUjLACTmQQ8g8Obx2+tUfsV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784925215; c=relaxed/simple;
-	bh=Zk/sFfO0P3Zc5xIDecphI5VF2UB8/fuN2Q0noue8ons=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Awz4cHcDRoxhQJI/OEyh49UASvL3v6wXjq6ssP7hkovMbkJ7DII73HQRIC3GSDVxsEjcASighdhgsS0bDnOC49z9V9oWNyBaOajS/71+8xv2S0yxkct3Atsb900PSRKAAUg7UeWZT4FSsk7pK+fY79zuYqV+mXfPjpeKPuT9vEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HhvCEONQ; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1784925217; c=relaxed/simple;
+	bh=br95Se9rDFmKXXxrvhp0Grrr61ZBeG24/7gmFfXUuk4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=anLOOO0SzNjAWuZnX5gwshuCsstyIOUdelSBN3lOvfsKrtanijpGv90lhQU2AfmkwS2esByjiqODMnzGeFI5IWIADc5n+IjBjiiKhXuQWPCNsjHHUiMv8HFRbO46ThG3KUOl51IrvlLypT/O/a0pZs+wkFyw0QeBXdFDbNMGZwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YMiXu65d; arc=none smtp.client-ip=209.85.216.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HhvCEONQ"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2cad8076b01so9766945ad.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 13:33:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YMiXu65d"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-38deea72eebso986518a91.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 13:33:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784925214; x=1785530014; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=PqO55og8W7BHslOf6Z0mSPTkO0lYXWtdruA0wlaytcE=;
-        b=HhvCEONQHnbIk9gAobdXUbHrILlYRqwWyrmFpksA4NKb2I2Ypq+I3tLjDNNoTmMKTR
-         zDqfbde5wRJYLSzH24C5kf1ehUGdPWFgDmDgYG/zx5f8o4IQIVXFevQ0zVePJERJDF4e
-         DsMr+w9PoldTPeSjU2T3TekW6O8634sDOGHxbimEioNJvYufFK0yEDPy8vpYHwXCSPsR
-         W4xLpD11E1rN0lXc6khhL5rYIG7ihddup/eSAC6lQ/iCGyx5jjii35WjKYNk6tISl53Q
-         2kVCPpahTCFFEO/JAbZo25wQHFlXvNvg+BOML3MYprNjlzEr3O1KShEOET/oM6zPR7i9
-         h1Ow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784925214; x=1785530014;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1784925216; x=1785530016; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=PqO55og8W7BHslOf6Z0mSPTkO0lYXWtdruA0wlaytcE=;
-        b=c2V3bmJwURiflNHUjBy2roWhBRyQTdlTvqt5kgihIVgR48uOOFKlh6U0HG8cwJENI6
-         WnAZpeOOFOPz6FrtRH2r0wP2Izg9BcHiQ550C1Pa/UaSOmYcwXQhSPTqHzlPSR9Q2Y3w
-         6OhDQdDZvKqx6z1WQtgPualGqPRopMAiTK9wa1FndJNgC3TLxEDXd7v0d0QTwrGOI5HV
-         4tSWZMB/gQNoofDiIqLfUtJBlyNHRP4iobbt3tqXM6SUcPvdMjrDpk9WXnAkm1c5XQd8
-         0DIQjDRl5s8Pzod616IoJjYaKL6oC19IJ3UITYjy8ITlSf2wNKdZZ/q1mpLbL82P7glf
-         zOyw==
-X-Forwarded-Encrypted: i=1; AHgh+RqtVy2yB7DjTvYuADgsGrsMAHykKE8NKvv4qMjgO4woM92vFJxYdKjKb3LBlCb75OxvOJAP4QEaf82vueyAaQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZ+8p1zXDau9WIMp9YQAXbH/dh0utWgIGrWgXd1+S2taIPDk0L
-	L6oMcWzv3SBbmdgPgDfv0qqvUzPLETXi11laMZ/j8+xSBTjLSyG8x3xN
-X-Gm-Gg: AR+sD13sE++KSTsPvYOsdaAUJ345RZAUKLUKSfi0/8iL4uIMuXWx763h5WuxBI+09P7
-	t+/f1gttvkloGmDcSHZc4fBkJAKfCDQArJuyUyLwF3VYlAZuEumg+y6fMDcamuLi9Z+4sOmqCKA
-	SKMe9B9Fg4ALKtWTfrCS2MOUmBFGKzbKOFZXTHKmWcP8jpTviuNEvKk0Tde+2A8zrRBvlG2HuPq
-	nc0/fjjbG7s9343K1CMFAR7Y3JVGmedWrq54+wL1J60Qpb+ZGinSr1FITdXk4YInh+Otr+iLG6K
-	9flmhlBJGVqSiXZQWUgc0bYsQUg6RqtTAbTHey6V0uMpRTFctWm19N3lNkscRPfd6BiaUafEQik
-	lUDcThSRd/OEPxXTL18wL/QNEDpp2rr9uR2HAgFRkP7sksfCPv0UIC6x159hqSWBgbOdL4WbHew
-	vcfGGzsSCOvuVkXLTxJAY5oJXX8+sBEwomGZdbIxPpkI4Xjz70QeE=
-X-Received: by 2002:a17:90a:c890:b0:38e:dc4:3fbb with SMTP id 98e67ed59e1d1-38ec68982femr8118870a91.43.1784925213668;
-        Fri, 24 Jul 2026 13:33:33 -0700 (PDT)
+        bh=+jM4hsjMFOnRF0dUppd0CYr7puRKriRYBY16Q14Jrnk=;
+        b=YMiXu65d5km0xFkJxYjriFiA7jJWAB6uHGOW6DKHx7jN0qR0UMXnW+sln6weoO/cKY
+         0lS0WYBdu5wVJRG4QxyxWTOLrDIU0ZtXXvt0VbDCeLH7IGFrmR9d76iCr4rADRFWpacM
+         3sde/ceikl4DWrISyrDt0C+4MIMe33JaHprVrgBu1biVpODA3uWwN7hcZCqHs1DJw5jO
+         XWcBGUGmn72q5vpJZYFRiSXh1j9GFJl3VfA1+0KMkSf9/N92S08DdBv+269mom16k4Lc
+         gyISbeRQgs7bsPmdVmd9P0DFSdrtb7QY0JJs3sz0iHgE66ZNLbGYWpNVnpbdhJfBEtuH
+         KbBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784925216; x=1785530016;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+jM4hsjMFOnRF0dUppd0CYr7puRKriRYBY16Q14Jrnk=;
+        b=ALylUH5QktXBhm5ETghfKnIzGBXn3Jjxb4gEOMwbd32bJc/503ToJRLcTw3jZTcohG
+         +6CZE8CUdkV4i81sCK+FlzIzGp3Hcqph6ojFGfekBh5c7f5ARQg0zmcHV/cTpDqeiIbp
+         dJmDSGJCvwS6gS8IYMh0Ja0Pb0hCXH2Bz3Vy0UobQ79YW9sdYxXxSbvMLdJ2J0ysNC4g
+         6i+QjqX6ThNvYrThzxFjWQjl1FUOp/N0jNBn3pp15hNhHqQtHTjJnZaHRK1PbXy7MDFR
+         emDC6Mw5m8z7mgth+k2ST+TKvMtPYJZjbUur/0Q6Ki/m7RSrZvsGXb6HOJvrDmn/cRlK
+         lYog==
+X-Forwarded-Encrypted: i=1; AHgh+Rp6lyot9ynJkiAahJ8myYC08R5zOnrfwnVbJ8USZvVr8RodYqZtBPmWKafBYpf6iZ4YCcZo6+aRpmsonftI8Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw2CQLjyP+ftoKFoCmqSOaouhQjww+XG0H8FCLJt2u6B1PkHpw0
+	Oo8/zIGNmmIYAAxS7KWyFf+4SJ5BQE0X17Pgmu4BGChEqvEdLJt8Zc6v
+X-Gm-Gg: AR+sD13VZLGB69kCTZPFXS/FggtU87uyIaqWUf5AOK3d43UtwQV2kbWom1u7ne13J7p
+	qfKCRyatc/4OlLgbzSN0btm/QzqY1aF6DXClrfbX7DNQblgFtFL1km2Ym63OyiecKwskj1CzmIv
+	y4n8MwqDRNWgFRpm8ND7fb3eM7CJrp2JwcTQqgkhKdfnQSC2+JATJYMwfGMdEiFWjFLkcN0+eDH
+	EIED7P3g2098aMlBYGmIc4F+MAX7aCKULh5O4amdzvsuwYnRM8V1/z6HrfeBe6fOwNRp8fKhTJ5
+	G+8Z5KJ1sTpjrK5+DbRbVMt/6p5VI8zWBoptC3xV8eaCbsUZxoXBiO2rUHGzwoslhPmzzZ7hvDu
+	vwG6bWnXq5XQrWwKAKsA88jHMijInaUuOSGACgeCTcWOrcV37CwVc1T/PlYUszaYXJ5SNy4Tg9U
+	1UnJup5bmXkhTSz/RATfXVjMHBveaE2qjDQH+sF2MKniTi3AZnCDMh/+HiUCfq5A==
+X-Received: by 2002:a17:90b:35ce:b0:37f:9ce1:cdb1 with SMTP id 98e67ed59e1d1-38ec65ae0eemr8221526a91.31.1784925215814;
+        Fri, 24 Jul 2026 13:33:35 -0700 (PDT)
 Received: from fabio-X870-EAGLE-WIFI7.. ([2804:1b3:a801:60b4:ddf8:a4ba:150b:5c93])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13003f12sm48918684c88.2.2026.07.24.13.33.31
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13003f12sm48918684c88.2.2026.07.24.13.33.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jul 2026 13:33:32 -0700 (PDT)
+        Fri, 24 Jul 2026 13:33:35 -0700 (PDT)
 From: Fabio Estevam <festevam@gmail.com>
 To: johannes.berg@intel.com
 Cc: briannorris@chromium.org,
 	francesco@dolcini.it,
 	linux-wireless@vger.kernel.org,
-	Fabio Estevam <festevam@nabladev.com>,
-	stable@vger.kernel.org
-Subject: [PATCH 1/2] wifi: mwifiex: Detach sync cmd buffer on interrupted wait
-Date: Fri, 24 Jul 2026 17:33:19 -0300
-Message-ID: <20260724203320.78793-1-festevam@gmail.com>
+	Fabio Estevam <festevam@nabladev.com>
+Subject: [PATCH 2/2] wifi: mwifiex: Remove WQ_HIGHPRI from main workqueue
+Date: Fri, 24 Jul 2026 17:33:20 -0300
+Message-ID: <20260724203320.78793-2-festevam@gmail.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260724203320.78793-1-festevam@gmail.com>
+References: <20260724203320.78793-1-festevam@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -77,79 +80,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Fabio Estevam <festevam@nabladev.com>
 
-mwifiex synchronous commands keep the caller-provided data buffer in
-cmd_node->data_buf. Several callers pass stack-allocated objects there.
+The MWIFIEX_WORK_QUEUE handles command and event processing, including
+the commands used for scheduled scans.
 
-If wait_event_interruptible_timeout() is interrupted, the caller can
-return and release that stack object while the firmware command is still
-the current command. A late firmware response then reaches the normal
-response handler, which can copy data through cmd_node->data_buf into the
-stale stack address.
+Running this work on the high-priority worker pool can interfere with
+latency-sensitive workloads. On an i.MX8MP-based audio system using an
+88W8997, background scheduled scans caused audible glitches in USB
+audio playback.
 
-This fixes a stack corruption observed during repeated association and
-disassociation cycles. The panic trace showed the command wait being
-interrupted immediately before a bad pointer dereference:
+Remove WQ_HIGHPRI from the main workqueue so that command and scan
+processing use the normal-priority worker pool.
 
-  cmd_wait_q terminated: -512
-  Unable to handle kernel paging request at virtual address 002c583837384662
-  Kernel panic - not syncing: stack-protector: Kernel stack is corrupted
-  ...
-  Tainted: [M]=MACHINE_CHECK
+Leave the RX and host MLME workqueues unchanged.
 
-The fault address decodes as little-endian ASCII:
-
-  0x002c583837384662 -> "bF878X,\0"
-
-which is a fragment of the VERSION_EXT firmware string exposed as
-debugfs "verext":
-
-  w8997o-V4, RF878X, FP92, 16.92.21.p153.7
-
-The same runs also showed corrupted control data containing:
-
-  0x2400372e333531 -> "153.7\0$"
-
-which is the tail of the same VERSION_EXT string. This points at a late
-VERSION_EXT response writing through a stale stack-backed data_buf after
-the interrupted wait returned.
-
-After cancelling pending commands on an interrupted or timed-out wait,
-detach the caller-owned data buffer from the still-current command. This
-preserves the existing command cancellation behaviour while preventing a
-late response from writing through a pointer whose lifetime ended with the
-waiting caller.
-
-Tested on an i.MX8MP board using an 88W8997.
-
-Cc: stable@vger.kernel.org
-Fixes: 3d026d09b28d ("mwifiex: cancel pending commands for signal")
 Signed-off-by: Fabio Estevam <festevam@nabladev.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 9460d5352b23..19196848778c 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -57,6 +57,18 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter,
- 		mwifiex_dbg(adapter, ERROR, "cmd_wait_q terminated: %d\n",
- 			    status);
- 		mwifiex_cancel_all_pending_cmd(adapter);
-+
-+		/* The command response path writes through cmd_node->data_buf.
-+		 * On an interrupted wait, the caller can return and release a
-+		 * stack-allocated data_buf before a late firmware response is
-+		 * processed. Detach the caller-owned buffer from the current
-+		 * command so a late response cannot corrupt freed stack memory.
-+		 */
-+		spin_lock_bh(&adapter->mwifiex_cmd_lock);
-+		if (adapter->curr_cmd == cmd_queued)
-+			adapter->curr_cmd->data_buf = NULL;
-+		spin_unlock_bh(&adapter->mwifiex_cmd_lock);
-+
- 		return status;
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index a8eab6b1e63b..c8df3edff675 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1550,7 +1550,7 @@ mwifiex_reinit_sw(struct mwifiex_adapter *adapter)
+ 
+ 	adapter->workqueue =
+ 		alloc_workqueue("MWIFIEX_WORK_QUEUE",
+-				WQ_HIGHPRI | WQ_MEM_RECLAIM | WQ_UNBOUND, 0);
++				WQ_MEM_RECLAIM | WQ_UNBOUND, 0);
+ 	if (!adapter->workqueue)
+ 		goto err_kmalloc;
+ 
+@@ -1716,7 +1716,7 @@ mwifiex_add_card(void *card, struct completion *fw_done,
+ 
+ 	adapter->workqueue =
+ 		alloc_workqueue("MWIFIEX_WORK_QUEUE",
+-				WQ_HIGHPRI | WQ_MEM_RECLAIM | WQ_UNBOUND, 0);
++				WQ_MEM_RECLAIM | WQ_UNBOUND, 0);
+ 	if (!adapter->workqueue)
+ 		goto err_kmalloc;
  
 -- 
 2.43.0
