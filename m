@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0AAD4334C0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 500834334A8
 	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 12:48:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784897305; cv=none; b=YQaJRyHtXupCjBgD1yrsd4JpVPF/0VJ/ybVrPMpLnpzbpH+MtH5i+kwPsD1m+GoUVzOzI6AaIWXy2bMTP7D07FdfYAz9EUkxxuKQYTvnl6F7hPFTGhY9eFwlqztclRQ3WbICd0k45OiTdBHJvzBy5tlWDiu7jWZ+eGBJPzo6l1M=
+	t=1784897305; cv=none; b=EbhzRgMrLxM9xi3dnN11TZp1tuu2ooeZfwv9bUpwwpDxfJ39stRf2C2oGQB525VmLCp/AyjzX/7Ydc//deveX2lYCLacUI/on8683ogFJf6YMmBzFDm3TxbC25g850OdVBgopPbUa9Asyj/aXPyjHohbwIkZAXhrRSxiwiIWw5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1784897305; c=relaxed/simple;
-	bh=N/prlXJb8iYiwH0x0/vT0MxEb1qlaPQJB/KPA0YrxTk=;
+	bh=cPMJgyqFjz2W4k4+dvq02fyY1kbL1fWYvyU5MKdFhXs=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=RQWV86nUS6saHvnFXfaNQo0wCYyrYcTdPai/zwEn8nTBBzSd9BX3pj7lx2kTGomu4F4mRoY8jnNqew8CsF+IFSheRESUXxQe9wZHe/VZIPlDJAULwAvRrHN5VBfBn4071WqI+s6SFLQwGdEQX47XNNKCKzYp8erSslMhvPEAnnw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=VZpuxTJd; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=SxEmTfmdHoWf++Ww9XPPhNJ+XnlQtlSINNqjCDuvgZIot4NrL6qBhs86GF9bAbSzGMNOf7u4c7QrTyBvk6+G9B87bCov7+DO83KQxYmo3ZmDx0QFcBDVASlyL4wtOL8V173QfuWlsWKf8bTh3z0KU/D0MU1L0Fyxsbb6Qzo5dzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=oMHUpVf4; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VZpuxTJd"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="oMHUpVf4"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=g70GMcEVKgW5LY1ZTG/2+PacJHNySek/l97g0db/08Y=; b=VZpuxTJdqalnGhszpPwPLYaTOa
-	1qMom8+dRktPuj62iZ+ol71oVsvJEHuAjkxlnmmb3/f1wbmF46Mw6Lh+LrhQqWKUB6+edjgJIwroK
-	c7Jh2CU0PQ0XXH4c8Cft1O5vAiSbwZUb1tpC8T2iYB8TZy8laJLfAsxJa73H6ZXA9osc=;
+	bh=Sdoe+b70ZEAzkysu7mAcgHN0BiRzqtBd851gY98Xxss=; b=oMHUpVf4MSBaQbtQjn9KVZbwqN
+	pjMNv4fHowSumA9RJzT/vAvP5jXC5j+iD8/+2+AOJIMwUWxJL2Au+mvc2760bn3IkfIBOWWO/ta4l
+	y3PBoObpAcN11yWpMw8LK5Hkkwc67K/swVYX1UoH7qAuLVsjS6q/ItUe1lsgXZJIdfNE=;
 Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1wnFK8-006LeO-25
+	id 1wnFK8-006LeO-1Y
 	for linux-wireless@vger.kernel.org;
 	Fri, 24 Jul 2026 14:48:20 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-next 27/29] wifi: mt76: set MT76_SCANNING when starting a hw scan
-Date: Fri, 24 Jul 2026 12:48:11 +0000
-Message-ID: <20260724124813.3961474-27-nbd@nbd.name>
+Subject: [PATCH mt76-next 26/29] wifi: mt76: mt7996: clear stale link state on full reset
+Date: Fri, 24 Jul 2026 12:48:10 +0000
+Message-ID: <20260724124813.3961474-26-nbd@nbd.name>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260724124813.3961474-1-nbd@nbd.name>
 References: <20260724124813.3961474-1-nbd@nbd.name>
@@ -48,60 +48,50 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The scan state bit is cleared by mt76_scan_complete(), but nothing ever
-sets it: mt76_sw_scan() is only called for drivers without hw scan
-support. As a result, all MT76_SCANNING checks are inert for drivers
-using mt76_hw_scan(), including the DFS state handling in
-mt76_phy_dfs_state() and the guard against manually triggered radar
-detection while scanning.
+After a full chip reset, mac80211 reconfig replays interface, link and
+channel context setup. mt7996_vif_link_add() short-circuits when the
+link_id is still marked in mvif->valid_links, a state introduced for
+postponing link teardown to interface removal. The reset path frees the
+link structures without clearing those bits, so the replayed setup never
+re-creates dev_info/bss_info/STA records in the restarted firmware and
+never re-registers the link wcid, leaving the device inoperative.
 
-Set the bit when the scan request is accepted. Since every channel
-programmed while scanning now evaluates the DFS state as disabled and
-stops the radar detector, re-program the operating channel at scan
-completion regardless of the off-channel state, after the scanning bit
-has been cleared. Otherwise a scan whose last visited channel was the
-operating channel, or one that returned to it early because of
-associated stations, would leave radar detection stopped until the
-next channel switch.
+The reset path also leaks every allocated MLD index: per-link indices
+and the per-vif group/remap indices are re-allocated from scratch during
+reconfig, but the old bits stay set in the masks, so repeated full
+resets exhaust the index space.
 
-Fixes: 31083e38548f ("wifi: mt76: add code for emulating hardware scanning")
+Clear valid_links in the reset vif iterator and reset the MLD index
+masks alongside the existing omac_mask clearing.
+
+Fixes: ace5d3b6b49e ("wifi: mt76: mt7996: improve hardware restart reliability")
+Fixes: 08813703ac41 ("wifi: mt76: mt7996: Destroy vif active links in mt7996_remove_interface()")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/scan.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index 325638d587c9..3cb11689d4bf 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -16,10 +16,17 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
- 
- 	clear_bit(MT76_SCANNING, &phy->state);
- 
--	if (dev->scan.chan && phy->main_chandef.chan && phy->offchannel &&
-+	/* Re-program the operating channel even when the scan never left it:
-+	 * any channel set during the scan ran with MT76_SCANNING held, which
-+	 * left DFS radar detection disabled
-+	 */
-+	if (phy->main_chandef.chan &&
- 	    !test_bit(MT76_MCU_RESET, &dev->phy.state)) {
-+		bool offchannel = phy->offchannel;
-+
- 		mt76_set_channel(phy, &phy->main_chandef, false);
--		mt76_offchannel_notify(phy, false);
-+		if (offchannel)
-+			mt76_offchannel_notify(phy, false);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+index ce8c5a5ea8cc..4794dacb3756 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mac.c
+@@ -2449,6 +2449,7 @@ mt7996_mac_reset_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		rcu_assign_pointer(mvif->link[i], NULL);
+ 		kfree_rcu(mlink, rcu_head);
  	}
- 	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
- 	memset(&dev->scan, 0, sizeof(dev->scan));
-@@ -211,6 +218,7 @@ int mt76_hw_scan(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	dev->scan.vif = vif;
- 	dev->scan.phy = phy;
- 	dev->scan.mlink = mlink;
-+	set_bit(MT76_SCANNING, &phy->state);
- 	ieee80211_queue_delayed_work(dev->phy.hw, &dev->scan_work, 0);
++	mvif->valid_links = 0;
+ 	rcu_read_unlock();
+ }
  
- out:
+@@ -2483,6 +2484,8 @@ mt7996_mac_full_reset(struct mt7996_dev *dev)
+ 
+ 	mt7996_for_each_phy(dev, phy)
+ 		phy->omac_mask = 0;
++	dev->mld_idx_mask = 0;
++	dev->mld_remap_idx_mask = 0;
+ 
+ 	ieee80211_iterate_stations_atomic(hw, mt7996_mac_reset_sta_iter, dev);
+ 	mt76_reset_device(&dev->mt76);
 -- 
 2.53.0
 
