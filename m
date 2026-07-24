@@ -1,170 +1,194 @@
-Received: from mail-oa1-f80.google.com (mail-oa1-f80.google.com [209.85.160.80])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06739361950
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 21:56:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A58939A4AA
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 22:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784930208; cv=none; b=uws/wr1YY86SLL4Pqm4v0h49lSoE3L9TTglDGrfH5gGPG22/fdLab1MKgrzPimbhEfyrSjevCa0FmzYNbSG22Zkp4VGtN/8lQsrnMgk9X6QVDgx93NWs7o7bcSW5Uq27j+8usY1vKVlTKZ7RAf0B4qbVdor1OU7Vct1SgPtKYGs=
+	t=1784931044; cv=none; b=iuyndDiNPnkHV/nYNCKbvqnGzcmkAM9EFxjSdmQ5RpXWMINcCXBixdzEEhzXAAp36DkcdvHYFyo2b539DnDyghC/hpkZM5xvtxn37wpwH1jW9l5a3jeNv+RsVuNLVCSSl17iUpm1Q7fu09al4aI0LiIv0L6ZXSB75crynqRpn94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784930208; c=relaxed/simple;
-	bh=4c1v2gKPJxoxMfqQsm1l2KpljohrD/R5BLwT+y9B9P0=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=t+Yx35IzPNc2kHs1IwKF00xooLvd/yY4lbOgSI+ZF3CLXLOBIgKvD5fwiUSkX8aMvFS4AycSifnHnh+fAOSVoQDxdyOrBuLy5pRiD4vxkJrk3owSuQpNkm6+TJxTi+3iMgpV/shi8UyyScHreE4xGc0+52A6RmsbePmWxfmr9js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa1-f80.google.com with SMTP id 586e51a60fabf-44d0960fb5bso347096fac.2
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 14:56:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784930199; x=1785534999;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+	s=arc-20240116; t=1784931044; c=relaxed/simple;
+	bh=ohOFeJY9h8tDcp37kno3adSeq/OhevTE33FpGFOFAyY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KTbPNiDPyjYdGo+EBb1mhaoVjk615utsll0bOXEAiHijHcL5fPqOmA9UIab9DIcE/uruqGJy4t5azcpQBIbkRkL24olVLoyMD1Zp5MoO31TlgJOH+PlCjNl7YLsLkWEpUWOb5jaCDtO2e42az7S7p9eMHCAo+KoeU+j0IKxzpWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C+n1X9HC; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+n1X9HC"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-47c6e9a694bso615093f8f.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 15:10:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1784931036; x=1785535836; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=QjVWOREysRIlXu+WlAK/dydMJtIiJmW7TsOBc9IpceY=;
-        b=iti5uKHOEwUWX1Sq2B1jDwSTX27kIlMCPp8zVFmtHYb1jDCWtesd50Zdv8NtBgPrWY
-         RSEGYhe8KgyEbH3dNPhK8iyrzRCVGCkuOKmQziC+vEebq3cqD+Og5B9dP7RB0/UlbwaG
-         I/ZRgkSFT4mlaKvsYejzneCBy+suGFElgPbUPMawaOyrRvA97qRXUA7VKin4B00gKjGq
-         Q2cqp+B2fe9EDKnH4R4TeAfqin0syGjlPUbzfWKqHrAzx1nVAxsHasqmvwtSvKcOBdxg
-         sWasArQRDoj1T2XVP+BiBf8KLNN4s2fFSllh8riXAWfGdQ0eotZ4n6ce2lBskgcq0j+I
-         YSUw==
-X-Forwarded-Encrypted: i=1; AHgh+RoIW30mAiJ/SkFTC8Q8kVW1fuA5e66n0anDts105tIFxUk/7mV6uCyR0ocoD4jpKxZ4PLPF6O2jx69PLFS36g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzles0W7xRTQIfkgLo02wNUiRuY1s3dSrPy/zO48/JQlYv6DHxZ
-	ZdRISwe7CvyDRRuCyYtCTXnAjUBPrcJAE/abo9m6C4gzX6FU6SP52R4n77FdYab3v08yukxyMrG
-	ogbwk0HiSNs9WsQVbYrqCLaH+zmPQusZpOP9WTfLrAkeE8VQo57APE5prqQw=
+        bh=Yqs4jWXpQot2YwX9w73crNB1xIUPmIM/U3nv5DCazug=;
+        b=C+n1X9HColJEuDWeuhjjmkMtj5DqBilLJ17qP40+5Ug5Mpnw/CAqfuXJLJq1v/Ef2k
+         KFVe2Az5SM2lzCoxXq+fmxvpAx57ny6d9FAt2A1kHHn23h5ZOA78s6GFTiOzXnMR+r79
+         OaRu49TZ2CjBnZZXXEYAPM8ZwZKFEbQAq163WLWTA0pFEHJpgPwRaIX5nh5mMFNOrjZt
+         Env5XLBKnE8FDCuwwbhCvIxFhFTSCGay2NLb/5l2foKu6n1/JazPyDFjA6YaZqHaugtH
+         MwDfQcl87g1Y7us3ZcIFF7lMM5SRj0JXkJT/dMGoFGuIu2Yxr/0NQb+6/6hMMdB8Lt2C
+         4OoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1784931036; x=1785535836;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Yqs4jWXpQot2YwX9w73crNB1xIUPmIM/U3nv5DCazug=;
+        b=B4dDuItIfwdlrVpnUahGY/+1fZD3cfB22YS1FMXXFxsKByOWfXQ0MBOFxcaRjqno3B
+         FR65dFE5n4ZAn7qCYOu+pXus/xvLJdDS0htmE0/M2kErVS530a+qkd8to01F2xPeqYI6
+         SCyBSMRNeY2tyBsFctS5GaSX0IGbIJdqG9olPEcZzGTHJ4XPniS3gixZTscrFSaowWLi
+         1Fzw5mbup8hGHOcJCdAUVjPzx+YajTgtTHJmJqFxo4ry208slGi2PEebBPzBFuymCQGy
+         DA7jpeKvmnEhefg8aeFFJk6kseJ+LJXO3FWX7D2zkUxaCT0PXb3XGalCMSivTn4iGA1e
+         fc+w==
+X-Gm-Message-State: AOJu0YzFFX3qItBxu1A3mtzv5CGPUDoMjajJb88mKtWIVRH2Zl9yzNNu
+	IR1ccR9aT21yeR0tpdeY+okPgiGH4I97F3w5munWF0CiU1M6FZHJuvkA
+X-Gm-Gg: AR+sD12nL7GTs3FfH+O8LaiU8ojJJeSXprZlU+tsJ/UdEVL5v+01EBkeuhmQUtBFD+U
+	BCHl1mK8h3Qv3JzioIiU4SNXI9tmMLkR/go5wokOKthiZamm0BFC/myZ0dvGpkoGPLXxBLWHRv9
+	Dgy4m+QYsItn7E6ipNVvmUgJMMWvSpO5JtMkLkZR2fMVfIA4p08vMSS69LJlhDeuyRAF0nwliN1
+	cXUH/Y5YHoNpfbueX3iWCuxZND3uqctBjOH+BCVu/UZlKgY2xvUH56vGo9dFH6d8i7FEMSJpgvt
+	DsX6bNzh7sy1NBRJMqMO6dway0zfXEu4JIjzQHB//EOzS4m34rXszwMpXSch64fQHShz9+5JNIs
+	z/t7l9BcgFbrGO+e7G7X4SVBx2TJBo7AaCvTilqvf4ex8p9eTBeRuNdC5od9cOmxhQP5exGFCZA
+	yGyN6jFuBZ
+X-Received: by 2002:a05:600c:c177:b0:495:4056:9473 with SMTP id 5b1f17b1804b1-496b5754455mr1076615e9.28.1784931036095;
+        Fri, 24 Jul 2026 15:10:36 -0700 (PDT)
+Received: from [192.168.1.50] ([79.118.68.61])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4d8d6efsm18832335e9.0.2026.07.24.15.10.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 24 Jul 2026 15:10:35 -0700 (PDT)
+Message-ID: <fe9a4df1-1ea9-44b6-8f98-10130d37e55c@gmail.com>
+Date: Sat, 25 Jul 2026 01:10:32 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:6b47:b0:492:9376:433a with SMTP id
- 5614622812f47-4ab6a1866c8mr239316b6e.37.1784930199449; Fri, 24 Jul 2026
- 14:56:39 -0700 (PDT)
-Date: Fri, 24 Jul 2026 14:56:39 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a63df97.a2ea2cc8.fbad6.000a.GAE@google.com>
-Subject: [syzbot] [wireless?] WARNING in nl80211_set_tx_bitrate_mask
-From: syzbot <syzbot+dcaca020ca8377e7ced0@syzkaller.appspotmail.com>
-To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 18/19] wifi: rtw88: match the RTL8723BS firmware connect
+ and power save behaviour
+To: luka.gejak@linux.dev, Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Michael Straube <straube.linux@gmail.com>,
+ Peter Robinson <pbrobinson@gmail.com>
+References: <20260724181858.192903-1-luka.gejak@linux.dev>
+ <20260724183314.197195-1-luka.gejak@linux.dev>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <20260724183314.197195-1-luka.gejak@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello,
+On 24/07/2026 21:33, luka.gejak@linux.dev wrote:
+> From: Luka Gejak <luka.gejak@linux.dev>
+> 
+> The vendor firmware expects the connect media status report at
+> association completion rather than when the station is added, so defer
+> it until the station is actually associated and track whether it was
+> sent, so the disconnect report is only sent to undo one that was.
 
-syzbot found the following issue on:
+Does the firmware really care? What happens if you don't do all that?
 
-HEAD commit:    e13caf1c2658 Merge tag 'net-7.2-rc4' of git://git.kernel.o..
-git tree:       net
-console output: https://syzkaller.appspot.com/x/log.txt?x=12e732b9580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5c4196ba0e33631d
-dashboard link: https://syzkaller.appspot.com/bug?extid=dcaca020ca8377e7ced0
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+> 
+> Leaving LPS also costs enough per-packet latency on this chip to
+> throttle bursty traffic badly, and the stock check enters LPS after a
+> single quiet two second window that an ordinary session hits
+> constantly. Gate LPS on the smoothed throughput for this chip so it
+> only sleeps after sustained idle. Other chips keep the existing
+> behaviour.
+> 
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> ---
+>  drivers/net/wireless/realtek/rtw88/main.c | 47 ++++++++++++++++++++++-
+>  1 file changed, 45 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+> index a2ef4479f408..63d1fb4bc87e 100644
+> --- a/drivers/net/wireless/realtek/rtw88/main.c
+> +++ b/drivers/net/wireless/realtek/rtw88/main.c
+> @@ -304,6 +304,25 @@ static void rtw_sw_beacon_loss_check(struct rtw_dev *rtwdev,
+>  /* process TX/RX statistics periodically for hardware,
+>   * the information helps hardware to enhance performance
+>   */
+> +static bool rtw8723bs_station_media_status(struct rtw_dev *rtwdev,
+> +					   struct ieee80211_sta *sta,
+> +					   struct ieee80211_vif *vif)
+> +{
+> +	return rtw_is_8723bs(rtwdev) &&
+> +	       vif->type == NL80211_IFTYPE_STATION && !sta->tdls;
+> +}
+> +
+> +/* 8723BS SDIO: defer the connect MEDIA_STATUS_RPT until the STA is actually
+> + * associated (the vendor firmware sends it at assoc completion, not sta-add).
+> + */
+> +static bool rtw8723bs_defer_sta_media_status(struct rtw_dev *rtwdev,
+> +					     struct ieee80211_sta *sta,
+> +					     struct ieee80211_vif *vif)
+> +{
+> +	return rtw8723bs_station_media_status(rtwdev, sta, vif) &&
+> +	       !vif->cfg.assoc;
+> +}
+> +
+>  static void rtw_watch_dog_work(struct work_struct *work)
+>  {
+>  	struct rtw_dev *rtwdev = container_of(work, struct rtw_dev,
+> @@ -382,6 +401,17 @@ static void rtw_watch_dog_work(struct work_struct *work)
+>  	 * get that vif and check if device is having traffic more than the
+>  	 * threshold.
+>  	 */
+> +	/* On 8723BS SDIO the firmware's per-packet wake latency out of LPS
+> +	 * throttles bursty traffic hard. The stock check enters LPS after a
+> +	 * single quiet 2s window, which a normal bursty session hits
+> +	 * constantly. Gate LPS on the smoothed throughput instead so the chip
+> +	 * only sleeps after sustained idle and stays awake through an active
+> +	 * session. Other chips keep the normal behaviour.
+> +	 */
+> +	if (rtw_is_8723bs(rtwdev) &&
+> +	    (stats->tx_throughput || stats->rx_throughput))
+> +		ps_active = true;
+> +
+>  	if (rtwdev->ps_enabled && data.rtwvif && !ps_active &&
+>  	    !rtwdev->beacon_loss && !rtwdev->ap_active)
+>  		rtw_enter_lps(rtwdev, data.rtwvif->port);
+> @@ -450,7 +480,13 @@ int rtw_sta_add(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
+>  	INIT_WORK(&si->rc_work, rtw_sta_rc_work);
+>  
+>  	rtw_update_sta_info(rtwdev, si, true);
+> -	rtw_fw_media_status_report(rtwdev, si->mac_id, true);
+> +	if (rtw8723bs_defer_sta_media_status(rtwdev, sta, vif)) {
+> +		rtwvif->fw_media_connected = false;
+> +	} else {
+> +		rtw_fw_media_status_report(rtwdev, si->mac_id, true);
+> +		if (rtw8723bs_station_media_status(rtwdev, sta, vif))
+> +			rtwvif->fw_media_connected = true;
+> +	}
+>  
+>  	rtwdev->sta_cnt++;
+>  	rtwdev->beacon_loss = false;
+> @@ -465,14 +501,21 @@ void rtw_sta_remove(struct rtw_dev *rtwdev, struct ieee80211_sta *sta,
+>  {
+>  	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
+>  	struct ieee80211_vif *vif = si->vif;
+> +	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+>  	int i;
+>  
+>  	cancel_work_sync(&si->rc_work);
+>  
+>  	if (vif->type != NL80211_IFTYPE_STATION || sta->tdls)
+>  		rtw_release_macid(rtwdev, si->mac_id);
+> -	if (fw_exist)
+> +	if (fw_exist && rtw8723bs_station_media_status(rtwdev, sta, vif) &&
+> +	    !rtwvif->fw_media_connected) {
+> +		/* connect status was deferred and never sent; nothing to undo */
+> +	} else if (fw_exist) {
+>  		rtw_fw_media_status_report(rtwdev, si->mac_id, false);
+> +		if (rtw8723bs_station_media_status(rtwdev, sta, vif))
+> +			rtwvif->fw_media_connected = false;
+> +	}
+>  
+>  	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
+>  		rtw_txq_cleanup(rtwdev, sta->txq[i]);
 
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/b71ec6e89047/disk-e13caf1c.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/e865a2cae4e9/vmlinux-e13caf1c.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/1cd52838b32f/bzImage-e13caf1c.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+dcaca020ca8377e7ced0@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-wlan0: Failed check-sdata-in-driver check, flags: 0x0
-WARNING: net/mac80211/driver-ops.h:884 at drv_set_bitrate_mask net/mac80211/driver-ops.h:884 [inline], CPU#0: syz.3.1244/10657
-WARNING: net/mac80211/driver-ops.h:884 at ieee80211_set_bitrate_mask+0x1034/0x1320 net/mac80211/cfg.c:4131, CPU#0: syz.3.1244/10657
-Modules linked in:
-CPU: 0 UID: 0 PID: 10657 Comm: syz.3.1244 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 06/25/2026
-RIP: 0010:drv_set_bitrate_mask net/mac80211/driver-ops.h:884 [inline]
-RIP: 0010:ieee80211_set_bitrate_mask+0x1084/0x1320 net/mac80211/cfg.c:4131
-Code: 20 01 00 00 48 85 c0 49 0f 44 ee 48 b8 00 00 00 00 00 fc ff df 0f b6 04 03 84 c0 0f 85 3b 01 00 00 41 8b 17 4c 89 ef 48 89 ee <67> 48 0f b9 3a e9 c3 fd ff ff e8 fd a2 82 f6 90 0f 0b 90 e9 41 fe
-RSP: 0018:ffffc90005adeff8 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 1ffff1100ac7fb25 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: ffff8880563fc120 RDI: ffffffff9069bb20
-RBP: ffff8880563fc120 R08: ffff8880527d0faf R09: 1ffff1100a4fa1f5
-R10: dffffc0000000000 R11: ffffed100a4fa1f6 R12: ffff8880527d0740
-R13: ffffffff9069bb20 R14: ffff8880563fd938 R15: ffff8880563fd928
-FS:  00007f230a4956c0(0000) GS:ffff888124f54000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f340e3fe9b0 CR3: 00000000590f6000 CR4: 00000000003526f0
-Call Trace:
- <TASK>
- rdev_set_bitrate_mask net/wireless/rdev-ops.h:683 [inline]
- nl80211_set_tx_bitrate_mask+0x30b/0x4f0 net/wireless/nl80211.c:14541
- genl_family_rcv_msg_doit+0x233/0x340 net/netlink/genetlink.c:1114
- genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
- genl_rcv_msg+0x614/0x7a0 net/netlink/genetlink.c:1209
- netlink_rcv_skb+0x226/0x4a0 net/netlink/af_netlink.c:2556
- genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
- netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
- netlink_unicast+0x7bb/0x940 net/netlink/af_netlink.c:1345
- netlink_sendmsg+0x813/0xb40 net/netlink/af_netlink.c:1900
- sock_sendmsg_nosec+0x13a/0x180 net/socket.c:775
- __sock_sendmsg net/socket.c:790 [inline]
- ____sys_sendmsg+0x54e/0x850 net/socket.c:2684
- ___sys_sendmsg+0x2a5/0x360 net/socket.c:2738
- __sys_sendmsg net/socket.c:2770 [inline]
- __do_sys_sendmsg net/socket.c:2775 [inline]
- __se_sys_sendmsg net/socket.c:2773 [inline]
- __x64_sys_sendmsg+0x1b1/0x290 net/socket.c:2773
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f230959de99
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f230a495028 EFLAGS: 00000246 ORIG_RAX: 000000000000002e
-RAX: ffffffffffffffda RBX: 00007f2309825fa0 RCX: 00007f230959de99
-RDX: 0000000000000000 RSI: 0000200000000280 RDI: 0000000000000005
-RBP: 00007f2309633eaf R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f2309826038 R14: 00007f2309825fa0 R15: 00007ffc28746ce8
- </TASK>
-----------------
-Code disassembly (best guess):
-   0:	20 01                	and    %al,(%rcx)
-   2:	00 00                	add    %al,(%rax)
-   4:	48 85 c0             	test   %rax,%rax
-   7:	49 0f 44 ee          	cmove  %r14,%rbp
-   b:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
-  12:	fc ff df
-  15:	0f b6 04 03          	movzbl (%rbx,%rax,1),%eax
-  19:	84 c0                	test   %al,%al
-  1b:	0f 85 3b 01 00 00    	jne    0x15c
-  21:	41 8b 17             	mov    (%r15),%edx
-  24:	4c 89 ef             	mov    %r13,%rdi
-  27:	48 89 ee             	mov    %rbp,%rsi
-* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
-  2f:	e9 c3 fd ff ff       	jmp    0xfffffdf7
-  34:	e8 fd a2 82 f6       	call   0xf682a336
-  39:	90                   	nop
-  3a:	0f 0b                	ud2
-  3c:	90                   	nop
-  3d:	e9                   	.byte 0xe9
-  3e:	41                   	rex.B
-  3f:	fe                   	.byte 0xfe
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
