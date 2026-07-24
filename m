@@ -1,164 +1,117 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3A4143746C
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 22:53:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF752476CEE;
+	Fri, 24 Jul 2026 23:35:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784933624; cv=none; b=ag51GcM5SplJ1w6F7o5eUcE5wdj4S9tu53PKaiZVEDMPo2eGNVq385grYjZuOw9tq2EcLlQOdBkYEuLDcA7MxgmkKV0wXrZi0Pr9Q18knlxe5zd8rp0vAYrmQSE3+te7eyZvj/2eWMAfFcFRjiSv0DnEWKBNS4/CbCiepptJ0Uw=
+	t=1784936112; cv=none; b=J0KWaa/Munz1//BCYW2eIjIIeNnd1whPFGcvXNYu//CpZtkf4/iPsAuY3kGvjEHlLpCWJsbZbYiD6sAP6agFEyde0Ue97aPr8n3idslwePjXgd6d3Lj2BE2Y/DY6BmGRdDhJswgTB1A9A3ZslJhCTB/2yfx9GLjbwksWwr5o2/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784933624; c=relaxed/simple;
-	bh=G1KRuzLWlppfbpDPfjS3SPYT3SM6HjFCw6jdVoogfOQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mZKwPNWHbNzH/pf83KrZ6b1za8J1ESM2kpSNvuYbeBDw8v47ia0S1etDA0alP8dKsCik1YGNLrtn6TgzP0PlHN4QFC2zE+13PJJPbIOzUa4UVliHYbmV4WPJZ6pVdgJsFpcWFiTWUJThp0foRO4FxUXU0E7hmbrwTZbUL7zs9gY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UNLMWoUr; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UNLMWoUr"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954c0833b4so7499765e9.1
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 15:53:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784933615; x=1785538415; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=J8ldsZEUrwIIl9s0mESXWdsLuqTjjuPFtNa3yxETkTs=;
-        b=UNLMWoUroeBReHCXDRUt8dgyd0iEHkZ8SIwPF+264DvnekWkMJSuxd7ARXB53EHwrw
-         QlcXcAL691qKe+mFmGzo77pLZZyZIF4db3ButbxZ9z675DlpDyxgNXwAx7v4e43/2tuM
-         mWuUuq+n9I32r4D8w4ENJaUfgkhSY7RatYnQ0Js9MEyKr6tvd4+ISfXW/i6f7Rh7DU1y
-         v7BomvL89nvGC3+h2UsAqn1nd1NVfVfkIg/7O2ldBsF0azKvEDSY15cdNB4i26yGNHXN
-         atIoRYHLlXObdSNPdx4RJ4gJ13Cp26/rNXM37aIEZcADxeu1vfyJlyFkz/OXuMJxbk0H
-         vNcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784933615; x=1785538415;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=J8ldsZEUrwIIl9s0mESXWdsLuqTjjuPFtNa3yxETkTs=;
-        b=eNYM8W/FUgbX3k4jhYXNHBoa8/9wagc4B+DIIQ6lX8bAn9AiKkJJJUuREohUfVXVDG
-         EMmsVEIOTaQ7r6dMXHNLrtHCsS+gax5xZuY2rBTTxErmzEkR1LlWxkpabyFgC/mSUwB0
-         2tS51y/vx6e47LCV44BzlEG8Ar4N8K2QjpGp7W7jCPPofv6F0DA1Y3WAx8nzgaFI5xAW
-         ICziYtLQ4pCRg0xkwY8uKgf4sxW2C1GCOxorVZL3lA/GWK9A00djbqBH9sPsa6s2XW8M
-         R922F79PQBjx2SkEQkxiTUqmlKz9Jq+Kfe5diZZdBjvN1hQdY8RvYesHJ+KFloz850K0
-         nKNg==
-X-Gm-Message-State: AOJu0YwvL36FbQglv8AaKoa+/ZhydHXzlFT1JWBx0G+DEX573CVcQ4VE
-	gWEzd8Kxg952xuIvAXzO588h7Gh3XE45BF13wlABq9DmH5AARtkHdLjC
-X-Gm-Gg: AR+sD11IIwWHR2WWiTkaKMAhLDsuTyZPO4QDbc9fmVByJAmKBoSvbci2rPy0oySuFaG
-	tDyYqf4x9ZE5L15cnjBXMPcb+34GD0Ha1ZJShEDb1V1v+fOfZmVkOIrFpGGnVnj6dCEF+tcDGRc
-	s2EiDmC01EXCPHgDt60eXboAvWs4ShON3INolOKnX5h7E9iJQvABwwCx3KnM3mXirRBpaeSxuOz
-	2HMyiggo7+92ncVgcA1hd9wDloRherByaBTmFkCDULcHlReWx5yoI3oY1b6Axl3C98/Fb2e5V96
-	BmMOa6e6jrIlDTwwfqDLLz9mvrcbrqUF+IsPApieXyXYhJ6Z6VTleqHUUO5/yBdKkruL1OHCdOl
-	Vr0bzv4s9y/U96+3EYR5ZUjTyH4cYKcXddXKeFpYdsX2IB655nolNbqXUE0mHKddFOLWlhIUWgp
-	mlBJfQeb23
-X-Received: by 2002:a05:600c:c8c:b0:493:b6ee:fcb7 with SMTP id 5b1f17b1804b1-496b56f39dbmr2142255e9.14.1784933614656;
-        Fri, 24 Jul 2026 15:53:34 -0700 (PDT)
-Received: from [192.168.1.50] ([79.118.68.61])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b4866813sm27078245e9.8.2026.07.24.15.53.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 24 Jul 2026 15:53:34 -0700 (PDT)
-Message-ID: <45f43cd2-af91-48a0-a0b5-5862824109ec@gmail.com>
-Date: Sat, 25 Jul 2026 01:53:32 +0300
+	s=arc-20240116; t=1784936112; c=relaxed/simple;
+	bh=aYrgDhizOckPspQJ6t3G3K3Lc7NOOpJo78OVx01YiFQ=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=G/cSxaNLZ38oJ0X1nq0GPY0ElORcleiWqC7Akkm8pgkr2qB4x24Wfhj25KXuDl209nPlNLwTXL/IiP67u++BEachw61Hw9arR/4iQCsKPNLl3YZpLwOJuyc1XtIlbzlSCXdN6vhikgAv3oHAtpg6bAtc5HzcC/qwyzIeJuO+DGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79E171F00A3A;
+	Fri, 24 Jul 2026 23:35:11 +0000 (UTC)
+Received: by venus (Postfix, from userid 1000)
+	id 93CE9181F1C; Sat, 25 Jul 2026 01:35:08 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
+ Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
+ Borislav Petkov <bp@alien8.de>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Daniel Lezcano <daniel.lezcano@kernel.org>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
+ Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Mark Brown <broonie@kernel.org>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Matthew Sakai <msakai@redhat.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Mike Rapoport <rppt@kernel.org>, 
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, 
+ Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
+ Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
+ Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
+ Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>, Vinod Koul <vkoul@kernel.org>, 
+ Will Deacon <will@kernel.org>, Yazen Ghannam <Yazen.Ghannam@amd.com>, 
+ Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
+ dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+ intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+ linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
+ linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
+ netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
+ with no effect
+Message-Id: <178493610858.699463.6794401814873674138.b4-ty@collabora.com>
+Date: Sat, 25 Jul 2026 01:35:08 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/19] wifi: rtw88: fw: handle the RTL8723BS management TX
- reports
-To: luka.gejak@linux.dev, Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>
-References: <20260724181858.192903-1-luka.gejak@linux.dev>
- <20260724181858.192903-5-luka.gejak@linux.dev>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260724181858.192903-5-luka.gejak@linux.dev>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On 24/07/2026 21:18, luka.gejak@linux.dev wrote:
-> From: Luka Gejak <luka.gejak@linux.dev>
-> 
-> The vendor firmware used by the RTL8723BS does not report management
-> frame transmission through C2H_CCX_TX_RPT. It uses event 0x12, and
-> reuses 0x32 for scan probe reports, which rtw88 otherwise treats as a
-> WLAN_RFON event and completes the LPS leave check with.
-> 
-> Route both events to the existing TX report handler for this chip, and
-> defer 0x32 to the worker instead of consuming it in the interrupt path,
-> so the reports are decoded and the LPS handshake is left alone. The
-> payload layout is the same as C2H_CCX_TX_RPT, so no separate decode is
-> needed.
-> 
 
-This is not right. 0x12 and 0x32 are not C2H IDs, they are the first
-byte of the C2H_CCX_TX_RPT payload.
-
-Since this patch changes the way C2H_WLAN_RFON is handled, it might
-be responsible for some "failed to leave lps" messages? Maybe extending
-the timeout (patch 3/19) is not necessary after all?
-
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> ---
->  drivers/net/wireless/realtek/rtw88/fw.c | 18 ++++++++++++++++++
->  drivers/net/wireless/realtek/rtw88/fw.h |  4 ++++
->  2 files changed, 22 insertions(+)
+On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
+> While reading mm/memblock, I found a conditional return where both
+> branches return the same value:
 > 
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-> index 945fedcd375b..a81ff15218e1 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.c
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
-> @@ -317,6 +317,15 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
->  	case C2H_CCX_TX_RPT:
->  		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
->  		break;
-> +	case C2H_VENDOR_TX_RPT:
-> +	case C2H_WLAN_RFON:
-> +		/*
-> +		 * The RTL8723BS firmware reports management TX through these
-> +		 * two events instead, using the same payload layout.
-> +		 */
-> +		if (rtw_is_8723bs(rtwdev))
-> +			rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
-> +		break;
->  	case C2H_BT_INFO:
->  		rtw_coex_bt_info_notify(rtwdev, c2h->payload, len);
->  		break;
-> @@ -365,6 +374,15 @@ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
->  		rtw_coex_info_response(rtwdev, skb);
->  		break;
->  	case C2H_WLAN_RFON:
-> +		/* On 8723BS SDIO with v41 firmware, C2H 0x32 carries a scan TX
-> +		 * report, not a WLAN_RFON event: defer it to rtw_fw_c2h_cmd_handle().
-> +		 */
-> +		if (rtw_is_8723bs(rtwdev)) {
-> +			*((u32 *)skb->cb) = pkt_offset;
-> +			skb_queue_tail(&rtwdev->c2h_queue, skb);
-> +			ieee80211_queue_work(rtwdev->hw, &rtwdev->c2h_work);
-> +			break;
-> +		}
->  		complete(&rtwdev->lps_leave_check);
->  		dev_kfree_skb_any(skb);
->  		break;
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-> index 48ad9ceab6ea..6927d2041d24 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.h
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.h
-> @@ -54,6 +54,10 @@ enum rtw_c2h_cmd_id {
->  	C2H_BT_MP_INFO = 0x0b,
->  	C2H_BT_HID_INFO = 0x45,
->  	C2H_RA_RPT = 0x0c,
-> +	/* 8723BS SDIO vendor v41 firmware management TX report (0x32 is
-> +	 * reported as C2H_WLAN_RFON, handled per-chip in the C2H dispatch).
-> +	 */
-> +	C2H_VENDOR_TX_RPT = 0x12,
->  	C2H_HW_FEATURE_REPORT = 0x19,
->  	C2H_WLAN_INFO = 0x27,
->  	C2H_WLAN_RFON = 0x32,
+> 	err = do_something();
+> 	if (err)
+> 		return err;
+> 	return err;
+> 
+> [...]
+
+Applied, thanks!
+
+[26/36] power: supply: pm8916_lbc: remove conditional return with no effect
+        commit: b7c8d46411317f135e7791c0eddc56691de63f07
+
+Best regards,
+-- 
+Sebastian Reichel <sebastian.reichel@collabora.com>
 
