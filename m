@@ -1,56 +1,57 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF36024A06D
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 03:30:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD0B27CCF0
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 03:47:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784863843; cv=none; b=GQxzygtIFcnFPuvpeZhOF85TXHFBG3rU4xJiZ6vk5g6u24LffZlm9jgJ9kAXL5BxYKiW008VhnzQzaBXXt32kX6jvlrrtphsRxQ8tDZMQ9avmbIhpOUwOi1nSeECni2flfkLD2z2J9+tC+eR71uu/Rlr/EHwD0vtJDDImrj/+vg=
+	t=1784864830; cv=none; b=VGGh6NLjRScc6hMS6Q9dHg6n9iM/WcOP2yWaiN/6jSg1zMOIWkR+XbNlA0XlVKAq91QwNGDQl4ca48vAyKn1nzjIDmFQbSWlSrqvdqyoS0zMgQLLbj2HJtFRDzg8SUs5REmvTO/hJJGuxbA3vYdKhzv2WSsUg984wvhF4/FYDwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784863843; c=relaxed/simple;
-	bh=MvpAPY+TxxCDfhreuHxYD3NBtwZLIPYF6I5ZGaTavhk=;
+	s=arc-20240116; t=1784864830; c=relaxed/simple;
+	bh=yt1H2PJPHfgDnRS2aZw3qQAUQpKJ17t50SSd+WLAMmU=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=piErDGWRd8FlXpsn7oBdyMyOEL4aega6QRRlN6+hoXrzlsCMZ4ZF8DnyS94mD3IQFyCM1na0izoZJPPGzjl2sHsEhxbPS8XEOLH7aRSD9IPG2vS+mPWx5WiARLJ/Ap3lBvk0malJV2pO1fpMqvvA78Lv2FGpqDRBtWHUdKF0gs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TTaKGrHY; arc=none smtp.client-ip=211.75.126.72
+	 MIME-Version:Content-Type; b=UEvKTMOH6618sQ8vd63c6JK4Ye9jxsEMSjeGREtMIvz1j90y30o39hrboMpLtQ5X44IuqNAbatrbBW5HOdBS3WYnRn5BqB8gWsmH0AP/mYmmJgKRCZyB1fohda4Oo/CzdfPYGxQXCeMWoOOcV2zeCrpd5tfnePxfapOuZXcXYJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=LFlCWhxs; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TTaKGrHY"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66O3UdmY6949961, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="LFlCWhxs"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66O3l45N1959387, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1784863839; bh=xB2pJ5FkEjrjkSfC/4oQPEVyXiLZBDeW3HoT0r0SwhQ=;
+	t=1784864824; bh=y0UgyzG2DzKIaYaJ+6X+kc5GuU4BHmtKfaJlawa3TzU=;
 	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
 	 MIME-Version:Content-Type;
-	b=TTaKGrHYSlLtzVrbSsxxCI4/rj5O1+FRz/Ksg7BcGEFQdSiZmGIkWqZNg3enVTUVb
-	 K08cLqu/K2kN9HvLYgX/7u/W+x5nq/BjzeDLLwC6tpF5EAE2B7TBSQ26kQ5vHSE4Xe
-	 Di+bZ1uD/6JLhU0ylOo85uGENDiqV4m+28noOKpTHS5jqo390cxJOzpaDYJle7g1oH
-	 aB57wYx415zLJBLf48ueMoQmjACeCNKTIAvIzKG3Yey2sUbC6Cia0KluZAZtaCpHhH
-	 fIv30kilsQ3M6+QuoHnzcIHKtP0htJiHHwAUxWR7kP0chP2QtoGf/HLm/PSrmUp/Gt
-	 1B5n+dBuBpjAg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66O3UdmY6949961
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Jul 2026 11:30:39 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+	b=LFlCWhxsXPiHppz6rwicq35ozfHxEFj1krvoCw/CBO1N+rXbsvusvtp3pkNQ3r5/6
+	 JB15O1/HkSkdZqyaonIOoG5Ggpazwhdse3xK5/WBhfRYhZXzJEOQb1uyyCNGXibL02
+	 8R6YLvSIlEGefwbgPRRR9JIzcYi46tbqnV3UO42v63nVo8p8oN9sS857w9dRe3ijP+
+	 aw43WGMbfNU8A5OthvqiOIshoupNuFMVgVFXBLXazq6xX6K8f9x5R4NCGcF6FzM2rv
+	 On8Pxw/uXn2WBAMWfYYl+uWr0YDt3T32i6QydZjLPCHs9BDfKlMW3s/QSiQsD9PrjL
+	 r9+PqAw4onwOg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66O3l45N1959387
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 24 Jul 2026 11:47:04 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 24 Jul 2026 11:30:39 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ 15.2.2562.17; Fri, 24 Jul 2026 11:47:04 +0800
+Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 24 Jul 2026 11:30:39 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
- (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
+ 15.2.2562.17; Fri, 24 Jul 2026 11:47:04 +0800
+Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
+ (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Fri, 24 Jul 2026 11:30:39 +0800
+ Transport; Fri, 24 Jul 2026 11:46:59 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Ping-Ke Shih <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-CC: <ku920601@realtek.com>
-Subject: Re: [PATCH rtw-next 01/13] wifi: rtw89: coex: Add version 107 TX/RX info for firmware feature
-In-Reply-To: <20260717065739.64124-2-pkshih@realtek.com>
-References: <20260717065739.64124-1-pkshih@realtek.com> <20260717065739.64124-2-pkshih@realtek.com>
-Message-ID: <7a9575bf-f6e3-4469-a288-c945f4aea89a@RTKEXHMBS05.realtek.com.tw>
-Date: Fri, 24 Jul 2026 11:30:39 +0800
+To: Mihail Dimoski <mihaildimoski@gmail.com>, Ping-Ke Shih
+	<pkshih@realtek.com>
+CC: <linux-wireless@vger.kernel.org>, Mihail Dimoski <mihaildimoski@gmail.com>
+Subject: Re: [PATCH] wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming A15 FA506II
+In-Reply-To: <20260718124045.23493-1-mihaildimoski@gmail.com>
+References: <20260718124045.23493-1-mihaildimoski@gmail.com>
+Message-ID: <54ea0e34-3309-44ae-92fb-718e12b7f1f2@RTKEXHMBS03.realtek.com.tw>
+Date: Fri, 24 Jul 2026 11:46:59 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -59,32 +60,29 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-Ping-Ke Shih <pkshih@realtek.com> wrote:
+Mihail Dimoski <mihaildimoski@gmail.com> wrote:
 
-> From: Ching-Te Ku <ku920601@realtek.com>
+> The RTL8822CE on the ASUS TUF Gaming A15 FA506II wedges during normal
+> use. The driver watchdog toggles PCIe ASPM while leaving power save;
+> the DBI read of the ASPM link-config register fails with -EIO, the PCIe
+> link becomes unstable, and the device drops off the bus, taking Wi-Fi
+> down until a cold power cycle:
 > 
-> The previous version 7 format is for Dual-Bluetooth using. This patch
-> is for single Bluetooth solution using. Driver will summary Wi-Fi now
-> status for firmware to train RF parameters & TDMA mechanism.
+>   rtw88_8822ce 0000:03:00.0: failed to read ASPM, ret=-5
+>   rtw88_8822ce 0000:03:00.0: firmware failed to leave lps state
+>   rtw88_8822ce 0000:03:00.0: mac power on failed
 > 
-> Signed-off-by: Ching-Te Ku <ku920601@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> This is the same platform ASPM inter-operability problem already
+> handled for other machines through rtw_pci_quirks[]. Disabling PCI
+> ASPM and deep power save on this model stops the failure. Add a DMI
+> quirk so the workaround is applied automatically.
+> 
+> Signed-off-by: Mihail Dimoski <mihaildimoski@gmail.com>
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-13 patch(es) applied to rtw-next branch of rtw.git, thanks.
+1 patch(es) applied to rtw-next branch of rtw.git, thanks.
 
-0427315a6ed1 wifi: rtw89: coex: Add version 107 TX/RX info for firmware feature
-4bedf26e132c wifi: rtw89: coex: Add version 9 report control info
-b5bfb43844e1 wifi: rtw89: coex: Fix unexpected grant-signal assignee
-00961e2705b7 wifi: rtw89: coex: Branch out version 105 firmware report map index
-49989a3fef37 wifi: rtw89: coex: Refine chip initial related structure
-81d30a7be825 wifi: rtw89: coex: Add driver info H2C command index version 103
-35b569b60aa0 wifi: rtw89: coex: Fix Wi-Fi role info H2C command header issue
-58b1bde3712e wifi: rtw89: coex: Add firmware 0.29.133.X support for RTL8852B family
-42a83b5f13e3 wifi: rtw89: coex: Add TDMA version 4
-b87da03ee7e9 wifi: rtw89: coex: Add slots version 2
-b8892add7e51 wifi: rtw89: coex: Add cycle status report version 105
-236badaa50b3 wifi: rtw89: coex: Add wifi role info version 101
-38c58d541cfe wifi: rtw89: coex: Add firmware 0.27.97.X support for RTL8852C
+b0034a2e4156 wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming A15 FA506II
 
 ---
 https://github.com/pkshih/rtw.git
