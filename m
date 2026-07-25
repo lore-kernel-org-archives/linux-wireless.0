@@ -1,222 +1,123 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7443535C181
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:25:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BC82E0925
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 14:18:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784978707; cv=none; b=gMXu+fZa+5kPLLJ6aTsIV7ZgelTq4OujgaeaN6w3uq3bRJ4TEj0EDb4XOerjOegIQDyxW8MhVGneppkRGr4QAdyv3MEBmpQspYeMuUPvwzq4g/1IkDb9Jtm/uUfiNLq8nn++8WYqYmpYpdAHAMXEUDAggHBkfs7JJ+V7BaUpDWA=
+	t=1784989113; cv=none; b=NcTt/mxv7R+TrZYbl4Lp0xrMhzvbqR0u6982mB69LolLpPQXcwvYy289fGNwDS8PBQEDornTRaeI+vGYdyERKDNdAXcLaplwno1O1rVyvTntd8tc0G9+oj74meRewZYBgkbg2hwU4eLO/Bht5OzrCrIfXD1EtXjArXfx0qN9zMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784978707; c=relaxed/simple;
-	bh=Rq3lzNswFfIYEhK5p/0mubinIFAPeB7nGHjY26yebvk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aA4wGjr+iCCBbaCb7YzgPQLFrLXwv9G6JV/2A5d1DrYKHuRK7azrh3qhROUyLgdhcBhbHtbHTvHFqBopirZMyj7iGhDkYiAJtwyQA2btHirbAMcaqNm87SFCEdidaSQWbuU1IVN7DZY25iu71M9jnkRXHtddRARNGtWs4aGvBbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KD298iOP; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1784989113; c=relaxed/simple;
+	bh=5VGYxoWHrhJJsYbfgc/9P1Hwpd2kQF19yCwR6r55wrc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AgLxp6MoiBUaWrbxMWwNE1PlDuvHY70JbpYXm4el2Chj8pFUbLWx/xhIVjuXC1j93bF26qRjImm6FWXU3rbtq6cqHr+7D3Z3ys9tY5MituE01E5ZcpA3i5wg5s+8FWVvqIR5KTms/48b8kC2+lqazGEVn3u+M73nRa9p88q66hA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=J+djYTUK; arc=none smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KD298iOP"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-4728c12ba97so769960f8f.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 04:25:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="J+djYTUK"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6983d3dae7aso3365940a12.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 07:18:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784978704; x=1785583504; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KohReyS6AJYnGPiV+qUeaij9orUKoMMitiIixb/+cRc=;
-        b=KD298iOPraUPrNKWG1ETdss85yKHgfjuuumJmlmDRCRGunUU23FdBF/VE/8p/D8hvn
-         TslySxJVAGotXasEIdN7dk5Bv4gUgUV3qDk7zLQFYMi+VYPQJslLqS0biq2q5Z6pFDAB
-         5hREy/9yu3AWWUmiYjMEf2zG8JBH1uOhtQ17AMygKsZBNJjG+ZYYcquuF+iT5OiMKrl4
-         rtRMTtIdDl9uxYciBKKp0ixFQ/fqTv4XnR0hT3dpLgIoOB5NKgOPD7xjOPK6JiZwSEJH
-         KTt2y/ueUMtLC4UUaLJjnomeGUwjmEITldnt+K2noFpEH+SjXERI0FdTXtBo7tJN9qEZ
-         1waA==
+        d=bairaktaris.de; s=google; t=1784989109; x=1785593909; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NXY4j56rD3KtaSlsN4KTeiYRDj0jhfdXi33CFrmcr4c=;
+        b=J+djYTUKkaADp8rjOEdtCNKTX4gqZmWCrgGUqrRjIyWjQS/JbsgKaNEf083YY+ViQ9
+         DXXcfD9PSCVXmg9wi61Vj83QYj982puJhlGr/F4YMsQ/0/uy9bxKNiMUhCwTgBv4FtV7
+         WH8skWhRQZZ3meuMRmA0r5t6d0Z/qoviby9yqXkCWiVg0yyTpGFO8YIe3wbtpQifPqUU
+         QUAJHLDL6h7SQh8DCym2+66xWPmJJ4p+eRAsUZ7838vV+jCIaIS2GNxAtKrXAgoGX63g
+         hbR03xHC57ENqDaeMPCyHGnifOVfRZqlz5QRsSdWZ9jFKjcDyb7WEHeU0yeEw6nteXz6
+         PZhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784978704; x=1785583504;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1784989109; x=1785593909;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KohReyS6AJYnGPiV+qUeaij9orUKoMMitiIixb/+cRc=;
-        b=XwXkbyofUaAP8Z727WqdWfcD/TfzlbtcdN3K2Cnhw4a1YjEw2YKMhduDV++lLkGV09
-         gI/L840MR8EPQbdQzb+/HCNZm5b17+iVUh90GJT1PgCueMAAyMerKnKpMQXjjbzaQ2uw
-         Nq3vDEPhZLA49DYknPZFjOyD3GWb87SHhEMs4ize3+5uKz+zo7hAg30ulwgftLr3cNU+
-         MvyUt6uhKGZcWh3alri1oIGmC3ldtw2bOoEyNNWsdOWVknJjshZaD5f7ALa12J0hMtFI
-         I+INZNe5Omx/9epJnVEB+Vt0d5/zo/7MrlJhdq6JGvxwa4Fk7RgPGWVYKkGieCLauCEJ
-         Bd9Q==
-X-Gm-Message-State: AOJu0YwH+3ccG0HDQJ4H7Wn0nyy9zNPCfh1e8+sBUwZhyCWhcC8HMhgU
-	Y2xt5a3jTnCyNVsTosDoh2Qsy/OsiO3G1aoobWhtKC6rUr/q5pDe4tNP
-X-Gm-Gg: AR+sD11iUVMEVgqpjmD9ht2hEPrvb2+9PNJx87M7z3GL7FlhQir2N2A4vyVRiH9bqvo
-	pHYrI2bC6czXI8EB6WNdg/58q68IXjov7QQD3ekp+K93zYWMYp1hFEQMaQYGTHyaLS9hnDyrRQV
-	NuRj2EzzToxdZjN15f1ps581p4gwONsALga2q2gX1Gk7jidkiVgDR1JMhQFvdc0JwZ5G4tzInBd
-	Y9CDeYd15i5uTwmkYwHov6LQ7/fBpmaikP/5MIFBDwaX7hh6hl6vo1O34ExYyte5rj8+ckfPab7
-	JfvqG3aBw7IGiv7nqmpLQeoF5JSuGQhrL8Pxf4Hm4l0E/dteoBaXcPQtvGzGuFC5rNgCOe41K2n
-	QpsWf4SyHRA85SoC4HEE/UuE+6fCM8Z04x5MQQYPL83f6OVcEbKnhh4v1EVgGJ8mweaZEsEih9A
-	jZ7vNuF4QZ
-X-Received: by 2002:a05:6000:2386:b0:47f:810c:8abe with SMTP id ffacd0b85a97d-47f9feb544emr2224500f8f.36.1784978703517;
-        Sat, 25 Jul 2026 04:25:03 -0700 (PDT)
-Received: from [192.168.1.50] ([79.118.68.61])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c531afsm33083322f8f.24.2026.07.25.04.25.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jul 2026 04:25:03 -0700 (PDT)
-Message-ID: <8ded63af-64cf-484b-977b-e4458278f9c1@gmail.com>
-Date: Sat, 25 Jul 2026 14:25:00 +0300
+        bh=NXY4j56rD3KtaSlsN4KTeiYRDj0jhfdXi33CFrmcr4c=;
+        b=H1IG6ZcOKHj1sukl9vNgxELoqRI9Ap3H4fKKPWoHuYCnGjycjgq6qCS2Mth3uoFTil
+         4cB3NDi2jmT7+x7wFkA7sivR1GXP++o/r4pLCl7xFFxj5Fj/AtEXsMBvCoVcDfKIHkb6
+         jwRdOACBKyjmYff/8MhvdQIu27C529C4uuUOcUVNu35TNkrhjfn5le2Nm+DYhp/2B94c
+         WuwExsAvcDAPCNuSLjcdhUmL2lGQ78I0l/mtNxVSE6VdIJdnEtBtVQyqrRoddYNri68R
+         X9TwvpHmmyoyGQgXoa7uAjzVxQiBG8+XZT61Jx6Ow9oILCZVC8QwRw4i8t9Nh14qJo0U
+         aiXg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq8TX29Bvz0AFhfXLCvJ7dcJQp3fvQlFuoNoxlTcL5Kg+7s8K+VaQw4Zq95aLkMS/1Azp1BFTWvhYFgM2WXVg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YykRmKw0Da7mD7UhVqMrrO56ZfnXTMQ1u/YAoqYqkPtW0YPS9Ag
+	MvF1T4MyrrhPON/SugZGvib40g2cIn/MMAOs6QLvn8WmfS8NP3L5QBcOVOCsQQ7GoQ==
+X-Gm-Gg: AR+sD11IwXDEO3HmH8kfrB4kQbnzMVQ90k4BuYsBNgBD1N84cEUXhd1ZcLfWZK3K6cu
+	LajrB6qYnb7hIeDOFp98D7uFrPl73GZgsG3pHIjYAkswmXXk1DBm52zujVoo28km/72dWZeNPvf
+	xCvVW0BLNDM7qnlbYy8J5LCh9nbn04lWHBD3rr0HrcgOQh9mgKkbpeXUUIsDtNonuQPxvvGS4zE
+	M6w8A0rFUc98KLVwvLQzZo+4Lg29uxsRt9NTHlGxh3XlDydZt0AfjjSJLg5V8GzpoW1BkoGpWWa
+	74P07tkQ8CiFQHrjTG324gTosfKIy3FVKESN5+1TDeUSiku9lBJYnuh+/Dj3op+Y0LKXZRvF+g7
+	NusdIXbBkKos0m2DeHhd3v8x+3NnZyQAr5Xao8RSrZ/mkibyznKjXXYWB6BDzVou/PyJfu6AQ/5
+	fSbc5fieN798lUoSOexggm6owHMRnAtA7wOldYLH+U3nhMb9gnCF+Yy+pvXjACVNBD72r2sqcVc
+	ft7yZGMYECLhMl1NhlGvgxE+liTSBfsmP/E58Oan9/ki6v5YtYzMpMAxhX0q6Qw+hnExr44CsSR
+	nnsG/FUgbRp4z8aDQ3dR6X+jolMKflWK6B8m6P4AFiIWNV5QLNn1BCKtQppWR+tNNuoCLdMzYsZ
+	WrIp6HgKrSlMWLw4ivXFFD7i9SQxKpBY=
+X-Received: by 2002:aa7:d0d0:0:b0:69a:3652:9d33 with SMTP id 4fb4d7f45d1cf-69fb1bb2da2mr1339966a12.19.1784989109529;
+        Sat, 25 Jul 2026 07:18:29 -0700 (PDT)
+Received: from Desktop (p54aff063.dip0.t-ipconnect.de. [84.175.240.99])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-69fb594622asm894010a12.26.2026.07.25.07.18.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Jul 2026 07:18:28 -0700 (PDT)
+From: Julius Bairaktaris <julius@bairaktaris.de>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: ath11k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Subject: [PATCH ath-next 0/2] wifi: ath11k: fix SoC reboot on firmware crash on AHB
+Date: Sat, 25 Jul 2026 16:17:55 +0200
+Message-ID: <20260725141757.1316877-1-julius@bairaktaris.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 13/19] wifi: rtw88: sdio: set up RX aggregation and
- interrupts for RTL8723BS
-To: luka.gejak@linux.dev, Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>
-References: <20260724181858.192903-1-luka.gejak@linux.dev>
- <20260724183235.196908-1-luka.gejak@linux.dev>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260724183235.196908-1-luka.gejak@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 24/07/2026 21:32, luka.gejak@linux.dev wrote:
-> From: Luka Gejak <luka.gejak@linux.dev>
-> 
-> Enable the existing RX aggregation setup for this chip and select the
-> larger DMA aggregation mode it needs. The RTL8723BS does not raise
-> CPWM1, so leave that source out of its interrupt mask, and set the SDIO
-> TX control bit the vendor driver uses to have transfers always
-> recognised.
-> 
-> Interrupt status is also acknowledged differently: write back only the
-> bits that are actually defined, and for this chip only those that are
-> unmasked, rather than writing the raw status word back. Writing back
-> undefined bits leaves the RTL8723BS raising a persistent interrupt after
-> resume. Note that restricting the acknowledgment to defined bits
-> applies to the other SDIO parts as well.
+On IPQ8074 every firmware assert takes the whole SoC down. The DP NAPI
+keeps polling while ath11k_core_reconfigure_on_crash() frees the data
+path underneath it, and dereferences a ring the teardown has already
+cleared.
 
-Why does it apply to the others?
+The interrupts used to be disabled at the top of that function.
+commit d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
+moved the disable into ath11k_core_reset(), which AHB parts never reach
+on a real firmware crash: reset_work is queued only from mhi.c and from
+the debugfs hw-restart handler. Patch 2 puts the disable back on the
+crash path. Patch 1 is a prerequisite - the CE half of the quiesce is a
+no-op on AHB today because the bus never implemented the hif ops.
 
-> 
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> ---
->  drivers/net/wireless/realtek/rtw88/sdio.c | 29 +++++++++++++++++++++--
->  drivers/net/wireless/realtek/rtw88/sdio.h |  9 +++++++
->  2 files changed, 36 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-> index fcbb0ee601c1..1c2d8082f468 100644
-> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
-> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-> @@ -866,7 +866,11 @@ static void rtw_sdio_init(struct rtw_dev *rtwdev)
->  {
->  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
->  
-> -	rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CPWM1;
-> +	if (rtw_is_8723bs(rtwdev))
-> +		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST;
-> +	else
-> +		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST |
-> +				       REG_SDIO_HIMR_CPWM1;
->  }
->  
->  static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
-> @@ -874,6 +878,7 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
->  	u8 size, timeout;
->  
->  	switch (rtwdev->chip->id) {
-> +	case RTW_CHIP_TYPE_8723B:
->  	case RTW_CHIP_TYPE_8703B:
->  	case RTW_CHIP_TYPE_8821A:
->  	case RTW_CHIP_TYPE_8812A:
-> @@ -901,6 +906,8 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
->  		    FIELD_PREP(BIT_DMA_AGG_TO_V1, timeout));
->  
->  	rtw_write8_set(rtwdev, REG_RXDMA_MODE, BIT_DMA_MODE);
-> +	if (rtw_is_8723bs(rtwdev))
-> +		rtw_write8_set(rtwdev, REG_RXDMA_MODE, 3 << 2);
->  }
->  
->  static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev)
-> @@ -969,9 +976,19 @@ static void rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
->  
->  static int rtw_sdio_start(struct rtw_dev *rtwdev)
->  {
-> +	u32 clear;
-> +
->  	rtw_sdio_8723bs_check_rqpn(rtwdev);
->  	rtw_sdio_init_free_txpg(rtwdev);
->  	rtw_sdio_enable_rx_aggregation(rtwdev);
-> +
-> +	if (rtw_is_8723bs(rtwdev)) {
-> +		clear = rtw_read32(rtwdev, REG_SDIO_HISR) &
-> +			RTW_SDIO_HISR_CLEAR_MASK;
-> +		if (clear)
-> +			rtw_write32(rtwdev, REG_SDIO_HISR, clear);
-> +	}
-> +
->  	rtw_sdio_enable_interrupt(rtwdev);
->  
->  	return 0;
-> @@ -1051,6 +1068,8 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
->  
->  	val = rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
->  	val &= 0xfff8;
-> +	if (rtw_is_8723bs(rtwdev))
-> +		val |= BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE;
->  	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
->  }
->  
-> @@ -1341,6 +1360,7 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
->  	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
->  	struct rtw_sdio *rtwsdio;
->  	struct rtw_dev *rtwdev;
-> +	u32 clear;
->  	u32 hisr;
->  
->  	rtwdev = hw->priv;
-> @@ -1357,7 +1377,12 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
->  		rtw_sdio_rx_isr(rtwdev);
->  	}
->  
-> -	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
-> +	if (rtw_is_8723bs(rtwdev))
-> +		clear = hisr & rtwsdio->irq_mask & RTW_SDIO_HISR_CLEAR_MASK;
-> +	else
-> +		clear = hisr & RTW_SDIO_HISR_CLEAR_MASK;
-> +	if (clear)
-> +		rtw_write32(rtwdev, REG_SDIO_HISR, clear);
->  
->  	rtwsdio->irq_thread = NULL;
->  }
-> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-> index aa088c512b9c..208c91446f82 100644
-> --- a/drivers/net/wireless/realtek/rtw88/sdio.h
-> +++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-> @@ -22,6 +22,7 @@
->  
->  /* SDIO Tx Control */
->  #define REG_SDIO_TX_CTRL			(SDIO_LOCAL_OFFSET + 0x0000)
-> +#define BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE	BIT(4)
->  
->  /*SDIO status timeout*/
->  #define REG_SDIO_TIMEOUT			(SDIO_LOCAL_OFFSET + 0x0002)
-> @@ -77,6 +78,14 @@
->  /* the following two are RTL8188 SDIO Specific */
->  #define REG_SDIO_HISR_MCU_ERR			BIT(28)
->  #define REG_SDIO_HISR_TSF_BIT32_TOGGLE		BIT(29)
-> +#define RTW_SDIO_HISR_CLEAR_MASK		\
-> +	(REG_SDIO_HISR_TXERR | REG_SDIO_HISR_RXERR | \
-> +	 REG_SDIO_HISR_TXFOVW | REG_SDIO_HISR_RXFOVW | \
-> +	 REG_SDIO_HISR_TXBCNOK | REG_SDIO_HISR_TXBCNERR | \
-> +	 REG_SDIO_HISR_C2HCMD | REG_SDIO_HISR_CPWM1 | \
-> +	 REG_SDIO_HISR_CPWM2 | REG_SDIO_HISR_HSISR_IND | \
-> +	 REG_SDIO_HISR_GTINT3_IND | REG_SDIO_HISR_GTINT4_IND | \
-> +	 REG_SDIO_HISR_PSTIMEOUT | REG_SDIO_HISR_OCPINT)
->  
->  /* HCI Current Power Mode */
->  #define REG_SDIO_HCPWM				(SDIO_LOCAL_OFFSET + 0x0019)
+Reproduced and fixed on a Xiaomi AX3600 (IPQ8074 hw2.0), with no
+out-of-tree modules loaded, using the debugfs simulate_fw_crash
+'assert' trigger:
+
+  before: 2/2 asserts panic in ath11k_dp_rx_process_mon_status() and
+          reboot the SoC
+  after:  3/3 asserts recover, 5 firmware boots across a single 397 s
+          uptime, no panics, both radios stay up
+
+Note the debugfs 'hw-restart' trigger does not reproduce this, since it
+goes through ath11k_core_reset() - the one path that still disables the
+interrupts. Only a real firmware assert does.
+
+Patch 1 is by inspection: it makes ath11k_hif_ce_irq_disable() take
+effect on AHB, which also fixes the existing call in
+ath11k_core_reset(). I have not managed to trigger a CE-side crash on
+its own, so if you would rather see that split out or dropped, say so.
+
+Julius Bairaktaris (2):
+  wifi: ath11k: implement CE interrupt enable/disable for AHB
+  wifi: ath11k: disable interrupts during firmware crash recovery
+
+ drivers/net/wireless/ath/ath11k/ahb.c  | 9 ++++++++-
+ drivers/net/wireless/ath/ath11k/core.c | 9 +++++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+
+-- 
+2.53.0
 
