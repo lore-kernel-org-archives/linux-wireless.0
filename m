@@ -1,85 +1,87 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0C33F4DDD
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA50B392C32
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785003111; cv=none; b=DJFtorT+ErQw9rKAhqmMULL16s0RJ9mPARtr063e415hFANdC6jwVpSu+a7PMcjf2HhKuaU32iTkTmA9u6po0vPd+4AC0z1Fn+85kDWPyzSLwyVKDtsNo3QDnBJdKPG0Rrn01h2YP+8NiAMyzPhjoMe2OaMoni4FNSbljeSL9qk=
+	t=1785003112; cv=none; b=bkSaxShxS98Mg6/zTBZNWPcxRUOq1Xzvu51qiE0o7OsfH0z32oH9k505jr2Hq/zDF0FpckteGW+2aIT79JQmWoKldeJB/f7wx1dvDHnZV/mYiIJAd3kXb6S+ScIzB7b91rLuXqkSaCCV6GQHOwTMozEfZ9nwjO+gGu1an3LMJjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785003111; c=relaxed/simple;
-	bh=R5+AM8MsBV1hJRBd//ih/Emez4JeTWQv30n6Tlqgei4=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=UWEG2F/6v+dYW0itBLu2fqYVPbt5GzELBHq4w7biRs6UkpH1wkmm+B0fi6HkbX9egIw60vDb68cr3dAY9rmu4XahpQp7U8grB+nufN55WvmJ9DBLh/7wppl1FKhnpR95vq5ABRqXPX2JtaTg7wgPtU3QyEi0/AZy5sOBCKIgLu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KQenNCQm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HaW8vzrJ; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1785003112; c=relaxed/simple;
+	bh=C9zmnrENp6fcooDKzQPgxLmxCEBqdWSrUY4Kto1cU34=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=P9q5DVAhGgSspbr1wiV2at91b1TQMKscrCKHt37BF7xBZ+sZZshDxgv7jD58ljKqs3odbvoneEKI62k6jZKwz85AG08bC1wHraEYeOgLSzFqXCdl5TjNNuMtabZuax2/MyOHrKIrex2LLcCXLRc++YEp5dLBjsuvojNbSh8z7N4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ENQGeFAL; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=jbbMddrx; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KQenNCQm";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HaW8vzrJ"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ENQGeFAL";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="jbbMddrx"
 Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66PGvgiB1975170
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:49 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66PGxHE81978237
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=oViaTxTEJFf8D4uFBbYAXO
-	cG09FPtk8+dz6gicLx8n0=; b=KQenNCQmmimFSxBZ+AiQ3hlXWavaJyKWSWl9fi
-	0Q5TUIrwQHBJqYgOXRImgwSxbm6eC7phgCcRXkingMAghiM5yRifY4Yc/rH157TZ
-	6sWBnzZmwymqRmRkeGjcF7+PQAxleiqrRgXeiB3TwRFZhY4IChN7TtwFmUYRI5w1
-	u+e5GvvNa1WqOHn7yT4PNmRAyFapoqITAXt6CPecFfVJgSnaS1dl3H7AuIVd/ZmJ
-	5np3d0fl8lStRq7U0C0MXbCnfdtFqBuFhDAki+U+pU2qyDHedQ9CeTjwAj98P0jy
-	cE/3dl9jvKJ3zxsdi2y6iu7VJermEvScCYfWiYYf0e6gCJIg==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fmpajh8yf-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	IVw21EajYFGo2Uy1Ircyl9njPPqRM/2Kk9IHbzFuUK0=; b=ENQGeFAL2011Iyxw
+	8Yejbsl9MRkeWW9zytVLZxxJazFmMedhWs17CQ0tV2XSzYWdfe/XZ9rzNM5uzWRf
+	BfnJ3UVj2Rekdmsrk2E50XBLkL+ZeXSmjJCtcRtXsyPXX2s32b0OXgkOXoM0DkkD
+	drohvWSRuR/LooQfkoj7UqMJBFPiKihTsHo9NMmiKX3FqIMnXx3gDVrV+2lIwGNC
+	LtBdKP4HGVBgXvlIWGh6idZUZ5YRLY+bXD29f+EQo/99pDWUIr7/oOBAQwFqM59H
+	O0hNH/I7/h3Tgdg8218Rr43BRYhJqtCKSvHOv+SlZ4B0MDO/6wl5cMhCz9nlPG7C
+	7VH6jg==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fmpajh8yg-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:49 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-388b404eaa4so2055707a91.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:11:49 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:50 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e8fee6af3so1622902a91.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:11:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785003109; x=1785607909; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=oViaTxTEJFf8D4uFBbYAXOcG09FPtk8+dz6gicLx8n0=;
-        b=HaW8vzrJlrGEURn8pCQUGMFpddC9pYP0B91q6BZlZWscrvd2DXGhH5ujKBRJDzipGp
-         ccSUpqWhbU5o4GHK8kepGoub36CtiDEQuqQvjRtGEBFx8HhCdAFlyIv0+x6TXf0HMv2H
-         BWgRLkg5WPWhoJLfsk3zmZZmHm+m6YV8jNnagKYA+etcXpEhcsdbqCNUCuE0DUOOdyes
-         ApTEyhdrRm8OP7hMrkQN6Tj7pPShtQPEZDkHmFsfKm+bkDEsPhepndGzPkm4L2l7pikS
-         14MJ1Q5+qLzzhST5jthC9aSkHjDQOYIuJo4pZrOKgY+PWHGm6emh2/fiADz1l+40qUeC
-         wgoQ==
+        d=oss.qualcomm.com; s=google; t=1785003110; x=1785607910; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IVw21EajYFGo2Uy1Ircyl9njPPqRM/2Kk9IHbzFuUK0=;
+        b=jbbMddrxMK3EIr4Ztwsxiz7eRurSBjM0a8aXgvS47Aak36mpcBCBI/Hv487jk6dfK2
+         W1ypcfzbYidVK3mmaRFKMd9WNUR9oPPuGv38+YC04TeCWvm+rPjozJDHqyNhXolA2Fhp
+         UJAfh1THd8x4j84aNL4dveg7jWeKZEoSJwAZ6yIR+PzZFOGGCDweooYIu4EbvU6lTsHq
+         M0j5JRuUygjhLI/upTbyGNSgRdARAckBva0HFw3SXBX7VgOhhM9t2vJHuv2krtzNNZYy
+         0/r3ZcW/rR5Grau0tP7he4eWlpuloruZtPuqpxmVLOo1rMlZ5VDbj1+mEiEruuYIHvsM
+         tpxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785003109; x=1785607909;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=oViaTxTEJFf8D4uFBbYAXOcG09FPtk8+dz6gicLx8n0=;
-        b=Q7RylvmrpFw738PtKzWr5SYQpKeDl3PPQ4LIdzFpE4eclLgebzDugDkvwY8tarvIvo
-         4wtRVIpxuTC0zGTDEi77ZlxzocsW3XRxLxGJ6LGUoiGnJ4KrCGRfCbzkuhQk4obt/kGh
-         Ddi8biF4OITzRonqdL7vpvLqTqNjuBJdcbAdngzWX9E3SE82dbd45wtBLhRMCuRvNram
-         bqVnVx9JwKlNSM6bEM/6x3UPuqg5NP93gCjtpz9oHDTksYExtW3kbrnIpeXm4jy2aJ/w
-         N3dclaBcx8HqVxyDw9l68daa+7ctjzAK2L4g4z+bMcM83cEOHJaVmPhzNwePPNMPeMMU
-         hIww==
-X-Gm-Message-State: AOJu0YxIigPa9qiHEr2ArjzkKo5sr2SbNdcvujVcEUeu67bHNm/wMglO
-	m15/1065LSPQ2W4ODnZz47QLrgt1zDnea+5/3M+TERA0hsjczmSO3T99QjD2abCBvNrq9doZQ/W
-	CFMnXZ8Va5P8UxRVpJtSc7WN5VacmP9a5s4c9QqPc4YVI29xwMuaeLes9tjaJeS/f9rcvIA==
-X-Gm-Gg: AR+sD12ZcpyDzfl3QmS/6jSL1Kkq0saFhxLpzPYqRNCgs6yzSXfjEZUY8AblF0a1B0k
-	DGRzH6GM9ZRlXEXz/PdNay0G0mwo54EI8prspWTtthMko4164y/xjig5o+DirGAfKPHQPHnLQ3E
-	UnAST+cYd12CnWl7ITRsFXkhd4Po/T2PrQOk2wVjXSOKfFLrDCU+HMQJuActSxZzn0wdzeaxjrW
-	fBue0zplvV/QzSge8d6YCl33rBanlJNy4JBbsSJPIpj3Mp4sXTMwLeV5jX16Unhbl6CiBbEczO/
-	NiMRiJFRk6vlgV96/Kgu3nXAFK3TQlwAfecQxTOAzvbNhxas9VCnsb+bvqsPosjXQLDqY4r4pul
-	15+lexawtWvLgxLX3uWjOMMmOTicco8OZ3f0Anxwlbtfbp1IUsdRLja0=
-X-Received: by 2002:a17:90b:3c8e:b0:37f:db06:229c with SMTP id 98e67ed59e1d1-38f2960fabbmr2985131a91.22.1785003109190;
+        d=1e100.net; s=20251104; t=1785003110; x=1785607910;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IVw21EajYFGo2Uy1Ircyl9njPPqRM/2Kk9IHbzFuUK0=;
+        b=aXuR8PyBfBfRtePVEkAQS3RVPcHFZcjUKodjixZtXVXKFX4jKlqFByO0NjD6BM65Ww
+         b5EutsxXmSHxKSxddcDfAvGjLX8HG0zmteSXkIwQBv2X5M9Yx5CWmah/wv0z+KwjbxvJ
+         1gUOGC7pwUeSO66q+/8cpKAwcQ85HFb21Qp3+l4iMrRf3f6d0YlUqDPH4ih8YPBuNstL
+         5PLM6xJ7w4i3+V/JUp6N43UW44/F0vpeIU8YxuelZ+BeYRbvlIgXytALJYltk4H+gHwj
+         e4kxixpoCWJhO2ay8sjCgnwwqbRuYJ5OGAM/8rMFMt1r0myd9y5G+SUIc9z3z7YSTOOZ
+         9JKw==
+X-Gm-Message-State: AOJu0YzpOm+XFYsIPQLqW8puhbIdN04owIDfVenZjJf3MZCLOLzvZGmp
+	lRK+cIzEfQol52G6xbTQSBRQc0fUEtw/+RGd8qTl/+kKXrpJi6lMRgy79cf6SScGkQM11HStGuG
+	TgLnWc4oI5cH4e6eiDBGztAYOYEQzKfhmQzQeuBqQmaHP7waDxlVBxjE/WluJw/cizNwJ+Q==
+X-Gm-Gg: AR+sD13pmz4VmnQ7mdKPJjc3RH5/1tU7rCfIC0YZPP5uJl0JHhCi0D6dPhbFvGmg1YR
+	GRa1foLRyF+HgNKxTfPLLE8xEAGJU5ucdHS812j9aFtPnYCwChNotmfPFVWeEP+nFLMao9zrpgI
+	Dx7NEkTXYNjTnQV+rWECTsYb7tofGjx5XoBTeWyCIlWyxh87hhd+9UX4OpLLyD7PsZ8ZkbRkDhN
+	j3jl4Vb864EerM8VYEZ7uwO8bNIR9fDwmUT39J2h3C8lVtRm848DANJzBmU2pZl3YJks6CQzgIK
+	P9Lqiql5FWFcmTbm+3BA19A9OHwNyJpfj/yOPQfD9AoumlMd4dT/s/j++35kuPABn6caBpYRrMt
+	1yLjg1ZdEoQQ2uOVbQsncUbyI+xmiHcFPVkVOZOIoMJiV5x3mGcRUfYc=
+X-Received: by 2002:a17:90b:5347:b0:387:e0db:bc34 with SMTP id 98e67ed59e1d1-38f298b386cmr2763301a91.42.1785003110195;
+        Sat, 25 Jul 2026 11:11:50 -0700 (PDT)
+X-Received: by 2002:a17:90b:5347:b0:387:e0db:bc34 with SMTP id 98e67ed59e1d1-38f298b386cmr2763285a91.42.1785003109777;
         Sat, 25 Jul 2026 11:11:49 -0700 (PDT)
-X-Received: by 2002:a17:90b:3c8e:b0:37f:db06:229c with SMTP id 98e67ed59e1d1-38f2960fabbmr2985120a91.22.1785003108789;
-        Sat, 25 Jul 2026 11:11:48 -0700 (PDT)
 Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
         by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13003f12sm64692635c88.2.2026.07.25.11.11.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Jul 2026 11:11:48 -0700 (PDT)
+        Sat, 25 Jul 2026 11:11:49 -0700 (PDT)
 From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Subject: [PATCH ath-next 0/2] wifi: ath12k: Cleanup ath12k_firmware_mode
- enumeration
-Date: Sat, 25 Jul 2026 11:11:44 -0700
-Message-Id: <20260725-consolidate-firmware_mode-v1-0-aedff0ce0ba5@oss.qualcomm.com>
+Date: Sat, 25 Jul 2026 11:11:45 -0700
+Subject: [PATCH ath-next 1/2] wifi: ath12k: move firmware_mode enum to
+ qmi.h
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -88,35 +90,33 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAGD8ZGoC/42NUQrCMBBEryL7bUoSaUv98h5SZE22dqFJNIm1U
- np3Q0/gz8BjmDcrJIpMCc6HFSLNnDj4Aup4ADOif5BgWxi01I1sVStM8ClMbDGTGDi6D0a6uWB
- JdCejVT3Yu+4MlP0z0sDL7r4C5lF4WjL0pRk55RC/++ms9v4P/6yEFFg3iLW01pr2ElKqXm+cT
- HCuKgH9tm0/v11m1tMAAAA=
-X-Change-ID: 20260717-consolidate-firmware_mode-93c215fdb29c
+Message-Id: <20260725-consolidate-firmware_mode-v1-1-aedff0ce0ba5@oss.qualcomm.com>
+References: <20260725-consolidate-firmware_mode-v1-0-aedff0ce0ba5@oss.qualcomm.com>
+In-Reply-To: <20260725-consolidate-firmware_mode-v1-0-aedff0ce0ba5@oss.qualcomm.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
         linux-kernel@vger.kernel.org,
         Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Proofpoint-ORIG-GUID: O4jaRMeKRwDVodOkAezjPDHmPSoRlP9-
-X-Authority-Analysis: v=2.4 cv=A8Bc+aWG c=1 sm=1 tr=0 ts=6a64fc65 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+X-Proofpoint-ORIG-GUID: Td3V98zhFQRhljUT_clWTkVkXG6tRwWB
+X-Authority-Analysis: v=2.4 cv=A8Bc+aWG c=1 sm=1 tr=0 ts=6a64fc66 cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
  a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=VwQbUJbxAAAA:8 a=G7SgPBRoAAAA:8 a=UXYPoygNbYHkjK84YqUA:9 a=QEXdDO2ut3YA:10
- a=rl5im9kqc5Lf4LNbBjHf:22 a=2rYB-OeQH5pmQqQB7sEg:22
-X-Proofpoint-GUID: O4jaRMeKRwDVodOkAezjPDHmPSoRlP9-
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfX8jbFG0fNuB6+
- FLCeXGbBjEgc6Fl1W73peouLYmWrlAo9qmXKNMBTIAVnzFNGHd6V9hWX9ujbX3rKfBRiyN9xp50
- vX/N++MKisrwFhkfa9ihznSGkiaryfqUdeKekxaH2NxuJfWNOrrWsN77i9ZrqHRJKGiGHtLWvya
- PeE7nMJHMH7meCSL/rc7vNAznL1voSkslek67lDO/uNkfQJzXnBFXmgUHHb8KUUwEW4kpnvKvAO
- yMgjOklLsekHm+Q7mUhfA0qiNO/vz3Kwude5KeFgZuX+2TvA5Q8EHR4nxD1tX9EQh8VDspIkkL+
- ZA7LSiAoghv9k1DXTUSHJ3y8qGnenwFL+cIocfkb+VVOQO3L3tHR54uEQNjvzPUcyQc01gP2MiF
- E0nohVipvfKrHYNWq/D8AWvow1hKYFzE0VBAf5MbChImivz64koFnn+tr5ENZbNfMwkdNTCQFcF
- wFXozgAvTwlHXlxvuJw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfX8PTvdLVrGoMl
- wDcYgDKospZCF/LhjA1Gund8xFmhzaLwAEhXeT71wjbvp6ZAR4VcuhgsvYZ1rcvyEKko+7Sve/+
- CE4fknkePrlt4hxX4hEk+R4tMKxlbZQ=
+ a=EUspDBNiAAAA:8 a=7UZE0HBkOswYJVh0bkIA:9 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-GUID: Td3V98zhFQRhljUT_clWTkVkXG6tRwWB
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfX8+u8wswNbCWE
+ CnHH4NOCdrs6TbQrHLRQ6k5eif7u5o/ryzH3imHiEJxsZuCaAgU8G7PeFW5Zkx1430cC61ShHrF
+ NZcUMr1r+0FWn+t/L345g6/7lfRQA/pxTSnQsSkUOu/uS1pepUl515xVCSgwc59ifeWcV8qjhax
+ lbixTCqq2xb0gVK1TWmH+S/LuiLFladBBdRNCCjfFSBBGUbY+1D/1ckNdQXWQa2ctT5Hblh7qlp
+ nUtDSqPIXmlFJtwq6R0jNwNcUm16UVVDDE2pX2h9hjPhjBIvSdZWbVfGN0jDMfa7Sl/fzf83OOH
+ dw2hcjNsJowmgq9L/NkXjNOMfR3ADaUth807KfoFM6ghOZwvKBzkecVWNGYrWIplYHB06KLmKAa
+ quE2KpU5eu5EPSb88jowrNtKKKQylviJaku0BqqABuig191bSMy76X7ZXnr6iaCUyVw50xbcf8b
+ utU0ypJ+UW1upw9nyGA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfXyZVU9hGyWFxV
+ Ufjof1LadfNGex9qu3Y+gMcUP7+7bltMsre9ev/HIrJU0O4v8gXKrYbMFQ9SLK21ZWX3AftAZzU
+ SwRwGoo9ieQmMM66iXpB4nxQjlRryBk=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-25_05,2026-07-24_02,2025-10-01_01
@@ -126,24 +126,148 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607250173
 
-This series inspired by [1] for ath11k, but takes a more comprehensive
-approach.
+The enum ath12k_firmware_mode defines values that are part of the QMI
+ABI, so it belongs in qmi.h rather than core.h. Consolidate it there
+along with ATH12K_FIRMWARE_MODE_OFF, which is currently a bare macro.
+Rename the enum to ath12k_qmi_firmware_mode to align with the naming
+convention of the other enums in qmi.h, and place it with the other
+ath12k_qmi_* enums.
 
-[1] https://lore.kernel.org/all/TYZPR01MB55561DF4543A0265B47A58CDC9C92@TYZPR01MB5556.apcprd01.prod.exchangelabs.com/
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
 
+Assisted-by: Claude:claude-sonnet-4-6
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 ---
-Jeff Johnson (2):
-      wifi: ath12k: move firmware_mode enum to qmi.h
-      wifi: ath12k: rename firmware_mode enum members to use QMI namespace
-
- drivers/net/wireless/ath/ath12k/core.c |  5 +++--
+ drivers/net/wireless/ath/ath12k/core.c |  3 ++-
  drivers/net/wireless/ath/ath12k/core.h | 10 +---------
- drivers/net/wireless/ath/ath12k/mac.c  |  2 +-
- drivers/net/wireless/ath/ath12k/pci.c  |  3 ++-
- drivers/net/wireless/ath/ath12k/qmi.c  |  8 ++++----
+ drivers/net/wireless/ath/ath12k/pci.c  |  1 +
+ drivers/net/wireless/ath/ath12k/qmi.c  |  4 ++--
  drivers/net/wireless/ath/ath12k/qmi.h  | 14 ++++++++++++--
- 6 files changed, 23 insertions(+), 19 deletions(-)
----
-base-commit: 189721a4afa1804315e7dcfca9ca0539c7b1d7af
-change-id: 20260717-consolidate-firmware_mode-93c215fdb29c
+ 5 files changed, 18 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+index a9112760185f..a052a77828f3 100644
+--- a/drivers/net/wireless/ath/ath12k/core.c
++++ b/drivers/net/wireless/ath/ath12k/core.c
+@@ -23,6 +23,7 @@
+ #include "wow.h"
+ #include "dp_cmn.h"
+ #include "peer.h"
++#include "qmi.h"
+ 
+ unsigned int ath12k_debug_mask;
+ module_param_named(debug_mask, ath12k_debug_mask, uint, 0644);
+@@ -1188,7 +1189,7 @@ static int ath12k_core_hw_group_start(struct ath12k_hw_group *ag)
+ }
+ 
+ static int ath12k_core_start_firmware(struct ath12k_base *ab,
+-				      enum ath12k_firmware_mode mode)
++				      enum ath12k_qmi_firmware_mode mode)
+ {
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
+index f9fb1399e0b6..a43959ebf46f 100644
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -160,14 +160,6 @@ enum ath12k_hw_rev {
+ 	ATH12K_HW_IPQ5424_HW10,
+ };
+ 
+-enum ath12k_firmware_mode {
+-	/* the default mode, standard 802.11 functionality */
+-	ATH12K_FIRMWARE_MODE_NORMAL,
+-
+-	/* factory tests etc */
+-	ATH12K_FIRMWARE_MODE_FTM,
+-};
+-
+ #define ATH12K_IRQ_NUM_MAX 57
+ #define ATH12K_EXT_IRQ_NUM_MAX	16
+ #define ATH12K_MAX_TCL_RING_NUM	3
+@@ -1143,7 +1135,7 @@ struct ath12k_base {
+ 
+ 	struct ath12k_hw_group *ag;
+ 	struct ath12k_wsi_info wsi_info;
+-	enum ath12k_firmware_mode fw_mode;
++	enum ath12k_qmi_firmware_mode fw_mode;
+ 	struct ath12k_ftm_event_obj ftm_event_obj;
+ 	bool hw_group_ref;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index ad74140e0fa5..907d29b1020c 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -17,6 +17,7 @@
+ #include "mhi.h"
+ #include "debug.h"
+ #include "hal.h"
++#include "qmi.h"
+ 
+ #define ATH12K_PCI_BAR_NUM		0
+ #define ATH12K_PCI_DMA_MASK		36
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.c b/drivers/net/wireless/ath/ath12k/qmi.c
+index bb61c78e5c29..c466c3ae793a 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.c
++++ b/drivers/net/wireless/ath/ath12k/qmi.c
+@@ -3431,7 +3431,7 @@ int ath12k_qmi_wlanfw_aux_uc_info_send(struct ath12k_base *ab)
+ }
+ 
+ static int ath12k_qmi_wlanfw_mode_send(struct ath12k_base *ab,
+-				       u32 mode)
++				       enum ath12k_qmi_firmware_mode mode)
+ {
+ 	struct qmi_wlanfw_wlan_mode_req_msg_v01 req = {};
+ 	struct qmi_wlanfw_wlan_mode_resp_msg_v01 resp = {};
+@@ -3631,7 +3631,7 @@ void ath12k_qmi_firmware_stop(struct ath12k_base *ab)
+ }
+ 
+ int ath12k_qmi_firmware_start(struct ath12k_base *ab,
+-			      u32 mode)
++			      enum ath12k_qmi_firmware_mode mode)
+ {
+ 	int ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/qmi.h b/drivers/net/wireless/ath/ath12k/qmi.h
+index cbe5be30053a..27b69847a15e 100644
+--- a/drivers/net/wireless/ath/ath12k/qmi.h
++++ b/drivers/net/wireless/ath/ath12k/qmi.h
+@@ -32,7 +32,6 @@
+ #define QMI_WLFW_FW_READY_IND_V01		0x0038
+ 
+ #define QMI_WLANFW_MAX_DATA_SIZE_V01		6144
+-#define ATH12K_FIRMWARE_MODE_OFF		4
+ 
+ #define ATH12K_BOARD_ID_DEFAULT	0xFF
+ 
+@@ -602,6 +601,17 @@ enum ath12k_qmi_mem_mode {
+ 	ATH12K_QMI_MEMORY_MODE_LOW_512_M,
+ };
+ 
++enum ath12k_qmi_firmware_mode {
++	/* the default mode, standard 802.11 functionality */
++	ATH12K_FIRMWARE_MODE_NORMAL,
++
++	/* factory tests etc */
++	ATH12K_FIRMWARE_MODE_FTM,
++
++	/* firmware offline */
++	ATH12K_FIRMWARE_MODE_OFF = 4,
++};
++
+ static inline void ath12k_qmi_set_event_block(struct ath12k_qmi *qmi, bool block)
+ {
+ 	lockdep_assert_held(&qmi->event_lock);
+@@ -617,7 +627,7 @@ static inline bool ath12k_qmi_get_event_block(struct ath12k_qmi *qmi)
+ }
+ 
+ int ath12k_qmi_firmware_start(struct ath12k_base *ab,
+-			      u32 mode);
++			      enum ath12k_qmi_firmware_mode mode);
+ void ath12k_qmi_firmware_stop(struct ath12k_base *ab);
+ void ath12k_qmi_deinit_service(struct ath12k_base *ab);
+ int ath12k_qmi_init_service(struct ath12k_base *ab);
+
+-- 
+2.43.0
 
