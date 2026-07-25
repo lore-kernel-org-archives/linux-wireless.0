@@ -1,678 +1,149 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AAA3311973
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:05:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C0C33F4DDD
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784991917; cv=none; b=eMO4VlzEt35d2393i9SfYtT9NfduY8BdK/2yUNwylRPvMVcyfwKwLdFw/n44mwIbjCKe93TlBbthAURTIKlSMt9b49BjkLfjqYsP894fBqxd69FaLDBMsQQQlbmLgwHMy06pBz/gt73byzcHH3dPG5G0aj5/hzRgtkVoKx6nMKI=
+	t=1785003111; cv=none; b=DJFtorT+ErQw9rKAhqmMULL16s0RJ9mPARtr063e415hFANdC6jwVpSu+a7PMcjf2HhKuaU32iTkTmA9u6po0vPd+4AC0z1Fn+85kDWPyzSLwyVKDtsNo3QDnBJdKPG0Rrn01h2YP+8NiAMyzPhjoMe2OaMoni4FNSbljeSL9qk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784991917; c=relaxed/simple;
-	bh=vgM08NrAE9TlDEJZ5tJ8HWawfu8k4tIcRJkpqjYuA/k=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H3NkEArvSIdZWdfADodPDoZ69wIV9TiJLsHYTppDRKjNC0RuPuUTmDOASEy0OfQCsHm8GDJfAwW94w1eZTKFoc06ydgODqzRLTlnRwIxVlOZ0OEbmeGjc2je1ruXVMHOiwQxsUyb1+SpStD6Rv3uUXeWfTjWW95M+0dSeHpBY4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=MRuUsJyg; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785003111; c=relaxed/simple;
+	bh=R5+AM8MsBV1hJRBd//ih/Emez4JeTWQv30n6Tlqgei4=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=UWEG2F/6v+dYW0itBLu2fqYVPbt5GzELBHq4w7biRs6UkpH1wkmm+B0fi6HkbX9egIw60vDb68cr3dAY9rmu4XahpQp7U8grB+nufN55WvmJ9DBLh/7wppl1FKhnpR95vq5ABRqXPX2JtaTg7wgPtU3QyEi0/AZy5sOBCKIgLu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KQenNCQm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HaW8vzrJ; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="MRuUsJyg"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784991909;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m28sztYDzqde2Ce97j3YDvGo94KxPFT6h2Wy/q/fR2M=;
-	b=MRuUsJygVQrW/Hk/GWSMp7+/h6HXmTeLePdBoEmO5aUSqr1iy6D6WWwFh5UL9odtleSRm7
-	86Ol7+co5cBEzywFQG6vqYgYaihQfCo8kyKx0jPN+z/T4HXlB4TaZ/ZrvgVIX90Z2m8ier
-	EFEJkADfKh1F+J1Mc94vfIdUrN+rQTI=
-From: luka.gejak@linux.dev
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Michael Straube <straube.linux@gmail.com>,
-	Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v2 11/11] wifi: rtw88: run the RTL8723BS association register sequence
-Date: Sat, 25 Jul 2026 17:04:27 +0200
-Message-ID: <20260725150427.93887-12-luka.gejak@linux.dev>
-In-Reply-To: <20260725150427.93887-1-luka.gejak@linux.dev>
-References: <20260725150427.93887-1-luka.gejak@linux.dev>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KQenNCQm";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HaW8vzrJ"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66PGvgiB1975170
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=oViaTxTEJFf8D4uFBbYAXO
+	cG09FPtk8+dz6gicLx8n0=; b=KQenNCQmmimFSxBZ+AiQ3hlXWavaJyKWSWl9fi
+	0Q5TUIrwQHBJqYgOXRImgwSxbm6eC7phgCcRXkingMAghiM5yRifY4Yc/rH157TZ
+	6sWBnzZmwymqRmRkeGjcF7+PQAxleiqrRgXeiB3TwRFZhY4IChN7TtwFmUYRI5w1
+	u+e5GvvNa1WqOHn7yT4PNmRAyFapoqITAXt6CPecFfVJgSnaS1dl3H7AuIVd/ZmJ
+	5np3d0fl8lStRq7U0C0MXbCnfdtFqBuFhDAki+U+pU2qyDHedQ9CeTjwAj98P0jy
+	cE/3dl9jvKJ3zxsdi2y6iu7VJermEvScCYfWiYYf0e6gCJIg==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fmpajh8yf-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 18:11:49 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-388b404eaa4so2055707a91.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:11:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785003109; x=1785607909; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=oViaTxTEJFf8D4uFBbYAXOcG09FPtk8+dz6gicLx8n0=;
+        b=HaW8vzrJlrGEURn8pCQUGMFpddC9pYP0B91q6BZlZWscrvd2DXGhH5ujKBRJDzipGp
+         ccSUpqWhbU5o4GHK8kepGoub36CtiDEQuqQvjRtGEBFx8HhCdAFlyIv0+x6TXf0HMv2H
+         BWgRLkg5WPWhoJLfsk3zmZZmHm+m6YV8jNnagKYA+etcXpEhcsdbqCNUCuE0DUOOdyes
+         ApTEyhdrRm8OP7hMrkQN6Tj7pPShtQPEZDkHmFsfKm+bkDEsPhepndGzPkm4L2l7pikS
+         14MJ1Q5+qLzzhST5jthC9aSkHjDQOYIuJo4pZrOKgY+PWHGm6emh2/fiADz1l+40qUeC
+         wgoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785003109; x=1785607909;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=oViaTxTEJFf8D4uFBbYAXOcG09FPtk8+dz6gicLx8n0=;
+        b=Q7RylvmrpFw738PtKzWr5SYQpKeDl3PPQ4LIdzFpE4eclLgebzDugDkvwY8tarvIvo
+         4wtRVIpxuTC0zGTDEi77ZlxzocsW3XRxLxGJ6LGUoiGnJ4KrCGRfCbzkuhQk4obt/kGh
+         Ddi8biF4OITzRonqdL7vpvLqTqNjuBJdcbAdngzWX9E3SE82dbd45wtBLhRMCuRvNram
+         bqVnVx9JwKlNSM6bEM/6x3UPuqg5NP93gCjtpz9oHDTksYExtW3kbrnIpeXm4jy2aJ/w
+         N3dclaBcx8HqVxyDw9l68daa+7ctjzAK2L4g4z+bMcM83cEOHJaVmPhzNwePPNMPeMMU
+         hIww==
+X-Gm-Message-State: AOJu0YxIigPa9qiHEr2ArjzkKo5sr2SbNdcvujVcEUeu67bHNm/wMglO
+	m15/1065LSPQ2W4ODnZz47QLrgt1zDnea+5/3M+TERA0hsjczmSO3T99QjD2abCBvNrq9doZQ/W
+	CFMnXZ8Va5P8UxRVpJtSc7WN5VacmP9a5s4c9QqPc4YVI29xwMuaeLes9tjaJeS/f9rcvIA==
+X-Gm-Gg: AR+sD12ZcpyDzfl3QmS/6jSL1Kkq0saFhxLpzPYqRNCgs6yzSXfjEZUY8AblF0a1B0k
+	DGRzH6GM9ZRlXEXz/PdNay0G0mwo54EI8prspWTtthMko4164y/xjig5o+DirGAfKPHQPHnLQ3E
+	UnAST+cYd12CnWl7ITRsFXkhd4Po/T2PrQOk2wVjXSOKfFLrDCU+HMQJuActSxZzn0wdzeaxjrW
+	fBue0zplvV/QzSge8d6YCl33rBanlJNy4JBbsSJPIpj3Mp4sXTMwLeV5jX16Unhbl6CiBbEczO/
+	NiMRiJFRk6vlgV96/Kgu3nXAFK3TQlwAfecQxTOAzvbNhxas9VCnsb+bvqsPosjXQLDqY4r4pul
+	15+lexawtWvLgxLX3uWjOMMmOTicco8OZ3f0Anxwlbtfbp1IUsdRLja0=
+X-Received: by 2002:a17:90b:3c8e:b0:37f:db06:229c with SMTP id 98e67ed59e1d1-38f2960fabbmr2985131a91.22.1785003109190;
+        Sat, 25 Jul 2026 11:11:49 -0700 (PDT)
+X-Received: by 2002:a17:90b:3c8e:b0:37f:db06:229c with SMTP id 98e67ed59e1d1-38f2960fabbmr2985120a91.22.1785003108789;
+        Sat, 25 Jul 2026 11:11:48 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13003f12sm64692635c88.2.2026.07.25.11.11.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Jul 2026 11:11:48 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: [PATCH ath-next 0/2] wifi: ath12k: Cleanup ath12k_firmware_mode
+ enumeration
+Date: Sat, 25 Jul 2026 11:11:44 -0700
+Message-Id: <20260725-consolidate-firmware_mode-v1-0-aedff0ce0ba5@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAGD8ZGoC/42NUQrCMBBEryL7bUoSaUv98h5SZE22dqFJNIm1U
+ np3Q0/gz8BjmDcrJIpMCc6HFSLNnDj4Aup4ADOif5BgWxi01I1sVStM8ClMbDGTGDi6D0a6uWB
+ JdCejVT3Yu+4MlP0z0sDL7r4C5lF4WjL0pRk55RC/++ms9v4P/6yEFFg3iLW01pr2ElKqXm+cT
+ HCuKgH9tm0/v11m1tMAAAA=
+X-Change-ID: 20260717-consolidate-firmware_mode-93c215fdb29c
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Proofpoint-ORIG-GUID: O4jaRMeKRwDVodOkAezjPDHmPSoRlP9-
+X-Authority-Analysis: v=2.4 cv=A8Bc+aWG c=1 sm=1 tr=0 ts=6a64fc65 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=G7SgPBRoAAAA:8 a=UXYPoygNbYHkjK84YqUA:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22 a=2rYB-OeQH5pmQqQB7sEg:22
+X-Proofpoint-GUID: O4jaRMeKRwDVodOkAezjPDHmPSoRlP9-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfX8jbFG0fNuB6+
+ FLCeXGbBjEgc6Fl1W73peouLYmWrlAo9qmXKNMBTIAVnzFNGHd6V9hWX9ujbX3rKfBRiyN9xp50
+ vX/N++MKisrwFhkfa9ihznSGkiaryfqUdeKekxaH2NxuJfWNOrrWsN77i9ZrqHRJKGiGHtLWvya
+ PeE7nMJHMH7meCSL/rc7vNAznL1voSkslek67lDO/uNkfQJzXnBFXmgUHHb8KUUwEW4kpnvKvAO
+ yMgjOklLsekHm+Q7mUhfA0qiNO/vz3Kwude5KeFgZuX+2TvA5Q8EHR4nxD1tX9EQh8VDspIkkL+
+ ZA7LSiAoghv9k1DXTUSHJ3y8qGnenwFL+cIocfkb+VVOQO3L3tHR54uEQNjvzPUcyQc01gP2MiF
+ E0nohVipvfKrHYNWq/D8AWvow1hKYFzE0VBAf5MbChImivz64koFnn+tr5ENZbNfMwkdNTCQFcF
+ wFXozgAvTwlHXlxvuJw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI1MDE3MyBTYWx0ZWRfX8PTvdLVrGoMl
+ wDcYgDKospZCF/LhjA1Gund8xFmhzaLwAEhXeT71wjbvp6ZAR4VcuhgsvYZ1rcvyEKko+7Sve/+
+ CE4fknkePrlt4hxX4hEk+R4tMKxlbZQ=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-25_05,2026-07-24_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 suspectscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ impostorscore=0 adultscore=0 lowpriorityscore=0 spamscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607250173
 
-From: Luka Gejak <luka.gejak@linux.dev>
+This series inspired by [1] for ath11k, but takes a more comprehensive
+approach.
 
-The RTL8723BS firmware does not derive the BSS parameters itself. The
-vendor start_clnt_join() programs them directly around authentication,
-and without that the station either fails to authenticate or is dropped
-by the AP shortly after associating.
+[1] https://lore.kernel.org/all/TYZPR01MB55561DF4543A0265B47A58CDC9C92@TYZPR01MB5556.apcprd01.prod.exchangelabs.com/
 
-Reproduce that sequence: restrict the receive filter to the target BSSID
-for the join window, program the basic and response rates from the BSS
-rate elements, apply the preamble and slot time from the BSS capability,
-enable TSF update, and wait for a beacon from the target before sending
-the authentication frame. Restore the receive filter and response rates
-on disconnect.
-
-Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/mac80211.c | 496 +++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/main.h     |   2 +
- drivers/net/wireless/realtek/rtw88/reg.h      |   2 +
- drivers/net/wireless/realtek/rtw88/sec.h      |   1 +
- 4 files changed, 498 insertions(+), 3 deletions(-)
+Jeff Johnson (2):
+      wifi: ath12k: move firmware_mode enum to qmi.h
+      wifi: ath12k: rename firmware_mode enum members to use QMI namespace
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index ff0f4f0bdc7b..2bb969e88381 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -46,6 +46,432 @@ void rtw8723bs_auth_sync_rx(struct rtw_dev *rtwdev,
- }
- EXPORT_SYMBOL(rtw8723bs_auth_sync_rx);
- 
-+/* ---- 8723BS SDIO association sequence (vendor start_clnt_join) ---- */
-+
-+#define RTW8723BS_JOIN_RETRY_LIMIT		0x30
-+#define RTW8723BS_AUTH_SYNC_WAIT_FALLBACK_MS	120
-+#define RTW8723BS_AUTH_SYNC_WAIT_MIN_MS		80
-+#define RTW8723BS_AUTH_SYNC_WAIT_MAX_MS		160
-+#define RTW8723BS_ACK_PREAMBLE_SHORT		BIT(7)
-+#define RTW8723BS_SHORT_SLOT_TIME		9
-+#define RTW8723BS_LONG_SLOT_TIME		20
-+#define RTW8723BS_RRSR_1M			BIT(0)
-+#define RTW8723BS_RRSR_2M			BIT(1)
-+#define RTW8723BS_RRSR_5_5M			BIT(2)
-+#define RTW8723BS_RRSR_11M			BIT(3)
-+#define RTW8723BS_RRSR_6M			BIT(4)
-+#define RTW8723BS_RRSR_9M			BIT(5)
-+#define RTW8723BS_RRSR_12M			BIT(6)
-+#define RTW8723BS_RRSR_18M			BIT(7)
-+#define RTW8723BS_RRSR_24M			BIT(8)
-+#define RTW8723BS_RRSR_36M			BIT(9)
-+#define RTW8723BS_RRSR_48M			BIT(10)
-+#define RTW8723BS_RRSR_54M			BIT(11)
-+#define RTW8723BS_RRSR_CCK_RATES \
-+	(RTW8723BS_RRSR_1M | RTW8723BS_RRSR_2M | \
-+	 RTW8723BS_RRSR_5_5M | RTW8723BS_RRSR_11M)
-+#define RTW8723BS_RRSR_2G_FORCE			RTW8723BS_RRSR_CCK_RATES
-+#define RTW8723BS_RRSR_2G_ALLOW \
-+	(RTW8723BS_RRSR_CCK_RATES | RTW8723BS_RRSR_6M | \
-+	 RTW8723BS_RRSR_12M | RTW8723BS_RRSR_24M)
-+
-+/* Keep the RCR at the vendor target-only state (AMF + CBSSID) across the whole
-+ * connect window, matching the vendor STA path. accept_all is kept only for the
-+ * caller's intent; both paths converge the filter to target-only.
-+ */
-+static void rtw8723bs_auth_rx_filter(struct rtw_dev *rtwdev, bool accept_all)
-+{
-+	rtwdev->hal.rcr |= BIT_AMF | BIT_CBSSID_DATA | BIT_CBSSID_BCN;
-+	rtwdev->hal.rcr &= ~BIT_AAP;
-+	rtw_write32(rtwdev, REG_RCR, rtwdev->hal.rcr);
-+}
-+
-+static void rtw8723bs_config_sec_cfg(struct rtw_dev *rtwdev)
-+{
-+	u16 sec = rtw_read16(rtwdev, RTW_SEC_CONFIG);
-+
-+	sec |= RTW_SEC_CHK_KEYID | RTW_SEC_TX_DEC_EN | RTW_SEC_RX_DEC_EN;
-+	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec);
-+}
-+
-+static void rtw8723bs_config_default_key_search(struct rtw_dev *rtwdev,
-+						bool enable)
-+{
-+	u16 sec = rtw_read16(rtwdev, RTW_SEC_CONFIG);
-+
-+	if (enable)
-+		sec |= RTW_SEC_TX_BC_USE_DK | RTW_SEC_TX_UNI_USE_DK |
-+		       RTW_SEC_RX_UNI_USE_DK;
-+	else
-+		sec &= ~(RTW_SEC_TX_UNI_USE_DK | RTW_SEC_RX_UNI_USE_DK |
-+			 RTW_SEC_TX_BC_USE_DK | RTW_SEC_RX_BC_USE_DK);
-+	rtw_write16(rtwdev, RTW_SEC_CONFIG, sec);
-+}
-+
-+static void rtw8723bs_enable_tsf_update(struct rtw_dev *rtwdev)
-+{
-+	rtw_write8_clr(rtwdev, REG_BCN_CTRL, BIT_DIS_TSF_UDT);
-+}
-+
-+static void rtw8723bs_set_ack_preamble(struct rtw_dev *rtwdev,
-+				       bool short_preamble)
-+{
-+	u8 val = rtw_read8(rtwdev, REG_RRSR + 2) & ~RTW8723BS_ACK_PREAMBLE_SHORT;
-+
-+	if (short_preamble)
-+		val |= RTW8723BS_ACK_PREAMBLE_SHORT;
-+	rtw_write8(rtwdev, REG_RRSR + 2, val);
-+}
-+
-+static void rtw8723bs_set_slot_time(struct rtw_dev *rtwdev, bool short_slot)
-+{
-+	rtw_write8(rtwdev, REG_SLOT,
-+		   short_slot ? RTW8723BS_SHORT_SLOT_TIME :
-+				RTW8723BS_LONG_SLOT_TIME);
-+}
-+
-+static u16 rtw8723bs_rrsr_from_ie_rate(u8 rate)
-+{
-+	switch (rate & 0x7f) {
-+	case 2:   return RTW8723BS_RRSR_1M;
-+	case 4:   return RTW8723BS_RRSR_2M;
-+	case 11:  return RTW8723BS_RRSR_5_5M;
-+	case 22:  return RTW8723BS_RRSR_11M;
-+	case 12:  return RTW8723BS_RRSR_6M;
-+	case 18:  return RTW8723BS_RRSR_9M;
-+	case 24:  return RTW8723BS_RRSR_12M;
-+	case 36:  return RTW8723BS_RRSR_18M;
-+	case 48:  return RTW8723BS_RRSR_24M;
-+	case 72:  return RTW8723BS_RRSR_36M;
-+	case 96:  return RTW8723BS_RRSR_48M;
-+	case 108: return RTW8723BS_RRSR_54M;
-+	default:  return 0;
-+	}
-+}
-+
-+static void rtw8723bs_collect_basic_rates(const u8 *ie, u16 *basic_rates,
-+					  bool *valid)
-+{
-+	int i;
-+
-+	if (!ie)
-+		return;
-+
-+	for (i = 0; i < ie[1]; i++) {
-+		u16 r;
-+
-+		if (!(ie[i + 2] & 0x80))
-+			continue;
-+		r = rtw8723bs_rrsr_from_ie_rate(ie[i + 2]);
-+		if (!r)
-+			continue;
-+		*basic_rates |= r;
-+		*valid = true;
-+	}
-+}
-+
-+static void rtw8723bs_reset_response_rates(struct rtw_dev *rtwdev)
-+{
-+	rtw_write32(rtwdev, REG_RRSR, 0xffff1);
-+	rtwdev->dm_info.rrsr_val_init = 0xffff1;
-+}
-+
-+static void rtw8723bs_apply_basic_rates(struct rtw_dev *rtwdev,
-+					struct ieee80211_vif *vif,
-+					const u8 *bssid)
-+{
-+	struct ieee80211_bss_conf *conf = &vif->bss_conf;
-+	struct cfg80211_bss *lookup_bss = NULL;
-+	struct cfg80211_bss *bss = NULL;
-+	bool valid = false;
-+	u16 basic_rates = 0;
-+
-+	if (!rtw_is_8723bs(rtwdev) || vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (conf->bss) {
-+		bss = conf->bss;
-+	} else if (bssid && is_valid_ether_addr(bssid)) {
-+		lookup_bss = cfg80211_get_bss(rtwdev->hw->wiphy, NULL,
-+					      bssid, NULL, 0,
-+					      IEEE80211_BSS_TYPE_ESS,
-+					      IEEE80211_PRIVACY_ANY);
-+		bss = lookup_bss;
-+	}
-+
-+	if (bss) {
-+		const u8 *rates, *ext;
-+
-+		rcu_read_lock();
-+		rates = ieee80211_bss_get_ie(bss, WLAN_EID_SUPP_RATES);
-+		ext = ieee80211_bss_get_ie(bss, WLAN_EID_EXT_SUPP_RATES);
-+		rtw8723bs_collect_basic_rates(rates, &basic_rates, &valid);
-+		rtw8723bs_collect_basic_rates(ext, &basic_rates, &valid);
-+		rcu_read_unlock();
-+	}
-+
-+	if (valid) {
-+		basic_rates |= RTW8723BS_RRSR_2G_FORCE;
-+		basic_rates &= RTW8723BS_RRSR_2G_ALLOW;
-+		rtw_write16(rtwdev, REG_RRSR, basic_rates);
-+		rtw_write8(rtwdev, REG_RRSR + 2,
-+			   rtw_read8(rtwdev, REG_RRSR + 2) & 0xf0);
-+		rtwdev->dm_info.rrsr_val_init = basic_rates;
-+	}
-+
-+	if (lookup_bss)
-+		cfg80211_put_bss(rtwdev->hw->wiphy, lookup_bss);
-+}
-+
-+/* Program response slot time (and, when set_preamble, the ACK preamble) from
-+ * the selected scan BSS capabilities; the AP capabilities are not yet in
-+ * bss_conf at mgd_prepare_tx() time.
-+ */
-+static void rtw8723bs_apply_bss_cap(struct rtw_dev *rtwdev,
-+				    struct ieee80211_vif *vif,
-+				    const u8 *bssid, bool set_preamble)
-+{
-+	struct ieee80211_bss_conf *conf = &vif->bss_conf;
-+	struct cfg80211_bss *lookup_bss = NULL;
-+	struct cfg80211_bss *bss = NULL;
-+	bool short_preamble, short_slot;
-+	u16 cap = 0;
-+
-+	if (!rtw_is_8723bs(rtwdev) || vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (conf->bss) {
-+		bss = conf->bss;
-+	} else if (bssid && is_valid_ether_addr(bssid)) {
-+		lookup_bss = cfg80211_get_bss(rtwdev->hw->wiphy, NULL,
-+					      bssid, NULL, 0,
-+					      IEEE80211_BSS_TYPE_ESS,
-+					      IEEE80211_PRIVACY_ANY);
-+		bss = lookup_bss;
-+	}
-+
-+	if (bss) {
-+		cap = bss->capability;
-+	} else if (conf->assoc_capability) {
-+		cap = conf->assoc_capability;
-+	} else {
-+		short_preamble = conf->use_short_preamble;
-+		short_slot = conf->use_short_slot;
-+		goto program;
-+	}
-+	short_preamble = !!(cap & WLAN_CAPABILITY_SHORT_PREAMBLE);
-+	short_slot = !!(cap & WLAN_CAPABILITY_SHORT_SLOT_TIME);
-+
-+program:
-+	if (set_preamble)
-+		rtw8723bs_set_ack_preamble(rtwdev, short_preamble);
-+	rtw8723bs_set_slot_time(rtwdev, short_slot);
-+
-+	if (lookup_bss)
-+		cfg80211_put_bss(rtwdev->hw->wiphy, lookup_bss);
-+}
-+
-+static unsigned int rtw8723bs_auth_sync_wait_ms(struct ieee80211_vif *vif)
-+{
-+	u16 beacon_int = vif->bss_conf.beacon_int;
-+	unsigned int wait_ms;
-+
-+	if (!beacon_int)
-+		return RTW8723BS_AUTH_SYNC_WAIT_FALLBACK_MS;
-+
-+	wait_ms = DIV_ROUND_UP(beacon_int * 1024, 1000) + 20;
-+	return clamp_t(unsigned int, wait_ms, RTW8723BS_AUTH_SYNC_WAIT_MIN_MS,
-+		       RTW8723BS_AUTH_SYNC_WAIT_MAX_MS);
-+}
-+
-+static void rtw8723bs_auth_sync_start(struct rtw_dev *rtwdev, const u8 *bssid)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	ether_addr_copy(sync->bssid, bssid);
-+	sync->seen = false;
-+	sync->seen_count = 0;
-+	sync->active = true;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+}
-+
-+static void rtw8723bs_auth_sync_stop(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	sync->active = false;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+}
-+
-+static bool rtw8723bs_auth_sync_seen(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+	unsigned long flags;
-+	bool seen;
-+
-+	spin_lock_irqsave(&sync->lock, flags);
-+	seen = sync->seen;
-+	spin_unlock_irqrestore(&sync->lock, flags);
-+
-+	return seen;
-+}
-+
-+static bool rtw8723bs_auth_sync_wait(struct rtw_dev *rtwdev,
-+				     unsigned int wait_ms)
-+{
-+	struct rtw_auth_sync *sync = &rtwdev->auth_sync;
-+
-+	return wait_event_timeout(sync->wait, rtw8723bs_auth_sync_seen(rtwdev),
-+				  msecs_to_jiffies(wait_ms)) > 0;
-+}
-+
-+static bool rtw8723bs_mgd_prepare_is_auth(struct rtw_dev *rtwdev,
-+					  struct ieee80211_prep_tx_info *info)
-+{
-+	return rtw_is_8723bs(rtwdev) && info &&
-+	       info->subtype == IEEE80211_STYPE_AUTH;
-+}
-+
-+/* Replicate the vendor start_clnt_join() register programming right before
-+ * auth. Returns true for a fresh join (BSSID changed).
-+ */
-+static bool rtw8723bs_mgd_prepare_join(struct rtw_dev *rtwdev,
-+				       struct ieee80211_vif *vif,
-+				       const u8 *bssid)
-+{
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	bool fresh_join;
-+	u16 retry_limit;
-+
-+	if (!is_valid_ether_addr(bssid))
-+		return false;
-+
-+	fresh_join = !ether_addr_equal(rtwvif->bssid, bssid);
-+
-+	ether_addr_copy(rtwvif->bssid, bssid);
-+	rtwvif->aid = 0;
-+	rtwvif->net_type = RTW_NET_MGD_LINKED;
-+	rtw_vif_port_config(rtwdev, rtwvif,
-+			    PORT_SET_BSSID | PORT_SET_AID | PORT_SET_NET_TYPE);
-+
-+	/* Do not narrow RRSR or switch to short-preamble responses before the
-+	 * exchange: the whole auth/assoc runs on the init response set
-+	 * (0xffff1, long preamble). Only slot time is programmed early.
-+	 */
-+	rtw8723bs_apply_bss_cap(rtwdev, vif, bssid, false);
-+
-+	rtw_fw_beacon_filter_config(rtwdev, false, vif);
-+
-+	/* Match the vendor start_clnt_join() TX state (set_msr directly, keep
-+	 * BCN_CTRL / BCNQ_DL set, reassert TBTT/RESP_SIFS every join).
-+	 */
-+	rtw_write8(rtwdev, REG_BCN_CTRL,
-+		   BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION);
-+	rtw_write32_set(rtwdev, REG_FWHW_TXQ_CTRL, BIT_EN_BCNQ_DL);
-+	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 1, 0x64 & 0xff);
-+	rtw_write8(rtwdev, REG_TBTT_PROHIBIT + 2,
-+		   (rtw_read8(rtwdev, REG_TBTT_PROHIBIT + 2) & 0xf0) | (0x64 >> 8));
-+	rtw_write16(rtwdev, REG_RESP_SIFS_CCK, 0x0808);
-+	rtw_write16(rtwdev, REG_RESP_SIFS_OFDM, 0x0a0a);
-+
-+	rtw_write16(rtwdev, REG_RXFLTMAP0, 0xffff);
-+	rtw_write16(rtwdev, REG_RXFLTMAP2, 0xffff);
-+	rtw8723bs_auth_rx_filter(rtwdev, true);
-+
-+	retry_limit = (RTW8723BS_JOIN_RETRY_LIMIT << 8) |
-+		      RTW8723BS_JOIN_RETRY_LIMIT;
-+	rtw_write16(rtwdev, REG_RETRY_LIMIT, retry_limit);
-+
-+	rtw8723bs_config_sec_cfg(rtwdev);
-+
-+	return fresh_join;
-+}
-+
-+/* The vendor sends a deauth to the target before auth to clear stale AP-side
-+ * state; synthesize and TX one, then let the AP settle.
-+ */
-+static void rtw8723bs_tx_pre_auth_deauth(struct rtw_dev *rtwdev,
-+					 struct ieee80211_vif *vif,
-+					 const u8 *bssid)
-+{
-+	struct ieee80211_tx_control control = {};
-+	struct ieee80211_tx_info *info;
-+	struct ieee80211_mgmt *mgmt;
-+	struct sk_buff *skb;
-+	unsigned int frame_len, headroom;
-+
-+	frame_len = sizeof(struct ieee80211_hdr_3addr) + sizeof(mgmt->u.deauth);
-+	headroom = rtwdev->chip->tx_pkt_desc_sz + 8;
-+
-+	skb = dev_alloc_skb(headroom + frame_len);
-+	if (!skb)
-+		return;
-+
-+	skb_reserve(skb, headroom);
-+	mgmt = skb_put_zero(skb, frame_len);
-+	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
-+					  IEEE80211_STYPE_DEAUTH);
-+	memcpy(mgmt->da, bssid, ETH_ALEN);
-+	memcpy(mgmt->sa, vif->addr, ETH_ALEN);
-+	memcpy(mgmt->bssid, bssid, ETH_ALEN);
-+	mgmt->u.deauth.reason_code = cpu_to_le16(WLAN_REASON_DEAUTH_LEAVING);
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	memset(info, 0, sizeof(*info));
-+	info->control.vif = vif;
-+
-+	rtw_tx(rtwdev, &control, skb);
-+	msleep(100);
-+}
-+
-+/* Orchestrate the pre-auth join: program the vendor join state, send the
-+ * pre-auth deauth, wait for a beacon from the target, then replay the
-+ * pre-auth coex H2Cs - once per fresh BSSID.
-+ */
-+static void rtw8723bs_mgd_prepare_auth_join(struct rtw_dev *rtwdev,
-+					    struct ieee80211_vif *vif,
-+					    struct ieee80211_prep_tx_info *info)
-+{
-+	struct rtw_vif *rtwvif;
-+	const u8 *bssid = NULL;
-+	bool fresh_join;
-+
-+	if (!rtw8723bs_mgd_prepare_is_auth(rtwdev, info) || !vif ||
-+	    test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
-+		return;
-+
-+	rtwvif = (struct rtw_vif *)vif->drv_priv;
-+
-+	if (!is_zero_ether_addr(vif->cfg.ap_addr))
-+		bssid = vif->cfg.ap_addr;
-+	else if (vif->bss_conf.bssid && !is_zero_ether_addr(vif->bss_conf.bssid))
-+		bssid = vif->bss_conf.bssid;
-+
-+	if (!bssid)
-+		return;
-+
-+	fresh_join = rtw8723bs_mgd_prepare_join(rtwdev, vif, bssid);
-+
-+	if (fresh_join || !rtwvif->pre_auth_join_done) {
-+		unsigned int wait_ms = rtw8723bs_auth_sync_wait_ms(vif);
-+
-+		rtw8723bs_auth_sync_start(rtwdev, bssid);
-+		rtw8723bs_tx_pre_auth_deauth(rtwdev, vif, bssid);
-+		rtw8723bs_auth_sync_wait(rtwdev, wait_ms);
-+		rtw8723bs_auth_sync_stop(rtwdev);
-+		rtwvif->pre_auth_join_done = true;
-+	}
-+
-+	if (!rtwvif->pre_auth_h2c_sent) {
-+		rtw_coex_8723bs_pre_auth_h2c(rtwdev);
-+		rtwvif->pre_auth_h2c_sent = true;
-+	}
-+}
-+
- static void rtw_ops_tx(struct ieee80211_hw *hw,
- 		       struct ieee80211_tx_control *control,
- 		       struct sk_buff *skb)
-@@ -424,6 +850,13 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		rtw_vif_assoc_changed(rtwvif, conf);
- 		if (vif->cfg.assoc) {
-+			if (rtw_is_8723bs(rtwdev) &&
-+			    vif->type == NL80211_IFTYPE_STATION) {
-+				rtw8723bs_auth_rx_filter(rtwdev, false);
-+				rtw8723bs_apply_basic_rates(rtwdev, vif, NULL);
-+				rtw8723bs_enable_tsf_update(rtwdev);
-+			}
-+
- 			rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FINISH);
- 
- 			rtw_fw_download_rsvd_page(rtwdev);
-@@ -445,6 +878,13 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 			if (test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
- 				rtw_hw_scan_abort(rtwdev);
- 
-+			if (rtw_is_8723bs(rtwdev) &&
-+			    vif->type == NL80211_IFTYPE_STATION) {
-+				rtw8723bs_auth_rx_filter(rtwdev, false);
-+				rtw8723bs_reset_response_rates(rtwdev);
-+				rtwvif->pre_auth_h2c_sent = false;
-+				rtwvif->pre_auth_join_done = false;
-+			}
- 		}
- 
- 		config |= PORT_SET_NET_TYPE;
-@@ -452,8 +892,26 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_BSSID) {
-+		bool bssid_cleared = is_zero_ether_addr(conf->bssid);
-+		bool bssid_changed = !ether_addr_equal(rtwvif->bssid,
-+						       conf->bssid);
-+
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION && bssid_changed) {
-+			rtwvif->pre_auth_h2c_sent = false;
-+			rtwvif->pre_auth_join_done = false;
-+		}
- 		ether_addr_copy(rtwvif->bssid, conf->bssid);
- 		config |= PORT_SET_BSSID;
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION && bssid_cleared) {
-+			rtwvif->aid = 0;
-+			rtwvif->net_type = RTW_NET_NO_LINK;
-+			config |= PORT_SET_NET_TYPE | PORT_SET_AID;
-+			rtw_write8(rtwdev, REG_BCN_CTRL,
-+				   BIT_DIS_TSF_UDT | BIT_EN_BCN_FUNCTION |
-+				   BIT_DIS_ATIM);
-+		}
- 		if (!rtw_core_check_sta_active(rtwdev))
- 			rtw_clear_op_chan(rtwdev);
- 		else
-@@ -485,8 +943,17 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_MU_GROUPS)
- 		rtw_chip_set_gid_table(rtwdev, vif, conf);
- 
--	if (changed & BSS_CHANGED_ERP_SLOT)
-+	if (changed & BSS_CHANGED_ERP_PREAMBLE &&
-+	    rtw_is_8723bs(rtwdev) &&
-+	    vif->type == NL80211_IFTYPE_STATION)
-+		rtw8723bs_set_ack_preamble(rtwdev, conf->use_short_preamble);
-+
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		if (rtw_is_8723bs(rtwdev) &&
-+		    vif->type == NL80211_IFTYPE_STATION)
-+			rtw8723bs_set_slot_time(rtwdev, conf->use_short_slot);
- 		rtw_conf_tx(rtwdev, rtwvif);
-+	}
- 
- 	if (changed & BSS_CHANGED_PS)
- 		rtw_recalc_lps(rtwdev, NULL);
-@@ -646,11 +1113,19 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key->hw_key_idx = hw_key_idx;
- 		rtw_sec_write_cam(rtwdev, sec, sta, key,
- 				  hw_key_type, hw_key_idx);
-+		if (rtw_is_8723bs(rtwdev) && vif &&
-+		    vif->type == NL80211_IFTYPE_STATION &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+			rtw8723bs_config_default_key_search(rtwdev, true);
- 		break;
- 	case DISABLE_KEY:
- 		rtw_hci_flush_all_queues(rtwdev, false);
- 		rtw_mac_flush_all_queues(rtwdev, false);
- 		rtw_sec_clear_cam(rtwdev, sec, key->hw_key_idx);
-+		if (rtw_is_8723bs(rtwdev) && vif &&
-+		    vif->type == NL80211_IFTYPE_STATION &&
-+		    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+			rtw8723bs_config_default_key_search(rtwdev, false);
- 		break;
- 	}
- 
-@@ -740,8 +1215,23 @@ static void rtw_ops_mgd_prepare_tx(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&rtwdev->mutex);
- 	rtw_leave_lps_deep(rtwdev);
--	rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
--	rtw_chip_prepare_tx(rtwdev);
-+
-+	if (rtw_is_8723bs(rtwdev)) {
-+		/* Wake from soft IPS and run the vendor join sequence. The RFK
-+		 * is handled by the once-only power-on IQK plus the ps.c
-+		 * post-IPS RF-bus recovery, not a fresh calibration here.
-+		 */
-+		if (rtw_leave_ips(rtwdev)) {
-+			rtw_err(rtwdev, "failed to leave idle state for mgd tx\n");
-+			goto out;
-+		}
-+		rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
-+		rtw8723bs_mgd_prepare_auth_join(rtwdev, vif, info);
-+	} else {
-+		rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
-+		rtw_chip_prepare_tx(rtwdev);
-+	}
-+out:
- 	mutex_unlock(&rtwdev->mutex);
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 4d3d1d99e305..6e0cb58259e1 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -829,6 +829,8 @@ struct rtw_vif {
- 	u8 bssid[ETH_ALEN];
- 	u8 port;
- 	u8 bcn_ctrl;
-+	bool pre_auth_h2c_sent;
-+	bool pre_auth_join_done;
- 	struct list_head rsvd_page_list;
- 	struct ieee80211_tx_queue_params tx_params[IEEE80211_NUM_ACS];
- 	const struct rtw_vif_port *conf;
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index b82a8de66e84..b6d4e8ed98c7 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -479,6 +479,7 @@
- #define BIT_DIS_TSF_UDT		BIT(4)
- #define BIT_EN_BCN_FUNCTION	BIT(3)
- #define BIT_EN_TXBCN_RPT	BIT(2)
-+#define BIT_DIS_ATIM		BIT(0)
- #define REG_BCN_CTRL_CLINT0	0x0551
- #define REG_DRVERLYINT		0x0558
- #define REG_BCNDMATIM		0x0559
-@@ -518,6 +519,7 @@
- #define BIT_UC_MD_EN		BIT(16)
- #define BIT_RXSK_PERPKT		BIT(15)
- #define BIT_HTC_LOC_CTRL	BIT(14)
-+#define BIT_AMF			BIT(13)
- #define BIT_RPFM_CAM_ENABLE	BIT(12)
- #define BIT_TA_BCN		BIT(11)
- #define BIT_RCR_ADF		BIT(11)
-diff --git a/drivers/net/wireless/realtek/rtw88/sec.h b/drivers/net/wireless/realtek/rtw88/sec.h
-index efcf45433999..73f2af66effe 100644
---- a/drivers/net/wireless/realtek/rtw88/sec.h
-+++ b/drivers/net/wireless/realtek/rtw88/sec.h
-@@ -22,6 +22,7 @@
- #define RTW_SEC_RX_DEC_EN		BIT(3)
- #define RTW_SEC_TX_BC_USE_DK		BIT(6)
- #define RTW_SEC_RX_BC_USE_DK		BIT(7)
-+#define RTW_SEC_CHK_KEYID		BIT(8)
- 
- #define RTW_SEC_ENGINE_EN		BIT(9)
- 
--- 
-2.55.0
+ drivers/net/wireless/ath/ath12k/core.c |  5 +++--
+ drivers/net/wireless/ath/ath12k/core.h | 10 +---------
+ drivers/net/wireless/ath/ath12k/mac.c  |  2 +-
+ drivers/net/wireless/ath/ath12k/pci.c  |  3 ++-
+ drivers/net/wireless/ath/ath12k/qmi.c  |  8 ++++----
+ drivers/net/wireless/ath/ath12k/qmi.h  | 14 ++++++++++++--
+ 6 files changed, 23 insertions(+), 19 deletions(-)
+---
+base-commit: 189721a4afa1804315e7dcfca9ca0539c7b1d7af
+change-id: 20260717-consolidate-firmware_mode-93c215fdb29c
 
