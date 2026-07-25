@@ -1,32 +1,32 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FE926AA91
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D55B33C18B
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:05:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784991898; cv=none; b=hXqkbkvkeREcriZU53afYUH4fHF8w+HVtoMbR8Mkpt22B6ftE6stI2eJazRccVkg9hpeh5OM02+Ay6Zgnw4K25TRio/oxHoyvms1sBZGNyGNCNUTz65nm7gmbTjSzv8wtbdYHAQ7SVfQDNMdfbEShce108+ylZzpzaQ/h7kRO18=
+	t=1784991902; cv=none; b=f/G1QKEoIE/7yjqz73ImMZRNtRR2AeSm6hx42+cUQKQOD34d6lKdi1eSspbj4sMnXnOYbf2KkD9hP+KZF3D6xLGZUZVVCaELYRcQHz+jC2FlI0qdMfpeq51P7jomJTv77blNv+i2X3u1Rp3jY7TjxEiJ1HFkJrR3x1dhJinHpuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784991898; c=relaxed/simple;
-	bh=A7wPUJsgy/RTBLkA3plhGKpTGDu2PU58SFXyj4G8CNM=;
+	s=arc-20240116; t=1784991902; c=relaxed/simple;
+	bh=HovpTk5Bd/7RbMMa3eBO9O9XlQvB3x5wL4BHlEIzExo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QpVkHiSpq9FTAhjjQxlnZ3/dPaSEFPbf6ruXyqBm4qT1Q0JimBJvf61C+oP8Z/PjQ2DDs54n2mR/SegJnzejOkBnuzYpimPkyO9JHWKzpV6tLMkr7mnHSs1aArzuUEVQgC3+YopgRSKrTLRHfgP/nDCz/qpfHKtWLGaP6nfC5oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PNHFnbxs; arc=none smtp.client-ip=95.215.58.181
+	 MIME-Version; b=jYGZH31K7RAQQl/r1xfZE+/v44VIMGdeRa2u7/OHRIHmUeIJ5RwNxE50tSwJo8l0NKLxf7QE5bVdkge7sEtX0cAN0LR4UudG2e8vvFRixGuymfhmCXb4rX/AOyHzQ5ZosLgtpqHVYBNdDQ8Tj5XTqAiK3fpQpXqdDgDSrGbVD8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rQKAnOkK; arc=none smtp.client-ip=95.215.58.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PNHFnbxs"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rQKAnOkK"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784991893;
+	t=1784991898;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5Mi6MjhsaXmEuc5i6mIKcJemekMse5QliukSRqipF/Q=;
-	b=PNHFnbxsA096r34tWJrNqHlWZ5q6NC2B/SHqyLuQnOqiOPmW3uGhCd4OqlkLyaz2jVjlN1
-	yPiasGqx8x/qzkVwyDmMmdT/nMcxbenSV6YnJ9aFJ4IzPYK4Z2XKPOagvDTLzTRcyBHuFB
-	kjFV3i4vcA1vzgab5sqL4guyp1wp7tk=
+	bh=8PQmOEcz7TX5uTzpc7Tqt5megUozqqBLXP326ZduEJU=;
+	b=rQKAnOkK3tmwAJtiCWPpGTRe6bnQDrKIzN29JQiCwvPf1QNHiGzIQ1GQ6Wp6vRQ3DUfrVU
+	xcJnPHdPWcWYD3YPzlp8mN1MuIVeYuh2Y5/b2TGyfEURkWi3cske3hUSydqBCePg3M1k62
+	d9Bv8wU5UN57cS1gKlkcbQUITt3cY9E=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-Date: Sat, 25 Jul 2026 17:04:17 +0200
-Message-ID: <20260725150427.93887-2-luka.gejak@linux.dev>
+Subject: [PATCH v2 04/11] wifi: rtw88: fw: fix the reserved page upload on RTL8723BS
+Date: Sat, 25 Jul 2026 17:04:20 +0200
+Message-ID: <20260725150427.93887-5-luka.gejak@linux.dev>
 In-Reply-To: <20260725150427.93887-1-luka.gejak@linux.dev>
 References: <20260725150427.93887-1-luka.gejak@linux.dev>
 Precedence: bulk
@@ -51,45 +51,83 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS, runs
-a Realtek vendor firmware that differs from the firmware used by the
-other rtw88 8723 family devices. Supporting it needs a number of small
-adjustments spread across the shared core, all of which have to be
-restricted to this one chip and bus combination.
-
-Add the chip type and a helper that tests for it, so the changes that
-follow can be gated without repeating the chip and bus comparison.
+Two things stop the reserved page handshake from completing on this
+chip. BIT_EN_BCNQ_DL has to be cleared so the upload is not treated as
+a real beacon, which rtw88 only does for PCIe while the vendor driver
+does it unconditionally. The software beacon download path also has to
+be pointed at port 0. Without either, BIT_BCN_VALID is never asserted
+and the upload reports a timeout.
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/main.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtw88/fw.c | 27 ++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6e981ba7986..8f86f7c12de5 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -194,6 +194,7 @@ enum rtw_chip_type {
- 	RTW_CHIP_TYPE_8723D,
- 	RTW_CHIP_TYPE_8821C,
- 	RTW_CHIP_TYPE_8703B,
-+	RTW_CHIP_TYPE_8723B,
- 	RTW_CHIP_TYPE_8821A,
- 	RTW_CHIP_TYPE_8812A,
- 	RTW_CHIP_TYPE_8814A,
-@@ -2194,6 +2195,12 @@ static inline bool rtw_chip_has_tx_stbc(struct rtw_dev *rtwdev)
- 	return rtwdev->chip->tx_stbc;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index dd6595b8175e..7c17086cac32 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -1477,10 +1477,14 @@ void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev,
+ 	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_LPS_PG_INFO, true);
  }
  
-+static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->chip->id == RTW_CHIP_TYPE_8723B &&
-+	       rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
-+}
++/* REG_DWBCN1_CTRL bit 20 (SW_BCN_SEL for port 0), relative to byte +2 */
++#define BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0	(20 - 16)
 +
- static inline u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
+ int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
+ 				u8 *buf, u32 size)
  {
- 	unsigned long mac_id;
+-	u8 bckp[3];
++	const bool is_8723bs_sdio = rtw_is_8723bs(rtwdev);
++	u8 bckp[4];
+ 	u8 val;
+ 	u16 rsvd_pg_head;
+ 	u32 bcn_valid_addr;
+@@ -1510,13 +1514,28 @@ int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
+ 	rtw_write8(rtwdev, REG_BCN_CTRL,
+ 		   (bckp[2] & ~BIT_EN_BCN_FUNCTION) | BIT_DIS_TSF_UDT);
+ 
+-	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE) {
++	/* Clear BIT_EN_BCNQ_DL so the chip does not treat the reserved-page
++	 * upload as a real beacon; otherwise BIT_BCN_VALID never asserts. The
++	 * vendor rtl8723bs driver does this unconditionally; rtw88 only did it
++	 * for PCIe, which left 8723BS SDIO's BCN_VALID handshake failing.
++	 */
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE || is_8723bs_sdio) {
+ 		val = rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL + 2);
+ 		bckp[1] = val;
+ 		val &= ~(BIT_EN_BCNQ_DL >> 16);
+ 		rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, val);
+ 	}
+ 
++	/* 8723BS SDIO: point the SW beacon download path at port 0, else
++	 * BIT_BCN_VALID is never asserted after the SDIO upload completes.
++	 */
++	if (is_8723bs_sdio) {
++		val = rtw_read8(rtwdev, REG_DWBCN1_CTRL + 2);
++		bckp[3] = val;
++		val &= ~BIT(BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0);
++		rtw_write8(rtwdev, REG_DWBCN1_CTRL + 2, val);
++	}
++
+ 	ret = rtw_hci_write_data_rsvd_page(rtwdev, buf, size);
+ 	if (ret) {
+ 		rtw_err(rtwdev, "failed to write data to rsvd page\n");
+@@ -1537,11 +1556,13 @@ int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
+ 	}
+ 
+ restore:
++	if (is_8723bs_sdio)
++		rtw_write8(rtwdev, REG_DWBCN1_CTRL + 2, bckp[3]);
+ 	rsvd_pg_head = rtwdev->fifo.rsvd_boundary;
+ 	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2,
+ 		    rsvd_pg_head | BIT_BCN_VALID_V1);
+ 	rtw_write8(rtwdev, REG_BCN_CTRL, bckp[2]);
+-	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE)
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE || is_8723bs_sdio)
+ 		rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, bckp[1]);
+ 	rtw_write8(rtwdev, REG_CR + 1, bckp[0]);
+ 
 -- 
 2.55.0
 
