@@ -1,32 +1,32 @@
-Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1CB33F5AC
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:05:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA4553438A6
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:05:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784991905; cv=none; b=NOGGZKeV7Ik/e8Se2H3FmwI6N5Zl+Knu+nyyGZBYLsNcosFiuh1+urqF6dOOSUoW56Uhkf3ccIZW0rz8CmwNNvqtI8uxGaSxrExQdr7UgjJUZ1lzeA/vQjvZXRrozOAi/BMuaNWqqVTEHwGHX0429Eneav4NhzfBbucPCBbn1Wg=
+	t=1784991907; cv=none; b=U+IG92+1hvys10s37i6YDBdTiMvjIFTRrX1XkbsdIrdI8iuXuTA1jAkF0EQKADXbZ//DiNhiN+yqeVE9P8IT90wcxV/kCdLuXQeZ0k46n6lmaU8A6bMct/cT5g80TrD1VWvxAO8iBuyiopmCb8ldMByHt9c4acWIAoQLFq/MwmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784991905; c=relaxed/simple;
-	bh=vi+wue3k5f6vqulJnzsLE+DAcZ0V70WCiveszk0u/kI=;
+	s=arc-20240116; t=1784991907; c=relaxed/simple;
+	bh=OtnzTAZKEkxJmzWEu77kMZZQVH/ZPcuDVj+/YMLE8So=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pD8q7Zvap5Boqiu0o57VvZZ8TCMiKsmqhlMCE9shmFiaHiYnFRo4XB+AlpNDwHCzrsopXnlpF3PUHQlvJ+IkhSmiG/ipN8pitWZZRafopsDL/n40Vg5jWS8FlKPHOQAN9jYbh+qAsmXY8Vo35MWdakqROtiysxVPWEVZCB6iQ/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ljRL4SOh; arc=none smtp.client-ip=95.215.58.172
+	 MIME-Version; b=IMbRUZxhWmXPDpiDATI3lBg81LLtDqghxFwZQbihjj+QxH1h0QWnofUzUSgCEFU0JkNGEdXJmLD4PjUYlymbThSAGTu36IhUpDRYs1sVpPUbBd3FWesKOyrP25MnwFvYUpC8KIudmw/dvixY+QDXovBBX8FV0qJAy24wlqy0X64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=qo4kPsJx; arc=none smtp.client-ip=95.215.58.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ljRL4SOh"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="qo4kPsJx"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1784991900;
+	t=1784991903;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wbkYZPR3jdcSBQHPQ9eKhRXwpGbCUPO+MpqFn3rwH2U=;
-	b=ljRL4SOhFuiAbWp1rjPuAD/yfu8bk592XkxRMg9G7hdVPzE2MJI53ywsfXRxMK/kKPp9Tw
-	1xJGM5/UDXcu8dj5zDLhFMFNzxLAIAMUpu1p0137RsxWcx15Pm6yZDTMNI3RZI4I5BB8NK
-	abUPKDgL8NOt2MiWqYldHhGabda3pZg=
+	bh=pkXLADA7GRUH3r64ZNYI+CzLSRonxO60OH6UJEDCfrk=;
+	b=qo4kPsJxL/I8qyVVO3kEmp31ZLzahI7U5642tjO85YAQt+ggKyScZwcNbiJAvKG9bXt0CB
+	9nWXANbn0Vnpd+Zlii8VBIVE7NHPyoqVnRzttxwBPGCNorNjffhuKBPc5x9gfkqW3a3E2Q
+	EmIMruAckrMISWAK3ak8qa0FEGGBgQM=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org,
@@ -35,9 +35,9 @@ Cc: linux-wireless@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v2 05/11] wifi: rtw88: coex: add the RTL8723BS scan antenna workaround
-Date: Sat, 25 Jul 2026 17:04:21 +0200
-Message-ID: <20260725150427.93887-6-luka.gejak@linux.dev>
+Subject: [PATCH v2 07/11] wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
+Date: Sat, 25 Jul 2026 17:04:23 +0200
+Message-ID: <20260725150427.93887-8-luka.gejak@linux.dev>
 In-Reply-To: <20260725150427.93887-1-luka.gejak@linux.dev>
 References: <20260725150427.93887-1-luka.gejak@linux.dev>
 Precedence: bulk
@@ -51,251 +51,332 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-On the RTL8723BS the PTA antenna path has to be programmed directly
-during scan. The vendor driver keeps its own scan-time antenna state and
-does not run the generic coexistence algorithm on boards where BT is
-disabled, and following it is necessary here: without the antenna and
-CCK priority setup applied at scan start, the site survey does not hear
-the AP reliably.
+The RTL8723BS reports free TX page counts that the generic 8051 path
+reads back from the chip on every transfer, which is both slow over SDIO
+and unreliable on this part: the register frequently reads back zero
+while pages are in fact available. It also gates transmission on an
+output queue token count that rtw88 does not track at all.
 
-Detect the BT-disabled case, replay the vendor BT_MP and BT_INFO queries
-once the firmware has been up long enough for RX DMA to be stable, then
-establish the scan path antenna configuration and skip the generic run.
+Mirror the vendor driver and keep the per-queue and public page counts
+in software, seeded at start and resynchronised from the chip only when
+the cached counts say there is not enough room. Wait for an OQT credit
+before writing, and account for the pages consumed after a successful
+transfer.
+
+Transfers also have to be padded up to the SDIO block size for this
+chip rather than using the generic alignment, so size the write
+separately from the frame and trim the skb back afterwards.
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c | 179 +++++++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/coex.h |   2 +
- drivers/net/wireless/realtek/rtw88/reg.h  |   1 +
- 3 files changed, 181 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/sdio.c | 220 ++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/sdio.h |   6 +
+ 2 files changed, 215 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 37c336def419..daba6082f850 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -1443,6 +1443,156 @@ static void rtw_coex_set_ant_path(struct rtw_dev *rtwdev, bool force, u8 phase)
- #define case_ALGO(src) \
- 	case COEX_ALGO_##src: return #src
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index 5b40d74b16ee..adf0b509e2cc 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -20,6 +20,7 @@
+ #include "tx.h"
  
-+/* 8723BS SDIO WiFi/BT coexistence antenna handling. On BT-disabled boards the
-+ * scan/auth window still routes through the PTA mux; these helpers force the
-+ * vendor-shaped WiFi-owned antenna path so directed management TX reaches air.
-+ */
-+#define REG_8723BS_BT_COEX_CTRL		0x0039
-+#define REG_8723BS_BB_ANT_CFG		0x0930
-+#define REG_8723BS_BB_ANT_CFG1		0x0944
-+#define REG_8723BS_BB_ANT_BUF		0x0974
-+#define RTW8723BS_COEX_H_WLAN_ACTIVE	0x1800101b
-+
-+static bool rtw_coex_8723bs_ant_is_aux(struct rtw_dev *rtwdev)
+ #define RTW_SDIO_INDIRECT_RW_RETRIES			50
++#define RTW_SDIO_OQT_TIMEOUT_MS				1000
+ 
+ static bool rtw_sdio_is_bus_addr(u32 addr)
+ {
+@@ -548,12 +549,91 @@ static int rtw_sdio_read_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
+ 	return ret;
+ }
+ 
++static void rtw_sdio_init_free_txpg(struct rtw_dev *rtwdev)
 +{
-+	return !!(rtwdev->efuse.bt_setting & BIT(6));
-+}
-+
-+static bool rtw_coex_8723bs_bt_disabled(struct rtw_dev *rtwdev)
-+{
-+	return rtw_is_8723bs(rtwdev) && rtwdev->coex.stat.bt_disabled;
-+}
-+
-+static u32 rtw_coex_8723bs_pta_ant_path(struct rtw_dev *rtwdev)
-+{
-+	return rtw_coex_8723bs_ant_is_aux(rtwdev) ? 0x80 : 0x200;
-+}
-+
-+/* Write BB_SEL_BTG, retrying once with SYS_FUNC BB reset if the first
-+ * write does not stick (RF/BB clock may have been gated).
-+ */
-+static u32 rtw_coex_8723bs_write_bb_sel_btg(struct rtw_dev *rtwdev, u32 value)
-+{
-+	u8 sys_func_before;
-+	u32 readback;
-+
-+	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	if ((sys_func_before & (BIT(0) | BIT(1))) != (BIT(0) | BIT(1))) {
-+		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+		usleep_range(10, 11);
-+	}
-+
-+	rtw_write32(rtwdev, REG_BB_SEL_BTG_8723B, value);
-+	readback = rtw_read32(rtwdev, REG_BB_SEL_BTG_8723B);
-+	if (readback == value)
-+		return readback;
-+
-+	usleep_range(10, 11);
-+	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+	rtw_write32(rtwdev, REG_BB_SEL_BTG_8723B, value);
-+
-+	return rtw_read32(rtwdev, REG_BB_SEL_BTG_8723B);
-+}
-+
-+static u32 rtw_coex_8723bs_reassert_pta_ant(struct rtw_dev *rtwdev)
-+{
-+	return rtw_coex_8723bs_write_bb_sel_btg(rtwdev,
-+						rtw_coex_8723bs_pta_ant_path(rtwdev));
-+}
-+
-+static void rtw_coex_8723bs_set_cck_pri(struct rtw_dev *rtwdev, bool high)
-+{
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
-+		return;
-+
-+	if (high) {
-+		rtw_write32(rtwdev, REG_BT_COEX_TABLE_H,
-+			    RTW8723BS_COEX_H_WLAN_ACTIVE);
-+	} else {
-+		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_TX_CCK, false);
-+		rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_RX_CCK, false);
-+	}
-+}
-+
-+static void rtw_coex_8723bs_restore_pad_ctrl(struct rtw_dev *rtwdev,
-+					     bool keep_pta_owner)
-+{
-+	u32 before, after;
-+
-+	before = rtw_read32(rtwdev, REG_PAD_CTRL1);
-+	after = before & ~(BIT_LNAON_WLBT_SEL | BIT_SW_DPDT_SEL_DATA);
-+	if (keep_pta_owner)
-+		after |= BIT_PAPE_WLBT_SEL;
-+	else
-+		after &= ~BIT_PAPE_WLBT_SEL;
-+	if (after != before)
-+		rtw_write32(rtwdev, REG_PAD_CTRL1, after);
-+}
-+
-+static void rtw_coex_8723bs_fw_gnt_bt_low(struct rtw_dev *rtwdev)
-+{
-+	if (!rtw_coex_8723bs_bt_disabled(rtwdev))
-+		return;
-+
-+	if (rtw_read8(rtwdev, REG_GNT_BT) == 0x00 &&
-+	    rtw_read8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL) == 0x0c)
-+		return;
-+
-+	rtw_fw_set_gnt_bt(rtwdev, 0);
-+}
-+
-+static void rtw_coex_8723bs_reassert_ant_buffer(struct rtw_dev *rtwdev)
-+{
-+	u8 sys_func_before;
-+
-+	sys_func_before = rtw_read8(rtwdev, REG_SYS_FUNC_EN);
-+	if ((sys_func_before & (BIT(0) | BIT(1))) != (BIT(0) | BIT(1))) {
-+		rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
-+		usleep_range(10, 11);
-+	}
-+
-+	rtw_write8_mask(rtwdev, REG_8723BS_BT_COEX_CTRL, BIT(3), 0x1);
-+	rtw_write8(rtwdev, REG_8723BS_BB_ANT_BUF, 0xff);
-+	rtw_write8_mask(rtwdev, REG_8723BS_BB_ANT_CFG1, 0x3, 0x3);
-+	rtw_write8(rtwdev, REG_8723BS_BB_ANT_CFG, 0x77);
-+}
-+
-+static void rtw_coex_8723bs_apply_scan_table(struct rtw_dev *rtwdev)
-+{
-+	rtwdev->coex.dm.cur_table = 2;
-+	rtw_coex_set_table(rtwdev, true, 0x5a5a5a5a, 0x5a5a5a5a);
-+}
-+
-+/* Non-connected scan/auth workaround: PS-TDMA type 8 off, PTA antenna path,
-+ * coex table type 2 (matches the vendor non-connected arbitration).
-+ */
-+void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_coex_dm *coex_dm = &rtwdev->coex.dm;
-+	struct rtw_coex_stat *coex_stat = &rtwdev->coex.stat;
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	const struct rtw_page_table *pg_tbl;
++	u32 free_txpg;
++	u16 pubq_num;
 +
 +	if (!rtw_is_8723bs(rtwdev))
 +		return;
 +
-+	coex_dm->cur_ps_tdma_on = false;
-+	coex_dm->cur_ps_tdma = 8;
-+	coex_dm->ps_tdma_para[0] = 0x08;
-+	coex_dm->ps_tdma_para[1] = 0x00;
-+	coex_dm->ps_tdma_para[2] = 0x00;
-+	coex_dm->ps_tdma_para[3] = 0x00;
-+	coex_dm->ps_tdma_para[4] = 0x00;
-+
-+	rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
-+	rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
-+	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
-+	rtw_coex_8723bs_reassert_ant_buffer(rtwdev);
-+	rtw_coex_8723bs_apply_scan_table(rtwdev);
-+	if (coex_stat->bt_disabled)
-+		rtw_coex_8723bs_set_cck_pri(rtwdev, true);
-+	rtw_coex_8723bs_reassert_pta_ant(rtwdev);
-+	rtw_coex_8723bs_restore_pad_ctrl(rtwdev, true);
-+}
-+
- static const char *rtw_coex_get_algo_string(u8 algo)
- {
- 	switch (algo) {
-@@ -2770,7 +2920,7 @@ void rtw_coex_power_on_setting(struct rtw_dev *rtwdev)
- 	coex->stop_dm = true;
- 	coex->wl_rf_off = false;
- 
--	/* enable BB, we can write 0x948 */
-+	/* enable BB, so BB_SEL_BTG is writable */
- 	rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
- 		       BIT_FEN_BB_GLB_RST | BIT_FEN_BB_RSTB);
- 
-@@ -2877,6 +3027,33 @@ void rtw_coex_scan_notify(struct rtw_dev *rtwdev, u8 type)
- 	coex->freeze = false;
- 	rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, true);
- 
-+	/* 8723BS SDIO BT-disabled: keep the scan/auth PTA antenna state the
-+	 * vendor uses and skip the generic coex run. At scan start (firmware
-+	 * has been up long enough for stable RX DMA) replay the vendor BT_MP /
-+	 * BT_INFO queries, then re-establish the scan-path PTA setup.
-+	 */
-+	if (rtw_coex_8723bs_bt_disabled(rtwdev)) {
-+		if (type == COEX_SCAN_START_2G || type == COEX_SCAN_START) {
-+			struct rtw_coex_info_req req = {};
-+
-+			coex_stat->cnt_wl[COEX_CNT_WL_SCANAP] = 0;
-+			coex_stat->wl_hi_pri_task2 = true;
-+
-+			req.seq = 0x0e;
-+			req.op_code = BT_MP_INFO_OP_SUPP_VER;
-+			rtw_fw_query_bt_mp_info(rtwdev, &req);
-+			req.seq = 0x0f;
-+			req.op_code = BT_MP_INFO_OP_PATCH_VER;
-+			rtw_fw_query_bt_mp_info(rtwdev, &req);
-+			rtw_fw_query_bt_info(rtwdev);
-+
-+			rtw_coex_8723bs_scan_workaround(rtwdev);
-+		} else {
-+			coex_stat->wl_hi_pri_task2 = false;
-+		}
-+		return;
++	pg_tbl = &rtwdev->chip->page_table[0];
++	pubq_num = rtwdev->fifo.acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
++		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
++	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++	if (free_txpg) {
++		atomic_set(&rtwsdio->free_pg_high, free_txpg & 0xff);
++		atomic_set(&rtwsdio->free_pg_normal, (free_txpg >> 8) & 0xff);
++		atomic_set(&rtwsdio->free_pg_low, (free_txpg >> 16) & 0xff);
++		atomic_set(&rtwsdio->free_pg_pub, (free_txpg >> 24) & 0xff);
++	} else {
++		atomic_set(&rtwsdio->free_pg_high, pg_tbl->hq_num);
++		atomic_set(&rtwsdio->free_pg_normal, pg_tbl->nq_num);
++		atomic_set(&rtwsdio->free_pg_low, pg_tbl->lq_num);
++		atomic_set(&rtwsdio->free_pg_pub, pubq_num);
 +	}
 +
- 	if (type == COEX_SCAN_START_5G) {
- 		rtw_dbg(rtwdev, RTW_DBG_COEX,
- 			"[BTCoex], SCAN START notify (5G)\n");
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wireless/realtek/rtw88/coex.h
-index c398be8391f7..72b1353c9313 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.h
-+++ b/drivers/net/wireless/realtek/rtw88/coex.h
-@@ -430,4 +430,6 @@ static inline void rtw_coex_active_query_bt_info(struct rtw_dev *rtwdev)
- 		rtw_coex_query_bt_info(rtwdev);
++	atomic_set(&rtwsdio->tx_oqt_free,
++		   rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG));
++}
++
++static void rtw_sdio_sync_free_txpg(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u32 free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++
++	if (!free_txpg)
++		return;
++
++	atomic_set(&rtwsdio->free_pg_high, free_txpg & 0xff);
++	atomic_set(&rtwsdio->free_pg_normal, (free_txpg >> 8) & 0xff);
++	atomic_set(&rtwsdio->free_pg_low, (free_txpg >> 16) & 0xff);
++	atomic_set(&rtwsdio->free_pg_pub, (free_txpg >> 24) & 0xff);
++}
++
++static int rtw_sdio_8723bs_free_txpg(struct rtw_dev *rtwdev, u8 queue)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	switch (queue) {
++	case RTW_TX_QUEUE_BCN:
++	case RTW_TX_QUEUE_H2C:
++	case RTW_TX_QUEUE_HI0:
++	case RTW_TX_QUEUE_MGMT:
++	case RTW_TX_QUEUE_VO:
++		return atomic_read(&rtwsdio->free_pg_high);
++	case RTW_TX_QUEUE_VI:
++		return atomic_read(&rtwsdio->free_pg_normal);
++	case RTW_TX_QUEUE_BE:
++	case RTW_TX_QUEUE_BK:
++		return atomic_read(&rtwsdio->free_pg_low);
++	default:
++		return -EINVAL;
++	}
++}
++
+ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 				    size_t count)
+ {
+ 	unsigned int pages_free, pages_needed;
+ 
+-	if (rtw_chip_wcpu_8051(rtwdev)) {
++	if (rtw_is_8723bs(rtwdev)) {
++		struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++		int dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++
++		if (dedicated < 0)
++			return dedicated;
++		pages_free = dedicated + atomic_read(&rtwsdio->free_pg_pub);
++		pages_needed = DIV_ROUND_UP(count, rtwdev->chip->page_size);
++		if (pages_needed <= pages_free)
++			return 0;
++
++		rtw_sdio_sync_free_txpg(rtwdev);
++		dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++		pages_free = dedicated + atomic_read(&rtwsdio->free_pg_pub);
++	} else if (rtw_chip_wcpu_8051(rtwdev)) {
+ 		u32 free_txpg;
+ 
+ 		free_txpg = rtw_sdio_read32(rtwdev, REG_SDIO_FREE_TXPG);
+@@ -632,44 +712,131 @@ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 	return 0;
  }
  
-+void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev);
++static int rtw_sdio_wait_tx_oqt(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	int i;
++	u8 free;
 +
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 08e9494977e0..b82a8de66e84 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -628,6 +628,7 @@
- #define REG_PSD			0x0910
- #define BIT_PSD_INI		GENMASK(23, 22)
- #define REG_SINGLE_TONE_CONT_TX	0x0914
-+#define REG_BB_SEL_BTG_8723B	0x0948
- #define REG_AGC_TABLE		0x0958
- #define REG_RFE_CTRL_E		0x0974
- #define REG_2ND_CCA_CTRL	0x0976
++	if (!rtw_is_8723bs(rtwdev))
++		return 0;
++
++	if (atomic_add_unless(&rtwsdio->tx_oqt_free, -1, 0))
++		return 0;
++
++	for (i = 0; i < RTW_SDIO_OQT_TIMEOUT_MS; i++) {
++		free = rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG);
++		if (free) {
++			atomic_set(&rtwsdio->tx_oqt_free, free - 1);
++			return 0;
++		}
++		usleep_range(1000, 2000);
++	}
++
++	return -EBUSY;
++}
++
++static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
++					 unsigned int pages)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	atomic_t *dedicated;
++	int free;
++
++	switch (queue) {
++	case RTW_TX_QUEUE_VI:
++		dedicated = &rtwsdio->free_pg_normal;
++		break;
++	case RTW_TX_QUEUE_BE:
++	case RTW_TX_QUEUE_BK:
++		dedicated = &rtwsdio->free_pg_low;
++		break;
++	default:
++		dedicated = &rtwsdio->free_pg_high;
++		break;
++	}
++
++	free = atomic_read(dedicated);
++	if (pages <= free) {
++		atomic_sub(pages, dedicated);
++	} else {
++		atomic_set(dedicated, 0);
++		atomic_sub(pages - free, &rtwsdio->free_pg_pub);
++	}
++}
++
+ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 			       enum rtw_tx_queue_type queue)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	unsigned int orig_len = skb->len;
++	bool rtl8723bs = rtw_is_8723bs(rtwdev);
++	unsigned int pages;
+ 	bool bus_claim;
+ 	size_t txsize;
++	size_t write_size;
+ 	u32 txaddr;
+ 	int ret;
+ 
+-	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
+-	if (!txaddr)
+-		return -EINVAL;
++	if (rtl8723bs) {
++		txsize = round_up(orig_len, 4);
++		write_size = txsize > RTW_SDIO_BLOCK_SIZE ?
++			     round_up(txsize, RTW_SDIO_BLOCK_SIZE) : txsize;
++	} else {
++		txsize = sdio_align_size(rtwsdio->sdio_func, orig_len);
++		write_size = txsize;
++	}
++
++	if (write_size > orig_len) {
++		unsigned int padding = write_size - orig_len;
++
++		if (skb_tailroom(skb) < padding) {
++			ret = pskb_expand_head(skb, 0,
++					       padding - skb_tailroom(skb),
++					       GFP_KERNEL);
++			if (ret)
++				return ret;
++		}
++		skb_put_zero(skb, padding);
++	}
+ 
+-	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
++	txaddr = rtw_sdio_get_tx_addr(rtwdev, txsize, queue);
++	if (!txaddr) {
++		ret = -EINVAL;
++		goto out_trim;
++	}
+ 
+ 	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
+ 	if (ret)
+-		return ret;
++		goto out_trim;
++	ret = rtw_sdio_wait_tx_oqt(rtwdev);
++	if (ret)
++		goto out_trim;
+ 
+ 	if (!IS_ALIGNED((unsigned long)skb->data, RTW_SDIO_DATA_PTR_ALIGN))
+ 		rtw_warn(rtwdev, "Got unaligned SKB in %s() for queue %u\n",
+ 			 __func__, queue);
+ 
+ 	bus_claim = rtw_sdio_bus_claim_needed(rtwsdio);
+-
+ 	if (bus_claim)
+ 		sdio_claim_host(rtwsdio->sdio_func);
+-
+-	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data, txsize);
+-
++	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data,
++			       write_size);
+ 	if (bus_claim)
+ 		sdio_release_host(rtwsdio->sdio_func);
+ 
++	if (!ret && rtl8723bs) {
++		pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
++		rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
++	}
+ 	if (ret)
+ 		rtw_warn(rtwdev,
+ 			 "Failed to write %zu byte(s) to SDIO port 0x%08x",
+-			 txsize, txaddr);
++			 write_size, txaddr);
+ 
++out_trim:
++	if (write_size > orig_len)
++		skb_trim(skb, orig_len);
+ 	return ret;
+ }
+ 
+@@ -749,8 +916,39 @@ static int rtw_sdio_setup(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
++static void rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
++{
++	const struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	const struct rtw_page_table *pg_tbl;
++	u32 free_txpg;
++	u16 pubq_num;
++
++	if (!rtw_is_8723bs(rtwdev))
++		return;
++
++	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++	if (free_txpg || !fifo->acq_pg_num)
++		return;
++
++	pg_tbl = &chip->page_table[0];
++	if (fifo->acq_pg_num <= pg_tbl->hq_num + pg_tbl->lq_num +
++				    pg_tbl->nq_num + pg_tbl->exq_num +
++				    pg_tbl->gapq_num)
++		return;
++
++	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
++		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
++	rtw_write32(rtwdev, REG_RQPN_NPQ,
++		    BIT_RQPN_NE(pg_tbl->nq_num, pg_tbl->exq_num));
++	rtw_write32(rtwdev, REG_RQPN,
++		    BIT_RQPN_HLP(pg_tbl->hq_num, pg_tbl->lq_num, pubq_num));
++}
++
+ static int rtw_sdio_start(struct rtw_dev *rtwdev)
+ {
++	rtw_sdio_8723bs_check_rqpn(rtwdev);
++	rtw_sdio_init_free_txpg(rtwdev);
+ 	rtw_sdio_enable_rx_aggregation(rtwdev);
+ 	rtw_sdio_enable_interrupt(rtwdev);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+index 457e8b02380e..12086f1aa280 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.h
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+@@ -159,6 +159,12 @@ struct rtw_sdio {
+ 	struct workqueue_struct *txwq;
+ 	struct rtw_sdio_work_data *tx_handler_data;
+ 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
++
++	atomic_t free_pg_high;
++	atomic_t free_pg_normal;
++	atomic_t free_pg_low;
++	atomic_t free_pg_pub;
++	atomic_t tx_oqt_free;
+ };
+ 
+ extern const struct dev_pm_ops rtw_sdio_pm_ops;
 -- 
 2.55.0
 
