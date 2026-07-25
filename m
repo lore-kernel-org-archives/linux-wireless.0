@@ -1,66 +1,66 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B12583B637F
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 10:17:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797FF3B7B83
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:08:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784974633; cv=none; b=JGOaxLJXYv0Fq4//54g6MtKfhlEJw+dFo6L9iKfUkCeaKHsevCUnSTpFmzu/akbpdVaOqaZ/MctLK7EbHtJ2jRHPIWSyrBjdvYqIRHqpdeQHN0nXEOCnp3tNw+0nNDxDdXJT9+V7QMa3KRwaR9ehu9H+Di7S+BgwQ6yLTtvf65c=
+	t=1784977691; cv=none; b=Fwe41y3iCZNy3o6AHNUt56eesiKtKS/tpek94NtQki9gk7bwwI2TF7Fdj0onurCs/2V5F1/E/AqapECVc6Om6eMD8+ENQ9f2S/hoC04kr/QAkHfXR6CWkw0m67LM6/UzR3LDF9gCAMmGr/nWkehW5aCEXYGyS9AYBdVYpUuZ7x4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784974633; c=relaxed/simple;
-	bh=W65bBVTTPPNOnEjP4KCxhnd+X0yisxFIm/BrThabImk=;
+	s=arc-20240116; t=1784977691; c=relaxed/simple;
+	bh=eSNTLm6v9ZwRlI24U2eL1fhUQqXHp0RDZUi2X4BfXuo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qMGvJO8qd16nmkQgd2oP2f6HElVmhrRHoh+C0iXwWbe4S2v4R/gw7VRa+yBk8iVKQ6FDiF6ysj/uY0K9BBCUFICBExubv7ba57n/OVSgUGXJHRTD4BO3W7xxhNwEzgexzttzqaJMa4sawHbAkYis0UylwcZxUVPG0CwYLiCFxFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BmMwILh8; arc=none smtp.client-ip=209.85.128.44
+	 In-Reply-To:Content-Type; b=SPi0MooHKH42Bz+23q2MkpONxcS58g5y+SZ01+wVRy9dhBCSbAqzZLyq5+9Q3E2U/74scZJHNRoc9SBFwgD6oo2D5FpEV+ifQLpcClm5RHpYhZHVg+YhxlM+fGkOY5Io+n5W3v+xvfZG7Qwdn6Gsad034rzfLWAIZSMeFP3kibA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C+4/nRQz; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BmMwILh8"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-49557167508so11909295e9.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 03:17:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+4/nRQz"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4954d383e64so8062935e9.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 04:08:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784974628; x=1785579428; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784977688; x=1785582488; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Pxgaj4ziBaYk3jWVl2nTaXJq4vxwI5aO/MKEtSh/FrA=;
-        b=BmMwILh8TcSC0qeBWThAY04XC2G2BReJV/RKUkn0MNKZkpJMtTfvRvAKyJi0LKgW+s
-         Ijr6rPmPaphfBiUGyxNwStSYlk2Pf0r0K3oDG/IeKf/Oc8GTfX5+owxbRkmLGuOfAvYm
-         SnajUHlq/TMzZaOrZezl6cUYyHrVnQBjBAkGf7n08R2QVdzg472K+ehzax3ofm0zBpPO
-         7vC1UnfvetEp1E4a5IJncRC86zF/HG6yf8se3exIbHTTFuehALuh+3Y3Ru82CO2LJVku
-         25U4a6UnXxseWovvNr1hjA9HC+MW5qfMjG7C7NrvvY7h3VtcWf0DwOfQ5ojhhcroNC7A
-         mL4g==
+        bh=RkzGUm18zBYfchA5uR342rVkKpX7P8GlAx2TTDiPHdw=;
+        b=C+4/nRQzjq/2TE4fcFkOYjJdJGCxs5nhcCKTtyAbkUFOTo1ChiIqnyw51Ar1dzL69j
+         dZgM7uh0KmXuNErIEJxeh2UBiRf02krpmb2/bs/d+/byX9R3yJcdkBuj0xmYLJFT5nLy
+         8nvicFpp45zQOlLlOBr77LjvPq4AVPyi+a0ChlFgbuVlfG94a7Gyd4MQB2LhEgCl4cn2
+         aW/Xmbp1nOcgXqFEwFT6ZSf7BqoTRwYrADCZ4JbSfkSSTsUnAob+c3wfrIHxdZsba8hC
+         pNYy2xAxNBEn6s/8qoNQMhbtrfA6+xWYE7RPWifdmzsyNRRM8SEAkiE5Bi4YPKRoPUQ2
+         J3hQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784974628; x=1785579428;
+        d=1e100.net; s=20251104; t=1784977688; x=1785582488;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Pxgaj4ziBaYk3jWVl2nTaXJq4vxwI5aO/MKEtSh/FrA=;
-        b=SvPxODkTWHTKiAWy8xGs2Pm77yRJv5zWM3+OV4HqanWg7KLk74oAmQmVQulIa1yf45
-         LQsk0Ce4Urf+ZydnzvKojhNwheaOeRPgFkEmKbP0sHnR0NWls6YBA5DacuQXECMpoeqe
-         T8OG5hMkKlW+2WoOlhv2kcaAavlfSjJur+tmmyBH9c7aHFZXdGxNfLlPFoCC9nFDg+U4
-         Napr3dyhVfkz8fH/stLkT4Z3Tp8p/YdHmhp0u4amNXuQov47rdeuPCFMduw1RgdDXkGx
-         QAv1K96ArKGn4c7I7Qa0D9ME+qkSi6YSk2jj53a4ZdGkZ2qqDOE6GRFDWxh5qCW4DvjB
-         /7tQ==
-X-Gm-Message-State: AOJu0YzX85FsKFk/aisotpogr1vWYEIdtef4tZNlnYcDpsM+o13ggn2C
-	SpGNq6DGf/L5hP40RoIb/tLnWrcOt344OliRjszUTrOVHGuM5ACHo5Lg
-X-Gm-Gg: AR+sD10/6aH+03YVAm6zGIu/05ySenR/T+C1RHxQxoELGG8pb0y/yJKunS3adBYPujs
-	LaIuhYAxZrakE6LwBpLHiQt9sqLXxBJF8/jmfnpdJjiJj4EFrF6Nnaqpx3Z8RnLO0wlamDK9YWj
-	FYkdhS74bnP6SUv8mb7nCxWnCCNIGsTKYP4uRwpsP7w5hw4Vin7zrNJwruLua059k5azknpX2q9
-	xSuzX7tm5JJWC7A9ulwS0Gop/7jGrd+2oe7mSnoiWe1VjyOrStKevaNrCHzelIvgg2GYshNdzFh
-	EjyQnUL5uw4tCQR5VEHppr5ZensvYcEJJnb584UM34sWXtKylvIFFsW2ZpbckrBpd4vArAsYURE
-	UVlZfd37sB4K1TiogjRHDd2Fn28X/v5+ItTH/+Slf2Rv68oYLgiPWkq5XmNWFEE2W6GwZOjA8dA
-	pC6G+NBZeR
-X-Received: by 2002:a05:600c:3512:b0:495:4e1d:82df with SMTP id 5b1f17b1804b1-496b56c57e4mr22178785e9.10.1784974627865;
-        Sat, 25 Jul 2026 03:17:07 -0700 (PDT)
+        bh=RkzGUm18zBYfchA5uR342rVkKpX7P8GlAx2TTDiPHdw=;
+        b=NKA+JXZaaj9DNZQAjTKgfY/dXYussFUz4iZzqX1BjqMVUIA3vTx6VJc9YT8HxZIaPQ
+         Qn7M0amIZFDTtmDYSlYEKvKlmZvNC9uqVOpthH/ItqMVCpbgPLqMcoCfyJZ5mDe+DEG6
+         a7ylDE7IXImWuEUQwUHNWxoIG3MAiILwZHAGUn2PahG1LIwTraPJRm6Az+6aZ8Tc9tc6
+         G9TmbuUIkjQ+szefvmpFdfQAhrevUhjFvj5DYTTiHDniIZV7jHFHDqXExxaCqbWIVMCq
+         BQNfEco9tQws2X5LUvu/0FoZbUd2nx9p3iJc1CuWQOx8A+VwHSr5EjdV6Hazw5Axc8mb
+         u4RQ==
+X-Gm-Message-State: AOJu0YwuWwU6MDH8ASJYUXXtIciM6+E8w4VmX3lm5xhdSBsGypLm0kXu
+	f2YQfJDxdndrlQe99XDOvGr+E8BJRD1u/4sU/1PrQ7yaljXMB35UGJ16
+X-Gm-Gg: AR+sD11mzNWvgypkRw677WeC3C4HuvuyhgwIBBrTPYMnJgWTeHXWRstRCHMvv9ooxVw
+	NNi58u8q8j/+hRW2rGXKF4UEtJZneRQhOcfkTtTTpKkys/G5FPJIAUPAyK1t8QodOq6DwMfJdH7
+	zBwct0oeA2et63f1yY2KQQy2j35hX20tBYA9icljE48iXjvAaX3pKGBSDoP94TsIUhHu8/1i34s
+	wbgUdmoP5Jz5shOGPcrpTfqNd8rL/UEZf3GgFE2eV02ony57zLkDlh65zPPtfwEzMQCttd+m3cV
+	djcHYCsPj4pHXzg6bpSR/aRwz3mGm4iuxyjd8NWGaUYnuSI8NeFFa5edEP1Zt8bp+hUFkqcxBM1
+	UsdpNAWFoywhnge1RAfZmFFbvDqGV+3Bh5yI0r4QuhAu1sQETyHt19xIKAjmfMFUwU49U/2Wue0
+	jRP/XGoTGZ
+X-Received: by 2002:a05:600c:c16d:b0:493:f822:ac5e with SMTP id 5b1f17b1804b1-496b56f1308mr22791375e9.23.1784977687443;
+        Sat, 25 Jul 2026 04:08:07 -0700 (PDT)
 Received: from [192.168.1.50] ([79.118.68.61])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85bd850asm30605411f8f.15.2026.07.25.03.17.06
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b49a5f98sm62973655e9.12.2026.07.25.04.08.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jul 2026 03:17:07 -0700 (PDT)
-Message-ID: <c767bcbb-a2d1-4ebb-bd67-0d9661b285cb@gmail.com>
-Date: Sat, 25 Jul 2026 13:17:05 +0300
+        Sat, 25 Jul 2026 04:08:07 -0700 (PDT)
+Message-ID: <51ca65e1-93ed-461a-99ff-2e72488a3a6e@gmail.com>
+Date: Sat, 25 Jul 2026 14:08:05 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,151 +68,286 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/19] wifi: rtw88: fw: add the vendor firmware commands
- used by RTL8723BS
+Subject: Re: [PATCH 12/19] wifi: rtw88: sdio: handle the RTL8723BS management
+ TX path
 To: luka.gejak@linux.dev, Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
  Michael Straube <straube.linux@gmail.com>,
  Peter Robinson <pbrobinson@gmail.com>
 References: <20260724181858.192903-1-luka.gejak@linux.dev>
- <20260724181858.192903-8-luka.gejak@linux.dev>
+ <20260724183225.196856-1-luka.gejak@linux.dev>
 Content-Language: en-US
 From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260724181858.192903-8-luka.gejak@linux.dev>
+In-Reply-To: <20260724183225.196856-1-luka.gejak@linux.dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 24/07/2026 21:18, luka.gejak@linux.dev wrote:
+On 24/07/2026 21:32, luka.gejak@linux.dev wrote:
 > From: Luka Gejak <luka.gejak@linux.dev>
 > 
-> The RTL8723BS join and coexistence sequences need four commands that
-> rtw88 does not implement: MACID_CFG to configure rate adaptation after
-> association, the WL channel info report, the firmware GNT_BT state, and
-> the coexistence antenna select reserve that forms part of the vendor
-> initialisation toggle.
-
-But rtw88 does implement the first two.
-
+> Management and beacon frames on this chip go to the high queue rather
+> than the extra one, and their descriptor has to sit at a fixed offset,
+> which means the skb payload must be aligned before the descriptor is
+> pushed instead of inserting padding after it. Doing the alignment can
+> fail, so the prepare path now reports an error rather than returning
+> void.
 > 
-> Add them here so the coexistence and association changes that follow
-> have the commands available.
+> The vendor descriptor also leaves SW_DEFINE and the sequence number at
+> zero for management frames, so there is no key to match an asynchronous
+> C2H report against. Follow the vendor dump_mgntframe_and_wait() path and
+> report completion at DMA completion for those frames, leaving data
+> frames on the normal TX report queue. Record the descriptor offset per
+> frame so the skb is unwound correctly on completion.
 > 
+
+Sequence numbers work for the other chips. Have you tried it?
+
 > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 > ---
->  drivers/net/wireless/realtek/rtw88/fw.c | 59 +++++++++++++++++++++++++
->  drivers/net/wireless/realtek/rtw88/fw.h | 13 ++++++
->  2 files changed, 72 insertions(+)
+>  drivers/net/wireless/realtek/rtw88/sdio.c | 131 +++++++++++++++++-----
+>  drivers/net/wireless/realtek/rtw88/sdio.h |   2 +
+>  2 files changed, 104 insertions(+), 29 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-> index 87da0dd82aaa..b43ee5d951fd 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.c
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
-> @@ -856,6 +856,65 @@ void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool connect)
->  	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+> index adf0b509e2cc..fcbb0ee601c1 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+> @@ -480,8 +480,14 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
+>  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
+>  				    REG_SDIO_CMD_ADDR_TXFF_HIGH);
+>  		break;
+> -	case RTW_TX_QUEUE_VI:
+>  	case RTW_TX_QUEUE_VO:
+> +		if (rtw_is_8723bs(rtwdev)) {
+> +			txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
+> +					    REG_SDIO_CMD_ADDR_TXFF_HIGH);
+> +			break;
+> +		}
+> +		fallthrough;
+> +	case RTW_TX_QUEUE_VI:
+>  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
+>  				    REG_SDIO_CMD_ADDR_TXFF_NORMAL);
+>  		break;
+> @@ -492,6 +498,8 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
+>  		break;
+>  	case RTW_TX_QUEUE_MGMT:
+>  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
+> +				    rtw_is_8723bs(rtwdev) ?
+> +				    REG_SDIO_CMD_ADDR_TXFF_HIGH :
+>  				    REG_SDIO_CMD_ADDR_TXFF_EXTRA);
+>  		break;
+>  	default:
+> @@ -765,12 +773,24 @@ static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
+>  	}
 >  }
 >  
-> +/* 8723BS SDIO: post-assoc rate-adaptation config in the vendor v5.2.17
-> + * MACID_CFG byte layout. disra (bit7 of [2]) must stay 0 so the firmware keeps
-> + * running rate adaptation for this mac_id.
-> + */
-> +void rtw_fw_macid_cfg(struct rtw_dev *rtwdev, u8 mac_id, u8 raid, u8 bw,
-> +		      u8 sgi, u32 rate_mask)
+> +static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb)
 > +{
-> +	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
+> +	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 > +
-> +	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_RA_INFO);
+> +	BUILD_BUG_ON(sizeof(struct rtw_sdio_tx_data) >
+> +		     sizeof(info->status.status_driver_data));
 > +
-> +	h2c_pkt[1] = mac_id & 0x7f;
-> +	h2c_pkt[2] = (raid & 0x1f) | (sgi ? BIT(7) : 0) | 0x60;
-> +	h2c_pkt[3] = (bw ? 3 : 1) & 0x3;
-> +	h2c_pkt[4] = rate_mask & 0xff;
-> +	h2c_pkt[5] = (rate_mask >> 8) & 0xff;
-> +	h2c_pkt[6] = (rate_mask >> 16) & 0xff;
-> +	h2c_pkt[7] = (rate_mask >> 24) & 0xff;
-> +
-> +	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
+> +	return (struct rtw_sdio_tx_data *)info->status.status_driver_data;
 > +}
 > +
-> +/* 8723BS SDIO: report the connected channel/bandwidth to the vendor firmware. */
-> +void rtw_fw_send_wl_ch_info(struct rtw_dev *rtwdev, u8 ch, u8 bw)
-> +{
-> +	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-> +	u8 bw_byte = bw == RTW_CHANNEL_WIDTH_40 ? 0x30 : 0x20;
-> +
-> +	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_WL_CH_INFO);
-> +	h2c_pkt[1] = 0x00;
-> +	h2c_pkt[2] = ch;
-> +	h2c_pkt[3] = bw_byte;
-> +
-> +	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-> +}
-> +
-> +/* 8723BS SDIO: set the firmware GNT_BT state (0 = WiFi owns the antenna). */
-> +void rtw_fw_set_gnt_bt(struct rtw_dev *rtwdev, u8 state)
-> +{
-> +	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-> +
-> +	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_GNT_BT);
-> +	SET_GNT_BT_STATE(h2c_pkt, state);
-> +
-> +	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-> +}
-> +
-> +/* 8723BS SDIO: vendor coex antenna-select reserve H2C (part of the init toggle). */
-> +void rtw_fw_coex_ant_sel_rsv(struct rtw_dev *rtwdev, u8 inverse, u8 type)
-> +{
-> +	u8 h2c_pkt[H2C_PKT_SIZE] = {0};
-> +
-> +	SET_H2C_CMD_ID_CLASS(h2c_pkt, H2C_CMD_COEX_ANT_SEL_RSV);
-> +	SET_COEX_ANT_SEL_RSV_INVERSE(h2c_pkt, inverse);
-> +	SET_COEX_ANT_SEL_RSV_TYPE(h2c_pkt, type);
-> +
-> +	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
-> +}
-> +
->  void rtw_fw_update_wl_phy_info(struct rtw_dev *rtwdev)
+>  static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+>  			       enum rtw_tx_queue_type queue)
 >  {
->  	struct rtw_traffic_stats *stats = &rtwdev->stats;
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-> index 6927d2041d24..8b238b41decf 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.h
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.h
-> @@ -572,10 +572,12 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
->  #define H2C_CMD_QUERY_BT_INFO		0x61
->  #define H2C_CMD_FORCE_BT_TX_POWER	0x62
->  #define H2C_CMD_IGNORE_WLAN_ACTION	0x63
-> +#define H2C_CMD_COEX_ANT_SEL_RSV	0x65
->  #define H2C_CMD_WL_CH_INFO		0x66
->  #define H2C_CMD_QUERY_BT_MP_INFO	0x67
->  #define H2C_CMD_BT_WIFI_CONTROL		0x69
->  #define H2C_CMD_WIFI_CALIBRATION	0x6d
-> +#define H2C_CMD_GNT_BT			0x6e
->  #define H2C_CMD_QUERY_BT_HID_INFO	0x73
+>  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+> +	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
+>  	unsigned int orig_len = skb->len;
+>  	bool rtl8723bs = rtw_is_8723bs(rtwdev);
+> +	bool quiet = rtl8723bs && tx_data->is_mgmt;
+>  	unsigned int pages;
+>  	bool bus_claim;
+>  	size_t txsize;
+> @@ -825,6 +845,8 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+>  	if (bus_claim)
+>  		sdio_release_host(rtwsdio->sdio_func);
 >  
->  #define H2C_CMD_KEEP_ALIVE		0x03
-> @@ -688,6 +690,12 @@ static inline void rtw_h2c_pkt_set_header(u8 *h2c_pkt, u8 sub_id)
->  	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x01, value, GENMASK(31, 24))
->  #define SET_QUERY_BT_INFO(h2c_pkt, value)                                      \
->  	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-> +#define SET_GNT_BT_STATE(h2c_pkt, value)                                       \
-> +	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, BIT(8))
-> +#define SET_COEX_ANT_SEL_RSV_INVERSE(h2c_pkt, value)                           \
-> +	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
-> +#define SET_COEX_ANT_SEL_RSV_TYPE(h2c_pkt, value)                              \
-> +	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(23, 16))
->  #define SET_WL_CH_INFO_LINK(h2c_pkt, value)                                    \
->  	le32p_replace_bits((__le32 *)(h2c_pkt) + 0x00, value, GENMASK(15, 8))
->  #define SET_WL_CH_INFO_CHNL(h2c_pkt, value)                                    \
-> @@ -853,6 +861,11 @@ void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
->  void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si,
->  			 bool reset_ra_mask);
->  void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
-> +void rtw_fw_macid_cfg(struct rtw_dev *rtwdev, u8 mac_id, u8 raid, u8 bw,
-> +		      u8 sgi, u32 rate_mask);
-> +void rtw_fw_send_wl_ch_info(struct rtw_dev *rtwdev, u8 ch, u8 bw);
-> +void rtw_fw_set_gnt_bt(struct rtw_dev *rtwdev, u8 state);
-> +void rtw_fw_coex_ant_sel_rsv(struct rtw_dev *rtwdev, u8 inverse, u8 type);
->  void rtw_fw_update_wl_phy_info(struct rtw_dev *rtwdev);
->  void rtw_fw_beacon_filter_config(struct rtw_dev *rtwdev, bool connect,
->  				 struct ieee80211_vif *vif);
+> +	if (!ret && quiet)
+> +		usleep_range(1000, 2000);
+>  	if (!ret && rtl8723bs) {
+>  		pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
+>  		rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
+> @@ -1032,52 +1054,82 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
+>  	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
+>  }
+>  
+> -static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb)
+> +static int rtw_sdio_align_tx_skb(struct sk_buff *skb, unsigned int headroom)
+>  {
+> -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> +	unsigned int misalign, needed;
+> +	int ret;
+>  
+> -	BUILD_BUG_ON(sizeof(struct rtw_sdio_tx_data) >
+> -		     sizeof(info->status.status_driver_data));
+> +	misalign = (unsigned long)skb->data & (RTW_SDIO_DATA_PTR_ALIGN - 1);
+> +	if (!misalign)
+> +		return 0;
+>  
+> -	return (struct rtw_sdio_tx_data *)info->status.status_driver_data;
+> +	needed = headroom + RTW_SDIO_DATA_PTR_ALIGN - 1;
+> +	if (skb_headroom(skb) < needed) {
+> +		ret = pskb_expand_head(skb, needed - skb_headroom(skb), 0,
+> +				       GFP_KERNEL);
+> +		if (ret)
+> +			return ret;
+> +
+> +		misalign = (unsigned long)skb->data &
+> +			   (RTW_SDIO_DATA_PTR_ALIGN - 1);
+> +		if (!misalign)
+> +			return 0;
+> +	}
+> +
+> +	needed = headroom + misalign;
+> +	if (skb_headroom(skb) < needed)
+> +		return -ENOSPC;
+> +
+> +	skb_push(skb, misalign);
+> +	memmove(skb->data, skb->data + misalign, skb->len - misalign);
+> +	skb_trim(skb, skb->len - misalign);
+> +
+> +	return 0;
+>  }
+>  
+> -static void rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
+> -				    struct rtw_tx_pkt_info *pkt_info,
+> -				    struct sk_buff *skb,
+> -				    enum rtw_tx_queue_type queue)
+> +static int rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
+> +				   struct rtw_tx_pkt_info *pkt_info,
+> +				   struct sk_buff *skb,
+> +				   enum rtw_tx_queue_type queue)
+>  {
+>  	const struct rtw_chip_info *chip = rtwdev->chip;
+>  	unsigned long data_addr, aligned_addr;
+> +	bool fixed_8723bs_offset;
+>  	size_t offset;
+>  	u8 *pkt_desc;
+> +	int ret;
+> +
+> +	fixed_8723bs_offset = rtw_is_8723bs(rtwdev) &&
+> +			      (queue == RTW_TX_QUEUE_MGMT ||
+> +			       queue == RTW_TX_QUEUE_BCN);
+> +
+> +	if (fixed_8723bs_offset) {
+> +		ret = rtw_sdio_align_tx_skb(skb, chip->tx_pkt_desc_sz);
+> +		if (ret)
+> +			return ret;
+> +	}
+>  
+>  	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
+>  
+>  	data_addr = (unsigned long)pkt_desc;
+>  	aligned_addr = ALIGN(data_addr, RTW_SDIO_DATA_PTR_ALIGN);
+>  
+> -	if (data_addr != aligned_addr) {
+> +	if (!fixed_8723bs_offset && data_addr != aligned_addr) {
+>  		/* Ensure that the start of the pkt_desc is always aligned at
+>  		 * RTW_SDIO_DATA_PTR_ALIGN.
+>  		 */
+>  		offset = RTW_SDIO_DATA_PTR_ALIGN - (aligned_addr - data_addr);
+> -
+>  		pkt_desc = skb_push(skb, offset);
+> -
+> -		/* By inserting padding to align the start of the pkt_desc we
+> -		 * need to inform the firmware that the actual data starts at
+> -		 * a different offset than normal.
+> -		 */
+>  		pkt_info->offset += offset;
+> +		memset(pkt_desc + chip->tx_pkt_desc_sz, 0, offset);
+>  	}
+>  
+>  	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
+> -
+>  	pkt_info->qsel = rtw_sdio_get_tx_qsel(rtwdev, skb, queue);
+> -
+>  	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
+>  	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
+> +
+> +	return 0;
+>  }
+>  
+>  static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
+> @@ -1087,9 +1139,10 @@ static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
+>  {
+>  	int ret;
+>  
+> -	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+> -
+> -	ret = rtw_sdio_write_port(rtwdev, skb, queue);
+> +	memset(rtw_sdio_get_tx_data(skb), 0, sizeof(struct rtw_sdio_tx_data));
+> +	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+> +	if (!ret)
+> +		ret = rtw_sdio_write_port(rtwdev, skb, queue);
+>  	dev_kfree_skb_any(skb);
+>  
+>  	return ret;
+> @@ -1127,11 +1180,22 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
+>  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+>  	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
+>  	struct rtw_sdio_tx_data *tx_data;
+> -
+> -	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+> +	int ret;
+>  
+>  	tx_data = rtw_sdio_get_tx_data(skb);
+> +	memset(tx_data, 0, sizeof(*tx_data));
+> +	if (skb->len >= sizeof(struct ieee80211_hdr_3addr)) {
+> +		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> +
+> +		tx_data->is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
+> +	}
+> +
+> +	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+> +	if (ret)
+> +		return ret;
+> +
+>  	tx_data->sn = pkt_info->sn;
+> +	tx_data->tx_pkt_offset = pkt_info->offset;
+>  
+>  	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
+>  
+> @@ -1410,11 +1474,20 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
+>  	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
+>  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>  	struct ieee80211_hw *hw = rtwdev->hw;
+> -
+> -	skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
+> -
+> -	/* enqueue to wait for tx report */
+> -	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
+> +	u8 tx_pkt_offset = tx_data->tx_pkt_offset;
+> +
+> +	if (!tx_pkt_offset)
+> +		tx_pkt_offset = rtwdev->chip->tx_pkt_desc_sz;
+> +	skb_pull(skb, tx_pkt_offset);
+> +
+> +	/* The RTL8723BS vendor descriptor uses SW_DEFINE/sn=0 for management
+> +	 * frames, so there is no unique key for matching asynchronous C2H TX
+> +	 * reports. Report completion at SDIO DMA completion, as the vendor
+> +	 * dump_mgntframe_and_wait() path does; data frames keep the normal C2H
+> +	 * report queue.
+> +	 */
+> +	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
+> +	    !(rtw_is_8723bs(rtwdev) && tx_data->is_mgmt)) {
+>  		rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
+>  		return;
+>  	}
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+> index 12086f1aa280..aa088c512b9c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.h
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+> @@ -140,6 +140,8 @@ struct sdio_device_id;
+>  
+>  struct rtw_sdio_tx_data {
+>  	u8 sn;
+> +	u8 tx_pkt_offset;
+> +	bool is_mgmt;
+>  };
+>  
+>  struct rtw_sdio_work_data {
 
