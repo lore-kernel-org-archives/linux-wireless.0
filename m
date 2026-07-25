@@ -1,66 +1,66 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797FF3B7B83
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:08:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7443535C181
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 11:25:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784977691; cv=none; b=Fwe41y3iCZNy3o6AHNUt56eesiKtKS/tpek94NtQki9gk7bwwI2TF7Fdj0onurCs/2V5F1/E/AqapECVc6Om6eMD8+ENQ9f2S/hoC04kr/QAkHfXR6CWkw0m67LM6/UzR3LDF9gCAMmGr/nWkehW5aCEXYGyS9AYBdVYpUuZ7x4=
+	t=1784978707; cv=none; b=gMXu+fZa+5kPLLJ6aTsIV7ZgelTq4OujgaeaN6w3uq3bRJ4TEj0EDb4XOerjOegIQDyxW8MhVGneppkRGr4QAdyv3MEBmpQspYeMuUPvwzq4g/1IkDb9Jtm/uUfiNLq8nn++8WYqYmpYpdAHAMXEUDAggHBkfs7JJ+V7BaUpDWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784977691; c=relaxed/simple;
-	bh=eSNTLm6v9ZwRlI24U2eL1fhUQqXHp0RDZUi2X4BfXuo=;
+	s=arc-20240116; t=1784978707; c=relaxed/simple;
+	bh=Rq3lzNswFfIYEhK5p/0mubinIFAPeB7nGHjY26yebvk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SPi0MooHKH42Bz+23q2MkpONxcS58g5y+SZ01+wVRy9dhBCSbAqzZLyq5+9Q3E2U/74scZJHNRoc9SBFwgD6oo2D5FpEV+ifQLpcClm5RHpYhZHVg+YhxlM+fGkOY5Io+n5W3v+xvfZG7Qwdn6Gsad034rzfLWAIZSMeFP3kibA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C+4/nRQz; arc=none smtp.client-ip=209.85.128.41
+	 In-Reply-To:Content-Type; b=aA4wGjr+iCCBbaCb7YzgPQLFrLXwv9G6JV/2A5d1DrYKHuRK7azrh3qhROUyLgdhcBhbHtbHTvHFqBopirZMyj7iGhDkYiAJtwyQA2btHirbAMcaqNm87SFCEdidaSQWbuU1IVN7DZY25iu71M9jnkRXHtddRARNGtWs4aGvBbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KD298iOP; arc=none smtp.client-ip=209.85.221.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C+4/nRQz"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4954d383e64so8062935e9.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 04:08:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KD298iOP"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-4728c12ba97so769960f8f.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 04:25:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1784977688; x=1785582488; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1784978704; x=1785583504; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=RkzGUm18zBYfchA5uR342rVkKpX7P8GlAx2TTDiPHdw=;
-        b=C+4/nRQzjq/2TE4fcFkOYjJdJGCxs5nhcCKTtyAbkUFOTo1ChiIqnyw51Ar1dzL69j
-         dZgM7uh0KmXuNErIEJxeh2UBiRf02krpmb2/bs/d+/byX9R3yJcdkBuj0xmYLJFT5nLy
-         8nvicFpp45zQOlLlOBr77LjvPq4AVPyi+a0ChlFgbuVlfG94a7Gyd4MQB2LhEgCl4cn2
-         aW/Xmbp1nOcgXqFEwFT6ZSf7BqoTRwYrADCZ4JbSfkSSTsUnAob+c3wfrIHxdZsba8hC
-         pNYy2xAxNBEn6s/8qoNQMhbtrfA6+xWYE7RPWifdmzsyNRRM8SEAkiE5Bi4YPKRoPUQ2
-         J3hQ==
+        bh=KohReyS6AJYnGPiV+qUeaij9orUKoMMitiIixb/+cRc=;
+        b=KD298iOPraUPrNKWG1ETdss85yKHgfjuuumJmlmDRCRGunUU23FdBF/VE/8p/D8hvn
+         TslySxJVAGotXasEIdN7dk5Bv4gUgUV3qDk7zLQFYMi+VYPQJslLqS0biq2q5Z6pFDAB
+         5hREy/9yu3AWWUmiYjMEf2zG8JBH1uOhtQ17AMygKsZBNJjG+ZYYcquuF+iT5OiMKrl4
+         rtRMTtIdDl9uxYciBKKp0ixFQ/fqTv4XnR0hT3dpLgIoOB5NKgOPD7xjOPK6JiZwSEJH
+         KTt2y/ueUMtLC4UUaLJjnomeGUwjmEITldnt+K2noFpEH+SjXERI0FdTXtBo7tJN9qEZ
+         1waA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784977688; x=1785582488;
+        d=1e100.net; s=20251104; t=1784978704; x=1785583504;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=RkzGUm18zBYfchA5uR342rVkKpX7P8GlAx2TTDiPHdw=;
-        b=NKA+JXZaaj9DNZQAjTKgfY/dXYussFUz4iZzqX1BjqMVUIA3vTx6VJc9YT8HxZIaPQ
-         Qn7M0amIZFDTtmDYSlYEKvKlmZvNC9uqVOpthH/ItqMVCpbgPLqMcoCfyJZ5mDe+DEG6
-         a7ylDE7IXImWuEUQwUHNWxoIG3MAiILwZHAGUn2PahG1LIwTraPJRm6Az+6aZ8Tc9tc6
-         G9TmbuUIkjQ+szefvmpFdfQAhrevUhjFvj5DYTTiHDniIZV7jHFHDqXExxaCqbWIVMCq
-         BQNfEco9tQws2X5LUvu/0FoZbUd2nx9p3iJc1CuWQOx8A+VwHSr5EjdV6Hazw5Axc8mb
-         u4RQ==
-X-Gm-Message-State: AOJu0YwuWwU6MDH8ASJYUXXtIciM6+E8w4VmX3lm5xhdSBsGypLm0kXu
-	f2YQfJDxdndrlQe99XDOvGr+E8BJRD1u/4sU/1PrQ7yaljXMB35UGJ16
-X-Gm-Gg: AR+sD11mzNWvgypkRw677WeC3C4HuvuyhgwIBBrTPYMnJgWTeHXWRstRCHMvv9ooxVw
-	NNi58u8q8j/+hRW2rGXKF4UEtJZneRQhOcfkTtTTpKkys/G5FPJIAUPAyK1t8QodOq6DwMfJdH7
-	zBwct0oeA2et63f1yY2KQQy2j35hX20tBYA9icljE48iXjvAaX3pKGBSDoP94TsIUhHu8/1i34s
-	wbgUdmoP5Jz5shOGPcrpTfqNd8rL/UEZf3GgFE2eV02ony57zLkDlh65zPPtfwEzMQCttd+m3cV
-	djcHYCsPj4pHXzg6bpSR/aRwz3mGm4iuxyjd8NWGaUYnuSI8NeFFa5edEP1Zt8bp+hUFkqcxBM1
-	UsdpNAWFoywhnge1RAfZmFFbvDqGV+3Bh5yI0r4QuhAu1sQETyHt19xIKAjmfMFUwU49U/2Wue0
-	jRP/XGoTGZ
-X-Received: by 2002:a05:600c:c16d:b0:493:f822:ac5e with SMTP id 5b1f17b1804b1-496b56f1308mr22791375e9.23.1784977687443;
-        Sat, 25 Jul 2026 04:08:07 -0700 (PDT)
+        bh=KohReyS6AJYnGPiV+qUeaij9orUKoMMitiIixb/+cRc=;
+        b=XwXkbyofUaAP8Z727WqdWfcD/TfzlbtcdN3K2Cnhw4a1YjEw2YKMhduDV++lLkGV09
+         gI/L840MR8EPQbdQzb+/HCNZm5b17+iVUh90GJT1PgCueMAAyMerKnKpMQXjjbzaQ2uw
+         Nq3vDEPhZLA49DYknPZFjOyD3GWb87SHhEMs4ize3+5uKz+zo7hAg30ulwgftLr3cNU+
+         MvyUt6uhKGZcWh3alri1oIGmC3ldtw2bOoEyNNWsdOWVknJjshZaD5f7ALa12J0hMtFI
+         I+INZNe5Omx/9epJnVEB+Vt0d5/zo/7MrlJhdq6JGvxwa4Fk7RgPGWVYKkGieCLauCEJ
+         Bd9Q==
+X-Gm-Message-State: AOJu0YwH+3ccG0HDQJ4H7Wn0nyy9zNPCfh1e8+sBUwZhyCWhcC8HMhgU
+	Y2xt5a3jTnCyNVsTosDoh2Qsy/OsiO3G1aoobWhtKC6rUr/q5pDe4tNP
+X-Gm-Gg: AR+sD11iUVMEVgqpjmD9ht2hEPrvb2+9PNJx87M7z3GL7FlhQir2N2A4vyVRiH9bqvo
+	pHYrI2bC6czXI8EB6WNdg/58q68IXjov7QQD3ekp+K93zYWMYp1hFEQMaQYGTHyaLS9hnDyrRQV
+	NuRj2EzzToxdZjN15f1ps581p4gwONsALga2q2gX1Gk7jidkiVgDR1JMhQFvdc0JwZ5G4tzInBd
+	Y9CDeYd15i5uTwmkYwHov6LQ7/fBpmaikP/5MIFBDwaX7hh6hl6vo1O34ExYyte5rj8+ckfPab7
+	JfvqG3aBw7IGiv7nqmpLQeoF5JSuGQhrL8Pxf4Hm4l0E/dteoBaXcPQtvGzGuFC5rNgCOe41K2n
+	QpsWf4SyHRA85SoC4HEE/UuE+6fCM8Z04x5MQQYPL83f6OVcEbKnhh4v1EVgGJ8mweaZEsEih9A
+	jZ7vNuF4QZ
+X-Received: by 2002:a05:6000:2386:b0:47f:810c:8abe with SMTP id ffacd0b85a97d-47f9feb544emr2224500f8f.36.1784978703517;
+        Sat, 25 Jul 2026 04:25:03 -0700 (PDT)
 Received: from [192.168.1.50] ([79.118.68.61])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496b49a5f98sm62973655e9.12.2026.07.25.04.08.06
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85c531afsm33083322f8f.24.2026.07.25.04.25.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 25 Jul 2026 04:08:07 -0700 (PDT)
-Message-ID: <51ca65e1-93ed-461a-99ff-2e72488a3a6e@gmail.com>
-Date: Sat, 25 Jul 2026 14:08:05 +0300
+        Sat, 25 Jul 2026 04:25:03 -0700 (PDT)
+Message-ID: <8ded63af-64cf-484b-977b-e4458278f9c1@gmail.com>
+Date: Sat, 25 Jul 2026 14:25:00 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -68,286 +68,155 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/19] wifi: rtw88: sdio: handle the RTL8723BS management
- TX path
+Subject: Re: [PATCH 13/19] wifi: rtw88: sdio: set up RX aggregation and
+ interrupts for RTL8723BS
 To: luka.gejak@linux.dev, Ping-Ke Shih <pkshih@realtek.com>
 Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
  Michael Straube <straube.linux@gmail.com>,
  Peter Robinson <pbrobinson@gmail.com>
 References: <20260724181858.192903-1-luka.gejak@linux.dev>
- <20260724183225.196856-1-luka.gejak@linux.dev>
+ <20260724183235.196908-1-luka.gejak@linux.dev>
 Content-Language: en-US
 From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260724183225.196856-1-luka.gejak@linux.dev>
+In-Reply-To: <20260724183235.196908-1-luka.gejak@linux.dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 24/07/2026 21:32, luka.gejak@linux.dev wrote:
 > From: Luka Gejak <luka.gejak@linux.dev>
 > 
-> Management and beacon frames on this chip go to the high queue rather
-> than the extra one, and their descriptor has to sit at a fixed offset,
-> which means the skb payload must be aligned before the descriptor is
-> pushed instead of inserting padding after it. Doing the alignment can
-> fail, so the prepare path now reports an error rather than returning
-> void.
+> Enable the existing RX aggregation setup for this chip and select the
+> larger DMA aggregation mode it needs. The RTL8723BS does not raise
+> CPWM1, so leave that source out of its interrupt mask, and set the SDIO
+> TX control bit the vendor driver uses to have transfers always
+> recognised.
 > 
-> The vendor descriptor also leaves SW_DEFINE and the sequence number at
-> zero for management frames, so there is no key to match an asynchronous
-> C2H report against. Follow the vendor dump_mgntframe_and_wait() path and
-> report completion at DMA completion for those frames, leaving data
-> frames on the normal TX report queue. Record the descriptor offset per
-> frame so the skb is unwound correctly on completion.
+> Interrupt status is also acknowledged differently: write back only the
+> bits that are actually defined, and for this chip only those that are
+> unmasked, rather than writing the raw status word back. Writing back
+> undefined bits leaves the RTL8723BS raising a persistent interrupt after
+> resume. Note that restricting the acknowledgment to defined bits
+> applies to the other SDIO parts as well.
+
+Why does it apply to the others?
+
 > 
-
-Sequence numbers work for the other chips. Have you tried it?
-
 > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 > ---
->  drivers/net/wireless/realtek/rtw88/sdio.c | 131 +++++++++++++++++-----
->  drivers/net/wireless/realtek/rtw88/sdio.h |   2 +
->  2 files changed, 104 insertions(+), 29 deletions(-)
+>  drivers/net/wireless/realtek/rtw88/sdio.c | 29 +++++++++++++++++++++--
+>  drivers/net/wireless/realtek/rtw88/sdio.h |  9 +++++++
+>  2 files changed, 36 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-> index adf0b509e2cc..fcbb0ee601c1 100644
+> index fcbb0ee601c1..1c2d8082f468 100644
 > --- a/drivers/net/wireless/realtek/rtw88/sdio.c
 > +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-> @@ -480,8 +480,14 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
->  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
->  				    REG_SDIO_CMD_ADDR_TXFF_HIGH);
->  		break;
-> -	case RTW_TX_QUEUE_VI:
->  	case RTW_TX_QUEUE_VO:
-> +		if (rtw_is_8723bs(rtwdev)) {
-> +			txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
-> +					    REG_SDIO_CMD_ADDR_TXFF_HIGH);
-> +			break;
-> +		}
-> +		fallthrough;
-> +	case RTW_TX_QUEUE_VI:
->  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
->  				    REG_SDIO_CMD_ADDR_TXFF_NORMAL);
->  		break;
-> @@ -492,6 +498,8 @@ static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, size_t size,
->  		break;
->  	case RTW_TX_QUEUE_MGMT:
->  		txaddr = FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
-> +				    rtw_is_8723bs(rtwdev) ?
-> +				    REG_SDIO_CMD_ADDR_TXFF_HIGH :
->  				    REG_SDIO_CMD_ADDR_TXFF_EXTRA);
->  		break;
->  	default:
-> @@ -765,12 +773,24 @@ static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
->  	}
->  }
->  
-> +static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb)
-> +{
-> +	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +
-> +	BUILD_BUG_ON(sizeof(struct rtw_sdio_tx_data) >
-> +		     sizeof(info->status.status_driver_data));
-> +
-> +	return (struct rtw_sdio_tx_data *)info->status.status_driver_data;
-> +}
-> +
->  static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
->  			       enum rtw_tx_queue_type queue)
+> @@ -866,7 +866,11 @@ static void rtw_sdio_init(struct rtw_dev *rtwdev)
 >  {
 >  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-> +	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
->  	unsigned int orig_len = skb->len;
->  	bool rtl8723bs = rtw_is_8723bs(rtwdev);
-> +	bool quiet = rtl8723bs && tx_data->is_mgmt;
->  	unsigned int pages;
->  	bool bus_claim;
->  	size_t txsize;
-> @@ -825,6 +845,8 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
->  	if (bus_claim)
->  		sdio_release_host(rtwsdio->sdio_func);
 >  
-> +	if (!ret && quiet)
-> +		usleep_range(1000, 2000);
->  	if (!ret && rtl8723bs) {
->  		pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
->  		rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
-> @@ -1032,52 +1054,82 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
+> -	rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CPWM1;
+> +	if (rtw_is_8723bs(rtwdev))
+> +		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST;
+> +	else
+> +		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST |
+> +				       REG_SDIO_HIMR_CPWM1;
+>  }
+>  
+>  static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
+> @@ -874,6 +878,7 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
+>  	u8 size, timeout;
+>  
+>  	switch (rtwdev->chip->id) {
+> +	case RTW_CHIP_TYPE_8723B:
+>  	case RTW_CHIP_TYPE_8703B:
+>  	case RTW_CHIP_TYPE_8821A:
+>  	case RTW_CHIP_TYPE_8812A:
+> @@ -901,6 +906,8 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
+>  		    FIELD_PREP(BIT_DMA_AGG_TO_V1, timeout));
+>  
+>  	rtw_write8_set(rtwdev, REG_RXDMA_MODE, BIT_DMA_MODE);
+> +	if (rtw_is_8723bs(rtwdev))
+> +		rtw_write8_set(rtwdev, REG_RXDMA_MODE, 3 << 2);
+>  }
+>  
+>  static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev)
+> @@ -969,9 +976,19 @@ static void rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
+>  
+>  static int rtw_sdio_start(struct rtw_dev *rtwdev)
+>  {
+> +	u32 clear;
+> +
+>  	rtw_sdio_8723bs_check_rqpn(rtwdev);
+>  	rtw_sdio_init_free_txpg(rtwdev);
+>  	rtw_sdio_enable_rx_aggregation(rtwdev);
+> +
+> +	if (rtw_is_8723bs(rtwdev)) {
+> +		clear = rtw_read32(rtwdev, REG_SDIO_HISR) &
+> +			RTW_SDIO_HISR_CLEAR_MASK;
+> +		if (clear)
+> +			rtw_write32(rtwdev, REG_SDIO_HISR, clear);
+> +	}
+> +
+>  	rtw_sdio_enable_interrupt(rtwdev);
+>  
+>  	return 0;
+> @@ -1051,6 +1068,8 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
+>  
+>  	val = rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
+>  	val &= 0xfff8;
+> +	if (rtw_is_8723bs(rtwdev))
+> +		val |= BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE;
 >  	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
 >  }
 >  
-> -static struct rtw_sdio_tx_data *rtw_sdio_get_tx_data(struct sk_buff *skb)
-> +static int rtw_sdio_align_tx_skb(struct sk_buff *skb, unsigned int headroom)
->  {
-> -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +	unsigned int misalign, needed;
-> +	int ret;
+> @@ -1341,6 +1360,7 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
+>  	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
+>  	struct rtw_sdio *rtwsdio;
+>  	struct rtw_dev *rtwdev;
+> +	u32 clear;
+>  	u32 hisr;
 >  
-> -	BUILD_BUG_ON(sizeof(struct rtw_sdio_tx_data) >
-> -		     sizeof(info->status.status_driver_data));
-> +	misalign = (unsigned long)skb->data & (RTW_SDIO_DATA_PTR_ALIGN - 1);
-> +	if (!misalign)
-> +		return 0;
->  
-> -	return (struct rtw_sdio_tx_data *)info->status.status_driver_data;
-> +	needed = headroom + RTW_SDIO_DATA_PTR_ALIGN - 1;
-> +	if (skb_headroom(skb) < needed) {
-> +		ret = pskb_expand_head(skb, needed - skb_headroom(skb), 0,
-> +				       GFP_KERNEL);
-> +		if (ret)
-> +			return ret;
-> +
-> +		misalign = (unsigned long)skb->data &
-> +			   (RTW_SDIO_DATA_PTR_ALIGN - 1);
-> +		if (!misalign)
-> +			return 0;
-> +	}
-> +
-> +	needed = headroom + misalign;
-> +	if (skb_headroom(skb) < needed)
-> +		return -ENOSPC;
-> +
-> +	skb_push(skb, misalign);
-> +	memmove(skb->data, skb->data + misalign, skb->len - misalign);
-> +	skb_trim(skb, skb->len - misalign);
-> +
-> +	return 0;
->  }
->  
-> -static void rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
-> -				    struct rtw_tx_pkt_info *pkt_info,
-> -				    struct sk_buff *skb,
-> -				    enum rtw_tx_queue_type queue)
-> +static int rtw_sdio_tx_skb_prepare(struct rtw_dev *rtwdev,
-> +				   struct rtw_tx_pkt_info *pkt_info,
-> +				   struct sk_buff *skb,
-> +				   enum rtw_tx_queue_type queue)
->  {
->  	const struct rtw_chip_info *chip = rtwdev->chip;
->  	unsigned long data_addr, aligned_addr;
-> +	bool fixed_8723bs_offset;
->  	size_t offset;
->  	u8 *pkt_desc;
-> +	int ret;
-> +
-> +	fixed_8723bs_offset = rtw_is_8723bs(rtwdev) &&
-> +			      (queue == RTW_TX_QUEUE_MGMT ||
-> +			       queue == RTW_TX_QUEUE_BCN);
-> +
-> +	if (fixed_8723bs_offset) {
-> +		ret = rtw_sdio_align_tx_skb(skb, chip->tx_pkt_desc_sz);
-> +		if (ret)
-> +			return ret;
-> +	}
->  
->  	pkt_desc = skb_push(skb, chip->tx_pkt_desc_sz);
->  
->  	data_addr = (unsigned long)pkt_desc;
->  	aligned_addr = ALIGN(data_addr, RTW_SDIO_DATA_PTR_ALIGN);
->  
-> -	if (data_addr != aligned_addr) {
-> +	if (!fixed_8723bs_offset && data_addr != aligned_addr) {
->  		/* Ensure that the start of the pkt_desc is always aligned at
->  		 * RTW_SDIO_DATA_PTR_ALIGN.
->  		 */
->  		offset = RTW_SDIO_DATA_PTR_ALIGN - (aligned_addr - data_addr);
-> -
->  		pkt_desc = skb_push(skb, offset);
-> -
-> -		/* By inserting padding to align the start of the pkt_desc we
-> -		 * need to inform the firmware that the actual data starts at
-> -		 * a different offset than normal.
-> -		 */
->  		pkt_info->offset += offset;
-> +		memset(pkt_desc + chip->tx_pkt_desc_sz, 0, offset);
+>  	rtwdev = hw->priv;
+> @@ -1357,7 +1377,12 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
+>  		rtw_sdio_rx_isr(rtwdev);
 >  	}
 >  
->  	memset(pkt_desc, 0, chip->tx_pkt_desc_sz);
-> -
->  	pkt_info->qsel = rtw_sdio_get_tx_qsel(rtwdev, skb, queue);
-> -
->  	rtw_tx_fill_tx_desc(rtwdev, pkt_info, skb);
->  	rtw_tx_fill_txdesc_checksum(rtwdev, pkt_info, pkt_desc);
-> +
-> +	return 0;
+> -	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+> +	if (rtw_is_8723bs(rtwdev))
+> +		clear = hisr & rtwsdio->irq_mask & RTW_SDIO_HISR_CLEAR_MASK;
+> +	else
+> +		clear = hisr & RTW_SDIO_HISR_CLEAR_MASK;
+> +	if (clear)
+> +		rtw_write32(rtwdev, REG_SDIO_HISR, clear);
+>  
+>  	rtwsdio->irq_thread = NULL;
 >  }
->  
->  static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
-> @@ -1087,9 +1139,10 @@ static int rtw_sdio_write_data(struct rtw_dev *rtwdev,
->  {
->  	int ret;
->  
-> -	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-> -
-> -	ret = rtw_sdio_write_port(rtwdev, skb, queue);
-> +	memset(rtw_sdio_get_tx_data(skb), 0, sizeof(struct rtw_sdio_tx_data));
-> +	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-> +	if (!ret)
-> +		ret = rtw_sdio_write_port(rtwdev, skb, queue);
->  	dev_kfree_skb_any(skb);
->  
->  	return ret;
-> @@ -1127,11 +1180,22 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
->  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
->  	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
->  	struct rtw_sdio_tx_data *tx_data;
-> -
-> -	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-> +	int ret;
->  
->  	tx_data = rtw_sdio_get_tx_data(skb);
-> +	memset(tx_data, 0, sizeof(*tx_data));
-> +	if (skb->len >= sizeof(struct ieee80211_hdr_3addr)) {
-> +		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-> +
-> +		tx_data->is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
-> +	}
-> +
-> +	ret = rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-> +	if (ret)
-> +		return ret;
-> +
->  	tx_data->sn = pkt_info->sn;
-> +	tx_data->tx_pkt_offset = pkt_info->offset;
->  
->  	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
->  
-> @@ -1410,11 +1474,20 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
->  	struct rtw_sdio_tx_data *tx_data = rtw_sdio_get_tx_data(skb);
->  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->  	struct ieee80211_hw *hw = rtwdev->hw;
-> -
-> -	skb_pull(skb, rtwdev->chip->tx_pkt_desc_sz);
-> -
-> -	/* enqueue to wait for tx report */
-> -	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
-> +	u8 tx_pkt_offset = tx_data->tx_pkt_offset;
-> +
-> +	if (!tx_pkt_offset)
-> +		tx_pkt_offset = rtwdev->chip->tx_pkt_desc_sz;
-> +	skb_pull(skb, tx_pkt_offset);
-> +
-> +	/* The RTL8723BS vendor descriptor uses SW_DEFINE/sn=0 for management
-> +	 * frames, so there is no unique key for matching asynchronous C2H TX
-> +	 * reports. Report completion at SDIO DMA completion, as the vendor
-> +	 * dump_mgntframe_and_wait() path does; data frames keep the normal C2H
-> +	 * report queue.
-> +	 */
-> +	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS &&
-> +	    !(rtw_is_8723bs(rtwdev) && tx_data->is_mgmt)) {
->  		rtw_tx_report_enqueue(rtwdev, skb, tx_data->sn);
->  		return;
->  	}
 > diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-> index 12086f1aa280..aa088c512b9c 100644
+> index aa088c512b9c..208c91446f82 100644
 > --- a/drivers/net/wireless/realtek/rtw88/sdio.h
 > +++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-> @@ -140,6 +140,8 @@ struct sdio_device_id;
+> @@ -22,6 +22,7 @@
 >  
->  struct rtw_sdio_tx_data {
->  	u8 sn;
-> +	u8 tx_pkt_offset;
-> +	bool is_mgmt;
->  };
+>  /* SDIO Tx Control */
+>  #define REG_SDIO_TX_CTRL			(SDIO_LOCAL_OFFSET + 0x0000)
+> +#define BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE	BIT(4)
 >  
->  struct rtw_sdio_work_data {
+>  /*SDIO status timeout*/
+>  #define REG_SDIO_TIMEOUT			(SDIO_LOCAL_OFFSET + 0x0002)
+> @@ -77,6 +78,14 @@
+>  /* the following two are RTL8188 SDIO Specific */
+>  #define REG_SDIO_HISR_MCU_ERR			BIT(28)
+>  #define REG_SDIO_HISR_TSF_BIT32_TOGGLE		BIT(29)
+> +#define RTW_SDIO_HISR_CLEAR_MASK		\
+> +	(REG_SDIO_HISR_TXERR | REG_SDIO_HISR_RXERR | \
+> +	 REG_SDIO_HISR_TXFOVW | REG_SDIO_HISR_RXFOVW | \
+> +	 REG_SDIO_HISR_TXBCNOK | REG_SDIO_HISR_TXBCNERR | \
+> +	 REG_SDIO_HISR_C2HCMD | REG_SDIO_HISR_CPWM1 | \
+> +	 REG_SDIO_HISR_CPWM2 | REG_SDIO_HISR_HSISR_IND | \
+> +	 REG_SDIO_HISR_GTINT3_IND | REG_SDIO_HISR_GTINT4_IND | \
+> +	 REG_SDIO_HISR_PSTIMEOUT | REG_SDIO_HISR_OCPINT)
+>  
+>  /* HCI Current Power Mode */
+>  #define REG_SDIO_HCPWM				(SDIO_LOCAL_OFFSET + 0x0019)
 
