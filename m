@@ -1,130 +1,253 @@
-Received: from out01-fra1-mx.uberspace.de (out01-fra1-mx.uberspace.de [185.139.157.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E6F1A682E;
-	Sat, 25 Jul 2026 15:02:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.139.157.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D89F23BCF7
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 15:04:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784991750; cv=none; b=Qt8WpWlMOCaif1QUdv+eA0omFZ9PZLY2fzoy9Xsuk6CQD6y4hcqmVtCPNjt6kaBg6HnNruLqYL7CGdb5E55+oKQr1+V5cyvw/DTY0BHecMtubY5l+6iCZKnUKFg43Un9oaJCqFYOVK80P4BxDXeBhA0ic9kZTllkf9uucHGWwL4=
+	t=1784991897; cv=none; b=N3Y0uIoCZOgnIbtiUFVjNrMQnVsBntyhro7fJoN2+Jj7hmnQCHG3cIuYYFf3yccUnERJAtaKgf1vG8a2ZmCjp8YR0m/vqL7KtiHWJFF3Xq4XY0aRv1PdETdaTJxXwmGxOcga7/E7FXQs8etrdgvzdaqqzYwYGlo1HvkfYzU7DVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784991750; c=relaxed/simple;
-	bh=L7NNS97L5lFBRlRqpMWkpL+t083DwAT108jf0cGLBnk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Cmyv5QKPIdrQHNypO2no7LiFzKdw8j1U+HpAPJBXvvsbWtPAU3er+ncitc0NY0fM3VlnjZgZzDFtzHUT+Jq/nuEUSTiBO1eieSNdwLQ9pMJdTArRgCSqL74tZGzEW9Uj4w0uIRiEEElBE7Vso+owx1pv02BbFr4FomJc7vtJXNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de; spf=pass smtp.mailfrom=plantwatch.de; dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b=qlB7lJgp; arc=none smtp.client-ip=185.139.157.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=plantwatch.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=plantwatch.de
+	s=arc-20240116; t=1784991897; c=relaxed/simple;
+	bh=/ffam6DRaFakOxN7xOr3dyQBn2AxIFn9B+p6hWgDeuI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hYs84/NEGKGQ4O9lawpu0e3l150H7DP5DX6rt/hwIvNuBSwOfj2t32q+ZhC31wv3bol2VouR0pToifime7It+oMYAErIaD8T4uazIWCBUlotp3ErucAPQhbxxTSz6SnEI31d689hm+NYbHwkb09iBpHqNnkw18k1RBKm9NaHDNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Tx/P75+v; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=plantwatch.de header.i=@plantwatch.de header.b="qlB7lJgp"
-Received: from janus.uberspace.de (janus.uberspace.de [IPv6:2a0b:20c0:2000:62:be24:11ff:fe50:5107])
-	by out01-fra1-mx.uberspace.de (Postfix) with ESMTPS id A46B3400F7;
-	Sat, 25 Jul 2026 17:02:12 +0200 (CEST)
-From: Simon Dietz <simon.dietz@plantwatch.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=plantwatch.de;
-	s=uberspace1; t=1784991732;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Tx/P75+v"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1784991892;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fZv9q0PX/ACqvH8vFCmvIkNrg2wZVDIkdqqYX2bPamo=;
-	b=qlB7lJgppp1GhDHQb+wEVOIq7RrbcbxcjRnsfy2YjAgJYSqldKbvq0G2Dtb1BOLBCT3fVj
-	o0prZpZ7YjAYa0MbsS+6nKTOWZVz57UdtwssT0DEn5CHkoXrvz5mEEPJUdY7AcJk12PG/y
-	cpCnJ8xVxoXTurjOTCgeTZ8b+JDcI6WiDI9jx7vHvOXpnYrgrOQ+SGGRcl5D0baqBhZ/S7
-	eHkN+BpfYsRTXxAp7bbJsWl9nuuYww6oKc4MTSNE7jzGQHg7kXr5l7WT3bhAXQhWHMYeU+
-	2MCalkjUEWPjQHZCiicOo7rVO/Mg0hUddZrY4iH8lD5zaSMSsU2YpONGdysSSg==
-Authentication-Results: ORIGINATING;
-	auth=pass smtp.auth=simon.dietz@plantwatch.de smtp.mailfrom=simon.dietz@plantwatch.de
-To: johannes@sipsolutions.net
-Cc: andrew+netdev@lunn.ch,
-	andrew@lunn.ch,
-	netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	dietz23838@hs-ansbach.de,
-	simon.dietz@plantwatch.de
-Subject: Re: short description of GeoNetworking
-Date: Sat, 25 Jul 2026 17:00:08 +0200
-Message-ID: <20260725150009.183155-1-simon.dietz@plantwatch.de>
-In-Reply-To: <127c720f9ceeaac6ec3872bfc7732ab27d968dfc.camel@sipsolutions.net>
-References: <127c720f9ceeaac6ec3872bfc7732ab27d968dfc.camel@sipsolutions.net>
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Hqi4AZjl1bPGk2dE9l6JxTrVeubyk/S+NatmfXGV6hA=;
+	b=Tx/P75+v1H96QO8bXzv6loRXeetvKVEKq/OHwvvpqSiz5oUixhxRQROgiqMeonq7JTspot
+	sAmntx5up/3TCylElyiHQjV0mXgwKub+s/IsbrWfW9Ouax7YLVG/PXxdTjun7zmxnZTahI
+	2vdwYe2wrL+/GBb4cY9xeUn1Dlld4NU=
+From: luka.gejak@linux.dev
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Luka Gejak <luka.gejak@linux.dev>
+Subject: [PATCH v2 00/11] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+Date: Sat, 25 Jul 2026 17:04:16 +0200
+Message-ID: <20260725150427.93887-1-luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [1.26 / 999.00];
-	SUSPICIOUS_RECIPS(1.50)[];
-	BAYES_HAM(-1.14)[88.63%];
-	MID_CONTAINS_FROM(1.00)[];
-	MIME_GOOD(-0.10)[text/plain];
-	RCPT_COUNT_SEVEN(0.00)[7];
-	RCVD_COUNT_ZERO(0.00)[0];
-	ARC_NA(0.00)[];
-	TAGGED_RCPT(0.00)[netdev];
-	ASN(0.00)[asn:3320, ipnet:2003::/19, country:DE];
-	FROM_HAS_DN(0.00)[];
-	ALIAS_RESOLVED(0.00)[];
-	DKIM_SIGNED(0.00)[plantwatch.de:s=uberspace1];
-	FROM_EQ_ENVFROM(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	LOCAL_OUTBOUND(0.00)[];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	TO_DN_NONE(0.00)[];
-	MIME_TRACE(0.00)[0:+]
+X-Migadu-Flow: FLOW_OUT
 
-Hi Johannes,
+From: Luka Gejak <luka.gejak@linux.dev>
 
-> Or put another way: for each packet, you need to know _where_ (as in
-> physical location) it's going to go, so you can pick which peer to
-> send it to, no? Is this really a *per-packet* property? If not, then
-> I don't think the shape calculations etc. would really need to be in
-> the kernel?
+This is the first of two series adding support for the Realtek RTL8723B
+802.11n chipset and its RTL8723BS SDIO variant to rtw88. It contains
+only the changes to the shared rtw88 core that the chip driver depends
+on. The chip itself, the build glue and the MAINTAINERS entry are a
+second series.
 
-For GeoBroadcast the destination area & shape is a per-packet property.
-For GeoUnicast and topologically scoped broadcast there is no such area
-and/or shape. So the shape calculations need to stay in the kernel to
-support GeoBroadcast packets, I think.
+v1 had 19 patches; this has 11.
 
-> A bigger issue with this might be that it's clearly a small piece of
-> a large overall puzzle - Simon, you mentioned a modified driver
-> somewhere I think (can't find that mention right now), which may be
-> using the OCB support in the stack, perhaps, but also isn't upstream.
+There is no rtw88-style firmware for this chip and no documentation for
+the vendor blob it does use, so while bringing it up I deliberately kept
+the driver as close to the vendor driver's behaviour as I could. With
+that many unknowns at once, matching the vendor exactly was the only way
+to tell which difference actually mattered when something did not work,
+rather than guessing. A number of the v1 patches came from that: they
+reproduced vendor behaviour that was useful to hold fixed during bring
+up, not behaviour the chip turns out to require.
 
-To unfold the puzzle a bit, for handling GeoNetworking packets in a
-standard conform manner, the following things would have to be done:
-* The wifi device has to be switched into ocb mode (included in
-  upstream linux kernel and iw)
-* The wifi device has to radio in the 5.9 Ghz spektrum, in particular
-  between 5.875 and 5.925 GHz[1], therefore ath9k must be patched.
-  These patches are not upstream, but rather short.
-* wireless-db and CRDA must be patched to support the spektrum
-  mentioned above, too.
-* The linux kernel must support GeoNetworking, either natively like
-  with the proposed patch series or (maybe?) via raw sockets. I am not
-  sure, if the support is needed to recieve GeoNetworking packets and
-  to record them with a tool like wireshark or if not, though. For
-  sending GeoNetworking packets it is necessary.
-* There has to be some kind of routing table interface to the kernel
-  and userspace tooling to support routing and sending of GeoBroadcast
-  and GeoUnicast packets.
+Now that the chip works end to end, and prompted by Bitterblue Smith's
+review, I went back and removed each of those on hardware to find which
+were actually load bearing. Eight were not. The changelog below gives
+the measurement for each.
 
-> That's a far smaller patch than I expected 🙂
+Why the remaining changes are needed
+====================================
 
-To be accepted upstream, the patch for wireless-db would have to add
-these 802.11p list entries to all EU countries, so it would be larger.
-Letting them reside in the world domain - which is the current
-implementation - may not be acceptable. But the ath9k part is indeed
-rather small.
+The vendor firmware's association behaviour and SDIO transfer contract
+differ from the firmware the existing rtw88 8723-family devices use, and
+those differences sit in code that lives in the core, so the chip driver
+cannot handle them on its own.
 
-> how do we get anything useful out of a socket family without them?
+What is left falls into four groups:
 
-Valid point. GeoNetworking support in the linux kernel may possibly
-increase its adoption in cases where linux is used (already). I may
-write to their mailing list and ask, if such an open source 802.11p
-implementation exists within the Automotive Grade Linux project.
+  - firmware (patches 3, 4): the GNT_BT command rtw88 does not
+    implement, and a fix to the reserved page upload handshake;
+  - coexistence (5, 6): the PTA antenna path has to be programmed
+    directly during scan and reasserted when associating;
+  - SDIO (7, 8, 9): software free-page and OQT accounting, RX
+    aggregation and interrupt setup, and TX back-pressure with a retry
+    on page starvation;
+  - association (10, 11): the vendor join sequence, which programs the
+    BSS parameters directly and waits for a beacon from the target
+    before authenticating.
 
-Simon
+Patches 1 and 2 are the chip type and helper plus a one-line receive
+fix.
 
-[1] according to EU 2020/1426
+Scope
+=====
+
+Everything is gated on rtw_is_8723bs(), which is false for every chip
+currently supported, so behaviour for existing devices is unchanged.
+The one exception is patch 2, which extends an existing RTL8703B
+zero-length-packet check; it is gated on the SDIO interface rather than
+the chip id, since that is the only place the behaviour has been
+observed.
+
+Patch 8 changes how the SDIO interrupt status is acknowledged. In v1
+that applied to all SDIO parts; it is now scoped to this chip only, and
+the others keep writing the status word back unchanged.
+
+Fixed in the second series
+==========================
+
+Two of the review points are addressed in the chip driver rather than
+here, because that is the right place for both:
+
+  - the hardware capability is filled in from a chip-specific
+    read_efuse, instead of special casing rtw_dump_hw_feature() in the
+    core;
+  - the receive FCS handling is a chip configuration fix. v1 stopped the
+    core advertising RX_INCLUDES_FCS for this chip. The real cause was
+    that the chip cleared BIT_APP_FCS by assigning WLAN_RCR_CFG over
+    hal.rcr wholesale, where the 8723x siblings only write the register
+    and leave hal.rcr alone. Setting that bit in the chip's WLAN_RCR_CFG
+    makes the descriptor carry the FCS like every other rtw88 chip, so
+    the core needs no special case and both hunks are gone from this
+    series.
+
+Neither change is visible here. I planned to send that series once this
+one is applied to rtw-next, but I can send it now alongside if you would
+rather review them together.
+
+Two things deliberately kept
+============================
+
+Two further patches could be removed without breaking anything on my
+test setup, and I have still kept them, because passing on a single AP
+is not evidence that dropping them is safe:
+
+  - the basic-rate handling in patch 11 programs the response rates
+    from the BSS rate elements. Removing it associates and passes
+    traffic here, but this AP advertises a conventional basic-rate set;
+    an AP with an unusual one may not behave the same. rtw88xxa writes
+    a fixed per-band set instead, so there may be a simplification here,
+    but it needs more than one AP to justify.
+  - the ERP preamble and slot-time handlers in patch 11 respond to
+    BSS_CHANGED_ERP_*. Dropping them passes a static test, but that test
+    cannot see a mid-session ERP change, such as a legacy station
+    joining the BSS.
+
+If you would rather have either of them out, say so and they can go.
+
+Testing
+=======
+
+Tested on RTL8723BS hardware together with the second series: repeated
+scan, authentication, association, WPA2 handshake, DHCP, bidirectional
+traffic, reconnects and module reloads. On one AP at strong signal
+(-38 dBm), 2.4 GHz HT40, throughput is roughly 34 Mbit/s down and
+17 Mbit/s up, with no "failed to get tx report" warnings and a clean
+log.
+
+Every patch builds with W=1 with no warnings on its own, and sparse and
+smatch are clean at the tip. checkpatch --strict is clean across this
+series. The other rtw88 bus and chip modules continue to build.
+
+Changes in v2:
+  - Dropped "tx: extend the TX report purge timeout". Instrumenting the
+    report path shows payload[6] & 0xfc equals the enqueued sequence
+    number, 32 out of 32 times, with rtw88's existing decode, and no
+    report is missed. The longer timeout was covering for the next
+    patch, not for the hardware.
+  - Dropped "fw: handle the RTL8723BS management TX reports". 0x12 and
+    0x32 are the first payload byte of C2H_CCX_TX_RPT, not C2H IDs;
+    every C2H event this chip sends carries a known id, so the existing
+    handler already covers them. Thanks to Bitterblue for catching this.
+  - Dropped "fw: send rate adaptation and RSSI info in the vendor
+    layout". The vendor byte layout is equivalent to what the existing
+    macros produce; uplink and the negotiated rate are unchanged without
+    it (16.4/16.5/17.0 against 15.4/16.7/16.6 Mbit/s, MCS7 both ways).
+  - Dropped "fw: send the media status report in the vendor layout". The
+    role field the vendor sets makes no difference here, as with the
+    other chips.
+  - Dropped "sdio: handle the RTL8723BS management TX path". Sequence
+    numbers do work for management frames on this chip, so reporting
+    completion at DMA completion is unnecessary.
+  - Dropped "calibrate and tune the PHY" entirely. All three parts were
+    vendor-matching scaffolding and none survived measurement: the
+    scan-time initial gain override is worse than
+    rtw_phy_dig_set_max_coverage() (five scans found 41 BSSes without it
+    against 34 with it); the IQ calibration works from the normal
+    phy_calibration path; and the hardcoded per-rate TX AGC table
+    overrode the efuse calibration by up to 22 index units and bypassed
+    the regulatory limit the by-rate path applies, which is not
+    something a driver should do.
+  - Dropped "match the RTL8723BS firmware connect and power save
+    behaviour". Deferring the connect report changes nothing, and the
+    LPS gating cannot be justified from measurement: with RTW_DBG_PS
+    enabled, LPS never engages on this setup at all, so the gating never
+    takes effect here.
+  - Dropped "advertise the correct receive capabilities". Both halves
+    move into the chip driver, as described above.
+  - "fw: add the vendor firmware commands" now adds only GNT_BT. rtw88
+    already implements MACID_CFG and the WL channel info report, and the
+    coexistence antenna select reserve became unused once the PHY patch
+    went.
+  - The zero-length packet check is gated on SDIO rather than the chip
+    id.
+  - The SDIO interrupt acknowledgment change is scoped to this chip.
+  - The association sequence no longer re-applies the BSS capability at
+    association time; BSS_CHANGED_ERP_PREAMBLE and BSS_CHANGED_ERP_SLOT
+    are handled later in the same callback.
+  - Register accesses that had raw addresses now use the existing
+    REG_GNT_BT and REG_BT_COEX_ENH_INTR_CTRL, plus a named define for
+    the BB antenna select register.
+
+The implementation is based on the initial RTL8723B work by Michael
+Straube <straube.linux@gmail.com>:
+
+  https://github.com/mistraube/rtw88/tree/rtl8723bs
+
+Based on the rtw-next branch from pkshih/rtw.
+
+Luka Gejak (11):
+  wifi: rtw88: add the RTL8723B chip type and SDIO helper
+  wifi: rtw88: rx: mark zero length packets on RTL8723BS
+  wifi: rtw88: fw: add the GNT_BT firmware command
+  wifi: rtw88: fw: fix the reserved page upload on RTL8723BS
+  wifi: rtw88: coex: add the RTL8723BS scan antenna workaround
+  wifi: rtw88: coex: reassert the antenna path when associating
+  wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
+  wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
+  wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
+  wifi: rtw88: record beacons from the target BSSID before
+    authenticating
+  wifi: rtw88: run the RTL8723BS association register sequence
+
+ drivers/net/wireless/realtek/rtw88/coex.c     | 225 +++++++-
+ drivers/net/wireless/realtek/rtw88/coex.h     |   3 +
+ drivers/net/wireless/realtek/rtw88/fw.c       |  38 +-
+ drivers/net/wireless/realtek/rtw88/fw.h       |   4 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 527 +++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/main.c     |   2 +
+ drivers/net/wireless/realtek/rtw88/main.h     |  29 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |   3 +
+ drivers/net/wireless/realtek/rtw88/rx.c       |   8 +-
+ drivers/net/wireless/realtek/rtw88/sdio.c     | 328 ++++++++++-
+ drivers/net/wireless/realtek/rtw88/sdio.h     |  18 +-
+ drivers/net/wireless/realtek/rtw88/sec.h      |   1 +
+ 12 files changed, 1154 insertions(+), 32 deletions(-)
+
+-- 
+2.55.0
+
