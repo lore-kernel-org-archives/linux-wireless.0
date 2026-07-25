@@ -1,80 +1,70 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DC073112BD
-	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 14:18:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 850AF19D065
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 14:20:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1784989115; cv=none; b=CRf2tfmaOIpR+LVXmBGVGitcLOblEaxJROXUcao5ilPzseFnLc9jsypT4U2kidEDySCVnsukzSNGdmfqk7zSA0ehYGRMrZyMlGaYrJlAFoATDVeDhqjFdPpul4vGrY/P4DfJj5Gw7stacQuGHhZw/daJrf9OsYl4Uy1xRFq9h0k=
+	t=1784989238; cv=none; b=AogXpamgWNFmz9Q2WAqp+3nlRDhu5UWH62M3RSishlvs47/90MTKL0S2Y5CM8xygR7NsCykyjANtjCVqBVgYuAngXifs6o5xNeMHYlvscIWkKGG2CGU5qV3Nh5+ztwPI8GPfAPJP6V/a90plibgqNlGR2Tyk0q+PDC86yMFNkLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1784989115; c=relaxed/simple;
-	bh=0pKzBqEZfX/3FaX6SDS0BxpO0dmNYx8HIndVPLnDDR8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lLqyqbMK1QjCIUjXMA++paklmJxWpv+KXT9RenetAWyVX3uukjLKRT93qtkmNtAVsY3s++uX5lWHTgPq9vzCACt3TF39JVd9+mKRdIOlmaXPLhpQGYPfRPQe+QKUV/FinST5p8y2SqFWj81LcJPOuKbsMWZV9JnpLwSwGSYqWQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=cZWBgBlD; arc=none smtp.client-ip=209.85.208.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	s=arc-20240116; t=1784989238; c=relaxed/simple;
+	bh=vF/EZxMH4ith7H/T/Ifl0fk3k439bUBG4mpWJtmX8Lc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d15MQS0iFpQ1dI1b/6LtuenUQMzxy0UdM0nMUuHMM16ihmCtjo1reeUzPXiX7U7BxkYSRZ3TE6++ZRZcLx14nZekhUamLvFuRXVDiNWeTfhpnsExPRBGDkDMMoBvAOK9XMdPBOKUuJdioEYsMXPJSRCBaW73VAYFwQr5x+P5XDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LDpALPrX; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="cZWBgBlD"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6986578d8c0so1919281a12.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 07:18:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LDpALPrX"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2ce87c7e3bbso15124595ad.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 07:20:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1784989112; x=1785593912; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=I6HhSphr40arB6iMxyFae2bf796pOpLnQzTJ7BzfcsQ=;
-        b=cZWBgBlDLa2VpLixujtQr5Cgc06rIb8gwp+tmypM3uRa3Qd7gyCExm2nJWU6yOVNcV
-         RkUuckSF2m+gG1xRR828aRQA40YZlkZdVUH3Fkb2Plz/D8Vy4aVbl46NMdYNYGb0UsMS
-         aMfhNw+n+IEaziL9oCtOpvUGhz3HHHmEaa0zCWhJbAIhwr7lkM4bCfXWkE+pUwUGyRdW
-         5/juRIvzp3JZTLgMsWuAue6tYD3PJoYWvUIHkC2CA66xKflMaGeR0bOgueeBtoB8XxO4
-         jYpRWtyeJa9cBenKKFZE3GLVOSNeVqL+AqHhdjkBcKwS0vywIeFcOdnMKbGYUsH6eTQG
-         +l3g==
+        d=gmail.com; s=20251104; t=1784989237; x=1785594037; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dx1yo+iIXIjXTyWIGQd/i3LQYtj6TWfZYRYFmYaTjBE=;
+        b=LDpALPrX/+/2FLs6yQXQaOAl/jb90TxGHal2w+r/RK24ezPy41cc9SruqNL97su69T
+         Q/PijZTK+oF8OejxUI04ZncdZxvR6AB12PJYRWb4hsfDzCMTMkgWA7nFnU1/KOnjg6O1
+         llC6NFvwaQ9gZ+L3e6STIuossfRn8CTxSYiNBUpj6uiG46MEgSDvUsHu37HJYBmiLEAn
+         5MGdR6e70IEwpb32m+LqvNJ0OgzP5lUDrjtiRgBLmu17Nerhupy6NrOOuaEF+9lv+LO0
+         31j4K6TmfAmDaPzZs15IU6H/jp1Zg9WocHdIgAmUc5B6JtxPqGHyxBBY0yZheVPqHCx1
+         nmrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1784989112; x=1785593912;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=I6HhSphr40arB6iMxyFae2bf796pOpLnQzTJ7BzfcsQ=;
-        b=rypmCGCs9ti/ZbgMxFWkq2Ga62pdyUkcgkyXhDtJD7Xc9zhqNihqH1bUC7X1syW8EX
-         tDAJ6aJ9WrtdAD1gSAH2u1zXgBT2BiEJrt9iR2kMjvDAGIm0Ck1DJDEN2/oHuvLpv6wt
-         KwAWru8zlLhz9sKtOuiywgZE0JroFKf5sLCht4U1PD7zPNINMO9IDxn39A+oRZXeDLfI
-         KHnhWtvV0Mntp8cgNrf0Vh5Dh/x00oJGNsqcV3kuHnS9mIflYiM/2Afw9091kfx2SU6J
-         8WUHI0jgNVIJHZquGFb9v9omrBhKPzDbl89GtFaQ1rQAf4l0r91BIlwdZPUJ4+kH05gT
-         j3IQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrsROcEQxIKuGxOipZNBDheQRuzBhGTWf77kbmr2jh9144hGUCcgbBlvPK/cDpeP/j9rI3mSycjasiX4R6wFw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwyB5o7USCgGTBSrg/N0F4NhH3jWMXRjfVCJFct9tNlVNN3dncy
-	rnrOJffCYvGZkIL8l0anZoraV1qqflD5xaytYkLTgy9WF4aXoHrVnkyDSdFGrnBRAA==
-X-Gm-Gg: AR+sD11GZ19LXTXsfSYwVcflN2ZmBENJbaDdZ957mrgdhpvnSJUjEQGHibspy+Xvkcg
-	5o/hK4CF4M/AZCDZQYjUetvDQTbFG5IP8ii48VAPJejZBMID8irvY3WC80y0E84zfJCNcdzOz/3
-	AIQmOYwRbFSqx2Y6kHynH5k9VT2wy6eBIs9gDviEYqRzYf90aWG+N/FED2siGnPDyoBAmbz8k+M
-	H73IxkOC78GSOHqwtxqeeAPs8t2tqMPDN3s2ic8Xd/rNVf+B3KuU2RWroaWgu0M/zgGEh2rZtqN
-	EK6Ivc7ZIk005U5B7MqBFork/5a/aYbfM0ZZA6qB15iI5S7XP0n4cOIVByKQT+CXm3SUvecDXwq
-	Gg0wykN5pZMpdSqOkeDrzHM6RJw7RS61doGgQM0EiIZX7lKgT42+Wo6FCKoFWVq3c3VFLVuNvxf
-	J2FwgTBaIAglV1yoDUfHBAYrSN8PGChViLDYbPPoL9/iYE2op6qCH/sruLwOQL/TZpDOwKsIUAr
-	Yc+WJ3Pn7o1CgXtP2MGuc8VpitQNojXnoE1fCSP2DjxtSha8MCMD9w/kP/PsTwJOtVJPWoEPwCF
-	F1fMSrGGL/Ib65r2ZIOR2LVOgmoyYU0lVIQnzBMzjURurHomzHQ5QtCEfgRL/BsaJFpvuXzexCd
-	1x1EVnxW3/5oNaInVzbHBjXu70iHHEF0=
-X-Received: by 2002:a05:6402:42cd:b0:699:f3b8:165c with SMTP id 4fb4d7f45d1cf-69fc116ad78mr869524a12.28.1784989111703;
-        Sat, 25 Jul 2026 07:18:31 -0700 (PDT)
-Received: from Desktop (p54aff063.dip0.t-ipconnect.de. [84.175.240.99])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-69fb594622asm894010a12.26.2026.07.25.07.18.30
+        d=1e100.net; s=20251104; t=1784989237; x=1785594037;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=dx1yo+iIXIjXTyWIGQd/i3LQYtj6TWfZYRYFmYaTjBE=;
+        b=VAWNwL8OsH1OvLeaaYRP6L/Ok7aFijfEbZ9NTlqexVoSvLDMJqMZwvuH8omT5AZnM/
+         gqFdRsle8FwEx/XIYKEPQZ58JEi7MKtvwGTEWelRyUKiWnTh7HEnkP9l5qkOMOO/32uV
+         yIFPhxYMAafRQjLaWe3ipPGiwlKI91fqYvYCtbv7LZJBb+5FlQB/tgW75t2YOMK81+0n
+         ou2X2rDcpyXUGncD25mFJUJIPDI5SJps87kFTKEb7jrYOITrhvRgiHXyXBnW7af1y/+g
+         JOV3JwsQVPTQe8gC8KKuHy7NH513mwuMp9XwbjwhNk2GA6INos7zqdFu3Mt9obZGPY14
+         9p/w==
+X-Gm-Message-State: AOJu0Yxnllq0fGl6rpEfBqE0LIsUn8ynjI40HKMppxPHddMALd+x56pK
+	mdCfCm1zwlY2AthF9RPUsazTim8gYUtUqKsSiiQbNNVqzom9PPUCLFrs
+X-Gm-Gg: AR+sD128QEi7DN+TkmilW9T1fuh/7qK0E9ATadcd2WIFTc7SQzOAI6gSsr/xo9UZysg
+	3b0NBD33xRM1uD+P8EpfrVhUg6iYWvp9EZ3a0joYEgS4+0k4HbFaXPGfVD1xKovN5qtUPR+wFrS
+	j+l/N74dH4b1LvnInc2e0ztfg+++z675v/5mJj1Mbk42udgxy+C0xVoXrqmnpQxHVahGYBvD8zi
+	0sOqDenF87FhiA/CxoiGhBdkXlUDPnPZN0kInMtQSfSbAzbhXn+13ptZFR3kjDIoz8VFh2pnmI5
+	h9geeQaidqOAu1VslO8H6aLhIk3psdKGQzkaRT9UwcpsqckUdtDUfmM7yC0cFGdUGt+9IQ4dgPa
+	OfGn8yn1uyYiUxOclo38j2NRy2LZcruIrSzvI2RGxkh617WLQyTGlkMZjPe5LwoHdvtKabVjh3s
+	t4XUuEpoCxwUzfWGdVXDCCkmJsGqZnrkwh30puoop0NqfgKEepBr81c4Vz
+X-Received: by 2002:a17:903:1a27:b0:2cf:8131:75f4 with SMTP id d9443c01a7336-2cfde7aa812mr22476235ad.11.1784989236717;
+        Sat, 25 Jul 2026 07:20:36 -0700 (PDT)
+Received: from deepanshu-kernel-hacker.. ([2405:201:682f:383f:14e7:a09f:23fb:cb4])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-314bc549cacsm11412873eec.16.2026.07.25.07.20.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Jul 2026 07:18:30 -0700 (PDT)
-From: Julius Bairaktaris <julius@bairaktaris.de>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: ath11k@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
+        Sat, 25 Jul 2026 07:20:35 -0700 (PDT)
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Subject: [PATCH ath-next 2/2] wifi: ath11k: disable interrupts during firmware crash recovery
-Date: Sat, 25 Jul 2026 16:17:57 +0200
-Message-ID: <20260725141757.1316877-3-julius@bairaktaris.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260725141757.1316877-1-julius@bairaktaris.de>
-References: <20260725141757.1316877-1-julius@bairaktaris.de>
+	Deepanshu Kartikey <kartikey406@gmail.com>,
+	syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
+Subject: [PATCH v2] wifi: cfg80211: validate IEs in cfg80211_wext_siwgenie()
+Date: Sat, 25 Jul 2026 19:50:28 +0530
+Message-ID: <20260725142028.32560-1-kartikey406@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -83,69 +73,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On IPQ8074 a firmware assert reboots the SoC:
+The KASAN allocation trace shows that a malformed IE buffer is
+stored via SIOCSIWGENIE (cfg80211_wext_siwgenie()) without any
+validation. The crash trace shows that a subsequent SIOCSIWESSID
+triggers a connection attempt which calls cfg80211_sme_get_conn_ies()
+to process the stored IE buffer, causing:
 
-  Unable to handle kernel read from unreadable memory at virtual address 0
-  pc : ath11k_hal_srng_access_begin+0xc/0x60 [ath11k]
-  lr : ath11k_dp_rx_process_mon_status+0x15c/0xd84 [ath11k]
-  Call trace:
-   ath11k_hal_srng_access_begin+0xc/0x60 [ath11k]
-   ath11k_dp_rx_process_mon_rings+0xa0/0x5d4 [ath11k]
-   ath11k_dp_service_srng+0x1f4/0x348 [ath11k]
-   ath11k_ahb_ext_grp_napi_poll+0x34/0xd4 [ath11k_ahb]
-   __napi_poll+0x38/0x188
-   net_rx_action+0x120/0x2c0
+ - An out-of-bounds read in skip_ie() which reads ies[pos+1]
+   (the length byte) past the end of the 1-byte buffer.
 
-ath11k_core_reconfigure_on_crash() tears the data path down with
-ath11k_dp_pdev_free(), ath11k_dp_free() and ath11k_hal_srng_clear(),
-which memsets the ring list. The DP NAPI is still running while that
-happens, so it services a ring whose address pointer has just been
-cleared.
+ - An integer underflow in the memcpy size argument when offs
+   returned by ieee80211_ie_split() exceeds ies_len, causing
+   unsigned subtraction to wrap to SIZE_MAX and triggering a
+   fortify panic.
 
-That function used to disable the interrupts first, until
-commit d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
-moved the disable into ath11k_core_reset(). reset_work is only queued
-from mhi.c and from the debugfs hw-restart handler, so AHB parts never
-run it on a real firmware crash. Their recovery goes QMI server exit ->
-restart_work -> ath11k_core_reconfigure_on_crash() ->
-ath11k_core_qmi_firmware_ready(), and nothing disables the interrupts
-anywhere along it.
+Fix this by validating the IE buffer in cfg80211_wext_siwgenie()
+before storing it. First reject buffers smaller than 2 bytes since
+a valid IE requires at least a type and length field. Then use
+for_each_element() and for_each_element_completed() to verify all
+elements are well-formed. Return -EINVAL if validation fails.
 
-Disable them again on the crash path. The reset path has already done
-so by the time it gets here, hence the ab->is_reset check.
+Reported-by: syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=cc867e537e4bd36f69bb
+Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
 
-This is also why the debugfs hw-restart trigger never showed the
-problem: it goes through ath11k_core_reset(), the one path that still
-had the disable.
-
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.12-01460-QCAHKSWPL_SILICONZ-1
-Fixes: d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
-Assisted-by: Claude:claude-opus-5
-Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
 ---
- drivers/net/wireless/ath/ath11k/core.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+v2: Use for_each_element() and for_each_element_completed() instead
+    of open-coded validation loop, as suggested by Johannes Berg.
+    Also add explicit ie_len < 2 check to handle the case where
+    for_each_element_completed() returns true for a 1-byte buffer.
+---
+ net/wireless/wext-sme.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 8039124e7832..8c24fc8828d5 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -2334,6 +2334,15 @@ static int ath11k_core_reconfigure_on_crash(struct ath11k_base *ab)
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 573b6b15a446..51fc2617a1c3 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -319,6 +319,18 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 		return 0;
  
- 	mutex_lock(&ab->core_lock);
- 	ath11k_thermal_unregister(ab);
+ 	if (ie_len) {
++		const struct element *elem;
 +
-+	/* ath11k_core_reset() already disabled the interrupts on the reset
-+	 * path; only the firmware crash path reaches here with them live.
-+	 */
-+	if (!ab->is_reset) {
-+		ath11k_hif_irq_disable(ab);
-+		ath11k_hif_ce_irq_disable(ab);
-+	}
++		 /* IE must have at least Type + Length bytes */
++		if (ie_len < 2)
++			return -EINVAL;
++		for_each_element(elem, extra, ie_len) {
++			/* nothing */
++		}
 +
- 	ath11k_dp_pdev_free(ab);
- 	ath11k_cfr_deinit(ab);
- 	ath11k_spectral_deinit(ab);
++		if (!for_each_element_completed(elem, extra, ie_len))
++			return -EINVAL;
++
+ 		ie = kmemdup(extra, ie_len, GFP_KERNEL);
+ 		if (!ie)
+ 			return -ENOMEM;
 -- 
-2.53.0
+2.43.0
 
