@@ -1,106 +1,75 @@
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC19B30F938
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 16:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7CB9BE63;
+	Sun, 26 Jul 2026 17:02:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785084127; cv=none; b=TOfc256jVxtk9vPpnAZTz4sOZvInIthfXF9VTfrbwUR9SW6zw88jASk/AoejGNely53nNoPFsDfWThG3hVZTs94NFQZl1xjUDT6u67wXE35SxggBVCr9lB2BRZmn0fzQ4WecV+2I/hMPq+MFSbfjSZNBfpQj0jlZRpxByiV4aus=
+	t=1785085330; cv=none; b=Tu/FKOBMTn44d4uFmdNBtP5Koh01lyTtZWwnEzOTlLtFYU9TNpyoIfCAuPpvnJo0FpbPbpPLQsjmRcYBLVUYTqpdRjv8993JQc7EOM6fFnWTI1UkZrl0Ie5am/Z7ck0rDfbu0tXnbAvX39DeI8Kel351Zm/Bx+M4ZQfWIoeAtGs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785084127; c=relaxed/simple;
-	bh=5ayzNmnRWCbzWEek0cUnWmGqhJIO1oU83wMkBfmlKfk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H0jYhcXdjQsvyARL32ESuj7tyBUeeg+aAeiNOB52aPzqiDIujcqdP9ubZkd0hEjAUnQppVdf2JxHQBjgJVh6tHpaSG6XBLHS16wwOdWdEsw4KGyyCmMtv3nxZaPJhd0AbyTFL5j4LQs5OD6LcN+bbSNPsc1ErTQdXvd+HvfqqRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MPViRCvH; arc=none smtp.client-ip=209.85.215.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785085330; c=relaxed/simple;
+	bh=H5ahAGUABcTvY/yUtF+jhkvA3wyRVDcr2FDZ0Ll09BM=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=UYdWtTjufVVfKsHVdDWXpvlTgi+hLp7XDOrUNK6pLMxyueKR0APkbjjBXdpez4KJfWo0aEhrIkHdCVhRclf/WJcSWTg+f6UGiMldKMr3IMx4+1u8DCsRIgOTblzfBaKtdhV9k9VpMDyxm9dpXNajDg7JmRLrHaAx3qZxWJUS6wg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=oD0wFeqB; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MPViRCvH"
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-c99eaa1f020so1782208a12.2
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 09:42:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785084125; x=1785688925; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5ayzNmnRWCbzWEek0cUnWmGqhJIO1oU83wMkBfmlKfk=;
-        b=MPViRCvHXVpOwuEkYs/ECEGyWeIOyNIogMUlmqhOqsHX7Xt35jqXRXrxe8X1VHwyf+
-         4ADrwlCb3QGLFh7L3Z/izQ6mfcxom/B5uIEBAIAdwir8wvFNMTPSPm72/2t3KFXGNp3F
-         TL94bjnvFfdeOZ3IOv533zxf2CXD8xeQC/D2M/MC44yIvshqRqLeDS8m+0jNhHEpUA9c
-         LJ8kB3mZAosyh+9x+QaQIvgwnIGD7muaf+0kG//2KolTY4QE4oIFIAw0Hz3vmusdOy9x
-         U0+520pR4xb7fpj+X2wsaMHvupeEGhTlBrru+6Nd4qRm+VcFZInKpCaNydqjEq8HotE4
-         6zGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785084125; x=1785688925;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5ayzNmnRWCbzWEek0cUnWmGqhJIO1oU83wMkBfmlKfk=;
-        b=CUo+7TQzkEBCebaoQj98WRT4BDx3IHSKgKxYyebYF7uNHaU42Mmv4Z1X6uUQszY9Xn
-         rr6nsvuW7HeNBArnwYY43KsfvBCmhVLFWM5NUywrnv4MMN1X6haU6W03K6KY5m93dkAt
-         6XnOBBl3BpvIHZZSwzs3yEhA7caIYD2ir3oxE/hxzrNVdzG5BWwehoOezhhRsZMQcIAS
-         BHGuXMj8cwLwq6nJ2e5Vz8v65ZG6JCrIBPAz4P531Wd+DHn9l3eeyIaE9bq1Mf7hfDfH
-         UFy9KSQaKRTs5aW0BQx55jBX7qSxKfbTD0Z8n0fcj99BkkzlRPCgZUYO6DRNKj4aI2+7
-         NZhQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrKnTicVEyLgifocxmJBrbQ4vXUwY9IB83YpHDDhsxpLfoLWv5xY8ILS7FUQkeyxg9TSzQRlZmtWBcB8UJQqA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxiIBlGRC0KO1ykPZBNoQYEO7yxFi9oKo4JyZkLKqOM+XAYvDTj
-	9+fs2remkJIGbHrQBt3pfvqMfQaBNIJClV+5URwToNkjovO/3ORNzcfl
-X-Gm-Gg: AR+sD11B7PJ62NFvR/04/80KV0B7auw3ANz3mGQ9wjDlt0DHFb0h0QEIDFwFOe2sKaP
-	wm89eL7ezbq0GLZlf63PDd9crfPwsB0VP9EgX7aoaFLPJ8k09IZY0wi4tWRp9Su6ojle1xbv4MX
-	QfMH7K5s2fys1vrcvhm//KoKm2Pp2PqSgB3kbq43OLhHhBGLI7PKXn/Ogv/oDrWopiI5LppwaMq
-	9VJ/PuHkqZeJD94meNrG5k6FNaVP/wzZThBoH3Kp5uCGTCpFX/yiCI3XAQJVahFAA4K7NWJy+Kj
-	nmGbPxVPs/kA6LuP/yFZj1KlW7xDtTpG2/TUtMNavVbC8HCe7Ay/wT6GPlJat1rudCkS/a/IFHU
-	GA7jvZxigdHYaBEtZMq3v+hHz1LCdlZArbiu4MA1lZFClITII3knC9QyZwwZgH4yniJ/FdhlHFY
-	Qtayz2xB0fi+8MLHuSe4fTyzbBuDeRbfm+t2ocCJbvDM0CvHXNqfw=
-X-Received: by 2002:a05:6a21:2d8b:b0:3c4:46ca:3339 with SMTP id adf61e73a8af0-3c67df119a4mr5107306637.39.1785084125253;
-        Sun, 26 Jul 2026 09:42:05 -0700 (PDT)
-Received: from KRHW1CJW23.bytedance.net ([203.208.189.11])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13015052sm42934152c88.5.2026.07.26.09.42.01
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 26 Jul 2026 09:42:04 -0700 (PDT)
-From: Zhao Li <enderaoelyther@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mark Brown <broonie@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
-Subject: Re: linux-next: manual merge of the wireless-next tree with the origin tree
-Date: Mon, 27 Jul 2026 00:41:56 +0800
-Message-ID: <20260726164156.71624-1-enderaoelyther@gmail.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <b99e4a1428546030b61883063b9542dd953a69f2.camel@sipsolutions.net>
-References: <b99e4a1428546030b61883063b9542dd953a69f2.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="oD0wFeqB"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=H5ahAGUABcTvY/yUtF+jhkvA3wyRVDcr2FDZ0Ll09BM=;
+	t=1785085328; x=1786294928; b=oD0wFeqB/VA5A2ImN/HdPSaEbSdSnciN6L+0tQndMs1dWNf
+	FudQGkpSssst7vdN5fm65+H/d9kG517/MQ9qTELZ0pnPWRPVousqDQov/6kOYUmQnM1Z3FR1rveBy
+	aYTqtXhz7D/JW8+cTUA/6G917sIHBmBvB76rx+8GXqlzyPJGalSmeAvKhTJHCU2Ju08WwUh5uWR57
+	wV/yvBty43H0Mzfyos9keyphC2pawZZDW1b5n4R+M2ZSyeQ9gN96pXedb/9U4GodEmzhXJ1HJK4A/
+	ujHok3dgMOymTkyIG+MzN7HKzTzfUt/fn+OaC55hINTtKvT2Ua7pmPTvFayXNr9Q==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wo2El-0000000Fk94-45cl;
+	Sun, 26 Jul 2026 19:02:04 +0200
+Message-ID: <56333069155a692ac1a363e84814494684e0c01d.camel@sipsolutions.net>
+Subject: Re: linux-next: manual merge of the wireless-next tree with the
+ origin tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhao Li <enderaoelyther@gmail.com>
+Cc: Mark Brown <broonie@kernel.org>, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, Miri Korenblit
+	 <miriam.rachel.korenblit@intel.com>, Pagadala Yesu Anjaneyulu
+	 <pagadala.yesu.anjaneyulu@intel.com>
+Date: Sun, 26 Jul 2026 19:02:02 +0200
+In-Reply-To: <20260726164156.71624-1-enderaoelyther@gmail.com> (sfid-20260726_184208_981630_F422AA81)
+References: 
+	<b99e4a1428546030b61883063b9542dd953a69f2.camel@sipsolutions.net>
+	 <20260726164156.71624-1-enderaoelyther@gmail.com>
+	 (sfid-20260726_184208_981630_F422AA81)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-malware-bazaar: not-scanned
 
-On Sun, 26 Jul 2026 12:33:13 +0200, Johannes Berg wrote:
-> But because I don't think (a) we should fix that in the merge, and (b)
-> it's actually very important, I'm just going to leave it as
-> "notify_driver".
+On Mon, 2026-07-27 at 00:41 +0800, Zhao Li wrote:
+>=20
+> For the record, destroy_assoc_data already does both. Since f13e573ab3f12
+> moved drv_mgd_complete_tx() into ieee80211_destroy_assoc_data(), that lab=
+el
+> notifies the driver before the link is torn down, then abandons. No
+> additional path would be needed. The impact is negligible either way, so =
+I
+> agree it is not worth touching now.
 
-I traced both paths again and I agree with you. Retrying against a broken
-AP is the better failure mode than confusing the driver, and the trigger
-needs an AP that reports success without an AID Response element, so it is
-not worth changing the merge resolution.
+D'oh. Now I even remember I asked Anji to do that... Oops.
 
-> If we actually observe this in practice and want to get rid of the time
-> wasting, I guess we could add a path out that does both, but I'm not
-> sure it's worth it.
+Well, it's not merged yet, so I guess I can update my suggested merge
+resolution and send a message...
 
-For the record, destroy_assoc_data already does both. Since f13e573ab3f12
-moved drv_mgd_complete_tx() into ieee80211_destroy_assoc_data(), that label
-notifies the driver before the link is torn down, then abandons. No
-additional path would be needed. The impact is negligible either way, so I
-agree it is not worth touching now.
-
-Thanks for looking at it.
-
-Zhao
+johannes
