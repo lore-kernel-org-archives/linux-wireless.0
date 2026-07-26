@@ -1,113 +1,195 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailtransmit04.runbox.com (mailtransmit04.runbox.com [185.226.149.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC5838911F;
-	Sun, 26 Jul 2026 11:27:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07CD136C0C8
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 12:39:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.226.149.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785065267; cv=none; b=mBEVk2D5063YIzsUj5t9Yhoik/GBLuOdM1EcPGH3UnIKVN0FEOEiEJAVosxdwtghaw5IEWasJTIf4DPdSt8hJaaecruU9FuTcIAKfYnbcJI4lIJj6SRRY5OBQbsCd77H93PAc/xuySaKUeBAnjbYcHeHbcrs3J+6d9iAnvA7kLw=
+	t=1785069553; cv=none; b=jYqOseIAfkqlLWkvk7svlhxoZtyqVUU/zvmE2ch66x/vqJPBYQQHI2Fk1EGoBKYaMdmgpUGgDRhh44s+ATdYk9iSCBefk7Kcmd0dGsq81WMHwWEaDWso3GSOKPxwH3OtOgJNuGhHDsnWr8J8BNnWUegTpRV23gmv+tY8PRZzYds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785065267; c=relaxed/simple;
-	bh=/OHTI7GFA6QoxK+znTnzwjEtMxIkMe7DcVIiisq61Q8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J2Gfx3XIDQaMBt4qnegqxuz4IpKvQKFwU9+t9JkrZ/T3J0VDE/9g1zTlrBLr6x8Q52XG95Gfl27FBxkDtAN5v6CCQarsnlgB9XQTbrv/AAYkzCAqMmyBJCUUZL0YnUoS7eR2GZPtw2SCurwFLVwbQP+yJv2PaljNC45EuwcafYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bFwthwBB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785069553; c=relaxed/simple;
+	bh=+Q5BULeE1SVINzh8tLhV0G2r2dzGC7dYEgo28hpm+Og=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SdHht4rJ+wO04TxHsl3DsXqIFxTUuwIONtu6/1dmPTZabzFt5DBrbCckmWbXZsWuxCVtOvwXthuM9LJCh9ns5S9UL3vpilA4Enyqk1iUlhLqAbK5/82UKiYGmPGETJZf8qXDHwuz/sDJygSDaDL/MW1NS4D63Mrhpdp5aJW4jCE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pokerfj.es; spf=pass smtp.mailfrom=pokerfj.es; dkim=pass (2048-bit key) header.d=pokerfj.es header.i=@pokerfj.es header.b=W45kUUBR; arc=none smtp.client-ip=185.226.149.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=pokerfj.es
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pokerfj.es
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bFwthwBB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA52F1F00A3A;
-	Sun, 26 Jul 2026 11:27:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785065260;
-	bh=BD67O4VxjpIvpQkBY4qU/I0nnLqaoQK18bmEHcUuNU4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=bFwthwBB+8VzKDqeSOeJBOabb7INmugR1qe4ekQkgIJOA/+Ppa2tP4rRvPj2QgNCi
-	 Oo3Dsk0hRS1W4QcIPaMj0J6naWVbWJdmyH2zzIvAeHT+Vm5v8+6ot2zwblI0R/9goJ
-	 LNp25GZYNPNOYMbyL/ftVh7onSraKfduBqZ0EkOEf8Srms6yIormtf1CqD6WVQPe1G
-	 dd4GoGG8VwQdbAkcXrYbx0ZWilTg9+5QHP/mRIJ9jUX48EosfJ+LIno6k7GrarbCgH
-	 iF5Waw6r8v/p1YVvAqEMjPN9TRJu1TQ0xdXnaMJBLWUx4Ugn9YH/A+m+aZwefLUo7j
-	 Nm/IWK1BHeIiQ==
-Message-ID: <6a6bfe58-2b9b-46f2-9f16-d0abebf6337a@kernel.org>
-Date: Sun, 26 Jul 2026 13:27:23 +0200
+	dkim=pass (2048-bit key) header.d=pokerfj.es header.i=@pokerfj.es header.b="W45kUUBR"
+Received: from mailtransmit03.runbox ([10.9.9.163] helo=aibo.runbox.com)
+	by mailtransmit04.runbox.com with esmtps  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <stian@pokerfj.es>)
+	id 1wny8I-00ESz5-Cz; Sun, 26 Jul 2026 14:39:06 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=pokerfj.es;
+	 s=selector1; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From;
+	bh=4ladVpaoW9vefHFwesCEbd1yA6LOVd5j8P6Nrhwso7U=; b=W45kUUBRIZyCMhuWMit2ACqzDu
+	Sgqpcfc4G8GuGr3hhpXJ74E02SRuBVDynjLPs7sfERsWmEwc3v/iP3/Z4HUO28vWjIev73ceGcg+6
+	RNoFdRFZ0SG0eEfvir/xEFmp3Yf3IprYoF7bXQb3m16s8OM99XzgqtJkRzXOD55RiCoyY/CCZcwe/
+	feAZCfk00KeTbiXbCSe32M7Mqfd66lXTyEZ2chPBqDt5lUAUySiyJcOrcBHZ2AAYUtX1Kvt9BWTIn
+	ZvBw5MxMT89ey/7zeFTSF56pr9kfSwNeflFfnZ6v+acIdEqDc/fCWSI2J1VhxUxoGwbkNOnQRvhEZ
+	4DU1KI1g==;
+Received: from [10.9.9.73] (helo=submission02.runbox)
+	by mailtransmit03.runbox with esmtp (Exim 4.86_2)
+	(envelope-from <stian@pokerfj.es>)
+	id 1wny8H-0003RT-GK; Sun, 26 Jul 2026 14:39:05 +0200
+Received: by submission02.runbox with esmtpsa  [Authenticated ID (1471791)]  (TLS1.2:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.95)
+	id 1wny8D-00DiuM-07;
+	Sun, 26 Jul 2026 14:39:01 +0200
+From: Stian Knudsen <stian@pokerfj.es>
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+ Jeff Johnson <jjohnson@kernel.org>, ath12k@lists.infradead.org,
+ Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] wifi: ath12k: restore country code during resume
+Date: Sun, 26 Jul 2026 14:39:00 +0200
+Message-ID: <kRCU5oqTQiSs4eiJwPN0zw@pokerfj.es>
+In-Reply-To: <36d63752-0d93-412c-96c8-546c972e6b7b@oss.qualcomm.com>
+References:
+ <df37460e-f8ba-4e11-b412-4aa8b17cd32e@oss.qualcomm.com>
+ <bacea060-bae5-4136-841c-49db5b561b51@oss.qualcomm.com>
+ <36d63752-0d93-412c-96c8-546c972e6b7b@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next] dt-bindings: net: wireless: mediatek,mt76:
- fix 'spacial' spelling
-To: "shaikh.kamal" <shaikhkamal2012@gmail.com>, Felix Fietkau <nbd@nbd.name>,
- Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
- Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>,
- Johannes Berg <johannes@sipsolutions.net>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org
-References: <20260726053817.17409-1-shaikhkamal2012@gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20260726053817.17409-1-shaikhkamal2012@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-On 26/07/2026 07:38, shaikh.kamal wrote:
-> Fix spelling error reported by codespell: spacial -> spatial
-> (spatial reuse). No functional change.
+On Friday, 24 July 2026 04:51:43 Central European Summer Time Baochen Qiang 
+wrote:
+> On 7/24/2026 8:15 AM, Jeff Johnson wrote:
+> > On 7/20/2026 5:09 AM, Stian Knudsen wrote:
+> >> The country code configured before suspend is lost after resume:
+> >> the device is powered down in suspend_late and powered back up in
+> >> resume_early, so firmware reboots with its default regulatory
+> >> settings and the previously set country code is no longer applied.
+> >> 
+> >> On WCN7850 the firmware comes back in the world regulatory domain
+> >> (country 00) and takes ~7 seconds to rediscover the country code
+> >> from AP beacons, part of a ~16 second total delay before wifi
+> >> reconnects after resume.
+> >> 
+> >> Restore it by resending WMI_SET_CURRENT_COUNTRY_CMDID during resume
+> >> if a country code was set before suspend, i.e. when ar->alpha2 is
+> >> valid. This follows the same approach as ath11k commit 7f0343b7b871
+> >> ("wifi: ath11k: restore country code during resume").
+> >> 
+> >> Note that only single_pdev_only devices support suspend/resume (see
+> >> ath12k_core_continue_suspend_resume()), so handling the first and
+> >> only pdev is sufficient.
+> >> 
+> >> Tested-on: WCN7850 hw2.0 PCI
+> >> WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+> >> 
+> >> Fixes: 8d5f4da8d70b ("wifi: ath12k: support suspend/resume")
+> >> Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+> >> Link: https://lore.kernel.org/r/-_iDJ_M5RrqACWB0qmtleg@pokerfj.es
+> >> Signed-off-by: Stian Knudsen <stian@pokerfj.es>
+> >> ---
+> >> v2:
+> >> - Add Fixes tag, per Baochen's review comment.
+> >> - Link to v1:
+> >> https://lore.kernel.org/r/20260717130254.36732-1-stian@pokerfj.es ---
+> >> 
+> >>  drivers/net/wireless/ath/ath12k/core.c | 21 +++++++++++++++++++++
+> >>  1 file changed, 21 insertions(+)
+> >> 
+> >> diff --git a/drivers/net/wireless/ath/ath12k/core.c
+> >> b/drivers/net/wireless/ath/ath12k/core.c ---
+> >> a/drivers/net/wireless/ath/ath12k/core.c
+> >> +++ b/drivers/net/wireless/ath/ath12k/core.c
+> >> @@ -197,6 +197,7 @@ EXPORT_SYMBOL(ath12k_core_resume_early);
+> >> 
+> >>  int ath12k_core_resume(struct ath12k_base *ab)
+> >>  {
+> >> 
+> >> +	struct ath12k *ar;
+> >> 
+> >>  	long time_left;
+> >>  	int ret;
+> >> 
+> >> @@ -211,6 +212,26 @@ int ath12k_core_resume(struct ath12k_base *ab)
+> >> 
+> >>  		return -ETIMEDOUT;
+> >>  	
+> >>  	}
+> >> 
+> >> +	/* So far only single_pdev_only devices can reach here,
+> >> +	 * so it is valid to handle the first, and the only, pdev.
+> >> +	 */
+> >> +	ar = ab->pdevs[0].ar;
+> >> +	if (ab->hw_params->current_cc_support &&
+> >> +	    ar->alpha2[0] != 0 && ar->alpha2[1] != 0) {
+> >> +		struct wmi_set_current_country_arg arg = {};
+> >> +
+> >> +		memcpy(&arg.alpha2, ar->alpha2, 2);
+> >> +
+> >> +		reinit_completion(&ar->regd_update_completed);
+> >> +
+> >> +		ret = ath12k_wmi_send_set_current_country_cmd(ar, &arg);
+> >> +		if (ret) {
+> >> +			ath12k_warn(ab, "failed to set country code during 
+resume: %d\n",
+> >> +				    ret);
+> >> +			return ret;
+> >> +		}
+> > 
+> > Baochen, can you remind me why we don't need to wait for completion here?
+> > (the ath11k change doesn't wait)
 > 
-> Signed-off-by: shaikh.kamal <shaikhkamal2012@gmail.com>
-> ---
->  .../bindings/net/wireless/mediatek,mt76.yaml           | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+> Technically we will wait, but asynchronously instead of synchronously. It
+> works in a way:
+> 
+> 1. reinit completion
+> 2. send new cc to firmware, proceed with no sync wait.
+> 3. in reg channel list event host process reg rules, queue regd update work
+> and signals completion.
+> 4. regd update work calls ath12k_regd_update() where we wait for the
+> completion.
+> 
+> But I am feeling this is not a good design. As you can see,
+> ath12k_regd_update() is reachable via the regd update work, which is queued
+> in reg chan list event. However it is the event itself signals the
+> completion. That means ath12k_regd_update() never blocks, the whole
+> reinit-wait thing is a no-ops.
 > 
 
-Slow down. Same comments.
+To be honest, I didn't walk that code path when I wrote the patch. I added 
+reinit_completion() because it's what the existing call sites already do 
+(ath13k_update_11d() and the reg_notifier path in reg.c, and the ath11k commit 
+this was ported from), not because I'd verified it synchronizes anything.
+I went through the code path, and came to the same conclusion as Baochen's 
+explanation: ath12k_reg_handle_chan_list() queues regd_update_work before the 
+event handler calls complete_all() a few lines later in the same function 
+(wmi.c), so by the time the queued work reaches its 
+wait_for_completion_timeout() in ath12k_regd_update(), the completion is 
+already signaled. I don't think it's blocking anything meaningful.
 
-Best regards,
-Krzysztof
+Since it's not limited to this patch, happy to either add a comment here once 
+you settle on how to describe it, or drop the reinit_completion() call from my 
+patch entirely if you'd rather not repeat it to a fourth call until it's 
+cleaned up.
+Whichever you prefer for v3.
+
+> > If that is legit, perhaps we should document it with a comment since
+> > reinit_completion() without waiting for it seems strange
+> > 
+> >> +	}
+> >> +
+> >> 
+> >>  	return 0;
+> >>  
+> >>  }
+> >>  EXPORT_SYMBOL(ath12k_core_resume);
+> >> 
+> >> --
+> >> 2.50.0
+
+
+
+
