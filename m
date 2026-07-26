@@ -1,147 +1,100 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-176.mta1.migadu.com (out-176.mta1.migadu.com [95.215.58.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07DE82EEE86
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 05:38:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED92282F08
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 06:17:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785044322; cv=none; b=LHL66qjJ+QS2Ag2XUpa13TtTI6i8DoLzN7GHsfTYp4TOWAjEwG1jX1GARo0NDhQvDwcX9wKpzI9ypuIxu/ByAcG0vSKBqsa9aPNHKjVo+vHF/5EqUGSNREOwWGq/KkJMnICBMxeet4ZltxkOlcRPfB+P6R3EfQr9oLY+4ff5vs4=
+	t=1785046643; cv=none; b=J1vv7g0BzHH4b7aiq+c7aVfUxoDZflF6OyTjBGHy0rVaw+Mh7whvvIQM52aj6u7M+t1aTNd6qD9JXxCfE4yK1+/43K590+lPQG9PQYsFTf/q6k673yinH+Cph0I2he1+ZLx0daciZYtgGISQmAeqRUuJUzRncdnCWFA+pJ4T8OI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785044322; c=relaxed/simple;
-	bh=j7FUZwB9pjASzphoYEYSQhWkw4XGgszx7T8FJ8ZX9DU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AIRPbh6x2WF+d5GvnOrR/Iw9Bczs/wwqkA5DTSvCYBokyY/nje3RwDhcPJaptVQ0q7NvaETVZ3/F/EbQAW4eq0tCqq1zEeYObbHCypoB4AUFAzo/Pa73iNhaSAhX5aYAa31i7wYcJIVBcJ3zP1dBsaFJtmimQqALAX8Tc5l1M84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O9ybJm0l; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785046643; c=relaxed/simple;
+	bh=UmbjpzObP5waVp8I4ae3ONdwvkJm1f60CkHPAfjsl/E=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=DYi06vq6pAb1/FYP5XttfAwxAPIyCIAUxXpsktCiLNWvo3Rpb7q7n8o8zp49xU68TfGU/nVurh7J62QfJ5q1jTMM+XSjPpCFgInornIPzYFlg/oE6wDhKb/+JzwyZ7QQjhm4Vp0PI1DuhtaeARgLgS6DxR780PDiht6kw1p9Jjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=UQHtE0n4; arc=none smtp.client-ip=95.215.58.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O9ybJm0l"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-84864086bfeso1629516b3a.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jul 2026 22:38:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785044320; x=1785649120; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ev/3L8OQlWgePlw96lEzXKu7EjQVakUCH3mo3g6zOGU=;
-        b=O9ybJm0lTEmu0uhTeWzgQ1ubuC61AW5RnX19fVa8/wCqla2JpLk4rmgZ+7lDoJWDVl
-         NxwPLEIJVdW2zgUKcebQLCeOIZswg6UoBBXSY5KlA4aTjmba1Vq/EIMYWNpqbRjtufQN
-         z7VTkgoKc8qzHqne83pXuSdSZ6olxB/pk0jkM7vSzyDxqswVe3Qs7YX9KKn4LS3ybJPE
-         tXppdifDVWjffturkOSTceBg0CZzWfYXxZ30Mct/VUJqTTgA0szzLsMBRgIbm8q8R9iu
-         O6ziIUhKAOTq4+iYfi1fQs18YI2KeBIzWUOVo2SxyO+kZCev0khl16RwtW0YlgD2CZU5
-         USjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785044320; x=1785649120;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=ev/3L8OQlWgePlw96lEzXKu7EjQVakUCH3mo3g6zOGU=;
-        b=ULBSeRPu8S0B+jNbRjW7KKNVMO57Jd/aCYzUP5q+RZlrh6FnUjyA8yPpAZBahXGa4l
-         /hBW9tqtmaZ299A03iqwdUE2NImLI+Ihk3VD+pafiKuMXxxJV4UoJOrzYb2OijOnyzRU
-         8bQRZtnMwdmSA3JpZfd23oC00VE1a834Yw/HjDhtrsOtx+prZyN26FxoSLnF771T0dkV
-         vPqUwF2qE+1C0JOiRCU753RYVS7bmY2vQkQErd1nBoszwpmgEWKTOExxCq2gPCaQV8D0
-         2FgJWp6pMz5+coYsYfoZpI+JYByW4vO6ZuBACxpAJkXtafM39lplpOeGl1HHyzFkueNG
-         Xykw==
-X-Gm-Message-State: AOJu0YzpRyDIt0ijKut1g/KjSoJ3u8C6hZcmPr240QzP9XTfAjtASjEl
-	NXmHm1LUv6hFpIyfZ9aENuxTbn181v6VA76jJcW7zKpwh36JU0wgAeqF
-X-Gm-Gg: AR+sD10CUgvx6QFsiwrx93q+dXU6j4G7WnHUNw5ieI2lc/yBmb/VIRUutMitC89LYZv
-	KC52Tp1Os/vgMSlME2KJqV9vxUhXLGRzG9vV7ySPPB34Tv5NzPUp2gOJlU7/BRQwuNm1pHnAHlp
-	t8tlHsZQuNAXG6b0b2MaMWp2EWve2QgrphbUVaK9zgyFrVYLtl4qrCPgiIg1YJ2klpG+z3JZ81Z
-	w7s4K9jR62lo3JSegjEQ5O6X/D707dQR/7vd+dngGZAHtlYIr1dtKf8jkeMMaOy8qzVeDQFkYT0
-	r6scJFiDLwwQ3TIKvpLAj63xOGwTT++06/TLKVNmWMuuaSIK7Bkob5JS6Vw6HI/kAdmwa3tiHSK
-	bTXg7fbDRjaeSsdElIV+UOZmcSLyCcoGu+Xgb9fO3ha13DnSLJ6ZAPCCc5/jkPkfYWTYmmxMiUc
-	hoR9XeUB2kpMiIIFiOmXWRZidxjR/+r/g=
-X-Received: by 2002:a05:6a00:190c:b0:837:e9cc:d474 with SMTP id d2e1a72fcca58-84e593ff0efmr3181609b3a.2.1785044320319;
-        Sat, 25 Jul 2026 22:38:40 -0700 (PDT)
-Received: from acer-nitro-anv15-41.entro.com ([118.34.230.2])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e5346dc8bsm1600912b3a.61.2026.07.25.22.38.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 25 Jul 2026 22:38:39 -0700 (PDT)
-From: "shaikh.kamal" <shaikhkamal2012@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH wireless-next] dt-bindings: net: wireless: mediatek,mt76: fix 'spacial' spelling
-Date: Sun, 26 Jul 2026 11:08:17 +0530
-Message-ID: <20260726053817.17409-1-shaikhkamal2012@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="UQHtE0n4"
+Date: Sun, 26 Jul 2026 08:17:08 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785046638;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UmbjpzObP5waVp8I4ae3ONdwvkJm1f60CkHPAfjsl/E=;
+	b=UQHtE0n4y/hMbuff9us+qTJPIOKFiPVa8J39qLyIaUmkRm9NL7/RBipWjahJ2Phq9ZtOUh
+	p7LnYLRI0tMNQ8EREUUqZxE26WnZPvhcTKyWRvb0XRZBdAditumspVF0aQTBGsgj2LApZW
+	OR6/RM414cFQK2Jhh70z0V6xCluctUg=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>, Bitterblue Smith <rtl8821cerfe2@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Michael Straube <straube.linux@gmail.com>,
+ Peter Robinson <pbrobinson@gmail.com>, luka.gejak@linux.dev
+Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_13/19=5D_wifi=3A_rtw88=3A_sdio=3A_set_up?=
+ =?US-ASCII?Q?_RX_aggregation_and_interrupts_for_RTL8723BS?=
+In-Reply-To: <25a64bfc14c14c9ebe544d5d55bc8a45@realtek.com>
+References: <20260724181858.192903-1-luka.gejak@linux.dev> <20260724183235.196908-1-luka.gejak@linux.dev> <8ded63af-64cf-484b-977b-e4458278f9c1@gmail.com> <25a64bfc14c14c9ebe544d5d55bc8a45@realtek.com>
+Message-ID: <1EE071EB-219E-4C33-AC0B-D5562D6212AD@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Migadu-Flow: FLOW_OUT
 
-Fix spelling error reported by codespell: spacial -> spatial
-(spatial reuse). No functional change.
+On July 26, 2026 3:35:02 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom> =
+wrote:
+>Bitterblue Smith <rtl8821cerfe2@gmail=2Ecom> wrote:
+>> On 24/07/2026 21:32, luka=2Egejak@linux=2Edev wrote:
+>> > From: Luka Gejak <luka=2Egejak@linux=2Edev>
+>> >
+>> > Enable the existing RX aggregation setup for this chip and select the
+>> > larger DMA aggregation mode it needs=2E The RTL8723BS does not raise
+>> > CPWM1, so leave that source out of its interrupt mask, and set the SD=
+IO
+>> > TX control bit the vendor driver uses to have transfers always
+>> > recognised=2E
+>> >
+>> > Interrupt status is also acknowledged differently: write back only th=
+e
+>> > bits that are actually defined, and for this chip only those that are
+>> > unmasked, rather than writing the raw status word back=2E Writing bac=
+k
+>> > undefined bits leaves the RTL8723BS raising a persistent interrupt af=
+ter
+>> > resume=2E Note that restricting the acknowledgment to defined bits
+>> > applies to the other SDIO parts as well=2E
+>>=20
+>> Why does it apply to the others?
+>
+>Luka, could you answer Bitterblue's questions before sending v2?
+>You might write the change in cover letter of v2, but it is very hard
+>for reviewers to know if you did changes based on reviewers' opinions
+>or you have different reasons=2E More, please give reviewers more time to
+>discuss entirely=2E I don't know that I should reply your v1 or v2 or RFC=
+?
+>
+>I admit that I have not yet reviewed your patches, but it gets harder
+>to me since there are many versions=2E=20
+>
+>Ping-Ke
+>
 
-Signed-off-by: shaikh.kamal <shaikhkamal2012@gmail.com>
----
- .../bindings/net/wireless/mediatek,mt76.yaml           | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-index ae6b97cdc44b..e51acc544f15 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.yaml
-@@ -221,7 +221,7 @@ properties:
-                     minItems: 4
-                     maxItems: 4
-                     description:
--                      4 half-dBm backoff values (1 - 4 antennas, single spacial
-+                      4 half-dBm backoff values (1 - 4 antennas, single spatial
-                       stream)
- 
-                   paths-ofdm:
-@@ -229,7 +229,7 @@ properties:
-                     minItems: 4
-                     maxItems: 4
-                     description:
--                      4 half-dBm backoff values (1 - 4 antennas, single spacial
-+                      4 half-dBm backoff values (1 - 4 antennas, single spatial
-                       stream)
- 
-                   paths-ofdm-bf:
-@@ -238,13 +238,13 @@ properties:
-                     maxItems: 4
-                     description:
-                       4 half-dBm backoff values for beamforming
--                      (1 - 4 antennas, single spacial stream)
-+                      (1 - 4 antennas, single spatial stream)
- 
-                   paths-ru:
-                     $ref: /schemas/types.yaml#/definitions/uint8-matrix
-                     description:
-                       Sets of half-dBm backoff values for 802.11ax rates for
--                      1T1ss (aka 1 transmitting antenna with 1 spacial stream),
-+                      1T1ss (aka 1 transmitting antenna with 1 spatial stream),
-                       2T1ss, 3T1ss, 4T1ss, 2T2ss, 3T2ss, 4T2ss, 3T3ss, 4T3ss
-                       and 4T4ss.
-                       Each set starts with the number of channel bandwidth or
-@@ -262,7 +262,7 @@ properties:
-                     $ref: /schemas/types.yaml#/definitions/uint8-matrix
-                     description:
-                       Sets of half-dBm backoff (beamforming) values for 802.11ax
--                      rates for 1T1ss (aka 1 transmitting antenna with 1 spacial
-+                      rates for 1T1ss (aka 1 transmitting antenna with 1 spatial
-                       stream), 2T1ss, 3T1ss, 4T1ss, 2T2ss, 3T2ss, 4T2ss, 3T3ss,
-                       4T3ss and 4T4ss.
-                       Each set starts with the number of channel bandwidth or
-
-base-commit: 1590cf0329716306e948a8fc29f1d3ee87d3989f
-prerequisite-patch-id: 912014811782d33538ddb17f00b64c15b364425e
--- 
-2.43.0
-
+Understood, I am sorry about that=2E I will reply to individual emails=20
+instead of sending new version from now on=2E Basically all his comments
+were addressed in v2=2E Also how long should I wait, because I thought=20
+it's the best if I send new version which is ~500 lines shorter so=20
+there is less to review, but I will wait if you want, just tell me how
+much? Right now latest version is v2=2E Do you want me to respond to=20
+Bitterbind's individual emails now or do that for any new comments in=20
+v2?
+Best regards,
+Luka Gejak
