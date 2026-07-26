@@ -1,111 +1,130 @@
-Received: from mail-oa1-f99.google.com (mail-oa1-f99.google.com [209.85.160.99])
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71AEE3BB9FD
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 22:12:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84E242BEC52
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 22:19:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785103936; cv=none; b=EdXKZHZjsjnSXpilFGM9/etdg1rprAwBCchSCsnIk+9AY+WQuGuUYIUx/Dl7rE4WqXL7sa5Dkjmils5Iw44pEsGnd6zLym6THKCRKVPOfJeGPcoxdiTWInhn1eDLdSVqGj+IBc139cZ7Cp4/dtol3sv92d39ho0xKRMzlNtyCjM=
+	t=1785104385; cv=none; b=Fm3sZgUwtle+oOHNns36Ajf6+kZiQ6CGLDlTJ61qJ66J2FeGk5UFvhloDBuY+P8dEEbCfoXjZXkz4/8teGhTZmx5kbiml51j+eWiUiEl9nzPDRpxzeH9CuKkFZg3WSyXsv7NzcChGj0eYHu0CwZbVtWOmEgp/rx02qZ5uZrc8Rc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785103936; c=relaxed/simple;
-	bh=XirBAzOzE0ihAUqfnuAp2o8HAi5p7wNO+MkVNs1T5Uo=;
-	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=RFrGGpnN3OvSkRvThGfp7CU35Svze1Cs/Ato0HCHq125fIIndbXOmi0mQajsdxDNlzeUJUwbvHk7sxQKqak2yCsbdhD+MrJqjbwq4ETbPyQUQmqjiuxCw8ESBQu3JoGVF6k7VOciQ0/5LWxr8pS62uXVmkqdDKeQAuB+42IL9FE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=BnTXVWgg; arc=none smtp.client-ip=209.85.160.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785104385; c=relaxed/simple;
+	bh=/yDyEKG75YqKDusww/DX2764BjZuS3yKOk6JMkg83a8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eTd5BGSh5Q2iBJZ3G01sMZL7GyRL7Y2swtmIQwmIKy0ANMVPxf0OBjsyY4gfx4cUo6aafEUem1/QeiZtgdd3d4hQ3W/pfkHKmMDDtAiDgU09OAbuPgZEIx7E6NJTyPISY6cZcFVEgOFeyv/PtcZB/8CgTp2xOcaMkH93vS4DbCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=eGkkRZHQ; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BnTXVWgg"
-Received: by mail-oa1-f99.google.com with SMTP id 586e51a60fabf-456f7012050so2364079fac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 15:12:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785103934; x=1785708734;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from
-         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XirBAzOzE0ihAUqfnuAp2o8HAi5p7wNO+MkVNs1T5Uo=;
-        b=mtzUjQsDKvLC6oSstoJx9yFAOnKTxyHzpO5bl6j+EsOQwzU95OkyuWxXK4E68OD1+3
-         6wmiyQUhJ3AD6zZlouDV5mqy4It6TUIbjywntdLiQWjUGu6hMoAnjT3OcmImbPDni/mN
-         DjF0OJ5tH+FwGQUu6cwtVB0H6aNwOP9V1ekZRyyQqvvIoak1RmCRo7iNVH8DcHVNt9zr
-         ztHF6XF4cZiuC+57BDLaiP8V7OGM73f7v/xVd5tYXJyUDU1i8NWdDetxcer8vSW8KPts
-         TKjYZ9mfQVfy1HxRSITBG69bCXkz/ragm49tpEmRO5munR3pX61i3DWPAVGNkMf+s9Mn
-         tc/A==
-X-Gm-Message-State: AOJu0YxbvOmpacBAH5FKiYsYVoAityGtkD7/RQowNmRHLDI4c3mEDCS7
-	uOaCQAes3Xa43q9Acmp+nGXs/4OH2iXPcQ8V7C0BTGo1EBhMiwBK5p2XKGLWO8dOsmyBUwm+XeR
-	V9C2gAJoSuqLEDjvcfL8olMomm7dRyjRhKIPyJuDmcc7uCa75spMBl5ut/bviRJzg6BMl43xsIk
-	8sqRtU3kLHTvfZpfndggnRFYqJKDGrYG7M5X7SERx3JptcvdrR+kLVEFzepo/yNeI0rZCoJgElK
-	UehgnhEvrGOJIpWonosL7y8cGKR
-X-Gm-Gg: AR+sD119BZ8e+fItWt1MOGRotb0eoylYq2+TfAo6IMp2IgY1kRmblRkHdGN6rV1eln0
-	CWhXm1GBaFWulwLJO8o+I09tYbWVDW98JFpLC43AN0XpxiGX3IUGtDUjZddbjqs8MWI053+1baI
-	PPH4GWdNGgpVc+ZENtoWJiVHwD3D+ARGuqMV71GNo4p6wrSs/eRqhmj7/mXsmlJX5Beity2U8Ih
-	eerrlGRsVAqy5Fuf2XQyVzHYq2AZdaO1jzWA7q5w55g8KoO5md2prcXFpqgL4XTynMp6gqLE+Lh
-	mniwYUaSlQ2bGFdZ5fD9YCL39ZPFNDDe7QPl7rwgRrFS1N28XAXaYCiFTvlmk40yt5q/1H5G6is
-	Af5PQHCElbiuLwYMN9BMAq0GbG5Yat98w+/WdFk3zGPWijgLyeIbnUlW2tzBJ44vecekYtVIDm3
-	ypuTQ+r+PTdk1QCxSUD749hiEAoFcTtcYesJP8rZk=
-X-Received: by 2002:a05:6808:1185:b0:4ab:224d:6dd6 with SMTP id 5614622812f47-4ab5e3d97ccmr7368382b6e.15.1785103934244;
-        Sun, 26 Jul 2026 15:12:14 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-457673b64d7sm1222921fac.10.2026.07.26.15.12.12
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 26 Jul 2026 15:12:14 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-ed1-f69.google.com with SMTP id 4fb4d7f45d1cf-69cd6606b19so1937187a12.1
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 15:12:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="eGkkRZHQ"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-69fe400c14aso1007100a12.2
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 15:19:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785103931; x=1785708731; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XirBAzOzE0ihAUqfnuAp2o8HAi5p7wNO+MkVNs1T5Uo=;
-        b=BnTXVWggQYIyPQbgksCDh2STiuOyT/5V01FfDNoYRAHwHEAI7A8dtDoLlyV+86JOqg
-         7p0+n8yLkmuNDeO3Lwv1QxbuuQF1/tuRr3rjtu5SVB5tW2e97UR6nytrhHYohhUuayD6
-         MRUaR4ByHKDWDHCLXbORewcCDYfQ4B5jcipfg=
-X-Received: by 2002:a05:6402:5188:b0:69f:4c65:8696 with SMTP id 4fb4d7f45d1cf-69fc100510dmr2460866a12.11.1785103931597;
-        Sun, 26 Jul 2026 15:12:11 -0700 (PDT)
-X-Received: by 2002:a05:6402:5188:b0:69f:4c65:8696 with SMTP id 4fb4d7f45d1cf-69fc100510dmr2460856a12.11.1785103931164;
-        Sun, 26 Jul 2026 15:12:11 -0700 (PDT)
-Received: from [192.168.178.59] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-69fb5958ea0sm1918044a12.31.2026.07.26.15.12.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 26 Jul 2026 15:12:10 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>
-Date: Mon, 27 Jul 2026 00:12:09 +0200
-Message-ID: <19fa07c4ea8.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <78e9e3c667a7e356cfd2f736fd5852c91bd7cbf4.camel@sipsolutions.net>
-References: <20260726192541.2816743-1-arend.vanspriel@broadcom.com>
- <20260726192541.2816743-11-arend.vanspriel@broadcom.com>
- (sfid-20260726_212621_952206_40730C54)
- <78e9e3c667a7e356cfd2f736fd5852c91bd7cbf4.camel@sipsolutions.net>
-User-Agent: AquaMail/1.59.0 (build: 105900627)
-Subject: Re: [PATCH -next 10/10] wifi: cfg80211: convert cookie output to input parameter
+        d=bairaktaris.de; s=google; t=1785104382; x=1785709182; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Z6N0boIWyU0J5K0rc/NgMjVGoZ83sDuVKA9GvDpL6Ug=;
+        b=eGkkRZHQt6tODwIVB6vrQD1n522piEIfL1+r9RoN6vh18Vu97VFRKATQOK1bIQnIP4
+         dRK+aswsoxeGARtTtGP48iVzhn02MS9H8uFe7Tus+Pww/IPyUc7JAWHb9KzBiZ7O/wIY
+         oHx++uPKg8C4yK+/5FhUVFyQ0qoB1xRiQGQiK4FsrYwDnsIN9RjueJwFov7VTBVA4IwG
+         kD3U+PbAcUmiGpnqvmwzjP9KCn6HgeseXYcQSy2WMz/w72CTAzai+CrcJAfZ5GtSrxUT
+         /tCX4hTaIbJWFN1KoGMq06n/cxdl7KES9NoKnSTXZnt4FRT6/81NLwSOgPWDFvBdpIQZ
+         ADQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785104382; x=1785709182;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Z6N0boIWyU0J5K0rc/NgMjVGoZ83sDuVKA9GvDpL6Ug=;
+        b=jAlxSucwDJIplXopr8Z8cRgCiw9AXjEglJWvfT2pJGFLzsNC3goVSrGv4PTJLSVOEC
+         Plyo5BpyQYi+/NZ2GnSxbAINWrC++H2f3z//pBKu29mGGwU7Mr/77nzskQRFYruNF0pm
+         ALLyJSY++6EdLmyRVYonZCFjOZstHH2+bShQagEAr4S3htYdp+fIsXNe0/uXBoQR6DbG
+         d8WRFEjUokG6QSnZUwW5uNxBc7mfxPYN0rt8ZMXMvoGN1AkJyFVk+HymrxVGExkCP+hq
+         DZ1IQGQ0HG3S4F0muB9h1KUKxoJgsWi0fBq2wg4Om53k2BciYKoeqjaMnBeYu99Dqo8m
+         eixA==
+X-Forwarded-Encrypted: i=1; AHgh+RrAx/S/LLpt+vKO0xSls/uDMCXoU/vTB3NaLF29cD4k8SFfivnkoPbbQ39W5pLE1B1615+FapXfHZXY40X+xw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyIQ2pU17kNC0xwkbxlDSv616XbUn2aCU5/b6C4zp+XUXnJMu3v
+	a6KjY7OaIWViJcxQ9alj20xff9n4ayLF4ZZ3JASx6uRSt8YZQnw47h0lHJspZzEffw==
+X-Gm-Gg: AR+sD115CVh6EwsbjrlCMqSWJMPX3GsslSQB5U8sgoTTbY/Bm3swn0U3nVgQ9LmQj12
+	VcjvUCJj3lpPmQeALvEv7zgo3oF9WWAmovHi2YojLj33qrOzWvpW/GRFSUXeVzqfTJFic8+SJoT
+	81ik4MWwfZHN2pBL4EqkGEuecKiMkRTKPrD4O63THOk44BC2vEEYI477Rd9Mvvo9v9nzjvP6u3L
+	n7SSl13VOLSakqrDuxiZ5HwyuorX8ZZVAq7fyrxK5UZ/KSvejTWkDTjudab4OLw+0nWodqecGl0
+	HoVLcCKRVsIlCsNV+Tkdk4VvANWKLyf/SGKGBhX/0mm4rCjDllxXCeMGHxlcjTJNaVBw4nVe/Kr
+	7ZN1C3jQR2xl0SDddoJghmOH3n8TEO+7L3v6CpwSL8bDAJAGaWRdP1sFS8H0BzYclUyAir8RjPT
+	N8HcK5ngBmzQKC2ySO9RDWilFSMq4V4SFAcEI8Q5CNauAbNcBvINU3YnfOdgCaAnyQ5CB8ywgG3
+	lIdDCrkRzJJGjGt6WXSb6A61OiK6Ee9xCUjiIBGiw1UN/QUD89CZT+IQJ2rOIq9CkAkadIz/tiR
+	TxXuUT9hOpi1ITsPOytGYmJDqeAsc/xDvLk5khJ35xCD0NH67um/rldMFH2vAjgbaUxohOBFUu7
+	7FbnyWKT4D6R1BgkB3kIaTNo8+NctgDA=
+X-Received: by 2002:a17:907:72cf:b0:c15:abe2:e1df with SMTP id a640c23a62f3a-c1f1f07e1d6mr239191166b.43.1785104381647;
+        Sun, 26 Jul 2026 15:19:41 -0700 (PDT)
+Received: from Desktop (p54affe4b.dip0.t-ipconnect.de. [84.175.254.75])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1c32a76fecsm561599466b.8.2026.07.26.15.19.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Jul 2026 15:19:41 -0700 (PDT)
+From: Julius Bairaktaris <julius@bairaktaris.de>
+To: jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baochen.qiang@oss.qualcomm.com,
+	vasanthakumar.thiagarajan@oss.qualcomm.com,
+	rameshkumar.sundaram@oss.qualcomm.com
+Subject: [PATCH ath-next v2 0/2] wifi: ath11k: fix SoC reboot on firmware crash on AHB
+Date: Mon, 27 Jul 2026 00:19:06 +0200
+Message-ID: <20260726221908.104873-1-julius@bairaktaris.de>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
 Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Op 26 juli 2026 21:38:03 schreef Johannes Berg <johannes@sipsolutions.net>:
+On IPQ8074 every firmware assert takes the whole SoC down. The DP NAPI
+keeps polling while ath11k_core_reconfigure_on_crash() frees the data
+path underneath it, and dereferences a ring the teardown has already
+cleared.
 
-> On Sun, 2026-07-26 at 21:25 +0200, Arend van Spriel wrote:
->> The tx_control_port op is excluded: its cookie pointer is nullable
->> (passed as NULL when dont_wait_for_ack is set), so the nullable
->> pointer semantics are still required.
->
-> Well, kind of? Since we guarantee non-zero cookies, we could just pass
-> zero for this case, maybe that'd be nicer here?
+The interrupts used to be disabled at the top of that function.
+commit d455e805de70 ("wifi: ath11k: rearrange IRQ enable/disable in reset path")
+moved the disable into ath11k_core_reset(), which AHB parts never reach
+on a real firmware crash: reset_work is queued only from mhi.c and from
+the debugfs hw-restart handler. Patch 2 puts the disable back on the
+crash path. Patch 1 is a prerequisite - the CE half of the quiesce is a
+no-op on AHB today because the bus never implemented the hif ops.
 
-Crossed my mind as well. Will look into it.
+Reproduced and fixed on a Xiaomi AX3600 (IPQ8074 hw2.0), with no
+out-of-tree modules loaded, using the debugfs simulate_fw_crash
+'assert' trigger:
 
-Gr. AvS
+  before: 2/2 asserts panic in ath11k_dp_rx_process_mon_status() and
+          reboot the SoC
+  after:  3/3 asserts recover, 5 firmware boots across a single 397 s
+          uptime, no panics, both radios stay up
 
+Note the debugfs 'hw-restart' trigger does not reproduce this, since it
+goes through ath11k_core_reset() - the one path that still disables the
+interrupts. Only a real firmware assert does.
 
+Patch 1 is by inspection: it makes ath11k_hif_ce_irq_disable() take
+effect on AHB, which also fixes the existing call in
+ath11k_core_reset(). I have not managed to trigger a CE-side crash on
+its own, so if you would rather see that split out or dropped, say so.
+
+Changes in v2 (no functional change, review comments from Jeff on 2/2):
+- separate the ath-specific Tested-on tag from the upstream tags with a
+  blank line
+- use the standard kernel block comment style, with /* on its own line
+
+v1: https://lore.kernel.org/ath11k/20260725141757.1316877-1-julius@bairaktaris.de/
+
+Julius Bairaktaris (2):
+  wifi: ath11k: implement CE interrupt enable/disable for AHB
+  wifi: ath11k: disable interrupts during firmware crash recovery
+
+ drivers/net/wireless/ath/ath11k/ahb.c  |  9 ++++++++-
+ drivers/net/wireless/ath/ath11k/core.c | 10 ++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+
+-- 
+2.53.0
 
