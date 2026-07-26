@@ -1,81 +1,109 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from mail-oo1-f99.google.com (mail-oo1-f99.google.com [209.85.161.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE1CA335575
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 19:07:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD68C30D40A
+	for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 19:21:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785092848; cv=none; b=WtgCsh9tATxcijanIpane93XUTHE+E9OrXMRevDB0Kk8H2OSB9QygqhmRcQDZWzKEyJwHyF7OV6sec9NqR7NzxtKLT30YSrQfh0i8BTRQKphi7KQJjhZWWVQSwt9VHu9Rj21biEigFPwe3zkwYmVZl0ll6pEUobda/8hHvNWXOE=
+	t=1785093665; cv=none; b=n4tAtFM0jEB2k+rDxoKabs/WuAWRltd0wAdkwcRYYkCdO8JgYdLoftKA9xyGEay7L5/yKpnLQmNO3ncaD5TnHF6RAc6W3A35PGzmqwnKCjxtNuI+GgPn/QVowlF2kkVpbGz1kG8qSH9Bg37cpl87eCDomIS+Ecst61WpWdZ32TI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785092848; c=relaxed/simple;
-	bh=aeR6qb99/go93Xe0zf/SY2jIefv0FIAp2SuMPVC3hfs=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=WOStqJ/TwTkKNSYXuAy0MbR6xtEUR+/jtXS3x9m+1JIsosaKi43tXT7ZuU9p8pACMv/LktyQJ+JYuCG6YcKMnMUolbo+mEu5seEfGHJQdPwCaC9DkmJOuaRsZpweRhvDSGNnwBycghd9u3qa6Hq9/F9jEyrFiTdzUWl4dDZO1C0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0sec.ai; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=mE+0/tAS; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=0sec.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0sec.ai
+	s=arc-20240116; t=1785093665; c=relaxed/simple;
+	bh=fyLOzs4S/leSr8Df5qHayjyTwwiwPthIuUyGjrAo7uI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=h8mcUmvdHwEJB+JcDgzCLkfFqWjYgVT6EluV5T8hGx7L1BLQAtZx239JYjUrNF42V65plceuZOn31jTIsHrrl9KGC/H+nOVfDFhXhORSx0VuXIjhZC+o7zfM/Dl2BCeI8lJ3aG0IH2vlpXPTrmWXmRx2V7kqBxqbeM8dhyg37dI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=iJGOK+AG; arc=none smtp.client-ip=209.85.161.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="mE+0/tAS"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4957eefd361so15312955e9.1
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 12:07:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=0sec.ai; s=google; t=1785092843; x=1785697643; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=aeR6qb99/go93Xe0zf/SY2jIefv0FIAp2SuMPVC3hfs=;
-        b=mE+0/tASVYJZBf3tA+tjxne60SXy4niOo0WVuy8GT3XQGCOeQPjugx1UNcaPgSaa4O
-         gtRF63SP4hIqOLnkSiff1Z3Opi/qSIOpfgxOvm+sufnyTknsURZsuz1aBf5g3lzdV0Ek
-         UqKkZ4FvU4fXAZGXJcknkvBuua0ZBfhj2YUA+ahYoK8lICiuT6vvYBwz2gw57HGvIzRZ
-         XkjwcCBifpiu86LOcUSwT0ShC2HxA+sHLkeqEa+889TD1m2L2wRmtWECdg6WeViF3Tf7
-         HkNtgVd9uUs8j4AiSm9LyqzGiF3pJqo3MZqASb84CNov8hafuWJBKmyOg34mCgfIqQLc
-         ugcw==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="iJGOK+AG"
+Received: by mail-oo1-f99.google.com with SMTP id 006d021491bc7-6aaee9a5084so1190757eaf.2
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 12:21:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785092843; x=1785697643;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=aeR6qb99/go93Xe0zf/SY2jIefv0FIAp2SuMPVC3hfs=;
-        b=RYuifAR2HDLzoRHEFKVRuluKCUPT6zO63Y7TIVT74SB5TnavXWNjGqhjDAy8YCx/cJ
-         7DfA9RIUySLLt7dDSbe1JL7+wbaR3Q/mG/pccqQpx56EdQMq+DbgOmZ6EfLyaM27NDl2
-         pU3yOc/KitmvDIhXknyimSzI5fZ6Sd1i1yX5rq4kD91giA72nyD+uDoeWKOtiwzUmKAN
-         c+GBnss8rziDtUBTmm9UznBgRRST1WrYa1wtF937nKMPsmyl4qmmVM7Nj6vGpDCcDK6Y
-         Hhur6m3iRvt245dNXC1Lmma107tAUg6VNfCs8SFJ1y0n4VwSsB6SGdpJqd55YZ0YBkXP
-         mcCA==
-X-Forwarded-Encrypted: i=1; AHgh+Rp33h6Ntc2xrLv9a6RZyrqwbnlB5WYbHzqXHy0DOKMCdJhMDQ0DRfJhL4RrNpgV6Eu9M4Eq6c8BMRabdvj2dA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzrG36DKGRYK4HU+Zw8EWHL98iF0fDlb24k1ZUYNljSqRQXF/aS
-	G9PqsYZAtykLrhMfVp0MEhI8wEWlC3a5rrRG/USPZPpWPn5DwbTNWdKhgb1wZqGlQmsv
-X-Gm-Gg: AR+sD12ULxJYNahMgimLDG07beeCYv24JyOCvBDa1LEuOJ0nUVikvwfmrvUI1IraxGa
-	opgFGaWlRIwAGA+8AtI4aIT5nyc9TnPKRTSVi8voak8QsaLR6p3RLN9TZdhmohfK5i5t7larNQi
-	F6IPuDREQ/XOkrWg55e9KH92pAMZn132dFnQWhC8UOHsm+03azVSRkZI4gteiVLdikB68SVKgsl
-	xcHxvZjhSFAU7QdFXh5Gdm8CTArnGfQ1Yw3KW8bTZ6co3I3MqogMlemYfuq+/J5HqduXAglkFnH
-	307IQu8NI+7dup5shiiZG5b+Gjs5pHc3YS81Y1JiBCBokXFQDsTwET6rKtloKxXpncU1IGk8n2t
-	7XKraR3kblCoSdf4kgWhFseZsD+60yXWWSfpWUUIc8itdhflXAbrmckvmWR9BVu5GlLGsM319CI
-	Qj7ex1MqB1zJKd3oT30MJ+kaRByOuC0Ep/QYzESWPNTNsn+MH5pci5ISNFq6KImJuh2o+boYhkl
-	YKv1E8hkznX3FCH3EKJ4tq+a/2QDqQs91Y=
-X-Received: by 2002:a05:600c:8485:b0:495:6713:9aa3 with SMTP id 5b1f17b1804b1-496b57281d5mr75357285e9.30.1785092842714;
-        Sun, 26 Jul 2026 12:07:22 -0700 (PDT)
-Received: from peakbook-mini.tail8e484.ts.net ([178.197.222.64])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47f85b9a6d7sm42226357f8f.2.2026.07.26.12.07.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Jul 2026 12:07:22 -0700 (PDT)
-From: Doruk Tan Ozturk <doruk@0sec.ai>
-To:
- Jeff Johnson <jeff.johnson@oss.qualcomm.com>, linux-wireless@vger.kernel.org
-Cc: tristan@talencesecurity.com, vasanthakumar.thiagarajan@oss.qualcomm.com,
- stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath6kl: prevent assoc info length underflow
-Date: Sun, 26 Jul 2026 21:07:21 +0200
-Message-ID: <178509284111.44012.4392862410372916703@0sec.ai>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+        d=1e100.net; s=20251104; t=1785093662; x=1785698462;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=f/GC7/JY8dkQF9VYMmOxneNdfen5EFzs8r5WpvRe5Po=;
+        b=l6Egr2clmActlDTroXJXl6yydayTwoHHa86l4yx30lKWDt2YbCvii0vM5ITsp4zmLA
+         5M7VnT98Yd6VPU8wqmi3/jBaKFkGYyzIkyNmC9jzsbwfrzQSApdZJc6TqyGClySDgjdH
+         ZdbrXZdf8BAmDTKhb1SQ7EnOc2Qvgn5egNTFiQyCMY0pO91KXfM8QaOVyxeFzYBQ0gDx
+         PqzaaNe/21VDa/cKLxedWGXbVwzr3nUIl4dkbTZPLD7WmNNqxGJ3Jr3p7RZxLq1Bhfdj
+         s/mzKZQKaDmX/EY7jgsrN8DhXL900qBtuf6telMDlYNT+TmdtqwOLylPk1KS0JjS6NtM
+         6TaQ==
+X-Gm-Message-State: AOJu0Yxx5QcAnR9Ga1qhX1Rd1TqQRzNfGDpRReTl3zwJfGAbqsKgcM2B
+	WPrhHbMF++swu3OisAdegETg0mMIvhhV23d45P0YS3CBu89FBfTUfKEoXdJHLMjdG/R6qx8/+go
+	5IiCpiRNZMtdk4loXVtCw0qM4qdSZt/+3HVHm/9OaNaYQ4is3GZzNm+CtIkahIAtXxxI9Z7/Mzs
+	GODY5TgjX/etlYK23cX+O/i0KwMg0rxqxrHnbFN0+vnJ7R5umepJiZ+60ExAXYWUQ3dBWwB7m3L
+	3fsCPSTziDUVrQ2CoLAjuCFtMMh
+X-Gm-Gg: AR+sD12idg4Sfoz119wzCk4hSOhKObcNRzNCI9cqXHKhqBkHI5UCQuojWZAzLKunc6m
+	0dlbQ9Sl+XkHuL1o9Uy2xrIFrrR4Z0XWzIFTVu9s6vB94egO+mF25VDEp/kqmJkNO/WfxcTvsRK
+	h0aWmA9e/zcDRP/VqGOvMHuPDroBZnoKO/DDqu0lQmbV/nkyAZHtoEv/Nmq7rlddtNwvnIWdg6R
+	ptiLr3LUiVyNEC1uY/pwm2X3bh2jyP1pxueS8qFeKSDtqiSeKWYWwROGS87nPcHOzQWdvUBV3GE
+	s+yYYczRHF1y3aO/OLqn7/kUywRBp4wdG1DM+pQPoC/1TElS6ra77b3vm9pSf+J/POq47MdO1zh
+	jtMTZWJuw3gUQGVy79xdWj1IpCjS3fbRkUvhUznBL7eB2bjLvBDCZ0eKQsnF9t9ca29MoTjvVPu
+	s32cD66CjERBNAfuphwuV6ZzxVLHFdErSx6WOgkmQ=
+X-Received: by 2002:a05:6820:4d09:b0:6aa:a1b5:34c9 with SMTP id 006d021491bc7-6aaff7ff169mr5340070eaf.14.1785093662495;
+        Sun, 26 Jul 2026 12:21:02 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-73.dlp.protect.broadcom.com. [144.49.247.73])
+        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-457673a7ffcsm1190768fac.11.2026.07.26.12.21.01
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 26 Jul 2026 12:21:02 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb6cf425e86so2604407a12.1
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Jul 2026 12:21:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1785093660; x=1785698460; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=f/GC7/JY8dkQF9VYMmOxneNdfen5EFzs8r5WpvRe5Po=;
+        b=iJGOK+AGpw2CkEbnj50wcebYkiwi6YAdYtW9uy6mi/MfJR3/sZbkcjBaX63QKIPGsx
+         YsuKL0MY4qmRgNpcct6/N4B8ReBFlErLiIrvQvPKKI6+NAFDzh1muAdtz6AQMBQFq2Jh
+         cCytyiJPwD7azc6SUGVKyg91HXLTl3/aaGS9M=
+X-Received: by 2002:a05:6a21:6da8:b0:3bf:7c02:c46f with SMTP id adf61e73a8af0-3c67dae4388mr6673905637.14.1785093660106;
+        Sun, 26 Jul 2026 12:21:00 -0700 (PDT)
+X-Received: by 2002:a05:6a21:6da8:b0:3bf:7c02:c46f with SMTP id adf61e73a8af0-3c67dae4388mr6673881637.14.1785093659625;
+        Sun, 26 Jul 2026 12:20:59 -0700 (PDT)
+Received: from [10.229.42.29] ([192.19.176.250])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d13015052sm43706517c88.5.2026.07.26.12.20.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 26 Jul 2026 12:20:59 -0700 (PDT)
+Message-ID: <9ca181db-7bec-4f6c-9f42-4a66068af354@broadcom.com>
+Date: Sun, 26 Jul 2026 21:20:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: brcmfmac: cyw: set a unique cookie for mgmt tx
+To: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
+References: <20260725014411.170340-1-bogdan.nicolae@gmail.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260725014411.170340-1-bogdan.nicolae@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-hey Jeff, sorry I was prepping a different patch and sent this one by acciden=
-t. please take the original one from July 13th. appreciate it!
+On 25/07/2026 03:44, Bogdan Nicolae wrote:
+> Set cookie using an increasing atomic counter. Avoids mismatches of completion
+> events later in brcmf_notify_mgmt_tx_status, where packet_id != vif->mgmt_tx_id
+> is checked.
 
--- Doruk
+Thanks for the split. I increased the scope and been looking in the 
+cookie usage in the wireless subsystem. So I have a series lined up to 
+change the cookie to an input parameter and have cfg80211 hand out the 
+cookie value (it already has cfg80211_assign_cookie() function). This
+will also cover zero cookie fix here. So I would suggest to drop this 
+patch and only let the PMKID patch go in.
+
+Regards,
+Arend
