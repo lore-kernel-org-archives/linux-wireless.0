@@ -1,115 +1,156 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1E443CB55D
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 22:53:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E0E431ED80;
+	Mon, 27 Jul 2026 22:56:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785192796; cv=none; b=NVToAYuK5ErMyGiuCshbexRmgnjL6MK3ED9LrRfPj1uSFJ3LsjuU+jzE38lwjobQ2RNxKvwK7rgn2TFRu2cKtraPBExiaK1EXO3RN1ePMy0SYtMTfJu5/Eq5nl46n8L1muGbcIDS7eVo1mKGsliGk73rAZDsOMgOcyejnNpjnus=
+	t=1785192965; cv=none; b=U47DxFXbM4HSYkKH1TZ2axzuplxkbkf8KKI8o1YJlm97sd6Vkubuxi8O654JlElW0yvVMZzBYkSuCr/NebeLhb2YdPtHCZrDD7LLM/ubRugmef+vTmzSCKxUYUwXXIsPXodYrFJ6Y+1EMO6jKxWheLj50mPo595YuRGvLB71gDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785192796; c=relaxed/simple;
-	bh=mSN/efPKVmVi+AcOqZJZ9SPgOGC/AZ19K1EaT+rnT4I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ipp42VxN8zrHN2Xhp0iQDQsxAY/sXVTFXcn2WoNc2g4r27yntZIPvj0Hn8QKyUsEyO+OPBQlqnbLF6BEgsQN4pFIwEnLDBAvL1Cp/2HrtRBBBhWiVnVgZmd4bRTxaXnH3MR5YNbmDay8USm978+TdtYPDjNni1pbeJSEdHxlGBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eb2qVjQA; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785192965; c=relaxed/simple;
+	bh=oEgoEtojyQ9PC8g7uhG7viM9B7fGAJubrsCe9lk5/YY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=DIUMCMU2SIQHdp3QhJBxNx+FOc7dtpZh/E2wUrQZvOXlkSOCbHcf1/2BOUUe0jVtPq7Su0hSdgrWmxjKIeQQu1q/E/Tl6qozvJU2kZidb6zjqZGsFuVg61zAcbaZzOtFBM5Or0IMMa3V9lkaygGaDwUriiaKa2QrMZIm+0LQ1gY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iwaG5uRX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eb2qVjQA"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-84867f07d63so3939615b3a.2
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:53:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785192794; x=1785797594; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9c2bNkM182eWtMQSsK53z2vdCBlwj9TY54Z48t5tnuA=;
-        b=eb2qVjQA03Rb/z30D/Yzbs+zH7aLm0Gb21TTR8HPe0Os1lU94X8yrFf+wMJItMPLl5
-         ahRnsJSzvMCnmOqH+FiJ3O9dKzXGZ8KEGFbTtzclU+giMkk8J5cWHAhwciF4ZagOIYw7
-         FMJorK2xqjr32o76UTk8EZ39nv4j+7ejRhi11o2EIM0Pp2nHCOkDZUlS27uYPxv7e1zo
-         HtD2K9Jd5YJ3ySJdw9zhULXw62foimvQ9VA78uzM5xLEaTiIkVFLZRKjnl7d1NTAuiJl
-         2b13K6j90fxLztn4cdeGKLNC0hwYFfaEJN25epgs1Zxf4BenbO5ZgI3gFTxBVLNr+xZ9
-         hO1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785192794; x=1785797594;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=9c2bNkM182eWtMQSsK53z2vdCBlwj9TY54Z48t5tnuA=;
-        b=QiOOLrrugiGekOMA08JDBYTOCSvBhMrEx3UEkiVvV3l6+38U/XpHX9Pn0FnNaSnsTL
-         OoX9K9j7lDJcupYeIE578EsedneyQI1LiQlUmm+es1yZ65QuYkDo0somLqzplERhBWXy
-         R9a9jw9FjPb6AXxaJxzyeOtBfJNbzkng5B2ZQVyd+0VRmIJ4m0mY39Q/igbPrKzXsv22
-         YU6ony15MDPfpc+HsKp6/k7z9JdtVlmTJhIpu96PH7pDHHQfbkzPvFLOPwaAVS7KiT9q
-         iVVEq4tKjUDEvlTwzZjZOwmio+mbCUCSGQB+BL65hp/QHL4Z21hyytVGSH5RSawelEZN
-         SeKQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqveUorCPIZb333DXbm+a7Bw5z/4svOG+fxrvuWDhUhZlXTI84qKKAGUP6ZEJQBhuWgYpQ++LTZwXNr9xYKrA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuMbRKIlch8vgMeyLAl0sesVg5CcisN//s8HY1+gqLx26dngAS
-	cMqXFbmyuwvU0k562kMKoLTgQLoI6ZpNEiY0m+xM3D1EzA45DOJUbZS4
-X-Gm-Gg: AR+sD13mlEAb0RZ/K9aSGDPC88HVAAY8toiWTtYWPqmEiKgjXVsSkuFKByzO6PMjFrB
-	d/UyrPbfc5Tqol5pz63uhZWAW9QHPnTA+yxiGqXq8qZing3UfDq5j4FIyf/h1jUPRvaZX/URjLz
-	mAXJgPFKhNcAHRJaOYbee1Oq5peQMPmMVRH4CHENMwobcQO92rGGaVbv8RDSLyhuZWAFKSVJuhF
-	TGh1FMElLvWNAURlJRvQ4e0ZePAN5XGKoTdmLUryCaSd7rSbmKHIiZc0Z8pBsQeuEvJZXN35+0r
-	eSWr0ABfSKaYcX0xcx+wKb1QXtl6GKvNb9OJMoXbLegXJreLGseTJrdDXAhQglmMq9/HwbGEUuP
-	NoIy5BZddgj0xlLx+XCwsxhJQdtKuzlumY/2tX4Fo2T/SSNspVaUpnf6JtBh56SevVLMDToocfO
-	6SqYZx6l9F62bdjdzF2O0h5r25FuWsoxdIhRazgPhInZjENaL1enkjg3pVBwCoHS5KWbHYQ9oho
-	/sJqdaz1xbZ0O3okR37fptuSrSKvtfsKh0OQdJ9I1WOv8VKSwZ3daRwgF7bdUQ7dQ==
-X-Received: by 2002:a05:6a00:999:b0:84a:29a7:f650 with SMTP id d2e1a72fcca58-84e928a9ab5mr39555b3a.0.1785192794215;
-        Mon, 27 Jul 2026 15:53:14 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e34])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84e532ad19csm3601949b3a.26.2026.07.27.15.53.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 15:53:13 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: devicetree@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] dt-bindings: net: wireless: brcm,bcm4329-fmac: add nvmem-consumer reference
-Date: Mon, 27 Jul 2026 15:53:11 -0700
-Message-ID: <20260727225311.266596-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iwaG5uRX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04CDB1F000E9;
+	Mon, 27 Jul 2026 22:55:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785192964;
+	bh=QggSvxtNQ67iS+XUwqrDlrH2xraHrxGb+vgcG7y0WsY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=iwaG5uRX32rTgcSQn1oI8cDhvVdBgF7xNVMcmwA5nB2roQEpjWkBM9/elDUKMWR+e
+	 A0p9zb+3tSs36tELwjTyibEs5znVgnOoeBgaUwvlk+h9jnbCN1e+v9elShDExZRawl
+	 S9FIBGMRZSowIq2RtsqIUQJ/GKy2epEJEkS13zWkXc/uH+dFvxm4jWJtqykilYp8FZ
+	 n/dZuVVGnI4Oh8Jv/TOV8zbNHWDjAXhVQbUPhHErbAZOrGNAAwjAULYVaj3h2kBbW9
+	 ED2feS2pNPbAGb5xCgo1ctL4J3aD2Ir+AJmF+Wa3lGIyvJ/mNC9waIoSbc3rE33Rm4
+	 vgzkKLQuteGUQ==
+From: Mark Brown <broonie@kernel.org>
+To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
+ Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
+ Borislav Petkov <bp@alien8.de>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Daniel Lezcano <daniel.lezcano@kernel.org>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
+ Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Matthew Sakai <msakai@redhat.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Mike Rapoport <rppt@kernel.org>, 
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, 
+ Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
+ Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
+ Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
+ Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>, Vinod Koul <vkoul@kernel.org>, 
+ Will Deacon <will@kernel.org>, Yazen Ghannam <Yazen.Ghannam@amd.com>, 
+ Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
+ dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+ intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+ linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
+ linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
+ netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
+ with no effect
+Message-Id: <178515520105.50339.6347304746485042237.b4-ty@b4>
+Date: Mon, 27 Jul 2026 13:26:41 +0100
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.16-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1395; i=broonie@kernel.org;
+ h=from:subject:message-id; bh=oEgoEtojyQ9PC8g7uhG7viM9B7fGAJubrsCe9lk5/YY=;
+ b=owEBbQGS/pANAwAKASTWi3JdVIfQAcsmYgBqZ+HxlIWhtS7M/+/D/kSsIotZNE7ycdvTNKMa6
+ lyMcsUy1YGJATMEAAEKAB0WIQSt5miqZ1cYtZ/in+ok1otyXVSH0AUCamfh8QAKCRAk1otyXVSH
+ 0NGoB/9aZSWKSSxB+DoiO9o+r0R7LvQ0b9P0b+u/ow+7Ti4Va043c7UzGI2RzCGdUpf18XgLn6f
+ SgEv95GzlB+upqVsxmPG9VHhXWw4Ho9J4p/hSGXTDgAS8ErF8GjIkiAzWtWwlF1NwqBzKdr1HBU
+ 4bzLooMHmkm+sRhw0K+K8vYxKzoIVIF4rw3OtvuVpbcnMjoni4zgFcLTc5cd+g7gZ+ms/PpNPge
+ 1bCGwvXOdpSE1Sx0RqUVVFnzDZUByQ/Qgq4t95aAwkznICTyGzRGtCagn7hNdby/Adb/VqLQiGG
+ EXfGwi5kgCay4GMGfP+CcNTcNXARRSisUOfJQUCdGh8to0xz
+X-Developer-Key: i=broonie@kernel.org; a=openpgp;
+ fpr=3F2568AAC26998F9E813A1C5C3F436CA30F5D8EB
 
-The brcm,bcm4329-fmac binding has unevaluatedProperties set to false
-but does not allow nvmem-cells or nvmem-cell-names, which are used by
-DTS files (e.g. bcm4709-linksys-ea9200.dts) to supply MAC addresses.
+On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
+> treewide: remove conditional returns with no effect
+> 
+> Hello,
+> 
+> While reading mm/memblock, I found a conditional return where both
+> branches return the same value:
+> 
+> [...]
 
-The driver already supports nvmem-based MAC address retrieval via
-of_get_mac_address(), so add the nvmem-consumer schema reference to
-document and allow these properties.
+Applied to
 
-Fixes warnings with users:
+   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/regulator.git for-7.3
 
-['brcm,bcm4366-fmac', 'brcm,bcm4329-fmac'] does not contain items matching the given schema
-from schema $id: http://devicetree.org/schemas/pci/pci-bus-common.yaml
-Unevaluated properties are not allowed ('nvmem-cell-names', 'nvmem-cells' were unexpected)
+Thanks!
 
-Assisted-by: opencode:big-pickle
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- .../devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml      | 1 +
- 1 file changed, 1 insertion(+)
+[14/36] ASoC: remove conditional return with no effect
+        https://git.kernel.org/broonie/misc/c/ca9b51f41c9d
+[28/36] regulator: wm831x-isink: remove conditional return with no effect
+        https://git.kernel.org/broonie/misc/c/9396a1d9e142
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-index 81fd3e37452a..5d87de6a17bb 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-@@ -17,6 +17,7 @@ description:
- 
- allOf:
-   - $ref: /schemas/net/wireless/wireless-controller.yaml#
-+  - $ref: /schemas/nvmem/nvmem-consumer.yaml#
- 
- properties:
-   compatible:
--- 
-2.55.0
+All being well this means that it will be integrated into the linux-next
+tree (usually sometime in the next 24 hours) and sent to Linus during
+the next merge window (or sooner if it is a bug fix), however if
+problems are discovered then the patch may be dropped or reverted.
+
+You may get further e-mails resulting from automated or manual testing
+and review of the tree, please engage with people reporting problems and
+send followup patches addressing any issues that are reported if needed.
+
+If any updates are required or you are submitting further changes they
+should be sent as incremental updates against current git, existing
+patches will not be replaced.
+
+Please add any relevant lists and maintainers to the CCs when replying
+to this mail.
+
+Thanks,
+Mark
 
