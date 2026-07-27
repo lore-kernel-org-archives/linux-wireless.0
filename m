@@ -1,63 +1,59 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D3E424E4B5;
-	Mon, 27 Jul 2026 08:59:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 958FB3EC6BE;
+	Mon, 27 Jul 2026 09:21:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785142795; cv=none; b=bIcymQAct0nGHlZmfQFt9XaE0JWBkcRyzgNlTZpn2AG4NIU4h+fhiWK3MnY0ZXE08rJFe+fTyTyK9r+mVUOxdk1yXqejkr2MgiWuDWkq5gg8BRV2Lz5uTObf982UtiSSF0SbztbUXr+tG2nVWIWAK9+VlnNUZr/ph+vcrqoZA14=
+	t=1785144082; cv=none; b=QjV7hiMLiV2YrUcWAGn1gDgdRhYQjaD6MxktkVHHVZZna8WCa6jXhlK96JyP9SwvNRTpTxpiM9ihUUMIem5m2Z+npjj2bRwkrRrJxIuvDppnfVCVv30m0CLt0l0PogsSQvZlRnn5TK3WzuTa9kKCSPpaXeZKGVnxbDfXmuhRlH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785142795; c=relaxed/simple;
-	bh=O0+GJZTELRt5/FKtFOiBUAPtt4D6K1YMO4yZrVTd1RI=;
+	s=arc-20240116; t=1785144082; c=relaxed/simple;
+	bh=ATcm3cwxiaD4AFcT4SUMpmqpzgwWRakt3CHT8nFWLus=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=l+KCLK0u87IZ6pcNtbpzBtLfWDYg6B56x9jW0732cv56WsdcjkDLux9KqhZiHtWXfAsJF5nm21KIjrxRzNpR/8uwNIoLmZHMqUblOqZwovFPgucrD/drZ6ahcI4IQ+NfSgqz74UwaEOykQ2zclGFN5kVGvjEgi2IKRDp7JzmT6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ashuHPXW; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=pfNOfJncMmJc9JoQAmNgekoySsrPoJrv2gtF5sEpmqExcy59yVFZul/bCtpJQgLxgdG8bwQSpxgz5xNIwvFUUvSUC/8ywVjylROu7xyovUsLLayHPWqTrZnrcH5l0GbX3oqAyH34WKvBX2UCVyPITTv3RjNLny1ZofvitwMoYFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=wvSbjx0X; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ashuHPXW"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R8xheD72981471, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="wvSbjx0X"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R9LAxE42989917, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785142783; bh=+ANnELhA/qMJxdl1v3PakJaekUzlEjSma+zs8Xd8p8Q=;
+	t=1785144070; bh=1+CDkhv/psM1dy7rtkrST4n/eCMWDLthpK5eOaOEzgc=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ashuHPXWxDSHRTFWaxEC0EG/pzwHolgI9cXAo1yAxLR2AO5DagEK0y3Y4nV1LIgfp
-	 Z9/HOFFEHFi+FBdZXqXy8CQEFaaiH8/KIrEEyHyfhPk40QpiGkCkRzM1Sl6/OJ5SAl
-	 Du/6bgxv5QtFAFRzulETQzCp/Ag+b6TDRa7MkK1Rsb8CyMBQ3Q0Ur2iGRki01iANw6
-	 43pTaExX2Vi343ar+mMZBs7WYsC6tl1B6ZsAXhJ3bM9g3aFpxFAKXvjP1eHNOpY2AY
-	 XQBYyesIpkT/u6ObvKJwhADF2qZ55lxYPC+bnjwlbXzFBxC5XO75aRXjhaGlnJ69ix
-	 CzYp/LMB31JwQ==
+	b=wvSbjx0XHMDjzQ/QsxUqQP15uTCKYs2ZFSuvL4iMXCzm+H8Jxn2G2S7KjRgJI3mbX
+	 6HxlMVhigG+jPYcSLHL3w468N/iHbzWFQG21Ol3nT3hfjcMMLi5jXekRZH5pPUPMWW
+	 aZnsn0QOj7sn674UZpgRkBz25ZfIwbEm9YCXX1VigFOva02v9X98HVaQf+tVEz5OHV
+	 mp8QqI4t7KxVSzTQEUR6/FlPEWSYW0xYNBHLwqghh3laJkBf6Qf1xzVpL8z1kppXRz
+	 xcLsgisWaQ/oWsAUL4lfyQdbOrUqhNOJzLrJ0eIoQnxsVS2Z0kEpmVMxtjDUn4NEMC
+	 VleVnkYhgvWFw==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R8xheD72981471
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R9LAxE42989917
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 27 Jul 2026 16:59:43 +0800
+	Mon, 27 Jul 2026 17:21:10 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 16:59:43 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 16:59:43 +0800
+ 15.2.2562.17; Mon, 27 Jul 2026 17:21:10 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 27 Jul 2026 16:59:43 +0800
+ 15.02.2562.017; Mon, 27 Jul 2026 17:21:10 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
  Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v2 08/11] wifi: rtw88: sdio: set up RX aggregation and
- interrupts for RTL8723BS
-Thread-Topic: [PATCH v2 08/11] wifi: rtw88: sdio: set up RX aggregation and
- interrupts for RTL8723BS
-Thread-Index: AQHdHEb8zKSybwnDLUOFE+V39aHJ2baBEhsQ
-Date: Mon, 27 Jul 2026 08:59:42 +0000
-Message-ID: <2d3e396f1e184e6eac0a232578d0761c@realtek.com>
+Subject: RE: [PATCH v2 09/11] wifi: rtw88: sdio: add TX back-pressure and
+ retry on page starvation
+Thread-Topic: [PATCH v2 09/11] wifi: rtw88: sdio: add TX back-pressure and
+ retry on page starvation
+Thread-Index: AQHdHEb9QehgipUqV0WrHvKAAfZkDLaBFFxQ
+Date: Mon, 27 Jul 2026 09:21:10 +0000
+Message-ID: <af51f851a5254faa9caba6b1e04fefe8@realtek.com>
 References: <20260725150427.93887-1-luka.gejak@linux.dev>
- <20260725150427.93887-9-luka.gejak@linux.dev>
-In-Reply-To: <20260725150427.93887-9-luka.gejak@linux.dev>
+ <20260725150427.93887-10-luka.gejak@linux.dev>
+In-Reply-To: <20260725150427.93887-10-luka.gejak@linux.dev>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -72,121 +68,245 @@ MIME-Version: 1.0
 luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
 > From: Luka Gejak <luka.gejak@linux.dev>
 >=20
-> Enable the existing RX aggregation setup for this chip and select the
-> larger DMA aggregation mode it needs. The RTL8723BS does not raise
-> CPWM1, so leave that source out of its interrupt mask, and set the SDIO
-> TX control bit the vendor driver uses to have transfers always
-> recognised.
+> Two problems show up on RTL8723BS uplink. The per-AC software FIFO is
+> unbounded, so mac80211 keeps handing frames down until latency collapses
+> under load. And when the chip runs out of free TX pages the queue is
+> simply abandoned for that pass, which stalls the AC until something else
+> kicks the worker.
 >=20
-> The chip also keeps raising the interrupt after resume if undefined
-> status bits are written back when acknowledging, so acknowledge only the
-> defined and unmasked bits. That is scoped to this chip; the other SDIO
-> parts keep writing the status word back unchanged.
+> Stop the mac80211 queue once a data AC fills past a high watermark and
+> wake it from the drain path when it falls back to a low one. Convert the
+> TX work item to a delayed work so a temporary page shortage can be
+> retried shortly afterwards instead of stalling, and cancel it on
+> teardown.
+>=20
+> Measured on RTL8723BS hardware, uplink goes from 11.9 Mbit/s with 204
+> TCP retransmits to 20.1 Mbit/s with 2.
 >=20
 > Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 > ---
->  drivers/net/wireless/realtek/rtw88/sdio.c | 28 ++++++++++++++++++++++-
->  drivers/net/wireless/realtek/rtw88/sdio.h |  9 ++++++++
->  2 files changed, 36 insertions(+), 1 deletion(-)
+>  drivers/net/wireless/realtek/rtw88/sdio.c | 75 ++++++++++++++++++++---
+>  drivers/net/wireless/realtek/rtw88/sdio.h |  3 +-
+>  2 files changed, 68 insertions(+), 10 deletions(-)
 >=20
 > diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wire=
 less/realtek/rtw88/sdio.c
-> index adf0b509e2cc..37d1d58fa55e 100644
+> index 37d1d58fa55e..572b791249ed 100644
 > --- a/drivers/net/wireless/realtek/rtw88/sdio.c
 > +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-> @@ -844,7 +844,11 @@ static void rtw_sdio_init(struct rtw_dev *rtwdev)
+> @@ -22,6 +22,15 @@
+>  #define RTW_SDIO_INDIRECT_RW_RETRIES                   50
+>  #define RTW_SDIO_OQT_TIMEOUT_MS                                1000
+>=20
+> +/* 8723BS SDIO TX FIFO back-pressure watermarks: stop the mac80211 queue=
+ once
+> + * the per-AC software FIFO fills past the high watermark, and wake it f=
+rom the
+> + * TX drain path once it falls back to the low one. Bounds the queueing =
+latency
+> + * that otherwise causes uplink bufferbloat / congestion collapse.
+> + */
+
+comment style.
+
+> +#define RTW_SDIO_TX_FIFO_HIWATER                       16
+> +#define RTW_SDIO_TX_FIFO_LOWATER                       8
+> +#define RTW_SDIO_TX_RETRY_DELAY                        msecs_to_jiffies(=
+1)
+> +
+>  static bool rtw_sdio_is_bus_addr(u32 addr)
+>  {
+>         return !!(addr & RTW_SDIO_BUS_MSK);
+> @@ -1030,7 +1039,7 @@ static void rtw_sdio_tx_kick_off(struct rtw_dev *rt=
+wdev)
 >  {
 >         struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
 >=20
-> -       rtwsdio->irq_mask =3D REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CP=
-WM1;
-> +       if (rtw_is_8723bs(rtwdev))
-> +               rtwsdio->irq_mask =3D REG_SDIO_HIMR_RX_REQUEST;
-> +       else
-> +               rtwsdio->irq_mask =3D REG_SDIO_HIMR_RX_REQUEST |
-> +                                      REG_SDIO_HIMR_CPWM1;
+> -       queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
+> +       mod_delayed_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work, =
+0);
 
-align the REG_*
+queue_delayed_work()?
 
 >  }
 >=20
->  static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
-> @@ -852,6 +856,7 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw=
-_dev *rtwdev)
->         u8 size, timeout;
+>  static void rtw_sdio_link_ps(struct rtw_dev *rtwdev, bool enter)
+> @@ -1154,6 +1163,18 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwde=
+v,
 >=20
->         switch (rtwdev->chip->id) {
-> +       case RTW_CHIP_TYPE_8723B:
->         case RTW_CHIP_TYPE_8703B:
->         case RTW_CHIP_TYPE_8821A:
->         case RTW_CHIP_TYPE_8812A:
-> @@ -879,6 +884,8 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw=
-_dev *rtwdev)
->                     FIELD_PREP(BIT_DMA_AGG_TO_V1, timeout));
+>         skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
 >=20
->         rtw_write8_set(rtwdev, REG_RXDMA_MODE, BIT_DMA_MODE);
-> +       if (rtw_is_8723bs(rtwdev))
-> +               rtw_write8_set(rtwdev, REG_RXDMA_MODE, 3 << 2);
-
-I think you are setting burst count?  rtw_write8_mask()?
-
-#define BIT_DMA_BURST_CNT	GENMASK(3, 2)
-
->  }
->=20
->  static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev)
-> @@ -947,9 +954,19 @@ static void rtw_sdio_8723bs_check_rqpn(struct rtw_de=
-v *rtwdev)
->=20
->  static int rtw_sdio_start(struct rtw_dev *rtwdev)
->  {
-> +       u32 clear;
-> +
->         rtw_sdio_8723bs_check_rqpn(rtwdev);
->         rtw_sdio_init_free_txpg(rtwdev);
->         rtw_sdio_enable_rx_aggregation(rtwdev);
-> +
-> +       if (rtw_is_8723bs(rtwdev)) {
-> +               clear =3D rtw_read32(rtwdev, REG_SDIO_HISR) &
-> +                       RTW_SDIO_HISR_CLEAR_MASK;
-> +               if (clear)
-> +                       rtw_write32(rtwdev, REG_SDIO_HISR, clear);
+> +       /* Back-pressure on the data ACs (BK/BE/VI/VO): once the FIFO fil=
+ls past
+> +        * the high watermark, stop the corresponding mac80211 queue so i=
+t stops
+> +        * handing us frames, bounding the queueing latency. Resumed from=
+ the TX
+> +        * drain path once the FIFO drains below the low watermark.
+> +        */
+> +       if (rtw_is_8723bs(rtwdev) && queue < RTW_TX_QUEUE_BCN &&
+> +           !rtwsdio->queue_stopped[queue] &&
+> +           skb_queue_len(&rtwsdio->tx_queue[queue]) >=3D RTW_SDIO_TX_FIF=
+O_HIWATER) {
+> +               rtwsdio->queue_stopped[queue] =3D true;
+> +               ieee80211_stop_queue(rtwdev->hw, skb_get_queue_mapping(sk=
+b));
 > +       }
 > +
->         rtw_sdio_enable_interrupt(rtwdev);
->=20
 >         return 0;
-> @@ -1029,6 +1046,8 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *=
-rtwdev)
->=20
->         val =3D rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
->         val &=3D 0xfff8;
-> +       if (rtw_is_8723bs(rtwdev))
-> +               val |=3D BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE;
->         rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
 >  }
 >=20
-> @@ -1293,6 +1312,13 @@ static void rtw_sdio_handle_interrupt(struct sdio_=
-func *sdio_func)
->                 rtw_sdio_rx_isr(rtwdev);
+> @@ -1455,32 +1476,48 @@ static void rtw_sdio_indicate_tx_status(struct rt=
+w_dev *rtwdev,
+>         ieee80211_tx_status_irqsafe(hw, skb);
+>  }
+>=20
+> -static void rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
+> -                                     enum rtw_tx_queue_type queue)
+> +static int rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
+> +                                    enum rtw_tx_queue_type queue,
+> +                                    bool *processed)
+>  {
+>         struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
+>         struct sk_buff *skb;
+> +       u16 q_map;
+>         int ret;
+>=20
+> +       *processed =3D false;
+>         skb =3D skb_dequeue(&rtwsdio->tx_queue[queue]);
+>         if (!skb)
+> -               return;
+> +               return 0;
+>=20
+> +       *processed =3D true;
+> +       q_map =3D skb_get_queue_mapping(skb);
+>         ret =3D rtw_sdio_write_port(rtwdev, skb, queue);
+>         if (ret) {
+>                 skb_queue_head(&rtwsdio->tx_queue[queue], skb);
+
+This case is also `processed =3D true`?
+
+> -               return;
+> +               return ret;
 >         }
 >=20
-> +       /* RTL8723BS keeps raising the interrupt after resume if undefine=
-d
-> +        * status bits are written back, so acknowledge only the bits tha=
-t are
-> +        * both defined and unmasked. Other chips keep the existing behav=
-iour.
-> +        */
-
-comment style
-
-> +       if (rtw_is_8723bs(rtwdev))
-> +               hisr &=3D rtwsdio->irq_mask & RTW_SDIO_HISR_CLEAR_MASK;
+>         rtw_sdio_indicate_tx_status(rtwdev, skb);
 > +
->         rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+> +       if (rtw_is_8723bs(rtwdev) && queue < RTW_TX_QUEUE_BCN &&
+> +           rtwsdio->queue_stopped[queue] &&
+> +           skb_queue_len(&rtwsdio->tx_queue[queue]) <=3D RTW_SDIO_TX_FIF=
+O_LOWATER) {
+> +               rtwsdio->queue_stopped[queue] =3D false;
+> +               ieee80211_wake_queue(rtwdev->hw, q_map);
+> +       }
+> +
+> +       return 0;
+>  }
 >=20
->         rtwsdio->irq_thread =3D NULL;
+>  static void rtw_sdio_tx_handler(struct work_struct *work)
+>  {
+>         struct rtw_sdio_work_data *work_data =3D
+> -               container_of(work, struct rtw_sdio_work_data, work);
+> +               container_of(to_delayed_work(work), struct rtw_sdio_work_=
+data,
+> +                            work);
+>         struct rtw_sdio *rtwsdio;
+>         struct rtw_dev *rtwdev;
+> +       bool processed;
+>         int limit, queue;
+>=20
+>         rtwdev =3D work_data->rtwdev;
+> @@ -1491,7 +1528,24 @@ static void rtw_sdio_tx_handler(struct work_struct=
+ *work)
+>=20
+>         for (queue =3D RTK_MAX_TX_QUEUE_NUM - 1; queue >=3D 0; queue--) {
+>                 for (limit =3D 0; limit < 1000; limit++) {
+> -                       rtw_sdio_process_tx_queue(rtwdev, queue);
+> +                       int ret;
+> +
+> +                       ret =3D rtw_sdio_process_tx_queue(rtwdev, queue, =
+&processed);
+> +                       if (ret) {
+> +                               if (rtw_is_8723bs(rtwdev) && ret =3D=3D -=
+EBUSY) {
+> +                                       mod_delayed_work(rtwsdio->txwq,
+> +                                                        &work_data->work=
+,
+> +                                                        RTW_SDIO_TX_RETR=
+Y_DELAY);
+> +                                       return;
+> +                               }
+> +                               break;
+> +                       }
+> +
+> +                       if (rtw_is_8723bs(rtwdev) &&
+> +                           queue =3D=3D RTW_TX_QUEUE_MGMT && processed) =
+{
+> +                               mod_delayed_work(rtwsdio->txwq, &work_dat=
+a->work, 0);
+> +                               return;
+> +                       }
 
-[...]
+Can you cleanup the handlers of return value and processed?
+The logic isn't clear to me.=20
+
+
+>=20
+>                         if (skb_queue_empty(&rtwsdio->tx_queue[queue]))
+>                                 break;
+> @@ -1518,14 +1572,16 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwde=
+v)
+>                 return -ENOMEM;
+>         }
+>=20
+> -       for (i =3D 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
+> +       for (i =3D 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
+>                 skb_queue_head_init(&rtwsdio->tx_queue[i]);
+> +               rtwsdio->queue_stopped[i] =3D false;
+> +       }
+>         rtwsdio->tx_handler_data =3D kmalloc_obj(*rtwsdio->tx_handler_dat=
+a);
+>         if (!rtwsdio->tx_handler_data)
+>                 goto err_destroy_wq;
+>=20
+>         rtwsdio->tx_handler_data->rtwdev =3D rtwdev;
+> -       INIT_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
+> +       INIT_DELAYED_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_ha=
+ndler);
+>=20
+>         return 0;
+>=20
+> @@ -1539,6 +1595,7 @@ static void rtw_sdio_deinit_tx(struct rtw_dev *rtwd=
+ev)
+>         struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
+>         int i;
+>=20
+> +       cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
+>         destroy_workqueue(rtwsdio->txwq);
+>         kfree(rtwsdio->tx_handler_data);
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wire=
+less/realtek/rtw88/sdio.h
+> index 541d4302ec6b..f1f59f8301b8 100644
+> --- a/drivers/net/wireless/realtek/rtw88/sdio.h
+> +++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+> @@ -152,7 +152,7 @@ struct rtw_sdio_tx_data {
+>  };
+>=20
+>  struct rtw_sdio_work_data {
+> -       struct work_struct work;
+> +       struct delayed_work work;
+>         struct rtw_dev *rtwdev;
+>  };
+>=20
+> @@ -168,6 +168,7 @@ struct rtw_sdio {
+>         struct workqueue_struct *txwq;
+>         struct rtw_sdio_work_data *tx_handler_data;
+>         struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
+> +       bool queue_stopped[RTK_MAX_TX_QUEUE_NUM];
+>=20
+>         atomic_t free_pg_high;
+>         atomic_t free_pg_normal;
+> --
+> 2.55.0
 
