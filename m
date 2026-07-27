@@ -1,150 +1,172 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpo63.interia.pl (smtpo63.interia.pl [217.74.67.63])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9AC3175A94;
-	Mon, 27 Jul 2026 07:37:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556E23E49C2
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 07:46:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.63
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785137843; cv=none; b=plbwyffTQIvmJ7m9pGcC0f+F6S7jccZXOcRvmeFKF4Q+jxg7XUCpUpmWRSdql2ZxBKTOb+C3RzbPQ7KzG39j7DLLB0rBg0DMQOJDu0IjGWCU0BhMO0lpGkUTl8OYb/CxEfGWZ5d7ve7P5EEYhgjjI2j1SYoMaKRqSyl68Lkmlyc=
+	t=1785138409; cv=none; b=pstfk/xqJ6gGacHX+MaBXBjsMDKokeY904aYf5tQsLY/kEM5eBsCnmc0bLLsU+usxPwVdsRTT9MHQtXO6SlV7PWKD3y5rGAzUlRBJPXKlHimLwfMOK4KZI4PyXtrtkXzgR1bDdt+9zmASrKGWjplGmyYBVU3vCF39jUwj77I7As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785137843; c=relaxed/simple;
-	bh=Dlvc7a0BWI84OlH1ml8ExRpkcTbVawiwBjkQqZEgPXQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=HRzh1HAJ8xrsZ4QLruHwgqljK3pFn74NdnmMr7HkeaytLMc2P98rXjW8+q5KuEOTJETgq3T8pSrR4jPxCGuGSoVOqeNXePw12XIeAXtcyOZeQZosUJ0+IqrVgI0AbK1za4b3VYpUdYtknefqYtpDH9VuVXvwZpgCnwlwD/9FY50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=iCY0hWbL; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1785138409; c=relaxed/simple;
+	bh=hH3iMPyaoJ5mkOhv3F2jIxeUnzRMusFiIDzaEhvu5HY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pkwS3hg/9dL1ytyDtFWKyLpQAmN8DvsKquU5cX705VgPwriwvxY5/zFRVNzBI8wa55arGvikj1qvwyugBB58t1IkvHA4QE1IzMUFX9sdLrBzEoWo6Vtg64YD5LUpD6MQOoCmz5KUxw6h+ZGNsbLAk6rTo5SFcFruQULGhPsuGK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=bkBHqs+n; arc=none smtp.client-ip=217.74.67.63
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="iCY0hWbL"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R7bAwsD2930889, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785137830; bh=7qDp2V5bXBkkMNFxa9OUKROo4Iq+q7lUQAMwhy+XPK4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=iCY0hWbLGSIHqL+wRiFrG03CkDg6x81p4hfS7qIZh+BcusRiFx7tI+CuPjFEGwVeF
-	 Fqbltah4QzToKS8uVIRLfOKSRfUSATj+sqnL6oBZTimdsKmOUKrxRc2JUDMi7OpEme
-	 m20kUPOgm+GQvFJLU1+BLT5tzdr6oUDVlJDV5+8DpfKkXAZZMUfLTe5VIKnmJFt6a/
-	 uuynGH96ARnqYOt0gxFwSleO9maFrIP5e4cRc+3E2YbU5loSqtVRAI7ObGnD8wZE3/
-	 mxs/X2i0BiSI8aqzH5BhSrvaMMnc0rNKH02aNo2penK7amkfeAT7zRAZqXa5eSJIuu
-	 0koHfZ95GRFgw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R7bAwsD2930889
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 27 Jul 2026 15:37:10 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 15:37:10 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 27 Jul 2026 15:37:10 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v2 04/11] wifi: rtw88: fw: fix the reserved page upload on
- RTL8723BS
-Thread-Topic: [PATCH v2 04/11] wifi: rtw88: fw: fix the reserved page upload
- on RTL8723BS
-Thread-Index: AQHdHEb4g47EmczZqkKghtqj2fzBgLaA+60g
-Date: Mon, 27 Jul 2026 07:37:10 +0000
-Message-ID: <1415f8a22c99437f8137304690edbcb3@realtek.com>
-References: <20260725150427.93887-1-luka.gejak@linux.dev>
- <20260725150427.93887-5-luka.gejak@linux.dev>
-In-Reply-To: <20260725150427.93887-5-luka.gejak@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="bkBHqs+n"
+Received: from localhost (unknown [80.68.231.31])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
+	Mon, 27 Jul 2026 09:46:33 +0200 (CEST)
+From: Slawomir Stepien <sst@poczta.fm>
+To: syzkaller-bugs@googlegroups.com,
+	johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	syzbot@lists.linux.dev,
+	Slawomir Stepien <sst@poczta.fm>,
+	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Subject: [PATCH v2] mac80211: reject station addition if AP or MLO link is inactive
+Date: Mon, 27 Jul 2026 09:45:26 +0200
+Message-ID: <20260727074526.248393-1-sst@poczta.fm>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
+	t=1785138395; bh=pAG5JQKFpd6sLu0HpXWK8TdT6a3g/pT8xNcL5/8HWXg=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=bkBHqs+n9+XO5dc3MXQL0Kgb0KowY0fGWJpVfyzYXbNd7R+Ov4Tjdfa37wzbWt3k9
+	 HooSh64lzUE+EU7yDQF2r0SoMTTL2vAX802i8ORYx6V5bxCRMAHLVJiFBsMuBVo5Q5
+	 eLt6laR/4XJ7GW+DXFi06bIBuSfmmGdNCpt3SuIk=
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
+Currently, userspace can issue a netlink command to add a station to
+an AP or P2P GO interface before the AP has fully started, or before
+a specific MLO link has begun beaconing. This will e.g. lead to a
+WARN_ON trigger:
 
-[...]
+WARNING: net/mac80211/rate.c:51 at rate_control_rate_init+0x5a6/0x630
+...
+Call Trace:
+ <TASK>
+ rate_control_rate_init_all_links+0xf4/0x190 net/mac80211/rate.c:84
+ sta_apply_auth_flags+0x1bc/0x430 net/mac80211/cfg.c:2152
+ sta_apply_parameters+0x126d/0x1b10 net/mac80211/cfg.c:2618
+ ieee80211_add_station+0x3de/0x700 net/mac80211/cfg.c:2684
+ rdev_add_station+0xfc/0x290 net/wireless/rdev-ops.h:201
+ nl80211_new_station+0x1b4e/0x1fd0 net/wireless/nl80211.c:9505
 
-> diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wirele=
-ss/realtek/rtw88/fw.c
-> index dd6595b8175e..7c17086cac32 100644
-> --- a/drivers/net/wireless/realtek/rtw88/fw.c
-> +++ b/drivers/net/wireless/realtek/rtw88/fw.c
-> @@ -1477,10 +1477,14 @@ void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev=
-,
->         rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_LPS_PG_INFO, true);
->  }
->=20
-> +/* REG_DWBCN1_CTRL bit 20 (SW_BCN_SEL for port 0), relative to byte +2 *=
-/
-> +#define BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0     (20 - 16)
+Fix this by introducing a two-tiered active state check in
+ieee80211_add_station():
 
-define along its register REG_DWBCN1_CTRL
+1. Global AP State: Add an early return if the main wdev is an AP or
+   P2P GO and `sdata->u.ap.active` is false.
 
-> +
->  int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
->                                 u8 *buf, u32 size)
->  {
-> -       u8 bckp[3];
-> +       const bool is_8723bs_sdio =3D rtw_is_8723bs(rtwdev);
-> +       u8 bckp[4];
->         u8 val;
->         u16 rsvd_pg_head;
->         u32 bcn_valid_addr;
-> @@ -1510,13 +1514,28 @@ int rtw_fw_write_data_rsvd_page(struct rtw_dev *r=
-twdev, u16 pg_addr,
->         rtw_write8(rtwdev, REG_BCN_CTRL,
->                    (bckp[2] & ~BIT_EN_BCN_FUNCTION) | BIT_DIS_TSF_UDT);
->=20
-> -       if (rtw_hci_type(rtwdev) =3D=3D RTW_HCI_TYPE_PCIE) {
-> +       /* Clear BIT_EN_BCNQ_DL so the chip does not treat the reserved-p=
-age
-> +        * upload as a real beacon; otherwise BIT_BCN_VALID never asserts=
-. The
-> +        * vendor rtl8723bs driver does this unconditionally; rtw88 only =
-did it
-> +        * for PCIe, which left 8723BS SDIO's BCN_VALID handshake failing=
-.
-> +        */
-> +       if (rtw_hci_type(rtwdev) =3D=3D RTW_HCI_TYPE_PCIE || is_8723bs_sd=
-io) {
->                 val =3D rtw_read8(rtwdev, REG_FWHW_TXQ_CTRL + 2);
->                 bckp[1] =3D val;
->                 val &=3D ~(BIT_EN_BCNQ_DL >> 16);
->                 rtw_write8(rtwdev, REG_FWHW_TXQ_CTRL + 2, val);
->         }
->=20
-> +       /* 8723BS SDIO: point the SW beacon download path at port 0, else
-> +        * BIT_BCN_VALID is never asserted after the SDIO upload complete=
-s.
-> +        */
+2. MLO Link State: For Wi-Fi 7 MLO setups, links can start asynchronously.
+   Even if the global AP is active, a specific link might still be down.
+   If a specific link_id is requested, ensure the underlying physical link
+   has an allocated beacon (`link->u.ap.beacon`) before proceeding with
+   sta_info allocation.
 
-Currently, not use networking specific comment style anymore
+Assisted-by: Gemini:3.1-pro
+Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
+Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+---
+v2:
+* Move the logic inside ieee80211_add_station()
+* Check both the non-MLO AP/P2P state and MLO link state
+* Update subject line and commit message
 
-   /*
-    * first line
-    * second
-    */
+v1:
+* https://lore.kernel.org/linux-wireless/373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org/
+---
+ net/mac80211/cfg.c | 43 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 34 insertions(+), 9 deletions(-)
 
-> +       if (is_8723bs_sdio) {
-> +               val =3D rtw_read8(rtwdev, REG_DWBCN1_CTRL + 2);
-> +               bckp[3] =3D val;
-> +               val &=3D ~BIT(BIT_OFFSET_DWBCN1_SW_BCN_SEL_PORT0);
-
-define along its register REG_DWBCN1_CTRL. Then, here
-
- val &=3D ~(BIT_DWBCN1_SW_BCN_SEL_PORT0 >> 16);
-
-
-> +               rtw_write8(rtwdev, REG_DWBCN1_CTRL + 2, val);
-> +       }
-> +
->         ret =3D rtw_hci_write_data_rsvd_page(rtwdev, buf, size);
->         if (ret) {
->                 rtw_err(rtwdev, "failed to write data to rsvd page\n");
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 43f142624d33..c3a580ad97e9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2637,19 +2637,24 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct sta_info *sta;
+-	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+ 	int err;
+ 
+ 	lockdep_assert_wiphy(local->hw.wiphy);
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_P2P_GO) {
++		if (!sdata->u.ap.active)
++			return -ENETDOWN;
++	}
++
+ 	if (params->vlan) {
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_AP)
+ 			return -EINVAL;
+-	} else
+-		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	}
+ 
+ 	if (ether_addr_equal(mac, sdata->vif.addr))
+ 		return -EINVAL;
+@@ -2663,17 +2668,37 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		return -EINVAL;
+ 
+ 	/*
+-	 * If we have a link ID, it can be a non-MLO station on an AP MLD,
+-	 * but we need to have a link_mac in that case as well, so use the
+-	 * STA's MAC address in that case.
++	 * If we have a link ID:
++	 * (1) check if it is valid, up and beaconing
++	 * (2) it can be a non-MLO station on an AP MLD, but we need to have a
++	 * link_mac in that case as well, so use the STA's MAC address in that
++	 * case.
+ 	 */
+-	if (params->link_sta_params.link_id >= 0)
++	if (params->link_sta_params.link_id >= 0) {
++		int link_id = params->link_sta_params.link_id;
++		struct ieee80211_link_data *link;
++		struct ieee80211_sub_if_data *wdev_sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++		if (link_id >= IEEE80211_MLD_MAX_NUM_LINKS)
++			return -EINVAL;
++
++		link = sdata_dereference(wdev_sdata->link[link_id], wdev_sdata);
++		if (!link)
++			return -ENOLINK;
++
++		if (wdev_sdata->vif.type == NL80211_IFTYPE_AP ||
++		    wdev_sdata->vif.type == NL80211_IFTYPE_P2P_GO) {
++			if (!rcu_access_pointer(link->u.ap.beacon))
++				return -ENETDOWN;
++		}
++
+ 		sta = sta_info_alloc_with_link(sdata, mac,
+-					       params->link_sta_params.link_id,
++					       link_id,
+ 					       params->link_sta_params.link_mac ?: mac,
+ 					       GFP_KERNEL);
+-	else
++	} else {
+ 		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
++	}
+ 
+ 	if (!sta)
+ 		return -ENOMEM;
+-- 
+2.55.0
 
