@@ -1,64 +1,65 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1933E2609DC;
-	Mon, 27 Jul 2026 02:04:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DCAF2609DC;
+	Mon, 27 Jul 2026 02:04:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785117857; cv=none; b=u3LyyYlHzZhLDmwLFD1VnPFviuBWw+8+vzFKlYuxdvf7SJOxF8Hw5yEZhw8vcwucqUSUAkDH8DAkMHsfMUupf8/zWCOzjpOMLnabXNatq5yz7dQ0mcOyLyfhtla1C91CpXWUEMgCRrztdOPBgd2ZZWB4IBkr42J6P7/VDuSdvNI=
+	t=1785117896; cv=none; b=PB9yCbM23Ir+WMiaHEOjLs0cfKxR6I+sg+Z+epUzt/RPP/gcX6Wlbt6I9bimBVTafKXccyvAJ8jU21QJJyasVvF6DkkXEEHs/221pDI96A0ATLAs0vddbW7Yx6PRoRNga0MPKLqmVa6YUcxNHy/+oT0OIMr2eFgIdlPUtxmXZzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785117857; c=relaxed/simple;
-	bh=Knbi0/bQGIPMjVin7nUYX2fq3HlpB3NJnUXU0k66x5o=;
+	s=arc-20240116; t=1785117896; c=relaxed/simple;
+	bh=qkuWlV4NNJoBjCtTZWfvXsRTJUPE9FjrQ/ixkf0B7kI=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=INUtDkMi1mzzCUv9TlmxXcJPuEEKQqah0p8ExfLvzi9gm8ZFyyipbLTZx/yBw+5DrlDwumMDHU1T48DaNtQbhoE90glqTHrVhoeQOpOn3JPBdqdOy+O+7wOq3FXztuSw3EM4d+HiZMFJOTB7ES/54d7Q5lSIgUuoGgXq3sxyqgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=mw8txT8a; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=hAGnehzR/yuOZfuApwQ0BUaisd7hdTflJzQnmc64MPBDGg7lgDiSSw35h8pip+d+R/qcIXfmTbH2//LyVCS7xJ7qkOU20hSGtjOmNBCNniqV1gIyt21rK8bpgI3GYZwrxkxEsBZfX2+f88x7idxYWiZPW+s5bOVhcS1pnSRBWwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=bhUfTR/I; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="mw8txT8a"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R243Zt82753093, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="bhUfTR/I"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R24pD622754143, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785117843; bh=Knbi0/bQGIPMjVin7nUYX2fq3HlpB3NJnUXU0k66x5o=;
+	t=1785117891; bh=qkuWlV4NNJoBjCtTZWfvXsRTJUPE9FjrQ/ixkf0B7kI=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=mw8txT8aKvld1Q8H1liAC8L7MoXolmcs0Z+hBC+Ie2W0EQGqhtML4pJKzD08bJsCR
-	 PUNGsoI51lqadvxF6HTtoa5xwR6zQLMq1OdW8+BhX45sUpJq/z8FF4tPQX551EZd4d
-	 Cjyv46NBK2fLNkQ1mD3aXzumxtyrg0XBPZbOzzMoZtBffg1+RoLUE4Mymmi+mavkqi
-	 JkZ8kSvL8s73B7wA0z0pCZ8nqrvYXkNJD+sZPM4ehJdRTEicC/sKWm6QZlhitZ3bhR
-	 yvC+m+2Za62CbAQOT/hKPihHOWGQF6QFHG203quArccLqnuJ/HsEJmx07b9y8/LXIR
-	 qVhAhB0RWLtpQ==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R243Zt82753093
+	b=bhUfTR/IHoutEvgsLfu1ts+L2b1KPrcrjQR1VehKzFLXU1WfJOm4/J6v1OoRsDGj7
+	 NpY92CeQ5mLwBtArHBncNRkU9KO9oA0e9GvGhXML1gCZ6xunkVW7V+ceIYqfIPEt3i
+	 azv75yLmsFtR8bqKPr2HA6mHrVyxhrEhfu9pzlgQsroKIqFtdU2+larI/AmZ9rkFDs
+	 7L3Ecp9bI+535LZH4y8oJjTW7ru4A1S6x51xa5IGSvRNXmvutOGY+5g73k8Z9QQ0TQ
+	 nhbdY3ivnjdVDhRP3Slq88cqvpLhWmOKwrg02s0Z4EF/fV4fFjQ20frH6Yam8PilpR
+	 3PYXuC6TSrupQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R24pD622754143
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 27 Jul 2026 10:04:03 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+	Mon, 27 Jul 2026 10:04:51 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 10:04:03 +0800
+ 15.2.2562.17; Mon, 27 Jul 2026 10:04:51 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 10:04:03 +0800
+ 15.2.2562.17; Mon, 27 Jul 2026 10:04:51 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 27 Jul 2026 10:04:02 +0800
+ 15.02.2562.017; Mon, 27 Jul 2026 10:04:51 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Josh Stevenson <josh@recursiveintell.com>,
+To: Sang-Heon Jeon <ekffu200098@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "kvalo@kernel.org" <kvalo@kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [BUG] rtw89_8852bte: Recurring firmware crashes (LBC watchdog / SER)  on RTL8852BE-VT despite ASPM and PS disabled
-Thread-Topic: [BUG] rtw89_8852bte: Recurring firmware crashes (LBC watchdog /
- SER)	 on RTL8852BE-VT despite ASPM and PS disabled
-Thread-Index: AQHdHTKWLp/75gQPtE2Zngp8BYWDzbaAlSKg
-Date: Mon, 27 Jul 2026 02:04:02 +0000
-Message-ID: <af2d7d55b7834ee1b159133bfd9ae736@realtek.com>
-References: <18c5e9fa2f7b7f5e.f55361b117e95aa2.460cfd9fd11f5e9a@nobara-pc>
-In-Reply-To: <18c5e9fa2f7b7f5e.f55361b117e95aa2.460cfd9fd11f5e9a@nobara-pc>
+Subject: RE: [PATCH rtw-next v2 1/2] wifi: rtlwifi: rtl8821ae: remove
+ conditional return with no effect
+Thread-Topic: [PATCH rtw-next v2 1/2] wifi: rtlwifi: rtl8821ae: remove
+ conditional return with no effect
+Thread-Index: AQHdHQRccTWbR+yjzUO4+qCV+SikebaAnn5g
+Date: Mon, 27 Jul 2026 02:04:51 +0000
+Message-ID: <a46d352db44243d0a18e2312d614cde1@realtek.com>
+References: <20260726134034.1385834-1-ekffu200098@gmail.com>
+ <20260726134034.1385834-2-ekffu200098@gmail.com>
+In-Reply-To: <20260726134034.1385834-2-ekffu200098@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -66,115 +67,14 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Sm9zaCBTdGV2ZW5zb24gPGpvc2hAcmVjdXJzaXZlaW50ZWxsLmNvbT4gd3JvdGU6DQo+IEhlbGxv
-LA0KPiANCj4gSSdtIGV4cGVyaWVuY2luZyByZWN1cnJpbmcgZmlybXdhcmUgY3Jhc2hlcyBvbiBh
-IFJlYWx0ZWsgUlRMODg1MkJFLVZUDQo+IFdpLUZpIGFkYXB0ZXIuIFRoZSBjcmFzaGVzIGhhcHBl
-biBldmVyeSAzMCBtaW51dGVzIHRvIHNldmVyYWwgaG91cnMNCj4gZHVyaW5nIG5vcm1hbCB1c2Us
-IHdpdGggOTkwIGNyYXNoIGV2ZW50cyBsb2dnZWQgaW4gdGhlIGN1cnJlbnQgYm9vdA0KPiAoMiBk
-YXlzIDExIGhvdXJzIHVwdGltZSkuIFRoZSBmaXJtd2FyZSBhdXRvLXJlY292ZXJzIHZpYSBTRVIg
-KFN5c3RlbQ0KPiBFcnJvciBSZWNvdmVyeSkgZWFjaCB0aW1lLCBidXQgY29ubmVjdGl2aXR5IGRy
-b3BzIGJyaWVmbHkuDQoNCkR1cmluZyB0aGUgcmVjb3ZlcnksIGl0IGNhbid0IFRYL1JYLiBCdXQg
-ZGlkIHlvdSBtZWFuIGl0IGRpc2Nvbm5lY3RlZCBmcm9tDQpBUD8gUGxlYXNlIHNoYXJlIGZ1bGwg
-a2VybmVsIGxvZy4gDQoNCj4gDQo+IFRoaXMgaXMgYSBrbm93biBpc3N1ZSByZXBvcnRlZCBieSBt
-dWx0aXBsZSB1c2VycyAoZS5nLiwgQXJjaCBMaW51eA0KPiBmb3J1bSBwb3N0IFsxXSksIGJ1dCBJ
-IGhhdmUgbm90IGZvdW5kIGFuIGV4aXN0aW5nIHVwc3RyZWFtIGJ1ZyByZXBvcnQNCj4gd2l0aCBm
-dWxsIGRpYWdub3N0aWMgZGF0YS4NCj4gDQo+IFsxXSBodHRwczovL2Jicy5hcmNobGludXgub3Jn
-L3ZpZXd0b3BpYy5waHA/aWQ9MjkwNDgwDQoNClRoZSByZXBvcnQgd2FzIFJUTDg4NTJCRSBpbnN0
-ZWFkLiBMZXQgbWUgaWdub3JlIGl0Lg0KDQo+IA0KPiAjIyBIYXJkd2FyZQ0KPiANCj4gLSBMYXB0
-b3A6IEhQIExhcHRvcCAxNS1mYzB4eHggKGJhc2Vib2FyZCA4REM3KQ0KPiAtIFdpLUZpOiBSZWFs
-dGVrIFJUTDg4NTJCRS1WVCBQQ0llIDgwMi4xMWF4DQo+ICAgUENJIElEOiAxMGVjOmI1MjAgKHN1
-YnN5c3RlbSAxMGVjOmI1MjApDQoNCkNvbmZpcm1lZCB0aGlzIElEIGlzIFJUTDg4NTJCRS1WVC4g
-DQoNCj4gICBNb2R1bGU6IHJ0dzg5Xzg4NTJidGUgKGRlcGVuZHMgb24gcnR3ODlfcGNpLCBydHc4
-OV84ODUyYikNCj4gLSBDUFU6IEFNRCBSeXplbiA3IDc3MzBVDQo+IC0gT1M6IE5vYmFyYSA0MyAo
-YmFzZWQgb24gRmVkb3JhIDQ0KQ0KPiAtIEtlcm5lbDogNy4xLjMtMjAwLm5vYmFyYS5mYzQ0Lng4
-Nl82NA0KPiAtIEZpcm13YXJlIHBhY2thZ2U6IGxpbnV4LWZpcm13YXJlLTIwMjYwNjIyLTEuZmM0
-NA0KPiAtIEZpcm13YXJlIGZpbGVzOiBydHc4ODUyYl9mdy5iaW4sIHJ0dzg4NTJiX2Z3LTEuYmlu
-LCBydHc4ODUyYl9mdy0yLmJpbg0KPiAgIChkYXRlZCAyMDI2LTA2LTIyKQ0KDQpUaGUgZmlybXdh
-cmUgZm9yIFJUTDg4NTJCRS1WVCBpcyBydHc4ODUyYnRfZncqLmJpbg0KDQpQbGVhc2UgY2hlY2sg
-dGhlIHZlcnNpb24geW91IGFyZSB1c2luZyBieSBrZXJuZWwgbG9nLCBsaWtlOg0KDQpydHc4OV84
-ODUyYnRlIDAwMDA6MDM6MDAuMDogbG9hZGVkIGZpcm13YXJlIHJ0dzg5L3J0dzg4NTJidF9mdy0x
-LmJpbg0KcnR3ODlfODg1MmJ0ZSAwMDAwOjAzOjAwLjA6IGVuYWJsaW5nIGRldmljZSAoMDEwMCAt
-PiAwMTAzKQ0KcnR3ODlfODg1MmJ0ZSAwMDAwOjAzOjAwLjA6IEZpcm13YXJlIHZlcnNpb24gMC4y
-OS4xMjcuMCAoZjg2OGFhMTgpLCBjbWQgdmVyc2lvbiAwLCB0eXBlIDUNCnJ0dzg5Xzg4NTJidGUg
-MDAwMDowMzowMC4wOiBGaXJtd2FyZSB2ZXJzaW9uIDAuMjkuMTI3LjAgKGY4NjhhYTE4KSwgY21k
-IHZlcnNpb24gMCwgdHlwZSAzDQoNCihBdHRhY2hpbmcgZnVsbCBsb2cgd291bGQgYmUgYmV0dGVy
-IHRvIGFuYWx5emUpDQoNCj4gDQo+ICMjIEFscmVhZHktdHJpZWQgbWl0aWdhdGlvbnMgKG5vIGVm
-ZmVjdCkNCj4gDQo+IFRoZSBmb2xsb3dpbmcgbW9kdWxlIHBhcmFtZXRlcnMgYXJlIHNldCBpbiAv
-ZXRjL21vZHByb2JlLmQvIGFuZA0KPiBjb25maXJtZWQgYWN0aXZlLCBidXQgY3Jhc2hlcyBwZXJz
-aXN0Og0KPiANCj4gICBvcHRpb25zIHJ0dzg5X3BjaSBkaXNhYmxlX2Nsa3JlcT15IGRpc2FibGVf
-YXNwbV9sMT15IGRpc2FibGVfYXNwbV9sMXNzPXkNCj4gICBvcHRpb25zIHJ0dzg5X2NvcmUgZGlz
-YWJsZV9wc19tb2RlPXkNCj4gDQo+IE5ldHdvcmtNYW5hZ2VyIFdpLUZpIHBvd2Vyc2F2ZSBpcyBz
-ZXQgdG8gZGlzYWJsZSAodmFsdWUgMikuDQo+IGl3IGRldiBzaG93cyAiUG93ZXIgc2F2ZTogb2Zm
-Ii4NCg0KSSB0aGluayB5b3UgaGF2ZSBkb25lIGV4cGVyaW1lbnRzIEkgd2FudCB0byBrbm93Lg0K
-DQo+IA0KPiAjIyBDcmFzaCBwYXR0ZXJuDQo+IA0KPiBDcmFzaGVzIG9jY3VyIGluIGJ1cnN0cyBv
-ZiAzIFNFUiBldmVudHM6DQo+ICAgMS4gUl9BWF9MQkNfV0FUQ0hET0c9MHgwMDAwMDA4MQ0KPiAg
-IDIuIFNFUiBjYXRjaGVzIGVycm9yOiAweDEwMDAgKEwyIHJlc2V0KQ0KPiAgIDMuIFNFUiBjYXRj
-aGVzIGVycm9yOiAweDEwMDEgKEwxIHJlc2V0KQ0KPiAgIDQuIFNFUiBjYXRjaGVzIGVycm9yOiAw
-eDEwMDIgKGZpcm13YXJlIHJlc2V0KQ0KPiANCj4gRWFjaCBidXJzdCB0YWtlcyB+MzBtcy4gVGhl
-IGZpcm13YXJlIHRoZW4gYXV0by1yZWNvdmVycyBhbmQNCj4gTmV0d29ya01hbmFnZXIgcmVjb25u
-ZWN0cyB3aXRoaW4gYSBmZXcgc2Vjb25kcy4NCj4gDQo+IFRvdGFsIGNyYXNoIGV2ZW50cyBhY3Jv
-c3MgMTUgYm9vdHM6IDEzLDM5NSsNCj4gUGVhayBib290OiAzLDA2MCBjcmFzaGVzIGluIG9uZSBz
-ZXNzaW9uLg0KPiANCj4gIyMgQ29tcGxldGUgY3Jhc2ggbG9nIChvbmUgcmVwcmVzZW50YXRpdmUg
-ZXZlbnQpDQo+IA0KPiBKdWwgMjQgMDE6MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1
-MmJ0ZSAwMDAwOjAxOjAwLjA6IFJfQVhfTEJDX1dBVENIRE9HPTB4MDAwMDAwODENCj4gSnVsIDI0
-IDAxOjIwOjI2IG5vYmFyYS1wYyBrZXJuZWw6IHJ0dzg5Xzg4NTJidGUgMDAwMDowMTowMC4wOiA8
-LS0tDQo+IEp1bCAyNCAwMToyMDoyNiBub2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUyYnRlIDAw
-MDA6MDE6MDAuMDogU0VSIGNhdGNoZXMgZXJyb3I6IDB4MTAwMA0KPiBKdWwgMjQgMDE6MjA6MjYg
-bm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAwMDAwOjAxOjAwLjA6IEZXIHN0YXR1cyA9
-IDB4YTEwMDExMDANCj4gSnVsIDI0IDAxOjIwOjI2IG5vYmFyYS1wYyBrZXJuZWw6IHJ0dzg5Xzg4
-NTJidGUgMDAwMDowMTowMC4wOiBGVyBCQURBRERSID0gMHgwDQo+IEp1bCAyNCAwMToyMDoyNiBu
-b2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUyYnRlIDAwMDA6MDE6MDAuMDogRlcgRVBDL1JBID0g
-MHgwDQo+IEp1bCAyNCAwMToyMDoyNiBub2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUyYnRlIDAw
-MDA6MDE6MDAuMDogRlcgTUlTQyA9IDB4Yjg5MDA2MzUNCj4gSnVsIDI0IDAxOjIwOjI2IG5vYmFy
-YS1wYyBrZXJuZWw6IHJ0dzg5Xzg4NTJidGUgMDAwMDowMTowMC4wOiBSX0FYX0hBTFRfQzJIID0g
-MHgxMDAxDQo+IEp1bCAyNCAwMToyMDoyNiBub2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUyYnRl
-IDAwMDA6MDE6MDAuMDogUl9BWF9TRVJfREJHX0lORk8gPSAweDEwMDAwMDANCj4gSnVsIDI0IDAx
-OjIwOjI2IG5vYmFyYS1wYyBrZXJuZWw6IHJ0dzg5Xzg4NTJidGUgMDAwMDowMTowMC4wOiBbRVJS
-XWZ3IFBDID0gMHhiODk4ODE1Yg0KPiBKdWwgMjQgMDE6MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDog
-cnR3ODlfODg1MmJ0ZSAwMDAwOjAxOjAwLjA6IFtFUlJdZncgUEMgPSAweGI4OTg4MGYzDQo+IEp1
-bCAyNCAwMToyMDoyNiBub2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUyYnRlIDAwMDA6MDE6MDAu
-MDogW0VSUl1mdyBQQyA9IDB4Yjg5ODgxNWQNCj4gWy4uLiBtb3JlIGZ3IFBDIGVudHJpZXMgLi4u
-XQ0KPiBKdWwgMjQgMDE6MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAwMDAw
-OjAxOjAwLjA6IFNFUiBjYXRjaGVzIGVycm9yOiAweDEwMDENCj4gSnVsIDI0IDAxOjIwOjI2IG5v
-YmFyYS1wYyBrZXJuZWw6IHJ0dzg5Xzg4NTJidGUgMDAwMDowMTowMC4wOiBGVyBzdGF0dXMgPSAw
-eGExMDA4MTAwDQo+IEp1bCAyNCAwMToyMDoyNiBub2JhcmEtcGMga2VybmVsOiBydHc4OV84ODUy
-YnRlIDAwMDA6MDE6MDAuMDogRlcgQkFEQUREUiA9IDB4MA0KPiBKdWwgMjQgMDE6MjA6MjYgbm9i
-YXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAwMDAwOjAxOjAwLjA6IEZXIEVQQy9SQSA9IDB4
-MA0KPiBKdWwgMjQgMDE6MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAwMDAw
-OjAxOjAwLjA6IEZXIE1JU0MgPSAweGI4OTg2NjU3DQo+IEp1bCAyNCAwMToyMDoyNiBub2JhcmEt
-cGMga2VybmVsOiBydHc4OV84ODUyYnRlIDAwMDA6MDE6MDAuMDogUl9BWF9IQUxUX0MySCA9IDB4
-MTAwMg0KPiBKdWwgMjQgMDE6MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAw
-MDAwOjAxOjAwLjA6IFJfQVhfU0VSX0RCR19JTkZPID0gMHhmMTAwMDAwMA0KPiBKdWwgMjQgMDE6
-MjA6MjYgbm9iYXJhLXBjIGtlcm5lbDogcnR3ODlfODg1MmJ0ZSAwMDAwOjAxOjAwLjA6IFtFUlJd
-ZncgUEMgPSAweGI4OWExZWEzDQo+IFsuLi4gbW9yZSBmdyBQQyBlbnRyaWVzIC4uLl0NCj4gSnVs
-IDI0IDAxOjIwOjI2IG5vYmFyYS1wYyBrZXJuZWw6IHJ0dzg5Xzg4NTJidGUgMDAwMDowMTowMC4w
-OiBTRVIgY2F0Y2hlcyBlcnJvcjogMHgxMDAyDQo+IA0KPiAjIyBPYnNlcnZhdGlvbnMNCj4gDQo+
-IDEuIFRoZSBjcmFzaCB0cmlnZ2VyIGlzIFJfQVhfTEJDX1dBVENIRE9HPTB4MDAwMDAwODEg4oCU
-IHRoZSBMQkMNCj4gICAgKExQUyBCb3VuZGFyeSBDaGVjaykgd2F0Y2hkb2cgZmlyZXMsIGluZGlj
-YXRpbmcgdGhlIGZpcm13YXJlDQo+ICAgIHN0b3BwZWQgcmVzcG9uZGluZy4NCj4gDQo+IDIuIEZX
-IEJBREFERFIgdmFyaWVzOiAweDAsIDB4NDQ0NCwgMHhhYWFhIOKAlCBzdWdnZXN0aW5nIGRpZmZl
-cmVudA0KPiAgICBjcmFzaCBzaXRlcyBpbiB0aGUgZmlybXdhcmUuDQo+IA0KPiAzLiBGVyBFUEMv
-UkEgaXMgYWx3YXlzIDB4MC4NCj4gDQo+IDQuIFRoZSBmdyBQQyB2YWx1ZXMgY2x1c3RlciBhcm91
-bmQgMHhiODk4X3h4eHggYW5kIDB4Yjg5YV94eHh4LA0KPiAgICBzdWdnZXN0aW5nIHRoZSBmaXJt
-d2FyZSBpcyBjcmFzaGluZyBpbiB0aGUgc2FtZSBjb2RlIHJlZ2lvbnMuDQo+IA0KPiA1LiBEaXNh
-YmxpbmcgQVNQTSwgY2xrcmVxLCBhbmQgcG93ZXIgc2F2ZSBtb2RlIGRvZXMgTk9UIHByZXZlbnQN
-Cj4gICAgdGhlIGNyYXNoZXMuIFRoaXMgc3VnZ2VzdHMgdGhlIHJvb3QgY2F1c2UgaXMgaW4gdGhl
-IGZpcm13YXJlDQo+ICAgIGl0c2VsZiwgbm90IGluIHRoZSBkcml2ZXIncyBwb3dlciBtYW5hZ2Vt
-ZW50IGludGVncmF0aW9uLg0KPiANCj4gNi4gQXV0by1yZWNvdmVyeSB2aWEgU0VSIHdvcmtzIHJl
-bGlhYmx5IOKAlCB0aGUgV2ktRmkgcmVjb25uZWN0cw0KPiAgICBldmVyeSB0aW1lLiBCdXQgdGhl
-IGJyaWVmIGNvbm5lY3Rpdml0eSBkcm9wcyBhcmUgZGlzcnVwdGl2ZS4NCj4gDQo+ICMjIFF1ZXN0
-aW9ucw0KPiANCj4gMS4gSXMgdGhpcyBhIGtub3duIGZpcm13YXJlIGJ1Zz8gSXMgdGhlcmUgYSBu
-ZXdlciBmaXJtd2FyZSB2ZXJzaW9uDQo+ICAgIGF2YWlsYWJsZSBvciBpbiBkZXZlbG9wbWVudD8N
-Cg0KWWVzLCBidXQgSSdkIHJlcG9ydCB0aGUgaXNzdWUgeW91IGFyZSBlbmNvdW50ZXJpbmcgdG8g
-aW50ZXJuYWwgZXhwZXJ0cy4NClBsZWFzZSBzaGFyZSBmdWxsIGtlcm5lbCBsb2cgKG1heWJlIHZp
-YSBwcml2YXRlIG1haWwgaWYgeW91IGRvbid0IHdhbnQNCnRvIGV4cG9zZSBwcml2YWN5KQ0KDQo+
-IA0KPiAyLiBBcmUgdGhlcmUgYW55IGRyaXZlci1zaWRlIHdvcmthcm91bmRzIHRvIHJlZHVjZSBM
-QkMgd2F0Y2hkb2cNCj4gICAgdHJpZ2dlcnMgKGUuZy4sIGFkanVzdGluZyB3YXRjaGRvZyB0aW1l
-b3V0LCBkaXNhYmxpbmcgTEJDKT8NCg0KSSB3aWxsIGxlYXZlIHRoZSBxdWVzdGlvbiB0byBpbnRl
-cm5hbCBleHBlcnRzIHdoZW4gSSBjb2xsZWN0IHRoZSBsb2cuDQoNCj4gDQo+IDMuIFdvdWxkIGEg
-bmV3ZXIga2VybmVsIHZlcnNpb24gKGUuZy4sIG1haW5saW5lKSBoYXZlIHJ0dzg5DQo+ICAgIHBh
-dGNoZXMgdGhhdCBhZGRyZXNzIHRoaXM/DQoNCk5vIHBhdGNoIHJlbGF0ZWQgdGhpcyBvYnZpb3Vz
-bHkuIA0KDQo+IA0KPiA0LiBJcyB0aGVyZSBhZGRpdGlvbmFsIGRpYWdub3N0aWMgZGF0YSBJIGNh
-biBjb2xsZWN0IHRvIGhlbHANCj4gICAgbmFycm93IGRvd24gdGhlIHJvb3QgY2F1c2U/DQoNCkNv
-bGxlY3QgdGhlIGxvZyB3aXRoIFNFUiBjYXNlcyBhcyBtYW55IGFzIHlvdSBjYW4sIGFuZCBzaGFy
-ZSB0byBtZS4NCg0KUGluZy1LZQ0KDQo=
+Sang-Heon Jeon <ekffu200098@gmail.com> wrote:
+> Both branches of the check return the same value, so the check has
+> no effect. Remove it and return the value directly.
+>=20
+> This is the result of running the Coccinelle script from
+> scripts/coccinelle/misc/cond_return_no_effect.cocci.
+>=20
+> Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
+
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+
