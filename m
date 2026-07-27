@@ -1,57 +1,58 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61E381F91D6;
-	Mon, 27 Jul 2026 02:06:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10F8C3451B2;
+	Mon, 27 Jul 2026 02:09:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785118011; cv=none; b=l+Rj2WhdvTOvGaVWEXTCUf3dNKYJ07+dmnwVXsXRA1p66RMxM6AHxV8lrNfrAihNWqisH0DTq/WLT/yf20tuCidOWajv/kvEL3rLyse18wobDNpvHmfzZXdnUQ43o6uMCvwCdshLMEPkFQVGlztPigvFghrLhOz49ZLT15PT0RI=
+	t=1785118171; cv=none; b=Pw+iBpQKPoophg6xqmKvaZj4rOYlz3V7ax/RHPNicqC5vqYExPKar7Qn/v7cyXUVg3bopB0/bcjubysRzX17vUVWDz2gKAHv1F6qx7NCVrNl5JTvfsS8xGx0oSEghkYdqaoMv7YXFh9Bn8D2BbC8ny6yfBs4sDAwVjIB4v+0RIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785118011; c=relaxed/simple;
-	bh=cEqmGPDboYvQfniQZNXUK/YpbfWEbTKZHSZTNmy4fSQ=;
+	s=arc-20240116; t=1785118171; c=relaxed/simple;
+	bh=Kj0OIH8JwIHeQBVxErMpaIpfC0RuImMMvJyBUuI9ruU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=j0O1PXflHu/aXukzEdIQk4w1WVW64+lQGfimpuOHa9mQKlHLUBwhgPPVuubfC4icPOJylmlCcMLxs5u4lclZHXqCgp+GLIU0iTosFha3TILGNwCGaNye0cfSQsAih28GiSixipvKd9zMYbACQsevlEDcJvntIRXcxB/ZNd9DCDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=R0RYWf5g; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=aydXs0/SLnI9BUZoZPHzW2ZymH30IQzobcHQMde+moXMfmmL17NlWYQVnzNPE49bzC8n4g3y3DEZM2L3WtCVmzNNVFnaiI41XInePyc99QJrVe/74yp+kzpyRZN55v2eezDNzMdN7/im9kci6jb6PfUw5WxOi3FkXJ/LsyChOTY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=X0qnaTzI; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="R0RYWf5g"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R26loyE2755114, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="X0qnaTzI"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R29QlqC2756421, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785118007; bh=cEqmGPDboYvQfniQZNXUK/YpbfWEbTKZHSZTNmy4fSQ=;
+	t=1785118166; bh=Kj0OIH8JwIHeQBVxErMpaIpfC0RuImMMvJyBUuI9ruU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=R0RYWf5gMFoYnvTJr75PYxp+fOVJtCdkKORG5hKraY2FB3xCeYddRgBDD7brYhdCs
-	 F9Fdz3uK9qgdr0ZPDz0uCiOTeCF/MS0dxbt5eP686Xe7KsldwIzauuCM5UhY7OKin1
-	 n+uS8RmfP48e6kllKK70rMtByRLX7JDGE/kp8NOymlTa6Kl+i67GoikoCikFFnqKmM
-	 9PeKM15ON71v9vmq4Tz3Hxml2tWGZ3hL/KFxOY7PEl+V07rylSM5NZvHTbxM2m16IE
-	 ttkcEmAiGaWjDpMoXW9NUKd15VAQNTio3TLz0SjTVdA3EcUTgu5Ap/870uR4zkdtcC
-	 Ivuec8995/Zjg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R26loyE2755114
+	b=X0qnaTzI/dStSJB9POPSnpIMfbqe7ToJDpHmbiSE8KB9d7No+mxekdl7NQkEcy8U4
+	 1+OL92gxeuSoDsxLV/vHS8XNHSSPMg37jnwWmV09UG4kGgM8rV0NrPmP5aGHxx97HV
+	 Qb7lzpg6Ek9b8xBHsBGY7XBj/rPsLdehlP+WCPn3etVLNBmSs0LoxnIMxo5a0PVy3g
+	 xayYwMLwMCoEJda8hyMVuX2uaYG2z2YMkr0Tsds7XMj3WYW5Asp8lzdS8MkQhfUEPV
+	 G77ibYBunn2E5qnhtCg1pGxBDUc76FYGrn4LmIo4L5Ni5W2ZmglAL8whVeBghNtDFM
+	 cKIJ7/9W+sh/g==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R29QlqC2756421
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 27 Jul 2026 10:06:47 +0800
+	Mon, 27 Jul 2026 10:09:26 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Mon, 27 Jul 2026 10:06:47 +0800
+ 15.2.2562.17; Mon, 27 Jul 2026 10:09:25 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Mon, 27 Jul 2026 10:06:46 +0800
+ 15.02.2562.017; Mon, 27 Jul 2026 10:09:25 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: Sang-Heon Jeon <ekffu200098@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, Sang-Heon Jeon <ekffu200098@gmail.com>
 CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v2 2/2] wifi: rtw89: remove conditional return
- with no effect
-Thread-Topic: [PATCH rtw-next v2 2/2] wifi: rtw89: remove conditional return
- with no effect
-Thread-Index: AQHdHQRdh1DYuy98QUOHI3o+oSCrf7aAnrjA
-Date: Mon, 27 Jul 2026 02:06:46 +0000
-Message-ID: <67544abb483b49cf859ce38b2bcf5d8e@realtek.com>
+Subject: RE: [PATCH rtw-next v2 1/2] wifi: rtlwifi: rtl8821ae: remove
+ conditional return with no effect
+Thread-Topic: [PATCH rtw-next v2 1/2] wifi: rtlwifi: rtl8821ae: remove
+ conditional return with no effect
+Thread-Index: AQHdHQRccTWbR+yjzUO4+qCV+SikebaAnn5ggAABCcA=
+Date: Mon, 27 Jul 2026 02:09:25 +0000
+Message-ID: <278a0e98f19847368eb40c330f39b10a@realtek.com>
 References: <20260726134034.1385834-1-ekffu200098@gmail.com>
- <20260726134034.1385834-3-ekffu200098@gmail.com>
-In-Reply-To: <20260726134034.1385834-3-ekffu200098@gmail.com>
+ <20260726134034.1385834-2-ekffu200098@gmail.com>
+ <a46d352db44243d0a18e2312d614cde1@realtek.com>
+In-Reply-To: <a46d352db44243d0a18e2312d614cde1@realtek.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -63,19 +64,22 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-Sang-Heon Jeon <ekffu200098@gmail.com> wrote:
-> Both branches of the check return the same value, so the check has
-> no effect. Remove it and return the value directly.
+
+Ping-Ke Shih <pkshih@realtek.com> wrote:
+> Sang-Heon Jeon <ekffu200098@gmail.com> wrote:
+> > Both branches of the check return the same value, so the check has
+> > no effect. Remove it and return the value directly.
+> >
+> > This is the result of running the Coccinelle script from
+> > scripts/coccinelle/misc/cond_return_no_effect.cocci.
+> >
+> > Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
 >=20
-> This is the result of running the Coccinelle script from
-> scripts/coccinelle/misc/cond_return_no_effect.cocci.
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 >=20
-> Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
 
-I'd update the subject to be more specific during it gets merged.
+For the record, I'd make subject more specific:=20
 
-"wifi: rtw89: remove conditional return with no effect in sys_init_*()"
-
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-
+wifi: rtlwifi: rtl8821ae: remove conditional return with no effect in _rtl8=
+821ae_llt_write()
 
