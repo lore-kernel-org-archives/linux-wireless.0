@@ -1,86 +1,93 @@
-Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6956A4156F5;
-	Mon, 27 Jul 2026 13:25:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB1B417BC1
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:26:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785158716; cv=none; b=b4ZmKtF2fGS06d3URRPiNAu5psDbyJYyVUwESkg53rDrx3fKJATAO/ty2hlAhQDHEcw02f0B1JYbnFHIqdRaOStT/QjPGTaDT/l2MecQQTNLQNlHm9ASrb2n0mKOk3wVMV78hILOZUq+xS3J/kjmqHSp/nRbQ9yS2anA9R6xziI=
+	t=1785158809; cv=none; b=JB+P46qRFwOEibpb3QH1n9dKmcXUSmGB+NFVQOn4JhFY1xPgZmPSy/3WBlC+dq+RKgvaBE3+IAZET3GAAvHIVbBiAB0v44mAsM3jV+ndwi6FUkupVWJGgKh/iJCIM/E4iyo5Fqyt13quNJ+qGyl2ijj/Uj0IsRPkJw/FVF3XuQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785158716; c=relaxed/simple;
-	bh=2oMWlduBxecwHxKYQKCQxNLhp+KcxrlrZ0hzIry90Qc=;
-	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=VqGgp1VJB1btsE51QPFi//quWT8J4Pjwa/DOPkuPWpBxNsIQcEsfgHY9aNKksluxVVxjfy6RAuyYvB81rrHO1exPTXo67pB+13XoRNhEv6Nncv4A01+FJG32YuJqK//wCGbxu0lhogyoCJW0rnllKmmT0n50EYYLg49huRp0DTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lkbdXTFu; arc=none smtp.client-ip=91.218.175.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785158809; c=relaxed/simple;
+	bh=lD5SvdNk75UOScJp3ni/m4e8lptYubX4aJwa3zeIvF4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YRpGYuttypvaO7WFDV4biNLNyaVusbMgVwCq8WL0st875j9NAuVywjgjujgxWkcy0XxlQ5diPEqMab9J2/lgvE9c2oRuYPgPfJcviZCa0NBT3FqBtpFc8YTxvvQIoWhecpB2yQ1CQNDOQFKoGV/4oSigH/ooA9vUqlZ8F0PDce8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=Bc8TDAdk; arc=none smtp.client-ip=217.74.67.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lkbdXTFu"
+	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="Bc8TDAdk"
+Received: from nr200 (unknown [80.68.231.31])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
+	Mon, 27 Jul 2026 15:26:42 +0200 (CEST)
+Date: Mon, 27 Jul 2026 15:26:40 +0200
+From: Slawomir Stepien <sst@poczta.fm>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
+	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
+ is inactive
+Message-ID: <amdckJhgBz7xT2F7@nr200>
+References: <20260727074526.248393-1-sst@poczta.fm>
+ <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
+ <amcjYrOESqnHjbhe@nr200>
+ <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
+ <amcyO4e4bnBPinrP@nr200>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785158709;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Kh9JjkvLwO3YQZsvQilGFQqhJQd6B3LsjF6OvGXaCo0=;
-	b=lkbdXTFu+1Y7WSEZDXMQJLuJQysP2fsXOyUWw+CkbRD6tUNXv8hRSAljUPWPn/qwdQ23l1
-	LAW847mZqeuBoDdSDHjwt/1Xu/7C++xHTJuJ8kjinNIMNXmW4AKNSqjo/enrz4r+/DmKBn
-	MzLfvlEOTr2Yk6a3DMAMmqPKB49GK9s=
-Date: Mon, 27 Jul 2026 13:25:07 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "Luka Gejak" <luka.gejak@linux.dev>
-Message-ID: <2b742bc6c2a247888b3df630183b85e367f8ffbd@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and
- SDIO helper
-To: "Ping-Ke Shih" <pkshih@realtek.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, "Michael 
- Straube" <straube.linux@gmail.com>, "Peter Robinson"
- <pbrobinson@gmail.com>, "Bitterblue Smith" <rtl8821cerfe2@gmail.com>,
- johannes.goede@oss.qualcomm.com, luka.gejak@linux.dev
-In-Reply-To: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
-References: <20260725150427.93887-1-luka.gejak@linux.dev>
- <20260725150427.93887-2-luka.gejak@linux.dev>
- <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <amcyO4e4bnBPinrP@nr200>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
+	t=1785158804; bh=pAb9wjj3IkLoMUeJ54KYrBI+XFpYZIGtqvlfjp8V3No=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	b=Bc8TDAdk1G/LvIjPQqpLelKNcEvQaOotnLjCrmV87jRa2zfLvs+dz0C2NcqoCVxHB
+	 luTfujbKt9UoMz1MVvmr3QnB0q1cpRvgM+WFxOLym0mNKTIrbHk3QeUHkoTwGrpoVF
+	 lSM5d8RsE1isSMCsUoFkHJiAlhSnAJjFgLvRjiDA=
 
-July 27, 2026 at 9:12 AM, "Ping-Ke Shih" <pkshih@realtek.com mailto:pkshi=
-h@realtek.com?to=3D%22Ping-Ke%20Shih%22%20%3Cpkshih%40realtek.com%3E > wr=
-ote:
->=20
->=20luka.gejak@linux.dev mailto:luka.gejak@linux.dev  <luka.gejak@linux.d=
-ev> wrote:
->=20
->=20>=20
->=20> From: Luka Gejak <luka.gejak@linux.dev>
-> >=20=20
->=20>  The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS=
-, runs
-> >  a Realtek vendor firmware that differs from the firmware used by the
-> >  other rtw88 8723 family devices. Supporting it needs a number of sma=
-ll
-> >  adjustments spread across the shared core, all of which have to be
-> >  restricted to this one chip and bus combination.
-> >
->=20
+On lip 27, 2026 12:26, Slawomir Stepien wrote:
+> On lip 27, 2026 11:25, Johannes Berg wrote:
+> > On Mon, 2026-07-27 at 11:22 +0200, Slawomir Stepien wrote:
+> > > 
+> > > I think we do not have. I'm looking at the struct wireless_dev fields and I see that there is just
+> > > info about what the configuration should be, not info about what is the current state of the device.
+> > > I also do not see any callback in struct cfg80211_ops that might help to get such info. If I'm wrong
+> > > then please correct my observation!
+> > 
+> > I think we maintain wdev->links[].ap.beacon_interval?
+> 
+> Ah: https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/nl80211.c#L7188 and
+> https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/ap.c#L36. Ok! Let me try using that in
+> v3 then. Thanks!
 
-...
+After taking a closer look at this I wonder how AP_VLAN should be handled? Is there a way on
+cfg80211 level to be able to check AP_VLAN's main device state?
 
-Hi=20everyone,
-I apologize for the sudden silence. I have run into unexpected offline=20
-circumstances=20and will be completely away from my development setup
-for the next few weeks, due to family reasons.
-I see all the review comments coming in and I appreciate the thorough=20
-feedback.=20I will address every single one of them and get v3 out as=20
-soon=20as I am back online.=20
-Thank you for your patience!
-Best regards,
-Luka Gejak
+My code change would look something like this:
+
+@@ -9404,6 +9404,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+        case NL80211_IFTYPE_AP:
+        case NL80211_IFTYPE_AP_VLAN:
+        case NL80211_IFTYPE_P2P_GO:
++               /* Add new station only after the AP and link has been started */
++               int link = params.link_sta_params.link_id >= 0 ?
++                          params.link_sta_params.link_id : 0;
++               if (!wdev->links[link].ap.beacon_interval)
++                       return -ENETDOWN;
++
+                /* ignore WME attributes if iface/sta is not capable */
+                if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
+                    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
+
+but the NL80211_IFTYPE_AP_VLAN case would not work here, right? Can I just do the checking only for
+NL80211_IFTYPE_AP and NL80211_IFTYPE_P2P_GO and skip NL80211_IFTYPE_AP_VLAN?
+
+-- 
+Slawomir Stepien
