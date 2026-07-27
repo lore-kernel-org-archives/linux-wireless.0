@@ -1,80 +1,106 @@
-Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E7343F5BD8
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 10:26:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4753F8251
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 10:55:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785147975; cv=none; b=s2yPJxhzRKpeAukTxMgvRE0IXBEjSlf7jlDT2Uf2fGzSYfnVOTUJGjMb89QBtS85FKuHC3SliWlhE7uDKBtzvZttQD+2aawBVf0zJIUW5S2kphF1fsBxD7EQhhOlXZZ9f54ghEbbkMrL+f8BZCyEGUcx8rj+yFv4FuWPff8bMhk=
+	t=1785149744; cv=none; b=EPIJE+zlRUiOnla87aWgKTtJY7lbrA4zsPcigaclKc32hy1g6zAXiBuKtfBMgW9dcV1wmZ2ybCf/zBGB0A3qMQrTyen1X/VkoGtO/zZGxUX6ffzBG7LvLS6r9vuFQS1ePDNcKCvnySkyrAPYKmJtP9alC6xGJ/IG7+Z1m0vXcbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785147975; c=relaxed/simple;
-	bh=EDGCZX/L5USTUoaVBHCMPMyVnd621+N9gstomG0BGPI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eHzwi+gBZORjFNBprUcfjFvnxHuiPjc//hVaAQNmJjPRh1sdA5CJ9pG5KsS3RwP1eSauSwgm5drN6B4alyC7hFOiaXUUpsOLgDAOqkRwCw08jfCXULk7f4FxqF3mdkL5H+vLshUHP9UV8TGhpcZ21CDMEo4ILLQhR4K4PSn6r7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=nATCzlgU; arc=none smtp.client-ip=217.74.67.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1785149744; c=relaxed/simple;
+	bh=UDRY1N2PPIKwNokluhbRES57rm0lFb8oYBzjdWwo7gE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OfIWwP+TEhKZlZWJGwqCsYMKVHe8jhT4+f4SrG5wuTcBwV+8iG9adEs3o1ruNijXfDaISJeDyuRgQ3nRPtwOGj91sqsQHTpi71ULfANHUlcxlBlCL4uY7ne4tkN3+gu+p+jRLkaGNl4gdtjs+5wqOo5O+HTWSRuQYK1fs2A+xnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=gxUfYtQR; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="nATCzlgU"
-Received: from nr200 (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Mon, 27 Jul 2026 12:26:06 +0200 (CEST)
-Date: Mon, 27 Jul 2026 12:26:03 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
- is inactive
-Message-ID: <amcyO4e4bnBPinrP@nr200>
-References: <20260727074526.248393-1-sst@poczta.fm>
- <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
- <amcjYrOESqnHjbhe@nr200>
- <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="gxUfYtQR"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-ca2fad0ae38so1781513a12.3
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 03:55:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1785149740; x=1785754540; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=s0XKAIuEGEIxxI3CPghYnt+GMKDGWSIvJZSgiwQRsPY=;
+        b=gxUfYtQRtNh5b9w12P7V5Ii7cIRjSHaVrdyVQTV7dsAWbP6PUAOlgiNP5lXBHlyCB5
+         nC390XiK9V+zddnO4J/aT4/SgiH9kfprBLrZFDVG7ejU1WrtweJHwSinvalLb+XLvx4K
+         74uaoWZE9cXomijw/QpNb4oLjDb+gjMHsOUd0VB1VWNNz11VSyrOn1oUMpcv+y3qpvFs
+         M18vZ/2ObhaP5kR5z/b+rfSD3ogV0A0Yv7fkyUTHDHTncDlBCa6prAjGwadT7XFKwqa7
+         ihRGRC4QKwXFrQy/MEoMSgnQnRD55v3x4eicFaAWERV2LPlfLw6MBLpcm8XGuMmSWgs+
+         u7lw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785149740; x=1785754540;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=s0XKAIuEGEIxxI3CPghYnt+GMKDGWSIvJZSgiwQRsPY=;
+        b=gAKR9BObZixIi30S9FtlDLvt4BD5WkfxNoWQ81oELpXLfkaSZEurvydST6Km/2QCpn
+         CQByo442WAEobOf6tCXZC2M56JpJspDZEOIbed9FOG9ylmQjK+KQHRyV05bAICi1sRUs
+         IzvS3/9ObHgOLXhGImKFNOj+IN7loGZpUYZqeDa6OyPzL8Xg15+iXzHLZqGyTaF7dWV7
+         3/9CC/tJgfdQt2RjbSsgkeJavLBJRgyzJLralx+38At02K0z8AGBh+HgGyklBLUrD+++
+         ZkaSlo25QkGM9rctFfS/G0TPsBPiHXL6HKO8qjbLcAy7rE8CdR2CkgzJaNevwlOdmP2a
+         jIEg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq6MOu7S1J7MurG2rPaNZ2dBHC+HrY8p47nG/C3Cdokf28o3qqfXzSWUfKIlVPi+kZ7PcRSUYTVjLrkJLATGg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz6H4nwl1/7GffSEjXo4l9mUY0Umk77mD09r2HMWmnB30RTUBaZ
+	zbdFVTvGm1pX8JkZIo/1MPQiS6pzQA5n9gw2eEcDILSIsn0qLe/3NZv1ojwsNyIr10k=
+X-Gm-Gg: AR+sD13H24B/EezDEQIw8dAVwKEQfvkLX6kOzccXVANZmgXhwIDg+ZPqyt6HtNvqkBG
+	hYaebiX9jaTEF2O98+3GMRl6321fvJrLLms4wIdxCvZO/CmdDQrjTpl/D6G8ZZUlX14lkzSWMHx
+	AgL75dEaZ5ykyedHGdyTl0FT8KvL7D8wEGm5gX4MzGnljugfD7UTn7dDqc9tCAfH8Xm+UmWdw5p
+	I7ZfEC2KuQ8qKk1TodEOV3g5aWeZsLpe034wA5Oa+rzGhn3qF4RmS4fOrFCkR6UqEfzi0Z6vQD3
+	5ZjD9h+Uo5WAmHJ/yxuI5xCZ5k0G/rWjfgCsaqGcyr7p4En5nvG9vHCssBaTks4k0atOa983Fvr
+	LZHGAEKTo38+zVdwb0wV05ukruIPA7GHQEVdp6siqWCDSVTOZOp1eyEm5kkaGGCP9GCi+pa0QLa
+	KI1/6z5RJTFED4lSSUPOH6+7cIFX9264hjymmbXUfQTfmhzww2j7CceaQmIHBjvCPP/U8sDypu8
+	y4Z38csXDofTC6dzpLrAWa9zx2jHZVO
+X-Received: by 2002:a05:6a21:a45:b0:3b2:a809:1000 with SMTP id adf61e73a8af0-3c67dae40f1mr8265553637.3.1785149740172;
+        Mon, 27 Jul 2026 03:55:40 -0700 (PDT)
+Received: from Metius.iitm.ac.in ([103.158.43.43])
+        by smtp.googlemail.com with ESMTPSA id a92af1059eb24-13d130f55c6sm85269877c88.15.2026.07.27.03.55.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 03:55:39 -0700 (PDT)
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: jjohnson@kernel.org
+Cc: Abdun Nihaal <nihaal@cse.iitm.ac.in>,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: ath11k: Fix possible memory leak in ath11k_dp_srng_setup()
+Date: Mon, 27 Jul 2026 16:25:31 +0530
+Message-ID: <20260727105532.118164-1-nihaal@cse.iitm.ac.in>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1785147967; bh=Skv4u+Bd4Ek7vYtCitVvYMvbYFt1hE/YhDDkH3PmXjA=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=nATCzlgUAYtZchRUgIYMxFFZy7jclJWBLGjgJHq5EkFuHm0FhlxF+KBpXyfqzRiyJ
-	 KwSreN7TLudrmnejbtKUXmmCczQjhuIakWO0vb6QiRxQtBodNHYnaNRxLz297n30l5
-	 ck22gwzJT0FaoDPsj3hk00Xb8yHwre8FEUtetvmY=
+Content-Transfer-Encoding: 8bit
 
-On lip 27, 2026 11:25, Johannes Berg wrote:
-> On Mon, 2026-07-27 at 11:22 +0200, Slawomir Stepien wrote:
-> > 
-> > I think we do not have. I'm looking at the struct wireless_dev fields and I see that there is just
-> > info about what the configuration should be, not info about what is the current state of the device.
-> > I also do not see any callback in struct cfg80211_ops that might help to get such info. If I'm wrong
-> > then please correct my observation!
-> 
-> I think we maintain wdev->links[].ap.beacon_interval?
+In ath11k_dp_srng_setup(), the memory allocated for
+ring->vaddr_unaligned is not freed when ath11k_hal_srng_setup() fails.
+Fix that by calling ath11k_dp_srng_cleanup() in that error path.
 
-Ah: https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/nl80211.c#L7188 and
-https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/ap.c#L36. Ok! Let me try using that in
-v3 then. Thanks!
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Cc: stable@vger.kernel.org
+Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+---
+Compile tested only. Issue found using static analysis.
 
-> > Beside this, do we think that all devices would always need this rejection? What if firmware of
-> > these devices would benefit from *lack* of such rejection? Just thinking aloud, not that I know such
-> > devices.
-> 
-> I don't think it should be legal in the userspace API, and even if they
-> did, we'd have to add a flag to let hostapd know about it, and then when
-> (probably never) we did that, we could change the checks along with the
-> API.
+ drivers/net/wireless/ath/ath11k/dp.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Sure. If you think it should be like that I can agree, since I do not have any opinion here.
-
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index f389b97acbdd..c3a16da1cba7 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -324,6 +324,7 @@ int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
+ 
+ 	ret = ath11k_hal_srng_setup(ab, type, ring_num, mac_id, &params);
+ 	if (ret < 0) {
++		ath11k_dp_srng_cleanup(ab, ring);
+ 		ath11k_warn(ab, "failed to setup srng: %d ring_id %d\n",
+ 			    ret, ring_num);
+ 		return ret;
 -- 
-Slawomir Stepien
+2.43.0
+
