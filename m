@@ -1,81 +1,123 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE4AE3DC4BC;
-	Mon, 27 Jul 2026 08:19:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195FD3E1692;
+	Mon, 27 Jul 2026 08:22:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785140353; cv=none; b=uvYW+sLFrA3iADBFmdcwKs6LHsnftEuv3NvDZ3HX1frffZlUX0ljeSOklBSDkU8pExygppbAOIWolTCJ2rES5XtZQyGfFfLwxst1Kp6dMix55+do/gq5BwZa515wap/GUFIVqWQAEpOztRjRu7W8W28yjUQlWP7CFXss9T0gWfA=
+	t=1785140524; cv=none; b=JoQqdXvjv4K09wq0UXzk0S8pLhwaUvKFv/fH5czxOxnADB82bT9tFGSvq+HPSrtRzOKoMpiEP+RHLqWLEIu+qnJ+2uB4GUT+FCVs2DEYneG/3ALgZMSGKR/r/D09iwYsOjUMDToYHI2x0RrJYRQOKP+fr9tLvO9e0i5owglcwzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785140353; c=relaxed/simple;
-	bh=1hdwlpnfmP5MxpPLGHNe7Z9gXctieD7gGoOXG1smzKk=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Cy7WADbN0Qfwh5W+3NtueKptiF6oXvDcCqa5boiMqF4BD3PgnoJakO+d/Jns95SsVq6f7McMwivpg7NMKIDY67+N35iyVGa1xr3ohG4xjjp3h+u8MZd2pr5WmCp7CVN27T75mYv2cLxrUuatNKH+yCSc7Fvg8ElcuSgh9b9vtH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HbkyTvSg; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785140524; c=relaxed/simple;
+	bh=2gmDLk+egwE6biYc+KZnuK7vLcsd+rwZ7uem/Y/+NEk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Hpsx+qKEvEpWKfltBkfXEMs6WU3EJYRFSP/jH9iZ2F7aT9ysN5XIdrMFJ8A71sMXPOsg7fTWRXqzbvUrF9oq34jCCjHyisKtby96637rv5hIk8SWv4vfttyEW3ZSuuZbKptkf6eOa44aNcUGiL3Dh61Vej9B/u9d12/1BUjQmMM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=MQ2NDdqg; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HbkyTvSg"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=20htQIMMefB01KOSqaQeJiYexQeGaj0lvGorN8enL1g=;
-	t=1785140352; x=1786349952; b=HbkyTvSg7J2+ES3vpI23iAIxtPG9HbR9amk13aYM4RttN3I
-	Ss1NjwM38UZ6KToH1BPN0Rl7oKZh+FhnfTGZgYRAO/J+8xMBaiir+uJ/3kDrHv2a46exDbulkUiyh
-	A/0Clq/NwqOXynA2i0/NpXKd3eZZLIVhNwqptrxcg6G7pKQunj0tz2UQzvG1mzEBQtt+K+qryKpBk
-	53pkb4HJs6G9b6n8BOPxePfFOZItoqwKsYVWmtqc5/MsWIIORsWO6/rpHKbWOdyc1jotb39wQOZJo
-	h7JR+3o5Hyx9rBNQs2Lpr5llC1NrAmj7DOqadf+cxpxcMKariVIMurUZHy4kMx1g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1woGYG-0000000E27g-0eyD;
-	Mon, 27 Jul 2026 10:19:08 +0200
-Message-ID: <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
- is inactive
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Slawomir Stepien <sst@poczta.fm>, syzkaller-bugs@googlegroups.com, 
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev, 
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Date: Mon, 27 Jul 2026 10:19:05 +0200
-In-Reply-To: <20260727074526.248393-1-sst@poczta.fm>
-References: <20260727074526.248393-1-sst@poczta.fm>
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="MQ2NDdqg"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R8LnQsA2948135, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1785140510; bh=ey1h0k0qAchZxb0kb/Cet4p5beAZVZvkZCXpBESqoKI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=MQ2NDdqgyUrRrihoCwgoqh5Sg9u3hyfy/a2BgZcanSAhTQcVjYmHRPSaB8fox7PS5
+	 okuYv/fgsevjGKozLoKwosdqwWK11XL31q2AaSdJK/8js3iWqi0WWHpLMtMelIpPGn
+	 HIEjVfveTZaUUu5SotaAjLLEXX14TCCucAg+MOi3NzgldLC5XdPjTRY1z/9t9jNM6n
+	 QnzaSCcv+Zi6UjWhwheOKwVYa9RVdjPEGIKsPtBbMCJ0rhY/JbJyP1DnslYwIvbSRE
+	 9zxlsDkSeWOgahdJB8wLuWnJvHwkreS6JAeb7AAeeRu8xONWSF4Oj5781ab5HF8pYv
+	 aykowEGeIoDvw==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R8LnQsA2948135
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 27 Jul 2026 16:21:50 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 27 Jul 2026 16:21:49 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 27 Jul 2026 16:21:49 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Mon, 27 Jul 2026 16:21:49 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH v2 06/11] wifi: rtw88: coex: reassert the antenna path
+ when associating
+Thread-Topic: [PATCH v2 06/11] wifi: rtw88: coex: reassert the antenna path
+ when associating
+Thread-Index: AQHdHEb6torHPjXX3kG1aOOR7i4g9raBCTbA
+Date: Mon, 27 Jul 2026 08:21:48 +0000
+Message-ID: <67bd17b405084af29d4d07e855ec5b60@realtek.com>
+References: <20260725150427.93887-1-luka.gejak@linux.dev>
+ <20260725150427.93887-7-luka.gejak@linux.dev>
+In-Reply-To: <20260725150427.93887-7-luka.gejak@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
 
-Hi,
+luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
 
-On Mon, 2026-07-27 at 09:45 +0200, Slawomir Stepien wrote:
-> Currently, userspace can issue a netlink command to add a station to
-> an AP or P2P GO interface before the AP has fully started, or before
-> a specific MLO link has begun beaconing. This will e.g. lead to a
-> WARN_ON trigger:
+[...]
+
+> +/* Replayed immediately before start_clnt_join()/auth: BT_INFO + PS-TDMA=
+ type 8
+> + * then the forced WiFi PTA antenna path, so the auth window is clean.
+> + */
+
+Comment style.=20
+
+> +void rtw_coex_8723bs_pre_auth_h2c(struct rtw_dev *rtwdev)
+> +{
+> +       lockdep_assert_held(&rtwdev->mutex);
+> +
+> +       if (!rtw_coex_8723bs_bt_disabled(rtwdev))
+> +               return;
+> +
+> +       rtw_fw_query_bt_info(rtwdev);
+> +       rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
+> +       rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
+> +       rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
+> +       rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
+> +       rtw_coex_8723bs_force_assoc_pta_ant(rtwdev);
+> +}
+> +
+>  static const char *rtw_coex_get_algo_string(u8 algo)
+>  {
+>         switch (algo) {
+> @@ -3115,6 +3150,17 @@ void rtw_coex_connect_notify(struct rtw_dev *rtwde=
+v, u8 type)
+>         if (coex->manual_control || coex->stop_dm)
+>                 return;
 >=20
-> WARNING: net/mac80211/rate.c:51 at rate_control_rate_init+0x5a6/0x630
-> ...
-> Call Trace:
->  <TASK>
->  rate_control_rate_init_all_links+0xf4/0x190 net/mac80211/rate.c:84
->  sta_apply_auth_flags+0x1bc/0x430 net/mac80211/cfg.c:2152
->  sta_apply_parameters+0x126d/0x1b10 net/mac80211/cfg.c:2618
->  ieee80211_add_station+0x3de/0x700 net/mac80211/cfg.c:2684
->  rdev_add_station+0xfc/0x290 net/wireless/rdev-ops.h:201
->  nl80211_new_station+0x1b4e/0x1fd0 net/wireless/nl80211.c:9505
+> +       /* 8723BS SDIO BT-disabled: the vendor ConnectNotify() early-retu=
+rns
+> +        * without sending H2Cs; scan_workaround already established the =
+PTA
+> +        * path / coex table / PS-TDMA. Keep only the register-level PTA
+> +        * reassertion at associate-start.
+> +        */
+> +       if (rtw_coex_8723bs_bt_disabled(rtwdev)) {
+> +               if (type =3D=3D COEX_ASSOCIATE_START)
+> +                       rtw_coex_8723bs_force_assoc_pta_ant(rtwdev);
+> +               return;
+> +       }
+> +
+>         rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, t=
+rue);
 >=20
-> Fix this by introducing a two-tiered active state check in
-> ieee80211_add_station():
+>         if (type =3D=3D COEX_ASSOCIATE_5G_START) {
 
-Shouldn't we have enough information in cfg80211 to validate it there,
-benefiting other drivers?
-
-johannes
