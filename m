@@ -1,93 +1,77 @@
-Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com [209.85.160.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB1B417BC1
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:26:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646A941A549
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.71
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785158809; cv=none; b=JB+P46qRFwOEibpb3QH1n9dKmcXUSmGB+NFVQOn4JhFY1xPgZmPSy/3WBlC+dq+RKgvaBE3+IAZET3GAAvHIVbBiAB0v44mAsM3jV+ndwi6FUkupVWJGgKh/iJCIM/E4iyo5Fqyt13quNJ+qGyl2ijj/Uj0IsRPkJw/FVF3XuQw=
+	t=1785159861; cv=none; b=gLsNE4lrYJrxdHej6XWrspa9e1j6VrgfBIoygwUSUJQu4OzZkMxNOlucSyxn2+VKCwOabMAiiBX65DT7LRMTOajUr3+f6vuofYCiPj7jtcRmFJivy6wZUEZBGZmU45hU2XJoYJYLsD0J8aUwoGequg7aBmpK5hENMR85CW54dNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785158809; c=relaxed/simple;
-	bh=lD5SvdNk75UOScJp3ni/m4e8lptYubX4aJwa3zeIvF4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YRpGYuttypvaO7WFDV4biNLNyaVusbMgVwCq8WL0st875j9NAuVywjgjujgxWkcy0XxlQ5diPEqMab9J2/lgvE9c2oRuYPgPfJcviZCa0NBT3FqBtpFc8YTxvvQIoWhecpB2yQ1CQNDOQFKoGV/4oSigH/ooA9vUqlZ8F0PDce8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=Bc8TDAdk; arc=none smtp.client-ip=217.74.67.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="Bc8TDAdk"
-Received: from nr200 (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Mon, 27 Jul 2026 15:26:42 +0200 (CEST)
-Date: Mon, 27 Jul 2026 15:26:40 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
- is inactive
-Message-ID: <amdckJhgBz7xT2F7@nr200>
-References: <20260727074526.248393-1-sst@poczta.fm>
- <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
- <amcjYrOESqnHjbhe@nr200>
- <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
- <amcyO4e4bnBPinrP@nr200>
+	s=arc-20240116; t=1785159861; c=relaxed/simple;
+	bh=byMobdvqZSA13hIWLjpfB0Ip0/kD1woLTHsuFjll038=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=j7M+rVC3QYhPkav67jeOhpsOXSRPOCSrffKXNqRWyYEsCILHxO2/w1nePH/pU6iXMeZ+q02Sd7CyEHYV9ZgVAt9E/vwn0ApJdyEhxicxANJeMPlmrWXecpYL35Q0K0s7x0quJzUYQWYhJQ3TdvWaKF47NqdJaAEyi0jAo8fo7JA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-451ff8b9acbso3182280fac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 06:44:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785159859; x=1785764659;
+        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=oFTgFt8cqxK0rHLJhtmmvdMm3BU9Lbv7921Lx7hATNQ=;
+        b=m4tFxTWb9Gwo241MNJB9xFwL5viaFqPFaHRiuN6rl13lz792LRDtVSAm2i+HWhFMzo
+         XkHGPLj4j9H5vVjtHWcuUOCjJa+oARfWjkvflvUvT9MQdNh90Xq+N0IIsiLycqSN+SML
+         5YHBYwtPPxDpTTFTozI7FGMzqXOJIbL1x5BH0b/Px6+PQl5oWeDGljjmf60BIcgnpfdA
+         PvxGUjGRwscYeEksAstUTUfMkjt8606SL2RWIhWAeyHCA/wSR3Nbd6D55UxeF8phLKKG
+         kLy7g7PFnKuJzERhKzu2XNHJSKo502F7LyXh0MeYtwDIT2ETFs8Vdia5E5gD/7uLHjlz
+         X6Kg==
+X-Forwarded-Encrypted: i=1; AHgh+RqBIpPYmWSfgMpBaw8XxHXd8xYqvGgWq0+9Gh0v9HRzzw0YdZODWRTZuz8Gt//mL/Jnys2OIQ7MMVsAyZasWg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx0dPAVNyFS4cSx4IJ34oe6TgS06oy6f0a+/b7pXRwr0stQEqyS
+	YAvKrUvwbHbrL7GMjeUnFfN5cYzdfPWDBu15fiIvUqspH/57m9MNM6VOrHK1YbdB4ilMJsT9FQl
+	CLjktNSUgidrHkiXgv5aasJfYYHL90+RfYZEGlegaZxxodOlFzzg3KewisUo=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <amcyO4e4bnBPinrP@nr200>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1785158804; bh=pAb9wjj3IkLoMUeJ54KYrBI+XFpYZIGtqvlfjp8V3No=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=Bc8TDAdk1G/LvIjPQqpLelKNcEvQaOotnLjCrmV87jRa2zfLvs+dz0C2NcqoCVxHB
-	 luTfujbKt9UoMz1MVvmr3QnB0q1cpRvgM+WFxOLym0mNKTIrbHk3QeUHkoTwGrpoVF
-	 lSM5d8RsE1isSMCsUoFkHJiAlhSnAJjFgLvRjiDA=
+X-Received: by 2002:a05:6808:220c:b0:4a3:cea7:4ab9 with SMTP id
+ 5614622812f47-4ab5e59d0e0mr9751017b6e.26.1785159859327; Mon, 27 Jul 2026
+ 06:44:19 -0700 (PDT)
+Date: Mon, 27 Jul 2026 06:44:19 -0700
+In-Reply-To: <20260727074526.248393-1-sst@poczta.fm>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a6760b3.073198cf.94f0f.0032.GAE@google.com>
+Subject: [syzbot ci] Re: mac80211: reject station addition if AP or MLO link
+ is inactive
+From: syzbot ci <syzbot+ci14393b3afd002932@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, sst@poczta.fm, syzbot@lists.linux.dev, 
+	syzbot@syzkaller.appspotmail.com, syzkaller-bugs@googlegroups.com
+Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On lip 27, 2026 12:26, Slawomir Stepien wrote:
-> On lip 27, 2026 11:25, Johannes Berg wrote:
-> > On Mon, 2026-07-27 at 11:22 +0200, Slawomir Stepien wrote:
-> > > 
-> > > I think we do not have. I'm looking at the struct wireless_dev fields and I see that there is just
-> > > info about what the configuration should be, not info about what is the current state of the device.
-> > > I also do not see any callback in struct cfg80211_ops that might help to get such info. If I'm wrong
-> > > then please correct my observation!
-> > 
-> > I think we maintain wdev->links[].ap.beacon_interval?
-> 
-> Ah: https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/nl80211.c#L7188 and
-> https://elixir.bootlin.com/linux/v7.1.4/source/net/wireless/ap.c#L36. Ok! Let me try using that in
-> v3 then. Thanks!
+syzbot ci has tested the following series
 
-After taking a closer look at this I wonder how AP_VLAN should be handled? Is there a way on
-cfg80211 level to be able to check AP_VLAN's main device state?
+[v2] mac80211: reject station addition if AP or MLO link is inactive
+https://lore.kernel.org/all/20260727074526.248393-1-sst@poczta.fm
+* [PATCH v2] mac80211: reject station addition if AP or MLO link is inactive
 
-My code change would look something like this:
+and found no issues.
 
-@@ -9404,6 +9404,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
-        case NL80211_IFTYPE_AP:
-        case NL80211_IFTYPE_AP_VLAN:
-        case NL80211_IFTYPE_P2P_GO:
-+               /* Add new station only after the AP and link has been started */
-+               int link = params.link_sta_params.link_id >= 0 ?
-+                          params.link_sta_params.link_id : 0;
-+               if (!wdev->links[link].ap.beacon_interval)
-+                       return -ENETDOWN;
-+
-                /* ignore WME attributes if iface/sta is not capable */
-                if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
-                    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
+Full report is available here:
+https://ci.syzbot.org/series/92d73927-5773-4a58-89b9-a9d70926c88e
 
-but the NL80211_IFTYPE_AP_VLAN case would not work here, right? Can I just do the checking only for
-NL80211_IFTYPE_AP and NL80211_IFTYPE_P2P_GO and skip NL80211_IFTYPE_AP_VLAN?
+***
 
--- 
-Slawomir Stepien
+If these findings have caused you to resend the series or submit a
+separate fix, please add the following tag to your commit message:
+  Tested-by: syzbot@syzkaller.appspotmail.com
+
+---
+This report is generated by a bot. It may contain errors.
+syzbot ci engineers can be reached at syzkaller@googlegroups.com.
