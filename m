@@ -1,81 +1,87 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FB7376A1F
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 20:00:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B9BF35C1B0
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 20:04:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785182412; cv=none; b=G+MVFEeORegMmu2F0V0Rwfkm0RIabLuP3qevgpPxsp3uWGxO/Dfau66xWa8gEhPkFDz686usCxaUF4QYfnMbP/1ff7ykJtJ8+bGwiyClmUhy6lU2XpyHlp/Lx1g0ssnzqzmP1vw5h6YVE329SyvgiNrx1mCOMzPhrG4EuHoxOZ0=
+	t=1785182694; cv=none; b=f762JyBisYPi/7eoyutrYskRh6XRBc/pX1+7qORq2W5ZRwgMphyd1fNBrDbfcup5P2fdntgHH/5vU8MHzlAWY1rjwkQ144wE9BhVKibPK6P2CVwHrQ6qNWY8Vk1pEzmZh3ZJMSuV2h0St0lcYBxOu8KCBnhenZt5XUCsCVq3Qk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785182412; c=relaxed/simple;
-	bh=VN2Zu0KQNDzKBJQR88gb83xdcOIPFPUvUXafsoqUygY=;
-	h=Message-ID:Date:From:To:Cc:Subject:Content-Type:MIME-Version; b=YOQ4xarRM29Eg0UJEDqbChn0wWXh/21wLKlih6+n8rzGDgw1wG2TBt/J/XTT10AegKy8OQAYH67y0cN3ySkGxFtU3xQOoKnjMehbOPm3I4ewJXlFNkzqolo9tkwABE0h3TQCVVso0/mOE/TWjjz3PYI7rOOcrEIOl4K9rxSi3JY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BvA2pMW0; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1785182694; c=relaxed/simple;
+	bh=k5cbXlw9uwy3cQaYVG3iayE5yJ6IcieVYPaWx5q/LTE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=t4osJRzyGb6UogMPFgTbUewRwhg3f+bqlLqCc9f19s+wQfcVLDFOHeponDSZgnAhHdhXHcRBME19SqCrNbq4AjIAEiZagmnLMuJjZW6hOTY96ycVl43rWbJ2+zgu3khC0WYAQM+3242RUt+KmzWjXzMDyVUpiN7sqK2406t4XQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y8Qtm/sh; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BvA2pMW0"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954dff6536so22670405e9.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:00:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y8Qtm/sh"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4953de5be0aso20723065e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:04:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785182398; x=1785787198; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:subject:cc:to
-         :from:date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=HtNOUytS7spqmKL8HBRjl5j9jbmXbkSAtWYLPzNGcyw=;
-        b=BvA2pMW0aqIuFdq9BoRQAVHAvaqa1tvlMdGT1BUNZfJYL1WG11nu4a/7Pw5h8RZGu4
-         CSIzHZWxMiuRFpqfZX4ezEmICpvOfJIni3D8hAnIxSUYQvs/X+2rbhxbuITJjG3Wacsy
-         R3s0VHQ4zFvqJj9/BqTo2+Qpij3uad1fFes5raQjQhjIFg801Zp2iSGPVjbJVQKRzcqF
-         DGmaMiX50QpMujMOt2IUC5s4tZOElcQgG+LW6UDATne1p+8jhSYH5U6peVyWxJobLr3E
-         z32g1uB7klFphFZcT5BBnFomSxZ2XACnAXD8uAzhoK3ozlnRDU9D0DRN/Jdwjwo0VEFb
-         AUXQ==
+        d=gmail.com; s=20251104; t=1785182690; x=1785787490; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vDIac45RIuvLJRTWSXLnkBc2gzMGU15MkFTMnnrYVY0=;
+        b=Y8Qtm/shVUbkrNkgQxH8Cizp7ELUtfYKSvawx3e4DNALnyiock+ufscrEL+rtaPUrN
+         LKCgFZXacQFwymqldcUdH/X7KWHrdCbfFoIoPrk8OW85PT8BbkN1RcVWRWdRPbKPxznK
+         E4930CWteemYsj6wo0/NjqEbC2U6AGyQ+KxDqbb5vaiydRWaIyDMODhAlyxXMe5Q0D3/
+         cHIIyKc+77iWYqqVMo9O5SAekVXm9KnBxbD2zgXaIqIwuW4cDrE8cmvq3Ta03ssUihlx
+         /1DX5YQfTeGwAuie/SY3RwPZNzMddFzor3sgucguZLBkdRpG9PRghSNpgMTTabDQ2fiP
+         By1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785182398; x=1785787198;
-        h=mime-version:content-transfer-encoding:content-type:subject:cc:to
-         :from:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=HtNOUytS7spqmKL8HBRjl5j9jbmXbkSAtWYLPzNGcyw=;
-        b=hz8fBhAlh7+9QnqfqdHFmeud48fg6cVTzy8iccqtkI75EgcJuulgR31jDei9RiII7w
-         VxTmR3WncH0ayYiamuczvt4ULtg7C2XQyjTx5DxB71owvRyDNuZzJB5kMvMRV/dikkKQ
-         UGB8CltafYwkWFkFjGXn89PAzqbQWVV5OgLj57MB3U/Yn++9x3LiredXB48HU4iwys7D
-         RIdqbYQg4dkGjYxEM+sDInC6BNYTho9Jlfs+yrM/CDFyKK9gu0f9Oqa3FWbH8WWzC/Df
-         LqtDdmvoibUHfWULu2sQY+xKGPQq1bnn0ka/u6jlV0rTBmdDigXMRdwptrPOdCGBQFjY
-         UpDA==
-X-Forwarded-Encrypted: i=1; AHgh+RqIyQT/GK+6rK3NZUmjuryxN9YrNZ5Cbw1b9M1DoBkxlNnfjIqMlmk8qFNd/eJ7Cm36b1TyRAkr/F+LQmMaMg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YydI9RBdW7bhzZmf792/+kJogYWahALpFeAncqjiINuk35jJn2l
-	SvJJuFGs8tqvGcO1bFR15jNnu07BHGMiqE9g0IFA7psgoyBhtJFMLp83
-X-Gm-Gg: AR+sD12IjFgv9VsYXTbLe+kwpLLy5Hz/tUuErmPk0IRkuwmNi2qc/FBDESc+73948zd
-	WitcTIxfvoRMvbAuZC2MXABYBPdG+1/7/U/OktPksbdtcbzdoameuQ5WdY4/GfA7UO9laK5Ugrj
-	SLDMDi1rvh9T/4VBNUUeN3/clp5H22eV7QAOMiOOcQt/tEridvVLqcEamws7sMPgIsAfkZ9PW4l
-	NyB7Um12vQGc2XmerBO3gUxNx45XXYs4U6ZECwD+iP2Qx2e/0rbOR4RHl2/sHhpCHqkp1RkiuNy
-	04ffr5/4D1RQftMVwN1DW0H8TLor14QhTFvFvbTBvJ+ONJ4IosCDQk2a1dHsHo171NEoZKAwa/5
-	CbBQ1VTMFHAWubbWFFx03M97OECvaDx3LSujiqzmw9ABX/jIDufeBug90sNvMS8Nzf5exLPDwLO
-	a9MECWuZk5t6dbBpYj2JQtT6Wg1DKBAIUBkzF5xD5N4NtkouWzsqqZyUxOe7WQiL6vzntt88ZNm
-	0aqXRGbvWBI
-X-Received: by 2002:a05:600c:c4a3:b0:495:7538:d4ea with SMTP id 5b1f17b1804b1-496b5670622mr127824895e9.0.1785182398165;
-        Mon, 27 Jul 2026 12:59:58 -0700 (PDT)
-Received: from mcp-gateway.lzampier.com (brnt-07-b2-v4wan-169820-cust69.vm7.cable.virginm.net. [81.102.32.70])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c46240c4sm17066885e9.12.2026.07.27.12.59.57
+        d=1e100.net; s=20251104; t=1785182690; x=1785787490;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vDIac45RIuvLJRTWSXLnkBc2gzMGU15MkFTMnnrYVY0=;
+        b=E4wiZpBhiqb6wCTnB1Gp1zuDxwo5EBSdnKVLuGgpvYum2nogjOJxCX8JBLkBIIoxAl
+         JO3VZPmpKeeZ6VcYfnbrr7KILgdN7wqUuB7Qm7fhZAgVT0j0Z6sro0dSzsYBM2/ZQwKm
+         +gz8seJQA6V5oR1B47Z+EsBI8VkPfZM0I2t9sUZ3H2OtJj68vjflbAfbq9iYDis1Mm2N
+         y1q0v2cnsvzzdBOqiGuFQ1C4E8ohIzbpoBwQojLB4+V3aIAPgWppLhL+ZmiUBRhsVNn6
+         LA8upEnHe8U0P+oIm0nrP0cP3KvP9LgXG54vq472ovONl9YkSCMx6o0oQVMrLsj+py6m
+         6bFA==
+X-Forwarded-Encrypted: i=1; AHgh+Rp0wllTHvrJAOavkREEp/E+Km/iYGqcDeoDZKcK+lusmWOkLXfJ1usxr1PcNQZO2zBJEMAOGOMTzpjVpeokUw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyINtzvZakgWVWRyXJNSFhAHvRo1bhNi2FBn2czro2+1a9ikaRd
+	Rlg2voUEvnlISMJxhJfQa2L1VlJkzepxLJsXqZWIdlAKJLEXzPFar6M=
+X-Gm-Gg: AR+sD13unU6+Wth8aGYKsMbD2AfJMOYY5jMtC+Z1UGDXuKt4+urZZ945No4ODPqu0Uh
+	nK+z5GvAbsrPwVESX+F5yKuKcnR7ouf83SXdSGDgLkTa0MUFJDGnvCWCO30eJMxQUOjErElvq+L
+	y8KRzbc668bFSzq3Ev/tlYDG2+KftxaEVC0YjrD16/K+bkqUPjMd24skjkiJBUxW7CbaQco5Fg8
+	4PyyWEI80k+6ov8GUbJQzSXBBMGtrw36hSYYREDP3mIuUyVZpK/sApEIfP2Bfo6clEzP6+yKtOq
+	M7wAj6t3n0CzB5TTdhwMdr4i4XKpoTQtmyEW8zaKeBjoMTpAd5lJefH94MJ5sZNjd750xMFQ5c+
+	V81VIe1Q2CBodgck0zKhknMyf4AUgbMrvqU6ozzIWYTruaPMfSpVu6eZSGAxlDs+mNM2us+BI4m
+	XXmzu8EwkDqqsyN6/cJmO78XK+rLLkTqkoXoRd+HUHQ4/ONOUzvx89r8Wi7L38NoNyQsIwL5L5Q
+	x/2jVR2t+0izyJE36/EfrF3epeVHJyT4LBYAH0wUKjRkDRC/56MDNoQeUTXMKErJYvJeFJF25O1
+	VS2ktoOov2RKnoit/iQ=
+X-Received: by 2002:a05:600c:1d0d:b0:495:3de8:33a6 with SMTP id 5b1f17b1804b1-496b56ffdecmr132086755e9.16.1785182690188;
+        Mon, 27 Jul 2026 13:04:50 -0700 (PDT)
+Received: from dev-debian.lzampier.com (brnt-07-b2-v4wan-169820-cust69.vm7.cable.virginm.net. [81.102.32.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c46160dfsm18400985e9.10.2026.07.27.13.04.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 12:59:57 -0700 (PDT)
-Message-ID: <6a67b8bd.4bd67053.2727d8.1806@mx.google.com>
-Date: Mon, 27 Jul 2026 12:59:57 -0700 (PDT)
-From: bookmailer3000@gmail.com
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>,
- linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
- stable@vger.kernel.org
-Subject: [PATCH] wifi: mt76: mt7915: keep the tx worker off the txq scheduler
- during hw restart
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        Mon, 27 Jul 2026 13:04:49 -0700 (PDT)
+From: Lucas Zampieri <lcasmz54@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7915: keep the tx worker off the txq scheduler during hw restart
+Date: Mon, 27 Jul 2026 17:04:48 -0300
+Message-ID: <20260727200448.978087-1-lcasmz54@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <6a67b8bd.4bd67053.2727d8.1806@mx.google.com>
+References: <6a67b8bd.4bd67053.2727d8.1806@mx.google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
 mt7915_mac_full_reset() calls ieee80211_restart_hw(), whose asynchronous
 mac80211 reconfiguration tears down and rebuilds every station's TXQs.
@@ -107,6 +113,10 @@ Fixes: 8a55712d124f ("wifi: mt76: mt7915: enable full system reset support")
 Cc: stable@vger.kernel.org
 Signed-off-by: Lucas Zampieri <lcasmz54@gmail.com>
 ---
+
+Resent from my own address; please disregard the earlier copy of this
+patch sent from an unrelated account by mistake.
+
  mt76.h        | 2 ++
  mt7915/mac.c  | 3 +++
  mt7915/main.c | 5 +++++
@@ -172,3 +182,4 @@ index 4507fd15..e8e86e46 100644
  		phy = dev->phys[i];
 -- 
 2.47.3
+
