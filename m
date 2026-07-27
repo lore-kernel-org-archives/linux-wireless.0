@@ -1,45 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8198D41D137
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 818C241D133
 	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:04:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785164691; cv=none; b=eosoDMDec6miRrOl8Tlfit3XZNlf3SJdEvUfdaEAaMQ/wrrMe6UbsOfZUNjKhsiSOjWsdNMNltl7fwasO4fOJKxkINzlbu3vaY2jOk20qnQtGRkvHcP5NzLlEE7ol6+k4+8CcVdRq58XXeMoNOof5aWUXuezmzcjvviU0cc0SJI=
+	t=1785164691; cv=none; b=q136PixywjebpTqtI+NdrKxFSPbyovJcuTvJvywZpjaC0uytWp3hiiS3+UGlXroq3mMk+p4w6UKyVgtu++8jKPu/raNHZ+58J7lXTvUpiGMQfw2Eb9x2WcQ7faNEVMQz7/VCKWCBlzO1K/pspg5ykwl1JMC6lub8xfg/0dOSqGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785164691; c=relaxed/simple;
-	bh=bcCx1RfKPnPUXMLbHwZ5BlXO1P5gAPC4TsOZ8+hrvOs=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IqaAOAiH0EZrC3mwYDfNSVM/eDYGxUyuGS8rKph+Wz8j7+S3NRHxOkmLsC9KPtAJePWxmJ5zM333pb1ALTgef5PivZHmsJzkkMa+jOGX3k+kim0TGXJxOWWDt69dM2jmxGUQirRXCPt4pPla6FUwcyA3KVzar1sgVlq2UUMVw08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=tsm0jW5L; arc=none smtp.client-ip=46.4.11.11
+	bh=Xiqt9E7jP/D54qDm948Bfq2EzYyRFTCUfW/ftmhU+PE=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=ooVSwbayks10AC5zfLTueQ9/6YttmefSXuwxRnJ5OyCawhGD841y6bAW3MYkdtQoH/Q2ieZmQ892fX166S6+xWnpn1taaOkavUE97Yca9yqrk2vogpoe5tS3ur86nJXabR+LPgLixGbWnxb+fjvFZswvgbkmz6hQuWIwEuPL4FI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=EiX6XdGP; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tsm0jW5L"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EiX6XdGP"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
+	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=X18bCdIiLtL03s3xj6AghB6QWzs3X67OsJrxxBWT0MM=; b=tsm0jW5LbOASikf5dWMoGeypEJ
-	4jL1mToTue/pllCSkMS0Rg51Nx4fjhcC1UFT2VX+CTw2yJY+X2cXB3vF6G+uj2pa72asFwdZfesYp
-	ueF8ZqNhOR+PNwxgw809Ozuq7y2CwjhZqKYslt+JpH3WJhrZYa0eDVjsFf151WH5taHs=;
+	bh=uJYn6j+7byC0unnBxQuJgtHI+dk4AyaHQ2ZgDGYOw5s=; b=EiX6XdGPCcNJMzKl7HA0qX75Cv
+	nd3pegfLdf8hr7bMfPSOqI1yPd1qTZ42uM2v+dE6QTKG/LK0Ovb9AgE7DXjkvIQHKW6RXdHa+F/vP
+	RqxCV4nfwWu/gbQB1egRlGpRLnuG6d9eT3sd9J8Y8GQ5lkZiyiWZhmUxCUdX35TrTR7w=;
 Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1woMsk-008KN0-0Q
+	id 1woMsj-008KN0-1T
 	for linux-wireless@vger.kernel.org;
-	Mon, 27 Jul 2026 17:04:42 +0200
+	Mon, 27 Jul 2026 17:04:41 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 05/15] wifi: mt76: mt7996: fix reg addr remap when addr is 0
-Date: Mon, 27 Jul 2026 15:04:24 +0000
-Message-ID: <20260727150434.1778520-5-nbd@nbd.name>
+Subject: [PATCH mt76 01/15] wifi: mt76: mt7996: fix MIB TX aggregation counter registers for mt7990
+Date: Mon, 27 Jul 2026 15:04:20 +0000
+Message-ID: <20260727150434.1778520-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260727150434.1778520-1-nbd@nbd.name>
-References: <20260727150434.1778520-1-nbd@nbd.name>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,83 +45,128 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+The MIB_TSCR0-7 counters read by mt7996_mac_update_stats() are
+hardcoded at the mt7996/mt7992 offsets 0x6b0-0x6d0, but mt7990 moved
+them to 0x750-0x770, so TX AMPDU statistics were read from unrelated
+registers on that chip. Move the offsets into the per-chip register
+tables.
 
-When addr is less than the hardcoded threshold in __mt7996_reg_addr,
-it indicates that remapping is unnecessary.
-Currently, the flow remaps address 0x0 to MT_HIF_REMAP_BASE_L2,
-which is incorrect.
-To address this, modify __mt7996_reg_addr to return INVALID_REG_ADDR
-if the address is not below the hardcoded value or is not present in
-the mt7996_reg_map array.
-Additionally, update the remap condition to check if addr is equal to
-INVALID_REG_ADDR.
-
-Fixes: 3687854d3e7e ("wifi: mt76: mt7996: add locking for accessing mapped registers")
-Signed-off-by: StanleyYP Wang <StanleyYP.Wang@mediatek.com>
+Fixes: f6c87411d15f ("wifi: mt76: mt7996: rework register mapping for mt7990")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7996/mmio.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7996/mmio.c  | 24 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7996/regs.h  | 24 ++++++++++++-------
+ 2 files changed, 40 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-index de68e60a1e86..0d7521d06981 100644
+index d9780bb425a7..de68e60a1e86 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
-@@ -17,6 +17,8 @@
- static bool wed_enable;
- module_param(wed_enable, bool, 0644);
+@@ -54,6 +54,14 @@ static const u32 mt7996_offs[] = {
+ 	[MIB_BSCR7]		= 0x9e8,
+ 	[MIB_BSCR17]		= 0xa10,
+ 	[MIB_TRDR1]		= 0xa28,
++	[MIB_TSCR0]		= 0x6b0,
++	[MIB_TSCR1]		= 0x6b4,
++	[MIB_TSCR2]		= 0x6b8,
++	[MIB_TSCR3]		= 0x6bc,
++	[MIB_TSCR4]		= 0x6c0,
++	[MIB_TSCR5]		= 0x6c4,
++	[MIB_TSCR6]		= 0x6c8,
++	[MIB_TSCR7]		= 0x6d0,
+ 	[HIF_REMAP_L1]		= 0x24,
+ 	[HIF_REMAP_BASE_L1]	= 0x130000,
+ 	[HIF_REMAP_L2]		= 0x1b4,
+@@ -91,6 +99,14 @@ static const u32 mt7992_offs[] = {
+ 	[MIB_BSCR7]		= 0xae4,
+ 	[MIB_BSCR17]		= 0xb0c,
+ 	[MIB_TRDR1]		= 0xb24,
++	[MIB_TSCR0]		= 0x6b0,
++	[MIB_TSCR1]		= 0x6b4,
++	[MIB_TSCR2]		= 0x6b8,
++	[MIB_TSCR3]		= 0x6bc,
++	[MIB_TSCR4]		= 0x6c0,
++	[MIB_TSCR5]		= 0x6c4,
++	[MIB_TSCR6]		= 0x6c8,
++	[MIB_TSCR7]		= 0x6d0,
+ 	[HIF_REMAP_L1]		= 0x8,
+ 	[HIF_REMAP_BASE_L1]	= 0x40000,
+ 	[HIF_REMAP_L2]		= 0x1b4,
+@@ -128,6 +144,14 @@ static const u32 mt7990_offs[] = {
+ 	[MIB_BSCR7]		= 0xbd4,
+ 	[MIB_BSCR17]		= 0xbfc,
+ 	[MIB_TRDR1]		= 0xc14,
++	[MIB_TSCR0]		= 0x750,
++	[MIB_TSCR1]		= 0x754,
++	[MIB_TSCR2]		= 0x758,
++	[MIB_TSCR3]		= 0x75c,
++	[MIB_TSCR4]		= 0x760,
++	[MIB_TSCR5]		= 0x764,
++	[MIB_TSCR6]		= 0x768,
++	[MIB_TSCR7]		= 0x770,
+ 	[HIF_REMAP_L1]		= 0x8,
+ 	[HIF_REMAP_BASE_L1]	= 0x40000,
+ 	[HIF_REMAP_L2]		= 0x1b8,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
+index c6379933b6c3..8ff78cf6eb04 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/regs.h
+@@ -64,6 +64,14 @@ enum offs_rev {
+ 	MIB_BSCR7,
+ 	MIB_BSCR17,
+ 	MIB_TRDR1,
++	MIB_TSCR0,
++	MIB_TSCR1,
++	MIB_TSCR2,
++	MIB_TSCR3,
++	MIB_TSCR4,
++	MIB_TSCR5,
++	MIB_TSCR6,
++	MIB_TSCR7,
+ 	HIF_REMAP_L1,
+ 	HIF_REMAP_BASE_L1,
+ 	HIF_REMAP_L2,
+@@ -250,9 +258,9 @@ enum offs_rev {
+ #define MT_MIB_BSCR7(_band)			MT_WF_MIB(_band, __OFFS(MIB_BSCR7))
+ #define MT_MIB_BSCR17(_band)			MT_WF_MIB(_band, __OFFS(MIB_BSCR17))
  
-+#define INVALID_REG_ADDR	0xffffffff
-+
- static const struct __base mt7996_reg_base[] = {
- 	[WF_AGG_BASE]		= { { 0x820e2000, 0x820f2000, 0x830e2000 } },
- 	[WF_ARB_BASE]		= { { 0x820e3000, 0x820f3000, 0x830e3000 } },
-@@ -358,7 +360,7 @@ static u32 __mt7996_reg_addr(struct mt7996_dev *dev, u32 addr)
- 		return dev->reg.map[i].mapped + ofs;
- 	}
+-#define MT_MIB_TSCR5(_band)			MT_WF_MIB(_band, 0x6c4)
+-#define MT_MIB_TSCR6(_band)			MT_WF_MIB(_band, 0x6c8)
+-#define MT_MIB_TSCR7(_band)			MT_WF_MIB(_band, 0x6d0)
++#define MT_MIB_TSCR5(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR5))
++#define MT_MIB_TSCR6(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR6))
++#define MT_MIB_TSCR7(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR7))
  
--	return 0;
-+	return INVALID_REG_ADDR;
- }
+ #define MT_MIB_RSCR1(_band)			MT_WF_MIB(_band, __OFFS(MIB_RSCR1))
+ /* rx mpdu counter, full 32 bits */
+@@ -268,14 +276,14 @@ enum offs_rev {
+ #define MT_MIB_RSCR36(_band)			MT_WF_MIB(_band, __OFFS(MIB_RSCR36))
  
- static u32 __mt7996_reg_remap_addr(struct mt7996_dev *dev, u32 addr)
-@@ -390,7 +392,7 @@ void mt7996_memcpy_fromio(struct mt7996_dev *dev, void *buf, u32 offset,
- {
- 	u32 addr = __mt7996_reg_addr(dev, offset);
+ /* tx ampdu cnt, full 32 bits */
+-#define MT_MIB_TSCR0(_band)			MT_WF_MIB(_band, 0x6b0)
+-#define MT_MIB_TSCR2(_band)			MT_WF_MIB(_band, 0x6b8)
++#define MT_MIB_TSCR0(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR0))
++#define MT_MIB_TSCR2(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR2))
  
--	if (addr) {
-+	if (addr != INVALID_REG_ADDR) {
- 		memcpy_fromio(buf, dev->mt76.mmio.regs + addr, len);
- 		return;
- 	}
-@@ -406,7 +408,7 @@ static u32 mt7996_rr(struct mt76_dev *mdev, u32 offset)
- 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
- 	u32 addr = __mt7996_reg_addr(dev, offset), val;
+ /* counts all mpdus in ampdu, regardless of success */
+-#define MT_MIB_TSCR3(_band)			MT_WF_MIB(_band, 0x6bc)
++#define MT_MIB_TSCR3(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR3))
  
--	if (addr)
-+	if (addr != INVALID_REG_ADDR)
- 		return dev->bus_ops->rr(mdev, addr);
+ /* counts all successfully tx'd mpdus in ampdu */
+-#define MT_MIB_TSCR4(_band)			MT_WF_MIB(_band, 0x6c0)
++#define MT_MIB_TSCR4(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR4))
  
- 	spin_lock_bh(&dev->reg_lock);
-@@ -421,7 +423,7 @@ static void mt7996_wr(struct mt76_dev *mdev, u32 offset, u32 val)
- 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
- 	u32 addr = __mt7996_reg_addr(dev, offset);
+ /* rx ampdu count, 32-bit */
+ #define MT_MIB_RSCR27(_band)			MT_WF_MIB(_band, __OFFS(MIB_RSCR27))
+@@ -299,7 +307,7 @@ enum offs_rev {
+ #define MT_MIB_RVSR1(_band)			MT_WF_MIB(_band, __OFFS(MIB_RVSR1))
  
--	if (addr) {
-+	if (addr != INVALID_REG_ADDR) {
- 		dev->bus_ops->wr(mdev, addr, val);
- 		return;
- 	}
-@@ -436,7 +438,7 @@ static u32 mt7996_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
- 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
- 	u32 addr = __mt7996_reg_addr(dev, offset);
+ /* rx blockack count, 32 bits */
+-#define MT_MIB_TSCR1(_band)			MT_WF_MIB(_band, 0x6b4)
++#define MT_MIB_TSCR1(_band)			MT_WF_MIB(_band, __OFFS(MIB_TSCR1))
  
--	if (addr)
-+	if (addr != INVALID_REG_ADDR)
- 		return dev->bus_ops->rmw(mdev, addr, mask, val);
- 
- 	spin_lock_bh(&dev->reg_lock);
+ #define MT_MIB_BTSCR0(_band)			MT_WF_MIB(_band, 0x5e0)
+ #define MT_MIB_BTSCR5(_band)			MT_WF_MIB(_band, __OFFS(MIB_BTSCR5))
 -- 
 2.53.0
 
