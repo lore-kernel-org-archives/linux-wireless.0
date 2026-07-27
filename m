@@ -1,172 +1,371 @@
-Received: from smtpo63.interia.pl (smtpo63.interia.pl [217.74.67.63])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556E23E49C2
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 07:46:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.63
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2594377EC5;
+	Mon, 27 Jul 2026 07:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785138409; cv=none; b=pstfk/xqJ6gGacHX+MaBXBjsMDKokeY904aYf5tQsLY/kEM5eBsCnmc0bLLsU+usxPwVdsRTT9MHQtXO6SlV7PWKD3y5rGAzUlRBJPXKlHimLwfMOK4KZI4PyXtrtkXzgR1bDdt+9zmASrKGWjplGmyYBVU3vCF39jUwj77I7As=
+	t=1785139136; cv=none; b=dlaQ9XsTQrfobCfrJY3NP3qnZeAiBSuepr/tMJbnPI0lK6RS1NBLAXVSkkpWEdIsmalTO0Ici9xSMZlr03iSkKa2vdyM3P2gcTKPSoDXuDkI5IjK1r3JPkXpPpOwIlAmieWPd51rsa5Jh9ElwAjlnh0d4GXK6Jdv31PmgdI8e9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785138409; c=relaxed/simple;
-	bh=hH3iMPyaoJ5mkOhv3F2jIxeUnzRMusFiIDzaEhvu5HY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pkwS3hg/9dL1ytyDtFWKyLpQAmN8DvsKquU5cX705VgPwriwvxY5/zFRVNzBI8wa55arGvikj1qvwyugBB58t1IkvHA4QE1IzMUFX9sdLrBzEoWo6Vtg64YD5LUpD6MQOoCmz5KUxw6h+ZGNsbLAk6rTo5SFcFruQULGhPsuGK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=bkBHqs+n; arc=none smtp.client-ip=217.74.67.63
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1785139136; c=relaxed/simple;
+	bh=gRj9NhGIekUAVZvEeb5gVXY4MVBunx56T2gcfzWLuDA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=F8k9cb5neVfNE3OXcXnL1jQzby6GCYH5vp3OBgVED6eQz4C6l9K/c9olV01SiPR9sBJMgMAWYdS889Xx1YpAy21JUN7/Q7vjZK1j4a5+agHYWzWTcdwT0L7JQlnlPT7QO4xCkeJvZfD44DJIiuYUIOP6GOmx4j6mshDk+D8lSRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=DHZPRbRG; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="bkBHqs+n"
-Received: from localhost (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Mon, 27 Jul 2026 09:46:33 +0200 (CEST)
-From: Slawomir Stepien <sst@poczta.fm>
-To: syzkaller-bugs@googlegroups.com,
-	johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	syzbot@lists.linux.dev,
-	Slawomir Stepien <sst@poczta.fm>,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: [PATCH v2] mac80211: reject station addition if AP or MLO link is inactive
-Date: Mon, 27 Jul 2026 09:45:26 +0200
-Message-ID: <20260727074526.248393-1-sst@poczta.fm>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="DHZPRbRG"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66R7wiYyB2937915, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1785139125; bh=2u5mWR3lwGRKfksGV1YyeOx51Eo4h0vBoOUC2LfFG4Y=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=DHZPRbRGNvfb/eTQkuY0Kq2X8udCaho+bK2GhMp6NG/oQRa8lBCmktgDDyb7Zp3gH
+	 rhM1P2ku5CI0nyAq93gbWp+R2tsA2jpQ00Y4reXjHq7bLtHfn6MDGmVUFwTCqUH1vS
+	 nEwvQIVaCPxSeXxUuriBduZbjdIeIOd3EbpgXYDc2m3JBFVt7lg5qIA+2ZK38FmC0a
+	 g8J1ah4vJo1kh76GeWsZ/QyyhFM4u1OyMcY24satulOhkoOPy4HMh56zNC2Ce61S8u
+	 luXhCGtx9LGBSD8hzlOTJAl/KsYfXhRjHS0n3S1U4CSmDA6Ccg5yz+mr31l2y1gil+
+	 74dtXWD/JqTsg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66R7wiYyB2937915
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 27 Jul 2026 15:58:44 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Mon, 27 Jul 2026 15:58:44 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
+ 15.02.2562.017; Mon, 27 Jul 2026 15:58:44 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: RE: [PATCH v2 05/11] wifi: rtw88: coex: add the RTL8723BS scan
+ antenna workaround
+Thread-Topic: [PATCH v2 05/11] wifi: rtw88: coex: add the RTL8723BS scan
+ antenna workaround
+Thread-Index: AQHdHEb5CiflpTNtb02S3URNeZUsfraA/X/g
+Date: Mon, 27 Jul 2026 07:58:44 +0000
+Message-ID: <c04cb1048e1940b1bc63dd68732998d8@realtek.com>
+References: <20260725150427.93887-1-luka.gejak@linux.dev>
+ <20260725150427.93887-6-luka.gejak@linux.dev>
+In-Reply-To: <20260725150427.93887-6-luka.gejak@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1785138395; bh=pAG5JQKFpd6sLu0HpXWK8TdT6a3g/pT8xNcL5/8HWXg=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=bkBHqs+n9+XO5dc3MXQL0Kgb0KowY0fGWJpVfyzYXbNd7R+Ov4Tjdfa37wzbWt3k9
-	 HooSh64lzUE+EU7yDQF2r0SoMTTL2vAX802i8ORYx6V5bxCRMAHLVJiFBsMuBVo5Q5
-	 eLt6laR/4XJ7GW+DXFi06bIBuSfmmGdNCpt3SuIk=
 
-Currently, userspace can issue a netlink command to add a station to
-an AP or P2P GO interface before the AP has fully started, or before
-a specific MLO link has begun beaconing. This will e.g. lead to a
-WARN_ON trigger:
+luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
+> From: Luka Gejak <luka.gejak@linux.dev>
+>=20
+> On the RTL8723BS the PTA antenna path has to be programmed directly
+> during scan. The vendor driver keeps its own scan-time antenna state and
+> does not run the generic coexistence algorithm on boards where BT is
+> disabled, and following it is necessary here: without the antenna and
+> CCK priority setup applied at scan start, the site survey does not hear
+> the AP reliably.
+>=20
+> Detect the BT-disabled case, replay the vendor BT_MP and BT_INFO queries
+> once the firmware has been up long enough for RX DMA to be stable, then
+> establish the scan path antenna configuration and skip the generic run.
+>=20
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> ---
+>  drivers/net/wireless/realtek/rtw88/coex.c | 179 +++++++++++++++++++++-
+>  drivers/net/wireless/realtek/rtw88/coex.h |   2 +
+>  drivers/net/wireless/realtek/rtw88/reg.h  |   1 +
+>  3 files changed, 181 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wire=
+less/realtek/rtw88/coex.c
+> index 37c336def419..daba6082f850 100644
+> --- a/drivers/net/wireless/realtek/rtw88/coex.c
+> +++ b/drivers/net/wireless/realtek/rtw88/coex.c
+> @@ -1443,6 +1443,156 @@ static void rtw_coex_set_ant_path(struct rtw_dev =
+*rtwdev, bool force, u8 phase)
+>  #define case_ALGO(src) \
+>         case COEX_ALGO_##src: return #src
+>=20
+> +/* 8723BS SDIO WiFi/BT coexistence antenna handling. On BT-disabled boar=
+ds the
+> + * scan/auth window still routes through the PTA mux; these helpers forc=
+e the
+> + * vendor-shaped WiFi-owned antenna path so directed management TX reach=
+es air.
+> + */
 
-WARNING: net/mac80211/rate.c:51 at rate_control_rate_init+0x5a6/0x630
-...
-Call Trace:
- <TASK>
- rate_control_rate_init_all_links+0xf4/0x190 net/mac80211/rate.c:84
- sta_apply_auth_flags+0x1bc/0x430 net/mac80211/cfg.c:2152
- sta_apply_parameters+0x126d/0x1b10 net/mac80211/cfg.c:2618
- ieee80211_add_station+0x3de/0x700 net/mac80211/cfg.c:2684
- rdev_add_station+0xfc/0x290 net/wireless/rdev-ops.h:201
- nl80211_new_station+0x1b4e/0x1fd0 net/wireless/nl80211.c:9505
+comment style.
 
-Fix this by introducing a two-tiered active state check in
-ieee80211_add_station():
+> +#define REG_8723BS_BT_COEX_CTRL                0x0039
+> +#define REG_8723BS_BB_ANT_CFG          0x0930
+> +#define REG_8723BS_BB_ANT_CFG1         0x0944
+> +#define REG_8723BS_BB_ANT_BUF          0x0974
+> +#define RTW8723BS_COEX_H_WLAN_ACTIVE   0x1800101b
 
-1. Global AP State: Add an early return if the main wdev is an AP or
-   P2P GO and `sdata->u.ap.active` is false.
+define these in reg.h
 
-2. MLO Link State: For Wi-Fi 7 MLO setups, links can start asynchronously.
-   Even if the global AP is active, a specific link might still be down.
-   If a specific link_id is requested, ensure the underlying physical link
-   has an allocated beacon (`link->u.ap.beacon`) before proceeding with
-   sta_info allocation.
+> +
+> +static bool rtw_coex_8723bs_ant_is_aux(struct rtw_dev *rtwdev)
+> +{
+> +       return !!(rtwdev->efuse.bt_setting & BIT(6));
+> +}
+> +
+> +static bool rtw_coex_8723bs_bt_disabled(struct rtw_dev *rtwdev)
+> +{
+> +       return rtw_is_8723bs(rtwdev) && rtwdev->coex.stat.bt_disabled;
+> +}
+> +
+> +static u32 rtw_coex_8723bs_pta_ant_path(struct rtw_dev *rtwdev)
+> +{
+> +       return rtw_coex_8723bs_ant_is_aux(rtwdev) ? 0x80 : 0x200;
+> +}
+> +
+> +/* Write BB_SEL_BTG, retrying once with SYS_FUNC BB reset if the first
+> + * write does not stick (RF/BB clock may have been gated).
+> + */
 
-Assisted-by: Gemini:3.1-pro
-Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
-Signed-off-by: Slawomir Stepien <sst@poczta.fm>
----
-v2:
-* Move the logic inside ieee80211_add_station()
-* Check both the non-MLO AP/P2P state and MLO link state
-* Update subject line and commit message
+With the given name, this comment seems not necessary.=20
 
-v1:
-* https://lore.kernel.org/linux-wireless/373210a9-4365-4cac-823a-0eec391858e7@mail.kernel.org/
----
- net/mac80211/cfg.c | 43 ++++++++++++++++++++++++++++++++++---------
- 1 file changed, 34 insertions(+), 9 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 43f142624d33..c3a580ad97e9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2637,19 +2637,24 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
+> +static u32 rtw_coex_8723bs_write_bb_sel_btg(struct rtw_dev *rtwdev, u32 =
+value)
+> +{
+> +       u8 sys_func_before;
+> +       u32 readback;
+> +
+> +       sys_func_before =3D rtw_read8(rtwdev, REG_SYS_FUNC_EN);
+> +       if ((sys_func_before & (BIT(0) | BIT(1))) !=3D (BIT(0) | BIT(1)))=
  {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct sta_info *sta;
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
- 	int err;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_P2P_GO) {
-+		if (!sdata->u.ap.active)
-+			return -ENETDOWN;
-+	}
-+
- 	if (params->vlan) {
- 		sdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
- 
- 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    sdata->vif.type != NL80211_IFTYPE_AP)
- 			return -EINVAL;
--	} else
--		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+	}
- 
- 	if (ether_addr_equal(mac, sdata->vif.addr))
- 		return -EINVAL;
-@@ -2663,17 +2668,37 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		return -EINVAL;
- 
- 	/*
--	 * If we have a link ID, it can be a non-MLO station on an AP MLD,
--	 * but we need to have a link_mac in that case as well, so use the
--	 * STA's MAC address in that case.
-+	 * If we have a link ID:
-+	 * (1) check if it is valid, up and beaconing
-+	 * (2) it can be a non-MLO station on an AP MLD, but we need to have a
-+	 * link_mac in that case as well, so use the STA's MAC address in that
-+	 * case.
- 	 */
--	if (params->link_sta_params.link_id >= 0)
-+	if (params->link_sta_params.link_id >= 0) {
-+		int link_id = params->link_sta_params.link_id;
-+		struct ieee80211_link_data *link;
-+		struct ieee80211_sub_if_data *wdev_sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-+
-+		if (link_id >= IEEE80211_MLD_MAX_NUM_LINKS)
-+			return -EINVAL;
-+
-+		link = sdata_dereference(wdev_sdata->link[link_id], wdev_sdata);
-+		if (!link)
-+			return -ENOLINK;
-+
-+		if (wdev_sdata->vif.type == NL80211_IFTYPE_AP ||
-+		    wdev_sdata->vif.type == NL80211_IFTYPE_P2P_GO) {
-+			if (!rcu_access_pointer(link->u.ap.beacon))
-+				return -ENETDOWN;
-+		}
-+
- 		sta = sta_info_alloc_with_link(sdata, mac,
--					       params->link_sta_params.link_id,
-+					       link_id,
- 					       params->link_sta_params.link_mac ?: mac,
- 					       GFP_KERNEL);
--	else
-+	} else {
- 		sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
-+	}
- 
- 	if (!sta)
- 		return -ENOMEM;
--- 
-2.55.0
+> +               rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
+
+Use given names for BIT 0/1.
+
+> +               usleep_range(10, 11);
+> +       }
+> +
+> +       rtw_write32(rtwdev, REG_BB_SEL_BTG_8723B, value);
+> +       readback =3D rtw_read32(rtwdev, REG_BB_SEL_BTG_8723B);
+> +       if (readback =3D=3D value)
+> +               return readback;
+> +
+> +       usleep_range(10, 11);
+> +       rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
+> +       rtw_write32(rtwdev, REG_BB_SEL_BTG_8723B, value);
+> +
+> +       return rtw_read32(rtwdev, REG_BB_SEL_BTG_8723B);
+> +}
+> +
+> +static u32 rtw_coex_8723bs_reassert_pta_ant(struct rtw_dev *rtwdev)
+> +{
+> +       return rtw_coex_8723bs_write_bb_sel_btg(rtwdev,
+> +                                               rtw_coex_8723bs_pta_ant_p=
+ath(rtwdev));
+
+Just call rtw_coex_8723bs_write_bb_sel_btg() ?
+
+> +}
+> +
+> +static void rtw_coex_8723bs_set_cck_pri(struct rtw_dev *rtwdev, bool hig=
+h)
+> +{
+> +       if (!rtw_coex_8723bs_bt_disabled(rtwdev))
+> +               return;
+> +
+> +       if (high) {
+> +               rtw_write32(rtwdev, REG_BT_COEX_TABLE_H,
+> +                           RTW8723BS_COEX_H_WLAN_ACTIVE);
+> +       } else {
+> +               rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_TX_CCK, false=
+);
+> +               rtw_coex_set_wl_pri_mask(rtwdev, COEX_WLPRI_RX_CCK, false=
+);
+> +       }
+> +}
+> +
+> +static void rtw_coex_8723bs_restore_pad_ctrl(struct rtw_dev *rtwdev,
+> +                                            bool keep_pta_owner)
+> +{
+> +       u32 before, after;
+> +
+> +       before =3D rtw_read32(rtwdev, REG_PAD_CTRL1);
+> +       after =3D before & ~(BIT_LNAON_WLBT_SEL | BIT_SW_DPDT_SEL_DATA);
+> +       if (keep_pta_owner)
+> +               after |=3D BIT_PAPE_WLBT_SEL;
+> +       else
+> +               after &=3D ~BIT_PAPE_WLBT_SEL;
+> +       if (after !=3D before)
+> +               rtw_write32(rtwdev, REG_PAD_CTRL1, after);
+> +}
+> +
+> +static void rtw_coex_8723bs_fw_gnt_bt_low(struct rtw_dev *rtwdev)
+> +{
+> +       if (!rtw_coex_8723bs_bt_disabled(rtwdev))
+
+Please review your calling path. I think callers should ensure RTL8723BS
+before calling. (But here needs additional condition bt_disabled though)
+
+> +               return;
+> +
+> +       if (rtw_read8(rtwdev, REG_GNT_BT) =3D=3D 0x00 &&
+> +           rtw_read8(rtwdev, REG_BT_COEX_ENH_INTR_CTRL) =3D=3D 0x0c)
+> +               return;
+> +
+> +       rtw_fw_set_gnt_bt(rtwdev, 0);
+> +}
+> +
+> +static void rtw_coex_8723bs_reassert_ant_buffer(struct rtw_dev *rtwdev)
+> +{
+> +       u8 sys_func_before;
+> +
+> +       sys_func_before =3D rtw_read8(rtwdev, REG_SYS_FUNC_EN);
+> +       if ((sys_func_before & (BIT(0) | BIT(1))) !=3D (BIT(0) | BIT(1)))=
+ {
+
+Please use given names for BIT 0/1.
+
+> +               rtw_write8_set(rtwdev, REG_SYS_FUNC_EN, BIT(0) | BIT(1));
+> +               usleep_range(10, 11);
+> +       }
+> +
+> +       rtw_write8_mask(rtwdev, REG_8723BS_BT_COEX_CTRL, BIT(3), 0x1);
+> +       rtw_write8(rtwdev, REG_8723BS_BB_ANT_BUF, 0xff);
+> +       rtw_write8_mask(rtwdev, REG_8723BS_BB_ANT_CFG1, 0x3, 0x3);
+> +       rtw_write8(rtwdev, REG_8723BS_BB_ANT_CFG, 0x77);
+> +}
+> +
+> +static void rtw_coex_8723bs_apply_scan_table(struct rtw_dev *rtwdev)
+> +{
+> +       rtwdev->coex.dm.cur_table =3D 2;
+> +       rtw_coex_set_table(rtwdev, true, 0x5a5a5a5a, 0x5a5a5a5a);
+> +}
+> +
+> +/* Non-connected scan/auth workaround: PS-TDMA type 8 off, PTA antenna p=
+ath,
+> + * coex table type 2 (matches the vendor non-connected arbitration).
+> + */
+> +void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev)
+> +{
+> +       struct rtw_coex_dm *coex_dm =3D &rtwdev->coex.dm;
+> +       struct rtw_coex_stat *coex_stat =3D &rtwdev->coex.stat;
+> +
+> +       if (!rtw_is_8723bs(rtwdev))
+
+Caller check this already.
+
+> +               return;
+> +
+> +       coex_dm->cur_ps_tdma_on =3D false;
+> +       coex_dm->cur_ps_tdma =3D 8;
+> +       coex_dm->ps_tdma_para[0] =3D 0x08;
+> +       coex_dm->ps_tdma_para[1] =3D 0x00;
+> +       coex_dm->ps_tdma_para[2] =3D 0x00;
+> +       coex_dm->ps_tdma_para[3] =3D 0x00;
+> +       coex_dm->ps_tdma_para[4] =3D 0x00;
+> +
+> +       rtw_fw_coex_tdma_type(rtwdev, 0x08, 0x00, 0x00, 0x00, 0x00);
+> +       rtw_coex_8723bs_fw_gnt_bt_low(rtwdev);
+> +       rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+> +       rtw_coex_8723bs_reassert_ant_buffer(rtwdev);
+> +       rtw_coex_8723bs_apply_scan_table(rtwdev);
+> +       if (coex_stat->bt_disabled)
+
+It looks like callers check this already.=20
+
+> +               rtw_coex_8723bs_set_cck_pri(rtwdev, true);
+> +       rtw_coex_8723bs_reassert_pta_ant(rtwdev);
+> +       rtw_coex_8723bs_restore_pad_ctrl(rtwdev, true);
+
+I wonder how you can make this workaround? There are so many arguments.
+
+> +}
+> +
+>  static const char *rtw_coex_get_algo_string(u8 algo)
+>  {
+>         switch (algo) {
+> @@ -2770,7 +2920,7 @@ void rtw_coex_power_on_setting(struct rtw_dev *rtwd=
+ev)
+>         coex->stop_dm =3D true;
+>         coex->wl_rf_off =3D false;
+>=20
+> -       /* enable BB, we can write 0x948 */
+> +       /* enable BB, so BB_SEL_BTG is writable */
+>         rtw_write8_set(rtwdev, REG_SYS_FUNC_EN,
+>                        BIT_FEN_BB_GLB_RST | BIT_FEN_BB_RSTB);
+>=20
+> @@ -2877,6 +3027,33 @@ void rtw_coex_scan_notify(struct rtw_dev *rtwdev, =
+u8 type)
+>         coex->freeze =3D false;
+>         rtw_coex_write_scbd(rtwdev, COEX_SCBD_ACTIVE | COEX_SCBD_ONOFF, t=
+rue);
+>=20
+> +       /* 8723BS SDIO BT-disabled: keep the scan/auth PTA antenna state =
+the
+> +        * vendor uses and skip the generic coex run. At scan start (firm=
+ware
+> +        * has been up long enough for stable RX DMA) replay the vendor B=
+T_MP /
+> +        * BT_INFO queries, then re-establish the scan-path PTA setup.
+> +        */
+> +       if (rtw_coex_8723bs_bt_disabled(rtwdev)) {
+> +               if (type =3D=3D COEX_SCAN_START_2G || type =3D=3D COEX_SC=
+AN_START) {
+> +                       struct rtw_coex_info_req req =3D {};
+> +
+> +                       coex_stat->cnt_wl[COEX_CNT_WL_SCANAP] =3D 0;
+> +                       coex_stat->wl_hi_pri_task2 =3D true;
+> +
+> +                       req.seq =3D 0x0e;
+> +                       req.op_code =3D BT_MP_INFO_OP_SUPP_VER;
+> +                       rtw_fw_query_bt_mp_info(rtwdev, &req);
+> +                       req.seq =3D 0x0f;
+> +                       req.op_code =3D BT_MP_INFO_OP_PATCH_VER;
+> +                       rtw_fw_query_bt_mp_info(rtwdev, &req);
+
+These two are debug purpose. When you cat debugfs, it will try to query the
+version, won't it?
+
+> +                       rtw_fw_query_bt_info(rtwdev);
+
+It seems to be called at initial. Is it necessary?
+
+> +
+> +                       rtw_coex_8723bs_scan_workaround(rtwdev);
+> +               } else {
+> +                       coex_stat->wl_hi_pri_task2 =3D false;
+> +               }
+> +               return;
+
+Since RTL8723BS does special handle, just move all into a function, but put
+in common flow.
+
+> +       }
+> +
+>         if (type =3D=3D COEX_SCAN_START_5G) {
+>                 rtw_dbg(rtwdev, RTW_DBG_COEX,
+>                         "[BTCoex], SCAN START notify (5G)\n");
+> diff --git a/drivers/net/wireless/realtek/rtw88/coex.h b/drivers/net/wire=
+less/realtek/rtw88/coex.h
+> index c398be8391f7..72b1353c9313 100644
+> --- a/drivers/net/wireless/realtek/rtw88/coex.h
+> +++ b/drivers/net/wireless/realtek/rtw88/coex.h
+> @@ -430,4 +430,6 @@ static inline void rtw_coex_active_query_bt_info(stru=
+ct rtw_dev *rtwdev)
+>                 rtw_coex_query_bt_info(rtwdev);
+>  }
+>=20
+> +void rtw_coex_8723bs_scan_workaround(struct rtw_dev *rtwdev);
+> +
+
+Just static no need to export.
+
+>  #endif
 
