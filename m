@@ -1,158 +1,174 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924FF15E5BB
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 18:12:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785175928; cv=pass; b=nVq1k6tLvT9tpkMlBN+d6s31Yv4WdAXMkhRs+vUBQ5hZDY9oYkbKbKJyHJgy/CmqqzzK9C7hER/+JBA/TpmRl1PEwDpCdlyjtJX742j8W6JmItoeMX4EGoG44p4Te2j8aNaOkw7PLZr8w9k1q5hCfUG++YK6Fewbpl1moo9GGcU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785175928; c=relaxed/simple;
-	bh=ARWDZkHQrN1z0/1Ag6bqNTedPkCVHLHWD1STI3q1RJU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=L++etZ63lMA6C0LhwEJyGzJ2EDHup3yauSatqyzLcwAYMMRt8OGbP6V+1DMcLAbxtfvVqtr5tTjHMr/vBrbS9iPkr7kaVSWsm0aHl4ieZmiIQWo80Zxib9xtAjmXXZPUIEIwu7t0to8/Aoty1Sl+bkQpsqtnnwq8pv0IRPzK7cI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nNc3eMe+; arc=pass smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FB7376A1F
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 20:00:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785182412; cv=none; b=G+MVFEeORegMmu2F0V0Rwfkm0RIabLuP3qevgpPxsp3uWGxO/Dfau66xWa8gEhPkFDz686usCxaUF4QYfnMbP/1ff7ykJtJ8+bGwiyClmUhy6lU2XpyHlp/Lx1g0ssnzqzmP1vw5h6YVE329SyvgiNrx1mCOMzPhrG4EuHoxOZ0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785182412; c=relaxed/simple;
+	bh=VN2Zu0KQNDzKBJQR88gb83xdcOIPFPUvUXafsoqUygY=;
+	h=Message-ID:Date:From:To:Cc:Subject:Content-Type:MIME-Version; b=YOQ4xarRM29Eg0UJEDqbChn0wWXh/21wLKlih6+n8rzGDgw1wG2TBt/J/XTT10AegKy8OQAYH67y0cN3ySkGxFtU3xQOoKnjMehbOPm3I4ewJXlFNkzqolo9tkwABE0h3TQCVVso0/mOE/TWjjz3PYI7rOOcrEIOl4K9rxSi3JY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BvA2pMW0; arc=none smtp.client-ip=209.85.128.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nNc3eMe+"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-81ec29f1d07so35731967b3.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 11:12:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785175924; cv=none;
-        d=google.com; s=arc-20260327;
-        b=hhYKeP2kDkhWiExtLyaiHNZcqgjTDw3Voe9K7I/ykdwgqwkcG00qKCg9useXRSmB97
-         VOaRtBjzQ8Q0Ok9QB55qDs9+o6604b01duZ685QFvDMnIgKEt/Iip1mVckqjk9U2VxLM
-         TieM6Wf+vEuOIRD1Hga6qJIikvYwQEaYSjOWehgk3ICpIdNZlmV/dCwtbROtcho91S11
-         24491Oarar/CGhO3uyPMqL8oMjETBknt1M4OBkXXJNyh2pr2xWcknGvH8sYFyvVDSJUY
-         uV3iidpiGaPqNnngpx3e9iQ3EWUL1D/qn+9HLe1Ffuhswg5fjnao8y8X16+5F8MO7zL3
-         vuxQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=XCh0/imz+IkcuVKGhvGaQ+5ECipoL9S8Q2JCCP0zXPA=;
-        fh=EyRC49qtZyK5q2FbYr/xpfmHfL08Fd6wbmnBSjPDnP4=;
-        b=E+H0uSgusrAX0DfBsh5k56tghRiJH6e1YsVSb8GwfGSMkVdG8c4OtPd109IFYTHHvc
-         NyxwOZdK895SyghFFNgmqh3EVO5U856O61Cf+Jk2dyHlRYs3jMPLotM9qC8SI3dgc9bF
-         bRdL3it+3oHO/te16/ZsOjfW/UH7c6F2vX9rXMWXc1/+kBba62WGpl1Cv1n7yMequpFp
-         HD5HJWmE8fGW+VFD1ZC6WFMWKAtqv9Gw7HMwEzR9npA9Sxh2MGquTxYgKAtrNbGnZhuU
-         ZnUEa9+XTvi684KeohIg6t7a9ExDzbRWZcgnoWjZvHX99Ayln7+OOHmehegNkN33XCvx
-         qCHg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BvA2pMW0"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4954dff6536so22670405e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 13:00:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785175924; x=1785780724; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=XCh0/imz+IkcuVKGhvGaQ+5ECipoL9S8Q2JCCP0zXPA=;
-        b=nNc3eMe+8ZDD6Ddm+2UsyjyDEOZTPrpzUnejEDOfSoXklOaWHoojpudmUYsxmcT9ki
-         /4kYahDE2+uuXlf8wHLFK8fGxE0AD/V7+yg3NiIgirRQWyIi+yuarIQZsRX53QAnIOxA
-         zdKzNEj1dzCGe+0PGkcgJqO/nE3AW9saSp8V1a1PqxrGScIDFH1V75twL7vJRbly/SMv
-         o+FdGT741wAfQg8OXlAtqm/KaFfgGXeg+Vx0IAvPTS5FGnt64dgEUuP44KyHTJzXQVdS
-         E1RaPPUL5y4iMQExzZKkQv9EH+jx0JSvfgoQYlpzi6yCVPHqjSiLiG2CHacMcu+kdNZy
-         PaOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785175924; x=1785780724;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1785182398; x=1785787198; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:subject:cc:to
+         :from:date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XCh0/imz+IkcuVKGhvGaQ+5ECipoL9S8Q2JCCP0zXPA=;
-        b=ZVEiblviPN+HF74CDjszLPSQaQ0+lXk6sI6uTMpXU6ZMw8KBCfL/nMiRE7nHTk9rLS
-         VkkjrkRcgVFJBD1ed8OBCmdu74WAessJMsY62qTgHbglwsi64FTFsboJPMd2mNTMfCWs
-         MF0QzyPf1/bnqDRwbBvw7Cw8toqNbhyImkh+3blPW0pVY9oBznQ4AsvxSefWChnH51Ix
-         ymSy5fLkgMdfL7Pp/NkPaMJ+RRS/vQY8iPXKewIMn6PHKOD4q5b2r9keIQGQWmJPH7PB
-         L0cO7dYVGdGnKtgtOkl0u3PgKTqIAN6f9joRSTPZdEfE8WC38qVzd3xdsoV7+sSOGovw
-         +lqQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rojzkc9tzV19Yu0rJDLMgy8B8DSJk+3i3EwqISw383aXhq2r0SA/J+qoqWiP2hh6ModRFqW04UbO+RoaeAF3w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyVxIsouWQcKH58vCeys+nnWPz8Aol2kcP9u0IYN44QRWx/cHfj
-	PYpa2ezaEbM0yUPAr5RMCVWsl0I7T/EN4KWDnzSCLFFxnT+ZuGxnWSPKbqTIljoFak+nXQRZ9vX
-	Bn0SKSJ8KjCEe2fV/dMaGYDKg5JRes3T5rLYcAGtxvA==
-X-Gm-Gg: AR+sD11IElw2HOTuO/5iy3Q9FDgEdfD0fyQrIV4Uu1Bjk2ejGkm+Yl+ZfkPHYIOsRmD
-	mK3Y6TKjoT00gumXll5JyfuGB4c5L9g5GAi4f52oNauWPFmOcNj+kavXTo+b5oL0eFNwow62I1Z
-	rNUbT0c2Q7Q1UlXz9it/s16zb+xy9tIcQyhmSIn4hneslSvKPe6WgGufcm+smsIApd+yoV0z9Y0
-	+/GaVqXDSkuvqe6KQEed4tG02eq4icmyvd/7+hav58SuedH9OF1/bqTfOUwrFGNabkPcjfITv5A
-	eW6I5vuJLiEKNjVhHWIF2RPpbDJeyS0NHVeTFWXorA==
-X-Received: by 2002:a05:690c:3681:b0:7b2:1bf1:8016 with SMTP id
- 00721157ae682-81f93930c80mr2697527b3.2.1785175924462; Mon, 27 Jul 2026
- 11:12:04 -0700 (PDT)
+        bh=HtNOUytS7spqmKL8HBRjl5j9jbmXbkSAtWYLPzNGcyw=;
+        b=BvA2pMW0aqIuFdq9BoRQAVHAvaqa1tvlMdGT1BUNZfJYL1WG11nu4a/7Pw5h8RZGu4
+         CSIzHZWxMiuRFpqfZX4ezEmICpvOfJIni3D8hAnIxSUYQvs/X+2rbhxbuITJjG3Wacsy
+         R3s0VHQ4zFvqJj9/BqTo2+Qpij3uad1fFes5raQjQhjIFg801Zp2iSGPVjbJVQKRzcqF
+         DGmaMiX50QpMujMOt2IUC5s4tZOElcQgG+LW6UDATne1p+8jhSYH5U6peVyWxJobLr3E
+         z32g1uB7klFphFZcT5BBnFomSxZ2XACnAXD8uAzhoK3ozlnRDU9D0DRN/Jdwjwo0VEFb
+         AUXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785182398; x=1785787198;
+        h=mime-version:content-transfer-encoding:content-type:subject:cc:to
+         :from:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=HtNOUytS7spqmKL8HBRjl5j9jbmXbkSAtWYLPzNGcyw=;
+        b=hz8fBhAlh7+9QnqfqdHFmeud48fg6cVTzy8iccqtkI75EgcJuulgR31jDei9RiII7w
+         VxTmR3WncH0ayYiamuczvt4ULtg7C2XQyjTx5DxB71owvRyDNuZzJB5kMvMRV/dikkKQ
+         UGB8CltafYwkWFkFjGXn89PAzqbQWVV5OgLj57MB3U/Yn++9x3LiredXB48HU4iwys7D
+         RIdqbYQg4dkGjYxEM+sDInC6BNYTho9Jlfs+yrM/CDFyKK9gu0f9Oqa3FWbH8WWzC/Df
+         LqtDdmvoibUHfWULu2sQY+xKGPQq1bnn0ka/u6jlV0rTBmdDigXMRdwptrPOdCGBQFjY
+         UpDA==
+X-Forwarded-Encrypted: i=1; AHgh+RqIyQT/GK+6rK3NZUmjuryxN9YrNZ5Cbw1b9M1DoBkxlNnfjIqMlmk8qFNd/eJ7Cm36b1TyRAkr/F+LQmMaMg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YydI9RBdW7bhzZmf792/+kJogYWahALpFeAncqjiINuk35jJn2l
+	SvJJuFGs8tqvGcO1bFR15jNnu07BHGMiqE9g0IFA7psgoyBhtJFMLp83
+X-Gm-Gg: AR+sD12IjFgv9VsYXTbLe+kwpLLy5Hz/tUuErmPk0IRkuwmNi2qc/FBDESc+73948zd
+	WitcTIxfvoRMvbAuZC2MXABYBPdG+1/7/U/OktPksbdtcbzdoameuQ5WdY4/GfA7UO9laK5Ugrj
+	SLDMDi1rvh9T/4VBNUUeN3/clp5H22eV7QAOMiOOcQt/tEridvVLqcEamws7sMPgIsAfkZ9PW4l
+	NyB7Um12vQGc2XmerBO3gUxNx45XXYs4U6ZECwD+iP2Qx2e/0rbOR4RHl2/sHhpCHqkp1RkiuNy
+	04ffr5/4D1RQftMVwN1DW0H8TLor14QhTFvFvbTBvJ+ONJ4IosCDQk2a1dHsHo171NEoZKAwa/5
+	CbBQ1VTMFHAWubbWFFx03M97OECvaDx3LSujiqzmw9ABX/jIDufeBug90sNvMS8Nzf5exLPDwLO
+	a9MECWuZk5t6dbBpYj2JQtT6Wg1DKBAIUBkzF5xD5N4NtkouWzsqqZyUxOe7WQiL6vzntt88ZNm
+	0aqXRGbvWBI
+X-Received: by 2002:a05:600c:c4a3:b0:495:7538:d4ea with SMTP id 5b1f17b1804b1-496b5670622mr127824895e9.0.1785182398165;
+        Mon, 27 Jul 2026 12:59:58 -0700 (PDT)
+Received: from mcp-gateway.lzampier.com (brnt-07-b2-v4wan-169820-cust69.vm7.cable.virginm.net. [81.102.32.70])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c46240c4sm17066885e9.12.2026.07.27.12.59.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2026 12:59:57 -0700 (PDT)
+Message-ID: <6a67b8bd.4bd67053.2727d8.1806@mx.google.com>
+Date: Mon, 27 Jul 2026 12:59:57 -0700 (PDT)
+From: bookmailer3000@gmail.com
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>,
+ linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7915: keep the tx worker off the txq scheduler
+ during hw restart
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260726133851.1382095-1-ekffu200098@gmail.com> <da1aa515-58cd-454b-9f18-314732d45913@oss.qualcomm.com>
-In-Reply-To: <da1aa515-58cd-454b-9f18-314732d45913@oss.qualcomm.com>
-From: Sang-Heon Jeon <ekffu200098@gmail.com>
-Date: Tue, 28 Jul 2026 03:11:53 +0900
-X-Gm-Features: AUfX_mwYEeKTjPAwobt28Qw9iPfdjUAGLbybM2HXhw33l5bInRZzC6WEhWFlIrc
-Message-ID: <CABFDxMF60HxufruO0s1pM0UAGcCwKPME_sobxagrT5876NUCug@mail.gmail.com>
-Subject: Re: [PATCH ath-next v2] wifi: ath6kl: remove conditional return with
- no effect
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 28, 2026 at 12:38=E2=80=AFAM Jeff Johnson
-<jeff.johnson@oss.qualcomm.com> wrote:
->
-> On 7/26/2026 6:34 AM, Sang-Heon Jeon wrote:
-> > Both branches of the check return the same value, so the check has
-> > no effect. Remove it and return the value directly.
-> >
-> > This is the result of running the Coccinelle script from
-> > scripts/coccinelle/misc/cond_return_no_effect.cocci.
-> >
-> > Signed-off-by: Sang-Heon Jeon <ekffu200098@gmail.com>
-> > ---
-> > As suggested by Ping-Ke, the wifi patch of the treewide v1 series [1]
-> > is split per driver and posted separately. You can find the Coccinelle
-> > script in v1 [1].
-> >
-> > ---
-> > Changes from v1 [1]
-> > - Split the wifi patch per driver
-> > - Change base to ath/for-next
-> > - Filter only ath6kl changes
-> >
-> > [1] https://lore.kernel.org/all/20260723184538.3888637-1-ekffu200098@gm=
-ail.com/
-> > ---
-> >
-> >  drivers/net/wireless/ath/ath6kl/init.c | 6 +-----
-> >  1 file changed, 1 insertion(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wirel=
-ess/ath/ath6kl/init.c
-> > index 782209dcb782..61fa10d88714 100644
-> > --- a/drivers/net/wireless/ath/ath6kl/init.c
-> > +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> > @@ -1566,11 +1566,7 @@ static int ath6kl_init_upload(struct ath6kl *ar)
-> >
-> >       address =3D MBOX_BASE_ADDRESS + LOCAL_SCRATCH_ADDRESS;
-> >       param =3D options | 0x20;
-> > -     status =3D ath6kl_bmi_reg_write(ar, address, param);
-> > -     if (status)
-> > -             return status;
-> > -
-> > -     return status;
->
-> this make the last call inconsistent with the other calls in this functio=
-n.
->
-> my preference would be to change the last line to return 0 instead
+mt7915_mac_full_reset() calls ieee80211_restart_hw(), whose asynchronous
+mac80211 reconfiguration tears down and rebuilds every station's TXQs.
+Nothing keeps the mt76 tx worker off the mac80211 txq scheduler in that
+window, so it dereferences freed TXQs and panics in the mt76-tx kthread.
 
-Nice way to get both consistency and explicitness. I'll address it in v3.
+  mt76_txq_schedule_list <- mt76_tx_worker_run <- mt76_tx_worker
 
-Thanks for the review :)
+Gate the worker at its entry point instead. Add a reset_pending counter
+to struct mt76_dev, raised per band in mt7915_mac_full_reset() and
+released as each band's reconfig completes in mt7915_reconfig_complete().
+mt76_tx_worker_run() returns immediately while the counter is nonzero,
+and the worker is kicked once it drops back to zero. A run already in
+flight when the reset starts is serialized by the existing
+mt76_worker_disable() in mt7915_mac_restart().
 
-> > +     return ath6kl_bmi_reg_write(ar, address, param);
-> >  }
-> >
-> >  int ath6kl_init_hw_params(struct ath6kl *ar)
->
+The worker cannot simply be parked across the restart. Driver callbacks
+invoked during the reconfiguration (mt7915_mcu_add_tx_ba(),
+__mt76_set_channel()) pause and unconditionally resume it, and kthread
+parking does not nest.
 
-Best Regards,
-Sang-Heon Jeon
+On MT7981 the panic reproduces within a few resets under tx load via the
+sys_recovery debugfs knob. With this patch it no longer occurs, across
+forced resets and two weeks of production firmware-triggered resets.
+
+The same restart/reconfig pattern exists in mt7996.
+
+Fixes: 8a55712d124f ("wifi: mt76: mt7915: enable full system reset support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Lucas Zampieri <lcasmz54@gmail.com>
+---
+ mt76.h        | 2 ++
+ mt7915/mac.c  | 3 +++
+ mt7915/main.c | 5 +++++
+ tx.c          | 3 +++
+ 4 files changed, 13 insertions(+)
+
+diff --git a/mt76.h b/mt76.h
+index dda5034b..ed30768f 100644
+--- a/mt76.h
++++ b/mt76.h
+@@ -974,6 +974,8 @@ struct mt76_dev {
+ 	enum mt76_hwrro_mode hwrro_mode;
+ 
+ 	struct mt76_worker tx_worker;
++	/* nonzero while a hw restart reconfig is rebuilding the TXQs */
++	atomic_t reset_pending;
+ 	struct napi_struct tx_napi;
+ 
+ 	spinlock_t token_lock;
+diff --git a/mt7915/mac.c b/mt7915/mac.c
+index cd123253..5f459c63 100644
+--- a/mt7915/mac.c
++++ b/mt7915/mac.c
+@@ -1428,6 +1428,9 @@ mt7915_mac_full_reset(struct mt7915_dev *dev)
+ 
+ 	dev->recovery.hw_full_reset = true;
+ 
++	/* released per band in mt7915_reconfig_complete() */
++	atomic_add(ext_phy ? 2 : 1, &dev->mt76.reset_pending);
++
+ 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
+ 	wake_up(&dev->mt76.mcu.wait);
+ 	ieee80211_stop_queues(mt76_hw(dev));
+diff --git a/mt7915/main.c b/mt7915/main.c
+index 42c548a3..73479d6c 100644
+--- a/mt7915/main.c
++++ b/mt7915/main.c
+@@ -1833,6 +1833,11 @@ mt7915_reconfig_complete(struct ieee80211_hw *hw,
+ 			 enum ieee80211_reconfig_type reconfig_type)
+ {
+ 	struct mt7915_phy *phy = mt7915_hw_phy(hw);
++	struct mt7915_dev *dev = phy->dev;
++
++	if (reconfig_type == IEEE80211_RECONFIG_TYPE_RESTART &&
++	    !atomic_dec_if_positive(&dev->mt76.reset_pending))
++		mt76_worker_schedule(&dev->mt76.tx_worker);
+ 
+ 	ieee80211_wake_queues(hw);
+ 	ieee80211_queue_delayed_work(hw, &phy->mt76->mac_work,
+diff --git a/tx.c b/tx.c
+index 4507fd15..e8e86e46 100644
+--- a/tx.c
++++ b/tx.c
+@@ -767,6 +767,9 @@ void mt76_tx_worker_run(struct mt76_dev *dev)
+ 	struct mt76_phy *phy;
+ 	int i;
+ 
++	if (atomic_read(&dev->reset_pending))
++		return;
++
+ 	mt76_txq_schedule_all(&dev->phy);
+ 	for (i = 0; i < ARRAY_SIZE(dev->phys); i++) {
+ 		phy = dev->phys[i];
+-- 
+2.47.3
