@@ -1,254 +1,165 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 356FC41E6C4
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:04:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61278396D09
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:29:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785164695; cv=none; b=TG4IPnxxFH2O077crr4ld0EE0i2Kl2E7mShWYMXLX1PqDk5g670czvWTtOfaKloaV8hRKO4k6ohdUCJx+p3XNXggd/k0xPPoCjxCz+BqKyI92063ZBnMQxCjc6odBzLe4M1SBpPHP6OMK6eAIT0FmwUibDFeVWLepd0hhV+rijo=
+	t=1785166196; cv=none; b=E246xwYubXTkbltJ5+IPKrnWC7Pe3bISoAgxLXrhCp1ZKloZdhI/X/BW/DifTMXmoVaHMOBCAyHWmV56G9U3bNQ6KJO4FDgvZ20Dn0u1BELPYDZ8fwn2j0QKciArE6n9ONuxBKJQTLPCKi6GrYMNbeVmpIY2NbEVyzfsCRkO8m8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785164695; c=relaxed/simple;
-	bh=c6XsO0UnfVnkQDq8LaS0gkkryaCp2s78rcsluR2p/38=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=P7sD0DIY3L4g85gxCe5zrtXuVY7EhdIrvMiVyV6vHXAHEjCxmb6abN99+lhy2msAtQRA9OZV7L7RysYCVu4rxE5gVP0QtT/bx78Ltc/OtslMkwBqDQmhg1tQdoh4yEqoVwRsSBkAj2+fqnNEGFveY8OiNWvFKQEfdzf5GlGkOcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=D7SkfZZ+; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1785166196; c=relaxed/simple;
+	bh=IZU6MDVTNHWrOxVhC8cZmK/SlQtqEcN+EhPWWcShn3g=;
+	h=Message-ID:Date:MIME-Version:To:Cc:Subject:From:Content-Type; b=KcGtLwxaZg3fbz/ZTrzwMJo8ThxyTuFFnepzUIm1+Mwa6ujASOYOZh75VlQTw2XBboD8s/5q7PTz48Stc0AhfxhXcshzNCel5ywdPVWRa+TqAIqO9U8e+lXXRa7gLi6MJVE0p/Ah9UCuGYCva+E4MRtLShiY39Ww6FSXqP85gCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=WYfoJWar; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=PSVYkPvX; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="D7SkfZZ+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=SCfXFC29VJFHIBodfpwu53CvTH2mLhW7GrcyTq1rJk4=; b=D7SkfZZ+X84iUvSQnVwdOMUfxQ
-	b7HXsbzx1ohs3mkxQsvH3VKM8YHZY8hkcqDsa54IhDYTx+Fl+/kkCAFKTahxKIlOF57TTd7CXdA+b
-	PXvJZhzEfrdLO0wqJw7dfzwkL+i4014BDaFLtwHKotlG+ipxjyF2irtJLvOkpn6isuWY=;
-Received: from p200300cadf0126009ebf0dfffe00fa2d.dip0.t-ipconnect.de ([2003:ca:df01:2600:9ebf:dff:fe00:fa2d] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1woMsl-008KN0-2o
-	for linux-wireless@vger.kernel.org;
-	Mon, 27 Jul 2026 17:04:43 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 15/15] wifi: mt76: mt7925: fix infinite loop in UNI event TLV parsing
-Date: Mon, 27 Jul 2026 15:04:34 +0000
-Message-ID: <20260727150434.1778520-15-nbd@nbd.name>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260727150434.1778520-1-nbd@nbd.name>
-References: <20260727150434.1778520-1-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="WYfoJWar";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="PSVYkPvX"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66RDm9033823643
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:29:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=aCP7o02Y8I/xfGf3dGEk8z
+	Mltx8sX5iT2Za0pUwKugE=; b=WYfoJWar3ooaV9cJywWtCXVn47vd44paedwCcT
+	s3PiFVlFCpPityAaUTQ/e4GZHmZ66B5v41gNSlZ3imoFoTgmwRdOiRc182jW1NjK
+	EDi1dgrZr/dttr4Pq1sbSbwqmr1ZNs7iE8nq046bn2Z8XTUByy6NOXA7lgG+0sRP
+	R1r7zm0s06pcSlTo0T9+oAIpqfUQ6RWSI40UFkCyYk7XU3fWF4WOWKrCSboNz/eD
+	TGLi7FOkYtFIjFOKHsWecvlBeAWdIS3rMuF51+cK67GOJhk0+CAA/+XnrSuPXgHx
+	iUGo4mhjoW4dqgZsx38CVwtuo27ufLihgcR2if8EP6Zqifhg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fp4nbsh1c-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 15:29:53 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38e54b6556aso3376955a91.2
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 08:29:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785166193; x=1785770993; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=aCP7o02Y8I/xfGf3dGEk8zMltx8sX5iT2Za0pUwKugE=;
+        b=PSVYkPvXJdt1gWowoQ6bdvMZLztaJXiDO+Ngrr5QeJ4kh6IArKp+cV4HmGcXdY2Afv
+         Txd/x9mv9CYm+AST0OkezCX2304mNc65mqEgfGloKnF5TBKlvEZYb535FB7cGDRzmGFB
+         NO0HyuIVb0ANhC+0Iinng8AASpWt9SvQ37tflveu+pmyn+DSw5XsmyUW8o3y/CS3Gw37
+         /ClZdiEkRiH/FDa/4j1QmRE+55UZb6aMUToK2RDmNeIjocdxMcCdmsqMP00qgCdLImB8
+         pFsZ0cXCOcUsbSEiT7ijZnbdiwEe+sEw5n+FgQwK42Cv0CDAjh7H2BLeS5NCqEk9cw8h
+         2O/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785166193; x=1785770993;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=aCP7o02Y8I/xfGf3dGEk8zMltx8sX5iT2Za0pUwKugE=;
+        b=Buzeo9WtUqjHetKmcV4ZCTS7Fos4/wIj4JPmaQPC7tGDWNAbFbV+k+r/znBnczFp5V
+         9Ys/98S6ddpPL01Iwr9hPaTYg/4DJXj3Pe79KVRfywYTKUflt8qJL81zKRlqq2FtbPBQ
+         Zz14HHnshYyXo92e0pLZZfLnIpU/JcQEI0hTExRAeghrxj/MPq7LZVbT2eSUj8X4hCkI
+         4eE6bSTjY5mAFhRdq2sj29tjgqp5pGlNAA0i7ugAIeFENXQfiKbFl15AwwpBCz8Xtoz0
+         jL5+IWhIw1KDU1Z4z/r7ZcTjD7k5dqnjUBFcbAExBmEvmEBUPPSHtvu5iqNJbZQ6JFjl
+         2hCw==
+X-Gm-Message-State: AOJu0Yz7ghKa9AmRonzdt7WCmIVlUNkN+l22MnCz76RJkEzfEOp7AmNj
+	VJRxg/m+ZO2dEnAGr5oP8Lw5hGZUPzk9e/GAmMNpU6sQdtcaKE6TzoSFLzN+vmRuLLxtYoispo2
+	vHixC38mYPQ5ettEjniqHxyvw78chZPsyOoHUwJGdef89vD5Z8j6r562zWgLkWJa7MLZ/65IQg/
+	OwyQ==
+X-Gm-Gg: AR+sD11zhae1qNAYjPr0FqKFFn/5WD62MsUpl2BoB17VQ7Aj28JTSM6VgkBNerhuXXu
+	e/caA5D7w+Wsyvm+Ryu0eTsn+FEbgwSXqL8vCj/sl+JhTzgqS459zl1or65JBjm4s0l9lqSaarc
+	vzfyVf8MT3DD6eKKjY6RkwRXlKOMH510CQib91EPtirrqUqvlIKYYTTnTSOoWrSirWOR/aaonRg
+	8J2rN2al8vOEgJT8N5jCW8hr8QeyV2aRBsSNFVQqxUEbsAuin+y0PNe0wEEdXid9brHzgjrz7Vo
+	uyA9zuof9bSVr1LoR6DVUkNdddNgMiQEVE2hO7xGx7jHSkbyY7HGnC/fST0YHbPaAysDkFP5ZPP
+	NSfVQjtR/ejtw06FdhA2zuN1Ch0Sb1UWqA1Ah
+X-Received: by 2002:a17:90b:4b86:b0:38e:a555:8fc3 with SMTP id 98e67ed59e1d1-38f2965654bmr8839882a91.41.1785166192580;
+        Mon, 27 Jul 2026 08:29:52 -0700 (PDT)
+X-Received: by 2002:a17:90b:4b86:b0:38e:a555:8fc3 with SMTP id 98e67ed59e1d1-38f2965654bmr8839848a91.41.1785166192076;
+        Mon, 27 Jul 2026 08:29:52 -0700 (PDT)
+Received: from [10.81.91.45] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13d130f55c6sm88728062c88.15.2026.07.27.08.29.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Jul 2026 08:29:51 -0700 (PDT)
+Message-ID: <8ea62ed4-0a27-47f3-ad4f-b30a1317c800@oss.qualcomm.com>
+Date: Mon, 27 Jul 2026 08:29:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: linux-wireless@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        ath12k@lists.infradead.org, jjohnson@kernel.org
+Subject: pull-request: ath-current-20260727
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: VofVepeWWCavaW5CkjL_5Q-7FejN8feR
+X-Authority-Analysis: v=2.4 cv=cJjQdFeN c=1 sm=1 tr=0 ts=6a677971 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=VwQbUJbxAAAA:8 a=LjZE-VvXoyxWvIaTNqcA:9 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI3MDE0NSBTYWx0ZWRfX6SbWl3ta0092
+ NnZE1qOMc6jqD6ZgMWF+G0RT5Anf+qwoNUPYp/Kojwh3rE/nE+2tDR693eEr4KV9J7+UNNnOyoP
+ mGzGhrTUZnyrxvKjkWwMPliF+zW53Hc=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI3MDE0NSBTYWx0ZWRfXyIN+t4I+h9i4
+ wqo3DxvqFwFaMPqHwiVctzN+/OUdzA7gNzwM6Ng621FQDFOKI8TFNT3Y5c+yv2XGrzx7dYiOTHd
+ N0URkBqZrssy0nT1xwAhiUKZJAPTpi6avMj74re4OmQMUlRD6nlfxOE3DSUqgNMTqoSCjvyqofV
+ Dm5PIjfuHskTWd2oi6Nr9zxF3zbgZNEsfmNMB6o/kzdauEzhvjkmsxo5GQsPTAl6MdKMLIYQaWr
+ 07nCyKB/wEqeSmQBx6Ew+EPGPQcHUmMbFKNdBJrSfUyzCdSKkN5zR5FTH55M2jET9INcXB3TDpL
+ DVF3SLPMUFk5e/jcJIGmpfWemk+pURXsd83QjuhelZeDPkyuR/3dc9yDIUdbbmZRXPzTdtvz4JN
+ 3H9pfeM92NhfaxUaNySa/8h183E9cw9ducWJaokzqRaqDjSs2zGWZsSjJ4zS5AfND5KLdwMqPTd
+ B6VX6wsLCH94FkS1mPQ==
+X-Proofpoint-GUID: VofVepeWWCavaW5CkjL_5Q-7FejN8feR
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-07-27_04,2026-07-24_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 phishscore=0 spamscore=0 adultscore=0 suspectscore=0
+ clxscore=1015 priorityscore=1501 lowpriorityscore=0 bulkscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607270145
 
-The event TLV loops accept a zero-length TLV, which advances neither the
-cursor nor the remaining length, so a malformed event hangs the caller.
-mt7925_mcu_uni_roc_event() additionally walked past the end of the skb,
-since it never checked the declared length against the remainder.
+The following changes since commit b24adfed83ae3fe623d978a30d5c6c636a874821:
 
-Replace the five open-coded loops with a shared iterator that rejects
-lengths below the TLV header and beyond the remaining buffer, and check
-the per-tag payload sizes before dereferencing them.
+  wifi: cfg80211: guard optional PMSR nominal time (2026-07-21 14:12:24 +0200)
 
-While here, make the RSSI monitor event read from the current TLV rather
-than from the start of the list.
+are available in the Git repository at:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- .../net/wireless/mediatek/mt76/mt7925/main.c  | 10 ++---
- .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 38 +++++++++++--------
- .../net/wireless/mediatek/mt76/mt7925/mcu.h   | 19 ++++++++++
- 3 files changed, 46 insertions(+), 21 deletions(-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath.git tags/ath-current-20260727
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-index 8586e18c2fa3..825cdced9f40 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
-@@ -1562,7 +1562,7 @@ void mt7925_scan_work(struct work_struct *work)
- 	while (true) {
- 		struct sk_buff *skb;
- 		struct tlv *tlv;
--		int tlv_len;
-+		u32 tlv_len;
- 
- 		spin_lock_bh(&phy->dev->mt76.lock);
- 		skb = __skb_dequeue(&phy->scan_event_list);
-@@ -1575,7 +1575,7 @@ void mt7925_scan_work(struct work_struct *work)
- 		tlv = (struct tlv *)skb->data;
- 		tlv_len = skb->len;
- 
--		while (tlv_len > 0 && le16_to_cpu(tlv->len) <= tlv_len) {
-+		mt7925_for_each_tlv(tlv, tlv_len) {
- 			struct mt7925_mcu_scan_chinfo_event *evt;
- 
- 			switch (le16_to_cpu(tlv->tag)) {
-@@ -1588,6 +1588,9 @@ void mt7925_scan_work(struct work_struct *work)
- 				}
- 				break;
- 			case UNI_EVENT_SCAN_DONE_CHNLINFO:
-+				if (le16_to_cpu(tlv->len) < sizeof(*tlv) + sizeof(*evt))
-+					break;
-+
- 				evt = (struct mt7925_mcu_scan_chinfo_event *)tlv->data;
- 
- 				mt7925_regd_change(phy, evt->alpha2);
-@@ -1599,9 +1602,6 @@ void mt7925_scan_work(struct work_struct *work)
- 			default:
- 				break;
- 			}
--
--			tlv_len -= le16_to_cpu(tlv->len);
--			tlv = (struct tlv *)((char *)(tlv) + le16_to_cpu(tlv->len));
- 		}
- 
- 		dev_kfree_skb(skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-index 8ca4c952d399..1219a370300a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
-@@ -409,16 +409,18 @@ mt7925_mcu_uni_hif_ctrl_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 	tlv = (struct tlv *)skb->data;
- 	tlv_len = skb->len;
- 
--	while (tlv_len > 0 && le16_to_cpu(tlv->len) <= tlv_len) {
-+	mt7925_for_each_tlv(tlv, tlv_len) {
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case UNI_EVENT_HIF_CTRL_BASIC:
-+			if (le16_to_cpu(tlv->len) <
-+			    sizeof(struct mt7925_mcu_hif_ctrl_basic_tlv))
-+				break;
-+
- 			mt7925_mcu_handle_hif_ctrl_basic(dev, tlv);
- 			break;
- 		default:
- 			break;
- 		}
--		tlv_len -= le16_to_cpu(tlv->len);
--		tlv = (struct tlv *)((char *)(tlv) + le16_to_cpu(tlv->len));
- 	}
- }
- 
-@@ -426,22 +428,24 @@ static void
- mt7925_mcu_uni_roc_event(struct mt792x_dev *dev, struct sk_buff *skb)
- {
- 	struct tlv *tlv;
--	int i = 0;
-+	u32 tlv_len;
- 
- 	skb_pull(skb, sizeof(struct mt7925_mcu_rxd) + 4);
-+	tlv = (struct tlv *)skb->data;
-+	tlv_len = skb->len;
- 
--	while (i < skb->len) {
--		tlv = (struct tlv *)(skb->data + i);
--
-+	mt7925_for_each_tlv(tlv, tlv_len) {
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case UNI_EVENT_ROC_GRANT:
-+			if (le16_to_cpu(tlv->len) <
-+			    sizeof(struct mt7925_roc_grant_tlv))
-+				break;
-+
- 			mt7925_mcu_roc_handle_grant(dev, tlv);
- 			break;
- 		case UNI_EVENT_ROC_GRANT_SUB_LINK:
- 			break;
- 		}
--
--		i += le16_to_cpu(tlv->len);
- 	}
- }
- 
-@@ -476,7 +480,7 @@ mt7925_mcu_tx_done_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 	tlv = (struct tlv *)skb->data;
- 	tlv_len = skb->len;
- 
--	while (tlv_len > 0 && le16_to_cpu(tlv->len) <= tlv_len) {
-+	mt7925_for_each_tlv(tlv, tlv_len) {
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case UNI_EVENT_TX_DONE_MSG:
- 			struct mt7928_uni_txdone_event *evt;
-@@ -484,6 +488,9 @@ mt7925_mcu_tx_done_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 			if (!is_mt7928(&dev->mt76))
- 				break;
- 
-+			if (le16_to_cpu(tlv->len) < sizeof(*evt))
-+				break;
-+
- 			evt = (struct mt7928_uni_txdone_event *)tlv;
- 			if (evt->status) {
- 				dev_info(dev->mt76.dev,
-@@ -510,8 +517,6 @@ mt7925_mcu_tx_done_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 		default:
- 			break;
- 		}
--		tlv_len -= le16_to_cpu(tlv->len);
--		tlv = (struct tlv *)((char *)(tlv) + le16_to_cpu(tlv->len));
- 	}
- }
- 
-@@ -548,10 +553,13 @@ mt7925_mcu_rssi_monitor_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 	tlv = (struct tlv *)skb->data;
- 	tlv_len = skb->len;
- 
--	while (tlv_len > 0 && le16_to_cpu(tlv->len) <= tlv_len) {
-+	mt7925_for_each_tlv(tlv, tlv_len) {
- 		switch (le16_to_cpu(tlv->tag)) {
- 		case UNI_EVENT_RSSI_MONITOR_INFO:
--			event = (struct mt7925_uni_rssi_monitor_event *)skb->data;
-+			if (le16_to_cpu(tlv->len) < sizeof(*event))
-+				break;
-+
-+			event = (struct mt7925_uni_rssi_monitor_event *)tlv;
- 			ieee80211_iterate_active_interfaces_atomic(dev->mt76.hw,
- 								   IEEE80211_IFACE_ITER_RESUME_ALL,
- 								   mt7925_mcu_rssi_monitor_iter,
-@@ -560,8 +568,6 @@ mt7925_mcu_rssi_monitor_event(struct mt792x_dev *dev, struct sk_buff *skb)
- 		default:
- 			break;
- 		}
--		tlv_len -= le16_to_cpu(tlv->len);
--		tlv = (struct tlv *)((char *)(tlv) + le16_to_cpu(tlv->len));
- 	}
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-index 154f792a56bc..11f9eac13ffc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.h
-@@ -699,6 +699,25 @@ mt7925_mcu_get_cipher(int cipher)
- 	}
- }
- 
-+static inline bool
-+mt7925_mcu_tlv_valid(struct tlv *tlv, u32 rem)
-+{
-+	u16 len;
-+
-+	if (rem < sizeof(*tlv))
-+		return false;
-+
-+	len = le16_to_cpu(tlv->len);
-+
-+	/* a length below the header size would not advance the cursor */
-+	return len >= sizeof(*tlv) && len <= rem;
-+}
-+
-+#define mt7925_for_each_tlv(tlv, rem)					\
-+	for (; mt7925_mcu_tlv_valid(tlv, rem);				\
-+	     (rem) -= le16_to_cpu((tlv)->len),				\
-+	     (tlv) = (struct tlv *)((u8 *)(tlv) + le16_to_cpu((tlv)->len)))
-+
- int mt7925_mcu_set_dbdc(struct mt76_phy *phy, bool enable);
- int mt7925_mcu_hw_scan(struct mt76_phy *phy, struct ieee80211_vif *vif,
- 		       struct ieee80211_scan_request *scan_req);
--- 
-2.53.0
+for you to fetch changes up to 469d7e6077c1665754eaf330e1feabdca7b060ae:
 
+  wifi: ath12k: resolve PENDING ML peer ID from MLO_PEER_MAP HTT event (2026-07-27 08:00:43 -0700)
+
+----------------------------------------------------------------
+ath.git update for v7.2-rc6
+
+Fix an ath12k MLO regression impacting WCN7850/QCC2072.
+
+----------------------------------------------------------------
+Baochen Qiang (8):
+      wifi: ath12k: fix out-of-bounds clear_bit in ath12k_mac_dp_peer_cleanup()
+      wifi: ath12k: factor out peer assoc send-and-wait into a helper
+      wifi: ath12k: keep ATH12K_PEER_ML_ID_VALID set in ath12k_sta::ml_peer_id
+      wifi: ath12k: add support for HTT_T2H_MSG_TYPE_MLO_RX_PEER_MAP
+      wifi: ath12k: introduce host_alloc_ml_id hardware parameter
+      wifi: ath12k: do not advertise MLD peer ID for firmware-allocate devices
+      wifi: ath12k: defer dp_peer registration when firmware allocates MLD peer ID
+      wifi: ath12k: resolve PENDING ML peer ID from MLO_PEER_MAP HTT event
+
+ drivers/net/wireless/ath/ath12k/core.c     |   2 +
+ drivers/net/wireless/ath/ath12k/core.h     |   3 +
+ drivers/net/wireless/ath/ath12k/dp_htt.c   |  49 +++++++++
+ drivers/net/wireless/ath/ath12k/dp_htt.h   |  12 +++
+ drivers/net/wireless/ath/ath12k/dp_peer.c  |  75 +++++++++++--
+ drivers/net/wireless/ath/ath12k/dp_peer.h  |   2 +
+ drivers/net/wireless/ath/ath12k/hw.h       |   2 +
+ drivers/net/wireless/ath/ath12k/mac.c      | 165 ++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath12k/peer.c     |  31 +++++-
+ drivers/net/wireless/ath/ath12k/peer.h     |   1 +
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c |  12 +++
+ 11 files changed, 293 insertions(+), 61 deletions(-)
