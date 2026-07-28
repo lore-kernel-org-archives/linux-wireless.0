@@ -1,109 +1,165 @@
-Received: from mail-yx1-f99.google.com (mail-yx1-f99.google.com [74.125.224.99])
+Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94CFB42BC50
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 18:23:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E38A7472F68
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 19:26:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785263002; cv=none; b=Sqjf7QidFm/O2oparol6n07klJfoZJvw1931yvOD2z0DopYeQP7VX+yoWgnSh1HTyGnHz16605XzL51K0k8hYT/Y7remaZ51qtPtXRlFYr2DQ9FxG/ubl5LPaw3I396FmPr2JRk2D4byK3s4rA0t4uc6vxw8M2+3YJfdw64SeGo=
+	t=1785266778; cv=none; b=VsJIAwBxC9bAdFpeakqKZupygVt6tQ9CZDdO/a2V0duwZIS1X/0a1bSWhMw8tHIY/zU+Lnz6yL3wPlh9bEJMBnk2kBbK0bErs4bXax1lIxP4Pnsvy1oJDLc8jVuFSSUuHjbzJRph86mrHiIz3ffOnOA+Ti54K9kx5hsQXnCXL68=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785263002; c=relaxed/simple;
-	bh=2ZMnfh2gm+z7DwlJzwXN+9iisoM++fsRSpgPAXHMX9o=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=LzyhDCMFVXglmQSsPcJjrgAQYX7i/C8TTHdC1m3elypIujqgfOrhiHqXaRDMW/0T09x0G245M34Bw2V1NwzyQX7YDR+YbcNwoyWFWReL+P6aOuRk5SJsZyBE1laGveaO67VUodFthk1M/o1VzWkY/RRmom0aqmkeLMLC8RiwxIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=KldYiSZY; arc=none smtp.client-ip=74.125.224.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785266778; c=relaxed/simple;
+	bh=EcHGE4bv3/8f684uJyKg5YK5taQ5B8iQcN0YfquQ28c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hi78bAHd4/4tL8quFRMVW94JqZHNqXpIr8fopn97MddCuHvKxK4CQMjmAWu10X86ssRTUber8cGDXOWQwGrbpuEvnUPMZdjXWsdJGp8ufmzk2Ad0zbaV9xKIFWNyb8RE1OIq4WWZqK3OGLABL1peWEUK63NbmmbCT1/MnhtdAlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h/OCuWfl; arc=none smtp.client-ip=209.85.221.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="KldYiSZY"
-Received: by mail-yx1-f99.google.com with SMTP id 956f58d0204a3-6681e7911b0so5863048d50.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 11:23:20 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785262999; x=1785867799;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=o/vhj2pW8AaAC+A8m3nnuIMt5Yp3qwZU9C2fvtKyLjE=;
-        b=dn8LCPbX26EWXVfyJsixAYgQO0gcLGbATgiPMsWnI6dJDMicf/LbbUp9eZwXDSWCjz
-         rjhqwRdV8Nc+gsyxqP7CAZtNj9gQlDqrGGJGzZBzCVzehycYS/SsnYmhK41EGujgWBQV
-         mJjvdcuNGJCvlLewu9oyu+9MQx6XyRjkgRpxjoyJ4R6XkWB/467pHIG2AkFDTxAugO2m
-         TDEBTAudjZinNdb7J4fP1085SyOXMd/MYRrStlrBfyosnfXTjSVZpt+lhGDP7uY7HOgj
-         e99MJ5NkvV/RBitu07C/DhxSYTRSVzDdZxAu5ifQux5K1S4xlIXUfyHhXOhXQi8FkHJR
-         otig==
-X-Gm-Message-State: AOJu0Yw4by0D45D8vkqZ5/73HzGijcpPp9ByjRNSXL60o8F78iaix7Ly
-	WIXUjT7qp19NC/Ie/a88YHiTMgFWTAUCl0ruxq1bR6WpfKqVsAN6QAN1UK5k2ntX+KKBCjMdzYk
-	2FQDZ2B+nyXbN4rHP51UDrm5rH+cJhndKo5+tJylZWQNcQpv5yIw7cSLusyLGpiwOVMGSgC1IWt
-	nSTORM5g1G+zThoZqCpOEYtxBIlPI24yiaWWW6G7DslzNakPqqhAFZN5NQPuQQqq9A6D+/QfCps
-	01J3y18mVWi7GRkEdQjc/I/cEqZ
-X-Gm-Gg: AR+sD12F0OiWP/ad+YmnN/E/R15WjdnbEFQr5LMHRbu8b3W+USzO+7ACxVevMqAjgIZ
-	GXkbDUjFvJ98sLUzkGWq6uEWcxkJw3kJdO+zfr+/pw4q4N87t+UfRoiSym6TpUau2lRnGj+ueJZ
-	fPJxBwyKPjJpaefEKPoxB5X9gaPc3z4D8LPwbdwy/KySbrE8SvVhTCZtrFLYp4DrqjdflMnhYy6
-	9pkxupMFakxGZivuCV/G/4HYL3ZhCdVT5Qd6HDBtcHNgf/Xw85ICVNe64wKPCFfwq0L7Jh0Rs/N
-	nYh6RV5ivtLWTArWdRNGkfEwFDrR8xL2oIgHHxvbp89vhWPZBoycj4zX+hOkg6qqCbHGbbRVNvC
-	ldvIlYOzLiBy8A0S90BDheqMekPJfc3iMkzTFnn1IW9E4LLTbGfCwEl3d7BCsJEgg3E1iL4qgjV
-	rtgIsjujcvyqf6W9rb3qv42VFV+QsCtlzemDvYDNc=
-X-Received: by 2002:a05:690e:43d3:b0:667:c766:a3ce with SMTP id 956f58d0204a3-6690580e99fmr1031753d50.86.1785262999346;
-        Tue, 28 Jul 2026 11:23:19 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-6691263cfa5sm28372d50.26.2026.07.28.11.23.19
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 28 Jul 2026 11:23:19 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-388cfc4848dso149181a91.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 11:23:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h/OCuWfl"
+Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-5bfaa014978so63645e0c.3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 12:26:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785262998; x=1785867798; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=o/vhj2pW8AaAC+A8m3nnuIMt5Yp3qwZU9C2fvtKyLjE=;
-        b=KldYiSZY4S+T9a/Qp2Qzt0LBXw7U0DzWQv/6Fh8ziWtWrYeRKlbKbxNjHZ/he2wrpB
-         GzmcRjyksdtM6fFIDgRlznzJKNhOgTdgDkk41cFNAFyLiCCRawwUg3hX5vS9Hj7lW1AY
-         3nJryLoHe3c/wHiTPrwB5xsrK5+2G6O/pFrCI=
-X-Received: by 2002:a17:90b:50c3:b0:38e:408:9d7d with SMTP id 98e67ed59e1d1-38f6a4acbe5mr3757848a91.36.1785262998049;
-        Tue, 28 Jul 2026 11:23:18 -0700 (PDT)
-X-Received: by 2002:a17:90b:50c3:b0:38e:408:9d7d with SMTP id 98e67ed59e1d1-38f6a4acbe5mr3757815a91.36.1785262997482;
-        Tue, 28 Jul 2026 11:23:17 -0700 (PDT)
-Received: from [10.229.42.78] ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31504dd42a9sm1193748eec.30.2026.07.28.11.23.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Jul 2026 11:23:16 -0700 (PDT)
-Message-ID: <2f901fed-faed-48a1-8f98-d2252576394f@broadcom.com>
-Date: Tue, 28 Jul 2026 20:23:17 +0200
+        d=gmail.com; s=20251104; t=1785266775; x=1785871575; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:sender:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=ePC1Y0ne7UyI/z8ccYsuTaBWGOHMZQF21As30zRm9nQ=;
+        b=h/OCuWflAK4dOqPk2+VxB04I4c5BpKVOcK0dHpuwQFXJMhs6gEIre2d+GJX4bFyVBX
+         S8ROP7GX3RXCVW3UPRhwyuCsZutFI/L/iuutI/pFKfOIdI9PdT6gwS+EyrEiO4eNpVEM
+         2FnuENm3xYJZYV+8hRwyl9sraDzzRH24DyJNDCfJedg1LOG7D1XNKwuzyO1UhaqlPM1i
+         ZUNZbEhBGqjFa5Hjbrby1qoKuhWmddvG/bq1BmMuV/b2pRfal1PudfVlXDgjUnJ/NNuI
+         pi0416h9aoPZJB6PLrC20/LA+IWMyxK/z+HHfrX/YXFs80lepK2WthMAzNGyYNLgYZ62
+         Ae7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785266775; x=1785871575;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ePC1Y0ne7UyI/z8ccYsuTaBWGOHMZQF21As30zRm9nQ=;
+        b=nLe94A/y9OAmXlse10UKfkrMk9dGGgO17Z0QHIYrpnctXDbW1xU5QrYcjhTRuHjB0w
+         6GdWH6rCv3upePqhNKcxbgXYJAB10tlcjQ4XjeX5J+FN3clQ4Bt9qW3Nn759JV942a6o
+         K36cc8V3RCgN23Rp9Dex3cMM+uDELVTB064b4W4dKzXxfjGo74VH6kVOshj4FMvJNBj3
+         EftOFGO9Eo32D/gR8lMSWA3OeyNVzAc4BR+cHOa1WbEEvrndKhnHzzX36wpTgpPrBgg1
+         cSBjZ1ZIsMZobweTRxz0sIUO/VJnzxezCxwIFC6Ma2fA/p8svO86vUISBQkwTskCFIX3
+         Cuag==
+X-Gm-Message-State: AOJu0Yy9dDhVIs3aaQdkOZNM1LfzK4/QuDnXpx9vmDk2503ZzO8lOeQM
+	+qShRp6DzkZfC9AxW2Mqw44GrbkssdURJmnx9J7/BVHDTFTLCb4Wl5KzZfIIhLaa
+X-Gm-Gg: AR+sD11IEVWUGG7lrT6p+PQKNzMaM3KTm3Y4O5GhZZYz556BN4zyWk4JHUN30qS8kt1
+	M8e+u5Znkp8B37RBnTG3P4hrOXttdcA+VIMxD/CuHQPrIwRIlM5lWffgX6tGL/PVZZsccnHR0gR
+	HtbigB3+CoDbytU2R+0kMe3qVBnIxS7L83CfMRqAGgNX91QzGZTic59nKuxV6FUEt46A9hsw+uQ
+	mT/s579sDrujihR/hOhHF9VPt5MilLAySSWVOENEL44TwiVCJqJtUi4gFAuRkAZOgaeVq4AhDq9
+	7QeJpNnTrV3pyP6qTjSj32RMNilq203pMQSi5gQorixAmb9KCNxn283FpCUpAcDfig3S9SqzRgy
+	BAWgYhOA4aiXz9qr6epBq0/qXFFvvAVDlfH8MSc3pd7G2/idvQeFT/K4aGqlWpOYZtvBhb5mMJC
+	y0Zy6PlxB9MwPZS4/S
+X-Received: by 2002:a05:6122:1815:b0:5c1:706d:aec3 with SMTP id 71dfb90a1353d-5c33fa9be2cmr1713248e0c.11.1785266774672;
+        Tue, 28 Jul 2026 12:26:14 -0700 (PDT)
+Received: from fedora.fibertel.com.ar ([200.55.79.212])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5c34eefcfaesm373461e0c.2.2026.07.28.12.26.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 12:26:14 -0700 (PDT)
+Sender: TheySaidThisWouldntFit <mariano.ignacio.baragiola@gmail.com>
+From: Mariano Baragiola <mbaragiola@linux.com>
+To: Ajay Singh <ajay.kathat@microchip.com>,
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Mariano Baragiola <mbaragiola@linux.com>
+Subject: [PATCH] wifi: wilc1000: validate monitor transmit frame headers
+Date: Tue, 28 Jul 2026 16:26:10 -0300
+Message-ID: <20260728192610.2236361-1-mbaragiola@linux.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next v2 00/12] wifi: cfg80211: consolidate cookie
- assignment for async ops
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev
-References: <20260728144549.2207061-1-arend.vanspriel@broadcom.com>
- <03bb72fdab133a4efa84bd57cad966d222fadb73.camel@sipsolutions.net>
- <19fa998cfc0.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-Content-Language: en-US
-In-Reply-To: <19fa998cfc0.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
 
-On 28/07/2026 18:39, Arend van Spriel wrote:
-> Op 28 juli 2026 18:18:48 schreef Johannes Berg <johannes@sipsolutions.net>:
-> 
->> Hmm. Maybe it's not too hard to update the staging driver?
->>
->> https://netdev-ctrl.bots.linux.dev/logs/build- 
->> wireless/1136007/14715755/build_32bit/summary
-> 
-> Dunno. I didn't look in staging. Will dive in.
-Indeed not too hard. I will fix it and wait for couple of days before 
-sending out v3 to address any comments from driver maintainers (if any).
+wilc_wfi_mon_xmit() reads the radiotap length before ensuring that the
+fixed header is present. After stripping that header, it reads the frame
+type and all three 802.11 addresses without checking how much frame data
+remains.
 
-Gr. AvS
+A truncated monitor injection can therefore cause out-of-bounds reads.
+Validate the radiotap header first, use the common 802.11 helper to check
+the variable header length, and require a complete three-address header
+before using the addresses. This covers QoS and four-address data headers
+while rejecting short control headers that this path cannot classify.
+
+Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Mariano Baragiola <mbaragiola@linux.com>
+---
+ drivers/net/wireless/microchip/wilc1000/mon.c | 30 +++++++++++++++----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/microchip/wilc1000/mon.c b/drivers/net/wireless/microchip/wilc1000/mon.c
+index b5cf6fa7a851..9b8c083b403d 100644
+--- a/drivers/net/wireless/microchip/wilc1000/mon.c
++++ b/drivers/net/wireless/microchip/wilc1000/mon.c
+@@ -142,6 +142,9 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 				     struct net_device *dev)
+ {
++	struct ieee80211_radiotap_header_fixed *rtap_hdr;
++	struct ieee80211_hdr_3addr *hdr;
++	unsigned int hdr_len;
+ 	u32 rtap_len, ret = 0;
+ 	struct wilc_wfi_mon_priv  *mon_priv;
+ 	struct sk_buff *skb2;
+@@ -153,13 +156,26 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	if (!mon_priv)
+ 		return -EFAULT;
+ 
++	if (skb->len < sizeof(*rtap_hdr))
++		goto drop;
++
++	rtap_hdr = (void *)skb->data;
++	if (rtap_hdr->it_version)
++		goto drop;
++
+ 	rtap_len = ieee80211_get_radiotap_len(skb->data);
+-	if (skb->len < rtap_len)
+-		return -1;
++	if (rtap_len < sizeof(*rtap_hdr) || skb->len < rtap_len)
++		goto drop;
+ 
+ 	skb_pull(skb, rtap_len);
++	hdr_len = ieee80211_get_hdrlen_from_skb(skb);
++	if (hdr_len < sizeof(*hdr))
++		goto drop;
+ 
+-	if (skb->data[0] == 0xc0 && is_broadcast_ether_addr(&skb->data[4])) {
++	hdr = (void *)skb->data;
++
++	if (ieee80211_is_deauth(hdr->frame_control) &&
++	    is_broadcast_ether_addr(hdr->addr1)) {
+ 		skb2 = dev_alloc_skb(skb->len + sizeof(*cb_hdr));
+ 		if (!skb2)
+ 			return -ENOMEM;
+@@ -191,8 +207,8 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	}
+ 	skb->dev = mon_priv->real_ndev;
+ 
+-	ether_addr_copy(srcadd, &skb->data[10]);
+-	ether_addr_copy(bssid, &skb->data[16]);
++	ether_addr_copy(srcadd, hdr->addr2);
++	ether_addr_copy(bssid, hdr->addr3);
+ 	/*
+ 	 * Identify if data or mgmt packet, if source address and bssid
+ 	 * fields are equal send it to mgmt frames handler
+@@ -207,6 +223,10 @@ static netdev_tx_t wilc_wfi_mon_xmit(struct sk_buff *skb,
+ 	}
+ 
+ 	return ret;
++
++drop:
++	dev_kfree_skb(skb);
++	return NETDEV_TX_OK;
+ }
+ 
+ static const struct net_device_ops wilc_wfi_netdev_ops = {
+-- 
+2.55.0
+
