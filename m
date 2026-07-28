@@ -1,196 +1,272 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E95C1A680B
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 00:20:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DB6B1A681E
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 00:32:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785198060; cv=none; b=GgqouieHMZylRYcbyrS5Bl/pXdM0M5SR46YFYHtVUItESyAvU4EFUWG5JxRKYMHsUe0ssdWe4/ARu9dwCV7xxT769F7/rFrZbSyMfsJoBKhMwVUj/B7pA+4Gw0V0oBtkehRdhqI6yw1qBkWydqc+U1bf70AhRYsgJ6mI2+7HW7c=
+	t=1785198742; cv=none; b=mrIFfaRkqW+M8nNI6V3UosPzgjwxvPPTIC8v5qR9rPYeXOZz4VHF1JtyZpm9G9VIoqgkZ7T9jwVRl526UztUZZoKdT6Z503IPQ3m8a/wGQQzgodTMCEUlF/HYrwz3oW5sRXKcZSIDPzAjWsqDSejpry+haidLQINAyxp/as1bf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785198060; c=relaxed/simple;
-	bh=AZBQH6sw52yRt+5IEYJ7WV8tHhvOu6zLPIHly2NM52c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eFpVswqbxD/d3GNL/76KJw1dSM4mBsXBGgPdgVfHWPnBvSzKrAP4q7MXVPDHwwDMkfVbaxnhw3F+0yb3KFsVPp6e5OHX2T/Dc4kd9nYjeXsoGYqWrHB/a+OOP9iIvHnX0gmXzA5R8YZPtY7N3TKiLrVBIgvTIj5ks3qVfgHWXmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hestyPTV; arc=none smtp.client-ip=209.85.167.42
+	s=arc-20240116; t=1785198742; c=relaxed/simple;
+	bh=Py3NE2dBA9D+wuyEQlhRPEbWAPlOdv9QpTay3xdbJqU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=bWbgJXD2uu3zBCpQwJwIDFJnljY5XziHdRfsYlqHWW1l/y8Dtdlfrvr8VM/P7sjsBGBC0LBQsXKt4l6mANh6i3o1y3hz1EqbCm2CDvEx5QtTUosghO8MSJFmkbGJt+DT8CswTm8vR4uxh5IdK2FFaSfCss5WllIE7IAk+TaFzdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ng+LyGdv; arc=none smtp.client-ip=209.85.208.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hestyPTV"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5b00d083818so381969e87.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 17:20:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ng+LyGdv"
+Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-39c7fd45465so28767731fa.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jul 2026 17:32:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785198056; x=1785802856; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FMLSvv5jcG839oN8ASkK2rci5K2oL9ElHsLObCCCdZM=;
-        b=hestyPTVZZV92Z0NGXqpw+heGpnluKespgcvOuDwRUGi/MNrJX3dZFCQ5QS54NrOLO
-         WGbazGN+BM5S8SA9/27iR2ftcgcQtLDiA+wpez0VgGymxBLK49XnVXy3AVaJs8z4+nxj
-         h3X+0fSC4BKmojvbsHB6wGjvsjTfQMvb63arcT9KZbfqZvXqTGXugGBfi/3mJektIF8c
-         FFZrtn45PA6SWbcqdJ4xatr1tHqiv41HNNFFh4u64aiBC4+QMG1QjcQ2lT2jHvr0qL++
-         LBGy0NrnHVYQrLrfOfZpXerqfYGWGu1kolkBuzNjP8G6VNi/id29GPMDuRhgBIv1YZQn
-         RyhA==
+        d=gmail.com; s=20251104; t=1785198739; x=1785803539; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=sBKaaxjnGO8fOejWs/6cfNqroT5nasVGxgPviHoLMXs=;
+        b=Ng+LyGdv2HmLFIykz9nZrOLMmc9/mS0k+vAAA5vCrkqIQ31QUcJZB8Ol1ZNH4Jf8EO
+         nYVky4kT7WwQYlbTQhPBCZvxXrYrCfolRJiFnywlgeeZXTNcMJwOXrVfDX+whfsHtUsS
+         yue7Gs28C6ywZGOJFTtrUOfbL4rG0SrGYA1dHBGFh28MLWlm2WD+gQRe8u3x++H7Bs88
+         B6PC+0wf1jg1UjlRzv8WCsTOYihcHdi284I7nE+FsjoK3LCtidRzgjK5sMX/7vvi/5Kx
+         Jk2agsxro6toVzN7Zmk9kx4gLMRpbrdGs4sKy9R5a2YnO8XciNjahYkdlFHqtBE+ODif
+         +whQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785198056; x=1785802856;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FMLSvv5jcG839oN8ASkK2rci5K2oL9ElHsLObCCCdZM=;
-        b=J9uLblZ5mPrM2bBnHmGbZa3dvkT2Qq6U6RqLMJg/4b1hHfWn38DT2qTAUrvxJViDEV
-         Ef3hsE1ffPElLRX9QxjIyvb2x+qE+GiKehdf2mzZdfaoA5V+geYn2eugNdv8OVTGJMW9
-         btP7mpwWlV/3ymrXiNTCmnFkTAG5xMzavgSf579M/ZpLzVmKmUYMCragJXaziDjJcotE
-         MhA6uFqT2mhyFW59Rq1wRb2DElbdBeMWhcPP2ibEJ9dyEGCvwPVBuis0FwDckubWTvuE
-         dcRm0Aq9nquEcjtw391B3GZ3uxmzl3nlAusk5VtMqWJUoK8Vkh3L+Q1M4yzQYfqWxNFz
-         oUYA==
-X-Gm-Message-State: AOJu0Yz8uYbs4/SgkAG6lUMVmrr1v2EW8gIR9TG822vBwOVhFQuUy3/H
-	ZxhiuL+Q1hLJsECh6nc0Qb7HHXe3uPNwTMvE7MTluaenw/YNqORMiPBgCHh0WFDnmlcHjA==
-X-Gm-Gg: AR+sD13JG9nJv7f4a5NlgqxCXQNnIi8YQRaSWXyOD04MvQvvvmdWK4GFbQMf6Q2Iit+
-	l3PZlRWRIlrb66ecbnAV3UaKKeJtdZG51YgNkhDt75bwNeIT57jKgTFCCUrOHoyIaK9U6PXRn5R
-	QMrZ1CjR/qRzle+yO646oteF96OjLwPZ4O8UVOoV4zLLocYkcQQJO/PmmDP1NBxaahwxewXQOpl
-	zboCOte2or6jXcz49L6npgOdXI35NOJ1XsTnBPlMEUSx50QMULOQFqTFGUPQFf393Ut+fX9gt93
-	DFPX/JhUoCZzemt/t6rPzFNionVDGIi42lZxGL1zDS2VtbZf2df2zKfJPijceYyHKpDWQo08+Cz
-	M4syXIqZTD4CBEzSA6cGrHNkzuglgUQugBBM+TqlrJ3Jy5RMssjOjObTnWQdHm+q48DTvtMi45R
-	v8PUKIV+E7Ne4=
-X-Received: by 2002:a05:6512:3a92:b0:5b2:a3a2:1395 with SMTP id 2adb3069b0e04-5b2d020d7b9mr22054e87.3.1785198055823;
-        Mon, 27 Jul 2026 17:20:55 -0700 (PDT)
-Received: from localhost ([188.234.148.119])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2be0817c2sm1760096e87.23.2026.07.27.17.20.52
+        d=1e100.net; s=20251104; t=1785198739; x=1785803539;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=sBKaaxjnGO8fOejWs/6cfNqroT5nasVGxgPviHoLMXs=;
+        b=bALgPgnPYlVT4wyouwEgaZ40YNZHeYZhS5llel/9mxPtEPuy04837mkRjdA2zkHXjW
+         WXh7KppjK41hmWFMChqHJbHwQ/rHzYPoc9XKJNeNe5xTvAOk/1+1iV2Fz/cx3t9Ctfb5
+         8NNCRsbEg/obQKs//j+rTEolSBTFfra2sJybxX6i7cO4t/GNLJbdpY3ov9FVzr7KNfgh
+         Q/scrSCsLCAkYWfGYCO6KuFxzXbivwZg5PLf61RxltVIRoY2XN+We/inYYS0uY1g/fK3
+         OfXSotTh7jtpv+63KHTrJ6C3MsuxrEbFf7+t7YOFArsZK+dCBGQ3vOqeOOXS3fLpxBf/
+         9qCw==
+X-Forwarded-Encrypted: i=1; AHgh+RoV+nsUCweqFmOiws84tDcO0VIsVEbY05JsnauSCPS3o5cy6dOHpJw3qRHiHNnoeMh4nAX/USBa9akBVSiDrw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKHjet4b4nPH0O2V025HcYxjDAc2Nx/je0S61UC5WolBuu+2KN
+	jcEMNRiulifOLYcssp2Vod5dz3qAvF5XLZBzNntGXGNrOCIoY3Y+sIfC
+X-Gm-Gg: AR+sD12zXUAEESXKAlZ4O6jFPX48sUQtAmn28BJNKb60PGI5W+yKHI8yWEz5bySm1Ll
+	+7y8vvWti5lizArn7I7OhhKCRYnVI2VVjHjmkOc0mvJShMjXJNqVYizgGClp3SrSTW7ohmstYJ6
+	sEJO/p19PPPO2p+joU4ocAJI1ZKOZhFv6wiFeP6o9pB0NTHq2DqppO/BY9nO2ZMCDWU2elDjJry
+	sufL25XxCSeiYBN3aGU3mmEqWNNoIB87EUjDaJ974LcaprNoaClxYfTvHyh/t6Uymc85BqMueUl
+	2C4u3NL1uCHHnDWaLdf79C7+CrdoRH4xL1ks13WAc5my/mQNwDVVznfWcupCX4kmxI+OqN5lhBS
+	S37PX/9+qjj6UVHYdDwIdwRN0C0qZXBPp86P29n9/5WG3CzEeYRIxYHyQudTvcI8X5Ca6tezG6V
+	IqR7GO0r/WV8fZ113ht7el
+X-Received: by 2002:a2e:be88:0:b0:39d:b717:622 with SMTP id 38308e7fff4ca-39f51d08b09mr197501fa.12.1785198738328;
+        Mon, 27 Jul 2026 17:32:18 -0700 (PDT)
+Received: from primary-ws.local ([188.234.148.119])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-39f22173117sm15700311fa.4.2026.07.27.17.32.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jul 2026 17:20:54 -0700 (PDT)
-From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
-	Bert Karwatzki <spasswolf@web.de>,
-	linux-kernel@vger.kernel.org,
-	Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Subject: [PATCH mt76] wifi: mt76: mt792x: drop redundant napi_disable() in unregister path
-Date: Tue, 28 Jul 2026 05:20:48 +0500
-Message-ID: <20260728002048.19351-1-mikhail.v.gavrilov@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        Mon, 27 Jul 2026 17:32:16 -0700 (PDT)
+Message-ID: <e62097844d50d8392c44e8f3dc5aed73a64051c6.camel@gmail.com>
+Subject: Re: hang during shutdown in next-20260722+ with MT7925
+From: "mikhail.v.gavrilov@gmail.com" <mikhail.v.gavrilov@gmail.com>
+To: Bert Karwatzki <spasswolf@web.de>, Nicolas Cavallari
+	 <nicolas.cavallari@green-communications.fr>
+Cc: linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>, 
+	ryder.lee@mediatek.com, lorenzo@kernel.org, legale.legale@gmail.com, 
+	sean.wang@mediatek.com, shayne.chen@mediatek.com
+Date: Tue, 28 Jul 2026 05:32:14 +0500
+In-Reply-To: <20260724151419.26014-1-spasswolf@web.de>
+References: <20260724151419.26014-1-spasswolf@web.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.61.1 (3.61.1-3.fc45) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Commit 13b7e6a96a00 ("wifi: mt76: Disable napi when removing device")
-made mt76_dma_cleanup() disable every RX NAPI instance before deleting
-it.  mt7921e_unregister_device() and mt7925e_unregister_device() already
-disable the very same instances and only afterwards call
-mt792x_dma_cleanup() -> mt76_dma_cleanup(), so each instance is now
-disabled twice.
+On Fri, 2026-07-24 at 17:14 +0200, Bert Karwatzki wrote:
+> Since next-20260722 my debian sid system hangs when shutting down or
+> rebooting (No error message when monitoring the shutdown process via
+> netconsole). I bisected the error to commit
+> 13b7e6a96a00 ("wifi: mt76: Disable napi when removing device")
+> and reverting this commit in next-20260723 makes shutting down or
+> rebooting work normally again.
+>=20
+> Wifi device:
+> 09:00.0 Network controller [0280]: MEDIATEK Corp. MT7925 802.11be
+> 160MHz 2x2 PCIe Wireless Network Adapter [Filogic 360] [14c3:7925]
+>=20
+> Cpu:
+> $ cat /proc/cpuinfo
+> processor	: 0
+> vendor_id	: AuthenticAMD
+> cpu family	: 26
+> model		: 68
+> model name	: AMD Ryzen 9 9950X 16-Core Processor
+> stepping	: 0
+> microcode	: 0xb404035
+> cpu MHz		: 624.194
+> cache size	: 1024 KB
+> physical id	: 0
+> siblings	: 32
+> core id		: 0
+> cpu cores	: 16
+> apicid		: 0
+> initial apicid	: 0
+> fpu		: yes
+> fpu_exception	: yes
+> cpuid level	: 16
+> wp		: yes
+> flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+> pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext
+> fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good amd_lbr_v2 nopl
+> xtopology nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq
+> monitor ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c
+> rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a
+> misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext
+> perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpuid_fault cpb
+> cat_l3 cdp_l3 hw_pstate ssbd mba perfmon_v2 ibrs ibpb stibp
+> ibrs_enhanced vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms
+> invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma
+> clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec
+> xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local
+> user_shstk avx_vnni avx512_bf16 clzero irperf xsaveerptr rdpru
+> wbnoinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean
+> flushbyasid decodeassists pausefilter pfthreshold avic
+> v_vmsave_vmload vgif x2avic v_spec_ctrl vnmi avx512vbmi umip pku
+> ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg
+> avx512_vpopcntdq rdpid bus_lock_detect movdiri movdir64b
+> overflow_recov succor smca fsrm avx512_vp2intersect flush_l1d
+> amd_lbr_pmc_freeze
+> bugs		: sysret_ss_attrs spectre_v1 spectre_v2
+> spec_store_bypass srso spectre_v2_user vmscape
+> bogomips	: 8599.52
+> TLB size	: 192 4K pages
+> clflush size	: 64
+> cache_alignment	: 64
+> address sizes	: 48 bits physical, 48 bits virtual
+> power management: ts ttp tm hwpstate cpb eff_freq_ro [13] [14]
+>=20
+> Other pci hardware:
+> $ lspci
+> 00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Root Complex
+> 00:00.2 IOMMU: Advanced Micro Devices, Inc. [AMD] Raphael/Granite
+> Ridge IOMMU
+> 00:01.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Dummy Host Bridge
+> 00:01.1 PCI bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge GPP Bridge
+> 00:01.2 PCI bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge GPP Bridge
+> 00:02.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Dummy Host Bridge
+> 00:02.1 PCI bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge GPP Bridge
+> 00:03.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Dummy Host Bridge
+> 00:04.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Dummy Host Bridge
+> 00:08.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Dummy Host Bridge
+> 00:08.1 PCI bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Internal GPP Bridge to Bus [C:A]
+> 00:08.3 PCI bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Internal GPP Bridge to Bus [C:A]
+> 00:14.0 SMBus: Advanced Micro Devices, Inc. [AMD] FCH SMBus
+> Controller (rev 71)
+> 00:14.3 ISA bridge: Advanced Micro Devices, Inc. [AMD] FCH LPC Bridge
+> (rev 51)
+> 00:18.0 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 0
+> 00:18.1 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 1
+> 00:18.2 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 2
+> 00:18.3 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 3
+> 00:18.4 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 4
+> 00:18.5 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 5
+> 00:18.6 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 6
+> 00:18.7 Host bridge: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge Data Fabric; Function 7
+> 01:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] Navi 10 XL
+> Upstream Port of PCI Express Switch (rev 25)
+> 02:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD/ATI] Navi 10 XL
+> Downstream Port of PCI Express Switch (rev 25)
+> 03:00.0 VGA compatible controller: Advanced Micro Devices, Inc.
+> [AMD/ATI] Navi 44 [Radeon RX 9060 XT] (rev c0)
+> 03:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Navi 48
+> HDMI/DP Audio Controller
+> 04:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd
+> NVMe SSD 9100 PRO [PM9E1]
+> 05:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Upstream Port (rev 01)
+> 06:00.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 06:06.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 06:07.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 06:08.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 06:0c.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 06:0d.0 PCI bridge: Advanced Micro Devices, Inc. [AMD] 600 Series
+> Chipset PCIe Switch Downstream Port (rev 01)
+> 08:00.0 Ethernet controller: Intel Corporation Ethernet Controller
+> I226-V (rev 06)
+> 09:00.0 Network controller: MEDIATEK Corp. MT7925 802.11be 160MHz 2x2
+> PCIe Wireless Network Adapter [Filogic 360]
+> 0b:00.0 USB controller: Advanced Micro Devices, Inc. [AMD] 800 Series
+> Chipset USB 3.x XHCI Controller (rev 01)
+> 0c:00.0 SATA controller: Advanced Micro Devices, Inc. [AMD] 600
+> Series Chipset SATA Controller (rev 01)
+> 0d:00.0 Non-Essential Instrumentation [1300]: Advanced Micro Devices,
+> Inc. [AMD] Raphael/Granite Ridge PCIe Dummy Function (rev c1)
+> 0d:00.2 Encryption controller: Advanced Micro Devices, Inc. [AMD]
+> Family 19h PSP/CCP
+> 0d:00.3 USB controller: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge USB 3.1 xHCI
+> 0d:00.4 USB controller: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge USB 3.1 xHCI
+> 0e:00.0 USB controller: Advanced Micro Devices, Inc. [AMD]
+> Raphael/Granite Ridge USB 2.0 xHCI
+>=20
+>=20
+> Bert Karwatzki
 
-napi_disable() is not idempotent: on return it leaves NAPIF_STATE_SCHED
-and NAPIF_STATE_NPSVC set, so a second call without an intervening
-napi_enable() spins in usleep_range() forever, waiting for bits that
-nobody will clear:
 
-  task:modprobe        state:D stack:25720 pid:7954  tgid:7954
-  Call Trace:
-   <TASK>
-   __schedule+0x11b8/0x26d0
-   schedule+0xe7/0x2f0
-   schedule_hrtimeout_range_clock+0x218/0x330
-   usleep_range_state+0x133/0x1b0
-   napi_disable_locked+0x37d/0x5f0
-   napi_disable+0x43/0x80
-   mt76_dma_cleanup+0x2b4/0x860 [mt76]
-   mt7921_pci_remove+0x17f/0x350 [mt7921e]
-   pci_device_remove+0xb6/0x1e0
-   device_release_driver_internal+0x38d/0x540
-   driver_detach+0xd0/0x1b0
-   bus_remove_driver+0x127/0x2d0
-   pci_unregister_driver+0x2a/0x280
-   __do_sys_delete_module+0x36a/0x5b0
-   do_syscall_64+0x11c/0x6d0
-   entry_SYSCALL_64_after_hwframe+0x76/0x7e
-   </TASK>
+Hi Bert,
 
+I hit the same hang on an MT7922 (mt7921e) and bisected it to the same
+commit, so it is not MT7925 specific.
+
+The cause is a double napi_disable().  mt7921e_unregister_device() and
+mt7925e_unregister_device() already disable all RX NAPI instances, and
+since 13b7e6a96a00 mt76_dma_cleanup() disables them a second time.
+napi_disable() is not idempotent - it leaves NAPIF_STATE_SCHED set on
+return, so the second call spins in usleep_range() forever.  Since
 mt7921_pci_shutdown() and mt7925_pci_shutdown() reuse the remove path,
-so the same deadlock is hit on every reboot and poweroff.  It is silent:
-the stuck task keeps sleeping and rescheduling, so neither the hung task
-detector nor the lockup detectors fire, and the last line on the console
-is "systemd-shutdown[1]: Rebooting."
+this is hit on every reboot and poweroff.  It is silent because the
+stuck task keeps sleeping and rescheduling, so neither the hung task
+detector nor the lockup detectors fire; sysrq-w during the hang shows
+the task parked in napi_disable() under mt76_dma_cleanup().
 
-Drop the driver-side loops and rely on mt76_dma_cleanup() instead.
-mt792x_dma_cleanup() stops and resets the WFDMA engine before calling
-it, so RX is already quiesced when the NAPI instances are disabled
-there.
+I have posted a fix, which is Nicolas' suggestion extended to mt7921e
+and with the then unused 'int i' removed:
 
-Fixes: 13b7e6a96a00 ("wifi: mt76: Disable napi when removing device")
-Reported-by: Bert Karwatzki <spasswolf@web.de>
-Closes: https://lore.kernel.org/all/20260724151419.26014-1-spasswolf@web.de/
-Suggested-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-Signed-off-by: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
----
+=20
+https://lore.kernel.org/all/20260728002048.19351-1-mikhail.v.gavrilov@gmail=
+.com/
 
-I hit the same hang on an ASRock B650I Lightning WiFi with MT7922
-(mt7921e) and bisected it to the same commit.  mt7921e has the same
-duplicated napi_disable() as mt7925e, so this covers both; it is
-Nicolas' suggestion from [1] extended to mt7921e and with the now
-unused 'int i' removed.
- 
-Tested on 7.2.0-rc5 with KASAN and lockdep enabled, MT7922 / mt7921e.
-Before the patch 'modprobe -r mt7921e' hangs (backtrace above, taken
-with sysrq-w) and the machine never gets past "Rebooting.".  With the
-patch 'modprobe -r mt7921e' and 'modprobe mt7921e' both complete and
-the interface comes back up, reboot and poweroff work again, and no
-__netif_napi_del_locked() or page_pool_disable_direct_recycling()
-warnings are logged.
- 
-[1] https://lore.kernel.org/all/59c03ab1-ec4a-411b-9b7e-8183ecf3e02b@green-communications.fr/
+I sent it as a separate thread so that patchwork registers it as a
+patch instead of a comment on the already applied commit.
 
- drivers/net/wireless/mediatek/mt76/mt7921/pci.c | 3 ---
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 3 ---
- 2 files changed, 6 deletions(-)
+Here on MT7922 it is tested with KASAN and lockdep enabled: module
+unload and reload, reboot and poweroff all work again.  If you can
+confirm it on your MT7925, a Tested-by would be welcome.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-index 7728c5ae6791..65d09d13304f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/pci.c
-@@ -43,7 +43,6 @@ static int mt7921e_init_reset(struct mt792x_dev *dev)
- 
- static void mt7921e_unregister_device(struct mt792x_dev *dev)
- {
--	int i;
- 	struct mt76_connac_pm *pm = &dev->pm;
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 
-@@ -52,8 +51,6 @@ static void mt7921e_unregister_device(struct mt792x_dev *dev)
- 
- 	cancel_work_sync(&dev->init_work);
- 	mt76_unregister_device(&dev->mt76);
--	mt76_for_each_q_rx(&dev->mt76, i)
--		napi_disable(&dev->mt76.napi[i]);
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
- 	cancel_work_sync(&dev->reset_work);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index ea64303283ed..eb1bd60e3d9f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -36,7 +36,6 @@ static int mt7925e_init_reset(struct mt792x_dev *dev)
- 
- static void mt7925e_unregister_device(struct mt792x_dev *dev)
- {
--	int i;
- 	struct mt76_connac_pm *pm = &dev->pm;
- 	struct ieee80211_hw *hw = mt76_hw(dev);
- 
-@@ -45,8 +44,6 @@ static void mt7925e_unregister_device(struct mt792x_dev *dev)
- 
- 	cancel_work_sync(&dev->init_work);
- 	mt76_unregister_device(&dev->mt76);
--	mt76_for_each_q_rx(&dev->mt76, i)
--		napi_disable(&dev->mt76.napi[i]);
- 	cancel_delayed_work_sync(&pm->ps_work);
- 	cancel_work_sync(&pm->wake_work);
- 	cancel_work_sync(&dev->reset_work);
--- 
-2.55.0
-
+--=20
+Thanks,
+Mikhail
