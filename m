@@ -1,160 +1,150 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA6941F942;
-	Tue, 28 Jul 2026 02:45:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 71CDD2DCF57;
+	Tue, 28 Jul 2026 03:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785206726; cv=none; b=PQkiOJZd50b8EwvG+dIFvthywtan3QezB5CpIbG4XApZRIxvpeNQUhk/nHTHOB0klnVwVdikrjIb1ryNf0X+i6xgWFZxexUQFjlYiOBFw4GAmwz49hhD9zUeMwTrhDg/HCRry60jpZXmot6WzT8JeJ+xmRodhmt1HjX2BuyDxwc=
+	t=1785208106; cv=none; b=XHFKq7giAaskn0NLu6eEHT+ehScAA3JoEA6JeDZokv8Q5/aoO3oISOEZ47wPoZWvE3BnjTqTAxqJgfT4w/wyQZyk6xxlMa5A/sDUG+buLav6x6MF1Qn3CBBjpaxlfvDnp0qbU51Up5vYIn3q6745IQX1pe3QJDsPRlf4DF3EuZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785206726; c=relaxed/simple;
-	bh=pQDFNH40sZNiB0luwZuiog275VTkEENkY9lrVDGL3pA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=HQdsIGKVohvY7iSNNs5MqGTgcZ1gOIuXSuSudb1cUvzIuIygG1+VfxD2yvYsJmOcSpI+13Sv7edbFPqqX5G3N2Mrx6RYG8fli1PBEY6cBjZdY3jsL706LJmIL0vbuH6F6a7UvFXzHZI09EKLwG/yVpfpeqn4xpQRsZ/tg0pc1Ko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=vPfOapCW; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="vPfOapCW"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66S2jJznD3555728, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785206719; bh=teowrk55cfCSQZL70MFwIA8kk4HNMeCdYfP01z3Uanw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=vPfOapCW2Xw5w79bOY4mOWHj7iVAFVwrq5oNhQb/teypoEdphX1wbigVAUwTKJZEr
-	 XoW8eMsiIOZ7BDVBvhP7i53P/wsFQQkogDB/MRhSvVJLA9n0EUjBht/Vs4OwT1IR43
-	 irWTcv6HwjQZMp5ukHnBbOA5ZHHSgdIN8hweqh6qBX1nCjiMiIUu/icQ+a/ko5vnlF
-	 +m2G5SdYFgWmmVMS7nEJqXlscjljK48+t5lGOXw/t3B6mlkjTyOTS+elD75KWvARdP
-	 tMSIIFfYZZMM7DFLFHML7v1/2Smsa+YAOe3sGC3amdGBSCqzE2jVs7fOYfeFlISNZs
-	 vZRXaLfOy/9tw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66S2jJznD3555728
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 28 Jul 2026 10:45:19 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 28 Jul 2026 10:45:19 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Tue, 28 Jul 2026 10:45:19 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "yhchen312@gmail.com" <yhchen312@gmail.com>
-CC: Damon Chen <damon.chen@realtek.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH] wifi: rtw89: 8852be: add .shutdown callback to quiesce
- device on reboot
-Thread-Topic: [PATCH] wifi: rtw89: 8852be: add .shutdown callback to quiesce
- device on reboot
-Thread-Index: AQHdHjQ15yuLO5GH90GecNOHrVXHNraCM1qg
-Date: Tue, 28 Jul 2026 02:45:19 +0000
-Message-ID: <142c91dfc7334136a5dabc4f91504ec6@realtek.com>
-References: <20260728015435.1585953-1-yhchen312@gmail.com>
-In-Reply-To: <20260728015435.1585953-1-yhchen312@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1785208106; c=relaxed/simple;
+	bh=aHCzfYpYUEmHit4qAlCqfvyFpxy6UxEiGDc6f2IaHbo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=J+cVa2vzRWfB8g+QN2xUmaP/8XZ1MBZR68A7bW5zKvnhqv1yO7Ex97tC0s90rsdTwYvisvv9bPdN5oOZuFnicLLNCXxURZ2qRDflv61DO6X0KL6lSABjDhVE357HD5xT2vxDQTHqVup+Ip64pVou0AiyKaIzcTFCpQd7xn0C/cs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=207.46.229.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wDX3y8cHWhqT2JGAA--.2335S3;
+	Tue, 28 Jul 2026 11:08:12 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app2 (Coremail) with SMTP id zC_KCgAnl8wcHWhqDy5HAw--.57582S2;
+	Tue, 28 Jul 2026 11:08:12 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: netdev@vger.kernel.org
+Cc: horms@kernel.org,
+	david@ixit.cz,
+	mgreer@animalcreek.com,
+	oe-linux-nfc@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH net v2] nfc: trf7970a: drain timeout_work and keep trf->lock valid across teardown
+Date: Tue, 28 Jul 2026 03:07:16 +0000
+Message-Id: <20260728030716.230626-1-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zC_KCgAnl8wcHWhqDy5HAw--.57582S2
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?ZYHA/QXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfncGSG+szpQCInt5Y8rbJUI0ehKhht0Ab00um4zGWfdpP9ED8i3dNWVazX1emWYn8OxNI
+	7Bz3XDcm+0nSxBmFi8Op9E6mavGmQbzmcFsnzP86
+X-Coremail-Antispam: 1Uk129KBj93XoWxAr1UuFykuFy5Wr1rWF4Utrc_yoWrJFW7pr
+	sxWFyq9rW8CrWjyFsrZF4IqFWrAa18J3y8C34qga4fJan8JFyxJry8Ja4Y9Fy8CrWkZ3ZF
+	vrW5ZayfuF4FyFcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUU9lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6x
+	kI12xvs2x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v2
+	6r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2
+	Ij64vIr41lF7xvr2IYc2Ij64vIr40E4x8a64kEw24l42xK82IYc2Ij64vIr41l4I8I3I0E
+	4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGV
+	WUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_
+	Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rV
+	WUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4U
+	JbIYCTnIWIevJa73UjIFyTuYvjxU7rcfUUUUU
 
+The driver never drains trf->timeout_work with a blocking primitive:
+every cancel_delayed_work() in the driver is the non-blocking variant,
+kept that way on purpose so the timeout handler can consume its return
+value for the ignore_timeout protocol. A timeout handler that is already
+running and blocked on trf->lock during trf7970a_remove() therefore
+survives past the teardown, then acquires the lock and dereferences trf
+-- a use-after-free.
 
-yhchen312@gmail.com <yhchen312@gmail.com> wrote:
-> From: "Yuhang.chen" <yhchen312@gmail.com>
->=20
-> Since hardware rfkill polling was introduced, warm reboot on arm64
-> platforms can panic with an asynchronous SError when the rfkill poll
-> workqueue reads a register while the PCIe link is being torn down:
+trf7970a_remove() also calls mutex_destroy(&trf->lock) before the devm
+chain frees trf, while the threaded IRQ handler trf7970a_irq() takes the
+same lock at entry and is only synchronised by the devm_free_irq() that
+runs after .remove() returns; it can thus observe the destroyed lock.
 
-Does it mean the work is running after .shutdown but before .remove?
+Fix both by draining timeout_work with cancel_delayed_work_sync() and by
+dropping the premature mutex_destroy():
 
->=20
->   SError Interrupt on CPU8, code 0x00000000be000011 -- SError
->   Workqueue: events_power_efficient rfkill_poll [rfkill]
->   Call trace:
->     rtw89_pci_ops_read8+0x94/0x160 [rtw89_pci]
->     rtw89_core_rfkill_poll+0x50/0x1e0 [rtw89_core]
->     rtw89_ops_rfkill_poll+0x40/0x68 [rtw89_core]
->     ieee80211_rfkill_poll+0x3c/0x70 [mac80211]
->     cfg80211_rfkill_poll+0x40/0x2a0 [cfg80211]
->     rfkill_poll+0x30/0x88 [rfkill]
->   Kernel panic - not syncing: Asynchronous SError Interrupt
->=20
-> During device_shutdown() the 8852BE PCI driver has no .shutdown
-> callback, so the device is never quiesced and the rfkill polling keeps
-> running.  Once the platform brings the PCIe link down, the next MMIO
-> read targets a non-responding device and is reported as an asynchronous
-> SError, which is fatal on arm64.
->=20
-> Add a .shutdown callback that runs the existing remove path to stop the
-> rfkill polling, free interrupts and power down the chip before the link
-> goes away. A NULL drvdata check guards the case where probe did not
-> fully complete.
->=20
-> Fixes: 0b38e6277aed ("wifi: rtw89: add support for hardware rfkill")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yuhang.chen <yhchen312@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw89/rtw8852be.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-> b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-> index 5bc0a6a99d1d..9aebecbac067 100644
-> --- a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-> +++ b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-> @@ -92,11 +92,20 @@ static const struct pci_device_id rtw89_8852be_id_tab=
-le[] =3D {
->  };
->  MODULE_DEVICE_TABLE(pci, rtw89_8852be_id_table);
->=20
-> +static void rtw89_8852be_shutdown(struct pci_dev *pdev)
-> +{
-> +       if (!pci_get_drvdata(pdev))
-> +               return;
-> +
-> +       rtw89_pci_remove(pdev);
+In trf7970a_remove(), cancel timeout_work between
+nfc_digital_unregister_device() and nfc_digital_free_device().
+nfc_digital_unregister_device() flushes the digital core's cmd_work,
+which invokes the driver's in_send_cmd/tg_send_cmd/tg_listen entry points
+and arms timeout_work; cancelling timeout_work before unregistering could
+let a final in-flight command re-arm it after the drain. The handler also
+dereferences trf->ddev, so the drain must precede freeing the digital
+device. On the probe-error path the device was never registered, so the
+cancel runs directly before nfc_digital_free_device().
 
-Not prefer calling rtw89_pci_remove() twice.
+Drop mutex_destroy(&trf->lock) from trf7970a_remove() and from the
+err_destroy_lock probe-error label. trf is devm_kzalloc()'d and
+devm_request_threaded_irq() is registered after it, so devm reverse-order
+cleanup runs devm_free_irq() (synchronising the threaded IRQ handler)
+before freeing trf. The mutex is embedded in trf, so leaving it valid
+until then lets the IRQ handler be drained before the lock goes away.
 
-I think we can add a callback .rtw89_pci_shutdown() to set a flag
-RTW89_FLAG_SHUTDOWN. In rtw89_ops_rfkill_poll(), just ignore polling, like:
+This issue was found by an in-house static analysis tool.
 
-@@ -2010,7 +2010,8 @@ static void rtw89_ops_rfkill_poll(struct ieee80211_hw=
- *hw)
-        lockdep_assert_wiphy(hw->wiphy);
+Fixes: 165063f1dac4 ("NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2 Tag Support")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
+---
+Changes in v2:
+  - Move the cancel_delayed_work_sync(&trf->timeout_work) in
+    trf7970a_remove() to after nfc_digital_unregister_device() and
+    before nfc_digital_free_device(), so the drain runs after the
+    digital core flushes its cmd_work instead of racing it. The
+    probe-error-path cancel and the mutex_destroy() removals are
+    unchanged.
 
-        /* wl_disable GPIO get floating when entering LPS */
--       if (test_bit(RTW89_FLAG_RUNNING, rtwdev->flags))
-+       if (test_bit(RTW89_FLAG_RUNNING, rtwdev->flags) ||
-+           test_bit(RTW89_FLAG_SHUTDOWN, rtwdev->flags))
-                return;
+ drivers/nfc/trf7970a.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-        rtw89_core_rfkill_poll(rtwdev, false);
-
-This flag is very similar to USB RTW89_FLAG_UNPLUGGED flag, but I'd add a
-new flag.
-
-> +}
-> +
->  static struct pci_driver rtw89_8852be_driver =3D {
->         .name           =3D "rtw89_8852be",
->         .id_table       =3D rtw89_8852be_id_table,
->         .probe          =3D rtw89_pci_probe,
->         .remove         =3D rtw89_pci_remove,
-> +       .shutdown       =3D rtw89_8852be_shutdown,
-
-I think this fix can apply to all PCI devices for this driver, right?
-
->         .driver.pm      =3D &rtw89_pm_ops,
->         .err_handler    =3D &rtw89_pci_err_handler,
->  };
-> --
-> 2.34.1
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index f22e091..9dc6931 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2207,13 +2207,13 @@ static int trf7970a_probe(struct spi_device *spi)
+ err_shutdown:
+ 	trf7970a_shutdown(trf);
+ err_free_ddev:
++	cancel_delayed_work_sync(&trf->timeout_work);
+ 	nfc_digital_free_device(trf->ddev);
+ err_disable_vddio_regulator:
+ 	regulator_disable(trf->vddio_regulator);
+ err_disable_vin_regulator:
+ 	regulator_disable(trf->vin_regulator);
+ err_destroy_lock:
+-	mutex_destroy(&trf->lock);
+ 	return ret;
+ }
+ 
+@@ -2228,12 +2228,11 @@ static void trf7970a_remove(struct spi_device *spi)
+ 	mutex_unlock(&trf->lock);
+ 
+ 	nfc_digital_unregister_device(trf->ddev);
++	cancel_delayed_work_sync(&trf->timeout_work);
+ 	nfc_digital_free_device(trf->ddev);
+ 
+ 	regulator_disable(trf->vddio_regulator);
+ 	regulator_disable(trf->vin_regulator);
+-
+-	mutex_destroy(&trf->lock);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+2.34.1
 
