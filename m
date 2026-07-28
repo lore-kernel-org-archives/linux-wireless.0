@@ -1,133 +1,116 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F6D41BA98
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 09:22:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785230562; cv=pass; b=BxKIUuciZF5TMhgKTXLLZhes5I7sDHCsuaYBNvhOgj9q2O6HB5baABBuSp3FHfj2Vg57aT+COBNgPZBEHm2ArR3eOv3m4dMxtBZrQg5y1r3HoeFhwk0IAgV62Hywa8Ysb8Tmn5ZQL5aAbSEoYLwsISRnulslJvan5V14ZWbd5Z8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785230562; c=relaxed/simple;
-	bh=eiahC4EwXO39hfBl12vbBh+1pVUCATYFHODBb9HHGVo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=knhKS25rELzaaDOdmSzfl3GpmCMoK+zC2uEhky2Z3iDNI4D0eWi5AtKaAVcSBa4ii+/aSqrdKBsSRXVnilbNalWLCewAXmagVBxBTdL0KbEjdZ2r89tslkMj0qPcZGV8fEp51nNHe0oxXGPCumYdfez3q8AWDlTwqf3J9oc1T+A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=lEc6ZCfO; arc=pass smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8BB41A791
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 09:40:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785231606; cv=none; b=Ffn22+hqvb12dC7OumvCj7m2lsiHNGol0gRnJ6HYC78g64LHuqtPhqau6VxIVz2Joe/iwIIoafhtZ68bjB8EDiRs0nYlE9sPaBPWyfdT9TKGKxXSI2id7YHEV/Xn6xU0NHnnPXZ7xvB8AxQxiX+4DdiUzyMbhVzuhF3hKzCsekw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785231606; c=relaxed/simple;
+	bh=RXCi80jJJoeuiTYlNE5Vyy/b5imzD817AWX8SLHt5ag=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KgArdGX+MMKnIsIVdpy2NIOO6birKs3ZQRbyhiaLiA4AYHW6ldW/8br+omcebRyJryqPdZC9sHUwWKp4Y/W6ws3CIdfQ84Z/jxbuybFNKMLKLCoJJQDXVXV4+EX9Cn6K0M5UM6OFYOEyvmU6GqNvlqoVtqIB/dTbe0DuF7spD6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hvbZsnVX; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="lEc6ZCfO"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2caed617615so37395965ad.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 02:22:41 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785230560; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Z2q9pFU+BVyEnqMOUfBnsHXilwmwFoQYJ+yjcUqnTp1SGG2JyABBt7/8srSWG+IETR
-         +CdgwiPdC+RX6kwvPDv/QiuWRbLhx+uAH2cV+BXXWW7sdnzTe1HeiIu6nzt9a6d56dMN
-         bnIJ5dM6LNOSnYulE1Wq47UC3D4pUEZq2Qo7IbJ9pJ1WC0pZy8x+bOWV4yFOVq4lMN+H
-         5uEjTm0xLl+lpQ8S8Ewor/Gr0krxb1tZ4ZHX/3YreNn0/9lsIqUrlF88JBLsjqW/H8N/
-         M9G38GOTbV3hK4Uf4wJaxZUvVJ/8QMdekur9Tzie7D5eoIjZt5+76w9RMuk7xP+XbH1w
-         AYAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=d10schBzgEOF3C/t7XgGB3J+xn0+TODvHGCxcjgHzIc=;
-        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
-        b=Gta/7LNeCVJbXyBMFgeTwrd7qa5ol2HIpbm7KHuB/xqwA+9IY2aUDv/ZXuFk5qCFA4
-         Z7PI6gfLUCfZvZ29VMPPcvt8eze1u08XO/5aDYzkKnP8uJYI0EVX+pQ449OWpq+jOwwZ
-         NotoWBvZ7NedyO8tvWeJ4FlZuzJ7zZFQ8Wgr/DJ6RM62JAp+OnJzBKxTGpcRbSjuR3N6
-         igLZ4AO9vjPgMxp4HfyQDV/fxWJklLw2Ju01NuD7aUKvk8zghziNnaqmVsc9cr+73LV/
-         T6YNTW7Aq7NvKUgJHYgDFypbXVwLJVm5zhcwppX4jWiT/SSzHjTzdLVifADOpm8biEqI
-         zUNg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hvbZsnVX"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c9ef3e1337fso2501804a12.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 02:40:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20251104; t=1785230560; x=1785835360; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=d10schBzgEOF3C/t7XgGB3J+xn0+TODvHGCxcjgHzIc=;
-        b=lEc6ZCfODBS0e70wIg+erkVyKqDu8ClprbUuUKlubrFPIklOOLxuNLWeNY9lhn1R7+
-         x4MXXAd4xY4XNrVJ2+KSNnkr0CXqxzS4x5bUW8E1xLCKazporJjUr/FHbi0HaQDZ5GKW
-         TWs1sSJl8LB/DNmYqg/4CMfLZxEf1Dpyr8vgrOP5POGXP37uqG3O1rtA4JmwT0Qoz4MV
-         blNQyu84ly3QJJLkV53Fg7oLERSir/QjlCL/LLQM1fyHnAnRT6cp+M1UxH+9V7SH2KZs
-         s0u6V4maOY1VeGQQjOTuRhSwZ4JQy0GonNWGCob7d+TAUcWjr8lEzbrp2YkDdMoF/ULD
-         6LAg==
+        d=gmail.com; s=20251104; t=1785231605; x=1785836405; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=hK5fMzgWYkoFa9TR120mfcDFY/khLZ9IPeK5ODLUBiE=;
+        b=hvbZsnVX5J3ttTe7r2oSG6+7m8tYw85La+texAnlV+TJs1kYGTU8Zw2HFcMYCLuVSp
+         sKhmw8COywGecMh+5ZffZutV95agPgU0PyKCf3jSTbgcYclwRR/+EYEOKJlEly5H/ear
+         J4IMASIPa3OU+hR+MNaAuX3abl9MMRz/bgBlZmhm3vIRHfJe6i3c2kxE/wVHt/1cyveq
+         74MKs05iAkbPH1M+W86Htqf9sz/+EXb2nXYjmT2NCl0OG+8UCtSqfBmHKvC3MJWYdhsI
+         Vq80nY+5C2UlNzE3sQ08ZaeQQfuP/P8DXymIeU+JkPb43sGHGmUXrGg+ATxU+KzP1zfQ
+         yIZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785230560; x=1785835360;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=d10schBzgEOF3C/t7XgGB3J+xn0+TODvHGCxcjgHzIc=;
-        b=N2fSmDLzsJhLdVWr9DRNZh7xx7KPo1pYrN3DGxWiPAcIKH36wtS0IWOZXcacwIZ2ej
-         RpzdLXdUGwn6BL3+HWojEYzU2H19I/cAfW1pj/fVbV/eWVPS7tRtFVzVLdbWfCT2hKEB
-         hyfeumd3XsPpDHwv8zTiUpVkkaO4nmMCewHgUu19DdlN4wxqaUQ5qfuvRxc7d1sHSBJw
-         lFmB36ik5XNGgViiLig7eGT+mM8Y1HdofNK7Ergbl23tDk+a7FpkcMfBLcNOVCmvTExP
-         z75TJeFKrn+4sOXVwpyrm6ZGpCYRlq0IadjAr54XpEMaNva/1TBFvoleVaNpwJbX81c8
-         ktcQ==
-X-Gm-Message-State: AOJu0YzyVPQIGtvTFmJXK2ImkhSKfPxWaKzZCNmqAkWuQkxZcLsmL2lr
-	sv8zuvFspbKMEsSZhEXERsIRR5toiZ+1JxING8PC3ygpZCvHZ1+AW5SKeYS6yVBv0daWn7CUEE/
-	YB838BKD9e1YcJxNs25ZhxNkRkey9TqJ6acQk
-X-Gm-Gg: AR+sD11UPVWMRRRIt+foR31vGtxlbDANsBlPI3GHZZThdIalPO2rTIZulAtnKjCcYY5
-	BjAJtn2sGVHKVl27qtQwHBCNaiApqqrq13ZrSJo67BgAhyWpHwNcNaAOw69198bLA8+p8JhKdoZ
-	j+NTXwB4DZ+smD8onUWpPoEltlVgwxdf2G0qtpYyi1aR7M9Fre58SF22K+E4gg6J9pg2sPxEKb6
-	bO6Or/k4oZp7TE6prVWdEXDuH9eetecJJHgFo3YHKAR0HSPB1VAvzwfWJQL1GdOk5fqzwqtPcfq
-	TG32NVIXJb9MlpjA+N/1EnUNrq6x1PKUJskPMGTerhkoEFR8inmBYjlRk/I=
-X-Received: by 2002:a17:903:2b0c:b0:2c0:a555:80d6 with SMTP id
- d9443c01a7336-2d015affc6dmr21677065ad.2.1785230560518; Tue, 28 Jul 2026
- 02:22:40 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785231605; x=1785836405;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=hK5fMzgWYkoFa9TR120mfcDFY/khLZ9IPeK5ODLUBiE=;
+        b=hYc5TlDB2Ucm5JNh7Rxg1SI/s1SPLqiluXbynfR/WCqW7riFFic0edetevG7a0gFPv
+         HARWUwtDN1lJqoAs0pjWYqv+JN5eE9exWd5gmZUxoe9bCb0y8buKB7WuZ1cxRCCUt5fx
+         0ch8XFCLV8mSUttwNIq4P4lFdKBrakBob/oiI+aR7p21G/0nMENkN3E3Fqg/RgF7SDI1
+         dDsxWtDeg1i27RIY1lq79XSBBMVDWsZEWOsPGO3Td5xsrkSZKXWGJgdwgWKOFlzrP9/x
+         hSuMqkKBNkn3XhcRNRpStnMmYNZ1LG+ZQmEJWVy+L2v9nhEQQo1ADHeg7nVBxwiehr3r
+         j0zQ==
+X-Gm-Message-State: AOJu0Yw/E4l9s0wck5sXUN0DZHa7Mb9WzdZZAYh/lzjbU4kzCiPkAs3g
+	ZcBGdyr3+wf4OTq/ycVGBz8AKRHAkUruxe0zzV/YGa9phytKlI6V0qwV
+X-Gm-Gg: AR+sD13qEEUi8G18jkdfB3GNMZ1bKorn9VUBA5Uh00lU/5k5/n43WC1gW5kc+CmpoWF
+	o1sio6OPj59gY8pq7SLxtYBApCeeBIoSoLyxE9jmdpPFr9QM7/L4bIncZTLaHn4YDsdefxgIkTm
+	ZkotiBIt2dnF9DABRQAHwvGs61ra//lEsIzdK7rRis/egYlXiR6u99fbEwuYsOQhNcjKeMCXmJQ
+	931RZ32gVFqHkjrAbBR73nAbJblq5BfZvfTKmherPImE9w6SX+YLvo/YgS4pLobmIt/CJ27tTQc
+	qsETQT1IB/VjBmYIqoQeihC12rK6CCp78PFGRktCLw71RBNdjZkg3NSgOhyzZ/xPRD/DP15NdwT
+	VwEWRe9vScRnrFNV7IE4RT35e3x2eAUGJ952FCRLsaoR7xGWgRhp+m7s4+gauoFJ3PRsBtB29We
+	8xGW0bekW1/mo70pnJo2Xh95leaRanLRnCQjf1X03so5W0hKs61DQ9DontZRqNiUvBc7aUUKNBN
+	ms/77o=
+X-Received: by 2002:a05:6a20:4324:b0:3b4:669c:ee32 with SMTP id adf61e73a8af0-3c8ba5bab93mr2125489637.37.1785231604622;
+        Tue, 28 Jul 2026 02:40:04 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-203-195.dynamic-ip.hinet.net. [61.228.203.195])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbbb660deeasm4328676a12.3.2026.07.28.02.40.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 02:40:04 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
+Date: Tue, 28 Jul 2026 17:39:58 +0800
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"open list:KERNEL HARDENING (not covered by other areas):Keyword:b__counted_by(_le|_be|_ptr)?b" <linux-hardening@vger.kernel.org>
+Subject: Re: [PATCH wireless-next] wifi: nxpwifi: embed rx_reorder_ptr
+Message-ID: <amh47u3hQRDO2dAG@nxpwireless-Inspiron-14-Plus-7440>
+References: <20260727002916.117754-1-rosenp@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
- <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
-In-Reply-To: <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
-From: Adrodoc <adrodoc55@googlemail.com>
-Date: Tue, 28 Jul 2026 11:22:28 +0200
-X-Gm-Features: AUfX_myYF5m4MaWPMhULBm3WMkvOCAzcw0IZNGdmlYWK1mTszYhfif6ugumA2G8
-Message-ID: <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
-Subject: Re: Error in rtw89 using Kernel 7.1.4
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260727002916.117754-1-rosenp@gmail.com>
 
-> Did you encounter this problem in older kernel version?
-> If older kernel works well, could you share the version and help to
-> bisect the cause?
+On Sun, Jul 26, 2026 at 05:29:16 PM -0700, Rosen Penev wrote:
+> rx_reorder_ptr is a dynamically allocated array which is done near the
+> main struct allocation. Combine the two to avoid freeing separately.
+> 
+> Also fix the type to what it actually is. void is normally used to avoid
+> casting but there's no need here.
+> 
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  .../net/wireless/nxp/nxpwifi/11n_rxreorder.c  | 19 +++----------------
+>  drivers/net/wireless/nxp/nxpwifi/main.h       |  2 +-
+>  2 files changed, 4 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
+> index c5819f89b08c..b2fd624497a3 100644
+> --- a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
+> +++ b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
+> @@ -171,7 +171,6 @@ nxpwifi_del_rx_reorder_entry(struct nxpwifi_private *priv,
+>  	list_del_rcu(&tbl->list);
+>  	spin_unlock_bh(&priv->rx_reorder_tbl_lock[tid]);
+>  
 
-Bisecting will be difficult for me, because in previous 7.1 kernel
-versions my internet disconnects every 10 minutes due to
-https://github.com/morrownr/rtw89/issues/109
-The current issue is a lot more rare. For yesterday `journalctl | grep
-"\[ERR\]"` shows me only 4 instances of this error. While the PC was
-running for about 14 hours.
-In other words I don't have a clean reproducer and have to run a
-kernel for quite some time to see if the issue occurs.
-This is not an issue if the kernel works, but I can't use my computer
-with a disconnect every 10 minutes.
+Hi Rosen,
 
-For today I booted into 6.18.38-2-cachyos-lts and will keep an eye on
-journalctl to see if I encounter the same issue here too.
-I could look into downgrading to the newest 7.0 kernel if that would
-help, since rtw#109 only got introduced in 7.1.
-I don't think 7.0 had the new issue, but I am not sure.
-I should probably mention that I only started using linux desktop in
-april this year, so I am pretty new to linux.
-Would it help to know for sure if 7.0 has the issue even if I can't
-bisect 7.1? If so I will look up how to downgrade the kernel in the
-next days.
+Thanks for the patch.
 
-> Since the firmware version is hidden (The ipv4-redacted part is a number originally).
-> Please check kernel log and share the version.
->
-> [    8.282149] rtw89_8852ae 0000:05:00.0: Firmware version <ipv4-redacted> (52acc807), cmd version 0, type 1
-> [    8.282153] rtw89_8852ae 0000:05:00.0: Firmware version <ipv4-redacted> (52acc807), cmd version 0, type 3
+This patch triggers an unused variable warning since the for-loop was removed:
 
-Here you go (output from my current boot into lts kernel):
-[    8.749689] rtw89_8852ae 0000:05:00.0: loaded firmware rtw89/rtw8852a_fw.bin
-[    8.749726] rtw89_8852ae 0000:05:00.0: enabling device (0000 -> 0003)
-[    8.752352] rtw89_8852ae 0000:05:00.0: Firmware version 0.13.36.2
-(52acc807), cmd version 0, type 1
-[    8.752355] rtw89_8852ae 0000:05:00.0: Firmware version 0.13.36.2
-(52acc807), cmd version 0, type 3
+../drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c:264:6: warning: unused variable 'i' [-Wunused-variable]
+  264 |         int i;
+      |             ^
