@@ -1,82 +1,70 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05D884218A5
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 10:37:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B157C40D565
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 11:13:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785235035; cv=none; b=NBAbX7bkTgRwJEQM5Atj3o3sDYBMQqx1Yp3TUByojc4szuTCwju4fTC9bZehlFtbdJOjCgbQUTmuQUt+dcFUPJFZrjjBNBbiY8op9JSTaVlCRuE5UFeebWDmpC1hr4aAvprGFvOCOb7k2a5LqbZVdc00/UPa9bSBugB9KmiwtuE=
+	t=1785237215; cv=none; b=SQlAoCcNyd6DEvYbVo+xII8WZZa9X3SaR3wrNahAgfyBzsh4uNExGM8EGHqqia6GPttgbz5ZTG7mMt+VwhQZCmOmt6jgwj32OislExa4hSNLoXsYbUVMAPlgO0wA13ItPMatzLh6nt28dqaaLiGbPTCN7XtGIKlDzSGwkO4ZCDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785235035; c=relaxed/simple;
-	bh=TwDswCnhLGMjnmvVs4bZnK990PhMC5sQgrIAgM5AHz4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OtSlVno7WstyHTd8pmBBmCRJRiftqxLRSpxjwE5wkj+LWjf+aVgCqnwcCXWvfqG9o49byyhI/keMTcY0GpQR1wd7cbe6CI3HbeKyyavn1zlvBQtbv6aGMugaJgqGHqf/aVflwlmqemNnDym4R44yVzs7ARqFrHWvCVZ32BqfpAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g5wndHGL; arc=none smtp.client-ip=209.85.128.42
+	s=arc-20240116; t=1785237215; c=relaxed/simple;
+	bh=e9EJOPMJQQmdhrX9ZLjutTgNigOU2bNeUlGTHv/ADiE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hqDJt2/bgnil7VTgyMqoPUYo+MZMBcy8epl1bQ51U8OxgsaPAomxm3S3kzGKTxUhT9wL6/MZMCKgmerKKaK/5EDMdPO8zW7JHvxnH3EFXLoPEhKgRV1c6MQZUMWCA3+9rOb7LExg3F+YBSmYKT4wZVOkPLf8NrGCDLImVCxTHMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r7WrkE6V; arc=none smtp.client-ip=209.85.215.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g5wndHGL"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4956242332dso32341025e9.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 03:37:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r7WrkE6V"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-cbb662575d3so2132242a12.0
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 04:13:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785235032; x=1785839832; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785237214; x=1785842014; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nz3o8jqJO211kGfAinv1dCAnPUoJ02ddlXqShlrRvxs=;
-        b=g5wndHGLbSCDzyY1bPZeoMt7fuZH8Vg8qnw88lI82wPvhlEj9mfII+/Dxl6QpHZihB
-         JeUgIs0rx6H4Skl/eJqd1RDg9ayjdead0z3fwDTwUqxEySZKBPq0v9WZ9XW7WpSpT1jK
-         rdPTE3wq1jxCL5KVVvuyeMSgOOCHNv7gu1gTsK1iZBGLc1P7RkvrHpxWumMnKnI4S1XL
-         xO0QvHcUto9gIAhCXK4iY7RBulIzuS1ojzEmeyz+OM69vuWNJ1N03a0Ga9YtTfu5eKr+
-         ileI3YLsPPL75p+2oeK6cFH6uJZ49QbKtroTh+Mog9LfIVY5XROx4RXxmnXxGByg98q9
-         u6iQ==
+        bh=Ef3Yb4VZjfVw3Uexl/SrI2+nfGjSSdskMXoJ4cJ3KC8=;
+        b=r7WrkE6VZQff1oXL400jSucWTgahF7HFO9FvU0E8AXJt/XTL0YhJNBmuB6tzqLNjTa
+         TqQLjYupJdFovP8eqXCkl0Y9sgyesXRmHivrW22dBeMgkeFXniQRWIQMvGoQq6LmHS60
+         fJlKgt0qbxsdqLuc3pW1uEo33Mbg+4JCqR65qSAgkbUUZ1PJE1+RDopRO3PaTKwX5mm6
+         jVyf4jY7wWWTU2RxTPlLKUM7D1rxE5QaD8btdZWViaf/SAnjhD4XvDU5K7HSgy6EEeO6
+         79eRsxw435tWf98pkor8SH+7WeqJMlYQsVe2g3LpUTufNYSqmYSh2BSRY9XGq0tbEqrS
+         1ZGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785235032; x=1785839832;
+        d=1e100.net; s=20251104; t=1785237214; x=1785842014;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=nz3o8jqJO211kGfAinv1dCAnPUoJ02ddlXqShlrRvxs=;
-        b=WKz7RxxRNIbYeepN8fbmFffIMLCsueH5PbRD4BOenyBiPWKZuo0MHi5d7SEfRebOkc
-         2JJz18RmI5k9wRHgBR7mOwx8hlfC1neVS7uPEQRBM1FezXiGOEGT+UdN1ck27pYTFSp3
-         8BNUk93M7U1YhxxaHelTjMnRTPIFXedcAhyv84K8fUjujCYtV59vaGWnWFH3lGcf30NJ
-         uwugFfJkFr6nskriNsIYgZxDKka6DkwzhO34R8CzSD0kHRAhxUtPnt+39L7q0AfK8smi
-         B4QrooxyDG4O7Y+wwtW5KACrKqn5M7oonYvDiabWFqvOAGfwqO+9AxptXZfi00VR17gb
-         qLWg==
-X-Forwarded-Encrypted: i=1; AHgh+RoKbTKClm7s2t03wx6UEo3sPcUMZHDl6TofuM/r5h2OzF1P6MfPLNHZkV7EOTzn99UeBkpqCEfpAYwsndaV7w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgstsK/JJDNy/x9yU1yj2c60sd8AgQyVlJmaLx1JUufsGy1z1c
-	nUG9krbdIni/7MK8CtsDjRPyK2SFZtOzAwaC3SCQgpShB8r0KWciIl+p
-X-Gm-Gg: AR+sD13YYwrn652sr2wCJe3zKzHP1IZBCa3BH5zFi31DqHHJDaoI4kvTlxAb2TCkM15
-	grysnFTPSr0+H0zki1QQzKVkgRtSx0P+QfdtmKjh2enBmfSHfR/fiJvSp3dHaPR41BeaecelD1Q
-	lRGleEQZcKKsLn4VDgsUYCr66gW2uwxKJFQfzN1ENI+n0LGdMQOeY47TroSz4WUQnZCCoac20OO
-	gynk2uiboKxLAvKGRA6LZ39rTj2rwEQJp+zKpFqz0vB+4J21yoPCh8yUJ49pOz3gY88tIzLrU5y
-	1GsUe624wyigpPt+mvUtgSAlBUetnPKs0mK9q1H+4LT6apXfNu086QSkk0V4dGK831BY/IZVwRJ
-	7Mys8a9ywwxgIgDT/NBiukCCQfJhtPFMrfa6/9fkp6OTMhetTaWM1hbBpxs0x9/me4yopfQJ9cP
-	ZqcJ05PJH41TKkZ8sfIr+1FW62ohc9tpTcGdqKeKQ6w9Un7spEuUBVqRbs8BG/z3ogwCYez1cx3
-	wj/BwZMwuyqCKA=
-X-Received: by 2002:a05:600c:c493:b0:495:4d88:e630 with SMTP id 5b1f17b1804b1-496c6545a58mr18452665e9.10.1785235031527;
-        Tue, 28 Jul 2026 03:37:11 -0700 (PDT)
-Received: from localhost.localdomain ([37.63.24.239])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957f9ae5c3sm408677755e9.3.2026.07.28.03.37.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 03:37:11 -0700 (PDT)
-From: Georgi Valkov <gvalkov@gmail.com>
-To: briannorris@chromium.org
-Cc: francesco@dolcini.it,
-	johannes.berg@intel.com,
-	kees@kernel.org,
-	miriam.rachel.korenblit@intel.com,
-	wenst@chromium.org,
-	rafael.beims@toradex.com,
-	avraham.stern@intel.com,
-	peddolla.reddy@oss.qualcomm.com,
-	error27@gmail.com,
-	s.kerkmann@pengutronix.de,
+        bh=Ef3Yb4VZjfVw3Uexl/SrI2+nfGjSSdskMXoJ4cJ3KC8=;
+        b=llmwuCSA1ApbNzBRw56gLPTxCQlMs+UIhkPiT4G4qGlLI6JVKbi9qIfdcWI6RejV61
+         iWCenGE9eLjHaVHXacpVDdhnX0dCGLq62Ol4imAGUW7R2lR7Mr28b0fCillc3MrCwLMl
+         vFcG1BeJiTTDy3T1FidtNCj7aPjVRZACBc5NkNyVQy3h89HLSifM6v1JGJb+d55aLuyT
+         aUvSjeYuxExF6xOToN4oUNFh0zx9mP9Lsnn6/MZCaEz/1V/7z+AMuNgiSuSoncNeBN0Z
+         U0jv1BvEA75+Yrh05H52+/CfxFTbLHfyEwGL3L71N6TATmS1IDif3QBoMuqB6y9jIXoX
+         EkmA==
+X-Forwarded-Encrypted: i=1; AHgh+RrRX+EqEExLHTQPoSZ1M/5UDH0E/7xW9AyXSQNTYlbQDzgavunMgs9clat3wwwFas1KL4ad8pZ33FauvJ+veA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQ4xlnhQZp7ROAKu6QPEMmPnBjz/BifdF5SQpVxKs8Vxcv+H+N
+	2KARF9rdm4/oQ9apkRSEv8Nn2d95U9CihekKQhhod7EQ+JffMaC/maZq
+X-Gm-Gg: AR+sD10F2AZqrSMsql4ynLmFX7gbHwlz/2syq6jPZoUFI+8BHpdu9q+KPkS0+zomYA7
+	KVfQlCDW8uBTecUHNcpa8pTtx+BUUsq3xNs/UQZGVGvPv/sj0wZZ53vTnN/UfW8gyx8+VSPBu7j
+	dKQEuDw7mmB8XIjfP2R9P7pnhZq7gppK3ae4t3baV0HPwc4rlhwoHqdDoBWmQLGQjaHLm7/TBCb
+	NDJHz39prNagXYAwdeb9H0uaq8snd6rKG3Un1RihWSfs1b+tn7Egdyik0ukvHVKt8xewfMX2lDC
+	+d+nyskzDK5DJABuIFRf83r+DWuBn3GkWvPA5K/W2QhwSWUULK2NQFydjd57ykLX7BhiU59sL0D
+	SEPzDdSkKzVrfN6QqAHZRqW5tCfVXLDtz9vzJywQLyOMdmFMpfugfAsckhscCBaIqNpZdOvIvlA
+	Ss9hgfhxd1dF84moEniV1Ehnch5joczA+k3tQUutE=
+X-Received: by 2002:a05:6a21:e598:b0:3c1:657:4c95 with SMTP id adf61e73a8af0-3c8aafbb6f3mr2587944637.15.1785237213865;
+        Tue, 28 Jul 2026 04:13:33 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([203.208.189.8])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-314bc548efesm43920950eec.14.2026.07.28.04.13.31
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 28 Jul 2026 04:13:33 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	gvalkov@gmail.com
-Subject: [PATCH] wifi: mwifiex: ignore ROM regulatory hint on WRT3200ACM/WRT32x
-Date: Tue, 28 Jul 2026 13:35:36 +0300
-Message-ID: <20260728103536.25012-1-gvalkov@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next] wifi: mac80211: fix per-STA profile length in cross-link CSA parsing
+Date: Tue, 28 Jul 2026 19:13:26 +0800
+Message-ID: <20260728111326.63087-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -85,59 +73,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
-from the mwifiex ROM, which conflicts with the platform regulatory
-configuration on units sold outside the US market. For example:
-- phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
-- phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
-- phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
+ieee80211_mgd_check_cross_link_csa() starts parsing elements after the
+fixed per-STA profile header and the STA Info field, but subtracts only
+the STA Info length from the profile length. As a result,
+ieee802_11_parse_elems() is given sizeof(*prof) == 3 bytes beyond the
+current profile's element area, and data following the profile may be
+interpreted as belonging to it.
 
-When the system boots, it detects a conflict between the user selected
-region and the radios, e.g. BG FR US, and applies extreme restrictions,
-preventing use of 5 GHz and DFS channels. This also affects phy0.
+Subtract the fixed profile header as well. The preceding
+ieee80211_mle_basic_sta_prof_size_ok() check guarantees that the
+corrected calculation cannot underflow, and
+ieee80211_rx_uhr_link_reconfig_req() uses the same calculation.
 
-Ignore the incorrect regulatory hint in the ROM of these devices, so
-userspace can set the correct platform regulatory domain. These radios
-are locked to the hard-coded configuration for which they are certified,
-so the only impact is that the region conflict is avoided and the 5 GHz
-radios can be used.
+The call site currently states that cross-link CSA parsing has no effect
+because the broader parsing is still incorrect. This patch does not
+address that broader problem; it only makes the per-STA profile parser
+stop at the end of that profile. No production allocation over-read or
+user-visible failure has been demonstrated.
 
-The change affects only WRT3200ACM and WRT32x routers, and helps
-overcome the incorrect behaviour of proprietary radio firmware.
-
-[1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-[2] https://github.com/openwrt/openwrt/issues/9956
-
-Tested-on: WRT3200ACM, OpenWrt
-Cc: stable@vger.kernel.org
-Signed-off-by: Georgi Valkov <gvalkov@gmail.com>
+Fixes: 7ef8f6821d16 ("wifi: mac80211: mlme: handle cross-link CSA")
+Assisted-by: Codex:gpt-5.6-sol
+Assisted-by: Kimi:K3
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
-Please backport to 6.18, which is used by OpenWrt.
-And let me know if there is a better approach to address this.
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index abc703441c5d..04f7f58cc7d0 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -4899,7 +4899,15 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 				country_code =
- 					mwifiex_11d_code_2_region(
- 						adapter->region_code);
-+
-+				/* WRT3200ACM/WRT32x ROM always reports US, which
-+				 * conflicts with routers sold outside the US.
-+				 * Ignore this hint so userspace can
-+				 * set the correct regulatory domain.
-+				 */
- 				if (country_code &&
-+				    !of_machine_is_compatible("linksys,wrt3200acm") &&
-+				    !of_machine_is_compatible("linksys,wrt32x") &&
- 				    regulatory_hint(wiphy, country_code))
- 					mwifiex_dbg(priv->adapter, ERROR,
- 						    "regulatory_hint() failed\n");
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index fa773f3b0541..1b9d272e7f8e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -7977,7 +7977,7 @@ ieee80211_mgd_check_cross_link_csa(struct ieee80211_sub_if_data *sdata,
+ 		prof = (void *)sta_profiles[link_id];
+ 		prof_elems = ieee802_11_parse_elems(prof->variable +
+ 						    (prof->sta_info_len - 1),
+-						    len -
++						    len - sizeof(*prof) -
+ 						    (prof->sta_info_len - 1),
+ 						    IEEE80211_FTYPE_MGMT |
+ 						    IEEE80211_STYPE_BEACON,
 -- 
-2.55.0
+2.50.1 (Apple Git-155)
 
