@@ -1,131 +1,133 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 107AE440A1B;
-	Tue, 28 Jul 2026 13:33:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D13A9441027;
+	Tue, 28 Jul 2026 13:34:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785245602; cv=none; b=IlM7xITQtF9gSaLhbGDp5M3jnpmFUmTrj7wt3aZluZcQhjUugQS+Yc8yfhHqxye+pFfDNCNL55iWro1vhK++zvBC81PuVAand6WZ3fD84tBrvgDAiO8ORPiH5QiIRX1qHCc+0mteqjcyGD+02ZfgITxzi69ee5N3ZdABd0qcJjk=
+	t=1785245701; cv=none; b=J2n96NW0Do6gQCebsq+R1MtM3U2irGi7u1X+B8n23X/Ct/K7biwBgyGqvHZ4i0M4pet+9rMZPAeLrn7tKSE+L6Zs00FpA8yFXYmgBvYOuJUXcnWSOyvZQOVTVwx1c82eNyls9yJ1Fj5fNFpo6NSVsy5UUNK4pIqpSq+QOdurafo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785245602; c=relaxed/simple;
-	bh=dB2FD2Jt+xkoNf/RtiVrCRMFYq/vWUrEwA0teaOd83Q=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=elj3jMukeGsgC4oTn1zJOoV0SKBSbVGFC4yA3GEnUGh5E5jiMSFwvSoEoGuPN/KPDRMMkuVJDahiVZX3KkIwhass0cuj9SqceQdrnIKOZy35Jzkm+DH0zPywWD49SXpa3zHARc0mTXbOlOmYMFzE127LPj0U5VEscJbOB2vkncE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=hLcPH0z0; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785245701; c=relaxed/simple;
+	bh=a2S6vCE3iDAwe+kDTjY4Keao1IQoTBvTut2bSpMqDYA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l+l4hrdrgQ8dys1SuUDVZETt37I/BNFO/Lv/YPwUmTIhPlgI9WxG0WuroelOIic2thEoOvsLTsaXKOSyw2t/f80GEoeqCc/5lq0mjWcTkqfVjzUGR1/TVstfE2I8N6TldDeQepbd8KbP0A/hQ6geyfhD1k/LMOn7OPW2lgOXo5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=DLK7nH0O; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="hLcPH0z0"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=lcfasX9W7wKm1g9QAzFmF3G17QASXNE+AZBdsiDciYk=;
-	t=1785245598; x=1786455198; b=hLcPH0z0BbeWQOI1glRgxIK6jerJqEfmYOWBc6+XtSQV4U+
-	dy7AdHS/5OLtEWqQMGvVIHak8/vir6QAnLYdFFsiafmZwBqx7s62aGQjROS22Y/AdEcnSFaUefIBB
-	L+sFc72Js1FyNdLsCLwW3EZf2JaU0b9uTxb9BmeApFqa4+pW0VWZQuG81NZQvNnGAcI5KBSStuXnQ
-	H4MAEV4KzS567tD97beJOPpE26SUriWuRKZc1+biAg84/13hp+Unj5kv/FxNoNO12uUWN7gaBG8Kt
-	le9BxgU9qnBCPWhj0cfsvnp69sD8LDSrkqRf/nQfhzd+Wh77utd5rhv0PsEFxR2w==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wohve-00000008qgB-2KeT;
-	Tue, 28 Jul 2026 15:33:06 +0200
-Message-ID: <506265cb26a402a10c82ed347f599a478f1d5d73.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] wifi: mac80211: validate individual TWT params
- before driver setup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhao Li <enderaoelyther@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	lachlan.hodges@morsemicro.com, lorenzo@kernel.org
-Date: Tue, 28 Jul 2026 15:33:01 +0200
-In-Reply-To: <20260723010928.76551-1-enderaoelyther@gmail.com> (sfid-20260723_030941_667975_B860D0C9)
-References: <20260723010928.76551-1-enderaoelyther@gmail.com>
-	 (sfid-20260723_030941_667975_B860D0C9)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="DLK7nH0O"
+Received: from LAPTOP-99KJFSET (unknown [58.241.16.34])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 47e1eefc9;
+	Tue, 28 Jul 2026 21:34:48 +0800 (GMT+08:00)
+From: Hongyan Xu <getshell@seu.edu.cn>
+To: toke@toke.dk,
+	afaerber@suse.de,
+	mani@kernel.org
+Cc: Hongyan Xu <getshell@seu.edu.cn>,
+	linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-actions@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn
+Subject: [PATCH RESEND] wifi: ath9k: stop using owl context after completion
+Date: Tue, 28 Jul 2026 21:34:46 +0800
+Message-ID: <20260728133446.692-1-getshell@seu.edu.cn>
+X-Mailer: git-send-email 2.50.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9fa8ef5fb103a1kunmeb964764f0b67
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDThpIVhhOGEhNTkJOGBhPH1YeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlOQ1VJT0pVSk1VSE9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhOQ0
+	NVSktLVUtZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=DLK7nH0O0y1856fXuyimwMP3ntkX0q1we0WWMtzcvbSIfzrg6lIIz5GFLFI2YToPaIv61MzW8NH4iZ7rpvr29j7qX12AvJpjgzgSH2TMSzn8uZO/XuORxeya+8fLp17YLsEApGjZWCgrf+o0jMnSDklU1tFg84oTDPMgNnE4xhE=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=utXp4zcDsQfyziyaB24hBkxQ5Nu1E6Nzja5yWjMT/7w=;
+	h=date:mime-version:subject:message-id:from;
 
-On Thu, 2026-07-23 at 09:09 +0800, Zhao Li wrote:
-> ieee80211_process_rx_twt_action() validates a received S1G TWT setup
-> frame only through the control byte and 2-byte req_type before queueing i=
-t.
+owl_remove() waits for eeprom_load, but both owl_fw_cb() and
+owl_nvmem_work() completed it before their last uses of ctx. The
+devm-allocated context can therefore be freed while the async path still
+dereferences it.
 
-That's not _quite_ true?
+Take a pci_dev reference and copy ctx-owned pointers while ctx is still
+protected. Complete only after ctx is no longer needed.
+Keep the completion before owl_rescan(). Rescan can remove the device
+synchronously.
 
-static bool
-ieee80211_process_rx_twt_action(struct ieee80211_rx_data *rx)
-{
-...
-        switch (mgmt->u.action.action_code) {
-        case WLAN_S1G_TWT_SETUP: {
-                struct ieee80211_twt_setup *twt;
+This issue was found by a static analysis tool.
 
-                if (rx->skb->len < IEEE80211_MIN_ACTION_SIZE(action_code) +
-                                   sizeof(struct ieee80211_twt_setup) +
-                                   2 /* TWT req_type agrt */)
-                        break;
+Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+---
+Resend with Manivannan's current address. No code changes.
 
-                twt =3D (void *)mgmt->u.action.s1g.variable;
-                if (twt->element_id !=3D WLAN_EID_S1G_TWT)
-                        break;
+ .../wireless/ath/ath9k/ath9k_pci_owl_loader.c | 31 ++++++++++++-------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-                if (rx->skb->len < IEEE80211_MIN_ACTION_SIZE(action_code) +
-                                   3 + /* token + tlv */
-                                   twt->length)
-                        break;
-
-                return true; /* queue the frame */
-
-
-But it's all highly confusing.
-
-> An individual agreement can therefore reach ieee80211_s1g_rx_twt_setup()
-> with twt->length too short for the full struct ieee80211_twt_params.
-
-And that element isn't even fixed size either...
-
-> The individual path passes twt to drv_add_twt_setup(). Both the tracepoin=
-t
-> and the driver callback consume the complete parameters block, not merely
-> req_type. Do not pass a short individual agreement to the driver.
-> Broadcast agreements remain unchanged because they are rejected locally
-> after accessing only req_type.
->=20
-> No in-tree driver both implements .add_twt_setup and exposes S1G
-> operation, so this is a robustness fix rather than a fix for an observed
-> crash.
-
-I think this also isn't true, because there are some drivers that have
-add_twt_setup, and having S1G isn't a necessary condition for this, in
-fact this particular path is meant to not be used with S1G but rather
-for TWT setup with HE (or later) devices.
-
-Nevertheless, I'm a bit wary of adding this as-is, and I'm not totally
-convinced it's a super urgent fix we need right now (-rc5!) even if it's
-an out-of-bounds by (at most) 14 bytes.
-
-I'm tempted to feed this https://p.sipsolutions.net/3956a9bfc0ab31b0.txt
-into an LLM and tell it add a validation inline for the element size and
-move the parsing to the element parser like we do for most other frames,
-but I don't really have time to play with it right now. Also, it'd need
-more information from the spec (this should be in public versions) about
-when each of those fields is present and when it isn't, and the struct
-ieee80211_twt_setup I documented there only covers the individual TWT
-parameter set field format, not the broadcast one, but I _think_ this is
-right...
-
-OK, I'm just going to take this patch into wireless, as ugly as it may
-be it seems correct, even if that's far from obvious with the code
-patterned this way (not your fault)... we can do further work on top
-later. Probably will edit the commit message a bit to not overclaim the
-lack of validation though.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c b/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
+index fe1013a3a..1aefe21d2 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
++++ b/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
+@@ -125,16 +125,19 @@ static void owl_rescan(struct pci_dev *pdev)
+ static void owl_fw_cb(const struct firmware *fw, void *context)
+ {
+ 	struct owl_ctx *ctx = context;
+-
+-	complete(&ctx->eeprom_load);
++	struct pci_dev *pdev = pci_dev_get(ctx->pdev);
+ 
+ 	if (fw) {
+-		ath9k_pci_fixup(ctx->pdev, (const u16 *)fw->data, fw->size);
+-		owl_rescan(ctx->pdev);
++		ath9k_pci_fixup(pdev, (const u16 *)fw->data, fw->size);
++		release_firmware(fw);
++		complete(&ctx->eeprom_load);
++		owl_rescan(pdev);
+ 	} else {
+-		dev_err(&ctx->pdev->dev, "no eeprom data received.\n");
++		dev_err(&pdev->dev, "no eeprom data received.\n");
++		complete(&ctx->eeprom_load);
+ 	}
+-	release_firmware(fw);
++
++	pci_dev_put(pdev);
+ }
+ 
+ static const char *owl_get_eeprom_name(struct pci_dev *pdev)
+@@ -158,19 +161,23 @@ static const char *owl_get_eeprom_name(struct pci_dev *pdev)
+ static void owl_nvmem_work(struct work_struct *work)
+ {
+ 	struct owl_ctx *ctx = container_of(work, struct owl_ctx, work);
++	struct pci_dev *pdev = pci_dev_get(ctx->pdev);
++	struct nvmem_cell *cell = ctx->cell;
+ 	void *buf;
+ 	size_t len;
+ 
+-	complete(&ctx->eeprom_load);
+-
+-	buf = nvmem_cell_read(ctx->cell, &len);
++	buf = nvmem_cell_read(cell, &len);
+ 	if (!IS_ERR(buf)) {
+-		ath9k_pci_fixup(ctx->pdev, buf, len);
++		ath9k_pci_fixup(pdev, buf, len);
+ 		kfree(buf);
+-		owl_rescan(ctx->pdev);
++		complete(&ctx->eeprom_load);
++		owl_rescan(pdev);
+ 	} else {
+-		dev_err(&ctx->pdev->dev, "no nvmem data received.\n");
++		dev_err(&pdev->dev, "no nvmem data received.\n");
++		complete(&ctx->eeprom_load);
+ 	}
++
++	pci_dev_put(pdev);
+ }
+ 
+ static int owl_nvmem_probe(struct owl_ctx *ctx)
+-- 
+2.50.1.windows.1
