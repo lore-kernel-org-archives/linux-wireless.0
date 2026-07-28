@@ -1,84 +1,84 @@
-Received: from mail-qt1-f227.google.com (mail-qt1-f227.google.com [209.85.160.227])
+Received: from mail-qt1-f225.google.com (mail-qt1-f225.google.com [209.85.160.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46148449B22
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 14:46:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CEE6451049
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 14:46:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785249976; cv=none; b=KmpM3NoSchSIQMazoYUuaasK2j9eB5w7vAfml2Abfxhd1/Atsjs0K+Dii+u9+zVMi9eI3xeFyDsSQ/pQQZJLpQv/UblhengGxhwPNqFTvI8eeKvGS/kSdnLWIRL9hrn09b6QvHqI1AsEdUtG6anBEAsdtNT1vNxlRh5P5yePyI0=
+	t=1785249978; cv=none; b=t3GLYKijD/7JxeUP8I2dyVIKh7k03oAonnuX+VSzq1Nf0WGg8m+791n9vi9F59oBBraVt7O4FmBMaQR8edffiNAHS6zRvvcZHjix0X8jazKRXmwDPYkwRUCGAjBDJt/8moyBogxoc1zr1+ao3N1MIWoGzuZwVJt/KyK/5fXN8dc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785249976; c=relaxed/simple;
-	bh=wIz+3euQACHcMtzoe/1WVQoQpiunxZW+Fc/WKDXM5WA=;
+	s=arc-20240116; t=1785249978; c=relaxed/simple;
+	bh=YN70RHjCwmQ83vx3SX+04RYNQVnGpUEZQcVazfzYY2k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PJnig134NGyrV6KID/of64d8+QCs0cisWaUCNuokHgQn1Vn4Dupe5P/Q198xgAO+GmQFAY3qn41BmB6VXNUld66V05rz3DTKRib7clN2CssbCFWbTNO9k1Xj/WGXXQ6cvIkg817f1/1eWQTNfINw+/IQLEt2haLNGBzswiCbMVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Jr13gp7O; arc=none smtp.client-ip=209.85.160.227
+	 MIME-Version; b=LrVEwXhQc4rYWavx1dXnbH8PyTjfZ/1qQUnxw315q3SItCHnoNGcajrmh81rKVql1FKzDO4/KlIScHmDoTrYKXeTE58eWH2loiPAKiqfau0MB9TnoF5N7U/5TCZaYqVyPEGLgv4STOgLbbdXehBqx2QWt1evO5VeoCTeTYvDn/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=VpesBTO0; arc=none smtp.client-ip=209.85.160.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Jr13gp7O"
-Received: by mail-qt1-f227.google.com with SMTP id d75a77b69052e-51c01089e8aso26138901cf.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 07:46:15 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VpesBTO0"
+Received: by mail-qt1-f225.google.com with SMTP id d75a77b69052e-51c04bf4711so38058971cf.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 07:46:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785249974; x=1785854774;
+        d=1e100.net; s=20251104; t=1785249976; x=1785854776;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=VwmBr3II+Nl4yIpxO7BvkJDCioVvnXcf67GLy4y8934=;
-        b=VhMBA/L2vb6yP3qKjGTQNyCGdv6EOyyRHTJX//rcdAITIm84O9Ny6FiMyH7Fz8+M+C
-         cpDbRLt8oxF/tXSEw5MnMB0rw7NrEyqj8MEvdIfhXgWYysLNeZtEICIYdpDSlbERpL6s
-         PJrQ6Juk38cVWx+lv2Lo5Ve0dkqVvPOBFYenHSsTIIPHis/hM5Z+fudaiSK1pY6LePVf
-         wJA7Z+B2F9Uebio23zMIETBqQGeTre+LxFk5m8y/CrC+09RhN2b2HKtSHORavq4OFQgH
-         pDgBAB395h19gfbUkYkduvaiubuWk5oba6gNd4eTUSf1GUhu8XWfrmdZaUxh1nfXStp7
-         X8Vg==
-X-Gm-Message-State: AOJu0YzaJYyJ5TMvhh79ZkJlO0/xr6496Y6CliGJXe9Gi2oGzpGv1wA/
-	zRPK7nYRBsRoLjTQtXvAn9HChJuN8Dig9rnnWdnnXrJOhxxKYrqbk4FLahKxCthIKE/A0f6dS0K
-	uwFpuyNdcb4msRCBS9+AYc520nfWq9UpQPuBrKYAjVj83VEUFX9z5C7lSIP7baDzp7/b2oL2uTG
-	6oek4vRpxh3OktbXeqYDiPkJaBoh2q2qovPgysjQIZJWQHIMb5f/BGuTPflCVjlAvvfW0cI1Z9z
-	ztMUYwwELTdkmlNqNqBOrnRoeWT
-X-Gm-Gg: AR+sD10Gxvev03d8U2e4xXQwFZCjTMUegHkLlV1B9yI82dxDpoCLFepvrI6/+ujCt+V
-	WDL53ceqx3LMFy+J28aCfJU5RetPl2oPWigUIJiUFTFI5utu7QDTasGtS2LL++72P9aD5SYy+/2
-	myJoGDHQFRoL+atB3aIyT1sJiTx7wD5ipBls7aXjWpNLKbjW4zfgfWG3pNHXsv8l6NDvL9v7+tE
-	zMpTohV7bUCiATczDP5a91pTB7UgESdpGzSGYM6uZ0yUO6vl9X6vKwfPzb7KRVuMXcjr/gVRTQq
-	A9jicWMoWIbembtaIZnc/6uXBUPLmgTPhXr4s2OS23+JzbAJ++QrVFB9SfdwoksejHr6Z2ttduD
-	UExGVFvxpiEWcIwvxk9AaDcl4ptl6t12qxcbJYvIWrAEM6qltUPLxaEjqtgMifoozhLGd5IQHQb
-	U9V3ROebIx5qbyMuj7zXly+ndDed0cdBYhsu+FB78=
-X-Received: by 2002:a05:622a:305:b0:51c:1daf:196f with SMTP id d75a77b69052e-529d7217c24mr24610941cf.58.1785249973883;
-        Tue, 28 Jul 2026 07:46:13 -0700 (PDT)
+        bh=9mAAQLzPAI07RqkNYsgKLJ0dCN5z/oc54+anUQNCXX8=;
+        b=cq1TdsasQMyUAxusIJknKA2P5v3IK1fRcnnzjXHeXDZFfbdKQMcmD2k9f7WPS9alP3
+         wyHLJuoZAaVUnJwblpvSPgOY/hjNiHxMGnAtGRk8mSe2jgv63ef2zcW+p81uOHJLAg5+
+         1xMgQPAa/Fvoqcz3BPMGtJzuarAyDdHXI0nyNe8s/ypilJpROtqIeGyYX8bhFTu8u6h0
+         LA8EkF/XRlYffP8UDpjZv7VXjhG5u1XotoRlszqNIWNG8bz3Q53UyoU4kSYqcn8y2yBl
+         ABCmwrANPn8E7ZvVXxTWgSBZaNUTzhDiFzhjrFclNFUDuHJIqOBHvq08S71gBfL3b6Er
+         NNYg==
+X-Gm-Message-State: AOJu0Yw84rAR+J9TQo1PA6kMoWpz5jKzt59myjnlnBFN4bjopxlJ6BK0
+	lMW5vM7t1x9msovBhhkDYah+Ptq6wi+4GPFfpy5YMikWv5/DQlq2dZ+5dr2i0PG7Cr+bx8wQYK0
+	hMFmxzMy0B/G56mCAhmbCKiqFmDRb2bVZ8hfaGUu/sAKCEI/kPf/OHMwsaM7BYI/vy/8ueehqSi
+	KoeLvLawh44NSzqo16BbCSPWozQxCTJdGjvxq1cnUzRcsIGhM7fz363TAeTfSTdLIpJSuJGWoi7
+	JbjV17cLF6USYxpyKTShWMtNX88
+X-Gm-Gg: AR+sD137R12v3Ioehx+csWQdQ+QdaNOvvhaAFWKoI3MZLJtc2M14nmMr3rvewfPSB0w
+	J5nbhA2LFKP8GBC1YBKfQznznmUFUYsTN4737edUttz3jX6Zg9EH+a0HdzruMnNSSSYaYL5g1vd
+	RYW3YUfj8B2NwW/6HVFWxIi4VSqU6vu8GFzJwbsGyo30eczhxVeqD9Red12FfHmlrIOgHa0fyzF
+	OW60RCqXWGv/5Gf0oYPHQ5Sg8heT9r1SDChU1kuNINRak0SxW6+4LqaelnKMlZpMELT1Gq5yNrQ
+	0S/tnGg+AnZRz6BDUQUJC5urTB2NVvoNvrEdMH8NbJbNrcnxLWtybHeUCjEj+igeURJ2lnSlgm/
+	hatWaZwlMAd2YGJKFZp5JmJUfkH0OXLoOCXM0fDoztXPNju/CNnvnsVDaenb8Hu3eTYLlgQQWPj
+	4i+OjNwzKfL3wT2UXGqZM6icXeSDFVzbZCgfei0YI=
+X-Received: by 2002:a05:622a:4d47:b0:514:9ece:a15a with SMTP id d75a77b69052e-529d70e4c86mr26461881cf.45.1785249976129;
+        Tue, 28 Jul 2026 07:46:16 -0700 (PDT)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id d75a77b69052e-529a27c625bsm2300021cf.6.2026.07.28.07.46.13
+        by smtp-relay.gmail.com with ESMTPS id d75a77b69052e-529a29ccdc1sm2441341cf.27.2026.07.28.07.46.15
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 28 Jul 2026 07:46:13 -0700 (PDT)
+        Tue, 28 Jul 2026 07:46:16 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-92ec91dc265so360580585a.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 07:46:13 -0700 (PDT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-92ec3146553so759777885a.1
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 07:46:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785249973; x=1785854773; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1785249975; x=1785854775; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=VwmBr3II+Nl4yIpxO7BvkJDCioVvnXcf67GLy4y8934=;
-        b=Jr13gp7O/iT9f0ekjpoq+3yPYMyAhu1oJbI+v4WYaGJsYkLn/lausdvBaL+3fzbWtP
-         jrM2Lq178dTfDJ+5+qDtiie2EYtMoz9sdKPWA4Fk40JTCuGMcem6MzD+2OJJL2UmSZl0
-         mvxN0zLJvIdDLLZ+KAlZxIjSEeLInnGquRd/M=
-X-Received: by 2002:a05:620a:4622:b0:932:dd83:c54 with SMTP id af79cd13be357-933026926bemr254650885a.42.1785249973086;
-        Tue, 28 Jul 2026 07:46:13 -0700 (PDT)
-X-Received: by 2002:a05:620a:4622:b0:932:dd83:c54 with SMTP id af79cd13be357-933026926bemr254644485a.42.1785249972438;
-        Tue, 28 Jul 2026 07:46:12 -0700 (PDT)
+        bh=9mAAQLzPAI07RqkNYsgKLJ0dCN5z/oc54+anUQNCXX8=;
+        b=VpesBTO0Sg3OaULMXsNAYxN4pLWFaZLcFq7D5QBDbUY+Rt7ewZPO3rwGKhdUkWtT+R
+         0475gxZkRFniaiuDEAc3dn+OCffDETtS81n6fVMaKFVvjNaekhdn0G0hGH90LGQkFWl1
+         VGHFFnTcwdyZqZ4kUr74Cz7fLrWv5Z8AO871I=
+X-Received: by 2002:a05:620a:2993:b0:92e:6b16:6a0a with SMTP id af79cd13be357-933026c9378mr252094085a.40.1785249975384;
+        Tue, 28 Jul 2026 07:46:15 -0700 (PDT)
+X-Received: by 2002:a05:620a:2993:b0:92e:6b16:6a0a with SMTP id af79cd13be357-933026c9378mr252090485a.40.1785249974891;
+        Tue, 28 Jul 2026 07:46:14 -0700 (PDT)
 Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-932de519154sm878659685a.5.2026.07.28.07.46.10
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-932de519154sm878659685a.5.2026.07.28.07.46.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 07:46:11 -0700 (PDT)
+        Tue, 28 Jul 2026 07:46:13 -0700 (PDT)
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH -next v2 08/12] wifi: nxpwifi: use pre-assigned cookie for remain_on_channel and mgmt_tx
-Date: Tue, 28 Jul 2026 16:45:45 +0200
-Message-ID: <20260728144549.2207061-9-arend.vanspriel@broadcom.com>
+Subject: [PATCH -next v2 09/12] wifi: qtnfmac: use pre-assigned cookie for mgmt_tx
+Date: Tue, 28 Jul 2026 16:45:46 +0200
+Message-ID: <20260728144549.2207061-10-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260728144549.2207061-1-arend.vanspriel@broadcom.com>
 References: <20260728144549.2207061-1-arend.vanspriel@broadcom.com>
@@ -91,35 +91,27 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Stop calling nxpwifi_roc_cookie() to generate cookies in
-nxpwifi_cfg80211_remain_on_channel() and nxpwifi_cfg80211_mgmt_tx().
-Use the pre-assigned cookie from cfg80211 instead.
+Stop overwriting *cookie with a random value in qtnf_mgmt_tx(). The
+internal firmware frame identifier (short_cookie) is unchanged.
 
 Assisted-by: Claude:claude-sonnet-4-6
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 2 --
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-index 4f9e20f72811..198174ac754e 100644
---- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-@@ -212,7 +212,6 @@ nxpwifi_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	tx_info->pkt_len = pkt_len;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 9e44c85d2051..284bc61c46d0 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -454,8 +454,6 @@ qtnf_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	u16 flags = 0;
+ 	u16 freq;
  
- 	nxpwifi_form_mgmt_frame(skb, buf, len);
--	*cookie = nxpwifi_roc_cookie(priv->adapter);
- 
- 	if (ieee80211_is_action(mgmt->frame_control))
- 		skb = nxpwifi_clone_skb_for_tx_status(priv,
-@@ -277,7 +276,6 @@ nxpwifi_cfg80211_remain_on_channel(struct wiphy *wiphy,
- 					 duration);
- 
- 	if (!ret) {
--		*cookie = nxpwifi_roc_cookie(adapter);
- 		priv->roc_cfg.cookie = *cookie;
- 		priv->roc_cfg.chan = *chan;
+-	*cookie = short_cookie;
+-
+ 	if (params->offchan)
+ 		flags |= QLINK_FRAME_TX_FLAG_OFFCHAN;
  
 -- 
 2.54.0
