@@ -1,69 +1,70 @@
-Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B157C40D565
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 11:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B3883AEF2F
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 11:22:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785237215; cv=none; b=SQlAoCcNyd6DEvYbVo+xII8WZZa9X3SaR3wrNahAgfyBzsh4uNExGM8EGHqqia6GPttgbz5ZTG7mMt+VwhQZCmOmt6jgwj32OislExa4hSNLoXsYbUVMAPlgO0wA13ItPMatzLh6nt28dqaaLiGbPTCN7XtGIKlDzSGwkO4ZCDU=
+	t=1785237726; cv=none; b=ZhksxeDMXZjqHIhVZMBFYgWb1j67A0dD5qfuBrSV4iDQ1YtZEbFkEDD9QYgN1LxZJ//8/6PYP75hNkF+7RQGu3eZ336I0ppaxjVB9yXIfuftw8IuDWSyQLIZJXdmC3LnBRj8KdGQpHsGtgcS8/W220tW3NgXMLdqmvX0vaD80dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785237215; c=relaxed/simple;
-	bh=e9EJOPMJQQmdhrX9ZLjutTgNigOU2bNeUlGTHv/ADiE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hqDJt2/bgnil7VTgyMqoPUYo+MZMBcy8epl1bQ51U8OxgsaPAomxm3S3kzGKTxUhT9wL6/MZMCKgmerKKaK/5EDMdPO8zW7JHvxnH3EFXLoPEhKgRV1c6MQZUMWCA3+9rOb7LExg3F+YBSmYKT4wZVOkPLf8NrGCDLImVCxTHMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r7WrkE6V; arc=none smtp.client-ip=209.85.215.170
+	s=arc-20240116; t=1785237726; c=relaxed/simple;
+	bh=VLecZiYysqRR3FyupZ4wmEA6aHz6zuJCznQDTIRVdyY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hi+sJ3MwPNPy8YAOSDYyJCqXd7kQW60Tz0RhiDqq1yMT179IHaQA6BlySMcMSxdXBQwK8CDF1M/y+VoEyMkDIQv4WheZpfhpgoH8GatTA/Hqjfx8eICtZjCRS+I3jmmix7hWo6vKmdBmWKoByOfjie96gd0uSN0gaOSzCdMMaN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DkMO5jFN; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r7WrkE6V"
-Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-cbb662575d3so2132242a12.0
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 04:13:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DkMO5jFN"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cfff5f88dbso18737695ad.3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 04:22:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785237214; x=1785842014; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785237724; x=1785842524; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Ef3Yb4VZjfVw3Uexl/SrI2+nfGjSSdskMXoJ4cJ3KC8=;
-        b=r7WrkE6VZQff1oXL400jSucWTgahF7HFO9FvU0E8AXJt/XTL0YhJNBmuB6tzqLNjTa
-         TqQLjYupJdFovP8eqXCkl0Y9sgyesXRmHivrW22dBeMgkeFXniQRWIQMvGoQq6LmHS60
-         fJlKgt0qbxsdqLuc3pW1uEo33Mbg+4JCqR65qSAgkbUUZ1PJE1+RDopRO3PaTKwX5mm6
-         jVyf4jY7wWWTU2RxTPlLKUM7D1rxE5QaD8btdZWViaf/SAnjhD4XvDU5K7HSgy6EEeO6
-         79eRsxw435tWf98pkor8SH+7WeqJMlYQsVe2g3LpUTufNYSqmYSh2BSRY9XGq0tbEqrS
-         1ZGg==
+        bh=yDhlQhwmlcQWIHpZs2yWSme42s37F9gsvsFAdiLtfjA=;
+        b=DkMO5jFNjYufgnqiwuTcv+kdfaXwRxbFI8x9KRmYZGwvx11TPQk5I3MHbNz4RzKnRH
+         ywpNeQzuGHVOLHDSSJzAzxOqoNgQ/krvvSYvFwhLHeKmlr0XI+o0Ox39+gCj3mDlfU5F
+         Qbm+X+/uOvvJkiWr0sBGr1+eXwTm6HdVWxhepoFWd4XqvLo+/3i5ERARFINT/KYgUZoR
+         WTFPVPkzbkZ0I4j3h/gJBfLnBZ4wyJ60JmR4ogHE18mZuxK73cK0z7E8cTwJg4hOczLD
+         IEY7UHlNlwRy5adlfZIJD+pq+g4BN+xCKp3KQ7fhWF2vIEMaPjXxmdXfSyJrnHj+DyE5
+         Cb5g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785237214; x=1785842014;
+        d=1e100.net; s=20251104; t=1785237724; x=1785842524;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Ef3Yb4VZjfVw3Uexl/SrI2+nfGjSSdskMXoJ4cJ3KC8=;
-        b=llmwuCSA1ApbNzBRw56gLPTxCQlMs+UIhkPiT4G4qGlLI6JVKbi9qIfdcWI6RejV61
-         iWCenGE9eLjHaVHXacpVDdhnX0dCGLq62Ol4imAGUW7R2lR7Mr28b0fCillc3MrCwLMl
-         vFcG1BeJiTTDy3T1FidtNCj7aPjVRZACBc5NkNyVQy3h89HLSifM6v1JGJb+d55aLuyT
-         aUvSjeYuxExF6xOToN4oUNFh0zx9mP9Lsnn6/MZCaEz/1V/7z+AMuNgiSuSoncNeBN0Z
-         U0jv1BvEA75+Yrh05H52+/CfxFTbLHfyEwGL3L71N6TATmS1IDif3QBoMuqB6y9jIXoX
-         EkmA==
-X-Forwarded-Encrypted: i=1; AHgh+RrRX+EqEExLHTQPoSZ1M/5UDH0E/7xW9AyXSQNTYlbQDzgavunMgs9clat3wwwFas1KL4ad8pZ33FauvJ+veA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwQ4xlnhQZp7ROAKu6QPEMmPnBjz/BifdF5SQpVxKs8Vxcv+H+N
-	2KARF9rdm4/oQ9apkRSEv8Nn2d95U9CihekKQhhod7EQ+JffMaC/maZq
-X-Gm-Gg: AR+sD10F2AZqrSMsql4ynLmFX7gbHwlz/2syq6jPZoUFI+8BHpdu9q+KPkS0+zomYA7
-	KVfQlCDW8uBTecUHNcpa8pTtx+BUUsq3xNs/UQZGVGvPv/sj0wZZ53vTnN/UfW8gyx8+VSPBu7j
-	dKQEuDw7mmB8XIjfP2R9P7pnhZq7gppK3ae4t3baV0HPwc4rlhwoHqdDoBWmQLGQjaHLm7/TBCb
-	NDJHz39prNagXYAwdeb9H0uaq8snd6rKG3Un1RihWSfs1b+tn7Egdyik0ukvHVKt8xewfMX2lDC
-	+d+nyskzDK5DJABuIFRf83r+DWuBn3GkWvPA5K/W2QhwSWUULK2NQFydjd57ykLX7BhiU59sL0D
-	SEPzDdSkKzVrfN6QqAHZRqW5tCfVXLDtz9vzJywQLyOMdmFMpfugfAsckhscCBaIqNpZdOvIvlA
-	Ss9hgfhxd1dF84moEniV1Ehnch5joczA+k3tQUutE=
-X-Received: by 2002:a05:6a21:e598:b0:3c1:657:4c95 with SMTP id adf61e73a8af0-3c8aafbb6f3mr2587944637.15.1785237213865;
-        Tue, 28 Jul 2026 04:13:33 -0700 (PDT)
-Received: from KRHW1CJW23.bytedance.net ([203.208.189.8])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-314bc548efesm43920950eec.14.2026.07.28.04.13.31
+        bh=yDhlQhwmlcQWIHpZs2yWSme42s37F9gsvsFAdiLtfjA=;
+        b=IiB2aEKJFQmer+6BVo1WobQGAh7dRb5BhVpaEXt620nTGg5wyaMFDOb+bar0UYR6Th
+         Y7ud6i5VFmRa0sePemaKtNdEPYk8gmGPPWuYc3zZb09tzJfbODb6QECHQC/Zi+fJAGW+
+         hpoaOl7ddsM5s81ztujs+77PRGONawZZNNF0eahBvjzt1HFVJqFqyE+DyguMS8ngA+mn
+         vJbyGNVoGrcqyb6UeHpOq4JwdXnerjy55kR+omiexxINNKcVWFWyABevXDONdRONd/Fv
+         an4R6p3xUvRWiz0ghn9u36rjEw9nzH4H+lUCQeKcmziWhGhuD4wHVQ41dAEwl68vXEuR
+         oj2Q==
+X-Forwarded-Encrypted: i=1; AHgh+Rpdtdok8AGhIsAEe0n7tebqlQKZXrzW/6VpJQ2R8l6SJc2BAxJJNlgOxnaI4Qg0KVOsaPo0MjWgyboCmiaXKw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyNO+fPu2DW9uhSlG/x/oM8ojxgG7OVaow9qBJJUNlLz/swWb3O
+	oIag2WqBBVts8H+b1EQNe3G+guhYdhiLHXXdCYQNm9SJ3e2Oa5HAJeJC
+X-Gm-Gg: AR+sD11Ml4AB48acjBJg6k4bVN73Hj6I4MFp+CmCwHuL6yUx9YYIkJ/RJX8ZNAEmWbT
+	FimMrxRfTVv705JfNgcUnI180Av+Y6uFkwlqLrvmqV3uNn3i6pwKaQoGekEDas9DC1b+Tc7TgwN
+	AQ0wa2QRL/4R8L/6eyUf3S07JENI0fS+JmuqYnVOLX8ziY6zl30Jl4Z8SM9Z10Rd7ejChbRTzA0
+	LK1sNG10ggJhPcVmDhKzhAPtWbw9rWvkOvyWt3HrZh+oUtOt23mrjgSHoK/J3kZlJ8X3Ybn4II0
+	w2REAA4ffKRjhAlQFhcIZi1RHL3iSnna6aRe9wanmcPcfQR/ysrQCtVsI06ZeuXyNKi1D054haa
+	idLvi9FiBLNCqJqEr4a/9aCrn+deupN5dOAMOGpakE7a11qAGRbttYLkfRzqCvcI6Q7ux1sx5bO
+	pHDnIeIFuWS6rWf9HnceKQrOg5zmYcQ3w49CnfdZpC2GiK
+X-Received: by 2002:a05:6a20:7291:b0:3bf:8f49:4038 with SMTP id adf61e73a8af0-3c8ba545920mr2383726637.39.1785237723498;
+        Tue, 28 Jul 2026 04:22:03 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([203.208.189.5])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e52f0c6f2sm36299720c88.11.2026.07.28.04.22.00
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 28 Jul 2026 04:13:33 -0700 (PDT)
+        Tue, 28 Jul 2026 04:22:03 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Ria Thomas <ria.thomas@morsemicro.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next] wifi: mac80211: fix per-STA profile length in cross-link CSA parsing
-Date: Tue, 28 Jul 2026 19:13:26 +0800
-Message-ID: <20260728111326.63087-1-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: fix tid_tx use-after-free on BA session stop
+Date: Tue, 28 Jul 2026 19:21:56 +0800
+Message-ID: <20260728112156.96822-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -73,45 +74,97 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ieee80211_mgd_check_cross_link_csa() starts parsing elements after the
-fixed per-STA profile header and the STA Info field, but subtracts only
-the STA Info length from the profile length. As a result,
-ieee802_11_parse_elems() is given sizeof(*prof) == 3 bytes beyond the
-current profile's element area, and data following the profile may be
-interpreted as belonging to it.
+ieee80211_stop_tx_ba_cb() hands tid_tx to kfree_rcu() through
+ieee80211_remove_tid_tx(), and then reads tid_tx->ndp after dropping
+sta->lock:
 
-Subtract the fixed profile header as well. The preceding
-ieee80211_mle_basic_sta_prof_size_ok() check guarantees that the
-corrected calculation cannot underflow, and
-ieee80211_rx_uhr_link_reconfig_req() uses the same calculation.
+	ieee80211_remove_tid_tx(sta, tid);	/* kfree_rcu(tid_tx, rcu_head) */
+	...
+	spin_unlock_bh(&sta->lock);
 
-The call site currently states that cross-link CSA parsing has no effect
-because the broader parsing is still incorrect. This patch does not
-address that broader problem; it only makes the per-STA profile parser
-stop at the end of that profile. No production allocation over-read or
-user-visible failure has been demonstrated.
+	if (start_txq)
+		ieee80211_agg_start_txq(sta, tid, false);
 
-Fixes: 7ef8f6821d16 ("wifi: mac80211: mlme: handle cross-link CSA")
+	if (send_delba)
+		ieee80211_send_delba(..., tid_tx->ndp);
+
+That read is not covered by an RCU read-side critical section, and it runs
+in preemptible process context: both callers hold the wiphy mutex, reaching
+it either from the ieee80211_ba_session_work() wiphy work or from
+ieee80211_sta_tear_down_BA_sessions() during station teardown.
+Softirqs can run in that window too, both from the local_bh_enable() that
+ends ieee80211_agg_start_txq() and from any interrupt exit, so the RCU
+callback can free tid_tx before the read.
+
+Driving the function from a test module with the grace period forced into
+that window, KASAN reports the read, and the free arrives on the ordinary
+RCU softirq path:
+
+  BUG: KASAN: slab-use-after-free in ieee80211_stop_tx_ba_cb+0x3cd/0x400
+  Read of size 1 at addr ffff888002b9f52e by task kworker/0:1/10
+  [...]
+  Freed by task 57:
+   __kasan_slab_free+0x47/0x70
+   __rcu_free_sheaf_prepare+0x70/0x250
+   rcu_free_sheaf_nobarn+0x18/0x40
+   rcu_core+0x426/0x1310
+   handle_softirqs+0x144/0x590
+   __irq_exit_rcu+0xea/0x150
+   irq_exit_rcu+0x9/0x20
+   sysvec_apic_timer_interrupt+0x6b/0x80
+   asm_sysvec_apic_timer_interrupt+0x1a/0x20
+
+send_delba is only set when tx_stop is set, which happens for
+AGG_STOP_LOCAL_REQUEST alone, so this is reached on local teardown -
+session idle timeout, PTK rekey, suspend, HW reconfig - and not from a
+peer's DELBA.
+
+Read ndp into a local before the session is freed, while sta->lock is still
+held. tid_tx->ndp has a single writer, in
+ieee80211_tx_ba_session_handle_start(), which cannot run concurrently here:
+both paths are serialised by the wiphy mutex, and the session is already
+marked HT_AGG_STATE_STOPPING at this point. tid_tx->ndp is also the only
+tid_tx dereference left after ieee80211_remove_tid_tx() in this function.
+
+Fixes: 98acd4c1d9f7 ("wifi: mac80211: add support for NDP ADDBA/DELBA for S1G")
 Assisted-by: Codex:gpt-5.6-sol
 Assisted-by: Kimi:K3
+Cc: stable@vger.kernel.org
 Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
- net/mac80211/mlme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/agg-tx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index fa773f3b0541..1b9d272e7f8e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7977,7 +7977,7 @@ ieee80211_mgd_check_cross_link_csa(struct ieee80211_sub_if_data *sdata,
- 		prof = (void *)sta_profiles[link_id];
- 		prof_elems = ieee802_11_parse_elems(prof->variable +
- 						    (prof->sta_info_len - 1),
--						    len -
-+						    len - sizeof(*prof) -
- 						    (prof->sta_info_len - 1),
- 						    IEEE80211_FTYPE_MGMT |
- 						    IEEE80211_STYPE_BEACON,
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 4833b46770b6..a75be7f37748 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -917,6 +917,7 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	bool send_delba = false;
+ 	bool start_txq = false;
++	bool ndp = false;
+ 
+ 	ht_dbg(sdata, "Stopping Tx BA session for %pM tid %d\n",
+ 	       sta->sta.addr, tid);
+@@ -933,6 +934,8 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
+ 	if (tid_tx->stop_initiator == WLAN_BACK_INITIATOR && tid_tx->tx_stop)
+ 		send_delba = true;
+ 
++	/* ieee80211_remove_tid_tx() hands tid_tx to kfree_rcu() */
++	ndp = tid_tx->ndp;
+ 	ieee80211_remove_tid_tx(sta, tid);
+ 	start_txq = true;
+ 
+@@ -946,7 +949,7 @@ void ieee80211_stop_tx_ba_cb(struct sta_info *sta, int tid,
+ 		ieee80211_send_delba(sdata, sta->sta.addr, tid,
+ 				     WLAN_BACK_INITIATOR,
+ 				     WLAN_REASON_QSTA_NOT_USE,
+-				     tid_tx->ndp);
++				     ndp);
+ }
+ 
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
 -- 
 2.50.1 (Apple Git-155)
 
