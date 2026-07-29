@@ -1,87 +1,88 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6C8B3CCA11
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5554C3E0092
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785309523; cv=none; b=rnrX9JNy2cizywpLAY6Or0yrrC6Qp6t59Pt27eF4Woh5NkQjTNRP9OACrxhWVvChZfLgMuZ55feZ8Fn81VZaqpp88OS6t7+NhCd+X2yEd8EP2oXPzrg6NgQu3Izbc8nCZOlz0aIvkHurMJVlCVK6+CmyqvdqVD3HbMoxOtiqN9k=
+	t=1785309524; cv=none; b=f+QEiJLIQn+3DUtnn/aq09EQY2uPgCm1qBDlFvt+v4DjJaOMi7rltgwABrc5MKutMf6nksuYSWxDhqihOGa4JBFYQw9FQtIBmx/zeo/V2NcD+EvD9vx4ytatyknF47ie+fmRpb7p6dC7Ze4a8wJsSja6QoTwJiRLtgOH9HKFYkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785309523; c=relaxed/simple;
-	bh=6DL5gUV/KCusJU3Wrx8NLq2t1UUqe7vLzlv3Amy2pHg=;
+	s=arc-20240116; t=1785309524; c=relaxed/simple;
+	bh=jUT7pYzwzncTOj36a+trjX6+tLTg5gZK2HL3xzDaZrc=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WQ2Ul+CyWaQsrBLKlx0JwssXApiIrSFk3kC+JDSph8Z5ETLLO7VGWdXC2v0XKkLnKdOckYq6FHd3o8/zTNiy/W5CdqDBsixg3dJ5lrpld67jd5sGkDIpRqaJu07/OCbFfzdk2HzirKfSEG28qv6OSBwAgNOUW0tK4I1/rOhUvLI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DMyFrFTa; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=L0L52dfd; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:Cc; b=UiKC5D6gLmtM/BoMuPms+orH0B+DvejcZsQvuJl+DLuLjp+ydGKHzfvv4945NrOq6p9Nha/a+ooc5RM17TfvpNtmeoJizhF8X9cl2AA4lSYAMceW0ITkn5hKTpjJAYgFaNuPKYwcU2KigI5igzDRJe79lSZJgf65nRzpUchzp/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gC7TQB7G; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MmR7Myri; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DMyFrFTa";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="L0L52dfd"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66T5hpRF677262
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:36 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gC7TQB7G";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MmR7Myri"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66T5goJf2055521
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	5ny0swmE7MmuvYquYFpfbom/etRJNh+llibZoszEySI=; b=DMyFrFTaHPGui9GW
-	4dRbOZh8CsrwNWcC6T013tJCfGXi7hSQG7uoeUpYS34MztU97PA/s36KAZT7y2Gg
-	CYFJbKps4QkaIAGki0mbjXxPFh9QcVWoFNBEsWaDIjCVooh05UwCCyYimJT7y3ri
-	qErKZBKh6eh8/O0ohgO59b9VUCZSfar4HY9yS5q+j3BpBxEYKak+ullmBg0L9RBe
-	ctrj66tbnUtjrP6tUiGdAPgxk2A07uNl6IFcTWV+BiMfkonTYAX8rVPaHjml/PMA
-	gbeSemuwoYngyGpeSxMDO1XzD9zyMoQ605IOM3zlxcOZryn5+ix5Qi+K2IO425u6
-	KtCHYA==
+	n3X7sjZrsiUmJKo1zr6UpG6RzjyU/w/4kRvDouCMrB4=; b=gC7TQB7GNe3/y7uK
+	6d8uM/ehne9tkvEXWZeDO8oGax3HIwVBPrmHwiqJ0u5G03QiMWyjFE82+bYE5CZ9
+	jzLv4gB/3aYlZYTCgIEpHeohPB6LtyaCz0cQmczhQ9wbnD4ZTqtl0HihwBM2RzOO
+	ENnvkIq8fatkQNydJggqGv+0PRcsoJOcK7ph8AgNNGZ1EFwN6yxyrZtwLSmbd5c8
+	yc95noExarQvkgeyGKaIcWZ8eVluE0u5lg6qVY0kyxWZmXdC8Xz41NwR6421sGMZ
+	8XAlGcS75e+exLiue30zyhiWrIlxJku5z0lbpJU2RYJbXVFanUA5aX4TRBoTAbpP
+	9cmztA==
 Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqbmm0b9s-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqbm1gbxq-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:36 +0000 (GMT)
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cb74d5db64eso685911a12.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 00:18:36 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 07:18:38 +0000 (GMT)
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-c9fe4c5eb39so408216a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 00:18:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785309516; x=1785914316; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1785309518; x=1785914318; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=5ny0swmE7MmuvYquYFpfbom/etRJNh+llibZoszEySI=;
-        b=L0L52dfdU20cwlRmdOvghFs8QVV0zXkixNRnnLNaoreLnPXV+I7TPxSAgqgRydLZTd
-         TfDGkck7pvdiy9fankm5x3+fwgmudBXacVTAdk/LHL/wePSlzbSGcSGE/CvARjeNoN9Y
-         tHycerLlR5GgMvC+FwPnSqiWYeOw3ZasUf/tT2Yt0iahMI31Z8qYngxKtGzLeWka940Y
-         4oXjADYsZtmUpUhylShb3FFk0o/8rdol40ZWvv2xixN3moqj6Nbk7SZbGzmlNFixkfQz
-         v1LS7pCLxaqaK/TT115AOCc1UwY/fxB0GDF5cfl6IWxXqNudzVTOzyt9bUAUoIdgdyVU
-         eVBg==
+        bh=n3X7sjZrsiUmJKo1zr6UpG6RzjyU/w/4kRvDouCMrB4=;
+        b=MmR7MyriEqdvtl8RDzb42yjXuyxmI4pFnKfE9nRdM1iVTmR20EVlr16wATJnOKRHx9
+         wj09AmWDToQCJErKNOMg5CnBCaUfX65LurnkjA9rthaNSO+wQrEIBE5DNO8vP/xZSzh7
+         B4QE9fSJtHxetcXRqTj2b1sYbiOxu0Hs/aUg55/k213oaXm38j0n+cDhqQLv2+cNWWWW
+         ZoeutUeMn+a0RXoPCxcTwrhDXrbzeXXFIor4vjkTU+a+EapwzbeBxOP5CXL5tXg10P6U
+         NMQCFfChPg9sI2NlfvgZErRtQcodDvvf3a447UVlOdmN8nVYErw8RM9nyi8XRtHHmUPz
+         8Sug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785309516; x=1785914316;
+        d=1e100.net; s=20251104; t=1785309518; x=1785914318;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=5ny0swmE7MmuvYquYFpfbom/etRJNh+llibZoszEySI=;
-        b=l9vBDmTJ1bZidNx9rp0VJlCkKQknA9husB2nCgy7yzqGLs/KLu46lIY+/js3SfU32r
-         ugJmU3c7ZLvRtqObv4/Aa9gQIAc0MEbM/zZrgITYry02D7qlD/rqtklp4/cdyH7169sR
-         67745gcWRqc8NcLcaZOa1kcAdffeeBs+EsaLyBf6R/P3EWJTuYHeIPYyWzWFO7urKfjD
-         56INaKoYr6GVQ5sx5XGbE1AcERML+eozeE9LTswcmjZzpISRn5wzq31EHOXz/uKISq2a
-         md+Y39UGfE2tyqjVTYYghoHOAkA8Jx26Qg0Zle8QonrHzV6W3KjoL7SJyHkZs/2SXMg4
-         uFzA==
-X-Gm-Message-State: AOJu0YxXi1C1UOqNQIKlQniiy/grcy56fcYfdXhfLntMaOCS8bLZ9Lif
-	y2e7aOecSKr9SadLPJ0Z8b+J0geBRwITCi42Di4Rs2qrz8gbrWJ0yTOLNrm1XOK2YkzaB7Z9kKo
-	wHO1Cqcse3qwawjbFU10CVYtpIc9ePB+khh6pgAb2Imrpxa6pCJM+/pFNn5qbMHw5cu2vJQ==
-X-Gm-Gg: AR+sD11hm1FsjYXiDFYUjjv8mj5HTADT9++oEelMSdXtNzjvMyvOsir//JcESmsRKT9
-	nYb9zPtGOTc0SOV/TsbmKBZKsMvDS/1as84Ho6l+MTQiosPHVQ3mZ+n7BX9mooG8K+4+KQQV7dI
-	qDDYNeaDyAokeXF+m65sUrNOLSZgtIeZO7FCCH31fB/mEM8ivAND9RwJw4WlIEHxDl5DxjSSTdR
-	Gu0GauVBmDWlLw8RspMsfIMWBp0PwvGE6EBZorCb+GAUZgeQ0aKlD1Z2o/qEgIqfKPtzJmZBiZp
-	RWYEjOSxcRJ231mWWaiSgGUBkxy4yD6BdqvCucgyjlfLoLzgLK4ZqCetqNYe94stE0pIpSbi+59
-	ON472C2DUOCehG3VIX/WBhqf2SGeqa1dXWRVaf0y71fN1kLB590Kf/g==
-X-Received: by 2002:a05:6a20:1d98:b0:3bf:e2dc:bc85 with SMTP id adf61e73a8af0-3c8ba5bf3dbmr6517781637.40.1785309515931;
-        Wed, 29 Jul 2026 00:18:35 -0700 (PDT)
-X-Received: by 2002:a05:6a20:1d98:b0:3bf:e2dc:bc85 with SMTP id adf61e73a8af0-3c8ba5bf3dbmr6517749637.40.1785309515426;
-        Wed, 29 Jul 2026 00:18:35 -0700 (PDT)
+        bh=n3X7sjZrsiUmJKo1zr6UpG6RzjyU/w/4kRvDouCMrB4=;
+        b=L/s7OD149lyQqsx44YesTaNYDMf4uPLOlle87fr2Jg+mNXugRHGT1z9WbESg3Y6Tnv
+         9G1CNGeVqSCcuXDw0+ytV8U+IQoUJyzsFcJsUUyVFU1raklg5ugyyRDq5QwVbv57tbK3
+         WMuo5h3qSJgb1ay0K2AHknu9VSTjmVG93IYR/Q6VFln1dJqfSlw5Ilyx60EIQrDJSGfJ
+         cLx4llE2fSExA5SKngYPDksqs/IpMHdY4OMw9kPCmuQsAsv7jxzefdjU9b630n/vaBrF
+         DIAFlm2HpewWAYDbAYMbVM4Pvd8uW/fjrcjFVZGdKub2zGeqmt5WWQ9WWY/zyJLgDEfx
+         iyyg==
+X-Gm-Message-State: AOJu0YwTU238oA9xpzmTawz/Tk4Mec7emNx28IsJslfpATyht/RFBv7Z
+	aGTT732nK61niqrBogsnNAXfvtOMdGBbCYZzvDoQksio5iSao+ScSaKQEytI51fkC1ymdjMgicE
+	GOjG42/niZqpBLTmFJMWNKMjKq6+pT08A1y8zYTzGyebsodhdz2rQrm2szeBjYzzLsBME4pNwhs
+	V3hA==
+X-Gm-Gg: AR+sD124w3JOcnMIv4K65qs9S/tCWXXjY02LQwwc/c7865yEGNDYZjDqGY1vpZkvokY
+	tFJxSIbRhd8PbsQ5HT2Zj1zmbm6+1xDKfdLU/3Wi8kpuE+cKtdCSAbctwK1FZEEZyaGAw6k6SM1
+	puv8jM5rikn13Nk8cRoSyPzI6PE1jJLJo/D6pDL2zYQjO0QYcWcsO/M1/8fKQYAZsFGFpxO6Le1
+	uDAVT6mnyP6O11Ryn/A6osf0ghRmZCcdsmnqKdK6xdDoyeXnNyGdTVbqfGBnwdF+2V9R8BGVm3y
+	q1NWJuUTB9qqjatUuk7loJjycfORvH1kiKePFzlTM2jjZAsEOQD+Yd7TRiwBmKf5jC4eQtz6eON
+	xsifI+opmKDaeLVM9pSciX0OPq8+kSihNOl9tu3/DRnVuhH9hZddT7w==
+X-Received: by 2002:a05:6a21:4516:b0:3c4:42d9:58e3 with SMTP id adf61e73a8af0-3c8aafa0605mr6894539637.13.1785309517575;
+        Wed, 29 Jul 2026 00:18:37 -0700 (PDT)
+X-Received: by 2002:a05:6a21:4516:b0:3c4:42d9:58e3 with SMTP id adf61e73a8af0-3c8aafa0605mr6894515637.13.1785309517083;
+        Wed, 29 Jul 2026 00:18:37 -0700 (PDT)
 Received: from [127.0.1.1] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbdb78ae98asm474793a12.1.2026.07.29.00.18.34
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbdb78ae98asm474793a12.1.2026.07.29.00.18.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 00:18:35 -0700 (PDT)
+        Wed, 29 Jul 2026 00:18:36 -0700 (PDT)
 From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Date: Wed, 29 Jul 2026 15:18:11 +0800
-Subject: [PATCH ath-next 1/4] wifi: ath12k: signal regd update completion
- when reg event is dropped
+Date: Wed, 29 Jul 2026 15:18:12 +0800
+Subject: [PATCH ath-next 2/4] wifi: ath12k: use per-radio ab in
+ ath12k_mac_hw_register()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -90,109 +91,101 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260729-ath12k-regd-wait-timeout-v1-1-504aa6e7e93c@oss.qualcomm.com>
+Message-Id: <20260729-ath12k-regd-wait-timeout-v1-2-504aa6e7e93c@oss.qualcomm.com>
 References: <20260729-ath12k-regd-wait-timeout-v1-0-504aa6e7e93c@oss.qualcomm.com>
 In-Reply-To: <20260729-ath12k-regd-wait-timeout-v1-0-504aa6e7e93c@oss.qualcomm.com>
 To: Jeff Johnson <jjohnson@kernel.org>
 Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
         Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Proofpoint-GUID: qNGmIbkxIOGzwqOG9YMYucNw7x8x22xU
-X-Proofpoint-ORIG-GUID: qNGmIbkxIOGzwqOG9YMYucNw7x8x22xU
-X-Authority-Analysis: v=2.4 cv=R/Uz39RX c=1 sm=1 tr=0 ts=6a69a94c cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDA1OCBTYWx0ZWRfX1Dz/8hnPDGbD
+ wNm3VjODaoxAR+CHn6O5bUQd9uRiY+xvfc7O7+FYHymYCwK2ch5sP1OaZsDKjCq9rYrL6v4oV88
+ wlHV6QkjNeCzn5U+RNJZZoIvoH0YeeLfpQLVWIJlNZIDvCrY//1V5XpIP1nkXVO3g8daKhpC+Id
+ tJ7yJL2LDOmaCF9n2CThZEFoX1qKj6tOmi13kIhgWMJBp2DaWTCjHpDIEE3v0wce9KY4seeiiPk
+ QTJPAxXHre+WZxvJ+UwTvDPQYtyvQoYERxLdkSHpG5Eo4kDshLeM7JZx6qv6Z9+IEq3G7AS7yUX
+ /fMotBkmxGo2M+CjQyw3OEHisW7qwdT/sawRHj+vC2JDtANMQh/30PErk4+makhukXL0UdDyjMP
+ FIbBaFse0Si5Ti7cZNEDO64BrT/7wVOGGmFWry5mbtrVVFTxgOX10wgQ3NyC2SW+mmF4OijBrhy
+ UE9ils+q36d+74gxA+A==
+X-Proofpoint-GUID: C8hgXw-AgkEWl1tB0GR2mbEugTuSWLcs
+X-Authority-Analysis: v=2.4 cv=R7Az39RX c=1 sm=1 tr=0 ts=6a69a94e cx=c_pps
  a=rz3CxIlbcmazkYymdCej/Q==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=EUspDBNiAAAA:8 a=Bb4tyEC6cNv58RkMtAsA:9 a=QEXdDO2ut3YA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=EUspDBNiAAAA:8 a=zhjQ6ZcactBYWx6wB3IA:9 a=QEXdDO2ut3YA:10
  a=bFCP_H2QrGi7Okbo017w:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDA1OCBTYWx0ZWRfXwF6JrAqDmitL
- OJrWci6qE4Ez4zq9BEm/gV8h1+Iw2UozOuTTbSw1+6KxAc2WEfwl7pVNyWfqaEiGmBZxSSsNHrm
- iRbx/us8IxGimMvloin1EaVwZeviZ6GYv5wccDE3ERo7VEzpBvc4cc2X1akzedNSbOiNp7enm3I
- 2OZf4BKPT1ozkRpuH4wv6YQW/MDCIzGAUKkAN+8kBoT8dNMB8IRhKiJv3LflAx4HaQGHuGM/0Xk
- PyEFOIpUG6kSefWV91f5LzzA0iz+MafY9axOW/cD7Rm+5ktbFZIHHiyHuoNXgQHeAzGvrcbh2Ij
- pZZvDFY+och5UOoHZnTnFTK/L8lqZcqUMvtL/0VJLe/JqaQfCNat7ATWHfj+jqJkkx01uaOLP+F
- FMzj5KDFIa0ByF+X2A/h/oxu6KKssWZugQV2uB2FjYKfXs78J5dNXuZaXZQs4d1GDMxKDwJTWhV
- K00VX4/Xy/pIlpYhz0A==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDA1OCBTYWx0ZWRfX85+g9gPc+QqO
- g+pX53emNsyUVGqt3sfWQig7cEArW6NGkFYVeF2PBz4h7cuGimFQdbOkQ+wydAje4vq5fWKhobY
- 5xgqYawrMATIkPaD0ys35gtNZXBDJb0=
+X-Proofpoint-ORIG-GUID: C8hgXw-AgkEWl1tB0GR2mbEugTuSWLcs
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDA1OCBTYWx0ZWRfX3PwDsbm+7Nr1
+ i3wPoLQ7xs53Txk8M8hd3EjtHlRVXYTDt8TwNxG+X0AzreQO4qBrwfO+jZSvypWhzhdDJ4pZ5tU
+ c7+5vZvAmrknLwbcYhnbwCrvw7WDXvc=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-29_02,2026-07-28_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015
- priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607290058
+ spamscore=0 malwarescore=0 bulkscore=0 priorityscore=1501 phishscore=0
+ adultscore=0 lowpriorityscore=0 impostorscore=0 suspectscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607290058
 
-During driver bring-up, ath12k_mac_hw_register() reinitializes
-ar->regd_update_completed and sends a set current country command to
-firmware. It then relies on the regulatory event from firmware to signal
-that completion via ath12k_reg_chan_list_event().
+In ath12k_mac_hw_register() the local 'ab' is fetched once from the first
+radio, i.e. ath12k_ah_to_ar(ah, 0)->ab. When an ath12k_hw spans more than
+one ath12k_base, the radios walked by for_each_ar() may belong to
+different ath12k_base instances. Using the function-scope 'ab' inside
+that loop then refers to the first radio's device, which is stale with
+respect to the ar being processed.
 
-However, when the country being set is identical to the one already
-applied at boot time, ath12k_reg_validate_reg_info() returns
-ATH12K_REG_STATUS_DROP through the "Avoid multiple overwrites to default
-regd" path. In that case ath12k_reg_chan_list_event() jumps to mem_free
-before assigning pdev_idx, so pdev_idx stays at its initial value of 255,
-'ar' remains NULL and complete_all() is never called.
+This is not a functional problem currently: the loop only dereferences the
+stale 'ab' under hw_params->current_cc_support, which is set only for
+WCN7850 and QCC2072. Both devices expose a single radio per ath12k_hw, so
+'ab' and ar->ab always point to the same ath12k_base.
 
-As a result the reinitialized completion is left unsignalled and the next
-ath12k_regd_update() waits the full timeout, printing:
-
-  Timeout while waiting for regulatory update
-
-Fix this by assigning pdev_idx from the event's phy_id right after it is
-extracted, before validation, so that the drop and fallback paths still
-reach complete_all(). Change the guard at the end to check the index
-against ab->num_radios so that an out-of-range phy_id does not lead to an
-invalid pdevs[] access.
+Still, relying on that is fragile. Cache ar->ab into a per-iteration
+'this_ab' and use it for the country code programming and the log messages
+so that each radio is handled against its own ath12k_base regardless of how
+many radios an ath12k_hw spans.
 
 Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
 
-Fixes: 906619a00967 ("wifi: ath12k: handle regulatory hints during mac registration")
 Signed-off-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath12k/wmi.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
-index 2b707ffc1a20..e9ec56a0e8db 100644
---- a/drivers/net/wireless/ath/ath12k/wmi.c
-+++ b/drivers/net/wireless/ath/ath12k/wmi.c
-@@ -6964,6 +6964,14 @@ static int ath12k_reg_chan_list_event(struct ath12k_base *ab, struct sk_buff *sk
- 		goto mem_free;
- 	}
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 54056dd37409..82cbb5b9cd11 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -15043,24 +15043,26 @@ static int ath12k_mac_hw_register(struct ath12k_hw *ah)
+ 		wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MONITOR);
  
-+	/*
-+	 * Set the valid pdev_idx before validating so that, even when the
-+	 * event is dropped or falls back, the completion the caller in
-+	 * ath12k_mac_hw_register() may be waiting on is still signalled at
-+	 * the end and it does not time out.
-+	 */
-+	pdev_idx = reg_info->phy_id;
+ 	for_each_ar(ah, ar, i) {
++		struct ath12k_base *this_ab = ar->ab;
 +
- 	ret = ath12k_reg_validate_reg_info(ab, reg_info);
- 	if (ret == ATH12K_REG_STATUS_FALLBACK) {
- 		ath12k_warn(ab, "failed to validate reg info %d\n", ret);
-@@ -6980,7 +6988,6 @@ static int ath12k_reg_chan_list_event(struct ath12k_base *ab, struct sk_buff *sk
- 	}
+ 		/* Apply the regd received during initialization */
+ 		ret = ath12k_regd_update(ar, true);
+ 		if (ret) {
+-			ath12k_err(ar->ab, "ath12k regd update failed: %d\n", ret);
++			ath12k_err(this_ab, "ath12k regd update failed: %d\n", ret);
+ 			goto err_unregister_hw;
+ 		}
  
- 	/* free old reg_info if it exist */
--	pdev_idx = reg_info->phy_id;
- 	if (ab->reg_info[pdev_idx]) {
- 		ath12k_reg_reset_reg_info(ab->reg_info[pdev_idx]);
- 		kfree(ab->reg_info[pdev_idx]);
-@@ -7019,7 +7026,7 @@ static int ath12k_reg_chan_list_event(struct ath12k_base *ab, struct sk_buff *sk
+-		if (ar->ab->hw_params->current_cc_support && ab->new_alpha2[0]) {
++		if (this_ab->hw_params->current_cc_support && this_ab->new_alpha2[0]) {
+ 			struct wmi_set_current_country_arg current_cc = {};
  
- out:
- 	/* In some error cases, even a valid pdev_idx might not be available */
--	if (pdev_idx != 255)
-+	if (pdev_idx < ab->num_radios)
- 		ar = ab->pdevs[pdev_idx].ar;
+-			memcpy(&current_cc.alpha2, ab->new_alpha2, 2);
+-			memcpy(&ar->alpha2, ab->new_alpha2, 2);
++			memcpy(&current_cc.alpha2, this_ab->new_alpha2, 2);
++			memcpy(&ar->alpha2, this_ab->new_alpha2, 2);
  
- 	/* During the boot-time update, 'ar' might not be allocated,
+ 			reinit_completion(&ar->regd_update_completed);
+ 
+ 			ret = ath12k_wmi_send_set_current_country_cmd(ar, &current_cc);
+ 			if (ret)
+-				ath12k_warn(ar->ab,
++				ath12k_warn(this_ab,
+ 					    "failed set cc code for mac register: %d\n",
+ 					    ret);
+ 		}
 
 -- 
 2.25.1
