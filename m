@@ -1,94 +1,94 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D10A14052A9
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 160C63AAF46
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785340012; cv=none; b=XkjNAfybHid1olP5ZDlXqPQ+ZNlExPq1AwCq8X0ROCpZ+7VhTx0do/IDCdGzUfghI1ZKAZz2gakZh9TC5jfZaqihhjb4ULMyZj9v9fEYWODWspturbF1+AVhfkS866nHHc99V4dRnhrt6FWlalP+sirRken9KdpDb4LkUaESFTQ=
+	t=1785340013; cv=none; b=ecs0ZT7W5T7ADqLG3yksgG1qVKsCnSA5S/DTD6RBUkFCZ8m7tPACanV77zGoUAf7ixKR/b/dGdCAG1myi4HzFiMHPCqANBWfzG9q0gH97GGH+aANWYLYWmKk3kMqiOUIp+CqY+19YpKaH7PT8rBJosdMP6+J8cc91zAu3SE4t/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785340012; c=relaxed/simple;
-	bh=141hLMEXLrYqsEb1IAynEGw04Wg9vePRH/mEYB3RA9k=;
+	s=arc-20240116; t=1785340013; c=relaxed/simple;
+	bh=El+1fI8XTHDf81KiNNEaQv40VeSZPjbo8Tw/ROQhe/g=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=TZ3I2XVr1NqRlqgNQeQvwrK/LIGu/eyUwbijDYf5KtO2wr9rV6JQP7RGixcxmcS+Bh8V3Bab7qzBQ479EkpkX8pYoEdUvqNHlBOy6KDo9nPdV6ygEhTuUPT37YvGPZtixXeDGaJUaSKGU+RpBT/V8LAydY7z1DMGJlDIAcX9HRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=naKyNRbw; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VbjUQ9db; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=mVfrDO6emf2k4iPE5BissZ4qWqnbQO0XLJWmqgUtXWDVb4Sh8mUteJcodyWD0/lL9aWiu4UtLJjMtvIJ1f0oJiEeXeoJR38O2C33nrkQ9mgZsML7RcTUMmFgDlapbP1ixr+5oqrsv/ZuHwk9wTyZnIp7anKWHKWnPfe6DV2pLr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=j3ClpX3Z; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ifg6pi69; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="naKyNRbw";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VbjUQ9db"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TF3AwJ1700433
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:50 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="j3ClpX3Z";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ifg6pi69"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TF3DeC2593196
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	wvMXtT1G8NnwWQRBRD5KYhitgr4PdwSykYCBd297j9c=; b=naKyNRbwpi1oyCxl
-	K1gxQPbU8+ax/LLWb7XgjzmYwlHJ167B2ZgbyyQfz7T6ljmF7LkoU7xIAir+VIaQ
-	QrYznVOjeK51m6HWiHIBtwckAwXmmXXSOixrGiJkcFNDc4mbApdche0jeClWQI6k
-	J76OznLQE323o92xBTYo5S+vdENwMJV5p7r63rusQ4hNQr/PSGcMDdo7gvEyW3ae
-	wmqxfiyt2mwWb/xzW/M1KVMEK1WQHhm8CbpOwkHKjDbFvFPqSJoyXAEtx2TM51bZ
-	TBdhhawGVq/P0WEEkkwR8Oeecm29nytK25FSH2K8TnuV/9dKqTEWBy8wvp0GL+xE
-	cz2blw==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqgrj17r7-1
+	TIzR5huQxeeXpvJuvDI07yDpu7ARuYqyzKtVILpu/mY=; b=j3ClpX3ZXN+9pdvL
+	RAqJsAHVGoLCndYJIc6+2KNWXLUchYx8SA5EkdOd8f2UdLXhMuT1BSclfGFhyJ7S
+	qdDiq8SClJsLez0xyggArAyUNAwak8aXNIEBuVwOJ0Xzh2uVGJwt0gAe0y6Nsfde
+	zXKseC+6wjsWg4rqO4f94bXidCqg96Q2SPOmEgYLS527kEMinRBQzflRlTGng6De
+	X7GkVPQcPJ/0+nvviFm722FVTgKI2kYCA3P7PWieMrdAC6TqofhYfFC7F028M8qg
+	GpL0lXjXtbSoHNAw4JIDv0+I2ZhLgoKq/mk87X+9/wQ+5IPWgKrK5c6GGCscE0vT
+	WBXzAQ==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqke08ev4-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:49 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cea6a46766so20740755ad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 08:46:49 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 15:46:51 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cc86a9ef97so21898715ad.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 08:46:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785340009; x=1785944809; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1785340011; x=1785944811; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:date:message-id
          :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=wvMXtT1G8NnwWQRBRD5KYhitgr4PdwSykYCBd297j9c=;
-        b=VbjUQ9dbVF+zE9X/wohRzGzokameAUtVZPlK9KpfROFqzzQ+8+L9IYXamaN3JGuyFt
-         0F4Wnx9lMM3pfNuTTGE8+fzlkZlmt3ge9a2TNF28yyODEt7urzQXxYkbWEG05uCCYEsJ
-         uSHqW8Ry2xTpnH+HEcWmZsvQ1Y6VHXgd6/oGSr0T9dkEgTcN77TXjSA48s4ab1+b9642
-         duLvmUv9tRApOp9TUjYIxE91EX99QSQkiSlSeJy91blh9ywWZcjAsUpwEk3qSek8slZO
-         K9hqPNr1yW7M/fSouTRgMBi7Z6reHrULlDEOq7uT/dSOT+c2C7ep2DNVNUiyY5Adb6My
-         cgSA==
+        bh=TIzR5huQxeeXpvJuvDI07yDpu7ARuYqyzKtVILpu/mY=;
+        b=ifg6pi690AqtJH2U3ZXQnQnkvBbk88Ap3Tn3xdSOH0SxR7nYBGj4MNyN9ePzqQRh54
+         gDlrzw1FJzLnZjFHmQOL72FRbAKquGGciRW2FcDb4nKr3yCbMFYFtkDWOZoxSdxxgUQg
+         vrjKMXsfB6//nBNCAA3o2fHJYZ/ZxjI+xzVCkqhtUbw4MFm1aPCtWQy/wbOny24JrrUj
+         IYnWqjE95B/4l6cwi4Mc+OfEwWufvIy7QXH/7rzBor3JPUJssynESdJFmJT1n9EftqhZ
+         bNe/zBFqb6lCEncmQ8yP7jTjit858fIr/D0mQjYqYPsSEJVPzEmxi30c/+WZq3cKEd7k
+         6EXA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785340009; x=1785944809;
+        d=1e100.net; s=20251104; t=1785340011; x=1785944811;
         h=content-transfer-encoding:content-type:mime-version:date:message-id
          :subject:references:in-reply-to:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=wvMXtT1G8NnwWQRBRD5KYhitgr4PdwSykYCBd297j9c=;
-        b=JURPD1hdx/MHqknfwpDXwANaOIqFREfMnQD1j8X3o5b1Uv4pVnmmiLiUTxYF3CB0QU
-         AkkRoIGh+OnLaPoLRA7V437Hze4pWrESOcJOrd9TYTcQ9JdGkjIskHPvCt5DIHM6sU6M
-         e7F8BP0/Pmnq/d9vnCKcvf3WOhQ5xxwNyxFNViW1ASsRqTlNFOkXjnNMAOCyoJ6pGeJv
-         sbzfs0rDX/8Q+eHy54aK+C2GhrQAG8rdQOEO8+4Rxdw5uhzrqcUGFliQxhop84RqDbpi
-         lo3D/C72CfU+UNGPCDab0uVUNzlgkYlQiBbdyyXY7ymelCahO5KsxpIAiG+Gzs6K+uuG
-         5zbg==
-X-Gm-Message-State: AOJu0YxqMMt+hqT7H8caAA8uG3ad6g0pR9qUR2scc11s2GOZH1Z8VEhI
-	/PtUkGcu5y2PglRJoem0SK8Gl1DwLDIdGpLVfWgjKi/NU//LQYaZ6HrCTAHrfz2MwxKfE8ftQ8c
-	gPawR4y6KSbDVNkdTWSGrpAN9tG/A/96QqdwprRGc6lBiOMkLR2Bz9taWnuNkKqQPmMJXpTatHI
-	m9TQ==
-X-Gm-Gg: AR+sD130UyEfGFgtDnSytBHRVsMOUzzFrWqbZQQfDYwR+pUX4SpKxjf1CuojRRxtbMq
-	rllCMzVG0PcW4VMLTO+qto2yuFXKWjWoff/8qh0Q2Qw1hHFRNT26Cu1iH0VwT2MtAs12x39RFEp
-	6Esjq+v+YUgJFomtb7ty84fL6Xu5Z43OPTA5BnHQH1NvMGfzMw6vlHqV0wDrCiETTX2lz9nU7g1
-	xZ41MJmSLoEsiC2Qi6euX9ejsisapdrSJwEqQJ9aiHjNx4tlxlEW5MzTIr/WN5rb45mClcPPgC8
-	HhnfEkDUmfQMCtrgL7KBERvNP1vmMHTZHciP83H0twCKsAwyyjMJTHZJ91DeJOAH778DKWRz/8d
-	J2EfFPziVPH81r8K/1obfzlEl+exyn2znVE5zGH0gJjkJX3WM+84K764=
-X-Received: by 2002:a17:902:da8c:b0:2cc:7e4a:bcc5 with SMTP id d9443c01a7336-2d015d48a03mr74927615ad.32.1785340009213;
-        Wed, 29 Jul 2026 08:46:49 -0700 (PDT)
-X-Received: by 2002:a17:902:da8c:b0:2cc:7e4a:bcc5 with SMTP id d9443c01a7336-2d015d48a03mr74927425ad.32.1785340008799;
-        Wed, 29 Jul 2026 08:46:48 -0700 (PDT)
+        bh=TIzR5huQxeeXpvJuvDI07yDpu7ARuYqyzKtVILpu/mY=;
+        b=hhx4Bt3NVgXeFrmaAi1DRAJsLDO211AUXvv5nfnZ3FQVSIDBUtrsnvOcmMC7G+TO9s
+         ze/kPZ7YUn0KVNWYaz9hcLbzwQWnTZOmenRiI6YmMzv1pZ1zPArpQG4vOIVQAUMH3E3u
+         YC4XdJcvFnjfPN2wjJjaUJeV04GLm+Pa6/vKcm1FCzQMdTnKhFThahCiMAUDe2Ca4Trj
+         71X7r+9jFBMX85fKtD2dwOyJxuCYTyYy7xkXBl3cCwTq/Stvw4yHV5w5yA5kyve78Pum
+         AMqAQ2ZMa4KotQv5m2lg8Nc8yXlDNJFEkg6tyn1DFw2jzPNrtjoCMZL+W2IVBWOG5JL0
+         xIDA==
+X-Gm-Message-State: AOJu0YzJ2KHuXdInMkGdJRMvYgARRUPBy3fedlqZqO7b84c7qx3+/NBw
+	Gd5QcKnfm8gft5Pia93G9a+EL3BgNIfAp18PvdSARmTXOA1TTA1oR6L6FZEZita4+j7ca0axA9s
+	a6OCy4EwzBZDrD3qq8Lj+bZEYE13svrdnF20gdIbQZ/n3u3Lg8yOAFB+RxtObl4CZ4gHLQpCA6f
+	v8bA==
+X-Gm-Gg: AR+sD10qX+80OY+VHlA3f30S5JE4wcKxb5FjP9NQ0wvkfzO9zED9TMNmz+xkWExeMmq
+	hVYLzJhG/3QktjDjXufNjHRQeEi7sax6pZDK6LogBkbBlMZmwOHcr4MQcb+VfupiLAS/BU6UJUg
+	eN8jyfhLREDHI1EfUDLMbQRoDaWRrJfOdNCnPswZbEJktHgWqu1Y0/LhmMfCe3CuZg8ZGz1Yh5D
+	jZvpngaq2prOZCXL5QEsjP8+zYn8/zjsXt4tJZAUyS7Bi4WC+ujOSJXSJQn3hvJIbgMYAt5fhY9
+	0cMXEKUTT3kjCN3dmPjbPd0KgUc9yvaeQlyMzYzqKodwMpr86DMZq0kc9lb9qfu6gbcXOovPL+e
+	Gpo2aS8kzlm4WfUeVYUyneu/2SOtXLxVLRgMnBpMLeIUHm9Xjt4q5yk4=
+X-Received: by 2002:a17:903:1ae4:b0:2ce:8e70:3210 with SMTP id d9443c01a7336-2d015c2ab52mr86647765ad.16.1785340010601;
+        Wed, 29 Jul 2026 08:46:50 -0700 (PDT)
+X-Received: by 2002:a17:903:1ae4:b0:2ce:8e70:3210 with SMTP id d9443c01a7336-2d015c2ab52mr86647495ad.16.1785340010193;
+        Wed, 29 Jul 2026 08:46:50 -0700 (PDT)
 Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022a76a5bsm13577185ad.35.2026.07.29.08.46.47
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022a76a5bsm13577185ad.35.2026.07.29.08.46.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 08:46:47 -0700 (PDT)
+        Wed, 29 Jul 2026 08:46:49 -0700 (PDT)
 From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 To: ath12k@lists.infradead.org,
-        Pavankumar Nandeshwar <pavankumar.nandeshwar@oss.qualcomm.com>
+        Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20260723054653.2794550-1-pavankumar.nandeshwar@oss.qualcomm.com>
-References: <20260723054653.2794550-1-pavankumar.nandeshwar@oss.qualcomm.com>
-Subject: Re: [PATCH ath-next] wifi: ath12k: skip MLO multicast links during
- crash recovery in Tx path
-Message-Id: <178534000763.2826154.462337785259615514.b4-ty@oss.qualcomm.com>
-Date: Wed, 29 Jul 2026 08:46:47 -0700
+In-Reply-To: <20260721065038.126046-1-aaradhana.sahu@oss.qualcomm.com>
+References: <20260721065038.126046-1-aaradhana.sahu@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next 0/2] wifi: ath12k: add MultiPD support for AHB
+ platforms
+Message-Id: <178534000893.2826154.6954370843674398249.b4-ty@oss.qualcomm.com>
+Date: Wed, 29 Jul 2026 08:46:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -98,53 +98,55 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
-X-Authority-Analysis: v=2.4 cv=RJOD2Yi+ c=1 sm=1 tr=0 ts=6a6a2069 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDEyNiBTYWx0ZWRfXyamfT+L9u+Qv
+ VwVhyKe/qqXyzZHex9DZnXGq0haajBXMhIM6OQJu3fB4nsa+kYjq2UYvhwXwDxywhljOkw4jLPX
+ lBCwau6kQs5sErdjUKBHEC9sAypNYHkKV4LQ1Cx1oAfpgaTRU61wG7og92iDAjAT89s6LC9AKxP
+ yke6I+p81y1pDJ2JNGYjuFAFPLF9OVgmhHnbAjKjxlarKC/jRoLBNs3kjHwxhyqhXy8BO4Pm8ap
+ cGaboTzlNLb0b/xyYs0fbJfmtfT+LXf+xjMW5XLyV8ENhjgc7EhOGooCgUI0GFDkl3L3owXTgMA
+ yucQWYMz4ERgHVEy8R7a4jllfI6NopBJm4fNMCQD2HDQfGLB05IqHwsbQ1g03mco/wh4C7SMFrm
+ 9gPiDkB8iqVGZqcHV7nmAgWmL15HyjifkZP4GAme6fmn6ePfCPGj47MSn2CztRgW4CNhLoX0Sn+
+ ZYiPSYO6goBGx59sOyA==
+X-Proofpoint-GUID: 9VeBISF34IoQJnDdSbX1iqeGytzJ3hjf
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDEyNiBTYWx0ZWRfX0tBQyVluCwOU
+ wHi3TsEDa+T4Mo9zKD9dTi1ctUdV4pqZ3Se3mIr/0RnjLca9Xc6IfwSG230rWyrXzTxSGBdxChh
+ 1AjRZG4bxaJ0i+YOXRnqypf+QinDya0=
+X-Authority-Analysis: v=2.4 cv=ONYXGyaB c=1 sm=1 tr=0 ts=6a6a206b cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=EUspDBNiAAAA:8 a=3KUpPwZqX_pmD2fy2jUA:9 a=QEXdDO2ut3YA:10
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-ORIG-GUID: pwuxDMALNIBqiQKQJqdhfDfdvJg5gc1V
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDEyNiBTYWx0ZWRfX51TUIi6zdryO
- RG0zkmDHdYATjK5IQ6qqCFszfDiutI+wuCSuBkN44H9QuAv+rb+NGZK3MHFgbbLJ8HPPjgIpzIR
- BBJqNE8s6QPfl8iiE7AxXucxizyk0qSvUv3BkYL+BuBp+Z20AjQ66I0RuGRtdH0B6sJLWh7hAyf
- LDTcOPRXNzhW/ectG5y32kEO7EcQWVR02+ppFlZCj5jYXkGd7fjzTNyyM7vLWW1kjcGllhIF/ti
- 1yUdfTt3xZCIB819K55Ihe/nrLuVk/AUxQCjY3RctB6k7p4+eQjKe/Jmlk4vNF+KSPHRCYiKlCD
- UcloJF9y53akNgV0ku0SGcishfhPxgO7cRxOroGmznkkbjmvv+XsMQeshLOuKP5zHhKD6heTBp6
- 0RoUgd0D9DSZZM+K5iLvwHnQNa4njtaR9tfMf2ujwG4F40xX15LedW+yTdNQhHNpCeW52a5Ei4/
- 8YnyBv2u+JTCOtMAaOg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDEyNiBTYWx0ZWRfX2fh1tqAkwyO2
- QrhPKuuw7By3YSWE/kF3aDs6ueiJbSN/GaWudJ8kt4Dc9iTV/nCBaLI1P0ysHbFJ+EPPdo8bxkt
- oAKWzkbFBBbZsE7vJI3Fwh38sgqDlfM=
-X-Proofpoint-GUID: pwuxDMALNIBqiQKQJqdhfDfdvJg5gc1V
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=EUspDBNiAAAA:8 a=d9bybJ0-G2pII4xQ70gA:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-ORIG-GUID: 9VeBISF34IoQJnDdSbX1iqeGytzJ3hjf
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-29_06,2026-07-29_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- impostorscore=0 suspectscore=0 clxscore=1015 spamscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607290126
+ impostorscore=0 lowpriorityscore=0 spamscore=0 adultscore=0
+ priorityscore=1501 suspectscore=0 bulkscore=0 clxscore=1015 phishscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607290126
 
 
-On Thu, 23 Jul 2026 11:16:53 +0530, Pavankumar Nandeshwar wrote:
-> In ath12k_wifi7_mac_op_tx(), the MLO multicast broadcast path iterates
-> over all active links and copies the original skb for transmission on
-> each link. When firmware crash recovery is underway (ATH12K_FLAG_CRASH_FLUSH
-> set), the per-link copy is allocated and partially processed before
-> ath12k_wifi7_dp_tx() eventually rejects it with -ESHUTDOWN.
+On Tue, 21 Jul 2026 12:20:36 +0530, Aaradhana Sahu wrote:
+> On AHB-based MultiPD platforms, multiple UserPDs can share a common
+> RootPD. Each UserPD requires its own firmware image and PASID, while
+> RootPD resources and services are shared across all UserPDs.
+> Add the required infrastructure in ath12k AHB to support MultiPD
+> platforms.
 > 
-> This wastes GFP_ATOMIC memory and produces spurious "failed to transmit
-> frame" warnings for every active MLO link during the recovery window.
-> The unicast and non-MLO paths are unaffected: they call ath12k_wifi7_dp_tx()
-> directly, which already guards against the flag at its entry.
+> The first patch introduces a platform descriptor to keep
+> platform-specific configuration in one place and provide userPD
+> mapping support.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] wifi: ath12k: skip MLO multicast links during crash recovery in Tx path
-      commit: 43c521c11ce8fe904e14d1ae0566ffea931cf2e9
+[1/2] wifi: ath12k: add AHB platform descriptor support
+      commit: 96f46607bbcee8aac00c4b5a1213b7d82ceee36d
+[2/2] wifi: ath12k: Share RootPD state across UserPDs to avoid duplicate operations
+      commit: c6ab3b1dfa3e62dbf42c66121037de460a182642
 
 Best regards,
 -- 
