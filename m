@@ -1,196 +1,102 @@
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
+Received: from dispatch1-us1.ppe-hosted.com (dispatch1-us1.ppe-hosted.com [148.163.129.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC393B5841
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 05:37:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E333B5841;
+	Wed, 29 Jul 2026 05:40:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.129.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785303460; cv=none; b=PdkWSBVwD3fBexKU9150UqcB/ELtZaWJfTm4MhCt8qpN69hMF0DAe2vc7+yYgMjNaSNS93Iu4A0YddGkO77jd2Wj7MEReyjRwVzOaYWzTdZ50I8rSwZK82YIfsHyJQPGwZkDY5OEt1QIrji6yD45xrfy0pb3o9Uc3HNNC7Gyrd4=
+	t=1785303648; cv=none; b=igWh71uE4HZwgv1PD0y9U1mDWgb1f1dx9XETBPY4qOCzSHsJjoxI4VegWLhpBjZaIow5rIoAwVzmTtPGEhjUwicJ6ivaEJNsD2ob2qzAJzTUiHEa4K80qxYs4f0Jz3t32mov/AJSriGTzKa7IzwNRWB5rNtqWKpmaG2StyT6xFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785303460; c=relaxed/simple;
-	bh=81WsicO1lnWvPSZw1fn2UG+k9M3g0LSPZQa9sgz45IY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MtfXqDZ7K2Cs84yj3THuRtzXj4aRXSWOvRUySQns+lgf0J97sIa+jj4GtNLxj9LCHbLbd9z8Gy+/rG1SBz8iahzeuTi68xveFjEpLPJpdMJ3HdxBrP+T0DEIHHZPgD29D+ta5DN/6qGIlncHMB6GDVjWKuLl8VmLRTppXTMEE2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jjn8a9kX; arc=none smtp.client-ip=209.85.167.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785303648; c=relaxed/simple;
+	bh=j3ukjpRfKf60Rl9QvBOOs4QvXRIMAbDPkms1Rg04Zow=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=eWVvgpRYkDHmQswXBCyZJDME2BDy2xacPDBuJf+aqNmkBbUYr4mg389dv7Gaoi5H1PqCA+n+HSb8bnW1zabsEW/XVPfRrgJufi1z6J2aWnbZMh8oU+iAf0rF4F0jbo8bijKNfxyNybnGRWu7SLyR5oGXnw4Ks2y4HkBfBybWkgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com; spf=pass smtp.mailfrom=candelatech.com; dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b=Im7apfUU; arc=none smtp.client-ip=148.163.129.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=candelatech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=candelatech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jjn8a9kX"
-Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-495efdede87so8288b6e.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 22:37:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785303458; x=1785908258; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=LYEwKBiTcuHNpwjMLcTcd5LYOpcHXXSayMJQAf1r+NQ=;
-        b=Jjn8a9kX2I9jpP0PH2u8gVTC5O+kXwcmOwpYoi24sTtud+SmGPPPuW4iyGJIX5TDPZ
-         GXwtQiQ6FwOXIluo/LvgfPKxetT4HOP2k7z7+r/MMQ+QUGIBRjwKBmXgDiw+mTH41UdV
-         fsftV1WM3wF5V9Lv6ABkJTMS0nODBO1McS3SnlfGwVUEW7g+uBQHbkS9tlm578KLHIqY
-         2MimHjRXRO1dfZ7IOgoob+qYLQDouKpGiLyEalVPgN7bzTK8hpHN954QG0my7tCkGvFo
-         G51uolHMsDHcQvddu5Vb23MzH1A2tKy1sl20fsE0LtwnFz2kN5yfc9d165p4P+r6Yn4j
-         FxGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785303458; x=1785908258;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LYEwKBiTcuHNpwjMLcTcd5LYOpcHXXSayMJQAf1r+NQ=;
-        b=GAgG2Rrxuv+ga42Xn9ym3sCMIsrtCCq847FOs7+CbDvdFij7j+YujCBc3TsvddfZRQ
-         DMgebJExrtP8B7OKw2k5VoSMnF6fpJaAeb6Yg2CwNDwr2hjRVBiCxuK6b4pz+zPPL6O9
-         syRQc3Gq8mOTflMvxsnr/Y/oFn0iH2ak5t+K4Fhjag2Wz2HsmEuF1dj8pwL/UtNM9QUL
-         TYOPdrwK6vjaqTr6U/ClXpCu+QnniCB7XG1K1gBSstt92h9nVJfnGEU/ZXnm+kdSiLOB
-         kNOg0pEthH5Ugm16yT6iCTq89Fu5NSNYsUxDpGa/V29f3GCazz6TfI3r+OeKnlhrFIt4
-         8peA==
-X-Gm-Message-State: AOJu0Ywwraf4dJXg6VUTuJ6ZGeDbnKQ9z7yixZi28U8OuCBq77K9vEg4
-	rx5HJjpfEpmXEjR2r3u3726IeC5xyIyevF7vmxPruhJx+crsN03oZrVk
-X-Gm-Gg: AR+sD10PNUBTZX8MXqFDe7u/vCbCiFcqxdrSxuwHz9cGEInwU4ioSeGxgMq0uLD59Oj
-	8F/Pd3H1V/FMZJZEDXNnXDaH8yA+sfE07EKMhXclx8N0k4nSFqSLQVBi8CxVWqjnlHLkqI5cYUf
-	kfTtaCq4Z0qFRlrc5eP0RiQzhWrxvh3zo3+2t4dZfxICU31j1fvnFSir1ar/RGBNsD/TL/OjoDh
-	ve6Rs5sHenNdJjSr8shnRQouExRS6Wc3w+kNLgAxmD87Bva5HaDDIljterL2cUlXBgICy2MpGKa
-	lc8yEtCC1rZ+kzUAiDTlOPi26SIR8TWDw8wNhlwtyyjaH+Dm5UrkGrEhTB5lOZcxNKf2O1uwuId
-	p00hY5KuYf+s2RZL+THPCylGc6JZYYQ/iYZMQenGI2USRf7qZqeWVHoaEmiPkFLEST0iybIlmb2
-	fHOQ4XuEMtiY3lw0/6Qc9DeQtTRdXJpL5gXQZiytnxsgBONcPmwpO1QrVLIxLd6fgQklnp4aQ1E
-	8J3uUU6zUY0lPpvur0tB5CES/g1WHtwe5mwYrGdYGXlzFM9jFkzNc7xi2420QQ=
-X-Received: by 2002:a05:6808:1589:b0:497:e695:3423 with SMTP id 5614622812f47-4ad5b5bcfb1mr2048496b6e.0.1785303457731;
-        Tue, 28 Jul 2026 22:37:37 -0700 (PDT)
-Received: from antares ([149.88.25.215])
-        by smtp.gmail.com with ESMTPSA id 5614622812f47-4ad6efc6ffcsm986864b6e.15.2026.07.28.22.37.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 22:37:36 -0700 (PDT)
-From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org,
-	Bogdan Nicolae <bogdan.nicolae@gmail.com>
-Subject: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE AP
-Date: Wed, 29 Jul 2026 00:34:08 -0500
-Message-ID: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Im7apfUU"
+Received: from dispatch1-us1.ppe-hosted.com (ip6-localhost [127.0.0.1])
+	by dispatch1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 7A5F92C87EE;
+	Wed, 29 Jul 2026 05:32:24 +0000 (UTC)
+X-Virus-Scanned: Proofpoint Essentials engine
+Received: from mail3.candelatech.com (mail.candelatech.com [208.74.158.173])
+	by mx1-us1.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTP id 2776FC40077;
+	Wed, 29 Jul 2026 05:32:15 +0000 (UTC)
+Received: from [192.168.0.26] (unknown [76.121.133.164])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail3.candelatech.com (Postfix) with ESMTPSA id 77D2713C2B0;
+	Tue, 28 Jul 2026 22:32:08 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 77D2713C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+	s=default; t=1785303132;
+	bh=j3ukjpRfKf60Rl9QvBOOs4QvXRIMAbDPkms1Rg04Zow=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Im7apfUUTOIN+L2g5xxaTeTsyki92JDwc98Xi+bnUHuPp/RRV15m5xGbBgZ2RGrqN
+	 k24aCuR8MmdbeCa6xDv6vH986RQ17RiikiVQOXaGy83tIlddOYeNhH/zVQnmZXY7lj
+	 g4sm5X6e+zB1tL9e5J63RW4qqt+FeIMV0XIMplk8=
+Message-ID: <fb6a4b6f-08a9-484c-b170-698673a711ad@candelatech.com>
+Date: Tue, 28 Jul 2026 22:32:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next] wifi: cfg80211: add fw_version device
+ attribute for sysfs
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
+ Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+References: <20260728234726.27479-1-roryl@candelatech.com>
+ <64aaccd3-7a96-48b6-9cdc-fede692351a5@oss.qualcomm.com>
+Content-Language: en-US
+From: Rory Little <roryl@candelatech.com>
+In-Reply-To: <64aaccd3-7a96-48b6-9cdc-fede692351a5@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MDID: 1785303136-jUL8Nxs0pxQd
+X-PPE-STACK: {"stack":"us5"}
+X-MDID-O:
+ us5;ut7;1785303136;jUL8Nxs0pxQd;<roryl@candelatech.com>;ad53361cb16e13f6f29cc39f16bb8319
+X-PPE-TRUSTED: V=1;DIR=OUT;
 
-When bringing up a WPA3-SAE SoftAP with external (user space) SAE, the
-driver never told the firmware which SAE Password Element (PWE) method to
-accept. The firmware was observed to corrupt its heap over time due to
-this omission, leading to firmware trap (data abort in heap allocator).
+On 7/28/26 18:34, Jeff Johnson wrote:
+> On 7/28/2026 4:47 PM, Rory Little wrote:
+>> The firmware version is already exposed via ethtool, but is not
+>> accessible without an attached interface to create a netdev. Expose this
+>> info in sysfs to allow users to query it without the use of ethtool.
+> Curious what is the value?
 
-Parse the beacon IEs on start_ap() and set the extsae_pwe iovar
-accordingly: 2 when the RSNX IE advertises H2E, 1 when an H2E-only
-membership selector is present, 0 otherwise. This matches the behaviour
-of the upstream/vendor driver and only applies to SAE-capable APs when
-external SAE is supported.
+Here are some that I have seen:
 
-Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 75 +++++++++++++++++++
- 1 file changed, 75 insertions(+)
+10.4-ct-9984-xtH-011-33ec52c8
+____000000-20251118163234
+____000000-20251015213023
+DEV_000000-20240823172837
+DEV_000000-20220929104205
+89.7207fc64.0 ty-a0-gf-a0-89.uc
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index d32b35ce0..335647916 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -60,6 +60,10 @@
- #define RSN_AKM_SHA256_1X		5	/* SHA256, 802.1X */
- #define RSN_AKM_SHA256_PSK		6	/* SHA256, Pre-shared Key */
- #define RSN_AKM_SAE			8	/* SAE */
-+#define BSS_MEMBERSHIP_SELECTOR_SAE_H2E_ONLY 123
-+#define BSS_MEMBERSHIP_SELECTOR_SET	0x80
-+#define SAE_H2E_ONLY_ENABLE		(BSS_MEMBERSHIP_SELECTOR_SAE_H2E_ONLY | \
-+					 BSS_MEMBERSHIP_SELECTOR_SET)
- #define RSN_CAP_LEN			2	/* Length of RSN capabilities */
- #define RSN_CAP_PTK_REPLAY_CNTR_MASK	(BIT(2) | BIT(3))
- #define RSN_CAP_MFPR_MASK		BIT(6)
-@@ -5091,6 +5095,73 @@ brcmf_config_ap_mgmt_ie(struct brcmf_cfg80211_vif *vif,
- 	return err;
- }
- 
-+static s32
-+brcmf_parse_configure_sae_pwe(struct brcmf_if *ifp,
-+			      struct cfg80211_ap_settings *settings)
-+{
-+	s32 err = 0;
-+	const struct brcmf_tlv *rsnx_ie;
-+	const struct brcmf_tlv *ext_rate_ie;
-+	const struct brcmf_tlv *supp_rate_ie;
-+	u8 ie_len, i;
-+	u32 wpa_auth = 0;
-+	/* SAE PWE method(s) to accept: 0 = Hunting-and-Pecking only,
-+	 * 1 = H2E only, 2 = both.
-+	 */
-+	u32 sae_pwe = 0;
-+
-+	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_SAE_EXT))
-+		return 0;
-+
-+	err = brcmf_fil_bsscfg_int_get(ifp, "wpa_auth", &wpa_auth);
-+	if (err || (wpa_auth & WPA3_AUTH_SAE_PSK) == 0) {
-+		brcmf_dbg(INFO, "wpa_auth is not SAE:0x%x\n", wpa_auth);
-+		return 0;
-+	}
-+
-+	rsnx_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-+				   settings->beacon.tail_len, WLAN_EID_RSNX);
-+	if (rsnx_ie && rsnx_ie->len &&
-+	    (rsnx_ie->data[0] & WLAN_RSNX_CAPA_SAE_H2E))
-+		sae_pwe = 2;
-+
-+	if (sae_pwe == 2) {
-+		supp_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.head,
-+						settings->beacon.head_len,
-+						WLAN_EID_SUPP_RATES);
-+		ext_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-+					       settings->beacon.tail_len,
-+					       WLAN_EID_EXT_SUPP_RATES);
-+		if (ext_rate_ie) {
-+			ie_len = ext_rate_ie->len;
-+			for (i = 0; i < ie_len; i++) {
-+				if (ext_rate_ie->data[i] == SAE_H2E_ONLY_ENABLE) {
-+					sae_pwe = 1;
-+					break;
-+				}
-+			}
-+		}
-+		if (sae_pwe == 2 && supp_rate_ie) {
-+			ie_len = supp_rate_ie->len;
-+			for (i = 0; i < ie_len; i++) {
-+				if (supp_rate_ie->data[i] == SAE_H2E_ONLY_ENABLE) {
-+					sae_pwe = 1;
-+					break;
-+				}
-+			}
-+		}
-+	}
-+
-+	err = brcmf_fil_iovar_int_set(ifp, "extsae_pwe", sae_pwe);
-+	if (err) {
-+		brcmf_err("extsae_pwe iovar not supported\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	brcmf_dbg(INFO, "extsae_pwe=%u\n", sae_pwe);
-+	return 0;
-+}
-+
- static s32
- brcmf_parse_configure_security(struct brcmf_if *ifp,
- 			       struct cfg80211_ap_settings *settings,
-@@ -5124,6 +5195,10 @@ brcmf_parse_configure_security(struct brcmf_if *ifp,
- 			err = brcmf_configure_wpaie(ifp, tmp_ie, true);
- 			if (err < 0)
- 				return err;
-+
-+			err = brcmf_parse_configure_sae_pwe(ifp, settings);
-+			if (err < 0)
-+				return err;
- 		}
- 	} else {
- 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
--- 
-2.55.0
+Top one is ath10k with CT firmware, next four are an assortment of 
+Mediatek radios, bottom is Intel.
 
+> It looks like many drivers, including ath11k and ath12k, do not populate this.
+> 
+> And this attribute is pointless for Wi-Fi 7 drivers supporting MLO with
+> multiple underlying hardware running different firmware images. I suspect
+> there are a few wiphy attributes that have this issue.
+> 
+> You'd need to instantiate these attribute on a per-radio basis to properly
+> handle the new multi-radio wiphy model.
+
+Hm, good point. It seems like it would either need a fw_version member 
+on the wiphy_radio struct, or something similar to the addresses field 
+off the wiphy. Would either of those be acceptable solutions?
+
+- Rory
+
+> 
+> /jeff
+> 
