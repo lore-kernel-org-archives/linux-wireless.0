@@ -1,149 +1,134 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBD0E43CE62
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:05:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E1F431A49
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:29:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785315941; cv=none; b=tg4LF1rBkci5ml5NJkqXJrt378UFwQd3jJrkmvtw18J9aekBjoBxwvjMHRspTojwAqJNA4twdAqnlg7LmhboaFwIvKC/8MPWZ5RGrGNP3TYVEs+M2oPY7nnTkdWYTZTb9w2/e1U6/BDNdKhtPUIo1LH7N/4BSTAUCEY0iD6spJI=
+	t=1785317389; cv=none; b=W0N+ghgLwWTbogJ5nySxVIjBNKdAJaZD1kkzV9+eKAnFHAgq6nAJwWChiTS1ATPBYaVXwGv0sTn+INNKAAJteT58WNN2hit73B8KEgqqNrMZConHVW/xvAcqH9iQ/BHFvirkA2s9/7/3hQUk9qGsKYMmSnkWYhQSVLxXbsUjqGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785315941; c=relaxed/simple;
-	bh=QNikqTvqVkGmUhXpmuK6j1Gvqf1bluFLLOGjK2Nisf0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NjAfQReh//c2U3Y6b6KV2inBwWUoi1I92fhJR2krOVYBU4bUNDi15f6YNCMRW7Czdi+Ki6au6w+1zhvx5OatmzmTFuDWOgxpBllUurMvvcSoJWZiKVXHWxZV5DGFpvusY/OeLubn2gA682HwE+5Y4cOSFHAw8ByUIP7x0I4RsjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ny90bndp; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XjZ6Lkdy; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785317389; c=relaxed/simple;
+	bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=tZkFkCNG8HRrEfWC8+bxEFm+EBg0O4YO9JBJk8tFPX0C8LcWTf2gtF8oJB1C/f0HUhs7Saa/c2V8u8No/y/wYSMNkzz8wif3deNJIwYg9CoVE3fb4HjDUtaJw/oYpz9CTMZBtrGcCTiKyLn1hrpDGSSkB61Ukfz3jqdi04nJX38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mboFNZRl; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ny90bndp";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XjZ6Lkdy"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66T7f2FN1088697
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:05:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	VBOrrFUaJtsfvmkvZqyRp/Ke0BbDoZomzwSefP6ue+w=; b=ny90bndpXhALLEDO
-	In86EzGjmP7l9+McPk22Q2xuhWQzTd8PCXBGct4xLC0BYWPhzzNTEe7Gb69P0a5S
-	OJLgqvFWWqGrug8+bNYJFV6l6MGTT0ew8cAhyETof7/Iny1x7vt5wUWHTLVTBy6K
-	E4MmRu1UvIKjdlx95CgPJbk7R8Ur89bnKUUiju7OHn2c1qISELz51PYC7Dxi1nKz
-	7zXklqx274lgX+Oqzsa09GbjhmA77z6cvXKpYN7/ZBH4go+U9R28GkKwJN7TIuqV
-	5zgA6CZGoUze7AUjHIlae0y0xdeu2x48rjH1QlVTQq56c9xpGn6K5ROMinFesisH
-	cNtBNw==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fq5sahxj7-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:05:38 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cee1ec30f2so10740865ad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:05:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mboFNZRl"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-495635a85d2so5583605e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:29:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785315937; x=1785920737; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VBOrrFUaJtsfvmkvZqyRp/Ke0BbDoZomzwSefP6ue+w=;
-        b=XjZ6Lkdyrx45ZP3A5FxkPeA47KB/A8S9UOJw2hJq/lJ0NnjEcJLkPsl/eLM9EWmit7
-         usJOhmnRCbyN/hjUagqbn81Zex2B43+hmEXJt9/O8Kq5paWbJ1k0M0sBXkYjbQ2JATFN
-         8SzUjnowM/bjgWIZ+dfMOxXJUoVlwSOChHmYZOv7N7JZZhn24ywqTD0g9SUqC2DMLmeZ
-         9WpA8g44aw9JOve5AAxmy2jP0d1eNEMLr76IqSyT76qPCiQugqGBI7NZK7ysBSK/y9tt
-         m3GpMjDKqdvO6W9lpCWjgzyq5b6u/IAw+XVtSdeHFT2j+X0en0MNMOewQh2FAAJDvPzX
-         7Dng==
+        d=gmail.com; s=20251104; t=1785317386; x=1785922186; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type:date
+         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
+        b=mboFNZRlykl2k+JtSRL2uNwQAaVLQ3XOr1RWQ1WvEHYdlvIP+9qbc8TxbYA+mEMmOq
+         2imXHnk+VH8BVMn3dkFhXEexjUi9Dzo7J+3tQryAkwAGoBcvQVjI02p12wbKNBUp6elf
+         3R5IHNJG3Hd1Z7rD+p/vuH7voWqzSJ4eq3DIOpQfGvo35RAU+DkfiZVa/AJXQNPkj59Y
+         z0TfyceGxkWkfCikzfQgp+sneMeciFw/E1RWFaAlXZjpimWTgJjaRONtFKy8iGy8iTYo
+         ApmXkuskEJnEZxMigxMaEcDHODzWfEkLfQ/l9TOd3iyMgbh3u5JbDnWWI31n1Yc5lLnQ
+         o2Fg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785315937; x=1785920737;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VBOrrFUaJtsfvmkvZqyRp/Ke0BbDoZomzwSefP6ue+w=;
-        b=Scw48NWvVQ10cwXsT/Y/++AiBqA1Fth9Xk5lZJcghtRTWVgg/YSZFbAM2XrEFVx7M/
-         ALm/Qjg7jhljXxLzcSO/iPiCIEXCTmF0ZetvQfFTs1gZ78DpIbvR0kvZ44faj6yvy2Oc
-         1bKW7xsMeSn79bVrU/rOjwz2zjMyAqQftU7lOY9Llqq6q79eDd+qu82WDdjF0dmYPMmr
-         SCjPfsee9P9bDpCmZlUOt/vMhwQPoEEKAtV/R8LbvQmR0Jhm8te55xjJLmDlHGypzs24
-         kCRPK0DSNS+BgNBlmojaJjWOOqK2hXHZVrrab/3I4T1zvr4BBja/KNWS5KaUTYB9kZhf
-         +UkA==
-X-Forwarded-Encrypted: i=1; AHgh+RrQjStqYdEWKKSy9gJyGKOU3Yb95AnvN4HVl2iboTH8i0jeap8c2+eMrEyabXbDboUZBITSuXuAYajE9DHf2g==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyhs8ntUbgemRLTBh+JfWanZnqqv2V4/fEAhR6wEHIwEWm0bC+7
-	xon6JHgI0/dcvoW1cwt2dvNAvZJrvqaQ8x1Vg9Mk5twk6ZbgbEJB8O8AyRfOpfGNWRrMibFuWmO
-	P4mgt2dXxIYbWjbDMyUlztTS4B4lHIFKv47rTBWlbGTrzJFuav40wCr+EPuYIwXSyhMY2pA==
-X-Gm-Gg: AR+sD12lIf785VFsi0DwsDbvmWV2S+KdHXbjJmuVOGRorxeuQq0jg9BqLpDkVXvyXfG
-	bRN1RQGnbGKc7NeD8KJHIGVULvyLdqaMUWJYCy7cjfs3xMf7JVtwdMUfgUqjbluFKimDn2kg3aw
-	fDXzNzRsakprW2uxfkDUxu/EeAEB0Z7Njv4XfqkMB4y6a+yUp/LT8Q9u84a+xX80rbHn49cLWZ+
-	7Y+4zt2Q4Jq3cUW8mJYw+jh86X5lnjkeV6XKbQeQSOomKrG0BdcSp+saOm9YyO6SS00erFksh0H
-	c6XT9jXoMGTygtS3R98BNRZ8d5dnLZgmYjf368ePI+jbqCigksNfKOH7CfOSHCKT1PoK2O21zDU
-	nasuhQqDCIb9uPXUhWrhLCWv1aNcfSicLupwcSG7lK9tDhU8zLxCDlgy2WEzX8jBI5hpiXQS9xw
-	==
-X-Received: by 2002:a17:903:1aeb:b0:2ca:be8:62d with SMTP id d9443c01a7336-2d015d26298mr69152745ad.32.1785315937495;
-        Wed, 29 Jul 2026 02:05:37 -0700 (PDT)
-X-Received: by 2002:a17:903:1aeb:b0:2ca:be8:62d with SMTP id d9443c01a7336-2d015d26298mr69152335ad.32.1785315936912;
-        Wed, 29 Jul 2026 02:05:36 -0700 (PDT)
-Received: from [10.133.33.108] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022a1586esm8247835ad.12.2026.07.29.02.05.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jul 2026 02:05:36 -0700 (PDT)
-Message-ID: <13f6c903-e85a-4f3a-9c96-ffab95f831a2@oss.qualcomm.com>
-Date: Wed, 29 Jul 2026 17:05:33 +0800
+        d=1e100.net; s=20251104; t=1785317386; x=1785922186;
+        h=mime-version:user-agent:content-transfer-encoding:content-type:date
+         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
+        b=VUONXfhqfWMpQ4Ta9l15xc7c8jQNWOU7X1YOrF5rz5mKuKque2kg/iYi10QiRvocK4
+         +47uooK/zfhOLS47M/+yOBVvd45WINMn+y63pmzLjXPShavn6+WpU8ZJsBBUZac91GXQ
+         NK+8GCNoPLDhjyab76JHsDnpphjaTZswOC2aV24glqzUkJtGvjYaw3pRr1d1w9irl6qn
+         vAQIDkBEkgqRh1xyq3nJpDCWTmTvjrsYMwu2AjcaNgMcE4N863A97b7WKzrYUcHLg9MS
+         N/8UAIvqN3zHSgQPX+wIkaikcA8pUAfvyvGCWugPfdnWw0t+7qmF7nPyNdsRVblwtbxS
+         Sqgg==
+X-Forwarded-Encrypted: i=1; AHgh+RoaQ/GCeFHp4oFEwWmxFXxJvYzLKWyJdWc/C/obG3LYOKul/Az4XQwGNeDidAgh2a8T2sEkzZFM3J2NVDJAIA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhT2VwfFdHtErhGqEG1rZnTBbIQCUN31v9oMiSv+OqbjKFGUeL
+	0y92P57JXiI86pg8rcFFyLezE+9vGr413pGDSraEdMbJ4lfwvWWAHx6scptADzGq
+X-Gm-Gg: AR+sD12gYjy/yWdv/8M1o+IrYW5KTnEUTupbSCwoHy6fSDKtc3JeBWX/uewMf8kvuXD
+	kD6X9eHCpjpUmswkPxDob4aGsVuJ2LqC22cUipQ1+QZhbYpSgdcR0vtcgj8BrD9qBC0I8CC+IES
+	RXIGEY0SIrnOUljOe2oYvlGrp0rLs16Fnd49xQqL+w1wV5AXbreHktvx+XGWG4Ky2nNHCLOgg0U
+	Ss+U5fiS6IDa871TQI2VvfHlKwWyApNq6zqoLQvck+pB+XDR02so0fX8K8SxXgANBACj+bOyeBJ
+	BOIF5wWss1flkM6pbDfHdQrXc9ADeXwdj2ERbPxRFc/iJD3DMpSQhIDSfoPws1TdzTN26pWZAEQ
+	US6/22S7M2Ddp5TF/T+1NsREqhoDM42+Woqy7a39myPhF/lUe956PBSAraMDi3Px4VAvpwQQpaq
+	3UTVLckvVEQdgj8svNXnM3Bw5Zhsa4xkGecqQCZ5nP0reHS7g5ZKIBy1xs9qVO4RZoXyi2obNBx
+	gATNxw6HUnxE+nFJ412nsJp95FF
+X-Received: by 2002:a05:600c:3b26:b0:495:4fd4:619b with SMTP id 5b1f17b1804b1-496c64151d0mr69763385e9.1.1785317385761;
+        Wed, 29 Jul 2026 02:29:45 -0700 (PDT)
+Received: from ?IPv6:2001:8a0:c4c6:f00:6d7d:cc54:8605:a888? ([2001:8a0:c4c6:f00:6d7d:cc54:8605:a888])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49764d848edsm43293315e9.4.2026.07.29.02.29.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jul 2026 02:29:45 -0700 (PDT)
+Message-ID: <3ac168e7dfe22133daf09adc3f6587098ec85619.camel@gmail.com>
+Subject: ath12k: recommended regulatory country source for embedded AP
+ products?
+From: Vitor Soares <ivitro@gmail.com>
+To: Jeff Johnson <jjohnson@kernel.org>, Wen Gong <quic_wgong@quicinc.com>
+Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, Kalle Valo
+	 <kvalo@kernel.org>
+Date: Wed, 29 Jul 2026 10:29:43 +0100
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2.1 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next] wifi: ath11k: fix leak in
- ath11k_service_ready_ext_event()
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>
-Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260727-ath11k_service_ready_ext_event-memleak-v1-1-e8373d27bdd1@oss.qualcomm.com>
-From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260727-ath11k_service_ready_ext_event-memleak-v1-1-e8373d27bdd1@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: GqddcJLWR5VHkDZcuKcaOtlkFIU_KpXx
-X-Authority-Analysis: v=2.4 cv=C5fZDwP+ c=1 sm=1 tr=0 ts=6a69c262 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=aNtGKDg7WqoNcE6Ki84A:9 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-ORIG-GUID: GqddcJLWR5VHkDZcuKcaOtlkFIU_KpXx
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDA3MyBTYWx0ZWRfX1WgxSpp+zRcP
- uwC/QpfPPFHdgQOstkh5jTxw5/vNwJrZaRgqEFH6nyWx1sGLULucEGtewW32QHb13N2BXsK1Iw0
- qvhTahAUKqR0RHwnXNB6wg0jpVwLxW8=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDA3MyBTYWx0ZWRfX93Xg4kc+HUMw
- HR3xu5hFRDQi05F4QoHEiasbPEEIcnH/4cVFepqo2Cq2ypE9YNGtj2bie9aT6qx3EfUp4yqD3Z9
- /lQS0FAj9DUFogBskE1YA1T54GoGSMUDUGRD67jqpgE7pH/JgRqnnIHZpauXUW9LbsmnYI2iHM0
- OlBKHKgJr8qBzxlqyzCtVfM72lmt6OMqErjFbfNsNt39H5jCsunb5D4QCUwxjPoR0CkixZpKWFK
- Jlvrec+khbHIGFhlAB7Rd9zBdDvWASkWGwJpKj6Ya4H5Y5hEScTRdNOtq9eifF1B1jDwg+OueCb
- JwUEdBCd6gY1yCethPXJLicGeEwI4IEWKmOps/R6QqDiuuSgKdMxGxbiNTWngx0rS0hJX7Io1xo
- w/iTbYCMRPAKDLwrhb0o4Ubbr56w15BFEbOz2L/yyqkkEwofLtgolQ4eE5CV4zJDViofS16e1Bh
- XhOi6FPb4L73JJVJCyw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-29_03,2026-07-28_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 phishscore=0 impostorscore=0 malwarescore=0 adultscore=0
- clxscore=1015 priorityscore=1501 bulkscore=0 lowpriorityscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607290073
+
+Hello,
+
+I'm integrationg the=C2=A0Silex SX-PCEBE module (Qualcomm WCN7850, ath12k) =
+on the
+ARM-based Toradex Aquila SoM family, using a recent mainline kernel (7.2-rc=
+).
+
+Hardware/firmware: wcn7850 hw2.0 (PCI),
+WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+(fw_version 0x1103006c).
+
+I'm trying to understand the intended way to set the regulatory country for
+ath12k on embedded products where the country is configured by the integrat=
+or of
+our SoM or at deployment time by the end user.
+
+My current understanding is that ath12k registers the wiphy as self-managed=
+, but
+userspace regulatory hints, e.g. "iw reg", are ignored in ath12k_reg_notifi=
+er()
+unless CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS=3Dy, which in turn depends on
+CONFIG_CFG80211_CERTIFICATION_ONUS.
+
+The SMBIOS coounty-code path, looks intended for fixed regional SKUs, Howev=
+er,
+it is not available on our ARM platform.
+
+So, I have 2 related questions:
+
+1 - Is the expected ath12k model for this type of product to enable=20
+ATH_REG_DYNAMIC_USER_REG_HINTS and use userspace regulatory hints before
+starting hostapd, with the regulatory responsibility on the product/integra=
+tor?
 
 
+Or is there another mechanism you would recomment for this use case?
 
-On 7/28/2026 7:39 AM, Jeff Johnson wrote:
-> Currently, during ath11k_service_ready_ext_event() processing,
-> svc_rdy_ext.mac_phy_caps can be allocated during TLV parsing. This is a
-> temporary allocation that is freed on the success path, but not on the
-> error path. If parsing succeeds far enough to allocate mac_phy_caps and
-> then fails on a later TLV, the allocation leaks. So free the allocation
-> on the error path.
-> 
-> Compile tested only.
-> 
-> Fixes: 5b90fc760db5 ("ath11k: fix wmi service ready ext tlv parsing")
-> Assisted-by: Claude:claude-sonnet-4-6
-> Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+2 - Since ath12k is a self-managed regulatory device and the firmware owns =
+and
+enforces the regulatory database, is the CFG80211_CERTIFICATION_ONUS gate
+intended to apply to this case as well?
 
-Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+In other words, should a userspace-selected country for a self-managed ath1=
+2k
+device be treated the same as dynamic user regulatory hints for non-self-ma=
+naged
+devices, or is this dependency inherited from the common ath regulatory mod=
+el?
+
+Without a country, the ath12k falls back to world "00", where 5 GHz AP oper=
+ation
+is blocked by NO_IR.
+
+Thanks,
+Vitor Soares
+
