@@ -1,99 +1,114 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+Received: from mail-qv1-f100.google.com (mail-qv1-f100.google.com [209.85.219.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E0F40BCB2
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:43:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF08442B0F
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785318193; cv=none; b=gIQuob83rf3EYNZVP1aqNcAa/j6YfZdFWqczxzUYqMJFQoxsHdwenR75Jnm6TEKZHpjeSXOF299CE8T3DSIh8Tg+KWEN2eMSuiY2knrSXfR68E9MEIP65A77XPuOGGJCgx7WjAjEkvPkVFqwU76XvU+FBZNXh+b8VQbRJ9Ci24U=
+	t=1785318510; cv=none; b=MhmT1srF1TKsN9eOmkF/2hUlV+HOp/95JvN7jXS/qwGNg46r4bL4xfXHvdWwndP9Tit2lduLJmK53Cv/6o00FPTUboJ0ICL1olDkUIklMlDk6+qtIg9PNsutD1cIdY3xd1+lVCLrdQLkLB6bPhl+QHE40E+43J5CKV5F9bh93ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785318193; c=relaxed/simple;
-	bh=hkcrbB9ShktWX1H9AZ/hhXP4eZ26Ve/kCzpgfCdUT2Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Oum4GlI2UDG3DvbGqsgRUlUR3Nel+Oz9QTzylj0i8URxMYJGsDtTZ5gb7DDp7CkwQ+vau/k1xn7X1Ydv9eChTef4tdY8GJwRCYfUxCxBRg6RSYmVy78zhJgDp9LFk/iZt8Qe4LPI6bMTJ3eNRVw4VygkdjlS4ukzK9iRQM6HTtM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JtUO37h4; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785318510; c=relaxed/simple;
+	bh=H1cxms0cuojPr7jUeGLLOn3L/QZApPoeQCFr1rIY4pw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VQQnMpP3mVJ1QGzYJ9Kv/SDFCPd7+PVlLZBq1ogNjwSqdbWt5gmgsKbEIZWUkgAWxOUD3B8479gGGiscaXoVwqvfYvBwBOhAuj0S8Tdw4A5WIaQRVWVKTF5SEIlRFOAjOu1zixryLUsUPz/k46/+NcXQ9BS6l5MMjqzNEvSfGj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=UU+i96vK; arc=none smtp.client-ip=209.85.219.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JtUO37h4"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-ca12086c06eso553331a12.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:43:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785318192; x=1785922992; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=t83ZAl+HTEOhK7yZi3aE9T2wGWPdb8+DClmlDdgQvpA=;
-        b=JtUO37h4LqYcWNJl8gtSWbDpQOCbH27M9saeYKYhx2HxuUhIGjMTDgjIfQxIkJtpiT
-         TQor7HFnFcBbXCgiiHx0M1sy4ilrfHkRzNtZf6EG73NE4/JBr1dh5iM5UpUK5ZX2hpsQ
-         YS79mcBmlpwJg1aqS34RLdrlzo9QfA2NJdgpjonhFKESChtdRib2gAtQQOund8w683qn
-         xgXbPcz4ot4pz3Ksy/YO4UOTuOK44e7YoTFoeIxzzascRl4avZJkx1hOVK/ZoDc4F8kt
-         RyC6z/Bcoh/RPFo3A1UlfPmwsmmOXSuSV9XF8YlAKIusNvnJ/j3pBs9ufQaCn+SWAvkH
-         pXNg==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UU+i96vK"
+Received: by mail-qv1-f100.google.com with SMTP id 6a1803df08f44-8f256eaedf8so6443616d6.2
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:48:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785318192; x=1785922992;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=1e100.net; s=20251104; t=1785318507; x=1785923307;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=q+GPA/rLhc1S1DZlerpKKjvy5ROXqBkGhbeqa7Tzmk0=;
+        b=HUbvuHmhB3kf9/OlMyht5nWrFhneXtvZjFJZV5Jcdbk6eIMAp0Ya+ZwRHolODQ5teF
+         e4DZrf5x87VNLcXLjHx26TN1o3Tft8TGDxYWo0e+dmCDxJNLe2k3eWy3TWcdmljH2AhA
+         UUfrBPnGn2eduFus2trTtFWvN++pTBedH1NlU+XOiH0JqRAkYkXD140kd6BZgj3ueMPv
+         CoqE+wisql7poggDpTHi8/+xjOZHCK22c05EfTaTpmRfacVM4jD11EvMUmytPqoPwNw6
+         4IGC3FxpIf6k5uVhUaGsnIIGJJxWtNl7BrJqH3sABm+eGE3/37MY1+/Z0G7cjm2KbP1g
+         Yzcg==
+X-Gm-Message-State: AOJu0YytZ2mva/CRwBsq6hrsBgOo+EUDh4jj+uE4ywnmo+QyDGa4vQOd
+	LP31uJ6FaPqkoqAQh43PzzochqyACjhgrRLqEyAaajXvNnEUXqiABtDe+gZ2nEQAY6Gmd26ptSj
+	Ku/emzrXAKeA3FB/K0l9J0sEKyC/k/R++baTsay3oBxE6JXT7t3moEdahXT5R4qpoiJIojkQV9B
+	2qqFoEhzBdq9CvbfSJzMxGbJiLptiAQHTdvI7ThtgCdg6KVibbjIAFKg4ZM3mN510V6sMOSnbVt
+	/rJb3aHJAMLpZR4bwOs676at/Iz
+X-Gm-Gg: AR+sD138luy3siaswsahaX6vn5Og1VuO3hNyoiSrM3kV5ZZRrDvEFM/3DJbjn5d+6rp
+	atkrpB5puEZUdCOm8uNaDCwNP8Pbn5jnlDU7qY4DNDI7bS21BthzrWjkJXcqDrMKmMS2Yl4tVBy
+	aF9UXaCxvfV0WkTucwkVwMLmn78utGBsbchYOOuK9CDzauhMIcKHnt3gNOrbqXNgiTziqXKUbLP
+	W6D1tjAQ245VIEKbp6+dPcodrJof/NVatEVKdagqC0J6ftZBvYJNAgKqv59V2FANuVOln2sNqjJ
+	rB814j87khTO68FyD89c8tda5inVXSl3/eL/P70C4fJQza7sF7naFltatFJTLukAMaEG8Vxw5JM
+	VhPkGRp+BG7jTvUGOiyIyx2HmEw0u2Pdy8PNy7fyL9kjToOHcZIxFC94rqasc1snIVCCwq23+RQ
+	ioazIPWPJrbDeody6WFqMED6oVPdu5IChJ2J7yKNk=
+X-Received: by 2002:a05:6214:2a45:b0:907:bde4:981a with SMTP id 6a1803df08f44-9081730d630mr58441186d6.42.1785318507286;
+        Wed, 29 Jul 2026 02:48:27 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-9081dcfa345sm1679876d6.17.2026.07.29.02.48.26
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 29 Jul 2026 02:48:27 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-8eec6acbe21so17231536d6.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:48:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1785318505; x=1785923305; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=t83ZAl+HTEOhK7yZi3aE9T2wGWPdb8+DClmlDdgQvpA=;
-        b=mbU5kk0J2TviZqlQ+b6Ypz5eRtnhNyOgRwp2sZ1uRynAdYivUkrC5nCPLSm7gn7ICr
-         4ezDYcOlMgQ0ik+NOiMQfzjoPKfrCDGIJy3YKTXmzFhTuMMkljp1QjBCNeWIhdg87LHg
-         MAx9/wRbo4YvdSs7XMZMJhwAl8OUv1KezpVa2VzTgFqZga7ri7jCSs5OxS6dHYY5mHGd
-         CLEGfz02DPmkJYZO4Utlzu7srcfNvalwDN9pDa5ch4f1oNMYLFKnHAXwGD0iO5Z+jsWU
-         NwuTVKSVisL3ShuuSSJk9gMPlcbjSzBuAD9JKPbRC2sJxfRxCA4obY9FQ2rQfV/Mffvq
-         KARw==
-X-Gm-Message-State: AOJu0YxTITQ6Xjr0Y7k517bKUqpLTjXRIkVne3X88olo1TinqxFqUPuQ
-	RCY3rkkV0Cis/AsMum/GTz3KXAGB6wcaHZy666Lp2K2hO9dL3Q+ujSE0
-X-Gm-Gg: AR+sD10XjiVFUI4XqL3FfW9no0iMtf6AQR9vHXKi11aQuLeMH1lOFNkvYM9kts0eM1r
-	I/6WOtiKCPaYqNsQl4QesJuyR3NRRm7p+2H8Ju7nh/Iq+cQlYu18bio9O8RZ8G6gDShEzsDK3u1
-	GFWGVOp9ChW2sJgHzrhkHr+bNfL3bw3eqj+mImj/GzBSfClIrm2ai2jjRv8X030AWGyrRnMazmE
-	LO+ZIhMbtdN2zcn6vSV7N8E4qtNs60AzqrpnjxDjpUAHEU8WV8BRBoLWHIDyPkgCODAeh01m0QT
-	pr5mSJ3swKa81BbgGTAjWVZ3iobiB9IdD6iGZl3OStfQfhupqSP3FkMhuFoYQEUvGKuttcFK8bt
-	O1dlyrDpDPOdBrH+2pIpYZx8EYJxfSa9uRR7sjGcXi1pv8XWxvKAEC0TYPn9JHRNAobcWU3dhGc
-	qL2KEZaSLa4JRDnB8kLDFBWfjpYxEu+rA2yHJ8wkX8//HKkJc4CKsX1FBwIZvOtCb3SfKk6bBcp
-	Yz0+9eRtl6sVorqmXaCuLy1oIuiOr2qoHWm+/g=
-X-Received: by 2002:a05:6a21:2291:b0:3c3:83e6:c705 with SMTP id adf61e73a8af0-3c8ba5beec0mr7303606637.35.1785318191749;
-        Wed, 29 Jul 2026 02:43:11 -0700 (PDT)
-Received: from localhost ([2409:40c4:138:9281:7d6f:2f3:b5b5:ed1c])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31504d37368sm14174469eec.22.2026.07.29.02.43.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 02:43:11 -0700 (PDT)
-Date: Wed, 29 Jul 2026 15:13:07 +0530
-From: Lovekesh Solanki <lovekeshsolanki00@gmail.com>
-To: Snake Pilot <snakepilot10@gmail.com>
-Cc: linux-wireless@vger.kernel.org, pkshih@realtek.com, 
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [BUG] rtw88_8723de: Wi-Fi and Bluetooth fail after warm reboot
-Message-ID: <amnGXPlG6nKUdEl7@eggarch>
-References: <CA+fxq6gPCQOYr6mh+_1ReOGzaiTULzMazXhs5q0PXc8PsjRJEQ@mail.gmail.com>
+        bh=q+GPA/rLhc1S1DZlerpKKjvy5ROXqBkGhbeqa7Tzmk0=;
+        b=UU+i96vKZD9wYydpxnhkptIh5W39Y/icdympbmwFX23fQOQPTVMfmfmiuCd5hSNAvN
+         KX+VJMRmd+Kl7yuHPWcfvMkIKD2zi9ESXmgj3ggi4vMnhYDWQFZ+i/VxoHQMboGgDKg9
+         vuRu3CD3QFGs06QGqJH5ybOuPOI8rcd6SXZf0=
+X-Received: by 2002:a05:6214:29eb:b0:8fd:6e32:2bfb with SMTP id 6a1803df08f44-90817376d39mr59183306d6.60.1785318505542;
+        Wed, 29 Jul 2026 02:48:25 -0700 (PDT)
+X-Received: by 2002:a05:6214:29eb:b0:8fd:6e32:2bfb with SMTP id 6a1803df08f44-90817376d39mr59183186d6.60.1785318505096;
+        Wed, 29 Jul 2026 02:48:25 -0700 (PDT)
+Received: from [10.176.3.215] ([192.19.176.250])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-9081dc496f7sm20496196d6.3.2026.07.29.02.48.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 29 Jul 2026 02:48:24 -0700 (PDT)
+Message-ID: <5cf57b2d-2bcc-481c-87bf-3a034d5f99be@broadcom.com>
+Date: Wed, 29 Jul 2026 11:48:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+fxq6gPCQOYr6mh+_1ReOGzaiTULzMazXhs5q0PXc8PsjRJEQ@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE
+ AP
+To: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
+References: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Hi,
+On 29/07/2026 07:34, Bogdan Nicolae wrote:
+> When bringing up a WPA3-SAE SoftAP with external (user space) SAE, the
+> driver never told the firmware which SAE Password Element (PWE) method to
+> accept. The firmware was observed to corrupt its heap over time due to
+> this omission, leading to firmware trap (data abort in heap allocator).
+> 
+> Parse the beacon IEs on start_ap() and set the extsae_pwe iovar
+> accordingly: 2 when the RSNX IE advertises H2E, 1 when an H2E-only
+> membership selector is present, 0 otherwise. This matches the behaviour
+> of the upstream/vendor driver and only applies to SAE-capable APs when
+> external SAE is supported.
 
-Could you provide the following:
-1) Full dmesg after warm and cold boot
-2) 'journalctl -k -b -1' after warm boot
+This makes sense, but may I ask what device do you have? Suspect it is a 
+Cypress/Infineon chip. I could not find the iovar in our (Broadcom bca) 
+code base so I suspect it is vendor specific.
 
-Also please run a few tests,
-1) Unload rtw88_8723de only or btusb only and perform warm reboot
-and see if both of them are broken while unloading only one driver
-2) Repeat the above with a delay like sleep 0, 1, 3, 5
-3) Try 'echo 1 | sudo tee /sys/bus/pci/devices/0000:02:00.0/reset' 
-after warm reboot see if it pci function reset recovers wifi
-
-Also provide output of 'lspci -vv -s 02:00.0' and 'lsusb -t'
-after warm reboot.
-
-That would be helpful.
-
-Thanks, 
-Lovekesh
+Regards,
+Arend
