@@ -1,134 +1,99 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E1F431A49
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:29:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E0F40BCB2
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 09:43:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785317389; cv=none; b=W0N+ghgLwWTbogJ5nySxVIjBNKdAJaZD1kkzV9+eKAnFHAgq6nAJwWChiTS1ATPBYaVXwGv0sTn+INNKAAJteT58WNN2hit73B8KEgqqNrMZConHVW/xvAcqH9iQ/BHFvirkA2s9/7/3hQUk9qGsKYMmSnkWYhQSVLxXbsUjqGE=
+	t=1785318193; cv=none; b=gIQuob83rf3EYNZVP1aqNcAa/j6YfZdFWqczxzUYqMJFQoxsHdwenR75Jnm6TEKZHpjeSXOF299CE8T3DSIh8Tg+KWEN2eMSuiY2knrSXfR68E9MEIP65A77XPuOGGJCgx7WjAjEkvPkVFqwU76XvU+FBZNXh+b8VQbRJ9Ci24U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785317389; c=relaxed/simple;
-	bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=tZkFkCNG8HRrEfWC8+bxEFm+EBg0O4YO9JBJk8tFPX0C8LcWTf2gtF8oJB1C/f0HUhs7Saa/c2V8u8No/y/wYSMNkzz8wif3deNJIwYg9CoVE3fb4HjDUtaJw/oYpz9CTMZBtrGcCTiKyLn1hrpDGSSkB61Ukfz3jqdi04nJX38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mboFNZRl; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1785318193; c=relaxed/simple;
+	bh=hkcrbB9ShktWX1H9AZ/hhXP4eZ26Ve/kCzpgfCdUT2Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Oum4GlI2UDG3DvbGqsgRUlUR3Nel+Oz9QTzylj0i8URxMYJGsDtTZ5gb7DDp7CkwQ+vau/k1xn7X1Ydv9eChTef4tdY8GJwRCYfUxCxBRg6RSYmVy78zhJgDp9LFk/iZt8Qe4LPI6bMTJ3eNRVw4VygkdjlS4ukzK9iRQM6HTtM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JtUO37h4; arc=none smtp.client-ip=209.85.215.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mboFNZRl"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-495635a85d2so5583605e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:29:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JtUO37h4"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-ca12086c06eso553331a12.0
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:43:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785317386; x=1785922186; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type:date
-         :cc:to:from:subject:message-id:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
-        b=mboFNZRlykl2k+JtSRL2uNwQAaVLQ3XOr1RWQ1WvEHYdlvIP+9qbc8TxbYA+mEMmOq
-         2imXHnk+VH8BVMn3dkFhXEexjUi9Dzo7J+3tQryAkwAGoBcvQVjI02p12wbKNBUp6elf
-         3R5IHNJG3Hd1Z7rD+p/vuH7voWqzSJ4eq3DIOpQfGvo35RAU+DkfiZVa/AJXQNPkj59Y
-         z0TfyceGxkWkfCikzfQgp+sneMeciFw/E1RWFaAlXZjpimWTgJjaRONtFKy8iGy8iTYo
-         ApmXkuskEJnEZxMigxMaEcDHODzWfEkLfQ/l9TOd3iyMgbh3u5JbDnWWI31n1Yc5lLnQ
-         o2Fg==
+        d=gmail.com; s=20251104; t=1785318192; x=1785922992; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=t83ZAl+HTEOhK7yZi3aE9T2wGWPdb8+DClmlDdgQvpA=;
+        b=JtUO37h4LqYcWNJl8gtSWbDpQOCbH27M9saeYKYhx2HxuUhIGjMTDgjIfQxIkJtpiT
+         TQor7HFnFcBbXCgiiHx0M1sy4ilrfHkRzNtZf6EG73NE4/JBr1dh5iM5UpUK5ZX2hpsQ
+         YS79mcBmlpwJg1aqS34RLdrlzo9QfA2NJdgpjonhFKESChtdRib2gAtQQOund8w683qn
+         xgXbPcz4ot4pz3Ksy/YO4UOTuOK44e7YoTFoeIxzzascRl4avZJkx1hOVK/ZoDc4F8kt
+         RyC6z/Bcoh/RPFo3A1UlfPmwsmmOXSuSV9XF8YlAKIusNvnJ/j3pBs9ufQaCn+SWAvkH
+         pXNg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785317386; x=1785922186;
-        h=mime-version:user-agent:content-transfer-encoding:content-type:date
-         :cc:to:from:subject:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=5WnxcIEaVC0j3CtWI+yiPRs8vygJw8ntQCvpp65dOv4=;
-        b=VUONXfhqfWMpQ4Ta9l15xc7c8jQNWOU7X1YOrF5rz5mKuKque2kg/iYi10QiRvocK4
-         +47uooK/zfhOLS47M/+yOBVvd45WINMn+y63pmzLjXPShavn6+WpU8ZJsBBUZac91GXQ
-         NK+8GCNoPLDhjyab76JHsDnpphjaTZswOC2aV24glqzUkJtGvjYaw3pRr1d1w9irl6qn
-         vAQIDkBEkgqRh1xyq3nJpDCWTmTvjrsYMwu2AjcaNgMcE4N863A97b7WKzrYUcHLg9MS
-         N/8UAIvqN3zHSgQPX+wIkaikcA8pUAfvyvGCWugPfdnWw0t+7qmF7nPyNdsRVblwtbxS
-         Sqgg==
-X-Forwarded-Encrypted: i=1; AHgh+RoaQ/GCeFHp4oFEwWmxFXxJvYzLKWyJdWc/C/obG3LYOKul/Az4XQwGNeDidAgh2a8T2sEkzZFM3J2NVDJAIA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxhT2VwfFdHtErhGqEG1rZnTBbIQCUN31v9oMiSv+OqbjKFGUeL
-	0y92P57JXiI86pg8rcFFyLezE+9vGr413pGDSraEdMbJ4lfwvWWAHx6scptADzGq
-X-Gm-Gg: AR+sD12gYjy/yWdv/8M1o+IrYW5KTnEUTupbSCwoHy6fSDKtc3JeBWX/uewMf8kvuXD
-	kD6X9eHCpjpUmswkPxDob4aGsVuJ2LqC22cUipQ1+QZhbYpSgdcR0vtcgj8BrD9qBC0I8CC+IES
-	RXIGEY0SIrnOUljOe2oYvlGrp0rLs16Fnd49xQqL+w1wV5AXbreHktvx+XGWG4Ky2nNHCLOgg0U
-	Ss+U5fiS6IDa871TQI2VvfHlKwWyApNq6zqoLQvck+pB+XDR02so0fX8K8SxXgANBACj+bOyeBJ
-	BOIF5wWss1flkM6pbDfHdQrXc9ADeXwdj2ERbPxRFc/iJD3DMpSQhIDSfoPws1TdzTN26pWZAEQ
-	US6/22S7M2Ddp5TF/T+1NsREqhoDM42+Woqy7a39myPhF/lUe956PBSAraMDi3Px4VAvpwQQpaq
-	3UTVLckvVEQdgj8svNXnM3Bw5Zhsa4xkGecqQCZ5nP0reHS7g5ZKIBy1xs9qVO4RZoXyi2obNBx
-	gATNxw6HUnxE+nFJ412nsJp95FF
-X-Received: by 2002:a05:600c:3b26:b0:495:4fd4:619b with SMTP id 5b1f17b1804b1-496c64151d0mr69763385e9.1.1785317385761;
-        Wed, 29 Jul 2026 02:29:45 -0700 (PDT)
-Received: from ?IPv6:2001:8a0:c4c6:f00:6d7d:cc54:8605:a888? ([2001:8a0:c4c6:f00:6d7d:cc54:8605:a888])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49764d848edsm43293315e9.4.2026.07.29.02.29.44
+        d=1e100.net; s=20251104; t=1785318192; x=1785922992;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=t83ZAl+HTEOhK7yZi3aE9T2wGWPdb8+DClmlDdgQvpA=;
+        b=mbU5kk0J2TviZqlQ+b6Ypz5eRtnhNyOgRwp2sZ1uRynAdYivUkrC5nCPLSm7gn7ICr
+         4ezDYcOlMgQ0ik+NOiMQfzjoPKfrCDGIJy3YKTXmzFhTuMMkljp1QjBCNeWIhdg87LHg
+         MAx9/wRbo4YvdSs7XMZMJhwAl8OUv1KezpVa2VzTgFqZga7ri7jCSs5OxS6dHYY5mHGd
+         CLEGfz02DPmkJYZO4Utlzu7srcfNvalwDN9pDa5ch4f1oNMYLFKnHAXwGD0iO5Z+jsWU
+         NwuTVKSVisL3ShuuSSJk9gMPlcbjSzBuAD9JKPbRC2sJxfRxCA4obY9FQ2rQfV/Mffvq
+         KARw==
+X-Gm-Message-State: AOJu0YxTITQ6Xjr0Y7k517bKUqpLTjXRIkVne3X88olo1TinqxFqUPuQ
+	RCY3rkkV0Cis/AsMum/GTz3KXAGB6wcaHZy666Lp2K2hO9dL3Q+ujSE0
+X-Gm-Gg: AR+sD10XjiVFUI4XqL3FfW9no0iMtf6AQR9vHXKi11aQuLeMH1lOFNkvYM9kts0eM1r
+	I/6WOtiKCPaYqNsQl4QesJuyR3NRRm7p+2H8Ju7nh/Iq+cQlYu18bio9O8RZ8G6gDShEzsDK3u1
+	GFWGVOp9ChW2sJgHzrhkHr+bNfL3bw3eqj+mImj/GzBSfClIrm2ai2jjRv8X030AWGyrRnMazmE
+	LO+ZIhMbtdN2zcn6vSV7N8E4qtNs60AzqrpnjxDjpUAHEU8WV8BRBoLWHIDyPkgCODAeh01m0QT
+	pr5mSJ3swKa81BbgGTAjWVZ3iobiB9IdD6iGZl3OStfQfhupqSP3FkMhuFoYQEUvGKuttcFK8bt
+	O1dlyrDpDPOdBrH+2pIpYZx8EYJxfSa9uRR7sjGcXi1pv8XWxvKAEC0TYPn9JHRNAobcWU3dhGc
+	qL2KEZaSLa4JRDnB8kLDFBWfjpYxEu+rA2yHJ8wkX8//HKkJc4CKsX1FBwIZvOtCb3SfKk6bBcp
+	Yz0+9eRtl6sVorqmXaCuLy1oIuiOr2qoHWm+/g=
+X-Received: by 2002:a05:6a21:2291:b0:3c3:83e6:c705 with SMTP id adf61e73a8af0-3c8ba5beec0mr7303606637.35.1785318191749;
+        Wed, 29 Jul 2026 02:43:11 -0700 (PDT)
+Received: from localhost ([2409:40c4:138:9281:7d6f:2f3:b5b5:ed1c])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31504d37368sm14174469eec.22.2026.07.29.02.43.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 02:29:45 -0700 (PDT)
-Message-ID: <3ac168e7dfe22133daf09adc3f6587098ec85619.camel@gmail.com>
-Subject: ath12k: recommended regulatory country source for embedded AP
- products?
-From: Vitor Soares <ivitro@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>, Wen Gong <quic_wgong@quicinc.com>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, Kalle Valo
-	 <kvalo@kernel.org>
-Date: Wed, 29 Jul 2026 10:29:43 +0100
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+        Wed, 29 Jul 2026 02:43:11 -0700 (PDT)
+Date: Wed, 29 Jul 2026 15:13:07 +0530
+From: Lovekesh Solanki <lovekeshsolanki00@gmail.com>
+To: Snake Pilot <snakepilot10@gmail.com>
+Cc: linux-wireless@vger.kernel.org, pkshih@realtek.com, 
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [BUG] rtw88_8723de: Wi-Fi and Bluetooth fail after warm reboot
+Message-ID: <amnGXPlG6nKUdEl7@eggarch>
+References: <CA+fxq6gPCQOYr6mh+_1ReOGzaiTULzMazXhs5q0PXc8PsjRJEQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+fxq6gPCQOYr6mh+_1ReOGzaiTULzMazXhs5q0PXc8PsjRJEQ@mail.gmail.com>
 
-Hello,
+Hi,
 
-I'm integrationg the=C2=A0Silex SX-PCEBE module (Qualcomm WCN7850, ath12k) =
-on the
-ARM-based Toradex Aquila SoM family, using a recent mainline kernel (7.2-rc=
-).
+Could you provide the following:
+1) Full dmesg after warm and cold boot
+2) 'journalctl -k -b -1' after warm boot
 
-Hardware/firmware: wcn7850 hw2.0 (PCI),
-WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-(fw_version 0x1103006c).
+Also please run a few tests,
+1) Unload rtw88_8723de only or btusb only and perform warm reboot
+and see if both of them are broken while unloading only one driver
+2) Repeat the above with a delay like sleep 0, 1, 3, 5
+3) Try 'echo 1 | sudo tee /sys/bus/pci/devices/0000:02:00.0/reset' 
+after warm reboot see if it pci function reset recovers wifi
 
-I'm trying to understand the intended way to set the regulatory country for
-ath12k on embedded products where the country is configured by the integrat=
-or of
-our SoM or at deployment time by the end user.
+Also provide output of 'lspci -vv -s 02:00.0' and 'lsusb -t'
+after warm reboot.
 
-My current understanding is that ath12k registers the wiphy as self-managed=
-, but
-userspace regulatory hints, e.g. "iw reg", are ignored in ath12k_reg_notifi=
-er()
-unless CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS=3Dy, which in turn depends on
-CONFIG_CFG80211_CERTIFICATION_ONUS.
+That would be helpful.
 
-The SMBIOS coounty-code path, looks intended for fixed regional SKUs, Howev=
-er,
-it is not available on our ARM platform.
-
-So, I have 2 related questions:
-
-1 - Is the expected ath12k model for this type of product to enable=20
-ATH_REG_DYNAMIC_USER_REG_HINTS and use userspace regulatory hints before
-starting hostapd, with the regulatory responsibility on the product/integra=
-tor?
-
-
-Or is there another mechanism you would recomment for this use case?
-
-2 - Since ath12k is a self-managed regulatory device and the firmware owns =
-and
-enforces the regulatory database, is the CFG80211_CERTIFICATION_ONUS gate
-intended to apply to this case as well?
-
-In other words, should a userspace-selected country for a self-managed ath1=
-2k
-device be treated the same as dynamic user regulatory hints for non-self-ma=
-naged
-devices, or is this dependency inherited from the common ath regulatory mod=
-el?
-
-Without a country, the ath12k falls back to world "00", where 5 GHz AP oper=
-ation
-is blocked by NO_IR.
-
-Thanks,
-Vitor Soares
-
+Thanks, 
+Lovekesh
