@@ -1,131 +1,196 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 588CC3B0AF0
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 05:31:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC393B5841
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 05:37:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785303093; cv=none; b=ODQeInpY5BjhfGkos9vDC1GOl4QzZjXrwefykOOoFEPF4wwEWfUv2pK5aXBUiVMSo+ES67g9ynwGL2YssVGK5dfuoPGOgx8fJM6RRvo5iNOd3uFMrwA5ZHUi3Tf5eySoCbJ8CDGSYo5S5qmz826GrdZECeUWivI6jaho3HstApA=
+	t=1785303460; cv=none; b=PdkWSBVwD3fBexKU9150UqcB/ELtZaWJfTm4MhCt8qpN69hMF0DAe2vc7+yYgMjNaSNS93Iu4A0YddGkO77jd2Wj7MEReyjRwVzOaYWzTdZ50I8rSwZK82YIfsHyJQPGwZkDY5OEt1QIrji6yD45xrfy0pb3o9Uc3HNNC7Gyrd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785303093; c=relaxed/simple;
-	bh=TK73DyNBFNgavPIJ8NX7LzeWA/wjG1g5dTxoKb05AaU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RuxITD5f1k8nxDj/jsTmcNsVdSlg8pFtrRGQOO6twgJU5Hi3leS1EGLcmD+cdm2xyQwS21jJrRnqVmIV0yuq0HWWqk17jQM7xbIgffF8UI6fEECd+4bAlvYcbLnscpQFgBpTM+5QrcRqhvbELtCbNgFac5TkxYYjDH2Vrs6E9yc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mHrEPotl; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1785303460; c=relaxed/simple;
+	bh=81WsicO1lnWvPSZw1fn2UG+k9M3g0LSPZQa9sgz45IY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MtfXqDZ7K2Cs84yj3THuRtzXj4aRXSWOvRUySQns+lgf0J97sIa+jj4GtNLxj9LCHbLbd9z8Gy+/rG1SBz8iahzeuTi68xveFjEpLPJpdMJ3HdxBrP+T0DEIHHZPgD29D+ta5DN/6qGIlncHMB6GDVjWKuLl8VmLRTppXTMEE2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jjn8a9kX; arc=none smtp.client-ip=209.85.167.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mHrEPotl"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-493f75f7172so4154365e9.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 22:31:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jjn8a9kX"
+Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-495efdede87so8288b6e.2
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 22:37:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785303090; x=1785907890; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ZZkhjXFCyNRKV6oXHNjuiRGL2GiMm192P3++mpEhAgw=;
-        b=mHrEPotlLNvS8C6SrW/UtuFx2D9wHvXhYxFJAT1Dm+SbmiaU8mVO6HacECQqYyC0se
-         afdZ98wxFEaMGdncnmNx2p02fya0WlDB9ynH+xTWVpsc899Se/P0tYTHe/NzZ+Wbg8rC
-         kOveryLb4IbVHx6Mb9iSyVkA0x+vya71+cZsB2UpSC/AuiMu1PE2QsXHB5JH2m9bab0S
-         hhfY4yKQR0J8D9JyExFHMTqQRaKqnMvmYq5CQedc9Ph7VrRreK5QzDrgsXBQ5T5+oESo
-         jY3evf0LjK7eQy24xXWW6QxkyyGMU+u20av5v/fdAyAlLng4oEaLrgFPVoSK5QjEdq+N
-         Nw3Q==
+        d=gmail.com; s=20251104; t=1785303458; x=1785908258; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LYEwKBiTcuHNpwjMLcTcd5LYOpcHXXSayMJQAf1r+NQ=;
+        b=Jjn8a9kX2I9jpP0PH2u8gVTC5O+kXwcmOwpYoi24sTtud+SmGPPPuW4iyGJIX5TDPZ
+         GXwtQiQ6FwOXIluo/LvgfPKxetT4HOP2k7z7+r/MMQ+QUGIBRjwKBmXgDiw+mTH41UdV
+         fsftV1WM3wF5V9Lv6ABkJTMS0nODBO1McS3SnlfGwVUEW7g+uBQHbkS9tlm578KLHIqY
+         2MimHjRXRO1dfZ7IOgoob+qYLQDouKpGiLyEalVPgN7bzTK8hpHN954QG0my7tCkGvFo
+         G51uolHMsDHcQvddu5Vb23MzH1A2tKy1sl20fsE0LtwnFz2kN5yfc9d165p4P+r6Yn4j
+         FxGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785303090; x=1785907890;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ZZkhjXFCyNRKV6oXHNjuiRGL2GiMm192P3++mpEhAgw=;
-        b=Vb88akD/fvgPT6Q4/Dy+5AN1e2mr6RiawazvesMo7YcpISxl2FXnP8N8LUOtbfnJck
-         +MNnXu86s72Tkn9zKzwbUj5YTSmqefem6Stq5M5KXkbbYLL0NDFWfaY+9UVj4Uwl2Aag
-         UkHpwnLoaN9299plI05cdeBWxB+7L+5hoNY84I3Gr+BpoKzZ30kDUeMlLr6MzWm8Gz2h
-         32lGwy5hbj9gE5OzGZHsSEQ0eZx6Zb1nhSNWgbnLGJ1jb8Lu157crDHQE5qewWCKCgJz
-         3p4ZMpWbkP57eh56yo/mxK+0OrB9TtmEZtUjZODZTwu6xK9tJhSthjla00zAuGN1AWs1
-         FXMw==
-X-Forwarded-Encrypted: i=1; AHgh+RrOhOu64x5bF/OGzkT4bR46GOXc1sTt/nptM6Yl33UxAIOjNui7LZ/eSM7uvTA37TVuhFNWHQMp3Gu9Tp2CPw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqNsGgfueitqURmDQ2hiKNsb7QON4MIYa9K/XkKY3NaMnvdEdl
-	hLBikS0rnxn/Zsn1WVMvFKixnwy4LB4hAcMW9JAEXSLXDheIqoeDCa2vP9hQIs5aMLI=
-X-Gm-Gg: AR+sD12I+zn5xHemZu5WNvy+bi9JY7CtB+yQNRgluVVjsDjvjU71krC2MudoPHC4u8p
-	F1oVGi1Ykgy8diiYY/oFHtkGpjGEtw7YFMKjH+xyQlhHWJVgx5hqe5C/JsJ2WgEpB+7gi8kf4e5
-	qF6LUXSfcHjL9Bvo5HNHlHhCX6bHzpmHSSGOLcdF2W/xdEWXc6NlwSCUIxp4ZPrNkc5Fh95NiWi
-	b5RK0l2PnzynUhKRCLWgfLkhxwzrhjn9ouG0r5zV7qTNpR9+rmr72ciE+k8OPSbquez7jL7GQZt
-	TNpjDR7KBIWlOEilMOY1f85+XlUlEZ5cYJ9NEBEHxbKWfgLNp9b6amrc51HmN72PEvOhggC342W
-	urc5Q47YrEUhiH0FpKPyxgU5BBDuoAPhXDcILy+bgGBL2RQaeNT1BUrOjDCuD7dK6MKoKevL1Cm
-	cjlAQSXm2PhedjCy/IOve3zDutMfxkYLswr2Nof1WwEnf7vct0CGK3LJ9a
-X-Received: by 2002:a05:600c:6986:b0:495:3aac:1098 with SMTP id 5b1f17b1804b1-496c6591311mr60736795e9.32.1785303090216;
-        Tue, 28 Jul 2026 22:31:30 -0700 (PDT)
-Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4957bff4784sm337623375e9.4.2026.07.28.22.31.29
+        d=1e100.net; s=20251104; t=1785303458; x=1785908258;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LYEwKBiTcuHNpwjMLcTcd5LYOpcHXXSayMJQAf1r+NQ=;
+        b=GAgG2Rrxuv+ga42Xn9ym3sCMIsrtCCq847FOs7+CbDvdFij7j+YujCBc3TsvddfZRQ
+         DMgebJExrtP8B7OKw2k5VoSMnF6fpJaAeb6Yg2CwNDwr2hjRVBiCxuK6b4pz+zPPL6O9
+         syRQc3Gq8mOTflMvxsnr/Y/oFn0iH2ak5t+K4Fhjag2Wz2HsmEuF1dj8pwL/UtNM9QUL
+         TYOPdrwK6vjaqTr6U/ClXpCu+QnniCB7XG1K1gBSstt92h9nVJfnGEU/ZXnm+kdSiLOB
+         kNOg0pEthH5Ugm16yT6iCTq89Fu5NSNYsUxDpGa/V29f3GCazz6TfI3r+OeKnlhrFIt4
+         8peA==
+X-Gm-Message-State: AOJu0Ywwraf4dJXg6VUTuJ6ZGeDbnKQ9z7yixZi28U8OuCBq77K9vEg4
+	rx5HJjpfEpmXEjR2r3u3726IeC5xyIyevF7vmxPruhJx+crsN03oZrVk
+X-Gm-Gg: AR+sD10PNUBTZX8MXqFDe7u/vCbCiFcqxdrSxuwHz9cGEInwU4ioSeGxgMq0uLD59Oj
+	8F/Pd3H1V/FMZJZEDXNnXDaH8yA+sfE07EKMhXclx8N0k4nSFqSLQVBi8CxVWqjnlHLkqI5cYUf
+	kfTtaCq4Z0qFRlrc5eP0RiQzhWrxvh3zo3+2t4dZfxICU31j1fvnFSir1ar/RGBNsD/TL/OjoDh
+	ve6Rs5sHenNdJjSr8shnRQouExRS6Wc3w+kNLgAxmD87Bva5HaDDIljterL2cUlXBgICy2MpGKa
+	lc8yEtCC1rZ+kzUAiDTlOPi26SIR8TWDw8wNhlwtyyjaH+Dm5UrkGrEhTB5lOZcxNKf2O1uwuId
+	p00hY5KuYf+s2RZL+THPCylGc6JZYYQ/iYZMQenGI2USRf7qZqeWVHoaEmiPkFLEST0iybIlmb2
+	fHOQ4XuEMtiY3lw0/6Qc9DeQtTRdXJpL5gXQZiytnxsgBONcPmwpO1QrVLIxLd6fgQklnp4aQ1E
+	8J3uUU6zUY0lPpvur0tB5CES/g1WHtwe5mwYrGdYGXlzFM9jFkzNc7xi2420QQ=
+X-Received: by 2002:a05:6808:1589:b0:497:e695:3423 with SMTP id 5614622812f47-4ad5b5bcfb1mr2048496b6e.0.1785303457731;
+        Tue, 28 Jul 2026 22:37:37 -0700 (PDT)
+Received: from antares ([149.88.25.215])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4ad6efc6ffcsm986864b6e.15.2026.07.28.22.37.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 22:31:29 -0700 (PDT)
-Date: Wed, 29 Jul 2026 08:31:26 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Yi Cong <cong.yi@linux.dev>
-Cc: gregkh@linuxfoundation.org, linux-staging@lists.linux.dev,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yi Cong <yicong@kylinos.cn>
-Subject: Re: [PATCH 2/4] staging: rtl8723bs: fix double free when
- register_netdev() fails
-Message-ID: <ammQLsniXJ4LwNRF@stanley.mountain>
-References: <20260729022509.2863634-1-cong.yi@linux.dev>
- <20260729022509.2863634-3-cong.yi@linux.dev>
+        Tue, 28 Jul 2026 22:37:36 -0700 (PDT)
+From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Subject: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE AP
+Date: Wed, 29 Jul 2026 00:34:08 -0500
+Message-ID: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260729022509.2863634-3-cong.yi@linux.dev>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jul 29, 2026 at 10:25:07AM +0800, Yi Cong wrote:
-> From: Yi Cong <yicong@kylinos.cn>
-> 
-> When register_netdev() fails, the error_register_netdev label in
-> _rtw_drv_register_netdev() frees the adapter and netdev via
-> rtw_free_drv_sw()/rtw_free_netdev() and then returns _FAIL.
-> 
-> The caller rtw_drv_init(), however, still holds a non-NULL if1 on this
-> failure path and jumps to free_if1, where rtw_sdio_if1_deinit() invokes
-> rtw_free_drv_sw() and rtw_free_netdev() again on the same already-freed
-> objects, resulting in a double free / use-after-free.
-> 
-> Drop the freeing from error_register_netdev and let rtw_sdio_if1_deinit()
-> perform the tear-down, which is the single owner for this path.
-> 
-> Fixes: 554c0a3abf21 ("staging: Add rtl8723bs sdio wifi driver")
-> Signed-off-by: Yi Cong <yicong@kylinos.cn>
-> ---
->  drivers/staging/rtl8723bs/os_dep/os_intfs.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/staging/rtl8723bs/os_dep/os_intfs.c b/drivers/staging/rtl8723bs/os_dep/os_intfs.c
-> index f31196f54b3e..ac401042faf4 100644
-> --- a/drivers/staging/rtl8723bs/os_dep/os_intfs.c
-> +++ b/drivers/staging/rtl8723bs/os_dep/os_intfs.c
-> @@ -773,10 +773,12 @@ static int _rtw_drv_register_netdev(struct adapter *padapter, char *name)
->  
->  error_register_netdev:
->  
-> -	rtw_free_drv_sw(padapter);
-> -
-> -	rtw_free_netdev(pnetdev);
-> -
-> +	/* Let the caller (rtw_drv_init -> rtw_sdio_if1_deinit) release the
-> +	 * adapter and netdev. Freeing them here would lead to a double free:
-> +	 * rtw_drv_init() still holds a non-NULL if1 and calls
-> +	 * rtw_sdio_if1_deinit(), which invokes rtw_free_drv_sw() and
-> +	 * rtw_free_netdev() again on the already-freed objects.
-> +	 */
+When bringing up a WPA3-SAE SoftAP with external (user space) SAE, the
+driver never told the firmware which SAE Password Element (PWE) method to
+accept. The firmware was observed to corrupt its heap over time due to
+this omission, leading to firmware trap (data abort in heap allocator).
 
-No need for this comment.  These weren't allocated in
-_rtw_drv_register_netdev() and no one really expects them to be
-freed here either.  AI always adds obvious comments but eventually
-the kernel will turn into the Terms of Service text which no one can
-possibly read in a life time.
+Parse the beacon IEs on start_ap() and set the extsae_pwe iovar
+accordingly: 2 when the RSNX IE advertises H2E, 1 when an H2E-only
+membership selector is present, 0 otherwise. This matches the behaviour
+of the upstream/vendor driver and only applies to SAE-capable APs when
+external SAE is supported.
 
-regards,
-dan carpenter
+Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 75 +++++++++++++++++++
+ 1 file changed, 75 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index d32b35ce0..335647916 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -60,6 +60,10 @@
+ #define RSN_AKM_SHA256_1X		5	/* SHA256, 802.1X */
+ #define RSN_AKM_SHA256_PSK		6	/* SHA256, Pre-shared Key */
+ #define RSN_AKM_SAE			8	/* SAE */
++#define BSS_MEMBERSHIP_SELECTOR_SAE_H2E_ONLY 123
++#define BSS_MEMBERSHIP_SELECTOR_SET	0x80
++#define SAE_H2E_ONLY_ENABLE		(BSS_MEMBERSHIP_SELECTOR_SAE_H2E_ONLY | \
++					 BSS_MEMBERSHIP_SELECTOR_SET)
+ #define RSN_CAP_LEN			2	/* Length of RSN capabilities */
+ #define RSN_CAP_PTK_REPLAY_CNTR_MASK	(BIT(2) | BIT(3))
+ #define RSN_CAP_MFPR_MASK		BIT(6)
+@@ -5091,6 +5095,73 @@ brcmf_config_ap_mgmt_ie(struct brcmf_cfg80211_vif *vif,
+ 	return err;
+ }
+ 
++static s32
++brcmf_parse_configure_sae_pwe(struct brcmf_if *ifp,
++			      struct cfg80211_ap_settings *settings)
++{
++	s32 err = 0;
++	const struct brcmf_tlv *rsnx_ie;
++	const struct brcmf_tlv *ext_rate_ie;
++	const struct brcmf_tlv *supp_rate_ie;
++	u8 ie_len, i;
++	u32 wpa_auth = 0;
++	/* SAE PWE method(s) to accept: 0 = Hunting-and-Pecking only,
++	 * 1 = H2E only, 2 = both.
++	 */
++	u32 sae_pwe = 0;
++
++	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_SAE_EXT))
++		return 0;
++
++	err = brcmf_fil_bsscfg_int_get(ifp, "wpa_auth", &wpa_auth);
++	if (err || (wpa_auth & WPA3_AUTH_SAE_PSK) == 0) {
++		brcmf_dbg(INFO, "wpa_auth is not SAE:0x%x\n", wpa_auth);
++		return 0;
++	}
++
++	rsnx_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
++				   settings->beacon.tail_len, WLAN_EID_RSNX);
++	if (rsnx_ie && rsnx_ie->len &&
++	    (rsnx_ie->data[0] & WLAN_RSNX_CAPA_SAE_H2E))
++		sae_pwe = 2;
++
++	if (sae_pwe == 2) {
++		supp_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.head,
++						settings->beacon.head_len,
++						WLAN_EID_SUPP_RATES);
++		ext_rate_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
++					       settings->beacon.tail_len,
++					       WLAN_EID_EXT_SUPP_RATES);
++		if (ext_rate_ie) {
++			ie_len = ext_rate_ie->len;
++			for (i = 0; i < ie_len; i++) {
++				if (ext_rate_ie->data[i] == SAE_H2E_ONLY_ENABLE) {
++					sae_pwe = 1;
++					break;
++				}
++			}
++		}
++		if (sae_pwe == 2 && supp_rate_ie) {
++			ie_len = supp_rate_ie->len;
++			for (i = 0; i < ie_len; i++) {
++				if (supp_rate_ie->data[i] == SAE_H2E_ONLY_ENABLE) {
++					sae_pwe = 1;
++					break;
++				}
++			}
++		}
++	}
++
++	err = brcmf_fil_iovar_int_set(ifp, "extsae_pwe", sae_pwe);
++	if (err) {
++		brcmf_err("extsae_pwe iovar not supported\n");
++		return -EOPNOTSUPP;
++	}
++
++	brcmf_dbg(INFO, "extsae_pwe=%u\n", sae_pwe);
++	return 0;
++}
++
+ static s32
+ brcmf_parse_configure_security(struct brcmf_if *ifp,
+ 			       struct cfg80211_ap_settings *settings,
+@@ -5124,6 +5195,10 @@ brcmf_parse_configure_security(struct brcmf_if *ifp,
+ 			err = brcmf_configure_wpaie(ifp, tmp_ie, true);
+ 			if (err < 0)
+ 				return err;
++
++			err = brcmf_parse_configure_sae_pwe(ifp, settings);
++			if (err < 0)
++				return err;
+ 		}
+ 	} else {
+ 		brcmf_dbg(TRACE, "No WPA(2) IEs found\n");
+-- 
+2.55.0
 
