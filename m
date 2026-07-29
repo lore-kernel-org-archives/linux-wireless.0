@@ -1,128 +1,177 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD104052CC
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 18:11:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A069451993
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 18:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785348691; cv=none; b=da3Kv8SyeCW6mDohniNNlysMmhw6IthAb6wVOgK9QSAJCBEA+DbgfI/jLF4BjyY3INPOQCK6MhuNo2QCMbc4MdEd0lkMx8tpo9beONP8ZLuOZ13lffy2LSnbHSSzMDhkTXixc9Ebyu7nrwS4qA2GczqNKMZXgb/R1E7MK05mJIg=
+	t=1785350240; cv=none; b=e3SGEJHXfSGl1BhtwPVAAdOC8Pjs/RtlEWSkvhixU75ku38msKv/F48FIRfNXHMU7pR+4gU6LgnYHwWrlqitCd+SsGVjg2Hug+CjGspwTLhdRKBdbkT/Cete15NNo4LqJPXb0ksC2EpwHM0f47tR2eCQH1ZEAPEF7b8aEGpA0Jo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785348691; c=relaxed/simple;
-	bh=J1YdDOLjvhqgPoiYF88zTnwSmsdQaX2EcyRup2NU+yM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BLliDDiR7sMCjglyAmeHsbrv3pj4ct0uCT2OkXvg/EtW/Zba90pLCRxynSgEw8DItsFMsn2xIi3ZjAskT+SFJVVcewlS/6V5Oi6pf+9UtQngokWhdnu2HaGXI7fRzzPVRXYvIfp+vvbkhG3kS6RxLS0l3WqKPw2uyp9LmtR8Xl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SQN/f4cX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=fuX18Dz+; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785350240; c=relaxed/simple;
+	bh=4P98aSbKBGaFkCj+9Z8F4SQSSnqALgFeDj729JAeHgA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LMoWSfkjy1NFplCzDLW65il05KtmGExPxtQWoASSSGUZbWa9KC4sdBUw+ctvaL8gO06fwLGYaW+6tmNY8sTlNMlIQd6iCWOA83U09CbqQVm5v2rn6WtJ3Mh1+N5H8wrsHp44RauL3EWtv1GpyeBgDTykco43H8cVovGyUxLss78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PwEZ0xkA; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SQN/f4cX";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="fuX18Dz+"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66TFFdnj2092386
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 18:11:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	J1YdDOLjvhqgPoiYF88zTnwSmsdQaX2EcyRup2NU+yM=; b=SQN/f4cXddpgRctD
-	6W3VavE99c2kl/qVLjwCiEMuxMtDNLGHJFmYuNZLlaOj0TZZE3WdRhnlJBxoi6JU
-	HVpKiLXPSrifJz941oYEorDFf67qXEF6y+Z7HIjTY5Xysb54aOKHMqt5j1+G2x1U
-	HzeBK4YrBEm6Rjm4Aa0Fijhd3xN3ekN8jSRJHzZfO1hKCsBiVMN8sR6ZE3hfujG3
-	wLk2HBJ9fwRRCXcrm7vyHLUEtk78h3tejkWSMJ9tJM2UHqE5TXIhpZjdhVfQcGlK
-	2TuktRA2oRTqN4mUcmQdHeANoKqYt7ssLUYPcDEAsp80UILntivxFg1USBoQsu9E
-	El/LMA==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqm0fh2jr-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 18:11:26 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cccfa32670so13681715ad.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 11:11:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PwEZ0xkA"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-cbb85186d43so657331a12.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 11:37:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785348686; x=1785953486; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=J1YdDOLjvhqgPoiYF88zTnwSmsdQaX2EcyRup2NU+yM=;
-        b=fuX18Dz+6Ba8BoD3pFVVrE0MeDJ16vzMVW5IcoLATnDtmQWeza/FJfeTdwwd62L193
-         QDeW5FTenpANgO3bVKfl4uD9ufL6eyY5jfXcYQSssF5o12yaAmWCPf3jEe9zT/a1Di1X
-         vbm+BBIGbLEIfA2FAO6xnattRHwGm1vryM7riT/EzdDp7V9xOsVQoiwVWBw3I5smObW9
-         KdGr6VswHC1oMayyEZUSei4PBv+G4EJ9pVDlIeU4VatRb2wC1pTFTcml1WWuKFA1GxNj
-         8KKq1hi2qW/lYvAWUe2DWYHjdQGjXE7lDmMQc4qs9qQSIsZPW4TCaNZqVO/TFsrBjMTC
-         4FqQ==
+        d=gmail.com; s=20251104; t=1785350239; x=1785955039; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=TKiRLVwj3NSxN3gEZDV7xpth8PKqEmNyRu0ElNGl93A=;
+        b=PwEZ0xkASSYe674ENRaXsVu9D5lUQjcKXrCTNqHJLiHWX4sqo9EZ2/VomqGePiODK6
+         5fFnbHWBU92MpTOkHoWgikiS+PlNqygQC/yScvv1uYyiWDSMNe5rQbImbvCZvWELQarF
+         ysEgXEwzSIWf3rOYnLphsGkBrRXrxI5nEZZMs3vxX/UnRoBjS+XmocsUF+YhzGxZRyUu
+         unwdwCLKwu2cfqR1GiDMWFuc8g93uB/G8EmVCvJfmpCgFyiI/02h+qico23lixDuPiM3
+         5zerkbmaXFvr+uzGbTZckwdkE4HJQ73WldgkojKc6gpcFpbu8dm6lOCj+r4ql1UcUpVs
+         3vJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785348686; x=1785953486;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1785350239; x=1785955039;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=J1YdDOLjvhqgPoiYF88zTnwSmsdQaX2EcyRup2NU+yM=;
-        b=T++1HYHLF/X2bHQLfVllbmMTOK4+QqTEJcuVGoVo5XHAoxNurfiMKHXYVFzvJ0E4yj
-         NOR2deoR3W6nLhAkSQJ1/EsH7PIIoCgPG35vl3FVpesYLjwfd0XinR/amvt6HTnZGmI5
-         j8nOWUcea+C1l1ZCuSuQLxMEuy0flLjUv4xMYRAdVeZkf0swgrTWx8ekEWS2eLiuaCn8
-         tG3a1SoxKtjiBvCXHpuOxyVHKgAxo5HvOLXvqaDqQ9Klv4QmW3W//XkC8oOcjwnohOb3
-         ngaEoF6S/xCrefD/N2eYHLoedm77QxCUMVPZ740N0wZ+KqSl6RYlMHR+MQgjsT9ZrgnP
-         jicA==
-X-Gm-Message-State: AOJu0YwBChuOl2lq7FIxpqveVvs1QtuTC0+Z0j6tXhHVaP9ILttJQyD/
-	tMYahdXwlu8Uw1nN5QXJYYpPUFg8ktfFV9Hb/peDQsyWhZEHVfxRqONiZ4jNOsO0Fv0Ya8K+AzF
-	y22n2i9IH9vN4BWj3ktEkYBRv1B1SupGup3uaXUXPtejWImBE2g6+nsS+ldgcqqoewNBIeg==
-X-Gm-Gg: AR+sD10MEfpY8/VJaixJL8mx/PIfqdOuO9kX3nRP+SqLYUorEvPFG1CT8zmuLZ8/iA7
-	Kp7+K52yMfxhbnB/482//IqWe4qLa+/SyIt/ZGPfksq/X6ijFgGvGFPXzW7nT9tLnnqO3fDz/Qn
-	uQxOPWIqn9SknmidPMkMtEfW5geGx/Ks7Q/QQzP8TiIpEgkFh+kM7bbPHocdXQB9cFVt0ggHYdl
-	MQo1s5BFvhdF/iZn1ZnTu5yfiON0Hn059Z6ni/6aaZaoUIc/A2IT0+tz7KVNo099ktYlagRkFFy
-	PpEKcf6Qt8fLtduE4/jDbMTcwE0OWWlLEBRZ52Wl0ZXRZRVkr1XEBWzONqkT3hYMaQ3KtvFOoGI
-	+m4hPmQZVMqr0h4N3Be7mR10k6/xGwZKAyiSU3FQVvJ7hkbSRCdRcCH/If51V
-X-Received: by 2002:a17:903:37c5:b0:2ca:e62c:9e96 with SMTP id d9443c01a7336-2d015b0021bmr83034465ad.5.1785348685729;
-        Wed, 29 Jul 2026 11:11:25 -0700 (PDT)
-X-Received: by 2002:a17:903:37c5:b0:2ca:e62c:9e96 with SMTP id d9443c01a7336-2d015b0021bmr83034165ad.5.1785348685262;
-        Wed, 29 Jul 2026 11:11:25 -0700 (PDT)
-Received: from [10.227.110.203] (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31504b1246dsm11149180eec.2.2026.07.29.11.11.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jul 2026 11:11:24 -0700 (PDT)
-Message-ID: <41a1de7c-5366-479f-a1f9-171d2c0fead7@oss.qualcomm.com>
-Date: Wed, 29 Jul 2026 11:11:23 -0700
+        bh=TKiRLVwj3NSxN3gEZDV7xpth8PKqEmNyRu0ElNGl93A=;
+        b=S/KdcKA+FHF7z7Sxa2DP0BokGUBJDL+tWF90IHIFtOhM1tx6Q/WqA23QY1LeGFVWrj
+         qG7oZtErdykTwKsx1KJT+iZQpvgBTmNb0cKbYD3KoMOKyGfZzcNdQtl+StaCqqYv8VPz
+         LyCHjqDPln0frJpyJSBjocueVyKVs+SfkHA9JYudvRByokeTdoNdiD/9HnS/xqVyizCC
+         dgKjrcVHJ7VBwFrrcVZd3MwArjbrVOdioZQ503icr5Pz+9vske+lmT6O3I6bk0hW1Mgp
+         rV0vsxP9+3aRsZtqSnRhdF59Z6Xz3ml1D/hETf44GJ61Tt5hFJyOwTCFXTTyShsjhnvv
+         VhAQ==
+X-Gm-Message-State: AOJu0YywVKh0xYXK7iXnio6xxUh/O8ZzGrigxIyveoDek+6Mf91lcfq2
+	PZpriMtoV+zvXsswtAbop44iRwWS3p9coMRGsVR7uheMVWiSUzzmtKRLH06EFiqf
+X-Gm-Gg: AR+sD11LlUHmjs7r0wztaESzlX6/00zwJsm0PR4koaJ8RPTxyJndvnBvsU62+jcqlKM
+	Yldk95vp65fH5mTX/a2MFqp1lVCqazfF6xcqQf+VvepIDnJsNwnW76A0wJT4k5zhRvVbEF2zpoG
+	+9nZaxiVsLM6oPF3Z9l58prNqUVxUQffwX7C0kP2tW2KpnrWWVyWWsrlhRCyjQXNR3qE5lOQ4E7
+	cmW/j4sBCW/hfeeh/R4KguhgGr073tVDn2SVc5xiqYl0N7sjedGs4eABCPIHDVDxG0nHym2q9J1
+	zJPnCERY9Xjdwe3wGTYTT/anmnGGveNWrNOMLZCV6OrjHM1EXLrJnEKZq2ZlcnirAlsiJsktNtE
+	ml8zjZU5lgM81pZKh4xaVTRpa0oR+c5nRQtbbg/o1Hh0/bI+B3q4FcFw6gv/sfVZIMFpMz+xLq/
+	6C4Wq77aD/QqlIX2K8xOqtfwdiqTADTdIuyBw8nelIjIzUtgRpc18ol+n91h1PsvxtbfJBzYl81
+	JC5qTe+mf5cgAkS4atenMO7QW0H18hcsDaQ0U4HwEaPF9sjJYx+rd9wWdo5MLBeaWjVzjWikTXT
+	kUV7NrJhK9PNYEoinrm4VBVCdly7TWW8CV1Sxg==
+X-Received: by 2002:a05:6a21:7106:b0:3c3:7f8f:88c9 with SMTP id adf61e73a8af0-3c8ba616cf1mr8675488637.54.1785350238739;
+        Wed, 29 Jul 2026 11:37:18 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbdba63d2fesm1312154a12.27.2026.07.29.11.37.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Jul 2026 11:37:17 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jeff Chen <jeff.chen_1@nxp.com>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-kernel@vger.kernel.org (open list),
+	linux-hardening@vger.kernel.org (open list:KERNEL HARDENING (not covered by other areas):Keyword:\b__counted_by(_le|_be|_ptr)?\b)
+Subject: [PATCHv2 wireless-next] wifi: nxpwifi: embed rx_reorder_ptr
+Date: Wed, 29 Jul 2026 11:37:15 -0700
+Message-ID: <20260729183715.691287-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-current] wifi: ath11k: reset ar->num_station on
- hardware start
-To: Nicolas Escande <nico.escande@gmail.com>, ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <20260729080932.3462066-1-nico.escande@gmail.com>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260729080932.3462066-1-nico.escande@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: baOLl7yNUNAaqMy3KmGIgzlJoZ3CzlUU
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzI5MDE0MCBTYWx0ZWRfX3niPaXGFf+Bm
- RqwUIZcsEw4NjKCcNlLVujlPM7hhnHxtVmrnRTirONdmzZ+QjICuA0VB4pk2KE5CfmZWcrXFfVT
- cVSym2A/MQ1m2HScPTSqduRxGidsI+8fFWT8nzHTMygDAi6mbrBTj+SFaErnil5LyaPMD6CbRYk
- f0uewAoxX/nJ10XSQg6ua/EgkhqQEB8+T8sKPAFXrI/lHPeANAX8QDhsIVhvlG9qivOfuFNOltf
- R/4YuFGp6vfHoBu1yvpWmDHt0EN7f89/ZotKMJa87b3+YmOpYefH+3a9nFqllP5l1KMqcJT4hGe
- EN4fvkWR4MoP1rNdJSLo1AFsuwjZ5wtY4St3C7tMCz/fYEm4Ar6P3D4bL7LLQkzjm8V6cO7tsrh
- cZXl3Vw2vng7x0BXTvKIWpntS6TD/08Nadd8a7I5FjP4nGU0tEECmFjkmqE0o7Q1m+UWalbEbp3
- A2YBoAcWNLW+mDusLJw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzI5MDE0MCBTYWx0ZWRfX+rS67SaBproD
- MwJsb5S51+Oh4rgebChaRsGzlKGtjfM0eZ0Mj8l2Uxb5jLwlKTSiyW9m1sZDt/3vcZeMFflr2Go
- nPLwu/zaksqPLT0pX63jr7aUrKVsHkk=
-X-Authority-Analysis: v=2.4 cv=LvuiDHdc c=1 sm=1 tr=0 ts=6a6a424e cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=i2L5d_RL8Kv-G60V4MAA:9 a=QEXdDO2ut3YA:10 a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-ORIG-GUID: baOLl7yNUNAaqMy3KmGIgzlJoZ3CzlUU
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-29_06,2026-07-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 priorityscore=1501 lowpriorityscore=0 suspectscore=0
- adultscore=0 clxscore=1015 impostorscore=0 spamscore=0 bulkscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607290140
+Content-Transfer-Encoding: 8bit
 
-I'm guessing I should drop this in favor of the one sent to the ath11k list
+rx_reorder_ptr is a dynamically allocated array which is done near the
+main struct allocation. Combine the two to avoid freeing separately.
+
+Also fix the type to what it actually is. void is normally used to avoid
+casting but there's no need here.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: fix unused variable error
+ .../net/wireless/nxp/nxpwifi/11n_rxreorder.c  | 23 +++++--------------
+ drivers/net/wireless/nxp/nxpwifi/main.h       |  2 +-
+ 2 files changed, 7 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
+index c5819f89b08c..65b628411543 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11n_rxreorder.c
+@@ -171,7 +171,6 @@ nxpwifi_del_rx_reorder_entry(struct nxpwifi_private *priv,
+ 	list_del_rcu(&tbl->list);
+ 	spin_unlock_bh(&priv->rx_reorder_tbl_lock[tid]);
+ 
+-	kfree(tbl->rx_reorder_ptr);
+ 	kfree_rcu(tbl, rcu);
+ 
+ 	atomic_set(&priv->adapter->rx_ba_teardown_pending, 0);
+@@ -262,7 +261,6 @@ static void
+ nxpwifi_11n_create_rx_reorder_tbl(struct nxpwifi_private *priv, u8 *ta,
+ 				  int tid, int win_size, int seq_num)
+ {
+-	int i;
+ 	struct nxpwifi_rx_reorder_tbl *tbl, *new_node;
+ 	u16 last_seq = 0;
+ 	struct nxpwifi_sta_node *node;
+@@ -273,11 +271,16 @@ nxpwifi_11n_create_rx_reorder_tbl(struct nxpwifi_private *priv, u8 *ta,
+ 		nxpwifi_11n_dispatch_pkt_until_start_win(priv, tbl, seq_num);
+ 		return;
+ 	}
++
++	if (win_size <= 0)
++		return;
++
+ 	/* if !tbl then create one */
+-	new_node = kzalloc_obj(*new_node, GFP_KERNEL);
++	new_node = kzalloc_flex(*new_node, rx_reorder_ptr, win_size);
+ 	if (!new_node)
+ 		return;
+ 
++	new_node->win_size = win_size;
+ 	INIT_LIST_HEAD(&new_node->list);
+ 	new_node->tid = tid;
+ 	memcpy(new_node->ta, ta, ETH_ALEN);
+@@ -311,26 +314,12 @@ nxpwifi_11n_create_rx_reorder_tbl(struct nxpwifi_private *priv, u8 *ta,
+ 		new_node->flags |= RXREOR_INIT_WINDOW_SHIFT;
+ 	}
+ 
+-	new_node->win_size = win_size;
+-
+-	new_node->rx_reorder_ptr = kcalloc(win_size, sizeof(void *),
+-					   GFP_KERNEL);
+-	if (!new_node->rx_reorder_ptr) {
+-		kfree(new_node);
+-		nxpwifi_dbg(priv->adapter, ERROR,
+-			    "%s: failed to alloc reorder_ptr\n", __func__);
+-		return;
+-	}
+-
+ 	new_node->timer_context.ptr = new_node;
+ 	new_node->timer_context.priv = priv;
+ 	new_node->timer_context.timer_is_set = false;
+ 
+ 	timer_setup(&new_node->timer_context.timer, nxpwifi_flush_data, 0);
+ 
+-	for (i = 0; i < win_size; ++i)
+-		new_node->rx_reorder_ptr[i] = NULL;
+-
+ 	spin_lock_bh(&priv->rx_reorder_tbl_lock[tid]);
+ 	list_add_tail_rcu(&new_node->list, &priv->rx_reorder_tbl_ptr[tid]);
+ 	spin_unlock_bh(&priv->rx_reorder_tbl_lock[tid]);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/main.h b/drivers/net/wireless/nxp/nxpwifi/main.h
+index 4abf80771be2..349dfa4d3f85 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/main.h
++++ b/drivers/net/wireless/nxp/nxpwifi/main.h
+@@ -656,10 +656,10 @@ struct nxpwifi_rx_reorder_tbl {
+ 	int init_win;
+ 	int start_win;
+ 	int win_size;
+-	void **rx_reorder_ptr;
+ 	struct reorder_tmr_cnxt timer_context;
+ 	u8 amsdu;
+ 	u8 flags;
++	struct sk_buff *rx_reorder_ptr[] __counted_by(win_size);
+ };
+ 
+ struct nxpwifi_bss_prio_node {
+-- 
+2.55.0
+
