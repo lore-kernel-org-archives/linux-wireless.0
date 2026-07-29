@@ -1,165 +1,118 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD900429003
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 08:57:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785315467; cv=none; b=JXSS/Is+WIeSW9PypBB2OA/L0FxQpgy/AMSjLrf9c7u30f3jsVnycIfkGUFNnpkuB3/HDGS3S5qicOUDX41FPouqhw9cadAvTCI5mLISG3Hd+dGwvlqqJMvL6YOgGU/yrVueBLslXQcAUFe/SH+FFW/MjIFoPPKJtUCqAJN6N20=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785315467; c=relaxed/simple;
-	bh=LnrIl9n8Waw67xWX/ez9Lp1twG5ExZPatFbFQOgEmsk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JtnPxMVw3H2c95yGwx1A0IUVCEb/rYHdmJbpTtZdP7deCCrzoVlB2i/qzZm1Sg2CY6RadiMO92fdFRYDHPC/HE+JxmwUjlko8/mOTfnOzwP/3xhy7EOiZbCQ/bX6KdjnUIcFmh2Jb5cVgBgTt5skKKTwqtxMoCGFdI+Dm/YZziI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DZ4l9eq8; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71CFD43F8CB
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 08:59:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.215.175
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785315575; cv=pass; b=eG9al7yDyFzwKzSXYioH/dAPTUlQNRN5oZlf1NQlexSWkYAFx6Dhp/X+TFKX//8B81GppOHDa/b7lHU5BhC5/xFjz1bVv/F8dJiYCIcDfDl1iwiITpBaqKimD/kj+Rh1TMgBVAH8lJt11mg2ltnFOTjmTEjcStKS1gY3uGfSL9Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785315575; c=relaxed/simple;
+	bh=eL5o/U4F6LVrV7LPnpLyFghjh0EbsFFgFHArnrgIKqc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AoIGLpH4Z5OhxZOymd2X9OQN3N/6vipw8ExkqfBozffFPlDX6IWfnSdDnVjTslfTSZtfGPjGf0ZggMGfaPR0gWpT00l1r27TZMygYQNmYlDHe1JzklAnwZo3VJ48UJefekjBn3rCQUnTv42pp8ts+X5okBYBFrmtafay8nRF+fw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=Bz4ZhGn3; arc=pass smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DZ4l9eq8"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4956869750eso4880745e9.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 01:57:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="Bz4ZhGn3"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-ca97d139d8dso392182a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 01:59:34 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785315574; cv=none;
+        d=google.com; s=arc-20260327;
+        b=HhxjUwnKq7lMMUA0MouuhEyMpFPqUpbWpfK7OdMWzcd8IgbgV8haLRGVyIMkSSL3Fv
+         MKPjCLk8jWY6vZB0vyp2jQ6nxSKvlJxh/FdaLcXKYFWPuN5RjxK1K5eTx0orOSz7eBYa
+         Zbl1c1oQYMlVae1TbIT+/zgjTRMNCWjAskytUxQjJ1/nUljMDr+7CzWETglUmVcseP4k
+         lNhNUFWwg1lbG7s+oPP1JrcpkKaVCzn0CIcqFd41cJdv7Cl4O1TDFpT/eJLRxqYJxexi
+         /ErIn5EyiexkloqdBkR4tciQoLH/c10NZYZGd451AT/aR0sgvN84Gm1EgSG6+pi4I0lT
+         iHkQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=eL5o/U4F6LVrV7LPnpLyFghjh0EbsFFgFHArnrgIKqc=;
+        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
+        b=Soe7FS0vbbt1fvyoclTpKJhSYWbpuApLbLv9fHqOrgHwFxWUVRUcc/U8dscakay+Su
+         0KQYexjKyOuhXp7unrE7oRPrZ3fK33nm6M2a54GMeRnAJ2Z8bVuj8ZRlGQO413JYSDT9
+         hpfczggWp9EB4+EAuY8Q/CWi0ecJh367BRnSaxqhBK7L7Ldd1joExWVCnner+CuSm8Er
+         m3I1Q/T88MY58SwrnLLVXbFJmc7EDSq/LJcmdyXl2YR3zEILU6KwO6f2xrHh3bsnBgzY
+         +MwiAYARqn00Ycg97kPe8N8KbYMYxuk02a2o5VG86YOFZpjf7fzXUjuTTkCEIOi20Xxb
+         28xw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785315462; x=1785920262; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+tWtt5LHOZ3EZZG9CR6BME0z+/0CE+s/sYD1S1X5wvU=;
-        b=DZ4l9eq8KOi553AJVIB7Ypp6TtMIpf7kK4GaH4LgHG/+u8ONtVkoVbEw/pPT5nyIED
-         rABF6Q6l+Ap4xKQo+3pO5oaBNX9W1k6hsFoDtzYuWwTnJGK/8KsKQhW70RquTSfaAUGt
-         ngVW4s9A7lctz+GgmP0uhAqWSSVuheDzVLzx+SKTJ3imHopxpvd5JzS1zgk9wfcfzB7j
-         zTcOHJhxR7DHoji8fsCqfkoYfNFC8OT6HUGwaNgd8Jp9TJWIaYQ5dQPrF8gu/jD3dRwU
-         y1n3sLGxsJ+DbxS3dOujv78mwyoP2HzAH+h9xvO7uYUSsf6Bjd/VNuw8NOW6XlO+Cvrh
-         lBAQ==
+        d=googlemail.com; s=20251104; t=1785315574; x=1785920374; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eL5o/U4F6LVrV7LPnpLyFghjh0EbsFFgFHArnrgIKqc=;
+        b=Bz4ZhGn3TUh51o2tAv+dgRDdI7Xr8MrOsxQ4Y7msi1+SDIN0123gxBmRvhNr+T0A8j
+         qRqmxt3aJPWB19SX2PE1uzb/Ps9jGvIe2YIP1ygtvKLAAh5FK+kMGFlT3wNXr7dFW9oN
+         WhnNDD1O5sFPcb0Ruc6mqUrZ9o7C2o4hEbLjpBPA0R6Yf0D6slUbYPvjFhpBbJOxEJMH
+         U/btrE01+zPyFJXJF5adIpJdSHgfca0x1kqQuA/8mmsHGefmNmwzYLcZ0RYZezyiqtgs
+         FyX3IWEOthZyS0udk+u3i+33pKcTRHwFtqwE4n7VXagQoo7BQiB7MmW7VZAwNh6Ex6UD
+         sE0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785315462; x=1785920262;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=+tWtt5LHOZ3EZZG9CR6BME0z+/0CE+s/sYD1S1X5wvU=;
-        b=U/Bk536Y+mlZFvHWpAOjmKhFmX8YFuK+eYxywPt4dhS7vag+Gxj5GHkns0KktCi2c1
-         uLAsqw8JrAaXsCvrJkHp3j0kHRJM7a5L5Os4mmfCF6kUlgdXEoW0sEtBkA8RLJPLr8Id
-         nx4kK0HfXIk5Gq2zvj/wHvX5qj3gmmRUuoHIXLV1XqSrGheK3aCg/23gTWdKJt52yjqu
-         zdFGJ6X/zyIZ3k7aFdNSuifaVOkTnitc2lUmffgYnNRPQ9qS6jKQwpRBfyVmh5Isnrsg
-         ToEbZrE7YQThfRl1oxBcwrj7edeHWU17icM+pLqKLZl0OecpU7Itu6Jv2mVQNr/UaNiS
-         ADYg==
-X-Gm-Message-State: AOJu0Yw7wjghi2umn5/6oMJuyh+V1pax70gPnV8oTzHu66nT7DndYCMr
-	KgaCDiIPT03m22bLowTmmKlpb6EtPiAoT4MkGcyXvaI1LjxQVQXvG/sK
-X-Gm-Gg: AR+sD135KmSs6aXDxHp7zQoRMleMQG547NalQIqmA5D9Ny0FTcdT0+UNutUfQz52hrX
-	3JFYo3rvKJavsKQ0JfXcFJ8AMg0SId701vz726rsRHY0Igmur2qC1pYOJdhKEikd+aGZgjKpALF
-	QIPR/4R46XBLgKulbI35bXmv3kCf6ENSXkKznhxEXCSLNNAnSD1kalvWo1fep4mXWE7VCVj+sP6
-	oWlFzHJgwB6FmFJEPPTniqk2jPg7SrMNYddSvrX9w3945TD4hV5RwR2UJLh9A6hpY0Zv2KUldS2
-	dNmKwKCjFavxjgLd4W7xpe3zu1yvZjw//BCftkn2WVs2cZdXpO3/cbBbuPnY4tNzouBoLU6PyIA
-	lnDtTfuoaqlNHMUNcu29Mu3xKAsW1f14HPeQdGaJ1GYA5stHlyP25nnTuvJkUMRtZbcG37qGN4f
-	Xz9CUxO8ygHhsy+OnL44FurwtCkrD5ovLKjbvUaKvkWEkMylRoN1lAMudVKtwZl3eyRKySfolXm
-	+EaDNpF83b33iMyXgwIAg==
-X-Received: by 2002:a05:600c:46cf:b0:495:699:84ca with SMTP id 5b1f17b1804b1-496c657391emr64189195e9.28.1785315462175;
-        Wed, 29 Jul 2026 01:57:42 -0700 (PDT)
-Received: from syracuse.iliad.local (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-496c45b1c2asm138614115e9.5.2026.07.29.01.57.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 01:57:41 -0700 (PDT)
-From: Nicolas Escande <nico.escande@gmail.com>
-To: ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Maxime Bizon <mbizon@freebox.fr>
-Subject: [PATCH ath-current] wifi: ath11k: fix locking problem in ath11k_dp_rx_tid_del_func()
-Date: Wed, 29 Jul 2026 10:57:41 +0200
-Message-ID: <20260729085741.3485711-1-nico.escande@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20251104; t=1785315574; x=1785920374;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=eL5o/U4F6LVrV7LPnpLyFghjh0EbsFFgFHArnrgIKqc=;
+        b=iuQNKeQXBiO08Q7MhqhxhCzznB2RxTj/4/o9x/fJ3m3A+qGtWaF+T1mP4eKXu7i5d9
+         K8xNq9gX54CsQ3UvAAZ0WMD5kfCanoWM9ptdlTOY/B52ozW1MLbFMEwrmtj0kq8OSrHz
+         1EVZivTvVCh0UBYnSVMXWJy9tVnpqf+8V6n7NzK7zDKqxBG5kMKy9fJmW3+NIoGFPFNq
+         HfoiaDWcz7XvzPZEiANlULo4GDq1lCg9RfqX3HJOC6Y+swzlQi2Y25xMA5sQgrdBFc1d
+         Oy+K/nRbwpU7T3dRvM/7JDfmeXESV8tu/oPgtEi/PnRHsX31if43S6xifzSmAINew+lC
+         Lvnw==
+X-Gm-Message-State: AOJu0YzAEUShREN/G/rOyt2DbLeRw/zBk1wKr5zlFAEJ7icS5IG7lFHm
+	ELla1utdDLoVqv8AcRXYhk4brHON6T2Nak6rHTN3JYjOJFsBjukwOvDHjG7WdwETiWhkO0Ozo/Z
+	Q2atZmssmXTxrd6LnuwN3mut/fA5UZ0E=
+X-Gm-Gg: AR+sD13xinhLAb/VOS9gzjmN7XXCJ0BVjNKjjiCy9c07nA5PqoSWV91m1geTtSiih9G
+	hH7zKrPOIeVtKaa7TFSisjLEbJEUDzNvnLPbA2Mujie/YNUWwzahHwxQSMcDfm3egHQR4Xht3Q8
+	n89Oi/WGOkwT/ge4UFJ9a4mPTVn6h5A2Z8QFbIjGMZWVn+crofzUt6h1PrGUlb562nCF3D1RwSh
+	vrAnMh2kiQE9TuvDUWAutu+SXR02g3+qXq7t4n8O20mfBgWkro3j8V9VLgFod8264UfrGlz3n7S
+	EEPbcQ72Ys7QpPxZvPJpC84QjIx5n/YOV0fpFEpIQBxrnDXFQCYN7GuR9lc0B5XXJ++NJWxfYqt
+	69Hbv7d8GKaGWsqNQ7XjFpSxbQfKD8ws=
+X-Received: by 2002:a05:6a21:490:b0:3c6:56b3:54d6 with SMTP id
+ adf61e73a8af0-3c8ba6273b9mr6971419637.62.1785315573568; Wed, 29 Jul 2026
+ 01:59:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
+ <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
+ <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
+ <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
+ <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com> <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
+In-Reply-To: <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
+From: Adrodoc <adrodoc55@googlemail.com>
+Date: Wed, 29 Jul 2026 10:59:22 +0200
+X-Gm-Features: AUfX_myseAyWx6oeg122gRez1UFPnlANk1nQOFiT1oeFI41RLMBxOlPNwvsCW9Q
+Message-ID: <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
+Subject: Re: Error in rtw89 using Kernel 7.1.4
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-From: Maxime Bizon <mbizon@freebox.fr>
+For some reason the first link I sent you is already dead:
+https://paste.cachyos.org/p/7f39b6e.log
+I don't know how long the retention of these links is and apparently
+there is a mediatek.com policy preventing mail attachments, so I
+uploaded them to the github issue to make sure they aren't lost:
+* https://github.com/morrownr/rtw89/issues/116
+* https://github.com/user-attachments/files/30497149/2026-07-27.13.02.12.7.1.4-1-cachyos.log
+* https://github.com/user-attachments/files/30497150/2026-07-28.19.40.14.6.18.38-2-cachyos-lts.log
 
-In this function, we iterate over dp->reo_cmd_cache_flush_list using
-list_for_each_entry_safe(), and for each expired entries we call
-ath11k_dp_reo_cache_flush() then free the entry. As this can be called
-from multiple CPU we protect for concurrent access using dp->reo_cmd_lock.
+Unfortunately I no longer have the log file from 23.07.2026, but the
+one from 27.07.2026 used the same kernel version.
 
-The lock is dropped to call ath11k_dp_reo_cache_flush() and taken again
-before keeping iterating over the loop. That is broken.
+> The RTL8852AE is supported since kernel 5.16. It will help if you can help to bisect the version.
 
-The list_for_each_entry_safe() protects over deleting the entry being 
-iterated over but does not protect for concurrent access. So another
-thread might have taken the lock in between and modified the list, leading
-to a crash (see bellow). 
+I'll look into it and report back if I have success with installing an
+old kernel.
 
-So fix it by restarting iterating over the list from the start once the
-lock is retaken.
+> How sure why the disassociation doesn't present in 7.1.4 log.
 
-	BUG: Unable to handle kernel paging request at virtual address 00000010ddbeef8c
-	Mem abort info:
-	ESR = 0x0000000096000045
-	EC = 0x25: DABT (current EL), IL = 32 bits
-	SET = 0, FnV = 0
-	EA = 0, S1PTW = 0
-	FSC = 0x05: level 1 translation fault
-	Data abort info:
-	ISV = 0, ISS = 0x00000045
-	CM = 0, WnR = 1
-	user pgtable: 4k pages, 39-bit VAs, pgdp=000000000593f000
-	[00000010ddbeef8c] pgd=0000000000000000, p4d=0000000000000000, pud=0000000000000000
-	Internal error: Oops: 0000000096000045 [#1] SMP
-	Modules linked in: ath11k_pci XXX
-	CPU: 1 PID: 1775 Comm: napi/-29 Not tainted XXXX
-	Hardware name: XXXX
-	pstate: 80000005 (Nzcv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-	pc : ath11k_dp_rx_tid_del_func+0x164/0x3c8
-	lr : ath11k_dp_rx_tid_del_func+0x2a0/0x3c8
-	sp : ffffff8020c2fb90
-	x29: ffffff8020c2fb90 x28: ffffff80207ae910 x27: 0000000000000080
-	x26: ffffffc00861ebe4 x25: ffffffc008cefb88 x24: ffffff800d701b2c
-	x23: 00000010ddbeef84 x22: ffffff800d701448 x21: ffffff8030e22d00
-	x20: ffffff800d700000 x19: 0000000000000080 x18: 0000000000000000
-	x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000
-	x14: 0000000000000026 x13: ffffff801958a100 x12: 0000000000000000
-	x11: 0000000000000001 x10: 0000000000000001 x9 : fffffffe0081eba0
-	x8 : ffffff801cc49300 x7 : ffffffc008f87130 x6 : ffffff80207ae900
-	x5 : 0000000000210d00 x4 : 0000000000000000 x3 : 0000000000000000
-	x2 : 000000010024519a x1 : 00000010ddbeef84 x0 : ffffff800d701b08
-	Call trace:
-	ath11k_dp_rx_tid_del_func+0x164/0x3c8
-	ath11k_dp_process_reo_status+0x1d4/0x2fc
-	ath11k_dp_service_srng+0x334/0x338
-	ath11k_pcic_ext_grp_napi_poll+0x30/0xc0
-	__napi_poll+0x34/0x184
-	napi_threaded_poll+0xb4/0x1d8
-	kthread+0xdc/0xe0
-	ret_from_fork+0x10/0x20
-	Code: b946e2c0 7101001f 54fffe29 a94002a1 (f9000420)
-
-Tested-on: QCN9074 PCI WLAN.HK.2.9.0.1-01977-QCAHKSWPL_SILICONZ-1
-
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
-Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
----
- drivers/net/wireless/ath/ath11k/dp_rx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 8e2abc7b8383..b8f939f7c04b 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -784,6 +784,7 @@ static void ath11k_dp_rx_tid_del_func(struct ath11k_dp *dp, void *ctx,
- 	dp->reo_cmd_cache_flush_count++;
- 
- 	/* Flush and invalidate aged REO desc from HW cache */
-+retry:
- 	list_for_each_entry_safe(elem, tmp, &dp->reo_cmd_cache_flush_list,
- 				 list) {
- 		if (dp->reo_cmd_cache_flush_count > DP_REO_DESC_FREE_THRESHOLD ||
-@@ -796,6 +797,7 @@ static void ath11k_dp_rx_tid_del_func(struct ath11k_dp *dp, void *ctx,
- 			ath11k_dp_reo_cache_flush(ab, &elem->data);
- 			kfree(elem);
- 			spin_lock_bh(&dp->reo_cmd_lock);
-+			goto retry;
- 		}
- 	}
- 	spin_unlock_bh(&dp->reo_cmd_lock);
--- 
-2.55.0
-
+That does indeed look strange.
