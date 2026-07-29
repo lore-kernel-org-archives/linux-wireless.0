@@ -1,70 +1,84 @@
 Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 896CD379ED2
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 17:36:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDBFA379ED2
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 17:36:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785346580; cv=none; b=Zl6qAbyqT9Jy4UD2SeLcsCOQma35piX9y/SYJlgq/Aq9ywdnW+FEN0VqagLXnkYDlcPEpEnCoO8dKicrgzBffNN6GEgWSal6sgXrhGV7bt6Rf5xhRhmRzaRNelGhjii894O+kzhSCIY0CRtfHh9IudZLkclw08Jpf60wxCU1FZ0=
+	t=1785346603; cv=none; b=LGijlAt3UHwMAeB55rCQ2e3ISUTZgjNK1TUk8++jfUFNXWg1c7JHvWElqtyF/bh7HfvraUSvP5Wb2kDcar8zE5rmOl66UIyba5p0EfPSnB/NesGnaiEcvX+c/UjUIIN/U7q1q6mc5wFFv95H+Ej0NTN8PY6QBhWD+ozlXd88Rkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785346580; c=relaxed/simple;
-	bh=V+iuPuLHAKheUEPYobZhw6wwlEloMhRxcZxA6HJh9OU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=A4lD+yxLtfdTovlU8EwmHFcWVFNtOT9Rxa4p3stVob9i10AhD3wPJhFlF7am4wj92sjIUZDlzmpq3fG72z+52ETeBw1f7Z52lmnd3p+Aaxfy7xUI3xoEqYBnZAuCO9HVBVqOu+gghjDr3OfyOuiXps0LsyraextVjE3xwQ0z5v8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rrfikCn7; arc=none smtp.client-ip=209.85.214.182
+	s=arc-20240116; t=1785346603; c=relaxed/simple;
+	bh=IWqDuURRcNsyW45L8LWTkRCh6zzFVXVXKphIqjNwpAw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jdf+LoTKHky3Losamy68suwF0klortn6yOIvgYLtG3Ef5dulWYvESsbk/tTPWqwIukHYNgP0aFbDrcBi5tFiUHntSjNGCwdX1DlOTSlYt8/CBrqAyuRuU8LqGksw0Sl2fwJI3zdzWcCr3xS9m8TNa7cfUYVFbKT5VEoyAQ1f/os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ufm/PEEH; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rrfikCn7"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2cca0c5799eso13107335ad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 10:36:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ufm/PEEH"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2d032846c95so81985ad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 10:36:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785346579; x=1785951379; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785346601; x=1785951401; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uhRNnUu6v3iXVOcCWlWtprydRHy1s6GXmSq+3+8Dmcw=;
-        b=rrfikCn7qCxutd36XAPUqKbenIIe/7PaTgMSAW0a49yvHXylEDAYWdx4KnzZpn6Yw7
-         XXmOP4Oofd6cPia7bLmrjkxHCPR4HtIxuXdlH4fWHD10g2P2BIFxQo7/NeTviWi34JCp
-         0O6KwncFdjfx9aSKPlDtsfDHkUKh3KU3qtHtCUbFNqE+Ty7RsAdI3pT+YsV6G/CKqZPL
-         Y1BWNOtLNA1zHylQznE7c8qNsrEeF0rIy7nfFZ15zYv0wroeaV3el8rQI1q0SDq2/Sdx
-         ziFTe5L8cdVuV278SSS7cL9EIoHvxRHiUofiLyfsaoiJHkxPkQNqQeSC03lQIiU05047
-         16eA==
+        bh=r9lmLVYjr93Girs1odAHEeMDnIJQvCQg1I6d0OHkOeA=;
+        b=Ufm/PEEHKjZv7FmLD6gPKLRdkXNa1rPH+nLUatyKque4lxIcwXH2PjRIr22DNxlNHi
+         mL1Y/SDVn5Db2BhNp8wfoPZuL6yHnLX+fJmbMmDABTq/dRW3xD4gYfDAtnIy2nCir9U7
+         dYGUSh4MtLTiggkRZZ5z2Q7B0MWWeB8pJIsM3VBD/16CMM1hb4F+anK7Fuo37uYC0dPU
+         hTkllPLyZsj2sqn9ofJ6dlLhyD+IpUg406ftBZE5iHf1N+9a2agAs25x7HMidUg7ePT5
+         4WUDsyJWJJVgKUKSTfNG18T1Xq9sOT8aWrHS3Vj9Xte/N/vNpCJJOr2egNjGDdgn1/0W
+         MG2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785346579; x=1785951379;
+        d=1e100.net; s=20251104; t=1785346601; x=1785951401;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=uhRNnUu6v3iXVOcCWlWtprydRHy1s6GXmSq+3+8Dmcw=;
-        b=Q4RZ+qU72CViH5Tf/WyKrbToat5w+mYajC89S3xLFM8xkcvMHu7DjHG/VxZ7ywYZ7k
-         ZUJJ9kyfxf4QefJpiaIIl1VNWSh4w0+5A8BD7gdSlr7tIGnLJb+M+omPKPukl7Im4WgF
-         +pRi8VqFtWmlpRyUBZLqSLmB8PLDLazk7n3EsNaP534tM28nkQsRZeYXs9biC9C6YppH
-         UPXIlcRag+O4OKt1mr2dt3WqTL0IkY/GkFy4/Mdg3YygSRbwKWykFTHd9mjoUkTjP++c
-         /0BKBgwh6ejkg1SHr5NPFwl3H/6t+8ZliUngCXVAViLgP3kshGFIIiU3FaLXmepJEeGd
-         HhmQ==
-X-Forwarded-Encrypted: i=1; AHgh+RodQCZRZl3vnFmXnt9okkJW7HJJyYOWwVQKGBiPswyZKhDTMnNdXLZFdwK+TXUQwCit7MqC4tgtkLG1bATJwg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQsoZTnECTUleJPguiINy5BVId2FQbTSwNwTBaNQZ3synOIuP0
-	6rGwYuN9t+I0MdtCDQBBAhbSXYjoS4m0cnzEojhnpZnSqK5Q8eQ6w0/Y9steTHbG
-X-Gm-Gg: AR+sD12QO/7F2kvcpRQJpkrUGhYCW2g29KFioruBApL5xoQCcfvVzbwHTk6irREocYn
-	7BR/L8DAN5+E8fYYvXEeKidlrf37qUJMQq2oBIwhy8TEMQKfU1iqT2H1p+YwR2Caa7zSPwvDL9w
-	3Lk43HfHgM8QmyYrr3YRh+OQVgpY1dzVqHQrHDxNaqd/Vmm8yEsYNOBQgxvEpWdD6FHpqrHDJYe
-	58RPHM8meEqEkZ519RTZlKBoeC+s+5ARb7XeBh9kKhTiAKC1YMif2w56ixP6Sq82w16dZPl8MbF
-	cwuV0JEJ/oIClcK5PzKxSoEOErVDjG58dshjf/Sg6QGXe+OEM6xKbFPJLfa9ovYXNUqEvddSePX
-	5AHBCJg7n//CsZizqPqyhoqcsWZZF11wU1uYYycDY0yw3pOp27X6/vtFy/dykzgONNfyAZvp9Yk
-	Wes/1+VIdZ+ozvV61EaJbRmnbWm0gQ+TIQDZY+7KLn+hyweNTo1uBg/doCVi5equnIWeOZih0eX
-	Wta/lg+rN9wc0cgBJDF3bC0yh4=
-X-Received: by 2002:a17:903:2391:b0:2ca:ce92:6e44 with SMTP id d9443c01a7336-2d015ac47a4mr90613645ad.8.1785346578717;
-        Wed, 29 Jul 2026 10:36:18 -0700 (PDT)
-Received: from KRHW1CJW23.bytedance.net ([58.250.106.107])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022bf8880sm14628745ad.66.2026.07.29.10.36.14
+        bh=r9lmLVYjr93Girs1odAHEeMDnIJQvCQg1I6d0OHkOeA=;
+        b=crJYhwF8lY5ozDdW1+Cj5Ex0HngSSptx9XDAx6gCM9wiA7PW6deS+jruGqDLA6c529
+         qvZR/BaEaVkeGK9n59kMkh/UXkcbtvm95lg/Aj7e6aM6CQ5HPSY9xYZl8U8Wkz/5iYNn
+         9y3qo8EJZkEC/kXC9yXoH3DKt3ZnRra+D7OjiJLh1Bx6qUJuQPK+kY15J6tAJQaPoBrV
+         hUx7n2zdI1hwFJyNbaOpOt5uaQ9WQ5qmvA40jblv5o60atinfewm8fOb5J3HXCqRLjtM
+         BrlC5BaCavAEG50uzFnJfg8YqS/hlKMFVO0cByMarChuPzhZ1eo6Gd/lkXYZIg7jOxq8
+         yzRQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrPihK/1FZLXGHfU66723a0r8WjuokrVJ8u6HDi/d7wt4gVrJPDlwLRQ+wN+DBXkfTUG+BQYzvHMhe+fwJ04g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwzAFcCKxlQ1/9gO0MVeVMI4VFj7pgAAshFCJypE5ke5DU5XCFz
+	xKEM6z9GNnYe9cNGDEBtKV93SQCe4JZz74L2l5gGuZQF2otcusGiGXsj
+X-Gm-Gg: AR+sD12dndYawsMQ12hffyetpbAoEFjR/8tpD9Si3c4DpdO9ZO3cQsC6RKYqy2bkdt3
+	7IyIDpsvqnAT8BbNqzmlFn5DzN7XAcFtXGGgLY8JcAgA54zTfMo4OtydXatvoIMgkBBst9uWo0M
+	VUx8cQWcmUW1+FtjZmTK1TAQ/gULHWei41qCYqwRD+zB3/4IaXFJdsxwx6+0fWShO2rytRMtxj7
+	Fs6FjfKoTVt4orfPRUiWs32xbrQws/j8ODo5kIQv1yiDH6XrGFOu77ZmeX/cq6a0fxdyI85S05+
+	/fLaWZuhkQXIC9GnJpbnEW6M7IHbrXWKasS4LJhAoK0oF2MC4kaWqF8meCCERl2LWKZXItplFgw
+	YvmS6WWG4A6GwpcKSQIt2cFIFDhZ65dlonELDqlRr8h3KgrO9JwfO+txWsicakaIQgZnjXx0IcQ
+	9VpOKesx+C+O/dDqEghfKF7A12DZL9679/d1OJEHIH9bfmKe5ykkaI6YUY5+aA5VW2e172SJJy/
+	8fkwFOIKrl8dJe1YP5GjZ+0mIA/gYrhnZIPwA==
+X-Received: by 2002:a17:902:f54f:b0:2ca:f40a:be76 with SMTP id d9443c01a7336-2d015d94cb0mr78650655ad.36.1785346601182;
+        Wed, 29 Jul 2026 10:36:41 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([120.234.91.241])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022bf39cdsm14806045ad.55.2026.07.29.10.36.35
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 29 Jul 2026 10:36:18 -0700 (PDT)
+        Wed, 29 Jul 2026 10:36:40 -0700 (PDT)
 From: Zhao Li <enderaoelyther@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Rex Lu <rex.lu@mediatek.com>,
+	Peter Chiu <chui-hao.chiu@mediatek.com>,
+	Chad Monroe <chad@monroe.io>,
+	Howard Hsu <howard-yh.hsu@mediatek.com>,
+	StanleyYP Wang <StanleyYP.Wang@mediatek.com>,
+	MeiChia Chiu <meichia.chiu@mediatek.com>,
+	Bo Jiao <Bo.Jiao@mediatek.com>,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: send TWT teardown to peer after setup TX failure
-Date: Thu, 30 Jul 2026 01:36:07 +0800
-Message-ID: <20260729173607.13340-1-enderaoelyther@gmail.com>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH 0/2] wifi: mt76: unlink TWT flows when MCU ADD fails
+Date: Thu, 30 Jul 2026 01:36:30 +0800
+Message-ID: <20260729173632.14387-1-enderaoelyther@gmail.com>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -74,46 +88,29 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When an AP's TWT Setup response is not acknowledged,
-ieee80211_s1g_tx_twt_setup_fail() asks the driver to tear down the local
-agreement and sends a TWT teardown action as the peer notification. It
-uses the response SA as the destination, but
-ieee80211_s1g_send_twt_setup() built that response with SA set to the
-AP's address. The teardown is therefore queued with DA, SA and BSSID all
-set to the AP address and never reaches the station.
+mt7915 and mt7996 link a TWT flow into the device list before asking the
+MCU to add the agreement. If that request fails, the accounting masks
+remain clear but the embedded flow node stays linked.
 
-The in-tree driver callbacks update local hardware state and emit no
-action frame. The station receives no notification that mac80211 asked
-the driver to remove the agreement and can keep following the TWT
-schedule, leaving the peers' power-save state desynchronized.
+A retry can corrupt the list by reinitializing the same linked node. If
+the station is removed instead, the mask-gated teardown skips the flow,
+leaving a dangling node for later scheduling and debugfs walks. The two
+patches restore the list to its pre-request state on the MCU ADD failure
+path, split per driver because their Fixes targets differ.
 
-Address the teardown to the response DA, the station to which the failed
-response was sent. This also matches the station lookup the transmit
-status path already performs on the same frame.
+MCU DELETE failures are deliberately outside this series. Deciding
+whether to drop host bookkeeping while firmware may retain an agreement
+requires separate ownership and accounting treatment.
 
-Fixes: f5a4c24e689f ("mac80211: introduce individual TWT support in AP mode")
-Assisted-by: Codex:gpt-5.6-sol
-Assisted-by: Kimi:K3
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
----
- net/mac80211/s1g.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Zhao Li (2):
+  wifi: mt76: mt7915: unlink TWT flow on MCU add failure
+  wifi: mt76: mt7996: unlink TWT flow on MCU add failure
 
-diff --git a/net/mac80211/s1g.c b/net/mac80211/s1g.c
-index abc338e22e59..bd7baf481836 100644
---- a/net/mac80211/s1g.c
-+++ b/net/mac80211/s1g.c
-@@ -147,7 +147,7 @@ ieee80211_s1g_tx_twt_setup_fail(struct ieee80211_sub_if_data *sdata,
- 
- 	drv_twt_teardown_request(sdata->local, sdata, &sta->sta, flowid);
- 
--	ieee80211_s1g_send_twt_teardown(sdata, mgmt->sa, sdata->vif.addr,
-+	ieee80211_s1g_send_twt_teardown(sdata, mgmt->da, sdata->vif.addr,
- 					flowid);
- }
- 
+ drivers/net/wireless/mediatek/mt76/mt7915/mac.c | 4 +++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mac.c | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
 
 base-commit: 57aa1718d5953dd532137d43b696c68545c2e0b3
 -- 
 2.50.1 (Apple Git-155)
-
