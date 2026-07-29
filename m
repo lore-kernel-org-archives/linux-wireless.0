@@ -1,128 +1,105 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202C93F23BD;
-	Wed, 29 Jul 2026 07:20:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1822F3621;
+	Wed, 29 Jul 2026 08:04:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785309609; cv=none; b=TY/xYe9N1eWBzXk+5RvAMEvoEIgXLEXx+e29SeiQLCnrMv9V3LZemz9HgqIz+UscKGoNC1eVjOSnFjB687SdYx08/G+sqm3mq7kLom4e/rOyhbXt9MyKBqnsVQgio0fYIvn/3IcgJTMZ6++fgHItMP70FTnUeZoJh8Rj4ZIpQ2w=
+	t=1785312299; cv=none; b=BwpONPnT3bnLycCjTI2DCOo2iKwMqGKvgGaW3MqXk/6ZR3f1gNE+Y4O0JMGOWLjK1uJ4TKu0zSSUqFaW0+ADx/+giwobj4bjHqyc3H1qQ6yfg68awnxlSlYz1ZE79yUABLAtxkeY24RNMTI2qnkHCroDuL3neDznC4ODBDJFU1M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785309609; c=relaxed/simple;
-	bh=V7hWWO6mhuQqEW9REQVaHEQj9LnMTlK7Pk4hG+CxxjI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jeluTU2l2fOUkIQfNgXENSPc+OCiNwMhcQtXejFaJFXg9lwevXxcz7DwiXsCFrqaV8RR+m+vWF5tqdCiQ8GADGIYniAqKDU9eaIpB0Nswc+zBnuFWN+FdY6Lu5+JzEL/k2arg3VWKFBjq7rnSLNGFnUPfKFRhUSQkKaTymNcWEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qrbUX6z1; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785312299; c=relaxed/simple;
+	bh=ddKVkjiqKodKGLZySimrJtcq3Eq/s7T16ooUmXqLtE0=;
+	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=lHKx+CaEU18EdpZU6FK1zt/hgDsgyIljZOApwoCj2X0TmSe+QQcgDDzCLhgJ99l3yES5yewYjIddDDdQE6a3n6DOMOHLoQGYQ/nGaMgXxwJmJ2FhWl7G6TfiuahfDx5cw7Hv006whUeciKRHQzX6f16jUumvoUzu8RN0DAbgpK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fCzto+AC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qrbUX6z1"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=jN5Og704DD+cr7s0QTEbW7DW1bfVaR+PYmPPBHoGk2s=; t=1785309601; x=1786519201; 
-	b=qrbUX6z1i+io+D0dCs5ebIQCYtI+4hI/iZ1rPaa5/gxWjwhOyol7NMOESVvTU/61NdxRRY2/+Z/
-	mS4xjbm7RgXkCyCW0DEQOZPQGwNFNVvbtleF7ID4bK8HxiE70cJ0fJ2HyGZKQ+mmyn3kIRv//mSnS
-	lnrtTtx0KufVbVm70ExBhor8KoqaRpd70QABb9m4S1rvi2+7cZJQqtGPnTQZ+ST9mqIsEkFR7t086
-	MJXa2HbqSWhFYhxPJGvU0ofRCkG91KkdhJlYlLN9l2gTyJ/sYHjY/FMTSskfpxpmunPX1+NfqI5D8
-	e9SjeIBL0Ftvdfzaru9l7+j0OLRYXX/Wsa+A==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1woya5-0000000HJeF-06Rd;
-	Wed, 29 Jul 2026 09:19:57 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [GIT PULL] wireless-2026-07-29
-Date: Wed, 29 Jul 2026 09:18:13 +0200
-Message-ID: <20260729071954.45655-3-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fCzto+AC"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 7A3821F00A3A;
+	Wed, 29 Jul 2026 08:04:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785312294;
+	bh=i+7IfLNzLhya7c637AxYiHwK+rmTN+FA662oC7SYVyo=;
+	h=From:To:Cc:Subject:Date;
+	b=fCzto+ACDdxOPEKA+y2jbdbjA8L9sL7fTit+QPNqqh+aeC6FDvUfqtupFVcFAaaPP
+	 CB1LXajjU2leu2/fwP6IoliVywdzT1gPGak0PZy/gWVjkfW6VO77+GT2hE2VSIbrka
+	 kx5u/kmcBY0s/afxagKObQG5JQl7P4jDC5qTL+D9wfzIYagUsC6HRUUJgjpBadkO0x
+	 n5jixwJWMyIbWl/1zZ/vrn6h9161DgpsxTC+9tQdnv98oTnxLM+ftJLmOD60KrcXX4
+	 /oq525KtlMhMmQQo43s+fVslqZeF8Y7+2fmGC6z6wqoNdL0IFhpPxGuxuaPsKDatse
+	 1iUaEUM1tOYEg==
+From: "syzbot" <syzbot@kernel.org>
+To: syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>, <linux-wireless@vger.kernel.org>, "Daniel Drake" <dsd@gentoo.org>
+Cc: johannes.berg@intel.com, kees@kernel.org, linux-kernel@vger.kernel.org, nihaal@cse.iitm.ac.in, syzbot@lists.linux.dev
+Subject: [PATCH] wifi: zd1211rw: reject secondary interfaces to prevent conflicts
+Message-ID: <0720e3ad-d98e-47d7-89af-4d22416b0fbc@mail.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Date: Wed, 29 Jul 2026 08:04:54 +0000 (UTC)
 
-Hi,
+From: Slawomir Stepien <sst@poczta.fm>
 
-So this week is _far_ less, thankfully. A couple more
-fixes that seemed important enough, but I've also been
-much more selective, in particular the 'mwifiex' driver
-seems to be a train-wreck, and has a lot of fixes and
-associated discussions still open - but I think I'll be
-leaving those for -next.
+The zd1211rw driver is designed for single-function Wi-Fi dongles and
+hardcodes its USB endpoints. When a malformed USB device exposes multiple
+interfaces that match the driver's device ID, the driver blindly binds to
+all of them.
 
-Please pull and let us know if there's any problem.
+During probe(), the driver calls usb_reset_device(), which iterates over
+all interfaces and invokes the pre_reset() callback for each bound
+interface. Since multiple interfaces are bound to zd1211rw, pre_reset() is
+called sequentially for each instance, acquiring their respective
+&mac->chip.mutex. Because all instances initialize their mutexes with the
+same lock class, lockdep detects a task acquiring a lock of the same class
+it already holds and flags it as a possible recursive deadlock:
 
-Thanks,
-johannes
+WARNING: possible recursive locking detected
+kworker/0:1/11 is trying to acquire lock:
+ffff88810371dde0 (&chip->mutex){+.+.}-{4:4}, at:
+zd_chip_disable_rxtx+0x20/0x50
+drivers/net/wireless/zydas/zd1211rw/zd_chip.c:1465
+
+but task is already holding lock:
+ffff8881138ddde0 (&chip->mutex){+.+.}-{4:4}, at: pre_reset+0x28c/0x380
+drivers/net/wireless/zydas/zd1211rw/zd_usb.c:1505
+
+Fix this by explicitly rejecting secondary interfaces (bInterfaceNumber !=
+0) during probe(). This ensures that only a single instance of the driver
+binds to the device, eliminating the recursive locking scenario.
+
+Fixes: e85d0918b54f ("[PATCH] ZyDAS ZD1211 USB-WLAN driver")
+Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
+Reported-by: syzbot+0ec3d1a6cf1fbe79c153@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=0ec3d1a6cf1fbe79c153
+Link: https://syzkaller.appspot.com/ai_job?id=00724ef7-fd77-4cde-9779-895b8f63c2f6
+Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+
+---
+diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+index 966d8ccb0..2bb2df12c 100644
+--- a/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zydas/zd1211rw/zd_usb.c
+@@ -1353,6 +1353,13 @@ static int probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 	struct zd_usb *usb;
+ 	struct ieee80211_hw *hw = NULL;
+ 
++	/* ZD1211 devices are single-function. Reject secondary interfaces
++	 * to prevent multiple instances from conflicting on hardcoded endpoints
++	 * and triggering recursive locking warnings.
++	 */
++	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
++		return -ENODEV;
++
+ 	print_id(udev);
+ 
+ 	if (id->driver_info & DEVICE_INSTALLER)
 
 
-
-The following changes since commit d326f83e819c53aa05c40d64f5805d6237b6aa1b:
-
-  Merge tag 'net-7.2-rc5' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net (2026-07-23 12:58:08 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git tags/wireless-2026-07-29
-
-for you to fetch changes up to 57aa1718d5953dd532137d43b696c68545c2e0b3:
-
-  wifi: iwlegacy: replace BUG_ON() with WARN_ON() on num_stations check (2026-07-28 15:35:37 +0200)
-
-----------------------------------------------------------------
-Much quieter, thankfully:
- - a set of ath12k fixes, including a recent
-   MLO regression for WCN7850/QCC2072
- - iwlegacy gets rid of a BUG_ON that triggered
- - a couple more robustness/security fixes
-
-----------------------------------------------------------------
-Baochen Qiang (8):
-      wifi: ath12k: fix out-of-bounds clear_bit in ath12k_mac_dp_peer_cleanup()
-      wifi: ath12k: factor out peer assoc send-and-wait into a helper
-      wifi: ath12k: keep ATH12K_PEER_ML_ID_VALID set in ath12k_sta::ml_peer_id
-      wifi: ath12k: add support for HTT_T2H_MSG_TYPE_MLO_RX_PEER_MAP
-      wifi: ath12k: introduce host_alloc_ml_id hardware parameter
-      wifi: ath12k: do not advertise MLD peer ID for firmware-allocate devices
-      wifi: ath12k: defer dp_peer registration when firmware allocates MLD peer ID
-      wifi: ath12k: resolve PENDING ML peer ID from MLO_PEER_MAP HTT event
-
-Deepanshu Kartikey (1):
-      wifi: cfg80211: validate IEs in cfg80211_wext_siwgenie()
-
-Johannes Berg (1):
-      Merge tag 'ath-current-20260727' of git://git.kernel.org/pub/scm/linux/kernel/git/ath/ath
-
-Stanislaw Gruszka (1):
-      wifi: iwlegacy: replace BUG_ON() with WARN_ON() on num_stations check
-
-Zhao Li (4):
-      wifi: mac80211: fix tid_tx use-after-free on BA session stop
-      wifi: mwifiex: use the subframe length when parsing A-MSDU TDLS frames
-      wifi: cfg80211: publish PMSR request before starting the driver
-      wifi: mac80211: validate individual TWT params before driver setup
-
- drivers/net/wireless/ath/ath12k/core.c             |   2 +
- drivers/net/wireless/ath/ath12k/core.h             |   3 +
- drivers/net/wireless/ath/ath12k/dp_htt.c           |  49 ++++++
- drivers/net/wireless/ath/ath12k/dp_htt.h           |  12 ++
- drivers/net/wireless/ath/ath12k/dp_peer.c          |  75 +++++++++-
- drivers/net/wireless/ath/ath12k/dp_peer.h          |   2 +
- drivers/net/wireless/ath/ath12k/hw.h               |   2 +
- drivers/net/wireless/ath/ath12k/mac.c              | 165 ++++++++++++++-------
- drivers/net/wireless/ath/ath12k/peer.c             |  31 +++-
- drivers/net/wireless/ath/ath12k/peer.h             |   1 +
- drivers/net/wireless/ath/ath12k/wifi7/hw.c         |  12 ++
- drivers/net/wireless/intel/iwlegacy/common.c       |   7 +-
- drivers/net/wireless/intel/iwlegacy/debug.c        |   2 +-
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |   2 +-
- net/mac80211/agg-tx.c                              |   4 +-
- net/mac80211/s1g.c                                 |   4 +
- net/wireless/pmsr.c                                |  22 ++-
- net/wireless/wext-sme.c                            |   9 ++
- 18 files changed, 333 insertions(+), 71 deletions(-)
+base-commit: 1590cf0329716306e948a8fc29f1d3ee87d3989f
+-- 
+See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
+You can comment on the patch as usual, syzbot will try to address
+the comments and send a new version of the patch if necessary.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
