@@ -1,77 +1,47 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A4B326B971
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 01:42:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A29E15B135;
+	Wed, 29 Jul 2026 02:01:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785289322; cv=none; b=iKbVNzZuDZD9tmKGfLPcI+fwOCfrfhuc+kDL10Hr3wAE2oJs4oUw02B0q2oeY6bad22DkB6Mur4eYQR/urHbCgIlaNTyfjOsgJnaHrAk6+MBNYNydELDqNe/NhX95K0jUGQ81nZiK5niyaLdEmBaWW69W3ScPeXb8qref25uyE8=
+	t=1785290487; cv=none; b=OnKueQCNyoKnnTxgIGscYMTiUxkxJ7N7MxlpZ4nV0qTGs/kW4HwatdzWohv3Ph1JAFemaK8+yPQY1KK2L1xD6HcEifqOM/o+gjQk25RjLfvLUAm/lgb8Wl5OvRxw2bkzi40zG42kCTNb7+XW74iOubLW1ujVUWdE/bJWXigQ4D0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785289322; c=relaxed/simple;
-	bh=xgtwDLpMx75M6cJhml2wykY+v7WLNZg/BF0MgF4i6Fw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FrNmk1xaF8QGwKNozADN11xWBasLhFxYmqTE8qt9Pgx/F6QPOUqhw8do56A9GH8Tjuw/zRd2zHBuL+pSBp0WWIU9unkKwcQBlGETf02oaLDscT4rTfNjX9wC9VJzIrwvJTBPcRAvUCDnJR93PbJ+JDsfDbwVt1zewUDe6hxUAuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T04RaezX; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785290487; c=relaxed/simple;
+	bh=8RpnnoGv+tIAGiSIWX+XOwQUaSiFyJLguEoJsJKxToA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CqrAeIxpOTheztMswyzsa0+9/bIB0e1UhCxoSZf04L2WGJmif/9nta/cogDnGixZEqDsVsQiEqnhVTdxiZlGf1ZaOTgAX8QK5mwyBysU2plRvvVwDLMyLOPBN4/TarSYvXtZriUQnb57+CH77gZtN6h9OJ7lGAvgGIP1qvMpKfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=TnhPCF3h; arc=none smtp.client-ip=54.254.200.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T04RaezX"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2cacb8416a1so4945215ad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 18:42:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785289321; x=1785894121; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Ml7zMT6FKGqHMb+nFINtzjOLq021Bu5npY5UipcxAyM=;
-        b=T04RaezX0R5uN7cYyWckUujbc1gnHguchjRaArfVn2PKaep+FHNTTh5z8QmMmMYsQS
-         IwlqjS3i9PtayZqlaYni8LL9Xwr/X6wwV8cfS19mgGswx65ASL521sCBMMziYZttY7UC
-         Oe3h1NsDZ4pnsc4CjllU9g9+7c1DLW7T3y7FW2JOTZJyy03H4Ctq4h8kUlVdqT6oJVFb
-         SkE/FrdBB4u5/ngV2eku0Xa6mBAr+Jq662+BGXcXouPXiN2TThK929IgzbziD2yQQdH9
-         3aU7i0Sj0WIqpl2Bx0Q+/wVoHKpmh5/GrICyFcf/eGxLWfuvEoQeX0kUlUD8FTROESwM
-         9Ukw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785289321; x=1785894121;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Ml7zMT6FKGqHMb+nFINtzjOLq021Bu5npY5UipcxAyM=;
-        b=RC9XUnqzdfnII5RxIFQee5Wtnoqy2SwkQENtGvMEvBOL+AvUapWzxr3gEq7TP8A8rI
-         /3l6wPniGwqjz939D3vknuCg34+70svd6sR4kUyWpOd25W9wu0ptTQHQPrtg7ClsGOzg
-         /XowOS/ugtfZkH681w9bUNNVOZsPF/6ikQISsOvXx3+4IHGPT/3X5XX3wjmENdPLgiXB
-         mWDXIPNL1SWkq6G0mCa72XuQbofN34IaNoacSV08FxOOa14xUnciQ8D8qoH3mivV2p59
-         cF8Sgc0eZfIZKXlmbjaWI+XW+GqcB/I2PXiiJ+Cp5nud8L1tIbQoc4CqsujDtk2KXzDv
-         yzKg==
-X-Forwarded-Encrypted: i=1; AHgh+RqUMAgQokdSYyYtgQ41CAwk+lY4Mo42yChJLg+u5RTxreii8RYkpTM09yN0BPKaVQ95MDefoqt/q71TvW2J6w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YycPhL1t4NwU33C18PMlMKFXqz/QUfjbFUffc0QT/pE1EMSpTMw
-	+1PvOIOdz1SGkI94e1XmkL+dCXRx+8LhQPrCtR9iKKBw6NEB1RgGCZHc
-X-Gm-Gg: AR+sD12sdtwGnxxhalEitRJ4bFeWB3rpzCGwr/8QctK7yd1F9FU3KIGECgY1o46x84/
-	K3kkgQ9JAjTWwtZLCLqkHO0k6WpSL52IcsV1sOOUcN72yCPAe6PO3mLSJy7M6kNt6AJ/ZMutuiz
-	9zK3cr+TPywvTXZUBy5Z6t3ljVlyXayII7gbhYWiEleK4MTAUdXn/Rtn7680Z7O2axmmrhrvZ3Q
-	EvYCA1G87JbiKBYDvgdJzqsloDIxAH8+StP8iCJs9e9vs3xjM4UrYYS9jFtoUNRz342C1yRKR3u
-	7IzV/dftG7JSUfbRlCSbTNQLIaApOJouZM3VvNtKawSc6NkxQ2hLHlVkjrb4EnSzmgPX2kODQvm
-	5GA/qhkrEJJfeUZ+frCK65kdKcUxpTpDO7NlerfowlAob68SsFFBG9mqvhE2O2iDOD5l13tUqeY
-	y0gV0MHheYSCkjPqlIkfWwBfGhaiWJCiSERs9DZkCh+QZtadrY+jZKOddAsnGMYhi2PJZX5Jy9D
-	3orGLS7oGq5TcKBKmM=
-X-Received: by 2002:a17:902:e78b:b0:2c7:f12d:5d37 with SMTP id d9443c01a7336-2d015b0d13cmr52744405ad.17.1785289320686;
-        Tue, 28 Jul 2026 18:42:00 -0700 (PDT)
-Received: from cyh-System-Product-Name.. ([129.227.183.200])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022a15893sm3593545ad.4.2026.07.28.18.41.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jul 2026 18:42:00 -0700 (PDT)
-From: yhchen312@gmail.com
-To: pkshih@realtek.com
-Cc: damon.chen@realtek.com,
-	linux-wireless@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="TnhPCF3h"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1785290435;
+	bh=CrLETh4iSEl/P6eqGC67l43WN4aXXH9eFzGL2XXCsNI=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=TnhPCF3hNn2vNPN+s/aG0JcgE3YLzFbzKiooE84IbSUpJoEL3cQmwmjRKRhUDb4E+
+	 Zgga63uMkkqNpJhXb7USlwWL+GS81kQPKyS2b0JnFheVstvFrgDfU7Wldaf2YpqLlE
+	 g0oDfABkEJknhp8D3UlzrCuMEOmoDfZiKHYuL490=
+X-QQ-mid: zesmtpsz7t1785290431te5a25bea
+X-QQ-Originating-IP: m91qHMmZsmOkvposUvkoyf/ytvEWwnp6lqy5qi6adTE=
+Received: from localhost.localdomain ( [124.126.19.250])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Wed, 29 Jul 2026 10:00:09 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 14955744681332169406
+EX-QQ-RecipientCnt: 6
+From: ZhaoJinming <zhaojinming@uniontech.com>
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	"Yuhang.chen" <yhchen312@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: rtw89: pci: add .shutdown callback to stop rfkill polling on reboot
-Date: Wed, 29 Jul 2026 09:41:42 +0800
-Message-Id: <20260729014142.2746777-1-yhchen312@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <142c91dfc7334136a5dabc4f91504ec6@realtek.com>
-References: <142c91dfc7334136a5dabc4f91504ec6@realtek.com>
+	ZhaoJinming <zhaojinming@uniontech.com>
+Subject: [PATCH v8] wifi: ath11k: fix resource leak on error in ext IRQ setup
+Date: Wed, 29 Jul 2026 10:00:05 +0800
+Message-Id: <20260729020005.219253-1-zhaojinming@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -79,211 +49,254 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
+X-QQ-XMAILINFO: OPdvjVtisQSK8sXHbk6V5VvHNSwVgXkB7n6/5XQn3ydsVxXE7oLpj5nm
+	FAAFyddEjwWwvk/M3h10x3dnHoxwBJFeT1U/2bZ/3/3S6+cz57WF20eecmumgfiYaiFRbPB
+	cgcYMNaKnw8YmxP1dN72xMIrxrXkFlyXJkuFJhexa4DuPZGMshSDzCfis/0bUUPKm12TExy
+	O4e4Vwo+PqNNzEsOuliTzie6ESUEiEzF5+A9vbgJrAvG1sUddbCQIYO7vcK5FnZ1eF91Rwq
+	DQunLahlyt9SybaoQZsY4PN6BdCMxApSflnVkpuECqLBxUEF8yPc1iMNtDd2iz0O6GbCn2h
+	2jBv7v9Jwmc2/h7KJO+9Dm8PsTQ6azjkBqOe/26hkXBMZBD1Sb8ex3EiyIEbY7+xeXtJ3ky
+	W2vKgR92+8Txxb3NMrtO9p0GcwIm+mmrs39JQ1oOzZooRiwk8nBxQQzcBKcbKpPnVFu0SeF
+	Vh2nb4ldz163MeSu4Y6C20UbimGsYStepvVKt72QCL8Hq+ON1wm1OJaMtX+t3AQZqrrxpdk
+	cdZhJOPa3PNrztLLPN6h/Hw+xykAIYml1hyNlDyym8VpifYlO4L2/Ucc56sPbv8wLISTw97
+	nxckvW2xcvloqyBGIDHszjEyzoqJl2/b058xXB/LkDAZ+viCr9AEIToZMmrmd5tYYV5J+cW
+	aECRyls8O26+4lYBZw4mV9DzMQo6zXWm8ffbkz76LOV1tl0+sJblyhwhYPBPK+uFTp389wq
+	WAvOY0QAxZoy7bq5XDlLvMmfklt39uqOuZ1aJKmPctx7BGPKC2NaTUfE2Z0iOKibbKpfG+K
+	exFI6bz1CQWaFJUGoqEZYxgE/e05Gn3OlC+unyR0w5QSQOhZncdk4rbGB5vB1bbSBVn1a3w
+	LYetDiher2TRvzE70T0ykKmuzZzl08FVGYpFSDAEdS0meoiuyJ926Hia6JX5pN5jfsFB+h0
+	G4+bEf257OX3TdasTe0suS0jFNmFMhkH/acSHWrYepImo39L9jhtzMiixpvgWoIjdBh4+wE
+	IUBJI0yEKgsKJUUDPcOZKxneDT+wH37WXP+BTPQW+3h3GQ8DScMtTGtaJ9sVg=
+X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
+X-QQ-RECHKSPAM: 0
 
-From: "Yuhang.chen" <yhchen312@gmail.com>
+In ath11k_ahb_config_irq(), when a CE request_irq() fails, the function
+returns the error immediately without freeing the CE IRQs that were
+successfully registered in previous loop iterations. The probe error
+path does not call ath11k_ahb_free_irq() either, so the previously
+registered CE IRQ handlers remain attached to the interrupt lines and
+are never released.
 
-Since the hardware rfkill polling was introduced, arm64 platforms can
-panic with an asynchronous SError during warm reboot:
+In ath11k_ahb_config_ext_irq(), when an external request_irq() fails,
+the error is only logged and the loop continues. The function then
+returns 0 indicating success, leaving the device in a partially
+configured state where some external IRQs are not registered. This
+causes enable_irq()/disable_irq()/free_irq() to be called on
+unregistered IRQs during runtime and remove/shutdown, triggering
+WARN_ON(!desc->action), and missing interrupt handlers lead to data
+loss.
 
-  SError Interrupt on CPU8, code 0x00000000be000011 -- SError
-  Workqueue: events_power_efficient rfkill_poll [rfkill]
-    rtw89_pci_ops_read8+0x94/0x160 [rtw89_pci]
-    rtw89_core_rfkill_poll+0x50/0x1e0 [rtw89_core]
-    rtw89_ops_rfkill_poll+0x40/0x68 [rtw89_core]
-    ieee80211_rfkill_poll+0x3c/0x70 [mac80211]
-    cfg80211_rfkill_poll+0x40/0x2a0 [cfg80211]
-    rfkill_poll+0x30/0x88 [rfkill]
-  Kernel panic - not syncing: Asynchronous SError Interrupt
+Additionally, if alloc_netdev_dummy() fails for a later IRQ group, the
+function returns -ENOMEM without freeing the ext IRQs and napi_ndev
+that were successfully set up for earlier groups.
 
-On the reboot path the kernel only runs device_shutdown(), which calls
-each driver's .shutdown callback; .remove is not invoked.  The rtw89 PCI
-driver had no .shutdown callback, so nothing stopped the rfkill polling
-work while the platform was tearing the PCIe link down.  Once the link
-is gone, the next MMIO read from the poll handler targets a
-non-responding device and is reported as a fatal asynchronous SError on
-arm64.
+Fix all three issues: propagate the error up to the caller and unwind
+all successfully registered IRQs and allocated resources on failure.
+Also move ab->irq_num[irq_idx] assignment after request_irq() succeeds
+in the ext IRQ path to match the CE IRQ path and avoid storing a stale
+IRQ number on failure.
 
-Add rtw89_pci_shutdown(), wired to all rtw89 PCI device drivers, which
-sets a new RTW89_FLAG_SHUTDOWN flag (mirroring the USB
-RTW89_FLAG_UNPLUGGED pattern).  When the flag is set,
-rtw89_ops_rfkill_poll() returns early, so no MMIO read is issued to the
-chip after shutdown begins and the SError no longer occurs.
-
-This does not call the full .remove path from .shutdown, to keep the
-shutdown handler minimal and avoid running the non-idempotent teardown
-twice.
-
-Fixes: 0b38e6277aed ("wifi: rtw89: add support for hardware rfkill")
-Cc: stable@vger.kernel.org
-Suggested-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Yuhang.chen <yhchen312@gmail.com>
+Signed-off-by: ZhaoJinming <zhaojinming@uniontech.com>
 ---
-v2: per Ping-Ke Shih's review [1], replace the rtw89_pci_remove() call
-    from .shutdown with a flag-based approach (set RTW89_FLAG_SHUTDOWN
-    and bail out early in rtw89_ops_rfkill_poll), and extend the fix to
-    all rtw89 PCI device drivers instead of 8852BE only.
 
-[1] https://lore.kernel.org/all/142c91dfc7334136a5dabc4f91504ec6@realtek.com/
----
- drivers/net/wireless/realtek/rtw89/core.h       |  1 +
- drivers/net/wireless/realtek/rtw89/mac80211.c   |  3 ++-
- drivers/net/wireless/realtek/rtw89/pci.c        | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw89/pci.h        |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8851be.c  |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852ae.c  |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852be.c  |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852bte.c |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8852ce.c  |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8922ae.c  |  1 +
- drivers/net/wireless/realtek/rtw89/rtw8922de.c  |  1 +
- 11 files changed, 24 insertions(+), 1 deletion(-)
+Changes in v8:
+- Move Link tag from commit body to changelog per maintainer's request.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.h b/drivers/net/wireless/realtek/rtw89/core.h
-index 5547888d7e67..a85b9c39c257 100644
---- a/drivers/net/wireless/realtek/rtw89/core.h
-+++ b/drivers/net/wireless/realtek/rtw89/core.h
-@@ -5373,6 +5373,7 @@ enum rtw89_flags {
- 	RTW89_FLAG_CHANGING_INTERFACE,
- 	RTW89_FLAG_HW_RFKILL_STATE,
- 	RTW89_FLAG_UNPLUGGED,
-+	RTW89_FLAG_SHUTDOWN,
- 
- 	NUM_OF_RTW89_FLAGS,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/mac80211.c b/drivers/net/wireless/realtek/rtw89/mac80211.c
-index aade5c5b79e8..9baedfde7085 100644
---- a/drivers/net/wireless/realtek/rtw89/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac80211.c
-@@ -1979,7 +1979,8 @@ static void rtw89_ops_rfkill_poll(struct ieee80211_hw *hw)
- 	lockdep_assert_wiphy(hw->wiphy);
- 
- 	/* wl_disable GPIO get floating when entering LPS */
--	if (test_bit(RTW89_FLAG_RUNNING, rtwdev->flags))
-+	if (test_bit(RTW89_FLAG_RUNNING, rtwdev->flags) ||
-+	    test_bit(RTW89_FLAG_SHUTDOWN, rtwdev->flags))
- 		return;
- 
- 	rtw89_core_rfkill_poll(rtwdev, false);
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
-index 102bae488180..61c54b52be1f 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.c
-+++ b/drivers/net/wireless/realtek/rtw89/pci.c
-@@ -4874,6 +4874,19 @@ void rtw89_pci_remove(struct pci_dev *pdev)
+Changes in v7:
+- Resend in a new thread. No content changes from v6.
+  Link: https://lore.kernel.org/all/b6903572-52cc-4c41-b9cf-5845e387c176@oss.qualcomm.com/
+
+Changes in v6:
+- Move ab->irq_num[irq_idx] = irq after request_irq() succeeds in the
+  ext IRQ path to match the CE IRQ logic and avoid storing a stale IRQ
+  number on failure.
+
+Changes in v5:
+- Resend as a fresh thread. No content changes from v4.
+
+Changes in v4:
+- Drop the napi_ndev NULL guard in ath11k_ahb_free_ext_irq_grp() as it
+  is unreachable in all existing call paths. A silent guard against an
+  impossible condition hides bugs instead of exposing them.
+
+Changes in v3:
+- Extract ath11k_ahb_free_ext_irq_grp() to handle per-group ext IRQ
+  cleanup and refactor ath11k_ahb_free_ext_irq() to use it.
+- On request_irq() failure in ath11k_ahb_config_ext_irq(), immediately
+  clean up the current group via ath11k_ahb_free_ext_irq_grp() before
+  jumping to the error label to unwind earlier groups.
+- Move u32 num_irq declaration before the irq_grp assignment to follow
+  declaration-before-statement ordering.
+- Extract ath11k_ahb_free_ce_irqs() to handle partial/full CE IRQ cleanup
+  and refactor ath11k_ahb_free_irq() to use it, replacing the duplicated
+  err_ce_irq cleanup loop in ath11k_ahb_config_irq().
+
+Changes in v2:
+- Move `irq_grp` declaration from for-loop body to function scope to fix
+  compile error in err_request_irq error path.
+- Set ret = -ENOMEM before goto err_request_irq on alloc_netdev_dummy()
+  failure to avoid returning uninitialized value.
+- When ath11k_ahb_config_ext_irq() fails, unwind the already-registered
+  CE IRQs via a shared err_ce_irq cleanup path to avoid leaking them.
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 1e1dea485760..ec5bf5c9fd79 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -431,36 +431,44 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
+ 	ab->qmi.service_ins_id = ab->hw_params.qmi_service_ins_id;
  }
- EXPORT_SYMBOL(rtw89_pci_remove);
  
-+void rtw89_pci_shutdown(struct pci_dev *pdev)
-+{
-+	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-+	struct rtw89_dev *rtwdev;
-+
-+	if (!hw)
-+		return;
-+
-+	rtwdev = hw->priv;
-+	set_bit(RTW89_FLAG_SHUTDOWN, rtwdev->flags);
+-static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
++static void ath11k_ahb_free_ext_irq_grp(struct ath11k_base *ab,
++					struct ath11k_ext_irq_grp *irq_grp)
+ {
+-	int i, j;
+-
+-	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+-		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
++	int j;
+ 
+-		for (j = 0; j < irq_grp->num_irq; j++)
+-			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
++	for (j = 0; j < irq_grp->num_irq; j++)
++		free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
+ 
+-		netif_napi_del(&irq_grp->napi);
+-		free_netdev(irq_grp->napi_ndev);
+-	}
++	netif_napi_del(&irq_grp->napi);
++	free_netdev(irq_grp->napi_ndev);
+ }
+ 
+-static void ath11k_ahb_free_irq(struct ath11k_base *ab)
++static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
+ {
+-	int irq_idx;
+ 	int i;
+ 
+-	if (ab->hw_params.hybrid_bus_type)
+-		return ath11k_pcic_free_irq(ab);
++	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++)
++		ath11k_ahb_free_ext_irq_grp(ab, &ab->ext_irq_grp[i]);
 +}
-+EXPORT_SYMBOL(rtw89_pci_shutdown);
-+
- MODULE_AUTHOR("Realtek Corporation");
- MODULE_DESCRIPTION("Realtek PCI 802.11ax wireless driver");
- MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw89/pci.h b/drivers/net/wireless/realtek/rtw89/pci.h
-index c3f2d0df5846..0728120d721f 100644
---- a/drivers/net/wireless/realtek/rtw89/pci.h
-+++ b/drivers/net/wireless/realtek/rtw89/pci.h
-@@ -1751,6 +1751,7 @@ struct pci_device_id;
  
- int rtw89_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
- void rtw89_pci_remove(struct pci_dev *pdev);
-+void rtw89_pci_shutdown(struct pci_dev *pdev);
- void rtw89_pci_basic_cfg(struct rtw89_dev *rtwdev, bool resume);
- void rtw89_pci_ops_reset(struct rtw89_dev *rtwdev);
- int rtw89_pci_ltr_set(struct rtw89_dev *rtwdev, bool en);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851be.c b/drivers/net/wireless/realtek/rtw89/rtw8851be.c
-index 640672eb0d26..61e6c997b206 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8851be.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8851be.c
-@@ -93,6 +93,7 @@ static struct pci_driver rtw89_8851be_driver = {
- 	.id_table	= rtw89_8851be_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
-index 64306cdc1ee4..e6fbcf75f1ad 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852ae.c
-@@ -95,6 +95,7 @@ static struct pci_driver rtw89_8852ae_driver = {
- 	.id_table	= rtw89_8852ae_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852be.c b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-index 5bc0a6a99d1d..25463342ac89 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852be.c
-@@ -97,6 +97,7 @@ static struct pci_driver rtw89_8852be_driver = {
- 	.id_table	= rtw89_8852be_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852bte.c b/drivers/net/wireless/realtek/rtw89/rtw8852bte.c
-index 49a72ca835ac..bf22be739f39 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852bte.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852bte.c
-@@ -99,6 +99,7 @@ static struct pci_driver rtw89_8852bte_driver = {
- 	.id_table	= rtw89_8852bte_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
-index 3c64c0539205..b8d4d9f02686 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852ce.c
-@@ -122,6 +122,7 @@ static struct pci_driver rtw89_8852ce_driver = {
- 	.id_table	= rtw89_8852ce_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-index 5527a8db393b..54bcd3f3d008 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922ae.c
-@@ -111,6 +111,7 @@ static struct pci_driver rtw89_8922ae_driver = {
- 	.id_table	= rtw89_8922ae_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops_be,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922de.c b/drivers/net/wireless/realtek/rtw89/rtw8922de.c
-index a1a81c338be3..65476a35a323 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922de.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922de.c
-@@ -111,6 +111,7 @@ static struct pci_driver rtw89_8922de_driver = {
- 	.id_table	= rtw89_8922de_id_table,
- 	.probe		= rtw89_pci_probe,
- 	.remove		= rtw89_pci_remove,
-+	.shutdown	= rtw89_pci_shutdown,
- 	.driver.pm	= &rtw89_pm_ops_be,
- 	.err_handler    = &rtw89_pci_err_handler,
- };
--- 
-2.34.1
-
+-	for (i = 0; i < ab->hw_params.ce_count; i++) {
++static void ath11k_ahb_free_ce_irqs(struct ath11k_base *ab, int max_idx)
++{
++	int irq_idx, i;
++
++	for (i = 0; i < max_idx; i++) {
+ 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
+ 			continue;
+ 		irq_idx = ATH11K_IRQ_CE0_OFFSET + i;
+ 		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
+ 	}
++}
++
++static void ath11k_ahb_free_irq(struct ath11k_base *ab)
++{
++	if (ab->hw_params.hybrid_bus_type)
++		return ath11k_pcic_free_irq(ab);
+ 
++	ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
+ 	ath11k_ahb_free_ext_irq(ab);
+ }
+ 
+@@ -524,20 +532,25 @@ static irqreturn_t ath11k_ahb_ext_interrupt_handler(int irq, void *arg)
+ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ {
+ 	struct ath11k_hw_params *hw = &ab->hw_params;
++	struct ath11k_ext_irq_grp *irq_grp;
+ 	int i, j;
+ 	int irq;
+ 	int ret;
+ 
+ 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
+-		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
+ 		u32 num_irq = 0;
+ 
++		irq_grp = &ab->ext_irq_grp[i];
++
+ 		irq_grp->ab = ab;
+ 		irq_grp->grp_id = i;
+ 
+ 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
+-		if (!irq_grp->napi_ndev)
+-			return -ENOMEM;
++		if (!irq_grp->napi_ndev) {
++			ret = -ENOMEM;
++			irq_grp->num_irq = 0;
++			goto err_request_irq;
++		}
+ 
+ 		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
+ 			       ath11k_ahb_ext_grp_napi_poll);
+@@ -585,14 +598,11 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ 				}
+ 			}
+ 		}
+-		irq_grp->num_irq = num_irq;
+-
+-		for (j = 0; j < irq_grp->num_irq; j++) {
++		for (j = 0; j < num_irq; j++) {
+ 			int irq_idx = irq_grp->irqs[j];
+ 
+ 			irq = platform_get_irq_byname(ab->pdev,
+ 						      irq_name[irq_idx]);
+-			ab->irq_num[irq_idx] = irq;
+ 			irq_set_status_flags(irq, IRQ_NOAUTOEN | IRQ_DISABLE_UNLAZY);
+ 			ret = request_irq(irq, ath11k_ahb_ext_interrupt_handler,
+ 					  IRQF_TRIGGER_RISING,
+@@ -600,11 +610,24 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
+ 			if (ret) {
+ 				ath11k_err(ab, "failed request_irq for %d\n",
+ 					   irq);
++				irq_grp->num_irq = j;
++				ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
++				goto err_request_irq;
+ 			}
++			ab->irq_num[irq_idx] = irq;
+ 		}
++
++		irq_grp->num_irq = num_irq;
+ 	}
+ 
+ 	return 0;
++
++err_request_irq:
++	for (i--; i >= 0; i--) {
++		irq_grp = &ab->ext_irq_grp[i];
++		ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
++	}
++	return ret;
+ }
+ 
+ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
+@@ -629,16 +652,24 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
+ 		ret = request_irq(irq, ath11k_ahb_ce_interrupt_handler,
+ 				  IRQF_TRIGGER_RISING, irq_name[irq_idx],
+ 				  ce_pipe);
+-		if (ret)
++		if (ret) {
++			ath11k_err(ab, "failed request_irq for %d\n", irq);
++			ath11k_ahb_free_ce_irqs(ab, i);
+ 			return ret;
++		}
+ 
+ 		ab->irq_num[irq_idx] = irq;
+ 	}
+ 
+ 	/* Configure external interrupts */
+ 	ret = ath11k_ahb_config_ext_irq(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to configure ext irq: %d\n", ret);
++		ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
++		return ret;
++	}
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
