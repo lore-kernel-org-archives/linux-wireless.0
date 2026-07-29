@@ -1,47 +1,72 @@
-Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A29E15B135;
-	Wed, 29 Jul 2026 02:01:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EB1E2E03EA
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 02:14:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785290487; cv=none; b=OnKueQCNyoKnnTxgIGscYMTiUxkxJ7N7MxlpZ4nV0qTGs/kW4HwatdzWohv3Ph1JAFemaK8+yPQY1KK2L1xD6HcEifqOM/o+gjQk25RjLfvLUAm/lgb8Wl5OvRxw2bkzi40zG42kCTNb7+XW74iOubLW1ujVUWdE/bJWXigQ4D0=
+	t=1785291287; cv=none; b=cx02itNKo5YzYvt7ikS4VS+qZpS3TUPbu8UQVBSmAizZ8tvEnqOIrcQHx6l+GKzLtdFOVoSIVkD24PywgcceYrc1j8RB+uWmaR0IT9SCHUd6sNRg3QwTH+2SWYj5FbjxLtKd9V+Yq0XaNENkr93XRmm2b7KlULCC9sQ80y5+KnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785290487; c=relaxed/simple;
-	bh=8RpnnoGv+tIAGiSIWX+XOwQUaSiFyJLguEoJsJKxToA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CqrAeIxpOTheztMswyzsa0+9/bIB0e1UhCxoSZf04L2WGJmif/9nta/cogDnGixZEqDsVsQiEqnhVTdxiZlGf1ZaOTgAX8QK5mwyBysU2plRvvVwDLMyLOPBN4/TarSYvXtZriUQnb57+CH77gZtN6h9OJ7lGAvgGIP1qvMpKfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=TnhPCF3h; arc=none smtp.client-ip=54.254.200.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+	s=arc-20240116; t=1785291287; c=relaxed/simple;
+	bh=1R2vTJFmqsTU0x06PRZkv1w7HMSkW2PhQBuyeuPqwfk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p5zguHAduQ23vrQqIeNotNLd44t6bY/wxYXHSw/cGMLFSQALKx5X7F0QuGgLuTiCn290ajL7peBENaa95ZGHDXNd/sNstCEo95FJJaXLid4Wg0ugkk6kOCZTN5g1E/aHD5ZMjDU8t0OY+B9jQOWA3oZ3B6jNqF+J+a1M31o/XZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EMlrm8rx; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="TnhPCF3h"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
-	s=onoh2408; t=1785290435;
-	bh=CrLETh4iSEl/P6eqGC67l43WN4aXXH9eFzGL2XXCsNI=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=TnhPCF3hNn2vNPN+s/aG0JcgE3YLzFbzKiooE84IbSUpJoEL3cQmwmjRKRhUDb4E+
-	 Zgga63uMkkqNpJhXb7USlwWL+GS81kQPKyS2b0JnFheVstvFrgDfU7Wldaf2YpqLlE
-	 g0oDfABkEJknhp8D3UlzrCuMEOmoDfZiKHYuL490=
-X-QQ-mid: zesmtpsz7t1785290431te5a25bea
-X-QQ-Originating-IP: m91qHMmZsmOkvposUvkoyf/ytvEWwnp6lqy5qi6adTE=
-Received: from localhost.localdomain ( [124.126.19.250])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Wed, 29 Jul 2026 10:00:09 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 14955744681332169406
-EX-QQ-RecipientCnt: 6
-From: ZhaoJinming <zhaojinming@uniontech.com>
-To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
-	Jeff Johnson <jjohnson@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EMlrm8rx"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-ca2fad0ae38so286283a12.3
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Jul 2026 19:14:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785291284; x=1785896084; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=rbUCrmdI/D1+7MliQyPPx7KnkhrNLA9n5yUnvCZwLOA=;
+        b=EMlrm8rxjrauYw/anU/BAxhfrubezsdX1wc6n+VEbn9ThjG9IEtM6IF40r064vQmK/
+         UJuOGvrTdhz1SWuVSRdzGadPFrmYJ532fYtTNeOKTvG6pKbcalj/OHlxXans0z7RT2g0
+         SQqi2G9rzKiGXRj+riguSNoGbM74sdYV3GXCUHTRqA+kYIVsXzQddPV0lNaLqt+8lqJe
+         jR5Ifu7BUSBHc0preisNS1zsi1CQH7Au3bIt/85zJFfHWjW+yRJP9fdFfSAp2F5mUAQB
+         oTjVz9sMFu26V8hNiuBSuj5M4KwRsrCWTvoNY1n4R+jt1IFOsrF8ofSsPGKdT4m5dhgj
+         8XHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785291284; x=1785896084;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=rbUCrmdI/D1+7MliQyPPx7KnkhrNLA9n5yUnvCZwLOA=;
+        b=ita5PWx5n2v/N0vw4/y9G1W3n2PE1CxI0G+GnxUmBHm8pjiAwllb5sv7kty6BupoLc
+         hn5f4HQz5YUqunBi1PHjRWeDqeyvVm5NQc0eguI7rXO3Et7LwFZ67n7Rox9qjmZKHfM0
+         ci62s827GOEv1uKMydBi6I+3AsRd5+mD/NHB/CVUyV3lS1+vo3gvs+T/FBjEiWdzrX8r
+         4PAPz3a3t34mTpGgSvP4w5ghZIgq9dGNpUW6lxkD5mAFnhJvBBmgIxebk+tGB8OHTCSH
+         6L4L1EY87yPubqfm5Ph3V+/CKe/aR2gNFdHIKdrv+QVFbJrYltI+1LG0USRAB3PEW2mZ
+         3Tqw==
+X-Gm-Message-State: AOJu0YxY8x9dZABEZYM/kAvFtyh2ORNc9mCJWhjsLziZgrHwMnvi8ouX
+	8jkJXN9JABNDaAvBOMpu+SVE/gY0X5pV0k9YKqiVkqENld63a0hpSROy
+X-Gm-Gg: AR+sD10d01cpsUiQa66xV8Iuipo126LZZXkh5hkKAkQK9osReLQD5s3JTn/YYFEX7Rf
+	15xnu3r0YUgwMZq94hMfD/OjI34ImOviKqPqAR4S7pezji4pZglhgjQC2TgnQsjWG6TyMuuf8WP
+	Ai/SoVu410PF/KOu0cNevWPlbNw8AJgkhmC42j20bzeGiVaajpxqupwH8wghVwas6XTxTYOn1xs
+	X85eFWQ1QcdcHN1ZXnWyhto1/8ccMIqeBIwNht3q4vdhVXNHSlT+S19/BcT72/wpTtkjg1nx0mz
+	93DRFp+PLvYTcrgGN04+yDrmTdBf2/egqpPudARa7IC/OUqkt3i5i3GiePOHtFOrrpfAE88kFGw
+	wNoF/rBKgWXfMgkDHT2mSzbEP9J2Vfy05QYv4Ff9FrdxRPY8ZOZt+aoHPB6slUTpuaj3hrm4APs
+	yCyZ30VukRWa0GAsy7tlg7fLbVj0eEczER2QO1oaS7GyvteIprxrOqBY3QEixXrivHebdeIRXOx
+	VGUNyubqytwRa1GUgUyhcL6FxgmaPUvltdfhTvmdvo4
+X-Received: by 2002:a05:6a20:b40b:b0:3b3:2703:115 with SMTP id adf61e73a8af0-3c8aafda28amr5599473637.16.1785291284393;
+        Tue, 28 Jul 2026 19:14:44 -0700 (PDT)
+Received: from deepanshu-kernel-hacker.. ([2405:201:682f:383f:4684:f08f:7d61:c1d3])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31504d3250asm3536485eec.20.2026.07.28.19.14.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Jul 2026 19:14:43 -0700 (PDT)
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+To: johannes@sipsolutions.net,
+	jeff.johnson@oss.qualcomm.com
 Cc: linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	ZhaoJinming <zhaojinming@uniontech.com>
-Subject: [PATCH v8] wifi: ath11k: fix resource leak on error in ext IRQ setup
-Date: Wed, 29 Jul 2026 10:00:05 +0800
-Message-Id: <20260729020005.219253-1-zhaojinming@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+	Deepanshu Kartikey <kartikey406@gmail.com>,
+	syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
+Subject: [PATCH v3] wifi: cfg80211: add cfg80211_validate_ies() helper and use it
+Date: Wed, 29 Jul 2026 07:44:36 +0530
+Message-ID: <20260729021436.19909-1-kartikey406@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,254 +74,138 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz4b-0
-X-QQ-XMAILINFO: OPdvjVtisQSK8sXHbk6V5VvHNSwVgXkB7n6/5XQn3ydsVxXE7oLpj5nm
-	FAAFyddEjwWwvk/M3h10x3dnHoxwBJFeT1U/2bZ/3/3S6+cz57WF20eecmumgfiYaiFRbPB
-	cgcYMNaKnw8YmxP1dN72xMIrxrXkFlyXJkuFJhexa4DuPZGMshSDzCfis/0bUUPKm12TExy
-	O4e4Vwo+PqNNzEsOuliTzie6ESUEiEzF5+A9vbgJrAvG1sUddbCQIYO7vcK5FnZ1eF91Rwq
-	DQunLahlyt9SybaoQZsY4PN6BdCMxApSflnVkpuECqLBxUEF8yPc1iMNtDd2iz0O6GbCn2h
-	2jBv7v9Jwmc2/h7KJO+9Dm8PsTQ6azjkBqOe/26hkXBMZBD1Sb8ex3EiyIEbY7+xeXtJ3ky
-	W2vKgR92+8Txxb3NMrtO9p0GcwIm+mmrs39JQ1oOzZooRiwk8nBxQQzcBKcbKpPnVFu0SeF
-	Vh2nb4ldz163MeSu4Y6C20UbimGsYStepvVKt72QCL8Hq+ON1wm1OJaMtX+t3AQZqrrxpdk
-	cdZhJOPa3PNrztLLPN6h/Hw+xykAIYml1hyNlDyym8VpifYlO4L2/Ucc56sPbv8wLISTw97
-	nxckvW2xcvloqyBGIDHszjEyzoqJl2/b058xXB/LkDAZ+viCr9AEIToZMmrmd5tYYV5J+cW
-	aECRyls8O26+4lYBZw4mV9DzMQo6zXWm8ffbkz76LOV1tl0+sJblyhwhYPBPK+uFTp389wq
-	WAvOY0QAxZoy7bq5XDlLvMmfklt39uqOuZ1aJKmPctx7BGPKC2NaTUfE2Z0iOKibbKpfG+K
-	exFI6bz1CQWaFJUGoqEZYxgE/e05Gn3OlC+unyR0w5QSQOhZncdk4rbGB5vB1bbSBVn1a3w
-	LYetDiher2TRvzE70T0ykKmuzZzl08FVGYpFSDAEdS0meoiuyJ926Hia6JX5pN5jfsFB+h0
-	G4+bEf257OX3TdasTe0suS0jFNmFMhkH/acSHWrYepImo39L9jhtzMiixpvgWoIjdBh4+wE
-	IUBJI0yEKgsKJUUDPcOZKxneDT+wH37WXP+BTPQW+3h3GQ8DScMtTGtaJ9sVg=
-X-QQ-XMRINFO: Mp0Kj//9VHAxzExpfF+O8yhSrljjwrznVg==
-X-QQ-RECHKSPAM: 0
 
-In ath11k_ahb_config_irq(), when a CE request_irq() fails, the function
-returns the error immediately without freeing the CE IRQs that were
-successfully registered in previous loop iterations. The probe error
-path does not call ath11k_ahb_free_irq() either, so the previously
-registered CE IRQ handlers remain attached to the interrupt lines and
-are never released.
+The KASAN allocation trace shows that a malformed IE buffer is
+stored via SIOCSIWGENIE (cfg80211_wext_siwgenie()) without any
+validation. The crash trace shows that a subsequent SIOCSIWESSID
+triggers a connection attempt which calls cfg80211_sme_get_conn_ies()
+to process the stored IE buffer, causing:
 
-In ath11k_ahb_config_ext_irq(), when an external request_irq() fails,
-the error is only logged and the loop continues. The function then
-returns 0 indicating success, leaving the device in a partially
-configured state where some external IRQs are not registered. This
-causes enable_irq()/disable_irq()/free_irq() to be called on
-unregistered IRQs during runtime and remove/shutdown, triggering
-WARN_ON(!desc->action), and missing interrupt handlers lead to data
-loss.
+ - An out-of-bounds read in skip_ie() which reads ies[pos+1]
+   (the length byte) past the end of the 1-byte buffer.
 
-Additionally, if alloc_netdev_dummy() fails for a later IRQ group, the
-function returns -ENOMEM without freeing the ext IRQs and napi_ndev
-that were successfully set up for earlier groups.
+ - An integer underflow in the memcpy size argument when offs
+   returned by ieee80211_ie_split() exceeds ies_len, causing
+   unsigned subtraction to wrap to SIZE_MAX and triggering a
+   fortify panic.
 
-Fix all three issues: propagate the error up to the caller and unwind
-all successfully registered IRQs and allocated resources on failure.
-Also move ab->irq_num[irq_idx] assignment after request_irq() succeeds
-in the ext IRQ path to match the CE IRQ path and avoid storing a stale
-IRQ number on failure.
+Fix this by adding a cfg80211_validate_ies() helper that uses
+for_each_element() and for_each_element_completed() to verify
+that all information elements in a buffer are well-formed.
 
-Signed-off-by: ZhaoJinming <zhaojinming@uniontech.com>
+Refactor the existing duplicate patterns in validate_beacon_head()
+and validate_ie_attr() in nl80211.c to use the new helper, and
+use it in cfg80211_wext_siwgenie() to validate the IE buffer
+before storing it. Return -EINVAL if validation fails.
+
+Reported-by: syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=cc867e537e4bd36f69bb
+Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
+
 ---
+v3: Refactor validation into cfg80211_validate_ies() helper and
+    use it in validate_beacon_head(), validate_ie_attr(), and
+    cfg80211_wext_siwgenie(), as suggested by Jeff Johnson.
+    Remove redundant ie_len < 2 check since for_each_element()
+    already handles that case. Fix missing semicolon after
+    /* nothing */ in for_each_element() body.
 
-Changes in v8:
-- Move Link tag from commit body to changelog per maintainer's request.
+v2: Use for_each_element() and for_each_element_completed()
+    instead of open-coded validation loop, as suggested by
+    Johannes Berg.
+---
+ net/wireless/nl80211.c  | 15 ++-------------
+ net/wireless/nl80211.h  |  2 ++
+ net/wireless/util.c     | 11 +++++++++++
+ net/wireless/wext-sme.c |  3 +++
+ 4 files changed, 18 insertions(+), 13 deletions(-)
 
-Changes in v7:
-- Resend in a new thread. No content changes from v6.
-  Link: https://lore.kernel.org/all/b6903572-52cc-4c41-b9cf-5845e387c176@oss.qualcomm.com/
-
-Changes in v6:
-- Move ab->irq_num[irq_idx] = irq after request_irq() succeeds in the
-  ext IRQ path to match the CE IRQ logic and avoid storing a stale IRQ
-  number on failure.
-
-Changes in v5:
-- Resend as a fresh thread. No content changes from v4.
-
-Changes in v4:
-- Drop the napi_ndev NULL guard in ath11k_ahb_free_ext_irq_grp() as it
-  is unreachable in all existing call paths. A silent guard against an
-  impossible condition hides bugs instead of exposing them.
-
-Changes in v3:
-- Extract ath11k_ahb_free_ext_irq_grp() to handle per-group ext IRQ
-  cleanup and refactor ath11k_ahb_free_ext_irq() to use it.
-- On request_irq() failure in ath11k_ahb_config_ext_irq(), immediately
-  clean up the current group via ath11k_ahb_free_ext_irq_grp() before
-  jumping to the error label to unwind earlier groups.
-- Move u32 num_irq declaration before the irq_grp assignment to follow
-  declaration-before-statement ordering.
-- Extract ath11k_ahb_free_ce_irqs() to handle partial/full CE IRQ cleanup
-  and refactor ath11k_ahb_free_irq() to use it, replacing the duplicated
-  err_ce_irq cleanup loop in ath11k_ahb_config_irq().
-
-Changes in v2:
-- Move `irq_grp` declaration from for-loop body to function scope to fix
-  compile error in err_request_irq error path.
-- Set ret = -ENOMEM before goto err_request_irq on alloc_netdev_dummy()
-  failure to avoid returning uninitialized value.
-- When ath11k_ahb_config_ext_irq() fails, unwind the already-registered
-  CE IRQs via a shared err_ce_irq cleanup path to avoid leaking them.
-
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 1e1dea485760..ec5bf5c9fd79 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -431,36 +431,44 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
- 	ab->qmi.service_ins_id = ab->hw_params.qmi_service_ins_id;
- }
- 
--static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
-+static void ath11k_ahb_free_ext_irq_grp(struct ath11k_base *ab,
-+					struct ath11k_ext_irq_grp *irq_grp)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 5adcb6bd0fc5..27bbaf916574 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -228,7 +228,6 @@ static int validate_beacon_head(const struct nlattr *attr,
  {
--	int i, j;
--
--	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
--		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
-+	int j;
+ 	const u8 *data = nla_data(attr);
+ 	unsigned int len = nla_len(attr);
+-	const struct element *elem;
+ 	const struct ieee80211_mgmt *mgmt = (void *)data;
+ 	const struct ieee80211_ext *ext;
+ 	unsigned int fixedlen, hdrlen;
+@@ -259,13 +258,8 @@ static int validate_beacon_head(const struct nlattr *attr,
+ 	data += fixedlen;
+ 	len -= fixedlen;
  
--		for (j = 0; j < irq_grp->num_irq; j++)
--			free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
-+	for (j = 0; j < irq_grp->num_irq; j++)
-+		free_irq(ab->irq_num[irq_grp->irqs[j]], irq_grp);
- 
--		netif_napi_del(&irq_grp->napi);
--		free_netdev(irq_grp->napi_ndev);
+-	for_each_element(elem, data, len) {
+-		/* nothing */
 -	}
-+	netif_napi_del(&irq_grp->napi);
-+	free_netdev(irq_grp->napi_ndev);
- }
- 
--static void ath11k_ahb_free_irq(struct ath11k_base *ab)
-+static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
- {
--	int irq_idx;
- 	int i;
- 
--	if (ab->hw_params.hybrid_bus_type)
--		return ath11k_pcic_free_irq(ab);
-+	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++)
-+		ath11k_ahb_free_ext_irq_grp(ab, &ab->ext_irq_grp[i]);
-+}
- 
--	for (i = 0; i < ab->hw_params.ce_count; i++) {
-+static void ath11k_ahb_free_ce_irqs(struct ath11k_base *ab, int max_idx)
-+{
-+	int irq_idx, i;
-+
-+	for (i = 0; i < max_idx; i++) {
- 		if (ath11k_ce_get_attr_flags(ab, i) & CE_ATTR_DIS_INTR)
- 			continue;
- 		irq_idx = ATH11K_IRQ_CE0_OFFSET + i;
- 		free_irq(ab->irq_num[irq_idx], &ab->ce.ce_pipe[i]);
- 	}
-+}
-+
-+static void ath11k_ahb_free_irq(struct ath11k_base *ab)
-+{
-+	if (ab->hw_params.hybrid_bus_type)
-+		return ath11k_pcic_free_irq(ab);
- 
-+	ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
- 	ath11k_ahb_free_ext_irq(ab);
- }
- 
-@@ -524,20 +532,25 @@ static irqreturn_t ath11k_ahb_ext_interrupt_handler(int irq, void *arg)
- static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- {
- 	struct ath11k_hw_params *hw = &ab->hw_params;
-+	struct ath11k_ext_irq_grp *irq_grp;
- 	int i, j;
- 	int irq;
- 	int ret;
- 
- 	for (i = 0; i < ATH11K_EXT_IRQ_GRP_NUM_MAX; i++) {
--		struct ath11k_ext_irq_grp *irq_grp = &ab->ext_irq_grp[i];
- 		u32 num_irq = 0;
- 
-+		irq_grp = &ab->ext_irq_grp[i];
-+
- 		irq_grp->ab = ab;
- 		irq_grp->grp_id = i;
- 
- 		irq_grp->napi_ndev = alloc_netdev_dummy(0);
--		if (!irq_grp->napi_ndev)
--			return -ENOMEM;
-+		if (!irq_grp->napi_ndev) {
-+			ret = -ENOMEM;
-+			irq_grp->num_irq = 0;
-+			goto err_request_irq;
-+		}
- 
- 		netif_napi_add(irq_grp->napi_ndev, &irq_grp->napi,
- 			       ath11k_ahb_ext_grp_napi_poll);
-@@ -585,14 +598,11 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- 				}
- 			}
- 		}
--		irq_grp->num_irq = num_irq;
 -
--		for (j = 0; j < irq_grp->num_irq; j++) {
-+		for (j = 0; j < num_irq; j++) {
- 			int irq_idx = irq_grp->irqs[j];
+-	if (for_each_element_completed(elem, data, len))
++	if (cfg80211_validate_ies(data, len))
+ 		return 0;
+-
+ err:
+ 	NL_SET_ERR_MSG_ATTR(extack, attr, "malformed beacon head");
+ 	return -EINVAL;
+@@ -276,13 +270,8 @@ static int validate_ie_attr(const struct nlattr *attr,
+ {
+ 	const u8 *data = nla_data(attr);
+ 	unsigned int len = nla_len(attr);
+-	const struct element *elem;
+-
+-	for_each_element(elem, data, len) {
+-		/* nothing */
+-	}
  
- 			irq = platform_get_irq_byname(ab->pdev,
- 						      irq_name[irq_idx]);
--			ab->irq_num[irq_idx] = irq;
- 			irq_set_status_flags(irq, IRQ_NOAUTOEN | IRQ_DISABLE_UNLAZY);
- 			ret = request_irq(irq, ath11k_ahb_ext_interrupt_handler,
- 					  IRQF_TRIGGER_RISING,
-@@ -600,11 +610,24 @@ static int ath11k_ahb_config_ext_irq(struct ath11k_base *ab)
- 			if (ret) {
- 				ath11k_err(ab, "failed request_irq for %d\n",
- 					   irq);
-+				irq_grp->num_irq = j;
-+				ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
-+				goto err_request_irq;
- 			}
-+			ab->irq_num[irq_idx] = irq;
- 		}
+-	if (for_each_element_completed(elem, data, len))
++	if (cfg80211_validate_ies(data, len))
+ 		return 0;
+ 
+ 	NL_SET_ERR_MSG_ATTR(extack, attr, "malformed information elements");
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index bdb065d14054..8322ced6b551 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -129,4 +129,6 @@ int nl80211_pmsr_start(struct sk_buff *skb, struct genl_info *info);
+ void nl80211_mlo_reconf_add_done(struct net_device *dev,
+ 				 struct cfg80211_mlo_reconf_done_data *data);
+ 
++bool cfg80211_validate_ies(const u8 *data, int len);
 +
-+		irq_grp->num_irq = num_irq;
- 	}
- 
- 	return 0;
+ #endif /* __NET_WIRELESS_NL80211_H */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 24527bf321b2..dcaa5903bcd2 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -3083,3 +3083,14 @@ bool cfg80211_wdev_channel_allowed(struct wireless_dev *wdev,
+ 	return false;
+ }
+ EXPORT_SYMBOL(cfg80211_wdev_channel_allowed);
 +
-+err_request_irq:
-+	for (i--; i >= 0; i--) {
-+		irq_grp = &ab->ext_irq_grp[i];
-+		ath11k_ahb_free_ext_irq_grp(ab, irq_grp);
++bool cfg80211_validate_ies(const u8 *data, int len)
++{
++	const struct element *elem;
++
++	for_each_element(elem, data, len) {
++		/* nothing */
 +	}
-+	return ret;
- }
++
++	return for_each_element_completed(elem, data, len);
++}
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 573b6b15a446..1476d933c7e7 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -319,6 +319,9 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 		return 0;
  
- static int ath11k_ahb_config_irq(struct ath11k_base *ab)
-@@ -629,16 +652,24 @@ static int ath11k_ahb_config_irq(struct ath11k_base *ab)
- 		ret = request_irq(irq, ath11k_ahb_ce_interrupt_handler,
- 				  IRQF_TRIGGER_RISING, irq_name[irq_idx],
- 				  ce_pipe);
--		if (ret)
-+		if (ret) {
-+			ath11k_err(ab, "failed request_irq for %d\n", irq);
-+			ath11k_ahb_free_ce_irqs(ab, i);
- 			return ret;
-+		}
- 
- 		ab->irq_num[irq_idx] = irq;
- 	}
- 
- 	/* Configure external interrupts */
- 	ret = ath11k_ahb_config_ext_irq(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to configure ext irq: %d\n", ret);
-+		ath11k_ahb_free_ce_irqs(ab, ab->hw_params.ce_count);
-+		return ret;
-+	}
- 
--	return ret;
-+	return 0;
- }
- 
- static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id,
+ 	if (ie_len) {
++		if (!cfg80211_validate_ies(extra, ie_len))
++			return -EINVAL;
++
+ 		ie = kmemdup(extra, ie_len, GFP_KERNEL);
+ 		if (!ie)
+ 			return -ENOMEM;
+-- 
+2.43.0
+
