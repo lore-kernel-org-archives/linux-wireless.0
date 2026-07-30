@@ -1,32 +1,32 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6FF382298
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 06:09:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19C0384CD3;
+	Thu, 30 Jul 2026 06:09:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785391769; cv=none; b=IwQAJ49Bg0JlzX5MDVLkvZ7I4mt+F3eF5CBEp05f1TGeqz1vJeliqC8DXJJUknLgeadorPOc1lTqxBwZX1teaMWfF3FBK5rqDn76ky7q2d2sn2PcC62BTudkrHphZkso56B2KkqQa1+Iq3LikPBJ8suAJGQLecLGjYQDoL9PhVA=
+	t=1785391771; cv=none; b=BJoB3bQ5kwFpN9fHu0+/2NHukBYYzFmv7GFZxlux5ZAOvnvSjO9CBvPtVA3rRZqqjgpLW+DxQETlRP5fhiz/QJxrK3EYtdwRw90HbYxQ2li9tDqxxSCmODHe7A3beT+M2JLNxvWUNIubgN8jSYOnmVrrA7TqHNW8zsiypEIMd5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785391769; c=relaxed/simple;
-	bh=YoKT+RMRC0Vh/t6369YyxeFt474ao8mnuaWNjvSxklg=;
+	s=arc-20240116; t=1785391771; c=relaxed/simple;
+	bh=NvNj2mGdU+Dp+eTjacg4WlEPEjJxHCulIA5m+IheOLA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=j8V7ZG7VwIkgxr5XNCv7RLetNfsNGTGunZFMYVZzgalHeXHIEf8kh3dBVHB/jyw5GXZztRkMCSxLgF6Dc8DS8ZdiJ1BReXdvYxiiCFP326LbJJHsIeTdlr8fosqhyqmWiMXGU/qMiA0BxiVsDXW+lTlCgmM3NueC6rX2EMDgal4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ocSUzJvi; arc=none smtp.client-ip=91.218.175.185
+	 MIME-Version; b=qqNZPKr0qeTy5pfiv+8flou2SK+7nbvYjSiHb+5h/WKZPA+zL64Y1Tqbm+TW0WMOjur88mR63CsfGenBR0rzv0g7g9gliwqskZz4MuXGisQcix2ktJ+NxZUkLpNeB64Di+q11Te/mj0cHfYPmaoq5CVaAuH2dSEhQkaxyBFdZpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PARpcB5c; arc=none smtp.client-ip=91.218.175.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ocSUzJvi"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PARpcB5c"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785391762;
+	t=1785391765;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YoKT+RMRC0Vh/t6369YyxeFt474ao8mnuaWNjvSxklg=;
-	b=ocSUzJviUwouy5eNE+XOAxY/SWZsLwWdy4/S1iwfnqOb6PXD98SfOi7WgkxUQaqVbUERxf
-	oInWhziEB3ErGhr2DABHZjVmdOYXB/Ztr+eUX6Kt1K5LzxQWGWi2Yi21FwKGjQwTB/atLh
-	8/LJ4gU2PGVj7l+Hvu0y7duSGDz8wYc=
+	bh=NvNj2mGdU+Dp+eTjacg4WlEPEjJxHCulIA5m+IheOLA=;
+	b=PARpcB5ci7oX1Ezk9Ulq5dppq3ufHwbYmuhC9oe8xaE046y/IKtN67Nq/2k2GStfLaS+Wo
+	fZebgMKhv41cU+bO0JHgr1JfC7IUU3Ttl6OFvrounLuf5MreAhr+Yiyvm781UR6eYifWcp
+	VnLlKS3wsIVr6dAT3Sw+jzwi7cRtYh4=
 From: luka.gejak@linux.dev
 To: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 Cc: Luka Gejak <luka.gejak@linux.dev>,
@@ -35,11 +35,11 @@ Cc: Luka Gejak <luka.gejak@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	Michael Straube <straube.linux@gmail.com>,
 	Peter Robinson <pbrobinson@gmail.com>
-Subject: Re: [PATCH 17/19] wifi: rtw88: calibrate and tune the PHY for RTL8723BS
-Date: Thu, 30 Jul 2026 06:08:55 +0000
-Message-ID: <20260730060903.30187-8-luka.gejak@linux.dev>
-In-Reply-To: <efef00cb-8369-48d5-859f-623663ddac56@gmail.com>
-References: <efef00cb-8369-48d5-859f-623663ddac56@gmail.com>
+Subject: Re: [PATCH 19/19] wifi: rtw88: advertise the correct receive capabilities on RTL8723BS
+Date: Thu, 30 Jul 2026 06:08:57 +0000
+Message-ID: <20260730060903.30187-10-luka.gejak@linux.dev>
+In-Reply-To: <92272d90-a549-437d-886e-308807418485@gmail.com>
+References: <92272d90-a549-437d-886e-308807418485@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,42 +51,25 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-On 25/07/2026 00:05, Bitterblue Smith wrote:
-> These are three separate things, so they should be three patches.
+On 25/07/2026 01:29, Bitterblue Smith wrote:
+> You can do that too instead of adding special code here. You can
+> make your own rtw8723b_read_efuse() which calls rtw8723x_read_efuse()
+> and also fills hw_cap.
 
-The patch is dropped entirely in v2. None of the three survived
-re-testing.
+Done, in the chip driver.
 
-> This behaviour is already implemented for all the chips, although with
-> even higher gain (0x1c) than what you're setting here (0x1e). See
-> rtw_phy_dig_set_max_coverage(). Does it not work?
+> The driver is supposed to set that bit. The default value of
+> rtwdev->hal.rcr includes it. I think that should work for this
+> chip too.
 
-It works, and better than the override: five scans found 41 BSSes
-without it against 34 with it.
+You are right, and the reason it did not was a bug of mine:
+rtw8723b_init_wmac_setting() assigned WLAN_RCR_CFG over hal.rcr
+wholesale and so cleared BIT_APP_FCS, where the 8723x siblings only
+write the register. With the bit set in the chip's WLAN_RCR_CFG the
+descriptor carries the FCS and the core needs no special case.
 
-> This chip only handles the 2.4 GHz band, so checking the current band
-> should not be necessary.
-
-True, though the function is gone now.
-
-> With this you are always setting the same TX power, hardcoded in
-> rtw8723bs_pg_txagc. What is the reason for that?
->
-> Normally the TX power depends on values burned into the chip's efuse
-> (so they vary from device to device), and values hardcoded into the
-> driver are only used if there is nothing in the chip's efuse.
-
-There is no good reason, and this one was the worst of the three. The
-efuse path works: the by-rate table gives sensible values with the
-regulatory limit applied, and the hardcoded table was overriding them
-by up to 22 index units and bypassing that limit.
-
-> In rtw88 the IQ calibration is normally done in the phy_calibration
-> function (from rtw_chip_ops) which runs right before connecting to a
-> network, not in the power on code. Wouldn't that be fine for this chip
-> too?
-
-It is fine. v2 uses the normal phy_calibration path.
+Both changes are in the chip driver series rather than the
+preparations, so they will not be visible until that one is sent.
 
 Best regards,
 Luka Gejak
