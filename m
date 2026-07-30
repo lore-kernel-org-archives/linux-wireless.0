@@ -1,99 +1,231 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4FE0448B93
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:21:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5784037F8AF
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785428486; cv=none; b=GwzeWzUzPE27/QsQ/1YS9tAvm3i5vuWipwqqhApTVSIqk5coma6NT+szL7G8m0k77EtR7wbG9E8iq9onavRHv6z4n1vMfYiUyZwxwWRRbrNqvCP8l6KS7TFIaXj+tXhgwzUBCFNJJdBAh7xheoAmnN3hF3YSGUdCLHVwsctrr9Y=
+	t=1785428504; cv=none; b=M8op2+ICWIM+vl90o26idnBRHFJTHzmRquvhC5LpF6vHuGJqytLCjkfPMfUIe8KT8FiZ75kK3OWIeZi9iQl+wVcacaH6Xf6Vog2S10/9y40VhuxYgUhEuHfmKD7lrP1CipEtAYXSS8MtPFGJsHvUoI694SyE26Quok8sBYFgGoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785428486; c=relaxed/simple;
-	bh=0vJ2Pwn1SPoWkfDZqyMbLhyf/HEJIJtrz11Wn2z/Yyg=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=DA9rk56byYehwwaQCgCtP+8MxeWfidhtMjQzlU3Liub4cLqO9tTNKDu/VUcwIBDLVaRnPtCrEH4wT8zPKL6ODh+zXIRrIeL4YAfCgWeDyRIWOurWh3Wkt+VXoMGZEqQdNH2FA40/RsIVnzf/L3JieUvkIeSovpYrqIAsCZjselY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=w0V9pO3o; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785428504; c=relaxed/simple;
+	bh=bq4PN7BDO0yFKVQsaXHpuXUbJYEn7r0/aMV4I2Qy7bk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WfvuP8oydRRkU5oYBEYN1ELY52ww0vBe1Vj7IiglxrW9/flqpXzMjkK2Dc+O9s+F8b/KKZFTxwH5mtdu6tlQuqAje3omyz0tcN6RFTHQwELNsjSphRT//s3j1dYR3aoeGhvhzXloROaYhTqSrCQmeaxLUWUn3WFtRFc3w+RcxbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YwJTVbTH; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="w0V9pO3o"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=hQuOYMoDTYUILojp/RAfjwyX8BrLvGbkW8QZqah9ROg=;
-	t=1785428484; x=1786638084; b=w0V9pO3o/ujJMqvu8zO+oMDxURIG/d1cYbiCFRvXynMRXML
-	eqcvxX9d20A3qrQh5LVNlbi/LSM1xlkjDnTzKz7jyDv0dm9yRlhlHDyv0iPWXZOKj3FGfm9HZkR9E
-	fXwtP0ab8p6d2Ud41ygNWEZP/R68z33GUAnRSdylIemBaDPpANTmvIrwSysCnw2LqPVhhD2dphNCt
-	eOHMGFXM3ssZdfYzHaMBnAhiCbn2L2L9abTptbV8alH6pZT1hz03X+c/9Mg7wnxwzEomh2Zj7MA5i
-	3F0KT5jgPBM4kbKDfn+tCAfAuX5DiwmShJ+M5yzAIsRS5p4W6AyPSZgSQqEgjHnQ==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wpTVY-00000008BYm-29pA;
-	Thu, 30 Jul 2026 18:21:20 +0200
-Message-ID: <1dceded216618b1d7bb7b79846f15712161f2cc8.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: mac80211: defer AP-side FT key upload until
- association
-From: Johannes Berg <johannes@sipsolutions.net>
-To: andcov23@gmail.com
-Cc: linux-wireless@vger.kernel.org, Kavita Kavita
-	 <kavita.kavita@oss.qualcomm.com>, Sai Pratyusha Magam
-	 <sai.magam@oss.qualcomm.com>
-Date: Thu, 30 Jul 2026 18:21:19 +0200
-In-Reply-To: <20260730161531.3535100-1-andcov23@gmail.com> (sfid-20260730_181613_060012_A4F8F4A1)
-References: <20260730161531.3535100-1-andcov23@gmail.com>
-	 (sfid-20260730_181613_060012_A4F8F4A1)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YwJTVbTH"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3856d4015e0so8734a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:21:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785428502; x=1786033302; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=fDjKwH/pLgq11MmSt15oZfyeN0eo31ydS4Xhih3a270=;
+        b=YwJTVbTH3OwlH2fzjPC0psGgu/OM5Aq+gdoWAHozus57de90mYgiH/5A5w/Zc2NbZP
+         VigIF3GmoDC+5bau5FO8HE0VlBnEf4+MNgV1+HFtlmOoSOQZjvkyXY2v9RcOdO/l4Eb9
+         RTi5a40DBrLWYItoFrMLSuXfViHSQaaAm5Mn5XbCr3+0Dxs/YmA4st6bA9rEbDZgEZ65
+         pIlTHk3QpwPuALoRu+CrHneg0XBDS2TCAkGNx79bFQCZnKx5+Sm68Dys1oTMSOCW43cb
+         5tnH3H10G4uIlpqgHtN7SNmUWFLDZsfa4h7UdaZ0rHzyFywVu1uJftOowlp7FCDWUamT
+         c6eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785428502; x=1786033302;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=fDjKwH/pLgq11MmSt15oZfyeN0eo31ydS4Xhih3a270=;
+        b=m5oyAr2xogsMIyYZ99yBWvL4929HfTnK2zkzQEDwmwjm8pt/fI8qI7uJfZymuGKCyZ
+         RyqfRqeiw54+Nldg3gxbBOW6NqNlcGpDDhicZpHehnZyZ7w0Mcnf084Ne5DFX3ktDGja
+         RV5APthZB0Wh1LfLcznOQVfnZ0Xv8LJCn9eb+zEWc0lPnNw2ku8IGTGQKHHd61f1LRvM
+         PKDTJTBGTFeaELX6H8n4rSMgmsCZfgxTelMaZg0T0YlM7UtZorYjHqRQmviPWxH9x9rY
+         CFXs1ziqlzzKVXXFbngff+emXy2HzR4CSXz2sKDgr89a8faZiB97PeaIDmcY5FRoBYEB
+         hahg==
+X-Gm-Message-State: AOJu0Yx2cdFyJwS4c7jr1Rni0CiepC2ZXCavIDzK4fVc69l4W/LFYnl1
+	H35WVG6p3/dhs+GUTB043K0sS9FxP4l8U9xV17XWsNw6lGavtYHNJuNc
+X-Gm-Gg: AR+sD10AWyuIdZppmgBJYgXwLLot2kpAsL75n6Now91QrnoNpCsuLeWZm3pDT3TS1Ec
+	IfmAItDLjEGk/HmAKaTaTRAHXSUt5XFAE+J+jQor0amgglHQIXxtdIFlbX790KuzmoZlbDnfSjq
+	XWDxjqeWXOA7mJkkFmhmqoZr6vXwGU3qAtnTPx1WnEhc8LWSaGlxsArRxlJu97smE2NnIrnXyJ5
+	Je92kVz4ICtLDL0MZ4BBekVAZ1ieYnEFQwIb/WqsRPPQNWHlenPL2QMMhcv8ICPo3xkZM9wmIU8
+	cl2TqeY6UTJCLBWow5fdcvg3mLKtWk7l638dnxl+7DgQWG+FZ5+d+NwpK6dMvGwFQMWvxAKinSK
+	ReRx0MYHGa0R7dSPP70f0ZXLrSqMNhQRDKDCfafh3w2ZEUz9w665wewHn1rUgRlUJWl/vWsFydJ
+	c/ULfAwS4qKV3EEJ8BG5D6YmUub2yuxGOzBOMnEkeCxjLKxhCPkmz7ecvP5xgGCvRHtioE9ANqu
+	54=
+X-Received: by 2002:a17:90b:4487:b0:38e:ab3f:2c99 with SMTP id 98e67ed59e1d1-38fa8094a00mr759768a91.2.1785428501521;
+        Thu, 30 Jul 2026 09:21:41 -0700 (PDT)
+Received: from Potato.tail66a299.ts.net ([171.76.83.76])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e7275973dsm19964269c88.15.2026.07.30.09.21.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Jul 2026 09:21:41 -0700 (PDT)
+From: Shivesh <chanelshivesh@gmail.com>
+X-Google-Original-From: Shivesh <shivesh@example.com>
+To: arend.vanspriel@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Shivesh <chanelshivesh@gmail.com>
+Subject: [PATCH v2 1/8] wifi: brcmfmac: flowring: replace O(N) loop with atomic counter
+Date: Thu, 30 Jul 2026 16:21:04 +0000
+Message-ID: <20260730162135.12278-1-shivesh@example.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, 2026-07-30 at 18:14 +0200, andcov23@gmail.com wrote:
-> From: Andrea Covelli <andcov23@gmail.com>
->=20
-> During an AP-side Fast Transition, hostapd may install the PTK after
-> creating a station entry but before marking it associated. The ASSOC gate
-> in ieee80211_add_key() rejects the request with -ENOENT, producing:
->=20
->   nl80211: kernel reports: key addition failed
->=20
-> Userspace may retry after association, but this race can instead break
-> the roam, particularly with PMF.
->=20
-> Accept pre-association pairwise keys on AP and AP_VLAN interfaces once
-> the station exists. Mark only those keys as deferred so hardware upload
-> is skipped while the key is stored in mac80211. Upload the marked PTKs
-> after the driver's AUTH-to-ASSOC state transition succeeds.
->=20
-> Track deferred state on each key and scan the station's PTK slots at
-> ASSOC so hardware upload is limited to keys accepted before association.
-> EPP peers are excluded from this deferral because EPP requires the PTK
-> to be available before association to encrypt and decrypt
-> (Re)Association Request and Response frames.
->=20
-> Fixes: 1626e0fa740d ("mac80211: fix FT roaming")
+From: Shivesh <chanelshivesh@gmail.com>
 
-This is _ages_ ago, so this bug has been around basically forever.
+Optimizes flowring deletion by tracking counter updates with a flag
+instead of an O(N) spinlock walk, fixing a teardown leak.
 
-> Cc: stable@vger.kernel.org
+Signed-off-by: Shivesh <chanelshivesh@gmail.com>
+---
+ .../broadcom/brcm80211/brcmfmac/flowring.c    | 65 ++++++++++++++-----
+ .../broadcom/brcm80211/brcmfmac/flowring.h    | 18 +++++
+ 2 files changed, 66 insertions(+), 17 deletions(-)
 
-I don't think the stable thing is appropriate then.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index 35cbcea0abc9..b9c518939f50 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -182,10 +182,8 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_pub *drvr;
+ 	struct brcmf_if *ifp;
+-	bool currently_blocked;
+-	int i;
+-	u8 ifidx;
+ 	unsigned long flags;
++	u8 ifidx;
+ 
+ 	spin_lock_irqsave(&flow->block_lock, flags);
+ 
+@@ -194,23 +192,54 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 		spin_unlock_irqrestore(&flow->block_lock, flags);
+ 		return;
+ 	}
+-	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
+ 
+-	currently_blocked = false;
+-	for (i = 0; i < flow->nrofrings; i++) {
+-		if ((flow->rings[i]) && (i != flowid)) {
+-			ring = flow->rings[i];
+-			if ((ring->status == RING_OPEN) &&
+-			    (brcmf_flowring_ifidx_get(flow, i) == ifidx)) {
+-				if (ring->blocked) {
+-					currently_blocked = true;
+-					break;
+-				}
+-			}
++	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
++	ring->blocked = blocked;
++
++	/*
++	 * Maintain the per-interface blocked-ring counter.
++	 *
++	 * We use ring->counted_in_blocked rather than checking
++	 * ring->status here.  A ring that became blocked while
++	 * RING_OPEN has already been counted (counted_in_blocked=true).
++	 * By the time we unblock it during teardown its status may have
++	 * advanced to RING_CLOSING, so testing RING_OPEN would wrongly
++	 * skip the atomic_dec and permanently leak the counter, leaving
++	 * the netif queue stopped forever.
++	 *
++	 * Rule:
++	 *   block transition  (unblocked→blocked): count only if RING_OPEN,
++	 *                                          set counted_in_blocked.
++	 *   unblock transition (blocked→unblocked): decrement only if we
++	 *                                          previously counted it,
++	 *                                          clear counted_in_blocked.
++	 */
++	if (blocked) {
++		if (ring->status == RING_OPEN) {
++			atomic_inc(&flow->if_blocked_cnt[ifidx]);
++			ring->counted_in_blocked = true;
+ 		}
++	} else {
++		if (ring->counted_in_blocked) {
++			atomic_dec(&flow->if_blocked_cnt[ifidx]);
++			ring->counted_in_blocked = false;
++		}
++	}
++
++	/*
++	 * Only propagate a netif queue-stop/wake when the interface
++	 * transitions between fully-clear and at-least-one-blocked.
++	 * Reading the atomic is safe here: we hold block_lock, so no
++	 * concurrent brcmf_flowring_block() call can race the update
++	 * we just made above.
++	 */
++	if (blocked && atomic_read(&flow->if_blocked_cnt[ifidx]) != 1) {
++		/* Another ring was already blocked; no new queue-stop needed. */
++		spin_unlock_irqrestore(&flow->block_lock, flags);
++		return;
+ 	}
+-	flow->rings[flowid]->blocked = blocked;
+-	if (currently_blocked) {
++	if (!blocked && atomic_read(&flow->if_blocked_cnt[ifidx]) != 0) {
++		/* More rings still blocked; do not wake the queue yet. */
+ 		spin_unlock_irqrestore(&flow->block_lock, flags);
+ 		return;
+ 	}
+@@ -367,6 +396,8 @@ struct brcmf_flowring *brcmf_flowring_attach(struct device *dev, u16 nrofrings)
+ 		spin_lock_init(&flow->block_lock);
+ 		for (i = 0; i < ARRAY_SIZE(flow->addr_mode); i++)
+ 			flow->addr_mode[i] = ADDR_INDIRECT;
++		for (i = 0; i < ARRAY_SIZE(flow->if_blocked_cnt); i++)
++			atomic_set(&flow->if_blocked_cnt[i], 0);
+ 		for (i = 0; i < ARRAY_SIZE(flow->hash); i++)
+ 			flow->hash[i].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
+ 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
+index f3d511f9a3c9..afdea8b3f8aa 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
+@@ -5,6 +5,8 @@
+ #ifndef BRCMFMAC_FLOWRING_H
+ #define BRCMFMAC_FLOWRING_H
+ 
++#include <linux/atomic.h>
++
+ 
+ #define BRCMF_FLOWRING_HASHSIZE		512		/* has to be 2^x */
+ #define BRCMF_FLOWRING_INVALID_ID	0xFFFFFFFF
+@@ -26,6 +28,16 @@ enum ring_status {
+ struct brcmf_flowring_ring {
+ 	u16 hash_id;
+ 	bool blocked;
++	/*
++	 * True when this ring has been counted in the per-interface
++	 * if_blocked_cnt[].  Set to true whenever the ring transitions
++	 * unblocked→blocked while RING_OPEN; cleared on the matching
++	 * blocked→unblocked transition.  Needed so that a ring that
++	 * becomes blocked while RING_OPEN and is later moved to
++	 * RING_CLOSING still correctly decrements the counter at
++	 * teardown, even though its status is no longer RING_OPEN.
++	 */
++	bool counted_in_blocked;
+ 	enum ring_status status;
+ 	struct sk_buff_head skblist;
+ };
+@@ -40,6 +52,12 @@ struct brcmf_flowring {
+ 	struct brcmf_flowring_hash hash[BRCMF_FLOWRING_HASHSIZE];
+ 	spinlock_t block_lock;
+ 	enum proto_addr_mode addr_mode[BRCMF_MAX_IFS];
++	/* Per-interface count of currently blocked open rings.
++	 * Maintained atomically so brcmf_flowring_block() can check
++	 * whether any sibling ring is already blocked in O(1) without
++	 * holding block_lock across an O(nrofrings) walk.
++	 */
++	atomic_t if_blocked_cnt[BRCMF_MAX_IFS];
+ 	u16 nrofrings;
+ 	bool tdls_active;
+ 	struct brcmf_flowring_tdls_entry *tdls_entry;
+-- 
+2.53.0
 
-I also have a very large set of changes in this area that actually end
-up doing something very similar for SMD Transition, and much more
-comprehensively, which I'm about to post, so I think it's better for
-this to be integrated with that work later.
-
-This also doesn't consider the case of failure on HW support, i.e. with
-SW_CRYPTO_CONTROL it just (without any comment I might add) skips the
-thing by pretending the driver said it was OK. Not convinced that's a
-good idea, although this might be something that can't really solved
-better, perhaps.
-
-johannes
