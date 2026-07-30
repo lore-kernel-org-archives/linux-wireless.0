@@ -1,159 +1,163 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5453806C5
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 03:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785381037; cv=none; b=oALa05BFCYeAaJnKPCYzeIa45/Xqjh9ej0BXiZZI4eYyO4vWEtJoZL6hw0fJ240xANVO3HmEosFlRI4VCzPYgnRgZWJIlkkCG0fQ7DuyoFi5ioySh5QuQqVXLVL9jrjxlU0mvn7KmkZ0D7bAklVRrmq8nV2b1229r56sEjnXXEA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785381037; c=relaxed/simple;
-	bh=G26oBuLWBXTguVs1cjBDadH3KIV/Cq3VPwqIvFRppTQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Nnfnb6UDuISE58ScilqhnMen9HiPieydtjiUlCxA7nbRQbSnPD8xAJF+31KYNtliNR/JtYTBJ/htp6OPElmo+F510twrBK5fgANj+X0Lcg3XZNUdfH+mroeHvbGE/oKC/MLI2Vtsy6/EEVIdnjXt+zuy4K8vzAm/WWA8VHvG0qc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=inlykNPb; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IjgP/6qD; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31CA37FF53
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 03:24:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785381871; cv=pass; b=TK6GfnT9sdRFNxCD2WyVmgFJOU61JMi2Gntbw29G0eAD9wc318TSBll9i0GXbPTTRze11+DQ2OG4oQnTEm5q+nhWY9mNOmIMwJkSwztxYdxXqOIw7T0fQZpFcDrUrDmBzrlIzZhA9STxYYiJwT49EtuFkU2EafH4wfaICuOy2Es=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785381871; c=relaxed/simple;
+	bh=XHg40f1gJ/YIvj9Si9YNU/RPMmZ5XfcIDvaNQCDpNwg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aO2wA7YJ87PwAPyEzQXqiqRx4Jm3B6WIFR8iyP2ZinesfeyZaNt0s9nh+4B8vO1Mj84DYwdeKn//f1SJTbdSSbMjonbxmI/FoWufRRlGmCYh15Vde6PIJUHIteuWD7M580BaTAYjHFDLStZFrIoqzvuhhQOc8rfkDcStvbiO47E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r+CyZTg9; arc=pass smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="inlykNPb";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IjgP/6qD"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66U2i48s3941822
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 03:10:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Hru35mpumEb
-	kOLf7h02q3Nl02jlJ/9pefcv0jtM38wk=; b=inlykNPbeu+ZWHbKW044qJZOKAr
-	Vr0079Tvp4dzhVqybX9B0C18YX7Ek6O8U07W6nW29ia9IbpKNNtGUWCMffUHVbPE
-	8fmKEwkcMaE18s6hamKc51Z5TBzyqCtqIOPrvF2+7RORnAzqs1ggDBF0l4/i/z1j
-	NFZhs6pInncsnfIDld5CqOtapAdtbkDA+BN5Y20U8YmdTXryD23eX62oNqFE/Rvu
-	kupg5SEA1wAtACLn5bmfoh9M/RoDm37QT9DzGiWZaZJjnLJU6sy+cG1K8FgGgQ2d
-	RCUSoSco/4vbu8qpFYY8ddBMM+auhWNe5xGBiKkzyJj+hcwAHaKdx5WgDHA==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fqx3ag3bs-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 03:10:35 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cf6acd760cso20025055ad.3
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 20:10:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r+CyZTg9"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5aec201b582so1814987e87.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jul 2026 20:24:29 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785381868; cv=none;
+        d=google.com; s=arc-20260327;
+        b=nEoE+ap5cHRrWnM90dLx+VVOMkv1DxEjFk5gLCzN26TL4qc/vGZAQsaP3qz5o3gzoy
+         Now8Z0KD0Rf3/0xio0LsL+zoeygz7Hnn+xzbl3chza0gC8+VyPnR+MxEfnolekmSXDbU
+         Nj7sQqjN64cPiLD9KbT880zdRHaKZG26UHMUiUur6ic36HY4rRHKsuRHg1cfIxJ3t1+O
+         30eDCJKV9kGZMfbrXuytTMflHBsq7pZVuRnP9L0EwJZ2LBjDsuTIOzMqZ9QewD3Rv5Bn
+         Qe9PsFhVNmcLbddT7+s5C0tBFhBfADt/Jzr23ZT+UTWEI0u26w1RichKXXmRpJTcu8ge
+         Vh5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=czSucy7zlmDRprNUvvGm2utHsJougpvDn6kozLJOcKQ=;
+        fh=nze6cRpUwNAiRNJfUQhrzVaaQr6F9bHUNi5HC7yv+a4=;
+        b=iF0RqfZJT2SBbMrsZAT56ejWIgNUf160rhgqsU+ikHKQEyG+lkBMV6m4QwzpQv4ZEA
+         eCOVEvWmycIoa+Lt5WN4mYmS9R5c8+GUiWrxJ6djFT4Yr8D7ym+RUIrALMeIEriqkq/c
+         c1qPXCp9DKwmn/YYHgzQprSFm1NlIEschKQfLUepvo+9Xya3bG7+hmycE5LYrE7L/e5e
+         0F2GXmzW3Oo0lgyZ06z4a7fCKqx8xVEn+QI9jc31h5HNCz94HRfhAO1B9niybFhJGNVK
+         RudT5wgeioBnjWnOcY0jIJVdZp3om7SUOd2uUixIG5CqatA1m4IIYIfP6WY4BPbecfYq
+         9O7Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785381034; x=1785985834; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Hru35mpumEbkOLf7h02q3Nl02jlJ/9pefcv0jtM38wk=;
-        b=IjgP/6qDJJC0+ly/IdE2iSG1J1avc1sC7NtM97/NHdlfwTBd1d6FQFUd8RI9zyPQh9
-         NkXlDYNVs6gkkEmtR8FvcPCKI+JYJbzFfEDVLLfnhnEIeENgK/Rc5wDeqVDY2pyVmDsr
-         t7dPiZfkVrht/h7+fL5dRYroN+ugTFR2wGSkOtIcKMQb37SvQDL3Qoj4+gfMY+yLsH7M
-         yW8mB0mCMp3AtTpDb3NY8VmKE/1ZCqWwZAj+mAn50fARY9zqRAjYpt9OGwHevUBse+mU
-         WpW0ys7eMANQ5zluzF6ydS7O7ZYji7OMxnDmBRwZV3uD7n/VqQkRmMhIN9jgKOeaEZzm
-         Fsug==
+        d=gmail.com; s=20251104; t=1785381868; x=1785986668; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=czSucy7zlmDRprNUvvGm2utHsJougpvDn6kozLJOcKQ=;
+        b=r+CyZTg9WAngGfsteFMObpjdYuxuRw82C6kWsRZcr1xE8x1nFjXuPmjaE3J3XjLb5u
+         A0UG7EA7K0NMKuOsJhysgbA5BJF1TE7XiAOEb44Pfx6GGMucH1cMwlgBfUfJbIAQL42H
+         FU3c3Dp5NqL48LUT50PzT6MYqg2KdnfK21qJ0gJczQWCIUQQb/TYU9hKKS2LHHLN00Aw
+         P/0653GznNt1uYgPV6kYrQajw6prHGj6F3AVdRSX2BXcB7EDscFBbZZZO22f85lcN0qC
+         5wiKoMf15o3hPTp3HR/LjdeHx1hR5SBPHNVvljbOPEWKfk2c0KM+DyThIWA2Xs908Vmo
+         BsbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785381034; x=1785985834;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Hru35mpumEbkOLf7h02q3Nl02jlJ/9pefcv0jtM38wk=;
-        b=sL/Ph6Jfcn2qPiXHnOnPlRYvRz3shV2pM5rUQ3HJujW4NrGzTbYoOClE27ivfs9m84
-         r7/Ieft5z/d/9sd2uYkxA4Nk/IqxX5CBfAumvn4qXq/pYX/vGE7nRZ1GurDhCqca089b
-         UzCYV2tG3KJny+iLobKL+FOeadoVBN6rVKjTrYW/5lTHxKEhxelUCc21C3VllFtOK0UZ
-         NxkDWIyGmczBr/2o3OxZX7HL8TIOIE3ICKSkmSpIHonKDFnJePXhi83xn+UfJWjBrXCh
-         MLOLa8q6eUk1JyFCLTpbNJsUAaRwT38xK0WE8ulkkhLSv6IG1zaTmbeEn4Tan468AOOi
-         EnlQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rp0vDChcCv10HjLpm6I5jHJixG0wbDLYYilNfdlkOdHliAMepBH7Oy2Ky8unK+SQtHc9+3M5S0fmLFwkFMuaw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXQmzZdZyfiBajQepB89P6D5YK+LnhhLYfsxkxzANB0z0RVSIR
-	IvHLuSmuSswpZ18hxiske65aeb5cr3AOiaD//mTOg7Jg/ERFhFIulwXDqXmvo2P4iuz9LEhDmS0
-	Uy2jqmcQ+Crm2Aw+3xsyZsh/MupDjqqKRlyKFMRXW1C1TXQLPZyshbdea4/cWwg17o+HkpA==
-X-Gm-Gg: AR+sD11/uoZy9uKalB/eaQGA4ox3VJFSPgUF13ZcxV6Nz3mH53JkovkXa/M2BqpOrcj
-	ZDgG2TIrQXXmrPJvjpL0IGuDv8uUvHVBjRwWQWi2FNg8oP2Hw/gf/uR8M2cxkbMIEi3ADUVQzPX
-	lJ/hDPVScuqw6X0Y889fmPnaie4m1ajwdSWEGEa82A1KFB3b2kvUtsgPQ4gi1mDZ2ti7YjU9csj
-	3J0w6C6YcONdWpLYQzS4z8SXOK8TDKAoivJqi6eqszGV5abnUeXfXynF5OyDXK3sDU09NYOC8um
-	1fg1I5SgNALsACHMMcOfiZ8J3a0OYBHDoYbBQKPqrAIJQS0ZI4iV2Sxm9x8wqdikfMaz/wCU+Ok
-	ffVhE3xtUn9rzjgqam79Fg3+4E2gQ5XscHhefL5DNMSEVHE6b7K3TEYPCqoI=
-X-Received: by 2002:a17:903:f8d:b0:2ca:c68:c554 with SMTP id d9443c01a7336-2d035e66a85mr9174835ad.38.1785381034453;
-        Wed, 29 Jul 2026 20:10:34 -0700 (PDT)
-X-Received: by 2002:a17:903:f8d:b0:2ca:c68:c554 with SMTP id d9443c01a7336-2d035e66a85mr9174545ad.38.1785381034046;
-        Wed, 29 Jul 2026 20:10:34 -0700 (PDT)
-Received: from Z2-SFF-G9-MQ.ap.qualcomm.com (i-global052.qualcomm.com. [199.106.103.52])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d022c2e5b2sm18928035ad.74.2026.07.29.20.10.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jul 2026 20:10:33 -0700 (PDT)
-From: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
-To: jjohnson@kernel.org
-Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
-Subject: [RESEND PATCH ath-current 3/3] wifi: ath11k: unregister PM notifier on QMI init failure path
-Date: Thu, 30 Jul 2026 11:09:48 +0800
-Message-Id: <20260730030948.147892-4-miaoqing.pan@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260730030948.147892-1-miaoqing.pan@oss.qualcomm.com>
-References: <20260730030948.147892-1-miaoqing.pan@oss.qualcomm.com>
+        d=1e100.net; s=20251104; t=1785381868; x=1785986668;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=czSucy7zlmDRprNUvvGm2utHsJougpvDn6kozLJOcKQ=;
+        b=NhtQdKeukg7WseEKm7z4rveuQgcVW+0OZVGjqC7gURb1e6avPGMP4/jal+QoWgR+zL
+         /kqZ4DHSA013nriLbG56TF7HnHmFG0pPGJt9x8EXYG1AgGlbskyceCv5fbO6cD944r0z
+         G4rdCQRHMMf1zCiS53cB7W2L35OdT56KISkxSYue8qK7Ye+YSbiytlfMvHbzBCGVR3vT
+         RubE88nikEo7OC2Oq7ZvYlF744/m87dm6G9bwrB4wYG65KnlOHkQBDPYhsY2cxtzL5D+
+         rzpuUQrImz9Bgwi4l62oBsv+xowaE3UythLsqmgtuZU5r8RmQ1ShhU1Xnvaw7sjr7qBn
+         aPcA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr4etJjInCU17YgvgXGQaw3nCtGuQNEW224/mjRiIDenvn058BBeZkr4lbeVHVnCGvH/ZbYx3uGl8hobhG5TQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxQ02R5NfeJY1OpeQ6dKbezwKtPZ5LzArGJ3XXPdjdeRSKRqvpX
+	wVthWdZwSv/kpeKrHVPW6Som641XN5Wj8L/YPzCbkbBYcapzBf/8dt65Arlk36hNz5XFb4S7fmm
+	iV5AvBKH/AXwz0jSPYPTltq/8VpDB9f8DhFMI+u5I+ALT
+X-Gm-Gg: AR+sD13rXFXGkNDTXd8nGDHcJAexoiQkfnWuY4IDGHRMDbR6D3Xu2C8OqTbsPYs35XE
+	VxymfpVhIBsoszS/Ktth7ie+9jE8n6T2gZXL7h84zFofEO1Tk1ljweJI2JnL3ZVUfkDgqB8dQhP
+	acpD2mz+eW2PX3d8AtTsyhTNDNMy+0wLeKYO7qjTZjsVEoLYtXBXsnvKc1DO5w/3K25NqIkb7jm
+	EVQ8zgH8S7OD4RlHjwzlH3lm2x3yMqNbUPuBw5CQ6x/t4SQtowFwQhUs6EAYo3BPaoqE7ae4Vd+
+	0kPpE29CNTJ9N12PEGVofFvcNXeOSeCo37UoaF/3I2i9Zshheh94QS7Qmg84GwVm2VCqly8Wsq8
+	oVhUKKQqmI6op8hHErOxoEJQaGVM=
+X-Received: by 2002:ac2:4e0f:0:b0:5ae:be47:f006 with SMTP id
+ 2adb3069b0e04-5b2db391e67mr122170e87.43.1785381867775; Wed, 29 Jul 2026
+ 20:24:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: Lvv9pSyCtActccEtgHOsfSmHnYpK96Ay
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDAxOCBTYWx0ZWRfXxXwtKxZzBuwu
- 8AZuExYMpcJwiRjw2xCv7tcOTkKNnWQYE6H8asKosZq8RfETLHkZrlJpXPi0uz4bWJFcMG/8ePK
- aB+JWS1oYQ+Si9I12b3c/IgUs+82TBE=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDAxOCBTYWx0ZWRfXwCEmpPkWE1lU
- Rit9BAXWSPo78gVsPrskWNGVKWdmMtvNFXdxSH2/F97BMLyiNSR8wa5iux1Pa58Rprznj+gYA01
- UBYd7LPoMv5d1kXeyp7hOZqv4Z1sAxIWztn0RaK0YtUpEBakjHPbRzqE49keXq9cp+Fv+iGHNtl
- 2F2GGPx7WiH07BMngHL7JEsXYlGLdI1+nkOP6jHph/3dsNtPwGAw60NfT+JMOZxFmNCnpQdVaez
- 45H/s9Ge8spjHgURtna6uFhlEoxSmhhyLWEgAf8gchQxr7CTRApFYm4iKXa/Pl1B9IZ+tKb8Hju
- rpJVTuxveISTV8ArTkO9hOrC0+8DaGtdblAkNnCGyXWvYh7nScfrl03k4XmCEzF8ZuHHZ+9QCmv
- IKPI2Qhy6zXxz8ht1eFnLPsPA+vHdR+bamzrRmRmRPuyTb2k7FUMSTR9KoWiqpiwh2TU9E1Oscn
- iGaAgPpJG53rvEoSt0w==
-X-Proofpoint-GUID: Lvv9pSyCtActccEtgHOsfSmHnYpK96Ay
-X-Authority-Analysis: v=2.4 cv=S+7pBosP c=1 sm=1 tr=0 ts=6a6ac0ab cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=b9+bayejhc3NMeqCNyeLQQ==:17
- a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=EUspDBNiAAAA:8
- a=FJAr2BPrIL5JYYbaf3kA:9 a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-29_09,2026-07-29_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 impostorscore=0 clxscore=1015 priorityscore=1501
- spamscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607300018
+References: <20260728103536.25012-1-gvalkov@gmail.com> <amq0EnoZrBA+8W+J@nxpwireless-Inspiron-14-Plus-7440>
+ <CADOrJmZKdM0y6jeS7oOK0aKm7BaqcDB=BmXTSBrFTiTqXHhUhA@mail.gmail.com>
+In-Reply-To: <CADOrJmZKdM0y6jeS7oOK0aKm7BaqcDB=BmXTSBrFTiTqXHhUhA@mail.gmail.com>
+From: George Valkov <gvalkov@gmail.com>
+Date: Thu, 30 Jul 2026 06:24:15 +0300
+X-Gm-Features: AUfX_my7RmQB3ea64gFTkqlTnLieF4yzIpHcpIeqSKcu98ezcAV1Ujrhvwx5QWc
+Message-ID: <CADOrJmb=_uNHnnqswMAN+LTNPHnRARqF=MicFTP6C5QoMxH4Uw@mail.gmail.com>
+Subject: Re: [PATCH] wifi: mwifiex: ignore ROM regulatory hint on WRT3200ACM/WRT32x
+To: Jeff Chen <chunfan.chen@gmail.com>
+Cc: briannorris@chromium.org, francesco@dolcini.it, johannes.berg@intel.com, 
+	kees@kernel.org, miriam.rachel.korenblit@intel.com, wenst@chromium.org, 
+	rafael.beims@toradex.com, avraham.stern@intel.com, 
+	peddolla.reddy@oss.qualcomm.com, error27@gmail.com, s.kerkmann@pengutronix.de, 
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-ath11k_core_init() registers a PM notifier before the QMI server
-becomes available. If the QMI server never arrives, the device remove()
-path can take the early-exit path introduced for QMI initialization
-failures, skipping ath11k_core_deinit().
+Hi Jeff, I forgot to mention:
+The compatibile strings are added by this OpenWrt patch:
+https://github.com/openwrt/openwrt/blob/main/target/linux/mvebu/patches-6.18/
+311-adjust-compatible-for-linksys.patch
 
-As a result, the PM notifier remains registered after the ath11k base
-object has been freed. A subsequent suspend or resume event may invoke
-the stale notifier and trigger a use-after-free.
+So unless we also upstream this patch, using device names will work
+only on OpenWrt, which would make the current patch ineffective.
 
-Fix this by explicitly unregistering the PM notifier in the QMI failure
-cleanup path before releasing ath11k resources.
+Georgi
 
-Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.2.0.c2-00204-QCAMSLSWPLZ-1
-
-Fixes: 32d93b51bc7e ("wifi: ath11k: choose default PM policy for hibernation")
-Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
----
- drivers/net/wireless/ath/ath11k/ahb.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 7f5f5c8d7c56..bdb8c99f10fa 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -1272,6 +1272,7 @@ static void ath11k_ahb_remove(struct platform_device *pdev)
- 		ath11k_ahb_power_down(ab, false);
- 		ath11k_debugfs_soc_destroy(ab);
- 		ath11k_qmi_deinit_service(ab);
-+		ath11k_core_pm_notifier_unregister(ab);
- 		goto qmi_fail;
- 	}
- 
--- 
-2.34.1
-
+On Thu, 30 Jul 2026 at 06:06, George Valkov <gvalkov@gmail.com> wrote:
+>
+> Hi Jeff,
+> Initially I wanted to keep changes easy to read and as simple as possible,
+> hence my current patch is based on device names.
+>
+> Indeed out openwrt-ai also caught this:
+> https://github.com/openwrt/openwrt/pull/24458#pullrequestreview-4803923901
+>
+> I've been thinking about possible options:
+> 1. Use board names "linksys,rango" and "linksys,venom", where
+>    rango is WRT3200ACM, and venom is WRT32x. But a venom dts
+>    is also not available in Linux. We do have it in OpenWrt:
+>    https://github.com/openwrt/openwrt/blob/main/target/linux/mvebu/files
+>    /arch/arm/boot/dts/marvell/armada-385-linksys-venom.dts
+> 2. We could either ignore this or
+> 3. Have another PR with venom board support files, but that will require
+>    much more research and work. I don't have WRT32x hardware, and I'm
+>    uncomfortable doing this without supervision.
+> 4. We can also implement a dts flag, e.g. ignore_reg_hint, which can be
+>    set in the board dts. This might be the best and most flexible option.
+>    My experience with dts is almost zero and I will need help to implement
+>    it.
+>
+> Georgi
+>
+> On Thu, 30 Jul 2026 at 05:17, Jeff Chen <chunfan.chen@gmail.com> wrote:
+> >
+> > On Tue, Jul 28, 2026 at 01:35:36 PM +0300, Georgi Valkov wrote:
+> > > WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
+> > > from the mwifiex ROM, which conflicts with the platform regulatory
+> > > configuration on units sold outside the US market. For example:
+> > > - phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
+> > > - phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
+> > > - phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
+> >
+> > Hi Georgi,
+> >
+> > Thanks for the patch. I have a question about these compatible strings:
+> >
+> > >                               if (country_code &&
+> > > +                                 !of_machine_is_compatible("linksys,wrt3200acm") &&
+> > > +                                 !of_machine_is_compatible("linksys,wrt32x") &&
+> >
+> > I checked the mainline kernel source, but these names are not found
+> > in the DTS files under arch/arm/boot/dts/marvell/. Instead, mainline uses
+> > "linksys,rango" and "linksys,venom".
+> >
+> > As a result, this machine check will always fail on a pure mainline kernel,
+> > making the quirk ineffective.
+> >
+> > Jeff
