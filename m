@@ -1,32 +1,32 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from out-177.mta1.migadu.com (out-177.mta1.migadu.com [95.215.58.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9654B3B14D0
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 07:45:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13EA73B6348
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 07:45:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785397545; cv=none; b=C1oWQ6BfAn157gU9Oiizq/hCUSNdd41oshZMxnSAFKAHkRze6cc/8laTv5z+M3vs8jf7FCX3u1qWxxkf5SC+NsFoil4DioNaACb9nmFHq++NlC2S2RRyFSS6v1Ejd9Brn2s7WmLljEUCMG7NnRgePgQ3PNwoXMgiklJf0BjYCSA=
+	t=1785397546; cv=none; b=oVF0Nuyjoz8EBHLQ+geq5MELX1WLfHwAVqj8/ZEPSuImKZdTiMFRNrnddnnGRY4NsoPxtXV1DZfhMbGDY217vI1orZ42wYsAc7ijYzdTtqKyAqqwfdqZgv/0GFpwpUYdqlpVBT6cpjy/hLFjd+U5TSschNDtW7pddxmwQwxnNgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785397545; c=relaxed/simple;
-	bh=NYL9+Iko3h1c8Lb5N8PGSC8gdoJvO5OQVvnG7myu1uA=;
+	s=arc-20240116; t=1785397546; c=relaxed/simple;
+	bh=34GdtLV2kLpfzoYH0LOFN7JLEJTL1ma02Bm8yKw43no=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rY/YooPr9y7TplOkLsDG7Xac2qqTVxZkMPfGLabXNqdMM0J0HggVqeWlHI+COdZqpp71UPwq7zM7UbIuBEdxHjbmmnhxN4obUGklLpR4hmKVeT2B29GwA//XLI1nenZWH4rDaKjv6f+GSIP268qKFXJ2Kz7e9CyKbL70iiuA4Ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NP28lxgz; arc=none smtp.client-ip=95.215.58.178
+	 MIME-Version; b=hTX2rnXn8dKT+f3elHUCz+2a/RJWp+Kk98AiW2s8IB+z2P1c7dH8hPnFoynAWIf0mCAaRCHO9dnj7jca/sBfPnbrfuOgz8JPsc/ZJwLHL7xmtwubCE3g0qghxqqeHeYqGNdjkuDZI9mIadnGjGtID1b8A8SqPm6Z+yt+ixiynm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WgRS8MrO; arc=none smtp.client-ip=95.215.58.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NP28lxgz"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WgRS8MrO"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785397541;
+	t=1785397542;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=A4oNLn/1Y830os5QOR7ahPtstkBoQ4YTu0H/L7jtWBs=;
-	b=NP28lxgzn7pM+j74b3z0aeMcfsJ+DfuSUiKvBQYz3CImyw3OT8ZlMF4SfV0xM9l8OQ2DPX
-	U7PnxMrMu6VUSjSkHXfBkLUyEEBoOmEAmVVmAjcS7vgRB3+R5xN3/RUg/6SKfeeQFsdLCV
-	2W9PllFDLAtEUn9j1rigwjaN1dPzNzc=
+	bh=5GqlmurrZI+UAzodTam5xYTbk2+/8ptNeXnVqpdSbEw=;
+	b=WgRS8MrOX+9sl9GFaes6gNOwbIEiBJEuBUlR1VVCrajtE8zoo7uHjfXy0rC2Pe8PN/HcfR
+	WlFXtEfpy31WSLMLRQZGmo326jPfjTJHW+wGygZmQATSpjITrmPqEa/ZGzWmp7k7Z643Nq
+	Y4PHHzgQsWDQAFSBcDVj4kIKOTXnOhk=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Luka Gejak <luka.gejak@linux.dev>,
@@ -35,11 +35,11 @@ Cc: Luka Gejak <luka.gejak@linux.dev>,
 	Michael Straube <straube.linux@gmail.com>,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH v2 08/11] wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
-Date: Thu, 30 Jul 2026 07:45:01 +0000
-Message-ID: <20260730074504.19725-7-luka.gejak@linux.dev>
-In-Reply-To: <2d3e396f1e184e6eac0a232578d0761c@realtek.com>
-References: <2d3e396f1e184e6eac0a232578d0761c@realtek.com>
+Subject: Re: [PATCH v2 09/11] wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
+Date: Thu, 30 Jul 2026 07:45:02 +0000
+Message-ID: <20260730074504.19725-8-luka.gejak@linux.dev>
+In-Reply-To: <af51f851a5254faa9caba6b1e04fefe8@realtek.com>
+References: <af51f851a5254faa9caba6b1e04fefe8@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,30 +51,61 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-On 27/07/2026 08:59, Ping-Ke Shih wrote:
->> +               rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST |
->> +                                      REG_SDIO_HIMR_CPWM1;
+On 27/07/2026 09:21, Ping-Ke Shih wrote:
+>> +/* 8723BS SDIO TX FIFO back-pressure watermarks: stop the mac80211 queue once
 > 
-> align the REG_*
+> comment style.
 
-Fixed.
+Fixed, both of them.
 
->> +       if (rtw_is_8723bs(rtwdev))
->> +               rtw_write8_set(rtwdev, REG_RXDMA_MODE, 3 << 2);
+>> -       queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
+>> +       mod_delayed_work(rtwsdio->txwq,
+>> +                        &rtwsdio->tx_handler_data->work, 0);
 > 
-> I think you are setting burst count?  rtw_write8_mask()?
+> queue_delayed_work()?
+
+Changed inside the TX handler, where the work is not pending and
+queue_delayed_work() is the right call.
+
+I kept mod_delayed_work() in rtw_sdio_tx_kick_off() on purpose, because
+there it can race with a pending retry. If a page shortage has already
+armed the work with RTW_SDIO_TX_RETRY_DELAY, queue_delayed_work() would
+see it pending and do nothing, so a newly queued frame would sit for up
+to a millisecond for no reason. mod_delayed_work() re-arms it to fire
+immediately. I have added a comment saying so.
+
+>>         if (ret) {
+>>                 skb_queue_head(&rtwsdio->tx_queue[queue], skb);
 > 
-> #define BIT_DMA_BURST_CNT	GENMASK(3, 2)
+> This case is also `processed = true`?
+[...]
+> Can you cleanup the handlers of return value and processed?
+> The logic isn't clear to me.
 
-Yes, that is the burst count. Now
+You are right that it was not clear, and the requeue case was the
+reason: the frame had been dequeued but not sent, so neither value
+described it well. The out-parameter is gone. rtw_sdio_process_tx_queue()
+now returns:
 
-  rtw_write8_mask(rtwdev, REG_RXDMA_MODE, BIT_DMA_BURST_CNT, 0x3);
+   1  a frame was written
+   0  the queue was empty
+  <0  the write failed and the frame is back at the head of the queue
 
->> +       /* RTL8723BS keeps raising the interrupt after resume if undefined
-> 
-> comment style
+which the handler reads as
 
-Fixed, along with the rest of the series.
+	ret = rtw_sdio_process_tx_queue(rtwdev, queue);
+	if (ret == 0)
+		break;
+	if (ret < 0) {
+		if (rtl8723bs && ret == -EBUSY) {
+			queue_delayed_work(... RTW_SDIO_TX_RETRY_DELAY);
+			return;
+		}
+		break;
+	}
+
+with the management frame restart after it. Behaviour is unchanged; a
+non-EBUSY error still moves on to the next queue.
 
 Best regards,
 Luka Gejak
