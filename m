@@ -1,68 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C578328B71;
-	Thu, 30 Jul 2026 07:39:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 824DE33A6E9;
+	Thu, 30 Jul 2026 07:45:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785397194; cv=none; b=lueeH5OSsxYrWE/rTEYyoQDeIunqpL4zlzohSjIDr3cLdGmGkCY/Sy9S2TXuAJDW9kI5R9VVJ4jBrnVy5xE5YOZWiKlz3aW+IqvOxub9ekVMAnpjwIRaaQelmDws/DCqMY3o9xjtMqEhh9kEU17TV+T4zuui+bi6478E+ihPZ+c=
+	t=1785397539; cv=none; b=Onqd2nb0Cd1sROYMbBkXk1Mb9RZLxnNHI/imrRWEi27Lfz2PO5PKmF8bPDQkSy51rDJ7/o5wkS6mZvrgyDiIQV62ywWR1GL2tWZPRfBpQK24wBkyZskh9OMtiEAArYwB5w7Mh6QkZFgJbQf+3VURkJISejllf0WNyLGcMypZVNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785397194; c=relaxed/simple;
-	bh=3P112EVIHzjzV+HRW3sycyMQC8VD6eJ4jtjN/mILxzo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tNmgyk/yWBYQV6jo8I62NN4cawr+3vTc5h41VLQDmp/rZWsRGqQg+fE8aPp4v8gpucxNS6Q+bNf33pMMIsortCuioIUjaxb6sruLC52tbVRcx8vTahOXTbnTR5MPdIrQnmr+X0N012a/BvPi2t3RTwK4JJaB7s6uJckevrs+tIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=e8U9t4NX; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785397539; c=relaxed/simple;
+	bh=YCedUE7KErEw1BXN676SxahX64CLElnOpa2TolJBD90=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mK1UM4JlRHCWHA+9963vBBXtCGjAeXyfsHNm3PbO/im8VnHsYnMlLoLf3gSu9g7Rg1XxsVX781vwN+Bm6bW+VRjW6No1G6gSOZSuDsLANSm6eg/2G0IkiupmevyHGwS0NShG189PAvWckOcbf78QeyD9O0DKx+lX2vt8y97YpFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xFve8Y5f; arc=none smtp.client-ip=95.215.58.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="e8U9t4NX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 051A41F000E9;
-	Thu, 30 Jul 2026 07:39:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1785397192;
-	bh=svLe7s4QjDfCesasTA8vn+XDkYAYv+K8Z0uBYaXxNEk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=e8U9t4NXHdEc2hbcy8XNay9RnFTFhWgYKw3EoY+v2IVGBZK1z9nPZBZosXh6qsW2D
-	 R6i14C85FJdNGeNR9XfxMGHWEdkdGIsXOKKmD1BC/q0oJmKOG8GTNwjbyJgF21aaOu
-	 6s1qEdIlULS8e4rScGzw4nGjwTGOoWryW+ITE2Jw=
-Date: Thu, 30 Jul 2026 09:38:25 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Yi Cong <cong.yi@linux.dev>
-Cc: linux-staging@lists.linux.dev, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yi Cong <yicong@kylinos.cn>
-Subject: Re: [PATCH v2 2/4] staging: rtl8723bs: fix double free when
- register_netdev() fails
-Message-ID: <2026073007-handoff-pajamas-63a3@gregkh>
-References: <20260730060000.1944670-1-cong.yi@linux.dev>
- <20260730060000.1944670-3-cong.yi@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xFve8Y5f"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785397535;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=xw9rOROEberHU0pIyKBWtUooSjG4p1hWdB6I+Whzyz4=;
+	b=xFve8Y5fdsM3AOiraDbk8LOmkKa/retqxB5zJQpc3yp8l+LRqFmvf4BjKPODXz90SeDM1v
+	QXyzhAmj/cd2OVk0WYhF+ifqjkPXu9b2ljkGyCGITboe+kQZpJJikhl9RMOVq9eCOmSOF+
+	BLkeXmA1BBArsK3QTKiaoljmFbtXyCM=
+From: luka.gejak@linux.dev
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Luka Gejak <luka.gejak@linux.dev>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: Re: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and SDIO helper
+Date: Thu, 30 Jul 2026 07:44:55 +0000
+Message-ID: <20260730074504.19725-1-luka.gejak@linux.dev>
+In-Reply-To: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
+References: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260730060000.1944670-3-cong.yi@linux.dev>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Jul 30, 2026 at 01:59:58PM +0800, Yi Cong wrote:
-> From: Yi Cong <yicong@kylinos.cn>
-> 
-> When register_netdev() fails, the error_register_netdev label in
-> _rtw_drv_register_netdev() frees the adapter and netdev via
-> rtw_free_drv_sw()/rtw_free_netdev() and then returns _FAIL.
-> 
-> The caller rtw_drv_init(), however, still holds a non-NULL if1 on this
-> failure path and jumps to free_if1, where rtw_sdio_if1_deinit() invokes
-> rtw_free_drv_sw() and rtw_free_netdev() again on the same already-freed
-> objects, resulting in a double free / use-after-free.
-> 
-> Drop the freeing from error_register_netdev and let rtw_sdio_if1_deinit()
-> perform the tear-down, which is the single owner for this path.
-> 
-> Fixes: 554c0a3abf21 ("staging: Add rtl8723bs sdio wifi driver")
-> Signed-off-by: Yi Cong <yicong@kylinos.cn>
+From: Luka Gejak <luka.gejak@linux.dev>
 
-You forgot to use the proper "Assisted-by:" tags for this series, right?
+On 27/07/2026 07:12, Ping-Ke Shih wrote:
+>> +static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
+> 
+> As RTL8723B generation is very different from other chips, you need to add
+> this to deliver different flow. I'd think if we need a set of ops to make
+> code clearer.
 
-thanks,
+Agreed, and v3 starts on that. The largest offender was patch 11, which
+had an if/else on the chip in ieee80211_ops::mgd_prepare_tx(). That is
+now a chip_ops::prepare_tx callback dispatched from
+rtw_chip_prepare_tx(), so the common path has no chip test left.
 
-greg k-h
+For the rest I reduced each site to a single entry point that the
+common flow calls once and that returns as soon as it has handled the
+notification, rather than the chip test being repeated in every helper
+below it:
+
+  rtw_coex_8723bs_scan_notify()
+  rtw_coex_8723bs_connect_notify()
+
+Everything below those now assumes RTL8723BS with BT disabled, which
+also answers your "callers check this already" comments on patch 05.
+
+The SDIO side is harder to express as ops, because it is the bus
+driver rather than the chip driver that differs, and rtw_sdio has no
+per-chip ops table today. If you would rather I add one there too I am
+happy to do it; it would be four callbacks (free page check, page
+accounting, output queue wait, transfer sizing) and I did not want to
+introduce that structure without asking first.
+
+Best regards,
+Luka Gejak
