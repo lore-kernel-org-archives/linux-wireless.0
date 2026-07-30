@@ -1,63 +1,63 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82A1744DB61
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A6745FFD0
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785427477; cv=none; b=cGzEdvrPzb7csJGpBTZ4x7r6g3aaYnIHYcXsezyEhNyyKKTnvDC4oBVM6fHbS0Zrp0jo/NSF7Y7aJtZA/LRIwvBEGpZG6iznaME2FYSScY4Vo7ZRweg5LcU3aToxJtxrY8F4Y0rnZ0KM4dFILNFrMY6Z6TiMv/gIWeHV9UAZQsU=
+	t=1785427480; cv=none; b=GQq7GQvTDXZ9F7rvcLWtpuDerYbMFHFd5oh3TdfoUrl0MiKtwY9VWk0e4Yh5QAwZ0/ICWxqqYqUcGe99G0Tb6vm6kQefSJqQwUpaD1c2eo9uYt5I8igJAI5u8a8MtIJ/QlacyFNNKhfKrgN/RYwOGwh1KW4N555x7STEtcr5FmI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785427477; c=relaxed/simple;
-	bh=uVNCm45C3XC07WQGOTZjv70HxvVG+1BMzGP4bpvZu7s=;
+	s=arc-20240116; t=1785427480; c=relaxed/simple;
+	bh=83sqCGdGcSCvVa+9JspIJKCFU9FvCzQFy5Q7L48LIJg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WAkKaduhJGYAqMHvn+nQiTbo8k/1NkeS25+RqCeAmKkqHraPvt6ye1PNKEc7/zYtkt9Uj6HMRCAjTMavJtzQtDu5jEvxUoJecm9qksCngZ88xx5W+KFulq/TmC5+uwWHAnZ9vB7bo5JFCwaegrqxbQmMA74qjGR3uryMa0zCx4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=agxZKEzL; arc=none smtp.client-ip=209.85.216.54
+	 MIME-Version; b=MBEhD57PHP6XrJt+6iRI7JtckqICbItiPaXJ1949NnYf7NmC2S5Dlx+qY3VkwcuE4Occ/qMkW9fF96OsT0vCHGTPrES84AqRSMRILMrK83xZlXvmo750pDDgzYOsIJV8CbtgnlT0QniVxync8ah8c9jSbpyUbLsBhikPtXkQmZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nm7z0Bwa; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="agxZKEzL"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-381f03d7be0so5180a91.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nm7z0Bwa"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-849f2f32facso4946b3a.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785427475; x=1786032275; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785427478; x=1786032278; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TERzNlpS66WxjkUnYI6cB5mJn+bQoDdEk70EG74DgeM=;
-        b=agxZKEzLquu4KYN/9u43ywzNKUwpBQhUaWZCxvJKf6VImeX5g3gZwd4dhRxSJDX4Ip
-         b3E3Eup5TQMurRRHxMsqox51RBEIf3VcPuUhAyul5MXhnA83nCvE2KJQLi8YBtEnLGCW
-         OZ5ZWW8qLBC6tI683NDuqMa09Otd1GceDkWSM43GuzP6+7ihJnmkdaUk70l/wEZNjpvs
-         GtxkqMX2p/a1j/4JXDgK76mGm+rc7Yw433OYJcL1vWVMLT/xk6vaLY1R5EAI5ltn8gV3
-         NxxK+Qy8+ZYhpa0uWPw6hEy6J/Y5ioRArq/EKL/lh5Zz9nTBoUYKClAeZXh8sE6lLadD
-         x1aw==
+        bh=3jIAI+a5zpsh6wBE3laZ7ci5SL/RFgEEpXPR8uss6Ao=;
+        b=Nm7z0Bwagth6q7UjFiJYqXPIRLNO/lZ9txh8UYjs/3SMCUF3DHCjNb3vBXR6zXCRKS
+         9W8xZVZY59ib8TyyzI6uS+UfNq5pBTGOdard/JuHYgO+hHywTRWyvC9/dnS0CQXGJ9aE
+         M4GWcg3jWBDiY13OMjRqMhkVCEi2fMlmLCS2lohXb8LI/sXvQRVDMjj3Dee1BynZ4vFJ
+         GP186fcDdp4nCZN0vs1ufatfPboW+ESd806YJCSozUWdGhdKUY1F28TtwQJS41lBX8gG
+         cI/SkIi+LRkp3fvuyzUxsnveUwAGEzQLySLp2fOHLcH66bGKbQBORtKCHjHiPeJP5dRw
+         LGlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785427475; x=1786032275;
+        d=1e100.net; s=20251104; t=1785427478; x=1786032278;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TERzNlpS66WxjkUnYI6cB5mJn+bQoDdEk70EG74DgeM=;
-        b=cQfFEOGNZ/z/FnDqCirDdDQN407EYHl7ps8uqbKyszARZ6ggl0c4af+6xnYeJIGpvJ
-         q8oG590XLFY+gYRMdWG7ovD48ZpqQt6CyEm4suX8QWjxeChEvoq3C75DXbjREj4cb+WI
-         4IyNuxhKPRYQ2CG4N4mLadxKAtObH8kKy3HQvbn2V/ZNzcFTfqrLjMXMXmfME5B/y4tF
-         AT0+ySzc4P8wxkrGVAgwC0/Buni1SyGGrrqCxqvusaQLGZxHVYkPn/HUYu5qpPVSC5xh
-         LVXsHiRoVCCL3SqAGOUqPbUypmCBFH8gDiyA5CqcyzoiVa3CxWV8hKQ41FbzSuXHRMGh
-         JmwA==
-X-Gm-Message-State: AOJu0Yw15aIspU+b7GRonibgtDEozhry2zyMjuoCdxYLXX/rUbyNo81X
-	2Z8/jonm7b+1MiAtWm6MmgQT5kEKu6zK3bIkJo7yqmzZ1y+ful5kwcheU7RtX8+apuM=
-X-Gm-Gg: AR+sD10lNyynpGiimDrkoz2wGk2h5BNbSTa1fyJopR089lMBsyyaNYcSCCo68erBgEY
-	9IC/hGRiYII6Bp52bfUn50SClJ6laRAOMJGVSVGyjXURh/oppgFZ/19kElhnBCrv0Bs/ofnhnw4
-	PMrPQKl/ksQi9TyEOTKHM6jI3H+Bu5gA8drvJvB7xq/vrP0LmqM9ji2gSWQ+h0QjcTeeTpYXhnN
-	wXLnt+9hlMg5WTcdDfS4SXt/yWxJ+KFn9v7RRipcpWLlS4OE3broHaPvJscdSxSvZpuN1YdZPNT
-	WvtM44OYh5OJdeBThHjk2BCnMANnVGZ103VTmgv55YyM3glO/VzdBIdOBsxOWTOFoaZgKytPy3F
-	t4b9P4MQbnnc+Q88fUDwb/QwvVhLuAI4x83sXQ7nseJehMAdzlHFuHHFOrzCjT9PVzLB3mqRvFi
-	r5m3CjxZDWUwW2BsBOmvAQth4i2g2I2q9K9ZtUehpXft4kw9mHvvkmLYt1DJvyZz5oLu9yIsXKt
-	Ns=
-X-Received: by 2002:a17:90b:274d:b0:37f:eda5:516f with SMTP id 98e67ed59e1d1-38fa7c68cf5mr872384a91.0.1785427474684;
-        Thu, 30 Jul 2026 09:04:34 -0700 (PDT)
+        bh=3jIAI+a5zpsh6wBE3laZ7ci5SL/RFgEEpXPR8uss6Ao=;
+        b=PmosTOrZfQGNZp0sin3hIhP8qzuK1VtDJ4P1kHYkoa80o/Aa2FPM00GOTjUgltBpu1
+         7ZFImoXqU85lks/EiufbxRICf84qxPaSKgU4XnGN1T1ka8uuMw0HMlC5p0GBAIGx7CoW
+         LQH9VceFJC7H1ck8H8bk+D2wc4IfChtq4DxeuavmGDdw0z+b4HyBdvjlWQE/JSMdh+EU
+         s0OYCHnt0suoyvBg3cmZrdBa9ZSoeK7VeGL/F2gG7C79P+IqHKrsKLe7frCWBS7TDkCv
+         g3343QaNGRAL2m520unNNjvzziSvJh2gGeADf8N5Ht67tvtryv1BCmpt1Wdes1Sr2W5r
+         HWBw==
+X-Gm-Message-State: AOJu0YzP76THLLP9Cj1Cu8VBVrGOVYt5eQvYi4t3O8oVtK/aqGPBu4r2
+	BuRCwohOhx4/3Rm10EPAF41xir+ydeG4DUk1gEXy/bFFqeCEc6mQFIUW
+X-Gm-Gg: AR+sD13oCI236LDP66e6hafTdaH1j41Mb4iJ5/xXvoz4SQOemtdA2ynwKCH5x7qnOj5
+	locYs7xM/TAMg5ce9c9Du+MVtIsRELuFoBiDxSUHhfBhFvokKhCdLQRnqfSsUefgs6SXLXmNknu
+	OMOdLku2y4OMXBIZyaA+qzvRMOt/uw7IyhPnppAN9FpDXs2BJsGoakEE405+w7Iyn6QYe/kRfPB
+	gQcdF13OtlOqUWKn8Ja7zQtZor1zJH0dBkBwIpuDbjkOK1+9NORBnezF3RRaEXaDbRwX9wy+FQP
+	9dvn+ikoWR0qnstV/3la3jivWloPEMheSAhXX98HAYLpF+fYT7nNHKUgpC6FGte3tgR6ZNvEuo3
+	u3L31YBkLzMRxntLbB9Ej6pNbLOIxqX3i1sW8lONORChpeilke55FZx6NKsIq914dvYksf3r/4H
+	glpyk1kPlD7+taBgly1OCv00KmnNAprjpMZ16GuQbDoKhsVbAzzhpnqMVc+MmHWTajWtcwnHV0H
+	KsHEINj6xNZWg==
+X-Received: by 2002:a17:90b:1c89:b0:36d:b30b:14ed with SMTP id 98e67ed59e1d1-38fa80944a8mr870183a91.2.1785427477707;
+        Thu, 30 Jul 2026 09:04:37 -0700 (PDT)
 Received: from Potato.tail66a299.ts.net ([171.76.83.76])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.31
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 09:04:34 -0700 (PDT)
+        Thu, 30 Jul 2026 09:04:37 -0700 (PDT)
 From: Shivesh <chanelshivesh@gmail.com>
 X-Google-Original-From: Shivesh <shivesh@example.com>
 To: arend.vanspriel@broadcom.com
@@ -66,9 +66,9 @@ Cc: linux-wireless@vger.kernel.org,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	Shivesh <shivesh@example.com>
-Subject: [PATCH 2/8] wifi: brcmfmac: sdio: coalesce host locks in rx path
-Date: Thu, 30 Jul 2026 16:03:50 +0000
-Message-ID: <20260730160425.11933-2-shivesh@example.com>
+Subject: [PATCH 3/8] wifi: brcmfmac: core: populate radiotap header with RSSI
+Date: Thu, 30 Jul 2026 16:03:51 +0000
+Message-ID: <20260730160425.11933-3-shivesh@example.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260730160425.11933-1-shivesh@example.com>
 References: <20260730160425.11933-1-shivesh@example.com>
@@ -80,101 +80,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Tightens host claim scope to only cover hdparse calls, avoiding
-unnecessary blocking during skb manipulation.
+Populates the radiotap header with dbm_antsignal using the rssi
+value extracted from the firmware's hardware RX header, fixing
+missing signal data in monitor mode captures.
 
 Signed-off-by: Shivesh <shivesh@example.com>
 ---
- .../broadcom/brcm80211/brcmfmac/sdio.c        | 62 ++++++++++++-------
- 1 file changed, 38 insertions(+), 24 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/core.c        | 34 +++++++++++--------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index b725c64e5b5c..4e414403d747 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1645,37 +1645,43 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index ec170647800d..673f0000389c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -431,45 +431,51 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	netif_rx(skb);
+ }
  
- 		rd_new.seq_num = rxseq;
- 		rd_new.len = dlen;
++struct brcmf_radiotap_info {
++	struct ieee80211_radiotap_header hdr;
++	s8 dbm_antsignal;
++} __packed;
 +
-+		/*
-+		 * Claim the host once for the entire header-parsing phase.
-+		 *
-+		 * brcmf_sdio_hdparse() operates on data already in host
-+		 * memory, but may call brcmf_sdio_rxfail() on error, which
-+		 * writes SDIO Func1 registers and therefore requires the
-+		 * host to be claimed.
-+		 *
-+		 * skb_pull() and the num counter are pure host-memory
-+		 * operations; keep them outside the lock to minimise the
-+		 * hold time.  Both hdparse calls (superframe header and
-+		 * each subframe header) are grouped under a single claim/
-+		 * release, replacing the original N+1 separate pairs.
-+		 */
- 		sdio_claim_host(bus->sdiodev->func1);
- 		errcode = brcmf_sdio_hdparse(bus, pfirst->data, &rd_new,
- 					     BRCMF_SDIO_FT_SUPER);
--		sdio_release_host(bus->sdiodev->func1);
--		bus->cur_read.len = rd_new.len_nxtfrm << 4;
--
--		/* Remove superframe header, remember offset */
--		skb_pull(pfirst, rd_new.dat_offset);
--		num = 0;
--
--		/* Validate all the subframe headers */
--		skb_queue_walk(&bus->glom, pnext) {
--			/* leave when invalid subframe is found */
--			if (errcode)
--				break;
+ void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ {
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR_FMT_RADIOTAP)) {
+-		/* Do nothing */
++		/* Firmware already provided a full radiotap header; do nothing */
+ 	} else if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR_FMT_HW_RX_HDR)) {
+ 		struct wlc_d11rxhdr *wlc_rxhdr = (struct wlc_d11rxhdr *)skb->data;
+-		struct ieee80211_radiotap_header *radiotap;
++		struct brcmf_radiotap_info *rtap;
+ 		unsigned int offset;
+ 		u16 RxStatus1;
++		s8 rssi;
  
--			rd_new.len = pnext->len;
--			rd_new.seq_num = rxseq++;
--			sdio_claim_host(bus->sdiodev->func1);
--			errcode = brcmf_sdio_hdparse(bus, pnext->data, &rd_new,
--						     BRCMF_SDIO_FT_SUB);
--			sdio_release_host(bus->sdiodev->func1);
--			brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
--					   pnext->data, 32, "subframe:\n");
--
--			num++;
-+		/* Validate all the subframe headers while host is claimed */
-+		if (!errcode) {
-+			skb_queue_walk(&bus->glom, pnext) {
-+				rd_new.len = pnext->len;
-+				rd_new.seq_num = rxseq++;
-+				errcode = brcmf_sdio_hdparse(bus, pnext->data,
-+							     &rd_new,
-+							     BRCMF_SDIO_FT_SUB);
-+				brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
-+						   pnext->data, 32,
-+						   "subframe:\n");
-+				if (errcode)
-+					break;
-+			}
- 		}
+ 		RxStatus1 = le16_to_cpu(wlc_rxhdr->rxhdr.RxStatus1);
++		rssi = wlc_rxhdr->rssi;
  
- 		if (errcode) {
--			/* Terminate frame on error */
--			sdio_claim_host(bus->sdiodev->func1);
-+			/* Terminate frame on error, still holding the host */
- 			brcmf_sdio_rxfail(bus, true, false);
- 			bus->sdcnt.rxglomfail++;
- 			brcmf_sdio_free_glom(bus);
-@@ -1683,6 +1689,14 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			bus->cur_read.len = 0;
- 			return 0;
- 		}
-+		sdio_release_host(bus->sdiodev->func1);
-+
-+		/* Host released; now do the pure-memory bookkeeping */
-+		bus->cur_read.len = rd_new.len_nxtfrm << 4;
-+
-+		/* Remove superframe header, remember offset */
-+		skb_pull(pfirst, rd_new.dat_offset);
-+		num = 0;
+ 		offset = sizeof(struct wlc_d11rxhdr);
+-		/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU
+-		 * subframes
+-		 */
++		/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU subframes */
+ 		if (RxStatus1 & RXS_PBPRES)
+ 			offset += 2;
+ 		offset += D11_PHY_HDR_LEN;
  
- 		/* Basic SD framing looks ok - process each packet (header) */
+ 		skb_pull(skb, offset);
  
+-		/* TODO: use RX header to fill some radiotap data */
+-		radiotap = skb_push(skb, sizeof(*radiotap));
+-		memset(radiotap, 0, sizeof(*radiotap));
+-		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
++		/* Insert our radiotap header with RSSI data */
++		rtap = skb_push(skb, sizeof(*rtap));
++		memset(rtap, 0, sizeof(*rtap));
++		rtap->hdr.it_len = cpu_to_le16(sizeof(*rtap));
++		rtap->hdr.it_present = cpu_to_le32(1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL);
++		rtap->dbm_antsignal = rssi;
+ 
+-		/* TODO: 4 bytes with receive status? */
+-		skb->len -= 4;
++		/* Strip the 4-byte receive status / FCS tail */
++		skb_trim(skb, skb->len - 4);
+ 	} else {
+ 		struct ieee80211_radiotap_header *radiotap;
+ 
+-		/* TODO: use RX status to fill some radiotap data */
+ 		radiotap = skb_push(skb, sizeof(*radiotap));
+ 		memset(radiotap, 0, sizeof(*radiotap));
+ 		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
+ 
+-		/* TODO: 4 bytes with receive status? */
+-		skb->len -= 4;
++		/* Strip the 4-byte receive status / FCS tail */
++		skb_trim(skb, skb->len - 4);
+ 	}
+ 
+ 	skb->dev = ifp->ndev;
 -- 
 2.53.0
 
