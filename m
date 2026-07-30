@@ -1,184 +1,229 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949834519A6
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:01:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E750438DC40
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785427273; cv=none; b=Lgy38xyrgmUzohAO3s4xJA/VA+D/nfoG+x+ovaGnHwz0hWGwH25TACmBuRcPwI4q8JQL7PCzWzWEE8Uh8r0viiXwIaO0G3QTn1HTVoc3Lm5tiqvJPrNRWYiPLixMA4aHEH/Om+g6kwLChtCgkYWUidwL8kBO6U7g5YUz+LZmuNg=
+	t=1785427474; cv=none; b=UrlIJg4p+++0mzEtqsRhQ3z1+Yw3FSpPUmTSDHPGox0v45i4xO0Xe9fWiPEf3CS1GlTCLallkgF6Q4pB0E0/AsqHotqh1FPCRlxlc4btIi1GljQWl4QE0pJkRUxZG3K6D6hrOWHVYrZPPQsheWMrinmYnyKHYVmntOB8dk5+nMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785427273; c=relaxed/simple;
-	bh=8FCfjPBXOgeSOCE9oMNfyVBDBWfxZtU2M5HiiMnr1BI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Fy1BlRMKQqtYaG3z89kYUKYs9Sa9IgTfT8T29VXByZXkmMsqy2xX6oQHTYGp/R8ybgcPfnSb5Bif0XTlkDLrMJfqADp94OBbV/MI4tgn6yu53dybv6CIBIQIaEYU8dVt5oZsbOT0iqTaenfjCCkK0KksxohL/Fi9fFZqsKpJQcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=CoQ+dBJ2; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cHrQXpcE; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785427474; c=relaxed/simple;
+	bh=OspfEu0PH4En6DDNaG81nLBxGMAEqO3gsvGoIDdgcn8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=U18ut8mu5cpYHxJo9OXFPk+t2YxYEra5D0i6yEjbZcxWca3/DpmjGZfa+UMHcOj5y2DOJQZbAKsMjqyzZ2yuOPoeF09r6Tzd2sNM10wUL8m9u57d72dBeDRLviqgvS2guSQwDC2A2nMoYoppC6RtO6/iTIDKxnaE8utsD4Cmzl4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pURGoqGt; arc=none smtp.client-ip=209.85.216.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="CoQ+dBJ2";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cHrQXpcE"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66UFQodn2401514
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:01:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	r+r+249nF6a2qrtXG3fwd0XKqhJprD40LYapJr4TU6o=; b=CoQ+dBJ2w2OXWcV7
-	89Yvmm28+CeLZyllRsKsEYx2lctJzjxebUPTXvnncMJYuuM8mG5FftOXEjE7Pbub
-	i+c84ERsedV8jQDpkqL/kyr+aqqvCUcojbG6t4DKyuqLvEHA66yXRnE4TVQy22hC
-	REpHvQ0DdAwnpUAwQdeUZU7fkLkcTHMeAy/Z10PpKMBKAamGTX9MaUwnXdH3/IBG
-	MDiA7KkJal0svawJPgwTk88UazLOKDygNC0qYWI+dM9DoVjYo4aQaq6ZRdj7B3Qj
-	8xdnU8MqzLJLaQiVSlkOSrRbL5SFX1RIrOoJFBUS1yoDaOd2WB0Px17lCZUOAVhY
-	iGhUqA==
-Received: from mail-vs1-f71.google.com (mail-vs1-f71.google.com [209.85.217.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fr8168n0w-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:01:06 +0000 (GMT)
-Received: by mail-vs1-f71.google.com with SMTP id ada2fe7eead31-744e80385dbso607137.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:01:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pURGoqGt"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3856d4015e0so4112a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785427265; x=1786032065; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=r+r+249nF6a2qrtXG3fwd0XKqhJprD40LYapJr4TU6o=;
-        b=cHrQXpcEzZmIZjPHspRJwPF8XAsOh+YmLHLO6p+OW+uMv9/JnO2b055jSIaTwr1xGo
-         k0Cehiih41MReG1igfg94QOjm+cfU41lj/o8G6cNZbpc3yyqSwDysxgQfMBx/Z0U/XS1
-         5w2/tw/KLaWqM1ZeGBpq5J+7OLU3KRLQmYz3i8zANNNZz7mTKrlkEr0mmW/tqMHfQI26
-         pPNHytZdX8WTQUnSgfQbLUzWjiyMs0mYs3dmjqQ3BeY3MPaIX1RTj3vJWG8fRtiTCwWn
-         tpFSlIlPZUzkAOmxD1TBYweeGM12X7BQBsp9m2kRQFZ1X55xt3ZqLMoBHfG2pFv4xVLa
-         sgwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785427265; x=1786032065;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1785427472; x=1786032272; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=r+r+249nF6a2qrtXG3fwd0XKqhJprD40LYapJr4TU6o=;
-        b=q/EmRmv2G0bxUTrUSfADAToyc07H8xospDBHDzw5W53It36ccVfpOcrbfKEfbMxPcU
-         CXIH0ovMKmLFNvoMs1T2smpHWEqhuJ+x1XKwAEB32Q8EewEDEj+b2BWF+d2sOrZUBTbw
-         6I8+FabuIFYuaChslgLeCJXc4HqQOdr63Kp9w600EdAoHr/HumAryNPWXI0zWRVW78lZ
-         Jenn5cHXhE1C4umeeLkeN84pV0HnUOc5tqzPt94AnkfPRV96lAjXPD0hHsO0Xezg+cpN
-         XVDgHPuC1ZMMMPd9WYgO2/xx6m15XJsjprozWT441U2anGtW8xrhBSmVaob73IA/vIlc
-         DnSg==
-X-Forwarded-Encrypted: i=1; AHgh+Roamfb9kToFhJL+DQO5dayOnXJaJ03atlNsp19U/WaZrmypopPvE5v2lqTQVRgLcI5eRSuG6hgQkf/LBfYjvQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwrXoZzVkv4AXncedOJ0wPCCBXAEuH1N8n2LyEVHAs4qz+wC+Uo
-	TZ8MpmHkoj/JnT71S7X+hQ6H/CVVi2huBs/jiyKUhNIP+AN9VvGbaXa57yJ9hVwgWVfr3EvC+4Q
-	b/Q/fnn1hUDcjlqjK80dULetrS+I+UHHjb/YYjA5tcUwWSTlUDmPugzNQxoBM/2ociWlJbA==
-X-Gm-Gg: AR+sD111jDHRsNaP/MH7PXCfje2kX0EATs5ZPXGf34eAMxC7m53S4SycJ++i7lNEctr
-	XURSnP0FJ3t7ODrr6kxrujNEw83E7h6vRBmMJvxi+i0z51cZDBgEXENkMETNZyDn9tCeD2u30Vr
-	ZTeNceH51RyUWF5yeyFX1fD11Cxm+LbQQf5vMilFjIu5BqH7zoIDo5xtt+3nLP9a1pdJS2K4uIE
-	15Q+PZLtqjJJZQXs1b6mi/Yj1rob2EKscknYU/NDBE3YY0IPHoPb+903cx7jYYdA081FkT29NSP
-	bKiBsMv+tTup3x0jKejwd5yLXq4Rk9dYOFHSJ3LJiUgnqTpLTOX5wlaLFswrHcsZrdt/FU0cGJi
-	OH1iQgL0tYrLup36duiBZ+bmXnMTvATNwFN/jig08UaOlWGL+TwuPD7NnPgLBXg4M1d4SEyQCpx
-	bBvsCEGnodJ5c7UlOPcYc/joKrSvBObnA+uAYIPRB5T6ha0yckqzmR
-X-Received: by 2002:a05:6102:1484:b0:74a:b5e3:e96f with SMTP id ada2fe7eead31-7574dfce200mr1067412137.7.1785427264853;
-        Thu, 30 Jul 2026 09:01:04 -0700 (PDT)
-X-Received: by 2002:a05:6102:1484:b0:74a:b5e3:e96f with SMTP id ada2fe7eead31-7574dfce200mr1067275137.7.1785427263969;
-        Thu, 30 Jul 2026 09:01:03 -0700 (PDT)
-Received: from QCOM-eG0v1AUPpu.na.qualcomm.com ([2a01:e0a:830:450:61cd:dcd3:c61a:ac3c])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1fa8bb6deesm85168066b.53.2026.07.30.09.01.01
+        bh=hqASPZFtaBlHPhl3fozdspmc8s9/23tVm7H9FNuYtZU=;
+        b=pURGoqGtaeWOfT36mr4kQaLia5U7uUQnFWGU5eaq3vOWzr/IDD3fHdWViIBrHPU49P
+         eTpX4VlY/2WQJAMdKWeDkq+rg0mco75y46dA0StHpc2srBfB3sQw5348St1nmCsS+hiN
+         OCAi8pOjggRbh5B1MLzQWjxRvR1IuoJPxsFjp+31qwLZNuoChcdv5aQLoDu5ymOFUtcK
+         Dk/Ci2AEgEjZSqLe3Sz6Vh92k5FNAASjOV8wuDAFhSPeIGx0ECGo7qOrwPm5CXWvtRSu
+         aEk9KvgvuJLmA5d5u1WmwWI+om5W6nivpgQAYS1YVpBNditsqyYkOoy1aClfu1Pj1Ygb
+         3irQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785427472; x=1786032272;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=hqASPZFtaBlHPhl3fozdspmc8s9/23tVm7H9FNuYtZU=;
+        b=e3fx2sKZhOUxRiSXGfMi4j88UbzTE0M0boPYHTsnCG8zjVhJ3mn285uoTluks6Ya3e
+         hibKsA5nu5D/Mp8p8zfkd1E6b2DxNbGsY7aV4Qr4dx+Sov7nQ6YzZJh/l0heJdcdp64B
+         YxUVqJGz3CHSuHhNdN0xy6enFGsvwgugfApmncOawlOdWjykeBg6J8EFdXIy9KRSYUm2
+         4tOLaQu5u5mY7x0XBFeWcjMnzfz1TeMvegG2eV/ku6S+YQ7C+vT32JNf18S8F8bNvOXq
+         BOAEmM9oR+rsbq6CHMe4vS7uTCTl+Cr7xBdjl9LHDHtqfDJaRNAcGHjubf9774VaWbhg
+         vVZA==
+X-Gm-Message-State: AOJu0YzLoru9cafTj5zoBrhqk9jzWYQs9sdeQaZQKNitDgvSbVOjiDmJ
+	2Q3rUzGdySCfKM2x3IHTjR/MEBLpaKRpFuRVJUPC7q7fWUeEcYkfsq9l
+X-Gm-Gg: AR+sD13VW6izZzDg9qxJ04aYhjxN1D/47HZ5tu8StbGT4yzv5Bm5+lzdQIbF1LL2xLq
+	2RfbMIv06ZwPXSKVpkj+xz+UP0/O0TOjRs10kEBG72xhz+JXt/vWqmBFl4bz9MRCiknhmJzCEUv
+	vkLWBFkKgUxWGarXXtxmcfeUKWV8d0iuWRUEXQdYrdjB5cnwM1klREG5PYTVtMoH4Mxf0+gcogO
+	ZdP6exRyliEwnyD+GjoLdyNWq04s2vjQVFGDxSzZqmPOTrZpouYwX5dDWQEeKz06lK5WbNIDRQB
+	S5xbkTGDmDBoG990+sAsDmEUa+tffRAQ7ZHsmHDRRDoU2Tgn3Q8A0dJO0SCMN+OkaDStiMSJjLK
+	J6GXh78cguKbNTtkLBwpAB8Y+mQt5f0Yr83ePkwnjbKCwB2q8fqMgrU8KKX/OcA86fcweKjGaRZ
+	rtb1RiLQeymCpPPJ7X90T4PbWVBbVUpZl2LKbAVWC99Kcbb6dNHmRktQFyJQkELzCYpfuQlMn1w
+	C4=
+X-Received: by 2002:a17:90b:4487:b0:38e:ab3f:2c99 with SMTP id 98e67ed59e1d1-38fa8094a00mr688435a91.2.1785427471539;
+        Thu, 30 Jul 2026 09:04:31 -0700 (PDT)
+Received: from Potato.tail66a299.ts.net ([171.76.83.76])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 09:01:03 -0700 (PDT)
-From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Thu, 30 Jul 2026 18:00:39 +0200
-Subject: [PATCH v9 09/10] Bluetooth: qca: Set NVMEM BD address quirks when
- address is invalid
+        Thu, 30 Jul 2026 09:04:31 -0700 (PDT)
+From: Shivesh <chanelshivesh@gmail.com>
+X-Google-Original-From: Shivesh <shivesh@example.com>
+To: arend.vanspriel@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Shivesh <shivesh@example.com>
+Subject: [PATCH 1/8] wifi: brcmfmac: flowring: replace O(N) loop with atomic counter
+Date: Thu, 30 Jul 2026 16:03:49 +0000
+Message-ID: <20260730160425.11933-1-shivesh@example.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260730-block-as-nvmem-v9-9-f72935817dbf@oss.qualcomm.com>
-References: <20260730-block-as-nvmem-v9-0-f72935817dbf@oss.qualcomm.com>
-In-Reply-To: <20260730-block-as-nvmem-v9-0-f72935817dbf@oss.qualcomm.com>
-To: Ulf Hansson <ulfh@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-        Rocky Liao <quic_rjliao@quicinc.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>,
-        Srinivas Kandagatla <srini@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Saravana Kannan <saravanak@kernel.org>,
-        Christian Marangi <ansuelsmth@gmail.com>
-Cc: linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-bluetooth@vger.kernel.org,
-        netdev@vger.kernel.org, daniel@makrotopia.org,
-        Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-X-Mailer: b4 0.14.2
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMwMDEyMCBTYWx0ZWRfX73paoloIkYVf
- vBTPzihbZrDOpiUSOlPGRdWSUsUtgrCHH9lI7xmWtvsdYesY0/+1W3YUQfNZK53rBg9S+uo5bd7
- mc476BM6bwqb/ZwhJ1SQqGrYQORLoK4=
-X-Proofpoint-ORIG-GUID: 26G0acjz2kf7A7xpq0Q_xiFZ-w1TqdgM
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMwMDEyMCBTYWx0ZWRfX89j48e0FlAuk
- 89S72Im2B1J09tDkOef+x9E4pEVTJG+ezlT81+PAWNxPU5dBwB8I9DOSOuyrqjQecAz8dwtCnzo
- KHN59NYD8sMIFlq7GDQT/nEY4o+cRzjy+yoCmCrmSzCnxbhODAi+iF80PDQVDIRbW3/08liWAAV
- Snjlz5fkopn0flFGAwzyWBeFNg21PC5hxl9nqkMJqKAsjB8GgMklSO3bRjt98RXo7pLEh4c4v3r
- 24YuCG8CD/+Ro1tYd8rF1LAfBq/jY9Eq5+4717286dMGhpUue9wiufbJCKZ6mS7uQazSFJ6wUHQ
- LfcpNR6He8elgzIR0uaqnMNcgXjnPhGmXuX9HLLH3fF+SaUUQZAj+9MBq7akJekKKbWB2Tb/Qyn
- mphxvMR/WevrN88uF9bDgc99DBB46Q==
-X-Authority-Analysis: v=2.4 cv=LIlWhpW9 c=1 sm=1 tr=0 ts=6a6b7542 cx=c_pps
- a=P2rfLEam3zuxRRdjJWA2cw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
- a=99fXo_IpyjsNTNVBUdkA:9 a=QEXdDO2ut3YA:10 a=ODZdjJIeia2B_SHc_B0f:22
-X-Proofpoint-GUID: 26G0acjz2kf7A7xpq0Q_xiFZ-w1TqdgM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-07-30_04,2026-07-30_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 suspectscore=0 lowpriorityscore=0 phishscore=0 malwarescore=0
- adultscore=0 bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2607300120
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-When the controller BD address is invalid (zero or default),
-set the NVMEM quirks to allow retrieving the address from a
-'local-bd-address' NVMEM cell. The BD address is often stored
-alongside the WiFi MAC address in big-endian format, so also
-set the big-endian quirk.
+Optimizes flowring deletion by tracking counter updates with a flag
+instead of an O(N) spinlock walk, fixing a teardown leak.
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Signed-off-by: Shivesh <shivesh@example.com>
 ---
- drivers/bluetooth/btqca.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/flowring.c    | 65 ++++++++++++++-----
+ .../broadcom/brcm80211/brcmfmac/flowring.h    | 18 +++++
+ 2 files changed, 66 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
-index 04ebe290bc784ea854ec7743bc753c3e41f556d3..06cb787b0559f3d712ec2b88d9e25a7d46fb00b3 100644
---- a/drivers/bluetooth/btqca.c
-+++ b/drivers/bluetooth/btqca.c
-@@ -723,8 +723,11 @@ static int qca_check_bdaddr(struct hci_dev *hdev, const struct qca_fw_config *co
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index 35cbcea0abc9..b9c518939f50 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -182,10 +182,8 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_pub *drvr;
+ 	struct brcmf_if *ifp;
+-	bool currently_blocked;
+-	int i;
+-	u8 ifidx;
+ 	unsigned long flags;
++	u8 ifidx;
+ 
+ 	spin_lock_irqsave(&flow->block_lock, flags);
+ 
+@@ -194,23 +192,54 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 		spin_unlock_irqrestore(&flow->block_lock, flags);
+ 		return;
  	}
+-	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
  
- 	bda = (struct hci_rp_read_bd_addr *)skb->data;
--	if (!bacmp(&bda->bdaddr, &config->bdaddr))
-+	if (!bacmp(&bda->bdaddr, &config->bdaddr)) {
- 		hci_set_quirk(hdev, HCI_QUIRK_USE_BDADDR_PROPERTY);
-+		hci_set_quirk(hdev, HCI_QUIRK_USE_BDADDR_NVMEM);
-+		hci_set_quirk(hdev, HCI_QUIRK_BDADDR_NVMEM_BE);
+-	currently_blocked = false;
+-	for (i = 0; i < flow->nrofrings; i++) {
+-		if ((flow->rings[i]) && (i != flowid)) {
+-			ring = flow->rings[i];
+-			if ((ring->status == RING_OPEN) &&
+-			    (brcmf_flowring_ifidx_get(flow, i) == ifidx)) {
+-				if (ring->blocked) {
+-					currently_blocked = true;
+-					break;
+-				}
+-			}
++	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
++	ring->blocked = blocked;
++
++	/*
++	 * Maintain the per-interface blocked-ring counter.
++	 *
++	 * We use ring->counted_in_blocked rather than checking
++	 * ring->status here.  A ring that became blocked while
++	 * RING_OPEN has already been counted (counted_in_blocked=true).
++	 * By the time we unblock it during teardown its status may have
++	 * advanced to RING_CLOSING, so testing RING_OPEN would wrongly
++	 * skip the atomic_dec and permanently leak the counter, leaving
++	 * the netif queue stopped forever.
++	 *
++	 * Rule:
++	 *   block transition  (unblocked→blocked): count only if RING_OPEN,
++	 *                                          set counted_in_blocked.
++	 *   unblock transition (blocked→unblocked): decrement only if we
++	 *                                          previously counted it,
++	 *                                          clear counted_in_blocked.
++	 */
++	if (blocked) {
++		if (ring->status == RING_OPEN) {
++			atomic_inc(&flow->if_blocked_cnt[ifidx]);
++			ring->counted_in_blocked = true;
+ 		}
++	} else {
++		if (ring->counted_in_blocked) {
++			atomic_dec(&flow->if_blocked_cnt[ifidx]);
++			ring->counted_in_blocked = false;
++		}
 +	}
++
++	/*
++	 * Only propagate a netif queue-stop/wake when the interface
++	 * transitions between fully-clear and at-least-one-blocked.
++	 * Reading the atomic is safe here: we hold block_lock, so no
++	 * concurrent brcmf_flowring_block() call can race the update
++	 * we just made above.
++	 */
++	if (blocked && atomic_read(&flow->if_blocked_cnt[ifidx]) != 1) {
++		/* Another ring was already blocked; no new queue-stop needed. */
++		spin_unlock_irqrestore(&flow->block_lock, flags);
++		return;
+ 	}
+-	flow->rings[flowid]->blocked = blocked;
+-	if (currently_blocked) {
++	if (!blocked && atomic_read(&flow->if_blocked_cnt[ifidx]) != 0) {
++		/* More rings still blocked; do not wake the queue yet. */
+ 		spin_unlock_irqrestore(&flow->block_lock, flags);
+ 		return;
+ 	}
+@@ -367,6 +396,8 @@ struct brcmf_flowring *brcmf_flowring_attach(struct device *dev, u16 nrofrings)
+ 		spin_lock_init(&flow->block_lock);
+ 		for (i = 0; i < ARRAY_SIZE(flow->addr_mode); i++)
+ 			flow->addr_mode[i] = ADDR_INDIRECT;
++		for (i = 0; i < ARRAY_SIZE(flow->if_blocked_cnt); i++)
++			atomic_set(&flow->if_blocked_cnt[i], 0);
+ 		for (i = 0; i < ARRAY_SIZE(flow->hash); i++)
+ 			flow->hash[i].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
+ 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
+index f3d511f9a3c9..afdea8b3f8aa 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.h
+@@ -5,6 +5,8 @@
+ #ifndef BRCMFMAC_FLOWRING_H
+ #define BRCMFMAC_FLOWRING_H
  
- 	kfree_skb(skb);
++#include <linux/atomic.h>
++
  
-
+ #define BRCMF_FLOWRING_HASHSIZE		512		/* has to be 2^x */
+ #define BRCMF_FLOWRING_INVALID_ID	0xFFFFFFFF
+@@ -26,6 +28,16 @@ enum ring_status {
+ struct brcmf_flowring_ring {
+ 	u16 hash_id;
+ 	bool blocked;
++	/*
++	 * True when this ring has been counted in the per-interface
++	 * if_blocked_cnt[].  Set to true whenever the ring transitions
++	 * unblocked→blocked while RING_OPEN; cleared on the matching
++	 * blocked→unblocked transition.  Needed so that a ring that
++	 * becomes blocked while RING_OPEN and is later moved to
++	 * RING_CLOSING still correctly decrements the counter at
++	 * teardown, even though its status is no longer RING_OPEN.
++	 */
++	bool counted_in_blocked;
+ 	enum ring_status status;
+ 	struct sk_buff_head skblist;
+ };
+@@ -40,6 +52,12 @@ struct brcmf_flowring {
+ 	struct brcmf_flowring_hash hash[BRCMF_FLOWRING_HASHSIZE];
+ 	spinlock_t block_lock;
+ 	enum proto_addr_mode addr_mode[BRCMF_MAX_IFS];
++	/* Per-interface count of currently blocked open rings.
++	 * Maintained atomically so brcmf_flowring_block() can check
++	 * whether any sibling ring is already blocked in O(1) without
++	 * holding block_lock across an O(nrofrings) walk.
++	 */
++	atomic_t if_blocked_cnt[BRCMF_MAX_IFS];
+ 	u16 nrofrings;
+ 	bool tdls_active;
+ 	struct brcmf_flowring_tdls_entry *tdls_entry;
 -- 
-2.34.1
+2.53.0
 
