@@ -1,119 +1,127 @@
-Received: from out-178.mta0.migadu.com (out-178.mta0.migadu.com [91.218.175.178])
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1264740926C;
-	Thu, 30 Jul 2026 14:28:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A741C44211B
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 14:35:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785421733; cv=none; b=O30jNOB3XppSN5xy4csCzSUNSsCnn6sUJkH5rA20N8r0i8nKoy6T148OuHjDAWunm4SMj3d87Ks1YRPeZYBKpTSGliPdOf7/qIu+c7HDDwZf3/14IzkMJx7gqH8SxNAzmR0Vj/hVBrtbZmY/Sd8LK+AvRKL8aGowH4y+hHddnpk=
+	t=1785422109; cv=none; b=mOtdW7TBGzKLVOW81xbavWs2G6h2ksUiov71Lp4/c9m4Hfd9b2BDz4jlGRyvuYSvtwmAtuEeCCz5lE1gIlBZhC5aQdhxWImn5oMwIHx+5q9W2kf9Q3GuQt0VHEE6QOQtJKku3V72p9gj2GSi/pfLfu8KT3+9IMgcHuyVLFc3Dzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785421733; c=relaxed/simple;
-	bh=aAV9wRqARtaWoP89gto4xpqPvKZzd/4dtVDg2+yRjXg=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=dQLRRNy2OJKmR61R3qul4/nvgiOeD3vL5NQBZMnuoND6uT09yEiOq9n5OAANrS7xdKj56CnWv/srIXZbVBIufolWmqYu5lVYaL/lBylGKlrBhy9LUplp/2xlSEMqYlloJ2iI7WlWo+D12FflUn0J+OoPhSz5u9oZ+4u2y5Nxfb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mv9Umw/i; arc=none smtp.client-ip=91.218.175.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1785422109; c=relaxed/simple;
+	bh=4jxrn4ZV17oiZnKQGv/vvua35JDDkL1UzbdFPhr+s48=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AS0UJxoFi7fX3sEkNxReKMKjJICOlWPEaRpp2zuNVCOR1GzM/iTW+ZrxmZpGPgpLAqUb/N/VSuat2/+7lz9WstWN+xSCxkT2HV67ypf63pVlrvCjNR6uuM7kVB8GjJRATH4dFKl9tf3BT4yQbFr6P3LnN0akhmoAy66ir/8Y6eA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=LcLS3kBa; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mv9Umw/i"
-Date: Thu, 30 Jul 2026 16:28:34 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785421730;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6YQgsKXoP3pMbRdGfcjamYsUScERKdJ+qUdS6Y9CW7E=;
-	b=mv9Umw/i6/p51CAfbLuQhByC+5efUIwVhfWD+mLQAjQ+PzobomvCIMiY5jqP0CwPl1Awhg
-	lJn4OMaAS8oOGI/iZfnmeYWasHXsgHsceeNIyjQoZOBK/3QBjxlOCc5G3FNOR4i6ivjkIQ
-	+fUS4zQqhHfYsqv3onOk9raxj4XtcSA=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v2_01/11=5D_wifi=3A_rtw88=3A_add_?=
- =?US-ASCII?Q?the_RTL8723B_chip_type_and_SDIO_helper?=
-In-Reply-To: <6c2d5972971f48548a58dc3fba890793@realtek.com>
-References: <774407603bef4fd38290f6b5d4b4a26c@realtek.com> <20260730074504.19725-1-luka.gejak@linux.dev> <6c2d5972971f48548a58dc3fba890793@realtek.com>
-Message-ID: <6872BF49-855E-42A5-A06F-98C4602B2C25@linux.dev>
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="LcLS3kBa"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=mv+lLm4u8AEhybNg9O5TKm/nca+D82/EFX3SLgScuoU=; t=1785422106; x=1786631706; 
+	b=LcLS3kBaPWas8h//+fYK8cbQge7B8Jq6KHHQJQpcEpH0C5HWVLDazNa0gthyRZlxqF9btdYXds6
+	EO3dDLHhX3TKsbHH71UhxTmSEpsqsPWS20ez6hVoeD1XZ9/BqLXJsL5wwWDusKddyhJ/2ddmgdc5J
+	MAQjiR7IjG0JQn+sXRm02Z0+UoGlJi8aPCVmSYLyk9grXUOUuKSSNVO2xsegeRwvWpvA59r59ed5t
+	aR3vG3XVDx513Kb3xn8X5HCzfJVGa3kfg7OorITKabZbD5N78gS6IBUwr/nyu1eVhPetsZQvH4PqP
+	mVF5WUqMmFVUpwLEiRLVHRQKR1mxdpHzE3PQ==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <benjamin@sipsolutions.net>)
+	id 1wpRqV-00000004mKH-47KW;
+	Thu, 30 Jul 2026 16:34:52 +0200
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Ramasamy Kaliappan <ramasamy.kaliappan@oss.qualcomm.com>,
+	Jouni Malinen <j@w1.fi>,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
+	Benjamin Berg <benjamin.berg@intel.com>
+Subject: [PATCH wireless-next 0/8] Adding NO_STA flag and reworking RX link resolution
+Date: Thu, 30 Jul 2026 16:34:16 +0200
+Message-ID: <20260730143415.1833312-10-benjamin@sipsolutions.net>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
 
-On July 30, 2026 11:17:41 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom>=
- wrote:
->luka=2Egejak@linux=2Edev <luka=2Egejak@linux=2Edev> wrote:
->> it would be four callbacks (free page check, page
->> accounting, output queue wait, transfer sizing) and I did not want to
->> introduce that structure without asking first=2E
-> If these are called from sdio=2Ec, just check chip ID in sdio=2Ec=2E
+From: Benjamin Berg <benjamin.berg@intel.com>
 
-That is what v3 already does, so nothing changes there=2E All four are
-reached from sdio=2Ec only=2E
+Hi,
 
-> If they are used by common flow like coex=2Ec, I prefer to implement
-> them by chip_ops=2E
+This patchset refactors the RX link resolution a bit to fix some issues
+where mac80211 might accept frames on the wrong link and incorrectly
+translate the address. It also adds a new NL80211_ATTR_FRAME_CMD_NO_STA
+flag so that userspace can know whether address translation was done by
+the kernel on RX and can also prevent address translation for management
+frames during TX.
 
-Let me list them all so you can rule on all of them at once rather than
-a file at a time=2E
+This together should be enough to fix the existing issues in hostapd
+where stations that are still associated try to authenticate again but
+hostapd for example ends up sending the frame to an old link address.
 
-Two go regardless of your answer: the chip test inside
-rtw8723bs_apply_basic_rates() and rtw8723bs_apply_bss_cap() is
-redundant, both callers already establish the chip=2E In the second one
-the NL80211_IFTYPE_STATION half of the same guard is still needed, so
-only the chip half goes there=2E
+Benjamin
 
-That leaves the following outside sdio=2Ec=2E
+Changes in v1:
+ * Add NAN_DATA interface handling
+ * Handle NO_STA flag correctly for NAN
+ * Fixed forwarding of station parameter
+ * Rebase and other small fixes
 
-coex=2Ec, 2 sites:
+Changes in RFCv2:
+ * Port other drivers to new API (untested)
+ * Fix a checkpatch warning
 
-  rtw_coex_scan_notify()    -> rtw_coex_8723bs_scan_notify()
-  rtw_coex_connect_notify() -> rtw_coex_8723bs_connect_notify()
+Benjamin Berg (8):
+  wifi: iwlwifi: use link_sta internally to the driver
+  wifi: mac80211: change public RX API to use link stations
+  wifi: mac80211: refactor RX link_id and station handling
+  wifi: mac80211: rework RX packet handling
+  wifi: cfg80211: add attribute for TX/RX denoting there is no station
+  wifi: mac80211: report to cfg80211 when no STA is known for a frame
+  wifi: mac80211: pass station to ieee80211_tx_skb_tid
+  wifi: mac80211: pass error station if non-STA transmit was requested
 
-  Each tests the chip and bt_disabled once and returns true when it has
-  handled the notification; everything below them assumes both=2E
+ drivers/net/wireless/ath/ath11k/dp_rx.c       |   2 +-
+ drivers/net/wireless/ath/ath12k/dp_mon.c      |   2 -
+ drivers/net/wireless/ath/ath12k/dp_rx.c       |  20 +-
+ drivers/net/wireless/ath/ath12k/hw.h          |  20 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c |  20 +-
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.h |  12 +-
+ drivers/net/wireless/ath/ath12k/wifi7/hw.c    |   6 +-
+ drivers/net/wireless/ath/ath12k/wmi.c         |   6 -
+ drivers/net/wireless/intel/iwlwifi/mld/agg.c  |  17 +-
+ drivers/net/wireless/intel/iwlwifi/mld/agg.h  |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   |  50 +-
+ drivers/net/wireless/intel/iwlwifi/mld/rx.h   |   2 +-
+ .../wireless/intel/iwlwifi/mld/tests/agg.c    |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |   6 +-
+ drivers/net/wireless/mediatek/mt76/mac80211.c |  22 +-
+ drivers/net/wireless/realtek/rtw89/core.c     |   6 -
+ .../wireless/virtual/mac80211_hwsim_main.c    |   3 -
+ include/net/cfg80211.h                        |   4 +
+ include/net/mac80211.h                        |  25 +-
+ include/uapi/linux/nl80211.h                  |   7 +
+ net/mac80211/agg-tx.c                         |   4 +-
+ net/mac80211/ap.c                             |   3 -
+ net/mac80211/ht.c                             |   2 +-
+ net/mac80211/ieee80211_i.h                    |  11 +-
+ net/mac80211/iface.c                          |   7 +-
+ net/mac80211/mlme.c                           |  10 +-
+ net/mac80211/offchannel.c                     |  13 +-
+ net/mac80211/rx.c                             | 447 ++++++++++--------
+ net/mac80211/scan.c                           |  10 +-
+ net/mac80211/tdls.c                           |   2 +-
+ net/mac80211/tx.c                             |  10 +-
+ net/wireless/nl80211.c                        |   8 +-
+ 33 files changed, 413 insertions(+), 357 deletions(-)
 
-mac80211=2Ec, 6 sites in rtw_ops_bss_info_changed(): the receive filter
-on assoc and on disassoc, BSSID change bookkeeping, and the
-BSS_CHANGED_ERP_PREAMBLE and BSS_CHANGED_ERP_SLOT handlers=2E
+-- 
+2.55.0
 
-mac80211=2Ec, 2 sites in rtw_ops_set_key(): enabling and disabling
-default key search for group keys=2E
-
-rx=2Ec, 1 site in rtw_rx_fill_rx_status(), the zero length packet test=2E
-This one runs per received frame, so an indirect call there looks like
-the wrong trade to me=2E I would keep it inline unless you disagree=2E
-
-fw=2Ec, 1 site in rtw_fw_write_data_rsvd_page(), two register
-save/restore blocks interleaved with the generic ones=2E I do not see how
-to lift those into an op without restructuring the whole function, so I
-would keep that inline too=2E
-
-For coex=2Ec and the two mac80211=2Ec callbacks I am happy to add ops=2E O=
-ne
-constraint on coex=2Ec: the 8723BS code calls rtw_coex_set_ant_path() and
-rtw_coex_set_table(), which are static in coex=2Ec=2E Implementing the ops
-in rtw8723b=2Ec would mean making those two non-static, which seems worse
-than the chip test it replaces=2E What I had in mind is leaving the
-functions in coex=2Ec, declaring them in coex=2Eh, and having rtw8723b=2Ec
-point the ops at them, the same shape as the chip_ops::prepare_tx that
-v3 adds for the association sequence=2E The generic helpers stay static
-that way=2E
-
-Tell me which of those you want as ops and I will do it=2E
-
-The comment on mod_delayed_work() is already in v3=2E
-
-Best regards,
-Luka Gejak
