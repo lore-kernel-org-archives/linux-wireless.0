@@ -1,64 +1,64 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA578463B7E
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62EA8450401
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785427486; cv=none; b=cmSkN6JHK9flq1Osg/cD6GLB6L/5HaRL3mxomtoJ6ufUbvoQbGecABi5Hwl84x/NL4QrkRKUYbgXq6SCK1TN/3mLfV5Uxd0nspFiaViRkS8pcXMhPKPxiirGLQzXTujvATdt/whDnW7DA943i4XRMFg9QpKxE3jEprJzghBw0bE=
+	t=1785427489; cv=none; b=fGHiXKsy4huSDQcEwByRMG3exhKz5SUq2H1g37c+s2AKfnByIgOHy8Uk64cm2txWjBVtp+3/X4dV/a3CwyOCFWVPV3vTdVCmkoYz6PYSCmqknzuq4Xb69/wEQpIiPrdOYVBOjMmomm3j+eCb44ljTuicdJ0j2QUinF569JM7ZRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785427486; c=relaxed/simple;
-	bh=gkAnUCyYpehMzHmYIc25rVziVrhfkNOjur94Ob19X6w=;
+	s=arc-20240116; t=1785427489; c=relaxed/simple;
+	bh=d4nOnT31foNOR63+DrFJFTVwqLjcoSlCGbUdKsH6CIA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CQXYpi5HkXGUgVDKvFvzf1qAU7kcjmwIIWEIM9txHPYh5QKalLA2Cv5XccTvurr2sxeD9Hrlp7rN61ykt1NxdZaZwCmQtfolD57CD0HubBCYhqJB6GL8XoQUsqhKNKuG4WF6FAJijIOWjtcJWfH3fmfa23umGcPNmLtRW9Jf1eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K2X++00n; arc=none smtp.client-ip=209.85.216.51
+	 MIME-Version:Content-Type; b=srO4c2DvGF5na031MdSMzXEIHxrwjqH3fo5Q+kbDj/XwcmM0OvB+eUw6zcganNV+ov2HOmt5uMgJCbWyrq8uiK7HiN87ybGPIQ27WdBJc/iDIfTOCjg17HjOD+damg/t1nC7GtSHdDzjCWutkX0qfs5ujUo2FjP1c53ro5vnPsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o4hXgFWD; arc=none smtp.client-ip=209.85.216.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K2X++00n"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38ecc48b3deso5071a91.0
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o4hXgFWD"
+Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-384c94c9423so3747a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785427484; x=1786032284; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785427488; x=1786032288; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=cjoI5FnOpAUf/hyrk7Qs3Ouzwtem6HJr54Hst1usiSo=;
-        b=K2X++00nMYtYqzo0isewhmwl2AlSi544AYrcaSgIKwMgcW8+KWBgLjxJr+0q3s//mW
-         CV5AZEXRps5fKoVZV7u7rreKcvIaWILJh3NyiUIIgACJHGuWbMAR773rl48DfOYSSxn0
-         BL8nvJQbe94GIYP+8TRwBzFVZTpys2gnd0F/ZZTmE/VZsN8CTNikxud9ZQ515d2DFHgP
-         i4hlD8id9t//AsqwPkZPVdBXcGYhnKCXi7DbSxbLCOq08akPeoVP2nHpRFd2W9fMm13A
-         9EuUZ+hQimJYPKcYRLyuyUvVLzgP2xR3fUka9mJcN909337sipgraT0q7X2tHh3naQNd
-         BBVw==
+        bh=dYPgSDDfqeqUZ3RR4zRVMJgkhHA+lOjtpoEJpFazOss=;
+        b=o4hXgFWDI+YfTNxvQCpjKPsqHWo60gdYkBFz1P4OJGfJBRK41O/yQ1pG3A6CjNxFpG
+         qhpUNbYOU0nZifHSE+BZr6TKUhgEyNIyKYOCy1sY4PAwI3bUdNu8WFclW52yWf1cqCUY
+         YwUc5fmgTDOKXHhJMalIBRvy1oYV5nb3qZ56gi6FPuprnZmOpdb0+HZs6XaEL/O6duH9
+         3Ej5E0gqDRRqPZf55jE7RCeKAz0AfLgc8srl9DeSxZblmqV3Z+pO+mlAYLzEUhQxmcmv
+         2eey/XZy5OVsXFgaZZ1Gg9/ryLlxtvTbfd0x2KqnnhdFaJ00lpzAgn7hQFpnJHwcaU+n
+         SroA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785427484; x=1786032284;
+        d=1e100.net; s=20251104; t=1785427488; x=1786032288;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=cjoI5FnOpAUf/hyrk7Qs3Ouzwtem6HJr54Hst1usiSo=;
-        b=SLFlZi1u8ro4LR57dqQddcyBzYWts5GpAGm1RisrLQwPuY6Y+8LTHO+z3NgmY+J2wX
-         eC6v25dJOTwgX/RqYs36/QamNTweQ4EJ13fzKULFcuG6JFK7TXchwj4usgI9/U7Mohgv
-         GbjP8dZAkJADz0EMKdydmR95WumggvfCBSIYhEfdLoF5jeirneoex+7apttuigEeUe+m
-         l5N0+P9tvXGCLnKDzuEsLd72HQX80iKFbfugHeYGj8JqY8+NpNaejVwz3B5nasPHkgZt
-         LpKVEW+X/DA6K2M96AGpN/8Iy7oE5bJk/FMZEXwRsUZoBqQr1+6800lnUGxNnN5DEhhN
-         FJQA==
-X-Gm-Message-State: AOJu0Yz4G33hJ1aA7YqbaRp686OdCDSsiM0RxLFKcHLcv/p1Pzendczi
-	rRxdYqKjDhE6Amsp0WaV0HqVG1ng7KbWdit3MihtvlVJmvcdIMyu7qIJrT/cki0lPGM=
-X-Gm-Gg: AR+sD10TzdBAnFsdEWh1jf8VtWyd4W+5C9WkIJ62eCRQFvSGYKLmQHbxYRH9teDMv0H
-	0Zs7SveISAVovPk1D5nolpkbRasApz6HI3DkR5JCINJZFDezYRM7vPeq970IFxLktM40B6DNxy+
-	xnXXWRO09m89ABjkvZjhrQCH3OglAGWkBePpDwQ8NTeDgFHozwQnk8PLSXEx4ryQJiROvqTh81g
-	t+Uf1t1Wh+t7Z0LXNG5MJ14V/XhZ24b40IFLi5WsFv7YKSgGlWi5SZulYTCwwfJuEegHxcsr5Vs
-	VGlNAfWtgmTqp31MYhy+13lTDBIshBq0KJYDsgLerqVvfZBxQjOja/PVk4Gxh8KFPwf9/Ai8h8t
-	sOcTx/LvGDxUXsFhsvpQZhOOrka2rkicoC4t/uZJUTUrMZP+ER2RDicWQcKRBkUVcvZqjN+F9U1
-	q2K5pxBhK3S/AWgVLx5fLxdtgqWNfgrJG2rJRooAXMqyJRpK5Ru/YYkz5c1e3T9EnaMMnrMuUh8
-	Hmb1BCU4DTYga8tqbCVHgR9nA==
-X-Received: by 2002:a17:90b:2dd0:b0:381:2788:a437 with SMTP id 98e67ed59e1d1-38fa7f2fc13mr879033a91.1.1785427484126;
-        Thu, 30 Jul 2026 09:04:44 -0700 (PDT)
+        bh=dYPgSDDfqeqUZ3RR4zRVMJgkhHA+lOjtpoEJpFazOss=;
+        b=MevjGmh7QG/UHo1k8M64FxQtstonB8+nCtYRRb9lDOgKTbWkM02ThTCe0ym1E+S716
+         hAG7QJ0l6PLDiV9YPpn9tYKyQcYv0jd1DB0A9+k24NEiJLmtOI6rsjN7pyfiYBD7G6cj
+         4BnGAygxgIC+6SdB4nczc44wBq8GJ6t1vBNeNcA9oX8MAOyfrkbBF1yWnMq4nv+Wl15O
+         Mm7OQxeVA4g7DURp3qTzX+kWwGfRrOd52N5TkPHra+S+bracx0ngG4hET588WT01FOo3
+         1dIQYU57ks/gS4SgWG/ULqp36K80pncNgPZ6HFXAryTrQkLdoeKKYbFl0GDpqhXcED6j
+         eJ8Q==
+X-Gm-Message-State: AOJu0Yxnm8vQ3edtMWsguylseygwh9P45ydcaq+VM5uP4K1k1FJWJZws
+	G6cVR1plmv6lKHhSbgGLYr2G8Nc2NP9BEAqFx0kWONVVrjnXcbLeAQGW
+X-Gm-Gg: AR+sD12HhZDYfqNDo1RFuVnvvAhn3/n6g/HURb4xsc3Z+HOwRD+DWoW0LrAGkg17RBJ
+	WEMG3upNWHmczulvWGP5s+at3h8TzqSANMvturRG5jL0rlWJ+DxHvJdEahIOAzZJM8xVHM3M4HB
+	+BAailvboIkWQ+RnC7RecaHJF/fj7gO2qqSfIh4XKCuaw+nP5eCTmdJN5ti3FwKd0bWGvcvTUex
+	St31DA7FleHtbwRO6uq2iXu3hNjfmxYLQtuvzBeK4KJurq0IvLQnuqm9tdmViW5j5DjCeXuIdwM
+	MFO47FXdmHVpAHpdx15INpW6fMvcXHXjDTzYK01fAzslbS5QXGrfCf5ka4M574OMgQLbF6M1wqF
+	Ftu0euz3EQrzeJMcwrxjGVDllzMRh12o+yRiak3McZnrQt+UTFZtVxQkcYVcHavsvhQn46Tb/aq
+	yTKlC41zgoneQNTTFVfLQt9UTVEvjkkiIVxiffDBbRqwihyZDBf499zSYOcK0v1dwLHOol4LadF
+	NDUvr8tGrtUUg==
+X-Received: by 2002:a17:90b:5784:b0:38e:480b:99a5 with SMTP id 98e67ed59e1d1-38fa7fe2179mr773181a91.2.1785427487341;
+        Thu, 30 Jul 2026 09:04:47 -0700 (PDT)
 Received: from Potato.tail66a299.ts.net ([171.76.83.76])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.41
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 09:04:43 -0700 (PDT)
+        Thu, 30 Jul 2026 09:04:46 -0700 (PDT)
 From: Shivesh <chanelshivesh@gmail.com>
 X-Google-Original-From: Shivesh <shivesh@example.com>
 To: arend.vanspriel@broadcom.com
@@ -67,9 +67,9 @@ Cc: linux-wireless@vger.kernel.org,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	Shivesh <shivesh@example.com>
-Subject: [PATCH 5/8] wifi: brcmfmac: msgbuf: tune thresholds and optimize sleep latency
-Date: Thu, 30 Jul 2026 16:03:53 +0000
-Message-ID: <20260730160425.11933-5-shivesh@example.com>
+Subject: [PATCH 6/8] wifi: brcmfmac: pcie: optimize latency and irq teardown
+Date: Thu, 30 Jul 2026 16:03:54 +0000
+Message-ID: <20260730160425.11933-6-shivesh@example.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260730160425.11933-1-shivesh@example.com>
 References: <20260730160425.11933-1-shivesh@example.com>
@@ -82,120 +82,116 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Increases tx pktids and tune flush thresholds. Fixes a silent tx stall
-under high load by correctly using test_and_set_bit. Optimizes
-initialization polling latency from msleep(10) to usleep_range.
+Optimizes mailbox polling with exponential backoff rather than a fixed
+msleep(10) loop. Fixes define names. Eliminates coarse msleep(50) delays
+during IRQ teardown by replacing them with tight usleep_range polling.
 
 Signed-off-by: Shivesh <shivesh@example.com>
 ---
- .../broadcom/brcm80211/brcmfmac/msgbuf.c      | 69 ++++++++++++++++---
- 1 file changed, 61 insertions(+), 8 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/pcie.c        | 66 ++++++++++++++++---
+ 1 file changed, 58 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index ba1ce1552e0f..8db6167072da 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -48,7 +48,19 @@
- #define MSGBUF_TYPE_LPBK_DMAXFER		0x13
- #define MSGBUF_TYPE_LPBK_DMAXFER_CMPLT		0x14
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 13662aa4b4ea..9338a5faa260 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -268,6 +268,27 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
  
--#define NR_TX_PKTIDS				2048
+ #define BRCMF_PCIE_MBDATA_TIMEOUT		msecs_to_jiffies(2000)
+ 
 +/*
-+ * NR_TX_PKTIDS: number of simultaneously in-flight TX packet IDs.
-+ * Each outstanding TX frame consumes one ID until the dongle returns
-+ * a TX-status completion.  The original 2048-entry pool exhausted under
-+ * ≥4 concurrent iperf3 streams on Wi-Fi 5/6 (802.11ac/ax) devices,
-+ * causing "No PKTID available" drops and TCP retransmits.  4096 gives
-+ * headroom for high-aggregation scenarios while still fitting in a
-+ * modest amount of host memory (~48 KB for the pktid table entries).
++ * H2D mailbox poll timing parameters.
 + *
-+ * NR_RX_PKTIDS: RX post buffers pre-allocated to the dongle.  1024 is
-+ * sufficient for current hardware RX ring depths; leave unchanged.
++ * The dongle typically clears the H2D mailbox register within a few
++ * hundred microseconds after the doorbell interrupt fires.  The
++ * original code used msleep(10) * 100 iterations, meaning the
++ * minimum observable latency was 10ms even when the dongle was fast.
++ *
++ * We instead start with a short sleep and double it each iteration
++ * (exponential backoff) up to BRCMF_PCIE_MB_POLL_MAX_US, staying
++ * within the same 1-second absolute timeout.
++ *
++ * MIN_US / INITIAL_MAX_US : usleep_range bounds for the first iteration.
++ * MAX_US     : cap on the per-iteration sleep (µs).
++ * TIMEOUT_US : total budget before giving up (1 second).
 + */
-+#define NR_TX_PKTIDS				4096
- #define NR_RX_PKTIDS				1024
- 
- #define BRCMF_IOCTL_REQ_PKTID			0xFFFE
-@@ -64,8 +76,29 @@
- #define BRCMF_MSGBUF_PKT_FLAGS_FRAME_MASK	0x07
- #define BRCMF_MSGBUF_PKT_FLAGS_PRIO_SHIFT	5
- 
--#define BRCMF_MSGBUF_TX_FLUSH_CNT1		32
--#define BRCMF_MSGBUF_TX_FLUSH_CNT2		96
-+/*
-+ * TX flush / doorbell-ring thresholds.
-+ *
-+ * CNT1 is the minimum number of frames to accumulate in the commonring
-+ * before the first intermediate write_complete() (doorbell ring) is
-+ * issued mid-batch.  CNT2 is the hard flush interval: after this many
-+ * frames have been written since the last flush, we unconditionally
-+ * ring the bell and reset the counter.
-+ *
-+ * Raising both from the original 32/96 to 64/128 doubles the average
-+ * number of TX descriptors committed per MMIO write, halving the PCIe
-+ * doorbell rate on sustained throughput workloads.  The tradeoff is a
-+ * marginally higher worst-case latency for the last frames in a burst,
-+ * which in practice is hidden by the time the dongle DMA engine drains
-+ * the previous batch.
-+ *
-+ * TRICKLE_TXWORKER_THRS governs how often brcmf_msgbuf_tx_queue_data()
-+ * forces a workqueue schedule when the queue depth is not a multiple of
-+ * this value.  Keeping it at half of CNT1 (32) preserves responsiveness
-+ * for low-rate flows (e.g. VoIP, ICMP) that never accumulate 64 frames.
-+ */
-+#define BRCMF_MSGBUF_TX_FLUSH_CNT1		64
-+#define BRCMF_MSGBUF_TX_FLUSH_CNT2		128
- 
- #define BRCMF_MSGBUF_DELAY_TXWORKER_THRS	96
- #define BRCMF_MSGBUF_TRICKLE_TXWORKER_THRS	32
-@@ -787,10 +820,30 @@ static int brcmf_msgbuf_schedule_txdata(struct brcmf_msgbuf *msgbuf, u32 flowid,
- {
- 	struct brcmf_commonring *commonring;
- 
--	set_bit(flowid, msgbuf->flow_map);
-+	/*
-+	 * If the bit was already set, a txflow_work item is already
-+	 * queued or running for this ring.  In that case the existing
-+	 * worker will drain our freshly enqueued frame when it runs,
-+	 * so we only need to schedule another work item when the
-+	 * force flag is set or the ring is below the delay threshold.
-+	 *
-+	 * If the bit was NOT set (test_and_set_bit returns false), no
-+	 * worker is pending for this ring at all.  We MUST schedule
-+	 * one unconditionally, otherwise the frame we just enqueued
-+	 * will sit in the flowring unsent until some unrelated event
-+	 * triggers the workqueue — causing silent TX stalls under
-+	 * high load when outstanding_tx >= DELAY_TXWORKER_THRS.
-+	 */
-+	if (!test_and_set_bit(flowid, msgbuf->flow_map)) {
-+		/* Bit was clear: no worker pending, always schedule. */
-+		queue_work(msgbuf->txflow_wq, &msgbuf->txflow_work);
-+		return 0;
-+	}
++#define BRCMF_PCIE_MB_POLL_MIN_US		40
++#define BRCMF_PCIE_MB_POLL_INITIAL_MAX_US	50
++#define BRCMF_PCIE_MB_POLL_MAX_US		5000
++#define BRCMF_PCIE_MB_POLL_TIMEOUT_US		1000000
 +
-+	/* Bit was already set: worker pending, apply coalescing heuristic. */
- 	commonring = msgbuf->flowrings[flowid];
--	if ((force) || (atomic_read(&commonring->outstanding_tx) <
--			BRCMF_MSGBUF_DELAY_TXWORKER_THRS))
-+	if (force || (atomic_read(&commonring->outstanding_tx) <
-+		      BRCMF_MSGBUF_DELAY_TXWORKER_THRS))
- 		queue_work(msgbuf->txflow_wq, &msgbuf->txflow_work);
+ #define BRCMF_PCIE_CFGREG_STATUS_CMD		0x4
+ #define BRCMF_PCIE_CFGREG_PM_CSR		0x4C
+ #define BRCMF_PCIE_CFGREG_MSI_CAP		0x58
+@@ -766,7 +787,8 @@ brcmf_pcie_send_mb_data(struct brcmf_pciedev_info *devinfo, u32 htod_mb_data)
+ 	struct brcmf_core *core;
+ 	u32 addr;
+ 	u32 cur_htod_mb_data;
+-	u32 i;
++	u32 elapsed_us = 0;
++	u32 sleep_us = BRCMF_PCIE_MB_POLL_INITIAL_MAX_US;
  
- 	return 0;
-@@ -1621,11 +1674,11 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	do {
- 		brcmf_msgbuf_rxbuf_data_fill(msgbuf);
- 		if (msgbuf->max_rxbufpost != msgbuf->rxbufpost)
--			msleep(10);
-+			usleep_range(1000, 2000);
- 		else
- 			break;
+ 	shared = &devinfo->shared;
+ 	addr = shared->htod_mb_data_addr;
+@@ -776,12 +798,40 @@ brcmf_pcie_send_mb_data(struct brcmf_pciedev_info *devinfo, u32 htod_mb_data)
+ 		brcmf_dbg(PCIE, "MB transaction is already pending 0x%04x\n",
+ 			  cur_htod_mb_data);
+ 
+-	i = 0;
++	/*
++	 * Wait for the dongle to consume the previous H2D mailbox message.
++	 *
++	 * There is no interrupt that signals when the dongle clears this
++	 * register, so polling is unavoidable.  The original code used
++	 * msleep(10) per iteration, incurring at least 10ms of latency
++	 * even when the dongle responded in microseconds.
++	 *
++	 * We use usleep_range() with exponential backoff instead:
++	 *   - First iteration sleeps ~50µs (fast path for responsive dongle).
++	 *   - Each subsequent iteration doubles the sleep, capped at 5ms,
++	 *     so long waits still yield the CPU without busy-spinning.
++	 *   - Total timeout matches the original 1-second limit.
++	 *   - We bail early if the device has gone down so that a dead
++	 *     dongle does not hold the caller for a full second.
++	 */
+ 	while (cur_htod_mb_data != 0) {
+-		msleep(10);
+-		i++;
+-		if (i > 100)
++		if (devinfo->state == BRCMFMAC_PCIE_STATE_DOWN) {
++			brcmf_dbg(PCIE, "Device down, aborting MB send\n");
+ 			return -EIO;
++		}
++
++		if (elapsed_us >= BRCMF_PCIE_MB_POLL_TIMEOUT_US) {
++			brcmf_err("Timeout waiting for H2D MB slot after %u us\n",
++				  elapsed_us);
++			return -EIO;
++		}
++
++		usleep_range(BRCMF_PCIE_MB_POLL_MIN_US, sleep_us);
++		elapsed_us += sleep_us;
++
++		/* Exponential backoff, capped at BRCMF_PCIE_MB_POLL_MAX_US */
++		sleep_us = min(sleep_us * 2, (u32)BRCMF_PCIE_MB_POLL_MAX_US);
++
+ 		cur_htod_mb_data = brcmf_pcie_read_tcm32(devinfo, addr);
+ 	}
+ 
+@@ -1001,10 +1051,10 @@ static void brcmf_pcie_release_irq(struct brcmf_pciedev_info *devinfo)
+ 	free_irq(pdev->irq, devinfo);
+ 	pci_disable_msi(pdev);
+ 
+-	msleep(50);
++	usleep_range(1000, 2000);
+ 	count = 0;
+-	while ((devinfo->in_irq) && (count < 20)) {
+-		msleep(50);
++	while ((devinfo->in_irq) && (count < 1000)) {
++		usleep_range(1000, 2000);
  		count++;
--	} while (count < 10);
-+	} while (count < 100);
- 	brcmf_msgbuf_rxbuf_event_post(msgbuf);
- 	brcmf_msgbuf_rxbuf_ioctlresp_post(msgbuf);
- 
+ 	}
+ 	if (devinfo->in_irq)
 -- 
 2.53.0
 
