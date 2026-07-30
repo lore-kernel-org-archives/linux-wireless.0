@@ -1,59 +1,63 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2AC73ED13F;
-	Thu, 30 Jul 2026 09:02:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 108C83EDAC9;
+	Thu, 30 Jul 2026 09:17:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785402181; cv=none; b=mBoL7yAFmjW1a9luFAl3srPkGbC7s64fp620RtA8aYqmc8VMQqbF6fcRIVv1ivgp+o2uuMzzvBtTisHx/W79Q/UQdwAifVXmYp75vVK0iYKxueCFHM8cqE/Zl98VnMq/r7at8ggjDNvwEgil9JwJKjPTrXI32UcAMIpx72q4ZBg=
+	t=1785403074; cv=none; b=N6MqpWEf1Ri6OfN/NByGBOjPFriqLxvj7GPtsFw67mhaOFikAoFNKnvI4NFRFfiWG0xVRoKXMBEp2oqZl4MX3JvfsL/FIVMa3tEH0ufX7XzbKd+5RkF4TtsIwTwqKgGIly2/r6F7BrMix5GjhtG4WPoqfyiyhYqiA8YMXdZCaUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785402181; c=relaxed/simple;
-	bh=FCeQYZgboLmutTQDBSlK/wujqxTSUBV9zy6FKgBoM/o=;
+	s=arc-20240116; t=1785403074; c=relaxed/simple;
+	bh=eAH0XsPFyWHBxIkhF7dj2GITd/pTe/YgTsJDxRUdS9I=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=sfQQtbtHSaJ9LAUIYSi5y1e0EfnLjNr4aPlnGOQhzOzIqfPfg1JUFWa/cCFKioPsLFZPfJaIs3AJEX5Bf+FhIQtJMMcxOrW5Zp8BPgImKifWPkD7mcr+fIZr0mmQt6IBgcrOOtJyKQPM1z78WzN0KAajUWxyYcOAuvfZYU/us7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=PE1Iz8B1; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=dVy96EjcuiNxS5R29sb/pamfhJnEP81DpBWidXhY6mLgmnax/XoR3XbmrNvDjw2mqz2X8Df9ZS7leRdtD50pln5jS4cBqRAcCIpvXV6MuvZ1+XGStZRC2Ff8fj2neWV23ISrdGvMc46/Hb0p96G1LJHBt3+PuanI8DEsm0nhiqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=XGYn9Zf6; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="PE1Iz8B1"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66U92gjuE1068654, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="XGYn9Zf6"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66U9HfuU61073629, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785402162; bh=Q9CUwJVMbbqwnLxYXhKdCUWEa4BGFb85LxPT2Sd41co=;
+	t=1785403061; bh=eAH0XsPFyWHBxIkhF7dj2GITd/pTe/YgTsJDxRUdS9I=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=PE1Iz8B13SS51VMiRQ513syjPUuLo3honuaNPF7UYVTUEH+7AYpzYaLUj5kWJTWMr
-	 MTH/YugT8k63UjDN/XbpE5XF880Rhp2wgyC3TZMPYBJZ6EHS0ApqdBvNuggSPlOxge
-	 YKVQ0OQdM0TJHM1XqKECwjbU7CR1UKcuXE3nrjjuiZjfAiZ1eb9QW9ulaY03FejjxS
-	 H6XM+EdCPioXa0q/ynOzt4BzIaXpX5/pkixgVkWosmRJg5XvBllwMWm8/qY2GImf/r
-	 Eu1XvhL3FrwRE5hwrwQO4+s6dXuRe9vPSiUiUAPTW1wTZmD5BBQdjQ5P4w/dzAXRdt
-	 b/H4+c89S8aPQ==
+	b=XGYn9Zf6PvFtvEj7/Rq3LL9f67UkrwLeJbvgKqylEW2/ZSGtwemGQAf0Wig2A2Ed7
+	 Z8uyewCNSHiLsasTBSrCALwaRWu0nJML/X4EvOHhQ7/8pTLU/nDkyiaH70UwTZ/H50
+	 /995um+Eok+P3qsYRv8vkCQVJdj/ow63dXauY01h+FhV/IpXK+IL8A0fVjjDLTGfke
+	 UmM6ZBaHSdTM0KCbg0n5gczRrX20KjmQqk687bluqArLza5CqTlOOOvvcO0iiLHAq6
+	 1t3INE/gEM1yr1iBXjZmzVjkoGl+3BfEZTiPj5ukT7jplIho+Lw2G6f5DG57cn0OJA
+	 OdJLSzKL6wezA==
 Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66U92gjuE1068654
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66U9HfuU61073629
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 30 Jul 2026 17:02:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+	Thu, 30 Jul 2026 17:17:41 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 30 Jul 2026 17:02:42 +0800
+ 15.2.2562.17; Thu, 30 Jul 2026 17:17:42 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Thu, 30 Jul 2026 17:17:42 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Thu, 30 Jul 2026 17:02:42 +0800
+ 15.02.2562.017; Thu, 30 Jul 2026 17:17:42 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
  Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v2 09/11] wifi: rtw88: sdio: add TX back-pressure and
- retry on page starvation
-Thread-Topic: [PATCH v2 09/11] wifi: rtw88: sdio: add TX back-pressure and
- retry on page starvation
-Thread-Index: AQHdHEb9QehgipUqV0WrHvKAAfZkDLaBFFxQgAQbogCAAJtSIA==
-Date: Thu, 30 Jul 2026 09:02:42 +0000
-Message-ID: <1e496b19adbe4986a1b8d53dde7fe45e@realtek.com>
-References: <af51f851a5254faa9caba6b1e04fefe8@realtek.com>
- <20260730074504.19725-8-luka.gejak@linux.dev>
-In-Reply-To: <20260730074504.19725-8-luka.gejak@linux.dev>
+Subject: RE: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and SDIO
+ helper
+Thread-Topic: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and
+ SDIO helper
+Thread-Index: AQHdHEb43bJAs6El90WByPxHzpdzD7aA9VHggAQ6pICAAJ8VQA==
+Date: Thu, 30 Jul 2026 09:17:41 +0000
+Message-ID: <6c2d5972971f48548a58dc3fba890793@realtek.com>
+References: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
+ <20260730074504.19725-1-luka.gejak@linux.dev>
+In-Reply-To: <20260730074504.19725-1-luka.gejak@linux.dev>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -66,24 +70,13 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
-> On 27/07/2026 09:21, Ping-Ke Shih wrote:
-> >> -       queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
-> >> +       mod_delayed_work(rtwsdio->txwq,
-> >> +                        &rtwsdio->tx_handler_data->work, 0);
-> >
-> > queue_delayed_work()?
->=20
-> Changed inside the TX handler, where the work is not pending and
-> queue_delayed_work() is the right call.
->=20
-> I kept mod_delayed_work() in rtw_sdio_tx_kick_off() on purpose, because
-> there it can race with a pending retry. If a page shortage has already
-> armed the work with RTW_SDIO_TX_RETRY_DELAY, queue_delayed_work() would
-> see it pending and do nothing, so a newly queued frame would sit for up
-> to a millisecond for no reason. mod_delayed_work() re-arms it to fire
-> immediately. I have added a comment saying so.
+> it would be four callbacks (free page check, page
+> accounting, output queue wait, transfer sizing) and I did not want to
+> introduce that structure without asking first.
 
-Make sense. Please add a short comment for the reason.=20
+If these are called from sdio.c, just check chip ID in sdio.c.=20
+If they are used by common flow like coex.c, I prefer to implement them=20
+by chip_ops.=20
 
-Ping-Ke
+Ping-ke
 
