@@ -1,81 +1,106 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06E31F942;
-	Thu, 30 Jul 2026 05:39:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACFF2E738C
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 06:00:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785389978; cv=none; b=Fmsw1kXHUKQw7h4csna9N08VtQvY0bJqjIXT2GvKIiYzEMNsktBUC+rWxYCeBXAtv4xqeNB0pDzpB2R7qCnyA8w1/1x0BHciIwzx25O7OGk/7yy+iJEKiDQZPScTvdTaVxZHvb5Xd1vZPGmAFm4TKbnGQgV8o2BcYrpkptUqSfs=
+	t=1785391253; cv=none; b=kXn+NX2SRt6dj6fr4BXiD8fqutePIT5AHiL2lzPfky4+ZQBDuyFR5RDzow/qQiv/b1TEwN3mtzBwJxqujQWaWwM+Q80m7XTI5k6jjcrQzKi7GcP7UMvQFmMXWFTt/pYXc3fj2UZwd8KwXyP/UJ0rAugaxdQ3j7JlWtJfuBdlnac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785389978; c=relaxed/simple;
-	bh=iejjyPrmNhE06apCLSgYfu9JilFFitAJr5pfimkOBTY=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=s+NthQW3/+XW43lVc2ummelUCeoZULB3kY0onD2W+6Dmp3hUXJbdf8B02+07zytzpI/AYXxz1JjDMGpj4lCVF1n5vCLcJmkMCRUuiG2IyLD14ymMT5qcMMaB9waJK+zf7aBSrrF3J7o19K7ksI/iDF8+OV5hNZ8DEPHCHrct2Yw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=RxkW9ESn; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1785391253; c=relaxed/simple;
+	bh=sh0cK31CqP3rFU+JNVSzwAUoi6TTM7qyx/bj1IEU3gc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=mGe1FQ4bSm58IoVSaQON8u09SajMDN5cyOkTYUkwMbsY16z8QiK3yfPJxKi9ggwqLzHbzUlmo1dGKaZ4MoLkYbCeaMqG+wlM8UkpD7US/4Z0a9RbB2NO4kFNk9UA/wXfTicSc2QHOxtCmhvT+Ewj2NSozeDXhdURy4M0QWbv7Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=VKhAuSjK; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="RxkW9ESn"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66U5dW311970765, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785389972; bh=oAuAXm/tIjqUC+juPvjyJJBAbcHsMFfVRTRXVtrFo58=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=RxkW9ESnnBS7YSLM6ingnToYfpgg66XQjgQeCKYALlbkdz77jLbbnCkcCftGI0Fpy
-	 k30eq6frH4i+ovmGTMdp7UPnutNFk1B19j3mtKZ/IYVt40H3BUMSREzTDiuf8Ubizr
-	 YpE9ez9AKAw536OjlPFxMI9/0B8eGealXpCwwXbMZk5sYs5vRdfYocvC36LdiEKIQ3
-	 t0+XzUFcqgLyYfA/JdPmn5RDfrwmOBN6t1bbkqjRNXXl3jO+Q0aJDdqEkpGfungyMo
-	 vVfLokGS8mVuJmu7l0sjbp48FSVWU6jbEEm4Vb+zzbc31ku/Mgrh8NXVYOAieBxVOL
-	 I4/OfIXi+i+5Q==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66U5dW311970765
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 30 Jul 2026 13:39:32 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 30 Jul 2026 13:39:32 +0800
-Received: from RTKEXHMBS03.realtek.com.tw (10.21.1.53) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Thu, 30 Jul 2026 13:39:32 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS03.realtek.com.tw
- (10.21.1.53) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Thu, 30 Jul 2026 13:39:27 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdun Nihaal <nihaal@cse.iitm.ac.in>, <pkshih@realtek.com>
-CC: Abdun Nihaal <nihaal@cse.iitm.ac.in>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] wifi: rtw88: Fix potential memory leak in rtw_txq_push_skb()
-In-Reply-To: <20260727064223.61836-1-nihaal@cse.iitm.ac.in>
-References: <20260727064223.61836-1-nihaal@cse.iitm.ac.in>
-Message-ID: <e7f7b2c1-3469-487e-8968-0d7b3e29b2ab@RTKEXHMBS03.realtek.com.tw>
-Date: Thu, 30 Jul 2026 13:39:27 +0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="VKhAuSjK"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785391247;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=tgN5oBKicJ7KNhlJcF9OIXncn3QsGd64Tgwkels3ifI=;
+	b=VKhAuSjKpKnL1T4YERVywD1BMlFnQjph9ogdSye8DwqWcG9Kbae5FIGWW7RJBQOC1E37s+
+	ka6f6wFi48YluS7p6O1H+8jkLbOisyBTAedO1cKGzo2ZWicoR3PtBUX1/Oq5pwPMfD8dCP
+	ifuGCvX4ghS+I0zxL23gIHPgo4LVwBw=
+From: Yi Cong <cong.yi@linux.dev>
+To: gregkh@linuxfoundation.org
+Cc: linux-staging@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yi Cong <yicong@kylinos.cn>
+Subject: [PATCH v2 2/4] staging: rtl8723bs: fix double free when register_netdev() fails
+Date: Thu, 30 Jul 2026 13:59:58 +0800
+Message-Id: <20260730060000.1944670-3-cong.yi@linux.dev>
+In-Reply-To: <20260730060000.1944670-1-cong.yi@linux.dev>
+References: <20260730060000.1944670-1-cong.yi@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Abdun Nihaal <nihaal@cse.iitm.ac.in> wrote:
+From: Yi Cong <yicong@kylinos.cn>
 
-> The skb passed to the rtw_hci_tx_write() is expected to be freed when
-> the function fails, but the error path in rtw_txq_push_skb() does not
-> free the skb before returning. This can lead to a memory leak in
-> rtw_txq_push() where a dequeued skb is passed to rtw_txq_push_skb().
-> 
-> Fixes: aaab5d0e6737 ("rtw88: kick off TX packets once for higher efficiency")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+When register_netdev() fails, the error_register_netdev label in
+_rtw_drv_register_netdev() frees the adapter and netdev via
+rtw_free_drv_sw()/rtw_free_netdev() and then returns _FAIL.
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+The caller rtw_drv_init(), however, still holds a non-NULL if1 on this
+failure path and jumps to free_if1, where rtw_sdio_if1_deinit() invokes
+rtw_free_drv_sw() and rtw_free_netdev() again on the same already-freed
+objects, resulting in a double free / use-after-free.
 
-9f2948010764 wifi: rtw88: Fix potential memory leak in rtw_txq_push_skb()
+Drop the freeing from error_register_netdev and let rtw_sdio_if1_deinit()
+perform the tear-down, which is the single owner for this path.
 
+Fixes: 554c0a3abf21 ("staging: Add rtl8723bs sdio wifi driver")
+Signed-off-by: Yi Cong <yicong@kylinos.cn>
 ---
-https://github.com/pkshih/rtw.git
+ drivers/staging/rtl8723bs/os_dep/os_intfs.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/rtl8723bs/os_dep/os_intfs.c b/drivers/staging/rtl8723bs/os_dep/os_intfs.c
+index f31196f54b3e0..84633a51e2db7 100644
+--- a/drivers/staging/rtl8723bs/os_dep/os_intfs.c
++++ b/drivers/staging/rtl8723bs/os_dep/os_intfs.c
+@@ -754,7 +754,6 @@ u8 rtw_free_drv_sw(struct adapter *padapter)
+ 
+ static int _rtw_drv_register_netdev(struct adapter *padapter, char *name)
+ {
+-	int ret = _SUCCESS;
+ 	struct net_device *pnetdev = padapter->pnetdev;
+ 
+ 	/* alloc netdev name */
+@@ -765,19 +764,10 @@ static int _rtw_drv_register_netdev(struct adapter *padapter, char *name)
+ 
+ 	/* Tell the network stack we exist */
+ 	if (register_netdev(pnetdev) != 0) {
+-		ret = _FAIL;
+-		goto error_register_netdev;
++		return _FAIL;
+ 	}
+ 
+-	return ret;
+-
+-error_register_netdev:
+-
+-	rtw_free_drv_sw(padapter);
+-
+-	rtw_free_netdev(pnetdev);
+-
+-	return ret;
++	return _SUCCESS;
+ }
+ 
+ int rtw_drv_register_netdev(struct adapter *if1)
+-- 
+2.25.1
 
