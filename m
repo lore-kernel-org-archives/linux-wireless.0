@@ -1,63 +1,63 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A6745FFD0
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F75045FFDD
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 16:04:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785427480; cv=none; b=GQq7GQvTDXZ9F7rvcLWtpuDerYbMFHFd5oh3TdfoUrl0MiKtwY9VWk0e4Yh5QAwZ0/ICWxqqYqUcGe99G0Tb6vm6kQefSJqQwUpaD1c2eo9uYt5I8igJAI5u8a8MtIJ/QlacyFNNKhfKrgN/RYwOGwh1KW4N555x7STEtcr5FmI=
+	t=1785427483; cv=none; b=tU2BjXZ18EiLaWfd3KS2i3zeMPmpmWrc9NlQjLTaRX5o6kAHHqV6msSIdF+lLddm+JWbdNzzoAgoxPEvwK3iK7/hNSsfQh/LbVUyY0WanJfUAbci1TUkM+9OVO4gb4OPpPUyydzHCSTyqiwPfqHuvwjyu6Jvhy8inkOT9T/Bh9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785427480; c=relaxed/simple;
-	bh=83sqCGdGcSCvVa+9JspIJKCFU9FvCzQFy5Q7L48LIJg=;
+	s=arc-20240116; t=1785427483; c=relaxed/simple;
+	bh=2/xzd7pwxzvKAQzcQP6eUvsOWiHqVVYplGHUqC9o+AI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MBEhD57PHP6XrJt+6iRI7JtckqICbItiPaXJ1949NnYf7NmC2S5Dlx+qY3VkwcuE4Occ/qMkW9fF96OsT0vCHGTPrES84AqRSMRILMrK83xZlXvmo750pDDgzYOsIJV8CbtgnlT0QniVxync8ah8c9jSbpyUbLsBhikPtXkQmZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nm7z0Bwa; arc=none smtp.client-ip=209.85.210.169
+	 MIME-Version; b=Kklnwn7hZeWxg283vN533Kk2zyxiVuSAyA+IPqaKc3DjyvvReM/DEgixVWjYfual11FbTU/iUu3UKJzVzElOtrgodh3psOXAHGUDE9DoQoPsjZgOGFagLZDFwo1pBDN07QUkHuafXAblv7xNe4+Qab6JZTor5tkF8txBYLLYFYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rDUpJv4j; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nm7z0Bwa"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-849f2f32facso4946b3a.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rDUpJv4j"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-381f03d7be0so5190a91.1
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 09:04:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785427478; x=1786032278; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785427481; x=1786032281; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3jIAI+a5zpsh6wBE3laZ7ci5SL/RFgEEpXPR8uss6Ao=;
-        b=Nm7z0Bwagth6q7UjFiJYqXPIRLNO/lZ9txh8UYjs/3SMCUF3DHCjNb3vBXR6zXCRKS
-         9W8xZVZY59ib8TyyzI6uS+UfNq5pBTGOdard/JuHYgO+hHywTRWyvC9/dnS0CQXGJ9aE
-         M4GWcg3jWBDiY13OMjRqMhkVCEi2fMlmLCS2lohXb8LI/sXvQRVDMjj3Dee1BynZ4vFJ
-         GP186fcDdp4nCZN0vs1ufatfPboW+ESd806YJCSozUWdGhdKUY1F28TtwQJS41lBX8gG
-         cI/SkIi+LRkp3fvuyzUxsnveUwAGEzQLySLp2fOHLcH66bGKbQBORtKCHjHiPeJP5dRw
-         LGlQ==
+        bh=uXxniCcKoOU5F+uvUGWNd+osNIWTn5/2sMtcMApujT0=;
+        b=rDUpJv4jMX7SYJqRIhtXhO30maeyXwPMbOxHb5P1PqYlQ4WEKfYC+RxSaIJcnpZyRH
+         UZ5lS+FQ7zQQx3X8tmsCVhRzdltXpKrccHIINHoNpVksi7WoHEkTz1rknKeQTAFCRyLL
+         ANjgBq09frtdFOPYSVNhJCfc5wG3oCndhfjLbyDtZ9z012ZFAe2xM9juEV7R/AXhVgED
+         RYzO8ypvb03TJDP/EQkOwB5BeLpu0JjrK12UPmqHmcRA0p/voBK61k+MHp3xJhvGNuoA
+         2c7daZZatVsEncneqRVeKqj6H1xrolY0Ma3o86XG5ki3irD9QH9FJFTpEHlkTMnRSrN0
+         rAGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785427478; x=1786032278;
+        d=1e100.net; s=20251104; t=1785427481; x=1786032281;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3jIAI+a5zpsh6wBE3laZ7ci5SL/RFgEEpXPR8uss6Ao=;
-        b=PmosTOrZfQGNZp0sin3hIhP8qzuK1VtDJ4P1kHYkoa80o/Aa2FPM00GOTjUgltBpu1
-         7ZFImoXqU85lks/EiufbxRICf84qxPaSKgU4XnGN1T1ka8uuMw0HMlC5p0GBAIGx7CoW
-         LQH9VceFJC7H1ck8H8bk+D2wc4IfChtq4DxeuavmGDdw0z+b4HyBdvjlWQE/JSMdh+EU
-         s0OYCHnt0suoyvBg3cmZrdBa9ZSoeK7VeGL/F2gG7C79P+IqHKrsKLe7frCWBS7TDkCv
-         g3343QaNGRAL2m520unNNjvzziSvJh2gGeADf8N5Ht67tvtryv1BCmpt1Wdes1Sr2W5r
-         HWBw==
-X-Gm-Message-State: AOJu0YzP76THLLP9Cj1Cu8VBVrGOVYt5eQvYi4t3O8oVtK/aqGPBu4r2
-	BuRCwohOhx4/3Rm10EPAF41xir+ydeG4DUk1gEXy/bFFqeCEc6mQFIUW
-X-Gm-Gg: AR+sD13oCI236LDP66e6hafTdaH1j41Mb4iJ5/xXvoz4SQOemtdA2ynwKCH5x7qnOj5
-	locYs7xM/TAMg5ce9c9Du+MVtIsRELuFoBiDxSUHhfBhFvokKhCdLQRnqfSsUefgs6SXLXmNknu
-	OMOdLku2y4OMXBIZyaA+qzvRMOt/uw7IyhPnppAN9FpDXs2BJsGoakEE405+w7Iyn6QYe/kRfPB
-	gQcdF13OtlOqUWKn8Ja7zQtZor1zJH0dBkBwIpuDbjkOK1+9NORBnezF3RRaEXaDbRwX9wy+FQP
-	9dvn+ikoWR0qnstV/3la3jivWloPEMheSAhXX98HAYLpF+fYT7nNHKUgpC6FGte3tgR6ZNvEuo3
-	u3L31YBkLzMRxntLbB9Ej6pNbLOIxqX3i1sW8lONORChpeilke55FZx6NKsIq914dvYksf3r/4H
-	glpyk1kPlD7+taBgly1OCv00KmnNAprjpMZ16GuQbDoKhsVbAzzhpnqMVc+MmHWTajWtcwnHV0H
-	KsHEINj6xNZWg==
-X-Received: by 2002:a17:90b:1c89:b0:36d:b30b:14ed with SMTP id 98e67ed59e1d1-38fa80944a8mr870183a91.2.1785427477707;
-        Thu, 30 Jul 2026 09:04:37 -0700 (PDT)
+        bh=uXxniCcKoOU5F+uvUGWNd+osNIWTn5/2sMtcMApujT0=;
+        b=oRWlvUTNxHSdTt8bszuRGBYBoKiGlRANxcsULWtYtLnk68DHqxMHq6XnwUxiK5wGdj
+         9MjoLkcQ4LhVOtpgwwOlaNqm3fzLdGJStkYXXV59qfm9pV8vj9/5qwNbGE9Pi7QXfmtN
+         DNaT1E1B/5gXP3QwOlv6LKs2RJJCmECcxvS044HkeGTr3SWYuiydqfW5SeWtUQRbOJyF
+         7PpjTU/IO8sTZtCso3wE49eQ7jub7FqlrjkaQ73OSsuscEpAnfsB8ZIVVI4CgBvZDDTZ
+         hrYlvaef2XZzfeLfW5/XdzceOwaYZuT5nT41y45PCZqeYr7o2E5EXjdI0+8PYl9G/Kr3
+         C8Zw==
+X-Gm-Message-State: AOJu0YyDIMGPuFFDyLN2POdZtnGoi35u/4wcK3jNTH+EatCKYGE67KJ+
+	cPta6kX9tzWsaRomYSCl/Jx040H5+y29TnaKB6+jvDl+j6MRhBVWma1x
+X-Gm-Gg: AR+sD13lRBW4RY1Vyht/pwfKFnNgYsfmgqGs9sPrfdraW9C2yL6yySUjlT10hmcqG78
+	IJR8RE6QefSrV3YQyufzbq3lKDL2X9sXkXVhjbM+uy1Y5rVm2lMEL/KlkABibeoAtpWXnDRCEgy
+	fChGvgjDlDBVQ6u2Z3V1CVP+gnNsCnuP1cLwmmJEYMicIfddsa+ktxwmIgP5SpraF2HvkdtN9ON
+	9YsV4mN03i1IM3B6KiO/W9CxhM4zHx3DGpkVudvy+3f1A8XCaytCbgAjNfxMqSM3EBjOhbuSr8Z
+	vFEOwkZIYsGL+sSSMq9MtPwRG9G+bdTO7fo3Y9bD5Qrh2JfoTjk7gh70zatys1NxLhtsTbnkcSj
+	etek2RWS8jgQpSle9BO0Ry4qivv2rZOIPFS4Fh1ceuKQzgq1w4XIt7YuJr94/6kbr3AaH3u9zaO
+	oTWOnkjle+CMQgJbn1wFT2BychCUfdBtpyUxMbAohjkKD4az/GOKerlVunDVx8dD1vsZewysnko
+	NY=
+X-Received: by 2002:a17:90b:4c0f:b0:38e:91a8:fb85 with SMTP id 98e67ed59e1d1-38fa8200471mr696474a91.3.1785427480946;
+        Thu, 30 Jul 2026 09:04:40 -0700 (PDT)
 Received: from Potato.tail66a299.ts.net ([171.76.83.76])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.35
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13e72643a12sm35012783c88.5.2026.07.30.09.04.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 09:04:37 -0700 (PDT)
+        Thu, 30 Jul 2026 09:04:40 -0700 (PDT)
 From: Shivesh <chanelshivesh@gmail.com>
 X-Google-Original-From: Shivesh <shivesh@example.com>
 To: arend.vanspriel@broadcom.com
@@ -66,9 +66,9 @@ Cc: linux-wireless@vger.kernel.org,
 	brcm80211-dev-list.pdl@broadcom.com,
 	linux-kernel@vger.kernel.org,
 	Shivesh <shivesh@example.com>
-Subject: [PATCH 3/8] wifi: brcmfmac: core: populate radiotap header with RSSI
-Date: Thu, 30 Jul 2026 16:03:51 +0000
-Message-ID: <20260730160425.11933-3-shivesh@example.com>
+Subject: [PATCH 4/8] wifi: brcmfmac: cfg80211: implement PMKID_V2 and fix delay busy-wait
+Date: Thu, 30 Jul 2026 16:03:52 +0000
+Message-ID: <20260730160425.11933-4-shivesh@example.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260730160425.11933-1-shivesh@example.com>
 References: <20260730160425.11933-1-shivesh@example.com>
@@ -80,85 +80,196 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Populates the radiotap header with dbm_antsignal using the rssi
-value extracted from the firmware's hardware RX header, fixing
-missing signal data in monitor mode captures.
+Implements PMKID_V2 for FILS fast-roaming support instead of falling
+through to the V1 path. Additionally replaces a harmful mdelay() busy-wait
+in brcmf_delay with usleep_range() to prevent CPU stalls.
 
 Signed-off-by: Shivesh <shivesh@example.com>
 ---
- .../broadcom/brcm80211/brcmfmac/core.c        | 34 +++++++++++--------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 118 ++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h    |   4 +-
+ 2 files changed, 110 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index ec170647800d..673f0000389c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -431,45 +431,51 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- 	netif_rx(skb);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 0b55d445895f..7d7e5ececd22 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3989,12 +3989,10 @@ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+ 
+ static __always_inline void brcmf_delay(u32 ms)
+ {
+-	if (ms < 1000 / HZ) {
+-		cond_resched();
+-		mdelay(ms);
+-	} else {
++	if (ms <= 20)
++		usleep_range(ms * 1000, ms * 1000 + 1000);
++	else
+ 		msleep(ms);
+-	}
  }
  
-+struct brcmf_radiotap_info {
-+	struct ieee80211_radiotap_header hdr;
-+	s8 dbm_antsignal;
-+} __packed;
+ static s32 brcmf_config_wowl_pattern(struct brcmf_if *ifp, u8 cmd[4],
+@@ -4364,6 +4362,104 @@ brcmf_pmksa_v3_op(struct brcmf_if *ifp, struct cfg80211_pmksa *pmksa,
+ 	return ret;
+ }
+ 
++/**
++ * brcmf_pmksa_v2_op - update firmware PMKSA cache using the V2 list interface.
++ *
++ * V2 firmware (revision 12) uses a versioned flat list structure
++ * (brcmf_pmk_list_v2_le) rather than the per-entry operation model of V3.
++ * Each entry carries FILS-specific fields (raw PMK material, SSID, and
++ * fils_cache_id) in addition to the basic BSSID + PMKID pair, enabling
++ * FILS fast-roaming on devices that do not support V3.
++ *
++ * @cfg:   driver config structure holding the shadow V2 PMKSA list
++ * @ifp:   interface pointer
++ * @pmksa: the PMKSA to add/remove, or NULL for a flush
++ * @alive: true = add (set time_left to no-expiry), false = remove/flush
++ */
++static s32
++brcmf_pmksa_v2_op(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp,
++		  struct cfg80211_pmksa *pmksa, bool alive)
++{
++	struct brcmf_pub *drvr = cfg->pub;
++	struct brcmf_pmk_list_v2_le *list = &cfg->pmk_list_v2;
++	struct brcmf_pmksa_v2 *pmk = list->pmk;
++	u32 npmk = le16_to_cpu(list->length);
++	u32 i;
 +
- void brcmf_netif_mon_rx(struct brcmf_if *ifp, struct sk_buff *skb)
++	/* npmk here stores the count of valid entries, repurposing the
++	 * length field of the shadow list as a counter.  We convert to
++	 * the wire format (byte length) when sending to firmware.
++	 */
++	if (!pmksa) {
++		/* Flush: zero the shadow list and push an empty V2 list. */
++		memset(list, 0, sizeof(*list));
++		goto send;
++	}
++
++	if (alive) {
++		/* Set: search for existing BSSID match first. */
++		for (i = 0; i < npmk; i++)
++			if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
++				break;
++
++		if (i >= BRCMF_MAXPMKID) {
++			bphy_err(drvr, "V2 PMKSA cache full (%d entries)\n",
++				 npmk);
++			return -EINVAL;
++		}
++
++		memset(&pmk[i], 0, sizeof(pmk[i]));
++		pmk[i].length = cpu_to_le16(sizeof(struct brcmf_pmksa_v2));
++		if (pmksa->bssid)
++			memcpy(pmk[i].bssid, pmksa->bssid, ETH_ALEN);
++		if (pmksa->pmkid)
++			memcpy(pmk[i].pmkid, pmksa->pmkid, WLAN_PMKID_LEN);
++		if (pmksa->pmk && pmksa->pmk_len &&
++		    pmksa->pmk_len <= WLAN_PMK_LEN_SUITE_B_192) {
++			memcpy(pmk[i].pmk, pmksa->pmk, pmksa->pmk_len);
++			pmk[i].pmk_len = cpu_to_le16(pmksa->pmk_len);
++		}
++		if (pmksa->ssid && pmksa->ssid_len) {
++			memcpy(pmk[i].ssid.SSID, pmksa->ssid, pmksa->ssid_len);
++			pmk[i].ssid.SSID_len = pmksa->ssid_len;
++		}
++		if (pmksa->fils_cache_id)
++			pmk[i].fils_cache_id = *pmksa->fils_cache_id;
++
++		if (i == npmk)
++			npmk++;
++	} else {
++		/* Delete: find by BSSID and compact the list. */
++		for (i = 0; i < npmk; i++)
++			if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
++				break;
++
++		if (i >= npmk) {
++			bphy_err(drvr, "V2 PMKSA entry not found\n");
++			return -EINVAL;
++		}
++
++		for (; i < npmk - 1; i++)
++			memcpy(&pmk[i], &pmk[i + 1], sizeof(pmk[i]));
++		memset(&pmk[npmk - 1], 0, sizeof(pmk[npmk - 1]));
++		npmk--;
++	}
++
++	/* Update shadow entry count (stored in length field). */
++	list->length = cpu_to_le16(npmk);
++
++send:
++	/* Build the wire-format header and send the full list to firmware.
++	 * version and length on the wire reflect the actual byte footprint.
++	 */
++	list->version = cpu_to_le16(BRCMF_PMKSA_VER_2);
++	list->length  = cpu_to_le16(offsetof(struct brcmf_pmk_list_v2_le, pmk) +
++				   npmk * sizeof(struct brcmf_pmksa_v2));
++
++	return brcmf_fil_iovar_data_set(ifp, "pmkid_info", list, sizeof(*list));
++}
++
++
+ static __used s32
+ brcmf_update_pmklist(struct brcmf_cfg80211_info *cfg, struct brcmf_if *ifp)
  {
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR_FMT_RADIOTAP)) {
--		/* Do nothing */
-+		/* Firmware already provided a full radiotap header; do nothing */
- 	} else if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MONITOR_FMT_HW_RX_HDR)) {
- 		struct wlc_d11rxhdr *wlc_rxhdr = (struct wlc_d11rxhdr *)skb->data;
--		struct ieee80211_radiotap_header *radiotap;
-+		struct brcmf_radiotap_info *rtap;
- 		unsigned int offset;
- 		u16 RxStatus1;
-+		s8 rssi;
+@@ -4402,8 +4498,8 @@ brcmf_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *ndev,
  
- 		RxStatus1 = le16_to_cpu(wlc_rxhdr->rxhdr.RxStatus1);
-+		rssi = wlc_rxhdr->rssi;
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V3))
+ 		return brcmf_pmksa_v3_op(ifp, pmksa, true);
+-
+-	/* TODO: implement PMKID_V2 */
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V2))
++		return brcmf_pmksa_v2_op(cfg, ifp, pmksa, true);
  
- 		offset = sizeof(struct wlc_d11rxhdr);
--		/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU
--		 * subframes
--		 */
-+		/* MAC inserts 2 pad bytes for a4 headers or QoS or A-MSDU subframes */
- 		if (RxStatus1 & RXS_PBPRES)
- 			offset += 2;
- 		offset += D11_PHY_HDR_LEN;
+ 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+ 	for (i = 0; i < npmk; i++)
+@@ -4446,8 +4542,8 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
  
- 		skb_pull(skb, offset);
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V3))
+ 		return brcmf_pmksa_v3_op(ifp, pmksa, false);
+-
+-	/* TODO: implement PMKID_V2 */
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V2))
++		return brcmf_pmksa_v2_op(cfg, ifp, pmksa, false);
  
--		/* TODO: use RX header to fill some radiotap data */
--		radiotap = skb_push(skb, sizeof(*radiotap));
--		memset(radiotap, 0, sizeof(*radiotap));
--		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
-+		/* Insert our radiotap header with RSSI data */
-+		rtap = skb_push(skb, sizeof(*rtap));
-+		memset(rtap, 0, sizeof(*rtap));
-+		rtap->hdr.it_len = cpu_to_le16(sizeof(*rtap));
-+		rtap->hdr.it_present = cpu_to_le32(1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL);
-+		rtap->dbm_antsignal = rssi;
+ 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+ 	for (i = 0; i < npmk; i++)
+@@ -4487,8 +4583,8 @@ brcmf_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *ndev)
  
--		/* TODO: 4 bytes with receive status? */
--		skb->len -= 4;
-+		/* Strip the 4-byte receive status / FCS tail */
-+		skb_trim(skb, skb->len - 4);
- 	} else {
- 		struct ieee80211_radiotap_header *radiotap;
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V3))
+ 		return brcmf_pmksa_v3_op(ifp, NULL, false);
+-
+-	/* TODO: implement PMKID_V2 */
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PMKID_V2))
++		return brcmf_pmksa_v2_op(cfg, ifp, NULL, false);
  
--		/* TODO: use RX status to fill some radiotap data */
- 		radiotap = skb_push(skb, sizeof(*radiotap));
- 		memset(radiotap, 0, sizeof(*radiotap));
- 		radiotap->it_len = cpu_to_le16(sizeof(*radiotap));
- 
--		/* TODO: 4 bytes with receive status? */
--		skb->len -= 4;
-+		/* Strip the 4-byte receive status / FCS tail */
-+		skb_trim(skb, skb->len - 4);
- 	}
- 
- 	skb->dev = ifp->ndev;
+ 	memset(&cfg->pmk_list, 0, sizeof(cfg->pmk_list));
+ 	err = brcmf_update_pmklist(cfg, ifp);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 6ceb30142905..57167fde5ba1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -344,7 +344,8 @@ struct brcmf_cfg80211_wowl {
+  * @bss_list: bss_list holding scanned ap information.
+  * @bss_info: bss information for cfg80211 layer.
+  * @conn_info: association info.
+- * @pmk_list: wpa2 pmk list.
++ * @pmk_list: wpa2 pmk list (V1 firmware).
++ * @pmk_list_v2: wpa2 pmk list for V2 firmware (FILS-capable, firmware rev 12).
+  * @scan_status: scan activity on the dongle.
+  * @pub: common driver information.
+  * @channel: current channel.
+@@ -376,6 +377,7 @@ struct brcmf_cfg80211_info {
+ 	struct wl_cfg80211_bss_info *bss_info;
+ 	struct brcmf_cfg80211_connect_info conn_info;
+ 	struct brcmf_pmk_list_le pmk_list;
++	struct brcmf_pmk_list_v2_le pmk_list_v2;
+ 	unsigned long scan_status;
+ 	struct brcmf_pub *pub;
+ 	u32 channel;
 -- 
 2.53.0
 
