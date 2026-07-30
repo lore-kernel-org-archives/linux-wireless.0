@@ -1,32 +1,32 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from out-186.mta1.migadu.com (out-186.mta1.migadu.com [95.215.58.186])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 824DE33A6E9;
-	Thu, 30 Jul 2026 07:45:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A323769F0
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 07:45:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.186
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785397539; cv=none; b=Onqd2nb0Cd1sROYMbBkXk1Mb9RZLxnNHI/imrRWEi27Lfz2PO5PKmF8bPDQkSy51rDJ7/o5wkS6mZvrgyDiIQV62ywWR1GL2tWZPRfBpQK24wBkyZskh9OMtiEAArYwB5w7Mh6QkZFgJbQf+3VURkJISejllf0WNyLGcMypZVNI=
+	t=1785397540; cv=none; b=S2yZkmq+yOy4+TtkJfZ0/G5od0hdL8Z6OP3OK6HE9Pa8dVJM8BEMynKrhSxjSu/Wkk6kbU/VtaXkAG76xp3EB626XpjKwq5QiRGT9+bk8q1PHxQdZZtLkrTjpzYgdrCpekeRf4tchmOhiELtFdzp4/32v8U9jiPemf09h3dCbbI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785397539; c=relaxed/simple;
-	bh=YCedUE7KErEw1BXN676SxahX64CLElnOpa2TolJBD90=;
+	s=arc-20240116; t=1785397540; c=relaxed/simple;
+	bh=6voSCIg4c3kH6M6b/gceGAV3pCxoV1TZBCQkL5Vl6ic=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mK1UM4JlRHCWHA+9963vBBXtCGjAeXyfsHNm3PbO/im8VnHsYnMlLoLf3gSu9g7Rg1XxsVX781vwN+Bm6bW+VRjW6No1G6gSOZSuDsLANSm6eg/2G0IkiupmevyHGwS0NShG189PAvWckOcbf78QeyD9O0DKx+lX2vt8y97YpFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=xFve8Y5f; arc=none smtp.client-ip=95.215.58.179
+	 MIME-Version; b=X0i/vbPwqLMpjvxo5zSz3Iucr74jpFzayMTaW7isTft3Oq48sHDlczSR/g5gvqT7q0LCwNdHziBzbYfpahM/LX+TUn2Gk+v6phaUenHBngQ6O2KM9a9qXXw/Bn57rDr8ZlPWm3y/zrfNhwh9p+zIfxs6GvQFnMFtUuolqsHq6qE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=EAfhVplQ; arc=none smtp.client-ip=95.215.58.186
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="xFve8Y5f"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="EAfhVplQ"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785397535;
+	t=1785397536;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xw9rOROEberHU0pIyKBWtUooSjG4p1hWdB6I+Whzyz4=;
-	b=xFve8Y5fdsM3AOiraDbk8LOmkKa/retqxB5zJQpc3yp8l+LRqFmvf4BjKPODXz90SeDM1v
-	QXyzhAmj/cd2OVk0WYhF+ifqjkPXu9b2ljkGyCGITboe+kQZpJJikhl9RMOVq9eCOmSOF+
-	BLkeXmA1BBArsK3QTKiaoljmFbtXyCM=
+	bh=dDZrv9PJcTF5nY6EQQgc7uu+oYGf9/Vv1bvfE0YdMAM=;
+	b=EAfhVplQpyN6s8A7tmgNLAKyETUz0yI+QHwhLbdVVmxv7c62UuAaHnSHWle7PnqcLYqsu6
+	ZbN6DlXOst1ZFPooPDKrR09sZfK9QirZkc6jy/iVue2hIFpKgzRIQRtp5t+RUHD1xcIj19
+	j3sgKTPx6Jxu3bZHtxRZxECLOQFqlic=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>
 Cc: Luka Gejak <luka.gejak@linux.dev>,
@@ -35,11 +35,11 @@ Cc: Luka Gejak <luka.gejak@linux.dev>,
 	Michael Straube <straube.linux@gmail.com>,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: Re: [PATCH v2 01/11] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-Date: Thu, 30 Jul 2026 07:44:55 +0000
-Message-ID: <20260730074504.19725-1-luka.gejak@linux.dev>
-In-Reply-To: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
-References: <774407603bef4fd38290f6b5d4b4a26c@realtek.com>
+Subject: Re: [PATCH v2 02/11] wifi: rtw88: rx: mark zero length packets on RTL8723BS
+Date: Thu, 30 Jul 2026 07:44:56 +0000
+Message-ID: <20260730074504.19725-2-luka.gejak@linux.dev>
+In-Reply-To: <e0ba8a366df54843a8d9f65bbc028b41@realtek.com>
+References: <e0ba8a366df54843a8d9f65bbc028b41@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,35 +51,16 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-On 27/07/2026 07:12, Ping-Ke Shih wrote:
->> +static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
+On 27/07/2026 07:14, Ping-Ke Shih wrote:
+>> +       if ((rtwdev->chip->id == RTW_CHIP_TYPE_8703B ||
+>> +            rtw_is_8723bs(rtwdev)) &&
 > 
-> As RTL8723B generation is very different from other chips, you need to add
-> this to deliver different flow. I'd think if we need a set of ops to make
-> code clearer.
+> Straighten it. Though it is over 80 characters, but still acceptable.
 
-Agreed, and v3 starts on that. The largest offender was patch 11, which
-had an if/else on the chip in ieee80211_ops::mgd_prepare_tx(). That is
-now a chip_ops::prepare_tx callback dispatched from
-rtw_chip_prepare_tx(), so the common path has no chip test left.
+Done in v3:
 
-For the rest I reduced each site to a single entry point that the
-common flow calls once and that returns as soon as it has handled the
-notification, rather than the chip test being repeated in every helper
-below it:
-
-  rtw_coex_8723bs_scan_notify()
-  rtw_coex_8723bs_connect_notify()
-
-Everything below those now assumes RTL8723BS with BT disabled, which
-also answers your "callers check this already" comments on patch 05.
-
-The SDIO side is harder to express as ops, because it is the bus
-driver rather than the chip driver that differs, and rtw_sdio has no
-per-chip ops table today. If you would rather I add one there too I am
-happy to do it; it would be four callbacks (free page check, page
-accounting, output queue wait, transfer sizing) and I did not want to
-introduce that structure without asking first.
+	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8703B || rtw_is_8723bs(rtwdev)) &&
+	    pkt_stat->pkt_len == 0) {
 
 Best regards,
 Luka Gejak
