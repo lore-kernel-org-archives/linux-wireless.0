@@ -1,153 +1,78 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com [209.85.161.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761933AFD0E
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 07:47:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB66B3D3CE5
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 08:39:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785397635; cv=none; b=EAzsG7lBTdkFeVKCwn7GJvktIrs05BuDec/CV6e/UFLjEN4Ac6Qkz2UpTNU9KBsp1ztHIYa3+QKHXw4Cj/xXIzDWNfG/GYzx0BbL2ephpTAHW9lpbqLRxUPEg824MVAqMdMWju+iK2gKNgIsU9627oVjQeBowAEOQuJ3C6xfmEs=
+	t=1785400795; cv=none; b=UTo3RGwJs1pwUT1ygQj4OJe30IStwbfzjVrItOoYxhfBErY4NCkZF/3VvlbBqq4W1Zl//WY1X37FWOs7j+dqqLAexWUuFe5dUyC6fatP7kFN2mrsHHZSvc6Zwq4kjWOadP8sPJaP45PaNbRXTiIWe7U4UR8BiAN6Oniztdu6lWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785397635; c=relaxed/simple;
-	bh=D0KaS0Yk9tXGLsfg0t5EIZQa50X+fKdqYZwmCb5nkuk=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=urqJf+ApTC7gOKBRAkbyRmaOozuwfrK+CleyE+hPrOxbHdKezisJqSK3Oc+ntZ31I+IPswo89U9eZhEeZLjM8z/yA47BnIycza88molpNY7Vgd3yYXfQkoy1l/0t12GeH3zLKTlySlYk539unoDQMn018lKRkH8RRTAOct7z0n0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PFNDasSw; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PFNDasSw"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-8423f236418so1451706b3a.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 00:47:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785397634; x=1786002434; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=qT2/Gj6C3LLD04ewfQjlm82kTvMsQwWc7jtbFYONwk4=;
-        b=PFNDasSwqMRjIbYsZc4UBEBV9DUeTVrVZDPfQLnbA/ExpEutGwbq2+14VDvL8XulxS
-         k9clJuW9b71qOpPEBOONjzW1WuR7ggZXHes9e/2MYiTk679lgYvpZtgchpckeFuyLhEN
-         ISweJT2MytHSLrdWkcjeKuMSdZruITHgOgVwkPeMDKmgg9PZKVe5tVcz8s6PyCoWDVTe
-         P7qB9Ndnz61/PMU3ZAiaVI+OcggOsHiuL5T3quLodkOjNa8kyNrSwC5BCiTD3SuerdDm
-         nKJyadBmFTpcHDclncZ13b2fiJOPYxVSV4/kSQL9i3m+sF03bvl4Ua865SlOX2Hto+CX
-         +4lw==
+	s=arc-20240116; t=1785400795; c=relaxed/simple;
+	bh=RRQgUvdQ3aavNVgsn07sNMPutigdLkIImz5NBoYA1BI=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:Cc:
+	 Content-Type; b=bt/Ey/LucKlrgxzx50C2fVbJyKA2cK6+sLEad/7IHJ7U4XK+ywmfy02E7rGfwN0enlGK2gfoq1JMmgEJ8ev9mesH4NOi3gyrVhH5BSQA16gJMfAdrqfXw8NuY6K4GiiG0YD5STM2yQBFRnv/cJoEB44UvTpQdyCyrSyIKLKCBOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-6aca189b5a9so810501eaf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jul 2026 01:39:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785397634; x=1786002434;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qT2/Gj6C3LLD04ewfQjlm82kTvMsQwWc7jtbFYONwk4=;
-        b=iUakbJXJfc3u1gdMATGwbWvJhglM4vDvc6k84I/XTKhgR9iW7l267n9a0njj8TJQ7P
-         aK2Y0RCpaplED+JR1jk9aUb//GAnHjbKQHAGZhw6MV7N5mO5bOotfUyKWRlBgPPbAGAs
-         aL1rhB9Bwbv76hYhT0hsZu3kha+fDrKiJ5DGIhAalIPx4crnG3qcUE60EO6S6Wx4QhtO
-         +s4sDVhhoJuHwwsaZloFZf7slzgrP50hx3FiWQUl/Gw12IAyfWE+sLdqQOYbZ+HgklBr
-         RWH9OHT2t9N0HhisLLc6RXfIKQzJqTocZO34VEY7QcQ5fxYMlvwpPpiNOYUBy3JksI+h
-         GWHQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoTKi1Q/QwjFjoBaTddQCTrkGRkHuKu9mzH52HjU2ZgBmYzBWE5rh6ahlZEhG4dRRrlh8c9XRVqRTDroJXE4w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBlHWjdV4IV48/kakQ33X7jdX2AElwr5Dik7BxhGZI6rW1lX45
-	L/Nk8ONOkbk7NN+M5tNIjlhgAoAWrQbzhXaJkZQF8kkJh31DdyNYqAL6
-X-Gm-Gg: AR+sD12mVg9vralzm2RHo8fSY5wKgh43RpiNIr7iIDWa8kAQm/YQIBsjFZitaQsU4A1
-	G9apcAZT9sbUJvSwURWCE6VieAHbD+8uFPJpnqZhd5PN700mPklPgKSKc51SlPr0lCHVBbgmQqr
-	uKRmALgNvOjDvQ8tFIeF7sQBSQi2aTNwl2xYw2QlhrxsdFjIJZR0xqSAYA0rayDaz3lRlM/ZVUH
-	9njpV/lopPwVvpPdQuXw34MXvcQ2B7QjcDUVvf/6rD/wsD9mdtJR1SJFjcR005tp1rpMLW2SLV3
-	tXz9DyDQH+DL47jyb9ly0aD4jgh6uGt5mPXmRwCNYpLE8nCjdEYYcqoVpqKm6sf5e+Guo5QXudd
-	7Q51qi9HNgeznyljInCRWZWHkXC06fxDPviAyC1mPzkh/nhJb6SqoSvtBVr4Bz171FfJlCTQW8Z
-	C0P1ENWMTH0OasmQ5ENVhnruGv6tSfCPUqZsVhwmFKSFK37oF75ZphyY2MN8lWJ/nGvcP4MLTAB
-	DoVDa1EkoFFgtiZz3hlwuk8nh8YXA/0YgclBJ/o6yJD6vXWdQZXVM4=
-X-Received: by 2002:a05:6a00:1d27:b0:847:9c3a:b77f with SMTP id d2e1a72fcca58-84ebc3eb0b9mr1599711b3a.35.1785397633653;
-        Thu, 30 Jul 2026 00:47:13 -0700 (PDT)
-Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-203-195.dynamic-ip.hinet.net. [61.228.203.195])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84ea02ff637sm2607204b3a.39.2026.07.30.00.47.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Jul 2026 00:47:12 -0700 (PDT)
-From: Jeff Chen <chunfan.chen@gmail.com>
-X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
-Date: Thu, 30 Jul 2026 15:47:06 +0800
-To: George Valkov <gvalkov@gmail.com>
-Cc: Jeff Chen <chunfan.chen@gmail.com>, briannorris@chromium.org,
-	francesco@dolcini.it, johannes.berg@intel.com, kees@kernel.org,
-	miriam.rachel.korenblit@intel.com, wenst@chromium.org,
-	rafael.beims@toradex.com, avraham.stern@intel.com,
-	peddolla.reddy@oss.qualcomm.com, error27@gmail.com,
-	s.kerkmann@pengutronix.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] wifi: mwifiex: ignore ROM regulatory hint on
- WRT3200ACM/WRT32x
-Message-ID: <amsBes9fCF9ZdkCS@nxpwireless-Inspiron-14-Plus-7440>
-References: <20260728103536.25012-1-gvalkov@gmail.com>
- <amq0EnoZrBA+8W+J@nxpwireless-Inspiron-14-Plus-7440>
- <CADOrJmZKdM0y6jeS7oOK0aKm7BaqcDB=BmXTSBrFTiTqXHhUhA@mail.gmail.com>
- <CADOrJmb=_uNHnnqswMAN+LTNPHnRARqF=MicFTP6C5QoMxH4Uw@mail.gmail.com>
+        d=1e100.net; s=20251104; t=1785400792; x=1786005592;
+        h=content-type:cc:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=qPHUvKAFy8CDKIgzImZmEkcdzJ9femtXsPgBerSdioA=;
+        b=BI36IpK4Mus8Yuj5+7vi0tV0VDk+rjjldyfSTtA9TE+/FrjQ/N4Lz4RPgc2894JrwC
+         Xy+0oudCgGi4020jBCoyGYOCqHwkyu+yf9/ikrj3ZDJHLuC3UhlXvUugZ8MzYUf+e1Lc
+         LialtS3sf2uRh/pUY9oihYSulzZxQIphGwLTDCu4oWWoqY6ozpkYhzNbIdtsHdu0cBtz
+         TVEeEMXBIgaEY2zjXABZtRrL21aREFvU+m7TNreWKo89+UCAF9LU562xGgXYaBCl3B4m
+         LtINE6Q4dgmaN+MyAsIvlThjWLE2yJZWNVqhjQkaKJBs4Rb2NjSRmvsE3ijm7ZVJyLSC
+         Cqgg==
+X-Forwarded-Encrypted: i=1; AHgh+RqeryxOMFQ7pQeeqj/cYNVd3WiQO7Tg7l8V2HLhAEO8FYWIUvQWa1enqdfl1Wlsftq0efmGrG475eiAWLrE9A==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyDrRqLIzn+goDAS2eH2+px31TmlfiVtr0DTapz7keUIXcU+OI2
+	rfai7lGQfZEEd5RFbrUM8LYffcWBu2FEJ+FUYQxDwy7nwzwT2xCNUw50eKeLOBDb8yRJDk++O/e
+	cXJDhPDOr8rMpe/rK65Xw3ud2kPeZFYJhzKpZS1g9evnHKLiTOO8/tpsOzzQ=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADOrJmb=_uNHnnqswMAN+LTNPHnRARqF=MicFTP6C5QoMxH4Uw@mail.gmail.com>
+X-Received: by 2002:a05:6820:808:b0:6a3:5ba3:4fef with SMTP id
+ 006d021491bc7-6acbc12d79amr939075eaf.43.1785400792742; Thu, 30 Jul 2026
+ 01:39:52 -0700 (PDT)
+Date: Thu, 30 Jul 2026 01:39:52 -0700
+In-Reply-To: <20260730065231.1644030-1-sst@poczta.fm>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a6b0dd8.79190830.3d7c75.001b.GAE@google.com>
+Subject: [syzbot ci] Re: wifi: zd1211rw: reject secondary interfaces to
+ prevent conflicts
+From: syzbot ci <syzbot+cid88d044a615d9e11@syzkaller.appspotmail.com>
+To: dsd@gentoo.org, johannes.berg@intel.com, kees@kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	nihaal@cse.iitm.ac.in, sst@poczta.fm, syzbot@lists.linux.dev, 
+	syzbot@syzkaller.appspotmail.com, syzkaller-bugs@googlegroups.com
+Cc: syzbot@lists.linux.dev, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jul 30, 2026 at 06:24:15 AM +0300, George Valkov wrote:
-> Hi Jeff, I forgot to mention:
-> The compatibile strings are added by this OpenWrt patch:
-> https://github.com/openwrt/openwrt/blob/main/target/linux/mvebu/patches-6.18/
-> 311-adjust-compatible-for-linksys.patch
-> 
-> So unless we also upstream this patch, using device names will work
-> only on OpenWrt, which would make the current patch ineffective.
-> 
-> Georgi
-> 
-> On Thu, 30 Jul 2026 at 06:06, George Valkov <gvalkov@gmail.com> wrote:
-> >
-> > Hi Jeff,
-> > Initially I wanted to keep changes easy to read and as simple as possible,
-> > hence my current patch is based on device names.
-> >
-> > Indeed out openwrt-ai also caught this:
-> > https://github.com/openwrt/openwrt/pull/24458#pullrequestreview-4803923901
-> >
-> > I've been thinking about possible options:
-> > 1. Use board names "linksys,rango" and "linksys,venom", where
-> >    rango is WRT3200ACM, and venom is WRT32x. But a venom dts
-> >    is also not available in Linux. We do have it in OpenWrt:
-> >    https://github.com/openwrt/openwrt/blob/main/target/linux/mvebu/files
-> >    /arch/arm/boot/dts/marvell/armada-385-linksys-venom.dts
-> > 2. We could either ignore this or
-> > 3. Have another PR with venom board support files, but that will require
-> >    much more research and work. I don't have WRT32x hardware, and I'm
-> >    uncomfortable doing this without supervision.
-> > 4. We can also implement a dts flag, e.g. ignore_reg_hint, which can be
-> >    set in the board dts. This might be the best and most flexible option.
-> >    My experience with dts is almost zero and I will need help to implement
-> >    it.
-> >
-> > Georgi
-> >
+syzbot ci has tested the following series
 
-Hi Georgi,
+[v2] wifi: zd1211rw: reject secondary interfaces to prevent conflicts
+https://lore.kernel.org/all/20260730065231.1644030-1-sst@poczta.fm
+* [PATCH v2] wifi: zd1211rw: reject secondary interfaces to prevent conflicts
 
-Thanks for the update. My recommendation aligns with openwrt-ai's suggestion.
+and found no issues.
 
-In general, checking board-specific DT strings inside a generic driver is 
-not a good idea. However, since implementing a new DT flag or module parameter
-requires deeper driver architectural changes, expanding the list of compatible
-strings is a more pragmatic way considering these are legacy devices.
+Full report is available here:
+https://ci.syzbot.org/series/9b94bd4a-bcde-4e2d-80ff-1f2f332416a6
 
-You can update the check to include all four strings for V2:
+***
 
-	if (country_code &&
-	    !of_machine_is_compatible("linksys,rango") &&
-	    !of_machine_is_compatible("linksys,wrt3200acm") &&
-	    !of_machine_is_compatible("linksys,venom") &&
-	    !of_machine_is_compatible("linksys,wrt32x") &&
-	    regulatory_hint(wiphy, country_code))
+If these findings have caused you to resend the series or submit a
+separate fix, please add the following tag to your commit message:
+  Tested-by: syzbot@syzkaller.appspotmail.com
 
-Combining these four strings ensures the patch works in both pure mainline and
-OpenWrt environments. 
-
-We should still wait for feedback from the maintainers or other reviewers 
-to see if they prefer this hardcoded approach or a proper module/DT property.
-
-Jeff
+---
+This report is generated by a bot. It may contain errors.
+syzbot ci engineers can be reached at syzkaller@googlegroups.com.
