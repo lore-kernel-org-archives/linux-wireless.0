@@ -1,179 +1,87 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E16661E22E9;
-	Fri, 31 Jul 2026 13:25:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC2C411F97
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:28:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785504308; cv=none; b=QdKnfXs9lDbcQX7GXURq9RnVihafbCnSISHa9kPajdqdFNWtCAI1wqplcUBAdZBHpJk4bgbrTdrcnZswzoZuF8NiB6a4axw2MIPx3tJ58npVoYrLDQrh0vi3fieaHzTYCj61TclTR9sUR8A9RAydy7cIdgyYfvy5C01KFT5utKM=
+	t=1785504482; cv=none; b=cEBtRlcjIIV3YAsyBXnG41SiuRqAtdeqi/FNLgZBOZr+s5+OGaeZdigsRQBmIGBhXNahxIIFlPtaNe0XyYgvJv8FsQM9eMMxQhnN+/GN2QUrs34rPZF6lJa018CNg1Rqm0aT6zcXYmzWu9/6KKuwwTi038d5R1CH2R+cNckf0pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785504308; c=relaxed/simple;
-	bh=SNqW0AcC12UUHiXLwJjL7nphdBNEiPpISj+Qn4EYqdQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PjzB38U2vhKhQ4dgqd2fFo8KpVQUhBeByyXoQsvTo2Aznh3zNbrCLfb0MHBe7gu46qqGkg1enuJu08aZ8mc6M4t9sFl4CCZ/jshJ9LbKULsGc87LzUltr6hCISwYnWescgy5wlTLY+/nUjgENSxoqeeYlCRcbzN//3XZBGkZ1aY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VBzqJasP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785504482; c=relaxed/simple;
+	bh=BdWRFs4osWaaJzMBzKIKTHPcsMgJqciu7jcoPmTxYec=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=V5v8YAahvjz+fkOitcSqUdJCt3N5DI+b54txlO3KOVkkP56vLrU2rOImIVsGOSeQhonEVNykYnzbBRDctvq88Th4TN0dHRwtBcuZ8Nzd9ZGely2KLrgmoVquTOwd8l76xKWh4cUe1cp/rekYKbSLQgGv7w/8w/29ahtYGrhly+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fgm9xkTh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VBzqJasP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAC271F000E9;
-	Fri, 31 Jul 2026 13:25:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fgm9xkTh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9487A1F00A3A
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:28:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785504306;
-	bh=utjqEB17tKWhckTFh1NqEfXTplQWPtaUNOXGP6fvNZY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VBzqJasPBrgN5I6aKiksVfo7lPXdHuFUpgQa29YF5Rs2DVWR2op4G7w8WPZq96wml
-	 w7wL7B8p2ZbZFgVhDqNBWItwVRRMgPZsh2biJrbtW4kM04T5FGbDkdIbkWyH4qHpvA
-	 NSObXoj61256/1sxb6GQeXo2vsm9dG9U1x7YbZJc85icgI5buSNSSSq+XvHvxwOnJ0
-	 OwX0hSmnFZpWxL2kKNkQsEIKmSjM/s44IpnICRWH+Rj4ihytgH3XmJP+0YqCVSW6IL
-	 orjsbh4N/Y0A6TGzTojoBzI++EO7FYOvkA3/UfQueaaZ8L3HPipN2du587K+X66Vk/
-	 M5DJJUmmd7P6A==
-From: Simon Horman <horms@kernel.org>
-To: fanwu01@zju.edu.cn
-Cc: Simon Horman <horms@kernel.org>,
-	netdev@vger.kernel.org,
-	david@ixit.cz,
-	mgreer@animalcreek.com,
-	oe-linux-nfc@lists.linux.dev,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH net] nfc: trf7970a: initialize lock and timeout_work before requesting the IRQ
-Date: Fri, 31 Jul 2026 14:24:54 +0100
-Message-ID: <20260731132454.277038-1-horms@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260728031021.230831-1-fanwu01@zju.edu.cn>
-References: <20260728031021.230831-1-fanwu01@zju.edu.cn>
+	s=k20260515; t=1785504480;
+	bh=BdWRFs4osWaaJzMBzKIKTHPcsMgJqciu7jcoPmTxYec=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=fgm9xkThoqF1bQfPKO65FXat8RPLvTXA1XKtS4lux6x04EWgf5FH13BC8cyLHazPr
+	 dxzEQEnZ2Df/Tppmr2j3vLpLLS9qa9ha2qu+qXjQ6azhAt7sq6IF2eqHqW93C5RyoK
+	 TzXsDCJ6Ybn/MAaTz0O9nq2rCBocCM3nN5zK6lrw6dP/aHfYjN95ceIZnBoqnWhx1k
+	 WW3n99WPKLtRFqFe7BJZA5sk06HwbHzVF9HYWaljlWJJy+T9hsK7wQj88oCou57s59
+	 0KAgsXS/e9JqHF1A8NTB/9+4ixHnqSaTU7hPdlftVqNQKKsGa186j1PFolfZL1F7g4
+	 cxNxbc1EdJa0g==
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b0117d49dcso1171321e87.3
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 06:28:00 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RpYKSBBDtRXqeXF49vrBp5K76tezxvRoLK2ALJLuZO71yP6Ku9gIGK0RFM7u3u7y27nUVZn+Vut7WwT4ivV3g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwRlDbjuvsxu9/t1EV00QbzFykQP8jU8gUfK4QEIP87cnsamYpX
+	J+DFHA9kV03jwnVcavbGWGI0oKmg0XFfCN3NmU7DC8vZwEvY9xIFEGoQmirxkCsCzPcDWX0RzJ4
+	5OGd2g0EZRIq9FtBgRni4sRPBe4tae++vhDd6m1+OwA==
+X-Received: by 2002:a05:6512:3d9f:b0:5b2:a1f2:466e with SMTP id
+ 2adb3069b0e04-5b2e1fc8295mr456344e87.10.1785504479286; Fri, 31 Jul 2026
+ 06:27:59 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 31 Jul 2026 06:27:58 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Fri, 31 Jul 2026 06:27:58 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <CAMRc=McA3BqoazxvGDu1_WoT9x0ujXT_80jKPp+5Jb0Rda9zOA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260731-pwrseq-vote-rename-v2-1-480357946e00@oss.qualcomm.com>
+ <CAFEp6-3X+PCXZdEy1p47XUDs7cT16JDjt0=928Jjkeik_haaQw@mail.gmail.com> <CAMRc=McA3BqoazxvGDu1_WoT9x0ujXT_80jKPp+5Jb0Rda9zOA@mail.gmail.com>
+Date: Fri, 31 Jul 2026 06:27:58 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MdA6dTDvp=kQ+k2Jf=kyZBK7VTJCX=0Qvq2MOvQVOQDsQ@mail.gmail.com>
+X-Gm-Features: AUfX_my4-vcUkFt6J5bi893LfoyHoVCDYEQ_iJ8oHk7wCMSuijA_BdfQPo-2B_Q
+Message-ID: <CAMRc=MdA6dTDvp=kQ+k2Jf=kyZBK7VTJCX=0Qvq2MOvQVOQDsQ@mail.gmail.com>
+Subject: Re: [PATCH v2] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
+To: Bartosz Golaszewski <brgl@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Alessio Belle <alessio.belle@imgtec.com>, Luigi Santivetti <luigi.santivetti@imgtec.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	Jeff Johnson <jjohnson@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>, linux-pm@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	imagination@lists.freedesktop.org, dri-devel@lists.freedesktop.org, 
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+	linux-pci@vger.kernel.org, Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+	Loic Poulain <loic.poulain@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 
-This is an AI-generated review of your patch. The human sending this
-email has considered the AI review valid, or at least plausible.
-Full review at: https://netdev-ai.bots.linux.dev/sashiko/#/patchset/20260728031021.230831-1-fanwu01@zju.edu.cn?part=1
----
---- Patch [1]: [PATCH net] nfc: trf7970a: initialize lock and timeout_work before requesting the IRQ ---
-commit 4be20d05d9fa2b3917899acbab0b48bcd2d1125f
-Author: Fan Wu <fanwu01@zju.edu.cn>
+On Fri, 31 Jul 2026 15:04:30 +0200, Bartosz Golaszewski <brgl@kernel.org> said:
+>>
+>> Nit: s/pwrseq_disble/pwrseq_disable ?
+>>
+>
+> Ah dang it, how did I miss it, I test-built it. :/
+>
+> Thanks for catching it.
+>
 
-nfc: trf7970a: initialize lock and timeout_work before requesting the IRQ
+Ah right, makes sense, it builds fine, it's just my sed script was wrong and
+renamed it like this everywhere.
 
-This moves mutex_init(&trf->lock) and INIT_DELAYED_WORK(&trf->timeout_work,
-...) above devm_request_threaded_irq() in trf7970a_probe(), so an interrupt
-arriving right after the handler is registered cannot touch an
-uninitialized mutex or delayed_work. The IRQ-request failure path destroys
-the mutex inline and returns. Tagged for stable.
-
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 60883001fa5d..3e57f8cf229e 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
-> @@ -2124,18 +2124,19 @@ static int trf7970a_probe(struct spi_device *spi)
->  		}
->  	}
->  
-> +	mutex_init(&trf->lock);
-> +	INIT_DELAYED_WORK(&trf->timeout_work, trf7970a_timeout_work_handler);
-> +
->  	ret = devm_request_threaded_irq(trf->dev, spi->irq, NULL,
->  					trf7970a_irq,
->  					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
->  					"trf7970a", trf);
->  	if (ret) {
->  		dev_err(trf->dev, "Can't request IRQ#%d: %d\n", spi->irq, ret);
-> +		mutex_destroy(&trf->lock);
->  		return ret;
->  	}
->  
-> -	mutex_init(&trf->lock);
-> -	INIT_DELAYED_WORK(&trf->timeout_work, trf7970a_timeout_work_handler);
-> -
-
-[Severity: High]
-This isn't a bug introduced by this patch, but since the patch fixes the
-setup side of exactly this ordering problem and is tagged for stable, is
-the mirror-image teardown window worth addressing at the same time?
-
-Nothing in this driver ever synchronously cancels trf->timeout_work, and
-the devm-registered IRQ is only released by devres_release_all(), i.e.
-after trf7970a_remove() returns and after probe's error unwinding at the
-err_destroy_lock label.
-
-First case, work still queued at unbind. trf7970a_tg_listen() arms the work
-in mode-detect state:
-
-	trf->state = mode_detect ? TRF7970A_ST_LISTENING_MD :
-				   TRF7970A_ST_LISTENING;
-
-	schedule_delayed_work(&trf->timeout_work, msecs_to_jiffies(timeout));
-
-but trf7970a_shutdown() has no arm for TRF7970A_ST_LISTENING_MD:
-
-	switch (trf->state) {
-	case TRF7970A_ST_WAIT_FOR_TX_FIFO:
-	...
-	case TRF7970A_ST_LISTENING:
-		trf7970a_send_err_upstream(trf, -ECANCELED);
-		fallthrough;
-	...
-	default:
-		break;
-	}
-
-so the queued work survives, and trf7970a_remove() goes on to
-
-	nfc_digital_unregister_device(trf->ddev);
-	nfc_digital_free_device(trf->ddev);
-	...
-	mutex_destroy(&trf->lock);
-
-and returns, after which devres frees the devm_kzalloc'ed trf. Can the
-still-armed delayed_work timer, which lives inside that freed allocation,
-then fire and have trf7970a_timeout_work_handler() dereference trf->dev,
-trf->state and trf->lock after free?
-
-Second case, work already running. The only stop used anywhere in the file
-is the non-synchronous variant, in trf7970a_send_err_upstream():
-
-	cancel_delayed_work(&trf->timeout_work);
-
-If trf7970a_timeout_work_handler() is already blocked on
-mutex_lock(&trf->lock) while trf7970a_remove() holds it, that cancel
-returns 0 and remove() continues. Once remove() unlocks, does the handler
-acquire the lock and run concurrently with the rest of remove(), reaching
-trf7970a_send_err_upstream() -> trf7970a_send_upstream() -> trf->cb(trf->ddev,
-...) after nfc_digital_free_device(trf->ddev), and finally
-mutex_unlock(&trf->lock) on a mutex already destroyed inside memory devres
-frees as soon as remove() returns? nfc_digital_unregister_device() only
-sync-cancels its own poll_work/cmd_work/cmd_complete_work, it does not
-touch trf->timeout_work.
-
-There is also a debug-only aspect on the newly funnelled error paths. All
-failures after the IRQ request (VIN and VDD_IO get/enable, ddev allocation,
-startup, nfc_digital_register_device) reach
-
-	err_destroy_lock:
-		mutex_destroy(&trf->lock);
-		return ret;
-
-while the devm IRQ is still armed, and trf7970a_irq() takes the lock as its
-first action before any state check:
-
-	mutex_lock(&trf->lock);
-
-	if (trf->state == TRF7970A_ST_RF_OFF) {
-
-With CONFIG_DEBUG_MUTEXES, mutex_destroy() clears lock->magic, so does a
-late interrupt on these paths (and on the remove() path) trip
-DEBUG_LOCKS_WARN_ON in the mutex debug checks?
-
-Would adding cancel_delayed_work_sync(&trf->timeout_work) plus a
-devm_free_irq()/disable_irq() (or registering the mutex and work teardown
-with devm_add_action_or_reset() so release order mirrors setup) before
-mutex_destroy() in both trf7970a_remove() and the probe unwind, and handling
-TRF7970A_ST_LISTENING_MD in trf7970a_shutdown(), close these windows?
-
-Verified with git grep on drivers/nfc/trf7970a.c: no occurrences of
-cancel_delayed_work_sync, flush_delayed_work, disable_irq or devm_free_irq.
+Bart
