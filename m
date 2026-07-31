@@ -1,159 +1,249 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8569D23A9BD;
-	Fri, 31 Jul 2026 19:45:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA483368A4
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 20:30:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785527126; cv=none; b=ujq3a3Xvt7tck+s8keS1M05ahwLr62IRTeiugTf3yjCd1f38T9zGdNjfCT6zEesepldZq0rAg5A0011ynHxjVIcHXoSOxOiRNR3ub47oYNJzg1RKon8YogTWeOWPhm8hzWgoaKpdgBp6eQKnoVOX4kUhopuM+JiU8HVD46m1BmA=
+	t=1785529826; cv=none; b=F3yT0yEYrxRve+CaFSrdCqo2RysUCkljNMfOPIXC78lKnipXIKxr6g+ZnbAZPK99nIqr7gCevSvehTa3/T9+k7JTdLbk7bb9wgvNSFV42Of7ec/z0x99Iv46B2lSC1j7ZQfXofaoNXJI+sys1B1hr7qBmo7xpHEk2urz0LCELyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785527126; c=relaxed/simple;
-	bh=NWJQXpMun4RvJz+N1cruXjW8PFVvRG8ukGxWBva6L8Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NDsi21W3xFHbQ0z40+hM4tsphPTZ/FCSHi1ZqV0IHDroRmxvNlA3+WJt7jp3VUkftyt2qc1K0KNnMnQtWmMOe0pnHfR5laENFs8AlX4kUvpiN1XrhRK59ndHEqpAB7ltuamS5Oe8KdmUdZf13NYwC5VmWwwOD3DBP1TPOJvIPhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BeJ9+1mi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785529826; c=relaxed/simple;
+	bh=3s03pkL9oeJUPVwr1dXRoijssDjCiRbpXwT8ZRzki2s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nHQiqmaNn/gagFT/QXt9moUcUCeuCQ0JQ3BINujN7+0KKR38CAVWkmKaS48WJJndv+tih5f1hiCTWKUH4BdRje5XHDgTu4G+YNieZ6Jzvo0FZDsThNmovC0+UV8m+zK3qZiWFAzkFxGMSOhkvcOge+kfHg+1MTcUeYwtcWw0h7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XJcIS9jk; arc=none smtp.client-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BeJ9+1mi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0838D1F00AC4;
-	Fri, 31 Jul 2026 19:45:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785527124;
-	bh=3jI9CC/sZ4ARLXSiOgtugxrCVXTNu14jQbrcYaBcmFo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=BeJ9+1miorW0FS3VdnJ/I13Q7ie9xhc+/fDIbznrDrx734J1CKN/t9TEaWThrc37G
-	 b6FYEszzaVww3XJ/Ub1E7fY18S9s/vrpxID8jmH33+PgPJAZI3H8DEq7AjsyRjJeiF
-	 vdfixkVkVzB4xMG4SbJP4ONe2JkgiJPv4gd8qIaHWwWu+s9M5KmVdF9YjI89tcQR3n
-	 RO4Eg80xATtrLtjikTeM3FbsvnTQuB6bVem2mTil4xJVMGAlNYA4YQZ5kZ8ezA9ryt
-	 ruFq4wOE5WukvObQB5LwM1cIPk+m2KWPmTTMXbR3Dt02l4FMMlam2D/Nu6Pt+doGmo
-	 m8RDb0wvW8xWg==
-Message-ID: <1bc703a1-132f-4472-a703-d5c804d215c8@kernel.org>
-Date: Fri, 31 Jul 2026 21:45:19 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XJcIS9jk"
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-caf45fc5202so896350a12.1
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:30:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785529824; x=1786134624; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qw3gOUllJFQoCjPBirotENfbkzHV53ONak3oQ9/a8JA=;
+        b=XJcIS9jk9LC6oyuW6aVK1av6/wn+e2dKMhIQ+5qvl8MgNDdnf9+Jtvq2bOKWFZVKBK
+         LZxrtpvzV7XZnUJmfDmSl3VPdT32ZwU8uEyz7+ooWUJDJOUJH9bm/+A48ZAb7RuL3r4c
+         5nUeE17AqHkI4ZsuJPaYr2Kw77VM8EjzobbE5Z0u9Eb7jDAwY5+l3c0IoPmDvF4qDZgx
+         wmhb+VPSHyHrpMwNWsByMLWB0yp2YMMH8JSYeSFUKZRdgxGKhvRrvfQYVcF87qYAAE+p
+         FO201JW9ReO1IwP/8YbWThziGqXgEIzbkpn74cqRNKoIYZUgcJGRfn+VSEOOdZo1rM2M
+         kzMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785529824; x=1786134624;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qw3gOUllJFQoCjPBirotENfbkzHV53ONak3oQ9/a8JA=;
+        b=V08qsIhnuwKb7mHvm3Wb28/8GfdP/k1M8zfjqt1XvznB90lU2oiEPvum1sdTj2bRw4
+         D9JF42OrmAjDm0NKJC/tyBb+rdaETQmvz2PjMk23rrdIZoQauj9Q3q7l/qZjvngv6tsm
+         d8Znl07dnuZLjh4vvLq2WCp9utWLRmczKxA2ziAEgsRJn7LfshVT0vg0h6KRn0G3LBnv
+         YXOTAciEnwrVlD8q6fcRRQkHFsJ1SOuV71/5nkTrZvZIpyp6kAA/YISH+Oh4MxrQmPXU
+         UoqIk52BNtB/d1wPgRSj0DN8LBDuH1dvIcWfMQ1MgrsY4TYkRPjBuFQFc97IOndkOqaq
+         P+Pg==
+X-Gm-Message-State: AOJu0YyGSAJYLWGWzwJ6sWyHqlhf2ktE70aQk3DoFBfoonESRML9QnF2
+	twVCde9sHoxaGK8AeOU8MjOQ17PYeIeDu5kw8k1RW91iKmH8QPWXPiOV
+X-Gm-Gg: AR+sD13sEzlqEsPAGIFUe+Ie+Sc33LmnfjA+HYKZtioYHtSfWBDnPjcutA0S+gfglMY
+	oGe0m2q5XMIlBmCq0qr+E0stzgTsOeQI0jl07X6a1J+6TPTN2G4sbPMUobe8QWcVWninz+0Qzf+
+	5HPejDmcLB8bNjHCbHOA1yL4uWVVAGhgck32PHnH8fEVz8LtN8n/T/BApG10MQCW/faEttddyu3
+	fvC6LRN8ZlQaKPUI3tl5aLl1ADsAj5o6MMfTjsvGKYkxyQZXZUB8TK5Fes3nBoxddPEo8HGf7p1
+	FfytW4PyCazZSvzLpyKDJMB56NPZQTLpzZJMYsxGxh8kM0ey/QfVLk1EDSbsUZB88/Xpli5YsFr
+	QLvV3TVbsWM/9fM6unjkG8gTfY0Zj105/qqyg6Y0rltmIzZECx+b4prCv5G+pWKFAvV3ZDdYCRE
+	QWvkWVTnwU9guEjeDhzyef1rca5KZSV/iThxuE1tH/sQtU1Mp0iISQLKGp8HMbTZZyxHBhPHKZh
+	ZKbPUBFfQC7hTsTI5xkls1UUGksOtmyZOvr
+X-Received: by 2002:a05:6a20:6a05:b0:3b4:7eb0:47a1 with SMTP id adf61e73a8af0-3c92a53b04cmr1045998637.19.1785529824407;
+        Fri, 31 Jul 2026 13:30:24 -0700 (PDT)
+Received: from localhost ([2409:40c4:1:e82e:8e53:b79c:e61:f58e])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153e045016sm13998718eec.19.2026.07.31.13.30.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jul 2026 13:30:23 -0700 (PDT)
+Date: Sat, 1 Aug 2026 02:00:17 +0530
+From: Lovekesh Solanki <lovekeshsolanki00@gmail.com>
+To: Snake Pilot <snakepilot10@gmail.com>
+Cc: linux-wireless@vger.kernel.org, pkshih@realtek.com, 
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [BUG] rtw88_8723de: Wi-Fi and Bluetooth fail after warm reboot
+Message-ID: <am0AOC9ZmP81kGcT@eggarch>
+References: <CA+fxq6gPCQOYr6mh+_1ReOGzaiTULzMazXhs5q0PXc8PsjRJEQ@mail.gmail.com>
+ <amnGXPlG6nKUdEl7@eggarch>
+ <CA+fxq6i05RW5G289EL9V_uUgidQhDOpUhiy_J++pDDwqLwJp0Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: zd1211rw: reject secondary interfaces to prevent
- conflicts
-Content-Language: en-US
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, syzbot <syzbot@kernel.org>,
- syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>,
- linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
-Cc: johannes.berg@intel.com, kees@kernel.org, linux-kernel@vger.kernel.org,
- nihaal@cse.iitm.ac.in, syzbot@lists.linux.dev, workflows@vger.kernel.org
-References: <0720e3ad-d98e-47d7-89af-4d22416b0fbc@mail.kernel.org>
- <dbe5b96e-c95c-474e-aca0-8227fee4682a@oss.qualcomm.com>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <dbe5b96e-c95c-474e-aca0-8227fee4682a@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="6locgwin6sw2oolp"
+Content-Disposition: inline
+In-Reply-To: <CA+fxq6i05RW5G289EL9V_uUgidQhDOpUhiy_J++pDDwqLwJp0Q@mail.gmail.com>
 
-On 7/31/26 19:36, Jeff Johnson wrote:
-> On 7/29/2026 1:04 AM, syzbot wrote:
->> From: Slawomir Stepien <sst@poczta.fm>
->> 
->> The zd1211rw driver is designed for single-function Wi-Fi dongles and
->> hardcodes its USB endpoints. When a malformed USB device exposes multiple
->> interfaces that match the driver's device ID, the driver blindly binds to
->> all of them.
->> 
->> During probe(), the driver calls usb_reset_device(), which iterates over
->> all interfaces and invokes the pre_reset() callback for each bound
->> interface. Since multiple interfaces are bound to zd1211rw, pre_reset() is
->> called sequentially for each instance, acquiring their respective
->> &mac->chip.mutex. Because all instances initialize their mutexes with the
->> same lock class, lockdep detects a task acquiring a lock of the same class
->> it already holds and flags it as a possible recursive deadlock:
->> 
->> WARNING: possible recursive locking detected
->> kworker/0:1/11 is trying to acquire lock:
->> ffff88810371dde0 (&chip->mutex){+.+.}-{4:4}, at:
->> zd_chip_disable_rxtx+0x20/0x50
->> drivers/net/wireless/zydas/zd1211rw/zd_chip.c:1465
->> 
->> but task is already holding lock:
->> ffff8881138ddde0 (&chip->mutex){+.+.}-{4:4}, at: pre_reset+0x28c/0x380
->> drivers/net/wireless/zydas/zd1211rw/zd_usb.c:1505
->> 
->> Fix this by explicitly rejecting secondary interfaces (bInterfaceNumber !=
->> 0) during probe(). This ensures that only a single instance of the driver
->> binds to the device, eliminating the recursive locking scenario.
->> 
->> Fixes: e85d0918b54f ("[PATCH] ZyDAS ZD1211 USB-WLAN driver")
->> Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
->> Reported-by: syzbot+0ec3d1a6cf1fbe79c153@syzkaller.appspotmail.com
->> Closes: https://syzkaller.appspot.com/bug?extid=0ec3d1a6cf1fbe79c153
->> Link: https://syzkaller.appspot.com/ai_job?id=00724ef7-fd77-4cde-9779-895b8f63c2f6
->> Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+
+--6locgwin6sw2oolp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Thanks for additional testing and logs,
+
+On Fri, Jul 31, 2026 at 03:58:32AM -0600, Snake Pilot wrote:
+>   Module unloaded       Extra delay    Wi-Fi              Bluetooth
+>   ------------------------------------------------------------------------
+>   rtw88_8723de          0 seconds      failed (-16)       failed (-71)
+>   rtw88_8723de          1 second       failed (-16)       failed (-71)
+>   rtw88_8723de          3 seconds      failed (-16)       failed (-71)
+>   rtw88_8723de          5 seconds      failed (-16)       failed (-71)
 > 
-> E-mail from syzbot but SOB from a human?
-> 
-> I read the trailer, but this seems to violate:
-> https://docs.kernel.org/process/coding-assistants.html
-> 
-> Namely:
-> AI agents MUST NOT add Signed-off-by tags. Only humans can legally certify the
-> Developer Certificate of Origin (DCO).
-> 
-> +workflows list
+>   btusb                 0 seconds      worked             worked
+>   btusb                 1 second       worked             worked
+>   btusb                 3 seconds      worked             worked
+>   btusb                 5 seconds      worked             worked
+I'd say this rules out anything in rtw88 and we should focus on btusb,
+since unloading it fixed both functions.
 
-The original mail [1] has this at the bottom:
+> No Wi-Fi interface appeared, and Bluetooth remained absent. Thus, the PCI bus
+> reset did not recover the device after the failure had occurred.
+Yeah and with -71 above seems like chip isn't answering read descriptors
+at all.
 
-> See https://goo.gle/syzbot-ai-patches for information about AI-generated
-patches.
+The previous boot journal there's no other bluetooth activity logged
+after boot, so a graceful bluetooth shutdown doesn't seem to be
+happening on a warm reboot, but it does work when you explicitely unbind
+it.
 
-Where it says:
+Problem could be in the power state chip may be left in a state warm
+reboot cannot clear.
 
-> Patches mailed to the kernel mailing lists were reviewed and Signed-off-by
-by at least one human developer in accordance with AI Coding Assistants
-guidelines.
+A somewhat similar issue with the Qualcomm QCA6390 combo 7e7bbddd029b
+("qca6390 enable failure after warm reboot"), where they fixed it by
+simply making sure chip got proper reset/shutdown command before
+restart. This could also work for our case but needs confirmation.
 
-Since From: and S-o-b: refers to a human developer, and there's Assisted-by:
-it seems to be according to the rules. The "From: syzbot" seems to be just a
-sending mechanism, that wouldn't even make it to the git commit log.
+I'm attaching a small patch that just adds extra logging around the 
+shutdown path for this chip to see what's been invoked and what not
+before a warm reboot and if it even completes.
 
-[1]
-https://lore.kernel.org/all/0720e3ad-d98e-47d7-89af-4d22416b0fbc@mail.kernel.org/
+Could you apply it and perform a simple warm reboot and send the
+journalctl -k -b -1 after it?
+
+Regards, 
+Lovekesh
 
 
+--6locgwin6sw2oolp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="diag.patch"
+
+diff --git a/drivers/bluetooth/btrtl.c b/drivers/bluetooth/btrtl.c
+index 7f54d2d..b78feb7 100644
+--- a/drivers/bluetooth/btrtl.c
++++ b/drivers/bluetooth/btrtl.c
+@@ -1402,6 +1402,8 @@ int btrtl_shutdown_realtek(struct hci_dev *hdev)
+ 	struct sk_buff *skb;
+ 	int ret;
+ 
++	bt_dev_info(hdev, "diag: btrtl_shutdown_realtek: sending HCI_OP_RESET");
++
+ 	/* According to the vendor driver, BT must be reset on close to avoid
+ 	 * firmware crash.
+ 	 */
+@@ -1411,6 +1413,7 @@ int btrtl_shutdown_realtek(struct hci_dev *hdev)
+ 		bt_dev_err(hdev, "HCI reset during shutdown failed");
+ 		return ret;
+ 	}
++	bt_dev_info(hdev, "diag: btrtl_shutdown_realtek: HCI_OP_RESET completed OK");
+ 	kfree_skb(skb);
+ 
+ 	return 0;
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index 184e95c..382ff81 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -4470,6 +4470,8 @@ static void btusb_disconnect(struct usb_interface *intf)
+ 	struct btusb_data *data = usb_get_intfdata(intf);
+ 	struct hci_dev *hdev;
+ 
++	bt_dev_info(data ? data->hdev : NULL, "diag: btusb_disconnect called for intf %p", intf);
++
+ 	BT_DBG("intf %p", intf);
+ 
+ 	if (!data)
+@@ -4682,6 +4684,15 @@ static void btusb_coredump(struct device *dev)
+ }
+ #endif
+ 
++static void btusb_shutdown(struct device *dev)
++{
++	struct usb_interface *intf = to_usb_interface(dev);
++	struct btusb_data *data = usb_get_intfdata(intf);
++
++	pr_info("btusb: diag: device_shutdown() reached btusb for intf %p, hdev up=%d\n",
++		intf, data && data->hdev ? test_bit(HCI_UP, &data->hdev->flags) : -1);
++}
++
+ static struct usb_driver btusb_driver = {
+ 	.name		= "btusb",
+ 	.probe		= btusb_probe,
+@@ -4692,11 +4703,12 @@ static struct usb_driver btusb_driver = {
+ 	.supports_autosuspend = 1,
+ 	.disable_hub_initiated_lpm = 1,
+ 
+-#ifdef CONFIG_DEV_COREDUMP
+ 	.driver = {
++#ifdef CONFIG_DEV_COREDUMP
+ 		.coredump = btusb_coredump,
+-	},
+ #endif
++		.shutdown = btusb_shutdown,
++	},
+ };
+ 
+ module_usb_driver(btusb_driver);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index eaa928b..49c5d07 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -166,12 +166,16 @@ static int rtw_pwr_cmd_polling(struct rtw_dev *rtwdev,
+ 
+ 	/* if PCIE, toggle BIT_PFM_WOWL and try again */
+ 	value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
++	rtw_info(rtwdev, "diag: pre-toggle REG_SYS_PW_CTRL=0x%02x, poll offset=0x%x want=0x%x\n",
++		 value, offset, cmd->value & cmd->mask);
+ 	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D)
+ 		rtw_write8(rtwdev, REG_SYS_PW_CTRL, value & ~BIT_PFM_WOWL);
+ 	rtw_write8(rtwdev, REG_SYS_PW_CTRL, value | BIT_PFM_WOWL);
+ 	rtw_write8(rtwdev, REG_SYS_PW_CTRL, value & ~BIT_PFM_WOWL);
+ 	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D)
+ 		rtw_write8(rtwdev, REG_SYS_PW_CTRL, value | BIT_PFM_WOWL);
++	rtw_info(rtwdev, "diag: post-toggle REG_SYS_PW_CTRL=0x%02x, retry poll read=0x%02x\n",
++		 rtw_read8(rtwdev, REG_SYS_PW_CTRL), rtw_read8(rtwdev, offset));
+ 
+ 	if (do_pwr_poll_cmd(rtwdev, offset, cmd->mask, cmd->value))
+ 		return 0;
+diff --git a/net/bluetooth/hci_sync.c b/net/bluetooth/hci_sync.c
+index c8d1412..17dfc92 100644
+--- a/net/bluetooth/hci_sync.c
++++ b/net/bluetooth/hci_sync.c
+@@ -5416,11 +5416,19 @@ static int hci_dev_shutdown(struct hci_dev *hdev)
+ 	bool was_userchannel =
+ 		hci_dev_test_and_clear_flag(hdev, HCI_USER_CHANNEL);
+ 
++	bt_dev_info(hdev, "diag: hci_dev_shutdown: HCI_UP=%d HCI_UNREGISTER=%d shutdown_cb=%ps",
++		    test_bit(HCI_UP, &hdev->flags),
++		    hci_dev_test_flag(hdev, HCI_UNREGISTER),
++		    hdev->shutdown);
++
+ 	if (!hci_dev_test_flag(hdev, HCI_UNREGISTER) &&
+ 	    test_bit(HCI_UP, &hdev->flags)) {
+ 		/* Execute vendor specific shutdown routine */
+-		if (hdev->shutdown)
++		if (hdev->shutdown) {
++			bt_dev_info(hdev, "diag: calling vendor shutdown callback");
+ 			err = hdev->shutdown(hdev);
++			bt_dev_info(hdev, "diag: vendor shutdown returned %d", err);
++		}
+ 	}
+ 
+ 	if (was_userchannel)
+
+--6locgwin6sw2oolp--
