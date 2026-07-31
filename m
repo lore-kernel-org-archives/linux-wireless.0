@@ -1,541 +1,142 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from smtp11.infineon.com (smtp11.infineon.com [217.10.52.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55DFF42A140
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:42:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03E3F2EB84E;
+	Fri, 31 Jul 2026 13:51:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785505381; cv=none; b=rGAY3I9rD1uwZUZhJq6lIXNoMrbF0U8r0t3+3t8WPJJ1ISbJH8EiFlVmB7EA17gGtpd77OP9GUoQviPjPaiE/yyemHTC9p4Ui9mOYdd1G9nqwcNgsJhQa7Emt+d9W2tnD3kVKWZwQM7SP73U24iFLX5ipPHLbbCrODo+xFJJcCQ=
+	t=1785505876; cv=none; b=Yy34pVqJngEoXio2R7nRnUq+JxVlY344lwaA18ed3pHDpcae/LdlgyLgku+ZmayBQ0hKPif8O6RJwd8PrIYAeqk60enWiZFKlU/J/iXkdi2eqXpRg0VJiMSmOewejPndBgPmpFLY83emMykn5LO7XI53uq0Uwt66UZVvhFqG0k4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785505381; c=relaxed/simple;
-	bh=kvOGZa1EbG1JmCELyW6giGGs3+nL3zJBZ/OfjLsOQNk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EeN54SMGKJmaH6KlwZwN2PtWUCD1gfdXTH7fvZxUdHVsFUlbgzbo0pp9UnS3WGynFo1zGchSPcWQIvDUbMVrw8JB/c96XbSKni8wkpWjYLnNPrD9ZD2ThdF7sbGVFwfoHj/eoSNdRWL7S2uCEP/WkgaW/sWh73Sy55oh1CJTndw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Q6nSazE+; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785505876; c=relaxed/simple;
+	bh=85HMa1urLda3H4SQPW9fwOAUmAEVpJSRJQ/BJG+jc48=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MC5V8uQURPgkhs08O+SR0u5/K0HAFwzdGcl3thsDW8PUUv0pPQWhB7/vDkJfGPVX7fCrz6qxnLYxpN4/ABegPxUgaHaaKLjzkxtN64fJbClOi7sEtVXHaD0kKarhIpbSOHW31qdYg82fjW714oprToU2vNmwtjBvfuJ/TKKhz0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=Pg7oTqYB; arc=none smtp.client-ip=217.10.52.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Q6nSazE+"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=H8I8sI1d6HaNlYv63z+/TtbGVG22LhVsANHeWyixXsM=;
-	t=1785505379; x=1786714979; b=Q6nSazE+xNBxoDtv7gz4L3pUzjsaixaQRqTd2CTmjbIl2FZ
-	OwuR8a3d/j4VQxZS+B1H7vuuFlCjjrGl3IbSeDP85IUeW+6LKYVFgQVIQdTJBgyzClIOMNdEnezAp
-	l0HvG+yPubFfGupBCijdDxbVBsh+RGUphDlso3DUO0jvKWjjvnFGbsRSeZi4v06jectDtnKR29ecM
-	OQ1BTVOwO6AL1ycvS5CFl2OTwujp7JLDxgzqJXGzlAji9SnHCCtYBvPNAOoivTWfLtkDu2tQD4CrV
-	jY27YK3AobJ5gwGjUL5ei/LTNM+vGY03+6Xvb/aSsIhr+HKBQMORCJTOf1EP1b7g==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <benjamin@sipsolutions.net>)
-	id 1wpnVo-000000048ua-1Cwr;
-	Fri, 31 Jul 2026 15:42:56 +0200
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next 4/5] wifi: mac80211: add Control Integrity Protocol handling
-Date: Fri, 31 Jul 2026 15:40:10 +0200
-Message-ID: <20260731154006.1a643e55c539.I30cf9ae29629188b8674e2268a6b592c1a63128b@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260731154006.7bddd2d85ff1.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
-References: <20260731154006.7bddd2d85ff1.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="Pg7oTqYB"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1785505874; x=1817041874;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=85HMa1urLda3H4SQPW9fwOAUmAEVpJSRJQ/BJG+jc48=;
+  b=Pg7oTqYBhak1Bf4blb7s+VHLw6Lqfu9S2Q18tuSO9kG5C7cXuLTAz2JT
+   Cn7VNraBIpcpu0ZSnQTY3QWVIFGnml9r7mQBfVy4aeW1vsTYgniCK0mYa
+   k+1rBP644UCZ/ah6T3/l9w2yeiRh8+Wck8ZJS6mkmflUAK3vqSOdrVX4g
+   M=;
+X-CSE-ConnectionGUID: pjTlxk6kTnG+t57lGJdSnQ==
+X-CSE-MsgGUID: QYQxC+awQ966qSjpJ5goBQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11861"; a="154010874"
+X-IronPort-AV: E=Sophos;i="6.25,196,1779141600"; 
+   d="scan'208";a="154010874"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE814.infineon.com) ([172.23.29.40])
+  by smtp11.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jul 2026 15:51:06 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE814.infineon.com
+ (172.23.29.40) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 31 Jul
+ 2026 15:51:05 +0200
+Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
+ MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 31 Jul 2026 15:51:02 +0200
+Date: Fri, 31 Jul 2026 13:50:53 +0000
+From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
+To: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+CC: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>,
+	<brcm80211-dev-list.pdl@broadcom.com>, <linux-kernel@vger.kernel.org>,
+	<wlan-kernel-dev-list@infineon.com>
+Subject: Re: [PATCH] wifi: brcmfmac: configure SAE PWE method for external
+ SAE AP
+Message-ID: <fn7xsi3b5k6bshyueeybjdb4vzudsdwt6arjn3swj3lszew5nv@v5xtmaxhslbm>
+References: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
+ <5cf57b2d-2bcc-481c-87bf-3a034d5f99be@broadcom.com>
+ <CA+ORkNQntwC4k2arcngGdYB3mwsbJCkCRNTJRJ2GoRxjdGXLzA@mail.gmail.com>
+ <c452116c-6215-4d62-b96b-72ae23a478e1@broadcom.com>
+ <CA+ORkNSsb8Z5eUVH1GRvWtO_he6A+_b67ov2Cm6VJuWciJeKZQ@mail.gmail.com>
+ <CA+ORkNSG45LrTu09AiHNwTZ882Yybq-3E-=enwe+2eA36fEO4g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CA+ORkNSG45LrTu09AiHNwTZ882Yybq-3E-=enwe+2eA36fEO4g@mail.gmail.com>
+X-ClientProxiedBy: MUCSE802.infineon.com (172.23.29.28) To
+ MUCSE827.infineon.com (172.23.29.20)
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+On 07/29, Bogdan Nicolae wrote:
+> Gokul,
+> 
+> Looks like this is also missing, can you please add it in your patch:
 
-Add the handling of CIP during association, when adding a station in AP
-mode and also adds some checks whether the keys are being installed
-correctly.
+sure, we will include the quoted patch while submitting our "extsae_pwe" patchset
+for community review.
 
-For internal use, add a new key flag CIP that is used for both the
-pairwise key and CIGTK. The CIGTK will then have the MCAST_KEY and CIP
-flags set.
+Kindly avoid top-posting while sending your email replies.
+Need to use interleaved quoting.
+https://en.wikipedia.org/wiki/Posting_style#Interleaved_style
 
-As the CIGTK uses key indices 0 and 1, add a new variable to track it
-separately from the other GTKs.
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index d32b35ce0..455f5619f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -77,6 +77,11 @@
+> 
+> #define        DOT11_BCN_PRB_FIXED_LEN         12      /* beacon/probe
+> fixed length */
+> 
+> +#define WL_IOV_OP_BSSCFG_DISABLE               0
+> +#define WL_IOV_OP_BSSCFG_ENABLE                        1
+> +#define WL_IOV_OP_MANUAL_STA_BSSCFG_CREATE     2
+> +#define WL_IOV_OP_MANUAL_AP_BSSCFG_CREATE      3
+> +
+> #define BRCMF_SCAN_JOIN_ACTIVE_DWELL_TIME_MS   320
+> #define BRCMF_SCAN_JOIN_PASSIVE_DWELL_TIME_MS  400
+> #define BRCMF_SCAN_JOIN_PROBE_INTERVAL_MS      20
+> @@ -5260,6 +5265,19 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy,
+> struct net_device *ndev,
+>                if ((brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) && (!mbss))
+>                        brcmf_fil_iovar_int_set(ifp, "mbss", 1);
+> 
+> +               if (!test_bit(BRCMF_VIF_STATUS_AP_CREATED,
+> &ifp->vif->sme_state)) {
+> +                       bss_enable.bsscfgidx = cpu_to_le32(ifp->bsscfgidx);
+> +                       bss_enable.enable =
+> +                               cpu_to_le32(WL_IOV_OP_MANUAL_AP_BSSCFG_CREATE);
+> +                       err = brcmf_fil_iovar_data_set(ifp, "bss", &bss_enable,
+> +                                                      sizeof(bss_enable));
+> +                       if (err < 0) {
+> +                               bphy_err(drvr, "bss_enable config failed %d\n",
+> +                                        err);
+> +                               goto exit;
+> +                       }
+> +               }
+> +
+>                err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_AP, 1);
+>                if (err < 0) {
+>                        bphy_err(drvr, "setting AP mode failed %d\n",
+> 
+> Thanks,
+> Bogdan
+> 
+> On Wed, Jul 29, 2026 at 8:19 AM Bogdan Nicolae <bogdan.nicolae@gmail.com> wrote:
+> >
+> > Gokul,
+> >
+> > Great to hear. Are there any other changes you are planning to submit?
+> > I found this to be the minimal working config at least for WPA3 personal,
+> > but would like to know if I am missing anything else.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
----
- include/net/mac80211.h     |  9 ++++
- net/mac80211/cfg.c         | 22 ++++++++-
- net/mac80211/ieee80211_i.h |  2 +
- net/mac80211/key.c         | 94 +++++++++++++++++++++++++++++---------
- net/mac80211/key.h         |  3 +-
- net/mac80211/mlme.c        | 22 ++++++++-
- net/mac80211/sta_info.h    |  2 +
- 7 files changed, 129 insertions(+), 25 deletions(-)
+Could you help us with the exact version of 43455 firmware, Raspbian distro and
+kernel that you are currently using in your RPi ? 
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 77ebf9a9ca87..aae140fdc2bb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2396,6 +2396,8 @@ static inline bool lockdep_vif_wiphy_mutex_held(struct ieee80211_vif *vif)
-  *	number generation only
-  * @IEEE80211_KEY_FLAG_SPP_AMSDU: SPP A-MSDUs can be used with this key
-  *	(set by mac80211 from the sta->spp_amsdu flag)
-+ * @IEEE80211_KEY_FLAG_CIP: This key is used for the Control Integrity
-+ *	Protocol, and is either a pairwise key or a CIGTK.
-  */
- enum ieee80211_key_flags {
- 	IEEE80211_KEY_FLAG_GENERATE_IV_MGMT	= BIT(0),
-@@ -2410,6 +2412,7 @@ enum ieee80211_key_flags {
- 	IEEE80211_KEY_FLAG_NO_AUTO_TX		= BIT(9),
- 	IEEE80211_KEY_FLAG_GENERATE_MMIE	= BIT(10),
- 	IEEE80211_KEY_FLAG_SPP_AMSDU		= BIT(11),
-+	IEEE80211_KEY_FLAG_CIP			= BIT(12),
- };
- 
- /**
-@@ -2630,6 +2633,8 @@ struct ieee80211_sta_aggregates {
-  * @eht_cap: EHT capabilities of this STA
-  * @uhr_cap: UHR capabilities of this STA
-  * @s1g_cap: S1G capabilities of this STA
-+ * @cip_mic_padding: the MIC padding required by the STA as defined in its
-+ *	CIP Capabilities element
-  * @agg: per-link data for multi-link aggregation
-  * @bandwidth: current bandwidth the station can receive with.
-  *	This is the minimum between the peer's capabilities and our own
-@@ -2658,6 +2663,7 @@ struct ieee80211_link_sta {
- 	struct ieee80211_sta_eht_cap eht_cap;
- 	struct ieee80211_sta_uhr_cap uhr_cap;
- 	struct ieee80211_sta_s1g_cap s1g_cap;
-+	u8 cip_mic_padding;
- 
- 	struct ieee80211_sta_aggregates agg;
- 
-@@ -2721,6 +2727,7 @@ struct ieee80211_link_sta {
-  * @valid_links: bitmap of valid links, or 0 for non-MLO
-  * @spp_amsdu: indicates whether the STA uses SPP A-MSDU or not.
-  * @epp_peer: indicates that the peer is an EPP peer.
-+ * @cip: indicates whether the STA uses control frame protection or not.
-  * @nmi: For NDI stations, pointer to the NMI station of the peer.
-  * @nan_sched: NAN peer schedule for this station. Valid only for NMI stations.
-  * @ext_mld_capa_ops: the MLD's extended MLD capabilities and operations
-@@ -2742,6 +2749,8 @@ struct ieee80211_sta {
- 	u8 max_amsdu_subframes;
- 	u16 eml_cap;
- 
-+	bool cip;
-+
- 	struct ieee80211_sta_aggregates *cur;
- 
- 	bool support_p2p_ps;
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 49d516789e74..3bf81629cde3 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -619,6 +619,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct ieee80211_link_data *link =
- 		ieee80211_link_or_deflink(sdata, link_id, false);
- 	bool pairwise = type == NL80211_KEYTYPE_PAIRWISE;
-+	bool cigtk = type == NL80211_KEYTYPE_CIGTK;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta = NULL;
- 	struct ieee80211_key *key;
-@@ -662,6 +663,9 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		key->conf.link_id = -1;
- 	} else {
- 		key->conf.link_id = link->link_id;
-+
-+		if (cigtk)
-+			key->conf.flags |= IEEE80211_KEY_FLAG_CIP;
- 	}
- 
- 	if (params->mode == NL80211_KEY_NO_TX)
-@@ -745,6 +749,7 @@ ieee80211_lookup_key(struct ieee80211_sub_if_data *sdata, int link_id,
- 	struct ieee80211_local *local __maybe_unused = sdata->local;
- 	struct ieee80211_link_data *link = &sdata->deflink;
- 	bool pairwise = type == NL80211_KEYTYPE_PAIRWISE;
-+	bool cigtk = type == NL80211_KEYTYPE_CIGTK;
- 	struct ieee80211_key *key;
- 
- 	if (link_id >= 0) {
-@@ -774,7 +779,11 @@ ieee80211_lookup_key(struct ieee80211_sub_if_data *sdata, int link_id,
- 			return wiphy_dereference(local->hw.wiphy,
- 						 sta->ptk[key_idx]);
- 
--		if (!pairwise &&
-+		if (cigtk && key_idx < NUM_CTRL_KEYS)
-+			return wiphy_dereference(local->hw.wiphy,
-+						 link_sta->cigtk[key_idx]);
-+
-+		if (!pairwise && !cigtk &&
- 		    key_idx < NUM_DEFAULT_KEYS +
- 			      NUM_DEFAULT_MGMT_KEYS +
- 			      NUM_DEFAULT_BEACON_KEYS)
-@@ -787,6 +796,9 @@ ieee80211_lookup_key(struct ieee80211_sub_if_data *sdata, int link_id,
- 	if (pairwise && key_idx < NUM_DEFAULT_KEYS)
- 		return wiphy_dereference(local->hw.wiphy, sdata->keys[key_idx]);
- 
-+	if (cigtk)
-+		return wiphy_dereference(local->hw.wiphy, link->cigtk[key_idx]);
-+
- 	key = wiphy_dereference(local->hw.wiphy, link->gtk[key_idx]);
- 	if (key)
- 		return key;
-@@ -2294,6 +2306,8 @@ static int sta_link_apply_parameters(struct ieee80211_local *local,
- 	case STA_LINK_MODE_NEW:
- 		if (!params->link_mac)
- 			return -EINVAL;
-+		if (sta->sta.cip && !params->cip_cap_set)
-+			return -EINVAL;
- 		break;
- 	case STA_LINK_MODE_LINK_MODIFY:
- 		break;
-@@ -2416,6 +2430,9 @@ static int sta_link_apply_parameters(struct ieee80211_local *local,
- 		ieee80211_s1g_cap_to_sta_s1g_cap(sdata, params->s1g_capa,
- 						 link_sta);
- 
-+	if (params->cip_cap_set)
-+		link_sta->pub->cip_mic_padding = params->cip_cap;
-+
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_NAN:
- 	case NL80211_IFTYPE_NAN_DATA:
-@@ -2578,6 +2595,9 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 	if (params->eml_cap_present)
- 		sta->sta.eml_cap = params->eml_cap;
- 
-+	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_CIP))
-+		sta->sta.cip = true;
-+
- 	ret = sta_link_apply_parameters(local, sta, STA_LINK_MODE_STA_MODIFY,
- 					&params->link_sta_params);
- 	if (ret)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c6e6cb9d90a1..fc85f8bf96e3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -477,6 +477,7 @@ struct ieee80211_mgd_assoc_data {
- 	bool comeback; /* whether the AP has requested association comeback */
- 	bool s1g;
- 	bool spp_amsdu;
-+	bool cip;
- 
- 	s8 assoc_link_id;
- 
-@@ -1104,6 +1105,7 @@ struct ieee80211_link_data {
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS +
- 					NUM_DEFAULT_MGMT_KEYS +
- 					NUM_DEFAULT_BEACON_KEYS];
-+	struct ieee80211_key __rcu *cigtk[NUM_CTRL_KEYS];
- 	struct ieee80211_key __rcu *default_multicast_key;
- 	struct ieee80211_key __rcu *default_mgmt_key;
- 	struct ieee80211_key __rcu *default_beacon_key;
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 9ac7a5c4b861..4c9788ec0b74 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -205,6 +205,10 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 			  sta ? sta->sta.addr : bcast_addr, ret);
- 
-  out_unsupported:
-+	/* Control Integrity Protocol can only be done in hardware */
-+	if (key->conf.flags & IEEE80211_KEY_FLAG_CIP)
-+		return -EINVAL;
-+
- 	switch (key->conf.cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
-@@ -440,11 +444,13 @@ void ieee80211_set_default_beacon_key(struct ieee80211_link_data *link,
- static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 				 struct ieee80211_link_data *link,
- 				 struct sta_info *sta,
--				 bool pairwise,
-+				 enum ieee80211_key_flags flags,
- 				 struct ieee80211_key *old,
- 				 struct ieee80211_key *new)
- {
- 	struct link_sta_info *link_sta = sta ? &sta->deflink : NULL;
-+	bool pairwise = flags & IEEE80211_KEY_FLAG_PAIRWISE;
-+	bool cip = flags & IEEE80211_KEY_FLAG_CIP;
- 	int link_id;
- 	int idx;
- 	int ret = 0;
-@@ -535,6 +541,8 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			if (new &&
- 			    !(new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX))
- 				_ieee80211_set_tx_key(new, true);
-+		} else if (cip) {
-+			rcu_assign_pointer(link_sta->cigtk[idx], new);
- 		} else {
- 			rcu_assign_pointer(link_sta->gtk[idx], new);
- 		}
-@@ -569,6 +577,8 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 
- 		if (is_wep || pairwise)
- 			rcu_assign_pointer(sdata->keys[idx], new);
-+		else if (cip)
-+			rcu_assign_pointer(link->cigtk[idx], new);
- 		else
- 			rcu_assign_pointer(link->gtk[idx], new);
- 
-@@ -883,6 +893,10 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 			ret = -EOPNOTSUPP;
- 			goto out;
- 		}
-+
-+		/* Set CIP flag if enabled for the station */
-+		if (sta->sta.cip)
-+			key->conf.flags |= IEEE80211_KEY_FLAG_CIP;
- 	} else if (sta) {
- 		struct link_sta_info *link_sta = &sta->deflink;
- 		int link_id = key->conf.link_id;
-@@ -896,15 +910,25 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 			}
- 		}
- 
--		old_key = wiphy_dereference(sdata->local->hw.wiphy,
--					    link_sta->gtk[idx]);
--	} else {
--		if (idx < NUM_DEFAULT_KEYS)
-+		if (key->conf.flags & IEEE80211_KEY_FLAG_CIP)
- 			old_key = wiphy_dereference(sdata->local->hw.wiphy,
--						    sdata->keys[idx]);
--		if (!old_key)
-+						    link_sta->cigtk[idx]);
-+		else
- 			old_key = wiphy_dereference(sdata->local->hw.wiphy,
--						    link->gtk[idx]);
-+						    link_sta->gtk[idx]);
-+	} else {
-+		if (key->conf.flags & IEEE80211_KEY_FLAG_CIP) {
-+			old_key = wiphy_dereference(sdata->local->hw.wiphy,
-+						    link->cigtk[idx]);
-+		} else {
-+			if (idx < NUM_DEFAULT_KEYS)
-+				old_key = wiphy_dereference(sdata->local->hw.wiphy,
-+							    sdata->keys[idx]);
-+
-+			if (!old_key)
-+				old_key = wiphy_dereference(sdata->local->hw.wiphy,
-+							    link->gtk[idx]);
-+		}
- 	}
- 
- 	/* Non-pairwise keys must also not switch the cipher on rekey */
-@@ -938,9 +962,17 @@ int ieee80211_key_link(struct ieee80211_key *key,
- 	if (sta && sta->sta.spp_amsdu)
- 		key->conf.flags |= IEEE80211_KEY_FLAG_SPP_AMSDU;
- 
-+	/* A CIP related key must be GCMP-256 (really GMAC-256) */
-+	if ((key->conf.flags & IEEE80211_KEY_FLAG_CIP) &&
-+	    key->conf.cipher != WLAN_CIPHER_SUITE_GCMP_256) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	increment_tailroom_need_count(sdata);
- 
--	ret = ieee80211_key_replace(sdata, link, sta, pairwise, old_key, key);
-+	ret = ieee80211_key_replace(sdata, link, sta, key->conf.flags,
-+				    old_key, key);
- 
- 	if (!ret) {
- 		ieee80211_debugfs_key_add(key);
-@@ -966,8 +998,7 @@ void ieee80211_key_free(struct ieee80211_key *key, bool delay_tailroom)
- 	 */
- 	if (key->sdata)
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
--				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
--				      key, NULL);
-+				      key->conf.flags, key, NULL);
- 	ieee80211_key_destroy(key, delay_tailroom);
- }
- 
-@@ -1098,8 +1129,7 @@ static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
- 
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list) {
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
--				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
--				      key, NULL);
-+				      key->conf.flags, key, NULL);
- 		list_add_tail(&key->list, keys);
- 	}
- 
-@@ -1119,8 +1149,7 @@ void ieee80211_remove_link_keys(struct ieee80211_link_data *link,
- 		if (key->conf.link_id != link->link_id)
- 			continue;
- 		ieee80211_key_replace(key->sdata, link, key->sta,
--				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
--				      key, NULL);
-+				      key->conf.flags, key, NULL);
- 		list_add_tail(&key->list, keys);
- 	}
- }
-@@ -1196,8 +1225,17 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		if (!key)
- 			continue;
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
--				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
--				      key, NULL);
-+				      key->conf.flags, key, NULL);
-+		__ieee80211_key_destroy(key, key->sdata->vif.type ==
-+					NL80211_IFTYPE_STATION);
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(sta->deflink.cigtk); i++) {
-+		key = wiphy_dereference(local->hw.wiphy, sta->deflink.cigtk[i]);
-+		if (!key)
-+			continue;
-+		ieee80211_key_replace(key->sdata, NULL, key->sta,
-+				      key->conf.flags, key, NULL);
- 		__ieee80211_key_destroy(key, key->sdata->vif.type ==
- 					NL80211_IFTYPE_STATION);
- 	}
-@@ -1207,8 +1245,7 @@ void ieee80211_free_sta_keys(struct ieee80211_local *local,
- 		if (!key)
- 			continue;
- 		ieee80211_key_replace(key->sdata, NULL, key->sta,
--				      key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE,
--				      key, NULL);
-+				      key->conf.flags, key, NULL);
- 		__ieee80211_key_destroy(key, key->sdata->vif.type ==
- 					NL80211_IFTYPE_STATION);
- 	}
-@@ -1390,10 +1427,20 @@ ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 		    NUM_DEFAULT_BEACON_KEYS))
- 		return ERR_PTR(-EINVAL);
- 
--	prev_key = wiphy_dereference(local->hw.wiphy,
--				     link_data->gtk[idx]);
-+	if (WARN_ON(cigtk && idx >= NUM_CTRL_KEYS))
-+		return ERR_PTR(-EINVAL);
-+
-+	if (cigtk)
-+		prev_key = wiphy_dereference(local->hw.wiphy,
-+					     link_data->cigtk[idx]);
-+	else
-+		prev_key = wiphy_dereference(local->hw.wiphy,
-+					     link_data->gtk[idx]);
- 	if (!prev_key) {
--		if (idx < NUM_DEFAULT_KEYS) {
-+		if (cigtk) {
-+			prev_key = wiphy_dereference(local->hw.wiphy,
-+						     link_data->cigtk[idx ^ 1]);
-+		} else if (idx < NUM_DEFAULT_KEYS) {
- 			for (int i = 0; i < NUM_DEFAULT_KEYS; i++) {
- 				if (i == idx)
- 					continue;
-@@ -1424,6 +1471,9 @@ ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 	if (sdata->u.mgd.mfp != IEEE80211_MFP_DISABLED)
- 		key->conf.flags |= IEEE80211_KEY_FLAG_RX_MGMT;
- 
-+	if (prev_key->conf.flags & IEEE80211_KEY_FLAG_CIP)
-+		key->conf.flags |= IEEE80211_KEY_FLAG_CIP;
-+
- 	key->conf.link_id = link_data->link_id;
- 
- 	err = ieee80211_key_link(key, link_data, NULL);
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 826e4e9387c5..c85992493afd 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -2,7 +2,7 @@
- /*
-  * Copyright 2002-2004, Instant802 Networks, Inc.
-  * Copyright 2005, Devicescape Software, Inc.
-- * Copyright (C) 2019, 2022-2023 Intel Corporation
-+ * Copyright (C) 2019, 2022-2023, 2026 Intel Corporation
-  */
- 
- #ifndef IEEE80211_KEY_H
-@@ -19,6 +19,7 @@
- #define NUM_DEFAULT_KEYS 4
- #define NUM_DEFAULT_MGMT_KEYS 2
- #define NUM_DEFAULT_BEACON_KEYS 2
-+#define NUM_CTRL_KEYS 2
- #define INVALID_PTK_KEYIDX 2 /* Keyidx always pointing to a NULL key for PTK */
- 
- struct ieee80211_local;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f51167f0fc46..34d713c9a691 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2337,6 +2337,10 @@ ieee80211_add_link_elems(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_put_eht_cap(skb, sdata, sband,
- 				      &assoc_data->link[link_id].conn);
- 
-+	/* Insert CIP only on the assoc link (it will be inherited) */
-+	if (link_id == assoc_data->assoc_link_id && assoc_data->cip)
-+		ieee80211_put_cip_cap(skb, sdata);
-+
- 	if (assoc_data->link[link_id].conn.mode >= IEEE80211_CONN_MODE_UHR)
- 		ieee80211_put_uhr_cap(skb, sdata, sband);
- 
-@@ -2613,7 +2617,8 @@ static int ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 	       assoc_data->ie_len + /* extra IEs */
- 	       (assoc_data->fils_kek_len ? 16 /* AES-SIV */ : 0) +
- 	       9 /* WMM */ +
--	       4 /* regulatory connectivity, if 6 GHz is supported */;
-+	       4 /* regulatory connectivity, if 6 GHz is supported */ +
-+	       (assoc_data->cip ? 4 /* CIP capabilities */ : 0);
- 
- 	for (link_id = 0; link_id < IEEE80211_MLD_MAX_NUM_LINKS; link_id++) {
- 		struct cfg80211_bss *cbss = assoc_data->link[link_id].bss;
-@@ -6274,6 +6279,19 @@ static bool ieee80211_assoc_config_link(struct ieee80211_link_data *link,
- 		/* TODO: OPEN: what happens if BSS color disable is set? */
- 	}
- 
-+	if (assoc_data->cip) {
-+		if (elems->cip_cap) {
-+			link_sta->pub->cip_mic_padding =
-+				u8_get_bits(elems->cip_cap->v,
-+					    WLAN_CIP_CAPA_MIC_PADDING);
-+		} else {
-+			sdata_info(sdata,
-+				   "CIP Capabilities not included in association response\n");
-+			ret = false;
-+			goto out;
-+		}
-+	}
-+
- 	if (cbss->transmitted_bss) {
- 		bss_conf->nontransmitted = true;
- 		ether_addr_copy(bss_conf->transmitter_bssid,
-@@ -7000,6 +7018,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
- 		goto out_err;
- 
- 	sta->sta.spp_amsdu = assoc_data->spp_amsdu;
-+	sta->sta.cip = assoc_data->cip;
- 
- 	if (ieee80211_vif_is_mld(&sdata->vif)) {
- 		if (!elems->ml_basic)
-@@ -10538,6 +10557,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	assoc_data->spp_amsdu = req->flags & ASSOC_REQ_SPP_AMSDU;
-+	assoc_data->cip = req->flags & ASSOC_REQ_CIP;
- 
- 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
- 		err = -EBUSY;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ee0d32877c5b..f409f6a3afa1 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -485,6 +485,7 @@ struct ieee80211_fragment_cache {
-  * @link_hash_node: hash node for rhashtable
-  * @sta: Points to the STA info
-  * @gtk: group keys negotiated with this station, if any
-+ * @cigtk: control integrity group keys negotiated with this station, if any
-  * @tx_stats: TX statistics
-  * @tx_stats.packets: # of packets transmitted
-  * @tx_stats.bytes: # of bytes in all packets transmitted
-@@ -535,6 +536,7 @@ struct link_sta_info {
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS +
- 					NUM_DEFAULT_MGMT_KEYS +
- 					NUM_DEFAULT_BEACON_KEYS];
-+	struct ieee80211_key __rcu *cigtk[NUM_CTRL_KEYS];
- 	struct ieee80211_sta_rx_stats __percpu *pcpu_rx_stats;
- 
- 	/* Updated from RX path only, no locking requirements */
--- 
-2.55.0
-
+Regards,
+Gokul
