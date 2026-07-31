@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E19433C1F36
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:42:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1730C33D6F0
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 13:42:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785505378; cv=none; b=FN087R2owuY1dJPt399sUzRu+FwY3E7Cf1VCvxdnx4uPs21XD+X2P5rfxCP+tyj8pJUg1m8dCDWOphA9k/Rbs9w9WkGJDr1kzq0SiKAXIlhayOiEfL/GlAO8Pg8PNM64WuYSO9Meosef6+ObpsqPOZBu1LslYtFoKXkD+r1ZQCQ=
+	t=1785505379; cv=none; b=SUrbLN/RBQ+n1zS857wOwl5+N1L75O2hN62kRvDf7mVm5QWLX/x3Z+6ouIheW/Za5Ep/2J66hvt/FAXrwcfROHpcv7S0lU43Sbui6V8FIJBk4v0C01eo7TojHPpduBFbj2uwLmVRmOfPfjQw661qFVngPi+wez3uElz3QTb8EKo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785505378; c=relaxed/simple;
-	bh=tqO2TfrRv9qQGsravDmZw52YX2CL4POKp2z84mpWjGs=;
+	s=arc-20240116; t=1785505379; c=relaxed/simple;
+	bh=erS8pyQtPYO8AxujzIlSavu30qtjBkgQZ6WDbC7Bvbc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=heK1WG6IVaIzowY0rLZGJYofb9KctKg3vuT4sZ3/ESx38HQ6AN5WuhKu7qxvTpV7bPSksZt4MxYXeDRwQoRGOG2QXRsqKB0gst1mHsZxexkJjt5aDXCH8sf58sEnlfdyaQbObuU6mt9NayCqjBHkrf58tXSiz1Zdn5/nAxSMreY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HKn5MExF; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=X+6AZDsa9EPpC0GTCJvpmLOTFI0tcFQ49D1H5ILyEK/9HmmIaEy/COBHdFne19nwDSDQGvPonw5mPOc/o7hx2fg/dBXYQmfw57KXuO4Bi49yy/ZRliRi3KYgFR0x0zOG0fkIKiaWQmCwi5jelA9wsePgleBCwzUUuY7PNxfv+5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=fKcbYVLR; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HKn5MExF"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="fKcbYVLR"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=zb5VEgjNOuIN+SASRqdFlJ+ZkwhAgJ8Qgzfm3kz1j88=;
-	t=1785505377; x=1786714977; b=HKn5MExFlhvzQs6RihSfIilXumg8p3DlBSRSYZDagWhl8MB
-	PfcUKq96vMEbTI88hucTP/5an97MY75swkplefCf8vq3uwYO6vQWLBSXqZFfIoEdWEM0NNIcx7j+q
-	E/T6u56+4KXuKOf21wz9U426FafMNsmyk6/qFrOT9PW3wB47B8FhBmNIGejetjBaRVI84P6Rr0z94
-	0ohHCl2+t8g5iVIV8zbl76R7g6YeUgAH931kUf+oc3kmZ+M5VYmcP5PBQDLn/b2xggdsWSigJHTPz
-	OX0Y2w9d4wV917N8V3h5vzsfASix6+WbKOiuZYQhN8U2bsKTRW2oMH4wU7Y8FpsA==;
+	Resent-Cc:Resent-Message-ID; bh=V84WcufziRcybLCjOcVsll7Zl/kNp9hcCa6emON2vHc=;
+	t=1785505378; x=1786714978; b=fKcbYVLR0OHj5IB3c5Yp0OytD8on1HR3lf8rx4eoNvyeUvp
+	wRBZQmYhluc6qTHybk/N/XDB5IP7emq9IU061WcrpvFkeH1/fvBjtQbiYS67ArWBzH+ZZhrbnJeVS
+	SxeKCOH9sypvONuyps1PKO3Sp/uWNv6Dy16XzSBxEpY6sbB7bsv3bZtbvH1WUhWzFrsq6E2Z8+z1K
+	lxrzXzoVl6If1efvBU4sJz3GB7J5bxydVKttsljgZy2CMZni7kesomwog03hl15OAwaUTDS+DeS8q
+	X7zIE4dcjQ2I/1P49Ufbkf7UWaCqLMTCSi7T4/hGcxFq8xTtrBTaJjUrqzvfVE7A==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1wpnVl-000000048ua-2B6Y;
-	Fri, 31 Jul 2026 15:42:53 +0200
+	id 1wpnVm-000000048ua-3dQA;
+	Fri, 31 Jul 2026 15:42:55 +0200
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next 2/5] wifi: mac80211: add cigtk parameter to ieee80211_gtk_rekey_add
-Date: Fri, 31 Jul 2026 15:40:08 +0200
-Message-ID: <20260731154006.4535cd6322f9.I3d046fbe7dfb3883471773f84e7a791b5b97000e@changeid>
+Subject: [PATCH wireless-next 3/5] wifi: mac80211: add helpers to parse/generate CIP Capabilities
+Date: Fri, 31 Jul 2026 15:40:09 +0200
+Message-ID: <20260731154006.ad3cb5d32dc5.Ia3ea929dd6381cf8b04e3dd0c38e709e335113c2@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260731154006.7bddd2d85ff1.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
 References: <20260731154006.7bddd2d85ff1.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
@@ -50,120 +50,112 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-The CIGTK keys use a key index of 0 or 1, which is not unique. As such,
-a new parameter is needed to differentiate the key type. Add the
-parameter to prepare for handling the CIGTK in the future.
+The Control Integrity Protocol (CIP) Capabilities need to be
+added to and parsed from the association request and response.
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mld/d3.c | 6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 6 ++++--
- drivers/net/wireless/realtek/rtw89/wow.c    | 6 ++++--
- include/net/mac80211.h                      | 3 ++-
- net/mac80211/key.c                          | 2 +-
- 5 files changed, 15 insertions(+), 8 deletions(-)
+ include/linux/ieee80211.h  | 13 +++++++++++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ net/mac80211/parse.c       |  4 ++++
+ net/mac80211/util.c        | 19 +++++++++++++++++++
+ 4 files changed, 39 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/d3.c b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-index 55f9b809e764..6d8ede336d59 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/d3.c
-@@ -1138,7 +1138,8 @@ iwl_mld_add_mcast_rekey(struct ieee80211_vif *vif,
- 		return;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 26e674038865..16d78fd61c22 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1828,6 +1828,7 @@ enum ieee80211_eid_ext {
+ 	WLAN_EID_EXT_BANDWIDTH_INDICATION = 135,
+ 	WLAN_EID_EXT_KNOWN_STA_IDENTIFCATION = 136,
+ 	WLAN_EID_EXT_NON_AP_STA_REG_CON = 137,
++	WLAN_EID_EXT_CIP_CAPA = 150,
+ 	WLAN_EID_EXT_UHR_OPER = 151,
+ 	WLAN_EID_EXT_UHR_CAPA = 152,
+ 	WLAN_EID_EXT_MACP = 153,
+@@ -2900,4 +2901,16 @@ static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,
+ 		     __ieee80211_check_tim(tim, tim_len, aid);
+ }
  
- 	key_config = ieee80211_gtk_rekey_add(vif, key_data->id, key_data->key,
--					     sizeof(key_data->key), link_id);
-+					     sizeof(key_data->key), link_id,
-+					     false);
- 	if (IS_ERR(key_config))
- 		return;
++/* The MIC padding subfield in the CIP capabilities */
++#define WLAN_CIP_CAPA_MIC_PADDING	0x0F
++
++/**
++ * struct ieee80211_cip_cap - CIP Capabilities element
++ *
++ * @v: The value of the Control Integrity Protocol Capability element
++ */
++struct ieee80211_cip_cap {
++	u8 v;
++} __packed;
++
+ #endif /* LINUX_IEEE80211_H */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a1ef88fe846d..c6e6cb9d90a1 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1870,6 +1870,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_ttlm_elem *ttlm[IEEE80211_TTLM_MAX_CNT];
+ 	const struct ieee80211_uhr_cap *uhr_cap;
+ 	const struct ieee80211_uhr_operation *uhr_operation;
++	const struct ieee80211_cip_cap *cip_cap;
  
-@@ -1220,7 +1221,8 @@ static void iwl_mld_mlo_rekey(struct iwl_mld *mld,
- 				 mlo_key->idx, link_id);
+ 	/* not the order in the psd values is per element, not per chandef */
+ 	struct ieee80211_parsed_tpe tpe;
+@@ -2775,6 +2776,8 @@ int ieee80211_put_uhr_cap(struct sk_buff *skb,
+ 			  const struct ieee80211_supported_band *sband);
+ void ieee80211_put_reg_conn(struct ieee80211_sub_if_data *sdata,
+ 			    struct sk_buff *skb);
++int ieee80211_put_cip_cap(struct sk_buff *skb,
++			  struct ieee80211_sub_if_data *sdata);
  
- 		key = ieee80211_gtk_rekey_add(vif, mlo_key->idx, mlo_key->key,
--					      sizeof(mlo_key->key), link_id);
-+					      sizeof(mlo_key->key), link_id,
-+					      false);
+ /* channel management */
+ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
+diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
+index cb2be167cde7..3b66ca7d7a5c 100644
+--- a/net/mac80211/parse.c
++++ b/net/mac80211/parse.c
+@@ -205,6 +205,10 @@ ieee80211_parse_extension_element(u32 *crc,
+ 			elems->ttlm_num++;
+ 		}
+ 		break;
++	case WLAN_EID_EXT_CIP_CAPA:
++		if (len >= sizeof(*elems->cip_cap))
++			elems->cip_cap = data;
++		break;
+ 	case WLAN_EID_EXT_UHR_OPER:
+ 		if (params->mode < IEEE80211_CONN_MODE_UHR)
+ 			break;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index a96078a6bfa2..8303f624b7f6 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -4680,6 +4680,25 @@ int ieee80211_put_uhr_cap(struct sk_buff *skb,
+ 	return 0;
+ }
  
- 		if (IS_ERR(key))
- 			continue;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 6b11fa32ea5c..bd52f2ebd3ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1887,7 +1887,8 @@ static bool iwl_mvm_gtk_rekey(struct iwl_wowlan_status_data *status,
- 
- 		key = ieee80211_gtk_rekey_add(vif, status->gtk[i].id,
- 					      status->gtk[i].key,
--					      sizeof(status->gtk[i].key), -1);
-+					      sizeof(status->gtk[i].key), -1,
-+					      false);
- 		if (IS_ERR(key)) {
- 			/* FW may send also the old keys */
- 			if (PTR_ERR(key) == -EALREADY)
-@@ -1922,7 +1923,8 @@ iwl_mvm_d3_igtk_bigtk_rekey_add(struct iwl_wowlan_status_data *status,
- 		return true;
- 
- 	key_config = ieee80211_gtk_rekey_add(vif, keyidx, key_data->key,
--					     sizeof(key_data->key), -1);
-+					     sizeof(key_data->key), -1,
-+					     false);
- 	if (IS_ERR(key_config)) {
- 		/* FW may send also the old keys */
- 		return PTR_ERR(key_config) == -EALREADY;
-diff --git a/drivers/net/wireless/realtek/rtw89/wow.c b/drivers/net/wireless/realtek/rtw89/wow.c
-index 8dadd8df4fc6..c8e002238ecb 100644
---- a/drivers/net/wireless/realtek/rtw89/wow.c
-+++ b/drivers/net/wireless/realtek/rtw89/wow.c
-@@ -669,10 +669,12 @@ static struct ieee80211_key_conf *rtw89_wow_gtk_rekey(struct rtw89_dev *rtwdev,
- 	if (ieee80211_vif_is_mld(wow_vif))
- 		key = ieee80211_gtk_rekey_add(wow_vif, keyidx, gtk,
- 					      cipher_info->len,
--					      rtwvif_link->link_id);
-+					      rtwvif_link->link_id,
-+					      false);
- 	else
- 		key = ieee80211_gtk_rekey_add(wow_vif, keyidx, gtk,
--					      cipher_info->len, -1);
-+					      cipher_info->len, -1,
-+					      false);
- 
- 	kfree(rekey_conf);
- 	if (IS_ERR(key)) {
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9d1fac6e8082..77ebf9a9ca87 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6279,6 +6279,7 @@ void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
-  * @key_len: the key data. Might be bigger than the actual key length,
-  *	but not smaller (for the driver convinence)
-  * @link_id: the link id of the key or -1 for non-MLO
-+ * @cigtk: whether this is a CIGTK
-  *
-  * When GTK rekeying was done while the system was suspended, (a) new
-  * key(s) will be available. These will be needed by mac80211 for proper
-@@ -6305,7 +6306,7 @@ void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
- struct ieee80211_key_conf *
- ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 			u8 idx, u8 *key_data, u8 key_len,
--			int link_id);
-+			int link_id, bool cigtk);
- 
- /**
-  * ieee80211_gtk_rekey_notify - notify userspace supplicant of rekeying
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index f45e792abede..9ac7a5c4b861 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -1366,7 +1366,7 @@ EXPORT_SYMBOL_GPL(ieee80211_set_key_rx_seq);
- struct ieee80211_key_conf *
- ieee80211_gtk_rekey_add(struct ieee80211_vif *vif,
- 			u8 idx, u8 *key_data, u8 key_len,
--			int link_id)
-+			int link_id, bool cigtk)
++int ieee80211_put_cip_cap(struct sk_buff *skb,
++			  struct ieee80211_sub_if_data *sdata)
++{
++	const struct wiphy_iftype_ext_capab *ift_ext_capa =
++		cfg80211_get_iftype_ext_capa(sdata->local->hw.wiphy,
++					     ieee80211_vif_type_p2p(&sdata->vif));
++	u8 cip_capabilities = ift_ext_capa ? ift_ext_capa->cip_capabilities : 0;
++
++	if (skb_tailroom(skb) < 4)
++		return -ENOBUFS;
++
++	skb_put_u8(skb, WLAN_EID_EXTENSION);
++	skb_put_u8(skb, 2);
++	skb_put_u8(skb, WLAN_EID_EXT_CIP_CAPA);
++	skb_put_u8(skb, cip_capabilities);
++
++	return 0;
++}
++
+ const char *ieee80211_conn_mode_str(enum ieee80211_conn_mode mode)
  {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_local *local = sdata->local;
+ 	static const char * const modes[] = {
 -- 
 2.55.0
 
