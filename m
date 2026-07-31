@@ -1,160 +1,159 @@
-Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB1E7438023
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 18:55:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785524158; cv=pass; b=ZFFkoaS9yBaDtsg6tsdRBXMvKjPV+EefDE+Izq6+fPvtSRIstVoMKL0PZvw9ATUjMIU8HRCvl+xsJq9Ycj2o3IXiQA4bycj5SVbvtd2Bq+ugny5kgkFk2rgvIvq3wKg1WfmvvekZrlxwkDCkZ8wwztnOPKkYxfuM1dzpyVTJYDg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785524158; c=relaxed/simple;
-	bh=e7Xb6iyuKREBvhKuDndEnRmOXeFlw2JNtdV9987uNAk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nXeTQif/B6fTkG2iQ0ZuMSQ61Nzu9ad3LvGB7atzu3Yeibsp9ZN8kgTUAA4xIx1QX/JL0VxRi/zXwx6+lcJX339z30n3OU0TRu/WAmdI6fENHqPIfmPw8I4g0rYZdeU5xUXyoQ1YWUKE7nwKGv1DdXKhbjdoWzzWGcAxvygIK1M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fQ1iIw4z; arc=pass smtp.client-ip=209.85.219.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8569D23A9BD;
+	Fri, 31 Jul 2026 19:45:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785527126; cv=none; b=ujq3a3Xvt7tck+s8keS1M05ahwLr62IRTeiugTf3yjCd1f38T9zGdNjfCT6zEesepldZq0rAg5A0011ynHxjVIcHXoSOxOiRNR3ub47oYNJzg1RKon8YogTWeOWPhm8hzWgoaKpdgBp6eQKnoVOX4kUhopuM+JiU8HVD46m1BmA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785527126; c=relaxed/simple;
+	bh=NWJQXpMun4RvJz+N1cruXjW8PFVvRG8ukGxWBva6L8Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NDsi21W3xFHbQ0z40+hM4tsphPTZ/FCSHi1ZqV0IHDroRmxvNlA3+WJt7jp3VUkftyt2qc1K0KNnMnQtWmMOe0pnHfR5laENFs8AlX4kUvpiN1XrhRK59ndHEqpAB7ltuamS5Oe8KdmUdZf13NYwC5VmWwwOD3DBP1TPOJvIPhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BeJ9+1mi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fQ1iIw4z"
-Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-8efcef23d21so9178306d6.2
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 11:55:56 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785524156; cv=none;
-        d=google.com; s=arc-20260327;
-        b=m9wEZSu2nsaim6OLFoGlrkWTRYBzYTuFP9CK2YgPZd/CVeoZ5VkFZxnjj4BQDYXGFw
-         2QCm1BkuIU51gu7tt/RjgaWGCjvBRn8UexxACi31MyPaFy/Ra8KeZCWETByAfwwARfx8
-         mEb5tieLOMp4qoqnMaOgEGpT69pQBJMhoCUupLmsQhQnedGIn3W1gN0dSOlIyFM4qHhX
-         5yFfR7mXwWbcBSSAZKRi7LwH5M6m52psiNgo+6E2Be31qkpzi6auw6o/j0fpjxYRBGnN
-         0gAC5FhgKFNvpfKQVEejWAdht3wKiM5UD290MgkKY2vxamnnENhX3WcEGTUz//ZylZRM
-         OjEQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=8E4+shQav05WgyUY6G3Mum98V9wgbtXbHPtbTkAf4bQ=;
-        fh=dX/Nco/B3U1XHrI35pOmGwJ5LyegLnleP1JtVBZLXFQ=;
-        b=k/CgBbFZvEAzdUdMqncEr0RFcgTJ+P8j0RbmANJA9Yb7dC5j4znjybicspPyIWtTix
-         BCsyRM3tF/TBcdoycd71dzArBavkb4hW6CznLepW7yS83oPC8tN67G2mlQQ+lMfJnlF8
-         CmyqNZ/ZtxvRYVvSaN8QI2SMbbtMue1NTzhFNdHNAuE3qbWUhXKX+zF5fpg6XPmbW5h5
-         Zo7gtnqDqNqmgCZF3UTQ5uLPzd0QHjDMbbb3eHhaXGTypYJgoMaZU7x1S3pKN0EsGlW7
-         CcJg7A+4TM4qEy2LpG0T//Ku32fmp72aFyQ3nIZGsgmWTzinCryQ1t323PXWFn7P6J5e
-         1XWw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785524156; x=1786128956; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=8E4+shQav05WgyUY6G3Mum98V9wgbtXbHPtbTkAf4bQ=;
-        b=fQ1iIw4zBpEAG2qv3uhhVgA4F5aHd4LPH5nMZOvabLPgJBByL0Hv/Rxtzp0C9OWeSl
-         sbFjmCK4OyGxBHpqL8Nyl//nN3iTZpR17OGo+UYegRJwss1ye50+mKk72rA2kdmR+KLz
-         YZE/riLpKNfqc4s+H4PqFk6/BEVGXemBT4/xIwqSsFGuKZP+fJ58fl8GHOCT2sKcHdsQ
-         YmVzK8meoBwx0Txpu8J3XS7ggeEFX+5HHQxxFfdwfAgH7O+bJAUyPp0P5cIge9v/EiZk
-         OIkfiwnSqQUA5wv9O+73+Kb2Tb+G5gJuv59T7y0CVg68ErLvC1ohH9ABRYgj+heikxOz
-         RydA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785524156; x=1786128956;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8E4+shQav05WgyUY6G3Mum98V9wgbtXbHPtbTkAf4bQ=;
-        b=GgkxxwZ1fZfTlSQNo6oQRqjdG7X299bBlLl5xwVkQX+Ji1ZcKhAl4A5lCLf7tUwQTM
-         rqI1J1iGfjmNCl0ay1ZkrRpA1uGHW4RJu1OoAOkdTtfHV1cytOymzQjGC8Whiovj4AK2
-         IFo4o9fV/eBzaudod7XNvwythTVq0LLhUgOmqmUT8qwWRhqItivygxTvDAlHUs7ymvyG
-         N5oPO90tcPinHp8V4B/FfGFiLuTACFOYBDQabJ8chZoecK9JD6NwxZDWCQCq5gKqASdt
-         vrgycApSStUc1ayTPScTy4AFnZDrK/7LATF5hWs8JPk9Tbhpd5SjLC9k7RIiMPIMoCLb
-         y4Hw==
-X-Gm-Message-State: AOJu0Yw2lXvvfD0GSzSk1fl8cUUgrNszRhLjV3qv9OnkvKm9Wy7JwRC1
-	AXUjC1mzz7i0wt/tyrSG+ZBhMC+za24szqbhKpBsf9rfoH2ipdV/HCbUwd3o/EU5H//BStSgsyd
-	k8FhPwqyIwcOFCAtOX4NWflxW/VrByug=
-X-Gm-Gg: AR+sD11htAlhmMJDFJfJYaLKbc8tT6tWpc+81vyuWyGUipLmGhJIlLU/RhAc/5fAPgl
-	Zwrleqz/haC84Kk7hEezUWQvVGQAYZRtgv6EDmVuwQZcyWT+h86LfebZIx0QVFKTpszsR06uN+L
-	6GV3yCXjAxMRI93G0fQjs4/Mh4H4FDgGMxVkAB61fDPSkPHdyKEx10/7RJr3yDb+DsZkuzf7url
-	ys8U76/dSoOz2EPbI4PuNt4/sz9gq2OMG2I45cviuMUYDeXqFfeOO2dhGEx+KsLUS4G0j/UJf/B
-	4vnRspY/tmjsNp/reQpbxpkcGi3MXn2LzMf4sKDBGkeceVrAtA+9DPY=
-X-Received: by 2002:a05:6214:509e:b0:8f2:d87e:29de with SMTP id
- 6a1803df08f44-90849686d43mr18964906d6.27.1785524155376; Fri, 31 Jul 2026
- 11:55:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BeJ9+1mi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0838D1F00AC4;
+	Fri, 31 Jul 2026 19:45:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785527124;
+	bh=3jI9CC/sZ4ARLXSiOgtugxrCVXTNu14jQbrcYaBcmFo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=BeJ9+1miorW0FS3VdnJ/I13Q7ie9xhc+/fDIbznrDrx734J1CKN/t9TEaWThrc37G
+	 b6FYEszzaVww3XJ/Ub1E7fY18S9s/vrpxID8jmH33+PgPJAZI3H8DEq7AjsyRjJeiF
+	 vdfixkVkVzB4xMG4SbJP4ONe2JkgiJPv4gd8qIaHWwWu+s9M5KmVdF9YjI89tcQR3n
+	 RO4Eg80xATtrLtjikTeM3FbsvnTQuB6bVem2mTil4xJVMGAlNYA4YQZ5kZ8ezA9ryt
+	 ruFq4wOE5WukvObQB5LwM1cIPk+m2KWPmTTMXbR3Dt02l4FMMlam2D/Nu6Pt+doGmo
+	 m8RDb0wvW8xWg==
+Message-ID: <1bc703a1-132f-4472-a703-d5c804d215c8@kernel.org>
+Date: Fri, 31 Jul 2026 21:45:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260731094141.2410630-1-perceivalpercy@gmail.com>
- <20260731175103.1745248-1-perceivalpercy@gmail.com> <8dcc424b-32b1-4152-b75b-10bdac0af9d8@oss.qualcomm.com>
-In-Reply-To: <8dcc424b-32b1-4152-b75b-10bdac0af9d8@oss.qualcomm.com>
-From: Kamil Bienkiewicz <perceivalpercy@gmail.com>
-Date: Fri, 31 Jul 2026 20:55:42 +0200
-X-Gm-Features: AUfX_myL8T9vAdW6QqQ1YACdqC_rsZuU2s0TooK_rdtdDDwd2VfH0OH--wwpTFU
-Message-ID: <CAKXN0879kBtG=YbCUWRqg=RPcnkOdSiaWB5PREh9oqFVwV=vkQ@mail.gmail.com>
-Subject: Re: [BUG] ath12k: NULL deref in ath12k_mac_op_hw_scan() when a scan
- is requested during firmware recovery (IPQ5332 + QCN9274)
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>, 
-	Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: zd1211rw: reject secondary interfaces to prevent
+ conflicts
+Content-Language: en-US
+To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, syzbot <syzbot@kernel.org>,
+ syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>,
+ linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>
+Cc: johannes.berg@intel.com, kees@kernel.org, linux-kernel@vger.kernel.org,
+ nihaal@cse.iitm.ac.in, syzbot@lists.linux.dev, workflows@vger.kernel.org
+References: <0720e3ad-d98e-47d7-89af-4d22416b0fbc@mail.kernel.org>
+ <dbe5b96e-c95c-474e-aca0-8227fee4682a@oss.qualcomm.com>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <dbe5b96e-c95c-474e-aca0-8227fee4682a@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 7/31/2026, Jeff Johnson wrote:
-> I've cc'd the dev team to have a look at this issue.
+On 7/31/26 19:36, Jeff Johnson wrote:
+> On 7/29/2026 1:04 AM, syzbot wrote:
+>> From: Slawomir Stepien <sst@poczta.fm>
+>> 
+>> The zd1211rw driver is designed for single-function Wi-Fi dongles and
+>> hardcodes its USB endpoints. When a malformed USB device exposes multiple
+>> interfaces that match the driver's device ID, the driver blindly binds to
+>> all of them.
+>> 
+>> During probe(), the driver calls usb_reset_device(), which iterates over
+>> all interfaces and invokes the pre_reset() callback for each bound
+>> interface. Since multiple interfaces are bound to zd1211rw, pre_reset() is
+>> called sequentially for each instance, acquiring their respective
+>> &mac->chip.mutex. Because all instances initialize their mutexes with the
+>> same lock class, lockdep detects a task acquiring a lock of the same class
+>> it already holds and flags it as a possible recursive deadlock:
+>> 
+>> WARNING: possible recursive locking detected
+>> kworker/0:1/11 is trying to acquire lock:
+>> ffff88810371dde0 (&chip->mutex){+.+.}-{4:4}, at:
+>> zd_chip_disable_rxtx+0x20/0x50
+>> drivers/net/wireless/zydas/zd1211rw/zd_chip.c:1465
+>> 
+>> but task is already holding lock:
+>> ffff8881138ddde0 (&chip->mutex){+.+.}-{4:4}, at: pre_reset+0x28c/0x380
+>> drivers/net/wireless/zydas/zd1211rw/zd_usb.c:1505
+>> 
+>> Fix this by explicitly rejecting secondary interfaces (bInterfaceNumber !=
+>> 0) during probe(). This ensures that only a single instance of the driver
+>> binds to the device, eliminating the recursive locking scenario.
+>> 
+>> Fixes: e85d0918b54f ("[PATCH] ZyDAS ZD1211 USB-WLAN driver")
+>> Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
+>> Reported-by: syzbot+0ec3d1a6cf1fbe79c153@syzkaller.appspotmail.com
+>> Closes: https://syzkaller.appspot.com/bug?extid=0ec3d1a6cf1fbe79c153
+>> Link: https://syzkaller.appspot.com/ai_job?id=00724ef7-fd77-4cde-9779-895b8f63c2f6
+>> Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+> 
+> E-mail from syzbot but SOB from a human?
+> 
+> I read the trailer, but this seems to violate:
+> https://docs.kernel.org/process/coding-assistants.html
+> 
+> Namely:
+> AI agents MUST NOT add Signed-off-by tags. Only humans can legally certify the
+> Developer Certificate of Origin (DCO).
+> 
+> +workflows list
 
-Thank you, much appreciated.
+The original mail [1] has this at the bottom:
 
-For those just added, a short self-contained summary so you don't have to
-read back through the thread.
+> See https://goo.gle/syzbot-ai-patches for information about AI-generated
+patches.
 
-Platform
-  GL.iNet GL-BE9300: IPQ5332 (ath12k AHB, 2.4 GHz) + 2x QCN9274 (PCIe,
-  5/6 GHz). OpenWrt "qualcommbe" target, kernel 6.18.39, backports 7.2-rc4.
+Where it says:
 
-Failure
-  The firmware crashes before QMI is ready. ath12k_core_reset() then
-  returns early because ATH12K_FLAG_QMI_FW_READY_COMPLETE is unset (core.c,
-  "ignore reset dev flags"), so recovery is skipped by design and the devic=
-e
-  is left half-initialised. An nl80211 scan arriving in that window
-  dereferences a pointer that is not valid yet, in
-  ath12k_mac_op_hw_scan(). Faulting address is 0x1508 =E2=80=94 a small str=
-ucture
-  offset from NULL. The faulting task is hostapd.
+> Patches mailed to the kernel mailing lists were reviewed and Signed-off-by
+by at least one human developer in accordance with AI Coding Assistants
+guidelines.
 
-Why it reproduces rather than being a one-in-a-thousand race
-  hostapd runs the 20/40 MHz coexistence scan when bringing up a 40 MHz BSS
-  on 2.4 GHz, and it retries that scan on -EBUSY. So for the entire duratio=
-n
-  of the un-recovered window the driver is asked to scan, over and over.
-  Any firmware crash during early boot therefore lands on this reliably.
+Since From: and S-o-b: refers to a human developer, and there's Assisted-by:
+it seems to be according to the rules. The "From: syzbot" seems to be just a
+sending mechanism, that wouldn't even make it to the git commit log.
 
-Provenance of the crashing code
-  ath12k_mac_op_hw_scan() in the tree we build is byte-identical to
-  drivers/net/wireless/ath/ath12k/mac.c in mainline master =E2=80=94 I diff=
-ed the
-  whole function. None of our out-of-tree ath12k patches touch the scan
-  path, and the early-return in ath12k_core_reset() is upstream code as
-  well. Our tree only adds a clearer warning and a coredump call there.
+[1]
+https://lore.kernel.org/all/0720e3ad-d98e-47d7-89af-4d22416b0fbc@mail.kernel.org/
 
-Suggested shape of a fix (not a patch, just the contract question)
-  If ath12k may legitimately be scanned while a reset has been skipped,
-  then ath12k_mac_op_hw_scan() returning -EBUSY or -ENETDOWN rather than
-  dereferencing looks correct independent of platform. Both mac80211 and
-  hostapd handle a refused scan cleanly =E2=80=94 hostapd already retries o=
-n -EBUSY
-  today.
 
-Workaround we run meanwhile, in case it helps narrow it
-  Forcing HT20/EHT20 on the 2.4 GHz radio avoids the coexistence scan
-  entirely and the crash stops occurring. That is consistent with the scan
-  being the trigger rather than a contributing coincidence.
-
-I have the board on the bench, full pstore/ramoops dumps (complete kernel
-log from boot through to the oops), and a reliable trigger. I am happy to
-test any patch or debug diff on this hardware with a quick turnaround =E2=
-=80=94
-including the error-path work already in the pipeline, if it is expected to
-cover this. If it does, I am glad to confirm that rather than have anyone
-spend time on a fresh fix.
-
-Thanks,
-Kamil
