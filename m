@@ -1,501 +1,364 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D093C109D
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:43:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785487415; cv=pass; b=ZTfdhrn4Evkj3w+YpNarHWZBGBHgAmoLDiWm/ucn6GYEeKXbVD138V4LFTTupAgs9xv8SoSfunkHs5jX3fuYGJBIpNHWTK62vhclbZf6zkLIyPEV+Z7+vn4oEAX6p6CdK9JEyj+G8n6cJS2gUXvesHazsp8VrGZdAX/PpeKREDg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785487415; c=relaxed/simple;
-	bh=7d1cX0sJ5aGvmi/1aLIuxAQBrGgBRvV38RLqGwGH4BM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QkI/UrWKZH3O9tQetTtqEL8+7Pd9pHhiJgm+jA1Q/fU2UitVE0yWL8Ba8t0E6F5mGTN55zyJEGggUK1YLplMNE8qgvctjO2vTsgo8ODhglUGzvn37Kq7CYdOsx270bhWH4Uc/02yE0PT+d/ka+IVGmI8t/7whRpptDHmRGAnKkM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Vqgltm67; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=hK/Pczgg; arc=pass smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCCD3C1D5B
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:48:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785487710; cv=none; b=eMZIOqbF1iixA8OSqewc1TqFtjt/l8/jhE7iko+PcmvMhLlYtUv8X29Ea2sh28MfmgoiJ2MAMrXFcZZvI2rCT0xGGbeeM9C9dQPm2GCaU7e7cad3gDNfqos9aqYM3Fk3vFDv6NGj2XudPng+1m3qiqgVLDrKEPrtO3IkOy78NLs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785487710; c=relaxed/simple;
+	bh=L6sA/7nCbMvZfrQ6ZKajIU8dpYJVFZyov0ivDHRlx/w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=s4amo1I4QBB0eTd3vgFjXfzDoK59CyJxPZbbTaHsdRoIkSRGYIBAb/kq+Ksi3PDpv8fUS8eK/s3kIMwP8kESLdGMoxdxEV7PC7t4nzY2lhypc7uHr7HiPfaSd8EODQD4HRrgvC5NvDHkDAvSkWiA3gsR1DJk/zLN1a0JuayTpoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hCLjy0Ln; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YKjzQu3R; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Vqgltm67";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="hK/Pczgg"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66V8c6ML481197
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:43:33 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hCLjy0Ln";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YKjzQu3R"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66V8lPLM2991333
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:48:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	E3GhF007z7C34wPcyFeCCGV2WXEPpkpmeiHbGxUATr4=; b=Vqgltm67AGe6H03K
-	3UZdm7UENlGOTEEsNjQsuaFyjYDY3WhDv5gT93rwT2kHNoDitSCf4OctnQxOOImm
-	AgixAlEps0gNL+ig3eFTmk7lOQiF/2B+9qO1dU1iMCZaTWXmCy4pEbrNY6X95LFw
-	RxdgApAtNWtcLsS/wsWJ3cJlEQkYpwCLwT1/kOBJLX+uwf1NinEjYHLaNWEB/URq
-	jmMo3icTNZeijQ9Mg5FtHtb2/dx3PWIANHxwB2VD9f1lBHKq/C2IMLfMyaDtyK4l
-	Us8UHmG/0RNCD98LNRirVpyPLOvNVlPFyeT8TMFrxF/uGlaJ8rqN5N21hsnvS8Z7
-	hatSuA==
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4frrc8g0p7-1
+	i8F2L1rEXRMkWHvZppRIKIF/IIlCRy69zAZcBD+vS5s=; b=hCLjy0LnIkvPUl/i
+	UxQTVhe07Mio9UD+M42cCqnhzvuviKU88XIMEe65+QqLkldu8ipXP8993kgB4K1W
+	pQFD1b8LbjhfF+a5CUNLMn3OayP+TcVTgDnPxk2bGkuuTVnDD8IuQRHiQebOnAUe
+	es/MaYeZF2pmVbOC1t4mssg4D88b4taB3AZ4PIIEiN8kWjygj9YJX8D+sv2WdTFe
+	N/Nsy1P/3Hbf7tkZY0caMrwxGWlAgjJ8sB7HOuYFUYr5Ry3G9S8DRXOWjXugZ3M9
+	vw89LQoOC0GpIuwzZ2BnmfrQ4nZ9lSfBkMTqTss/2GbLWFFilrdkLUNJu/k/6lYB
+	LN5iYA==
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4frrgpg041-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:43:33 +0000 (GMT)
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-92e9a2b95b5so132091085a.2
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 01:43:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1785487412; cv=none;
-        d=google.com; s=arc-20260327;
-        b=fiz0aI4VciZ/ys8Y0anjUZq6DxQF1s6Rshf3a8DPbb73viwaXP3uq4OeDxQo4JumcE
-         UyW8L1dnLeakejg1Ha+J1dWAni98HwUIMnSE5Oeaj/zPg6hoLQalUbMOJgQencCn5RFg
-         ucde1y5TSeJnM6b7BvRDRUVCNPAv4YKJ0QxfinHoqSssOATMQADHz48QZv7hIUd4FPBw
-         WN5Q13/RvsuEvE0mWwsktRL8Rv3JbnxFarap4OBmxNehrm42hncHt94mLWmqS8dp2GAl
-         Pcy3Cmqj3znPXvxLTVamT5bN8k5b1nbwEiOuzmFRPiI4BwpHMZPH57HJcj46pFndaTlx
-         xotg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=E3GhF007z7C34wPcyFeCCGV2WXEPpkpmeiHbGxUATr4=;
-        fh=b+3BradIFUvUTGSgI3fbchLbXQsEhTMyqRx6xfvCDtA=;
-        b=NIP/JBfLFMO9vRwLB5r+Kzd3sy7F0oH8A5TLxA1D8rDmUkmTyl8fCYxFSme0E4HSIG
-         uEyJSg8mHAKKdfcR9zimOuUMhWKnwjUEvDjE4mNB+OMx8HftsUcK7F6wMu4MSmie1Pcl
-         amTc6fJJa8ZbMzYNufcBDi2K1B99NbMRbFGIaK9Zvq1zAj/HrqH1cSDnZiPSBvMiorOQ
-         CTpgbmjq1YeKsZ2/BRiXYOYxN1Y7De11ZS3/lYCxv9v8j+wQNuQyMqnFy4c3B5J0SVLb
-         8guh3svWSZXot4HhTBUtgrOsH3zoxJ5RUPv9RvuitELF41k+7ANfyx4Z/QqMt9ob6NSl
-         XzHw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:48:24 +0000 (GMT)
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-84e3d575d6eso1640422b3a.3
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 01:48:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785487412; x=1786092212; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=E3GhF007z7C34wPcyFeCCGV2WXEPpkpmeiHbGxUATr4=;
-        b=hK/PczggUq83e5C+4TAnCDA19tSsDvHOLZbQVErJCkrmqOUqgYaX2s5JntRYU6eJ6u
-         ecObKZV+NqpQcdPr9kNp1s6wQeC2Nmr3IEo21tgN/CqeS0ivLjU2U1+PJ7Mh2wJKWcg6
-         tBmmawywfZvzlH8H7a7llJBZLe3ouDMsdcx8hAQqTYE7QMCnULEH3A/opqocJ8smHxd6
-         AGGqdLsTnb+LIHyTZGMoi5nGY5yjKWIJJaA+9FxHxvoxcwkXAc4ieEIvvIPcLZim9qUR
-         UAWxHcz8j914OJgXXnKI7KJvYKWGUAOIWpT2v6lEFma1Un17PoBZMMMO+HGHE78YRJnL
-         6K0w==
+        d=oss.qualcomm.com; s=google; t=1785487704; x=1786092504; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=i8F2L1rEXRMkWHvZppRIKIF/IIlCRy69zAZcBD+vS5s=;
+        b=YKjzQu3RD6YQKvGXSPAqFlSkZgQszbaISlx7ov9LOuvIZ9UUsb9r4OI9a3Y2UF5DLE
+         WqEyCuoLCtjiFfMjBeAWePWA6pl9yQ8bc96h7hdfRiPzUCtUfqvxZwI6fF7J+927fnTg
+         qrdIICccQERccIFdUoZMtVmyozo9CfRCsFo4f8UOxCFuqoB88mlk40Cdi+VuG3Y05MXi
+         Bswu6J3tBTZLqGnOyglKQ5QWB5C9z7ZVUOiNVhKvwuHKyTYbureXdzLaozQTt0kHw7M/
+         DUuufsL8kZy9leKYVTc1BRgCib5JaLh65zf9GBu6fYqPJJkCvPU+ONxckWcv3ZE7E/jb
+         MP3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785487412; x=1786092212;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=E3GhF007z7C34wPcyFeCCGV2WXEPpkpmeiHbGxUATr4=;
-        b=Gdpg3pOLk7IHrb8o4wAIWMuDq3EuDhGNDDxKKNRz6uwz33HjBNhdI0M58t3GWWpaEs
-         PlfMbazP3VR3z/hvkQbngaVJVy3wOWiAlwLZmoGMxvWD1JzEMEyUUj2IGO21IDD7GYGt
-         BDibIyPvr5CkKxDeN+77DJ977x575oyFUJTPaqRtyiNHrSsrYOQ+fwTpCEOCsf76UStz
-         WxMumAKBgSmE7T1DV0I58g15mo56lxsZ1gwvk0asben74VXTvLW493OhRbkeU78KH1OO
-         nR4pVN890kOYP3P1qXawQQxt8RKlxHq05kbjLUjfrSzzVpZ87Hwez2p2cV8H0YJFbXl5
-         1vTw==
-X-Forwarded-Encrypted: i=1; AHgh+Rrjvpv8zq3E0XOo3XEWBcCmZk50gJu1XjUWtvdfJH/oiZfWJ4jcq1uNX+uHrymSjw7ykYzbLLzaVNCnNSLcwQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YylCztcnzLFCuydGQsyuxrSOOXFpAfzxnpFqRnc+/F1ZCWpDjTm
-	Zq+jNwH+AXerhXPOXIiAyPvWGFxGrj8x2Ch5HGwz12LOl4vnipiv/o4pyOgfWAxGH+bbmMly7aS
-	z41KA6JjC/N/kS5O8l3z21PLoW6sSOeXSQLdI2SYJSVhHDyRoI9sTyAuaV77hgtpgNsZTAH5lLn
-	BoBuk/WxFsSNVR7I+/b80PryykmM+O2fh3IriACfNsjV5l
-X-Gm-Gg: AR+sD12I3ws2j0tyswfeHR9FXE5GXREYG4XewRBLT6b/iiT5GhzbZdKjQzAh7hDlM0s
-	O2DAoJvBbP5m0SB+gZ9kmkHwxliz4OkuLoOqfPJ38VbtGx0xmOvGrE1ofQGosZbh26IDu1k72ac
-	NHskGuxtGME+ozvoxwJNqLnJGAGYu6I0wYpQlrKVmJUVIaLN43rWY+6f80hXY1o+dhvp+33eyPn
-	9BA17dih1UiLNRg8FkmpvlQkN3tksR3EP+s3w25h1tp4xs6D7CdLc6CrFHqkHmvkIcmeiK6S4M=
-X-Received: by 2002:a05:620a:6f93:20b0:92e:9ceb:24af with SMTP id af79cd13be357-9349687363bmr109635485a.41.1785487411807;
-        Fri, 31 Jul 2026 01:43:31 -0700 (PDT)
-X-Received: by 2002:a05:620a:6f93:20b0:92e:9ceb:24af with SMTP id
- af79cd13be357-9349687363bmr109632785a.41.1785487411292; Fri, 31 Jul 2026
- 01:43:31 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1785487704; x=1786092504;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=i8F2L1rEXRMkWHvZppRIKIF/IIlCRy69zAZcBD+vS5s=;
+        b=sHZa2Qc7n8tnuQUmWtBlOpdpPpEFbiVCsyrdpsHT9cB50Jt274ppP6gdJ6modXSDEK
+         GeAbe4PPCq62/z7DxX/X+nq2n0D0PixX8y+RuASJUoua6Yhb+g8rxsOrLu3qJulaHI9n
+         oTxmBSZSEBdLSVk0KaBZZ3JuUS7LN6akkP0DhNL39zJKijOMDfYuiSooc639YwRH/F73
+         5WrP+6T4ddwDgYMssPxyfOcDXy/89eQxJCOtYGRhaU5MVplXpdCTyFO7Z+zrL69+MZv7
+         /foBiJHO73mv2nXzSuKgxCiIptKxM/Ts8/rXpJY1aJDO5oeRTOKPiiCxWb2RHlqAtxZX
+         WJGQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoUXF6LJ05f14T2s5GtgDrnoXIVn6e+G2+eeHS8eBwfxIPAnB12zYyBjHHFnuQyYGLM4q4BgbDcqnd7q/cerw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+uX0a2ECEcjW9ZsD03sCDmHZimE8R4HaMOTS6SoZyqIA5Orrc
+	ldZA9dxjoiJmsBDMEfyL56TBLpjsjzsWyvOUwnROLD46mk0Za7PHBbUFjZtScyujG6qV26Ibc1f
+	e7fThBuck+jeRKEPRASyk9/EVf3GatNDQ/eXbLWqL2Ms98WsOCnjtiQ8A3SBO7hhJZdB4Kg==
+X-Gm-Gg: AR+sD10oGeJHNgQTAYHf04NRVRd8OL1Sl/XMVSCtj+UawByCMors23Iy7uLo4qCGr34
+	6cpcB4NLMIO8zxdNCpPFoS3wsxqMgEESEu62BJrRGW6KNI/6oFsY1y1hUBH7YAsGQXOem5OATq0
+	BL4nyTQntrwbdH6okeGDOXW5XV2b9u3avuANbsn8UGjZF2D/A+pYrTOR/DLYTQoE85Gk1uKwp64
+	uLCLpwUvV0D4sirLQ91qcmfqRlag4MIAtU41Ub+eyB8T0znueiblP5aeahMrzRzxVrHnhJwHr9T
+	9OviMqk7Q4mGiYJNRdzHFmFiF6FnE6+ZSAqVH0argYaZ7q7jMGIUop9QyY7aJhkOsTDwaJc1mG+
+	aMm7fWmgG5tlhidgk8ERMGw4Oyana/qCrQjnmpgqgd1NQVn3hYwgX5ViWnI70khD1xSkVBjP/DA
+	==
+X-Received: by 2002:a05:6a00:17a5:b0:848:3119:941e with SMTP id d2e1a72fcca58-84ed6edacf2mr1134363b3a.47.1785487703905;
+        Fri, 31 Jul 2026 01:48:23 -0700 (PDT)
+X-Received: by 2002:a05:6a00:17a5:b0:848:3119:941e with SMTP id d2e1a72fcca58-84ed6edacf2mr1134343b3a.47.1785487703393;
+        Fri, 31 Jul 2026 01:48:23 -0700 (PDT)
+Received: from [10.133.33.123] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84edc51cac8sm156250b3a.56.2026.07.31.01.48.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 31 Jul 2026 01:48:23 -0700 (PDT)
+Message-ID: <0ed1f684-1b3b-411b-87fa-929dc0f8f7e9@oss.qualcomm.com>
+Date: Fri, 31 Jul 2026 16:48:19 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260731-pwrseq-vote-rename-v2-1-480357946e00@oss.qualcomm.com>
-In-Reply-To: <20260731-pwrseq-vote-rename-v2-1-480357946e00@oss.qualcomm.com>
-From: Loic Poulain <loic.poulain@oss.qualcomm.com>
-Date: Fri, 31 Jul 2026 10:43:19 +0200
-X-Gm-Features: AUfX_mxGc8TowxqJoyMLr9lPewvGGZuHpNOlIMfPw74Jd7bPqJDpwbDzy4wrrSI
-Message-ID: <CAFEp6-3X+PCXZdEy1p47XUDs7cT16JDjt0=928Jjkeik_haaQw@mail.gmail.com>
-Subject: Re: [PATCH v2] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
-To: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Alessio Belle <alessio.belle@imgtec.com>,
-        Luigi Santivetti <luigi.santivetti@imgtec.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>,
-        linux-pm@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, imagination@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-pci@vger.kernel.org,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-GUID: CUCJebCOwQgH5juiP93kMqBXVhCBL9pn
-X-Proofpoint-ORIG-GUID: CUCJebCOwQgH5juiP93kMqBXVhCBL9pn
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDA2MyBTYWx0ZWRfX5t0lqh0zMfeH
- ckIKEKrfFC1UotucUmOyaJXeQB/X4cgqDcDB2ZWC0RR+VwnsFbykOpHM/Quo1rqyGM0N3552qVi
- XZvbwyE19rfRABIuSLG7mF9YFDc1YntZ6+R69Xg5v+7bYdCd5PUMmTuW0doBxlmHIY8zGOEeedM
- 1gnqR2xfg/CPL6C7MeewRkPJiy1pvWUWUBAD9pu4y+XWaXcsVEvgCPpnaUsR/P6v878sHefi8HE
- 6A8gwq/xiAPpEQlU3pvI9YvVu9cujQPifIl9gzdxoEC/IOFi+KCPqioNhOe3paF58L5nTeFkT9s
- 39NxCrl6u6vwMKgouf6JzYigSmaZPKKDBawvtQkV5/NEorrb9yW1B/x8NLfVLGW4z3bRn+7NqxY
- ZmqVnH255ZZw/v2ocNsQqIqUlvLwNmXdOvErfxaRG87bVp6cKowTjthhmbtKgc92nwW/dYHQir6
- o6EroLlBhGqseSZNNww==
-X-Authority-Analysis: v=2.4 cv=EcL4hvmC c=1 sm=1 tr=0 ts=6a6c6035 cx=c_pps
- a=qKBjSQ1v91RyAK45QCPf5w==:117 a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10
- a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
- a=eoimf2acIAo5FJnRuUoq:22 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=bC-a23v3AAAA:8
- a=EUspDBNiAAAA:8 a=1XWaLZrsAAAA:8 a=W1t4AYViT67xggANpSQA:9 a=QEXdDO2ut3YA:10
- a=NFOGd7dJGGMPyQGDc5-O:22 a=FO4_E8m0qiDe52t0p3_H:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDA2MyBTYWx0ZWRfX6FeUb+QmryPP
- taHpKcfYlVUYkH4tkn4U5s4rE/Q9oHMJj95BP1Ifo/8ObrBomMOSQYqz9bVaYmqQpugD1Ocb5gr
- 4uFzivGkMz0YfYCjSednilh8V+4mXic=
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] wifi: ath12k: fix MLO station firmware crash recovery
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260727162748.963275-1-jtornosm@redhat.com>
+ <20260727162748.963275-2-jtornosm@redhat.com>
+From: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260727162748.963275-2-jtornosm@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: EH2-sTNR4gXueKe1oDlVJYckHfXar5oL
+X-Authority-Analysis: v=2.4 cv=SK5ykuvH c=1 sm=1 tr=0 ts=6a6c6158 cx=c_pps
+ a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=20KFwNOVAAAA:8 a=f2E5mhgNlWdv1eDQvuYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=zc0IvFSfCIW2DFIPzwfm:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDA2MyBTYWx0ZWRfX5txOtFbZuwAB
+ 9f916r++Ndps6ibUcosEQrTCpr3KhjjWGZw4iovwDKNH0xHImo3LsNstyxbu7HUEtZ2n6Jmb3pV
+ MKLuVTbQDTiuBDZAMGQzkBzyvdXyPFuq2RfJq3+7N9jo5pzA5sjpaAFygutVaNV6URLiQfJRo4g
+ OFovR/PnEwPwnq8TZm/V+zeJo8dv7eacjFjBAagtYLsywcMLbBfST5N0rbzSgjfden0kulhZpBr
+ cRPiGj48DQ2WitqAyyRmZakoPkVs6LvoNzmEOqds4wfEMxcWqZMN2+ugxLcNC4yjsYZ+BPNI19l
+ zl9VHhEgbC9aPhDqZ1y8MuWSpA0xPEPx2Kf5ExJ9YtuEyVwpusYA2CaKBRPU3R9rk3dvD83PmPF
+ 7+jlG3R+BvN5vH1zmhs6u/4s878Eo8bdExCaT9ETt4mDvB+uSTHWD0/Dj0rNVzkTR+AfFkekZBd
+ 1QLy+8hZyU0KEuDGBdA==
+X-Proofpoint-ORIG-GUID: EH2-sTNR4gXueKe1oDlVJYckHfXar5oL
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDA2MyBTYWx0ZWRfX9EO0JEE+pWCe
+ zNCTa5U/NjLNkiakMaMZjByaXgj4P4CQflJYHu2BjpyxlrEyj7pDg9geXQAvDowZfaOs3OB7dyc
+ XodtZYeKToAptyNhicwZDqHwDNi1mZ8=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-31_03,2026-07-30_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 impostorscore=0 malwarescore=0 phishscore=0 priorityscore=1501
- adultscore=0 lowpriorityscore=0 suspectscore=0 clxscore=1015 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310063
+ bulkscore=0 lowpriorityscore=0 suspectscore=0 priorityscore=1501
+ clxscore=1015 spamscore=0 impostorscore=0 malwarescore=0 phishscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2607310063
 
-On Fri, Jul 31, 2026 at 10:29=E2=80=AFAM Bartosz Golaszewski
-<bartosz.golaszewski@oss.qualcomm.com> wrote:
->
-> The way power sequencing works means that a call to pwrseq_power_on()
-> does not necessarily result in the pwrseq target being powered-on at
-> that time: it may have already been powered on before. Similarly: a call
-> to pwrseq_power_off() does not have to result in an actual powering off
-> of resources: there may still be other users that requested a power-on
-> before.
->
-> We will also introduce the concept of "non-controllable" pwrseq targets
-> soon which further increases the disconnect between the naming
-> convention and the actual semantics.
->
-> What consumers of pwrseq descriptors actually do is: they *vote* for a
-> powering on of a given target or retract that vote. These operations
-> could be called get/put in line with runtime PM but this could become
-> confusing since we already provide pwrseq_get/put() for a different
-> purpose. pwrseq_vote_on/off() also have been rejected as unusual in
-> the tree.
->
-> Change the name of the two functions to pwrseq_enable/disable() which
-> better reflects their purpose and semantics and also mirrors other
-> enable-counted resources like regulators and clocks. No functional change
-> intended.
->
-> If at any point users need to know *when* the exact power event happens,
-> we can provide that information in the form of a notifier.
->
-> Acked-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> ---
-> I've floated the idea to rename the two pwrseq functions from "power
-> on/off" to "vote on/off". I've sent a patch but the overwhelming
-> consensus seem to be that enable/disable naming is preferred.
->
-> I'm doing it in a single commit that should go through the pwrseq tree
-> with Acks from subsystem maintainers.
->
-> [1] https://lore.kernel.org/all/CAMRc=3DMefxn81d0VUwmQgwFtffkL1=3DEr_1VQZ=
-CbC1Sa-Qph4t1w@mail.gmail.com/
-> ---
-> Changes in v2:
-> - Change the naming convention to enable/disable
-> - Link to v1: https://patch.msgid.link/20260727-pwrseq-vote-rename-v1-1-a=
-2029aeeac65@oss.qualcomm.com
-> ---
->  Documentation/driver-api/pwrseq.rst      |  4 ++--
->  drivers/bluetooth/hci_qca.c              |  4 ++--
->  drivers/gpu/drm/imagination/pvr_power.c  |  4 ++--
->  drivers/net/wireless/ath/ath10k/snoc.c   |  6 +++---
->  drivers/pci/pwrctrl/generic.c            |  4 ++--
->  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c |  4 ++--
->  drivers/power/sequencing/core.c          | 16 ++++++++--------
->  include/linux/pwrseq/consumer.h          |  8 ++++----
->  8 files changed, 25 insertions(+), 25 deletions(-)
->
-> diff --git a/Documentation/driver-api/pwrseq.rst b/Documentation/driver-a=
-pi/pwrseq.rst
-> index ad18b2326b689a41471216f3889480b11768ca82..0c315ab1138b02540fae60b39=
-928c580027c0f7c 100644
-> --- a/Documentation/driver-api/pwrseq.rst
-> +++ b/Documentation/driver-api/pwrseq.rst
-> @@ -50,9 +50,9 @@ Consumer interface
->  The consumer API is aimed to be as simple as possible. The driver intere=
-sted in
->  getting a descriptor from the power sequencer should call pwrseq_get() a=
-nd
->  specify the name of the target it wants to reach in the sequence after c=
-alling
-> -pwrseq_power_up(). The descriptor can be released by calling pwrseq_put(=
-) and
-> +pwrseq_enable(). The descriptor can be released by calling pwrseq_put() =
-and
->  the consumer can request the powering down of its target with
-> -pwrseq_power_off(). Note that there is no guarantee that pwrseq_power_of=
-f()
-> +pwrseq_disble(). Note that there is no guarantee that pwrseq_disble()
->  will have any effect as there may be multiple users of the underlying re=
-sources
->  who may keep them active.
->
-> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-> index 345f602e9ce233a0934a73a85d1e7c17c4f3210d..e713fc06b73402ae3d57794ed=
-0870df8394a796a 100644
-> --- a/drivers/bluetooth/hci_qca.c
-> +++ b/drivers/bluetooth/hci_qca.c
-> @@ -2259,7 +2259,7 @@ static void qca_power_off(struct hci_uart *hu)
->         }
->
->         if (power && power->pwrseq) {
-> -               pwrseq_power_off(power->pwrseq);
-> +               pwrseq_disble(power->pwrseq);
 
-Nit: s/pwrseq_disble/pwrseq_disable ?
 
->                 set_bit(QCA_BT_OFF, &qca->flags);
->                 return;
->          }
-> @@ -2319,7 +2319,7 @@ static int qca_regulator_enable(struct qca_serdev *=
-qcadev)
->         int ret;
->
->         if (power->pwrseq)
-> -               return pwrseq_power_on(power->pwrseq);
-> +               return pwrseq_enable(power->pwrseq);
->
->         /* Already enabled */
->         if (power->vregs_on)
-> diff --git a/drivers/gpu/drm/imagination/pvr_power.c b/drivers/gpu/drm/im=
-agination/pvr_power.c
-> index a71d5b35601e7b996428312028a4c0542a5b1350..031fad8adf4f4843e852000d3=
-d6ba45d0e4b0aeb 100644
-> --- a/drivers/gpu/drm/imagination/pvr_power.c
-> +++ b/drivers/gpu/drm/imagination/pvr_power.c
-> @@ -352,12 +352,12 @@ static int pvr_power_init_pwrseq(struct pvr_device =
-*pvr_dev)
->
->  static int pvr_power_on_sequence_pwrseq(struct pvr_device *pvr_dev)
->  {
-> -       return pwrseq_power_on(pvr_dev->pwrseq);
-> +       return pwrseq_enable(pvr_dev->pwrseq);
->  }
->
->  static int pvr_power_off_sequence_pwrseq(struct pvr_device *pvr_dev)
->  {
-> -       return pwrseq_power_off(pvr_dev->pwrseq);
-> +       return pwrseq_disble(pvr_dev->pwrseq);
->  }
->
->  const struct pvr_power_sequence_ops pvr_power_sequence_ops_pwrseq =3D {
-> diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireles=
-s/ath/ath10k/snoc.c
-> index 3106502275781d32d17a45a661362206144df6b3..d7e23971fe1da99f6b5f7559d=
-62d04e2044d8950 100644
-> --- a/drivers/net/wireless/ath/ath10k/snoc.c
-> +++ b/drivers/net/wireless/ath/ath10k/snoc.c
-> @@ -1025,7 +1025,7 @@ static int ath10k_hw_power_on(struct ath10k *ar)
->
->         ath10k_dbg(ar, ATH10K_DBG_SNOC, "soc power on\n");
->
-> -       ret =3D pwrseq_power_on(ar_snoc->pwrseq);
-> +       ret =3D pwrseq_enable(ar_snoc->pwrseq);
->         if (ret)
->                 return ret;
->
-> @@ -1042,7 +1042,7 @@ static int ath10k_hw_power_on(struct ath10k *ar)
->  vreg_off:
->         regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->vregs);
->  pwrseq_off:
-> -       pwrseq_power_off(ar_snoc->pwrseq);
-> +       pwrseq_disble(ar_snoc->pwrseq);
->
->         return ret;
->  }
-> @@ -1060,7 +1060,7 @@ static int ath10k_hw_power_off(struct ath10k *ar)
->         ret_vreg =3D regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->=
-vregs);
->
->         if (ar_snoc->pwrseq)
-> -               ret_seq =3D pwrseq_power_off(ar_snoc->pwrseq);
-> +               ret_seq =3D pwrseq_disble(ar_snoc->pwrseq);
->
->         return ret_vreg ? : ret_seq;
->  }
-> diff --git a/drivers/pci/pwrctrl/generic.c b/drivers/pci/pwrctrl/generic.=
-c
-> index a7e599d841e6289db161b19a93ba5a61d9e0ab1c..d366883355173eac1a2631b73=
-e5e041666ac23ad 100644
-> --- a/drivers/pci/pwrctrl/generic.c
-> +++ b/drivers/pci/pwrctrl/generic.c
-> @@ -29,7 +29,7 @@ static int slot_pwrctrl_power_on(struct pci_pwrctrl *pw=
-rctrl)
->         int ret;
->
->         if (slot->pwrseq) {
-> -               pwrseq_power_on(slot->pwrseq);
-> +               pwrseq_enable(slot->pwrseq);
->                 return 0;
->         }
->
-> @@ -48,7 +48,7 @@ static int slot_pwrctrl_power_off(struct pci_pwrctrl *p=
-wrctrl)
->                                                 struct slot_pwrctrl, pwrc=
-trl);
->
->         if (slot->pwrseq) {
-> -               pwrseq_power_off(slot->pwrseq);
-> +               pwrseq_disble(slot->pwrseq);
->                 return 0;
->         }
->
-> diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrct=
-rl/pci-pwrctrl-pwrseq.c
-> index a308bf4b5fc01d23b75db4cd396201c3ba3fe695..2a6f46f6e2012dd985b657c97=
-c85879ba13b5133 100644
-> --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> @@ -56,7 +56,7 @@ static int pwrseq_pwrctrl_power_on(struct pci_pwrctrl *=
-pwrctrl)
->         struct pwrseq_pwrctrl *pwrseq =3D container_of(pwrctrl,
->                                            struct pwrseq_pwrctrl, pwrctrl=
-);
->
-> -       return pwrseq_power_on(pwrseq->pwrseq);
-> +       return pwrseq_enable(pwrseq->pwrseq);
->  }
->
->  static int pwrseq_pwrctrl_power_off(struct pci_pwrctrl *pwrctrl)
-> @@ -64,7 +64,7 @@ static int pwrseq_pwrctrl_power_off(struct pci_pwrctrl =
-*pwrctrl)
->         struct pwrseq_pwrctrl *pwrseq =3D container_of(pwrctrl,
->                                            struct pwrseq_pwrctrl, pwrctrl=
-);
->
-> -       return pwrseq_power_off(pwrseq->pwrseq);
-> +       return pwrseq_disble(pwrseq->pwrseq);
->  }
->
->  static int pwrseq_pwrctrl_probe(struct platform_device *pdev)
-> diff --git a/drivers/power/sequencing/core.c b/drivers/power/sequencing/c=
-ore.c
-> index 02f42da915985339d3de507fc36dd158b0035a99..34d5c0af6f37bdbfa9d656d95=
-795d38cc7e38762 100644
-> --- a/drivers/power/sequencing/core.c
-> +++ b/drivers/power/sequencing/core.c
-> @@ -708,7 +708,7 @@ void pwrseq_put(struct pwrseq_desc *desc)
->         pwrseq =3D desc->pwrseq;
->
->         if (desc->powered_on)
-> -               pwrseq_power_off(desc);
-> +               pwrseq_disble(desc);
->
->         kfree(desc);
->         module_put(pwrseq->owner);
-> @@ -874,7 +874,7 @@ static int pwrseq_unit_disable(struct pwrseq_device *=
-pwrseq,
->  }
->
->  /**
-> - * pwrseq_power_on() - Issue a power-on request on behalf of the consume=
-r
-> + * pwrseq_enable() - Issue a power-on request on behalf of the consumer
->   *                     device.
->   * @desc: Descriptor referencing the power sequencer.
->   *
-> @@ -887,7 +887,7 @@ static int pwrseq_unit_disable(struct pwrseq_device *=
-pwrseq,
->   * Returns:
->   * 0 on success, negative error number on failure.
->   */
-> -int pwrseq_power_on(struct pwrseq_desc *desc)
-> +int pwrseq_enable(struct pwrseq_desc *desc)
->  {
->         struct pwrseq_device *pwrseq;
->         struct pwrseq_target *target;
-> @@ -925,14 +925,14 @@ int pwrseq_power_on(struct pwrseq_desc *desc)
->
->         return ret;
->  }
-> -EXPORT_SYMBOL_GPL(pwrseq_power_on);
-> +EXPORT_SYMBOL_GPL(pwrseq_enable);
->
->  /**
-> - * pwrseq_power_off() - Issue a power-off request on behalf of the consu=
-mer
-> + * pwrseq_disble() - Issue a power-off request on behalf of the consumer
->   *                      device.
->   * @desc: Descriptor referencing the power sequencer.
->   *
-> - * This undoes the effects of pwrseq_power_on(). It issues a power-off r=
-equest
-> + * This undoes the effects of pwrseq_enable(). It issues a power-off req=
-uest
->   * on behalf of the consumer and when the last remaining user does so, t=
-he
->   * power-down sequence will be started. If one is in progress, the funct=
-ion
->   * will block until it's complete and then return.
-> @@ -940,7 +940,7 @@ EXPORT_SYMBOL_GPL(pwrseq_power_on);
->   * Returns:
->   * 0 on success, negative error number on failure.
->   */
-> -int pwrseq_power_off(struct pwrseq_desc *desc)
-> +int pwrseq_disble(struct pwrseq_desc *desc)
->  {
->         struct pwrseq_device *pwrseq;
->         struct pwrseq_unit *unit;
-> @@ -966,7 +966,7 @@ int pwrseq_power_off(struct pwrseq_desc *desc)
->
->         return ret;
->  }
-> -EXPORT_SYMBOL_GPL(pwrseq_power_off);
-> +EXPORT_SYMBOL_GPL(pwrseq_disble);
->
->  /**
->   * pwrseq_to_device() - Get the pwrseq device pointer from a descriptor.
-> diff --git a/include/linux/pwrseq/consumer.h b/include/linux/pwrseq/consu=
-mer.h
-> index 3c907c9e1885dc2958043a9a733fbe20bdf95f6e..5e94b0b9c38b036fc40e3e2c8=
-c6e1020d0d0bb6e 100644
-> --- a/include/linux/pwrseq/consumer.h
-> +++ b/include/linux/pwrseq/consumer.h
-> @@ -20,8 +20,8 @@ void pwrseq_put(struct pwrseq_desc *desc);
->  struct pwrseq_desc * __must_check
->  devm_pwrseq_get(struct device *dev, const char *target);
->
-> -int pwrseq_power_on(struct pwrseq_desc *desc);
-> -int pwrseq_power_off(struct pwrseq_desc *desc);
-> +int pwrseq_enable(struct pwrseq_desc *desc);
-> +int pwrseq_disble(struct pwrseq_desc *desc);
->
->  struct device *pwrseq_to_device(struct pwrseq_desc *desc);
->
-> @@ -43,12 +43,12 @@ devm_pwrseq_get(struct device *dev, const char *targe=
-t)
->         return ERR_PTR(-ENOSYS);
->  }
->
-> -static inline int pwrseq_power_on(struct pwrseq_desc *desc)
-> +static inline int pwrseq_enable(struct pwrseq_desc *desc)
->  {
->         return -ENOSYS;
->  }
->
-> -static inline int pwrseq_power_off(struct pwrseq_desc *desc)
-> +static inline int pwrseq_disble(struct pwrseq_desc *desc)
->  {
->         return -ENOSYS;
->  }
->
+On 7/28/2026 12:27 AM, Jose Ignacio Tornos Martinez wrote:
+> ATH12K_FLAG_RECOVERY is cleared too early in
+> ath12k_core_reconfigure_on_crash(), before mac80211 runs
+> ieee80211_reconfig(). By the time mac80211 calls back into the driver
+> (sta_state, change_vif_links, set_key), the RECOVERY flag is already false,
+> so the driver treats recovery callbacks as normal operations.
+> 
+> This causes several problems during MLO recovery:
+> 
+> - ath12k_mac_op_sta_state() tries to activate MLO links during the
+>   AUTH->ASSOC transition, calling ieee80211_set_active_links()
+>   recursively, which triggers a WARNING at net/mac80211/link.c.
+> 
+> - ath12k_mac_op_change_vif_links() processes link removal during
+>   reconfig, causing inconsistent state.
+> 
+> - ath12k_mac_set_key() fails with "cannot install key for non-existent
+>   peer" because peers do not exist yet during reconfig. Keys will be
+>   re-established during normal reconnection after
+>   ieee80211_hw_restart_disconnect() triggers a fresh association.
+> 
+> - ath12k_mac_flush() waits for pending TX to complete, but after a
+>   firmware crash the TX will never complete, causing a 20 second timeout.
+> 
+> - ath12k_mac_station_remove() calls ath12k_bss_disassoc() and
+>   ath12k_mac_vdev_stop() which send WMI commands to dead firmware,
+>   causing timeouts that delay recovery.
+> 
+> - ath12k_clear_peer_keys() tries to look up and clear peer keys, but
+>   peers are already gone after firmware crash.
+> 
+> - ath12k_dp_rx_ampdu_stop() dereferences per-link station state that
+>   may not be valid during crash teardown.
+> 
+> - ath12k_peer_mlo_link_peers_delete() sends WMI peer delete commands
+>   for each MLO link peer. With dead firmware these time out and can
+>   trigger cascading resets.
+> 
+> - HAL srng source ring operations (ath12k_hal_srng_src_num_free,
+>   ath12k_hal_srng_src_get_next_entry, ath12k_hal_srng_access_end)
+>   may attempt MMIO access to hardware that is no longer responsive
+>   if TX paths race with the crash. Guard these to prevent potential
+>   hard lockups on unresponsive hardware.
+> 
+> These issues were observed during sporadic firmware crashes in MLO
+> operation. To allow systematic testing and reproduction, the debugfs
+> simulate_fw_crash interface was used to trigger controlled firmware
+> crashes during active MLO connections with traffic.
+> 
+> Fix by moving clear_bit(ATH12K_FLAG_RECOVERY) from
+> ath12k_core_reconfigure_on_crash() to ath12k_mac_op_reconfig_complete(),
+> so the flag stays set through the entire mac80211 reconfig phase. Add
+> ATH12K_FLAG_RECOVERY checks in change_vif_links, set_key, and sta_state
+> to skip operations that are invalid during recovery. Add
+> ATH12K_FLAG_CRASH_FLUSH checks in mac_flush, station_remove,
+> clear_peer_keys, dp_rx_ampdu_stop, peer_mlo_link_peers_delete, and the
+> HAL srng source ring helpers to return immediately when the firmware is
+> dead.
+> 
+> Tested on WCN7850 with MLO (Wi-Fi 7).
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 > ---
-> base-commit: 95d6a9ccef99117115e41e9adb271243bd5e985b
-> change-id: 20260727-pwrseq-vote-rename-b7cd21032668
->
-> Best regards,
-> --
-> Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
->
+>  drivers/net/wireless/ath/ath12k/core.c  |  2 --
+>  drivers/net/wireless/ath/ath12k/dp_rx.c |  3 +++
+>  drivers/net/wireless/ath/ath12k/hal.c   | 10 ++++++++++
+>  drivers/net/wireless/ath/ath12k/mac.c   | 19 +++++++++++++++++--
+>  drivers/net/wireless/ath/ath12k/peer.c  |  6 ++++++
+>  5 files changed, 36 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/core.c b/drivers/net/wireless/ath/ath12k/core.c
+> index 742d4fd1b598..5c3883b19da1 100644
+> --- a/drivers/net/wireless/ath/ath12k/core.c
+> +++ b/drivers/net/wireless/ath/ath12k/core.c
+> @@ -1410,8 +1410,6 @@ static int ath12k_core_reconfigure_on_crash(struct ath12k_base *ab)
+>  	if (ret)
+>  		goto err_hal_srng_deinit;
+>  
+> -	clear_bit(ATH12K_FLAG_RECOVERY, &ab->dev_flags);
+> -
+>  	return 0;
+>  
+>  err_hal_srng_deinit:
+> diff --git a/drivers/net/wireless/ath/ath12k/dp_rx.c b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> index 8fa0e90b4531..473855ded8a7 100644
+> --- a/drivers/net/wireless/ath/ath12k/dp_rx.c
+> +++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
+> @@ -751,6 +751,9 @@ int ath12k_dp_rx_ampdu_stop(struct ath12k *ar,
+>  
+>  	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+>  
+> +	if (test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags))
+> +		return 0;
+> +
+>  	arsta = wiphy_dereference(ath12k_ar_to_hw(ar)->wiphy,
+>  				  ahsta->link[link_id]);
+>  	if (!arsta)
+> diff --git a/drivers/net/wireless/ath/ath12k/hal.c b/drivers/net/wireless/ath/ath12k/hal.c
+> index 071cb5d30931..6d3f4bca46a3 100644
+> --- a/drivers/net/wireless/ath/ath12k/hal.c
+> +++ b/drivers/net/wireless/ath/ath12k/hal.c
+> @@ -376,6 +376,9 @@ int ath12k_hal_srng_src_num_free(struct ath12k_base *ab, struct hal_srng *srng,
+>  
+>  	lockdep_assert_held(&srng->lock);
+>  
+> +	if (unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags)))
+
+ath12k_hal_srng_src_num_free(), ath12k_hal_srng_src_get_next_entry(), and
+ath12k_hal_srng_access_end() sit on the per-packet TX/RX hot path. Adding an
+ATH12K_FLAG_CRASH_FLUSH test in the lowest HAL layer overloads a global flag onto all srng
+operations and is a layering violation — the HAL should not know about device-crash semantics.
+
+> +		return 0;
+> +
+>  	hp = srng->u.src_ring.hp;
+>  
+>  	if (sync_hw_ptr) {
+> @@ -419,6 +422,9 @@ void *ath12k_hal_srng_src_get_next_entry(struct ath12k_base *ab,
+>  
+>  	lockdep_assert_held(&srng->lock);
+>  
+> +	if (unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags)))
+> +		return NULL;
+> +
+>  	/* TODO: Using % is expensive, but we have to do this since size of some
+>  	 * SRNG rings is not power of 2 (due to descriptor sizes). Need to see
+>  	 * if separate function is defined for rings having power of 2 ring size
+> @@ -524,6 +530,10 @@ void ath12k_hal_srng_access_end(struct ath12k_base *ab, struct hal_srng *srng)
+>  {
+>  	lockdep_assert_held(&srng->lock);
+>  
+> +	if (srng->ring_dir == HAL_SRNG_DIR_SRC &&
+> +	    unlikely(test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags)))
+> +		return;
+> +
+>  	if (srng->flags & HAL_SRNG_FLAGS_LMAC_RING) {
+>  		/* For LMAC rings, ring pointer updates are done through FW and
+>  		 * hence written to a shared memory location that is read by FW
+> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+> index 51c4df32e716..c559ced9e524 100644
+> --- a/drivers/net/wireless/ath/ath12k/mac.c
+> +++ b/drivers/net/wireless/ath/ath12k/mac.c
+> @@ -4278,6 +4278,9 @@ ath12k_mac_op_change_vif_links(struct ieee80211_hw *hw,
+>  
+>  	lockdep_assert_wiphy(hw->wiphy);
+>  
+> +	if (old_links && test_bit(ATH12K_FLAG_RECOVERY, &ah->radio[0].ab->dev_flags))
+
+why it is limited to the first radio?
+
+> +		return -EINVAL;
+> +
+>  	ath12k_generic_dbg(ATH12K_DBG_MAC,
+>  			   "mac vif link changed for MLD %pM old_links 0x%x new_links 0x%x\n",
+>  			   vif->addr, old_links, new_links);
+> @@ -5956,6 +5959,9 @@ static int ath12k_clear_peer_keys(struct ath12k_link_vif *arvif,
+>  
+>  	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
+>  
+> +	if (test_bit(ATH12K_FLAG_CRASH_FLUSH, &ab->dev_flags))
+> +		return 0;
+> +
+>  	spin_lock_bh(&dp->dp_lock);
+>  	peer = ath12k_dp_link_peer_find_by_vdev_and_addr(dp, arvif->vdev_id, addr);
+>  	if (!peer || !peer->dp_peer) {
+> @@ -6031,6 +6037,8 @@ static int ath12k_mac_set_key(struct ath12k *ar, enum set_key_cmd cmd,
+>  		spin_unlock_bh(&dp->dp_lock);
+>  
+>  		if (cmd == SET_KEY) {
+> +			if (test_bit(ATH12K_FLAG_RECOVERY, &ab->dev_flags))
+> +				return 0;
+>  			ath12k_warn(ab, "cannot install key for non-existent peer %pM\n",
+>  				    peer_addr);
+>  			return -EOPNOTSUPP;
+> @@ -7045,7 +7053,8 @@ static int ath12k_mac_station_remove(struct ath12k *ar,
+>  
+>  	wiphy_work_cancel(ar->ah->hw->wiphy, &arsta->update_wk);
+>  
+> -	if (ahvif->vdev_type == WMI_VDEV_TYPE_STA) {
+> +	if (ahvif->vdev_type == WMI_VDEV_TYPE_STA &&
+> +	    !test_bit(ATH12K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags)) {
+>  		ath12k_bss_disassoc(ar, arvif);
+>  		ret = ath12k_mac_vdev_stop(arvif);
+>  		if (ret)
+> @@ -7795,7 +7804,8 @@ int ath12k_mac_op_sta_state(struct ieee80211_hw *hw,
+>  	 * about to move to the associated state.
+>  	 */
+>  	if (ieee80211_vif_is_mld(vif) && vif->type == NL80211_IFTYPE_STATION &&
+> -	    old_state == IEEE80211_STA_AUTH && new_state == IEEE80211_STA_ASSOC) {
+> +	    old_state == IEEE80211_STA_AUTH && new_state == IEEE80211_STA_ASSOC &&
+> +	    !test_bit(ATH12K_FLAG_RECOVERY, &ah->radio[0].ab->dev_flags)) {
+>  		/* TODO: for now only do link selection for single device
+>  		 * MLO case. Other cases would be handled in the future.
+>  		 */
+> @@ -12596,6 +12606,9 @@ static int ath12k_mac_flush(struct ath12k *ar)
+>  	long time_left;
+>  	int ret = 0;
+>  
+> +	if (test_bit(ATH12K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
+> +		return -ESHUTDOWN;
+> +
+>  	time_left = wait_event_timeout(ar->dp.tx_empty_waitq,
+>  				       (atomic_read(&ar->dp.num_tx_pending) == 0),
+>  				       ATH12K_FLUSH_TIMEOUT);
+> @@ -13494,6 +13507,8 @@ ath12k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
+>  	for_each_ar(ah, ar, i) {
+>  		ab = ar->ab;
+>  
+> +		clear_bit(ATH12K_FLAG_RECOVERY, &ab->dev_flags);
+> +
+>  		ath12k_warn(ar->ab, "pdev %d successfully recovered\n",
+>  			    ar->pdev->pdev_id);
+>  
+> diff --git a/drivers/net/wireless/ath/ath12k/peer.c b/drivers/net/wireless/ath/ath12k/peer.c
+> index 2681a047d4d5..e96eb78bbc0c 100644
+> --- a/drivers/net/wireless/ath/ath12k/peer.c
+> +++ b/drivers/net/wireless/ath/ath12k/peer.c
+> @@ -297,6 +297,12 @@ int ath12k_peer_mlo_link_peers_delete(struct ath12k_vif *ahvif, struct ath12k_st
+>  	if (!sta->mlo)
+>  		return -EINVAL;
+>  
+> +	/* During firmware crash, peers are already gone. Skip WMI peer delete
+> +	 * to avoid timeouts that delay recovery and can trigger cascading resets.
+> +	 */
+> +	if (test_bit(ATH12K_FLAG_CRASH_FLUSH, &ah->radio[0].ab->dev_flags))
+> +		return 0;
+> +
+>  	/* FW expects delete of all link peers at once before waiting for reception
+>  	 * of peer unmap or delete responses
+>  	 */
+
