@@ -1,87 +1,87 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D640C345EA3
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 22:04:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F5C13B6370
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 23:06:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785535448; cv=none; b=r5ddrRatrY3S6HCnrgeOSUHvdbxB9w2mzlS0Fn/da5m6Wy64pctpbrSRo7yrJZPH1KH5GEKGQfJf2UXWxpgk2T70Lt/hX+vLrekhHV13uljv6o1MGrGPxpQNvuLxgZuNxJ1FhQZ6s8eEC0SAqSD6lDmIqanilBNcMyPuDikK1Tk=
+	t=1785539207; cv=none; b=Cz5EVSbzK4fDDh8NKx6P1mmPtNGBgVybVVGvGMIDHfFRkqy2T+6Kq+2wl9L7RM9HjRh19zkBrHS+3B9/Don8KHmAiMUvWP1hhZjopd2BYX3HwlcKIGIRQyHxramqr70kqJRAIy2N/Q5X3T5KDlCSE+wVzja5opsXaWsOgngMb8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785535448; c=relaxed/simple;
-	bh=wprVu+4rI6oZhTEdzwm6VygX6UGfweOUmvNii/btMF8=;
+	s=arc-20240116; t=1785539207; c=relaxed/simple;
+	bh=+p8w7mchGyzmIeE1JbXU5M3SPt4L2Luq0jH2toCtWl4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=e9oTbR+GU2p54mmUfz3wc3LSy2HnpMNigQyMOLb2o/oOcUCiYDWnvWINeDegWGEDstqUW7yjGDqvGVhtaiwJUlGCC/if7FVOJ0Sjee+GjbpupoHNCpMG9W9IOxOoQAOcEo6wyEJQ8VvnqvS2vxg0E9429Y06fcTUVhaqDCu0VKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kU1raL0r; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=AOu7sEX6; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=bR2BAGl/7eTHZlP+SebIdJlRqdqrmqhQntcSk8rA8fB+v3xKgsEL5hBWwJkjWkdQ3lSntlUPB2wFDlaOKdgWAO4+R98181CoYHQAFc0mVCwtoJRNdbiBoOd2Amyxm7ombhta7dalrpjDnimF+56LdDIHQSCCv6ICvgbN8M5Tu+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kZKgMv1X; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=c4PwNQTX; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kU1raL0r";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="AOu7sEX6"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VM0pce1096987
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 22:04:05 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kZKgMv1X";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="c4PwNQTX"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 66VM0XKT956471
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 23:06:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	djLiBrCrntR2/g21yzu3z+y0eymgeWBUmxdBpdNDfug=; b=kU1raL0rs+7Krbr4
-	rYXNg2OZfV+iaVADXFJ5vs2lOpu0FOApn3zvlhKWoyFpPeIuOEGMTXCXmphnyxpa
-	bHEOLNiZBQaB2uZ6GgWY1AWMzzHojxBqeRUl6KVEBwyZ2s4FmKY7nMXctWzPBy5H
-	qgBkU7ytWCvP5MHVlUL1/7bKS27FM3Q835/do0Ra0WHHfArak98kD98A/qOXkD5Q
-	b0LAcqlqJfl3p2yVY0bneAWqa9YchV36H3pMPkUCMJZmPa5tYkyJ1qcGxr1bw/ka
-	vHKWK6Jw6Q/KCsMlrJ+tdmJauJHYJDtXLgp16dQ+fNigSSuUEe6po3W+vWbY/cDg
-	C8M6tA==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4frujuth9g-1
+	U7tpd0S2YwULBAdlt+aVaG0rTF0GEY2FTOIPMSdKP60=; b=kZKgMv1XSSOQ7puU
+	XbSnkuVRS+Ih44Nrdk/1d0zPjix3f0k5HTSa3wl8P3IDafmm8djhKlqaqWcI8Upe
+	BNZrLQeme0UmZAqhcf6xlH3+TJkw/3alfRyJIXiIVTguYT2CnRocBmd/Mop6P/m1
+	gxEbW1UAUtESgNhhZ50atSytTUVR2ZBOFysbUnOrwK7inx5U5JDuUoISm11KDG14
+	z7zOBkeXZpMx6dR25Zs1Cw/O8RZgtm5oOUniwBFRQbfZFknocGc5bHTfrCca8o5q
+	lJKsrDcRP1v4zfGRQMRZ6EHyX4x3xX0OxryBbOkCbqejovMbZZ5gDohupcW2nKA4
+	al4cRg==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4frtyqjx9n-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 22:04:05 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2d001671a54so28303625ad.2
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 15:04:05 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 23:06:44 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38e7b87ce77so3701216a91.0
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 16:06:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785535445; x=1786140245; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1785539204; x=1786144004; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=djLiBrCrntR2/g21yzu3z+y0eymgeWBUmxdBpdNDfug=;
-        b=AOu7sEX6Yheku3Uhea8M5o+s/wMsW/mxKSDWQCtNXvcGmW9i7OCgUKh+mSZCFRLdv2
-         J4uzs2DB3zMIYn93J+PnMiSf7vqsojurPFKl864MjBwZv/7KeWMHf1iMhyqFLW9dGy7h
-         8PyVOeXW1iVABvMuC5cwx8Yvj0t7d0NeuCWK+jVIn44Uu/dtOBErzRUDf+RliLp4QFPe
-         VCDwRzPL8HffWcSP/UsKzXKEjzk5XWpytfjV62eTI8Gv7dNL1FFC8YajuMrXio9IHlpy
-         mZCUAusK4iPXAvdzI2E+R0HMCSulvZ/8OQSCDcBT8nBUch3wBwh4saSvbIF82T4zcW6K
-         484w==
+        bh=U7tpd0S2YwULBAdlt+aVaG0rTF0GEY2FTOIPMSdKP60=;
+        b=c4PwNQTX+ljR6vgRK9CxwA7Q7zRKraNu0bpNy3MlPTM93p1XxPgvv6dKdUVlpEL/19
+         1mJJZ55k6lC01kmAYnVScNU8LAPqn2Kqhfq30pza5k/gYStpIxtiw7MwUKtYnkPG9JiE
+         pLPVRbg4IO0VcNDNfvw6E4rjqIpPlcXRcbauOEJ7FXMOXnLTtRWfLRStPak9S3E7Ir2x
+         LobNvQfZG8+BMECv9db/0eLEiGqmDWVNiqiBh7+AdxvT8yFUasaDMfSO1iDRzb+e5y1Q
+         QoWZFPyGfEoR+UWyb3enCKLz6hR0S4EGzfGDFFl8oDSQQdmAi9aqKSg3j8KRVRgjjO9O
+         kAVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785535445; x=1786140245;
+        d=1e100.net; s=20251104; t=1785539204; x=1786144004;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=djLiBrCrntR2/g21yzu3z+y0eymgeWBUmxdBpdNDfug=;
-        b=Z/9C+2nGuVAPzIJtKcLQusyBDbOO2L7ZvNyEV4TbASNljszWgdh3glQNt8fFBJrqcO
-         cWlMv/tQ3hxv0HrLuwnNeF+40brBqhVlICNM7AAIUJ/2YttcVy9TUzefnMWA3BKhOnQZ
-         XxQo0S5xu83D0XBOPL6EJcxg4ROUsshVCvKhFxUhO0Os7gvvr1IJqM0KnEAp1tS3CdES
-         tNjeuNO+0ilJEVWIiwEWA4ec9OzhM+wZBd9O7vihyPdZbQ/AwzXLmRYcBWT7fCwp01+v
-         5j2s9V1F5/AccnPtuUv+nol+Fy1fj2ejwZ0yOKrRM8TTsHhHBH8QoezgWPXX9y3/SrVd
-         SMrg==
-X-Forwarded-Encrypted: i=1; AHgh+RoRdbGFuYVkbhlJ7tXhgrUOkWcOIj+w55TeL+0d8lip8t0uQ7VLpQd0RJtxhJXITmVZ2s1MsYq6VbwrDHcdrw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwvgmJREjMNWw2mgwa1sW4G1fP3uqO+iugbbJrMPoULlIKU3G8M
-	9lmzYm9a0tBhti6AECmic0EUViMkTGXAwM00gunetVow9RCN0WnLeEaG97jjrz97TZKBdnqixTd
-	dSjOz7v/NH27J54BtDNaHjBupbta/+tul9+nOphqYjWKwjsHSVBD/bBUXsXCENomuwOGsLw==
-X-Gm-Gg: AR+sD10y8P0+xFhAj2dSrRKDEj3tGkg8U98GiwDylDkZ1rkQyOj3Q5cqBC6WvLZRZ2y
-	F8oh/XwxBSxIQNoeNcXRDJr4aO9ng4/dVhcHl5eimHABvUt2TdwWvsxUo/qd25Hw3cw1/7IdFj/
-	hI5ixIw9gByOsqU9LVe+o/lY2wXe35IVJs/FF2r0tAM79CNk/xITRUeUMnFXgtRoRDu/O2L19HP
-	Az9u9QWQ4hv/7wEwkhA3RaqLCbJp8Iq9tLYaiECk9OwSVbi4M40+eE0y1Pok6TnCQyZ94ZtwtmD
-	cM2kEWIjnPIH+8e5lGZUK4NXgD/7OW9vCCCGG8tewcoZ2SDsZDtYdWDRMLqFL7WBKTHulI4ivJp
-	hrwguHnFo5ehoODTmU7YGnOpvWVtViHIjLSUG7HjrxPaCPmF8e0XFLcbt9eM=
-X-Received: by 2002:a05:6a20:4499:b0:3c0:9c19:65ab with SMTP id adf61e73a8af0-3c92a9054e1mr1240320637.67.1785535444669;
-        Fri, 31 Jul 2026 15:04:04 -0700 (PDT)
-X-Received: by 2002:a05:6a20:4499:b0:3c0:9c19:65ab with SMTP id adf61e73a8af0-3c92a9054e1mr1240278637.67.1785535444178;
-        Fri, 31 Jul 2026 15:04:04 -0700 (PDT)
+        bh=U7tpd0S2YwULBAdlt+aVaG0rTF0GEY2FTOIPMSdKP60=;
+        b=P3wrr8lR0d1kIdefZ6fcIKs7Jat+7Ea8Pmem/A5zW4ncRnR2Mhxntkxw45xXSTiZaV
+         4ZMQ5HbjGQRtWoFG+UlGAqTDG1lu/s20srq8OkmDXqK4XCkSr7Ub8V3OtluL76tDlKqL
+         GMjsWl6KkS7KeSzfqZXnFmD4KccH52hAmyg7kKXFRV3B4PbH1pE0t/JBLwsJV7ODqIYR
+         3y41If/doIFJTpVvjgsu4Fb2XcbeiITvA6mpr6JsmlnoF4toaGtSNfkWRdfOOQBwjFfD
+         CBnPABIGLU9gxL7yh+lfbMORK0h3hPHoKohOvru6GajdAZHf2+9zP3pizeqExklOl7nf
+         OlJg==
+X-Forwarded-Encrypted: i=1; AHgh+Rol1JkHEuXbRGpJmsirBQGI5jY8B2d4aHoPc0WEmn1t3o9RLwyyspZbZoLAVagc2tBORCZXvigdpQUX6uqbMA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4Iuu/41tQzwt9AiZiRo5wSe1JCkkmyl9n3SSbQzH+ctllobqA
+	cYi3dyRIRj8Szp+LZnR8kzHQgPmd5JKikL5yOBwu/Z1HYHTjuxDXWTu7+KmdgnZrD/WKJjngHAK
+	6hEX6SoJPTX0/CH04Y7eOlHRC+RpkUFsfqPKFxIDytfu0gXc5YpyAEH5phpqHDg4sayV+bA==
+X-Gm-Gg: AR+sD1237kbsXspaLDf3MYE4PAg78L5Ryhe253Dk5NcFv95AR6k6AEEBit59WT/wK94
+	eTd1O5/3ljzKxg2Ov/XjLHtmLbrOI0k+IXWtS68e1c1+6Zz3daM5rUIa+fiTh/Hj8sDMtd1WbXM
+	+Az9cZThiS0kOUrC8l7uoHgvBeUeFzDT8/odxtAD+V6LQbZCg2e+uFsJIZLVw3/GgwfyY5+nE9g
+	+kwPd89aLjJrY28a3wLocEho3EjeUqmxN0MKRX6o3SyVQz9H/Z+V2/h7opETkacgZJL596+ygVL
+	EscKqDj4YY2edEwfrNuTzOS9skSt9mZ9HcK3/unMNkPQF4x8qNz5H0oFrI6G18bGBRlMukxW8st
+	1uub6b0PhnuygMbImmWfbMxagw6J6kiFsudvAZInXR1Ytb8qZtK+AwY63YVc=
+X-Received: by 2002:a17:90b:1c86:b0:38d:ef48:b04 with SMTP id 98e67ed59e1d1-38fbc4249efmr1421274a91.10.1785539203837;
+        Fri, 31 Jul 2026 16:06:43 -0700 (PDT)
+X-Received: by 2002:a17:90b:1c86:b0:38d:ef48:b04 with SMTP id 98e67ed59e1d1-38fbc4249efmr1421253a91.10.1785539203358;
+        Fri, 31 Jul 2026 16:06:43 -0700 (PDT)
 Received: from [192.168.1.9] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153e04491dsm12966664eec.16.2026.07.31.15.04.02
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fab4e44bcsm9419228c88.12.2026.07.31.16.06.42
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 31 Jul 2026 15:04:02 -0700 (PDT)
-Message-ID: <a9565939-0ff0-4672-a733-20692b9f9f26@oss.qualcomm.com>
-Date: Fri, 31 Jul 2026 15:04:01 -0700
+        Fri, 31 Jul 2026 16:06:42 -0700 (PDT)
+Message-ID: <f105a3df-6769-4a61-ba37-a6b874a918b6@oss.qualcomm.com>
+Date: Fri, 31 Jul 2026 16:06:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -89,107 +89,124 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/5] wifi: ath12k: fixes to improve MLO station stability
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, jjohnson@kernel.org
-Cc: ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260727162748.963275-1-jtornosm@redhat.com>
+Subject: Re: [RESEND PATCH ath-current 3/3] wifi: ath11k: unregister PM
+ notifier on QMI init failure path
+To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20260730030948.147892-1-miaoqing.pan@oss.qualcomm.com>
+ <20260730030948.147892-4-miaoqing.pan@oss.qualcomm.com>
 Content-Language: en-US
 From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-In-Reply-To: <20260727162748.963275-1-jtornosm@redhat.com>
+In-Reply-To: <20260730030948.147892-4-miaoqing.pan@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=U6Giy+ru c=1 sm=1 tr=0 ts=6a6d1bd5 cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDE3MyBTYWx0ZWRfX0e3hzIsB0d/B
+ kFgXyJJ/8INfTMF4fXD28L5mc4tyok4ryNamc/mb+XlG9ydtLWoOKZA/PFxCAxmeK9E2gCIFpj2
+ 3Xh6a5itvNN7LRG5dz1/9MuLx7f1Vpk1vAoDx/ReekcaRPupVryG6WcdfC5OxVhNoryPBokNwLK
+ oaaATYZvGTX3P+DzGdBuNFmA4rMkkl0PtLvzN8Ajhk63iFivnGYiwLSlOD1h456zqLYrHStzbXw
+ 9tfq7hhqxmGmEaYo2QDEuJHaE65DP6JtCPmNIaC1gwG20UoWA7q8fj3SxoZN7RiU7Gf3aCgdYT7
+ c+XKC0yUUBulalNkrwgxIiuBwY3mSDay/YBDQPF3eyhDbARFBGm0C7965OfhfK/mU7FXUs29NpS
+ BrLWcVRbgH2kiZsSSeJSxp4saRGJYxm1fmPjTibeY/iuhLUsRLMnfQOt2eHkryFb3NYVWkh4PCS
+ qYWDOLht/NLd7D9XxEQ==
+X-Proofpoint-ORIG-GUID: -NwIOR_U0yyP3ZtIEc8RLJTHAZUhEzn0
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDE3MyBTYWx0ZWRfX6cpR5YYF6/ZB
+ wLiukLT2+L+k9EBso2aFs0w7xyYkYz97i/E6aqRkRNT6e56juLcR6R82R+8a0Oeyps1VD0YfsTw
+ DMd74Dw5jSNq1TMkITbrWg3UMCR1wa0=
+X-Authority-Analysis: v=2.4 cv=YaGNIQRf c=1 sm=1 tr=0 ts=6a6d2a84 cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
  a=IkcTkHD0fZMA:10 a=RAioF0-LDSMA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=vNYMOvrsSQ6qDk_1z1wA:9 a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
-X-Proofpoint-ORIG-GUID: vwcxaEwxn0Fhyk8epzfzPuQszGeMim1V
-X-Proofpoint-GUID: vwcxaEwxn0Fhyk8epzfzPuQszGeMim1V
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNzMxMDE2NiBTYWx0ZWRfX4nUD7v2770xB
- 5JYzqAzvVXTIbLwjkpt3bSVIoO5vIwsAZKV3CiQp9mc3OcpAA8KOlis73/x+Z5zBKazNfdmMSwC
- NWYXOQ0JmshilKbbFQlX6opPs0Jr5ZjYpfQYyss1XtdUabj1dQ4W3liUGyqggLUMzWup4ag+b8h
- o7CyfqC3ofr5HUPEIIFf6GDgnP9XLKD1aCUprjfOIETGjxHfYH/TlKiR8lHJ8/b621o/26+LFid
- P4+sf+o6Kr5cudOS7udlxVq1lxt8CWyzX0yT/DOjim2iuKOH49M+6TSVpiFy2Clm5M/EqxN9uaB
- iuA0yIn/ZV3FULBmITqNwWyG6FC8UweCk619jpDLWn4h6TIbXv/zPFMMQqV8y6UmueDUlb0Bupk
- kEuGF+Mc9O0Mg1+sRVNtRWvQ34wW3FEE1D6+fOKx0NjUs8rYWfYJs52yIn9u8uAqs/ntRF56SlH
- Cm8TbLHz4cIyYmMDmjg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNzMxMDE2NiBTYWx0ZWRfX/6h+Gdcgsw8G
- 8I3QJOJRUvgQXsczS1zeTmTl+GaTqTNEY2YdstSYyB0tfL9UlZhx0aoGJSTL6pu92nKTGL6+eVO
- p2S3GAtrhi0ao3Wgdjg+/vtnT0fNxRc=
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=8LiCHbkhAqqawgbigPAA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-GUID: -NwIOR_U0yyP3ZtIEc8RLJTHAZUhEzn0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-07-31_07,2026-07-30_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 phishscore=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 adultscore=0 spamscore=0 bulkscore=0 impostorscore=0
+ impostorscore=0 phishscore=0 clxscore=1015 lowpriorityscore=0 spamscore=0
+ malwarescore=0 priorityscore=1501 suspectscore=0 bulkscore=0 adultscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310166
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2607310173
 
-On 7/27/2026 9:27 AM, Jose Ignacio Tornos Martinez wrote:
-> This series improves firmware crash recovery and connection stability
-> for MLO (Wi-Fi 7) stations on ath12k. Both work correctly for non-MLO
-> (Wi-Fi 6) stations, where the driver handles the full teardown and
-> reconnect cycle without issues and maintains stable connections. This
-> series brings MLO to the same level.
-> 
-> Without these fixes, a firmware crash during an active MLO connection
-> results in kernel warnings, NULL pointer dereferences, 20+ second
-> recovery delays, and periodic disconnections both after recovery and
-> during normal operation under heavy traffic.
-> 
-> Patches 1-3 fix firmware crash recovery:
-> 
-> Patch 1 moves the RECOVERY flag clear to reconfig_complete and adds
->         CRASH_FLUSH guards to prevent operations on dead firmware.
-> Patch 2 prevents scans during recovery to avoid NULL dereferences.
-> Patch 3 fixes ML peer ID desync between host and firmware by syncing
->         the peer ID from firmware's actual value.
-> 
-> Patches 4-5 fix MLO beacon miss handling:
-> 
-> Patch 4 fixes beacon_iter to iterate all MLO links instead of only
->         deflink for BSSID matching and connection_loss_work
->         cancellation.
-> Patch 5 complements patch 4 by skipping connection_loss_work for MLO
->         entirely, since its cancellation mechanism is unreliable and
->         the mac80211 probe triggered by ieee80211_beacon_loss() is
->         sufficient to detect real AP unreachability, as done by other
->         MLO-capable drivers such as mt76 and rtw89.
-> 
-> Tested on WCN7850 with MLO (Wi-Fi 7).
-> Firmware crashes were observed to occur spontaneously during normal
-> MLO operation with intense traffic testing, though rarely.
-> The debugfs simulate_fw_crash interface was used for systematic testing
-> and reproduction during active MLO connections with traffic.
-> 
-> Note: I will have limited availability from mid-August to
-> mid-September. I will address any review feedback before then
-> or promptly after returning.
-> 
-> Jose Ignacio Tornos Martinez (5):
->   wifi: ath12k: fix MLO station firmware crash recovery
->   wifi: ath12k: prevent scan during firmware recovery
->   wifi: ath12k: fix MLO dp_peer ID desync with firmware
->   wifi: ath12k: fix MLO beacon handling using per-link addressing
->   wifi: ath12k: skip connection_loss_work for MLO beacon miss
-> 
+On 7/29/2026 8:09 PM, Miaoqing Pan wrote:
+> ath11k_core_init() registers a PM notifier before the QMI server
+> becomes available. If the QMI server never arrives, the device remove()
+> path can take the early-exit path introduced for QMI initialization
+> failures, skipping ath11k_core_deinit().
 
-This series doesn't apply to ath/main, please rebase:
+This patch felt wrong to me, so I spent some time with my buddy Claude.
 
-Applying: wifi: ath12k: fix MLO station firmware crash recovery
-Using index info to reconstruct a base tree...
-M       drivers/net/wireless/ath/ath12k/core.c
-M       drivers/net/wireless/ath/ath12k/hal.c
-M       drivers/net/wireless/ath/ath12k/mac.c
-M       drivers/net/wireless/ath/ath12k/peer.c
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/ath/ath12k/peer.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath12k/peer.c
-Auto-merging drivers/net/wireless/ath/ath12k/mac.c
-Auto-merging drivers/net/wireless/ath/ath12k/hal.c
-Auto-merging drivers/net/wireless/ath/ath12k/core.c
-Recorded preimage for 'drivers/net/wireless/ath/ath12k/peer.c'
-error: Failed to merge in the changes.
-Patch failed at 0001 wifi: ath12k: fix MLO station firmware crash recovery
+I asked Claude: in the last patch the commit text says "If the QMI server
+never arrives, the device remove() path can take the early-exit path
+introduced for QMI initialization failures". where is this device remove()
+path code? I'm trying to understand why there needs to be a call to
+ath11k_core_pm_notifier_unregister() in ath11k_ahb_remove() as well as in
+ath11k_core_deinit(). since ath11k_core_pm_notifier_register() is only called
+from one place it is logical that ath11k_core_pm_notifier_unregister() should
+also be called in one place that is symmetrical. the proposed patch breaks the
+init/deinit symmetry.
+
+Claude said:
+The symmetry argument is well-founded. Here's the actual structure:
+
+ath11k_core_init() registers the notifier. ath11k_core_deinit() is its
+symmetric counterpart and unregisters it. That is the intended 1:1 pairing.
+
+The problem is that both ath11k_ahb_remove() and ath11k_pci_remove() have an
+early-exit path for QMI_FAIL that bypasses ath11k_core_deinit() — but still
+need to undo what ath11k_core_init() did. So they replicate the unregister
+call directly. This is an existing pattern: pci.c:1188 already had
+ath11k_core_pm_notifier_unregister() in its QMI_FAIL early-exit before this
+patch series.
+
+Patch 3 simply extends that same pattern to ahb.c's early-exit path, which was
+missing it.
+
+The symmetry break isn't introduced by this patch — it was already present for
+PCI. The fix for the symmetry issue would be to restructure so the early-exit
+paths all go through ath11k_core_deinit() (or a new partial-deinit function),
+but that's a larger refactor. This patch's approach matches the existing
+convention in the tree.
+
+The commit message claim about "the early-exit path introduced for QMI
+initialization failures" refers to the QMI_FAIL branch at ahb.c:1301 — the
+goto qmi_fail block that skips ath11k_core_deinit().
+
+Thank you, Claude.
+
+So I guess this patch is OK since it is replicating the PCI pattern, but is
+there any way to have ath11k_core_deinit() called in those early exit paths so
+that we can keep the init/deinit symmetry? It just seems wrong that if
+ath11k_core_init() did not return an error that we would have deinit logic
+that would skip calling ath11k_core_deinit()
+
+> 
+> As a result, the PM notifier remains registered after the ath11k base
+> object has been freed. A subsequent suspend or resume event may invoke
+> the stale notifier and trigger a use-after-free.
+> 
+> Fix this by explicitly unregistering the PM notifier in the QMI failure
+> cleanup path before releasing ath11k resources.
+> 
+> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.2.0.c2-00204-QCAMSLSWPLZ-1
+> 
+> Fixes: 32d93b51bc7e ("wifi: ath11k: choose default PM policy for hibernation")
+> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath11k/ahb.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+> index 7f5f5c8d7c56..bdb8c99f10fa 100644
+> --- a/drivers/net/wireless/ath/ath11k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath11k/ahb.c
+> @@ -1272,6 +1272,7 @@ static void ath11k_ahb_remove(struct platform_device *pdev)
+>  		ath11k_ahb_power_down(ab, false);
+>  		ath11k_debugfs_soc_destroy(ab);
+>  		ath11k_qmi_deinit_service(ab);
+> +		ath11k_core_pm_notifier_unregister(ab);
+>  		goto qmi_fail;
+>  	}
+>  
 
