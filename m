@@ -1,138 +1,84 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B5C41A6800;
-	Fri, 31 Jul 2026 00:48:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA8C29ACC5
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 01:19:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785458940; cv=none; b=uoaRvfivqPrEGK+cJpuFiKH0ftznaCR5yavBh3rgwmAGRGESDCnkrmibRkbxO/Ch9GqAd+5GdOluxseNpuyQh/kRgbijRdG7ZLwc+mSTvYBZMKjwdChohtKng17XfiZnysmb+qBaJg8f32PyDeJqDFD89CgYdVURxvE52xnq3tc=
+	t=1785460798; cv=none; b=VFme5llzLmfr5b8J+N0u8VVa2zxUI5Z/lZb2hbw0YxuzbA68ZuYEjv/d5W8xZlx2NK3GB/tjV4wGD2ksP80XCAk8T5kesj0zfoZL3RICQVXgWV+uLvUNHLBWY1w088XYA3FFcL9W3cXD9DUCu2xQEmOSjaO6SrsVZSG+PaLACjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785458940; c=relaxed/simple;
-	bh=gbAr6Y3/AOldxJR71un1sFf7yPWxiiGjFm3zkEqE70A=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AiQ4ZwS1eSXQXBHIplyf6Hh4PltmVJldlaCGrT2NfXt+T3HhO7lpmXGz06rv8kf/ZPgD5vq/xKurGjdd6KQmfOxbt15uo4MNTgJa/rpO28q8Y0Ey8WBBGjEl19/fA73+3rF1n1m81pK+gHSb2umn0trOtmXU3y8yxVKYkqeoYiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=KMtFNmmC; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1785460798; c=relaxed/simple;
+	bh=47e8b0WdNaEk4DooyC6qfw7+a4EBXQUIyJCmrzaFF5A=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=LtmuQMvkW0T82nShNHdSzhjH8XBSd56HZtjFUHoxJ8AQZC2I1jpQ9siBtqfdZkrdQtS9fOcKuq/vvRVwFRh8aIv5943nnzSVTsSa+/d7QCSLwqa7gvUsGKpF1u6bGWqR1IKS3KX3z8ZVMNYUpr/Jzy2WU22Rgu+hlwfNDja5m7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gTG3Sioe; arc=none smtp.client-ip=91.218.175.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="KMtFNmmC"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 66V0mjvyF1543465, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785458925; bh=+cGwDi9TmCnUewqIVnD56JxQEJpXt5qrvc5E4M64uy4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=KMtFNmmCO2oCACNIFc/tOC6L5ELt/OMCgN0syqYy/N4qQWkXg86uJ/UrDRgh1SIxm
-	 7Cn3MH8yb87i97egZkh5amCNxqPFLcOpyp1/VTjSiR/ttUUSJDeNlACWVbh8D87hbD
-	 5GpCCmJX2JnedFxNBOCEiTebx5eF3xULXapg9dl6W3p6bx3m3gDOQMpH4TYW6Skcnd
-	 qrbd6AopGDhg1I64AnwyTlzeaGDJR3qmI2LywZCLGP/rvUJqqKxQlZPf5a+9TPrhY0
-	 ZhNoBBJr7O4+NR5VlIsZ3A0wQt505A2ajKwmdaHVCaLdjSBEOYMhoqqwLG3l9SsQrt
-	 a5byq0KJstqxQ==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 66V0mjvyF1543465
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 31 Jul 2026 08:48:45 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 31 Jul 2026 08:48:46 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Fri, 31 Jul 2026 08:48:45 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::e6fd:5a3f:8946:92c4%10]) with mapi id
- 15.02.2562.017; Fri, 31 Jul 2026 08:48:45 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Peter Robinson <pbrobinson@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: RE: [PATCH v2 11/11] wifi: rtw88: run the RTL8723BS association
- register sequence
-Thread-Topic: [PATCH v2 11/11] wifi: rtw88: run the RTL8723BS association
- register sequence
-Thread-Index: AQHdHEb/KrivPqpz/0SOkFGQL9rTRbaBHE5wgAQTsgCAAKQ5IA==
-Date: Fri, 31 Jul 2026 00:48:45 +0000
-Message-ID: <c697b23e723f4cab875e2c01fe6defc0@realtek.com>
-References: <611b495996b74b278bfd769a9c045582@realtek.com>
- <20260730074504.19725-10-luka.gejak@linux.dev>
-In-Reply-To: <20260730074504.19725-10-luka.gejak@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gTG3Sioe"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1785460793;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wXHPrSho6azgZZFSVUejZWoRGeUy3dDCZgU8B46t7FU=;
+	b=gTG3Sioekhliqb9ChSprbt7Dkp14qN/JzvJmI52pEsnJrF8lwEb2aWMxAweZEbuRSXTFCv
+	eMRVTHUC/tqHtnwPwLrCouppJRylm1tpO+eLjDi7BOL0ataYGH1SJyRKyd0+oICp8crjoz
+	3Lu/QjqxaBJAI3zUhDN6KbliqOhTdoA=
+From: Yi Cong <cong.yi@linux.dev>
+To: gregkh@linuxfoundation.org,
+	error27@gmail.com
+Cc: linux-staging@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yi Cong <yicong@kylinos.cn>
+Subject: [PATCH v3 1/4] staging: rtl8723bs: free HalData with vfree, not kfree
+Date: Fri, 31 Jul 2026 09:18:53 +0800
+Message-Id: <20260731011856.2006363-2-cong.yi@linux.dev>
+In-Reply-To: <20260731011856.2006363-1-cong.yi@linux.dev>
+References: <20260731011856.2006363-1-cong.yi@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
+From: Yi Cong <yicong@kylinos.cn>
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote;
-> On 27/07/2026 09:33, Ping-Ke Shih wrote:
-> >> +       if (rtw_is_8723bs(rtwdev)) {
-> [...]
-> > I'm surprising that RTL8723BS needs so many special handing. Can you re=
-duce
-> > them? At least, use rtw_chip_prepare_tx() to implement its specific
-> > functions.
->=20
-> Done. v3 adds a chip_ops::prepare_tx callback, and
-> rtw_ops_mgd_prepare_tx() is back to a single common path:
->=20
->         mutex_lock(&rtwdev->mutex);
->         rtw_leave_lps_deep(rtwdev);
->         rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
->         rtw_chip_prepare_tx(rtwdev, vif, info);
->         mutex_unlock(&rtwdev->mutex);
->=20
-> rtw_chip_prepare_tx() calls the chip callback when one is set and
-> otherwise keeps the existing deferred RF calibration, so no other chip
-> changes behaviour. The RTL8723BS callback does the IPS wake and the
-> join sequence, and the chip driver in the follow-up series points
-> .prepare_tx at it. That also removes the chip test from the helper
-> below it, per your comments on patch 05.
->=20
-> On reducing the rest: this patch is smaller in v3, but not as much as
-> I would like, and I want to be straight about why. Two things went:
->=20
->  - the beacon wait, once you made me measure it (see my reply on
->    patch 10), which took struct rtw_auth_sync with it
+In the probe error path of rtw_sdio_if1_init(), HalData is released with
+kfree(), but it is allocated with vzalloc() in rtw_hal_data_init(). Freeing
+a vmalloc allocation with kfree() is undefined behaviour and can corrupt
+the allocator.
 
-I see the result is positive, so this part can be removed, right?
+Use rtw_hal_data_deinit() instead, which calls vfree() and is the matching
+deallocator used on the normal tear-down path. It also NULLs the pointer
+and clears hal_data_sz, making it safe to call here.
 
->  - two dead bool arguments, rtw8723bs_auth_rx_filter(accept_all) and
->    rtw_coex_8723bs_restore_pad_ctrl(keep_pta_owner), both of which had
->    a single value at every call site
->=20
-> What is left is the vendor start_clnt_join() register programming
-> itself: the BSSID-scoped receive filter, the response and basic rate
-> set from the BSS rate elements, preamble and slot time, TSF update, the
-> retry limit and the security config. I have removed these individually
-> on hardware and association fails or the AP drops us shortly after,
-> which is why they are still here rather than because I have not tried.
+Fixes: 554c0a3abf21 ("staging: Add rtl8723bs sdio wifi driver")
+Assisted-by: GLM:5.2
+Signed-off-by: Yi Cong <yicong@kylinos.cn>
+---
+ drivers/staging/rtl8723bs/os_dep/sdio_intf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I think you can implement these by chip->ops->mac_init(rtwdev);
-
->=20
-> If the concern is that it sits in mac80211.c rather than a chip file, I
-> agree, and I would rather move the whole rtw8723bs_* block into
-> rtw8723b.c in the driver series than leave it in the common file. It is
-> in mac80211.c today only because this series lands before the chip
-> file exists. Tell me which you prefer and I will do it that way.
-
-So the order of patches might be
-1. add specific handlings for RTL8723BS for common flow
-2. add RTL8723BS (but not enable right now)
-3. add *very* specific handlings for RTL8723BS for common flow
-   Here *very* means a lot of difference like you mentioned.
-   But if without this part, the RTL8723BS still can work (not perfect),
-   the step 4 can go ahead with step 2. Need your experiments to
-   confirm.
-4. enable RTL8723BS by Kconfig/Makefile
-
-Ping-Ke
-
+diff --git a/drivers/staging/rtl8723bs/os_dep/sdio_intf.c b/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
+index c43a0391a5ca7..f7ec09310ce98 100644
+--- a/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
++++ b/drivers/staging/rtl8723bs/os_dep/sdio_intf.c
+@@ -286,7 +286,7 @@ static struct adapter *rtw_sdio_if1_init(struct dvobj_priv *dvobj, const struct
+ 
+ free_hal_data:
+ 	if (status != _SUCCESS && padapter->HalData)
+-		kfree(padapter->HalData);
++		rtw_hal_data_deinit(padapter);
+ 
+ 	if (status != _SUCCESS) {
+ 		rtw_wdev_unregister(padapter->rtw_wdev);
+-- 
+2.25.1
 
