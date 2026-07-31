@@ -1,32 +1,32 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D165695
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 09:32:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633E631B833
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 09:32:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785490376; cv=none; b=ZOFeOtfGgwJdqY9ybWo0hl3fks0Si3uY9HpY8l54CfwG6+o/q3YK/CB1Yb5OsF1CJoVUClGloa8XBSYbX66i2+N2lv72j6xKr9fHWg/fAkbiNXfDN0ECFAuCgvqJW2ql+MB6I6bQx6GAsuUAw2FZq/4zYky145YVI51yVn35vro=
+	t=1785490379; cv=none; b=CxD6tjxTodK1oZm6DYxayUPCt/JECSvAfNtmPw69e8O37Yht7CxIma1tyjjtWP6Sjz2O0qlXRp/bybuNWUA4Mxx0GNwwq9VlfV5GIAM1M+YHs/bTvM8IcZAF8yTdqKQGKXTWi1vTTH/7rnk6hXvExUhFkDW2vsjUDlVtNP1ShSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785490376; c=relaxed/simple;
-	bh=bog/a/CepUks6eehAj/J9afhSgaKBjqoJ/bJVyADqkI=;
+	s=arc-20240116; t=1785490379; c=relaxed/simple;
+	bh=dlwi9ORZJbJt6lbm9zkJ0Q8U6kcu/WkQD4NM+EREXas=;
 	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=GXIXLdRa9spUT3TAPOFcYn931xktLwpzYF+ad6dfWYMLYB+EuIY4NricZ2F4mbAk0MtH/zD6S6cw43DSoPC7POeElsYHbOYzIRopHkS1BUblBz9b7eypUMGtcxam2jE9XAvLeI2ugriUrGr5CnuXjdz5L9jkbG34i76f0MWxTB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rPXnjh+g; arc=none smtp.client-ip=91.218.175.174
+	 MIME-Version:Content-Type; b=fRRZHMKVYWIy5SOzB+QqRoiF9FO0VoBjWlekdHfuacr4Ci70pQuVU1CR9WwRIlMr1+RpUVr5LlcM2UVwKMFnMW+iqjGwKp6Cu9pQ7E3q/GYtHCbEcv6LOP4wCbIXw/oBXzXfL/3Hgf3hhoDWgLMzEKCH8e2E7OiFmiCW/XBcluk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GciR/+MZ; arc=none smtp.client-ip=91.218.175.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rPXnjh+g"
-Date: Fri, 31 Jul 2026 11:31:46 +0200
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GciR/+MZ"
+Date: Fri, 31 Jul 2026 11:32:48 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785490371;
+	t=1785490375;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=LijMCJNHT++jeJQxsL21UBhKOtkGbQApmMoT7bTi/5o=;
-	b=rPXnjh+gisgwj0l86DKDMj3y14r/HRSbFsjYa7JKXbsh4sP0gLxdQGs6l1pe+1we8x3bSU
-	OCq78nO9DS/cge9tcrgVsdqB4RqWfSx86LbxK6ATTAMuQZA4hBK6qGYeSExs+jN6kMafro
-	NdsuIlsBK0xf3h2AQiaodkP+9VQDQx8=
+	bh=1eEqjThMF8F5/P1t5TSHjTco6lItunOOzUbN+YBJ8RI=;
+	b=GciR/+MZGvhjweUXSf0yizxn8cXykn4w9LCJT4i+QEoPN/DaBZlGj7yONvknHzoOYuT58z
+	QcDvp+iG8QSC7M83qhu4Z1tYTwDgrGw/yVSzy0wT2krgMwR4G+I21S0thZZlCFVJKxirG1
+	E7K2VBmcfCYAQ5DNQcyapBtpmF09XM0=
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>
@@ -35,11 +35,11 @@ CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
  Michael Straube <straube.linux@gmail.com>,
  Peter Robinson <pbrobinson@gmail.com>,
  Bitterblue Smith <rtl8821cerfe2@gmail.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v2_01/11=5D_wifi=3A_rtw88=3A_add_?=
- =?US-ASCII?Q?the_RTL8723B_chip_type_and_SDIO_helper?=
-In-Reply-To: <db7e5e0ee9fd4259a05db2e3fc08a5b1@realtek.com>
-References: <774407603bef4fd38290f6b5d4b4a26c@realtek.com> <20260730074504.19725-1-luka.gejak@linux.dev> <6c2d5972971f48548a58dc3fba890793@realtek.com> <6872BF49-855E-42A5-A06F-98C4602B2C25@linux.dev> <db7e5e0ee9fd4259a05db2e3fc08a5b1@realtek.com>
-Message-ID: <2AE57F1B-84FE-4BC6-A0E1-D8B61A90F3F0@linux.dev>
+Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v2_11/11=5D_wifi=3A_rtw88=3A_run_th?=
+ =?US-ASCII?Q?e_RTL8723BS_association_register_sequence?=
+In-Reply-To: <c697b23e723f4cab875e2c01fe6defc0@realtek.com>
+References: <611b495996b74b278bfd769a9c045582@realtek.com> <20260730074504.19725-10-luka.gejak@linux.dev> <c697b23e723f4cab875e2c01fe6defc0@realtek.com>
+Message-ID: <BE0CAC76-A3CD-413A-9276-E2A1A2138F10@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,119 +51,152 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: quoted-printable
 X-Migadu-Flow: FLOW_OUT
 
-On July 31, 2026 3:29:40 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom> =
+On July 31, 2026 2:48:45 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom> =
 wrote:
 >
->Luka Gejak <luka=2Egejak@linux=2Edev> wrote:
->> On July 30, 2026 11:17:41 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2E=
-com> wrote:
->> >luka=2Egejak@linux=2Edev <luka=2Egejak@linux=2Edev> wrote:
->> >> it would be four callbacks (free page check, page
->> >> accounting, output queue wait, transfer sizing) and I did not want t=
-o
->> >> introduce that structure without asking first=2E
->> > If these are called from sdio=2Ec, just check chip ID in sdio=2Ec=2E
+>luka=2Egejak@linux=2Edev <luka=2Egejak@linux=2Edev> wrote;
+>> On 27/07/2026 09:33, Ping-Ke Shih wrote:
+>> [=2E=2E=2E]
+>> On reducing the rest: this patch is smaller in v3, but not as much as
+>> I would like, and I want to be straight about why=2E Two things went:
 >>
->> That is what v3 already does, so nothing changes there=2E All four are
->> reached from sdio=2Ec only=2E
->>
->> > If they are used by common flow like coex=2Ec, I prefer to implement
->> > them by chip_ops=2E
->>
->> Let me list them all so you can rule on all of them at once rather than
->> a file at a time=2E
->>
->> Two go regardless of your answer: the chip test inside
->> rtw8723bs_apply_basic_rates() and rtw8723bs_apply_bss_cap() is
->> redundant, both callers already establish the chip=2E In the second one
->> the NL80211_IFTYPE_STATION half of the same guard is still needed, so
->> only the chip half goes there=2E
->>
->> That leaves the following outside sdio=2Ec=2E
->>
->> coex=2Ec, 2 sites:
->>
->>   rtw_coex_scan_notify()    -> rtw_coex_8723bs_scan_notify()
->>   rtw_coex_connect_notify() -> rtw_coex_8723bs_connect_notify()
->>
->>   Each tests the chip and bt_disabled once and returns true when it has
->>   handled the notification; everything below them assumes both=2E
->>
->> mac80211=2Ec, 6 sites in rtw_ops_bss_info_changed(): the receive filter
+>>  - the beacon wait, once you made me measure it (see my reply on
+>>    patch 10), which took struct rtw_auth_sync with it
+>
+>I see the result is positive, so this part can be removed, right?
 
-One piece of context first, because it changes most of the answers
-below=2E I ran the ablation you asked for in your other mail, and the
-association register sequence is not needed, nor are the two
-coexistence patches=2E Four patches are going from prep, which takes it
-from ten to six=2E The measurements and the two corrections I owe you are
-in my reply to that mail=2E
+Right, it is already gone in v3=2E
 
-> Should receive filter implement in rtw_ops_configure_filter()?
+>> What is left is the vendor start_clnt_join() register programming
+>> itself: the BSSID-scoped receive filter, the response and basic rate
+>> set from the BSS rate elements, preamble and slot time, TSF update, the
+>> retry limit and the security config=2E I have removed these individuall=
+y
+>> on hardware and association fails or the AP drops us shortly after,
+>> which is why they are still here rather than because I have not tried=
+=2E
+>
+>I think you can implement these by chip->ops->mac_init(rtwdev);
 
-Moot now, the receive filter handling goes with the patch I am
-dropping=2E For the record you were pointing at something real, although
-not quite where I first placed it=2E
+Before answering that I have to correct the sentence you are replying
+to=2E It is wrong=2E
 
-rtw8723b=2Ec does seed hal=2Ercr in mac_init, so it is not the problem=2E =
-The
-asymmetry is in rtw_ops_configure_filter() itself: entering promiscuous
-clears BIT_CBSSID_BCN and BIT_CBSSID_DATA together, but leaving it
-restores only BIT_CBSSID_BCN=2E CBSSID_DATA is therefore gone from
-hal=2Ercr for good after the first scan, on any chip, until the next
-mac_init=2E That is what the per-association forcing was compensating
-for=2E
+I ran the experiment you asked for below, and the association register
+sequence is not needed at all=2E What I told you was bring-up era data
+that I repeated without re-measuring=2E That is the same mistake you
+caught with the beacon wait, and I should have re-tested before
+asserting it a second time=2E
 
-There is a second one next to it: rtw8723x=2Ec writes WLAN_RCR_CFG
-straight to REG_RCR in mac_init without putting it into hal=2Ercr, so on
-8723D and 8703B the first configure_filter() call replaces it with the
-core default from rtw_core_init(), which carries neither CBSSID bit nor
-AMF=2E
+>So the order of patches might be
+>1=2E add specific handlings for RTL8723BS for common flow
+>2=2E add RTL8723BS (but not enable right now)
+>3=2E add *very* specific handlings for RTL8723BS for common flow
+>   Here *very* means a lot of difference like you mentioned=2E
+>   But if without this part, the RTL8723BS still can work (not perfect),
+>   the step 4 can go ahead with step 2=2E Need your experiments to
+>   confirm=2E
+>4=2E enable RTL8723BS by Kconfig/Makefile
 
-Both look worth fixing on their own and I am happy to send that
-separately if you agree with the reading=2E It is unrelated to this
-series=2E
+Confirmed, and it is better than "not perfect": I measured no
+difference at all=2E Step 3 disappears=2E
 
-> Please check existing codes related to sec->default_key_search to see
-> how to support RTL8723BS by the same flow=2E
+I reverted the whole patch, 440 lines, which is the join sequence, the
+chip_ops::prepare_tx callback, the six sites in
+rtw_ops_bss_info_changed() and both sites in rtw_ops_set_key()=2E All
+testing is WPA2-PSK/CCMP against one AP=2E
 
-You were right, and more strongly than you put it=2E
-rtw_sec_enable_sec_engine() sets default_key_search itself and then
-programs all four USE_DK bits on that basis, so my enable path was a
-no-op and my disable path was clearing bits the core had deliberately
-set=2E Both sites are gone with the patch, and 24 rekeys completed in the
-soak without them=2E
+                        with patch    without
+  scans seeing AP       23/24         18/18
+  associations          8/8           6/6
+  TCP up / down         21=2E8 / 38=2E9   18=2E6 / 39=2E0 Mbit/s
+  UDP up / down         25=2E0 / 40=2E0   25=2E0 / 40=2E0, 0% loss both
+  rtw88 errors          0             0
 
-> I don't object this=2E More, I'm considering if no need to check chips,
-> just be a common flow=2E
+The uplink figures need a caveat, because the two columns were measured
+on different days and uplink on this band drifts by several Mbit/s from
+one day to the next, so 21=2E8 against 18=2E6 is not a comparison I can
+stand behind=2E I repeated it as a paired test instead: ten alternating
+cycles in a single session, rebuilding and reinstalling the driver each
+time, five with the full series and five with all four patches
+reverted, so both see the same air=2E
 
-Happy to try that=2E Dropping the chip test would make the zero length
-check apply to every chip, so I would rather measure it on the 8703B
-path than assume; I do not have that hardware=2E If you are comfortable
-with it on inspection I will send it as a separate patch that removes
-the test entirely rather than fold it in here=2E
+  full series      19=2E0 Mbit/s mean over 10 runs, 18=2E7 to 19=2E4
+  four reverted    19=2E2 Mbit/s mean over 10 runs, 18=2E9 to 19=2E6
 
-> That looks fine=2E I remember I don't have comments on this part, no?
+There is no uplink cost=2E Downlink was never lower without the patches
+either, 38=2E9 with against 39=2E0 and 42=2E9 without, so the wider spread=
+ in
+the tables above is the environment rather than the code=2E
 
-Correct, you had no comments on the reserved page patch itself, only on
-the DWBCN1 define placement and the comment style, both fixed=2E The
-inline chip test there stays=2E
+Then a 5 minute stability run on the ablation: ping 1495/1495 at 0%
+loss, reconnects 15/15, link cycles 5/5, module reloads 3/3, scans
+under traffic 5/5, idle power save wake 0% loss, 24 rekeys completed,
+zero deauth, zero rqpn relatch, zero SDIO errors, no warnings, peak TX
+150 Mbit/s=2E
 
-> Did you mean callees of rtw_coex_8723bs_scan_workaround() ?
-> I think you can go with your mind=2E
+The reconnects and the rekeys are the point: the join sequence ran from
+mgd_prepare_tx() on every authentication, so 15 reconnects exercise
+exactly the path it lived on=2E
 
-Yes, those were the ones, and thank you, but it is moot now that the
-coexistence patches are going as well=2E
+Since that patch is what added the chip tests to mac80211=2Ec, dropping
+it takes that file from 8 chip tests to 0, and three of your review
+points on the other mail become unnecessary rather than needing rework=2E
 
-> I'd say the version copy many stuffs from vendor driver=2E However, we
-> should rewrite and consider the proper places, and if it is actually
-> necessary=2E The vendor driver is based on cfg80211, and many stuffs
-> have been done by mac80211, so we don't need to implement them in
-> rtw88=2E
+Your instinct was better than my evidence, so I applied it to the
+coexistence patches as well, whose justification came from the same
+period=2E Reverting those too, together with the GNT_BT command whose
+only caller they were:
 
-That turned out to be exactly right=2E Four of the ten patches were
-reproducing vendor behaviour that mac80211 or the core already handles,
-and they only survived this long because I kept quoting bring-up
-results instead of re-measuring them=2E Thanks for pushing on it twice=2E
+  scans 18/18, associations 6/6, TCP 18=2E0 up / 42=2E9 down, UDP 25=2E0 u=
+p
+  and 40=2E0 down both at 0% loss, 0 errors=2E Same 5 minute soak, same
+  result: 15/15 reconnects, 5/5 scans under traffic, 3/3 reloads=2E
+
+So the second correction: the commit message on the scan antenna
+workaround claims the site survey does not hear the AP reliably without
+it=2E That is also wrong=2E It scans 18/18 without it=2E
+
+One thing worth stating precisely, because it looks like a gap and is
+not=2E Those two coex patches are gated
+
+  if (!rtw_is_8723bs(rtwdev) || !rtwdev->coex=2Estat=2Ebt_disabled)
+          return false;
+
+so they only ever execute when bt_disabled is set, which was the case
+throughout=2E That is their entire scope, not a subset of it=2E
+
+That leaves prep at six patches:
+
+  1 add the RTL8723B chip type and SDIO helper
+  2 rx: mark zero length packets on RTL8723BS
+  3 fw: fix the reserved page upload on RTL8723BS
+  4 sdio: track free TX pages and OQT credits for RTL8723BS
+  5 sdio: set up RX aggregation and interrupts for RTL8723BS
+  6 sdio: add TX back-pressure and retry on page starvation
+
+and no chip tests left in mac80211=2Ec or coex=2Ec=2E What remains is one =
+in
+rx=2Ec, one in fw=2Ec and eleven in sdio=2Ec, all of which you have alread=
+y
+said are fine inline=2E
+
+With step 3 gone your ordering collapses to prep, then the chip driver,
+then Kconfig/Makefile, then MAINTAINERS=2E Would you rather have that as
+one series of nine patches, or keep the current split with prep sent
+first? I am happy either way; one series removes the "wait for prep to
+land" coordination=2E
+
+One detail for the ordering: a few register defines currently sit in
+the patches being dropped but are used by rtw8723b=2Ec, so they move into
+the chip support patch=2E BIT_AMF is used by its WLAN_RCR_CFG, and
+REG_PWR_DATA, BIT_EEPRPAD_RFE_CTRL_EN, REG_RFE_CTRL_ANT_SW,
+BIT_RFE_CTRL_ANT_SW_SEL, REG_RFE_CTRL_ANTA_SRC and
+BIT_BT_SEL_BY_WIFI_8723B by its own coexistence code=2E
+
+REG_BB_SEL_BTG_8723B goes away entirely rather than moving=2E Its only
+users were the coex patches being dropped, and it duplicates
+REG_BB_SEL_BTG in rtw8723x=2Eh at the same address, which is the one
+rtw8723b=2Ec actually uses=2E
 
 Best regards,
 Luka Gejak
