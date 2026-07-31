@@ -1,133 +1,144 @@
-Received: from ixit.cz (static-84-42-129-46.bb.vodafone.cz [84.42.129.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C8E9435EC0;
-	Fri, 31 Jul 2026 15:03:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=84.42.129.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B4043C7A8
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 15:49:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785510235; cv=none; b=Hvc1o1OfGoNYDc7iR0WCKyVN5ZVVCLnEkbeyxcgX9tZT1JjuCuj5/fO6Ti5l/4gq/VcgdOwo5OaRFZ/zT/Vi+c5Zw3RgWeghBiZ/YH1frmdHUp+X3Lb9snanpvwIjbE0dtCpLW/yYbHbze1S7hIMlt+MGJ2rUvUOgY3Wtir3scg=
+	t=1785512953; cv=none; b=c/9UDusSsfjeOFG1+4gSiZonRk6E2B27o5DHPAcUE3KhOCT6Zoxn/OhM7xNu59XQPjzGAnZC9da8aOwOfqUAHtbdiU+JPIIDNUIg+p/+6kk4qFb2g+MRqd72X/bqF9nQ38ADT6VZQnJa8yM3LZ211EWtbzg8klEJkigX4hMGt8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785510235; c=relaxed/simple;
-	bh=N/Oqr0RiD9OIZRAKiYeM/cFl0VtWVDEtYwO6YsGfo0E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rGam75mGuhn47qEhQtGXJtNXUjgCeiY7am33EimdPSUlW/X4BL62ZuXMN2aC+Sd525top6sejT1spnO8PaEDf0PL4+GOBG/tvH2qnbYmUJBTcX9Oshmhz0vlE8ZISPcosxuomE8JCX2REFb/QyfSJf2BFmCKBif4BxGGLLbYt4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz; spf=pass smtp.mailfrom=ixit.cz; dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b=Ff8M9PqL; arc=none smtp.client-ip=84.42.129.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ixit.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ixit.cz
+	s=arc-20240116; t=1785512953; c=relaxed/simple;
+	bh=PERNb1guRI8ZCQ12dy0SrLJzSrN4b5PB+j5i+IenUQk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WIKtow4OuD8hVSYpx2UsemQhQg2z6xqH3eMhWFqtBoe/OKfq9Ox51xAjVmD8RCZaLG9RDBiadrrtKjTgzFXPDTtSL+QWhYuLcbJQ+7sSyQ6l1swNo6e3xqBS75MdfiE44I74H1qxLoOTCCX740kwavYL+gJVFZXrfSUVhGr8U2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nt9+nF5Z; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ixit.cz header.i=@ixit.cz header.b="Ff8M9PqL"
-Received: from [10.0.0.182] (unknown [10.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by ixit.cz (Postfix) with ESMTPSA id B87D953409A8;
-	Fri, 31 Jul 2026 16:55:20 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ixit.cz; s=dkim;
-	t=1785509720;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=v3d7xI0CjFFJOqab8LewGaimYwRvxrurh7X0EHPLrDQ=;
-	b=Ff8M9PqL2mY0paKBhrbVWNzzi07z6eD6q4DlklqT3nXZ5pHg8HsrsRnVJhlqIqBnJ+n8SV
-	oUSHbUQsEeF8jCtpgS5JAXennVPt7DAHdaQdoKt9/TjkYMP1RrAMSemttOdG3S1f5q4B3q
-	pOTVITIZH20UTc7fNGgqU6kq0kHXepc=
-Message-ID: <d8d818fa-dac3-4200-a8bb-e6d664725783@ixit.cz>
-Date: Fri, 31 Jul 2026 16:55:20 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nt9+nF5Z"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2ccdce28edeso1165945ad.0
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 08:49:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785512951; x=1786117751; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=CZlO6ryQTGpm3SzZQm5FnSP1XcX7Y/GaBhxwcLiVUTU=;
+        b=Nt9+nF5ZpQssJv6+Dxrl95sTRnDzRY1k+PmgCiZjM37kFsuhRIIgNfHwKJ0CLlBuJi
+         IunTU0Xyy6dIMtELgkMeJay2xWsbMna4Ps+6Y/G5tDjggseIlz2CnDrKR9I2PSGjTk1W
+         spPeU6c6hyYOBfxI2tnP8vV06RujANDF0PPCqghbpEZwysmX61F+5UaxiYVK5zppzxAf
+         tpfNEK++8iW3ekWixNP1PlaQvJ9Ls/sXnF3hMitwsCXxGtbDwKTkhqRFHot9DIJkI4Cb
+         DT36Y4bi2EfH7Y3wcKxx2yBM7yHqWVNl2raX7DYpQT1e5VwWxpuIPl3gEoJhJAYy9QjX
+         mWYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785512951; x=1786117751;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CZlO6ryQTGpm3SzZQm5FnSP1XcX7Y/GaBhxwcLiVUTU=;
+        b=a6Hw1s3ciPIHhLkfmpvjuOd9+d9CzKBh5rHx11J1u5yRYrErLh4Rxa3kCehUcbqJMH
+         o7b9C7xqQMHlUha+yoQgDmdv67bSa3ryrfwp4oiZ6LjFWTU7rHGM3rmQji+e11IvHM0Z
+         4/T+JfwvxC6SN2cQDGclkTk9KXt9oAmxgckwRAGYvy9AK++nRtmLhRHMB5oRI3Sl9/Q9
+         pMDSq6XNWsZspWHDB+HB2Soswecc8Bj4godFYy6WSmMU0/i3j0+t6NmbIqLJmkLA47+7
+         fAdBP/qMAspQ9LF4Qh7yY+umhzumu6rHsX3UbD5OPTwWlfK/+RJ0A/Gfntq6hMnpMcxO
+         xC8A==
+X-Gm-Message-State: AOJu0Yygk6MQcgIS2D0id6TdkPiec0NiFix9s7OnCLPa5IWDp7kgAGfQ
+	KBq6Y8MDXYX8+dQiNiSb23z3lbCsY+gfYmgPKurcNL42t5CpJ1lbwYub
+X-Gm-Gg: AR+sD13YNDv56GlHrHW4Xe9L3EcM8L2eAwaj94zLP3nFlmwtuoA6ULE8Udeg7w2wKeg
+	2MVpy2nc3KYH+l1Hy+HSCWdqg4y4KUoT4lq//EJ3+j7TaxrZ0Sh/Hmmt4veL76MwquteqVvI+eF
+	XXcpFd7XX1WPO+nPmhj93KAf4emZhAb0SAhOeFV9lnQFihAKxSY7NuMeDnkLF5SrCZShtxaK2z8
+	oY9x7sDqWTzYWl8wlLNQSbEQOS0BgSWFM+scWQpJJcbMD58q9aJMJrgw02v+9UDpKmedhQ3rNEH
+	CWfTgLWDHPPwRy4QkH+Nim6AZ69ZMHKR5JZc10T63usupU0r9t+bpKI8zYd218Vs19mBvT+Gtd5
+	qrqBqN/EyTh6x7YGaC+4UZLuLtqCvSBlYBxb7I/X4wIRXrxhwJrGTywj62j1iC/VLzzXFt9SSSp
+	xhmSfu3wODpWsibnUP9Mqr5yejXHWx/rWbi1Ke1FM62jrzTXwbYN3GZQC6/6YlQAtOdPVM/uygw
+	t4=
+X-Received: by 2002:a17:903:18d:b0:2cc:e7f3:d39e with SMTP id d9443c01a7336-2d052298ccemr6519365ad.2.1785512950890;
+        Fri, 31 Jul 2026 08:49:10 -0700 (PDT)
+Received: from Potato.tail66a299.ts.net ([171.76.83.76])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153e045016sm11852510eec.19.2026.07.31.08.49.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 31 Jul 2026 08:49:10 -0700 (PDT)
+From: Shivesh <chanelshivesh@gmail.com>
+X-Google-Original-From: Shivesh <shivesh@example.com>
+To: arend.vanspriel@broadcom.com
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Shivesh <chanelshivesh@gmail.com>
+Subject: [PATCH v3 0/8] wifi: brcm80211: performance and stability improvements
+Date: Fri, 31 Jul 2026 15:48:32 +0000
+Message-ID: <20260731154901.1822-1-shivesh@example.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v2] wifi: ath10k: make in-order rx amsdu buffers
- persistent
-To: Richard Acayan <mailingradian@gmail.com>,
- Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Jeff Johnson <jjohnson@kernel.org>,
- Johannes Berg <johannes.berg@intel.com>, Kalle Valo
- <kvalo@qca.qualcomm.com>, Michal Kazior <michal.kazior@tieto.com>,
- linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- phone-devel@vger.kernel.org
-References: <20260719-ath10k-a-msdu-v2-1-f479bb9d1217@ixit.cz>
- <0b9f80bf-73e8-4e9d-9726-b8816c9a364b@oss.qualcomm.com>
- <amyzhVgSeYO6MptG@rdacayan>
-Content-Language: en-US
-From: David Heidelberg <david@ixit.cz>
-Autocrypt: addr=david@ixit.cz; keydata=
- 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
-In-Reply-To: <amyzhVgSeYO6MptG@rdacayan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 31/07/2026 16:39, Richard Acayan wrote:
-[...]
+From: Shivesh <chanelshivesh@gmail.com>
 
->>>   
->>> +	msdu = skb_peek(list);
->>> +	rxd = HTT_RX_BUF_TO_RX_DESC(hw,
->>> +				    (void *)msdu->data - hw->rx_desc_ops->rx_desc_size);
->>
->> Dead rxd computation before the loop — VALID, MINOR
->>
->> Lines 3168–3170 compute rxd via skb_peek(), but the while loop at 3172
->> immediately dequeues the same SKB and unconditionally recomputes rxd at lines
->> 3175–3177. The pre-loop assignment is never read. It's dead code. The original
->> patch must have introduced this when restructuring (the pre-existing code
->> likely used rxd from before the loop). It should be removed.
-> 
-> This was removed on 20 January 2026 before v1 was submitted. It seems
-> this v2 is based on applying the commits to the pre-2026 patch.
+This series addresses several performance bottlenecks and correctness
+issues in both brcmfmac (PCIe/SDIO) and brcmsmac drivers.
 
-I checked against what Comma.AI uses, and it's also gone there, so we've been 
-using pre-v1 in sdm845-next.
+Changes since v2:
+- core.c: Add skb_cow_head() check before skb_push() to prevent a
+  kernel panic when the skb arrives with zero headroom in monitor mode
+  receive path.
+- cfg80211.c: Fix a silent PMKID list corruption bug in brcmf_pmksa_v2_op.
+  The shadow entry counter (npmk) was stored in list->length, which was
+  then overwritten with the wire-format byte-length at the send: label.
+  On subsequent calls, le16_to_cpu(list->length) would decode the byte-
+  length as an entry count, silently corrupting the PMKID cache.
 
-Dropping it definitely make sense, and since Comma.AI already tested, I assume 
-no regression.
+Changes since v1:
+- Sent with correct author/Signed-off-by address (chanelshivesh@gmail.com).
 
-Will be addressed in v3.
+Patch overview:
+  1. flowring: Replace O(N) blocked-ring scan with an atomic per-interface
+     counter, fixing a teardown counter leak that permanently stopped netif.
+  2. sdio: Coalesce N+1 separate sdio_claim_host/release pairs in the
+     rxglom path into a single pair covering all hdparse calls.
+  3. core: Populate the radiotap header with RSSI from wlc_d11rxhdr in
+     monitor mode, fixing missing signal strength in packet captures.
+     Add skb_cow_head() to prevent panic on zero-headroom skbs.
+  4. cfg80211: Implement the PMKID_V2 set/del/flush paths for FILS
+     fast-roaming support on firmware revision 12 devices. Fix the V2
+     shadow counter overwrite bug. Replace mdelay() busy-wait in
+     brcmf_delay() with usleep_range().
+  5. msgbuf: Increase NR_TX_PKTIDS (2048->4096) and TX flush thresholds
+     (32/96->64/128). Fix silent TX stall under high load by using
+     test_and_set_bit to guarantee worker scheduling.
+  6. pcie: Replace fixed msleep(10) mailbox polling with usleep_range
+     exponential backoff. Replace msleep(50) IRQ teardown polling with
+     usleep_range for faster teardown.
+  7. fwsignal: Document that a duplicate MAC handle ADD is a safe no-op.
+  8. brcmsmac/ampdu: Clarify IEEE 802.11n TID compliance comment.
 
-David
+Shivesh (8):
+  wifi: brcmfmac: flowring: replace O(N) loop with atomic counter
+  wifi: brcmfmac: sdio: coalesce host locks in rx path
+  wifi: brcmfmac: core: populate radiotap header with RSSI
+  wifi: brcmfmac: cfg80211: implement PMKID_V2 and fix delay busy-wait
+  wifi: brcmfmac: msgbuf: tune thresholds and optimize sleep latency
+  wifi: brcmfmac: pcie: optimize latency and irq teardown
+  wifi: brcmfmac: fwsignal: safe no-op on duplicate MAC add
+  wifi: brcmsmac: ampdu: clarify standard compliance on QoS change
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 123 ++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h    |   4 +-
+ .../broadcom/brcm80211/brcmfmac/core.c        |  44 ++++---
+ .../broadcom/brcm80211/brcmfmac/flowring.c    |  65 ++++++---
+ .../broadcom/brcm80211/brcmfmac/flowring.h    |  18 +++
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c    |   4 +-
+ .../broadcom/brcm80211/brcmfmac/msgbuf.c      |  69 ++++++++--
+ .../broadcom/brcm80211/brcmfmac/pcie.c        |  66 ++++++++--
+ .../broadcom/brcm80211/brcmfmac/sdio.c        |  62 +++++----
+ .../broadcom/brcm80211/brcmsmac/ampdu.c       |  11 +-
+ 10 files changed, 375 insertions(+), 91 deletions(-)
+
+
+base-commit: 5e0bcb4920bcb9e0ef6c03a91730fe45f643f3a4
+-- 
+2.53.0
+
