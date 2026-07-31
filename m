@@ -1,84 +1,84 @@
-Received: from mail-vk1-f225.google.com (mail-vk1-f225.google.com [209.85.221.225])
+Received: from mail-pf1-f225.google.com (mail-pf1-f225.google.com [209.85.210.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED0BA3DB336
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 12:35:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB86541D633
+	for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 12:35:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785501326; cv=none; b=ip30AKiw49cfGJrYXPdKrlq21EbuXRc2w6sEYlN4bh5G6lEUHZhZCHpdH13Yx8mo24O31UfhWfOfz505qqKFwL9IwtlhqPtizG/r/RqZVHwmLOdp0/D2dS7tc5F8nTLOU2RNQFAoDYdcZ7y5ZiznED2u4hRrHUJ+JwR5w1beA4I=
+	t=1785501328; cv=none; b=H5xPQCM2vPmBov3d42us8rLbKqAaGkwf/DUpx0stQrdTR3tagpAJ6v+/JXJ7Ax1ZqGWXLRazwMVuZaHdSAo85/wNdk7Bxk2E6dMwnM68qxr9OY0dclbmjnbbUSSZqovdlrS70gDPNcsBJh7vKWpfLvOapDUsbFaDbhepVz0hd4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785501326; c=relaxed/simple;
-	bh=gTdggbvaB6x7848EGqj36834vWoqoSIsvC5RhvMirJ4=;
+	s=arc-20240116; t=1785501328; c=relaxed/simple;
+	bh=jK3suJFo5svwCW7SI53ge/3Tbq431K/wpYj8IJr6xLM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TuB4o2xT6TNo6zvCfxN+dmKNFh1HAsy3fAF0vlccJ7cVnkUZewKggpjMv++0c8fK5BobkY+xLDdoOHbZzs9QKIyGYpVC5NfDyEn6DvAd9t3JE79aN/cErmkqL2TtMDAq5d0LHx6CaMqW3Bn4yXpDTJG+/DpC17noB9jdrxPD3JY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hryJf6q8; arc=none smtp.client-ip=209.85.221.225
+	 MIME-Version; b=cqFaNbkNn0AOqd70nESZGbDtZ5AFxpvUAnqLofK8rq/vmq5ju+xz97OFe4iyVU0H77J8rVuZfTBWvanLByjaioIM3TjN2+TEp/nLF2Op0Lg+ZY8c4uTJ2CKs2PYsu8M/+JRh3N7B1rr1dh/+MNmx8DUJ8XKp9gJ4l9m3uZCbprQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=aO5BHBTo; arc=none smtp.client-ip=209.85.210.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hryJf6q8"
-Received: by mail-vk1-f225.google.com with SMTP id 71dfb90a1353d-5bfb3347dc4so575828e0c.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 05:35:24 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aO5BHBTo"
+Received: by mail-pf1-f225.google.com with SMTP id d2e1a72fcca58-84e0688b859so496124b3a.0
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 05:35:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785501324; x=1786106124;
+        d=1e100.net; s=20251104; t=1785501326; x=1786106126;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=dvzVH9b2ozkOdQzhM+oBzR772b6NvYmkBpZvSNx5YlI=;
-        b=TwGnUEXD+Ub/Nf1raY4flk/PacQqMlYVdTi8CJepV21/wvWmVzNgMnp88qyTaiJQZN
-         gIBVMx+ByFYNAWBB8vtH1Nf3TxwL8G8PoPcn/umyjdqBHEygzSFanfYlWehyxhiy6seg
-         q00T564837So72dLbqngm8LeFucYtEGhExUlmSF+aWFg/fZTbZcV6JjvjL+DcQ2YcOjp
-         ytDmOWjKal0W6xGp7EBOHFALcqzZKgZtnX8U+6xSdKwDoPBn4GhmZvvLjl7nGA1BREPW
-         WuLITnyRqYHNjlkfzvDlTKMrvyrEUwAkwaHNbHMsGcaKLAW+jK1hFRLm5H1ENFQWiuyW
-         JMaQ==
-X-Gm-Message-State: AOJu0YzewgwbMAyLghC7XrT6fDe5l1cnRE/+f+BQcmzQMMCHF9PkCfLU
-	wtacxx6hslGOj8fK9nkyWNBefR5B779KJGgQGVHnFGV1JVKjHy81o3lAlyaW+Cec0hXjIsshiFI
-	zaqjwHOz66d8h6fFiogSLUtQdvXZmnTl2Kyd59b9XyZE7nmzvZdUcIIfXpQvgwaO94GvBL1BDiT
-	H+DcZp6gZ/n4ldoDdI82RCQB683Qbi9CcgkV1BCJqhmpqApozNgBXCDSYdYtCHHYStYJpVzVyHl
-	+sPXLL/XFV1Fqb7q6SKPSbEbkgv
-X-Gm-Gg: AR+sD11R3Q+My1Ei9Uq0oXulyV0SW+TdmD/J844DP//QGQNOrKqeequ4yjtllSqmOEg
-	wtwcwzdeOl89RfxfUcfsy5RLkTXGt7RxyNV25MYTlET3Zy1kqAa3L6fxxrXFT11uX1BJTvHXSUe
-	ga+wRvEdGOnclUSzjZja1XLD2fqxTPT8nXH58bd9H+OP2k/3toz1DCs4yQLZTBdGmHla8dweKy/
-	AcqUQR8GFJgvY+LVNtMCkA+6ZiSmoy8mgBEQUca1iAaEgadZtJykdEXBcDyn//UaQNDIsjm3jHf
-	HBa+1OYv0M0l4/ftUE1+WuZB2mcOfLdn6BZ/1SEsOJs/c0LyYR3tdrOq+mWDJ5OWJHLXwIx/42C
-	qk+5SkASzhR5F2203z9NlUtbWqsssJy+EB6ehv8JIAYJjH+tTocv/XhOFU7mM2eqDAZ5Ci6li3P
-	YPmBwfX4GNPsb+kvex8DBCC3+dvFTzhmCg+7lJxd8=
-X-Received: by 2002:a05:6122:c84:b0:5bf:8109:dc81 with SMTP id 71dfb90a1353d-5c37e6d6278mr499946e0c.14.1785501323655;
-        Fri, 31 Jul 2026 05:35:23 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c37ecd4d2csm187880e0c.6.2026.07.31.05.35.23
+        bh=kIl1FECj4ULR/8VITs0v8eyw9e7Au1gZH8UIwlr6tTU=;
+        b=h5XoyyzLEo9iEWe7Xyz/zkzUD7kfMxJf4cYF627k1yYYQxynaZ4dfZO/y3HZAQz3k7
+         lkvsnwGdnEu5DdLB+1ztiiML+ej3L/tQYECMlSDydXxmkhVm3lt+t3rd8ujBlXfLBVsV
+         sVTck0cH2HnjXFoXxKjEItU3JZhTKetGj5NEQ598i7HfGnnMMJucX9qxh0anJ41eBS0x
+         kmT5mqYP9wOZdTmQ8kFNCzJ250cXVIlMGgh+Ssbvk665Cetg1Uh+VWOWgehSjOL3ono/
+         ZwuOFykqXtBeyFbS+4aGmzpU1hPQJIjqSExJpFqOuTsE5pb2E/sd0u/+DzVkK9StSs2C
+         R0pA==
+X-Gm-Message-State: AOJu0Yy0BQbzStZExJaiqSP36pzUJh3H44zPaDalKmOZMVSmvwSdjuYu
+	a9ezZAhEAKbaqlIkfofFX6SrVB/bWaeWsJl6PcNlylPHrW2+AtBBQdIekFpTd4dcgv1V/90ef54
+	tfN1yMxOF9qF0d76YOij8V0DgBbszf8Mq1+afHYSGdSy33ZV7g4v2Ord2CYkMa+WyfBY5CiEVSP
+	Atkn6RdodW0fSNHLgh79yeqdR3bkJR30EhdTfnHGEEtRE1XrOn8SYvDusmCikG3nGtKk45dxjiW
+	3e2iDtFoIZVggCrH+/NmPEUw4DC
+X-Gm-Gg: AR+sD117YGP2oo0XbXU3snB1PKxTAnFGWam9rf5ueazdrJ9D8xaBZ8W7bceJXa0CqlL
+	5eUvQE66E+PXfs6u30VvJEvtz9m7tZMdpICOs+W2wpkKCkkVwjMuriLSbdXAdxEcYERfCXnbZiO
+	RKbgWuCrN1HVrGsYPjNjQqLZpc/XNDNv3nBTgJkgZQ4sytdYbvUN9bTsFsq2zQ+aL7hSyqW2vUi
+	/l4O1NM0suZJLbp4ZABFnthDpe0ujwo3eiiktE23eO/UEmxLcLmH+PRnMtaUc3iBVMpzMcyZytw
+	BTC3+nOkthr1F8eIYcr+yuivcPZK2D86qfFjhFhUu4Sr8u/kD0CH/Bhhqs2qlb9+SkxyzgE6AfJ
+	5u08ZX9msfQUQeaiZX1lSdiIpplRbwF/fhVTGCTOpOsTgRX4frODsdrbKZPb7bcBS71eG5RmE1b
+	q2Oe2vOlmlvYo8Dw72R0o6YpQdEUoyIZ26V+FAs14=
+X-Received: by 2002:a05:6a00:12e9:b0:847:99a7:c751 with SMTP id d2e1a72fcca58-84ed6d8d678mr1532064b3a.25.1785501326124;
+        Fri, 31 Jul 2026 05:35:26 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
+        by smtp-relay.gmail.com with ESMTPS id d2e1a72fcca58-84edc273ba3sm65009b3a.5.2026.07.31.05.35.25
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 31 Jul 2026 05:35:23 -0700 (PDT)
+        Fri, 31 Jul 2026 05:35:26 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cbb20f82a0eso1303006a12.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 05:35:22 -0700 (PDT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cccfa32670so10605625ad.2
+        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 05:35:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785501322; x=1786106122; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1785501324; x=1786106124; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=dvzVH9b2ozkOdQzhM+oBzR772b6NvYmkBpZvSNx5YlI=;
-        b=hryJf6q8QxqW3G65dNiEpCeuTUCkX6aAh2wdhOHbTz/71N5Br8E0bDo5r54rxo/JcJ
-         w6P6WtI1j4ti+l6LiRJ2YhWtmGF0kKq8ERp+ZDdxPewxh0AGZJcNuYu9AAS0Z9elwqzM
-         +b3N8vf7DyDvEWvS6CM5MI+7+JK6QemZbNICI=
-X-Received: by 2002:a05:6a21:6cc4:b0:3c8:e397:cf77 with SMTP id adf61e73a8af0-3c91b176954mr1786161637.2.1785501322100;
-        Fri, 31 Jul 2026 05:35:22 -0700 (PDT)
-X-Received: by 2002:a05:6a21:6cc4:b0:3c8:e397:cf77 with SMTP id adf61e73a8af0-3c91b176954mr1786133637.2.1785501321426;
-        Fri, 31 Jul 2026 05:35:21 -0700 (PDT)
+        bh=kIl1FECj4ULR/8VITs0v8eyw9e7Au1gZH8UIwlr6tTU=;
+        b=aO5BHBTozAQoxSX/JLQ/Ek5Yqe0syQMXXWM6o5o9b5pvyV0B1cb62FymhwW8Yo8pcU
+         iRC1LO4AhV7VW8ojt99q6gZ5/eqTB1yNaZb2zQKhbRlatVOZRxR2JBfBz98NwgdM5g2d
+         oBUZh9I4DJzDdG4xOtu7ZUb+YNW4KAvh9wduc=
+X-Received: by 2002:a05:6a21:3216:b0:3c3:c687:a3b9 with SMTP id adf61e73a8af0-3c91b314ab8mr1859160637.48.1785501323998;
+        Fri, 31 Jul 2026 05:35:23 -0700 (PDT)
+X-Received: by 2002:a05:6a21:3216:b0:3c3:c687:a3b9 with SMTP id adf61e73a8af0-3c91b314ab8mr1859141637.48.1785501323572;
+        Fri, 31 Jul 2026 05:35:23 -0700 (PDT)
 Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153dd9be04sm5187041eec.9.2026.07.31.05.35.19
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153dd9be04sm5187041eec.9.2026.07.31.05.35.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2026 05:35:20 -0700 (PDT)
+        Fri, 31 Jul 2026 05:35:23 -0700 (PDT)
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
 	brcm80211@lists.linux.dev,
 	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH -next v3 02/13] wifi: mac80211: stop using ieee80211_mgmt_tx_cookie()
-Date: Fri, 31 Jul 2026 14:34:58 +0200
-Message-ID: <20260731123509.1975281-3-arend.vanspriel@broadcom.com>
+Subject: [PATCH -next v3 03/13] wifi: ath6kl: use pre-assigned cookie for remain_on_channel and mgmt_tx
+Date: Fri, 31 Jul 2026 14:34:59 +0200
+Message-ID: <20260731123509.1975281-4-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260731123509.1975281-1-arend.vanspriel@broadcom.com>
 References: <20260731123509.1975281-1-arend.vanspriel@broadcom.com>
@@ -91,139 +91,169 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Now that cfg80211 pre-assigns the cookie before calling into mac80211,
-stop calling ieee80211_mgmt_tx_cookie() in all affected paths:
+Stop generating cookies in ath6kl_remain_on_channel() and
+ath6kl_mgmt_tx(). cfg80211 now pre-assigns the cookie before calling
+into the driver.
 
-- ieee80211_start_roc_work(): for normal ROC use the pre-assigned value
-  directly instead of generating a new one.
-- ieee80211_attach_ack_skb(): the cookie is already set by the caller;
-  remove the ieee80211_mgmt_tx_cookie() call and store it in the ack
-  SKB as-is. This covers both mgmt_tx and probe_peer since both call
-  ieee80211_attach_ack_skb().
-- ieee80211_mgmt_tx(): the dummy 0xffffffff assignment for the
-  dont_wait_for_ack case is no longer needed; cfg80211_assign_cookie()
-  guarantees a non-zero value which is sufficient for the internal
-  ROC vs mgmt-tx distinction.
-- ieee80211_store_ack_skb(): same fix for the tx_control_port path.
+For remain_on_channel, store the pre-assigned cookie in
+vif->last_roc_id. Widen last_roc_id and last_cancel_roc_id from u32
+to u64 to hold the full 64-bit cookie value.
 
-With no remaining callers, remove ieee80211_mgmt_tx_cookie() and the
-roc_cookie_counter field from struct ieee80211_local.
+For mgmt_tx, store the pre-assigned cookie in wmi->last_mgmt_tx_cookie
+so the firmware TX status event handler can pass the correct cookie to
+cfg80211_mgmt_tx_status(). Thread the cookie through the powersave
+queue (ath6kl_mgmt_buff) so it is available when the frame is
+eventually dequeued and sent.
 
 Assisted-by: Claude:claude-sonnet-4-6
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- net/mac80211/cfg.c         | 14 --------------
- net/mac80211/ieee80211_i.h |  3 ---
- net/mac80211/offchannel.c  | 17 ++++-------------
- net/mac80211/tx.c          |  4 +---
- 4 files changed, 5 insertions(+), 33 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 18 ++++++------------
+ drivers/net/wireless/ath/ath6kl/core.h     |  5 +++--
+ drivers/net/wireless/ath/ath6kl/main.c     |  1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c     |  1 +
+ drivers/net/wireless/ath/ath6kl/wmi.c      |  2 +-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |  1 +
+ 6 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0a9247be26af..b6d02d2b28f5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -4831,19 +4831,6 @@ int ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	return __ieee80211_channel_switch(wiphy, dev, params);
- }
- 
--u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local)
--{
--	lockdep_assert_wiphy(local->hw.wiphy);
--
--	local->roc_cookie_counter++;
--
--	/* wow, you wrapped 64 bits ... more likely a bug */
--	if (WARN_ON(local->roc_cookie_counter == 0))
--		local->roc_cookie_counter++;
--
--	return local->roc_cookie_counter;
--}
--
- int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
- 			     u64 *cookie, gfp_t gfp)
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index ecde91159b54..e9d6e6a53d7d 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3038,16 +3038,10 @@ static int ath6kl_remain_on_channel(struct wiphy *wiphy,
  {
-@@ -4868,7 +4855,6 @@ int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
- 	IEEE80211_SKB_CB(skb)->status_data_idr = 1;
- 	IEEE80211_SKB_CB(skb)->status_data = id;
+ 	struct ath6kl_vif *vif = ath6kl_vif_from_wdev(wdev);
+ 	struct ath6kl *ar = ath6kl_priv(vif->ndev);
+-	u32 id;
  
--	*cookie = ieee80211_mgmt_tx_cookie(local);
- 	IEEE80211_SKB_CB(ack_skb)->ack.cookie = *cookie;
- 
- 	return 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a1ef88fe846d..3760319ab079 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1710,8 +1710,6 @@ struct ieee80211_local {
- 	struct list_head roc_list;
- 	struct wiphy_work hw_roc_start, hw_roc_done;
- 	unsigned long hw_roc_start_time;
--	u64 roc_cookie_counter;
--
- 	struct idr ack_status_frames;
- 	spinlock_t ack_status_lock;
- 
-@@ -1991,7 +1989,6 @@ u64 ieee80211_reset_erp_info(struct ieee80211_sub_if_data *sdata);
- 
- void ieee80211_handle_queued_frames(struct ieee80211_local *local);
- 
--u64 ieee80211_mgmt_tx_cookie(struct ieee80211_local *local);
- int ieee80211_attach_ack_skb(struct ieee80211_local *local, struct sk_buff *skb,
- 			     u64 *cookie, gfp_t gfp);
- 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 2bceb73717c6..94be6497f259 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -602,14 +602,12 @@ static int ieee80211_start_roc_work(struct ieee80211_local *local,
- 
- 	/*
- 	 * cookie is either the roc cookie (for normal roc)
--	 * or the SKB (for mgmt TX)
-+	 * or the mgmt_tx cookie; both are pre-assigned by cfg80211
- 	 */
--	if (!txskb) {
--		roc->cookie = ieee80211_mgmt_tx_cookie(local);
--		*cookie = roc->cookie;
--	} else {
-+	if (!txskb)
-+		roc->cookie = *cookie;
-+	else
- 		roc->mgmt_tx_cookie = *cookie;
+ 	/* TODO: if already pending or ongoing remain-on-channel,
+ 	 * return -EBUSY */
+-	id = ++vif->last_roc_id;
+-	if (id == 0) {
+-		/* Do not use 0 as the cookie value */
+-		id = ++vif->last_roc_id;
 -	}
+-	*cookie = id;
++	vif->last_roc_id = *cookie;
  
- 	req = wiphy_dereference(local->hw.wiphy, local->scan_req);
+ 	return ath6kl_wmi_remain_on_chnl_cmd(ar->wmi, vif->fw_vif_idx,
+ 					     chan->center_freq, duration);
+@@ -3106,6 +3100,7 @@ static int ath6kl_send_go_probe_resp(struct ath6kl_vif *vif,
  
-@@ -1021,13 +1019,6 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			kfree_skb(skb);
- 			goto out_unlock;
- 		}
--	} else {
--		/* Assign a dummy non-zero cookie, it's not sent to
--		 * userspace in this case but we rely on its value
--		 * internally in the need_offchan case to distinguish
--		 * mgmt-tx from remain-on-channel.
--		 */
--		*cookie = 0xffffffff;
+ static bool ath6kl_mgmt_powersave_ap(struct ath6kl_vif *vif,
+ 				     u32 id,
++				     u64 cookie,
+ 				     u32 freq,
+ 				     u32 wait,
+ 				     const u8 *buf,
+@@ -3138,6 +3133,7 @@ static bool ath6kl_mgmt_powersave_ap(struct ath6kl_vif *vif,
+ 
+ 			INIT_LIST_HEAD(&mgmt_buf->list);
+ 			mgmt_buf->id = id;
++			mgmt_buf->cookie = cookie;
+ 			mgmt_buf->freq = freq;
+ 			mgmt_buf->wait = wait;
+ 			mgmt_buf->len = len;
+@@ -3222,7 +3218,6 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		 * Send Probe Response frame in GO mode using a separate WMI
+ 		 * command to allow the target to fill in the generic IEs.
+ 		 */
+-		*cookie = 0; /* TX status not supported */
+ 		return ath6kl_send_go_probe_resp(vif, buf, len, freq);
  	}
  
- 	if (!need_offchan) {
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0cf5f6ec75e6..6993e694e835 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2605,10 +2605,8 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
- 		if (id >= 0) {
- 			info_id = id;
- 			*info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
--			if (cookie) {
--				*cookie = ieee80211_mgmt_tx_cookie(local);
-+			if (cookie)
- 				IEEE80211_SKB_CB(ack_skb)->ack.cookie = *cookie;
--			}
- 		} else {
- 			kfree_skb(ack_skb);
- 		}
+@@ -3235,16 +3230,15 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		id = vif->send_action_id++;
+ 	}
+ 
+-	*cookie = id;
+-
+ 	/* AP mode Power saving processing */
+ 	if (vif->nw_type == AP_NETWORK) {
+-		queued = ath6kl_mgmt_powersave_ap(vif, id, freq, wait, buf, len,
+-						  &more_data, no_cck);
++		queued = ath6kl_mgmt_powersave_ap(vif, id, *cookie, freq, wait,
++						  buf, len, &more_data, no_cck);
+ 		if (queued)
+ 			return 0;
+ 	}
+ 
++	ar->wmi->last_mgmt_tx_cookie = *cookie;
+ 	return ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx, id, freq,
+ 					wait, buf, len, no_cck);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 77e052336eb5..a0b236eeeab5 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -404,6 +404,7 @@ struct ath6kl_mgmt_buff {
+ 	u32 freq;
+ 	u32 wait;
+ 	u32 id;
++	u64 cookie;
+ 	bool no_cck;
+ 	size_t len;
+ 	u8 buf[];
+@@ -631,8 +632,8 @@ struct ath6kl_vif {
+ 	struct cfg80211_scan_request *scan_req;
+ 	enum sme_state sme_state;
+ 	int reconnect_flag;
+-	u32 last_roc_id;
+-	u32 last_cancel_roc_id;
++	u64 last_roc_id;
++	u64 last_cancel_roc_id;
+ 	u32 send_action_id;
+ 	bool probe_req_report;
+ 	u16 assoc_bss_beacon_int;
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 8afc6589fc51..9c023d7ce305 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -898,6 +898,7 @@ void ath6kl_pspoll_event(struct ath6kl_vif *vif, u8 aid)
+ 		spin_unlock_bh(&conn->psq_lock);
+ 
+ 		conn->sta_flags |= STA_PS_POLLED;
++		ar->wmi->last_mgmt_tx_cookie = mgmt_buf->cookie;
+ 		ath6kl_wmi_send_mgmt_cmd(ar->wmi, vif->fw_vif_idx,
+ 					 mgmt_buf->id, mgmt_buf->freq,
+ 					 mgmt_buf->wait, mgmt_buf->buf,
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index d81825413906..609d458ca6c5 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1469,6 +1469,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 					spin_unlock_bh(&conn->psq_lock);
+ 					idx = vif->fw_vif_idx;
+ 
++					ar->wmi->last_mgmt_tx_cookie = mgmt->cookie;
+ 					ath6kl_wmi_send_mgmt_cmd(ar->wmi,
+ 								 idx,
+ 								 mgmt->id,
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 6c29f0bcec9f..2140fddba8ba 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -596,7 +596,7 @@ static int ath6kl_wmi_tx_status_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "tx_status: id=%x ack_status=%u\n",
+ 		   id, ev->ack_status);
+ 	if (wmi->last_mgmt_tx_frame) {
+-		cfg80211_mgmt_tx_status(&vif->wdev, id,
++		cfg80211_mgmt_tx_status(&vif->wdev, wmi->last_mgmt_tx_cookie,
+ 					wmi->last_mgmt_tx_frame,
+ 					wmi->last_mgmt_tx_frame_len,
+ 					!!ev->ack_status, GFP_ATOMIC);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 8fbece3fdad9..89ce2abbb1cd 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -125,6 +125,7 @@ struct wmi {
+ 
+ 	u8 *last_mgmt_tx_frame;
+ 	size_t last_mgmt_tx_frame_len;
++	u64 last_mgmt_tx_cookie;
+ 	u8 saved_pwr_mode;
+ };
+ 
 -- 
 2.54.0
 
