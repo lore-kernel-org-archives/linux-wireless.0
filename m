@@ -1,396 +1,744 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4E901F12FB
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Aug 2026 18:01:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A80D3C76BC
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Aug 2026 19:56:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785607320; cv=none; b=R/be6hs7Q5wL2k8PEyYVA8/PmHBD78mCenhg1/4oQTPH1mz437ZbBOWuXOc1+Hc9CRxokIKvfocMcKsr9B38yeu6Rqr5Z9ATHI63UqBAI3oxz93EzymcuTQXvU646a3wdyXNzQ+llaq6Q6GrjR7qHTUUVUv3eoZTkKKfyTmJyko=
+	t=1785614191; cv=none; b=s1mN5S3IfOGFdlvQIgwtZ2/hD74MLngsjpa/SY/AAHuDYCQHKOCEOSAesgXN1y0bmDy6DQE/pC0Q6ASrL+GpcaclVgt+5QnsgUIwh+ZUDxhAxXTwjmEzLElIFZ8N40cA4v8FJLelcNStNLQv4D8NQck/sC4hlOpTiNBLLOyni08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785607320; c=relaxed/simple;
-	bh=NoRO0YWi3XqQjzt6kyMB79k85tg9ohVVdmI+pYF1aXg=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=UfQ3tlMNnzEiqoaDG6+m0e6THzLsiraffknYz7IolcpTtsHO3UyXsVibXeniGzdcRf0LnqjrOCTf9G8ykzC5MtwFHAUd9x/JETPRXLkzbFwPsa15KzQOT5GZX3rZkMsvLerKlRCKL9VLrgh1o++3EnNRctMpUQOn3Sw0XoopSxk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=o6t8Fgao; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1785614191; c=relaxed/simple;
+	bh=jRCtHxYQbzSVipaJb15HIDt3mt8am6/lnYyTBvSwHXM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tgAqvMo/ElbzQqvlzB+fK1EGnI9A8fZtpCGrbYEizZIAiXZN3E8BtwupXUVfXg5RUPi+BId7rXYSeSCpMhqQUviduS15sxoCqgmczwatESQ/GWYyEF7EhpefDzEjFyqJMqkvkIoVdomvecXvJBn4qZARbPMjIgugIUR9MI+CcSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DL1LcvNk; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KWt5UWon; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="o6t8Fgao"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:Cc:To:Subject:From:
-	MIME-Version:Date:Message-ID:Sender:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=joaoAaEUNqIZVlyjYjIttPHChItNIZeqXdx5BBAGFds=; b=o6t8FgaoiQVHD5TAFA3Ih9m3WA
-	z/kMhYp26uQrpNpXACEG2rqJjWNXNyu4cVK24hJW89a7F587FqxZuaXVZDNeDYUb/BPzLxNyYHpyF
-	HLcoVIjCwouLXkpysU2d3g23EIqQAsBfy5DFVnXO5walDnDFv70Yl6RRBLVGEDseAFU0=;
-Received: from p54a43140.dip0.t-ipconnect.de ([84.164.49.64] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1wqE1z-00A1BF-24;
-	Sat, 01 Aug 2026 20:01:55 +0200
-Message-ID: <fcde5dc7-5870-49f6-8e19-636fa5734884@nbd.name>
-Date: Sat, 1 Aug 2026 20:01:55 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DL1LcvNk";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KWt5UWon"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 671JWmdU4099073
+	for <linux-wireless@vger.kernel.org>; Sat, 1 Aug 2026 19:56:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=YilNsvftXkeJTNgADTddjj92CPFeR7A2/HJ
+	cuCj9OM8=; b=DL1LcvNkw21qL3Bm/fQqOWiVRKLOkLn7baYE+LjJlQZY29mMEMb
+	K6rM2iiMi28eCaS4WMLpZPdoZH7pGdTyQdz9jcVXTzS6PkF7N1f8CoAMd1SoKh9P
+	WHAAVQa6do/6X9yfR9EROo2Yq2py9W/D94/OZqoH94YrxgE4vtBbYQirDUQ01/xI
+	7MY/75zQsIEc8YxVDlcT5TuXwVJhhkZnYOdg2Zu0VOne+iaj3uAc3PYYEoYQdljQ
+	9JaP9uXow7znnQ+dO+WKU5nSLfQimWAXgtirtkC7J0JkeiIU6V4OWvKMqnIQQTIX
+	KhFZ2NgJ2PYpai3oqjo1tfygYeCUTar5fZQ==
+Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com [209.85.160.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fs8q51msm-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2026 19:56:28 +0000 (GMT)
+Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-51c0199faafso21312761cf.3
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2026 12:56:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785614182; x=1786218982; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=YilNsvftXkeJTNgADTddjj92CPFeR7A2/HJcuCj9OM8=;
+        b=KWt5UWon+o9Qcz7a/RnrT3U3kFp4Qnae0AfTAlFLbaugYr/FbcoSjYdlXo/xTioskQ
+         bVquFQa89/KFywR1V8xEB45ztGsdu3D0Eulq2U6k9uqayo6EOHtC6DYmJJXxHSmns5M5
+         nAMRBny8EfhaDZBeA6mIrndeIPoDeCzNcDX0zjXL9wi77UV12AXaN26K4LHJWODUIp1O
+         2nVBJEzJp3pCFOCYxzH3F91fSuCiKJeori+kXp5kBSTx4VVhc2ZOmJvN5FRXCu04J52r
+         V+2x5ygXFXIXLjEu+G2SS0oqx07EJRJeXmfDsf1sXzjGBAggxKlB3c8FfBXlYTVZ2t2s
+         +cmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785614182; x=1786218982;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=YilNsvftXkeJTNgADTddjj92CPFeR7A2/HJcuCj9OM8=;
+        b=q1b/q8ceVIjCkLchqfY9cVthTArqI5zLIMqmhGj0oXEAfuKgnnFO//giEW9ds9mBx9
+         6eg3gfgHmF0Sh3+quMbPizsfdFP5KukSCH39q7KF+Sw8Jl4q0QYNSzM36HaxL/t4mKEu
+         VhPX620JLEaN89n/m+8ez/CardtKG+XKBmK5gLmapOhN+Mhik3dlwtznWRtVuNLIvwhM
+         zDVcUknrWy+VF/lbha05HuBJN8q6F1XL34dIBRSOhx2L/5v+d5sdGlIk/idDm+mJaGAc
+         uTX1aKF87QekJD6ukQ0NP7FPYWuBvTGafTzMG8F7uuuArOMqf8BCp5KMYHbIcrNKgmqA
+         oAGg==
+X-Forwarded-Encrypted: i=1; AHgh+Rols1jsILAQxIdkRqxlI0DF4FGnqq+vrLcimk3tkqq+rKYHob+/mus+DKHiplXO10inLy1iOi82KArHmrHRAw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+1/HkZhdT5TqvusE4Uux9F4/6gsT6lBTw/7VJtdWXnv5nAIvI
+	/9C7LAbFyMZ0+DwuzeJGU+s1TcP0siGurDMGJh/cHyCicX3WF0FpjfK4PXnKfB8DuyyCsjQV8Yz
+	QsD/qfriBJTNUAJOksedduHWjimFZHEFIOKiW4rk0/tJuEcUAdqHYw6fn++RnVCT1Fx2asQ==
+X-Gm-Gg: AR+sD10CMd3ugwUANPxbrR3cNEv3Dl5N3rJRlfguaXDOwy2zS5aT8P/S1LsoaHbQilU
+	n43Pv6F9+LegZZXhYD/GW57QlBqgad5GPGsyWpx5j1E4V6eJjRCvQoEWsGSKMtTTGR/GzCC5RT3
+	lR1VhPjNBwONCi1epe7zWGQp5S+/lbtn4Bmu8vEC5xE/dGIKj49woBnvcsVt2KYjYKgsaPmMb+L
+	H7e3tdaFzDbQrkC/MILmy9aRdsHNSWnwT80UvA9X4XGEUdB5OmFhQoZOh/iD+QUoe7z8amfmFMM
+	vgjEf3yYH1aT2vaFJjHNEevKEdjGBOYnZE07WV1Z2vOO3G17wY4MTREu5tnxQ5q4uRieUAxqYta
+	U1JYuzwOPrHNw550R
+X-Received: by 2002:a05:622a:2596:b0:51c:c6c:9d65 with SMTP id d75a77b69052e-52b5667054fmr101489091cf.1.1785614181488;
+        Sat, 01 Aug 2026 12:56:21 -0700 (PDT)
+X-Received: by 2002:a05:622a:2596:b0:51c:c6c:9d65 with SMTP id d75a77b69052e-52b5667054fmr101487961cf.1.1785614180919;
+        Sat, 01 Aug 2026 12:56:20 -0700 (PDT)
+Received: from quoll ([178.197.223.174])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47fd41cfde0sm16523909f8f.3.2026.08.01.12.56.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 01 Aug 2026 12:56:18 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+To: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Mike Leach <mike.leach@arm.com>, James Clark <james.clark@linaro.org>,
+        Leo Yan <leo.yan@arm.com>, Damien Le Moal <dlemoal@kernel.org>,
+        Niklas Cassel <cassel@kernel.org>, Jyri Sarha <jyri.sarha@iki.fi>,
+        Tomi Valkeinen <tomi.valkeinen@ideasonboard.com>,
+        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Linus Walleij <linusw@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Andi Shyti <andi.shyti@kernel.org>,
+        Jassi Brar <jassisinghbrar@gmail.com>, Lee Jones <lee@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Jeff Johnson <jjohnson@kernel.org>, Viresh Kumar <vireshk@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
+        Yangbo Lu <yangbo.lu@nxp.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+        Paul Walmsley <pjw@kernel.org>,
+        Samuel Holland <samuel.holland@sifive.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Richard Cochran <richardcochran@gmail.com>,
+        Jens Wiklander <jenswi@kernel.org>,
+        Yuanfang Zhang <yuanfang.zhang@oss.qualcomm.com>,
+        YC Hung <yc.hung@mediatek.com>, Svyatoslav Ryhel <clamor95@gmail.com>,
+        Sean Wang <sean.wang@kernel.org>, Frank Li <Frank.Li@nxp.com>,
+        Peter Ujfalusi <peter.ujfalusi@gmail.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        coresight@lists.linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-mediatek@lists.infradead.org, linux-gpio@vger.kernel.org,
+        linux-i2c@vger.kernel.org, mfd@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-pm@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-usb@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: [PATCH] dt-bindings: Correct white-space style
+Date: Sat,  1 Aug 2026 21:56:14 +0200
+Message-ID: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Felix Fietkau <nbd@nbd.name>
-Subject: pull request: mt76-next 2026-08-01
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Language: en-US
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=25041; i=krzysztof.kozlowski@oss.qualcomm.com;
+ h=from:subject; bh=jRCtHxYQbzSVipaJb15HIDt3mt8am6/lnYyTBvSwHXM=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBqbk9dcmvFjYCVFkZB2dpTSq2XFpopFEsJgYPdk
+ MOOvnArybaJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCam5PXQAKCRDBN2bmhouD
+ 13wqD/kBunGPSCWQR/b5Wxs6ixKR+A10NDRYBErq4Tta9I5OlO8dNcUw4VsWhVirfb+XK+6LMv2
+ 2lLjyQ9SbjrQfmzFsBMBbtJ6p5NGoP1pE83mslHrQ6LZsrBLt38R0U0KeVjpwegZhaLn9jegUG5
+ WwSKtZ0XOXPUpwvGoNE90C2Yiq2ES3TtXSnDEeYfhohFeSsK7r8LKyu9C7HpLrjAsmIoUzjhins
+ JZp/lWQt0rwq1YDmKIhZWJhtUHlNW4KL6z2bWpliRjPXoZ8mHQ/5wMsbdS3vRH7ewuC9O8L+mxT
+ tnyHO4UbYOzAteLCauAC5XaOLKelbxgmSMaZZPGWSC/uFxZ6/lWvZQQ5G0wudXsdhqRiwFyE8HH
+ 737aU0WsC0YOHtzKzMBVKUo2l6039B/7utqrVQCg4bU17HWhY/xeEs0XRBkPQdTVafdwt4K+uXm
+ gAPGBqdHIG37ssgKg/b4zuMN4eizSf5rLk4/H9hYAo3kPsdEL/+FivL5o3dL69EtXsi4stRCVVT
+ FdUNl+2d+oHHTcK2TX9c+a8oUtp4i9XXyDLLs0U/tkvCbGyVeff3gWR+k4sZcnL/7/BwiS+s4n+
+ E6QakHXrRwoL+5PcvBB8WyqkJsWWQJVwJFlmGklcrPEOCr2lQB1YqgLpdRdNJRoOi7Mf0TVYKD/ hwt/BYnshz8WcZA==
+X-Developer-Key: i=krzysztof.kozlowski@oss.qualcomm.com; a=openpgp; fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODAxMDE2MSBTYWx0ZWRfX3emJQfzzKU4D
+ gzY2UY2JXt3azQvPHKKLRCYisbp/pD9EZlo39BF80j3cHj/yL58VyAh4ejyWOOvmqNgBHyqK7tB
+ 7hjcoEnZjE6EBnSLVNaQHTjx/sJWxWk=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODAxMDE2MSBTYWx0ZWRfX5C9dUe05c0FR
+ SPTHFhw+c68nzFEKb3GGWh+gpNGJNaAxrTCT9KtErkkWnoOXJGN5fvfdZL+HXG2s5rFllu8sQzv
+ so+2lPFxUxp80naKGEWcQcIK+9VHFOjpWHDndDFa5v7XKbOcynM2E1q20i3vMKiryXGVjquKII/
+ NqoPzZ0NSXKV/X4cCjrXxTjbR81ZbovlykfTPUe2/rI9C8DnHmLNalV2F5w7lnzamxAJZc8xhcT
+ /6THUx1h59W8j5LlPihWo2+zwhEywWpxKr7B16vJmLZ4kNLHqVyorfkeUzAK4OYb30dXbXxBSh7
+ 0m/wIR/+POPe7a/lXrVcjiRKXOAJbS7OeCPJnFm5sIb/Lt7Q5mcLNqBnd8IpGgh6pdZ/f2SBwSa
+ MgbKZ7HHs3eprb9mDMEpPF7Se2JVBdB9NhCdeTjjnhiYUZwpOzKJyLyeBlL0YyxLmufFFhrWkvH
+ r6x02zXRwymrKR2aZZw==
+X-Proofpoint-GUID: 3ohH1i1yQwsQkPLBmW5OU4Y4EB5cPIP9
+X-Authority-Analysis: v=2.4 cv=IYC3n2qa c=1 sm=1 tr=0 ts=6a6e4f6c cx=c_pps
+ a=WeENfcodrlLV9YRTxbY/uA==:117 a=N6niishs+lR9UBL1FN3Qrw==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=EUspDBNiAAAA:8
+ a=7lKMP4hLRc14UtNM5MAA:9 a=kacYvNCVWA4VmyqE58fU:22
+X-Proofpoint-ORIG-GUID: 3ohH1i1yQwsQkPLBmW5OU4Y4EB5cPIP9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-01_03,2026-07-30_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0 phishscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 malwarescore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608010161
 
-Hi,
+Correct a few white-space issues, like double space after '=' or before
+bracket '{' characters, which will be flagged by dt-check-style.  No
+functional changes.
 
-Here's my mt76 pull request for 7.3
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-- Felix
+---
 
-The following changes since commit 4a0bd262df757b25fc4e2a53c947317c119ced4e:
+Patch applies on Rob's for-next branch.
+---
+ .../arm/firmware/linaro,optee-tz.yaml         |  8 +-
+ .../devicetree/bindings/arm/psci.yaml         | 18 ++--
+ .../bindings/arm/qcom,coresight-tnoc.yaml     |  2 +-
+ .../devicetree/bindings/ata/st,ahci.yaml      | 22 ++---
+ .../bindings/display/ti/ti,am65x-dss.yaml     | 12 +--
+ .../bindings/display/ti/ti,j721e-dss.yaml     | 96 +++++++++----------
+ .../bindings/display/ti/ti,k2g-dss.yaml       | 36 +++----
+ .../bindings/dsp/mediatek,mt8195-dsp.yaml     |  2 +-
+ .../bindings/gpio/st,nomadik-gpio.yaml        |  2 +-
+ .../devicetree/bindings/i2c/st,sti-i2c.yaml   |  2 +-
+ .../bindings/mailbox/st,sti-mailbox.yaml      |  2 +-
+ .../bindings/mfd/maxim,max77620.yaml          |  2 +-
+ .../bindings/net/wireless/qcom,ath10k.yaml    | 34 +++----
+ .../devicetree/bindings/opp/opp-v2.yaml       | 28 +++---
+ .../pinctrl/mediatek,mt7988-pinctrl.yaml      |  2 +-
+ .../devicetree/bindings/ptp/fsl,ptp.yaml      | 12 +--
+ .../devicetree/bindings/pwm/pwm-sifive.yaml   |  2 +-
+ .../bindings/usb/ti,twl4030-usb.yaml          |  2 +-
+ 18 files changed, 142 insertions(+), 142 deletions(-)
 
-   wifi: mac80211: fix per-STA profile length in cross-link CSA parsing (2026-07-28 16:04:16 +0200)
+diff --git a/Documentation/devicetree/bindings/arm/firmware/linaro,optee-tz.yaml b/Documentation/devicetree/bindings/arm/firmware/linaro,optee-tz.yaml
+index 5d033570b57b..26ebcf4565f3 100644
+--- a/Documentation/devicetree/bindings/arm/firmware/linaro,optee-tz.yaml
++++ b/Documentation/devicetree/bindings/arm/firmware/linaro,optee-tz.yaml
+@@ -50,8 +50,8 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+-    firmware  {
+-        optee  {
++    firmware {
++        optee {
+             compatible = "linaro,optee-tz";
+             method = "smc";
+             interrupts = <GIC_SPI 187 IRQ_TYPE_EDGE_RISING>;
+@@ -59,8 +59,8 @@ examples:
+     };
+ 
+   - |
+-    firmware  {
+-        optee  {
++    firmware {
++        optee {
+             compatible = "linaro,optee-tz";
+             method = "hvc";
+         };
+diff --git a/Documentation/devicetree/bindings/arm/psci.yaml b/Documentation/devicetree/bindings/arm/psci.yaml
+index 6e2e0c551841..0d04389c81fa 100644
+--- a/Documentation/devicetree/bindings/arm/psci.yaml
++++ b/Documentation/devicetree/bindings/arm/psci.yaml
+@@ -146,12 +146,12 @@ examples:
+     // Case 1: PSCI v0.1 only.
+ 
+     psci {
+-      compatible      = "arm,psci";
+-      method          = "smc";
+-      cpu_suspend     = <0x95c10000>;
+-      cpu_off         = <0x95c10001>;
+-      cpu_on          = <0x95c10002>;
+-      migrate         = <0x95c10003>;
++      compatible = "arm,psci";
++      method = "smc";
++      cpu_suspend = <0x95c10000>;
++      cpu_off = <0x95c10001>;
++      cpu_on = <0x95c10002>;
++      migrate = <0x95c10003>;
+     };
+ 
+   - |+
+@@ -159,8 +159,8 @@ examples:
+     // Case 2: PSCI v0.2 only
+ 
+     psci {
+-      compatible      = "arm,psci-0.2";
+-      method          = "smc";
++      compatible = "arm,psci-0.2";
++      method = "smc";
+     };
+ 
+   - |+
+@@ -251,7 +251,7 @@ examples:
+ 
+       cpu_pd1: power-domain-cpu1 {
+         #power-domain-cells = <0>;
+-        domain-idle-states =  <&cpu_pwrdn>;
++        domain-idle-states = <&cpu_pwrdn>;
+         power-domains = <&cluster_pd>;
+       };
+ 
+diff --git a/Documentation/devicetree/bindings/arm/qcom,coresight-tnoc.yaml b/Documentation/devicetree/bindings/arm/qcom,coresight-tnoc.yaml
+index ef648a15b806..37147124449e 100644
+--- a/Documentation/devicetree/bindings/arm/qcom,coresight-tnoc.yaml
++++ b/Documentation/devicetree/bindings/arm/qcom,coresight-tnoc.yaml
+@@ -82,7 +82,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    tn@109ab000  {
++    tn@109ab000 {
+       compatible = "qcom,coresight-tnoc", "arm,primecell";
+       reg = <0x109ab000 0x4200>;
+ 
+diff --git a/Documentation/devicetree/bindings/ata/st,ahci.yaml b/Documentation/devicetree/bindings/ata/st,ahci.yaml
+index 6e8e4b4f3d6c..d82c5a65b60c 100644
+--- a/Documentation/devicetree/bindings/ata/st,ahci.yaml
++++ b/Documentation/devicetree/bindings/ata/st,ahci.yaml
+@@ -57,16 +57,16 @@ examples:
+     #include <dt-bindings/clock/stih407-clks.h>
+ 
+     sata@9b20000 {
+-        compatible    = "st,ahci";
+-        reg           = <0x9b20000 0x1000>;
+-        interrupts    = <GIC_SPI 159 IRQ_TYPE_NONE>;
++        compatible = "st,ahci";
++        reg = <0x9b20000 0x1000>;
++        interrupts = <GIC_SPI 159 IRQ_TYPE_NONE>;
+         interrupt-names = "hostc";
+-        phys          = <&phy_port0 PHY_TYPE_SATA>;
+-        phy-names     = "sata-phy";
+-        resets        = <&powerdown STIH407_SATA0_POWERDOWN>,
+-                         <&softreset STIH407_SATA0_SOFTRESET>,
+-                         <&softreset STIH407_SATA0_PWR_SOFTRESET>;
+-        reset-names   = "pwr-dwn", "sw-rst", "pwr-rst";
+-        clocks        = <&clk_s_c0_flexgen CLK_ICN_REG>;
+-        clock-names   = "ahci_clk";
++        phys = <&phy_port0 PHY_TYPE_SATA>;
++        phy-names = "sata-phy";
++        resets = <&powerdown STIH407_SATA0_POWERDOWN>,
++                 <&softreset STIH407_SATA0_SOFTRESET>,
++                 <&softreset STIH407_SATA0_PWR_SOFTRESET>;
++        reset-names = "pwr-dwn", "sw-rst", "pwr-rst";
++        clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
++        clock-names = "ahci_clk";
+     };
+diff --git a/Documentation/devicetree/bindings/display/ti/ti,am65x-dss.yaml b/Documentation/devicetree/bindings/display/ti/ti,am65x-dss.yaml
+index 49a007cbcd3a..d1e530e12604 100644
+--- a/Documentation/devicetree/bindings/display/ti/ti,am65x-dss.yaml
++++ b/Documentation/devicetree/bindings/display/ti/ti,am65x-dss.yaml
+@@ -261,9 +261,9 @@ examples:
+                 "ovr1", "ovr2", "vp1", "vp2", "common1";
+         ti,am65x-oldi-io-ctrl = <&dss_oldi_io_ctrl>;
+         power-domains = <&k3_pds 67 TI_SCI_PD_EXCLUSIVE>;
+-        clocks =        <&k3_clks 67 1>,
+-                        <&k3_clks 216 1>,
+-                        <&k3_clks 67 2>;
++        clocks = <&k3_clks 67 1>,
++                 <&k3_clks 216 1>,
++                 <&k3_clks 67 2>;
+         clock-names = "fck", "vp1", "vp2";
+         interrupts = <GIC_SPI 166 IRQ_TYPE_EDGE_RISING>;
+         ports {
+@@ -299,9 +299,9 @@ examples:
+             reg-names = "common", "vidl1", "vid",
+                         "ovr1", "ovr2", "vp1", "vp2", "common1";
+             power-domains = <&k3_pds 186 TI_SCI_PD_EXCLUSIVE>;
+-            clocks =        <&k3_clks 186 6>,
+-                            <&vp1_clock>,
+-                            <&k3_clks 186 2>;
++            clocks = <&k3_clks 186 6>,
++                     <&vp1_clock>,
++                     <&k3_clks 186 2>;
+             clock-names = "fck", "vp1", "vp2";
+             interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>;
+             oldi-transmitters {
+diff --git a/Documentation/devicetree/bindings/display/ti/ti,j721e-dss.yaml b/Documentation/devicetree/bindings/display/ti/ti,j721e-dss.yaml
+index 65ae8a1c3998..cac5ef1743d3 100644
+--- a/Documentation/devicetree/bindings/display/ti/ti,j721e-dss.yaml
++++ b/Documentation/devicetree/bindings/display/ti/ti,j721e-dss.yaml
+@@ -154,54 +154,54 @@ examples:
+     #include <dt-bindings/soc/ti,sci_pm_domain.h>
+ 
+     dss: dss@4a00000 {
+-            compatible = "ti,j721e-dss";
+-            reg =   <0x04a00000 0x10000>, /* common_m */
+-                    <0x04a10000 0x10000>, /* common_s0*/
+-                    <0x04b00000 0x10000>, /* common_s1*/
+-                    <0x04b10000 0x10000>, /* common_s2*/
+-                    <0x04a20000 0x10000>, /* vidl1 */
+-                    <0x04a30000 0x10000>, /* vidl2 */
+-                    <0x04a50000 0x10000>, /* vid1 */
+-                    <0x04a60000 0x10000>, /* vid2 */
+-                    <0x04a70000 0x10000>, /* ovr1 */
+-                    <0x04a90000 0x10000>, /* ovr2 */
+-                    <0x04ab0000 0x10000>, /* ovr3 */
+-                    <0x04ad0000 0x10000>, /* ovr4 */
+-                    <0x04a80000 0x10000>, /* vp1 */
+-                    <0x04aa0000 0x10000>, /* vp2 */
+-                    <0x04ac0000 0x10000>, /* vp3 */
+-                    <0x04ae0000 0x10000>, /* vp4 */
+-                    <0x04af0000 0x10000>; /* wb */
+-            reg-names = "common_m", "common_s0",
+-                    "common_s1", "common_s2",
+-                    "vidl1", "vidl2","vid1","vid2",
+-                    "ovr1", "ovr2", "ovr3", "ovr4",
+-                    "vp1", "vp2", "vp3", "vp4",
+-                    "wb";
+-            clocks =        <&k3_clks 152 0>,
+-                            <&k3_clks 152 1>,
+-                            <&k3_clks 152 4>,
+-                            <&k3_clks 152 9>,
+-                            <&k3_clks 152 13>;
+-            clock-names = "fck", "vp1", "vp2", "vp3", "vp4";
+-            power-domains = <&k3_pds 152 TI_SCI_PD_EXCLUSIVE>;
+-            interrupts =    <GIC_SPI 602 IRQ_TYPE_LEVEL_HIGH>,
+-                            <GIC_SPI 603 IRQ_TYPE_LEVEL_HIGH>,
+-                            <GIC_SPI 604 IRQ_TYPE_LEVEL_HIGH>,
+-                            <GIC_SPI 605 IRQ_TYPE_LEVEL_HIGH>;
+-            interrupt-names =       "common_m",
+-                                    "common_s0",
+-                                    "common_s1",
+-                                    "common_s2";
+-            ports {
+-                    #address-cells = <1>;
+-                    #size-cells = <0>;
+-                    port@0 {
+-                            reg = <0>;
++        compatible = "ti,j721e-dss";
++        reg = <0x04a00000 0x10000>, /* common_m */
++              <0x04a10000 0x10000>, /* common_s0*/
++              <0x04b00000 0x10000>, /* common_s1*/
++              <0x04b10000 0x10000>, /* common_s2*/
++              <0x04a20000 0x10000>, /* vidl1 */
++              <0x04a30000 0x10000>, /* vidl2 */
++              <0x04a50000 0x10000>, /* vid1 */
++              <0x04a60000 0x10000>, /* vid2 */
++              <0x04a70000 0x10000>, /* ovr1 */
++              <0x04a90000 0x10000>, /* ovr2 */
++              <0x04ab0000 0x10000>, /* ovr3 */
++              <0x04ad0000 0x10000>, /* ovr4 */
++              <0x04a80000 0x10000>, /* vp1 */
++              <0x04aa0000 0x10000>, /* vp2 */
++              <0x04ac0000 0x10000>, /* vp3 */
++              <0x04ae0000 0x10000>, /* vp4 */
++              <0x04af0000 0x10000>; /* wb */
++        reg-names = "common_m", "common_s0",
++                "common_s1", "common_s2",
++                "vidl1", "vidl2","vid1","vid2",
++                "ovr1", "ovr2", "ovr3", "ovr4",
++                "vp1", "vp2", "vp3", "vp4",
++                "wb";
++        clocks = <&k3_clks 152 0>,
++                 <&k3_clks 152 1>,
++                 <&k3_clks 152 4>,
++                 <&k3_clks 152 9>,
++                 <&k3_clks 152 13>;
++        clock-names = "fck", "vp1", "vp2", "vp3", "vp4";
++        power-domains = <&k3_pds 152 TI_SCI_PD_EXCLUSIVE>;
++        interrupts = <GIC_SPI 602 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 603 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 604 IRQ_TYPE_LEVEL_HIGH>,
++                     <GIC_SPI 605 IRQ_TYPE_LEVEL_HIGH>;
++        interrupt-names = "common_m",
++                          "common_s0",
++                          "common_s1",
++                          "common_s2";
++        ports {
++            #address-cells = <1>;
++            #size-cells = <0>;
++            port@0 {
++                reg = <0>;
+ 
+-                            dpi_out_0: endpoint {
+-                                    remote-endpoint = <&dp_bridge_input>;
+-                            };
+-                    };
++                dpi_out_0: endpoint {
++                    remote-endpoint = <&dp_bridge_input>;
++                };
+             };
++        };
+     };
+diff --git a/Documentation/devicetree/bindings/display/ti/ti,k2g-dss.yaml b/Documentation/devicetree/bindings/display/ti/ti,k2g-dss.yaml
+index 96b1439f88e3..87721da0a8af 100644
+--- a/Documentation/devicetree/bindings/display/ti/ti,k2g-dss.yaml
++++ b/Documentation/devicetree/bindings/display/ti/ti,k2g-dss.yaml
+@@ -80,26 +80,26 @@ examples:
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+ 
+-    dss: dss@2540000 {
+-            compatible = "ti,k2g-dss";
+-            reg =   <0x02540000 0x400>,
+-                    <0x02550000 0x1000>,
+-                    <0x02557000 0x1000>,
+-                    <0x0255a800 0x100>,
+-                    <0x0255ac00 0x100>;
+-            reg-names = "cfg", "common", "vid1", "ovr1", "vp1";
+-            clocks =        <&k2g_clks 0x2 0>,
+-                            <&k2g_clks 0x2 1>;
+-            clock-names = "fck", "vp1";
+-            interrupts = <GIC_SPI 247 IRQ_TYPE_EDGE_RISING>;
++    dss@2540000 {
++        compatible = "ti,k2g-dss";
++        reg = <0x02540000 0x400>,
++              <0x02550000 0x1000>,
++              <0x02557000 0x1000>,
++              <0x0255a800 0x100>,
++              <0x0255ac00 0x100>;
++        reg-names = "cfg", "common", "vid1", "ovr1", "vp1";
++        clocks = <&k2g_clks 0x2 0>,
++                 <&k2g_clks 0x2 1>;
++        clock-names = "fck", "vp1";
++        interrupts = <GIC_SPI 247 IRQ_TYPE_EDGE_RISING>;
+ 
+-            power-domains = <&k2g_pds 0x2>;
++        power-domains = <&k2g_pds 0x2>;
+ 
+-            max-memory-bandwidth = <230000000>;
++        max-memory-bandwidth = <230000000>;
+ 
+-            port {
+-                    dpi_out: endpoint {
+-                            remote-endpoint = <&sii9022_in>;
+-                    };
++        port {
++            dpi_out: endpoint {
++                remote-endpoint = <&sii9022_in>;
+             };
++        };
+     };
+diff --git a/Documentation/devicetree/bindings/dsp/mediatek,mt8195-dsp.yaml b/Documentation/devicetree/bindings/dsp/mediatek,mt8195-dsp.yaml
+index abc52978be7a..994afb1c31ff 100644
+--- a/Documentation/devicetree/bindings/dsp/mediatek,mt8195-dsp.yaml
++++ b/Documentation/devicetree/bindings/dsp/mediatek,mt8195-dsp.yaml
+@@ -81,7 +81,7 @@ examples:
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+     #include <dt-bindings/interrupt-controller/irq.h>
+     dsp@10803000 {
+-        compatible =  "mediatek,mt8195-dsp";
++        compatible = "mediatek,mt8195-dsp";
+         reg = <0x10803000 0x1000>,
+               <0x10840000 0x40000>;
+         reg-names = "cfg", "sram";
+diff --git a/Documentation/devicetree/bindings/gpio/st,nomadik-gpio.yaml b/Documentation/devicetree/bindings/gpio/st,nomadik-gpio.yaml
+index 40b4a7551449..e871149c520f 100644
+--- a/Documentation/devicetree/bindings/gpio/st,nomadik-gpio.yaml
++++ b/Documentation/devicetree/bindings/gpio/st,nomadik-gpio.yaml
+@@ -85,7 +85,7 @@ examples:
+   - |
+     gpio@8012e080 {
+         compatible = "st,nomadik-gpio";
+-        reg =  <0x8012e080 0x80>;
++        reg = <0x8012e080 0x80>;
+         interrupts = <0 120 0x4>;
+         #gpio-cells = <2>;
+         gpio-controller;
+diff --git a/Documentation/devicetree/bindings/i2c/st,sti-i2c.yaml b/Documentation/devicetree/bindings/i2c/st,sti-i2c.yaml
+index 08f9c1e446fd..4efbe82b6d68 100644
+--- a/Documentation/devicetree/bindings/i2c/st,sti-i2c.yaml
++++ b/Documentation/devicetree/bindings/i2c/st,sti-i2c.yaml
+@@ -60,7 +60,7 @@ examples:
+     i2c@fed40000 {
+         compatible = "st,comms-ssc4-i2c";
+         reg = <0xfed40000 0x110>;
+-        interrupts =  <GIC_SPI 187 IRQ_TYPE_LEVEL_HIGH>;
++        interrupts = <GIC_SPI 187 IRQ_TYPE_LEVEL_HIGH>;
+         clocks = <&clk_s_a0_ls CLK_ICN_REG>;
+         clock-names = "ssc";
+         clock-frequency = <400000>;
+diff --git a/Documentation/devicetree/bindings/mailbox/st,sti-mailbox.yaml b/Documentation/devicetree/bindings/mailbox/st,sti-mailbox.yaml
+index a023c28dff49..662ab7f617ac 100644
+--- a/Documentation/devicetree/bindings/mailbox/st,sti-mailbox.yaml
++++ b/Documentation/devicetree/bindings/mailbox/st,sti-mailbox.yaml
+@@ -42,7 +42,7 @@ additionalProperties: false
+ examples:
+   - |
+     #include <dt-bindings/interrupt-controller/arm-gic.h>
+-    mailbox0: mailbox@8f00000  {
++    mailbox@8f00000 {
+         compatible = "st,stih407-mailbox";
+         reg = <0x8f00000 0x1000>;
+         interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
+diff --git a/Documentation/devicetree/bindings/mfd/maxim,max77620.yaml b/Documentation/devicetree/bindings/mfd/maxim,max77620.yaml
+index 602711865274..ac063c2bab73 100644
+--- a/Documentation/devicetree/bindings/mfd/maxim,max77620.yaml
++++ b/Documentation/devicetree/bindings/mfd/maxim,max77620.yaml
+@@ -311,7 +311,7 @@ examples:
+                 in-sd3-supply = <&vdd_5v0_vbus>;
+ 
+                 in-ldo0-1-supply = <&vdd_1v8_vio>;
+-                in-ldo2-supply   = <&vdd_3v3_vbat>;
++                in-ldo2-supply = <&vdd_3v3_vbat>;
+                 in-ldo3-5-supply = <&vdd_3v3_vbat>;
+                 in-ldo4-6-supply = <&vdd_3v3_vbat>;
+                 in-ldo7-8-supply = <&vdd_1v8_vio>;
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+index d4f4d72ee0d3..e667d78b3ab3 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.yaml
+@@ -390,22 +390,22 @@ examples:
+                      <GIC_SPI 46 IRQ_TYPE_EDGE_RISING>,
+                      <GIC_SPI 47 IRQ_TYPE_EDGE_RISING>,
+                      <GIC_SPI 168 IRQ_TYPE_LEVEL_HIGH>;
+-        interrupt-names =  "msi0",
+-                           "msi1",
+-                           "msi2",
+-                           "msi3",
+-                           "msi4",
+-                           "msi5",
+-                           "msi6",
+-                           "msi7",
+-                           "msi8",
+-                           "msi9",
+-                           "msi10",
+-                           "msi11",
+-                           "msi12",
+-                           "msi13",
+-                           "msi14",
+-                           "msi15",
+-                           "legacy";
++        interrupt-names = "msi0",
++                          "msi1",
++                          "msi2",
++                          "msi3",
++                          "msi4",
++                          "msi5",
++                          "msi6",
++                          "msi7",
++                          "msi8",
++                          "msi9",
++                          "msi10",
++                          "msi11",
++                          "msi12",
++                          "msi13",
++                          "msi14",
++                          "msi15",
++                          "legacy";
+         ieee80211-freq-limit = <5470000 5875000>;
+       };
+diff --git a/Documentation/devicetree/bindings/opp/opp-v2.yaml b/Documentation/devicetree/bindings/opp/opp-v2.yaml
+index 10000a758572..ce0fa82bce98 100644
+--- a/Documentation/devicetree/bindings/opp/opp-v2.yaml
++++ b/Documentation/devicetree/bindings/opp/opp-v2.yaml
+@@ -293,9 +293,9 @@ examples:
+             opp-microvolt = <970000>, /* Supply 0 */
+                             <960000>, /* Supply 1 */
+                             <960000>; /* Supply 2 */
+-            opp-microamp =  <70000>,  /* Supply 0 */
+-                            <70000>,  /* Supply 1 */
+-                            <70000>;  /* Supply 2 */
++            opp-microamp = <70000>,  /* Supply 0 */
++                           <70000>,  /* Supply 1 */
++                           <70000>;  /* Supply 2 */
+             clock-latency-ns = <300000>;
+         };
+ 
+@@ -306,9 +306,9 @@ examples:
+             opp-microvolt = <975000 970000 985000>, /* Supply 0 */
+                             <965000 960000 975000>, /* Supply 1 */
+                             <965000 960000 975000>; /* Supply 2 */
+-            opp-microamp =  <70000>,    /* Supply 0 */
+-                <70000>,    /* Supply 1 */
+-                <70000>;    /* Supply 2 */
++            opp-microamp = <70000>,    /* Supply 0 */
++                           <70000>,    /* Supply 1 */
++                           <70000>;    /* Supply 2 */
+             clock-latency-ns = <300000>;
+         };
+ 
+@@ -317,11 +317,11 @@ examples:
+         opp-1000000002 {
+             opp-hz = /bits/ 64 <1000000002>;
+             opp-microvolt = <975000 970000 985000>, /* Supply 0 */
+-                <965000 960000 975000>, /* Supply 1 */
+-                <965000 960000 975000>; /* Supply 2 */
+-            opp-microamp =  <70000>,    /* Supply 0 */
+-                <0>,      /* Supply 1 doesn't need this */
+-                <70000>;    /* Supply 2 */
++                            <965000 960000 975000>, /* Supply 1 */
++                            <965000 960000 975000>; /* Supply 2 */
++            opp-microamp = <70000>,    /* Supply 0 */
++                           <0>,      /* Supply 1 doesn't need this */
++                           <70000>;    /* Supply 2 */
+             clock-latency-ns = <300000>;
+         };
+     };
+@@ -405,8 +405,8 @@ examples:
+             opp-hz = /bits/ 64 <1000000000>;
+             opp-microvolt-slow = <915000 900000 925000>;
+             opp-microvolt-fast = <975000 970000 985000>;
+-            opp-microamp-slow =  <70000>;
+-            opp-microamp-fast =  <71000>;
++            opp-microamp-slow = <70000>;
++            opp-microamp-fast = <71000>;
+         };
+ 
+         opp-1200000000 {
+@@ -415,7 +415,7 @@ examples:
+                                  <925000 910000 935000>; /* Supply vcc1 */
+             opp-microvolt-fast = <975000 970000 985000>, /* Supply vcc0 */
+                                  <965000 960000 975000>; /* Supply vcc1 */
+-            opp-microamp =  <70000>; /* Will be used for both slow/fast */
++            opp-microamp = <70000>; /* Will be used for both slow/fast */
+         };
+     };
+ 
+diff --git a/Documentation/devicetree/bindings/pinctrl/mediatek,mt7988-pinctrl.yaml b/Documentation/devicetree/bindings/pinctrl/mediatek,mt7988-pinctrl.yaml
+index 1f31b520cb43..a33f1fd277c9 100644
+--- a/Documentation/devicetree/bindings/pinctrl/mediatek,mt7988-pinctrl.yaml
++++ b/Documentation/devicetree/bindings/pinctrl/mediatek,mt7988-pinctrl.yaml
+@@ -573,7 +573,7 @@ examples:
+         uart0_pins: uart0-pins {
+           mux {
+             function = "uart";
+-            groups =  "uart0";
++            groups = "uart0";
+           };
+         };
+       };
+diff --git a/Documentation/devicetree/bindings/ptp/fsl,ptp.yaml b/Documentation/devicetree/bindings/ptp/fsl,ptp.yaml
+index 42ca895f3c4e..998f2ce8665f 100644
+--- a/Documentation/devicetree/bindings/ptp/fsl,ptp.yaml
++++ b/Documentation/devicetree/bindings/ptp/fsl,ptp.yaml
+@@ -146,11 +146,11 @@ examples:
+         reg = <0x24e00 0xb0>;
+         interrupts = <12 IRQ_TYPE_LEVEL_LOW>;
+         interrupt-parent = <&ipic>;
+-        fsl,cksel       = <1>;
++        fsl,cksel = <1>;
+         fsl,tclk-period = <10>;
+-        fsl,tmr-prsc    = <100>;
+-        fsl,tmr-add     = <0x999999a4>;
+-        fsl,tmr-fiper1  = <0x3b9ac9f6>;
+-        fsl,tmr-fiper2  = <0x00018696>;
+-        fsl,max-adj     = <659999998>;
++        fsl,tmr-prsc = <100>;
++        fsl,tmr-add = <0x999999a4>;
++        fsl,tmr-fiper1 = <0x3b9ac9f6>;
++        fsl,tmr-fiper2 = <0x00018696>;
++        fsl,max-adj = <659999998>;
+     };
+diff --git a/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml b/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml
+index bae993128981..40397bdf2d69 100644
+--- a/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml
++++ b/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml
+@@ -62,7 +62,7 @@ additionalProperties: false
+ 
+ examples:
+   - |
+-    pwm:  pwm@10020000 {
++    pwm@10020000 {
+       compatible = "sifive,fu540-c000-pwm", "sifive,pwm0";
+       reg = <0x10020000 0x1000>;
+       clocks = <&tlclk>;
+diff --git a/Documentation/devicetree/bindings/usb/ti,twl4030-usb.yaml b/Documentation/devicetree/bindings/usb/ti,twl4030-usb.yaml
+index 6ef337507425..c338ad0368de 100644
+--- a/Documentation/devicetree/bindings/usb/ti,twl4030-usb.yaml
++++ b/Documentation/devicetree/bindings/usb/ti,twl4030-usb.yaml
+@@ -67,7 +67,7 @@ examples:
+ 
+         usb1v5-supply = <&reg_vusb1v5>;
+         usb1v8-supply = <&reg_vusb1v8>;
+-        usb3v1-supply  = <&reg_vusb3v1>;
++        usb3v1-supply = <&reg_vusb3v1>;
+         usb_mode = <1>;
+ 
+         #phy-cells = <0>;
+-- 
+2.53.0
 
-are available in the Git repository at:
-
-   https://github.com/nbd168/wireless tags/mt76-next-2026-08-01
-
-for you to fetch changes up to 4df22710a77d2365e56d720bc4106e54c1dfa2ff:
-
-   wifi: mt76: mt7996: remove beacon_int_min_gcd from ADHOC interface combinations (2026-08-01 17:55:26 +0000)
-
-----------------------------------------------------------------
-mt76 patches for 7.3
-
-- fixes
-- mt7925 NAN support
-- mt7928 support
-- mt7996 AP powersave improvements
-
-----------------------------------------------------------------
-Ahmed Naseef (1):
-       wifi: mt76: mt7603: add 0x7592 EEPROM chip ID
-
-Bryam Vargas (2):
-       wifi: mt76: mt7915: bound the device EEPROM address before the EFUSE copy
-       wifi: mt76: mt7996: bound the device EEPROM address before the EFUSE copy
-
-Chad Monroe (7):
-       wifi: mt76: mt7996: fix EAPOL source BSS for non-MLD stations
-       wifi: mt76: mt7996: fix non-MLD station num_sta leak
-       wifi: mt76: mt7996: select net_setup_tc handler at runtime
-       wifi: mt76: fix stuck TX queues after SER with no active interfaces
-       wifi: mt76: mt7915: trigger L1 SER on PLE MDP RIOC hang
-       wifi: mt76: serialize scan-link teardown with dev->mutex
-       wifi: mt76: mt7996: hold dev->mutex in remove_interface teardown
-
-Charlie-cy Wu (3):
-       wifi: mt76: mt7921: refactor regd update to fix recursive mutex deadlock
-       wifi: mt76: mt7925: add regulatory wiphy self manager support
-       wifi: mt76: mt7921: add regulatory wiphy self manager support
-
-David Bauer (2):
-       wifi: mt76: mt7915: configure noise floor reporting on reset
-       wifi: mt76: mt7603: free beacon SKB on error
-
-Devin Wittmayer (5):
-       wifi: mt76: mt76x02: do not WARN on invalid rx descriptor length
-       wifi: mt76: mt76x02: report rx FCS errors to mac80211
-       wifi: mt76: mt7925: ensure tx headroom in usb_sdio_tx_prepare_skb
-       wifi: mt76: mt7925: cancel mlo_pm_work on stop
-       wifi: mt76: mt792x: do not advertise active monitor
-
-Dmitry Antipov (1):
-       wifi: mt76: mt7915: simplify mt7915_sys_recovery_set()
-
-Dmitry Gomzyakov (1):
-       wifi: mt76: connac: add MT7991A (0x7991) to is_mt7996()
-
-Eason Lai (3):
-       wifi: mt76: mt792x: fix use-after-free in mt76_rx_poll_complete
-       wifi: mt76: mt7921: Add PCIe AER handler support to prevent system crash
-       wifi: mt76: mt792x: Fix memory leak in SDIO TX path
-
-Emery Hsin (21):
-       wifi: mt76: mt792x: consolidate rx interrupt masks into all_complete_mask
-       wifi: mt76: connac2: apply new rx all_complete_mask
-       wifi: mt76: mt7925: replace shared rx irq masks with per-chip definitions
-       wifi: mt76: mt7925: add MT7927 per-chip rx irq definitions
-       wifi: mt76: mt792x: add per-chip PCIe register struct
-       wifi: mt76: connac2: add per-chip PCIe register definitions
-       wifi: mt76: mt7925: add per-chip PCIe register definitions
-       wifi: mt76: mt792x: replace shared PCIe MAC macros with per-chip struct
-       wifi: mt76: mt792x: rename WFDMA DMASHDL enable bit to follow the convention
-       wifi: mt76: mt7925: rename WTBL registers to chip-specific format
-       wifi: mt76: mt792x: add tx_done ring to common DMA queue allocation
-       wifi: mt76: connac3: update basic rate table starting index
-       wifi: mt76: mt7925: fix MMIO dynamic remap window size
-       wifi: mt76: mt7925: add MT7928 FWDL support
-       wifi: mt76: mt7925: add MT7928 irq_map with chip-specific rx masks
-       wifi: mt76: mt7925: add MT7928 DMA configuration
-       wifi: mt76: mt7925: add MT7928 TXD/TXS/TX_DONE support
-       wifi: mt76: mt7925: add MMIO register remapping table for MT7928
-       wifi: mt76: mt7925: align scan IE and EFUSE TLV lengths to 4 bytes for MT7928
-       wifi: mt76: mt7925: add MT7928 per-chip PCIe register definitions
-       wifi: mt76: mt7925: add MT7928 PCIe support
-
-Ethan Nelson-Moore (2):
-       wifi: mt76: mt7925: remove code guarded by nonexistent config option
-       wifi: mt76: mt7996: remove code guarded by nonexistent config option
-
-Felix Fietkau (54):
-       wifi: mt76: mt7996: validate RX band_idx before dereferencing phys[]
-       wifi: mt76: mt7996: set MT76_MCU_RESET before waking MCU waiters on full reset
-       wifi: mt76: mt7915: clear wcid mask under mutex after RCU pointer clear
-       wifi: mt76: mt7915: avoid nss underflow in mt7915_mcu_get_sta_nss
-       wifi: mt76: mt7996: don't report a zero TX bitrate
-       wifi: mt76: mt7915: write RX header translation bit to the correct register
-       wifi: mt76: fix 4th chain ACK RSSI bitmask in sta_poll
-       wifi: mt76: mt7996: fix TX DMA mapping leak for AddBA req frames
-       wifi: mt76: fix stranded frames in mt76_txq_schedule_pending
-       wifi: mt76: allow TX aggregation on the VO queue
-       wifi: mt76: fix uninitialised RXDMAD_C descriptor info
-       wifi: mt76: fix RXDMAD_C buffer recycling race
-       wifi: mt76: mt7915: poll the correct SLP CTRL register for the second adie
-       wifi: mt76: fix HE DCM max-RU capability encoding
-       wifi: mt76: mt7996: bound TLV walk in mt7996_mcu_get_chip_config
-       wifi: mt76: fix out-of-bounds access in mmio copy helpers
-       wifi: mt76: mt7915: unwind state on add_interface failure
-       wifi: mt76: mt7996: hold dev->mt76.mutex while disabling tx worker in SER
-       wifi: mt76: decode the full VHT Rx STBC capability field
-       wifi: mt76: fix ER-SU 106-tone RU check in RX rate decode
-       wifi: mt76: mt7996: reserve space for the CSA-abort countdown TLV
-       wifi: mt76: mt7996: don't leak MLD group index on remap alloc failure
-       wifi: mt76: cancel reset and rc work on device unregister
-       wifi: mt76: report data NSS for STBC frames in RX rate decode
-       wifi: mt76: mt7915: use little-endian for bss_info_ra wire fields
-       wifi: mt76: only consume the WO drop bit on WED v2 devices
-       wifi: mt76: mt7915: unlink TWT flow if the MCU rejects the agreement
-       wifi: mt76: mt7996: skip key upload when adding an offchannel link
-       wifi: mt76: mt7996: wake MCU waiters before aborting scan in L1 SER
-       wifi: mt76: fix queue reg access when building WED and NPU together
-       wifi: mt76: mt7615: fix NULL deref in mt7615_mac_set_rates
-       wifi: mt76: mt7996: free vif links after clearing wcid entries on full reset
-       wifi: mt76: mt7996: clear stale link state on full reset
-       wifi: mt76: set MT76_SCANNING when starting a hw scan
-       wifi: mt76: mt7996: fix MIB TX aggregation counter registers for mt7990
-       wifi: mt76: mt7915: fix double hif2 init on the non-WED path
-       wifi: mt76: mt7915: fix ext PHY use-after-free on register error path
-       wifi: mt76: mt7915: release hif2 reference on probe IRQ failure
-       wifi: mt76: mt7996: do not attach hif2 WED when the main WED attach failed
-       wifi: mt76: mt7996: do not leave state behind after a failed WED attach
-       wifi: mt76: mt7915: fix chainmask handling for non-dbdc phys on band 1
-       wifi: mt76: mt7915: report RX chain signal for all RX paths
-       wifi: mt76: mt7915: update SKU power limits after changing antennas
-       wifi: mt76: mt7925: fix infinite loop in UNI event TLV parsing
-       wifi: mt76: add PS buffering support for HW-managed TIM drivers
-       wifi: mt76: mt7915: handle MCU PS sync events
-       wifi: mt76: mt7996: handle UNI PS sync events
-       wifi: mt76: set the EOSP bit in the QoS header of the last released frame
-       wifi: mt76: mt7603: fix U-APSD service period termination
-       wifi: mt76: mt7603: tell mac80211 when the PS queue has run empty
-       wifi: mt76: mt7603: restore hardware PS buffering after a service period
-       wifi: mt76: mt7603: file buffered frames under the TID reported to mac80211
-       wifi: mt76: reject out-of-range link ids in mt76_vif_link()
-       wifi: mt76: mt7996: fix out-of-bounds link array access in mt7996_tx()
-
-Filip Bakreski (1):
-       wifi: mt76: mt76u: use a threaded NAPI for the RX path
-
-Howard Hsu (1):
-       wifi: mt76: mt7996: reject iTWT setup requests from MLD stations
-
-JB Tsai (1):
-       wifi: mt76: mt7925: Fix unregister deadlock
-
-Jared.Huang (2):
-       wifi: mt76: mt7925: update clc before setting sar power table
-       wifi: mt76: mt7925: fix msg len mismatch between driver and firmware
-
-Jeff Hsu (1):
-       wifi: mt76: mt7925: skip DMA re-init selectively
-
-Jose Ignacio Tornos Martinez (1):
-       wifi: mt76: mt7996: remove beacon_int_min_gcd from ADHOC interface combinations
-
-Kenneth Kasilag (1):
-       wifi: mt76: mt7996: expose per-band MAC addresses to cfg80211
-
-Laxman Acharya Padhya (2):
-       wifi: mt76: mt7921: validate CLC firmware records
-       wifi: mt76: mt7996: validate default EEPROM firmware size
-
-Michael-CY Lee (2):
-       wifi: mt76: fix non-AQL packet accounting for MLO stations
-       wifi: mt76: assign link_id when sending probe request during scan
-
-Peter Chiu (4):
-       wifi: mt76: mt7996: fix MLD ID in MAC TXD and HIF TXP
-       wifi: mt76: mt7996: add mcu command to set bssid mapping address
-       wifi: mt76: mt7996: leave PS when a 4-address connection is established
-       wifi: mt76: fix queue assignment for disassoc packets
-
-Prashant Rahul (1):
-       wifi: mt76: mt7921: fix memory leak when skb_linearize fails in mcu rx event
-
-Rex Lu (2):
-       wifi: mt76: fix RX data queuing of RRO 3.0
-       wifi: mt76: check txfree done event on the WED hw path
-
-Runyu Xiao (1):
-       wifi: mt76: mt7615: avoid waiting for mac work under the mt76 mutex
-
-Ryan Leung (1):
-       wifi: mt76: mt7915: add thermal zone device registration
-
-Sean Wang (18):
-       wifi: mt76: mt792x: advertise mgmt frame registration
-       wifi: mt76: mt7925: guard BSS capability lookups
-       wifi: mt76: connac: add NAN connection type
-       wifi: mt76: mt7925: add NAN MCU helpers
-       wifi: mt76: mt7925: add NAN MCU handling
-       wifi: mt76: add init_wiphy callback
-       wifi: mt76: mt7925: wire up NAN operations
-       wifi: mt76: mt792x: build iface combinations dynamically
-       wifi: mt76: mt792x: advertise NAN data support
-       wifi: mt76: mt7925: stop init retries on hung bus
-       wifi: mt76: mt7925: skip reset work on hung bus
-       wifi: mt76: mt792x: stop USB register access after bus hang
-       wifi: mt76: mt792x: drain USB UDMA before WFSYS reset
-       wifi: mt76: mt792x: enable USB UDMA TX timeout
-       wifi: mt76: mt792x: quiesce USB paths on disconnect
-       wifi: mt76: mt7927: set band index for sniffer mode
-       wifi: mt76: mt7927: use real monitor vifs for dual-band monitors
-       wifi: mt76: mt7925: support new WoW pattern TLV
-
-Shayne Chen (2):
-       wifi: mt76: fix handling channel context with different bands in mt76_switch_vif_chanctx()
-       wifi: mt76: mt7996: fix capability of EHT-MCS 15 in MRU
-
-StanleyYP Wang (4):
-       wifi: mt76: mt7996: add missing rdd_idx check when enabling background radar
-       wifi: mt76: mt7996: fix reg addr remap when addr is 0
-       wifi: mt76: mt7996: remove repeater muar config
-       wifi: mt76: mt7996: add scan dwell time hw cap
-
-Wentao Guan (1):
-       wifi: mt76: mt7925: cancel pending mlo_pm_work
-
-Zhi-Jun You (2):
-       wifi: mt76: wed: fix kernel panic on non-DBDC MT7986
-       wifi: mt76: mt7915: fix net_fill_forward_path for non-DBDC mt7986
-
-shengwei.lu (1):
-       wifi: mt76: mt7925: Fix EHT Beamformee SS subfields to meet 802.11be minimum
-
-  drivers/net/wireless/mediatek/mt76/channel.c          |   98 ++---
-  drivers/net/wireless/mediatek/mt76/dma.c              |   48 ++-
-  drivers/net/wireless/mediatek/mt76/dma.h              |  112 +++---
-  drivers/net/wireless/mediatek/mt76/mac80211.c         |   20 +-
-  drivers/net/wireless/mediatek/mt76/mcu.c              |   12 +-
-  drivers/net/wireless/mediatek/mt76/mmio.c             |   18 +-
-  drivers/net/wireless/mediatek/mt76/mt76.h             |   11 +
-  drivers/net/wireless/mediatek/mt76/mt7603/beacon.c    |    2 +
-  drivers/net/wireless/mediatek/mt76/mt7603/dma.c       |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c    |    1 +
-  drivers/net/wireless/mediatek/mt76/mt7603/mac.c       |   73 +++-
-  drivers/net/wireless/mediatek/mt76/mt7603/main.c      |   89 ++++-
-  drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h    |    4 +
-  drivers/net/wireless/mediatek/mt76/mt7615/main.c      |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c   |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt7615/usb_sdio.c  |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt76_connac.h      |   16 +-
-  drivers/net/wireless/mediatek/mt76/mt76_connac3_mac.h |   42 +++
-  drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c  |    8 +-
-  drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.c  |  267 ++++++++++++-
-  drivers/net/wireless/mediatek/mt76/mt76_connac_mcu.h  |   47 +++
-  drivers/net/wireless/mediatek/mt76/mt76x02_mac.c      |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c   |   17 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c    |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/init.c      |   41 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/mac.c       |   34 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/main.c      |   25 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/mcu.c       |   43 ++-
-  drivers/net/wireless/mediatek/mt76/mt7915/mcu.h       |   15 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/mmio.c      |    3 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/mt7915.h    |   20 +
-  drivers/net/wireless/mediatek/mt76/mt7915/pci.c       |    9 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/regs.h      |    1 +
-  drivers/net/wireless/mediatek/mt76/mt7915/soc.c       |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7915/testmode.c  |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt7921/mac.c       |    5 +-
-  drivers/net/wireless/mediatek/mt76/mt7921/main.c      |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7921/mcu.c       |   35 +-
-  drivers/net/wireless/mediatek/mt76/mt7921/pci.c       |  112 +++++-
-  drivers/net/wireless/mediatek/mt76/mt7921/pci_mac.c   |    3 +-
-  drivers/net/wireless/mediatek/mt76/mt7921/regd.c      |  219 ++++++++++-
-  drivers/net/wireless/mediatek/mt76/mt7921/regd.h      |   57 ++-
-  drivers/net/wireless/mediatek/mt76/mt7921/regs.h      |    5 +
-  drivers/net/wireless/mediatek/mt76/mt7925/Makefile    |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7925/init.c      |   37 ++
-  drivers/net/wireless/mediatek/mt76/mt7925/mac.c       |  241 +++++++++++-
-  drivers/net/wireless/mediatek/mt76/mt7925/mac.h       |    9 +-
-  drivers/net/wireless/mediatek/mt76/mt7925/main.c      |  279 ++++++++++++--
-  drivers/net/wireless/mediatek/mt76/mt7925/mcu.c       |  267 ++++++++++---
-  drivers/net/wireless/mediatek/mt76/mt7925/mcu.h       |   43 +++
-  drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h    |    9 +
-  drivers/net/wireless/mediatek/mt76/mt7925/nan.c       | 1098 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  drivers/net/wireless/mediatek/mt76/mt7925/nan.h       |  421 +++++++++++++++++++++
-  drivers/net/wireless/mediatek/mt76/mt7925/pci.c       |  305 +++++++++++++--
-  drivers/net/wireless/mediatek/mt76/mt7925/pci_mac.c   |    8 +-
-  drivers/net/wireless/mediatek/mt76/mt7925/pci_mcu.c   |    2 +-
-  drivers/net/wireless/mediatek/mt76/mt7925/regd.c      |  250 ++++++++++++-
-  drivers/net/wireless/mediatek/mt76/mt7925/regd.h      |   57 +++
-  drivers/net/wireless/mediatek/mt76/mt7925/regs.h      |   67 +++-
-  drivers/net/wireless/mediatek/mt76/mt7925/usb.c       |    8 +
-  drivers/net/wireless/mediatek/mt76/mt792x.h           |   85 ++++-
-  drivers/net/wireless/mediatek/mt76/mt792x_core.c      |  146 +++++++-
-  drivers/net/wireless/mediatek/mt76/mt792x_dma.c       |  124 ++++--
-  drivers/net/wireless/mediatek/mt76/mt792x_regs.h      |   25 +-
-  drivers/net/wireless/mediatek/mt76/mt792x_usb.c       |  138 ++++++-
-  drivers/net/wireless/mediatek/mt76/mt7996/eeprom.c    |    6 +
-  drivers/net/wireless/mediatek/mt76/mt7996/init.c      |   30 +-
-  drivers/net/wireless/mediatek/mt76/mt7996/mac.c       |   96 ++++-
-  drivers/net/wireless/mediatek/mt76/mt7996/main.c      |   75 ++--
-  drivers/net/wireless/mediatek/mt76/mt7996/mcu.c       |  205 +++++++---
-  drivers/net/wireless/mediatek/mt76/mt7996/mcu.h       |   42 ++-
-  drivers/net/wireless/mediatek/mt76/mt7996/mmio.c      |   93 +++--
-  drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h    |    9 +-
-  drivers/net/wireless/mediatek/mt76/mt7996/regs.h      |   24 +-
-  drivers/net/wireless/mediatek/mt76/scan.c             |   26 +-
-  drivers/net/wireless/mediatek/mt76/sdio.c             |   11 +-
-  drivers/net/wireless/mediatek/mt76/tx.c               |  102 ++++-
-  drivers/net/wireless/mediatek/mt76/usb.c              |   75 +++-
-  drivers/net/wireless/mediatek/mt76/wed.c              |    7 +-
-  79 files changed, 5358 insertions(+), 609 deletions(-)
-  create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-  create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/nan.h
