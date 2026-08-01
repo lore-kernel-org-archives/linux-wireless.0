@@ -1,36 +1,43 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 379D126B971;
-	Sat,  1 Aug 2026 05:12:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8821F30BB
+	for <linux-wireless@vger.kernel.org>; Sat,  1 Aug 2026 07:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785561133; cv=none; b=J84ZFeWNEAnuKQ7/q0vNw5TmDUstBanSANgA/ecfZ2EfGiXq5n4mgjbHCgKfaZY9WdCApASIwS2ORILrPsDlICyMddfmWqBElGxQOmEUdaQGjlWq0xFW/EAbU1iGTH01nKH0jjBBMwXe6uEhGfoGLJuvdQQAnf/sWwLIE+EbLJs=
+	t=1785571117; cv=none; b=F4gX0enr9F1KjHuebLGm1u8NqPvm9AHdLQhg8bj/RHMwhBugIliGRMA2x75xB4512qBJCTg4f6/bWhGedtVLfiQFT4T2svISvgDu0DdNWlue67yQ3zhNgFL6NNIA6wtux163aPg2IiPMaIg3AOvzWXVvX0o9JM9B94GlEV3SPDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785561133; c=relaxed/simple;
-	bh=emLeZnw4OIjThaxhqA/LDyYQqQAnTWcFZ2CC2sUoLC8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pHnE7cC1l/GSNhwlgWlKSEegPCITcXhorjOR7dbum/VmvY8Cq6640NO0020k0KaTGan8DxyT+h88V3qy6jOGYWlNeXfPlutnJ7atK0+H54SaZvFrUYXxpEgiX9TKG8bLpGuyqAQe0HhT/2d+oQVENxxXto0/OcP1nEhXD5hOPpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=207.46.229.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wC3HzwbgG1qXSpWAA--.9036S3;
-	Sat, 01 Aug 2026 13:11:56 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app4 (Coremail) with SMTP id zi_KCgAX_DQZgG1q8hjIAg--.52348S2;
-	Sat, 01 Aug 2026 13:11:53 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: netdev@vger.kernel.org
-Cc: horms@kernel.org,
-	david@ixit.cz,
-	mgreer@animalcreek.com,
-	oe-linux-nfc@lists.linux.dev,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH net v3 0/2] nfc: trf7970a: fix lifetime ordering around IRQ setup and teardown
-Date: Sat,  1 Aug 2026 05:10:56 +0000
-Message-Id: <20260801051058.354165-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1785571117; c=relaxed/simple;
+	bh=zKrDcNIxLj5I5Z1Lx0A42nznKS6zqRaEvUPzXg6ATvI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=XMjeaw5NHEhnKaXGiRmxkTaTkVA90GXkBeZObAvE4FNkFU9DPhX9bB5vPCl4JpFTSlHR3vBzziBmWWWAkHiVszliw6OjOudQgpjax2Ox5AUvKZqzbZA5qUkZevBQm0tO8yyRW9hf2jXpUdkfAYrWll2MSTbdE8HcJBB21Jpj4aA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=qqUw05tX; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="qqUw05tX"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
+	Message-ID:Date:Subject:To:From:Content-Type:Sender:Reply-To:Cc:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
+	Resent-Message-ID:In-Reply-To:References;
+	bh=cH+mdCb6Lj65dQlLL6K78f9tWJ4BZa9q8kk/MKndRBs=; t=1785571115; x=1786780715; 
+	b=qqUw05tXE08mCc5vqPN65iRIGL8qrerLLvWqvZ4Khj3fzQkXoDREGzg4tkZ/oOjD06WSROTa91k
+	U2ZpA6Uw1T8KTNbgzUw4oYVRovDk7z7eIk0zvDE7myc7aOp42SXtuc0FywEOXPnYWruFarTxQcg47
+	xL+vYGAxx0a60MHDdi93sv62U2Zv0rrfWiCd9hMWmBECBSyKWLlGU9nRdVH6TTclFmZ9QveAeH8T8
+	UHS8hjqB6gC1UJUSebKVQ5AQE89NvDxfZeO6xzdNcEmBOn+UXRpIj4GVVad3EQNHIHz+x5P0VjwIo
+	dOoLpnM7ifpIoAxGmDT92obmdsjUgXPM4pjg==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wq4bx-0000000ErOv-0ocR
+	for linux-wireless@vger.kernel.org;
+	Sat, 01 Aug 2026 09:58:25 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 00/12] wifi: mac80211: install group keys to STA
+Date: Sat,  1 Aug 2026 09:58:16 +0200
+Message-ID: <20260801075822.645974-14-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -38,65 +45,52 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zi_KCgAX_DQZgG1q8hjIAg--.52348S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?dDTSsAXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfnXz+g1OQfMo27QHy5TwQyZyI29s4XPrUUoM/I4cEgQRhL2gcCEq3jlm1XGvHysDteGCc
-	gEgLry6tynhUH1djB5ep9E6mavGmQbzmcFsnzP86
-X-Coremail-Antispam: 1Uk129KBj93XoWxJr18Cr1ftw17Xw4fXFyxZwc_yoW8XFyDpa
-	15ta1UKrWvyrnF9w43u3WxXFyrAa1rXw47uwn3Wa4xCFZ8CFnayr10g3y5ZF17Gr4fC3WI
-	yFyvvFy8Wa4DJwcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUAVWUtwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8
-	JbIYCTnIWIevJa73UjIFyTuYvjxU7ID7DUUUU
 
-Two lifetime-ordering fixes for the trf7970a NFC digital driver.
+Hi,
 
-Patch 1 sets up the lock and timeout work before the threaded IRQ is
-registered, and moves the lock to devm_mutex_init() so its teardown is
-part of the devres lifetime.
+First of all, I should state that this requires Benjamin's CIP work:
+https://lore.kernel.org/linux-wireless/20260731154006.7bddd2d85ff1.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid/
+(It's therefore going to fail NIPA, but as RFC ...)
 
-Patch 2 depends on patch 1 and drains the timeout work across removal:
-it marks a running handler to skip completion, handles LISTENING_MD in
-shutdown, and cancels the work after the digital core stops issuing
-commands and before the digital device is freed.
+There are multiple motivations here, obviously the first is the
+"headline feature" here:
+ - Prepare for SMD Transition: During SMD Transition, new group keys
+   become available after ST Execution, well before really switching
+   to the new AP (in current AP MLD execution mode).
+ - Clean up the TX/RX internal key lookups by unifying RX group key
+   handling across all interface types (at least IBSS and mesh already
+   required to link it into a station).
+ - And something Jouni pointed out yesterday: group keys apparently
+   aren't (always?) correctly removed when disconnecting, this will
+   clearly clear that up as well, somewhat as a side effect.
 
-These were previously sent as standalone patches. Per review feedback
-from Simon Horman they are respun as a series.
+The design involves cfg80211 so that existing userspace (wpa_s) can
+work as-is, without giving the station address for group keys. This
+is clearly necessary, and it might perhaps continue relying on that
+rather than getting special code paths for different kernels, though
+of course SMD Transition group key installs will need to be with the
+MAC address.
 
----
+The debugfs file here is required for hostap tests, they currently
+decide whether or not a key is pairwise or not based on the station
+link/mac address in debugfs, but that breaks with this since it'll
+always be present (and I decided breaking the debugfs API was OK,
+rather than preserving that), so the tests will need to read this
+new flags file to check instead - I have the necessary adjustments,
+of course.
 
-v3:
-  - Respun as a 2-patch series with an explicit dependency.
-  - Patch 1: switch to devm_mutex_init(); remove the explicit
-    mutex_destroy() calls and the now-empty err_destroy_lock label.
-  - Patch 2: set ignore_timeout before send_err_upstream; handle
-    TRF7970A_ST_LISTENING_MD in shutdown.
-  - Patch 1 was previously sent standalone.
+The last two patches are just something that we wanted for various
+reasons and that fell out fairly easily after doing all the other
+refactoring in this work, it's not critical for any of the stated
+goals, it's a bit of a side quest. It could also be improved, but
+the most important thing there for us was patch 11 for NAN.
 
-init-order v1: https://lore.kernel.org/netdev/20260728031021.230831-1-fanwu01@zju.edu.cn/
-teardown v2:   https://lore.kernel.org/netdev/20260728030716.230626-1-fanwu01@zju.edu.cn/
-teardown v1:   https://lore.kernel.org/netdev/20260721133539.3195899-1-fanwu01@zju.edu.cn/
+And since I'm mentioning SMD Transition so much: I pretty much have
+much of the remaining bits and pieces for client side in mac80211,
+and Ilan has the wpa_s (and minimal hostapd, for testing) code too,
+but it needs significant further work and cleaning up, and possibly
+significant redesign of TXQ infrastructure in mac80211 to allow us
+to transfer packets to the new AP queues.
 
-
-Fan Wu (2):
-  nfc: trf7970a: set up lock and timeout work before requesting IRQ
-  nfc: trf7970a: quiesce timeout work before teardown
-
- drivers/nfc/trf7970a.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
--- 
-2.34.1
+johannes
 
