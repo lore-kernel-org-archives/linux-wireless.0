@@ -1,70 +1,39 @@
-Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B0A296BAF
-	for <linux-wireless@vger.kernel.org>; Sat,  1 Aug 2026 00:43:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.45
+Received: from zg8tmtyylji0my4xnjeumjiw.icoremail.net (zg8tmtyylji0my4xnjeumjiw.icoremail.net [162.243.161.220])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6CFAC26B971;
+	Sat,  1 Aug 2026 05:11:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.243.161.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785545007; cv=none; b=L5zQIVzXTbVZlMUMZesMnJ7LUIMRXfVLx81nuyIXdmgSNnjaUxwzEid+JGizl36/qDt6ErvHFwfdbhQD6ONuseFDJJX3m2ocCufibmjPlNNJzBQjSqST6UQI5gMtFWphThmrIla5QLjiFjvj9G4l/akC8YfPCEf32XUFn5mDRB0=
+	t=1785561121; cv=none; b=kvZbIjBdsdaFAfIAhtPABMSpsu01ffUsFhCyXiuQVVtf0Q3jdYLUWaYmOIBSUivI13TkIOS+NFxr5xFhnPOs05gI+ZrHOnqYC7nFbJkBe2HsVFup7r2/XEv5jQDB+E8bfkS9q6SIhsJwE+42mA6A/4Nj9rmnOMhPTM1Wpt41Y5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785545007; c=relaxed/simple;
-	bh=F0ysE6YH41uWO/d+JZW29/5KWxWGXTbrIC/DYo4N+q8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rmPe0cM1cDxwTrSzA258Xe5t8n2jgAKCwK2y8oAi7c6nAkPihIfSk8ZU8gHvLflTpf/0dHBA31P47YYkvU1emDMjSJCTdfjrdR+pcsy3KBdjQPcolfaj0hQ82nBcBKxxPC+7N3B/gpcIOGf56jUJwnT517d8iWni24iCHkf/IrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lvaHKnMi; arc=none smtp.client-ip=209.85.167.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lvaHKnMi"
-Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-5b0117dda13so1470960e87.0
-        for <linux-wireless@vger.kernel.org>; Fri, 31 Jul 2026 17:43:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785545004; x=1786149804; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=F+mu3lYgplfrwjY2DJL/ygTm4SmYdcK4n2UmUXCZpKc=;
-        b=lvaHKnMi4W7S4GUSkuxQu5iBvV8zxkAevCBdpyjMh7TAzbPlTMls0aLdDapGQnzIzy
-         VY7B8RIIpbiL/qjBGaaEMo5RFP0GSeWlwNX8Fo1IKXg4hGW6rw7Y3uxbBoqua7DejT9x
-         gX1Yt5ZnAWbBSa7uhRpggz2WXa+5XBwM6eYI+qGe8bOLN9ogjDG/2V70EdvOU2zxeb1H
-         uT9dpZ0tDkjF4uFQTlEn64iwca9eWFnEGuElhfOqkr/PKNSsTPDGSdicvfoZoQQMTB+y
-         NVxftFnGKNqosTF8xWskp0vjK5MgdnIxZJ/u+Vj+scf3SBXoQoK1XDnAtG1IonB+1hDD
-         Geuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785545004; x=1786149804;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=F+mu3lYgplfrwjY2DJL/ygTm4SmYdcK4n2UmUXCZpKc=;
-        b=G//b+fuaWUgTjCOfGoRAxOTADTvXz4Puhobj8P1yu2DozzpsprYEWPrhu272hWa5wG
-         a2Uk1L71EFBSZ3ihfngeExRvcTRQsQDnNehxFoOsfq3f3TnAFRjnjNlTfOIcHT/OybXw
-         DCrWXW113lpaMSf3D0bMDFWNR0ZTMSWa6Mi8TCY6Gqo93tlgriffvy0Zt4Mft30g1Cr9
-         4+AoSALNBI2YawQQik2otTj4EEgHH5VM469T6rMqnEMMEmtgMdElGr/DAUJWug2C0Aqw
-         lWeg82CzSbfLqfkIm0xStHPLes+g7CKwMqXTr8JkIcgUXADCd+DNW/hBr5hDsTJrh4yv
-         yPdA==
-X-Gm-Message-State: AOJu0YyoxzSbhtAHf8ngb0eROQ4ylQPPQuNlTcft4A7AsvM5fHSSPEnR
-	U1lrmlWsQsYxbQX/ObLWk814g517+aoa9SstPdcHrkTL7ucZL8QpSvjvfM4FHrMK
-X-Gm-Gg: AR+sD10xqUa5D1thTqqWGu2G61CgoqRZ0Fa0TIaiuIlnoE4KC1iEUTYi22TskML3AaT
-	W+uF2vAWd4I1G5Qnl31fUr0AcPNh60NH5Fy5G/s2urblU/Fwbe7E8NQsyu6BJHhSzuxqUONZlEj
-	3v3gFzLgYlCYIRGxFo1euPUMVN7wnz9jAvRpLolV7fWwxeUea2WyVtGqGgeSL6j/QA508SaznYs
-	ulWkugiIYbSjqxYhuQCMKzM+huy8iNxU1VvTrDEp/TIozDE+Infhhn9Uik0zG9XyM44JlrpQyi6
-	9u/hoI3W8McK10R4SsfklyUnyVdmNRVqcgAUk2S4F7MMNaMzR+4KaI9JI0AzeukNrKgSKoeAiI+
-	PBUNJFmw6YGF4snMFkhQ8AZjqWZ/6n0O2d/ZAt52p2ZapZlRjaugYzyNLzUFxrL9mG9rtNZc8IA
-	iexAVuQpgbuZZOt3x/IGFIistRC9ZIb70jUeOJzmCHMLVXMeDKk2kTSX6VFCMSFK0pngu6xasmb
-	pFsVx0uR5R/vRV0ayoK+4+V
-X-Received: by 2002:ac2:4a6a:0:b0:5b0:f9d:f7d9 with SMTP id 2adb3069b0e04-5b2e4f83e1dmr200946e87.45.1785545003821;
-        Fri, 31 Jul 2026 17:43:23 -0700 (PDT)
-Received: from zbok.dom.cz (89-79-165-104.dynamic.play.pl. [89.79.165.104])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b2e23d23d7sm598582e87.37.2026.07.31.17.43.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Jul 2026 17:43:22 -0700 (PDT)
-From: Kamil Bienkiewicz <perceivalpercy@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	Kamil Bienkiewicz <perceivalpercy@gmail.com>
-Subject: [PATCH v2] wifi: ath12k: advertise AP_VLAN interface mode for IPQ5332
-Date: Sat,  1 Aug 2026 02:42:43 +0200
-Message-ID: <20260801004243.489010-1-perceivalpercy@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	s=arc-20240116; t=1785561121; c=relaxed/simple;
+	bh=PGDOcNymwDX5T6Omny+4zsabCXKUSa1MC9cwwtCPWFE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=hVh9Wss+Ns+gvYfAf0E9hAawp069kNGa+IVT4upKGEMq+lm+htk4bPrT3BXwkguQKcjBIdOGatoxC6zJvsovPjlprIQfqM0rgDHFLKSy3uAcSOALgtwNkrbgHWkhFmBaqXb4+B55jUB4Z3dFh6LFcXDSXHjanjxl7I8L+z/8td0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=162.243.161.220
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.98.66.117])
+	by mtasvr (Coremail) with SMTP id _____wCHnnwbgG1qXypWAA--.3134S3;
+	Sat, 01 Aug 2026 13:11:55 +0800 (CST)
+Received: from localhost.localdomain (unknown [10.98.66.117])
+	by mail-app4 (Coremail) with SMTP id zi_KCgAX_DQZgG1q8hjIAg--.52348S4;
+	Sat, 01 Aug 2026 13:11:55 +0800 (CST)
+From: Fan Wu <fanwu01@zju.edu.cn>
+To: netdev@vger.kernel.org
+Cc: horms@kernel.org,
+	david@ixit.cz,
+	mgreer@animalcreek.com,
+	oe-linux-nfc@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Subject: [PATCH net v3 2/2] nfc: trf7970a: quiesce timeout work before teardown
+Date: Sat,  1 Aug 2026 05:10:58 +0000
+Message-Id: <20260801051058.354165-3-fanwu01@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260801051058.354165-1-fanwu01@zju.edu.cn>
+References: <20260801051058.354165-1-fanwu01@zju.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -72,57 +41,87 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zi_KCgAX_DQZgG1q8hjIAg--.52348S4
+X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
+X-CM-DELIVERINFO: =?B?Ugm4TgXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
+	sfnXz+g1OQfMo27QHy5TwQyZwIAy17UsmYccfUoaeAh3wBL2gcCEq3jlm1XGvHysDtePvN
+	+zrg950ikgaNrRwWKnGp9E6mavGmQbzmcFsnzP86
+X-Coremail-Antispam: 1Uk129KBj93XoW7tFyxtF18tr1fAr1DCw15GFX_yoW5JF48pr
+	4Fga45CryUuF4jkFnrAF1xta4rAwn7XayUC3y09ayfG395GFyxJryDtFyUZFyDAr95u3W2
+	vry3Ar4UuFsYyFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUU9lb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r106r15M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
+	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
+	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
+	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
+	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
+	I_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
+	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
+	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8
+	JbIYCTnIWIevJa73UjIFyTuYvjxUcUDGUUUUU
 
-Only the two QCN9274 hw_params advertise NL80211_IFTYPE_AP_VLAN; the
-IPQ5332 entry does not. As ath12k sets SW_CRYPTO_CONTROL, mac80211 does
-not add the mode on the driver's behalf, so AP/VLAN is absent from the
-wiphy and hostapd cannot create WDS station interfaces:
+The timeout work can be running, blocked on trf->lock, while
+trf7970a_remove() runs trf7970a_shutdown() under that lock. shutdown()
+completes the active command through trf->cb(), but its non-blocking
+cancel cannot stop a handler that is already running. Once remove drops
+the lock, the handler may resume and complete the same command a second
+time through trf->cb(). By then nfc_digital_unregister_device() may have
+freed the struct digital_cmd referenced by trf->cb_arg.
 
-  nl80211: Failed to create interface <name>: -95 (Operation not supported)
+Set ignore_timeout before shutdown completes the command, so the handler
+short-circuits when it resumes. Then call cancel_delayed_work_sync()
+after nfc_digital_unregister_device() and before nfc_digital_free_device().
 
-The 4-address datapath itself (sta_set_4addr, per-station TCL metadata,
-WMI_PEER_USE_4ADDR/WMI_VDEV_PARAM_WDS, 4-address frame and NULL/EAPOL
-handling) is shared Wi-Fi 7 code with no per-chip or per-bus gating, so
-IPQ5332 can already deliver it. AP_VLAN is a software interface type, so
-no interface combination changes are needed.
+Handle TRF7970A_ST_LISTENING_MD in shutdown so RF is switched off for
+that state too; otherwise a threaded IRQ can re-arm the work after the
+drain.
 
-On a mixed-bus single-wiphy group the effect is wider still, since
-ath12k_mac_get_ifmodes() intersects interface_modes across all radios:
-one IPQ5332 masks AP_VLAN for the QCN9274 radios too.
+This patch depends on the preceding patch, which keeps trf->lock valid
+until the threaded IRQ is drained.
 
-Advertise AP_VLAN on IPQ5332 as QCN9274 does. Tested with 4-address WDS
-stations on IPQ5332 + 2x QCN9274; RADIUS dynamic VLAN was not tested.
+This issue was found by an in-house static analysis tool.
 
-Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.6-01270-QCAHKSWPL_SILICONZ-1
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
-
-Signed-off-by: Kamil Bienkiewicz <perceivalpercy@gmail.com>
+Fixes: 165063f1dac4 ("NFC: trf7970a: Add driver with ISO/IEC 14443 Type 2 Tag Support")
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:gpt-5.6
+Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
 ---
-v2: rebased onto ath/main (8150c22bc). No functional change; v1 was
-generated against a backports tree and its trailing context no longer
-matched after .supports_cong_ctrl_max_msdus was added to the IPQ5332
-hw_params entry.
+ drivers/nfc/trf7970a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-IPQ5424 (line ~845, and possibly QCC2072/WCN7850) appears to need the
-same change, but I have no such hardware, so I have limited this to
-IPQ5332 which I could test.
- drivers/net/wireless/ath/ath12k/wifi7/hw.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hw.c b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-index 7b86f324b..a20c21807 100644
---- a/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-+++ b/drivers/net/wireless/ath/ath12k/wifi7/hw.c
-@@ -664,7 +664,8 @@ static const struct ath12k_hw_params ath12k_wifi7_hw_params[] = {
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 9c6f8db..42e7c05 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2015,6 +2015,8 @@ static void trf7970a_shutdown(struct trf7970a *trf)
+ 	case TRF7970A_ST_WAIT_FOR_RX_DATA_CONT:
+ 	case TRF7970A_ST_WAIT_TO_ISSUE_EOF:
+ 	case TRF7970A_ST_LISTENING:
++	case TRF7970A_ST_LISTENING_MD:
++		trf->ignore_timeout = true;
+ 		trf7970a_send_err_upstream(trf, -ECANCELED);
+ 		fallthrough;
+ 	case TRF7970A_ST_IDLE:
+@@ -2210,6 +2212,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ err_shutdown:
+ 	trf7970a_shutdown(trf);
+ err_free_ddev:
++	cancel_delayed_work_sync(&trf->timeout_work);
+ 	nfc_digital_free_device(trf->ddev);
+ err_disable_vddio_regulator:
+ 	regulator_disable(trf->vddio_regulator);
+@@ -2229,6 +2232,7 @@ static void trf7970a_remove(struct spi_device *spi)
+ 	mutex_unlock(&trf->lock);
  
- 		.interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				   BIT(NL80211_IFTYPE_AP) |
--				   BIT(NL80211_IFTYPE_MESH_POINT),
-+				   BIT(NL80211_IFTYPE_MESH_POINT) |
-+				   BIT(NL80211_IFTYPE_AP_VLAN),
- 		.supports_monitor = true,
- 		.supports_cong_ctrl_max_msdus = true,
+ 	nfc_digital_unregister_device(trf->ddev);
++	cancel_delayed_work_sync(&trf->timeout_work);
+ 	nfc_digital_free_device(trf->ddev);
  
+ 	regulator_disable(trf->vddio_regulator);
 -- 
-2.55.0
+2.34.1
 
