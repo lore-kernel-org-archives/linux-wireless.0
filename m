@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9699A3563E8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96912343D85
 	for <linux-wireless@vger.kernel.org>; Sat,  1 Aug 2026 07:58:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785571118; cv=none; b=GAp1SsI/mK/pNp5t3S48ejPGiw6Nxz24VFK5ATIfO/vVbISj+deAzZxn18k/nFX9aA8WQylwev4WJGwT7IrkVzZFK/305X8r9OuGArI3rPdycEc/BHiG5a71JDGJUcb2lKTvPBZVr0GSO2sHyHlu9SXr1Oqb8BsdlZG7OFq38GU=
+	t=1785571118; cv=none; b=pjxOHTom3eY8QRd1n1uFmoo5wmSdsR6SGmK0s+am+1kR0BuDjes/+1wvP2Lpg88lbWCsC4w5hI1F5xi7cHiIZlIUrcE9lAmaDpDTI8kdbiK88xjLa0hoJK9LAa9TWheYFVDSUp3VxcnxkkZJIoNgQSuIrpeeehOcoB4WELWFi10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785571118; c=relaxed/simple;
-	bh=BAwc9h/1zOFE8cILSUrQFIfRXNZD5TqLOhe5ZGqJR/A=;
+	bh=2fE5xk31Ydc8qHt9cJZsfqPoH+rlpc0G42g8pVm79PQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Lyi/Swkkeh+I8Row+4dtRhSZ54nowgWVGSa0jJ0RjFVf75Uz0DAzNVPU7Eo1hqikI5EZJgy55Odx++KkNKjSlv5Me66XfH+GqJ5le911pBPDejH2OePTt+8N8qKY7NnayI6QcSP53eXUL6vppnow61F354LGcUx7jZod9oySKfY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Q6kyf+zw; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=UPPtg4Zeksyxwp6DhLld6Fq2GG0oik8qlejIAqWj13xL8XYL2rOFbMCZsRS05a6YnRSsNrNDO4WYvc3d3/N4aH96Gu47HsQOCm1I6bo5ibsIMuUo44MwqUDSZ26VgYVMarBSdlXtoDy37u8YqOxniuBhDvzpmMPmaRHFWnijxsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=TunQxG5g; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Q6kyf+zw"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="TunQxG5g"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=jfSo0c3h+n9M0Gw4Jm2bKnJJaCStELD4LlgJUMSSugU=;
-	t=1785571116; x=1786780716; b=Q6kyf+zwtT9KOAGG4yuiK7Y0IWxHsIMSIBzVsGBncijik58
-	Ohj8JQt9St6QiZDhPOiw47rTVH12XUE36caVvjGkW4vd5eTCFULruGHFV6ok1RbLcXVxVmLwyqf/D
-	+J+lApzfgiV/rRWHYz6/YfwgRCOOUNvosDX51h/p50pOpB2EUUWGae6BOcH0qJZJHrPT16SMt3RNh
-	WMyDDVHYW/zc6uVq13YSgnL2zJss36Kv99wZjWRj6oDfW1C+EBLWZo/eYs1T5znAEgI+D7FxftKsv
-	S5Sk+AC/SPpnwg/wA3iBQaRWXm4X29vegDYgwuWsHDGMoNS0CnC5gdbzAZGne2Lg==;
+	Resent-Cc:Resent-Message-ID; bh=a/JI9n9U4GIKD7hbIC5/PHGmfzI9OO1ueZlZUVUtmJU=;
+	t=1785571116; x=1786780716; b=TunQxG5g/5NO3wxK8qnDzD6y9DIWqdgp+Uh/pauGujxLGgc
+	QTp06q0t+uDCZkxL0Yb5Fzcs9XdikJc5dCgJTUS3lPoYUr5/Uvk59fANqqP6/c3FV6t3WEeSPdV5K
+	CZs6SEhFyg8tN2Ptl6zPzyVfaTFwx/s3q2lDObpkdThgGhx7Lp+ic9CF47HVkeV1q3o+VuYIW78Cm
+	pQRuLQtVcnAHSW+Ic1yunW71nNO5l+YmC1bTGJSy8YbGlhKk6PbHP2UfDJu2Njzo1K18HFhdoE2MI
+	2briyTUoRYzvBcY+h4J8vWG9P5KJHMnqB/WcCdKzvjoKwrBhz42DEfnW9wvvefrg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wq4bz-0000000ErOv-1S5x;
-	Sat, 01 Aug 2026 09:58:27 +0200
+	id 1wq4c0-0000000ErOv-0Do6;
+	Sat, 01 Aug 2026 09:58:28 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC PATCH 02/12] wifi: mac80211: clarify per-STA GTK handling code/docs
-Date: Sat,  1 Aug 2026 09:58:18 +0200
-Message-ID: <20260801095822.17bcbe0f7df8.Ib3a58f33a932b57be8a3e01b913b06f137f5c793@changeid>
+Subject: [RFC PATCH 03/12] wifi: mac80211: add key flags to debugfs
+Date: Sat,  1 Aug 2026 09:58:19 +0200
+Message-ID: <20260801095822.253e12d17dc1.I3a7d6912def9ba2623b41cc672704cbe3beb0bf3@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260801075822.645974-14-johannes@sipsolutions.net>
 References: <20260801075822.645974-14-johannes@sipsolutions.net>
@@ -50,74 +50,70 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The FT case in the documentation cannot happen, because
-the way mac80211 handles FT (now) doesn't add a station
-entry before the actual BSS transition. In addition, the
-documentation doesn't mention mesh, which also uses this
-flag. NAN was always allowing it, out of necessity.
-
-Also clarify that other interface types aren't supported
-(for now) at all, which is already rejected by cfg80211
-but checking here is easy and makes the code clearer.
+Since there are two sets of key flags, one for the driver
+and one internal to mac80211, add the first set in debugfs
+as well. This will be used by hwsim tests to determine if
+a key is pairwise or not, since the next changes will make
+mac80211 use only per-STA GTKs.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/mac80211.h | 12 +++++++-----
- net/mac80211/key.c     | 18 ++++++++++++++----
- 2 files changed, 21 insertions(+), 9 deletions(-)
+ net/mac80211/debugfs_key.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index aae140fdc2bb..e9006e3a0c32 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2918,11 +2918,13 @@ struct ieee80211_txq {
-  *	dtim_period).
-  *
-  * @IEEE80211_HW_SUPPORTS_PER_STA_GTK: The device's crypto engine supports
-- *	per-station GTKs as used by IBSS RSN or during fast transition. If
-- *	the device doesn't support per-station GTKs, but can be asked not
-- *	to decrypt group addressed frames, then IBSS RSN support is still
-- *	possible but software crypto will be used. Advertise the wiphy flag
-- *	only in that case.
-+ *	per-station GTKs as used by IBSS RSN and mesh. If the device doesn't
-+ *	support per-station GTKs, but can be asked not to decrypt group
-+ *	addressed frames, then IBSS RSN support is still possible but
-+ *	software crypto must be used. Drivers advertise the wiphy flag
-+ *	(%WIPHY_FLAG_IBSS_RSN) instead in that case.
-+ *	For mesh, it's assumed that either this flag is set or SW crypto
-+ *	can be used, regardless of additional wiphy flags.
-  *
-  * @IEEE80211_HW_AP_LINK_PS: When operating in AP mode the device
-  *	autonomously manages the PS status of connected stations. When
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 4c9788ec0b74..ed08e011c1f2 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -155,10 +155,20 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 	 * per-station GTKs are required to be supported if secure NAN is
- 	 * supported).
- 	 */
--	if (sta && !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE) &&
--	    !(ieee80211_hw_check(&key->local->hw, SUPPORTS_PER_STA_GTK) ||
--	      sdata->vif.type == NL80211_IFTYPE_NAN_DATA))
--		goto out_unsupported;
-+	if (sta && !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+		switch (sdata->vif.type) {
-+		case NL80211_IFTYPE_NAN_DATA:
-+			break;
-+		case NL80211_IFTYPE_ADHOC:
-+		case NL80211_IFTYPE_MESH_POINT:
-+			if (!(ieee80211_hw_check(&key->local->hw,
-+						 SUPPORTS_PER_STA_GTK)))
-+				goto out_unsupported;
-+			break;
-+		default:
-+			goto out_unsupported;
-+		}
-+	}
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 117f58af5ff9..79ae3552c55b 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -4,7 +4,7 @@
+  * Copyright (c) 2006	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright (C) 2015	Intel Deutschland GmbH
+- * Copyright (C) 2021-2023   Intel Corporation
++ * Copyright (C) 2021-2023, 2026 Intel Corporation
+  */
  
- 	if (sta && !sta->uploaded)
- 		goto out_unsupported;
+ #include <linux/kobject.h>
+@@ -42,9 +42,10 @@ static const struct debugfs_short_fops key_ ##name## _ops = {		\
+ 		 KEY_READ_##format(name)				\
+ 		 KEY_OPS(name)
+ 
+-#define KEY_CONF_READ(name, format_string)				\
+-	KEY_READ(conf_##name, conf.name, format_string)
+-#define KEY_CONF_READ_D(name) KEY_CONF_READ(name, "%d\n")
++#define KEY_CONF_READ(name, val, format_string)				\
++	KEY_READ(conf_##name, conf.val, format_string)
++#define KEY_CONF_READ_D(name, val) KEY_CONF_READ(name, val, "%d\n")
++#define KEY_CONF_READ_X(name, val) KEY_CONF_READ(name, val, "0x%x\n")
+ 
+ #define KEY_CONF_OPS(name)						\
+ static const struct debugfs_short_fops key_ ##name## _ops = {		\
+@@ -53,12 +54,16 @@ static const struct debugfs_short_fops key_ ##name## _ops = {		\
+ }
+ 
+ #define KEY_CONF_FILE(name, format)					\
+-		 KEY_CONF_READ_##format(name)				\
++		 KEY_CONF_READ_##format(name, name)			\
++		 KEY_CONF_OPS(name)
++#define KEY_CONF_FILE_NAMED(name, val, format)				\
++		 KEY_CONF_READ_##format(name, val)			\
+ 		 KEY_CONF_OPS(name)
+ 
+ KEY_CONF_FILE(keylen, D);
+ KEY_CONF_FILE(keyidx, D);
+ KEY_CONF_FILE(hw_key_idx, D);
++KEY_CONF_FILE_NAMED(conf_flags, flags, X);
+ KEY_FILE(flags, X);
+ KEY_READ(ifindex, sdata->name, "%s\n");
+ KEY_OPS(ifindex);
+@@ -356,6 +361,7 @@ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+ 	DEBUGFS_ADD(mic_failures);
+ 	DEBUGFS_ADD(key);
+ 	DEBUGFS_ADD(ifindex);
++	DEBUGFS_ADD(conf_flags);
+ };
+ 
+ void ieee80211_debugfs_key_remove(struct ieee80211_key *key)
 -- 
 2.55.0
 
