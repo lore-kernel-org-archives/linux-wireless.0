@@ -1,198 +1,182 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAF30257824
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 14:30:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC363B3C0E
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 16:05:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785681060; cv=none; b=GzHXbZhAB+REkxrqXEgADppvnHb7YPaZnw/m0R2yfD5NdQEv8mqZjIWfTT0QVgwBl4y26hyfaeZIZqWkhc+L91sNNZgPxz6c8oUXVz3VAy/RsZIljWOT7IZQA8YKmJZnnYQcMxD4VFb9j42/6WTaPnM76cQEwFVrHQIECFexnCY=
+	t=1785686751; cv=none; b=ACxhF63hR1Rtpgw8Sc3ioAcyVT1FdQ2vYNUwITm43iGN6x1Sp88cJ4hCFSNpc9Hm4uSHt2URxPB10NF4Li0sETbS54RhmITNYDoJ1nHVsCPHePlN1jm9M7IxSugFOdaV25lTL/ma50kimtCe5ozrf/MbrqGnbcJer/tCHmtR8Dc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785681060; c=relaxed/simple;
-	bh=4Cw5hHEtwE4SsTUeNi0GjrPqFYX5d9lInGn6AgWbfuQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LEbpENMkeVrq634Jd72TxUHW2OmQbLdBvbjca4w5IIZ0f4t0aE2l0a9qrSRB1u/Pi3ywY8Gccu8hfJMU0EDfJBTrOlFgmzWFGE0rnwZkZH4Te2MCroAhMFERK0gy7tQmPGc0GpyQhAEsUkFZkxprVT5nCKbwlLjlsIm1dxDbVXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Q7KExOPD; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JKby09y0; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785686751; c=relaxed/simple;
+	bh=QZIvylAwL2mwBu3J7lNF5eXEyn70Xu5VGQOPaqdnL2g=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m8b+dDu/bv1wqwvfy+rCF50WQy9tU4AyLPyetzB/gEYSt5FUIsDXxiE7QB4HlUbSI5iWoRzZbDZvZljA0DHp2A9DUfJQL13p5WTIZuQLoF2zrRxm31878M5XSdv3h26PM/cM3ubShLHOxZZUpbVdKVmWFhGWsLhkTtX8l0IaFBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J4tzXAoP; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Q7KExOPD";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JKby09y0"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 672B6fme1809971
-	for <linux-wireless@vger.kernel.org>; Sun, 2 Aug 2026 14:30:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2wLRb9QYeLt7rsVJiN7hvsyaizC8vPUiUfINQ6ZucSQ=; b=Q7KExOPD9xdKlaiR
-	aHN5+/9FPnOhdkYRb54QhiHeJJ+JF6g2m/nrGHslEFdXpta7P3skcFQgcVWppdxQ
-	grVsxUJz+rRWcglAnpKBVdNcUpGO9kCEjw6uEnSGhgdJETMSNlllIMxvKcQNrfIC
-	EclpJ5WAF2KYeYN9rmzVUW53rptyB02YUKTUpkdwK+4/LxVZc6uY4WQIFHuSZLVo
-	vVlgDjATtOwwdYcGUIinMg+9cLOG4oUTzRHGuOK/pejMZR8ZGHO/5Z4m5grmFTie
-	44Ke/jjusXT65rp1h+j97rnJWdzTSGzDy++Rxvli0aG0IgPtHRi2NrzMTaBNbw+L
-	U8haew==
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fs8q530xw-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 14:30:57 +0000 (GMT)
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cb4cdf95b5aso5139368a12.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 07:30:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J4tzXAoP"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ce87c7e3bbso26580695ad.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 09:05:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785681056; x=1786285856; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2wLRb9QYeLt7rsVJiN7hvsyaizC8vPUiUfINQ6ZucSQ=;
-        b=JKby09y0wDxr8WUAGnj214enHIypTcq9V7oIm4NB6+f5BdYX9qlwvtbrt0ijsEs0rv
-         wfJW7GsitssmRLgdQ9KEVrJZE3SdTeq0N3wQiw7JeZMFSiTIkMCX8ipJ+8PPDNaN5a0B
-         +pRDjGGfffDqkK5ypcoCr4sbSkNLSLm95HwPCaBIjSoe99WLFWrlNC0ITJuuFGu+b4fB
-         BiyYB0JRrXsvoHsrvdSJkEZaYWFyw407I/ij6VIAJ7MUae+iq4tMMn80l7RwFSA9AjyZ
-         hXdGRO0yHdXN0ylwPEPa2rOMxuIrdRG2nXFvDZY1iNrVscf6xoe7JubJo2mSIGh2l2pf
-         e84A==
+        d=gmail.com; s=20251104; t=1785686747; x=1786291547; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=jQmpfn45uaTNNsHtj+z4E83LXS4CJJjfzV+3sS08LV0=;
+        b=J4tzXAoPBhfI2G00/VRbXmXdYJVpB9QLYI3cueW3s1CH8SY+5H89mHCjZ5zPULuWdl
+         7Pjc7UpRExqqcpTwoY+ckLsdHyGz8fEextdOZkNh+RXRcdP9COWTRCf8COOUiYvbexFz
+         M6NurCAge7E13AyoD+kgzA4CBJh5PcNJETcxLf+JXd6+oUVcOvCZq+BwDdWTcE5tV+7q
+         n1Ygrv4h/Ntl7mCWtYEOygoWFCS2kjubbBkqfdFFG5ane3htH2s7c7dDxKYoh5NKaeYb
+         OW2bu13h1R8cCprmWHQASXa8f5eYQx/EE+T+/bx/orD43AUVeHJ9oresEXMCW+ohj8yY
+         hHyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785681056; x=1786285856;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1785686747; x=1786291547;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=2wLRb9QYeLt7rsVJiN7hvsyaizC8vPUiUfINQ6ZucSQ=;
-        b=BnAxU4wC8bGJMXszV+Lq+xrILVOKV264TWDPYF2N6EoDuJETwtKSe7SbWcnB5i1KFZ
-         BqPDCFEyrNgM4zB6RHEszAo9OKaoqzrT2p0bbboAJjz9Wk7Fyvr8jUsFsgJ8P1CRdMZ+
-         AikrY8Eq+Eh9lbYXWdkAY527WlUCfzD5Nz0xUysrrX+CkEWvsQCnSLVzc1YZhBcQnjCu
-         xoQYHm2kLpnXi+SoCt/jBKjSYM83UMUYYH9FMZcvjJ2wdl+ylIy8VyXyJ3t8gHjCPGw4
-         iQb3fFRk4e5dhrSs+k31rnSmVNrdmkybrVJIQ7K7fLvMfdLYtaDKlbwU3GCo2NIKlWIz
-         I9Kg==
-X-Forwarded-Encrypted: i=1; AHgh+RpBh2tzg5XjcJms56e5sXdtQ72xlxA2xRW4edQjKDA/OYe6JsC5DO0t+OkHRpy9gjq9Lh/c5Gc1zC/Qb6RqCg==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyjvhBogGS0sskdvwwV5lPwYM+96wKUmk9oltttn4kdfb5cd0vY
-	+FqL15lTtOtR+AxZMk9ZaKsoem4nePHo3GNA1yP59vKLg1CGSJJv4K9Fb/lf60hmoKWZo0J32kT
-	aNmx/xYptKnA3IcjezL/rhbXnOkg4Y+c6IxrMu41stc59JGAtUaOBUREoVW4On6DpXLg9mA==
-X-Gm-Gg: AR+sD11vAaLa7K/z9PH6TKPQ4Y5fFvDeOjoOxVUmde+IXQfPK5/KUIyNHX/sMQYEKAI
-	jszYxPBcnIqvyb2CVszPtvW1njK5LKc9dkQCDssNVNnfYqXFwI/F6jSHh6QYnLJRkZlx7Nck3vl
-	31lLSUxv5tdsRhhMYGNUawokAQUvQQeCLodslQTLSNz0PsN23KfcZzp/hRK7k7zm0Zn2RHix2a8
-	9sCzRmqTax3GmB1d8pNbYE+TXAuPatFMnxG1zlbF0xZITjH3KJTIvKtNGBbCmdF6rVV+4N/s34i
-	BqQ/eP6Jzv0twUdopWExvn8JtHE02yKZz71wtLBxpitPORO1YfM3Z12718WXHW9khNX5LVlnOJs
-	mZRlMRhAjqd/UDhe57/P5k7kmDsbZceX3GSnfyQcK4BMSpeUVYIZv869WYKM=
-X-Received: by 2002:a05:6a21:a04:b0:3c0:e6c3:224a with SMTP id adf61e73a8af0-3c92a85cbe3mr6691734637.37.1785681056458;
-        Sun, 02 Aug 2026 07:30:56 -0700 (PDT)
-X-Received: by 2002:a05:6a21:a04:b0:3c0:e6c3:224a with SMTP id adf61e73a8af0-3c92a85cbe3mr6691704637.37.1785681056010;
-        Sun, 02 Aug 2026 07:30:56 -0700 (PDT)
-Received: from [192.168.1.9] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153dd4e666sm40316903eec.4.2026.08.02.07.30.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Aug 2026 07:30:55 -0700 (PDT)
-Message-ID: <bdb87a52-80ba-4f74-94f1-cc01881e0c8a@oss.qualcomm.com>
-Date: Sun, 2 Aug 2026 07:30:53 -0700
+        bh=jQmpfn45uaTNNsHtj+z4E83LXS4CJJjfzV+3sS08LV0=;
+        b=q6Siy36zs+y/ZKY8aQqt24tucG4RS1bAKKkozDzt7JxiBqOHPy8C81c7npB05+Z5za
+         l8PmvFpfSGiaVlMWOQEgJdUXR6RyJbv2Rp44XiX74vs3eK69r+970yjYegKmFY1QhJWO
+         W19LZ+0h/6rcSj5Kxj6Mm8mVI2KjJAM7MIzKzZAFf+O4WscUF+9RN5s9FzCOxtYJOFXF
+         wOdQaYrXYPttloTtprZG8vq9bvI2Vknez1ILnFpN+1XNozIvyBnv92Ggv6aZcAH1YVEb
+         HwxtJfosXcxqjA1dWF5FPiBjQjxjMkYneWzmleR2WP8WQo+zTxjt+rFNvXdXeaRFTtQE
+         c1hQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoKIJFIe+P6I8aWbHx7aCP844wqVJXH/o1p5hUiv7R3V1SDavhW2yfEmXOM8Djbvfziq1PrYuVSYQjvsck8bw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy3tnKgLXsNhUdqLOcGjjCYmEGJ8CJknJUQq6jb75VKAmjNAR3V
+	+wXEyppbD+mx/e72VG+0hXUx26ZHNz4XjSvz+Nr8ZEXIwpsJ58bg9M0tbgW30RWt
+X-Gm-Gg: AR+sD11HftoiXwCRlc4zEhMh5arS/iHTUDepL+fARu66xLlq6Cp2aV0VpLldc13/wV4
+	J964OwmzMqwZKWBm/2ah70cILlaNXAMffSJ6pYlhzX+1W6AsfitC/aXJTHS6NbgSWJkFgcspUNO
+	1kWXyJdmORpdqsPaCQMnbZExKgQEVDwd3Ca3mHEemOI1+vbj6R0HKlK2mOY157xwm/5ZasdkPqq
+	A1jQ7CqVayfYSHkRtQjfATIJfCaSv+4JoiklzIJwgduIw02I4CCaZmVHS/8fIut0UxhQZHEKZns
+	493zxl6MzXEimhiOFDuAwtRt5Gsi4LYrFTYKkOjKwvfCj24SuWcP8iuWfmP8g8IXfzEJnBo1Vey
+	guNhBM0N228cXk+EoB8O85zTqcJangQsRJdC+/ybyJxAH7xy7HO2liztMVdHFR2H8aRIKqdjFzF
+	Hdf0wrOhQhdsNESgL48R3Nam10hd0CQgveLD7PGfgEmrOy2GZeD2+qVmFWi6koLYzPHcPV
+X-Received: by 2002:a17:902:d489:b0:2cc:61e8:5fba with SMTP id d9443c01a7336-2d05244492amr68660835ad.32.1785686747186;
+        Sun, 02 Aug 2026 09:05:47 -0700 (PDT)
+Received: from Hybread.localdomain ([118.100.92.57])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d04b120fe0sm26777115ad.67.2026.08.02.09.05.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Aug 2026 09:05:46 -0700 (PDT)
+From: Koh Tom Han <kohtomhan@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Koh Tom Han <kohtomhan@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7996: validate sta_num in ALL_STA_INFO event
+Date: Mon,  3 Aug 2026 00:05:40 +0800
+Message-ID: <20260802160540.1072-1-kohtomhan@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: rsi: Fix types to appease CFI
-To: Stefan Hansson <newbie13xd@gmail.com>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, phone-devel@vger.kernel.org,
-        ~postmarketos/upstreaming@lists.sr.ht
-Cc: Stefan Hansson <newbyte@postmarketos.org>
-References: <20260802-rsi-cfi-fix-v1-1-5821d2cb54ee@postmarketos.org>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260802-rsi-cfi-fix-v1-1-5821d2cb54ee@postmarketos.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODAyMDEyOSBTYWx0ZWRfX4mdNxNOEZf7z
- PFlSvk8YSE1qafTc8znB4hHbT4qNF22P3Uj4AQa8CzZstnTelcsSMeiVTix+bdFj6l17BWBpNwK
- sEN01g4ffmUozy52Pf8eD9a9uPvFjBU=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODAyMDEyOSBTYWx0ZWRfXzODjiRJ5Lil0
- G43xw9/uTUCUxI0LL/vy0p6nOk/uyfUTCn9zBMrXrg07ujy5aYgwMyi9yr0zsfnStYOjf+BG4/n
- 7Ep88U1pUzN8LI8+vKIs+Af2L6qmBFe/P2AlniZurXf10MqMoFmfap7IuanrWviaP0nIZ6p/sqw
- flZdBH7DpYe4v9Md7gNShVSmEWqlNQNupSo7OokHDTMR49+nq57N7LpuP/Q/b13ML9QkjURWeRr
- D6WNkXK2rSqDAXICkPi7YdOaA+FWRhhaVCWrgL1eSkdBgI0h743aHNOyxCn0Wwp7V5FJeaqv9VI
- MPw1QVn4eC9qqpv8ppu4I5DaVcP+LMwEx5hOb3DXFNEBjX9j6ANemookURriIR7PyIzEMi+W/PF
- QwBCsM2KahQy8uF4SnwW8kBLPqW0N8HhMzkrh/fTrEIOi3uWz7IZUKpT8Lqr1f53nekTsJEs6Vg
- 9MZ52okd6IhCI40WUlg==
-X-Proofpoint-GUID: 92V8ilqXtmvMdp3Enb9zh-J47StxuBBc
-X-Authority-Analysis: v=2.4 cv=IYC3n2qa c=1 sm=1 tr=0 ts=6a6f54a1 cx=c_pps
- a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=Gbw9aFdXAAAA:8 a=pGLkceISAAAA:8 a=90mh4GC2pPR358r5yh0A:9 a=QEXdDO2ut3YA:10
- a=_Vgx9l1VpLgwpw_dHYaR:22 a=9vIz8raoGPyDa4jBFAYH:22
-X-Proofpoint-ORIG-GUID: 92V8ilqXtmvMdp3Enb9zh-J47StxuBBc
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-02_04,2026-07-30_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0 phishscore=0
- suspectscore=0 priorityscore=1501 spamscore=0 malwarescore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608020129
+Content-Transfer-Encoding: 8bit
 
-On 8/2/2026 5:22 AM, Stefan Hansson wrote:
-> Avoids errors like:
-> 
->     CFI failure at kthread+0x124/0x1cc (target: rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type: 0x89fb613d)
-> 
-> As seen in the aforementioned error this was tested using the downstream
-> redpine_91x driver found in the Librem 5's downstream source tree.
-> However, it appears that this driver is a modified version of the rsi
-> driver found in mainline Linux and as such I decided to port the changes
-> here too.
-> 
-> Signed-off-by: Stefan Hansson <newbyte@postmarketos.org>
+mt7996_mcu_rx_all_sta_info_event() uses res->sta_num, a __le16 taken
+straight from the firmware event, as the bound of a loop that indexes the
+rate[], adm_stat[] and msdu_cnt[] flexible-array members of the event.
+The count is never clamped and skb->len is never consulted, so an event
+declaring more stations than it actually carries makes the driver read
+past the end of the received skb.
 
-Having fixed a ton of these issues in the Qualcomm Android downstream driver I
-was going to give my R-B, but I ran this through my ath.git patch acceptance
-process and it flagged some issues, starting with:
+The strides are 20, 36 and 12 bytes respectively, so the worst case
+(tag UNI_ALL_STA_TXRX_ADM_STAT, sta_num 0xFFFF) walks roughly 2.25 MB
+beyond the buffer, in softirq context. Out-of-bounds wlan_idx values are
+range-checked by mt76_wcid_ptr(), but the break statements inside the
+switch exit only the switch, so the loop keeps running; indices that do
+fall in range accumulate out-of-bounds data into wcid->stats, which
+mt7996_sta_statistics() exports to userspace when WED offload is active.
 
-WARNING:FROM_SIGN_OFF_MISMATCH: From:/Signed-off-by: email address mismatch:
-'From: Stefan Hansson <newbie13xd@gmail.com>' != 'Signed-off-by: Stefan
-Hansson <newbyte@postmarketos.org>'
+The return value of the preceding skb_pull() is also discarded.
+skb_pull() returns NULL without modifying the skb when the requested
+length exceeds skb->len, so for an event shorter than
+sizeof(struct mt7996_mcu_rxd) the pull silently does nothing and res
+ends up aliasing the RXD header, taking sta_num from arbitrary
+descriptor bytes.
 
-There are also kernel-doc issues noted below
+Check the pull, require the fixed part of the event to be present, pick
+the element stride for the tag being processed, and reject any sta_num
+that cannot fit in the received payload. The subtraction cannot
+underflow because of the preceding skb->len check.
 
-> @@ -246,12 +246,13 @@ EXPORT_SYMBOL_GPL(rsi_read_pkt);
->  /**
->   * rsi_tx_scheduler_thread() - This function is a kernel thread to send the
->   *			       packets to the device.
-> - * @common: Pointer to the driver private structure.
-> + * @data: Pointer to the driver private structure.
->   *
->   * Return: None.
+For comparison, mt7996_mcu_wed_rro_event() in the same file already
+bounds its iteration with "while (skb->len >= sizeof(*e))".
 
-Return: 0
+Found by code review and confirmed under KASAN with a KUnit test that
+feeds the handler a synthetic ALL_STA_INFO event carrying four adm_stat
+entries but declaring 65535, using a kzalloc-ed struct mt7996_dev (the
+handler only dereferences dev via mt76_wcid_ptr()). No MT7996 hardware
+was involved:
 
->   */
-> -static void rsi_tx_scheduler_thread(struct rsi_common *common)
-> +static int rsi_tx_scheduler_thread(void *data)
->  {
-> +	struct rsi_common *common = data;
->  	struct rsi_hw *adapter = common->priv;
->  	u32 timeout = EVENT_WAIT_FOREVER;
->  
-...
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-> index 25c2b232394a..513d2fdfb510 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-> @@ -25,8 +25,9 @@
+  BUG: KASAN: slab-out-of-bounds in mt7996_mcu_rx_all_sta_info_event+0x19a/0x3a0
+  Read of size 2 at addr ffff8880012422a0 by task kunit_try_catch/28
+   mt7996_mcu_rx_all_sta_info_event+0x19a/0x3a0
+   mt7996_all_sta_info_oob_test+0x24b/0x360
+  The buggy address belongs to the object at ffff888001242000
+   which belongs to the cache skbuff_small_head of size 640
+  The buggy address is located 32 bytes to the right of
+   allocated 640-byte region [ffff888001242000, ffff888001242280)
 
-above here update the documentation: s/common/data/
+The same test passes cleanly with this patch applied.
 
-Warning: drivers/net/wireless/rsi/rsi_91x_usb_ops.c:28 function parameter
-'data' not described in 'rsi_usb_rx_thread'
-Warning: drivers/net/wireless/rsi/rsi_91x_usb_ops.c:28 Excess function
-parameter 'common' description in 'rsi_usb_rx_thread'
+Fixes: adde3eed4a75 ("wifi: mt76: mt7996: Add mcu commands for getting sta tx statistic")
+Cc: stable@vger.kernel.org
+Signed-off-by: Koh Tom Han <kohtomhan@gmail.com>
+---
+ .../net/wireless/mediatek/mt76/mt7996/mcu.c   | 30 +++++++++++++++++--
+ 1 file changed, 27 insertions(+), 3 deletions(-)
 
->   *
->   * Return: None.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+index 2e83f4b79..65d9ae11e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mcu.c
+@@ -648,13 +648,37 @@ static void
+ mt7996_mcu_rx_all_sta_info_event(struct mt7996_dev *dev, struct sk_buff *skb)
+ {
+ 	struct mt7996_mcu_all_sta_info_event *res;
+-	u16 i;
++	size_t elem_size;
++	u16 i, sta_num;
+ 
+-	skb_pull(skb, sizeof(struct mt7996_mcu_rxd));
++	if (!skb_pull(skb, sizeof(struct mt7996_mcu_rxd)))
++		return;
++
++	if (skb->len < sizeof(*res))
++		return;
+ 
+ 	res = (struct mt7996_mcu_all_sta_info_event *)skb->data;
+ 
+-	for (i = 0; i < le16_to_cpu(res->sta_num); i++) {
++	switch (le16_to_cpu(res->tag)) {
++	case UNI_ALL_STA_TXRX_RATE:
++		elem_size = sizeof(res->rate[0]);
++		break;
++	case UNI_ALL_STA_TXRX_ADM_STAT:
++		elem_size = sizeof(res->adm_stat[0]);
++		break;
++	case UNI_ALL_STA_TXRX_MSDU_COUNT:
++		elem_size = sizeof(res->msdu_cnt[0]);
++		break;
++	default:
++		return;
++	}
++
++	/* the firmware-provided station count must fit in the received event */
++	sta_num = le16_to_cpu(res->sta_num);
++	if (sta_num > (skb->len - sizeof(*res)) / elem_size)
++		return;
++
++	for (i = 0; i < sta_num; i++) {
+ 		u8 ac;
+ 		u16 wlan_idx;
+ 		struct mt76_wcid *wcid;
+-- 
+2.53.0
 
-Return: 0
-
->   */
-> -void rsi_usb_rx_thread(struct rsi_common *common)
-> +int rsi_usb_rx_thread(void *data)
->  {
-> +	struct rsi_common *common = data;
->  	struct rsi_hw *adapter = common->priv;
->  	struct rsi_91x_usbdev *dev = adapter->rsi_dev;
->  	int status;
