@@ -1,137 +1,134 @@
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7BBE3955E8
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 10:25:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2DF43B1EC8;
+	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785666328; cv=none; b=sYkNhHlMLk6rPI4i6Qv9vMaz7gQpAHiXsveCu3TxKt92E0sFugK/9zwOS2ey6apH21S59fLGbgp8jvlRFCkZCRdvkldJJJRFZ6PSsSEGvntWhccJs8BwXb812QrPTovo+gKcQuNN/R79ptl8sbgYUtBLN1LHcX1b6tH2F6/Gxzw=
+	t=1785672789; cv=none; b=HUbye5q6dPsNwd6/BcKKMDiqUo8JdS3BWzlDygaSpC+LJycLUB8gkDd87una2Ju3brbFppa6uGeqMg3DJPXQ4/DF64Z6atRuFgHlDEse3CtPvEqV84nUWQto08/I8l8Yvqgb7pAWJd1BoRQ4YoT65wTqIjxs1j6jPsMPayerZnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785666328; c=relaxed/simple;
-	bh=pck+pClOKblcqDWxsPRoWg8rfy6K+Grrr1EREHE3oKM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=KeiJZ8lsrGopRCtrdIk9SY3vWPxwPP2OBmLlMzfUhswjROXmaNBqlVCl9i+Ox0dijkoy3r6rJ+gmSXJDZC+tWMYWgbdAQE2pzyYEQk7/S7SCO9fCcCLK0lKl26fec8ltBgvoE19jJFxde3vNpoJCXkDVe6DT/w5jBCeqfdszBF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hbzswvKG; arc=none smtp.client-ip=209.85.216.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785672789; c=relaxed/simple;
+	bh=WGFFdsRUYtTtbwa6B95ZHBXoVvi4dQVulYeTYwNSlW4=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=b1qb9dnJytazAdaF3PlarKzi5wDAueaWw07ZX/8E/07G0iWwKaduGCpgFt7iz+r0f+7ux7X0eDFuF1Ib04iRw3m0vp6uw3OK3g2xnoEV4s1jpixzFx4Pe/72WpSp5I65lnGR5PnuVfehAjmiKJ4p7QlzchGr85JWMYCQjJ49Tkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o7idJfot; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hbzswvKG"
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-38d489b6b71so2211831a91.0
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 03:25:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785666319; x=1786271119;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=U30tOpuVn8qhXLPjIH2/nfOt+KCdmSRNh2hKzUS0a7U=;
-        b=RikU7kXaAm5qj0izLyiz7bj5ZaQYFAQ4cRfFuD4+395xDgKDoh4Km0m/U/vVK4JbiT
-         44uHGQ39tx3tZS4MlIEM7FDMFSMp7ly4Bq4AKuD6v49MWnUzPFAZDLKzZ8SSc9Tagvrf
-         4GJ6u7PJ2zeMRT8K2zd6jWs4uvPeyN5yMQ7rphRyWkoRk3EaGR9xEJCParGS+8Wok/ZC
-         RowkrEKAG3KyO46ZcXZYROEy0UsLa0/KeAqdfWwynRLmGRAoyQS4WwwvNNTNuc2YvSDS
-         ZBI/fPBVOAWEWRGneavl0H5bFso1J3PiJFKGPFsL3shN9Y0IQMhUC3+5WVIHf3IvFxpQ
-         TwKQ==
-X-Gm-Message-State: AOJu0YxkzmJPbD5bTEYLDV5GW5pC4FMHCNl/BIMJYHbEKorOTpM27jqr
-	eexrmY9AG7qEG7P3BU+mYCelNWuxUaV7BI5FWfHACOPxu+4FxdDHAqz0PSK/EjYXppMJZMMyemi
-	Qdjy39EtJiDL08ujmOoFW8Y1yOoeLLXrXTYc0RURgTHo4ucL08ZpVgsM31ABvwdolPd0pwsSGyH
-	qprCWoA3K/644Zqf1ZAz1czTwuf3k79pQMzWXJArBd0ererxVGZ7tXJe/J84ml5IAKHgvMGHI5y
-	2bnB/LIgYf1bAPa/HccpVRbJZaX
-X-Gm-Gg: AR+sD12Brh+A/hEhwuvg0+j9vdocoTA8d0WkOFPHeJRtDxjVAMmokk9EaG3leuB1d3g
-	L3VOFP9irmSERvh4FDXNb5rOVDL4VMACD0yvLSGbiQHik7YTu60jSKGFaczwrK+2msHKasoCaa9
-	NFz9oaYwnT1kR4+KJaFR8k1mV+eQ7ViJG9mMht0kJTQsuwpKst3gq0TBD+FaWjiKIjIjGniXYa0
-	Ji+1NA0gUIKOVAenBOoAOiVbsLuzqcBT7YKKSjCoimpDYoZLUUHmZ8wA1UklPjutMuYuJd0TADQ
-	oqQerUgVrCXw/XeyicgESFaeSXX8dftx8dO/6wOVq1NqyiYopsJ1H6lHreJ6POziRwCV4kvkGbJ
-	tDt9xlKKvjXvpHOf1ZdIj9+1W/AiB7KmHhIJFLkujL5EiMJTXhWP5Wh9laoxBtKVNxMHwqxDp1T
-	JM6JwCghmAtjBtvK7qQZF8Tgr782y0eDjqukcXw4E=
-X-Received: by 2002:a17:90a:f94d:b0:381:5ab5:b667 with SMTP id 98e67ed59e1d1-38fbc4e518bmr5586632a91.31.1785666319028;
-        Sun, 02 Aug 2026 03:25:19 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-27.dlp.protect.broadcom.com. [144.49.247.27])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-38fb2d6001esm603013a91.2.2026.08.02.03.25.18
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 02 Aug 2026 03:25:19 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb733fc5024so3640148a12.2
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 03:25:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785666317; x=1786271117; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=U30tOpuVn8qhXLPjIH2/nfOt+KCdmSRNh2hKzUS0a7U=;
-        b=hbzswvKG+60l4KC5opdp+YoxTEYW/2w+jgzB2YKl0dwnEWTq6FAd3ac5bRh643U4AK
-         9PFtnA32PxqeqMfTEq1Wl1+o+IiMOAV41xbyc1N9CiEVtaLE+MWPRTKXY/Hg52oEcPPs
-         HzhMFxYCxBJykqXlRNp9h4N8mo0nRl0bhnx+w=
-X-Received: by 2002:a05:6a21:3a4a:b0:3c4:14a3:fed4 with SMTP id adf61e73a8af0-3c92a8f5e7fmr6805475637.55.1785666316987;
-        Sun, 02 Aug 2026 03:25:16 -0700 (PDT)
-X-Received: by 2002:a05:6a21:3a4a:b0:3c4:14a3:fed4 with SMTP id adf61e73a8af0-3c92a8f5e7fmr6805451637.55.1785666316514;
-        Sun, 02 Aug 2026 03:25:16 -0700 (PDT)
-Received: from [10.229.42.78] ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fab1334cfsm22570319c88.1.2026.08.02.03.25.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Aug 2026 03:25:15 -0700 (PDT)
-Message-ID: <d5b7a4a8-532f-47c7-a883-036d5cc81a90@broadcom.com>
-Date: Sun, 2 Aug 2026 12:25:09 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o7idJfot"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A1A85C2BCF7;
+	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1785672788;
+	bh=WGFFdsRUYtTtbwa6B95ZHBXoVvi4dQVulYeTYwNSlW4=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=o7idJfotBYjHgV7BD/qzIbHPVLcD/XoMUy9s8ojgK0jmAoCn2FWDW+ymSuUcPfIfO
+	 OCdlDNhckDEQqpeiX0vKB9T0X3sNngjGCEu+6o12lMEGlGRvzcr4u0f5m7xG6po5gX
+	 Etry41WpIN3wrC+UshFlToIF3Qc5RCWLodIyZbcNLmuVQGYrxhDVN9pvPumOP1M8sw
+	 3XVaFmHzcQw/SzFoBwwIuXjQo9pqRCfpk5pISKa/cFPYOUSe+zUQc4uzs0HxFLddWy
+	 uR7nyQ8GqNjFMbAdKCsGtoecesGadlA/lUjm3f8OfmoKRfNcZvw4FbDL2xD6iMBY1g
+	 V45utSMzj6ogA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F55AC55177;
+	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
+From: lurenjia534 via B4 Relay <devnull+lurenjia534.outlook.com@kernel.org>
+Date: Sun, 02 Aug 2026 20:12:54 +0800
+Subject: [PATCH] wifi: mac80211_hwsim: drop frames with invalid channel
+ width
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/8] wifi: brcm80211: performance and stability fixes
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Shivesh <chanelshivesh@gmail.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
-References: <20260731160646.3812-1-chanelshivesh@gmail.com>
- <20260802101530.4028803-1-arend.vanspriel@broadcom.com>
-Content-Language: en-US
-In-Reply-To: <20260802101530.4028803-1-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Message-Id: <20260802-mac80211-hwsim-invalid-width-v1-1-94d9bba2ae60@outlook.com>
+X-B4-Tracking: v=1; b=H4sIAEU0b2oC/yWMQQ6CMBBFr0Jm7UTaBVSvYlxMy2jHQDUdBBPC3
+ W119fN+Xt4GyllY4dxskHkRlWcqYA4NhEjpzihDYbCt7VrXWpwolDEG46oyoaSFRhlwlWGOeOp
+ 7Z3zH1HcOSuKV+SafX/5y/bO+/YPDXJvV8KSMPlMKsV6rZB5Z9TiRJNj3Lz8k8gGgAAAA
+X-Change-ID: 20260802-mac80211-hwsim-invalid-width-97781b6ea768
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com, 
+ stable@vger.kernel.org, lurenjia534 <lurenjia534@outlook.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785672786; l=2911;
+ i=lurenjia534@outlook.com; s=20260801; h=from:subject:message-id;
+ bh=/iY0dNxP0zkE1SAHnpQcq1gmr+HYoaV6xhQaYs/s9EQ=;
+ b=DKMeWXh6UssVYnAqq0vsaXgnuNYEkVb3aQrBjTUK+Ujiq65tB29Nk01utpN5/qzZ5JsvqSm45
+ og9bgY1+E4VCnN2H0C0xW6P9NBK78klLBwkOIJc5FaZzH+DLmEfqRpk
+X-Developer-Key: i=lurenjia534@outlook.com; a=ed25519;
+ pk=nMa0OcUJYxnaGbhs5f95IwVQ7sPrWI7It3LMsh0BJX4=
+X-Endpoint-Received: by B4 Relay for lurenjia534@outlook.com/20260801 with
+ auth_id=906
+X-Original-From: lurenjia534 <lurenjia534@outlook.com>
+Reply-To: lurenjia534@outlook.com
 
-On 02/08/2026 12:15, Arend van Spriel wrote:
-> On Fri, 31 Jul 2026 16:06:17 +0000, Shivesh <chanelshivesh@gmail.com> wrote:
->> This series fixes several performance bottlenecks and correctness
->> issues in both brcmfmac (PCIe/SDIO) and brcmsmac drivers.
-> 
-> Two blockers need to be fixed before any of this can be applied:
-> 
-> - 2/8: num++ was dropped from the subframe-parse loop. cnt is always 0
->    on return, so rd->seq_num += cnt - 1 underflows to 255 (u8) on every
->    successful glom receive, corrupting sequence-number tracking for all
->    subsequent packets.
-> 
-> - 4/8: pmksa->fils_cache_id does not exist in struct cfg80211_pmksa;
->    the correct field name is cache_id so this does not compile.
-> 
-> Beyond the blockers, please split the series into separate submissions:
-> 1. Stability and correctness fixes (3/8, 5/8 TX-stall fix, 6/8 Fixes
->     tagged part)
-> 2. Performance improvements (1/8, 2/8, 5/8, 6/8 performance parts)
-> 3. New functionality and comment-only patches (4/8 PMKID_V2,7/8, 8/8)
-> 
-> This makes it easier dealing with fixes that should go to stable trees.
-> For the stability series you can add Cc: stable@vger.kernel.org and a
-> Fixes: tag in the commit message.
-> 
-> Regarding patch 1/8: the patch also fixes a race where a ring state
-> changes RING_OPEN->RING_CLOSING while blocked causes a permanent
-> netif queue stop. The fix relies on the atomic counter so keeping them
-> together is fine, but this change is primarily a potential bug fix so
-> rephrase the subject, e.g. "fix blocked-ring race permanently stopping queue"
-> 
-> Finally, some of the commit messages seem to use LLM lingo so if there
-> was a coding assistent used please add an Assisted-by tag as required by
-> Documentation/process/coding-assistants.rst.
+From: lurenjia534 <lurenjia534@outlook.com>
 
-Some additional remarks. Have these patches all been tested and if so 
-please add reference to the platform used. Especially for the 
-performance improvements it would also be good to have some profiling 
-information as to how much performance gain these patches provide.
+A frame injected through a monitor interface can request a VHT transmit
+rate wider than the channel configured on the simulated radio.  The rate
+comes from userspace-provided radiotap metadata, so it can be invalid.
 
-Regards,
-Arend
+mac80211_hwsim_tx() currently warns and returns when the requested rate is
+wider than the channel.  A warning is inappropriate for invalid userspace
+input.  Moreover, hwsim owns the skb after its ->tx() callback is invoked,
+so returning without reporting status or freeing the skb leaks it.
+
+Drop frames with an invalid channel width and release their SKBs with
+ieee80211_free_txskb().  Frames with valid rates continue through the
+existing transmit path.
+
+The reproducer triggered the warning in 20 of 20 unmodified-kernel boots.
+With this change, 100 iterations completed without a warning on both the
+report baseline and wireless/main.  An E2E control also confirmed that a
+valid 20 MHz frame was forwarded while a 160 MHz request on the same
+channel was dropped.
+
+Fixes: 585625c955b1 ("mac80211_hwsim: check TX and STA bandwidth")
+Reported-by: syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com
+Closes: https://lore.kernel.org/all/6a441a03.b42ede87.8e801.0009.GAE@google.com/
+Tested-by: syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com
+Cc: stable@vger.kernel.org
+Assisted-by: Codex:GPT-5.6 MAX
+Signed-off-by: lurenjia534 <lurenjia534@outlook.com>
+---
+Testing:
+- syzbot #syz test on wireless/main: pass
+- original syzbot C reproducer: 20/20 report-baseline boots warned;
+  unmodified wireless/main warned in 3/3 independent boots
+- patched original reproducer: 100/100 iterations clean on both the report
+  baseline and wireless/main
+- monitor-injection E2E: valid 20 MHz frame forwarded; invalid 160 MHz
+  frame dropped
+- CONFIG_MAC80211_HWSIM=y/m runtime tests: clean, taint 0
+- GCC x86-64 full y/m builds, GCC W=1, sparse, and Clang x86-64/arm64
+  target builds: pass
+---
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index 75caa97bec..2d4bc3cd9a 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -2256,8 +2256,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 		else if (rflags & IEEE80211_TX_RC_160_MHZ_WIDTH)
+ 			bw = NL80211_CHAN_WIDTH_160;
+ 
+-		if (WARN_ON(hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)))
++		if (hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)) {
++			ieee80211_free_txskb(hw, skb);
+ 			return;
++		}
+ 	}
+ 
+ 	/* wmediumd mode check */
+
+---
+base-commit: 2812e64e1575e05500a35c405aaa6e99b7d7930b
+change-id: 20260802-mac80211-hwsim-invalid-width-97781b6ea768
+
+Best regards,
+--  
+lurenjia534 <lurenjia534@outlook.com>
+
+
