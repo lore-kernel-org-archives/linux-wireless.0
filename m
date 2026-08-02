@@ -1,50 +1,46 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA2703B14D4;
-	Sun,  2 Aug 2026 16:44:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55AC22264C7;
+	Sun,  2 Aug 2026 18:07:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785689083; cv=none; b=DqHCMTYPujezqH9D91WKYxZ5EZegOAPa1LCy/TQr4/OiwlukNh/d236cIlEJyFh2+v4tzRFTHpOdDOxLmxSDuTrMjbAWZiZyuXXmCDZ5A2NyMtygayJKX3ks1gFCOprAp3J5VqlSnH+RxmvSVNyiO+1kdwX+q4CFRa7jT5a6rdU=
+	t=1785694041; cv=none; b=LIJ4CDD0mdobsSulynFLd7Zv4oP1kcSqCdvioxME9/hr8By/4tRyutgKG7mkYfvB9F2Ajp4S1k9fPdBRXkOD1NkiVDa1T56zmDa8YYmRmaGWlDZwP27uT9frhWXVGYmDf31VqwfHxsMMa4e6tpIDGdoZJbY8cpqpl0G1/tT/EeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785689083; c=relaxed/simple;
-	bh=ud4vT+e2j9Ob/tFcw11ih0csrD+GjTQLdgbkBjEU3MA=;
+	s=arc-20240116; t=1785694041; c=relaxed/simple;
+	bh=3GLnhRhZ5ZtWlYBvzYRmLdWBLLxYQqTqnpK0e6Ug+gQ=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=bxGJgjVOTzYF/dbUHiUmUe6+ZgnZWQcV+feUdKGcrNEiOcIsVpzLnrN+PqNhTP6fAXGacZK+D6WMUn1XRcvDwnhAlvau/GkCxXvumT+Uft6OWjYMes7a8f78jrFSRlw80AkDsrsdt1pYdA1SSgFBTaH7RA90U0Mi3dO7AHf5PoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=w3U/XZyX; arc=none smtp.client-ip=168.119.38.16
+	 Content-Type:MIME-Version; b=QExYoOjBaQVbk56c69g07kvZ/s6Bf396Rm0xHQe/vdNhqRTQVNiRIMhIo1LcDUL+xF7HntIBNV88t0WhtZlt55b4v7wuglM6cglgCl5FBQ7WHWVgSAwhvAq3O9Wj0BX36lwDJMUiazOmdyE6UbWVbfcKOb18Y8EoP+mP0Qhj9Nk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=R4QX6Kvk; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="w3U/XZyX"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="R4QX6Kvk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
 	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=zC4AhMh7ol+PrePXq4QYAm34GA0EeXjZGTiE2KymlTo=;
-	t=1785689081; x=1786898681; b=w3U/XZyXI9w6duJLV1u0c7KwF5+3HmUsgQYemQ5nctglkTp
-	aaAW+1t75NZ7hzMRmhg8uwNwn0iSv31Xc617GKKyiot0ifCEjX5T6Pjp+jI8igxr97EKwKew7KHaz
-	Kc5WZhBsAshlBeVsnFPk7xLydWGo/2mkWHdS/u4MjcMpPKJf/+3XBwqqH/w/OTE33KTJilA+tuFQm
-	vxjZ3e7u9Xf3Yt5LpUQPN5g3+UT4r2xmtkYkcQ1kbpHapOaBRw97Z95ZnqUjZQGk5D7mOMmAkQ1tM
-	RaQqIx7rJ72qUfOYeKenIwj09CVpnEjgYMrPcBpNW5ZlLrMV+WmWzuiC8Q1HE/sw==;
+	Resent-Cc:Resent-Message-ID; bh=3GLnhRhZ5ZtWlYBvzYRmLdWBLLxYQqTqnpK0e6Ug+gQ=;
+	t=1785694039; x=1786903639; b=R4QX6Kvkqm+2TgUjvFPJcSez2zrW4w1r7En2L9h3Y+Lkc2L
+	Q8EI7A4B0L76BlC9QvqQo35tha/NqlQx7oB1/Ay6BYyY0UeeFoRzT99yJ8gsHWfGCSRGKGzHCkgE9
+	3avN/k3MBSeYwPx0B6YYGABJ+Zw7oZwAzQOBURMvpKJHoVi9ZFQPgZKyzsqAehDpUIl6k45czb76b
+	k0JL4ad0/CmfYm+1jC4Og8ZRPerKDkwZ6lOoVBxVpR5s+A7hpvA4cz1bj5uJSoEF2EQfx6/rSFwrl
+	C+8I6XYrssCi93MALCfaR2y+SwB067kN9v2b1DJdGO1alMMJi9Vp50G+hlUdc5aA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqZIk-0000000DwEd-2ATY;
-	Sun, 02 Aug 2026 18:44:38 +0200
-Message-ID: <6648c1d61a44ad732550ff20c0b1aecaa43676f6.camel@sipsolutions.net>
-Subject: Re: [PATCH] wifi: brcmfmac: Fix memory leak in
- brcmf_sdio_read_control()
+	id 1wqaai-0000000DxdI-0lAc;
+	Sun, 02 Aug 2026 20:07:16 +0200
+Message-ID: <3673f70c00e5059c644dbac17eca46e020db4233.camel@sipsolutions.net>
+Subject: Re: [PATCH -next v3 00/13] wifi: cfg80211: consolidate cookie
+ assignment for async ops
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>, Abdun Nihaal
-	 <nihaal@cse.iitm.ac.in>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
-	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Date: Sun, 02 Aug 2026 18:44:37 +0200
-In-Reply-To: <e059b52701d3cad4480dfb506e61474924b9f29e.camel@sipsolutions.net>
-References: <20260722110713.115988-1-nihaal@cse.iitm.ac.in>
-		 <20260802083905.3819981-2-arend.vanspriel@broadcom.com>
-	 <e059b52701d3cad4480dfb506e61474924b9f29e.camel@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev
+Date: Sun, 02 Aug 2026 20:07:15 +0200
+In-Reply-To: <20260731123509.1975281-1-arend.vanspriel@broadcom.com> (sfid-20260731_143523_286560_2029D88D)
+References: <20260731123509.1975281-1-arend.vanspriel@broadcom.com>
+	 (sfid-20260731_143523_286560_2029D88D)
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
@@ -56,31 +52,28 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-malware-bazaar: not-scanned
 
-On Sun, 2026-08-02 at 18:41 +0200, Johannes Berg wrote:
-> On Sun, 2026-08-02 at 10:38 +0200, Arend van Spriel wrote:
-> > On Wed, 22 Jul 2026 16:37:12 +0530, Abdun Nihaal <nihaal@cse.iitm.ac.in=
-> wrote:
-> > > The memory allocated for buf is not freed in some of the error paths =
-in
-> > > brcmf_sdio_read_control(). Fix that by adding vfree() calls.
-> > >=20
-> > > Fixes: dd43a01c5cdb ("brcmfmac: use dynamically allocated control fra=
-me buffer")
-> > > Cc: stable@vger.kernel.org
-> > > Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-> > > ---
-> > > Compile tested only. Issue found using static analysis.
-> > >=20
-> > >  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> >=20
-> > To be applied to wireless tree.
->=20
-> I'm going to put this into wireless-next, at this point (-rc6) this just
-> doesn't cut it, the commit message makes it sound purely theoretical.
+On Fri, 2026-07-31 at 14:34 +0200, Arend van Spriel wrote:
+> NL80211_ATTR_COOKIE is a userspace-visible u64 that correlates an async
+> nl80211 operation with its completion event. Three cfg80211 ops currently
+> delegate cookie generation to the driver: remain_on_channel, mgmt_tx, and
+> probe_peer. This produces inconsistent strategies across drivers: some us=
+e
+> an incrementing counter, some use get_random_u32(), some use a CID cast t=
+o
+> u64, and brcmfmac's mgmt_tx always assigned zero - which is arguably brok=
+en
+> since cfg80211 treats zero as an invalid cookie.
 
-Actually, I'm not even going to do that - sprinkling vfree()s over the
-code when moving the one that exists would be sufficient is, and I'm
-being generous here, not a good change.
+Thanks for cleaning this up, I've applied it.
+
+Incidentally, this also simplified some changes that I'm slowly
+prototyping in this area - I want to queue ethernet frames on the TXQs,
+initially at least for client mode, in order to build A-MSDUs at TXQ
+dequeue rather than enqueue, and to be able to more easily move frames
+from one place to another during SMD transition.
+
+I guess it'll be a while before I'll post _all_ of that though, might
+post some prep patches soon with some "further thoughts" in the cover
+letter.
 
 johannes
