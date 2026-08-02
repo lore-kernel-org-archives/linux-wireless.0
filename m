@@ -1,134 +1,120 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f226.google.com (mail-pl1-f226.google.com [209.85.214.226])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 604793815E2
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 08:12:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B1B340402
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 08:39:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785658365; cv=none; b=QItF+xgTT6jhc9JGTPxBwRPKgXU7YyHNMbQOpSflgPC/pi0uLRltBQiX9fn8t/eUBydSa6ZvufWNgcKdaAqYUwm2xVri0idCF/hzBYr0Zefp28b3K0VI1ok3ommTNkJODn/rjLotYu8n0mgQm0Cch1+61F7up2fcfQ2NJi8zVHY=
+	t=1785659953; cv=none; b=BNgtwTt5NUUUxGPcECICMOXG6VUQA9s1dTU0CzfMhXmP2SW5hvxii4TRqznFvYRcwpyFqLx+jhc1SxxMUO0uZml0VNMdqTdirbiBf5x1jzd7yVm70LbGIBV5rF88d6GprJdS95Rkp0aU0EPoHKrkXKuL+VE5OTVfPosV9AagL98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785658365; c=relaxed/simple;
-	bh=oonhCjUiNHQbXz2Jic4jiCUmV23VmwsAVITbWK/0fRA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uos9hGy1Rk9+JGHnmhLntFs90908SHmsIrxVzURw7+SE0bL3JNEtpompwcHlLeawwdOcjSw6kKFBAoM0bxjITLcJzrN8wLJUXKvPURU84cwVYIPWSQpfPpYjIGEs05K0rXNXciTnrGBvxmhHgJ9AsO8aV4grLoDOty23zHRLDv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nYk11OM2; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785659953; c=relaxed/simple;
+	bh=UKrW9nXcUEOoZsQi1eBYDxrgEKEtHJTn83NEJj/UUrE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=aK7v6H96W5MxuPb1byfV2ZevjPy5DsBQDRXhafrrLAj7l5rWJMWhyPYzn3MzedagAQJLFum5vh/Nq29VAK+ehVRdApfsZKdJyNN6iAjaz+rrJFF4MpnLnD6hTQLV9aR1KoqR0HNqR45JXgUygwyujrSY2QioFhFuen5I/82pJLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=SS9lNWRs; arc=none smtp.client-ip=209.85.214.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nYk11OM2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785658362; x=1817194362;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=oonhCjUiNHQbXz2Jic4jiCUmV23VmwsAVITbWK/0fRA=;
-  b=nYk11OM2ZU/69ADdu8XadDWDx8uRhxThAQIDYNfbbX5UV9RgmkBdCd2n
-   nZ6EiASZWwHabQIYrr8cXiIEWOO4/0E2FUCOhqyqjeUkNYWaumuWUSwtC
-   fM5q+bZO83dAiY5LLFN467KCj4MyFMyq8yup/y5wt3Ds1dahmSlciyZZN
-   LCKX0adNSBAPR3bWWDLE73PYZdgwePucuU74wJt0nm4a/N17BuvC7zbPS
-   nMaZK+U/GersxaGO6QSzvVwFFUxoo6t0aSaNbfL6zaJUYQDnph8fRl+yN
-   wMYj71jR4HwUp9QfsgOP5JsEskQIDRR21R4b7ckzyyEBr6yTUoKHqiDnI
-   Q==;
-X-CSE-ConnectionGUID: j/Vrn0W7SF+POyQ1VZwnUA==
-X-CSE-MsgGUID: 0OOeaoUvRL2/OcGRJ9z4vg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11862"; a="96815241"
-X-IronPort-AV: E=Sophos;i="6.25,200,1779174000"; 
-   d="scan'208";a="96815241"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2026 01:12:41 -0700
-X-CSE-ConnectionGUID: 8aq/kgCsSkCqwrEsvIIQWA==
-X-CSE-MsgGUID: LWgVu8nuSDC8LstTZ/UBZQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,200,1779174000"; 
-   d="scan'208";a="284327323"
-Received: from weis0040.iil.intel.com ([10.12.217.108])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2026 01:12:40 -0700
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-To: johannes@sipsolutions.net
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SS9lNWRs"
+Received: by mail-pl1-f226.google.com with SMTP id d9443c01a7336-2cacf197759so35290855ad.2
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 01:39:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785659952; x=1786264752;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QcNqyGzkZccinhf/pClfyqDVf/rDURIGbJC6+/X1yug=;
+        b=fxgUhmzSRx1l8LUortxSm592QReaSAWNl5wlxQe7bjZoTbibp3IQU7qJ+yj8VBGqBX
+         5cyQ8SX8s7gIqvE1uayhk25sjfsO953AgtqZW70Dw4BbYz8XE/6KJgBAl/Xolre01EyW
+         5CeT3WqLsynHqfpNqWoRqISVpNa7mfirOqywkxVCFGHt5Dz3WxRceRrJWR/YV6bv3uXI
+         YZuWhkwGUNEDZBHxm/V6PfJrsS+gX5m8Kh7BQ6rLNt6cU2mkeh3gznmzIGQeaKGW50Yg
+         Xcqs2fJPBrRpoCfOHCm72CqRN0Ac/+bXDSJJmLVZDEA5R6AgV6LKvT/M9FmLwHWRU+cH
+         Of9A==
+X-Gm-Message-State: AOJu0Ywb5dUewc6vPl1arQdQmGuHwCxlkFuyApAufrSO1nWn4JeDaUvV
+	WN+NNSPaiAj6HOmEpJd8DWC7BeQXxF6xtFsAquPoaB9P+trjwpfPhq27ZbFEoj0oxv4+6JQrQ6c
+	3okAhM2k0lIwXLhAMIe0o/sMCewrtwNzzEiQXw21WOisA/fMap1d4yg6VRQfl6NYQ3vrFET2VvE
+	36I7T+N6cgcIOeQdyD7EXW7OqAmv3Go5NN+CEHF3F1mTND6xexdXv6u8uBL9BNd57sMkXss5e19
+	3rP0OenW+crkdkCXoDR+sVMY/p8
+X-Gm-Gg: AR+sD10e+ikLXn2HnqLxFYEGCiVVFLiRb26TjH3g4YXJZAiUjUqovXciGKucxiD+nNF
+	utJYSTtddW9Kt/1e0u42L38lRbHGvSwsLpF5u/wxnRvzsAIjSg3OUBRnD8zbfOHgGrWCNUQ4eqy
+	07Cq1/P2lOkP9EWOxv40eyeCLAKs92C937sWWQ4NrTZ9emI0dUBMAyU073edZj615NDpYL4NPNM
+	nZgS37RVl49EocVOfmTDICUaGlP7r2GEyVghh3EiDvJooKUEb90WSRvWySbfkHVgrTng9UMOjIp
+	z7ajOI+48MLDwUESEKCYWB2Uha1OrcYUGIzsB2Qvup2tyfVCskcFJoJguegLcjorqgwFk4+/iLC
+	ZnKc5FxKEHLJloaRGd5ZQOIi1U78fgIK22iXbt/dYD1/YyaTamhvrHfzjjjbgUEb5ciWrpnE57D
+	ywmerWkbtRswL8xXeZDetdRJmnUhLVDUARmu4nG2k=
+X-Received: by 2002:a17:903:124c:b0:2ca:5d9a:ecc6 with SMTP id d9443c01a7336-2d0523b7dbamr55369265ad.28.1785659951655;
+        Sun, 02 Aug 2026 01:39:11 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
+        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2d04ae3f6a5sm6288075ad.2.2026.08.02.01.39.11
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 02 Aug 2026 01:39:11 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-8fdace20927so22891926d6.2
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 01:39:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1785659950; x=1786264750; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QcNqyGzkZccinhf/pClfyqDVf/rDURIGbJC6+/X1yug=;
+        b=SS9lNWRseoG2to4aZhSbBPVKfU1Jb3FJwcWfe6/CcmGyLPS6C6zld23LbGcXnb05BT
+         PtJP4Fy4Zv8VK66aGHJ5d4uiFJ+5HwfnCac2bxuvwe2dhFuz5s01Jkh+mLbOfSkQ2LUE
+         pOWibaHRABe0/bRBqi8jIZqUDOfYGFhv0G3gw=
+X-Received: by 2002:a05:6214:c8d:b0:907:e7e6:9544 with SMTP id 6a1803df08f44-908495bbd60mr101854716d6.9.1785659950083;
+        Sun, 02 Aug 2026 01:39:10 -0700 (PDT)
+X-Received: by 2002:a05:6214:c8d:b0:907:e7e6:9544 with SMTP id 6a1803df08f44-908495bbd60mr101854556d6.9.1785659949617;
+        Sun, 02 Aug 2026 01:39:09 -0700 (PDT)
+Received: from bld-bun-02.bun.broadcom.net ([192.19.176.227])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-908435def8fsm49457956d6.38.2026.08.02.01.39.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Aug 2026 01:39:09 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Jason Huang <Jason.Huang2@infineon.com>
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH wireless] wifi: mac80211: disconnect on CSA to channel 0
-Date: Sun,  2 Aug 2026 11:12:17 +0300
-Message-Id: <20260802111213.3bc833515e40.I255c37c31ca8b0b34e351cf254e16b6071dd8fb3@changeid>
-X-Mailer: git-send-email 2.34.1
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH] wifi: brcmfmac: fix P2P action frame handling without device vif
+Date: Sun,  2 Aug 2026 10:38:58 +0200
+Message-ID: <20260802083905.3819981-1-arend.vanspriel@broadcom.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260722082608.412472-1-Jason.Huang2@infineon.com>
+References: <20260722082608.412472-1-Jason.Huang2@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Organization: Intel Israel (74) Limited
 Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 22 Jul 2026 16:26:08 +0800, Jason Huang <Jason.Huang2@infineon.com> wrote:
+> Some P2P action frame paths assume the P2P device vif is always
+> available. That is not true when userspace sends non-P2P public action
+> frames through the primary interface, or when action-frame abort runs
+> after the P2P device vif has not been created.
+>
+> Fall back to the primary vif when aborting an action frame without a P2P
+> device vif, and guard P2P device saved IE access before using it for
+> peer channel search.
+>
+> Fixes: 30fb1b272909 ("brcmfmac: use actframe_abort to cancel ongoing action frame")
+> Fixes: 6eda4e2c5425 ("brcmfmac: Add tx p2p off-channel support.")
+>
+> Signed-off-by: Jason Huang <jason.huang2@infineon.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-The refactor for the CSA parsing erroneously equates channel
-zero and no information present, leading it to ignore a CSA
-on an AP that advertises a switch to that (invalid) channel.
-This leads to not disconnecting, which we should. For Intel
-devices, this can lead to a firmware crash.
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Fix this by using an int type for the channel number as well
-as the opclass, and using a (negative) value that cannot be
-encoded in the element to indicate it's not present.
+Provided Johannes is willing to fix the blank line once again. Fingers
+crossed ;-)
 
-Fixes: 21c3f8f95554 ("wifi: mac80211: refactor STA CSA parsing flows")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
----
- net/mac80211/spectmgmt.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
-index ec622750e1c9..880f4625775d 100644
---- a/net/mac80211/spectmgmt.c
-+++ b/net/mac80211/spectmgmt.c
-@@ -227,7 +227,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- {
- 	enum nl80211_band new_band = current_band;
- 	int new_freq;
--	u8 new_chan_no = 0, new_op_class = 0;
-+	int new_chan_no = -1, new_op_class = -1;
- 	struct ieee80211_channel *new_chan;
- 	struct cfg80211_chan_def new_chandef = {};
- 	const struct ieee80211_sec_chan_offs_ie *sec_chan_offs;
-@@ -256,7 +256,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		new_op_class = ext_chansw_elem->new_operating_class;
- 
- 		if (!ieee80211_operating_class_to_band(new_op_class, &new_band)) {
--			new_op_class = 0;
-+			new_op_class = -1;
- 			if (!unprot_action)
- 				sdata_info(sdata,
- 					   "cannot understand ECSA IE operating class, %d, ignoring\n",
-@@ -268,14 +268,14 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	if (!new_op_class && elems->ch_switch_ie) {
-+	if (new_op_class < 0 && elems->ch_switch_ie) {
- 		new_chan_no = elems->ch_switch_ie->new_ch_num;
- 		csa_ie->count = elems->ch_switch_ie->count;
- 		csa_ie->mode = elems->ch_switch_ie->mode;
- 	}
- 
- 	/* nothing here we understand */
--	if (!new_chan_no)
-+	if (new_chan_no < 0)
- 		return 1;
- 
- 	/* Mesh Channel Switch Parameters Element */
-@@ -349,7 +349,8 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
- 				get_unaligned_le16(bwi->info.optional);
- 	} else if (!wide_bw_chansw_ie || !wbcs_elem_to_chandef(wide_bw_chansw_ie,
- 							       &new_chandef)) {
--		if (!ieee80211_operating_class_to_chandef(new_op_class, new_chan,
-+		if (new_op_class < 0 ||
-+		    !ieee80211_operating_class_to_chandef(new_op_class, new_chan,
- 							  &new_chandef))
- 			new_chandef = csa_ie->chanreq.oper;
- 	}
--- 
-2.34.1
-
+Regards,
+Arend
