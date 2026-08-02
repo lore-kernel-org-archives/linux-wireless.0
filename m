@@ -1,135 +1,128 @@
-Received: from mail-yw1-f226.google.com (mail-yw1-f226.google.com [209.85.128.226])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0F3B3242AB
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 12:24:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C25733938C;
+	Sun,  2 Aug 2026 12:29:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785673486; cv=none; b=OmeMo4KWUMZ4MWVNQyfOwikKF0MZv2Wc25jmY8GPALiQUOf/Mao2uwu1DkmB2rdlpmWOQESVZtopSPibgMHPbhZeAUy5NkVeQdL4EDV6DN5Oe6291u0nsP46WKUwfYUg6vXEqjKWOf/8pkbDiuJzL8PVc2v6lPjiEmVtie/BML8=
+	t=1785673760; cv=none; b=qO/rcRAFnXWUWQa341URwKoj+uLscP9GrkSPKxZkoNdwcmCN8pkW95QJdsliHDIbo0P3HGI7oI04CspwLrYFILyJ22H4SgRPshtdSN+8kcwkiGC09DKA2Fb+earvHYjBTHHZBGm9whHuiv5uGKdmGySmAQAx99ydDsYeP2ipHp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785673486; c=relaxed/simple;
-	bh=IVBACOmNYotUTjgF9C6tiVB81vMoFAfRoriF976EZok=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GZnJN904CQBuYQAeCwWYFGgXvzewc/EAgUlOECfAQHgkTKfcai+XEfKvwjLpC+aq43C8uigCTwHJtAaMn8j0GgnSVDCf9eYbo6GRgqiHJfOlSWkkEwkthfGTo5T1tMAOHTgcDCdEw5uoF6CjfTY4imS4nwIRAl70hikceT3O7LU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=EFVqYM0+; arc=none smtp.client-ip=209.85.128.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785673760; c=relaxed/simple;
+	bh=Oc+Pf6P+wet7UHezAuJRNaKASH+UQW2bFsWGp3UkczE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mf6Fm0hvQAAJI/h04j0SzTVXjWRPswwTU27YOyhlujQ7ZrDNjgplkL+GDpzp9b6k+m4xH/0IQuJl8+yhfwf4G8iWpdan3u1w46NCn+rwFND3hL21/ucXdoIw6hOSUu1VmJTdFK211Wbo9aCInysHqXes8SmoV6c62l1WL3IOzWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H2OmZJER; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EFVqYM0+"
-Received: by mail-yw1-f226.google.com with SMTP id 00721157ae682-81e69a2db34so36968547b3.0
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:24:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785673484; x=1786278284;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=QNXeMyhkpbk8rwnA0O7uBQvIUEYbGICoPWDBw29OKOs=;
-        b=WxQvxuwKcr04/Nh0UPDy0WyHeHSzavAuC940S+5wE/VSe189XMKOKaZak/UdXeGqEJ
-         eConS3rsrktX2+eNHwu0/scqslRtblkQsDt410+qyYc8ECrqp4N4++ZVlLCQBYPZ0Dc0
-         GTcu9W6ZDfTRY8HhfqFHd+U4j/uGcpeRKQWRzStNCE0LZ+rklJXE3VxZzDnZsVOYjLHO
-         XmvEma7QnG1KymetVnEKsNe0e85jlxL4y4yy3dMxC1d/3MCgFh0D3hErXF6OYIgCYGxH
-         IBKXNgkvmojj1cJCgfAiMC3MxA/v1b9/7rVysZLx1VpX0b/t45hEUC88LpT0+9Yp+w0L
-         RrVg==
-X-Gm-Message-State: AOJu0YxZ0hert8VWVAZlG1Sgq3iPIT0TIs/qTy5dZ8rzKixcIeRyBLEb
-	iDy017EVQPBI63YiA7uk5svvbylsRy9pXegzeWfAO2PPJYhOqXXjA/2Ax4DBShT8CNKJYT88O65
-	7NUqP2j0ewH+5gGp+XGBaT7a8bwXnnymWWtqGr71Zo/ahGVp4TMCZ92NiP3P8Yub28TllgtDoKA
-	5gKYugwmS51BbfJfShhmgyhoMfFsw1kKSJ6QRykWv/iogECMJXxBPlYCtP4yJWt8eAAcFZU3REc
-	qQnm0Ve8Z7E4wllAKyonMdjO/Rj
-X-Gm-Gg: AR+sD12Feqn7gAzgk0220TsuOvd2h9e/4Y/qvMnfVtymyqrHe/bpm3Bk8zgmQRTB+oR
-	SdiXWzG1MfBqOGcfCiaPuLE9k/Dp1TknVTHdRZjGuxOqxsWWiAiG3HmzQW9LygQP1JACzvNZ/JG
-	FJlWQh23Nf0n3olfixGx1B/Zed+Hp9/wkeoWXNVfJbRv/ApG1DnTPqw4Pbrz3b7pSTes6sXJ/JQ
-	JLeAdcObarb+IZseO38gPCjv2Lr2EX2iVhzkykKPrTj9l6R9aaqoeU7F4DKuMt8D3E8KRKZjF4V
-	xK3He73InM9VVG5TvZbHV3DuXcLrYUCuSVF+yulfRzdklqE+Z4QEPX0Ub7g1lgYRcOrCImBzVIi
-	Ob+dK35NPtPJj7o7BWBI2leutpVQGH9+n1WINv2WbqcxeCATiI5ufoxYk31MalfgJxN7j7U+x++
-	UTtF/g4rPeLqHl3RI8qjK0hoh3PxR6UOlIQ54BYuc=
-X-Received: by 2002:a05:690c:4b11:b0:81f:3b6d:a0a4 with SMTP id 00721157ae682-81fd4bba5edmr87744417b3.25.1785673483874;
-        Sun, 02 Aug 2026 05:24:43 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-27.dlp.protect.broadcom.com. [144.49.247.27])
-        by smtp-relay.gmail.com with ESMTPS id 00721157ae682-81fccf1bedbsm3523437b3.3.2026.08.02.05.24.42
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 02 Aug 2026 05:24:43 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51c1d137a68so46636521cf.3
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:24:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785673482; x=1786278282; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QNXeMyhkpbk8rwnA0O7uBQvIUEYbGICoPWDBw29OKOs=;
-        b=EFVqYM0+6NjoE1/o48vIEIOlK/WFaP+c2tlBaJBsgTN82BrpG+vOywIEWIqE7IW0z8
-         oAzM01aX1GYOg/u5G6w/bzVOm1pLUoI6H0uPMFQwge9MtkPCOTAwt7UnSAKwUENPiI/m
-         itE6qlP/DdeG+4pO6o5pkc0c8bCOympwMkcd0=
-X-Received: by 2002:a05:622a:5906:b0:51c:8439:14e5 with SMTP id d75a77b69052e-52b566951a7mr125476451cf.10.1785673481792;
-        Sun, 02 Aug 2026 05:24:41 -0700 (PDT)
-X-Received: by 2002:a05:622a:5906:b0:51c:8439:14e5 with SMTP id d75a77b69052e-52b566951a7mr125476081cf.10.1785673481411;
-        Sun, 02 Aug 2026 05:24:41 -0700 (PDT)
-Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52b4eb6a84csm42125231cf.18.2026.08.02.05.24.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Aug 2026 05:24:39 -0700 (PDT)
-Message-ID: <f449500c-74f3-40e0-bbcc-ee560951714d@broadcom.com>
-Date: Sun, 2 Aug 2026 14:24:34 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2OmZJER"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C46541F000E9;
+	Sun,  2 Aug 2026 12:29:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785673758;
+	bh=SHSGsM0vu6t3zdEJHGFOqvnDDQ/hs9cDuA8s50LeKfA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=H2OmZJERCYxtrOOph6nrStzZdf9Px2+Qu52EKRUMyRnmj4QfSbClOGXvOwLQl/4aA
+	 QXrUGppcGBhRWhY9tW992RTQ83AkGGQJozNyGViEgllW7DJ8ayJ1pfg/mDZfKLYM+O
+	 iaCJu9ozHHoC9OJbqbp8GE2FXVc48vGCq9wTtZKsOYsPdu40/jveDStEa4FnAS8dvh
+	 eBwmazAysE+S1N5/1Od2as8vkHZiBiRzJzW/3NReG/Vr6BQSlyRO9SCgOFK91LoO0Z
+	 4Wat2UmYU94tkzX5l86TF3Srukt7Yi+4nQ/P5F5pqFRu3Ol3LaLh9TJ1K2EelnS/lt
+	 PpuVHx/cRwcTg==
+Date: Sun, 2 Aug 2026 14:29:15 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Suzuki K Poulose <suzuki.poulose@arm.com>, Mike Leach <mike.leach@arm.com>, 
+	James Clark <james.clark@linaro.org>, Leo Yan <leo.yan@arm.com>, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Jyri Sarha <jyri.sarha@iki.fi>, 
+	Tomi Valkeinen <tomi.valkeinen@ideasonboard.com>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Linus Walleij <linusw@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Patrice Chotard <patrice.chotard@foss.st.com>, 
+	Andi Shyti <andi.shyti@kernel.org>, Jassi Brar <jassisinghbrar@gmail.com>, 
+	Lee Jones <lee@kernel.org>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jeff Johnson <jjohnson@kernel.org>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Yangbo Lu <yangbo.lu@nxp.com>, Paul Walmsley <pjw@kernel.org>, 
+	Samuel Holland <samuel.holland@sifive.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Richard Cochran <richardcochran@gmail.com>, Jens Wiklander <jenswi@kernel.org>, 
+	Yuanfang Zhang <yuanfang.zhang@oss.qualcomm.com>, YC Hung <yc.hung@mediatek.com>, 
+	Svyatoslav Ryhel <clamor95@gmail.com>, Sean Wang <sean.wang@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Peter Ujfalusi <peter.ujfalusi@gmail.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, coresight@lists.linaro.org, linux-arm-msm@vger.kernel.org, 
+	linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-mediatek@lists.infradead.org, linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org, 
+	mfd@lists.linux.dev, linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+	linux-pm@vger.kernel.org, netdev@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Correct white-space style
+Message-ID: <am83ac93gyowUgSQ@monoceros>
+References: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless] wifi: brcmfmac: validate msgbuf flowring IDs
- before use
-To: Can Peng <pengcan@kylinos.cn>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20260723055618.550834-1-pengcan@kylinos.cn>
- <20260802083905.3819981-3-arend.vanspriel@broadcom.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260802083905.3819981-3-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="ynduf7ixmtnk7fvw"
+Content-Disposition: inline
+In-Reply-To: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
 
-On 02/08/2026 10:39, Arend van Spriel wrote:
-> On Thu, 23 Jul 2026 13:56:17 +0800, Can Peng <pengcan@kylinos.cn> wrote:
->> Firmware messages carry flow_ring_id values which brcmfmac converts
->> to an internal flowid by subtracting
->> BRCMF_H2D_MSGRING_FLOWRING_IDSTART. The resulting value is used as
->> a bit index in txstatus_done_map and as an array index into
->> msgbuf->flowrings and the flowring state.
->>
->> Validate the firmware supplied flow_ring_id before using it. This
->> prevents flow_ring_id values below BRCMF_H2D_MSGRING_FLOWRING_IDSTART
->> from underflowing and rejects values outside msgbuf->max_flowrings.
->>
->> In the tx status path, complete the packet with an error after
->> removing a valid packet id so the skb is not leaked when the flow
->> ring id is invalid.
->>
->> Fixes: 9a1bb60250d2 ("brcmfmac: Adding msgbuf protocol.")
->> Cc: stable@vger.kernel.org
->> Signed-off-by: Can Peng <pengcan@kylinos.cn>
->> ---
->>   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 46 +++++++++++++++++++---
->>   1 file changed, 40 insertions(+), 6 deletions(-)
-> 
-> One nit: there is a double blank line between brcmf_msgbuf_get_flowid()
-> and brcmf_msgbuf_dequeue_work() in the resulting code. This comes from
-> the pre-existing double blank line that was between
-> brcmf_msgbuf_remove_flowring() and brcmf_msgbuf_dequeue_work() -- worth
-> cleaning up to a single blank line.
-> 
-> Minor enough that I will take care of it while applying if you do not
-> send a v2.
 
-As I do not apply anything anywhere maybe Johannes will, but feel free 
-to send that v2.
+--ynduf7ixmtnk7fvw
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] dt-bindings: Correct white-space style
+MIME-Version: 1.0
 
-Regards,
-Arend
+On Sat, Aug 01, 2026 at 09:56:14PM +0200, Krzysztof Kozlowski wrote:
+> Correct a few white-space issues, like double space after '=3D' or before
+> bracket '{' characters, which will be flagged by dt-check-style.  No
+> functional changes.
+>=20
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> [...]
+> diff --git a/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml b/Docu=
+mentation/devicetree/bindings/pwm/pwm-sifive.yaml
+> index bae993128981..40397bdf2d69 100644
+> --- a/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml
+> +++ b/Documentation/devicetree/bindings/pwm/pwm-sifive.yaml
+> @@ -62,7 +62,7 @@ additionalProperties: false
+> =20
+>  examples:
+>    - |
+> -    pwm:  pwm@10020000 {
+> +    pwm@10020000 {
+>        compatible =3D "sifive,fu540-c000-pwm", "sifive,pwm0";
+>        reg =3D <0x10020000 0x1000>;
+>        clocks =3D <&tlclk>;
+
+I'm ok with this change (as &pwm is unused in the example), I also don't
+care much about this not being a whitespace only change and thus not
+really matching the commit log.
+
+Acked-by: Uwe Kleine-K=F6nig <ukleinek@kernel.org> # for Documentation/devi=
+cetree/bindings/pwm
+
+Best regards
+Uwe
+
+--ynduf7ixmtnk7fvw
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmpvOBgACgkQj4D7WH0S
+/k5+WQf8CivH89faKCp48CBlupnrahHpA3qdaBm48BnUdJduo4BaximYlTqDGSxO
+NXL529LwysgvuiHkOxrg9bUdk/Lx68V5xZboTmO5BFwMGnqiXaazc9iWfyHrau7M
+YVderOTLj5yWcB/0FkMdHb59nmaH6H3DTA7lTyzhEH2rK1e56Xe0bWxXn5wPx//K
+Fg6BzFpjoO28RLKp88OCsgzFiu3Y6yaJNenCx2MeV0T15/L721ZmHJDKsQqu5iDJ
+iXzPSntzwtR7HAs/3NUW1jSaAV2Jq41LUqlqjX4CeZDwSDaX6iquowVSJDhJvYuK
+ZtKTkgqchOdbv2qhQEqje3UkwK9pWQ==
+=9CRH
+-----END PGP SIGNATURE-----
+
+--ynduf7ixmtnk7fvw--
