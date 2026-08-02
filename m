@@ -1,37 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2DF43B1EC8;
-	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128442D3225
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 12:23:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785672789; cv=none; b=HUbye5q6dPsNwd6/BcKKMDiqUo8JdS3BWzlDygaSpC+LJycLUB8gkDd87una2Ju3brbFppa6uGeqMg3DJPXQ4/DF64Z6atRuFgHlDEse3CtPvEqV84nUWQto08/I8l8Yvqgb7pAWJd1BoRQ4YoT65wTqIjxs1j6jPsMPayerZnk=
+	t=1785673386; cv=none; b=rzkwPRhsGcJhcjAp33xa5ExariRJUjadMP8E+r3yCe+9bnHEZO4BfSFj2M1eYkX7amk0tf22rYIWLj+dFIhVSoUqhCwX3cPC5zwyH4NI0zf1WTQT0Oceohy7k/3P5TWvFjfCpNVrX5/ysVEIiLHfUR1wmKxO48EgQSUAWSJ90YE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785672789; c=relaxed/simple;
-	bh=WGFFdsRUYtTtbwa6B95ZHBXoVvi4dQVulYeTYwNSlW4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=b1qb9dnJytazAdaF3PlarKzi5wDAueaWw07ZX/8E/07G0iWwKaduGCpgFt7iz+r0f+7ux7X0eDFuF1Ib04iRw3m0vp6uw3OK3g2xnoEV4s1jpixzFx4Pe/72WpSp5I65lnGR5PnuVfehAjmiKJ4p7QlzchGr85JWMYCQjJ49Tkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o7idJfot; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1785673386; c=relaxed/simple;
+	bh=btEAofBqbPs4lIfMsEMPgdS7qc+jMsnM2+pzmrvtpDE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OR2V0pInOSbstHdFczTIk4EwbEQ7VZ+YW5Xz2x8bPPUH2IHoLFROZMn+wTzSP9VXsv2XsIg/xkYZx4+T9EVdaD1qgwZymLTNZVeZBLfmsocKoe1yx4bTp/zVSUGQviXRBSmEba/1dplc1ME37h2gdhFIkO58OrnWwSFOeNgA6Lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KQY9EQm6; arc=none smtp.client-ip=209.85.208.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o7idJfot"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A1A85C2BCF7;
-	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1785672788;
-	bh=WGFFdsRUYtTtbwa6B95ZHBXoVvi4dQVulYeTYwNSlW4=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=o7idJfotBYjHgV7BD/qzIbHPVLcD/XoMUy9s8ojgK0jmAoCn2FWDW+ymSuUcPfIfO
-	 OCdlDNhckDEQqpeiX0vKB9T0X3sNngjGCEu+6o12lMEGlGRvzcr4u0f5m7xG6po5gX
-	 Etry41WpIN3wrC+UshFlToIF3Qc5RCWLodIyZbcNLmuVQGYrxhDVN9pvPumOP1M8sw
-	 3XVaFmHzcQw/SzFoBwwIuXjQo9pqRCfpk5pISKa/cFPYOUSe+zUQc4uzs0HxFLddWy
-	 uR7nyQ8GqNjFMbAdKCsGtoecesGadlA/lUjm3f8OfmoKRfNcZvw4FbDL2xD6iMBY1g
-	 V45utSMzj6ogA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F55AC55177;
-	Sun,  2 Aug 2026 12:13:08 +0000 (UTC)
-From: lurenjia534 via B4 Relay <devnull+lurenjia534.outlook.com@kernel.org>
-Date: Sun, 02 Aug 2026 20:12:54 +0800
-Subject: [PATCH] wifi: mac80211_hwsim: drop frames with invalid channel
- width
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KQY9EQm6"
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-39f678705c3so18357191fa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:23:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785673383; x=1786278183; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=CpT+FgkcorYOYwnPqETssYy39Xr51dI1NIkn0lwblN8=;
+        b=KQY9EQm6u56FfBJQJPVYKsOJ7519z46xJc/JfmhkGgHSWwZ4T4zXMWlyLFl5dy3mUC
+         MukfyS7Cml/7w4RRQklC6hJUNsSc84YYY8sWs0LLue42MN2VEWHLnmgixs0+KBwaVysb
+         SIt8ye1Uv/GTbJl63BRBi4zBj+UNaf7iswFwPiyvWh8D5hIzKGBhJ990XhncliPU0CVO
+         sDX/CqYZ/cffRm2nvVfz4CC0ezcyZe0bafHSN2w6G+do6lS6nKbR7FONZ3fGR6mXpPDO
+         mbehidXtZVqTGaN/BlVzapxuJFPtyjrP9zuV+BUTxiKQOw9/l0bDPHGdfzeSMw7dhZMW
+         xMBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785673383; x=1786278183;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=CpT+FgkcorYOYwnPqETssYy39Xr51dI1NIkn0lwblN8=;
+        b=GXGoisUmuprtLunT/VJWIrHCH/vxMah488m1ga6P7hN18FV4Bm+r0dR07JRuqcpDHa
+         +pDgG8zYcgURHJjOi7Ds0S3rCIiAdDS5ihP6kJ2WzZc4S1Qs0nSHTd/xVO+vG0EVdAbz
+         eAauWtDS380DJabQ2XOk/0vG4MxOqn6oeYAY7FzugG79crxgV4CBAkJ6cBT3Lbf2HKNb
+         jWFMJzFtEsAWSkDK94pSRXboXZ6DaUaq4D63iUClMHCQto+TbIqHJSxNnojQ1hYmmsvr
+         0DhVZifdVBZe660irNVHDSGm4dQTC/5m7VWQ1NzlTNQXvLynGf9qvziFsAb1NKTHWuTK
+         3ljA==
+X-Gm-Message-State: AOJu0Yz9azU8rzX6Pp7LbDE4ne8WooGfKdGEaN0W1+BL0tkwqc0K+cyy
+	s8ykNzfliUCFY6di7XuTchykB8o4FSHk0JI0ocuqWovxQCD+bPb+ZQQyd6/bj5b6
+X-Gm-Gg: AR+sD11p5KqHMVzzkP3+zH1ZuhCnFuBtK8ExjeyHttr8m/DnxNiGob5wXirqmdPsbRi
+	poPftjH69IXgQr/9/0qT6a6bPY9f5YNFFzfF0LwlPJfag/q5luKYBmH3gVHW5PD40cuUxENbmCK
+	vVas9MOZ7tF6FUx//WypbYgo7sum5cMEZ6fGg8/BYVa8SgDkbNJ9M3BFszr1NWVWgFGDDKL1Mis
+	K4pNnmW9Tf9vYIU4MoSlIp+Q1hOKVfq0acsg+x2EaeGXWlbcg3azzLN8ntFSwLPvcV2QzEVEpJM
+	VKYf0RQ1MIHD6F9kFvfOvGrFxI03fOZg5T6xfF9Hb5hw0qNN8qpaGZ81vqtc3QcOVjhCrYMq4oD
+	rl3Ff6h0QCdCYRhb6gbQ82nSDqAA10+KKwYCahoN59202L4AQMzWSigixabRBOpiYD2k+tMYNNe
+	fwFMrML6tyQXIkkG2mH3lpwDs8dolQUYWevBI1BOLGZZldyTY97n9nmhIG
+X-Received: by 2002:a2e:b8ca:0:b0:39d:560a:faa with SMTP id 38308e7fff4ca-39f7eaa5c8cmr16169101fa.16.1785673382926;
+        Sun, 02 Aug 2026 05:23:02 -0700 (PDT)
+Received: from [192.168.1.139] ([2001:9b1:c9c3:6900::69b])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-39f813074aesm8316791fa.37.2026.08.02.05.23.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 02 Aug 2026 05:23:01 -0700 (PDT)
+From: Stefan Hansson <newbie13xd@gmail.com>
+X-Google-Original-From: Stefan Hansson <newbyte@postmarketos.org>
+Date: Sun, 02 Aug 2026 14:22:57 +0200
+Subject: [PATCH] wifi: rsi: Fix types to appease CFI
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,95 +68,152 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260802-mac80211-hwsim-invalid-width-v1-1-94d9bba2ae60@outlook.com>
-X-B4-Tracking: v=1; b=H4sIAEU0b2oC/yWMQQ6CMBBFr0Jm7UTaBVSvYlxMy2jHQDUdBBPC3
- W119fN+Xt4GyllY4dxskHkRlWcqYA4NhEjpzihDYbCt7VrXWpwolDEG46oyoaSFRhlwlWGOeOp
- 7Z3zH1HcOSuKV+SafX/5y/bO+/YPDXJvV8KSMPlMKsV6rZB5Z9TiRJNj3Lz8k8gGgAAAA
-X-Change-ID: 20260802-mac80211-hwsim-invalid-width-97781b6ea768
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com, 
- stable@vger.kernel.org, lurenjia534 <lurenjia534@outlook.com>
+Message-Id: <20260802-rsi-cfi-fix-v1-1-5821d2cb54ee@postmarketos.org>
+X-B4-Tracking: v=1; b=H4sIAKA2b2oC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzMDCwMj3aLiTN3ktEzdtMwKXSMDAwvTJDNL4xQjIyWgjoKiVKAw2LToWAi
+ /uDQpKzW5BGSEUm0tACMoSyVvAAAA
+X-Change-ID: 20260802-rsi-cfi-fix-20085b693d22
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht
+Cc: Stefan Hansson <newbyte@postmarketos.org>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1785672786; l=2911;
- i=lurenjia534@outlook.com; s=20260801; h=from:subject:message-id;
- bh=/iY0dNxP0zkE1SAHnpQcq1gmr+HYoaV6xhQaYs/s9EQ=;
- b=DKMeWXh6UssVYnAqq0vsaXgnuNYEkVb3aQrBjTUK+Ujiq65tB29Nk01utpN5/qzZ5JsvqSm45
- og9bgY1+E4VCnN2H0C0xW6P9NBK78klLBwkOIJc5FaZzH+DLmEfqRpk
-X-Developer-Key: i=lurenjia534@outlook.com; a=ed25519;
- pk=nMa0OcUJYxnaGbhs5f95IwVQ7sPrWI7It3LMsh0BJX4=
-X-Endpoint-Received: by B4 Relay for lurenjia534@outlook.com/20260801 with
- auth_id=906
-X-Original-From: lurenjia534 <lurenjia534@outlook.com>
-Reply-To: lurenjia534@outlook.com
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5262;
+ i=newbyte@postmarketos.org; h=from:subject:message-id;
+ bh=btEAofBqbPs4lIfMsEMPgdS7qc+jMsnM2+pzmrvtpDE=;
+ b=owGbwMvMwCG25kZIp7bFjRmMp9WSGLLyzZZkbGrKlq+fuE2t2DSIyYPDKfmN1OZ7kxfPP/Axd
+ VfD0T06HaUsDGIcDLJiiixtPrJbm0S+zWmU118EM4eVCWQIAxenAEykfA/D/0qlunc7Pp9cwLq2
+ 97FHWM+XG51ROypWOa2pD990m09w6wuGv5Jzxb5fDDjUbDonS/C75l+mCbKxr7J37te5V7T6RHF
+ jLRcA
+X-Developer-Key: i=newbyte@postmarketos.org; a=openpgp;
+ fpr=864C1DB58214F69C811F2FA2ACD854892B38D898
 
-From: lurenjia534 <lurenjia534@outlook.com>
+Avoids errors like:
 
-A frame injected through a monitor interface can request a VHT transmit
-rate wider than the channel configured on the simulated radio.  The rate
-comes from userspace-provided radiotap metadata, so it can be invalid.
+    CFI failure at kthread+0x124/0x1cc (target: rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type: 0x89fb613d)
 
-mac80211_hwsim_tx() currently warns and returns when the requested rate is
-wider than the channel.  A warning is inappropriate for invalid userspace
-input.  Moreover, hwsim owns the skb after its ->tx() callback is invoked,
-so returning without reporting status or freeing the skb leaks it.
+As seen in the aforementioned error this was tested using the downstream
+redpine_91x driver found in the Librem 5's downstream source tree.
+However, it appears that this driver is a modified version of the rsi
+driver found in mainline Linux and as such I decided to port the changes
+here too.
 
-Drop frames with an invalid channel width and release their SKBs with
-ieee80211_free_txskb().  Frames with valid rates continue through the
-existing transmit path.
-
-The reproducer triggered the warning in 20 of 20 unmodified-kernel boots.
-With this change, 100 iterations completed without a warning on both the
-report baseline and wireless/main.  An E2E control also confirmed that a
-valid 20 MHz frame was forwarded while a 160 MHz request on the same
-channel was dropped.
-
-Fixes: 585625c955b1 ("mac80211_hwsim: check TX and STA bandwidth")
-Reported-by: syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com
-Closes: https://lore.kernel.org/all/6a441a03.b42ede87.8e801.0009.GAE@google.com/
-Tested-by: syzbot+435fdb053cf98bfa5778@syzkaller.appspotmail.com
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:GPT-5.6 MAX
-Signed-off-by: lurenjia534 <lurenjia534@outlook.com>
+Signed-off-by: Stefan Hansson <newbyte@postmarketos.org>
 ---
-Testing:
-- syzbot #syz test on wireless/main: pass
-- original syzbot C reproducer: 20/20 report-baseline boots warned;
-  unmodified wireless/main warned in 3/3 independent boots
-- patched original reproducer: 100/100 iterations clean on both the report
-  baseline and wireless/main
-- monitor-injection E2E: valid 20 MHz frame forwarded; invalid 160 MHz
-  frame dropped
-- CONFIG_MAC80211_HWSIM=y/m runtime tests: clean, taint 0
-- GCC x86-64 full y/m builds, GCC W=1, sparse, and Clang x86-64/arm64
-  target builds: pass
----
- drivers/net/wireless/virtual/mac80211_hwsim_main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_coex.c     | 3 ++-
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 5 +++--
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 3 ++-
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 3 ++-
+ drivers/net/wireless/rsi/rsi_common.h       | 2 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         | 2 +-
+ drivers/net/wireless/rsi/rsi_usb.h          | 2 +-
+ 7 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-index 75caa97bec..2d4bc3cd9a 100644
---- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-+++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
-@@ -2256,8 +2256,10 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 		else if (rflags & IEEE80211_TX_RC_160_MHZ_WIDTH)
- 			bw = NL80211_CHAN_WIDTH_160;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+index ee603a5173fb..023c539fc384 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_coex.c
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -50,8 +50,9 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
+ 	} while (coex_q != RSI_COEX_Q_INVALID);
+ }
  
--		if (WARN_ON(hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)))
-+		if (hwsim_get_chanwidth(bw) > hwsim_get_chanwidth(confbw)) {
-+			ieee80211_free_txskb(hw, skb);
- 			return;
-+		}
- 	}
+-static void rsi_coex_scheduler_thread(struct rsi_common *common)
++static int rsi_coex_scheduler_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
+ 	u32 timeout = EVENT_WAIT_FOREVER;
  
- 	/* wmediumd mode check */
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 662e42d1e5e8..61db2b363d11 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -246,12 +246,13 @@ EXPORT_SYMBOL_GPL(rsi_read_pkt);
+ /**
+  * rsi_tx_scheduler_thread() - This function is a kernel thread to send the
+  *			       packets to the device.
+- * @common: Pointer to the driver private structure.
++ * @data: Pointer to the driver private structure.
+  *
+  * Return: None.
+  */
+-static void rsi_tx_scheduler_thread(struct rsi_common *common)
++static int rsi_tx_scheduler_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	u32 timeout = EVENT_WAIT_FOREVER;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 597b238e2294..18a28aa97446 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -62,8 +62,9 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ 
+ static void rsi_rx_handler(struct rsi_hw *adapter);
+ 
+-void rsi_sdio_rx_thread(struct rsi_common *common)
++int rsi_sdio_rx_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 25c2b232394a..513d2fdfb510 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -25,8 +25,9 @@
+  *
+  * Return: None.
+  */
+-void rsi_usb_rx_thread(struct rsi_common *common)
++int rsi_usb_rx_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_usbdev *dev = adapter->rsi_dev;
+ 	int status;
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 3cdf9ded876d..2a33a81f71a3 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -58,7 +58,7 @@ static inline void rsi_reset_event(struct rsi_event *event)
+ 
+ static inline int rsi_create_kthread(struct rsi_common *common,
+ 				     struct rsi_thread *thread,
+-				     void *func_ptr,
++				     int (*func_ptr)(void *data),
+ 				     u8 *name)
+ {
+ 	init_completion(&thread->completion);
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index 7c91b126b350..eb2b7f36a7e4 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -134,5 +134,5 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
+ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
+ int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
+ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num);
+-void rsi_sdio_rx_thread(struct rsi_common *common);
++int rsi_sdio_rx_thread(void *data);
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 961851748bc4..78067eaffe8b 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -81,5 +81,5 @@ static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
+ 	return EVENT_WAIT_FOREVER;
+ }
+ 
+-void rsi_usb_rx_thread(struct rsi_common *common);
++int rsi_usb_rx_thread(void *data);
+ #endif
 
 ---
-base-commit: 2812e64e1575e05500a35c405aaa6e99b7d7930b
-change-id: 20260802-mac80211-hwsim-invalid-width-97781b6ea768
+base-commit: 95d6a9ccef99117115e41e9adb271243bd5e985b
+change-id: 20260802-rsi-cfi-fix-20085b693d22
 
 Best regards,
 --  
-lurenjia534 <lurenjia534@outlook.com>
-
+Stefan Hansson <newbyte@postmarketos.org>
 
