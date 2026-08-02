@@ -1,383 +1,244 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mail-oi1-f207.google.com (mail-oi1-f207.google.com [209.85.167.207])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DCF22836E
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 02:21:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C1723B63E
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 03:46:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.207
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785637280; cv=none; b=H14Dq0dTBTZ5WeMtGREOcYDqee2ql+zNwtD2MyR11xfuCmwpaUuO8dDU6ohhoL9Y1WZuJ5blCsSI5SnKuoHe8qpIeojSnPR7jVUD/h8EWRq4Awjuf7J0lbQ1Kd5kTcz/bG+yiMKp2ZKZXbuPrwLm3dh35H/gYqyP+6tWqd2iE/Q=
+	t=1785642404; cv=none; b=PNt3nQgFEfscZd4NmjcCYm0Y3HRvyCqU2ij/AvE1qRnmzr5z6EyKkKgGcDMWhYSYcLshgUSg1wVlvj5Y44NilgTsk7Y+muMcYBvDSoWxFWpfKavmTofP/W0vh5E5J8B5Uu1E41GZnfjP85MpGkZ4ZI0xXttmLKj3+wiowqC1ILY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785637280; c=relaxed/simple;
-	bh=scu+MCpM3zmd1ELzMGtmNa/7oK8TtD+HeplfuezT8ag=;
-	h=From:To:Subject:Message-ID:Date:MIME-Version:Content-Type; b=pf3Mu5Xo9rpx553BSFQKHbZr/Tx6u3cLR4DvbfOWHGNbPOgfIIJdCOkpbCfprFzrYMevnQ90QAEsmDkPbynE3rTB4fchqva8K7jFitP1Sw2BgiTTQYW2xhoG+VaYwQZG7ORAiOW3iC3gUAOx1jF+W3RKmUrek7krQUvg6F3Yb2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=I/gvd84V; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="I/gvd84V"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6722LCXA03086775, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785637272; bh=umY/5X54qFp4st7jFzWOpfRVRXjCAsPF0IISwEkdsrE=;
-	h=From:To:Subject:Message-ID:Date:MIME-Version:Content-Type;
-	b=I/gvd84VM5C08GX/ctibdE2+UaXV8yyEND6VMPqvpPwP8/6ESURu9Y2x8lfj4xZ7W
-	 b9w3xTlmkMk3Gpu3qMOl/C7dUot9/LzoPnlMMyz7CBcioYgXxp2w1zx0KuLXiBK9mk
-	 zEMvm64kKnRIrxlYlUnkoxJjL0T2ajlX2ZZ8HonKcpyHsYzlKlnYnorf7A6rjEj8tK
-	 AGFuJScNb2R8w5M/CwbWTxNZ+Ijmcvlu6ET4xYbR0QP0GDRH5RJ/6SaRsIpT6tEy14
-	 0I7ZjaqnMnLSKCVQTdwy9Ikqz0stvnzN82FD+df6mxXNjUkcpGHNkExyVSMN02wC4m
-	 vXcgLds/UBQkg==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6722LCXA03086775
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Sun, 2 Aug 2026 10:21:12 +0800
-Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Sun, 2 Aug 2026 10:21:12 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Sun, 2 Aug 2026 10:21:12 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS05.realtek.com.tw
- (10.21.1.55) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17 via Frontend
- Transport; Sun, 2 Aug 2026 10:21:12 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: pull-request: rtw-next-2026-08-02
-Message-ID: <4230f3d5-43f3-4be2-b7c6-d4aed93721aa@RTKEXHMBS05.realtek.com.tw>
-Date: Sun, 2 Aug 2026 10:21:12 +0800
+	s=arc-20240116; t=1785642404; c=relaxed/simple;
+	bh=sezgLEyBC9Es3UETpH3+MuabYW/HD/PBrBBUJMwZj0s=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=LVZYQdOCuPyuJmZrfkTEO/H8mDPjwhfciUxcJbsMqsZAOJcZX1njBluWf2l4yrfFkNmvBZHnLZLvVNoPwVPBjaLlr74t1AZXRR52mwAleTn0edrwkM0TZH68CEf0FvjdO6UfvNJapuM8eNIfpZthTtDIf/CvApjq2fTSu9BeEhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.167.207
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oi1-f207.google.com with SMTP id 5614622812f47-49aa4525b82so3184218b6e.1
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Aug 2026 20:46:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785642399; x=1786247199;
+        h=content-type:to:from:subject:message-id:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kL/Ml9iryEkMC+wj+LqPNtEaj4DBg6U2aownFArWlo4=;
+        b=jXCN+FIKcp9tiFccIvz6f8lyvH0cvqJQAXos9LaPS+OMRumnd17i5bFhwfLuB4v3wp
+         hiyS6eNTnkiMZ5G1+tM/1PJBH4lRmrGxfm8Jai4gbbB7Fxn7J+wPhRzKMDP0SygloMP+
+         FOTp19NCy3MeQAuO6b1d5lGfgIJOGI/x8c+WCsCApzno7MLkk1pqGDSp/YNlKiLfa/I/
+         jtM3MKbEREf3Xnjblr8uOSe2djyE2EJJLsHapTTCEo+WXMHL3N4mroz+40ucx4TNGVrf
+         GVz1+hb9odtQeVEbAGdCX9as6V9cFPDR4/zASd0OL0lRJldvutflJOpSPWR+FTMxfKD6
+         BJYQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rqcx0oPs/aivv0es5VBrme+OEpuscYq7PheG8UppzZUZWHBeG6xH6l4siqfhn+dSIig/+eYz6y9X/R7g0D0YQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzT3WcWQuTrlxgEYwRu3cACHYz4MTaL/oJ3iDj8m5Mqs5gGtQkB
+	aPO7cnK2v+UpxQW1azm5tysysvl8CB069VC3IHlQ/t8Vrs23DXBx7hrIDFMz6aqhIRI1cpMqyXB
+	sWseheJA3m9/xGl8RLZCjCO9Mq74wVfbgdiQ6lfSthx1djxe+xEQVp7snh5c=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Received: by 2002:a05:6808:150c:b0:4ab:32ea:95f6 with SMTP id
+ 5614622812f47-4af5e1b215amr9515583b6e.13.1785642399119; Sat, 01 Aug 2026
+ 20:46:39 -0700 (PDT)
+Date: Sat, 01 Aug 2026 20:46:39 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a6ebd9f.2d659fcc.1d46f5.01cd.GAE@google.com>
+Subject: [syzbot] [libertas?] INFO: task hung in lbs_remove_card (2)
+From: syzbot <syzbot+a88c826d548437310a57@syzkaller.appspotmail.com>
+To: libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org, 
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Hello,
 
-A pull-request of rtw-next to wireless-next tree, more info below. Please
-let me know if any problems.
+syzbot found the following issue on:
 
-Thanks
-Ping-Ke
+HEAD commit:    5d5fd841c346 Merge 7.2-rc5 into usb-next
+git tree:       https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git usb-testing
+console output: https://syzkaller.appspot.com/x/log.txt?x=13539499580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=6ec4d592e55f7960
+dashboard link: https://syzkaller.appspot.com/bug?extid=a88c826d548437310a57
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/2ed536ae4daf/disk-5d5fd841.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/ab40098ccbf1/vmlinux-5d5fd841.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/66d5c395f47c/bzImage-5d5fd841.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a88c826d548437310a57@syzkaller.appspotmail.com
+
+INFO: task kworker/1:3:5238 blocked for more than 143 seconds.
+      Not tainted syzkaller #0
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:kworker/1:3     state:D stack:20968 pid:5238  tgid:5238  ppid:2      task_flags:0x4288060 flags:0x00080000
+Workqueue: events request_firmware_work_func
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5510 [inline]
+ __schedule+0x1325/0x47d0 kernel/sched/core.c:7234
+ __schedule_loop kernel/sched/core.c:7311 [inline]
+ schedule+0xdd/0x2c0 kernel/sched/core.c:7326
+ lbs_wait_for_firmware_load+0x11e/0x1e0 drivers/net/wireless/marvell/libertas/firmware.c:117
+ lbs_remove_card+0x84/0x390 drivers/net/wireless/marvell/libertas/main.c:913
+ if_usb_disconnect+0xc5/0x270 drivers/net/wireless/marvell/libertas/if_usb.c:317
+ usb_unbind_interface+0x1dd/0x9e0 drivers/usb/core/driver.c:461
+ device_remove drivers/base/dd.c:618 [inline]
+ device_remove+0x12a/0x180 drivers/base/dd.c:610
+ __device_release_driver drivers/base/dd.c:1349 [inline]
+ device_release_driver_internal+0x44e/0x620 drivers/base/dd.c:1372
+ usb_driver_release_interface drivers/usb/core/driver.c:643 [inline]
+ usb_forced_unbind_intf+0x1a4/0x240 drivers/usb/core/driver.c:1137
+ usb_reset_device+0x411/0xaa0 drivers/usb/core/hub.c:6409
+ if_usb_reset_device.isra.0+0x21e/0x290 drivers/net/wireless/marvell/libertas/if_usb.c:400
+ if_usb_prog_firmware.cold+0x161/0x192 drivers/net/wireless/marvell/libertas/if_usb.c:918
+ lbs_fw_loaded drivers/net/wireless/marvell/libertas/firmware.c:23 [inline]
+ helper_firmware_cb drivers/net/wireless/marvell/libertas/firmware.c:80 [inline]
+ helper_firmware_cb+0x1f7/0x2d0 drivers/net/wireless/marvell/libertas/firmware.c:64
+ request_firmware_work_func+0x13f/0x440 drivers/base/firmware_loader/main.c:1164
+ process_one_work+0xa23/0x1940 kernel/workqueue.c:3322
+ process_scheduled_works kernel/workqueue.c:3405 [inline]
+ worker_thread+0x5ef/0xe50 kernel/workqueue.c:3486
+ kthread+0x370/0x450 kernel/kthread.c:436
+ ret_from_fork+0x69a/0xc80 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+Showing all locks held in the system:
+5 locks held by kworker/0:1/11:
+5 locks held by kworker/1:0/23:
+ #0: ffff888106684540 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x12b1/0x1940 kernel/workqueue.c:3297
+ #1: ffffc9000018fd18 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x988/0x1940 kernel/workqueue.c:3298
+ #2: ffff88810b7441d8 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #2: ffff88810b7441d8 (&dev->mutex){....}-{4:4}, at: hub_event+0x1bd/0x4af0 drivers/usb/core/hub.c:5904
+ #3: ffff8881360491d8 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #3: ffff8881360491d8 (&dev->mutex){....}-{4:4}, at: usb_disconnect+0x10a/0x9a0 drivers/usb/core/hub.c:2341
+ #4: ffff888104e921a0 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #4: ffff888104e921a0 (&dev->mutex){....}-{4:4}, at: device_del+0xa0/0x9b0 drivers/base/core.c:3923
+1 lock held by khungtaskd/29:
+ #0: ffffffff896e2b40 (rcu_read_lock){....}-{1:3}, at: rcu_lock_acquire include/linux/rcupdate.h:300 [inline]
+ #0: ffffffff896e2b40 (rcu_read_lock){....}-{1:3}, at: rcu_read_lock include/linux/rcupdate.h:840 [inline]
+ #0: ffffffff896e2b40 (rcu_read_lock){....}-{1:3}, at: debug_show_all_locks+0x3d/0x184 kernel/locking/lockdep.c:6775
+8 locks held by kworker/1:1/40:
+2 locks held by getty/2917:
+ #0: ffff888112a280a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x24/0x80 drivers/tty/tty_ldisc.c:243
+ #1: ffffc900000452e8 (&ldata->atomic_read_lock){+.+.}-{4:4}, at: n_tty_read+0x419/0x14e0 drivers/tty/n_tty.c:2211
+3 locks held by kworker/1:3/5238:
+ #0: ffff88810006b140 ((wq_completion)events){+.+.}-{0:0}, at: process_one_work+0x12b1/0x1940 kernel/workqueue.c:3297
+ #1: ffffc90001fffd18 ((work_completion)(&fw_work->work)){+.+.}-{0:0}, at: process_one_work+0x988/0x1940 kernel/workqueue.c:3298
+ #2: ffff888104e921a0 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #2: ffff888104e921a0 (&dev->mutex){....}-{4:4}, at: __device_driver_lock drivers/base/dd.c:1171 [inline]
+ #2: ffff888104e921a0 (&dev->mutex){....}-{4:4}, at: device_release_driver_internal+0xb2/0x620 drivers/base/dd.c:1369
+3 locks held by kworker/1:4/5243:
+ #0: ffff8881f57397a0 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock_nested kernel/sched/core.c:667 [inline]
+ #0: ffff8881f57397a0 (&rq->__lock){-.-.}-{2:2}, at: raw_spin_rq_lock kernel/sched/sched.h:1653 [inline]
+ #0: ffff8881f57397a0 (&rq->__lock){-.-.}-{2:2}, at: rq_lock kernel/sched/sched.h:1991 [inline]
+ #0: ffff8881f57397a0 (&rq->__lock){-.-.}-{2:2}, at: __schedule+0x2dc/0x47d0 kernel/sched/core.c:7108
+ #1: ffffc9000203fd18 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x988/0x1940 kernel/workqueue.c:3298
+ #2: ffff8881f5728d28 (lock#5){..-.}-{3:3}, at: local_lock_acquire include/linux/local_lock_internal.h:46 [inline]
+ #2: ffff8881f5728d28 (lock#5){..-.}-{3:3}, at: kcov_remote_stop+0x77/0x540 kernel/kcov.c:1040
+5 locks held by kworker/0:6/5376:
+ #0: ffff888106684540 ((wq_completion)usb_hub_wq){+.+.}-{0:0}, at: process_one_work+0x12b1/0x1940 kernel/workqueue.c:3297
+ #1: ffffc90004327d18 ((work_completion)(&hub->events)){+.+.}-{0:0}, at: process_one_work+0x988/0x1940 kernel/workqueue.c:3298
+ #2: ffff88810bb1c1d8 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #2: ffff88810bb1c1d8 (&dev->mutex){....}-{4:4}, at: hub_event+0x1bd/0x4af0 drivers/usb/core/hub.c:5904
+ #3: ffff888123b8a1d8 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #3: ffff888123b8a1d8 (&dev->mutex){....}-{4:4}, at: __device_attach+0x7e/0x4d0 drivers/base/dd.c:1073
+ #4: ffff88813c9131a0 (&dev->mutex){....}-{4:4}, at: device_lock include/linux/device.h:1102 [inline]
+ #4: ffff88813c9131a0 (&dev->mutex){....}-{4:4}, at: __device_attach+0x7e/0x4d0 drivers/base/dd.c:1073
+
+=============================================
+
+NMI backtrace for cpu 1
+CPU: 1 UID: 0 PID: 29 Comm: khungtaskd Not tainted syzkaller #0 PREEMPT(lazy) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/16/2026
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x100/0x190 lib/dump_stack.c:120
+ nmi_cpu_backtrace.cold+0x12d/0x151 lib/nmi_backtrace.c:122
+ nmi_trigger_cpumask_backtrace+0x21c/0x2a0 lib/nmi_backtrace.c:65
+ trigger_all_cpu_backtrace include/linux/nmi.h:162 [inline]
+ __sys_info lib/sys_info.c:157 [inline]
+ sys_info+0x141/0x190 lib/sys_info.c:165
+ check_hung_uninterruptible_tasks kernel/hung_task.c:353 [inline]
+ watchdog+0xcb1/0x1030 kernel/hung_task.c:561
+ kthread+0x370/0x450 kernel/kthread.c:436
+ ret_from_fork+0x69a/0xc80 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+Sending NMI from CPU 1 to CPUs 0:
+NMI backtrace for cpu 0
+CPU: 0 UID: 0 PID: 9946 Comm: syz.5.678 Not tainted syzkaller #0 PREEMPT(lazy) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/16/2026
+RIP: 0010:io_serial_in+0x87/0xb0 drivers/tty/serial/8250/8250_port.c:402
+Code: 82 88 fe 48 8d 7d 40 44 89 e1 48 b8 00 00 00 00 00 fc ff df 48 89 fa d3 e3 48 c1 ea 03 80 3c 02 00 75 1a 66 03 5d 40 89 da ec <5b> 0f b6 c0 5d 41 5c e9 cd 85 53 04 e8 38 e8 f0 fe eb a2 e8 c1 e8
+RSP: 0018:ffffc9001299f8b0 EFLAGS: 00000002
+RAX: dffffc0000000000 RBX: 00000000000003fd RCX: 0000000000000000
+RDX: 00000000000003fd RSI: ffffffff832b8160 RDI: ffffffff94249da0
+RBP: ffffffff94249d60 R08: 0000000000000001 R09: 000000000000001f
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000020 R14: fffffbfff2849406 R15: dffffc0000000000
+FS:  00007f0e216776c0(0000) GS:ffff888268636000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000110c38e08b CR3: 00000001350e0000 CR4: 00000000003506f0
+Call Trace:
+ <TASK>
+ serial_in drivers/tty/serial/8250/8250.h:128 [inline]
+ serial_lsr_in drivers/tty/serial/8250/8250.h:150 [inline]
+ wait_for_lsr+0x13a/0x210 drivers/tty/serial/8250/8250_port.c:1982
+ serial8250_fifo_wait_for_lsr_thre drivers/tty/serial/8250/8250_port.c:3235 [inline]
+ serial8250_console_fifo_write drivers/tty/serial/8250/8250_port.c:3300 [inline]
+ serial8250_console_write+0xdfd/0x1a50 drivers/tty/serial/8250/8250_port.c:3385
+ console_emit_next_record kernel/printk/printk.c:3183 [inline]
+ console_flush_one_record+0x790/0xe50 kernel/printk/printk.c:3269
+ console_flush_all kernel/printk/printk.c:3343 [inline]
+ __console_flush_and_unlock kernel/printk/printk.c:3373 [inline]
+ console_unlock+0x103/0x260 kernel/printk/printk.c:3413
+ vprintk_emit+0x407/0x6b0 kernel/printk/printk.c:2479
+ _printk+0xcf/0x110 kernel/printk/printk.c:2504
+ usb_gadget_register_driver_owner.cold+0x58/0xd0 drivers/usb/gadget/udc/core.c:1762
+ raw_ioctl_run drivers/usb/gadget/legacy/raw_gadget.c:596 [inline]
+ raw_ioctl+0x1a85/0x2b80 drivers/usb/gadget/legacy/raw_gadget.c:1307
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x10b/0x7f0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7f0e22c1dc2b
+Code: 00 48 89 44 24 18 31 c0 48 8d 44 24 60 c7 04 24 10 00 00 00 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1c 48 8b 44 24 18 64 48 2b 04 25 28 00 00
+RSP: 002b:00007f0e21674f00 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000000006 RCX: 00007f0e22c1dc2b
+RDX: 0000000000000000 RSI: 0000000000005501 RDI: 0000000000000006
+RBP: 00007f0e21675fd0 R08: 0000000000000001 R09: 00000000ffffffff
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 0000200000000000 R14: 0000000000000000 R15: 00000000000010d0
+ </TASK>
+
 
 ---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-The following changes since commit dc59e4fea9d83f03bad6bddf3fa2e52491777482:
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
 
-  Linux 7.2-rc1 (2026-06-28 12:01:31 -0700)
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
 
-are available in the Git repository at:
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
 
-  https://github.com/pkshih/rtw.git tags/rtw-next-2026-08-02
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
 
-for you to fetch changes up to 86c3125c75d79ee7fb4d045bb9ada4c5b067eacc:
-
-  wifi: rtw89: 8922d: enable Makefile and Kconfig for RTL8922DE (2026-08-02 09:55:20 +0800)
-
-----------------------------------------------------------------
-rtw-next patches for v7.3
-
-Some random cleanups and fixes on rtlwifi, rtw88 and rtw89. The major
-features added to rtw89 are listed:
-
-rtw89:
-
- - add LED support
-
- - update BT-coexistence mechanism to support dual Bluetooth for RTL8922D
-
- - support WiFi 7 chip RTL8922DE
-
-----------------------------------------------------------------
-Abdun Nihaal (3):
-      wifi: rtlwifi: rtl8192du: Fix possible memory leak in rtl92du_init_sw_vars()
-      wifi: rtlwifi: pci: fix error path in rtl_pci_probe()
-      wifi: rtw88: Fix potential memory leak in rtw_txq_push_skb()
-
-Anirudh Srinivasan (2):
-      PCI: Move Spacemit vendor and device IDs to linux/pci_ids.h
-      wifi: rtw89: pci: enable 36-bit DMA on spacemit K3
-
-Bitterblue Smith (2):
-      wifi: rtw88: 8822c: Don't process RF path C in query_phy_status_page{0,1}
-      wifi: rtw88: 8822b: Don't process RF path C in query_phy_status_page1
-
-Bitterblue Smith (S.E.A. Datentechnik GmbH) (1):
-      wifi: rtw88: Enable receiving control frames in monitor mode
-
-Chelsy Ratnawat (1):
-      wifi: rtlwifi: rtl8192d: remove dead SMPS rate mask code
-
-Chen Jung Ku (1):
-      wifi: rtw88: 8822c: replace msleep() with fsleep() for DPK delays
-
-Chia-Yuan Li (1):
-      wifi: rtw89: fw: use MAC source for IO offload delay command
-
-Chih-Kang Chang (6):
-      wifi: rtw89: disable sniffer mode in RX filter when initialization for Wi-Fi 7 chips
-      wifi: rtw89: pci: disable phy error flag related to refclk
-      wifi: rtw89: wow: only WiFi 6 chips initialize RF registers in WoWLAN mode
-      wifi: rtw89: 8852a: fix RSSI report when average beacon RSSI is not ready
-      wifi: rtw89: rfk: update TXIQK H2C command format to v1
-      wifi: rtw89: 8922d: bypass TXIQK when scan
-
-Chin-Yen Lee (2):
-      wifi: rtw89: wow: use MLD address in WoWLAN ARP replies for MLO stations
-      wifi: rtw89: wow: add QoS control field to WoWLAN ARP response for MLO
-
-Ching-Te Ku (63):
-      wifi: rtw89: coex: force to exit Wi-Fi LPS while Bluetooth profile exist
-      wifi: rtw89: coex: offset current BT info to BT0 for dual BT configuration
-      wifi: rtw89: coex: Move wifi related counters to wifi info
-      wifi: rtw89: coex: Extend bt_slot_req for dual MAC wifi
-      wifi: rtw89: coex: Move Bluetooth related counters to BT info
-      wifi: rtw89: coex: Refine third party module related coexistence
-      wifi: rtw89: coex: Add TX/RX RF parameter format version 9
-      wifi: rtw89: coex: Renaming drvinfo_type to drvinfo_ver
-      wifi: rtw89: coex: Add Wi-Fi firmware 0.35.94.1 support for RTL8922D
-      wifi: rtw89: coex: Add RTL8922D chip string
-      wifi: rtw89: coex: Add Init info version 10
-      wifi: rtw89: coex: add rtw89_btc_init() entry for initialization once
-      wifi: rtw89: coex: Update TDMA descriptor for dual MAC
-      wifi: rtw89: coex: Add Bluetooth binding for Bluetooth TX power setting
-      wifi: rtw89: coex: Add Bluetooth binding for Bluetooth RX gain setting
-      wifi: rtw89: coex: Add WiFi/Bluetooth adapter binding info
-      wifi: rtw89: coex: Add TDMA binding for dual MAC
-      wifi: rtw89: coex: Update scoreboard related logic for dual Bluetooth
-      wifi: rtw89: coex: Add Co-RX logic
-      wifi: rtw89: coex: Add Wi-Fi role info version 10
-      wifi: rtw89: coex: Rearrange coexistence control structure
-      wifi: rtw89: coex: Update driver outsource info to firmware version 6
-      wifi: rtw89: ceox: Update antenna & grant signal setting
-      wifi: rtw89: coex: Rearrange Bluetooth firmware report entry
-      wifi: rtw89: coex: Refine send firmware command function
-      wifi: rtw89: coex: Refine _reset_btc_var()
-      wifi: rtw89: coex: Correct SET_RFE settings
-      wifi: rtw89: coex: Add firmware report control report v11
-      wifi: rtw89: coex: update external control length by case
-      wifi: rtw89: coex: Update coexistence version to 9.24.0
-      wifi: rtw89: coex: Add version 107 TX/RX info for firmware feature
-      wifi: rtw89: coex: Add version 9 report control info
-      wifi: rtw89: coex: Fix unexpected grant-signal assignee
-      wifi: rtw89: coex: Branch out version 105 firmware report map index
-      wifi: rtw89: coex: Refine chip initial related structure
-      wifi: rtw89: coex: Add driver info H2C command index version 103
-      wifi: rtw89: coex: Fix Wi-Fi role info H2C command header issue
-      wifi: rtw89: coex: Add firmware 0.29.133.X support for RTL8852B family
-      wifi: rtw89: coex: Add TDMA version 4
-      wifi: rtw89: coex: Add slots version 2
-      wifi: rtw89: coex: Add cycle status report version 105
-      wifi: rtw89: coex: Add wifi role info version 101
-      wifi: rtw89: coex: Add firmware 0.27.97.X support for RTL8852C
-      wifi: rtw89: coex: Add chip initial info version 11 for RTL8922A/D
-      wifi: rtw89: coex: Add Wi-Fi MLO info version 2 H2C command
-      wifi: rtw89: coex: Add firmware 0.35.111.X support for RTL8922A/D
-      wifi: rtw89: coex: Rearrange _ntfy_role_info info
-      wifi: rtw89: coex: Separate _ntfy_role_info into two function
-      wifi: rtw89: coex: Decrease Wi-Fi special packet protect time
-      wifi: rtw89: coex: complete GPIO debug configuration handler
-      wifi: rtw89: coex: Refine RF calibration notify flow
-      wifi: rtw89: coex: Fix log dump format with proper newline
-      wifi: rtw89: coex: Add BTC report version 8 support for BT sub-reports
-      wifi: rtw89: coex: Add dual Bluetooth debug info dump
-      wifi: rtw89: coex: Fix TDMA v8 handling to unblock BTC report parsing
-      wifi: rtw89: coex: Fix H2C command redundant send & version fall through
-      wifi: rtw89: coex: Handle Bluetooth LE-Audio related coexistence feature
-      wifi: rtw89: coex: Fix Bluetooth link weight not updated on profile change
-      wifi: rtw89: coex: Fix BT-info parsing for 5/6 GHz band & dual Bluetooth
-      wifi: rtw89: coex: Clear BT link weight when BT is disabled
-      wifi: rtw89: coex: Change Wi-Fi link_mode_v0 translating timing
-      wifi: rtw89: coex: Port _update_bt_ctrl_lps() for BT profile-based LPS control
-      wifi: rtw89: coex: Update Wi-Fi/Bluetooth coexistence version to 9.24.1
-
-Dan Carpenter (1):
-      wifi: rtw89: debug: fix off by on in rtw89_ppdu_str()
-
-David Lee (1):
-      wifi: rtw89: 8852cu: add quirk to disable 2.4 GHz band
-
-Dawei Feng (1):
-      wifi: rtw88: pci: fix resource leak on failed NAPI setup
-
-Dian-Syuan Yang (2):
-      wifi: rtw89: drop packet offload entry on H2C addition failure to avoid scan issue
-      wifi: rtw89: refine RX filter configuration for WiFi 7 generation
-
-Dmitry Morgun (1):
-      wifi: rtw89: check return values in rtw89_ops_start_ap()
-
-Eric Huang (5):
-      wifi: rtw89: 8922d: remove CCK bandwidth compensation
-      wifi: rtw89: 8922d: dynamic adjust channel smoothing
-      wifi: rtw89: 8922d: fix EMLSR BB switch sequence for MLO mode transition
-      wifi: rtw89: phy: fix bandedge primary channel for 2.4GHz 40MHz and 6GHz
-      wifi: rtw89: pack I/O during bb_sethw to reduce API execution time
-
-Fan Wu (1):
-      wifi: rtl8xxxu: fix use-after-free from rx_urb_wq on stop
-
-GuoHan Zhao (1):
-      wifi: rtw89: wow: fix unsupported cipher debug messages
-
-Johnson Tsai (2):
-      wifi: rtw89: add LED support to reflect the wireless association status
-      wifi: rtw89: add multicolor LED support for RTL8852CU valve board
-
-Mihail Dimoski (1):
-      wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming A15 FA506II
-
-Panagiotis Petrakopoulos (1):
-      wifi: rtw89: use str_enable_disable() helper
-
-Pengpeng Hou (1):
-      wifi: rtw89: fix HE extended capability length check
-
-Ping-Ke Shih (24):
-      wifi: rtw89: fw: add first set of firmware features by version for RTL8922D
-      wifi: rtw89: fw: support scan offload v2 for WiFi 7 chips
-      wifi: rtl8xxxu: 8723bu: remove reference of non-existing firmware rtl8723bu_bt.bin
-      wifi: rtw89: mac: finish active TX immediately without waiting for DMAC
-      wifi: rtw89: mac: pass chip version to firmware
-      wifi: rtw89: fw: lower debug level for UDM1 debug register
-      wifi: rtw89: 8922d: set TX compensation by format v2
-      wifi: rtw89: efuse: no need to export rtw89_efuse_read_ecv_be()
-      wifi: rtw89: efuse: read thermal calibration value for RTL8922D
-      wifi: rtw89: 8922d: read default digital voltage calibration values
-      wifi: rtw89: add thermal protect by digital voltage reduction
-      wifi: rtw89: 8922d: set ANA CLK enter to 500KHz
-      wifi: rtw89: 8922d: update scaling factor for RX path
-      wifi: rtw89: phy: add NCTL check for WiFi 7 chips
-      wifi: rtw89: unify access struct of TX power track tables
-      wifi: rtw89: set needed firmware elements for early chips transition
-      wifi: rtw89: mac: abstract register definition of firmware boot debug
-      wifi: rtw89: 8922d: add TX time limit for 2GHz band
-      wifi: rtw89: fw: do bb_preinit before downloading firmware
-      wifi: rtw89: wow: extend timeout unit to avoid SER false alarm
-      wifi: rtw89: pci: set PCIe maximum TS1 for RTL8922DE
-      wifi: rtw89: 8922d: reduce IO in power-on function
-      wifi: rtw89: phy: set CFR to manual mode for some 2GHz channels
-      wifi: rtw89: 8922d: enable Makefile and Kconfig for RTL8922DE
-
-Po-Hao Huang (2):
-      wifi: rtw89: fix scan offload version check logic
-      wifi: rtw89: change scan offload format to V3 for WiFi 7 IC
-
-Runyu Xiao (1):
-      wifi: rtlwifi: rtl8192du: check QoS TID before indexing tids
-
-Sang-Heon Jeon (2):
-      wifi: rtlwifi: rtl8821ae: remove conditional return with no effect in _rtl8821ae_llt_write()
-      wifi: rtw89: remove conditional return with no effect in sys_init_*()
-
-Stanislaw Gruszka (1):
-      wifi: rtl818x: initialize eeprom_93cx6 struct to zero
-
-Wentao Guan (1):
-      wifi: rtw89: fw: correct preload field of w2 in rtw89_fw_h2c_default_cmac_tbl_be()
-
-William Hansen-Baird (4):
-      wifi: rtlwifi: rtl8723be: Remove unnecessary irq save/restore in hw_init()
-      wifi: rtlwifi: fix disabling of ASPM for RTL8723BE with AER flooding
-      wifi: rtlwifi: convert pci if-statement to ID table
-      wifi: rtlwifi: disable ASPM for RTL8723BE with subsystem ID 17aa:b736
-
-Yuhang.chen (1):
-      wifi: rtw89: pci: add .shutdown callback to stop rfkill polling on reboot
-
-Zong-Zhe Yang (5):
-      wifi: rtw89: fw: fix link ID filling for LPS MLO common info
-      wifi: rtw89: introduce helper to get tx shape index
-      wifi: rtw89: add tx shape v0 to keep built-in arrays compatible during transitions
-      wifi: rtw89: extend tx shape format for regulatory 6 GHz power type
-      wifi: rtw89: debug: add diagnosis for RF
-
- drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c |    2 +-
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c |    2 +-
- drivers/net/wireless/realtek/rtl8xxxu/8723b.c      |   11 +-
- drivers/net/wireless/realtek/rtl8xxxu/core.c       |   20 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         |   49 +-
- .../wireless/realtek/rtlwifi/rtl8192d/hw_common.c  |   21 +-
- .../net/wireless/realtek/rtlwifi/rtl8192du/sw.c    |   12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192du/trx.c   |    3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |    6 -
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |    7 +-
- drivers/net/wireless/realtek/rtw88/bf.c            |    6 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c      |    8 +-
- drivers/net/wireless/realtek/rtw88/main.h          |    1 +
- drivers/net/wireless/realtek/rtw88/pci.c           |   14 +-
- drivers/net/wireless/realtek/rtw88/rtw8723x.c      |    3 +-
- drivers/net/wireless/realtek/rtw88/rtw8814a.c      |    3 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.c      |    4 +-
- drivers/net/wireless/realtek/rtw88/rtw8821c.h      |    3 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c      |    9 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c      |   15 +-
- drivers/net/wireless/realtek/rtw88/rtw88xxa.c      |    3 +-
- drivers/net/wireless/realtek/rtw88/tx.c            |    1 +
- drivers/net/wireless/realtek/rtw89/Kconfig         |   29 +
- drivers/net/wireless/realtek/rtw89/Makefile        |    9 +
- drivers/net/wireless/realtek/rtw89/coex.c          | 7138 ++++++++++++--------
- drivers/net/wireless/realtek/rtw89/coex.h          |  155 +-
- drivers/net/wireless/realtek/rtw89/core.c          |  128 +-
- drivers/net/wireless/realtek/rtw89/core.h          | 1401 +++-
- drivers/net/wireless/realtek/rtw89/debug.c         |  124 +-
- drivers/net/wireless/realtek/rtw89/debug.h         |    1 +
- drivers/net/wireless/realtek/rtw89/efuse.h         |    7 +
- drivers/net/wireless/realtek/rtw89/efuse_be.c      |  117 +-
- drivers/net/wireless/realtek/rtw89/fw.c            | 1696 ++++-
- drivers/net/wireless/realtek/rtw89/fw.h            |  360 +-
- drivers/net/wireless/realtek/rtw89/led.c           |  139 +
- drivers/net/wireless/realtek/rtw89/led.h           |   37 +
- drivers/net/wireless/realtek/rtw89/led_mc.c        |   81 +
- drivers/net/wireless/realtek/rtw89/mac.c           |   71 +-
- drivers/net/wireless/realtek/rtw89/mac.h           |   52 +-
- drivers/net/wireless/realtek/rtw89/mac80211.c      |   38 +-
- drivers/net/wireless/realtek/rtw89/mac_be.c        |   87 +-
- drivers/net/wireless/realtek/rtw89/pci.c           |   17 +
- drivers/net/wireless/realtek/rtw89/pci.h           |    6 +-
- drivers/net/wireless/realtek/rtw89/pci_be.c        |   11 +-
- drivers/net/wireless/realtek/rtw89/phy.c           |   95 +-
- drivers/net/wireless/realtek/rtw89/phy.h           |   28 +-
- drivers/net/wireless/realtek/rtw89/phy_be.c        |   53 +-
- drivers/net/wireless/realtek/rtw89/reg.h           |  100 +-
- drivers/net/wireless/realtek/rtw89/rtw8851b.c      |  148 +-
- drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c  |   22 +-
- .../net/wireless/realtek/rtw89/rtw8851b_table.c    |   23 +-
- .../net/wireless/realtek/rtw89/rtw8851b_table.h    |    2 +-
- drivers/net/wireless/realtek/rtw89/rtw8851be.c     |    2 +
- drivers/net/wireless/realtek/rtw89/rtw8851bu.c     |    1 +
- drivers/net/wireless/realtek/rtw89/rtw8852a.c      |   91 +-
- drivers/net/wireless/realtek/rtw89/rtw8852a_rfk.c  |   36 +-
- .../net/wireless/realtek/rtw89/rtw8852a_table.c    |   27 +-
- .../net/wireless/realtek/rtw89/rtw8852a_table.h    |    2 +-
- drivers/net/wireless/realtek/rtw89/rtw8852ae.c     |    2 +
- drivers/net/wireless/realtek/rtw89/rtw8852au.c     |    1 +
- drivers/net/wireless/realtek/rtw89/rtw8852b.c      |   84 +-
- .../net/wireless/realtek/rtw89/rtw8852b_common.c   |    7 +-
- drivers/net/wireless/realtek/rtw89/rtw8852b_rfk.c  |   36 +-
- .../net/wireless/realtek/rtw89/rtw8852b_table.c    |   31 +-
- .../net/wireless/realtek/rtw89/rtw8852b_table.h    |    2 +-
- drivers/net/wireless/realtek/rtw89/rtw8852be.c     |    2 +
- drivers/net/wireless/realtek/rtw89/rtw8852bt.c     |   86 +-
- drivers/net/wireless/realtek/rtw89/rtw8852bte.c    |    2 +
- drivers/net/wireless/realtek/rtw89/rtw8852bu.c     |    1 +
- drivers/net/wireless/realtek/rtw89/rtw8852c.c      |   87 +-
- drivers/net/wireless/realtek/rtw89/rtw8852c_rfk.c  |  101 +-
- .../net/wireless/realtek/rtw89/rtw8852c_table.c    |   39 +-
- .../net/wireless/realtek/rtw89/rtw8852c_table.h    |    2 +-
- drivers/net/wireless/realtek/rtw89/rtw8852ce.c     |    2 +
- drivers/net/wireless/realtek/rtw89/rtw8852cu.c     |   57 +-
- drivers/net/wireless/realtek/rtw89/rtw8922a.c      |  142 +-
- drivers/net/wireless/realtek/rtw89/rtw8922ae.c     |    3 +
- drivers/net/wireless/realtek/rtw89/rtw8922au.c     |    1 +
- drivers/net/wireless/realtek/rtw89/rtw8922d.c      |  521 +-
- drivers/net/wireless/realtek/rtw89/rtw8922de.c     |    3 +
- drivers/net/wireless/realtek/rtw89/wow.c           |   27 +-
- drivers/pci/controller/dwc/pcie-spacemit-k1.c      |    3 -
- include/linux/pci_ids.h                            |    4 +
- 83 files changed, 9566 insertions(+), 4217 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw89/led.c
- create mode 100644 drivers/net/wireless/realtek/rtw89/led.h
- create mode 100644 drivers/net/wireless/realtek/rtw89/led_mc.c
+If you want to undo deduplication, reply with:
+#syz undup
