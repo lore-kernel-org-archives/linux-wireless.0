@@ -1,219 +1,135 @@
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
+Received: from mail-yw1-f226.google.com (mail-yw1-f226.google.com [209.85.128.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 128442D3225
-	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 12:23:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0F3B3242AB
+	for <linux-wireless@vger.kernel.org>; Sun,  2 Aug 2026 12:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785673386; cv=none; b=rzkwPRhsGcJhcjAp33xa5ExariRJUjadMP8E+r3yCe+9bnHEZO4BfSFj2M1eYkX7amk0tf22rYIWLj+dFIhVSoUqhCwX3cPC5zwyH4NI0zf1WTQT0Oceohy7k/3P5TWvFjfCpNVrX5/ysVEIiLHfUR1wmKxO48EgQSUAWSJ90YE=
+	t=1785673486; cv=none; b=OmeMo4KWUMZ4MWVNQyfOwikKF0MZv2Wc25jmY8GPALiQUOf/Mao2uwu1DkmB2rdlpmWOQESVZtopSPibgMHPbhZeAUy5NkVeQdL4EDV6DN5Oe6291u0nsP46WKUwfYUg6vXEqjKWOf/8pkbDiuJzL8PVc2v6lPjiEmVtie/BML8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785673386; c=relaxed/simple;
-	bh=btEAofBqbPs4lIfMsEMPgdS7qc+jMsnM2+pzmrvtpDE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=OR2V0pInOSbstHdFczTIk4EwbEQ7VZ+YW5Xz2x8bPPUH2IHoLFROZMn+wTzSP9VXsv2XsIg/xkYZx4+T9EVdaD1qgwZymLTNZVeZBLfmsocKoe1yx4bTp/zVSUGQviXRBSmEba/1dplc1ME37h2gdhFIkO58OrnWwSFOeNgA6Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KQY9EQm6; arc=none smtp.client-ip=209.85.208.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785673486; c=relaxed/simple;
+	bh=IVBACOmNYotUTjgF9C6tiVB81vMoFAfRoriF976EZok=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GZnJN904CQBuYQAeCwWYFGgXvzewc/EAgUlOECfAQHgkTKfcai+XEfKvwjLpC+aq43C8uigCTwHJtAaMn8j0GgnSVDCf9eYbo6GRgqiHJfOlSWkkEwkthfGTo5T1tMAOHTgcDCdEw5uoF6CjfTY4imS4nwIRAl70hikceT3O7LU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=EFVqYM0+; arc=none smtp.client-ip=209.85.128.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KQY9EQm6"
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-39f678705c3so18357191fa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:23:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785673383; x=1786278183; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=CpT+FgkcorYOYwnPqETssYy39Xr51dI1NIkn0lwblN8=;
-        b=KQY9EQm6u56FfBJQJPVYKsOJ7519z46xJc/JfmhkGgHSWwZ4T4zXMWlyLFl5dy3mUC
-         MukfyS7Cml/7w4RRQklC6hJUNsSc84YYY8sWs0LLue42MN2VEWHLnmgixs0+KBwaVysb
-         SIt8ye1Uv/GTbJl63BRBi4zBj+UNaf7iswFwPiyvWh8D5hIzKGBhJ990XhncliPU0CVO
-         sDX/CqYZ/cffRm2nvVfz4CC0ezcyZe0bafHSN2w6G+do6lS6nKbR7FONZ3fGR6mXpPDO
-         mbehidXtZVqTGaN/BlVzapxuJFPtyjrP9zuV+BUTxiKQOw9/l0bDPHGdfzeSMw7dhZMW
-         xMBQ==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EFVqYM0+"
+Received: by mail-yw1-f226.google.com with SMTP id 00721157ae682-81e69a2db34so36968547b3.0
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:24:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785673383; x=1786278183;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+        d=1e100.net; s=20251104; t=1785673484; x=1786278284;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=CpT+FgkcorYOYwnPqETssYy39Xr51dI1NIkn0lwblN8=;
-        b=GXGoisUmuprtLunT/VJWIrHCH/vxMah488m1ga6P7hN18FV4Bm+r0dR07JRuqcpDHa
-         +pDgG8zYcgURHJjOi7Ds0S3rCIiAdDS5ihP6kJ2WzZc4S1Qs0nSHTd/xVO+vG0EVdAbz
-         eAauWtDS380DJabQ2XOk/0vG4MxOqn6oeYAY7FzugG79crxgV4CBAkJ6cBT3Lbf2HKNb
-         jWFMJzFtEsAWSkDK94pSRXboXZ6DaUaq4D63iUClMHCQto+TbIqHJSxNnojQ1hYmmsvr
-         0DhVZifdVBZe660irNVHDSGm4dQTC/5m7VWQ1NzlTNQXvLynGf9qvziFsAb1NKTHWuTK
-         3ljA==
-X-Gm-Message-State: AOJu0Yz9azU8rzX6Pp7LbDE4ne8WooGfKdGEaN0W1+BL0tkwqc0K+cyy
-	s8ykNzfliUCFY6di7XuTchykB8o4FSHk0JI0ocuqWovxQCD+bPb+ZQQyd6/bj5b6
-X-Gm-Gg: AR+sD11p5KqHMVzzkP3+zH1ZuhCnFuBtK8ExjeyHttr8m/DnxNiGob5wXirqmdPsbRi
-	poPftjH69IXgQr/9/0qT6a6bPY9f5YNFFzfF0LwlPJfag/q5luKYBmH3gVHW5PD40cuUxENbmCK
-	vVas9MOZ7tF6FUx//WypbYgo7sum5cMEZ6fGg8/BYVa8SgDkbNJ9M3BFszr1NWVWgFGDDKL1Mis
-	K4pNnmW9Tf9vYIU4MoSlIp+Q1hOKVfq0acsg+x2EaeGXWlbcg3azzLN8ntFSwLPvcV2QzEVEpJM
-	VKYf0RQ1MIHD6F9kFvfOvGrFxI03fOZg5T6xfF9Hb5hw0qNN8qpaGZ81vqtc3QcOVjhCrYMq4oD
-	rl3Ff6h0QCdCYRhb6gbQ82nSDqAA10+KKwYCahoN59202L4AQMzWSigixabRBOpiYD2k+tMYNNe
-	fwFMrML6tyQXIkkG2mH3lpwDs8dolQUYWevBI1BOLGZZldyTY97n9nmhIG
-X-Received: by 2002:a2e:b8ca:0:b0:39d:560a:faa with SMTP id 38308e7fff4ca-39f7eaa5c8cmr16169101fa.16.1785673382926;
-        Sun, 02 Aug 2026 05:23:02 -0700 (PDT)
-Received: from [192.168.1.139] ([2001:9b1:c9c3:6900::69b])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-39f813074aesm8316791fa.37.2026.08.02.05.23.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 02 Aug 2026 05:23:01 -0700 (PDT)
-From: Stefan Hansson <newbie13xd@gmail.com>
-X-Google-Original-From: Stefan Hansson <newbyte@postmarketos.org>
-Date: Sun, 02 Aug 2026 14:22:57 +0200
-Subject: [PATCH] wifi: rsi: Fix types to appease CFI
+        bh=QNXeMyhkpbk8rwnA0O7uBQvIUEYbGICoPWDBw29OKOs=;
+        b=WxQvxuwKcr04/Nh0UPDy0WyHeHSzavAuC940S+5wE/VSe189XMKOKaZak/UdXeGqEJ
+         eConS3rsrktX2+eNHwu0/scqslRtblkQsDt410+qyYc8ECrqp4N4++ZVlLCQBYPZ0Dc0
+         GTcu9W6ZDfTRY8HhfqFHd+U4j/uGcpeRKQWRzStNCE0LZ+rklJXE3VxZzDnZsVOYjLHO
+         XmvEma7QnG1KymetVnEKsNe0e85jlxL4y4yy3dMxC1d/3MCgFh0D3hErXF6OYIgCYGxH
+         IBKXNgkvmojj1cJCgfAiMC3MxA/v1b9/7rVysZLx1VpX0b/t45hEUC88LpT0+9Yp+w0L
+         RrVg==
+X-Gm-Message-State: AOJu0YxZ0hert8VWVAZlG1Sgq3iPIT0TIs/qTy5dZ8rzKixcIeRyBLEb
+	iDy017EVQPBI63YiA7uk5svvbylsRy9pXegzeWfAO2PPJYhOqXXjA/2Ax4DBShT8CNKJYT88O65
+	7NUqP2j0ewH+5gGp+XGBaT7a8bwXnnymWWtqGr71Zo/ahGVp4TMCZ92NiP3P8Yub28TllgtDoKA
+	5gKYugwmS51BbfJfShhmgyhoMfFsw1kKSJ6QRykWv/iogECMJXxBPlYCtP4yJWt8eAAcFZU3REc
+	qQnm0Ve8Z7E4wllAKyonMdjO/Rj
+X-Gm-Gg: AR+sD12Feqn7gAzgk0220TsuOvd2h9e/4Y/qvMnfVtymyqrHe/bpm3Bk8zgmQRTB+oR
+	SdiXWzG1MfBqOGcfCiaPuLE9k/Dp1TknVTHdRZjGuxOqxsWWiAiG3HmzQW9LygQP1JACzvNZ/JG
+	FJlWQh23Nf0n3olfixGx1B/Zed+Hp9/wkeoWXNVfJbRv/ApG1DnTPqw4Pbrz3b7pSTes6sXJ/JQ
+	JLeAdcObarb+IZseO38gPCjv2Lr2EX2iVhzkykKPrTj9l6R9aaqoeU7F4DKuMt8D3E8KRKZjF4V
+	xK3He73InM9VVG5TvZbHV3DuXcLrYUCuSVF+yulfRzdklqE+Z4QEPX0Ub7g1lgYRcOrCImBzVIi
+	Ob+dK35NPtPJj7o7BWBI2leutpVQGH9+n1WINv2WbqcxeCATiI5ufoxYk31MalfgJxN7j7U+x++
+	UTtF/g4rPeLqHl3RI8qjK0hoh3PxR6UOlIQ54BYuc=
+X-Received: by 2002:a05:690c:4b11:b0:81f:3b6d:a0a4 with SMTP id 00721157ae682-81fd4bba5edmr87744417b3.25.1785673483874;
+        Sun, 02 Aug 2026 05:24:43 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-27.dlp.protect.broadcom.com. [144.49.247.27])
+        by smtp-relay.gmail.com with ESMTPS id 00721157ae682-81fccf1bedbsm3523437b3.3.2026.08.02.05.24.42
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 02 Aug 2026 05:24:43 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-51c1d137a68so46636521cf.3
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 05:24:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1785673482; x=1786278282; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QNXeMyhkpbk8rwnA0O7uBQvIUEYbGICoPWDBw29OKOs=;
+        b=EFVqYM0+6NjoE1/o48vIEIOlK/WFaP+c2tlBaJBsgTN82BrpG+vOywIEWIqE7IW0z8
+         oAzM01aX1GYOg/u5G6w/bzVOm1pLUoI6H0uPMFQwge9MtkPCOTAwt7UnSAKwUENPiI/m
+         itE6qlP/DdeG+4pO6o5pkc0c8bCOympwMkcd0=
+X-Received: by 2002:a05:622a:5906:b0:51c:8439:14e5 with SMTP id d75a77b69052e-52b566951a7mr125476451cf.10.1785673481792;
+        Sun, 02 Aug 2026 05:24:41 -0700 (PDT)
+X-Received: by 2002:a05:622a:5906:b0:51c:8439:14e5 with SMTP id d75a77b69052e-52b566951a7mr125476081cf.10.1785673481411;
+        Sun, 02 Aug 2026 05:24:41 -0700 (PDT)
+Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52b4eb6a84csm42125231cf.18.2026.08.02.05.24.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 02 Aug 2026 05:24:39 -0700 (PDT)
+Message-ID: <f449500c-74f3-40e0-bbcc-ee560951714d@broadcom.com>
+Date: Sun, 2 Aug 2026 14:24:34 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless] wifi: brcmfmac: validate msgbuf flowring IDs
+ before use
+To: Can Peng <pengcan@kylinos.cn>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
+ brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20260723055618.550834-1-pengcan@kylinos.cn>
+ <20260802083905.3819981-3-arend.vanspriel@broadcom.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260802083905.3819981-3-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260802-rsi-cfi-fix-v1-1-5821d2cb54ee@postmarketos.org>
-X-B4-Tracking: v=1; b=H4sIAKA2b2oC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDCwMj3aLiTN3ktEzdtMwKXSMDAwvTJDNL4xQjIyWgjoKiVKAw2LToWAi
- /uDQpKzW5BGSEUm0tACMoSyVvAAAA
-X-Change-ID: 20260802-rsi-cfi-fix-20085b693d22
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
- phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht
-Cc: Stefan Hansson <newbyte@postmarketos.org>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5262;
- i=newbyte@postmarketos.org; h=from:subject:message-id;
- bh=btEAofBqbPs4lIfMsEMPgdS7qc+jMsnM2+pzmrvtpDE=;
- b=owGbwMvMwCG25kZIp7bFjRmMp9WSGLLyzZZkbGrKlq+fuE2t2DSIyYPDKfmN1OZ7kxfPP/Axd
- VfD0T06HaUsDGIcDLJiiixtPrJbm0S+zWmU118EM4eVCWQIAxenAEykfA/D/0qlunc7Pp9cwLq2
- 97FHWM+XG51ROypWOa2pD990m09w6wuGv5Jzxb5fDDjUbDonS/C75l+mCbKxr7J37te5V7T6RHF
- jLRcA
-X-Developer-Key: i=newbyte@postmarketos.org; a=openpgp;
- fpr=864C1DB58214F69C811F2FA2ACD854892B38D898
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Avoids errors like:
+On 02/08/2026 10:39, Arend van Spriel wrote:
+> On Thu, 23 Jul 2026 13:56:17 +0800, Can Peng <pengcan@kylinos.cn> wrote:
+>> Firmware messages carry flow_ring_id values which brcmfmac converts
+>> to an internal flowid by subtracting
+>> BRCMF_H2D_MSGRING_FLOWRING_IDSTART. The resulting value is used as
+>> a bit index in txstatus_done_map and as an array index into
+>> msgbuf->flowrings and the flowring state.
+>>
+>> Validate the firmware supplied flow_ring_id before using it. This
+>> prevents flow_ring_id values below BRCMF_H2D_MSGRING_FLOWRING_IDSTART
+>> from underflowing and rejects values outside msgbuf->max_flowrings.
+>>
+>> In the tx status path, complete the packet with an error after
+>> removing a valid packet id so the skb is not leaked when the flow
+>> ring id is invalid.
+>>
+>> Fixes: 9a1bb60250d2 ("brcmfmac: Adding msgbuf protocol.")
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Can Peng <pengcan@kylinos.cn>
+>> ---
+>>   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  | 46 +++++++++++++++++++---
+>>   1 file changed, 40 insertions(+), 6 deletions(-)
+> 
+> One nit: there is a double blank line between brcmf_msgbuf_get_flowid()
+> and brcmf_msgbuf_dequeue_work() in the resulting code. This comes from
+> the pre-existing double blank line that was between
+> brcmf_msgbuf_remove_flowring() and brcmf_msgbuf_dequeue_work() -- worth
+> cleaning up to a single blank line.
+> 
+> Minor enough that I will take care of it while applying if you do not
+> send a v2.
 
-    CFI failure at kthread+0x124/0x1cc (target: rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type: 0x89fb613d)
+As I do not apply anything anywhere maybe Johannes will, but feel free 
+to send that v2.
 
-As seen in the aforementioned error this was tested using the downstream
-redpine_91x driver found in the Librem 5's downstream source tree.
-However, it appears that this driver is a modified version of the rsi
-driver found in mainline Linux and as such I decided to port the changes
-here too.
-
-Signed-off-by: Stefan Hansson <newbyte@postmarketos.org>
----
- drivers/net/wireless/rsi/rsi_91x_coex.c     | 3 ++-
- drivers/net/wireless/rsi/rsi_91x_main.c     | 5 +++--
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 3 ++-
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 3 ++-
- drivers/net/wireless/rsi/rsi_common.h       | 2 +-
- drivers/net/wireless/rsi/rsi_sdio.h         | 2 +-
- drivers/net/wireless/rsi/rsi_usb.h          | 2 +-
- 7 files changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
-index ee603a5173fb..023c539fc384 100644
---- a/drivers/net/wireless/rsi/rsi_91x_coex.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
-@@ -50,8 +50,9 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
- 	} while (coex_q != RSI_COEX_Q_INVALID);
- }
- 
--static void rsi_coex_scheduler_thread(struct rsi_common *common)
-+static int rsi_coex_scheduler_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
- 	u32 timeout = EVENT_WAIT_FOREVER;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 662e42d1e5e8..61db2b363d11 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -246,12 +246,13 @@ EXPORT_SYMBOL_GPL(rsi_read_pkt);
- /**
-  * rsi_tx_scheduler_thread() - This function is a kernel thread to send the
-  *			       packets to the device.
-- * @common: Pointer to the driver private structure.
-+ * @data: Pointer to the driver private structure.
-  *
-  * Return: None.
-  */
--static void rsi_tx_scheduler_thread(struct rsi_common *common)
-+static int rsi_tx_scheduler_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	u32 timeout = EVENT_WAIT_FOREVER;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-index 597b238e2294..18a28aa97446 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
-@@ -62,8 +62,9 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
- 
- static void rsi_rx_handler(struct rsi_hw *adapter);
- 
--void rsi_sdio_rx_thread(struct rsi_common *common)
-+int rsi_sdio_rx_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index 25c2b232394a..513d2fdfb510 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -25,8 +25,9 @@
-  *
-  * Return: None.
-  */
--void rsi_usb_rx_thread(struct rsi_common *common)
-+int rsi_usb_rx_thread(void *data)
- {
-+	struct rsi_common *common = data;
- 	struct rsi_hw *adapter = common->priv;
- 	struct rsi_91x_usbdev *dev = adapter->rsi_dev;
- 	int status;
-diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
-index 3cdf9ded876d..2a33a81f71a3 100644
---- a/drivers/net/wireless/rsi/rsi_common.h
-+++ b/drivers/net/wireless/rsi/rsi_common.h
-@@ -58,7 +58,7 @@ static inline void rsi_reset_event(struct rsi_event *event)
- 
- static inline int rsi_create_kthread(struct rsi_common *common,
- 				     struct rsi_thread *thread,
--				     void *func_ptr,
-+				     int (*func_ptr)(void *data),
- 				     u8 *name)
- {
- 	init_completion(&thread->completion);
-diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
-index 7c91b126b350..eb2b7f36a7e4 100644
---- a/drivers/net/wireless/rsi/rsi_sdio.h
-+++ b/drivers/net/wireless/rsi/rsi_sdio.h
-@@ -134,5 +134,5 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
- void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
- int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
- int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num);
--void rsi_sdio_rx_thread(struct rsi_common *common);
-+int rsi_sdio_rx_thread(void *data);
- #endif
-diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
-index 961851748bc4..78067eaffe8b 100644
---- a/drivers/net/wireless/rsi/rsi_usb.h
-+++ b/drivers/net/wireless/rsi/rsi_usb.h
-@@ -81,5 +81,5 @@ static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
- 	return EVENT_WAIT_FOREVER;
- }
- 
--void rsi_usb_rx_thread(struct rsi_common *common);
-+int rsi_usb_rx_thread(void *data);
- #endif
-
----
-base-commit: 95d6a9ccef99117115e41e9adb271243bd5e985b
-change-id: 20260802-rsi-cfi-fix-20085b693d22
-
-Best regards,
---  
-Stefan Hansson <newbyte@postmarketos.org>
-
+Regards,
+Arend
