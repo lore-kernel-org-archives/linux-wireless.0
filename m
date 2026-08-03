@@ -1,294 +1,221 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtpo49.interia.pl (smtpo49.interia.pl [217.74.67.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A73531F991;
-	Mon,  3 Aug 2026 12:39:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2A32820A9
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 13:10:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785760747; cv=none; b=QOqCWWKvgQ2rLG5w3iyZheHOBno531Vca9VW3fTJkE00ikpAyo3vihB6XWOI988eMs/XInXSV/hiGLQQNZHxKZRKtiQC3lVoQcPLFgR+w6GIlj17Xvtx29CsB1CmU6F04RfeGZbyScvGLJYKPKfujgxqTZpIK0rZq4tOwTb1gGc=
+	t=1785762615; cv=none; b=ixlw5avlN4ng+BNydyN2+pjtOJU7RdHIqAvyaHXhlvFi626Fdd9p5FOHKExDz6fIpvHAlObdpdEy8Cv6yCczT0utLmLj+8FTcQCejanzODa5PKDRAEhT1n+MvXOwypuCKIc7M0t3vAK7sWeDvPZJwP6rBXiD79HUekrZT6qW9RU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785760747; c=relaxed/simple;
-	bh=9hpHOy1m9ICSDrTNHLJLXu9VFFuslXTqcO6D5bYwqv8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=gn2P7IlXml2fHGS99Oo8NhI6CXH+yNd9IPlNLZ9+1dbGs14KITNuqmS5EXZhKN/p6+GjA2cFQ9GtpnnlCIk09B7IH+wL4pqktqBcE4Z3GSJdYqAf4sTceTesvEHiXQ4z30tH7VE+1Pew5DjaO9OcIhGDj2N+m0E6eCXy4fXbFXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O6i+wKYo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1785762615; c=relaxed/simple;
+	bh=skZ3o2C83bqo64O48eP2TbVWJScyinPe2K7YPqDQbl8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LEenR2X47QnlLlJfLupEndZ3LIuIxzacypvOvL4JxuOYyEXURGoKAHdUixDb9UE2pSizyEeHsxmNn3BFPV1Pc4s8wEz/uM7eqMz7/GH2lZSPH8rwmkFRYtm+EadaLQ2c/tR9+AY/lx8bpYtTj+6jPxViFz2OlRegoLyO+aZfd7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=Cf5mUZUO; arc=none smtp.client-ip=217.74.67.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O6i+wKYo"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8B64CC2BCB9;
-	Mon,  3 Aug 2026 12:39:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1785760746;
-	bh=9hpHOy1m9ICSDrTNHLJLXu9VFFuslXTqcO6D5bYwqv8=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=O6i+wKYou95aZ+mJFWGgW+M1yxHu3UVPhw9rc7eud6h9R1zH/fNMPUGGpDMPG6HWr
-	 Y1MM57hz2b/sNA/U66FtblPAA0hPC59HXbRNL6xYC2fw55DFK8a6FNmdhJ67MRAj1x
-	 kecmEit0LnTsqtmXwfNjj7aIFodRB2+HpDWr4vRDuiojuBvTfp0YM+sEKEtdadAOFu
-	 fq1CPOXh6Rrz1Yq1dNsYTW0LIpy0J6jOdIlOpCeEtr9G7wc6F2RMbzJlIm5GC60quf
-	 oC3Zm1DO2eZ8pQ9RXuew4U2v61NA4FxDoN63PovQnHW17Wbua6EuGbxD8OKUkY7y6d
-	 GVDKkF63VaPpg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67148C55184;
-	Mon,  3 Aug 2026 12:39:06 +0000 (UTC)
-From: David Heidelberg via B4 Relay <devnull+david.ixit.cz@kernel.org>
-Date: Mon, 03 Aug 2026 14:39:04 +0200
-Subject: [PATCH RFC v3] wifi: ath10k: make in-order rx amsdu buffers
- persistent
+	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="Cf5mUZUO"
+Received: from nr200 (unknown [80.68.231.31])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
+	Mon,  3 Aug 2026 15:09:58 +0200 (CEST)
+Date: Mon, 3 Aug 2026 15:09:56 +0200
+From: Slawomir Stepien <sst@poczta.fm>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
+	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
+ is inactive
+Message-ID: <anCTJFZ54Y93O8Qs@nr200>
+References: <20260727074526.248393-1-sst@poczta.fm>
+ <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
+ <amcjYrOESqnHjbhe@nr200>
+ <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
+ <amcyO4e4bnBPinrP@nr200>
+ <amdckJhgBz7xT2F7@nr200>
+ <28f4f5b6fbe594c41538d5068b2d77495250ecd7.camel@sipsolutions.net>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260803-ath10k-a-msdu-v3-1-af2af21c2f19@ixit.cz>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3WNywrCMBREf6XctVfyKJa4EgQ/wK10kTSpuYitJ
- LFUS/7dkL3LM8Oc2SC6QC7CsdkguIUizVMBuWtg8Hq6OyRbGAQTB9ZxhTp5zh6o8RntG4dWSdk
- 6wxS3UDav4EZaq+8G18sZ+hJ6imkOn/qxiFr90S0COY5tp4xRlgvenWiltB++0Oecfy5Du3CtA
- AAA
-X-Change-ID: 20260719-ath10k-a-msdu-c49334eb091d
-To: Jeff Johnson <jjohnson@kernel.org>, 
- Johannes Berg <johannes.berg@intel.com>, 
- Kalle Valo <kvalo@qca.qualcomm.com>, 
- Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
- linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
- phone-devel@vger.kernel.org, David Heidelberg <david@ixit.cz>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8241; i=david@ixit.cz;
- h=from:subject:message-id;
- bh=Vyca6Kdkl5mnaYlJ5S6qCSV/AGIPFC949AIwyje/jKU=;
- b=owEBbQKS/ZANAwAIAWACP8TTSSByAcsmYgBqcIvpvtDhFNQO9qNBdEqaIRvyG6dSIJKpj9twV
- 7orHrL99pyJAjMEAAEIAB0WIQTXegnP7twrvVOnBHRgAj/E00kgcgUCanCL6QAKCRBgAj/E00kg
- cnc6D/wMhnWAd46FAWl7v5+K2ANUuv6gsyzd1wAw4ysLDmhmm8fVL8uD1bvw+p+m+rPdcIQmXNb
- YoW5wrZ2AB/o/o06gXNRPE5n0QB/y7Xr0ccGtwlY2YxCBByZIhpqviN6GIkhhj3TrE/xM/o07X7
- ItIwqLP5MCWCNsEKXhvqhkd90mnqL4gPqXBZpbEg6XFyF30ZC69m/fCWcawokveQM8Ah8bz0pwn
- hNTsISX7Lw/wlrnbkWliy/z34OTkzeXCbv4LtVp21Ffan0HojakIwihr83dRf/vsmt+TVMZQZen
- 4HA1K1d52pzRsHZvBiombCoxlQQinngRGsB/Efitj7hR/f7Uq3uWD5fKmOkWI//RI33rlbD3YZ5
- AVWOxZ3RZrM3fxPpTGjHFS3SXpIGNmLmQ3KdZ8JfOOh10n+QEbdCMTAQRi+FMOeRxgOuXoCOGMT
- oixFJqsJmdlpR1SxU9xiLrgJABEdvpLdLlkrERAzdtYEtxpoKh0EhgWQXWzGFV7MF1pjW1i/OER
- y+hN5kRAu20cIgy2sTHeB0aN0Qh39LO3qafpWfRAuA264CWIIGI6vyU+Dd+/MSmFTMksXccZCcc
- Y0bdtp1FiVwO/RNDFABCiD8UpA/BDloSeO3ZfOQEskq6mpNT92i78YZ6YHsDle5sMzXDLN3h+4z
- foSzx9P4LM5DRzQ==
-X-Developer-Key: i=david@ixit.cz; a=openpgp;
- fpr=D77A09CFEEDC2BBD53A7047460023FC4D3492072
-X-Endpoint-Received: by B4 Relay for david@ixit.cz/default with auth_id=355
-X-Original-From: David Heidelberg <david@ixit.cz>
-Reply-To: david@ixit.cz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <28f4f5b6fbe594c41538d5068b2d77495250ecd7.camel@sipsolutions.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
+	t=1785762600; bh=H46BO01Jn8KSezBfJtXDje0ki6VhnDh0lE6fQuGUTGg=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	b=Cf5mUZUO3/ttFfBwiAsUCylvrFvpdL87z6sC+BUah/XEpgDmKBHl1lyxwvg5fthYY
+	 e2kC3TmoPtaGMJUjoPo5v8aXTEi6RBpZzvRgMazyPl2PV29Cknsvt6Xb03HoyCnTr/
+	 Ek3IEKbSFyT2nHmKlaATAQi6EgBWpumed4+bCmA8=
 
-From: David Heidelberg <david@ixit.cz>
+On lip 31, 2026 14:40, Johannes Berg wrote:
+> On Mon, 2026-07-27 at 15:26 +0200, Slawomir Stepien wrote:
+> > After taking a closer look at this I wonder how AP_VLAN should be handled? Is there a way on
+> > cfg80211 level to be able to check AP_VLAN's main device state?
+> 
+> Hmm, yeah that might be an issue? I guess in theory it could track it,
+> but it doesn't.
+> 
+> > My code change would look something like this:
+> > 
+> > @@ -9404,6 +9404,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+> >         case NL80211_IFTYPE_AP:
+> >         case NL80211_IFTYPE_AP_VLAN:
+> >         case NL80211_IFTYPE_P2P_GO:
+> > +               /* Add new station only after the AP and link has been started */
+> > +               int link = params.link_sta_params.link_id >= 0 ?
+> > +                          params.link_sta_params.link_id : 0;
+> > +               if (!wdev->links[link].ap.beacon_interval)
+> > +                       return -ENETDOWN;
+> > +
+> >                 /* ignore WME attributes if iface/sta is not capable */
+> >                 if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
+> >                     !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
+> > 
+> > but the NL80211_IFTYPE_AP_VLAN case would not work here, right? Can I just do the checking only for
+> > NL80211_IFTYPE_AP and NL80211_IFTYPE_P2P_GO and skip NL80211_IFTYPE_AP_VLAN?
+> 
+> Yeah it'd just reject everything, I guess.
+> 
+> I think in practice stations are added at the AP interface first and
+> then moved to a VLAN, which would argue for actually rejecting
 
-The WCN3990 might split MSDUs among multiple "in-order" indications.
-The driver needs information from previous indications to handle MPDUs
-that are not started by the same indications that complete them. Stash
-the MSDUs of an incomplete MPDU in the driver state, together with the
-peer id, tid and frag flag identifying it, and prepend them to the MSDU
-list of the next indication so the MPDU can be completed instead of
-being dropped and confusing the driver.
+But are they moved and then this `case NL80211_IFTYPE_AP_VLAN` should match?
+In my tests this case doesn't match, even after the STA is assoc with vlan interface (e.g.
+wlan0.10).
 
-Keeping the actual buffers around is required, not just metadata: the
-stashed MSDUs are the payload of the incomplete MPDU, which can only be
-processed and delivered once the buffer flagged as the last MSDU
-arrives. If the next indication does not continue the pending MPDU
-(different peer id, tid or frag flag, or an offload indication), bail
-out to recovery as before, since no firmware is known to do this. Cap
-the stash at the rx ring size and bail out the same way if the last MSDU
-never arrives, so a firmware that stops mid MPDU cannot grow it without
-bound.
+My test is done using qemu with:
 
-Based on effort of Richard Acayan.
+Files:
+------
+==> hostapd.accept <==
+02:00:00:00:01:00 10
 
-Signed-off-by: David Heidelberg <david@ixit.cz>
----
-The WCN3990 firmware may split an A-MSDU across multiple HTT "in-order"
-indications. Mainline drops these ("failed to extract amsdu: -11",
-rx_confused, recovery), collapsing throughput under load on affected
-devices. Stash the MSDUs of an incomplete MPDU in the driver state so
-it can be completed by the next indication instead of being dropped.
+==> hostapd.conf <==
+interface=wlan0
+driver=nl80211
+ssid=VLAN_Test_AP
+hw_mode=g
+channel=1
 
-Similar patch has been carried out-of-tree (sdm845 mainline, Comma.AI
-vamOS) for a long time.
+# Basic WPA2-PSK
+wpa=2
+wpa_passphrase=password123
+wpa_key_mgmt=WPA-PSK
 
-Changes in v3:
-- Rework: keep the per-indication MSDU list on the stack and stash only
-  the MSDUs of an incomplete MPDU between indications; processing and
-  error paths are otherwise unchanged from mainline (Johannes)
-- Track the frag flag of the pending MPDU and bail out to recovery if
-  the continuing indication disagrees (Jeff's review agent)
-- Drop the unused msdu/rxd assignments before the extract loop, a stale
-  pre-v1 leftover (Richard)
-- Return 0 when stashing an incomplete MPDU, waiting for the
-  continuation is not an error
-- Explain in the commit message why the buffers themselves must be
-  kept, not just metadata (Johannes)
-- Link to v2: https://lore.kernel.org/r/20260719-ath10k-a-msdu-v2-1-f479bb9d1217@ixit.cz
+# Enable MAC-based Access Control and VLAN Assignment
+macaddr_acl=1
+accept_mac_file=/root/hostapd.accept
 
-Changes in v2:
-- checkpatch & style. (Jeff)
-- Improve comments.
-- Link to v1: https://lore.kernel.org/linux-wireless/20260210021249.12132-2-mailingradian@gmail.com/
----
- drivers/net/wireless/ath/ath10k/htt.h    | 10 +++++++
- drivers/net/wireless/ath/ath10k/htt_rx.c | 48 +++++++++++++++++++++++++++++++-
- 2 files changed, 57 insertions(+), 1 deletion(-)
+# Enable Dynamic VLAN interface creation
+dynamic_vlan=1
+vlan_file=/root/hostapd.vlan
+vlan_naming=1
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 25c6b2e2f81c8..0a3998bdc34fd 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1924,16 +1924,26 @@ struct ath10k_htt {
- 
- 	bool tx_mem_allocated;
- 	const struct ath10k_htt_tx_ops *tx_ops;
- 	const struct ath10k_htt_rx_ops *rx_ops;
- 	bool disable_tx_comp;
- 	bool bundle_tx;
- 	struct sk_buff_head tx_req_head;
- 	struct sk_buff_head tx_complete_head;
-+
-+	/* MSDUs of an MPDU left incomplete by an in-order indication, waiting
-+	 * for the next indication to continue it
-+	 */
-+	struct {
-+		u8 tid;
-+		u16 peer_id;
-+		bool frag;
-+		struct sk_buff_head msdus;
-+	} rx_in_ord_split;
- };
- 
- struct ath10k_htt_tx_ops {
- 	int (*htt_send_rx_ring_cfg)(struct ath10k_htt *htt);
- 	int (*htt_send_frag_desc_bank_cfg)(struct ath10k_htt *htt);
- 	int (*htt_alloc_frag_desc)(struct ath10k_htt *htt);
- 	void (*htt_free_frag_desc)(struct ath10k_htt *htt);
- 	int (*htt_tx)(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index ab2d373b4750d..40fdde280a6f1 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -291,16 +291,18 @@ void ath10k_htt_rx_free(struct ath10k_htt *htt)
- 		return;
- 
- 	timer_delete_sync(&htt->rx_ring.refill_retry_timer);
- 
- 	skb_queue_purge(&htt->rx_msdus_q);
- 	skb_queue_purge(&htt->rx_in_ord_compl_q);
- 	skb_queue_purge(&htt->tx_fetch_ind_q);
- 
-+	skb_queue_purge(&htt->rx_in_ord_split.msdus);
-+
- 	spin_lock_bh(&htt->rx_ring.lock);
- 	ath10k_htt_rx_ring_free(htt);
- 	spin_unlock_bh(&htt->rx_ring.lock);
- 
- 	dma_free_coherent(htt->ar->dev,
- 			  ath10k_htt_get_rx_ring_size(htt),
- 			  ath10k_htt_get_vaddr_ring(htt),
- 			  htt->rx_ring.base_paddr);
-@@ -841,16 +843,18 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
- 	htt->rx_ring.sw_rd_idx.msdu_payld = 0;
- 	hash_init(htt->rx_ring.skb_table);
- 
- 	skb_queue_head_init(&htt->rx_msdus_q);
- 	skb_queue_head_init(&htt->rx_in_ord_compl_q);
- 	skb_queue_head_init(&htt->tx_fetch_ind_q);
- 	atomic_set(&htt->num_mpdus_ready, 0);
- 
-+	skb_queue_head_init(&htt->rx_in_ord_split.msdus);
-+
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt rx ring size %d fill_level %d\n",
- 		   htt->rx_ring.size, htt->rx_ring.fill_level);
- 	return 0;
- 
- err_dma_idx:
- 	dma_free_coherent(htt->ar->dev,
- 			  ath10k_htt_get_rx_ring_size(htt),
- 			  vaddr_ring,
-@@ -3296,16 +3300,38 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 		ath10k_warn(ar, "dropping invalid in order rx indication\n");
- 		return -EINVAL;
- 	}
- 
- 	/* The event can deliver more than 1 A-MSDU. Each A-MSDU is later
- 	 * extracted and processed.
- 	 */
- 	__skb_queue_head_init(&list);
-+
-+	if (!skb_queue_empty(&htt->rx_in_ord_split.msdus)) {
-+		/* An MPDU left incomplete by a previous indication is
-+		 * pending. It might still be possible to handle indications
-+		 * that do not continue it if there is only one peer that
-+		 * splits at each given moment. We are bailing out because we
-+		 * should have a test case for this before trying to fix it.
-+		 */
-+		if (tid != htt->rx_in_ord_split.tid ||
-+		    peer_id != htt->rx_in_ord_split.peer_id ||
-+		    frag != htt->rx_in_ord_split.frag ||
-+		    offload) {
-+			ath10k_warn(ar, "split amsdu did not resume immediately\n");
-+			htt->rx_confused = true;
-+			__skb_queue_purge(&htt->rx_in_ord_split.msdus);
-+			ath10k_core_start_recovery(ar);
-+			return -EIO;
-+		}
-+
-+		skb_queue_splice_init(&htt->rx_in_ord_split.msdus, &list);
-+	}
-+
- 	if (ar->hw_params.target_64bit)
- 		ret = ath10k_htt_rx_pop_paddr64_list(htt, &resp->rx_in_ord_ind,
- 						     &list);
- 	else
- 		ret = ath10k_htt_rx_pop_paddr32_list(htt, &resp->rx_in_ord_ind,
- 						     &list);
- 
- 	if (ret < 0) {
-@@ -3334,17 +3360,37 @@ static int ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 */
- 			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status, NULL);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status, false, NULL,
- 					     NULL, peer_id, frag);
- 			ath10k_htt_rx_h_enqueue(ar, &amsdu, status);
- 			break;
- 		case -EAGAIN:
--			fallthrough;
-+			/* The MPDU is incomplete. Stash the remaining MSDUs
-+			 * and wait for the next indication to continue it.
-+			 * A last MSDU that never arrives would otherwise keep
-+			 * growing the stash on every indication, so give up
-+			 * once it cannot plausibly be an A-MSDU any more.
-+			 */
-+			if (skb_queue_len(&list) > HTT_RX_RING_SIZE) {
-+				ath10k_warn(ar, "split amsdu exceeds %d msdus\n",
-+					    HTT_RX_RING_SIZE);
-+				htt->rx_confused = true;
-+				__skb_queue_purge(&list);
-+				ath10k_core_start_recovery(ar);
-+				return -EIO;
-+			}
-+
-+			htt->rx_in_ord_split.tid = tid;
-+			htt->rx_in_ord_split.peer_id = peer_id;
-+			htt->rx_in_ord_split.frag = frag;
-+			skb_queue_splice_init(&list,
-+					      &htt->rx_in_ord_split.msdus);
-+			return 0;
- 		default:
- 			/* Should not happen. */
- 			ath10k_warn(ar, "failed to extract amsdu: %d\n", ret);
- 			htt->rx_confused = true;
- 			__skb_queue_purge(&list);
- 			ath10k_core_start_recovery(ar);
- 			return -EIO;
- 		}
+==> hostapd.vlan <==
+10  wlan0.10  br10
 
----
-base-commit: 95d6a9ccef99117115e41e9adb271243bd5e985b
-change-id: 20260719-ath10k-a-msdu-c49334eb091d
+==> wpa.conf <==
+p2p_disabled=1
+network={
+        ssid="VLAN_Test_AP"
+        #psk="password123"
+        psk=c31c83ea62af5b750232dc32865586f7658777dce974a980446dd6bff0154913
+}
 
-Best regards,
---  
-David Heidelberg <david@ixit.cz>
+Commands:
+---------
+modprobe mac80211_hwsim radios=2
+ip link add br10 type bridge
+ip link set br10 up
+hostapd -d hostapd.conf -B
+wpa_supplicant -i wlan1 -c wpa.conf
 
+Results:
+--------
+# iw dev
+phy#1
+        Interface wlan1
+                ifindex 5
+                wdev 0x100000001
+                addr 02:00:00:00:01:00
+                type managed
+                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
+                txpower 20.00 dBm
+                multicast TXQ:
+                        qsz-byt qsz-pkt flows   drops   marks   overlmt hashcol tx-bytes        tx-packets
+                        0       0       0       0       0       0       0       0               0
+phy#0
+        Interface wlan0.10
+                ifindex 8
+                wdev 0x2
+                addr 02:00:00:00:00:00
+                type AP/VLAN
+                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
+                txpower 20.00 dBm
+        Interface wlan0
+                ifindex 4
+                wdev 0x1
+                addr 02:00:00:00:00:00
+                ssid VLAN_Test_AP
+                type AP
+                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
+                txpower 20.00 dBm
+                multicast TXQ:
+                        qsz-byt qsz-pkt flows   drops   marks   overlmt hashcol tx-bytes        tx-packets
+                        0       0       33      0       0       0       0       3868            33
 
+# iw dev wlan0.10 station dump
+Station 02:00:00:00:01:00 (on wlan0.10)
+        authorized:     yes
+        authenticated:  yes
+        associated:     yes
+        preamble:       short
+        WMM/WME:        no
+        MFP:            no
+        TDLS peer:      no
+        inactive time:  5676 ms
+        rx bytes:       3569
+        rx packets:     30
+        tx bytes:       410
+        tx packets:     4
+        tx retries:     0
+        tx failed:      0
+        rx drop misc:   0
+        signal:         -30 dBm
+        signal avg:     -30 dBm
+        tx bitrate:     1.0 MBit/s
+        tx duration:    0 us
+        rx bitrate:     54.0 MBit/s
+        rx duration:    0 us
+        DTIM period:    0
+        beacon interval:0
+        connected time: 238 seconds
+        associated at [boottime]:       30.496s
+        associated at:  1785761454053 ms
+        current time:   1785761692411 ms
+
+# dmesg | grep laza
+(this is just a print of this field just before the switch() call)
+[   30.489902][  T189] laza: info->attrs[NL80211_ATTR_IFINDEX]: 4
+(and yes, it is just one print triggered)
+
+This index 4 is assigned to wlan0, so it will never have iftype == NL80211_IFTYPE_AP_VLAN.
+Also the print of wdev->identifier will give 0x1 and not 0x2.
+
+So, is it even possible that `case NL80211_IFTYPE_AP_VLAN` would match? If it will never match, then
+do I understand that the change I proposed should be correct for other cases?
+
+> everything being OK anyway - but then that shouldn't be because of this
+> but rather by just removing the AP_VLAN case there, or so.
+> 
+> Not sure what the best thing would be though.
+
+-- 
+Slawomir Stepien
