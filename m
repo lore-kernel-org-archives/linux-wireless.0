@@ -1,149 +1,162 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C5A73BCD00;
-	Mon,  3 Aug 2026 13:15:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785762949; cv=none; b=ngl2yk6MZ7aiT2zbB6uXKOGCK9TNQEfOTWL5sucWH0G6ErxCsJiG/IeNI363SQUBNU+UYWRio+yBXAUCBxUO8QdZ6VxBVY10rdv70EgDBWc1d0MTQQZcHWVTy1O+B/UQsvPUpgk83fI7YRQef00XqjHNuJ+f+W5fS3CGQ8rFiKQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785762949; c=relaxed/simple;
-	bh=7skgG640I9Y27CSJCPv4vVblkC9ONnYRz3n9i0WG8js=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Qk4rgY7MZN5zf0sIDUBC9chOk+3PNM3M8Keh/XqTCWKQyQxXAjijvNrTuDqXsBZB2QRT6RMOMqC4ge4JcAZtXhSZawu+c3Xtu4nO5Vu4QzEt/6+q6qMvAJfE1hJIlBZBNdiAFTUTDgkd3aIsRgDwarKjPbH1eUg8tjL7KTK2U4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=po8rppf3; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A4253D7A01
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 13:37:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.181
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785764271; cv=pass; b=DaqB3/yfKDH5lWmB9nsnKeKT7hyyz+VUK7x8OTFGni8Gmwxm1vJ+qiFczJRCDwFehcMyizHQh0QnUZT51IHDoKrI5RPFPsD7PbznhQiftAlJGCVZ3Hco21FaJm1+A677crFSe4F7uAp1Jj4UMk9H0SMRPKxJ6nLECcpvQyE21vk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785764271; c=relaxed/simple;
+	bh=SqJe3EZPOAS+ATQtGZAzXPMXAesHd2zSQtTkzLMIy5I=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=sksmNoAnt+ZGF7TiWysMSZq4FcXwvH7Q/K123LW7sUip6+g0ikRKxkmOBnqqcWzOyrur4KjtOYuCWSM4Gzg79G5iaSRtA+aMOgdqs99m7UCLCdoHYhvgPhGzW+qvTs6suxBcTt5s7crGbRoKaBKO7kJAg5thTvpq2Zv7mjiJ4IY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GehehOqv; arc=pass smtp.client-ip=209.85.160.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="po8rppf3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=IVuFzLv86C3W5DdcoQiE0co6a6YTdM2LHmIH7EuYVAk=;
-	t=1785762941; x=1786972541; b=po8rppf3bVm0rA9c0CVeST3bo4uXdNE/2liAJkoIPY4hOl1
-	uC0g923lwVhKzjIQ/q4GunZ6fdS7KnaeYEhwHXNae8BopsJPKqxpkGuQgQ4AUC8HIhZG1oYtXaNI0
-	5dCE/0fXwiQ4gmRVuCJa8QeGzqeEbq2VCWvDYCm1AP5IwW17GRdZQN32lnDmZQYCGCCEjbIuSyR3Z
-	YvhVj8iUq/n9HvpRkd2C5aqs0Mu8Fsb5BjQV1s0jcp39V3SEuHhoJ48bao+jAP9IWfSQPyAiL7Yn7
-	6HttSXv5fZk9yP7NyiqQkxfbWtB9WeE8nOO7S3CcJW9OxOekiXCBhCqazZ241ixw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqsVw-0000000E9jT-39Ir;
-	Mon, 03 Aug 2026 15:15:33 +0200
-Message-ID: <95571b0374a24554beb39cee4fb92852b1222942.camel@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
- is inactive
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Slawomir Stepien <sst@poczta.fm>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev, 
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Date: Mon, 03 Aug 2026 15:15:25 +0200
-In-Reply-To: <anCTJFZ54Y93O8Qs@nr200>
-References: <20260727074526.248393-1-sst@poczta.fm>
-	 <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
-	 <amcjYrOESqnHjbhe@nr200>
-	 <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
-	 <amcyO4e4bnBPinrP@nr200> <amdckJhgBz7xT2F7@nr200>
-	 <28f4f5b6fbe594c41538d5068b2d77495250ecd7.camel@sipsolutions.net>
-	 <anCTJFZ54Y93O8Qs@nr200>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GehehOqv"
+Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-51c928bf172so19138681cf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 06:37:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785764269; cv=none;
+        d=google.com; s=arc-20260327;
+        b=s6y1NqxaIVCl/l1VGODkDmoxDLGzRrznQGoxxFIP5hP7/j5jQYmePyWuI8oi5Mwcon
+         LgvkIpFEHkpCV3YWFJi2KGz3lw+j9hnVFXs3Z/vWBF8kUc9ds/NFNU192fqiv8T/Zqno
+         cL8tUyvxlbftW1YmvqgAoyAlX0En/VwnWOEsUEIZ9k8s6P//RhBHf8+0u8PxdrrmdE16
+         bs5DeNeymNNXVhh4l7DfYGoqWXt6alhKD3UKXnAu+UkJOoXQz+TCN+wnXhNAeGWvgqam
+         uY9VrWN/2EuSoZBr4Lo/mjdPeS757hua8r9c1u5fpyOCHWFxwO60MCHF+JoVKOzSnyvM
+         2hJg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=/FC6z87r+mdO33nIFcf4J/sknNa4tnocxzppMasidjc=;
+        fh=BzVcj3AOSjt+4oCebDOU6fO0kGZQwBEUFf03l6Edbvw=;
+        b=rN8u0kw0Bdwhf+F9i7LmDVGKYEACy+GOWKVT8LMIt9SdJb8IkJeIAu5IErTx2dFths
+         QjoZJwlFpXdlc9+ELWWfQD7zqJODQHu0yNDzjfJTjoL9PAvieVIJpdUNUqdty+mMPX3Y
+         0TYRvh6sDf0Pn2g55KCqmD7IUrsY25qtcmRozK1LyXYey+MRUuydFw2Jav5Vra4VMtzo
+         iP0sW9Pwwe/5VH3u6D/bt+iYMvrWrC7CQYeTG72gEaGEe+hq2H2lhUgFG795otWQH8kC
+         o6E7Bb9vb1WzBgQVF4Bn08eWh1QSg3tV1bRMgbk2Lb1unk52myhR1HrXN5n6A3j+E1Oa
+         MQ1A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785764269; x=1786369069; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/FC6z87r+mdO33nIFcf4J/sknNa4tnocxzppMasidjc=;
+        b=GehehOqv2ReAPMErDkp4JYkDdt44rMg3a6bManzsY9XWDmxh4oA0rowQPF+o99hIVg
+         BphpNKTRsfXyCdyYCY66E1x44bZ3fokjGRdfNxTZQesXf50areXcXpCObX4zfcj0gXm8
+         ibkEuvqsCt9ev2/Er95swYDEztiy3rv9NlPh0+fcEsI+bXFMJiMmILMa2fXWOlKPcNR2
+         TXsdgbXTKoHjZjdoM2Tkih6GoN5uAfYxIjsegtSpKHeP3LyhNMbFSrganQIoF50iw4DO
+         CRMpqG79JDgVcntTEV1vnSOfwSDH7xmYYGYa0Hdy9x5G8OAGuvIZbXc7VsFq/IhgiWkC
+         OVVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785764269; x=1786369069;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=/FC6z87r+mdO33nIFcf4J/sknNa4tnocxzppMasidjc=;
+        b=d1lykP5KfVKtQhOESjxhEeUrdnD0Wkce8vs5U7ySKm3y5urUqmHFjadEYgdRpNxB4V
+         7xnJYE1jssvho27WAY6hcEGQn/sFgLrjUl8W1kPbChosCHfw22/6tMNqUrXCttBBkcjh
+         k5yQ4rVhTcw909F3OdwWQA8nyZBefeWacIarFkY3S5N/cjfKXihKXXW6h4+u/oPA0H2Y
+         mdAWVGHY4GPYiRkwAR+Cukyd8I8OEvSp4G3+lU/sHL6OY86HYeOae+NxnTblm9Q8uyX6
+         0UA9YHQmlqjgijBo7K/Hi7SJ8K4gU4OuwaDhnFsFEtRB4CaCmHbLOJKB0bUSEqRh+lQY
+         Znjg==
+X-Gm-Message-State: AOJu0YyzTqeilNV8a7/eJujgbYPvaL0UhcdKbF2mDId4jxREB16+KJWt
+	owSV+UO7cV+VzhCXz62KtXGK8DKjpzvB4E5p/Kh0zh9SCjJ1ESZ02hr+3YlUp4QY+DQkaOe4iEh
+	qRvQRROjsyjsjxSJXCoYJZlE1LMtUz4q0P7gh
+X-Gm-Gg: AR+sD114jkJZF1EkTOQzpMY3RSx1Jek58/hvM85/QcpGXdssezO4NNr1NZYyEnumvj2
+	Nd3NC1U8w546nsBSz4NmDj37d2evuvigp7ZbPBN1Hz1KFwITtbXchSr8FgBG4PT3T6w9O6k6VW8
+	1ooW1M3SZ1IgBodjRpEbVPtjGqhtlk7uSaizJIZFDF3sAQDl4keEKVAuqT46YfbvcaspkpQ2Gvy
+	rpvuXrS1/zMhxx67LRRExT7XbpLbWFNyiZJNNL6ivNKzR1IORKJ4QXksK9oh6FRgzzc/Z0JUUa8
+	5qOZs2dmHBIvPZRtrv5B27TxRmOmSvGTIGFlg2iPmyyPvA==
+X-Received: by 2002:a05:622a:2448:b0:50d:e471:2d1e with SMTP id
+ d75a77b69052e-52b56796756mr216669591cf.35.1785764268494; Mon, 03 Aug 2026
+ 06:37:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+From: Morgan Wong <pbodq2@gmail.com>
+Date: Mon, 3 Aug 2026 21:37:37 +0800
+X-Gm-Features: AUfX_my52F_WsXUNKO17EPdt6_bQ37R_zLDjYZWy1NX8Nrq8o2XftkK-hFIQ_Ms
+Message-ID: <CABzKGg0YEm5PfW9YtEM0G1SYY6RD80DmFpu_Jpb9hoioK+tH-w@mail.gmail.com>
+Subject: wireless-regdb: Update regulatory rules for Hong Kong (HK) on 5GHz
+ and 6GHz
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 2026-08-03 at 15:09 +0200, Slawomir Stepien wrote:
-> On lip 31, 2026 14:40, Johannes Berg wrote:
-> > On Mon, 2026-07-27 at 15:26 +0200, Slawomir Stepien wrote:
-> > > After taking a closer look at this I wonder how AP_VLAN should be han=
-dled? Is there a way on
-> > > cfg80211 level to be able to check AP_VLAN's main device state?
-> >=20
-> > Hmm, yeah that might be an issue? I guess in theory it could track it,
-> > but it doesn't.
-> >=20
-> > > My code change would look something like this:
-> > >=20
-> > > @@ -9404,6 +9404,12 @@ static int nl80211_new_station(struct sk_buff =
-*skb, struct genl_info *info)
-> > >         case NL80211_IFTYPE_AP:
-> > >         case NL80211_IFTYPE_AP_VLAN:
-> > >         case NL80211_IFTYPE_P2P_GO:
-> > > +               /* Add new station only after the AP and link has bee=
-n started */
-> > > +               int link =3D params.link_sta_params.link_id >=3D 0 ?
-> > > +                          params.link_sta_params.link_id : 0;
-> > > +               if (!wdev->links[link].ap.beacon_interval)
-> > > +                       return -ENETDOWN;
-> > > +
-> > >                 /* ignore WME attributes if iface/sta is not capable =
-*/
-> > >                 if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
-> > >                     !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME=
-)))
-> > >=20
-> > > but the NL80211_IFTYPE_AP_VLAN case would not work here, right? Can I=
- just do the checking only for
-> > > NL80211_IFTYPE_AP and NL80211_IFTYPE_P2P_GO and skip NL80211_IFTYPE_A=
-P_VLAN?
-> >=20
-> > Yeah it'd just reject everything, I guess.
-> >=20
-> > I think in practice stations are added at the AP interface first and
-> > then moved to a VLAN, which would argue for actually rejecting
->=20
-> But are they moved and then this `case NL80211_IFTYPE_AP_VLAN` should mat=
-ch?
+Dear all,
 
-I'm not entirely sure, but I believe they're _added_ to the AP first,
-and then _modified_ to be in the AP_VLAN via another path
-(NL80211_CMD_SET_STATION, NL80211_ATTR_VLAN_ID).
+Currently:
 
-The question is whether or not we can rely on this, i.e. no userspace
-ever used the other path.
-
-> In my tests this case doesn't match, even after the STA is assoc with vla=
-n interface (e.g.
-> wlan0.10).
-
-Right.
-
-> My test is done using qemu with:
-
-I'd probably use UML/hwsim tests, but sure.
-
-> This index 4 is assigned to wlan0, so it will never have iftype =3D=3D NL=
-80211_IFTYPE_AP_VLAN.
-> Also the print of wdev->identifier will give 0x1 and not 0x2.
->=20
-> So, is it even possible that `case NL80211_IFTYPE_AP_VLAN` would match? I=
-f it will never match, then
-> do I understand that the change I proposed should be correct for other ca=
-ses?
-
-Well, it's _possible_, right? It just appears to not be used in
-practice, as I described above (guess your test says I'm right).
-
-But then I think we should do two changes:
-
-1) simply refuse adding stations to AP_VLAN, i.e. drop the
-   NL80211_IFTYPE_AP_VLAN case entirely from the function
-
-2) make the change you suggested validating the link
+# Source:
+# https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1039.pdf
+(2.4 GHz and 5 GHz)
+# https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1081.pdf (6 GHz)
+country HK: DFS-ETSI
+(2400 - 2483.5 @ 40), (36)
+(5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
+(5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
+(5470 - 5730 @ 160), (27), DFS
+(5730 - 5850 @ 80), (36)
+(5945 - 6425 @ 160), (24), NO-OUTDOOR
 
 
-Actually only validating the link as you showed would basically achieve
-(1) with -ENETDOWN (we've been using -ENOLINK btw) rather than with the
--EOPNOTSUPP error from the default switch case, but it also seems less
-explicit...
 
-Or maybe just do both in one commit?
+Update :
 
-johannes
+# Source:
+# https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1039.pdf
+(2.4 GHz and 5 GHz)
+# https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15/subpart-E
+(2.4 GHz and 5 GHz)
+# https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00.07_20/en_301893v020007a.pdf
+(2.4 GHz and 5 GHz)
+# https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1081.pdf (6 GHz)
+# https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00.00_20/en_303687v010000a.pdf
+(6GHz)
+country HK: DFS-ETSI
+(2400 - 2483.5 @ 40), (36)
+(5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
+(5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
+(5470 - 5730 @ 160), (30), DFS
+(5730 - 5850 @ 80), (36)
+(5945 - 6425 @ 320), (23), NO-OUTDOOR
+
+Reason for change in 5470-5730 :
+The HK department, OFCA has its own requirement, 30dbm in addition to
+EITHER fulfilling FCC OR ETSI requirement. The rationale behind is
+having the biggest tolerance among major world standards to be an
+international city. The OFCA, 30dbm is the baseline value to be
+fulfilled in the highest priority.
+
+About FCC
+27dbm (500mW) without TPC, 30dbm (1W) with TPC
+# https://www.ecfr.gov/current/title-47/part-15/subpart-E#p-15.407(h)(1)
+
+About UTSI (same as FCC)
+27dbm (500mW) without TPC, 30dbm (1W) with TPC
+# https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00.07_20/en_301893v020007a.pdf
+(page 17)
+
+A TPC (30dbm), 802.11h edition should be taken instead of 27dbm as I suggest.
+Or a TPC regulation flag may be a good idea to bind with 30dbm together.
+
+
+Reason for change in  5945 - 6425 :
+The HK department, OFCA requires to have its own EIPR limit, 24dbm in
+addition to ETSI 23dbm.
+Therefore, the smaller value should be taken.
+(6GHz in HK requires no reference to FCC standards, unlike 5GHz situation)
+WIFI 7 allows 320MHz, the previous value, 160MHz was in wifi 6E era.
+
+# https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00.00_20/en_303687v010000a.pdf
+(page 17)
+
+
+-- 
+Regards,
+
+Morgan Wong
