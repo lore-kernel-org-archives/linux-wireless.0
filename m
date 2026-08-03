@@ -1,147 +1,132 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D841741A55D;
-	Mon,  3 Aug 2026 17:09:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A35415F3E
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 17:14:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785776943; cv=none; b=KULpWj+seeGTyuMHbc6m2HjgqwIirsAq9yVTjA1IgFYTGc4ckEGVKyBQD9ajq7J6ji60PZHq4mIsW17S4sbclu3oIdsHjRgSpIKlB1FUIbn3V23WOhBMpIekeE1STWU2tocqOao8fmah/IT9JZ7FA5SR8Ux/4ltk0sk1e/LAFyM=
+	t=1785777263; cv=none; b=NsbXFOkN0lTOr6Ox0/7UvIUqOtTeJqRMD8zWCe4QlAG60V/PO4+75uYWu032/VX8XaKYGYUFXTKeCk9fzDd+CFeq+rqbN/2CMC4B8QzTRrLfpmB6lFe7bBKhzw8bGT/mvItwsA9DJ+nt20ok1F76Hn2/xKDkrFlYkzjuOnrFkEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785776943; c=relaxed/simple;
-	bh=I6zcxJO/xtHszKp/1BchexOKkdlM6T63zoh6Dkdw3aA=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=DtySVZLEfvlIqGWkTJWu6bIvH9EDZWW7ZBaj37WW9hCLB1BgJHpuV3F61sAEx8awwXO1gazez65h6t29YzbaoBXy4onFn1t38JaLCYyOB/vVkpWWUkcnYu9bTyKiMrkI8BvL5X0jW7UjMhgvXXgHwFtM4HcwRPYvt1KEBGBvky4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oHsxQLsS; arc=none smtp.client-ip=198.175.65.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1785777263; c=relaxed/simple;
+	bh=O6I5z+hO9I5U5pxhNDiVlajwFCyfjfEyaeAjsSR9uE8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rw66FX8M+3INnR0nWbx/WEiK4Pptg5OonTXm4yQIbjNmGMnEQ1KbQ/IIYS2DRyHHmFJDJk3CDz443D66ctNvVtqNE0owimFU9oN4A3KZ4PLlCXtUXCnM3wiLvdAz1sUJzxK/eIYyr4pMEJnHG8prSKiERBsrE6QLRb+QQEcVtCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fOn4l/ON; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oHsxQLsS"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fOn4l/ON"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785776942; x=1817312942;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=I6zcxJO/xtHszKp/1BchexOKkdlM6T63zoh6Dkdw3aA=;
-  b=oHsxQLsS74boDVEapf1Qvcqnh+1+/vUaM47+Lub8MpY6D7oNtt1W8Rxt
-   6C1GJsNo8diOy7oLH1xrLvyC1pH+Pg27cbHBaMo532PbsWRh+InqJIra+
-   5hsF9i+khuc07KStlpYfZ2fzv6UCUDOKUPVP2d5iDasrU+vfOVGufzSVy
-   nfpr3f4xZ7HuRDk58ACXgiM4y1oR/S0qpQq5vBHSXWyAfLOlG9Ty6TDkF
-   DAEw1PHRO/VnRK9cgfcKLtI8QFeK3X6PjRQTRWdc8O16uia8C7oyfQ6Mq
-   Igbj94TAEA6HTSa+OtkZZ2RB/83XNOfm4ZBB557a0bLF0wdhHUglk9cKW
-   g==;
-X-CSE-ConnectionGUID: ht1+Zej5S3edRgJhmITjwQ==
-X-CSE-MsgGUID: uQGuUzLyRcene0uAPr53lA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="86267670"
+  t=1785777262; x=1817313262;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=O6I5z+hO9I5U5pxhNDiVlajwFCyfjfEyaeAjsSR9uE8=;
+  b=fOn4l/ON1XYZ+j8DzTRBEyJV3zaz8H+kZDXujgxqbZeca2EG0AQipUqk
+   AFym8ZuhV3/5LhoS/037T0a98CoAyURVYlrkoC1hT7S7qfmzpov24MCJ0
+   NYCNeZ+xEQ9RBK4A2rJcTl3UzA8hkUn3fzMWYdsLx8astkMSKFISn56mB
+   b5RLF4L9NNCFeYXmToe92+N3+VS7ucAGbXm+BP2Pj8lF39pjvZF8q/mQf
+   +C9B9CIgEEA7U270iaqOc8FlWFHYL2KkqsqtUr6QcWcxQpCmfEdlTZtmS
+   PZyHlPx92994S+m/97zCw3TcgqECDGef0bWshMoHE4ET4T8/cPEJzph6T
+   A==;
+X-CSE-ConnectionGUID: y9VRWenRQWKk5xDE914X8A==
+X-CSE-MsgGUID: uDnA06DiRe6MEEUQcIdsAA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="90131975"
 X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
-   d="scan'208";a="86267670"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 10:09:01 -0700
-X-CSE-ConnectionGUID: tVLy63j4QYumtUhtBPDFUQ==
-X-CSE-MsgGUID: yd4EEuREQdqDZBXrpIDoTg==
+   d="scan'208";a="90131975"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 10:14:20 -0700
+X-CSE-ConnectionGUID: SfkezNeKQryRg3JKVUBY/A==
+X-CSE-MsgGUID: tXZxqbhQSQCR0GDI2mYb9g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.25,202,1779174000"; 
-   d="scan'208";a="256951519"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.61])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 10:08:54 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 3 Aug 2026 20:08:51 +0300 (EEST)
-To: Manivannan Sadhasivam <mani@kernel.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
-    Jonathan Derrick <jonathan.derrick@linux.dev>, 
-    Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org, 
-    linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
-    ath11k@lists.infradead.org, ath10k@lists.infradead.org, 
-    Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-    Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-    Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v3 6/8] wifi: ath12k: Use pci_{enable/disable}_link_state()
- APIs to enable/disable ASPM states
-In-Reply-To: <lmmrcv2dpuitbqmuargtsbk647z66gs6aqanzis226py2hjhys@d5h5p6ltmg4e>
-Message-ID: <658436eb-af18-4343-67db-63e484617239@linux.intel.com>
-References: <20260708-pci-aspm-fix-v3-6-6bd72451746e@kernel.org> <20260710202546.GA989860@bhelgaas> <lmmrcv2dpuitbqmuargtsbk647z66gs6aqanzis226py2hjhys@d5h5p6ltmg4e>
+   d="scan'208";a="260681371"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 03 Aug 2026 10:14:18 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wqwEw-000000007RX-3s5x;
+	Mon, 03 Aug 2026 17:14:14 +0000
+Date: Tue, 4 Aug 2026 01:13:44 +0800
+From: kernel test robot <lkp@intel.com>
+To: JB Tsai <jb.tsai@mediatek.com>, nbd@nbd.name, lorenzo@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org, Sean.Wang@mediatek.com,
+	Quan.Zhou@mediatek.com, Ryder.Lee@mediatek.com,
+	litien.chang@mediatek.com, Charlie-cy.Wu@mediatek.com,
+	jb.tsai@mediatek.com
+Subject: Re: [PATCH] wifi: mt76: connac3: implement 6GHz power type detection
+ and dynamic CLC filtering
+Message-ID: <202608040156.lx0926Ek-lkp@intel.com>
+References: <20260724085103.3155942-1-jb.tsai@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260724085103.3155942-1-jb.tsai@mediatek.com>
 
-On Fri, 31 Jul 2026, Manivannan Sadhasivam wrote:
-> On Fri, Jul 10, 2026 at 03:25:46PM -0500, Bjorn Helgaas wrote:
-> > On Wed, Jul 08, 2026 at 04:30:20PM +0200, Manivannan Sadhasivam wrote:
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > 
-> > > It is not recommended to enable/disable the ASPM states on the back of the
-> > > PCI core directly using the LNKCTL register. It will break the PCI core's
-> > > knowledge about the device ASPM states. So use the APIs exposed by the PCI
-> > > core to enable/disable ASPM states.
-> > > 
-> > > Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.0.c5-00481-QCAHMTSWPL_V1.0_V2.0_SILICONZ-3
-> > > 
-> > > Reported-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
-> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > ---
-> > >  drivers/net/wireless/ath/ath12k/Kconfig |  2 +-
-> > >  drivers/net/wireless/ath/ath12k/pci.c   | 19 +++----------------
-> > >  drivers/net/wireless/ath/ath12k/pci.h   |  4 +++-
-> > >  3 files changed, 7 insertions(+), 18 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath12k/Kconfig b/drivers/net/wireless/ath/ath12k/Kconfig
-> > > index 4a2b240f967a..7852ede3eaea 100644
-> > > --- a/drivers/net/wireless/ath/ath12k/Kconfig
-> > > +++ b/drivers/net/wireless/ath/ath12k/Kconfig
-> > > @@ -1,7 +1,7 @@
-> > >  # SPDX-License-Identifier: BSD-3-Clause-Clear
-> > >  config ATH12K
-> > >  	tristate "Qualcomm Wi-Fi 7 support (ath12k)"
-> > > -	depends on MAC80211 && HAS_DMA && PCI
-> > > +	depends on MAC80211 && HAS_DMA && PCI && PCIEASPM
-> > 
-> > As Sashiko pointed out [1], I think adding the PCIEASPM dependency is
-> > an issue.  The PCI core should provide stubs or whatever is necessary
-> > to make ath12k work even if PCIEASPM isn't selected.
-> > 
-> > I'm guessing this hardware depends on the ability to disable ASPM even
-> > without PCIEASPM so we probably would need more than just empty stubs.
-> > We do build aspm.c unconditionally now and we provide LTR and L1SS
-> > save/restore regardless of PCIEASPM.  Maybe we need something similar
-> > here.
-> > 
-> 
-> This was discussed in v2 and Ath maintainer Jeff was in agreement with the
-> dependency:
-> https://lore.kernel.org/linux-pci/705a4fe5-658e-25ac-9e4d-6b8089abca46@linux.intel.com
+Hi JB,
 
-To further that, any driver that has to disable ASPM clearly does depend 
-on capacility to disable ASPM. So having depends on PCIEASPM makes perfect 
-sense in these cases. I suppose the status quo of drivers doing that on 
-their own has just gotten many blind for that obvious dependency.
+kernel test robot noticed the following build errors:
 
-In any case, PCIEASPM is gated by EXPERT so one should really know what 
-one is doing if one is goind to disable it, if that ends up losing some 
-driver that depends on PCIEASPM important for that config minimalist, 
-clearly the person wasn't expert enough to touch that config option :-).
+[auto build test ERROR on wireless-next/main]
+[cannot apply to wireless/main linus/master v7.2-rc6 next-20260731]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-So I think sashiko is simply wrong in this case, and having empty stubs is 
-wrong as well because it encourages drivers to do driver-side ASPM disable 
-behind core's ASPM back.
+url:    https://github.com/intel-lab-lkp/linux/commits/JB-Tsai/wifi-mt76-connac3-implement-6GHz-power-type-detection-and-dynamic-CLC-filtering/20260803-215116
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
+patch link:    https://lore.kernel.org/r/20260724085103.3155942-1-jb.tsai%40mediatek.com
+patch subject: [PATCH] wifi: mt76: connac3: implement 6GHz power type detection and dynamic CLC filtering
+config: alpha-allmodconfig (https://download.01.org/0day-ci/archive/20260804/202608040156.lx0926Ek-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 16.1.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260804/202608040156.lx0926Ek-lkp@intel.com/reproduce)
 
-I don't see much benefit from letting these drivers to build without 
-PCIEASPM (the non-empty "stubs" approach Bjorn suggests). Is that ability 
-to satisfy some extreme config minimalist who wants to partially disable 
-ASPM on system that has a broken HW? Or just to make sashiko happy? Why 
-make things harder than what "depends on PCIEASPM" already provides for 
-us, regardless of sashiko thinking we "lose" something in that trade.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202608040156.lx0926Ek-lkp@intel.com/
 
-I, on the other hand, think it's win to properly mark drivers that need 
-PCIEASPM with depends on, even if it's just for the capability to disable 
-ASPM.
+All errors (new ones prefixed by >>):
 
--- 
- i.
+   drivers/net/wireless/mediatek/mt76/mt7925/main.c: In function 'mt7925_set_sar_specs':
+>> drivers/net/wireless/mediatek/mt76/mt7925/main.c:1986:15: error: too few arguments to function 'mt7925_mcu_set_clc'; expected 4, have 3
+    1986 |         err = mt7925_mcu_set_clc(dev, dev->mt76.alpha2,
+         |               ^~~~~~~~~~~~~~~~~~
+   In file included from drivers/net/wireless/mediatek/mt76/mt7925/main.c:10:
+   drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h:387:5: note: declared here
+     387 | int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+         |     ^~~~~~~~~~~~~~~~~~
 
+
+vim +/mt7925_mcu_set_clc +1986 drivers/net/wireless/mediatek/mt76/mt7925/main.c
+
+c948b5da6bbec7 Deren Wu    2023-09-18  1978  
+c948b5da6bbec7 Deren Wu    2023-09-18  1979  static int mt7925_set_sar_specs(struct ieee80211_hw *hw,
+c948b5da6bbec7 Deren Wu    2023-09-18  1980  				const struct cfg80211_sar_specs *sar)
+c948b5da6bbec7 Deren Wu    2023-09-18  1981  {
+c948b5da6bbec7 Deren Wu    2023-09-18  1982  	struct mt792x_dev *dev = mt792x_hw_dev(hw);
+c948b5da6bbec7 Deren Wu    2023-09-18  1983  	int err;
+c948b5da6bbec7 Deren Wu    2023-09-18  1984  
+c948b5da6bbec7 Deren Wu    2023-09-18  1985  	mt792x_mutex_acquire(dev);
+8a27c5c764040f Jared.Huang 2026-06-17 @1986  	err = mt7925_mcu_set_clc(dev, dev->mt76.alpha2,
+8a27c5c764040f Jared.Huang 2026-06-17  1987  			 dev->country_ie_env);
+8a27c5c764040f Jared.Huang 2026-06-17  1988  	if (err < 0)
+8a27c5c764040f Jared.Huang 2026-06-17  1989  		goto out;
+8a27c5c764040f Jared.Huang 2026-06-17  1990  
+c948b5da6bbec7 Deren Wu    2023-09-18  1991  	err = mt7925_set_tx_sar_pwr(hw, sar);
+c948b5da6bbec7 Deren Wu    2023-09-18  1992  
+8a27c5c764040f Jared.Huang 2026-06-17  1993  out:
+8a27c5c764040f Jared.Huang 2026-06-17  1994  	mt792x_mutex_release(dev);
+c948b5da6bbec7 Deren Wu    2023-09-18  1995  	return err;
+c948b5da6bbec7 Deren Wu    2023-09-18  1996  }
+c948b5da6bbec7 Deren Wu    2023-09-18  1997  
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
