@@ -1,152 +1,117 @@
-Received: from mail-yx1-f98.google.com (mail-yx1-f98.google.com [74.125.224.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B603390219
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 08:21:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B383B2FC8;
+	Mon,  3 Aug 2026 08:35:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785745270; cv=none; b=t8n8nWx8swp0ICRJbQ0OJxX8Y5sOsnV6jO+VVyXnKWrH7+QorrgjVj/oFAtPgdCSdPyDbLm/9BVY9EstJpX2NXoDfkNDnAmN6sHbDLf1ta8oXA/4KKwOpwqG9w2DT/IUPV1vKaXUjw4bQq6OdYSh4+Z4MwQaR6T2Eui4rv4wB+0=
+	t=1785746145; cv=none; b=hneix6RzSifmmAyzhGPaSa6/mH941+CIntRIXFKDi4M9Lih5OE7DizxafRwkWwm/yCNEjdV0dUM3d3qvlVPnjf4I7NtBdn+1awEkfpm2BkQabGKa5By1sfF7ZsySaRDFfl/bYC/0PtVJ3K1a3eEXWab5hitQZeBXmB2sDY/bYwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785745270; c=relaxed/simple;
-	bh=Pg0dLujnHeta+8k9PUkwaeX7IBhCH3Vp8JK79I4o2qs=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=S5NAjOaGC3iviDALeSmMaruAkiBAb7wyl8Bq3pIpFImlOn+vEZOGgrggFx9ROBSwPkDDm0O4DLuihq0TaZwCdd5jT770Ys7WZslIBiVhRJBNsmBcSsqTEV9VrwqfDar7kpDJF+ascq4gp8rwwVB/0vvAPGFAm7UgUo2obdfRDk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=S/vNP+dB; arc=none smtp.client-ip=74.125.224.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785746145; c=relaxed/simple;
+	bh=yWnjSS9vKXPJ84pKJJ0of6r86pbCS1H32ygisOLc57w=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=WSMZGC8470CG3XPocZpJSrkjBRRqN0xPSe9dZqxE7/IB1N4RQDcs7ToBHQX8vUtR4nhz+3dC/29WZ+FovRvFEbKiCEiYd9YOmwMMolgcpH23OGcZLTNaGVBGezs+3xgxaDCU2eIyoYB1m6QzytXStdUUGJeX1N/LpoQy7XOyQFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=KEePdZ9q; arc=none smtp.client-ip=168.119.38.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="S/vNP+dB"
-Received: by mail-yx1-f98.google.com with SMTP id 956f58d0204a3-66899fe9077so4289550d50.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 01:21:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785745267; x=1786350067;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=umawf+BlMbUojF4hA2eaASvm/LHe9PC11Jo6AdX6bp8=;
-        b=s/1CWLDsPJk5Wz1dPBtWwQNVz3W7MNn2bb+fKAopjGsbZquVV8KcJHvhD+AhfUA+gL
-         okAPRkvOmt3qVfQEY88eHt6wLL2A0Ur5lAU4m1n/WCWZlYAUHHknk8aToBAAw0tqBtOU
-         URScFKQJp9EwhndTcdK9yvfMxqjvM56Q/DG5Vi2NJurQJgyFYuH0WPaPI/xDoASqxP3h
-         qrNtrWCfHPL9yPVPwR7kZ7rIf7JCjARE9OFPjjIopag5fNSmJIxceEfGpd3IeUJpzAv3
-         HAdTxCVzzZpMkDk1g/TLLpJIKUtQSZ5q5PuYPm3sbLQuYrQ3URbeyl/Atp+HF809CJdo
-         rp9A==
-X-Gm-Message-State: AOJu0YxnctnOkiEZYaAX8le5UrFqew+Kk3Mo+Xq/xvuTha6ryFSnFkFk
-	Go8kpG1juIkkokPemsL2iQ7XsqKTLLrCGAMqgWkK5K69elrQ+CwAeI7H7Y2lNLuSNccZyvvBnbT
-	8xI4He3NkT/z0Tkf7zQEj80H8T6PbY2UWsrX98h1vbI2ROleW/uz1ezvGK1PyK8wcrd06kflVoX
-	Es5R78bbJ7hJ1MsB/KlBLGRCsKaLiCqmzrHOu/14AI/vH8Acyf2LSfHU2hy4ShScAHXd55Q2fzS
-	LjIbGAoj7Hng8mFSNl/fa3wpxXE
-X-Gm-Gg: AR+sD11UySAe/akfCySFiLm5E9CkIWQza2AASg6G7cMY7biVHPEs87fxpf6NgKRCttA
-	53PwWn1opQqKBVYufZ3O95kzLunFGY7It4tSHw8uWMmLBbvYaiM0H6MX8tLHs/EpfShH5N87yuR
-	ynf28ZBsHrKidsKaPCIMoEE+aOEIweAVvIr1iKPkm08VsS0Cmjbkrj0nvx2BsXGZl8/mqdSoVTF
-	Ga9M19odv+dQS0twUtBQAJZzF8FuqCtWEeWPUKXKEyhc+7PMCkXcan6ioBh5Lwl6Oe1QcJ3HDpI
-	uVDNzqmJbyOboCRdqBVWEqZP/InI/+ejTN6HeVxtnPNlGp/B+DnolERH9d6OdThYxMdede4d3Xu
-	lnQZ+Sop8k1FWqZXlg2y9ts5mUJIR/+DP4smvu+aMXq+PyF6DTvP2lFWmNqoQy0wvAGZBE/5qtw
-	OelOkmEtBg28qlwc3E/Z+QkkBtsDMEEVTstOjWpiI=
-X-Received: by 2002:a53:dacf:0:b0:667:5960:a594 with SMTP id 956f58d0204a3-6694f26980amr8252785d50.54.1785745267384;
-        Mon, 03 Aug 2026 01:21:07 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-22.dlp.protect.broadcom.com. [144.49.247.22])
-        by smtp-relay.gmail.com with ESMTPS id 956f58d0204a3-6694af4d78esm333877d50.15.2026.08.03.01.21.07
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 03 Aug 2026 01:21:07 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38dd87656d3so4362555a91.2
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 01:21:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785745266; x=1786350066; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=umawf+BlMbUojF4hA2eaASvm/LHe9PC11Jo6AdX6bp8=;
-        b=S/vNP+dB2r8dfC99LwWLupiUUelWHCzPGrii4uDLA7/qrFOK/BB2g4nsOt3Hq2yrZq
-         8grCzW3/DlwIZmDvFHl/ZpYzxndP1rIF16+/+oJyH2mRTiKXMfjVgC1s1S4D+W0ZPEfB
-         Z0nwcSMxoX9LtVgZCiB6i2VJCG9p9iBhd3DgU=
-X-Received: by 2002:a17:90b:4f48:b0:381:c500:b0d1 with SMTP id 98e67ed59e1d1-38fbc4ff4ccmr8731215a91.20.1785745265909;
-        Mon, 03 Aug 2026 01:21:05 -0700 (PDT)
-X-Received: by 2002:a17:90b:4f48:b0:381:c500:b0d1 with SMTP id 98e67ed59e1d1-38fbc4ff4ccmr8731186a91.20.1785745265384;
-        Mon, 03 Aug 2026 01:21:05 -0700 (PDT)
-Received: from [10.176.2.103] ([192.19.176.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153dd9be04sm33069820eec.9.2026.08.03.01.21.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Aug 2026 01:21:04 -0700 (PDT)
-Message-ID: <c2589f1c-c754-4282-815b-df64f0250623@broadcom.com>
-Date: Mon, 3 Aug 2026 10:21:03 +0200
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="KEePdZ9q"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+	Resent-Cc:Resent-Message-ID; bh=6p1m/ojTb6OKIEBFPCad5AVVmbyfw4zU7FwpLGdBjwQ=;
+	t=1785746143; x=1786955743; b=KEePdZ9qnRQzNEv70BUzbcmVxN6coQXvjdsZJKcWlpahrw8
+	GgpvOkj88YozoCtQf46ystPItaK3dgBvzVWf9GZYsPqALu2jzL7fM/G01SfTPhVHUeWrpwk/O30mp
+	0NWTxT6puld/jVveX6XXahGUNLSNuA4Gk7t0UsxUmgVBR34Kx8GHzcWQj2GZmbwnQBE/VrcYOhl9z
+	Ws4VqP34+8NczlyTv9s3u3tIPwQJ1V0ySaZVJZswa8xBwOr9YMVGYMkG0/6lZhnjbTLegQvB9+1WX
+	i3fBpDF+4SAyK8UvUxghueLfL+krEoLd9PK4TMqaD7zs23oyglHH0AF6A6i3CNkw==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1wqo96-00000005v8c-1FXW;
+	Mon, 03 Aug 2026 10:35:40 +0200
+Message-ID: <e628d43a4aca1763cafcde41338cf7a34fe57d6c.camel@sipsolutions.net>
+Subject: Re: [PATCH] wifi: brcmfmac: Fix memory leak in
+ brcmf_sdio_read_control()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>, Abdun Nihaal
+	 <nihaal@cse.iitm.ac.in>
+Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
+	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Date: Mon, 03 Aug 2026 10:35:39 +0200
+In-Reply-To: <c2589f1c-c754-4282-815b-df64f0250623@broadcom.com> (sfid-20260803_102116_661427_959202E9)
+References: <20260722110713.115988-1-nihaal@cse.iitm.ac.in>
+	 <20260802083905.3819981-2-arend.vanspriel@broadcom.com>
+	 <e059b52701d3cad4480dfb506e61474924b9f29e.camel@sipsolutions.net>
+	 <6648c1d61a44ad732550ff20c0b1aecaa43676f6.camel@sipsolutions.net>
+	 <19fc626a040.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+	 <c2589f1c-c754-4282-815b-df64f0250623@broadcom.com>
+	 (sfid-20260803_102116_661427_959202E9)
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: brcmfmac: Fix memory leak in
- brcmf_sdio_read_control()
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
- Abdun Nihaal <nihaal@cse.iitm.ac.in>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20260722110713.115988-1-nihaal@cse.iitm.ac.in>
- <20260802083905.3819981-2-arend.vanspriel@broadcom.com>
- <e059b52701d3cad4480dfb506e61474924b9f29e.camel@sipsolutions.net>
- <6648c1d61a44ad732550ff20c0b1aecaa43676f6.camel@sipsolutions.net>
- <19fc626a040.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-Content-Language: en-US
-In-Reply-To: <19fc626a040.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+X-malware-bazaar: not-scanned
 
-On 03/08/2026 07:44, Arend van Spriel wrote:
-> Op 2 augustus 2026 18:44:40 schreef Johannes Berg 
-> <johannes@sipsolutions.net>:
-> 
->> On Sun, 2026-08-02 at 18:41 +0200, Johannes Berg wrote:
->>> On Sun, 2026-08-02 at 10:38 +0200, Arend van Spriel wrote:
->>>> On Wed, 22 Jul 2026 16:37:12 +0530, Abdun Nihaal 
->>>> <nihaal@cse.iitm.ac.in> wrote:
->>>>> The memory allocated for buf is not freed in some of the error 
->>>>> paths in
->>>>> brcmf_sdio_read_control(). Fix that by adding vfree() calls.
->>>>>
->>>>> Fixes: dd43a01c5cdb ("brcmfmac: use dynamically allocated control 
->>>>> frame buffer")
->>>>> Cc: stable@vger.kernel.org
->>>>> Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
->>>>> ---
->>>>> Compile tested only. Issue found using static analysis.
->>>>>
->>>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
->>>>> 1 file changed, 3 insertions(+)
->>>>
->>>> To be applied to wireless tree.
->>>
->>> I'm going to put this into wireless-next, at this point (-rc6) this just
->>> doesn't cut it, the commit message makes it sound purely theoretical.
->>
->> Actually, I'm not even going to do that - sprinkling vfree()s over the
->> code when moving the one that exists would be sufficient is, and I'm
->> being generous here, not a good change.
-> 
-> Sorry, Johannes
-> 
-> I looked at moving the vfree() to the done: label, but the code also 
-> gets there in the success path to wakeup waiters. In the success path 
-> the buf is stored for further processing so it should not be freed. 
-> Maybe better to do:
-> 
->         spin_unlock_bh(&bus->rxctl_lock);
->         brcmf_sdio_dcmd_resp_wake(bus);
->         return;
-> 
-> fail:
->         vfree(buf);
->         /* Awake any waiters */
->         brcmf_sdio_dcmd_resp_wake(bus);
-> }
-Actually it turns out brcmf_sdio_read_control() is only called once so 
-the brcmf_sdio_dcmd_resp_wake() can be taken outside the function.
+On Mon, 2026-08-03 at 10:21 +0200, Arend van Spriel wrote:
+> >=20
+> > I looked at moving the vfree() to the done: label, but the code also=
+=20
+> > gets there in the success path to wakeup waiters. In the success path=
+=20
+> > the buf is stored for further processing so it should not be freed.=20
 
-Gr. AvS
+Hah, my bad, sorry!
+
+> > Maybe better to do:
+> >=20
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spin_unlock_bh(&bus->rxctl_lock);
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 brcmf_sdio_dcmd_resp_wake(bus);
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+> >=20
+> > fail:
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 vfree(buf);
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* Awake any waiters */
+> >  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 brcmf_sdio_dcmd_resp_wake(bus);
+> > }
+> Actually it turns out brcmf_sdio_read_control() is only called once so=
+=20
+> the brcmf_sdio_dcmd_resp_wake() can be taken outside the function.
+
+Or just something like this?
+
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1827,15 +1827,17 @@ brcmf_sdio_read_control(struct brcmf_sdio *bus, u8 =
+*hdr, uint len, uint doff)
+        if (bus->rxctl) {
+                brcmf_err("last control frame is being processed.\n");
+                spin_unlock_bh(&bus->rxctl_lock);
+-               vfree(buf);
+                goto done;
+        }
+        bus->rxctl =3D buf + doff;
+        bus->rxctl_orig =3D buf;
+        bus->rxlen =3D len - doff;
+        spin_unlock_bh(&bus->rxctl_lock);
++       /* buffer is queued */
++       buf =3D NULL;
+=20
+ done:
++       vfree(buf);
+        /* Awake any waiters */
+        brcmf_sdio_dcmd_resp_wake(bus);
+ }
+
+
+It's already using vmalloc() so seems it wouldn't care that much about
+calling vfree(NULL) on the success path?
+
+johannes
