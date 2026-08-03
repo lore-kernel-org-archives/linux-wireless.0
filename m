@@ -1,45 +1,80 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE2102848AA
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C670313550
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:36:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785766408; cv=none; b=W7oc6wjL5vNq29rS3iEz68E85WzDa93kGRwQ9BBo4dNo594OiZkALckQ9LSQJ36vvOjFg89UsS2Y4L3aQL16vLHsknRPd0W6KKl0+q31PrC3kz/L9VuRDStXNcLmL2MRBK7QIkqEwSexO719Bbqzbd7l4nbO78cKymmdew5K4Kg=
+	t=1785767786; cv=none; b=i/OkrLmTWC+LJ8UQRjV/Oz58iAnd7sPMvegnplhZdbcQy4kL5IX+5SLsX1IW8G3DzaBkI+/E7DjYigJzJWw1GIkOSPA0gdp7u35uatCS2E6IuPyT/5bgWQsOZBuyl+n9gGFtU1DS0zsfjT8pJ11R/aWuehHzFMtNY6jk6QzHVj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785766408; c=relaxed/simple;
-	bh=3PYJXZggJz15vfmQ6JQ7hsAp0wQjN4q8A4d8LmgZbmc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JnObLCzxF+A4Lj29mfEJr3RvF6CMglyDFTIv3hKzsDrIHEwBnfcqjrrEo9FzgfNUbftOfRtaSU4lQilOFVCD5x89Q9yq1Pg/vwbH8W/TrItAOYzy0U//sGcPo7MJxasBoqY8bcdgOlDS+0xz09NU/PVOeYtkKIw+k1ocLqS+8VE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=HucgSWou; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785767786; c=relaxed/simple;
+	bh=GFFC126DJy54L91aVHwJFsFbycvYP2zw6dY1MoOwNo4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jd5nY+gGiTT66BcJ/SNEk80+R5GUvCK6dJcpWyCuOatkol4PRfMKESCX4FrO+mJQAgLwprz9Zg6b5mNzDBjvK7Yc4Vw1vuHR1uQla6CeLfjce/GQQ5qKvdYDn+trBQp7ywIggPKzQ7iWviwa/yhIkeQ+OFKMGQg4brpsxZy1GGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VsmBIaKf; arc=none smtp.client-ip=209.85.221.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="HucgSWou"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=5X9UVxCpmMIoJAklT7niIRxim6EnTxYSpt4kDThgUlY=;
-	t=1785766406; x=1786976006; b=HucgSWouXwWcpcjzx7Wn0bFj/GfIsdao9mtjIJsC2uNeaib
-	ioLIBnbLeYRl3x9fFqwDwYzNYg8AoEREyDaQpAmgwQbb8ZO7FguZXJRabqYLlcMhy1+HX7+UyxX8K
-	fFOoyVStV3wvnjVW41Hd+xo+f6haWLhM3wwRGh+ivpP9x1GCyOD9RA3w6YdssqB64+FbIsmMKxHB1
-	bAS36xyfUqywZXxJCeiYwkEhkqC0y54mhMqGkmudEiYB2p1dWP2+nAnI2K0ibCFJjLHD3syAqAIyx
-	d6Lhs5GjflAzVjnWeiXRfVZIDUgMDC4wrWreoPJsGxAfL0Ch1676Yp41Jmd8Qqjw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqtPt-0000000G4Ws-1nFl;
-	Mon, 03 Aug 2026 16:13:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 7/7] wifi: mac80211: store the ack skb before building the header
-Date: Mon,  3 Aug 2026 16:08:43 +0200
-Message-ID: <20260803141309.292711-16-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260803141309.292711-9-johannes@sipsolutions.net>
-References: <20260803141309.292711-9-johannes@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VsmBIaKf"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-47f706438c3so190469f8f.3
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 07:36:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785767781; x=1786372581; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6NEy/PUFP4IYziRxlFsuxGJ+UKXD+3O9hbIQf+7B02s=;
+        b=VsmBIaKfislYVJhGN8ID17zJC76vr6noyXUGkxQW/08MbMPf1Mco2U9Ziagv8oiZC5
+         8zk9lj2TJWOpq4gHa8jh08Pu8kh2YruOMKv8uWpiHxUztaG14UPdCtJOGQ2+pQNFUyeK
+         UAOHzAu942CrtyMLN5gR01lNUlDxOwJVmQW0dnTV3qBWdX8ILPq7q/IUMSHIKI775enV
+         lCGB3R4NsyZ2lOiPJ4+ozkY3d7SS2Fp4LuRwSad/quuH+O0JGAzIfgqn+tIMD4H7d5Do
+         hDN+4j5zDKAoDtC1z7LfIy6frV3op9B4RuIWnvFMxIN5LrdzZ7xEpMrj/GEgJ9zql6To
+         sW0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785767781; x=1786372581;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6NEy/PUFP4IYziRxlFsuxGJ+UKXD+3O9hbIQf+7B02s=;
+        b=enshQsjbDI3/h+jwLkp4+GalQhax/xHS8d1Pc30IK2CbPuelLhfCTGqFLTTPzQA9PT
+         e3JmxN+FnynuwSHlObtg0+qHG1WpDxxkGQelOdAx0pw8DAqawsKnB+MQOvQ40603DA2Q
+         QzNJ0U8MphN8lm3F+ehQNnAum29Dw55Nxq4ekF1a++a4h7UcrAAvGF0BuvRKtMsyjUJG
+         oQ5BdaOSc43go1oBXxBFGJjLdxdrZGHukDHTvqHzEMZBRmMMP0diKWROnp93JyKOiB21
+         lR4adTkrWN8vLU5E7YopQ6L02RwrYcEvuaQ5kJmOhZXWCPC5rjhnPy7lGmghq7NEcf4H
+         rq5Q==
+X-Forwarded-Encrypted: i=1; AHgh+Ro3t8sobm4GVwBpCZsIB2SFD34zQICoXosRPw0s/JNZdYCrja1sGR5RSgJTdw4YBmCgKWh6gecadNORRN6zUQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzJiQj7mHcnR7AEG4sEu4a6VEFo2mv3pML1WHvpLN+rz21QNaT7
+	wElXNP7qMNStCmcRElVdPNz4q3Dhg8F6JEt6rLaFYIMXWGj34AfUe6Hk
+X-Gm-Gg: AR+sD12MuEKYPvQRKZtrAIEIiIrVQMbZQgdqK1eTcVmho/vNby2IiwBEArABotkof5S
+	f6a7S0gmJCIHUMb8tNCSmYyBHwWmLJTidFUsG+We1P/+epbnmMrjQ5GS4Kki9tFwM3N9Yo28fdu
+	bYPsZMbyz7rX2ymiKpOJ5ElFfdbJKHWB/SsRcDh5hvZ95OHdnES3bdVW2f21rXTi0mc2uPa/YjH
+	m3RV57momRXIBjEmX6F+BPmLQRR8o2sbaJOjGB1w+VZnNUjcQ4ggESikCLcH+foyYSARS5GfTJ3
+	kZ8x0PHwfrTMajUOTFkeXZBhJE+7krA83R90IFaGtaMa1enjq9QLH8pZEsrHqmQok67Nkbt2GTG
+	MfpYVxqBsfW8vdksaxb15C7oZoDivHBX7bOcr7ISjMvyLLX2d+R4FQriMmHNItCrNCSXl3If0ek
+	nz5RHQpPUQa2vD9/9sC4fUaWMifSfl9qpeAIa3pie4AP0HIqNbQoTFC1NdVMxLW8zlkRfeoQfCe
+	/Kw1Rx2UdRn8A==
+X-Received: by 2002:a05:6000:382:b0:47f:946b:d3fc with SMTP id ffacd0b85a97d-47fd72e31eemr14371381f8f.2.1785767780705;
+        Mon, 03 Aug 2026 07:36:20 -0700 (PDT)
+Received: from thomas-precision3591.. ([2a04:cec0:101e:c128:c461:1b2d:86b8:e437])
+        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-47fd41cfdc6sm32663260f8f.8.2026.08.03.07.36.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2026 07:36:19 -0700 (PDT)
+From: Thomas Fourier <fourier.thomas@gmail.com>
+To: 
+Cc: Thomas Fourier <fourier.thomas@gmail.com>,
+	Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org (open list:MEDIATEK MT76 WIRELESS LAN DRIVER),
+	linux-kernel@vger.kernel.org (open list:ARM/Mediatek SoC support),
+	linux-arm-kernel@lists.infradead.org (moderated list:ARM/Mediatek SoC support),
+	linux-mediatek@lists.infradead.org (moderated list:ARM/Mediatek SoC support)
+Subject: [PATCH net] wifi: mt76: sdio: Fix possible data race when dequeuing skb
+Date: Mon,  3 Aug 2026 16:35:08 +0200
+Message-ID: <20260803143510.49558-2-fourier.thomas@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -48,292 +83,62 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+The next entry of the queue is saved as a refenrence and immediately
+removed from the list, before processing the skb. It can thus be
+overwritten by the queuing function at the same time as .rx_skb() is
+called.
 
-The ack skb has to be stored while the frame is still in 802.3
-format, since that is what is reported back to userspace. It's
-currently done in ieee80211_build_hdr(), but that complicates
-it a bit.
+Split mt76s_get_next_rx_entry() to get the tail, and once it is
+processed, pop the element.
 
-Thanks the the previous ieee80211_lookup_ra_sta() change, it's
-now known whether or not the frame will be group addressed on
-the air, which is needed for this condition.
+This patch was compile-tested only.
 
-Also simplify callers of ieee80211_store_ack_skb() by filling
-the TX info directly and fix the free in ieee80211_build_hdr()
-to use ieee80211_free_txskb(), reporting the drop to userspace
-rather than being quiet about it.
+This patch depends on commit 16254fc51f7d ("mt76: sdio: fix use of q->head and q->tail").
 
-This also lets use validate the link ID for control port TX in
-that code itself, rather than interleaving it into build_hdr().
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: d39b52e31aa6 ("mt76: introduce mt76_sdio module")
+Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
 ---
- net/mac80211/tx.c | 116 ++++++++++++++--------------------------------
- 1 file changed, 36 insertions(+), 80 deletions(-)
+ drivers/net/wireless/mediatek/mt76/sdio.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 96261429a78d..911c4b5700d0 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2588,13 +2588,11 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
- 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/sdio.c b/drivers/net/wireless/mediatek/mt76/sdio.c
+index 8bae77c761be..12ee781a62f4 100644
+--- a/drivers/net/wireless/mediatek/mt76/sdio.c
++++ b/drivers/net/wireless/mediatek/mt76/sdio.c
+@@ -371,14 +371,21 @@ mt76s_get_next_rx_entry(struct mt76_queue *q)
+ 	spin_lock_bh(&q->lock);
+ 	if (q->queued > 0) {
+ 		e = &q->entry[q->tail];
+-		q->tail = (q->tail + 1) % q->ndesc;
+-		q->queued--;
+ 	}
+ 	spin_unlock_bh(&q->lock);
+ 
+ 	return e;
  }
  
--static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
--				   struct sk_buff *skb,
--				   u32 *info_flags,
--				   u64 cookie)
-+static void ieee80211_store_ack_skb(struct ieee80211_local *local,
-+				    struct sk_buff *skb, u64 cookie)
++static void
++mt76s_clear_next_rx_entry(struct mt76_queue *q)
++{
++	spin_lock_bh(&q->lock);
++	q->tail = (q->tail + 1) % q->ndesc;
++	q->queued--;
++	spin_unlock_bh(&q->lock);
++}
++
+ static int
+ mt76s_process_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
  {
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct sk_buff *ack_skb;
--	u16 info_id = 0;
+@@ -397,6 +404,9 @@ mt76s_process_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
  
- 	if (skb->sk)
- 		ack_skb = skb_clone_sk(skb);
-@@ -2611,28 +2609,15 @@ static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
- 		spin_unlock_irqrestore(&local->ack_status_lock, flags);
- 
- 		if (id >= 0) {
--			info_id = id;
--			*info_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
-+			info->status_data = id;
-+			info->status_data_idr = 1;
-+			info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
- 			if (cookie)
- 				IEEE80211_SKB_CB(ack_skb)->ack.cookie = cookie;
- 		} else {
- 			kfree_skb(ack_skb);
- 		}
- 	}
--
--	return info_id;
--}
--
--static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)
--{
--	struct sk_buff *ack_skb;
--	unsigned long flags;
--
--	spin_lock_irqsave(&local->ack_status_lock, flags);
--	ack_skb = idr_remove(&local->ack_status_frames, info_id);
--	spin_unlock_irqrestore(&local->ack_status_lock, flags);
--
--	kfree_skb(ack_skb);
- }
- 
- /**
-@@ -2640,7 +2625,6 @@ static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)
-  * @sdata: virtual interface to build the header for
-  * @skb: the skb to build the header in
-  * @sta: the station pointer
-- * @cookie: cookie pointer to fill (if not %NULL)
-  *
-  * This function takes the skb with 802.3 header and reformats the header to
-  * the appropriate IEEE 802.11 header based on which interface the packet is
-@@ -2656,8 +2640,7 @@ static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)
-  */
- static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 					   struct sk_buff *skb,
--					   struct sta_info *sta,
--					   u64 cookie)
-+					   struct sta_info *sta)
- {
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_local *local = sdata->local;
-@@ -2672,7 +2655,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	bool wme_sta = false, authorized = false;
- 	bool tdls_peer;
- 	bool multicast;
--	u16 info_id = 0;
- 	struct ieee80211_chanctx_conf *chanctx_conf = NULL;
- 	enum nl80211_band band;
- 	int ret;
-@@ -2954,11 +2936,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		goto free;
- 	}
- 
--	if (unlikely(!multicast &&
--		     (sk_requests_wifi_status(skb->sk) || cookie)))
--		info_id = ieee80211_store_ack_skb(local, skb, &info->flags,
--						  cookie);
--
- 	hdr.frame_control = fc;
- 	hdr.duration_id = 0;
- 	hdr.seq_ctrl = 0;
-@@ -2997,8 +2974,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		head_need += local->tx_headroom;
- 		head_need = max_t(int, 0, head_need);
- 		if (ieee80211_skb_resize(sdata, skb, head_need, ENCRYPT_DATA)) {
--			ieee80211_free_txskb(&local->hw, skb);
--			skb = NULL;
- 			ret = -ENOMEM;
- 			goto free;
- 		}
-@@ -3027,44 +3002,14 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 
- 	skb_reset_mac_header(skb);
- 
--	if (info_id) {
--		info->status_data = info_id;
--		info->status_data_idr = 1;
--	}
- 	info->band = band;
- 
--	if (likely(!cookie)) {
--		info->control.flags |=
--			u32_encode_bits(link_id, IEEE80211_TX_CTRL_MLO_LINK);
--	} else {
--		unsigned int pre_conf_link_id;
--
--		/*
--		 * The link ID already has been set by
--		 * ieee80211_tx_control_port(), here
--		 * we just sanity check that
--		 */
--
--		pre_conf_link_id = u32_get_bits(info->control.flags,
--						IEEE80211_TX_CTRL_MLO_LINK);
--
--		if (pre_conf_link_id != link_id &&
--		    link_id != IEEE80211_LINK_UNSPECIFIED) {
--#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			net_info_ratelimited("%s: dropped frame to %pM with bad link ID request (%d vs. %d)\n",
--					     sdata->name, hdr.addr1,
--					     pre_conf_link_id, link_id);
--#endif
--			ret = -EINVAL;
--			goto free;
--		}
--	}
--
-+	info->control.flags =
-+		u32_replace_bits(info->control.flags, link_id,
-+				 IEEE80211_TX_CTRL_MLO_LINK);
- 	return skb;
-  free:
--	if (info_id)
--		ieee80211_remove_ack_skb(local, info_id);
--	kfree_skb(skb);
-+	ieee80211_free_txskb(&local->hw, skb);
- 	return ERR_PTR(ret);
- }
- 
-@@ -4369,6 +4314,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_tx_info *info;
- 	struct sta_info *sta;
- 	struct sk_buff *next;
-+	bool group_addressed;
- 	int len = skb->len;
- 
- 	if (unlikely(!ieee80211_sdata_running(sdata) || skb->len < ETH_HLEN)) {
-@@ -4388,6 +4334,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
- 		goto out_free;
- 
-+	group_addressed = IS_ERR(sta);
- 	if (IS_ERR(sta))
- 		sta = NULL;
- 
-@@ -4431,7 +4378,11 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		info->flags = info_flags;
- 		info->control.flags = ctrl_flags;
- 
--		skb = ieee80211_build_hdr(sdata, skb, sta, 0);
-+		if (unlikely(!group_addressed &&
-+			     sk_requests_wifi_status(skb->sk)))
-+			ieee80211_store_ack_skb(local, skb, 0);
+ 		dev->drv->rx_skb(dev, MT_RXQ_MAIN, e->skb, NULL);
+ 		e->skb = NULL;
 +
-+		skb = ieee80211_build_hdr(sdata, skb, sta);
- 		if (IS_ERR(skb)) {
- 			kfree_skb_list(next);
- 			goto out;
-@@ -4766,12 +4717,8 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 			memcpy(IEEE80211_SKB_CB(seg), info, sizeof(*info));
- 	}
- 
--	if (unlikely(sk_requests_wifi_status(skb->sk))) {
--		info->status_data = ieee80211_store_ack_skb(local, skb,
--							    &info->flags, 0);
--		if (info->status_data)
--			info->status_data_idr = 1;
--	}
-+	if (unlikely(sk_requests_wifi_status(skb->sk)))
-+		ieee80211_store_ack_skb(local, skb, 0);
- 
- 	dev_sw_netstats_tx_add(dev, skbs, len);
- 
-@@ -4916,7 +4863,7 @@ ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
- 	info->flags = info_flags;
- 	info->control.flags = IEEE80211_TX_CTRL_MLO_LINK_UNSPEC;
- 
--	skb = ieee80211_build_hdr(sdata, skb, sta, 0);
-+	skb = ieee80211_build_hdr(sdata, skb, sta);
- 	if (IS_ERR(skb))
- 		goto out;
- 
-@@ -6537,6 +6484,7 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_info *info;
-+	bool group_addressed;
- 	struct sta_info *sta;
- 	struct sk_buff *skb;
- 	struct ethhdr *ehdr;
-@@ -6577,15 +6525,11 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 
- 	/* we may override the SA for MLO STA later */
- 	if (link_id < 0) {
--		ctrl_flags |= u32_encode_bits(IEEE80211_LINK_UNSPECIFIED,
--					      IEEE80211_TX_CTRL_MLO_LINK);
-+		link_id = IEEE80211_LINK_UNSPECIFIED;
- 		memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
- 	} else {
- 		struct ieee80211_bss_conf *link_conf;
- 
--		ctrl_flags |= u32_encode_bits(link_id,
--					      IEEE80211_TX_CTRL_MLO_LINK);
--
- 		rcu_read_lock();
- 		link_conf = rcu_dereference(sdata->vif.link_conf[link_id]);
- 		if (!link_conf) {
-@@ -6616,6 +6560,7 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 		return err;
- 	}
- 
-+	group_addressed = IS_ERR(sta);
- 	if (IS_ERR(sta))
- 		sta = NULL;
- 
-@@ -6631,14 +6576,25 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	info = IEEE80211_SKB_CB(skb);
- 	memset(info, 0, sizeof(*info));
- 	info->flags = flags;
-+	ctrl_flags |= u32_encode_bits(link_id, IEEE80211_TX_CTRL_MLO_LINK);
- 	info->control.flags = ctrl_flags;
- 
--	skb = ieee80211_build_hdr(sdata, skb, sta, cookie);
-+	if (!group_addressed)
-+		ieee80211_store_ack_skb(local, skb, cookie);
++		mt76s_clear_next_rx_entry(q);
 +
-+	skb = ieee80211_build_hdr(sdata, skb, sta);
- 	if (IS_ERR(skb)) {
- 		rcu_read_unlock();
- 		return PTR_ERR(skb);
+ 		nframes++;
  	}
- 
-+	if (link_id != u32_get_bits(info->control.flags,
-+				    IEEE80211_TX_CTRL_MLO_LINK)) {
-+		ieee80211_free_txskb(&local->hw, skb);
-+		rcu_read_unlock();
-+		return -EINVAL;
-+	}
-+
- 	dev_sw_netstats_tx_add(dev, 1, skb->len);
- 	ieee80211_tpt_led_trig_tx(local, skb->len);
- 
+ 	if (qid == MT_RXQ_MAIN)
 -- 
-2.55.0
+2.43.0
 
