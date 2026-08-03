@@ -1,142 +1,371 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4388A4137BA
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 15:27:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54AED34A79D
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 16:27:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785770861; cv=none; b=HCpYoPpSKXsiISqiEo2fuy/+6pI+BHE0tQt1sovydKw/RMT+h2iCYGJtPwapgmW0dFiRlUL2cDIwQu3ofsGf3eBZN7F+l7YDlp+GUooK7wCy6i9XsyAgxaQzLiMy8b9ZmMLrCDwEtcfeycUufUULtga1GoSRBYw2Kv1/Itbd/1o=
+	t=1785774472; cv=none; b=szRLgfC79wpTZ4htdQaNPtaq4dU/CRFtjtKGz31XDPNM//1rUae7LWXOEvQ1hsBdjolR692ymiqMN4utzSQr4fapLH+b0pjkbh23AyaDQs7E1gHl9xKrH7G7vvMJCOUbcSVnep7isTjOtfwofHSTICly6IMXaRQaxiD6uUsjIc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785770861; c=relaxed/simple;
-	bh=c2vXKiq7DSrIU9oU3HbOkXvwhlZ8W9HsgtJyk+YAtow=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Rxi5wPTDVIy3w5R4pTCBqsXtbhSJHFhBZEuUM6uu8y8NfanymlS4HowA97vfGnklj57L0tw/yz+4fZ7GZuaR+dYLUj0aXBLxLDCvrUdW9HQl3s5hLW26PvLPdB6I7W3AJQSqDtqcNuuv+f3QHcwuBjfPaJ/yeUirKxgIDQqkmO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nUyNmum3; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Fr34Zwds; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785774472; c=relaxed/simple;
+	bh=VQo1bW0hm9hgY9T33j0TouICWPsJ4lrP07kth8h4+Vw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=FBmMpmIjCOwGf7lYFwFn3/c/mnM/CGxcN7sgV7AGzu+VXG6uhx4hScc7codwjUU6zG3QYgGAeSXhuMNSFc8vLiYTf6cPGrVkq3Js9GogjrfnIVE4/VcvM6sQvCW5ZfUiZ+ShjS0P5+wd+HVEf2Cx/XG96ZrUIvgU5QItyXCsJ9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dTK8HXqV; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nUyNmum3";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Fr34Zwds"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 673EBo67826855
-	for <linux-wireless@vger.kernel.org>; Mon, 3 Aug 2026 15:27:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	GGYViWXurUa0HzGP77CTZFQ5h9rjO9etmSEsVqjPpLE=; b=nUyNmum3kYC4RjEN
-	NGeYtedex4pArQGhwwv67zupdSWUTPOKi4ZiwM7pVf586zWVCAuYsoUH3CUeHTDM
-	cCFhM8cgGoFWIiSJoIveSb1YiGqO0hkRecPfK1QlS0nZLLH/1IF3D9hDrhZYR1sU
-	051eOjSC+pCVI9uciNaO4eoIhp4hlfTZGKRO2+pGHWwrFCEhflm5ngBiBdymOZDi
-	LxtVvU2H7syYibeAriJzHuxDHHnuz3iGmbYHDuSA+6T0OF8SqvI9r5nITj2EC80B
-	VfxBcZk+tnWMOVebFYcwEbHL4PNka7OK36LX/eaD5BGprAS3RNqYo5gfoNJQA4Nb
-	YBSGQQ==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ftnhkjab1-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 15:27:39 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38ce7fabf76so1654840a91.2
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 08:27:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dTK8HXqV"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2cacf197759so52567865ad.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 09:27:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785770858; x=1786375658; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=GGYViWXurUa0HzGP77CTZFQ5h9rjO9etmSEsVqjPpLE=;
-        b=Fr34ZwdsD//xhTfa8Uwnb/n/ZRtS2s8c8/mZ6VIYoY5KXoROq+GIMjEaAvgy74hwLB
-         1Cq3fnha72bsohAEAdpzIHRuE1m3h3PdRLvF5kMy5tLsdMwQUGATTA/Q3Yo3uM2X0lSQ
-         W0jBWbPUWXSQ2WgzyEQkL2XaLWQJEMYOY+Cb2Iyjmf3jYicEezQSy3VQzlVhdjrP9Ddo
-         tAmmOcdYhrctBcYpXKeNEydzBQdjKA8p5v0Mc/PX1xIjMGbqrsDO3I4FyZxPeCQHgLUc
-         x31WuSjfKjrP3sdTkKRepZddlEeqEAEwnQnKC7Kl3rnVfX0WkTG5mQiqKOwhwx/LKqpr
-         rphw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785770858; x=1786375658;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1785774469; x=1786379269; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=GGYViWXurUa0HzGP77CTZFQ5h9rjO9etmSEsVqjPpLE=;
-        b=hOL5WIlwvr+t2zz7CcAlqlu+Ca/Em/WXOhwf0Epw6o1W8qgXPdN2ADuu2KIkIAQZXK
-         e3FqkKQAcT84QiJt+NPV1HUUJhX3EUI4Ft4fpssNwHU6Qv6LIZH0awDj2wHICsKs4tgw
-         15qbX0A2RI20wxKv3EADs7nIJ3rMrvYjBx8sesxC+np9IYcDbxhfjIB7vESy0mZmgULD
-         803tmOLwlIMFZBM6NgSbXfwtHXdp9Il2/dh3JrEr5Zzpzt+afKJJo0SLHxhxSYqcO0nB
-         lE6zOQc/rbbXquhYDWD8KmAnDvlXMa5KuenuDZZwebCmABEiIaLBtue24jpkHqQWJqdS
-         rLDA==
-X-Gm-Message-State: AOJu0YwxqvQTdNuUxXmahV0ZTK737NaDYt/ZRBm4/Owt2z97jhcci5Fi
-	BDH4snk0GaVBT8ZnvadFbtffWrOfX3xYReLg2KceUiwA08OSz/NsnW3SwAJkcAMn1KWKukSomUE
-	yNZGQMqvHPTjO+13kmlk4k5mC4TUUk36VV4fsFgck6DK+PNGzUoZubZ/zfMx6vdVEge6uCw==
-X-Gm-Gg: AR+sD13/Xn5Bb2FqVi6aacLPp6FZwUk3AkVsboHrewFVc8Lz4CITs1GWsc7Pi1YS+84
-	tqvE2FSpkgs4q4KdnMC5tqOsEGsr7W9TybniSlgvYnqP670fOQ2JRTpwRzfPS8OdfM1mIBZj1S8
-	50xxEzUuv+ZUms2OOsWaRM6BEpm3g5d4E7v4pJ1E2zDWNHDGHYdTocmpWbOeII5yoNz7ra+LwyL
-	p9aN1h6LNcowOQaiW4SySwreBUbXizcB0AZ7hBmLRnu3lMVhQzbsNvPMXNCbW6f66ShXErpf7FK
-	U+eQZGuTlALc/z4hNq6s3FrzKz4dsNIy8Ba7kRNiEHHV+vX3dcxjReuqokaN9kNf4HvKxzbBFDs
-	jtwAdYUPrLod2C19N7nDspG7uoVxxKVvZfjyTsgwg6KLt1YaDA1zfXjjORWvY
-X-Received: by 2002:a17:90b:164e:b0:381:dc88:7c09 with SMTP id 98e67ed59e1d1-38fbc56cda4mr10079844a91.33.1785770858127;
-        Mon, 03 Aug 2026 08:27:38 -0700 (PDT)
-X-Received: by 2002:a17:90b:164e:b0:381:dc88:7c09 with SMTP id 98e67ed59e1d1-38fbc56cda4mr10079824a91.33.1785770857730;
-        Mon, 03 Aug 2026 08:27:37 -0700 (PDT)
-Received: from [10.227.105.111] (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fab4cb50dsm53886955c88.10.2026.08.03.08.27.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Aug 2026 08:27:36 -0700 (PDT)
-Message-ID: <81733f86-829e-4c5a-8a52-58b594d7301c@oss.qualcomm.com>
-Date: Mon, 3 Aug 2026 08:27:35 -0700
+        bh=TIiDESccwzblN/501hAeBpzSidh0kuFRQ/arO3hete4=;
+        b=dTK8HXqVeRh7uc3Cz6xUGpWRc3EpuP0D6Pz6zkWoTPLrefM3qotOYa9udzH3slMK8i
+         6w2/L/n2ohzOaLsdem4EHb+x7zgL0qSWMpWWHWlKgFghwFssWpgTRwNleSogc2PHRmjc
+         P1vrCY0l7pgKl1TrlQvPRBu494K5pbaYouW2J8q8t6Os1lO4kwKlXlJsIXy9L/K+HeRB
+         b0zmc/nwrDCfOi+EffVrH9w6riP7MHZ6xZ92b6fs+zTArzDTnnLynVboyEeb2GpYv/Tt
+         KAAJLZnDm797eaer+YuvOe1er/vHCQSb/g6jtvjZIyDvHaNDkfBUo4VlxiWwXXR8x/1R
+         uHlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785774469; x=1786379269;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=TIiDESccwzblN/501hAeBpzSidh0kuFRQ/arO3hete4=;
+        b=sdDiKAFCN2hyQ4SPnUq5g+/21BQSn2KgOW5jwHn+a3rFsnwYhn9KE1QJpyOH1sR2LC
+         lYUiv4HzlJmMTV4WXNf+85MEzvdw22m/joCYdCWCchtDKf+LDNb0Z7XG2eFvDRk1afzI
+         kfr++OxkNxPZcf6EXbqnzFiSk+FNGIjKUsc4biiK08Kjcv3XDrA13a2NaVoUonCyJlVQ
+         iCr0tIEn6pyHyrPckQqsa4qaeZ4povvW2qzgce5n1sSCDP+glyZ1yimRYuY54611TUi/
+         G+E+boZvkMXComs7bpXT8VcFDNEoZcebEYrP2Q17Z6o1vFEle8NMf9/e5sPb6hpR2gNP
+         6g6Q==
+X-Forwarded-Encrypted: i=1; AHgh+Ro6OJGCyW/1jVYqNptPWoosvOTyV18eYFI/MC5S94kkyM3Xm2p8ufYDlU7H3rzPpNevCHzyMOQs8Vr943XVuA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyXwHb9hfnqEoVBLdNy6np6/BzmZ38s3Ereq6FEaxvNAZm3UlVw
+	dbSvCppZWh0tdPNSYwKahBQpSM9vyJot3silRMRC50cEetaxe6zIjnpT
+X-Gm-Gg: AR+sD10S2kQLTu+kiYCcIljLRoEdXUlUdOA35oBhmy6fZ9s16txMOrlliuD46l91TjM
+	vR/K4BXG8ghS2bAiqcdDCw8a4q5DAP9hyYCzwh4e2DLKD6DROwK1wEAwzo2vzZYqFfTumH3vol5
+	3YfchyT4OPqrwD4alKvXhl/J4TxI9Buyx3hN2CcvOKz49KPAIncYpzjDsdTwzj/n6LIewav723t
+	RAo+tyZlfVYoB+iZXId7jXAUe/+nUhDGaSB2pEn/ESZQhcCvAIsnG+JRQ+2YL8H+l53ytvQOIii
+	bteZvpGrBaGvrzke3bs2Nc2zxJlZFVH7PAOxHJeRJ0JJBp7779C2toOqZ1mN53BYvKkhRyF87u4
+	oFWUkySqUUHClMDJrOlyLlGV2u6HxJUojNdYlOYQrl4B1cPewsvebfBr4o99xzfM0JFPOoSh+bP
+	W4qUtdqlRP6L5FZUVC4po+v/NE76vlibpBAGUVbiVsNTOSNxcFhAPOIgHnBWG2KKqsLrKL4joyV
+	ZOpkX/RC58uTgD+VNJy5Hqa/kSrDG/kmU3pZQhpcy1iJ1pix4L0ePLfKP6M4ra8FDa23boEq3qy
+	6/Q2DyPSKrTLMGIo
+X-Received: by 2002:a17:902:c409:b0:2c9:c46b:1286 with SMTP id d9443c01a7336-2d0523ea309mr108869215ad.34.1785774469345;
+        Mon, 03 Aug 2026 09:27:49 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440.tw-tpe02.nxp.com (61-228-195-211.dynamic-ip.hinet.net. [61.228.195.211])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d04b0ea23dsm40720275ad.44.2026.08.03.09.27.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2026 09:27:48 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+To: lkp@intel.com
+Cc: johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org,
+	Jeff Chen <jeff.chen_1@nxp.com>
+Subject: [PATCH v2] wifi: nxpwifi: fix multiple static analysis errors and warnings
+Date: Tue,  4 Aug 2026 00:27:41 +0800
+Message-Id: <20260803162741.438820-1-chunfan.chen@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <202608020855.QwN5n7i5-lkp@intel.com>
+References: <202608020855.QwN5n7i5-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: pull-request: mm81x-next-2026-07-31
-To: Lachlan Hodges <lachlan.hodges@morsemicro.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, arien.judge@morsemicro.com,
-        dan.callaghan@morsemicro.com
-References: <3wboegj7eyorursqi7gftc2s3jqtrfi5fv3k57eoqrr5arxmnh@2jextspacknp>
- <c0d041baca23377772791242ce0ef241aaba4112.camel@sipsolutions.net>
- <2uamaledjzr2qlvixwrnhrd532ugmbyeajpnljpjurj2tflld2@ak3ym3aalkn3>
-Content-Language: en-US
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-In-Reply-To: <2uamaledjzr2qlvixwrnhrd532ugmbyeajpnljpjurj2tflld2@ak3ym3aalkn3>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: VmYZ5gbWVixE800GOxQyIgbgBGI61i2R
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODAzMDEzOCBTYWx0ZWRfX2THbGaJSkPur
- xQcKKW2iukuemOGKGhouGFnRLS+QAQa2XjAduKDQOoSaV0zhjRN+hYF+IhJeNidRsAkk7c4+0ip
- TLBUdH345ApEKs17+qh778SU1JLMhLjnxb7+Cl+WMIu/iG4PMYD7M9DlSSudXq8DJLV+3tymW+U
- I2/4VQO8Plw7K6hqc6r/Y2AYvNpocSBiTgkTUjn9eySYSpvXvgpixEKGAK+sK/qqa3mq26YRyyQ
- HCckhlwBAhN0cxLAK8OAEQ6oJ1ZIDsz69HtDfizL1Qm7qUzs+LyYswrXNUfvfggrMhL13JBITZa
- Y0RFIogQUYQcQIw5BKF62q6n0Y7ziLni4H6L5tzwH3iE+CCoVq1/SrGFHmNBbPSloLQXx2PlhfG
- u7jxfauq9CCojaRlUI0Y111+JNMq7b/Qwwmfejlmsg/1I/ZFKk8Lo8jGtSoGL9WmfqOwnPj+J9A
- EXEdEN5SCbsE8rlLaPg==
-X-Proofpoint-ORIG-GUID: VmYZ5gbWVixE800GOxQyIgbgBGI61i2R
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODAzMDEzOCBTYWx0ZWRfX9MaHrtEm3lwk
- pGBW6cNTsJCgJOxMHI+j5ubXwYAYIui/IhIwsj3yhW7Kx+X4seCrncwRhn63ERsyE1h7AzoPepv
- CXKAO8wQyB/eho9V3F2UwDneKrq+ECs=
-X-Authority-Analysis: v=2.4 cv=UIjt2ify c=1 sm=1 tr=0 ts=6a70b36b cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=VwQbUJbxAAAA:8 a=xA6h9QslmyXtgN1B4EYA:9 a=QEXdDO2ut3YA:10
- a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-03_03,2026-08-03_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
- impostorscore=0 bulkscore=0 adultscore=0 spamscore=0 suspectscore=0
- phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
- definitions=main-2608030138
+Content-Transfer-Encoding: 8bit
 
-On 8/2/2026 10:26 PM, Lachlan Hodges wrote:
->> I guess signed would be nice, if you can arrange it, then I probably
->> will check less ;-)
-> 
-> No problem, I will sort that out.
+From: Jeff Chen <jeff.chen_1@nxp.com>
 
-In case you need the pointer...
+Fix various development-phase bugs, code quality, and logical issues
+reported by the kernel test robot (using the Smatch static analysis tool).
 
-https://docs.kernel.org/process/maintainer-pgp-guide.html
+The following addressable fixes are included:
+
+- 11n.c & 11ax.c: Fix potential NULL pointer dereferences by correcting
+  logical operators (&& to ||) in 11n.c and hoisting the bss_desc
+  verification to the top of the function in 11ax.c.
+- 11n.c: Fix a severe Use-After-Free (UAF) memory corruption during RCU
+  list traversal. Restore the proper list_for_each_entry_safe() loop
+  structure along with the required array index [i] within the locked
+  writer path.
+- sdio.c: Fix a missing unwind resource cleanup pathway where a protocol
+  error branch returned directly via -EINVAL instead of using
+  'goto term_cmd', leaving the SDIO hardware state machine out of sync.
+- main.h: Fix a signedness mismatch bug where nxpwifi_get_unused_bss_num()
+  could return -2 as an unsigned integer fallback.
+- util.c: Remove a redundant and dead condition check (position <= 15)
+  which was always true for a 4-bit unsigned bit-field member variable.
+- cfg80211.c: Clean up a dead unreachable 'return 0' at the bottom of the
+  switch-case logic.
+- uap_txrx.c: Clean up mismatched and inconsistent indentations within the
+  handling of multicast RX forward paths.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202608020855.QwN5n7i5-lkp@intel.com/
+Assisted-by: Gemini:unknown-model
+Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
+---
+ drivers/net/wireless/nxp/nxpwifi/11ax.c     |  5 ++-
+ drivers/net/wireless/nxp/nxpwifi/11n.c      |  7 +--
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 14 ++++--
+ drivers/net/wireless/nxp/nxpwifi/main.c     |  2 +-
+ drivers/net/wireless/nxp/nxpwifi/main.h     | 21 ++++++---
+ drivers/net/wireless/nxp/nxpwifi/sdio.c     |  3 +-
+ drivers/net/wireless/nxp/nxpwifi/uap_txrx.c |  4 +-
+ drivers/net/wireless/nxp/nxpwifi/util.c     | 47 ++++++++++-----------
+ 8 files changed, 60 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11ax.c b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+index cc47c435eb70..96540914f3cf 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11ax.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11ax.c
+@@ -413,7 +413,10 @@ bool nxpwifi_is_11ax_twt_supported(struct nxpwifi_private *priv,
+ 	struct nxpwifi_ie_types_he_cap *user_he_cap;
+ 	struct nxpwifi_ie_types_he_cap *hw_he_cap;
+ 
+-	if (bss_desc && (!nxpwifi_is_ap_11ax_twt_supported(bss_desc))) {
++	if (!bss_desc)
++		return false;
++
++	if (!nxpwifi_is_ap_11ax_twt_supported(bss_desc)) {
+ 		nxpwifi_dbg(priv->adapter, MSG,
+ 			    "AP don't support twt feature\n");
+ 		return false;
+diff --git a/drivers/net/wireless/nxp/nxpwifi/11n.c b/drivers/net/wireless/nxp/nxpwifi/11n.c
+index e46c5053d509..c2a54d781b42 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/11n.c
++++ b/drivers/net/wireless/nxp/nxpwifi/11n.c
+@@ -451,7 +451,7 @@ void
+ nxpwifi_11n_delete_tx_ba_stream_tbl_entry(struct nxpwifi_private *priv,
+ 					  struct nxpwifi_tx_ba_stream_tbl *tbl)
+ {
+-	if (!tbl && nxpwifi_is_tx_ba_stream_ptr_valid(priv, tbl))
++	if (!tbl || nxpwifi_is_tx_ba_stream_ptr_valid(priv, tbl))
+ 		return;
+ 
+ 	nxpwifi_dbg(priv->adapter, INFO,
+@@ -694,7 +694,7 @@ int nxpwifi_get_tx_ba_stream_tbl(struct nxpwifi_private *priv,
+ /* Delete Tx BA stream entry by RA. */
+ void nxpwifi_del_tx_ba_stream_tbl_by_ra(struct nxpwifi_private *priv, u8 *ra)
+ {
+-	struct nxpwifi_tx_ba_stream_tbl *tbl;
++	struct nxpwifi_tx_ba_stream_tbl *tbl, *tmp;
+ 	int i;
+ 
+ 	if (!ra)
+@@ -702,7 +702,8 @@ void nxpwifi_del_tx_ba_stream_tbl_by_ra(struct nxpwifi_private *priv, u8 *ra)
+ 
+ 	for (i = 0; i < MAX_NUM_TID; i++) {
+ 		spin_lock_bh(&priv->tx_ba_stream_tbl_lock[i]);
+-		list_for_each_entry_rcu(tbl, &priv->tx_ba_stream_tbl_ptr[i], list)
++		list_for_each_entry_safe(tbl, tmp,
++					 &priv->tx_ba_stream_tbl_ptr[i], list)
+ 			if (!memcmp(tbl->ra, ra, ETH_ALEN))
+ 				nxpwifi_11n_delete_tx_ba_stream_tbl_entry(priv, tbl);
+ 
+diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+index c820f08d2835..5cc8cdf594d3 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
++++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+@@ -717,6 +717,7 @@ nxpwifi_init_new_priv_params(struct nxpwifi_private *priv,
+ 			     enum nl80211_iftype type)
+ {
+ 	struct nxpwifi_adapter *adapter = priv->adapter;
++	int ret;
+ 
+ 	nxpwifi_init_priv(priv);
+ 
+@@ -740,7 +741,15 @@ nxpwifi_init_new_priv_params(struct nxpwifi_private *priv,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-	priv->bss_num = nxpwifi_get_unused_bss_num(adapter, priv->bss_type);
++	ret = nxpwifi_get_unused_bss_num(adapter, priv->bss_type,
++					 &priv->bss_num);
++
++	if (ret) {
++		nxpwifi_dbg(adapter, ERROR,
++			    "%s: no unused bss_num for type %d\n",
++			    dev->name, priv->bss_type);
++		return ret;
++	}
+ 
+ 	flush_workqueue(adapter->workqueue);
+ 	atomic_set(&adapter->iface_changing, 0);
+@@ -943,7 +952,6 @@ nxpwifi_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		case NL80211_IFTYPE_STATION:
+ 			return nxpwifi_change_vif_to_sta(dev, curr_iftype,
+ 							 type, params);
+-			break;
+ 		default:
+ 			goto errnotsupp;
+ 		}
+@@ -952,8 +960,6 @@ nxpwifi_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 		goto errnotsupp;
+ 	}
+ 
+-	return 0;
+-
+ errnotsupp:
+ 	nxpwifi_dbg(priv->adapter, ERROR,
+ 		    "unsupported interface type transition: %d to %d\n",
+diff --git a/drivers/net/wireless/nxp/nxpwifi/main.c b/drivers/net/wireless/nxp/nxpwifi/main.c
+index 4e01f45f3a00..b4c63829024a 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/main.c
++++ b/drivers/net/wireless/nxp/nxpwifi/main.c
+@@ -204,7 +204,7 @@ static bool nxpwifi_drain_tx(struct nxpwifi_adapter *adapter)
+ 					  NXPWIFI_ASYNC_CMD);
+ 			adapter->hs_activated_manually = false;
+ 		}
+-			nxpwifi_process_bypass_tx(adapter);
++		nxpwifi_process_bypass_tx(adapter);
+ 		if (adapter->hs_activated) {
+ 			clear_bit(NXPWIFI_IS_HS_CONFIGURED,
+ 				  &adapter->work_flags);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/main.h b/drivers/net/wireless/nxp/nxpwifi/main.h
+index 349dfa4d3f85..b25a6a4f2936 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/main.h
++++ b/drivers/net/wireless/nxp/nxpwifi/main.h
+@@ -1166,8 +1166,9 @@ nxpwifi_get_priv(struct nxpwifi_adapter *adapter,
+ }
+ 
+ /* find unused BSS number for new interface */
+-static inline u8
+-nxpwifi_get_unused_bss_num(struct nxpwifi_adapter *adapter, u8 bss_type)
++static inline int
++nxpwifi_get_unused_bss_num(struct nxpwifi_adapter *adapter, u8 bss_type,
++			   u8 *bss_num)
+ {
+ 	u8 i, j;
+ 	int index[NXPWIFI_MAX_BSS_NUM];
+@@ -1179,9 +1180,14 @@ nxpwifi_get_unused_bss_num(struct nxpwifi_adapter *adapter, u8 bss_type)
+ 		      NL80211_IFTYPE_UNSPECIFIED)) {
+ 			index[adapter->priv[i]->bss_num] = 1;
+ 		}
+-	for (j = 0; j < NXPWIFI_MAX_BSS_NUM; j++)
+-		if (!index[j])
+-			return j;
++
++	for (j = 0; j < NXPWIFI_MAX_BSS_NUM; j++) {
++		if (!index[j]) {
++			*bss_num = j;
++			return 0;
++		}
++	}
++
+ 	return -ENOENT;
+ }
+ 
+@@ -1195,8 +1201,9 @@ nxpwifi_get_unused_priv_by_bss_type(struct nxpwifi_adapter *adapter,
+ 	for (i = 0; i < adapter->priv_num; i++)
+ 		if (adapter->priv[i]->bss_mode ==
+ 		   NL80211_IFTYPE_UNSPECIFIED) {
+-			adapter->priv[i]->bss_num =
+-				nxpwifi_get_unused_bss_num(adapter, bss_type);
++			if (nxpwifi_get_unused_bss_num(adapter, bss_type,
++						       &adapter->priv[i]->bss_num))
++				return NULL;
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/nxp/nxpwifi/sdio.c b/drivers/net/wireless/nxp/nxpwifi/sdio.c
+index d8536354f093..8ef0f6eb49e2 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/sdio.c
++++ b/drivers/net/wireless/nxp/nxpwifi/sdio.c
+@@ -1347,7 +1347,8 @@ static int nxpwifi_process_int_status(struct nxpwifi_adapter *adapter, u8 sdio_i
+ 			     ((rx_blocks * NXPWIFI_SDIO_BLOCK_SIZE) >
+ 			      card->mpa_rx.buf_size))) {
+ 				nxpwifi_dbg(adapter, ERROR, "invalid rx_len=%d\n", rx_len);
+-				return -EINVAL;
++				ret = -EINVAL;
++				goto term_cmd;
+ 			}
+ 
+ 			rx_len = (u16)(rx_blocks * NXPWIFI_SDIO_BLOCK_SIZE);
+diff --git a/drivers/net/wireless/nxp/nxpwifi/uap_txrx.c b/drivers/net/wireless/nxp/nxpwifi/uap_txrx.c
+index f3d24bf861ca..840dddfc4f5a 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/uap_txrx.c
++++ b/drivers/net/wireless/nxp/nxpwifi/uap_txrx.c
+@@ -246,8 +246,8 @@ int nxpwifi_handle_uap_rx_forward(struct nxpwifi_private *priv,
+ 		} else {
+ 			nxpwifi_dbg(adapter, ERROR,
+ 				    "failed to copy skb for uAP\n");
+-				    priv->stats.rx_dropped++;
+-				    dev_kfree_skb_any(skb);
++			priv->stats.rx_dropped++;
++			dev_kfree_skb_any(skb);
+ 			return -ENOMEM;
+ 		}
+ 	} else {
+diff --git a/drivers/net/wireless/nxp/nxpwifi/util.c b/drivers/net/wireless/nxp/nxpwifi/util.c
+index 29ef031f8ec9..bbfefb81d8d3 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/util.c
++++ b/drivers/net/wireless/nxp/nxpwifi/util.c
+@@ -799,34 +799,33 @@ int nxpwifi_recv_packet_to_monif(struct nxpwifi_private *priv,
+ 		__le16 acc_le;
+ 		u8 flags = 0;
+ 
+-		if (ext.timestamp.position <= 15) {
+-			hdr->it_present |= cpu_to_le32(BIT(IEEE80211_RADIOTAP_TIMESTAMP));
+-			off = ALIGN(off, 8);
+-
+-			if (ext.timestamp.flags & 0x01) {
+-				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_32BIT;
+-				ts = (u32)ext.timestamp.device_timestamp;
+-			} else {
+-				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT;
+-				ts = ext.timestamp.device_timestamp;
+-			}
++		hdr->it_present |=
++			cpu_to_le32(BIT(IEEE80211_RADIOTAP_TIMESTAMP));
++		off = ALIGN(off, 8);
+ 
+-			ts_le = cpu_to_le64(ts);
+-			memcpy(rthdr + off, &ts_le, sizeof(ts_le));
+-			off += sizeof(ts_le);
++		if (ext.timestamp.flags & 0x01) {
++			flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_32BIT;
++			ts = (u32)ext.timestamp.device_timestamp;
++		} else {
++			flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT;
++			ts = ext.timestamp.device_timestamp;
++		}
+ 
+-			if (ext.timestamp.flags & 0x02) {
+-				accuracy = ext.timestamp.accuracy;
+-				flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY;
+-			}
++		ts_le = cpu_to_le64(ts);
++		memcpy(rthdr + off, &ts_le, sizeof(ts_le));
++		off += sizeof(ts_le);
+ 
+-			acc_le = cpu_to_le16(accuracy);
+-			memcpy(rthdr + off, &acc_le, sizeof(acc_le));
+-			off += sizeof(acc_le);
+-			rthdr[off++] = (ext.timestamp.unit & 0x0f) |
+-					((ext.timestamp.position & 0x0f) << 4);
+-			rthdr[off++] = flags;
++		if (ext.timestamp.flags & 0x02) {
++			accuracy = ext.timestamp.accuracy;
++			flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY;
+ 		}
++
++		acc_le = cpu_to_le16(accuracy);
++		memcpy(rthdr + off, &acc_le, sizeof(acc_le));
++		off += sizeof(acc_le);
++		rthdr[off++] = (ext.timestamp.unit & 0x0f) |
++				((ext.timestamp.position & 0x0f) << 4);
++		rthdr[off++] = flags;
+ 	}
+ 
+ 	if (format == NXPWIFI_RATE_FORMAT_HE && has_ext) {
+
+base-commit: 6c5fc504d0d6934132637aa3db4b9b58148eaa78
+-- 
+2.34.1
 
