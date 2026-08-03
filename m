@@ -1,142 +1,186 @@
-Received: from mail-qt1-f226.google.com (mail-qt1-f226.google.com [209.85.160.226])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD68F380FC3
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 05:44:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 317B319EED3
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 06:09:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785735855; cv=none; b=AdEXO7xWCAmbMamzJmWUFKJjwSMf7x7jmDKgdLvxW2nct1bTqnRi7Q8SnJzNgqE9d2m3XRhM/M+LnACH/K/83NxPMVBc3+OE+kpr1+s68u2serjDhr5i1KGuVzcbJby2vjdbXaMJPTVZ2qiuxm70/jqrlTPEqusHGUHC1CweShA=
+	t=1785737356; cv=none; b=seBXziYDK5Cft+E41OkEhFZClP/CQ5uc3fW9wroO/Ddcm7rfUWsI6onsgO5FIRR5ri3O/b50imVCIoJegufZSSN05RkHmpA5qjh7qatbOnNQ5krkH+o5y0hbQvmiYuNt716wC40uvRxckLd+MKnh8VAKYXz998grw/70vpYjECo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785735855; c=relaxed/simple;
-	bh=yjB7RGHZWNCfModfSNNs6/sJuqTLBvL7I9fkLDpx6ag=;
-	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=cYVZ1UVylQzGJN+U3qrVbYB/AoyFQYtK3MqYfz3VlUlucfDTOtkUBmGw4nt4R4r4AnyQKIX+PmLDhR9D0XPvG3zJl4OvwhMjzKtjtZ2jjxUUbYgHkFHPsMMFYgZAOJY1Uaj2muPo0muvcIaDvW8577pES+aFShQ4ecg99xfyNeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=PnWhTstw; arc=none smtp.client-ip=209.85.160.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1785737356; c=relaxed/simple;
+	bh=99V7caP6QP/UMxzDFZgPmEPZaiX3JkPM/JYdzqOK09c=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=nuU0b/gghjqCv9vE+75c3nLjXvLKKdcWACEuwSRqkqca4hYByrjke7ianc4HjU4KOXZ66Lpe3/+A86f5VE4xdF//iNJV8XxOs05sDLK/wbw0a7c1vB7HIWZdkSx39s5tJ+a5ATuQWPAXZZTXyksLgF9828X05hR8lFnQMhDglto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dqudDAl1; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PnWhTstw"
-Received: by mail-qt1-f226.google.com with SMTP id d75a77b69052e-51c2a76536bso27455361cf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 22:44:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785735852; x=1786340652;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from
-         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=df1R3651GFZlufP+Sp9/jqANKcFbF/GkeE2awbI5Hgs=;
-        b=oNESPQpOLoWwC18rVdNaTveMO5DAU+ohmOqHx0kqpj8lmT920aZcEAM1qGq4X1huIv
-         0OZfWoH3an9tvGZ4wnuqmqX9Z+9E1uS2tsvNpuw1muJ5iRotA32s3hao72YSgi69/O0E
-         xQ6W+Y90l9E0p8WXVYRwHSUs3+4Xf82ex1UqnOVCuxsJZdPpfosw20QXW7fghLCr2Xj5
-         J3l1xFfIohhbOHOvm3uw1k6PMHZZBfzWqmKRMmt/6LSHsi2avdtBynLI0cf+9z2es5WA
-         qeC3Dk2J9OGvw/Jkr7SuzEj9i9scnr6DBeMZbNA/VXmflzy9owAE5RitYFYuMJW+gjlg
-         JU4w==
-X-Gm-Message-State: AOJu0Yy9LtOi6YKzx9F28MXCKBIzqfNRKzL8qu4vm4VB6yCTT98z+G3T
-	L/zXxb9VCxsftMlB81BuSFvmOhhtNd+OHAgVj04FUyTSXkm6cyYWMOKOLk+l2fMB7P4audPn+fx
-	mSTV4VSAnUT+hZCfvQB6JPEuWrrgIVCQhr61mySyQPrsQzw3kuYKJeFLl5mk1jGCuM0Bwixnq63
-	ZX4ytGjvzN6+y2f4QdIx62dbl8SojoQVE1vKQOTo0Y9yY7ovywa93y9KuL4vcgPPCRTURGtHeKK
-	mJpGBXWY4yn6WCEkiJFu5Y+6Tn0
-X-Gm-Gg: AR+sD100b1Riu7oeJ1hSyFb1I76QPo1C1wLrYlY0WQdIQD8cKMkl55UIJcKdIj4X89W
-	K5rxMZHp/8+MgRhLEvQ5TMmumTmaLTAiCZdiKI3zmp3xHIFMXZUSWvb3h37HE5TvlxczZ8Zx9Aj
-	bVje7E8r7KAj1/WE5u/h0YM8agQebncRGH9n60RBgp+tdCM5f92WEVmL6EtbWfIc3HjJV0mxeTR
-	vCYMnbwlHyuvESeTreAVOcr+tS0wO53TVaLrO8fqUAZ/lMnNfHgciZW79KJ300LBzz1gSc8oXpo
-	xdv/OsTxs9wxPPBvql17bTqif/Gxp3SpATVNOQ3hRsD2AyyCyeHcrOR1HT30dwGigSw087a6Grf
-	Jnu86MdFgxNyq9775uwhk7u2n/zhIiOtnoOZr7mnTrpALWuiaSoUmC5qjNpQVDtCLqIkPaBgeA4
-	Lhip7cXZHScdH9XKnTr4bu5dcxceElIvUtUtc71nQ=
-X-Received: by 2002:a05:622a:5913:b0:527:7a5b:ca67 with SMTP id d75a77b69052e-52b5673f0a0mr179036841cf.20.1785735852435;
-        Sun, 02 Aug 2026 22:44:12 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id d75a77b69052e-52b4e81fb5dsm3699421cf.12.2026.08.02.22.44.11
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 02 Aug 2026 22:44:12 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-c1f548718d0so376478266b.0
-        for <linux-wireless@vger.kernel.org>; Sun, 02 Aug 2026 22:44:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1785735850; x=1786340650; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=df1R3651GFZlufP+Sp9/jqANKcFbF/GkeE2awbI5Hgs=;
-        b=PnWhTstwB6GTPm+7ZWf5nCyzXES3Ag+gUw4MegEjp1Pj5YESi12kdGVHFntcwU1Dmm
-         NaVbyzYw3Lk5GsVjspuiiMRc+8UTxMWqdYD0VblyG+L96Y0Ol5UMsEIAtAtI4Vvfm8U2
-         H+hufJ6Jyfoqs0swJTsNDjAMUo0feP3Mn7RBk=
-X-Received: by 2002:a17:906:f1cf:b0:c16:8931:245c with SMTP id a640c23a62f3a-c1fe81e1316mr455358866b.21.1785735849937;
-        Sun, 02 Aug 2026 22:44:09 -0700 (PDT)
-X-Received: by 2002:a17:906:f1cf:b0:c16:8931:245c with SMTP id a640c23a62f3a-c1fe81e1316mr455357966b.21.1785735849510;
-        Sun, 02 Aug 2026 22:44:09 -0700 (PDT)
-Received: from [192.168.178.59] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c1fd4537755sm496563766b.54.2026.08.02.22.44.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 02 Aug 2026 22:44:09 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>, Abdun Nihaal <nihaal@cse.iitm.ac.in>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>, <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Date: Mon, 03 Aug 2026 07:44:08 +0200
-Message-ID: <19fc626a040.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <6648c1d61a44ad732550ff20c0b1aecaa43676f6.camel@sipsolutions.net>
-References: <20260722110713.115988-1-nihaal@cse.iitm.ac.in>
- <20260802083905.3819981-2-arend.vanspriel@broadcom.com>
- <e059b52701d3cad4480dfb506e61474924b9f29e.camel@sipsolutions.net>
- <6648c1d61a44ad732550ff20c0b1aecaa43676f6.camel@sipsolutions.net>
-User-Agent: AquaMail/1.59.0 (build: 105900627)
-Subject: Re: [PATCH] wifi: brcmfmac: Fix memory leak in brcmf_sdio_read_control()
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dqudDAl1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1785737354; x=1817273354;
+  h=date:from:to:cc:subject:message-id;
+  bh=99V7caP6QP/UMxzDFZgPmEPZaiX3JkPM/JYdzqOK09c=;
+  b=dqudDAl1b+FJDIoYKWV/6hmkDGR70VFssMsF59zOG6uWJuzzr0gz2hub
+   O5RpBQhc2YEcDKrdtECY56rpafFCOI1onc+kjwLLoZhs1ejvDXEk7ksaJ
+   J/rfy6xpoyn2o2jmAG7ZAviBopAohq/dnYygTXikAi2MOXrhk9ZZbVQHx
+   L/GnI7gTK5byc9b74tvLhpHH5pY4b3s3TCHseMc0073kcSwS0AViLz085
+   KUMawBXnGwsruad8rjl6B3xIldqwSECuMqlbUjg8lnZPCVmG/0cf3ph55
+   l1Nz2QL7FfmpJnMuCSDihNkPP+8OtYSd6iDixBRBbq8ri30bhzwLyQM0b
+   Q==;
+X-CSE-ConnectionGUID: Tv62qpCZThy/reW7czsFuw==
+X-CSE-MsgGUID: /DiTFjv5TZu1KUZOQQndRg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11863"; a="96626097"
+X-IronPort-AV: E=Sophos;i="6.25,201,1779174000"; 
+   d="scan'208";a="96626097"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2026 23:09:13 -0700
+X-CSE-ConnectionGUID: 7w+umH5hRxSo3jJJCVgxZA==
+X-CSE-MsgGUID: 0xOfoc0YQm+yChDS2DhiJw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,201,1779174000"; 
+   d="scan'208";a="257787398"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 02 Aug 2026 23:09:11 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wqlrJ-000000006Ep-1BNs;
+	Mon, 03 Aug 2026 06:09:09 +0000
+Date: Mon, 03 Aug 2026 14:08:33 +0800
+From: kernel test robot <lkp@intel.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [wireless-next:for-next] BUILD REGRESSION
+ 6c5fc504d0d6934132637aa3db4b9b58148eaa78
+Message-ID: <202608031418.iEFPFMg8-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Op 2 augustus 2026 18:44:40 schreef Johannes Berg <johannes@sipsolutions.net>:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git for-next
+branch HEAD: 6c5fc504d0d6934132637aa3db4b9b58148eaa78  wifi: cfg80211: stop PMSR before P2P and NAN teardown
 
-> On Sun, 2026-08-02 at 18:41 +0200, Johannes Berg wrote:
->> On Sun, 2026-08-02 at 10:38 +0200, Arend van Spriel wrote:
->>> On Wed, 22 Jul 2026 16:37:12 +0530, Abdun Nihaal <nihaal@cse.iitm.ac.in> wrote:
->>>> The memory allocated for buf is not freed in some of the error paths in
->>>> brcmf_sdio_read_control(). Fix that by adding vfree() calls.
->>>>
->>>> Fixes: dd43a01c5cdb ("brcmfmac: use dynamically allocated control frame 
->>>> buffer")
->>>> Cc: stable@vger.kernel.org
->>>> Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
->>>> ---
->>>> Compile tested only. Issue found using static analysis.
->>>>
->>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +++
->>>> 1 file changed, 3 insertions(+)
->>>
->>> To be applied to wireless tree.
->>
->> I'm going to put this into wireless-next, at this point (-rc6) this just
->> doesn't cut it, the commit message makes it sound purely theoretical.
->
-> Actually, I'm not even going to do that - sprinkling vfree()s over the
-> code when moving the one that exists would be sufficient is, and I'm
-> being generous here, not a good change.
+Unverified Error/Warning (likely false positive, kindly check if interested):
 
-Sorry, Johannes
+    drivers/net/wireless/nxp/nxpwifi/scan.c:2037:1: internal compiler error: in final_scan_insn_1, at final.cc:2823
+    net/wireless/nl80211.c:19015:1: internal compiler error: in final_scan_insn_1, at final.cc:2823
 
-I looked at moving the vfree() to the done: label, but the code also gets 
-there in the success path to wakeup waiters. In the success path the buf is 
-stored for further processing so it should not be freed. Maybe better to do:
+Error/Warning ids grouped by kconfigs:
 
-        spin_unlock_bh(&bus->rxctl_lock);
-        brcmf_sdio_dcmd_resp_wake(bus);
-        return;
+recent_errors
+`-- csky-allmodconfig
+    |-- drivers-net-wireless-nxp-nxpwifi-scan.c:internal-compiler-error:in-final_scan_insn_1-at-final.cc
+    `-- net-wireless-nl80211.c:internal-compiler-error:in-final_scan_insn_1-at-final.cc
 
-fail:
-        vfree(buf);
-        /* Awake any waiters */
-        brcmf_sdio_dcmd_resp_wake(bus);
-}
+elapsed time: 738m
 
-Gr. AvS
+configs tested: 100
+configs skipped: 0
 
+tested configs:
+alpha                            allnoconfig    gcc-16.1.0
+alpha                           allyesconfig    gcc-16.1.0
+alpha                              defconfig    gcc-16.1.0
+arc                             allmodconfig    gcc-16.1.0
+arc                             allyesconfig    gcc-16.1.0
+arc                  randconfig-001-20260803    gcc-16.1.0
+arc                  randconfig-002-20260803    gcc-8.5.0
+arm                  randconfig-001-20260803    gcc-10.5.0
+arm                  randconfig-002-20260803    gcc-12.5.0
+arm                  randconfig-003-20260803    clang-24
+arm                  randconfig-004-20260803    clang-21
+arm                          tegra_defconfig    gcc-16.1.0
+arm64                randconfig-001-20260803    gcc-8.5.0
+arm64                randconfig-002-20260803    clang-24
+arm64                randconfig-003-20260803    clang-24
+arm64                randconfig-004-20260803    clang-24
+csky                            allmodconfig    gcc-16.1.0
+csky                 randconfig-001-20260803    gcc-10.5.0
+csky                 randconfig-002-20260803    gcc-12.5.0
+hexagon              randconfig-001-20260803    clang-22
+hexagon              randconfig-002-20260803    clang-20
+i386                            allmodconfig    gcc-14
+i386                buildonly-randconfig-001    gcc-14
+i386       buildonly-randconfig-001-20260803    clang-22
+i386       buildonly-randconfig-002-20260803    clang-22
+i386       buildonly-randconfig-003-20260803    gcc-13
+i386       buildonly-randconfig-004-20260803    clang-22
+i386       buildonly-randconfig-005-20260803    gcc-14
+i386       buildonly-randconfig-006-20260803    clang-22
+i386                 randconfig-001-20260803    clang-22
+i386                 randconfig-002-20260803    clang-22
+i386                 randconfig-003-20260803    clang-22
+i386                 randconfig-004-20260803    gcc-14
+i386                 randconfig-005-20260803    clang-22
+i386                 randconfig-006-20260803    gcc-13
+i386                 randconfig-007-20260803    clang-22
+i386                 randconfig-011-20260803    gcc-14
+i386                 randconfig-012-20260803    clang-22
+i386                 randconfig-013-20260803    gcc-14
+i386                 randconfig-014-20260803    gcc-14
+i386                 randconfig-015-20260803    gcc-14
+i386                 randconfig-016-20260803    clang-22
+i386                 randconfig-017-20260803    gcc-14
+loongarch                          defconfig    clang-24
+loongarch            randconfig-001-20260803    gcc-16.1.0
+loongarch            randconfig-002-20260803    clang-18
+mips                           gpr_defconfig    clang-24
+nios2                           allmodconfig    gcc-11.5.0
+nios2                            allnoconfig    gcc-11.5.0
+nios2                randconfig-001-20260803    gcc-11.5.0
+nios2                randconfig-002-20260803    gcc-10.5.0
+parisc                          allmodconfig    gcc-16.1.0
+parisc                          allyesconfig    gcc-16.1.0
+parisc                             defconfig    gcc-16.1.0
+parisc               randconfig-001-20260803    gcc-13.4.0
+parisc               randconfig-002-20260803    gcc-15.2.0
+powerpc              randconfig-001-20260803    gcc-10.5.0
+powerpc              randconfig-002-20260803    gcc-16.1.0
+powerpc64            randconfig-001-20260803    gcc-12.5.0
+powerpc64            randconfig-002-20260803    gcc-8.5.0
+riscv                randconfig-001-20260803    gcc-8.5.0
+riscv                randconfig-002-20260803    clang-24
+s390                 randconfig-001-20260803    gcc-13.4.0
+s390                 randconfig-002-20260803    clang-22
+sh                                 defconfig    gcc-16.1.0
+sh                   randconfig-001-20260803    gcc-16.1.0
+sh                   randconfig-002-20260803    gcc-12.5.0
+sparc                         randconfig-001    gcc-16.1.0
+sparc                randconfig-001-20260803    gcc-8.5.0
+sparc                randconfig-002-20260803    gcc-16.1.0
+sparc64              randconfig-001-20260803    gcc-15.2.0
+sparc64              randconfig-002-20260803    clang-24
+um                   randconfig-001-20260803    gcc-13
+um                   randconfig-002-20260803    clang-24
+x86_64     buildonly-randconfig-001-20260803    clang-22
+x86_64     buildonly-randconfig-002-20260803    clang-22
+x86_64     buildonly-randconfig-003-20260803    gcc-13
+x86_64     buildonly-randconfig-004-20260803    gcc-14
+x86_64     buildonly-randconfig-005-20260803    gcc-14
+x86_64     buildonly-randconfig-006-20260803    gcc-14
+x86_64               randconfig-001-20260803    gcc-14
+x86_64               randconfig-002-20260803    gcc-14
+x86_64               randconfig-003-20260803    gcc-14
+x86_64               randconfig-004-20260803    gcc-14
+x86_64               randconfig-005-20260803    gcc-14
+x86_64               randconfig-006-20260803    gcc-14
+x86_64               randconfig-011-20260803    clang-22
+x86_64               randconfig-012-20260803    gcc-14
+x86_64               randconfig-013-20260803    gcc-14
+x86_64               randconfig-014-20260803    clang-22
+x86_64               randconfig-015-20260803    clang-22
+x86_64               randconfig-016-20260803    gcc-14
+x86_64               randconfig-071-20260803    gcc-14
+x86_64               randconfig-072-20260803    clang-22
+x86_64               randconfig-073-20260803    clang-22
+x86_64               randconfig-074-20260803    clang-22
+x86_64               randconfig-075-20260803    clang-22
+x86_64               randconfig-076-20260803    clang-22
+xtensa               randconfig-001-20260803    gcc-8.5.0
+xtensa               randconfig-002-20260803    gcc-8.5.0
 
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
