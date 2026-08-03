@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8AF33939CE
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D0840B0E5
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785766401; cv=none; b=J0hcvg7IBQ7oqd2ghXEDKW7Az7vMMmfyYi1hrWtBGeHkNMXN/1k1SfqNYBo3a+GTwDoc9Gek5ZznDiRt4AtgBSJAaFMpzGdzskjCjpz7FRE9BfxLyet6LDW9oAl2dXI1cSPk+rNs4NxBSIHgDviklUDGFCS8vYcr5Rs1Bq6Se+I=
+	t=1785766403; cv=none; b=Q8vDoUBaDwLl3WvKEcj8NGnN7vQfLAPeypFNUYkcAOrY4WiVOBc4S1V2GFodwtNAP7n5FfCm9Rsx06YuWBtkj6Xk+RumT3Qg6pcTimIBHITvgCE4NPUjzHP7ssM5NpnUcSoMGsGIcmF3TrBe1ZFpDQROjxSOOxzXEetE52uLeWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785766401; c=relaxed/simple;
-	bh=+C1/trH/vqi2/Z7ZEEoViX4d61YyqpiUJUEDwOhFMZE=;
+	s=arc-20240116; t=1785766403; c=relaxed/simple;
+	bh=CXM6neQYb80TCLG+EW7H3geUePDUXLyFVS4xivDx2tA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uffWL1EbU3j8yPzLGBM7yln5E/GMSKDHKtBRxM3y39MKbH1CCfXiqgAVNcPq3q2rs7bNrtG0hGfCFUDpJUmZiAy0dRkK716YZKLebXJaPrQboIV4XD/fwt3Tkwsrv1ZIwtVcB4uWhMk01xXeSlF95H7c7Huy/bBmJAKAqQ9vUQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=q+0C35ye; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=gg2BEpXJZ6fF2tip+OolqU++jAu7VLtXE8XOzBP1TQ1pk/r2lcjngM45syZRE+dN8OFMxnndHHgHFREOJ2kW+20stLSjxi3VHWEI+TgDWmUfODSrAIiq/WEZuTJjW0FL4gN68fIhlmccqC6pvjHLQE0VN1EVmarphaHR1MT8ujA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=BFbRQgp1; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="q+0C35ye"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="BFbRQgp1"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=6Qq0/374IgV/BvVJkzkK42K1Z6knTkqCC9ABVsBv6m4=;
-	t=1785766399; x=1786975999; b=q+0C35ye9uWpLjl6zpam+etKewmsepctJS4aVig5+xd97j4
-	9Q4OS03mmAdfFVpsVXtmvz7A9FRmKWkh+D0fGGbaJlNbsIgtapMsQYPyldTIApUBRlQqknqHaKRiY
-	dPWFRux3w05c3mX7m4fAxStq4A4Umu0jYQcPtr1j1aBv6PdNODlbtYIXpnRimPG5zHNbtV810yPNh
-	v0/PDxalHr7j+t58oB00aEkkRI3WuQJZHrrsGiFw8M0QbGrG0qWhf4rGZ3QIIsUm7OOp0Tp9MZIaM
-	oNYQtf6SWvrVDfNLJispN3oh6TAGnXCPzGlLKpPUjwjLYG7JHxfn3bMj5PIDGmMw==;
+	Resent-Cc:Resent-Message-ID; bh=0zhLGoWdZAHgkGpDMsNbGqdeWrhHgcelilqKSFWQFXs=;
+	t=1785766401; x=1786976001; b=BFbRQgp1H5Gbo3DiIaVCjJo+Q0MFPoLsFik8YHPt1+qAxI8
+	gRttB20iAaENSXB77e4S/3ndYMxLU+7CltPYt+Y1yjrpXrTnDPQ8fvHgb7YL0f68QAclV3QDKIJEX
+	7b9rO7AvJUjsRhb+3AVoePXn88Lvg/UrzFU7McTqFWoQ9SAAY8jMIY3ArYzUaaFDgsl+9JMIdyULh
+	DfeQ04L3MGUA2ThT3Q2DiHpeQ0ZaW/I6ejhGAq2UIOcGFmKJSQBnFbs36Fg2i5p+jPrJUAYhpieAU
+	k+8XEEQ1/3+vOpgP57XOnm2L6VH9vwgl2o24MvSkJ5fGb2zUFUwaxrWYRE41A8xg==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqtPp-0000000G4Ws-0XHD;
-	Mon, 03 Aug 2026 16:13:17 +0200
+	id 1wqtPp-0000000G4Ws-3eBz;
+	Mon, 03 Aug 2026 16:13:18 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 4/7] wifi: mac80211: unshare the skb before building the header
-Date: Mon,  3 Aug 2026 16:08:40 +0200
-Message-ID: <20260803141309.292711-13-johannes@sipsolutions.net>
+Subject: [PATCH wireless-next 5/7] wifi: mac80211: report multicast transmission from lookup_ra_sta()
+Date: Mon,  3 Aug 2026 16:08:41 +0200
+Message-ID: <20260803141309.292711-14-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260803141309.292711-9-johannes@sipsolutions.net>
 References: <20260803141309.292711-9-johannes@sipsolutions.net>
@@ -50,66 +50,84 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_build_hdr() unshares the skb halfway through, after it
-has already looked at it but before it writes anything. That's not
-a problem, but complicates the callers and requires passing the
-flags to the function, etc.
+ieee80211_lookup_ra_sta() returns ERR_PTR(-ENOENT) both when the
+802.11 frame will be is group addressed and when it's going to
+an unknown station.
 
-Move the unsharing to the only caller that matters, the new one
-from the previous patch has a fresh SKB and doesn't need it and
-the TDLS callers via ieee80211_tdls_build_mgmt_packet_data() are
-also fresh SKBs.
+Keep reporting an ERR_PTR() for group addressed but set to NULL
+for individually addressed frames so the callers can use it to
+distinguish later. This is already explicitly the case for all
+interface types except mesh, and callers already tolerate (but
+don't distinguish) both cases.
+
+Also change the ieee80211_lookup_ra_sta() to be static.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 20 ++++++++------------
- 1 file changed, 8 insertions(+), 12 deletions(-)
+ net/mac80211/ieee80211_i.h |  5 -----
+ net/mac80211/tx.c          | 19 +++++++++++++++----
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 85f72ad06ad7..f4ac945b5508 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2471,11 +2471,6 @@ static inline bool ieee80211_require_encrypted_assoc(__le16 fc,
+ 	return sta && sta->sta.epp_peer && ieee80211_is_assoc(fc);
+ }
+ 
+-/* sta_out needs to be checked for ERR_PTR() before using */
+-int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+-			    struct sk_buff *skb,
+-			    struct sta_info **sta_out);
+-
+ static inline void
+ ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 			  struct sk_buff *skb, int tid,
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 28c60ae442c0..1d139c2506bb 100644
+index 1d139c2506bb..cc0c6b46d19c 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -2637,9 +2637,8 @@ static void ieee80211_remove_ack_skb(struct ieee80211_local *local, u16 info_id)
-  * the appropriate IEEE 802.11 header based on which interface the packet is
-  * being transmitted on.
-  *
-- * Note that this function also takes care of the TX status request and
-- * potential unsharing of the SKB - this needs to be interleaved with the
-- * header building.
-+ * Note that this function also takes care of the TX status request. The skb
-+ * must not be shared.
-  *
-  * The function requires the read-side RCU lock held
-  *
-@@ -2949,15 +2948,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		info_id = ieee80211_store_ack_skb(local, skb, &info_flags,
- 						  cookie);
+@@ -2504,9 +2504,16 @@ static inline bool ieee80211_is_tdls_setup(struct sk_buff *skb)
+ 	       skb->data[14] == WLAN_TDLS_SNAP_RFTYPE;
+ }
  
--	/*
--	 * If the skb is shared we need to obtain our own copy.
--	 */
--	skb = skb_share_check(skb, GFP_ATOMIC);
--	if (unlikely(!skb)) {
--		ret = -ENOMEM;
--		goto free;
--	}
--
- 	hdr.frame_control = fc;
- 	hdr.duration_id = 0;
- 	hdr.seq_ctrl = 0;
-@@ -4424,6 +4414,12 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		if (skb->protocol == sdata->control_port_protocol)
- 			ctrl_flags |= IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP;
+-int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+-			    struct sk_buff *skb,
+-			    struct sta_info **sta_out)
++/*
++ * Returns an error if the frame should be dropped, otherwise
++ * the *sta_out pointer is filled:
++ *  - valid sta pointer: frame goes to that station
++ *  - NULL: frame will be unicast to a yet unknown station
++ *  - ERR_PTR(-ENOENT): frame will be group addressed
++ */
++static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
++				   struct sk_buff *skb,
++				   struct sta_info **sta_out)
+ {
+ 	struct sta_info *sta;
  
-+		skb = skb_share_check(skb, GFP_ATOMIC);
-+		if (unlikely(!skb)) {
-+			kfree_skb_list(next);
-+			goto out;
+@@ -2531,6 +2538,10 @@ int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ #ifdef CONFIG_MAC80211_MESH
+ 	case NL80211_IFTYPE_MESH_POINT:
++		if (is_multicast_ether_addr(skb->data)) {
++			*sta_out = ERR_PTR(-ENOENT);
++			return 0;
 +		}
-+
- 		skb = ieee80211_build_hdr(sdata, skb, info_flags,
- 					  sta, ctrl_flags, 0);
- 		if (IS_ERR(skb)) {
+ 		/* determined much later */
+ 		*sta_out = NULL;
+ 		return 0;
+@@ -2573,7 +2584,7 @@ int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+ 		return -EINVAL;
+ 	}
+ 
+-	*sta_out = sta ?: ERR_PTR(-ENOENT);
++	*sta_out = sta;
+ 	return 0;
+ }
+ 
 -- 
 2.55.0
 
