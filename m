@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CFE2403AE2
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 11:44:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A81183E5A38
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 11:44:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785757457; cv=none; b=G1AT6BIuTnDZdOxJae5LJwPm7xrX0pnID8PSVVFgjEnAiXhb0Zduh50Jc0aIiTB2bapxU3bcCAmX4RJ8m094fqBgsGqxn8J8jsv/91B+PbGChx47CErTFyx4gsxj65OGeJo1Dyhjp4rlYtLo2eVn5bzkNrXiFSSmOkT8mEJMEHw=
+	t=1785757458; cv=none; b=PtVmZoNCZ8hfxKORQ4mXi+4ulExyoZlsJECh30wFi2T0QNvqtOUwTmNo1LgI9w89bDw/jGeEq2D6XPk32CPcxZeedAIEH2nJE0Mtx24l83wv77xjMdLrrsVkPYbLlPl/+VdPuQEekITX1w2dCHQOqATjtXuQpQxnu/INVwzxN5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785757457; c=relaxed/simple;
-	bh=FVccS/aWpZ6jS7mtnW1R00qnMNwnS6w5k1uqejjXQ9k=;
+	s=arc-20240116; t=1785757458; c=relaxed/simple;
+	bh=VY/nltdE3RTc5sqr2BGpcUBXVonedPW40i9VhZuk+3g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=plh/T9IFs2LUj6TUZKrtCCfoYwzlnsujSLNId6oRLKhXAQXC16b1Dw+WwFeLUhVUl3jrCmdkXXx/QVMYU5ji5iK02A+xIEIjNbxg3tn4elyDE7u6trI/mK7etTJWXLsUAkMZ24fm3qy9uKXO2XpKuJpKT7a1Sj0kRqLVrNKuAYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=tYhHQYwV; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=EOxHHTJjnHi6LsgGxUiYWFZoHAOIJRsWrI8TAyzfwjZZsdY/3Lq0S6OZTyGhOfbSEWpZOp8mB1VCHQqVmJDsPOhu/aUH8EQGnYtj8pj1vi3F1WQ/Kr29f4yGEJdPdPZb7HqJBzxyC8OXM8BTAuciojkfP6I3xEaf14BoST2x4NY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=rWzp30N0; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="tYhHQYwV"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="rWzp30N0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=vdSLGrcSwEd3//YCYDAD46pieNbmN+tdbnDD1NCtNKk=;
-	t=1785757455; x=1786967055; b=tYhHQYwVMVc7xeV1rjWVaAi7QQ/yMLcHWOchXq5TmIH3Bqt
-	JHHS9eIqaaxwrR3NyPb6Hk/4Zy1TRnsS6dKyoeZ0xBaTepPwvl+qeb2pXWuDF9xqEJJEfpWH2avqH
-	pVdGYURMX8r2mnwritG0Ua0MODqQ58TWRL01NIgJpR5foJoHGcJvjIbYMwKIU6soYoWAfLwluWLP+
-	6RfflFw+SClU84yHAC/Bj14IBR4KcJ20eZ5miGXRqJpnT4asaPRNUWK4q0RhTNsg8NwJkpeXRMUhz
-	R5FVMI+Hhg3fVk8eBOxr4NY7/L5sLsraWUx75oXKRUIlsAp2+KYdQjOWUe4FOr/g==;
+	Resent-Cc:Resent-Message-ID; bh=ZA1EzPzaWiKzqxAlfJwvRpikDMbpdUW3sDznarZoBOY=;
+	t=1785757456; x=1786967056; b=rWzp30N0sQitost/T6zUb5ufX3jq3JmFjfgUBgAOWdFwhfW
+	Njy4CEhn7m7SxSGQFjllqJvNU0kBwXuAGArcIb0OT+SOy1jinnKRVZFq8vo8Unl2ofsB/Qey8yVMS
+	ddLQ6axUf01WxRGBaNhjqHNMXZfJvBqRA4ux7aLOfk69g5hHqFQ+QhwCnSYAbR3d2rhXqg5IH2uXO
+	8AwYS/gKo6WdZ3MrixGd9hm5Q06Wauxavqffm44sMZzS64JvIXF9t/RDBovi2BbTfLrte7Nl7/Xin
+	KMhyX8AI1aH7sibVk2JszOz4pc91Q0M1oO5ZkFdtQOb2a1BQhjSCn8d2RviitUsA==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <benjamin@sipsolutions.net>)
-	id 1wqr5Y-0000000B74U-2M8K;
-	Mon, 03 Aug 2026 13:44:12 +0200
+	id 1wqr5a-0000000B74U-0hhK;
+	Mon, 03 Aug 2026 13:44:14 +0200
 From: Benjamin Berg <benjamin@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next v2 3/5] wifi: mac80211: add helpers to parse/generate CIP Capabilities
-Date: Mon,  3 Aug 2026 13:44:04 +0200
-Message-ID: <20260803134401.2f3d0b3ab791.Ia3ea929dd6381cf8b04e3dd0c38e709e335113c2@changeid>
+Subject: [PATCH wireless-next v2 5/5] wifi: mac80211_hwsim: claim support for Control Integrity Protocol
+Date: Mon,  3 Aug 2026 13:44:06 +0200
+Message-ID: <20260803134401.3801fe48e0a6.If483ea588361a90b58a52493936cc0bbbc74c075@changeid>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260803134401.e4851391bdda.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
 References: <20260803134401.e4851391bdda.I49c0be0a1b05d625cc307e9bdd13c32a6c18667f@changeid>
@@ -50,112 +50,28 @@ Content-Transfer-Encoding: 8bit
 
 From: Benjamin Berg <benjamin.berg@intel.com>
 
-The Control Integrity Protocol (CIP) Capabilities need to be
-added to and parsed from the association request and response.
+The mac80211_hwsim driver never actually generates control frames. As
+such, it can simply claim the Control Integrity protocol (CIP).
 
 Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
 ---
- include/linux/ieee80211.h  | 13 +++++++++++++
- net/mac80211/ieee80211_i.h |  3 +++
- net/mac80211/parse.c       |  4 ++++
- net/mac80211/util.c        | 19 +++++++++++++++++++
- 4 files changed, 39 insertions(+)
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 26e674038865..16d78fd61c22 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1828,6 +1828,7 @@ enum ieee80211_eid_ext {
- 	WLAN_EID_EXT_BANDWIDTH_INDICATION = 135,
- 	WLAN_EID_EXT_KNOWN_STA_IDENTIFCATION = 136,
- 	WLAN_EID_EXT_NON_AP_STA_REG_CON = 137,
-+	WLAN_EID_EXT_CIP_CAPA = 150,
- 	WLAN_EID_EXT_UHR_OPER = 151,
- 	WLAN_EID_EXT_UHR_CAPA = 152,
- 	WLAN_EID_EXT_MACP = 153,
-@@ -2900,4 +2901,16 @@ static inline bool ieee80211_check_tim(const struct ieee80211_tim_ie *tim,
- 		     __ieee80211_check_tim(tim, tim_len, aid);
- }
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index 02b6d81cccd1..1cc322aa898d 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -5668,6 +5668,9 @@ static const struct wiphy_iftype_ext_capab mac80211_hwsim_iftypes_ext_capa[] = {
+ 		.eml_capabilities = IEEE80211_EML_CAP_EMLSR_SUPP |
+ 				    IEEE80211_EML_CAP_EMLMR_SUPPORT,
+ 		.mld_capa_and_ops = MAC80211_HWSIM_MLD_CAPA_OPS,
++		/* CIP works as hwsim does not have control frames */
++		.cip_supported = true,
++		.cip_capabilities = 0,
+ 	},
+ };
  
-+/* The MIC padding subfield in the CIP capabilities */
-+#define WLAN_CIP_CAPA_MIC_PADDING	0x0F
-+
-+/**
-+ * struct ieee80211_cip_cap - CIP Capabilities element
-+ *
-+ * @v: The value of the Control Integrity Protocol Capability element
-+ */
-+struct ieee80211_cip_cap {
-+	u8 v;
-+} __packed;
-+
- #endif /* LINUX_IEEE80211_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5761e9621491..8ec112a8675b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1868,6 +1868,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_ttlm_elem *ttlm[IEEE80211_TTLM_MAX_CNT];
- 	const struct ieee80211_uhr_cap *uhr_cap;
- 	const struct ieee80211_uhr_operation *uhr_operation;
-+	const struct ieee80211_cip_cap *cip_cap;
- 
- 	/* not the order in the psd values is per element, not per chandef */
- 	struct ieee80211_parsed_tpe tpe;
-@@ -2772,6 +2773,8 @@ int ieee80211_put_uhr_cap(struct sk_buff *skb,
- 			  const struct ieee80211_supported_band *sband);
- void ieee80211_put_reg_conn(struct ieee80211_sub_if_data *sdata,
- 			    struct sk_buff *skb);
-+int ieee80211_put_cip_cap(struct sk_buff *skb,
-+			  struct ieee80211_sub_if_data *sdata);
- 
- /* channel management */
- bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
-diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
-index cb2be167cde7..3b66ca7d7a5c 100644
---- a/net/mac80211/parse.c
-+++ b/net/mac80211/parse.c
-@@ -205,6 +205,10 @@ ieee80211_parse_extension_element(u32 *crc,
- 			elems->ttlm_num++;
- 		}
- 		break;
-+	case WLAN_EID_EXT_CIP_CAPA:
-+		if (len >= sizeof(*elems->cip_cap))
-+			elems->cip_cap = data;
-+		break;
- 	case WLAN_EID_EXT_UHR_OPER:
- 		if (params->mode < IEEE80211_CONN_MODE_UHR)
- 			break;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a96078a6bfa2..8303f624b7f6 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -4680,6 +4680,25 @@ int ieee80211_put_uhr_cap(struct sk_buff *skb,
- 	return 0;
- }
- 
-+int ieee80211_put_cip_cap(struct sk_buff *skb,
-+			  struct ieee80211_sub_if_data *sdata)
-+{
-+	const struct wiphy_iftype_ext_capab *ift_ext_capa =
-+		cfg80211_get_iftype_ext_capa(sdata->local->hw.wiphy,
-+					     ieee80211_vif_type_p2p(&sdata->vif));
-+	u8 cip_capabilities = ift_ext_capa ? ift_ext_capa->cip_capabilities : 0;
-+
-+	if (skb_tailroom(skb) < 4)
-+		return -ENOBUFS;
-+
-+	skb_put_u8(skb, WLAN_EID_EXTENSION);
-+	skb_put_u8(skb, 2);
-+	skb_put_u8(skb, WLAN_EID_EXT_CIP_CAPA);
-+	skb_put_u8(skb, cip_capabilities);
-+
-+	return 0;
-+}
-+
- const char *ieee80211_conn_mode_str(enum ieee80211_conn_mode mode)
- {
- 	static const char * const modes[] = {
 -- 
 2.55.0
 
