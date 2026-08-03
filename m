@@ -1,43 +1,69 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106EB3E715E
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 11:52:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15FF3D7A01
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 11:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785757976; cv=none; b=ZLScLVpRtJmCXC6QPjasettTeR8EjA5zw5MXNsayX7U7uKFJjDfTTF2gtiCHtQI21FGGShAW7zoVaw1opgcTaeez1k+T81Sn4iK2LWQjF1lN+OQbPLGFuQBrKLMhVhrowV4U7tu5aB6o1ww4jkqFaPCcRIRy8Gox1C0s+u++cxQ=
+	t=1785758317; cv=none; b=S2Inorb1lthE++a2PgQ35zV7bZTXpr7kW/NDQ0SmyI0a5Bd2mCw6uHeFLj9yMSH58ofZfAWQXg18F59so3WMLaSEoPFa+HZToikHsQrJjKjtQRVPYWGN185EoPiYm1FFnqYik+Ctu2Z6cfKwJpa5LBnNtW4+kXyVz1s0PKu8m6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785757976; c=relaxed/simple;
-	bh=4US4/LG9EZ1S4KuGNEM4y4TqvN5jAPkeeNSMiFbD7qI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IOUD7F2tVaaf/e7t3fH2DeiMUF0+OKt439ju8X5ZQVpqXrOK7kuudyn+NOiUAA++G743YIp3dNy7s3CaSLh5GhZAqFqQb0iFh4KLUmRK4LJa/q5BEq9/e8jqiLdnN/PDm1ux+PO64cjdt7YOB9JdpUmJUDFBLHrDtaGAHgLwxrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=s7F/hBu6; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1785758317; c=relaxed/simple;
+	bh=k7UrqjaX/AIAidinj0Mjiu/cSuxm3BbHz9qtWa/qS/A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WMPpRRY0QIyp4iPor9RX3JAMbSZae+V5w4QM7csMBWA2xT9ukbXK8B57aYZl5ytrJL5pJGDq/qQ67Eo+Q/lvbASrAEJh0jN8FMHN0lhxsRCExAgITzltLE8gnMSW587wD/MfnQcoUdn30jswrL0AxqrtuKtaviu00ii6/PfRZuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I7KhOTKX; arc=none smtp.client-ip=209.85.161.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="s7F/hBu6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-	Resent-Message-ID:In-Reply-To:References;
-	bh=sqZ0hzgGDGOQa0jxCtAC9xGrxloqYmcIjSXvVuiU2J8=; t=1785757975; x=1786967575; 
-	b=s7F/hBu6NcltS00wSXp62npac8oV/Iv71BHxOXk/MEXwkKga60lC/ueC5gsULLx985n34qpP4zk
-	EcaEmGwSJX9xdOQ/Ib0vJhVf8LsF2UPovcQviRvBILi+WQo0lpuBoDbHSOOPha3rQR6JGIeyLCKF0
-	mxJ72LappuwK8WRvX/i2IpTzdFNgauaDf41UrKj3nxzFgOlOc3yQg/j+VIuBkiDxjNX14CBGJqiyU
-	uA5K1zBwcF/9A+u4nqhxWzpoco4awP4VIaXYpDCs59gWhi5nGPc1eks7Uxir3hp5g9aayTmL+5pIg
-	NxnO/1EqZe93MhQ3WX6pK6iX8j4Pqfodw+Ow==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqrDv-0000000BNTh-1PQq;
-	Mon, 03 Aug 2026 13:52:51 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next] wifi: mac80211: make ieee80211_is_tx_data() internal
-Date: Mon,  3 Aug 2026 13:52:48 +0200
-Message-ID: <20260803135248.cd23ccac65d7.I1c238c6abe39f5a1ff1b11d8556599d01dd03ff0@changeid>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I7KhOTKX"
+Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-6acc88b9c5fso1403908eaf.2
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 04:58:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785758315; x=1786363115; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=R3rKslDwnV4zeJnBp6rQK9dLaIkOXR2TUwnnkUIzGW8=;
+        b=I7KhOTKXgllzwH6XFIjbvh9Jjr0qP8Gpno//z+8x1rr2GJJIBT52FRqzFp69TQbCw1
+         mBkg1Ek75t2EXOEE2aYNU9OtTJ8mrf6XiyvhyqK6psryXIuB7SozDo/9pAL2T4n27xPX
+         DA9Ll0a1IQoAb/H1K+GD4Y7UEosFDh/XQWdtMgsXQcSB5VK7mDWrU62HHePoKtAuWIR+
+         qJ6/lhtMCQRwCfIRcGfQbo88EAQI+a+xIucPJcPQ09/441O5Q/2s+GZS8EA8b+eTTEan
+         V64vfofS6I+5BA354Asj70rvGxVZIhF3EG8BKIoyHaWk820x316yTX4ohdY8BUINEE1l
+         gztA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785758315; x=1786363115;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=R3rKslDwnV4zeJnBp6rQK9dLaIkOXR2TUwnnkUIzGW8=;
+        b=XaI1iUOYbDaR8bpVpmJ5IqwDHT15k0xbmRi39IIvucgm6Lz5xsdmQ741ho2rZDc+41
+         G9D3JzS3YyG7s9/QSlE4yarLhdwaQUyKXneKt4TXr30XiKzmm7qsJDsoz/gSHUE92Dbl
+         byZgEiIRM1btE1YgxTcA4d7dyuiQ4SO8yFii7J2qOg7c3WffX/uW3q2OgmTs4bgSQxpw
+         +CKIby7VDLj+C8jOvW1gGrxcghiMHTLqOds5T1d4DFZHTomXl3FAdC+ZfaLC73z2FO4w
+         pVkOZ5xiRbb3g3gN6/8N9NZbO4KFJUr0qH7TEv55MVhvdOLZ1QxqgiFC/8tPISuoi2l3
+         fe8A==
+X-Gm-Message-State: AOJu0Yx6tHN7yFsE/xe96KldCKygCp03LshyNFynUQclcf8vpquoLlQv
+	no/UmdkMxhkK34K0Q1Nv4fEEnNenUBydXKuKvFJTpj3H/2JK3pSLhuKW
+X-Gm-Gg: AR+sD10WIz5LNfQmxyEY1PNuMrneKnCFpQB8i7+qwufEp/vqmpep58F61dC6fDQcH3q
+	7poqMIqlU8Q6lvwuNdV6a6bK6nElwyUoeq8azmI9kWRoFoKoVsK026cflWOtmO6pJSzw15Iw7Ze
+	yzbfpRYr3X2NmhtmReKPTuVYzgSQ9Qiwo1tq5lAdEfS5co5+oMcwOkXYrgx5qDYTVLt/9nlugE1
+	4uOTNUL4XKLRoT5hocDQyfW1lsoKBCsHktygpW2jOugcBci5D0xYd8UgBD1Lz/LSKim55Xg4vXT
+	hyS6BkYkClUWmUOn68fW1HWNFS3WncrE9dFRO8DEOcZhivQzfYZbklYqaGX575UGsQyokkIDBBL
+	K67wxjeqK2OCEavoU45BpaHbUBbY7uBK8lW6r9Q6kftP+JYaxvSZsxrFSaH51jwAKqEzBh/siUg
+	g/SKJcv3o8mLwleHG5h2nIoNtAcU34QPNB3A5cSgI6lVCmK0qkSAYk3Gv50QlU/XVScMJRTzfiR
+	ZaKNVSxMqMhXPNBR+UIf31gUV+cMGbmwcVdxZ/3
+X-Received: by 2002:a05:6820:811b:b0:69d:9dfb:7928 with SMTP id 006d021491bc7-6ae4331b541mr14225525eaf.3.1785758314694;
+        Mon, 03 Aug 2026 04:58:34 -0700 (PDT)
+Received: from cr-x-ubuntu2604-client-1.dev.fyre.ibm.com ([170.225.223.19])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-458f6064843sm8703341fac.4.2026.08.03.04.58.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2026 04:58:33 -0700 (PDT)
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: [PATCH] wifi: rtlwifi: rtl8192cu: Remove logically dead code in rtl92cu_update_hal_rate_mask
+Date: Mon,  3 Aug 2026 04:58:25 -0700
+Message-ID: <20260803115826.992789-1-chelsyratnawat2001@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -46,71 +72,108 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Johannes Berg <johannes.berg@intel.com>
+The variable 'mimo_ps' is initialized to IEEE80211_SMPS_OFF and never
+modified throughout the function. This makes the condition checking for
+IEEE80211_SMPS_STATIC always evaluate to false, rendering the entire
+if-branch unreachable dead code.
 
-This function isn't used by any driver, and we may want to
-change it in the future. Don't expose it. Drivers may still
-do the same determination based on the flags, but if we'd
-ever change the encapsulation internally etc. (which I'm
-considering) then the use in mac80211 may need to change,
-or the function itself.
+This error was reported by Coverity Scan.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 ---
- include/net/mac80211.h     | 19 -------------------
- net/mac80211/ieee80211_i.h |  9 +++++++++
- 2 files changed, 9 insertions(+), 19 deletions(-)
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 70 ++++++++-----------
+ 1 file changed, 30 insertions(+), 40 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9d1fac6e8082..f65ddbe99b3e 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -8058,25 +8058,6 @@ void
- ieee80211_obss_color_collision_notify(struct ieee80211_vif *vif,
- 				      u64 color_bitmap, u8 link_id);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 989e7cff8e20..e75f7ec44e6a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1911,7 +1911,6 @@ static void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	bool shortgi = false;
+ 	u8 rate_mask[5];
+ 	u8 macid = 0;
+-	u8 mimo_ps = IEEE80211_SMPS_OFF;
  
--/**
-- * ieee80211_is_tx_data - check if frame is a data frame
-- *
-- * The function is used to check if a frame is a data frame. Frames with
-- * hardware encapsulation enabled are data frames.
-- *
-- * @skb: the frame to be transmitted.
-- *
-- * Return: %true if @skb is a data frame, %false otherwise
-- */
--static inline bool ieee80211_is_tx_data(struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_hdr *hdr = (void *) skb->data;
--
--	return info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP ||
--	       ieee80211_is_data(hdr->frame_control);
--}
--
- /**
-  * ieee80211_set_active_links - set active links in client mode
-  * @vif: interface to set active links on
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5761e9621491..e86d8697f614 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -191,6 +191,15 @@ struct ieee80211_tx_data {
- 	unsigned int flags;
- };
+ 	sta_entry = (struct rtl_sta_info *) sta->drv_priv;
+ 	wirelessmode = sta_entry->wireless_mode;
+@@ -1956,47 +1955,38 @@ static void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	case WIRELESS_MODE_N_5G:
+ 		ratr_index = RATR_INX_WIRELESS_NGB;
  
-+static inline bool ieee80211_is_tx_data(struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
-+
-+	return info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP ||
-+	       ieee80211_is_data(hdr->frame_control);
-+}
-+
- /**
-  * enum ieee80211_packet_rx_flags - packet RX flags
-  * @IEEE80211_RX_AMSDU: a-MSDU packet
+-		if (mimo_ps == IEEE80211_SMPS_STATIC) {
+-			if (rssi_level == 1)
+-				ratr_bitmap &= 0x00070000;
+-			else if (rssi_level == 2)
+-				ratr_bitmap &= 0x0007f000;
+-			else
+-				ratr_bitmap &= 0x0007f005;
++		if (rtlphy->rf_type == RF_1T2R ||
++		    rtlphy->rf_type == RF_1T1R) {
++			if (curtxbw_40mhz) {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x000f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x000ff000;
++				else
++					ratr_bitmap &= 0x000ff015;
++			} else {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x000f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x000ff000;
++				else
++					ratr_bitmap &= 0x000ff005;
++			}
+ 		} else {
+-			if (rtlphy->rf_type == RF_1T2R ||
+-			    rtlphy->rf_type == RF_1T1R) {
+-				if (curtxbw_40mhz) {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x000f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x000ff000;
+-					else
+-						ratr_bitmap &= 0x000ff015;
+-				} else {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x000f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x000ff000;
+-					else
+-						ratr_bitmap &= 0x000ff005;
+-				}
++			if (curtxbw_40mhz) {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x0f0f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x0f0ff000;
++				else
++					ratr_bitmap &= 0x0f0ff015;
+ 			} else {
+-				if (curtxbw_40mhz) {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x0f0f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x0f0ff000;
+-					else
+-						ratr_bitmap &= 0x0f0ff015;
+-				} else {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x0f0f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x0f0ff000;
+-					else
+-						ratr_bitmap &= 0x0f0ff005;
+-				}
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x0f0f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x0f0ff000;
++				else
++					ratr_bitmap &= 0x0f0ff005;
+ 			}
+ 		}
+ 
 -- 
-2.55.0
+2.53.0
 
