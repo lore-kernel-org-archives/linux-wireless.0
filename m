@@ -1,221 +1,131 @@
-Received: from smtpo49.interia.pl (smtpo49.interia.pl [217.74.67.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2A32820A9
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 13:10:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDDC236B912
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 13:12:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785762615; cv=none; b=ixlw5avlN4ng+BNydyN2+pjtOJU7RdHIqAvyaHXhlvFi626Fdd9p5FOHKExDz6fIpvHAlObdpdEy8Cv6yCczT0utLmLj+8FTcQCejanzODa5PKDRAEhT1n+MvXOwypuCKIc7M0t3vAK7sWeDvPZJwP6rBXiD79HUekrZT6qW9RU=
+	t=1785762748; cv=none; b=lxMbbvojqXCdMwACIsHGTt16GHjhPKuY4jJ48DOUYU/Oae2O6n2SlmCfFsYIc2pn2R1K2AIZ0oSLvzTJPKNfSxlB7+n0rt+yzgKA1WcZ2GEIVnMDyHrOGH6Bdj0M+G0KsSlaIJXUlg7ArieAIZ9tyDOidmmd/fae/HaMzP7IhEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785762615; c=relaxed/simple;
-	bh=skZ3o2C83bqo64O48eP2TbVWJScyinPe2K7YPqDQbl8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LEenR2X47QnlLlJfLupEndZ3LIuIxzacypvOvL4JxuOYyEXURGoKAHdUixDb9UE2pSizyEeHsxmNn3BFPV1Pc4s8wEz/uM7eqMz7/GH2lZSPH8rwmkFRYtm+EadaLQ2c/tR9+AY/lx8bpYtTj+6jPxViFz2OlRegoLyO+aZfd7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=Cf5mUZUO; arc=none smtp.client-ip=217.74.67.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1785762748; c=relaxed/simple;
+	bh=mdxF4avpkzXiCtWbEJnWAV7RiToth4AbaLZLL7kkhiE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q40UjkiT6/DQaoulm5ztE94837LC5PJlBVh0roka7ViOl25SujSNarLg+s6Iw9NVe3wwlLYaN92dUFjJF0BV9kKBS4sJPQ3sBl8+BpmyuMP1ao7MGLgP4P1W9Az0K7s1GZCZgEkXFn5TWCRQ0ppbvrMp5LZwEQj7manUezJAAOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mWS1YroI; arc=none smtp.client-ip=209.85.210.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="Cf5mUZUO"
-Received: from nr200 (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Mon,  3 Aug 2026 15:09:58 +0200 (CEST)
-Date: Mon, 3 Aug 2026 15:09:56 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: Re: [PATCH v2] mac80211: reject station addition if AP or MLO link
- is inactive
-Message-ID: <anCTJFZ54Y93O8Qs@nr200>
-References: <20260727074526.248393-1-sst@poczta.fm>
- <9a9a794ad16663cfd7a652b83455ff16156b9baa.camel@sipsolutions.net>
- <amcjYrOESqnHjbhe@nr200>
- <741854f0b9774ce2da1e5c2fb551631aa4028122.camel@sipsolutions.net>
- <amcyO4e4bnBPinrP@nr200>
- <amdckJhgBz7xT2F7@nr200>
- <28f4f5b6fbe594c41538d5068b2d77495250ecd7.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mWS1YroI"
+Received: by mail-ot1-f47.google.com with SMTP id 46e09a7af769-7e6b5737bb2so3019602a34.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 06:12:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785762739; x=1786367539; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=byW6jvQp8zKfKlaoj0GNIPAuiHh64WLa20kMqH69y+M=;
+        b=mWS1YroIw5aJ9hsJFSJQujk4shdwhMij6K0Q72QyidVyGzQq5R5Dx8GR7BQmVJmJC6
+         noQQhVrZlCQRguGUdQs8frhPFe2d7YF4uu8HSzkO5FYR9UvbgkvnpA7l0oUPBfYkEXqr
+         1UX67Non6ZPOa42pWYxHfzHbDuWQkFFsd1/2o9UVxgv30xE4sRWEaZmMAEt9MxeUYN9r
+         lOmMdzb1hYHdUFyu+e2YMNHzHfSzlLgcTR/+U8pmkLLUeAOFk5KzBn78a8WSNvAG0J3V
+         EJCNSOOLyEYKRv5ddxjPQKit4kpdQvAdkIV+IDYRAVORo4orlZpQ+Q+9+ocg5TUhetw0
+         I0yg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785762739; x=1786367539;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=byW6jvQp8zKfKlaoj0GNIPAuiHh64WLa20kMqH69y+M=;
+        b=BBPHAa00yYTgca94VuAY1R4wCEwfhv/gWjBT9SNhcw2RdY1QxMzMPx+5nsn8hPZgEL
+         tvY4qomByvBnSkPyJE0Ld1QVtFv+cRecdagGz0x4L2AJS1cxTKX3wZbzicRCUmqLMo0U
+         4MsU17NEHgVx6EFGJYQh7mi9bJiyp2aLT2lC5sbw0U9+E8Tv2VeI7+O1jBj7Orfg3Q0A
+         P56nD9i8vWzgtz5XT15yobyoVGij7q2kNSuUumlfwb82WfGJef72meHhgmkAIhFINDUy
+         r3ju2mpXeXBGuxx4WSJpS82aYeBu0K6rfL0r8oUisLtlgWq1FWr3/8aaxv/Ebw5ofyUh
+         aAaA==
+X-Gm-Message-State: AOJu0YzsgSYk/oxk/Mv566YfuV2/S5kVnJ1dQKJlZNzMoPssmklHd/Tu
+	qe1GqTRDf8LUiGerW29swDn3Tw8M9bO1O5YARN5GcSFVMsF5XWrVBMx4ehmwDL1y
+X-Gm-Gg: AR+sD124IRjlX8B3+Q4tjyYxflONLw4+17GUJ0bOWdlaaw7vzkqhFQfqt9YL78pg7vB
+	Jg75VVB9EzP/hvkmSwB8nkPnUDt2js1aajdMK7NDxWe3LnXL4ywsPGkgbyuRPYOsYRMmWXmut+T
+	iYfAp6SK2GIA7aheWdus0b5qLD88ypmp8a0ouQ1i4LGIr68EDOW0NlvzEMTCiXRvFkIN3I1hy2X
+	d3x/yBqZqqZGiJYaZrXv/9e+bL7xMbGhaIX0PQdVQyJfpNj7qmd9qhl3fxT+4epBrxL8vOvIS1u
+	Lt0wgSI017q+Ih+mXj1kbLHtC8VLZgnlPXrN5AHdja62sYJNfnimqp+kkvUa+7uxzPH+U/YZZOd
+	wy2FEsaTXWsZJ77oFj6AMI8x89CANTNWXQ0N21N1LZPtg5rd92rCOxNGkVz6IEbOH80+4kJEr03
+	MB67oRwU1ounPmc3msrSquqJgCyCAot/c+vp9I0HaWYX45LJI1/cSAAPCTXzqpRRGGm0SUtKa5n
+	2mKT9dkTFDtShPFrLCX79IjjIgUKLwi8FWajhTX
+X-Received: by 2002:a05:6830:6d4e:b0:7e9:e257:81cb with SMTP id 46e09a7af769-7f196d7d1a7mr15601097a34.7.1785762738994;
+        Mon, 03 Aug 2026 06:12:18 -0700 (PDT)
+Received: from cr-x-ubuntu2604-client-1.dev.fyre.ibm.com ([170.225.223.19])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f18ed3e91bsm7202955a34.4.2026.08.03.06.12.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2026 06:12:18 -0700 (PDT)
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: [PATCH] wifi: rtlwifi: rtl8192cu: Remove logically dead code in rtl92cu_update_hal_rate_table
+Date: Mon,  3 Aug 2026 06:12:03 -0700
+Message-ID: <20260803131203.998989-1-chelsyratnawat2001@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <28f4f5b6fbe594c41538d5068b2d77495250ecd7.camel@sipsolutions.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1785762600; bh=H46BO01Jn8KSezBfJtXDje0ki6VhnDh0lE6fQuGUTGg=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=Cf5mUZUO3/ttFfBwiAsUCylvrFvpdL87z6sC+BUah/XEpgDmKBHl1lyxwvg5fthYY
-	 e2kC3TmoPtaGMJUjoPo5v8aXTEi6RBpZzvRgMazyPl2PV29Cknsvt6Xb03HoyCnTr/
-	 Ek3IEKbSFyT2nHmKlaATAQi6EgBWpumed4+bCmA8=
+Content-Transfer-Encoding: 8bit
 
-On lip 31, 2026 14:40, Johannes Berg wrote:
-> On Mon, 2026-07-27 at 15:26 +0200, Slawomir Stepien wrote:
-> > After taking a closer look at this I wonder how AP_VLAN should be handled? Is there a way on
-> > cfg80211 level to be able to check AP_VLAN's main device state?
-> 
-> Hmm, yeah that might be an issue? I guess in theory it could track it,
-> but it doesn't.
-> 
-> > My code change would look something like this:
-> > 
-> > @@ -9404,6 +9404,12 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
-> >         case NL80211_IFTYPE_AP:
-> >         case NL80211_IFTYPE_AP_VLAN:
-> >         case NL80211_IFTYPE_P2P_GO:
-> > +               /* Add new station only after the AP and link has been started */
-> > +               int link = params.link_sta_params.link_id >= 0 ?
-> > +                          params.link_sta_params.link_id : 0;
-> > +               if (!wdev->links[link].ap.beacon_interval)
-> > +                       return -ENETDOWN;
-> > +
-> >                 /* ignore WME attributes if iface/sta is not capable */
-> >                 if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
-> >                     !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
-> > 
-> > but the NL80211_IFTYPE_AP_VLAN case would not work here, right? Can I just do the checking only for
-> > NL80211_IFTYPE_AP and NL80211_IFTYPE_P2P_GO and skip NL80211_IFTYPE_AP_VLAN?
-> 
-> Yeah it'd just reject everything, I guess.
-> 
-> I think in practice stations are added at the AP interface first and
-> then moved to a VLAN, which would argue for actually rejecting
+The variable 'mimo_ps' is initialized to IEEE80211_SMPS_OFF and never
+modified throughout the function. This makes the condition checking for
+IEEE80211_SMPS_STATIC always evaluate to false, rendering the entire
+if-branch unreachable dead code.
 
-But are they moved and then this `case NL80211_IFTYPE_AP_VLAN` should match?
-In my tests this case doesn't match, even after the STA is assoc with vlan interface (e.g.
-wlan0.10).
+This error was reported by Coverity Scan.
 
-My test is done using qemu with:
+Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+---
+ .../wireless/realtek/rtlwifi/rtl8192cu/hw.c   | 20 +++++++------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
-Files:
-------
-==> hostapd.accept <==
-02:00:00:00:01:00 10
-
-==> hostapd.conf <==
-interface=wlan0
-driver=nl80211
-ssid=VLAN_Test_AP
-hw_mode=g
-channel=1
-
-# Basic WPA2-PSK
-wpa=2
-wpa_passphrase=password123
-wpa_key_mgmt=WPA-PSK
-
-# Enable MAC-based Access Control and VLAN Assignment
-macaddr_acl=1
-accept_mac_file=/root/hostapd.accept
-
-# Enable Dynamic VLAN interface creation
-dynamic_vlan=1
-vlan_file=/root/hostapd.vlan
-vlan_naming=1
-
-==> hostapd.vlan <==
-10  wlan0.10  br10
-
-==> wpa.conf <==
-p2p_disabled=1
-network={
-        ssid="VLAN_Test_AP"
-        #psk="password123"
-        psk=c31c83ea62af5b750232dc32865586f7658777dce974a980446dd6bff0154913
-}
-
-Commands:
----------
-modprobe mac80211_hwsim radios=2
-ip link add br10 type bridge
-ip link set br10 up
-hostapd -d hostapd.conf -B
-wpa_supplicant -i wlan1 -c wpa.conf
-
-Results:
---------
-# iw dev
-phy#1
-        Interface wlan1
-                ifindex 5
-                wdev 0x100000001
-                addr 02:00:00:00:01:00
-                type managed
-                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
-                txpower 20.00 dBm
-                multicast TXQ:
-                        qsz-byt qsz-pkt flows   drops   marks   overlmt hashcol tx-bytes        tx-packets
-                        0       0       0       0       0       0       0       0               0
-phy#0
-        Interface wlan0.10
-                ifindex 8
-                wdev 0x2
-                addr 02:00:00:00:00:00
-                type AP/VLAN
-                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
-                txpower 20.00 dBm
-        Interface wlan0
-                ifindex 4
-                wdev 0x1
-                addr 02:00:00:00:00:00
-                ssid VLAN_Test_AP
-                type AP
-                channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
-                txpower 20.00 dBm
-                multicast TXQ:
-                        qsz-byt qsz-pkt flows   drops   marks   overlmt hashcol tx-bytes        tx-packets
-                        0       0       33      0       0       0       0       3868            33
-
-# iw dev wlan0.10 station dump
-Station 02:00:00:00:01:00 (on wlan0.10)
-        authorized:     yes
-        authenticated:  yes
-        associated:     yes
-        preamble:       short
-        WMM/WME:        no
-        MFP:            no
-        TDLS peer:      no
-        inactive time:  5676 ms
-        rx bytes:       3569
-        rx packets:     30
-        tx bytes:       410
-        tx packets:     4
-        tx retries:     0
-        tx failed:      0
-        rx drop misc:   0
-        signal:         -30 dBm
-        signal avg:     -30 dBm
-        tx bitrate:     1.0 MBit/s
-        tx duration:    0 us
-        rx bitrate:     54.0 MBit/s
-        rx duration:    0 us
-        DTIM period:    0
-        beacon interval:0
-        connected time: 238 seconds
-        associated at [boottime]:       30.496s
-        associated at:  1785761454053 ms
-        current time:   1785761692411 ms
-
-# dmesg | grep laza
-(this is just a print of this field just before the switch() call)
-[   30.489902][  T189] laza: info->attrs[NL80211_ATTR_IFINDEX]: 4
-(and yes, it is just one print triggered)
-
-This index 4 is assigned to wlan0, so it will never have iftype == NL80211_IFTYPE_AP_VLAN.
-Also the print of wdev->identifier will give 0x1 and not 0x2.
-
-So, is it even possible that `case NL80211_IFTYPE_AP_VLAN` would match? If it will never match, then
-do I understand that the change I proposed should be correct for other cases?
-
-> everything being OK anyway - but then that shouldn't be because of this
-> but rather by just removing the AP_VLAN case there, or so.
-> 
-> Not sure what the best thing would be though.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index e75f7ec44e6a..199bab58363c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1809,10 +1809,9 @@ static void rtl92cu_update_hal_rate_table(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u32 ratr_value;
++	u32 ratr_value, ratr_mask;
+ 	u8 ratr_index = 0;
+ 	u8 nmode = mac->ht_enable;
+-	u8 mimo_ps = IEEE80211_SMPS_OFF;
+ 	u16 shortgi_rate;
+ 	u32 tmp_ratr_value;
+ 	u8 curtxbw_40mhz = mac->bw_40;
+@@ -1844,19 +1843,14 @@ static void rtl92cu_update_hal_rate_table(struct ieee80211_hw *hw,
+ 	case WIRELESS_MODE_N_24G:
+ 	case WIRELESS_MODE_N_5G:
+ 		nmode = 1;
+-		if (mimo_ps == IEEE80211_SMPS_STATIC) {
+-			ratr_value &= 0x0007F005;
+-		} else {
+-			u32 ratr_mask;
+ 
+-			if (get_rf_type(rtlphy) == RF_1T2R ||
+-			    get_rf_type(rtlphy) == RF_1T1R)
+-				ratr_mask = 0x000ff005;
+-			else
+-				ratr_mask = 0x0f0ff005;
++		if (get_rf_type(rtlphy) == RF_1T2R ||
++		    get_rf_type(rtlphy) == RF_1T1R)
++			ratr_mask = 0x000ff005;
++		else
++			ratr_mask = 0x0f0ff005;
+ 
+-			ratr_value &= ratr_mask;
+-		}
++		ratr_value &= ratr_mask;
+ 		break;
+ 	default:
+ 		if (rtlphy->rf_type == RF_1T2R)
 -- 
-Slawomir Stepien
+2.53.0
+
