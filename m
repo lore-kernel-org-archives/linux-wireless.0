@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 227DF1DFFB
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19FB5374A0B
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785766399; cv=none; b=XRY3elVkoWORV3B14LSKKNPchVEzPsea7ZeedY9DvTK0PhnEone7c2FvjlLqmzhDLgyuIo+f2PaQgB6AhJP3v0XGR4LdNkl0TvvEh5KZJDHeQLd4GHRxu0W/EPUBed4QTf4TjINBxuJDrOseoQSRjFXa2CxWXmeFwHHxVxzJYa0=
+	t=1785766399; cv=none; b=rbrteobXr4Y5qGGpgEhEC5ZxVCbCVf9Qx3OePqXGSwUuxF+7pL63pk2oJpvB2lrG/htXPiaUSwp5LywP3OSpe1vd7IsJmltnE+nyoy66p5Lf5hH66cBQFx1HFyGekeqhFGrp4833r6Bau/lgjqVVWOy6ucjYphvEtJXs8dst55I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1785766399; c=relaxed/simple;
-	bh=Y0yIsenAM3jlClJLtnIRbQAYxKKzx50AJSf/9W95Cpg=;
+	bh=quQhfjxfTjs15mezp6pqs+iFMc8So3jhILmHW3H41ms=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qcBHYH3oK52/rwMBtGirNqEHwF+4BqQQI7679MmistKBTzeLjsoKGnQfc1SkE8SNLCsHJ81EHz9AokFa3xYH2rrQY4NHfw/A689Fec5kwxy/VbBMBsbQSQ1y3jAO+gtJUiLUcqFlbm3IBmFXqHWWN2AV7V4ExCqoVQTZEM4zY5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=TZ5Wonnv; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=aDmbEU3yCF8SiY6DNhcZtT0NLbh7EAX11yMpxrGUAbZ/GsBmCk9iw0sXZmYFyPal8b4k6rEwfWC+xmlvXekbdCuNz59rTnWXqCWUI490bS7iVGDrU/EWxw/p02pC2LwKUDFhw8IZowrj6mV1Ch3uZOzcoJ1eUJ731vya5jI3g7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=P8LV4Ejo; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="TZ5Wonnv"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="P8LV4Ejo"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=8eTAJMRnBlX6hdB9VU72LrvfA5HnGx7AMYXFZkh20eA=;
-	t=1785766397; x=1786975997; b=TZ5WonnvjeBmolEcyHrCnxq2kg+9oDaQ0oF1bi2zaa11Nx/
-	995edobrlNZEsBmlcd1Obs9HyYIv6G8Jd0myLw0PKoKKSnNpGcABGkQrXcMGFzwRNDBELpnUKwCqJ
-	MhNa/O4ilKUZZjZLjos87Pki2vzW+1YsNWOsoneTyp01YB6IwSoPo1D0w30SERiKgmXL5v/c/SF+Q
-	GzxDlD2t+Araz6TTG+BhqGp/23gpjViv6RERfxHLHs9fK4M5KgQxfmcAaqs1HE3l6jvjbGbKaPypB
-	1bR1rlJs92SbSmutOVMPUmyqR7/6efeoYKZwfEfYJ3hEXoqPLveM9h0YtkKnstJA==;
+	Resent-Cc:Resent-Message-ID; bh=SIeYbr6n8pzik4/KN8WDQDSXphZsiQ59fQCg9on86tQ=;
+	t=1785766398; x=1786975998; b=P8LV4EjoSJnheAk5yPzMx6g4+aHI2m8GTryPL5Wy/wfpxq8
+	F4v8S9D2L0AxRrIiRtOeXH/H0cR8Ys8uWw8euEFdTTgcX0tlmjtYsuQ0/bWwRI/8nno8AN5BQ//LZ
+	Uf53ETsSbJbVeGf+Hz3PBBpVjD2RUC1xqwEsfmKN6YMu0XPUEMpxFE8qb0e1eILfIdbb7XfNwIZ52
+	WmGiRJqP5pbWyBAqOKpMoecZu8WSWKmAouj28ZwFELtrIiLYf9EXAcdsX/Lpl8DgNoeewJGue3Eld
+	js/6bCeXlkrGLUG+hXmQ2b0bP6cmDer4+E7CPWe9hwkXsFfyxzCnRCxSwAtSHe8Q==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqtPk-0000000G4Ws-2m68;
-	Mon, 03 Aug 2026 16:13:13 +0200
+	id 1wqtPm-0000000G4Ws-2EH1;
+	Mon, 03 Aug 2026 16:13:15 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 1/7] wifi: mac80211: fix IEEE80211_TX_CTL_REQ_TX_STATUS mixup
-Date: Mon,  3 Aug 2026 16:08:37 +0200
-Message-ID: <20260803141309.292711-10-johannes@sipsolutions.net>
+Subject: [PATCH wireless-next 2/7] wifi: mac80211: tx: simplify control port frame transmission
+Date: Mon,  3 Aug 2026 16:08:38 +0200
+Message-ID: <20260803141309.292711-11-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260803141309.292711-9-johannes@sipsolutions.net>
 References: <20260803141309.292711-9-johannes@sipsolutions.net>
@@ -50,53 +50,79 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In ieee80211_build_hdr(), IEEE80211_TX_CTL_REQ_TX_STATUS is checked
-in ctrl_flags, which is wrong - IEEE80211_TX_CTL_REQ_TX_STATUS is in
-info->flags, so the check is for IEEE80211_TX_CTRL_PORT_CTRL_PROTO
-instead. This works out OK because the only place setting _that_ at
-a point before this gets called is in fact ieee80211_tx_control_port()
-which was intended here. This is actually needed for correctness, if
-jt were checking info->flags instead, TDLS would fill/leak the status
-frames created here.
+ieee80211_tx_control_port() already does most of the necessary work,
+much of which is repeated by __ieee80211_subif_start_xmit(). Most
+work in the latter function is completely unnecessary since these
+are special frames we built directly here (long enough, etc.)
 
-However, we can just fix it by using the cookie instead, that'll be
-set for PREAUTH frames via ieee80211_tx_control_port() as well, and
-no other frames.
+Call ieee80211_build_hdr() and ieee80211_xmit() directly instead.
 
-Additionally, the code also erroneously set it, but that just caused
-preauth frames to get it set, since storing the ACK SKB will also set
-the correct flag. Drop this assignment entirely.
+It also means some errors can now be reported to userspace rather
+than frames silently getting dropped, but that's a good thing.
 
-Fixes: a7528198add8 ("mac80211: support control port TX status reporting")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ net/mac80211/tx.c | 34 +++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3a1e2c9e1565..6c2ee181a3a7 100644
+index 6c2ee181a3a7..772350f485dd 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -2945,8 +2945,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+@@ -6596,9 +6596,6 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+ 	skb_reset_network_header(skb);
+ 	skb_reset_mac_header(skb);
+ 
+-	if (local->hw.queues < IEEE80211_NUM_ACS)
+-		goto start_xmit;
+-
+ 	/* update QoS header to prioritize control port frames if possible,
+ 	 * prioritization also happens for control port frames send over
+ 	 * AF_PACKET
+@@ -6611,24 +6608,31 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
+ 		return err;
  	}
  
- 	if (unlikely(!multicast &&
--		     (sk_requests_wifi_status(skb->sk) ||
--		      ctrl_flags & IEEE80211_TX_CTL_REQ_TX_STATUS)))
-+		     (sk_requests_wifi_status(skb->sk) || cookie)))
- 		info_id = ieee80211_store_ack_skb(local, skb, &info_flags,
- 						  cookie);
+-	if (!IS_ERR(sta)) {
+-		u16 queue = ieee80211_select_queue(sdata, sta, skb);
++	if (IS_ERR(sta))
++		sta = NULL;
  
-@@ -6554,9 +6553,6 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	if (unencrypted)
- 		flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-		skb_set_queue_mapping(skb, queue);
++	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, sta, skb));
  
--	if (cookie)
--		ctrl_flags |= IEEE80211_TX_CTL_REQ_TX_STATUS;
--
- 	flags |= IEEE80211_TX_INTFL_NL80211_FRAME_TX;
+-		/*
+-		 * for MLO STA, the SA should be the AP MLD address, but
+-		 * the link ID has been selected already
+-		 */
+-		if (sta && sta->sta.mlo)
+-			memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
++	/*
++	 * for MLO STA, the SA should be the AP MLD address, but
++	 * the link ID has been selected already
++	 */
++	if (sta && sta->sta.mlo)
++		memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
++
++	skb = ieee80211_build_hdr(sdata, skb, flags, sta, ctrl_flags, cookie);
++	if (IS_ERR(skb)) {
++		rcu_read_unlock();
++		return PTR_ERR(skb);
+ 	}
+-	rcu_read_unlock();
  
- 	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
+-start_xmit:
++	dev_sw_netstats_tx_add(dev, 1, skb->len);
++	ieee80211_tpt_led_trig_tx(local, skb->len);
++
+ 	local_bh_disable();
+-	__ieee80211_subif_start_xmit(skb, skb->dev, flags, ctrl_flags, cookie);
++	ieee80211_xmit(sdata, sta, skb);
+ 	local_bh_enable();
++	rcu_read_unlock();
+ 
+ 	return 0;
+ }
 -- 
 2.55.0
 
