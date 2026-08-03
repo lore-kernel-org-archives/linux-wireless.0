@@ -1,42 +1,42 @@
 Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19FB5374A0B
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D27537E30F
+	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 14:13:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785766399; cv=none; b=rbrteobXr4Y5qGGpgEhEC5ZxVCbCVf9Qx3OePqXGSwUuxF+7pL63pk2oJpvB2lrG/htXPiaUSwp5LywP3OSpe1vd7IsJmltnE+nyoy66p5Lf5hH66cBQFx1HFyGekeqhFGrp4833r6Bau/lgjqVVWOy6ucjYphvEtJXs8dst55I=
+	t=1785766401; cv=none; b=AW5dCvd3dQhjnG7v2sgGjs2BKLhYrZgGm3sd9jrXcBRKn+UTWkU7LIUz9g1aiIYbm22gl9IsFd0+P4I/C+KQmKWqQGx0CxmRSS49AlJyNfFUUAga3XsW+9XUPVrh/R1fiU2KlFOHRSvEtgrIeiof6uURwn6zr80gXVmnzVxbqxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785766399; c=relaxed/simple;
-	bh=quQhfjxfTjs15mezp6pqs+iFMc8So3jhILmHW3H41ms=;
+	s=arc-20240116; t=1785766401; c=relaxed/simple;
+	bh=0v+wkPDkeLpLZTlzAUQNUGpu5T7KedweuFPSqDKHZnM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aDmbEU3yCF8SiY6DNhcZtT0NLbh7EAX11yMpxrGUAbZ/GsBmCk9iw0sXZmYFyPal8b4k6rEwfWC+xmlvXekbdCuNz59rTnWXqCWUI490bS7iVGDrU/EWxw/p02pC2LwKUDFhw8IZowrj6mV1Ch3uZOzcoJ1eUJ731vya5jI3g7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=P8LV4Ejo; arc=none smtp.client-ip=168.119.38.16
+	 MIME-Version; b=AVuZo6Rz5sfmpsxIdxZmZ0oRQRdWDr1EtDhzgP3v+0PuhGKRQ3I/7eUx1t8kIb7dpRSaQ+YoRnu4OkYuag6qnKtN7hndky+tACViwD0DgaKEoBuvMBwKyc+6NcODpbssCLmsA6JMpLZkqcT6Pw/fcOh6Riwj5Fcnrt8bk2yKOtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=Cd6LJVj/; arc=none smtp.client-ip=168.119.38.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="P8LV4Ejo"
+	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="Cd6LJVj/"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=SIeYbr6n8pzik4/KN8WDQDSXphZsiQ59fQCg9on86tQ=;
-	t=1785766398; x=1786975998; b=P8LV4EjoSJnheAk5yPzMx6g4+aHI2m8GTryPL5Wy/wfpxq8
-	F4v8S9D2L0AxRrIiRtOeXH/H0cR8Ys8uWw8euEFdTTgcX0tlmjtYsuQ0/bWwRI/8nno8AN5BQ//LZ
-	Uf53ETsSbJbVeGf+Hz3PBBpVjD2RUC1xqwEsfmKN6YMu0XPUEMpxFE8qb0e1eILfIdbb7XfNwIZ52
-	WmGiRJqP5pbWyBAqOKpMoecZu8WSWKmAouj28ZwFELtrIiLYf9EXAcdsX/Lpl8DgNoeewJGue3Eld
-	js/6bCeXlkrGLUG+hXmQ2b0bP6cmDer4+E7CPWe9hwkXsFfyxzCnRCxSwAtSHe8Q==;
+	Resent-Cc:Resent-Message-ID; bh=wMxo5dY05NfyXeOfFBwIyLSXPiUs7BiKvB8azkwdduM=;
+	t=1785766399; x=1786975999; b=Cd6LJVj/riuZY4xIBfvtuQTrkvwqyR7SsgaiMpQ8uruN6z1
+	sQXUb/rIUCRYa5zIX+k0l4VLgQS+6eUOih/NLNORmh6ERdHClMeSV7xKyh7SLj7fG64igwD3chOV9
+	k5kOnzjqrF0T/bONsKu+PELfpTQNIQywTmjOLVpwvReG35nwUV6uLLnTyi1WK2WEExX5thioa+PDt
+	BMxB8+8UJoOBoQXnl7W1+ttmTQzGbjobR3U7uCvFfAr7lxoKpL1mQR6URTg0QabSM71FattKNq4wJ
+	DJWGMoxe6kHfzo0WFNTYi1Jp8JrV1BA7AxyQfKl6lohlrpJKcW68eaRLu+2dvpAw==;
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
 	(Exim 4.98.2)
 	(envelope-from <johannes@sipsolutions.net>)
-	id 1wqtPm-0000000G4Ws-2EH1;
-	Mon, 03 Aug 2026 16:13:15 +0200
+	id 1wqtPn-0000000G4Ws-3LEY;
+	Mon, 03 Aug 2026 16:13:16 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH wireless-next 2/7] wifi: mac80211: tx: simplify control port frame transmission
-Date: Mon,  3 Aug 2026 16:08:38 +0200
-Message-ID: <20260803141309.292711-11-johannes@sipsolutions.net>
+Subject: [PATCH wireless-next 3/7] wifi: mac80211: remove cookie from __ieee80211_subif_start_xmit()
+Date: Mon,  3 Aug 2026 16:08:39 +0200
+Message-ID: <20260803141309.292711-12-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260803141309.292711-9-johannes@sipsolutions.net>
 References: <20260803141309.292711-9-johannes@sipsolutions.net>
@@ -50,79 +50,123 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-ieee80211_tx_control_port() already does most of the necessary work,
-much of which is repeated by __ieee80211_subif_start_xmit(). Most
-work in the latter function is completely unnecessary since these
-are special frames we built directly here (long enough, etc.)
-
-Call ieee80211_build_hdr() and ieee80211_xmit() directly instead.
-
-It also means some errors can now be reported to userspace rather
-than frames silently getting dropped, but that's a good thing.
+This argument is now always zero, so no longer used. Remove it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tx.c | 34 +++++++++++++++++++---------------
- 1 file changed, 19 insertions(+), 15 deletions(-)
+ net/mac80211/ieee80211_i.h |  3 +--
+ net/mac80211/tdls.c        |  2 +-
+ net/mac80211/tx.c          | 21 ++++++++-------------
+ 3 files changed, 10 insertions(+), 16 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5761e9621491..85f72ad06ad7 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2233,8 +2233,7 @@ netdev_tx_t ieee80211_subif_start_xmit_8023(struct sk_buff *skb,
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags,
+-				  u32 ctrl_flags,
+-				  u64 cookie);
++				  u32 ctrl_flags);
+ struct sk_buff *
+ ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
+ 			      struct sk_buff *skb, u32 info_flags);
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index dc2f662fe4c4..4f4cae9fd274 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -1121,7 +1121,7 @@ ieee80211_tdls_prep_mgmt_packet(struct wiphy *wiphy, struct net_device *dev,
+ 	/* disable bottom halves when entering the Tx path */
+ 	local_bh_disable();
+ 	__ieee80211_subif_start_xmit(skb, dev, flags,
+-				     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC, 0);
++				     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC);
+ 	local_bh_enable();
+ 
+ 	return ret;
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 6c2ee181a3a7..772350f485dd 100644
+index 772350f485dd..28c60ae442c0 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
-@@ -6596,9 +6596,6 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 	skb_reset_network_header(skb);
- 	skb_reset_mac_header(skb);
+@@ -4367,8 +4367,7 @@ EXPORT_SYMBOL(ieee80211_txq_schedule_start);
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags,
+-				  u32 ctrl_flags,
+-				  u64 cookie)
++				  u32 ctrl_flags)
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+@@ -4426,7 +4425,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			ctrl_flags |= IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP;
  
--	if (local->hw.queues < IEEE80211_NUM_ACS)
--		goto start_xmit;
--
- 	/* update QoS header to prioritize control port frames if possible,
- 	 * prioritization also happens for control port frames send over
- 	 * AF_PACKET
-@@ -6611,24 +6608,31 @@ int ieee80211_tx_control_port(struct wiphy *wiphy, struct net_device *dev,
- 		return err;
+ 		skb = ieee80211_build_hdr(sdata, skb, info_flags,
+-					  sta, ctrl_flags, cookie);
++					  sta, ctrl_flags, 0);
+ 		if (IS_ERR(skb)) {
+ 			kfree_skb_list(next);
+ 			goto out;
+@@ -4563,7 +4562,7 @@ static void ieee80211_mlo_multicast_tx_one(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	ctrl_flags |= u32_encode_bits(link_id, IEEE80211_TX_CTRL_MLO_LINK);
+-	__ieee80211_subif_start_xmit(out, sdata->dev, 0, ctrl_flags, 0);
++	__ieee80211_subif_start_xmit(out, sdata->dev, 0, ctrl_flags);
+ }
+ 
+ static void ieee80211_mlo_multicast_tx(struct net_device *dev,
+@@ -4578,7 +4577,7 @@ static void ieee80211_mlo_multicast_tx(struct net_device *dev,
+ 		ctrl_flags |= u32_encode_bits(__ffs(links),
+ 					      IEEE80211_TX_CTRL_MLO_LINK);
+ 
+-		__ieee80211_subif_start_xmit(skb, sdata->dev, 0, ctrl_flags, 0);
++		__ieee80211_subif_start_xmit(skb, sdata->dev, 0, ctrl_flags);
+ 		return;
  	}
  
--	if (!IS_ERR(sta)) {
--		u16 queue = ieee80211_select_queue(sdata, sta, skb);
-+	if (IS_ERR(sta))
-+		sta = NULL;
- 
--		skb_set_queue_mapping(skb, queue);
-+	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, sta, skb));
- 
--		/*
--		 * for MLO STA, the SA should be the AP MLD address, but
--		 * the link ID has been selected already
--		 */
--		if (sta && sta->sta.mlo)
--			memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+	/*
-+	 * for MLO STA, the SA should be the AP MLD address, but
-+	 * the link ID has been selected already
-+	 */
-+	if (sta && sta->sta.mlo)
-+		memcpy(ehdr->h_source, sdata->vif.addr, ETH_ALEN);
-+
-+	skb = ieee80211_build_hdr(sdata, skb, flags, sta, ctrl_flags, cookie);
-+	if (IS_ERR(skb)) {
-+		rcu_read_unlock();
-+		return PTR_ERR(skb);
+@@ -4619,8 +4618,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		ieee80211_convert_to_unicast(skb, dev, &queue);
+ 		while ((skb = __skb_dequeue(&queue)))
+ 			__ieee80211_subif_start_xmit(skb, dev, 0,
+-						     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC,
+-						     0);
++						     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC);
+ 	} else if (ieee80211_vif_is_mld(&sdata->vif) &&
+ 		   ((sdata->vif.type == NL80211_IFTYPE_AP &&
+ 		     !ieee80211_hw_check(&sdata->local->hw, MLO_MCAST_MULTI_LINK_TX)) ||
+@@ -4630,8 +4628,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	} else {
+ normal:
+ 		__ieee80211_subif_start_xmit(skb, dev, 0,
+-					     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC,
+-					     0);
++					     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC);
  	}
--	rcu_read_unlock();
  
--start_xmit:
-+	dev_sw_netstats_tx_add(dev, 1, skb->len);
-+	ieee80211_tpt_led_trig_tx(local, skb->len);
-+
+ 	return NETDEV_TX_OK;
+@@ -4729,8 +4726,7 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 		if (!test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+ 			/* fall back to non-offload slow path */
+ 			__ieee80211_subif_start_xmit(skb, dev, 0,
+-						     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC,
+-						     0);
++						     IEEE80211_TX_CTRL_MLO_LINK_UNSPEC);
+ 			return;
+ 		}
+ 
+@@ -6660,8 +6656,7 @@ int ieee80211_probe_mesh_link(struct wiphy *wiphy, struct net_device *dev,
+ 
  	local_bh_disable();
--	__ieee80211_subif_start_xmit(skb, skb->dev, flags, ctrl_flags, cookie);
-+	ieee80211_xmit(sdata, sta, skb);
+ 	__ieee80211_subif_start_xmit(skb, skb->dev, 0,
+-				     IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP,
+-				     0);
++				     IEEE80211_TX_CTRL_SKIP_MPATH_LOOKUP);
  	local_bh_enable();
-+	rcu_read_unlock();
  
  	return 0;
- }
 -- 
 2.55.0
 
