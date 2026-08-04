@@ -1,125 +1,111 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 172053D9558
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 21:03:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C3B3CB57D;
+	Tue,  4 Aug 2026 22:31:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785877404; cv=none; b=NOrkSpgNWHE+KKvIq5WfB0wfzjwBIZwEk8GPbtHx1l+WNKltTox8EV/ALJ8JQnh0EHIod9RfkUMqDO1MeByQRUt6iUJ5fCTgMUBR/cKSxCLBBMlQH7Nf1RyVWS7Sd3CwrYrK6Q+nkEw5COSdo1qatOk0jBh6UC9kfZMiAzFxTR4=
+	t=1785882691; cv=none; b=BZiJOrFvG6HsAZ89OVdRw9yBDJpyeGpgFoSKp+KV8cpD1sJNQegoRWxQ7QRng8bzaz16wlKDNh5p8V45wecAAG/3knADj07N6/ITY+cd/d8USevJ7wW3mtCiGpjxgPM3RoxDvqKl3//jX0ioqVHj4aQy4jzcvUaOMEhym+OdcZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785877404; c=relaxed/simple;
-	bh=Nq480V9rbVIvPogmTMvxGbvQhA45ynkBc7pX8U92kIw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bp2ngzTczollTBXwzbvzp96/fA1MZrUqjq5SN+peHaXxwwIzW+GpaEBKleHeWMryZM3bWFCxz60uuZeiL4n+YcqCqPfrvdtXUuseNCEUxVsIt2KtXoDE6gbEowcHyW4iwh3fzwkf5tm4+9ujiqN9PMLiNV0awtRd+4IhODbSOC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DZEASqqg; arc=none smtp.client-ip=209.85.221.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785882691; c=relaxed/simple;
+	bh=mG1SLwAJIubIVjXdTFNOBu8EzWB7e3//i6VKXIlyBlc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=GIL1tRAGhXa2ctKkf5q1cZGh/dhagDAxBuUz/sibERw+Q8EyZq4g69hlfdhP4QhkNKKW+KpY47Kn+D1OgRsRabMMPLwLXIj69zf7G0mP18vHixzPs7KmvYQBKYPHRU1CWTJJHxHvixNl7kP+ruUPSBHWo++ZHcvMEb/x/PrR+bA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VSdW48Lc; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DZEASqqg"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-47f7872abb6so117732f8f.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2026 14:03:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785877401; x=1786482201; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tfqi+sPLHjcIbbi7QX6xu9XbeZElNtuKW90eUTRnvgQ=;
-        b=DZEASqqgGDvHo122sAN9Xi6tjRbgbLic0UL4Bf4cs3pTkeIRuk/f1lZpHaStjVanCL
-         5s9o5TWCiX0Wb72wToH2V8C6keA72sIgn7SA3/630GIwt5v0+6z71AxIGJOTeTDa/1LW
-         B8SAtVs2qfTgYo3UaUylmgO3MfTQANufR/RG7MFn4EZyMsDKlnM7JWqOTU/Vo2X6kSyT
-         IMTCjsj7WkCtIVGQ78ZmeVerdS8QrfgunDTCZKUsRur2FMGr4Z6n9UfEK1eWDR5vxW0E
-         0RUXdLA+m9n31BMkRBLJzPnpr9+gASFV7OAtsZZ7cjJWVPbaJr8FKOK72diWlbk3MiyZ
-         Ju2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785877401; x=1786482201;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tfqi+sPLHjcIbbi7QX6xu9XbeZElNtuKW90eUTRnvgQ=;
-        b=b82HyiIm8E51mHXHc/huUjtoHDJiix5E4JKvVQb3PwS3oX9KSffyHLoqln8E2mIPAi
-         9rq6sjoTaTSd+UfWK6FuGvjVs+8s1Qv0UBow4/JQ3YSsTNfD2yoyhaqj2fvkjOmjhUG5
-         TGLgD+qy/1RxC6yDKr9pS1GjkvgN0Q09tYavp6JPAZ+UhGkWP8bhUMhQQEl2upG7tb19
-         7y31MK1nzasloam5hwKR5zFeQIOJWsbR+z0dT6MWhkQ+iAQOpQGCMvX8i7CKv4PPyCYT
-         7+OGXNpdtkuWlkjN8/j2gPn5srIzwk+wg8bPiai6T8v7L298Jb6PtAy4TWCeihEKHa5X
-         TAng==
-X-Forwarded-Encrypted: i=1; AHgh+RoEEnOQAUYxVZqxxShXcmyPfErI82+qwyPoIYtwhBDQP5CQUnQbyrVO9b7JK5frymYeY6Qls+CiCga0s+0Rgw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyDLYV/mGxZicV1WJrsUATqq8BDgBztXgC2ebamod8+nB/gb+Ip
-	HLh0nwka+/cxV2CWs56ySYKOua5hJ9mRe3oMFbeqsu6yKrOJmXIzXYDL
-X-Gm-Gg: AR+sD11NpYzH8RmQLMYiAefHbXKYs2ysS+Pq8pQsRkjw9AC7Fvv7SAjIYQtrBqNiMdN
-	9j8jEB1ue4ww+iPqggAcU9rIqpUkwfybv4GbklIgn1O8e5n5dA7ljSfKXYt1311SLPkJigp4Ryz
-	BmFuYSiNwk4q+v5DKcsm6zDgO+mf2WRsTvuc9YGInrqebkCApdbpEKBAlyPg/sP2HdmD5rrOh3W
-	s7WnSO9ss4LJ+U5+D4TQG15Xa0VQ7oWKeXSqgsnjovF/tYrEk+OfZ8ZnQI3//SWVEMRvOWNOsdr
-	vf6EzGNWPITGxTz4oPSXF4dXslljKB2eqnmto65D/QvSpHIHOn5a6oYvOsWlzToJH5IZFzdrSdn
-	mPB4TPMP+WGxC+ZVuF/gLBIlT3dCzK060w8XPxl2Ii4jeXBqSWjf1rAlv5jJUpoxgSELs+8eoe/
-	rL+h2s6aJIgsLflqgUZK4dZ0iCtcrRR3ClelsRzjSHHImg2Uy01yjg8fze0HV/1cFZNq+vESti
-X-Received: by 2002:a05:6000:2486:b0:47f:80df:3ba4 with SMTP id ffacd0b85a97d-47fec62aec8mr3010273f8f.28.1785877401253;
-        Tue, 04 Aug 2026 14:03:21 -0700 (PDT)
-Received: from debian.local ([2a0a:ef40:e13:1601:335c:b8a1:fe26:15c7])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47febfda11csm2897658f8f.1.2026.08.04.14.03.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 14:03:20 -0700 (PDT)
-Date: Tue, 4 Aug 2026 22:03:19 +0100
-From: Chris Bainbridge <chris.bainbridge@gmail.com>
-To: "Korenblit, Miriam Rachel" <miriam.rachel.korenblit@intel.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"regressions@lists.linux.dev" <regressions@lists.linux.dev>
-Subject: Re: [REGRESSION] iwlwifi IO_PAGE_FAULT and Master Disable Timed Out
-Message-ID: <anJTlyrKsASh9gZg@debian.local>
-References: <amzVtgQb2p-_nShU@debian.local>
- <DS0PR11MB78800B96A0FE637DC5390E4AA3D62@DS0PR11MB7880.namprd11.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VSdW48Lc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77C731F00A3D;
+	Tue,  4 Aug 2026 22:31:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785882685;
+	bh=1rNKgpIx6sZKzmYQ6FweqLBwIUVjPux1He9OuvdAw/w=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=VSdW48Lc4jRQjSvOYK6+1RkSCe23ufhDsOsXhNt4Ddw8D/YQHxmW320dvP2P7ORz+
+	 Nzz4hCaj/lJheSxjNhu3iK8vKtbjkdRaSYOp9A3xKfMCmjo1wFCtcIoxttJJ7CHyTW
+	 6FMLdwzCEAHkqLj2FEznUUNVP76O0jKtDVItxv3ED11ABBaD/MjbZTwf7dKQLMYfYP
+	 dEaRKsKWQs/SpA7P9pNqP15pttyCi9lzKbUd8DJdKNkfS4l3ybZmwCkpxRabdDxoZc
+	 l51MfSH06sfXgb8HFBXSqbR2LPPJEGwI4O/DC9mCeNnBGbOkIY2Ycs3abL1ZRO0ZNw
+	 8giP29bCtxPug==
+From: Bjorn Andersson <andersson@kernel.org>
+To: konradybcio@kernel.org,
+	Sumit Garg <sumit.garg@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-media@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath12k@lists.infradead.org,
+	linux-remoteproc@vger.kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	robin.clark@oss.qualcomm.com,
+	sean@poorly.run,
+	akhilpo@oss.qualcomm.com,
+	lumag@kernel.org,
+	abhinav.kumar@linux.dev,
+	jesszhan0024@gmail.com,
+	marijn.suijten@somainline.org,
+	airlied@gmail.com,
+	simona@ffwll.ch,
+	vikash.garodia@oss.qualcomm.com,
+	bod@kernel.org,
+	mchehab@kernel.org,
+	elder@kernel.org,
+	andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	jjohnson@kernel.org,
+	mathieu.poirier@linaro.org,
+	trilokkumar.soni@oss.qualcomm.com,
+	mukesh.ojha@oss.qualcomm.com,
+	pavan.kondeti@oss.qualcomm.com,
+	jorge.ramirez@oss.qualcomm.com,
+	tonyh@qti.qualcomm.com,
+	vignesh.viswanathan@oss.qualcomm.com,
+	srinivas.kandagatla@oss.qualcomm.com,
+	amirreza.zarrabi@oss.qualcomm.com,
+	jenswi@kernel.org,
+	op-tee@lists.trustedfirmware.org,
+	apurupa@qti.qualcomm.com,
+	skare@qti.qualcomm.com,
+	linux-kernel@vger.kernel.org,
+	Sumit Garg <sumit.garg@oss.qualcomm.com>
+Subject: Re: (subset) [PATCH v9 00/14] firmware: qcom: Add OP-TEE PAS service support
+Date: Tue,  4 Aug 2026 17:31:15 -0500
+Message-ID: <178588267268.451855.11887423649046062153.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260702115835.167602-1-sumit.garg@kernel.org>
+References: <20260702115835.167602-1-sumit.garg@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DS0PR11MB78800B96A0FE637DC5390E4AA3D62@DS0PR11MB7880.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Sun, Aug 02, 2026 at 07:24:04AM +0000, Korenblit, Miriam Rachel wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Chris Bainbridge <chris.bainbridge@gmail.com>
-> > Sent: Friday, July 31, 2026 8:05 PM
-> > To: Grumbach, Emmanuel <emmanuel.grumbach@intel.com>
-> > Cc: Berg, Johannes <johannes.berg@intel.com>; Korenblit, Miriam Rachel
-> > <miriam.rachel.korenblit@intel.com>; linux-wireless@vger.kernel.org;
-> > regressions@lists.linux.dev
-> > Subject: [REGRESSION] iwlwifi IO_PAGE_FAULT and Master Disable Timed Out
-> > 
-> > Hi,
-> > 
-> > 0eaa1f245ac0 ("wifi: iwlwifi: mvm: don't support the reset handshake for old
-> > firmwares") introduced an intermittent boot regression on my laptop:
-> > 
-> > [   15.974991] iwlwifi 0000:01:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT
-> > domain=0x000a address=0xbe9f5000 flags=0x0000]
-> > [   15.976184] iwlwifi 0000:01:00.0: AMD-Vi: Event logged [IO_PAGE_FAULT
-> > domain=0x000a address=0xbe9f5400 flags=0x0000]
-> > [   15.978501] iwlwifi 0000:01:00.0: Master Disable Timed Out, 100 usec
-> > 
-> > The commit only contains:
-> > 
-> > +       /* Those firmware versions claim to support the fw_reset_handshake
-> > +        * but they are buggy.
-> > +        */
-> > +       if (IWL_UCODE_MAJOR(mvm->fw->ucode_ver) <= 77)
-> > +               trans->conf.fw_reset_handshake = false;
-> > 
-> > The if condition is evaluating true on my laptop despite using firmware ty-a0-gf-
-> > a0-89.ucode. So I suspect this is not the correct way to check the firmware
-> > version?
-> 
-> Yes, seems like you are right.
-> Thanks for the report!
-> 
-> I am attaching a fix candidate, I'd appreciate if you could test it.
 
-Thanks, the fix is working fine.
+On Thu, 02 Jul 2026 17:28:16 +0530, Sumit Garg wrote:
+> From: Sumit Garg <sumit.garg@oss.qualcomm.com>
+> 
+> Qcom platforms has the legacy of using non-standard SCM calls
+> splintered over the various kernel drivers. These SCM calls aren't
+> compliant with the standard SMC calling conventions which is a
+> prerequisite to enable migration to the FF-A specifications from Arm.
+> 
+> [...]
 
-Reported-and-tested-by: Chris Bainbridge <chris.bainbridge@gmail.com>
+Applied, thanks!
+
+[09/14] media: qcom: Switch to generic PAS TZ APIs
+        commit: 94d3305d990b055e1561e3b78275344b1f40c86e
+
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
