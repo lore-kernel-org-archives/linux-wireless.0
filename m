@@ -1,135 +1,207 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF653E49F4
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 08:26:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB37F43CE40;
+	Tue,  4 Aug 2026 08:55:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785831996; cv=none; b=QgrlOuM/ftjtFa1oGJxZPkNYGI5LMA5yr215arNOj4Z2ToeEy/qRewOJQvpq4UfbL0umVS3XWrjW38Xyyjb/fUhazuDMZULn9a4nDErlr08FSqwzhMIdG+BgIjgVOGr1Y8PlKQm/JU+dF7HYIICfroFZ8wX7VlRCvXa7ybfIL/s=
+	t=1785833760; cv=none; b=NVGIc6zQieH8Ht7oBwC+mV0Bz5klz+qoqpd9oGgevdmxw8o0nghNK4h2V3bu+HtmFPMwwTNUoiRXsigBtRdG2V9bZ5FmmVBG3yZpcG6H6WTQFfJLU3czltP0InK5CipoGGLkkn6C32s/dsyRu4j9RhRwmelZZIYonCW/rrcjOjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785831996; c=relaxed/simple;
-	bh=BQFteY2voHYMLFunRJz6Ll4QfFexNagrrLETSu9A++A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=a+oHBrk9WR4tYsqx06C0UszUiYy9K79D0FCUSCRvpsHmmpQY5j7phcs7LHMGpYDOOyrJ59GtKjh59N2GFZ98mB/WK5bxNtsQXYw/YSVetEVKJgpYk0gduKVTjIgnoYV/ncA3smStmgaMB478VSYtqfT6le4yOuLGLhEfjGNmkhM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GrQm4wNf; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785833760; c=relaxed/simple;
+	bh=8QSj/FHPhDqw9yacyuEStvcaNX2S7QEqGsKoxcOm1l8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=nKIvfMcOdTDEpmJ5i/X+kIIckOKDZZDDRbmKWc7DzsBj37bpAxrDk7BgGa2odbQA5/wqUkwwPO9LZekLshgPzrpT8iRMJbEXz70/C4BINf2y4d95TslF8z12MjWZkBoaWrHQQ+KjJYpk4+26Czf/avmjhJPG7w0A3lA7utvvBZ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZhUIrKFa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GrQm4wNf"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4954b3c5cbeso4321325e9.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2026 01:26:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785831991; x=1786436791; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=BgISVsIsIFnGhLp1EYAeC2svf5amhtNd1DkilnWeLAo=;
-        b=GrQm4wNf8ao6NW+nQP9EpWQfiDuiUEVfVWLGxm3gNqOp4x4BRMxI79Rdt+/WqEf5ST
-         E3BP1D4OSoe22NvdGtDwaWDoKzZaYPeeLLYas+dFDuRs9mFRt/lpXziYMoRKr+QA7Vad
-         n2upo4qC2xQ1h4YqVWlG452J6dPXvoQrSoH8ZOgBiIHG/4kwz1c4pIpl9XsnwgiaySUb
-         9Z7TqJ4AOIYzpvCFwYDBqbr7ceXCV0Mb5efY7WuVmcpUjbNQrn+SxePG4wm2sReoyVAe
-         n49X8ld2RFbjlUBrqS59VI20SiaxJM/12tPxbAFC2r61eOROgpNlL6QQdrrZLkmZeDpw
-         kuNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785831991; x=1786436791;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BgISVsIsIFnGhLp1EYAeC2svf5amhtNd1DkilnWeLAo=;
-        b=cvW+M6ztUm5gv6a7VU5ICkyhRcNa5BTwNpaWcS4TJdNqPdtHXAs2zUmErHw4RwmTCn
-         4jyoUnZgVvlBh1jgLhqCzbFsN08+RedO9O3WT8Vvb2dMwmG2yEq++TAsuOhBv27Vwid4
-         2vZwrJJpsBzK8IQclq5FQBaN/+KbE4XBy+95+/HiHgVb5BVvw7UwrW41fvSK1M/RZ7YP
-         1/t/PWuHPbTxNfo11zbDsuRtKW3nI2Ppu1KDLbSew505ujAtNHn0JzXx/aetJAt27PYz
-         UJDEHoP1Bu6WERc13hVm+1b4aNvjuksw+Js0MuBJ+r16N7o/mBhtw5nl2hkTU6Ojfkl0
-         xH2g==
-X-Forwarded-Encrypted: i=1; AHgh+RqRSaI/NrwgtDUs1oAB6eXU+eN2FZQ3m/0LPXVCqBy3fIoVk90S5Avrflr6W6SBdabuWmjokmi2J+2iyFJ8CQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdeonOeRlEBMgY4+A/8F48E6iC8QiYJTRRo1yH2N5356XRAu0x
-	Zj/nATLxilw/Zg+wgiZq34UwVRNYf13u0NOSgnrRoN/mluX9cHqyCoas
-X-Gm-Gg: AR+sD13dmuG+Rl3j+w9hcBmhmYLlN9flZ1WSV0SnWrCO2Jwr0b1m3R/tc6ptoLpsr7H
-	br2uqaKvRtc/MeL1r8IQ1zN81O3a7QaDOJZnDk/0vy/gbCWCdT0txN+O9H2Df5oBzx3uYBI5tMN
-	orLDy7rN5c4+Mvv8EmBriMW1+DPsrDoiR8QChe5bOl8CwSw3kt9bS1ALgsT/bI4G+MgDT2C4lOL
-	bqHAipHfg/eLv01pnhs/zK6flSKfAshclcy+qvK5apPiPX4fodNe3aJwoYO0EG6mE2HhewgC780
-	DYDZESnYTZLFtMkS9ExJS43kR5Btoh7+Re804jz3MJft0joTvw3ry+0U4dBX+TqG6WhkwegxipQ
-	4Q+ZLxKBP9nrSaje6yHYfOMjOKsSKKtcGy8wmAoQ0+sShiIMFEwxcWYlWKCBa8Dl2ZQQpe9/EQC
-	+B8lYya+Nhoi6Wwws0K5mjJIaUIrsCRgcQ/tPWopTHePXIZ0hxSYmvvG89Jh3nGwN9kQO4VdxGs
-	AI/aBllFrztMqfMNZhlHUxeaOQzU44us/rcr1ksdRKyokx+Z2Fjir92Xg==
-X-Received: by 2002:a05:600c:5252:b0:493:f42e:1b3f with SMTP id 5b1f17b1804b1-4980c6a4284mr152228175e9.3.1785831990958;
-        Tue, 04 Aug 2026 01:26:30 -0700 (PDT)
-Received: from thomas-precision3591.paris.inria.fr (wifi-pro-82-131.paris.inria.fr. [128.93.82.131])
-        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-49807b9441csm300528555e9.4.2026.08.04.01.26.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Aug 2026 01:26:30 -0700 (PDT)
-From: Thomas Fourier <fourier.thomas@gmail.com>
-To: 
-Cc: Thomas Fourier <fourier.thomas@gmail.com>,
-	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org (open list:QUALCOMM ATHEROS ATH9K WIRELESS DRIVER),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH net] wifi: ath9k: Fix potential spin_lock() before spin_lock_init()
-Date: Tue,  4 Aug 2026 10:09:08 +0200
-Message-ID: <20260804080913.67985-2-fourier.thomas@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZhUIrKFa"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 67BC4C2BCF4;
+	Tue,  4 Aug 2026 08:55:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1785833759;
+	bh=8QSj/FHPhDqw9yacyuEStvcaNX2S7QEqGsKoxcOm1l8=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=ZhUIrKFaTAU1LxubtZzVK8Py9vjRstpf+NkauXNHnzcifqpdQVJtdY2U3nFhVYIPj
+	 NV9AAfOoEXAPTOxu/SlgVwPeeQIIr5QjSaPOSBNXvMP4ykwFACADmXi6EIBN9zeuWu
+	 NQfL6bRH3gsTtI/RiieNFLuZhmCoou+B/Qmc/rQ/qj/2c30gIugerm8W0ZfhTXvuvC
+	 dXPFzik+Vh+n1onfBoU1rWy28VnFT9dNSW7vlh3rf0upu72sF9u2eezVwkuIpY83kB
+	 QTO+WH4883g6aopaLN3YgGb41etvW9QgxmvqXa7lsYnSMods7Ngu1tOFQL1bN+pScZ
+	 1SaqZmnFoYpwg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DB0C5518F;
+	Tue,  4 Aug 2026 08:55:59 +0000 (UTC)
+From: Stefan Hansson via B4 Relay <devnull+newbyte.postmarketos.org@kernel.org>
+Date: Tue, 04 Aug 2026 10:55:41 +0200
+Subject: [PATCH v2] wifi: rsi: Fix types to appease CFI
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260804-rsi-cfi-fix-v2-1-59679a520240@postmarketos.org>
+X-B4-Tracking: v=1; b=H4sIAAypcWoC/22NwQ6CMBBEf8Xs2Zp2FYKe/A/DAcoCq5GS3Uo0h
+ H+34NXjm8y8mUFJmBQuuxmEJlYOQwLc78D31dCR4SYxoMXcFhaNKBvfsmn5bdDaIqvz87FBhLQ
+ YhVK82W7lj/VV38nHVbE2etYY5LPdTW7t/TdPzjiTFega9HV2IrqOQeOzkgfFoIcgHZTLsnwB+
+ PzwML8AAAA=
+X-Change-ID: 20260802-rsi-cfi-fix-20085b693d22
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ phone-devel@vger.kernel.org, ~postmarketos/upstreaming@lists.sr.ht
+Cc: Stefan Hansson <newbyte@postmarketos.org>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1785833758; l=5665;
+ i=newbyte@postmarketos.org; s=20260802; h=from:subject:message-id;
+ bh=BB2op5+p7icC+54RZOKKgba+7WNOZz8dHsaqqYyKAvc=;
+ b=ThwlqJJN1yoe+CcfBWuSg1qewHU3rshzTmTRG6YrHMTCThXu+4doDF1T6xeiW1wFudVbbaMYN
+ 1nVorWYRGjjC5veppy7VSJwhAXsDo9LYvi+BC4+lu1phkid1DpFJ4oL
+X-Developer-Key: i=newbyte@postmarketos.org; a=ed25519;
+ pk=CMd9mCPy2ujgZ4/0VRH1OVotAimnFmPg2/JMEEgsOUk=
+X-Endpoint-Received: by B4 Relay for newbyte@postmarketos.org/20260802 with
+ auth_id=910
+X-Original-From: Stefan Hansson <newbyte@postmarketos.org>
+Reply-To: newbyte@postmarketos.org
 
-The function ath9k_init_wmi() initializes wmi->wmi_lock. It is called in
-ath9k_htc_probe_device(), and the priv->initialized flag is set.
-However, the ath9k_wmi_event_tasklet takes the lock before checking the
-priv->initialized flag, so the lock may not be initialized before
-being taken.  This could be the case, for example, if the spin_lock_init()
-is reordered with tasklet_setup() in ath9k_init_wmi() by the compiler or
-CPU.
+From: Stefan Hansson <newbyte@postmarketos.org>
 
-There is a write memory barrier before setting the priv->initialized,
-but no corresponding read memory barrier is used after checking the
-flag.
+Avoids errors like:
 
-Move priv->initialized at the start of ath9k_wmi_event_tasklet() and
-add a corresponding read memory barrier.
+    CFI failure at kthread+0x124/0x1cc (target: rsi_coex_scheduler_thread+0x0/0x1b4 [redpine_91x]; expected type: 0x89fb613d)
 
-Fixes: 24355fcb0d4c ("wifi: ath9k: delay all of ath9k_wmi_event_tasklet() until init is complete")
-Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
+As seen in the aforementioned error this was tested using the downstream
+redpine_91x driver found in the Librem 5's downstream source tree.
+However, it appears that this driver is a modified version of the rsi
+driver found in mainline Linux and as such I decided to port the changes
+here too.
+
+Signed-off-by: Stefan Hansson <newbyte@postmarketos.org>
 ---
- drivers/net/wireless/ath/ath9k/wmi.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+Changes in v2:
+- Fix kernel-doc warnings.
+- Link to v1: https://patch.msgid.link/20260802-rsi-cfi-fix-v1-1-5821d2cb54ee@postmarketos.org
+---
+ drivers/net/wireless/rsi/rsi_91x_coex.c     | 3 ++-
+ drivers/net/wireless/rsi/rsi_91x_main.c     | 7 ++++---
+ drivers/net/wireless/rsi/rsi_91x_sdio_ops.c | 3 ++-
+ drivers/net/wireless/rsi/rsi_91x_usb_ops.c  | 7 ++++---
+ drivers/net/wireless/rsi/rsi_common.h       | 2 +-
+ drivers/net/wireless/rsi/rsi_sdio.h         | 2 +-
+ drivers/net/wireless/rsi/rsi_usb.h          | 2 +-
+ 7 files changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 284e8c13b043..df4a3a625536 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -146,6 +146,15 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
- 	unsigned long flags;
- 	u16 cmd_id;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_coex.c b/drivers/net/wireless/rsi/rsi_91x_coex.c
+index ee603a5173fb..023c539fc384 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_coex.c
++++ b/drivers/net/wireless/rsi/rsi_91x_coex.c
+@@ -50,8 +50,9 @@ static void rsi_coex_sched_tx_pkts(struct rsi_coex_ctrl_block *coex_cb)
+ 	} while (coex_q != RSI_COEX_Q_INVALID);
+ }
  
-+	/* Check if ath9k_htc_probe_device() completed. */
-+	if (!data_race(priv->initialized))
-+		return;
-+	/*
-+	 * Make sure ath9k_htc_probe_device() initialization is
-+	 * committed to memory before processing skb.
-+	 */
-+	smp_rmb();
-+
- 	do {
- 		spin_lock_irqsave(&wmi->wmi_lock, flags);
- 		skb = __skb_dequeue(&wmi->wmi_event_queue);
-@@ -155,12 +164,6 @@ void ath9k_wmi_event_tasklet(struct tasklet_struct *t)
- 		}
- 		spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+-static void rsi_coex_scheduler_thread(struct rsi_common *common)
++static int rsi_coex_scheduler_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_coex_ctrl_block *coex_cb = common->coex_cb;
+ 	u32 timeout = EVENT_WAIT_FOREVER;
  
--		/* Check if ath9k_htc_probe_device() completed. */
--		if (!data_race(priv->initialized)) {
--			kfree_skb(skb);
--			continue;
--		}
--
- 		hdr = (struct wmi_cmd_hdr *) skb->data;
- 		cmd_id = be16_to_cpu(hdr->command_id);
- 		wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
--- 
-2.43.0
+diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
+index 662e42d1e5e8..2ce514766620 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_main.c
++++ b/drivers/net/wireless/rsi/rsi_91x_main.c
+@@ -246,12 +246,13 @@ EXPORT_SYMBOL_GPL(rsi_read_pkt);
+ /**
+  * rsi_tx_scheduler_thread() - This function is a kernel thread to send the
+  *			       packets to the device.
+- * @common: Pointer to the driver private structure.
++ * @data: Pointer to the driver private structure.
+  *
+- * Return: None.
++ * Return: 0.
+  */
+-static void rsi_tx_scheduler_thread(struct rsi_common *common)
++static int rsi_tx_scheduler_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	u32 timeout = EVENT_WAIT_FOREVER;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+index 597b238e2294..18a28aa97446 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio_ops.c
+@@ -62,8 +62,9 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word)
+ 
+ static void rsi_rx_handler(struct rsi_hw *adapter);
+ 
+-void rsi_sdio_rx_thread(struct rsi_common *common)
++int rsi_sdio_rx_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_sdiodev *sdev = adapter->rsi_dev;
+ 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+index 25c2b232394a..e899631b9aed 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
+@@ -21,12 +21,13 @@
+ /**
+  * rsi_usb_rx_thread() - This is a kernel thread to receive the packets from
+  *			 the USB device.
+- * @common: Pointer to the driver private structure.
++ * @data: Pointer to the driver private structure.
+  *
+- * Return: None.
++ * Return: 0.
+  */
+-void rsi_usb_rx_thread(struct rsi_common *common)
++int rsi_usb_rx_thread(void *data)
+ {
++	struct rsi_common *common = data;
+ 	struct rsi_hw *adapter = common->priv;
+ 	struct rsi_91x_usbdev *dev = adapter->rsi_dev;
+ 	int status;
+diff --git a/drivers/net/wireless/rsi/rsi_common.h b/drivers/net/wireless/rsi/rsi_common.h
+index 3cdf9ded876d..2a33a81f71a3 100644
+--- a/drivers/net/wireless/rsi/rsi_common.h
++++ b/drivers/net/wireless/rsi/rsi_common.h
+@@ -58,7 +58,7 @@ static inline void rsi_reset_event(struct rsi_event *event)
+ 
+ static inline int rsi_create_kthread(struct rsi_common *common,
+ 				     struct rsi_thread *thread,
+-				     void *func_ptr,
++				     int (*func_ptr)(void *data),
+ 				     u8 *name)
+ {
+ 	init_completion(&thread->completion);
+diff --git a/drivers/net/wireless/rsi/rsi_sdio.h b/drivers/net/wireless/rsi/rsi_sdio.h
+index 7c91b126b350..eb2b7f36a7e4 100644
+--- a/drivers/net/wireless/rsi/rsi_sdio.h
++++ b/drivers/net/wireless/rsi/rsi_sdio.h
+@@ -134,5 +134,5 @@ int rsi_sdio_master_access_msword(struct rsi_hw *adapter, u16 ms_word);
+ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit);
+ int rsi_sdio_determine_event_timeout(struct rsi_hw *adapter);
+ int rsi_sdio_check_buffer_status(struct rsi_hw *adapter, u8 q_num);
+-void rsi_sdio_rx_thread(struct rsi_common *common);
++int rsi_sdio_rx_thread(void *data);
+ #endif
+diff --git a/drivers/net/wireless/rsi/rsi_usb.h b/drivers/net/wireless/rsi/rsi_usb.h
+index 961851748bc4..78067eaffe8b 100644
+--- a/drivers/net/wireless/rsi/rsi_usb.h
++++ b/drivers/net/wireless/rsi/rsi_usb.h
+@@ -81,5 +81,5 @@ static inline int rsi_usb_event_timeout(struct rsi_hw *adapter)
+ 	return EVENT_WAIT_FOREVER;
+ }
+ 
+-void rsi_usb_rx_thread(struct rsi_common *common);
++int rsi_usb_rx_thread(void *data);
+ #endif
+
+---
+base-commit: 95d6a9ccef99117115e41e9adb271243bd5e985b
+change-id: 20260802-rsi-cfi-fix-20085b693d22
+
+Best regards,
+--  
+Stefan Hansson <newbyte@postmarketos.org>
+
 
