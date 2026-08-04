@@ -1,32 +1,30 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99C421767D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C16A41D648
 	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 06:55:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785826519; cv=none; b=O8mboL4/t3QQuz5lEPXpu/Ldp7TPpKjEWnqsrzjVflxbOMt1ccWiqGg4JzQ28mx1bq6kC92zpxwbYaqAfGUhXa8urO0kRfdHnTqFfAxaxRwvABkGawnJJY3ji86tKtTnOduuUNZTviO3QrdEW3Mz1OXv6fs/FlQxspvTEfPCZco=
+	t=1785826520; cv=none; b=AqV0BcgWvn4gsyRyVL9n+JoiXAv0QnTVvZ+71aS4x/Y4RO8/6GjR6BXw8OwIng9aKGur8i86+mUjHeTaPapmAef8gLLeb2AXME8DSaHCbKjXWdP6ZxGtz1A4nJ5LxdQcTqAftPOo1FTHHwI9uy5zJs/RE1ixKUszX0u7yZ8JCSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785826519; c=relaxed/simple;
-	bh=skDLPIA5lpTzmQkNYeIR+vNdfgVXxuMeyYT2OSW/92A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nX1Q1OCmF4P2AS0M3iP6xO9QwbimJu2kc3JPKIeaqewptNA4Aj79Fejwf5iU8Mm+hy9MvsMqdPaHpet3xgRClLcccrChxWcNqSBBCrxzWvmPba0gOTZQk3V91FkG2hbuZfZKuj1n4fmrtWE2Ckp5cI8J40Kg1tp2W6BIgo+5TKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=t4dJFaEf; arc=none smtp.client-ip=91.218.175.183
+	s=arc-20240116; t=1785826520; c=relaxed/simple;
+	bh=hfGRP/QVOci+jDnheJ7hHkwbxLATAsS89mNf5jV0rSU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Op3tTunkhLbCn7FEtEfYoeax5PEIomaaWXicU5Tx7Tl3E7PNHAQkwcD1srt6RCxS77jqUxFn2T+paW1WDkI6IOGfC+MQKBga3f955IqfT3m7+6ib+PJvMZHbSqIb54sCQtH003SR5jFFJidThTOvKKHw1uXs/gJO1yEq1FjH7wU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Q0issCa4; arc=none smtp.client-ip=91.218.175.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="t4dJFaEf"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Q0issCa4"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1785826515;
+	t=1785826514;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zIDZMZqDN1uS5+Ef/EHX8qRaF9h5xnkFXzTuE9h2rO4=;
-	b=t4dJFaEfcL1HfJrMRI/hnfLAKJS1ImEgFSekZqnwH1Ct9Gau+UDq0C/HnOcS4eETsaIcu2
-	dloun0hObUmcIJ5EkTGQ0dQG7FoA8ucQ4SbYb1O9vcZ/FtLFWMkSPL5r6Z4BVtMZf9kkJJ
-	Er44MD25JnH1OVGobk9PFYhkqNZWTLM=
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=AQ4QFMFca5ZgoIOXYXqIBNuGIWkmMBatkTGktaa+bd4=;
+	b=Q0issCa4/MlbUdUqq2NPZ2ciNGZEAXZF84S0SX/z96i1l4YvlCfFU1Mzq6oA08haD++0uf
+	EHkM9xnwOrnfeo9ITa458WCiwSunMBlDZfpYckLFQSjhhIomK40Jp5OtKDVvA4MPolR7/q
+	Jvr+afiRu+FObjvF8qjIZ1xmfcCpBpg=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	linux-wireless@vger.kernel.org
@@ -36,11 +34,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Hans de Goede <johannes.goede@oss.qualcomm.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v3 1/5] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-Date: Tue,  4 Aug 2026 06:54:21 +0000
-Message-ID: <20260804065425.17364-2-luka.gejak@linux.dev>
-In-Reply-To: <20260804065425.17364-1-luka.gejak@linux.dev>
-References: <20260804065425.17364-1-luka.gejak@linux.dev>
+Subject: [PATCH v3 0/5] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+Date: Tue,  4 Aug 2026 06:54:20 +0000
+Message-ID: <20260804065425.17364-1-luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -52,45 +48,311 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS, runs
-a Realtek vendor firmware that differs from the firmware used by the
-other rtw88 8723 family devices. Supporting it needs a number of small
-adjustments spread across the shared core, all of which have to be
-restricted to this one chip and bus combination.
+This is the first of two series adding support for the Realtek RTL8723B
+802.11n chipset and its RTL8723BS SDIO variant to rtw88. It contains
+only the changes to the shared rtw88 core that the chip driver depends
+on. The chip itself, the build glue and the MAINTAINERS entry are a
+second series.
 
-Add the chip type and a helper that tests for it, so the changes that
-follow can be gated without repeating the chip and bus comparison.
+v1 had 19 patches, v2 had 11, this has 5.
 
-Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
----
- drivers/net/wireless/realtek/rtw88/main.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+There is no rtw88-style firmware for this chip and no documentation for
+the vendor blob it does use, so while bringing it up I deliberately kept
+the driver as close to the vendor driver's behaviour as I could. With
+that many unknowns at once, matching the vendor exactly was the only way
+to tell which difference actually mattered when something did not work,
+rather than guessing. A number of the v1 patches came from that: they
+reproduced vendor behaviour that was useful to hold fixed during bring
+up, not behaviour the chip turns out to require.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6e981ba7986..8f86f7c12de5 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -194,6 +194,7 @@ enum rtw_chip_type {
- 	RTW_CHIP_TYPE_8723D,
- 	RTW_CHIP_TYPE_8821C,
- 	RTW_CHIP_TYPE_8703B,
-+	RTW_CHIP_TYPE_8723B,
- 	RTW_CHIP_TYPE_8821A,
- 	RTW_CHIP_TYPE_8812A,
- 	RTW_CHIP_TYPE_8814A,
-@@ -2194,6 +2195,12 @@ static inline bool rtw_chip_has_tx_stbc(struct rtw_dev *rtwdev)
- 	return rtwdev->chip->tx_stbc;
- }
- 
-+static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->chip->id == RTW_CHIP_TYPE_8723B &&
-+	       rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
-+}
-+
- static inline u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
- {
- 	unsigned long mac_id;
+Bitterblue Smith's review of v1 prompted me to go back and remove each
+of those on hardware to find which were actually load bearing; eight
+were not. Ping-Ke Shih's review of v2 did the same for a further six,
+and the changelog below gives the measurement for each. In three of
+those cases I had told the list, or claimed in a commit message, that
+the chip needed something it does not, on the strength of bring-up
+notes I had not re-measured. All three corrections are in the
+changelog.
+
+What is left is there because removing it made something measurably
+worse, not because the vendor driver does it.
+
+What is left falls into two groups:
+
+  - SDIO (patches 3, 4, 5): software free-page and output-queue
+    accounting, RX aggregation and interrupt setup, and TX back-pressure
+    with a retry on page starvation;
+  - patches 1 and 2: the chip type and helper plus a one-line receive
+    fix.
+
+This series no longer touches fw.c, coex.c or mac80211.c at all.
+
+Scope
+=====
+
+Everything is gated on rtw_is_8723bs(), which is false for every chip
+currently supported, so behaviour for existing devices is unchanged.
+There is one exception, deliberate: patch 2 extends an existing RTL8703B
+zero-length-packet check and is gated on the SDIO interface rather than
+the chip id, since that is the only place the behaviour has been
+observed. Ping-Ke has suggested that check may not need a chip test at
+all; I would rather measure that on RTL8703B hardware than assume it,
+and I do not have that part, so it is unchanged here.
+
+Patch 4 changes how the SDIO interrupt status is acknowledged. In v1
+that applied to all SDIO parts; it is scoped to this chip only, and the
+others keep writing the status word back unchanged.
+
+Chip specific code in the common path
+=====================================
+
+Ping-Ke asked whether this needs a set of ops rather than a chip test
+sprinkled through the core. Working through that question is what
+removed most of this series: once the association and coexistence
+patches turned out not to be needed, the chip tests they carried went
+with them.
+
+What remains is one test in rx.c and eleven in sdio.c. There are none
+in fw.c, mac80211.c or coex.c. The SDIO ones are in the bus driver
+rather than the chip driver, and rtw_sdio has no per-chip ops table
+today; Ping-Ke confirmed an inline chip id check there is fine.
+
+Fixed in the second series
+==========================
+
+Two of Bitterblue's review points are addressed in the chip driver
+rather than here, because that is the right place for both:
+
+  - the hardware capability is filled in from a chip-specific
+    read_efuse, instead of special casing rtw_dump_hw_feature() in the
+    core;
+  - the receive FCS handling is a chip configuration fix. v1 stopped the
+    core advertising RX_INCLUDES_FCS for this chip. The real cause was
+    that the chip cleared BIT_APP_FCS by assigning WLAN_RCR_CFG over
+    hal.rcr wholesale, where the 8723x siblings only write the register
+    and leave hal.rcr alone. Setting that bit in the chip's WLAN_RCR_CFG
+    makes the descriptor carry the FCS like every other rtw88 chip, so
+    the core needs no special case and both hunks are gone from this
+    series.
+
+Neither change is visible here. I planned to send that series once this
+one is applied to rtw-next, but I can send it now alongside if you would
+rather review them together, or fold the two into one series if that is
+easier.
+
+Testing
+=======
+
+Tested on RTL8723BS hardware together with the second series: repeated
+scan, authentication, association, WPA2-PSK/CCMP handshake, DHCP,
+bidirectional traffic, reconnects and module reloads.
+
+Throughput is measured against an iperf3 server one hop behind the AP,
+with the wlan0 byte counters as ground truth because the test machine's
+wired interface shares the same subnet. On one AP at strong signal
+(-35 dBm), 2.4 GHz HT40: TCP 19.1 Mbit/s up and 37.8 Mbit/s down, UDP
+25.0 Mbit/s up and 40.0 Mbit/s down, both at 0% loss.
+
+Uplink on this band drifts by several Mbit/s from day to day, enough to
+swamp the differences I was trying to measure, so where the changelog
+below compares two builds the comparison is a paired test: the two
+builds alternate within one session, rebuilt and reinstalled each time,
+rather than being measured on different days.
+
+Suspend and resume are not covered: this machine only offers s2idle and
+does not reliably come back from it.
+
+A five minute soak: 1495/1495 pings at 0% loss, 15/15 reconnects, 5/5
+link up/down cycles, 3/3 module reloads, 5/5 scans under traffic, 24
+group rekeys, no deauthentication, no SDIO errors, no warnings in the
+log. Scanning saw the target AP in 18 of 18 attempts across 6 cold
+module reloads, with 6/6 associations.
+
+The soak and scan figures were taken on a build that also carried the
+reserved page patch dropped below; the throughput figures above are from
+the tree posted here.
+
+Every patch builds with W=1 with no warnings on its own, sparse is clean
+at the tip, and smatch reports nothing in any file this series touches.
+checkpatch --strict is clean across this series. The other rtw88 bus and
+chip modules continue to build.
+
+Changes in v3:
+  - Dropped "fw: fix the reserved page upload on RTL8723BS". Its commit
+    message said the BIT_BCN_VALID handshake fails on 8723BS SDIO
+    without it. That does not reproduce. The failure path is an explicit
+    rtw_err("error beacon valid") returning -EBUSY, reached from
+    BSS_CHANGED_ASSOC on every association; over three associations on
+    each of five builds with the patch reverted it never fired,
+    associations were 3/3, and there was no packet loss after 30 s idle
+    in power save, which is the path the reserved page's null data and
+    PS-poll frames serve. As a control, rtw_info messages appear in the
+    same captures and rtw_err outranks them, so a failure would have
+    been logged. AP mode and WoWLAN also download the reserved page and
+    are not tested here, so if it turns out to matter there it can come
+    back with evidence behind it.
+  - Kept "sdio: add TX back-pressure and retry on page starvation", now
+    with a measurement rather than an assertion, since you asked whether
+    the remaining chip tests are necessary. Counting
+    rtw_sdio_tx_handler invocations under an identical 60 Mbit/s UDP
+    flood, because the retry re-arms that same work item: 1798 and 3095
+    on two baseline runs against 69 with the patch reverted. Achievable
+    transmit rate falls by about a third without it, 25.5 Mbit/s against
+    38.3 and 40.2. tx_dropped and tx_errors stay at zero throughout, so
+    the failure is not dropping frames, it is failing to push them.
+  - Kept "sdio: set up RX aggregation and interrupts". The aggregation
+    half makes no measurable difference to throughput here, and on that
+    evidence alone I would have dropped it. The rest of the patch does
+    not show up in a throughput test at all: the chip keeps raising the
+    interrupt after resume if undefined status bits are written back
+    when acknowledging.
+
+    I have not been able to validate the suspend and resume path: the
+    test machine only offers s2idle and does not reliably resume from
+    it, so I cannot exercise the interrupt acknowledgement change. It is
+    kept because the failure it addresses was observed during bring up,
+    not because it has been re-measured. If someone with hardware that
+    suspends cleanly finds it unnecessary, it should go.
+  - Dropped "run the RTL8723BS association register sequence", 440
+    lines, which was the vendor join sequence, six sites in
+    rtw_ops_bss_info_changed() and both sites in rtw_ops_set_key().
+
+    Ping-Ke asked for this to run from rtw_chip_prepare_tx() rather than
+    a chip test in mgd_prepare_tx(), and I had done that with a new
+    chip_ops::prepare_tx. Since the whole patch is gone, so is the
+    callback; the core is left as it was rather than gaining an op with
+    no user.
+
+    I had told the list that association fails without these registers.
+    That was wrong, and it was bring-up-era data I repeated without
+    re-measuring. With the whole patch reverted: 18/18 scans saw the AP,
+    6/6 associations, and the five minute soak above, whose 15 reconnects
+    and 24 rekeys exercise the exact path the sequence ran on, since it
+    ran from mgd_prepare_tx() on every authentication. Uplink measured
+    paired against the full series, 19.0 against 19.2 Mbit/s over ten
+    runs each.
+
+    The default key search handling in that patch was also simply wrong:
+    rtw_sec_enable_sec_engine() sets sec->default_key_search itself and
+    programs all four USE_DK bits on that basis, so the enable path was
+    a no-op and the disable path was clearing bits the core had
+    deliberately set.
+  - Dropped "coex: add the RTL8723BS scan antenna workaround" and "coex:
+    reassert the antenna path when associating", and with them "fw: add
+    the GNT_BT firmware command", whose only caller they were.
+
+    The commit message on the first claimed the site survey does not
+    hear the AP reliably without it. That is also wrong: 18/18 scans
+    without it. Both were gated on the chip and on coex bt_disabled, so
+    that gate is their entire scope rather than a subset of it, and the
+    measurements above cover it.
+  - Dropped "record beacons from the target BSSID before
+    authenticating". Ping-Ke doubted the beacon wait affected the
+    connection and he was right: with the wait removed, association
+    succeeded 12/12 from a cold module reload and 12/12 from a warm
+    reconnect, against 10/10 and 10/10 with it, at the same latency.
+    The pre-auth deauth already sleeps 100 ms with the recording window
+    open, so on a 100 ms beacon interval the wait was almost always
+    already satisfied when it was reached. struct rtw_auth_sync and the
+    RX-path hook go with it.
+  - Dropped the BT_MP version queries and the BT_INFO query at scan
+    start, and the BT_INFO query plus two of three repeated PS-TDMA
+    H2Cs in the pre-auth replay. Measured over cold module reloads with
+    three scans each, 8 reloads with the queries and 10 without: 29/30
+    scans saw the target AP and 10/10 associations succeeded without
+    them, against 24/24 and 8/8 with them.
+  - The cached SDIO page counters are clamped at zero. A lost update
+    between the free page check and the accounting could previously
+    drive the public counter negative, and the sum was assigned to an
+    unsigned, which made the check pass unconditionally from then on and
+    suppressed the resync that was supposed to recover it.
+  - REG_SDIO_FREE_TXPG now has field masks and is decoded with
+    u32_get_bits(); the RX DMA burst count uses BIT_DMA_BURST_CNT;
+    open-coded BIT(0)|BIT(1) on REG_SYS_FUNC_EN uses the existing names.
+  - The RTL8723BS-specific SDIO helpers are named _8723bs_ and the chip
+    test moved to their callers.
+  - rtw_sdio_process_tx_queue() returns 1/0/-errno instead of taking a
+    "processed" out-parameter, which makes the retry and back-pressure
+    logic in the TX handler readable.
+  - mod_delayed_work() in rtw_sdio_tx_kick_off() carries a comment
+    saying why it is not queue_delayed_work(): a page-starvation retry
+    may already be armed with a delay, and the newly queued frame should
+    not wait for it.
+  - An argument that had a single value at every call site is gone,
+    along with its dead branch.
+  - Block comments use the general kernel style, per commit 82b8000c28b5
+    ("net: drop special comment style").
+
+Changes in v2:
+  - Dropped "tx: extend the TX report purge timeout". Instrumenting the
+    report path shows payload[6] & 0xfc equals the enqueued sequence
+    number, 32 out of 32 times, with rtw88's existing decode, and no
+    report is missed. The longer timeout was covering for the next
+    patch, not for the hardware.
+  - Dropped "fw: handle the RTL8723BS management TX reports". 0x12 and
+    0x32 are the first payload byte of C2H_CCX_TX_RPT, not C2H IDs;
+    every C2H event this chip sends carries a known id, so the existing
+    handler already covers them.
+  - Dropped "fw: send rate adaptation and RSSI info in the vendor
+    layout". The vendor byte layout is equivalent to what the existing
+    macros produce; uplink and the negotiated rate are unchanged without
+    it (16.4/16.5/17.0 against 15.4/16.7/16.6 Mbit/s, MCS7 both ways).
+  - Dropped "fw: send the media status report in the vendor layout". The
+    role field the vendor sets makes no difference here, as with the
+    other chips.
+  - Dropped "sdio: handle the RTL8723BS management TX path". Sequence
+    numbers do work for management frames on this chip, so reporting
+    completion at DMA completion is unnecessary.
+  - Dropped "calibrate and tune the PHY" entirely. All three parts were
+    vendor-matching scaffolding and none survived measurement: the
+    scan-time initial gain override is worse than
+    rtw_phy_dig_set_max_coverage() (five scans found 41 BSSes without it
+    against 34 with it); the IQ calibration works from the normal
+    phy_calibration path; and the hardcoded per-rate TX AGC table
+    overrode the efuse calibration by up to 22 index units and bypassed
+    the regulatory limit the by-rate path applies, which is not
+    something a driver should do.
+  - Dropped "match the RTL8723BS firmware connect and power save
+    behaviour". Deferring the connect report changes nothing, and the
+    LPS gating cannot be justified from measurement: with RTW_DBG_PS
+    enabled, LPS never engages on this setup at all, so the gating never
+    takes effect here.
+  - Dropped "advertise the correct receive capabilities". Both halves
+    move into the chip driver, as described above.
+  - "fw: add the vendor firmware commands" now adds only GNT_BT. rtw88
+    already implements MACID_CFG and the WL channel info report, and the
+    coexistence antenna select reserve became unused once the PHY patch
+    went.
+  - The zero-length packet check is gated on SDIO rather than the chip
+    id.
+  - The SDIO interrupt acknowledgment change is scoped to this chip.
+  - The association sequence no longer re-applies the BSS capability at
+    association time; BSS_CHANGED_ERP_PREAMBLE and BSS_CHANGED_ERP_SLOT
+    are handled later in the same callback.
+  - Register accesses that had raw addresses now use the existing
+    REG_GNT_BT and REG_BT_COEX_ENH_INTR_CTRL, plus a named define for
+    the BB antenna select register.
+
+The implementation is based on the initial RTL8723B work by Michael
+Straube <straube.linux@gmail.com>:
+
+  https://github.com/mistraube/rtw88/tree/rtl8723bs
+
+Based on the rtw-next branch from pkshih/rtw.
+
+Luka Gejak (5):
+  wifi: rtw88: add the RTL8723B chip type and SDIO helper
+  wifi: rtw88: rx: mark zero length packets on RTL8723BS
+  wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
+  wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
+  wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
+
+ drivers/net/wireless/realtek/rtw88/main.h |   7 +
+ drivers/net/wireless/realtek/rtw88/rx.c   |   8 +-
+ drivers/net/wireless/realtek/rtw88/sdio.c | 373 ++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/sdio.h |  22 +-
+ 4 files changed, 383 insertions(+), 27 deletions(-)
+
 -- 
 2.53.0
 
