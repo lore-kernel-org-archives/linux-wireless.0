@@ -1,133 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C884A344D9F
-	for <linux-wireless@vger.kernel.org>; Mon,  3 Aug 2026 22:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B06A2E2EEE
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 01:05:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785796611; cv=none; b=eDOuZljgn2RHm60ofbfEiWaZA0FNkcKmZoWYZVpGbYN2au0nh5PLF71mxnXfM7IalwEWgf2HC6ZiUbiHpY6X5HqvI+kI8Dt7RgTtyBSfNzuC80/RarTW5uYdtlBqFeCbB+ZRUNOwRYmgpnq/D3nqT5eXrhO/AWQoynZ+gmR6CCY=
+	t=1785805525; cv=none; b=HO5VRkB1sW9u3zTrqhfv5lqXRhndO4FsmX3s7HX2up0ADUKbPkFd5kf4J2kFcocc+3RPYXCSp4+TJIyrRcQO/pgZbzSLFtbD0Eqg/0yIZc0p6Dg5YgBHY4fanxDwSN7yPqdpNundk4syGciDWEE89t7fQy7jUrWbm5x87AXjUMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785796611; c=relaxed/simple;
-	bh=SMhjVdU2ZDAmJkhf9Tg7h3l0ADU6HH3S2XK+03kIQNw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=argdx+ZSiKfehDOwH/AztunCfCZnyLAWsK9c2I7G4e01U4xU3iJK2YG5Jv+436XWCgkOgE+TeRr85qmPbTeUAhsG3pQDpcUpjPNBWP60HNyGkPihGLlgj8Ee9/mCEr2AVlzVXtPMEgEwZqYJGI84XrhfWdmKqzC7/zNTyvy71ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Nzd5nc3R; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1785805525; c=relaxed/simple;
+	bh=LKhytjTjyDYioFTDZB5nkEvh/eVhAK45VzLfo8AW6dw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=T8j2LS9C1nrKr1AcSyY+h2AvD+Lg07LyxsONQk+Fph2uwerMbrAvo9Z7YDF51OVW75E9c3Hav+EwerWjkrrjzT2jI/JT5KmseeFtEl/5UP44gUMYIDQO+/UxmHfYQ9I1xYRVPBjfijTrCqKjNKI7Bv15ZTsTLCIIFsvJPP5lzY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=IRJQOKXP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=YkLeDhsh; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Nzd5nc3R"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1785796610; x=1817332610;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=SMhjVdU2ZDAmJkhf9Tg7h3l0ADU6HH3S2XK+03kIQNw=;
-  b=Nzd5nc3R+CaOSqWaJ3toWoRZ01lsZ16tuIRMjDEmPTcUOk9Nh9rFKMHP
-   tVpjuS10PAN3ZFjnBeScMIl8TstTzhCw32TrGRnrOy65KFLyWkX7X1SjX
-   caO+gHNLNfJ3zsoJ88RbWN4VHTIVnvVkXkWKwkw+d4hDHBq5rwtSqNtTC
-   Ma161qZdxorOPSm03xrv4SwrIg87JJY9BpsYeyIhNNlS1jEtQ4ycqSJxL
-   gD9xvHGczSSFJ/MUs+P8EiA7ymQ48gwpHHB+BGn8tei2A2vgC1tMCl74i
-   RSZ9DsFpOvCD6uafMyx8Q5dVqIv7YNpbhvHYxjpUNBDY3RxK670hOkVNa
-   w==;
-X-CSE-ConnectionGUID: Ep7qjcd9RW6lsxqp9lokuA==
-X-CSE-MsgGUID: Q92UgkN6RUezYu//UYxuxQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11864"; a="85474330"
-X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
-   d="scan'208";a="85474330"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2026 15:36:49 -0700
-X-CSE-ConnectionGUID: Mzxjk8tvTWqrXS+MdLLxUA==
-X-CSE-MsgGUID: /gGtqyWdQXaebCJpfJmvfw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,203,1779174000"; 
-   d="scan'208";a="263324267"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 03 Aug 2026 15:36:47 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wr1H2-000000008AD-0x9z;
-	Mon, 03 Aug 2026 22:36:44 +0000
-Date: Tue, 4 Aug 2026 06:36:03 +0800
-From: kernel test robot <lkp@intel.com>
-To: JB Tsai <jb.tsai@mediatek.com>, nbd@nbd.name, lorenzo@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org, Sean.Wang@mediatek.com,
-	Quan.Zhou@mediatek.com, Ryder.Lee@mediatek.com,
-	litien.chang@mediatek.com, Charlie-cy.Wu@mediatek.com,
-	jb.tsai@mediatek.com
-Subject: Re: [PATCH] wifi: mt76: connac3: implement 6GHz power type detection
- and dynamic CLC filtering
-Message-ID: <202608040641.uKGpvScD-lkp@intel.com>
-References: <20260724085103.3155942-1-jb.tsai@mediatek.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="IRJQOKXP";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="YkLeDhsh"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 673JkrmM990431
+	for <linux-wireless@vger.kernel.org>; Tue, 4 Aug 2026 01:05:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	/LbEgpSMFNZGfRfUuT05UPTIEVzlUc3E5z7lGNToJYg=; b=IRJQOKXPm2b7bBGU
+	gqjjwsDObmkatrZgD9OND1CavG6jFMGSc3d2G+jQsm6xPS9crDMKF02rHrNR8aJX
+	+YODpP9+x86wuf1vGf0g0GvgpfBFLDRz2d9nbY6gpkBqBmFWCZPcg63rDsf2dgH8
+	z7XbzSaYk8bx4+IldKY136XkA/IAHWad0c49N1PZKM+AEuXfBo/MlKokuf6d6XD3
+	/5Pu/ei3nMvvbqVn7ccRky/J7Lh+z6jZCd5Xg1LZ4vgoT8Wy84CALi5HjuLW4VCd
+	S3xmgSn1w8mGfFO+qQ30u90PId7dAVfXrJQeFHAEektkrquX2w0CnPsUlkY+gWOQ
+	Veh/gw==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ftx7m2381-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 04 Aug 2026 01:05:23 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e22137fb3so6402588a91.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Aug 2026 18:05:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785805523; x=1786410323; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=/LbEgpSMFNZGfRfUuT05UPTIEVzlUc3E5z7lGNToJYg=;
+        b=YkLeDhshZFTbpx9ZRfGvDPl7xepARgqFYZMxmAIn1Bs7p+6/A2/UOZvNOMk8xnJsP5
+         NmlxZwIHEB+fEcwUaExKKzTbBPeIV6u8hqIMpJ7IlQYak/2GiynXpd4xEjyQOMLor48K
+         umCgXPOChAHBPDi/ngvUKu2m60mnhH1MnTaRdzWZ3O5+tlngDDw57ufbeiqNnhoOnIn5
+         1OUkd2oOMCK6pvHGyOcU6EkYVKUxYEJQ+vT6CxJ34Tl1iYPqgE1IZtqkPewzWn/pzsZr
+         O1gKHOFpXbNJDdOa/8N2/WMHZdyt9+nMUteNX7+lfGLSzzTcll7quJUGNGcDhPPBQn31
+         CJnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785805523; x=1786410323;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=/LbEgpSMFNZGfRfUuT05UPTIEVzlUc3E5z7lGNToJYg=;
+        b=Vl31JxCJYPd48vHLFH6qo6pvR2YqwdN6rg3knQ9DafQ4X8eP0XAa4ZZgR6tQghLY90
+         oLsCmvLekzkCpDi2jAsQq+VIoLX5eZPa2nSGuBXh3xM/EgXY2CYMRIPw1ffU/MNl3St4
+         xb+4LE6xYi6dNh1eMhwz8+D5CB/Zj6E7ttEaAex1VMVuJ1THPSvZdO74wmokdTwdswsv
+         Fw4KM+Yhktx1pF6uUfTHiXWknTZHU982ktEXHOSf49u2FXkVq3fAeXY9U95nrPR0UHSX
+         FuHedqAhgdv5RF6l8l1MWtEbweAxjxoAVUJfy4aHkgedvBv6k7mGBmirmPtW88ahytPm
+         Cq5Q==
+X-Forwarded-Encrypted: i=1; AHgh+RoOmE5iTyGe2LX7ODKRtpQkTQO0cKJ1KlCcet8fv9tE2f7/+dhCDxpxHxNWE9L/ia8+5mRMlskskAhojZCuDQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzzjoQfFyQXa1jJTJOvuSHdxaoIKc5z8yUKBoZzPTCx5qr93TYW
+	NdKlcmxa0w0FnPmsYQ+KopjRm60Ciet8NvpdQvjXW1FPs6ezuriUMWz3nO4pzDUUlLsGa2R47MZ
+	5hhkk/3KgvvbggxJP5by2Zd7uQ70Jp/h7Jfbn16+gYzNhzPUbpVxBG25vrP4NVX0CapXRTl9NBT
+	q+Hg==
+X-Gm-Gg: AR+sD12tBytpKVTbX4UnrCu/Ffzm0neRNpEnQ2B7+3BZ1AFBZ0ZlnFMFOazpwqtowSD
+	KHjFr+jLsS7bFV7NWPGDFMPf7/reTHywZ3M+I950GRR8zdlUL6S1Ews3xKw5ZqN5mqj7TA7pqxQ
+	TUAsTowwptZZ1uriEQpMnfmMrmm3gNWuw2ohZgwVX3nPwJaL2DlMwUJ6SKU2pHnsNUgtiJQoTzR
+	qadrXrACujJVQz7p4CBidz4r+Njm0MFwJAvi65aIOD9TKE/IrBms/efIRmqpNV/mHYeUKkvzYFc
+	yuMjQ2ScsY2ePkAcCOL4NayeOsuQ5NfuuEDllbekGmVqPMdRZisbVkai8430QBKR/Ul39rS0GHp
+	eU/El5SeukwET+FtkjUujSYdZnlxpHk2coSqRlnvBLzOK1ZWYw0GkE8F6mabA
+X-Received: by 2002:a17:90b:250e:b0:38f:caa2:5731 with SMTP id 98e67ed59e1d1-38fcaa28718mr5590475a91.40.1785805522938;
+        Mon, 03 Aug 2026 18:05:22 -0700 (PDT)
+X-Received: by 2002:a17:90b:250e:b0:38f:caa2:5731 with SMTP id 98e67ed59e1d1-38fcaa28718mr5590462a91.40.1785805522496;
+        Mon, 03 Aug 2026 18:05:22 -0700 (PDT)
+Received: from [192.168.1.20] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3153e29a126sm45747701eec.31.2026.08.03.18.05.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Aug 2026 18:05:21 -0700 (PDT)
+Message-ID: <3d358696-6d97-41c0-bbe1-199179d6630a@oss.qualcomm.com>
+Date: Mon, 3 Aug 2026 18:05:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260724085103.3155942-1-jb.tsai@mediatek.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH wireless-next 1/7] wifi: mac80211: fix
+ IEEE80211_TX_CTL_REQ_TX_STATUS mixup
+To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+References: <20260803141309.292711-9-johannes@sipsolutions.net>
+ <20260803141309.292711-10-johannes@sipsolutions.net>
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260803141309.292711-10-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA0MDAwNSBTYWx0ZWRfXyKxSShcRfWTP
+ avO8tQEWZMuTjUwFrxt/RlbT7NE9aSrrcH3hAN2LRPukMPeW/SHQhnwFXpPN5hhRAMPIZ0YpSIM
+ e9XDQmDvdZTBfK2NxeG+6/2+jeBoFa30kdoWHenW4u1biWJSIZ0doocqLWyIBa+B0A8xq6DihpT
+ h/CcXbf3ZXqyVJrINJfkyRufPduWQdT96JYWhnTa2ZIrT6XPzu+8sb/WB4Fsya5QoYMDeVTVmke
+ 4UyhJI1cZk9SdSDUPkm5DvUkTbHerCPHieoQeJhqJFkFWccX/LRcG/YBRHnUZmgKBiOKr5r5/MF
+ o5JeuBNHKGZeM8ViFOjjT+LvWF1Bfk93OpInTCkJfPjugSiqYRvMazD4/MXxSNSOm93EbmSVvuA
+ AkI2hEYNB99UQc69y95KjLVAmExhrGE+nvL3jHMXX8sxwE+LwyX6KSe7nVETxRNhCZc0weVOKtg
+ 2UrvlxFo5FmLD24bK2g==
+X-Authority-Analysis: v=2.4 cv=TIt1jVla c=1 sm=1 tr=0 ts=6a713ad3 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=QyXUC8HyAAAA:8 a=jm5SFhSk8r0fvC0Ct98A:9 a=QEXdDO2ut3YA:10 a=zgiPjhLxNE0A:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-ORIG-GUID: bri-cyW2eCXkEpq4j3FGWUrlarYC2Nfh
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA0MDAwNSBTYWx0ZWRfXwYOqxZar3F4H
+ tmqBxlikIJBPeBS+fj3eVPfv4gHgFKtwxcEWzrAQRPvaS05sfV6/5iWivJp7ThA46mFRpR2pVkh
+ aQpz5ZDifyHIzLxannkBvYPRc2JbloU=
+X-Proofpoint-GUID: bri-cyW2eCXkEpq4j3FGWUrlarYC2Nfh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-03_05,2026-08-03_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 phishscore=0 bulkscore=0 malwarescore=0
+ priorityscore=1501 spamscore=0 suspectscore=0 impostorscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608040005
 
-Hi JB,
+On 8/3/2026 7:08 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In ieee80211_build_hdr(), IEEE80211_TX_CTL_REQ_TX_STATUS is checked
+> in ctrl_flags, which is wrong - IEEE80211_TX_CTL_REQ_TX_STATUS is in
+> info->flags, so the check is for IEEE80211_TX_CTRL_PORT_CTRL_PROTO
+> instead. This works out OK because the only place setting _that_ at
+> a point before this gets called is in fact ieee80211_tx_control_port()
+> which was intended here. This is actually needed for correctness, if
+> jt were checking info->flags instead, TDLS would fill/leak the status
 
-kernel test robot noticed the following build errors:
+nit: s/jt/it/
 
-[auto build test ERROR on wireless-next/main]
-[also build test ERROR on next-20260803]
-[cannot apply to wireless/main linus/master v7.2-rc6]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> frames created here.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/JB-Tsai/wifi-mt76-connac3-implement-6GHz-power-type-detection-and-dynamic-CLC-filtering/20260803-215116
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20260724085103.3155942-1-jb.tsai%40mediatek.com
-patch subject: [PATCH] wifi: mt76: connac3: implement 6GHz power type detection and dynamic CLC filtering
-config: nios2-allmodconfig (https://download.01.org/0day-ci/archive/20260804/202608040641.uKGpvScD-lkp@intel.com/config)
-compiler: nios2-linux-gcc (GCC) 11.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260804/202608040641.uKGpvScD-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608040641.uKGpvScD-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/net/wireless/mediatek/mt76/mt7925/main.c: In function 'mt7925_set_sar_specs':
->> drivers/net/wireless/mediatek/mt76/mt7925/main.c:1986:15: error: too few arguments to function 'mt7925_mcu_set_clc'
-    1986 |         err = mt7925_mcu_set_clc(dev, dev->mt76.alpha2,
-         |               ^~~~~~~~~~~~~~~~~~
-   In file included from drivers/net/wireless/mediatek/mt76/mt7925/main.c:10:
-   drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h:387:5: note: declared here
-     387 | int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
-         |     ^~~~~~~~~~~~~~~~~~
-
-
-vim +/mt7925_mcu_set_clc +1986 drivers/net/wireless/mediatek/mt76/mt7925/main.c
-
-c948b5da6bbec74 Deren Wu    2023-09-18  1978  
-c948b5da6bbec74 Deren Wu    2023-09-18  1979  static int mt7925_set_sar_specs(struct ieee80211_hw *hw,
-c948b5da6bbec74 Deren Wu    2023-09-18  1980  				const struct cfg80211_sar_specs *sar)
-c948b5da6bbec74 Deren Wu    2023-09-18  1981  {
-c948b5da6bbec74 Deren Wu    2023-09-18  1982  	struct mt792x_dev *dev = mt792x_hw_dev(hw);
-c948b5da6bbec74 Deren Wu    2023-09-18  1983  	int err;
-c948b5da6bbec74 Deren Wu    2023-09-18  1984  
-c948b5da6bbec74 Deren Wu    2023-09-18  1985  	mt792x_mutex_acquire(dev);
-8a27c5c764040fb Jared.Huang 2026-06-17 @1986  	err = mt7925_mcu_set_clc(dev, dev->mt76.alpha2,
-8a27c5c764040fb Jared.Huang 2026-06-17  1987  			 dev->country_ie_env);
-8a27c5c764040fb Jared.Huang 2026-06-17  1988  	if (err < 0)
-8a27c5c764040fb Jared.Huang 2026-06-17  1989  		goto out;
-8a27c5c764040fb Jared.Huang 2026-06-17  1990  
-c948b5da6bbec74 Deren Wu    2023-09-18  1991  	err = mt7925_set_tx_sar_pwr(hw, sar);
-c948b5da6bbec74 Deren Wu    2023-09-18  1992  
-8a27c5c764040fb Jared.Huang 2026-06-17  1993  out:
-8a27c5c764040fb Jared.Huang 2026-06-17  1994  	mt792x_mutex_release(dev);
-c948b5da6bbec74 Deren Wu    2023-09-18  1995  	return err;
-c948b5da6bbec74 Deren Wu    2023-09-18  1996  }
-c948b5da6bbec74 Deren Wu    2023-09-18  1997  
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
