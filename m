@@ -1,29 +1,29 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E533138F653
-	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 06:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622EA3F075A
+	for <linux-wireless@vger.kernel.org>; Tue,  4 Aug 2026 06:25:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785824655; cv=none; b=F/f2kzh2wqGFKZ9q68VJm4FDqY9Tu2EgAmKLykVo0pAKDo66xQ9NNn1GDhzvKaJH1O4E04Z7ICb6BJUruficHokq4XNypKvpnenPTZjyHdKSUm0oaGZuJ6JbdgzQoym28ht/MNiPwFE8Rnd3aYvNQ8T1lZW2SuYCs/Iaju22d9k=
+	t=1785824716; cv=none; b=PKKpH5n0LHDeqmzTZe/peRUhGsdpYzcprSHSlBCXwzXE5uPxWScmWLy1Ri1F2ia0I/N/X/SXYo8nvxWxYn3pTnCPcPlNP/2502odp2ouVA7nwFQtpZs3UGJXwE3fJRcEyRD2j00iBNqBZT7K/gzkmtyXJx4jcOZHM7mQ/a8QLxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785824655; c=relaxed/simple;
-	bh=/wbGh9ZJbhI5pYB94HVG+Sa+FGQR+cVgqRy8US7vZrw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=o2Oaf2eH/ceUjLQEQPEdPw3ty7gijTmWc5WytHdSRSv57kEXCr6Ao90nqEIrDWkAyDs3RmCUb4G/AA7gB2bXuTE7hKTC2PlwMABtfNHSHACueFA84fwZcPSn3Lrro0vvPAZ2rlwTocDwjT7nfPJRCMPfjAaqI7/CKu+MFlnNOKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=oI7Iewx9; arc=none smtp.client-ip=60.244.123.138
+	s=arc-20240116; t=1785824716; c=relaxed/simple;
+	bh=tMMvbzHdkYsTIcNu/qxut7p+h/vqZGy091cNnnNYN4k=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qrupxBfUzx5nTzrf5n9iWZhlW7I+hqE8BgAGkDReGGgsOQy9mHzK2VdKyvh4WrNSlpi7lR1HmA6ryRbl7+CY7TcdTEjXEf0fAoLNGr3BycwC9LpcOfvnIPMdiCyGO0RKcSGSpu3dBLXcQ8Te92gv0i8OhBwpCV5KB160vOrVdrg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kqedOuGE; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oI7Iewx9"
-X-UUID: 17d0052c8fcd11f1b1788b6acf885367-20260804
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kqedOuGE"
+X-UUID: 3dc539be8fcd11f18dc8c9802ae25ab1-20260804
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=M3loX8ga7znSQULYfqy+ijlN4dXdSpPjSIiieTvPzf4=;
-	b=oI7Iewx9Ge4TMLSTKkFUO4kZutokVOpu/tGFLSl3dA24T+BVWQWjio5HCurnCprg7BAOyCKVpB9yiA3kNMqMt3d9WCCPosFSVFIbjqOszaW2FegqUNP/ZMFtzHelJdoLQsi4ifpeh4KCDt0Cq2jSklfPgfz8aL6IyXGogE/HuFE=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=+HadGpgIIwsDkvhCJNd5RT/h3BnMqvag/KtuUIT7O6Y=;
+	b=kqedOuGEl4njldNALBpMZqRU+Abhz1AyT89j3F7aasRtSDNS53PmfoDJlKSwhQ7g55ZYzVQTnSWfrHGTPxD1JwKm+RG+STkgC2Q9Mk1vxvZ6uR5Nf1rI5HQhUNBwbriYMxYc79bjTWb2qNWNYyPKESJsEF3MXQIxdBeK/lw0Enk=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:c7c3b47f-4152-4c2a-a87c-799b81548aa4,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:7db8b62,CLOUDID:0733a3a7-8a7b-4c49-a0c0-42d13e7adac0,B
+X-CID-O-INFO: VERSION:1.3.19,REQID:41ea64d5-4f24-426d-b969-e4e93ee12f40,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:4abaae7e-1239-47c2-a054-c33c1ab2b3a0,B
 	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
 	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
 	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -31,28 +31,27 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 17d0052c8fcd11f1b1788b6acf885367-20260804
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
+X-UUID: 3dc539be8fcd11f18dc8c9802ae25ab1-20260804
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
 	(envelope-from <jb.tsai@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1910206704; Tue, 04 Aug 2026 14:24:05 +0800
+	with ESMTP id 799443357; Tue, 04 Aug 2026 14:25:09 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 4 Aug 2026 14:24:04 +0800
+ 15.2.2562.29; Tue, 4 Aug 2026 14:25:08 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Tue, 4 Aug 2026 14:24:04 +0800
+ 15.2.2562.29 via Frontend Transport; Tue, 4 Aug 2026 14:25:08 +0800
 From: JB Tsai <jb.tsai@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
-	<Shengwei.Lu@mediatek.com>, <litien.chang@mediatek.com>,
-	<jb.tsai@mediatek.com>, Shengwei Lu <shengwei.lu@mediatek.com>, Sean Wang
-	<sean.wang@mediatek.com>
-Subject: [PATCH 1/2] [PATCH 1/2] wifi: mt76: mt7925: add IE-parsing helpers for AP NSTS extraction for MT7928
-Date: Tue, 4 Aug 2026 14:24:02 +0800
-Message-ID: <20260804062403.642593-1-jb.tsai@mediatek.com>
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH v2] wifi: mt76: connac3: implement 6GHz power type detection and dynamic CLC filtering
+Date: Tue, 4 Aug 2026 14:25:06 +0800
+Message-ID: <20260804062507.643024-1-jb.tsai@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -64,278 +63,326 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-From: Shengwei Lu <shengwei.lu@mediatek.com>
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-Add a dedicated module (ies.c / ies.h) that provides four helpers to
-parse BSS IEs and extract the AP's maximum TX spatial-stream count
-(NSTS):
+This patch enhances 6GHz regulatory handling by implementing proper
+power type detection and selective CLC (Country Location Configuration)
+table filtering.
 
- - mt7928_ht_nsts_from_ies()  - reads HT Capability TX MCS streams
- - mt7928_vht_nsts_from_ies() - reads VHT Capability TX MCS map
- - mt7928_he_nsts_from_ies()  - reads HE Capability TX MCS/NSS for 80 MHz
- - mt7928_eht_nsts_from_ies() - reads EHT Capability TX MCS/NSS
+Changes in main.c:
+1. Add mt7925_regd_set_6ghz_power_type() with multi-source channel
+   detection fallback mechanism:
+   - Primary: link_conf->chanreq.oper.chan (per-link BSS config)
+   - Secondary: vif->bss_conf.chanreq.oper.chan (default link)
+   - Tertiary: phy->mt76->chandef.chan (PHY layer)
+2. Move mt7925_calc_vif_num() and mt7925_regd_set_6ghz_power_type()
+   before mt7925_mac_link_sta_add() to avoid implicit declaration
+3. Call mt7925_regd_set_6ghz_power_type() in station add/remove paths
 
-Also add mt7928_get_bss_suswm_cap() which walks the HT/VHT/HE/EHT caps
-of both the AP (peer link_sta) and the local device (own sband) and
-fills a struct mt7928_suswm_cap {bfer_en, bfee_en, nsts} summarising
-the SU beamforming capabilities and the AP's NSTS count. The
-MT_SU_SWM_{BFER,BFEE,NSTS_MEET} bitmap defines used by the STA_REC_SUSWM
-TLV are also introduced here.
+Changes in mcu.c:
+1. Add power_type_change parameter to __mt7925_mcu_set_clc() and
+   related functions to distinguish between regulatory updates and
+   power type changes
+2. Implement CLC table filtering logic:
+   - When power_type_change=false (from mt7925_mcu_regd_update):
+     Send 2/5G ('-'), 6G LPI ('0'), and 6G VLP ('2') tables
+   - When power_type_change=true (from mt7925_regd_set_6ghz_power_type):
+     Send only the specific 6G power table matching current power_type
+3. Map power_type to CLC type codes:
+   MT_AP_LPI -> '0', MT_AP_SP -> '1', MT_AP_VLP -> '2'
+4. Add env_6g field to CLC request structure to pass power type to FW
 
-These helpers will be consumed by the STA_REC_SUSWM TLV builder to
-determine whether the AP's NSTS count falls within the device's
-supported spatial-stream limit.
+This fixes the issue where vif->bss_conf.chanreq.oper.chan was NULL
+during early connection stages, and enables proper 6GHz power type
+switching based on regulatory requirements.
 
-Signed-off-by: Shengwei Lu <shengwei.lu@mediatek.com>
-Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+
 ---
- .../wireless/mediatek/mt76/mt7925/Makefile    |   2 +-
- .../net/wireless/mediatek/mt76/mt7925/ies.c   | 183 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7925/ies.h   |  31 +++
- 3 files changed, 215 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/ies.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt7925/ies.h
+v2: rebase to fix build error
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/Makefile b/drivers/net/wireless/mediatek/mt76/mt7925/Makefile
-index f9dcc0bba393..af62c775c3d6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/Makefile
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/Makefile
-@@ -4,7 +4,7 @@ obj-$(CONFIG_MT7925_COMMON) += mt7925-common.o
- obj-$(CONFIG_MT7925E) += mt7925e.o
- obj-$(CONFIG_MT7925U) += mt7925u.o
+---
+ .../net/wireless/mediatek/mt76/mt7925/main.c  | 86 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   | 46 ++++++++--
+ .../wireless/mediatek/mt76/mt7925/mt7925.h    |  4 +-
+ .../net/wireless/mediatek/mt76/mt7925/regd.c  | 10 +--
+ 4 files changed, 134 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index 8813fd00d569..5d38c7e7f5f7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -884,6 +884,86 @@ mt7925_get_rates_table(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	return mvif->basic_rates_idx;
+ }
  
--mt7925-common-y := mac.o mcu.o regd.o main.o init.o debugfs.o nan.o
-+mt7925-common-y := mac.o mcu.o regd.o main.o init.o debugfs.o nan.o ies.o
- mt7925-common-$(CONFIG_NL80211_TESTMODE) += testmode.o
- mt7925e-y := pci.o pci_mac.o pci_mcu.o
- mt7925u-y := usb.o
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/ies.c b/drivers/net/wireless/mediatek/mt76/mt7925/ies.c
-new file mode 100644
-index 000000000000..0eb7dc7665b3
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/ies.c
-@@ -0,0 +1,183 @@
-+// SPDX-License-Identifier: BSD-3-Clause-Clear
-+/* Copyright (C) 2026 MediaTek Inc. */
-+
-+#include <linux/ieee80211.h>
-+#include <net/cfg80211.h>
-+#include <net/mac80211.h>
-+#include "ies.h"
-+
-+u8 mt7928_ht_nsts_from_ies(const struct cfg80211_bss_ies *ies)
++static void
++mt7925_calc_vif_num(void *priv, u8 *mac, struct ieee80211_vif *vif)
 +{
-+	const struct ieee80211_ht_cap *ht_cap;
-+	const struct element *elem;
-+	u8 nsts = 0, i, max_tx_streams;
++	u32 *num = priv;
 +
-+	elem = cfg80211_find_elem(WLAN_EID_HT_CAPABILITY,
-+				  ies->data, ies->len);
-+	if (!elem || elem->datalen < sizeof(*ht_cap))
-+		return 0;
++	if (!priv)
++		return;
 +
-+	ht_cap = (const void *)elem->data;
-+
-+	if ((ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_RX_DIFF) &&
-+	    (ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_DEFINED))
-+		max_tx_streams =
-+			((ht_cap->mcs.tx_params & IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK)
-+				>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
-+	else
-+		max_tx_streams = IEEE80211_HT_MCS_TX_MAX_STREAMS;
-+
-+	for (i = 0; i < max_tx_streams; i++) {
-+		if (ht_cap->mcs.rx_mask[i])
-+			nsts = i + 1;
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		*num += 1;
++		break;
++	default:
++		break;
 +	}
-+
-+	return nsts;
 +}
 +
-+u8 mt7928_vht_nsts_from_ies(const struct cfg80211_bss_ies *ies)
++static void
++mt7925_regd_set_6ghz_power_type(struct ieee80211_vif *vif,
++				struct ieee80211_bss_conf *link_conf,
++				bool is_add)
 +{
-+	const struct ieee80211_vht_cap *vht_cap;
-+	const struct element *elem;
-+	u16 tx_mcs_map;
-+	u8 nsts = 0, i;
++	struct mt792x_vif *mvif = (struct mt792x_vif *)vif->drv_priv;
++	struct mt792x_phy *phy = mvif->phy;
++	struct mt792x_dev *dev = phy->dev;
++	struct ieee80211_channel *chan = NULL;
++	u32 valid_vif_num = 0;
++	enum mt792x_reg_power_type old_power_type;
++	bool power_type_changed = false;
 +
-+	elem = cfg80211_find_elem(WLAN_EID_VHT_CAPABILITY,
-+				  ies->data, ies->len);
-+	if (!elem || elem->datalen < sizeof(*vht_cap))
-+		return 0;
++	old_power_type = phy->power_type;
 +
-+	vht_cap = (const void *)elem->data;
-+	tx_mcs_map = le16_to_cpu(vht_cap->supp_mcs.tx_mcs_map);
++	/* Try to get channel from link_conf first, then vif->bss_conf, then phy */
++	if (link_conf && link_conf->chanreq.oper.chan)
++		chan = link_conf->chanreq.oper.chan;
++	else if (vif->bss_conf.chanreq.oper.chan)
++		chan = vif->bss_conf.chanreq.oper.chan;
++	else if (phy->mt76->chandef.chan)
++		chan = phy->mt76->chandef.chan;
 +
-+	for (i = 0; i < 8; i++) {
-+		if (((tx_mcs_map >> (2 * i)) & 0x3) != IEEE80211_VHT_MCS_NOT_SUPPORTED)
-+			nsts = i + 1;
++	ieee80211_iterate_active_interfaces(mt76_hw(dev),
++					    IEEE80211_IFACE_ITER_RESUME_ALL,
++					    mt7925_calc_vif_num, &valid_vif_num);
++
++	if (valid_vif_num > 1) {
++		phy->power_type = MT_AP_DEFAULT;
++		goto out;
 +	}
 +
-+	return nsts;
++	if (!is_add)
++		vif->bss_conf.power_type = IEEE80211_REG_UNSET_AP;
++
++	switch (vif->bss_conf.power_type) {
++	case IEEE80211_REG_SP_AP:
++		phy->power_type = MT_AP_SP;
++		break;
++	case IEEE80211_REG_VLP_AP:
++		phy->power_type = MT_AP_VLP;
++		break;
++	case IEEE80211_REG_LPI_AP:
++		phy->power_type = MT_AP_LPI;
++		break;
++	case IEEE80211_REG_UNSET_AP:
++		phy->power_type = MT_AP_UNSET;
++		break;
++	default:
++		phy->power_type = MT_AP_DEFAULT;
++		break;
++	}
++
++out:
++	power_type_changed = (old_power_type != phy->power_type);
++
++	if (power_type_changed && chan && chan->band == NL80211_BAND_6GHZ)
++		mt7925_mcu_apply_regd(dev, dev->mt76.alpha2, dev->country_ie_env, true);
 +}
 +
-+u8 mt7928_he_nsts_from_ies(const struct cfg80211_bss_ies *ies)
-+{
-+	const struct ieee80211_he_cap_elem *he_cap;
-+	const struct ieee80211_he_mcs_nss_supp *mcs_nss;
-+	const struct element *elem;
-+	u8 mcs_nss_size;
-+	u16 tx_mcs_80;
-+	u8 nsts = 0, i;
+ static int mt7925_mac_link_sta_add(struct mt76_dev *mdev,
+ 				   struct ieee80211_vif *vif,
+ 				   struct ieee80211_link_sta *link_sta,
+@@ -1006,6 +1086,8 @@ static int mt7925_mac_link_sta_add(struct mt76_dev *mdev,
+ 			goto out_pm;
+ 	}
+ 
++	mt7925_regd_set_6ghz_power_type(vif, link_conf, true);
 +
-+	elem = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_CAPABILITY,
-+				      ies->data, ies->len);
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ 
+ 	return 0;
+@@ -1279,6 +1361,8 @@ static void mt7925_mac_link_sta_remove(struct mt76_dev *mdev,
+ 	mt76_wcid_cleanup(mdev, wcid);
+ 	mt76_wcid_mask_clear(mdev->wcid_mask, idx);
+ 
++	mt7925_regd_set_6ghz_power_type(vif, link_conf, false);
 +
-+	if (!elem || elem->datalen < 1 + sizeof(*he_cap))
-+		return 0;
-+
-+	he_cap = (const void *)(elem->data + 1);
-+	mcs_nss_size = ieee80211_he_mcs_nss_size(he_cap);
-+
-+	if (elem->datalen < 1 + sizeof(*he_cap) + mcs_nss_size)
-+		return 0;
-+
-+	mcs_nss = (const void *)(he_cap + 1);
-+	tx_mcs_80 = le16_to_cpu(mcs_nss->tx_mcs_80);
-+
-+	for (i = 0; i < 8; i++) {
-+		if (((tx_mcs_80 >> (2 * i)) & 0x3) != IEEE80211_HE_MCS_NOT_SUPPORTED)
-+			nsts = i + 1;
+ 	mt76_connac_power_save_sched(&dev->mphy, &dev->pm);
+ }
+ 
+@@ -1829,7 +1913,7 @@ static int mt7925_set_sar_specs(struct ieee80211_hw *hw,
+ 
+ 	mt792x_mutex_acquire(dev);
+ 	err = mt7925_mcu_set_clc(dev, dev->mt76.alpha2,
+-			 dev->country_ie_env);
++				 dev->country_ie_env, false);
+ 	if (err < 0)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index bebac21e4d38..76f26cb36f24 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -3504,7 +3504,7 @@ EXPORT_SYMBOL_GPL(mt7925_mcu_set_channel_domain);
+ static int
+ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		     enum environment_cap env_cap,
+-		     struct mt7925_clc *clc, u8 idx)
++		     struct mt7925_clc *clc, u8 idx, bool power_type_change)
+ {
+ 	struct mt7925_clc_segment *seg;
+ 	struct sk_buff *skb;
+@@ -3522,19 +3522,38 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		u8 pad1;
+ 		u8 alpha2[2];
+ 		u8 type[2];
+-		u8 rsvd[64];
++		u8 env_6g;
++		u8 rsvd[63];
+ 	} __packed req = {
+ 		.tag = cpu_to_le16(0x3),
+ 
+ 		.idx = idx,
+ 		.env = env_cap,
++		.env_6g = dev->phy.power_type,
+ 	};
+ 	int ret, valid_cnt = 0;
+ 	u8 *pos, *last_pos;
++	u8 target_6g_type;
+ 
+ 	if (!clc)
+ 		return 0;
+ 
++	/* Determine target 6G power type based on phy->power_type */
++	switch (dev->phy.power_type) {
++	case MT_AP_LPI:
++		target_6g_type = '0';
++		break;
++	case MT_AP_SP:
++		target_6g_type = '1';
++		break;
++	case MT_AP_VLP:
++		target_6g_type = '2';
++		break;
++	default:
++		target_6g_type = '0'; /* default to LPI */
++		break;
 +	}
 +
-+	return nsts;
-+}
+ 	req.ver = clc->ver;
+ 	pos = clc->data + sizeof(*seg) * clc->t0.nr_seg;
+ 	last_pos = clc->data + le32_to_cpu(*(__le32 *)(clc->data + 4));
+@@ -3546,6 +3565,23 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		    rule->alpha2[1] != alpha2[1])
+ 			continue;
+ 
++		/* Filter power tables based on call source:
++		 * power_type_change == false: from mt7925_mcu_regd_update()
++		 *   - Send 2/5G ('-') and 6G LPI ('0') and 6G VLP ('2')
++		 * power_type_change == true: from mt7925_regd_set_6ghz_power_type()
++		 *   - Send only the specific 6G power table based on power_type
++		 */
++		if (power_type_change) {
++			/* Only send the specific 6G power table */
++			if (rule->type[0] != target_6g_type)
++				continue;
++		} else {
++			/* Send 2/5G and 6G LPI and VLP only */
++			if (rule->type[0] != '-' && rule->type[0] != '0' &&
++			    rule->type[0] != '2')
++				continue;
++		}
 +
-+u8 mt7928_eht_nsts_from_ies(const struct cfg80211_bss_ies *ies)
-+{
-+	const struct ieee80211_eht_cap_elem_fixed *eht_cap;
-+	const struct ieee80211_he_cap_elem *he_cap;
-+	const struct element *eht_elem, *he_elem;
-+	const u8 *mcs_nss_data;
-+	u8 mcs_nss_size;
-+	u8 nsts = 0, i;
-+
-+	eht_elem = cfg80211_find_ext_elem(WLAN_EID_EXT_EHT_CAPABILITY,
-+					  ies->data, ies->len);
-+	if (!eht_elem || eht_elem->datalen < 1 + sizeof(*eht_cap))
-+		return 0;
-+
-+	he_elem = cfg80211_find_ext_elem(WLAN_EID_EXT_HE_CAPABILITY,
-+					 ies->data, ies->len);
-+	if (!he_elem || he_elem->datalen < 1 + sizeof(*he_cap))
-+		return 0;
-+
-+	eht_cap = (const void *)(eht_elem->data + 1);
-+	he_cap = (const void *)(he_elem->data + 1);
-+
-+	mcs_nss_size = ieee80211_eht_mcs_nss_size(he_cap, eht_cap, true);
-+	if (eht_elem->datalen < 1 + sizeof(*eht_cap) + mcs_nss_size)
-+		return 0;
-+
-+	mcs_nss_data = (const u8 *)(eht_cap + 1);
-+
-+	for (i = 0; i < mcs_nss_size; i++)
-+		nsts = (mcs_nss_data[i] >> 4) & 0xf;
-+
-+	return nsts;
-+}
-+
-+void mt7928_get_bss_suswm_cap(const struct cfg80211_bss_ies *ies,
-+			      const struct ieee80211_link_sta *link_sta,
-+			      const struct ieee80211_supported_band *own_sband,
-+			      enum nl80211_iftype iftype,
-+			      struct mt7928_suswm_cap *cap)
-+{
-+	const struct ieee80211_sta_ht_cap *ht_cap = &link_sta->ht_cap;
-+	const struct ieee80211_sta_vht_cap *vht_cap = &link_sta->vht_cap;
-+	const struct ieee80211_sta_he_cap *he_cap = &link_sta->he_cap;
-+	const struct ieee80211_sta_eht_cap *eht_cap = &link_sta->eht_cap;
-+	const struct ieee80211_sta_vht_cap *own_vht_cap = &own_sband->vht_cap;
-+	const struct ieee80211_sta_he_cap *own_he_cap =
-+		ieee80211_get_he_iftype_cap(own_sband, iftype);
-+	const struct ieee80211_sta_eht_cap *own_eht_cap =
-+		ieee80211_get_eht_iftype_cap(own_sband, iftype);
-+
-+	cap->bfer_en = false;
-+	cap->bfee_en = false;
-+	cap->nsts = 0;
-+
-+	if (ht_cap->ht_supported)
-+		cap->nsts = mt7928_ht_nsts_from_ies(ies);
-+
-+	if (vht_cap->vht_supported) {
-+		if (vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)
-+			cap->bfer_en = true;
-+
-+		if (own_vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE)
-+			cap->bfee_en = true;
-+
-+		cap->nsts = mt7928_vht_nsts_from_ies(ies);
-+	}
-+
-+	if (he_cap->has_he && own_he_cap) {
-+		if (he_cap->he_cap_elem.phy_cap_info[3] &
-+		    IEEE80211_HE_PHY_CAP3_SU_BEAMFORMER)
-+			cap->bfer_en = true;
-+
-+		if (own_he_cap->he_cap_elem.phy_cap_info[4] &
-+		    IEEE80211_HE_PHY_CAP4_SU_BEAMFORMEE)
-+			cap->bfee_en = true;
-+
-+		cap->nsts = mt7928_he_nsts_from_ies(ies);
-+	}
-+
-+	if (eht_cap->has_eht && own_eht_cap) {
-+		if (eht_cap->eht_cap_elem.phy_cap_info[0] &
-+		    IEEE80211_EHT_PHY_CAP0_SU_BEAMFORMER)
-+			cap->bfer_en = true;
-+
-+		if (own_eht_cap->eht_cap_elem.phy_cap_info[0] &
-+		    IEEE80211_EHT_PHY_CAP0_SU_BEAMFORMEE)
-+			cap->bfee_en = true;
-+
-+		cap->nsts = mt7928_eht_nsts_from_ies(ies);
-+	}
-+}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/ies.h b/drivers/net/wireless/mediatek/mt76/mt7925/ies.h
-new file mode 100644
-index 000000000000..a1239f22ef54
---- /dev/null
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/ies.h
-@@ -0,0 +1,31 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
-+/* Copyright (C) 2026 MediaTek Inc. */
-+
-+#ifndef __MT7925_IES_H
-+#define __MT7925_IES_H
-+
-+#include <net/cfg80211.h>
-+#include <net/mac80211.h>
-+
-+#define MT_SU_SWM_BFER		BIT(0)
-+#define MT_SU_SWM_BFEE		BIT(1)
-+#define MT_SU_SWM_NSTS_MEET	BIT(2)
-+
-+struct mt7928_suswm_cap {
-+	bool bfee_en;
-+	bool bfer_en;
-+	u8 nsts;
-+};
-+
-+u8 mt7928_ht_nsts_from_ies(const struct cfg80211_bss_ies *ies);
-+u8 mt7928_vht_nsts_from_ies(const struct cfg80211_bss_ies *ies);
-+u8 mt7928_he_nsts_from_ies(const struct cfg80211_bss_ies *ies);
-+u8 mt7928_eht_nsts_from_ies(const struct cfg80211_bss_ies *ies);
-+
-+void mt7928_get_bss_suswm_cap(const struct cfg80211_bss_ies *ies,
-+			      const struct ieee80211_link_sta *link_sta,
-+			      const struct ieee80211_supported_band *own_sband,
-+			      enum nl80211_iftype iftype,
-+			      struct mt7928_suswm_cap *cap);
-+
-+#endif /* __MT7925_IES_H */
+ 		seg = (struct mt7925_clc_segment *)clc->data
+ 			  + rule->seg_idx - 1;
+ 
+@@ -3579,7 +3615,7 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ }
+ 
+ int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+-		       enum environment_cap env_cap)
++		       enum environment_cap env_cap, bool power_type_change)
+ {
+ 	struct mt792x_phy *phy = (struct mt792x_phy *)&dev->phy;
+ 	int i, ret;
+@@ -3594,13 +3630,13 @@ int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 			continue;
+ 
+ 		ret = __mt7925_mcu_set_clc(dev, alpha2, env_cap,
+-					   phy->clc[i], i);
++					   phy->clc[i], i, power_type_change);
+ 
+ 		/* If no country found, set "00" as default */
+ 		if (ret == -ENOENT)
+ 			ret = __mt7925_mcu_set_clc(dev, "00",
+ 						   ENVIRON_INDOOR,
+-						   phy->clc[i], i);
++						   phy->clc[i], i, power_type_change);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+index 321e732347f2..e3fef41cbb33 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+@@ -385,7 +385,9 @@ int mt7925_set_tx_sar_pwr(struct ieee80211_hw *hw,
+ 
+ int mt7925_mcu_regval(struct mt792x_dev *dev, u32 regidx, u32 *val, bool set);
+ int mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+-		       enum environment_cap env_cap);
++		       enum environment_cap env_cap, bool power_type_change);
++int mt7925_mcu_apply_regd(struct mt792x_dev *dev, u8 *alpha2,
++			  enum environment_cap env, bool power_type_change);
+ int mt7925_mcu_set_mlo_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
+ 			   u16 sel_links, int duration, u8 token_id);
+ int mt7925_mcu_set_roc(struct mt792x_phy *phy, struct mt792x_bss_conf *mconf,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/regd.c b/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
+index 3eb3f172dba4..a039ec3ee47b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/regd.c
+@@ -137,14 +137,14 @@ mt7925_regd_channel_update(struct wiphy *wiphy, struct mt792x_dev *dev)
+ 	}
+ }
+ 
+-static int mt7925_mcu_apply_regd(struct mt792x_dev *dev, u8 *alpha2,
+-				  enum environment_cap env)
++int mt7925_mcu_apply_regd(struct mt792x_dev *dev, u8 *alpha2,
++			  enum environment_cap env, bool power_type_change)
+ {
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	int ret;
+ 
+-	ret = mt7925_mcu_set_clc(dev, alpha2, env);
++	ret = mt7925_mcu_set_clc(dev, alpha2, env, power_type_change);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -167,7 +167,7 @@ int mt7925_mcu_regd_update(struct mt792x_dev *dev, u8 *alpha2,
+ 
+ 	mt792x_mutex_acquire(dev);
+ 	if (dev->regd_change)
+-		ret = mt7925_mcu_apply_regd(dev, alpha2, country_ie_env);
++		ret = mt7925_mcu_apply_regd(dev, alpha2, country_ie_env, false);
+ 	mt792x_mutex_release(dev);
+ 	dev->regd_change = false;
+ 	dev->regd_in_progress = false;
+@@ -407,7 +407,7 @@ int mt7925_regd_change(struct mt792x_phy *phy, char *alpha2)
+ 	} else if (phy->chip_cap & MT792x_CHIP_CAP_11D_EN) {
+ 		return regulatory_hint(wiphy, alpha2);
+ 	} else {
+-		return mt7925_mcu_set_clc(dev, alpha2, ENVIRON_INDOOR);
++		return mt7925_mcu_set_clc(dev, alpha2, ENVIRON_INDOOR, false);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(mt7925_regd_change);
 -- 
-2.45.2
+2.18.0
 
