@@ -1,337 +1,147 @@
-Received: from MM0P280CU010.outbound.protection.outlook.com (mail-swedensouthazolkn19012049.outbound.protection.outlook.com [52.103.34.49])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AD643BBFA4
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 09:47:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.34.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785923267; cv=fail; b=WL/t3WWnDn3LkSqnDb6cQjv5vV9lVwwSTx3GkLTJU4fseOj0e8oIkmb5RFq/IRV/w5J6ZB35GDJWUjmTP2/34351Ku73RMl8bDwnddQwkGPbvmOa8g+0qgDhzgn/e6T5DoNoOliVyh9dGIHWzlqblrPgizUppdw5DQxGH6QHgqk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785923267; c=relaxed/simple;
-	bh=3tTcDKicXoNF70KxOafZRNon3785WKDWElhEv7tdO2g=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=GhxyqeztNHpbMekgf7uZnFjINGWysX0rxUDwCbLk8ZZ+Vscsw2K0KlCg8feiCtN7mqDkzfrAOOg9rdZnyTx86CIhJ65Ol0hD++15vBIqN+ZevTuhELwWcP49XRBJP7LBhnwAs4NlDYEmVltpzIfcPTQuTUzcoqOx/cO4MJdjk48=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=Xll63+3d; arc=fail smtp.client-ip=52.103.34.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB55440627B
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 09:51:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785923506; cv=none; b=q8A+phizljy1aQZq6JvNlO9LZv0kIdr0iaTnLeII+8+/IKNBuNO3rTpLEWaSv+swZUfW4RJt2iLWPoKMqqxUCppiG0vvMl10no+La84o02lzWjSin9mbDkQegqsP5+5uaEmT8vQX0fmg8RPnOudcPadYpXovwRcv7nEeinVPeDA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785923506; c=relaxed/simple;
+	bh=QFM7AMKU4RXwGP9obr9bM9LikH8JUn/fNm7E3dfSGRw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XihOB3p5Ovs/y8PGhKUrDHULSoAZZ1vPDv5EdRnmjQ+uQkqjbR24Wx5CD/x1d1O8SgEbuh6uNl3ojH+6h0fwJd214qJMvUWeZbBdRlcZ6whkz8fpcoaCtk6Nm5zi2sJL+3pLVrUQYKQGokZz0kyywZLNbXTC5OD4WruYuTYqz3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=meZ1yApO; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=j7PAkvhR; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="Xll63+3d"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UOCrbWFwNb0ST5CD9N29ZUmrhFnifOG8TNzOKoVpm0O2lL5vf5fKw0TdK7qHb4wnZDq8FvUkVmvjBujDgrErGga51V4bK2cue1ubodwb8zIvWMF87vtf/tpUwMydkyEz4IqRFnFaYxO1/tMGzzcOK4YmizZIBv4BiPeCBKRme6Mk8Zi7mnp00gArqJ1xJt6ZATjQ+tJClvCK1d4LYGJn3m91J6Ay1L8Cmz+VWakfRbV7S36A2K/nUZIB1iFxT0InP2T1v6jvaWZ5KuPuyW3MXx328Ha9fSptuYLBp0th/K3kbtGv6GjSIZSCniT8YHmAAm+nHAihYCZcaC03LXRz9A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uNDzieRYzgImzk2JfcOwrAjPcwdFLt36ZEhK6B5bS78=;
- b=ZC+u/B4HJg5L4bYr1K4OOygaaGRKmb9cvF2AkU7Rbtz0PdgYq37YuF0JieSkiyYpep65JklCO7fsMKKvaH+l+wtOgROuP2O50ddXeuQs6V/v541YEqUvfd8gFakQ9YcS4hoPnE8ldzibXKXhjfHE/wlF7liKa8Q14hyO4/RQFWFN5mMnELgRBCO/ta02GKVw10nRaM53YuFZFz5wkMFVO4XqH0NTiumVf2lxq3ROiDilJDeYPmsoAg56zSuvODfSndhLFaE5gvPyMi9EavAyrw+P+g8jMaHSr7qJ0jvwRg6d6e97Sz6WbTtTZ1vTiHtNWHn0lbX/XhTE4WMVeaHt1w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uNDzieRYzgImzk2JfcOwrAjPcwdFLt36ZEhK6B5bS78=;
- b=Xll63+3djkNKF6S5IMZ2VTe0P1H62mXz3l2PrsO35clVIvwZAGTH/rbyvcDEPpaoMzH4ctrEWW5EI0AIgGzL3hwF6r+Geuy5+dP3BVX5AX3AFgyBeGlySP33unwSW01NCDXyveCWqL2vNZNJLNmjA7jBhoLaumKcP51T3u3OEbA5fVypkpxeeKWkd+yCe4myumig8DC5uJKQU1UIcIZNSyNAtXXoOePpi/NFfJoJxX71xM1CVy0ADNRQz1Iqnqz+SVtCf1dGolHtawSwGoMLy6M8JaUcVWqL0p38SKvzi4Rc7RndEbN+AfzYfcQZtM3rWYCoFKX/mtLvTRDzV7ZMRA==
-Received: from GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:eb::13)
- by GV3P280MB0243.SWEP280.PROD.OUTLOOK.COM (2603:10a6:150:e::8) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.292.19; Wed, 5 Aug 2026 09:47:42 +0000
-Received: from GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM
- ([fe80::fd2d:3517:f39d:926a]) by GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM
- ([fe80::fd2d:3517:f39d:926a%3]) with mapi id 15.21.0292.015; Wed, 5 Aug 2026
- 09:47:42 +0000
-From: Stephen C Goodman <Stephen.C.Goodman2@outlook.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"brcm80211@lists.linux.dev" <brcm80211@lists.linux.dev>,
-	"brcm80211-dev-list.pdl@broadcom.com" <brcm80211-dev-list.pdl@broadcom.com>
-Subject: Re: brcmfmac: AP+STA on one PHY reassigns STA MAC to AP MAC and
- breaks concurrent operation
-Thread-Topic: brcmfmac: AP+STA on one PHY reassigns STA MAC to AP MAC and
- breaks concurrent operation
-Thread-Index: AQHdI2zP+JudjhTyVkW3bxnWqHaO77aPNo0F
-Date: Wed, 5 Aug 2026 09:47:42 +0000
-Message-ID:
- <GVYP280MB10566292972656C67802C7B79DD32@GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM>
-References:
- <GVYP280MB1056154BB4A4DE3D4555EA0C9DD52@GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM>
-In-Reply-To:
- <GVYP280MB1056154BB4A4DE3D4555EA0C9DD52@GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GVYP280MB1056:EE_|GV3P280MB0243:EE_
-x-ms-office365-filtering-correlation-id: d1cf54d2-cb88-47e9-70ee-08def2d69817
-x-microsoft-antispam:
- BCL:0;ARA:14566002|19101099003|12121999013|6012599012|31061999003|8062599012|8060799015|19110799012|41001999006|15030799006|15080799012|51005399006|25010399006|40105399003|2607281247196008|102099032|3412199025|440099028|19061999003;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?eSHMD7HlB0Q5haoFwHuJZWs9MPOmcrHbdpuSeAfQGeA2dNZkqffrNBIb0k?=
- =?iso-8859-1?Q?ZrzLwjUK/o70TTfRNmlcQCwom7CTd1RCAYFknF1lk28N1JoZOMcp1cm8df?=
- =?iso-8859-1?Q?9AQCY2RDOCzmYsQu/JKnP0r4UydB2T/JDH8m1NKDVaV9YwjfycwKb06ha3?=
- =?iso-8859-1?Q?g2JfaRM/s05t1rq6rQZheCISVw1CAGoFm+nPGyF6j50ijHKRKRdnUgUBR3?=
- =?iso-8859-1?Q?3c2Dg9qfES0DjxKF4uw8DJApzM6Y8ioZyVrgLkF7kSC6M0ll75rNhZfbuY?=
- =?iso-8859-1?Q?v7s9nBaxj50RPFuc3+ReR5uppAw7pnGNXQ3kOEMhRFjKUPXgOc3ARIzSqt?=
- =?iso-8859-1?Q?SaWN7lra8LCuOAW9CVEuP1qkwUlhxQXzplo62iLWf7qmuq8QCu7l5n3REX?=
- =?iso-8859-1?Q?ru4ErPqtvBAx/KmC2X6kBmUP4fMKdrPOoKoB6lvgDMl7hbA8dCaukXhHCu?=
- =?iso-8859-1?Q?uTYnWTJc8VM4ps0ki+RuOEIdxcflKQEafKT/0iOD9Y05VzbVkr+MUJFMtU?=
- =?iso-8859-1?Q?zJGaSTdOELWwRgVEeWsbjKkl8GFTjBL/WH4uufm0gB5rylBzF6lf99KSNh?=
- =?iso-8859-1?Q?KSl+12c8Poueh6oom9zjy7zQCmKFjbaB7QC/hzryUZUFDe04XIEBTCeLB7?=
- =?iso-8859-1?Q?mDLV9Iey9FCQKMcaqZlvd/5a3owcoWQCtJ2fd3hCMVFOOPgq3l9lI+QCvo?=
- =?iso-8859-1?Q?MA93pS/LedVI1EyEYay309zE6d7BZtFbPiM9tIRqwZRETl1L+ygm1NJvfB?=
- =?iso-8859-1?Q?E5EHm6li6oITZELZk/Xcu0qfSuMrLd2h363MxYq+iLhwh7byuTTK4BSZ+l?=
- =?iso-8859-1?Q?ET/GH9KRVhbxVQ28J4ASWlwTpyIuiK+c+Qq41BgWWaUTLFzTZWARfJNYQD?=
- =?iso-8859-1?Q?jsG51Qe8gWii4KlUn4bJvnD+rzhQrYf+J5oANKP5TlDso+PYwLaMB+4eWc?=
- =?iso-8859-1?Q?XHnqNQlWkO1SG24GOl2ncgr57ifFw8QI+d4uAk3jILJDUMMEOeYUHyghzi?=
- =?iso-8859-1?Q?BTcTqq4RhJ1ppYEAA9GsrdFExNvBeyItX7K7+jOIKwgCgfvM+J/hxwg81c?=
- =?iso-8859-1?Q?b+xnjiDQ6TUMglN+0KpUxu1mRvTF8gfsybfc/LoxNRQMDgCLJmjfQz6Z7h?=
- =?iso-8859-1?Q?cDStRUqDrkbknIW7a0zgk9J7yUKaA=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?g+MmrEoGAr2Yatsq1uR+b8gG14Q0OKbrPOgK/ElYhaFfiI5oYnvlBr7yKi?=
- =?iso-8859-1?Q?/f18dTWf2BCrrmMU/xbvQ6apbxwd21R+mbjsRAO+8V6TOAAd91wGSe0970?=
- =?iso-8859-1?Q?YWz262OCk1XgMIEGhfGeopma63p3DX7f8S5tBGqjDEVeVz6ovcUod2L9x7?=
- =?iso-8859-1?Q?/HXVa4IXG8IgjUP8AM5LulvHWEa8KZuPTOXodo7jG/Tyo/CYswL0jz3f4O?=
- =?iso-8859-1?Q?m21Y8/cqBsN8CnDYfXoTqV1kKNyW2UM2wARgm8d+9R06ACXQEN2hMaSsgb?=
- =?iso-8859-1?Q?7LFCK3+47HegzCKkFyt0PxdULvhHzTtkv3/RMY1Qcfs/69T8GV6EGRxofm?=
- =?iso-8859-1?Q?8Rh6rjCzy+Xoj5/YPZ/uAqurPT2vnJctVqYNVR8RPGltAm4m953WwoqU5F?=
- =?iso-8859-1?Q?xS2a/862U4yiJ+NwmeUSwE3uN4+vOXomXQbCtZRqlMRMxBM/oWbWD+OPdI?=
- =?iso-8859-1?Q?XA/BpE9O+qevtYsvkU7c5PZmdplxVqWsDyYrEybizmNGSNv3EDrg1hPzfx?=
- =?iso-8859-1?Q?554IrsUCf/Iuo7bl8A1Z9aEiEaP+kINuJIotiDjRDexFBew9dPo5cFwrHq?=
- =?iso-8859-1?Q?WL99Q183jHU1+IX50XJdZnE3uF6xSUl1HnoyF5GP9UM29TavBpeZ1o/AHa?=
- =?iso-8859-1?Q?K1ADZy8HvTuVOyRrYe0CaE2y44BMfUCBv1mctQbQPj6zh2hANj2VjhoCiW?=
- =?iso-8859-1?Q?yWqjaOtGXH/ZLOvEkw77FWGDyZWSDDUToZy+gsD3aVaGy9suRvy6DT7hQ6?=
- =?iso-8859-1?Q?7e9bSSop0O/T5Kag3Afs/gJJrHkfoJa75zATM/8NF4rBs34wQdqDVoKxvv?=
- =?iso-8859-1?Q?lyrey4RCS3RVE3eigCzMub+arUwABJrKft+kLrKshA35a7QYlwQ15o2g5h?=
- =?iso-8859-1?Q?c1Q7XxI5vrmlFhIif6IgQENIS6v1LHlGL8hjYD3B9eobjvSBVZVOHUIzb/?=
- =?iso-8859-1?Q?kb+v3n83yiW5xTgcVmZSdAHsZoYGq8xe9eWV0GQL3Jwrr8tUBUbHknFYx7?=
- =?iso-8859-1?Q?z1wXJoYUn69WbrUa+Nq9BG3MbnpYohS+33aZc14NtO1XiKZGbGJy0y8EYz?=
- =?iso-8859-1?Q?NFrcb3jsvI/z8im6iing4QnNRRwTKp/EmtMzr8owNiz1NoWn4RrMs/RXuK?=
- =?iso-8859-1?Q?BCRSgb63/pR4i6uDJCQ9/OcQGoSUZq9egHhgtMoNue+waYJxlLwDAbZRRP?=
- =?iso-8859-1?Q?W9UN/oJBmDGDWA4fEqg9jiSA81DeQd33kvX5PRwRCn/wdzKlOpw1R2ned8?=
- =?iso-8859-1?Q?ryiAnv4ECHrPuNgoTEsM+L6WZ/5VmjFADADXgTjnB/8xkbCfQrY5USh4G4?=
- =?iso-8859-1?Q?1ee883B/avWrgRo+F8Xtm4ahlFw81U3NOAas/vySVIatTSmMdnWlzUOmpU?=
- =?iso-8859-1?Q?p1oppBNMQ1NhrOgas719QbX/oS9kt4Nw/ynx6pWK+yVgVc+gLavunWmV48?=
- =?iso-8859-1?Q?jbPc/qhVBwcnynJ3?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="meZ1yApO";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="j7PAkvhR"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6758dPAv2663308
+	for <linux-wireless@vger.kernel.org>; Wed, 5 Aug 2026 09:51:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	1IU+TsuZ564fFaBd33xIc9jlaZuK+lX3HGJbEgaHb8g=; b=meZ1yApO36DwW3G5
+	W2RlIfPaGWXXsr4/9NKjL8wrNqrfq9z2iBHeeWFAiN7OGo9zFg45utFeNQ1LWqxH
+	j5474T9+wznaWwdvwrmiAuBUmwgv8lhoqIesbIYS3m0ETKWcu8CGQyVwjAtHFF3j
+	mJwJ7ed1XCMqa/cJISRWGHUsQYhgrktqgqcZc8/Es2RYT+cj9sRAGMOnPDCyz70w
+	ATWfBb5T8OAtU5LN/8J7dDSRNaaGz1sn6QIE8jzJOEq/nsNuds5FoOf6/+OcxNLq
+	S6cGpQuFazHVYyiKvmMb+H1osRPA2WEg6tmHeGH09Wt++dBva5kBujlCXGehrYLv
+	8RymtQ==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fv14w8k3a-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 09:51:43 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cc5faecf01so15941525ad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 02:51:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1785923502; x=1786528302; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1IU+TsuZ564fFaBd33xIc9jlaZuK+lX3HGJbEgaHb8g=;
+        b=j7PAkvhRJpIq3mX0ZPacQSu5pOjlNymmBVRW1A+R5qm8dm0fFjHBNyo/qUpf7GNMSF
+         Y3IuTjT75BoluCIN3c60dZDbFlJ0f9y7Pllv9CdbxOmRibtiyXzzsR4SNrujZvSmd8xZ
+         bLiwjGQl5Og0/JtkLQkbhUFgbfXmUCpTNqEoehRcGt9peu1WOFZR+MstuBEgdYjrHYrT
+         OjxK6Cfwf19pmgrH7k1rPuu3bgssTJKRWO7C0GSIb3yrGA1zq9DTS1ft9gx3DRBhJ5gv
+         aWs4tupMVXdkDZsN27fF0b/Yh1n3hTyOYBVRicIu6z3a9qLpOPu2C+NX4fke9kf+0m3p
+         Uwhw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785923502; x=1786528302;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1IU+TsuZ564fFaBd33xIc9jlaZuK+lX3HGJbEgaHb8g=;
+        b=LT3Nn7D13S3v/CvJNeV571J4m6ZtsF24dXM/A5IQymlw29u+TLD6KWCB3/1z0dZPzk
+         meLCZ1aYlU5/kXJ555/yyVEosQpzSQSsO7SIIMCNjek7uuXgPNaoLJb4/lw3QY8bFnY7
+         MIvSjuToa5vf5S65rRq2L77evIiBJBViTzTlUQkE0Oq64kRDlzxOnTLyvFAlOuoPfgOX
+         RewkLfywW8zYINF7dGIUc7ytva1OmAMxexC3DsECPyxzrtiIkoWvsVLphPe/6P8uDmWS
+         wVtCMxCqq3+mHuPMjCcJqNyxiMRkOj7p5qtXhhcfLqmuktMfl8ruxJbCq6Hvhyh6i960
+         MDNA==
+X-Forwarded-Encrypted: i=1; AHgh+Rr/LFaBICxO4hF2QDCwR+DCLwgSTZnAiyEDoZtmN9ZQc5HUSZ7xdK9GerfgqZqoLnQlqDmb1ANAsYogmJSOVQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPaGuBCiAB9gdkUtHLkpFTqY0rQtWABmEQ5NkSFSK1WqCcFPB+
+	sd+dR/FAvZ5dNf9r8J2sOmSrskjywUHFHtrdHVmYg5X9pfo5zsqWeq+a7knQCu/R3d5zlwlLUxo
+	ljpU0SsEepUpCI7Sxvg/43GUc3ahB9K2sTbfg6nGqP54payPZf3Dw6RXKltuwuJLY2xZsvw==
+X-Gm-Gg: AR+sD10Nwnr/bhFjP9zvajqj+IAV23pPBTmIXmi92YgMWX6ynZaKNy6J5R462WKIJM7
+	gKX5Dbguy++BQPp+0zqdr0sO9cvmxj8NSUQKIcbXN1qnhw0lvdcrKBctCjp6OYpoHxJjkvsnnGn
+	bErsKaa7dlu3b2DnPGETp4BXFRAFgqywDxo0C1AyrwhGzUstiYCto1NwehAaSh4d+ImOBr60mus
+	b9ccgRfdH82vyzBaeIfEcgAoCmEKYdJmUzIUL1E2EMHg0NQE6tHdMwlLMwjY5JFEZPihVSmi/BV
+	WP04HZb6H/ntZIbOIRbw5bB0GWbzMYzzIA8q/GcBHcKXi8+Bxy+qU2xFGy3ZsP9nc2wknWQ973C
+	gji1hfoAeYSWAee/dwN1wkcLDH7UAecZRgaPZfUIM
+X-Received: by 2002:a17:903:4688:b0:2cc:f5aa:9513 with SMTP id d9443c01a7336-2d0ca7fbc9amr66562515ad.10.1785923502440;
+        Wed, 05 Aug 2026 02:51:42 -0700 (PDT)
+X-Received: by 2002:a17:903:4688:b0:2cc:f5aa:9513 with SMTP id d9443c01a7336-2d0ca7fbc9amr66561995ad.10.1785923502033;
+        Wed, 05 Aug 2026 02:51:42 -0700 (PDT)
+Received: from [10.152.199.23] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315867d7e4csm14825638eec.31.2026.08.05.02.51.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Aug 2026 02:51:41 -0700 (PDT)
+Message-ID: <63a41170-b20b-4a9a-8d60-12d2226e2f76@oss.qualcomm.com>
+Date: Wed, 5 Aug 2026 15:21:35 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GVYP280MB1056.SWEP280.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: d1cf54d2-cb88-47e9-70ee-08def2d69817
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2026 09:47:42.1605
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV3P280MB0243
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] wifi: ath11k: Fix possible memory leak in
+ ath11k_dp_srng_setup()
+To: Abdun Nihaal <nihaal@cse.iitm.ac.in>, jjohnson@kernel.org
+Cc: nathan@kernel.org, ndesaulniers@google.com, morbo@google.com,
+        justinstitt@google.com, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, baochen.qiang@oss.qualcomm.com,
+        stable@vger.kernel.org
+References: <20260801114911.91483-1-nihaal@cse.iitm.ac.in>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260801114911.91483-1-nihaal@cse.iitm.ac.in>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDA3OCBTYWx0ZWRfX9lk7IdqRL0mu
+ H5UH/SzinX0LPQxw4D5Q8WGEe4UT1R6B2FmKZ++p+Jxv3GCECdXQqZ1IyNvp/6J6HUgafNmcfOE
+ ewOO1GtqIZ0WlHQiOMcgmAWimJrAxPQ=
+X-Proofpoint-ORIG-GUID: q3tqnD-ajcaWA4d99epsThIMpq1vXG5A
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDA3OCBTYWx0ZWRfXzi4/m7S7jwW5
+ X8LlY2R8daR0CBEEygmF/HkLwJgqSLFgPjJ+IosWvIV+gOaTliV18rVkqaPFAxjUZYcdUV2hgTb
+ 3EyG55whvj721tVUQy6zjMD2mOF/UDdJwKjOX3j8tQm2BlSgvW/zNf6gLWHkC7CldQ91J3fI1L2
+ jlgq8bKF9PFao1oFEH9SUFMOyIDDjJekPTEE7L9wtssk6CwK15TVYYBql9gYPxoLBUMLGFF9v8t
+ +UJ1bLMrHDceb4MG/YLXkBLtIDlN0sBq2wGFnqWyinmnfaFm7wqRT0gVMfELhest1kMtB/tS5h6
+ 79Xgu6RcMJr0ffkJAJXSdvzNy4DFZCMiGqKNShIj2NNJdt0JV6v1ETXeWZR4u3vUF2h3ao4psCt
+ c/msLeKcCX+jltTppLm5qqtHlfjq16WDHJ5xUuDvoY8OKr6pI1IZkSfyF4xyE6P7gMrVNN/pw2u
+ VP4Fzu/GCvTr5xgVemw==
+X-Proofpoint-GUID: q3tqnD-ajcaWA4d99epsThIMpq1vXG5A
+X-Authority-Analysis: v=2.4 cv=Cu+PtH4D c=1 sm=1 tr=0 ts=6a7307af cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=i0Dr3GctjLOm-fFF1aoA:9 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-05_03,2026-08-04_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 clxscore=1015 malwarescore=0 spamscore=0 suspectscore=0
+ bulkscore=0 priorityscore=1501 adultscore=0 impostorscore=0
+ lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608050078
 
-I ran additional tests and found results that may help.=0A=
-=0A=
-## Summary=0A=
-=0A=
-There appear to be two related failures:=0A=
-=0A=
-1. A MAC address configured for the station using OpenWrt=0A=
-   "option macaddr" is ignored. The station continues using the=0A=
-   primary/default address.=0A=
-=0A=
-2. When the AP and station are enabled concurrently, the station can=0A=
-   take the AP interface's MAC address. Both interfaces then have the=0A=
-   same address, the AP fails to remain active, and the station either=0A=
-   fails to connect or connects only momentarily.=0A=
-=0A=
-The only method that reliably changes the station MAC is:=0A=
-=0A=
-ip link set dev phy0-sta0 address <STA_MAC>=0A=
-=0A=
-This works even without bringing the interface down first.=0A=
-=0A=
-When I bring both interfaces down, assign different MAC addresses, and=0A=
-bring them up again, the addresses shown by Linux become different.=0A=
-However, the interfaces then enter a repeated failure cycle: the=0A=
-station connects for approximately one second and disconnects, while=0A=
-phy0-ap0 appears for approximately one second and disappears again.=0A=
-=0A=
-## Expected behavior=0A=
-=0A=
-The MAC address supplied for each interface should either:=0A=
-=0A=
-1. be applied to that interface, or=0A=
-2. be rejected with a clear error if the firmware cannot support it.=0A=
-=0A=
-A supported one-STA plus one-AP combination should remain operational=0A=
-with distinct, valid local-unicast addresses. The driver should not=0A=
-silently assign the AP address to the station or repeatedly recreate=0A=
-and remove interfaces.=0A=
-=0A=
-## Reproduction=0A=
-=0A=
-1. Configure only a station on radio0 and give it an explicit MAC:=0A=
-=0A=
-config wifi-iface 'sta'=0A=
-option device 'radio0'=0A=
-option mode 'sta'=0A=
-option network 'wwan'=0A=
-option ssid '<redacted>'=0A=
-option encryption '<redacted>'=0A=
-option key '<redacted>'=0A=
-option macaddr '<STA_MAC>'=0A=
-=0A=
-2. Reload Wi-Fi.=0A=
-=0A=
-3. Check phy0-sta0:=0A=
-=0A=
-ip link show dev phy0-sta0=0A=
-=0A=
-The configured STA_MAC is not applied. The station uses the=0A=
-primary/default radio address instead.=0A=
-=0A=
-4. Configure and enable an AP on the same PHY with another address:=0A=
-=0A=
-config wifi-iface 'ap'=0A=
-option device 'radio0'=0A=
-option mode 'ap'=0A=
-option network 'lan'=0A=
-option ssid '<redacted>'=0A=
-option encryption '<redacted>'=0A=
-option key '<redacted>'=0A=
-option macaddr '<AP_MAC>'=0A=
-=0A=
-The radio is configured so the AP and station can use the same channel;=0A=
-automatic channel selection was used during this test.=0A=
-=0A=
-5. Reload Wi-Fi and check both interfaces:=0A=
-=0A=
-ip link show dev phy0-sta0=0A=
-ip link show dev phy0-ap0=0A=
-iw dev=0A=
-=0A=
-The station takes AP_MAC, so phy0-sta0 and phy0-ap0 can show the same=0A=
-MAC address. The AP then fails to remain operational.=0A=
-=0A=
-If another AP configuration is enabled with a different address, the=0A=
-station can instead take that AP's address.=0A=
-=0A=
-## Manual MAC-address test=0A=
-=0A=
-The following changes the station MAC successfully:=0A=
-=0A=
-ip link set dev phy0-sta0 address <STA_MAC>=0A=
-=0A=
-I also tested forcing both interfaces to restart with distinct=0A=
-addresses:=0A=
-=0A=
-ip link set dev phy0-sta0 down=0A=
-ip link set dev phy0-sta0 address <STA_MAC>=0A=
-ip link set dev phy0-sta0 up=0A=
-=0A=
-ip link set dev phy0-ap0 down=0A=
-ip link set dev phy0-ap0 address <AP_MAC>=0A=
-ip link set dev phy0-ap0 up=0A=
-=0A=
-Linux then shows two distinct addresses, but AP+STA operation becomes=0A=
-unstable and enters a repeated add/remove cycle.=0A=
-=0A=
-No interface was manually created with "iw phy interface add", and no=0A=
-separate manual hostapd instance was used for the log below.=0A=
-=0A=
-## Relevant log excerpt=0A=
-=0A=
-br-lan: port 6(phy0-ap0) entered forwarding state=0A=
-ieee80211 phy0: brcmf_cfg80211_add_iface: iface validation failed: err=3D-1=
-6=0A=
-br-lan: port 6(phy0-ap0) entered disabled state=0A=
-brcmfmac 0000:01:00.0 phy0-ap0: left allmulticast mode=0A=
-brcmfmac 0000:01:00.0 phy0-ap0: left promiscuous mode=0A=
-br-lan: port 6(phy0-ap0) entered disabled state=0A=
-br-lan: port 6(phy0-ap0) entered blocking state=0A=
-br-lan: port 6(phy0-ap0) entered disabled state=0A=
-brcmfmac 0000:01:00.0 phy0-ap0: entered allmulticast mode=0A=
-brcmfmac 0000:01:00.0 phy0-ap0: entered promiscuous mode=0A=
-ieee80211 phy0: brcmf_link_down: WLC_DISASSOC failed (-52)=0A=
-br-lan: port 6(phy0-ap0) entered forwarding state=0A=
-ieee80211 phy0: brcmf_cfg80211_add_iface: iface validation failed: err=3D-1=
-6=0A=
-=0A=
-This sequence repeats approximately once per second.=0A=
-=0A=
-## Code-path observations=0A=
-=0A=
-The observed difference between OpenWrt configuration and "ip link"=0A=
-appears consistent with the current brcmfmac code paths.=0A=
-=0A=
-OpenWrt's wireless scripts place the configured address in the nl80211=0A=
-request as "req.mac". When a pre-existing wireless device is reused,=0A=
-this request is sent using NL80211_CMD_SET_INTERFACE.=0A=
-=0A=
-In brcmfmac, brcmf_cfg80211_change_iface() receives:=0A=
-=0A=
-struct vif_params *params=0A=
-=0A=
-but does not appear to use params->macaddr.=0A=
-=0A=
-This could explain why a configured address is ignored when the primary=0A=
-or reusable interface becomes phy0-sta0.=0A=
-=0A=
-There is another asymmetry in brcmf_apsta_add_vif():=0A=
-=0A=
-* For NL80211_IFTYPE_STATION, params->macaddr is passed to=0A=
-  brcmf_cfg80211_request_sta_if().=0A=
-* For NL80211_IFTYPE_AP, brcmf_cfg80211_request_ap_if() is called=0A=
-  without the requested address, and that function generates an=0A=
-  address from the primary interface.=0A=
-=0A=
-In contrast, "ip link set ... address ..." reaches=0A=
-brcmf_netdev_set_mac_address(), which calls=0A=
-brcmf_c_set_cur_etheraddr(). That path sends the address to the=0A=
-firmware and updates the netdev address after the operation succeeds.=0A=
-=0A=
-The "-16" message also appears to come from interface-combination=0A=
-validation before a new interface-create request is sent to firmware.=0A=
-Since a STA+AP combination should be valid, perhaps a previous or stale=0A=
-VIF remains counted while userspace retries the operation.=0A=
-=0A=
-## Possible firmware address restriction=0A=
-=0A=
-On the same hardware, I separately observed that multiple AP interfaces=0A=
-work when their first five MAC-address octets are identical and only=0A=
-the last octet differs. Arbitrary unrelated AP addresses do not work=0A=
-concurrently.=0A=
-=0A=
-I intend to report that multi-AP behavior separately. However, it may=0A=
-be relevant because brcmfmac also constructs its advertised interface=0A=
-address list from a common base address and varies the final octet.=0A=
-=0A=
-This could indicate a firmware address-mask or address-pool restriction.=0A=
-Even if that restriction is required by the firmware, it does not=0A=
-appear to explain why a requested station address is silently ignored,=0A=
-why the station receives an AP address, or why the failure enters an=0A=
-endless retry loop.=0A=
-=0A=
-## Questions=0A=
-=0A=
-1. Is ignoring params->macaddr in brcmf_cfg80211_change_iface()=0A=
-   intentional?=0A=
-=0A=
-2. Should the driver call brcmf_c_set_cur_etheraddr() when a MAC is=0A=
-   supplied while changing/reusing the primary interface?=0A=
-=0A=
-3. Should brcmf_cfg80211_request_ap_if() receive and validate=0A=
-   params->macaddr instead of always generating the AP address?=0A=
-=0A=
-4. Does the firmware require concurrent VIF addresses to share a=0A=
-   particular prefix or address mask?=0A=
-=0A=
-5. If such a firmware restriction exists, should brcmfmac expose it=0A=
-   through wiphy->addr_mask or reject incompatible addresses before=0A=
-   interface creation?=0A=
-=0A=
-=0A=
-Best regards,=0A=
+On 8/1/2026 5:19 PM, Abdun Nihaal wrote:
+> In ath11k_dp_srng_setup(), the memory allocated for
+> ring->vaddr_unaligned is not freed in the error paths that follow.
+> Fix that by calling ath11k_dp_srng_cleanup() in those error paths.
+> 
+> Compile tested only. Issue found using a prototype static analysis tool
+> built on the LLVM compiler infrastructure.
+> 
+> Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+> Cc: stable@vger.kernel.org
+> Assisted-by: Claude:claude-sonnet-4-6
+> Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+> Signed-off-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
