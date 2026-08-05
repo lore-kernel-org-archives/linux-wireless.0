@@ -1,35 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39A773D7D6A;
-	Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47EF847045E
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 21:09:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785962150; cv=none; b=LhbyFYGu+3dpqQeZ8XhZj1onz/41DqTmkNuQSh8Vm8J4KBN9m/3LtffCLkSsvkqyBCMCM6wsOnyytIw/FvAOuGmeI8qt2tukrkXv4ztJbQgSLOsse3AL45u8ZA0jE0Te64lNVxrTj0HvPOlWZpQNJXvMgEnOX7MgbKJe21wWoMM=
+	t=1785964201; cv=none; b=j1UkbT6O3dHvVtu0q0QqY/mdghm6+zJk6DKC7lkbEbQ6ZcCzAE9f8y4981pCyeeUuhQACMOjiIeseapBvR2rQc7tnryl+rwzm5/gRbqO9EQsuGQEctBCHNd1gg2npLdaqdErXusluvXntZtoDP8XGOq38PRXXhpxudOuWOI7dOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785962150; c=relaxed/simple;
-	bh=94OfipwqChMd3pKKB97CcGK/he6eIzoy9eeRZyraIu8=;
-	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=Fx6jjWetLFZesnPUQg88sdCqKgEFIuV/wdp5K6TX8qlS+470CmDCFv6Upn8qkin8yBYhyidohf6MEVMb1RCwxeYVyQG9EbScq69SH+YjeuT+OZ/6LfS7xX/hYCZFZHGTGRej9sqnj1v/YSejmLtexkkkpvjgd3RitFEqAAsKNN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SaX7v9AN; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1785964201; c=relaxed/simple;
+	bh=j6D8ImoteM7kDuq1VRILlohiwkKfmrlM2XD9L0SLgL0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FbjwC43O6KmvOCYX3+qNKgSl+645jBSyzkDWDY0AJfCJ8j4Z8BDN2IXcUXP+jgnMOfqwewfJvtDAYpz3qgRev8coq3efR0hzVBme7RoTxbZBvDQtQcjJw+zigGLN731t6pFM6kjPll32/I7DCO/Wa2PhnWnNGeWB/EE+RSf3GdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bepM/hld; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SaX7v9AN"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6F7751F000E9;
-	Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1785962148;
-	bh=grB6GXqo3SRM/onPgxhODF0vMNWHGpGA2ehlG7HsPLo=;
-	h=From:To:Cc:Subject:Date;
-	b=SaX7v9ANHgonGDpdUSK2OScEqHcBF0acavdqphB6IL3hQe6vSMPcLVfqckQx9FY4u
-	 4fOrFMlL3oRU+ndGZOmz8JtIrOCJhv9d2XjOIrhH42xubvPUpq+byliWOWrflMTe0M
-	 DRfSbT+LSH0XiSwMzs5AprCV1icin/RKlNeI5cWKiW6Wb5/NtH+aej7Bf+MqW5/T/r
-	 /0jOcmtMVwvdXB6SGNyVl4yPSZyGvcu+1nu2HnPrV19mY9fm1AHoR9hObUNu2lhvv5
-	 gLVCMWD6zBmY1R6sLXETgABiBFHBnHz8LNSgqjzQ7r4vx53HHmrLWjH9VcR47ZshV2
-	 CJ8LVQFTUsY5w==
-From: "syzbot" <syzbot@kernel.org>
-To: syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>, "Johannes Berg" <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>, "Sergey Matyukevich" <sergey.matyukevich.os@quantenna.com>
-Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev
-Subject: [PATCH] wifi: cfg80211: fix BSS RB tree collision during channel switch
-Message-ID: <1e64e12d-7785-45f0-8ece-b87724e7c9af@mail.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bepM/hld"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-ca80d708489so220492a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 14:09:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1785964187; x=1786568987; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=NCfLIwLQXd+ehjGtddX19Kp+kZQI1+gPoAz7ZcG61eM=;
+        b=bepM/hld3cwSizRaDp11fhZZCy5k3JTr3yOzBhHPrq7AEV6mpPwdfvAlWgs/2mdOqY
+         r8QVZCDUcGJ6BcFQoVhcdzaNG1WaAR5gXxMBmJYn2ikm36d4EBy8+hDStxksz1hzCstG
+         eCUp8pKO8ZvOJNza78+yn9Li9AG7dpn8WuyriuWKdicFSVExEyhymGZPap1nbQ0l8qVB
+         XtQtoKXh/veoQA9WNoBLDCkO18qRSxxQLIWfcBOM/TzUIm2T3phhmD9XTDHdQdNaU3fJ
+         KaP2R7ofz2OkPiLUvMrGsM0/l80GPoW/7u2rkAZHepFGeCF5zB8FjY9Ucjy1LTWU+ES+
+         QwSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785964187; x=1786568987;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=NCfLIwLQXd+ehjGtddX19Kp+kZQI1+gPoAz7ZcG61eM=;
+        b=FZ/QHklj14P9bPVYpgFzIXTSa2iMbHZMJCX0ea522TGAqU+E4nE8zJrJlEBCdCx+Uv
+         yJ1KFdL+d82Cz8E4zGGrfwFu6MXS3wg2LU4CBRFX4ccxoxP4xrwbnvav4p2MyoFO6llV
+         rFUs7Fp08wUCd6MFOE/1FyHbOidTIit7ERKZDzWN0fYsOpsTNvtrRMGFxym3g0msU6ie
+         CIyLG8Acxy7jUg5h5cC8Fet8xA5ks3F9N5HA8QJXkwJ4swCxvSWB2PM5LFBEtotCXlqK
+         TtIgS7FAgsY0bKBntx6yIo6Cl7HE/+jOE0os0bB33AN3zdH+Um4hsCLhhVs/z5UZzUz4
+         qQvA==
+X-Forwarded-Encrypted: i=1; AHgh+Rq10TZIdAHSsa5AgF6KcN/qBykMPvft2I7ZrQkmOS1kQV0OtJw4E1busEfJWMbXc3/KXWzcwGQSoTNECbRymA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxcvYfNRmsqBmIMQ8dXWy1a6OeKy+Sw2t5nB1O8k2puRiU4+eeA
+	53GcvvaL4kRFt4WaTEqMy21SWEUKdgEkWfQ5P18LXCi9X3i8Dx9eijeo
+X-Gm-Gg: AR+sD13BX4m5rUEYdiX8ylNZqFnFQ7m/6c96QDxx89UXNFxCOXGSHki3eMYpsxaPOyl
+	ClIEbeQXg38+EWZOWsjZo9p4G6+xHcpys/ZScpwygDrLYxDUDKv1uzxmIpNCtomhQrjih/mWSaO
+	nKVkoYjSEcjNE0QiqcQbnoTheoQKpUImyj/47m6TY8E7h85o141fKVO7ZPoBx00eutKv6rhQLgi
+	iq2prKFtiq8cq9KyS/HFAxfjGPhejs6jZH65f/2x19kuWFYFQvRB5gwOqx2V58D9C4siB/McatT
+	GFqvtei3L+cYO8F/TEF/X3t5/oqWcufbIYWbpAiSOWI5Mj1CwIDMkoHX450SaDJyrDfS3ZxZp0O
+	wfQ5++/tQIGBR4zxljwa9a2XKPCCBNinRL6khAUWHYaVq2c9AV01mvZqkguC9MIlPsaM9BTE3QW
+	GWv8b2l2bztixPnqonZ3m4Fw5zKApapvY/M8GyfnxGLBHzjqBzLafxIm8JIg==
+X-Received: by 2002:a05:6a20:7f91:b0:3ba:d7b0:fcac with SMTP id adf61e73a8af0-3cb9c0a2040mr2070221637.5.1785964186427;
+        Wed, 05 Aug 2026 14:09:46 -0700 (PDT)
+Received: from eos ([103.89.26.200])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca2e8ae2sm16914896c88.0.2026.08.05.14.09.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Aug 2026 14:09:45 -0700 (PDT)
+From: =?UTF-8?q?=E3=82=A4=E3=83=A0=E3=83=86=E3=82=A3=E3=83=A4=E3=82=BA?= <reza1234khan1234@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?=E3=82=A4=E3=83=A0=E3=83=86=E3=82=A3=E3=83=A4=E3=82=BA?= <reza1234khan1234@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: rtw88: fix out-of-bounds CAM write when key table is full
+Date: Thu,  6 Aug 2026 03:09:41 +0600
+Message-ID: <20260805210941.75136-1-reza1234khan1234@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -38,82 +74,52 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Date: Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
 
-From: Slawomir Stepien <sst@poczta.fm>
+In rtw_ops_set_key(), when the CAM table is full,
+rtw_sec_get_free_cam() returns RTW_MAX_SEC_CAM_NUM (32) because
+find_next_zero_bit()/find_first_zero_bit() return the bitmap size
+when no free slot exists. The bounds check compares the returned
+index with ">" against total_cam_num (32), so the invalid index 32
+passes the check.
 
-When a station processes a Channel Switch Announcement (CSA),
-cfg80211_update_assoc_bss_entry() is called to update the channel of the
-associated BSS. Because the channel is part of the BSS Red-Black (RB) tree
-key, changing the channel requires removing the BSS from the tree and
-re-inserting it.
+rtw_sec_write_cam() then indexes cam_table[32], an array declared
+with RTW_MAX_SEC_CAM_NUM (32) entries, causing an out-of-bounds
+write that corrupts the cam_map allocation bitmap. The write also
+sets bit 32 of cam_map, which overruns the bitmap as well.
 
-Before re-inserting, cfg80211_update_assoc_bss_entry() searches for any
-existing BSS on the new channel that matches the associated BSS so it can
-be unlinked to prevent an RB tree collision. However, the search loop
-incorrectly uses cfg80211_bss_type_match() to filter candidates based on
-their capabilities. If an existing BSS matches perfectly in cmp_bss() (same
-channel, BSSID, and SSID) but has different capabilities (e.g., due to a
-malicious or misconfigured beacon setting both ESS and IBSS bits),
-cfg80211_bss_type_match() skips it.
+Fix the off-by-one by rejecting indices >= total_cam_num.
 
-This leaves the colliding BSS in the tree. When cfg80211_rehash_bss()
-attempts to re-insert the associated BSS, rb_insert_bss() compares them
-using cmp_bss(), which ignores capabilities. It finds them identical,
-resulting in an RB tree collision and triggering a warning:
+Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Cc: stable@vger.kernel.org
 
-WARNING: net/wireless/scan.c:1675 at rb_insert_bss net/wireless/scan.c:1675
-[inline]
-WARNING: net/wireless/scan.c:1675 at cfg80211_rehash_bss+0x1e6/0x540
-net/wireless/scan.c:1732
-Call Trace:
- <TASK>
- cfg80211_update_assoc_bss_entry+0x3cd/0x660 net/wireless/scan.c:3478
- cfg80211_ch_switch_notify+0x3b1/0x780 net/wireless/nl80211.c:22366
- ieee80211_sta_process_chanswitch+0xbd1/0x29e0 net/mac80211/mlme.c:-1
- ieee80211_rx_mgmt_beacon+0x1dc6/0x32a0 net/mac80211/mlme.c:8309
- ieee80211_sta_rx_queued_frame+0x6ac/0x4e40 net/mac80211/mlme.c:11793
- ieee80211_iface_process_skb net/mac80211/iface.c:1766 [inline]
- ieee80211_iface_work+0x552/0x1010 net/mac80211/iface.c:1823
- cfg80211_wiphy_work+0x29e/0x420 net/wireless/core.c:538
- </TASK>
+Tested on: RTL8821CE (PCIe) on kernel
+7.2.0-rc6-rtw88test-00059-g0d8395707651. The patched module loaded
+and associated to a WPA2 network; ping traffic passed with 0% packet
+loss. Reassociation and disconnect/reconnect cycles completed
+without errors, and the CAM table (debugfs dump_cam) showed valid
+key entries. The CAM-full boundary (28+ pairwise keys) requires an
+access point with 28+ clients and is not reachable in a
+single-client setup, so that path was verified by code inspection.
 
-Fix this by removing the cfg80211_bss_type_match() check from the collision
-search loop. The RB tree uniqueness is defined solely by cmp_bss(), so any
-BSS that evaluates to cmp == 0 must be unlinked to prevent a collision,
-regardless of whether its capability matches the connection type. If the
-AP's capabilities legitimately changed, cfg80211_update_known_bss() will
-safely update the capability later.
-
-Fixes: 0afd425b1b64 ("cfg80211: fix duplicated scan entries after channel switch")
-Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
-Reported-by: syzbot+dc6f4dce0d707900cdea@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=dc6f4dce0d707900cdea
-Link: https://syzkaller.appspot.com/ai_job?id=3e1a2f1d-82c9-492d-8063-7fb21356c013
-Signed-off-by: Slawomir Stepien <sst@poczta.fm>
-
+Tested-by: イムティヤズ <reza1234khan1234@gmail.com>
+Signed-off-by: イムティヤズ <reza1234khan1234@gmail.com>
 ---
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 071083cc3..97bf7ab8c 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -3443,11 +3443,6 @@ void cfg80211_update_assoc_bss_entry(struct wireless_dev *wdev,
- 	cbss->pub.channel = chan;
- 
- 	list_for_each_entry(bss, &rdev->bss_list, list) {
--		if (!cfg80211_bss_type_match(bss->pub.capability,
--					     bss->pub.channel->band,
--					     wdev->conn_bss_type))
--			continue;
--
- 		if (bss == cbss)
- 			continue;
- 
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-base-commit: f5098b6bae761e346ebcd9da7f95622c04733cff
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 766f22d31079..3b6302f14de0 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -597,7 +597,7 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		hw_key_idx = key->keyidx;
+ 	}
+ 
+-	if (hw_key_idx > sec->total_cam_num) {
++	if (hw_key_idx >= sec->total_cam_num) {
+ 		ret = -ENOSPC;
+ 		goto out;
+ 	}
 -- 
-See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
-You can comment on the patch as usual, syzbot will try to address
-the comments and send a new version of the patch if necessary.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+2.55.0
+
