@@ -1,125 +1,119 @@
-Received: from out-171.mta1.migadu.com (mta1.migadu.com [37.59.57.117])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FF2D3D7D9B
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 20:09:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.59.57.117
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39A773D7D6A;
+	Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785960583; cv=none; b=ZgrF/zzJEz53g2tGD+FUu5t7z793OqbBKPNZAbMLNG6of4PUQ/u6LlypNNayfCKHYXnUGkz5uI155H+qcmSlS1nC7NdYHuACjB6A4AQxuwUh89OYDViHpQ+XEtm0BfitNlOG/e/3jOQTZv6mSp5VJNJ75+Cdf2mK5Xj8iaxvXEc=
+	t=1785962150; cv=none; b=LhbyFYGu+3dpqQeZ8XhZj1onz/41DqTmkNuQSh8Vm8J4KBN9m/3LtffCLkSsvkqyBCMCM6wsOnyytIw/FvAOuGmeI8qt2tukrkXv4ztJbQgSLOsse3AL45u8ZA0jE0Te64lNVxrTj0HvPOlWZpQNJXvMgEnOX7MgbKJe21wWoMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785960583; c=relaxed/simple;
-	bh=ZPfGVkyxLyfwbBORUmxYDQ8W0azZ07ETCkMSYUEN4m8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t1UvKruTiTZjminXpa9NCwNolOHYWYNJUwfxrWDWwZUPbh4Tq2WhM8JTbtay16Zt7kEfG8Oi79rNVmHW2YlY6HHiNmRwOZORhog94fO6ux8k6ah03yiKyWfpH70yyLWScwB+xoExmP/6eURqlLL0iI2RluQnDtKjPP+ThSJ9dRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=DDnyOjcA; arc=none smtp.client-ip=37.59.57.117
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1785962150; c=relaxed/simple;
+	bh=94OfipwqChMd3pKKB97CcGK/he6eIzoy9eeRZyraIu8=;
+	h=From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:Date; b=Fx6jjWetLFZesnPUQg88sdCqKgEFIuV/wdp5K6TX8qlS+470CmDCFv6Upn8qkin8yBYhyidohf6MEVMb1RCwxeYVyQG9EbScq69SH+YjeuT+OZ/6LfS7xX/hYCZFZHGTGRej9sqnj1v/YSejmLtexkkkpvjgd3RitFEqAAsKNN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SaX7v9AN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="DDnyOjcA"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1785960577;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Lsbxk4DD6MTaYwn6/BXYYPb1S/6SO9MBPU/YZIAV3pY=;
-	b=DDnyOjcALJewwQs06v6eFgXc2iSlbmRKeU4WPFKZuPOczI/Jzu1fjuWfZIXh450qFgyQsS
-	oz2Z4tHEJM1u7RDsmBbIvDzeZf4AQS7ha1nzgRE50p2OvpR2AmRMWWoZF1U2vjfG8fRm25
-	fZExdmDoiNIcxNDb7YcJvL0oyXhOWzFfycVk3TJCQJ2xrcQTPR4E45hLplUCBHrs9fvJhl
-	RnC0ZZu05lTWr3Radw9QIgoTAiDzcxyKibhimvEmv66QzuD30/YLka9q446rG2STHzCW2r
-	IA6FYjaLC9a+prd9nxN/wCFTPT7apJ4h5gkLTEcvDEh81O9bE7imW7WDel5BWA==
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Sean Wang <sean.wang@mediatek.com>,
-	Deren Wu <deren.wu@mediatek.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	JB Tsai <jb.tsai@mediatek.com>,
-	Eason Lai <eason.lai@mediatek.com>
-Subject: [PATCH] wifi: mt76: take rcu_read_lock in the USB/SDIO tx completion path
-Date: Wed,  5 Aug 2026 13:09:28 -0700
-Message-ID: <20260805200928.37874-1-lucid_duck@justthetip.ca>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SaX7v9AN"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6F7751F000E9;
+	Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1785962148;
+	bh=grB6GXqo3SRM/onPgxhODF0vMNWHGpGA2ehlG7HsPLo=;
+	h=From:To:Cc:Subject:Date;
+	b=SaX7v9ANHgonGDpdUSK2OScEqHcBF0acavdqphB6IL3hQe6vSMPcLVfqckQx9FY4u
+	 4fOrFMlL3oRU+ndGZOmz8JtIrOCJhv9d2XjOIrhH42xubvPUpq+byliWOWrflMTe0M
+	 DRfSbT+LSH0XiSwMzs5AprCV1icin/RKlNeI5cWKiW6Wb5/NtH+aej7Bf+MqW5/T/r
+	 /0jOcmtMVwvdXB6SGNyVl4yPSZyGvcu+1nu2HnPrV19mY9fm1AHoR9hObUNu2lhvv5
+	 gLVCMWD6zBmY1R6sLXETgABiBFHBnHz8LNSgqjzQ7r4vx53HHmrLWjH9VcR47ZshV2
+	 CJ8LVQFTUsY5w==
+From: "syzbot" <syzbot@kernel.org>
+To: syzkaller-bugs@googlegroups.com, Slawomir Stepien <sst@poczta.fm>, "Johannes Berg" <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>, "Sergey Matyukevich" <sergey.matyukevich.os@quantenna.com>
+Cc: linux-kernel@vger.kernel.org, syzbot@lists.linux.dev
+Subject: [PATCH] wifi: cfg80211: fix BSS RB tree collision during channel switch
+Message-ID: <1e64e12d-7785-45f0-8ece-b87724e7c9af@mail.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Date: Wed,  5 Aug 2026 20:35:48 +0000 (UTC)
 
-mt7925_usb_sdio_tx_complete_skb() looks up the wcid and then the sta
-links, both with rcu_dereference(), from the mt76-usb-status kthread
-holding nothing. PROVE_RCU catches it twice on the first association:
+From: Slawomir Stepien <sst@poczta.fm>
 
-  mt76.h:1305 suspicious rcu_dereference_check() usage!
-  no locks held by mt76-usb-status/1254.
-   mt7925_usb_sdio_tx_complete_skb+0x119/0x130 [mt7925_common]
-   mt76_queue_tx_complete+0x27/0x60 [mt76]
-   mt76u_status_worker+0xed/0x1e0 [mt76_usb]
+When a station processes a Channel Switch Announcement (CSA),
+cfg80211_update_assoc_bss_entry() is called to update the channel of the
+associated BSS. Because the channel is part of the BSS Red-Black (RB) tree
+key, changing the channel requires removing the BSS from the tree and
+re-inserting it.
 
-  mt7925/mac.c:856 suspicious rcu_dereference_check() usage!
-   mt7925_tx_check_aggr.part.0+0xc2/0xe0 [mt7925_common]
-   mt7925_usb_sdio_tx_complete_skb+0xa0/0x130 [mt7925_common]
+Before re-inserting, cfg80211_update_assoc_bss_entry() searches for any
+existing BSS on the new channel that matches the associated BSS so it can
+be unlinked to prevent an RB tree collision. However, the search loop
+incorrectly uses cfg80211_bss_type_match() to filter candidates based on
+their capabilities. If an existing BSS matches perfectly in cmp_bss() (same
+channel, BSSID, and SSID) but has different capabilities (e.g., due to a
+malicious or misconfigured beacon setting both ESS and IBSS bits),
+cfg80211_bss_type_match() skips it.
 
-mt7921's USB/SDIO completion has the same unprotected wcid lookup and
-warns at mt76.h:1305 too. It only warns once because
-mt76_connac2_tx_check_aggr() reads sta->deflink directly. The DMA path
-does the same lookups but completes from softirq, so it stays quiet.
+This leaves the colliding BSS in the tree. When cfg80211_rehash_bss()
+attempts to re-insert the associated BSS, rb_insert_bss() compares them
+using cmp_bss(), which ignores capabilities. It finds them identical,
+resulting in an RB tree collision and triggering a warning:
 
-Tested on 7.2-rc5 with PROVE_RCU, fresh module load per arm: MT7925
-(Netgear A9000) two splats before and none after, MT7921 (Alfa) one
-before and none after, 4000 packets on each arm with no change to the
-link. mt7921e on the same kernel was clean throughout.
+WARNING: net/wireless/scan.c:1675 at rb_insert_bss net/wireless/scan.c:1675
+[inline]
+WARNING: net/wireless/scan.c:1675 at cfg80211_rehash_bss+0x1e6/0x540
+net/wireless/scan.c:1732
+Call Trace:
+ <TASK>
+ cfg80211_update_assoc_bss_entry+0x3cd/0x660 net/wireless/scan.c:3478
+ cfg80211_ch_switch_notify+0x3b1/0x780 net/wireless/nl80211.c:22366
+ ieee80211_sta_process_chanswitch+0xbd1/0x29e0 net/mac80211/mlme.c:-1
+ ieee80211_rx_mgmt_beacon+0x1dc6/0x32a0 net/mac80211/mlme.c:8309
+ ieee80211_sta_rx_queued_frame+0x6ac/0x4e40 net/mac80211/mlme.c:11793
+ ieee80211_iface_process_skb net/mac80211/iface.c:1766 [inline]
+ ieee80211_iface_work+0x552/0x1010 net/mac80211/iface.c:1823
+ cfg80211_wiphy_work+0x29e/0x420 net/wireless/core.c:538
+ </TASK>
 
-Fixes: dc66a129adf1 ("wifi: mt76: add a wrapper for wcid access with validation")
-Fixes: c22769de2509 ("wifi: mt76: mt7925u: use connac3 tx aggr check in tx complete")
-Cc: stable@vger.kernel.org
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Fix this by removing the cfg80211_bss_type_match() check from the collision
+search loop. The RB tree uniqueness is defined solely by cmp_bss(), so any
+BSS that evaluates to cmp == 0 must be unlinked to prevent a collision,
+regardless of whether its capability matches the connection type. If the
+AP's capabilities legitimately changed, cfg80211_update_known_bss() will
+safely update the capability later.
+
+Fixes: 0afd425b1b64 ("cfg80211: fix duplicated scan entries after channel switch")
+Assisted-by: Gemini:gemini-3.5-flash Gemini:gemini-3.1-pro-preview syzbot
+Reported-by: syzbot+dc6f4dce0d707900cdea@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=dc6f4dce0d707900cdea
+Link: https://syzkaller.appspot.com/ai_job?id=3e1a2f1d-82c9-492d-8063-7fb21356c013
+Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mac.c | 3 +++
- drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 3 +++
- 2 files changed, 6 insertions(+)
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 071083cc3..97bf7ab8c 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -3443,11 +3443,6 @@ void cfg80211_update_assoc_bss_entry(struct wireless_dev *wdev,
+ 	cbss->pub.channel = chan;
+ 
+ 	list_for_each_entry(bss, &rdev->bss_list, list) {
+-		if (!cfg80211_bss_type_match(bss->pub.capability,
+-					     bss->pub.channel->band,
+-					     wdev->conn_bss_type))
+-			continue;
+-
+ 		if (bss == cbss)
+ 			continue;
+ 
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-index f7d54472d..661a54e6c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mac.c
-@@ -828,11 +828,14 @@ void mt7921_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
- 
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
-+
-+	rcu_read_lock();
- 	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
- 
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
- 		mt76_connac2_tx_check_aggr(sta, txwi);
-+	rcu_read_unlock();
- 
- 	skb_pull(e->skb, headroom);
- 	mt76_tx_complete_skb(mdev, e->wcid, e->skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-index 6b0cd1996..20e0919d2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
-@@ -1470,11 +1470,14 @@ void mt7925_usb_sdio_tx_complete_skb(struct mt76_dev *mdev,
- 	u16 idx;
- 
- 	idx = le32_get_bits(txwi[1], MT_TXD1_WLAN_IDX);
-+
-+	rcu_read_lock();
- 	wcid = __mt76_wcid_ptr(mdev, idx);
- 	sta = wcid_to_sta(wcid);
- 
- 	if (sta && likely(e->skb->protocol != cpu_to_be16(ETH_P_PAE)))
- 		mt7925_tx_check_aggr(sta, e->skb, wcid);
-+	rcu_read_unlock();
- 
- 	skb_pull(e->skb, headroom);
- 	mt76_tx_complete_skb(mdev, e->wcid, e->skb);
+
+base-commit: f5098b6bae761e346ebcd9da7f95622c04733cff
 -- 
-2.55.0
-
+See https://goo.gle/syzbot-ai-patches for information about AI-generated patches.
+You can comment on the patch as usual, syzbot will try to address
+the comments and send a new version of the patch if necessary.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
