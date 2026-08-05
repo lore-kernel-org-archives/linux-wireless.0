@@ -1,209 +1,138 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D9E40B6E5
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 10:07:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 042D73D649C
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 10:48:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785924465; cv=none; b=SyR/x7Tt7J9KRKDo2cxiuaWbnnPNNkqpAEj6OUlGrbRw5LCK4B9okfH/Gzd8K1Rba27iKXhBXVZ0JFIEV0m+GYGFN3K8LodCotJYaWOcg+QmWs1mfZKgUBUc4fGzYuaIJYA2M4593nnYfafndefA/VU1PAio8lb8E+Lu+U56IuA=
+	t=1785926900; cv=none; b=tfvCkPlorIBHofkj8ZoOZ7r0XXhkz8jmmiITV5HaOKYDPfKQ3FLklQzMED8ZCg9qRRzt6NSdNMUJk8H28SCnbtwYjlSrGV/FdxKoOwLqnHuJfzqLz3dEP6Qd0FjIbWr6YXM+QK+S2T4r+bWHykqicZZ38GRhJWJVQOIOA+gSpsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785924465; c=relaxed/simple;
-	bh=dmK4SExRnYcicfzWeZcuHjOVX0icKw2TA06Fvrt/HWo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KgJx0E0yvrgIeeEm2ZhceUlEzvYxCXLkR5AOIXZ2UuFjzP4wjScQEYJhdbr0aNg7kuIwzz86eAmJnrnA/WMm7wB2ZnCYVTu0XoJJyXgaOCIMBgoZqnROCwcwGZEaXFKe6BelMC7Fi32IjUjqI7wjm501KfeZ1AoP/t2neR+G7H0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=K7+mtetm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JnhXyQc+; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1785926900; c=relaxed/simple;
+	bh=gUpyyqs6gJpCeGpD1RKcbYYS2KUuR/dMlYj1P/DLGu8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=cFY72XhdN1E2rS9Ucog4rj69ej5bXIB4NB3+qWb2hZ+expGfZBUdi6ZxkucRLO/X+iXFOty4h3f4Z2bwPqnqsWVMig3LAsscmiNFeLtu7l3N5JAEk67x3jLr0TDMSODUJlcPZKmdNSDNFTd8UlgzWS9dRhyPtqTslowPou3R9l4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=TnbHlg5F; arc=none smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="K7+mtetm";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JnhXyQc+"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6758dFwe2074103
-	for <linux-wireless@vger.kernel.org>; Wed, 5 Aug 2026 10:07:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	f7TvXrEwxNxYGHqagweuLdI2HuNVd9ApPoKl7MTkzyU=; b=K7+mtetmpPkwGFpC
-	UQJsPX3k2m3A5VIwEfEa1AIJ2ObBPCo2TOm5j7d7VDYyJlA+TLee2feIB3rKZrFT
-	X7Be86pOe14DbB3Uj9v6crPfkTlungcBLIkm78pacIkVrkVwVAQKSlpEjHdcvdvN
-	cz0oavodhmzcBfHz9ZLFgSsxjqnCnimsSvybG6K9Dboh3yw0X4/EpxfvUClJGwU6
-	rOx4PajwdDtGYTU87i0bmhrCHrQ9SUM/CJHBMC9IxjTgFdLPAEVYh6qRMjjHto3M
-	NBrU5UtbNIY/7llR4SDWMTOmx4Qj+fA6Ob+aqvQORc/r78iIw1Kx/uSupJ9vv7Ad
-	cg+vbg==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fuk9u48c0-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 10:07:42 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38fa7b09921so1380719a91.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 03:07:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="TnbHlg5F"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6a051904222so1026017a12.2
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 03:48:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785924462; x=1786529262; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=f7TvXrEwxNxYGHqagweuLdI2HuNVd9ApPoKl7MTkzyU=;
-        b=JnhXyQc+TJTUcsYTxrgin9SneJoGDSn6e2cddk5wZauPXBj+ZqbcISNL9JjdQr6d8w
-         uJilbqeOWeNErAi3e8umbn0+j0ozbK4WwwUlg7Iu5SgwfN76yTVxmhmFkqK3Qx97LAgg
-         7bLhjYUFHJ/JpVDLV0pNBxJxkLgT+w1EvM69qhdw20IsiPZ21i9NI5FaIiq8efuEZQ3h
-         B6M8P7qYEOmdFLYPCD6lrzA2fAlWasxmBDaJCLvS8X0J9WFnKCpPr1sGiLZDQjEvc+fO
-         UtPhzQLFYLjLXCXeoLjCgH6GVB3+6Sv22m4QLZHWYVT94e9yLuH/Jb34grAXCocwq5i9
-         F2Cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785924462; x=1786529262;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=bairaktaris.de; s=google; t=1785926897; x=1786531697; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=f7TvXrEwxNxYGHqagweuLdI2HuNVd9ApPoKl7MTkzyU=;
-        b=KaQoCY/2JBfoQMHeMTG/Tp1n01Aj26BM6GGTo9BvRFi65hnko0dc/GmStVGuuVhmca
-         an/WP6NO20cw9UKvGFCnkRpYYlWcN6duznVpTWmIlA0HPmU7sa6w4N72CAssMpl27ilt
-         E3S0EKiCHFnquiBk//wzpaxGc1GtMS00tFn94C0cxGeETVLUJ5gbVOfr4jJaYmtrQa4c
-         CDXBha9QQIzfSdV6MIxyubfxTPYp6VEFnFEqIRExUsd4bgR4r2MWtj936xW7RNRfOPM5
-         A7JdYG4bSLHR+fEnie4LntV4woy92Bd5fmAnjy410NtcYbKzqCcY0M9ToDkVuIQb1cVh
-         i5pQ==
-X-Forwarded-Encrypted: i=1; AHgh+RoMTEoZ4s5bjougH+mexTAGEk6LDbMiLNN4LstWRvcbBSHAYZu8fGYmRAkio4Fab3e8Q8PVq6UQNLUbZ3xsYA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YziMeVw5GREveLouOVm76XBOjkKq6rTxkfmZvZIgA964pTmVPbS
-	utJwDq7K3i488XnpTCFAfNk8ONXDr1NbV3LnvR9XWq82ymyoFVBLV0f6W8Y3VEZgveLxxtKJIDJ
-	SIDdjKIdqmM3M0OVn0B+yQNghDEcSGgfpc88Pk2gw/wyesvH+PQNMHyW/JTrX18q1C//U4Q==
-X-Gm-Gg: AR+sD12W1SV/DtX6sA2cGjagzR0VOyioDt9lDwHtM0O57tpyqREjMI8sivr6Z7V/O2A
-	PW4TbkwzauQGwwuDqr07+FD+AKUd7dWJ+hJVh5cXK90hU1BQPRAWY/Kr4k/H8cBj3/8rVMhY6ww
-	UVZCQvhnFJmwWpSfTyU3xCQaNPhPAlkJAXLSkp6D3ffOB6pQ1HSnQNxgw4329dmvTPrIm3wPrsk
-	8gO4QqrMNcn4OjCUnSGUBMMmC7heFxVTPtQFGVpqjfqnJdxYWXH8jgj3YWa9L0tZIfh9WykwOgH
-	8BMbUFR5A9gvJQj5x54gU6xWD/sT9FeiEqHtjq2k8u2N5YryVoMGpZRqYxLZVCQLVk+nazjvyjs
-	HdUd8gMatFRc1XkOSTYe2FuCbYqP9USKmq0KVZA5e
-X-Received: by 2002:a17:90b:1c84:b0:38f:1e1a:515e with SMTP id 98e67ed59e1d1-3903c5b1688mr5154522a91.14.1785924461689;
-        Wed, 05 Aug 2026 03:07:41 -0700 (PDT)
-X-Received: by 2002:a17:90b:1c84:b0:38f:1e1a:515e with SMTP id 98e67ed59e1d1-3903c5b1688mr5154442a91.14.1785924461194;
-        Wed, 05 Aug 2026 03:07:41 -0700 (PDT)
-Received: from [10.152.199.23] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca6576b7sm11507202c88.7.2026.08.05.03.07.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Aug 2026 03:07:40 -0700 (PDT)
-Message-ID: <3214559e-a9a6-49ea-a421-c41698fc2114@oss.qualcomm.com>
-Date: Wed, 5 Aug 2026 15:37:35 +0530
+        bh=GvEJw99p8ayWOXHnBsyaDzv0WkQm248L0elbcOdHRLQ=;
+        b=TnbHlg5F+1JLvbJsTBIaeCwNK3QWEG/X+j7FwgkYwKH2716v3+IYklycY7B0SpTfjf
+         AFplASwjSW9lbZAClMoJ8/85tiLwyJcoWZyZp3cV8hwdOGD0U+YK15xrCDseDq3d05D9
+         o4+TL2ZuLgdBQ0e+9ZlwaRS6wCKtglEhlzA+qk89c76fD+l19fHBoHTJ9GPfsPKqmRqT
+         QnJo8mv9En6Yene95Z1NDeVAn++U3FWlwr2aJfuumooCCrVgBEcOEUaOL99DpbanUDQb
+         dE3agM386Ql4UOKu2udR110sixOxcdesMiZOgag9dt38lWzyV6A48sLc3rTfYbdB3h/X
+         nMuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1785926897; x=1786531697;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=GvEJw99p8ayWOXHnBsyaDzv0WkQm248L0elbcOdHRLQ=;
+        b=NMSY25AJycu6kK/BQBDaSnKPfSHgXTTQ3IHD3nvYExS3cd83WqbD+Hau/CjxW8qCUz
+         mcKd/yifpceYbGB9VoaRdpfKZI+ounZpna2uOP5udWjITxAUm7EkC9Kn37UlyHt/AACJ
+         hmWblPjzcQuLg90gn0+L5agLlwmphzHhrRPLprhwrYOuMAxxRYmsRqHgaplZhWwSOV9q
+         gFb/Y3HzlfZV1A5vFuMX/idWYNaH/arPRDk+/xPWwr5GNKBttxVmdT4zH4FBzvZUbm/1
+         HErBomry1wnkxZhKQXhx9oO1140SXHvoUQ6BlYamxontNTzf6vCqUEf+jDmvMFEL9b7e
+         945g==
+X-Forwarded-Encrypted: i=1; AHgh+RpryBDSEhjKqfTTQoNIQY/qnMyXbVGNeOwF+cF26R4iPfdNeVb35/202cqyHo4+B+iFZBysLXCUh6haJ6dZig==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwoQfx1/ATYpU3+btjtMf5jp2PsePvXD4gt6yoYfrFLFJhJW+GL
+	8gWmqvLd14cW9lrjvFXeFRCTNA1BzrOYtVgjVCTjNanbebZ5m8stuBNiwsxUV3kBIAACRl9SJsy
+	KuUMrwSuB
+X-Gm-Gg: AR+sD11Z+pPp5zR0zhEFOHkvlOUyOlgVPtd7fygL4/foEVN0V54vvwoumPwOWNTz8bM
+	NTyfMfzdO1pxZGVZuiabtHPZOAMtuBA2KZwo+MkU9YGzC2lnM7yZojXn7PkPXVfKE/tSLzWQzDz
+	Hn3Gbg96kRZNYsv/G70WD46m2gUGaB/e0oSgBsui8oxbopv1QHkYKvBDbgGbo91Tmwb3sU7pHc/
+	YUu9Z/9U/g2JJLzu8WNpCz1+lIne72aF2itVrPD6liy99a0YJ1MLCmorB5v0w7hMsITigK5pNjf
+	xq8wMEC5Rz1nX3OXW+BDhilLeHPihqQH2fZoAgMLhUllXm3YvttX/eLdNDbqb21cG1zjrE6oBa9
+	NEHjz4xZ+zd9lXIPIxss/AaN/WPY2fGFqg61jb3p3FI4XRQc1UPWqNLbCgX2vbw3dK1FCokdf5F
+	F6qFiH2MULHSBL8wKsZ5gWcYHHK4PKbLgNVHT6U7LChj9Oq2tA+kDogDVk/rDzr1TkIHxAoFh1W
+	Rlvh3bRfxLXo5uiH+Hzzk6YMIKrEUZMAvzjDgT4gKnQeKl+5fo8DsC7AofZu0Q6Rmi3N9sI+Jq9
+	KKyhS8qLMxNzMh1Zx2tX+fOnWgM4drUfbIKQCx2FFG0H5FCyGvzEsKwvMuFqXllmAQOOKx4pMwI
+	IzuTIrwJ4kxWNYJS3Q/LDiRq1ANeFcTYklOmLjMNJClZ6osxiHVHsOKvToImuWmE3v0ObYvmx03
+	4CQBThTTnlGK9l
+X-Received: by 2002:a17:906:ee88:b0:c07:43ed:1b3e with SMTP id a640c23a62f3a-c2039901c40mr314065166b.0.1785926897008;
+        Wed, 05 Aug 2026 03:48:17 -0700 (PDT)
+Received: from Desktop (pd9513f50.dip0.t-ipconnect.de. [217.81.63.80])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2036426ca8sm91267766b.50.2026.08.05.03.48.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Aug 2026 03:48:16 -0700 (PDT)
+From: Julius Bairaktaris <julius@bairaktaris.de>
+To: jjohnson@kernel.org
+Cc: ath11k@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Subject: Re: [PATCH ath-next v2 0/2] wifi: ath11k: fix SoC reboot on firmware crash on AHB
+Date: Wed,  5 Aug 2026 12:48:00 +0200
+Message-ID: <20260805104800.576058-1-julius@bairaktaris.de>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260726221908.104873-1-julius@bairaktaris.de>
+References: <20260726221908.104873-1-julius@bairaktaris.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND PATCH ath-current 2/3] wifi: ath11k: fix NULL dereference
- in ahb remove when QMI init incomplete
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260730030948.147892-1-miaoqing.pan@oss.qualcomm.com>
- <20260730030948.147892-3-miaoqing.pan@oss.qualcomm.com>
- <114b5ae4-002a-4f35-8fb1-0ebf44e9250a@oss.qualcomm.com>
- <61e47242-7615-4bc7-af80-c671318b3c0d@oss.qualcomm.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <61e47242-7615-4bc7-af80-c671318b3c0d@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=NInlPU6g c=1 sm=1 tr=0 ts=6a730b6e cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=EUspDBNiAAAA:8 a=u_1nGVd5-Qw513d467YA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-GUID: kqGANH4Cif5Ja1DrasZYLFCFBCvq_AyV
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDA4MCBTYWx0ZWRfX8ZlrpnhAg4ng
- rpDNEYRAGLxi8+XWW7DwZZRDFxCCccXJtN9vqYW7LoJowYmPdPGDv422iU1VFTV3MtBsv2JZFt3
- dobI1rS7ZFlLC6Ve95T3G/OCN92bgkc=
-X-Proofpoint-ORIG-GUID: kqGANH4Cif5Ja1DrasZYLFCFBCvq_AyV
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDA4MCBTYWx0ZWRfX8w2KCnwDuREQ
- OBuF87HkRSNtfuAz+0Di7gZZnATR9pa0HGRjg+aDWlT/RyvMCNrTyXUcQG13LlOKdzs1ug3Vf9m
- rRZcsnPb6i2A8UcsdAkXUhIeCvhZMKFnpQTENAJGS7YJx09k80bEUEpOXFtUWl1OsTLf9VgwHNR
- raT6L3fFOIHaWo6ZcmyY04pJ61tlD9wfHKvQQaVREYd4ZGIk7xw3vnqMgg17Z1xxUNfEWI3nEUJ
- RDxzXrCnLgG2kL9vEdishksxHQXb40Z9ZV2Q2yK60Rj4I3JAS7q7aoBanUEb58/zrS/ygpw3ooL
- fAAFZ/b7iOAgVTEEZgdavrpk0Z0l+FsP6NkYrNnvVRwua+NFducsH6NTYJTuLdKJ18WUb6+NWqd
- HLICDPGSG7Haji5WX8OO23pajMqR88XvzFaMQAfdYotdnl9QOmWs6CR6TY3VQV9PLhZ1M/rmS94
- frlAI29q1qUuRFkwOcg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-05_03,2026-08-04_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 impostorscore=0 suspectscore=0 clxscore=1015 adultscore=0
- malwarescore=0 spamscore=0 priorityscore=1501 phishscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608050080
 
-On 8/3/2026 12:17 PM, Miaoqing Pan wrote:
-> 
-> 
-> On 7/31/2026 5:24 PM, Rameshkumar Sundaram wrote:
->> On 7/30/2026 8:39 AM, Miaoqing Pan wrote:
->>> On WCN6750, if QMI messages never arrive (for example when qrtr_smd
->>> is not ready), WLAN initialization stops before the device is fully
->>> registered. In this case ATH11K_FLAG_QMI_FAIL is not set because no
->>> QMI event handler is executed.
->>>
->>> When the driver is removed, ath11k_ahb_remove() still calls
->>> ath11k_core_deinit(), which eventually triggers
->>> ath11k_ce_cleanup_pipes() on uninitialized CE pipes and results in a
->>> NULL pointer dereference in ath11k_hal_srng_access_begin():
->>>
->>>    ath11k_hal_srng_access_begin+0x14/0x68 [ath11k]
->>>    ath11k_ce_cleanup_pipes+0x184/0x190 [ath11k]
->>>    ath11k_pcic_stop+0x24/0x38 [ath11k]
->>>    ath11k_core_deinit+0xfc/0x1c0 [ath11k]
->>>    ath11k_ahb_remove+0x38/0xa0 [ath11k_ahb]
->>>
->>> Fix this by invoking ath11k_ahb_remove_prepare() before the state
->>> check and skipping ath11k_core_deinit() when either QMI initialization
->>> failed or the device was never registered. If ATH11K_FLAG_REGISTERED
->>> is not set, core initialization did not complete and CE pipes may
->>> remain uninitialized, making ath11k_core_deinit() unsafe.
->>>
->>> Tested-on: WCN6750 hw1.0 AHB WLAN.MSL.2.0.c2-00204-QCAMSLSWPLZ-1
->>>
->>> Fixes: 00402f49d26f ("ath11k: Add support for WCN6750 device")
->>> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
->>> ---
->>>   drivers/net/wireless/ath/ath11k/ahb.c | 6 ++++--
->>>   1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/ 
->>> wireless/ath/ath11k/ahb.c
->>> index fb5640882b98..7f5f5c8d7c56 100644
->>> --- a/drivers/net/wireless/ath/ath11k/ahb.c
->>> +++ b/drivers/net/wireless/ath/ath11k/ahb.c
->>> @@ -1265,14 +1265,16 @@ static void ath11k_ahb_remove(struct 
->>> platform_device *pdev)
->>>   {
->>>       struct ath11k_base *ab = platform_get_drvdata(pdev);
->>> -    if (test_bit(ATH11K_FLAG_QMI_FAIL, &ab->dev_flags)) {
->>> +    ath11k_ahb_remove_prepare(ab);
->>> +
->>> +    if (test_bit(ATH11K_FLAG_QMI_FAIL, &ab->dev_flags) ||
->>> +        !test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags)) {
->>
->> Can we use ATH11K_FLAG_REGISTERED alone to decide the cleanup path? If 
->> REGISTERED is set, ath11k_core_qmi_firmware_ready() completed at least 
->> once and the normal ath11k_core_deinit() path should run. If QMI 
->> failed on recovery (say before FW_READY or INIT_DONE) this should 
->> still do core_deinit() isn't ?
->>
->>
-> During SSR recovery, it is possible for a QMI failure to occur after the 
-> device has already been registered, which could result in both 
-> ATH11K_FLAG_REGISTERED and ATH11K_FLAG_QMI_FAIL being set at the same time.
+Ping, and some extra data since v1 only had my own bring-up tree behind it.
 
-Yeah so in that case current code will skip core_deinit() which should 
-actually run isn't ? Though the QMI has failed on recovery the core was 
-already initialized and should be torn down.
+I have now reproduced this on a stock ath11k with no out-of-tree modules
+loaded at all, on an otherwise unmodified OpenWrt mac80211 backports
+6.18.39 build for the Xiaomi AX3600 (IPQ8074 hw2.0), firmware
+WLAN.HK.2.12-01460-QCAHKSWPL_SILICONZ-1:
 
->>>           ath11k_ahb_power_down(ab, false);
->>>           ath11k_debugfs_soc_destroy(ab);
->>>           ath11k_qmi_deinit_service(ab);
->>>           goto qmi_fail;
->>>       }
->>> -    ath11k_ahb_remove_prepare(ab);
->>>       ath11k_core_deinit(ab);
->>>   qmi_fail:
->>
+  # grep -c ath11k_nss /proc/kallsyms
+  0
+  # lsmod | grep -c qca
+  0
 
---
-Ramesh
+Driving the debugfs simulate_fw_crash 'assert' trigger, panic captured
+via ramoops:
+
+  without this series: 1 assert  -> panic, SoC reboot
+  with this series:    5 asserts -> 5 recoveries, boot_id unchanged,
+                                    both radios back up
+
+The panic is the one from the cover letter, verbatim:
+
+  Unable to handle kernel read from unreadable memory at virtual address 0
+  pc : ath11k_hal_srng_access_begin+0xc/0x60 [ath11k]
+  lr : ath11k_dp_rx_process_mon_status+0x15c/0xd84 [ath11k]
+  Call trace:
+   ath11k_hal_srng_access_begin+0xc/0x60 [ath11k] (P)
+   ath11k_dp_rx_process_mon_rings+0xa0/0x5d4 [ath11k]
+   ath11k_dp_service_srng+0x1f4/0x348 [ath11k]
+   ath11k_ahb_ext_grp_napi_poll+0x34/0xd4 [ath11k_ahb]
+
+So the AHB crash path really does reach ath11k_core_reconfigure_on_crash()
+with the interrupts live on a plain upstream driver, not only on mine.
+
+Two things I found while doing that run, both separate from this series
+and neither ready to send:
+
+ - the recovery leaves a list_del() warning from finish_wait() in
+   ath11k_wmi_cmd_send(), once per recovery. ath11k_wmi_pdev_attach()
+   re-runs init_waitqueue_head() on tx_ce_desc_wq on every recovery,
+   under a task that is still queued on it.
+
+ - once ath11k_core_reconfigure_on_crash() takes its err_hal_srng_deinit
+   path, nothing calls ath11k_hal_srng_init() again, so srng_config stays
+   freed and every later restart faults. A recovery that fails once looks
+   unrecoverable by construction.
+
+I will send those separately once I have them properly narrowed; flagging
+them here only in case they are already known.
+
+Thanks,
+Julius
