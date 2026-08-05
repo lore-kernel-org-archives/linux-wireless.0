@@ -1,71 +1,74 @@
-Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABE5E382F10
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 08:20:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66E63E49DB
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 08:25:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785918019; cv=none; b=TISrn06Ia0e1mYhjDaRA6Et9CTtrJ6ZdGzfOQQT1CPLQw+TWdj8XlyOQttyt/FywBrYNxn7Sa/q3T+sus+8xGlKL7iQNc362E4bxY50cYzjx+8WXmTDnfr9RUuZADt+ooobJvFTNjlAjRIQ4ANQkJ3IiRWpzukEFniPksnFycAI=
+	t=1785918326; cv=none; b=T+eZKD0NGNHB31ePMcPsGEN/g5MYEhs5sccQGlJu0to6AJCqzu7JMcOxN1y6EPMh3vKQNYC9ET1b0N1pdvmei6Tts6b3BozWcuR5I0nJ7i23AgSScOnFu2E7glNLYXRLV0VOg034AEIKbconlnrL0EliUCgSQr6AWl2Uqpy/LBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785918019; c=relaxed/simple;
-	bh=sC1PqM3mS4ZwupnHSTVTX76YOTo1lsvoOshl2TlcZ9I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FPii8rokAYPwZrC3ar9vnzbJ68DDt17WhMiio7hJENa9QemInhZOdJxE7Tm9dTXgF9qRWE0YyyCt9CpvLJ88OtvGMi49RaxlAk09Sa6UfdEH6+cEr+UTqkySX9SROOntmo00GkEeL5wUy1ZRs8ubV9ra9NQBFFrbD8t8zdLmTIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TP1jk8nC; arc=none smtp.client-ip=209.85.167.173
+	s=arc-20240116; t=1785918326; c=relaxed/simple;
+	bh=1vBX4q7ojpcugGpkY4PDpKLUTwdTY4Y0bm+vJswlm4Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g0O9Hkh3f3GhBdbodL5Ay8+cKDIfTCkju/q55rTps1yJDZ3Hk1be8Fjndbf5T9i2m5ySWCoPRDH/pxrIyu5VRB/RlcfD1EfHr/sykVxTLZaDc7m7tparrehsm+xD+DdviXjTmy5VXbIHHxTi0T6KfGeWLfZcBrL0T6+5kW34+ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PPRF1Euo; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TP1jk8nC"
-Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-4a427e628a9so290753b6e.0
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 01:20:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PPRF1Euo"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-383cb94f742so735028a91.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 01:25:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785918016; x=1786522816; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1785918325; x=1786523125; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7jumsFBHRQJWD6/ookMZn8TKnz47JvFiGso6tpoKjIQ=;
-        b=TP1jk8nCz/HLEdvPEQ1FH5LIIq8wXg4aVKovhv9ifq9Mnc7MJLr7TrPxfZCrNb+CNJ
-         x1K6dPjDi4daP37ptJlH0K3VoEtCCNZsXRhkG323Nv1VIfMKp9OSM2dKiwutaIc1vY4O
-         fKUPm/5pnSyv0+Yi19jgNbXs9r5vb7S0c1WfVONe1NXLdCTy+jx6nuD2MrMV/B5ml/Cp
-         5cPNpriOm3jKC5imQQrbXJNMKb/ua/7B1qBMz4HXQb+XirvA+0le5iOxze9p6/ERhtUh
-         zjwckwruLLDtoj2SYK6yNW/FHoXwTqCYM2sCLB+zTwZWgub+6pXIu8SBSsUR7N2N944g
-         LYNw==
+        bh=sO8zLVEA2ZltNWuNfjgzJEFi3mOfQQ23YawfcZLxY7w=;
+        b=PPRF1EuoV6E/4fMkUyT8Ym5e4xdAM/LMuwev31mjii4iyN7CKKiWyTDnkTctZErdqy
+         nQRPHYxY8TQK5ANkutJIrh6XqgThMQTSR6dEUxKqtkZI3antH2kO7jWX6RBLE8FgsFM4
+         IuZiKl+7GlRmJQkcFiH6kzE/7wHOxs+IvFF7O6KgaC2tiFqOyBpBlw/AF74qFU5I/uAC
+         L8iN/9y75PsGfFn8GmcnAYdooL1XYeo9oAjHNrMRnljuBELvsoH4928WPJLMKUmrX8Dr
+         qw02nnoFV/h9Y18WShMbTg7EaPIEJFVhe+tTfT8r5vu1j2+5siN6co4p4cPCfLdww/HB
+         hfPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785918016; x=1786522816;
+        d=1e100.net; s=20251104; t=1785918325; x=1786523125;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7jumsFBHRQJWD6/ookMZn8TKnz47JvFiGso6tpoKjIQ=;
-        b=TqgVXsqjWV7Edw8TuNLzvb1COpWjSkY2/TOHf9lsT1ZnElt0FXdR9+9I7eOCHbX0KS
-         hipvkJF60MiH9aLNdQFo6zdmaTURxJXq6Bmu1RIR39pbfHyouRnr4PfkppuMFFg96QA3
-         spNIU7lCXATt7NR5AVKalwvX9YFRWEyiDRvQUh5QmWCj0CHwS2qGVMYBlbqXZWDmWavO
-         BAJ2od49g5BRBxXslLDQUodT19ZipwVMjXQuipUfFYRL/xOPr25WsQKo0ae/DUCP4osU
-         Lt9ePUGvWS9uqeZaXpnTgirQyrnJjbweCWGSDw6qGt+VThWvvrzYMuawGRXfGF0DtOfj
-         SOQA==
-X-Forwarded-Encrypted: i=1; AHgh+RoFAA7qklF5WdjKo82PO07LGUc32YdXSCOAlbsK10H/WBMaUGDhDJH7NMo/+FrytRbkcqoR/upl0Dqm1BV/Rw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKqilWUhiWhRaTLLMQfW8vdcMHVeDvhc1UrubujFpXiRcXuyFY
-	pyP21rJnauQA/+p/Zleqi1wkt3EuPUBR5IQxBZFwhzE80WwtyCpJByK+
-X-Gm-Gg: AR+sD12FJ4OZvXdlhbur5izgxxcv/OW8EroeD4dZq3uR8LSEDm/nbfyiChu/k+RdwD7
-	40kG6W/MEJhiGdJdg9RKwqrShYzFIdrlfIGEuQHge6OhoC0KlelDNGzX+NEVe0eX3XhxUXVbHEh
-	47TSmCKhbqkeU8iJ1kVI8fE8ckGTQN/zLOdZkyFspa696ikShMv4Qi16Dm14B5ZCktgAO34Ub5S
-	siaArv895Q6FuVXVNZ6ZGW8Tr3+wcXtY1hR2kgk0rP7m5rJICYKtiBBfRRAYZ3tRrxWmzELd5mp
-	L4N++qNOyskgXru17O6kLrxnENSDxfPkxsqfCggNHIBKr/hsx6ryaLGXiAygypzi7Mi/soqyizp
-	/cvzqCb8q+ispAZRPd/nwM5st0UQZVD8t7h4ePJ6M7QRl3ouHuFUGugnfIIg0xNaOugqnO1YVUP
-	yW8+RDIyDTEDV/EkF8XI81t4b0d3d2rfzqzqXZxA7tBcSob7kSPooTqtldX5XXw4Q+LGcwje/OJ
-	2xoBzeiCFsYxz/h82GXxOoIAXLpxSSKyQ8vYhab
-X-Received: by 2002:a05:6820:151a:b0:6aa:f84d:83f9 with SMTP id 006d021491bc7-6ae96f3d750mr2251067eaf.23.1785918016358;
-        Wed, 05 Aug 2026 01:20:16 -0700 (PDT)
-Received: from cr-x-ubuntu2604-client-1.dev.fyre.ibm.com ([170.225.223.19])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-4599e6c7eedsm1798867fac.17.2026.08.05.01.20.12
+        bh=sO8zLVEA2ZltNWuNfjgzJEFi3mOfQQ23YawfcZLxY7w=;
+        b=H96ld/jSdmlx83Hwi0O+NfeaPXyNk6yZ/QsTsYkmtG+xUGhyTe1ez2e2vIKPxMYQLV
+         B1051VK3drDdcgxa9rYsOQ1IimgOjTO/+X4rUzHy2g0NtFvmwCc1SOhhWorqhUV9Y9M+
+         RXdXDLHw4KZ56shMMQOZLMxGeuI7kNAoe7dC91TOiSRjbM6aTsJGvMJup2O9Q2TrDQQV
+         cMFTYO0L3x7ROhIrkyLbe9PtFnXMMhsYfCLf8qWc3il+P+5bdKl12ntAcYWtqFHlGjcj
+         aFJ8IgKSEYKtSdzEVjvegIdMtyQ6jZnk0Z3SV8SMj0KfOzB0sHU8VI2GicjMBHjAx2DK
+         xVvA==
+X-Forwarded-Encrypted: i=1; AHgh+RrFjqVkgUFagWtXRlfPG2JiercmgSsHqiTDLYh9aOEoxbA9pscwuDebZ88iaiWPb/d+aId+yEz6kIhZTRUzZQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzFIM2Ra5RngjFtIG8cJKUkxm/9Zd+08esG2sfKo5R+K0DGEzI8
+	UagTEGPDh8jZr8GzlLDqg8hxaa+EGY1mk+FD58ohwn53tepjXh3XYmh1
+X-Gm-Gg: AR+sD13MOmQtL7IhVkMOHV4UHxTo1uLXRs3+m+lmRjqnVr8BzLwT6MJWSaDgC8BNrqU
+	m5C3thlpHyRbPuz3rHWecIuehuziTlAxSjEkOy5LjVd8BXQ4haQaYc9vD9Mks943fQmH/UKHSWj
+	OjwhATWGnGpI6amj5Fz+1+rdGqTwKgYK0+XAI+/qt2ltOX/PTbgNP3Kq+DpqhcTeivWnK11uqjl
+	bGNJdN/NYjLU7hljCj49fKLtqomDIgjASNzrTBKKT9QIysqCf/HiGYOef8WgercoQIw2Xv0JDDU
+	7j9bFi1T7UcFYVM1YcPWBhcF4wc0T+dyge0Fa5jpWzPaOJ01DuGFiXj6JfiTP9skDg9WEzM3JZh
+	HHg67/W5UOXIBL6ZXjSAtYLw0CHbU32iOAW+CSPn20Qsp1RKhw/khRk6U+wQE96fYIoQEQfFwsy
+	imLd6Ti6KI5tnL8GyvO7YqRn8m2INHNI1Rf3fAoX4XRLNiez4MrYUIpdTZVAzeiWYvAtcqnMkS
+X-Received: by 2002:a17:90b:5683:b0:381:26f:8f05 with SMTP id 98e67ed59e1d1-3903c5380f7mr4999150a91.3.1785918324995;
+        Wed, 05 Aug 2026 01:25:24 -0700 (PDT)
+Received: from osman.mioffice.cn ([43.224.245.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3903f5fdfe5sm1263278a91.4.2026.08.05.01.25.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 01:20:13 -0700 (PDT)
-From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-To: pkshih@realtek.com
-Cc: hvilleneuve@dimonoff.com,
-	linux-wireless@vger.kernel.org,
-	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-Subject: [PATCH] wifi: rtlwifi: remove dead mimo_ps handling from rate update code
-Date: Wed,  5 Aug 2026 01:20:04 -0700
-Message-ID: <20260805082004.608667-1-chelsyratnawat2001@gmail.com>
-X-Mailer: git-send-email 2.53.0
+        Wed, 05 Aug 2026 01:25:24 -0700 (PDT)
+From: Zhan Xusheng <zhanxusheng1024@gmail.com>
+X-Google-Original-From: Zhan Xusheng <zhanxusheng@xiaomi.com>
+To: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	zhanxusheng@xiaomi.com
+Subject: [PATCH 0/2] wifi: iwlwifi: Fix GP2 to nanoseconds overflow on 32-bit
+Date: Wed,  5 Aug 2026 16:25:13 +0800
+Message-ID: <20260805082515.4136842-1-zhanxusheng@xiaomi.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -74,339 +77,39 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Several rtlwifi drivers declare mimo_ps as IEEE80211_SMPS_OFF
-and never modify it. As a result, conditionals checking for
-IEEE80211_SMPS_STATIC or IEEE80211_SMPS_DYNAMIC are false,
-making those branches unreachable.
+GP2 is a free-running 32-bit microsecond hardware counter. Both the mvm
+and mld PTP code convert a u32 GP2 value to nanoseconds with
 
-Remove the unused mimo_ps variables, drop the dead SMPS
-branches, and simplify the remaining rate mask selection logic
-without changing runtime behavior. Also move ratr_mask
-declarations out of the removed conditional blocks where
-appropriate.
+	gp2 * NSEC_PER_USEC
 
-Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
----
- .../wireless/realtek/rtlwifi/rtl8188ee/hw.c   |  2 -
- .../realtek/rtlwifi/rtl8192d/hw_common.c      | 22 ++---
- .../wireless/realtek/rtlwifi/rtl8192ee/hw.c   |  1 -
- .../wireless/realtek/rtlwifi/rtl8192se/hw.c   | 92 ++++++++-----------
- .../wireless/realtek/rtlwifi/rtl8723ae/hw.c   |  1 -
- .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 69 ++++++--------
- 6 files changed, 75 insertions(+), 112 deletions(-)
+NSEC_PER_USEC is a plain 'long' (1000L), so on 32-bit builds the
+multiplication is performed in 32-bit arithmetic and overflows once the
+GP2 value exceeds ~4.29 million microseconds (~4.3 s). Since GP2 wraps
+only every 2^32 microseconds (~71.5 min), the product is truncated for
+almost the entire counter range, producing bogus PTP timestamps.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index 53c32e1de7e4..910f8372d83d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -1970,7 +1970,6 @@ static void rtl88ee_update_hal_rate_table(struct ieee80211_hw *hw,
- 	u32 ratr_value;
- 	u8 ratr_index = 0;
- 	u8 b_nmode = mac->ht_enable;
--	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
- 	u16 shortgi_rate;
- 	u32 tmp_ratr_value;
- 	u8 curtxbw_40mhz = mac->bw_40;
-@@ -2070,7 +2069,6 @@ static void rtl88ee_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	bool b_shortgi = false;
- 	u8 rate_mask[5];
- 	u8 macid = 0;
--	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
- 
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
- 	wirelessmode = sta_entry->wireless_mode;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192d/hw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192d/hw_common.c
-index 97e0d9c01e0a..6d8b39174bb6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192d/hw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192d/hw_common.c
-@@ -775,7 +775,6 @@ static void rtl92d_update_hal_rate_table(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
- 	enum wireless_mode wirelessmode;
--	u8 mimo_ps = IEEE80211_SMPS_OFF;
- 	u8 curtxbw_40mhz = mac->bw_40;
- 	u8 nmode = mac->ht_enable;
- 	u8 curshortgi_40mhz;
-@@ -783,7 +782,7 @@ static void rtl92d_update_hal_rate_table(struct ieee80211_hw *hw,
- 	u32 tmp_ratr_value;
- 	u8 ratr_index = 0;
- 	u16 shortgi_rate;
--	u32 ratr_value;
-+	u32 ratr_value, ratr_mask;
- 
- 	curshortgi_40mhz = !!(sta->deflink.ht_cap.cap & IEEE80211_HT_CAP_SGI_40);
- 	curshortgi_20mhz = !!(sta->deflink.ht_cap.cap & IEEE80211_HT_CAP_SGI_20);
-@@ -811,20 +810,15 @@ static void rtl92d_update_hal_rate_table(struct ieee80211_hw *hw,
- 	case WIRELESS_MODE_N_24G:
- 	case WIRELESS_MODE_N_5G:
- 		nmode = 1;
--		if (mimo_ps == IEEE80211_SMPS_STATIC) {
--			ratr_value &= 0x0007F005;
--		} else {
--			u32 ratr_mask;
- 
--			if (get_rf_type(rtlphy) == RF_1T2R ||
--			    get_rf_type(rtlphy) == RF_1T1R) {
--				ratr_mask = 0x000ff005;
--			} else {
--				ratr_mask = 0x0f0ff005;
--			}
--
--			ratr_value &= ratr_mask;
-+		if (get_rf_type(rtlphy) == RF_1T2R ||
-+		    get_rf_type(rtlphy) == RF_1T1R) {
-+			ratr_mask = 0x000ff005;
-+		} else {
-+			ratr_mask = 0x0f0ff005;
- 		}
-+
-+		ratr_value &= ratr_mask;
- 		break;
- 	default:
- 		if (rtlphy->rf_type == RF_1T2R)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 48a3c94606be..00048912900c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2266,7 +2266,6 @@ static void rtl92ee_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	bool b_shortgi = false;
- 	u8 rate_mask[7] = {0};
- 	u8 macid = 0;
--	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
- 	wirelessmode = sta_entry->wireless_mode;
- 	if (mac->opmode == NL80211_IFTYPE_STATION ||
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-index e5775b94f04e..6b9f247d11e0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-@@ -2001,10 +2001,9 @@ static void rtl92se_update_hal_rate_table(struct ieee80211_hw *hw,
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u32 ratr_value;
-+	u32 ratr_value, ratr_mask;
- 	u8 ratr_index = 0;
- 	u8 nmode = mac->ht_enable;
--	u8 mimo_ps = IEEE80211_SMPS_OFF;
- 	u16 shortgi_rate = 0;
- 	u32 tmp_ratr_value = 0;
- 	u8 curtxbw_40mhz = mac->bw_40;
-@@ -2032,26 +2031,21 @@ static void rtl92se_update_hal_rate_table(struct ieee80211_hw *hw,
- 	case WIRELESS_MODE_N_24G:
- 	case WIRELESS_MODE_N_5G:
- 		nmode = 1;
--		if (mimo_ps == IEEE80211_SMPS_STATIC) {
--			ratr_value &= 0x0007F005;
--		} else {
--			u32 ratr_mask;
--
--			if (get_rf_type(rtlphy) == RF_1T2R ||
--			    get_rf_type(rtlphy) == RF_1T1R) {
--				if (curtxbw_40mhz)
--					ratr_mask = 0x000ff015;
--				else
--					ratr_mask = 0x000ff005;
--			} else {
--				if (curtxbw_40mhz)
--					ratr_mask = 0x0f0ff015;
--				else
--					ratr_mask = 0x0f0ff005;
--			}
- 
--			ratr_value &= ratr_mask;
-+		if (get_rf_type(rtlphy) == RF_1T2R ||
-+		    get_rf_type(rtlphy) == RF_1T1R) {
-+			if (curtxbw_40mhz)
-+				ratr_mask = 0x000ff015;
-+			else
-+				ratr_mask = 0x000ff005;
-+		} else {
-+			if (curtxbw_40mhz)
-+				ratr_mask = 0x0f0ff015;
-+			else
-+				ratr_mask = 0x0f0ff005;
- 		}
-+
-+		ratr_value &= ratr_mask;
- 		break;
- 	default:
- 		if (rtlphy->rf_type == RF_1T2R)
-@@ -2119,7 +2113,6 @@ static void rtl92se_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	u32 band = 0;
- 	bool bmulticast = false;
- 	u8 macid = 0;
--	u8 mimo_ps = IEEE80211_SMPS_OFF;
- 
- 	sta_entry = (struct rtl_sta_info *) sta->drv_priv;
- 	wirelessmode = sta_entry->wireless_mode;
-@@ -2167,41 +2160,32 @@ static void rtl92se_update_hal_rate_mask(struct ieee80211_hw *hw,
- 		band |= (WIRELESS_11N | WIRELESS_11G | WIRELESS_11B);
- 		ratr_index = RATR_INX_WIRELESS_NGB;
- 
--		if (mimo_ps == IEEE80211_SMPS_STATIC) {
--			if (rssi_level == 1)
--				ratr_bitmap &= 0x00070000;
--			else if (rssi_level == 2)
--				ratr_bitmap &= 0x0007f000;
--			else
--				ratr_bitmap &= 0x0007f005;
-+		if (rtlphy->rf_type == RF_1T2R ||
-+		    rtlphy->rf_type == RF_1T1R) {
-+			if (rssi_level == 1) {
-+				ratr_bitmap &= 0x000f0000;
-+			} else if (rssi_level == 3) {
-+				ratr_bitmap &= 0x000fc000;
-+			} else if (rssi_level == 5) {
-+				ratr_bitmap &= 0x000ff000;
-+			} else {
-+				if (curtxbw_40mhz)
-+					ratr_bitmap &= 0x000ff015;
-+				else
-+					ratr_bitmap &= 0x000ff005;
-+			}
- 		} else {
--			if (rtlphy->rf_type == RF_1T2R ||
--				rtlphy->rf_type == RF_1T1R) {
--				if (rssi_level == 1) {
--						ratr_bitmap &= 0x000f0000;
--				} else if (rssi_level == 3) {
--					ratr_bitmap &= 0x000fc000;
--				} else if (rssi_level == 5) {
--						ratr_bitmap &= 0x000ff000;
--				} else {
--					if (curtxbw_40mhz)
--						ratr_bitmap &= 0x000ff015;
--					else
--						ratr_bitmap &= 0x000ff005;
--				}
-+			if (rssi_level == 1) {
-+				ratr_bitmap &= 0x0f8f0000;
-+			} else if (rssi_level == 3) {
-+				ratr_bitmap &= 0x0f8fc000;
-+			} else if (rssi_level == 5) {
-+				ratr_bitmap &= 0x0f8ff000;
- 			} else {
--				if (rssi_level == 1) {
--					ratr_bitmap &= 0x0f8f0000;
--				} else if (rssi_level == 3) {
--					ratr_bitmap &= 0x0f8fc000;
--				} else if (rssi_level == 5) {
--					ratr_bitmap &= 0x0f8ff000;
--				} else {
--					if (curtxbw_40mhz)
--						ratr_bitmap &= 0x0f8ff015;
--					else
--						ratr_bitmap &= 0x0f8ff005;
--				}
-+				if (curtxbw_40mhz)
-+					ratr_bitmap &= 0x0f8ff015;
-+				else
-+					ratr_bitmap &= 0x0f8ff005;
- 			}
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index bd45d9bd40bb..2e50f5c24df8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1924,7 +1924,6 @@ static void rtl8723e_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	bool shortgi = false;
- 	u8 rate_mask[5];
- 	u8 macid = 0;
--	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
- 
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
- 	wirelessmode = sta_entry->wireless_mode;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 9b119a51bc30..91e56be7a336 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -3473,7 +3473,6 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 	bool b_shortgi = false;
- 	u8 rate_mask[7];
- 	u8 macid = 0;
--	u8 mimo_ps = IEEE80211_SMPS_OFF;
- 	u8 rf_type;
- 
- 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
-@@ -3540,47 +3539,37 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
- 		else
- 			ratr_index = RATR_INX_WIRELESS_NG;
- 
--		if (mimo_ps == IEEE80211_SMPS_STATIC
--			|| mimo_ps == IEEE80211_SMPS_DYNAMIC) {
--			if (rssi_level == 1)
--				ratr_bitmap &= 0x000f0000;
--			else if (rssi_level == 2)
--				ratr_bitmap &= 0x000ff000;
--			else
--				ratr_bitmap &= 0x000ff005;
-+		if (rf_type == RF_1T1R) {
-+			if (curtxbw_40mhz) {
-+				if (rssi_level == 1)
-+					ratr_bitmap &= 0x000f0000;
-+				else if (rssi_level == 2)
-+					ratr_bitmap &= 0x000ff000;
-+				else
-+					ratr_bitmap &= 0x000ff015;
-+			} else {
-+				if (rssi_level == 1)
-+					ratr_bitmap &= 0x000f0000;
-+				else if (rssi_level == 2)
-+					ratr_bitmap &= 0x000ff000;
-+				else
-+					ratr_bitmap &= 0x000ff005;
-+			}
- 		} else {
--			if (rf_type == RF_1T1R) {
--				if (curtxbw_40mhz) {
--					if (rssi_level == 1)
--						ratr_bitmap &= 0x000f0000;
--					else if (rssi_level == 2)
--						ratr_bitmap &= 0x000ff000;
--					else
--						ratr_bitmap &= 0x000ff015;
--				} else {
--					if (rssi_level == 1)
--						ratr_bitmap &= 0x000f0000;
--					else if (rssi_level == 2)
--						ratr_bitmap &= 0x000ff000;
--					else
--						ratr_bitmap &= 0x000ff005;
--				}
-+			if (curtxbw_40mhz) {
-+				if (rssi_level == 1)
-+					ratr_bitmap &= 0x0fff0000;
-+				else if (rssi_level == 2)
-+					ratr_bitmap &= 0x0ffff000;
-+				else
-+					ratr_bitmap &= 0x0ffff015;
- 			} else {
--				if (curtxbw_40mhz) {
--					if (rssi_level == 1)
--						ratr_bitmap &= 0x0fff0000;
--					else if (rssi_level == 2)
--						ratr_bitmap &= 0x0ffff000;
--					else
--						ratr_bitmap &= 0x0ffff015;
--				} else {
--					if (rssi_level == 1)
--						ratr_bitmap &= 0x0fff0000;
--					else if (rssi_level == 2)
--						ratr_bitmap &= 0x0ffff000;
--					else
--						ratr_bitmap &= 0x0ffff005;
--				}
-+				if (rssi_level == 1)
-+					ratr_bitmap &= 0x0fff0000;
-+				else if (rssi_level == 2)
-+					ratr_bitmap &= 0x0ffff000;
-+				else
-+					ratr_bitmap &= 0x0ffff005;
- 			}
- 		}
- 		break;
+Most conversions in the same files already cast to u64 first
+((u64)gp2 * NSEC_PER_USEC); a handful of sites (the adjfine path, the
+stored scale_update_gp2 and the monitor/RX timestamp path) simply missed
+the cast. These patches add the missing u64 casts so the multiplications
+are done in 64-bit, matching the existing call sites. 64-bit builds are
+unaffected. The mld driver inherited the same pattern (and bug) from
+mvm, so it is fixed in a separate patch with its own Fixes: tags.
+
+Found by code inspection; not tested on 32-bit hardware. The change is a
+straightforward u64 cast matching the surrounding code.
+
+
+Zhan Xusheng (2):
+  wifi: iwlwifi: mvm: Fix GP2 to nanoseconds overflow on 32-bit
+  wifi: iwlwifi: mld: Fix GP2 to nanoseconds overflow on 32-bit
+
+ drivers/net/wireless/intel/iwlwifi/mld/ptp.c  | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mld/rx.c   | 6 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/ptp.c  | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 ++--
+ 4 files changed, 8 insertions(+), 10 deletions(-)
+
 -- 
-2.53.0
+2.43.0
 
