@@ -1,193 +1,216 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E19B472F76
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 13:56:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785938221; cv=none; b=CAAMCyflRBx4VPDePuiz2fWY2AXXHGDBowNOYCgoX6wT9hLV63jOj0zNM3q1krW+caS+ic8CVJyziACkSaEUXQT/dWZdvkc19rnd7cnIgvgEkyI9cr9EGRGqa+2obQ0XimkVtbT9x1aBIJjiqT8Y1M1m6h2YsKvWRxep9I877Bo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785938221; c=relaxed/simple;
-	bh=diyEuWZHzf/RCzjjtbeq9XwF5mD+mihbuH8CpbkLkYg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qj3/ssUEGGiHi3I/XHjT2amGE2OQ6JGRstofZ9321Q7ob8dho2p6JtWhnZohQIZ6LL5fmpKPwdntsjYgbPdsmsv5b7cb/WiK1s2IjmBvkJFTFc2RAk+jbq0CWXK9Qw4SLm1FUP3/3BAR2w1CcBMzlE/vWL8o8weBHte4lVkqezM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B/4U90Cj; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C2B3876BA
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 14:30:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.216.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1785940253; cv=pass; b=R8Nqayfm708TrTHUGy7i0Tf3/Kk27CjM3oUJZ7K4PKDPhQXqHRhrCRtVMufV+yWXkGRdIzTlGjS8h7m6MYwDF45vK+TiO4ZCdDu7L6uvZ52NRrP8+o9jgfd9dWI5LaxQcdnyCoPWUmAmtQNO/H8vigpt1VGmi/T4ngmjNhWyx0Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1785940253; c=relaxed/simple;
+	bh=nVkw7S/S8YZQkYX75mov7wW1nD1au4zCD5yOqhgZZLE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aM87er8Oabsx+ff/ryq7qbbCyt1DEAdGtSkEVowjK300jY5pyGPp8gderZzUBsLCLuRVLE/olTd/drB5Ci7r9ysAYP61lPqbtoATlSCMwtKCRx8HjELW0yCc1/KJrfxgPeynxOekxsg8xoHFOT6zUpFqX/C2w+oZdnmaJVn5fBc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=EsBJUgZG; arc=pass smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B/4U90Cj"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-495590dde14so10841185e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 06:56:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="EsBJUgZG"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-383b4a3755fso1037860a91.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 07:30:42 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1785940241; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Hrvl+J1UY00btdXGdQxDH+5EEHfmFsVZg9GS8CCZvcvH8c0VPaL0eU0UTWqOX/2K5y
+         VmHN88EzM6sJMwztADSGtvH41uuAH5EFVvR1FAxYUALlznYeLPw3NxRLu+IUG6b+JBsA
+         e6zWyhPKupJFRlJTFRQFI0+cgtCNZJaBfXkfRtdDiaBBI046JIP1b/H5xr5SXt9jL3WK
+         Pnufsn1SENBlElkZ0Qt0zGHbwBuHOUol1qzIpaWx/xqNjLlRU7GjngQiAHJ/ocQFlj5F
+         xxGVweXdhTp5QfQEAiifhz9RFwK9krj858nzpO6n3wm84O2ucs3OhTDdZXe+EZAA411u
+         l0KA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=4ABBdm8gy6VtPwyClt8h4QARX2YqTG4pZ6M4pDua5XQ=;
+        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
+        b=joliTqDZws5MPcm2gz5/XGhY3fRsH5BSftISIkW7mO7LdKUdp+T5Lejr6+DEAzOX1a
+         MQlVlw0wKHn3uGEsiWnQfZvzwc1tvF6rwy2AZWuwqGXbYP9p1go7orgp7witddDto+K4
+         /DhOq/QkhZvklFxLu/JsV+4LiFwxLfj0KTwUCRF7CaCAmV616jwQGIruacNxmmf7+dhr
+         5+V9JuB/M5yHgRKH01GaZYtqoy5PxMrsBlNL/dYCZdeMyhQG+wjQcosWxTXxaKvOdqA0
+         nz6NVVvQcLFrLfCWvtOW0U6LzYJ6Mj7EvQ4ADJUWOdTNEV6OrdVHYzKz3PUt4+C6i3uX
+         FalA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785938218; x=1786543018; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+        d=googlemail.com; s=20251104; t=1785940241; x=1786545041; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=rF8eP1OY8L9QuXVHd7iT1kdFN9+aOh7P/1wr7uIkXmw=;
-        b=B/4U90CjfvZptma4FljMtbpqX0wqCMuXmZBWOlyZkGut3jIyimv4UiB0+r3WH42z6l
-         1uTco/AiuGJg0R3PS1S7RRON74MsS/tkzTpAXkSDTEzgHr8+k+DPzwpyUfQPkHKBQ8DS
-         ZLhuDhkLJJYsn90PZvFPdVNMSlQgzsUvE7r23OIAdRmwADgJ7be1sN1o9v2ABvDa3WEU
-         UET8talAO60CrZM0QSb+tx7BnWT9iUrADSklyWnb5HiQ+iwNkiitdYz2v9/Ttav1XOZ8
-         tf4Dp7BJ0CcQfYAHOxbRtNJDk8nH388XMWxI3e55p8nk7gr//Y+unk8zlKll2uCdTyPo
-         x72A==
+        bh=4ABBdm8gy6VtPwyClt8h4QARX2YqTG4pZ6M4pDua5XQ=;
+        b=EsBJUgZGkarInuOQcggo5fEYSCJjcWUlym2bmmA/ILxNYPD93qo/FuUEi+2hHgi3mg
+         7x7a88VLL1DAj5SkUXaS/BobcFdeBD8CgVUTHYGTusH9jyY6wY5EuOdFf7JN+CVeyTYl
+         T8NMAcShpdR6swhlU2xrLi7/U5xVx1EDjSwybnLDrdLfeTfDncckZkBpl4lYoVxSu6jh
+         WvlehYJQGlOfmGLjLr3LYUsGJ9yZf4shUFxIFUmCoMf5L75E9ZOjIK3IKX1g8090UMvQ
+         GM023MzVWkz1ggBeYaQ7GmUvPFrWPwj/E9+l2lZON8KELHtJvhe6mDVpCzP8NZeo7rWJ
+         eCQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785938218; x=1786543018;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=rF8eP1OY8L9QuXVHd7iT1kdFN9+aOh7P/1wr7uIkXmw=;
-        b=KD1UG9SYAA2qMHCCGPZENRLvDCh6UswJPapJSR5i8+Dt0GZ0cjHp4E/qacyrXVh7oX
-         V88Kkd0dlY7P1p/9b+htIoi58xt09FqLybqHvj18nLi93QUba8KCfsdimS1yrYR6qYMj
-         85gPF7Yd/ZOfJckFwp74a494PGcfgpC9D2X+CT8rulmvS8lXY241jOjRs8+Olq2qtF+U
-         8xGXY0s0WPRdz9sx01jw2ipGzJkQYW31kE8VW8Re3icz2VOJI+PG82uSFRXHI4rW44Ex
-         68DENkfu9jKkc6SrK9ulP72RKHrUy803EX26iOK1ViRRwfR8nWPPjstRS1a6rrnIesfe
-         CbhQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrPgkhLKJbzA8Z38M/zTaf5ryMwZhiWqfT1lSB0vKaFEq+y0jTkvgB8+jqe1i+lu1ag/VRG6IWSMQTtglE4hQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgtFEK3KXh+bUrKGi6cqdE9CqLZCUH3BBi5w/KpjrMvGBYusN0
-	SVdBIyk0kY4M6Rlx6OZkQO7HLg+5u+SQadtqVXWkv4xAnAc1wEElSZhq
-X-Gm-Gg: AR+sD11Q8FvdZbs8x5YLVdlkEjNJMBEEBVZNntLkonbey5h/PZE3/t+BVPVBcKZpz9J
-	AkHiQxkfbw/k+0ywRZy9G8iXtR4jTdya++lr1JbyeEGgRKn70xnWpGu3MWrHwCPslUuYK6czYs8
-	CZ7ZHol5cRlFKc7pztITGkCb4OO8RlfNzn6PRifphMPWK/ixMa3ALMhTWmxMjHHM5LUhmQQ5eJm
-	3MvcrhCagr0Jq35JuNjwBIKA/WVrn+qWlMXwemiCCYHKtN6HRWW/ub6BNXInoLXulINayRqSnmK
-	soPXClRbvWhH5ENpcX03CcJNc2bQ31frILxEGgK4zUAsc20R2HqEjfOvlHNuywxUxwLrLdAD/vd
-	9p/21mERTQEp6U6gqUfH2S298fWnlULoS1Us+jZ7BHqOwwUk1ugw3bEg05aL0f9/SyTdlENE/Wc
-	yFG7/mUhY4DyOJnS1fZmFhIiV5R9hK9hwZbiXcLhkUid+MqA+If08+Cd4/8WPE1jZb1ao=
-X-Received: by 2002:a05:600c:1d10:b0:495:7a23:1eee with SMTP id 5b1f17b1804b1-4994e7ba86amr74594335e9.12.1785938217905;
-        Wed, 05 Aug 2026 06:56:57 -0700 (PDT)
-Received: from [192.168.68.75] ([95.46.73.2])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-47febfda11csm8772460f8f.1.2026.08.05.06.56.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Aug 2026 06:56:57 -0700 (PDT)
-Message-ID: <15ce55e2-c4cc-4579-811f-4c13e19bc6e5@gmail.com>
-Date: Wed, 5 Aug 2026 16:56:56 +0300
+        d=1e100.net; s=20251104; t=1785940241; x=1786545041;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=4ABBdm8gy6VtPwyClt8h4QARX2YqTG4pZ6M4pDua5XQ=;
+        b=j0eOa6dMyB32Cp5Y2WBsrtbx9xwpZiSVR4LcVh9dFaTTgfLubZAZBuTzW7JZ7fetmH
+         V+a4prfyKtL52Gcw71aYt2eID9l5HGMSHob2T62DWSfq3hSVJun2TJyAw0352s0S6hs0
+         5dHzSgFDJHgQEY8uQD8tmHpgcN0tBSDEsG+8lAGB7AX2Pr9vD6TMJfQoLG20GGLF4NS6
+         ZWTy8JtRbzIeO6G3J3Enl2hS5fx/EHD0++WTymt1LpheQkDvQT9fHHxyhzJwukzQhUmk
+         hoNw6hisvH6r2Cbeva0efgyAadCnAvuOj9TJtpbiIBpPLbguUemcWu1a0jPmopOjmWDb
+         Ee9w==
+X-Gm-Message-State: AOJu0Yz6nWQfwKZLITrFTM1RrAOqEg5I9R/Rv+3zNFSJYAXVhSfR9/7h
+	rUVRxFX6+/skzGTu7CEBVIfYcCBnaLriC04J9i5enNW8J4XVQdJOvNGUBRuS/JDGU70EQHvmzzB
+	R7VPzBLUXMW6ZJDS0H/zpDMy2gBaFsAZcsME/
+X-Gm-Gg: AR+sD13ps7K+ParERP3DNwRmYBB9OmlcXJJj40SEUQmljtn7W5+Ypis03fmUNMU4+p9
+	lQQGbJOW58xGaYZJzSgkZZYYbh9/7TG2ZmMOo8DinpbwjoemTLfUEI0iRuGRW+s+xVDXhJ43i5/
+	Zkn8VKHeWt6Vv6vLhcKozKPigGrbYAuMG8sLWGnDu1NcojuDm2pvmq46JRVewf6de/qGliOVoF8
+	cPfz7U74Am0D9yjHhhQDxA/t1Hr/zUTeAbA9jsDZZOxUuevrcTynF/UfnM7kZn08cH21m6GlO5m
+	gOognGy6h2oq+08u4ZoeuGpOWyJ9b+I+/ZHRausXSgIoERRgAAUA4mi3vAPrK0R4G5zsAU381pC
+	rMZzcmqcVgg2yba/c6HYFTYMa+f7TsLYQ
+X-Received: by 2002:a17:90a:c107:b0:38e:6f90:eabd with SMTP id
+ 98e67ed59e1d1-3903c53783cmr8635709a91.5.1785940240885; Wed, 05 Aug 2026
+ 07:30:40 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next v2] wifi: brcmfmac: Add support for BCM4361
- PCIe chipset
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
-References: <20260804-broadcom-staging-v2-1-cebdc69e938c@gmail.com>
- <2dc55d93-544f-47ec-b349-c206f5414f22@broadcom.com>
-Content-Language: en-US
-From: Markuss Broks <markuss.broks@gmail.com>
-In-Reply-To: <2dc55d93-544f-47ec-b349-c206f5414f22@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
+ <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
+ <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
+ <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
+ <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com> <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
+ <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
+ <CAOQMLZUn30NJwU4pR0hL=nz38Mbp=73wgqd+CoQE2qSO3cf4_w@mail.gmail.com>
+ <013f7d3cf223417c94df41a2a45fa540@realtek.com> <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
+In-Reply-To: <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
+From: Adrodoc <adrodoc55@googlemail.com>
+Date: Wed, 5 Aug 2026 16:30:28 +0200
+X-Gm-Features: AUfX_mwp84vSDWm6IjL_F3xXtpMc-1zdCjpR9YOhAveHuqZZT4EgP95N4evRl9k
+Message-ID: <CAOQMLZVMALBLeCZUB3Jdvk75znt0D7HxrXyPMhGPvcKLx3j-Yg@mail.gmail.com>
+Subject: Re: Error in rtw89 using Kernel 7.1.4
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Arend,
+Continuing to use 6.6.9-arch1-1 was a good idea. I did get an error
+today: https://github.com/user-attachments/files/30747862/2026-08-05.15.51.12.6.6.9-arch1-1.log
+Unlike errors on other kernel version I didn't notice the disconnect
+here. I just saw this error in the log by accident afterwards. I was
+in a zoom call during the error, so I would have expected to notice
+any disconnects. Maybe the recovery is much faster in this kernel
+version?
 
-On 8/5/26 8:46 AM, Arend van Spriel wrote:
-> On 04/08/2026 16:07, Markuss Broks via B4 Relay wrote:
->> From: Markuss Broks <markuss.broks@gmail.com>
->>
->> Those are the required changes for the BCM4361 PCIe chipset support.
->
-> Hi Markuss,
->
-> That is a brief commit message. Maybe you can provide a bit of context 
-> for this patch answering these questions: Are you using this device in 
-> some project? What platform are you using (if any)? What works and 
-> what does not?
-I was just looking at similar device additions in brcmfmac, and noticed 
-they didn't have much of a description, so I decided not to add much 
-either. Should I add some general info about the BCM4361 into the commit 
-message?
+The output looks very similar, so I believe this is the same error,
+but I am not 100% sure. For example the message "firmware failed to
+ack for leaving ps mode" is not present here, but maybe that message
+was added to the driver code later.
 
-BCM4361 is used on the Samsung Galaxy S9 device (samsung-starlte), based 
-on Exynos9810. There it's connected via PCIe link. Not sure if perhaps 
-there's SDIO or USB or other variants of this chipset. Everything 
-"basic" seems to work, seems to connect to both 2.4GHz and 5GHz 
-networks, download speed looks good. Haven't tried station mode, but I'm 
-not sure what's the proper way to set it up anyway.
->
->> Signed-off-by: Markuss Broks <markuss.broks@gmail.com>
->> ---
->> Changes in v2:
->> - EDITME: describe what is new in this series revision.
->> - EDITME: use bulletpoints and terse descriptions.
->
-> This really does not look very useful. Those EDITME: are for you! As the
-> actual patch did not change you can probably say:
->   - fix subject format indicating wifi subsystem and wireless-next repo.
+Also interesting: there was no message like "wlan0: disassociated" or
+"wlan0: authenticate" after the error. Maybe there was just no
+disconnect despite the error, which would explain why I did not notice
+a problem until I randomly looked at the log.
 
-Oh, sorry, I did not notice that b4 puts the changelog there if it's not 
-in the cover letter. It's been a while since I last submitted something 
-:) I will add the changelog there for v2 and v3 once I submit a v3.
-
->
->> - Link to v1: 
->> https://patch.msgid.link/20260803-broadcom-staging-v1-1-f6f77e55b72e@gmail.com
->> ---
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 3 +++
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 3 +++
->> drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
->> 3 files changed, 8 insertions(+)
->
-> [...]
->
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c 
->> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> index 55f4d7b970f2..914ae72a7b74 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->> @@ -59,6 +59,7 @@ BRCMF_FW_CLM_DEF(43570, "brcmfmac43570-pcie");
->> BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
->> BRCMF_FW_DEF(4359, "brcmfmac4359-pcie");
->> BRCMF_FW_DEF(4359C, "brcmfmac4359c-pcie");
->> +BRCMF_FW_CLM_DEF(4361, "brcmfmac4361-pcie");
->
-> Are you sure the CLM blob is required? Can you test without it being 
-> present in /lib/firmware?
-I have tried without the CLM blob, it says "no clm blob available, 
-device might have limited channels available" but seems to at least 
-somewhat work, I haven't noticed a difference. It's still a good idea to 
-load it probably, right?
->
->> BRCMF_FW_CLM_DEF(4364B2, "brcmfmac4364b2-pcie");
->> BRCMF_FW_CLM_DEF(4364B3, "brcmfmac4364b3-pcie");
->> BRCMF_FW_DEF(4365B, "brcmfmac4365b-pcie");
->
-> [...]
->
->> diff --git 
->> a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h 
->> b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
->> index df3b67ba4db2..b800cbfdece1 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
->> +++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
->
-> [...]
->
->> @@ -86,6 +87,7 @@
->> #define BRCM_PCIE_43602_2G_DEVICE_ID 0x43bb
->> #define BRCM_PCIE_43602_5G_DEVICE_ID 0x43bc
->> #define BRCM_PCIE_43602_RAW_DEVICE_ID 43602
->> +#define BRCM_PCIE_4361_DEVICE_ID 0x441f
->
-> Please add:
-> +#define BRCM_PCIE_4361_2G_DEVICE_ID 0x4420
-> +#define BRCM_PCIE_4361_5G_DEVICE_ID 0x4421
-
-Are those some special variants of the chipset?
-
->
-> Regards,
-> Arend
->
->> #define BRCM_PCIE_4364_DEVICE_ID 0x4464
->> #define BRCM_PCIE_4365_DEVICE_ID 0x43ca
->> #define BRCM_PCIE_4365_2G_DEVICE_ID 0x43cb 
-
-Thanks,
-
-- Markuss
-
+Relevant excerpt from the link above:
+[20763.187469] [UFW BLOCK] IN=wlan0 OUT=
+MAC=<mac-address-redacted>:<mac-address-redacted>:08:00
+SRC=<ipv4-redacted> DST=<ipv4-redacted> LEN=36 TOS=0x00 PREC=0xC0
+TTL=1 ID=38024 DF PROTO=2
+[20836.465375] rtw89_8852ae 0000:05:00.0: FW status = 0x62001100
+[20836.465385] rtw89_8852ae 0000:05:00.0: FW BADADDR = 0x0
+[20836.465389] rtw89_8852ae 0000:05:00.0: FW EPC/RA = 0x0
+[20836.465393] rtw89_8852ae 0000:05:00.0: FW MISC = 0xb898f053
+[20836.465397] rtw89_8852ae 0000:05:00.0: R_AX_HALT_C2H = 0x1000
+[20836.465401] rtw89_8852ae 0000:05:00.0: R_AX_SER_DBG_INFO = 0xf1000005
+[20836.465409] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ffaf
+[20836.465423] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe8d
+[20836.465437] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff83
+[20836.465452] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe8f
+[20836.465466] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff8b
+[20836.465480] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe95
+[20836.465494] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ffa7
+[20836.465509] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff83
+[20836.465523] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fea7
+[20836.465537] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe8b
+[20836.465552] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff97
+[20836.465566] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fea7
+[20836.465580] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff9d
+[20836.465594] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fea9
+[20836.465609] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff9f
+[20836.465620] rtw89_8852ae 0000:05:00.0: --->
+               err=0x1000
+[20836.465624] rtw89_8852ae 0000:05:00.0: R_AX_SER_DBG_INFO =0xf1000005
+[20836.465630] rtw89_8852ae 0000:05:00.0: R_AX_DMAC_ERR_ISR=0x00000010
+[20836.465633] rtw89_8852ae 0000:05:00.0: R_AX_DMAC_ERR_IMR=0x00000000
+[20836.465637] rtw89_8852ae 0000:05:00.0: R_AX_WDE_ERR_FLAG_CFG=0x83190000
+[20836.465641] rtw89_8852ae 0000:05:00.0: R_AX_PLE_ERR_FLAG_CFG=0x00000000
+[20836.465644] rtw89_8852ae 0000:05:00.0: R_AX_WDE_ERR_IMR=0xffffffff
+[20836.465648] rtw89_8852ae 0000:05:00.0: R_AX_WDE_ERR_ISR=0x02000020
+[20836.465651] rtw89_8852ae 0000:05:00.0: R_AX_PLE_ERR_IMR=0xffffffdf
+[20836.465655] rtw89_8852ae 0000:05:00.0: R_AX_PLE_ERR_FLAG_ISR=0x00000000
+[20836.465664] rtw89_8852ae 0000:05:00.0: R_AX_CMAC_ERR_ISR [0]=0x00000002
+[20836.465668] rtw89_8852ae 0000:05:00.0: R_AX_CMAC_FUNC_EN [0]=0xf000003f
+[20836.465672] rtw89_8852ae 0000:05:00.0: R_AX_CK_EN [0]=0xffffffff
+[20836.465675] rtw89_8852ae 0000:05:00.0: R_AX_PTCL_IMR0 [0]=0x10ff20ff
+[20836.465679] rtw89_8852ae 0000:05:00.0: R_AX_PTCL_ISR0 [0]=0x00808400
+[20836.465683] rtw89_8852ae 0000:05:00.0: R_AX_CMAC_ERR_IMR [0]=0x00000000
+[20836.465686] rtw89_8852ae 0000:05:00.0: R_AX_RPQ_RXBD_IDX =0x00e400e4
+[20836.465690] rtw89_8852ae 0000:05:00.0: R_AX_DBG_ERR_FLAG=0x00000000
+[20836.465693] rtw89_8852ae 0000:05:00.0: R_AX_LBC_WATCHDOG=0x00000081
+[20836.465694] rtw89_8852ae 0000:05:00.0: <---
+[20836.465695] rtw89_8852ae 0000:05:00.0: SER catches error: 0x1000
+[20836.465837] rtw89_8852ae 0000:05:00.0: FW status = 0x62001100
+[20836.465841] rtw89_8852ae 0000:05:00.0: FW BADADDR = 0x0
+[20836.465845] rtw89_8852ae 0000:05:00.0: FW EPC/RA = 0x0
+[20836.465850] rtw89_8852ae 0000:05:00.0: FW MISC = 0xb898f053
+[20836.465854] rtw89_8852ae 0000:05:00.0: R_AX_HALT_C2H = 0x1001
+[20836.465857] rtw89_8852ae 0000:05:00.0: R_AX_SER_DBG_INFO = 0xf1000005
+[20836.465865] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe8f
+[20836.465880] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898febb
+[20836.465895] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe87
+[20836.465909] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe97
+[20836.465923] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898febb
+[20836.465937] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff97
+[20836.465952] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fea7
+[20836.465967] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ffa9
+[20836.465981] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff9b
+[20836.465996] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe7f
+[20836.466010] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff7d
+[20836.466025] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fe8d
+[20836.466040] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ffa7
+[20836.466054] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898fea1
+[20836.466069] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb898ff9b
+[20836.466089] rtw89_8852ae 0000:05:00.0: SER catches error: 0x1001
+[20836.466325] rtw89_8852ae 0000:05:00.0: FW status = 0x62008100
+[20836.466330] rtw89_8852ae 0000:05:00.0: FW BADADDR = 0x0
+[20836.466334] rtw89_8852ae 0000:05:00.0: FW EPC/RA = 0x0
+[20836.466339] rtw89_8852ae 0000:05:00.0: FW MISC = 0xb898e663
+[20836.466343] rtw89_8852ae 0000:05:00.0: R_AX_HALT_C2H = 0x1002
+[20836.466347] rtw89_8852ae 0000:05:00.0: R_AX_SER_DBG_INFO = 0xf1000005
+[20836.466356] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c2133
+[20836.466370] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89b56a5
+[20836.466385] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c5137
+[20836.466399] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89394af
+[20836.466414] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb897beaf
+[20836.466429] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb897dc23
+[20836.466443] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb893a62b
+[20836.466458] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb897dbe9
+[20836.466472] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c1311
+[20836.466487] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb893a66f
+[20836.466502] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89369d9
+[20836.466516] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c170f
+[20836.466531] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c163d
+[20836.466546] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb893712b
+[20836.466560] rtw89_8852ae 0000:05:00.0: [ERR]fw PC = 0xb89c2103
+[20836.466572] rtw89_8852ae 0000:05:00.0: SER catches error: 0x1002
+[20836.502850] rtw89_8852ae 0000:05:00.0: c2h class 1 func 3 not support
+[20888.217364] [UFW BLOCK] IN=wlan0 OUT=
+MAC=<mac-address-redacted>:<mac-address-redacted>:08:00
+SRC=<ipv4-redacted> DST=<ipv4-redacted> LEN=36 TOS=0x00 PREC=0xC0
+TTL=1 ID=301 DF PROTO=2
