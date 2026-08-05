@@ -1,67 +1,85 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCD6938A722
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 15:20:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821F93CE0A2
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 17:37:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785943250; cv=none; b=fxaclp1uBdiPzUbshC3B+QgfVJEChYIf7xZnE+2/IxAaH2Rua7yGeLxsQvvdrUBwsoy7e44rCsl0inQ2LUpkVuviB3joVmmgWb02gwXLoaaLBgih0yYCI9Jdz/Tq1JKRuzZfJeZvWwq5L5c0se51yVJyNzDBrnIEJ8C6kQfc4OE=
+	t=1785951458; cv=none; b=aLmacZYiLth7d3opw8CLnjLoIZDvIRGQlep6yrpSeFW83T4unrwXg0iH3AELwAP+9WCgMchL5H6g7bAeF23b7nedqtFXY6zaLIPpsasngfesAjzQr24QzVFVGBLkmbYgEWRPSSAeW89QI5jAg72umqIv6mUGt1sDrDFOfDk+6zQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785943250; c=relaxed/simple;
-	bh=pOsm6FrgunrEy4xg3MPZYoossqKIYDfdKu6pzcmAxos=;
+	s=arc-20240116; t=1785951458; c=relaxed/simple;
+	bh=8nHymJz9Hxwiu1R2ZGOKhk9m52x2+2NplI9DV/JCU+8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bAR0n0/ItVWOU95+52JSvK2Hf05jtZK/g+rsECp2PGjGdskmPQl1HkvFjR9HtglBMfd4TX6wex3bBLKr28Kuhj8zC1tbdw2T1yzwiTDfWyySwTK5yjuOIVzURpn0jakDpevOezy9veJ+FXAWfeH/N2cxlSStYIwc5O2d2Kh6+A4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D19LSXRi; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 In-Reply-To:Content-Type; b=AmvkGUdSLsNNd0nBlIXy+EOyf/UnXyDumnM6daB4daQMKTBAg84nMZEUKQmIts8BB3zZrejqnAp+HfM53a+uCwndZIUuibOIusEa/07cilRolIECRwgw0u2ZPkv9RRi2OQ/B01dyx/IR6KRh1jZ5QYXIjPFvxqnt2WT8fmPfpBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=knw85JFZ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=eRhTNqXF; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D19LSXRi"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c1712a04ddaso189189466b.2
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 08:20:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="knw85JFZ";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="eRhTNqXF"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 675HS71w3596364
+	for <linux-wireless@vger.kernel.org>; Wed, 5 Aug 2026 17:37:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tf4LxB/oQgR5MpM2Vnd5nrnEbZ31FkI/3egS5tcFk4g=; b=knw85JFZGjWQz+v6
+	PP068AmkKVCnDE6GdejKmCL5uSEyXSrrnM1s5IeFnWEoWEflkOwlbqQ2fl8B6Ca4
+	9VJmy5IpC3V2cY6CeRwo2eF+Bq2CYfFAUvNp0EGmKQRsf2Dq4Rq78IL5NHA3xXsI
+	Sh1qf2pO08Mgy7K5MQ1+iG9bTRFAbhid659OfkOsDeXyWMKkgLBZf/0sCtvhIz87
+	MiugtG8gXvuDD5a7BdSJlPp3iRkrSGybv1WHBNSfE4TJEepLZS6NdiBHUzG+UOD/
+	jeGt/UnHkMXfXlPay+xGR4ArzjKUvrHdApTTxhyhzdQnrBqAMqnjtvWFHvYbweok
+	/YMF/g==
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fv2c0a98h-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 17:37:36 +0000 (GMT)
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-84e3d575d6eso2150614b3a.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 10:37:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785943247; x=1786548047; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=v9epO7gQb+z39xQJcQzm+4bGloNLtTUWyXFpKMh1ihQ=;
-        b=D19LSXRiGyVozi6GbgWJYbekjASR+eZww+KbfIimimQwHx4h/y9/oG/nP7csmpbpT8
-         HkZi19zWxL2QLa+IfqhcqJbQPkDHm5ex4joiOZAXKh/0hjvDclaQMaP1XLWHQw23Xx7z
-         9CvHurB4i2O6GnaTsFmMX7Bzx5+49+SF1vs/zGMH7Y3hb2VFtBX5KbTIn/3JvGgNU5BL
-         h+BAoVFZkNunpaim8njVSj0BNjUmXAgN71QpC7cWYrWSUZFRCL9NLbivYTF+NuKCuEEn
-         dTBNEBi4JU96B0Rd3DphMuMKvD8Kp4jdO+YXLOzetcUpz61aqM2aRYMKizKKPJHBpwOF
-         x1gg==
+        d=oss.qualcomm.com; s=google; t=1785951455; x=1786556255; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=tf4LxB/oQgR5MpM2Vnd5nrnEbZ31FkI/3egS5tcFk4g=;
+        b=eRhTNqXFoK9da0W9MNjJEd459L5j9ypIscendaaBLon1Pa+YtJl0dfo4qsles1zkSx
+         RACJs/cCFjNS2EpkE/AYe/mVUqDSd7krTaLeblBqd/IoLh57yp1ka2H6XZKtyUUrA/ky
+         KLdNTDrBROEXAZK1nWH2lZucB6kCyLqdbmhyH5tkeChSX1ravpFllSN7rmcyYFs1WCQj
+         EaLkYra/CXej6gzzM0DU+YSWxAo2iiz/ngaUOZ0GTLKUuKprD0nOBCRiMK1cloNwkueZ
+         rDyXlRlher52SynI8Zn8g42BuBUhCPxS7LblbThaSa+7wN3VTvVTp1hAbNG9dPf/70eA
+         aqAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785943247; x=1786548047;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1785951455; x=1786556255;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=v9epO7gQb+z39xQJcQzm+4bGloNLtTUWyXFpKMh1ihQ=;
-        b=WQQ0oeDuVxfPJ8Wvu53so703Y3b5+IsrpCUZenYZvr9aUSt7VlpWFR5sCJrhc8jH3w
-         FGZy4ZMzEu64l06fTsfxO4WvyqDlLFecLRFv17MXVBcbDuRdzSHvZcI5xS52xIn1VivQ
-         x/MlMzSxoYz8N0NdcLbvRUAag+iTan3CHBfNQBdjBsdyCMUVbSOOyIR9nE3nnvl2SFdD
-         z9UoYcax26yaFhPtvzCP2s5zPQhpC00kX/kpAJJC3jLPL8/b6AVWCNhE3SoGrGXArXdp
-         knwTVQlIOQOolBd0FNLDBm9luZjzNcDU7D3vq/TrTYzAyNuzuNuVSMWnhoKt7/gUlwRs
-         OJmw==
-X-Forwarded-Encrypted: i=1; AHgh+Rpwz4sMvYwN1NOY46HW/LDLIya1aAEVDY/4iClWs/il7p0qF1V5bXjBdhQz+YRgqemlFZPraTmIPXYDmpkaGg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz1YvjP0N7UN+R/C90oHGuZXndG4o6p/uafyhiM7oHInb/x6YZ7
-	ifvWrmHVuwum7Tqh0hNi7CG++7E5LKuBNbT3USSRtcvolL1Bx6L+5scH
-X-Gm-Gg: AR+sD12kmAYHtxCxVcACNyQ8MG8FInHVkB+LNpi4Mr82Q2TITrIOpb5+A2Fl2F9E3jn
-	oT1lJP6/EhhkleZukZy2tHOadhPxj9+Hu6xH0qR6qXN9G6yFG/CGCHm1/o0m3LJNI0cay33Ttab
-	HC3hMZ8MQECrOZDklOd1ZmyXrRGxjWWNyjt1uMZl7TQw8WXQdJRThyd1q2hlOpSiSfO8llRchnu
-	oa06E16aX/sAUIiJFNDIVcUlEzp24DDQdVsm9vJpRH3Vloz+jf371q6REHIOlFxLH8EDmNeF683
-	SjLqQIiLtI3tyD77DxTo0oB7OR8JQYmJQGtS32C64MvLsDycngJZUhE7Fq/AuI8Wr6lY58UzdiV
-	qVbucUe+c/xDx/NhAFWqAblgcGox4s92TVlZuN14IdJRIl4DTejWjbcMmoQTCYwK7aRhH+V3o8W
-	+28S75W3GkUQUmCvEiqlk5F0QBVkmmokAsTaPJYLRpbHW5cqqB3q2uOBEIx25GVG2/cg==
-X-Received: by 2002:a17:907:ea8c:b0:bf0:b39:dcc8 with SMTP id a640c23a62f3a-c2039cc30d5mr394300766b.26.1785943246679;
-        Wed, 05 Aug 2026 08:20:46 -0700 (PDT)
-Received: from [192.168.68.75] ([95.46.73.2])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c20363e72eesm139084466b.40.2026.08.05.08.20.45
+        bh=tf4LxB/oQgR5MpM2Vnd5nrnEbZ31FkI/3egS5tcFk4g=;
+        b=cSTmlia/YC8H0fwh8caqLhfGNEQqmgBaIL6Z+41bGL7o5xi+JsI6LARTLNPE48gCRm
+         NCRB8/8+P2GLEgglN1IDsnQsXF0pJwdjHLVjkfKdB9dTlqKJRWcH+yr6I8lLjTv0fSso
+         yXCYkIECrJ9gPbLlnMAGlnWsb7+y9qgcHxtbnm0d6n4IGdY/xknqBbrveS9XatBAv/42
+         0UJZvfhfQpNoQPUWaKUeJeBgA02qtFGWl9kVA+aTxEVOKsx3rAtBi14jY0++r0Zj2LdA
+         C+gyaoD8cGs8Ojevfgvy1276PVHTm1yikuYR0Amnxry0GFaED9vJWb5zllWtLCr2zxOw
+         dWfA==
+X-Gm-Message-State: AOJu0YzWF5Hjk1qTQqtid9YuspnIF9cxBT8R5WUqXOaXKCIbXtkug085
+	+qvZZgU/rOsl+ncRfP0P/VBQ32HOeTFHis0l8ct/Bma553iEe5niL4G9T/NeAJWWyRHCOOEMOb0
+	KNndXHC+H2HJEdTbc66Fmx2BsvlGspWkilzleX9QmIdOiZugG9p4RLGn3R+f4z2P6Imgtgg==
+X-Gm-Gg: AR+sD127/zj6IDvm3F59AtbhyYwCEBiCRhew3AeK521QUDHlQVr3m4tYvpOyMgwH94/
+	W/YMQcf9y6D4UhmoecF8V8foNmmWNu0Vn9JGV8e9uAvDM1EWDmYFlb662M/cuCvv8OnOJNh28bt
+	K+xfnPm+fyeM3iAHcboDteOnxwIAJPXDiyGM2VWqsWW8IX/MXYYnmoJ/J/pd9Ku95ghVtvDqJQM
+	eN36qXddh6uPwP+LZYtWXOmtQU4XL+LHLylPJ59YzsDauvHVsqDYMm1fiYJmtyS4r7eTyQBRxfB
+	g6chn7EL4D2yrCSekk1DCpm+NLagufgYWm8EbHJ3wxjHw3Q98xsOB2legpqwyCVV/UIUnLZi1Uz
+	5DjTUqgYm9kw//61ZonBCNhLPb1jJSVzK8H/m9c9auTwX
+X-Received: by 2002:a17:90a:ec86:b0:38e:bbf1:de34 with SMTP id 98e67ed59e1d1-3903c537a12mr9389143a91.7.1785951036459;
+        Wed, 05 Aug 2026 10:30:36 -0700 (PDT)
+X-Received: by 2002:a17:90a:ec86:b0:38e:bbf1:de34 with SMTP id 98e67ed59e1d1-3903c537a12mr9388899a91.7.1785951034787;
+        Wed, 05 Aug 2026 10:30:34 -0700 (PDT)
+Received: from [192.168.11.104] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca2e8ae2sm15689866c88.0.2026.08.05.10.30.32
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Aug 2026 08:20:46 -0700 (PDT)
-Message-ID: <568e2b4c-435b-4258-9137-8c22ba5af427@gmail.com>
-Date: Wed, 5 Aug 2026 18:20:45 +0300
+        Wed, 05 Aug 2026 10:30:34 -0700 (PDT)
+Message-ID: <73d62ad2-439e-470d-a638-bb7c5a02f031@oss.qualcomm.com>
+Date: Wed, 5 Aug 2026 23:00:29 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -69,147 +87,69 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless-next v2] wifi: brcmfmac: Add support for BCM4361
- PCIe chipset
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org
-References: <20260804-broadcom-staging-v2-1-cebdc69e938c@gmail.com>
- <2dc55d93-544f-47ec-b349-c206f5414f22@broadcom.com>
- <15ce55e2-c4cc-4579-811f-4c13e19bc6e5@gmail.com>
- <2ca5662a-4946-4b38-bd1d-adc27f86aa16@broadcom.com>
+Subject: Re: [PATCH ath-next 0/4] wifi: ath12k: fix timeout while waiting for
+ regulatory update on bring-up
+To: Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+        Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath12k@lists.infradead.org
+References: <20260729-ath12k-regd-wait-timeout-v1-0-504aa6e7e93c@oss.qualcomm.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
 Content-Language: en-US
-From: Markuss Broks <markuss.broks@gmail.com>
-In-Reply-To: <2ca5662a-4946-4b38-bd1d-adc27f86aa16@broadcom.com>
+In-Reply-To: <20260729-ath12k-regd-wait-timeout-v1-0-504aa6e7e93c@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: VO4JAR1450_crLWxtk_a1yn6CYrpO369
+X-Authority-Analysis: v=2.4 cv=aOfAb79m c=1 sm=1 tr=0 ts=6a7374e0 cx=c_pps
+ a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=EUspDBNiAAAA:8 a=dBmMSM3fNOV455FkuikA:9 a=QEXdDO2ut3YA:10
+ a=OpyuDcXvxspvyRM73sMx:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDE0NCBTYWx0ZWRfX31PueA2sWhe2
+ QYkjOntLkvSy7L28Yg8Zt2QJWj4FdYl3iwF/mcUbT8LPbTfP1foOrjo7+v2aqRr533A8XGpi+c8
+ 3r+Ddg+d+lo00+0Qg++MvYP7D1S8ecs=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDE0NCBTYWx0ZWRfXzQk8rJRXNY1C
+ /b0TmggZmeYFT21qY8yY3VDquRWvVJR9bQiXvT4tzXP+2SAes73MWJ7OSVP+vzY/Oqz2Tu1+G40
+ 9kh9JVn1SlGVwhJjFTuKX8/mrR8iBVNZHWkn4KFfviRMliTDMFRNGSF5mK+dJB88kq4SgjRL6wT
+ ypNeKEXw2Wr5+qkmVuE9MMU9wgg4iFzWSzFcGQCFIn0TORcTnv5y44LwohxH7+ydnTqZFzDQvWx
+ 1797wPfPiCdgFcX/fjDVFwvChab48YsrreIOMCvDgDAEZFZygi4uYoLl8lC6gm0xyj54H9kx6K5
+ pw0L8uHZxdCAGyeR3aPFN/HH83+BvM/SIrTd5IzbD6i55chx5m+NNRC/0KQkK/JqKvZTDK9DSwl
+ YdBkA+QleLaSWVWLfYC7a2t2Fe1+CPqCg1CzVxWv/v86tTvbs1fxsdrRGjUeU8GUH5EXekr0aIJ
+ XBqZsXtwXhSNYU2Nlkw==
+X-Proofpoint-GUID: VO4JAR1450_crLWxtk_a1yn6CYrpO369
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-05_05,2026-08-05_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 clxscore=1015 phishscore=0
+ malwarescore=0 bulkscore=0 impostorscore=0 suspectscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608050144
 
-Hi Arend,
-
-On 8/5/26 6:16 PM, Arend van Spriel wrote:
-> On 05/08/2026 15:56, Markuss Broks wrote:
->> Hi Arend,
->>
->> On 8/5/26 8:46 AM, Arend van Spriel wrote:
->>> On 04/08/2026 16:07, Markuss Broks via B4 Relay wrote:
->>>> From: Markuss Broks <markuss.broks@gmail.com>
->>>>
->>>> Those are the required changes for the BCM4361 PCIe chipset support.
->>>
->>> Hi Markuss,
->>>
->>> That is a brief commit message. Maybe you can provide a bit of 
->>> context for this patch answering these questions: Are you using this 
->>> device in some project? What platform are you using (if any)? What 
->>> works and what does not?
->> I was just looking at similar device additions in brcmfmac, and 
->> noticed they didn't have much of a description, so I decided not to 
->> add much either. Should I add some general info about the BCM4361 
->> into the commit message?
->>
->> BCM4361 is used on the Samsung Galaxy S9 device (samsung-starlte), 
->> based on Exynos9810. There it's connected via PCIe link. Not sure if 
->> perhaps there's SDIO or USB or other variants of this chipset. 
->> Everything "basic" seems to work, seems to connect to both 2.4GHz and 
->> 5GHz networks, download speed looks good. Haven't tried station mode, 
->> but I'm not sure what's the proper way to set it up anyway.
->
-> Mentioning the platform you tested these patches on is sufficient. So 
-> when you say "connect to both 2.4GHz and 5GHz networks" I somehow 
-> suspect you already covered station mode.
-Okay, sure. I guess I kinda mixed up the terminology here, I meant to 
-say that I haven't tested the AP mode, not the station mode, sorry for 
-the confusion.
->  >>
->>>> Signed-off-by: Markuss Broks <markuss.broks@gmail.com>
->>>> ---
->>>> Changes in v2:
->>>> - EDITME: describe what is new in this series revision.
->>>> - EDITME: use bulletpoints and terse descriptions.
->>>
->>> This really does not look very useful. Those EDITME: are for you! As 
->>> the
->>> actual patch did not change you can probably say:
->>>   - fix subject format indicating wifi subsystem and wireless-next 
->>> repo.
->>
->> Oh, sorry, I did not notice that b4 puts the changelog there if it's 
->> not in the cover letter. It's been a while since I last submitted 
->> something :) I will add the changelog there for v2 and v3 once I 
->> submit a v3.
->
-> Sure. No problem.
->
->>>
->>>> - Link to v1: https://patch.msgid.link/20260803-broadcom-staging- 
->>>> v1-1-f6f77e55b72e@gmail.com
->>>> ---
->>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 3 +++
->>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 3 +++
->>>> drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
->>>> 3 files changed, 8 insertions(+)
->>>
->>> [...]
->>>
->>>> diff --git 
->>>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c 
->>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->>>> index 55f4d7b970f2..914ae72a7b74 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
->>>> @@ -59,6 +59,7 @@ BRCMF_FW_CLM_DEF(43570, "brcmfmac43570-pcie");
->>>> BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
->>>> BRCMF_FW_DEF(4359, "brcmfmac4359-pcie");
->>>> BRCMF_FW_DEF(4359C, "brcmfmac4359c-pcie");
->>>> +BRCMF_FW_CLM_DEF(4361, "brcmfmac4361-pcie");
->>>
->>> Are you sure the CLM blob is required? Can you test without it being 
->>> present in /lib/firmware?
->> I have tried without the CLM blob, it says "no clm blob available, 
->> device might have limited channels available" but seems to at least 
->> somewhat work, I haven't noticed a difference. It's still a good idea 
->> to load it probably, right?
->
-> Right. I was just curious whether it has a working CLM blob compiled 
-> in firmware or not.
->
->>>
->>>> BRCMF_FW_CLM_DEF(4364B2, "brcmfmac4364b2-pcie");
->>>> BRCMF_FW_CLM_DEF(4364B3, "brcmfmac4364b3-pcie");
->>>> BRCMF_FW_DEF(4365B, "brcmfmac4365b-pcie");
->>>
->>> [...]
->>>
->>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/include/ 
->>>> brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/ 
->>>> brcm_hw_ids.h
->>>> index df3b67ba4db2..b800cbfdece1 100644
->>>> --- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
->>>> +++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
->>>
->>> [...]
->>>
->>>> @@ -86,6 +87,7 @@
->>>> #define BRCM_PCIE_43602_2G_DEVICE_ID 0x43bb
->>>> #define BRCM_PCIE_43602_5G_DEVICE_ID 0x43bc
->>>> #define BRCM_PCIE_43602_RAW_DEVICE_ID 43602
->>>> +#define BRCM_PCIE_4361_DEVICE_ID 0x441f
->>>
->>> Please add:
->>> +#define BRCM_PCIE_4361_2G_DEVICE_ID 0x4420
->>> +#define BRCM_PCIE_4361_5G_DEVICE_ID 0x4421
->>
->> Are those some special variants of the chipset?
->
-> Not really. The difference is in the radio frontend. 0x441f is a 
-> dual-band. The other two have only a single band so the board gets a 
-> bit cheaper. The device id is programmed in on-chip OTP so firmware 
-> knows what type of board it is running on.
-Okay, I see, thanks for the explanation!
->
-> Regards,
-> Arend
-
--Markuss
-
+On 7/29/2026 12:48 PM, Baochen Qiang wrote:
+> On devices that support setting the current country code, the following
+> warning is seen during driver bring-up:
+> 
+>    Timeout while waiting for regulatory update
+> 
+> This happens when the country to be set during registration is the same as
+> the one already applied at boot time: the regulatory event from firmware
+> gets dropped without signalling the completion, so the waiter times out.
+> 
+> Fix it, and also skip setting the country code when it is unchanged.
+> 
+> ---
+> Baochen Qiang (4):
+>        wifi: ath12k: signal regd update completion when reg event is dropped
+>        wifi: ath12k: use per-radio ab in ath12k_mac_hw_register()
+>        wifi: ath12k: protect new_alpha2 access with base_lock
+>        wifi: ath12k: skip setting country code during registration when unchanged
+> 
+>   drivers/net/wireless/ath/ath12k/mac.c | 31 ++++++++++++++++++++++++++-----
+>   drivers/net/wireless/ath/ath12k/wmi.c | 11 +++++++++--
+>   2 files changed, 35 insertions(+), 7 deletions(-)
+> ---
+> base-commit: 4fa10e991f77b4c929d1959900a6ed422b9e2ac5
+> change-id: 20260721-ath12k-regd-wait-timeout-6403498ae30b
+> 
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
