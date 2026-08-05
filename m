@@ -1,55 +1,55 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB590247280
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 05:49:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C8F3CB56F
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 05:54:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785908957; cv=none; b=XK3v1AYcFIdOwdX1TzXwEvWhjL7Inpp/NscKYUYCaoEpLZtQinUbvQc6jud08YAsaurXW9mCQAIBM2ynxG1nv41dZ9WUBiQcYoiEIASWkS9MYoxq3xcJeE4wvPBeGetnli7YBBsXEWnJiCnX3ZcBDWiUHgYl+rbJyCYPZUbIIcc=
+	t=1785909265; cv=none; b=WpSAaE71zU3iRWO6okZJ05BpMu9lEKr6jDr6PeH9U8Cehd+2MIpRVOqmopPx6QFpx0Blbk0sHtuwX9Zn6M3BbTgGVQE+0DoderfCDiODbcKsmA/W1AlAzvamj07s8XF7xmKZ8+7WpsQQgshySCoATjxWIzgaIVmQnLohTGzfGQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785908957; c=relaxed/simple;
-	bh=CCVjZr7XlXelaAJFBFJsEByOxM1k5Z113zQnk7XRyqE=;
+	s=arc-20240116; t=1785909265; c=relaxed/simple;
+	bh=EGUH/sSx/SgSx9+hBEartwdQNBAFVfQXtBE/atloicU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=TlNZjqHtlI3vyjI3fxyuS4WRZiVhe0cLcYcNr1P52svbd5huwQkapM/RspC9f6LW+EY8T2Qqg/jJ4nds7hocFyFKCLh5yZ4hrUq8C/ViTsiC/HPLBXIRIhMT52tYA1xSQYtRLpnwW0/5vnlSJh/BhzpC9gaXw/a41nPCa3pLvYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Qg8BlATR; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=Z5xxubq2+VJNW5TTvUO/c2gxDbJ51uDZmU8oiX3K7MJWna7pAbZUb70OHPP1ICjCduOSIJ9EgAlLjVcq+znH6ZB1avbddMmmZpN4Pbd9hiryY5WzAGuBANPjuRQNsa7w/f9i9T//75OGfX9mAGUBviHZetJ/aiISe/HZ+fChjUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=VPNBqnst; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Qg8BlATR"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6755nARa91642827, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="VPNBqnst"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6755sG0S11644278, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1785908950; bh=CCVjZr7XlXelaAJFBFJsEByOxM1k5Z113zQnk7XRyqE=;
+	t=1785909256; bh=EGUH/sSx/SgSx9+hBEartwdQNBAFVfQXtBE/atloicU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=Qg8BlATRNRJSg/zzXU4/85Fk9FjX1O1z8kXEJdPc7wDQJDslNd3xLRHr9gLXrQk/n
-	 4JBaFBKhdQhhnydrwL8pdtxlZZFUX0cL/RvGQAeVZNKS35noCpsvcWVvfInFpt93O3
-	 pmMC2u+yhAUPzTMgrLwPIlsn5CAkDDkHli0/9/B+z4qwbti4hbAQ8s1QBVPVUNKWcQ
-	 DMXWT8F7L267uoOeoC1HJs/5OzCgOmaJcqd/JD+/TiqIyl7IiDMaTATfg6FkTDMgYX
-	 c7gjEveNREUR46mHgKr3YfyyJPhZpQDzlxhljLud3PDbf/3hfetLUvPwU+61zOBXbW
-	 ijvMCewDfwn7Q==
+	b=VPNBqnsthUzBL+frvg+/drOX9GoC6ZI2tc25D7Nx/qREYr3WR/42sVuGIAYxVXOu1
+	 fpjdyx06CjkiWgWodZYEDgmpeyLlZsfVV3q9kO+kFchl2LghzDhLa/A5bI+sK5Q6e8
+	 iLU7pUXSZCwDzAKjko6kG2RK4TEeo1+fHZBTOCJD6HKZbGxu+J2i8L54Pn3qjmj1W7
+	 pqntskvOg7GzC/qHrEVCYrj13aM1l3ERtpRacw1hKdI0+iXrK2msHadrfcg0rlYb8b
+	 aexal9h8Y9AMxjL0W/FeM6NzC19V+JZn0a61nPrtGi5pUd4qkqNr3qOeRSReO3Lq1Y
+	 J7fLA+pX0soZw==
 Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6755nARa91642827
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6755sG0S11644278
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 5 Aug 2026 13:49:10 +0800
+	Wed, 5 Aug 2026 13:54:16 +0800
 Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
  RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Wed, 5 Aug 2026 13:49:10 +0800
+ 15.2.2562.17; Wed, 5 Aug 2026 13:54:16 +0800
 Received: from RTKEXHMBS05.realtek.com.tw ([::1]) by
  RTKEXHMBS05.realtek.com.tw ([fe80::61a9:c619:5327:6ce4%4]) with mapi id
- 15.02.2562.017; Wed, 5 Aug 2026 13:49:10 +0800
+ 15.02.2562.017; Wed, 5 Aug 2026 13:54:16 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Subject: RE: [PATCH] wifi: rtlwifi: rtl8192cu: Remove logically dead code in
- rtl92cu_update_hal_rate_mask
+ rtl92cu_update_hal_rate_table
 Thread-Topic: [PATCH] wifi: rtlwifi: rtl8192cu: Remove logically dead code in
- rtl92cu_update_hal_rate_mask
-Thread-Index: AQHdIz9rUbY58lrT4UW8OQdw46ppRraO9TFA
-Date: Wed, 5 Aug 2026 05:49:07 +0000
-Message-ID: <6feea5e213b749e99a0335485884a586@realtek.com>
-References: <20260803115826.992789-1-chelsyratnawat2001@gmail.com>
-In-Reply-To: <20260803115826.992789-1-chelsyratnawat2001@gmail.com>
+ rtl92cu_update_hal_rate_table
+Thread-Index: AQHdI0m7VwA0elGZokiSvZGRkJu/draO9pnw
+Date: Wed, 5 Aug 2026 05:54:16 +0000
+Message-ID: <eb196f133d8547c783fd303e90f9071a@realtek.com>
+References: <20260803131203.998989-1-chelsyratnawat2001@gmail.com>
+In-Reply-To: <20260803131203.998989-1-chelsyratnawat2001@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -69,15 +69,19 @@ Chelsy Ratnawat <chelsyratnawat2001@gmail.com> wrote:
 >=20
 > This error was reported by Coverity Scan.
 
-The 'error' seems too strong... I'd change this to warning.
+Similarly, I'd change 'error' to 'warning', and use rtl92cu_update_hal_rate=
+_table()
+instead in subject.
 
-Also add parenthesis to function name of subject -- i.e. rtl92cu_update_hal=
-_rate_mask().
-
-(no need to resend)
+By the way, I see other places using IEEE80211_SMPS_OFF have similar dead c=
+ode.
+Patches are welcome to remove them.
 
 >=20
 > Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 
 Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+
+
+
 
