@@ -1,125 +1,174 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47EF847045E
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 21:09:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 502703F6C3B
+	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 22:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785964201; cv=none; b=j1UkbT6O3dHvVtu0q0QqY/mdghm6+zJk6DKC7lkbEbQ6ZcCzAE9f8y4981pCyeeUuhQACMOjiIeseapBvR2rQc7tnryl+rwzm5/gRbqO9EQsuGQEctBCHNd1gg2npLdaqdErXusluvXntZtoDP8XGOq38PRXXhpxudOuWOI7dOg=
+	t=1785968582; cv=none; b=OYhGLwv8Igy8ZzqKE3PvEKchaslvL81wC3stVHfE7Nk6dC+4MhWLn7Klp4INUQezZ8YcJgG548YCK9h5uZ592t3C59scZDuQPSD/OLYzP5ggoiQpcHiPNuy4hW7e16JbE5fSJhCk5oXUpkey9yrjwFwf+1+36Lf2XnEDOOHcdpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785964201; c=relaxed/simple;
-	bh=j6D8ImoteM7kDuq1VRILlohiwkKfmrlM2XD9L0SLgL0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FbjwC43O6KmvOCYX3+qNKgSl+645jBSyzkDWDY0AJfCJ8j4Z8BDN2IXcUXP+jgnMOfqwewfJvtDAYpz3qgRev8coq3efR0hzVBme7RoTxbZBvDQtQcjJw+zigGLN731t6pFM6kjPll32/I7DCO/Wa2PhnWnNGeWB/EE+RSf3GdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bepM/hld; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1785968582; c=relaxed/simple;
+	bh=OHnRjIHFjIh6JN/AxKvenjOteXf62zvdZGHGUigHpV8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=knrEknLHGjUTHup4++zSSgM/fL4cOPHFJM41RGA4J+0RVON/BbITch2GERyySJ1XmJOgLhq+GqvIW7VotnltooLfouBq/MAs0fvWxmHEfQebi3hb4NLx+MqftjRWvXYHx5SmP+pg+bVWBC5hDAA7lR98d/hPXCGQNQ4i7paIErk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DxXAU+FV; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=PRAxNk6J; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bepM/hld"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-ca80d708489so220492a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 14:09:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DxXAU+FV";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="PRAxNk6J"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 675HRgWC561051
+	for <linux-wireless@vger.kernel.org>; Wed, 5 Aug 2026 22:23:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	a6BAVQ9ThanieDXugfzEu/sNGCAt8Zw60hFjdT0UDDI=; b=DxXAU+FVPnXkEnko
+	Yf/qW+VDDAXPcNbCi9VghuDBjMfQwwG1eRhaZTN6OtWvml3jpdZkTtnhAF4Z5YJD
+	yFThydPazJ570cJNak6yWxJG5UINa6hjcnk2NkEGovlSq2sRjgayag6025IMUmnR
+	VHfIPk8aPThW4Ch06903k1cd2qFbuK7t3YetOhY+CesElUs4haP1gWmiyKaxNJ2A
+	640keZxgJThBcL0N2KGTqo7zUt4+xYTisJLXqxJZaTij9LmCfvMSbi6uDmL1FrYE
+	YRx1o7dGakHJDCV7JCW8KwPb65KEUtkQ0rWXeQ1UCkSopYIRYfPSoZZBLS7GQTnw
+	PNR+Qw==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fv9dmh4wq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 22:23:00 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2cf7dd9fd91so13902205ad.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 15:23:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1785964187; x=1786568987; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+        d=oss.qualcomm.com; s=google; t=1785968580; x=1786573380; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=NCfLIwLQXd+ehjGtddX19Kp+kZQI1+gPoAz7ZcG61eM=;
-        b=bepM/hld3cwSizRaDp11fhZZCy5k3JTr3yOzBhHPrq7AEV6mpPwdfvAlWgs/2mdOqY
-         r8QVZCDUcGJ6BcFQoVhcdzaNG1WaAR5gXxMBmJYn2ikm36d4EBy8+hDStxksz1hzCstG
-         eCUp8pKO8ZvOJNza78+yn9Li9AG7dpn8WuyriuWKdicFSVExEyhymGZPap1nbQ0l8qVB
-         XtQtoKXh/veoQA9WNoBLDCkO18qRSxxQLIWfcBOM/TzUIm2T3phhmD9XTDHdQdNaU3fJ
-         KaP2R7ofz2OkPiLUvMrGsM0/l80GPoW/7u2rkAZHepFGeCF5zB8FjY9Ucjy1LTWU+ES+
-         QwSg==
+        bh=a6BAVQ9ThanieDXugfzEu/sNGCAt8Zw60hFjdT0UDDI=;
+        b=PRAxNk6Jt5MoCIvTlzMOsAng9nHyIps+RUTfzQf2XcARc31sQWXoYzTloYcLVkrf6U
+         jgS6bnirmC6dCCJNgEHsgQJq6JbdcSYTeKzs4CMIoMQRkVRi1cD6SrFxjzq7K2bIEGOx
+         B/r1c6x+FKYu16XoFtmKxx+TAxKtEA/Q8gLlnUKPZcsMWzVVAa12ITkyYonxEZbOgxYm
+         wHzEb/a+2M4h1liCKdUX3bXTzRzyQg5jiS+TXZtDgjlwDZEv5sVrNdvgq7AcNwYibVXo
+         H4RLB5UaFWaRbrt4dYqkiWwJxlfMUoqBzKL97UlG+on54yBRIraW0FUe8tBFKv08qqFf
+         7TdQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785964187; x=1786568987;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=NCfLIwLQXd+ehjGtddX19Kp+kZQI1+gPoAz7ZcG61eM=;
-        b=FZ/QHklj14P9bPVYpgFzIXTSa2iMbHZMJCX0ea522TGAqU+E4nE8zJrJlEBCdCx+Uv
-         yJ1KFdL+d82Cz8E4zGGrfwFu6MXS3wg2LU4CBRFX4ccxoxP4xrwbnvav4p2MyoFO6llV
-         rFUs7Fp08wUCd6MFOE/1FyHbOidTIit7ERKZDzWN0fYsOpsTNvtrRMGFxym3g0msU6ie
-         CIyLG8Acxy7jUg5h5cC8Fet8xA5ks3F9N5HA8QJXkwJ4swCxvSWB2PM5LFBEtotCXlqK
-         TtIgS7FAgsY0bKBntx6yIo6Cl7HE/+jOE0os0bB33AN3zdH+Um4hsCLhhVs/z5UZzUz4
-         qQvA==
-X-Forwarded-Encrypted: i=1; AHgh+Rq10TZIdAHSsa5AgF6KcN/qBykMPvft2I7ZrQkmOS1kQV0OtJw4E1busEfJWMbXc3/KXWzcwGQSoTNECbRymA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcvYfNRmsqBmIMQ8dXWy1a6OeKy+Sw2t5nB1O8k2puRiU4+eeA
-	53GcvvaL4kRFt4WaTEqMy21SWEUKdgEkWfQ5P18LXCi9X3i8Dx9eijeo
-X-Gm-Gg: AR+sD13BX4m5rUEYdiX8ylNZqFnFQ7m/6c96QDxx89UXNFxCOXGSHki3eMYpsxaPOyl
-	ClIEbeQXg38+EWZOWsjZo9p4G6+xHcpys/ZScpwygDrLYxDUDKv1uzxmIpNCtomhQrjih/mWSaO
-	nKVkoYjSEcjNE0QiqcQbnoTheoQKpUImyj/47m6TY8E7h85o141fKVO7ZPoBx00eutKv6rhQLgi
-	iq2prKFtiq8cq9KyS/HFAxfjGPhejs6jZH65f/2x19kuWFYFQvRB5gwOqx2V58D9C4siB/McatT
-	GFqvtei3L+cYO8F/TEF/X3t5/oqWcufbIYWbpAiSOWI5Mj1CwIDMkoHX450SaDJyrDfS3ZxZp0O
-	wfQ5++/tQIGBR4zxljwa9a2XKPCCBNinRL6khAUWHYaVq2c9AV01mvZqkguC9MIlPsaM9BTE3QW
-	GWv8b2l2bztixPnqonZ3m4Fw5zKApapvY/M8GyfnxGLBHzjqBzLafxIm8JIg==
-X-Received: by 2002:a05:6a20:7f91:b0:3ba:d7b0:fcac with SMTP id adf61e73a8af0-3cb9c0a2040mr2070221637.5.1785964186427;
-        Wed, 05 Aug 2026 14:09:46 -0700 (PDT)
-Received: from eos ([103.89.26.200])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca2e8ae2sm16914896c88.0.2026.08.05.14.09.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Aug 2026 14:09:45 -0700 (PDT)
-From: =?UTF-8?q?=E3=82=A4=E3=83=A0=E3=83=86=E3=82=A3=E3=83=A4=E3=82=BA?= <reza1234khan1234@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?=E3=82=A4=E3=83=A0=E3=83=86=E3=82=A3=E3=83=A4=E3=82=BA?= <reza1234khan1234@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: rtw88: fix out-of-bounds CAM write when key table is full
-Date: Thu,  6 Aug 2026 03:09:41 +0600
-Message-ID: <20260805210941.75136-1-reza1234khan1234@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20251104; t=1785968580; x=1786573380;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=a6BAVQ9ThanieDXugfzEu/sNGCAt8Zw60hFjdT0UDDI=;
+        b=ZkqUlI0rNT33Gw34zzty+q71cyleMG2LwvcI8aCIUaJj8Q48rc+aZFcxpZbWbK//4v
+         7AzZJFECFjYeprGxzpQG5z+HSRNOyRl9JLy4tm++Ymeai7YDX8jrmejAZdIjDt2O6J0L
+         ZruiLB2WyK1DqpnaZU+LQWAqJlYWygtRZ5oBaWvvx7dTK1A/fQtcfTSpWzQmQYonWC+y
+         NwAnWrJuACoznBtY1/qvUZTh/TNnzBh4b0X6Xj79H/FMIN+b7ysB6CUUXfqEiOf9iAyl
+         R+xirLi/xDGG/5YdI7LWd1c6tkU0O1AhaJcyiZM+NcTGX2P6ebI1DuEaFJIri2vKY5HU
+         3XgA==
+X-Forwarded-Encrypted: i=1; AHgh+RpT/1mT7JjVNA57tc2MO6LBW2MdBHNQWhxBwfz4whpDP99KelmRdy3AJ7cbidnXqf5nynfYqO2SssD/oXsFrw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyeyTjpRuIMyZnue6MFRNGOzl4arszLOZdQUO8d/r4c87wRiOm6
+	xdY1T/znFE+zzZdWUmTHpI88nyn7/v1H271ht86RBAXjfhwa/WnyI20Qn/lkat1UGZ5IwgRUGws
+	S89utge7eY/B/luAk716WQbAvTi4KjJDgtxHYuGwZ017xhWIfwJ1Wa78GvLCTrt6W/R0x6g==
+X-Gm-Gg: AR+sD11exY80rBsu8oF+4F+BGqV9NvreuV6sO0QUQCbaD9wiC18fXUZmP1qpKdobsgm
+	g0UalMVFzr5o88baU+VUQ00HlhS4mMf79C8UX2X1S/YILKRKuYEyLZjzTfItFKkQXZKlvZt5z/R
+	KwMF2ZdgDEbgP9zPRDgp5h5BIHUGE5FUpoMulUW3ldpaS9iNCZalBZYvMJjhO295O74AFqhqLon
+	WCE0NieEUUDcHK8Q9EFRDV2ZYWv7ILGEt4pLVL+B1UtuF3ibqrGEQ1uzPJffkXK2ftF4OCIoNvz
+	ta4hl6QrPWCPbX9tcneZlYuem1fnkEpptfNI08wvRPt5wPAgminJOfBBJKCFcN0dl3gktJkNYdr
+	ItyrW0rcMwO4iNffwp37TzQP6HOLkC0M2zLwAH7kWk+oI8vyBx8m+iIGfAld5
+X-Received: by 2002:a17:903:3c68:b0:2c8:f34c:82c0 with SMTP id d9443c01a7336-2d0ca7120ccmr120510005ad.2.1785968579724;
+        Wed, 05 Aug 2026 15:22:59 -0700 (PDT)
+X-Received: by 2002:a17:903:3c68:b0:2c8:f34c:82c0 with SMTP id d9443c01a7336-2d0ca7120ccmr120509575ad.2.1785968579243;
+        Wed, 05 Aug 2026 15:22:59 -0700 (PDT)
+Received: from [192.168.1.20] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3158673be99sm34518778eec.15.2026.08.05.15.22.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Aug 2026 15:22:58 -0700 (PDT)
+Message-ID: <39262e9c-e41c-49d3-9b95-6aeb81d2e864@oss.qualcomm.com>
+Date: Wed, 5 Aug 2026 15:22:57 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] wifi: support authorized roaming offload reporting
+To: Jason Huang <Jason.Huang2@infineon.com>, linux-wireless@vger.kernel.org
+Cc: wlan-kernel-dev-list@infineon.com
+References: <20260804030450.232028-1-Jason.Huang2@infineon.com>
+ <20260805110116.35884-1-Jason.Huang2@infineon.com>
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <20260805110116.35884-1-Jason.Huang2@infineon.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=TJR1jVla c=1 sm=1 tr=0 ts=6a73b7c4 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=VwQbUJbxAAAA:8 a=bUQKSiCPAAAA:8 a=2yOEcQvKnnliPOLPb-sA:9 a=QEXdDO2ut3YA:10
+ a=uG9DUKGECoFWVXl0Dc02:22 a=-fHZXUhsFbuwFN3fwQAr:22
+X-Proofpoint-GUID: 3qjWHcUbV5fOvnJpb3HUJVxHjy2Q9msS
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDE4NCBTYWx0ZWRfX1yMOQReDwo/V
+ tStqITkaNeqPLZ7h6VXfGFlJDaqW+mME9MppZ5vzru3m6JpQPn0+KrySVfJrFJ/+jSYfLTBtiZ9
+ ll2dluFDjKn8e5IumEavx2tsIuzvoKc=
+X-Proofpoint-ORIG-GUID: 3qjWHcUbV5fOvnJpb3HUJVxHjy2Q9msS
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDE4NCBTYWx0ZWRfXyh/kdYxIdVCG
+ IpHdZIdnJ+/Y3vBvTyev+k+3OC0pbXEkHiS1asJPp0j3kTqkDVVxJ4ZCorGwzyy90n3nW+HuWxv
+ q1/OpNURLTABBtII0xGSwKvgucxNVIXux7lG56AxW/DFuFny5XWlx20P+KHlJBd90p7riGkJsmJ
+ Chsuv2iZ18OLadPDPiOU2Sa40YvZ6c5NSQU7OZMnts7J2dkdxQokbU+/t8d+PVh0E27zbJNNeeb
+ jecL3xDPR6MOYpQZzSPZTjIVQSb6JZb8jDVCtNrkDRkfpDx2Z6pkoG4UTRpPaRQXutmNa79fhQ2
+ iB/aiNF6brFOfEFyKxn7/jtL+ugjr6znWQXNB5W4xAxE2IJBBj/HxNX8Fmg/zIOGpAo0uZSPpWE
+ 4QaL510ziXE2XEY6rl3DHpfMWsU6/puIBE1pjzy6ISW3bZ/u+ay3RAoEExLxMNLHYjgckKVwBtr
+ bQbmfOjUoCGVsYKDZTw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-05_05,2026-08-05_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 bulkscore=0 suspectscore=0 adultscore=0 lowpriorityscore=0
+ malwarescore=0 priorityscore=1501 phishscore=0 spamscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608050184
 
-In rtw_ops_set_key(), when the CAM table is full,
-rtw_sec_get_free_cam() returns RTW_MAX_SEC_CAM_NUM (32) because
-find_next_zero_bit()/find_first_zero_bit() return the bitmap size
-when no free slot exists. The bounds check compares the returned
-index with ">" against total_cam_num (32), so the invalid index 32
-passes the check.
+On 8/5/2026 4:01 AM, Jason Huang wrote:
+> From: Jason Huang <jason.huang2@infineon.com>
+> 
+> This is a shorter resend of the cfg80211/nl80211 API patches from the
+> previous 7-patch series. The earlier submission appears to have been
+> partially processed, so resend only these two prerequisite patches as a
+> standalone series.
+> 
+> The series lets drivers report connect and roam events that are already
+> authorized by firmware offload, and adds a roam offload extended feature
+> so userspace can provide PMK material for FT/OKC roaming offload without
+> requiring full 802.1X 4-way handshake offload support.
+> 
+> Changes in v2:
+> - Resend as a shorter 2-patch series for nipa processing.
+> - No code changes
+> 
+> Jason Huang (2):
+>   wifi: cfg80211: report authorized connect and roam events
+>   wifi: nl80211: add roam offload extended feature
+> 
+>  include/net/cfg80211.h       |  6 ++++++
+>  include/uapi/linux/nl80211.h |  8 +++++++-
+>  net/wireless/nl80211.c       | 10 ++++++++--
+>  net/wireless/sme.c           |  2 ++
+>  4 files changed, 23 insertions(+), 3 deletions(-)
+> 
+> 
+> base-commit: 6c5fc504d0d6934132637aa3db4b9b58148eaa78
 
-rtw_sec_write_cam() then indexes cam_table[32], an array declared
-with RTW_MAX_SEC_CAM_NUM (32) entries, causing an out-of-bounds
-write that corrupts the cam_map allocation bitmap. The write also
-sets bit 32 of cam_map, which overruns the bitmap as well.
+You need to figure out your patch posting.
 
-Fix the off-by-one by rejecting indices >= total_cam_num.
+You posted a v2 cover letter as a separate thread (which is correct), but
+without the two actual patches.
+https://lore.kernel.org/all/20260805105716.35643-1-Jason.Huang2@infineon.com/
 
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-Cc: stable@vger.kernel.org
+You then posted a v2 cover letter with the 2 patches, but as a reply to the V1
+which is not correct. The new version should have been a separate thread.
+https://lore.kernel.org/all/20260805110116.35884-1-Jason.Huang2@infineon.com/
+(has In-Reply-To: <20260804030450.232028-1-Jason.Huang2@infineon.com>)
 
-Tested on: RTL8821CE (PCIe) on kernel
-7.2.0-rc6-rtw88test-00059-g0d8395707651. The patched module loaded
-and associated to a WPA2 network; ping traffic passed with 0% packet
-loss. Reassociation and disconnect/reconnect cycles completed
-without errors, and the CAM table (debugfs dump_cam) showed valid
-key entries. The CAM-full boundary (28+ pairwise keys) requires an
-access point with 28+ clients and is not reachable in a
-single-client setup, so that path was verified by code inspection.
+If you are new to posting then I strongly suggest using 'b4' to post patches
+since it takes care of almost all of these details for you.
 
-Tested-by: イムティヤズ <reza1234khan1234@gmail.com>
-Signed-off-by: イムティヤズ <reza1234khan1234@gmail.com>
----
- drivers/net/wireless/realtek/rtw88/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 766f22d31079..3b6302f14de0 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -597,7 +597,7 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		hw_key_idx = key->keyidx;
- 	}
- 
--	if (hw_key_idx > sec->total_cam_num) {
-+	if (hw_key_idx >= sec->total_cam_num) {
- 		ret = -ENOSPC;
- 		goto out;
- 	}
--- 
-2.55.0
-
+/jeff
