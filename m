@@ -1,87 +1,85 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95B5423D7F4
-	for <linux-wireless@vger.kernel.org>; Wed,  5 Aug 2026 22:50:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68BE22DC357
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 03:14:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1785970255; cv=none; b=TLsgrW/EMd1B8htk+g2ElL0SDQ/yZwziGhF7UgEX7HE2xmQwD6jZVSL/+/0igCjNozZAIZhuwGyIJWZ2MuX2vfOajn5SmBywbIcfE85Ta5lHhcWpYpYoy2iZ3OyQpYPL5XooXo7fmk47Lp9SUUBaTsMA8fkZL9WZLX1l6cNKcVI=
+	t=1785986099; cv=none; b=J7Dxmvg8pQSZsxbo11WKbqTO1loC/+FksVOdkgJySoKhYdIu4D83rtRzNO48iCWJbShZfNlJDLMxgfnE+SO1sTteq3cqylNBn5MfnN3zL5U0qEityRgpnDDwRhHYYQizmt5S07IYMEUqCiO/TB9SVCUNIl+zvw1CgEGuAe8uUdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1785970255; c=relaxed/simple;
-	bh=cpdGgNTACYUQFfRV/bm+mEkjQbed0fQAHzU8XxUC2lg=;
+	s=arc-20240116; t=1785986099; c=relaxed/simple;
+	bh=D3iCvfNKx/idSoPifsf0+ocoO2Z7+rC+IQ7yXao0pPY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Px2mTQqKoVby3hjA6ZbP+ZUpyLt3GD1hPYTHwJi8u+HAQhuHfn6ZaYYSfSH1JVouaHmaQWRIhdkqpJtjyhCb30ISAa8BeTY4v+RL5jLyjqAlga0toxX8Jjlp8GZRIeAjbwwcNZyjZxIAxvnO+0+2vEsHefTcPW2A1t+h81P1+Ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cZ2pA2Rz; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=JQ5QWZ3Y; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:Content-Type; b=LyPnVtLU2zBw7r07F7lePGG4CzxiJCADRpjdRaJYlU5Fe05Li8262NAIdASOSKMvJGZxGS0DUs8c24yhP6sG3uR3QmFP/3h0lcaQZQQUoxzgfYd6aV0UwF1X572YZBimQQYG3oeJjXsL6PKDYsdlo0MQI+pBIEIGBA3hi0WSIJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RL5WLkuL; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KyKm88C8; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cZ2pA2Rz";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="JQ5QWZ3Y"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 675HRtb03275494
-	for <linux-wireless@vger.kernel.org>; Wed, 5 Aug 2026 22:50:53 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RL5WLkuL";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KyKm88C8"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 675NatDB731377
+	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2026 03:14:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	TZFR6ZOFPA8NS1GuJH0Uda7EpAQ9ewQLN5fYauItt+8=; b=cZ2pA2RzB7mO7eCh
-	iKIgGyUnkx1qVO/qmKu4JSYSwmznX3Q6qXd4/h03e9nNlw0+xf4cEyyAZEKp+R8B
-	lDipyq8MXkqobCoxlLIHjj40JGFvRPE8vrYr10+axIwajg7nYz2SdrDYh6k2MRFQ
-	SVDzDhkG5sPJRDgXHWNimMZy0mWsr1PTtdJiDpf9wttITYcR3DsMseOkCe2t5nG9
-	qgZpIDGW7JoVYetgWNylcO3Dg6tpjz48DV0tGjt06vLz/K8gnd16awj8jAoFQv/E
-	MUcyNeqyVs4heAlafi43uiWOw85OdQSoPqDwFV137sLZGb6sCrobhG5lo5PtVZqt
-	rPplbw==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fv5x5jg0e-1
+	1DabwC7oH9KDSlKyVafMlD/TxVCzk/z4oNfeI2MxI6g=; b=RL5WLkuL/NC5HNlQ
+	6ozTcumM58gOCD91Tn/IEwto+HVEWB4CKJcVnYTNAoCt/fi1wgUwJVSlVZoTnzB0
+	/9q1rftTjobLrraHjYWlaS5fG/ceDGumQ6LdeGqWwEvW7xMCwtKaxHSYtp7FRdbg
+	2ByYVL3aiQVp/6tOvP5vcc4BWWk1K0a+MG++oTwQHm/fpFUkI/wMwN8H4dTdQWdr
+	guLN12C34TbwpW/A/i6D0rBBZeJJKJGEXAaU39jcVFspjB1qcDgIlJMVkqSmnwcc
+	srTYS0jBCJhnrrJWBkhNsypBkVgg+K9VBHhVNstCnlIU/LuOjXITilNKDCvyFn2C
+	bPBUiQ==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fv5dk3awu-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 22:50:53 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cbb92868263so1663021a12.2
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 15:50:53 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 03:14:57 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cb48f41343aso384134a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Aug 2026 20:14:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1785970253; x=1786575053; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=TZFR6ZOFPA8NS1GuJH0Uda7EpAQ9ewQLN5fYauItt+8=;
-        b=JQ5QWZ3YRwN/6vOZ93ao5LK0vjrG7XT8y2MVFOrQR84MPiLJ3LrEERDrm4kf3+v5L6
-         VoRDsq7S93KP9B8nveYBe+RSvU0X/ZtR+mlAsFI/Vq6Puqdnpe6zczNi9SLTPFZ+SZlO
-         aHo/hyIXBstqRVcbExJEFz8enkj5Ftl/t51XiKsx1dSjPdHm5sN5E+HGhNxA/YFu27po
-         7nd7o1s60MGzOnCIb4rLz0WPs6GNU2Y2od7rZ24l7Fgkov2BSeJth4quFH5x/oL3rX9q
-         db+bpmhBjsMcroyg2Ny7xkguWFtv9h0EHQjcRYwlJwDq9lKcFIv4bJaZMawAisnqRPO8
-         jVjA==
+        d=oss.qualcomm.com; s=google; t=1785986097; x=1786590897; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1DabwC7oH9KDSlKyVafMlD/TxVCzk/z4oNfeI2MxI6g=;
+        b=KyKm88C8xs2fmOTJrFFHAxIEDd7BtXhLxJJv5K7k78YQeN+Qw0cdr9clTazXc869N9
+         R8miLZi6RWkMvjfJ09sjJhHlDDo8qtB/IOXnmGDNh8vcYwjdbMZAJzY1wbjgNPsBbSDd
+         h6t0R6h3ceg4h8nz7G8KEg4mMDLARPBquTzYxzulaRB5wJzTiZS22OEYI+3LKdR7TPuC
+         d3FI5KejylvjX3SnLIcTpBX3tYn4mfZEgXtbF0bT2hlMXkEPGQEknN+5ak/3fdzfZ/XH
+         tmouabr/PyDzso3C+7AbXP18rDrhmaYCWHupOXRF0nZkpUidNTlffqd5ojLqiUFSL4q9
+         SJnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1785970253; x=1786575053;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1785986097; x=1786590897;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TZFR6ZOFPA8NS1GuJH0Uda7EpAQ9ewQLN5fYauItt+8=;
-        b=tS77heO92Zg/dtJuIlv6C/KXTOGTHyp5xMwzoQAHKcGNbK1ERWSbBwSejWFfZipZ3i
-         Qm9MeIfNYvoN+1gyk4LPzReV/OjMtz112OOi+4sRw7juoWuKMH0+x4iddqxfW7IJiW8X
-         bYO1yPstWzAszf7oE4kGiegmpM3513e9zzmk0W6ivMXlxfyouZ+35icDeFVKpv3SkWSP
-         0We2B9I8Cit+wv9DlPoBwfnTbGjCGk5C9mStI7gGBmlhZZ/A1Smor6E1x8vEgdDXlZik
-         sOtRBA+FkJrA+1PPxYMSjDMWFhP1Yh3OW/k8a1tvxyjaIlk9bWochpVF1ZxOb8TDl9Gm
-         b8qg==
-X-Forwarded-Encrypted: i=1; AHgh+RpbdZS1C8uTKu3hkha5+lbm+SvN0iUBcjpX4fd1eAfO1D0RPzgGwSXIi+uFXTneHcpAC7pScB6o7mqdcVTJBQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxqw9qbSMTHL/FN5Qp+JbkwuxkVBPj74pTI8dzf1JS18FYXhR8S
-	13XhwhqDl0attsP379mZhsbO0fVGUtpH4qMIbBAr9DJwybEKwA8izgurE+akDmDRWt0VV0yYyVu
-	2I7ujuKEboWopPvWgxt3J3guzQjtEbJR8aTUhHHbg8gAGyMUQz3uxa9oXsz8KNQTz+in77Q==
-X-Gm-Gg: AR+sD13+HV/PXT6bllYtY/2i3BWQe2D2o9xfTj1O0EZ64gh+U9mg63ZtOmz+AfHVsBw
-	L6u+hsXnEmqpb+NB4y3i79c5xg/R8bkTdQcL/mWWneVSqVLByV7uFkxOXG+w2ugrOhEawIuY6Rn
-	b52gntL+pc1lBh3ZMopUZ3fF3KdOlxDXD0ZECXDWcrXZJ1cdxqN27feS4ahf59roY6d4CUWZ0y3
-	u9Y1z0qEGkUkhWm8iO1UXj7JLemT+uKISErfz7QYZz+l3NNw1oRloKmvzKuMvxLk1pV2/u21a2W
-	BFGao0vyLFPCywOdaF5fY6u8+nP/RsZKElXXNK1DA3lkRDvrarZFWxjKpTZOS66uHnyWy36SWRb
-	7eSep9o2LAg+BiE1PHuaaMdWI8hjS6aD6JWPftWBba9DbokFXHWfhMqxx/OU0
-X-Received: by 2002:a05:6300:4045:b0:3bf:83f3:b810 with SMTP id adf61e73a8af0-3cb85ef7f63mr12697003637.29.1785970252884;
-        Wed, 05 Aug 2026 15:50:52 -0700 (PDT)
-X-Received: by 2002:a05:6300:4045:b0:3bf:83f3:b810 with SMTP id adf61e73a8af0-3cb85ef7f63mr12696951637.29.1785970252446;
-        Wed, 05 Aug 2026 15:50:52 -0700 (PDT)
-Received: from [192.168.1.20] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315867c6a29sm20071000eec.29.2026.08.05.15.50.51
+        bh=1DabwC7oH9KDSlKyVafMlD/TxVCzk/z4oNfeI2MxI6g=;
+        b=hb/A5NOXl5Eusvyarx08NRvDLLb8Pc2Oh5X3v0SgLd1/zK1jobi0m8Y6RWz8xOAxcq
+         YdSme8HjOAMe0ag4aSGb+pBt7btHvI615J6Ix326bizvWo/VY+im/LA4e1MAUHxNhTxK
+         kMykTZc3E+owTnQ/QYANvGZGpSwc8C05Xb/twu2Ta2oh5f18qHwPdENO07nzDdEQXKGU
+         y0HodGPyoKgkdBGvtzSd0C2FlSgrbX63aTIzJciB4P1SB9dJwaMdTROxHi50hKYWCf8W
+         Pl0pmvMCoVmojXFtNEg2NPKxHjYBwCuaiVxl1sjDFIA6xKLs8qtHb7ft18RQtOvDhUY/
+         f/8Q==
+X-Gm-Message-State: AOJu0Yw3BDcb66chXdtSXvrdAKn9BMWiAIsQViVcdmGBQ90I35cH5qmt
+	gWw1wBurxSPI6l+1vwzKJ4pFb4IyAwQ2ETv0Sl783pKhtbR6aajJDaTOkSl7K4/lbuCPrLFH0zY
+	BVyHkbApocWYUGmutPNmaU+geK8Gn0TxKYkQcYyPAVJniBs9uAw+Xu7tacwDE+T8x8GBkqA==
+X-Gm-Gg: AR+sD13CH9dQS8dWnjuqz0CH9xJefO0qtbalHLNsKlaC4/ZI9/jFdS883HeBUUvw367
+	ivoq239/Ih95zmC1O+yeY5ZgtpFJvELtPoOMw9ze2cZjPyjgtirU/r0jyLpDsfvp90slvKluk+p
+	w1tiZPgRhnd9MiBayiv1dcmDvQI+KCillhxntQkP/wUt7hVc6L3vY0tLlHRdg2EoBIkvvmxO3pS
+	9wHIEhKFkT7cgwEFBOsi+VSSNxGiVYEraTYrrKQVEkS3LX1m3CFf1Mewcs3G/7AiUAApeygSvKO
+	JY/doEDJi0xvblyLpxF19Yrs6terUTGw3paAxY9AhBjKeFdVBqY0pzh9kRET20hgzLV8Sxf7CI6
+	O5XnKtzijrZyj/XFBa2Rt/yvasQsK
+X-Received: by 2002:a05:6a21:600b:b0:3bf:8a0e:dd99 with SMTP id adf61e73a8af0-3cb9c25865emr4555684637.17.1785986096647;
+        Wed, 05 Aug 2026 20:14:56 -0700 (PDT)
+X-Received: by 2002:a05:6a21:600b:b0:3bf:8a0e:dd99 with SMTP id adf61e73a8af0-3cb9c25865emr4555634637.17.1785986096130;
+        Wed, 05 Aug 2026 20:14:56 -0700 (PDT)
+Received: from [10.152.196.97] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13fca9111b6sm19025832c88.13.2026.08.05.20.14.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 05 Aug 2026 15:50:51 -0700 (PDT)
-Message-ID: <f2c8c83f-e2e4-4ed1-871f-f1bb1d71c057@oss.qualcomm.com>
-Date: Wed, 5 Aug 2026 15:50:50 -0700
+        Wed, 05 Aug 2026 20:14:55 -0700 (PDT)
+Message-ID: <d9cde078-ad54-4938-8bb2-51193ecddaa2@oss.qualcomm.com>
+Date: Thu, 6 Aug 2026 08:44:51 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -89,131 +87,164 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] wifi: cfg80211: report authorized connect and roam
- events
-To: Jason Huang <Jason.Huang2@infineon.com>, linux-wireless@vger.kernel.org
-Cc: wlan-kernel-dev-list@infineon.com,
-        Chung-Hsien Hsu <Chung-Hsien.Hsu@infineon.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-kernel@vger.kernel.org
-References: <20260804030450.232028-1-Jason.Huang2@infineon.com>
- <20260805110116.35884-1-Jason.Huang2@infineon.com>
- <20260805110116.35884-2-Jason.Huang2@infineon.com>
+Subject: Re: [PATCH wireless-next] wifi: nl80211: add support to configure 6
+ GHz non-HT duplicate transmission
+To: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+References: <20260805-dup-beacon-v1-1-68574869c896@oss.qualcomm.com>
+From: Mahendran P <mahendran.p@oss.qualcomm.com>
 Content-Language: en-US
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-In-Reply-To: <20260805110116.35884-2-Jason.Huang2@infineon.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20260805-dup-beacon-v1-1-68574869c896@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA1MDE4NiBTYWx0ZWRfX1X+39bNEE7Tj
- tTK5b9XcXnSbWkb1uMTA5RwQSunn4M8ztBl0iel7NdXeQu6FfUv+CgR4G8yvKJuJQKBRi4nqsss
- fAV+qi5zCeHRHvXgYWWwxz8Kt8tKiEqHHensqO+4yNkVlpZJBjdDjBP9jirM9tPxPEjxATYEPov
- DyOq+D/6C9gOP+XAVFD0S27h8H4edwYSUpkCFShDtRu+XR3uqdAVU/4M35DrZs4gvIMnSk77Pa2
- pLe68tRKurjIGdGvXbiDWUElF/LPNjg0W/STO6HM2L155LaXod9EZyGhdcrgG3sRB9GnD8S31SI
- 39tjcueclGad6cCe4huJb0070crgHEDZGJPZ563liAly3cuiADA0Lp8KenQ93tYoWcOQNuZb4VZ
- o7Jy+Z+eAlY/hYoxEjiguqLFMoHekbRYw0nLgYMyU2FdwW+ZDBXMBDple4IELebybkOzFh+CCV3
- f8qQRHt4E4x6C/jVZCw==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA1MDE4NiBTYWx0ZWRfX9GXgXRrpgVbk
- 9pP5g9gYyuIWw2LXGT2oCLeSuC4GEKC40IrOVps89bzwmGxot3OuBJbeWs7HCspKg7fkQ3YxTbt
- tIZ7pRTrRMg78jhifBthgf68HWSLxDI=
-X-Proofpoint-GUID: WZcjYRz17sDGTxDq6gja4O9VdAy5L4Ou
-X-Authority-Analysis: v=2.4 cv=cIbQdFeN c=1 sm=1 tr=0 ts=6a73be4d cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
+X-Proofpoint-ORIG-GUID: OU2FtjfrpeusfhLwGTIGBFNI336vcTkX
+X-Authority-Analysis: v=2.4 cv=Or9/DS/t c=1 sm=1 tr=0 ts=6a73fc31 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
  a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
- a=bUQKSiCPAAAA:8 a=PW-KNzBFAAAA:8 a=dlxwaV8mhwWKbarLZ4QA:9 a=QEXdDO2ut3YA:10
- a=x9snwWr2DeNwDh03kgHS:22 a=-fHZXUhsFbuwFN3fwQAr:22 a=84zbTXrhsdUYOv-GFPQN:22
-X-Proofpoint-ORIG-GUID: WZcjYRz17sDGTxDq6gja4O9VdAy5L4Ou
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
+ a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=HgweAf5VjdDSSt7PCqIA:9
+ a=QEXdDO2ut3YA:10 a=_Vgx9l1VpLgwpw_dHYaR:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDAyMSBTYWx0ZWRfX6jkyj3z+opM6
+ 0XLY9lGu5JI3U720CH1Ns5Xw4hFiFjkzqdPUKnog0hcLx0nyrtxYZtRzXrdcGdljCwwzGeF1CRU
+ dVvQpNe6TtYO6CuaXJncl7c5B95JtuKabhUtqQN5lZOUg8YfylFmAaeiofgpgq7a/02NcekcQx0
+ 73TkZJRxSzye9W9mmnhpCWeJYL+Vc6Anl633SBvjBHYycaSNfIT5gTZpicFopqSodlN/zkNbVB+
+ 1suSeCbh1Fiu8ObvHtwQUnS+TUWNcAfrykSTMIvwqcwwRQWb5EJ/W2spQUTopTOPBk1bbC/BWkv
+ DFk6OzpRZ0R52pM7EJYGhFrBwGgUd/LSQLVxMDJpho+3T2Z2eMQ25kpUdHjniviMO64fyzUyYex
+ NoMTsjcT9PyPGxGNxYIAiu3C7jv4JLtotM0xvwoVngEkKgbdpIv9rt8LAn6GWcaLZkNmSFLgxve
+ Aen/DXdzDG6E+wkOaeA==
+X-Proofpoint-GUID: OU2FtjfrpeusfhLwGTIGBFNI336vcTkX
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDAyMSBTYWx0ZWRfX0xnlw4J14V+P
+ MOP+Apfc0d65Rg2flfkb2GijOpP6kvHXux3lYIe9VSkleBaV9Mr2HctK2igEp8trDT5u4nCXnNW
+ nccefT8FoyjMp+mBKMufQLGcgygUpSg=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-05_05,2026-08-05_01,2025-10-01_01
+ definitions=2026-08-05_06,2026-08-05_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0 priorityscore=1501
- impostorscore=0 bulkscore=0 clxscore=1015 adultscore=0 suspectscore=0
+ suspectscore=0 phishscore=0 priorityscore=1501 spamscore=0 bulkscore=0
+ clxscore=1011 malwarescore=0 lowpriorityscore=0 adultscore=0 impostorscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608050186
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608060021
 
-On 8/5/2026 4:01 AM, Jason Huang wrote:
-> From: Jason Huang <jason.huang2@infineon.com>
-> 
-> Drivers that offload the 802.1X/FT key exchange can know that
-> the link is ready for data traffic when reporting a successful
-> connect or roam event. Carry that state through cfg80211 and
-> include NL80211_ATTR_PORT_AUTHORIZED in the corresponding nl80211
-> notification when the driver provides it.
-> 
-> This lets userspace avoid restarting authentication state machines
-> after firmware has already completed the security exchange during
-> offloaded roaming.
-> 
-> Assisted-by: GitHub Copilot CLI:gpt-5.5
-> Signed-off-by: Chung-Hsien Hsu <Chung-Hsien.Hsu@infineon.com>
-> Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 
-Jason,
-why are the above signing off the patch if you are the author?
-
-> Signed-off-by: Jason Huang <jason.huang2@infineon.com>
+On 8/5/2026 2:56 PM, Manish Dharanenthiran wrote:
+> As per IEEE Std 802.11-2024, subclause 26.17.2.2, a 6 GHz AP can transmit
+> a Beacon frame using a non-HT duplicate PPDU, so that stations scanning
+> only PSC channels can discover it. Currently, there is no mechanism
+> to request the driver to transmit non-HT duplicate Beacon frames.
+>
+> In [1], changes were made to parse the Beacon from user-space to set
+> the non-HT duplicate flag in the kernel. However, it was suggested that
+> non-HT transmission be part of the Beacon TX rate settings. Hence, add
+> NL80211_TXRATE_6GHZ_NON_HT_DUP as a flag attribute under
+> NL80211_ATTR_TX_RATES to let user-space request the driver to transmit
+> non-HT duplicate Beacons.
+>
+> Also add validation to reject the Beacon if non-HT duplicate Beacon
+> transmission is enabled when legacy rates are not configured.
+>
+> [1]  https://lore.kernel.org/all/1644914581-21682-1-git-send-email-quic_ramess@quicinc.com/
+>
+> Signed-off-by: Manish Dharanenthiran <manish.dharanenthiran@oss.qualcomm.com>
 > ---
->  include/net/cfg80211.h       | 6 ++++++
->  include/uapi/linux/nl80211.h | 4 +++-
->  net/wireless/nl80211.c       | 6 +++++-
->  net/wireless/sme.c           | 2 ++
->  4 files changed, 16 insertions(+), 2 deletions(-)
-> 
+> Note: Users(ath11k&ath12k) of this new NL attribute will be posted later
+> once this gets approved.
+> ---
+>   include/net/cfg80211.h       |  1 +
+>   include/uapi/linux/nl80211.h |  4 ++++
+>   net/wireless/nl80211.c       | 13 +++++++++++++
+>   3 files changed, 18 insertions(+)
+>
 > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 97c16d4ff127..7f576bb7325c 100644
+> index 97c16d4ff127..6bc490108303 100644
 > --- a/include/net/cfg80211.h
 > +++ b/include/net/cfg80211.h
-> @@ -9103,6 +9103,8 @@ struct cfg80211_fils_resp_params {
->   * @assoc_encrypted: The driver should set this flag to indicate that the
->   *	(Re)Association Request/Response frames are transmitted encrypted over
->   *	the air.
-> + * @authorized: Indicates whether the connection is ready to transport data
-> + *	packets.
->   */
->  struct cfg80211_connect_resp_params {
->  	int status;
-> @@ -9113,6 +9115,7 @@ struct cfg80211_connect_resp_params {
->  	struct cfg80211_fils_resp_params fils;
->  	enum nl80211_timeout_reason timeout_reason;
->  	bool assoc_encrypted;
-> +	bool authorized;
->  
->  	const u8 *ap_mld_addr;
->  	u16 valid_links;
-> @@ -9281,6 +9284,8 @@ cfg80211_connect_timeout(struct net_device *dev, const u8 *bssid,
->   * @links.bss: For MLO roaming, entry of new bss to which STA link got
->   *	roamed. For non-MLO roaming, links[0].bss points to entry of bss to
->   *	which STA got roamed (may be %NULL if %links.bssid is set)
-> + * @authorized: Indicates whether the new connection is ready to transport data
-> + *	packets.
->   */
->  struct cfg80211_roam_info {
->  	const u8 *req_ie;
-> @@ -9297,6 +9302,7 @@ struct cfg80211_roam_info {
->  		struct ieee80211_channel *channel;
->  		struct cfg80211_bss *bss;
->  	} links[IEEE80211_MLD_MAX_NUM_LINKS];
-> +	bool authorized;
->  };
->  
->  /**
+> @@ -901,6 +901,7 @@ struct cfg80211_bitrate_mask {
+>   		enum nl80211_eht_gi eht_gi;
+>   		enum nl80211_he_ltf he_ltf;
+>   		enum nl80211_eht_ltf eht_ltf;
+> +		bool nonht_dup_6ghz;
+>   	} control[NUM_NL80211_BANDS];
+>   };
+>   
 > diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 020387d76412..66b4cfd8de86 100644
+> index 020387d76412..d8fefefc11a9 100644
 > --- a/include/uapi/linux/nl80211.h
 > +++ b/include/uapi/linux/nl80211.h
-> @@ -2705,7 +2705,9 @@ enum nl80211_commands {
->   *	in %NL80211_CMD_CONNECT to indicate that for 802.1X authentication it
->   *	wants to use the supported offload of the 4-way handshake.
->   * @NL80211_ATTR_PMKR0_NAME: PMK-R0 Name for offloaded FT.
-> - * @NL80211_ATTR_PORT_AUTHORIZED: (reserved)
-> + * @NL80211_ATTR_PORT_AUTHORIZED: flag attribute used in %NL80211_CMD_CONNECT
-> + *	or %NL80211_CMD_ROAM notifications to indicate that 802.1X
-> + *	authentication was done by the driver or is not needed.
+> @@ -5900,6 +5900,9 @@ enum nl80211_key_attributes {
+>    *	see &struct nl80211_txrate_eht
+>    * @NL80211_TXRATE_EHT_GI: configure EHT GI, (u8, see &enum nl80211_eht_gi)
+>    * @NL80211_TXRATE_EHT_LTF: configure EHT LTF, (u8, see &enum nl80211_eht_ltf)
+> + * @NL80211_TXRATE_6GHZ_NON_HT_DUP: configure 6 GHz non-HT duplicate Beacon
+> + *	transmission. This flag is applicable only in Beacon TX rate setting
+> + *	and must be accompanied by a non-HT (legacy) Beacon rate.
+>    * @__NL80211_TXRATE_AFTER_LAST: internal
+>    * @NL80211_TXRATE_MAX: highest TX rate attribute
+>    */
+> @@ -5915,6 +5918,7 @@ enum nl80211_tx_rate_attributes {
+>   	NL80211_TXRATE_EHT,
+>   	NL80211_TXRATE_EHT_GI,
+>   	NL80211_TXRATE_EHT_LTF,
+> +	NL80211_TXRATE_6GHZ_NON_HT_DUP,
+>   
+>   	/* keep last */
+>   	__NL80211_TXRATE_AFTER_LAST,
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 44f2bad08670..cb4752fc38a0 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -569,6 +569,7 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+>   	[NL80211_TXRATE_EHT_LTF] = NLA_POLICY_RANGE(NLA_U8,
+>   						   NL80211_RATE_INFO_EHT_1XLTF,
+>   						   NL80211_RATE_INFO_EHT_8XLTF),
+> +	[NL80211_TXRATE_6GHZ_NON_HT_DUP] = { .type = NLA_FLAG },
+>   
+>   };
+>   
+> @@ -6303,6 +6304,14 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+>   			mask->control[band].eht_ltf =
+>   				nla_get_u8(tb[NL80211_TXRATE_EHT_LTF]);
+>   
+> +		if (tb[NL80211_TXRATE_6GHZ_NON_HT_DUP]) {
+> +			if (band != NL80211_BAND_6GHZ ||
+> +			    (wdev->iftype != NL80211_IFTYPE_AP &&
+> +			     wdev->iftype != NL80211_IFTYPE_P2P_GO))
+> +				return -EINVAL;
+> +			mask->control[band].nonht_dup_6ghz = true;
+> +		}
+> +
+>   		if (mask->control[band].legacy == 0) {
+>   			/* don't allow empty legacy rates if HT, VHT, HE or EHT
+>   			 * are not even supported.
+> @@ -6344,6 +6353,7 @@ static int validate_beacon_tx_rate(struct cfg80211_registered_device *rdev,
+>   {
+>   	u32 count_ht, count_vht, count_he, count_eht, i;
+>   	u32 rate = beacon_rate->control[band].legacy;
+> +	bool nonht_dup = beacon_rate->control[band].nonht_dup_6ghz;
+>   
+>   	/* Allow only one rate */
+>   	if (hweight32(rate) > 1)
+> @@ -6405,6 +6415,9 @@ static int validate_beacon_tx_rate(struct cfg80211_registered_device *rdev,
+>   	    (!rate && !count_ht && !count_vht && !count_he && !count_eht))
+>   		return -EINVAL;
+>   
+> +	if (nonht_dup && !rate)
+> +		return -EINVAL;
 
-This attribute became deprecated when NL80211_CMD_PORT_AUTHORIZED was
-introduced. Why are you not using that?
 
-503c1fb98ba3 ("cfg80211/nl80211: add a port authorized event")
+Since the changes introduce NL80211_TXRATE_6GHZ_NON_HT_DUP as a separate 
+configuration parameter,
+should cfg80211 verify consistency with the Beacon template's HE 
+operation duplicate beacon subfield?
 
+
+> +
+>   	if (rate &&
+>   	    !wiphy_ext_feature_isset(&rdev->wiphy,
+>   				     NL80211_EXT_FEATURE_BEACON_RATE_LEGACY))
+>
+> ---
+> base-commit: 6c5fc504d0d6934132637aa3db4b9b58148eaa78
+> change-id: 20260805-dup-beacon-0d074e15ecf7
+>
+>
