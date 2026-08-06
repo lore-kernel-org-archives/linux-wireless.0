@@ -1,154 +1,206 @@
-Received: from smtpo63.interia.pl (smtpo63.interia.pl [217.74.67.63])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11B9C47045C
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 11:39:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.63
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEC3246C836
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 12:09:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786016362; cv=none; b=g7eaBVH6NQvC92spCxhLQh573uD3aBPwI6tdojVZY1SmNbSgCiDdrZVJVF/+wyQsqLpsKYtdzfY1cezGmX0UpNO2h2Ws4bb+atbZ6yjGY0yM+/k6uXwHVLRCXQTkd4D8G0D9/MaQKyqluRXAzgd/TvwgxVqLpdp3x0lcI8a0+Xk=
+	t=1786018190; cv=none; b=EkJRT54g9yF04yRILVOSxaZw/g6pjcfkTaQNc6mx/KD1polwEtu5Vcq5BNnenU9Hz3HHJ+YO9Usu8hdJQMYRaSQW29njbjT6H3/IJG7bQ94vBg//eH2pZ/1ll9t7DWmWgrUEZr53UcDEEeDCDPltL2Uxq9c1lOLtkCawZf4c9J0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786016362; c=relaxed/simple;
-	bh=Ms2b1+iwLYtJW4EKc+FcT7UgEfOQ/W9ht+OujYO5R4w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oEBUSIkVCRBsBuC1lwzx0qZHYti54StlRRpDCLkPHyKRXjqtAIS9lW1tYbpe7D7n0JJJfLO/aK8q97bvdXp370PgnSO2I/CiLiI94aSiUfwi2kLTaeE/gfjtInox65wD9CrNjusz9ZWEAtMuC2vcoJw+AACaDhW9PqYTAqGdNrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=JXu4DdVl; arc=none smtp.client-ip=217.74.67.63
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
+	s=arc-20240116; t=1786018190; c=relaxed/simple;
+	bh=jgaLeVL27Ph54JsZW5Ks8bVOsgDEnvw2gXFf1Az1gDM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BiSgkHan2Rpq2OfSi39GX3Eter5wspm7kLsw1lRYwquMpWmINNsSpCKrTK1O4HSEZpst6gQE5AkFEVDaCJQWQp1NWTR0clBxnQsGvUqPqart14khpxPXegmy6XNMrpZwxNuaCCGxOX0FwBJQeFJrvX5NvmfpSmnhtzItUKTqiCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=h2WIKRXn; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EfDftZA6; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="JXu4DdVl"
-Received: from nr200 (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Thu,  6 Aug 2026 13:38:56 +0200 (CEST)
-Date: Thu, 6 Aug 2026 13:38:54 +0200
-From: Slawomir Stepien <sst@poczta.fm>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Aleksandr Nogikh <nogikh@google.com>, syzbot <syzbot@kernel.org>,
-	syzkaller-bugs@googlegroups.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, syzbot@lists.linux.dev,
-	Krystian Kaniewski <krystianmkaniewski@gmail.com>
-Subject: Re: sysbot AI patches and wireless
-Message-ID: <anRyTtgRT8gVUZYR@nr200>
-References: <068e46b5-0c88-4432-959a-b9400d9691ee@mail.kernel.org>
- <3b6c46b6d79f3a0e0ded2967db3cfd469314b05c.camel@sipsolutions.net>
- <CANp29Y6sHOe5QY6BgzeUtKFGqc2pDyP8WAUzQ6E1-3oYgZTY0g@mail.gmail.com>
- <6007f37089d14eb14deed54d34921f0ef691e1fa.camel@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="h2WIKRXn";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EfDftZA6"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6769neaT1277839
+	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2026 12:09:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=ktRiHTx7t1faG0a+hDMeHugxgAdQx3BfAqT
+	E17eP2eM=; b=h2WIKRXnWG1D6DltOfi7KCug7ftXmatSwrjdxe8tcIPfBCFkZUF
+	JUjrBLjZBo2KKEcvJ+KpwlC3ZnRjeFE0DuPbq4FqtlNUZJ4oEYHVSc6HayaRqTvB
+	nnBFx0Zxls2/hoUi1MwszFtm0QJ99I/MxkLs4lqQ9CdEiXsPUwhSdfozUT/eI2o7
+	ljA03j4LPDpclTy05w7OJcDT0+dvDEGHWD+xHDmsFy8M00QxHmjuE7rhx9yxH5h7
+	OR7QH3EzRL2mdAU5O5SWELMMkzR4JE3Fkmj4LQfyW/JaKbALzcfnY4OaeCr/ezyn
+	BWjCK8YtVU4cvOXGOpxhyD3xA46oqCvoEQQ==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fvjuej1jn-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 12:09:47 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38f57e31b6eso1902071a91.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 05:09:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1786018182; x=1786622982; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ktRiHTx7t1faG0a+hDMeHugxgAdQx3BfAqTE17eP2eM=;
+        b=EfDftZA6rHdYkzP/Y8yqt/tXCWTj9cxov+oKZDc0h54FIRB2LctKqqy/Tj8wU3+vsb
+         EyMSe0q71SabaJnB5bWt1YlDtPQguUiuIVElarO30lj2eTGR16ul3XtSPmEL3tEvjnG5
+         +TW+yURB5oMFLO9j7sIZekHwQnVuuoGkONZVWR3Vnq2q3wZ9y4pvkzXMMHTtEGP5V7MT
+         o3/yrlGgeENjBdKY3i7+oZEcPPrDYd22Mezq1snR57o04egjMVwzOGmuKoB82k5NVP8e
+         Twh6y8Q0vGsQIPbxUp+pZ8pkkBUFCPPXLhI8mXlzCCZm8Ysg1gN1iiqDCtR4wVKK0Ojb
+         9UEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786018182; x=1786622982;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ktRiHTx7t1faG0a+hDMeHugxgAdQx3BfAqTE17eP2eM=;
+        b=ccCa8tcGzDoDtaChnRWgHaQZD/cnsHg/Srs02t5eqaRAoz3vuXtgU27wAaYXzCFIrS
+         rpSFbqIoP2Jv4mUxWR6d/zjsQcCkCyReJGPYSV2n7P7QKZTfCcrNAjobCb+07QTaDRWZ
+         DNkDJF9HvVPbR6ksz1/93qUXPu0DI1FcPWW7M2MtpDL3CUeM1IYMiAx91TlcEUVsd1li
+         Iq/XHNB0BRgZbl8yP3EWMf3UW51HxiQsT1dX8o9gup+nEu+ZBZr3vDsU4wnKLHZWyIwe
+         /dl6MDnRaTglxFRCnn7wnDrQ8EPraCBasJfLWgX0YNVl/Jik9dAZVFzTeE10jN2JMHgW
+         gTyg==
+X-Gm-Message-State: AOJu0YyQD1MLgqMyZrhPKEweUABnH3/e1GbKYt5zP3kNBEJffd2bXRO9
+	rDevVp8fuVKtdmH1nlBdnyXGuGlz9LLGnmwKqSChXw0j/3um6nzGT+GfD2bfHBbm2lJ1FyATLqS
+	bUyAOoze2QgzXKyOKDH51n19gfYZOo+wLmygV5T9KJU7BwcGh8XGMFktThMXN+fTmJPJhEQ==
+X-Gm-Gg: AR+sD12tk7f8ApHZht404x02r7OiLs7d6gDxF4R9IQmkHX7ulqss0S9tju9nyEr3PXz
+	n2CsR+OfGpEVEJe/6eCGVUR8LTkq+zmxDvhdzKU1OeAO0Sl21kLG9lbl130kUusF2CZhVF/042G
+	3i0K9Q2MpSGRy31Oeuj+4kUYoN/NBvGg6OU3P708A8Zrc0WUti+I9cFOzv5rT+tiIB+wz0NuapY
+	aqXS2zkKTt+HvKiCNbMHwKCPOJGgcknsstqrLJ4XkBcOfHvQXJXdn1f33wH2m7zA6611mcARvlv
+	pXucODJ3QniW7dbegGhGvTBdMnlKIlWWGFJHKUGLh0qcNvtrRyosdi8qy8rLyiI/6aWOK6JlShx
+	OtdnsWZZBhdlBH+3zsGjyyek5P2jGEqslb6JWc5HcFUoWhaphzRMe
+X-Received: by 2002:a17:90b:17c5:b0:37c:607b:2cd9 with SMTP id 98e67ed59e1d1-3903b9f3ee3mr12286129a91.0.1786018181905;
+        Thu, 06 Aug 2026 05:09:41 -0700 (PDT)
+X-Received: by 2002:a17:90b:17c5:b0:37c:607b:2cd9 with SMTP id 98e67ed59e1d1-3903b9f3ee3mr12285830a91.0.1786018179780;
+        Thu, 06 Aug 2026 05:09:39 -0700 (PDT)
+Received: from hu-kaur-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39085db4a6csm1469079a91.3.2026.08.06.05.09.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 05:09:39 -0700 (PDT)
+From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+X-Google-Original-From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+Subject: [PATCH ath-next v2 0/8] wifi: ath12k: extend device DP stats for TX and RX observability
+Date: Thu,  6 Aug 2026 17:39:19 +0530
+Message-Id: <20260806120927.3607733-1-pardeep.kaur@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6007f37089d14eb14deed54d34921f0ef691e1fa.camel@sipsolutions.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1786016338; bh=fLlyC2WWzGpA57gYNxu0gi5EVGg83nFZiTa91Q+iepA=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
-	b=JXu4DdVlV8VFgq8sIy0qeIIHOvDUAKqPtCMa3f/mNQd3v6Q8oHGauTuC+sU2GNeKc
-	 wcZKKANzKBh9uOS6q6vHyktjVQY+toPMyhSfBsU3zATrMX2HjpVcoEehQ1/5Di479A
-	 LOs5QhYpTyZ4JzcQp8xRW/6Yb1dlajzuJ1J5vI7g=
+Content-Transfer-Encoding: 8bit
+X-Authority-Analysis: v=2.4 cv=aNzAb79m c=1 sm=1 tr=0 ts=6a74798b cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22 a=EUspDBNiAAAA:8
+ a=olAotSUzlDmdGhVfZMkA:9 a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-GUID: KFWdjwsxhKOWNgxQkWTmTuyBf8rGqb6k
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX43zciB+0uBtv
+ UpWg0uzPpagNhRj97X853+ZIck5EMgIUeuQ9IV90Sly6asO6vthHVz9r5e3CWDNt5SAOqW7HKSe
+ FTBHLnux54fN0XwTbOz57YBV0873tVySoyFj5Su8MCtU27pSKvPOMi5l+8UDFny5Q5SEAKf4hah
+ vn00mh1f9E9YBUAPgyrsuEzIbpSVnWtkRxUnlpzz4l+sHOf/OKU5eBTMQjuraL8Sj3InwWUOfC6
+ oq/WBGHe0mbW/ttQc0ES5LrO+0ZLnIOcQwMp9gRnDlmgCeqAlRYEepIWrk7KGx6lQjR0T6R7GPR
+ 4Ij+7oMiSsrzaWXJVxWRQqTMeEO5vORkiKKK8WW577DJ/qhOtggvo66rwqPx5StPLNVzSF+TkZX
+ cmZ8NgnLTTNNhf56sXE3W8m/dXvIlBUYVudZ4e2ExxgsrHRo7154AKooDeIPukkPoxYLzLCJn/g
+ htFFpn0zZqyZjs00OBQ==
+X-Proofpoint-ORIG-GUID: KFWdjwsxhKOWNgxQkWTmTuyBf8rGqb6k
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX3rjGz1MRyWx4
+ JS0io2Bh2wcRsTnxrmN2txV/UfBJSBMeOTAFaoBKUZVRyXTjImEx9MDjbe9aNd3bCmxd9mxIys9
+ S6mtfrPod3I9p0B9NZQAqaaqCzcVtgM=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-05_06,2026-08-05_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 phishscore=0 priorityscore=1501 lowpriorityscore=0
+ impostorscore=0 suspectscore=0 adultscore=0 clxscore=1015 malwarescore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608060095
 
-On sie 06, 2026 12:15, Johannes Berg wrote:
-> Hi!
-> 
-> > 1. Every AI-generated patch sent by syzbot has been pre-reviewed and
-> > approved by a human engineer. The person who approved the patch is
-> > listed in the From: and Signed-off-by: fields.
-> 
-> Yes, I realize that. But the experience still seems to be one of me
-> effectively consuming pure LLM output, just via an intermediary. If I
-> had the time to do that, then I'd be perfectly able to talk to an LLM
-> directly, cutting out the intermediaries, and get the issues fixed that
-> way - much, much faster than writing everything in emails.
-> 
-> If, on the other hand, the intermediaries actually do the necessary
-> legwork etc. then I don't think this whole process is necessary; I don't
-> think using "b4" would be a significant hurdle in the process, and
-> that's really the only thing this helps with? Maybe LLM access (not
-> everyone has effectively free tokens), but that's still enabled by
-> syzbot providing the service over on the internal/upstream-moderation
-> list I guess.
-> 
-> Now, of course now that I say this (and you disabled it) I guess I'll
-> just see the patches pasted into an email manually instead, and I've
-> lost the signal that I could use to just ignore them entirely, but at
-> least I've been honest about it - and I guess I'll still silently drop
-> patches where the "human engineer" has no idea what they're doing. Even
-> having Reported-by: syzbot has been a signal of that to some extent.
-> 
-> I do think syzbot is a bit of a special case - at least if there's a
-> reproducer it's trivial to tell the system "hack the code until the
-> issue no longer reproduces" - but that's almost certainly guaranteed to
-> not be a useful patch yet.
-> 
-> The system, in a case like this, is almost certainly going to provide a
-> very narrow, targeted fix (with an annoying wall of text explaining
-> exactly that), but I think that at least the human in the loop should
-> actually take a step back from that and ask what the semantics of the
-> code should be ... I've played this game with Slawomir's first patch
-> myself, but that clearly cannot scale if the original intermediary
-> doesn't want to do that.
-> 
-> Maybe it's something you can even tell the LLM to do, somehow, so the
-> first draft is better. In this case, for example, why the hell did it
-> decide that it made any sense to have multiple branches of the same
-> switch statement - and there are even only two! - implement the same
-> validation? At the very least I'd expect the "human engineer" to take
-> that step back.
-> 
-> This is why I'm refusing these patches, because clearly nobody actually
-> even bothers to look at the semantics of the code before or during the
-> patching. Does pulling out the check outside of the switch change the
-> order of errors? Yes. Does that matter? No, the new order of errors for
-> NL80211_TDLS_ENABLE_LINK would actually - if you think about it (!) -
-> make a lot more sense! Am I surprised the LLM doesn't do that when you
-> tell it to make a targeted fix? Absolutely not.
-> 
-> But I really cannot make that judgement call myself for every single
-> issue like that, if I could, see above, I could be doing all of this
-> myself. Need the contributors to do that. Slawomir did that after I
-> prompted (pun intended!) him to do that, and it didn't work out so well
+From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 
-It didn't? Or it did? :) Well I do not have new version of the patch yet, but I'm still
-investigating correct approach and testing a lot. I see now, that I should do that in the 1st place.
-I'm sorry for that.
+Extend ath12k device DP stats for TX and RX path observability.
 
-> and we had a good discussion about it, but again, I can't provide that
-> support all time.
-> 
-> > 2. For the patches already sent to LKML, the bot *does not* send
-> > automatic replies and *does not* automatically submit newer versions.
-> > Once the patch is on LKML, follow-ups, comments, and iterations are
-> > handled entirely by the human developer who signed off on it, so you
-> > have not been interacting with an LLM.
-> 
-> Thanks for clarifying. I've definitely seen pure LLM replies (sometimes
-> even with the output saying things along the lines of "the reviewer said
-> this, I'll explain...") but that might have been in other contexts,
-> clearly it's not just syzbot which enables people doing things like
-> that.
-> 
-> > I apologize for the frustration this may have caused. We'll stop
-> > sending AI-assisted patches to the wireless subsystem.
-> 
-> Apology accepted, and thanks for disabling it.
-> 
-> Slawomir, Krystian, I assume you mean well and I apologise that you're
-> getting caught in the cross-fire here. Even the targeted fixes are still
-> fixes, so I understand from your perspective this still made sense, but
-> from mine it just absolutely cannot scale, both in terms of long-term
-> maintenance (sprinkling checks all over the code disregarding the
-> architecture) and also in terms of review bandwidth etc. I'm sorry
-> you're effectively the two first victims of this new process.
+Patch 1 fixes out-of-bounds array access on TX stats arrays
+fw_tx_status[], tx_wbm_rel_source[] and tqm_rel_reason[] by adding
+likely()/WARN_ON_ONCE() bounds checks before each increment.
 
-Thanks and now worries! It's a good lesson, that the overall subsystem might need a better
-approach. I know, that I sometimes will overlook this.
+Patch 2 renames the local variable wbm_status to htt_status in
+ath12k_dp_tx_process_htt_tx_complete() to accurately reflect the field
+origin, and simplifies ts.acked to use true directly.
 
-In the end, I should be saying sorry for wasting your time. And also, I should say `thanks!` for all
-the good hints and "prompts"!
+Patch 3 adds a per-pool TX descriptor allocation failure counter
+txbuf_na[] indexed by pool_id to track which traffic class ran out of
+TX descriptors, and exposes it in device_dp_stats debugfs.
 
--- 
-Slawomir Stepien
+Patch 4 adds a write handler to device_dp_stats debugfs so that writing
+'reset' clears all device DP stats counters without reloading the driver.
+
+Patch 5 introduces a new dp_stats.h header with the
+ath12k_wbm_err_drop_reason enum, adds per-drop-reason counters in the
+WBM RX error path, and exposes them in device_dp_stats debugfs.
+
+Patch 6 adds a 2D sent_to_stack[ring_id][device_id] counter to track
+successful MSDU deliveries to the network stack, attributed to the ring
+owner's dp so it is directly comparable with reo_rx[] in the same
+debugfs file in MLO configurations.
+
+Patch 7 fixes the REO Rx Received debugfs output to use 0-based ring
+indexing and lowercase "ring%d:" consistent with other ring counters.
+
+Patch 8 adds a dedicated sw_desc_fallback counter to track how often the
+WBM RX error path falls back to SW descriptor retrieval when HW CC is
+not done, distinct from actual packet drops.
+
+v2 changes:
+- Fix txbuf_na[] indexing: use pool_id instead of ring_id so the counter
+  tracks TX descriptor pool exhaustion per traffic class, not per CPU
+  ring (patch 3).
+- Fix sent_to_stack[] to use a 2D array [ring_id][device_id] attributed
+  to the ring owner's dp, making it directly comparable with reo_rx[] in
+  the same debugfs file in MLO configurations (patch 6).
+- Fix double-counting of WBM_ERR_DROP_RXDMA_GENERIC: move the increment
+  inside rxdma_err()'s default: branch so it counts only unhandled RXDMA
+  errors, consistent with WBM_ERR_DROP_REO_GENERIC (patch 5).
+- Remove WBM_ERR_INV_PEER_ID, WBM_ERR_DROP_INV_COOKIE and
+  WBM_ERR_DROP_INV_PUSH_RSN from the drop reason enum; these have no
+  corresponding increment sites in the datapath (patch 5).
+- Remove leading space from "WBM Rx Drop Count" section header (patch 5).
+- Add likely()/WARN_ON_ONCE() bounds check on ring_id before indexing
+  sent_to_stack[] (patch 6).
+- Update commit messages for patches 3 and 6 to reflect corrected
+  semantics.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6.r1-00402-QCAHKSWPL_SILICONZ-1
+
+Signed-off-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+---
+
+Aniruddha Mishra (2):
+  wifi: ath12k: add WBM RX error drop statistics
+  wifi: ath12k: add WBM SW desc fallback counter
+
+Hariharan Ramanathan (4):
+  wifi: ath12k: rename wbm_status to htt_status in HTT TX completion
+  wifi: ath12k: add TCL ring TX buffer allocation failure counter
+  wifi: ath12k: add device DP stats reset support via debugfs
+  wifi: ath12k: track per-ring RX sent-to-stack count
+
+Pardeep Kaur (2):
+  wifi: ath12k: fix out-of-bounds access on TX stats arrays
+  wifi: ath12k: fix 1-based ring index in REO Rx Received debugfs output
+
+ drivers/net/wireless/ath/ath12k/debugfs.c     | 79 ++++++++++++++++++-
+ drivers/net/wireless/ath/ath12k/dp.h          | 14 +++-
+ drivers/net/wireless/ath/ath12k/dp_stats.h    | 25 ++++++
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c | 52 +++++++++---
+ drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c | 29 ++++---
+ .../net/wireless/ath/ath12k/wifi7/hal_rx.c    |  5 +-
+ 6 files changed, 178 insertions(+), 26 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath12k/dp_stats.h
+
+base-commit: 691e5e43b2aa5da35b044532845a3b230e540894
+--
+2.34.1
+
