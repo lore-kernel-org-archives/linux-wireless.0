@@ -1,90 +1,91 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921CB389116
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 12:09:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EB60479890
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 12:09:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786018198; cv=none; b=bJ6U8qRNRJ/53iS3AjIdJdjn5Z7Mky00oe/g30KtkcqPSWCd5fCTtLIHZWbmyvEyYdVj+isH5y3mAloXC9d9UORQLq/NA9im4yPHoJjldEn2JAFsOSnjTaJI6/RQGi2s8qg3X918yKKT2kEhldnaymG2gBMWa6e91Qw737/xyZo=
+	t=1786018201; cv=none; b=UY6bf3DrHqGJ7OLYhsnaMtXQgcjpl513KSrG7JIrt3UpvyULIgB0yjiDlU3mtNhnmRApZeOtNAIMNLu54EZSks0Q7rtmvZMTTmHBxBTaUa4m0LXQ3kdGLCZAtt12eKrFggL3FZ+I7Chv5FXax+Ms7XpdNFNY+vYBGLyXHpSHhkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786018198; c=relaxed/simple;
-	bh=Nos9PmBDlRSlqKK9yIhV2JUoRxNyQBtaRS9UkHvyeUM=;
+	s=arc-20240116; t=1786018201; c=relaxed/simple;
+	bh=LBC9I9XwzwRIsKhUcG67uymeyj0tGJXiO2GSiFFJ5dQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DK0JC3swwi9LK5+bSUGdVV6ZCE4RHWVBUnORAIZcgfYfctTWObDKm5Iwaz8PfKhm3g1UzmIPUPxgZGMQehEH5gM5bJxrqVSogETntTYBeeHQhMirCNs7Ro8Em9YYV0qFxMWW6bKYMxGARraj6+z3oPX05SbDaNzZAw2z7o6uyL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AEBPcCUa; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=UcheFEfh; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=R7RYCJcop/ZIZaa8AMtKnN0QwaRTHwQRSHXu53Nc40a8NGBc4fl8fpoYhipB8Zp9Lmxu+bzQ75Q4+a237ECaQVNTbX63td+TGWdpyc7T4dEeAHTyBSGYth09Vh1UD7UKi2SP24QyG7Qr0wrHUfqGup/d5tvzFyDG1iWmW2/c1rs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=oz6KCXPX; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kWgNQspb; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AEBPcCUa";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="UcheFEfh"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6769ndcj1308830
-	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2026 12:09:56 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="oz6KCXPX";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kWgNQspb"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6769nlZO1228267
+	for <linux-wireless@vger.kernel.org>; Thu, 6 Aug 2026 12:09:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=WfGjm0JB1ke
-	59rn7c3qNVGhDamzhVdkvGmTOqnhyvnI=; b=AEBPcCUayOYg3mCrdXGgBV4+zWB
-	LsETg89VdNaTvutjm/wV5HRvXLhFSDuAGNXcZ7ukEOmxkgFVR6W3MWCuDuPaw27X
-	ECPn9RP4Td9xu76z3f5zFfDHBaIVnVtH3VIKOoQfxOVYS2OlHQZ+rYZfRRVVRQ+f
-	Ltxt4b/rW+JRFFdw0/M+909SU3Rv0F1Pszr/PVbLZ2FagMEY/Z0Ak0udCXjBfx8s
-	UWhLvtEZ1qZYC77nlUICjxPNeIex/bI03xg83VsntE/nQsKKVWcA06665d92p3k/
-	Z4MiFkhu8mVkkEDPwmwashGDutAKO8Z4TYtHnUGHJ8LVrkCHUNLOOXbAY2g==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fvp72956g-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=XSGzh9lPVIO
+	X0gxfEZMJTF4LJynlHT+NQszGI18tGyg=; b=oz6KCXPXIQbVa338UfUmDzF1HUy
+	GQaZ0Gbmfn/1A8tgMc9UzUA8SRiY89C8phDQRJ5zp+XGLO3KKt+h5MPG9J2qnWMz
+	QtByoMNDJZFaGeICMYvorkDUCMNTM1R+aqAE51eg6OvaAfQA8Zv2l/nEShuHyg0P
+	YzDwul71+qJqkIInzy8zhG5h9JWmvFtrGubK9ciuqZkRlM144BjZX46dT1PlBxeG
+	QeVfLuuoVOacjJFMh1njQE8pfNdmJF+pJX8qOv5Sn1ctXlluk/Yo6cQsmd7vCsGr
+	pw3T25UbczmdGg63O17z1sCF/T9DSxXwytHwHQdsU+/C04xg9nQ3grqCPIg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fvqdugt21-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 12:09:56 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38e667368f0so3485039a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 05:09:55 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 12:09:59 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38e8fee6af3so2317069a91.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 05:09:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786018195; x=1786622995; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1786018198; x=1786622998; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WfGjm0JB1ke59rn7c3qNVGhDamzhVdkvGmTOqnhyvnI=;
-        b=UcheFEfhwg4vIDghdoqfOKzT0XZoCcWubRRGh7WG0rlvT/5gARsb3TdFkIV515QiX4
-         e9b0jxhVtnmtPFhDy3g9y4fuHd/s0bTsZc9GlfsimAyMcW76r1Fqza/KifuXMi/H7jh/
-         gOpki/RTBdJ3e6O+CmVrIQo//VJ96bmHJB0Xx0q2Egx8alEchb8kbsLV80/XhZwcwwqv
-         OSvC1We/vJBtVqG+osRMuaFvhnPmWcovd2wlzCtd3gu6EPnhZhWafRsys2biwQnvuE5j
-         Pw1kwlgJHyaX1zc/e1dWSjXxdh8VV0MkjfR5ERXyhhYfEI3KxkR0WpHw3pFlniezlr4T
-         76sg==
+        bh=XSGzh9lPVIOX0gxfEZMJTF4LJynlHT+NQszGI18tGyg=;
+        b=kWgNQspbZv8qPtBtickMIbIK4Yjf0EoLwd/sFamtBK6mI0hY3eQRNPpHABBYpSktP6
+         NNvZxRfAqUpYiSCQsJwvMT4PLm6Tx4hRzD/fMfyJZHO9C0ASbFM8hg7ZzCiGnfTIixxV
+         tNHpEsSDTJD713JiSwA91ddPqK7CCp5dxsOUXWTeCV83i+5woKcTHfghvjTf3OA5psBH
+         oRapeth6Dd5luUWUiWLeQtf4v0ESFtbPWg+6g2qk0Q2XGutS0w1JKHVGi51qtXOXXshY
+         fTkM+zDELTFcwhk/j9n59gIuUOaher3sLxGut7ovR6KFVwW/FTAsbh+vdMNqVZQJb7+h
+         fq2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786018195; x=1786622995;
+        d=1e100.net; s=20251104; t=1786018198; x=1786622998;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WfGjm0JB1ke59rn7c3qNVGhDamzhVdkvGmTOqnhyvnI=;
-        b=oC6rH164VudZfOCxXkff8Oc8FwZuGkzNyzRb7FfXV4XiDCZT8rFC02gn6h8Sye/lmE
-         3b8wdHP9Jv4tT1zyVLxMQhYJnyNY+1T0tCGbBvlNOgo5+I4Wqjqg7wlrqN4yhUM87fi/
-         Myfpd/Phlt5vbVb8rsYPy0ymQBhxdD36uu8c43Orz6LayZRIkZiWV9uBOXw5MxqPHFxS
-         +H0t3EusqHNZxMcoOltGmYlnbaYNF+HkyuEMMECw9+fOzEAngqN/oQBVKqAEEsVa/yG9
-         /fI/XC1E1sLeqhHeiNJZZv18CIraWTP34ECR7A/e7iWGQoGhaycrlTZa38yjO5XuTyfc
-         EBvA==
-X-Gm-Message-State: AOJu0Ywc/AM0tekzElD4Wr0O2R+w5G8/fGCMkfOG10jggq0mJu9c/iHn
-	Gy7SDR6xB4fLKDXL71rgIXhZqPzbx/T2kYyabUQzZsW7Ndtb7m1MreErFqK44J2XvxIb8mSgjoJ
-	PJSHcidAFVgjLKuAoxTOvQOposaJAQ4A74ts3PIAxD36v5/SVJksPzhQ3SFVbfjn3ISq4hQ==
-X-Gm-Gg: AR+sD11vRrdZL9g5syQhg5HeNjVQfGqYpIJJU/GyD/clAjJFzwPTww3Rc1yp+OVonDE
-	iM/f2lgxuX0W3BjApqsTS3tumIbnxJj6HSjaLs+fL97lf+xZGMvyEO24fvO/IV39W+yI6JXd3TT
-	zANA7RS4N9+nvPgTfR8BOU9rs51Z8doMuX/0Al+a4pnDA/JgthNEvuafRz57kGX//XV9LDyd6yN
-	+FHKE5e2HmrGtZyQa7EiyLVDNLVWPe7UqSBdNEN6ZNLJMDyL0dfOwrfizlrlOcs2Ked/igDHQ3u
-	TsUJgu9G72+OphDX6q54i+cWH0RC+mGCnNXioUfSYc2d1IubcXryNLplbUI/q594vbUXJfkFcSR
-	BKjfSfDnlgDybg8hbRg0W+1brErT1H2E8DlMfhpITkdIXctlsQmXn
-X-Received: by 2002:a17:90b:56ce:b0:38d:f94d:4c6e with SMTP id 98e67ed59e1d1-3903c5faa8amr15295121a91.17.1786018195021;
-        Thu, 06 Aug 2026 05:09:55 -0700 (PDT)
-X-Received: by 2002:a17:90b:56ce:b0:38d:f94d:4c6e with SMTP id 98e67ed59e1d1-3903c5faa8amr15295045a91.17.1786018194496;
-        Thu, 06 Aug 2026 05:09:54 -0700 (PDT)
+        bh=XSGzh9lPVIOX0gxfEZMJTF4LJynlHT+NQszGI18tGyg=;
+        b=FvYzslhe++MU2pprBQMBs7B28Lwmra8RxV6krtnNRoLEVOgr3/qU2I9BguGF5JlLO9
+         Dy4ysFmvRy/5rGEqLJemHf1FrI93pwhbNaBwI47hM45PTXw0vo7jIoK/Ej0WlnI6x63Z
+         i9nAOCDQgr1MYj6IdWRaiz9U4eIeAUDWwEWs2Mf33TkF507OBMVYPR5IBxbBtIxTmMhi
+         1CAQmLKr3qio0OPcgVjZnbJ6DhtuX/B7U/BfS5Oqgl5oEXvdwfU7KnGkvE+sLJtYWH3B
+         i8uXtdZjBetwvURwQYgvzUMOXdCNy3EKJUujhjjdSHnKNRamHQnUiYlPaegPiHX3ZNlr
+         ihxA==
+X-Gm-Message-State: AOJu0YxD+JAk4ADSjZiNEFqhUXzMXmP8q4QxBgjNS7gAQJxw7DKRND5q
+	RnPo3W9CGxgNTp6xtFxpPcJLG/QC0YqjG/xkEWscUooG09ux3xIkcIEKidGdjvC2fUvfInqS4RO
+	uywM+C7EmzPn/XMinlt0Gaeq+XWrleSlkQ6KHEuGBKfEmjbLM+PMmDI4wr9On9398gMcsQBWavi
+	Dhmg==
+X-Gm-Gg: AR+sD12d7httkt+QcSNYAsuVMld0G2gVSCd8/OL66ZB3DN/v7St0gwx0/hztNIebGQh
+	w8UjN3Ck0kx+OwUUQmHCiU1sYhJPmDKNq0Aq34LQI9fJbwsK5oFgSE6j5c/aPyiN2dvZ9EGBdhP
+	OgHgINdf/nZ/auUcB98JGZ+o2jxfeeVEkenRWMNgfbH7zWWpi/5GZ8E59cWG6RfYnKErY3ZlTOP
+	poSqSQlXb1BcyTcGGVOtlwIgI/vZF1/c6MzH/a9w6LvhYn/lckMPhA/v7bUoDtpa+egpLF1d3/E
+	lAHSxHBLl52yYTAAt+ZteQGnTi3GECuIhsRSV/P0ykcsq7lw4OWHnIil/fbFNoTcYS3E8QAjYv4
+	YaFmFkBmLK2s8HKwcmh4p3EHTq9J/as3Miq9K1eJ0vrI2kMkPH4aE
+X-Received: by 2002:a17:90b:520a:b0:366:10f1:3d91 with SMTP id 98e67ed59e1d1-3903c54adbamr14271965a91.1.1786018198309;
+        Thu, 06 Aug 2026 05:09:58 -0700 (PDT)
+X-Received: by 2002:a17:90b:520a:b0:366:10f1:3d91 with SMTP id 98e67ed59e1d1-3903c54adbamr14271860a91.1.1786018197673;
+        Thu, 06 Aug 2026 05:09:57 -0700 (PDT)
 Received: from hu-kaur-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39085db4a6csm1469079a91.3.2026.08.06.05.09.52
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39085db4a6csm1469079a91.3.2026.08.06.05.09.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Aug 2026 05:09:53 -0700 (PDT)
+        Thu, 06 Aug 2026 05:09:57 -0700 (PDT)
 From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 X-Google-Original-From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com
 To: ath12k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-        Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>,
+        Aniruddha Mishra <aniruddha.mishra@oss.qualcomm.com>,
         Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
-Subject: [PATCH ath-next v2 4/8] wifi: ath12k: add device DP stats reset support via debugfs
-Date: Thu,  6 Aug 2026 17:39:23 +0530
-Message-Id: <20260806120927.3607733-5-pardeep.kaur@oss.qualcomm.com>
+Subject: [PATCH ath-next v2 5/8] wifi: ath12k: add WBM RX error drop statistics
+Date: Thu,  6 Aug 2026 17:39:24 +0530
+Message-Id: <20260806120927.3607733-6-pardeep.kaur@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260806120927.3607733-1-pardeep.kaur@oss.qualcomm.com>
 References: <20260806120927.3607733-1-pardeep.kaur@oss.qualcomm.com>
@@ -95,113 +96,358 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: ukV0bahsxWlGeYqfrsTBK7AfiH9aJjnz
-X-Authority-Analysis: v=2.4 cv=JYCMa0KV c=1 sm=1 tr=0 ts=6a747994 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-GUID: YshBC15tTxi7i0iSZgVtl4i-aiczIeMz
+X-Proofpoint-ORIG-GUID: YshBC15tTxi7i0iSZgVtl4i-aiczIeMz
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX47oJ99twKwL/
+ HqJi3Odfw+DW9UB2zii7yzjEbFdeDXx1E6s3S4bmJXCg6PUcXq2ktDRqoWTDJRML6x0odqOXb8U
+ 4/2IPYLwtrH3MXYpDMWWSZNTl+dodIhyle0EVoGx1erbrLQStt1VlSIMFN3zfwwnfFBP0Jb4GaU
+ b951ljq9PJxAjGyO9qwy3yUQsZFhvp5Pd14/JtIlYJP2VFA0K54ksTvFKUWuX3MgeGzcIiT/QrA
+ nXAnUt2xnEFgrtjpFt+ORbJ6o6hQ/yDfO/zBr3p7f1cd0++4nG5Lx/avJnOKXqwqQNcfFUBq746
+ EtXYj3lFvKYnHIkAMEr9qKqGpB/fZr0gznRPs+eaxey+dvEoLapllIDiT7kIK5HOgenBe1ZQS64
+ V7c4wBW4gTNZBF7JySonUDA8XmgLEZOj+LKvHhbo/GQ8AxoZ/W+z7nlhClDKbb/qKizOtQnhHdU
+ FVaqpM1oA3J3uFcvH/w==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX/4Fux373HmrW
+ ofAJ5jMGvWk+bwhVOp9GOtyDuTnuICdb3wvMDOhRIHyyh3IuF3nrlDHwOBartZHaIf/nE/G8EG4
+ TqxpPLyCFRgIL7BNWUrRbwJXixn5XeY=
+X-Authority-Analysis: v=2.4 cv=bdtbluPB c=1 sm=1 tr=0 ts=6a747997 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
- a=_Iy9b4Js2nCRBGGyCYcA:9 a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX7+3deVuh4IkL
- Ifoe2WjE1m6mfsB7tAYOUHB6ux0QSpAZqWbXe770p7x6WXA6x1iqMUM7YZpStZfiyhqzygPMF3y
- D0jPSYXmQXaH13LDQreEhMLzrmtFie23CMzAjFn7+Vd24UM17SPP9Gaxevh1Zg0vyMirefMIuTK
- yO9FigzgCV3REEXUS2hPXTLt+8rOPGMpBKTzExUhjMNP860bcNZga7OZLWEi6kFhJZvEBdnC5JX
- L6CNutt9ALyNAYmV04J9zROUJAwowFV1KgxkM/oyVFEccabYmcbVzk7E/+wwmqwM8D68WWUUJ4B
- GPS6hRK4eA2RRLMDQfVkHmuNq9mEqeKy9z4V96FPQ+sfaJ40O8maPX+ZnsK4Wq2m+4GxyDdUQ7p
- phDEtPXX2Rp2YOOxVvdQelfT1yriS5QhI1HANOHz783lm2Bt7Zgox8W3IJvFyWmT/JE8WozrS/3
- eo8ae+1A0i6D9OOPMLg==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA2MDA5NSBTYWx0ZWRfX5xK+ERulYbFy
- IWIY3DN3ZwLUl0n71LsC/tgUvsYX16IwLzv1IZrO/1aSoQTXDgTjBndvXUIWn29VX3ItFtJ1CW3
- B/fRqsflDwfXPPIpuajLRUJMkgyxXq4=
-X-Proofpoint-GUID: ukV0bahsxWlGeYqfrsTBK7AfiH9aJjnz
+ a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=EUspDBNiAAAA:8
+ a=njqguKqIJykaDPTg3YMA:9 a=uKXjsCUrEbL0IQVhDsJ9:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-05_06,2026-08-05_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 impostorscore=0 priorityscore=1501 phishscore=0 adultscore=0
- malwarescore=0 lowpriorityscore=0 spamscore=0 suspectscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608060095
+ phishscore=0 clxscore=1015 spamscore=0 bulkscore=0 malwarescore=0
+ suspectscore=0 lowpriorityscore=0 priorityscore=1501 adultscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608060095
 
-From: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
+From: Aniruddha Mishra <aniruddha.mishra@oss.qualcomm.com>
 
-There is no way to reset device DP stats counters without reloading
-the driver, making it difficult to isolate issues to a specific time
-window during debugging.
+Without fine-grained drop counters, diagnosing RX failures in the
+WBM error path requires intrusive debugging. Introduce per-drop-reason
+counters to track exactly where and why packets are dropped during
+WBM RX error handling.
 
-Add a write handler to the device_dp_stats debugfs file so that
-writing 'reset' clears all device DP stats counters. Change the file
-mode from 0400 to 0600 to allow write access. Use strcmp() with
-newline stripping to match the input, consistent with the existing
-pattern in debugfs.c. Return -EINVAL on unrecognised input.
+Introduce a new dp_stats.h header and define ath12k_wbm_err_drop_reason
+enum there covering all drop points in the WBM RX error path: descriptor
+parse failures, SW descriptor retrieval errors, null partner DP,
+invalid HW link ID, null pdev/ar, CAC running, scatter-gather drops,
+and invalid NWifi header length. The new header is included by dp.h
+which is already included by all consumers.
 
-No lock is taken around the memset since the counters are updated
-locklessly in the datapath; taking dp_lock would be misleading as it
-does not protect device_stats updates.
+Add ath12k_device_dp_rx_wbm_err_stats struct grouping rxdma_error[],
+reo_error[], and the new drop[] counters, replacing the flat arrays
+previously in ath12k_device_dp_stats.
+
+Add bounds checks before indexing rxdma_error[] and reo_error[] with
+hardware-supplied err_code values to prevent out-of-bounds writes, using
+the same likely/WARN_ON_ONCE pattern as the TX stats bounds fixes.
+
+Add ath12k_wifi7_dp_rx_wbm_err_free_skb() helper to combine drop stat
+increment and skb free at each drop site, reducing repetition. Define
+the helper at the top of dp_rx.c before its first use.
+
+Increment WBM_ERR_DROP_RXDMA_GENERIC only inside rxdma_err()'s
+default: branch so it counts only unhandled RXDMA errors, not every
+RXDMA drop - consistent with how WBM_ERR_DROP_REO_GENERIC is counted.
+
+Expose WBM RX drop counts in the device_dp_stats debugfs file under a
+new 'WBM Rx Drop Count' section.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6.r1-00402-QCAHKSWPL_SILICONZ-1
 
-Signed-off-by: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
+Signed-off-by: Aniruddha Mishra <aniruddha.mishra@oss.qualcomm.com>
 Co-developed-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 Signed-off-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath12k/debugfs.c | 35 ++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath12k/debugfs.c     | 23 +++++++++-
+ drivers/net/wireless/ath/ath12k/dp.h          | 10 +++-
+ drivers/net/wireless/ath/ath12k/dp_stats.h    | 25 ++++++++++
+ drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c | 46 +++++++++++++++----
+ .../net/wireless/ath/ath12k/wifi7/hal_rx.c    |  5 +-
+ 5 files changed, 95 insertions(+), 14 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath12k/dp_stats.h
 
 diff --git a/drivers/net/wireless/ath/ath12k/debugfs.c b/drivers/net/wireless/ath/ath12k/debugfs.c
-index ec49692107a8..0e446a666f4c 100644
+index 0e446a666f4c..f9653fb7b038 100644
 --- a/drivers/net/wireless/ath/ath12k/debugfs.c
 +++ b/drivers/net/wireless/ath/ath12k/debugfs.c
-@@ -1220,8 +1220,41 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
- 	return ret;
- }
+@@ -1071,6 +1071,20 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
+ 		[HAL_REO_DEST_RING_ERROR_CODE_PN_ERR_FLAG_SET] = "PN err",
+ 		[HAL_REO_DEST_RING_ERROR_CODE_DESC_BLOCKED] = "Desc blocked"};
  
-+static ssize_t
-+ath12k_debugfs_write_device_dp_stats(struct file *file,
-+				     const char __user *user_buf,
-+				     size_t count, loff_t *ppos)
++	static const char *wbm_rx_drop[WBM_ERR_DROP_MAX] = {
++		[WBM_ERR_GET_SW_DESC] = "SW desc error",
++		[WBM_ERR_DESC_PARSE] = "Desc parse error",
++		[WBM_ERR_DROP_INV_HW_ID] = "Invalid hw id",
++		[WBM_ERR_DROP_NULL_PRTNR_DP] = "Null Partner dp",
++		[WBM_ERR_DROP_NULL_PROC_DP] = "Process Null Partner dp",
++		[WBM_ERR_DROP_NULL_PDEV] = "Null Pdev",
++		[WBM_ERR_DROP_NULL_AR] = "Null ar",
++		[WBM_ERR_DROP_CAC_RUNNING] = "CAC Running",
++		[WBM_ERR_DROP_SG] = "Scatter Gather",
++		[WBM_ERR_DROP_INV_NWIFI_HDR] = "Invalid NWifi Hdr len",
++		[WBM_ERR_DROP_REO_GENERIC]  = "REO Generic",
++		[WBM_ERR_DROP_RXDMA_GENERIC] = "RXDMA Generic"};
++
+ 	static const char *wbm_rel_src[HAL_WBM_REL_SRC_MODULE_MAX] = {
+ 		[HAL_WBM_REL_SRC_MODULE_TQM] = "TQM",
+ 		[HAL_WBM_REL_SRC_MODULE_RXDMA] = "Rxdma",
+@@ -1095,13 +1109,18 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
+ 
+ 	for (i = 0; i < HAL_REO_ENTR_RING_RXDMA_ECODE_MAX; i++)
+ 		len += scnprintf(buf + len, size - len, "%s: %u\n",
+-				 rxdma_err[i], device_stats->rxdma_error[i]);
++				 rxdma_err[i], device_stats->wbm_err.rxdma_error[i]);
+ 
+ 	len += scnprintf(buf + len, size - len, "\nREO errors:\n");
+ 
+ 	for (i = 0; i < HAL_REO_DEST_RING_ERROR_CODE_MAX; i++)
+ 		len += scnprintf(buf + len, size - len, "%s: %u\n",
+-				 reo_err[i], device_stats->reo_error[i]);
++				 reo_err[i], device_stats->wbm_err.reo_error[i]);
++
++	len += scnprintf(buf + len, size - len, "\nWBM Rx Drop Count:\n");
++	for (i = 0; i < WBM_ERR_DROP_MAX; i++)
++		len += scnprintf(buf + len, size - len, "%s: %u\n",
++				 wbm_rx_drop[i], device_stats->wbm_err.drop[i]);
+ 
+ 	len += scnprintf(buf + len, size - len, "\nHAL REO errors:\n");
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index 16675210806a..9b57b2170b60 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -7,6 +7,7 @@
+ #ifndef ATH12K_DP_H
+ #define ATH12K_DP_H
+ 
++#include "dp_stats.h"
+ #include "hw.h"
+ #include "dp_htt.h"
+ #include "dp_cmn.h"
+@@ -437,13 +438,18 @@ struct ath12k_device_dp_tx_err_stats {
+ 	atomic_t misc_fail;
+ };
+ 
++struct ath12k_device_dp_rx_wbm_err_stats {
++	u32 rxdma_error[HAL_REO_ENTR_RING_RXDMA_ECODE_MAX];
++	u32 reo_error[HAL_REO_DEST_RING_ERROR_CODE_MAX];
++	u32 drop[WBM_ERR_DROP_MAX];
++};
++
+ struct ath12k_device_dp_stats {
+ 	u32 err_ring_pkts;
+ 	u32 invalid_rbm;
+-	u32 rxdma_error[HAL_REO_ENTR_RING_RXDMA_ECODE_MAX];
+-	u32 reo_error[HAL_REO_DEST_RING_ERROR_CODE_MAX];
+ 	u32 hal_reo_error[DP_REO_DST_RING_MAX];
+ 	struct ath12k_device_dp_tx_err_stats tx_err;
++	struct ath12k_device_dp_rx_wbm_err_stats wbm_err;
+ 	u32 reo_rx[DP_REO_DST_RING_MAX][ATH12K_MAX_DEVICES];
+ 	u32 rx_wbm_rel_source[HAL_WBM_REL_SRC_MODULE_MAX][ATH12K_MAX_DEVICES];
+ 	u32 tqm_rel_reason[MAX_TQM_RELEASE_REASON];
+diff --git a/drivers/net/wireless/ath/ath12k/dp_stats.h b/drivers/net/wireless/ath/ath12k/dp_stats.h
+new file mode 100644
+index 000000000000..04d3892acff3
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath12k/dp_stats.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++/*
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++
++#ifndef ATH12K_DP_STATS_H
++#define ATH12K_DP_STATS_H
++
++enum ath12k_wbm_err_drop_reason {
++	WBM_ERR_GET_SW_DESC,
++	WBM_ERR_DESC_PARSE,
++	WBM_ERR_DROP_INV_HW_ID,
++	WBM_ERR_DROP_NULL_PRTNR_DP,
++	WBM_ERR_DROP_NULL_PROC_DP,
++	WBM_ERR_DROP_NULL_PDEV,
++	WBM_ERR_DROP_NULL_AR,
++	WBM_ERR_DROP_CAC_RUNNING,
++	WBM_ERR_DROP_SG,
++	WBM_ERR_DROP_INV_NWIFI_HDR,
++	WBM_ERR_DROP_REO_GENERIC,
++	WBM_ERR_DROP_RXDMA_GENERIC,
++	WBM_ERR_DROP_MAX,
++};
++
++#endif /* ATH12K_DP_STATS_H */
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
+index 95d87dd67872..b203513d63cc 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c
+@@ -12,6 +12,15 @@
+ #include "hal_wcn7850.h"
+ #include "hal_qcc2072.h"
+ 
++static void
++ath12k_wifi7_dp_rx_wbm_err_free_skb(struct ath12k_dp *dp,
++				    struct sk_buff *msdu,
++				    enum ath12k_wbm_err_drop_reason drop_reason)
 +{
-+	struct ath12k_base *ab = file->private_data;
-+	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
-+	struct ath12k_device_dp_stats *device_stats = &dp->device_stats;
-+	char buf[20] = {};
-+	int ret;
-+
-+	if (count >= sizeof(buf))
-+		return -EINVAL;
-+
-+	ret = copy_from_user(buf, user_buf, count);
-+	if (ret)
-+		return -EFAULT;
-+
-+	/* drop the possible '\n' from the end */
-+	if (count > 0 && buf[count - 1] == '\n')
-+		buf[count - 1] = '\0';
-+
-+	if (!strcmp(buf, "reset")) {
-+		memset(device_stats, 0, sizeof(*device_stats));
-+		return count;
-+	}
-+
-+	ath12k_warn(ab, "unsupported command: %s\n", buf);
-+
-+	return -EINVAL;
++	dp->device_stats.wbm_err.drop[drop_reason]++;
++	dev_kfree_skb_any(msdu);
 +}
 +
- static const struct file_operations fops_device_dp_stats = {
- 	.read = ath12k_debugfs_dump_device_dp_stats,
-+	.write = ath12k_debugfs_write_device_dp_stats,
- 	.open = simple_open,
- 	.owner = THIS_MODULE,
- 	.llseek = default_llseek,
-@@ -1232,7 +1265,7 @@ void ath12k_debugfs_pdev_create(struct ath12k_base *ab)
- 	debugfs_create_file("simulate_fw_crash", 0600, ab->debugfs_soc, ab,
- 			    &fops_simulate_fw_crash);
+ static u16 ath12k_wifi7_dp_rx_get_peer_id(struct ath12k_dp *dp,
+ 					  enum ath12k_peer_metadata_version ver,
+ 					  __le32 peer_metadata)
+@@ -1614,6 +1623,7 @@ static int ath12k_wifi7_dp_rx_h_null_q_desc(struct ath12k_pdev_dp *dp_pdev,
+ 		/* First buffer will be freed by the caller, so deduct it's length */
+ 		msdu_len = msdu_len - (DP_RX_BUFFER_SIZE - hal_rx_desc_sz);
+ 		ath12k_wifi7_dp_rx_null_q_desc_sg_drop(dp, msdu_len, msdu_list);
++		dp->device_stats.wbm_err.drop[WBM_ERR_DROP_SG]++;
+ 		return -EINVAL;
+ 	}
  
--	debugfs_create_file("device_dp_stats", 0400, ab->debugfs_soc, ab,
-+	debugfs_create_file("device_dp_stats", 0600, ab->debugfs_soc, ab,
- 			    &fops_device_dp_stats);
- }
+@@ -1649,8 +1659,10 @@ static int ath12k_wifi7_dp_rx_h_null_q_desc(struct ath12k_pdev_dp *dp_pdev,
+ 		skb_put(msdu, hal_rx_desc_sz + l3pad_bytes + msdu_len);
+ 		skb_pull(msdu, hal_rx_desc_sz + l3pad_bytes);
+ 	}
+-	if (unlikely(!ath12k_dp_rx_check_nwifi_hdr_len_valid(dp, msdu, rx_info)))
++	if (unlikely(!ath12k_dp_rx_check_nwifi_hdr_len_valid(dp, msdu, rx_info))) {
++		dp->device_stats.wbm_err.drop[WBM_ERR_DROP_INV_NWIFI_HDR]++;
+ 		return -EINVAL;
++	}
  
+ 	ath12k_dp_rx_h_ppdu(dp_pdev, rx_info);
+ 	ret = ath12k_wifi7_dp_rx_h_mpdu(dp_pdev, msdu, rx_info);
+@@ -1763,7 +1775,10 @@ static bool ath12k_wifi7_dp_rx_h_rxdma_err(struct ath12k_pdev_dp *dp_pdev,
+ 	struct ath12k_skb_rxcb *rxcb = ATH12K_SKB_RXCB(msdu);
+ 	bool drop = false;
+ 
+-	dp->device_stats.rxdma_error[rxcb->err_code]++;
++	if (likely(rxcb->err_code < HAL_REO_ENTR_RING_RXDMA_ECODE_MAX))
++		dp->device_stats.wbm_err.rxdma_error[rxcb->err_code]++;
++	else
++		WARN_ON_ONCE(1);
+ 
+ 	switch (rxcb->err_code) {
+ 	case HAL_REO_ENTR_RING_RXDMA_ECODE_UNAUTH_WDS_ERR:
+@@ -1780,6 +1795,7 @@ static bool ath12k_wifi7_dp_rx_h_rxdma_err(struct ath12k_pdev_dp *dp_pdev,
+ 		/* TODO: Review other rxdma error code to check if anything is
+ 		 * worth reporting to mac80211
+ 		 */
++		dp->device_stats.wbm_err.drop[WBM_ERR_DROP_RXDMA_GENERIC]++;
+ 		drop = true;
+ 		break;
+ 	}
+@@ -1796,7 +1812,10 @@ static bool ath12k_wifi7_dp_rx_h_reo_err(struct ath12k_pdev_dp *dp_pdev,
+ 	struct ath12k_skb_rxcb *rxcb = ATH12K_SKB_RXCB(msdu);
+ 	bool drop = false;
+ 
+-	dp->device_stats.reo_error[rxcb->err_code]++;
++	if (likely(rxcb->err_code < HAL_REO_DEST_RING_ERROR_CODE_MAX))
++		dp->device_stats.wbm_err.reo_error[rxcb->err_code]++;
++	else
++		WARN_ON_ONCE(1);
+ 
+ 	switch (rxcb->err_code) {
+ 	case HAL_REO_DEST_RING_ERROR_CODE_DESC_ADDR_ZERO:
+@@ -1813,6 +1832,7 @@ static bool ath12k_wifi7_dp_rx_h_reo_err(struct ath12k_pdev_dp *dp_pdev,
+ 		/* TODO: Review other errors and process them to mac80211
+ 		 * as appropriate.
+ 		 */
++		dp->device_stats.wbm_err.drop[WBM_ERR_DROP_REO_GENERIC]++;
+ 		drop = true;
+ 		break;
+ 	}
+@@ -1935,6 +1955,7 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 		ret = ath12k_wifi7_hal_wbm_desc_parse_err(dp, rx_desc,
+ 							  &err_info);
+ 		if (ret) {
++			dp->device_stats.wbm_err.drop[WBM_ERR_DESC_PARSE]++;
+ 			ath12k_warn(ab, "failed to parse rx error in wbm_rel ring desc %d\n",
+ 				    ret);
+ 			continue;
+@@ -1946,6 +1967,7 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 		if (!desc_info) {
+ 			desc_info = ath12k_dp_get_rx_desc(dp, err_info.cookie);
+ 			if (!desc_info) {
++				dp->device_stats.wbm_err.drop[WBM_ERR_GET_SW_DESC]++;
+ 				ath12k_warn(ab, "Invalid cookie in DP WBM rx error descriptor retrieval: 0x%x\n",
+ 					    err_info.cookie);
+ 				continue;
+@@ -1961,7 +1983,8 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 		device_id = desc_info->device_id;
+ 		partner_dp = ath12k_dp_hw_grp_to_dp(dp_hw_grp, device_id);
+ 		if (unlikely(!partner_dp)) {
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_NULL_PRTNR_DP);
+ 
+ 			/* In any case continuation bit is set
+ 			 * in the previous record, cleanup scatter_msdu_list
+@@ -2007,7 +2030,8 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 		hw_link_id = ath12k_dp_rx_get_msdu_src_link(partner_dp->hal,
+ 							    msdu_data);
+ 		if (hw_link_id >= ATH12K_GROUP_MAX_RADIO) {
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_INV_HW_ID);
+ 
+ 			/* In any case continuation bit is set
+ 			 * in the previous record, cleanup scatter_msdu_list
+@@ -2068,7 +2092,8 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 			ath12k_dbg(ab, ATH12K_DBG_DATA,
+ 				   "Unable to process WBM error msdu due to invalid hw link id %d device id %d\n",
+ 				   hw_link_id, device_id);
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_NULL_PROC_DP);
+ 			continue;
+ 		}
+ 
+@@ -2077,18 +2102,21 @@ int ath12k_wifi7_dp_rx_process_wbm_err(struct ath12k_dp *dp,
+ 
+ 		dp_pdev = ath12k_dp_to_pdev_dp(partner_dp, pdev_idx);
+ 		if (!dp_pdev) {
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_NULL_PDEV);
+ 			continue;
+ 		}
+ 		ar = ath12k_pdev_dp_to_ar(dp_pdev);
+ 
+ 		if (!ar || !rcu_dereference(ar->ab->pdevs_active[pdev_idx])) {
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_NULL_AR);
+ 			continue;
+ 		}
+ 
+ 		if (test_bit(ATH12K_FLAG_CAC_RUNNING, &ar->dev_flags)) {
+-			dev_kfree_skb_any(msdu);
++			ath12k_wifi7_dp_rx_wbm_err_free_skb(dp, msdu,
++							    WBM_ERR_DROP_CAC_RUNNING);
+ 			continue;
+ 		}
+ 
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
+index 49c693289709..60e7a36097f1 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/hal_rx.c
+@@ -329,7 +329,10 @@ int ath12k_wifi7_hal_desc_reo_parse_err(struct ath12k_dp *dp,
+ 				    HAL_REO_DEST_RING_INFO0_PUSH_REASON);
+ 	err_code = le32_get_bits(desc->info0,
+ 				 HAL_REO_DEST_RING_INFO0_ERROR_CODE);
+-	dp->device_stats.reo_error[err_code]++;
++	if (likely(err_code < HAL_REO_DEST_RING_ERROR_CODE_MAX))
++		dp->device_stats.wbm_err.reo_error[err_code]++;
++	else
++		WARN_ON_ONCE(1);
+ 
+ 	if (push_reason != HAL_REO_DEST_RING_PUSH_REASON_ERR_DETECTED &&
+ 	    push_reason != HAL_REO_DEST_RING_PUSH_REASON_ROUTING_INSTRUCTION) {
 -- 
 2.34.1
 
