@@ -1,53 +1,54 @@
-Received: from out-178.mta1.migadu.com (mta1.migadu.com [37.59.57.117])
+Received: from mail3-167.sinamail.sina.com.cn (mail3-167.sinamail.sina.com.cn [202.108.3.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4960D431A50
-	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 22:29:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.59.57.117
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE91D21CFE0
+	for <linux-wireless@vger.kernel.org>; Thu,  6 Aug 2026 23:30:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.108.3.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786055401; cv=none; b=ZtKXBXcq2AmN+p97n7eokyDPh3kbfYYZ0cSw74nDHha8Rx9J28Zz//qOYiz2D6NvY13lcoHm/Y2GOV5HwGL+YPqUNx24PIhzyZ3uSaT0Nl7+NAguMi0vofqb6Hjvd9bQ9jkrTOJfJHE6H/NG8Ev+jbmjyTDFSpc2IwysCbroCxU=
+	t=1786059028; cv=none; b=o78F0Efh9EtNmpFoaAw3SljtOThsxFFqOsPYP6cwjxHOpqtwWLid2oZGU0yUuS2w8rwufYH3JtvKZJHk+zxSeqycMxtGZLfrilftUWb0Fa/SwIdYpLWgpIUvVU+h91HXgbAAFHFqYBo8q4pI2ASfBMBIvYQli39x73C+IxiVvnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786055401; c=relaxed/simple;
-	bh=+Em8aOJxMnQY7SunwD6mWEnnsR83v0NBgGih8rJg6PE=;
+	s=arc-20240116; t=1786059028; c=relaxed/simple;
+	bh=LLPIVZLkcDBEXmcY+m6qHFAz6hVv8iBq31NdOIuv73Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FM78yzrAt/QyDa1gDCkLomiNXVRdWOQcbRr4nUaMMxvmRHEtchsgQw8QT5iZlg167w9MQiMzeQP2hK+oPJEaV1XWAObpEtJEAW4tfvNI9olSDRm7vaNQ3au/mAUnzpoIueR1GvQ33kCZSLRWqilrISHky6fjyUeFyXIAmqLZDDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=QqB9lMlP; arc=none smtp.client-ip=37.59.57.117
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	 MIME-Version; b=IBkgeaTGr++sAQPudXmpDxg6QROoy/qmCbb54qbmWYZ6QdyGNxKnqmjrt4HOCEudOlZk8RyCOq/0yidLcSokbIPhRbUdZJ0veROmJ3CvR2k1uS2khytfUpD4VOoEq91iHvB/axaPVDPboEuAzFmsM/2NL4GuUJEdoHHUoAwX0sA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com; spf=pass smtp.mailfrom=sina.com; dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b=m2uT1+EL; arc=none smtp.client-ip=202.108.3.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sina.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sina.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="QqB9lMlP"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=justthetip.ca;
-	s=key1; t=1786055385;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aNV4uXbDodbnruGyVrOp44eaeJJKSwZaU6AGbof4wsU=;
-	b=QqB9lMlPa1c1nl3NBIENn5wAVdr6S9U40sA8wMtH77kTxy1zvQv4QyOVwVe5ixmb9iNvs9
-	j6uOtu0UstMJ5ZTK/EUdNZe5x1wxCzwAIG7fxalHEYe0H7g4Lz2gCdkGikE91uXRZNE8PG
-	/GanVfi0H75NqcAjiT7amZUU0B7uCFIHNVGD4sXtwGO3P/zl+pf4Xid7ecuVW4BcwZ5KLt
-	26h2CpmpQoPIfJBnGH21zh4HW5DcK0O2hevKLhnVNMDavuPIA1ErS84LP1tdymBAe/bpKx
-	u20EJ3urRn8JxcD+NURI1zXZyMpqDxQ64YIXid41+COH3Q1I22MeDUX+1AACKg==
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Eason Lai <eason.lai@mediatek.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
+	dkim=pass (1024-bit key) header.d=sina.com header.i=@sina.com header.b="m2uT1+EL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sina.com; s=201208; t=1786059024;
+	bh=LLPIVZLkcDBEXmcY+m6qHFAz6hVv8iBq31NdOIuv73Q=;
+	h=From:Subject:Date:Message-ID;
+	b=m2uT1+ELOFl7gN3p6cwL53qRiUYlCUAZatEi/9glIP7bFLq/m1aBcujD+pqurubcX
+	 KVxwPw5FDKBN28CRiiPafQDu9Vpv/d3O09Vl4q/L+UQ7cj0bkAdjuCHbI2SNh6f+2X
+	 VA94R3kysX29ORPs4X0DGQKfcqUzNh/QaSWFaHT8=
+X-SMAIL-HELO: localhost.localdomain
+Received: from unknown (HELO localhost.localdomain)([221.216.154.155])
+	by sina.com (10.54.253.33) with ESMTP
+	id 6A75190300000BF6; Thu, 7 Aug 2026 07:30:14 +0800 (CST)
+X-Sender: hdanton@sina.com
+X-Auth-ID: hdanton@sina.com
+Authentication-Results: sina.com;
+	 spf=none smtp.mailfrom=hdanton@sina.com;
+	 dkim=none header.i=none;
+	 dmarc=none action=none header.from=hdanton@sina.com
+X-SMAIL-MID: 5296506685417
+X-SMAIL-UIID: DB663BE915C8410096AD3F36CA1047D9-20260807-073014-1
+From: Hillf Danton <hdanton@sina.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Slawomir Stepien <sst@poczta.fm>,
+	Aleksandr Nogikh <nogikh@google.com>,
+	syzbot <syzbot@kernel.org>,
+	syzkaller-bugs@googlegroups.com,
 	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Kun Wu <kun.wu@mediatek.com>,
-	Deren Wu <deren.wu@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Quan Zhou <quan.zhou@mediatek.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Leon Yen <leon.yen@mediatek.com>,
-	Litien Chang <litien.chang@mediatek.com>,
-	JB Tsai <jb.tsai@mediatek.com>
-Subject: Re: [PATCH v1] wifi: mt76: mt792x: fix memory leak in USB TX path
-Date: Thu,  6 Aug 2026 15:29:22 -0700
-Message-ID: <20260806222922.30384-1-lucid_duck@justthetip.ca>
-In-Reply-To: <20260805073812.1433126-1-eason.lai@mediatek.com>
-References: <20260805073812.1433126-1-eason.lai@mediatek.com>
+	linux-kernel@vger.kernel.org,
+	syzbot@lists.linux.dev,
+	Krystian Kaniewski <krystianmkaniewski@gmail.com>
+Subject: Re: sysbot AI patches and wireless
+Date: Fri,  7 Aug 2026 07:30:00 +0800
+Message-ID: <20260806233001.997-1-hdanton@sina.com>
+In-Reply-To: <8a0020fb5318ed645b0331d3790a75f83c0ee443.camel@sipsolutions.net>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,21 +56,14 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
-> 	err = mt76u_tx_setup_buffers(dev, tx_info.skb, q->entry[idx].urb);
-> 	if (err < 0)
-> -		return err;
-> +		goto err_free_skb;
-
-The first hunk looks right, that is what mt76s_tx_queue_skb already does.
-
-The second one I think is a problem. By then tx_prepare_skb has succeeded, so
-the skb can already be in wcid->pktid, and nothing takes it out before the
-free. mt76_tx_status_skb_get walks that idr on every tx status event and reads
-the cb off each entry, so this looks like it turns the leak into a
-use-after-free. mt7925 asks for tx status every quarter second per station, so
-there is usually an entry there.
-
-mt76_tx_complete_skb would cover it instead. It marks the skb DMA_DONE and
-leaves it in the idr for the existing timeout to reap.
+On Thu, 06 Aug 2026 16:49:45 +0200 Johannes Berg wrote:
+>
+> It's definitely part of the job to train new contributors, and it's
+> actually very rewarding to see someone grow from first time contributor.
+> Sadly, now there's basically no "first-contact signal" that says "I care
+> about this more than landing this one patch". :-/ Getting a well-formed
+> (and well-argued) patch used to be worth something, now it's basically not.
+>
+Nope, who cares (LPC/Unix)?
+Is Linux helping make the earth a better place (for who/all)?
