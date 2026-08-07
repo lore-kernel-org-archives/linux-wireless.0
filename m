@@ -1,49 +1,62 @@
-Received: from sender-of-o58.zoho.eu (sender-of-o58.zoho.eu [136.143.169.58])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C87937DE99;
-	Fri,  7 Aug 2026 11:52:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.169.58
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786103582; cv=pass; b=JBSXSJ0kuiciL9XrG4kIbgEGJx5iLQ1cQcbXAK+DDZsbxgie9dSBbP+/1zyKYvGbzK/pduXNKmEVqvGZCobTcuKMDuQ7LVfsk71AUIJTWQvhELZ811UGdeh8mEnJc/qumRpLnZi3XBQ27ew87UT4iE2OhzmWkT5ZFeP00FGlLcw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786103582; c=relaxed/simple;
-	bh=ZiO4oQuYjubGClhyudjZz1i/d+fNPHT5q0R4OrUg4nc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O+OpBBSrAkhm1t0x6xaoHvGR59dN/dZbhiHZlu5klxgk7KCaAa0DMoFgj2klhFdLBK9mCCQRLBmMuM1h4Ecf2hldpLEd2TfNL/YiOzf2tRZIAWe6qpFxkkdyMQ02OAD0SufU0i/wqN5hUDiDOu9HfVJhZdwCISEBdB79xo2slmA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com; spf=pass smtp.mailfrom=iusegentoo.com; dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b=K5FzlWIR; arc=pass smtp.client-ip=136.143.169.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=iusegentoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iusegentoo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDE0B4756B4
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 12:59:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786107578; cv=none; b=LaZJibq0Y/qEtv90mqr1KGa1L19X8R1Z+leWOXogmkyNt2YmoDSINJYCCec+9d0/TiWZdsj/USSs70UbWKkyWpjeImNe8rP6DkBT8Mlm1yqO7KpD0QY1TQgeS6dU/Ri/Bo/NB4jd7KK40QPCKER0Bw32FDgrIsqfUCnXpAuEKGw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786107578; c=relaxed/simple;
+	bh=c+Obj3KxZAXJqJFX2X9E/Kyv+qj00penHJsYWag3Dkc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=dICUQjK4vToVqhABe8GTO+vhPqyXiyz/LvRDAODGhACZdOYMjD/z+V4jrvYm8bWMy4xdMOx0ZTxya9bobA+PzFQWwL6JFtFGsEKbMOBNARv913IIxdi4fDO8nRDpRbiDUBXns/CF7SK8Uwn48NNQGgmUckcmmPxQKoNNK7tiUuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C7LSutTl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=iusegentoo.com header.i=ali@iusegentoo.com header.b="K5FzlWIR"
-ARC-Seal: i=1; a=rsa-sha256; t=1786103565; cv=none; 
-	d=zohomail.eu; s=zohoarc; 
-	b=Y4zlc5f0kxRW2kpN35sGTnZEGPaRB015sPgY7SosLXT7ZkOYrZOuKyh84CDM4Rk9MxTmVbrNqoFk4wucLShwFbSlCJla5gLd3fJkmhZYUMPkvcbyZhgb3Bo5RVE5+2LF0RJmx1Whuee2fUSD3WSVdphkfs/aS3W1w/W6wJAexjM=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.eu; s=zohoarc; 
-	t=1786103565; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=o8H3NO69JdBjLs2Z5ukxlQG+UUvzduh0eVugBp94kgA=; 
-	b=g3ApPLRozRwB5EEQMf8215Ph0GumTO3mbAmpbY7VtVr+2tB3V/HWbJKQjZAcW/xyuL4/epxpyOjzZJHKKDCfcVQzHgL2Fi+v/l31D8O5uMtfbYPJ3v4B+KRyoRPHo+0W4sXME2sir9gSlBo0L/df4xisCJbhpG2ISCW+f235wh8=
-ARC-Authentication-Results: i=1; mx.zohomail.eu;
-	dkim=pass  header.i=iusegentoo.com;
-	spf=pass  smtp.mailfrom=ali@iusegentoo.com;
-	dmarc=pass header.from=<ali@iusegentoo.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786103565;
-	s=zmail; d=iusegentoo.com; i=ali@iusegentoo.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
-	bh=o8H3NO69JdBjLs2Z5ukxlQG+UUvzduh0eVugBp94kgA=;
-	b=K5FzlWIRQ++oYIf1j0Tk30KjgPUvndwxFb77HSZkEVwn1OzIwvqXT1rUTVdXOuly
-	53YQmSnbIwKP9UyXmH00/vIResGQ5VzN8lHHBh9jmn74lgtQpmM6ZzaKZC27tgDv6zY
-	U23TU0ybVerxEgSB8ecJgiL2f7/iQUc+UEicl4xk=
-Received: by mx.zoho.eu with SMTPS id 1786103561267961.2475917661083;
-	Fri, 7 Aug 2026 13:52:41 +0200 (CEST)
-From: Ali Ahmet Memis <ali@iusegentoo.com>
-To: Ajay Singh <ajay.kathat@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: wilc1000: fix out-of-bounds read in P2P public action frames
-Date: Fri,  7 Aug 2026 11:52:30 +0000
-Message-ID: <20260807115230.136767-1-ali@iusegentoo.com>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C7LSutTl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786107560;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4Ce3mbn9VnBLWH5P+vwgYp9VLPRTWUW0aQvMbeGeCrI=;
+	b=C7LSutTllWhzTA5uaDnK8ATs9C5bNEqKnOqmJcgadUF3jhmBhwQb4V6vAfljMqnfSCqaMQ
+	UvQuz6xs5L8k/Byo618nTOZSZUhb7QxB4LDTrM0iKdhlnAYh5LY3EeNAt63FqibP/yi4nn
+	+LqqNCWN3V/xgA17dAw34Yrt9ZIO8jI=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-328-WQL0Ke1hPIiluU26xBzukQ-1; Fri,
+ 07 Aug 2026 08:59:16 -0400
+X-MC-Unique: WQL0Ke1hPIiluU26xBzukQ-1
+X-Mimecast-MFC-AGG-ID: WQL0Ke1hPIiluU26xBzukQ_1786107555
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CE5F81956096;
+	Fri,  7 Aug 2026 12:59:14 +0000 (UTC)
+Received: from thuth-p1g4.redhat.corp (headnet05.pony-001.prod.iad2.dc.redhat.com [10.2.32.117])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F069D30001A2;
+	Fri,  7 Aug 2026 12:59:11 +0000 (UTC)
+From: Thomas Huth <thuth@redhat.com>
+To: Eric Biggers <ebiggers@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-crypto@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Steve French <smfrench@gmail.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2 6/6] mac80211: fils_aead: Use __cleanup() for aes_cmac_key instead of memzero_explicit()
+Date: Fri,  7 Aug 2026 14:58:43 +0200
+Message-ID: <20260807125845.1477067-7-thuth@redhat.com>
+In-Reply-To: <20260807125845.1477067-1-thuth@redhat.com>
+References: <20260807125845.1477067-1-thuth@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,68 +64,39 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-ZohoMailClient: External
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-wilc_wfi_p2p_rx() and mgmt_tx() start parsing a frame once
-ieee80211_is_public_action() returns true. That helper only verifies the
-frame is long enough for the action category field, that is
-offsetofend(struct ieee80211_mgmt, u.action.category), 25 bytes. Both
-functions then read the P2P public action header up to oui_subtype at
-offset 30 and pass "size - ie_offset" to cfg80211_find_vendor_ie(), where
-ie_offset is offsetof(struct ieee80211_mgmt, u) + sizeof(*d), i.e. 32.
+From: Thomas Huth <thuth@redhat.com>
 
-A public action frame of 25 to 31 bytes passes the check but is shorter
-than that 32 byte header, so oui_subtype can be read out of bounds, and
-because the length is unsigned, "size - ie_offset" underflows to a value
-close to 4 GiB. cfg80211_find_vendor_ie() takes an unsigned int length,
-so even the size_t subtraction in mgmt_tx() is truncated to the same
-value. It then walks far past the buffer searching for a vendor element
-until it reaches unmapped memory.
+By using __cleanup(aes_cmac_zeroize_key) for clearing the key data,
+we can save one line of code here.
 
-In the receive path the frame arrives over the air and needs no
-association, so a nearby unauthenticated device can crash the host while
-it is in P2P listen. Reject frames shorter than the P2P public action
-header in both paths before dereferencing it.
-
-Fixes: 4fb8b5aa2a11 ("staging: wilc1000: refactor p2p action frames handling API's")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ali Ahmet Memis <ali@iusegentoo.com>
+Signed-off-by: Thomas Huth <thuth@redhat.com>
 ---
- drivers/net/wireless/microchip/wilc1000/cfg80211.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ net/mac80211/fils_aead.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/cfg80211.c b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-index 6654fce4ded8..2737f3b72684 100644
---- a/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-+++ b/drivers/net/wireless/microchip/wilc1000/cfg80211.c
-@@ -1058,6 +1058,13 @@ void wilc_wfi_p2p_rx(struct wilc_vif *vif, u8 *buff, u32 size)
- 	if (!ieee80211_is_public_action((struct ieee80211_hdr *)buff, size))
- 		goto out_rx_mgmt;
+diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
+index d2f4a17eab990..293590976489a 100644
+--- a/net/mac80211/fils_aead.c
++++ b/net/mac80211/fils_aead.c
+@@ -24,7 +24,7 @@ static int aes_s2v(const u8 *in_key, size_t key_len,
+ 		   size_t num_elem, const u8 *addr[], size_t len[], u8 *v)
+ {
+ 	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE] = {};
+-	struct aes_cmac_key key;
++	struct aes_cmac_key key __cleanup(aes_cmac_zeroize_key);
+ 	struct aes_cmac_ctx ctx;
+ 	size_t i;
+ 	int res;
+@@ -62,7 +62,6 @@ static int aes_s2v(const u8 *in_key, size_t key_len,
+ 	aes_cmac_update(&ctx, d, AES_BLOCK_SIZE);
+ 	aes_cmac_final(&ctx, v);
  
-+	/* ieee80211_is_public_action() only validates up to the category
-+	 * byte, so reject frames too short for the P2P public action header
-+	 * before dereferencing it or computing size - ie_offset.
-+	 */
-+	if (size < ie_offset)
-+		goto out_rx_mgmt;
-+
- 	d = (struct wilc_p2p_pub_act_frame *)(&mgmt->u.action);
- 	if (d->oui_subtype != GO_NEG_REQ && d->oui_subtype != GO_NEG_RSP &&
- 	    d->oui_subtype != P2P_INV_REQ && d->oui_subtype != P2P_INV_RSP)
-@@ -1207,6 +1214,13 @@ static int mgmt_tx(struct wiphy *wiphy,
- 		goto out_set_timeout;
- 	}
+-	memzero_explicit(&key, sizeof(key));
+ 	return 0;
+ }
  
-+	/* ieee80211_is_public_action() only validates up to the category
-+	 * byte, so reject frames too short for the P2P public action header
-+	 * before dereferencing it or computing len - ie_offset.
-+	 */
-+	if (len < ie_offset)
-+		goto out_set_timeout;
-+
- 	d = (struct wilc_p2p_pub_act_frame *)(&mgmt->u.action);
- 	if (d->oui_type != WLAN_OUI_TYPE_WFA_P2P ||
- 	    d->oui_subtype != GO_NEG_CONF) {
 -- 
 2.55.0
 
