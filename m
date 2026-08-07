@@ -1,211 +1,122 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413B13793DC
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 16:07:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFD40474258
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 16:37:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786118878; cv=none; b=Pp9ud0vPTEWj7/JVpLaWtFKeUiYVXGf7sSbO6zXwPxVi2NMA+/lMZ/ylbMvze//cwmaJdIHfDLxc/6X/Ly5B7r0AVSn3FVMgwO23XYcf87/wazmuVXQmUeUskw+UPmZi4SELsMCD5vG3i6Ku2gfnB0HbETZoEYvV1YLYVNoxzUc=
+	t=1786120671; cv=none; b=qtGJk/MnTsvuV6iYvsBe0ZqxXbBceIwSfM6gxiRsxo+ftasSDIhRKGjga9V+RTPrIWaXpODlTvcIVRMP83EpEja4rOfQbmOg/T6/lxBILgNQpTsEjwMAP6ZEhNyKzn0+ZwllscthZy3/7r/NyAxnYKz5b8kEbRi4+g5xThcohAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786118878; c=relaxed/simple;
-	bh=291X25EMsM5xe4YtxhnDQmoI99qBB/TB2Fm7iJV9SUM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Pjei37dMkyu1tBGOTJXBikoWtnredx1sZ4Dt5/V0o12Dt5IV1uypB7dQsEqXoYBOre22JfBj3GokJpxMZdr2QibWgGsRZPN4NEO1GxZg/qws66Obe1TOKjw5Zg/oCl+AKUATGhGyUeia8O8JqZ/H1D455QHLouv/z0blJeL9MFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=grYZvSYN; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786120671; c=relaxed/simple;
+	bh=W2vPaAvbBFaEnI5PS+wWp9fGPFM0lRF90ZCyeiQzTGA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HgKfTEl63qDpRhksAi26AOnnFF/ep83WKnU9SfYpD0CPxdUEk/NinAb7V3z7ZERJiLp1T+rTdC/lOwPeJe38T6APi75GIO28w5BRzVbhsDA9BeX6OveclA4mlgdJA5ZFc1COtJivGJJgX5SLXfyz5B9GfieS3/89KHJ4fYw2CEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DHt8Ax+q; arc=none smtp.client-ip=209.85.167.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="grYZvSYN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786118877; x=1817654877;
-  h=date:from:to:cc:subject:message-id;
-  bh=291X25EMsM5xe4YtxhnDQmoI99qBB/TB2Fm7iJV9SUM=;
-  b=grYZvSYNQJACc3oKBSnGZ6JEd3UBqpYeYBIsq9VWnM899OhnJhwKGilG
-   1fDkHk68Vlqq+Qm7JjCxDyI9X5v0u/c+HoaiyLgQCJBg9wNV1yPoOfSZ4
-   XrxWzONlplqkn37opAiPnscoM/v6WMsD9Cji3WTqQIcm2haVY6Xd+DU5Z
-   gShQ5Lyv0dEm1tzIS4v7IbuQkkR+TBAjSEUwkLZ4dEml65Hm8pSBXm0K8
-   +ScC3fy/oQhkYZ6mU3us6pWsQdMSbrCuTOfy8v07zU+Zp/wpuM1yxDZFM
-   sxAF+1AYwtheNXJF0QaM1wiRsBwvUcaBIr/t2mMg6+RbbVAVGFQ7FAlM1
-   w==;
-X-CSE-ConnectionGUID: dNp0cq7FRB+fZ6P+WO1qXg==
-X-CSE-MsgGUID: 9YsiUNn9ToyuMfvOk6KqHg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11868"; a="90610737"
-X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
-   d="scan'208";a="90610737"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2026 09:07:56 -0700
-X-CSE-ConnectionGUID: otn1amxxToiwSe0Ki8wubg==
-X-CSE-MsgGUID: klhfvhqcT/m8yrQpqTFU6Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,210,1779174000"; 
-   d="scan'208";a="300636234"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 07 Aug 2026 09:07:55 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wsN6u-00000000Ifn-2Prg;
-	Fri, 07 Aug 2026 16:07:52 +0000
-Date: Sat, 08 Aug 2026 00:07:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [wireless-next:for-next] BUILD SUCCESS
- ca800a9302764c445de0da0e84d2252400a770ee
-Message-ID: <202608080020.dfB9G3jn-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DHt8Ax+q"
+Received: by mail-oi1-f179.google.com with SMTP id 5614622812f47-4960a66d36dso878358b6e.1
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 09:37:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786120668; x=1786725468; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=RYnU/CjNnSldiurArBMef+rqNUycTmCsidAIhbgMp9k=;
+        b=DHt8Ax+qYqOHOoWvUdhpnMRIVBkxqKnIdxQ7tdmDFFySm92vEYggSVFloJb/tidux3
+         ihfnuTzADaYMF8ARHfD7yLJQc/zGABeW9XSe3wqDRjJYcNWtxc0sg2YOl/NIeQXQX//j
+         xpL5dtDkGx30iuT1TqxEBqSBC7BmTHNaUssGxVHSGdgEArDQmwxPWSXvwkFI1iXwkExX
+         46imgyIpN6Ydo4Qcl5JGxO1kYfg4wqkU5tivfMIvvaUj1/R9lgBKiv6Acc/sfwY0v1Dz
+         FxJQV3pioqK1KMH1eQaV1WaNp6oDUD55dxqSYz5njHMeZfzpr7JsdjxwH4owbGWpiT4w
+         Jdxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786120668; x=1786725468;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=RYnU/CjNnSldiurArBMef+rqNUycTmCsidAIhbgMp9k=;
+        b=OcpM1y7X5ZogP+Y5Kglm+s02miLVWLFHRYADKe3enixTcgtLyLii5HdjWPLK2nZ1Jz
+         VDM+W6xlyUr6BQIzzx1NayRzrVgdwguVO1wR1XMNmTPkSi8FSfIhoHegllId2xcZ4ML6
+         kKBqAUFYxYW9GZIO2PH5SBkxXJsV7OHNNZfo6yV23R5pVtOCQd+YZngjnkJhFwoa1jrk
+         ylPUndfIgar3a7HC3pEbDazYk2wArB2OjtOuEbrA6L2QETT4zZpAWH4uve+Qv0sp89bb
+         mOA1wfOqPPq9vleBGN6nh+HtctVidNi196/EsDYPS9/tjTxVQZU8uN3B02ArxPW2YgFO
+         q3lQ==
+X-Gm-Message-State: AOJu0YyGXoaOMzyOAvaJlww3i8XaJNo/B8L4pngVO7/1WaI06CSZ+grN
+	Sn77L6RcfYPd7pRHJcMXucs0dx40RqtmzO8MC+4MQ254ZLZYL5L/Y1/X
+X-Gm-Gg: AR+sD10hQJqV3n3P5T0/FFt/cdnrmvXxP16vJCm8zFZHNNMOw/uPoqwB+3iQjRDtp2l
+	pwzFRWa9W3zhF7br8NOIg6YVsqgdK9oNsvn2M8lQHZiXkEmk3+bQhZ9gKkDic8WhVov2E0dzfdf
+	pJewB/yoCqOt6GVy+a3EWYKQxvMt4TS1sQsaVYhl1xJ7ACjSL1xwwqPEDkqb/6+8WKnFUKNCzAD
+	NI//1wd4YVEX1mQwFclnHnjs6FlBazmMgf1YF/JPtInin4KqRSTSqS5pE87Jjfub2JcX+BHWZhy
+	SxpQqFsugDRUFTorqoiq643LgbkFOuBnCis8Vouedy9/vjdFoxfwvtNKJP5jL2EJ/X8vojk1sO4
+	twFOeU8HO4pkXKjZeViHGqeQalS9/jVwNjVvHN33Q+iSyAs1rnd6DZExJ1wBaUfqrAdEWYSR2LW
+	0WaYyWEM5wssJ7QACKlrLtqC2eTDXFJJAvcn+02o1epw13tW2a2APRlh74FqcUNCGs3KbQGCyAH
+	yUqBCtZs6xwTldcmbTjYQUaS+gJ9y4gnjPk2Gl2e9sAODZ7tzEAoMFLRrIy3no=
+X-Received: by 2002:a05:6808:13c2:b0:495:d9fc:238a with SMTP id 5614622812f47-4afae30e48cmr8312577b6e.3.1786120667910;
+        Fri, 07 Aug 2026 09:37:47 -0700 (PDT)
+Received: from antares ([149.88.25.215])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-4afae769393sm7731773b6e.16.2026.08.07.09.37.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Aug 2026 09:37:47 -0700 (PDT)
+From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v6] wifi: brcmfmac: cyw: pass PMKID to firmware if present
+Date: Fri,  7 Aug 2026 11:34:18 -0500
+Message-ID: <20260807163418.487508-1-bogdan.nicolae@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git for-next
-branch HEAD: ca800a9302764c445de0da0e84d2252400a770ee  wifi: nxpwifi: bound uAP association event IEs to the event buffer
+Zero out auth_status on initialization. Otherwise, garbage will
+leak from the stack to the firmware (when ssid is less than 32 bytes
+and/or when params->pmkid is set). Then, pass the params->pmkid to the
+firmware (without it, the firmware caches a garbage PMKID on successful
+authentication and denies a subsequent association request that includes
+the PMKID).
 
-elapsed time: 1482m
+Fixes: 66f909308a7c ("wifi: brcmfmac: cyw: support external SAE authentication in station mode")
+Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+v6: Fixed diff line number
+v5: Fixed line length > 80 chars
+v4: Fixed indentation
+v3: Added Fixes, Cc: stable, and Acked-by tags
+v2: Split into a separate patch
 
-configs tested: 134
-configs skipped: 60
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allnoconfig    gcc-16.1.0
-alpha                           allyesconfig    gcc-16.1.0
-alpha                              defconfig    gcc-16.1.0
-arc                             alldefconfig    gcc-16.1.0
-arc                             allmodconfig    gcc-16.1.0
-arc                             allyesconfig    gcc-16.1.0
-arm                  randconfig-001-20260807    clang-17
-arm                  randconfig-002-20260807    gcc-12.5.0
-arm                  randconfig-003-20260807    gcc-10.5.0
-arm                  randconfig-004-20260807    gcc-16.1.0
-arm64                randconfig-001-20260807    clang-24
-arm64                randconfig-001-20260807    gcc-16.1.0
-arm64                randconfig-002-20260807    clang-24
-arm64                randconfig-002-20260807    gcc-16.1.0
-arm64                randconfig-003-20260807    gcc-16.1.0
-arm64                randconfig-004-20260807    clang-17
-arm64                randconfig-004-20260807    gcc-16.1.0
-csky                            allmodconfig    gcc-16.1.0
-csky                 randconfig-001-20260807    gcc-16.1.0
-csky                 randconfig-002-20260807    gcc-16.1.0
-hexagon              randconfig-001-20260807    clang-18
-hexagon              randconfig-001-20260807    clang-24
-hexagon              randconfig-002-20260807    clang-18
-hexagon              randconfig-002-20260807    clang-24
-i386                            allmodconfig    gcc-14
-i386       buildonly-randconfig-001-20260807    gcc-13
-i386       buildonly-randconfig-001-20260807    gcc-14
-i386       buildonly-randconfig-002-20260807    gcc-13
-i386       buildonly-randconfig-002-20260807    gcc-14
-i386       buildonly-randconfig-003-20260807    clang-22
-i386       buildonly-randconfig-003-20260807    gcc-13
-i386       buildonly-randconfig-004-20260807    clang-22
-i386       buildonly-randconfig-004-20260807    gcc-13
-i386       buildonly-randconfig-005-20260807    clang-22
-i386       buildonly-randconfig-005-20260807    gcc-13
-i386       buildonly-randconfig-006-20260807    gcc-13
-i386                 randconfig-001-20260807    clang-22
-i386                 randconfig-001-20260807    gcc-14
-i386                 randconfig-002-20260807    clang-22
-i386                 randconfig-002-20260807    gcc-14
-i386                 randconfig-003-20260807    clang-22
-i386                 randconfig-003-20260807    gcc-14
-i386                 randconfig-004-20260807    gcc-14
-i386                 randconfig-005-20260807    clang-22
-i386                 randconfig-005-20260807    gcc-14
-i386                 randconfig-006-20260807    gcc-14
-i386                 randconfig-007-20260807    gcc-14
-i386                 randconfig-011-20260807    clang-22
-i386                 randconfig-012-20260807    clang-22
-i386                 randconfig-012-20260807    gcc-14
-i386                 randconfig-013-20260807    clang-22
-i386                 randconfig-014-20260807    clang-22
-i386                 randconfig-014-20260807    gcc-14
-i386                 randconfig-015-20260807    clang-22
-i386                 randconfig-016-20260807    clang-22
-i386                 randconfig-017-20260807    clang-22
-i386                 randconfig-017-20260807    gcc-14
-loongarch                          defconfig    clang-24
-loongarch            randconfig-001-20260807    clang-18
-loongarch            randconfig-001-20260807    clang-24
-loongarch            randconfig-002-20260807    clang-18
-m68k                      m5275evb_defconfig    gcc-16.1.0
-mips                       qi_lb60_defconfig    clang-17
-nios2                           allmodconfig    gcc-11.5.0
-nios2                            allnoconfig    gcc-11.5.0
-nios2                randconfig-001-20260807    clang-18
-nios2                randconfig-001-20260807    gcc-8.5.0
-nios2                randconfig-002-20260807    clang-18
-nios2                randconfig-002-20260807    gcc-8.5.0
-parisc                          allmodconfig    gcc-16.1.0
-parisc                          allyesconfig    gcc-16.1.0
-parisc                             defconfig    gcc-16.1.0
-parisc               randconfig-001-20260807    gcc-8.5.0
-parisc               randconfig-002-20260807    gcc-8.5.0
-powerpc              randconfig-001-20260807    gcc-8.5.0
-powerpc              randconfig-002-20260807    gcc-8.5.0
-powerpc64            randconfig-001-20260807    gcc-8.5.0
-powerpc64            randconfig-002-20260807    gcc-8.5.0
-riscv                         randconfig-001    gcc-12.5.0
-riscv                randconfig-001-20260807    gcc-12.5.0
-riscv                randconfig-002-20260807    gcc-12.5.0
-s390                 randconfig-001-20260807    gcc-12.5.0
-s390                 randconfig-002-20260807    gcc-12.5.0
-sh                                 defconfig    gcc-16.1.0
-sh                           migor_defconfig    gcc-16.1.0
-sh                   randconfig-001-20260807    gcc-12.5.0
-sh                   randconfig-002-20260807    gcc-12.5.0
-sparc                           alldefconfig    gcc-16.1.0
-sparc                         randconfig-001    gcc-16.1.0
-sparc                randconfig-001-20260807    gcc-16.1.0
-sparc                randconfig-002-20260807    gcc-16.1.0
-sparc64              randconfig-001-20260807    gcc-16.1.0
-sparc64              randconfig-002-20260807    gcc-16.1.0
-um                              alldefconfig    clang-24
-um                   randconfig-001-20260807    gcc-16.1.0
-um                   randconfig-002-20260807    gcc-16.1.0
-x86_64     buildonly-randconfig-001-20260807    clang-22
-x86_64     buildonly-randconfig-002-20260807    clang-22
-x86_64     buildonly-randconfig-002-20260807    gcc-14
-x86_64     buildonly-randconfig-003-20260807    clang-22
-x86_64     buildonly-randconfig-003-20260807    gcc-14
-x86_64     buildonly-randconfig-004-20260807    clang-22
-x86_64     buildonly-randconfig-005-20260807    clang-22
-x86_64     buildonly-randconfig-006-20260807    clang-22
-x86_64                                 kexec    clang-22
-x86_64               randconfig-001-20260807    clang-22
-x86_64               randconfig-002-20260807    clang-22
-x86_64               randconfig-002-20260807    gcc-14
-x86_64               randconfig-003-20260807    clang-22
-x86_64               randconfig-004-20260807    clang-22
-x86_64               randconfig-005-20260807    clang-22
-x86_64               randconfig-006-20260807    clang-22
-x86_64               randconfig-006-20260807    gcc-14
-x86_64                        randconfig-011    clang-22
-x86_64               randconfig-011-20260807    clang-22
-x86_64               randconfig-012-20260807    clang-22
-x86_64               randconfig-013-20260807    clang-22
-x86_64               randconfig-014-20260807    clang-22
-x86_64               randconfig-014-20260807    gcc-14
-x86_64               randconfig-015-20260807    clang-22
-x86_64               randconfig-015-20260807    gcc-14
-x86_64               randconfig-016-20260807    clang-22
-x86_64               randconfig-016-20260807    gcc-14
-x86_64               randconfig-071-20260807    clang-22
-x86_64               randconfig-071-20260807    gcc-13
-x86_64               randconfig-072-20260807    clang-22
-x86_64               randconfig-073-20260807    clang-22
-x86_64               randconfig-074-20260807    clang-22
-x86_64               randconfig-075-20260807    clang-22
-x86_64               randconfig-075-20260807    gcc-14
-x86_64               randconfig-076-20260807    clang-22
-x86_64                          rhel-9.4-bpf    gcc-14
-xtensa               randconfig-001-20260807    gcc-16.1.0
-xtensa               randconfig-002-20260807    gcc-16.1.0
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+index 873754be5..2c59b5e57 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+@@ -200,7 +200,7 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_pub *drvr;
+-	struct brcmf_auth_req_status_le auth_status;
++	struct brcmf_auth_req_status_le auth_status = {};
+ 	int ret = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -208,6 +208,9 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
+ 	ifp = netdev_priv(dev);
+ 	drvr = ifp->drvr;
+ 	if (params->status == WLAN_STATUS_SUCCESS) {
++		if (params->pmkid)
++			memcpy(auth_status.pmkid, params->pmkid,
++			       WLAN_PMKID_LEN);
+ 		auth_status.flags = cpu_to_le16(BRCMF_EXTAUTH_SUCCESS);
+ 	} else {
+ 		bphy_err(drvr, "External authentication failed: status=%d\n",
 --
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.55.0
