@@ -1,69 +1,76 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from out-182.mta1.migadu.com (mta1.migadu.com [37.59.57.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2118D3AFCF2;
-	Fri,  7 Aug 2026 07:17:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F00646D2C8;
+	Fri,  7 Aug 2026 08:11:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=37.59.57.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786087072; cv=none; b=m7PZZl/2MomQ0u6LbhbqFU1a1vSrKjG1q4AApfv0UZ4gH43dQ1MREe8SJ0nINKCGBriAq6TEnF84Fgc+ORZsWTe4WCXkqDu9ZZeXvHjkqct0eIKHMN9Ki7yLgVf0GBNXgPfTmju+BHHSSPBkowZMvVEBkzdMClM+3YnkUxb5+ok=
+	t=1786090271; cv=none; b=kyTbBeso/sOPc7it7WtV++TNaXUs5bbJZMgGTA8ucoJZDW7NBdVb7jhxZNnu9e594Mkbj6laD4PGNE04hflhwIi9xsDZxIa0LiK1XT65GrOPz4J5dX3LSQJTD1u3XIGB76qMkFtIerHG1CesjJJHFugN6gbNkMAHbE4UpZvMzmc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786087072; c=relaxed/simple;
-	bh=kGLaynbVs0max8n25l5hHvF3hSwFmzk6hhHHal/wTLw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QVmBwzgd+Tcy1N7RvUNPIhNm4wTlWJHc9KTl2rMeh1OnyLjKtlDjGMDLSvqgYa1umHLVBvZRQoj6wGRm64Wwy0xuSU3hFT2J6Bmi3tUCwHjPh8XnQndgDTHeHMNfH9dN5oYutPlw+rl9/B39QQZCgbxcV3uNjBnMLURF2KllYYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=g3jqUiMz; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1786090271; c=relaxed/simple;
+	bh=jURQS4KhiRezpYm+L4Jm2lOk0iy04uqp673Uj51OgUI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=q5Jzp06w9ea6HW3cxX7IRypsewLAjS08DsSFHb+2LxKFs3ngmjC61RBEA21kwZHA2IMKeCA4lso4xjNJxTCI5VCvYIKn1lsuvW3rR/5+hMYM3GW97q+HvzaOZtG9ZhDft15+eOax/VA7ou3ZlRMDPqZpRHuDN6mvK1UUA4oXKbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=sNpCBQ7K; arc=none smtp.client-ip=37.59.57.117
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="g3jqUiMz"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=kGLaynbVs0max8n25l5hHvF3hSwFmzk6hhHHal/wTLw=;
-	t=1786087068; x=1787296668; b=g3jqUiMzAEpoCtkDo1EL3IAGnXq/bZNSiJNBMdxFFPczHd0
-	IPjqzKBQ9FiIQdFDvHHDiD0QMkEy5Ou9WCWhQj/Po6nkpEAaDcUZsbh8yRxmap2b2g8q/67nyC69r
-	mVr2pkSME3AayazRGU2CaTon6+qjeDMKOAD8jUJBpnI8xZguuMBBDU7QqB72rL86S8onGLs919e3F
-	Yb9J9T3DQl3C6jREPUxfqt4lW+AoydFZ/pP8MVXxoPIP+Hvg8Xc5jll+fnX5ZU9ctDoDv6qMn1qkc
-	AbwPQkryyDEf7jxfFBBTMJrbjCdThDWou+wi9NwKWJygFPr1f1EMNx2SVpUqBcAg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1wsEpr-0000000GxLq-0VQi;
-	Fri, 07 Aug 2026 09:17:43 +0200
-Message-ID: <ec0e5426914e9a10466f870f464cab349ca9b6e0.camel@sipsolutions.net>
-Subject: Re: [PATCH v5] wifi: brcmfmac: cyw: pass PMKID to firmware if
- present
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>, Bogdan Nicolae
-	 <bogdan.nicolae@gmail.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
-	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org, 
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="sNpCBQ7K"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1786090264;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=pjvM5JkEvbQU0SRFHfCRDVW50y3/HcS9gtSK2WMzm6c=;
+	b=sNpCBQ7KNsE3uCfVmFap6d3NktPCwmJoKKJGZc8X90TukaHvHT7BfJ/W2nPOyFX01LNHs9
+	8IbmiLIByTjBbM/q6ui2lp7I/PRnoefsO5wA6M6muCYnxRcaKqKkTk/pqnv1UgUVZSfVIf
+	dE4oc7GKG5cYWQ0qveIi1vL7nhMh24Q=
+From: Yi Cong <cong.yi@linux.dev>
+To: pkshih@realtek.com
+Cc: kvalo@kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yi Cong <yicong@kylinos.cn>,
 	stable@vger.kernel.org
-Date: Fri, 07 Aug 2026 09:17:42 +0200
-In-Reply-To: <ca791519-5967-4d30-919b-146158432990@broadcom.com> (sfid-20260807_084714_855076_FDABF219)
-References: <20260807032209.447044-1-bogdan.nicolae@gmail.com>
-	 <ca791519-5967-4d30-919b-146158432990@broadcom.com>
-	 (sfid-20260807_084714_855076_FDABF219)
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-1.fc44) 
+Subject: [PATCH] wifi: rtw89: 8851b: fix swapped DPK channel/bandwidth backup fields
+Date: Fri,  7 Aug 2026 16:10:06 +0800
+Message-Id: <20260807081006.240450-1-cong.yi@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, 2026-08-07 at 08:47 +0200, Arend van Spriel wrote:
->=20
-> It looks like you hand edited the patch but now the number of line is 9=
-=20
-> and not 8. Not sure if Johannes wants to hand edit that, but it does=20
-> apply once fixed.
+From: Yi Cong <yicong@kylinos.cn>
 
-Nope. Please send patches that apply, that way also the nipa bot can
-compile test them etc.
+The .ch and .bw backup fields are swapped; .ch should store the channel
+and .bw the bandwidth, matching all other chips.
 
-johannes
+Fixes: 0194a95cbe721a ("wifi: rtw89: 8851b: rfk: add DPK")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yi Cong <yicong@kylinos.cn>
+---
+ drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c b/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
+index c63f0e6364dad..71342461f2b30 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851b_rfk.c
+@@ -1895,8 +1895,8 @@ static void _dpk_information(struct rtw89_dev *rtwdev, enum rtw89_phy_idx phy,
+ 	u8 kidx = dpk->cur_idx[path];
+ 
+ 	dpk->bp[path][kidx].band = chan->band_type;
+-	dpk->bp[path][kidx].ch = chan->band_width;
+-	dpk->bp[path][kidx].bw = chan->channel;
++	dpk->bp[path][kidx].ch = chan->channel;
++	dpk->bp[path][kidx].bw = chan->band_width;
+ 
+ 	rtw89_debug(rtwdev, RTW89_DBG_RFK,
+ 		    "[DPK] S%d[%d] (PHY%d): TSSI %s/ DBCC %s/ %s/ CH%d/ %s\n",
+-- 
+2.25.1
+
