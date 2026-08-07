@@ -1,169 +1,260 @@
-Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3038E2F3C0E
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 06:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E070B38DC58
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 07:11:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786085232; cv=none; b=qHb/6StErVWfWI3YQMhiDJiYfAcbus/Nwy9f47FJ7lgs9CLRDEPl+9bk/5QkNeC6JYebrn+z5h3MgPrF2KKPPeeaY7Kfy3dzChpqjKcffHBVcZOAT7l8mcbXIPR65sFJ+v10jkkJu9//vPRIyto2hmNgO0Nee05jNH3/oAMjaHI=
+	t=1786086690; cv=none; b=ijSC330E4jZfCsc1uz5T+yVkzvay5k6HUQjYM3+cSzR7ZWneDbbvhI/CZhthkVJyCF2h4gcasMMbkXigEf2vFaIaaGecTFGk6izX96gAPMhHgeBHdsMFgfQx89Oy5KjBNA2JkSliZZLs3xyAQK7/K86HUSF1mFR+CI++WKbNazU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786085232; c=relaxed/simple;
-	bh=9Y5CiBh9ejoquK6ooJ8B7lLV6zQMZFZZqfxbS+uFVnw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ujyXf3ulQvjuZJJWZMQjohANZWRgSy3e+REUj6yYsAPxE75bEN1GQifl8+hkrHkMxv4fIXMF8fMBlyurey0+zV4r9xBATu2ed5poG1TtB+3rc5qDAyP3Ey7LKDwTNsXhSlzUjJarJNZurzdj79MKHQfLIufABl3KkbUj8802jBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=OSYcUBQ6; arc=none smtp.client-ip=209.85.216.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1786086690; c=relaxed/simple;
+	bh=hE1FXbtA+p7/hmI2bQMYA39dEFWrpKC4J0fov1G7UF8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NGyFIo5J9HISv6PaQ46jZvT4lu8n5eDn6mgMToXOhGh04FuuOw30VgMEwEMSVsSmyQN55k1mx0h3YlDWIv2GFs6n7d2vviXCC/AivudkpEF5/79DdbZIfbIqCMy1MSyr9f/VOszvHGTUNvfbH6l4+DrUx797EToFVhhRUkZ2mMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DN5h7XHn; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OSYcUBQ6"
-Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-38e08baf860so2857981a91.2
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 23:47:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786085230; x=1786690030;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=k1nQYGrcGXQu2s20fusPuZGr3riqxpJDJFHLZrZqcfQ=;
-        b=eunBr6NW4tzkp21sORrWWmytvsyYDuWNeIKziiDtBS9LzYr/fGAYrztaM0KEsfqcnA
-         DRcfqzZ2vQBwTWfZv6/u74MxW6mc2Wkk1RoePBSLNGASNN4JQlNnzYI3WKEXy5v0cT+G
-         0Oanc1/AHmT8pUkZ4p+MZvadnnHUPIonTQA4umRiTPLxg98vzfK31/EqCLGTiFMgwYMY
-         GHJpWjLQUg/oRBTYxMCWhc1K4zW5Kx+siRc6roBC/3jM/VY0KYA0i3pm3hn9uSbkFDVV
-         ugBHBG8TrthaUPvcTUBcJBkgTKYzSU+64Ky4HD//83PwcwBJmCr0HjHmyaXagOcET4Vg
-         6dxA==
-X-Gm-Message-State: AOJu0YyF7mWIVKDHn+nyzTs8EkWEyvwF+lb7R7d7MhESM6hM7k3uHxJi
-	EmM2f2/+24McKqogzwvMcwfaGDW1VPL1OVS+MmJPWi9mRuIz9gWj6xGEVkBeCaNzvM2N5tUzFOK
-	7kVnonTfPD0oJayhBV7Ee3WWSP4+u8w2YbFj9tk0DrFpVNYGBh1SThXB/xHHPzvnvGRIWznPzuC
-	oJ5AC7k5xqHl7UPMPhlKu0C5+e850SOzTO2HehBOUsZY0aYTateFoknlavAc3/iWO2RPaEdNS5C
-	DPRaiHMzVScQL87uJftt34iKHcg
-X-Gm-Gg: AR+sD13uA2rcqySFvlDCSjhV+LP5i3IXqWqlCISBpDBtwvYa56ebcpUAIckR3utYfJx
-	b5l+h0gL4Z/SnpFKaCccQIIrtZrDwViYmQSFyYLyv7G55uA+x3q8pVF0HVTXexdlhnDbv7M8BKD
-	0nq/CP2Ty35ImLfFB3L3QbYtdK0rNvl7SLbPfWruyGVfwAWnPum8G2UkcXLxRXgyaP6axxEmYoW
-	+MwJ0RJ8OcqnZFpMMm7a6kbBq3Bf0S2Sasmcl7GqYESQ/TAW+Rg8cCwR91RqZlz0KG5e8M2X0oD
-	NOo6ZlutHuDma9MYw8w7FLAKbKOXWXJm+y8Eqd2eMJiXWydMBuElUJxzVYBcHuQUFI2slPEdj+3
-	VhN3Qlxm00RCdBma6rjLCxOrkpBypaCffW2hbXcb3O3N+5QgRcZZdAEkrl4NnM6wN8B7e89tCym
-	kKXmyaO0Iwg+oK3LSgLoibHG/aKr45Mz2u1sCFJZM=
-X-Received: by 2002:a17:90b:274d:b0:38e:fea2:df53 with SMTP id 98e67ed59e1d1-3903c534d46mr23608831a91.4.1786085230256;
-        Thu, 06 Aug 2026 23:47:10 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3925fec93a9sm458164a91.5.2026.08.06.23.47.09
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 06 Aug 2026 23:47:10 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-c15fff01a30so214697066b.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 23:47:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1786085228; x=1786690028; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=k1nQYGrcGXQu2s20fusPuZGr3riqxpJDJFHLZrZqcfQ=;
-        b=OSYcUBQ6Hc2DPUXFDDKcSONEbDeO7DTmKNXnSXwXzVal4LTXrlUNzGbqycHSS2mwad
-         mk6bi9UuNurebVkEPBS4c6hCopOScb3zfe7ssBslpq2pSgmzr32ojgHiNPlyt3qgv4i0
-         k0L8LAqI6enKB0ZPEQ/+b4vQ1XtI85pnmtnmc=
-X-Received: by 2002:a17:906:ef01:b0:c20:2b23:71cc with SMTP id a640c23a62f3a-c20731e1113mr305061866b.10.1786085227660;
-        Thu, 06 Aug 2026 23:47:07 -0700 (PDT)
-X-Received: by 2002:a17:906:ef01:b0:c20:2b23:71cc with SMTP id a640c23a62f3a-c20731e1113mr305058566b.10.1786085226844;
-        Thu, 06 Aug 2026 23:47:06 -0700 (PDT)
-Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2080a29a4csm15686666b.1.2026.08.06.23.47.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 06 Aug 2026 23:47:06 -0700 (PDT)
-Message-ID: <ca791519-5967-4d30-919b-146158432990@broadcom.com>
-Date: Fri, 7 Aug 2026 08:47:08 +0200
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DN5h7XHn"
+X-UUID: 2ea3e1d8922f11f1b1788b6acf885367-20260807
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=aT5X5kEM+b1LPxhJkxfBtItNwRN3iR5kcevHOohFkWM=;
+	b=DN5h7XHnfBT7k4pEWXLANngb2vcNLhmyYO0tLPzDDG4jrF9xzI8WguXaKDUYtisONZLPjImGVnaz8JrNi1uvrAW9nCfSKvuv0QuqaaayA4mRvk8VsuzgYdQ1N0u4gFAPwDJNEra3UAfpFp8KWXF8KGdLvsymhouv/fjcv6Vw/ic=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:ca502086-3cf9-4522-9bee-4994413dc84c,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:951cfe13-936d-4b8b-857d-7e30feac00f8,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 2ea3e1d8922f11f1b1788b6acf885367-20260807
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1471496089; Fri, 07 Aug 2026 15:11:16 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 7 Aug 2026 15:11:15 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 7 Aug 2026 15:11:15 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH] wifi: mt76: mt7928: add debugfs to pin the 6GHz power mode
+Date: Fri, 7 Aug 2026 15:11:14 +0800
+Message-ID: <20260807071114.3056469-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5] wifi: brcmfmac: cyw: pass PMKID to firmware if present
-To: Bogdan Nicolae <bogdan.nicolae@gmail.com>,
- Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev,
- brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20260807032209.447044-1-bogdan.nicolae@gmail.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260807032209.447044-1-bogdan.nicolae@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On 07/08/2026 05:22, Bogdan Nicolae wrote:
-> Zero out auth_status on initialization. Otherwise, garbage will
-> leak from the stack to the firmware (when ssid is less than 32 bytes
-> and/or when params->pmkid is set). Then, pass the params->pmkid to the
-> firmware (without it, the firmware caches a garbage PMKID on successful
-> authentication and denies a subsequent association request that includes
-> the PMKID).
-> 
-> Fixes: 66f909308a7c ("wifi: brcmfmac: cyw: support external SAE authentication in station mode")
-> Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-It looks good, but in patchwork it showed the patch could not be applied 
-so I tried myself:
+The 6GHz power mode follows the power type advertised by the AP, which
+makes it hard to validate one specific power table on the FW side. Add a
+debugfs knob that pins the power mode and pushes the CLC power table of
+the selected mode down to the FW.
 
-$ patch -p1 < 
-~/Downloads/v5-wifi-brcmfmac-cyw-pass-PMKID-to-firmware-if-present.diff
-patching file drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-/usr/bin/patch: **** malformed patch at line 23:  		bphy_err(drvr, 
-"External authentication failed: status=%d\n",
+Key changes:
+- Add power_type_user to struct mt792x_phy to flag a pinned power mode
+- Add 6g_power_mode debugfs for selecting the 6GHz power mode:
+  * 0: UNSET
+  * 1: DEFAULT
+  * 2: LPI
+  * 3: SP
+  * 4: VLP
+  * 0xff: release the override
+- Skip mt7925_regd_set_6ghz_power_type() while pinned, so that 6GHz
+  (dis)association no longer overrides the selected power mode
+- Return -EOPNOTSUPP when CLC is not supported and -EINVAL for values
+  other than the ones listed above
 
-Been staring at it and not seeing the problem. Also checkpatch is not 
-complaining. Look at the hexdump and the last line was missing a space 
-before the tabs, but that was not the issue. The plot thickens...
-> ---
-> v5: Fixed line length > 80 chars
-> v4: Fixed indentation
-> v3: Added Fixes, Cc: stable, and Acked-by tags
+Selecting a mode re-applies the regulatory domain with power_type_change
+set, hence only the power table of that mode is sent to the FW. Releasing
+the override does not send anything to the FW, it only restores the power
+mode to its initial state so that the next 6GHz association or regulatory
+domain change programs the power tables again.
 
-Contrary to this there is no CC: stable tag in this patch.
+Usage:
+  echo 3 > /sys/kernel/debug/ieee80211/phy0/mt76/6g_power_mode
+  cat /sys/kernel/debug/ieee80211/phy0/mt76/txpower_sku
+  echo 0xff > /sys/kernel/debug/ieee80211/phy0/mt76/6g_power_mode
 
-> v2: Split into a separate patch
-> 
->   drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-> index 873754be5..2c59b5e57 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
-> @@ -200,7 +200,7 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
->   {
->   	struct brcmf_if *ifp;
->   	struct brcmf_pub *drvr;
-> -	struct brcmf_auth_req_status_le auth_status;
-> +	struct brcmf_auth_req_status_le auth_status = {};
->   	int ret = 0;
->   
->   	brcmf_dbg(TRACE, "Enter\n");
-> @@ -208,6 +208,8 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt7925/debugfs.c   | 66 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7925/main.c  |  4 ++
+ .../net/wireless/mediatek/mt76/mt7925/mcu.c   |  8 ++-
+ drivers/net/wireless/mediatek/mt76/mt792x.h   |  2 +
+ 4 files changed, 77 insertions(+), 3 deletions(-)
 
-It looks like you hand edited the patch but now the number of line is 9 
-and not 8. Not sure if Johannes wants to hand edit that, but it does 
-apply once fixed.
-
-Let's wait for Johannes to reply.
-
-Regards,
-Arend
-
->   	ifp = netdev_priv(dev);
->   	drvr = ifp->drvr;
->   	if (params->status == WLAN_STATUS_SUCCESS) {
-> +		if (params->pmkid)
-> +			memcpy(auth_status.pmkid, params->pmkid,
-> +			       WLAN_PMKID_LEN);
->   		auth_status.flags = cpu_to_le16(BRCMF_EXTAUTH_SUCCESS);
->   	} else {
->   		bphy_err(drvr, "External authentication failed: status=%d\n",
-> --
-> 2.55.0
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+index 01a3655e8b82..3b34c20f7325 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+@@ -3,6 +3,7 @@
+ 
+ #include "mt7925.h"
+ #include "mcu.h"
++#include "regd.h"
+ 
+ static int
+ mt7925_reg_set(void *data, u64 val)
+@@ -319,6 +320,69 @@ mt7928_txpwr_tbl_get(void *data, u64 *val)
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_txpwr_tbl, mt7928_txpwr_tbl_get,
+ 			 mt7928_txpwr_tbl_set, "%lld\n");
+ 
++/* Pin the 6GHz power mode instead of following the AP advertised one and push
++ * only the CLC power table of that mode down to the FW:
++ *   0: UNSET, 1: DEFAULT, 2: LPI, 3: SP, 4: VLP
++ *   0xff: release the override and go back to the AP advertised power mode
++ *
++ * UNSET/DEFAULT keep the FW on the LPI table, which is what the driver uses
++ * when no 6GHz power type has been reported by the AP.
++ *
++ * While pinned, 6GHz (dis)association no longer touches the power mode and a
++ * regulatory domain change only refreshes the pinned 6G power table, so the
++ * 2/5G tables of the new country are not sent until the override is released.
++ *
++ * Releasing does not send anything to the FW, it only restores the power mode
++ * to its initial state so that the next 6GHz association or regulatory domain
++ * change programs the power tables again.
++ */
++static int
++mt7925_6g_power_mode_set(void *data, u64 val)
++{
++	struct mt792x_dev *dev = data;
++	struct mt792x_phy *phy = &dev->phy;
++	int ret;
++
++	if (!mt7925_regd_clc_supported(dev))
++		return -EOPNOTSUPP;
++
++	if (val == 0xff) {
++		mt792x_mutex_acquire(dev);
++		phy->power_type_user = false;
++		phy->power_type = MT_AP_UNSET;
++		mt792x_mutex_release(dev);
++
++		return 0;
++	}
++
++	if (val > MT_AP_VLP)
++		return -EINVAL;
++
++	wiphy_lock(mt76_hw(dev)->wiphy);
++	mt792x_mutex_acquire(dev);
++	phy->power_type_user = true;
++	phy->power_type = (enum mt792x_reg_power_type)val;
++	ret = mt7925_mcu_apply_regd(dev, dev->mt76.alpha2,
++				    dev->country_ie_env, true);
++	mt792x_mutex_release(dev);
++	wiphy_unlock(mt76_hw(dev)->wiphy);
++
++	return ret;
++}
++
++static int
++mt7925_6g_power_mode_get(void *data, u64 *val)
++{
++	struct mt792x_phy *phy = &((struct mt792x_dev *)data)->phy;
++
++	*val = phy->power_type_user ? phy->power_type : 0xff;
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(fops_6g_power_mode, mt7925_6g_power_mode_get,
++			 mt7925_6g_power_mode_set, "%lld\n");
++
+ static int
+ mt7925_pm_set(void *data, u64 val)
+ {
+@@ -556,6 +620,8 @@ int mt7925_init_debugfs(struct mt792x_dev *dev)
+ 	debugfs_create_file("deep-sleep", 0600, dir, dev, &fops_ds);
+ 	debugfs_create_file("fixedrate", 0600, dir, dev, &fops_fixedrate);
+ 	debugfs_create_file("autorate", 0600, dir, dev, &fops_autorate);
++	debugfs_create_file("6g_power_mode", 0600, dir, dev,
++			    &fops_6g_power_mode);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index cbfbf39322de..0dba2de8e5a5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -941,6 +941,10 @@ mt7925_regd_set_6ghz_power_type(struct ieee80211_vif *vif,
+ 	enum mt792x_reg_power_type old_power_type;
+ 	bool power_type_changed = false;
+ 
++	/* the 6GHz power mode is pinned through debugfs */
++	if (phy->power_type_user)
++		return;
++
+ 	old_power_type = phy->power_type;
+ 
+ 	/* Try to get channel from link_conf first, then vif->bss_conf, then phy */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index 6e892860325b..39ca49506150 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -3672,14 +3672,14 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		u8 pad1;
+ 		u8 alpha2[2];
+ 		u8 type[2];
+-		u8 env_6g;
++		u8 power_type_user; /* 0: AP advertised, 1: forced by debugfs */
+ 		u8 rsvd[63];
+ 	} __packed req = {
+ 		.tag = cpu_to_le16(0x3),
+ 
+ 		.idx = idx,
+ 		.env = env_cap,
+-		.env_6g = dev->phy.power_type,
++		.power_type_user = dev->phy.power_type_user,
+ 	};
+ 	int ret, valid_cnt = 0;
+ 	u8 *pos, *last_pos;
+@@ -3720,8 +3720,10 @@ __mt7925_mcu_set_clc(struct mt792x_dev *dev, u8 *alpha2,
+ 		 *   - Send 2/5G ('-') and 6G LPI ('0') and 6G VLP ('2')
+ 		 * power_type_change == true: from mt7925_regd_set_6ghz_power_type()
+ 		 *   - Send only the specific 6G power table based on power_type
++		 * A 6GHz power mode pinned through debugfs behaves like the
++		 * latter: only the 6G power table of that mode is sent.
+ 		 */
+-		if (power_type_change) {
++		if (power_type_change || dev->phy.power_type_user) {
+ 			/* Only send the specific 6G power table */
+ 			if (rule->type[0] != target_6g_type)
+ 				continue;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index 65e1b9874ead..c226e5a13164 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -222,6 +222,8 @@ struct mt792x_phy {
+ 	u8 sta_work_count;
+ 	u8 clc_chan_conf;
+ 	enum mt792x_reg_power_type power_type;
++	/* 6GHz power mode pinned through debugfs, ignore the AP advertised one */
++	bool power_type_user;
+ 
+ 	struct sk_buff_head scan_event_list;
+ 	struct delayed_work scan_work;
+-- 
+2.18.0
 
