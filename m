@@ -1,164 +1,181 @@
-Received: from mail-oa1-f79.google.com (mail-oa1-f79.google.com [209.85.160.79])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C5C1184540
-	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 00:01:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.79
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BAAA35E925
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 01:47:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786060897; cv=none; b=spyRj/khR281gKER9VUvs4+XedJkt9pskiD6GzvGCtJ0bmRT0WGIO0y2CVCiSj8tOU/M/CssCH/B/ruBL8YINVwlta7Gnyufrh/UKk74RCjBBsxNFSAEnyIxLqoBBrf4eNNqMoj//s3NySAEp13SGkHEvBFFiQOwB5jqNOHxgS0=
+	t=1786067266; cv=none; b=UfcKCiD+uR0yqkpH5bBE5kdJ7c9YkAtxTlq465XWVGmvFk0ujBVGEaQVdrPIiWEACa4m8Pg8nGjgNZQk2M+yoFLLPcixw3677wzynBy6N6ezKm/mau+18j3oZVQQvKTw9XDzM+SsueCP7408GNRkImKQ+hF8/RfRHKUF25F4WCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786060897; c=relaxed/simple;
-	bh=1bJWVyeZnRuOuHntp7+lTeu0y4ITdPXkHSJVDH6DNUk=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=TWhYe9CkFFo39zSoh0MnrV9gpwaJMOTLyashPzQZxqn3MevSswoKD5adDM8UOhHekRAFzgT9KEnRoxxtPbNMmqIMQA0+27ffk/eq+hj0kV/xuOFJJKIVDeEXeKAx77n4A4IIva3DCJ6h+7UdK4eYMnJ3WLXVJTH3yM6qu40Y7+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.160.79
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa1-f79.google.com with SMTP id 586e51a60fabf-4488f192768so2293997fac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 17:01:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786060893; x=1786665693;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+	s=arc-20240116; t=1786067266; c=relaxed/simple;
+	bh=klrxJKPs/SxSqdEiDtHEjI9ihnBPB3tTRXMGfG6Qms4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bxjjw+/XlIoLfDA3WlbZ+10mUEbCRwBxZzRUHTsd/rQOG9ANCqFhnGwbeIjUtwEX/wWyOrdH9ucjDspVmP8m1MVQFXyh8ccOXzf/+i1AZJmug6gQrqVLffHfUYvP67z5S2Q6wYyT8NYhj7yjxm/q8M6OEH8fp1R4f2megpXdyhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=DdEyf+vu; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=L/yhpDL8; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="DdEyf+vu";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="L/yhpDL8"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6770GoGI2803111
+	for <linux-wireless@vger.kernel.org>; Fri, 7 Aug 2026 01:47:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	T4yQd5VpQTZvFK02L358x4zxAu2+dKl10X0+R1gySgk=; b=DdEyf+vuBXbVuEks
+	WrN++mMFH9m43FY2Z9c0V6+32xm0btAXC52gubLs9vjgRg4Ww4mO4k4TDYjQio5o
+	pNmLLBlaF0rPnGGzYE9WXuds/rJNplbbvPrSumiUY52QqK1m+HeHCdIxt3Bq26HJ
+	ZBS/R5ksobke/eHArFA6doyyDuV4mEgdWTLagqp1vZjGN5ZJXpAYgf58xP7WoR77
+	rQWLinK6UJ7QZvIaOffLWHgATROVpGHXs4peIgw1Z1lrWG8DBXBhzWXPlgZ69mal
+	x7PSp2PRHCQzEDuZih0e5LX6y+XQZBJJTW60TgbS0rVbo0AWw3RwT/vFmX5kdsMC
+	AAqVeA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fvy6hsm4t-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 01:47:41 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-38dbf293831so5773402a91.3
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 18:47:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1786067261; x=1786672061; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=JhlxfeYKuuhGGTKptt6/0FUkLSlB4juTWmeosV4wFr8=;
-        b=Gy5SVJq/IYVy6u+Ag05AlGSkhINeoQ158Mx67idQStKD/mjqnqYDS0huJEjAHJaW+8
-         o3DBktEcpNJuc3yaSuCIOfUk85UWk8YgDhEVa7AGxsdFKqHGqvgui+ZNSU/baq+xdVt1
-         xXj79k1bbsaoEQPm3a+Xit2C3N200MEcHhNDi3/BPTZGEhSLYOZxApA2sgHM6uW1/Z2M
-         m0F64UHCMPyFTZ31hSmBuiruqGIpgsqZL8b/L9MzGerRna4XqlJsvJGy655MHYtmJur+
-         brAhvnvmu649KhgCoIVAAmhifXGOyEB0NakOM5pJguY6ku7gNFGGpFeZGoTq2K++a8WZ
-         zfnA==
-X-Forwarded-Encrypted: i=1; AHgh+RpG3SKhpT0xCUteSGq2JL3bvoa/sshZ/7T94Ft2jVeGXlayGSFKmfmFzOXTl+1P18/oBAsEpmXi032qrYHsUA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx/gCAs+7s6uxWH6MCyXje9yNVaXTjsLWUVqqxBUFgrUCgEnVKx
-	HfJqnWfFsmmWSdQViLzSX66ba6ZZ7nRSmGeCCHtym/1uVE3a3KGSjdY1NnAx2SO9m/1FPlvowB9
-	fgoRzCY76cr6Tu2mKOwAMBu0I4xvifrd8CeIeEVIMJeN5bvbJuPNwqXadBj8=
+        bh=T4yQd5VpQTZvFK02L358x4zxAu2+dKl10X0+R1gySgk=;
+        b=L/yhpDL87CaiFLBzZ7MXHvJLsPmKpLwLcRm0s9P8KxiyLcjsIsj3kwP+QMhEM9Wz4w
+         Dj4yn9OtgvAqBCq2EOJ3YM5OcSNSL4sPJLEeWbD7YP2PR7aFAz3k9fe4+aA+jM2eTwRh
+         /AFrkKRkUUWBuGBXtS76NYRX9uWe0pPlHTfW9oHArVbJ/MK5FpTOdowR+D5YMg+8s+58
+         GV/OofjRwoxWhCvdzZOUpIlWtgY+xBWsWYkmVxYfB6YiLJn47JcWnuRGWblG1N4E+O59
+         gDRnooRnoHl3vtmNcvn60HgTRZk92qB6U9q2Hx02A7RN1T49w7rVkx+3SOE3t2eZFh7s
+         lJsQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786067261; x=1786672061;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=T4yQd5VpQTZvFK02L358x4zxAu2+dKl10X0+R1gySgk=;
+        b=rLNDaxu7Bgovy/xxGiCDQnqEySiNcdpYxH/o5ya9fQNxaKy1+cso0JBQqqnKWIE3Bh
+         WV8wPXynOCjW6vbHz2XztVny2QNsviDdPbS0Zd1Np876FLBaG3Xv0cJa2ZRyY4friv3h
+         rfkN+H1T4swGy6gwX9HyMyjHQ+YNVqLax1jc5cKIR1+EZ961Fv8OrFtkVzLAtpN9pk/W
+         Px0dWFTkF+BgFlnSiyWb/ruvOSyNFqecWv+j2hIY8S0zwfJTS8B2EeSAmudZKP79Gkv/
+         7mk+r/EthnCqmewz7iy5He0GIuSkwzakTFGkGxbtD4SenDHV7NwdsDUGVZsFHpwzVlu4
+         lq3Q==
+X-Forwarded-Encrypted: i=1; AHgh+RpVFmBp2X8VG1WVLf2FYuM10eVG6/knUsZyfeG3Lmh/bYNvtgMoinweW3kKuGCE6n3iCmwTuVebNBfBCbgItQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWM0/DoGP4lj/nV4jekwheG93na0dPxv0v8Zdaz8lr0bed0DF4
+	Hwe5L133HzYH6uIvL+g/5NZ9VTpQpPdtd2qaIK4UEL1YU2QQcwhb6zR6jajysFLW2yIkcmPGplp
+	aqtp8oUXtKdG5af3TNkx4+9oa+ReUimZR1K78YSRIrudKv4hyg/mvQRbEhfhDg8ov2zEAcA==
+X-Gm-Gg: AR+sD11RvEbVX58myJTQrB17kdVkTDDokzmfQCcwQOMtTNtIanh6RU9ebtBDCB+15Ek
+	S9epvRQeTuMTL73QaqQlOj/Uf5tZJtFb3ctjj4u34k8Xr7ZETCre/+eQ7m2lcGA5uu/LLd68xB5
+	oyJs7fHHJrD28aeAKqr+2jRJeSA8wThfM9HtF45w5vuoBCub8/sKbEJLGn0SXFMe3wF2jHomIWD
+	ASPQmUZwEyKQTHK7vYLkRCFL5AJ34At5PsuofgyxrHwZCpUq8duEr4i/cH1rFa9BAuzcrvoe4z7
+	9UkEFrrc8gWFaPMCZqnT53YCNH1+W8d1cc7IlKp6hShSiFN8vhgDiDH7F5DzDLE6kSMgkv3ZuvX
+	xrznZBrarz5rJWpUHZbMqXWyaqZehjwQdiIrvysC47vXXieG7NKbK/06+89CI
+X-Received: by 2002:a17:90b:134f:b0:38e:488f:7068 with SMTP id 98e67ed59e1d1-39261f729d5mr365772a91.2.1786067260879;
+        Thu, 06 Aug 2026 18:47:40 -0700 (PDT)
+X-Received: by 2002:a17:90b:134f:b0:38e:488f:7068 with SMTP id 98e67ed59e1d1-39261f729d5mr365726a91.2.1786067260421;
+        Thu, 06 Aug 2026 18:47:40 -0700 (PDT)
+Received: from [192.168.1.20] (103.sub-97-215-187.myvzw.com. [97.215.187.103])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bec5aac2sm1064869eec.30.2026.08.06.18.47.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 06 Aug 2026 18:47:39 -0700 (PDT)
+Message-ID: <6a9196e8-2e2f-43f8-9665-6ebb82b95951@oss.qualcomm.com>
+Date: Thu, 6 Aug 2026 18:47:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a4a:ee0a:0:b0:6ae:6f38:dac with SMTP id
- 006d021491bc7-6ae96c8490emr9917601eaf.10.1786060893028; Thu, 06 Aug 2026
- 17:01:33 -0700 (PDT)
-Date: Thu, 06 Aug 2026 17:01:33 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a75205d.01d0871a.3a0d52.0034.GAE@google.com>
-Subject: [syzbot] [wireless?] WARNING in cfg80211_wext_siwrate
-From: syzbot <syzbot+af177aa139efdd13a9da@syzkaller.appspotmail.com>
-To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: ath12k: fix channel list double-free on error paths
+To: Linkai Gong <gonglinkai@kylinos.cn>, Jeff Johnson <jjohnson@kernel.org>
+Cc: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
+        Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath12k@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+References: <20260731093816.1771338-1-gonglinkai@kylinos.cn>
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+In-Reply-To: <20260731093816.1771338-1-gonglinkai@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: goXsB2JgDiXqH1VR-flVRzUjcnR4crFX
+X-Proofpoint-ORIG-GUID: goXsB2JgDiXqH1VR-flVRzUjcnR4crFX
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA3MDAxMCBTYWx0ZWRfX/QaX1bKhpQjg
+ M1Q7BxwIyElqwCs4uVr9YOhJarc0sajXmj4nyVwQFzDlcIkokG3VIkFgpfr0TsDiLxw5jOuYfni
+ bH8p/N9G9XBEw3WwO/iuZ+ZTiPt/P8Hh6RVVqGEjGRIKZ/Th7uZRh9Q/lDHA4d0+fXUeDCfi/dt
+ OezVzI40fqlCgnHyzKXAq/zWH3tyeDxFs4jjbdkaya/mgKCcNucR9yZ5AxQhULIjJ9kJDskAsa8
+ sgE9+aHGgKSY2Gz8DvaB9icYDxscAP08rHVVNOQxagl+3t8Ijl1k8IS39jesPdNUuFtbh7BW/2U
+ scEkKkHZlhMQjqE0kN77mgvUItnJSaKyknXSlOdbaDtU3BuqoY0uyH/sunP6qO0LUveddSvThzj
+ 72L3A4/LaIUkMc6LRYB06ryJd8PwuOYIaYPv8NbJeHp/Rpe/nFD3Z5D9wuByyjcY6lsS71w3IWz
+ YpwkalHFQViTs4fVN1w==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODA3MDAxMCBTYWx0ZWRfX63uWUrIqwOoc
+ rn2JHHSzU+kj7HF3ulyiJy2l2CU/sRBz3XgcA3dDSg8jq7JiZ80iKg81ypoPJTc7HKLcid2cIA7
+ 008nSPT1vKS5lAVVSOSDSdVYV0tEd3U=
+X-Authority-Analysis: v=2.4 cv=bot8wkai c=1 sm=1 tr=0 ts=6a75393d cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=UaEkX0D7FlC0tWE/LoNF7Q==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=2tX9H4ud-KebakibVqoA:9 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-07_01,2026-08-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 clxscore=1015 adultscore=0 suspectscore=0
+ malwarescore=0 impostorscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608070010
 
-Hello,
+On 7/31/2026 2:38 AM, Linkai Gong wrote:
+> ath12k_mac_setup_channels_rates() frees band channel arrays on failure
+> but either leaves the pointers non-NULL or clears the wrong band. Later
+> ath12k_mac_cleanup_unregister() frees the same pointers again.
+> 
+> Clear the correct sbands[].channels pointers after kfree(), including
+> a copy-paste bug that nulled 2 GHz after freeing 6 GHz channels.
 
-syzbot found the following issue on:
+https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath12k/submittingpatches.html#tested-on-tag
+Tested-on: tag missing. How was this tested?
 
-HEAD commit:    31a420a822ff bpf: Check sk_state before sk_protocol in bpf..
-git tree:       bpf
-console output: https://syzkaller.appspot.com/x/log.txt?x=14370132580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=4e38b15c29e6a1d9
-dashboard link: https://syzkaller.appspot.com/bug?extid=af177aa139efdd13a9da
-compiler:       Debian clang version 22.1.8 (++20260613092233+e80beda6e255-1~exp1~20260613092250.77), Debian LLD 22.1.8
+> 
+> Fixes: acc152f9be20 ("wifi: ath12k: combine channel list for split-phy devices in single-wiphy")
+> Signed-off-by: Linkai Gong <gonglinkai@kylinos.cn>
+> ---
+>  drivers/net/wireless/ath/ath12k/mac.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+> index a0928890671a..5468a8d2d5d5 100644
+> --- a/drivers/net/wireless/ath/ath12k/mac.c
+> +++ b/drivers/net/wireless/ath/ath12k/mac.c
+> @@ -14275,6 +14275,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
+>  					   sizeof(ath12k_6ghz_channels), GFP_KERNEL);
+>  			if (!channels) {
+>  				kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+> +				ar->mac.sbands[NL80211_BAND_2GHZ].channels = NULL;
+>  				return -ENOMEM;
+>  			}
+>  
+> @@ -14325,7 +14326,9 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
+>  					   GFP_KERNEL);
+>  			if (!channels) {
+>  				kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+> +				ar->mac.sbands[NL80211_BAND_2GHZ].channels = NULL;
+>  				kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
+> +				ar->mac.sbands[NL80211_BAND_6GHZ].channels = NULL;
+>  				return -ENOMEM;
+>  			}
+>  
+> @@ -14365,7 +14368,7 @@ static int ath12k_mac_setup_channels_rates(struct ath12k *ar,
+>  					kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+>  					ar->mac.sbands[NL80211_BAND_2GHZ].channels = NULL;
+>  					kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
+> -					ar->mac.sbands[NL80211_BAND_2GHZ].channels = NULL;
+> +					ar->mac.sbands[NL80211_BAND_6GHZ].channels = NULL;
+>  					kfree(channels);
+>  					band->channels = NULL;
+>  					return ret;
 
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/180a2e05da8a/disk-31a420a8.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/7e4b97c130ad/vmlinux-31a420a8.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/589c3b9f04af/bzImage-31a420a8.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+af177aa139efdd13a9da@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-wlan1: Failed check-sdata-in-driver check, flags: 0x0
-WARNING: net/mac80211/driver-ops.h:884 at drv_set_bitrate_mask net/mac80211/driver-ops.h:884 [inline], CPU#1: syz.1.7134/31079
-WARNING: net/mac80211/driver-ops.h:884 at ieee80211_set_bitrate_mask+0x1034/0x1320 net/mac80211/cfg.c:4134, CPU#1: syz.1.7134/31079
-Modules linked in:
-CPU: 1 UID: 0 PID: 31079 Comm: syz.1.7134 Not tainted syzkaller #0 PREEMPT(full) 
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/24/2026
-RIP: 0010:drv_set_bitrate_mask net/mac80211/driver-ops.h:884 [inline]
-RIP: 0010:ieee80211_set_bitrate_mask+0x1084/0x1320 net/mac80211/cfg.c:4134
-Code: 20 01 00 00 48 85 c0 49 0f 44 ee 48 b8 00 00 00 00 00 fc ff df 0f b6 04 03 84 c0 0f 85 3b 01 00 00 41 8b 17 4c 89 ef 48 89 ee <67> 48 0f b9 3a e9 c3 fd ff ff e8 ad 3b 82 f6 90 0f 0b 90 e9 41 fe
-RSP: 0018:ffffc90004457778 EFLAGS: 00010246
-RAX: 0000000000000000 RBX: 1ffff11006ac0325 RCX: dffffc0000000000
-RDX: 0000000000000000 RSI: ffff888035600120 RDI: ffffffff9069c4f0
-RBP: ffff888035600120 R08: ffff888069d60faf R09: 1ffff1100d3ac1f5
-R10: dffffc0000000000 R11: ffffed100d3ac1f6 R12: ffff888069d60740
-R13: ffffffff9069c4f0 R14: ffff888035601938 R15: ffff888035601928
-FS:  00007f1ff74ce6c0(0000) GS:ffff888125050000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b2f81aff8 CR3: 000000007c55c000 CR4: 00000000003526f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000600
-Call Trace:
- <TASK>
- rdev_set_bitrate_mask net/wireless/rdev-ops.h:683 [inline]
- cfg80211_wext_siwrate+0x78d/0x9d0 net/wireless/wext-compat.c:1238
- ioctl_standard_call+0xc5/0x160 net/wireless/wext-core.c:1042
- wireless_process_ioctl net/wireless/wext-core.c:-1 [inline]
- wext_ioctl_dispatch+0xee/0x410 net/wireless/wext-core.c:1013
- wext_handle_ioctl+0x110/0x1d0 net/wireless/wext-core.c:1074
- sock_ioctl+0x159/0x7e0 net/socket.c:1353
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:597 [inline]
- __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
- do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
- do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f1ff659e0d9
-Code: ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 e8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f1ff74ce028 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00007f1ff6825fa0 RCX: 00007f1ff659e0d9
-RDX: 0000200000000040 RSI: 0000000000008b20 RDI: 0000000000000008
-RBP: 00007f1ff6635024 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007f1ff6826038 R14: 00007f1ff6825fa0 R15: 00007ffebb92fee8
- </TASK>
-----------------
-Code disassembly (best guess):
-   0:	20 01                	and    %al,(%rcx)
-   2:	00 00                	add    %al,(%rax)
-   4:	48 85 c0             	test   %rax,%rax
-   7:	49 0f 44 ee          	cmove  %r14,%rbp
-   b:	48 b8 00 00 00 00 00 	movabs $0xdffffc0000000000,%rax
-  12:	fc ff df
-  15:	0f b6 04 03          	movzbl (%rbx,%rax,1),%eax
-  19:	84 c0                	test   %al,%al
-  1b:	0f 85 3b 01 00 00    	jne    0x15c
-  21:	41 8b 17             	mov    (%r15),%edx
-  24:	4c 89 ef             	mov    %r13,%rdi
-  27:	48 89 ee             	mov    %rbp,%rsi
-* 2a:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
-  2f:	e9 c3 fd ff ff       	jmp    0xfffffdf7
-  34:	e8 ad 3b 82 f6       	call   0xf6823be6
-  39:	90                   	nop
-  3a:	0f 0b                	ud2
-  3c:	90                   	nop
-  3d:	e9                   	.byte 0xe9
-  3e:	41                   	rex.B
-  3f:	fe                   	.byte 0xfe
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
