@@ -1,52 +1,72 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 563C612B94;
-	Fri,  7 Aug 2026 02:56:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33E822579E
+	for <linux-wireless@vger.kernel.org>; Fri,  7 Aug 2026 03:25:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786071400; cv=none; b=PeSm6RrhLhA5TyrFAEMrRXkicm4H5+6DJmuSMFfu4ytAohQAfxeK+Eq1YjoqTEIGQRP5lvfDF7nPJOwYKf33J8V7YNFQPhPvOrZmdi31IcVMsUh3bYsatFVNE6cWAP9qhp92MvwYwrfysY0GTWH+UaMqTGtFVJ0NlnWbZoWdtnk=
+	t=1786073143; cv=none; b=JUfV7dPQ+UHEMgm4OZ9+lANq8if7d0kplotfidBH9KG+fP49zt8dBuQ5/yXw/SP218tFgMn/04Qjqdrh5xsc8iHV/t6AhMIuv2lfkzeq6k6B0SSNircsWbjm5M9dgQcbfaD9u8gNgPZFD4xR94SesNflMPSdtjk0vW13h2N/48E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786071400; c=relaxed/simple;
-	bh=sMjo+vMZ3HtHucfyWe9JW8Ip/ZGVz+rgSm+BHT0zqf4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=S9XSQ7NnsA5yDRjMJOZk5KzpezssQPcR/WEe0m82SOyQsz6/orcPqDZfdNC+SD5pfSn/m+RbS7Gah2TaUufd8sChU8vwfV6lln5lSlOV/f6pXHRV5v+HtKGr76QVZQfqAOCrLyW/VBi32bqrNpbueZ/zM6ltReNIkIORE/ycwJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 97dedbf4920b11f1aa26b74ffac11d73-20260807
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.12,REQID:75a0e0ad-b6bd-44ee-8edb-59f1de35a4e6,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:20
-X-CID-META: VersionHash:e7bac3a,CLOUDID:dc1a74f3a12583116f8656b6593050f9,BulkI
-	D:nil,BulkQuantity:0,Recheck:0,SF:81|82|83|102|850|865|898,TC:nil,Content:
-	0|15|50,EDM:5,IP:nil,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:
-	0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 97dedbf4920b11f1aa26b74ffac11d73-20260807
-X-User: gonglinkai@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <gonglinkai@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 481017638; Fri, 07 Aug 2026 10:56:31 +0800
-From: Linkai Gong <gonglinkai@kylinos.cn>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wifi: ath12k: fix channel list double-free on error paths
-Date: Fri,  7 Aug 2026 10:56:28 +0800
-Message-Id: <20260807025628.1893831-1-gonglinkai@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <6a9196e8-2e2f-43f8-9665-6ebb82b95951@oss.qualcomm.com>
-References: <6a9196e8-2e2f-43f8-9665-6ebb82b95951@oss.qualcomm.com>
+	s=arc-20240116; t=1786073143; c=relaxed/simple;
+	bh=5DWHTyV/pH+3MdDwtmbB7rkHS/t6yPLT6Xj+jVdd9cU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=haUWfvi8ZmSFBxqF1cw0KILjz7pyBwwfoXkxqotdzapl7wIUJqbyg6YY64D9hoszTQhKQmJcTlBsNvYjRsGq9pRMG92hYMeImI5F3XX6U/j7B43W7Nl0qoZiWj0tQeUTeoCUSNDJ+oVTQ7lrsiYttHpwHszeTRX4/8PrwbGUeOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XmlVLwZn; arc=none smtp.client-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XmlVLwZn"
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-7ec6815f0f8so436487a34.3
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Aug 2026 20:25:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786073140; x=1786677940; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1+6XE7Yc3wed4LEk38MwpLFA21L8FO91QUtlY5oe2OY=;
+        b=XmlVLwZnH3GVLX7Qa71gCGaXQGrasc2svQM5rm07SFiO7TmbuoaA+FSl992Lx8DYuE
+         DQdY6JGm66x0MkxNJ7iJoJyM+njYCuGaEYcXuzejPhh+nhXwWb+oX+pQ1IuEN+gzua61
+         EATV4NHjC4tSc4kr1YPveYGRO1xus6kfWKbeZYkIV9s2CvSa08zP8XuI1Au557P7okS6
+         4w+88GRSLztxXrQYupvLu2YabXUgVW70OZyl22bcsTGc1mtBVhiBFKlAwZ4L7/H2wHw9
+         XVBoBCgx1kKrWdn/5IdusxCSFFy1Jj1qYJPFuA/FhVhfpxp4aW/keQDoew8u24mXEF9A
+         tZ0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786073140; x=1786677940;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1+6XE7Yc3wed4LEk38MwpLFA21L8FO91QUtlY5oe2OY=;
+        b=N0pPqVn9O5mUbBttQLhHllz4OM+a1E5KiP8kwSlbcFCkJGiBYZfREq4cJBwupSs8Eg
+         esn9EAHEm7R3bZnzzadAxYjMkxJcit8oCBiS1ckRsY1iFHrilRYw6gkq/8REmMKym+3l
+         5ggLtij9sznb43l/zRpn8SSC2aUvAkpdAYe+X2pWBLkho7hkn+gGu3Q9DS2rLlHpE3dL
+         enRzsnW6dG13lD1hik3Q8zt7syZQwKKtT+QhbOMSXypDQFXB11I6FiAHCbvgNlOOVIOm
+         nGBdAqtMYxnu9OtPt9rbkP3S8QZKu+YtILe8g0GWjK5sdDomjrzAJCDJxJACCpGP2KS6
+         i5KA==
+X-Gm-Message-State: AOJu0YxzXl/g+ijZ9uZcWcV+PgpJ8KRYdvhnAz9po0LXM7GONrxpqrFn
+	Z2xfpGzuA/Ee5t3hD52x4rdnKmHr4kKfmWeSa0bmCaocZscRKdt+y3OzM62YPFIz
+X-Gm-Gg: AR+sD11f/3yY1HKVUBxhGsTaQOyx+b2ioNn+uWbUzB0uMJre7mRfglrbU2PYateFU6C
+	fRa2uU2trFpPJtDbsMdKvXGlbxcR/HVwUnbDCLmIxwQB8zRCtSAjezwfTnMULuo80nsg3QK0oeT
+	7NQVmAIVU8KbvuxSU0sfOJvbQ3eLqQqR7PoSmPL6b0fccc5qy+36Iu57BWM63uArTL29Wif985P
+	98IOpWHPR+F2F4nuWjJGyqw6haLu/Gs1pEmZRX0xNQouVmsvrbYOXU6JFqIFE6lOIBuW56jE2zI
+	brw7lvt+0r/beWHi66CB8AJBi51He0VArcNc2JxA/MpDwfGIiNigABxiYDHR6HTUbUpH59FgY0k
+	zPwUOvCSkID9RQrM+U8SI6wBpqg8jpqFH4/VZHEedlnaqNWuXqyH7UP1HEWhMSzNvkYGdUqpbS/
+	vKOhGXvpaygpb+j7NEaGsFBd/Yr2XKLBgXadeBq000/uGvFBOtmxkVqguYGXrTC+0ZxPaCs8OvY
+	e5Zbs7ZQWZusNAjbQFIG1rF2cbk05Rq04drcAu+koZcv7EQytWgCuIQTiKEZLwkt9f5mwnmFw==
+X-Received: by 2002:a05:6830:8d1:b0:7dc:d6b1:48b7 with SMTP id 46e09a7af769-7f1e5c6e96amr7295657a34.1.1786073139763;
+        Thu, 06 Aug 2026 20:25:39 -0700 (PDT)
+Received: from antares ([149.88.25.215])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f35b563b04sm405786a34.6.2026.08.06.20.25.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Aug 2026 20:25:39 -0700 (PDT)
+From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211@lists.linux.dev,
+	brcm80211-dev-list.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v5] wifi: brcmfmac: cyw: pass PMKID to firmware if present
+Date: Thu,  6 Aug 2026 22:22:09 -0500
+Message-ID: <20260807032209.447044-1-bogdan.nicolae@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -55,25 +75,47 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Thu, Aug 06, 2026 at 18:47:38 -0700, Jeff Johnson wrote:
-> https://wireless.docs.kernel.org/en/latest/en/users/drivers/ath12k/submittingpatches.html#tested-on-tag
-> Tested-on: tag missing. How was this tested?
+Zero out auth_status on initialization. Otherwise, garbage will
+leak from the stack to the firmware (when ssid is less than 32 bytes
+and/or when params->pmkid is set). Then, pass the params->pmkid to the
+firmware (without it, the firmware caches a garbage PMKID on successful
+authentication and denies a subsequent association request that includes
+the PMKID).
 
-Thanks for the review.
+Fixes: 66f909308a7c ("wifi: brcmfmac: cyw: support external SAE authentication in station mode")
+Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+v5: Fixed line length > 80 chars
+v4: Fixed indentation
+v3: Added Fixes, Cc: stable, and Acked-by tags
+v2: Split into a separate patch
 
-This issue was found by code review of the error paths in
-ath12k_mac_setup_channels_rates(). I do not have QCN9274/WCN7850
-hardware, so I could not provide a Tested-on tag or reproduce the
-ENOMEM double-free on a device.
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-The bug is: after kfree() of sbands[].channels on failure, the
-pointer is left non-NULL (or the wrong band is cleared), and
-ath12k_mac_cleanup_unregister() frees it again.
-
-I understand Tested-on is required for ath12k. I will follow up
-with a v2 including Tested-on once I can test on QCN9274/WCN7850
-hardware. Meanwhile, any Tested-by from someone with the hardware
-would be appreciated.
-
-Thanks,
-Linkai
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+index 873754be5..2c59b5e57 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cyw/core.c
+@@ -200,7 +200,7 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_pub *drvr;
+-	struct brcmf_auth_req_status_le auth_status;
++	struct brcmf_auth_req_status_le auth_status = {};
+ 	int ret = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -208,6 +208,8 @@ brcmf_cyw_external_auth(struct wiphy *wiphy, struct net_device *dev,
+ 	ifp = netdev_priv(dev);
+ 	drvr = ifp->drvr;
+ 	if (params->status == WLAN_STATUS_SUCCESS) {
++		if (params->pmkid)
++			memcpy(auth_status.pmkid, params->pmkid,
++			       WLAN_PMKID_LEN);
+ 		auth_status.flags = cpu_to_le16(BRCMF_EXTAUTH_SUCCESS);
+ 	} else {
+ 		bphy_err(drvr, "External authentication failed: status=%d\n",
+--
+2.55.0
