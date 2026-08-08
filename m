@@ -1,142 +1,108 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-qk1-f228.google.com (mail-qk1-f228.google.com [209.85.222.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35AC822157B
-	for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2026 00:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786147224; cv=pass; b=c+J2HAWMO92YEk3FruiXjEukkJ/30vFYFbrKJLCBC0ZY2TdxYW6nlOWayDZ9+x55ZIQhik4DhL0nXkit37aDHCWQVh3j6P8QmMbQO1onmt+5Tmb3/ceJtboJwgHKNkisBED3lNcCNI9a6g1x8L0TVT4B0P2KUCb0yACSRR/nsc0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786147224; c=relaxed/simple;
-	bh=UdR7ZTFIL3V+BnNVq1UDIT4zKuWlbCjD0STBKjhwyC8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nM+ol6gPWoB4u3R7tXZM9DLrLPz1tdLYHNfvqQCve/uNhAAB23teNE4z2JxkPdmITFpianCtX0IU9nsDMBNaq+zi/90poAGEQY2EKECuf2VJIhXJpTQW8pQNYgO564ssSwCqsOXwZ2ZaR4KfLt996AdcdQlzRGZGj9/wUdt7zLI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PWW25m0E; arc=pass smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3491119B5B1
+	for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2026 05:20:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.228
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786166429; cv=none; b=K9k3+g+HETdUsuiuGzTrcMIfvv5hAf4HXUU5MAHOOod+dYfTe/XIGvZx06v7ZnWlQZajcUR8b9GqXe8DGkjXVq/qLfo7pd7AUwU6Lm+XpQhS+f+AGo8rxsyBFrh0iVgb3h7OEFwYrAZOZW45a5cHifgkOy4Paz5ujbmqBtQNB38=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786166429; c=relaxed/simple;
+	bh=nU/2OOvqLDucf42vJ9zbZVAYbRRlmeeEpprDjXmH3a4=;
+	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=iKVVrfRNtL2X7peyDXVjiJzJsGYQarz3/DVZbhJQnXQlo4m8OgBTXZbAuS4njYhgu6WhNbTT1wvYbeyob4kOYbI3TG4o7sUhcXMybJT0o5lstRftF8Wnyfhutm8wsIuzI/LcG7oob8B6NrvKdqt+prLxba9vYG0UAUBSW5fesCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=F/zEfiEY; arc=none smtp.client-ip=209.85.222.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PWW25m0E"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-6a18ef236ecso7491a12.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 17:00:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786147221; cv=none;
-        d=google.com; s=arc-20260327;
-        b=ms5npX3Cr2GN724CZkGUHhA9uedJ1wO84ulbjl70Hl8NSunmfuj0h+kz0tvEeEubZg
-         r5xxf2qNdcn1bqm0pS2FoOeFvZeZkn79zMZuuCkQpE8+eDr/aRsnkvWBYkpz3p/G1Hmw
-         65KIUa5Ga3UM+w9M+k9FANb1SdLNNR/m+4baKXq7ZcGFCxjielF68+9A78c9WTuGLiZS
-         b1sDon4aLhqXqYplwSIDXYFqSlYcS4Iu7DSnDqRPzVBGxo5cPOQ+rBg6wWPrNK3PSc7A
-         74Onj/p9BCYeuZT4qoybySD2mrqcWk2OozEj24GgDR4Pyu9+wYhMakSuCRQd7XDN/e+U
-         Ak2g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=v8ZBSWIPrWKHHCg3jurXTVoAiywt7j3Be5iKukh07Cs=;
-        fh=ZS1PzuDaSBRrfUbFIp52DxpIM6r9UAGY66vTeJXmclM=;
-        b=Z96FLRDInJgY1hA+I8N2UYwifCgDunauqzIDClfBR70fOdG+B1/U5zr6fMdxNmXHhA
-         VeuctZCEd95KfWyQCS24Y3Y3y9seG6L6W0rk97H0ren6YV/zlDJHJ/KU9vl2a+0casqx
-         bro6fa0QSrfLc9MGwcoNPhomShXh2p999ZH+WSPcYhwszlPMgVYWegfXMU07zNeOJirU
-         JuF8/z2GF4JEgAi+uvwG/qtm893/W7b+iwSFq44If8UscvdfS/VqTCaw4yhTh02kMkE1
-         rpHO8GJEG2B8krqHge4TyixP9Whs2o7Hro19usbQnNllvHX+5dRaCXigj1s1tYQcmBJ3
-         V8qg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786147221; x=1786752021; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=v8ZBSWIPrWKHHCg3jurXTVoAiywt7j3Be5iKukh07Cs=;
-        b=PWW25m0ECv5b+Id9VOVf0DA3DA+YziO8c308WlxIApCuUPgzm3eto5gv6jMxEf/0wr
-         eZo5kkJQ19koMvI8W6H5Whrf/vdugIZiar1doHiJ6y0Xwr5dlaC8OkV7R+Q7cjvukesU
-         5+8L7DmYjG19XiD8gM7TsN9C8BmWCjGyAAlvJ9OxhfyqJOjB3o+ciAvwLMLIteWPX6b5
-         Op9kvvJemdK8LR29DCTaN69TSUth5gTixx0MVCz+g7TBDa3CtWyrU9CSiqELL3tqU1S9
-         AzRFHr0MkEU51zy1kKssxNXCiyJO+wrKdDA5V6islR+ySeu8bGCizqc8pNevaf2DWhUN
-         9OXQ==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F/zEfiEY"
+Received: by mail-qk1-f228.google.com with SMTP id af79cd13be357-930f4e5eed1so10314585a.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 22:20:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786147221; x=1786752021;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=v8ZBSWIPrWKHHCg3jurXTVoAiywt7j3Be5iKukh07Cs=;
-        b=En59uG99kN6TkeoUEsSauIB3cWnxnM0T8AVDzwNrVW1HzM9tuS7JFEJCqossYTQKqA
-         1EQb7Cu48xfJlqO6YNHS9myP98zsPKFMZrmpMexyJN73JHjp/Vr58RNk/1vtbDj8mBXl
-         L2CsNgFtT1bXJkuXcIv77J5Xg+cn8cuJw7xu5w59LUmPQpryPbotAjKvxoNQtKVqkJyr
-         eVT9O1z95EQQrk2A/Sgp9xY9cexWRzoyQWxGZoE+qCdhglSmNWL9SB0tZKDsMW804VrB
-         k6W2hXFHrLxvqi0iESb8PptVDyKvXEf/GTW86Z/f9RfKaHlY2Cz3CBBPBSZweyTysmdW
-         HBTw==
-X-Gm-Message-State: AOJu0Yxep/pLmXgNZOC6sn6SFwKOzI3Wn9MPEw/3wtyrzTvc+HoPTDsY
-	evoniyVTZ2i8w9NjMHUWo7np91MFZ3anKVHleYZsJZYDjY3pM64SKmITQ6H0nrZtzxyQL2Nlxvz
-	5E/1fxwikf+ibqMGVdxr33DemTGt/pbs=
-X-Gm-Gg: AR+sD11xyvAlMUOw3GYOajka25w1llx0a5oj64VVfKY8i4YeURRzZAF/jwyJL1u517H
-	ZC1k/bTw21Z8bLcjYUJftVJRDG4LMIfOv6T/Un08hvGTjHnNApinsmR+xcaqOWERh4MaCq6F99P
-	BRpKnwOe7TYlh7o1pAGYNGwtQhYSRM0fxMdi/qIWODS0m/nnbM4bKlgfgGZZWxuz5cvVHV8kfZ+
-	MUcZAUcTaMQSu/yHK9BmKFqh7yqdCjbgBwCNriE2uvq8mFxqgqpCP00VozOcZmWNaJlMi/VvCTX
-	rXDj3Oa3LzpEmSXGBkCuo2j2+NHmSE2uEs03m3D8qYvzUh0kpZjrPRxosLvhG41NrjD09vx/XYu
-	nFeZwS0l9mRAC4LP7PilTeaD2+o/l51IAqjc8O+UVcbQ=
-X-Received: by 2002:a05:6402:28cb:b0:6a1:445f:1f3 with SMTP id
- 4fb4d7f45d1cf-6a14f28502cmr6315290a12.4.1786147221307; Fri, 07 Aug 2026
- 17:00:21 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1786166427; x=1786771227;
+        h=content-transfer-encoding:content-type:mime-version:subject
+         :user-agent:references:in-reply-to:message-id:date:cc:to:from
+         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aFUU6ozWORWiiM1uNeCkxuEsbC3KYm7Xvn+yMHJJFRY=;
+        b=N8Y0vAjdM0NgXwJh3G+x9OJm9hUUuSVQo5anpc0g40FivGQUuakXd0XfUOiNuGf+Xn
+         3jj4KJWtm7fRjeRIkLsJHk1ITWApMYBK33mL/c3CrBmCmVwQctNqsPnO6wF9y5PTbZOz
+         bZ9H12NFGAxHRI+b/kR5y+ZShCmcIGBGGE1qCJvFnSnvQWdl6yNnzM3ea+ubGk3ZuV7v
+         2TMnyQvGcBxVGpBOppB8leoN/X8Sd242t+CPl0bm0nP8lMUPB/+e/dStzGDSs2Vsojv1
+         YnKOysZArDGLu9ehDycwH4sZmCbCZM83Vafu5QWbNanUjhA/RjJGl3zjlGLdDP+HjHTX
+         Z/kA==
+X-Gm-Message-State: AOJu0YxYQyUgZvtGIHr1L8gw8NRDUDiGInzoj7EtbO8vjxpgHQCOIKZz
+	AvwP+uOqAh1Q6EdB2v5L2I9vDntRRF8gNag1rxl9tLtSICCulcPsWT+rcXRlXO/ycmJezefvxCR
+	H80Gd4fWCDt4efcgENeuPqeYuHDBKQr7TOGOb1I68E1+NhuQf0fhzTQ2AFZfJB0bPu+74br40Q9
+	N6EArjn9uiqGhGw8O0vQz0vjJ3wDmbC0IdVjejuleT+v/v2CELaCLBYDoKRwL3u9xdCMKLlaRwn
+	AV1NjMLn/UPNjanJp6emTesHTHI
+X-Gm-Gg: AR+sD10AVIRf34cjHVdtxWw07TiygLVNI3FrQ0nrJW+X69aHfc/YGXupNMbI3HTUP8X
+	VLK2PJRRJEV1+LH1Y7X8XuSA46GObUO4e84yBLyC2CnWfsYcDRSY6Pu94idrOu2mJnT6GIp115x
+	TSRdXILEMYRNxNFfo0QLpYNBTlqm03XXLYPb3KbZKLxR8OYAKj71WyyWP7i3jzG4Q1DNimEEXeL
+	uXVPQHj3MVOcGC0/y+AwSTEZcC44E3Iq0BfW5F8+HZ0RMYuLaHW/C32gSu7uPkNr2SnlG50lGl3
+	O8gT2gwIPDASw/ETuagKiVGH4Y5ck2ye90Rx1E6eUBcww3k9IfFpTk8025j+m8CuN/Bg6wu2oTF
+	QRwob4+03bxr+Li1+X5u274B0V/nq7sifEdM1NCDPuH3efEnc/qGmg6z3MuteKq9ikUOtp+ewYd
+	MzfDj+zhs+Efj53RwxIz0c4zrcBVdqtLad2CGtspk=
+X-Received: by 2002:a05:620a:522c:b0:92e:59b0:df08 with SMTP id af79cd13be357-93649112c65mr2406392885a.3.1786166426870;
+        Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
+        by smtp-relay.gmail.com with ESMTPS id af79cd13be357-9366e283c32sm74250685a.6.2026.08.07.22.20.26
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cc6dd43737so7511655ad.2
+        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1786166425; x=1786771225; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:subject
+         :user-agent:references:in-reply-to:message-id:date:cc:to:from:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aFUU6ozWORWiiM1uNeCkxuEsbC3KYm7Xvn+yMHJJFRY=;
+        b=F/zEfiEYKdG3A2ARkBb0YOdI2Sql8pBsfRDArPhez6vI0t3yb582IshyfM31d49hBq
+         k8f7r4qizGAImLwpK1iPIS42UrTqHk66CSL2jfqEdsIB/SicOJ4fKfvGDbNgPvD1fyn7
+         2kOu5NHz8P3zN5YHE7cW3WdzP1aNyZWvXMUJs=
+X-Received: by 2002:a17:902:ecc1:b0:2c9:fb11:1bf4 with SMTP id d9443c01a7336-2d0ca7b5436mr286487775ad.7.1786166425369;
+        Fri, 07 Aug 2026 22:20:25 -0700 (PDT)
+X-Received: by 2002:a17:902:ecc1:b0:2c9:fb11:1bf4 with SMTP id d9443c01a7336-2d0ca7b5436mr286487355ad.7.1786166424861;
+        Fri, 07 Aug 2026 22:20:24 -0700 (PDT)
+Received: from [10.229.40.14] ([192.19.176.227])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bebde2e6sm13972699eec.21.2026.08.07.22.20.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Aug 2026 22:20:23 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Bogdan Nicolae <bogdan.nicolae@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>, <linux-kernel@vger.kernel.org>, Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
+Date: Sat, 08 Aug 2026 07:20:19 +0200
+Message-ID: <19fdfd09e38.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+In-Reply-To: <CA+ORkNSS1dOdUK51B0Q1r2Htc5NpP-=EmE4FO6=4rX5CUU_FpA@mail.gmail.com>
+References: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
+ <20260802083905.3819981-8-arend.vanspriel@broadcom.com>
+ <CA+ORkNSS1dOdUK51B0Q1r2Htc5NpP-=EmE4FO6=4rX5CUU_FpA@mail.gmail.com>
+User-Agent: AquaMail/2.6.0 (build: 200600043)
+Subject: Re: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE AP
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260729053408.13715-1-bogdan.nicolae@gmail.com> <20260802083905.3819981-8-arend.vanspriel@broadcom.com>
-In-Reply-To: <20260802083905.3819981-8-arend.vanspriel@broadcom.com>
-From: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-Date: Fri, 7 Aug 2026 18:56:26 -0500
-X-Gm-Features: AUfX_mzX12CQEWUDSZdNypV-f9oJzIXa5Pzlcmj9Okz8ULUQ91VkoAyJ9BvBYCo
-Message-ID: <CA+ORkNSS1dOdUK51B0Q1r2Htc5NpP-=EmE4FO6=4rX5CUU_FpA@mail.gmail.com>
-Subject: Re: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE AP
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211@lists.linux.dev, 
-	brcm80211-dev-list.pdl@broadcom.com, linux-kernel@vger.kernel.org, 
-	Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; format=flowed; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Gokul (representing Infineon) promised he would send a patch a while back.
-This would be a preferred solution as it comes directly from the vendor.
-But it also takes time. I can send a revised patch next week.
+Op 8 augustus 2026 02:00:22 schreef Bogdan Nicolae <bogdan.nicolae@gmail.com>:
+
+> Gokul (representing Infineon) promised he would send a patch a while back.
+> This would be a preferred solution as it comes directly from the vendor.
+> But it also takes time. I can send a revised patch next week.
+
+Yeah. With Johannes being on vacation I say we can give Infineon bit more 
+time to provide their patch.
 
 Regards,
-Bogdan
+Arend
 
-On Sun, Aug 2, 2026 at 3:39=E2=80=AFAM Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
-> On Wed, 29 Jul 2026 00:34:08 -0500, Bogdan Nicolae wrote:
-> > When bringing up a WPA3-SAE SoftAP with external (user space) SAE, the
-> > driver never told the firmware which SAE Password Element (PWE) method =
-to
-> > accept. The firmware was observed to corrupt its heap over time due to
-> > this omission, leading to firmware trap (data abort in heap allocator).
-> >
-> > Parse the beacon IEs on start_ap() and set the extsae_pwe iovar
-> > accordingly: 2 when the RSNX IE advertises H2E, 1 when an H2E-only
-> > membership selector is present, 0 otherwise. This matches the behaviour
-> > of the upstream/vendor driver and only applies to SAE-capable APs when
-> > external SAE is supported.
-> >
-> > Signed-off-by: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-> > ---
-> >  .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 75 +++++++++++++++++++
-> >  1 file changed, 75 insertions(+)
->
-> As discussed the extsae_pwe iovar is vendor specific so the fix needs to
-> be gated on the CYW vendor. The cleanest approach would be to add a fwvid
-> hook (following the pattern of set_sae_password in brcmfmac/cyw/) so
-> brcmf_parse_configure_sae_pwe() is only invoked for CYW chipsets.
->
-> [...]
->
-> > +#define BSS_MEMBERSHIP_SELECTOR_SAE_H2E_ONLY 123
->
-> This is already defined as BSS_MEMBERSHIP_SELECTOR_SAE_H2E in
-> <linux/ieee80211.h>. Please reuse the existing constant.
->
-> [...]
->
-> Regards,
-> Arend
+
+
