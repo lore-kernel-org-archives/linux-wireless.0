@@ -1,110 +1,116 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D1C2E737E
-	for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2026 11:33:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9FD23DB326;
+	Sat,  8 Aug 2026 14:48:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786188785; cv=none; b=kqxAWrtujoLCKUx007mJVQH17ezAKy5om+Jlcn2zegHvafSwI3f/4pCuTyeLksr4sfROMjpZdpc5nbKBpX/PmHzBtw5d2bMbla9sUdbwGBSYmRXf1WiF16Boh3bAEURtvxf39s7EptTvZli8nG4luOF91Kfm1ZYUWRqNP4qCyG4=
+	t=1786200491; cv=none; b=CoUFVhhyY11dmPB1fx56aoqQzFoPDEJZYAB5P5oexJQ9v/i84LfQKn6BnX4B7W0Dn4l/gBsh3GmU7ZrUvc+SU/UKOMijYzRbCNVlGJxQRQ5SLYMhVQB/ajxPbcx0prh2dixmbFTaXbw7KGMvv8bpcWjAGK8vPIX/ca3GnbD3ZNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786188785; c=relaxed/simple;
-	bh=D1xEcmhhf1a68HQLmZt6TiNTbKHxIfIp4aGjlkSzidA=;
-	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=mxL3oT9wi02LLF592K4MqrjXNv2E09EcPvipd4BDxbG+9OxQKF5yehjguCGxWuB52w0JP5YFOMGv9QsYGJcc7n03l282weEBjZPRNpJKdRB9Usl7bmlVC6lwYi89NCdSqImX99mOjdXt/LuS5/5cX0ZiY90m5DV0ZeRG1DuUsJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NqWL5roL; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786200491; c=relaxed/simple;
+	bh=yTTFd8O1LYrFw7p0Qs/OST2M6/47gL4Fm++Y1YgNMMk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=jRW5EAK9l/iGhzMbMVsGoJiyML1xxdKktip+7Raz6rK68hvISEj5Uz+bvXnbEBGIINivzt0D452JeZ+ftC8AtZAtlej9n5XM7wGPJlvzuGQwN7E69m5cBf47eYFAwN2tk3pUwNrTTQGDYv/O6AAm+Whw/FiqZO3g/xQ6Di3v6SM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=surriel.com; dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b=XWPPdfur; arc=none smtp.client-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=surriel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NqWL5roL"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4954df200ddso2329235e9.0
-        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2026 04:33:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786188782; x=1786793582; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=PD/+vGGo80Tk1YVcv2e7nHyQRYQQpC76abSxLSltLaI=;
-        b=NqWL5roLJAl/HxkDXDFJJQHdljJf3BRpT9Le2WitedmJ6H0j/t8MzM7tDhHVi0BwTz
-         vMUDBcVHNYsOd/9GvV6cxjBgJdKPyd3GN774HYhnqD/NSkuKDG3VObDx+Kp804ocqLqs
-         c6WC/DU2egZrxoQvqCxCz5HrdlV6RboJ04skecsYgchQEuzy3FGOKzPOOe+srp2VJpFJ
-         jET86PpR5B8Xyz825TKqy3v7fBCskF/aCITd5cymHVHqIwKE5dMHpfW1O9L8m+l7umOn
-         0oZB2VbwcWUi96314ZU8p0RSLxQJavpruLBYgOo2QN2GCIVVbJn7++99X1QG2oCyDTR3
-         7Ovw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786188782; x=1786793582;
-        h=content-transfer-encoding:content-type:subject:from:cc:to
-         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PD/+vGGo80Tk1YVcv2e7nHyQRYQQpC76abSxLSltLaI=;
-        b=q6Svo7XvQUApvdTCrUg04UcRmKOL/wzlYzSj2rWE5LlHyEBqSrOwAYj2JwDPNo6zM5
-         5GRaAfkYaosRR9vFXEqK9g6RXuD1A2gKs9xa28jfDr2/7aceEHkrdb5dtt3Ql3ouG2Lq
-         RLm/gK1cGdoh7hye2grWDz+onkSHesfw36hJiL2w/glUzi4Ah5dj7IYJ92xe+kyFHaZ7
-         ARlYC6IJm1Heze9NZ5X7/bp2nInVpaXrjq8EQvGeR50+qrFhBoYonLxL5wnB0Yybhia7
-         LrWeNshpXIhuSg2soV2D2cGfvtKpyYqE9etetWOY7TPCO4IFN63LqI5G7CktPnapYlKM
-         isHQ==
-X-Gm-Message-State: AOJu0YxtBqLauf25nlm09i7CRJ09/UkGAUatwqnvS8WD/9gwWTIij02o
-	3LzB9ScFt0RKrqUEQOPf7nBv4GB3KfEJzbyRvd3tUXWJ3xzCc/go3WWyQLHy17zx
-X-Gm-Gg: AR+sD11RbstjI5hlmRm/ILluIidus79E7DkWB9cNpKjLU9UerUNvRzsdsVnX4g4C9w+
-	R5ZtR49UhN9Ml+2qlWyUxug8Erceed2TCO/QjBX/12gc4qAy4rzZVZ4puYCfHj8GDtiwEvczaz8
-	548xq0Zwmla/2QI+ChOBqbYXgTTpCM5GOTr98ZvI5XwUUcKLThojGl3tpobRxj8dLyfJ+6Gp/e7
-	1H+gYs/84i4eTV57v4Tyr0i3QUMZJFTJXCSWy84stDGGzx/rH3WUU9jNIxerZMbYEbmFBCt7Q6z
-	VOLm1jNChvpVCJvnbw6Z/nB+MpZHeiFzbBxDYG0gvD1cNEgKratnyBgXgr9/FFinJkTq/Z0FIue
-	d8TeYyo/o88WG+EswcBwJ6DmoY92NpU43XtXHluHkppI6I5hs2qnLQd2iN9yv73sQqmghs3htTP
-	5IS5Na5FhjiKZKrL0h9udGCxAcaK8qXIrpoPHzLy9YWs88R3lRlRz8PORy7mVZuIQEQ1yWQiD6/
-	8dGyqChi3oGAKMnrEkhiTB6vDtQ7LV8rojXZQCRe1mF1G0neogOqWgj3uKjKYeKmp+yxgj0pGmd
-	pIU=
-X-Received: by 2002:a05:600c:1c21:b0:493:e460:1f6 with SMTP id 5b1f17b1804b1-4994e6fe377mr386737485e9.0.1786188782291;
-        Sat, 08 Aug 2026 04:33:02 -0700 (PDT)
-Received: from ?IPV6:2a02:1388:23c0:6b4:aa41:f4ff:fec6:26e2? ([2a02:1388:23c0:6b4:aa41:f4ff:fec6:26e2])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499542858b2sm253927675e9.14.2026.08.08.04.33.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 08 Aug 2026 04:33:01 -0700 (PDT)
-Message-ID: <59a87b27-a3e4-437c-b26b-de61d6d5f1ef@gmail.com>
-Date: Sat, 8 Aug 2026 14:33:00 +0300
+	dkim=pass (2048-bit key) header.d=surriel.com header.i=@surriel.com header.b="XWPPdfur"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
+	; s=mail; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=b9Ey9HydJ5tvmYklKCi/JaUrXhz1LSF8DSZDroT9ynE=; b=XWPPdfur3dwBrmHv5ZUxN7iqgK
+	CXXr0OyNfGJ1T5qLvAp50i+Zx9cfvLKS6P02+ewZ5+rl7Yc4S13D0k3coq1JUyc7I+vPfd6iZbD6f
+	IZXBEDSInk9NnKi/P5vq8OVvYK2YjB484d0r7j6YRNJiHULMpxRwMWbvEhY1zQuVHxq9rdCNhRfgY
+	7RGNfpkCg+CnMvCjBsAoZIddEIYSPZS0tqgcPWfWIcvM2mjTCv6z0hrqgzqC759YKc2sOtNyw6Tj8
+	zLp3FqeMRt32onqkx+cbqZtVYHVV3ux8lx2Q+4B0TTu/rF9T5V0H8/6WnbZOTEZvbW1u1+Fbffdn5
+	XIcb6RHA==;
+Received: from [2601:18c:8100:a0e0:5a47:caff:fe78:8708] (helo=fangorn)
+	by shelob.surriel.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.97.1)
+	(envelope-from <riel@surriel.com>)
+	id 1wsiL5-000000001DA-21sd;
+	Sat, 08 Aug 2026 10:47:55 -0400
+Date: Sat, 8 Aug 2026 10:47:55 -0400
+From: Rik van Riel <riel@surriel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: avoid WARN in set_bitrate_mask when sdata
+ not in driver
+Message-ID: <20260808104755.319c686e@fangorn>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com
-From: Gravias Panagiotis <graviaspanagiotis1@gmail.com>
-Subject: [BUG] rtw89: RTL8852BE instant wake from suspend (Unknown wakeup
- reason 0)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-Hello,
+ieee80211_set_bitrate_mask() checks if the interface is running via
+ieee80211_sdata_running(), but it does not check if the interface is
+still present in the driver.
 
-I am experiencing an issue where my laptop instantly wakes from suspend 
-(s2idle) due to a spurious interrupt from the RTL8852BE wireless card. 
-The system refuses to stay asleep unless I use a workaround.
+When sdata is running but IEEE80211_SDATA_IN_DRIVER is not set, the
+call reaches drv_set_bitrate_mask() in driver-ops.h which hits
 
-Hardware: Realtek RTL8852BE Wireless LAN 802.11ax PCI-Express Adapter
-Driver: rtw89_8852be
-Kernel version: [Insert your output from `uname -r`]
-Distribution: Arch Linux
+  wlan1: Failed check-sdata-in-driver check, flags: 0x0
+  WARNING: net/mac80211/driver-ops.h:884 at drv_set_bitrate_mask
 
-Steps to reproduce:
-1. Have RTL8852BE card active and connected to Wi-Fi.
-2. Trigger system suspend via `systemctl suspend`.
-3. The system begins the sleep process but immediately aborts and wakes 
-back up to the lock screen.
+Syzkaller triggers this via wext SIOCSIWRATE ioctl. The Call Trace shows
+wext_ioctl_dispatch() in wext-core.c dispatching the ioctl, calling
+ioctl_standard_call() for SIOCSIWRATE, which calls cfg80211_wext_siwrate()
+in wext-compat.c. That builds a bitrate mask and calls
+rdev_set_bitrate_mask() which ends up in ieee80211_set_bitrate_mask() in
+cfg.c. The interface is marked running via SDATA_STATE_RUNNING but
+flags is 0, so check_sdata_in_driver() fails.
 
-Relevant journalctl logs:
-kernel: rtw89_8852be 0000:03:00.0: Unknown wakeup reason 0
-bluetoothd[785]: Controller resume with wake event 0x0
-kernel: PM: suspend exit
+When the interface is being torn down, or when wext ioctl is issued
+during interface bringup before drv_add_interface() sets IN_DRIVER, the
+running check passes while IN_DRIVER is clear.
 
-It appears the WoWLAN implementation on this specific chip is firing a 
-generic 0 interrupt upon entering D3/s2idle state.
+Check IEEE80211_SDATA_IN_DRIVER in ieee80211_set_bitrate_mask() before
+calling the driver, returning -ENETDOWN. This avoids the WARN_ONCE in
+driver-ops.h and matches other cfg.c operations that bail early when not
+in driver.
 
-It is a personal problem so i would love to contribute in fixing this 
-problem. Please let me know if there are any driver parameters or 
-patches you would like me to test to help debug this.
+This change should be safe because wiphy mutex is held in
+cfg80211_wext_siwrate() via guard(wiphy), and IN_DRIVER is set/cleared
+under RTNL and wiphy paths in drv_add_interface() and
+drv_remove_interface() in driver-ops.c, so the check is race-free
+against driver add/remove. Returning -ENETDOWN is the same error other
+not-running paths use and does not introduce new locking.
 
-Thank you,
-Panagiotis Graviasyes
+Reported-by: syzbot+af177aa139efdd13a9da@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=af177aa139efdd13a9da
+Link: https://lore.kernel.org/all/6a75205c.59b6c763.2bba34.00c3.GAE@google.com/
+Fixes: 554a43d5e77e ("mac80211: check sdata_running on ieee80211_set_bitrate_mask")
+Cc: stable@vger.kernel.org
+Assisted-by: Hermes:muse-spark-1.2 syzkaller
+Signed-off-by: Rik van Riel <riel@surriel.com>
+---
+ net/mac80211/cfg.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 43f142624d33..b66baa98b98d 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -4113,6 +4113,9 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return -ENETDOWN;
+ 
++	if (!(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
++		return -ENETDOWN;
++
+ 	/*
+ 	 * If active validate the setting and reject it if it doesn't leave
+ 	 * at least one basic rate usable, since we really have to be able
+-- 
+2.55.0
+
+
