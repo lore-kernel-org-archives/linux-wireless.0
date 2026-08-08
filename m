@@ -1,108 +1,110 @@
-Received: from mail-qk1-f228.google.com (mail-qk1-f228.google.com [209.85.222.228])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3491119B5B1
-	for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2026 05:20:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D1C2E737E
+	for <linux-wireless@vger.kernel.org>; Sat,  8 Aug 2026 11:33:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786166429; cv=none; b=K9k3+g+HETdUsuiuGzTrcMIfvv5hAf4HXUU5MAHOOod+dYfTe/XIGvZx06v7ZnWlQZajcUR8b9GqXe8DGkjXVq/qLfo7pd7AUwU6Lm+XpQhS+f+AGo8rxsyBFrh0iVgb3h7OEFwYrAZOZW45a5cHifgkOy4Paz5ujbmqBtQNB38=
+	t=1786188785; cv=none; b=kqxAWrtujoLCKUx007mJVQH17ezAKy5om+Jlcn2zegHvafSwI3f/4pCuTyeLksr4sfROMjpZdpc5nbKBpX/PmHzBtw5d2bMbla9sUdbwGBSYmRXf1WiF16Boh3bAEURtvxf39s7EptTvZli8nG4luOF91Kfm1ZYUWRqNP4qCyG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786166429; c=relaxed/simple;
-	bh=nU/2OOvqLDucf42vJ9zbZVAYbRRlmeeEpprDjXmH3a4=;
-	h=From:To:CC:Date:Message-ID:In-Reply-To:References:Subject:
-	 MIME-Version:Content-Type; b=iKVVrfRNtL2X7peyDXVjiJzJsGYQarz3/DVZbhJQnXQlo4m8OgBTXZbAuS4njYhgu6WhNbTT1wvYbeyob4kOYbI3TG4o7sUhcXMybJT0o5lstRftF8Wnyfhutm8wsIuzI/LcG7oob8B6NrvKdqt+prLxba9vYG0UAUBSW5fesCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=F/zEfiEY; arc=none smtp.client-ip=209.85.222.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1786188785; c=relaxed/simple;
+	bh=D1xEcmhhf1a68HQLmZt6TiNTbKHxIfIp4aGjlkSzidA=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=mxL3oT9wi02LLF592K4MqrjXNv2E09EcPvipd4BDxbG+9OxQKF5yehjguCGxWuB52w0JP5YFOMGv9QsYGJcc7n03l282weEBjZPRNpJKdRB9Usl7bmlVC6lwYi89NCdSqImX99mOjdXt/LuS5/5cX0ZiY90m5DV0ZeRG1DuUsJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NqWL5roL; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F/zEfiEY"
-Received: by mail-qk1-f228.google.com with SMTP id af79cd13be357-930f4e5eed1so10314585a.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 22:20:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786166427; x=1786771227;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from
-         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=aFUU6ozWORWiiM1uNeCkxuEsbC3KYm7Xvn+yMHJJFRY=;
-        b=N8Y0vAjdM0NgXwJh3G+x9OJm9hUUuSVQo5anpc0g40FivGQUuakXd0XfUOiNuGf+Xn
-         3jj4KJWtm7fRjeRIkLsJHk1ITWApMYBK33mL/c3CrBmCmVwQctNqsPnO6wF9y5PTbZOz
-         bZ9H12NFGAxHRI+b/kR5y+ZShCmcIGBGGE1qCJvFnSnvQWdl6yNnzM3ea+ubGk3ZuV7v
-         2TMnyQvGcBxVGpBOppB8leoN/X8Sd242t+CPl0bm0nP8lMUPB/+e/dStzGDSs2Vsojv1
-         YnKOysZArDGLu9ehDycwH4sZmCbCZM83Vafu5QWbNanUjhA/RjJGl3zjlGLdDP+HjHTX
-         Z/kA==
-X-Gm-Message-State: AOJu0YxYQyUgZvtGIHr1L8gw8NRDUDiGInzoj7EtbO8vjxpgHQCOIKZz
-	AvwP+uOqAh1Q6EdB2v5L2I9vDntRRF8gNag1rxl9tLtSICCulcPsWT+rcXRlXO/ycmJezefvxCR
-	H80Gd4fWCDt4efcgENeuPqeYuHDBKQr7TOGOb1I68E1+NhuQf0fhzTQ2AFZfJB0bPu+74br40Q9
-	N6EArjn9uiqGhGw8O0vQz0vjJ3wDmbC0IdVjejuleT+v/v2CELaCLBYDoKRwL3u9xdCMKLlaRwn
-	AV1NjMLn/UPNjanJp6emTesHTHI
-X-Gm-Gg: AR+sD10AVIRf34cjHVdtxWw07TiygLVNI3FrQ0nrJW+X69aHfc/YGXupNMbI3HTUP8X
-	VLK2PJRRJEV1+LH1Y7X8XuSA46GObUO4e84yBLyC2CnWfsYcDRSY6Pu94idrOu2mJnT6GIp115x
-	TSRdXILEMYRNxNFfo0QLpYNBTlqm03XXLYPb3KbZKLxR8OYAKj71WyyWP7i3jzG4Q1DNimEEXeL
-	uXVPQHj3MVOcGC0/y+AwSTEZcC44E3Iq0BfW5F8+HZ0RMYuLaHW/C32gSu7uPkNr2SnlG50lGl3
-	O8gT2gwIPDASw/ETuagKiVGH4Y5ck2ye90Rx1E6eUBcww3k9IfFpTk8025j+m8CuN/Bg6wu2oTF
-	QRwob4+03bxr+Li1+X5u274B0V/nq7sifEdM1NCDPuH3efEnc/qGmg6z3MuteKq9ikUOtp+ewYd
-	MzfDj+zhs+Efj53RwxIz0c4zrcBVdqtLad2CGtspk=
-X-Received: by 2002:a05:620a:522c:b0:92e:59b0:df08 with SMTP id af79cd13be357-93649112c65mr2406392885a.3.1786166426870;
-        Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-20.dlp.protect.broadcom.com. [144.49.247.20])
-        by smtp-relay.gmail.com with ESMTPS id af79cd13be357-9366e283c32sm74250685a.6.2026.08.07.22.20.26
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cc6dd43737so7511655ad.2
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Aug 2026 22:20:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NqWL5roL"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4954df200ddso2329235e9.0
+        for <linux-wireless@vger.kernel.org>; Sat, 08 Aug 2026 04:33:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1786166425; x=1786771225; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:subject
-         :user-agent:references:in-reply-to:message-id:date:cc:to:from:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aFUU6ozWORWiiM1uNeCkxuEsbC3KYm7Xvn+yMHJJFRY=;
-        b=F/zEfiEYKdG3A2ARkBb0YOdI2Sql8pBsfRDArPhez6vI0t3yb582IshyfM31d49hBq
-         k8f7r4qizGAImLwpK1iPIS42UrTqHk66CSL2jfqEdsIB/SicOJ4fKfvGDbNgPvD1fyn7
-         2kOu5NHz8P3zN5YHE7cW3WdzP1aNyZWvXMUJs=
-X-Received: by 2002:a17:902:ecc1:b0:2c9:fb11:1bf4 with SMTP id d9443c01a7336-2d0ca7b5436mr286487775ad.7.1786166425369;
-        Fri, 07 Aug 2026 22:20:25 -0700 (PDT)
-X-Received: by 2002:a17:902:ecc1:b0:2c9:fb11:1bf4 with SMTP id d9443c01a7336-2d0ca7b5436mr286487355ad.7.1786166424861;
-        Fri, 07 Aug 2026 22:20:24 -0700 (PDT)
-Received: from [10.229.40.14] ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315bebde2e6sm13972699eec.21.2026.08.07.22.20.21
+        d=gmail.com; s=20251104; t=1786188782; x=1786793582; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=PD/+vGGo80Tk1YVcv2e7nHyQRYQQpC76abSxLSltLaI=;
+        b=NqWL5roLJAl/HxkDXDFJJQHdljJf3BRpT9Le2WitedmJ6H0j/t8MzM7tDhHVi0BwTz
+         vMUDBcVHNYsOd/9GvV6cxjBgJdKPyd3GN774HYhnqD/NSkuKDG3VObDx+Kp804ocqLqs
+         c6WC/DU2egZrxoQvqCxCz5HrdlV6RboJ04skecsYgchQEuzy3FGOKzPOOe+srp2VJpFJ
+         jET86PpR5B8Xyz825TKqy3v7fBCskF/aCITd5cymHVHqIwKE5dMHpfW1O9L8m+l7umOn
+         0oZB2VbwcWUi96314ZU8p0RSLxQJavpruLBYgOo2QN2GCIVVbJn7++99X1QG2oCyDTR3
+         7Ovw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786188782; x=1786793582;
+        h=content-transfer-encoding:content-type:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=PD/+vGGo80Tk1YVcv2e7nHyQRYQQpC76abSxLSltLaI=;
+        b=q6Svo7XvQUApvdTCrUg04UcRmKOL/wzlYzSj2rWE5LlHyEBqSrOwAYj2JwDPNo6zM5
+         5GRaAfkYaosRR9vFXEqK9g6RXuD1A2gKs9xa28jfDr2/7aceEHkrdb5dtt3Ql3ouG2Lq
+         RLm/gK1cGdoh7hye2grWDz+onkSHesfw36hJiL2w/glUzi4Ah5dj7IYJ92xe+kyFHaZ7
+         ARlYC6IJm1Heze9NZ5X7/bp2nInVpaXrjq8EQvGeR50+qrFhBoYonLxL5wnB0Yybhia7
+         LrWeNshpXIhuSg2soV2D2cGfvtKpyYqE9etetWOY7TPCO4IFN63LqI5G7CktPnapYlKM
+         isHQ==
+X-Gm-Message-State: AOJu0YxtBqLauf25nlm09i7CRJ09/UkGAUatwqnvS8WD/9gwWTIij02o
+	3LzB9ScFt0RKrqUEQOPf7nBv4GB3KfEJzbyRvd3tUXWJ3xzCc/go3WWyQLHy17zx
+X-Gm-Gg: AR+sD11RbstjI5hlmRm/ILluIidus79E7DkWB9cNpKjLU9UerUNvRzsdsVnX4g4C9w+
+	R5ZtR49UhN9Ml+2qlWyUxug8Erceed2TCO/QjBX/12gc4qAy4rzZVZ4puYCfHj8GDtiwEvczaz8
+	548xq0Zwmla/2QI+ChOBqbYXgTTpCM5GOTr98ZvI5XwUUcKLThojGl3tpobRxj8dLyfJ+6Gp/e7
+	1H+gYs/84i4eTV57v4Tyr0i3QUMZJFTJXCSWy84stDGGzx/rH3WUU9jNIxerZMbYEbmFBCt7Q6z
+	VOLm1jNChvpVCJvnbw6Z/nB+MpZHeiFzbBxDYG0gvD1cNEgKratnyBgXgr9/FFinJkTq/Z0FIue
+	d8TeYyo/o88WG+EswcBwJ6DmoY92NpU43XtXHluHkppI6I5hs2qnLQd2iN9yv73sQqmghs3htTP
+	5IS5Na5FhjiKZKrL0h9udGCxAcaK8qXIrpoPHzLy9YWs88R3lRlRz8PORy7mVZuIQEQ1yWQiD6/
+	8dGyqChi3oGAKMnrEkhiTB6vDtQ7LV8rojXZQCRe1mF1G0neogOqWgj3uKjKYeKmp+yxgj0pGmd
+	pIU=
+X-Received: by 2002:a05:600c:1c21:b0:493:e460:1f6 with SMTP id 5b1f17b1804b1-4994e6fe377mr386737485e9.0.1786188782291;
+        Sat, 08 Aug 2026 04:33:02 -0700 (PDT)
+Received: from ?IPV6:2a02:1388:23c0:6b4:aa41:f4ff:fec6:26e2? ([2a02:1388:23c0:6b4:aa41:f4ff:fec6:26e2])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499542858b2sm253927675e9.14.2026.08.08.04.33.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 07 Aug 2026 22:20:23 -0700 (PDT)
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Bogdan Nicolae <bogdan.nicolae@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>, <linux-kernel@vger.kernel.org>, Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
-Date: Sat, 08 Aug 2026 07:20:19 +0200
-Message-ID: <19fdfd09e38.2873.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <CA+ORkNSS1dOdUK51B0Q1r2Htc5NpP-=EmE4FO6=4rX5CUU_FpA@mail.gmail.com>
-References: <20260729053408.13715-1-bogdan.nicolae@gmail.com>
- <20260802083905.3819981-8-arend.vanspriel@broadcom.com>
- <CA+ORkNSS1dOdUK51B0Q1r2Htc5NpP-=EmE4FO6=4rX5CUU_FpA@mail.gmail.com>
-User-Agent: AquaMail/2.6.0 (build: 200600043)
-Subject: Re: [PATCH] wifi: brcmfmac: configure SAE PWE method for external SAE AP
+        Sat, 08 Aug 2026 04:33:01 -0700 (PDT)
+Message-ID: <59a87b27-a3e4-437c-b26b-de61d6d5f1ef@gmail.com>
+Date: Sat, 8 Aug 2026 14:33:00 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com
+From: Gravias Panagiotis <graviaspanagiotis1@gmail.com>
+Subject: [BUG] rtw89: RTL8852BE instant wake from suspend (Unknown wakeup
+ reason 0)
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Op 8 augustus 2026 02:00:22 schreef Bogdan Nicolae <bogdan.nicolae@gmail.com>:
+Hello,
 
-> Gokul (representing Infineon) promised he would send a patch a while back.
-> This would be a preferred solution as it comes directly from the vendor.
-> But it also takes time. I can send a revised patch next week.
+I am experiencing an issue where my laptop instantly wakes from suspend 
+(s2idle) due to a spurious interrupt from the RTL8852BE wireless card. 
+The system refuses to stay asleep unless I use a workaround.
 
-Yeah. With Johannes being on vacation I say we can give Infineon bit more 
-time to provide their patch.
+Hardware: Realtek RTL8852BE Wireless LAN 802.11ax PCI-Express Adapter
+Driver: rtw89_8852be
+Kernel version: [Insert your output from `uname -r`]
+Distribution: Arch Linux
 
-Regards,
-Arend
+Steps to reproduce:
+1. Have RTL8852BE card active and connected to Wi-Fi.
+2. Trigger system suspend via `systemctl suspend`.
+3. The system begins the sleep process but immediately aborts and wakes 
+back up to the lock screen.
 
+Relevant journalctl logs:
+kernel: rtw89_8852be 0000:03:00.0: Unknown wakeup reason 0
+bluetoothd[785]: Controller resume with wake event 0x0
+kernel: PM: suspend exit
 
+It appears the WoWLAN implementation on this specific chip is firing a 
+generic 0 interrupt upon entering D3/s2idle state.
 
+It is a personal problem so i would love to contribute in fixing this 
+problem. Please let me know if there are any driver parameters or 
+patches you would like me to test to help debug this.
+
+Thank you,
+Panagiotis Graviasyes
