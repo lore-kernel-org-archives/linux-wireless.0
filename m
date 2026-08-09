@@ -1,153 +1,254 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB034502F
-	for <linux-wireless@vger.kernel.org>; Sun,  9 Aug 2026 16:56:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786294600; cv=none; b=CBTC1l7zhANwjoLaFauSrpchBhyTZDflFtxx2xEmgZm6BqY7Ky7QFy6CbgnL2o0nYkcUZz2QqsVaewfy4+FinCdB5AHrMz1FoSDXVGXcUaVi8Yf+WK1YwUkXonIgIsREanhKuTVbFWw6jFS7tuOy3GkYAdDNpt/Vrxd8C36PUP8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786294600; c=relaxed/simple;
-	bh=txqa91q72Cu3wOoIOnH6POVtteeX1eCmRdt5UR1rueI=;
-	h=Message-ID:Date:MIME-Version:To:Cc:Subject:From:Content-Type; b=XXq6S2infPiCFNyBDJtxcGy97LJYpIaJLXWstXC059iTRNBdnuaHXTkgjh0vDHf6Dq5jA2q61P+nVtgiMWA581sMRy4hfXd6VQyURCKLAyylYP8ikuT3qxkoNGWHbHxkbiiAMhYgBBctUVwwUfK9Y/QvLc7g2H/BcwBvbd2tLV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ias4j0lI; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=eUhlJgLs; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5123D3306
+	for <linux-wireless@vger.kernel.org>; Sun,  9 Aug 2026 19:02:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786302187; cv=pass; b=ijdiaPBzaMDW583s9mAR4iSxLZOpBrWimOjBhFu2K6KrDPNL5dvWogMUTQ3Fk/YIx3NRP3nn6tbQEbvmSWaU73oKd7HmpeFXh6k9KudURvtH1ag6QFtChUwEwWQnknl1IVI+fpv901BuAPZHvttSNtxQlcjaONxB/z2TQDO2VDU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786302187; c=relaxed/simple;
+	bh=Tr85TjNTkZIACaSW1Ih8wVQSmk78sJ0coTL+2akjckE=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=nyt8SNpumHz3YMS7MHnASAm0kwtVvhbx763wsYngTz86CU/issA2W2G2eB9ps/DFNzKS4dD1rMBffZ6VLADikPD9MkaocKm66/oDcU0G45aO2VNMIPpExHsSZuN9BMo+cLZIiwzn0M6L2H0M7EMCuDbTQsYJWEE5AaFYdtmRZ2E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ifkJB/MF; arc=pass smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ias4j0lI";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="eUhlJgLs"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 679FMmud2777257
-	for <linux-wireless@vger.kernel.org>; Sun, 9 Aug 2026 16:56:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=FRMtojNYebz5pnxWFacqhh
-	jzm6+711Mk/YGMwYi3xFA=; b=Ias4j0lIMSFUAPycl6i+j0wnbv91lYzuClBcvu
-	/LmWCPr61vcusvhpi7Hu3FotmTb2GvTwmxkxxyp5+Bd+aaLF4higEAz4TVT8PxTE
-	CUlEp4AQH0g4TiTZ51GtlLD7G9Vwzu9PeTW4s062cZ8sWjVrDwQpWpceb+HL5d45
-	quEDJztb5nJgShcZ+JHCeBc0JMBIO1BZKy4mZT2F/pheGpgLhawL/zh9JCmdiKW9
-	meBmlsAYlXo7IraptnFrmjwOOAJM3dxbi3zhtNWtuwcZxRa/Izya65riLc6FDQ5R
-	fr2KtTy/koRFlERN7nVIvtLvx5yR33KzJjAONqtowAHzSoPg==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fww7cu54c-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2026 16:56:38 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cfca8558d2so16234185ad.2
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2026 09:56:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ifkJB/MF"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b0117d49dcso895304e87.3
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2026 12:02:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786302166; cv=none;
+        d=google.com; s=arc-20260327;
+        b=BRfNg9fWXHhWzJ3LC+qpWMF0tApn5gz8xwgMOkLKKguLqxG3wQordEmMtj1LwJHYC1
+         +uajg5aneyPahLq5d18BTBE7YmehJ/9KFhZ8uCUDsCUvlzeQanqW4EyUgp03g8lRtKRe
+         k7Pdqrjtdxal8zMxrLFKcGF1o0BntzqJdRdxHQRVAFqiGC1jHc7zs95eKN0ydY7FFV0r
+         t7IBUrqkhxNjsyRMZdiqrUlVob+Ku97FeGRDJROzh79guyHwV3lLm1eC/uQxv3B2RdHk
+         rJlpNzgtaCwZwIqgCHwhz0Lwuhcw2k/N7ZeRZFxKlZ3HCtLoBPvsqQDIq4/XEiBYAqaN
+         Alqw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=kK/baEY+iyHIx6N7/Yc/rss5G3sNOiQswNXX/D/jPWM=;
+        fh=+EaFIm9Pg2EPlH8IlJMKIpk6lzHRZbOSPszEEIdQBKM=;
+        b=l9Qq2KOvecmMkMXuIXT4rfXA3UoxAkmVBGMlzBJus4bGQFUdAdFM9/SJSZB9LUNZKM
+         +ZXwYg/k1FcdU4YSk2xBzddH09oanY+n0fnfzJbKhlTLoZyqaTbNW9o0b6souonByapz
+         T4wOvqHBY+oNe4lN2bJR7pp44Vj/Ksu4yonSP8zRXJDXGGAHJkWzoM9r6EiLRxXoMfpS
+         EtGnHbwE1PDAKrG4YVPcFiYwJRujwpfHoEGsOjfHGpv8/FNUeGXb7m/FwSEWiQQXEMLV
+         fke5PUyKe0bb0fFIBH/aUW3OoW2zcZ6UQuJ+Q8VzAW5tPsLEhcrilXwayc9EJzXtm7v/
+         up4w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786294597; x=1786899397; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:from:content-language
-         :subject:cc:to:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=FRMtojNYebz5pnxWFacqhhjzm6+711Mk/YGMwYi3xFA=;
-        b=eUhlJgLshgnroO4c5ut24Gn1N3seyvTWV5W1gF9/nxGTpge8UBBorgekJC5NjnB0ES
-         6yWRG6Q7JlXh1NgpSapknn9JHV02OGEvvTFr0Au0vskC4rSl1+hIDu269jc3MEFcC38h
-         VLY5cfXr8qM0rANrvjfIVQzwAFQpwST4vDfsL+5tYrOK8Tw6SuaUY3wholxdH+jclRNe
-         XtfujJPj1l0WWkzFlXOL2rrwCVayFtS4iDQdGK1g0fbiPwfNw9c2KveBeMHip7+NdT1W
-         I12gFlDMTXaPqAvSpzo/uErKUM6yfVQtgVQ1pJnljI7OtPcXTZCtLcL8SgpWl61IPHBO
-         sf9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786294597; x=1786899397;
-        h=content-transfer-encoding:content-type:from:content-language
-         :subject:cc:to:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1786302166; x=1786906966; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=FRMtojNYebz5pnxWFacqhhjzm6+711Mk/YGMwYi3xFA=;
-        b=Dqqq/boBWn9aePGo7spCxc84yxUKanO3KfVJ0uoA+ROVNeIzEUx+aoy6BzMtj6Ogk0
-         JLkCyGVik7MDpleWw0g/fPb2YtsMAU3n1qlnQ24PoM2E0ODUtXz07pLUWsuOzjwzjpe9
-         qSOAp7YCPIBfN8wZ/G42ZGM9oxWMJcFF99KHBgv3wnVIGwGYL/tiyr862gsUzlpjP4ZA
-         A9uwnC7UwVIyUav1V1ESCGHBtQE+PDAync3+4lp5SUZHU0oFVx0bYSW4eK8/KprlpJ/n
-         WwRRSNrKG6ufo/kUQKQzbvJm39H37cvA2Bn+fFB7IObwMAh5OUUnWhfu81M7qvE0X/Jk
-         K6Hw==
-X-Gm-Message-State: AOJu0Yxckcrf+QX2sQiUZNkMFz4FwalntHfuMB79OtH9FazTjtLgA++G
-	hH18bX39ZrEJpcZXjJkQUwJmYUqexUDxjHxdMYivny1yMxPGKQogwtSdZvbpR/ADS9c42YQa1y4
-	d210k3DZyr765qsNO96w+Yf2TIm1HKXaScyYVEyedxUO7ShS4pyBZCkm8ZRLStr+/M6vmIw==
-X-Gm-Gg: AR+sD11DTrm2nugoxlQ3nJphCXqcVqfUKNGILqXbyzT2Urtw0O2d1PtpmGdLIrDWhiB
-	jwo3wLbeHMECUk9UgUpap9rC5cu6PKPMe5oylZeVPiJCYfSm6FcHpkYADBZlLlJvcm2HF9N17Pd
-	Jt/ekqKhH1asutS2uwXZG/u034KutioP/oKeHpsjcqtpZvTnFPHTy4j//fEOalz5r0N1bqFEWu5
-	qw0lwK1/QnergInp1KS/Yf24kJnNYQ950lOjacyJXZk2Vg+Tf1y+kjsaHz/cZuIphHnvWZ4NPb1
-	nuxne1eefsWTp7NMTfaKupb/uoIwDqb2bkX22TiUpuEomQj/27k8NC+JR+ijkGoeLBuMZbHgI46
-	lY4ilTNR1u62QeZ4vh8NXNhroHAG7+oQhPpa0
-X-Received: by 2002:a17:902:d492:b0:2ca:2079:91cc with SMTP id d9443c01a7336-2d2a8458c42mr151822745ad.5.1786294597461;
-        Sun, 09 Aug 2026 09:56:37 -0700 (PDT)
-X-Received: by 2002:a17:902:d492:b0:2ca:2079:91cc with SMTP id d9443c01a7336-2d2a8458c42mr151822505ad.5.1786294597034;
-        Sun, 09 Aug 2026 09:56:37 -0700 (PDT)
-Received: from [10.81.91.45] (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315beb8844fsm34239760eec.16.2026.08.09.09.56.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 09 Aug 2026 09:56:36 -0700 (PDT)
-Message-ID: <8476e576-04aa-4fd6-bde6-e34c918ff28c@oss.qualcomm.com>
-Date: Sun, 9 Aug 2026 09:56:35 -0700
+        bh=kK/baEY+iyHIx6N7/Yc/rss5G3sNOiQswNXX/D/jPWM=;
+        b=ifkJB/MF9ySaiWjI6AmHmvpFg9IPJViPf8M9j2SCc2gY2zva1KKE8mXFmaGGdUb4SL
+         XaSf8PuhD/Spq/SLvUNOdPsEF6L7SI2s1kDp6afloj5aBQibx2QWl6MggTVlZ9w1Jwh1
+         xAiuuu1hEaSebOHxPUTNZTuPRZYLGfM18EPBhegPKE9mhu6n2KQWPy+0w71muN/8mpLf
+         diDYUo2KSms/A1DvxtSBSgfpSEYE7Ab4MvMW2YRjtJd0NgXaa9rBdxedNk+Eruyx0dF7
+         LyReltU6UbkzJIs8G5llX+awUN6CLS30eLnwCpmp01WuqDNXE48dL7rZ9W8gFyAGv+5g
+         kzAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786302166; x=1786906966;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=kK/baEY+iyHIx6N7/Yc/rss5G3sNOiQswNXX/D/jPWM=;
+        b=hBpBSMBtgGQPRJ0TleprgkzOdSmt+5HuVug8vfhZRMc2ltlrQfxwMXB30cDevus7BN
+         AKZlVPjGVV3F3Q1Y66123rW/ntoP3/qV2+dJc3pa0vMNlMXmKLpvrLScnst7dSCOATQ/
+         hiWDO6t0nlB5DxBBvfBO3vf3Cn5gKSolg35vsOoW5bSBhKY8UMJ2c6SwUBFmZ5IqAvIE
+         flemqEUBYBGexZFAzZDQ/HlqFN1gGw78YU2Qszogwu23LIB6IYFB6IGvf1BHcpoEWiL6
+         DOMTTWaetH5aC2oMaFzsKZkI8plU+40VUF1jcE6vCh6xUjTpyx+VKuLV+YniLBtSKeF8
+         b5mQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rqs8FC7tLujN17J0xPZmAIf51RVCPYipnp1EWud1H0amJfE0Ddm9Ho1aUKRt/w4qTEWSHSQpVrSVQJljvBh6A==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx+nbHuByEWaTaNl0R8repusYg2P8uraIEdtJ/S6xmi8q2amYB1
+	+Fw/dUCK2arsNA72R/hZN68dTfSWCK7mSxUQATZahIfi/2jS9FQ5XpwW1tcSA9CIWNk5qRTU8AC
+	niLyWCPR6Yow0oU4LiPQVvsU4MB1K8N0=
+X-Gm-Gg: AR+sD10co+okBhXVdXun56NSm31SoCxIeOoOeTAb6USjA5LOP8xGla/BZlGMqVOlA+x
+	B8kSuJGc7sS7TRwWUjOPB+S5HYN32FaEHUy19FPPtv9egypOJsHPI1IW+LbexNWDRNSXsskPgIu
+	87ot7uXOv/3ONV6iGfuADziKycXYHn/P4y+a/sl2A2z7hPBgntG7lIRxBE+ieR5MKDP5iQ17iyb
+	nBtF09iRdJWXmVegDQpcXj+psTRAqkB0CODpMI9JjhqPSXsoFgziGO0nYaI+xwQDX99tO20H0Cc
+	U+C6g0P8lHTs3YdsxgFKsKV546VIbl2qjsz/AtrUDUy9QE4JgnCoYhmQnks6zYo69JUuZLAaGRu
+	JO0DWksTMopFFwtA=
+X-Received: by 2002:a05:6512:39ce:b0:5b3:e02:b398 with SMTP id
+ 2adb3069b0e04-5b30e02b54dmr1231733e87.44.1786302165841; Sun, 09 Aug 2026
+ 12:02:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        ath11k@lists.infradead.org, ath12k@lists.infradead.org,
-        jjohnson@kernel.org
-Subject: [PULL linux-firmware] ath10k, ath11k and ath12k firmware ath-20260809
-Content-Language: en-US
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: 7UjFfpDH84G9TkZfKAQTMI4Fulb-WgaE
-X-Proofpoint-ORIG-GUID: 7UjFfpDH84G9TkZfKAQTMI4Fulb-WgaE
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODA5MDE1MiBTYWx0ZWRfX2Upx8xtLyQe4
- A98dcIjCMs8DVLFn6zFI0g2SldsP3miVMxVTnYf2WUl03gV7HXVl89R0p52UScaRmejp5190VI1
- lja6dqFWkWBSKb6eFrzpc02J4rq1X8bWHh5oomOvlLh+CkDSHI15lwfPns+x8RcdT9LZwylzinc
- WfUogbol2x9l3mwnrxC3JRCraaXkyork4eD3p6xeUb+gTT2Tc8fGZa20zqZxfft0PNafMLTuxQd
- 2ov/U0OkqJjNDLOrHYngmIBbSkkBV1buiCa+M9F2RFrqXoyEWAzMMfZRC50eHCBIp4+maSFk32K
- rs+O+PK4A32HHHTtnVOjJcbEDjZUG/VpP879gVsMMlwe7tZVyy5FJJRKpnLgW+W/3Z3C9qaYU5w
- Sc2AtYuR43dF9DYkaj9UOv92dzGWubxgdzm70SavRT2wUzUr2AaHnM/sS+k3KVOwz76rMVf33Bw
- cxePliWbblUd+aW/8qQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODA5MDE1MiBTYWx0ZWRfXxqQEr+r/IFSZ
- vNuJnL9+/0GZ9xVrJWERGj4smzSGqft3PiWxpVTC16SJP5AA13GFsIb/Lw/0S/nEl456mwUOTA8
- C+LtjV892nIzsI0uuvqY6bS/RgVa+ec=
-X-Authority-Analysis: v=2.4 cv=IPsyzAvG c=1 sm=1 tr=0 ts=6a78b146 cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=VwQbUJbxAAAA:8 a=5BXK2PN6kyUBF_VKF64A:9 a=QEXdDO2ut3YA:10
- a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-09_05,2026-08-07_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
- bulkscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608090152
+From: Jason Zeng <jasonzeng2009@gmail.com>
+Date: Sun, 9 Aug 2026 12:02:34 -0700
+X-Gm-Features: AUfX_mw0GrRobnvOBwc7j3_1MvOf25PTcnqEU1bZx91zZ2QtvD_WMJ9uPQSXbOk
+Message-ID: <CAMe_HMpLsGEgW=1i6W6od_ADpEEDoMVgfNQ-4rWW==J=QNNPtQ@mail.gmail.com>
+Subject: wifi: mt76: mt7925: false-positive hard rfkill on MSI Vector A16 HX (MS-15MM)
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Cc: Allan Wang <allan.wang@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, 
+	Sean Wang <sean.wang@mediatek.com>, linux-wireless@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
 Hi,
-Here's a new pull request for ath10k, ath11k and ath12k firmware.
 
-There are no changes for ath11k or ath12k.
-For ath10k, add board file for WCN3990 variant Shikra_EVK
+Since v6.16, mt7925 Wi-Fi is unusable on the MSI Vector A16 HX A8WHG
+laptop (board MS-15MM): the interface is reported as rfkill
+"Hard blocked: yes" on every boot, and the block cannot be lifted from
+software. Windows on the same machine works normally. I have traced
+this to a false-positive hardware-rfkill report on this platform and
+verified experimentally that the radio is actually functional.
 
-Please let me know if there are any problems.
+Hardware
+--------
+- Laptop: MSI Vector A16 HX A8WHG (DMI: sys_vendor "Micro-Star
+  International Co., Ltd.", product "Vector A16 HX A8WHG", board
+  "MS-15MM"), BIOS E15MMAMS.104 (07/28/2025), EC 15MMIMS1.101
+- WLAN: MEDIATEK MT7925 [14c3:7925], subsystem Foxconn [105b:e138]
+- Kernel: 6.18.42 (also reproduced by other users on Arch/Fedora/Mint
+  kernels >=3D 6.16; kernels of the 6.12 LTS era are NOT affected)
+- Firmware: linux-firmware 20260622, WM firmware build 20260605184805,
+  HW/SW version 0x8a108a10
+
+Symptom
+-------
+- mt7925e probes fine, firmware loads fine.
+- As soon as the interface is brought up, rfkill flips to
+  "Hard blocked: yes" and the interface is taken down. The block
+  persists for the rest of the session.
+- NetworkManager logs "Wi-Fi now disabled by radio killswitch" ~1 s
+  after activating the device.
+
+Analysis
+--------
+Commit e54b870212c0 ("wifi: mt76: mt7925: add rfkill_poll for hardware
+rfkill", first in v6.16) added:
+
+  __mt7925_start():
+      if (phy->chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN)
+          wiphy_rfkill_start_polling(mphy->hw->wiphy);
+
+  mt7925_rfkill_poll():
+      ret =3D mt7925_mcu_wf_rf_pin_ctrl(phy);   /* MCU_UNI_CMD(RADIO_STATUS=
+) */
+      wiphy_rfkill_set_hw_state(hw->wiphy, ret =3D=3D 0);
+
+On this platform the firmware advertises
+MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN, and the RADIO_STATUS query
+always returns 0 ("RF pin asserted"), so the wiphy is hard-blocked as
+soon as polling starts. However, the pin state appears to be a board
+wiring/EC defect on this MSI model, not a real kill switch: the radio
+demonstrably works, and there is no airplane-mode state that can clear
+it (toggling the airplane key, BIOS reset, EC reset, cold boot, and a
+Windows full shutdown were all tried by various users without effect).
+
+Experimental verification (on 6.18.42)
+--------------------------------------
+1. Fresh "modprobe mt7925e" with the interface left down:
+   rfkill shows "Hard blocked: no".
+2. "ip link set wlan0 up": rfkill flips to "Hard blocked: yes" the
+   moment polling starts. Scans return nothing because mac80211
+   immediately downs the interface.
+3. With a one-line test patch disabling the poll registration in
+   __mt7925_start() (rebuilt mt7925-common only, same kernel, same
+   firmware): the interface comes up, "iw dev wlan0 scan" returns 19
+   BSSs, and NetworkManager can connect normally. The radio is fully
+   functional despite the firmware reporting the RF pin as asserted.
+
+So on this platform the new hardware-rfkill support faithfully reports
+a bogus pin state and disables a working radio. The Windows MediaTek
+driver evidently ignores this pin on this machine, and kernels < 6.16
+worked for the same reason.
+
+Community reports of what appears to be the same issue (multiple users,
+multiple distros, since around Dec 2025):
+- https://discuss.cachyos.org/t/new-laptop-with-mt7925-wifi-adapter-being-h=
+ard-blocked-rfkill/23872
+- https://discuss.cachyos.org/t/getting-wifi-to-work-on-msi-vector-a16-hx-a=
+8whg/27772
+- https://forum-en.msi.com/index.php?threads/wifi-hard-blocked-on-msi-vecto=
+r-a16-hx-a8whg-linux-ubuntu-24-04-acpi-bios-bug.418090/
+
+(One user in the second thread reported to linux-mediatek earlier this
+year; I'm adding the root-cause analysis above.)
+
+Possible fixes
+--------------
+Would a DMI-based quirk (or a PCI subsystem-vendor/-device based one,
+[105b:e138] on this board) that skips wiphy_rfkill_start_polling() on
+affected platforms be acceptable? Alternatively the poll result could
+be cross-checked before hard-blocking (e.g. ignore a pin that is
+asserted from cold boot and never changes state), or a module parameter
+could allow affected users to opt out.
+
+I'm happy to test patches on this hardware and to provide any further
+debugging output (full dmesg, MCU traces, ACPI tables =E2=80=94 note this
+BIOS also has duplicate \_SB.PCI0.GPPA/WLAN power objects that ACPICA
+rejects with AE_ALREADY_EXISTS at table load; that turned out to be
+unrelated to the rfkill issue, but I can share the tables if useful).
+
+Raw data
+--------
+
+lspci -nnk:
+
+  05:00.0 Network controller [0280]: MEDIATEK Corp. MT7925 802.11be
+          160MHz 2x2 PCIe Wireless Network Adapter [Filogic 360] [14c3:7925=
+]
+          Subsystem: Foxconn International, Inc. Device [105b:e138]
+          Kernel driver in use: mt7925e
+
+Driver probe (dmesg):
+
+  mt7925e 0000:05:00.0: ASIC revision: 79250000
+  mt7925e 0000:05:00.0: HW/SW Version: 0x8a108a10, Build Time: 202606051846=
+51a
+  mt7925e 0000:05:00.0: WM Firmware Version: ____000000, Build Time:
+20260605184805
+
+Typical boot (journal):
+
+  NetworkManager: rfkill1: found Wi-Fi radio killswitch
+    (at /sys/devices/pci0000:00/0000:00:03.2/0000:05:00.0/ieee80211/phy0/rf=
+kill1)
+    (driver mt7925e)
+  NetworkManager: manager: rfkill: Wi-Fi now disabled by radio killswitch
+  wpa_supplicant: rfkill: WLAN hard blocked
+
+Experiment, unpatched 6.18.42 (phy index varies across module reloads):
+
+  # modprobe -r mt7925e && modprobe mt7925e     # interface left down
+  # rfkill list
+  2: phy1: Wireless LAN
+          Soft blocked: no
+          Hard blocked: no
+  # ip link set wlan0 up && iw dev wlan0 scan   # scan returns nothing
+  # rfkill list
+  2: phy1: Wireless LAN
+          Soft blocked: no
+          Hard blocked: yes
+
+Experiment, same kernel/firmware with the test change below:
+
+  # ip link set wlan0 up && iw dev wlan0 scan | grep -c '^BSS'
+  19
+  # rfkill list
+  3: phy2: Wireless LAN
+          Soft blocked: no
+          Hard blocked: no                      # stays unblocked; NM
+connects fine
+
+Test change used for step 3 (diagnostic only, not proposed as the fix):
+
+  --- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+  +++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+  @@ __mt7925_start()
+  - if (phy->chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN)
+  + if (0 && (phy->chip_cap & MT792x_CHIP_CAP_WF_RF_PIN_CTRL_EVT_EN))
+    wiphy_rfkill_start_polling(mphy->hw->wiphy);
 
 Thanks,
-/jeff
----
-The following changes since commit 16d815da3637f645bc67e4c71b757e70ae44d498:
-
-  Merge branch 'airoha' into 'main' (2026-08-06 12:07:51 +0000)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/ath/linux-firmware.git ath-20260809
-
-for you to fetch changes up to 796029ba95ac00dec03264eae3807e0ea0ae988c:
-
-  ath10k: WCN3990 hw1.0: update board-2.bin (2026-08-09 08:00:34 -0700)
-
-----------------------------------------------------------------
-Jeff Johnson (1):
-      ath10k: WCN3990 hw1.0: update board-2.bin
-
- ath10k/WCN3990/hw1.0/board-2.bin | Bin 867116 -> 893528 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)
+Jason Zeng
