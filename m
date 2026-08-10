@@ -1,151 +1,175 @@
-Received: from mail-pl1-f228.google.com (mail-pl1-f228.google.com [209.85.214.228])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F5643FD0B
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 19:22:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F11342CBA;
+	Mon, 10 Aug 2026 19:26:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786389722; cv=none; b=jdO7XdxWljMV4anOHzepqrBtvQyMltoZ1rgbIlc5aojkfNezJlHvAIuxw49WxlNHjbOrQoPjt3E4KvKZqlwGcM8jJzktp0OCzxixka+Xc6pXLzMf9pbnCPULa8ylCYIUhNSOqV7kgIoudKRBAFHDpH6wAnveRt21TtWEW8ilwa4=
+	t=1786389985; cv=none; b=vGN4zvKPyEeJH44pSdfvw4VXszJl6soHkX7bKB3ivghmc21qc7xk9kHat5qG4jlAbPXSPc7DVUwPCNNmNkQ3nMzDouQrRdlV6JlV3pnpqq41VsqIcogLktGvisG69UTYaNZKn06M4RFqCjJV8X479452TT3gT+72G/w3KnLdMTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786389722; c=relaxed/simple;
-	bh=byp/DGoBmK0QSy7inRGYoZ+tVgEDH9/VqoouG77P4Yw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VtWAglWunpg4jmYOWXFr+usysdFMUUehLrQvV7f0wnXFb7UKuhiQaLes2fpXEZTtZR/HxkC6+qV9IKZHm47CNdJQ2ep+Ilwl1EPQj2SyJgmVHOtyw5TgYNr/mgCakGTZZlTDEgZfsYBBQtUTuxbwYXx3lqy96EFJt8/JADsYHJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=bq0JnlIt; arc=none smtp.client-ip=209.85.214.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1786389985; c=relaxed/simple;
+	bh=GCKXdOc28NC5OnXa1/mzOFkq4JmD7AhEVOgj5N6tN5k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QussJWp8k2lwyiHYRzXIcPhgpA1udAyLFecQzmkFiyKRmUzLMgOX+adUdY/3Fg4PNZ4xFhNTlJABm5Mzx3wq7bAeELHyh4u26L/p3UMAhxHh0uhTqjlC6rXtj/VIpOWmpENRA/L8TdMnpGyXO0n/TJfMEfp6zxE8bxh0YQLV2GI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jyCeUZqY; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bq0JnlIt"
-Received: by mail-pl1-f228.google.com with SMTP id d9443c01a7336-2ceaf8a1265so35405255ad.2
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 12:22:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786389720; x=1786994520;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=6dsTj9bVR22kgCOopy9QSe5LsU/US12529STCamM+18=;
-        b=arf+Ac0Wqtne7iI8cMqmZ3jXVXD4xns65yv/MpihqbU+gy8WYBOeS++/Fa31q00xr7
-         UPExGgxZgz15T4ivSI+tAZLo17zpZS7X8vDLNUmnom5XgFttDESLfjREnvz+Q+3u5kmj
-         XbTkpwBzhNhF4pMwuYC1Tb03GbCsAA2xumFOkqqWxD2Go+2r6xu+8uG6qZxyxZ7FNE3b
-         Ck25WrNjKHPwkQHB7ta7pWXIuBslzFsLMU4vo4tTHFIJ8CGAEUtYMmN7OdGACHVxeQYW
-         n0z8e6Xvz/VVAauGwN4qlrt+aRa1vDPh4fBGavIXaR40pkyJbOZMeQRwK2wBFC6N6IOz
-         PeaA==
-X-Forwarded-Encrypted: i=1; AHgh+RpdLiLozNCsWawBO+6L655yo2sFB8LlWPF6v4+apTizQS1CJLt7MfbdQU34SBEgF/qEp3y1PE4kxLeKvnlNGQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0lPXbeNtxKlE0dv4lX58j8lcexalsPRuMQStHQ+hczUmAcJXc
-	WsebGMcT/GHpIDfUdE2hqYUxesPyNLy44Qy5s7Qk2k/IvThnScnGIBJLEAMxo7ezMfpkBPPT4wx
-	S/AB3SopOs0jyPfmPPlZGVwO94TeQlR8o4YhZr3hr+PopvZPK2szrtP0yApcSFIIfxudUF5bJa9
-	7q+pHNlFb12NdwahRP9SuPPDjW6CgTmpfr4b8wNnVe9j1I4hC+Ts7WdmQ/a7IOtpRdFBhzCpBPG
-	IH6BnVgV7LY7eMClunGtHB9LrSO
-X-Gm-Gg: AR+sD11Lp08oEgVggxnlFugdY7kemcA3uaezXEnQ0s6fcafvdq4pUCPeiWHrzAwdEQX
-	8g76AJK9Mf/MZrUL6aGBjtlsordIf31VBi8efZp3ouKaLrsG4/YogA6Z/HnM3nKVDitUIKRABhu
-	lfDT+1Dso0zYUU/h3sGztVlv+juCHug/Rw4cwrVYHs7kVBpvIQAWgMjXsvgIu8brj/EokZISh36
-	rNWioBQwCpSK0i6INvrGcukqozB/77QU0sZHzTaAGYNFzaCLsbi6YLFM6XNIxJFcq5cuZ+2umMX
-	rkiwH1OXHUa9JPoeR18OJltx8JfO1o9Hrh2Y1p6RkUuqWhhPyQc5exWRfFP7FA5Mpom417SkOMp
-	6EzKHSciBpDzT+ffVnqfwUcBrfFu73UtRTydWnw2S6dsH7bC36yDGelavDWNTtC1GreYDao05uG
-	/PAupCCQfq3LR1Jx/XAbW6frWyqA2XLCr7bca5cV4=
-X-Received: by 2002:a17:903:1ae3:b0:2ca:481:de45 with SMTP id d9443c01a7336-2d2fffd70damr45740525ad.6.1786389719760;
-        Mon, 10 Aug 2026 12:21:59 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-25.dlp.protect.broadcom.com. [144.49.247.25])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-2d14cc8ec8bsm934695ad.23.2026.08.10.12.21.59
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 10 Aug 2026 12:21:59 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-51c19493ac2so25400781cf.1
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 12:21:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1786389718; x=1786994518; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=6dsTj9bVR22kgCOopy9QSe5LsU/US12529STCamM+18=;
-        b=bq0JnlIt0S3HmE9MjcRDZNLHAOGz9EUChaV/k/4cprgeuAjLtZeSxxit2GF7i0vQ7r
-         B6YtqKe5mz45ItUIxswo1jXZzV9HVKIksuaEbc0jlT/oU//ZSse9vk+0GE7jYr0b2onA
-         4us/y4o+Z2nI6Dduk0XH0nRVMS8vWIpbzDOfo=
-X-Forwarded-Encrypted: i=1; AHgh+Rqy0wz0pF9qHghev1jHLu9GZHzeEeHy8RYsIujn+iPZrfgqCOLYHft4oTFN9U4eQIkIQxi+oUa+P713RlsFdA==@vger.kernel.org
-X-Received: by 2002:ac8:7f41:0:b0:519:ef86:127d with SMTP id d75a77b69052e-52d4bb91b9fmr47670311cf.18.1786389718335;
-        Mon, 10 Aug 2026 12:21:58 -0700 (PDT)
-X-Received: by 2002:ac8:7f41:0:b0:519:ef86:127d with SMTP id d75a77b69052e-52d4bb91b9fmr47669641cf.18.1786389717837;
-        Mon, 10 Aug 2026 12:21:57 -0700 (PDT)
-Received: from [192.168.178.26] (f215227.upc-f.chello.nl. [80.56.215.227])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52d1659c1d8sm79841321cf.16.2026.08.10.12.21.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Aug 2026 12:21:57 -0700 (PDT)
-Message-ID: <d8a54746-b8ba-438f-ac45-5d30492e85ba@broadcom.com>
-Date: Mon, 10 Aug 2026 21:21:56 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jyCeUZqY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786389983; x=1817925983;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=GCKXdOc28NC5OnXa1/mzOFkq4JmD7AhEVOgj5N6tN5k=;
+  b=jyCeUZqYnb2cxEsHIx40ac4s+ZeeOAPB7kF+urR7p1I6D/ZfCWL35Uy6
+   ASK0gTCIpz9m0PjfPMQzM30xBoiF8eAW6x4r2ndQdKfoMTiz6Oug65yEp
+   VzZD9vMgFpiQpPU+4rBxQfRzbG70vprpOtSb07/oMvTbqfHIJ9IyJtwc+
+   Xoqtq3zBl7OjuDog7KZRolSjyrFnyW1Y59yuVnWlktqI9srxYjnRbOXeq
+   O/+gnWQUavabfH2mhj0K0SjFZPUo0Z/wvDamdkhfCczfIVnXJij1x61HL
+   WzFnk0G6Kr+1ABrgmejeFM6k0tm516vpUcu0q03b+PirHGreLTxFBE1lQ
+   w==;
+X-CSE-ConnectionGUID: QatpoJhjQkqFpIf34CJrGA==
+X-CSE-MsgGUID: 0PCXQNV6RL6wf841RPPSvg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11871"; a="86793154"
+X-IronPort-AV: E=Sophos;i="6.25,216,1779174000"; 
+   d="scan'208";a="86793154"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 12:26:22 -0700
+X-CSE-ConnectionGUID: k/JuUWB9RUahXHf7zbkVEg==
+X-CSE-MsgGUID: oCH/whz2SUKhdpn+p+oIQA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,216,1779174000"; 
+   d="scan'208";a="259819073"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 10 Aug 2026 12:26:19 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wtVdZ-00000000Neo-0AdI;
+	Mon, 10 Aug 2026 19:26:17 +0000
+Date: Tue, 11 Aug 2026 03:25:51 +0800
+From: kernel test robot <lkp@intel.com>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
+	alex@shazbot.org, mani@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, jjohnson@kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	mhi@lists.linux.dev, linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+Message-ID: <202608110204.wb17Qqit-lkp@intel.com>
+References: <20260626055023.197470-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] dt-bindings: net: wireless: brcm,bcm4329-fmac: add
- nvmem-consumer reference
-To: Rob Herring <robh@kernel.org>
-Cc: Rosen Penev <rosenp@gmail.com>, devicetree@vger.kernel.org,
- Johannes Berg <johannes@sipsolutions.net>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260727225311.266596-1-rosenp@gmail.com>
- <20260802083905.3819981-7-arend.vanspriel@broadcom.com>
- <20260810173040.GA2218158-robh@kernel.org>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260810173040.GA2218158-robh@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
 
-On 10/08/2026 19:30, Rob Herring wrote:
-> On Sun, Aug 02, 2026 at 10:39:04AM +0200, Arend van Spriel wrote:
->> On Mon, 27 Jul 2026 15:53:11 -0700, Rosen Penev <rosenp@gmail.com> wrote:
->>> The brcm,bcm4329-fmac binding has unevaluatedProperties set to false
->>> but does not allow nvmem-cells or nvmem-cell-names, which are used by
->>> DTS files (e.g. bcm4709-linksys-ea9200.dts) to supply MAC addresses.
->>>
->>> The driver already supports nvmem-based MAC address retrieval via
->>> of_get_mac_address(), so add the nvmem-consumer schema reference to
->>> document and allow these properties.
->>> ---
->>>   .../devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml | 1 +
->>
->> The problem is real but I think the fix belongs in network-class.yaml rather
->> than the brcmfmac binding specifically. ethernet-controller.yaml already
->> defines nvmem-cells and nvmem-cell-names for wired NICs, but the wireless
->> binding hierarchy (wireless-controller.yaml -> network-class.yaml) is missing
->> them. Fixing it in network-class.yaml would cover all network nodes at once
->> instead of requiring each wireless driver to add the same reference
->> individually.
-> 
-> It is wrong because nvmem-consumer.yaml does not define how many entries
-> and what they are. IOW, the valid names in nvmem-cell-names must be
-> defined.
-> 
-> However, expecting all network class devices to use the same
-> nvmem-cells/nvmem-cell-names will probably not work long term. Some
-> device may use it, but not use "mac-address" entry. Unfortunately,
-> there's not a way to override a default in json-schema. So we'll
-> probably have to just define this in every user rather than centrally.
-> 
-> So this should just add the definitions to the brcm,bcm4329-fmac
-> binding:
-> 
-> nvmem-cells:
->    maxItems: 1
-> 
-> nvmem-cell-names:
->    const: mac-address
-Hi, Rob
+Hi Jose,
 
-I try to stay away from devicetree bindings so I am not well-aware of 
-the limitations to express things. Just applying my aim-for-reuse mantra ;-)
+kernel test robot noticed the following build warnings:
 
-Thanks for your guidance.
+[auto build test WARNING on pci/next]
+[also build test WARNING on pci/for-linus linus/master v7.2-rc6 next-20260807]
+[cannot apply to linux-review/Jose-Ignacio-Tornos-Martinez/Add-device-specific-reset-for-Qualcomm-devices/20260804-001013]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Regards,
-Arend
+url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/PCI-Add-device-specific-reset-for-Qualcomm-devices/20260810-131417
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260626055023.197470-1-jtornosm%40redhat.com
+patch subject: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+config: um-randconfig-r073-20260810 (https://download.01.org/0day-ci/archive/20260811/202608110204.wb17Qqit-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+smatch: v0.5.0-9187-g5189e3fb
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202608110204.wb17Qqit-lkp@intel.com/
+
+smatch warnings:
+drivers/pci/quirks.c:4278 reset_qualcomm_wifi() warn: always true condition '(val != (~0)) => (0-u32max != u64max)'
+
+vim +4278 drivers/pci/quirks.c
+
+  4234	
+  4235	/*
+  4236	 * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
+  4237	 * registers.
+  4238	 */
+  4239	static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
+  4240	{
+  4241		bool link_recovered = false;
+  4242		unsigned long timeout;
+  4243		void __iomem *bar;
+  4244		u32 val;
+  4245		u16 cmd;
+  4246	
+  4247		if (probe)
+  4248			return 0;
+  4249	
+  4250		if (pdev->current_state != PCI_D0)
+  4251			return -EINVAL;
+  4252	
+  4253		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+  4254		pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+  4255	
+  4256		bar = pci_iomap(pdev, 0, 0);
+  4257		if (!bar) {
+  4258			pci_write_config_word(pdev, PCI_COMMAND, cmd);
+  4259			return -ENODEV;
+  4260		}
+  4261	
+  4262		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4263		val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+  4264		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4265		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4266	
+  4267		msleep(10);
+  4268	
+  4269		val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+  4270		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4271		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4272	
+  4273		msleep(10);
+  4274	
+  4275		timeout = jiffies + msecs_to_jiffies(5000);
+  4276		while (time_before(jiffies, timeout)) {
+  4277			val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> 4278			if (val != PCI_ERROR_RESPONSE) {
+  4279				link_recovered = true;
+  4280				break;
+  4281			}
+  4282			msleep(20);
+  4283		}
+  4284	
+  4285		if (!link_recovered) {
+  4286			pci_err(pdev, "PCIe link failed to recover after reset\n");
+  4287			goto out_restore;
+  4288		}
+  4289	
+  4290		/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
+  4291		 * and thus need to set MHICTRL_RESET to clear SYSERR.
+  4292		 */
+  4293		iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
+  4294		ioread32(bar + QUALCOMM_WIFI_MHICTRL);
+  4295	
+  4296		msleep(10);
+  4297	
+  4298	out_restore:
+  4299		pci_iounmap(pdev, bar);
+  4300		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+  4301	
+  4302		return link_recovered ? 0 : -ETIMEDOUT;
+  4303	}
+  4304	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
