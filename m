@@ -1,87 +1,88 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E16A4386C2A
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:55:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 397DA32D0EE
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786337709; cv=none; b=WdT++2N/qBUDRJ25TeWOnLKdGflMXpCrN03OuA4Z3DyNIPBQWZ15fGbEZkAMoAncu7nJgtTAsKhE5DKjuXzlM1WqjejnMZN6pcPZDWR9Ohec7nxiF3VaQ4ezBuNxfs/vroRcrb1v+N1j6Hwxr23zvWpaLfW6eGXYO1sWmG/zSiA=
+	t=1786337763; cv=none; b=irqz8PtfrKXmNLUxWcBcgDgAL2ahMSlQBAOp537xjrRsya7GWp80iEbevC9FcA4wLnFE6EZIeozTDRNSUW1CC3Z87wRGRheenzXbm4oHdBp8SKjz7LyrOTnmoRjz5F4DGNlpSq0g/Red3IJyNgnPLplk4X0QaimbjksyjbbBw6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786337709; c=relaxed/simple;
-	bh=yR/+IIQoTBzve7Hm6IcxaZqzuiRYQ3R8GtyKug4pV0w=;
+	s=arc-20240116; t=1786337763; c=relaxed/simple;
+	bh=BqQB/4LLSggual9waKmZjByLYIJs78CgJFNjdtgnP54=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f0yYzZW48OxFCTwmSrNCEfm5P4ClmM9jm0jnd47Jn7aoC6jix1D5QHJ+ZoZWj6wL72xzQFpH+hBVuT9xrb9NhKTc4B+LD4hyq4T+H7nRtQdMCj9Fn4dOwgKEAXiK/6WNH3aMlV2ZZtwXDOwBGPk5qx2vTun2bImZnILJ7fu2sY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Z4nak5RF; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GeN27qP/; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:Content-Type; b=Sr1TukivNBRh53SAgv8Sw9yAbWQBLTLQWWcpYCRpSmA/YmDIDvyuxQJFPxub0G+lQiQ2JiZ8LNOLPzRE6GEBcJUsSE+CIWiQWC2EAGdVyu3Ti5zw1st9l94Gd0IQdafgtVSHX9bIz4Qb76sc0N5jycZ15QzeliHfIQFeDDUVelg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YHHttd8L; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Hp4rY6h3; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Z4nak5RF";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GeN27qP/"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 679L7Ugp3477005
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:55:07 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YHHttd8L";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Hp4rY6h3"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 679LuaGD3597620
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:56:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ArTpDam5bh0KLdnINtdiE20WeCWsVmySFXjbwgWmPwE=; b=Z4nak5RFWZGgUquk
-	m94HXSBn/J9iD0zhM6QbhOqSHrHvSSmXxWaPDP2/ZYc02OtmPaRaAv38OH8A548W
-	oKGwZ6hG2hmmWxFq7wVS9/oldFsCT2OtVd4FAUec8Ziy97ri63Jq5/qkm5QoQZvA
-	MWRmO5M2gZYpWcOvz9Bppze9OmkaAwCerMfjRnF2TVsLwDSXkAVF0e26BRQflsQa
-	L/RMa5HUZ7+oj3xn521JZycyMNCtkxAZ+YdpeOdfTs7Fbv8sh/OJiQrvxGE6LOJF
-	W8JlaPr6kaND7q2++nkgkeoHtAhVXM4IO6kIi/OEK923nlPxJXfNRZ+noUp1nHgK
-	+gqUfA==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fww7cvb6a-1
+	5WsshM48rhq3oko+rk+xALFZQt/sxdV74HMC+99dUD8=; b=YHHttd8LmLJ1bJ7s
+	pGl1xh+yN9FcaJvXR5lxJUxO7NMDRPzZEsi5fG3zOCDFMyIB7CtkSYAmvdMjQlYs
+	KFww2vtIW8hLSQbIAg4wKTEtDq/vdI9Mi8pVWxuHeLmVBY0LHUivWVJCW6iieBMO
+	yFBjHC6bHFbKZuV5Zi1K04gBgYECjBxKTAQBtNWxuYnMmx775nsmkedhBtY22zWl
+	kSCOtPJz+Pl57hJzTgMhKn9yKoP8TzeWfu/GD75FzBRdUbBxZ8+TohuH9xo1nn4I
+	BA+rKDkSlfwiieUBBqM4ApAHfuUGuDMAhuYoHhSsaGFmdMHC7iDOHggmikiIHfyL
+	Jc6VHg==
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fwvu8mcc8-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:55:06 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-848662cd2a1so1734241b3a.2
-        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2026 21:55:06 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:56:00 +0000 (GMT)
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-84eccf9d899so2308812b3a.2
+        for <linux-wireless@vger.kernel.org>; Sun, 09 Aug 2026 21:56:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786337706; x=1786942506; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1786337760; x=1786942560; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ArTpDam5bh0KLdnINtdiE20WeCWsVmySFXjbwgWmPwE=;
-        b=GeN27qP/SjZl640hibyErmTJ+1JaqB0ZRbuKiMncfFQn+r9HzDb1KQfknghIoqP9Oa
-         48Cap8t32C5Ya+ivXUq+X/oU4iG/F7YZR77RN5dSJH8qOqA1o4PJR4eiMW47uobZSFxC
-         8PWw4DPUGe/6DOHPIUYjPbLVHvuEVY1vGCKuE8h6e/YTShCyF+9VOxrHjms9SLn6ePWW
-         eTfg19gRLgxg03sYWAd0xP3ztIyZejj4OLiqSLF9F6ejG3g4RnljdzftrFWoGYk8V0jT
-         +xRtQoTAWiW3vIRTyuhcj3U/3J448RWhwgYxKmNf2viUZiVS9QuxmnUDwI7pOFXzA8pt
-         k2Tw==
+        bh=5WsshM48rhq3oko+rk+xALFZQt/sxdV74HMC+99dUD8=;
+        b=Hp4rY6h34tvCNwqzNje8KMhBAYVkvCrTIh5Zk+8UJlF3qvaaQEW7MCBjXrnUUWe86a
+         ROVhpwr5pSdE6XM//PV0lHuEPaZ3ZjWvHxUACWs7ny7m4XVEVwkOcXYx5oda2MtNL0oC
+         Iyj8O8wlBvAf8hFLluuFNnHQuUxwqfzXTxiqbziF5BzQ2Pamp2aUGTkH8WYiewWFFGSX
+         0PKd0JhEXMI6UL0wZQqwKLC4oB6AShOlWLcLSRmfB0Gvto05ijX2w72CNGDMAmuyUZrv
+         O931eY+lvMIBwpcfLWNWCJhIEUMTbalCE3LWZ/r9ANl3y8lBbPUNtfeJ3ZqWbTWK+N7q
+         L8uA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786337706; x=1786942506;
+        d=1e100.net; s=20251104; t=1786337760; x=1786942560;
         h=content-transfer-encoding:content-type:in-reply-to:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ArTpDam5bh0KLdnINtdiE20WeCWsVmySFXjbwgWmPwE=;
-        b=XwhBv72Xusq1yjpRseyrWtJTsqjvwal3Zmfx31p6j2UZBP3wdMwpOieGkYjprO3T0z
-         8hUcFScpEDMTCTLmTRQzoWTwvfM+gAkXdscr42U/S100zfszQ5a2MYJMbnyzp7iFAF6n
-         YxIBkrWxyImlJtxSF1i2rV1N1xYTlvuuAp42eShDzP18zgaLKj4wZ/GQFZxpnJ3WFpl/
-         TRDMuZ/+PykUuOzvXbHsWbeVp1uPl09fthBTuDAAlhuW7GugsWk6RydHJc4GP8fBvRxi
-         HXSqUbmyhgUE9fob+TqcrjuV/gH8bSSWTZ/l3pYltUOmM+oZizPQ4sfN/fdg01U6a7cZ
-         RejQ==
-X-Gm-Message-State: AOJu0Ywh2+rkgrTO1uRQpX1nS5QWE3fMOulBgKGaGA+J9qwIxDjkLKXk
-	Rri+II3+K5q4RkOaiDuP+GKumRbWZhcRgPZD7WuC8c+rTE1sM5S1DYDtGiXxYD7T64trIxtrpyp
-	oiaoTpKdIdZvMMq8z/9XSLHHTEqfMurdSoKW31uxBup49mgbTMJ4lS5VV+J76SEN90GAAyQ==
-X-Gm-Gg: AR+sD11fq9AtL04ni2PaNMDqLRFDjVx/fAZ84qmTwK8z4ZdAxMEGyr2Xq8Tpx6KSnIE
-	D32UQkptheeHLDCFrN1QsWE2hCw+As/YRMNJhHpq1eWrb51P6O/H8w8taQMoXnbZptCinPa8PNK
-	OWDrHQN6z1BXGUw2PeX6E6g3eSUkMbbA3Q86/8iFiJXXSts5oCtlQ1sHo12sB1lBclKuSVRttYo
-	bGA5+w1BtffSBAWS7QWJCqpG4V46YxLDHIbI0nZC4xcmX8k91sZctvifvzj/gD6nJaVqYi9neQx
-	nvJP5pQ+j2f8WRGRvbidKSbQgL4hkQOk1yw2ttXbwoN3QTI6MisQB1Ui579tEXHeXtbHXStUXVc
-	R19VTIEU0Y0BjGlWic90xNxtOGulO5zmqOqsW31+GFgzCetYfNxpcBW0VPH6N8czxjmDJmQKaGz
-	QRqaSq6op6/e2OJwlizA==
-X-Received: by 2002:a05:6a00:2393:b0:847:881c:7026 with SMTP id d2e1a72fcca58-84f69418396mr14737204b3a.3.1786337706099;
-        Sun, 09 Aug 2026 21:55:06 -0700 (PDT)
-X-Received: by 2002:a05:6a00:2393:b0:847:881c:7026 with SMTP id d2e1a72fcca58-84f69418396mr14737174b3a.3.1786337705575;
-        Sun, 09 Aug 2026 21:55:05 -0700 (PDT)
+        bh=5WsshM48rhq3oko+rk+xALFZQt/sxdV74HMC+99dUD8=;
+        b=mv+6G2WqTODm0ervHCRACOBEe4VhdPsZcHgxMBap/FE+LVazhRdrlr4EHsSWGpm2jI
+         YKVrJS5OGtvSAKbRzxcHhnGwaioYODl3RSVJfdy5sDMnKOJksP5GvE8hxwgResVIPQh5
+         NY+6EnvQi2Y96DFdjwApeZmOdbqcCudVEqjoerp2DfhyaRuC065H9a0U49DFPiQANRXY
+         +Z4Ca7xrcZZSbV3L8OJZ7v0oIPaMHvJjn0c1ary3qF515WfCB6A2gdXAXvZQq3RRjcrj
+         MU4Wp0BA0v4cOU1jXn//syi755+nJtK09ZFn0ar43PuU6pByELoJONnVSNwPRpvSAfpq
+         J7JA==
+X-Gm-Message-State: AOJu0Yx3vtQGt0gMIiY+zSA3RHXHZE99NfGU3zSEzSf1SFZew7O17z8b
+	ulAso64i5BPv6BqhgfyDKCbeEgyW7JAbGmHvYe2j1UXxzTTbC5AyA/BalAcgmN+/Y7G+7iyBjtk
+	Aym15GukomEfzL3l+Ef/6wcqY0O2E0AJrc/UcWfIw6CN9Ohr9xwUJJlpwepuPR0mrDff5/P+usr
+	hzPg==
+X-Gm-Gg: AR+sD100ZCY+CbHKlmUc0uvauViUg7F3Vp9wyBfs1HMAFOnLP0vM2AxI0CdFhJkytH1
+	+eVGW9LT9iRzROkhxxrudiW3lHIbEHHxRP/H5igZ2yTAhN+gSc0fCYrVsk2cEwuk/dRWNzDbbbO
+	p1trCn2G0jR4TEwKD1kMOG6wl243o0PgQfrRFpSmg+e4Nnfo3PjbuE+GcsKU0GuUKWLFmqC5kRU
+	mpCNI1Fe6vJTJF2AomzCRkKo2LG42Hr+ZTohYICClXW9+16SRpg9ZXs/wc7l6njP0xonuVwp1gX
+	DikYDWcsTzCeLDu5woYa52mvQgcSXHUN3VpOnW+BWj/nN9A67J8mWejlHrLDj19TpMri7fGi4wf
+	0cpQ+fR3yJu5N9OgwJCj5SDPxuE3a8MnfGpKKrl2N3skJv4uVDCYSjj7G55U1qBG3GGmE7rNjTL
+	TtIQKT9RPyDzJ+LpM0QQ==
+X-Received: by 2002:a05:6a00:2887:b0:847:8449:2ba6 with SMTP id d2e1a72fcca58-84f2dfcfd34mr47829874b3a.8.1786337759774;
+        Sun, 09 Aug 2026 21:55:59 -0700 (PDT)
+X-Received: by 2002:a05:6a00:2887:b0:847:8449:2ba6 with SMTP id d2e1a72fcca58-84f2dfcfd34mr47829849b3a.8.1786337759261;
+        Sun, 09 Aug 2026 21:55:59 -0700 (PDT)
 Received: from [10.79.124.186] (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84f5a3a0f8dsm3248601b3a.12.2026.08.09.21.55.03
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84f5a3d1155sm3203620b3a.20.2026.08.09.21.55.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 09 Aug 2026 21:55:05 -0700 (PDT)
-Message-ID: <89f8b7d4-fea5-4b22-b5e4-07d8de06eeda@oss.qualcomm.com>
-Date: Mon, 10 Aug 2026 10:25:02 +0530
+        Sun, 09 Aug 2026 21:55:58 -0700 (PDT)
+Message-ID: <41001b17-36b8-4c5c-9a8a-959ecf7b28ce@oss.qualcomm.com>
+Date: Mon, 10 Aug 2026 10:25:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -89,140 +90,81 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next v2 4/8] wifi: ath12k: add device DP stats reset
- support via debugfs
+Subject: Re: [PATCH ath-next v2 7/8] wifi: ath12k: fix 1-based ring index in
+ REO Rx Received debugfs output
 To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
 References: <20260806132427.3704828-1-pardeep.kaur@oss.qualcomm.com>
- <20260806132427.3704828-5-pardeep.kaur@oss.qualcomm.com>
- <9dd4f651-3437-467f-9994-93b92a83270f@oss.qualcomm.com>
+ <20260806132427.3704828-8-pardeep.kaur@oss.qualcomm.com>
+ <746f106d-f435-47ca-a33b-32e4b97843f7@oss.qualcomm.com>
 Content-Language: en-US
 From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
-In-Reply-To: <9dd4f651-3437-467f-9994-93b92a83270f@oss.qualcomm.com>
+In-Reply-To: <746f106d-f435-47ca-a33b-32e4b97843f7@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: AR0QkZ4E5xLrvnO6VxTicSCrps2TDUpt
-X-Proofpoint-ORIG-GUID: AR0QkZ4E5xLrvnO6VxTicSCrps2TDUpt
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEwMDAzOCBTYWx0ZWRfX3GLwjHQ9Kuir
- WGKj4bQGWHsDv/FFMOmQ/dIAQNXl8e8RzUmb2tbJlQy3ANbA+qLPcwuf4y3HQaN+8M6OEeHozSc
- oMvS9aOUM8gCdDhGMbr66YLuUtAZ7/uI26/41jgaxRZZL+II48MaiJL4oL+5jFDHCUiGNyrZABi
- qNdwEQzJPJyJTR9w9aNRuNTLnRVHAc8shw4L02LiB67lBWKxT0SC0yPmBQKIlp9E0pyRt8Dfe0d
- oc5Z+WmGCp09cjWj3tL6mM+OmB4fypVXsokohUm6nfYnJLJD7cDmyhh/i+fP18m3wx5ffghSND/
- S0wVJMM5+oOnAHQ1FofghVZwUOq8W1YcenDHyjtWVB3pZtIwM4Gbpx1QVWwLEa/rLcHNN+ACI6+
- c+IMEFYgMXD3r6UmX+AvcFzSj7K0+MJNl0PlGHA35j9pewTy60Uzq3ParrZFwWkCT5ArusmzE3k
- anlZ8UtUtL0iX6oqUmQ==
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEwMDAzOCBTYWx0ZWRfX2hnjPa6LFbP/
- qLCKfiCl6uhFbSzMDUZEMo6plPM+wIaM4jS5yCOQn5XMtWrrA7uNFxfcSgNF8fhxIw9YLQemtf1
- XK1uh1/hXRm1yNtUU+FbJ2pj85/4Nqo=
-X-Authority-Analysis: v=2.4 cv=IPsyzAvG c=1 sm=1 tr=0 ts=6a7959aa cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-GUID: YVAnEZJt7KJBCdHXsLpKKbV7mMKRBpvQ
+X-Authority-Analysis: v=2.4 cv=M8p97Sws c=1 sm=1 tr=0 ts=6a7959e0 cx=c_pps
+ a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=AFajGRLNYAwZlwsr5FkA:9 a=QEXdDO2ut3YA:10
- a=zc0IvFSfCIW2DFIPzwfm:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=EUspDBNiAAAA:8 a=ZXtejqto8Ws31T1WmfgA:9 a=QEXdDO2ut3YA:10
+ a=OpyuDcXvxspvyRM73sMx:22
+X-Proofpoint-ORIG-GUID: YVAnEZJt7KJBCdHXsLpKKbV7mMKRBpvQ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEwMDAzOCBTYWx0ZWRfX6dEaO5UqRQgJ
+ itCGTcSQs7N9t5ZqiZQy2Uj+LsPRXjHp5Um7wcwisCWBpD/pu0taR+lNLf7sUkSezDxIy6x3E/U
+ iZsbSe5SUUVKTd7XZW91U20gtpJlBoyqiOhNFhVg/qYL/RP2fXg+YUyLW9IkvqDHydjNwPdU7zM
+ oDRxMluzc1XbE3qOqP5ula5UNFUvZQdOajPFEu3yZlSQqhf+gkbnHyTJATGUmxrbHPc6+9Jp8uZ
+ umlvUsJnemo3dzVTruMqb0+GqPzzyuh+XfYbua25AQ2u8pS16MBMH9qlDTHPe2QDe7pG1szStgk
+ By0yHBMcYOaXfrCBh0tu0IU2rFj7iqBEhWHL3EpCXx28nTaIIv60dUpCUTufxtAk+RyoaAcSx5Q
+ v277ho2j+vfR2QYvTP0P0Uk0oT0jNkYGkz/aPFE9dQ8oPqMKuid9MBuaOpSM/Kk1C1m7MMZnrhr
+ 9wrdJxCPJmLLuMy2xUA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODEwMDAzOCBTYWx0ZWRfX9i7Etu1qfcQo
+ 9m0MV72Y+v/I6mepyUbmT2i1gthVJ6VEAaQFaK8S09VKFsDjBe/nDqV4ZbU3JWKYa4fddoSsDL7
+ sacMiC7DAd2NCtPkbOORrX/8LfWBIS4=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-09_07,2026-08-07_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 phishscore=0 clxscore=1015 priorityscore=1501 suspectscore=0
- bulkscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608100038
+ spamscore=0 clxscore=1015 priorityscore=1501 lowpriorityscore=0
+ malwarescore=0 impostorscore=0 adultscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608100038
 
 
-On 07-08-2026 07:44, Jeff Johnson wrote:
+On 08-08-2026 20:56, Jeff Johnson wrote:
 > On 8/6/2026 6:24 AM, Pardeep Kaur wrote:
->> From: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
+>> From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 >>
->> There is no way to reset device DP stats counters without reloading
->> the driver, making it difficult to isolate issues to a specific time
->> window during debugging.
->>
->> Add a write handler to the device_dp_stats debugfs file so that
->> writing 'reset' clears all device DP stats counters. Change the file
->> mode from 0400 to 0600 to allow write access. Use strcmp() with
->> newline stripping to match the input, consistent with the existing
->> pattern in debugfs.c. Return -EINVAL on unrecognised input.
->>
->> No lock is taken around the memset since the counters are updated
->> locklessly in the datapath; taking dp_lock would be misleading as it
->> does not protect device_stats updates.
+>> The REO Rx Received section in device_dp_stats debugfs uses a 1-based
+>> ring index ("Ring1:", "Ring2:", ...) which is inconsistent with the rest
+>> of ath12k where rings are indexed from 0. Fix it to use 0-based indexing
+>> and lowercase "ring%d:" to match the style used by all other ring counters
+>> in the same function.
 >>
 >> Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6.r1-00402-QCAHKSWPL_SILICONZ-1
 >>
->> Signed-off-by: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
->> Co-developed-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
+>> Fixes: 84873d542e95 ("wifi: ath12k: print device dp stats in debugfs")
+> drop the Fixes tag -- this is not something that needs backporting
+
+will update this
+
+>
 >> Signed-off-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 >> ---
->>   drivers/net/wireless/ath/ath12k/debugfs.c | 35 ++++++++++++++++++++++-
->>   1 file changed, 34 insertions(+), 1 deletion(-)
+>>   drivers/net/wireless/ath/ath12k/debugfs.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
 >>
 >> diff --git a/drivers/net/wireless/ath/ath12k/debugfs.c b/drivers/net/wireless/ath/ath12k/debugfs.c
->> index ec49692107a8..0e446a666f4c 100644
+>> index 216a1af22898..d4ea21aac21e 100644
 >> --- a/drivers/net/wireless/ath/ath12k/debugfs.c
 >> +++ b/drivers/net/wireless/ath/ath12k/debugfs.c
->> @@ -1220,8 +1220,41 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
->>   	return ret;
->>   }
+>> @@ -1215,7 +1215,7 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
+>>   	len += scnprintf(buf + len, size - len, "\nREO Rx Received:\n");
 >>   
->> +static ssize_t
->> +ath12k_debugfs_write_device_dp_stats(struct file *file,
->> +				     const char __user *user_buf,
->> +				     size_t count, loff_t *ppos)
->> +{
->> +	struct ath12k_base *ab = file->private_data;
->> +	struct ath12k_dp *dp = ath12k_ab_to_dp(ab);
->> +	struct ath12k_device_dp_stats *device_stats = &dp->device_stats;
->> +	char buf[20] = {};
->> +	int ret;
->> +
->> +	if (count >= sizeof(buf))
->> +		return -EINVAL;
->> +
->> +	ret = copy_from_user(buf, user_buf, count);
->> +	if (ret)
->> +		return -EFAULT;
->> +
->> +	/* drop the possible '\n' from the end */
->> +	if (count > 0 && buf[count - 1] == '\n')
->> +		buf[count - 1] = '\0';
->> +
-> my review agent says:
-> The new ath12k_debugfs_write_device_dp_stats uses raw copy_from_user(buf,
-> user_buf, count) and never checks or advances *ppos. A write split across two
-> write(2) calls (non-zero ppos on the second) will copy the second chunk into
-> buf[0] instead of buf[ppos], silently failing to match "reset". The existing
-> ath12k_write_simulate_fw_crash in the same file (line 63) uses
-> simple_write_to_buffer(), which is the idiomatic kernel pattern here. Replace
-> with:
-> ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-> if (ret <= 0)
->      return ret;
-will follow the existing pattern and update the patch
->
->> +	if (!strcmp(buf, "reset")) {
->> +		memset(device_stats, 0, sizeof(*device_stats));
->> +		return count;
->> +	}
->> +
->> +	ath12k_warn(ab, "unsupported command: %s\n", buf);
->> +
->> +	return -EINVAL;
->> +}
->> +
->>   static const struct file_operations fops_device_dp_stats = {
->>   	.read = ath12k_debugfs_dump_device_dp_stats,
->> +	.write = ath12k_debugfs_write_device_dp_stats,
->>   	.open = simple_open,
->>   	.owner = THIS_MODULE,
->>   	.llseek = default_llseek,
->> @@ -1232,7 +1265,7 @@ void ath12k_debugfs_pdev_create(struct ath12k_base *ab)
->>   	debugfs_create_file("simulate_fw_crash", 0600, ab->debugfs_soc, ab,
->>   			    &fops_simulate_fw_crash);
+>>   	for (i = 0; i < DP_REO_DST_RING_MAX; i++) {
+>> -		len += scnprintf(buf + len, size - len, "Ring%d:", i + 1);
+>> +		len += scnprintf(buf + len, size - len, "ring%d:", i);
 >>   
->> -	debugfs_create_file("device_dp_stats", 0400, ab->debugfs_soc, ab,
->> +	debugfs_create_file("device_dp_stats", 0600, ab->debugfs_soc, ab,
->>   			    &fops_device_dp_stats);
->>   }
->>   
+>>   		for (j = 0; j < ab->ag->num_devices; j++) {
+>>   			len += scnprintf(buf + len, size - len,
