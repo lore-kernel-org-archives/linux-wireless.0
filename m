@@ -1,131 +1,164 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5053B14AF
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 09:50:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.214.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355453; cv=pass; b=ZIqZM9NFU9cyX8KHqXzRMaGvVSG9YYGiXgU5bt/5Xqf48kv7JYf/zJCpIfefiVvHmMBUVTyRPw3NvCBcIUY+K7ehI7TMiPPioc81xBdLwaHRth1pyJ3mKa1QBos8R47vcGES0pSzA+767I8AYaCUSd5UQp8IvO9hecWuaXX6DQw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355453; c=relaxed/simple;
-	bh=CuSQuhAi+mqWr7Aa6Bae3WKZXhvJ/H1Z3Ts1+D9P5z8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IMiifZ/Jt3o4X1PZBgujkjxjcKC7QMX3wL5F+9ZHzJ8P5ewyBiufkbw/oAIqv8xvpSq6ToPmMA9p2kfSwVDDntDvgrSzLEWcKYPMFnjjX8+7E6A3uYyVFH12Vr63h1eYfK6hLSjfgNkz3OgDtLJPSnygvpl2bR9fGRZt0cAOUGk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=PdvUmtXq; arc=pass smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F12255E43
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 09:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786355471; cv=none; b=DTM++akphXUsnkdrRXimczKuPZz2+JubNa7MlOVy40KxxhvipDnIjLSbyAF4DdNjyQJQykIrr0Z1QixrnDj5UG0C5dR2tLTsRFAsCmnFA0tKcVBUpX+BSFL7BkPGvG/ah/8CMVUabZySmankQbjkfCYvknMxjhyZp0597/UYk10=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786355471; c=relaxed/simple;
+	bh=ihb16qqgzfb+ZORy3jvepuRYiaQpGA/+Dj8f3i3SIZU=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=MbdJx6LT6c5W7t+uwD+5iIwT4o2ZOHsGYoJtlLTWTb4qHkce9Xk0QOOgELTdxIuwlIkrCmNc7g2J8pcp6EHrpmwVwNDc8EDP1uoYxDMQCHl3PA1m0RnqglF/eSxcEcQeCuIHDzdtH6KyW5S9pRQ5GMb5+OEtigelxW9dinvt9b0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=Sosn8qr4; arc=none smtp.client-ip=85.9.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="PdvUmtXq"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2caced6038eso16575875ad.0
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 02:50:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786355451; cv=none;
-        d=google.com; s=arc-20260327;
-        b=qLMEcQ4hBRDtn4aKaZ+mv8AgAs9+IoHvenuEAKYXrx3UU1sQ+eS1L852nM3a4ETQ/9
-         7lWux0utrPHkjAecFhUmNK8LHqEHdv3Z5UrFPyfc8LFyl1etiGdrVEJ1Y4VOKvuMN7I4
-         MnFMwclZFx5/GzyQtTXTt5OZFMUfJvUuuJ07/qMQOi5Qfl/5BLSDc6Z0Ow2yXiAkIdfs
-         5iGAwrtxu/ZYFDH6TyLOvAsF3CeFO1qXJYYCFT0uL+VtrQTOQN0cCKPhtPJGFJGmkUY0
-         Nmdh2RsxUrcb0HPXXzJdRQJGQEbOssoXsAIADj3D9YShsGqtpmewSiN9ZahQqmYjllc8
-         kubQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=CuSQuhAi+mqWr7Aa6Bae3WKZXhvJ/H1Z3Ts1+D9P5z8=;
-        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
-        b=KkraD8ysDjd2uJz6qA0kddtHCq1iyZFG8btBWkZe9mWP25UYs7ELyFNxNY56MXTPQ2
-         1CXjOuj0CgjUGSO7q64GDMTp4NyXv8QDDjL0pZ0lHbK6+7E5iqRt4W35LMdxSUovzl/O
-         qWuLeGrE1rCBNuC5ZzljSn/G1GuHDLJv7oqMk2M//RbmjTnPkl1L7U+7/8Z1M5MpVGKB
-         7V7ozv9vVJI2i5aw+ZKx8dK5IH2jM4vxUg+La9KhOkxjmhjqJEG8ucMrBchNCX18cIOQ
-         5YMAB3hZ08bXJfcN5TQ9H2g7Idhte9MIFCc05kPRbLgelC3cccuwEu6XydPYdi5WkLyj
-         llpw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20251104; t=1786355451; x=1786960251; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=CuSQuhAi+mqWr7Aa6Bae3WKZXhvJ/H1Z3Ts1+D9P5z8=;
-        b=PdvUmtXqRIEXtq6/HEG7iTZtizZdXO5ltsd9K1JO/jhHte/HJyjboI1FfuIoGye0U7
-         S1e2phfoa3xNmcBo3FUBNagGdjQL9Y0ZgdWdRRMo02va5lNZMle1sRiUsxvqf9qH4cyU
-         Frl1/b1Aw/u5A+NZ8yFzMy+8jpsphQk6/TELSaRe9dYV+j3kMkG5WLs+cpG7CT7Bm0NU
-         Umy7NKHKM7z/ncPY+9LHjy/WaVIJcfQxFt1XD5vxhXLJrFo520oIlkmNEeoBhw0ElRTY
-         Hd+WVFrsA2fzOHV8sk5+cguzr5N7CqUiDG3C9x8R5NN1Ue2wwnq5FWNo0AYC3ffWmfng
-         7VXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786355451; x=1786960251;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=CuSQuhAi+mqWr7Aa6Bae3WKZXhvJ/H1Z3Ts1+D9P5z8=;
-        b=SPXU+mMgvgqVuY+7GbNxGEEPtXcVZOvAcMoxy3fSqInSitHI8zIqZWEVDu1NKfiGZ4
-         thubPGck8FNK7+SjwVhTZXolcnzMnis3WhqYOH+vOj/HmqwKAD3AQLd4rR7gjXoRTM3u
-         JfWI09NeLghBPjSmV/cfkTZFrdcHBMASQ04pxZgX/Ar6jMRuwlaBPVi4EIa+zTvqmY1C
-         wcZ5au6Ti6gCIgwYuJPT5tXjopliSOJpOxw8KhJQyWxr6pwG7mWscLGsRT7DMnHotNk4
-         d23KatBjjttLR7C4CKZtN9kN3MeaWZF/7XO4BM2r+wgf64gldQQoxAgo1sRBYzyOaLz/
-         EBHQ==
-X-Gm-Message-State: AOJu0YxE+Yk9M1zuI7VcT2bjqfaVuDmOrTZ6QRz8Rd96VW/vxsqVqiLf
-	F96LWPmMzd4tKqpeNqnLSmJDV05WRbtvXoZXMq9Qpt56vEC7V0jwv4i0+M/eEZdMnufSjA15FMn
-	rJKrqVaLW5OoRrdKV+VVCcPP76cG4d9b4MtyA
-X-Gm-Gg: AR+sD121xlW/gz2u6G+NKmKZYKN+Oh7WIseagdy0PFY4FVxYTD4nIXTbvhj1WPoezvX
-	qlJN5P1zD5L5slvZty/Zq7BI7gh4Rh6X1V1XKFknt8FVYp9x4oLQu1l1pZhCnPt3hEaJZD+Uf4l
-	v5C4FgB3HWlYlFFOkqS0/kM2PdS4zpMcDj0wDhWeTMBAj1MUAmR1AwfJnMBqa42frm+cavTawsz
-	bk+ovrumT5lzhojHeKVISC1nENTnQwsHZFYNKX2itCKUN4gWONBbroj7NW9uLdb9uOv3Zq7WlAO
-	Zue16KWpC7o0FBxuyXR0UrectCxkctDE2CIJVXUYumsXs6IuloaIYPSaY5UiZa+ueazCy4NHvDR
-	GR00S4CUZQSH6qnwTw/X9xL0lKO9HAeLn
-X-Received: by 2002:a17:903:1c8:b0:2cf:7ea3:7cf1 with SMTP id
- d9443c01a7336-2d2b2db7e96mr175168425ad.5.1786355450923; Mon, 10 Aug 2026
- 02:50:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="Sosn8qr4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1786355459; x=1786614659;
+	bh=3gQCmbZiRpTIP78Wgb09iQGd9hbmY0T5UypymMdu5do=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=Sosn8qr4Hy6GO+M0FZme1WadsgJiXdMxGbSAfrGHzjUBJKhgUI7Gbeytow4UKSgYc
+	 Dsocy8YYBPUHiEimfrTiifurGOsmU1XFj3AIn91Su+8r+Rna0JFTv+V7TAfYMXX/nD
+	 XjdW/BFXFJDPX4IVcTS1nGVik6qAsKFVPu5YGlXeQlGmXR89kI9LSVcplnY1W+wFn7
+	 ESWRsUI1G7jty3geLlJX1GMYYb4f3O4lVIS4PdbPebu/B6wD4tuIMNYntpFY757kY6
+	 f+7/H9sNGgQ9s7WR/aKcp1haOJK1n9bNF8txnid2u9hhdpSYySkUI19KXlIvFjTrXR
+	 ou9b1MpSew7YQ==
+Date: Mon, 10 Aug 2026 09:50:54 +0000
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+From: Ryan Leung <untilscour@protonmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
+Subject: [PATCH v2] wifi: mt76: mt7996: add thermal zone device registration
+Message-ID: <20260810-mt7996-thermal-zone-v2-1-563dfbbf9175@protonmail.com>
+Feedback-ID: 184418679:user:proton
+X-Pm-Message-ID: 3d550f87ccf31ceff35eda65ecd63ca9f0c8d962
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
- <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
- <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
- <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
- <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com> <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
- <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
- <CAOQMLZUn30NJwU4pR0hL=nz38Mbp=73wgqd+CoQE2qSO3cf4_w@mail.gmail.com>
- <013f7d3cf223417c94df41a2a45fa540@realtek.com> <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
- <CAOQMLZVMALBLeCZUB3Jdvk75znt0D7HxrXyPMhGPvcKLx3j-Yg@mail.gmail.com> <0912165f66394229b4f2b4114ae28a50@realtek.com>
-In-Reply-To: <0912165f66394229b4f2b4114ae28a50@realtek.com>
-From: Adrodoc <adrodoc55@googlemail.com>
-Date: Mon, 10 Aug 2026 11:50:39 +0200
-X-Gm-Features: AUfX_myGatWDRYLCMVCj8Pi0R-1_BG8zlo2mj5DRninazg05b4LEKJCTS7wvsFs
-Message-ID: <CAOQMLZUbZhNhOQyxGXW7YSOU-z6w-4jWqfqVkaeMhdx2kLDrmg@mail.gmail.com>
-Subject: Re: Error in rtw89 using Kernel 7.1.4
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> SER L1 ("SER catches error: 0x1000") means firmware detect and fix an error already, and notify driver it does (driver no need to do anything). Therefore, I'd suggest to ignore this message if it doesn't bother your daily use.
+Register the mt7996 phy as a thermal zone sensor using
+devm_thermal_of_zone_register() so that device tree thermal-zones
+nodes can reference the Wi-Fi chip as a temperature source. This
+allows the kernel thermal governor to control external cooling
+devices such as PWM fans based on Wi-Fi chip temperature.
 
-Ok, that's good to know.
+Registration is non-fatal: -ENODEV is returned when no
+thermal-sensors DT property references this device, which is the
+expected case on platforms without a thermal zone configured.
 
-> By the way, the first log you shared shows that disconnection happened after SER L1 about 50 seconds. SER L1 seems not a related event.
+Signed-off-by: Ryan Leung <untilscour@protonmail.com>
+---
+Changes in v2:
+- Take phy->dev->mt76.mutex around mt7996_mcu_get_temperature()
+- Unregister phy->tzone explicitly in mt7996_unregister_thermal() before th=
+e phy is freed
+- Link to v1: https://patch.msgid.link/20260722-mt7996-thermal-zone-v1-1-88=
+896e6e9985@protonmail.com
 
-I am pretty sure SER L1 (or maybe "firmware failed to ack for leaving
-ps mode") is a relevant event, because the connection was not
-functioning properly during these 50 seconds.
+To: Felix Fietkau <nbd@nbd.name>
+To: Lorenzo Bianconi <lorenzo@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+To: Shayne Chen <shayne.chen@mediatek.com>
+To: Sean Wang <sean.wang@mediatek.com>
+To: Matthias Brugger <matthias.bgg@gmail.com>
+To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mediatek@lists.infradead.org
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c   | 33 ++++++++++++++++++=
+++++
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  1 +
+ 2 files changed, 34 insertions(+)
 
-> More, the disconnection might depend on AP you are connecting, so keep the experiments in the same environments if possible.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net=
+/wireless/mediatek/mt76/mt7996/init.c
+index fb635a092584..fda9df1fa66b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -234,11 +234,33 @@ static const struct thermal_cooling_device_ops mt7996=
+_thermal_ops =3D {
+ =09.set_cur_state =3D mt7996_thermal_set_cur_throttle_state,
+ };
+=20
++static int mt7996_thermal_get_temp(struct thermal_zone_device *tz, int *te=
+mp)
++{
++=09struct mt7996_phy *phy =3D thermal_zone_device_priv(tz);
++=09int val;
++
++=09mutex_lock(&phy->dev->mt76.mutex);
++=09val =3D mt7996_mcu_get_temperature(phy);
++=09mutex_unlock(&phy->dev->mt76.mutex);
++=09if (val < 0)
++=09=09return val;
++
++=09*temp =3D val * 1000;
++=09return 0;
++}
++
++static const struct thermal_zone_device_ops mt7996_tz_ops =3D {
++=09.get_temp =3D mt7996_thermal_get_temp,
++};
++
+ static void mt7996_unregister_thermal(struct mt7996_phy *phy)
+ {
+ =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
+ =09char name[sizeof("cooling_deviceXXX")];
+=20
++=09if (phy->tzone)
++=09=09devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
++
+ =09if (!phy->cdev)
+ =09=09return;
+=20
+@@ -275,6 +297,17 @@ static int mt7996_thermal_init(struct mt7996_phy *phy)
+ =09phy->throttle_temp[MT7996_CRIT_TEMP_IDX] =3D MT7996_CRIT_TEMP;
+ =09phy->throttle_temp[MT7996_MAX_TEMP_IDX] =3D MT7996_MAX_TEMP;
+=20
++=09phy->tzone =3D devm_thermal_of_zone_register(phy->dev->mt76.dev,
++=09=09=09=09=09=09   phy->mt76->band_idx, phy,
++=09=09=09=09=09=09   &mt7996_tz_ops);
++=09if (IS_ERR(phy->tzone)) {
++=09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
++=09=09=09dev_warn(phy->dev->mt76.dev,
++=09=09=09=09 "failed to register thermal zone %d: %ld\n",
++=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
++=09=09phy->tzone =3D NULL;
++=09}
++
+ =09if (!IS_REACHABLE(CONFIG_HWMON))
+ =09=09return 0;
+=20
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/n=
+et/wireless/mediatek/mt76/mt7996/mt7996.h
+index 2a0cdb56f822..39fa25a562e5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -372,6 +372,7 @@ struct mt7996_phy {
+=20
+ =09struct ieee80211_sband_iftype_data iftype[NUM_NL80211_BANDS][NUM_NL8021=
+1_IFTYPES];
+=20
++=09struct thermal_zone_device *tzone;
+ =09struct thermal_cooling_device *cdev;
+ =09u8 cdev_state;
+ =09u8 throttle_state;
 
-I only have one access point and all experiments so far were on the
-same computer using the same router.
+---
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+change-id: 20260722-mt7996-thermal-zone-a1de7cb1d728
 
-> Yes, it is worth to try by setting
-> iw dev wlan0 set power_save off
+Best regards,
+-- =20
+Ryan Leung <untilscour@protonmail.com>
 
-1. I'll try disabling power save on the newest kernel now.
-2. If that doesn't help I'll try disabling ASPM-related features.
-3. If that also doesn't work I'll go back to bisecting the kernel and
-will ignore SER L1 from now on.
 
-> The second way is to debug on the latest kernel and apply debug patch to dump more detail needed by internal experts. But it seems like this is still uncertain because of hardware flaw they mentioned.
-
-Is that still an option? I think it might yield results faster. Since
-I have to keep a kernel running for about a day to make sure it
-doesn't have the disconnect issue, bisecting will take quite some
-time.
