@@ -1,181 +1,102 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mail-24430.protonmail.ch (mail-24430.protonmail.ch [109.224.244.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78993B5841;
-	Mon, 10 Aug 2026 09:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27F8C3A9870
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 09:58:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355892; cv=none; b=V9FFNFrZCOqsiL6fbVihrqSqGQxwYwP2AjLe1bozqX58CHWPoLPO2dhGrjgnguzPAD1SOsCamAGAI1oQrgb1JNxIvn5IhiXkMoVawLilbaNBrddza24ucaMTfiXxtGaKzkPYXfi1pHHjTsoZeDra8H7nQfNWa8QL1VP2sDTExK4=
+	t=1786355900; cv=none; b=PfLgpHDqNA5ZE0eqj1Np5Ma6IigKbX/wcioQT4tLC6SCcQokQKGFOSkgFAe9Vy3COBkt+/6rZYP+76MmZCGBsedQly6Qaao0Qi7ak8YgmaELuTrTaqL4JSB/xR4Dr0GxxbUeq3E5nniuyfA/+skfDzLaqPaP4/hR3wyA7IacTy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355892; c=relaxed/simple;
-	bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uBzoYaKqwHd5HPsX7fQsh3mCy0ObYwqmVHmG2waafjTMy/mIhEV0532IoJAkA462kANvLqIMyiG8XA/r42aM/DNlR9+k5frGZf4OFLaluYtoJtQatqANO407ATQO8/2o+v+fWT0cdA9+W36ubV0+7l/NrL4cUnkDenAw5Zph+Ak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P043AHYZ; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786355900; c=relaxed/simple;
+	bh=FjkEHMV8CZWrCpqrknnBFBiHfGfqn8UHNDmsIRcjvwo=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=AI5agKb3Y/FTy9wU4a1IYZ8Ph1g/TKTFwORwlDc9jTKdtTtBQ8ayqv0G9CJar/G3o0pG+i/ncYaAxo+V1ihmeBTcJUHCaYl3jT4vc0yUS8inWeO6C2ihjOhAo1DCN/qU+iezl+XSsjWA9hMBYTmdl57fCO+3Ji4w9KUaZAU7dTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=urbdkUTW; arc=none smtp.client-ip=109.224.244.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P043AHYZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786355887; x=1817891887;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
-  b=P043AHYZOWripuvjotgNunh45t3GH2X1xQu6NDJB/UstrSVx0SwQ5flT
-   QKDVCa86vMC3jHyre8TWhXUoKiwFCLPFX7BtDrz8xHGgcmahmOY+9IZPI
-   mCsr0t7rkhGhIb9B3bsNXdPr9y/TbkqRIvSyhLkHHSj8cfRiNvv1VVRcO
-   vdkHRrbbKqvrD48q9jFcX9i1Ost9zgj7SnADgub1Wdu8j4uTV8NrRt32g
-   gQArl9RYe27SrlCTQ4v0WHUS+rAC85CmLocrdkuORUqYNooTbaajKszbF
-   /45bsK2cpHAmlZiIqepc68LdBkk7HU5yGsWMOWEGhWQP2FuUTwpNTAHvs
-   A==;
-X-CSE-ConnectionGUID: 33RjamcmQqKVWrVpxF8Yhg==
-X-CSE-MsgGUID: UeBG106hT7uMh3gvIT/iMA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11870"; a="86941073"
-X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
-   d="scan'208";a="86941073"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 02:58:01 -0700
-X-CSE-ConnectionGUID: 1s6lpu4bQyymJDs4F82TDA==
-X-CSE-MsgGUID: PFzlndWpT9OR6jAyiitIZA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
-   d="scan'208";a="261708904"
-Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 10 Aug 2026 02:57:58 -0700
-Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wtMlX-00000000N6k-1EnS;
-	Mon, 10 Aug 2026 09:57:55 +0000
-Date: Mon, 10 Aug 2026 17:57:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
-	alex@shazbot.org, mani@kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	jjohnson@kernel.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <202608101710.4bALXXJf-lkp@intel.com>
-References: <20260626055023.197470-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="urbdkUTW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1786355887; x=1786615087;
+	bh=FjkEHMV8CZWrCpqrknnBFBiHfGfqn8UHNDmsIRcjvwo=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=urbdkUTWmyojU0WvGdgllvJ/SVQwOK61hFZoP8bbC19X70dBFjdjWugF8iHp/Mi6m
+	 Ee60bY9W1HbrO3wFPVxdnicc8QCB9ZKPKXBSDNDAc+G2wbIRi/zt9iRwnCuV4ukzck
+	 fF9/mePf8GUG815kQ9Cs8PSutuJPqvgQEWe6owB89RH/h/WNZGfrnkN3FXT3ixJr/a
+	 3swPhzBSpLE/dhDzPu56CDeINjQQPN/V2S47GnCjEOMz87RzV5AqB4Uv1Ohdv7FivS
+	 EfyExTT8TnzztP14RJjAklD8RBPxN5GaX++Al3pTyPzbBGbq7NnJrGDzMIqwr4DJx1
+	 Vn8aFNm9rRm7A==
+Date: Mon, 10 Aug 2026 09:57:59 +0000
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+From: Ryan Leung <untilscour@protonmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
+Subject: [PATCH mt76] wifi: mt76: mt7915: fix thermal zone use-after-free on unregister
+Message-ID: <20260810-mt7915-unregister-thermal-v1-1-c6d57b4cb368@protonmail.com>
+Feedback-ID: 184418679:user:proton
+X-Pm-Message-ID: bdfc05f714111930a08a7bf935deca3457c14f2a
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jose,
+phy->tzone is registered with devm_thermal_of_zone_register() against
+the parent device, so its cleanup runs only after .remove() returns.
+But mt7915_unregister_thermal() never unregisters it, while the phy
+memory is freed earlier via mt76_free_device()/ieee80211_free_hw()
+in that same .remove() path, leaving a use-after-free window.
 
-kernel test robot noticed the following build warnings:
+Explicitly unregister it with devm_thermal_of_zone_unregister()
+in mt7915_unregister_thermal() before the phy is freed.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v7.2-rc6 next-20260807]
-[cannot apply to linux-review/Jose-Ignacio-Tornos-Martinez/Add-device-specific-reset-for-Qualcomm-devices/20260804-001013]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+While at it, include phy->mt76->band_idx in the dev_warn() message
+emitted when devm_thermal_of_zone_register() fails, to help identify
+which band's thermal zone registration failed on multi-band chips.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/PCI-Add-device-specific-reset-for-Qualcomm-devices/20260810-131417
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260626055023.197470-1-jtornosm%40redhat.com
-patch subject: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
-config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/config)
-compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 12df34b8469b8095359de8c249cb1b2753fadeea)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/reproduce)
+Fixes: 313f1a27ebcb ("wifi: mt76: mt7915: add thermal zone device registrat=
+ion")
+Signed-off-by: Ryan Leung <untilscour@protonmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7915/init.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608101710.4bALXXJf-lkp@intel.com/
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net=
+/wireless/mediatek/mt76/mt7915/init.c
+index ca46a203aa48..e0376da79dda 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
+@@ -200,6 +200,9 @@ static void mt7915_unregister_thermal(struct mt7915_phy=
+ *phy)
+ {
+ =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
+=20
++=09if (phy->tzone)
++=09=09devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
++
+ =09if (!phy->cdev)
+ =09=09return;
+=20
+@@ -238,8 +241,8 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
+ =09if (IS_ERR(phy->tzone)) {
+ =09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
+ =09=09=09dev_warn(phy->dev->mt76.dev,
+-=09=09=09=09 "failed to register thermal zone: %ld\n",
+-=09=09=09=09 PTR_ERR(phy->tzone));
++=09=09=09=09 "failed to register thermal zone %d: %ld\n",
++=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
+ =09=09phy->tzone =3D NULL;
+ =09}
+=20
 
-All warnings (new ones prefixed by >>):
+---
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+change-id: 20260809-mt7915-unregister-thermal-82e805c618a6
 
->> drivers/pci/quirks.c:4278:11: warning: result of comparison of constant 18446744073709551615 with expression of type 'u32' (aka 'unsigned int') is always true [-Wtautological-constant-out-of-range-compare]
-    4278 |                 if (val != PCI_ERROR_RESPONSE) {
-         |                     ~~~ ^  ~~~~~~~~~~~~~~~~~~
-   1 warning generated.
+Best regards,
+-- =20
+Ryan Leung <untilscour@protonmail.com>
 
 
-vim +4278 drivers/pci/quirks.c
-
-  4234	
-  4235	/*
-  4236	 * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
-  4237	 * registers.
-  4238	 */
-  4239	static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
-  4240	{
-  4241		bool link_recovered = false;
-  4242		unsigned long timeout;
-  4243		void __iomem *bar;
-  4244		u32 val;
-  4245		u16 cmd;
-  4246	
-  4247		if (probe)
-  4248			return 0;
-  4249	
-  4250		if (pdev->current_state != PCI_D0)
-  4251			return -EINVAL;
-  4252	
-  4253		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-  4254		pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
-  4255	
-  4256		bar = pci_iomap(pdev, 0, 0);
-  4257		if (!bar) {
-  4258			pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4259			return -ENODEV;
-  4260		}
-  4261	
-  4262		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4263		val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4264		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4265		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4266	
-  4267		msleep(10);
-  4268	
-  4269		val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
-  4270		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4271		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-  4272	
-  4273		msleep(10);
-  4274	
-  4275		timeout = jiffies + msecs_to_jiffies(5000);
-  4276		while (time_before(jiffies, timeout)) {
-  4277			val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
-> 4278			if (val != PCI_ERROR_RESPONSE) {
-  4279				link_recovered = true;
-  4280				break;
-  4281			}
-  4282			msleep(20);
-  4283		}
-  4284	
-  4285		if (!link_recovered) {
-  4286			pci_err(pdev, "PCIe link failed to recover after reset\n");
-  4287			goto out_restore;
-  4288		}
-  4289	
-  4290		/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
-  4291		 * and thus need to set MHICTRL_RESET to clear SYSERR.
-  4292		 */
-  4293		iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
-  4294		ioread32(bar + QUALCOMM_WIFI_MHICTRL);
-  4295	
-  4296		msleep(10);
-  4297	
-  4298	out_restore:
-  4299		pci_iounmap(pdev, bar);
-  4300		pci_write_config_word(pdev, PCI_COMMAND, cmd);
-  4301	
-  4302		return link_recovered ? 0 : -ETIMEDOUT;
-  4303	}
-  4304	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
