@@ -1,164 +1,181 @@
-Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F12255E43
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 09:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78993B5841;
+	Mon, 10 Aug 2026 09:58:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355471; cv=none; b=DTM++akphXUsnkdrRXimczKuPZz2+JubNa7MlOVy40KxxhvipDnIjLSbyAF4DdNjyQJQykIrr0Z1QixrnDj5UG0C5dR2tLTsRFAsCmnFA0tKcVBUpX+BSFL7BkPGvG/ah/8CMVUabZySmankQbjkfCYvknMxjhyZp0597/UYk10=
+	t=1786355892; cv=none; b=V9FFNFrZCOqsiL6fbVihrqSqGQxwYwP2AjLe1bozqX58CHWPoLPO2dhGrjgnguzPAD1SOsCamAGAI1oQrgb1JNxIvn5IhiXkMoVawLilbaNBrddza24ucaMTfiXxtGaKzkPYXfi1pHHjTsoZeDra8H7nQfNWa8QL1VP2sDTExK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355471; c=relaxed/simple;
-	bh=ihb16qqgzfb+ZORy3jvepuRYiaQpGA/+Dj8f3i3SIZU=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=MbdJx6LT6c5W7t+uwD+5iIwT4o2ZOHsGYoJtlLTWTb4qHkce9Xk0QOOgELTdxIuwlIkrCmNc7g2J8pcp6EHrpmwVwNDc8EDP1uoYxDMQCHl3PA1m0RnqglF/eSxcEcQeCuIHDzdtH6KyW5S9pRQ5GMb5+OEtigelxW9dinvt9b0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=Sosn8qr4; arc=none smtp.client-ip=85.9.210.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	s=arc-20240116; t=1786355892; c=relaxed/simple;
+	bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uBzoYaKqwHd5HPsX7fQsh3mCy0ObYwqmVHmG2waafjTMy/mIhEV0532IoJAkA462kANvLqIMyiG8XA/r42aM/DNlR9+k5frGZf4OFLaluYtoJtQatqANO407ATQO8/2o+v+fWT0cdA9+W36ubV0+7l/NrL4cUnkDenAw5Zph+Ak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P043AHYZ; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="Sosn8qr4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1786355459; x=1786614659;
-	bh=3gQCmbZiRpTIP78Wgb09iQGd9hbmY0T5UypymMdu5do=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=Sosn8qr4Hy6GO+M0FZme1WadsgJiXdMxGbSAfrGHzjUBJKhgUI7Gbeytow4UKSgYc
-	 Dsocy8YYBPUHiEimfrTiifurGOsmU1XFj3AIn91Su+8r+Rna0JFTv+V7TAfYMXX/nD
-	 XjdW/BFXFJDPX4IVcTS1nGVik6qAsKFVPu5YGlXeQlGmXR89kI9LSVcplnY1W+wFn7
-	 ESWRsUI1G7jty3geLlJX1GMYYb4f3O4lVIS4PdbPebu/B6wD4tuIMNYntpFY757kY6
-	 f+7/H9sNGgQ9s7WR/aKcp1haOJK1n9bNF8txnid2u9hhdpSYySkUI19KXlIvFjTrXR
-	 ou9b1MpSew7YQ==
-Date: Mon, 10 Aug 2026 09:50:54 +0000
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-From: Ryan Leung <untilscour@protonmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
-Subject: [PATCH v2] wifi: mt76: mt7996: add thermal zone device registration
-Message-ID: <20260810-mt7996-thermal-zone-v2-1-563dfbbf9175@protonmail.com>
-Feedback-ID: 184418679:user:proton
-X-Pm-Message-ID: 3d550f87ccf31ceff35eda65ecd63ca9f0c8d962
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P043AHYZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1786355887; x=1817891887;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=OIBLn+vI6UtjzTR690g/0/DqXLgizFSN5e6xNFRiIQY=;
+  b=P043AHYZOWripuvjotgNunh45t3GH2X1xQu6NDJB/UstrSVx0SwQ5flT
+   QKDVCa86vMC3jHyre8TWhXUoKiwFCLPFX7BtDrz8xHGgcmahmOY+9IZPI
+   mCsr0t7rkhGhIb9B3bsNXdPr9y/TbkqRIvSyhLkHHSj8cfRiNvv1VVRcO
+   vdkHRrbbKqvrD48q9jFcX9i1Ost9zgj7SnADgub1Wdu8j4uTV8NrRt32g
+   gQArl9RYe27SrlCTQ4v0WHUS+rAC85CmLocrdkuORUqYNooTbaajKszbF
+   /45bsK2cpHAmlZiIqepc68LdBkk7HU5yGsWMOWEGhWQP2FuUTwpNTAHvs
+   A==;
+X-CSE-ConnectionGUID: 33RjamcmQqKVWrVpxF8Yhg==
+X-CSE-MsgGUID: UeBG106hT7uMh3gvIT/iMA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11870"; a="86941073"
+X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
+   d="scan'208";a="86941073"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 02:58:01 -0700
+X-CSE-ConnectionGUID: 1s6lpu4bQyymJDs4F82TDA==
+X-CSE-MsgGUID: PFzlndWpT9OR6jAyiitIZA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,215,1779174000"; 
+   d="scan'208";a="261708904"
+Received: from lkp-server01.sh.intel.com (HELO 6eda058d650d) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 10 Aug 2026 02:57:58 -0700
+Received: from kbuild by 6eda058d650d with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wtMlX-00000000N6k-1EnS;
+	Mon, 10 Aug 2026 09:57:55 +0000
+Date: Mon, 10 Aug 2026 17:57:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>, bhelgaas@google.com,
+	alex@shazbot.org, mani@kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	jjohnson@kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+Message-ID: <202608101710.4bALXXJf-lkp@intel.com>
+References: <20260626055023.197470-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260626055023.197470-1-jtornosm@redhat.com>
 
-Register the mt7996 phy as a thermal zone sensor using
-devm_thermal_of_zone_register() so that device tree thermal-zones
-nodes can reference the Wi-Fi chip as a temperature source. This
-allows the kernel thermal governor to control external cooling
-devices such as PWM fans based on Wi-Fi chip temperature.
+Hi Jose,
 
-Registration is non-fatal: -ENODEV is returned when no
-thermal-sensors DT property references this device, which is the
-expected case on platforms without a thermal zone configured.
+kernel test robot noticed the following build warnings:
 
-Signed-off-by: Ryan Leung <untilscour@protonmail.com>
----
-Changes in v2:
-- Take phy->dev->mt76.mutex around mt7996_mcu_get_temperature()
-- Unregister phy->tzone explicitly in mt7996_unregister_thermal() before th=
-e phy is freed
-- Link to v1: https://patch.msgid.link/20260722-mt7996-thermal-zone-v1-1-88=
-896e6e9985@protonmail.com
+[auto build test WARNING on pci/next]
+[also build test WARNING on pci/for-linus linus/master v7.2-rc6 next-20260807]
+[cannot apply to linux-review/Jose-Ignacio-Tornos-Martinez/Add-device-specific-reset-for-Qualcomm-devices/20260804-001013]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-To: Felix Fietkau <nbd@nbd.name>
-To: Lorenzo Bianconi <lorenzo@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-To: Shayne Chen <shayne.chen@mediatek.com>
-To: Sean Wang <sean.wang@mediatek.com>
-To: Matthias Brugger <matthias.bgg@gmail.com>
-To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-mediatek@lists.infradead.org
----
- drivers/net/wireless/mediatek/mt76/mt7996/init.c   | 33 ++++++++++++++++++=
-++++
- drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  1 +
- 2 files changed, 34 insertions(+)
+url:    https://github.com/intel-lab-lkp/linux/commits/Jose-Ignacio-Tornos-Martinez/PCI-Add-device-specific-reset-for-Qualcomm-devices/20260810-131417
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260626055023.197470-1-jtornosm%40redhat.com
+patch subject: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/config)
+compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 12df34b8469b8095359de8c249cb1b2753fadeea)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260810/202608101710.4bALXXJf-lkp@intel.com/reproduce)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net=
-/wireless/mediatek/mt76/mt7996/init.c
-index fb635a092584..fda9df1fa66b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
-@@ -234,11 +234,33 @@ static const struct thermal_cooling_device_ops mt7996=
-_thermal_ops =3D {
- =09.set_cur_state =3D mt7996_thermal_set_cur_throttle_state,
- };
-=20
-+static int mt7996_thermal_get_temp(struct thermal_zone_device *tz, int *te=
-mp)
-+{
-+=09struct mt7996_phy *phy =3D thermal_zone_device_priv(tz);
-+=09int val;
-+
-+=09mutex_lock(&phy->dev->mt76.mutex);
-+=09val =3D mt7996_mcu_get_temperature(phy);
-+=09mutex_unlock(&phy->dev->mt76.mutex);
-+=09if (val < 0)
-+=09=09return val;
-+
-+=09*temp =3D val * 1000;
-+=09return 0;
-+}
-+
-+static const struct thermal_zone_device_ops mt7996_tz_ops =3D {
-+=09.get_temp =3D mt7996_thermal_get_temp,
-+};
-+
- static void mt7996_unregister_thermal(struct mt7996_phy *phy)
- {
- =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
- =09char name[sizeof("cooling_deviceXXX")];
-=20
-+=09if (phy->tzone)
-+=09=09devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
-+
- =09if (!phy->cdev)
- =09=09return;
-=20
-@@ -275,6 +297,17 @@ static int mt7996_thermal_init(struct mt7996_phy *phy)
- =09phy->throttle_temp[MT7996_CRIT_TEMP_IDX] =3D MT7996_CRIT_TEMP;
- =09phy->throttle_temp[MT7996_MAX_TEMP_IDX] =3D MT7996_MAX_TEMP;
-=20
-+=09phy->tzone =3D devm_thermal_of_zone_register(phy->dev->mt76.dev,
-+=09=09=09=09=09=09   phy->mt76->band_idx, phy,
-+=09=09=09=09=09=09   &mt7996_tz_ops);
-+=09if (IS_ERR(phy->tzone)) {
-+=09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
-+=09=09=09dev_warn(phy->dev->mt76.dev,
-+=09=09=09=09 "failed to register thermal zone %d: %ld\n",
-+=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
-+=09=09phy->tzone =3D NULL;
-+=09}
-+
- =09if (!IS_REACHABLE(CONFIG_HWMON))
- =09=09return 0;
-=20
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/n=
-et/wireless/mediatek/mt76/mt7996/mt7996.h
-index 2a0cdb56f822..39fa25a562e5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
-@@ -372,6 +372,7 @@ struct mt7996_phy {
-=20
- =09struct ieee80211_sband_iftype_data iftype[NUM_NL80211_BANDS][NUM_NL8021=
-1_IFTYPES];
-=20
-+=09struct thermal_zone_device *tzone;
- =09struct thermal_cooling_device *cdev;
- =09u8 cdev_state;
- =09u8 throttle_state;
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202608101710.4bALXXJf-lkp@intel.com/
 
----
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
-change-id: 20260722-mt7996-thermal-zone-a1de7cb1d728
+All warnings (new ones prefixed by >>):
 
-Best regards,
--- =20
-Ryan Leung <untilscour@protonmail.com>
+>> drivers/pci/quirks.c:4278:11: warning: result of comparison of constant 18446744073709551615 with expression of type 'u32' (aka 'unsigned int') is always true [-Wtautological-constant-out-of-range-compare]
+    4278 |                 if (val != PCI_ERROR_RESPONSE) {
+         |                     ~~~ ^  ~~~~~~~~~~~~~~~~~~
+   1 warning generated.
 
 
+vim +4278 drivers/pci/quirks.c
+
+  4234	
+  4235	/*
+  4236	 * Qualcomm WiFi device-specific reset using SoC global reset via BAR0
+  4237	 * registers.
+  4238	 */
+  4239	static int reset_qualcomm_wifi(struct pci_dev *pdev, bool probe)
+  4240	{
+  4241		bool link_recovered = false;
+  4242		unsigned long timeout;
+  4243		void __iomem *bar;
+  4244		u32 val;
+  4245		u16 cmd;
+  4246	
+  4247		if (probe)
+  4248			return 0;
+  4249	
+  4250		if (pdev->current_state != PCI_D0)
+  4251			return -EINVAL;
+  4252	
+  4253		pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+  4254		pci_write_config_word(pdev, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
+  4255	
+  4256		bar = pci_iomap(pdev, 0, 0);
+  4257		if (!bar) {
+  4258			pci_write_config_word(pdev, PCI_COMMAND, cmd);
+  4259			return -ENODEV;
+  4260		}
+  4261	
+  4262		val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4263		val |= QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+  4264		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4265		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4266	
+  4267		msleep(10);
+  4268	
+  4269		val &= ~QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET_V;
+  4270		iowrite32(val, bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4271		ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+  4272	
+  4273		msleep(10);
+  4274	
+  4275		timeout = jiffies + msecs_to_jiffies(5000);
+  4276		while (time_before(jiffies, timeout)) {
+  4277			val = ioread32(bar + QUALCOMM_WIFI_PCIE_SOC_GLOBAL_RESET);
+> 4278			if (val != PCI_ERROR_RESPONSE) {
+  4279				link_recovered = true;
+  4280				break;
+  4281			}
+  4282			msleep(20);
+  4283		}
+  4284	
+  4285		if (!link_recovered) {
+  4286			pci_err(pdev, "PCIe link failed to recover after reset\n");
+  4287			goto out_restore;
+  4288		}
+  4289	
+  4290		/* After SOC_GLOBAL_RESET, MHISTATUS may still have SYSERR bit set
+  4291		 * and thus need to set MHICTRL_RESET to clear SYSERR.
+  4292		 */
+  4293		iowrite32(QUALCOMM_WIFI_MHICTRL_RESET_MASK, bar + QUALCOMM_WIFI_MHICTRL);
+  4294		ioread32(bar + QUALCOMM_WIFI_MHICTRL);
+  4295	
+  4296		msleep(10);
+  4297	
+  4298	out_restore:
+  4299		pci_iounmap(pdev, bar);
+  4300		pci_write_config_word(pdev, PCI_COMMAND, cmd);
+  4301	
+  4302		return link_recovered ? 0 : -ETIMEDOUT;
+  4303	}
+  4304	
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
