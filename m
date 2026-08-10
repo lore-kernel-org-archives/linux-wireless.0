@@ -1,143 +1,124 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B6DF380FE5
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 10:48:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3253E3BED30
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 11:26:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786358937; cv=none; b=Dqh0Y+NttslF8mCKnq9/8Pq4XvgpVUZF7t5uiFXpBvhNCuwl1B9CzmE9aoZgRNdpHxEb2YZrI0YRtIF7s5HaYcm+asbbIokbCdUmlGayv02R2+FW0KFj+qfhD9NkXHeADT0OEX4MAUfaeHHTFUW02Ge+5W7iPdGQFUoIYFNAsMQ=
+	t=1786361171; cv=none; b=qN8gbC1K/RIQLLd1vsGlSGHeODGTJUAa6vDS+HH/EDaOosMldNoACzsFOdBv5Sf3rMTzZx/kkMVNMes9omqVYbWlUi7aTIrtaZDEwDHPpV9pd9Ugo4gMf8aqR+E5CBg08Tl4HwTOxn71hwDhb/fQv6+V3llsnlUf7q8uwkMcj7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786358937; c=relaxed/simple;
-	bh=D58LBYkIcuWO94TE8xG8H+n++odNeYUUVORE2mFnY28=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SkLP2InHGATnbpsbUxFytqEdz4nRJBewUOokFpI1UgZP9xDHM+VQRKhaNxkFDPTjuRAzeuFw9M4tAWm6JgW4kwD8dnPfjxn9u5LtVig6Gi6WWAjVpR3xKEDxWqrvUerMuiDKYdKFJ7vFmL74l6QTrjuzLeX0mHDW7YX3SsLxxYI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bGQHD8oz; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EpEjGtwh; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1786361171; c=relaxed/simple;
+	bh=QwVAnHRHiCemIeYxsEaRGiTsru4MY7geYHkt3gj+mPE=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uQP2sWCyrvYlQe3acLA4IggtmDfzQ9sz/UU/WFT9XlALh+miE5+JMaJG7TT783w1OssHMmDYbjS3FDFwbcjbMGG7L5Am70WnIIAcW+IrbFTNWXVPFqlIwUy724UtoJEeAcVCLtF809jfUmbIh2I2beRd5OBnzckdfGfArp6wG5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TMYGiQiV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bGQHD8oz";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EpEjGtwh"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67A9S6GE872709
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 10:48:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	i3TvPInWz3YuN8P66pTP8LjGc5w0D9OtD5LRwHcHHwI=; b=bGQHD8ozF9SOh/w4
-	dX4rgBt6DU2cYkJyGusiKPaKqXAE/WyDS39Du72MnABBNcXcpgG29O4wrxR0+irT
-	Au+1BEH7I//6+lVPiIRQWZMN7v7POT8LIJmr1B3IMaZN3vBdgjct6TXYL8q+13+g
-	GTyFXV2VAoJ8a3o0n7TyiWq24gR3HoetFeOpfR27HsdvQCyz4WEQyJRjPa25kSys
-	iV3heqt/baQUCFk353cVC3q+MJ+1QHelR2HFX6WMuAurV24F2VswXLIcfIIQ/A7z
-	S7FhShvqITHdKH4qo4ZU5ETE7IG5Hhe3oQj74Hy3xK+OJ41xlxpkxqOQWQkNd/bY
-	Mw+kug==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fy8v5929w-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 10:48:55 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-38827cee19eso2556641a91.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 03:48:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786358935; x=1786963735; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=i3TvPInWz3YuN8P66pTP8LjGc5w0D9OtD5LRwHcHHwI=;
-        b=EpEjGtwhYzdZKYPS4Y3bn7oU78JF5fraz2OEddvV/Vb5nePeNI5GTwjBxALUPYbEUd
-         9Vuke4p/DowKA0nNmsuvESvI70eBUPR4V7sWH0XSVc5epMwsmHkFeP4HchZoQBb9txf3
-         itJR51tm2SBO68k03aY/RC7RexLfWxs+ugye7a4U4RBKf6kR/qDAc9quoSok5wJBmMI8
-         ftk/yNVUFPCIjzw4JEIwBGK7Dx7rYp87Wd27GKwq8f+a2FDt+nP5+XTE66UGxU7VqGK+
-         J66l2OSgmrvrd06IEcQg/N8nTt9nCDZ458w3tZBu5IA72WLBrIITawiGPCjVzNNlxJce
-         zSug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786358935; x=1786963735;
-        h=content-transfer-encoding:content-type:in-reply-to:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=i3TvPInWz3YuN8P66pTP8LjGc5w0D9OtD5LRwHcHHwI=;
-        b=XtiS/ZqSE237baJUFE4C8rQILajV3zM9PriSw6wCr9c3xNzdziXcWJWJmKSwxwZlx9
-         G2NEDigk3hhuBIBQVbeakyGK+NrGVRhk56jltjs3c8bZWwnN9jpXydKIwF5Or5JbldRA
-         raRuVjKP2Nlab5qBYJdzr/aCUPrT67MhzEpmKwa20xKzUapn4mAnZXK1+EvqH8cva8Rf
-         F7sukyyoQ44lkkw++NijrEF36IvfsOTSI7M+5VVajwwrZ7B8DhVDMW5937vtaC1RVssp
-         cjHhyJj/NE/kd7PzoRwZwZ9jSX2u9GBn7qj5Va/D1uyct6PUBi4DkaKkkVAO2rka+oFg
-         e7GQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpXpjbEIVQoNrabA+b+NJs1fD4KvEjtLR3OJntXOiX/B5wdrryv8UEKgs6I7PjnnVmVqSu9V46fn0Kkt44tHA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWCFNcLTver0qJnUGW9m8FaPPqnA6q+mUG0n4JsVsklWsxl9a1
-	qATNtYweicZ2GUaubbidUkHHqxt7PHV23HkuO8d9sO796q73tUzRwuDqWSJHmvoQTvWx8ebCQG8
-	NIhcAGu/DQtw5WokNJneYSbov2sxwVL24WK3eD1jLJuYcGh1EImqSEVhdz0FBrs3ZsGNKngntJm
-	NS/w==
-X-Gm-Gg: AR+sD11CXvTJmj1QXsUWwxAR8BqVpo3uV+v7mxy+Z+MmTC0oghP5iHcrslwicDeQvBJ
-	/mdbgSyDWEEIOimEYwJ9a/okFeSo9d+XVs6NCjmbLgC1G3uqtvDPKkzG386g9rnYZ9DQmsfGozC
-	3Kl6AYb8bdWea6PBZXlajY9YXEmaYCnLfkS9CR3XupdLHhIrD0sOINGsoUXldElr5TR/9Eqpn6p
-	g4XwqGt03GJMSJV9Pa+5g7X3+fldUuUbvs969UX46BgVN7BydKyTMXWAlMwi1N3m8R6oNeDKmfC
-	TJYUen+n8OdLrr8OXr6bNVly8MEPfVxzZW88TGmJolVqSPuTVtRlSswbKDfXFa9AFvnWJjYpjcs
-	L2oNcKtfCuF6Mu1ZAT2xkvFKAHaOkeX7500xc/XsL
-X-Received: by 2002:a17:90b:4ad2:b0:38e:740f:9764 with SMTP id 98e67ed59e1d1-392ccab2142mr293452a91.18.1786358934700;
-        Mon, 10 Aug 2026 03:48:54 -0700 (PDT)
-X-Received: by 2002:a17:90b:4ad2:b0:38e:740f:9764 with SMTP id 98e67ed59e1d1-392ccab2142mr293391a91.18.1786358934218;
-        Mon, 10 Aug 2026 03:48:54 -0700 (PDT)
-Received: from [10.152.199.23] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-315beb87d3bsm44052076eec.14.2026.08.10.03.48.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Aug 2026 03:48:53 -0700 (PDT)
-Message-ID: <0cad6db7-ecc9-4051-b47d-148365d43ca8@oss.qualcomm.com>
-Date: Mon, 10 Aug 2026 16:18:49 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TMYGiQiV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E072D1F00A3E
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 11:26:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786361169;
+	bh=wZoyj/bcYqq2WaFoOPNolBM0q0on9gdK76aAsSvObhU=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=TMYGiQiVyWdja3666tnZyi5AUbCLb4zbspLWjOIyDSld4bkZaB32jXvzVJ7y80nGE
+	 bVdpTc4xyAyY5YkfK5HDTntoQwjnWA4qQQWhDeEqkzZZX5CROFNQ49SD0wQMAqpEcS
+	 9DJKJ++Z8zhB9f1Wjs2x6/baRiIxyHJu9d++5Qv3KHKdIxWLIJ2mvLNfBRoiQntJ89
+	 QgVzjtB2wMbEMcbgaAM1oDDDJWeHAFSRjxDNO+rMpBWAf6ZX5hHObx4k3el+FYth8s
+	 NJe07b67fdpivNIpoH/OOSuxYErtLXYeg4QE/sCkYlILbJmWzAVROEJnKyim6UydhL
+	 Oc0Tvomcx/orQ==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5b15dcaca31so1638579e87.0
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:26:09 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AHgh+RplaIP6hDioQd06GZebnFVtWxFcqw3Zzu6lTfP36WBVSOWupKfW5yoDEQS4I8enlZRKGR0kqf9oJFG5KZ9vJw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzi69dY1FY++0T6GryreJKrAF7yJnyrUFJM/2jYtIb/cQm6M3NE
+	qrOTzSD1SOtYeiXhxD4ipz7OeehDTE5ldYcTeQ80bMzJdBa2cRjA9qEwLEmCXHqfwpZcnyWzafn
+	ORnp40tDNU2jQPouGLnKfQU5coFAVO8dNNBA6E4OdUg==
+X-Received: by 2002:ac2:4d18:0:b0:5b0:1b0f:7a60 with SMTP id
+ 2adb3069b0e04-5b2f4cc8da0mr3704106e87.32.1786361168649; Mon, 10 Aug 2026
+ 04:26:08 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 10 Aug 2026 06:26:07 -0500
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Mon, 10 Aug 2026 06:26:07 -0500
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next] wifi: ath12k: remove unused
- ath12k_dp_rx_h_find_link_peer()
-To: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>, jjohnson@kernel.org
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260803010532.302038-1-miaoqing.pan@oss.qualcomm.com>
-From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260803010532.302038-1-miaoqing.pan@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEwMDA5NCBTYWx0ZWRfX0z+4/9XiKiFi
- mYSQQttR7JVqmqoY/Z5kXmFGRf87tbAgSlOVl7lO1+spaHsr4+bkP3LIFZT4zwmJh0px99+cJOz
- m5Tdsgk8TeAZibG/Rf9zCDKUKdum/BQ=
-X-Authority-Analysis: v=2.4 cv=J6qaKgnS c=1 sm=1 tr=0 ts=6a79ac97 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=-fi7bus0BQzjAAfoSv0A:9 a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-GUID: gFwPf8me5o3Y8ChOsfknsabMihQwxoZi
-X-Proofpoint-ORIG-GUID: gFwPf8me5o3Y8ChOsfknsabMihQwxoZi
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEwMDA5NCBTYWx0ZWRfX4F4UrzfG3FgN
- V3gbJaqk8oor61dio1ypmidIFKQMbnB2sPKZJBhXP5ctKrcmISEyvuTELgt2cfMUQ3YrUYhnoqB
- /N8L46kHhvCITDowitk+tynUtCCwxLSvdQy+Vp8MxOigCyTipOoYzEnQtYYTOdMIOjhYOhjCUhf
- tVQ7lJD3worneDD3QZCC2QVobCz/kAGodvcpBCH2jnyWtPW6Rx2UcvSeKnyS1yGMj/O1w7BypKY
- Wzx5dRQ35ff1jAa+AehnDgg70XGU5cyVdTdA1MrDpzceHavbfZi5qBEUyukGXjG8MgWU3jnCmdO
- YTLCEwIglR3jIASfaEp+F1OfyQj0yIDEKy3UbB4jcGdb6vdT+2/u1/zyeFzZeO7lXW3hOuMeP9n
- qAA2cXT0JunEXfLhSyJ731w+pQTzkGAX8WeN4cnPd/jET8auTBkR/vdXRU9Wv1B/Bz+7l0cghPl
- CJfhq9YgntLoWnt7xdA==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-10_02,2026-08-07_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 spamscore=0 lowpriorityscore=0 priorityscore=1501
- impostorscore=0 clxscore=1015 adultscore=0 bulkscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608100094
+References: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
+Date: Mon, 10 Aug 2026 06:26:07 -0500
+X-Gmail-Original-Message-ID: <CAMRc=MeiXHL-1i31q-+wuibK5qM1=xV+4qn0z+CWFXjt3CdrCQ@mail.gmail.com>
+X-Gm-Features: AUfX_myd-9E67e5jDYYEWIDd_Fhka4yTI8ar0CZ3ucq5EUGNAu2R2AhAZ0we-FI
+Message-ID: <CAMRc=MeiXHL-1i31q-+wuibK5qM1=xV+4qn0z+CWFXjt3CdrCQ@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: Correct white-space style
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Suzuki K Poulose <suzuki.poulose@arm.com>, 
+	Mike Leach <mike.leach@arm.com>, James Clark <james.clark@linaro.org>, Leo Yan <leo.yan@arm.com>, 
+	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Jyri Sarha <jyri.sarha@iki.fi>, 
+	Tomi Valkeinen <tomi.valkeinen@ideasonboard.com>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Linus Walleij <linusw@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Patrice Chotard <patrice.chotard@foss.st.com>, 
+	Andi Shyti <andi.shyti@kernel.org>, Jassi Brar <jassisinghbrar@gmail.com>, 
+	Lee Jones <lee@kernel.org>, Johannes Berg <johannes@sipsolutions.net>, 
+	Jeff Johnson <jjohnson@kernel.org>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Yangbo Lu <yangbo.lu@nxp.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <ukleinek@kernel.org>, 
+	Paul Walmsley <pjw@kernel.org>, Samuel Holland <samuel.holland@sifive.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Richard Cochran <richardcochran@gmail.com>, 
+	Jens Wiklander <jenswi@kernel.org>, Yuanfang Zhang <yuanfang.zhang@oss.qualcomm.com>, 
+	YC Hung <yc.hung@mediatek.com>, Svyatoslav Ryhel <clamor95@gmail.com>, 
+	Sean Wang <sean.wang@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+	Peter Ujfalusi <peter.ujfalusi@gmail.com>, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	coresight@lists.linaro.org, linux-arm-msm@vger.kernel.org, 
+	linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-mediatek@lists.infradead.org, linux-gpio@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, mfd@lists.linux.dev, 
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
+	linux-pm@vger.kernel.org, netdev@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/3/2026 6:35 AM, Miaoqing Pan wrote:
-> ath12k_dp_rx_h_find_link_peer() is no longer referenced anywhere,
-> remove the unused helper and its declaration to avoid dead code.
-> 
-> Tested-on: QCC2072 hw1.0 PCI CI_WLAN.COL.1.0.c2-00229.1-QCACOLSWPL_V1_TO_SILICON-1
-> Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> 
-> Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+On Sat, 1 Aug 2026 21:56:14 +0200, Krzysztof Kozlowski
+<krzysztof.kozlowski@oss.qualcomm.com> said:
+> Correct a few white-space issues, like double space after '=' or before
+> bracket '{' characters, which will be flagged by dt-check-style.  No
+> functional changes.
+>
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+>
+> ---
+>
+> Patch applies on Rob's for-next branch.
+> ---
+>  .../arm/firmware/linaro,optee-tz.yaml         |  8 +-
+>  .../devicetree/bindings/arm/psci.yaml         | 18 ++--
+>  .../bindings/arm/qcom,coresight-tnoc.yaml     |  2 +-
+>  .../devicetree/bindings/ata/st,ahci.yaml      | 22 ++---
+>  .../bindings/display/ti/ti,am65x-dss.yaml     | 12 +--
+>  .../bindings/display/ti/ti,j721e-dss.yaml     | 96 +++++++++----------
+>  .../bindings/display/ti/ti,k2g-dss.yaml       | 36 +++----
+>  .../bindings/dsp/mediatek,mt8195-dsp.yaml     |  2 +-
+>  .../bindings/gpio/st,nomadik-gpio.yaml        |  2 +-
+>  .../devicetree/bindings/i2c/st,sti-i2c.yaml   |  2 +-
+>  .../bindings/mailbox/st,sti-mailbox.yaml      |  2 +-
+>  .../bindings/mfd/maxim,max77620.yaml          |  2 +-
+>  .../bindings/net/wireless/qcom,ath10k.yaml    | 34 +++----
+>  .../devicetree/bindings/opp/opp-v2.yaml       | 28 +++---
+>  .../pinctrl/mediatek,mt7988-pinctrl.yaml      |  2 +-
+>  .../devicetree/bindings/ptp/fsl,ptp.yaml      | 12 +--
+>  .../devicetree/bindings/pwm/pwm-sifive.yaml   |  2 +-
+>  .../bindings/usb/ti,twl4030-usb.yaml          |  2 +-
+>  18 files changed, 142 insertions(+), 142 deletions(-)
+>
 
+For GPIO:
 
-Guess Tested-on can removed in pending if needed so,
-
-Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
