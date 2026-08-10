@@ -1,102 +1,79 @@
-Received: from mail-24430.protonmail.ch (mail-24430.protonmail.ch [109.224.244.30])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27F8C3A9870
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 09:58:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B08C3B7759
+	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 10:11:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786355900; cv=none; b=PfLgpHDqNA5ZE0eqj1Np5Ma6IigKbX/wcioQT4tLC6SCcQokQKGFOSkgFAe9Vy3COBkt+/6rZYP+76MmZCGBsedQly6Qaao0Qi7ak8YgmaELuTrTaqL4JSB/xR4Dr0GxxbUeq3E5nniuyfA/+skfDzLaqPaP4/hR3wyA7IacTy4=
+	t=1786356697; cv=none; b=Qj35xligo6mZZKZ6/b42BAWWqq5dmwHz6qPnBbtLUbIhMmqJ+EoZfpwaKauYiN5WB4LCtBw9FkHXvOF/2kqE5Blmrv/h+Yk3yB0OvoEhb7tSfss+dBk58aAFRM2nKtl5TgIoZgBjRz+89LAAzqVRqtqbTr/TLy18bDQ+JaDc+PA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786355900; c=relaxed/simple;
-	bh=FjkEHMV8CZWrCpqrknnBFBiHfGfqn8UHNDmsIRcjvwo=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=AI5agKb3Y/FTy9wU4a1IYZ8Ph1g/TKTFwORwlDc9jTKdtTtBQ8ayqv0G9CJar/G3o0pG+i/ncYaAxo+V1ihmeBTcJUHCaYl3jT4vc0yUS8inWeO6C2ihjOhAo1DCN/qU+iezl+XSsjWA9hMBYTmdl57fCO+3Ji4w9KUaZAU7dTM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=urbdkUTW; arc=none smtp.client-ip=109.224.244.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	s=arc-20240116; t=1786356697; c=relaxed/simple;
+	bh=VR/FR12up2l3bccBXUXL/3VFyoBK3DsRHlCU42gGUeo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Qx+T7LtljPyCNRVZvSpN9Ve4m1f6WeR/sOOgg6CrrdQtUDbxYpQrj6JF0XcdLbZQLQQ9d5mmDwfUXuuSdM9E0VAPcCwO/admMw2wZCvF/AiM8MRO+B/yj+t1oAD+kMgE9gSbt+CzQMfqu7Q+ZIX2gVvn3IT+aVrdzmPzRh51ZQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YJZoByG0; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="urbdkUTW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1786355887; x=1786615087;
-	bh=FjkEHMV8CZWrCpqrknnBFBiHfGfqn8UHNDmsIRcjvwo=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=urbdkUTWmyojU0WvGdgllvJ/SVQwOK61hFZoP8bbC19X70dBFjdjWugF8iHp/Mi6m
-	 Ee60bY9W1HbrO3wFPVxdnicc8QCB9ZKPKXBSDNDAc+G2wbIRi/zt9iRwnCuV4ukzck
-	 fF9/mePf8GUG815kQ9Cs8PSutuJPqvgQEWe6owB89RH/h/WNZGfrnkN3FXT3ixJr/a
-	 3swPhzBSpLE/dhDzPu56CDeINjQQPN/V2S47GnCjEOMz87RzV5AqB4Uv1Ohdv7FivS
-	 EfyExTT8TnzztP14RJjAklD8RBPxN5GaX++Al3pTyPzbBGbq7NnJrGDzMIqwr4DJx1
-	 Vn8aFNm9rRm7A==
-Date: Mon, 10 Aug 2026 09:57:59 +0000
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-From: Ryan Leung <untilscour@protonmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
-Subject: [PATCH mt76] wifi: mt76: mt7915: fix thermal zone use-after-free on unregister
-Message-ID: <20260810-mt7915-unregister-thermal-v1-1-c6d57b4cb368@protonmail.com>
-Feedback-ID: 184418679:user:proton
-X-Pm-Message-ID: bdfc05f714111930a08a7bf935deca3457c14f2a
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YJZoByG0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1786356695;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VR/FR12up2l3bccBXUXL/3VFyoBK3DsRHlCU42gGUeo=;
+	b=YJZoByG0RkLWzSBeCWKs4uWSX05NC/R3JqcvYNEAYHR9yDFbgyOoIxzf1h/SoLdeLq/TRF
+	FoEazAocfRaWJfUBjBmeLQhJS812rryjm4GuRJrhcXOeE81b/dYRUV4tW83nxUUzsGV+FT
+	v854OBeis0R/9Gj+f3PCishr0jTHQqw=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-621-YiHmMsHdMn2kLv-HX_iktQ-1; Mon,
+ 10 Aug 2026 06:11:31 -0400
+X-MC-Unique: YiHmMsHdMn2kLv-HX_iktQ-1
+X-Mimecast-MFC-AGG-ID: YiHmMsHdMn2kLv-HX_iktQ_1786356689
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A1D4C195604E;
+	Mon, 10 Aug 2026 10:11:29 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.32.47])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7E6C919560AB;
+	Mon, 10 Aug 2026 10:11:24 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: lkp@intel.com
+Cc: alex@shazbot.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	bhelgaas@google.com,
+	jjohnson@kernel.org,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	llvm@lists.linux.dev,
+	mani@kernel.org,
+	mhi@lists.linux.dev,
+	oe-kbuild-all@lists.linux.dev
+Subject: Re: [PATCH v11] PCI: Add device-specific reset for Qualcomm devices
+Date: Mon, 10 Aug 2026 12:11:22 +0200
+Message-ID: <20260810101122.25977-1-jtornosm@redhat.com>
+In-Reply-To: <202608101710.4bALXXJf-lkp@intel.com>
+References: <202608101710.4bALXXJf-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-phy->tzone is registered with devm_thermal_of_zone_register() against
-the parent device, so its cleanup runs only after .remove() returns.
-But mt7915_unregister_thermal() never unregisters it, while the phy
-memory is freed earlier via mt76_free_device()/ieee80211_free_hw()
-in that same .remove() path, leaving a use-after-free window.
+Please, use the latest version (v13):
+https://lore.kernel.org/all/20260721081301.205374-1-jtornosm@redhat.com/
+That and more things are fixed there.
 
-Explicitly unregister it with devm_thermal_of_zone_unregister()
-in mt7915_unregister_thermal() before the phy is freed.
-
-While at it, include phy->mt76->band_idx in the dev_warn() message
-emitted when devm_thermal_of_zone_register() fails, to help identify
-which band's thermal zone registration failed on multi-band chips.
-
-Fixes: 313f1a27ebcb ("wifi: mt76: mt7915: add thermal zone device registrat=
-ion")
-Signed-off-by: Ryan Leung <untilscour@protonmail.com>
----
- drivers/net/wireless/mediatek/mt76/mt7915/init.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/init.c b/drivers/net=
-/wireless/mediatek/mt76/mt7915/init.c
-index ca46a203aa48..e0376da79dda 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/init.c
-@@ -200,6 +200,9 @@ static void mt7915_unregister_thermal(struct mt7915_phy=
- *phy)
- {
- =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
-=20
-+=09if (phy->tzone)
-+=09=09devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
-+
- =09if (!phy->cdev)
- =09=09return;
-=20
-@@ -238,8 +241,8 @@ static int mt7915_thermal_init(struct mt7915_phy *phy)
- =09if (IS_ERR(phy->tzone)) {
- =09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
- =09=09=09dev_warn(phy->dev->mt76.dev,
--=09=09=09=09 "failed to register thermal zone: %ld\n",
--=09=09=09=09 PTR_ERR(phy->tzone));
-+=09=09=09=09 "failed to register thermal zone %d: %ld\n",
-+=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
- =09=09phy->tzone =3D NULL;
- =09}
-=20
-
----
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
-change-id: 20260809-mt7915-unregister-thermal-82e805c618a6
-
-Best regards,
--- =20
-Ryan Leung <untilscour@protonmail.com>
-
+Thanks
 
