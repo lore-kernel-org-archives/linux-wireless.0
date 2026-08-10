@@ -1,124 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3253E3BED30
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 11:26:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E75A93C0A1F;
+	Mon, 10 Aug 2026 11:41:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786361171; cv=none; b=qN8gbC1K/RIQLLd1vsGlSGHeODGTJUAa6vDS+HH/EDaOosMldNoACzsFOdBv5Sf3rMTzZx/kkMVNMes9omqVYbWlUi7aTIrtaZDEwDHPpV9pd9Ugo4gMf8aqR+E5CBg08Tl4HwTOxn71hwDhb/fQv6+V3llsnlUf7q8uwkMcj7E=
+	t=1786362078; cv=none; b=UfHRDdONRb7YbP/8lVFx7bIllRt7yF6n2Dewds6ePTQC17UPV3cnOQTDaxJM6ATBQ0B51Yf4FA7KJ2PYudNegdL553B93T9DzWc99JaNIHVAHAmDRTAzGyMCAZCQrlNU5YTKXsbSiXWxEpjFuvwszqqawjORAozVo8oFzfxi8Qg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786361171; c=relaxed/simple;
-	bh=QwVAnHRHiCemIeYxsEaRGiTsru4MY7geYHkt3gj+mPE=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uQP2sWCyrvYlQe3acLA4IggtmDfzQ9sz/UU/WFT9XlALh+miE5+JMaJG7TT783w1OssHMmDYbjS3FDFwbcjbMGG7L5Am70WnIIAcW+IrbFTNWXVPFqlIwUy724UtoJEeAcVCLtF809jfUmbIh2I2beRd5OBnzckdfGfArp6wG5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TMYGiQiV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786362078; c=relaxed/simple;
+	bh=iC++ZRTCcOc1mRqxcM130EJQxxgP7M+hKLNBVoBysvU=;
+	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=F9VJm6rOp5zo3sCHOMDyRU/QLVQUeDrsL/WC+oDDqM8lbZIpJMh8n9qWIDFHThsyErsusXtnwqdNqGRDwzUloIPnTVyhmjhN1qbOmSBh7HiRLMbNSzMTfRujtNQfKGWL/M+lfuH3wtntkef+8lyNKmiGkJlY6Q31YeP/HN7L2KM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=e0t5HJ/Z; arc=none smtp.client-ip=217.10.52.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TMYGiQiV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E072D1F00A3E
-	for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 11:26:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786361169;
-	bh=wZoyj/bcYqq2WaFoOPNolBM0q0on9gdK76aAsSvObhU=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=TMYGiQiVyWdja3666tnZyi5AUbCLb4zbspLWjOIyDSld4bkZaB32jXvzVJ7y80nGE
-	 bVdpTc4xyAyY5YkfK5HDTntoQwjnWA4qQQWhDeEqkzZZX5CROFNQ49SD0wQMAqpEcS
-	 9DJKJ++Z8zhB9f1Wjs2x6/baRiIxyHJu9d++5Qv3KHKdIxWLIJ2mvLNfBRoiQntJ89
-	 QgVzjtB2wMbEMcbgaAM1oDDDJWeHAFSRjxDNO+rMpBWAf6ZX5hHObx4k3el+FYth8s
-	 NJe07b67fdpivNIpoH/OOSuxYErtLXYeg4QE/sCkYlILbJmWzAVROEJnKyim6UydhL
-	 Oc0Tvomcx/orQ==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5b15dcaca31so1638579e87.0
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Aug 2026 04:26:09 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+RplaIP6hDioQd06GZebnFVtWxFcqw3Zzu6lTfP36WBVSOWupKfW5yoDEQS4I8enlZRKGR0kqf9oJFG5KZ9vJw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzi69dY1FY++0T6GryreJKrAF7yJnyrUFJM/2jYtIb/cQm6M3NE
-	qrOTzSD1SOtYeiXhxD4ipz7OeehDTE5ldYcTeQ80bMzJdBa2cRjA9qEwLEmCXHqfwpZcnyWzafn
-	ORnp40tDNU2jQPouGLnKfQU5coFAVO8dNNBA6E4OdUg==
-X-Received: by 2002:ac2:4d18:0:b0:5b0:1b0f:7a60 with SMTP id
- 2adb3069b0e04-5b2f4cc8da0mr3704106e87.32.1786361168649; Mon, 10 Aug 2026
- 04:26:08 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 10 Aug 2026 06:26:07 -0500
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 10 Aug 2026 06:26:07 -0500
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="e0t5HJ/Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1786362076; x=1817898076;
+  h=from:subject:date:message-id:mime-version:
+   content-transfer-encoding:to:cc;
+  bh=iC++ZRTCcOc1mRqxcM130EJQxxgP7M+hKLNBVoBysvU=;
+  b=e0t5HJ/ZoCpsQadE4w/s96Z9WyiQkkChilUe00un2acUYbo+AEVxWoTQ
+   6RVScDIhQEF9nxuRqc0Rnm4CkaCfOS1maxhZRu795PdDTpUuN/vl1AVEC
+   SH+kMqhdigzaQWoSG0IBQS3HwDgZIYp8JwlF2XJspkWaldrTjVqGrywzZ
+   k=;
+X-CSE-ConnectionGUID: nbMbrpNSTuOWuDi9b28hbg==
+X-CSE-MsgGUID: xxqR7PFJQbuUP3r0LIJQeQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11870"; a="104127851"
+X-IronPort-AV: E=Sophos;i="6.25,215,1779141600"; 
+   d="scan'208";a="104127851"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
+  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2026 13:41:08 +0200
+Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE805.infineon.com
+ (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Mon, 10 Aug
+ 2026 13:41:07 +0200
+Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
+ MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Mon, 10 Aug 2026 13:41:04 +0200
+From: Jason Huang <Jason.Huang2@infineon.com>
+Subject: [PATCH v3 0/5] brcmfmac: add FT/OKC roaming offload support
+Date: Mon, 10 Aug 2026 19:40:52 +0800
+Message-ID: <20260810-upstream-wireless-next-main-jason-11r-support-v1-v3-0-bce4f460ae0b@infineon.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260801195613.235430-2-krzysztof.kozlowski@oss.qualcomm.com>
-Date: Mon, 10 Aug 2026 06:26:07 -0500
-X-Gmail-Original-Message-ID: <CAMRc=MeiXHL-1i31q-+wuibK5qM1=xV+4qn0z+CWFXjt3CdrCQ@mail.gmail.com>
-X-Gm-Features: AUfX_myd-9E67e5jDYYEWIDd_Fhka4yTI8ar0CZ3ucq5EUGNAu2R2AhAZ0we-FI
-Message-ID: <CAMRc=MeiXHL-1i31q-+wuibK5qM1=xV+4qn0z+CWFXjt3CdrCQ@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: Correct white-space style
-To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Suzuki K Poulose <suzuki.poulose@arm.com>, 
-	Mike Leach <mike.leach@arm.com>, James Clark <james.clark@linaro.org>, Leo Yan <leo.yan@arm.com>, 
-	Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, Jyri Sarha <jyri.sarha@iki.fi>, 
-	Tomi Valkeinen <tomi.valkeinen@ideasonboard.com>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Linus Walleij <linusw@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Patrice Chotard <patrice.chotard@foss.st.com>, 
-	Andi Shyti <andi.shyti@kernel.org>, Jassi Brar <jassisinghbrar@gmail.com>, 
-	Lee Jones <lee@kernel.org>, Johannes Berg <johannes@sipsolutions.net>, 
-	Jeff Johnson <jjohnson@kernel.org>, Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Yangbo Lu <yangbo.lu@nxp.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <ukleinek@kernel.org>, 
-	Paul Walmsley <pjw@kernel.org>, Samuel Holland <samuel.holland@sifive.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Richard Cochran <richardcochran@gmail.com>, 
-	Jens Wiklander <jenswi@kernel.org>, Yuanfang Zhang <yuanfang.zhang@oss.qualcomm.com>, 
-	YC Hung <yc.hung@mediatek.com>, Svyatoslav Ryhel <clamor95@gmail.com>, 
-	Sean Wang <sean.wang@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
-	Peter Ujfalusi <peter.ujfalusi@gmail.com>, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	coresight@lists.linaro.org, linux-arm-msm@vger.kernel.org, 
-	linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-mediatek@lists.infradead.org, linux-gpio@vger.kernel.org, 
-	linux-i2c@vger.kernel.org, mfd@lists.linux.dev, 
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org, 
-	linux-pm@vger.kernel.org, netdev@vger.kernel.org, linux-pwm@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, linux-usb@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAMS4eWoC/x3NTQoCMQxA4asMWRtoKv7gVcRFbaNGnLYknXFgm
+ LtbXH6b91YwVmGDy7CC8iwmJXfsdwPEV8hPRknd4J0/ujM5nKo15TDiV5Q/bIaZl4ZjkIzvYCU
+ jkaJNtRZtOBPeU/TRnw6OQoKercoPWf7L623bfhVnJ3aCAAAA
+X-Change-ID: 20260810-upstream-wireless-next-main-jason-11r-support-v1-bdc2c27501ad
+To: <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>, Arend van Spriel
+	<arend.vanspriel@broadcom.com>, <linux-kernel@vger.kernel.org>,
+	<brcm80211@lists.linux.dev>, <brcm80211-dev-list.pdl@broadcom.com>,
+	<wlan-kernel-dev-list@infineon.com>, <jeff.johnson@oss.qualcomm.com>,
+	"Carella Chen" <carella.chen@infineon.com>, Jason Huang
+	<jason.huang2@infineon.com>, Darren Li <hsin-hung.li@cypress.com>,
+	Chung-Hsien Hsu <Chung-Hsien.Hsu@infineon.com>, Chi-hsien Lin
+	<chi-hsien.lin@cypress.com>, Shelley Yang <shelley.yang@infineon.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1786362064; l=1458;
+ i=jason.huang2@infineon.com; s=20260810; h=from:subject:message-id;
+ bh=iC++ZRTCcOc1mRqxcM130EJQxxgP7M+hKLNBVoBysvU=;
+ b=3RZU0ItgVqtv2txN5X13fY9rjBupVokoHrTQS+CcXvFPio8OkCfkkEh9T/fhrN+748NTZG/RQ
+ b6zGFItkLriCP6qTvPW2plj5zOPQVUZ5r/yMQCD+2Bj9ZWkwgriohPr
+X-Developer-Key: i=jason.huang2@infineon.com; a=ed25519;
+ pk=BmqGCssp9w9TsTSVHuzcc6+C1o5uJ0uZK4ZSmrma28M=
+X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
+ MUCSE809.infineon.com (172.23.29.35)
 
-On Sat, 1 Aug 2026 21:56:14 +0200, Krzysztof Kozlowski
-<krzysztof.kozlowski@oss.qualcomm.com> said:
-> Correct a few white-space issues, like double space after '=' or before
-> bracket '{' characters, which will be flagged by dt-check-style.  No
-> functional changes.
->
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
->
-> ---
->
-> Patch applies on Rob's for-next branch.
-> ---
->  .../arm/firmware/linaro,optee-tz.yaml         |  8 +-
->  .../devicetree/bindings/arm/psci.yaml         | 18 ++--
->  .../bindings/arm/qcom,coresight-tnoc.yaml     |  2 +-
->  .../devicetree/bindings/ata/st,ahci.yaml      | 22 ++---
->  .../bindings/display/ti/ti,am65x-dss.yaml     | 12 +--
->  .../bindings/display/ti/ti,j721e-dss.yaml     | 96 +++++++++----------
->  .../bindings/display/ti/ti,k2g-dss.yaml       | 36 +++----
->  .../bindings/dsp/mediatek,mt8195-dsp.yaml     |  2 +-
->  .../bindings/gpio/st,nomadik-gpio.yaml        |  2 +-
->  .../devicetree/bindings/i2c/st,sti-i2c.yaml   |  2 +-
->  .../bindings/mailbox/st,sti-mailbox.yaml      |  2 +-
->  .../bindings/mfd/maxim,max77620.yaml          |  2 +-
->  .../bindings/net/wireless/qcom,ath10k.yaml    | 34 +++----
->  .../devicetree/bindings/opp/opp-v2.yaml       | 28 +++---
->  .../pinctrl/mediatek,mt7988-pinctrl.yaml      |  2 +-
->  .../devicetree/bindings/ptp/fsl,ptp.yaml      | 12 +--
->  .../devicetree/bindings/pwm/pwm-sifive.yaml   |  2 +-
->  .../bindings/usb/ti,twl4030-usb.yaml          |  2 +-
->  18 files changed, 142 insertions(+), 142 deletions(-)
->
+Changes in v3:
+- Send as a new standalone thread; v2 was accidentally posted once without
+  patches and once as a reply to v1.
+- Stop using deprecated NL80211_ATTR_PORT_AUTHORIZED and report authorization
+  through cfg80211_port_authorized(), which emits NL80211_CMD_PORT_AUTHORIZED.
+- Squash OKC PMK programming and firmware roaming supplicant mode into one
+  brcmfmac patch.
+- Clean up authorship/trailers for the squashed patch.
 
-For GPIO:
+---
+Carella Chen (3):
+      wifi: nl80211: add roam offload extended feature
+      wifi: brcmfmac: detect firmware FBT and OKC support
+      wifi: brcmfmac: advertise firmware roam offload support
 
-Acked-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Darren Li (2):
+      wifi: brcmfmac: add PMK programming for firmware roaming offload
+      wifi: brcmfmac: report port authorization after offloaded roaming
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 125 +++++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   4 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ include/uapi/linux/nl80211.h                       |   4 +
+ net/wireless/nl80211.c                             |   4 +-
+ 6 files changed, 129 insertions(+), 14 deletions(-)
+---
+base-commit: 6c5fc504d0d6934132637aa3db4b9b58148eaa78
+change-id: 20260810-upstream-wireless-next-main-jason-11r-support-v1-bdc2c27501ad
+
+Best regards,
+-- 
+Jason Huang <jason.huang2@infineon.com>
+
