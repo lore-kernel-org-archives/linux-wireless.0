@@ -1,76 +1,79 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8A6376A19
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 19:28:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F806418377
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 21:00:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786476513; cv=none; b=fTHk7H1ihmjoFsC7N3V6S1BS3u6RR7QWLqdNaydrgHojM0VU2lm6XbmPhBnPFwXwgjPxXP7j6fc7iYy3J1IS3rlkrlwrPWFMuJe5oinAFgic5Q9bY1beV6d8t48y17/+uOcUjdAzOxWwJRhYoVjxjNkN4Z7mRV2Bg9ow/dRnQn0=
+	t=1786482052; cv=none; b=tCMzuuYZmSc7oLprqEnG0YlHEYLedA/bYzj4bN6AeoMnqm4NZui3XyfnesVV0Dlwwpnxb7WeXYdZJin1yw1wl5xhyqsxCkgnRfJ3I9P9yE4XJTG3L+3cK0PgisqGUUNvPV4RKEgWlrj08Migri76tUr9ksSLdGDPOdYWaaA5iT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786476513; c=relaxed/simple;
-	bh=sjpcrFYB8d+bC4S7LoKkxpYWX/LF0bafJ7X8YU4y/ww=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bD1NFE6/EyvzSf6Vj02YlB/v480abC03QKEJReoWS8zJBs/6cXXDc5uV/oi5oDHBB4X42ZZ/NNzWIvy+ZSKAJuAb9aCko4dz2Iv4vDl0vGJ+kskR4EEw5nnc35mlbvD5lhaw4pgUO3tRBlsJKbSnYJ23QTHSQ1HbxU/RnFg0RJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qq7AgghM; arc=none smtp.client-ip=209.85.216.49
+	s=arc-20240116; t=1786482052; c=relaxed/simple;
+	bh=DHZeUSZTTSX7z32SiH+oih8p4TW3kYdEqSl1SPBOCc0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=hNM6ElyyAxnlm6cXvBWtsKyWLJI/NJ0sQC5UyNjzMj3+OOiY1pHaEG8YIr3L5UaMXB2aFOvUk+CAFC1OYPc3p2fwARjbqW+H8PGE0QLk56tkO8hF9R+hKFYX/Gvm/92T65UkLZOB+9tV/oVNvtYOK/QLSai1f3sG6uypE6/UBSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Av4x1dfq; arc=none smtp.client-ip=209.85.215.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qq7AgghM"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-38e58034d05so84518a91.2
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 12:28:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Av4x1dfq"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-c9eefcf9175so204380a12.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 14:00:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786476511; x=1787081311; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=0BfcN7LOBZWD+vttsIPj25gnBx710XzvAdMMZWdWWbk=;
-        b=qq7AgghMEdMMgxPXjvaiD0dkuV5gTME57y8ycAm32eEyOp3boIXAiUbA3yT+rhUPwf
-         4iFq8BI3Wv4YuDed4htLEhuVP85kRNMXH4a7BgVUtpwmlu+noeezzmYo0MLWVqct7jAS
-         BMUxNsMC+w+ynDVMoBmuNX8SCeDJFozGWy6ggawfVlUm9lnqt1cu1fSOnh9B3qqFKNZu
-         VJ68G4Bn1pR+x99KFikNEk9NVh67oqIMk5lFwNAdRHICWBBGBQa0Vhv3AdO77QQZxZtY
-         a2nlK99uvfzOc4axUzwJXomO1hAephU1SQXNULi4rweW9yuReg5qwZSh8TtcW6osqmBN
-         VfoQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786476511; x=1787081311;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1786482050; x=1787086850; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=0BfcN7LOBZWD+vttsIPj25gnBx710XzvAdMMZWdWWbk=;
-        b=n49WkUDfCJX2rSLD0BYNiEjLnq8ZDvP4LkiFxtGR5l2y1V8es+lgpKdxv46+vsFnQZ
-         SvqwbVDMmLta/+BLHsfUZO+Gsdbu+dU0xZfRVJR+3AwxX5ntW6JUVV98IwH4uR0EJOUa
-         /J+n/px15BsAEVfy2IOHcLjtvdlPBFcSMxdpQvABPW5ZweADsnXtFZUQ+YP7dgtmU3ak
-         kAlTTF36mXEqsWofj8wqjG62FXiskwgRKSwByVoLzyECHh6IZwX867oitqifH+yp9WIC
-         pzDywCBw7/NkLlsHBuEGlr1S/5vpqj8CeuULZyP37uwDg4QaKAA5qfP3vflutb+3xlgI
-         dSxw==
-X-Forwarded-Encrypted: i=1; AHgh+Ro20GXAjWx6681oHQg50dZDHlWqiRfF02gLAmpa9c1+GYx0PZ0eI0HA4337XuZXpOHMhjUwgBIfiIa3onjdKw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwrHFl0AFb69nOS0zN/oo1epRY7W5W2UcrD6Wdnc9aMZ+bV/2hS
-	Wq6vuLUZxFTs8miiQJsw4IoUGv14gDzPqGRsQdqjAZh8zCKsc2BA+QGC
-X-Gm-Gg: AR+sD115iXhfTxgdjQg0+Ufqi7Qcm92Ku3epE6NLEhsFPPAf9rkKfa5MY2y+WaJW28K
-	NjH6X6Y1tnrNw5F6RXsG6mhIHCDxCJKDhSRq5Kex0Nm/PSLIjFB9DWmtLHQM4QqXiCMXoT3UNZV
-	9vDNxRw4Dyt15dIWuIlxQu6zunxWoU0QfNh0KvBRhytsvidt0E168G/JaRNp8YcF1Ej/QJWYeqD
-	UHQR/OKUNe2IwsdYBxPZHs1i/2GIgGPMEMyq7uderU/vKql79mHvv/zycTknJT6th5YeHjlV83L
-	oXvDLz+wM/iyKYnHUo9eyIpVcXfMd7uaJVTDu+SaoksCTkd2u9BvFd/hGgsizi3f8WKk23g5L7K
-	JDKEcyItGoZfFpvDAdhRJXDf5Kgt7Ixvb5Nu51mqjg8LJ++HsvQ2ZV3f7o1Gck7gYkuQBbFQozS
-	R7Dj1gmrij0737hF7Wo6mXyFgm8naGoDtE3gBfgfKuHFxm0GwM2bOt7lK/U938nx29cEm7OHPJ4
-	M8q6gFcFZjxoHH8Gnn6Q6R7ta4zMmrZ1QkpFu8nw5czKthJvR29RG1BG+4hDnl3lk/5/GdLJB1u
-	jxnB2Eus2GEZg3wJpkTyf75lBYcpEiCUoPSOGA==
-X-Received: by 2002:a17:90a:d885:b0:381:bc4c:da5b with SMTP id 98e67ed59e1d1-392f487a046mr2643427a91.18.1786476511329;
-        Tue, 11 Aug 2026 12:28:31 -0700 (PDT)
-Received: from ryzen.lan ([2601:644:8000:7a86::e35])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392f8e3f565sm746425a91.13.2026.08.11.12.28.30
+        bh=Zdl3WKJSZaIAl32/kPw7PkLAafvF1qJSXITcCb18upg=;
+        b=Av4x1dfqVUu5MH7gQ38hcrBwbCm9ZrZl9ZQRFGyD9T+YbxPRSEtVUKrXUBIpfW0Jx9
+         U6O7wUZGi85JMy968/usBUrRrR8pji1elP1vqfnIPAxRRkMcVvxBE4Awj1P6e/JZmf5F
+         JUZ3Ez92WgDPVhrSlWoP5dVQGi778Ich90I+LL6m7RpKGt3+uLdyq+C4tO8c5SC9cnqL
+         Z+GrisGaztw6wPQaeTCCclEQFWPK6AnhlGUv9PYN6PpmdF3G6l8BCr6y8TuKj4JRkPN2
+         jdGuBOyUWQoJYyJ/b89RLCCHXrOxpJecnM4ZuiwMaVuI4C8hofc1z8XKVmIYPUCRbqPB
+         t0Hg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786482050; x=1787086850;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Zdl3WKJSZaIAl32/kPw7PkLAafvF1qJSXITcCb18upg=;
+        b=FamZ0ln/tK151pwWhtu+ozjH4n9z3fELuafVr/Jtk+8MRpDsw4x+Wz3JJIVzE4Qs9b
+         MzAtoVGEAGSrRn09WZbgVGcxrJfgO7tDeBwq/fbNK5mkHh68fyndPy7+YBCc+MgCJsU1
+         vE5Fw782loAiQpU8h3Xxmt3rSygfgNeAx6la0WSGJn4AOvH8mNArwSQnnQelGONE0UHQ
+         UZHuiaY4m5xrp7h6CXdIu9SIHWWwVBg3WLhNjNlLBiA6U2TykbRVTVlNBcbfqP0NKXLa
+         149dta/RtMNeVFLFzm2GSIVx3tUYb12iG/lN2qTbGn6daKYOo1VfUtxq/hi2tVOnhGJ+
+         PYrg==
+X-Forwarded-Encrypted: i=1; AHgh+RqsINnEvDtPPEuMcmKlfVxbHRi+uE2A7iS5DSgYRZ5gcWn6JJ22UNPkUREJ3mDCL5ZSP12SWzm4OTKKbVhW+w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YymoNhzZXXO24AJGe6j5alOUFaQ9eC2Xx9FQOhzJW4qhN1YNLV+
+	RAMzXzT4kDUOmpnTDJYbmNC0O+fcZ3gwudUKz7u+21PT9HdKfu4MQZmx
+X-Gm-Gg: AR+sD13umEpkISOOi+/G/ix9DxcY6ACpS0hzhvP4UvmJ2t+cjYa4K7Kc95SFMqkRqZn
+	343ScXQSm79Uly4K4JgcvX3zujoDRgN1DkdQkQs7GXlEQUCbzGRNlgMwSzdZIUo/gLRfRk0Y7Zt
+	Wlya3uVJEPPjzfrHCaW1QTwCPmkmQaymHUmmB2Ni00GcG1hx4z4Apds5X2AlOiQguG3Te6XfULM
+	TL2iAMZ8heskbd9Z3hci64afX0g4pRoYdPPufhM/fTN/4kZhvH2Rd7IlZ42zmF1ytIBf2J/3Na+
+	j5YZLrud8ZEyBoJDq3HWbLo9Cw1uULoUyVpqqArPzxkPgwbgkeYYitxXUfPhqFGkMio4RANnTlO
+	WX+MGNecgkmcdTunSC1PQBMDVAtVZSH/eKNPOKJ/BXYbPEjJmfutQC+vU+15TMM1NsKhypT3qXS
+	Is5XWFGrQkxKuuPUZS+6ZllIyL7rQnAxdVmtX9VHXiVUUI5EAHG9Tvus8KZKJGmqoN/LfpIpPS5
+	eatNuABQKWaOH2oOoQWzAXk6nCKuUA+vzfBTxZ9BL6kDVlZYNHpfvLKO0tUf1T44rehpgatLGIP
+	nGzk
+X-Received: by 2002:a05:6a20:cf8d:b0:3c3:935a:af2c with SMTP id adf61e73a8af0-3cc2b77f0cemr8795497637.3.1786482050220;
+        Tue, 11 Aug 2026 14:00:50 -0700 (PDT)
+Received: from nixos ([2405:201:c40d:9039:4f8b:4d:f8c2:8f50])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31cf628e42asm3322246eec.15.2026.08.11.14.00.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Aug 2026 12:28:30 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: devicetree@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] dt-bindings: net: brcm,bcm4329-fmac: add nvmem-cells for MAC address
-Date: Tue, 11 Aug 2026 12:28:29 -0700
-Message-ID: <20260811192829.123410-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        Tue, 11 Aug 2026 14:00:49 -0700 (PDT)
+From: Ayushman Rout <ayushmanrout27@gmail.com>
+To: syzbot+f1ba58d6b55abd13239e@syzkaller.appspotmail.com
+Cc: johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com,
+	Ayushman Rout <ayushmanrout27@gmail.com>
+Subject: [PATCH] wifi: mac80211: guard drv_net_setup_tc() against unbound AP_VLAN sdata
+Date: Wed, 12 Aug 2026 02:29:27 +0530
+Message-ID: <20260811205927.11228-1-ayushmanrout27@gmail.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <6a6d39e6.f794c993.27aeb.0008.GAE@google.com>
+References: <6a6d39e6.f794c993.27aeb.0008.GAE@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -79,48 +82,68 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The nvmem-cells and nvmem-cell-names properties are used to supply a
-MAC address to the brcmfmac wireless controller. Nodes such as
-bcm4709-linksys-ea9200.dts fail dtbs_check with:
+#syz test: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git master
 
-    Unevaluated properties are not allowed ('nvmem-cell-names',
-    'nvmem-cells' were unexpected)
+syzbot reports a NULL/invalid pointer dereference in
+trace_event_raw_event_drv_net_setup_tc(), reached via
+ieee80211_netdev_setup_tc() -> drv_net_setup_tc().
 
-nvmem-consumer.yaml cannot be referenced from the common
-network-class.yaml because it does not constrain the number of entries
-or their names, and not all network devices use the same cell names.
-Each binding that uses nvmem must therefore define its own
-nvmem-cells/nvmem-cell-names constraints, like ethernet-controller.yaml
-and qca,ath9k.yaml already do.
+drv_net_setup_tc() calls get_bss_sdata(sdata) unconditionally. For an
+NL80211_IFTYPE_AP_VLAN interface this does
+container_of(sdata->bss, ...), but sdata->bss is only linked
+opportunistically at interface-add time when a matching same-address
+AP interface exists - it is not enforced, so an AP_VLAN interface can
+be fully created and registered with sdata->bss left NULL.
+container_of() on NULL yields a small invalid pointer rather than
+NULL, which the trace_drv_net_setup_tc tracepoint then dereferences
+to read the interface name.
 
-Add the single-cell, mac-address-only constraints to the
-brcm,bcm4329-fmac binding.
+Guard against an unbound AP_VLAN sdata before calling
+get_bss_sdata(), matching the WARN_ON_ONCE(!bss) precondition already
+used for this same relationship in sta_info.c. Also add
+check_sdata_in_driver(), used by the neighboring
+drv_net_fill_forward_path() but missing here.
 
-Assisted-by: opencode:deepseek-v4-flash-free
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
+The underlying gap in ieee80211_if_add() - AP_VLAN creation not
+requiring a bound bss - is not fixed here; other get_bss_sdata()
+callers may share the exposure.
+
+Fixes: 61587f1556fe ("wifi: mac80211: add support for letting drivers register tc offload support")
+Reported-by: syzbot+f1ba58d6b55abd13239e@syzkaller.appspotmail.com
+Closes: https://syzkaller.appspot.com/bug?extid=f1ba58d6b55abd13239e
+Signed-off-by: Ayushman Rout <ayushmanrout27@gmail.com>
 ---
- v2: don't use nvmem-consumer.yaml
- .../bindings/net/wireless/brcm,bcm4329-fmac.yaml           | 7 +++++++
- 1 file changed, 7 insertions(+)
+ net/mac80211/driver-ops.h | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-index 81fd3e37452a..88d0099871b1 100644
---- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-+++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
-@@ -57,6 +57,13 @@ properties:
-           - pci14e4,4434  # BCM4388
-           - pci14e4,449d  # BCM43752
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index f1c0b87fddd5..ecfdb51152f4 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1702,7 +1702,23 @@ static inline int drv_net_setup_tc(struct ieee80211_local *local,
  
-+  nvmem-cells:
-+    maxItems: 1
-+    description: Reference to an nvmem node for the MAC address
+ 	might_sleep();
+ 
++	/*
++	 * An AP_VLAN interface created without a matching, same-address
++	 * AP interface present never gets sdata->bss populated (see the
++	 * interface-add validation in iface.c, which links bss only
++	 * opportunistically and does not require it). Such an sdata is
++	 * not safe to pass through get_bss_sdata(): container_of() on a
++	 * NULL sdata->bss yields a small invalid pointer, which the
++	 * tracepoint below then dereferences to read the interface name,
++	 * causing a crash.
++	 */
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN && !sdata->bss)
++		return -EIO;
 +
-+  nvmem-cell-names:
-+    const: mac-address
+ 	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
 +
-   reg:
-     description: SDIO function number for the device (for most cases
-       this will be 1) or PCI device identifier.
+ 	trace_drv_net_setup_tc(local, sdata, type);
+ 	if (local->ops->net_setup_tc)
+ 		ret = local->ops->net_setup_tc(&local->hw, &sdata->vif, dev,
 -- 
-2.55.0
+2.54.0
 
