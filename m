@@ -1,206 +1,104 @@
-Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1D72DB788;
-	Tue, 11 Aug 2026 00:50:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C392C86D
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 01:48:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786409430; cv=none; b=Jna0eddPsq4ohJs1zRNZORK5fZgps2Yww3A25y4gQSbqiSDXF/kfGH+OxMiHu0CI29XSzVc2G7CGEztYsRgYT0e29uLlij+vXuPzHnBiD4jOPmqG0XqeTdD97BHjoUs2AOwqhcTiA5Ke65ScMHfRLbYqbN4USQDjcTS9CrIH3X0=
+	t=1786412932; cv=none; b=XyOqbFDafSkiQgyvvT1TQiDkJrBMCf0quQyhbXq19Xu8+3KM3qRBeOT8a9rS+F5B6HfR1k1lcpttV++mGJbmPGYUIu4ec5/+8Zi52rNCbkKbyw/XmtFm4qQgp0NilqbegHbO79s3e8z17PyXv6p890VqjxKqeBmc2HHC5FdbE18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786409430; c=relaxed/simple;
-	bh=Okj9DNeUzdOdzTd2wwQTc4c2e6I5H3eHiKM1120lciM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Yu+1aK+5bi6g48E4OnynA+Xsm7SrgEPXDI2ubftlBsPcLcRM2w7Bj7/Ge6eZVRGCNl2k6Hjq9kvz+XSOnDTOyplbqLBkzqlGdlO4P+zUpBAC1f2c72QBJMNEHIJfln6ccXmUvkP2VQzqPpaIRTDsm1vUjt1DpRrwjmHD/nmpMJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
-Received: from local
-	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-	 (Exim 4.99)
-	(envelope-from <daniel@makrotopia.org>)
-	id 1wtahA-000000001MG-1U9I;
-	Tue, 11 Aug 2026 00:50:22 +0000
-Date: Tue, 11 Aug 2026 01:49:54 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Simon Horman <horms@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Vladimir Oltean <olteanv@gmail.com>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	linux-bluetooth@vger.kernel.org,
-	Hans de Goede <johannes.goede@oss.qualcomm.com>
-Subject: [RFC PATCH 4/4] Bluetooth: btintel_pcie: use
- device_schedule_reprobe() after reset
-Message-ID: <anpxsvOTKb1i3OV6@makrotopia.org>
+	s=arc-20240116; t=1786412932; c=relaxed/simple;
+	bh=PFT78P3V7FaLPcguJCctSxHJFgOpnpFA3uF988EGXW4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=l+Ho+ghnI6c+7cWDI+Z7k3n3M8prCsV58bMv1Ux7OsuRlALSbvIyLvbcBqb55Pj0xOJBQum61lxCVbGolMwXKwlW1ehPl61feM3a/w83BghQsSvjKfeP8hlfcbvgtrVDc2YvtoCjW/GjeG8TQZweiGP4rBTLXjhkyuccW15qWCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=KSY/gDxI; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="KSY/gDxI"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67B1mkUG32191702, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1786412926; bh=PFT78P3V7FaLPcguJCctSxHJFgOpnpFA3uF988EGXW4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=KSY/gDxI7hqU13HenHjQECrXMCbn7gfuKQLKg6A/F+WRXXpfK6S7nHgFnXS/QU4Je
+	 ukqUCzyOs7IT4uSlt/kr2qJ0Mz//6wVyn0RRC+hllaHex9x1XWKzW01UW47x5NY9AQ
+	 IaU5I7j+GAyfYoXMqfP8gp7jEn8tcOGnrzaxc/XHeHXLSi7mpr5l3U+my1q5f+oZ+j
+	 0UoMrvgKuEDLO4X12SADRs+TrqZN2wSmuy8TRcqm3PQZnIt8tpgRCuFOHWTa9ioFSU
+	 cmV83Idsa3uwvzq9K8e66bbsE+L8kXCMcieasi7TwkVcIG1w0em5v2rfNd5Nz1xZ6q
+	 JL9vD408xeKdA==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67B1mkUG32191702
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 11 Aug 2026 09:48:46 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 11 Aug 2026 09:48:46 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.17; Tue, 11 Aug 2026 09:48:45 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Tue, 11 Aug 2026 09:48:45 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Adrodoc <adrodoc55@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Error in rtw89 using Kernel 7.1.4
+Thread-Topic: Error in rtw89 using Kernel 7.1.4
+Thread-Index: AQHdHdZdU24pRS7N10KrgD20Ysr2qbaCFWPAgAAJV2CAAAS0AIAAjzyAgAD0dVCAAAXTgIAAAl0AgAn324CAAQ3XcP//9hYAgABhDACAB7IeQP//21yAgAGLWLA=
+Date: Tue, 11 Aug 2026 01:48:45 +0000
+Message-ID: <c52840cf65464f659635eec6fcd6de12@realtek.com>
+References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
+ <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com>
+ <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
+ <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
+ <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
+ <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com>
+ <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
+ <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
+ <CAOQMLZUn30NJwU4pR0hL=nz38Mbp=73wgqd+CoQE2qSO3cf4_w@mail.gmail.com>
+ <013f7d3cf223417c94df41a2a45fa540@realtek.com>
+ <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
+ <CAOQMLZVMALBLeCZUB3Jdvk75znt0D7HxrXyPMhGPvcKLx3j-Yg@mail.gmail.com>
+ <0912165f66394229b4f2b4114ae28a50@realtek.com>
+ <CAOQMLZUbZhNhOQyxGXW7YSOU-z6w-4jWqfqVkaeMhdx2kLDrmg@mail.gmail.com>
+In-Reply-To: <CAOQMLZUbZhNhOQyxGXW7YSOU-z6w-4jWqfqVkaeMhdx2kLDrmg@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-btintel_pcie re-probes its own device synchronously from its own reset
-work via device_reprobe(), both after an FLR and after an ACPI PLDR.
-The synchronous call runs .remove() from inside the reset work, which
-requires a hand-rolled correctness contract spanning several comments:
-.remove() must skip draining the very reset work it is running from
-(the current_work() check), the reset must use pci_try_reset_function()
-to dodge a device_lock ABBA against .remove(), and both reset paths
-must not touch 'data' after the reprobe call because .remove() has
-freed it.
-
-Convert the two self re-probes to device_schedule_reprobe(). The
-driver core's builtin work item now triggers .remove(), never the
-reset work itself, so the current_work() check in .remove() is dead
-and is removed: disable_work_sync(&data->reset_work) now also
-guarantees the reset work has fully returned before 'data' is freed.
-The Wi-Fi sibling handling in the PLDR path is left untouched; the
-sibling is a different device re-probed from a bounded context and has
-neither of the bug classes the helper addresses.
-
-Safety of the window between the reset work returning and the deferred
-detach running, during which 'data' now stays alive:
-
-- hci callbacks: send_frame fails with -ENODEV while
-  BTINTEL_PCIE_RECOVERY_IN_PROGRESS is set, and that bit is only
-  cleared by a fresh probe. New reset requests coalesce into the
-  in-flight one via the same bit. open/close are no-ops.
-
-- interrupts: the reset work masks all interrupt causes and calls
-  synchronize_irq() before the reset, the dump workers stay disabled
-  (disable count >= 1) until .remove(), and the freshly reset device
-  raises no traffic until the next probe re-initializes it. The same
-  exposure already exists today in the window between
-  pci_try_reset_function() and the synchronous re-probe; the
-  conversion only lengthens it.
-
-- work disable counts: the success-path contract is unchanged in
-  substance. The reset work's disable_work_sync() calls stay
-  unbalanced on success, .remove() disables again, and the fresh
-  probe re-INIT_WORKs the dump workers with disable count 0.
-
-pci_lock_rescan_remove() now only covers the reset itself, no longer
-the re-probe. Hot-removal between the reset and the deferred re-probe
-is handled by the helper's dead-device check.
-
-If scheduling the re-probe fails in the FLR path, the error is
-returned so the reset work re-enables the dump workers, matching the
-existing FLR failure handling; unlike before, 'data' is still alive
-in that case. The PLDR path keeps logging only, as before.
-
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/bluetooth/btintel_pcie.c | 48 +++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index 005c77a4f5eb..16ed19c2d359 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -2641,7 +2641,7 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
- 	 * BT needs pci_save_state()/pci_restore_state() because the BT driver
- 	 * is still partially attached when the _PRR runs (it hasn't been unbound yet).
- 	 * The PCI device needs to remain minimally functional so that
--	 * device_reprobe(&pdev->dev) can work afterward
-+	 * the deferred re-probe of the BT device can work afterward
- 	 */
- 	ret = btintel_pcie_acpi_reset_method(data);
- 
-@@ -2652,14 +2652,16 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
- 	}
- 
- 	if (!ret) {
--		if (device_reprobe(&pdev->dev))
--			BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+		if (device_schedule_reprobe(&pdev->dev, 0))
-+			BT_ERR("BT reprobe scheduling failed for BDF:%s",
-+			       pci_name(pdev));
- 	}
- }
- 
- /*
-- * Issue a Function Level Reset and hand teardown/re-init off to the PCI
-- * core via device_reprobe(), mirroring the PLDR path's contract.
-+ * Issue a Function Level Reset and hand teardown/re-init off to the
-+ * driver core via device_schedule_reprobe(), mirroring the PLDR path's
-+ * contract.
-  *
-  * Caller must hold pci_lock_rescan_remove() and must have already
-  * disabled interrupts and drained both rx_work and coredump_work.
-@@ -2681,14 +2683,12 @@ static int btintel_pcie_perform_flr(struct btintel_pcie_data *data)
- 		return err;
- 	}
- 
--	/* device_reprobe() always detaches the driver first (running
--	 * .remove(), which frees 'data'); any re-probe failure leaves the
--	 * device unbound but 'data' is already gone, so just log it.
--	 */
--	if (device_reprobe(&pdev->dev))
--		BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+	err = device_schedule_reprobe(&pdev->dev, 0);
-+	if (err)
-+		BT_ERR("BT reprobe scheduling failed for BDF:%s",
-+		       pci_name(pdev));
- 
--	return 0;
-+	return err;
- }
- 
- static void btintel_pcie_reset_work(struct work_struct *wk)
-@@ -2718,11 +2718,15 @@ static void btintel_pcie_reset_work(struct work_struct *wk)
- 
- 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
- 
--	/* Both reset paths follow the same contract: on success they
--	 * destroy 'data' via device_reprobe() (a fresh probe re-INIT_WORKs
--	 * the dump workers with disable count 0), so enable_work() must
--	 * NOT be called on the success path. Only the FLR path can fail
--	 * with 'data' still alive, in which case we balance the
-+	/* Both reset paths follow the same contract: on success the
-+	 * deferred re-probe scheduled with device_schedule_reprobe()
-+	 * destroys 'data' by re-running .probe() (which re-INIT_WORKs the
-+	 * dump workers with disable count 0), so enable_work() must NOT
-+	 * be called on the success path. 'data' stays alive until the
-+	 * deferred detach runs; in this window new activity is fenced by
-+	 * BTINTEL_PCIE_RECOVERY_IN_PROGRESS, the masked interrupts and
-+	 * the disabled dump workers. Only the FLR path can fail with no
-+	 * re-probe scheduled, in which case we balance the
- 	 * disable_work_sync() calls above so a later successful reset is
- 	 * not permanently blocked.
- 	 *
-@@ -2766,7 +2770,7 @@ static void btintel_pcie_reset_work(struct work_struct *wk)
-  * The bit is cleared only by .remove() / re-probe via fresh devm
-  * allocation, which is the intended one-shot semantics: a reset
-  * tears down and re-probes 'data', so there is no "in-flight"
-- * reset to follow up after device_reprobe() succeeds.
-+ * reset to follow up after the deferred re-probe succeeds.
-  */
- static void btintel_pcie_request_reset(struct btintel_pcie_data *data,
- 				       enum btintel_pcie_reset_type type)
-@@ -3082,13 +3086,7 @@ static void btintel_pcie_remove(struct pci_dev *pdev)
- 	disable_work_sync(&data->hwexp_work);
- 	disable_work_sync(&data->fwtrigger_work);
- 
--	/* Cancel pending reset work. Skip only when remove() is called from
--	 * within the reset work itself (PLDR device_reprobe path) to avoid
--	 * deadlock. current_work() returns the work_struct of the caller if
--	 * we are in a workqueue context.
--	 */
--	if (current_work() != &data->reset_work)
--		disable_work_sync(&data->reset_work);
-+	disable_work_sync(&data->reset_work);
- 
- 	btintel_pcie_disable_interrupts(data);
- 
--- 
-2.55.0
+QWRyb2RvYyA8YWRyb2RvYzU1QGdvb2dsZW1haWwuY29tPiB3cm90ZToNCj4gPiBCeSB0aGUgd2F5
+LCB0aGUgZmlyc3QgbG9nIHlvdSBzaGFyZWQgc2hvd3MgdGhhdCBkaXNjb25uZWN0aW9uIGhhcHBl
+bmVkIGFmdGVyIFNFUiBMMSBhYm91dCA1MCBzZWNvbmRzLg0KPiBTRVIgTDEgc2VlbXMgbm90IGEg
+cmVsYXRlZCBldmVudC4NCj4gDQo+IEkgYW0gcHJldHR5IHN1cmUgU0VSIEwxIChvciBtYXliZSAi
+ZmlybXdhcmUgZmFpbGVkIHRvIGFjayBmb3IgbGVhdmluZw0KPiBwcyBtb2RlIikgaXMgYSByZWxl
+dmFudCBldmVudCwgYmVjYXVzZSB0aGUgY29ubmVjdGlvbiB3YXMgbm90DQo+IGZ1bmN0aW9uaW5n
+IHByb3Blcmx5IGR1cmluZyB0aGVzZSA1MCBzZWNvbmRzLg0KDQpGb3IgbGF0ZXIgZXhwZXJpbWVu
+dHMgKHN1Y2ggYXMga2VybmVsIDYuNi45KSwgZGlkIHlvdSBhbHNvIGNvbmZpcm0gdGhpcyBhZnRl
+cg0KU0VSIGhhcHBlbmVkPyBNYXliZSwgeW91IGNhbiBhIHBpbmcgd2l0aCB0aW1lc3RhbXAgaW4g
+YmFja2dyb3VuZDoNCg0KICAgcGluZyA4LjguOC44IHwgd2hpbGUgcmVhZCBkdDsgZG8gZWNobyAi
+JChkYXRlICcrJVktJW0tJWQgJUg6JU06JVMnKSAtICRkdCI7IGRvbmUNCg0KPiA+IFRoZSBzZWNv
+bmQgd2F5IGlzIHRvIGRlYnVnIG9uIHRoZSBsYXRlc3Qga2VybmVsIGFuZCBhcHBseSBkZWJ1ZyBw
+YXRjaCB0byBkdW1wIG1vcmUgZGV0YWlsIG5lZWRlZCBieQ0KPiBpbnRlcm5hbCBleHBlcnRzLiBC
+dXQgaXQgc2VlbXMgbGlrZSB0aGlzIGlzIHN0aWxsIHVuY2VydGFpbiBiZWNhdXNlIG9mIGhhcmR3
+YXJlIGZsYXcgdGhleSBtZW50aW9uZWQuDQo+IA0KPiBJcyB0aGF0IHN0aWxsIGFuIG9wdGlvbj8g
+SSB0aGluayBpdCBtaWdodCB5aWVsZCByZXN1bHRzIGZhc3Rlci4gU2luY2UNCj4gSSBoYXZlIHRv
+IGtlZXAgYSBrZXJuZWwgcnVubmluZyBmb3IgYWJvdXQgYSBkYXkgdG8gbWFrZSBzdXJlIGl0DQo+
+IGRvZXNuJ3QgaGF2ZSB0aGUgZGlzY29ubmVjdCBpc3N1ZSwgYmlzZWN0aW5nIHdpbGwgdGFrZSBx
+dWl0ZSBzb21lDQo+IHRpbWUuDQoNClRoZSBwYXRoIHRvIGRlYnVnIFNFUiBkdW1wIGlzIGxvbmdl
+ciwgYmVjYXVzZSBJIHBlcnNvbmFsbHkgZG9uJ3QgdW5kZXJzdGFuZA0KdGhlIG51bWJlcnMsIHNv
+IEkgd2lsbCBuZWVkIGludGVybmFsIGV4cGVydHMgdG8gaGVscCBhbmFseXppbmcgeW91ciBmZWVk
+YmFjay4gDQpTaW5jZSBSVEw4ODUyQUUgaXMgZWFybGllciBjaGlwLCB0aGUgcHJvZ3Jlc3Mgd2ls
+bCBiZSBzbG93ZXIuIFNvIGJlIHBhdGllbnQNCmlmIHdlIGNob29zZSB0aGlzIHdheS4NCg0KUGVy
+c29uYWxseSBJIHByZWZlciB0byBiaXNlY3Qga2VybmVsIGZpcnN0ICh0aG91Z2ggaXQgdGFrZXMg
+dGltZSB0b28pLg0KSWYgdGhlIGNhdXNlIGlzbid0IGZyb20gZHJpdmVyIHNpZGUsIGxldCdzIG1v
+dmUgdG8gZGVidWcgU0VSIGR1bXAuIA0KDQoNCg==
