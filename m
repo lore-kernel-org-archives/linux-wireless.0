@@ -1,32 +1,32 @@
-Received: from out-175.mta1.migadu.com (out-175.mta1.migadu.com [95.215.58.175])
+Received: from out-174.mta1.migadu.com (out-174.mta1.migadu.com [95.215.58.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D74E424D6C
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 09:13:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2D81417377
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 09:13:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786439596; cv=none; b=cPAKd7P4QOs2VxVz/Ri2Xkr5NshIzaGh6E7cta660UInn2EFgKhga/LhEBEH2KqkaEj/yHyLprA8fnxAJjq2K3VSXbh6ytnjw4/z0flF13lm97//mXsthtTjZSc4ZRMemVlmGuPzXy2Y5cvHiBl6G1cEJMaTEnF/hvqk3PhQ318=
+	t=1786439600; cv=none; b=u10rNYu9dJcC9wMZzIdaI8io9LNoBopmvdx4UCsTVK6P6NOBqU2zdIAXKzGi7KATW640Iv35YOlwrSihnD+ur+Wyne8of2Sq0cSovOjpGvuNsjBfmJeN50Y9/HzCr6lFxcBeNbk40Zru8I8VmJBvS5F/VRRfHmwQGd2vecyblDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786439596; c=relaxed/simple;
-	bh=skDLPIA5lpTzmQkNYeIR+vNdfgVXxuMeyYT2OSW/92A=;
+	s=arc-20240116; t=1786439600; c=relaxed/simple;
+	bh=XOpYD6I4JlkbBLnsmaDU2z1GtAYOgs2KWDmPkI4vHbI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rtGUTOnO7gaWUYTN/f2NfM7TFVX4TeaLKPtRpLk1cxBRxlOB237eTIrxTDlKOinZWydJgeOrkDu4A9pAq4cZahASwYxEmPfb1k3f+k6en8x1P0zgXE5DbPwULy7frJWsfXvHUY7cnZEs29m6yi9LxBzVnfizJRpreNz4q/7wt44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=k/LFD55M; arc=none smtp.client-ip=95.215.58.175
+	 MIME-Version; b=UlBfJ904bWe2nANpZkC14t7Z/6EuGFgJmiiOvmF9IXvIrVNyvd9tpl/X6mJEXXfLtY3ab9OTWZgqSTRZbyEEply13ttm027sNyk3x4ubDiMKHpRfwrui4ZoBpmKbXABKHfU/t++HAHNW/z1ve5K/8Rkc05bUaf6bSgQxstqtJBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tvq0BwCv; arc=none smtp.client-ip=95.215.58.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="k/LFD55M"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tvq0BwCv"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786439591;
+	t=1786439593;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=zIDZMZqDN1uS5+Ef/EHX8qRaF9h5xnkFXzTuE9h2rO4=;
-	b=k/LFD55MuafTojUMvV1Y3zHuoCN2Rssa1ERmOz/cnj/M/vD7KxUNVL6TuUWfRCsLKBIMIR
-	9P0dXIxvMHEh4ee8opN8bOztvSx19QV8Cl0LuF+ullOzyaBzX69v4HKNNQKFPLd5MUOW1W
-	wY8R0mOdMWV9zrx3jZCEVp5/ttWsess=
+	bh=uu7M6NtujFaEuvcioOiMlJdOPXugliUXHR5sYjd60P0=;
+	b=tvq0BwCv+5B1n9iGaRk6O2WjLDDDWy9PFNbS3vYuqymnYHpIL4iL3kXXM0DwybcipZlaUA
+	yL/E8+5gAE9Zpt+b9jlrYGOlPoTbEXZirhZFYF5uB7KRNuOhKwPl1h96V/ti0F4Fpx0wiI
+	HEKjlIao9dnTllgRXIV7cOUYwAjRcGs=
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>,
 	linux-wireless@vger.kernel.org
@@ -36,9 +36,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Hans de Goede <johannes.goede@oss.qualcomm.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v4 1/7] wifi: rtw88: add the RTL8723B chip type and SDIO helper
-Date: Tue, 11 Aug 2026 09:11:57 +0000
-Message-ID: <20260811091203.26841-2-luka.gejak@linux.dev>
+Subject: [PATCH v4 2/7] wifi: rtw88: rx: mark zero length packets on RTL8723BS
+Date: Tue, 11 Aug 2026 09:11:58 +0000
+Message-ID: <20260811091203.26841-3-luka.gejak@linux.dev>
 In-Reply-To: <20260811091203.26841-1-luka.gejak@linux.dev>
 References: <20260811091203.26841-1-luka.gejak@linux.dev>
 Precedence: bulk
@@ -52,45 +52,41 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-The RTL8723B is a 802.11n combo chip whose SDIO variant, RTL8723BS, runs
-a Realtek vendor firmware that differs from the firmware used by the
-other rtw88 8723 family devices. Supporting it needs a number of small
-adjustments spread across the shared core, all of which have to be
-restricted to this one chip and bus combination.
+Like the RTL8703B, the RTL8723BS reports receive descriptors with a zero
+packet length, which the vendor driver drops outright. rtw88 already
+flags these as having no PSDU for the RTL8703B, so extend the same
+handling rather than passing an empty frame up.
 
-Add the chip type and a helper that tests for it, so the changes that
-follow can be gated without repeating the chip and bus comparison.
+This is gated on the SDIO interface rather than the chip id, because it
+has only been observed there; the USB variant is not known to do it.
 
+Co-developed-by: Michael Straube <straube.linux@gmail.com>
+Signed-off-by: Michael Straube <straube.linux@gmail.com>
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
 ---
- drivers/net/wireless/realtek/rtw88/main.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rx.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6e981ba7986..8f86f7c12de5 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -194,6 +194,7 @@ enum rtw_chip_type {
- 	RTW_CHIP_TYPE_8723D,
- 	RTW_CHIP_TYPE_8821C,
- 	RTW_CHIP_TYPE_8703B,
-+	RTW_CHIP_TYPE_8723B,
- 	RTW_CHIP_TYPE_8821A,
- 	RTW_CHIP_TYPE_8812A,
- 	RTW_CHIP_TYPE_8814A,
-@@ -2194,6 +2195,12 @@ static inline bool rtw_chip_has_tx_stbc(struct rtw_dev *rtwdev)
- 	return rtwdev->chip->tx_stbc;
- }
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+index 01fd299abb7f..a9361ef4b93c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rx.c
++++ b/drivers/net/wireless/realtek/rtw88/rx.c
+@@ -253,10 +253,12 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
  
-+static inline bool rtw_is_8723bs(struct rtw_dev *rtwdev)
-+{
-+	return rtwdev->chip->id == RTW_CHIP_TYPE_8723B &&
-+	       rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
-+}
-+
- static inline u8 rtw_acquire_macid(struct rtw_dev *rtwdev)
- {
- 	unsigned long mac_id;
+ 	rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
+ 
+-	/* Rtl8723cs driver checks for size < 14 or size > 8192 and
+-	 * simply drops the packet.
++	/*
++	 * Rtl8723cs and rtl8723bs drivers check for size < 14 or size > 8192
++	 * and simply drop the packet.
+ 	 */
+-	if (rtwdev->chip->id == RTW_CHIP_TYPE_8703B && pkt_stat->pkt_len == 0) {
++	if ((rtwdev->chip->id == RTW_CHIP_TYPE_8703B || rtw_is_8723bs(rtwdev)) &&
++	    pkt_stat->pkt_len == 0) {
+ 		rx_status->flag |= RX_FLAG_NO_PSDU;
+ 		rtw_dbg(rtwdev, RTW_DBG_RX, "zero length packet");
+ 	}
 -- 
 2.53.0
 
