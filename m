@@ -1,136 +1,128 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D86253803E3
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 18:37:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9FC345EBF;
+	Tue, 11 Aug 2026 18:52:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786473423; cv=none; b=rszyw+tqNB111qbFtstyG0ay0oFQjsGuozxYJSZP3c8V0rSd7hnXmXr3+nc9Dv6OE6JUNvQgT+s2i4UG7j0R2xUAVgxsfGNbHoTXxpKcUiMffiE4IagAdvMLLLD/IBjo/R35cG5cekxIyJ4BjdAeC0eWyoEM8MWuDQP/rw+Ugbw=
+	t=1786474330; cv=none; b=Pj6/64Q2VQS3MkjT9kau/RWQJbtptxfMqpHJArWkLIKaiUfmvmud+/i3tzsWUZQFaGqntXXh8oaMAD7Iws/4Pot7rRwe4Dt9IG+jquTkF1M9rsilwO1pU6P9NV9m4mwLf3HlIa6TVPkgSVcvT9CutUy3QxDfS2nKYuj9csqGS1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786473423; c=relaxed/simple;
-	bh=+xk0YRRHFXWWxXx4K4tc+WTEpaRgU+AXG1t5LiJ3az0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=q+2X0M4CPGeMhe873MbT+2pJv1WUf2fXT7Y3PAWUoef33XEzqMLhlJY3/QVPWS+aP35FdUUYar5NDk6i0hPL/6W6XY4qDTlyj6kZYPmKKpozYwsB4JzvAQN+kch/WoseAvVY9sF4mzvb8p/WLb9wyMoLfROrcR9h2r1VKBb+2r4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MjsM43MQ; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786474330; c=relaxed/simple;
+	bh=iG6kolHVo+LhrokzkJn9oo8OafaqsBYZtLW62gK7dbY=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=VhFZrjSH07ikb62SMZR70+VlVvcVEDiOHme77qSfitUFPGpXtqnvdWE9P8rdbbBneIIennFPN/bTW+3u5dxgMoDGpxv+o71fLw1iw88qISexVbrujOl5ycWQwgxarkrU29ZVkazVzy09kXi5siDugI+8ImqF+A1vynkHjhwgrN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f9fcK+NV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MjsM43MQ"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-cbb973e6749so105818a12.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 11:37:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786473421; x=1787078221; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=g6IN6WNOpG4UWSFoaCxgmbPHMP989spnYBSI85Zg3/s=;
-        b=MjsM43MQZ0wv6dQXmmKBoSvgt7Up0nutdu5EN0hxcMMPY/avITXwkX0joHh7gYZlXA
-         erZtVdlBh4uZUCjezWmoIv+wnZXtdjxog3GheE90lIga8JTdzumuV9R/178qqVpO8zqp
-         9Sb6KyAWoW7fXYOMxhmofADM575pgcN6Yi682Cq9jdYIwBH817J8gsGW4XBDgDFWftdQ
-         VJUyeIxDty21Itkt6/GY+rm8U3H6+RftqciTq01LpkAt6hR7sGmZnEKs/POo4U696O0l
-         OiqQYw8S7fIc0685ObI0EPPtE7ibhk0UKlpA72/qf0lqtMc93OCoqJUyCLfqW2X8J+X7
-         B8qw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786473421; x=1787078221;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=g6IN6WNOpG4UWSFoaCxgmbPHMP989spnYBSI85Zg3/s=;
-        b=TQoQ3MMH5YGZ6ZNLWizdniwgd3gQtnV8sFphJFL7c81/8dTp1nFxrW4B27XH7ShRZh
-         y6DqQK+4ABgOxyiyRlGBcX5PmzuWy6XWsEhod2DMftbl+WSVNIReo2PlynEtQ0w8xfoU
-         6r5hIQ5n0UHxpWQb7hI573lqAENh/vm9Mm1ZzuXJy0PshtyCVt6Sv5tzwmAzfNV25JV8
-         PH2pZ1EbhZ6Ijbqp5mmhabe/Z1ceu8r2Rbj5/fIXhfg7omrDO67lqYrmXammOgYPuKNf
-         iNDPjcgQwwyvMjXF+QIO+j693vXHfnV7zCpfWjc0kc9g1C6ChQZKQJwOJ/QOUhJcm0fp
-         pg1A==
-X-Forwarded-Encrypted: i=1; AHgh+RorEnQRbPElLbvcs5axzYk2gTkVZArD/VISaR49XJVAHUuRpLk42M++005LekEPO3EcEvZgxfLTUXSmGbuPrQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywwyx9tTdyqCL6Gqq849nS/43Z4zw7FAA40ydI4ZlIXX9kg/tqZ
-	ack8wB2jMuJMUD6uaU7t9h/7NlKYGUYpPDvRU4aGVXZctcCYG3AYu2+z
-X-Gm-Gg: AR+sD10TVj4KRBBjLmOq0musWEVLZCchMrvW7qZCfwYBRs3LviALUHXDulfJK5sjhwe
-	DFaVJhm2kjpHPT4MpFQP/5ssE3/5F+nCwiCQ+IYdsH+PahnjHfYG960juY/HfLWWCiwGOfP//ZZ
-	sxoAU4v5oGhUoMQG+4pOzYR7X7S8KfArUlLu9BhkHLoy9gstazagmtQ3MUy6oCyoLJekHmSyU1F
-	9uVF3PWSGzAA1BrlKiJP8DexTNphXqH5FG9Go3gDSvc615M7gXc5JZ6pwD6YXNHLRZ/es+RU/Ac
-	BH1AtRNPmXWtc/vrxYFgZ7Gb8uZYL/1N73YgSWeZ2/bW30ZnHaTisybEF6biAcuVXnN32BvFnha
-	ReWSLpuIG03I4y+vYxKNFhj/K9zJEGhTqdJtsYcXl2nDCxx1H0yIG0wWrzVzqI/pyx1fsqxY7yH
-	rcVm+42M7DMezhMBbFV3ywIFWLYrFrRtZWzPkK5lGoLvWSWwVPGOc5WtIePhRg9LzWiXtJYu27k
-	tjgcV8iWb3knFffToW7gBn1DdMTaujpaHA=
-X-Received: by 2002:a05:6a21:4a97:b0:3c3:859b:9178 with SMTP id adf61e73a8af0-3cc2bb0a29amr7579414637.34.1786473420857;
-        Tue, 11 Aug 2026 11:37:00 -0700 (PDT)
-Received: from [10.100.120.121] ([152.193.78.90])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbed8ea1ecesm1380728a12.31.2026.08.11.11.36.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Aug 2026 11:37:00 -0700 (PDT)
-Message-ID: <09fdf1b1-8025-48a7-b479-8edfd625a561@gmail.com>
-Date: Tue, 11 Aug 2026 11:36:56 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f9fcK+NV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64C9D1F00A3A;
+	Tue, 11 Aug 2026 18:51:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1786474329;
+	bh=L0HTQS1LYVWSdc3RimfvMueRkxBKnov+tJfBP1Nzenc=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=f9fcK+NVNWrvcSOcKHy6zfAbJxAzV4H4fy8MVkzolSHyhTXevNA14uYiezSHzn6pQ
+	 ycpaMxR2NK5BhnYOlevG/IFGX9tQA5Zq59bExZRq8ebTHdeuBPIJKdmorpcmlYiJYN
+	 enPNXmLxCznd3cawK4k1uWZ7ls5UQ+kBsVAJbZyI9ASkk1wotZU4MuXOcOSURRiwqg
+	 sT65TPpe9rPAxYbWb9c4r08z7q71qyz1ECpgE74A6BnSnCI7mMzF6uQjafv+S2Jyy3
+	 tECe4u8tzT2Nvo9T8WlyH+ZxIb0wNqskL4SGoz+McXb9NEhgBdQAaCdq0Vli+in/qH
+	 jqXBcNxLA7xiA==
+From: Vinod Koul <vkoul@kernel.org>
+To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
+ Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
+ Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
+ Borislav Petkov <bp@alien8.de>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Daniel Lezcano <daniel.lezcano@kernel.org>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+ Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
+ "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
+ Jonathan Cameron <jic23@kernel.org>, 
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
+ Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
+ Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Mark Brown <broonie@kernel.org>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Matthew Sakai <msakai@redhat.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, 
+ Michael Turquette <mturquette@baylibre.com>, 
+ Mike Rapoport <rppt@kernel.org>, 
+ Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+ Nicolas Palix <nicolas.palix@imag.fr>, 
+ Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
+ Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
+ Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
+ Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>, Will Deacon <will@kernel.org>, 
+ Yazen Ghannam <Yazen.Ghannam@amd.com>, 
+ Sang-Heon Jeon <ekffu200098@gmail.com>
+Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
+ dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
+ dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
+ intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
+ linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
+ linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
+ netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
+In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
+References: <20260723184538.3888637-1-ekffu200098@gmail.com>
+Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
+ with no effect
+Message-Id: <178647430099.1113716.2263974283705757692.b4-ty@kernel.org>
+Date: Wed, 12 Aug 2026 00:21:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: mac80211: defer AP-side FT key upload until
- association
-To: Andrea Covelli <andcov23@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
- linux-wireless@vger.kernel.org,
- Kavita Kavita <kavita.kavita@oss.qualcomm.com>,
- Sai Pratyusha Magam <sai.magam@oss.qualcomm.com>
-References: <20260730161531.3535100-1-andcov23@gmail.com>
- <219ac494-deb2-41f7-a762-7b5e666499e3@gmail.com>
- <20260811173509.179926-1-andcov23@gmail.com>
- <30d659c8-f568-4903-9dc0-1a78e16229ce@gmail.com>
- <20260811182545.256241-1-andcov23@gmail.com>
-Content-Language: en-US
-From: James Prestwood <prestwoj@gmail.com>
-In-Reply-To: <20260811182545.256241-1-andcov23@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13.0
 
-Hi Andrea,
 
-On 8/11/26 11:25 AM, Andrea Covelli wrote:
-> Hi James,
->
->> Another case I forgot to mention is the client will FT roam and
->> immediately start dropping _ALL_ IP traffic (despite the 802.11 layer
->> remaining connected/stable). We've seen this with several vendors and
->> actually had to create a watchdog to monitor for this situation and force
->> a deauth on the client side. I wonder if this is closer to the issue here.
-> Yes, that is much closer to the failure mode I would expect here. The FT
-> reassociation can complete because the initial set_key() failure is not
-> propagated as an association failure. After calling the void
-> wpa_ft_install_ptk() helper on WPA_ASSOC_FT, the caller unconditionally sets
-> sm->ft_completed = 1; there is no success value to check. If that retry also
-> fails, the AP and station can remain associated at the 802.11 state-machine
-> level while the AP has no usable PTK, leaving the protected data path
-> inoperable until a disconnect and reassociation.
->
-> That does not establish that the vendor APs you observed hit this exact
-> mac80211 ASSOC gate; a different key/peer ordering bug, or another data-path
-> problem, could produce the same symptom. For this specific race, the strongest
-> signature would be a successful FT reassociation followed by no working
-> protected data, together with a failed pre-association key installation and a
-> failed or absent post-association retry on the AP.
->
-> Even without useful AP logs, a station-side monitor capture covering the FT
-> exchange through the watchdog-triggered deauthentication could help narrow
-> this down. In particular, protected data continuing to be transmitted and
-> acknowledged at the 802.11 layer without any higher-layer response would be
-> consistent with a key/data-path failure on the AP.
+On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
+> While reading mm/memblock, I found a conditional return where both
+> branches return the same value:
+> 
+> 	err = do_something();
+> 	if (err)
+> 		return err;
+> 	return err;
+> 
+> [...]
 
-This is great to hear. Getting a monitor capture is tricky since its not 
-a consistent problem, but I will try and get this either way.
+Applied, thanks!
 
-I really appreciate the context here, we've been struggling with this 
-issue for years with no help from vendors. This is the biggest break 
-I've gotten.
+[19/36] dmaengine: qcom_hidma: remove conditional return with no effect
+        commit: 04b8c3de13871653a8ecbd9f1adfea4d0694ecfe
 
-Thanks,
+Best regards,
+-- 
+~Vinod
 
-James
 
->
-> Thanks,
-> Andrea
