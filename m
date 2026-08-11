@@ -1,128 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9FC345EBF;
-	Tue, 11 Aug 2026 18:52:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8A6376A19
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 19:28:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786474330; cv=none; b=Pj6/64Q2VQS3MkjT9kau/RWQJbtptxfMqpHJArWkLIKaiUfmvmud+/i3tzsWUZQFaGqntXXh8oaMAD7Iws/4Pot7rRwe4Dt9IG+jquTkF1M9rsilwO1pU6P9NV9m4mwLf3HlIa6TVPkgSVcvT9CutUy3QxDfS2nKYuj9csqGS1w=
+	t=1786476513; cv=none; b=fTHk7H1ihmjoFsC7N3V6S1BS3u6RR7QWLqdNaydrgHojM0VU2lm6XbmPhBnPFwXwgjPxXP7j6fc7iYy3J1IS3rlkrlwrPWFMuJe5oinAFgic5Q9bY1beV6d8t48y17/+uOcUjdAzOxWwJRhYoVjxjNkN4Z7mRV2Bg9ow/dRnQn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786474330; c=relaxed/simple;
-	bh=iG6kolHVo+LhrokzkJn9oo8OafaqsBYZtLW62gK7dbY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=VhFZrjSH07ikb62SMZR70+VlVvcVEDiOHme77qSfitUFPGpXtqnvdWE9P8rdbbBneIIennFPN/bTW+3u5dxgMoDGpxv+o71fLw1iw88qISexVbrujOl5ycWQwgxarkrU29ZVkazVzy09kXi5siDugI+8ImqF+A1vynkHjhwgrN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f9fcK+NV; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1786476513; c=relaxed/simple;
+	bh=sjpcrFYB8d+bC4S7LoKkxpYWX/LF0bafJ7X8YU4y/ww=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bD1NFE6/EyvzSf6Vj02YlB/v480abC03QKEJReoWS8zJBs/6cXXDc5uV/oi5oDHBB4X42ZZ/NNzWIvy+ZSKAJuAb9aCko4dz2Iv4vDl0vGJ+kskR4EEw5nnc35mlbvD5lhaw4pgUO3tRBlsJKbSnYJ23QTHSQ1HbxU/RnFg0RJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=qq7AgghM; arc=none smtp.client-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f9fcK+NV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64C9D1F00A3A;
-	Tue, 11 Aug 2026 18:51:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1786474329;
-	bh=L0HTQS1LYVWSdc3RimfvMueRkxBKnov+tJfBP1Nzenc=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=f9fcK+NVNWrvcSOcKHy6zfAbJxAzV4H4fy8MVkzolSHyhTXevNA14uYiezSHzn6pQ
-	 ycpaMxR2NK5BhnYOlevG/IFGX9tQA5Zq59bExZRq8ebTHdeuBPIJKdmorpcmlYiJYN
-	 enPNXmLxCznd3cawK4k1uWZ7ls5UQ+kBsVAJbZyI9ASkk1wotZU4MuXOcOSURRiwqg
-	 sT65TPpe9rPAxYbWb9c4r08z7q71qyz1ECpgE74A6BnSnCI7mMzF6uQjafv+S2Jyy3
-	 tECe4u8tzT2Nvo9T8WlyH+ZxIb0wNqskL4SGoz+McXb9NEhgBdQAaCdq0Vli+in/qH
-	 jqXBcNxLA7xiA==
-From: Vinod Koul <vkoul@kernel.org>
-To: Julia.Lawall@inria.fr, Alex Deucher <alexander.deucher@amd.com>, 
- Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, 
- Andrew Lunn <andrew@lunn.ch>, Andrew Morton <akpm@linux-foundation.org>, 
- Arkadiusz Kubalewski <arkadiusz.kubalewski@intel.com>, 
- Borislav Petkov <bp@alien8.de>, 
- =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
- Daniel Lezcano <daniel.lezcano@kernel.org>, 
- David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
- Eric Dumazet <edumazet@google.com>, Florian Westphal <fw@strlen.de>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Hans de Goede <hansg@kernel.org>, Hans Verkuil <hverkuil@kernel.org>, 
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, 
- Herbert Xu <herbert@gondor.apana.org.au>, 
- =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
- Jakub Kicinski <kuba@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- Jani Nikula <jani.nikula@linux.intel.com>, Jaroslav Kysela <perex@perex.cz>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Jiri Pirko <jiri@resnulli.us>, 
- "Joerg Roedel (AMD)" <joro@8bytes.org>, Johan Hovold <johan@kernel.org>, 
- Jonathan Cameron <jic23@kernel.org>, 
- Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, 
- Julian Anastasov <ja@ssi.bg>, Leon Romanovsky <leon@kernel.org>, 
- Liam Girdwood <lgirdwood@gmail.com>, Linus Walleij <linusw@kernel.org>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Mark Brown <broonie@kernel.org>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Matthew Sakai <msakai@redhat.com>, 
- Mauro Carvalho Chehab <mchehab@kernel.org>, 
- Maxime Ripard <mripard@kernel.org>, 
- Michael Turquette <mturquette@baylibre.com>, 
- Mike Rapoport <rppt@kernel.org>, 
- Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
- Nicolas Palix <nicolas.palix@imag.fr>, 
- Pablo Neira Ayuso <pablo@netfilter.org>, Paolo Abeni <pabeni@redhat.com>, 
- Ping-Ke Shih <pkshih@realtek.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- Rodrigo Vivi <rodrigo.vivi@intel.com>, Sebastian Reichel <sre@kernel.org>, 
- Shuah Khan <shuah@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
- Simon Horman <horms@verge.net.au>, Stephen Boyd <sboyd@kernel.org>, 
- Steve French <sfrench@samba.org>, Takashi Iwai <tiwai@suse.com>, 
- Thomas Renninger <trenn@suse.com>, Thomas Zimmermann <tzimmermann@suse.de>, 
- Tony Luck <tony.luck@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>, 
- Vadim Fedorenko <vadim.fedorenko@linux.dev>, Will Deacon <will@kernel.org>, 
- Yazen Ghannam <Yazen.Ghannam@amd.com>, 
- Sang-Heon Jeon <ekffu200098@gmail.com>
-Cc: cocci@inria.fr, amd-gfx@lists.freedesktop.org, 
- dmaengine@vger.kernel.org, dm-devel@lists.linux.dev, 
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, 
- intel-wired-lan@lists.osuosl.org, iommu@lists.linux.dev, 
- linux-cifs@vger.kernel.org, linux-clk@vger.kernel.org, 
- linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org, 
- linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org, 
- linux-input@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-media@vger.kernel.org, linux-mm@kvack.org, linux-pm@vger.kernel.org, 
- linux-rdma@vger.kernel.org, linux-rtc@vger.kernel.org, 
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
- linux-wireless@vger.kernel.org, lvs-devel@vger.kernel.org, 
- netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, 
- nouveau@lists.freedesktop.org, platform-driver-x86@vger.kernel.org
-In-Reply-To: <20260723184538.3888637-1-ekffu200098@gmail.com>
-References: <20260723184538.3888637-1-ekffu200098@gmail.com>
-Subject: Re: (subset) [PATCH 00/36] treewide: remove conditional returns
- with no effect
-Message-Id: <178647430099.1113716.2263974283705757692.b4-ty@kernel.org>
-Date: Wed, 12 Aug 2026 00:21:40 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qq7AgghM"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-38e58034d05so84518a91.2
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 12:28:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786476511; x=1787081311; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=0BfcN7LOBZWD+vttsIPj25gnBx710XzvAdMMZWdWWbk=;
+        b=qq7AgghMEdMMgxPXjvaiD0dkuV5gTME57y8ycAm32eEyOp3boIXAiUbA3yT+rhUPwf
+         4iFq8BI3Wv4YuDed4htLEhuVP85kRNMXH4a7BgVUtpwmlu+noeezzmYo0MLWVqct7jAS
+         BMUxNsMC+w+ynDVMoBmuNX8SCeDJFozGWy6ggawfVlUm9lnqt1cu1fSOnh9B3qqFKNZu
+         VJ68G4Bn1pR+x99KFikNEk9NVh67oqIMk5lFwNAdRHICWBBGBQa0Vhv3AdO77QQZxZtY
+         a2nlK99uvfzOc4axUzwJXomO1hAephU1SQXNULi4rweW9yuReg5qwZSh8TtcW6osqmBN
+         VfoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786476511; x=1787081311;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0BfcN7LOBZWD+vttsIPj25gnBx710XzvAdMMZWdWWbk=;
+        b=n49WkUDfCJX2rSLD0BYNiEjLnq8ZDvP4LkiFxtGR5l2y1V8es+lgpKdxv46+vsFnQZ
+         SvqwbVDMmLta/+BLHsfUZO+Gsdbu+dU0xZfRVJR+3AwxX5ntW6JUVV98IwH4uR0EJOUa
+         /J+n/px15BsAEVfy2IOHcLjtvdlPBFcSMxdpQvABPW5ZweADsnXtFZUQ+YP7dgtmU3ak
+         kAlTTF36mXEqsWofj8wqjG62FXiskwgRKSwByVoLzyECHh6IZwX867oitqifH+yp9WIC
+         pzDywCBw7/NkLlsHBuEGlr1S/5vpqj8CeuULZyP37uwDg4QaKAA5qfP3vflutb+3xlgI
+         dSxw==
+X-Forwarded-Encrypted: i=1; AHgh+Ro20GXAjWx6681oHQg50dZDHlWqiRfF02gLAmpa9c1+GYx0PZ0eI0HA4337XuZXpOHMhjUwgBIfiIa3onjdKw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrHFl0AFb69nOS0zN/oo1epRY7W5W2UcrD6Wdnc9aMZ+bV/2hS
+	Wq6vuLUZxFTs8miiQJsw4IoUGv14gDzPqGRsQdqjAZh8zCKsc2BA+QGC
+X-Gm-Gg: AR+sD115iXhfTxgdjQg0+Ufqi7Qcm92Ku3epE6NLEhsFPPAf9rkKfa5MY2y+WaJW28K
+	NjH6X6Y1tnrNw5F6RXsG6mhIHCDxCJKDhSRq5Kex0Nm/PSLIjFB9DWmtLHQM4QqXiCMXoT3UNZV
+	9vDNxRw4Dyt15dIWuIlxQu6zunxWoU0QfNh0KvBRhytsvidt0E168G/JaRNp8YcF1Ej/QJWYeqD
+	UHQR/OKUNe2IwsdYBxPZHs1i/2GIgGPMEMyq7uderU/vKql79mHvv/zycTknJT6th5YeHjlV83L
+	oXvDLz+wM/iyKYnHUo9eyIpVcXfMd7uaJVTDu+SaoksCTkd2u9BvFd/hGgsizi3f8WKk23g5L7K
+	JDKEcyItGoZfFpvDAdhRJXDf5Kgt7Ixvb5Nu51mqjg8LJ++HsvQ2ZV3f7o1Gck7gYkuQBbFQozS
+	R7Dj1gmrij0737hF7Wo6mXyFgm8naGoDtE3gBfgfKuHFxm0GwM2bOt7lK/U938nx29cEm7OHPJ4
+	M8q6gFcFZjxoHH8Gnn6Q6R7ta4zMmrZ1QkpFu8nw5czKthJvR29RG1BG+4hDnl3lk/5/GdLJB1u
+	jxnB2Eus2GEZg3wJpkTyf75lBYcpEiCUoPSOGA==
+X-Received: by 2002:a17:90a:d885:b0:381:bc4c:da5b with SMTP id 98e67ed59e1d1-392f487a046mr2643427a91.18.1786476511329;
+        Tue, 11 Aug 2026 12:28:31 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e35])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-392f8e3f565sm746425a91.13.2026.08.11.12.28.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Aug 2026 12:28:30 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: devicetree@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS)),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv2] dt-bindings: net: brcm,bcm4329-fmac: add nvmem-cells for MAC address
+Date: Tue, 11 Aug 2026 12:28:29 -0700
+Message-ID: <20260811192829.123410-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
+Content-Transfer-Encoding: 8bit
 
+The nvmem-cells and nvmem-cell-names properties are used to supply a
+MAC address to the brcmfmac wireless controller. Nodes such as
+bcm4709-linksys-ea9200.dts fail dtbs_check with:
 
-On Fri, 24 Jul 2026 03:45:02 +0900, Sang-Heon Jeon wrote:
-> While reading mm/memblock, I found a conditional return where both
-> branches return the same value:
-> 
-> 	err = do_something();
-> 	if (err)
-> 		return err;
-> 	return err;
-> 
-> [...]
+    Unevaluated properties are not allowed ('nvmem-cell-names',
+    'nvmem-cells' were unexpected)
 
-Applied, thanks!
+nvmem-consumer.yaml cannot be referenced from the common
+network-class.yaml because it does not constrain the number of entries
+or their names, and not all network devices use the same cell names.
+Each binding that uses nvmem must therefore define its own
+nvmem-cells/nvmem-cell-names constraints, like ethernet-controller.yaml
+and qca,ath9k.yaml already do.
 
-[19/36] dmaengine: qcom_hidma: remove conditional return with no effect
-        commit: 04b8c3de13871653a8ecbd9f1adfea4d0694ecfe
+Add the single-cell, mac-address-only constraints to the
+brcm,bcm4329-fmac binding.
 
-Best regards,
+Assisted-by: opencode:deepseek-v4-flash-free
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: don't use nvmem-consumer.yaml
+ .../bindings/net/wireless/brcm,bcm4329-fmac.yaml           | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+index 81fd3e37452a..88d0099871b1 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm4329-fmac.yaml
+@@ -57,6 +57,13 @@ properties:
+           - pci14e4,4434  # BCM4388
+           - pci14e4,449d  # BCM43752
+ 
++  nvmem-cells:
++    maxItems: 1
++    description: Reference to an nvmem node for the MAC address
++
++  nvmem-cell-names:
++    const: mac-address
++
+   reg:
+     description: SDIO function number for the device (for most cases
+       this will be 1) or PCI device identifier.
 -- 
-~Vinod
-
+2.55.0
 
