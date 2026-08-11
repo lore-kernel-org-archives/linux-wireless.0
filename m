@@ -1,86 +1,51 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.61.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5D9D418340
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 09:08:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2681313546;
+	Tue, 11 Aug 2026 09:11:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.61.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786439317; cv=none; b=I1jyxjHRpsu6yY/3jNmWRimsN6DzhUL/Xnig9djUIwzOAxOwGDQqUz3bzBlvINoSQDqk3IDECJBS/XJJW7PdzHqaXsPwq6nL9eUhwvgN1v2fX/8ma0NWmFE6aQDtQMq0LGH+TK5ukzazBfa0UXBteYTHtzsdEVz0ENsG044iOtw=
+	t=1786439506; cv=none; b=QmBLmoZIiC8fuRUA/xLgUFs+PXB9L1lJ6PjxvIYAZscnaCfiH5KZesvzhgigguE76ZQmF1tLzecCyjDUSLX3IEJZUdgemfXi9ZVI9gcidBRmsYPyp4/DD5KcmOf7Kx6dRxqHe2QqK9ML9XDIgcKORhaFcGvtgaeuUxrzJI/nq6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786439317; c=relaxed/simple;
-	bh=7CbOcwWZ7ZZr53jmxUWNeG8P3y1wnw7lQL+FlVMjxt8=;
+	s=arc-20240116; t=1786439506; c=relaxed/simple;
+	bh=pduLq0xfM1j5vFXj++w3Ljq3jSAnaaIYmtcTGSCxgjo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CP3IxxJCNtif3ULcu6wiK7BLNkU3/4AQi2uW+K29wJd9wm84Kr5lSfw2P5TeptlqL8yw6QjIjfkzm1ndc2JyFOy8P9vGF6MEk3eUwI9yICKnmdXEBYg16KfYDSnAKxRYFZIWuFP7Ke40Z3Pw6fFCON9XnCpL5sAaGXD52CNWbMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=OORMp2yK; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=df9VOvsj; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=MDJgdP/Pdvm4/XugIdIFDBNcl6W17pDijA460cpwEGwUBuQicInQeaum9ZN1RLojJhqPMRKprQwr+htF4TbMe+lxASa42zksGciPIBGYUY1oAHez8lu0/QbMdvwcEmKop43ls8IvOq75A9531aFgPRscH7qXfLVPj72olYwFAIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=hgx0TiHl; arc=none smtp.client-ip=188.68.61.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="OORMp2yK";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="df9VOvsj"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67B6orDs3307992
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 09:08:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	LjUuYXbdt0kh11on79yWHneJJYx9txmfhYypn2EGBjQ=; b=OORMp2yKH/WfTg6A
-	rGNXjxzrLHDLY3+uI6ea1nqX7qpH7qBSjq+GcgIpN+MigoVhsf6on7sKH7asMj0c
-	NvFApJqu/nrpa4SQTckv5X/S5iaebjO/FxfpxX36QMlSNAoKeuxCYJDNcm9SGocf
-	PbjlQkKbc9F6m5flBgc5xGGYT78F5A0QhkOg67jX0DNGcrYGEFpFWMxDgEWX8h4x
-	MU+X57poVt0rVky2P6Cog/llWLzJojqaoCWC7xuw5FYzS1qIMC6WUsiiyfvFMGKb
-	pmo/k33Do3mu3pQcEaaj7aw+LGKPiiYr/1eTTi7ogXfMsHbkrSVxeFjZXt31xJRH
-	JrLfQw==
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4fyjyfu9ff-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 09:08:34 +0000 (GMT)
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-84885a4fcabso3047173b3a.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 02:08:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786439313; x=1787044113; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LjUuYXbdt0kh11on79yWHneJJYx9txmfhYypn2EGBjQ=;
-        b=df9VOvsj/wNNRTZKsKZJZE2NhNv56d6GWaSU/kwCkMFm6+siHRU1iD9O8NkX6TAqNy
-         nEthZHhyT9+lYU5woNgRFbhSZ/YeFCfKQVOT6imSfulOK0BZWPCmnSp2oLOm/GJTrgIp
-         rCCGhelXVABVk5gWPoW2HbaXRTr4YxnDnEq/yPACbsMmB7TcPmcqcUlS75wHgbfBT6gO
-         1uhoaPXwE0DTQNW8ps98ehIwmKVR0/Bp3qhKPLEZhCB2S02CwxNcnaHFAOsT7Lq//GuQ
-         oTaSzTAj40MUrhzPRZv9kF1JPwq90Ktxnm/W7G6vx+BwtcByjNv3B2Y6Cy1BUiORZR+H
-         T0NQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786439313; x=1787044113;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LjUuYXbdt0kh11on79yWHneJJYx9txmfhYypn2EGBjQ=;
-        b=S7rtdrcW+lXPeJVqU4Cpf7576TDB8AoFwS1Po+yWZrdhcGizNQ95fUH9wPNHcmRTjT
-         G+G+KRDb121nLssQRqzGbVMA4fD/0exXKGd96IHIjGe6GqNhQwnIZZB51ER7+Tv/K909
-         L/GINx0lHxC0jqW3HQhGSnwhnxLZcWBXpM+EC/Y6KRnsU1DMTSMzP2MCdI6MesVxVUjE
-         1vnUFEpXkifk1x7mI4g8kZ4hbCRcOM2aFd1AVyp2Pvm+JQfxG9Er3/i8GvEKMXEMEKeB
-         dsY9s7UOLPQTXT83qPFmuZQDDJloVCn+epuy2x2oxGgl9+2Su9a4ZTy/h+lHXL9H4Erw
-         sEzg==
-X-Gm-Message-State: AOJu0YyDWa52YQmXgA4sNtgxg+/BlZ1kqg4Y0t7JgBZcTN0ctx0ijB8V
-	9/5bkUlszTSemclPv79cJnBTL9ZKqjXsMk2hyae5o4Ai3peCFEr23TfppSWg4sH0icReCayq+uM
-	gVbtu5aPycyfUVk+f9OTTga5ZFN2weUMZ5Ql8DTIyTR7HY+euReaubCTbgzGOj2LAi+pdzg==
-X-Gm-Gg: AR+sD12mr/aoG8TkMOOEPpjv8LVf2T0BUIH9PMYMi9rz0898CcHKJAfajPRq7PliXu+
-	DrXaLCfN83pgNvH9Kr6/bdAZefJQeMyC7rddGWhSP7UiIKnOgxmoz2lRhjTNBvKYrHpjytdOtMY
-	7wGZty+nHk2dyJwngVJuTyvQzKYwrrQxF43+RmU78yeO9Xl9JnZG25g/XqcPWLHLV/G1Kxtz1KT
-	eDpbDP/bwtOGltWvG3O8dQxojNrH+zs2fQL+fa+OSZGYURWY/7oEbaoU4NlSlCB2vtGDMLxkuKj
-	SbrQnwnaofw/KHNyBCawFELMOfS+xTUdbw4HEkME2+QM7cuXxFAB+/u/1WkRxXd4VfzdmNlmOl9
-	FEZMRHmeca+KV1nCpstKJzWVr04t/YTBRDKUHaAFuDWdE6sg=
-X-Received: by 2002:a05:6a00:4c98:b0:84c:1cd2:142e with SMTP id d2e1a72fcca58-84fa8877ed2mr1890569b3a.23.1786439313075;
-        Tue, 11 Aug 2026 02:08:33 -0700 (PDT)
-X-Received: by 2002:a05:6a00:4c98:b0:84c:1cd2:142e with SMTP id d2e1a72fcca58-84fa8877ed2mr1890513b3a.23.1786439312577;
-        Tue, 11 Aug 2026 02:08:32 -0700 (PDT)
-Received: from [10.152.206.38] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cbed881a102sm565034a12.0.2026.08.11.02.08.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Aug 2026 02:08:32 -0700 (PDT)
-Message-ID: <c66e03b5-4f49-45e6-ad18-96bb8370cead@oss.qualcomm.com>
-Date: Tue, 11 Aug 2026 14:38:28 +0530
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="hgx0TiHl"
+Received: from mors-relay-8403.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4hK5Tf0lLrz8G6W;
+	Tue, 11 Aug 2026 11:11:34 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1786439494;
+	bh=pduLq0xfM1j5vFXj++w3Ljq3jSAnaaIYmtcTGSCxgjo=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=hgx0TiHlkbXSyFXHiLFytZ0ReEpk6pT6L2OzuA8Gcl1qMhPJgLMXPK2bGjDFNpbBQ
+	 ni50h2NCD1GYhKhG/OESQrtrdarRs/BxlVDMb6nyc7Dizun+K0UDoW99eXMTvlar5h
+	 FOcwNEJ3oOiAHe8FDkmliPeAn+hpMPQOva9+xAQxdEOuq0GFrbD9AWOXVPnd9SCUgQ
+	 tGlJQ3PoYBqVEi+993k2evfTXVn6UqxzUS+5+dlm4x+FC3/8VEeXm17vQ7wgfReNOY
+	 VzKdYKkXAY5SYgBJZEQBFSA4hdlddzEuqOBbiRaDqokmCC2nQ805mkHQZHZa3QkuSk
+	 NlR8hT+dyMSbw==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8403.netcup.net (Postfix) with ESMTPS id 4hK5Tf00Ttz8FsC;
+	Tue, 11 Aug 2026 11:11:34 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hK5Td1RYRz8sb9;
+	Tue, 11 Aug 2026 11:11:33 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 49F0B5FB9F;
+	Tue, 11 Aug 2026 11:11:32 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <18b018d0-7f7d-4975-b0b3-5e3c9f413698@leemhuis.info>
+Date: Tue, 11 Aug 2026 11:11:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -88,213 +53,162 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next] wifi: ath12k: add support to load shared
- firmware on multiPD
-To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
-        ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, jjohnson@kernel.org,
-        quic_kiranv@quicinc.com, baochen.qiang@oss.qualcomm.com
-References: <20260811054316.518494-1-aaradhana.sahu@oss.qualcomm.com>
-Content-Language: en-US
-From: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
-In-Reply-To: <20260811054316.518494-1-aaradhana.sahu@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH wireless] Revert "wifi: mt76: Disable napi when removing
+ device"
+To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>,
+ linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>,
+ Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
+ Bert Karwatzki <spasswolf@web.de>, Devin Wittmayer
+ <lucid_duck@justthetip.ca>, Eric Biggers <ebiggers@kernel.org>,
+ regressions@lists.linux.dev, linux-kernel@vger.kernel.org,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+References: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+X-Enigmail-Draft-Status: N11222
+Autocrypt: addr=linux@leemhuis.info; keydata=
+ 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 MEK4
+In-Reply-To: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: NzVq2gwKqWzk5kmkPvzbLU4zSiEHzRby
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODExMDA3NSBTYWx0ZWRfX5xcNYhLri+xJ
- kgswAYmK5OEWFQYnn1KhS69ZraUxCfc5QxmLIZkWkbj3I7hNIKkU+RV2spzjYMtja9nnnQTF/VW
- 74UfwnyDB4ELMhG0FwVsKJrGK74vlJ8=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODExMDA3NSBTYWx0ZWRfXxiqBHTYX+LPS
- Zo4kqzzBPFXZ2EvnnlUv+c1zGAGkmAABILUog/6Aqd2qtOVfNge8KyIv1ifn+wc6DYvBqQ9PRaR
- e8h7GCbpir5JvQ6nUWLF1Rsn96mY7e+p9h72U1sg1NGYG6G+qtsKxqWJZLRfUXkqEqRxdwBj369
- 8VZdm3L89W1jf0bZ9lxJMFxGiThApO4ZCBYUFCgcl8A2jdYmq9yPj9O6EgRNXhW4UlzQ7bSYh+z
- gVM8W7SJi/+ifhS4x8VsRf8r6w0IsbRAti/AZi+rCOpf7Zv7FSgq83Mca8bZjc/l5i76Qo2bOA4
- RgYX02YJiG/3LuX+Ak3xjLfL3/4Z9Ic49bb+qvNdl9f7LJMykoU4U+NMvagC7ixcXPW0xFrufQg
- lepBjgVOmFQuzKGGUVwERJPhVLpsK5D9aYh5bG4zlzt15mB9iVBME/Dp5wPzAddzvDfh32pCqxT
- DdzvzQBefZfulnt65TA==
-X-Proofpoint-GUID: NzVq2gwKqWzk5kmkPvzbLU4zSiEHzRby
-X-Authority-Analysis: v=2.4 cv=Zd4t8MVA c=1 sm=1 tr=0 ts=6a7ae692 cx=c_pps
- a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=EUspDBNiAAAA:8 a=dUED-PE9xrSGjoPRRc8A:9 a=QEXdDO2ut3YA:10
- a=OpyuDcXvxspvyRM73sMx:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-10_06,2026-08-10_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 impostorscore=0 malwarescore=0 suspectscore=0 adultscore=0
- priorityscore=1501 spamscore=0 phishscore=0 bulkscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608110075
+X-PPP-Message-ID: <178643949291.1778080.8629527780920957825@mxe9fb.netcup.net>
+X-NC-CID: uzt+PSFyfq7cjCp0QSeR89ltQkT0z8wf4jqMtxuhVJK9Vra3dw4=
 
+On 8/4/26 14:00, Mikhail Gavrilov wrote:
+> This reverts commit 13b7e6a96a005c656d38f3da51581deaf9866375.
+> 
+> That commit made mt76_dma_cleanup() disable every RX NAPI instance before
+> deleting it, to silence WARNs in __netif_napi_del_locked() and
+> page_pool_disable_direct_recycling() seen when unloading mt7915e with an
+> MT7916.
+> 
+> On mt7921e and mt7925e the same instances are already disabled earlier,
+> in mt7921e_unregister_device() and mt7925e_unregister_device(), which
+> only afterwards call mt792x_dma_cleanup() -> mt76_dma_cleanup().  Each
+> instance is therefore disabled twice, and napi_disable() is not
+> idempotent: on return it leaves NAPIF_STATE_SCHED and NAPIF_STATE_NPSVC
+> set, so the second call spins in usleep_range() forever, waiting for bits
+> that nobody will clear.
+> 
+> mt7921_pci_shutdown() and mt7925_pci_shutdown() reuse the remove path, so
+> this is hit on every reboot, poweroff and module unload.  It is silent:
+> the stuck task keeps sleeping and rescheduling, so neither the hung task
+> detector nor the lockup detectors fire, and the last line on the console
+> is "systemd-shutdown[1]: Rebooting."
+> [...]> Dropping the two driver-side loops instead was tried and
+rejected: with
+> them gone, the RX poll can reach mt76_token_release() via
+> PKT_TYPE_TXRX_NOTIFY and mt7921_mac_tx_free() while
+> mt76_connac2_tx_token_put() is running idr_destroy(&dev->token) outside
+> token_lock, which is a use-after-free rather than a hang [1].
+> 
+> Revert for now, so that reboot, poweroff and module unload work again.
+> The WARNs on mt7915e are a less severe problem than an unbootable
+> machine, and fixing them belongs in the drivers that delete the NAPI
+> instances, where each one can pick a point that is safe for its own
+> teardown order, rather than in the shared mt76_dma_cleanup().
 
+What's the status of this? Looks like things stalled.
 
-On 8/11/2026 11:13 AM, Aaradhana Sahu wrote:
-> IPQ5332 platform uses a MultiPD architecture where multiple firmware
-> instances share common read-only code segments. The driver currently
-> loads only the per-UserPD firmware, which leaves the shared read-only
-> firmware unloaded.
-> 
-> Add support for loading the shared read-only firmware once before the
-> UserPDs are powered up. The shared segment contains common code that is
-> identical across all UserPDs and reduces the total firmware memory
-> requirement.
-> 
-> Store the reserved memory mapping in struct ath12k_ahb_rproc_info so it can
-> be shared by all UserPDs and mapped only once. Keep the mapping valid
-> across UserPD power cycles, and unmap it when the last UserPD is removed.
-> 
-> Shut down the shared firmware from the rproc deconfiguration path when the
-> last UserPD is removed.
-> 
-> Also, pass NULL for the reloc_base parameter because the driver uses fixed
-> memory regions configured through device tree and does not need the
-> adjusted physical address after relocation.
-> 
-> Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.6-01275-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+> Reported-by: Bert Karwatzki <spasswolf@web.de>
+> Closes: https://lore.kernel.org/all/20260724151419.26014-1-spasswolf@web.de/
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221818
+
+FWIW, I think it would be good to get this revert into 7.2 final, as
+there were more reports about this:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=221848
+https://bugzilla.kernel.org/show_bug.cgi?id=221862
+
+And this is likely the same issue, too:
+https://bugzilla.kernel.org/show_bug.cgi?id=221831
+
+I've also seen multiple people mention it in a matrix channel dedicated
+to Fedora's kernel.
+
+Ciao, Thorsten
+
+> Link: https://lore.kernel.org/all/20260730050428.GA73812@sol/ [1]
+> Signed-off-by: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
 > ---
->   drivers/net/wireless/ath/ath12k/ahb.c       | 166 +++++++++++++++++---
->   drivers/net/wireless/ath/ath12k/ahb.h       |   9 ++
->   drivers/net/wireless/ath/ath12k/wifi7/ahb.c |   3 +
->   3 files changed, 157 insertions(+), 21 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
-> index 0fc55c9169e1..3985f4e1c067 100644
-> --- a/drivers/net/wireless/ath/ath12k/ahb.c
-> +++ b/drivers/net/wireless/ath/ath12k/ahb.c
-> @@ -347,35 +347,60 @@ static void ath12k_ahb_stop(struct ath12k_base *ab)
->   	ath12k_ce_cleanup_pipes(ab);
->   }
->   
-> +static int ath12k_ahb_get_fw_load_region(struct ath12k_base *ab)
-> +{
-> +	struct ath12k_ahb *ab_ahb = ath12k_ab_to_ahb(ab);
-> +	struct ath12k_ahb_rproc_info *rproc_info = ab_ahb->rproc_info;
-> +	struct device *dev = ab->dev;
-> +	struct resource res;
-> +	int ret;
-> +
-> +	if (rproc_info->mem_region)
-> +		return 0;
-> +
-> +	ret = of_reserved_mem_region_to_resource_byname(dev->of_node, "q6-region", &res);
-> +	if (ret)
-> +		return ret;
-> +
-> +	rproc_info->mem_phys = res.start;
-> +	rproc_info->mem_size = resource_size(&res);
-> +	rproc_info->mem_region = memremap(rproc_info->mem_phys, rproc_info->mem_size,
-> +					  MEMREMAP_WC);
-> +	if (!rproc_info->mem_region) {
-> +		ath12k_err(ab, "unable to map memory region: %pa+%zx\n",
-> +			   &res.start, rproc_info->mem_size);
-> +		rproc_info->mem_phys = 0;
-> +		rproc_info->mem_size = 0;
-> +		return -ENOMEM;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void ath12k_ahb_put_fw_load_region(struct ath12k_ahb_rproc_info *rproc_info)
-> +{
-> +	memunmap(rproc_info->mem_region);
-> +	rproc_info->mem_region = NULL;
-> +	rproc_info->mem_phys = 0;
-> +	rproc_info->mem_size = 0;
-> +}
-> +
->   static int ath12k_ahb_power_up(struct ath12k_base *ab)
->   {
->   	struct ath12k_ahb *ab_ahb = ath12k_ab_to_ahb(ab);
-> +	struct ath12k_ahb_rproc_info *rproc_info = ab_ahb->rproc_info;
->   	char fw_name[ATH12K_USERPD_FW_NAME_LEN];
->   	char fw2_name[ATH12K_USERPD_FW_NAME_LEN];
->   	struct device *dev = ab->dev;
->   	const struct firmware *fw, *fw2;
->   	unsigned long time_left;
-> -	phys_addr_t mem_phys;
-> -	struct resource res;
-> -	void *mem_region;
-> -	size_t mem_size;
->   	u32 pasid;
->   	int ret;
->   
-> -	ret = of_reserved_mem_region_to_resource_byname(dev->of_node, "q6-region",
-> -							&res);
-> +	ret = ath12k_ahb_get_fw_load_region(ab);
->   	if (ret)
->   		return ret;
->   
-> -	mem_phys = res.start;
-> -	mem_size = resource_size(&res);
-> -	mem_region = devm_memremap(dev, mem_phys, mem_size, MEMREMAP_WC);
-> -	if (IS_ERR(mem_region)) {
-> -		ath12k_err(ab, "unable to map memory region: %pa+%zx\n",
-> -			   &res.start, mem_size);
-> -		return PTR_ERR(mem_region);
-> -	}
-> -
->   	snprintf(fw_name, sizeof(fw_name), "%s/%s/%s%d%s", ATH12K_FW_DIR,
->   		 ab->hw_params->fw.dir, ATH12K_AHB_FW_PREFIX, ab_ahb->userpd_id,
->   		 ATH12K_AHB_FW_SUFFIX);
-> @@ -400,11 +425,13 @@ static int ath12k_ahb_power_up(struct ath12k_base *ab)
->   
->   	/* Load FW image to a reserved memory location */
->   	if (ab_ahb->scm_auth_enabled)
-> -		ret = qcom_mdt_load(dev, fw, fw_name, pasid, mem_region,
-> -				    mem_phys, mem_size, &mem_phys);
-> +		ret = qcom_mdt_load(dev, fw, fw_name, pasid, rproc_info->mem_region,
-> +				    rproc_info->mem_phys, rproc_info->mem_size,
-> +				    NULL);
->   	else
-> -		ret = qcom_mdt_load_no_init(dev, fw, fw_name, mem_region,
-> -					    mem_phys, mem_size, &mem_phys);
-> +		ret = qcom_mdt_load_no_init(dev, fw, fw_name, rproc_info->mem_region,
-> +					    rproc_info->mem_phys, rproc_info->mem_size,
-> +					    NULL);
->   	if (ret) {
->   		ath12k_err(ab, "Failed to load MDT segments: %d\n", ret);
->   		goto err_fw;
-> @@ -428,8 +455,9 @@ static int ath12k_ahb_power_up(struct ath12k_base *ab)
->   		goto err_fw2;
->   	}
->   
-> -	ret = qcom_mdt_load_no_init(dev, fw2, fw2_name, mem_region, mem_phys,
-> -				    mem_size, &mem_phys);
-> +	ret = qcom_mdt_load_no_init(dev, fw2, fw2_name, rproc_info->mem_region,
-> +				    rproc_info->mem_phys, rproc_info->mem_size,
-> +				    NULL);
->   	if (ret) {
->   		ath12k_err(ab, "Failed to load MDT segments: %d\n", ret);
->   		goto err_fw2;
-> @@ -877,6 +905,7 @@ static struct ath12k_ahb_rproc_info *ath12k_ahb_rproc_info_alloc(struct ath12k_b
->   	rproc_info->rootpd_booted_by_driver = false;
->   	rproc_info->userpd[ab_ahb->userpd_id - 1] = ab_ahb;
->   	rproc_info->num_userpd = 1;
-> +	rproc_info->shared_fw_loaded = false;
->   	init_completion(&rproc_info->rootpd_ready);
->   	ab_ahb->rproc_info = rproc_info;
->   
-> @@ -961,6 +990,76 @@ static int ath12k_ahb_boot_root_pd(struct ath12k_base *ab)
->   	return 0;
->   }
->   
-> +static int ath12k_ahb_load_auth_shared_fw(struct ath12k_base *ab,
-> +					  struct ath12k_ahb_rproc_info *rproc_info,
-> +					  const char *fw_name, u32 pasid)
-> +{
-> +	int ret;
-> +
+> Sending this because the regression is now in its second week with four
+> independent reporters, and the two-part alternative (this revert plus
+> napi_disable() added inside mt7915_unregister_device()) needs MT7916
+> hardware that I do not have.  I deliberately left the mt7915 side out;
+> Nicolas is best placed to do it, since MT7916 is what he reported
+> against.
+>  
+> Verified on 7.2.0-rc5 with KASAN and lockdep enabled, MT7922 / mt7921e:
+> before the revert 'modprobe -r mt7921e' hangs (backtrace above, taken
+> with sysrq-w) and the machine never gets past "Rebooting."; after it,
+> module unload and reload, reboot and poweroff all work again.
+>  
+> The hang was independently bisected to the same commit by Bert Karwatzki
+> on MT7925 and reproduced by Devin Wittmayer on MT7927 and MT7922, and
+> Eric Biggers saw it on mt7925e as well.
+> 
+>  drivers/net/wireless/mediatek/mt76/dma.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+> index 322041859217..f8c2fe5f2f58 100644
+> --- a/drivers/net/wireless/mediatek/mt76/dma.c
+> +++ b/drivers/net/wireless/mediatek/mt76/dma.c
+> @@ -1189,10 +1189,7 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
+>  	mt76_for_each_q_rx(dev, i) {
+>  		struct mt76_queue *q = &dev->q_rx[i];
+>  
+> -		if (!mt76_queue_is_wed_rro(q)) {
+> -			napi_disable(&dev->napi[i]);
+> -			netif_napi_del(&dev->napi[i]);
+> -		}
+> +		netif_napi_del(&dev->napi[i]);
+>  		mt76_dma_rx_cleanup(dev, q);
+>  
+>  		page_pool_destroy(q->page_pool);
 
-nit: move this empty line below after the declaration part.
-
-> +	const struct firmware *fw __free(firmware) = NULL;
-
-
-With that nit addressed
-
-Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
