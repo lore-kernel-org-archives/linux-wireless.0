@@ -1,142 +1,194 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-06.mail-europe.com (mail-06.mail-europe.com [85.9.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9F6640EBB0
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 08:27:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79A233321AA
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 08:50:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.9.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786436835; cv=none; b=fePs7dNTFUc+mr0Ad1XtK2df93k5bugxyKhOGfuB8t3CU5nR3DJhy5Xvvt4/SP3kwN7mDf7xZq9RE4lWEtn0LYn9Rag92m+4U/ezUHCkkcOiqCiNTtIDpzbkjKxSnNah5YXMRgQoHZoDQ9Y02XC5kXNgpIX+Bc1P07N4sbUotdA=
+	t=1786438232; cv=none; b=Dx7ExjHJsiQgTdaQNFiSd3XjIowFe8iTVCrDxv7Ap+3jR+Uu85P5u336bKD+skRnB47g42ONCtW/pHkrk+BwWiH2aZFKmZdUd/FyHBcIrprRadYKAHdt3GPfVVxKUYg6E/+SyG4/n/MCfwiJG1n3b6TDNFwoduwCym6FoHfPJmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786436835; c=relaxed/simple;
-	bh=ok4xpuQbwDIqZ3qpbUpj7vT70ITusOHkGyK7XwCc8+w=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=SFe1buBZmwuhOFwlVjTTi6w2Uq5w9EjLgr0AK1ziWcXljaSiIhxAjbb1gcoob6Awnje4NE0Ll1K5Q5zhzzPuzUPsVVSwRiVAUQWkDLwLS8wgNACPlv6RXaWEymG1WQuqh4Gy1HMYg67Rk3sGHIjnRJW1Lw2NRqKdTORHVhO+d2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ohm9RiNb; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786438232; c=relaxed/simple;
+	bh=u0j/Ab3YUM5nDQoYY0xmAfrEx6wwqUw9VX9jyKMNDHM=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=b88EEbz7wZ2YVVmC7QfrXnJxTJ4qW/5Ci2uBuxXCV1exNgMMdOju+0SFrHhIUuCZck2ZNpyaj/7WEkdNi6UfqKK0jF4wbTY+PDB8r32/oJr0CmueE3QEr52LJm3mhPMHp+I5NOY0htG5NAkTFVPhonvaALFK39XqZMZqW5HHEpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=mAVTQhOm; arc=none smtp.client-ip=85.9.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ohm9RiNb"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-49802c418b5so26547985e9.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 01:27:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786436832; x=1787041632; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=3WNN0jBnqjNkMd8rlfEtTd2nbjLXRpa7uvLdlshlheE=;
-        b=Ohm9RiNb9d7EF0IcEz4SKAyDBFnJEB/RbFNtXxK+Ed2mlDkTStJaW2WQJvgUjX6Xv0
-         MXnB7MJ6/+LdrSXesd7kVUT4znetD2PVjac3c7KFupKgUfKqNPJmmm3QoVugnvuxfn5P
-         CEDFG/Sim2KdANFd+fllqz9ClQZuqwW9Rwr86mWy2xaChysP8DrNvELRJL7o2O6w0Rpd
-         sWs5iVReC/cjkldMLZS41f6iwXPZTvB0mDpEhZD5HjATJ0kYjOCPpjQ7IXvOwrxUspOy
-         lSa0eVxtwzWVf+l15EyvI4xFV/9Uw5nsrCTAhKwrtRUUxwUkL5B81XNmS1S1+qaULR4a
-         uRVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786436832; x=1787041632;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=3WNN0jBnqjNkMd8rlfEtTd2nbjLXRpa7uvLdlshlheE=;
-        b=JW+rY/PZvnGI7UAuzLN5zrMdbw5LxMZ2C/CL9A2XwX1FaBr31hcDlxbARHnEmqVNMv
-         Y42uJu2CbBUr8DQ0LmSPs/caTluTtgIHQ5jDyV6av33vEHMKtuBY5NZXt5LTQSQUvO5l
-         vVmguPTQ56Q3SkEPVD036Ly72zs4on3vqWMwpNmYHj7yEDtSloXoFRNFwTZqAYIGfbsG
-         7GL5V/UmNu2qPMKBomgq7fjj8/IpHKCdb2EB9BWgPEMIi5yxld11BzMo008g6/est5ou
-         yqV7yxZ1KTyphSNlUnbNpByYssmJoXuD5H3/1VbnjBoNbY0vaSFHGD4vqYwbQ0zX/d6c
-         tNsg==
-X-Forwarded-Encrypted: i=1; AHgh+Rr6jdwyLGzcrmvA9nMrUS+fgCVsnQ3Xi833njrrwh2XeKDDjYiCM5LvLDxa+R2v+/CkV4fuopQnv9/VS2L0Zw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz1kfUH++Ci693eX7Y/bpHWVmUuSAQzyxbZt/x9IXvJuRAtEsjd
-	JpR4QWa0CJTUKPoe9OGkQMZE713WBxvCl+/LccycIOMJF5aYdCm2M/+B
-X-Gm-Gg: AR+sD123OACEuFLnba/nyglxgOQ8s0bxrbdy7gFE2UAWMh7aIZwtbfF2McSdjIUauVc
-	QK30uS/LnqnHOAbSzjZjOKvQ0kxPpc4RzlvUri+fokNMdz4D/IpxtrUtD5xLGhYjBwqwE1swmCf
-	VSkGBn27nvVUE2CPGHcK+RUumY31+Mp4yLOX9h6SI+hh76nVnfTHjjKzsi4aIhvn8B0kaLq2oyF
-	wlstmiXCTGu5ALfdfbMegE9dXnk7ubjVjDZfRCQMrNC/O27aGPByXbrKtJZNRfPWAyVcKrG5zm4
-	D6jQak/+tMRibJCckVLzUG4ig60jCS9CMu63bxOyZPey+4hNhCIQoSSKt7RBRjjidkU/wXN4Thb
-	sksb1EPxXbUntYqPNpRu+UOpqmwbUQ1Lpk3Uwa8nBNevVXpDq4gazeqUgd/4EnVvVyrf2I4xMBa
-	2IUHCbtwyQqm4KAiLMilYF6b8zxjnUy0LwB71cC7VBiVnmAwAuX5dB9AMqmH+/bR9zymAm5sQKN
-	sG3MS/oFoYiaqwttvAUAYmw6rzWSvO6m1TmufftOla+uiPTq5O8Zh1Esf70ZOYcl5HWyOyKUplb
-	YnPGxxfcZP0gWld8kNtxIguzoHeyb8DY7P0hhKx+eM+al1np7wMgcUvbGAbppTQSGO9Y
-X-Received: by 2002:a05:600c:4f49:b0:499:726c:d658 with SMTP id 5b1f17b1804b1-4997913bf43mr15555825e9.19.1786436831868;
-        Tue, 11 Aug 2026 01:27:11 -0700 (PDT)
-Received: from localhost.localdomain (dynamic-2a02-3100-a133-e401-bc8e-d36c-2d08-c5e0.310.pool.telefonica.de. [2a02:3100:a133:e401:bc8e:d36c:2d08:c5e0])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49977e89d68sm21853155e9.3.2026.08.11.01.27.10
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 11 Aug 2026 01:27:11 -0700 (PDT)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211@lists.linux.dev,
-	brcm80211-dev-list.pdl@broadcom.com,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: brcmfmac: fix lost 802.1x TX completion wakeup
-Date: Tue, 11 Aug 2026 10:27:02 +0200
-Message-Id: <20260811082702.44521-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="mAVTQhOm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1786438213; x=1786697413;
+	bh=B/BWd9ahgdTSLtwMVSEXT4QdTD2JB0E70QdMnhGX31c=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=mAVTQhOmpGXHl9WFki5svzlo53v3pvIixXkQAM64zsqqQPFUFvC06Re/sbCVKoA9M
+	 jwHipIYc+gVUAyiPTDJgyv85nO50+DZer/gYdXYDd6dmPuJMG08Vui7FBbfM75Z8M4
+	 KnZunRuQILdMjtvN2Mz4vxbeNJ4AnF2T7S/mcLp701m+8zDMYeaUJevSHNwLPcIebX
+	 MbzJ0AFmp5mHI7wkCBMxzC0i3ZO9Ikzs+pK85r5qktEUORIyeQvAX7nBd+tpQVAiMx
+	 y1H11bQYerWgCFUlu/WiCnEQkct14mCsc2bECkGHgMfg4aEYWoYVY5ue9n/8lb0O4N
+	 x6DzmwhUdnF5A==
+Date: Tue, 11 Aug 2026 08:50:03 +0000
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+From: Ryan Leung <untilscour@protonmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
+Subject: [PATCH v4] wifi: mt76: mt7996: add thermal zone device registration
+Message-ID: <20260811-mt7996-thermal-zone-v4-1-9ca715a8ae1f@protonmail.com>
+Feedback-ID: 184418679:user:proton
+X-Pm-Message-ID: 7ecc38f1bebdc3774029a95f1e69a3493d063ea2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-brcmf_txfinalize() decrements pend_8021x_cnt before a lockless
-waitqueue_active() check. atomic_dec() does not order the decrement
-against the check.
+Register the mt7996 phy as a thermal zone sensor using
+devm_thermal_of_zone_register() so that device tree thermal-zones
+nodes can reference the Wi-Fi chip as a temperature source. This
+allows the kernel thermal governor to control external cooling
+devices such as PWM fans based on Wi-Fi chip temperature.
 
-The waiter can therefore observe a nonzero count while the waker observes
-an empty queue, losing the final wakeup and delaying key installation
-until the 950 ms timeout.
+Registration is non-fatal: -ENODEV is returned when no
+thermal-sensors DT property references this device, which is the
+expected case on platforms without a thermal zone configured.
 
-Add smp_mb__after_atomic() to order the decrement before the queue
-check. wait_event_timeout() provides the matching barrier. LKMM confirms
-that this forbids the lost-wakeup outcome.
+Unregister the thermal zone together with the existing cooling device
+when the phy is torn down, and on the hwmon registration failure path
+in the same init routine, so neither is left registered against a phy
+that is about to be freed. Clear both pointers after unregistering,
+since this init-time failure path can now run before the normal
+teardown path also unregisters the same phy, and without clearing them,
+that second call would unregister already-freed objects.
 
-Fixes: 21fff75d2fb6 ("brcmfmac: use wait_event_timeout for 8021x pending count")
-Assisted-by: Claude:claude-fable-5
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+Signed-off-by: Ryan Leung <untilscour@protonmail.com>
 ---
-LKMM results with herdtools7 7.58:
+Changes in v4:
+- Clear phy->tzone/phy->cdev in mt7996_unregister_thermal() after
+  unregistering, making it idempotent.
+- Link to v3: https://patch.msgid.link/20260810-mt7996-thermal-zone-v3-1-ae=
+9d7cd6cde1@protonmail.com
 
-  C brcmf-wakeup-buggy
-  { atomic_t cnt = ATOMIC_INIT(1); }
-  P0(atomic_t *cnt, int *wq)
-  {
-  	int r0;
-  	atomic_dec(cnt);
-  	r0 = READ_ONCE(*wq);
-  }
-  P1(atomic_t *cnt, int *wq)
-  {
-  	int r1;
-  	WRITE_ONCE(*wq, 1);
-  	smp_mb();
-  	r1 = atomic_read(cnt);
-  }
-  exists (0:r0=0 /\ 1:r1=1)
+Changes in v3:
+- Unwind cdev/tzone registration in mt7996_thermal_init() on hwmon registra=
+tion failure.
+- Link to v2: https://patch.msgid.link/20260810-mt7996-thermal-zone-v2-1-56=
+3dfbbf9175@protonmail.com
 
-The fixed variant adds smp_mb__after_atomic() immediately after
-atomic_dec().
+Changes in v2:
+- Take phy->dev->mt76.mutex around mt7996_mcu_get_temperature()
+- Unregister phy->tzone explicitly in mt7996_unregister_thermal() before th=
+e phy is freed
+- Link to v1: https://patch.msgid.link/20260722-mt7996-thermal-zone-v1-1-88=
+896e6e9985@protonmail.com
+---
+ drivers/net/wireless/mediatek/mt76/mt7996/init.c   | 40 ++++++++++++++++++=
++++-
+ drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h |  1 +
+ 2 files changed, 40 insertions(+), 1 deletion(-)
 
-  Observation brcmf-wakeup-buggy Sometimes 1 3
-  Observation brcmf-wakeup-fixed Never 0 3
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/init.c b/drivers/net=
+/wireless/mediatek/mt76/mt7996/init.c
+index fb635a092584..0ac8424a7d99 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/init.c
+@@ -234,17 +234,42 @@ static const struct thermal_cooling_device_ops mt7996=
+_thermal_ops =3D {
+ =09.set_cur_state =3D mt7996_thermal_set_cur_throttle_state,
+ };
+=20
++static int mt7996_thermal_get_temp(struct thermal_zone_device *tz, int *te=
+mp)
++{
++=09struct mt7996_phy *phy =3D thermal_zone_device_priv(tz);
++=09int val;
++
++=09mutex_lock(&phy->dev->mt76.mutex);
++=09val =3D mt7996_mcu_get_temperature(phy);
++=09mutex_unlock(&phy->dev->mt76.mutex);
++=09if (val < 0)
++=09=09return val;
++
++=09*temp =3D val * 1000;
++=09return 0;
++}
++
++static const struct thermal_zone_device_ops mt7996_tz_ops =3D {
++=09.get_temp =3D mt7996_thermal_get_temp,
++};
++
+ static void mt7996_unregister_thermal(struct mt7996_phy *phy)
+ {
+ =09struct wiphy *wiphy =3D phy->mt76->hw->wiphy;
+ =09char name[sizeof("cooling_deviceXXX")];
+=20
++=09if (phy->tzone) {
++=09=09devm_thermal_of_zone_unregister(phy->dev->mt76.dev, phy->tzone);
++=09=09phy->tzone =3D NULL;
++=09}
++
+ =09if (!phy->cdev)
+ =09=09return;
+=20
+ =09snprintf(name, sizeof(name), "cooling_device%d", phy->mt76->band_idx);
+ =09sysfs_remove_link(&wiphy->dev.kobj, name);
+ =09thermal_cooling_device_unregister(phy->cdev);
++=09phy->cdev =3D NULL;
+ }
+=20
+ static int mt7996_thermal_init(struct mt7996_phy *phy)
+@@ -275,14 +300,27 @@ static int mt7996_thermal_init(struct mt7996_phy *phy=
+)
+ =09phy->throttle_temp[MT7996_CRIT_TEMP_IDX] =3D MT7996_CRIT_TEMP;
+ =09phy->throttle_temp[MT7996_MAX_TEMP_IDX] =3D MT7996_MAX_TEMP;
+=20
++=09phy->tzone =3D devm_thermal_of_zone_register(phy->dev->mt76.dev,
++=09=09=09=09=09=09   phy->mt76->band_idx, phy,
++=09=09=09=09=09=09   &mt7996_tz_ops);
++=09if (IS_ERR(phy->tzone)) {
++=09=09if (PTR_ERR(phy->tzone) !=3D -ENODEV)
++=09=09=09dev_warn(phy->dev->mt76.dev,
++=09=09=09=09 "failed to register thermal zone %d: %ld\n",
++=09=09=09=09 phy->mt76->band_idx, PTR_ERR(phy->tzone));
++=09=09phy->tzone =3D NULL;
++=09}
++
+ =09if (!IS_REACHABLE(CONFIG_HWMON))
+ =09=09return 0;
+=20
+ =09hwmon =3D devm_hwmon_device_register_with_groups(&wiphy->dev, name, phy=
+,
+ =09=09=09=09=09=09       mt7996_hwmon_groups);
+=20
+-=09if (IS_ERR(hwmon))
++=09if (IS_ERR(hwmon)) {
++=09=09mt7996_unregister_thermal(phy);
+ =09=09return PTR_ERR(hwmon);
++=09}
+=20
+ =09return 0;
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h b/drivers/n=
+et/wireless/mediatek/mt76/mt7996/mt7996.h
+index 2a0cdb56f822..39fa25a562e5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mt7996.h
+@@ -372,6 +372,7 @@ struct mt7996_phy {
+=20
+ =09struct ieee80211_sband_iftype_data iftype[NUM_NL80211_BANDS][NUM_NL8021=
+1_IFTYPES];
+=20
++=09struct thermal_zone_device *tzone;
+ =09struct thermal_cooling_device *cdev;
+ =09u8 cdev_state;
+ =09u8 throttle_state;
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 ++
- 1 file changed, 2 insertions(+)
+---
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+change-id: 20260722-mt7996-thermal-zone-a1de7cb1d728
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index dad6f4563d146..b192947ab4735 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -555,6 +555,8 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+Best regards,
+-- =20
+Ryan Leung <untilscour@protonmail.com>
 
- 	if (type == ETH_P_PAE) {
- 		atomic_dec(&ifp->pend_8021x_cnt);
-+		/* Order the decrement before waitqueue_active() */
-+		smp_mb__after_atomic();
- 		if (waitqueue_active(&ifp->pend_8021x_wait))
- 			wake_up(&ifp->pend_8021x_wait);
- 	}
---
-2.53.0
+
