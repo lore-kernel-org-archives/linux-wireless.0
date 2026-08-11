@@ -1,72 +1,71 @@
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996543F6C3E
-	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 21:40:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12F9C41DDE1
+	for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 21:46:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786484431; cv=none; b=SrSGj6L7+8tQR0pSf4KFc5BfugFJkyzDTicX9PT5GBFBRVkc34V5ixTWandU3S4WMGrAanWiKNrhjS7mTzoB4efSO5tQJduGcwV32EBDdk4q1iprPi55zLUN/AjF1YmYlGtG65ophe9/iHElsgdQ1R/Xi5wkvkjVIcN1zvVJekc=
+	t=1786484771; cv=none; b=g96cRApVAdmM28MXAzk7pe/5CVoz+hN9vMjjMoUci35kcAPZJ4kr1mZFGorra6tx47pYKWNfSS9rO7WiJl9UVT3gqMzuWjdLDxu0MNfqrx1tNYsP1NZgm6dcbTtC5m0KaQidPrGCcRUJU4B7+6uPiGP1RQjBwhBkGDIi/rC5Mic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786484431; c=relaxed/simple;
-	bh=Ll78vpwObE588vHxzO5Tvc+xexqmBp/RM0FOMnlk7Jc=;
+	s=arc-20240116; t=1786484771; c=relaxed/simple;
+	bh=M6+x42Ra9mZV5aXqeupA2cbnRBucXuDnlPx1Q6OKhFU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Pnm6hYjXYdna1ABIpEQWfa/apiMCR1Wwp2YBdE0D9url3IS6kLACkvSYC/dQ7iCa4hNLQ37VaQlXl7aMgVAHVeemVK9CXoEmf76c+95/3tIzWOK+WdHT/YrSD1DcLmVyIvucH74Gg92lT1ZnOnZINIvySAqowkacdRqsOhqmDh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=ZEVcBM6t; arc=none smtp.client-ip=209.85.215.179
+	 Content-Type:Content-Disposition:In-Reply-To; b=HbRyBM/aFOJwOvA8GeGuecMHIfoQfso1Iq9wHnDjdkjVu3Hv/H4pnmm+/G9Zr8wZYw7DoU2p/iBqUpZt1wU2FXnEF96JxxMa7dHALg0JmPnRXn8MPqC+2CkZdYihNLnZ5ZVD0R0NNJVJRdJAb3YmFlKDn18B0mhB0h0XSYOyiVQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=VXQQQgAv; arc=none smtp.client-ip=209.85.210.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZEVcBM6t"
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-cbedb88aa34so205667a12.3
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 14:40:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="VXQQQgAv"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-84faf87d19dso383661b3a.3
+        for <linux-wireless@vger.kernel.org>; Tue, 11 Aug 2026 14:46:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1786484429; x=1787089229; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1786484769; x=1787089569; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=mwQhH4XS3un6SW0fojWkls2gU/V4w8kR3cIWs4sWaGQ=;
-        b=ZEVcBM6tQa4IbaaOJm0lApxPykZSUZudauaV083i7eMGctvlXyuL35ilxe1br3Rxhl
-         lwCOOgGWrYOAmcLrxYGI6PCGl9lv6XS3+b4BZnajF6mz2KIpHbw/6XByvyTR8CZIzsMy
-         UBJvKY4vBc3V0LGYtZddEr/hM6dEwmtbFte5o=
+        bh=S0KVLMdXm3gz895ibuakjkga/MkVR3K4Q+M5sDfPkq8=;
+        b=VXQQQgAvRwdiw0bxVKduum1tUEa+krLf3W+LsMHL1fjEmSw49BH35cXCxxVuW5MJ2x
+         Tsrn8755PRWPtZUxJGcGUb9FCXUCf5+yWv2tOL14p1ehXtJwudDNOkqViJ/2Rs29k52M
+         ngSMtVa6DALlf1fLaxOOfvrpSXDpvk6fKKyR4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786484429; x=1787089229;
+        d=1e100.net; s=20251104; t=1786484769; x=1787089569;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=mwQhH4XS3un6SW0fojWkls2gU/V4w8kR3cIWs4sWaGQ=;
-        b=hOeXhLZCE+98hRpMEodx6EpxNCacJirQ1OD5rc4jAGfohKJpyiQ0zbTWixcE6qZkut
-         l/ar8xi5QeTMtoU16gaX1yylACgGtvp8OSzRwxj06h/D2CXTBNkWIBU0sRWEKVCXiE00
-         ZeSu/NkQR83A72GVIr9Dp3GPZdsq8ouArKlamZwgi9RQ+3p9dE2Cg5I2Gug2+p6DHE5g
-         dB/30SkBFoXnZzSGdejK9dHVZriDajT8UyX6OghicmFCf6/Iz8c8ZY7dpAU8pXD4FuSO
-         wTJL0ZqxSvTOx2pX4w2JiIUpcXuVVf/A/1E3WMxBkGlI04v14+oqNA0d7UcE7+E6BOdN
-         Tj9A==
-X-Gm-Message-State: AOJu0YxAjTDICg1V194540oV7qq1PySm19R3b8FIOdq+ETa+qWRqjnEF
-	6AR9ZocLDUW2u1g9mK1fGNvD/hwcQjGA589O+WEKzl9bKAChVM//RHkhkqNZ5HSUKw==
-X-Gm-Gg: AR+sD12SdwODwrDXdR9Tagc/S1eIFZ1O5opHv8u6bRBHvM7BoBNCibFgpAbj37ApgU5
-	up+AU1mp+DeUG73fs56p5okZvtVNKxCRLtqgrZUBQrm1YQKDJ5CL9evcKx0mHHAZ6UkMWq1hubv
-	gjXvjdYvszZgM0OW5volo8Y57i2mxNpskwy47gfupFCpiblRq+W6euz5sfH3EbEimDSzfVHyo0x
-	Jar37NNvChn0w/va1uB55SC5Q5I9zG0BST6+Vpw1ghAdQ+i82e/xFcMgLeGCdF98ajaZGx6VSne
-	CpO1NTTLy1K1ufIItSwSd2i0lD+4SwYbA6ejtl372SvA6Z7yt05hAxqKFlWQhTHYPVdgaJLJpT9
-	0zC4BOgElcWpdtnl15w0QWN24AP4uCqHWsqU9dCvam9O0aBpdERjXEKMegSgZdyu2f64MW0N7AB
-	uz2Tibo/HPSEFCEPKD1ejjLz6kgz61qfdvRAbReXwDZYfehFP6VO9az8P0zpLNbkIEDxz1iouRM
-	7Gzy/enTklCO+M7EbLAyLxFY+0=
-X-Received: by 2002:a05:6a21:a0b:b0:3c3:791e:5e0c with SMTP id adf61e73a8af0-3cc2ba5a436mr9230650637.19.1786484428882;
-        Tue, 11 Aug 2026 14:40:28 -0700 (PDT)
+        bh=S0KVLMdXm3gz895ibuakjkga/MkVR3K4Q+M5sDfPkq8=;
+        b=Hym5XcG8zkU1I0iM0O9OAHzenN7DcjghcDNo/VtTfK+POiwNJQaPz7blCNzDPm5jOS
+         +c3w7LDl+P4I8h6mNL0eGxrTNoHQdGIw3hC+UP00E1E8QanQo0kfkqtVIvYoQr1ikdwS
+         JtIrHwRiLjhXy+2GfDRVM51JFjMOicvlvMYrwJneQiIgoN/gxShzEjVX77owN+E/hKUB
+         uSqe6Nh6GRg60GCo0kpPbKSYZY+dA+tDctu3WvZcc7TmRqPX+Sxn4zB3PUkOKcYHlR+I
+         LLWsXSWTl52wVwmHtAj9iDp1SanKsYDUYPzwgsE4m74DGGL+VsTmyckDgPde0ynpo8uI
+         Ek2A==
+X-Forwarded-Encrypted: i=1; AHgh+RodEy5/Wf+gW4QNhczonNocGDp/hhNIl7lGsBqieB5ORtXtZjVtwdpK23wUgtcioWwrEzYytWXCu3F6in2n5w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyKagUS9N2YOu3bE/2l9rsCgfiJGJHbIWwz4wEzAoWbG7OuPz3+
+	MJgPJUn5ymEz/dFfndSuGgfMx/PrZ8MAu4OYaToeKbfnbT4E/EJiZYSwtu68fA7jTw==
+X-Gm-Gg: AR+sD10QAehjLCl18flS1ecfhHd9ZN+vghMQNbZguDAv3dcB2H4xEsBUR9f+wfXWWcf
+	+IN6+95YBzhxOq/oCGiKMUmFrKv0LlKK3gaDD4DZZN7RmJ6FP1SBXkB6wZhMTKPJUc/DFoaln5D
+	XyeBm/D+fpDJH2UVznBYU5kah97u91iFEv/bar/s894eObl/8O/u6WKb34CE3vvdZfJmUYsGVWY
+	kfxxVJTNTeBaY3o8tKC+vhvc3oTNmVjdlfX0rjlIiCbsMz0p5azTutcN0OBwO3B9Xx8LlCBuoCv
+	fG5bYwOc6NCmTT3SfoxL3mYx5zdenSxsAzFt6lDrwNHeuixtdgkdz33WPbCGgb4vk3RfvAbUYpP
+	61XyXzZK7ctuI/7tMB7oWbhsXme+SU6ntsjCEQiz3tGL94uesSRJkHUENfheFE64Ja3fC4/MTb+
+	kiZn2ZaU5CrLiPU4k3CH9h93ZH9z8LV2x2f+Ree9qkjehuHrvMot57LlFekTiSZRuJ2L5IPqRUb
+	iX7KikPvVIVrtAXUuUuL4y8RVM=
+X-Received: by 2002:a05:6a21:a49:b0:3c4:1c9f:d7e with SMTP id adf61e73a8af0-3cc2b77a9fdmr9612504637.6.1786484769271;
+        Tue, 11 Aug 2026 14:46:09 -0700 (PDT)
 Received: from localhost ([2a00:79e0:2e7c:8:79fa:d268:80cb:4947])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-31cf3d0517csm2929719eec.9.2026.08.11.14.40.27
+        by smtp.gmail.com with UTF8SMTPSA id a92af1059eb24-14124451180sm2624868c88.1.2026.08.11.14.46.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Aug 2026 14:40:28 -0700 (PDT)
-Date: Tue, 11 Aug 2026 14:40:26 -0700
+        Tue, 11 Aug 2026 14:46:08 -0700 (PDT)
+Date: Tue, 11 Aug 2026 14:46:06 -0700
 From: Brian Norris <briannorris@chromium.org>
-To: Zhao Li <enderaoelyther@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	johannes@sipsolutions.net, francesco@dolcini.it,
-	linville@tuxdriver.com, patila@marvell.com, cluo@marvell.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3] wifi: mwifiex: validate action frame fixed fields
-Message-ID: <anuWyiPQja6_5vly@google.com>
-References: <20260723011013.76968-1-enderaoelyther@gmail.com>
- <20260723202257.688-1-enderaoelyther@gmail.com>
+To: Doruk Tan Ozturk <doruk@0sec.ai>
+Cc: francesco@dolcini.it, kees@kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3] wifi: mwifiex: validate HT/VHT capability and
+ operation IE lengths
+Message-ID: <anuYHjoUCW5rSVyt@google.com>
+References: <20260802124426.87779-1-doruk@0sec.ai>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -75,98 +74,178 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260723202257.688-1-enderaoelyther@gmail.com>
+In-Reply-To: <20260802124426.87779-1-doruk@0sec.ai>
 
-Hi,
+Hi Doruk,
 
-On Fri, Jul 24, 2026 at 04:22:57AM +0800, Zhao Li wrote:
-> mwifiex_process_mgmt_packet() accepts an rx_pkt_length as small as a
-> four-address struct ieee80211_hdr plus the two-byte firmware length prefix.
-> After stripping the prefix, mwifiex_parse_mgmt_packet() can receive a
-> buffer equal to sizeof(struct ieee80211_hdr).
+On Sun, Aug 02, 2026 at 02:44:26PM +0200, Doruk Tan Ozturk wrote:
+> mwifiex_update_bss_desc_with_ie() records raw pointers to the HT
+> Capabilities, HT Operation, VHT Capabilities, VHT Operation, 20/40 BSS
+> Coexistence and Operating Mode Notification elements taken straight out
+> of a beacon/probe-response buffer, without checking that each element is
+> long enough for the fixed-size structure that later consumers read. The
+> buffer is a tight kmemdup() of the on-air IEs (beacon_buf_size ==
+> ies->len), so a truncated element placed last leaves the stored pointer
+> one past the end of the allocation.
 > 
-> For action frames, the parser reads the category byte immediately after
-> that header and, for a public action frame, reads the following action
-> code byte without verifying that either field is present. A minimal frame
-> therefore reads one or two bytes beyond the RX buffer.
+> At association time these pointers are dereferenced at fixed offsets
+> regardless of the on-air length: mwifiex_cmd_append_11n_tlv() memcpy()s
+> sizeof(struct ieee80211_ht_cap) (26 bytes) from bcn_ht_cap and reads
+> bcn_ht_oper->ht_param, and mwifiex_cmd_append_11ac_tlv() memcpy()s
+> sizeof(struct ieee80211_vht_cap) (12 bytes) from bcn_vht_cap and reads
+> bcn_vht_oper->chan_width. A nearby AP (rogue / evil-twin; an open SSID
+> needs no credentials) advertising a BSS with a truncated HT/VHT cap
+> element therefore triggers a slab out-of-bounds read on the victim's
+> association attempt. This out-of-bounds read is the primary issue.
 > 
-> Require the category and public action-code fields before reading them.
-> mwifiex parses the firmware four-address layout before removing addr4,
-> so add ETH_ALEN to the standard IEEE80211_MIN_ACTION_SIZE() offsets.
+> For the HT-Cap copy the over-read bytes are additionally placed into the
+> outgoing association request, so a limited amount of adjacent heap memory
+> can leak over the air. In station mode this is small (single-digit
+> bytes), because mwifiex_fill_cap_info() rewrites most of the copied
+> HT-Cap before transmission; the leak is a secondary effect.
 > 
-> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
-> Fixes: 72e5aa8d2a6d ("mwifiex: support for parsing TDLS discovery frames")
+> mwifiex_set_sta_ht_cap() has the same missing-length pattern: in uAP mode
+> it reads two bytes of ieee80211_ht_cap.cap_info from a
+> cfg80211_find_ie(WLAN_EID_HT_CAPABILITY) result in a client association
+> request without checking the element length, a 1-2 byte out-of-bounds
+> read (used only to select an A-MSDU size, not leaked).
+> 
+> Reject the frame with -EINVAL when any of these elements is shorter than
+> the structure the driver later reads, matching the length validation the
+> FH/DS/CF/IBSS parameter-set cases in the same beacon parser already
+> perform. mwifiex_set_sta_ht_cap() returns void, so there the too-short
+> element is skipped instead.
+> 
+> The length tested in mwifiex_set_sta_ht_cap() is ht_cap_ie->len, which
+> is attacker-controlled on-air data, so it is only used as a bound.
+> cfg80211_find_ie() walks the IE stream and returns NULL for an element
+> that claims to be longer than the data it was given, so any element it
+> does return has len bytes of payload inside ies_len. The new test is
+> therefore a minimum-size check before the fixed-size cap_info read, not
+> an assumption that len is trustworthy beyond the bounds cfg80211 has
+> already enforced.
+> 
+> No dynamic reproducer: mwifiex is a fullmac driver for Marvell hardware
+> with no mac80211_hwsim equivalent, so this was confirmed by source and
+> structure-offset analysis, and compile-tested only.
+> 
+> Found by 0sec automated security-research tooling (https://0sec.ai).
+> 
+> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
 > Cc: stable@vger.kernel.org
-> Link: https://lore.kernel.org/all/66f148d83eb9f0970b9abbccc85d1b61244e54ad.camel@sipsolutions.net/
-> Link: https://lore.kernel.org/all/20260708195911.84365-8-enderaoelyther@gmail.com/
-> Link: https://lore.kernel.org/all/20260723011013.76968-1-enderaoelyther@gmail.com/
-> Assisted-by: Codex:gpt-5
-> Assisted-by: Claude:opus-4.8
-> Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
-
-I think this is another one of those cases where we're working hard to
-validate against the firmware-reported packet length, but we're not
-actually checking that the reported length fits within the real skb
-size (skb->len).
-
-If you want to follow up on that, that could be worth doing in
-mwifiex_process_mgmt_packet().
-
+> Assisted-by: 0sec:multi-model
+> Signed-off-by: Doruk Tan Ozturk <doruk@0sec.ai>
 > ---
-> Changes in v3:
-> - Drop the redundant parser-local header check; the caller already
->   guarantees the complete four-address header after removing the two-byte
->   firmware prefix.
 > 
-> Changes in v2:
-> - Express the action-field sizes with IEEE80211_MIN_ACTION_SIZE(),
->   accounting for the firmware four-address layout.
-> ---
->  drivers/net/wireless/marvell/mwifiex/util.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+> Changes in v3 (per Francesco Dolcini's review of v2):
+>  - Commit message only; the diff is unchanged from v2.
+>  - Spell out why ht_cap_ie->len is safe to test against in
+>    mwifiex_set_sta_ht_cap(): cfg80211_find_ie() already rejects an
+>    element that claims to be longer than the data it was given, so len
+>    is used purely as a minimum-size bound, not as a trusted value.
+>  - Restore the note (dropped in v2) that there is no dynamic
+>    reproducer and that this is source-analysis plus compile-tested
+>    only, answering the "did you test this" question on v1.
 > 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-> index 7d3631d21223..e54a86ecaa33 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/util.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/util.c
-> @@ -317,9 +317,15 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
->  
->  	switch (stype) {
->  	case IEEE80211_STYPE_ACTION:
-> +		if (len < IEEE80211_MIN_ACTION_SIZE(category) + ETH_ALEN)
+> Changes in v2 (per Francesco Dolcini's review of v1):
+>  - Return -EINVAL on a too-short element instead of break, matching the
+>    FH/DS/CF/IBSS and VENDOR_SPECIFIC cases in the same function.
+>    mwifiex_set_sta_ht_cap() returns void, so there it stays a skip.
+>  - Switch the Assisted-by trailer to 0sec:multi-model.
+> 
+> v1: https://lore.kernel.org/all/20260709100800.7026-1-doruk@0sec.ai/
+> v2: https://lore.kernel.org/all/20260715185543.14478-1-doruk@0sec.ai/
+> 
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 12 ++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/util.c |  2 +-
+>  2 files changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 97c0ec3b822e7..22031faba057f 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -1384,6 +1384,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  							bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_HT_CAPABILITY:
+> +			if (element_len < sizeof(struct ieee80211_ht_cap))
 
-IEEE80211_MIN_ACTION_SIZE() sorta implies we're using 'struct
-ieee80211_mgmt' in here. But we're using 'struct ieee80211_hdr' and the
-4-address format, in fact.
+I think this is more clearly-correct when you use this form:
 
-That disconnect then means you have to awkwardly account for the extra
-address by adding ETH_ALEN.
+			if (element_len < sizeof(*bss_entry->bcn_ht_cap))
 
-All in all, I kinda prefer the style of v1, where you directly reference
-the size of the actual things we're using (sizeof(*ieee_hdr)). It has
-the downside of the open-coded "+ 1" and "+ 2", but that's how the
-existing parsing works, so IMO it's still better to match that.
+Same for most/all of these. See especially the note for
+WLAN_EID_OPMODE_NOTIF below.
 
-(I do see Johannes suggested this in v1, but I'm not sure I agree, now
-that I see the result.)
+> +				return -EINVAL;
+>  			bss_entry->bcn_ht_cap = (struct ieee80211_ht_cap *)
+>  					(current_ptr +
+>  					sizeof(struct ieee_types_header));
+> @@ -1392,6 +1394,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  					bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_HT_OPERATION:
+> +			if (element_len < sizeof(struct ieee80211_ht_operation))
+> +				return -EINVAL;
+>  			bss_entry->bcn_ht_oper =
+>  				(struct ieee80211_ht_operation *)(current_ptr +
+>  					sizeof(struct ieee_types_header));
+> @@ -1400,6 +1404,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  					bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_VHT_CAPABILITY:
+> +			if (element_len < sizeof(struct ieee80211_vht_cap))
+> +				return -EINVAL;
+>  			bss_entry->disable_11ac = false;
+>  			bss_entry->bcn_vht_cap =
+>  				(void *)(current_ptr +
+> @@ -1409,6 +1415,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  					      bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_VHT_OPERATION:
+> +			if (element_len < sizeof(struct ieee80211_vht_operation))
+> +				return -EINVAL;
+>  			bss_entry->bcn_vht_oper =
+>  				(void *)(current_ptr +
+>  					 sizeof(struct ieee_types_header));
+> @@ -1417,6 +1425,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  					      bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_BSS_COEX_2040:
+> +			if (!element_len)
+> +				return -EINVAL;
+>  			bss_entry->bcn_bss_co_2040 = current_ptr;
+>  			bss_entry->bss_co_2040_offset =
+>  				(u16) (current_ptr - bss_entry->beacon_buf);
+> @@ -1427,6 +1437,8 @@ int mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
+>  				(u16) (current_ptr - bss_entry->beacon_buf);
+>  			break;
+>  		case WLAN_EID_OPMODE_NOTIF:
+> +			if (!element_len)
 
-> +			return -1;
-> +
->  		category = *(payload + sizeof(struct ieee80211_hdr));
->  		switch (category) {
->  		case WLAN_CATEGORY_PUBLIC:
-> +			if (len < IEEE80211_MIN_ACTION_SIZE(action_code) + ETH_ALEN)
-> +				return -1;
-> +
->  			action_code = *(payload + sizeof(struct ieee80211_hdr)
-
-If we end up going back to 'sizeof(*ieee_hdr)' approach, I'd suggest
-changing this too, for consistency.
+Are you sure "non-zero" is the right check here? This field is used as
+'struct ieee_types_oper_mode_ntf'. If you used the sizeof(*...)
+suggestion above, I don't think we'd fall into that type mismatch trap.
 
 Brian
 
->  					+ 1);
->  			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
+> +				return -EINVAL;
+>  			bss_entry->oper_mode = (void *)current_ptr;
+>  			bss_entry->oper_mode_offset =
+>  					(u16)((u8 *)bss_entry->oper_mode -
+> diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
+> index 7d3631d212236..844223c04e2ef 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/util.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/util.c
+> @@ -721,7 +721,7 @@ mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
+>  
+>  	ht_cap_ie = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies,
+>  					     ies_len);
+> -	if (ht_cap_ie) {
+> +	if (ht_cap_ie && ht_cap_ie->len >= sizeof(struct ieee80211_ht_cap)) {
+>  		ht_cap = (void *)(ht_cap_ie + 1);
+>  		node->is_11n_enabled = 1;
+>  		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
 > -- 
-> 2.50.1 (Apple Git-155)
+> 2.43.0
 > 
