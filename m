@@ -1,110 +1,176 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [185.244.194.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B2C841D12C;
-	Wed, 12 Aug 2026 11:58:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.244.194.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6692243C054
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 12:29:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786535913; cv=none; b=h75LgX3JBj3xVcGOEsGdmNF2kTREC5vvJHmpUmE8bUigqUVrsDBAeZbIQDRzFGly91QBfVwkq5JLhJiQ7r3h8n2A/tQMb4AK3U8KV70lPn8lSqB3S7ptp0D1wW/83fBdZjSpIyiEFh9sfcB5qz+0LETYoB0X6fy93AbXNR4Ipm4=
+	t=1786537744; cv=none; b=rq6aghlRUCIfxVtjE0fSYbiAoLLV31iDCb65JCtlJi3dZY61jBMQ4xMA762dBXjN3fF12zrSnJubXaUQRSN9WxPizssgOYvGoN+d8bgflwgXOwWRZhczyZ4SHXtNe7N0PXurl7SESpB8l9fcrZTPBZiwUrJCZah5NEUe/vQLnuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786535913; c=relaxed/simple;
-	bh=bvmb/TiVePQoacyNeg/EPqKiK1zhRGjv56Pw0yKl1ro=;
-	h=Message-ID:Date:MIME-Version:From:Subject:Cc:To:Content-Type; b=Si9X7Kq+7bXpGLLrOe0Vf00svyn5azLl2ZeJdOyUlDb8FcKTSK9Ps6zqrxhCiE4QR21o9QDzvq/m+YNbLOrQaMAyn08nk61f8YqVDAGMQpNPU+KZS2pPX2n/m68TjI0ohePBt1N5/wFKDryjWpWYIOQ5pB5y3TqFJbIVwpaKlYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=dGO+XS8p; arc=none smtp.client-ip=185.244.194.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1786537744; c=relaxed/simple;
+	bh=f1pOTQ2VjuAxnQ9jHMFr0GMzUif++/1BFdvI2UGAn34=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NUFM8EQhv0CzvvA/YHBtgK//bY5dRy1MaUKIujdrBfW+BwfP2jf5qodRNFfx9+2qDpkB+g7Z4kQX/lpty0jvck/WoekSBb/7o0B+aAeEZRNfXP0+6HXQt2FAeMcDAAGH5JdYv7WgmvqOCXgE1oZJqq4vAM9Bp1rSVc6rp4cgHWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jM64Fc88; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="dGO+XS8p"
-Received: from relay01-mors.netcup.net (localhost [127.0.0.1])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hKn6y71pDz975C;
-	Wed, 12 Aug 2026 13:57:46 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1786535867;
-	bh=bvmb/TiVePQoacyNeg/EPqKiK1zhRGjv56Pw0yKl1ro=;
-	h=Date:From:Subject:Cc:To:From;
-	b=dGO+XS8pj4A9/os5e6AyArwGHyKLPUo3EmyqtG5lmEWNGAr2/LUeAZkdc2dIuLirH
-	 EoM4YhRh7hQeh79a8k6p0XRjA0M8zF0IPJmchegA2V9QK7g8H5FXW8ahS++JK5YUia
-	 kDmCa+l9NWZ13KanM7NNT8aczltPUsmbJ9dthgpPTspVMnl656CXHPrtm15hZl8a/Y
-	 uqSy6FzOclUlAmLNVyJ+f828dbIvWzQ8ljlpr3EXyM9OX8uZgF2T+w3N5VCgYNNOlG
-	 aGwHC3ZlxlshfUD4e94M+B8SxrFn2+YDIO4IBTHHoNB5W2yBmQ8HNXiYw4bm5Lr1Yb
-	 nT/MM1Fx/1ebQ==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by relay01-mors.netcup.net (Postfix) with ESMTPS id 4hKn6y6JDVz7xHY;
-	Wed, 12 Aug 2026 13:57:46 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hKn6x5YWHz8sZg;
-	Wed, 12 Aug 2026 13:57:45 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id 7C2555F960;
-	Wed, 12 Aug 2026 13:57:40 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <7e66ca09-fa70-4a3c-948a-0c46b268655c@leemhuis.info>
-Date: Wed, 12 Aug 2026 13:57:38 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jM64Fc88"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4954a32cf1eso3936675e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 05:29:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786537740; x=1787142540; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NVmTqF598AY6DSdqutGI1TCovgwbqSdTjZQhudqgbiw=;
+        b=jM64Fc883Wzgy0vLlX0x3A+xT0Yp6xp9Q1yn/h/mZLPWjsE88QdkVV1tG0Yc9DQHlh
+         MAURqCDvfn03X2MniIsa3AXGM7cQqFxM2tSlHHedzQ6xOh7WKf3UyVJFtSiWcbA0U9FL
+         ING+okbtMk2JzZsO1Tsz3UfzuRaB+zwwGl7+MH8qi9vLUjuFgkvu09J1Rva4ABQo0U1s
+         5WStX4hMOHzBK676dppxBcLALpDWnF3s22XF+GnRdNFqimFncrtbtZDdqnL8ZRFO28SK
+         VsF6f42ckmMXS6m2J6icnPUGJL6BtZtDf3uMGviWLYvWzxfBh4VyEaeIz+pnvSyZ5Otj
+         fBEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786537740; x=1787142540;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=NVmTqF598AY6DSdqutGI1TCovgwbqSdTjZQhudqgbiw=;
+        b=Yf/Povwi8cIQsCp+Ey3eCdUMqznV8BtpBLHBxZSaClOONQKCpI5ILGgStLkipkPphb
+         QpYniPBxb2/rvTIfrDujrIJ/F0va7q+/bHG29sK0G2Iv10ve4t3RhuEF0qB0m4PhI6wn
+         d30m157QIxkp0pCbQydFdzysGtHTPPk6arkS6PJzHBOrDEWwgqo537zvC7sdG4mJ+fP/
+         HA2Jwzgui/fu4YEOY9QQbuIAwVlNyC+xVRBtrQ/MMVNpRXTmneplPEYfX2zDzcztU077
+         HvZiBWc8Ql5gkHu3PFZ1/aPkkJOXLxJhCHBM2rYsPg3uGlRGQjRNCW4MUuOaINPwARxH
+         pRsg==
+X-Forwarded-Encrypted: i=1; AHgh+Rp48b/ob6TzaNPivkaQ4DDV7wH1StJ92pY1hi01EWP02YBxf6vzM+bua+u9vFqjvt8hBTV/oJ5kWLr+wwxVoA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx8LC/DK+fcoBfqNvYiqxeAiOAaUuFNmwOC8AUsXFxT+VqsK8GO
+	OTRlHPnkTtONGtyOxNnrZ/VxlZ8NRFJuoInMnwclqWUbKe57CzNzmUCW
+X-Gm-Gg: AR+sD10U5+RDdZta1bA14910TxTrxBaVSUuBjqiwI7/0WC/QAeu5KkUYdsKp8/CW5xA
+	dfbSQ5SKdBQRiA6bynOdhz6GQ9s2m2wgWjOUNmffPSt0VUvsMAGanivinW/klbhvY7X7o10m3Vq
+	WCwnMYIJ5cqsYf9r8XwEsbSFF3CgnV6MYs7aLiPtun5BLl/Ko/ff8EhauXgobttQnGyex18XeTU
+	wMahXujQoxTajQZzNO/yDMKp2aQyG5+gTCBzMgvJDlObQO9zNN70+RCzZS2UW1g38BQ4GWJc8AB
+	6bISYe9lshVS7SyvMFvZgGfrUTSU7y7hi3wab/9W1/KNFNxUoGSJduyculxzwCsU6YYq6ZMiJkR
+	pfnnqrEXb1+Bwo0xrl11MXo25dW0lfc1UyAngcON5Lid09hkLM81Z20hY9O7PYCckOV0dvXDs4g
+	nc1dFh6pHENnNZui6QLFnibAK21fstJUAgPqSpUdATdpUx2dUPagknrzqbzS6tqPdSBP8kTiVC1
+	P3A
+X-Received: by 2002:a05:600c:8214:b0:495:63e4:7f78 with SMTP id 5b1f17b1804b1-4997c0fe741mr70766445e9.10.1786537740313;
+        Wed, 12 Aug 2026 05:29:00 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4997ad2d03fsm39471045e9.2.2026.08.12.05.28.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2026 05:28:59 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next] wifi: rtw88: usb: do not log transfers lost to a mode switch
+Date: Wed, 12 Aug 2026 14:28:58 +0200
+Message-ID: <20260812122858.3317577-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-Subject: wifi fixes that might be good to have in 7.2 final
-Cc: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>,
- Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
- Linux kernel regressions list <regressions@lists.linux.dev>,
- LKML <linux-kernel@vger.kernel.org>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
- netdev <netdev@vger.kernel.org>, Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Eric Dumazet <edumazet@google.com>, "David S. Miller"
- <davem@davemloft.net>, Johannes Berg <johannes@sipsolutions.net>,
- Paolo Abeni <pabeni@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
- Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-PPP-Message-ID: 
- <178653586107.1439299.11653628339469674671@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: 7C2555F960
-X-NC-CID: 1NwMoK8I3ZVzD21OQrVtGqKGwuDzwniGHhZtSLj/0tLP6qHZePQ=
+Content-Transfer-Encoding: 8bit
 
-Hi nt76, wifi driver and net maintainers, just a quick FYI:
+An RTL8822BU or RTL8822CU is asked to come back as a USB 3 device by
+rtw_usb_switch_mode_new(), added in commit 315c23a64e99 ("wifi: rtw88:
+usb: Support USB 3 with RTL8822CU/RTL8822BU"). The chip powers off its
+MAC and leaves the bus while the last control transfers of that sequence
+are still in flight, so they complete with -EPROTO and the driver reports
+them as errors:
 
-I think it would be good if the following revert from Mikhail (CCed)
-could make it to 7.2, as the 7.2-rc regression it fixes was reported
-multiple times over the past few weeks -- at least seven times iirc:
+  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+  rtw_8822bu 1-1:1.0: write register 0xc4 failed with -71
+  usb 1-1: USB disconnect, device number 2
+  usbcore: registered new interface driver rtw_8822bu
+  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
 
-Revert "wifi: mt76: Disable napi when removing device"
-https://lore.kernel.org/lkml/20260804120004.523934-1-mikhail.v.gavrilov@gmail.com/
-https://patchwork.kernel.org/project/linux-wireless/patch/20260804120004.523934-1-mikhail.v.gavrilov@gmail.com/
+Register 0xc4 is REG_PAD_CTRL2 and the access losing the race is the
+rtw_write32_set() that ends the switch sequence, a few milliseconds before
+the disconnect. Which transfer gets caught varies from boot to boot: 0xc4
+is in the "always on" section, so every write to it is followed by a second
+one from rtw_usb_reg_sec(), and sometimes that is the one that fails:
 
-See that lore thread linked above for the details. The revert is sitting
-on the list for a week now afaics; there was an earlier attempt to fix
-this, but it was abandoned due to problems.
+  rtw_8822bu 1-1:1.0: rtw_usb_reg_sec: reg 0x4e0, usb write 1 fail, status: -71
 
-Note, as mentioned by Mikhail in that thread: that revert apparently
-reintroduces some WARNs which a separate patch is supposed to fix that
-Nicolas posted yesterday after coming back from vacation:
+Nothing is wrong here. The device re-enumerates, probes again and registers
+normally, which is why rtw_usb_probe() already treats a non-zero return
+from rtw_usb_switch_mode() as "Not a fail". On a USB 2 only port the
+switch can never succeed, so the message returns on every boot and
+everyone using such a port has to work out that it is harmless.
 
-https://patchwork.kernel.org/project/linux-wireless/patch/20260810154923.32546-1-nicolas.cavallari@green-communications.fr/
+Mark the window in which the chip is expected to leave the bus and skip the
+error reports for transfers that fall into it. The flag is never cleared
+because the switch always ends in a re-probe with a fresh struct rtw_usb.
 
-Ciao, Thorsten
+Tested with an RTL8822BU (0x7392:0xb822) on a USB 2 root port of a TI AM62,
+where the message appears exactly once per boot. With the patch both lines
+are gone while the disconnect, the re-enumeration and the second firmware
+load are unchanged. The tested build was 6.12.103 carrying the same change;
+the hunks differ only in context.
 
-
-P.S.: I wonder if "wifi: mt76: mt7921: refactor regd update to fix
-recursive mutex deadlock") (which is as 1f83a8378eb26c in net-next /
-https://lore.kernel.org/linux-wireless/20260629083543.153564-1-jb.tsai@mediatek.com/
-) would be good to have in 7.2, too. From the description of the 7.2-rc
-regression Devin Wittmayer gave in
-https://lore.kernel.org/linux-wireless/20260804185118.19705-1-lucid_duck@justthetip.ca/
-it sounds a lot like it might be wise to have in 7.2. To quote:
-
-> [...] wpa_supplicant blocks while
-> holding the wiphy mutex, so NetworkManager, the cfg80211 workqueue and
-> new ssh sessions pile up behind it and the machine has to be reset
+Signed-off-by: Mehmet Fide <mehmet.fide@gmail.com>
+---
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -64,7 +64,7 @@
+ 				 RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
+ 				 t_reg, 0, data, t_len, 500);
+ 
+-	if (status != t_len && status != -ENODEV)
++	if (status != t_len && status != -ENODEV && !rtwusb->switching_mode)
+ 		rtw_err(rtwdev, "%s: reg 0x%x, usb write %u fail, status: %d\n",
+ 			__func__, t_reg, t_len, status);
+ }
+@@ -90,7 +90,7 @@
+ 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      RTW_USB_CMD_REQ, RTW_USB_CMD_READ, addr,
+ 			      RTW_USB_VENQT_CMD_IDX, data, len, 1000);
+-	if (ret < 0 && ret != -ENODEV && count++ < 4)
++	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
+ 		rtw_err(rtwdev, "read register 0x%x failed with %d\n",
+ 			addr, ret);
+ 
+@@ -140,7 +140,7 @@
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+ 			      RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
+ 			      addr, 0, data, len, 500);
+-	if (ret < 0 && ret != -ENODEV && count++ < 4)
++	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
+ 		rtw_err(rtwdev, "write register 0x%x failed with %d\n",
+ 			addr, ret);
+ 
+@@ -1111,6 +1111,7 @@
+ 
+ static int rtw_usb_switch_mode_new(struct rtw_dev *rtwdev)
+ {
++	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
+ 	enum usb_device_speed cur_speed;
+ 	u8 id = rtwdev->chip->id;
+ 	bool can_switch;
+@@ -1151,6 +1152,11 @@
+ 	rtw_write32(rtwdev, REG_PAD_CTRL2, pad_ctrl2);
+ 	rtw_write8(rtwdev, REG_PAD_CTRL2 + 1, 4);
+ 
++	/* From here the chip powers off its MAC and re-enumerates, so it can
++	 * leave the bus while a control transfer is still in flight.
++	 */
++	rtwusb->switching_mode = true;
++
+ 	rtw_write16_set(rtwdev, REG_SYS_PW_CTRL, BIT_APFM_OFFMAC);
+ 	usleep_range(1000, 1001);
+ 	rtw_write32_set(rtwdev, REG_PAD_CTRL2, BIT_NO_PDN_CHIPOFF_V1);
+--- a/drivers/net/wireless/realtek/rtw88/usb.h
++++ b/drivers/net/wireless/realtek/rtw88/usb.h
+@@ -85,6 +85,9 @@
+ 	struct sk_buff_head rx_free_queue;
+ 	struct work_struct rx_work;
+ 	struct work_struct rx_urb_work;
++
++	/* the chip is re-enumerating, control transfers are expected to fail */
++	bool switching_mode;
+ };
+ 
+ static inline struct rtw_usb_tx_data *rtw_usb_get_tx_data(struct sk_buff *skb)
