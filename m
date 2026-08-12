@@ -1,74 +1,74 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A84352025
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 19:06:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90482367293
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 19:06:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786561567; cv=none; b=Av8/6cu06ZK8XGyLtmjoa3r4J00gXerVuGlGKCIP4zHBsp4pIg3WiNq/3XwPQxkkFQghiOxHvLkKa8dTLmeP+M8IN2a04vhRSDtOy0MzIxoWQn4Lbv6mBJmvJfOCzWy5buekyodKToK09Oe08yH0tAj77psJnq8konunWb/eexQ=
+	t=1786561570; cv=none; b=Zcgx9o6cN+R31lQFDfmtbzuu/YhKUmxDLtMcj+QSb84bYTWu0Z44TK2ZwFV22Z5cMLB+sNfGzudTP//+00O0DpS+hH9py75i3EpnhyXOIxzRccGVeh0ev4qixTSe4DW6TpnQIDMw4OK2lgjupTeE/m2+FsljaL1GIeAjb+1vvIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786561567; c=relaxed/simple;
-	bh=XgKH/QMgnQwl7EBN8sR3LbzgpflW0fob5QcEkkgOi6c=;
+	s=arc-20240116; t=1786561570; c=relaxed/simple;
+	bh=T3sPnoq0RTs0uG8HPlVWHRGrVSNIKWFyaLvT/6yrFPQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Apxk+e8pVXYwgUnlEreZgM9hQ6vFLthPIDtrhPXK88b3Dvd4WAePcpRgAMzHolPTQjnWQczvHuqXwQqr9PX61VEiSHbj2nZ/shyT6Vl0Ng7tq6Nk3nQofxBn/4j2+Tgko6OA+wJIwl+HL78k4dzt6TsvnUM0b4yDu++THuVijwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JAHV+02N; arc=none smtp.client-ip=209.85.221.48
+	 MIME-Version; b=h3xMgDcxeXeNajXP3oupEC/uktd6WMSyJuK2sc/ir2DRV+smdrcC1p+Ftr4wpjulBOivYUSQAQFWL6dfcdhvvDV/qWXYFav+SHyyb4OwkNss5KrQM5Cb+c16+UFcilQbEAe1VUkLaH9whLksqDCJfePVU3wykfM1OCzISY3YsPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XXQC3PK3; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JAHV+02N"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-47fecbbafdaso412365f8f.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 12:06:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XXQC3PK3"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-498028b3d5eso13852525e9.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 12:06:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786561562; x=1787166362; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786561567; x=1787166367; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=/1tMxUnulpGOwRXNg8wdc8brX/d0czOuEVfcemqNqzM=;
-        b=JAHV+02NPqcAu4lrYJDl3p7Pdi8ohEOQCtgshlnKQ1CduvJ+s1KmkNY91liKpASGzk
-         oQJ8TBZ3t0s0BcUD7mCDF5LvuRXH2zTGxNo55U+pJubBYeESrAGxOg1NfC7JtL07+Z9A
-         rUC6fWGhCC+iGoo2IOQ2HHBC+ay9Uk48zfBiUCY7KLGHTciid/urCDJd2blkmCZctXml
-         HtX7UPwwCRl589p23rgSKgsqoo2CtewVbL1QSEafkM0FOxpD3NYDVP/7chj6G2cnp7q9
-         obxW8gngUIRWwUjqUIuKhEgHZBVp09muzMjiexeZt86RsSGN+muhx59sr2U0X9chQLOb
-         6eGA==
+        bh=jw5hnegB1m/L5wmsBBcHwaBQGgRjAN6McFTUJSuZSpc=;
+        b=XXQC3PK3c6w2rexY4dXeMslJdD5bFihF0Bx3NXelxugdDn0Yu5z9yK5IS0Im3OXpcQ
+         qLQTSAUGUl0SUAkS05b7yqbd0j1PKt44rGDk4FkFTuu+qJCW2cZx5sQyT+6au8UZlN3A
+         xth5o+Lx9YGdfl3bszCwMGZ8TSqiecsCaGapwUULvLYoXVIFHRtMcOIw7IwmSBYwxrbR
+         S7qfYsgqXnTjvLpBo9zDynZwh8vn9VobxQYFBX9017/aL9bxyL5xufBsRwhOCyk00/L9
+         V3bpjKuI2WlDbIPL3SRaGy/0/3vhwOCZmJWvB+DiLQh+yZn0YEIxDFgZ7o5PK4C3PrOH
+         XzPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786561562; x=1787166362;
+        d=1e100.net; s=20251104; t=1786561567; x=1787166367;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/1tMxUnulpGOwRXNg8wdc8brX/d0czOuEVfcemqNqzM=;
-        b=A7mcH/RUWsPdeOPkeOuJ6qtFKmNt66nPd/VY1yBSYsbZuLSXVV1NtjHckc94sYYmFl
-         QDSqnajP2qw8aCb7n2yVIKkrnJAa/IhrtZcddfnaQydICHOGQSZ4i/UVzVXrw1rrHNM9
-         wd7wz7umWU9JSZWxj5kt3xogAE1Z7iKfUoHy3YxcychgQwIL45+DmBjUh2eRBy98piI4
-         3+Jkdawm+YTey53OKqJg83j4DNEbnNo68u86ZPJUx2eJqkvxl7QHWyhluD9Z/zYxeJ/Z
-         +g2zL3fcvhT7zAtmiSzbnuqBIG2zI+Hll+JdafKBNsHAFvU8jrRtQsRrRy0xrkalFxJw
-         FWMw==
-X-Forwarded-Encrypted: i=1; AHgh+RpZKjynajyLhJb92yv0HfjFhXjheQF0sZAOtYCdFNzMbekyZXwOOoPeYmuq6FXOHYeD2EV/4FuWMIVrSewf7w==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy74tDEWI+ULndFtL7vZWE0ZpR+33VhCD7IpZFPW55pOO6RLkZn
-	TeE3ZjM1WGFEg0ewJK2RstO7PrNvz9tuVd7Ym6CdUBtBmHM9fYdVVpTt
-X-Gm-Gg: AR+sD12qTuEMmiz2Bi5S98h+q1Au8Gq3+aMRmDgDkF+/coknPu5ARdh/x9o5Zfh47IG
-	EqplTmGQlOnD659dEECvxKCnYyc8Q1wSAW8FKeXHpNxJL4GGF8jcJsRC1o1kpeq6+kokMomrPyB
-	IVbYWE4i1CrytEnddq3JzyvqPoxU8JZqXpUzyoskfBGgAEso/NboeoNs7KtC8xecYHtpha0Eeuf
-	m095xcH7b46qtKSTrwy4IkCqrBEfwJj2m7L1Fh9E+V3jDHI7rV/PAxTKv2+yiCHZDDKg1h2vnB/
-	sjXVnOsQeJNMqFyYjSyXjoENUkxTK0hSzuudrHjOpOEfsYe0NfEJRRIRZ8KYu1bxm3sHZirGy/V
-	RvOv384+8PqzZdZ0IF2h5Xx0v7J9/et8EAzvE6BwPMPcq51mMSdPQSQmqNDxC1Q9xCG4fjRJb4c
-	Q1+B7XStDgrCM/xwP6eB+XodF5iu7PqLpwlD/CQRH/3Au5cCRXm6m4ruN5iLsf8Nj056z9a7LyW
-	KIJWWEI1Y1rt7cqUVLzNc4081oekU8EdZTiT9/gkJxAUg8kwwZLIGvylGojSCz5BcmtKxKanbEN
-	Nkr0OQ==
-X-Received: by 2002:a5d:50cc:0:b0:481:51ce:542f with SMTP id ffacd0b85a97d-4815a028804mr313422f8f.21.1786561561990;
-        Wed, 12 Aug 2026 12:06:01 -0700 (PDT)
+        bh=jw5hnegB1m/L5wmsBBcHwaBQGgRjAN6McFTUJSuZSpc=;
+        b=erQsGo689s+S+MFx6cR8DWvsEQ4Zr7omLJtAg/oY9qfLKhIhjEo9eqb93G3eRpuskJ
+         A2+w8Bg5CFzBdNR51eApWAlrA63u/ydhlgyLMq3YB4VcltqmGRARWHSp7tMKsspPBdPs
+         K0lnaijLFWjHjb8npb4JN8YfAIz/JzIt9yRCXXfnTTM35PDpuq+h8iZFp5nTsR1MUK1z
+         c86YobGdX1gL5HAzBoMuMeskrK/l2BiDEf6c7I4QTaLVKZaMPClllHjcEb/iMhuY08qm
+         qHu691/0WaMflJdswAovwnrbySrphkSIWpmoys7gcsC9hey39VCDfyntUJTnQnt5dH6c
+         LoZQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpuwP8Av395nqpligP9oqaQyU31TWwr+q9a/3xgWXQeujPxIWxY5/FQNCA5cBlcI8mO1FTm8r+AarKAwjIIVA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkEDtvNupANKnC29cYjS280S6gsL8X8NjqNvo7TFX+xyqHfYNH
+	9vvzaB7mJgVw9PC5WqIjhCyhEop+UX088uiIDnsiWzvA3z9fPFeQfCBX
+X-Gm-Gg: AR+sD11HrQLzXzG1jYI7G4Q/0vIGHXvyW1xzcCWzJj3sU8XC0amrGpVYEmsotnrQXND
+	+KsYX4szNT+RV2o71ztUzlA8vaQ8iJJ9J7ZK1Z275DCGXKYE0P+12AyIYczXc2C2dC7B89VRr4l
+	q2D7cxDAD8tytbdCz+IiWlvJmqmatc+bqJXP9FYs0Wu9a5tDaOliIHkzbkr8pd4c6ccoYFhi2B9
+	r8+iRawVTKHjLuAw7fVW7WQ6ewhi8fnf9iDH/ivYe6iy2WUFY2okPK9H5yB5Ln0noWCYtjVgtxI
+	aVmA+x3Nm2HJSVRJuOHyHEEeRyUBMxd15y0weZ941mEc1NSkwvIPFRexPR7g9tY2oHOdNHrnJEM
+	opdkNONqO5M4uszgq6ZhnlgNI39GnUHmfLDvfqgs3JinCpgcL7n7jPrbCQsE9fgSJCAdg5tspDY
+	mK1Hv1FqONqkeWi8JzI3gK3OCo/BlqKMlUHjW9ZOqIJ6OfyogZf2RVjChFEO8jZgIRVe8/nKuk7
+	e2yxmz760mO8s5KfPv5q2WVqBwJjO44OZgWTHFprGMDKJDovLpA3rioSNqXj5tR2+qu0N5jBUGl
+	X3ThIw==
+X-Received: by 2002:a05:600c:46c6:b0:498:ee7:e407 with SMTP id 5b1f17b1804b1-4997c1649f5mr87009305e9.17.1786561566686;
+        Wed, 12 Aug 2026 12:06:06 -0700 (PDT)
 Received: from Mac.home ([95.35.242.1])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48150d5eb2csm9179875f8f.30.2026.08.12.12.06.00
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48150d5eb2csm9179875f8f.30.2026.08.12.12.06.04
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 12 Aug 2026 12:06:01 -0700 (PDT)
+        Wed, 12 Aug 2026 12:06:06 -0700 (PDT)
 From: Shmulik Cohen <anuk909@gmail.com>
 To: stas.yakovlev@gmail.com
 Cc: johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Shmulik Cohen <anuk909@gmail.com>
-Subject: [PATCH 2/3] wifi: libipw: reject too-short association responses
-Date: Wed, 12 Aug 2026 22:04:11 +0300
-Message-ID: <20260812190412.18333-3-anuk909@gmail.com>
+Subject: [PATCH 3/3] wifi: ipw2x00: bound management frame length to the receive buffer
+Date: Wed, 12 Aug 2026 22:04:12 +0300
+Message-ID: <20260812190412.18333-4-anuk909@gmail.com>
 X-Mailer: git-send-email 2.51.2
 In-Reply-To: <20260812190412.18333-1-anuk909@gmail.com>
 References: <20260812190412.18333-1-anuk909@gmail.com>
@@ -80,49 +80,80 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-libipw_handle_assoc_resp() reads the capability, status and aid fields
-of the 30-byte association response prefix and then computes the
-information element length as
+Both management receive paths establish a lower bound on the frame
+length and no upper bound, even though the length originates from the
+device.
 
-	stats->len - sizeof(*frame)
+ipw2100_corruption_check() returns 0 without inspecting frame_size for
+management frames, and __ipw2100_rx_process() only rejects a frame
+smaller than the three-address header, so any reported size up to the
+u32 limit reaches libipw_rx_mgt() against a receive allocation of
+IPW_RX_NIC_BUFFER_LENGTH bytes.  Check frame_size itself rather than
+stats.len, which is a u16: a size of 65566 truncates to 30 on
+assignment and would pass a check made afterwards.
 
-stats->len is a u16 and sizeof() has type size_t, so the subtraction is
-evaluated as size_t and wraps instead of going negative.  Truncating
-that to the u16 length parameter of libipw_parse_info_param() turns a
-frame shorter than the fixed fields into a length near 64 KiB, and the
-parser then reads past the receive buffer.
+ipw_rx() likewise only rejects a frame shorter than the header length.
+Bound it against the DMA mapped receive buffer.  The size passed to
+alloc_skb() is rounded up by the allocator, so skb_tailroom() can
+exceed IPW_RX_BUF_SIZE and is not a usable bound here; the existing
+uses of that idiom in the data paths are too permissive for the same
+reason.
 
-Both the ipw2100 and ipw2200 management receive paths reach this
-function having established only that the frame carries the generic
-24-byte three-address header.
+libipw then hands the remainder to libipw_parse_info_param(), which
+walks information elements for as long as the length allows, so an
+over-long reported length reads past the receive buffer without any
+wraparound being involved.
 
-Reject the frame before any fixed field is touched.
+The length is device-reported, so per
+Documentation/process/threat-model.rst this is a robustness fix rather
+than a vulnerability.
 
 Found by an AI-assisted review of length arithmetic in management frame
-parsers.  Verified with a KUnit case under Generic KASAN on arm64 under
-QEMU; I do not have the hardware, so it is not tested on a real device.
+parsers.  Compile-tested only for these two hunks; I do not have the
+hardware, so they are not tested on a real device.
 
-Fixes: 9e8571affd1c ("[PATCH] ieee80211: Add QoS (WME) support to the ieee80211 subsystem")
 Assisted-by: Claude:claude-opus-5
 Signed-off-by: Shmulik Cohen <anuk909@gmail.com>
 ---
- drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 4 +++-
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 9 +++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-index 2661dac6985e..424349a6935e 100644
---- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-@@ -1209,6 +1209,9 @@ static int libipw_handle_assoc_resp(struct libipw_device *ieee, struct libipw_as
- 	struct libipw_network *network = &network_resp;
- 	struct net_device *dev = ieee->dev;
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index 2b8a23865bfb..43b4e432956b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -2712,7 +2712,9 @@ static void __ipw2100_rx_process(struct ipw2100_priv *priv)
+ 				break;
+ 			}
+ #endif
+-			if (stats.len < sizeof(struct libipw_hdr_3addr))
++			if (sq->drv[i].frame_size <
++				    sizeof(struct libipw_hdr_3addr) ||
++			    sq->drv[i].frame_size > IPW_RX_NIC_BUFFER_LENGTH)
+ 				break;
+ 			switch (WLAN_FC_GET_TYPE(le16_to_cpu(u->rx_data.header.frame_ctl))) {
+ 			case IEEE80211_FTYPE_MGMT:
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 4bc9bb406e8e..8249d493ee22 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -8322,6 +8322,15 @@ static void ipw_rx(struct ipw_priv *priv)
+ 					break;
+ 				}
  
-+	if (stats->len < sizeof(*frame))
-+		return 1;
++				if (unlikely(le16_to_cpu(pkt->u.frame.length) >
++					     IPW_RX_BUF_SIZE -
++					     IPW_RX_FRAME_SIZE)) {
++					IPW_DEBUG_DROP("Received oversized packet. Dropping.\n");
++					priv->net_dev->stats.rx_errors++;
++					priv->wstats.discard.misc++;
++					break;
++				}
 +
- 	network->flags = 0;
- 	network->qos_data.active = 0;
- 	network->qos_data.supported = 0;
+ 				switch (WLAN_FC_GET_TYPE
+ 					(le16_to_cpu(header->frame_ctl))) {
+ 
 -- 
 2.50.1 (Apple Git-155)
 
