@@ -1,202 +1,158 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99212219E8
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 17:32:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8085E47A0B6
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 17:44:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786555941; cv=none; b=q1bIzYUUoi8OOId4ezSCJ89jnxpF7RTLvPBRcvoQnzE4LkWGcfIhd7621BuCuxTA/zH6lCpmmbpnFQEAaTubdmFtJDPUUdrptoXtOoukJeecTrePdjrODrTkTF6Z91HFnhbvszFyj/mBMKpI7rdT61Ca36t/s+cxaaOnH4iwmas=
+	t=1786556651; cv=none; b=WrdRFQRAuMbxAiv55R16YbYoKrMdUiGZBQ7xOp194ViLH6dB6n8M9i4CmcdnoKvgu9qPd0hrn/Mv4CFjc1/b71tP116faYhywTGu8ikdKleK2kMWq5CkyuE4bMgkUdhEuU7xyDrBeMRK/CgD0mnUmKoS7QQul7Wp2ck2OPtFIf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786555941; c=relaxed/simple;
-	bh=zpw41a2GOMiTzlSJKGC60Wo41zaNwRJ8ScSgYZ3v+OM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kMQgn/iOiagY70kR1Zjm2Btr85GpCn6juJ0B+iouhAdFpMNZ5wrLgs0g6IpeWeGK0DyEUVqNfKZ3APaHUb1M+zlzyxb6frZstI8K8e/54JYVu6NdYGZJDa4hbH+Akuvlkp3DJ1B1Eg2sBUwtn1cwaU7GB9CvCh6JE3n3hTT8m/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H5hTKJ2A; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786556651; c=relaxed/simple;
+	bh=Qkefgy0OuFAOwldlQ/n1WRh8UyINUd+Afak2C/o6OgI=;
+	h=Message-ID:Date:MIME-Version:To:Cc:Subject:From:Content-Type; b=kmKCvQXPYLeKLQ3rEWpuZrxW24XuErOFMa5qj0LOGFVcQvG6Qik/f277TblE0eJ2vYzwbYLbkZXnk1YZGMGzV2znkiHRgBlGVS3CsRYpFK5U/J/MgIDwuDGEIio9J5CvxBwTS1suBNE/2uDvH9Hj42MZJWULtzMp+0Tjf1xIhiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=bmyaQwom; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ARFjIrMJ; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H5hTKJ2A"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-49978908b35so9328225e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 10:32:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="bmyaQwom";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ARFjIrMJ"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67CGppLO4083399
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 17:44:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=WPrUe1AHxk8839bSM8P8eF
+	DTJ+/fnhI9uw2/dmjlgD4=; b=bmyaQwomX0028YIjqP24MgJYMgs88YwzsbdR2u
+	+T7RI7MyNpTaNDbpHDSTcNimEmT5jUBZIKm6A8RznJU6gn5Xt1qgUVkm7etEK1ol
+	eG6vKMv9gQ/WKdb9BDI6HQwq0OxMSC5anSpaI1olVLYhu/fgcYaLWM7xlfe/mFHH
+	qf33+xWrsYM2meKe8wnuyQSnmCS0SzzAHTZEWW4ZBjiqTorwh4Xpm4c2wMAviDaf
+	Pc7VBegBx4ffmE+JxRe4IxjIv9SbALVkyLsGhccYuntk0Fx+aTmwIgC3YzrADn9J
+	jgTp4aUvglL6kwEK9qC6cGmlXmEVwypjFRpq4eKd1ZK5JQig==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g0pmyt22s-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 17:44:07 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cbb6433e9d4so1515610a12.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 10:44:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786555938; x=1787160738; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mhjYsHUqvyr8BxlLuLAP+QOYlpeqyHn1XI3lWI8kO8w=;
-        b=H5hTKJ2A5yHUJmDgwE0+bSg/xlpb++uEWs35AHGTeKQkaA+xX8JOPjufAzqCCXCdoY
-         5iyEoR9idImNDiO6fqF8aIP+HXNs9oSe0BiEmTcwBPt2lt1sUHZ3ZFZ9yKu/LT9YD//Q
-         D1Kqnvy+SlpBzJFXqIGhDzAHmHvXZX373f/8jdPrVjrvSVKqS4GVF9sfL1mC2KVkZ6ou
-         E8t2EWhWfbTdxfx/X55AVjO2jSfzmu0dieCM04MpHIZCyMT/VlunGgnytev4uUcX6+NR
-         PCp1fGxbtKhTEQ42vN1qBJOc33D/xptPsFpogYFqDlkJRBD/PHonX6V9HAP55vFQABHY
-         q0+w==
+        d=oss.qualcomm.com; s=google; t=1786556647; x=1787161447; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=WPrUe1AHxk8839bSM8P8eFDTJ+/fnhI9uw2/dmjlgD4=;
+        b=ARFjIrMJdx9jthNHAou65ftyUNx2ez2QMUcF/EPp056D6RtsEDepZZ2wy8O/f3aO78
+         wX1M61pbQuF2mjTnv6Ban9ojDAzErwT/4YMnPEM47D7JybzBpHXghQSeMnZi/Wbj8q/K
+         0IPk/l//mr/ThNem2RV6eddxQesl0/1fHXZz6o0Tw88ZLCHE+bWx9hyPGbzTP8GjWFcN
+         RyeuEWS6b7w0S0wuEX5tqH4l0goLC1Ysp5FvYg+ou3riEOQ/G7bObyQGjjYTcA/7lsRS
+         4q8v8GgOpQQ11rAlSFBXIvnF1HBLxhb5ossRUlkgNvXHoL10O+7BN29eJlQQx8NubEDB
+         jS3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786555938; x=1787160738;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mhjYsHUqvyr8BxlLuLAP+QOYlpeqyHn1XI3lWI8kO8w=;
-        b=I4QxzkxodvCqVV9Us0KlF3rdqBwdu+PEcaVrU8Pv8qlEAzAkPGxuj4NVi+x04anyZe
-         GbCBGLSpGwBysg8ePEiGegpLCkfm3NEyrFdlUodshVpi8BhU/k/LM/vEMala+5NaTfvP
-         0E9GNetAtRKdEkd7avHV24EafOJjlt93Q2ChmduM875r5xjj5JnKC+t6TMPpcltIAZrk
-         zNsOW90S26g2zwY6FRGYBUPR17AjLkm+jatoo3tUzT6/IM6bHzvJHRxT2+TVPpcIPVVa
-         xJCaO19sY+zlTGDfw7SK5ifPN05W7roJkmxxuOBSqqX307QFWE0I8zeifSw89nZm0OiI
-         B2wg==
-X-Forwarded-Encrypted: i=1; AHgh+Rq8Jb0XQ/+1qK2BdUIR/yh5jL8DIypBUChyyPX/bbV4uGWjzo7xtpLy/iJGmN8NZkMr1P+Tk4XZ2Wrsz70TDw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YznFYKuNVtFOzjT+VyM4oHtGqtvLxkbqyjtEgU++95WVpg7VRQA
-	UeYdJMuuQOqwcAOvQ0W/VOpn/zSCMYoFfVCbZ58Lgs6U8OLArs7FfTxThzBqZw==
-X-Gm-Gg: AR+sD12zn3XXp8U5EC6qll44JflOHZJsYZTB4AAURGT03gYAuSiWU4EHrTi6cw7FzkU
-	MDMDJbPbQJqrssyg6znizORnhUeGkkcV4U1Xd6hRgssZrGNJi+hAu64ioWDW8qa+KjyYeNt7JZy
-	se2S8VphTOeokawdel5MmJiuk9M54Kg4oV/jbfo96oKK3UoHzvGDQ/NiE9X9DOxs6nQXZ0tWpk4
-	oDFhUlzmKq51ULyh8v+o2ZFRzC+P58wlFoAxhcs6sKb35oYq571oN/anfPgvccT381OdS1UQADI
-	ls/JLgm2KnxKmaNoiblR6AuPaL6lX7M+DSEYt4juWnoBr4OpfrBJ7Jk69YHOb2nOEHRNGdpiZgI
-	FdUc2bUhiUImXE9X5LorELbPzHeDKBMH7PBNdbwLGhaVxtlMIypirbcxQy3Bv1VhPz1ZBL5Vtda
-	YpI5T6CgZyGWhbsRQ6q2ZOpDuipxlVtVYiQKTL6lgfNzpXxgYR5KX+tJl25iaiUT/u9A==
-X-Received: by 2002:a05:600c:470d:b0:499:4d4d:822a with SMTP id 5b1f17b1804b1-4997c16007cmr79194375e9.17.1786555937641;
-        Wed, 12 Aug 2026 10:32:17 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49981b62437sm3574405e9.12.2026.08.12.10.32.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 10:32:16 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH rtw-next v2] wifi: rtw88: usb: do not log transfers lost to a mode switch
-Date: Wed, 12 Aug 2026 19:32:15 +0200
-Message-ID: <20260812173215.4090278-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260812122858.3317577-1-mehmet.fide@gmail.com>
-References: <20260812122858.3317577-1-mehmet.fide@gmail.com>
+        d=1e100.net; s=20251104; t=1786556647; x=1787161447;
+        h=content-transfer-encoding:content-type:from:content-language
+         :subject:cc:to:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=WPrUe1AHxk8839bSM8P8eFDTJ+/fnhI9uw2/dmjlgD4=;
+        b=NTbo5tzxDHdfKKHawnWHak/577J3ARBNp9d+pA298orIqTTZzvLuOQaMTeuZysPc0D
+         FiyaV5vxFKVklLk8xWRJ/o6gME95RIIvDkQ4MySzxXE0MeNsXzR4G7IpDbjzODCBHJhq
+         inEpqRNMip+Wak7nbV9RMekWLO/94PXKohQy37Ducm4Oh8vY+H0EliB8LwVdy1G8I28/
+         HQJ5gf6BddiBwkTIdQjhyOfvmnpn5b8oP17erwWv6QXKWfuR6Nxu5CEIZX1zDBeKRLOY
+         kDT2gtVJBE16XXsr+0ny1xT4B1Us5p7MLq3TRAE5YQ5GjCL//N/L5MVEh+zswhk1d4wr
+         6L2w==
+X-Gm-Message-State: AOJu0YzmVzKfOvCtecTtTlAgjZOzkrV6/nquhzxoeB227RBYRIlSUcba
+	2CLpjvt8GSOcykty1pywI755AUlu3e6YR+FbQ8GNjqIOFD6XoL/mLGlx8RozOiAG/X6zxKyZnli
+	su6pJIU9bhFf/Xn9ijumnu7M7HviTroVEeQOfFLSnBHkxPyEc1eqZqRVsr3zGKLBAawFTeBOo/c
+	Kn6A==
+X-Gm-Gg: AR+sD103ADZh7p65z2ETGTLhoW2ePy0cLr+IK9eXKvElgO3y8y8pYawEJopjyfJmSMb
+	szw4Okv8Yt7ZfY5GLiwHC5mhae16R/bJjWxqmaBY+Wffxya7jXvcGKR7iRC7KdEehNGVnDR2+j/
+	Xm6Zmk6FoB1WoiaPnMc1lM4LUm6Z9HrYRlUp2vWSl8fBISReas3Oss50Z2sAGW+FMnWvxQ2nPVQ
+	4InMUYHTYCfafA2jCw/z7l9yET3RbMbbUPlzqO5YkI1zSw9yvIriMLLVlenQgua7iIVUEeKBqXK
+	UwULrzlIDiDIl4uYMfLhRe98aOXGK0LUYahH9iy2YFn3wxIHSwzTsvnIdTDDVJGQPz5k2fQXRYY
+	LNnNasZMHd6rQt32w4vpekhwGrxfZlQRsP2ad
+X-Received: by 2002:a05:6a21:a4c2:b0:3bf:d487:4b42 with SMTP id adf61e73a8af0-3cc553e6c70mr93759637.35.1786556646797;
+        Wed, 12 Aug 2026 10:44:06 -0700 (PDT)
+X-Received: by 2002:a05:6a21:a4c2:b0:3bf:d487:4b42 with SMTP id adf61e73a8af0-3cc553e6c70mr93709637.35.1786556646396;
+        Wed, 12 Aug 2026 10:44:06 -0700 (PDT)
+Received: from [10.81.91.45] (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31e65ffc056sm966106eec.27.2026.08.12.10.44.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 12 Aug 2026 10:44:05 -0700 (PDT)
+Message-ID: <7736f627-e80d-48f5-a11c-97bf81597d6c@oss.qualcomm.com>
+Date: Wed, 12 Aug 2026 10:44:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: linux-firmware@kernel.org
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+        jjohnson@kernel.org
+Subject: [PULL linux-firmware] ath10k, ath11k and ath12k firmware ath-20260812
+Content-Language: en-US
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODEyMDE0MiBTYWx0ZWRfX7yvd/p3Pfmcl
+ WZ4+y86ABo4TfY32xVRCIlaqz/mfo2SkybOS9oy/nXr4SPluKlYSP2G0JonmnjGrIepbRaNvCrO
+ l/ySvfjqOloXEaQkLmfkJXj+N1VY1Qk=
+X-Proofpoint-ORIG-GUID: EOWt2jCA97Jt1r8PLKsY-SkvXu4vnsVN
+X-Authority-Analysis: v=2.4 cv=C/fZDwP+ c=1 sm=1 tr=0 ts=6a7cb0e7 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=VwQbUJbxAAAA:8 a=-bKND4alXjPcxD5Ql1gA:9 a=QEXdDO2ut3YA:10
+ a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-GUID: EOWt2jCA97Jt1r8PLKsY-SkvXu4vnsVN
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEyMDE0MiBTYWx0ZWRfXye77mSpQDofM
+ 3YIrsZmYFfnym0IGkw67kYyVSapwOPZXUM4Zk4tzyEcTYlxZiBjbmJrFyAZNoJzZlkjW3+l0U0P
+ yp5SxVQcNJ773c25lQo1gI0Edn5XF79kz+gJVS2bn5gnPCQB3044l7LBlcWq7lqoq6ggkRQhHGc
+ 3d+0SKVYBzBZSi1YWzK55PwicPgDnwPDawI/p2zMBrdgzqvcF1qErqA+VFfDnRLs24evayS5un7
+ Fo7wmxhjwNuMMpMTeYY6ssCju+Jdd0WaMp9mP9N4N9S1shX/SBxFNhFj/zeLjiR+R0y3hzYvw8U
+ SPMx4rIM4QtBssIBI/nO71sktpj/u8bTZPk8FcsmUgSTDn+7ETkbOsoU5n6JiQoz3xLynxKb28g
+ WYfVy+20mKW9v3G0rhnToRPeymAsHdyycE2zHfCXkfm6peje1FciAOLI6Ab4foCcsX6Mw2Kuqmx
+ BMuHeTM7XfgG9d0rH+w==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-12_05,2026-08-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 clxscore=1015 phishscore=0 spamscore=0 malwarescore=0
+ adultscore=0 suspectscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608120142
 
-An RTL8822BU or RTL8822CU is asked to come back as a USB 3 device by
-rtw_usb_switch_mode_new(). The chip powers off its MAC and leaves the bus
-while the last control transfers of that sequence are still in flight, so
-they complete with -EPROTO and the driver reports them as errors:
+Hi,
+Here's a new pull request for ath10k, ath11k and ath12k firmware.
 
-  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
-  rtw_8822bu 1-1:1.0: write register 0xc4 failed with -71
-  usb 1-1: USB disconnect, device number 2
-  usbcore: registered new interface driver rtw_8822bu
-  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+There are no changes for ath10k or ath11k.
 
-Register 0xc4 is REG_PAD_CTRL2 and the access losing the race is the
-rtw_write32_set() that ends the switch sequence, a few milliseconds before
-the disconnect. Which transfer gets caught varies from boot to boot: 0xc4
-is in the "always on" section, so every write to it is followed by a second
-one from rtw_usb_reg_sec(), and sometimes that is the one that fails:
+For ath12k, update the QCC2072 hw1.0 firmware to WLAN.COL.1.0.c2-00228.
 
-  rtw_8822bu 1-1:1.0: rtw_usb_reg_sec: reg 0x4e0, usb write 1 fail, status: -71
+Please let me know if there are any problems.
 
-Nothing is wrong here. The device re-enumerates, probes again and registers
-normally, which is why rtw_usb_probe() already treats a non-zero return
-from rtw_usb_switch_mode() as "Not a fail". On a USB 2 only port the
-switch can never succeed, so the message returns on every boot and
-everyone using such a port has to work out that it is harmless.
+Thanks,
+/jeff
 
-Mark the window in which the chip is expected to leave the bus and skip the
-error reports for transfers that fall into it. rtw_usb_switch_mode_old()
-disconnects the same way for RTL8812AU and RTL8814AU, so mark it there too.
-The flag is never cleared because the switch always ends in a re-probe with
-a fresh struct rtw_usb.
+----------------------------------------------------------------
 
-Tested with an RTL8822BU (0x7392:0xb822) on a USB 2 root port of a TI AM62,
-where the message appears exactly once per boot. With the patch both lines
-are gone while the disconnect, the re-enumeration and the second firmware
-load are unchanged.
+The following changes since commit e3c0c4b70f50ae77bea557b4a44be04413d3f3ed:
 
-Signed-off-by: Mehmet Fide <mehmet.fide@gmail.com>
----
-v2:
- - regenerated with git format-patch on top of rtw-next, as asked
- - also mark the window in rtw_usb_switch_mode_old(), which disconnects
-   the same way for RTL8812AU and RTL8814AU
+  Merge branch 'robot/pr-0-1786456716' into 'main' (2026-08-11 14:02:21 +0000)
 
- drivers/net/wireless/realtek/rtw88/usb.c | 13 ++++++++++---
- drivers/net/wireless/realtek/rtw88/usb.h |  3 +++
- 2 files changed, 13 insertions(+), 3 deletions(-)
+are available in the Git repository at:
 
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 64e1c3420..b60e58b35 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -64,7 +64,7 @@ static void rtw_usb_reg_sec(struct rtw_dev *rtwdev, u32 addr, __le32 *data)
- 				 RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
- 				 t_reg, 0, data, t_len, 500);
- 
--	if (status != t_len && status != -ENODEV)
-+	if (status != t_len && status != -ENODEV && !rtwusb->switching_mode)
- 		rtw_err(rtwdev, "%s: reg 0x%x, usb write %u fail, status: %d\n",
- 			__func__, t_reg, t_len, status);
- }
-@@ -90,7 +90,7 @@ static u32 rtw_usb_read(struct rtw_dev *rtwdev, u32 addr, u16 len)
- 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
- 			      RTW_USB_CMD_REQ, RTW_USB_CMD_READ, addr,
- 			      RTW_USB_VENQT_CMD_IDX, data, len, 1000);
--	if (ret < 0 && ret != -ENODEV && count++ < 4)
-+	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
- 		rtw_err(rtwdev, "read register 0x%x failed with %d\n",
- 			addr, ret);
- 
-@@ -140,7 +140,7 @@ static void rtw_usb_write(struct rtw_dev *rtwdev, u32 addr, u32 val, int len)
- 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
- 			      RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
- 			      addr, 0, data, len, 500);
--	if (ret < 0 && ret != -ENODEV && count++ < 4)
-+	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
- 		rtw_err(rtwdev, "write register 0x%x failed with %d\n",
- 			addr, ret);
- 
-@@ -1098,6 +1098,7 @@ static int rtw_usb_switch_mode_old(struct rtw_dev *rtwdev)
- 			rtw_write8(rtwdev, REG_ACLK_MON, 0x1);
- 			rtw_write8(rtwdev, 0x3d, 0x3);
- 			/* usb disconnect */
-+			rtwusb->switching_mode = true;
- 			rtw_write8(rtwdev, REG_SYS_PW_CTRL + 1, 0x80);
- 			return 1;
- 		}
-@@ -1111,6 +1112,7 @@ static int rtw_usb_switch_mode_old(struct rtw_dev *rtwdev)
- 
- static int rtw_usb_switch_mode_new(struct rtw_dev *rtwdev)
- {
-+	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
- 	enum usb_device_speed cur_speed;
- 	u8 id = rtwdev->chip->id;
- 	bool can_switch;
-@@ -1151,6 +1153,11 @@ static int rtw_usb_switch_mode_new(struct rtw_dev *rtwdev)
- 	rtw_write32(rtwdev, REG_PAD_CTRL2, pad_ctrl2);
- 	rtw_write8(rtwdev, REG_PAD_CTRL2 + 1, 4);
- 
-+	/* From here the chip powers off its MAC and re-enumerates, so it can
-+	 * leave the bus while a control transfer is still in flight.
-+	 */
-+	rtwusb->switching_mode = true;
-+
- 	rtw_write16_set(rtwdev, REG_SYS_PW_CTRL, BIT_APFM_OFFMAC);
- 	usleep_range(1000, 1001);
- 	rtw_write32_set(rtwdev, REG_PAD_CTRL2, BIT_NO_PDN_CHIPOFF_V1);
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 9b695b688..9d2825368 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -85,6 +85,9 @@ struct rtw_usb {
- 	struct sk_buff_head rx_free_queue;
- 	struct work_struct rx_work;
- 	struct work_struct rx_urb_work;
-+
-+	/* the chip is re-enumerating, control transfers are expected to fail */
-+	bool switching_mode;
- };
- 
- static inline struct rtw_usb_tx_data *rtw_usb_get_tx_data(struct sk_buff *skb)
--- 
-2.54.0
+  git://git.kernel.org/pub/scm/linux/kernel/git/ath/linux-firmware.git ath-20260812
 
+for you to fetch changes up to 25c06030aa434817928ace452c06f095f14729d3:
+
+  ath12k: QCC2072 hw1.0: update to WLAN.COL.1.0.c2-00228-QCACOLSWPL_V1_TO_SILICON-1 (2026-08-12 10:31:06 -0700)
+
+----------------------------------------------------------------
+Jeff Johnson (1):
+      ath12k: QCC2072 hw1.0: update to WLAN.COL.1.0.c2-00228-QCACOLSWPL_V1_TO_SILICON-1
+
+ WHENCE                              |   2 +-
+ ath12k/QCC2072/hw1.0/firmware-2.bin | Bin 7111860 -> 7148724 bytes
+ 2 files changed, 1 insertion(+), 1 deletion(-)
