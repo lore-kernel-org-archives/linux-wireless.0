@@ -1,68 +1,68 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1C0282F2A
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 08:11:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF44E3AE6FB
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 08:19:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786522287; cv=none; b=V8x17/6LWaSpuzm+L95G+IRfq7TP25M04oCvc1j8DzE1Pe+a5zgKInefgoc61U7LeT6KU3CTiTXPcUSWQZipNCIKgMz6Akw8kLjQbsOSsLXPRRQBb7iTQVZxTYBN8nGswN+AwZHmvjQ7x5sZYospaq89q3Lw6vu9lmAhDnQ1enA=
+	t=1786522765; cv=none; b=SiS0/flsdd+Jop9lBkRhR2evJjVa262MISy0oodhxXb2qBezWxu1fdRBoVPSVpPRsatevOVuPNTdhMmRZjNlM3H94ThusKLDqikqOKFyQjdtSrJ4uaZgpCjJX7OBDJNkOYA3LOUBBQ2M5G2Ck/AMdha3FzV2JOo//uvX40fSZQQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786522287; c=relaxed/simple;
-	bh=j7iPKZajdynzJCSgbxb1Xh60z9mW3hDVAZIm+yzzLxk=;
+	s=arc-20240116; t=1786522765; c=relaxed/simple;
+	bh=tWK0X1iTDmr25ZHj8biE6gJ2te45XVM0qyKOz1086bQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=oz2WT2v5DZI0st1DUQRogtwDL7J2Z0b1J69oxREh0V/J3Bb2od8UxWZHzccbgoRs/2N0d11LZdcahN12fLJqUCeGUVA3fe/z+RYO0F055MMDYlXWYIUpQ/vOUxrnOiUW2ygH9kjwEfDAq1Ho1goHOaZwvh0QFtr7VI5V6tpyIbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D7wopWqe; arc=none smtp.client-ip=209.85.221.42
+	 Content-Disposition; b=ghfYOnyncdZr9BYqV4esPmDPWRTnnCFEC21DDQ4T5CTtksIPmQymemBEbblnRpYAj0Ek4iq+KgtdfWVHP1W8/3F3BGfoad02ydW1oXDccZpCWBuYus+LhCo3iYj6ybfSffJGE5G4Sr1kQGLi1jXlVC+U6hjhXtPRNm2Svhhm4Fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iT8UQqjJ; arc=none smtp.client-ip=209.85.221.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D7wopWqe"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-47fe2d179e2so324074f8f.1
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 01:11:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iT8UQqjJ"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-47ddf7b09e5so626381f8f.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 01:19:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786522284; x=1787127084; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786522762; x=1787127562; darn=vger.kernel.org;
         h=content-disposition:content-type:mime-version:message-id:subject:cc
          :to:from:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=DUUew1TgUXKr+Fo1GhQIDyGs5pp/Nn+31fMTiE5epuQ=;
-        b=D7wopWqePgR+jUYpnoBzxgl/DbRCCzpWT9vD9jvjtG8EEPtS/M8xu091incYLxiT2h
-         SwFozTn9umNpzIy/JtND+/2ggVrd7Q7zLcAqE7PVkR2vYXWmO/qyM6Wn0K4rhDAuM6je
-         EreP+ukSeQ5CqUuibIY45jrmWVYsZHOEYVgxQnwjpmhZQzunoSDRRk8hCIzCEncHdgrR
-         VQY5TGc8DcdnDXPydKa+4MN5ksXUDrbIPH3BOSoiqst2saIQl/Bm2mSxeoD8LRbAuoJA
-         dLHqPKOfyo4kqgJAXupU33yWzA8bbx7bgOdRonsEhxr8pyY1lfZFFY6kltvnDG63ZEs0
-         +hTw==
+        bh=H5Dr9h3cDgpz66DSrF0V7NHklXRELPtJp5mRBEYzBLM=;
+        b=iT8UQqjJ7AW3GBu3FBNuaE2+Fbm6SX5t/2HjRsIhzACYPD25RK05475C6HcxyqD4vm
+         GKsZicEKXOb/iEi/4g2hsKjne0s8ZpOdTsPJhuMfwqE+ETELb9hADJhJc14Dyn8viqij
+         J7+1UIJx4uUZfZkdop+g4e/TXkuCjKXP/1txeVViikSvu8blZ1uJRpUb1QKg/EUrIYiT
+         5Xob5C+AKToVeYUF+ZjwMmta6OaLqt6awNx60Ql3IOoDYLc6/ExLaYPe2fprRXc9bxrJ
+         3beIX8UWrDgLiVR8AxMkGMYTCbbwbeJ4/V03QD9hEbGdwjGQIdbLiIv7CKcfgzPn4TWH
+         ZDHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786522284; x=1787127084;
+        d=1e100.net; s=20251104; t=1786522762; x=1787127562;
         h=content-disposition:content-type:mime-version:message-id:subject:cc
          :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=DUUew1TgUXKr+Fo1GhQIDyGs5pp/Nn+31fMTiE5epuQ=;
-        b=XfVWNx/qWVsNtp7ktNj3Zp9K0fq8meGIdEM399TVYgIsz1SzJ6pICYH6aKoLzxfeBj
-         3AvvYlRHAegMlBs0PQ5mOZc8LskkuUntyz3I+R0z0drwUXmuhT745YyeIIA9RCvmbRT2
-         Zla+yPLGhq0BAD3XPgp38UKo6mill3iR7gy475y5yTsclrOb8g5oW6Jq7ymHZA1t/Kls
-         543LivHjzkKeRhPNqOcDRs8VjL0NQJvxGTgF2hkTlE8ynCSpIyERzafTsmCqW5JvSW2+
-         GKLqeKKD9sI4wpzkR8uiWfwSGNOu2az+Q/3kM6w/+xRlT+/4ftfbc6xLKA9BHjZCTb6e
-         jRhw==
-X-Gm-Message-State: AOJu0YxwLZonHKpojk0Jlu59DgTzz+LO0yNukRGtQzmKp3EoIaquNhkx
-	0M0ezVWqcOewIbrVSf9Iemy5jhV1EVDJpKfsy7uakuJbbB/X+MCbkpBd
-X-Gm-Gg: AR+sD10MI9GlLDUfdA2ZS1Vg1H/iZ+ZOyTq/rIWfidSf+kQuxaKoHqXUao6yPVRq3yz
-	1DbVkrTVQnVt//gFyMPrC6k9HlRxWk+pDSVVARXsi4oTR6g5MTqju8b8mYXg+vVYCrZt5D/6n80
-	zEgN8VE1jyoc7ufb69uTtLsAkE2RTWUSt0a1GcWjrZpQ6vwzB6wLeAypUDPrTYLE5fYzX2oZ+mE
-	sNROOS3qE4c1yDP0gpVfx6uYIs8KawDVvDhdzSsJIL53FApPVlhzoG4B8wgdGkRG6YuApU15lxp
-	AggTEJHSm8fBNv2dXi1UAhjsXdCjEkGq1ZVDjih1kF6OVC4xkmEoj2wCrRTPJmxemNxuBFj51kC
-	Fx2uPtZQc3dLWhV++6PygLpg25KbZQxMdBUihJaBqnca+ZdUwKJPrwjx9JitoxIc8G3vXI114mO
-	6FBu/uV1wqu8neL5hxN/ogdOl8HtoF6H+/ij9TV7RAwIEfopt0R9IFGq4VrxpGjuzru2Y=
-X-Received: by 2002:a05:6000:65b:b0:481:46d2:19a4 with SMTP id ffacd0b85a97d-48152b103e1mr3249899f8f.24.1786522283994;
-        Wed, 12 Aug 2026 01:11:23 -0700 (PDT)
+        bh=H5Dr9h3cDgpz66DSrF0V7NHklXRELPtJp5mRBEYzBLM=;
+        b=RZaaI0ZZ/kmzgFqkOuHqZbGrAt+6y4QCjMrTcaG32Or7SXOwELhLFsRTnLg7McLxCo
+         pUBc4hDqCiJe0kjuDAv4Rl5SgKjihKDw02oPakj/JOvG4KuuYgSYQZj/WebKafcsKaS+
+         U8SHvGN7zY7TVUQR691nh9VCR1Vs2NA/TWxDhtA2QkIios753DBtof7mTowJ6CBx1rHR
+         byRZov9YsO3r68neUpcaRN2vB3tqg6xKEWyyhwVmigVl37NnO20adZHxJOSU1smEIIB4
+         9smptrB4u2sDZ4KGj+4As2KV+ITOWahZP2SOfjCpkO69HJPYUjfM6iBJ5LO8VP4YFiPm
+         sGPQ==
+X-Gm-Message-State: AOJu0YyyjndfxfA1xS9ttyWqOPKGY/8Yv0KclbGC3gpIe2QJVoa9szZ6
+	FG4Q6wV6PkiokL26z4p9UkZ75/wxr17xqCYVWHBSG7Cmfj8qHKaJkQ+E
+X-Gm-Gg: AR+sD13ChTJL+tehuZI0VjaOcpVddJXuQ4P5+xPvPGXVrW9aSzgdAbJDxFZRqNPEpfL
+	dHKG+8+cVdb3rGJa8SyR+xf5kctkI9ga8R3jSMI1EK6pOAYQHDCrHDpRuitT7iqH8/Tq7kBY/gg
+	mBOPuU1JGedrDlKf3pLiKEN3fFW2EO3lUE030eolZ1EH1rnssB1dzwNMMdafglL1pmdQuEuM1x7
+	LGZ2toROdi9VYbStou4WLwh+HEEIbIuSfF2xQLC6H1bKOOkIzxhaUhGtaDwjy9Ke0OP1fTK77+o
+	G0M4YnCf1tcs8Xxl4/WNMi8Ozzr0DKOmazk8lXI1XgITPQ/oKewE/fbh1mkiVi7G34ECIhJRvsD
+	paUWR78TtmwJUUS9mlO1SG3lbSGw6ebXxVMTBG6g2lroNpR8WXq3m82igRkT4hM0Kpv+ufJf2ke
+	y05JC0iFnvORhkmkdl5/+2Jjt+88hS37Ac7By7j/4mn9cIoklVnsi/WVWZ
+X-Received: by 2002:a05:6000:2405:b0:480:d9:ee6d with SMTP id ffacd0b85a97d-48152c62f17mr3724966f8f.19.1786522761668;
+        Wed, 12 Aug 2026 01:19:21 -0700 (PDT)
 Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48150bf5c5fsm5146702f8f.3.2026.08.12.01.11.22
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48150c057f0sm5207345f8f.9.2026.08.12.01.19.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 01:11:23 -0700 (PDT)
-Date: Wed, 12 Aug 2026 11:11:19 +0300
+        Wed, 12 Aug 2026 01:19:21 -0700 (PDT)
+Date: Wed, 12 Aug 2026 11:19:17 +0300
 From: Dan Carpenter <error27@gmail.com>
 To: Jeff Chen <jeff.chen_1@nxp.com>
 Cc: linux-wireless@vger.kernel.org
 Subject: [bug report] wifi: nxp: add nxpwifi driver for IW61x
-Message-ID: <anwqp-LuExbRshYu@stanley.mountain>
+Message-ID: <anwshVbQWXXHTJpa@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -78,60 +78,157 @@ Commit 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x") from
 Jun 5, 2026 (linux-next), leads to the following Smatch static
 checker warning:
 
-	drivers/net/wireless/nxp/nxpwifi/cfg80211.c:850 nxpwifi_change_vif_to_sta()
-	warn: duplicate check 'ret' (previous on line 840)
+	drivers/net/wireless/nxp/nxpwifi/main.c:627 _nxpwifi_fw_dpc()
+	warn: missing error code here? 'IS_ERR()' failed. 'ret' = '0'
 
-drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-    816 static int
-    817 nxpwifi_change_vif_to_sta(struct net_device *dev,
-    818                           enum nl80211_iftype curr_iftype,
-    819                           enum nl80211_iftype type,
-    820                           struct vif_params *params)
-    821 {
-    822         struct nxpwifi_private *priv;
-    823         struct nxpwifi_adapter *adapter;
-    824         int ret;
-    825 
-    826         priv = nxpwifi_netdev_get_priv(dev);
-    827 
-    828         if (!priv)
-    829                 return -EINVAL;
-    830 
-    831         adapter = priv->adapter;
-    832 
-    833         nxpwifi_dbg(adapter, INFO,
-    834                     "%s: changing role to station\n", dev->name);
-    835 
-    836         ret = nxpwifi_deinit_priv_params(priv);
-    837         if (ret)
-    838                 goto done;
-    839         ret = nxpwifi_init_new_priv_params(priv, dev, type);
-    840         if (ret)
-    841                 goto done;
-    842 
-    843         update_vif_type_counter(adapter, curr_iftype, -1);
-    844         update_vif_type_counter(adapter, type, 1);
-    845         dev->ieee80211_ptr->iftype = type;
-    846 
-    847         if (nxpwifi_set_bss_mode(priv))
-    848                 return -1;
+drivers/net/wireless/nxp/nxpwifi/main.c
+    552 static int _nxpwifi_fw_dpc(const struct firmware *firmware, void *context)
+    553 {
+    554         int ret = 0;
+    555         char fmt[64];
+    556         struct nxpwifi_adapter *adapter = context;
+    557         struct nxpwifi_fw_image fw;
+    558         bool init_failed = false;
+    559         struct wireless_dev *wdev;
+    560         struct completion *fw_done = adapter->fw_done;
+    561 
+    562         if (!firmware) {
+    563                 nxpwifi_dbg(adapter, ERROR,
+    564                             "Failed to get firmware %s\n", adapter->fw_name);
+    565                 ret = -EINVAL;
+    566                 goto err_dnld_fw;
+    567         }
+    568 
+    569         memset(&fw, 0, sizeof(struct nxpwifi_fw_image));
+    570         adapter->firmware = firmware;
+    571         fw.fw_buf = (u8 *)adapter->firmware->data;
+    572         fw.fw_len = adapter->firmware->size;
+    573 
+    574         if (adapter->if_ops.dnld_fw)
+    575                 ret = adapter->if_ops.dnld_fw(adapter, &fw);
+    576         else
+    577                 ret = nxpwifi_dnld_fw(adapter, &fw);
+    578 
+    579         if (ret)
+    580                 goto err_dnld_fw;
+    581 
+    582         nxpwifi_dbg(adapter, MSG, "WLAN FW is active\n");
+    583 
+    584         /* Load optional calibration data */
+    585         ret = request_firmware(&adapter->cal_data, cal_data_name, adapter->dev);
+    586         if (ret) {
+    587                 nxpwifi_dbg(adapter, INFO, "no %s, using default cal\n",
+    588                             cal_data_name);
+    589                 adapter->cal_data = NULL;
+    590         }
+    591 
+    592         /* enable host interrupt after fw dnld is successful */
+    593         if (adapter->if_ops.enable_int) {
+    594                 ret = adapter->if_ops.enable_int(adapter);
+    595                 if (ret)
+    596                         goto err_dnld_fw;
+    597         }
+    598 
+    599         ret = nxpwifi_init_fw(adapter);
+    600         if (ret)
+    601                 goto err_init_fw;
+    602 
+    603         maybe_quirk_fw_disable_ds(adapter);
+    604 
+    605         if (!adapter->wiphy) {
+    606                 if (nxpwifi_register_cfg80211(adapter)) {
+    607                         nxpwifi_dbg(adapter, ERROR,
+    608                                     "cannot register with cfg80211\n");
+    609                         goto err_init_fw;
 
-Was this supposed to be?
+error code not set.
 
-	ret = nxpwifi_set_bss_mode(priv);
+    610                 }
+    611         }
+    612 
+    613         if (nxpwifi_init_channel_scan_gap(adapter)) {
+    614                 nxpwifi_dbg(adapter, ERROR,
+    615                             "could not init channel stats table\n");
+    616                 goto err_init_chan_scan;
 
-    849 
---> 850         if (ret)
-    851                 goto done;
+not set.
+    617         }
+    618 
+    619         rtnl_lock();
+    620         /* Create station interface by default */
+    621         wdev = nxpwifi_add_virtual_intf(adapter->wiphy, "mlan%d", NET_NAME_ENUM,
+    622                                         NL80211_IFTYPE_STATION, NULL);
+    623         if (IS_ERR(wdev)) {
+    624                 nxpwifi_dbg(adapter, ERROR,
+    625                             "cannot create default STA interface\n");
+    626                 rtnl_unlock();
+--> 627                 goto err_add_intf;
 
-Dead code.
 
-    852 
-    853         ret = nxpwifi_sta_init_cmd(priv, false, false);
-    854 
-    855 done:
-    856         return ret;
-    857 }
+not set.
+
+    628         }
+    629 
+    630         wdev = nxpwifi_add_virtual_intf(adapter->wiphy, "uap%d", NET_NAME_ENUM,
+    631                                         NL80211_IFTYPE_AP, NULL);
+    632         if (IS_ERR(wdev)) {
+    633                 nxpwifi_dbg(adapter, ERROR,
+    634                             "cannot create AP interface\n");
+    635                 rtnl_unlock();
+    636                 goto err_add_intf;
+
+error code not set.
+
+    637         }
+    638 
+    639         rtnl_unlock();
+    640 
+    641         nxpwifi_drv_get_driver_version(adapter, fmt, sizeof(fmt) - 1);
+    642         nxpwifi_dbg(adapter, MSG, "driver_version = %s\n", fmt);
+    643         adapter->is_up = true;
+    644         goto done;
+    645 
+    646 err_add_intf:
+    647         vfree(adapter->chan_stats);
+    648 err_init_chan_scan:
+    649         wiphy_unregister(adapter->wiphy);
+    650         wiphy_free(adapter->wiphy);
+    651 err_init_fw:
+    652         if (adapter->if_ops.disable_int)
+    653                 adapter->if_ops.disable_int(adapter);
+    654 err_dnld_fw:
+    655         nxpwifi_dbg(adapter, ERROR,
+    656                     "info: %s: unregister device\n", __func__);
+    657         if (adapter->if_ops.unregister_dev)
+    658                 adapter->if_ops.unregister_dev(adapter);
+    659 
+    660         set_bit(NXPWIFI_SURPRISE_REMOVED, &adapter->work_flags);
+    661         nxpwifi_terminate_workqueue(adapter);
+    662 
+    663         if (adapter->hw_status == NXPWIFI_HW_STATUS_READY) {
+    664                 pr_debug("info: %s: shutdown nxpwifi\n", __func__);
+    665                 nxpwifi_shutdown_drv(adapter);
+    666                 nxpwifi_free_cmd_buffers(adapter);
+    667         }
+    668 
+    669         init_failed = true;
+    670 done:
+    671         if (adapter->cal_data) {
+    672                 release_firmware(adapter->cal_data);
+    673                 adapter->cal_data = NULL;
+    674         }
+    675         if (adapter->firmware) {
+    676                 release_firmware(adapter->firmware);
+    677                 adapter->firmware = NULL;
+    678         }
+    679         if (init_failed)
+    680                 nxpwifi_free_adapter(adapter);
+    681 
+    682         /* Tell all current and future waiters we're finished */
+    683         complete_all(fw_done);
+    684 
+    685         return ret;
+    686 }
 
 This email is a free service from the Smatch-CI project [smatch.sf.net].
 
