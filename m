@@ -1,155 +1,139 @@
-Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EED17336881
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 07:53:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1C0282F2A
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 08:11:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786521190; cv=none; b=mith9Wf+eujQBgGj1VAyHCgHPcmasu3WQNRboseSRCeR7utFGEV7cW4jlcjxRv5qXsDnzdo94d3sY9fhzj/EUyV/tKv+khzEL6fmY2/JIxZ7Btj/5sMAfr5QI46Htf9fyEphLJ7eH3f/mdyHFojLhsF+bCs6v7QhOSmEq18IcKk=
+	t=1786522287; cv=none; b=V8x17/6LWaSpuzm+L95G+IRfq7TP25M04oCvc1j8DzE1Pe+a5zgKInefgoc61U7LeT6KU3CTiTXPcUSWQZipNCIKgMz6Akw8kLjQbsOSsLXPRRQBb7iTQVZxTYBN8nGswN+AwZHmvjQ7x5sZYospaq89q3Lw6vu9lmAhDnQ1enA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786521190; c=relaxed/simple;
-	bh=xuH8wOsfox/c07DyssW1HKJDd+Z1Jkc1ttgGn9LUngM=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=OKZ94+O1tmtjFYL+hI6ircBS+431agph5nN04OdC6tPvZBjgSjJa3XO9wtyovTVAaoBRWE7a7jQmj6tfCwo6cFlVammJX5Y1qLwPwv0eZjREiNS1Oy4tuLO/bIKo9Hko85kVvdWAahMUNN2rUY3yuzvsqe9NP8eTOpzaigBd7/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hXKaIYse; arc=none smtp.client-ip=91.218.175.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1786522287; c=relaxed/simple;
+	bh=j7iPKZajdynzJCSgbxb1Xh60z9mW3hDVAZIm+yzzLxk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=oz2WT2v5DZI0st1DUQRogtwDL7J2Z0b1J69oxREh0V/J3Bb2od8UxWZHzccbgoRs/2N0d11LZdcahN12fLJqUCeGUVA3fe/z+RYO0F055MMDYlXWYIUpQ/vOUxrnOiUW2ygH9kjwEfDAq1Ho1goHOaZwvh0QFtr7VI5V6tpyIbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D7wopWqe; arc=none smtp.client-ip=209.85.221.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hXKaIYse"
-Date: Wed, 12 Aug 2026 09:52:56 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1786521181;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xuH8wOsfox/c07DyssW1HKJDd+Z1Jkc1ttgGn9LUngM=;
-	b=hXKaIYseCI5Ju+DM2oNbKNh8qBi36inXESKw1vjhoYazyPyTPK9B9Qssafn0Uv3qsTMjb3
-	mO6b0kIaNrRfCsTsTDM1DGV8v0ganUR9A4zUYJYlDrxuE2vqtWwGMmX0mgg+TgsWGkrcyr
-	d+i2bpAROxp+ZUAPeUB2vHX872PU3n0=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: RE: [PATCH v3 0/5] wifi: rtw88: preparations for RTL8723B/RTL8723BS
-In-Reply-To: <9f96f4a479f64ef384c76c3b1f71b2a4@realtek.com>
-References: <20260804065425.17364-1-luka.gejak@linux.dev> <A850D677-5DD9-4626-9DAB-1C62F20E292F@linux.dev> <9f96f4a479f64ef384c76c3b1f71b2a4@realtek.com>
-Message-ID: <57719CE4-BEE4-4A1E-B760-DFFD04FF865C@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D7wopWqe"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-47fe2d179e2so324074f8f.1
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 01:11:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786522284; x=1787127084; darn=vger.kernel.org;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=DUUew1TgUXKr+Fo1GhQIDyGs5pp/Nn+31fMTiE5epuQ=;
+        b=D7wopWqePgR+jUYpnoBzxgl/DbRCCzpWT9vD9jvjtG8EEPtS/M8xu091incYLxiT2h
+         SwFozTn9umNpzIy/JtND+/2ggVrd7Q7zLcAqE7PVkR2vYXWmO/qyM6Wn0K4rhDAuM6je
+         EreP+ukSeQ5CqUuibIY45jrmWVYsZHOEYVgxQnwjpmhZQzunoSDRRk8hCIzCEncHdgrR
+         VQY5TGc8DcdnDXPydKa+4MN5ksXUDrbIPH3BOSoiqst2saIQl/Bm2mSxeoD8LRbAuoJA
+         dLHqPKOfyo4kqgJAXupU33yWzA8bbx7bgOdRonsEhxr8pyY1lfZFFY6kltvnDG63ZEs0
+         +hTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786522284; x=1787127084;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=DUUew1TgUXKr+Fo1GhQIDyGs5pp/Nn+31fMTiE5epuQ=;
+        b=XfVWNx/qWVsNtp7ktNj3Zp9K0fq8meGIdEM399TVYgIsz1SzJ6pICYH6aKoLzxfeBj
+         3AvvYlRHAegMlBs0PQ5mOZc8LskkuUntyz3I+R0z0drwUXmuhT745YyeIIA9RCvmbRT2
+         Zla+yPLGhq0BAD3XPgp38UKo6mill3iR7gy475y5yTsclrOb8g5oW6Jq7ymHZA1t/Kls
+         543LivHjzkKeRhPNqOcDRs8VjL0NQJvxGTgF2hkTlE8ynCSpIyERzafTsmCqW5JvSW2+
+         GKLqeKKD9sI4wpzkR8uiWfwSGNOu2az+Q/3kM6w/+xRlT+/4ftfbc6xLKA9BHjZCTb6e
+         jRhw==
+X-Gm-Message-State: AOJu0YxwLZonHKpojk0Jlu59DgTzz+LO0yNukRGtQzmKp3EoIaquNhkx
+	0M0ezVWqcOewIbrVSf9Iemy5jhV1EVDJpKfsy7uakuJbbB/X+MCbkpBd
+X-Gm-Gg: AR+sD10MI9GlLDUfdA2ZS1Vg1H/iZ+ZOyTq/rIWfidSf+kQuxaKoHqXUao6yPVRq3yz
+	1DbVkrTVQnVt//gFyMPrC6k9HlRxWk+pDSVVARXsi4oTR6g5MTqju8b8mYXg+vVYCrZt5D/6n80
+	zEgN8VE1jyoc7ufb69uTtLsAkE2RTWUSt0a1GcWjrZpQ6vwzB6wLeAypUDPrTYLE5fYzX2oZ+mE
+	sNROOS3qE4c1yDP0gpVfx6uYIs8KawDVvDhdzSsJIL53FApPVlhzoG4B8wgdGkRG6YuApU15lxp
+	AggTEJHSm8fBNv2dXi1UAhjsXdCjEkGq1ZVDjih1kF6OVC4xkmEoj2wCrRTPJmxemNxuBFj51kC
+	Fx2uPtZQc3dLWhV++6PygLpg25KbZQxMdBUihJaBqnca+ZdUwKJPrwjx9JitoxIc8G3vXI114mO
+	6FBu/uV1wqu8neL5hxN/ogdOl8HtoF6H+/ij9TV7RAwIEfopt0R9IFGq4VrxpGjuzru2Y=
+X-Received: by 2002:a05:6000:65b:b0:481:46d2:19a4 with SMTP id ffacd0b85a97d-48152b103e1mr3249899f8f.24.1786522283994;
+        Wed, 12 Aug 2026 01:11:23 -0700 (PDT)
+Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48150bf5c5fsm5146702f8f.3.2026.08.12.01.11.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2026 01:11:23 -0700 (PDT)
+Date: Wed, 12 Aug 2026 11:11:19 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Jeff Chen <jeff.chen_1@nxp.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] wifi: nxp: add nxpwifi driver for IW61x
+Message-ID: <anwqp-LuExbRshYu@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On August 12, 2026 2:38:23 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom=
-> wrote:
->
->Luka Gejak <luka=2Egejak@linux=2Edev> wroet:
->> On August 4, 2026 8:54:20 AM GMT+02:00, luka=2Egejak@linux=2Edev wrote:
->> >From: Luka Gejak <luka=2Egejak@linux=2Edev>
->> >
->> >This is the first of two series adding support for the Realtek RTL8723=
-B
->> >802=2E11n chipset and its RTL8723BS SDIO variant to rtw88=2E It contai=
-ns
->> >only the changes to the shared rtw88 core that the chip driver depends
->> >on=2E The chip itself, the build glue and the MAINTAINERS entry are a
->> >second series=2E
->> >
->> >v1 had 19 patches, v2 had 11, this has 5=2E
->> >
->>=20
->> =2E=2E=2E
->>=20
->> Hi Ping-Ke,
->>=20
->> I have sent a v4 that supersedes this series, before you review v3, so
->> you do not spend time on this one=2E As you suggested, I am noting it h=
-ere
->> on the v3 cover=2E
->
->Thanks for the notification, and sorry for the late=2E I hope I can revie=
-w
->v4 this Friday if no urgent tasks interrupt me=2E
->
+Hello Jeff Chen,
 
-No need to apologise=2E Before you spend time on it: please skip patch 4/7
-("fw: handle the RTL8723BS management TX reports")=2E I am dropping it in
-v5=2E Your question below is what sent me back to the hardware, and the
-answer is that the patch cannot be doing what its commit message claims=2E
+Commit 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x") from
+Jun 5, 2026 (linux-next), leads to the following Smatch static
+checker warning:
 
->>=20
->> v4 re-adds two patches that were dropped in v2, both on the TX report a=
-nd
->> leave-LPS paths=2E Testing on slower ARM SDIO hosts, Peter Robinson on =
-the
->> RFC and another tester on a Rockchip RK3288 board, reproduced "failed t=
-o
->> get tx report from firmware"
->
->This makes sense for slower platform=2E
->
->> and "firmware failed to leave lps state",
->
->Does this only occur on "slow" platform? Unless a C2H event was handled
->slowly? I'll review the patch and add comment there=2E
->
->Ping-Ke
->
+	drivers/net/wireless/nxp/nxpwifi/cfg80211.c:850 nxpwifi_change_vif_to_sta()
+	warn: duplicate check 'ret' (previous on line 840)
 
-It is not a C2H handling issue on this chip, and that is the problem with
-the patch=2E The RTL8723BS v41 firmware does not advertise
-FW_FEATURE_LPS_C2H: the feature word in the firmware header is 0x00007df0,
-which has FW_FEATURE_SIG clear, so __update_firmware_feature() sets
-fw->feature to 0=2E rtw_fw_leave_lps_check() therefore takes the
-__rtw_fw_leave_lps_check_reg() branch and polls REG_TCR=2E Nothing ever
-waits on rtwdev->lps_leave_check, so the part of my patch that stops
-completing it on a 0x32 event changes nothing at all=2E
+drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+    816 static int
+    817 nxpwifi_change_vif_to_sta(struct net_device *dev,
+    818                           enum nl80211_iftype curr_iftype,
+    819                           enum nl80211_iftype type,
+    820                           struct vif_params *params)
+    821 {
+    822         struct nxpwifi_private *priv;
+    823         struct nxpwifi_adapter *adapter;
+    824         int ret;
+    825 
+    826         priv = nxpwifi_netdev_get_priv(dev);
+    827 
+    828         if (!priv)
+    829                 return -EINVAL;
+    830 
+    831         adapter = priv->adapter;
+    832 
+    833         nxpwifi_dbg(adapter, INFO,
+    834                     "%s: changing role to station\n", dev->name);
+    835 
+    836         ret = nxpwifi_deinit_priv_params(priv);
+    837         if (ret)
+    838                 goto done;
+    839         ret = nxpwifi_init_new_priv_params(priv, dev, type);
+    840         if (ret)
+    841                 goto done;
+    842 
+    843         update_vif_type_counter(adapter, curr_iftype, -1);
+    844         update_vif_type_counter(adapter, type, 1);
+    845         dev->ieee80211_ptr->iftype = type;
+    846 
+    847         if (nxpwifi_set_bss_mode(priv))
+    848                 return -1;
 
-The other half does not hold up either=2E With the driver instrumented, 93
-TX reports over three scans arrive as C2H id 0x03, and no event arrives
-with a top level id of 0x12 or 0x32=2E Bitterblue Smith made this point on
-v1, that 0x12 and 0x32 are payload bytes of C2H_CCX_TX_RPT rather than
-C2H ids=2E The hardware agrees with him=2E
+Was this supposed to be?
 
-The tester's report does not require the patch either=2E He saw "failed to
-get tx report from firmware" easily on the unfixed branch, and "firmware
-failed to leave lps state" only sometimes; with both patches applied the
-lps warning did not appear=2E An intermittent warning not appearing in one
-run does not establish much on its own=2E
+	ret = nxpwifi_set_bss_mode(priv);
 
-So that warning is still unexplained=2E Since the check is a REG_TCR poll
-with a 100 ms budget, a slow SDIO host missing that window is the obvious
-candidate, but I have not reproduced it: my only board is a fast x86
-host=2E A branch carrying patch 3 alone is out with the tester now=2E If a
-poll window turns out to be the cause I will send it as a separate patch,
-with the measurement behind it, rather than folded into this one=2E
+    849 
+--> 850         if (ret)
+    851                 goto done;
 
-One detail from the same report that is worth separating out: with both
-patches applied, the tx report warning still returns after a
-"systemctl restart wpa_supplicant@wlan0=2Eservice"=2E That looks like the
-generic case where a management frame is still awaiting a report when the
-link tears down, since the tx_report queue is only purged at deinit and
-not on disconnect=2E That is not specific to this chip and I am not
-addressing it in this series=2E
+Dead code.
 
-So the slow host improvement in v4 comes from patch 3 alone=2E It extends
-the 2500 ms timeout from commit c80788f7c5ae ("wifi: rtw88: increase TX
-report timeout to fix race condition"), which you acked for the
-RTL8723DU, to the RTL8723BS for the same off channel scan race, and the
-slow host reports match that mechanism=2E v5 will be this series with
-patch 4 removed, so six patches, and the cover letter will say that one
-patch was restored rather than two=2E
+    852 
+    853         ret = nxpwifi_sta_init_cmd(priv, false, false);
+    854 
+    855 done:
+    856         return ret;
+    857 }
 
-Best regards,
-Luka Gejak
+This email is a free service from the Smatch-CI project [smatch.sf.net].
+
+regards,
+dan carpenter
