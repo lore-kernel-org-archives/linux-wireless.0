@@ -1,142 +1,81 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mta0.migadu.com (out-77.mta0.migadu.com [91.218.175.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90D3446AA9C
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 14:59:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D46470135
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 15:58:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786546776; cv=none; b=SR4tsXY51NsS9iRr7HQvweaqGR5zsdTvk3yKN0mnr+DZAIZyz/QLyxSGAzEl6YMN7Uf4cexWphlMJY17LBLfYw+kYJ19RGT27f4f/TjU46pZkJaK5eI5QKkUUfe1GFx4R9nKF71o/+Wv0n28/LRP99raiAlRamRfJe+JxtYFdhw=
+	t=1786550302; cv=none; b=WZByx+Dv/7qAQYsHR1Ux73XdbDr4i0e+FbQ+LyYMHLIhp+ghjT80m/6hBOubiSvhHh7xc3PcT1sUK+/cJazFen1KquZZdu+n2TmUG5UOV04uAL7IWvHmH3Rd+vNBJMp/VAVyQvZc5Kp6P544FPmizUP6K1ComlhWmdUmUbxDriU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786546776; c=relaxed/simple;
-	bh=v8ilK+pEsYpngRvjfbRcBdLp0FzX9zgBZmRgQxySmZI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=kuziDsqwpo3cVzsYLw6T4G2Ibr32ttdOSTQnb22p4m5rUeH29HMaAtgIv9ZvLupSJ8mNLpvvc2BY3E9O4OeGqalv6DJr/o010WhJ+e067WUOLyHntSb9quK4BsA6faN736BKsPNa1TDDn67iEj2k2VxSzooncBQEpgUM4hY8ybM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KfK3HGSv; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786550302; c=relaxed/simple;
+	bh=6Om2oyAaZk+iPjfVlIinvElzTUwWq7tFMyDXcSXpRl4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=SL7/YpF2mwGY2byeVbaOHb/3UXJLpg4ZVqr1Bwjl6IZ4G8vOvS2cwzaw3rjjKU2uu22jJiGdDnhRbloZgZgLVeYcqrrawj7Kd1FMeN/KKAN/bu9zTaggCafFmDp3Xd0/4dy8spkbquitwA1aLFlZCcI3T1Ia78OTVPMhAgeU4cQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=AjuvSxgl; arc=none smtp.client-ip=91.218.175.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KfK3HGSv"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-49954b88fffso11859795e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 07:59:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786546759; x=1787151559; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=NhF+5+IkWvEfJOpZIxvPcr/6RRXPpqOnEBt9tf6dcVM=;
-        b=KfK3HGSv8BJ67JuFtSJrLlK1bEqp+LCe8lNB09HonjCPGHAGGs9QjkrD5KWolqqEDl
-         3OYfHZvbrs3/OoPFgQIssmrU7uR2kxrwL6AsrXvMr+aUCsNU4StF3TpgO1eDviVi4zrg
-         Cs4ElFa6glp1SLeb0BzLIXgGp04Z80LohKgWGqYwy0uAZlRqLzuEH28+EjL+XejhR5IR
-         RWGjkEgJzjlljE63CyJpk1rFYHnqcd3aIvE7J5eC8gJAzgieEKKYOslppljmnjLFHadQ
-         WTqytaeI5DWbunaNpcACWO3XyNunsGWrcH0rLqZqatJz+6tKS6O6x89O28V2nyCxcJLN
-         QlYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786546759; x=1787151559;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=NhF+5+IkWvEfJOpZIxvPcr/6RRXPpqOnEBt9tf6dcVM=;
-        b=k6orFVBagKyEpYDMRzUIHToFdD6fePf5Q7kmCbTs/Bu9gfVp0AE4j0dOZ6NTjzLE5p
-         BuC/GosUvEJpriRtdbQtZ/wqGFZxIhKnX9Tftb2NjqV3EXcynGHhoOJJEgbiH0FPhsY3
-         hnzu9oVRg2/f0CIzyNNzDfg5aFugG9kdN6dY//B8SRjPdKTFTFuxHs0vxtPdSVgbazlM
-         J0/fpZISLsUKIV+oFuhtHsdpNkMvXQUoY8dsQlgdi8R3+67ODkpkoF4OiBfM9CRf6tp4
-         q2KaoWojn3f5ksrZpI9t9sNgbBQvd6ZexCzjxyas3TNoSm8ARQtmxRuX7iBU+bGI3TPj
-         qqlA==
-X-Gm-Message-State: AOJu0YxBsJOR5UfzDZ8xabBOxDpdU3Yw26qiGR3jjTDge4+P2kcIpIMB
-	Oyhme05EY2fKhc2onotZg+oZcCTlWu4UTSw1IuxmqW02lCR9qr9ytXFduaDQ7Q==
-X-Gm-Gg: AR+sD115fJWXEHM+Z3JWs2mFNnvNXK79qv/zLxDCNGDC1mpaYcwucm6jv+tDapK/U27
-	Y+AG6TN6jAePUt5INyrbXaGt+0RCwwB6rVx+HxX7Q1FBiYf4N3f5pH+YyW7OPpqEKsIb7+1eeDj
-	U2TSIICBEiS6P/NYl1WVUxa9aoySWyFql5FD4Fx4e245/sptIE10lYVxqoBEFLlpyaoRfNN+13i
-	3NYLjYvgH1g9f4ibN8M4BXUGq6QutwgeFHUhflqAZXeBFe4G9h5ZXiilVhlQcM9TNgzoZ9ku06o
-	bM5zZIOJ2kdjr6lSzHaOiH5RLqk+mdtwe/tjbw0ZuH2h2CRdKZg74qGsL48vf0VB4FKcTLvxzZO
-	mFrWKJ/IJuULBc80njzrbI+qmgmX2ATAvuiUYvyvvCcbtt0ZCh7wsMm6VIe6jMfglCyekq/Brpg
-	weUuaJCga+cYDpvbQJmxbJAMedtOFs0mRpt4qPQQsRtMf9ys0rt9FMo1ioVUwqLnmTRoWUCmlUg
-	PgwiSAJWg==
-X-Received: by 2002:a05:600c:4e08:b0:499:4892:d022 with SMTP id 5b1f17b1804b1-4997c0d09c0mr81316375e9.8.1786546758852;
-        Wed, 12 Aug 2026 07:59:18 -0700 (PDT)
-Received: from [127.0.1.1] (freebox.vlq16.iliad.fr. [213.36.7.13])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4997aaa4a8csm82675685e9.3.2026.08.12.07.59.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 07:59:17 -0700 (PDT)
-From: Nicolas Escande <nico.escande@gmail.com>
-Date: Wed, 12 Aug 2026 16:58:05 +0200
-Subject: [PATCH ath-current v3] wifi: ath11k: reset ar->num_stations on
- hardware start
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="AjuvSxgl"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=6Om2oyAaZk+iPjfVlIinvElzTUwWq7tFMyDXcSXpRl4=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786550296; v=1; x=1787155096;
+ b=AjuvSxglkZEOnt/kOKtWUDoLzw1uZi3t6RFYCWmZIv4rqT+DOKE0suU5kKnDKR3foFWjXnVM
+ nK/Prp9z9zMEiiSSqS+SJ/Ax7uRkhBRFCrXxKYv2k0NrZceaQEBExu6iesc/jXIs+qb8Kk4uEQ1
+ d8ybjyM+xuCZtRK2m4I8GbDxfUtyhfz+w2yuV+YEKnQKnY7RvtxUkPjPtWetmTNWOhUPhKJT6US
+ 9l6VHK5AxHTxzY1qonDoDS6HqPy94bY1Wx/Pk7G78n9ZLnv4BuIUII6CxDEVB5mlSzJVmtBbSYI
+ hcnJHnqaEcmys1MrE6TLZ0WSyGIGkt8QGoW/QDXsCP9xg==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
+	by smtp.migadu.com with ESMTPS id 6eb947314bb2fb15;
+	Wed, 12 Aug 2026 15:58:16 +0000
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Thorsten Leemhuis <regressions@leemhuis.info>
+Cc: Eric Dumazet <edumazet@google.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	JB Tsai <jb.tsai@mediatek.com>,
+	Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>,
+	Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>,
+	Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
+	linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	regressions@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: Re: wifi fixes that might be good to have in 7.2 final
+Date: Wed, 12 Aug 2026 08:58:11 -0700
+Message-ID: <20260812155811.10950-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <7e66ca09-fa70-4a3c-948a-0c46b268655c@leemhuis.info>
+References: <7e66ca09-fa70-4a3c-948a-0c46b268655c@leemhuis.info>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260812-num-station-v3-1-871d20e043f6@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3WOTQ7CIBSEr2JYSwO8hlJX3sN0gfS1YCwYoI2m6
- d3tz8KVy8nMfDMzSRgdJnI5zSTi5JILfhVwPhFjte+RunbVRDAhmeKC+nGgKeu85mgLUCoA4KK
- uydp4Rezce6fdiM6WmjFG9Jk0h5nG+wNN3nhbvIthoNlG1L+JStRMsRpEAaUUTErKqXcmFJiM9
- i1e+0G7Z2HCsBGsSznEz/5+EvvsQQHGSwZMFhyg4uo/pFmW5QsvHOBQBQEAAA==
-X-Change-ID: 20260812-num-station-d33483331299
-To: ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-X-Mailer: b4 0.15.2
+Content-Transfer-Encoding: 8bit
 
-When (multiple) hw restart occurs, we end up in a situation where we
-cannot accept new stations / mesh peers. This seems to be the
-'num_stations' in 'struct ath11k' that did not get reset properly in
-this case. In ath11k_mac_op_start(), it was indeed the only accounting var
-that did not get reset so let's clear it too.
+On 12/08/2026 13:57, Thorsten Leemhuis wrote:
+> P.S.: I wonder if "wifi: mt76: mt7921: refactor regd update to fix
+> recursive mutex deadlock") (which is as 1f83a8378eb26c in net-next [...]
+> ) would be good to have in 7.2, too.
 
-This avoids problems like those:
+It is the same bug, and that patch fixes it. I ran it A/B on an MT7922
+with mt7921e, swapping only mt7921-common.ko: stock deadlocks on a 6 GHz
+association, patched associates at 5975 MHz in four seconds with no splats.
 
-	[1248828.088023] WARNING: CPU: 0 PID: 12281 at net/mac80211/util.c:1682 ieee80211_reconfig_stations+0x98/0xc0
-	[1248828.088115] Call trace:
-	[1248828.088116]  ieee80211_reconfig_stations+0x98/0xc0 (P)
-	[1248828.088119]  ieee80211_reconfig+0x774/0x1438
-	[1248828.088123]  ieee80211_restart_work+0x10c/0x178
-	[1248828.088127]  process_one_work+0x178/0x3c0
-	[1248828.088130]  worker_thread+0x280/0x440
-	[1248828.088133]  kthread+0xe0/0xf8
-	[1248828.088137]  ret_from_fork+0x10/0x20
-	[1248828.088141] ---[ end trace 0000000000000000 ]---
-	[1248836.686604] ath11k_pci 0000:04:00.0: refusing to associate station: too many connected already (128)
-	[1248836.686609] ath11k_pci 0000:04:00.0: Failed to add station: xx:xx:xx:xx:xx:xx for VDEV: 1
+The fix is in wireless-next, not in wireless.git. v7.2-rc7 still takes
+dev->mutex unconditionally in mt7921_mcu_regd_update(), so 7.2 ships the
+deadlock unless it moves trees.
 
-Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-01977-QCAHKSWPL_SILICONZ-1
+Nothing is owed to stable: e88098133ed4 is in v7.2-rc1 and not in v7.1.
 
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Signed-off-by: Nicolas Escande <nico.escande@gmail.com>
----
-Changes in v3:
-- Fixed message typos
-- Trimmed stacktrace
-- Added hardware revision to Tested-on
-- Link to v2: https://patch.msgid.link/20260730140306.133718-1-nico.escande@gmail.com
-
-Changes in v2
-- rebased on ath/master
-- no code change
-- Link to v1: https://patch.msgid.link/20260729080932.3462066-1-nico.escande@gmail.com
----
- drivers/net/wireless/ath/ath11k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 2d55cdc4d165..0baa46df1fb9 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -6699,6 +6699,7 @@ static int ath11k_mac_op_start(struct ieee80211_hw *hw)
- 	ar->num_started_vdevs = 0;
- 	ar->num_created_vdevs = 0;
- 	ar->num_peers = 0;
-+	ar->num_stations = 0;
- 	ar->allocated_vdev_map = 0;
- 
- 	/* Configure monitor status ring with default rx_filter to get rx status
-
----
-base-commit: e07447e654476262558bee570f4cf456e2b32565
-change-id: 20260812-num-station-d33483331299
-
-Best regards,
---  
-Nicolas Escande <nico.escande@gmail.com>
-
+Devin
