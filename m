@@ -1,71 +1,71 @@
 Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A215B46A5E6
-	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 14:46:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB59E36D517
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 14:46:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786545974; cv=none; b=lzQQBltUyXB29n19KzGbwXfp9gHIW/uwI3FN23q2eouIw7/TzahRQstYDBhVcNkmKRW12liEyPdDxNSjq7Ag4eQjeJI61YQcUhtdET8IZAq+wBXbCzWAiYDIRkYxH1eeMyOcKDI9GCrN7Zma+lmHrDkrZoEcDcORlq5LAPpCr94=
+	t=1786545975; cv=none; b=sb7YJJmzZi5MStcFZChjJkJ80sDnDRFwdDJb4pg+UKv9WaM79yUbqgLJWKpSUAsT8D+Qd9TQVPECTnr7QlP92pBgUdn+AEcBH297thdkWoN3utNvhlGvVGsiWZiMrSnT5b1rugpKRLgJQ5xnifNjAElkjYGXlGoaVBlznNOXXAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786545974; c=relaxed/simple;
-	bh=ypHI0S+UNvDNhN5cj1MB0lINoArN61phj1Gchrhibgo=;
+	s=arc-20240116; t=1786545975; c=relaxed/simple;
+	bh=5TXl+7FhJNDRzik5WEtBDUOOLm+EMBxf4N2AmcSdcd4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZL/DG/IOblXICirTzasmr2ADINFLpv9h4dRVyQ+LWg8niDHwICfJRKO8mf7+WmOkTBPduCtr7gpeDk70bKriODvbmxiA3ZqI6+fpgZCqE5iCKDHep9hVGAeRE++53HtBD8807ZeFe5cMz/IHSA4olTwDHUhSqGtSxcBkEP/qIbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i3BwMazV; arc=none smtp.client-ip=209.85.167.50
+	 MIME-Version; b=TFdLV3vbQSfRJHXOUMSJkYOzebHxasMl5TPV0WvcOL4LCo5t3ANZYkX9UKXO4AXNEA+T0p04oBgVYKy6WEqGbgBPldj/+f7MeB+1whEgGUGtZ3eutyIACyhjxaq0uN4rs3VCtFPmczlhPTw6bBNABFLBcuZwQC+1K3bcTc/J4ys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C/uxJANa; arc=none smtp.client-ip=209.85.167.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i3BwMazV"
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b01910b499so915687e87.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 07:46:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C/uxJANa"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5b0115b9e17so1117732e87.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 07:46:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786545971; x=1787150771; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786545972; x=1787150772; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=9SQr3P3H65aB8k8MZd33ziaOzUGlc9kgkH4DtThvPgg=;
-        b=i3BwMazV4ynu5kMkxlzSJ29g8LAaQ2k81fUMPYz/u0Q9HGyAd52PXr8T7Mkk1H9Vre
-         UQX3pyqej8J0p8hxtfyzEV7bhe4oaLIRAb5OHdkdDASFMbUdhyDrqpjzdH+olFM5PRio
-         QHBAg+EEDFpk+7UoqM4h8KS0qoZqhP7eq2FEp+equupIRbmtt/S3hKKdW1cdqAZ9VHyl
-         DDwr4cTOBINDH1STmD8CF9Z4MkPvikI8a0tZkIRvjUzSzhJQl6KA3V9uTPI42LlK3xyw
-         KPCA5vGFPepQUc0+rrBDpT7JZKQIXTBKK3ENUE62uIJ65eoGM9QBuS06dopPueiLbjEv
-         uHNg==
+        bh=6mNXe4icQAHTtL3mT5idpm+v38V2NUoG/qN7vf7IPgA=;
+        b=C/uxJANa7x30ppSlXWTDWBd2Oug0ygp1CX3CW024WyDNE0vRVe/fuQh5taeoJMZegU
+         PEh4elltdrpbba5seMomqcVkRgZpPhrWTdOdIEJl5AJe2CClimqrYGY6Ow4jKp2ulX3Z
+         CDurUvJT1sjaklCWFVsUY8SEEg4BcbSQkJ3Pahiu6bX7bU4g4oP++vFajP5jyx6QFVJB
+         JDXStZKnJzL8m10JXOwtiMLSr+Hti9/8DyZ2JbFDhPSDbZj9UmbJOFrWn9UBlgX4aWjK
+         86MGwKGT7MVYFMLxOSqdtj1yDQtZ/KDt0pw/0uPfecfip2K/cBpBeN6ihrgdikqbKQCg
+         P0gg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786545971; x=1787150771;
+        d=1e100.net; s=20251104; t=1786545972; x=1787150772;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=9SQr3P3H65aB8k8MZd33ziaOzUGlc9kgkH4DtThvPgg=;
-        b=XLvS8iKw6MMx2hnOb8XKhI+Lq0bJ8alhwjzkFhNnxfxEYCF6e4CSlrUhWFZGf4G0Tq
-         H+1kcVr31JlGqz0JDi9tDjSiEFoC5Oc+LETDA8KgewndZ3l/1zgYhLofcEm/nu3A0tum
-         oFDsI1JM6IqHCPEGe0s8dQbYo51YXRrZBl2CluhNuYaILUGCxucUo2wLBQv43x35Gosg
-         tIYHiEyJEPmzff7KIHxYDu3aZnlo90RKaMXM79SvQ2yVAszSsRX7g7buVmFB/fvsp9gz
-         XyALzlKuaI2d7t82c6DKviqiK888L8UxhxZ0H1S+JXi5+aLXNgLIETiLc3Czg3kt98z/
-         AxMQ==
-X-Gm-Message-State: AOJu0YzJPVKasDRbe29Fn5oeiW8IJcvfeaxHIQmt2c+WbawgS/dilrqA
-	Aj2C4KP97oLajZigo9PZ8RyPocSJNUzte9hQE0zCz+jXX66wrSkc+/mbuvEPywMX
-X-Gm-Gg: AR+sD13eootQU274ArndMf6SNgS2LhM6aOZZQvAGMXLP0GIp4oCP2tJYeheMZKtz8vF
-	BHOHo8vfVFRCCnD7o8DIjW+03E35K71wos9XUSCyZ0yPOY/IsBvTQrEq20mj/qESttmefuqv6w3
-	qWEeDFi9F7f1pkBnd6EE2PXC5AZwTJdDx9BUGijtOuYlSQlutBPHkqEDF2VGRZ4oQhCHYE4LQ3n
-	6dEV3jxNR7ka5BA5pF4wZTtwbmCBDCgmNWB3L4KXCQgZLx/rzN2OcNyyUKSpTEvbx55eyz7KNXM
-	1HOsTlrkOghK+r9VkaPshV2lKyaAdoAxiP+uxSengzLRXUiRN9HiLg6KHKxyZpcPwhF2pah2k+g
-	P78/6z3OKnu1mLuxlrgwustOTjY6OmROD0rXPI0dXvAgo43z/+vb/tmZZ42JQP1ZUlcqEMqkACn
-	NbKYRPBJJi21JCg1vpIfP5bdLXrqZOCG3ohulDv1gJgJjRmoEA9ueCAOMwIyw5+JL3FUiq7bTFQ
-	+/tc9UiuadbznY9Qsluc8lCKzqahn6hy5c/xXItq4pe6Mn14sAALxdu1rY4VA==
-X-Received: by 2002:a05:6512:481a:b0:5b2:a22c:50ff with SMTP id 2adb3069b0e04-5b44bb42249mr1278206e87.19.1786545970533;
-        Wed, 12 Aug 2026 07:46:10 -0700 (PDT)
+        bh=6mNXe4icQAHTtL3mT5idpm+v38V2NUoG/qN7vf7IPgA=;
+        b=M52MprrSJbnrCSbg7bOi71ON3dWAnY5OKnR6PMTxEyiYzaVRqzVtZXeJlSBC++2HCI
+         mTljRvO8XFJVBWO2yF6TLuzL3fNTi3SMt7nn0614VMbYqT5q93vP5AjPIa80zJqZ7ctI
+         Fe8wlnp1aSUfAo6+do+GimaGuV6g07EJhwKb/DSklrl6EV/mQMu9nDtUMBD11WagGs/v
+         H1xJ0ohtr0gToTlXyNWGDI9Al0RrbebAbo/jPdslJcSzp1wgL5/JHhfmqtuj4Sy9S9aR
+         nwZBOAwOSCj9/RLQ8tumt8CdiagwDHspIHjhg37ajuo8+erUut/XUyD4I+XQzMsRz8YB
+         XUsg==
+X-Gm-Message-State: AOJu0YwCqTPFxQgqdYeGpxoaVcOZdH6wz4fTdJG0IVIhHT31S+9E18Kg
+	XuEZfqJKuMEfBmTQ3Kl0yrjE1jHqE6JZFzZWFZY0i8DmLOM76BAjVRcR
+X-Gm-Gg: AR+sD11x8waFm/n1DUtHrt8ow21Rb+sV3f2H6umyW9wSz2XWKpC0bnAKFUZLZrmXqxD
+	IzS2aS8zVuSk00M/J1C/77icmUpaIL6ZTOk05izyMr5olXQIWlzsMAEtzrd9fVJzo+eFb4ogSBR
+	KJo2fYpTavBZ23/NeoNnuSc41koEWnmO4vA7J3UAzu16f/0SD5Hi32BDEn8DwXx252wNm38BjVC
+	cJ5eLQ2QmRScBhZmpunPb9RC3BsIBI5ZJHM03eNrHfK+LkuquCu/NNXDi6wlDrOoPkLax7P5934
+	fFH+cEG63pOehB0v3XkGeZJ0eopr4cDDY49FnskdxUyrE87PUnHo3aMrB7Kp245BjErx80lN9jS
+	lp3aPmSz9XBsazx076I1eqEGiTDX48G5nqgl7+HdAzShusyT8b7G7nXWlM3/i/sYUXSCxijgJn0
+	76KeYypa8a/jcVPhCxLrH3DpV1JU37hIWVtmqbvbx9ia9PW5QmVhljIwEKaC8N80PIAWAv+PHSb
+	BIklUe3JbIM6cceclTv9fd8NW3JnYTdlLNl/DjWQ2gc70UFS7+1lEv88F0/6w==
+X-Received: by 2002:a05:6512:3b91:b0:5b0:1108:c57d with SMTP id 2adb3069b0e04-5b44e31cef8mr947204e87.46.1786545971733;
+        Wed, 12 Aug 2026 07:46:11 -0700 (PDT)
 Received: from archlinux ([94.180.96.85])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b44cfc27besm552179e87.21.2026.08.12.07.46.09
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b44cfc27besm552179e87.21.2026.08.12.07.46.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 07:46:09 -0700 (PDT)
+        Wed, 12 Aug 2026 07:46:11 -0700 (PDT)
 From: Arsenii Pashchenko <ulijg308@gmail.com>
 To: pkshih@realtek.com
 Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Arsenii Pashchenko <ulijg308@gmail.com>
-Subject: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ validation
-Date: Wed, 12 Aug 2026 21:45:44 +0700
-Message-ID: <a016d09710dce6f27a60e8fb3c16cdc28ef24a08.1786545572.git.ulijg308@gmail.com>
+Subject: [PATCH 3/4] wifi: rtw88: rtw8822c: switch to the kernel's sort() library
+Date: Wed, 12 Aug 2026 21:45:45 +0700
+Message-ID: <4a0b85003aac26b23fcfc6e414e00b39e0d2aa45.1786545572.git.ulijg308@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <cover.1786545572.git.ulijg308@gmail.com>
 References: <cover.1786545572.git.ulijg308@gmail.com>
@@ -77,82 +77,71 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Leverage the kernel's native sign_extend32() macro to properly
-interpret the 10-bit raw values from hardware registers as signed
-32-bit (s10) integers covering the [-512, 511] range.
+Replace the custom, nested bubble-sort logic in rtw8822c_dac_iq_sort()
+and __rtw8822c_dac_iq_sort() with a call to the kernel's optimized
+heapsort implementation.
 
-This allows us to completely rewrite rtw8822c_dac_iq_check() to use
-a simple, clean amplitude boundary check instead of complex, nested
-unsigned boundary conditions. Drop the temporary u32 casts inside
-the check and sampling routines.
+Implement a concise, localized s32 comparator. Since the previous
+patch already guarantees that input values are properly sign-extended
+into signed arrays, the custom circular index sorting rules completely
+disappear, trimming down lines of code.
 
 Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 24 +++++++++----------
- 1 file changed, 11 insertions(+), 13 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 28 ++++++-------------
+ 1 file changed, 8 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 896e3e7b9..d06986d09 100644
+index d06986d09..642ac2e2b 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3,6 +3,7 @@
-  */
+@@ -4,6 +4,7 @@
  
  #include <linux/module.h>
-+#include <linux/bitops.h>
+ #include <linux/bitops.h>
++#include <linux/sort.h>
  #include "main.h"
  #include "coex.h"
  #include "fw.h"
-@@ -277,18 +278,15 @@ static u32 rtw8822c_get_path_read_addr(u8 path)
- 	return base_addr;
- }
- 
--static bool rtw8822c_dac_iq_check(struct rtw_dev *rtwdev, s32 value_s32)
-+static bool rtw8822c_dac_iq_check(struct rtw_dev *rtwdev, s32 value)
- {
--	u32 value = (u32)value_s32;
--	bool ret = true;
- 
--	if ((value >= 0x200 && (0x400 - value) > 0x64) ||
--	    (value < 0x200 && value > 0x64)) {
--		ret = false;
-+	if (value > 100 || value < -100) {
- 		rtw_dbg(rtwdev, RTW_DBG_RFK, "[DACK] Error overflow\n");
-+		return false;
+@@ -186,31 +187,18 @@ static void rtw8822c_rf_minmax_cmp(struct rtw_dev *rtwdev, s32 value_s32,
  	}
- 
--	return ret;
-+	return true;
  }
  
- static void rtw8822c_dac_cal_iq_sample(struct rtw_dev *rtwdev, s32 *iv, s32 *qv)
-@@ -299,8 +297,8 @@ static void rtw8822c_dac_cal_iq_sample(struct rtw_dev *rtwdev, s32 *iv, s32 *qv)
- 	while (i < DACK_SN_8822C && cnt < 10000) {
- 		cnt++;
- 		temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
--		iv[i] = (s32)((temp & 0x3ff000) >> 12);
--		qv[i] = (s32)(temp & 0x3ff);
-+		iv[i] = sign_extend32((temp & 0x3ff000) >> 12, 9);
-+		qv[i] = sign_extend32(temp & 0x3ff, 9);
+-static void __rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, s32 *v1_s32, s32 *v2_s32)
++static int rtw8822c_dac_iq_cmp_s32(const void *a, const void *b)
+ {
+-	u32 *v1 = (u32 *)v1_s32;
+-	u32 *v2 = (u32 *)v2_s32;
+-	if (*v1 >= 0x200 && *v2 >= 0x200) {
+-		if (*v1 > *v2)
+-			swap(*v1, *v2);
+-	} else if (*v1 < 0x200 && *v2 < 0x200) {
+-		if (*v1 > *v2)
+-			swap(*v1, *v2);
+-	} else if (*v1 < 0x200 && *v2 >= 0x200) {
+-		swap(*v1, *v2);
+-	}
++	s32 va = *(const s32 *)a;
++	s32 vb = *(const s32 *)b;
++
++	return (va > vb) - (va < vb);
+ }
  
- 		if (rtw8822c_dac_iq_check(rtwdev, iv[i]) &&
- 		    rtw8822c_dac_iq_check(rtwdev, qv[i]))
-@@ -352,11 +350,11 @@ static void rtw8822c_dac_cal_iq_search(struct rtw_dev *rtwdev,
+ static void rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, s32 *iv, s32 *qv)
+ {
+-	u32 i, j;
+-
+-	for (i = 0; i < DACK_SN_8822C - 1; i++) {
+-		for (j = 0; j < (DACK_SN_8822C - 1 - i) ; j++) {
+-			__rtw8822c_dac_iq_sort(rtwdev, &iv[j], &iv[j + 1]);
+-			__rtw8822c_dac_iq_sort(rtwdev, &qv[j], &qv[j + 1]);
+-		}
+-	}
++	sort(iv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NULL);
++	sort(qv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NULL);
+ }
  
- 		if (i_delta > 5 || q_delta > 5) {
- 			temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
--			iv[0] = (s32)((temp & 0x3ff000) >> 12);
--			qv[0] = (s32)(temp & 0x3ff);
-+			iv[0] = sign_extend32((temp & 0x3ff000) >> 12, 9);
-+			qv[0] = sign_extend32(temp & 0x3ff, 9);
- 			temp = rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
--			iv[DACK_SN_8822C - 1] = (s32)((temp & 0x3ff000) >> 12);
--			qv[DACK_SN_8822C - 1] = (s32)(temp & 0x3ff);
-+			iv[DACK_SN_8822C - 1] = sign_extend32((temp & 0x3ff000) >> 12, 9);
-+			qv[DACK_SN_8822C - 1] = sign_extend32(temp & 0x3ff, 9);
- 		} else {
- 			break;
- 		}
+ static void rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec_s32, u32 *val)
 -- 
 2.55.0
 
