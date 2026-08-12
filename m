@@ -1,93 +1,117 @@
-Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45300383C89;
-	Wed, 12 Aug 2026 07:12:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.126.187
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786518780; cv=none; b=kk9qJSYqh/2aEwJeYMrWheKDAyfmv6LcLG/geAKXmxEbWfEQHd9BT+Hs8pZIAjhQS3mEuwRRHeh28ESuyfzvuMl4h8Yj+s4sU7DEhqR4zSc52XtA1l7kIHFZDs3ZiR6klEoaABapPn1de1DIpJ1uuD2eAdl87YVP0MeaJOYwL7E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786518780; c=relaxed/simple;
-	bh=VQi1EaVbL2hU+QwBiJ2KSgSfI7guwvcoSatUvfhLGcM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BDY87NnyhwUW9ZtgQevQTNaUOW713TuXdagohmyWQ7AsvuBRtFykpHClMTS4dKph4FxC5eSW0wpW/8R1sYCcmh6jb1VETcvZN9wAEUVhXOyuKoVORJzZDXyPEPQ2jaS916pUfdcwSaIZ1HdMLJ7VEz8sxwePhFDdta+9bZBO7Zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr; spf=pass smtp.mailfrom=green-communications.fr; arc=none smtp.client-ip=212.227.126.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=green-communications.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=green-communications.fr
-Received: from client.hidden.invalid by mrelayeu.kundenserver.de (mreue012
- [213.165.67.103]) with ESMTPSA (Nemesis) id 1N8VkX-1wywpw14an-00ygG3; Wed, 12
- Aug 2026 09:12:45 +0200
-Message-ID: <b308aff2-422b-4ac1-84d8-f066aa17f5fe@green-communications.fr>
-Date: Wed, 12 Aug 2026 09:12:43 +0200
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236FB36308A
+	for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 07:23:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.44
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786519431; cv=pass; b=TI5mk3kKR6k8Y1yr7FvxwbjW92COukUwDhHUBPe/plL2pEhcTNQadFyF6K+LpgATqPGujJ3OOoEHawspQXy5b0YJ1cJWg5NItQjiwFc9JaMWKLPnJj5q9X5HN2foCoETsMEUUJnznAeO5VNJru0xnkRlIs/S6SxyEVsekKCKsHo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786519431; c=relaxed/simple;
+	bh=lPE2CLxAbZbntiAzIEzsCiAb8fZRvxGUGyest/89SrU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SKSDLG/YmDN52Mf+BWK3EySdiX8iw1OTmi5O5bj8e28fQVR1LZk1iKkddnuzOWmhUmCbh752bBI+2amn2i6YkMZVNmmWPnfhdAiRr73ZAS2mCHU14cGowRZW/dI+fgzrea4PkRds22mziRs5h84KhaevmBd8WNXtiPu0EVvWX2Y=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Z3fOzic8; arc=pass smtp.client-ip=209.85.210.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Z3fOzic8"
+Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-7e9ef94c0e2so386389a34.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 00:23:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786519429; cv=none;
+        d=google.com; s=arc-20260327;
+        b=rxvT0Th00h44UYA8yuT4rYMBZ4KBxdNG7Ip9GK/Eu3keQJjWFhf76jfp/ayM0DGvIn
+         xaQGoikWOgiDBNNfCqzI/kYkzvNWv6t8MQ+T5O30QCm2BXJqpyA0nXfE/viJw4X3UksR
+         FG/9Qqi29xEyQUbXdYtmZvCXebArWep+l7NzqA+uY7PrjKLlgEZT6/CprrmKMwP3d5mA
+         BgB5QKyn2AvFS3XBWytLWdpqlvwNuY4Xsc+N6iWiQEGSl6kN3GpDtttjhCbl5SVy87IH
+         ag1xLCCArbf1nWBrXB9L8UDwMgIRM8Afhzjpgj+/vSrPpohpJRKEvfB7z3NJwji9+fBW
+         0OrQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=lPE2CLxAbZbntiAzIEzsCiAb8fZRvxGUGyest/89SrU=;
+        fh=6mQmOShwDkHr7oo2lLjjC840VgeEf/JrS2uy0Ad7SgA=;
+        b=BfBkF05hsQu8/hvtbwLYQM49ZoCgXBhYyR8OTPghbUhoPT1P7wOSbEH+m6bCC7eH45
+         6hO5ylyY9EQ3VQw3UA/JyiSGY6xeTTFFXmExCVL3O8ZhcX8b2syIqgtPwhwEjGA6fmmK
+         HnSW/AFQg0CNkhWJAGwQxPzPeFfHeMOM6pmLiH4AyEttDie7mj+A9AYuE4sphkoeTN8W
+         vwjjHQ/87UZSwRIZhcn1v8mFYCritQcPL7HX1ahDRr/ekJ3LQXx1zn2tyzVz6S8xCtVb
+         AhvVLKx+ynGRMXQRuEeJmt40aRyjiWlkAo/b6MU5g8NIw4ItKSCN7In/4RIyFL6/oZEP
+         kGqA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786519429; x=1787124229; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=lPE2CLxAbZbntiAzIEzsCiAb8fZRvxGUGyest/89SrU=;
+        b=Z3fOzic8JixLXdJzs1HMK4OIySEDXhbKkW+3WC+fuvL3zKFGPiFDYu4tRjL0UEpgNt
+         gZLGN50GQDzInUTbj7hOzsbofLiiT8Mw5Ac5xurlSivHVhPN4ULtyMPRgSDPb/Fcghup
+         7nmNIvyp8ZFqelgXZi+dzqZSOuZWZLgc8Xk2IZIAgSIn1C6GuWIL6ldCtefTPQQk4TMH
+         if1EhtIC7Hys1Ysw9inJLeJ9e68s9XjFi9QDOZWAX8gOsfq+2+77GIlpQ9eoCtL5iqok
+         5bWBv/SQVdXIo4XmACz+DOT/2YjocTnyuHkwEoNLXUgGgnPFRuoI8OjinWeQPuWBJatr
+         Ec9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786519429; x=1787124229;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=lPE2CLxAbZbntiAzIEzsCiAb8fZRvxGUGyest/89SrU=;
+        b=bY5hSHrttY5yrGGlCh4tS153ddsbLpyLQHoATbUnt91DFVoHfBHg21YBoa0gOFY1nL
+         zlTF3ww7spMRFONPGUMRvVKGNeHsaFLwMCKXOkIw6pgqL9me5SqfVKKR8odzVUTMIUtq
+         AC9ntiSJeJvLuc9IZvcUwC2fc1u738YtQETkuHHx0G6U3rKLb8rS3233ppbH2/qOwejC
+         kyHHKioQme+ghL+fzU36mAeOwfjjCGfIogL/d3VE6aTiVxqA/OQGzdCox+ft4UDMXClj
+         P9sFujvThyze6FEjSDJpVwDNi1jOLX5OQAA2JFImi8Y5zwRB0qj9N0zsJaNanppnQli2
+         uMBQ==
+X-Forwarded-Encrypted: i=1; AHgh+RqgJNuhSR0aZKyCp2/c5kMzLWxPJ+6Vsr4TE4OwXy+tE94eIr3VnIEekUSZjkPB9AX6QeXkXRf0LvNknnY2Rw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzSNmeBRAlvo3hf7c4DA33rxnnhcCuiB8FHRjYdcuiszlY3sEVD
+	P5BtjlTdbUf9EAwMIVULAVl5UKrktk2vYAnSS2yEZUCwI1wldZquuaIxHhft8GWLwW0Ybjnudq+
+	piQRNSw7AP0/zGV9cDJfvTWwlX79zB7w=
+X-Gm-Gg: AR+sD11m7XULdVAkQhF3lc9x8OthT/WyChK/OKXmBK2cQg0uOgiTzx3sJ8rgFyorOS5
+	SsXV9D5RerB7vkIah8/ISSimPorrfpFCSqGn0uoz+Z6RoeTgF7+81VgXNcJ7JTHE92YB3pBfLbR
+	rLEjC5zxwvR9kuIhWxv8YlOXY1jZ8jq4wgMDYtu+35JXdEVUVLHmEFFZotxKjM05O7iRuZbECBN
+	oP39+6vSwCgdZhbHCOoPzTF9p0euw/bqfl5hF7yZ9pI+OvCbYQV3WAJSbXgDQ1UlCuWDveLl1NP
+	wP6RMDGn5N18LFoUu6y26priQz7a3okXI9agIseHzXrf529JwlTGQlEkxvUeTkXhDI2BzKRRXi0
+	mn7+yU1BuMHQRX5L6hh+gvyfK3eM1hDiiXLks
+X-Received: by 2002:a05:6830:6a99:b0:7e9:d4b5:8004 with SMTP id
+ 46e09a7af769-7f3b7703ea6mr3313972a34.5.1786519428838; Wed, 12 Aug 2026
+ 00:23:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH wireless] Revert "wifi: mt76: Disable napi when removing
- device"
-To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>,
- Thorsten Leemhuis <regressions@leemhuis.info>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
- Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
- Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>,
- Bert Karwatzki <spasswolf@web.de>, Devin Wittmayer
- <lucid_duck@justthetip.ca>, Eric Biggers <ebiggers@kernel.org>,
- linux-kernel@vger.kernel.org,
- Linux kernel regressions list <regressions@lists.linux.dev>
 References: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
- <18b018d0-7f7d-4975-b0b3-5e3c9f413698@leemhuis.info>
- <CABXGCsMhfR-fOwUgKuQrojM8jEpdco_m9aYA9ph_EOrCfaPxeA@mail.gmail.com>
-Content-Language: en-US
-From: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-In-Reply-To: <CABXGCsMhfR-fOwUgKuQrojM8jEpdco_m9aYA9ph_EOrCfaPxeA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:GaVZyzekj9x/vvbT5ncKOHyvA5oAzdQoFRYVQ+98FU5LYyxKUip
- pYy/ZyFYLrbnCvN/Jncfh/DCFgOtAry6y8nOQbCdFQROx6tbhBIcmxlM50PrwiV6GL0H2RR
- FOD12Y/NY8aYA4mBHNGt33++1JbrlI2J6TsVTUcDaELDcp2mPL1xT0ZxuTqNvhsOcCaD2A6
- BlF3PapvUZjbpEcwxQQRQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Yxyf3+e41JQ=;7BJuyb7Tr4Evc14ulnbvjk7FWOF
- 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
+ <18b018d0-7f7d-4975-b0b3-5e3c9f413698@leemhuis.info> <CABXGCsMhfR-fOwUgKuQrojM8jEpdco_m9aYA9ph_EOrCfaPxeA@mail.gmail.com>
+ <b308aff2-422b-4ac1-84d8-f066aa17f5fe@green-communications.fr>
+In-Reply-To: <b308aff2-422b-4ac1-84d8-f066aa17f5fe@green-communications.fr>
+From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+Date: Wed, 12 Aug 2026 12:23:37 +0500
+X-Gm-Features: AUfX_mxZLwD3AKWIfDqBi4-P_dTiG6Fu-Md1DdgkQNdMk5RKTm8G9CoEhj7fBUk
+Message-ID: <CABXGCsNYLoE8OSxEbbYJPV34H=8s1QzLjvc2pjQSwiK2VjHdfA@mail.gmail.com>
+Subject: Re: [PATCH wireless] Revert "wifi: mt76: Disable napi when removing device"
+To: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+Cc: Thorsten Leemhuis <regressions@leemhuis.info>, linux-wireless@vger.kernel.org, 
+	Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, 
+	Bert Karwatzki <spasswolf@web.de>, Devin Wittmayer <lucid_duck@justthetip.ca>, 
+	Eric Biggers <ebiggers@kernel.org>, linux-kernel@vger.kernel.org, 
+	Linux kernel regressions list <regressions@lists.linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Le 12/08/2026 à 00:30, Mikhail Gavrilov a écrit :
-> Felix, could you also mark my withdrawn first attempt as superseded?  It
-> is still at "new" too, and it must not be applied - it replaces the hang
-> with a use-after-free:
-> 
->    https://patchwork.kernel.org/project/linux-wireless/ 
-> patch/20260728002048.19351-1-mikhail.v.gavrilov@gmail.com/
+On Wed, Aug 12, 2026 at 12:13=E2=80=AFPM Nicolas Cavallari
+<nicolas.cavallari@green-communications.fr> wrote:
+>
+> Depending on the patchwork configuration, you might be able to change
+> the status of your own patch if you register an account. I'm not sure if
+> patchwork.kernel.org allows it, through.
 
-Depending on the patchwork configuration, you might be able to change 
-the status of your own patch if you register an account. I'm not sure if 
-patchwork.kernel.org allows it, through.
+Marked it Superseded, thanks - patchwork.kernel.org does let the
+submitter change state on their own patches.
+
+--=20
+Thanks,
+Mikhail Gavrilov.
