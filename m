@@ -1,74 +1,70 @@
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF34D41D215
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 06:40:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6572341BA7A
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 06:52:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786603260; cv=none; b=ucY0yiQcxRGWGSGoqim9OswxckVLi9L/85OtzI3b6H3K11494NXC3l/3FAaXmaiN+Y5IJ7q7PEjxaFjxBHSnMTFWRKxa1puC58nwsIWn2qzkl1pScohGLB6/mNG4l1HiLR9PG/1QGMPyMz8YN8Z/d1nb8jMBGfjMbcde6DT11zw=
+	t=1786603972; cv=none; b=XfKMTPfnK10twNWL+VI8NpZUykmzYCL3QrkbjF7QsHke9lifPp4/B9waTimzDKTwpvo7PVUb/4QzvwzylCbJnCRQe/amLuK9SHZ0xE51SOKucMQHwPuB6SNkzwEUSul+bRaNuCxXLc7OAr8NlxFIc4ziZTA0O2zhNPb2/SrpLs0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786603260; c=relaxed/simple;
-	bh=I3MnwJKeKecLiZA9lN0unfFy2VZRO/RtM/o/Ua9pfNU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ey5tsDpQyjv1h579iZAXlK/ZVN1mas10a/d9kKBk66/owtE6XyRCJS3XAi1UAXMzxmnDvDN0odbRnjynmW3xfw1iFAEYIbV1pjf1BQfD/0mlgKjCfpjQZhAcmak83uEyFwTA+0XiWDp0i0JGFA1K6f+If/VvurGA/1uWzz+YDtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fYMfccPj; arc=none smtp.client-ip=209.85.221.44
+	s=arc-20240116; t=1786603972; c=relaxed/simple;
+	bh=Sk99J0H/Z9nrU3stku+BhkRc1rZCLnM0D8arqBxdvM4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fIJLiNQ+YyhYQFO7b0UyRJZGD6am0HLNp7wdE/CbYkzf3cHW4t2hucWLevXSJe7OWVD7I1iJWrGn4G2NM5WRIsVFr9MA0s/3xB25C93HHJzNZBwIkiwQY7fErRLsi1nizuIcAV/YmbdX3igDWf3nH7LxD7NYkLxHXYt3tDcqe2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E0pZG601; arc=none smtp.client-ip=209.85.167.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fYMfccPj"
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-47de0093c42so1603647f8f.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 23:40:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E0pZG601"
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5b2a4359d16so380390e87.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Aug 2026 23:52:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786603251; x=1787208051; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=OjgCOQZV4xvZ6ZlJku/979mNz0W9TKBYYyEUFdVQ7Pc=;
-        b=fYMfccPjzLoj2LwtZ5sUcFIdIg8fhM8KqnStldw0og0VwSYzhM62hOyxM0xBPHY8QQ
-         X0Vmjpm/ZMsCNJtF13L5Em7CCY/V86DfYHBzkDjT/+GjfXbDjkc9FqzQpXNjVfxhNEat
-         COxkaKnuCtWQHp06vMGdHyfE79C2x16eQ1oz63vH5plh7tWImQXlLWz/hWeAtWiQR5Xq
-         rPT4L0uN0Ap3Zpsie2vzKlFFmSHWBmXphgzXUtuh2l1leCwPkzyRGCBHr0lx6uwGkx3J
-         rlxStTQX/FdDIXR5nLp8bQWocfHuh69fSt41kAhwZT/b5TnYPGXTjg3sjUrifrO8+dhq
-         +NMg==
+        d=gmail.com; s=20251104; t=1786603968; x=1787208768; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=w5MJXBWLUZITB4uTg9L/4D9nTZBNcUiWYYsAhymg8X8=;
+        b=E0pZG601oSSliLe0CElLEND+lC5+puUIFIwTn0hpwyKwsHVWRUYWw2zcjRv9JQNosH
+         n//bJRy65ClTMP1QztoR9TJpwd8gaDjs6J7WL98G1TAVvzeHDWxjH8GChn+9LLuIKpII
+         YgKW4IEend8lGYqQOdxdKMfsPZ3vffDsoS/J54MaKjZmK6JN8yknvQpKnTnG1f0g0tfY
+         ZSv+iIgUL0OZbeRgL5NHHi4tC+CuMEbYQXQ2iSqL5nwO7iDzyViN/fX7tHyG8LbtJrfO
+         SyuuXg4rnZMLEYHV8nYa/ZWv3qQdYos7F04P1oPt7IgmioD3WCleWPYukkTsRcc3LBBM
+         vx+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786603251; x=1787208051;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=OjgCOQZV4xvZ6ZlJku/979mNz0W9TKBYYyEUFdVQ7Pc=;
-        b=pncKVyGt/oybdXIHLNFpLcbhmxm2GYXLXsKIlre5vKnhgJO5P2F/RE+nT+pNs5/TNv
-         4rT7pEfSu1jgjpU+GkL1DpswSeUE83HSrMZeCC8LLzDWt/cP1Mi23ZGSY/ITVMTnRLfP
-         1FkhO+aRIvORbF92F2+1BDwQzyYCjt+p//TqXMw9jKDvn/Eb3Iw5jQ5Sy61ZiyrY1EyT
-         LvXCpSjqCWwWBk3DUMqzb+GA/YpElL6PSmw6Bx1YdX2jFRNgaJIzxbl66joJCm5B1tQI
-         kGYiCRATZ+UcKdFVPdfV384b4a5DEXDfYP955SNV4Yf8huUXxfrwUOFtASQxOsp3CCv+
-         9w6w==
-X-Forwarded-Encrypted: i=1; AHgh+RrYLpPblzjfqtR4LRv1uByCbf6OV2BZWYs21P1Gu7/56etBNx5ZNy0+Xg+1z1O/eP5rP8ePM8VrKZ02TDxMfw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQro+lEhWKB940g5rXX5/m6ckktE6BnQ43wXpzMB//Bm4il+s1
-	8Sl+83YlCkE3hlzBJE598WqzaHwCOojN33LQ9KQNQLJvTgXPOa3wDZg9FUGcVQ==
-X-Gm-Gg: AR+sD12fCaoyIdipH363Ps3WhNh20I1EdqfoYQ6bv1vfGhG2q3tDb/W7OmmZj6zSwef
-	WVpJn6ug8Wx0Q2DxctNqAgcwbB04m1Tw8kU04vYLFN7p3N7tFILtDfR72Cs0ORznO78C48337x2
-	PmyyMNqqyGFcBdngO7lqG676axpJe81YfN7WXwRcS8UAC8E+IhsW61bxaYBQ+aIcOaK86A5QsmC
-	aotVJHXMltNvw2x5C1VGsFAd7zoo5oiKrbOyGCuhUAnH7zxfuZ1J+hQdWa25XFalE4Fws6cpGhT
-	TEABBrh/t3qleVKlHhLnVVC6uytt1aM0I0dmvwOGunDLozXC4piFjtvTKgcxZwQTnEVGetjn3qG
-	/BfayTu+uWC6KWlZVtVeq4T5oJjvGdvR2sPREmLn3KOSyMNAZUrFcdusIZFXeNPPr/WiuAf3SXh
-	iRUNgipGLzsUssLlfTrtalMUnIVL1rq0Z7ikAhP2Np6nm7KQYdavZJeUKffovJgPOpkw==
-X-Received: by 2002:a05:6000:2c13:b0:47f:9464:86cc with SMTP id ffacd0b85a97d-48159cbd121mr4453345f8f.2.1786603250415;
-        Wed, 12 Aug 2026 23:40:50 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4815a5b6e3asm3407586f8f.28.2026.08.12.23.40.49
+        d=1e100.net; s=20251104; t=1786603968; x=1787208768;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=w5MJXBWLUZITB4uTg9L/4D9nTZBNcUiWYYsAhymg8X8=;
+        b=TZj23NVMUHlHkgmxLJK3WnXgjD45e4AVj8y8MldTAX+bVIrIECECNKY94X5+Cjbxqc
+         7LHLP/T2Or2ZnMBwMWGFMSf4FA+AT0BDkyFvEpsZKSVo7GIl3TQI/0NeC19SlCunOyZ6
+         DE2XN5m3UPngzvGOZaulY9HcRc1rsJyH+vwgxGHymkydRx0R9Jj48yKAX8X1Vxo9Otuc
+         89rosAZ+E5a21n/jmZirrS5hE+W7aUJPlMVO/AqXzMiXJD2N/WqfHHIid3gOzC5Nx8Qp
+         Y3vbgrxpCleaq9rdWO03midH+tW9K+L8/oGONxnIT8MMTE1y9jTgHmd8QbI7ht97iTma
+         lkZA==
+X-Gm-Message-State: AOJu0Yztjgqxqk0sHoZ+H8spgUjfx0+yL7E4fyhSdznozk9jLa25j1A7
+	uunvzW5ryYLOg5bXQlNy501dT7md923WMJosna3c//xzhavMi06RboVX
+X-Gm-Gg: AR+sD11XyUKnDjLxXFGghIaFP2NPUt/LIowcYUZr6TrxRIMndazFk1XBVBbESjcPGUR
+	lk5z6/xCjcmsr666GTYaAA9cO+6bKIOXHQkM9nuLDvWWSErDO6s5Q7/d7oNSuCuyfNrxI6M8q0S
+	laMnSUGrg8e8c3uw1cnASt3s5GRZiXNMmGbU1jVh8mYI8a6FOLzvsNStrdtwBp+G3jOuWlMH+hc
+	kj3fYNoDCnAXFw9tTeHlpHsGG2yoJnd7p8/0Lf2JOdVXoszWMkvEe9CeAyWdN6JGMJRsfBNxAjk
+	oz0rW1GA71ct2lGDDYVUr+EK7JgoD8eCmdpMJxPXpNZ4pmG8cdoS1+a5xUdeXgnIdilKeuVd3Sz
+	gXXiTLEqjqVX3he6F3qc6UuMm/kAQeoEdzCahsK1EoWIWw+9JICxyNJgqwshxvzqm/al7riiZNV
+	xsYJXe2A/FXZE3fH1TzWcQE0FlgMFLPpYA88MP1VKKoR8aX3OlL/4anRcaw768mGTJub8iY5isw
+	7uPmFLTp5YqLA439sb1roJK1cWNkfWyOjdg5FnwZsJNi0xNpVcPrnToTLyw9g==
+X-Received: by 2002:a05:6512:1096:b0:5b0:22a6:6b13 with SMTP id 2adb3069b0e04-5b453cfb311mr484198e87.0.1786603968024;
+        Wed, 12 Aug 2026 23:52:48 -0700 (PDT)
+Received: from archlinux ([94.180.96.85])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b453a54adasm270076e87.38.2026.08.12.23.52.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Aug 2026 23:40:49 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH rtw-next v3] wifi: rtw88: usb: do not log transfers lost to a mode switch
-Date: Thu, 13 Aug 2026 08:40:48 +0200
-Message-ID: <20260813064048.198903-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <72ff0d793d61415eb9fd1c513abdcc5a@realtek.com>
-References: <72ff0d793d61415eb9fd1c513abdcc5a@realtek.com>
+        Wed, 12 Aug 2026 23:52:47 -0700 (PDT)
+From: Arsenii Pashchenko <ulijg308@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arsenii Pashchenko <ulijg308@gmail.com>
+Subject: [PATCH rtw-next v3 0/4] wifi: rtw88: rtw8822c: refactor DAC IQ calibration to s32
+Date: Thu, 13 Aug 2026 13:52:31 +0700
+Message-ID: <cover.1786603749.git.ulijg308@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -77,147 +73,55 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-An RTL8822BU or RTL8822CU is asked to come back as a USB 3 device by
-rtw_usb_switch_mode_new(). The chip powers off its MAC and leaves the bus
-while the last control transfers of that sequence are still in flight, so
-they complete with -EPROTO and the driver reports them as errors:
+This series refactors the Digital-to-Analog Converter (DAC) IQ 
+calibration routines in the rtw8822c driver. 
 
-  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
-  rtw_8822bu 1-1:1.0: write register 0xc4 failed with -71
-  usb 1-1: USB disconnect, device number 2
-  usbcore: registered new interface driver rtw_8822bu
-  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+The original code heavily relies on unsigned 32-bit math mapped over
+a 10-bit circular hardware register scale centered around 0x200. This 
+introduces complex nested boundary checks, custom bubble sort rules,
+and custom min/max tracking helpers.
 
-Register 0xc4 is REG_PAD_CTRL2 and the access losing the race is the
-rtw_write32_set() that ends the switch sequence, a few milliseconds before
-the disconnect. Which transfer gets caught varies from boot to boot: 0xc4
-is in the "always on" section, so every write to it is followed by a second
-one from rtw_usb_reg_sec(), and sometimes that is the one that fails:
+By migrating the temporary stack arrays and signatures to signed s32
+and utilizing the kernel's sign_extend32() API, the coordination system 
+is linearized. This allows the removal of internal custom helpers and 
+collapses unsigned wrap-around logic into standard linear operations.
 
-  rtw_8822bu 1-1:1.0: rtw_usb_reg_sec: reg 0x4e0, usb write 1 fail, status: -71
+The series is broken down as follows:
+Patch 1: Prepares signatures and stack buffers, converting types to s32.
+Patch 2: Introduces sign_extend32() and simplifies the validation window.
+Patch 3: Replaces custom bubble sort with the kernel's native sort().
+Patch 4: Eliminates minmax_cmp, streamlining search and offset loops.
 
-Nothing is wrong here. The device re-enumerates, probes again and registers
-normally, which is why rtw_usb_probe() already treats a non-zero return
-from rtw_usb_switch_mode() as "Not a fail". On a USB 2 only port the
-switch can never succeed, so the message returns on every boot and
-everyone using such a port has to work out that it is harmless.
+AI Disclosure:
+An AI assistant was used for source code analysis and conceptual 
+consultation regarding the signed math transformation. All code 
+modifications, final implementations, and refactoring steps were 
+written, reviewed, and verified manually by the author.
 
-Mark the window in which the chip is expected to leave the bus and skip the
-error reports for transfers that fall into it. The mark is set in
-rtw_usb_switch_mode(), so it covers both the new and the old switch
-sequence, and it is dropped again unless a switch was really started. It is
-never cleared after that because the switch always ends in a re-probe with
-a fresh struct rtw_usb.
-
-Tested with an RTL8822BU (0x7392:0xb822) on a USB 2 root port of a TI AM62,
-where the message appears exactly once per boot. With the patch both lines
-are gone while the disconnect, the re-enumeration and the second firmware
-load are unchanged.
-
-Signed-off-by: Mehmet Fide <mehmet.fide@gmail.com>
+Testing:
+- Every patch in the series was verified with scripts/checkpatch.pl 
+  and yielded 0 errors and 0 warnings.
+- Each patch was sequentially built (bisected and compiled) to ensure 
+  there are no compiler warnings, pointer type mismatches, or broken 
+  builds at any intermediate step.
 ---
-v3:
- - set the mark in rtw_usb_switch_mode() instead of in the two switch
-   helpers, and keep it only when the return value is 1 (Ping-Ke Shih)
+Changes in v3:
+ - Corrected the subject prefix target tree from wireless-next to rtw-next 
+   as requested by the maintainer.
+   
+Changes in v2:
+ - Fixed missing target tree name in the subject prefix (switched to wireless-next).
 
-I did not go for WARN_ONCE(): it would still fire once on every boot, which
-is exactly the message this patch is about, and it would add a backtrace to
-something the driver causes on purpose and already treats as "Not a fail".
 
-One note on where the mark is set. The transfers that lose the race are the
-last ones inside the switch helper, before it returns, so setting the mark
-only after the call would come too late. Setting it in the caller before the
-call and dropping it again unless the helper returns 1 keeps it in one place
-and still covers the window. The small cost is that the couple of register
-reads at the start of the helper are covered too.
+Arsenii Pashchenko (4):
+  wifi: rtw88: rtw8822c: convert DAC IQ buffers and signatures to s32
+  wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ validation
+  wifi: rtw88: rtw8822c: switch to the kernel's sort() library
+  wifi: rtw88: rtw8822c: simplify amplitude search and offset via s32
 
-v2:
- - regenerated with git format-patch on top of rtw-next, as asked
- - also cover the old switch sequence, used by RTL8812AU and RTL8814AU
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 146 ++++++------------
+ 1 file changed, 43 insertions(+), 103 deletions(-)
 
- drivers/net/wireless/realtek/rtw88/usb.c | 23 ++++++++++++++++++-----
- drivers/net/wireless/realtek/rtw88/usb.h |  3 +++
- 2 files changed, 21 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 64e1c3420..7a4de4995 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -64,7 +64,7 @@ static void rtw_usb_reg_sec(struct rtw_dev *rtwdev, u32 addr, __le32 *data)
- 				 RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
- 				 t_reg, 0, data, t_len, 500);
- 
--	if (status != t_len && status != -ENODEV)
-+	if (status != t_len && status != -ENODEV && !rtwusb->switching_mode)
- 		rtw_err(rtwdev, "%s: reg 0x%x, usb write %u fail, status: %d\n",
- 			__func__, t_reg, t_len, status);
- }
-@@ -90,7 +90,7 @@ static u32 rtw_usb_read(struct rtw_dev *rtwdev, u32 addr, u16 len)
- 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
- 			      RTW_USB_CMD_REQ, RTW_USB_CMD_READ, addr,
- 			      RTW_USB_VENQT_CMD_IDX, data, len, 1000);
--	if (ret < 0 && ret != -ENODEV && count++ < 4)
-+	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
- 		rtw_err(rtwdev, "read register 0x%x failed with %d\n",
- 			addr, ret);
- 
-@@ -140,7 +140,7 @@ static void rtw_usb_write(struct rtw_dev *rtwdev, u32 addr, u32 val, int len)
- 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
- 			      RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
- 			      addr, 0, data, len, 500);
--	if (ret < 0 && ret != -ENODEV && count++ < 4)
-+	if (ret < 0 && ret != -ENODEV && !rtwusb->switching_mode && count++ < 4)
- 		rtw_err(rtwdev, "write register 0x%x failed with %d\n",
- 			addr, ret);
- 
-@@ -1172,7 +1172,9 @@ static bool rtw_usb3_chip_new(u8 chip_id)
- 
- static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
- {
-+	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
- 	u8 id = rtwdev->chip->id;
-+	int ret;
- 
- 	if (!rtw_usb3_chip_new(id) && !rtw_usb3_chip_old(id))
- 		return 0;
-@@ -1189,10 +1191,21 @@ static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
- 		return 0;
- 	}
- 
-+	/* From here the chip may power off its MAC and re-enumerate, so it can
-+	 * leave the bus while a control transfer is still in flight. Keep the
-+	 * mark only if a switch was really started.
-+	 */
-+	rtwusb->switching_mode = true;
-+
- 	if (rtw_usb3_chip_old(id))
--		return rtw_usb_switch_mode_old(rtwdev);
-+		ret = rtw_usb_switch_mode_old(rtwdev);
- 	else
--		return rtw_usb_switch_mode_new(rtwdev);
-+		ret = rtw_usb_switch_mode_new(rtwdev);
-+
-+	if (ret != 1)
-+		rtwusb->switching_mode = false;
-+
-+	return ret;
- }
- 
- #define USB_REG_PAGE	0xf4
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.h b/drivers/net/wireless/realtek/rtw88/usb.h
-index 9b695b688..9d2825368 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.h
-+++ b/drivers/net/wireless/realtek/rtw88/usb.h
-@@ -85,6 +85,9 @@ struct rtw_usb {
- 	struct sk_buff_head rx_free_queue;
- 	struct work_struct rx_work;
- 	struct work_struct rx_urb_work;
-+
-+	/* the chip is re-enumerating, control transfers are expected to fail */
-+	bool switching_mode;
- };
- 
- static inline struct rtw_usb_tx_data *rtw_usb_get_tx_data(struct sk_buff *skb)
 -- 
-2.54.0
+2.55.0
 
