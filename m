@@ -1,177 +1,135 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3761D3AE198
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 17:41:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74BA0381B01
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 18:34:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786642868; cv=none; b=HIHIB3QTQiVz+takMHzhqkKHBdjGA11Fre8N6l1rAWS2/Pz0jF8QnFJZRNVmrvKB0rY00nrkguasW4sFS6BcZUnY5E4am7yncMQxpxt0iD8K0/h3QT74FjB+RpwikIj/udYMH3oCMSOiAdeN4DHoJJn1H08hMwMTbgls+scj75A=
+	t=1786646085; cv=none; b=EmJqV9AKGsILFX5OwKopYOAKVKSg7j6izLFAirGrB3JbKajc+FcWx4CW2bpZeBS6k3ly2EXZk1llKduOuh5YOzvf9VvN1Sy5cuRNP4nm3t41Ihn4i5/r2F3gxnELA9N740DL7PLGwOztEXl6CQrglfqPyQL8E5fGYUw8lyrRZ0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786642868; c=relaxed/simple;
-	bh=ERB3Ht3KQ7PJfL69qf4To3ZximdNxC6SNofrFvNxe0U=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=sLHpZIs+JjeQ1EyOk0vqHt+mXUCDhk8+Q6/p9PpzUuL2EV28dLZtroldeBzRvNR8SP/sb3cjL40yQmDbxxYpji4RABZbi/srJC2d3g8NDgwiTJU7WhxcvasASuJZmDLoPKnCTa3WCLvBL4R/TQqQJzA8ccum/90GbDMXcbOH+Pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ESXHz0IT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Z7et89Bl; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1786646085; c=relaxed/simple;
+	bh=DHFZ2TaJOgchJ5PIo/X8b3TeXaT3TPk70S1lgfWB3Xw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GoT8p0FQDaqVpqUSrIbPgpFc4m6kA2PPPou8bBVqbTX+JNOmYRxYyyfvrSAA+fQ5Qz/K7IQjNZysEJ12Yf+UbvRI+p/RYYVtX5Jm1jOlmnf1sCjNWPN6cN798uVAo0EFo/P/nQhEFAKQUtvD8tOTzikbBSFPuOUoImuMeDOT77Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SBPNCcEY; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ESXHz0IT";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Z7et89Bl"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67DH8EW03052436
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 17:41:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=JLpr7daqz7OTT67FQV80/z
-	+XbfGvlShMvH/5gavUb5M=; b=ESXHz0ITk82PMgKwDSgDOl7y9fDfTGO8NghIae
-	/fNEOTWzqqHaVe5bYu2ftaUKyARIYDdVIpBdpdHqaSfq8ZlM0DXeke1uqNDwK5fw
-	vQ9R7wgvfE/b8W4vdlyJW4lVb2HwgKGJdaJ0zGdwSja73NomEhabEZLnoe1W6I83
-	SbFdNMvkYswc8fRUtz+F7XwCbQp+4zyx15qCaht4FWsk35i0w8LOQZXQRDmdTDDt
-	Pqkj44Nkb/Qm/nfGEYPtGElM7CU9eBobuc7r2HdLr8jP3+B5MF+zxha7r1yXp4oo
-	IeApzNgQd8FstirbTO3w16oTLiSHc33p95E8nFn2aI8iAPsw==
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g1j2f04vd-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 17:41:06 +0000 (GMT)
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cbb20f82a0eso58144a12.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 10:41:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SBPNCcEY"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4953e04ef16so2167175e9.2
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 11:34:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1786642866; x=1787247666; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=JLpr7daqz7OTT67FQV80/z+XbfGvlShMvH/5gavUb5M=;
-        b=Z7et89Bls50T96oL0/05IamVPG/jz4quT+Hcd9pNhTRndJsCNtqV5YfORf5Vx06wPU
-         q7sgBlC31cseOmvjhMxHbQLiKw7zPgMAUr6DmvhNFMTMmxZSsgViaD1MVTorrvK5jPsc
-         zvJx8zmFeLms40qQhJdC+xfcrQF3Kgimj0XyNLvFte0qk9WAixnaxVn27XEZ1WUcQiR/
-         D4zzznej1eI8cBsDdFBtJoNKg1CziRtH2JYEdEZWPheOqANuAx+3dU8UC5U+YGh9/Qi8
-         wT5qPS1bgGmfxQ4WDSiK97i/OkdrW+rxuCZqub5MKnaDT9gFFFZxRMe+ThQ9b0IfJqBC
-         9ERA==
+        d=gmail.com; s=20251104; t=1786646083; x=1787250883; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=VhF0Xbpe0vf9q5WFf1uUEKSaWLORxrvQ33nYU/aKtAk=;
+        b=SBPNCcEY1l/Xq7vpa1sHnjpCP6mRoPhbeoQz8QJH3aGStEU/7uhzykMss3B5G1QnV7
+         4BKCbPJ2cmMFDWSDqCCsw9nJb7VBH7UbyPgsvF0nrqsaJjsYN6T9kyeHbBcD9tzakXKF
+         rEg9rRYqIzg59oKC2T2TSGCZKDvBnSsTQmHbONuHReCAkYJO6bNTXh65hmgFAOwkD5KM
+         8qvb3680swrschS0m9+Q0WWs1Hdlsz0akansQjqRbwNIaY4FCYOhJ2uzs4QLloAiLtU6
+         wHmADzlDdrEJ2/xMgAeghqo0BLbsfdPDOY0dIeFVo29sGUmwo5ft9lPs8e4azKCf2+KB
+         GfhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786642866; x=1787247666;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=JLpr7daqz7OTT67FQV80/z+XbfGvlShMvH/5gavUb5M=;
-        b=b0M+yAsZTDQv9Bt5GJdzX09TJir9CV4l5cQDSKjYY/R1zJZOdCQ/PRjBq8fcmjQ4Hg
-         KFV8p7gNN8+TMZ0JTWuDDblVxdeT8tpwFzQLlHXDuAztc3pqkULJHtqkFaBdx9mc3HMx
-         JwBd/5u6hzywB1JAaPj77KZO+BFpIO3fcwJ0NDDTsifwkUOxUMjv8hhFyyZNo38Z3l5Y
-         sfUHsgWsGV7EH6Ug8285oE7tDtavP3bZVJDatGKBTnp/Ssv8HB9G//hoNlVFzy/hPh+E
-         H42w59omwdrXdd/Sgu5kRE6ToWRzNYQXfn4AfG3KJrnl/F3kx4aRhYOGOpSoNxdWqRrf
-         9hJg==
-X-Forwarded-Encrypted: i=1; AHgh+RrIOvQiize48DLyQoC/fATLX+DeDWQ9F9aZCSCJ4hVMlYO/xAfMv/tuGAifSR97ExKvAWJm0EnDLtyCEtKqaQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkQfAy/OBB0MPuTBKzCTcFjZ+/h1oqKQLUt145AW+/OsJWn1Ze
-	QjDzrTZ2yIh8JwjLtXi7iz+buMU4TKNvY6MA3u+QJAA0rG0+1ocskYph8hehbmsDngDlE90mXAq
-	nGsf15ddn53QouATK/JLy1UazOuZcdMjEnH5KMuBlNDx2yq+fk1bfftggb4NLI5hheJ7FBw==
-X-Gm-Gg: AR+sD112lI/KFEBpMahaA/pXMZYiKokkPBZlhRHtFF4J4yCb8pk0S0ZIxQ7LuivNu94
-	2pz6ZwrnJZZQX6/i0ciaXVoe6qh5MGPu4QYkg/TSvdgCJ4Gde0X93kVPFE2w7QPcUWh0by/bn+G
-	PGLXOd9uKH9Oxi6Ky6MDOYZ7yvDIMYaJACMVymIGAJUer1UQmgJUAx/xKQ4pSb7tqtajkNlepwg
-	w/G5kTobaOHyi3jj3346zfn3ZGWws6y/qrIrbtIPaLbTy+TCTnfvJdnspqMNuqns5TPHXBD9BlF
-	yoNRqSJG2XIUmhs5JcgMCqoypk/8qScAhOTYcf+UCO1buGQPC5Xnp8GUu/56D7iSTzgMnP/1K8+
-	jx6sA/n1p8bNVD9Dl78YIELOco3lu/1dNt9PiVV6Vc0mbvkx5L4dVsVA=
-X-Received: by 2002:a05:6a21:3282:b0:3c3:b57b:6459 with SMTP id adf61e73a8af0-3cc54f3e1demr9186874637.7.1786642865592;
-        Thu, 13 Aug 2026 10:41:05 -0700 (PDT)
-X-Received: by 2002:a05:6a21:3282:b0:3c3:b57b:6459 with SMTP id adf61e73a8af0-3cc54f3e1demr9186802637.7.1786642865089;
-        Thu, 13 Aug 2026 10:41:05 -0700 (PDT)
-Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-31ebf732166sm16244436eec.18.2026.08.13.10.41.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 10:41:04 -0700 (PDT)
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Date: Thu, 13 Aug 2026 10:41:02 -0700
-Subject: [PATCH ath-next] wifi: ath9k: use rcu_dereference_bh() for
- sta->rates in ath_merge_ratetbl()
+        d=1e100.net; s=20251104; t=1786646083; x=1787250883;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VhF0Xbpe0vf9q5WFf1uUEKSaWLORxrvQ33nYU/aKtAk=;
+        b=oG8G0KPr/iXaibdZsnnS/3jAeuLqlHsy0wRrrIFkArqd6Sy+1M5TLtH/izBo4NW62K
+         LYmmTDTjz8pyS7Fds5gTubdGMvL/xJxpHKXN4/cS9pzwpwvcfsB5aZlU3NvgccsLd1ao
+         PeHqiEzB9Rn9AcDq8askdQOOEpKMs+i2uk8NmBELcK5ZLZ5Dr4n/jPxT/8sbNxGERABz
+         ote7Mulbe/p79Ow+gsVFxblcJ0KAxv25RuAQIqbHctLLKIKtG7Y7gLvBK56Putid1daf
+         B0CTrNra3cfc8dwf7rOLdt4CGkj21j46lE/okiiMOvJgI4G+TDucCUPVYZ3v1WJUVzwx
+         yobg==
+X-Forwarded-Encrypted: i=1; AHgh+RpsHtL/knN2TmFf5VVweipD1sx4bts1RfjDnv4XdKwYWZSsjwDwhxDyFQ8voIGTFVy5RJXgxAUahcYnbqfNfw==@vger.kernel.org
+X-Gm-Message-State: AOJu0YypqMLCD1ZrorwLCM/DoEjQ4eFy3q4jtXHRkQa8bnvkB2Or11tQ
+	rsdPiYVb7rrbgKbP6x7fCgR3FAA65QlHrCrbW4mDErkudPyu+yOX9PA3
+X-Gm-Gg: AR+sD12UgEmOmusBDROgdMd01VlQe0HVb3XjVlXbBKNGXRQJ612HoVv1LYTar3xYMQy
+	zgnoJv01FL0elxFuozqVX+rrguHLFrFlGCTV+fj0ku0IMWaf9CRUHo+CT7ketX6EuQVOCymeZev
+	tmHKTSCguvMKFHPX8lH3siW0mh0zzJ9dHylW3fRGSLKLtZpVRgTguei/BaCAhykQqIRN/jZjHyA
+	1CWQZ1l4tdjyMLWd5WAZNv9TRyNUDHG8XwN+qrB83Yzd1pNz+QZQ1wxH77yEJIGw5gBuXVFP5eY
+	Osq6m6g52VqHGwrbdO/ZQe8KbFDoyT2fRxBqjUrv7iQsgnpwCGM7daLJH8PWQTpdACWMTRzXYGi
+	bYykBBfsCFI2jlUymTJpdssoZcOsAdT96eMmjcBWz+8zlJCsirVHHzXyAP3Peq7o5ByQk8QJocn
+	/8xibkv+Q088RwFWlNga7QzacpCasn3XgJn3k35EIa6BxprmS92YVBpAqgF82cD/YB/WJKPQ==
+X-Received: by 2002:a05:600c:6289:b0:499:84fe:ca8c with SMTP id 5b1f17b1804b1-499879332e1mr5414995e9.5.1786646082473;
+        Thu, 13 Aug 2026 11:34:42 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.229])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4815f2c46besm1159536f8f.31.2026.08.13.11.34.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Aug 2026 11:34:42 -0700 (PDT)
+Message-ID: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
+Date: Thu, 13 Aug 2026 21:34:39 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20260813-ath9k-rcu-fix-v1-1-424665a1ce60@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIAK4BfmoC/x2MSwqAMAwFryJZG6ifFutVxEXR1AahSqsiiHc3u
- JzHvHkgU2LK0BcPJLo48xYFqrKAKbi4EPIsDLWqjeqqBt0R7IppOtHzjbo11rVGNX7WIJ89kcx
- /bwBRMdJ9wPi+H3vKONNpAAAA
-X-Change-ID: 20260813-ath9k-rcu-fix-5469a4603fd5
-To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        pengdonglin <pengdonglin@xiaomi.com>
-Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-X-Mailer: b4 0.14.3
-X-Authority-Analysis: v=2.4 cv=FeMHAp+6 c=1 sm=1 tr=0 ts=6a7e01b2 cx=c_pps
- a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=EUspDBNiAAAA:8 a=6wmsvPg6niT-l0PZxM0A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=x9snwWr2DeNwDh03kgHS:22
-X-Proofpoint-GUID: eFf7g9QB7cC4y0KxA67yedRDsMZVqGdy
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODEzMDEyNyBTYWx0ZWRfX1AR4s48g7UsJ
- hMDnXoix1jrZi23wq/TR+wQjeH9soodhaZ1755e6XupX1cQAJIpf6nL0IEIdkaLsAq8WRghahDm
- ubnHDLXF6smqhejiPegA+cDW0swoA7B3oFK7ycH0CjThxFERueExPejRf7sYaDo9d1RJpM20Qb/
- z9d7L9Wv5e1NLPkyKaHxQV39dJTuN56hWEOI2tlTko9WFZBmlmHES7p583YTvLn8fCXA0WjIF9p
- xiyvgh12ftbFQidZkJNxk3jRo+DS2KQmHQ/29gbcSbhKUSPEjKvf9DYt93pvlmFYbCIRqiWDf3X
- IGoxMQVFIJ4V9q6X7EqIGjCeRf1O9A+3JVU6JMGLkCRp1bexGT/Q4gMC6cUol93e/lmEo//OpmW
- 3999hn9Mfdte+5h+U83772ZbsOzzlsQCsujjVjwNjSEpPprkCOl029b/hyb4u2qtFybdG197LUo
- QunYKHFXwmFwCqBJDJA==
-X-Proofpoint-ORIG-GUID: eFf7g9QB7cC4y0KxA67yedRDsMZVqGdy
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODEzMDEyNyBTYWx0ZWRfXzuTWRA9rSTo7
- UoaLrtaxu/yJsJSMyqPEnWcDngxsXiJ3A2TClOhkGI3a1L2Hcc7AF2dJpZuUOAQ0gLsXsh33EAm
- 4KaZ0ushdz/Goj8RyiGcyWBTCwBb9NE=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-13_05,2026-08-12_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0 impostorscore=0
- suspectscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608130127
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via
+ the AC queues
+To: Mehmet Fide <mehmet.fide@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Mehmet Fide <mehmet.fide@screeningeagle.com>
+References: <4bb13bf2-8588-4235-a1ec-b82e6668c982@gmail.com>
+ <20260813155252.2265589-1-mehmet.fide@gmail.com>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <20260813155252.2265589-1-mehmet.fide@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit c4f518736472 ("wifi: ath9k: Remove redundant rcu_read_lock/unlock()
-in spin_lock") removed the explicit rcu_read_lock()/rcu_read_unlock() pair
-from ath_txq_schedule(), relying on spin_lock_bh() to provide an implicit
-RCU read-side critical section.
+On 13/08/2026 18:52, Mehmet Fide wrote:
+> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+> 
+> Hello Bitterblue,
+> 
+>> I wonder if you can reproduce this problem with kernel 6.5? It looks
+>> like commit 076f786a0ae1 ("wifi: rtw88: Fix AP mode incorrect DTIM
+>> behavior") from 6.5 was supposed to fix the exact same problem.
+>> This is also the commit which introduced the code you are now removing.
+> 
+> Thanks, I was not aware of that commit, and you are right that my patch
+> reverts exactly the usb.c hunk of it; the MORE_DATA and HGQMD parts
+> stay. I will say that in the commit message in a v2.
+> 
+> I did not run 6.5 and cannot easily on this hardware, the board support
+> we run starts at 6.12. I do not think it would add information though:
+> the code from 076f786a0ae1 is unchanged between 6.5 and the 6.12.103 I
+> tested, and it was demonstrably engaged while the AP was wedged. In a
+> register snapshot taken in that state REG_TCR reads 0x00303030, so
+> BIT_TCR_UPDATE_HGQMD was set. Still, the high queue drained at about 14
+> frames a second, roughly 3 frames per DTIM at beacon interval 100 and
+> dtim_period 2, measured over minutes from the URB submit/complete
+> counters, while several hundred frames sat queued. So at least on
+> RTL8822BU the burst fetch does not happen even with that fix active.
+> RTL8821CU behaves the same, measured today on the same bench with only
+> the dongle swapped: stock fails the reconnect test 0/3 with the "error
+> beacon valid" messages appearing, and passes 5/5 with none once the bmc
+> routing is reverted. RTL8822BU is 0/5 stock and 10/10 with the revert.
+> 
+> I also think the two problems are different. 076f786a0ae1 addresses the
+> hardware fetching one buffered packet per DTIM instead of the whole
+> burst. What we hit is sustained inflow above any DTIM-paced outflow: on
+> USB the high queue shares the single bulk-out endpoint and the page
+> pool with the beacon and H2C queues, so once the pool is exhausted
+> (measured: 14 of 1803 pages left) the beacon reserved-page download
+> fails ("error beacon valid"), the TIM stops updating, and the firmware
+> never releases the burst, which closes the loop and no station can
+> associate again.
+> 
+> If you would rather keep the after-DTIM delivery for stations in power
+> save, I am happy to test an alternative, for example routing bmc to the
+> high queue only while a station is actually in PS, or a depth cap on
+> the high queue. On this hardware the plain AC-queue routing is what I
+> could verify.
+> 
+> Thanks,
+> Mehmet
 
-That is correct on kernels without CONFIG_DEBUG_LOCK_ALLOC, where
-rcu_read_lock_any_held() falls back to !preemptible() as a proxy, and
-spin_lock_bh() disables preemption.
+Could you check what the official driver is doing in the same situation?
 
-However, rcu_dereference() in ath_merge_ratetbl() checks
-rcu_read_lock_held(), which under CONFIG_DEBUG_LOCK_ALLOC only returns
-true when lock_is_held(&rcu_lock_map) — set exclusively by an explicit
-rcu_read_lock().  A spin_lock_bh() does not set rcu_lock_map, so on a
-CONFIG_DEBUG_LOCK_ALLOC + CONFIG_PROVE_RCU kernel, any call path that
-reaches ath_merge_ratetbl() with a non-NULL sta will produce a lockdep
-splat.
-
-The correct fix is to use rcu_dereference_bh(), whose validity check
-calls rcu_read_lock_bh_held(), which returns true whenever BH is disabled
-(in_softirq() || irqs_disabled()).  This matches the actual protection
-at all callers of ath_set_rates() that pass a non-NULL sta: they all hold
-a spin_lock_bh() (either sc->chan_lock or txq->axq_lock).
-
-Fixes: c4f518736472 ("wifi: ath9k: Remove redundant rcu_read_lock/unlock() in spin_lock")
-Assisted-by: Claude:claude-sonnet-4-6
-Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 89d8b3178784..3413bb4906d4 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -168,7 +168,7 @@ static bool ath_merge_ratetbl(struct ieee80211_sta *sta, struct ath_buf *bf,
- 	if (!sta)
- 		return false;
- 
--	ratetbl = rcu_dereference(sta->rates);
-+	ratetbl = rcu_dereference_bh(sta->rates);
- 	if (!ratetbl)
- 		return false;
- 
-
----
-base-commit: e07447e654476262558bee570f4cf456e2b32565
-change-id: 20260813-ath9k-rcu-fix-5469a4603fd5
-
+https://github.com/morrownr/88x2bu-20210702
