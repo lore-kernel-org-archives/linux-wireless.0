@@ -1,144 +1,125 @@
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com [209.85.161.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92CD331A4C
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 19:48:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED3CE43C06F
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 21:05:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786650484; cv=none; b=FKg2Ku0Vd2z+RufCpm7P7o9Ua+uu0/09U73kcTwfXBKBfbXJVYrdHq9atVxWKkyvi1PjK3TsPK+wQ6j6q2nM54lxdu5eTUw01OZTNhiHc/jJm01GIhH1vAVY8dkqS5ghda/73ghBKzaPSbipkq6pbiB+1qs3ykykJ5EKH6+mvJU=
+	t=1786655134; cv=none; b=WShcPfQ1SvFFRfy22TSsN5K9JKMNiyB7HHZWMJmJ+xuqdPHNIbVN1IyfpPphvRnQKhc5ZHZDEql67NJzkS+4t1xqSDzkxFPyVzAd/4fO3o/pw80jGlpNBWym9nXXm8CplY15W4V39AzHEFtm6NCURSqGkynqImMO6WNaz9GRxw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786650484; c=relaxed/simple;
-	bh=jdff9RjTJ6FX5CYneqmJRs3kJJfu3JM/pEar10ZoML0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rPYgTBbbCje7vFXOPtqLKNqEeNw3xQIgFW3RVnDYmHlfEMNdXn8U+uyqRTOqEdr3BIf+Te4AQEy8r+SIwEF5PM/QnAy0kGL4miUG/zEx4A59KD+jt6blqWZnPQFSALRHd5kKKMDrNVCp2blxkSdXst6O2MHuG0iDqIefKnW7VvQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tHwEfD9t; arc=none smtp.client-ip=209.85.221.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tHwEfD9t"
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-47de0093c42so179037f8f.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 12:48:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786650481; x=1787255281; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=DPXs8j8erucli+FArrA6gPvW9i2D52YxZx0U6KvKwvs=;
-        b=tHwEfD9t2z4dGX2O31aooggmxQZDtYZ+CutHDnny21u3TlvtSgT5Aj9zz8i3fhF8FI
-         xLFVXp3zkS2crcqwXkD0itRu2nOpAbQ4tUL22LWvXP9dWJ28Oymf/GR5D9CdxBcgiZNL
-         5J5xh1AzmaPyNNS1idZ8gUT91APhjc4c7NZq9Op/VSogkBtSlOmP0V23W5FStZ4bYfIx
-         90dL7mvjHW8XkRmHr2MPtMG5QqjN8Q4v5V4wPAj1+UqLRsf8J8FJY5SixvI043mNuGUV
-         p3m1U4ogGENYKkPFJtbLNKa45uIqA/jWOuZWuX3kBuJtBYhzfFD9NTj4l/GbBWszL39g
-         xF2g==
+	s=arc-20240116; t=1786655134; c=relaxed/simple;
+	bh=RzEhLitbuFE5c49mic/FxVJN3KkaVMCXjL2DM+xyRv4=;
+	h=MIME-Version:Date:In-Reply-To:Message-ID:Subject:From:To:
+	 Content-Type; b=j6A+5T6Jz1cW5cp16TCAE1aTbBmo9V3tbqXXL3BRR7gCLKg/ccE5i1lMCykjJBSwfd0Jlwi8Sj7BcsazQlhQ4mTZRuhml+mHvk9bpNEmofnBrbCyPEizzWb7kHPvH4XfonCtgqjO7AFdm6i+EZdT99ZSRaj4XSQpg2I8xBxKO3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.161.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-oo1-f70.google.com with SMTP id 006d021491bc7-6ab0def53fcso267213eaf.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 14:05:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786650481; x=1787255281;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DPXs8j8erucli+FArrA6gPvW9i2D52YxZx0U6KvKwvs=;
-        b=ddjqSVsliemv3Uuhj2b7dNKC+4ShoLTrbXb71+a0Ov5C2Yylfo6A4Yeyglbtbbu6D6
-         UW3M9aycA5OqSOwKFpe+lZ6qYW9traP47/aVaV5GUBbwveWZQWyWhQUscnDTri2yHGFa
-         /5MxC8MpLbt3zvAfc3MIWbwcFaAlErrxRveXe/CF1G6O8P+Rjz2MDzYRUxbn7QfjmrGr
-         jpdhN4WBg1nFV4YgJNVcSu4zyryZlWz55WlW6MHly6id83O/i1j0JnybN7MDhHGpwQ2I
-         dcvyWNbAhb0pZjwsGd36cp336mlY+09Gglkd5Ux3FOk+Zh2sq+cHIBUuGZZvPKvg92rf
-         ColA==
-X-Forwarded-Encrypted: i=1; AHgh+RqN84bUoXRubnMwbNidqHpSJWmE8rE00THiqYvugA77NagOGd4C2AmB4cW+dvPvOTUmC8uMImckQymTBY1+Nw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxjNWzRcsnEL5wSc/Xa5yBTWQcCxK0zn7nCBCATX7SuFL6VChMn
-	7AZNs0XF0ozrYaCeeY6yuDT/HbCK93WehSXCUUh2uYNDMI8MX0+I710c
-X-Gm-Gg: AR+sD11alru36iK8T18YQXJOZQng7gTRrvqafrvVY9uM8AajACvaaXS70CgYdCHs8VS
-	/nuImI9GxSBQ/TE7fIp0JKFr8iarxLVXs/GMcLHiWoaP/PANh8LepcywhIMBY6vgtG2+HFVu7Er
-	iSbjau0DVmU9773eHbybLtoZi7NY7MfkY0OOwFxFFzmeHZbCM3Xg5Mrat6uv/wzxuKfFLf2f18Y
-	YrLDdp1kKfpJyFIucJwipbeQZ1+oOYo8PJFp2XUNKwa7Rb4h2932P/si1z7Xnu88FcRCyWWHzNl
-	we27UZ79uZCOwIUCfzH6B7wcNjDNEG/5zw0cHJhMjlwAytqtxPVs81yEBlj+D2MXRW/72lhCdJu
-	y/HUSk0AN5ZdlR4WAP+V9Nw48P4NodBvEC2tNxnu8ygeA6qx7hg5uSKqDkpDOe/JHgaWTG+Gg6b
-	25mS2zA5zm9PaYbQrepjjR20pAkPjxUY/O7cs2WNGbnjWn42kXjH3sO3JSm5Mq+U3lQllFug==
-X-Received: by 2002:a7b:c5ce:0:b0:499:726c:d658 with SMTP id 5b1f17b1804b1-499879bb9e5mr6552485e9.19.1786650480602;
-        Thu, 13 Aug 2026 12:48:00 -0700 (PDT)
-Received: from [192.168.1.50] ([79.119.240.229])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49981b631c1sm178430575e9.14.2026.08.13.12.47.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Aug 2026 12:47:59 -0700 (PDT)
-Message-ID: <ccc4cb9f-41a8-4de1-a6ca-b5e074385e4d@gmail.com>
-Date: Thu, 13 Aug 2026 22:47:58 +0300
+        d=1e100.net; s=20251104; t=1786655130; x=1787259930;
+        h=content-type:to:from:subject:message-id:in-reply-to:date
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=g6AkYXzHt3HDrsgn/d6vZ9xWa23uiub/SG2FBKrx1Ak=;
+        b=ZazcaezNXj1ufF0q+ReQpm7faiS0YTO+xIxGteXLu4Fr5Z+/gG7DraVnn/K+dtcrzL
+         LFhnUFqzowyHRBInJCSpyHCgDKl6c2NPoytZa0TEyNFjqOve31bgYlx+ONbN1WLGGNLg
+         e7I75UrMIkE37ZN6YN3JCyJYt1iY0CGQ308ADStzMRFD4YeeT6e+D5hC45AnbQ0qUTAc
+         G8Ct3WQG2/0dqacioWATj+ZYkWwEXLQj3bgjQpBxuxdcmDElS7kJfLXiV+ZvElEMARj3
+         rqVedhm3C7V4nTSEs3vc90BKGZ41aMUaGzAkHzVAADC7mBDe2wpI3MxCuXuVcbgpTlSD
+         2X4w==
+X-Forwarded-Encrypted: i=1; AHgh+RqQCJGg2g4jFjVjerjrx2kDQqpbQ2zfc1uC8hgHjeJe8SazuChQuXxEtqM8sr/4AnqL4K7sBWNSRi3zcYh92Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywc9avg7fS+1Zw4hn1WB4esAK+Efs7ppAJ3JmhdBcum74vhIUps
+	rS9dCslRDMenR7vKkRybbr+Tjsp1WXn1M3LEZ8aaIbtCPiVZZHYBdSjAHw1/+3a/LCs1/F996s0
+	NmFGxyWLsWWNDFM8Lp8ufbtDt37NOxQ+6lcsePiP9/HJM1yrbV7aXj3c4k/Q=
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via
- the AC queues
-To: Mehmet Fide <mehmet.fide@gmail.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, Mehmet Fide <mehmet.fide@screeningeagle.com>
-References: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
- <20260813185021.2290877-1-mehmet.fide@gmail.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260813185021.2290877-1-mehmet.fide@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a05:6820:81c8:b0:6b0:ace7:c413 with SMTP id
+ 006d021491bc7-6b0d5fd3426mr1361902eaf.6.1786655130674; Thu, 13 Aug 2026
+ 14:05:30 -0700 (PDT)
+Date: Thu, 13 Aug 2026 14:05:30 -0700
+In-Reply-To: <699fbc78.050a0220.1cd54b.000b.GAE@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <6a7e319a.ec5dc6cc.21cb3f.00bb.GAE@google.com>
+Subject: Re: [syzbot] [wireless?] WARNING in ieee80211_set_active_links (3)
+From: syzbot <syzbot+582469b3a9ef5f13606b@syzkaller.appspotmail.com>
+To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-On 13/08/2026 21:50, Mehmet Fide wrote:
-> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
-> 
-> Hello Bitterblue,
-> 
->> Could you check what the official driver is doing in the same situation?
->>
->> https://github.com/morrownr/88x2bu-20210702
-> 
-> Good timing, we had already done exactly that comparison before your
-> mail arrived. That driver was our working reference on the same bench
-> throughout the investigation (5/5 reconnect cycles where in-tree fails
-> 0/5), and we went through its AP transmit path to understand why it is
-> immune. It handles this quite differently, in five ways:
-> 
-> 1. bmc frames are buffered only while a station is actually dozing
->    (sta_dz_bitmap check in core/rtw_xmit.c, rtw_xmit_ap_enqueue). With
->    no sleeper present they leave immediately through the normal AC
->    path, which is what my patch restores for rtw88.
-> 
-> 2. The buffering happens in software (the bmc sta's sleep_q), not in
->    the hardware high queue. The hardware HIQ receives at most one DTIM
->    burst at a time (chk_bmc_sleepq_hdl), so it can never accumulate
->    into the page pool the way rtw88's standing high queue does.
-> 
-> 3. Even then, a filter decides what may ride the HIQ at all. The
->    default (rtw_hiq_filter=1, "allow special") lets only ARP, EAPOL and
->    DHCP through; mDNS/SSDP chatter never enters the high queue. The
->    rest of the buffered frames go out through the normal queues when
->    the burst is released.
-> 
-> 4. The driver owns the TIM bit itself: it sets it when it starts
->    buffering, pushes the updated beacon, and clears it only after both
->    the software queue and the hardware HIQ are empty, polled through
->    HW_VAR_CHK_HI_QUEUE_EMPTY. It does not depend on a beacon download
->    whose pages come from the same pool the backlog is exhausting.
-> 
-> 5. MORE_DATA is set on every burst frame except the last one, which
->    carries 0 and terminates the burst. rtw88 sets it on every high
->    queue frame including the last. That may be part of why I measured
->    the burst fetch not happening here even with BIT_TCR_UPDATE_HGQMD
->    set: the hardware never sees the end marker the vendor code
->    provides.
-> 
-> So the field-proven driver never routes bulk multicast through the high
-> queue either, sleeper or not; the high queue is a small, filtered,
-> explicitly terminated DTIM burst buffer for it, not a transport path.
-> 
-> Given that, I still think routing bmc through the AC queues is the
-> right minimal fix for rtw88 USB. If you want to keep buffered delivery
-> for dozing stations I am happy to work on the fuller shape, meaning PS
-> tracking plus a software staging queue released at DTIM, but that is a
-> much bigger change and the current behavior is a hard AP breakage.
-> 
-> Thanks,
-> Mehmet
+syzbot has found a reproducer for the following issue on:
 
-I don't know enough to have an opinion on this.
+HEAD commit:    3aa1dcaa4f6f Revert "wifi: mt76: Disable napi when removin..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=11f09c79580000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=c44651ea7dd2f307
+dashboard link: https://syzkaller.appspot.com/bug?extid=582469b3a9ef5f13606b
+compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=15747225580000
 
-Shouldn't mac80211 handle the buffering already?
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+582469b3a9ef5f13606b@syzkaller.appspotmail.com
+
+------------[ cut here ]------------
+sta0: Failed check-sdata-in-driver check, flags: 0x0
+WARNING: net/mac80211/driver-ops.h:1723 at drv_can_activate_links net/mac80211/driver-ops.h:1723 [inline], CPU#0: kworker/u33:4/93
+WARNING: net/mac80211/driver-ops.h:1723 at ieee80211_set_active_links+0x2d0/0x970 net/mac80211/link.c:651, CPU#0: kworker/u33:4/93
+Modules linked in:
+CPU: 0 UID: 0 PID: 93 Comm: kworker/u33:4 Not tainted syzkaller #0 PREEMPT(full) 
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+Workqueue: events_unbound cfg80211_wiphy_work
+RIP: 0010:drv_can_activate_links net/mac80211/driver-ops.h:1723 [inline]
+RIP: 0010:ieee80211_set_active_links+0x2d7/0x970 net/mac80211/link.c:651
+Code: 05 00 00 e8 5b de da f6 48 8b 34 24 48 81 c6 20 01 00 00 48 89 34 24 e8 47 de da f6 48 8d 3d e0 87 03 06 48 8b 34 24 44 89 fa <67> 48 0f b9 3a e9 e0 fe ff ff e8 2a de da f6 0f b7 c5 4c 8d bb 50
+RSP: 0018:ffffc9000165faf8 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: ffff888038876c70 RCX: ffffffff8b2f94de
+RDX: 0000000000000000 RSI: ffff888038874120 RDI: ffffffff91331d20
+RBP: 0000000000000001 R08: 0000000000000005 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff888038875928
+R13: 0000000000000000 R14: ffff888101a90f40 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff8880d5de9000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000562bad7c5000 CR3: 000000000e994000 CR4: 0000000000352ef0
+Call Trace:
+ <TASK>
+ ieee80211_if_parse_active_links+0xbb/0x120 net/mac80211/debugfs_netdev.c:732
+ wiphy_locked_debugfs_write_work+0xe6/0x1c0 net/wireless/debugfs.c:248
+ cfg80211_wiphy_work+0x2b7/0x550 net/wireless/core.c:538
+ process_one_work+0xa23/0x1940 kernel/workqueue.c:3322
+ process_scheduled_works kernel/workqueue.c:3405 [inline]
+ worker_thread+0x5ef/0xe50 kernel/workqueue.c:3486
+ kthread+0x370/0x450 kernel/kthread.c:436
+ ret_from_fork+0x72b/0xd50 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+----------------
+Code disassembly (best guess), 1 bytes skipped:
+   0:	00 00                	add    %al,(%rax)
+   2:	e8 5b de da f6       	call   0xf6dade62
+   7:	48 8b 34 24          	mov    (%rsp),%rsi
+   b:	48 81 c6 20 01 00 00 	add    $0x120,%rsi
+  12:	48 89 34 24          	mov    %rsi,(%rsp)
+  16:	e8 47 de da f6       	call   0xf6dade62
+  1b:	48 8d 3d e0 87 03 06 	lea    0x60387e0(%rip),%rdi        # 0x6038802
+  22:	48 8b 34 24          	mov    (%rsp),%rsi
+  26:	44 89 fa             	mov    %r15d,%edx
+* 29:	67 48 0f b9 3a       	ud1    (%edx),%rdi <-- trapping instruction
+  2e:	e9 e0 fe ff ff       	jmp    0xffffff13
+  33:	e8 2a de da f6       	call   0xf6dade62
+  38:	0f b7 c5             	movzwl %bp,%eax
+  3b:	4c                   	rex.WR
+  3c:	8d                   	.byte 0x8d
+  3d:	bb                   	.byte 0xbb
+  3e:	50                   	push   %rax
+
+
+---
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
