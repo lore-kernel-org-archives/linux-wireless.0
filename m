@@ -1,135 +1,195 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from xmbghk7.mail.qq.com (xmbghk7.mail.qq.com [43.163.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382E2489866
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 18:50:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AED3490BFB;
+	Thu, 13 Aug 2026 18:50:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.163.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786647029; cv=none; b=Fg/xg286AH8CR453Vln6jJzmkMBx2fojwPT3KxEWbP71Rgm3+rxGkllVTbFpl+HH2xHPGVI9ZFjuVg2Gl1L9xQDd/A+KEo0EaHro+9zdShZLvTJEstSRBkBhcH5NG2g+IUcYwv0k9HLTWHs3z/1GS99vvF2ewWBKZOsgo4EM6aI=
+	t=1786647063; cv=none; b=IJG8oSY6viqksqlZouw06fftd2NilEpzAFI5BuQo3QWBOAQmdbFmH+baK3+g9aNtVsThBX//gbQUK/g4NdIbCm1X8k0kSk9Rfe3AkTwzcRi2+kte1sSJcvhTmk3rv9FdUtCPvfHPvP/YsN0dA9iwL3QQsH1XH723OW2xp8p7Uy0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786647029; c=relaxed/simple;
-	bh=AkBKR03uCxQT0b9C6hxQnaA2qPJn7M9baAsRN+oR/ps=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Jr0x5uNDqXhKDgYnXFGtzGRsQ7wSPcagBXqhXAzb1g+gklSViAj8CVvXHd56JASQaR1KE3HQWAKhWvYDVW+xmj14Arh8X+M5bj2gy8SgKbZbgWoRCm4bhDqUhGPLmIVodO3MK1ZQVkvDvT/0NpGBMg/XIUTB8CEzlH2U7pmV82o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PgdTXFxR; arc=none smtp.client-ip=209.85.221.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786647063; c=relaxed/simple;
+	bh=jMb9szKBS93MDlrnbBDAVNXU2j6aCvuA9eIJY0/UrMI=;
+	h=From:To:Subject:Mime-Version:Content-Type:Date:Message-ID; b=UMwPVL0CYlhJ3Azw1KxfHAKeSoPpHE0wsdQo20Eo9mjFy4k4/ebG9nu+B6LuqwNlJZYLpnIr3rJXIK2KHHzK7mvWZn3YivnWbDyXmFC2EuCGuqQfMa81xIK1BPuEV8mlcFeUymI3TMMG2jd5Z/cD0jtoe7Py3uO1SRlBditpIpo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=qP7JwPbZ; arc=none smtp.client-ip=43.163.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PgdTXFxR"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-47fe89fb333so81252f8f.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 11:50:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786647023; x=1787251823; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=4CmqxsU45YaJX65GG/NrnTX1eKbG2HH3nIDBeKynSsg=;
-        b=PgdTXFxR7JpV8T0EZL3wHKu+TJn7GXYrtCxC8nONFDnKuKGRy7qnHTLzEVFTFNVKt/
-         lb4soRV5zsHugWWppl1MUzGm+sN6gufvvHfdGwEuN8bmtoOPfK0brrjNAHxqaShwilGn
-         84QtXSeTjWmK1aZnoHl6lNsKi+KqgqTsFVba+3DWos6I837EYFuv4vmk3JTwztdTyQ8E
-         lkMJI06Jf6F6hQS1HL/dNZmhMfGe4WqwIPLNoWejrU2jUqqVtAMtZy7WrzPPgC2sU1+A
-         y5/HQH/gwaOgcD1+bONDMSDRNcOmxFpefkGNi4EA5CUe/LL2xzQmiAFshm2UTy6cZ6dt
-         /O4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786647023; x=1787251823;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=4CmqxsU45YaJX65GG/NrnTX1eKbG2HH3nIDBeKynSsg=;
-        b=E6ABqKCfEMK77HJURWnnZaHi6nSaDPpjQyPbfUUjEAdcZDsjacuLLva20EDsawzGTj
-         6qgta2ddOkphfZ6G7uPkQNGD3XJEGkVDrbmbj2qVU0mUJiso5lzFk7/rjIjqVI+T/qvv
-         CqSimx0aixEjTAVf0cwViAjE3ZM7/bYRs83VdBxZ+XVFbQxkvj2W3ZnKgEcHj21vrPq6
-         PrwtQSw1qMUNVLNK3GNflXntxkjls9IdwfagTyuAw9tVs28orhIyQbmqQiN1WsUUeRLY
-         mbR85uwWk8+gXu3wE0HHmzYsNjNyKBQ88RXmjQeFl95vTCPhDwvMpldi4EG9r/FAGDlA
-         bpEQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrbnYyD8prx5+dLfLSQuCI0miPYrSjxzGEHsuH3HcElsyvGPJCAJ780cFRtgFoIxOztwqU7RDeKTkvVms4eTA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7mKvhWi6ur9FYPo8bckf7cskqf3r1G3YPLDCk5STrxGSUj/z5
-	5Rmu3zmdCi3h8UzW2fxNYJNfX5xCLl2+2fnKfjgzQLLvo3vlF7WncWnJ
-X-Gm-Gg: AR+sD12+QJp3LNPAPjZagHlxDaiPEPcplZf5NcUXY6NKs5K4DdQE8Gx2YpOkyy0fNqu
-	3GJgc4aO4D41uyHyc3+9ZUObcQsm7GmI/agukppfvQLM8mLtN4HKjCLflyaIf799YFVlJubSMwN
-	D+wnd9S8IqHev+OGp1UapbSxrZsjhhA/E1LbWsKySDXfBYb1kzh/aeQvC4u7pRCx/4GpT2ut4G9
-	DNg51/ntEY/Ii6GmNtF+LJNZAKcbHo01XBHTo5G5tOwAANP47R7BEgTqxiDta1rX3lG4O1hqYn9
-	/XYAIwGBnk1VzouPi1fVz6wELsQ7+4Ee2yFUKBrkP2lzRoNQAdfmhpKdDYTmPvh+awH6SFarpLe
-	+wTy4sGMsdkLymRvrWjo0Vqz+uQdEV6c5++nJGvLxfcJ5fLPxolPovlCTe1PDK7GOYBhfRih1BH
-	vFe0dNTpxyfJOlP4UBb5T+WpgfXlzQ1mUgZtIYUGjawiPeN71hNirirmM0UKrDfy2AEg==
-X-Received: by 2002:a05:600c:2055:b0:499:819e:db2c with SMTP id 5b1f17b1804b1-499879ace10mr4265345e9.16.1786647023237;
-        Thu, 13 Aug 2026 11:50:23 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4998216d082sm83608805e9.13.2026.08.13.11.50.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 11:50:22 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mehmet Fide <mehmet.fide@screeningeagle.com>
-Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via the AC queues
-Date: Thu, 13 Aug 2026 20:50:21 +0200
-Message-ID: <20260813185021.2290877-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
-References: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="qP7JwPbZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1786647048; bh=jMb9szKBS93MDlrnbBDAVNXU2j6aCvuA9eIJY0/UrMI=;
+	h=From:To:Subject:Date;
+	b=qP7JwPbZg2mZCI8O+4ee7psdmmzTcWI8Uq0oS5bGEqi263+v9rTL/R2CM0sla2t0R
+	 H3IurQYBn8oRnSOBllEbuhrNUj7pJswec8nzUZJcoih2SxDszBeiU2PO1aQhRl/A2R
+	 gg/QWNqJHSMMplC29sy4bNgL8srHamTSMJHlfEhQ=
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-XMAILINFO: OeJOoYd4plGbuYCTjj13Zeh1io+ve77RoLNPMCFERAZoSHyKY2Egspq+EuCLGq
+	 fZTSupFcDSOe5neeKjUyRmyZRgsu5lVQjjOoVa0H7FoBbRVn+tfmncB47SR6WJXRzRWYys+vZNxBG
+	 uasBxXCkcx44pdmb3FGoZXF1P+2KWJ84y5C2SmRdtVUaQ5hun6TfcDdrz+xnARpZG0JNKwa0DH3Z2
+	 qPQ0END/DVTXaDtVELq9xfsRJBVjLUQOSZPKDGrqGHfMW1OTYODBnKEfWsdA9g7UZfdTO6Qi28Nly
+	 dFOiipUgBsqG9YjO6KWgZJPRm2muh0BhaKBZuPnMAE9HCzSLZTV3S5NYJCdW3jhwCfA35FnflcemH
+	 mfH3TNIl5EnQ3hmIl5RbCK6udhvQr3+p4VnzNpn+6VeKIl29bVeqrjvo5REwWqCsyg5rwtYh7cSbz
+	 P7j3qx1Is0krseJB4bE3/Gd/IyxvFQ8lxGplqdr1b8ucbYMPWSA+W2HNGdi+fu0h/wo/cz8ab89MW
+	 IvrDSZS7Wmxiy3LQMBlKf9DIxKUzw9HFdbyjb4x+L3pJlAR4JK0HIz9jH4QTRuYUG965Q70aHnWPP
+	 uw1rBtzttavEwh+eHEHDP25JhWVOCW9WkHlVPWUWQrdx1QnsLAanTgIPTKLDJazI9yqrdQRRWunyS
+	 8QjaQp3wB8F4468ajXdkioLl2nBFj4ZMN0frP16T/eMGRD2umnUQv87fn7PUvbO572IlOzhLo83lA
+	 J41OUFXck9MmhubGPkunwP09O1C67lZRU8mjgRDNPKU9qkN7ddqhEnhHMJNt6wTaMPkOvE5B00y19
+	 yDBQyjay8g0dLQrXWgj+nz2UmpgRQ4/dcaWd7d9f4SL7UydMknMJtUB43nV8vkGuAW4J1S47BxRLD
+	 bXnDLaEoRF2XVHxk9GGJeKBOSdr/9b8XypwoBpP3Ihz1Uuch9Z4hj7aiEzsYJ4gGc8ZG8aTwggDNW
+	 dwmMek+pJ8MBNGgVJEP/Yeg5zdG+5WtGVGpYId/UsBe7FlICCeEir17BYi8Q8KQRp0cyHUVPb2NHW
+	 j+jIHmNwVghMQ3y3uxZrkPcjWHa4I7Vbhs5Zy4ztQaRlK4LrZy7FQ8B5hrQ==
+From: "=?utf-8?B?U2FiMWU=?=" <sab1e@qq.com>
+To: "=?utf-8?B?bGludXgtd2lyZWxlc3M=?=" <linux-wireless@vger.kernel.org>, "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>
+Subject: RTL8821CE on Intel N95 causes rare silent system hangs on Debian 13 (rtw88 / PCIe ASPM suspected)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Date: Fri, 14 Aug 2026 02:49:35 +0800
+X-Priority: 3
+Message-ID: <tencent_B5F1A333800F8780E50E845422A59A874306@qq.com>
+X-QQ-MIME: TCMime 1.0 by Tencent
+X-Mailer: QQMail 2.x
+X-QQ-Mailer: QQMail 2.x
+X-QQ-mid: xmsezc57-0t1786646975tmde36oi5
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+SGksCgpJJ2QgbGlrZSB0byByZXBvcnQgYSByZWN1cnJpbmcgZnVsbC1zeXN0ZW0gZnJlZXpl
+LiBJIHdhbnQgdG8gYmUgdXBmcm9udCB0aGF0IEkKYW0gbm90IGNlcnRhaW4gdGhpcyBpcyBh
+IFdpRmkvcnR3ODggcHJvYmxlbSBhdCBhbGwgLS0gdGhlIFJUTDg4MjFDRSBpcwpjdXJyZW50
+bHkganVzdCBteSBsZWFkaW5nIHN1c3BlY3QsIGFuZCBJIGhhdmUgbm90IGNvbmZpcm1lZCBp
+dC4gSSBoYXZlIGFscmVhZHkKcmVhZCB0aGUgZXhpc3RpbmcgcmVwb3J0cyBhYm91dCA4ODIx
+Q0UgKyBBU1BNIEwxIHByb2JsZW1zIChCdWd6aWxsYSAjMjE1MTMxLAp0aGUgTWFyY2ggMjAy
+NiAiaGFyZCBzeXN0ZW0gZnJlZXplIG9uIFJUTDg4MjFDRSB3aGVuIHBvd2VyX3NhdmUgaXMg
+ZW5hYmxlZCIKdGhyZWFkLCBVYnVudHUgTFAgIzE5Mjc4MDgsIERlYmlhbiAjMTExNDkzMCks
+IGFuZCBteSBzeW1wdG9tIGxvb2tzICpzaW1pbGFyIGJ1dApub3QgaWRlbnRpY2FsKiB0byB0
+aG9zZS4gSSdtIHdyaXRpbmcgdG8gYXNrIHdoZXRoZXIgeW91IGNhbiB0ZWxsIGlmIHRoaXMg
+aXMgdGhlCnNhbWUgcm9vdCBjYXVzZSBvciBhIGRpZmZlcmVudCBpc3N1ZS4KCk15IG1haW4g
+Z29hbCBpcyB0byBlbGltaW5hdGUgdGhlIHNvdXJjZSBvZiB0aGlzIGluc3RhYmlsaXR5LiBJ
+IGRvIG5vdCByZWx5IG9uCnRoaXMgV2lGaSBkZXZpY2UgKHRoZSBtYWNoaW5lIHVzZXMgRXRo
+ZXJuZXQpLCBzbyBJIGFtIHdpbGxpbmcgdG8gc2ltcGx5IGRpc2FibGUKb3IgcGh5c2ljYWxs
+eSByZW1vdmUgaXQuIEkgbWFpbmx5IHdhbnQgdG8gZGV0ZXJtaW5lIHdoZXRoZXIgdGhpcyBj
+YXJkIGlzIGluZGVlZAp0aGUgcm9vdCBjYXVzZSAtLSBhIGZpeCBpcyBub3QgbmVjZXNzYXJp
+bHkgcmVxdWlyZWQuCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+CgpFbnZpcm9ubWVudAoKwqAgU29DOiDCoCDCoCDCoCDCoCDCoCDCoCDCoEludGVsIE45NSAo
+QWxkZXIgTGFrZS1OKQrCoCBPUzogwqAgwqAgwqAgwqAgwqAgwqAgwqAgRGViaWFuIDEzICh0
+cml4aWUpCsKgIEtlcm5lbDogwqAgwqAgwqAgwqAgwqAgNi4xMi4xMDErZGViMTMtYW1kNjQg
+KERlYmlhbiA2LjEyLjEwMS0xKQrCoCBXaUZpOiDCoCDCoCDCoCDCoCDCoCDCoCBSZWFsdGVr
+IFJUTDg4MjFDRSwgMTBlYzpjODIxLCBzdWJzeXN0ZW0gMTBlYzpjODIxCsKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIFBDSSAwMDAwOjAyOjAwLjAsIGJlaGluZCBSb290IFBvcnQg
+MDAwMDowMDoxZC4wCsKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIChJbnRlbCA4MDg2
+OjU0YjApCsKgIERyaXZlcjogwqAgwqAgwqAgwqAgwqAgcnR3Xzg4MjFjZSAvIHJ0dzg4X3Bj
+aSAvIHJ0dzg4X2NvcmUgKGluLXRyZWUpCsKgIEZpcm13YXJlOiDCoCDCoCDCoCDCoCBydHc4
+OC9ydHc4ODIxY19mdy5iaW4gdjI0LjExLjAsIEgyQyB2ZXJzaW9uIDEyCsKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgICgxMzk0NzIgYnl0ZXMsIG1kNSAyNjM4YTQwMDQyYTI3ZTk4
+ZGYyZjc5MjljOGVlZTc2MCwKwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBzaGlw
+cGVkIGJ5IERlYmlhbiBmaXJtd2FyZS1yZWFsdGVrIDIwMjUwNDEwLTIpCsKgIEV0aGVybmV0
+OiDCoCDCoCDCoCDCoCByODE2OSAoUlRMODExMS84MTY4Lzg0MTEpLCBQQ0kgMDAwMDowMTow
+MC4wCgrCoCBMaW5rIHN0YXRlIChSb290IFBvcnQgMDA6MWQuMCk6CsKgIMKgIExua0NhcDog
+wqBTcGVlZCA4R1QvcywgV2lkdGggeDEsIEFTUE0gTDBzIEwxCsKgIMKgIExua0N0bDogwqBB
+U1BNIEwwcyBMMSBFbmFibGVkCsKgIMKgIExua1N0YTogwqBTcGVlZCAyLjVHVC9zIChHZW4x
+KSwgV2lkdGggeDEKwqAgwqAgTDFTdWJDdGwxOiBQQ0ktUE1fTDEuMSsgUENJLVBNX0wxLjIr
+IEFTUE1fTDEuMSsgQVNQTV9MMS4yKwrCoCBEZXZpY2UgMDI6MDAuMDogwqBBU1BNIEwwcyBM
+MSBFbmFibGVkLCBMMS4xL0wxLjIgZW5hYmxlZCwgQ2xvY2tQTSsKCsKgIFdpRmkgaW50ZXJm
+YWNlIGlzIE5PVCBhc3NvY2lhdGVkIHRvIGFueSBBUCAod2xwMnMwIE5PLUNBUlJJRVI7CsKg
+IE5ldHdvcmtNYW5hZ2VyIHNob3dzICJ1bmF2YWlsYWJsZSIpLiBOZXR3b3JrTWFuYWdlciBw
+ZXJpb2RpY2FsbHkgc2NhbnMgYW5kCsKgIGJyaW5ncyB0aGUgaW50ZXJmYWNlIGluYWN0aXZl
+L2Rpc2FibGVkLgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoK
+U3ltcHRvbXMKClR3byBmdWxsLXN5c3RlbSBzaWxlbnQgZnJlZXplcyBzbyBmYXI6CsKgIDEp
+IDIwMjYtMDgtMDkgfjE3OjUyIENTVArCoCAyKSAyMDI2LTA4LTExIH4xOToxNSBDU1QKCkJv
+dGggYXJlICpzaWxlbnQqOiBubyBwYW5pYywgbm8gc29mdCBsb2NrdXAsIG5vIE5NSSB3YXRj
+aGRvZyBvdXRwdXQsIGFuZCBubwphdXRvbWF0aWMgd2F0Y2hkb2cgcmVib290IChoYXJkbG9j
+a3VwX3BhbmljPTEsIHNvZnRsb2NrdXBfcGFuaWM9MSwKcGFuaWNfb25fd2Fybj0xLCBubWlf
+d2F0Y2hkb2c9MSwgY3Jhc2hrZXJuZWw9MjU2TSB3ZXJlIGFsbCBlbmFibGVkOyBub25lCmZp
+cmVkKS4gUmVjb3ZlcnkgaXMgb25seSBieSBoYXJkIHBvd2VyIHJlc2V0LgoKQm90aCBmcmVl
+emVzIGhhcHBlbmVkICptaW51dGVzIGFmdGVyIGEgV2lGaSBzY2FuIGNvbXBsZXRlZCosIGR1
+cmluZyB1bnJlbGF0ZWQKc3lzdGVtIGFjdGl2aXR5ICgxc3Q6IDFwYW5lbCBkb2luZyBoZWF2
+eSB0YXIvZGlzayBJL087IDJuZDogYSBidXJzdCBvZiBzc2hkIC8KcHJvY2VzcyBhY3Rpdml0
+eSkuIFRoZXJlIGlzIG5vIHJ0dzg4IGVycm9yIG1lc3NhZ2UgaW1tZWRpYXRlbHkgcHJlY2Vk
+aW5nIHRoZQpmcmVlemUgaW4gdGhlIGpvdXJuYWwgLS0gdGhlIGxhc3QgbGluZXMgYXJlIG9y
+ZGluYXJ5IHN5c3RlbSBhY3Rpdml0eS4KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0KCk9ic2VydmVkIGVycm9ycyAoc2VwYXJhdGUgZnJvbSB0aGUgZnJlZXpl
+LCBpbiB0aGUgaG91cnMvZGF5cyBiZWZvcmUgaXQpCgpydHdfODgyMWNlIDAwMDA6MDI6MDAu
+MDogZmFpbGVkIHRvIGRvd25sb2FkIGZpcm13YXJlCnJ0d184ODIxY2UgMDAwMDowMjowMC4w
+OiBtYWMgcG93ZXIgb24gZmFpbGVkCnJ0d184ODIxY2UgMDAwMDowMjowMC4wOiBmYWlsZWQg
+dG8gcG93ZXIgb24gbWFjCnJ0d184ODIxY2UgMDAwMDowMjowMC4wOiBmYWlsZWQgdG8gc2Vu
+ZCBoMmMgY29tbWFuZApXQVJOSU5HIC4uLiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
+L3J0dzg4L3BjaS5jIC4uLiBmYWlsZWQgdG8gcmVhZCBEQkkgcmVnaXN0ZXIKCgpBRVIgb24g
+dGhlIFJvb3QgUG9ydCAocmVjdXJyaW5nIGF0IGlycmVndWxhciBpbnRlcnZhbHMsIGRvZXMg
+Tk9UIGhhbmcgYnkgaXRzZWxmKToKwqAgcGNpZXBvcnQgMDAwMDowMDoxZC4wOiBBRVI6IENv
+cnJlY3RhYmxlIGVycm9yIG1lc3NhZ2UgcmVjZWl2ZWQgZnJvbSAwMDAwOjAyOjAwLjAKwqAg
+cnR3Xzg4MjFjZSAwMDAwOjAyOjAwLjA6IFBDSWUgQnVzIEVycm9yOiBzZXZlcml0eT1Db3Jy
+ZWN0YWJsZSwKwqAgwqAgwqAgdHlwZT1EYXRhIExpbmsgTGF5ZXIsIChUcmFuc21pdHRlciBJ
+RCkKwqAgcnR3Xzg4MjFjZSAwMDAwOjAyOjAwLjA6IMKgIGRldmljZSBbMTBlYzpjODIxXSBl
+cnJvciBzdGF0dXMvbWFzaz0wMDAwMTAwMC8wMDAwZTAwMArCoCBydHdfODgyMWNlIDAwMDA6
+MDI6MDAuMDogwqAgwqBbMTJdIFRpbWVvdXQKKGFsc28gc2VlbiB0aGUgc2FtZSBlcnJvciBy
+ZXBvcnRlZCBieSB0aGUgcm9vdCBwb3J0IGl0c2VsZiwgZGV2aWNlIFs4MDg2OjU0YjBdLArC
+oGFuZCBvY2Nhc2lvbmFsbHkgQmFkRExMUC4pCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tCgpSZWxhdGlvbnNoaXAgdG8gdGhlIGtub3duIGlzc3VlcyAoYW5k
+IHdoeSB0aGlzIG1heSBiZSBkaWZmZXJlbnQpCgpUaGUga25vd24gODgyMUNFIHJlcG9ydHMg
+KEJ1Z3ppbGxhICMyMTUxMzEsIHRoZSAyMDI2IExQUy9BU1BNIHRocmVhZCkgZGVzY3JpYmUK
+ZnVsbCBmcmVlemVzIG9uICphc3NvY2lhdGVkKiBsYXB0b3BzIHdpdGggYSBwcmVhbWJsZSBv
+ZjoKwqAgwqAgcnR3Xzg4MjFjZSAuLi46IHBjaSBidXMgdGltZW91dCwgY2hlY2sgZG1hIHN0
+YXR1cwrCoCDCoCBydHdfODgyMWNlIC4uLjogZmlybXdhcmUgZmFpbGVkIHRvIGxlYXZlIGxw
+cyBzdGF0ZQphbmQgdGhlIHJvb3QgY2F1c2UgaXMgZGVzY3JpYmVkIGFzIHRoZSBjaGlwIGZh
+aWxpbmcgdG8gbGVhdmUgQVNQTSBMMSAobGluawpzdGF5cyBpbiBMMSAtPiBSWCBETUEgc3Rh
+bGxzKS4KCk15IGNhc2UgaXMgZGlmZmVyZW50IGluIHRocmVlIHdheXM6CsKgIDEpIFRoZSBp
+bnRlcmZhY2UgaXMgKm5ldmVyIGFzc29jaWF0ZWQqLCBzbyB0aGUgZHJpdmVyIGRvZXMgbm90
+IGVudGVyCsKgIMKgIMKgTFBTL0xQUy1EZWVwIChydHdfZW50ZXJfbHBzIHJlcXVpcmVzIGFu
+IGFzc29jaWF0ZWQgc3RhdGlvbikuIEl0IGluc3RlYWQKwqAgwqAgwqBlbnRlcnMgSVBTIChp
+ZGxlIHBvd2VyIHNhdmUgLyBNQUMgcG93ZXItb2ZmKSBvbiBJRUVFODAyMTFfQ09ORl9JRExF
+LiBUaGUKwqAgwqAgwqBlcnJvcnMgSSBzZWUgYXJlIElQUy1sZWF2ZS9wb3dlci1vbiBmYWls
+dXJlcyAoImZhaWxlZCB0byBkb3dubG9hZArCoCDCoCDCoGZpcm13YXJlIiwgIm1hYyBwb3dl
+ciBvbiBmYWlsZWQiKSwgbm90IHRoZSBMUFMgc2lnbmF0dXJlcyBhYm92ZS4KwqAgMikgVGhl
+IGZyZWV6ZSBpcyAqc2lsZW50KiB3aXRoIG5vIHJ0dzg4IGVycm9yIGltbWVkaWF0ZWx5IGJl
+Zm9yZSBpdC4KwqAgMykgVGhlIDIwMjEgTkFQSSB3b3JrYXJvdW5kIGlzICphbHJlYWR5IGFj
+dGl2ZSogaGVyZTogY29tbWl0IDI0ZjVlMzhhMTNiNQrCoCDCoCDCoCgiRGlzYWJsZSBQQ0ll
+IEFTUE0gd2hpbGUgZG9pbmcgTkFQSSBwb2xsIG9uIDg4MjFDRSIpIHNldHMgcnhfbm9fYXNw
+bQrCoCDCoCDCoGJlY2F1c2UgY2hpcCBpZCA9PSA4ODIxQyBhbmQgdGhlIHVwc3RyZWFtIGJy
+aWRnZSB2ZW5kb3IgaXMgSW50ZWwuIFNvIHRoaXMKwqAgwqAgwqBkZXZpY2UgZnJlZXplcyBk
+ZXNwaXRlIHRoYXQgd29ya2Fyb3VuZCAtLSBjb25zaXN0ZW50IHdpdGggdGhlIDIwMjYgcmVw
+b3J0CsKgIMKgIMKgbm90aW5nIHRoZSBOQVBJIHdyYXBwZXIgaXMgaW5zdWZmaWNpZW50IGZv
+ciBpZGxlLXN0YXRlIGRlYWRsb2NrcywgYnV0IGhlcmUKwqAgwqAgwqBpdCBpcyBpZGxlICp3
+aXRob3V0IGFzc29jaWF0aW9uKiAoSVBTLCBub3QgTFBTLURlZXApLgoKLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKV2hhdCBJIGhhdmUgdHJpZWQgKHJlcHJv
+ZHVjdGlvbikKCkkgY291bGQgbm90IHJlcHJvZHVjZSB0aGUgZnJlZXplIG9uIGRlbWFuZDoK
+wqAgLSBuZXRjb25zb2xlIHRvIGEgcmVtb3RlIGhvc3QgZm9yIH40MCBoOiBubyBmcmVlemUu
+CsKgIC0ga2R1bXAgKyBOTUkvc29mdGxvY2t1cCB3YXRjaGRvZzogZGlkIG5vdCB0cmlnZ2Vy
+IGR1cmluZyB0aGUgcmVhbCBmcmVlemVzLgrCoCAtIEFnZ3Jlc3NpdmUgdXNlcnNwYWNlIHRy
+aWdnZXJzIChzY2FuIGxvb3BzLCBVRFAgZmxvb2QsIGRldmljZSBlbmFibGUvcmVzZXQpLgrC
+oCAtIFNvdXJjZS1sZXZlbCB0aW1pbmcgaW5qZWN0aW9uIGluIHJ0d19wY2lfbGlua19wcygp
+L3J0d19wY2lfYXNwbV9zZXQoKQrCoCDCoCAoZml4ZWQgMS0xMCB1cyBkZWxheXMpOiAwIEFF
+UiAvIDAgREJJIGVycm9ycyBvdmVyIDEyMSBBU1BNIHRvZ2dsZXMgKyAxNjE2CsKgIMKgIE5B
+UEkgcG9sbHMgaW4gODAgbWluLgrCoCAtIFJhcGlkbHkgdG9nZ2xpbmcgdGhlIEwxLjIgZW5h
+YmxlIGJpdHMgKHJvb3QgcG9ydCAweDIwOCAvIGRldmljZSAweDE2OCwKwqAgwqAgQVNQTV9M
+MV8yX0VOKSB2aWEgc2V0cGNpOiAzOTMxOSBMMDwtPkwxLjIgdHJhbnNpdGlvbnMgaW4gMTAg
+bWluLCAwIEFFUiwKwqAgwqAgbm8gZnJlZXplLgoKTXkgd29ya2luZyBoeXBvdGhlc2lzICh1
+bmNvbmZpcm1lZCkgaXMgdGhhdCB0aGUgZnJlZXplIGlzIGEgbG93LWxldmVsCmxpbmsvcG93
+ZXItc3RhdGUgZGVhZGxvY2sgcmF0aGVyIHRoYW4gYSBzb2Z0d2FyZSB0aW1pbmcgcmFjZSwg
+c2luY2Ugbm9uZSBvZiB0aGUKc29mdHdhcmUgdGltaW5nIG1hbmlwdWxhdGlvbiBhYm92ZSB0
+cmlnZ2VyZWQgaXQuCgpSZWdhcmRpbmcgdGhlIGRvY3VtZW50ZWQgd29ya2Fyb3VuZDogIm9w
+dGlvbnMgcnR3ODhfcGNpIGRpc2FibGVfYXNwbT15IiBpcwoqbm90IGVmZmVjdGl2ZSogb24g
+dGhpcyBwbGF0Zm9ybS4gQVNQTSAoTDBzL0wxIGFuZCB0aGUgTDEuMS9MMS4yIHN1YnN0YXRl
+cykgaXMKZm9yY2VkIGVuYWJsZWQgYnkgdGhlIEJJT1MgLS0gdGhlIGtlcm5lbCBwY2llX2Fz
+cG0gcG9saWN5IGlzICJkZWZhdWx0IgooQklPUy1jb250cm9sbGVkKSBhbmQgY2Fubm90IG92
+ZXJyaWRlIGl0LiBUaGUgZGlzYWJsZV9hc3BtIG1vZHVsZSBwYXJhbWV0ZXIKb25seSBzdG9w
+cyB0aGUgZHJpdmVyIGZyb20gdG9nZ2xpbmcgUmVhbHRlaydzIEJJVF9MMV9TV19FTiBpbiB0
+aGUgREJJIHJlZ2lzdGVyCihSVEtfUENJRV9MSU5LX0NGRyksIGJ1dCB0aGUgc3RhbmRhcmQg
+UENJZSBMTktDVEwgQVNQTSBMMS9MMS4yIHJlbWFpbnMgZW5hYmxlZApieSB0aGUgQklPUywg
+c28gdGhlIGRldmljZSBjYW5ub3QgYmUga2VwdCBvdXQgb2YgTDEgYnkgc29mdHdhcmUuIEEg
+cmVhbApkcml2ZXIvZmlybXdhcmUgZml4IGlzIHRoZXJlZm9yZSBuZWVkZWQgaGVyZSwgbm90
+IGEgd29ya2Fyb3VuZC4KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0KClF1ZXN0aW9uCgpJIGZvdW5kIGFuIGV4aXN0aW5nIGlzc3VlIHdob3NlIHN5bXB0b21z
+IHJlc2VtYmxlIG1pbmUgKHRoZSA4ODIxQ0UgQVNQTSBMMQpmcmVlemUgcmVwb3J0cyBhYm92
+ZSksIGJ1dCBteSBzeW1wdG9tcyBkbyBub3QgZnVsbHkgbWF0Y2ggdGhlbSAodW5hc3NvY2lh
+dGVkIC8KSVBTIHBhdGgsIGFuZCBubyBydHc4OCBlcnJvciBtZXNzYWdlIGltbWVkaWF0ZWx5
+IGJlZm9yZSB0aGUgZnJlZXplKS4gQ291bGQgeW91Cmp1ZGdlIHdoZXRoZXIgdGhlc2UgYXJl
+IGxpa2VseSB0aGUgc2FtZSByb290IGNhdXNlIG9yIHNlcGFyYXRlIGlzc3Vlcz8KCklmIGl0
+IGhlbHBzLCBJIGNhbiBwcm92aWRlOiBrZHVtcCB2bWNvcmUgKGZyb20gdGhlIGZvcmVuc2lj
+cyBzZXR1cCksIG5ldGNvbnNvbGUKY2FwdHVyZXMsIGZ0cmFjZSBmdW5jdGlvbiB0cmFjZXMg
+b2YgcnR3X2VudGVyX2lwcyAvIHJ0d19wY2lfbGlua19wcyAvCnJ0d19wb3dlcl9tb2RlX2No
+YW5nZSwgYW5kIEFFUiBjb3VudGVycy4KCgpUaGFua3MsClNhYjFlCgo=
 
-Hello Bitterblue,
-
-> Could you check what the official driver is doing in the same situation?
->
-> https://github.com/morrownr/88x2bu-20210702
-
-Good timing, we had already done exactly that comparison before your
-mail arrived. That driver was our working reference on the same bench
-throughout the investigation (5/5 reconnect cycles where in-tree fails
-0/5), and we went through its AP transmit path to understand why it is
-immune. It handles this quite differently, in five ways:
-
-1. bmc frames are buffered only while a station is actually dozing
-   (sta_dz_bitmap check in core/rtw_xmit.c, rtw_xmit_ap_enqueue). With
-   no sleeper present they leave immediately through the normal AC
-   path, which is what my patch restores for rtw88.
-
-2. The buffering happens in software (the bmc sta's sleep_q), not in
-   the hardware high queue. The hardware HIQ receives at most one DTIM
-   burst at a time (chk_bmc_sleepq_hdl), so it can never accumulate
-   into the page pool the way rtw88's standing high queue does.
-
-3. Even then, a filter decides what may ride the HIQ at all. The
-   default (rtw_hiq_filter=1, "allow special") lets only ARP, EAPOL and
-   DHCP through; mDNS/SSDP chatter never enters the high queue. The
-   rest of the buffered frames go out through the normal queues when
-   the burst is released.
-
-4. The driver owns the TIM bit itself: it sets it when it starts
-   buffering, pushes the updated beacon, and clears it only after both
-   the software queue and the hardware HIQ are empty, polled through
-   HW_VAR_CHK_HI_QUEUE_EMPTY. It does not depend on a beacon download
-   whose pages come from the same pool the backlog is exhausting.
-
-5. MORE_DATA is set on every burst frame except the last one, which
-   carries 0 and terminates the burst. rtw88 sets it on every high
-   queue frame including the last. That may be part of why I measured
-   the burst fetch not happening here even with BIT_TCR_UPDATE_HGQMD
-   set: the hardware never sees the end marker the vendor code
-   provides.
-
-So the field-proven driver never routes bulk multicast through the high
-queue either, sleeper or not; the high queue is a small, filtered,
-explicitly terminated DTIM burst buffer for it, not a transport path.
-
-Given that, I still think routing bmc through the AC queues is the
-right minimal fix for rtw88 USB. If you want to keep buffered delivery
-for dozing stations I am happy to work on the fuller shape, meaning PS
-tracking plus a software staging queue released at DTIM, but that is a
-much bigger change and the current behavior is a hard AP breakage.
-
-Thanks,
-Mehmet
