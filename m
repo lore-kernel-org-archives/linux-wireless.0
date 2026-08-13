@@ -1,41 +1,31 @@
-Received: from smtpo75.interia.pl (smtpo75.interia.pl [217.74.67.75])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1191414A1E
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 09:04:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.74.67.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A7E3B71A4;
+	Thu, 13 Aug 2026 10:09:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786611902; cv=none; b=jWP84nNFHT4mONSPYmYea3Qw027m+i8fca3kYEQj2T/3JkQdupiXwIBCIjxw/E6GY9xBLu6oWfLgu4zC+PhvbKKkmetjUCh+rqlRDaSFJw13rS0HrLwOIGTIK4DGfFtFZAgVtCX+cinmiFYJGljOxr9n5B2x6Jwn9FCT1gm8Wac=
+	t=1786615761; cv=none; b=dFSbyBEe0gnZiWo4XzkZB6rRs93ypqBlMR8S6q+3w+dWbOpOQFTturKvdiyaM98fXllY5tX5FLwgX+7OsiEmthLlnqVj2RlNsgYeFDUFh7IYhiDBY3CXZvRk4Ol16yurtFZexfRLYIdD/qhcGyK3O/Mk7mFHgbkl+rU5J5of2QQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786611902; c=relaxed/simple;
-	bh=y1Y2PC6oHn0pULjHaz63Ji3mGw6NQd3Ak0qLlIKHJ7I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fxsPXTpc8lkByIeJoKLGbHfqqUhkhcZq5dqFumhls3SIjwBTJn7uP3Xfltgsz4RGSqDFCxKPXam1g4oU5u9BI8scJ/nninSvxXEq+b/W/RjS5mztOBGnVlQ54VSsaUGrY8LxLBa872llYnQ8YYX4s9V52dptbiwY5CNJ6kiL8vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm; spf=pass smtp.mailfrom=poczta.fm; dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b=oZh2KHNm; arc=none smtp.client-ip=217.74.67.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=poczta.fm
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=poczta.fm header.i=@poczta.fm header.b="oZh2KHNm"
-Received: from localhost (unknown [80.68.231.31])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
-	(No client certificate requested)
-	by poczta.interia.pl (INTERIA.PL) with ESMTPSA;
-	Thu, 13 Aug 2026 11:04:47 +0200 (CEST)
-From: Slawomir Stepien <sst@poczta.fm>
-To: syzkaller-bugs@googlegroups.com,
-	johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	syzbot@lists.linux.dev,
-	sst@poczta.fm,
-	syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Subject: [PATCH 3/3] wifi: cfg80211: check if AP has been started before adding new station
-Date: Thu, 13 Aug 2026 11:04:34 +0200
-Message-ID: <20260813090434.2071318-3-sst@poczta.fm>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260813090434.2071318-1-sst@poczta.fm>
-References: <20260813090434.2071318-1-sst@poczta.fm>
+	s=arc-20240116; t=1786615761; c=relaxed/simple;
+	bh=2/40GNmVMzpabgYXiLtoWLh5cSHzJFeZXyGwsZ/vHT4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=S6qCpBQb33Va3IaPub6N8vLnXp8sQBT2tV1tqSlcDzBRhhgausMae5oSbPGZgDotGMZ/f26vswC/iBuDiLYM16Z3ZssuznsEa2Zn2PiyvC97nbS0paUCH4IYUNmyyhgu+BwBofa+mehM256Q5bleoC/hHdIcz37zznZGti9+Q7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from DESKTOP-L0HPE2S.localdomain (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowAAHDDrJl31qFCclBQ--.46566S2;
+	Thu, 13 Aug 2026 18:09:13 +0800 (CST)
+From: Haotian Zhang <vulab@iscas.ac.cn>
+To: zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Haotian Zhang <vulab@iscas.ac.cn>
+Subject: [PATCH] bcma: propagate bcma_register_devices() error to host probe
+Date: Thu, 13 Aug 2026 18:08:36 +0800
+Message-ID: <20260813100836.2913-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -43,49 +33,78 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=poczta.fm; s=dk;
-	t=1786611888; bh=6pkUEdW4H6yJqA39KYOX8H/dCYwKbzMzc6F1mVIA8w0=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version;
-	b=oZh2KHNmSwXRigcpSGADAJ1ODOTu3FDUeJIjTaisGjxhM6XMOpeuGDGfPfFG+/t76
-	 pM1T6bnme1ks3yW4oR4FPdJ4wnmA6eoNiluZVxfiP2TUQwG1tI5AEoCfUmCcTLvTCj
-	 AA0vK7uehLNw4aMDvNgfxKlAc9aGqJmM7GKXZyfI=
+X-CM-TRANSID:rQCowAAHDDrJl31qFCclBQ--.46566S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr4rZF1rXryfKFyxJr45Awb_yoW8Zw4kpa
+	n8Wa45C34vgr48uF4DAF10yFy5Krn2krW8uF1fCwn5ua9xCry8trWUta40ga1DCFW0ka4r
+	tF1jq3WruayUAF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkK14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
+	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
+	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
+	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
+	AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
+	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjiL05
+	UUUUU==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAISA2p9Zlej2QAAsD
 
-Adding a new station to AP makes only sense when the AP has been started
-beforehand (nl80211_start_ap()). Check if AP is up and beaconing on the
-link when adding new station. Return error if this isn't the case.
+bcma_bus_register() ignores the return value of bcma_register_devices(),
+which reports a failure when bcma_gpio_init() cannot register the GPIO
+chip. The error is silently discarded, so the bus is registered anyway
+and the host device stays bound with the bus half-initialized.
+On device removal bcma_bus_unregister() unconditionally calls
+gpiochip_remove() on a chip whose gpio_device was never registered,
+the failure paths of gpiochip_add_data() free it but leave chip->gpiodev
+dangling, and gpiochip_remove() dereferences it without any check,
+causing a NULL pointer dereference or use-after-free.
 
-Reported-by: syzbot+9bdc0c5998ab45b05030@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=9bdc0c5998ab45b05030
-Signed-off-by: Slawomir Stepien <sst@poczta.fm>
+Fix it by checking the return value of bcma_register_devices() in
+bcma_bus_register() and propagating the error to the caller, so the host
+probe fails instead of leaving the device bound in a half-initialized
+state. This new failure exit can be taken after some cores were already
+registered, so make the SoC host probe failure path unregister them, as
+the PCI host already does.
+
+Fixes: cf0936b06d8e ("bcma: add GPIO driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Haotian Zhang <vulab@iscas.ac.cn>
 ---
- net/wireless/nl80211.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/bcma/host_soc.c | 1 +
+ drivers/bcma/main.c     | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ebde52655904..75bbd78f91ba 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -9174,7 +9174,7 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
--	int err;
-+	int err, link_id;
- 	struct wireless_dev *wdev = info->user_ptr[1];
- 	struct net_device *dev = wdev->netdev;
- 	struct station_parameters params;
-@@ -9413,6 +9413,11 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
-+		/* Add a new station only after the AP and link has been started */
-+		link_id = wdev->valid_links ? params.link_sta_params.link_id : 0;
-+		if (!wdev->links[link_id].ap.beacon_interval)
-+			return -ENETDOWN;
-+
- 		/* ignore WME attributes if iface/sta is not capable */
- 		if (!(rdev->wiphy.flags & WIPHY_FLAG_AP_UAPSD) ||
- 		    !(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME)))
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 20b1816c570b..0bec0d005b89 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -236,6 +236,7 @@ static int bcma_host_soc_probe(struct platform_device *pdev)
+ 	return err;
+ 
+ err_unmap_mmio:
++	bcma_unregister_cores(bus);
+ 	iounmap(bus->mmio);
+ 	return err;
+ }
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 72f045e6ed51..55d17546c797 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -477,8 +477,9 @@ int bcma_bus_register(struct bcma_bus *bus)
+ 	}
+ 
+ 	/* Register found cores */
+-	bcma_register_devices(bus);
+-
++	err = bcma_register_devices(bus);
++	if (err)
++		return err;
+ 	bcma_info(bus, "Bus registered\n");
+ 
+ 	return 0;
 -- 
-2.55.0
+2.43.0
 
