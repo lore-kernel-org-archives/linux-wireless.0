@@ -1,70 +1,77 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-18.mta0.migadu.com [91.218.175.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B734F322A1C;
-	Thu, 13 Aug 2026 05:54:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EEA11AAE17
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 05:57:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786600471; cv=none; b=cfap1siveRxOxhCyMC3SykyTmS2poDVVTxjhPRpGmdtDNM9rvqwR94oPrr2hf7d6W0O+E9d6d16w8bABMpMmNC7INBAE+8yK/A1+8jtMWrgKfWHVaErL8bHahON4WR2HA+4UVxaSYJuE8+ceyKz9XMlIa4Tx1JUfLJ9Rs/QXKNw=
+	t=1786600641; cv=none; b=gPJs9Hk3dKDVqTlUHLUkYr9G0K6pqNy2q1b2HXr1Xfda4CcZMSVGvslmR64Ck8OXTevg2GKhr37EY5j0TYnMlfrciWrstyGZknyTmf67eocWIHPoXKaiEdlLTGEKFpjmfBARh/IHg9mqeYRb0u+vnMHicooj2q+plAOYhR3mhCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786600471; c=relaxed/simple;
-	bh=hw09XuBU8gKu+4yCoNGT5z/LjpFaJGHOgY835c5X19s=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=o7UHeGu4Mz/duT7zCmGHUjA7utgC7XOhkV+FNLxiQ3l9v2cVi96VoFcQZ3cLDYGv8RFuc/WqPPXU+oyFa4x5QzAti5CsigUA/5VnHWJXk9u4bSKaF+tE+47D15uFE9dLAHme/gshwNw0Ru70FzHWG9wJRG/rb54EDLvIEudwSfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ZSdCTk2S; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1786600641; c=relaxed/simple;
+	bh=a42qqutrvNEsIBTjeYtRgJpfyAco7/ed1UM+NmRG7BE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=T8HsqG+RFaUg/+nv7QodIN44ZC8ltP234azAe25JVp/cy/S313VsLgLPzaAsQcJo9+AH2MBTNwBcyuX9LbyhQxAT1Jtcj562RhOBVkISi35bKQRXF2LTBmEYCuK2H1q/fmhwieyU1FjwcXBpiyfZ5S+NziqG7vF8HJKfcDH1eYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=T2sUQ4rL; arc=none smtp.client-ip=91.218.175.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ZSdCTk2S"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67D5sPCG1040276, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786600465; bh=v0eb4ES9EaRszp3SqAO/SDXUpud2y3Sob8TmoXK8Aak=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=ZSdCTk2SthTaq6y847PBSYYJXqtQHIfANUC9anU0BiseO3sb79kMqz5uNfx8NgTIy
-	 j1jUl7hP1CzZhVQgND9ujETNjRzMK4kdB/ktaD6BP7H7mdEb2Il0+vslfnROYBIElx
-	 GEpHZ5FhrxF0DQ5YmgpWo9aqtIuSaLPfFxqsfElVnK1d3LJ48TVBODRS5rm4cms/KV
-	 quVc+7xXwuGA4DyXj/rKDgCQRPFdddEU1pY2dFDKnpvHl+Jgr/cRdvwQkoleKoUKFt
-	 NQcepcjEY9776P8klrIb+Tu/+JGsBQlBsRIKZhlhbZS/KTeB73P0d9xcGDumtBlGgf
-	 G2gAX/RRda06Q==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67D5sPCG1040276
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Thu, 13 Aug 2026 13:54:25 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Thu, 13 Aug 2026 13:54:25 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Thu, 13 Aug 2026 13:54:25 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Arsenii Pashchenko <ulijg308@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH wireless-next v2 0/4] wifi: rtw88: rtw8822c: refactor DAC
- IQ calibration to s32
-Thread-Topic: [PATCH wireless-next v2 0/4] wifi: rtw88: rtw8822c: refactor DAC
- IQ calibration to s32
-Thread-Index: AQHdKudPkAZdnwCNNkWKGmmluBiRRrabejRA
-Date: Thu, 13 Aug 2026 05:54:25 +0000
-Message-ID: <18267f0f1bfe435883817276dc540ff4@realtek.com>
-References: <cover.1786599645.git.ulijg308@gmail.com>
-In-Reply-To: <cover.1786599645.git.ulijg308@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="T2sUQ4rL"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=a42qqutrvNEsIBTjeYtRgJpfyAco7/ed1UM+NmRG7BE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1786600637; v=1; x=1787205437;
+ b=T2sUQ4rLBqN3Go8+8txosdyyp8hT5d3K9U/wr1oV/1yxi40ZpJNZTLJQqLH7cFRVBAh4q3B6
+ aQx/ShTDitD8Hc6NIOUY0eNoux7app4zXWLdZqN1ukPwfLxbBSuWXYvaf95h13VvfGRbSc2SgAX
+ 4C0YiKTcNr4DJHt3NRye5wyw=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from kali (31.223.131.186)
+	by smtp.migadu.com with ESMTPS id f6c43e95968d5701;
+	Thu, 13 Aug 2026 05:57:17 +0000
+X-Migadu-Flow: FLOW_OUT
+From: luka.gejak@linux.dev
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Luka Gejak <luka.gejak@linux.dev>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	Michael Straube <straube.linux@gmail.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Hans de Goede <johannes.goede@oss.qualcomm.com>
+Subject: Re: [PATCH v3 0/5] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+Date: Thu, 13 Aug 2026 05:56:57 +0000
+Message-ID: <20260813055657.13506-1-luka.gejak@linux.dev>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <57719CE4-BEE4-4A1E-B760-DFFD04FF865C@linux.dev>
+References: <57719CE4-BEE4-4A1E-B760-DFFD04FF865C@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
->  - Fixed missing target tree name in the subject prefix (switched to wire=
-less-next).
+From: Luka Gejak <luka.gejak@linux.dev>
 
-The correct tree tag is rtw-next. https://github.com/pkshih/rtw.git
+Hi Ping-Ke,
 
+Following up on the test I mentioned: the result is in, and patch 3 on
+its own is enough.
 
+The tester ran the series with patch 4 removed, on good signal near the
+AP. "firmware failed to leave lps state" did not appear at all, over one
+run of 46 iterations overnight and a second of 825 iterations. That
+warning was only intermittent on the unfixed branch to begin with, so
+patch 4 was never what suppressed it.
+
+"failed to get tx report from firmware" appeared once in the 46 iteration
+run and not at all in the 825 iteration run, against being easy to
+reproduce unfixed. So patch 3 is what addresses it, with a rare residual
+left over.
+
+That matches the firmware feature word and the C2H capture, so patch 4 is
+dropped in v5 as planned and the slow host improvement is patch 3 alone.
+
+Best regards,
+Luka Gejak
