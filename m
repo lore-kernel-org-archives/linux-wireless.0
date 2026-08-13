@@ -1,242 +1,376 @@
-Received: from mout.web.de (mout.web.de [212.227.15.4])
+Received: from sender4-op-o11.zoho.com (sender4-op-o11.zoho.com [136.143.188.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6E4331ECC;
-	Thu, 13 Aug 2026 14:57:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786633072; cv=none; b=ohW5n2FQviUUk/SJJ0WBugpz7qz97NCjKwndJO7g+6i9dA0IfeG+ggMAOJzZGEIl2568lH95WYi87C+96d6yuA54oyDy5WtAiBpdcGS4yClM/ScIIhFcob8+QOvnvYRZqfB2i0P2n12sRGj3sDAvqh2dB8YJ3NXRdNhGgM5BCIE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786633072; c=relaxed/simple;
-	bh=Hi0wEwSm5Rv+zIrod0GyfrzgDdb6x8prLNKStkLb8fE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FzshOtBZZETh0QYMlHY82IFvHZr0w9thryFoPVUyLaB/39T66WAKbNg3QYqkcdQ2c34H2wyIArdD6HrRG+RILNk57/l+3xqR6X6SIiCqXeyd5lygRGnRqH7DNc1d79sy4aPucqo4OzaCEI486+Q1aWp6mr+FkBsUDvQHvGOdwMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b=GgOrDE6k; arc=none smtp.client-ip=212.227.15.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99A2D32D0FC;
+	Thu, 13 Aug 2026 15:06:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786633617; cv=pass; b=t1/qEreVHjSfkpL6fyKfgtksj84TjH5qIEo1oa/E4A9mDH1t//1BLYC/spEcawVuTIxnoNlUU/gUYhfCdsFTnUmDu0DM5EAe1K1H+ibWmibR1Mt8HWAmY7iLnUVZI9i/VPptz4pGRnpIUeBgYBMuqMZKxLEHgc+6w8/6594TTkg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786633617; c=relaxed/simple;
+	bh=7Ta0iIdvrlwWwMSDb8WYexLfBGCaLNIhAKZbAbNo6XI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ri/rh6caTZHFOYeUdwIUmLb0ga+MUX/+1Vz4TiqhQ79/6r2O57Ao4y4PFaYdDQ1WV/oXgYZgHt5lyg8KMZc2VQprQ12Ml7LmnpSQNnwHmsrVkW4oO4h3mYtYXdyr8vRSQgd01J9NuSftMKW8y5cCB29DteUJiwg3XEMituvRRWo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nfraprado@collabora.com header.b=YpaCOOaH; arc=pass smtp.client-ip=136.143.188.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=spasswolf@web.de header.b="GgOrDE6k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1786633065; x=1787237865; i=spasswolf@web.de;
-	bh=r/yrGNlCDgNl8g9aGKGMo1rcdSYZ4GZXwom8+x3zBgE=;
-	h=X-UI-Sender-Class:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:cc:
-	 content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=GgOrDE6k2OEB/oo1/sm5FIUuECNV/BoXVwahO52Jycy1SCWHFwQHZE2eUDn6GhfT
-	 5XGWIzEjecfFgQ0YpzceokjSGXG7o/P0lr2QMMCtt1NPAPnjS+PH3cxBnA2lgfv0I
-	 PQumpEj9rKVJd/n4r6u5vFjcy0TlbT4P+eHcdtApp5hwpclwXCpbcq6A8kBDkMIMo
-	 TqF2i1MDb3KtrlYwACgvBQTCOmFqC4iVZsSGbVJQhFOPM9CW6FRMEU2u794vfolUc
-	 Ej4nSBJXNGDUdUQl+lHStBVutLfkJWNIRSnJs2qO74BjXjzg4v1Ev3E4H1IOk8QKb
-	 gHrpDezoeymiAWe0bw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from client.hidden.invalid by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MAtsj-1wjHOL3FbF-0028bW; Thu, 13
- Aug 2026 16:57:44 +0200
-From: Bert Karwatzki <spasswolf@web.de>
-To: Emery Hsin <emery.hsin@mediatek.com>
-Cc: Bert Karwatzki <spasswolf@web.de>,
-	Felix Fietkau <nbd@nbd.name>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	linux-next@vger.kernel.org,
-	jb.tsai@mediatek.com,
-	Deren.Wu@mediatek.com,
-	Leon.Yen@mediatek.com,
-	Quan.Zhou@mediatek.com,
-	Ryder.Lee@mediatek.com,
-	Sean.Wang@mediatek.com,
-	linux-mediatek@lists.infradead.org,
-	litien.chang@mediatek.com,
-	lorenzo@kernel.org
-Subject: [PATCH] wifi: mt76: mt7925: remove wm2_complete_mask from mt7925_irq_map
-Date: Thu, 13 Aug 2026 16:57:40 +0200
-Message-ID: <20260813145741.8047-1-spasswolf@web.de>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To:  <20260612075042.2577193-3-jb.tsai@mediatek.com> 
-References: 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nfraprado@collabora.com header.b="YpaCOOaH"
+ARC-Seal: i=1; a=rsa-sha256; t=1786633608; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=BOj8lqqSnW+ee/wTB10MukrVd0qpsHvwL83kF4efX2uihE31hFcE3TmPiH7hp4Tbv+nVdV7K5hjbP1lle1kEiGMMYjk3WbAUN2Hf1WVVWU0vJZaQ/K03n9j1UBTf3h8oXACOaF0CrEL0GUzHoQzry3PRr1yV8zdj479vCecn3J0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1786633608; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=51811k6Vs/YG5s1LjEnUnVvDFQtU8ePqH0bxWUymUfk=; 
+	b=lIbDp55FPXA6nhzZeqdDD6P/407lKCwqonstiEUP4ilVvgU5vgkLWTDS3C7vKE2MIwGdrL4JCV3qdgPhsR3pLeRKjv3jYRIXhJFO9HKz6CQUEBuhuOgnlcvIEsS2eE8tTeKg7OitMf19xl7R5Lc6FqPc+FE5WVw/NY0wehENAxw=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nfraprado@collabora.com;
+	dmarc=pass header.from=<nfraprado@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1786633608;
+	s=zohomail; d=collabora.com; i=nfraprado@collabora.com;
+	h=Message-ID:Subject:Subject:From:From:To:To:Cc:Cc:Date:Date:In-Reply-To:Content-Type:Content-Transfer-Encoding:MIME-Version:Message-Id:Reply-To;
+	bh=51811k6Vs/YG5s1LjEnUnVvDFQtU8ePqH0bxWUymUfk=;
+	b=YpaCOOaHQg9hqqiekqwOiOloE5rFaIIXrkjc4/6sdDzCgNsnDWihuKHsORYNQugm
+	hUqqEcaUhpH786zG66oSDSjMKqFaTMc9qPcz/gMBP+PaFku0RJo7/A8bV69BK8HYHZb
+	VoQVL448mAmD/NpLRC8llCExT0B3/PQ6RTWCEC4o=
+Received: by mx.zohomail.com with SMTPS id 1786633606668792.0049224972487;
+	Thu, 13 Aug 2026 08:06:46 -0700 (PDT)
+Message-ID: <cb527333b776e453259f2c73afa483d8f2a4fd9b.camel@collabora.com>
+Subject: Re: [PATCH] wifi: rtw89: Don't return default channel from disabled
+ bands
+From: =?ISO-8859-1?Q?N=EDcolas?= "F. R. A. Prado" <nfraprado@collabora.com>
+To: Ping-Ke Shih <pkshih@realtek.com>, David Lee <sc.lee@realtek.com>
+Cc: "kernel@collabora.com" <kernel@collabora.com>, 
+ "linux-wireless@vger.kernel.org"
+	 <linux-wireless@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	 <linux-kernel@vger.kernel.org>, Zong-Zhe Yang <kevin_yang@realtek.com>
+Date: Thu, 13 Aug 2026 11:06:45 -0400
+In-Reply-To: <6f52ebbc7b784b5ab25d54399a8e411f@realtek.com>
+References: <20260812-rtw89-2ghz-quirk-fix-v1-1-7fd2a46e7a02@collabora.com>
+	 <6f52ebbc7b784b5ab25d54399a8e411f@realtek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2-10 
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:y9xZWd1xlGhxtnEoOO3b6kGGh7R4lKUFirM4FRmNn3nv4zsMoBJ
- NrTOzqLjSEfAUKzuY9qu7mFS6ncqJZmmXLa8r5eYAxSqdxv47NonJYpOopVKIntf7jq/rqH
- QuejFlpiom/QUW1ULnfgnAUeyS4r6Mhj2lX4Qw6+mSmjFji2qp+B+GzhCr2bKAwrN2xj1bF
- WxPnZIwhZrz2LScDmAw8Q==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Hcjqk0DQ0oo=;g5mZI43kyAhtHjmW81RhWjU+ksY
- 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
- dYzWepIxLnXj2MoQ==
+X-ZohoMailClient: External
 
-Commit
-c4edf9e3e0e5 ("wifi: mt76: mt7925: replace shared rx irq masks with per-ch=
-ip definitions")
-introduces a non-NULL wm2_complete_mask element to mt7925_irq_map. This
-gives a NULL pointer dereference error when resuming from hibernate:
+On Thu, 2026-08-13 at 00:52 +0000, Ping-Ke Shih wrote:
+> N=C3=ADcolas F. R. A. Prado <nfraprado@collabora.com> wrote:
+> > rtw89_get_default_chandef() assumes the lowest frequency channel in
+> > the
+> > 2GHz band is available on all hardware, and always returns that as
+> > the
+> > default channel. This is no longer the case after commit
+> > 355626a2c232
+> > ("wifi: rtw89: 8852cu: add quirk to disable 2.4 GHz band"), and the
+> > current logic results in kernel WARNs and null pointer dereferences
+> > on
+> > boards with that quirk set.
+>=20
+> Could you share the kernel WARN?
 
-[ T2001] BUG: kernel NULL pointer dereference, address: 0000000000000a98
-[ T2001] #PF: supervisor write access in kernel mode
-[ T2001] #PF: error_code(0x0002) - not-present page
-[ T2001] PGD 0 P4D 0
-[ T2001] Oops: Oops: 0002 [#1] SMP NOPTI
-[ T2001] CPU: 5 UID: 0 PID: 2001 Comm: kworker/u128:4 Tainted: G        W =
-          7.2.0-rc4-bisect-00876-gc4edf9e3e0e5-dirty #746 PREEMPT_RT
-[ T2001] Tainted: [W]=3DWARN
-[ T2001] Hardware name: ASUS System Product Name/ROG STRIX B850-F GAMING W=
-IFI, BIOS 1627 02/05/2026
-[ T2001] Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
-[ T2001] RIP: 0010:mutex_lock+0xe/0x30
-[ T2001] Code: 75 07 31 c0 c3 cc cc cc cc be 01 00 00 00 e9 79 fe ff ff 66=
- 0f 1f 84 00 00 00 00 00 f3 0f 1e fa 65 48 8b 15 94 13 83 00 31 c0 <f0> 48=
- 0f b1 57 18 75 05 c3 cc cc cc cc be 02 00 00 00 e9 4b fe ff
-[ T2001] RSP: 0018:ffffa53dc250fdc8 EFLAGS: 00010246
-[ T2001] RAX: 0000000000000000 RBX: ffff951e8d0e3420 RCX: 0000000000000000
-[ T2001] RDX: ffff951f64f145c0 RSI: 0000000000000002 RDI: 0000000000000a80
-[ T2001] RBP: 0000000000000000 R08: 0000000000000004 R09: 0000000000000001
-[ T2001] R10: 0000000000000000 R11: 0000000000000004 R12: ffff951e8d0e3020
-[ T2001] R13: ffff951e8d0e2680 R14: ffff951e8d0e0aa0 R15: 0000000000000000
-[ T2001] FS:  0000000000000000(0000) GS:ffff952ccc8b3000(0000) knlGS:00000=
-00000000000
-[ T2001] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ T2001] CR2: 0000000000000a98 CR3: 000000050641e000 CR4: 0000000000f50ef0
-[ T2001] PKRU: 55555554
-[ T2001] Call Trace:
-[ T2001]  <TASK>
-[ T2001]  ? napi_disable+0x18/0x40
-[ T2001]  ? mt7925e_mac_reset+0x2f8/0x390 [mt7925e]
-[ T2001]  ? mt7925_mac_reset_work+0x98/0x1c0 [mt7925_common]
-[ T2001]  ? drm_sched_run_job_work+0x1c/0x2d0 [gpu_sched]
-[ T2001]  ? pwq_dec_nr_in_flight+0x29a/0x3a0
-[ T2001]  ? process_one_work+0x199/0x2a0
-[ T2001]  ? worker_thread+0x1a0/0x2f0
-[ T2001]  ? rescuer_thread+0x550/0x550
-[ T2001]  ? kthread+0xd1/0x110
-[ T2001]  ? kthread_affine_node+0x100/0x100
-[ T2001]  ? ret_from_fork+0x1f9/0x2b0
-[ T2001]  ? kthread_affine_node+0x100/0x100
-[ T2001]  ? kthread_affine_node+0x100/0x100
-[ T2001]  ? ret_from_fork_asm+0x11/0x20
-[ T2001]  </TASK>
+Sure, here are the details for those issues:
 
-Remove wm2_complete_mask from mt7925_irq_map to fix the issue.
+Warn:
+  Origin:
+https://github.com/pkshih/rtw/blob/38c58d541cfe286880cdadebc5d726fe18e3b615=
+/net/mac80211/rx.c#L5542
+  dmesg:
 
-Fixes: c4edf9e3e0e5 ("wifi: mt76: mt7925: replace shared rx irq masks with=
- per-chip definitions")
-Signed-off-by: Bert Karwatzki <spasswolf@web.de>
-=2D--
- drivers/net/wireless/mediatek/mt76/mt7925/pci.c | 1 -
- 1 file changed, 1 deletion(-)
+    WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:5376
+ieee80211_rx_list+0x759/0xda0 [mac80211]
+    Modules linked in: tcp_diag inet_diag rtw89_8852cu uinput
+snd_seq_dummy rfcomm snd_hrtimer snd_seq snd_seq_device ccm algif_aead
+des3_ede_x86_64 des_generic libdes md4 wireguard libcurve25519
+ip6_udp_tunnel udp_tunnel nft_fib_inet nft_fib_ipv4 nft_fib_ipv6
+nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct
+nft_chain_nat ip6table_nat ip6table_mangle ip6table_raw
+ip6table_security iptable_nat nf_nat nf_conntrack nf_defrag_ipv6
+nf_defrag_ipv4 iptable_mangle iptable_raw iptable_security nf_tables
+ip6table_filter ip6_tables iptable_filter uhid cmac algif_hash
+algif_skcipher af_alg bnep qrtr_mhi amdgpu rtw89_8852c intel_rapl_msr
+rtw89_usb cros_ec_hwmon cros_ec_sysfs cros_ec_debugfs cros_ec_chardev
+cros_ec_cec qrtr gpio_cros_ec ath11k_pci btusb amd_atl rtw89_core btmtk
+intel_rapl_common ath11k btrtl btbcm amdxcp btintel qmi_helpers
+drm_panel_backlight_quirks snd_hda_codec_atihdmi mousedev
+snd_hda_codec_hdmi kvm_amd hid_steam gpu_sched cdc_acm bluetooth
+mac80211 snd_hda_intel
+     drm_suballoc_helper spd5118 cros_ec_dev kvm snd_hda_codec
+drm_buddy snd_hda_core irqbypass drm_ttm_helper wmi_bmof
+snd_intel_dspcfg polyval_clmulni leds_valve snd_intel_sdw_acpi
+ghash_clmulni_intel ttm snd_hwdep aesni_intel cros_ec_keyb cfg80211
+drm_exec cros_usbpd_notify snd_pcm matrix_keymap r8169 rapl
+i2c_algo_bit pcspkr amd_pmf sp5100_tco realtek snd_timer rfkill
+mdio_devres drm_display_helper amdtee snd cec cros_ec_lpcs libphy
+i2c_piix4 mhi i2c_smbus soundcore k10temp cros_ec mdio_bus libarc4 ccp
+video cros_ec_proto tpm_crb amd_sfh wmi platform_profile tpm_tis tee
+tpm_tis_core amd_pmc 8250_dw mac_hid pkcs8_key_parser ntsync
+hid_playstation led_class_multicolor hid_nintendo ff_memless i2c_dev
+crypto_user dm_mod loop nfnetlink zram 842_decompress 842_compress
+lz4hc_compress lz4_compress tpm libaescfb ip_tables x_tables overlay
+vfat fat nvme extcon_steamdeck steamdeck_hwmon leds_steamdeck nvme_core
+nvme_keyring serio_raw nvme_auth hkdf steamdeck [last unloaded:
+rtw89_8852cu]
+    CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Kdump: loaded Tainted: G    =20
+W           6.18.39-valve1-g967933a3759d #1 PREEMPT(full)=20
+b7338bed92ca656968bea48f7630a30e271de506
+    Tainted: [W]=3DWARN
+    Hardware name: Valve Fremont/Fremont, BIOS F7F0106 04/28/2026
+12:12:27
+    RIP: 0010:ieee80211_rx_list+0x759/0xda0 [mac80211]
+    Code: 00 39 41 04 75 ca 48 85 f6 0f 85 57 ff ff ff 48 89 de eb bc
+0f 0b 41 0f b6 41 4c 3c 05 0f 86 ff f8 ff ff 0f 0b e9 ba f9 ff ff <0f>
+0b e9 b3 f9 ff ff 80 3d 72 40 21 00 00 0f 85 a6 f9 ff ff 41 0f
+    RSP: 0018:ffffccc600003bc8 EFLAGS: 00010246
+    RAX: 0000000000000000 RBX: ffff88cc0e240960 RCX: ffffccc600003cc0
+    RDX: ffff88cc0e2403e0 RSI: 0000000000000000 RDI: ffff88cc0e240960
+    RBP: ffffccc600003cc0 R08: 00000000ffffffff R09: ffff88cc0f094d00
+    R10: ffff88cc0e240960 R11: 0000000000000000 R12: 0000000000000000
+    R13: 0000000000000000 R14: 0000000000000000 R15: ffffccc600003e94
+    FS:  0000000000000000(0000) GS:ffff88cffe396000(0000)
+knlGS:0000000000000000
+    CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    CR2: 00000000b9db2858 CR3: 000000012c820000 CR4: 0000000000f50ef0
+    PKRU: 55555554
+    Call Trace:
+     <IRQ>
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? rtw89_vif_rx_stats_iter+0x72/0x6c0 [rtw89_core
+cc2978209104e6e9870df546aa63c2dfe663dabd]
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ieee80211_rx_napi+0x55/0xe0 [mac80211
+e7188b79ec75a1fb508ead80c70218c2a2d5655b]
+     rtw89_core_rx_to_mac80211+0x202/0xd70 [rtw89_core
+cc2978209104e6e9870df546aa63c2dfe663dabd]
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     rtw89_core_rx+0x53f/0x1280 [rtw89_core
+cc2978209104e6e9870df546aa63c2dfe663dabd]
+     ? __entry_text_end+0x1020d7/0x1020db
+     ? kmem_cache_alloc_noprof+0x71/0x5b0
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __build_skb+0x4d/0x60
+     rtw89_usb_rx_handler+0x124/0x2d0 [rtw89_usb
+bae8c268ee39b94df55cfdd699a060bf16cea37d]
+     process_one_work+0x193/0x350
+     bh_worker+0x187/0x1b0
+     tasklet_action+0x10/0x30
+     handle_softirqs+0xe1/0x290
+     __irq_exit_rcu+0xc6/0xf0
+     common_interrupt+0x85/0xa0
+     </IRQ>
+     <TASK>
+     asm_common_interrupt+0x26/0x40
+    RIP: 0010:cpuidle_enter_state+0xb5/0x410
+    Code: 5c 02 00 00 e8 dc fc 08 ff e8 57 f2 ff ff 48 89 c5 0f 1f 44
+00 00 31 ff e8 b8 74 07 ff 45 84 ff 0f 85 2e 02 00 00 fb 45 85 f6 <0f>
+88 7c 01 00 00 49 63 ce 48 2b 2c 24 48 6b d1 68 48 89 c8 48 c1
+    RSP: 0018:ffffffff8dc03e18 EFLAGS: 00000206
+    RAX: ffff88cffe396000 RBX: 0000000000000003 RCX: 0000000000000000
+    RDX: 00000026674b5715 RSI: fffffffbffde5c58 RDI: 0000000000000000
+    RBP: 00000026674b5715 R08: 0000000000000002 R09: 000000000000000f
+    R10: 0000000000000000 R11: 0000000000000000 R12: ffff88cc016d7c00
+    R13: ffffffff8ddf87e0 R14: 0000000000000003 R15: 0000000000000000
+     ? cpuidle_enter_state+0xa8/0x410
+     cpuidle_enter+0x31/0x50
+     do_idle+0x14f/0x290
+     cpu_startup_entry+0x29/0x30
+     rest_init+0xcc/0xd0
+     start_kernel+0x993/0x9a0
+     x86_64_start_reservations+0x24/0x30
+     x86_64_start_kernel+0xcc/0xd0
+     common_startup_64+0x13e/0x141
+     </TASK>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net=
-/wireless/mediatek/mt76/mt7925/pci.c
-index 02ef09dd797d..d2c0a78ae9f2 100644
-=2D-- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -493,7 +493,6 @@ static const struct mt792x_irq_map mt7925_irq_map =3D =
-{
- 		.all_complete_mask =3D MT7925_INT_RX_DONE_ALL,
- 		.data_complete_mask =3D MT7925_INT_RX_DONE_DATA,
- 		.wm_complete_mask =3D MT7925_INT_RX_DONE_WM,
--		.wm2_complete_mask =3D MT_INT_RX_DONE_WM2,
- 	},
- };
-=20
-=2D-=20
-2.55.0
+Null pointer dereference:
+  Triggered when running 'iw dev wlan1 set bitrates'
+  Origin:
+https://github.com/pkshih/rtw/blob/38c58d541cfe286880cdadebc5d726fe18e3b615=
+/drivers/net/wireless/realtek/rtw89/phy.c#L672
+  dmesg:
 
-I noticed that my debian sid system running linux next-20260812 would
-resume from hibernation either displaying a frozen GUI or show the
-mentioned backtrace in dmesg and freezing seconds after that. I bisected
-the issue to commit=20
-c4edf9e3e0e5 ("wifi: mt76: mt7925: replace shared rx irq masks with per-ch=
-ip definitions")
-which introduces a non-NULL wm2_complete_mask to mt7925_irq_map.
-Removing wm2_complete_mask from mt7925_irq_map fixes the issue in
-next-20260812.
+    BUG: kernel NULL pointer dereference, address: 0000000000000018
+    #PF: supervisor read access in kernel mode
+    #PF: error_code(0x0000) - not-present page
+    PGD 0 P4D 0=20
+    Oops: Oops: 0000 [#1] SMP NOPTI
+    CPU: 9 UID: 0 PID: 5466 Comm: iw Kdump: loaded Tainted: G        W
+6.18.39-valve1-g967933a3759d #1 PREEMPT(full)=20
+b7338bed92ca656968bea48f7630a30e271de506
+    Tainted: [W]=3DWARN
+    Hardware name: Valve Fremont/Fremont, BIOS F7F0106 04/28/2026
+12:12:27
+    RIP: 0010:rtw89_phy_rate_pattern_vif+0x2a1/0x380 [rtw89_core]
+    Code: c7 e9 a6 fe ff ff 4c 8b 55 80 8b 55 90 48 8b 45 a8 48 8b 7d
+98 41 b9 01 00 00 00 48 8b 00 48 8b 40 48 48 8b 84 f8 38 01 00 00 <8b>
+48 18 48 6b c7 64 49 d3 e1 48 8b 4d 88 41 83 e9 01 44 8b 04 01
+    RSP: 0018:ffffccdf4b247528 EFLAGS: 00010246
+    RAX: 0000000000000000 RBX: ffffccdf4b247568 RCX: 0000000000000001
+    RDX: 0000000000000000 RSI: 0000000000000088 RDI: 0000000000000000
+    RBP: ffffccdf4b2475b0 R08: 0000000000000001 R09: 0000000000000001
+    R10: ffff89961b75a860 R11: 0000000000002130 R12: 0000000000000002
+    R13: 0000000000000000 R14: ffffccdf4b247640 R15: 0000000000000002
+    FS:  00007fc8c4371e80(0000) GS:ffff89998fbd6000(0000)
+knlGS:0000000000000000
+    CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    CR2: 0000000000000018 CR3: 000000015d2fc000 CR4: 0000000000f50ef0
+    PKRU: 55555554
+    Call Trace:
+     <TASK>
+     rtw89_ops_set_bitrate_mask+0x30/0x80 [rtw89_core
+cc2978209104e6e9870df546aa63c2dfe663dabd]
+     ieee80211_set_bitrate_mask+0x242/0x3f0 [mac80211
+e7188b79ec75a1fb508ead80c70218c2a2d5655b]
+     nl80211_set_tx_bitrate_mask+0xe2/0x1b0 [cfg80211
+9026e3ef9756f7aa40bbad0fac3294da3b8c486f]
+     genl_family_rcv_msg_doit+0xff/0x160
+     genl_rcv_msg+0x1aa/0x2b0
+     ? __pfx_nl80211_pre_doit+0x10/0x10 [cfg80211
+9026e3ef9756f7aa40bbad0fac3294da3b8c486f]
+     ? __pfx_nl80211_set_tx_bitrate_mask+0x10/0x10 [cfg80211
+9026e3ef9756f7aa40bbad0fac3294da3b8c486f]
+     ? __pfx_nl80211_post_doit+0x10/0x10 [cfg80211
+9026e3ef9756f7aa40bbad0fac3294da3b8c486f]
+     ? __pfx_genl_rcv_msg+0x10/0x10
+     netlink_rcv_skb+0x5c/0x110
+     genl_rcv+0x28/0x40
+     netlink_unicast+0x288/0x3c0
+     ? __alloc_skb+0xdb/0x1a0
+     netlink_sendmsg+0x20d/0x430
+     ____sys_sendmsg+0x374/0x390
+     ? import_iovec+0x2f/0x40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ___sys_sendmsg+0x99/0xe0
+     __sys_sendmsg+0x8a/0xf0
+     do_syscall_64+0x7d/0x980
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? kmem_cache_free+0x550/0x5d0
+     ? __x64_sys_close+0x3d/0x80
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __x64_sys_close+0x3d/0x80
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? do_syscall_64+0x7d/0x980
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __sys_socket+0xd0/0x100
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? do_syscall_64+0x7d/0x980
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? exc_page_fault+0x71/0x150
+     entry_SYSCALL_64_after_hwframe+0x76/0x7e
+    RIP: 0033:0x7fc8c4432006
 
-Bert Karwatzki
+> >=20
+> > Update rtw89_get_default_chandef() to consider the available bands
+> > when
+> > picking the default channel.
+> >=20
+> > Fixes: 355626a2c232 ("wifi: rtw89: 8852cu: add quirk to disable 2.4
+> > GHz band")
+> > Signed-off-by: N=C3=ADcolas F. R. A. Prado <nfraprado@collabora.com>
+> > ---
+> > =C2=A0drivers/net/wireless/realtek/rtw89/chan.c |=C2=A0 2 +-
+> > =C2=A0drivers/net/wireless/realtek/rtw89/core.c | 21 ++++++++++++++++++=
+-
+> > --
+> > =C2=A0drivers/net/wireless/realtek/rtw89/core.h |=C2=A0 3 ++-
+> > =C2=A03 files changed, 21 insertions(+), 5 deletions(-)
+> >=20
+> > diff --git a/drivers/net/wireless/realtek/rtw89/chan.c
+> > b/drivers/net/wireless/realtek/rtw89/chan.c
+> > index 6f11335b4968..6512fc9eef29 100644
+> > --- a/drivers/net/wireless/realtek/rtw89/chan.c
+> > +++ b/drivers/net/wireless/realtek/rtw89/chan.c
+> > @@ -297,7 +297,7 @@ static void rtw89_config_default_chandef(struct
+> > rtw89_dev *rtwdev)
+> > =C2=A0{
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct cfg80211_chan_def cha=
+ndef =3D {0};
+> >=20
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw89_get_default_chandef(&chande=
+f);
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 rtw89_get_default_chandef(rtwdev,=
+ &chandef);
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __rtw89_config_entity_chande=
+f(rtwdev, RTW89_CHANCTX_0,
+> > &chandef);
+> > =C2=A0}
+> >=20
+> > diff --git a/drivers/net/wireless/realtek/rtw89/core.c
+> > b/drivers/net/wireless/realtek/rtw89/core.c
+> > index 397ebbfcac09..5ae9523667c6 100644
+> > --- a/drivers/net/wireless/realtek/rtw89/core.c
+> > +++ b/drivers/net/wireless/realtek/rtw89/core.c
+> > @@ -393,10 +393,25 @@ static void rtw89_traffic_stats_accu(struct
+> > rtw89_dev *rtwdev,
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+> > =C2=A0}
+> >=20
+> > -void rtw89_get_default_chandef(struct cfg80211_chan_def *chandef)
+> > +void rtw89_get_default_chandef(struct rtw89_dev *rtwdev,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct cfg80211_chan_def *chandef)
+> > =C2=A0{
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 cfg80211_chandef_create(chandef, =
+&rtw89_channels_2ghz[0],
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 NL80211_CHAN_NO_HT);
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u8 support_bands =3D rtwdev->chip=
+->support_bands;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct ieee80211_channel *default=
+_channel;
+> > +
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (support_bands & BIT(NL80211_B=
+AND_2GHZ) &&
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 !test_bit=
+(RTW89_QUIRK_DISABLE_2GHZ, rtwdev->quirks)) {
+>=20
+> I'd prefer the style implemented in rtw89_core_set_supported_band()
+> before
+> this if-branch.
+>=20
+> 	if (test_bit(RTW89_QUIRK_DISABLE_2GHZ, rtwdev->quirks))
+> 		support_bands &=3D ~BIT(NL80211_BAND_2GHZ);
+
+Sure, can do it in v2.
+
+>=20
+>=20
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 default_channel =3D &rtw89_channels_2ghz[0];
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else if (support_bands & BIT(NL=
+80211_BAND_5GHZ)) {
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 default_channel =3D &rtw89_channels_5ghz[0];
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else if (support_bands & BIT(NL=
+80211_BAND_6GHZ)) {
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 default_channel =3D &rtw89_channels_6ghz[0];
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 } else {
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 rtw89_err(rtwdev, "Failed to get default channel,
+> > no band supported\n");
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0 return;
+>=20
+> If it somehow falls into this case, won't it warn or null-
+> dereference?
+
+I suppose it could, but I'm not sure what would be a better option
+here, do you have any suggestions?
+
+In any case all of the hardware variants currently defined have at
+least one of those flags set, so this branch could never be reached.
+But if something ever changes, then this error would help noticing it.
+
+--=20
+Thanks,
+
+N=C3=ADcolas
