@@ -1,135 +1,135 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74BA0381B01
-	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 18:34:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 382E2489866
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 18:50:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786646085; cv=none; b=EmJqV9AKGsILFX5OwKopYOAKVKSg7j6izLFAirGrB3JbKajc+FcWx4CW2bpZeBS6k3ly2EXZk1llKduOuh5YOzvf9VvN1Sy5cuRNP4nm3t41Ihn4i5/r2F3gxnELA9N740DL7PLGwOztEXl6CQrglfqPyQL8E5fGYUw8lyrRZ0s=
+	t=1786647029; cv=none; b=Fg/xg286AH8CR453Vln6jJzmkMBx2fojwPT3KxEWbP71Rgm3+rxGkllVTbFpl+HH2xHPGVI9ZFjuVg2Gl1L9xQDd/A+KEo0EaHro+9zdShZLvTJEstSRBkBhcH5NG2g+IUcYwv0k9HLTWHs3z/1GS99vvF2ewWBKZOsgo4EM6aI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786646085; c=relaxed/simple;
-	bh=DHFZ2TaJOgchJ5PIo/X8b3TeXaT3TPk70S1lgfWB3Xw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GoT8p0FQDaqVpqUSrIbPgpFc4m6kA2PPPou8bBVqbTX+JNOmYRxYyyfvrSAA+fQ5Qz/K7IQjNZysEJ12Yf+UbvRI+p/RYYVtX5Jm1jOlmnf1sCjNWPN6cN798uVAo0EFo/P/nQhEFAKQUtvD8tOTzikbBSFPuOUoImuMeDOT77Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SBPNCcEY; arc=none smtp.client-ip=209.85.128.47
+	s=arc-20240116; t=1786647029; c=relaxed/simple;
+	bh=AkBKR03uCxQT0b9C6hxQnaA2qPJn7M9baAsRN+oR/ps=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Jr0x5uNDqXhKDgYnXFGtzGRsQ7wSPcagBXqhXAzb1g+gklSViAj8CVvXHd56JASQaR1KE3HQWAKhWvYDVW+xmj14Arh8X+M5bj2gy8SgKbZbgWoRCm4bhDqUhGPLmIVodO3MK1ZQVkvDvT/0NpGBMg/XIUTB8CEzlH2U7pmV82o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PgdTXFxR; arc=none smtp.client-ip=209.85.221.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SBPNCcEY"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4953e04ef16so2167175e9.2
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 11:34:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PgdTXFxR"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-47fe89fb333so81252f8f.3
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 11:50:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786646083; x=1787250883; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VhF0Xbpe0vf9q5WFf1uUEKSaWLORxrvQ33nYU/aKtAk=;
-        b=SBPNCcEY1l/Xq7vpa1sHnjpCP6mRoPhbeoQz8QJH3aGStEU/7uhzykMss3B5G1QnV7
-         4BKCbPJ2cmMFDWSDqCCsw9nJb7VBH7UbyPgsvF0nrqsaJjsYN6T9kyeHbBcD9tzakXKF
-         rEg9rRYqIzg59oKC2T2TSGCZKDvBnSsTQmHbONuHReCAkYJO6bNTXh65hmgFAOwkD5KM
-         8qvb3680swrschS0m9+Q0WWs1Hdlsz0akansQjqRbwNIaY4FCYOhJ2uzs4QLloAiLtU6
-         wHmADzlDdrEJ2/xMgAeghqo0BLbsfdPDOY0dIeFVo29sGUmwo5ft9lPs8e4azKCf2+KB
-         GfhA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786646083; x=1787250883;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1786647023; x=1787251823; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=VhF0Xbpe0vf9q5WFf1uUEKSaWLORxrvQ33nYU/aKtAk=;
-        b=oG8G0KPr/iXaibdZsnnS/3jAeuLqlHsy0wRrrIFkArqd6Sy+1M5TLtH/izBo4NW62K
-         LYmmTDTjz8pyS7Fds5gTubdGMvL/xJxpHKXN4/cS9pzwpwvcfsB5aZlU3NvgccsLd1ao
-         PeHqiEzB9Rn9AcDq8askdQOOEpKMs+i2uk8NmBELcK5ZLZ5Dr4n/jPxT/8sbNxGERABz
-         ote7Mulbe/p79Ow+gsVFxblcJ0KAxv25RuAQIqbHctLLKIKtG7Y7gLvBK56Putid1daf
-         B0CTrNra3cfc8dwf7rOLdt4CGkj21j46lE/okiiMOvJgI4G+TDucCUPVYZ3v1WJUVzwx
-         yobg==
-X-Forwarded-Encrypted: i=1; AHgh+RpsHtL/knN2TmFf5VVweipD1sx4bts1RfjDnv4XdKwYWZSsjwDwhxDyFQ8voIGTFVy5RJXgxAUahcYnbqfNfw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YypqMLCD1ZrorwLCM/DoEjQ4eFy3q4jtXHRkQa8bnvkB2Or11tQ
-	rsdPiYVb7rrbgKbP6x7fCgR3FAA65QlHrCrbW4mDErkudPyu+yOX9PA3
-X-Gm-Gg: AR+sD12UgEmOmusBDROgdMd01VlQe0HVb3XjVlXbBKNGXRQJ612HoVv1LYTar3xYMQy
-	zgnoJv01FL0elxFuozqVX+rrguHLFrFlGCTV+fj0ku0IMWaf9CRUHo+CT7ketX6EuQVOCymeZev
-	tmHKTSCguvMKFHPX8lH3siW0mh0zzJ9dHylW3fRGSLKLtZpVRgTguei/BaCAhykQqIRN/jZjHyA
-	1CWQZ1l4tdjyMLWd5WAZNv9TRyNUDHG8XwN+qrB83Yzd1pNz+QZQ1wxH77yEJIGw5gBuXVFP5eY
-	Osq6m6g52VqHGwrbdO/ZQe8KbFDoyT2fRxBqjUrv7iQsgnpwCGM7daLJH8PWQTpdACWMTRzXYGi
-	bYykBBfsCFI2jlUymTJpdssoZcOsAdT96eMmjcBWz+8zlJCsirVHHzXyAP3Peq7o5ByQk8QJocn
-	/8xibkv+Q088RwFWlNga7QzacpCasn3XgJn3k35EIa6BxprmS92YVBpAqgF82cD/YB/WJKPQ==
-X-Received: by 2002:a05:600c:6289:b0:499:84fe:ca8c with SMTP id 5b1f17b1804b1-499879332e1mr5414995e9.5.1786646082473;
-        Thu, 13 Aug 2026 11:34:42 -0700 (PDT)
-Received: from [192.168.1.50] ([79.119.240.229])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4815f2c46besm1159536f8f.31.2026.08.13.11.34.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Aug 2026 11:34:42 -0700 (PDT)
-Message-ID: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
-Date: Thu, 13 Aug 2026 21:34:39 +0300
+        bh=4CmqxsU45YaJX65GG/NrnTX1eKbG2HH3nIDBeKynSsg=;
+        b=PgdTXFxR7JpV8T0EZL3wHKu+TJn7GXYrtCxC8nONFDnKuKGRy7qnHTLzEVFTFNVKt/
+         lb4soRV5zsHugWWppl1MUzGm+sN6gufvvHfdGwEuN8bmtoOPfK0brrjNAHxqaShwilGn
+         84QtXSeTjWmK1aZnoHl6lNsKi+KqgqTsFVba+3DWos6I837EYFuv4vmk3JTwztdTyQ8E
+         lkMJI06Jf6F6hQS1HL/dNZmhMfGe4WqwIPLNoWejrU2jUqqVtAMtZy7WrzPPgC2sU1+A
+         y5/HQH/gwaOgcD1+bONDMSDRNcOmxFpefkGNi4EA5CUe/LL2xzQmiAFshm2UTy6cZ6dt
+         /O4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786647023; x=1787251823;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=4CmqxsU45YaJX65GG/NrnTX1eKbG2HH3nIDBeKynSsg=;
+        b=E6ABqKCfEMK77HJURWnnZaHi6nSaDPpjQyPbfUUjEAdcZDsjacuLLva20EDsawzGTj
+         6qgta2ddOkphfZ6G7uPkQNGD3XJEGkVDrbmbj2qVU0mUJiso5lzFk7/rjIjqVI+T/qvv
+         CqSimx0aixEjTAVf0cwViAjE3ZM7/bYRs83VdBxZ+XVFbQxkvj2W3ZnKgEcHj21vrPq6
+         PrwtQSw1qMUNVLNK3GNflXntxkjls9IdwfagTyuAw9tVs28orhIyQbmqQiN1WsUUeRLY
+         mbR85uwWk8+gXu3wE0HHmzYsNjNyKBQ88RXmjQeFl95vTCPhDwvMpldi4EG9r/FAGDlA
+         bpEQ==
+X-Forwarded-Encrypted: i=1; AHgh+RrbnYyD8prx5+dLfLSQuCI0miPYrSjxzGEHsuH3HcElsyvGPJCAJ780cFRtgFoIxOztwqU7RDeKTkvVms4eTA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx7mKvhWi6ur9FYPo8bckf7cskqf3r1G3YPLDCk5STrxGSUj/z5
+	5Rmu3zmdCi3h8UzW2fxNYJNfX5xCLl2+2fnKfjgzQLLvo3vlF7WncWnJ
+X-Gm-Gg: AR+sD12+QJp3LNPAPjZagHlxDaiPEPcplZf5NcUXY6NKs5K4DdQE8Gx2YpOkyy0fNqu
+	3GJgc4aO4D41uyHyc3+9ZUObcQsm7GmI/agukppfvQLM8mLtN4HKjCLflyaIf799YFVlJubSMwN
+	D+wnd9S8IqHev+OGp1UapbSxrZsjhhA/E1LbWsKySDXfBYb1kzh/aeQvC4u7pRCx/4GpT2ut4G9
+	DNg51/ntEY/Ii6GmNtF+LJNZAKcbHo01XBHTo5G5tOwAANP47R7BEgTqxiDta1rX3lG4O1hqYn9
+	/XYAIwGBnk1VzouPi1fVz6wELsQ7+4Ee2yFUKBrkP2lzRoNQAdfmhpKdDYTmPvh+awH6SFarpLe
+	+wTy4sGMsdkLymRvrWjo0Vqz+uQdEV6c5++nJGvLxfcJ5fLPxolPovlCTe1PDK7GOYBhfRih1BH
+	vFe0dNTpxyfJOlP4UBb5T+WpgfXlzQ1mUgZtIYUGjawiPeN71hNirirmM0UKrDfy2AEg==
+X-Received: by 2002:a05:600c:2055:b0:499:819e:db2c with SMTP id 5b1f17b1804b1-499879ace10mr4265345e9.16.1786647023237;
+        Thu, 13 Aug 2026 11:50:23 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4998216d082sm83608805e9.13.2026.08.13.11.50.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Aug 2026 11:50:22 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mehmet Fide <mehmet.fide@screeningeagle.com>
+Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via the AC queues
+Date: Thu, 13 Aug 2026 20:50:21 +0200
+Message-ID: <20260813185021.2290877-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
+References: <12eaffd0-9d0f-44bd-8163-d05b6a3df611@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via
- the AC queues
-To: Mehmet Fide <mehmet.fide@gmail.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, Mehmet Fide <mehmet.fide@screeningeagle.com>
-References: <4bb13bf2-8588-4235-a1ec-b82e6668c982@gmail.com>
- <20260813155252.2265589-1-mehmet.fide@gmail.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260813155252.2265589-1-mehmet.fide@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 13/08/2026 18:52, Mehmet Fide wrote:
-> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
-> 
-> Hello Bitterblue,
-> 
->> I wonder if you can reproduce this problem with kernel 6.5? It looks
->> like commit 076f786a0ae1 ("wifi: rtw88: Fix AP mode incorrect DTIM
->> behavior") from 6.5 was supposed to fix the exact same problem.
->> This is also the commit which introduced the code you are now removing.
-> 
-> Thanks, I was not aware of that commit, and you are right that my patch
-> reverts exactly the usb.c hunk of it; the MORE_DATA and HGQMD parts
-> stay. I will say that in the commit message in a v2.
-> 
-> I did not run 6.5 and cannot easily on this hardware, the board support
-> we run starts at 6.12. I do not think it would add information though:
-> the code from 076f786a0ae1 is unchanged between 6.5 and the 6.12.103 I
-> tested, and it was demonstrably engaged while the AP was wedged. In a
-> register snapshot taken in that state REG_TCR reads 0x00303030, so
-> BIT_TCR_UPDATE_HGQMD was set. Still, the high queue drained at about 14
-> frames a second, roughly 3 frames per DTIM at beacon interval 100 and
-> dtim_period 2, measured over minutes from the URB submit/complete
-> counters, while several hundred frames sat queued. So at least on
-> RTL8822BU the burst fetch does not happen even with that fix active.
-> RTL8821CU behaves the same, measured today on the same bench with only
-> the dongle swapped: stock fails the reconnect test 0/3 with the "error
-> beacon valid" messages appearing, and passes 5/5 with none once the bmc
-> routing is reverted. RTL8822BU is 0/5 stock and 10/10 with the revert.
-> 
-> I also think the two problems are different. 076f786a0ae1 addresses the
-> hardware fetching one buffered packet per DTIM instead of the whole
-> burst. What we hit is sustained inflow above any DTIM-paced outflow: on
-> USB the high queue shares the single bulk-out endpoint and the page
-> pool with the beacon and H2C queues, so once the pool is exhausted
-> (measured: 14 of 1803 pages left) the beacon reserved-page download
-> fails ("error beacon valid"), the TIM stops updating, and the firmware
-> never releases the burst, which closes the loop and no station can
-> associate again.
-> 
-> If you would rather keep the after-DTIM delivery for stations in power
-> save, I am happy to test an alternative, for example routing bmc to the
-> high queue only while a station is actually in PS, or a depth cap on
-> the high queue. On this hardware the plain AC-queue routing is what I
-> could verify.
-> 
-> Thanks,
-> Mehmet
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Could you check what the official driver is doing in the same situation?
+Hello Bitterblue,
 
-https://github.com/morrownr/88x2bu-20210702
+> Could you check what the official driver is doing in the same situation?
+>
+> https://github.com/morrownr/88x2bu-20210702
+
+Good timing, we had already done exactly that comparison before your
+mail arrived. That driver was our working reference on the same bench
+throughout the investigation (5/5 reconnect cycles where in-tree fails
+0/5), and we went through its AP transmit path to understand why it is
+immune. It handles this quite differently, in five ways:
+
+1. bmc frames are buffered only while a station is actually dozing
+   (sta_dz_bitmap check in core/rtw_xmit.c, rtw_xmit_ap_enqueue). With
+   no sleeper present they leave immediately through the normal AC
+   path, which is what my patch restores for rtw88.
+
+2. The buffering happens in software (the bmc sta's sleep_q), not in
+   the hardware high queue. The hardware HIQ receives at most one DTIM
+   burst at a time (chk_bmc_sleepq_hdl), so it can never accumulate
+   into the page pool the way rtw88's standing high queue does.
+
+3. Even then, a filter decides what may ride the HIQ at all. The
+   default (rtw_hiq_filter=1, "allow special") lets only ARP, EAPOL and
+   DHCP through; mDNS/SSDP chatter never enters the high queue. The
+   rest of the buffered frames go out through the normal queues when
+   the burst is released.
+
+4. The driver owns the TIM bit itself: it sets it when it starts
+   buffering, pushes the updated beacon, and clears it only after both
+   the software queue and the hardware HIQ are empty, polled through
+   HW_VAR_CHK_HI_QUEUE_EMPTY. It does not depend on a beacon download
+   whose pages come from the same pool the backlog is exhausting.
+
+5. MORE_DATA is set on every burst frame except the last one, which
+   carries 0 and terminates the burst. rtw88 sets it on every high
+   queue frame including the last. That may be part of why I measured
+   the burst fetch not happening here even with BIT_TCR_UPDATE_HGQMD
+   set: the hardware never sees the end marker the vendor code
+   provides.
+
+So the field-proven driver never routes bulk multicast through the high
+queue either, sleeper or not; the high queue is a small, filtered,
+explicitly terminated DTIM burst buffer for it, not a transport path.
+
+Given that, I still think routing bmc through the AC queues is the
+right minimal fix for rtw88 USB. If you want to keep buffered delivery
+for dozing stations I am happy to work on the fuller shape, meaning PS
+tracking plus a software staging queue released at DTIM, but that is a
+much bigger change and the current behavior is a hard AP breakage.
+
+Thanks,
+Mehmet
