@@ -1,195 +1,122 @@
-Received: from xmbghk7.mail.qq.com (xmbghk7.mail.qq.com [43.163.128.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AED3490BFB;
-	Thu, 13 Aug 2026 18:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.163.128.43
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786647063; cv=none; b=IJG8oSY6viqksqlZouw06fftd2NilEpzAFI5BuQo3QWBOAQmdbFmH+baK3+g9aNtVsThBX//gbQUK/g4NdIbCm1X8k0kSk9Rfe3AkTwzcRi2+kte1sSJcvhTmk3rv9FdUtCPvfHPvP/YsN0dA9iwL3QQsH1XH723OW2xp8p7Uy0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786647063; c=relaxed/simple;
-	bh=jMb9szKBS93MDlrnbBDAVNXU2j6aCvuA9eIJY0/UrMI=;
-	h=From:To:Subject:Mime-Version:Content-Type:Date:Message-ID; b=UMwPVL0CYlhJ3Azw1KxfHAKeSoPpHE0wsdQo20Eo9mjFy4k4/ebG9nu+B6LuqwNlJZYLpnIr3rJXIK2KHHzK7mvWZn3YivnWbDyXmFC2EuCGuqQfMa81xIK1BPuEV8mlcFeUymI3TMMG2jd5Z/cD0jtoe7Py3uO1SRlBditpIpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=qP7JwPbZ; arc=none smtp.client-ip=43.163.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DE2422540
+	for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 19:33:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.210.177
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786649605; cv=pass; b=shtrGOO4VjgpkCYnlNwBMTsHQkq3yr46LfkdUaHKUo2SJPJ6RgDklMPV5T/+XHDt/txSXZVMsxaGk5gvqsT9pATfcybVwUEfJbm/be2wXUI06YZvmWODrKxLiqd2lS2uEOPJnCxYmuGAMuxHjlgf8yhwQgFHxLlAWw2yrh4FlgE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786649605; c=relaxed/simple;
+	bh=3QZfHln560RCDvnk+V1j+UJC+TZGLqbIcb0VBhhIcvU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Q23gqW+fnFc9BeJizdiJg3oXvKZmR6YwTN0lFPw2Iy1O1lrkioppHGFR6ffX3uvOUOUvOKH5a2w/t0kQ+MlOQYpn1CSkysyrOIdAjX1uNXeGuGxDLfXqJDtmBa+d4CIeRI4xvgPyYUIbqmYKtFor5039UIha5gvcHQQ955jIBXQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=gRcGQ0S3; arc=pass smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="qP7JwPbZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1786647048; bh=jMb9szKBS93MDlrnbBDAVNXU2j6aCvuA9eIJY0/UrMI=;
-	h=From:To:Subject:Date;
-	b=qP7JwPbZg2mZCI8O+4ee7psdmmzTcWI8Uq0oS5bGEqi263+v9rTL/R2CM0sla2t0R
-	 H3IurQYBn8oRnSOBllEbuhrNUj7pJswec8nzUZJcoih2SxDszBeiU2PO1aQhRl/A2R
-	 gg/QWNqJHSMMplC29sy4bNgL8srHamTSMJHlfEhQ=
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
-X-QQ-XMAILINFO: OeJOoYd4plGbuYCTjj13Zeh1io+ve77RoLNPMCFERAZoSHyKY2Egspq+EuCLGq
-	 fZTSupFcDSOe5neeKjUyRmyZRgsu5lVQjjOoVa0H7FoBbRVn+tfmncB47SR6WJXRzRWYys+vZNxBG
-	 uasBxXCkcx44pdmb3FGoZXF1P+2KWJ84y5C2SmRdtVUaQ5hun6TfcDdrz+xnARpZG0JNKwa0DH3Z2
-	 qPQ0END/DVTXaDtVELq9xfsRJBVjLUQOSZPKDGrqGHfMW1OTYODBnKEfWsdA9g7UZfdTO6Qi28Nly
-	 dFOiipUgBsqG9YjO6KWgZJPRm2muh0BhaKBZuPnMAE9HCzSLZTV3S5NYJCdW3jhwCfA35FnflcemH
-	 mfH3TNIl5EnQ3hmIl5RbCK6udhvQr3+p4VnzNpn+6VeKIl29bVeqrjvo5REwWqCsyg5rwtYh7cSbz
-	 P7j3qx1Is0krseJB4bE3/Gd/IyxvFQ8lxGplqdr1b8ucbYMPWSA+W2HNGdi+fu0h/wo/cz8ab89MW
-	 IvrDSZS7Wmxiy3LQMBlKf9DIxKUzw9HFdbyjb4x+L3pJlAR4JK0HIz9jH4QTRuYUG965Q70aHnWPP
-	 uw1rBtzttavEwh+eHEHDP25JhWVOCW9WkHlVPWUWQrdx1QnsLAanTgIPTKLDJazI9yqrdQRRWunyS
-	 8QjaQp3wB8F4468ajXdkioLl2nBFj4ZMN0frP16T/eMGRD2umnUQv87fn7PUvbO572IlOzhLo83lA
-	 J41OUFXck9MmhubGPkunwP09O1C67lZRU8mjgRDNPKU9qkN7ddqhEnhHMJNt6wTaMPkOvE5B00y19
-	 yDBQyjay8g0dLQrXWgj+nz2UmpgRQ4/dcaWd7d9f4SL7UydMknMJtUB43nV8vkGuAW4J1S47BxRLD
-	 bXnDLaEoRF2XVHxk9GGJeKBOSdr/9b8XypwoBpP3Ihz1Uuch9Z4hj7aiEzsYJ4gGc8ZG8aTwggDNW
-	 dwmMek+pJ8MBNGgVJEP/Yeg5zdG+5WtGVGpYId/UsBe7FlICCeEir17BYi8Q8KQRp0cyHUVPb2NHW
-	 j+jIHmNwVghMQ3y3uxZrkPcjWHa4I7Vbhs5Zy4ztQaRlK4LrZy7FQ8B5hrQ==
-From: "=?utf-8?B?U2FiMWU=?=" <sab1e@qq.com>
-To: "=?utf-8?B?bGludXgtd2lyZWxlc3M=?=" <linux-wireless@vger.kernel.org>, "=?utf-8?B?bGludXgta2VybmVs?=" <linux-kernel@vger.kernel.org>
-Subject: RTL8821CE on Intel N95 causes rare silent system hangs on Debian 13 (rtw88 / PCIe ASPM suspected)
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="gRcGQ0S3"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-84eb992a881so85250b3a.2
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 12:33:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1786649603; cv=none;
+        d=google.com; s=arc-20260327;
+        b=qH84taDFNV1sasUX8awE9DM06FiSHDxpuNK7O4ydqnkmRf2KXl+wKTcaQGRhJ/fZ28
+         JfEm1Ev8DnLRAlpU2i2+BMt1ZOuldjWIwaY53T/srFWBkpkSaQ32IYnu7S8e13xrhGpL
+         HfYnLhyyxRy21UGpBCTrAhv8XALTbFv8fOkHnCke5UjN7FxLedPz6QA+VCIFeOXjdrv2
+         yhgncwqaCfYcd51wADs9GErhsJ3N3LVTaZR56gHa5vnNXM0/P4insDjwTPV7YLGEqGb0
+         lvMW1mThScpnux3/vl1up93KgQI1ICQtLUB9t2bogwnfJNF4DTM8SMLq+fBjhqEzDc5Y
+         BuTQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=3QZfHln560RCDvnk+V1j+UJC+TZGLqbIcb0VBhhIcvU=;
+        fh=zFCB9yj6tbPtiNOgT9n/qK9LnQKfgtX1AWhCxXtoerY=;
+        b=p2Ex2fvLFWG13q43Sa3ohvvOA9PdXh+zTNO9Z/6nDcaguxvVKkk5U/89OQwpGxp+UN
+         3P3vguauX8jeyjlBIkvsaYcFBt8EmVDJou0rUrS7f+EStH1oOjHXdTnwsPKxJepTZPVO
+         5wSTX9GF3hvBBWLouF7UpvkR9OqeSrnXe0ZR65jiWqTeJ7cnHQVabhQau+uOYwtihiVk
+         SgSrtZZR0q4AsbizPNmmkw238yEMuzxd4Q1N0xNluZmQFo9lVc1gBLFz5VnbXSnhsydT
+         71OZijFOPQamwaOjQhIyrzxn7E+YcN12t84t0qNQnl8x8gqmUiw2QH/tUW4RgekkY/js
+         Uz4w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20251104; t=1786649603; x=1787254403; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=3QZfHln560RCDvnk+V1j+UJC+TZGLqbIcb0VBhhIcvU=;
+        b=gRcGQ0S3BNsRKd2v1jD2NjOEq6WrnnXNiLAqhD1Vu4PnEGjkUGy5oPH5Y/d+WJhN/j
+         5mo8YKM3Z+bDSOquuyv23YsZ+rxr/5uquhC4xhaQ6YxLVAmTkS6rmwfqg+oAv/LS2ejZ
+         AoSHf7g4caKIr4V8TbzRlBBvlPAg++pVQIsgTZZ7yrdxo9YqF9eUeQFMDhYLWw+TOSSK
+         8HwiOX7qxsWaXtn9T0kZIUU8aY3GDepFqn0aDH9Q9EdL1CXWXJM2vN70wuUZgBmh95yY
+         YaoMjIQu7Anv4+CKP0u+691yw1TRKNfAKQLoDJSENteTbYUVkOcKjhBodzVLOnnJXiqD
+         LUgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786649603; x=1787254403;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=3QZfHln560RCDvnk+V1j+UJC+TZGLqbIcb0VBhhIcvU=;
+        b=J9O80d1pfB029dcl7FAHKpysDElXCdEG6a0KDTtpPFAOYkKw2a5ROoYeLHGGhgV+iI
+         U0rmJFoGZosdNWryOrvduMeyLp+falk4jLeBvNsTSpHZRrLYMDMdTEItVW30rAy3RUHD
+         qiiMBeALvDX3znrXX6QQlI1IGURZKCansgr+CgONPstg+qVeCpS6cwVIK04fEElb3UAb
+         7JLrQK6E8WROUeKv9THxpXu3/YXvUpZ0Z8cTyfQhVinJNCAZYwZggRpp2QGKkBhmRMvZ
+         l0zm3c7a82GIrGlBFUcFIdH6qIP+VQDF1kuIeZm0WTYAQ0lxBfKSSJTyzxYxyfxedvWO
+         pI4A==
+X-Gm-Message-State: AOJu0YziJ1K1b3kPdB2exnNq9cdcNJGDFfSrwp3FgHBstypeWfB7jGGw
+	qi5hE5PXwxBHAj47kAU9AW4ejz/0HcbUVA9aAdQfgBsoxWWgNlEWyFdTx5ePFUvHqtPPDHl71bN
+	JshhGuXqMFRccmJaYPl1d9hnlNnmR3gtw68Rq
+X-Gm-Gg: AR+sD10UC8urou/Xv2QbLxU1QdJDLNVHtG1Tuq0+wdglMnmzdo+zS/MJZUEuK/1ET0p
+	c4OjomspIKf4btoiRV5W8ovs2NmSwOgN8uIB5DQ4KLKDZpWs7M9M69hcFotAriClbA2B6/TDBOi
+	95uNh/z6lRP2HQVSVu/ZSCwrC3CyxF5JxrDnHbQ4CC84DDYnVeLoxxlCN5Xw/Li8T+Bo5l7gV52
+	HA7yHzs7GEeOMdPchNSiFJMM+2gLXGXRlFz6NaJ6ROvV7CwNTVjgxR/+Jz+a4dWcUAWNQ93pOgg
+	jsD/6lYoTdZO62L37saMui3eehQ6a5FKDzYaj4RGQc4FXuvzDRTv5I4y3nx8mmWRm+WBg9Lw+iF
+	jS/FDnnvp5HRvn7bghoYgdrbE6UQIKF3y
+X-Received: by 2002:a05:6a21:b94:b0:3c4:3767:adb2 with SMTP id
+ adf61e73a8af0-3cc719fe496mr181108637.1.1786649603377; Thu, 13 Aug 2026
+ 12:33:23 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Date: Fri, 14 Aug 2026 02:49:35 +0800
-X-Priority: 3
-Message-ID: <tencent_B5F1A333800F8780E50E845422A59A874306@qq.com>
-X-QQ-MIME: TCMime 1.0 by Tencent
-X-Mailer: QQMail 2.x
-X-QQ-Mailer: QQMail 2.x
-X-QQ-mid: xmsezc57-0t1786646975tmde36oi5
+MIME-Version: 1.0
+References: <CAOQMLZVB3_wedJ89yNoCKTXOsuXWNq+T785bVQBSr3Yh-TPqeA@mail.gmail.com>
+ <ea2f5ee46c064fb9b3a45e9d705e2f59@realtek.com> <1f8a2a023b064bca87a8f1e6712bca3d@realtek.com>
+ <CAOQMLZWhvwxTk9PNa0E=73pBOoah8X-2C+xN5-VY_gCSVtBkVg@mail.gmail.com>
+ <CAOQMLZWpPDbm5yiBg89GjzXnCwuQn+t5V=AP617MoH6q8Zu2zw@mail.gmail.com>
+ <fe2f2e2a52ed4565b5c2927d872d82cc@realtek.com> <CAOQMLZU31dc6ZvNi_veM6uU1fSXYNBdnWLkOwH5xXR45uOFx1w@mail.gmail.com>
+ <CAOQMLZWPMq=CCFpdg5wwsJ_QnrUKx_0YouTxdaSePO_0YPqcLA@mail.gmail.com>
+ <CAOQMLZUn30NJwU4pR0hL=nz38Mbp=73wgqd+CoQE2qSO3cf4_w@mail.gmail.com>
+ <013f7d3cf223417c94df41a2a45fa540@realtek.com> <CAOQMLZXiOBsjn=UEO6UryngzkfCzKdo+Xa1RmE_vTtZoFKN0Ew@mail.gmail.com>
+ <CAOQMLZVMALBLeCZUB3Jdvk75znt0D7HxrXyPMhGPvcKLx3j-Yg@mail.gmail.com>
+ <0912165f66394229b4f2b4114ae28a50@realtek.com> <CAOQMLZUbZhNhOQyxGXW7YSOU-z6w-4jWqfqVkaeMhdx2kLDrmg@mail.gmail.com>
+ <c52840cf65464f659635eec6fcd6de12@realtek.com>
+In-Reply-To: <c52840cf65464f659635eec6fcd6de12@realtek.com>
+From: Adrodoc <adrodoc55@googlemail.com>
+Date: Thu, 13 Aug 2026 21:33:11 +0200
+X-Gm-Features: AUfX_mypaFLQW0bV0-HlFqVLq9_-16eY4FgkaTZ4QTpsdJEEmr_hSF6PtB2ECNk
+Message-ID: <CAOQMLZU9fzaFNh+vbFR=ZpvkyG=T9UDwaeBVXpRj3fvYZt2D-g@mail.gmail.com>
+Subject: Re: Error in rtw89 using Kernel 7.1.4
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-SGksCgpJJ2QgbGlrZSB0byByZXBvcnQgYSByZWN1cnJpbmcgZnVsbC1zeXN0ZW0gZnJlZXpl
-LiBJIHdhbnQgdG8gYmUgdXBmcm9udCB0aGF0IEkKYW0gbm90IGNlcnRhaW4gdGhpcyBpcyBh
-IFdpRmkvcnR3ODggcHJvYmxlbSBhdCBhbGwgLS0gdGhlIFJUTDg4MjFDRSBpcwpjdXJyZW50
-bHkganVzdCBteSBsZWFkaW5nIHN1c3BlY3QsIGFuZCBJIGhhdmUgbm90IGNvbmZpcm1lZCBp
-dC4gSSBoYXZlIGFscmVhZHkKcmVhZCB0aGUgZXhpc3RpbmcgcmVwb3J0cyBhYm91dCA4ODIx
-Q0UgKyBBU1BNIEwxIHByb2JsZW1zIChCdWd6aWxsYSAjMjE1MTMxLAp0aGUgTWFyY2ggMjAy
-NiAiaGFyZCBzeXN0ZW0gZnJlZXplIG9uIFJUTDg4MjFDRSB3aGVuIHBvd2VyX3NhdmUgaXMg
-ZW5hYmxlZCIKdGhyZWFkLCBVYnVudHUgTFAgIzE5Mjc4MDgsIERlYmlhbiAjMTExNDkzMCks
-IGFuZCBteSBzeW1wdG9tIGxvb2tzICpzaW1pbGFyIGJ1dApub3QgaWRlbnRpY2FsKiB0byB0
-aG9zZS4gSSdtIHdyaXRpbmcgdG8gYXNrIHdoZXRoZXIgeW91IGNhbiB0ZWxsIGlmIHRoaXMg
-aXMgdGhlCnNhbWUgcm9vdCBjYXVzZSBvciBhIGRpZmZlcmVudCBpc3N1ZS4KCk15IG1haW4g
-Z29hbCBpcyB0byBlbGltaW5hdGUgdGhlIHNvdXJjZSBvZiB0aGlzIGluc3RhYmlsaXR5LiBJ
-IGRvIG5vdCByZWx5IG9uCnRoaXMgV2lGaSBkZXZpY2UgKHRoZSBtYWNoaW5lIHVzZXMgRXRo
-ZXJuZXQpLCBzbyBJIGFtIHdpbGxpbmcgdG8gc2ltcGx5IGRpc2FibGUKb3IgcGh5c2ljYWxs
-eSByZW1vdmUgaXQuIEkgbWFpbmx5IHdhbnQgdG8gZGV0ZXJtaW5lIHdoZXRoZXIgdGhpcyBj
-YXJkIGlzIGluZGVlZAp0aGUgcm9vdCBjYXVzZSAtLSBhIGZpeCBpcyBub3QgbmVjZXNzYXJp
-bHkgcmVxdWlyZWQuCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-CgpFbnZpcm9ubWVudAoKwqAgU29DOiDCoCDCoCDCoCDCoCDCoCDCoCDCoEludGVsIE45NSAo
-QWxkZXIgTGFrZS1OKQrCoCBPUzogwqAgwqAgwqAgwqAgwqAgwqAgwqAgRGViaWFuIDEzICh0
-cml4aWUpCsKgIEtlcm5lbDogwqAgwqAgwqAgwqAgwqAgNi4xMi4xMDErZGViMTMtYW1kNjQg
-KERlYmlhbiA2LjEyLjEwMS0xKQrCoCBXaUZpOiDCoCDCoCDCoCDCoCDCoCDCoCBSZWFsdGVr
-IFJUTDg4MjFDRSwgMTBlYzpjODIxLCBzdWJzeXN0ZW0gMTBlYzpjODIxCsKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIFBDSSAwMDAwOjAyOjAwLjAsIGJlaGluZCBSb290IFBvcnQg
-MDAwMDowMDoxZC4wCsKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIChJbnRlbCA4MDg2
-OjU0YjApCsKgIERyaXZlcjogwqAgwqAgwqAgwqAgwqAgcnR3Xzg4MjFjZSAvIHJ0dzg4X3Bj
-aSAvIHJ0dzg4X2NvcmUgKGluLXRyZWUpCsKgIEZpcm13YXJlOiDCoCDCoCDCoCDCoCBydHc4
-OC9ydHc4ODIxY19mdy5iaW4gdjI0LjExLjAsIEgyQyB2ZXJzaW9uIDEyCsKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgICgxMzk0NzIgYnl0ZXMsIG1kNSAyNjM4YTQwMDQyYTI3ZTk4
-ZGYyZjc5MjljOGVlZTc2MCwKwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBzaGlw
-cGVkIGJ5IERlYmlhbiBmaXJtd2FyZS1yZWFsdGVrIDIwMjUwNDEwLTIpCsKgIEV0aGVybmV0
-OiDCoCDCoCDCoCDCoCByODE2OSAoUlRMODExMS84MTY4Lzg0MTEpLCBQQ0kgMDAwMDowMTow
-MC4wCgrCoCBMaW5rIHN0YXRlIChSb290IFBvcnQgMDA6MWQuMCk6CsKgIMKgIExua0NhcDog
-wqBTcGVlZCA4R1QvcywgV2lkdGggeDEsIEFTUE0gTDBzIEwxCsKgIMKgIExua0N0bDogwqBB
-U1BNIEwwcyBMMSBFbmFibGVkCsKgIMKgIExua1N0YTogwqBTcGVlZCAyLjVHVC9zIChHZW4x
-KSwgV2lkdGggeDEKwqAgwqAgTDFTdWJDdGwxOiBQQ0ktUE1fTDEuMSsgUENJLVBNX0wxLjIr
-IEFTUE1fTDEuMSsgQVNQTV9MMS4yKwrCoCBEZXZpY2UgMDI6MDAuMDogwqBBU1BNIEwwcyBM
-MSBFbmFibGVkLCBMMS4xL0wxLjIgZW5hYmxlZCwgQ2xvY2tQTSsKCsKgIFdpRmkgaW50ZXJm
-YWNlIGlzIE5PVCBhc3NvY2lhdGVkIHRvIGFueSBBUCAod2xwMnMwIE5PLUNBUlJJRVI7CsKg
-IE5ldHdvcmtNYW5hZ2VyIHNob3dzICJ1bmF2YWlsYWJsZSIpLiBOZXR3b3JrTWFuYWdlciBw
-ZXJpb2RpY2FsbHkgc2NhbnMgYW5kCsKgIGJyaW5ncyB0aGUgaW50ZXJmYWNlIGluYWN0aXZl
-L2Rpc2FibGVkLgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoK
-U3ltcHRvbXMKClR3byBmdWxsLXN5c3RlbSBzaWxlbnQgZnJlZXplcyBzbyBmYXI6CsKgIDEp
-IDIwMjYtMDgtMDkgfjE3OjUyIENTVArCoCAyKSAyMDI2LTA4LTExIH4xOToxNSBDU1QKCkJv
-dGggYXJlICpzaWxlbnQqOiBubyBwYW5pYywgbm8gc29mdCBsb2NrdXAsIG5vIE5NSSB3YXRj
-aGRvZyBvdXRwdXQsIGFuZCBubwphdXRvbWF0aWMgd2F0Y2hkb2cgcmVib290IChoYXJkbG9j
-a3VwX3BhbmljPTEsIHNvZnRsb2NrdXBfcGFuaWM9MSwKcGFuaWNfb25fd2Fybj0xLCBubWlf
-d2F0Y2hkb2c9MSwgY3Jhc2hrZXJuZWw9MjU2TSB3ZXJlIGFsbCBlbmFibGVkOyBub25lCmZp
-cmVkKS4gUmVjb3ZlcnkgaXMgb25seSBieSBoYXJkIHBvd2VyIHJlc2V0LgoKQm90aCBmcmVl
-emVzIGhhcHBlbmVkICptaW51dGVzIGFmdGVyIGEgV2lGaSBzY2FuIGNvbXBsZXRlZCosIGR1
-cmluZyB1bnJlbGF0ZWQKc3lzdGVtIGFjdGl2aXR5ICgxc3Q6IDFwYW5lbCBkb2luZyBoZWF2
-eSB0YXIvZGlzayBJL087IDJuZDogYSBidXJzdCBvZiBzc2hkIC8KcHJvY2VzcyBhY3Rpdml0
-eSkuIFRoZXJlIGlzIG5vIHJ0dzg4IGVycm9yIG1lc3NhZ2UgaW1tZWRpYXRlbHkgcHJlY2Vk
-aW5nIHRoZQpmcmVlemUgaW4gdGhlIGpvdXJuYWwgLS0gdGhlIGxhc3QgbGluZXMgYXJlIG9y
-ZGluYXJ5IHN5c3RlbSBhY3Rpdml0eS4KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0KCk9ic2VydmVkIGVycm9ycyAoc2VwYXJhdGUgZnJvbSB0aGUgZnJlZXpl
-LCBpbiB0aGUgaG91cnMvZGF5cyBiZWZvcmUgaXQpCgpydHdfODgyMWNlIDAwMDA6MDI6MDAu
-MDogZmFpbGVkIHRvIGRvd25sb2FkIGZpcm13YXJlCnJ0d184ODIxY2UgMDAwMDowMjowMC4w
-OiBtYWMgcG93ZXIgb24gZmFpbGVkCnJ0d184ODIxY2UgMDAwMDowMjowMC4wOiBmYWlsZWQg
-dG8gcG93ZXIgb24gbWFjCnJ0d184ODIxY2UgMDAwMDowMjowMC4wOiBmYWlsZWQgdG8gc2Vu
-ZCBoMmMgY29tbWFuZApXQVJOSU5HIC4uLiBkcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVr
-L3J0dzg4L3BjaS5jIC4uLiBmYWlsZWQgdG8gcmVhZCBEQkkgcmVnaXN0ZXIKCgpBRVIgb24g
-dGhlIFJvb3QgUG9ydCAocmVjdXJyaW5nIGF0IGlycmVndWxhciBpbnRlcnZhbHMsIGRvZXMg
-Tk9UIGhhbmcgYnkgaXRzZWxmKToKwqAgcGNpZXBvcnQgMDAwMDowMDoxZC4wOiBBRVI6IENv
-cnJlY3RhYmxlIGVycm9yIG1lc3NhZ2UgcmVjZWl2ZWQgZnJvbSAwMDAwOjAyOjAwLjAKwqAg
-cnR3Xzg4MjFjZSAwMDAwOjAyOjAwLjA6IFBDSWUgQnVzIEVycm9yOiBzZXZlcml0eT1Db3Jy
-ZWN0YWJsZSwKwqAgwqAgwqAgdHlwZT1EYXRhIExpbmsgTGF5ZXIsIChUcmFuc21pdHRlciBJ
-RCkKwqAgcnR3Xzg4MjFjZSAwMDAwOjAyOjAwLjA6IMKgIGRldmljZSBbMTBlYzpjODIxXSBl
-cnJvciBzdGF0dXMvbWFzaz0wMDAwMTAwMC8wMDAwZTAwMArCoCBydHdfODgyMWNlIDAwMDA6
-MDI6MDAuMDogwqAgwqBbMTJdIFRpbWVvdXQKKGFsc28gc2VlbiB0aGUgc2FtZSBlcnJvciBy
-ZXBvcnRlZCBieSB0aGUgcm9vdCBwb3J0IGl0c2VsZiwgZGV2aWNlIFs4MDg2OjU0YjBdLArC
-oGFuZCBvY2Nhc2lvbmFsbHkgQmFkRExMUC4pCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tCgpSZWxhdGlvbnNoaXAgdG8gdGhlIGtub3duIGlzc3VlcyAoYW5k
-IHdoeSB0aGlzIG1heSBiZSBkaWZmZXJlbnQpCgpUaGUga25vd24gODgyMUNFIHJlcG9ydHMg
-KEJ1Z3ppbGxhICMyMTUxMzEsIHRoZSAyMDI2IExQUy9BU1BNIHRocmVhZCkgZGVzY3JpYmUK
-ZnVsbCBmcmVlemVzIG9uICphc3NvY2lhdGVkKiBsYXB0b3BzIHdpdGggYSBwcmVhbWJsZSBv
-ZjoKwqAgwqAgcnR3Xzg4MjFjZSAuLi46IHBjaSBidXMgdGltZW91dCwgY2hlY2sgZG1hIHN0
-YXR1cwrCoCDCoCBydHdfODgyMWNlIC4uLjogZmlybXdhcmUgZmFpbGVkIHRvIGxlYXZlIGxw
-cyBzdGF0ZQphbmQgdGhlIHJvb3QgY2F1c2UgaXMgZGVzY3JpYmVkIGFzIHRoZSBjaGlwIGZh
-aWxpbmcgdG8gbGVhdmUgQVNQTSBMMSAobGluawpzdGF5cyBpbiBMMSAtPiBSWCBETUEgc3Rh
-bGxzKS4KCk15IGNhc2UgaXMgZGlmZmVyZW50IGluIHRocmVlIHdheXM6CsKgIDEpIFRoZSBp
-bnRlcmZhY2UgaXMgKm5ldmVyIGFzc29jaWF0ZWQqLCBzbyB0aGUgZHJpdmVyIGRvZXMgbm90
-IGVudGVyCsKgIMKgIMKgTFBTL0xQUy1EZWVwIChydHdfZW50ZXJfbHBzIHJlcXVpcmVzIGFu
-IGFzc29jaWF0ZWQgc3RhdGlvbikuIEl0IGluc3RlYWQKwqAgwqAgwqBlbnRlcnMgSVBTIChp
-ZGxlIHBvd2VyIHNhdmUgLyBNQUMgcG93ZXItb2ZmKSBvbiBJRUVFODAyMTFfQ09ORl9JRExF
-LiBUaGUKwqAgwqAgwqBlcnJvcnMgSSBzZWUgYXJlIElQUy1sZWF2ZS9wb3dlci1vbiBmYWls
-dXJlcyAoImZhaWxlZCB0byBkb3dubG9hZArCoCDCoCDCoGZpcm13YXJlIiwgIm1hYyBwb3dl
-ciBvbiBmYWlsZWQiKSwgbm90IHRoZSBMUFMgc2lnbmF0dXJlcyBhYm92ZS4KwqAgMikgVGhl
-IGZyZWV6ZSBpcyAqc2lsZW50KiB3aXRoIG5vIHJ0dzg4IGVycm9yIGltbWVkaWF0ZWx5IGJl
-Zm9yZSBpdC4KwqAgMykgVGhlIDIwMjEgTkFQSSB3b3JrYXJvdW5kIGlzICphbHJlYWR5IGFj
-dGl2ZSogaGVyZTogY29tbWl0IDI0ZjVlMzhhMTNiNQrCoCDCoCDCoCgiRGlzYWJsZSBQQ0ll
-IEFTUE0gd2hpbGUgZG9pbmcgTkFQSSBwb2xsIG9uIDg4MjFDRSIpIHNldHMgcnhfbm9fYXNw
-bQrCoCDCoCDCoGJlY2F1c2UgY2hpcCBpZCA9PSA4ODIxQyBhbmQgdGhlIHVwc3RyZWFtIGJy
-aWRnZSB2ZW5kb3IgaXMgSW50ZWwuIFNvIHRoaXMKwqAgwqAgwqBkZXZpY2UgZnJlZXplcyBk
-ZXNwaXRlIHRoYXQgd29ya2Fyb3VuZCAtLSBjb25zaXN0ZW50IHdpdGggdGhlIDIwMjYgcmVw
-b3J0CsKgIMKgIMKgbm90aW5nIHRoZSBOQVBJIHdyYXBwZXIgaXMgaW5zdWZmaWNpZW50IGZv
-ciBpZGxlLXN0YXRlIGRlYWRsb2NrcywgYnV0IGhlcmUKwqAgwqAgwqBpdCBpcyBpZGxlICp3
-aXRob3V0IGFzc29jaWF0aW9uKiAoSVBTLCBub3QgTFBTLURlZXApLgoKLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKV2hhdCBJIGhhdmUgdHJpZWQgKHJlcHJv
-ZHVjdGlvbikKCkkgY291bGQgbm90IHJlcHJvZHVjZSB0aGUgZnJlZXplIG9uIGRlbWFuZDoK
-wqAgLSBuZXRjb25zb2xlIHRvIGEgcmVtb3RlIGhvc3QgZm9yIH40MCBoOiBubyBmcmVlemUu
-CsKgIC0ga2R1bXAgKyBOTUkvc29mdGxvY2t1cCB3YXRjaGRvZzogZGlkIG5vdCB0cmlnZ2Vy
-IGR1cmluZyB0aGUgcmVhbCBmcmVlemVzLgrCoCAtIEFnZ3Jlc3NpdmUgdXNlcnNwYWNlIHRy
-aWdnZXJzIChzY2FuIGxvb3BzLCBVRFAgZmxvb2QsIGRldmljZSBlbmFibGUvcmVzZXQpLgrC
-oCAtIFNvdXJjZS1sZXZlbCB0aW1pbmcgaW5qZWN0aW9uIGluIHJ0d19wY2lfbGlua19wcygp
-L3J0d19wY2lfYXNwbV9zZXQoKQrCoCDCoCAoZml4ZWQgMS0xMCB1cyBkZWxheXMpOiAwIEFF
-UiAvIDAgREJJIGVycm9ycyBvdmVyIDEyMSBBU1BNIHRvZ2dsZXMgKyAxNjE2CsKgIMKgIE5B
-UEkgcG9sbHMgaW4gODAgbWluLgrCoCAtIFJhcGlkbHkgdG9nZ2xpbmcgdGhlIEwxLjIgZW5h
-YmxlIGJpdHMgKHJvb3QgcG9ydCAweDIwOCAvIGRldmljZSAweDE2OCwKwqAgwqAgQVNQTV9M
-MV8yX0VOKSB2aWEgc2V0cGNpOiAzOTMxOSBMMDwtPkwxLjIgdHJhbnNpdGlvbnMgaW4gMTAg
-bWluLCAwIEFFUiwKwqAgwqAgbm8gZnJlZXplLgoKTXkgd29ya2luZyBoeXBvdGhlc2lzICh1
-bmNvbmZpcm1lZCkgaXMgdGhhdCB0aGUgZnJlZXplIGlzIGEgbG93LWxldmVsCmxpbmsvcG93
-ZXItc3RhdGUgZGVhZGxvY2sgcmF0aGVyIHRoYW4gYSBzb2Z0d2FyZSB0aW1pbmcgcmFjZSwg
-c2luY2Ugbm9uZSBvZiB0aGUKc29mdHdhcmUgdGltaW5nIG1hbmlwdWxhdGlvbiBhYm92ZSB0
-cmlnZ2VyZWQgaXQuCgpSZWdhcmRpbmcgdGhlIGRvY3VtZW50ZWQgd29ya2Fyb3VuZDogIm9w
-dGlvbnMgcnR3ODhfcGNpIGRpc2FibGVfYXNwbT15IiBpcwoqbm90IGVmZmVjdGl2ZSogb24g
-dGhpcyBwbGF0Zm9ybS4gQVNQTSAoTDBzL0wxIGFuZCB0aGUgTDEuMS9MMS4yIHN1YnN0YXRl
-cykgaXMKZm9yY2VkIGVuYWJsZWQgYnkgdGhlIEJJT1MgLS0gdGhlIGtlcm5lbCBwY2llX2Fz
-cG0gcG9saWN5IGlzICJkZWZhdWx0IgooQklPUy1jb250cm9sbGVkKSBhbmQgY2Fubm90IG92
-ZXJyaWRlIGl0LiBUaGUgZGlzYWJsZV9hc3BtIG1vZHVsZSBwYXJhbWV0ZXIKb25seSBzdG9w
-cyB0aGUgZHJpdmVyIGZyb20gdG9nZ2xpbmcgUmVhbHRlaydzIEJJVF9MMV9TV19FTiBpbiB0
-aGUgREJJIHJlZ2lzdGVyCihSVEtfUENJRV9MSU5LX0NGRyksIGJ1dCB0aGUgc3RhbmRhcmQg
-UENJZSBMTktDVEwgQVNQTSBMMS9MMS4yIHJlbWFpbnMgZW5hYmxlZApieSB0aGUgQklPUywg
-c28gdGhlIGRldmljZSBjYW5ub3QgYmUga2VwdCBvdXQgb2YgTDEgYnkgc29mdHdhcmUuIEEg
-cmVhbApkcml2ZXIvZmlybXdhcmUgZml4IGlzIHRoZXJlZm9yZSBuZWVkZWQgaGVyZSwgbm90
-IGEgd29ya2Fyb3VuZC4KCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0KClF1ZXN0aW9uCgpJIGZvdW5kIGFuIGV4aXN0aW5nIGlzc3VlIHdob3NlIHN5bXB0b21z
-IHJlc2VtYmxlIG1pbmUgKHRoZSA4ODIxQ0UgQVNQTSBMMQpmcmVlemUgcmVwb3J0cyBhYm92
-ZSksIGJ1dCBteSBzeW1wdG9tcyBkbyBub3QgZnVsbHkgbWF0Y2ggdGhlbSAodW5hc3NvY2lh
-dGVkIC8KSVBTIHBhdGgsIGFuZCBubyBydHc4OCBlcnJvciBtZXNzYWdlIGltbWVkaWF0ZWx5
-IGJlZm9yZSB0aGUgZnJlZXplKS4gQ291bGQgeW91Cmp1ZGdlIHdoZXRoZXIgdGhlc2UgYXJl
-IGxpa2VseSB0aGUgc2FtZSByb290IGNhdXNlIG9yIHNlcGFyYXRlIGlzc3Vlcz8KCklmIGl0
-IGhlbHBzLCBJIGNhbiBwcm92aWRlOiBrZHVtcCB2bWNvcmUgKGZyb20gdGhlIGZvcmVuc2lj
-cyBzZXR1cCksIG5ldGNvbnNvbGUKY2FwdHVyZXMsIGZ0cmFjZSBmdW5jdGlvbiB0cmFjZXMg
-b2YgcnR3X2VudGVyX2lwcyAvIHJ0d19wY2lfbGlua19wcyAvCnJ0d19wb3dlcl9tb2RlX2No
-YW5nZSwgYW5kIEFFUiBjb3VudGVycy4KCgpUaGFua3MsClNhYjFlCgo=
+I have been running kernel 7.1.5-1-cachyos with "sudo iw dev wlan0 set
+power_save off" for the last 3 days (monday to wednesday).
+On monday I had a very bad disconnect, but there was absolutely
+nothing to be seen in dmesg or journalctl, so that was probably some
+router or provider issue.
+Other than that I had no disconnect issues during that time also the
+SER L1 did not occur a single time in those 3 days.
+So now I am pretty sure that the disconnects and SER L1 were due to power_save.
+This makes sense to me given the message "firmware failed to ack for
+leaving ps mode".
+This is the same kernel where I previously had multiple disconnects per day.
 
+So I guess the next step would be to ignore ASPM and bisect kernels
+for "firmware failed to ack for leaving ps mode", right?
+Is there anything I should know about power_save going forward?
+Are there some known issues I should be aware of given that power
+saving is mentioned in
+https://wiki.archlinux.org/title/Network_configuration/Wireless#Random_disconnections
