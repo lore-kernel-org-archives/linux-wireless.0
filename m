@@ -1,177 +1,156 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7E9A403B00;
-	Fri, 14 Aug 2026 07:49:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF92E3E6DF7;
+	Fri, 14 Aug 2026 07:57:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786693790; cv=none; b=cHD/9OAyMeAlHr7deBMwtkFwG2gPHElk3aM2qtXEeRHprT0GH0U0xICHraBv4MmYfS+GPzF5CEk9MGFWiKE7uxs9iYJhgtNSbzn9BavFYVu3cfgIBvAj0vsRzFwyVdP2fat0Od6g5+AuoLM2awypi3Cp5hF837lbeC0K+WTWp2g=
+	t=1786694241; cv=none; b=I8q1/ub4YpQnhRbfeMLe0D9iCWRbWOyjDbXDpfIHrqF/VpNUG4z4SSLTzt9FyM+ZcN8P5jaXsp9UUZx7Xj4O/OCL8mUCf+YTm2LkjrgNZxt6PNsQT9X9sRoRV/W9UnhM0tZL/R3Nfoz9wSU3EOO5ZJ/ctyzd7eHmoX719BInOIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786693790; c=relaxed/simple;
-	bh=klqhahOqBQxvi3DBedDhjfv2XrG9PjO4XiT7IxiSjzw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=a3KnmExjg9B5S0BV/4+MQksupZUkIfm7dpdj67JtMffIEmHklNqVyGkKbAo+KdmLkv7T9VVZJR/RqlBQxsU4pqdYMNW5KpX6OLJsyDiycGl+4yXIE5IvpS3GZmhodSSSYB35GsSd5oopSoDeNcpiqdd0DBn7126xXsu74TREgSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=L0dR+/JN; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="L0dR+/JN"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E7nghgF1072674, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786693782; bh=dfrFegEasyq9FdWAyIzt4hiWfvnwwFpzwyLLK8ctAcg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=L0dR+/JNvFzyaPg6AxXl347x980I0aA6rgtT4A3pNCyrl311gt2iw4rcxoF0qCxf2
-	 8sXN+UzRLZy+Amua27vz6mmThu02XvKNfjMrSI1kytquCxWT6rd71UQ+xjjtR/+rCv
-	 2iBeVrXttEBwDqSY4E4zTcF1FKhGxKm+Tcjw1ppa79MFofrdwrgXo6KJJ4jnWEuokN
-	 qE4a2D3KMFXlGyvbMNw3kJ7Mc5hPd8yr4TeeicBcRatOxq+HxYAjkVaZKmKxBdhhjt
-	 TR3MVzFAyGsS8G4VMldjraTY5llBbPKQpLCV8Df0aNx6iPlZSeQs2CWfkLpMScLhw/
-	 lrl0WH3NqS8Ug==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E7nghgF1072674
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Aug 2026 15:49:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 15:49:42 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 14 Aug 2026 15:49:42 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Arsenii Pashchenko <ulijg308@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
- validation
-Thread-Topic: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
- validation
-Thread-Index: AQHdKmlUAXzXV8VvpUCXWdcBWAD1ILadLBAg
-Date: Fri, 14 Aug 2026 07:49:41 +0000
-Message-ID: <9be26fe7c6814b17baf2bb08fbfff6eb@realtek.com>
-References: <cover.1786545572.git.ulijg308@gmail.com>
- <a016d09710dce6f27a60e8fb3c16cdc28ef24a08.1786545572.git.ulijg308@gmail.com>
-In-Reply-To: <a016d09710dce6f27a60e8fb3c16cdc28ef24a08.1786545572.git.ulijg308@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1786694241; c=relaxed/simple;
+	bh=/sFaktxYBe3BwlSASUNIQbANjhK7fxjBztr7gLA2SD4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TiPKJo9hiqaPblsABHaCKTg3QUKJ2zRl1Y0KQk+4xU6sCC6xuK1tS3cxdAVYAzVRolcIrodalnmqsOzg7YvBIdBMIz6JHg8hXcA+PGkpOUAkHfk+yi2WPIHnlmgyW15AnCpsD/9PKetCuNkaivB8zHBd9B+BSSVH9DmL3Yd8PGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-01 (Coremail) with SMTP id qwCowACHWe1cyn5q3pCeBQ--.62332S2;
+	Fri, 14 Aug 2026 15:57:17 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>
+Subject: [PATCH v2] wifi: ath9k: validate USB RX stream lengths before copying
+Date: Fri, 14 Aug 2026 15:57:16 +0800
+Message-ID: <20260814075716.18804-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowACHWe1cyn5q3pCeBQ--.62332S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxGrW5WFWfJw4DJF13Ar1fZwb_yoW5KFWrpF
+	WSq3WayrW3XF1jyw4DG34fXF1Yga4Ig3yagFyxCw1avr1DAryqgryxKayjgrZ8AFWfAF48
+	Zr4DXw4DZFyUu3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw2
+	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x02
+	67AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUsiSdUUUUU=
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-Arsenii Pashchenko <ulijg308@gmail.com> wrote:
-> Leverage the kernel's native sign_extend32() macro to properly
-> interpret the 10-bit raw values from hardware registers as signed
-> 32-bit (s10) integers covering the [-512, 511] range.
+ath9k_hif_usb_rx_stream() parses records from one USB receive buffer
+and also completes records split across two buffers. It checks the stream
+tag and a packet length ceiling, but not every fixed header, current
+payload extent or continuation extent before reading or copying.
 
-New API FIELD_GET_SIGNED() is introduced. I think this is suitable
-to this case.
+Validate the fixed header and complete-record extent, bound a split
+record to the capacity of two receive buffers, and require the next
+buffer to contain the expected continuation. Clear all saved continuation
+state when a malformed record is dropped.
 
->=20
-> This allows us to completely rewrite rtw8822c_dac_iq_check() to use
-> a simple, clean amplitude boundary check instead of complex, nested
-> unsigned boundary conditions. Drop the temporary u32 casts inside
-> the check and sampling routines.
->=20
-> Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/rtw8822c.c | 24 +++++++++----------
->  1 file changed, 11 insertions(+), 13 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> index 896e3e7b9..d06986d09 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> @@ -3,6 +3,7 @@
->   */
->=20
->  #include <linux/module.h>
-> +#include <linux/bitops.h>
+Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
+Assisted-by: Codex:gpt-5
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+Changes since v1: https://lore.kernel.org/all/20260701053823.49801-1-pengpeng@iscas.ac.cn/
+- validate fixed headers and complete records before copying
+- prove the split-record path against two receive-buffer capacities
+- clear every saved continuation field after success or rejection
 
-I guess you need this because of sign_extend32(). Have you tried to build
-without this? I feel it is existing in include chain already.
+Every RX parser branch was reviewed statically; malformed USB traffic was
+not injected on ath9k hardware.
 
->  #include "main.h"
->  #include "coex.h"
->  #include "fw.h"
-> @@ -277,18 +278,15 @@ static u32 rtw8822c_get_path_read_addr(u8 path)
->         return base_addr;
->  }
->=20
-> -static bool rtw8822c_dac_iq_check(struct rtw_dev *rtwdev, s32 value_s32)
-> +static bool rtw8822c_dac_iq_check(struct rtw_dev *rtwdev, s32 value)
->  {
-> -       u32 value =3D (u32)value_s32;
-> -       bool ret =3D true;
->=20
-> -       if ((value >=3D 0x200 && (0x400 - value) > 0x64) ||
-> -           (value < 0x200 && value > 0x64)) {
-> -               ret =3D false;
-> +       if (value > 100 || value < -100) {
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 33 ++++++++++++++++++++++--
+ 1 file changed, 31 insertions(+), 2 deletions(-)
 
-The change is identical?
-
->                 rtw_dbg(rtwdev, RTW_DBG_RFK, "[DACK] Error overflow\n");
-> +               return false;
->         }
->=20
-> -       return ret;
-> +       return true;
->  }
->=20
->  static void rtw8822c_dac_cal_iq_sample(struct rtw_dev *rtwdev, s32 *iv, =
-s32 *qv)
-> @@ -299,8 +297,8 @@ static void rtw8822c_dac_cal_iq_sample(struct rtw_dev=
- *rtwdev, s32 *iv, s32 *qv)
->         while (i < DACK_SN_8822C && cnt < 10000) {
->                 cnt++;
->                 temp =3D rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff);
-> -               iv[i] =3D (s32)((temp & 0x3ff000) >> 12);
-> -               qv[i] =3D (s32)(temp & 0x3ff);
-> +               iv[i] =3D sign_extend32((temp & 0x3ff000) >> 12, 9);
-> +               qv[i] =3D sign_extend32(temp & 0x3ff, 9);
-
-FIELD_GET_SIGNED()
-
->=20
->                 if (rtw8822c_dac_iq_check(rtwdev, iv[i]) &&
->                     rtw8822c_dac_iq_check(rtwdev, qv[i]))
-> @@ -352,11 +350,11 @@ static void rtw8822c_dac_cal_iq_search(struct rtw_d=
-ev *rtwdev,
->=20
->                 if (i_delta > 5 || q_delta > 5) {
->                         temp =3D rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff=
-);
-> -                       iv[0] =3D (s32)((temp & 0x3ff000) >> 12);
-> -                       qv[0] =3D (s32)(temp & 0x3ff);
-> +                       iv[0] =3D sign_extend32((temp & 0x3ff000) >> 12, =
-9);
-> +                       qv[0] =3D sign_extend32(temp & 0x3ff, 9);
-
-FIELD_GET_SIGNED()
-
->                         temp =3D rtw_read32_mask(rtwdev, 0x2dbc, 0x3fffff=
-);
-> -                       iv[DACK_SN_8822C - 1] =3D (s32)((temp & 0x3ff000)=
- >> 12);
-> -                       qv[DACK_SN_8822C - 1] =3D (s32)(temp & 0x3ff);
-> +                       iv[DACK_SN_8822C - 1] =3D sign_extend32((temp & 0=
-x3ff000) >> 12, 9);
-> +                       qv[DACK_SN_8822C - 1] =3D sign_extend32(temp & 0x=
-3ff, 9);
-
-FIELD_GET_SIGNED()
-
-Please use real hardware to verify the values.
-
->                 } else {
->                         break;
->                 }
-> --
-> 2.55.0
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 47f904e7e652..8d60779165ab 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -566,6 +566,18 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 	if (rx_remain_len != 0) {
+ 		struct sk_buff *remain_skb = hif_dev->remain_skb;
+ 
++		if (rx_remain_len < hif_dev->rx_pad_len ||
++		    rx_remain_len > len) {
++			dev_kfree_skb_any(remain_skb);
++			hif_dev->remain_skb = NULL;
++			hif_dev->rx_remain_len = 0;
++			hif_dev->rx_transfer_len = 0;
++			hif_dev->rx_pad_len = 0;
++			RX_STAT_INC(hif_dev, skb_dropped);
++			spin_unlock(&hif_dev->rx_lock);
++			return;
++		}
++
+ 		if (remain_skb) {
+ 			ptr = (u8 *) remain_skb->data;
+ 
+@@ -579,11 +591,13 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 			skb_put(remain_skb, rx_pkt_len);
+ 
+ 			skb_pool[pool_index++] = remain_skb;
+-			hif_dev->remain_skb = NULL;
+-			hif_dev->rx_remain_len = 0;
+ 		} else {
+ 			index = rx_remain_len;
+ 		}
++		hif_dev->remain_skb = NULL;
++		hif_dev->rx_remain_len = 0;
++		hif_dev->rx_transfer_len = 0;
++		hif_dev->rx_pad_len = 0;
+ 	}
+ 
+ 	spin_unlock(&hif_dev->rx_lock);
+@@ -596,6 +610,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 
+ 		ptr = (u8 *) skb->data;
+ 
++		if (len - index < 4) {
++			RX_STAT_INC(hif_dev, skb_dropped);
++			goto invalid_pkt;
++		}
++
+ 		pkt_len = get_unaligned_le16(ptr + index);
+ 		pkt_tag = get_unaligned_le16(ptr + index + 2);
+ 
+@@ -624,6 +643,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 		index = index + 4 + pkt_len + pad_len;
+ 
+ 		if (index > MAX_RX_BUF_SIZE) {
++			if (len < MAX_RX_BUF_SIZE || index > 2 * MAX_RX_BUF_SIZE) {
++				RX_STAT_INC(hif_dev, skb_dropped);
++				goto invalid_pkt;
++			}
++
+ 			spin_lock(&hif_dev->rx_lock);
+ 			nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
+ 			if (!nskb) {
+@@ -648,6 +672,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 			hif_dev->remain_skb = nskb;
+ 			spin_unlock(&hif_dev->rx_lock);
+ 		} else {
++			if (index > len) {
++				RX_STAT_INC(hif_dev, skb_dropped);
++				goto invalid_pkt;
++			}
++
+ 			if (pool_index == MAX_PKT_NUM_IN_TRANSFER) {
+ 				dev_err(&hif_dev->udev->dev,
+ 					"ath9k_htc: over RX MAX_PKT_NUM\n");
+-- 
+2.50.1 (Apple Git-155)
 
