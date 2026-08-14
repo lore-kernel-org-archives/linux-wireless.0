@@ -1,64 +1,61 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 263B63F787E;
-	Fri, 14 Aug 2026 07:16:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B36141E6B9;
+	Fri, 14 Aug 2026 07:42:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786691767; cv=none; b=P3Q5EHpfXyLJIQAGauVk5XmarlTLDrqydHAS0SIb5gIeHPY3JXgGqpMUfAx7tibSSk8rYZAzkkvw8kPvGJlpHOtgavMucfK2W+OmCelavbSOHmltFvH64Xhcn/Or52tUk28l/sXbF8LXK4vNnYrribV10DezUvJEiOG1lGDgmoU=
+	t=1786693354; cv=none; b=AMHtKB8iWW7u+znqkr20Sibk7Ju5opAQ/OClztGQH5GLLNuFGl5mDHpPo+PzGwhRP0LbTUDOHceTZaSjI+lHMksMlUEwer1gwyyWuEk18f2ybcR34uyLLWZX88mmjFToFlkeh27RSQ11YuFL7YPFDAs203UULlzC7zBtv8Hv8gU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786691767; c=relaxed/simple;
-	bh=QQppTWXtC2uDl+i0fA+WpcSUefneuqQWWt/bwNeV9yE=;
+	s=arc-20240116; t=1786693354; c=relaxed/simple;
+	bh=3eCV8FrKDGTKtf8+iFXsrNYY3dF6Bhx1J+LuybP8slY=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=ol6CY5mBa8esZFoVGoj0DSuK5wZ3u3mB6Ih3N4KK8990UbLYT2osGT22JpNcxBt20Xi7yYCzSKMOZbeOAYARnNBPi546fGUSxoXUaIOjzwDty3zj9uZbGKZZqRu7GzY0K8usXpBsOb8MIF1StvpjUPA+WGVKey8fTgb7P7M2tmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=qLigrhpm; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=SfSnagq2s3pWvZ6KBEg0mrwPBjq5UHr2c/qZ+O+Wt+gp19XsZhtLqHWD0JUPVOcoMaym3wNb33eLtpUzhrrxSED7NV6aAO0P+QgW5U5gZz8mZnJMBIPgGvq1NvN3sN6Abj1sez/n1GrVH71nkENxvBtxfi1I4x0yhwE06TsIrao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Euf32JLX; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="qLigrhpm"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E7FoloE1059115, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Euf32JLX"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E7gL9H11069418, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786691750; bh=QQppTWXtC2uDl+i0fA+WpcSUefneuqQWWt/bwNeV9yE=;
+	t=1786693341; bh=2XswULKOY5y+g2oNf80HpLhvKky+eA1EJSu/WTmGD2U=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=qLigrhpmML7LCXgL2Z6Zlyje/Vbz86855UrT+nUKID1WuZjxCgegpT3ePLNOI8/+a
-	 APRf5UnwK+o+dfL7/OSShOpKl5HKYxDG8MrFtNUCNKq2WtGcApX7/4xg63Mb8Ia0An
-	 //3aoiecXlMUZ9qMmvcEikUBMefYCt35DOgs68Z/+QRx4iO6ZNB/fAblYY1V1vn6g9
-	 mTz/hf6hqiC+1nPWCq65LmhOrgZ60o8QPgs0ZAygNUdSFwI2YlOuXabIq6kKNwrOKD
-	 srdQSyqOrF1YM/z7Q6B0T+5K3s66GYyPGlGYNIdtgxV0ryI2j65EdyFuMPWodJ8x60
-	 vyzHIMMuJGK8w==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E7FoloE1059115
+	b=Euf32JLXPxnoE+dKHuIOOp0YrWyKPYHOCfu8cyW2e3LrPnFLahzuvOGicszAJ/wG4
+	 lsO/BkEKv/ahqieetna0h2jOA/RkEgPbA6+wtDm/zj+L0D0vFrWbbg1omRCvDTXnp2
+	 0FjScVxnWZ//cC8C9FXVDOTdHOw6cNQ9TBfcICCcCTDx097Az3G4VGXEoKPC0oBq/n
+	 aivourWK57QbZLFEUz/G4MJw+zmifc4HN0lcTGXMihOWZwOfteZyqqZZAtbvU0r4qn
+	 2dAzlCEBIFVNyfs9jaPKzsDw4qE220uAO5ByQ6YfdV4JMW4vkn88x7wK99jDKOd2Es
+	 /xetRLUUFfN4g==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E7gL9H11069418
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Aug 2026 15:15:50 +0800
+	Fri, 14 Aug 2026 15:42:21 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 15:15:50 +0800
+ 15.2.2562.43; Fri, 14 Aug 2026 15:42:21 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
  RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 15:15:50 +0800
+ 15.2.2562.43; Fri, 14 Aug 2026 15:42:21 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 14 Aug 2026 15:15:50 +0800
+ 15.02.2562.043; Fri, 14 Aug 2026 15:42:21 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
- Goede" <johannes.goede@oss.qualcomm.com>
-Subject: RE: [PATCH v4 3/7] wifi: rtw88: tx: extend the TX report purge
- timeout to RTL8723BS
-Thread-Topic: [PATCH v4 3/7] wifi: rtw88: tx: extend the TX report purge
- timeout to RTL8723BS
-Thread-Index: AQHdKXGnGNHlxQl6E0aylFc7HbAFa7adJntQ
-Date: Fri, 14 Aug 2026 07:15:50 +0000
-Message-ID: <d90ed84c1b114dea86af5b0065087a5a@realtek.com>
-References: <20260811091203.26841-1-luka.gejak@linux.dev>
- <20260811091203.26841-4-luka.gejak@linux.dev>
-In-Reply-To: <20260811091203.26841-4-luka.gejak@linux.dev>
+To: Arsenii Pashchenko <ulijg308@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/4] wifi: rtw88: rtw8822c: convert DAC IQ buffers and
+ signatures to s32
+Thread-Topic: [PATCH 1/4] wifi: rtw88: rtw8822c: convert DAC IQ buffers and
+ signatures to s32
+Thread-Index: AQHdKmlURevl7O5D/UerTagkxaMdMbadKh8Q
+Date: Fri, 14 Aug 2026 07:42:20 +0000
+Message-ID: <9242742673fc4ac09e8a9b0d2a4c5eb7@realtek.com>
+References: <cover.1786545572.git.ulijg308@gmail.com>
+ <12e170032b884c8693a08c780fb8aa677aa4af4c.1786545572.git.ulijg308@gmail.com>
+In-Reply-To: <12e170032b884c8693a08c780fb8aa677aa4af4c.1786545572.git.ulijg308@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -70,27 +67,68 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
-> From: Luka Gejak <luka.gejak@linux.dev>
+Arsenii Pashchenko <ulijg308@gmail.com> wrote:
+> Prepare the DAC IQ calibration path for signed math by converting the
+> temporary stack arrays 'iv' and 'qv' from u32 to s32. Update all
+> internal function signatures to accept s32 pointers.
 >=20
-> Commit c80788f7c5ae ("wifi: rtw88: increase TX report timeout to fix
-> race condition") raised the purge timeout to 2500 ms for the RTL8723DU,
-> because the firmware can stay off channel during background scans for
-> longer than the 500 ms default, which delays the TX reports and lets the
-> purge timer drop the tracking skbs. The host stack then reads the missing
-> status as loss and collapses TCP throughput.
+> To guarantee bisectability, wrap the existing unsigned logic in
+> temporary casts to u32. This maintains identical mathematical behavior
+> and avoids any compiler sign-compare warnings.
 >=20
-> The RTL8723BS runs the same vendor firmware over a slower SDIO host and
-> hits the same race. Testers on ARM SDIO boards see "failed to get tx
-> report from firmware" under load, with the same throughput collapse.
-> Extend the 2500 ms timeout to the RTL8723BS.
+> Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/rtw8822c.c | 49 +++++++++++--------
+>  1 file changed, 28 insertions(+), 21 deletions(-)
 >=20
-> Reported-by: Peter Robinson <pbrobinson@gmail.com>
-> Closes:
-> https://lore.kernel.org/all/CALeDE9PgQmpMfDt1DgfLD4tBFGH0MZ7GncV6RUEOHhHb=
-KF+TdQ@mail.gmail.com/
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> index 244c80264..896e3e7b9 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> @@ -153,9 +153,12 @@ static void rtw8822c_dac_restore_reg(struct rtw_dev =
+*rtwdev,
+>         }
+>  }
+>=20
+> -static void rtw8822c_rf_minmax_cmp(struct rtw_dev *rtwdev, u32 value,
+> -                                  u32 *min, u32 *max)
+> +static void rtw8822c_rf_minmax_cmp(struct rtw_dev *rtwdev, s32 value_s32=
+,
+> +                                  s32 *min_s32, s32 *max_s32)
+>  {
+> +       u32 value =3D (u32)value_s32;
+> +       u32 *min =3D (u32 *)min_s32;
+> +       u32 *max =3D (u32 *)max_s32;
 
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+blank line
 
+Also, it is possible to avoid all casting from s32 to u32, even just a
+transition patch? I guess compiler can silently ignore this, and it'd
+be much easier to review. Otherwise, I need to check if you remove
+these casting clearly.=20
+
+>         if (value >=3D 0x200) {
+>                 if (*min >=3D 0x200) {
+>                         if (*min > value)
+> @@ -182,8 +185,10 @@ static void rtw8822c_rf_minmax_cmp(struct rtw_dev *r=
+twdev, u32 value,
+>         }
+>  }
+>=20
+> -static void __rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, u32 *v1, u32 =
+*v2)
+> +static void __rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, s32 *v1_s32, =
+s32 *v2_s32)
+>  {
+> +       u32 *v1 =3D (u32 *)v1_s32;
+> +       u32 *v2 =3D (u32 *)v2_s32;
+
+blank line
+
+>         if (*v1 >=3D 0x200 && *v2 >=3D 0x200) {
+>                 if (*v1 > *v2)
+>                         swap(*v1, *v2);
+
+[...]
 
