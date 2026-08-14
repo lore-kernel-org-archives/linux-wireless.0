@@ -1,58 +1,57 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4693CB570;
-	Fri, 14 Aug 2026 08:04:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB134252D1;
+	Fri, 14 Aug 2026 08:10:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786694642; cv=none; b=TuXYwOxZflkYKr8lvrpUl/46GuVhe3ONfIOv9HKagcpOPrqKcWtZa1Qu81T7jBFgaY6YD6ie/FsQ6gCPBDqR49zrXYhE5T2IHOYri2GLCbXULFg/2bHqcA/GlCSqFSb3QCXWhz6Zq3tr9EyU0wDR0rNXc0B2GV/r3WMg2V/uXrI=
+	t=1786695049; cv=none; b=EJ8/01FLP6Nb8nG3IWkcNGwpEnXcRQpr6nyQ8z674KgRVoNfEApMp7JB8pBd5HAp23AbAvS7o71UUNrdqjZeHoOrrC8HVR6HV2pEvqbdCZTHjhx0Tf//tOilXK8Z1mxEpwyJRcMnQQeFV+6LU8L8+efB3tdChcD+PZRPeLYlGro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786694642; c=relaxed/simple;
-	bh=GcDjk6Sbeo/NqHcq5lbZO/Oi6bbGH1a6XKZe7+SJWCI=;
+	s=arc-20240116; t=1786695049; c=relaxed/simple;
+	bh=3UGvGaZC/heE1E9C0jRRxrGLSBi8ouG/CoDC8l216JQ=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=u9Bks1DGc044cDTsIjctPRThdyjase4sN4yMiqRmS4cM5zW9XzTG1f6nINSju2I0dyAZIgaHrC4VaYDAZPl2UYuzGogOThbNmYrh0ml+LgL6otA7298W9PQOX2n1FFwZBpuXlFMMVVfUEs2lCBYLCt/bGooXigoGDvtNrThRl0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dID0rCDu; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=cp1nmNBOulFkuLiZSUjUTkegnd0mA5582+268LC45k4CR/Z9EyGxbd51V0i1B2S5FaFEGc3FfSx9RFMZ42iNfI4wGJ3Z95Qw1/yffkdQ+qmIbs09FC2596vuoKbiOLd14qTTOsRGzCldR6frRkOIea6o0vRJXDnNxDU9fRSlLAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=oBtsj25E; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dID0rCDu"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E83uIfA1078895, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="oBtsj25E"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E8AbX321081109, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786694636; bh=etosF4QaJhDkaDs0d9TPteBo3Li8oEAxqc8hsmc7JxY=;
+	t=1786695038; bh=vgz3yBsy2FvtYOCw4H9uJ5mxPDH46x6lBmLm8ELN/Ak=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=dID0rCDuTVEr0rBXR37CCMiOyAtCZYi/5aAo4Q3OqzvnDwxWZuQQGYkpp2teo2S0s
-	 SuqhgWb6R3uCB2Oyf7KVR8CS0a7RGUzeFXa3zgu122wf6HqbD4+XWC1IHbvIi+2l9p
-	 q4oGGitbn2e79rlG/OH4pCWVeXl4ULm9n8s2dPOplBpq8xqY8Og2pHlQJU6Uq3cG71
-	 Fg6clmfK8XkXz3xLicc7Gn3LGVj7KuSgKR5aNi88Bt91IpflElerBQa3lGPA5IdHZB
-	 lcRIKlGxEgVF2pOKSU11c2ECgmfPvsuzOoRHG+x8j4ZKoNNXtPDpgSnlUu+QiYoP0T
-	 rlwC28xZu4iVw==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E83uIfA1078895
+	b=oBtsj25E3/jnpwAzQAC4OpI9NZfu5MUneIKyxWpJrNFt6OgP3eymiVIe3Qd8CtDCv
+	 D8X7383vULmASdfRbRhyictZ8nG185oZB01fpCncWz0Wh4q5cbJ0lommJ7w3CQzNn2
+	 J8h0WaSouc7r+kGpkx3dL5+Daq1xGp6CApE/lkfN3/ppSoXHdM1pk6npxLlEubzCP+
+	 J6l+FQZuwcbh4x9jasuqVzL+o7Lht+Ndy1JqWSATYUYSgGTBTpDopFZk5bdX0AuGD/
+	 SgkcaOMg7yLxKYd60HiP9XK+xWX2jYCCuGMQNAcqYwaeaWNvmtSNXIkc+27k5sXqhQ
+	 CRbV+6sX2Gmcw==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E8AbX321081109
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Aug 2026 16:03:56 +0800
+	Fri, 14 Aug 2026 16:10:38 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 16:03:56 +0800
+ 15.2.2562.43; Fri, 14 Aug 2026 16:10:33 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 14 Aug 2026 16:03:56 +0800
+ 15.02.2562.043; Fri, 14 Aug 2026 16:10:33 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: Arsenii Pashchenko <ulijg308@gmail.com>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
- validation
-Thread-Topic: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
- validation
-Thread-Index: AQHdKmlUAXzXV8VvpUCXWdcBWAD1ILadLBAggAAFQ8A=
-Date: Fri, 14 Aug 2026 08:03:55 +0000
-Message-ID: <c469acfcbf29407ebf04ad921339aeea@realtek.com>
+Subject: RE: [PATCH 4/4] wifi: rtw88: rtw8822c: simplify amplitude search and
+ offset via s32
+Thread-Topic: [PATCH 4/4] wifi: rtw88: rtw8822c: simplify amplitude search and
+ offset via s32
+Thread-Index: AQHdKmlVOxsiWjpZdky/3c9i6asNtLadMkJg
+Date: Fri, 14 Aug 2026 08:10:33 +0000
+Message-ID: <e73b9600122d4e708601914acf4238c0@realtek.com>
 References: <cover.1786545572.git.ulijg308@gmail.com>
- <a016d09710dce6f27a60e8fb3c16cdc28ef24a08.1786545572.git.ulijg308@gmail.com>
- <9be26fe7c6814b17baf2bb08fbfff6eb@realtek.com>
-In-Reply-To: <9be26fe7c6814b17baf2bb08fbfff6eb@realtek.com>
+ <0bb6e2fb78d0b2def623210938204a0efbbe2034.1786545572.git.ulijg308@gmail.com>
+In-Reply-To: <0bb6e2fb78d0b2def623210938204a0efbbe2034.1786545572.git.ulijg308@gmail.com>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -64,23 +63,113 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-> >                         temp =3D rtw_read32_mask(rtwdev, 0x2dbc, 0x3fff=
-ff);
-> > -                       iv[DACK_SN_8822C - 1] =3D (s32)((temp & 0x3ff00=
-0) >> 12);
-> > -                       qv[DACK_SN_8822C - 1] =3D (s32)(temp & 0x3ff);
-> > +                       iv[DACK_SN_8822C - 1] =3D sign_extend32((temp &=
- 0x3ff000) >> 12, 9);
-> > +                       qv[DACK_SN_8822C - 1] =3D sign_extend32(temp & =
-0x3ff, 9);
+Arsenii Pashchenko <ulijg308@gmail.com> wrote:
+> Complete the signed data transition by removing the complex
+> rtw8822c_rf_minmax_cmp() helper. On a true linear s32 scale, finding
+> the delta amplitude simplifies to a direct difference (max - min)
+> without any nested circular wrap-around conditions.
 >=20
-> FIELD_GET_SIGNED()
+> Refactor rtw8822c_dac_iq_offset() to directly calculate the trimmed
+> arithmetic mean, casting back to the hardware register's offset
+> orientation only at the final assignment using a ternary operator.
 >=20
-> Please use real hardware to verify the values.
+> Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtw88/rtw8822c.c | 103 +++++-------------
+>  1 file changed, 25 insertions(+), 78 deletions(-)
 >=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> index 642ac2e2b..6fcdfc64c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+> @@ -155,38 +155,6 @@ static void rtw8822c_dac_restore_reg(struct rtw_dev =
+*rtwdev,
+>         }
+>  }
+>=20
+> -static void rtw8822c_rf_minmax_cmp(struct rtw_dev *rtwdev, s32 value_s32=
+,
+> -                                  s32 *min_s32, s32 *max_s32)
+> -{
+> -       u32 value =3D (u32)value_s32;
+> -       u32 *min =3D (u32 *)min_s32;
+> -       u32 *max =3D (u32 *)max_s32;
+> -       if (value >=3D 0x200) {
+> -               if (*min >=3D 0x200) {
+> -                       if (*min > value)
+> -                               *min =3D value;
+> -               } else {
+> -                       *min =3D value;
+> -               }
+> -               if (*max >=3D 0x200) {
+> -                       if (*max < value)
+> -                               *max =3D value;
+> -               }
+> -       } else {
+> -               if (*min < 0x200) {
+> -                       if (*min > value)
+> -                               *min =3D value;
+> -               }
+> -
+> -               if (*max  >=3D 0x200) {
+> -                       *max =3D value;
+> -               } else {
+> -                       if (*max < value)
+> -                               *max =3D value;
+> -               }
+> -       }
+> -}
+> -
+>  static int rtw8822c_dac_iq_cmp_s32(const void *a, const void *b)
+>  {
+>         s32 va =3D *(const s32 *)a;
+> @@ -201,31 +169,16 @@ static void rtw8822c_dac_iq_sort(struct rtw_dev *rt=
+wdev, s32 *iv, s32 *qv)
+>         sort(qv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NUL=
+L);
+>  }
+>=20
+> -static void rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec_s32,=
+ u32 *val)
+> +static s32 rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec)
+>  {
+> -       u32 *vec =3D (u32 *)vec_s32;
+> -       u32 p, m, t, i;
+> +       s32 sum =3D 0;
+>=20
+> -       m =3D 0;
+> -       p =3D 0;
+> -       for (i =3D 10; i < DACK_SN_8822C - 10; i++) {
+> -               if (vec[i] > 0x200)
+> -                       m =3D (0x400 - vec[i]) + m;
+> -               else
+> -                       p =3D vec[i] + p;
+> -       }
+> +       for (u32 i =3D 10; i < DACK_SN_8822C - 10; i++)
+> +               sum +=3D vec[i];
+>=20
+> -       if (p > m) {
+> -               t =3D p - m;
+> -               t =3D t / (DACK_SN_8822C - 20);
+> -       } else {
+> -               t =3D m - p;
+> -               t =3D t / (DACK_SN_8822C - 20);
+> -               if (t !=3D 0x0)
+> -                       t =3D 0x400 - t;
+> -       }
+> +       s32 avg =3D sum / (DACK_SN_8822C - 20);
 
-Consider the change of sign_extend32() again. The value is not the same
-as before. So, if people run this intermediate patch, the result will be
-wrong. Please think how to rearrange your changes.
+No declaration in the middle.=20
+
+>=20
+> -       *val =3D t;
+> +       return avg >=3D 0 ? avg : 0x400 + avg;
+
+Return type is 's32', but here doesn't do sign_extension()?
+
+>  }
+>=20
+>  static u32 rtw8822c_get_path_write_addr(u8 path)
 
 
