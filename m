@@ -1,181 +1,363 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2959547ACFA
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 14:50:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52CB446AA66
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 16:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786719055; cv=none; b=kqy/VWRzMxjHA1dI/7E0JjUazmJcsSF21DJans/JpQReoQwvIdoTlq5BRVsa5UShbsIT7ZXPqelny1MKzRdJGI3c1OcT4XVV6e3rt4DyE1NxP6R3ZL8ZAn2VQHoDZFfVJ14C5H907E8VWIkDD/BXn2PrP6A3XYtI+X6Rnnq3V+w=
+	t=1786726567; cv=none; b=A907uKh4DYOCh1H+qCDLzkF0u5f5dVQjb37LyY5CJx8d00cXxhCD69Rr9Jgc5JGX1BqmN1fnGNSaXCuzGISIqhhCc8Ji8jwtsR25XFY5pZ+dtAJcU/SNqIJya3+1YTH9uBzy9lBAhhk5yTtStiFlNZbmQy1iwmdDCKNf0An2GwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786719055; c=relaxed/simple;
-	bh=hwtSLYtWAOoEfupI9+8iMQv7c54WYRNhB2Aq3XI54ug=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BhV22CeOMyFMuLVjf+j4XEJG75HiHYB8ie+WypiXUi6Dt+68YplCLAuI5L5w4Daouk5LRChxNGXdxfiU/2NcQjmUq4ZUxhZ3/cDVYAV/kK4/oWTP5JbRYliUCoUBiILgysZ0JKFQDtDNRXACt5lfmfBqDemL8gS8joZsccOcx3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q0njz93l; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1786726567; c=relaxed/simple;
+	bh=f4Z1ImQFV3Vdt2rJNVyWd3vziLNcRh4/EUlq5eBddsY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m636tzWg1rDwCSCFJVEGrgP7Yev1znCRsApN7KwgPbhVZSSqu6q/ckoQViMnrWia3T40JSAy8Rf3Dg6FlhNRkiWKr5IyGDJ8KA5WOiMjpW2bMLSmc3t5vRdRxSpF5M9fOdFSv9orH/01ITQJUY6SS9L7OxuWO1o+fbT4SW/hmB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=q+iCjw2N; arc=none smtp.client-ip=209.85.167.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q0njz93l"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1786719048; x=1818255048;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=hwtSLYtWAOoEfupI9+8iMQv7c54WYRNhB2Aq3XI54ug=;
-  b=Q0njz93lPIg2LAaoXFCMPjfuo3ZLN4QAZkLsnD//atBCLEUhtMaiCGo+
-   mVeyvXsOOFiLOye8O1O3Hfv0WLEq0nZbREavuTn+p1QM40T645jl2I5ME
-   r81l02YGoY44EWjwkyK5U82ZPBg5T+majkVAbX1zG4GpUsSyvJAS01zeX
-   lAbPQJGfCC/4vlsunAbIb4LZVxJjZIvMqTt2vopcsIzbKgCIwlmKHe7/E
-   TNRNahGuIe688hQJkXHNInsdeeeLP8ixEFuDlgge6CKFDpX90nkOrCYEj
-   hYD4M47MXw/Eb92s2xC7PtnIvQjBkKotfhUlIdFf+E3NfdriKFDT6t86l
-   w==;
-X-CSE-ConnectionGUID: mnmk2o4ERf2RBFLazyf6JA==
-X-CSE-MsgGUID: SGJTfOAhRB+gGB1LHFwTCw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11875"; a="104831988"
-X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
-   d="scan'208";a="104831988"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Aug 2026 07:50:43 -0700
-X-CSE-ConnectionGUID: BesPaAqZQlelEZ6+U4DL3g==
-X-CSE-MsgGUID: UqIunrVtRFGM4YozDZhUAA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,222,1779174000"; 
-   d="scan'208";a="289043298"
-Received: from igk-lkp-server01.igk.intel.com (HELO 3cba2a188a06) ([10.211.93.152])
-  by fmviesa001.fm.intel.com with ESMTP; 14 Aug 2026 07:50:42 -0700
-Received: from kbuild by 3cba2a188a06 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wutF2-000000006Hd-3Frm;
-	Fri, 14 Aug 2026 14:50:40 +0000
-Date: Fri, 14 Aug 2026 16:50:16 +0200
-From: kernel test robot <lkp@intel.com>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev
-Subject: Re: [PATCH 10/10] wifi: mt76: mt7996: fix out-of-bounds link array
- access in mt7996_tx()
-Message-ID: <202608141616.AvOMG8CW-lkp@intel.com>
-References: <20260801145334.1166751-10-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q+iCjw2N"
+Received: by mail-oi1-f176.google.com with SMTP id 5614622812f47-4af7283bf83so492269b6e.3
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 09:56:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786726565; x=1787331365; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OIuS3KnXviSmkpO9jd4qUQpqGSJTbz6GUjCtrlU2zjU=;
+        b=q+iCjw2N2W37JaLPrlRCYeGy4od8fpPm+HJQvMOgb41zyMNVwDb/admPkwpCDoimwm
+         AixiijIrtqQi7X3xU5/YjvxzXY/rfdqq0ijLNEk3F+c8Xw1spmSG0Pn44O2qKgt1pPT0
+         ZhBqNCtQCdyo4+WMO9oxzvX509laiUw+MMvwHjcp0fhIN2Qs21U11IE+0/ivoMvoh8F3
+         xb40xEy+LTUDfnI6AzN4TAhWG27KyuXsBTKloP+dH0QODw0bvIxgDB9GydadZehMhzEJ
+         /MBSM35fSNHZ8qaPlk9AeLswI7kVjkgxIySqWNKLSGZDCc1W3VpEXinljt/syipwlWfh
+         AIgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786726565; x=1787331365;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OIuS3KnXviSmkpO9jd4qUQpqGSJTbz6GUjCtrlU2zjU=;
+        b=KcT6qljstVTw+BlXBduKwQ2dHTaSEu2ympBo+cYloscRRhFPPZZKBOD0pPCg0+M8du
+         UuyfQJU+B3fgHrT/NTvw9dUgty7v+1RiM3R9LUHQKhzCwBcmyJiVbtoh5qPqN22tBjgS
+         E/Ywqn65U3p+5Z5mKBRkw3BnIjdgexrZJmw9bxqM45ZdkbmicK97Tvr6MpClz70mXbNo
+         N0ZIKYpYJSznGr12rol7RE9OxmkdlPBE0KmFDsGAeGieVfHAo75MEj12tsXdQ4UA3xv4
+         gywBk64yFqBW5blsPGBr4QUcVHcy+zcksijlovLH0XP+FQbE9k8AIsa9KWkkXT2iV4HJ
+         B/JA==
+X-Gm-Message-State: AOJu0Yx/5TWFq6fmH4jRg9dmkYe1MSCHVuQvKC0qo4/k2w8KcegANFvL
+	+h5pi3hj4Kfwm3jMCtxucT7eEweOYisYbzJeP6wyQwveXmSS7uzYxAuB
+X-Gm-Gg: AR+sD11fbXxkmx9BAg77RapZbSDkQKbRNrt0lZy6dUrH6+JclLODqV2nL1QJzQhL5Z2
+	L33UNb78e+a5OJqeA1DbolFi0aAS+2d5mWLtdflddLPuqoPXtOGyvETTEG1mvHLib3TP9tKn83J
+	Ud6rG3VNXdKRqI1zdx00ZamGeAxyDWzBHipPcGoiTWwg+OY99OMoeOwjH7XJJzcKE+eXUE+f8kq
+	X2Tv1oFHcmXncnYNpIJBFB4qeOFAjFDFILTCX8HaJrk21owheSVtxbaka+8s6yh8pouO1v2r9B7
+	ZWcN9ZqWViAPf1fVY6Yu5Zvfn8n309fBeHSUB9MM3XWbTaZcrRWPmHmRHlFK7PktahG+RmqkkR4
+	56WMQ2XatrDWI+ogDDvFv98BnSgz6ungmLZmUzK1QkqF6wggG8YqxF0ZQDlTs+fIlBVLbzZ2ZXd
+	RUTIBpj2uENIyxbtCrRocW5k1KXXtFx+zcrVJ7eOAMN/dKdEZ+uBOSJsJTVXjh8rFGRiEJhVz7X
+	L9GH0zEitzB9KSEa5JIR0TZaQb+5cFlJt4=
+X-Received: by 2002:a4a:ee14:0:b0:6b0:afc1:d87b with SMTP id 006d021491bc7-6b0d6016835mr6131865eaf.8.1786726564806;
+        Fri, 14 Aug 2026 09:56:04 -0700 (PDT)
+Received: from cr-x-ubuntu2604-client-1.dev.fyre.ibm.com ([170.225.223.19])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7f3e869b7f7sm1304962a34.25.2026.08.14.09.56.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Aug 2026 09:56:04 -0700 (PDT)
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+X-Google-Original-From: Chelsy Ratnawat <chelsy.ratnawat1@ibm.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
+	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: [PATCH] wifi: rtlwifi: remove dead mimo_ps handling from rate update code
+Date: Fri, 14 Aug 2026 09:55:56 -0700
+Message-ID: <20260814165556.1102547-1-chelsy.ratnawat1@ibm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260801145334.1166751-10-nbd@nbd.name>
+Content-Transfer-Encoding: 8bit
 
-Hi Felix,
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 
-kernel test robot noticed the following build errors:
+Several rtlwifi drivers declare mimo_ps as IEEE80211_SMPS_OFF
+and never modify it. As a result, conditionals checking for
+IEEE80211_SMPS_STATIC or IEEE80211_SMPS_DYNAMIC are false,
+making those branches unreachable.
 
-[auto build test ERROR on wireless/main]
-[also build test ERROR on linus/master v7.2-rc7]
-[cannot apply to wireless-next/main next-20260813]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Remove the unused mimo_ps variables, drop the dead SMPS
+branches, and simplify the remaining rate mask selection logic
+without changing runtime behavior. Also move ratr_mask
+declarations out of the removed conditional blocks where
+appropriate.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Felix-Fietkau/wifi-mt76-mt7915-handle-MCU-PS-sync-events/20260807-020152
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git main
-patch link:    https://lore.kernel.org/r/20260801145334.1166751-10-nbd%40nbd.name
-patch subject: [PATCH 10/10] wifi: mt76: mt7996: fix out-of-bounds link array access in mt7996_tx()
-config: x86_64-rhel-9.4-bpf (https://download.01.org/0day-ci/archive/20260814/202608141616.AvOMG8CW-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260814/202608141616.AvOMG8CW-lkp@intel.com/reproduce)
+Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+---
+ .../wireless/realtek/rtlwifi/rtl8188ee/hw.c   |  2 -
+ .../wireless/realtek/rtlwifi/rtl8192ee/hw.c   |  1 -
+ .../wireless/realtek/rtlwifi/rtl8192se/hw.c   | 92 ++++++++-----------
+ .../wireless/realtek/rtlwifi/rtl8723ae/hw.c   |  1 -
+ .../wireless/realtek/rtlwifi/rtl8821ae/hw.c   | 69 ++++++--------
+ 5 files changed, 67 insertions(+), 98 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608141616.AvOMG8CW-lkp@intel.com/
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 53c32e1de7e4..910f8372d83d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1970,7 +1970,6 @@ static void rtl88ee_update_hal_rate_table(struct ieee80211_hw *hw,
+ 	u32 ratr_value;
+ 	u8 ratr_index = 0;
+ 	u8 b_nmode = mac->ht_enable;
+-	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
+ 	u16 shortgi_rate;
+ 	u32 tmp_ratr_value;
+ 	u8 curtxbw_40mhz = mac->bw_40;
+@@ -2070,7 +2069,6 @@ static void rtl88ee_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	bool b_shortgi = false;
+ 	u8 rate_mask[5];
+ 	u8 macid = 0;
+-	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
+ 
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+ 	wirelessmode = sta_entry->wireless_mode;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index 48a3c94606be..00048912900c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2266,7 +2266,6 @@ static void rtl92ee_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	bool b_shortgi = false;
+ 	u8 rate_mask[7] = {0};
+ 	u8 macid = 0;
+-	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+ 	wirelessmode = sta_entry->wireless_mode;
+ 	if (mac->opmode == NL80211_IFTYPE_STATION ||
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+index e5775b94f04e..6b9f247d11e0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+@@ -2001,10 +2001,9 @@ static void rtl92se_update_hal_rate_table(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u32 ratr_value;
++	u32 ratr_value, ratr_mask;
+ 	u8 ratr_index = 0;
+ 	u8 nmode = mac->ht_enable;
+-	u8 mimo_ps = IEEE80211_SMPS_OFF;
+ 	u16 shortgi_rate = 0;
+ 	u32 tmp_ratr_value = 0;
+ 	u8 curtxbw_40mhz = mac->bw_40;
+@@ -2032,26 +2031,21 @@ static void rtl92se_update_hal_rate_table(struct ieee80211_hw *hw,
+ 	case WIRELESS_MODE_N_24G:
+ 	case WIRELESS_MODE_N_5G:
+ 		nmode = 1;
+-		if (mimo_ps == IEEE80211_SMPS_STATIC) {
+-			ratr_value &= 0x0007F005;
+-		} else {
+-			u32 ratr_mask;
+-
+-			if (get_rf_type(rtlphy) == RF_1T2R ||
+-			    get_rf_type(rtlphy) == RF_1T1R) {
+-				if (curtxbw_40mhz)
+-					ratr_mask = 0x000ff015;
+-				else
+-					ratr_mask = 0x000ff005;
+-			} else {
+-				if (curtxbw_40mhz)
+-					ratr_mask = 0x0f0ff015;
+-				else
+-					ratr_mask = 0x0f0ff005;
+-			}
+ 
+-			ratr_value &= ratr_mask;
++		if (get_rf_type(rtlphy) == RF_1T2R ||
++		    get_rf_type(rtlphy) == RF_1T1R) {
++			if (curtxbw_40mhz)
++				ratr_mask = 0x000ff015;
++			else
++				ratr_mask = 0x000ff005;
++		} else {
++			if (curtxbw_40mhz)
++				ratr_mask = 0x0f0ff015;
++			else
++				ratr_mask = 0x0f0ff005;
+ 		}
++
++		ratr_value &= ratr_mask;
+ 		break;
+ 	default:
+ 		if (rtlphy->rf_type == RF_1T2R)
+@@ -2119,7 +2113,6 @@ static void rtl92se_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	u32 band = 0;
+ 	bool bmulticast = false;
+ 	u8 macid = 0;
+-	u8 mimo_ps = IEEE80211_SMPS_OFF;
+ 
+ 	sta_entry = (struct rtl_sta_info *) sta->drv_priv;
+ 	wirelessmode = sta_entry->wireless_mode;
+@@ -2167,41 +2160,32 @@ static void rtl92se_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 		band |= (WIRELESS_11N | WIRELESS_11G | WIRELESS_11B);
+ 		ratr_index = RATR_INX_WIRELESS_NGB;
+ 
+-		if (mimo_ps == IEEE80211_SMPS_STATIC) {
+-			if (rssi_level == 1)
+-				ratr_bitmap &= 0x00070000;
+-			else if (rssi_level == 2)
+-				ratr_bitmap &= 0x0007f000;
+-			else
+-				ratr_bitmap &= 0x0007f005;
++		if (rtlphy->rf_type == RF_1T2R ||
++		    rtlphy->rf_type == RF_1T1R) {
++			if (rssi_level == 1) {
++				ratr_bitmap &= 0x000f0000;
++			} else if (rssi_level == 3) {
++				ratr_bitmap &= 0x000fc000;
++			} else if (rssi_level == 5) {
++				ratr_bitmap &= 0x000ff000;
++			} else {
++				if (curtxbw_40mhz)
++					ratr_bitmap &= 0x000ff015;
++				else
++					ratr_bitmap &= 0x000ff005;
++			}
+ 		} else {
+-			if (rtlphy->rf_type == RF_1T2R ||
+-				rtlphy->rf_type == RF_1T1R) {
+-				if (rssi_level == 1) {
+-						ratr_bitmap &= 0x000f0000;
+-				} else if (rssi_level == 3) {
+-					ratr_bitmap &= 0x000fc000;
+-				} else if (rssi_level == 5) {
+-						ratr_bitmap &= 0x000ff000;
+-				} else {
+-					if (curtxbw_40mhz)
+-						ratr_bitmap &= 0x000ff015;
+-					else
+-						ratr_bitmap &= 0x000ff005;
+-				}
++			if (rssi_level == 1) {
++				ratr_bitmap &= 0x0f8f0000;
++			} else if (rssi_level == 3) {
++				ratr_bitmap &= 0x0f8fc000;
++			} else if (rssi_level == 5) {
++				ratr_bitmap &= 0x0f8ff000;
+ 			} else {
+-				if (rssi_level == 1) {
+-					ratr_bitmap &= 0x0f8f0000;
+-				} else if (rssi_level == 3) {
+-					ratr_bitmap &= 0x0f8fc000;
+-				} else if (rssi_level == 5) {
+-					ratr_bitmap &= 0x0f8ff000;
+-				} else {
+-					if (curtxbw_40mhz)
+-						ratr_bitmap &= 0x0f8ff015;
+-					else
+-						ratr_bitmap &= 0x0f8ff005;
+-				}
++				if (curtxbw_40mhz)
++					ratr_bitmap &= 0x0f8ff015;
++				else
++					ratr_bitmap &= 0x0f8ff005;
+ 			}
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index bd45d9bd40bb..2e50f5c24df8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1924,7 +1924,6 @@ static void rtl8723e_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	bool shortgi = false;
+ 	u8 rate_mask[5];
+ 	u8 macid = 0;
+-	/*u8 mimo_ps = IEEE80211_SMPS_OFF;*/
+ 
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+ 	wirelessmode = sta_entry->wireless_mode;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 1ba53e671207..31f499be99a3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -3468,7 +3468,6 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 	bool b_shortgi = false;
+ 	u8 rate_mask[7];
+ 	u8 macid = 0;
+-	u8 mimo_ps = IEEE80211_SMPS_OFF;
+ 	u8 rf_type;
+ 
+ 	sta_entry = (struct rtl_sta_info *)sta->drv_priv;
+@@ -3535,47 +3534,37 @@ static void rtl8821ae_update_hal_rate_mask(struct ieee80211_hw *hw,
+ 		else
+ 			ratr_index = RATR_INX_WIRELESS_NG;
+ 
+-		if (mimo_ps == IEEE80211_SMPS_STATIC
+-			|| mimo_ps == IEEE80211_SMPS_DYNAMIC) {
+-			if (rssi_level == 1)
+-				ratr_bitmap &= 0x000f0000;
+-			else if (rssi_level == 2)
+-				ratr_bitmap &= 0x000ff000;
+-			else
+-				ratr_bitmap &= 0x000ff005;
++		if (rf_type == RF_1T1R) {
++			if (curtxbw_40mhz) {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x000f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x000ff000;
++				else
++					ratr_bitmap &= 0x000ff015;
++			} else {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x000f0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x000ff000;
++				else
++					ratr_bitmap &= 0x000ff005;
++			}
+ 		} else {
+-			if (rf_type == RF_1T1R) {
+-				if (curtxbw_40mhz) {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x000f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x000ff000;
+-					else
+-						ratr_bitmap &= 0x000ff015;
+-				} else {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x000f0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x000ff000;
+-					else
+-						ratr_bitmap &= 0x000ff005;
+-				}
++			if (curtxbw_40mhz) {
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x0fff0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x0ffff000;
++				else
++					ratr_bitmap &= 0x0ffff015;
+ 			} else {
+-				if (curtxbw_40mhz) {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x0fff0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x0ffff000;
+-					else
+-						ratr_bitmap &= 0x0ffff015;
+-				} else {
+-					if (rssi_level == 1)
+-						ratr_bitmap &= 0x0fff0000;
+-					else if (rssi_level == 2)
+-						ratr_bitmap &= 0x0ffff000;
+-					else
+-						ratr_bitmap &= 0x0ffff005;
+-				}
++				if (rssi_level == 1)
++					ratr_bitmap &= 0x0fff0000;
++				else if (rssi_level == 2)
++					ratr_bitmap &= 0x0ffff000;
++				else
++					ratr_bitmap &= 0x0ffff005;
+ 			}
+ 		}
+ 		break;
+-- 
+2.53.0
 
-All errors (new ones prefixed by >>):
-
-   drivers/net/wireless/mediatek/mt76/tx.c: In function 'mt76_txq_send_burst':
->> drivers/net/wireless/mediatek/mt76/tx.c:501:21: error: implicit declaration of function 'ieee80211_txq_aql_pending'; did you mean 'ieee80211_txq_get_depth'? [-Wimplicit-function-declaration]
-     501 |                 if (ieee80211_txq_aql_pending(phy->hw, txq))
-         |                     ^~~~~~~~~~~~~~~~~~~~~~~~~
-         |                     ieee80211_txq_get_depth
-
-
-vim +501 drivers/net/wireless/mediatek/mt76/tx.c
-
-   484	
-   485	static int
-   486	mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
-   487			    struct mt76_txq *mtxq, struct mt76_wcid *wcid)
-   488	{
-   489		struct mt76_dev *dev = phy->dev;
-   490		struct ieee80211_txq *txq = mtxq_to_txq(mtxq);
-   491		enum mt76_txq_id qid = mt76_txq_get_qid(txq);
-   492		struct ieee80211_tx_info *info;
-   493		struct sk_buff *skb;
-   494		int n_frames = 1;
-   495		bool stop = false;
-   496		int idx;
-   497	
-   498		if (test_bit(MT_WCID_FLAG_PS, &wcid->flags)) {
-   499			if (!(dev->drv->drv_flags & MT_DRV_HW_PS_BUFFERING))
-   500				return 0;
- > 501			if (ieee80211_txq_aql_pending(phy->hw, txq))
-   502				return 0;
-   503		}
-   504	
-   505		if (atomic_read(&wcid->non_aql_packets) >= MT_MAX_NON_AQL_PKT)
-   506			return 0;
-   507	
-   508		skb = mt76_txq_dequeue(phy, mtxq);
-   509		if (!skb)
-   510			return 0;
-   511	
-   512		info = IEEE80211_SKB_CB(skb);
-   513		if (!(wcid->tx_info & MT_WCID_TX_INFO_SET))
-   514			ieee80211_get_tx_rates(txq->vif, txq->sta, skb,
-   515					       info->control.rates, 1);
-   516	
-   517		spin_lock(&q->lock);
-   518		idx = __mt76_tx_queue_skb(phy, qid, skb, wcid, txq->sta, &stop);
-   519		spin_unlock(&q->lock);
-   520		if (idx < 0)
-   521			return idx;
-   522	
-   523		if (test_bit(MT_WCID_FLAG_PS, &wcid->flags))
-   524			goto out;
-   525	
-   526		do {
-   527			if (test_bit(MT76_RESET, &phy->state) || phy->offchannel)
-   528				break;
-   529	
-   530			if (stop || mt76_txq_stopped(q))
-   531				break;
-   532	
-   533			skb = mt76_txq_dequeue(phy, mtxq);
-   534			if (!skb)
-   535				break;
-   536	
-   537			info = IEEE80211_SKB_CB(skb);
-   538			if (!(wcid->tx_info & MT_WCID_TX_INFO_SET))
-   539				ieee80211_get_tx_rates(txq->vif, txq->sta, skb,
-   540						       info->control.rates, 1);
-   541	
-   542			spin_lock(&q->lock);
-   543			idx = __mt76_tx_queue_skb(phy, qid, skb, wcid, txq->sta, &stop);
-   544			spin_unlock(&q->lock);
-   545			if (idx < 0)
-   546				break;
-   547	
-   548			n_frames++;
-   549		} while (1);
-   550	
-   551	out:
-   552		spin_lock(&q->lock);
-   553		dev->queue_ops->kick(dev, q);
-   554		spin_unlock(&q->lock);
-   555	
-   556		return n_frames;
-   557	}
-   558	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
