@@ -1,138 +1,86 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EC04195D2;
-	Fri, 14 Aug 2026 07:58:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB4693CB570;
+	Fri, 14 Aug 2026 08:04:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786694322; cv=none; b=o0kQeG79EMUd5mrglNKyXGIMdJVzmg+iVDiKKNAmosFLfwSzxokgC9bwxvMZ2O1SmqR6ljDvr554H/e40K2APhbv95iZ5LT0li9FX/iGJIjdiwhYVI8mywZzeSHVE0I2A/qQqmZMPLe70AyF2p9zEX8u7hdb8Z4xv68zYeUtKZg=
+	t=1786694642; cv=none; b=TuXYwOxZflkYKr8lvrpUl/46GuVhe3ONfIOv9HKagcpOPrqKcWtZa1Qu81T7jBFgaY6YD6ie/FsQ6gCPBDqR49zrXYhE5T2IHOYri2GLCbXULFg/2bHqcA/GlCSqFSb3QCXWhz6Zq3tr9EyU0wDR0rNXc0B2GV/r3WMg2V/uXrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786694322; c=relaxed/simple;
-	bh=3buc7vWyAN0EyhknLMOPYO8rlwEtwRbHfbjP+03lpFo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=I8xCjOliRlwE34GO0DZeWD4A3oI8XBP7f01IM+3OW/CC6OIGBmgP1tV8hb5DJTsARo+zVlcIqurEpj8POSepLInFjvWiNeA7Ce55lPQfoGp9OPAHUorPwXXCU0wRqI/Nxx0cKjXphyIP8IwlMiS7lJNdFtLKV274Angt24uof2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-01 (Coremail) with SMTP id qwCowAAX7O+tyn5q7p2eBQ--.63496S2;
-	Fri, 14 Aug 2026 15:58:37 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>
-Subject: [PATCH v2] wifi: ath9k: reject short WMI command responses
-Date: Fri, 14 Aug 2026 15:58:37 +0800
-Message-ID: <20260814075837.20005-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1786694642; c=relaxed/simple;
+	bh=GcDjk6Sbeo/NqHcq5lbZO/Oi6bbGH1a6XKZe7+SJWCI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=u9Bks1DGc044cDTsIjctPRThdyjase4sN4yMiqRmS4cM5zW9XzTG1f6nINSju2I0dyAZIgaHrC4VaYDAZPl2UYuzGogOThbNmYrh0ml+LgL6otA7298W9PQOX2n1FFwZBpuXlFMMVVfUEs2lCBYLCt/bGooXigoGDvtNrThRl0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dID0rCDu; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dID0rCDu"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E83uIfA1078895, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1786694636; bh=etosF4QaJhDkaDs0d9TPteBo3Li8oEAxqc8hsmc7JxY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=dID0rCDuTVEr0rBXR37CCMiOyAtCZYi/5aAo4Q3OqzvnDwxWZuQQGYkpp2teo2S0s
+	 SuqhgWb6R3uCB2Oyf7KVR8CS0a7RGUzeFXa3zgu122wf6HqbD4+XWC1IHbvIi+2l9p
+	 q4oGGitbn2e79rlG/OH4pCWVeXl4ULm9n8s2dPOplBpq8xqY8Og2pHlQJU6Uq3cG71
+	 Fg6clmfK8XkXz3xLicc7Gn3LGVj7KuSgKR5aNi88Bt91IpflElerBQa3lGPA5IdHZB
+	 lcRIKlGxEgVF2pOKSU11c2ECgmfPvsuzOoRHG+x8j4ZKoNNXtPDpgSnlUu+QiYoP0T
+	 rlwC28xZu4iVw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E83uIfA1078895
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 14 Aug 2026 16:03:56 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 14 Aug 2026 16:03:56 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Fri, 14 Aug 2026 16:03:56 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Arsenii Pashchenko <ulijg308@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
+ validation
+Thread-Topic: [PATCH 2/4] wifi: rtw88: rtw8822c: use sign_extend32 for DAC IQ
+ validation
+Thread-Index: AQHdKmlUAXzXV8VvpUCXWdcBWAD1ILadLBAggAAFQ8A=
+Date: Fri, 14 Aug 2026 08:03:55 +0000
+Message-ID: <c469acfcbf29407ebf04ad921339aeea@realtek.com>
+References: <cover.1786545572.git.ulijg308@gmail.com>
+ <a016d09710dce6f27a60e8fb3c16cdc28ef24a08.1786545572.git.ulijg308@gmail.com>
+ <9be26fe7c6814b17baf2bb08fbfff6eb@realtek.com>
+In-Reply-To: <9be26fe7c6814b17baf2bb08fbfff6eb@realtek.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAAX7O+tyn5q7p2eBQ--.63496S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxZF45KryDGw1DJr17XF1kZrb_yoW5Cr1fpa
-	15ZFWavr1vqr17JrZ3XF48X3Z5Janaqa9xK393Ww1rZrykCr1FkFyFgFyjqr1DAF42gry7
-	ZF4UKa1rJr1vkrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw2
-	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x02
-	67AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUsiSdUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-ath9k_wmi_rsp_callback() removes the validated WMI header and copies
-the number of bytes expected by the waiting command into its response
-buffer. A device response shorter than that expectation can therefore
-be read beyond the skb payload.
+> >                         temp =3D rtw_read32_mask(rtwdev, 0x2dbc, 0x3fff=
+ff);
+> > -                       iv[DACK_SN_8822C - 1] =3D (s32)((temp & 0x3ff00=
+0) >> 12);
+> > -                       qv[DACK_SN_8822C - 1] =3D (s32)(temp & 0x3ff);
+> > +                       iv[DACK_SN_8822C - 1] =3D sign_extend32((temp &=
+ 0x3ff000) >> 12, 9);
+> > +                       qv[DACK_SN_8822C - 1] =3D sign_extend32(temp & =
+0x3ff, 9);
+>=20
+> FIELD_GET_SIGNED()
+>=20
+> Please use real hardware to verify the values.
+>=20
 
-Record -EMSGSIZE for a short response, complete the waiter, and return
-the stored status from the command path. This also prevents callers from
-consuming stale response bytes as a successful reply.
+Consider the change of sign_extend32() again. The value is not the same
+as before. So, if people run this intermediate patch, the result will be
+wrong. Please think how to rearrange your changes.
 
-Fixes: fb9987d0f748 ("ath9k_htc: Support for AR9271 chipset.")
-Assisted-by: Codex:gpt-5
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
----
-Changes since v1: https://lore.kernel.org/all/20260704011405.55089-1-pengpeng@iscas.ac.cn/
-- return a stored response error to the waiting command
-- retain acceptance of replies longer than the requested prefix
-- recheck callback synchronization under the existing WMI lock
-
-The WMI callback and waiter synchronization were reviewed statically; no
-ath9k firmware fault injection was performed.
-
- drivers/net/wireless/ath/ath9k/wmi.c | 17 +++++++++++++++--
- drivers/net/wireless/ath/ath9k/wmi.h |  1 +
- 2 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 284e8c13b043..06d9975f9717 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -206,8 +206,16 @@ static void ath9k_wmi_rsp_callback(struct wmi *wmi, struct sk_buff *skb)
- {
- 	skb_pull(skb, sizeof(struct wmi_cmd_hdr));
- 
--	if (wmi->cmd_rsp_buf != NULL && wmi->cmd_rsp_len != 0)
-+	if (wmi->cmd_rsp_buf && wmi->cmd_rsp_len) {
-+		if (skb->len < wmi->cmd_rsp_len) {
-+			wmi->cmd_rsp_status = -EMSGSIZE;
-+			goto complete;
-+		}
- 		memcpy(wmi->cmd_rsp_buf, skb->data, wmi->cmd_rsp_len);
-+	}
-+	wmi->cmd_rsp_status = 0;
-+
-+complete:
- 
- 	complete(&wmi->cmd_wait);
- }
-@@ -300,6 +308,7 @@ static int ath9k_wmi_cmd_issue(struct wmi *wmi,
- 	/* record the rsp buffer and length */
- 	wmi->cmd_rsp_buf = rsp_buf;
- 	wmi->cmd_rsp_len = rsp_len;
-+	wmi->cmd_rsp_status = 0;
- 
- 	wmi->last_seq_id = wmi->tx_seq_id;
- 	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
-@@ -356,9 +365,13 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 		return -ETIMEDOUT;
- 	}
- 
-+	spin_lock_irqsave(&wmi->wmi_lock, flags);
-+	ret = wmi->cmd_rsp_status;
-+	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
-+
- 	mutex_unlock(&wmi->op_mutex);
- 
--	return 0;
-+	return ret;
- 
- out:
- 	ath_dbg(common, WMI, "WMI failure for: %s\n", wmi_cmd_to_name(cmd_id));
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 5c3b710b8f31..0bb9d31f1a1c 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -157,6 +157,7 @@ struct wmi {
- 	u16 tx_seq_id;
- 	u8 *cmd_rsp_buf;
- 	u32 cmd_rsp_len;
-+	int cmd_rsp_status;
- 	bool stopped;
- 
- 	struct list_head pending_tx_events;
--- 
-2.50.1 (Apple Git-155)
 
