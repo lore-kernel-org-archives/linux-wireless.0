@@ -1,97 +1,70 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2792D471401
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 12:51:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139BD4457B8
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 13:04:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786711899; cv=none; b=nAw5/8dLBiaA36v5xKd18eaxMXMjWzcMsqPVLMGZpl3DcOhR2VqOUF6IQD6s50c/AdO8HKV0IxJjO7oOfrfoS1PK491JB5BaYKpl4cwdP1UXWjS+kO9Rkx5lOTVvGeBZFii3OWbuPmY5EVxx7wH7e5HioZ7JJXJ3mE9i/0igerY=
+	t=1786712669; cv=none; b=cD74T3jOLMFl73/3qvIJpBs7w6PltuUtvSMxYRJzR/utvvOebrA5iKMe1cgVujAe9jtqM/T2Vxjn4zILkCtE9S13+mytHqOQecLVCvbunmBi/0/2JQs7pMop2zX99oWE2cTX9XtL5fKBW/yuQJ9+vFLljpRR+/e9YMBE6SL5ZOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786711899; c=relaxed/simple;
-	bh=+cdB3jlbfOwPvLHC7qFXAtCDuK+tf5d2RCCwL4bvx5w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DlFRi/oQ1p+AiQnZ9qxmRG8dQC5hNSFpRl1J5OuvSaLoDaxI/nFweLh5PbUNLRQXGZZnr59h/HEVoBTC6mzbO19ckI6Rn4YguBWlpgKs4tSGM8o7GyQ3EpgzgTh0Vh/lVVbpse97gct11pYF+rZIGWxk9B091WjjtvnoV5fqkII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cX2wSaV6; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1786712669; c=relaxed/simple;
+	bh=Maf9RgD+0IOxRF2tWwTtH1M9haqBrQ15HwCvh6ZCEjU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ey+oUHDr608UslreXig+4JNESNbE8trzogNHcSLBj0VyGo+2zUlydQc6HStEo2gZ3v2+uX0Z1vK/9zD4SQIjYSYGCyAre5HH2WAoPftOhHWB0Q8fskTy9S1UDMig53j3THyJgsVsrWw+cki/4yS4C7JrWOHCeV3hDqhnSZSomuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jHt6h+oA; arc=none smtp.client-ip=209.85.214.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cX2wSaV6"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4954a9e8490so12861415e9.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 05:51:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jHt6h+oA"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2ced3386430so10403565ad.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 06:04:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786711894; x=1787316694; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Jxmv/7o/NfVI89rAdTVtRInPWnXbZJb6x6oPXtKGqx4=;
-        b=cX2wSaV6B2IcEy3kVNw/bSheHrVxlaAoZdKynyoUz3jg0oo+lhBYKap9dh7zHuaXPC
-         JwXj7nVJwDTywIm61FURM33JKNdQe9Wep5Ml8eGwe0EVE26S2n8aBtedE4PNzAfh4azs
-         P6p9PhmVkrnGSqg0We+Zfhgg7fmc2B5j40wQr4l48d72JGp772reLKme3z0sUoE/kH3O
-         n4ohfiGZEthQhoPVbchm6SOQ9lhcqfXrt4P6UdYYBaFaEjFhnguADFqdsM799pRTmQHX
-         wccvbMxR3rn3tl6BKRtVT9p+XyWR0Mi0aAVY1/poC976ahaM63yIzah/dmNwMBrwKf5c
-         yaMA==
+        d=gmail.com; s=20251104; t=1786712666; x=1787317466; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2jGjXEZ3uQl8flfRKuMCEEr1fs+F6hETSWVmOcLFVvQ=;
+        b=jHt6h+oAP825rtpETlHqMAhYTCMP+ffBTwn1awrN5V66MWyaik/NIVGyfQYruwnRpI
+         MNYZMphuzaNlvqy6bVD+1644CUysQFak8a38K+nKfBAxAJpERCzSr6ifIi+beNPR+Jon
+         OpIkXq0rpim1r/U0ecZEeERvY+yA1W3HEy5iPO4eB8fDDDkYaN30k2ly3a+EQBLUCUeb
+         f6vnGAGj9qOzrJ2PBZf4782mnyM6W5tfR/T5UU72v15wTiF1GWBQWQRxxabh8d5bi1+h
+         7qEmLfmnTAaZY5VMtQIdo4adoeIretFlJ6eUo6f2CJ7g7nusOg2A4/jWPeCTH8E3YO4f
+         XBrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786711894; x=1787316694;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Jxmv/7o/NfVI89rAdTVtRInPWnXbZJb6x6oPXtKGqx4=;
-        b=tPftfovyQfHwJArhz6EVOHA/jNGtTgRi+mPJt62/EQmW8jb2j2qyygu70yJsxvdP5V
-         qtGHMySN4z5s+XTUG6ykJkeRDM5ryM9e+IEgMR1N/nJzWSfFcqZ43dJ9HEAEej/i6C9u
-         oDYW8UTzX2kSrWbJQW3mZ+RiFJGc8WqxN+t5v80o6DG1lZ79W3+HPD9eBJasGS1+IIGc
-         ktmGWhd72SYmm7SgT3QEZjUXMEw9zNqchtB6lrYn+EGBK9mgClC+XH79PFNmbxOhh0uo
-         YViMMmBnCwg5odkzJMw7m1f2xsXAq27/W7yAVJUTjhcBTK7c4dLvfZhk6PLp5inr/Uw+
-         YWYg==
-X-Forwarded-Encrypted: i=1; AHgh+Rryib2ruHzKpdFGYzph12C8KAjKHg5nnXF+JJyWfkqKg+AtAPD2g86lxP5D3KmTK+NW5NukiWcyPSKmkTOgQw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxvuoQiM1Cu3W/fvQSs9uj+vBEWCtSUUPrnXO2mmnl3dIqdQIM
-	FZbZ9nTvsvXS/kcLVl/uOUzVAieVhJt3rXvWNJpP8CzhzkjelJ8DLmlG
-X-Gm-Gg: AR+sD10OuwdK9rlDhm6mWlQy7tMD2K0vUWMS3TAD53pcvVdeRG1zLzwaecE4EfAq6+I
-	njRZRIoF14o1qS+FodX5D192RHeXwzQxzA/jphIIT4yx2FWb7MkZukvMGtSegRoBvd9jnkP4cdF
-	D1ldDCqBgqFTYZtdW9dANh9o1ZlOdJOrR/HQ/EMV/H769I/+7JoygGmcfOsgZ0QzPEFiikN+eY0
-	YDhJ3Gzq4L5HJGT+nq0iMcTPFpxRr9Fb7hccH87gf3zb52+OYAwJayQfJm+CJQ/yovkBth4tKgR
-	GgqkjNx4Tbg6qAo9pnyKku/0m/jmGiUD9ryViabHWSkYrFUaw6DnHDVwHGX7gaKABA5CMSkm/YO
-	yQZaZQm3sYjeRPegFrsN3T7e2nPhS+hpLNvDjuDhzdR0/ORSpXr+YqEjfnf26zC9rLMmB4XqE3m
-	jtqdErukxk8mQkXn8tdX/T8nXWHUEP8F0CvA2LQkrmumFjKqWo4lUh22lMADKz556JqzbVHEQOd
-	S/lyua0hYu4DhZYnN2dQ+ry+Blk3Ly9vWx2ga3AA6RZLPrXBOyfEv2tw9xAHaf3dA==
-X-Received: by 2002:a05:600d:117:b0:499:5f80:83ac with SMTP id 5b1f17b1804b1-49987ab4e1bmr49051825e9.7.1786711894092;
-        Fri, 14 Aug 2026 05:51:34 -0700 (PDT)
-Received: from localhost.localdomain ([151.251.241.52])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49988ae8b62sm49727315e9.5.2026.08.14.05.51.31
+        d=1e100.net; s=20251104; t=1786712666; x=1787317466;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2jGjXEZ3uQl8flfRKuMCEEr1fs+F6hETSWVmOcLFVvQ=;
+        b=eGoglUBHmnC/wSzXFFmGbjJbcsUrZ8jCCqYABSfDqrFs71shEkRV1dqNs40mi+GQxG
+         P6RE7aL7ZIUTA61Uv/GbuXwfJYIehaMYvgV9VhI3VyygHZNiAX5LiNfgf4rebuQt06oC
+         gQ1b071sPOPrZdpdQh2DkCSHJqJWP21fVgJAGcDs/VEhp3lx23jDyTJgbpJkJ8XcvSzB
+         HiQKfGVz6y6QeIGLJh6uz67mmAN2VDPmxrw+Nfu2H6iQMW+ltUtowsRbzyCGJNoozVuE
+         a7Rocr/p3dFvN4fPlj505zkF8g5X6uIsokwwrjpPKf4m1rL3weqTnEy76gjBPxGW6o0g
+         a2Dw==
+X-Gm-Message-State: AOJu0YwdbIAoWrlSe7MtTGMK5KcGox9XyJSz5+tOFnckMMhSV9iHY5nv
+	k9lbLD98k32TZkZVuJfzQfO9Mq59zVycf9wz81XCqKjZl/mw8t5gk4WCGeC78PG1iEDizg==
+X-Gm-Gg: AR+sD10gUMqK4i/aBif5fv7M5tvqq7EzOPmwX0Dq9OvoyqAofClQqQHDP4dDciD031u
+	pmizGv93nfo4XtIEyS09ORCDyA0lz4ReQTnDjTgI1bsHvuH6k9FCnxTrubKBEHA6mGTvKIqD7Me
+	jSHA/xO75N+fmkHp3HgQINQZVxou1aOKvbRbDxtCz6Lft/IZc3/jdArHUNSxSgtYx9iw8Ur9qFv
+	eeh7LVFIPleUnp7JCZaHSmKJtYiwDMmAeniaW7qaGNSAc+bRIJzwUIgSiWi3VDZH96e/lIK/LrA
+	T9VL91IF9ltCS3ywynABbDU1XrTyL4b0fdLeNaldgu+hVp5hurqvX4+kjxKMpOl3F+Yhfub7xPO
+	8wkf5xcEjD1Wgo24tF9sgk4sH9QptV/TgvnAt1fE6bWxG4GcKyzdo9rHaiULXoFLAg1www7X4rU
+	7ZB6dT9/9TQk88ic2eSNkyn3ctf/KCCJEkykEZhNrEFI2jAJDrGhhJ6A/y0odMTosz8tH3Z/seK
+	uPmv0IcLLp7BTLp6jp0L7TNrkMxopPAo5DJ4jy9olafDWb9N/fNhg/LsKhtlKY=
+X-Received: by 2002:a17:903:32cb:b0:2ce:93a3:c168 with SMTP id d9443c01a7336-2d3b085db2fmr65522715ad.7.1786712665532;
+        Fri, 14 Aug 2026 06:04:25 -0700 (PDT)
+Received: from mouri.. (cm-27-145-52-219.revip12.asianet.co.th. [27.145.52.219])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d3aebf17absm9099345ad.80.2026.08.14.06.04.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2026 05:51:33 -0700 (PDT)
-From: Georgi Valkov <gvalkov@gmail.com>
-To: briannorris@chromium.org,
-	johannes@sipsolutions.net,
-	andrew@lunn.ch
-Cc: francesco@dolcini.it,
+        Fri, 14 Aug 2026 06:04:25 -0700 (PDT)
+From: Mouri <mourimcbusiness@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: miriam.rachel.korenblit@intel.com,
 	johannes.berg@intel.com,
-	kees@kernel.org,
-	miriam.rachel.korenblit@intel.com,
-	wenst@chromium.org,
-	rafael.beims@toradex.com,
-	avraham.stern@intel.com,
-	error27@gmail.com,
-	s.kerkmann@pengutronix.de,
-	gregory.clement@bootlin.com,
-	sebastian.hesselbarth@gmail.com,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	Frank.Li@nxp.com,
-	chunfan.chen@gmail.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	stable@vger.kernel.org,
-	gvalkov@gmail.com
-Subject: [PATCH 3/3] wifi: mwifiex: add dt flag to ignore incorrect ROM regulatory hint
-Date: Fri, 14 Aug 2026 15:50:25 +0300
-Message-ID: <20260814125025.90522-3-gvalkov@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260814125025.90522-1-gvalkov@gmail.com>
-References: <anoYr9H4KojJv-aZ@google.com>
- <20260814125025.90522-1-gvalkov@gmail.com>
+	Mouri <mourimcbusiness@gmail.com>
+Subject: [PATCH] wifi: iwlwifi: fix spelling mistakes
+Date: Fri, 14 Aug 2026 09:02:46 -0400
+Message-ID: <20260814130246.25259-1-mourimcbusiness@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -100,54 +73,151 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
-from the mwifiex ROM, which conflicts with the platform regulatory
-configuration on units sold outside the US market. For example:
-- phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
-- phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
-- phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
+Fix several spelling mistakes in the iwlwifi driver documentation
+and comments.
 
-When the system boots, it detects a conflict between the user selected
-region and the radios, e.g. BG FR US, and applies extreme restrictions,
-preventing use of 5 GHz and DFS channels. This also affects phy0.
-
-Implement a device-tree flag, which allows affected platforms to ignore
-an incorrect regulatory hint from ROM, so userspace can set the correct
-platform regulatory domain. This avoids the region conflict and allows
-the 5 GHz radios to be used.
-
-The change affects only platforms which explicitly define this flag, and
-helps overcome the incorrect behaviour of proprietary radio firmware.
-
-[1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-[2] https://github.com/openwrt/openwrt/issues/9956
-
-Tested-on: WRT3200ACM, OpenWrt
-Cc: stable@vger.kernel.org
-Signed-off-by: Georgi Valkov <gvalkov@gmail.com>
+Signed-off-by: Mouri <mourimcbusiness@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 4 ++--
+ 6 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index abc703441c5d..26978158a0ad 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -4899,7 +4899,14 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 				country_code =
- 					mwifiex_11d_code_2_region(
- 						adapter->region_code);
-+
-+				/* Allow platforms to ignore an incorrect
-+				 * regulatory hint from ROM, so userspace
-+				 * can set the correct regulatory domain.
-+				 */
- 				if (country_code &&
-+				    !device_property_read_bool(adapter->dev,
-+							       "marvell,ignore-regulatory-hint") &&
- 				    regulatory_hint(wiphy, country_code))
- 					mwifiex_dbg(priv->adapter, ERROR,
- 						    "regulatory_hint() failed\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 07f1240df866..692bb17dfc33 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -352,7 +352,7 @@ struct iwl_fw_ini_error_dump_register {
+  * struct iwl_fw_ini_dump_cfg_name - configuration name
+  * @image_type: image type the configuration is related to
+  * @cfg_name_len: length of the configuration name
+- * @cfg_name: name of the configuraiton
++ * @cfg_name: name of the configuration
+  */
+ struct iwl_fw_ini_dump_cfg_name {
+ 	__le32 image_type;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 3e73a6195fd9..88bdff486bd4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2302,7 +2302,7 @@ int iwl_mvm_set_sta_pkt_ext(struct iwl_mvm *mvm,
+ 			iwl_mvm_parse_ppe(mvm, pkt_ext, nss, ru_index_bitmap,
+ 					  ppe, ppe_pos_bit, true);
+ 		/* EHT PPE Thresholds doesn't exist - set the API according to
+-		 * HE PPE Tresholds
++		 * HE PPE Thresholds
+ 		 */
+ 		} else if (link_sta->he_cap.he_cap_elem.phy_cap_info[6] &
+ 			   IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT) {
+@@ -2364,7 +2364,7 @@ int iwl_mvm_set_sta_pkt_ext(struct iwl_mvm *mvm,
+ }
+ 
+ /*
+- * This function sets the MU EDCA parameters ans returns whether MU EDCA
++ * This function sets the MU EDCA parameters and returns whether MU EDCA
+  * is enabled or not
+  */
+ bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
+@@ -3617,7 +3617,7 @@ static void iwl_mvm_mei_host_associated(struct iwl_mvm *mvm,
+ 		break;
+ 	default:
+ 		/* auth method / AKM not supported */
+-		/* TODO: All the FT vesions of these? */
++		/* TODO: All the FT versions of these? */
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 3831b3c27e0f..d0ea18c5f03b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -2226,7 +2226,7 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
+ 
+ 	/*
+ 	 * Extended dwell is relevant only for low band to start with, as it is
+-	 * being used for social channles only (1, 6, 11), so we can check
++	 * being used for social channels only (1, 6, 11), so we can check
+ 	 * only scan type on low band also for CDB.
+ 	 */
+ 	if (iwl_mvm_is_regular_scan(params) &&
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index ff099aec7886..1cc0f703d675 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -75,7 +75,7 @@ struct iwl_mvm_vif;
+ /**
+  * DOC: station table - introduction
+  *
+- * The station table is a list of data structure that reprensent the stations.
++ * The station table is a list of data structure that represent the stations.
+  * In STA/P2P client mode, the driver will hold one station for the AP/ GO.
+  * In GO/AP mode, the driver will have as many stations as associated clients.
+  * All these stations are reflected in the fw's station table. The driver
+@@ -292,7 +292,7 @@ enum iwl_mvm_rxq_notif_type {
+ /**
+  * struct iwl_mvm_internal_rxq_notif - Internal representation of the data sent
+  * in &iwl_rxq_sync_cmd. Should be DWORD aligned.
+- * FW is agnostic to the payload, so there are no endianity requirements.
++ * FW is agnostic to the payload, so there are no endianness requirements.
+  *
+  * @type: value from &iwl_mvm_rxq_notif_type
+  * @sync: ctrl path is waiting for all notifications to be received
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index d3c2fe830477..2beea10302ab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -530,7 +530,7 @@ static bool iwl_mvm_use_host_rate(struct iwl_mvm *mvm,
+ 	 * Not a data frame, use host rate if on an old device that
+ 	 * can't possibly be doing MLO (firmware may be selecting a
+ 	 * bad rate), if we might be doing MLO we need to let FW pick
+-	 * (since we don't necesarily know the link), but FW rate
++	 * (since we don't necessarily know the link), but FW rate
+ 	 * selection was fixed.
+ 	 */
+ 	return mvm->trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ;
+@@ -914,7 +914,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	/*
+ 	 * Do not build AMSDU for IPv6 with extension headers.
+-	 * ask stack to segment and checkum the generated MPDUs for us.
++	 * ask stack to segment and checksum the generated MPDUs for us.
+ 	 */
+ 	if (skb->protocol == htons(ETH_P_IPV6) &&
+ 	    ((struct ipv6hdr *)skb_network_header(skb))->nexthdr !=
+@@ -1664,7 +1664,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			 * its sequence control is 0. Note that for that same
+ 			 * reason, NDPs are never sent to A-MPDU'able queues
+ 			 * so that we can never have more than one freed frame
+-			 * for a single Tx resonse (see WARN_ON below).
++			 * for a single Tx response (see WARN_ON below).
+ 			 */
+ 			if (ieee80211_is_qos_nullfunc(hdr->frame_control))
+ 				is_ndp = true;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 2e12f93ad32b..9398c9e3193a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -135,7 +135,7 @@ int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd,
+ }
+ 
+ /*
+- * We assume that the caller set the status to the sucess value
++ * We assume that the caller set the status to the success value
+  */
+ int iwl_mvm_send_cmd_pdu_status(struct iwl_mvm *mvm, u32 id, u16 len,
+ 				const void *data, u32 *status)
+@@ -284,7 +284,7 @@ int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq)
+  * @smps_request: The request to change the SMPS mode.
+  * @link_id: for MLO link_id, otherwise 0 (deflink)
+  *
+- * Get a requst to change the SMPS mode,
++ * Get a request to change the SMPS mode,
+  * and change it according to all other requests in the driver.
+  */
+ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
 -- 
-2.55.0
+2.43.0
 
