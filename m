@@ -1,146 +1,119 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01FDA322C73
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 05:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D8925524C;
+	Fri, 14 Aug 2026 05:44:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786685671; cv=none; b=kaWDDEn9AeMXT9qj6OeEimfK36qAHvdRWvgy1e12ZTc/lp1YcK0GJgqg8sfM9acnwNuOG8GB0sw3m5/pv5BbAF47coZwX+p5u3VlbnXEEb9JiDWLJpDD/VHmKFDwPo6+jRyz6O/W8LtaZRho4bxH+2T5VKhK9KEchx1F9jgxbYE=
+	t=1786686271; cv=none; b=EOaMmjmcU5S42abgu8e6BYmzMvyjH56FHAOokqAQQoOayZB8ll2ibbX2lma7eNbQZ5f0MIRvuN11e/WfNQKg8sRWOGWsaS8EooxT4vqQ+rvg+SoyprZnkUjKez32GHcYDgUHE5lvBWZ2pt77kVKs2jlrpB4/ZETVButE4kZnQEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786685671; c=relaxed/simple;
-	bh=suc85FrtLbQf22brsB88D7OYPOdq4ICoJ0e4DPW6Pm4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c4PwaCI386ogWiCsVNf1BcNCChEAwiFwYh1Ti8mqE0pfoQPNq3+UM49Z3zm6xn6fIvbs/dGWGNrnYKlM5qZN4DSAocCw+GwrLnQ47792k14DALNTak1HfTG2ZqXu5CevtxcnDl3zgwLmFNomTCE28Q3I9Rg/D58mb3znihNwnIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T5eFXajf; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786686271; c=relaxed/simple;
+	bh=6Qegz5BlEPX67vXcdOIowk/KXBydcQ2qzFz5hWW+6Tg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=LK4HXSi+fiMtcwifmiK+JyD+YyNRz2AuOlZgH4oFwVc11qSp5N0LDKbl+k/2FSlwZe4yuPjaU62nKxR4SRNgSer+Y76K69nRGIC59r5M+eDZU4EQArqSmkYEGP9Uk06a413QbA7aYpyEROuA+IwZvtFF1ENtI0m2sD6ZvEHcb5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=GA4wjgMc; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T5eFXajf"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4954a2e73a9so4343065e9.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Aug 2026 22:34:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786685668; x=1787290468; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NweZTATsw473HUSw2qvH+SmBzWknsDyQl1KkkpxMyrQ=;
-        b=T5eFXajfTv9dmPFT1mIOUSK2x67gjqVmEe5rC5rz82FbaWEBVX9uJ94cyzidXjvSYK
-         WhFlmsQt3XjS57YYFJt2Bav7sjtua4LCAKQKxiezfhtbJRht8cZQpFUVfkmlMsSIfGmG
-         CFSfZCh1bU347J8AqyCcCD93Syh5GYQ4CDmH/CiOKyxVcl+TE653nB1sztnygWwAafm+
-         V0hxtgKE3Nvm8ZFYtbKjGZW70atmZtuznVEfOe+iwH1WBIIWARch8YzqaBCcsamfR6sn
-         nV0gphbiI/pPhh0EP3Rd42GGoUxaxdTlSIXbFXP7Azv7ZpJjANhgUFT+Ky6uQPZVwOIK
-         xVjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786685668; x=1787290468;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NweZTATsw473HUSw2qvH+SmBzWknsDyQl1KkkpxMyrQ=;
-        b=qzH7Q8vzIkceoz5PP+7iTz8QLZPgi49ogaOhbMLrnSWdnxfyIU8t6CM29qmgtdZhI2
-         LnT4Cndkus4egcNprdTgM1zEAUbrsPdcvAJxGe0v0azLaXREHcFtPJZ1XiIuJsL5L3KQ
-         5qj3shyCbykW5CZ4lBWhQ2NR/CeTdjfsdfAqy+RsBqK4xS+JH8YG2GoywbAEHfMD6Gn3
-         fHlk9TpuFBO+HubHA6T0XMjhPlGd1+0pcsv8xalnVvgWxQKcJJXnTyqY9Qb/W1w34l9W
-         D60UzsV7MmpD9pFfc39sHiymBaXcHElsqYkqT7Vo5GjLMpL5+yCjTX52mCHKBPYP1i8Q
-         Ycmw==
-X-Forwarded-Encrypted: i=1; AHgh+RozRtES3eOgEi7TRNtvNa3Q3fW9OrpPVIzsLXekK3UX/b9fVgjkgWm2czQwsKUzhQX4XvyyYWdODbRK1IISZw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4OdRB/w826y8nedwbKl2XeQM4XeEr23Gl/bBY25ypN/SAAblS
-	CRIhbgS9ALuqkSXLvGBqm2jXkl7JtuMWBnMQ3SsZIqhnPdg8/1b3HcYE
-X-Gm-Gg: AR+sD12rjifek790nZbxgMMfzpIDquRmuSlR15v852gCHfe1bH1kw/6jnh3IZDokqAf
-	4GgqpHAGEq4TaKbIyLOvHYApJDL69c/lF5ELLN+CeQymIRxLoe5UsMnIiCNxcIMY8R+SNErAfD+
-	qTZx5hq6So9lI36v1xiJerSGC8rJBca4XkMnEq+9Zseztu7JMliQ7+NnRPyXmP8qny7CrCM8rww
-	SrjE5ZY+2zxU9o4b8hHNKZSoere0t+7E8BlKPdqiVPWM7Nk3HexQMnTrW9yQk2IV0HZBPzfL2Fl
-	qHc9XMXZclHtvT5kZJtqFEN7x6M50T04Lc2Olgmjpniioi6Szs2rOoBBl+YNbc88X8qchwijD/l
-	/P9vjSeiIzBMk++XKTuCCzkNFSpVd6eLXoC6L19X3r0MbqY1T82WfJiC9xwmgIEjbh8LRPsQ95F
-	ENDvbJcqm3bv2nAZ+SxkSENVm7L+0ttIMLA1IpuL1T3ALHAHRuR//mHauScBJNPfifQQ==
-X-Received: by 2002:a05:600c:1385:b0:499:5220:db3d with SMTP id 5b1f17b1804b1-499879a50afmr31079585e9.16.1786685668014;
-        Thu, 13 Aug 2026 22:34:28 -0700 (PDT)
-Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4815f20058fsm5914247f8f.4.2026.08.13.22.34.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Aug 2026 22:34:27 -0700 (PDT)
-From: Mehmet Fide <mehmet.fide@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mehmet Fide <mehmet.fide@screeningeagle.com>
-Subject: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the high queue only for DTIM delivery
-Date: Fri, 14 Aug 2026 07:34:26 +0200
-Message-ID: <20260814053426.2473247-1-mehmet.fide@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="GA4wjgMc"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E5iEbD5996936, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1786686254; bh=9UaHUAw0xVs6HSglKvatTeAsr+8QuqFhlUDWFxfP15E=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=GA4wjgMcERoaI81Hyu7yY3Pjip0tLL6tCCajG93CRHHaHrW40zPBt5j5jp4Ps9XRC
+	 9TgS8ZA2DHUNffxsNQkWUevYzzFkoRNDKDPGwft1D790R/z4x29MLqlzb0/idmY5RX
+	 IWzpX8O60/NP1biowE4EtEkjdGnLBlAWXoyw9uGB/pY6J/f3pWFfyxMW6yqZSHbRRp
+	 a0/pHsdvxuVyhT2ffd6ODf5a7Em9fCHaBePuDLMkQnx3j+jPRT122Xq7o9q8eUL38E
+	 QkaSWKwynCt1H9tS47oO+p5L9pOagGo4XtDDEW7BHPsc8PBRpaN14nHakyB6UbYBj3
+	 jOovJNQ6pXQ+g==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E5iEbD5996936
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 14 Aug 2026 13:44:14 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 14 Aug 2026 13:44:13 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Fri, 14 Aug 2026 13:44:13 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
+ Goede" <johannes.goede@oss.qualcomm.com>
+Subject: RE: [PATCH v4 2/7] wifi: rtw88: rx: mark zero length packets on
+ RTL8723BS
+Thread-Topic: [PATCH v4 2/7] wifi: rtw88: rx: mark zero length packets on
+ RTL8723BS
+Thread-Index: AQHdKXGmGZ/52bnHjEeR6fBuPktZYbadC+tQ
+Date: Fri, 14 Aug 2026 05:44:13 +0000
+Message-ID: <203b96ad48eb47ce9411fa57a73ac0a2@realtek.com>
+References: <20260811091203.26841-1-luka.gejak@linux.dev>
+ <20260811091203.26841-3-luka.gejak@linux.dev>
+In-Reply-To: <20260811091203.26841-3-luka.gejak@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
+> From: Luka Gejak <luka.gejak@linux.dev>
+>=20
+> Like the RTL8703B, the RTL8723BS reports receive descriptors with a zero
+> packet length, which the vendor driver drops outright. rtw88 already
+> flags these as having no PSDU for the RTL8703B, so extend the same
+> handling rather than passing an empty frame up.
+>=20
+> This is gated on the SDIO interface rather than the chip id, because it
+> has only been observed there; the USB variant is not known to do it.
+>=20
+> Co-developed-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+> ---
+>  drivers/net/wireless/realtek/rtw88/rx.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wirele=
+ss/realtek/rtw88/rx.c
+> index 01fd299abb7f..a9361ef4b93c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rx.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rx.c
+> @@ -253,10 +253,12 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *r=
+twdev,
+>=20
+>         rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
+>=20
+> -       /* Rtl8723cs driver checks for size < 14 or size > 8192 and
+> -        * simply drops the packet.
+> +       /*
+> +        * Rtl8723cs and rtl8723bs drivers check for size < 14 or size > =
+8192
+> +        * and simply drop the packet.
+>          */
+> -       if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8703B && pkt_stat->pkt_=
+len =3D=3D 0) {
+> +       if ((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8703B || rtw_is_8723bs=
+(rtwdev)) &&
+> +           pkt_stat->pkt_len =3D=3D 0) {
 
-In AP mode every broadcast and multicast data frame is routed to
-TX_DESC_QSEL_HIGH, the after-DTIM queue, whether or not anybody is
-asleep. The firmware drains that queue at beacon pace, a dozen or so
-frames per second measured on RTL8822BU, while one associated client's
-mDNS/SSDP chatter alone exceeds that. The excess accumulates inside
-the chip until the shared TX page pool is exhausted (measured: 14 of
-1803 pages left). From that point every host-sourced frame queues
-behind the backlog: authentication responses reach the air seconds
-after the client has given up, so no station can associate anymore,
-and the beacon reserved-page download fails the BCN_VALID poll
-("error beacon valid") because it needs pages from the same pool. The
-AP keeps beaconing, so the failure looks like a silent RX stall and
-only a reboot recovers.
+I think we can evaluate ` pkt_stat->pkt_len =3D=3D 0` first, because it is =
+an
+unlikely case and we can save a little time.
 
-mac80211 already decides when after-DTIM delivery is needed: it sets
-IEEE80211_TX_CTL_SEND_AFTER_DTIM on bmc frames only while at least one
-station is actually dozing. Honor that instead of routing
-unconditionally: flagged frames keep going through the high queue with
-the MORE_DATA and HGQMD handling introduced by commit 076f786a0ae1
-("wifi: rtw88: Fix AP mode incorrect DTIM behavior"), everything else
-leaves at line rate through the AC queues. This partially reverts the
-usb.c hunk of that commit, whose unconditional routing is what lets
-the backlog build up.
-
-On a bench AP (USB2, 20 MHz, WPA2, hostapd, a Windows client driven
-through disconnect/reconnect cycles): reconnects fail 0/5 on RTL8822BU
-and 0/3 on RTL8821CU before this change, and pass 10/10 and 5/5 with
-it, with the page pool staying healthy and no beacon errors logged.
-
-Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
----
-v3: drop the Fixes tag (Ping-Ke), reverse xmas order for the
-declarations (Ping-Ke).
-v2: honor IEEE80211_TX_CTL_SEND_AFTER_DTIM instead of routing bmc
-unconditionally to the AC queues.
-
-The flagged path is the code 076f786a0ae1 added and is unchanged by
-this patch; I did not have a client entering powersave on this bench
-to exercise it explicitly and will follow up with that measurement.
-
- drivers/net/wireless/realtek/rtw88/usb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
-index 64e1c3420..43b9cdb4a 100644
---- a/drivers/net/wireless/realtek/rtw88/usb.c
-+++ b/drivers/net/wireless/realtek/rtw88/usb.c
-@@ -560,6 +560,7 @@ static int rtw_usb_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
- static u8 rtw_usb_tx_queue_mapping_to_qsel(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	__le16 fc = hdr->frame_control;
- 	u8 qsel;
- 
-@@ -567,7 +568,8 @@ static u8 rtw_usb_tx_queue_mapping_to_qsel(struct sk_buff *skb)
- 		qsel = TX_DESC_QSEL_MGMT;
- 	else if (is_broadcast_ether_addr(hdr->addr1) ||
- 		 is_multicast_ether_addr(hdr->addr1))
--		qsel = TX_DESC_QSEL_HIGH;
-+		qsel = (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ?
-+		       TX_DESC_QSEL_HIGH : skb->priority;
- 	else if (skb_get_queue_mapping(skb) <= IEEE80211_AC_BK)
- 		qsel = skb->priority;
- 	else
--- 
-2.54.0
+>                 rx_status->flag |=3D RX_FLAG_NO_PSDU;
+>                 rtw_dbg(rtwdev, RTW_DBG_RX, "zero length packet");
+>         }
+> --
+> 2.53.0
 
