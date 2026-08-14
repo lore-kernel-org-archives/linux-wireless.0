@@ -1,119 +1,94 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward200b.mail.yandex.net (unknown [178.154.239.157])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D8925524C;
-	Fri, 14 Aug 2026 05:44:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68FB720D4E9
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 05:50:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786686271; cv=none; b=EOaMmjmcU5S42abgu8e6BYmzMvyjH56FHAOokqAQQoOayZB8ll2ibbX2lma7eNbQZ5f0MIRvuN11e/WfNQKg8sRWOGWsaS8EooxT4vqQ+rvg+SoyprZnkUjKez32GHcYDgUHE5lvBWZ2pt77kVKs2jlrpB4/ZETVButE4kZnQEo=
+	t=1786686633; cv=none; b=ZYtjekp1MttC0eUEUJ7DQ88m45itAZpObNjXPVYXX04VjmKrgNCf9Q8v40nE/9V6ENN4pfDLAQUdbBLslOqDy/T06kRJE2GQWA9vOdZiOJOsESVB+eeJw+Pauepr1fUod3Wh90TaBiDCx7rVOq0rY+xr+K5cg4j+0/S1frXllXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786686271; c=relaxed/simple;
-	bh=6Qegz5BlEPX67vXcdOIowk/KXBydcQ2qzFz5hWW+6Tg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=LK4HXSi+fiMtcwifmiK+JyD+YyNRz2AuOlZgH4oFwVc11qSp5N0LDKbl+k/2FSlwZe4yuPjaU62nKxR4SRNgSer+Y76K69nRGIC59r5M+eDZU4EQArqSmkYEGP9Uk06a413QbA7aYpyEROuA+IwZvtFF1ENtI0m2sD6ZvEHcb5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=GA4wjgMc; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1786686633; c=relaxed/simple;
+	bh=3pb25erNsAMZm5Dnnan/WuwHxJ4oJctMwpxWDzccXN0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Dl2WnYFzloa9YArqTAtN6waYJngj9nesWlVV6xBzFFaz+KRwcgzyc24wNA3Wel43fi8BkcJlMLIDk4zuHowZ9xBEP2qyd37I5zDBmOkt1EVCvD7SoAhRECxkKaD2MxwUEWD4fE1j/wa1VYaQ9QE2tbt6LKy9eQr5e0hF66fr+lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=UUlkUSyw; arc=none smtp.client-ip=178.154.239.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="GA4wjgMc"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E5iEbD5996936, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786686254; bh=9UaHUAw0xVs6HSglKvatTeAsr+8QuqFhlUDWFxfP15E=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=GA4wjgMcERoaI81Hyu7yY3Pjip0tLL6tCCajG93CRHHaHrW40zPBt5j5jp4Ps9XRC
-	 9TgS8ZA2DHUNffxsNQkWUevYzzFkoRNDKDPGwft1D790R/z4x29MLqlzb0/idmY5RX
-	 IWzpX8O60/NP1biowE4EtEkjdGnLBlAWXoyw9uGB/pY6J/f3pWFfyxMW6yqZSHbRRp
-	 a0/pHsdvxuVyhT2ffd6ODf5a7Em9fCHaBePuDLMkQnx3j+jPRT122Xq7o9q8eUL38E
-	 QkaSWKwynCt1H9tS47oO+p5L9pOagGo4XtDDEW7BHPsc8PBRpaN14nHakyB6UbYBj3
-	 jOovJNQ6pXQ+g==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E5iEbD5996936
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Aug 2026 13:44:14 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 13:44:13 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 14 Aug 2026 13:44:13 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
- Goede" <johannes.goede@oss.qualcomm.com>
-Subject: RE: [PATCH v4 2/7] wifi: rtw88: rx: mark zero length packets on
- RTL8723BS
-Thread-Topic: [PATCH v4 2/7] wifi: rtw88: rx: mark zero length packets on
- RTL8723BS
-Thread-Index: AQHdKXGmGZ/52bnHjEeR6fBuPktZYbadC+tQ
-Date: Fri, 14 Aug 2026 05:44:13 +0000
-Message-ID: <203b96ad48eb47ce9411fa57a73ac0a2@realtek.com>
-References: <20260811091203.26841-1-luka.gejak@linux.dev>
- <20260811091203.26841-3-luka.gejak@linux.dev>
-In-Reply-To: <20260811091203.26841-3-luka.gejak@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="UUlkUSyw"
+Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d102])
+	by forward200b.mail.yandex.net (postfix) with ESMTPS id EE4FD830D6
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 08:44:43 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-57.sas.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-57.sas.yp-c.yandex.net [IPv6:2a02:6b8:c23:313e:0:640:a643:0])
+	by forward102b.mail.yandex.net (postfix) with ESMTPS id B4C70C012E;
+	Fri, 14 Aug 2026 08:44:35 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-57.sas.yp-c.yandex.net (smtp) with ESMTPSA id YiJPNvafAuQ0-25pXqyHy;
+	Fri, 14 Aug 2026 08:44:35 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1786686275; bh=/GbLHi/tz0JPqqfKUjq9ND3+VZVdSsFrUOqI7xDNwNU=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=UUlkUSywvcs2Yimxm87ca8MA2wCx14OqQ9W7kHfm4u3uM9lgLFehAL4fwtG9rhe81
+	 dAUls2sz+T8W6YkcbMcCfKpyunM9yR/iSQXMGj+jmq2RGZdi4vILuVeeQixTW3ciKi
+	 jonwIU8BEfFy1AaFhnOPVSfsnCaXUyKJ8AFk51Vw=
+Authentication-Results: mail-nwsmtp-smtp-production-main-57.sas.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: linux-wireless@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] wifi: mt76: mt7915: simplify mt7915_sys_recovery_set()
+Date: Fri, 14 Aug 2026 08:43:35 +0300
+Message-ID: <20260814054335.1237804-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
-> From: Luka Gejak <luka.gejak@linux.dev>
->=20
-> Like the RTL8703B, the RTL8723BS reports receive descriptors with a zero
-> packet length, which the vendor driver drops outright. rtw88 already
-> flags these as having no PSDU for the RTL8703B, so extend the same
-> handling rather than passing an empty frame up.
->=20
-> This is gated on the SDIO interface rather than the chip id, because it
-> has only been observed there; the USB variant is not known to do it.
->=20
-> Co-developed-by: Michael Straube <straube.linux@gmail.com>
-> Signed-off-by: Michael Straube <straube.linux@gmail.com>
-> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-> ---
->  drivers/net/wireless/realtek/rtw88/rx.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wirele=
-ss/realtek/rtw88/rx.c
-> index 01fd299abb7f..a9361ef4b93c 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rx.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rx.c
-> @@ -253,10 +253,12 @@ static void rtw_rx_fill_rx_status(struct rtw_dev *r=
-twdev,
->=20
->         rtw_rx_addr_match(rtwdev, pkt_stat, hdr);
->=20
-> -       /* Rtl8723cs driver checks for size < 14 or size > 8192 and
-> -        * simply drops the packet.
-> +       /*
-> +        * Rtl8723cs and rtl8723bs drivers check for size < 14 or size > =
-8192
-> +        * and simply drop the packet.
->          */
-> -       if (rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8703B && pkt_stat->pkt_=
-len =3D=3D 0) {
-> +       if ((rtwdev->chip->id =3D=3D RTW_CHIP_TYPE_8703B || rtw_is_8723bs=
-(rtwdev)) &&
-> +           pkt_stat->pkt_len =3D=3D 0) {
+Simplify 'mt7915_sys_recovery_set()' by using
+the convenient 'kstrtou16_from_user()'.
 
-I think we can evaluate ` pkt_stat->pkt_len =3D=3D 0` first, because it is =
-an
-unlikely case and we can save a little time.
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
+---
+ .../wireless/mediatek/mt76/mt7915/debugfs.c   | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
->                 rx_status->flag |=3D RX_FLAG_NO_PSDU;
->                 rtw_dbg(rtwdev, RTW_DBG_RX, "zero length packet");
->         }
-> --
-> 2.53.0
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index 4d0854fe785b..4e9dd9f65e2f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -52,23 +52,12 @@ mt7915_sys_recovery_set(struct file *file, const char __user *user_buf,
+ 	struct mt7915_phy *phy = file->private_data;
+ 	struct mt7915_dev *dev = phy->dev;
+ 	bool band = phy->mt76->band_idx;
+-	char buf[16];
+-	int ret = 0;
++	int ret;
+ 	u16 val;
+ 
+-	if (count >= sizeof(buf))
+-		return -EINVAL;
+-
+-	if (copy_from_user(buf, user_buf, count))
+-		return -EFAULT;
+-
+-	if (count && buf[count - 1] == '\n')
+-		buf[count - 1] = '\0';
+-	else
+-		buf[count] = '\0';
+-
+-	if (kstrtou16(buf, 0, &val))
+-		return -EINVAL;
++	ret = kstrtou16_from_user(user_buf, count, 0, &val);
++	if (ret)
++		return ret;
+ 
+ 	switch (val) {
+ 	/*
+-- 
+2.55.0
 
