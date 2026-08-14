@@ -1,175 +1,92 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BB134252D1;
-	Fri, 14 Aug 2026 08:10:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3ACD36EA80;
+	Fri, 14 Aug 2026 08:11:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786695049; cv=none; b=EJ8/01FLP6Nb8nG3IWkcNGwpEnXcRQpr6nyQ8z674KgRVoNfEApMp7JB8pBd5HAp23AbAvS7o71UUNrdqjZeHoOrrC8HVR6HV2pEvqbdCZTHjhx0Tf//tOilXK8Z1mxEpwyJRcMnQQeFV+6LU8L8+efB3tdChcD+PZRPeLYlGro=
+	t=1786695091; cv=none; b=iZfSHjfFv2urq3g1TZmejip7wLCNl56ibbYhZ7FOSuF703dBVcU9XVJAD02Ges/ZE5CN0C2XsHp85xYUFL6MM3oH8gn7SikaM5Ub6fTlTOetMObs6yI+tnJiYusuFilkQ6VfPg1TfzSjTK9y2OOG+RHUdEqJrlu+XrWDdM8f5AQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786695049; c=relaxed/simple;
-	bh=3UGvGaZC/heE1E9C0jRRxrGLSBi8ouG/CoDC8l216JQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=cp1nmNBOulFkuLiZSUjUTkegnd0mA5582+268LC45k4CR/Z9EyGxbd51V0i1B2S5FaFEGc3FfSx9RFMZ42iNfI4wGJ3Z95Qw1/yffkdQ+qmIbs09FC2596vuoKbiOLd14qTTOsRGzCldR6frRkOIea6o0vRJXDnNxDU9fRSlLAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=oBtsj25E; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="oBtsj25E"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67E8AbX321081109, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1786695038; bh=vgz3yBsy2FvtYOCw4H9uJ5mxPDH46x6lBmLm8ELN/Ak=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=oBtsj25E3/jnpwAzQAC4OpI9NZfu5MUneIKyxWpJrNFt6OgP3eymiVIe3Qd8CtDCv
-	 D8X7383vULmASdfRbRhyictZ8nG185oZB01fpCncWz0Wh4q5cbJ0lommJ7w3CQzNn2
-	 J8h0WaSouc7r+kGpkx3dL5+Daq1xGp6CApE/lkfN3/ppSoXHdM1pk6npxLlEubzCP+
-	 J6l+FQZuwcbh4x9jasuqVzL+o7Lht+Ndy1JqWSATYUYSgGTBTpDopFZk5bdX0AuGD/
-	 SgkcaOMg7yLxKYd60HiP9XK+xWX2jYCCuGMQNAcqYwaeaWNvmtSNXIkc+27k5sXqhQ
-	 CRbV+6sX2Gmcw==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67E8AbX321081109
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Aug 2026 16:10:38 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 14 Aug 2026 16:10:33 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 14 Aug 2026 16:10:33 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Arsenii Pashchenko <ulijg308@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 4/4] wifi: rtw88: rtw8822c: simplify amplitude search and
- offset via s32
-Thread-Topic: [PATCH 4/4] wifi: rtw88: rtw8822c: simplify amplitude search and
- offset via s32
-Thread-Index: AQHdKmlVOxsiWjpZdky/3c9i6asNtLadMkJg
-Date: Fri, 14 Aug 2026 08:10:33 +0000
-Message-ID: <e73b9600122d4e708601914acf4238c0@realtek.com>
-References: <cover.1786545572.git.ulijg308@gmail.com>
- <0bb6e2fb78d0b2def623210938204a0efbbe2034.1786545572.git.ulijg308@gmail.com>
-In-Reply-To: <0bb6e2fb78d0b2def623210938204a0efbbe2034.1786545572.git.ulijg308@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1786695091; c=relaxed/simple;
+	bh=YmcFx91RbxlDvJdAAaI4Y+kAnZEiw/24k0vZnzFj0Bc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WANixapIcpX17OSGL+y0imH/Pwl6tEsPaXZJJKjMlilxONOqT+KQLhX1oMpRWbesr7b+mb8Uftvyfb49lJ72w7OvodJIxbckJgF0hWElo2rBm59hPLhtZb6yVVZF1ujfQ0JmyBs+dQGiTbK0daRNiRtNZOEd3UM+sjNM0NGYZOk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-01 (Coremail) with SMTP id qwCowAAX6+6tzX5qwxWfBQ--.5955S2;
+	Fri, 14 Aug 2026 16:11:26 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>
+Subject: [PATCH v2] wifi: ath6kl: keep the IBSS node count within the node map
+Date: Fri, 14 Aug 2026 16:11:25 +0800
+Message-ID: <20260814081125.25006-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowAAX6+6tzX5qwxWfBQ--.5955S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw1UJrWrKFyUKFy7ZFWkZwb_yoW8Xr1xpF
+	4fK397Ar1qqrW8W3yIva1xAF9Yga93trZIkF4qy3y3ZrnrAryrKFn5KFyjgr15JFW8WF43
+	ZFsFqF98JF95ZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyK14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26r
+	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1q6rW5McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04
+	k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7Cj
+	xVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfU0pBTUUUUU
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-Arsenii Pashchenko <ulijg308@gmail.com> wrote:
-> Complete the signed data transition by removing the complex
-> rtw8822c_rf_minmax_cmp() helper. On a true linear s32 scale, finding
-> the delta amplitude simplifies to a direct difference (max - min)
-> without any nested circular wrap-around conditions.
->=20
-> Refactor rtw8822c_dac_iq_offset() to directly calculate the trimmed
-> arithmetic mean, casting back to the hardware register's offset
-> orientation only at the final assignment using a ternary operator.
->=20
-> Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/rtw8822c.c | 103 +++++-------------
->  1 file changed, 25 insertions(+), 78 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> index 642ac2e2b..6fcdfc64c 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-> @@ -155,38 +155,6 @@ static void rtw8822c_dac_restore_reg(struct rtw_dev =
-*rtwdev,
->         }
->  }
->=20
-> -static void rtw8822c_rf_minmax_cmp(struct rtw_dev *rtwdev, s32 value_s32=
-,
-> -                                  s32 *min_s32, s32 *max_s32)
-> -{
-> -       u32 value =3D (u32)value_s32;
-> -       u32 *min =3D (u32 *)min_s32;
-> -       u32 *max =3D (u32 *)max_s32;
-> -       if (value >=3D 0x200) {
-> -               if (*min >=3D 0x200) {
-> -                       if (*min > value)
-> -                               *min =3D value;
-> -               } else {
-> -                       *min =3D value;
-> -               }
-> -               if (*max >=3D 0x200) {
-> -                       if (*max < value)
-> -                               *max =3D value;
-> -               }
-> -       } else {
-> -               if (*min < 0x200) {
-> -                       if (*min > value)
-> -                               *min =3D value;
-> -               }
-> -
-> -               if (*max  >=3D 0x200) {
-> -                       *max =3D value;
-> -               } else {
-> -                       if (*max < value)
-> -                               *max =3D value;
-> -               }
-> -       }
-> -}
-> -
->  static int rtw8822c_dac_iq_cmp_s32(const void *a, const void *b)
->  {
->         s32 va =3D *(const s32 *)a;
-> @@ -201,31 +169,16 @@ static void rtw8822c_dac_iq_sort(struct rtw_dev *rt=
-wdev, s32 *iv, s32 *qv)
->         sort(qv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NUL=
-L);
->  }
->=20
-> -static void rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec_s32,=
- u32 *val)
-> +static s32 rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec)
->  {
-> -       u32 *vec =3D (u32 *)vec_s32;
-> -       u32 p, m, t, i;
-> +       s32 sum =3D 0;
->=20
-> -       m =3D 0;
-> -       p =3D 0;
-> -       for (i =3D 10; i < DACK_SN_8822C - 10; i++) {
-> -               if (vec[i] > 0x200)
-> -                       m =3D (0x400 - vec[i]) + m;
-> -               else
-> -                       p =3D vec[i] + p;
-> -       }
-> +       for (u32 i =3D 10; i < DACK_SN_8822C - 10; i++)
-> +               sum +=3D vec[i];
->=20
-> -       if (p > m) {
-> -               t =3D p - m;
-> -               t =3D t / (DACK_SN_8822C - 20);
-> -       } else {
-> -               t =3D m - p;
-> -               t =3D t / (DACK_SN_8822C - 20);
-> -               if (t !=3D 0x0)
-> -                       t =3D 0x400 - t;
-> -       }
-> +       s32 avg =3D sum / (DACK_SN_8822C - 20);
+node_map has MAX_NODE_NUM entries. When a new peer arrives after the
+map is full, ath6kl_ibss_map_epid() increments node_num before rejecting
+the mapping. A later lookup then walks one element beyond node_map.
 
-No declaration in the middle.=20
+Reject a new mapping before advancing node_num.
 
->=20
-> -       *val =3D t;
-> +       return avg >=3D 0 ? avg : 0x400 + avg;
+Fixes: bdcd81707973 ("Add ath6kl cleaned up driver")
+Assisted-by: Codex:gpt-5
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+Changes since v1: https://lore.kernel.org/all/20260722040721.74876-1-pengpeng@iscas.ac.cn/
+- rebase on current ath6kl sources
+- reject a full map before incrementing node_num
 
-Return type is 's32', but here doesn't do sign_extension()?
+The IBSS map state transitions were reviewed statically; no ath6kl hardware
+test was performed.
 
->  }
->=20
->  static u32 rtw8822c_get_path_write_addr(u8 path)
+ drivers/net/wireless/ath/ath6kl/txrx.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index d81825413906..b340c795b7a3 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -67,10 +67,9 @@ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
+ 	}
+ 
+ 	if (ep_map == -1) {
+-		ep_map = ar->node_num;
+-		ar->node_num++;
+-		if (ar->node_num > MAX_NODE_NUM)
++		if (ar->node_num >= MAX_NODE_NUM)
+ 			return ENDPOINT_UNUSED;
++		ep_map = ar->node_num++;
+ 	}
+ 
+ 	memcpy(ar->node_map[ep_map].mac_addr, eth_hdr->h_dest, ETH_ALEN);
+-- 
+2.50.1 (Apple Git-155)
 
