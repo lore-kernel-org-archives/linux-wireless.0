@@ -1,96 +1,184 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C99C2441B8
-	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 13:46:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4833F2EA754
+	for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 13:47:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786715217; cv=none; b=N2hIUdVGCeeNCir2x8+okzPr0EAgnGyMfCImMet+1E62nvwXpPM8gmfp8shklSOQkAQ4DgTiLprbhd1EhJIXsNNuZoSOYWPOc8PaokTay9sKPoZCqLdh9dUY//BmaddV8CdZh7GcoR3gveR649b92FPg4KmE3ASdO+5JiaOBndE=
+	t=1786715231; cv=none; b=epbGC38sWzkL0cWjPmO98ch4NSZIFrvsfKN7RGasfhrBnM6PnsHgBoa21wC6Hle4c6VEQKynHowfLt+/4CIiN2XIvg20VjIjkc6boZaUjeoCWKaMzEsahANiQRR3yS19WM15/vjAtnZi+Oep+gwF2pp58YuUHnZjfwc7pTHHTf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786715217; c=relaxed/simple;
-	bh=20fbU9cscw9pYdO99cBjLYHWgdI7uYb5rHOtbX6DcCg=;
-	h=Message-ID:Date:From:To:Subject; b=I65b70E7M2ui24QAkchC8BV/hV3Tttmu/IF68rSULFrPs3srPv4iI4y+oBH1+FRziBdfRATvrXfMuEd5s2aBUMRLAcB8XFFow+NSIrjW+48lS+sC84UYYE1Jr7O3SbHrksdA3ol3zZ3Sw0VD3NRJ066z7sxVrXly/uLjU9Q6S7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FzpIBggw; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1786715231; c=relaxed/simple;
+	bh=0MAZSpI1FB2pQAJD2x8qbdLKZzJxcnDItyqwbUnBYqo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TBKlp0BLRp9oE8iDr/ndObEebZDjmbbMbh5On5vHzq/y89U3xBoXrQk7ZEwSAD5IndbM1ydHrChMv9Z3mnKWaX/uLrYmKgybEBuPaeGqi24bVCRp6QTkR2gYvXFhSD7juZJpoYNVyPXRjTh+N62ZEGJ3zzxL3Rr8JhtReM32OO0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=0sec.ai; spf=pass smtp.mailfrom=0.security; dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b=qLjfhZ+B; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=0sec.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=0.security
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FzpIBggw"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2cc7e86e7aeso11094885ad.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 06:46:54 -0700 (PDT)
+	dkim=temperror (0-bit key) header.d=0sec.ai header.i=@0sec.ai header.b="qLjfhZ+B"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-47f633e6058so905096f8f.0
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Aug 2026 06:47:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786715214; x=1787320014; darn=vger.kernel.org;
-        h=subject:to:from:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=NqgNmlqrijeAU72tJfWNhzCVIYAdWelzVlfyBTEuNi4=;
-        b=FzpIBggw53qeu60o0sBh8WcuHd87w+f8ukK4TG52tHoIdpvmSGKEc5jqsTwTzEQbIx
-         0f7bz7We1yZpyY6UvgIZmOhlpovQb/ScFQdnIkVVTkDj6TM5fuU5Tk6aaMfcfzF+xDXw
-         4bUHd0NBY2Zxp0hAcBAez5H4WWRcgNT7+JU/Qa8IPbxTZOD9G8n5rfILo1reHL98kslP
-         VVlIkp2iwwKznXAEcRZeKRal2C7dCRa5+jh4JEBOcqOKD5g/njf4lwn5hpTO9/ersqwR
-         vRdFNwUKTBSBxFH6v69YiBvbCRgHUk+CicUlaBq1J8UaEOkXxGlcH/jtTubGmI4sAQON
-         VFMQ==
+        d=0sec.ai; s=google; t=1786715227; x=1787320027; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=la6HmzMWjOjdupN59/M7Vsrfzm3xyDbqoAwnTK10twI=;
+        b=qLjfhZ+BelAiOxKLgA6nrpt9+96IeGwBCh2vcS2MnDhFRsFP0V2c+Jd6mY/Rq8YMIC
+         i6hV5FAakmPr8slmougtvIBKAVaMRrY6PfBH1lXGHZl2OdPJHeV5d9LUnCC5wXGTXJHu
+         Q3JTjDJ2viOJkQpK5W5mXkxjTYyytxeDcG9GNbALegv6Gwvgn1fR9bNnzlB9Sxalp07W
+         LL4oJ2ZlOIPseCDEVWAsiI6zW9aqMyv7chB9SYn+rJGVHounjfgitjXdd3giByKTRn1P
+         5Y3Mm35kKJ+jqNVCggslRqU2pX9+XEBZj1sc06cq43+AZdZ2xuBle9jO0AzneMvCkkkS
+         sO3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786715214; x=1787320014;
-        h=subject:to:from:date:message-id:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=NqgNmlqrijeAU72tJfWNhzCVIYAdWelzVlfyBTEuNi4=;
-        b=Bk2aM/C/MNmxCvbijUQuywH+RVk8ZS6pA/QZPj1PsgiwtsVWKO0sH7NbUq0UxlBEE7
-         Phsg8Uw0uKEDmjPpUhuwm9rMEbeBJRiy14aZkDKK5H5DeXUDZuUKANEH15fLu1Yba3Mf
-         IcrujLPQb5HXeIz/8/VZb0uRTSEemzWKvd3ejxVIM3a916gFRFS5yjes/hsrw4uwiHvv
-         H/L761bzSe056iX6cuEn0dVueR23ZmMd/7J++6PtVGF2gHC2+kWcms8cT83GROMIMCFU
-         S1nhJvhI1H5qv/TO0ltfBdU6GNxl2+3E44QNZFyKjCwfROHiUy4OU+OFfUvkJlf9ZNUv
-         B9kg==
-X-Gm-Message-State: AOJu0Ywb500EmTPiPLNZji0mxaqsFsLGoI1Lh41ffrbDEf2PIm0JSMiY
-	FjpMHM+5ZIxsZjllfW6S857zLxbyq+baiM7tSm1fFyfdMztk/aZiyXdR+an3oAcpyyG6ZP3UFmm
-	Blw==
-X-Gm-Gg: AR+sD10z0Ns3ArrSTIN1YAskFCLRpj/q3I8MuYWkTw77WmVLJ8vhDtC1OCuUs96fOY6
-	mTlBbFHLVMOlPypKu0LsJX70j5iKf1tPV5rGKav5+vMsMFQ7cbTg6v/aW1LoSzBg2KTMun0tcPJ
-	MMSF8SWPYW0g25mS+wiELEXj/Ji4ORdQdUxHVvA2VZSxxdJWg8bBajgUOQkaWkwjMwaSaYFK0Su
-	i1RyCJ/cCy1w7gSA2if69MdvEWG1I1cmkCu/pXhsaHNbd0NWPEJVuRFTFzBbvs+rv/qZx1CatrX
-	knWQqK05PCl64pfgPiHdWZLw4vxyNnaOsbTn5N1HgAGfSCew+OoXhrMH5MTEMYHNm173OxnXa8U
-	FkB7UgZnuC0o6g9x2d7YT6FNWg8HsOZrwPy03UKsbkCpnABkcZSmoKp4CC2U4YR8HVqFQXpFuxE
-	Q0ZVtzHR4ee08O54aLN55fabhprhuo8UXfUf7CWv+lxzM+foM5J6uzrvGeBiYz2/lk99tlf/rtI
-	tBkrS2xjtXEr4zWnSvVvgxeHYHBlYsGrBsaZ6NLzG92CTiG9mOK+VXBb3hhBsQR9hk=
-X-Received: by 2002:a17:902:d545:b0:2c9:c083:cd50 with SMTP id d9443c01a7336-2d3b0da5ddcmr72979625ad.17.1786715213767;
-        Fri, 14 Aug 2026 06:46:53 -0700 (PDT)
-Received: from localhost (ec2-13-235-62-231.ap-south-1.compute.amazonaws.com. [13.235.62.231])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-3218d3f398dsm4227105eec.22.2026.08.14.06.46.52
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Aug 2026 06:46:53 -0700 (PDT)
-Message-ID: <6a7f1c4d.642c3f8d.364216.004a@mx.google.com>
-Date: Fri, 14 Aug 2026 06:46:53 -0700 (PDT)
-From: fadamu954@gmail.com
-X-Google-Original-From: PayPal
-To: linux-wireless@vger.kernel.org
-Subject: Renewal Completed | $387.50 | Ref: I-9RMBSQP06GPJ29
+        d=1e100.net; s=20251104; t=1786715227; x=1787320027;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=la6HmzMWjOjdupN59/M7Vsrfzm3xyDbqoAwnTK10twI=;
+        b=HmpPj1VBwKcChQ3c7LBtElfRMG9Y353lpTpjwmoQsVbXM4qJRgvP1sZdmVkWNA0h8t
+         9dlZIBpgM/LfuaG+kLPUXcbn07YAbeDSu2eldXOpTJnayrqBtxW080xiiSvza6zmn7EH
+         XBtmj9rtPzoF7jzO0FMBUbjR6/NAkJOWzWGvnd4C5+fnvN91xcqmciVG8+Eu+gahaf/n
+         3v4C3nJpY/ssaMMJ+Fhg1r0mwBolXN33Ai/qkPgR6iomqEObV7gZAMOwtLZRyY013UId
+         SpPqwZ3H75okREWTAH8nwZ3v9dx8XYkKKKIfbo7g3tKOSYb2F1Xs86HqtVi+FLpFK7y/
+         3POg==
+X-Forwarded-Encrypted: i=1; AHgh+RqtkX1LkS0/bF2ErPShLu+HsBfK+PEgj7FnDEjPR68aYkyfIpEBuUrOlu3GzEmG+NvNSiwajJErJlwJDmgVNA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxyqkIoGsK5SxD7ZbQ5T89ehky3nCcKH4hTOoVU2k8KskAtOd2I
+	wIBTuZsCWN3LyhA+IvV7L79LOggoZGpWXoB/GqGSKRY3qOVwTBqTFo7G8tO1kDthAsnF
+X-Gm-Gg: AR+sD12/+C3xwpVZ0+fQ44HjQaCzMEwKeokgTLm3v+HinpGufJ7sVJj2Z1sZrT7bcQ7
+	TXMsNWSzR1gK63y10Jx0OmjFtUlZZmE1yhg16PeqFU87aRVZHy/gb9eiA19scHgtfCzvt8l6Fsy
+	Y3dDWWWergv6RKkfRXseyn+ADEh0iiSBlUiO2ToCv9NEBr8bdw2i4ix7ZR+RkVLZxfa26roJSfY
+	byH3I1YaiIj9K80Ks0palpG/qv+jdzOVK4SCeJQInVjV0EcddUxoWip6yrsohffIrs1+oln+N63
+	MV04xalehkJ3jO0vIytEVV4GVVJd4u/fruijcPLOv5J2TIWGhtGHt/tKOTricncceUfLl0su8cD
+	LSWKIamknQHjunDmKhB0uknKpaPvJvin9W8iozvbybmYsZFTufjW2IPInhnrSB1haLvIYekqIz5
+	SCu0BywhNty7s3qkAx+RwdM83PMeM/eySnA2Ve5nki+wOZepNSSAyUvVZZKpjyZskSHyqeab01B
+	Z41T0HI4N+mNO3nL4jC0UZV0jJXJhHbZzYlqh/q2GDQLzsY0+llgXZ+DhZQQT3W7vZ31c2ONYIi
+	JfJVwA==
+X-Received: by 2002:a05:6000:2703:b0:461:e27d:5690 with SMTP id ffacd0b85a97d-481607acf59mr6874946f8f.26.1786715227265;
+        Fri, 14 Aug 2026 06:47:07 -0700 (PDT)
+Received: from PeakBook-Mini.tail8e484.ts.net ([178.197.218.158])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4815f2c129dsm8326893f8f.26.2026.08.14.06.47.05
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 14 Aug 2026 06:47:06 -0700 (PDT)
+From: Doruk Tan Ozturk <doruk@0sec.ai>
+To: briannorris@chromium.org
+Cc: francesco@dolcini.it,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Doruk Tan Ozturk <doruk@0sec.ai>
+Subject: [PATCH v3] wifi: mwifiex: bound the pairwise-cipher OUI walk to the IE length
+Date: Fri, 14 Aug 2026 15:47:04 +0200
+Message-ID: <20260814134704.85902-1-doruk@0sec.ai>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Dear linux-wireless,
+mwifiex_search_oui_in_ie() reads a pairwise-cipher (PTK) count from a
+beacon/probe-response RSN or WPA information element and then walks that
+many 4-byte OUIs, comparing each with memcmp(). The count comes straight
+from the (attacker-supplied) IE and is never checked against the
+element's own length, and the callers admit the element on element_id
+alone (has_ieee_hdr() / has_vendor_hdr(), no length check). A crafted
+RSN/WPA IE with a large pairwise count therefore makes the walk read up
+to 255 * 4 bytes past the element -- an out-of-bounds read of the
+kmemdup()'d beacon buffer, reachable from any AP whose beacon/probe
+response is processed during scan-result parsing.
 
-We hope you're doing well.
+Pass the number of IE bytes available at the OUI list and bound the walk
+to the element. Keep the length signed and reject a negative value
+before any unsigned arithmetic, so a small or zero IE length cannot
+underflow to a large size_t and defeat the bound.
 
-Attached to this message, you’ll find the documents you recently requested. If anything is unclear or you need help understanding the content, please don’t hesitate to reach out to us at (831) 356 6612.
+Found by 0sec automated security-research tooling (https://0sec.ai).
 
-In addition, we’re happy to share some good news:
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Cc: stable@vger.kernel.org
+Assisted-by: 0sec:multi-model
+Signed-off-by: Doruk Tan Ozturk <doruk@0sec.ai>
+---
 
-You’ve reached your 1-year membership anniversary with us — thank you for being a valued part of our community. We’re also celebrating 20 years as a company, and as a gesture of appreciation, we’ve applied a special renewal offer to your account.
+Changes in v3 (per Brian Norris's review of v2):
+ - Keep ie_len signed and explicitly reject a negative (underflowed)
+   length before any unsigned arithmetic. The v2 bound added the count
+   to the offset and compared against (size_t)ie_len, so a small or zero
+   IE length that underflowed ie_len wrapped to a large size_t and the
+   bound would not fire.
 
-Renewal Details:
-- Service: Protection PRO Security
-- Account: linux-wireless (ID: UID582935)
-- Term: 1 Year
-- Renewal Rate: 387.50 USD
+Changes in v2 (per Francesco Dolcini's review of v1):
+ - Store offsetof(struct ie_body, ptk_body) in a named variable
+   (ptk_body_offset) and reuse it in both bounds checks; no functional
+   change.
+ - Switch the Assisted-by trailer to 0sec:multi-model.
 
-Your membership has been automatically renewed to ensure uninterrupted service and protection.
+ drivers/net/wireless/marvell/mwifiex/scan.c | 25 ++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
 
-If you have any questions about the documents or the renewal, we're here to help. You can contact us at (831) 356 6612 during regular business hours.
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 97c0ec3b822e7..473f4623ea199 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -104,12 +104,24 @@ has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
+  * a given oui in PTK.
+  */
+ static u8
+-mwifiex_search_oui_in_ie(struct ie_body *iebody, u8 *oui)
++mwifiex_search_oui_in_ie(struct ie_body *iebody, u8 *oui, int ie_len)
+ {
++	const size_t ptk_body_offset = offsetof(struct ie_body, ptk_body);
+ 	u8 count;
+ 
++	/* ie_len is the number of bytes available at iebody. Keep it signed
++	 * and reject a negative (underflowed) length before the unsigned
++	 * comparisons below, so a small or zero IE length cannot wrap.
++	 */
++	if (ie_len < 0 || (size_t)ie_len < ptk_body_offset)
++		return MWIFIEX_OUI_NOT_PRESENT;
++
+ 	count = iebody->ptk_cnt[0];
+ 
++	/* Reject an OUI count whose list would run past the element. */
++	if (ptk_body_offset + count * sizeof(iebody->ptk_body) > (size_t)ie_len)
++		return MWIFIEX_OUI_NOT_PRESENT;
++
+ 	/* There could be multiple OUIs for PTK hence
+ 	   1) Take the length.
+ 	   2) Check all the OUIs for AES.
+@@ -143,11 +155,14 @@ mwifiex_is_rsn_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+ 	if (has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
++		int ie_len = (int)bss_desc->bcn_rsn_ie->ieee_hdr.len -
++			RSN_GTK_OUI_OFFSET;
++
+ 		iebody = (struct ie_body *)
+ 			 (((u8 *) bss_desc->bcn_rsn_ie->data) +
+ 			  RSN_GTK_OUI_OFFSET);
+ 		oui = &mwifiex_rsn_oui[cipher][0];
+-		ret = mwifiex_search_oui_in_ie(iebody, oui);
++		ret = mwifiex_search_oui_in_ie(iebody, oui, ie_len);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -169,10 +184,14 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+ 	if (has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)) {
++		int ie_len = (int)bss_desc->bcn_wpa_ie->vend_hdr.len -
++			(int)sizeof(bss_desc->bcn_wpa_ie->vend_hdr.oui) -
++			WPA_GTK_OUI_OFFSET;
++
+ 		iebody = (struct ie_body *)((u8 *)bss_desc->bcn_wpa_ie->data +
+ 					    WPA_GTK_OUI_OFFSET);
+ 		oui = &mwifiex_wpa_oui[cipher][0];
+-		ret = mwifiex_search_oui_in_ie(iebody, oui);
++		ret = mwifiex_search_oui_in_ie(iebody, oui, ie_len);
+ 		if (ret)
+ 			return ret;
+ 	}
+-- 
+2.43.0
 
-Thank you again for choosing PayPal. We appreciate your trust and support.
-
-Warm regards,  
-The PayPal Team  
-5454 Paulson Pl. Boise Id 83704 USA
