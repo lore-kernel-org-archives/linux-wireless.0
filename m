@@ -1,208 +1,275 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.162])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DC521E98E3
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 05:51:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.162
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D04368D4C
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 08:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786773115; cv=none; b=p4WFei5DtpZmdoDbjKj1zWYT8YZPL/xjn2DLZZnL2elb79V0gpKSxUaOuo+APvMUbMlwfoE9BXPnYWL2S38Bc8Qk0KPMHquDkyribvc/ndCIMDlZvN1RrLw99Iqu4V2ptoUXwLT3tnxUV6hpdTlWRIlzeBdo4tjXsQR0qIvKsxM=
+	t=1786782814; cv=none; b=dzg7T55joMIP2LGjLjtadfSD9qwPc7JE0ei2a+TXci0EyMd8Wl8OZDONET1kB8LS1T1I0xHUPJo1znb8StD++9ZZnne80CkHOxz9iE03H/77Lfyolj3R4D4KwJ0w1Py9hOCo+C/Qvh26yHHOGt1RmRL6Lp5sovPQit/BhDbTg9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786773115; c=relaxed/simple;
-	bh=A9irWmcIhI6ALbZTSoKs9i10AfbHLtjNjLzA24zxlsQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ttoeoyvb2ocFmLGrGoHd/tngZXCMHkNIbYjBsdP2onXTEHLa3XCXN1YQ/s3HQw7hc77imdSN2Owc7jD/WxBXoTc68Si+p6L1JvVhRMhIABifJZAvbasSIFOnRLwB3IVRctAGCGChRFKIPkIybK4PqLKgU33Qt40vtVShA2uxUTQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=TkCGrLGw; arc=none smtp.client-ip=188.68.63.162
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1786782814; c=relaxed/simple;
+	bh=O3pMtBEmXEanZNQxxBczcnzItFMFemOxd1WChVtlbXs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T2nk6koW7sqP+IsC8N2Jonuqh7bzNf9TGz64S6WKpo9anXbAB3vLb8tSc9aMH9pY3dpfwMH8fHvSdbED7wEg3JuNJP+7tD63ISBQF39cci4EOSuDa8TBuB9KDubTuqmcu27k5FpCcmynmt4W5p5H8MF3vzDQyAoaoMnqOASypeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o7GLOYrG; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="TkCGrLGw"
-Received: from mors-relay-8201.netcup.net (localhost [127.0.0.1])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4hMSs94Dhtz4F1F;
-	Sat, 15 Aug 2026 07:51:41 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1786773101;
-	bh=A9irWmcIhI6ALbZTSoKs9i10AfbHLtjNjLzA24zxlsQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TkCGrLGwxJiJb8Z2t4HnYnwQX9nIr4TXtWdmVtH/Z0eKW+x0f8WvMJ7HdeqVlLKQA
-	 vEhUILSG8pLiup/MJv+qwoxM5VSJPo4rtBTpJbIwAhyA/t5GzrgZUVBFgMeiw+PmvX
-	 2CNElSRGWcqZ1T66iKvEKp82uWAmsVi36Pbm5qqfIFuS5rLAZvuyGx5vWuUIKDeeWg
-	 qX09sg4mfFCOlcj1gOjBhIYopZKiDq4tCoqjW1wDOq47pu06AElWoctvxeL9Lz6tRZ
-	 d4yfYErbY/7UHwi0gDxRIyff9+xWjhVmr4/3PRRKS7o8R4qUEjAwjRDJV03unExS25
-	 Yh9lkIfogJ+uA==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4hMSs93WmWz4F01;
-	Sat, 15 Aug 2026 07:51:41 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4hMSs84phvz8svk;
-	Sat, 15 Aug 2026 07:51:40 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id A1C9E5F98A;
-	Sat, 15 Aug 2026 07:51:35 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <d8e493ef-90ff-4364-ad4e-1709fae97005@leemhuis.info>
-Date: Sat, 15 Aug 2026 07:51:35 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o7GLOYrG"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-49557167508so16959185e9.1
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 01:33:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786782811; x=1787387611; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Yht8Yw3sMnFHO9DzWevf1YnwdQDpdoW5JTYhNzme8ao=;
+        b=o7GLOYrG4rdKLzRf0YdHE0CxYoqT8oc0qd4u173c5a+HNsHVuMpjigjB5exP2YF1T1
+         NdX23WmBUlRtqDF/UDoPHCE9PlWx67P1UpGuLV4RNI9YX9cVPTAzSaw40ZKrdqV+a/qM
+         TcQdSwZeEQ5RjB8OwQfaSAd/oJoYDnOiWLeChvv9p0rlggAVzjxEnErO8+m/5UG05yWT
+         iM7hxlx+LWBSmleQDLzlaQ9xtJJm/q6tLDBVaGUju//Ik2rQJVTnuLN3rYd+qd8ktCMt
+         ZRvImLgCdTZWgCmZz4X6AXAUwawCkeC6V+6WZRoRGOT0bfNMl4i9j3v08bKdovyNyZ8g
+         oyHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786782811; x=1787387611;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Yht8Yw3sMnFHO9DzWevf1YnwdQDpdoW5JTYhNzme8ao=;
+        b=BCFMlAs1DTMR7YrTByXpT3w2dwv10rF0akJfOueKCQDGNPk7DsoT8crAZiMG15qr3g
+         WNR9Q8V+VWOP0Ti2+XmrZ5n3DktaFFAEE1LJbemkS5kLkexvVSSvZ4+cXXbGR8OMI+Je
+         THnFsMpHUy9RyeMibbV/yaUOYo3zS4aUHx5mK27Q3kKn6hH+8mNRwLAH7l1dIUI5vos4
+         VDCxKaHdWDwU7dUk6B+fsxZBtJ9qWBFB0FXNAEScSbmZ/mRXUyOXCDptkuVa+Fd6e5XO
+         wfq+2LRp0QXaqm46Mqvw+Cuv8fvdUoxSmHxfz+Jaki6JvdUOyI+YsA9ryIH9rr3GzpBs
+         5eUg==
+X-Forwarded-Encrypted: i=1; AHgh+RoBlDhlr64XTgP+2UsJGu8Q6cOe6LPaL9F1RGcEZ1s8P5tz6CdvDIrzOgqldB822l/aH62qoZtmMKQcn7hILA==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8OuLTaC+AvfyGKhnNpBMhD8iETVc15vhMIVnFhJLYwa8Rcisq
+	8Zn8GEp9bk2deL7wLuX6H2s/2OxCFKQktMKiVN862o6J+hp6tspfaGzO
+X-Gm-Gg: AR+sD12gvaSxCwDymUnrtbWQd5TnI2iJywM0ex5WwVmwwHpQ09M4tHrs4GSygHbRVnC
+	YW4WJ4PIhNvvYYUnUB3yGW9KofXqBF5YCuR2dY91uU6K4tDWt2x4EPkR1QQi5Yb58pCTQtYo5JF
+	wV7IT4IL3aAdRZLu74HsFSv3KRw4Xml7LUmeN+ulf2wzhwYcIe25tMMlv3I1BNmPIcFoy3YL9DM
+	A/nzylf4ls1C8t1CxSqoLkbbG6VSWefEL//yptZKn634H0zXAr2Xn+gukBZpq2MSFLFkH9CyRyO
+	suL+8++Pjd93IAiQeZRn0RjdFU5n5x1bcgaU8CW/u3pVTEDdPiOMkUuU7pEy8tLVFcsDh6kaYUx
+	/denLz6H1+J2lLatAuI5alVE3zS/bDJVaYOP5ES9QJ+2IjnfQY9OCPbYiQ84GxYmB+xHhfmXSnS
+	KdHXMAjx3r72pLvSx5swkwfFBLJYlT6Vz8CTBAZwhbRPb3tvUgstAn8ajiXDAs3wi7zNX6eyvqa
+	Yx3inT60xxB31kg9l+loDFha7qrWz1QlyUBAMONQA==
+X-Received: by 2002:a05:600c:228e:b0:495:4e1d:82df with SMTP id 5b1f17b1804b1-499879774bamr118261605e9.10.1786782811137;
+        Sat, 15 Aug 2026 01:33:31 -0700 (PDT)
+Received: from localhost.localdomain ([82.137.32.242])
+        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-4815f2ccc00sm14498418f8f.35.2026.08.15.01.33.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Aug 2026 01:33:30 -0700 (PDT)
+From: Eduard Bostina <egbostina@gmail.com>
+To: Conor Dooley <conor+dt@kernel.org>,
+	devicetree@vger.kernel.org,
+	Eduard Bostina <egbostina@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Rob Herring <robh@kernel.org>
+Cc: daniel.baluta@nxp.com,
+	simona.toaca@nxp.com,
+	goledhruva@gmail.com,
+	m-chawdhry@ti.com
+Subject: [PATCH] dt-bindings: net: wireless: Convert WL1251 to DT schema
+Date: Sat, 15 Aug 2026 08:33:26 +0000
+Message-ID: <20260815083326.2146602-1-egbostina@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz
- link active
-To: Jonas Hort <jonas.hort@posteo.de>, regressions@lists.linux.dev
-Cc: linux-wireless@vger.kernel.org, lorenzo.bianconi83@gmail.com,
- Devin Wittmayer <lucid_duck@justthetip.ca>
-References: <066b30cc-a9e6-4aeb-964d-71551e8ea3ef@posteo.de>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <066b30cc-a9e6-4aeb-964d-71551e8ea3ef@posteo.de>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: <178677309598.4118759.4557917680638760400@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: A1C9E5F98A
-X-NC-CID: vcpBS7klDK/RW6cfGfjwxixU2QpwtVL0KzU15eWjVMznh4QGUso=
 
-On 8/14/26 16:04, Jonas Hort wrote:
-> Filed as: https://bugzilla.kernel.org/show_bug.cgi?id=221884
-> 
-> Summary: WiFi 7 MLO (5GHz+6GHz) on MT7925 silently stops passing traffic
-> after a few minutes, while the driver continues to report a fully
-> healthy link. Root cause appears to be a stalled WFDMA0 TX hardware
-> queue. Reproduced on both linux 7.1.8 (stable) and 7.2.0-rc7 (mainline
-> pre-release), not fixed as of rc7. Disabling the 6GHz radio on the
-> access point eliminates the freeze entirely in my testing.
+Convert the Texas Instruments WL1251 Wireless LAN Controller bindings to DT
+schema.
 
-Not my area of expertise, but there was one patch was reverted on
-Thursday that is somewhat related
-(https://git.kernel.org/torvalds/c/3aa1dcaa4f6f5ae08936491e08bd456f331f2d40
-), but that was more about shutdown/module unload aiui and likely
-something else.
+During the conversion, the following updates were made:
+- Added the 'clocks' property. It was missing from the txt binding but
+  is used in device trees (omap3-n900.dts).
+- Added 'spi-cpol' and 'spi-cpha'. These were present in the original
+  txt binding's example but missing from its property list.
+- 'vio-supply' and 'spi-max-frequency' are no longer required. The txt
+  binding listed them as required, but they are only applicable when
+  the chip is connected via SPI.
 
-But there were other reports that sounds somewhat related (but careful,
-I might send you on the wrong track here; CCing Devin, who wrote two of
-the following messages):
+Signed-off-by: Eduard Bostina <egbostina@gmail.com>
+---
+ .../bindings/net/wireless/ti,wl1251.txt       | 64 -------------
+ .../bindings/net/wireless/ti,wl1251.yaml      | 92 +++++++++++++++++++
+ 2 files changed, 92 insertions(+), 64 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
 
-https://lore.kernel.org/linux-wireless/20260629083543.153564-1-jb.tsai@mediatek.com/
-https://lore.kernel.org/linux-wireless/20260804185118.19705-1-lucid_duck@justthetip.ca/
-https://lore.kernel.org/all/20260812155811.10950-1-lucid_duck@justthetip.ca/
-
-Ciao, Thorsten
-> This is a regression: reported by multiple users on the CachyOS forum
-> as broken starting with the 7.1.x kernel line; earlier kernels
-> (6.18.x longterm) are reported to work fine. I have not yet performed
-> a commit-level bisection but can if guided on the best approach given
-> the AP-side 6GHz dependency.
-> 
-> --- Detailed description ---
-> 
-> Symptom:
-> When connected via MLO (Multi-Link Operation, EHT/WiFi 7) with two
-> active links - one on 5GHz and one on 6GHz - network traffic silently
-> stops after a few minutes of normal use (web browsing, etc). The
-> connection continues to show as healthy:
-> 
-> - `iw link` / `iw station dump` report the connection as associated,
->   authenticated, good signal (-60 to -65 dBm), high negotiated
->   bitrate (800-1700 Mbit/s), 0 tx retries, 0 tx failed.
-> - Nothing is logged to dmesg/journalctl at the time of the freeze.
-> - Ping to the gateway shows 100% packet loss for several minutes,
->   until the connection eventually recovers on its own.
-> 
-> I built a small watchdog script (ping-based failure detection + live
-> kernel log monitoring) to catch the freeze automatically and sample
-> mt76 debugfs state repeatedly across the event. This revealed the
-> actual mechanism:
-> 
-> `/sys/kernel/debug/ieee80211/phy0/mt76/xmit-queues` shows the WFDMA0
-> hardware TX queue's `tail` pointer completely frozen while `head`
-> keeps advancing - i.e. packets keep getting enqueued but the firmware
-> stops draining the queue. RX stops in the same instant (rx byte/packet
-> counters in `iw station dump` freeze completely). No tx retries or tx
-> failures are ever reported by the driver, so it does not appear to
-> notice the stall itself.
-> 
-> Example from one incident (kernel 7.2.0-rc7):
->   t+1s:  WFDMA0: queued=130 head=390 tail=260   rx bytes=184791894
->   t+9s:  WFDMA0: queued=148 head=408 tail=260   rx bytes=184791894 (unchanged)
-> 
-> `tail` never advances during the whole stall window while `head`
-> keeps growing - the queue is being filled but never drained.
-> 
-> Reproduced this exact signature four times total (twice on 7.1.8-1,
-> twice on 7.2.0-rc7-1), always with MLO 5GHz+6GHz active, always
-> within 3-5 minutes of normal use.
-> 
-> 6GHz correlation:
-> My MLO links are 5GHz (5180 MHz) + 6GHz (varies, e.g. 6135 MHz).
-> Fully disabling the 6GHz radio on the access point (FritzBox 5690
-> Pro, FRITZ!OS 8.25 - not just client-side band restriction via
-> NetworkManager, which does not reliably suppress the second MLO
-> link) results in 30+ minutes of clean operation with no freeze.
-> Re-enabling 6GHz reproduces the freeze again within minutes.
-> 
-> Regression info:
-> Multiple users on the CachyOS forum report this started with the
-> 7.1.x kernel line; the previous longterm kernel (6.18.x) is reported
-> to work fine by another user with different affected hardware
-> (different AP). I have not personally tested 6.18.x myself, and have
-> not performed a commit-level bisection yet - happy to do so if
-> pointed toward the most likely area of the driver, given the AP-side
-> 6GHz dependency makes a fully automated bisection awkward.
-> 
-> Steps to reproduce:
-> 1. Connect to an AP advertising WiFi 7 MLO with 5GHz+6GHz link
->    options, so the client negotiates both links.
-> 2. Use the connection normally (web browsing is sufficient).
-> 3. Within roughly 3-5 minutes, new connections start hanging;
->    existing traffic stops.
-> 4. Check `iw link` - link still reports as connected/healthy.
-> 5. Check `/sys/kernel/debug/ieee80211/phy*/mt76/xmit-queues` -
->    WFDMA0 tail pointer frozen while head continues to advance.
-> 
-> Environment:
-> - Kernel: linux-cachyos 7.1.8-1 and linux-cachyos-rc 7.2.0-rc7-1
->   (CachyOS, near-vanilla Arch-based build)
-> - cat /proc/version:
->   Linux version 7.2.0-rc7-1-cachyos-rc (linux-cachyos-rc@cachyos)
->   (clang version 22.1.8, LLD 22.1.8) #1 SMP PREEMPT_DYNAMIC
->   Mon, 10 Aug 2026 20:51:00 +0000
-> - Distribution: CachyOS
-> - Architecture: x86_64
-> - Kernel tainted: no (/proc/sys/kernel/tainted = 0)
-> - WiFi hardware: MediaTek MT7925 (mt7925e driver, mt76 core),
->   WM Firmware Build 20260605184805, ASIC revision 79250000
-> - Access point: AVM FritzBox 5690 Pro, FRITZ!OS 8.25
-> 
-> Related community discussion:
-> https://discuss.cachyos.org/t/mt7925-wifi-7-mlo-breaks-connectivity-on-7-1-x-mt76-regression/31972
-> (I am the thread starter; several other users report matching
-> symptoms with different hardware/APs)
-> 
-> Possibly related (different symptom, same 6GHz/MT7925 area, worth
-> checking for a common root cause):
-> Bug 221627 - MT7925E - System locks up with flashing caps lock
-> (comment 1 there: "caused by switching between AP's with the same
-> 6GHz wifi name")
-> 
-> Attachments (will add to this ticket):
-> - Full incident logs for all four reproductions (dmesg + journalctl
->   + mt76 debugfs time series across each freeze)
-> - iw station dump / iw link output during freeze
-> - Kernel .config
-> 
-> Note: checked bug 220424 (mlo_sta_cmd/sta_cmd regression) before filing -
-> different symptom (persistent near-zero throughput vs. our intermittent
-> full stall with healthy link stats) and different root cause (broadcast
-> wtbl hdr_trans_tlv handling). That fix landed in 6.16.6/6.17-rc5, well
-> before the kernel versions tested here, so it is not the cause of this
-> issue.
-> 
-> 
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+deleted file mode 100644
+index 88fd28d15eac..000000000000
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
++++ /dev/null
+@@ -1,64 +0,0 @@
+-* Texas Instruments wl1251 wireless lan controller
+-
+-The wl1251 chip can be connected via SPI or via SDIO. This
+-document describes the binding for the SPI connected chip.
+-
+-Required properties:
+-- compatible :        Should be "ti,wl1251"
+-- reg :               Chip select address of device
+-- spi-max-frequency : Maximum SPI clocking speed of device in Hz
+-- interrupts :        Should contain interrupt line
+-- vio-supply :        phandle to regulator providing VIO
+-
+-Optional properties:
+-- ti,wl1251-has-eeprom : boolean, the wl1251 has an eeprom connected, which
+-                         provides configuration data (calibration, MAC, ...)
+-- ti,power-gpio :	 GPIO connected to chip's PMEN pin if operated in
+-			 SPI mode
+-- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+-  for optional SPI connection related properties,
+-
+-Examples:
+-
+-&spi1 {
+-	wl1251@0 {
+-		compatible = "ti,wl1251";
+-
+-		reg = <0>;
+-		spi-max-frequency = <48000000>;
+-		spi-cpol;
+-		spi-cpha;
+-
+-		interrupt-parent = <&gpio2>;
+-		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
+-
+-		vio-supply = <&vio>;
+-		ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
+-	};
+-};
+-
+-&mmc3 {
+-	vmmc-supply = <&wlan_en>;
+-
+-	bus-width = <4>;
+-	non-removable;
+-	ti,non-removable;
+-	cap-power-off-card;
+-
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&mmc3_pins>;
+-
+-	#address-cells = <1>;
+-	#size-cells = <0>;
+-
+-	wlan: wifi@1 {
+-		compatible = "ti,wl1251";
+-
+-		reg = <1>;
+-
+-		interrupt-parent = <&gpio1>;
+-		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* GPIO_21 */
+-
+-		ti,wl1251-has-eeprom;
+-	};
+-};
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
+new file mode 100644
+index 000000000000..1f46f1235035
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
+@@ -0,0 +1,92 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/net/wireless/ti,wl1251.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Texas Instruments WL1251 Wireless LAN Controller
++
++maintainers:
++  - Eduard Bostina <egbostina@gmail.com>
++
++properties:
++  compatible:
++    const: ti,wl1251
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  vio-supply:
++    description:
++      Phandle to the regulator providing VIO. Required when connected via SPI.
++
++  ti,power-gpio:
++    maxItems: 1
++    description:
++      GPIO connected to chip's PMEN pin if operated in SPI mode.
++
++  ti,wl1251-has-eeprom:
++    type: boolean
++    description:
++      The wl1251 has an EEPROM connected, which provides configuration
++      data (calibration, MAC, ...).
++
++  clocks:
++    maxItems: 1
++
++  spi-max-frequency: true
++  spi-cpol: true
++  spi-cpha: true
++
++required:
++  - compatible
++  - reg
++  - interrupts
++
++allOf:
++  - $ref: /schemas/spi/spi-peripheral-props.yaml#
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    #include <dt-bindings/gpio/gpio.h>
++    spi1 {
++        #address-cells = <1>;
++        #size-cells = <0>;
++        wl1251@0 {
++            compatible = "ti,wl1251";
++            reg = <0>;
++            spi-max-frequency = <48000000>;
++            spi-cpol;
++            spi-cpha;
++            interrupt-parent = <&gpio2>;
++            interrupts = <10 IRQ_TYPE_NONE>;
++            vio-supply = <&vio>;
++            ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>;
++        };
++    };
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    mmc3 {
++        vmmc-supply = <&wlan_en>;
++        bus-width = <4>;
++        non-removable;
++        ti,non-removable;
++        cap-power-off-card;
++        pinctrl-names = "default";
++        pinctrl-0 = <&mmc3_pins>;
++        #address-cells = <1>;
++        #size-cells = <0>;
++        wifi@1 {
++            compatible = "ti,wl1251";
++            reg = <1>;
++            interrupt-parent = <&gpio1>;
++            interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
++            ti,wl1251-has-eeprom;
++        };
++    };
+-- 
+2.43.0
 
