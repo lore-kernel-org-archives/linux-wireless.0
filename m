@@ -1,154 +1,108 @@
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from out203-205-221-190.mail.qq.com (out203-205-221-190.mail.qq.com [203.205.221.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9A172C3757;
-	Sat, 15 Aug 2026 13:52:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7DE4218AA
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 15:13:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786801958; cv=none; b=E/+P7923Uuks6eYl3MHGhiM0ZXS0DFVh+luDCFZHQq2/L2WsdC7DF0thfuOwxilaeFG1qR/ATWqX1Bh3uco+lyRmFwxDsyrPwcqX451x7KYtVWbnZostR0at1q3aKWrILOSLzC344b7bGo2RxrvZLgfXvEvFXsrdrRrROLgIP2c=
+	t=1786806784; cv=none; b=G3LPJ74BZIum3+UUOr7QBMqYEcCvqDPLfm/snu535Jl2iJjHN0AOiwWCC8Hh1mkT0RpsK6/U3UW0RJmo3qGP+AYAwwiFsb8dVY+RzP2kRPsFGnapIMICPw8uaoOHHRvHdDGTupoZAh2qQEwmexyK5bL5Am2wEfJWu2nIb5U4HsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786801958; c=relaxed/simple;
-	bh=adzBY+vyUPRDkFg3C127280D0dslJ/CDMqjk1ZJcDxA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=lWVkneUGLxXKs7K9dHUhsr/KjBW4vyPielwqVlM/mrJke7T/oURUQOANz0MDIuA72G6urg7NhcODynRroGeKOZ4ESm3VmKa+kLLEBq1UU4jxeDGHPCOTo/2k58dNV92ewHo0nY1kp8I1CIBRw0QjUv6Z6I8GDMOo8xytnbT1k6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-05 (Coremail) with SMTP id zQCowAAXhT8bb4Bq3mvRBQ--.23067S2;
-	Sat, 15 Aug 2026 21:52:28 +0800 (CST)
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
-To: briannorris@chromium.org
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Francesco Dolcini <francesco@dolcini.it>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Ramesh Radhakrishnan <rramesh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Tristan Madani <tristmd@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v2] wifi: mwifiex: validate scan response extents
-Date: Sat, 15 Aug 2026 21:52:27 +0800
-Message-ID: <20260815135227.50392-1-pengpeng@iscas.ac.cn>
-X-Mailer: git-send-email 2.50.1
+	s=arc-20240116; t=1786806784; c=relaxed/simple;
+	bh=AvUuJ7lkE7TwcW1JrjcMnNCY7EGTZcDTXB6tLhSmFZE=;
+	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version:Content-Type; b=Rdvdg47zwVHDo0Acca/9SWHXDr/CVRukszMBC4/++DXPrjr9unc33Ln/xCrsCVx7RP63u3SS99G+MgOSW+Dsi8dhcaOLcaW2Gv3xTObn5qwUyaW09eWShyiedfnzOu3BFM1yUwWzhPm5stWOHUECap38eaGido/fD94hbu9mDaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=o4Usye67; arc=none smtp.client-ip=203.205.221.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="o4Usye67"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+	s=s201512; t=1786806777;
+	bh=FZKulgw6Epf238NDoYfOuRcBGDo3h5LDiPkO20LU4FE=;
+	h=From:To:Cc:Subject:Date;
+	b=o4Usye67paOGyeillslaRTrmw3QYCkpOuOCZ8xXHXs/PQnlcu07z+RpV9PkBsWTmJ
+	 FRri4UWUdlYpUab1PpIJSZmGv0Jl4YEt/psRQKtGbPVE3EdpF054r/3bo8avkxqFYp
+	 EMzmr3zxYv0C7MavOQkL9XL38w6cEe+p9evNUDRE=
+Received: from linux-wireless-email.txt ([117.155.170.226])
+	by newxmesmtplogicsvrszb51-1.qq.com (NewEsmtp) with SMTP
+	id 336A1449; Sat, 15 Aug 2026 23:12:54 +0800
+X-QQ-mid: xmsmtpt1786806774ty3mwbais
+Message-ID: <tencent_CA929E144EEEC926E8CFF32B18ED3A26A907@qq.com>
+X-QQ-XMAILINFO: M6rEOT/Vq/kGbSVX8Tun/ehPY5f3k9dt+2ra/7xvtYWMlORQZ8cGf8AXluONzF
+	 eltVOfjmXBwo63Jm1dDHlx0iaMH3HFz/MWAeRK3tJ0jnaf2QPwT0jRm3VcxeLgoaOWPcpuae4ARZ
+	 mrlbbhJotlvveQygKU1tpdnoKOYjyeBxdHVsCXItv7NAzfoK6ROykc85b1TSo6OZHDwd+ztCh393
+	 WjdHCEwmkq+QxKCYInK0aVTvgicdVerDm0doEGksnZhH030OpPr2eUnJsr5S6uhWc7CvJjYImT0j
+	 H9+zLqL8nxY0BgVuCLlRAkScgWX1x4YtwrEyaoHsCKvrRKiEdW/uZ0eBisb2+ZKRyFUsmAkssjtk
+	 Nv35ZqJ0wMrQtJvRkS6FZae+7coXLQ123aZZfX0/TcDQc+l5ZxjbkfHeagAs/SwcXDScmNTUAXcK
+	 52P2ujU3CQAmB0DAl3qE3XwKrVrgh14S3fFzPXQ0HHmVwmzU7T7fr2RmXauvw62NdgMwtpcTXgtm
+	 vCqSnOuABKpYzAUL31JH15CigXsRhRCJb2nzuhyYVFJi301WZNYSHGyRMMvoG0jsYddAAcc4S1Ym
+	 yJSIXNZFb6mgwvBtQspSeYPLMzedq3Q4XSBpjmCm6HpuvcEP2j4BfSV+tJEm8QQmg8hbTOWCcetz
+	 yupDLmc3ZD0DRJS4CHnFdmDAH6AYwLN6WKCG3tG617tXBpnajVmnfzQnvdetdGC0vRYvNjKVmNY6
+	 y0Kb4zWiooIfGzVBh6qhkCQ/pvMUrbLrOOvtbIJEHaiY6bWtnSYK/jBPJFn/No19VZjFQflpcE2E
+	 Dt0E+AEjevc4Vzmj+yM8PjNyAI2P2eQifwyudfPx5SDLqHlbf1BFC85RXSeLqQAyojCfrqWrxHbN
+	 1bw1cRvHXwf5+4q6Foqa+/LQ5gv1WCtsTQsherrRcsB/j3xCbx1dghpoe0n3JHioiiovavQdaNB4
+	 tuJUgLzzsN6EqxgcCLnyq+B7rkHvHTBXRpoApfea0sEStuaD2qGF1YK3nx3CLVNWyE0GsYwUCugM
+	 WIp2Jetu2b5qAD+kQlZm5vLhdlh9v3iV5tjlbTVSVj+dasssKK3M5GTYXG3YbHjH2ApjCsCh+yLX
+	 WUzRNyrccSggEBQBrD/1CLxgFWhMVUf0NNqrvTpdpX41IUC0b389QO10PVt/3d0gRati8n5S9nLw
+	 z3bs4=
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+From: autumnshiu <autumnshiu@foxmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@kernel.org, ath11k@lists.infradead.org
+Subject: [PATCH] wifi: ath11k: fix QCN6122 UNII-3 channels 149-165 disabled
+Date: Sat, 15 Aug 2026 23:07:38 +0800
+X-OQ-MSGID: <pz-l8-unii3-1786806458770268849-1000@autumn-NucBox-K6.local>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowAAXhT8bb4Bq3mvRBQ--.23067S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxAr1fKFyxWw1rtw1UXF4DCFg_yoWrGry7pF
-	Z0kw1fXr1kJr17Kr4xJF1Fqay5Ka1rXryjkF9rZw1furnIk34rZFWjkFyF9ryYqFsFgr4a
-	9r4qqr1fAr1DZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9214x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
-	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
-	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r
-	4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x0JUL0edUUUUU=
-X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-mwifiex_ret_802_11_scan() subtracts the fixed response fields and the
-firmware-provided BSS length from resp->size without first proving that
-either extent fits. A short response or oversized BSS length can
-therefore underflow tlv_buf_size and make the TLV parser walk beyond the
-command response.
+The QCN6122 firmware reports high_5ghz_chan without the UNII-3 band
+(5725-5850 MHz, channels 149-165). ath11k_mac_setup_channels_rates()
+passes this value to ath11k_mac_update_ch_list(), which marks every
+channel above high_5ghz_chan as IEEE80211_CHAN_DISABLED.
 
-Compute the fixed extent from the selected normal or background scan
-response. Validate that the fixed fields and BSS data fit before deriving
-the TLV extent and entering the parser.
+As a result channels 149-165 (including 5745 MHz, channel 149) are
+disabled on QCN6122 even though the board-2.bin BDF contains the
+UNII-3 frequencies and the regulatory domain covers them. This also
+truncates the wpa_supplicant freq_list, so a 5 GHz STA can never
+scan or associate on those channels.
 
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+Clamp high_5ghz_chan to the standard 5.8 GHz upper bound (5825 MHz,
+channel 165) for QCN6122, matching what the hardware and BDF
+actually support.
+
+Tested on a CMCC PZ-L8 (IPQ5018 + QCN6122) with the 5 GHz radio as
+STA and AP on channel 149/HE80.
+
+Patch authored by V4Pro (DeepSeek Harness), tested and submitted by
+autumnshiu.
+
+Signed-off-by: autumnshiu <autumnshiu@foxmail.com>
 ---
-Changes since v1:
-https://lore.kernel.org/all/20260706092654.79403-1-pengpeng@iscas.ac.cn/
-- narrow this patch to the independent response/BSS extent underflow
-- account for the additional fixed field in background-scan responses
-- leave TSF and channel-band array validation to Tristan Madani's patch:
-  https://lore.kernel.org/all/20260421134938.331334-5-tristmd@gmail.com/
+ drivers/net/wireless/ath/ath11k/mac.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
- drivers/net/wireless/marvell/mwifiex/scan.c | 29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 97c0ec3b822e..256201fff971 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2096,6 +2096,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 	u32 bytes_left;
- 	u32 idx;
- 	u32 tlv_buf_size;
-+	size_t fixed_size;
- 	struct mwifiex_ie_types_chan_band_list_param_set *chan_band_tlv;
- 	struct chan_band_param_set *chan_band;
- 	u8 is_bgscan_resp;
-@@ -2111,6 +2112,14 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 	else
- 		scan_rsp = &resp->params.scan_resp;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -10172,6 +10172,15 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
+ 	temp_reg_cap = reg_cap;
  
-+	scan_resp_size = le16_to_cpu(resp->size);
-+	fixed_size = scan_rsp->bss_desc_and_tlv_buffer - (u8 *)resp;
-+	if (scan_resp_size < fixed_size) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "SCAN_RESP: response is too short\n");
-+		ret = -1;
-+		goto check_next_scan;
-+	}
- 
- 	if (scan_rsp->number_of_sets > MWIFIEX_MAX_AP) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -2128,8 +2137,6 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 		    "info: SCAN_RESP: bss_descript_size %d\n",
- 		    bytes_left);
- 
--	scan_resp_size = le16_to_cpu(resp->size);
--
- 	mwifiex_dbg(adapter, INFO,
- 		    "info: SCAN_RESP: returned %d APs before parsing\n",
- 		    scan_rsp->number_of_sets);
-@@ -2137,15 +2144,17 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 	bss_info = scan_rsp->bss_desc_and_tlv_buffer;
- 
- 	/*
--	 * The size of the TLV buffer is equal to the entire command response
--	 *   size (scan_resp_size) minus the fixed fields (sizeof()'s), the
--	 *   BSS Descriptions (bss_descript_size as bytesLef) and the command
--	 *   response header (S_DS_GEN)
-+	 * The TLV buffer follows the command-specific fixed fields and the BSS
-+	 * descriptions. Background-scan responses have an additional fixed
-+	 * field before scan_rsp, which is included in fixed_size.
- 	 */
--	tlv_buf_size = scan_resp_size - (bytes_left
--					 + sizeof(scan_rsp->bss_descript_size)
--					 + sizeof(scan_rsp->number_of_sets)
--					 + S_DS_GEN);
-+	if (bytes_left > scan_resp_size - fixed_size) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "SCAN_RESP: BSS data exceeds response\n");
-+		ret = -1;
-+		goto check_next_scan;
-+	}
-+	tlv_buf_size = scan_resp_size - fixed_size - bytes_left;
- 
- 	tlv_data = (struct mwifiex_ie_types_data *) (scan_rsp->
- 						 bss_desc_and_tlv_buffer +
-
-base-commit: dac3e89a2c90c2feeb471e1f22a2512ad424b792
--- 
-2.50.1 (Apple Git-155)
++	/* QCN6122 firmware omits the UNII-3 band (5725-5850 MHz, channels
++	 * 149-165) from high_5ghz_chan, which makes the driver mark those
++	 * channels IEEE80211_CHAN_DISABLED. Clamp it to the standard 5.8 GHz
++	 * upper bound so channels 149-165 remain usable.
++	 */
++	if (ar->ab->hw_rev == ATH11K_HW_QCN6122_HW10 &&
++	    reg_cap->high_5ghz_chan < 5825)
++		reg_cap->high_5ghz_chan = 5825;
++
+ 	if (supported_bands & WMI_HOST_WLAN_2G_CAP) {
+ 		channels = kmemdup(ath11k_2ghz_channels,
+ 				   sizeof(ath11k_2ghz_channels),
 
