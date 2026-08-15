@@ -1,79 +1,70 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com [209.85.167.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D04368D4C
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 08:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FB342D594F
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 09:39:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786782814; cv=none; b=dzg7T55joMIP2LGjLjtadfSD9qwPc7JE0ei2a+TXci0EyMd8Wl8OZDONET1kB8LS1T1I0xHUPJo1znb8StD++9ZZnne80CkHOxz9iE03H/77Lfyolj3R4D4KwJ0w1Py9hOCo+C/Qvh26yHHOGt1RmRL6Lp5sovPQit/BhDbTg9U=
+	t=1786786773; cv=none; b=Mna/yesTlH2ojp67j/rEjOMBB0D5COoppdszK8BYR5aK1qTKGeRJKr8Z32S+tJZIO97wJUiwIbvRj9Jh1au3K4dcYN2fz4e7cnD24q4m4n+D7HDIBLh3usmwJLu8jjP6E8XNI64ARp6tI8/sl3zE8zLujR+M2GRSa5XLanJNgNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786782814; c=relaxed/simple;
-	bh=O3pMtBEmXEanZNQxxBczcnzItFMFemOxd1WChVtlbXs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T2nk6koW7sqP+IsC8N2Jonuqh7bzNf9TGz64S6WKpo9anXbAB3vLb8tSc9aMH9pY3dpfwMH8fHvSdbED7wEg3JuNJP+7tD63ISBQF39cci4EOSuDa8TBuB9KDubTuqmcu27k5FpCcmynmt4W5p5H8MF3vzDQyAoaoMnqOASypeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=o7GLOYrG; arc=none smtp.client-ip=209.85.128.50
+	s=arc-20240116; t=1786786773; c=relaxed/simple;
+	bh=CI0QIMmHQhXYmipUnZ4obBPXirDkukhV2/mM2zGuyOk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eV8uaKdzUG6fd6BlfrJSpX8b7Gel0DeliKEWGewH8In5F4ETfQLlU9tBzPktARvrNZH3Hfw6qdvEHTLw1R2wC6ffBC8F6YRiusu8HTHZNTHeciqpGv7eplMZq1+mPNecvDt6iJNN7YOHWonKMZtEQg0HQ4ytEUn7XARtGjPw4+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QpA0c7vE; arc=none smtp.client-ip=209.85.167.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o7GLOYrG"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-49557167508so16959185e9.1
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 01:33:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QpA0c7vE"
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5b021916bd3so2362707e87.3
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 02:39:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786782811; x=1787387611; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786786770; x=1787391570; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Yht8Yw3sMnFHO9DzWevf1YnwdQDpdoW5JTYhNzme8ao=;
-        b=o7GLOYrG4rdKLzRf0YdHE0CxYoqT8oc0qd4u173c5a+HNsHVuMpjigjB5exP2YF1T1
-         NdX23WmBUlRtqDF/UDoPHCE9PlWx67P1UpGuLV4RNI9YX9cVPTAzSaw40ZKrdqV+a/qM
-         TcQdSwZeEQ5RjB8OwQfaSAd/oJoYDnOiWLeChvv9p0rlggAVzjxEnErO8+m/5UG05yWT
-         iM7hxlx+LWBSmleQDLzlaQ9xtJJm/q6tLDBVaGUju//Ik2rQJVTnuLN3rYd+qd8ktCMt
-         ZRvImLgCdTZWgCmZz4X6AXAUwawCkeC6V+6WZRoRGOT0bfNMl4i9j3v08bKdovyNyZ8g
-         oyHA==
+        bh=Wu3vmS60bFGjaB0EqV/uEdj+HM7TnRWaMX7yzwT7SDM=;
+        b=QpA0c7vEMbxSAbFkXNQQqFRlBOxvnQvPvmYKYJhch+XkXXfhl7TzuZBfGv87KN7ouq
+         JIb6KpRU7Iq/pjT2VrTttMq5wUo4IoqtwIgzA2ZbbHXRPiYZno8WGTo/l6t7qdXdEnI8
+         pRnz4ahAFGRXFNH7XYvLFOn1Iyk07m+lguWo02cSpt8mp49YIR44Dis0ebKw08ccZseF
+         QtuDY6uFdZ3DQorr8mKw9B1PVIGp2IuJVYXrRmYqiUl81byGr6XFj+oGOV/CdY75A83/
+         rkraOM8BafCANzVbEJTvwWY37ltDdHJghqQBbZI4hZS0GNOqaYmAqwZ0Zrqftp6gUQtj
+         mQRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786782811; x=1787387611;
+        d=1e100.net; s=20251104; t=1786786770; x=1787391570;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Yht8Yw3sMnFHO9DzWevf1YnwdQDpdoW5JTYhNzme8ao=;
-        b=BCFMlAs1DTMR7YrTByXpT3w2dwv10rF0akJfOueKCQDGNPk7DsoT8crAZiMG15qr3g
-         WNR9Q8V+VWOP0Ti2+XmrZ5n3DktaFFAEE1LJbemkS5kLkexvVSSvZ4+cXXbGR8OMI+Je
-         THnFsMpHUy9RyeMibbV/yaUOYo3zS4aUHx5mK27Q3kKn6hH+8mNRwLAH7l1dIUI5vos4
-         VDCxKaHdWDwU7dUk6B+fsxZBtJ9qWBFB0FXNAEScSbmZ/mRXUyOXCDptkuVa+Fd6e5XO
-         wfq+2LRp0QXaqm46Mqvw+Cuv8fvdUoxSmHxfz+Jaki6JvdUOyI+YsA9ryIH9rr3GzpBs
-         5eUg==
-X-Forwarded-Encrypted: i=1; AHgh+RoBlDhlr64XTgP+2UsJGu8Q6cOe6LPaL9F1RGcEZ1s8P5tz6CdvDIrzOgqldB822l/aH62qoZtmMKQcn7hILA==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw8OuLTaC+AvfyGKhnNpBMhD8iETVc15vhMIVnFhJLYwa8Rcisq
-	8Zn8GEp9bk2deL7wLuX6H2s/2OxCFKQktMKiVN862o6J+hp6tspfaGzO
-X-Gm-Gg: AR+sD12gvaSxCwDymUnrtbWQd5TnI2iJywM0ex5WwVmwwHpQ09M4tHrs4GSygHbRVnC
-	YW4WJ4PIhNvvYYUnUB3yGW9KofXqBF5YCuR2dY91uU6K4tDWt2x4EPkR1QQi5Yb58pCTQtYo5JF
-	wV7IT4IL3aAdRZLu74HsFSv3KRw4Xml7LUmeN+ulf2wzhwYcIe25tMMlv3I1BNmPIcFoy3YL9DM
-	A/nzylf4ls1C8t1CxSqoLkbbG6VSWefEL//yptZKn634H0zXAr2Xn+gukBZpq2MSFLFkH9CyRyO
-	suL+8++Pjd93IAiQeZRn0RjdFU5n5x1bcgaU8CW/u3pVTEDdPiOMkUuU7pEy8tLVFcsDh6kaYUx
-	/denLz6H1+J2lLatAuI5alVE3zS/bDJVaYOP5ES9QJ+2IjnfQY9OCPbYiQ84GxYmB+xHhfmXSnS
-	KdHXMAjx3r72pLvSx5swkwfFBLJYlT6Vz8CTBAZwhbRPb3tvUgstAn8ajiXDAs3wi7zNX6eyvqa
-	Yx3inT60xxB31kg9l+loDFha7qrWz1QlyUBAMONQA==
-X-Received: by 2002:a05:600c:228e:b0:495:4e1d:82df with SMTP id 5b1f17b1804b1-499879774bamr118261605e9.10.1786782811137;
-        Sat, 15 Aug 2026 01:33:31 -0700 (PDT)
-Received: from localhost.localdomain ([82.137.32.242])
-        by smtp.googlemail.com with ESMTPSA id ffacd0b85a97d-4815f2ccc00sm14498418f8f.35.2026.08.15.01.33.29
+        bh=Wu3vmS60bFGjaB0EqV/uEdj+HM7TnRWaMX7yzwT7SDM=;
+        b=EFjaueoUc3XCcc95SNrUxOtgcuk3lc6572FUEfrPk9kUzL0JDWUhbJTXQLWt9vJq0C
+         w1fD7lLPuHFhS93TiBRuDeT49ZUfOJJIHcfKZQSfdLDtKvgeVquhLPU6QEXHnr1C8nFd
+         2EzTXNV0ulEssRAJIYbZg/JhfPDivIaHw7qL0nst3uZagSi2/D1Locq6juV3vPNeYbYA
+         kBWHPheJta/PPvPt33yes4jZ/d34Fu7sHMU545uT6Lh4xWSoKgtX5y5BRe9dNl0oAYyw
+         WtIUn6M3VoLX4ZqyIXXg1y+rPPR4rSduoyrv5NmJlSSBCy7gvdPMwGyhmNBpApa558kN
+         jK6A==
+X-Gm-Message-State: AOJu0YwvIo3J27KD4/JwaUQqvCOU6GbTt3be/TVZJyPcH9Xrz2bLohme
+	bJorSM/BNzoP1gh0xXG8guAGRiiNAFhf6VCnMQm2uDIhnItnrRxj8ybX
+X-Gm-Gg: AR+sD11xgSQN8XEBA+D5Xqf5ZvUOFaKoNS80Rp1/Ha+9CtQAr6eKHIwSfXfz/4jqI7e
+	ha1xAIbOZ6tedXD8hZwK8OQWO3z8CPi3eEwDmUxdtbGIjuv7hYM7DC6siqKWxxE8d9XutT2L/Lk
+	hGOSGJNUOztGOKtuLO3Hfr0WKd9Nu5audjRA//RDNr91FoNlvYHhHteEV5nCMkztil2IDKkBYVz
+	uQs/Y7t2O110c8amaiqjsbfcdcOnQ6E217Bu+KyPcChauO5bOPYEAYp/EtglQfu5v438yh8gr/q
+	hoH2H77twoDEF9myYBl+aYGHiORVyw5AcE5TloFw9d3py6jJbU5RpsFND69P4WvuUx4bIXOHTdt
+	HJVbb+g4B1bYMkpj4XmVrbyFoeGQBXkQrwSLMbpElttGhm7yf8fxEB9PH/acDY+f3t+tpM5zzYo
+	EjJwhcPHBAszo/lA20r1boY0NAVU/uOe3gHiLHQ51gwM509B2Hmi64GwO9pyRw7EggyVxuHZAxq
+	QOXqhF5XgPj1i26ayqhMDGx46N8C5Brl26FJd2HdFt3cFdeSogCMbEdt77Jp34ziWDIGEQK
+X-Received: by 2002:a05:6512:8344:b0:5b0:1b78:495d with SMTP id 2adb3069b0e04-5b459118b21mr1156022e87.24.1786786769962;
+        Sat, 15 Aug 2026 02:39:29 -0700 (PDT)
+Received: from archlinux ([94.180.44.22])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b458bedf9fsm1040316e87.46.2026.08.15.02.39.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 15 Aug 2026 01:33:30 -0700 (PDT)
-From: Eduard Bostina <egbostina@gmail.com>
-To: Conor Dooley <conor+dt@kernel.org>,
-	devicetree@vger.kernel.org,
-	Eduard Bostina <egbostina@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Sat, 15 Aug 2026 02:39:29 -0700 (PDT)
+From: Arsenii Pashchenko <ulijg308@gmail.com>
+To: pkshih@realtek.com
+Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Rob Herring <robh@kernel.org>
-Cc: daniel.baluta@nxp.com,
-	simona.toaca@nxp.com,
-	goledhruva@gmail.com,
-	m-chawdhry@ti.com
-Subject: [PATCH] dt-bindings: net: wireless: Convert WL1251 to DT schema
-Date: Sat, 15 Aug 2026 08:33:26 +0000
-Message-ID: <20260815083326.2146602-1-egbostina@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	Arsenii Pashchenko <ulijg308@gmail.com>
+Subject: [PATCH rtw-next v6 0/3] wifi: rtw88: rtw8822c: refactor DAC IQ calibration to s32
+Date: Sat, 15 Aug 2026 16:39:21 +0700
+Message-ID: <cover.1786784750.git.ulijg308@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -82,194 +73,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert the Texas Instruments WL1251 Wireless LAN Controller bindings to DT
-schema.
+This series refactors the Digital-to-Analog Converter (DAC) IQ
+calibration routines in the rtw8822c driver, eliminating legacy
+unsigned workarounds in favor of native signed math.
 
-During the conversion, the following updates were made:
-- Added the 'clocks' property. It was missing from the txt binding but
-  is used in device trees (omap3-n900.dts).
-- Added 'spi-cpol' and 'spi-cpha'. These were present in the original
-  txt binding's example but missing from its property list.
-- 'vio-supply' and 'spi-max-frequency' are no longer required. The txt
-  binding listed them as required, but they are only applicable when
-  the chip is connected via SPI.
+The original code heavily relies on unsigned 32-bit math mapped over
+a 10-bit circular hardware register scale centered around 0x200. This
+introduces complex nested boundary checks, custom bubble sort rules,
+and custom min/max tracking helpers.
 
-Signed-off-by: Eduard Bostina <egbostina@gmail.com>
+By migrating the temporary stack arrays and signatures to signed s32
+and utilizing the kernel's FIELD_GET_SIGNED() API, the coordination
+system is linearized. This allows the removal of internal custom
+helpers, collapses unsigned wrap-around logic into standard linear
+operations, and enables the drop-in integration of the kernel's
+native heapsort library.
+
+The series is broken down as follows:
+Patch 1: Introduces GENMASK constants for register fields and replaces
+         manual bit shifts with standard FIELD_GET() macros.
+Patch 2: Converts stack buffers and function signatures to signed s32,
+         switches sampling to FIELD_GET_SIGNED(), and straightens out
+         the validation windows and hardware offset mapping.
+Patch 3: Replaces custom bubble sort logic and unused helpers with a direct
+         call to the kernel's native sort() library using a safe,
+         overflow-proof relational comparator.
+
+AI Disclosure:
+An AI assistant was used for source code analysis and conceptual
+consultation regarding the signed math transformation. All code
+modifications, final implementations, and refactoring steps were
+written, reviewed, and verified manually by the author.
+
+Testing:
+- Note: The author does not possess the actual rtw8822c hardware. Actual
+  throughput and runtime performance verification is left to the vendor
+  or community testers.
+- Every patch in the series was verified with scripts/checkpatch.pl
+  and yielded 0 errors and 0 warnings.
+- Each patch was sequentially built (bisected and compiled) to ensure
+  there are no compiler warnings, pointer type mismatches, or broken
+  builds at any intermediate step.
 ---
- .../bindings/net/wireless/ti,wl1251.txt       | 64 -------------
- .../bindings/net/wireless/ti,wl1251.yaml      | 92 +++++++++++++++++++
- 2 files changed, 92 insertions(+), 64 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
+Changes in v6:
+ - Noted lack of physical hardware for throughput testing in the cover letter.
+ - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
+ - Optimized the min/max search loop in rtw8822c_dac_cal_iq_search() by
+   starting from index 1 since index 0 is used for initialization.
+ - Reverted an accidental change that broke the compilation.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-deleted file mode 100644
-index 88fd28d15eac..000000000000
---- a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-+++ /dev/null
-@@ -1,64 +0,0 @@
--* Texas Instruments wl1251 wireless lan controller
--
--The wl1251 chip can be connected via SPI or via SDIO. This
--document describes the binding for the SPI connected chip.
--
--Required properties:
--- compatible :        Should be "ti,wl1251"
--- reg :               Chip select address of device
--- spi-max-frequency : Maximum SPI clocking speed of device in Hz
--- interrupts :        Should contain interrupt line
--- vio-supply :        phandle to regulator providing VIO
--
--Optional properties:
--- ti,wl1251-has-eeprom : boolean, the wl1251 has an eeprom connected, which
--                         provides configuration data (calibration, MAC, ...)
--- ti,power-gpio :	 GPIO connected to chip's PMEN pin if operated in
--			 SPI mode
--- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
--  for optional SPI connection related properties,
--
--Examples:
--
--&spi1 {
--	wl1251@0 {
--		compatible = "ti,wl1251";
--
--		reg = <0>;
--		spi-max-frequency = <48000000>;
--		spi-cpol;
--		spi-cpha;
--
--		interrupt-parent = <&gpio2>;
--		interrupts = <10 IRQ_TYPE_NONE>; /* gpio line 42 */
--
--		vio-supply = <&vio>;
--		ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
--	};
--};
--
--&mmc3 {
--	vmmc-supply = <&wlan_en>;
--
--	bus-width = <4>;
--	non-removable;
--	ti,non-removable;
--	cap-power-off-card;
--
--	pinctrl-names = "default";
--	pinctrl-0 = <&mmc3_pins>;
--
--	#address-cells = <1>;
--	#size-cells = <0>;
--
--	wlan: wifi@1 {
--		compatible = "ti,wl1251";
--
--		reg = <1>;
--
--		interrupt-parent = <&gpio1>;
--		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* GPIO_21 */
--
--		ti,wl1251-has-eeprom;
--	};
--};
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
-new file mode 100644
-index 000000000000..1f46f1235035
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.yaml
-@@ -0,0 +1,92 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/net/wireless/ti,wl1251.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Texas Instruments WL1251 Wireless LAN Controller
-+
-+maintainers:
-+  - Eduard Bostina <egbostina@gmail.com>
-+
-+properties:
-+  compatible:
-+    const: ti,wl1251
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  vio-supply:
-+    description:
-+      Phandle to the regulator providing VIO. Required when connected via SPI.
-+
-+  ti,power-gpio:
-+    maxItems: 1
-+    description:
-+      GPIO connected to chip's PMEN pin if operated in SPI mode.
-+
-+  ti,wl1251-has-eeprom:
-+    type: boolean
-+    description:
-+      The wl1251 has an EEPROM connected, which provides configuration
-+      data (calibration, MAC, ...).
-+
-+  clocks:
-+    maxItems: 1
-+
-+  spi-max-frequency: true
-+  spi-cpol: true
-+  spi-cpha: true
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
-+allOf:
-+  - $ref: /schemas/spi/spi-peripheral-props.yaml#
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    spi1 {
-+        #address-cells = <1>;
-+        #size-cells = <0>;
-+        wl1251@0 {
-+            compatible = "ti,wl1251";
-+            reg = <0>;
-+            spi-max-frequency = <48000000>;
-+            spi-cpol;
-+            spi-cpha;
-+            interrupt-parent = <&gpio2>;
-+            interrupts = <10 IRQ_TYPE_NONE>;
-+            vio-supply = <&vio>;
-+            ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>;
-+        };
-+    };
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    mmc3 {
-+        vmmc-supply = <&wlan_en>;
-+        bus-width = <4>;
-+        non-removable;
-+        ti,non-removable;
-+        cap-power-off-card;
-+        pinctrl-names = "default";
-+        pinctrl-0 = <&mmc3_pins>;
-+        #address-cells = <1>;
-+        #size-cells = <0>;
-+        wifi@1 {
-+            compatible = "ti,wl1251";
-+            reg = <1>;
-+            interrupt-parent = <&gpio1>;
-+            interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
-+            ti,wl1251-has-eeprom;
-+        };
-+    };
+Changes in v5:
+ - Fixed a typo in the subject prefix of patch 2 ("fi:" -> "wifi:").
+ 
+Changes in v4:
+ - Flattened the series from 4 to 3 patches to avoid intermediate broken
+   states where sign-extended variables interacted with unsigned check
+   logic, ensuring 100% clean bisectability.
+ - Leveraged FIELD_GET_SIGNED() for modern, native handling of 10-bit
+   signed hardware entries as suggested during review.
+ - Shifted definition of register field masks from the .c file into the
+   shared rtw8822c.h header file according to subsystem design patterns.
+ - Stripped out custom rtw8822c_dac_iq_sort() wrapper, invoking the
+   kernel sort() library directly inside the main calibration search loop.
+
+Changes in v3:
+ - Corrected the subject prefix target tree from wireless-next to rtw-next 
+   as requested by the maintainer.
+   
+Changes in v2:
+ - Fixed missing target tree name in the subject prefix (switched to wireless-next).
+
+Arsenii Pashchenko (3):
+  wifi: rtw88: rtw8822c: Use bitfield macros for DAC IQ sampling
+  wifi: rtw88: rtw8822c: Convert DAC IQ calibration path to signed math
+  wifi: rtw88: rtw8822c: Replace custom DAC IQ sorting with kernel sort
+
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 155 ++++++------------
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |   3 +
+ 2 files changed, 49 insertions(+), 109 deletions(-)
+
 -- 
-2.43.0
+2.55.0
 
