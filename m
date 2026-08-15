@@ -1,128 +1,117 @@
-Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E66B332779D
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 16:59:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C0023264DA
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 19:06:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786813200; cv=none; b=d9tPXv/2rdVYR2GKc6FJPpTnKhJbxmysPdjxyUN4ofwb4Z+BoXLUIhJrN/bWgBCk60uP++iYSzxTqCaspm5yOmALhiCiJLT9PNEQ4aGuO59pWBV4M4mIMWgWvN7QgxhsHMzyRNsDuXj+T9iHu2BEeI++OsJ35W+dAh+4CREWDek=
+	t=1786820772; cv=none; b=ZyUdPtCL0cW8TLlLFnh8fxIZYLwhVudqQ6jkjVNmYhRm/gKAg8J6Cn9l2TUfd1zfN8hTmV7x6vAnI3ny/uwpjculriJOuGDfzJ6yF+s48GhUFsxkn/BWUDw9MMGKiuIZAMFe9pLb5PFqTVhgAHOsAUBJGv2qMZaWa40aW6/C+p0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786813200; c=relaxed/simple;
-	bh=hk8ey2BiC+ojmYOxKlXaJZgRJXTiWL54rqZdd/V98p0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=r//Ei70Er6s8GEf/VU4pUK76Wr+VbAEeBWzZl9pSfNNXMvBcJ90rPjnZTSHfjcwTmLLTpyTbXLpcXC/rq5t2yoIxC0tXRTbRC87DMG5V7mwuFjgvXrJpVXqNJQl37QGoT8YYRGWzN4eEoBhvDfCEXOm0RrzMHvZAxEd2dLy4xco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jMfRVYie; arc=none smtp.client-ip=209.85.167.44
+	s=arc-20240116; t=1786820772; c=relaxed/simple;
+	bh=kc5EjbGES34mSo/y1zV3VR+mWn7CQtser0vdFBZB8mI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TT2Us14NxO34pWDG2fNjJRDg3T6R5Vtxw7xJa+8W8Egyn0fVNbh/pZSue6heiMKOSTgx47l5m4ovCtLStzgXP5eSX5/7M4gdS652CdwhSiENv6OQCQkw985j4eexXmiapWoWdcCZoy4tuftanxGC4tACtbunDbInibGJ15kOcNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i5T2SPjD; arc=none smtp.client-ip=209.85.208.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jMfRVYie"
-Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5aebd52488cso2164871e87.2
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 09:59:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i5T2SPjD"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-39f927721f2so13168051fa.0
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 12:06:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786813197; x=1787417997; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=vo0gH5walmOuH9TG7vKE8plLHSq7YWG1GGcACj/aHik=;
-        b=jMfRVYieVSeIk81PPacHcktuUqySQmbZqEsbp256ge9rl7ht6LhY9SqrrbE+y04Maa
-         v0AJYcROCKrvVCJVvnpPcVnAMDNYmSq8VlAff6QSd7I5GYS35LyOzsr7zROJdyFNj4je
-         LNOkW/o+l36llRkNZ4w5wrHmMGWm8daJrO8WDRiLeh/fTY/zH7ScHHzq2QsbA1Pt12vD
-         RNcst31OPTFmY1eRkoiGDKYuMaNID5vKx2PchWYCWgWqr7dYmmlZExtSgVDxYL2rCpos
-         i2JrnDj22Bb3MlhUWZnJrRHL5fn3N/hXoRy6JNApXmauJLsW4wOaSp9M+PZkk0KJVX+a
-         c1Ew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786813197; x=1787417997;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20251104; t=1786820768; x=1787425568; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=vo0gH5walmOuH9TG7vKE8plLHSq7YWG1GGcACj/aHik=;
-        b=LRTWX+fY4eYyLSAxx8DYLml4ucyxcO/YcJdG3hdBFZY6WVwBTjRpUPASYfKPTZto6w
-         BwprmPop0G4Pr9jjsiyLwrq6FBEyPpip/52VFqSkPDiYrp/wZBKQzSgHxp27cZeYhm6F
-         AwNKBdTe5nnfG7FReS5iPazV0bciDOnO7THHO5XRmVOY3ku4iS681wMEG6J8/sV9halJ
-         SFqYpBmXd4or7w64YcIPzfOe8ddwtEL306U/eJICWqC5q7O4/N0XVf6J0CsmcxahnmjG
-         08Gh+6WqFS36/3g9WcSvzMXPb63tDUsyv7ZXHZ7GofYAAUFs5jIdYoz8H4+923Eg0cNl
-         JfBg==
-X-Forwarded-Encrypted: i=1; AHgh+RrAFOPZwmjVIxLvMOu1dITmtyyXPv89hBokti6LSlI/x6+c2Vu2epnxN/zmXYnh4Q92EiNSYZX7DIwxDhnmQA==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxLzP+qj7AeJZdW3EqQeuoQD7Oevqu9J72i/nY01z2rJ0Id2PUV
-	uF2b+y263rTPZrZcSOWVS60nhticHmeVQV3lwYtnQw7eUyIApWz7NG5B
-X-Gm-Gg: AR+sD11OfQnS6YJyRXBh4/nQG2/jz+LdLgIc30szVTenSjYRyb3leEjPc/K2/WAsyNq
-	ck4d4OdYm2O6zkmURwsdX0BDyQhWO2e7BPkSuYUFPXiHNIitL9LwH29FqgVvHH/hUdqJqcHJofU
-	Yppbzur14QHE2X+Dvctz2jebVIgW1F70QK3kOmyItKCCjYVBdwUWTBGZfZRt3TkrTvHz5j1NtbG
-	r4mJZe2DGOrs2Adl9GS5oR6iObRY9jEc2CH2ksTP7xMmI4GxawVhO9DtdLl7O5YJ+1H7CXo+HKD
-	x6jz6Gpa5WTj7J8i8evMG1mHaXP409iWf5mMHRP4Y77hlx2e3nsPdNpQ943dsNMbNk2RQTvJY2C
-	7DT2+cASciQMjd0lcGggInpPff7d94p7UQAcg1g4qFydHB/McSjFfuA4P7sjhDMn/R1qx4OJb6R
-	iTs/ffImCbXKUWZnU6IJhf3KaIKR+xXwb49to8gBIjmFOrkmUMR0J2IioxB4ZXdJfkoeqcSzXhv
-	LxtqW2ElRfFj2t38Cc91HHs/LrnZ2O+0yc=
-X-Received: by 2002:a05:6512:3043:b0:5b4:5352:e2da with SMTP id 2adb3069b0e04-5b459109648mr2103872e87.6.1786813196636;
-        Sat, 15 Aug 2026 09:59:56 -0700 (PDT)
-Received: from localhost (host-80-73-162-2.rev.as20985.net. [80.73.162.2])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b458b9a9bfsm1274885e87.6.2026.08.15.09.59.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 15 Aug 2026 09:59:56 -0700 (PDT)
-From: Andrey Golovko <andrey.golovko@gmail.com>
-To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Cc: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
- Thorsten Leemhuis <regressions@leemhuis.info>,
- Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
- Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
- Sean Wang <sean.wang@mediatek.com>, Bert Karwatzki <spasswolf@web.de>,
- Devin Wittmayer <lucid_duck@justthetip.ca>,
- Eric Biggers <ebiggers@kernel.org>,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- Linux kernel regressions list <regressions@lists.linux.dev>
-Subject: Re: [PATCH wireless] Revert "wifi: mt76: Disable napi when removing
- device"
-Date: Sat, 15 Aug 2026 20:12:00 +0300
-Message-ID: <20260815201000.9134-1-andrey.golovko@gmail.com>
-In-Reply-To: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
-References: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
+        bh=zXa2pyaIn29H9lp2gAhozozTffFlsxZSuqo0RAIo6mc=;
+        b=i5T2SPjD8Tr9gZeilP2pwgEM0MjcIbRA2pvTObgnEc7MUCF3jwaelySijLLdC/bxNp
+         hJjUGAAnXbKZrTrW4vxv1YKLvUpolqdSkwHugEFvXgf4uWVOWuHNyWIJQz3zhVmcKRCt
+         Fj0komMBTqZDx1m5XfYC5LkKSHi3HmKkzQKZZsKMY7Rcopue5oNIA2TJEqSL9LkJngI5
+         kBkjSl22OxNZEtFYKW6JC6KMdmKjtLe0IRB+DrBdI7jW3guonloiU6lw3AexTYs47Y69
+         vvLSd2oE2HEBQYo+PhgUQRiI8J5Vx6zZhYCI9A2LP2ZC1BWrMj0i7OLL7u+1vGExHHLf
+         iOWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786820768; x=1787425568;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zXa2pyaIn29H9lp2gAhozozTffFlsxZSuqo0RAIo6mc=;
+        b=BTrf+1Bc5peWfvivX5ffndo7Iz6IUcl3lGWkpa8U3hFc+uWT8au8n4EUa/533b2+8U
+         NhzQlmXgM19jIay7L5p11M5/puO0WO+w0LAwB7++BNm9l3gpdxUJwzvmdb0w7kW90Pdz
+         /rlriNcE5Gbh+Z6Rdprdatpvx8l4TS4Qm+GdFrcd1zOxtgPgeZ8joQsjb/Jc5zXK1SXe
+         HzmdXLOBssEfGvx4tWYqsKlPaMulSpVZoAyWnkgbVwffeucLJgMa4DM3zbjBu3wftUnc
+         98Lghh/rPb1G//1euXYS5IRmFH0V8CTI5spm6NsYp21ydeUv5hc5Y1UISqIMc62dBfls
+         rmhQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpFzkChqD+wmWSLNANH1/tfHHP7G0oZd8OXqjF0WV5//tBEjxNlIbPNixYM+tJ74DH41i57eCtwvsrBKWqtRg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxo1rU/da/2PKR8BzUJgIvEC5R5MV+EbJMM7ArQJs/dFO/6djsj
+	vJye0WLXGulFowLLQt9mBZjOsVuGNHylBEOa60FcSF9nDMZqxTPBpmFY
+X-Gm-Gg: AR+sD13wZs5mDMFta46/Fhv7be9nSuyJyOkbvdUgfE/tqAtF0wbkrlOUkYASlfdqMoz
+	OMx7UZ6we+W43J7At6i7e58PkbJi4ac6EGbs95TNivk+vN3MzOmoJjWx8qLDhNSur75CQOmL/vn
+	MZEWe8/OTgSwqE/gHUYIwqm97oJFHMtb3yG9Y3PBLMrQtgKrCvc7ytEd5o3GZU1eQht5QkvAStn
+	YyUNfXbj4m7kbnf1nz3HGi3F33QNeKF75pnWSo8OPc1sil/IDW9i1R1tUvXZDddyfkJFP1qHQ9o
+	caUIbiR0mtchS2iu0zLIAZRS+/l30/5koDy5BVOTNeN3ecfQAAdLdu4iKO0Z9N+gmu0fqqHsuB1
+	qBnyWhMEPxUahBDc05/LqZqKXuFD4FtIEmrEzrv2jHRMCZb7rqOww5JXw9J+I5AN53n7dGRKjuL
+	tM6Rf2FxQE0Q2PKu+mOENohZ7vOo106US1as7TyzzvvDK6EbsahdxMx1dX/M+LFxsHTjb75PDxv
+	Wv2cuqEzbZOQFntkk0l/KP7f4HTRoXtDGdewBUcmvGTDSJpWqDbPsNUzYU0TT3SMzZJ+BSCsYAB
+	xhiSiIaMYFdKNZMTBrsPvnat2Q==
+X-Received: by 2002:a2e:a58d:0:b0:3a1:110e:a999 with SMTP id 38308e7fff4ca-3a13280dd73mr14816401fa.29.1786820768303;
+        Sat, 15 Aug 2026 12:06:08 -0700 (PDT)
+Received: from ?IPV6:2001:14ba:ee:4e00:66c2:a7fd:8a9a:ffb5? (2001-14ba-ee-4e00-66c2-a7fd-8a9a-ffb5.rev.dnainternet.fi. [2001:14ba:ee:4e00:66c2:a7fd:8a9a:ffb5])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a130d1b40fsm13859701fa.37.2026.08.15.12.06.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 15 Aug 2026 12:06:06 -0700 (PDT)
+Message-ID: <16f4452a-97e4-4aa8-a64b-909334104358@gmail.com>
+Date: Sat, 15 Aug 2026 22:06:04 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] wifi: iwlwifi: fix spelling mistakes
+To: Mouri <mourimcbusiness@gmail.com>, linux-wireless@vger.kernel.org
+Cc: miriam.rachel.korenblit@intel.com, johannes.berg@intel.com
+References: <20260814130246.25259-1-mourimcbusiness@gmail.com>
+Content-Language: en-US
+From: =?UTF-8?B?SGFubmUtTG90dGEgTcOkZW5ww6TDpA==?= <hannelotta@gmail.com>
+In-Reply-To: <20260814130246.25259-1-mourimcbusiness@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-Tested-by: Andrey Golovko <andrey@golovko.me>
+On 8/14/26 4:02 PM, Mouri wrote:
+> Fix several spelling mistakes in the iwlwifi driver documentation
+> and comments.
+> 
+> Signed-off-by: Mouri <mourimcbusiness@gmail.com>
+> ---
+>   drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 2 +-
+>   drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 6 +++---
+>   drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 2 +-
+>   drivers/net/wireless/intel/iwlwifi/mvm/sta.h       | 4 ++--
+>   drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 6 +++---
+>   drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 4 ++--
+>   6 files changed, 12 insertions(+), 12 deletions(-)
+> 
 
-Third machine, third form factor: an ASUS ProArt PX13 HN7306EAC, AMD
-Strix Halo, MT7925 on PCIe (14c3:7925, mt7925e).  Kernel is v7.2-rc6
-plus unrelated ASoC patches, so the regression is still there in rc6 and
-rc7 - the 7.2 release is about to ship with it.
+Hi,
 
-Before the revert: every poweroff and every reboot hangs after the
-displays go off, machine stays powered, only holding the power button
-recovers it.  'modprobe -r mt7925e' hangs the same way, with the stack
-you posted:
+The spelling fixes look good to me.
 
-  napi_disable_locked+0xe9/0x100
-  napi_disable+0x25/0x50
-  mt76_dma_cleanup+0x178/0x370 [mt76]
-  mt792x_dma_cleanup+0x8f/0xb0 [mt792x_lib]
-  mt7925_pci_remove+0xd7/0x1a0 [mt7925e]
+There are a few additional spelling mistakes in the files,
+if you want to check them while at it:
 
-After the revert: five poweroffs and one reboot in a row, all clean, and
-'modprobe -r mt7925e' returns immediately.
+   drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c on lines 2900, 4005
+   drivers/net/wireless/intel/iwlwifi/mvm/scan.c on line 3444
+   drivers/net/wireless/intel/iwlwifi/mvm/tx.c on line 500
 
-One thing that may save the next person some time.  The hang is silent -
-no watchdog fires, and here even the panic-on-stall sysctls were all set
-to 1 by kdump-tools, so hung_task_panic could not catch it either.  But
-device_shutdown() prints "<device>: shutdown" before each callback when
-initcall_debug is on, so booting with
+Your Signed-off-by could include your full name.
 
-  initcall_debug nomodeset
+Reviewed-by: Hanne-Lotta Mäenpää <hannelotta@gmail.com>
 
-names the culprit on the console: nomodeset keeps amdgpu from taking
-over the framebuffer, so efifb survives to the end of the shutdown, and
-the last line on the screen is
+Best regards,
 
-  mt7925e 0000:c2:00.0: shutdown
+Hanne-Lotta Mäenpää
 
-with no "reboot: Power down" after it.  That points at the guilty
-.shutdown callback in one boot, without netconsole and without a serial
-port, which on a laptop is the difference between diagnosable and not.
-
-Andrey
