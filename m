@@ -1,56 +1,82 @@
-Received: from out203-205-221-190.mail.qq.com (out203-205-221-190.mail.qq.com [203.205.221.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com [209.85.167.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7DE4218AA
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 15:13:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E66B332779D
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 16:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786806784; cv=none; b=G3LPJ74BZIum3+UUOr7QBMqYEcCvqDPLfm/snu535Jl2iJjHN0AOiwWCC8Hh1mkT0RpsK6/U3UW0RJmo3qGP+AYAwwiFsb8dVY+RzP2kRPsFGnapIMICPw8uaoOHHRvHdDGTupoZAh2qQEwmexyK5bL5Am2wEfJWu2nIb5U4HsU=
+	t=1786813200; cv=none; b=d9tPXv/2rdVYR2GKc6FJPpTnKhJbxmysPdjxyUN4ofwb4Z+BoXLUIhJrN/bWgBCk60uP++iYSzxTqCaspm5yOmALhiCiJLT9PNEQ4aGuO59pWBV4M4mIMWgWvN7QgxhsHMzyRNsDuXj+T9iHu2BEeI++OsJ35W+dAh+4CREWDek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786806784; c=relaxed/simple;
-	bh=AvUuJ7lkE7TwcW1JrjcMnNCY7EGTZcDTXB6tLhSmFZE=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version:Content-Type; b=Rdvdg47zwVHDo0Acca/9SWHXDr/CVRukszMBC4/++DXPrjr9unc33Ln/xCrsCVx7RP63u3SS99G+MgOSW+Dsi8dhcaOLcaW2Gv3xTObn5qwUyaW09eWShyiedfnzOu3BFM1yUwWzhPm5stWOHUECap38eaGido/fD94hbu9mDaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=o4Usye67; arc=none smtp.client-ip=203.205.221.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
+	s=arc-20240116; t=1786813200; c=relaxed/simple;
+	bh=hk8ey2BiC+ojmYOxKlXaJZgRJXTiWL54rqZdd/V98p0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=r//Ei70Er6s8GEf/VU4pUK76Wr+VbAEeBWzZl9pSfNNXMvBcJ90rPjnZTSHfjcwTmLLTpyTbXLpcXC/rq5t2yoIxC0tXRTbRC87DMG5V7mwuFjgvXrJpVXqNJQl37QGoT8YYRGWzN4eEoBhvDfCEXOm0RrzMHvZAxEd2dLy4xco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jMfRVYie; arc=none smtp.client-ip=209.85.167.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="o4Usye67"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
-	s=s201512; t=1786806777;
-	bh=FZKulgw6Epf238NDoYfOuRcBGDo3h5LDiPkO20LU4FE=;
-	h=From:To:Cc:Subject:Date;
-	b=o4Usye67paOGyeillslaRTrmw3QYCkpOuOCZ8xXHXs/PQnlcu07z+RpV9PkBsWTmJ
-	 FRri4UWUdlYpUab1PpIJSZmGv0Jl4YEt/psRQKtGbPVE3EdpF054r/3bo8avkxqFYp
-	 EMzmr3zxYv0C7MavOQkL9XL38w6cEe+p9evNUDRE=
-Received: from linux-wireless-email.txt ([117.155.170.226])
-	by newxmesmtplogicsvrszb51-1.qq.com (NewEsmtp) with SMTP
-	id 336A1449; Sat, 15 Aug 2026 23:12:54 +0800
-X-QQ-mid: xmsmtpt1786806774ty3mwbais
-Message-ID: <tencent_CA929E144EEEC926E8CFF32B18ED3A26A907@qq.com>
-X-QQ-XMAILINFO: M6rEOT/Vq/kGbSVX8Tun/ehPY5f3k9dt+2ra/7xvtYWMlORQZ8cGf8AXluONzF
-	 eltVOfjmXBwo63Jm1dDHlx0iaMH3HFz/MWAeRK3tJ0jnaf2QPwT0jRm3VcxeLgoaOWPcpuae4ARZ
-	 mrlbbhJotlvveQygKU1tpdnoKOYjyeBxdHVsCXItv7NAzfoK6ROykc85b1TSo6OZHDwd+ztCh393
-	 WjdHCEwmkq+QxKCYInK0aVTvgicdVerDm0doEGksnZhH030OpPr2eUnJsr5S6uhWc7CvJjYImT0j
-	 H9+zLqL8nxY0BgVuCLlRAkScgWX1x4YtwrEyaoHsCKvrRKiEdW/uZ0eBisb2+ZKRyFUsmAkssjtk
-	 Nv35ZqJ0wMrQtJvRkS6FZae+7coXLQ123aZZfX0/TcDQc+l5ZxjbkfHeagAs/SwcXDScmNTUAXcK
-	 52P2ujU3CQAmB0DAl3qE3XwKrVrgh14S3fFzPXQ0HHmVwmzU7T7fr2RmXauvw62NdgMwtpcTXgtm
-	 vCqSnOuABKpYzAUL31JH15CigXsRhRCJb2nzuhyYVFJi301WZNYSHGyRMMvoG0jsYddAAcc4S1Ym
-	 yJSIXNZFb6mgwvBtQspSeYPLMzedq3Q4XSBpjmCm6HpuvcEP2j4BfSV+tJEm8QQmg8hbTOWCcetz
-	 yupDLmc3ZD0DRJS4CHnFdmDAH6AYwLN6WKCG3tG617tXBpnajVmnfzQnvdetdGC0vRYvNjKVmNY6
-	 y0Kb4zWiooIfGzVBh6qhkCQ/pvMUrbLrOOvtbIJEHaiY6bWtnSYK/jBPJFn/No19VZjFQflpcE2E
-	 Dt0E+AEjevc4Vzmj+yM8PjNyAI2P2eQifwyudfPx5SDLqHlbf1BFC85RXSeLqQAyojCfrqWrxHbN
-	 1bw1cRvHXwf5+4q6Foqa+/LQ5gv1WCtsTQsherrRcsB/j3xCbx1dghpoe0n3JHioiiovavQdaNB4
-	 tuJUgLzzsN6EqxgcCLnyq+B7rkHvHTBXRpoApfea0sEStuaD2qGF1YK3nx3CLVNWyE0GsYwUCugM
-	 WIp2Jetu2b5qAD+kQlZm5vLhdlh9v3iV5tjlbTVSVj+dasssKK3M5GTYXG3YbHjH2ApjCsCh+yLX
-	 WUzRNyrccSggEBQBrD/1CLxgFWhMVUf0NNqrvTpdpX41IUC0b389QO10PVt/3d0gRati8n5S9nLw
-	 z3bs4=
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
-From: autumnshiu <autumnshiu@foxmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@kernel.org, ath11k@lists.infradead.org
-Subject: [PATCH] wifi: ath11k: fix QCN6122 UNII-3 channels 149-165 disabled
-Date: Sat, 15 Aug 2026 23:07:38 +0800
-X-OQ-MSGID: <pz-l8-unii3-1786806458770268849-1000@autumn-NucBox-K6.local>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jMfRVYie"
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-5aebd52488cso2164871e87.2
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 09:59:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786813197; x=1787417997; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=vo0gH5walmOuH9TG7vKE8plLHSq7YWG1GGcACj/aHik=;
+        b=jMfRVYieVSeIk81PPacHcktuUqySQmbZqEsbp256ge9rl7ht6LhY9SqrrbE+y04Maa
+         v0AJYcROCKrvVCJVvnpPcVnAMDNYmSq8VlAff6QSd7I5GYS35LyOzsr7zROJdyFNj4je
+         LNOkW/o+l36llRkNZ4w5wrHmMGWm8daJrO8WDRiLeh/fTY/zH7ScHHzq2QsbA1Pt12vD
+         RNcst31OPTFmY1eRkoiGDKYuMaNID5vKx2PchWYCWgWqr7dYmmlZExtSgVDxYL2rCpos
+         i2JrnDj22Bb3MlhUWZnJrRHL5fn3N/hXoRy6JNApXmauJLsW4wOaSp9M+PZkk0KJVX+a
+         c1Ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786813197; x=1787417997;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vo0gH5walmOuH9TG7vKE8plLHSq7YWG1GGcACj/aHik=;
+        b=LRTWX+fY4eYyLSAxx8DYLml4ucyxcO/YcJdG3hdBFZY6WVwBTjRpUPASYfKPTZto6w
+         BwprmPop0G4Pr9jjsiyLwrq6FBEyPpip/52VFqSkPDiYrp/wZBKQzSgHxp27cZeYhm6F
+         AwNKBdTe5nnfG7FReS5iPazV0bciDOnO7THHO5XRmVOY3ku4iS681wMEG6J8/sV9halJ
+         SFqYpBmXd4or7w64YcIPzfOe8ddwtEL306U/eJICWqC5q7O4/N0XVf6J0CsmcxahnmjG
+         08Gh+6WqFS36/3g9WcSvzMXPb63tDUsyv7ZXHZ7GofYAAUFs5jIdYoz8H4+923Eg0cNl
+         JfBg==
+X-Forwarded-Encrypted: i=1; AHgh+RrAFOPZwmjVIxLvMOu1dITmtyyXPv89hBokti6LSlI/x6+c2Vu2epnxN/zmXYnh4Q92EiNSYZX7DIwxDhnmQA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxLzP+qj7AeJZdW3EqQeuoQD7Oevqu9J72i/nY01z2rJ0Id2PUV
+	uF2b+y263rTPZrZcSOWVS60nhticHmeVQV3lwYtnQw7eUyIApWz7NG5B
+X-Gm-Gg: AR+sD11OfQnS6YJyRXBh4/nQG2/jz+LdLgIc30szVTenSjYRyb3leEjPc/K2/WAsyNq
+	ck4d4OdYm2O6zkmURwsdX0BDyQhWO2e7BPkSuYUFPXiHNIitL9LwH29FqgVvHH/hUdqJqcHJofU
+	Yppbzur14QHE2X+Dvctz2jebVIgW1F70QK3kOmyItKCCjYVBdwUWTBGZfZRt3TkrTvHz5j1NtbG
+	r4mJZe2DGOrs2Adl9GS5oR6iObRY9jEc2CH2ksTP7xMmI4GxawVhO9DtdLl7O5YJ+1H7CXo+HKD
+	x6jz6Gpa5WTj7J8i8evMG1mHaXP409iWf5mMHRP4Y77hlx2e3nsPdNpQ943dsNMbNk2RQTvJY2C
+	7DT2+cASciQMjd0lcGggInpPff7d94p7UQAcg1g4qFydHB/McSjFfuA4P7sjhDMn/R1qx4OJb6R
+	iTs/ffImCbXKUWZnU6IJhf3KaIKR+xXwb49to8gBIjmFOrkmUMR0J2IioxB4ZXdJfkoeqcSzXhv
+	LxtqW2ElRfFj2t38Cc91HHs/LrnZ2O+0yc=
+X-Received: by 2002:a05:6512:3043:b0:5b4:5352:e2da with SMTP id 2adb3069b0e04-5b459109648mr2103872e87.6.1786813196636;
+        Sat, 15 Aug 2026 09:59:56 -0700 (PDT)
+Received: from localhost (host-80-73-162-2.rev.as20985.net. [80.73.162.2])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b458b9a9bfsm1274885e87.6.2026.08.15.09.59.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Aug 2026 09:59:56 -0700 (PDT)
+From: Andrey Golovko <andrey.golovko@gmail.com>
+To: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+Cc: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>,
+ Thorsten Leemhuis <regressions@leemhuis.info>,
+ Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
+ Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>,
+ Sean Wang <sean.wang@mediatek.com>, Bert Karwatzki <spasswolf@web.de>,
+ Devin Wittmayer <lucid_duck@justthetip.ca>,
+ Eric Biggers <ebiggers@kernel.org>,
+ linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Linux kernel regressions list <regressions@lists.linux.dev>
+Subject: Re: [PATCH wireless] Revert "wifi: mt76: Disable napi when removing
+ device"
+Date: Sat, 15 Aug 2026 20:12:00 +0300
+Message-ID: <20260815201000.9134-1-andrey.golovko@gmail.com>
+In-Reply-To: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
+References: <20260804120004.523934-1-mikhail.v.gavrilov@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -60,49 +86,43 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The QCN6122 firmware reports high_5ghz_chan without the UNII-3 band
-(5725-5850 MHz, channels 149-165). ath11k_mac_setup_channels_rates()
-passes this value to ath11k_mac_update_ch_list(), which marks every
-channel above high_5ghz_chan as IEEE80211_CHAN_DISABLED.
+Tested-by: Andrey Golovko <andrey@golovko.me>
 
-As a result channels 149-165 (including 5745 MHz, channel 149) are
-disabled on QCN6122 even though the board-2.bin BDF contains the
-UNII-3 frequencies and the regulatory domain covers them. This also
-truncates the wpa_supplicant freq_list, so a 5 GHz STA can never
-scan or associate on those channels.
+Third machine, third form factor: an ASUS ProArt PX13 HN7306EAC, AMD
+Strix Halo, MT7925 on PCIe (14c3:7925, mt7925e).  Kernel is v7.2-rc6
+plus unrelated ASoC patches, so the regression is still there in rc6 and
+rc7 - the 7.2 release is about to ship with it.
 
-Clamp high_5ghz_chan to the standard 5.8 GHz upper bound (5825 MHz,
-channel 165) for QCN6122, matching what the hardware and BDF
-actually support.
+Before the revert: every poweroff and every reboot hangs after the
+displays go off, machine stays powered, only holding the power button
+recovers it.  'modprobe -r mt7925e' hangs the same way, with the stack
+you posted:
 
-Tested on a CMCC PZ-L8 (IPQ5018 + QCN6122) with the 5 GHz radio as
-STA and AP on channel 149/HE80.
+  napi_disable_locked+0xe9/0x100
+  napi_disable+0x25/0x50
+  mt76_dma_cleanup+0x178/0x370 [mt76]
+  mt792x_dma_cleanup+0x8f/0xb0 [mt792x_lib]
+  mt7925_pci_remove+0xd7/0x1a0 [mt7925e]
 
-Patch authored by V4Pro (DeepSeek Harness), tested and submitted by
-autumnshiu.
+After the revert: five poweroffs and one reboot in a row, all clean, and
+'modprobe -r mt7925e' returns immediately.
 
-Signed-off-by: autumnshiu <autumnshiu@foxmail.com>
----
- drivers/net/wireless/ath/ath11k/mac.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+One thing that may save the next person some time.  The hang is silent -
+no watchdog fires, and here even the panic-on-stall sysctls were all set
+to 1 by kdump-tools, so hung_task_panic could not catch it either.  But
+device_shutdown() prints "<device>: shutdown" before each callback when
+initcall_debug is on, so booting with
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -10172,6 +10172,15 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
- 	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
- 	temp_reg_cap = reg_cap;
- 
-+	/* QCN6122 firmware omits the UNII-3 band (5725-5850 MHz, channels
-+	 * 149-165) from high_5ghz_chan, which makes the driver mark those
-+	 * channels IEEE80211_CHAN_DISABLED. Clamp it to the standard 5.8 GHz
-+	 * upper bound so channels 149-165 remain usable.
-+	 */
-+	if (ar->ab->hw_rev == ATH11K_HW_QCN6122_HW10 &&
-+	    reg_cap->high_5ghz_chan < 5825)
-+		reg_cap->high_5ghz_chan = 5825;
-+
- 	if (supported_bands & WMI_HOST_WLAN_2G_CAP) {
- 		channels = kmemdup(ath11k_2ghz_channels,
- 				   sizeof(ath11k_2ghz_channels),
+  initcall_debug nomodeset
 
+names the culprit on the console: nomodeset keeps amdgpu from taking
+over the framebuffer, so efifb survives to the end of the shutdown, and
+the last line on the screen is
+
+  mt7925e 0000:c2:00.0: shutdown
+
+with no "reboot: Power down" after it.  That points at the guilty
+.shutdown callback in one boot, without netconsole and without a serial
+port, which on a laptop is the difference between diagnosable and not.
+
+Andrey
