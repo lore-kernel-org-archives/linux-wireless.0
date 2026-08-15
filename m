@@ -1,117 +1,155 @@
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C0023264DA
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 19:06:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B7B92BDC0F
+	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 19:07:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786820772; cv=none; b=ZyUdPtCL0cW8TLlLFnh8fxIZYLwhVudqQ6jkjVNmYhRm/gKAg8J6Cn9l2TUfd1zfN8hTmV7x6vAnI3ny/uwpjculriJOuGDfzJ6yF+s48GhUFsxkn/BWUDw9MMGKiuIZAMFe9pLb5PFqTVhgAHOsAUBJGv2qMZaWa40aW6/C+p0=
+	t=1786820848; cv=none; b=gVXDmaWyIDtvK8fjCvCP+Fd5/FueCTnVXkonUjXm1FXc187UZO94sT16A34f9GSJc84pCE3CTITZnHQDSDTFwFU6VjHex+EeAOhfbZ//8mnUCt1iAMBDuB9caTnPD1QcoH43n2+e5heO8arWO1vC6V7EM9P5ukcOGqNbQ3ZrPeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786820772; c=relaxed/simple;
-	bh=kc5EjbGES34mSo/y1zV3VR+mWn7CQtser0vdFBZB8mI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TT2Us14NxO34pWDG2fNjJRDg3T6R5Vtxw7xJa+8W8Egyn0fVNbh/pZSue6heiMKOSTgx47l5m4ovCtLStzgXP5eSX5/7M4gdS652CdwhSiENv6OQCQkw985j4eexXmiapWoWdcCZoy4tuftanxGC4tACtbunDbInibGJ15kOcNc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i5T2SPjD; arc=none smtp.client-ip=209.85.208.172
+	s=arc-20240116; t=1786820848; c=relaxed/simple;
+	bh=hZ4gYeXG/cpS7vApLblCiJV4ysyLLA3A3BFTbWbGUMI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E74TnB5i/VU4XIkdDv9C5fvkAzMrqcmYeETEbECpGBWkL09pc41ICwCm3EgN2Sgs4/vJX/eXp8b7cDHaDTTukEbxhLoVLlNQkSS1+K4fJQeGm/h+3ysaV1ZfpuEZWurl80bbSSim31GytFzLm4jIZBNXRqZtxgEFEQ9/c6yxBgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HoaWilZR; arc=none smtp.client-ip=209.85.216.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i5T2SPjD"
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-39f927721f2so13168051fa.0
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 12:06:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HoaWilZR"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-38f620399a0so1831659a91.2
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 12:07:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786820768; x=1787425568; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zXa2pyaIn29H9lp2gAhozozTffFlsxZSuqo0RAIo6mc=;
-        b=i5T2SPjD8Tr9gZeilP2pwgEM0MjcIbRA2pvTObgnEc7MUCF3jwaelySijLLdC/bxNp
-         hJjUGAAnXbKZrTrW4vxv1YKLvUpolqdSkwHugEFvXgf4uWVOWuHNyWIJQz3zhVmcKRCt
-         Fj0komMBTqZDx1m5XfYC5LkKSHi3HmKkzQKZZsKMY7Rcopue5oNIA2TJEqSL9LkJngI5
-         kBkjSl22OxNZEtFYKW6JC6KMdmKjtLe0IRB+DrBdI7jW3guonloiU6lw3AexTYs47Y69
-         vvLSd2oE2HEBQYo+PhgUQRiI8J5Vx6zZhYCI9A2LP2ZC1BWrMj0i7OLL7u+1vGExHHLf
-         iOWQ==
+        d=gmail.com; s=20251104; t=1786820847; x=1787425647; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Q9z+ilZvjkaA4hnn8ASyfNzyt6HCWJVXyXA6SWj/0JA=;
+        b=HoaWilZRTkMorUzLfzripBGlAJdfzd/LA//Y07wGqWv6x8AtNH+l1yOvDDirpefEUo
+         pUq4yrBQQ+fQINXCXd+HRZep4zYzOQj9XGAPv32HFna98iJ36W2CWQvTk9o9gRU+4z/Y
+         zSnvFcD8iN3vWZwqDUbLQ4uo/R/ow79U0HdMadEycQZQs2NksVHGS0IfLaCUkY1b2lgm
+         V/jY2xraI1hj3RZho0teAopkVM5Wrm7JEzNKGCHZy65GrIfd/t4ENSlOuPW3jvQAluV/
+         v5PNTHCsFq6z03QSfhbQUls4J9PX2BGdVVunubVpul8Kxe06547mEz6+wrUVEQ++cQKz
+         x3Xg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786820768; x=1787425568;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1786820847; x=1787425647;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=zXa2pyaIn29H9lp2gAhozozTffFlsxZSuqo0RAIo6mc=;
-        b=BTrf+1Bc5peWfvivX5ffndo7Iz6IUcl3lGWkpa8U3hFc+uWT8au8n4EUa/533b2+8U
-         NhzQlmXgM19jIay7L5p11M5/puO0WO+w0LAwB7++BNm9l3gpdxUJwzvmdb0w7kW90Pdz
-         /rlriNcE5Gbh+Z6Rdprdatpvx8l4TS4Qm+GdFrcd1zOxtgPgeZ8joQsjb/Jc5zXK1SXe
-         HzmdXLOBssEfGvx4tWYqsKlPaMulSpVZoAyWnkgbVwffeucLJgMa4DM3zbjBu3wftUnc
-         98Lghh/rPb1G//1euXYS5IRmFH0V8CTI5spm6NsYp21ydeUv5hc5Y1UISqIMc62dBfls
-         rmhQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpFzkChqD+wmWSLNANH1/tfHHP7G0oZd8OXqjF0WV5//tBEjxNlIbPNixYM+tJ74DH41i57eCtwvsrBKWqtRg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxo1rU/da/2PKR8BzUJgIvEC5R5MV+EbJMM7ArQJs/dFO/6djsj
-	vJye0WLXGulFowLLQt9mBZjOsVuGNHylBEOa60FcSF9nDMZqxTPBpmFY
-X-Gm-Gg: AR+sD13wZs5mDMFta46/Fhv7be9nSuyJyOkbvdUgfE/tqAtF0wbkrlOUkYASlfdqMoz
-	OMx7UZ6we+W43J7At6i7e58PkbJi4ac6EGbs95TNivk+vN3MzOmoJjWx8qLDhNSur75CQOmL/vn
-	MZEWe8/OTgSwqE/gHUYIwqm97oJFHMtb3yG9Y3PBLMrQtgKrCvc7ytEd5o3GZU1eQht5QkvAStn
-	YyUNfXbj4m7kbnf1nz3HGi3F33QNeKF75pnWSo8OPc1sil/IDW9i1R1tUvXZDddyfkJFP1qHQ9o
-	caUIbiR0mtchS2iu0zLIAZRS+/l30/5koDy5BVOTNeN3ecfQAAdLdu4iKO0Z9N+gmu0fqqHsuB1
-	qBnyWhMEPxUahBDc05/LqZqKXuFD4FtIEmrEzrv2jHRMCZb7rqOww5JXw9J+I5AN53n7dGRKjuL
-	tM6Rf2FxQE0Q2PKu+mOENohZ7vOo106US1as7TyzzvvDK6EbsahdxMx1dX/M+LFxsHTjb75PDxv
-	Wv2cuqEzbZOQFntkk0l/KP7f4HTRoXtDGdewBUcmvGTDSJpWqDbPsNUzYU0TT3SMzZJ+BSCsYAB
-	xhiSiIaMYFdKNZMTBrsPvnat2Q==
-X-Received: by 2002:a2e:a58d:0:b0:3a1:110e:a999 with SMTP id 38308e7fff4ca-3a13280dd73mr14816401fa.29.1786820768303;
-        Sat, 15 Aug 2026 12:06:08 -0700 (PDT)
-Received: from ?IPV6:2001:14ba:ee:4e00:66c2:a7fd:8a9a:ffb5? (2001-14ba-ee-4e00-66c2-a7fd-8a9a-ffb5.rev.dnainternet.fi. [2001:14ba:ee:4e00:66c2:a7fd:8a9a:ffb5])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a130d1b40fsm13859701fa.37.2026.08.15.12.06.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 15 Aug 2026 12:06:06 -0700 (PDT)
-Message-ID: <16f4452a-97e4-4aa8-a64b-909334104358@gmail.com>
-Date: Sat, 15 Aug 2026 22:06:04 +0300
+        bh=Q9z+ilZvjkaA4hnn8ASyfNzyt6HCWJVXyXA6SWj/0JA=;
+        b=qiE2e2gIUml5Qz1o/5Pyl5NL1NXmwKqeL8LGVbrw3CleGyRlUc+7cMQ3qjeOJYGIjm
+         n/kszKVDs7J8m5v6UKYo0iqY5ubTIP68RermCly/BlKfg0qqXT8g/DMjQTatp0NB/xPk
+         EfBjVMw3Yw7cLEsOIOcWh7qdGDqYDGUo/aTYJwqkfnCoWR3aSd7kWWLAUf6ZnQEFi/n3
+         Hq8UH8qMCus9f50cHVbByvzWViySCw9N0CxWPl6gpSINg4oUpZ/vemnVDftmnF9TWnmc
+         NIR7nDqAH26EBoQ1+kzNH0hIZEz7VDpEl+UmdaZT4OKEvzSD6K5mx9WvxNzdIv1wlL9w
+         7PUQ==
+X-Gm-Message-State: AOJu0YyWsVBrxpdPWqJwHGZC04KV9KwPTxDuhEe+zRTO10nugpGgJuwf
+	DCF+s3Zuj7zmj4InBtrKZ7baz1DW/KMWIICy9LM0GL+mRFaDlGAnT6I42MKSHw==
+X-Gm-Gg: AR+sD10RXT48GUgLCxIC1IoFxFm3Y5XsUF90PuvnVSfcIP6/guFkh7YBA/ngPQb24C/
+	/SWt4KOayOLsZZszlcsvgTGAdjw0w9HKTOykfecJqvTPLiGgFMwrIxVSn9h5k3+yu0wtvwiY/Ty
+	cTEcO68ujKFhHmxkNZ2jza/jgC3lZUl8O5CzH8J0IbD31Lwz/nZXmt7AqSmdTiO96vfNg10t4eh
+	yc9vDMOWFQSzLRKsAizFT3rRgNDprPnkVnGPoVGOHZ6PITOT8BTd3yZbSuo8aRNoYiKJzqJCvpf
+	8rLQKtUCQNWldOpM3Obwc0XgjELMYwURzsRWx4CpZwK4TCGF1QAX87SAZhKtjEWywUsRCJ9prb7
+	CT8zM68RPrtJysxCa6t3MF/XQRiGFkTBDwf/uUlx4S/TZzqVjrfQJPPxZBalz0MQqoSxy/dhb0H
+	HS6qxCpg59GPaJvWhsOCXY0M7DoUbI+UF4P0lnTr6rutwH0iYpvR437/444Ph1n+BM92k8sQyfp
+	rXn4dUudHH9qI7elwKXDkLiaFoW0rpycb5fmKf/MyUiDw+rLcNqUYChUhUL/W9t4rcj8/TzehUY
+	rMy0OWYiWp3X+rCTMQtRqSlVfmRLREAJjh8pi0lrDwDLen6SBA==
+X-Received: by 2002:a17:90b:4ec6:b0:38d:e658:5959 with SMTP id 98e67ed59e1d1-3933b80052cmr16223928a91.5.1786820846796;
+        Sat, 15 Aug 2026 12:07:26 -0700 (PDT)
+Received: from ryzen.lan ([2601:644:8000:7a86::e34])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39339cec8c8sm2971210a91.1.2026.08.15.12.07.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Aug 2026 12:07:26 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCHv2 wireless] mac80211: stop tpt LED trigger timer before freeing trigger
+Date: Sat, 15 Aug 2026 12:07:24 -0700
+Message-ID: <20260815190724.16943-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: iwlwifi: fix spelling mistakes
-To: Mouri <mourimcbusiness@gmail.com>, linux-wireless@vger.kernel.org
-Cc: miriam.rachel.korenblit@intel.com, johannes.berg@intel.com
-References: <20260814130246.25259-1-mourimcbusiness@gmail.com>
-Content-Language: en-US
-From: =?UTF-8?B?SGFubmUtTG90dGEgTcOkZW5ww6TDpA==?= <hannelotta@gmail.com>
-In-Reply-To: <20260814130246.25259-1-mourimcbusiness@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 8/14/26 4:02 PM, Mouri wrote:
-> Fix several spelling mistakes in the iwlwifi driver documentation
-> and comments.
-> 
-> Signed-off-by: Mouri <mourimcbusiness@gmail.com>
-> ---
->   drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 2 +-
->   drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 6 +++---
->   drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 2 +-
->   drivers/net/wireless/intel/iwlwifi/mvm/sta.h       | 4 ++--
->   drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 6 +++---
->   drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 4 ++--
->   6 files changed, 12 insertions(+), 12 deletions(-)
-> 
+The throughput (tpt) LED trigger timer is only stopped in
+ieee80211_stop_tpt_led_trig(), which is reached via ieee80211_stop_device()
+when the interface is brought down. On a hot unplug, the device is torn down
+through ieee80211_unregister_hw() without ever going through
+ieee80211_do_stop(), so the timer is never stopped.
 
-Hi,
+ieee80211_led_exit() then frees local->tpt_led_trigger (which embeds the
+timer) without cancelling it. The still-armed timer keeps firing and
+dereferences the freed tpt_trig, walking local->tpt_led's LED list in
+led_trigger_blink() -> led_blink_set_nosleep() on the freed rt2x00 LED class
+device, causing a use-after-free page fault in interrupt context.
 
-The spelling fixes look good to me.
+Call ieee80211_stop_tpt_led_trig() in ieee80211_led_exit(), before
+unregistering the trigger and freeing the struct, so the timer is always
+stopped and can never run after the trigger/LEDs are torn down.
 
-There are a few additional spelling mistakes in the files,
-if you want to check them while at it:
+Fixes: e1e540685437 ("mac80211: add throughput based LED blink trigger")
+Assisted-by: opencode:hy3-free
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ v2: move static function instead of forward declaration
+ net/mac80211/led.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-   drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c on lines 2900, 4005
-   drivers/net/wireless/intel/iwlwifi/mvm/scan.c on line 3444
-   drivers/net/wireless/intel/iwlwifi/mvm/tx.c on line 500
-
-Your Signed-off-by could include your full name.
-
-Reviewed-by: Hanne-Lotta Mäenpää <hannelotta@gmail.com>
-
-Best regards,
-
-Hanne-Lotta Mäenpää
+diff --git a/net/mac80211/led.c b/net/mac80211/led.c
+index b5600d223452..42dcd56eb983 100644
+--- a/net/mac80211/led.c
++++ b/net/mac80211/led.c
+@@ -194,6 +194,19 @@ void ieee80211_led_init(struct ieee80211_local *local)
+ 	}
+ }
+ 
++static void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
++{
++	struct tpt_led_trigger *tpt_trig = local->tpt_led_trigger;
++
++	if (!tpt_trig->running)
++		return;
++
++	tpt_trig->running = false;
++	timer_delete_sync(&tpt_trig->timer);
++
++	led_trigger_event(&local->tpt_led, LED_OFF);
++}
++
+ void ieee80211_led_exit(struct ieee80211_local *local)
+ {
+ 	if (local->radio_led.name)
+@@ -206,6 +219,7 @@ void ieee80211_led_exit(struct ieee80211_local *local)
+ 		led_trigger_unregister(&local->rx_led);
+ 
+ 	if (local->tpt_led_trigger) {
++		ieee80211_stop_tpt_led_trig(local);
+ 		led_trigger_unregister(&local->tpt_led);
+ 		kfree(local->tpt_led_trigger);
+ 	}
+@@ -335,19 +349,6 @@ static void ieee80211_start_tpt_led_trig(struct ieee80211_local *local)
+ 	mod_timer(&tpt_trig->timer, round_jiffies(jiffies + HZ));
+ }
+ 
+-static void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
+-{
+-	struct tpt_led_trigger *tpt_trig = local->tpt_led_trigger;
+-
+-	if (!tpt_trig->running)
+-		return;
+-
+-	tpt_trig->running = false;
+-	timer_delete_sync(&tpt_trig->timer);
+-
+-	led_trigger_event(&local->tpt_led, LED_OFF);
+-}
+-
+ void ieee80211_mod_tpt_led_trig(struct ieee80211_local *local,
+ 				unsigned int types_on, unsigned int types_off)
+ {
+-- 
+2.55.0
 
