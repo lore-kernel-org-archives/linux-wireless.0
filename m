@@ -1,156 +1,258 @@
-Received: from mail-24424.protonmail.ch (mail-24424.protonmail.ch [109.224.244.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404D013777E
-	for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 19:46:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.224.244.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0987F37187E
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 04:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786823191; cv=none; b=pYG4CBELWi7OyGN7Pzq4Fn2wvHMXOoa4yO+flMTzCaDDA6C3AvHwFru14GOMRC0Pr/m52WjXCjM7Oj7ReWKIuZWSDzUJdD4KS+WSWgQ9LwcW/BK0KV7VoURdjquOUEiN5dD3gvDNtF2Vrg+d8PT+94/TjCvp3aaQEnen5A0x3k8=
+	t=1786853794; cv=none; b=R7F5klY6WHSv2kU9xQQpoZZYo+VKjZ9urtJHWhQv1G7NYGyeHVLpCslOmz/MMHRLA5S4DBEj5wUuent43LBBW15o0EwmTVWShjRiWcCfeGt1uyi+O5dZ0zfso+GEaF8u3VAj2G+eVAOepgTcUrw9p5sGEuG3zhihMn0WycylD0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786823191; c=relaxed/simple;
-	bh=wh9ALErat6AXGDNVV3rhKnUZ+pmnFJVZLzmEtAC1bXY=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=AKD5uMwLQivuCKMTfFSyjTkHdw3uIFa489KVpdM3dBjybfoC0P8sZ4Gij0xdXGRuJhCUzPJtKU5zuNOYRfq/mB7AxecsQw24q80LxL1aZtuvhmIAxlT7NPP2T/6nWWfk3WhgGuZmfLucFTdr/XJqGcu71HA+Z9yDA5/i16sX95A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=MPJDkRAk; arc=none smtp.client-ip=109.224.244.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	s=arc-20240116; t=1786853794; c=relaxed/simple;
+	bh=4LaYiLkDP2aXmEkannttRkqIwiLf76AhQXAio4+A28I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hdsYyxFZgHv3r15L1CETmHoNhHhd/fjIn0aA7JRzgv4DXDfRB1DHIWOjWUkbvAaQsX/Mbao5UR+yFsj9px4NtURfcbW+xgTB0K7Z/D+AlnB9QE/zk2SvXe02aSUVrea6yHrfp61SDl5usIkkd5n1KIugybeib0EUsTmsc0sa9Oc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W8XkwF95; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="MPJDkRAk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail; t=1786823178; x=1787082378;
-	bh=wh9ALErat6AXGDNVV3rhKnUZ+pmnFJVZLzmEtAC1bXY=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=MPJDkRAkBwo0UOaXg3jzBYtQY4UUHwyEH/kD38e10dhj6dZKGjvMcNin03h5Th01P
-	 3lkRLRs+D2VCDdVP45mLikaUWdWIyjYhyjS8SiBCkXLBAA0GP1DPV72fg0Z2ZUl+jG
-	 GsnuD111mhlZKoFyp71b8ii2wENHvfV3YIZMHLhcMbrgbhlSRIiBJHqpn/iqRdAgYg
-	 igDczF2ABjv0AJxhsrCoyNgyGsLg3MSLypDZ8pbQxcrde47ADt3nexK/oGz8X5vpgY
-	 y7mupCeWT6duO7ZAEN8Q9PpOFKiYkUvewKHLyrTJuwOuPTlJne5AVqQbXTdd6Tn/P6
-	 WMZWf/zACUW0Q==
-Date: Sat, 15 Aug 2026 19:46:12 +0000
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Louis <tux823@proton.me>
-Cc: "pkshih@realtek.com" <pkshih@realtek.com>
-Subject: [BUG] wifi: rtw89: firmware regression on RTL8922AE (0.35.80.3 vs 0.35.42.1)
-Message-ID: <-lvXDCNoYldP3-AEO0uA-s2_Ebvv7FA2sfz4o8Y-4GF7epAf9Qe8v7dBFApXrVhpR942H-CWduTWtKM31PAiEd44d-c2A4aVc3Z5uRmv7dE=@proton.me>
-Feedback-ID: 215313278:user:proton
-X-Pm-Message-ID: 5bfefc6c0f6d20ccf716d65fadd03a92518b048c
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W8XkwF95"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-384930ca5e2so2553985a91.3
+        for <linux-wireless@vger.kernel.org>; Sat, 15 Aug 2026 21:16:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1786853792; x=1787458592; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=x4AoVOMsMK3rMZOZOWllsqcg2u1mx3uVn8qKNNd+UFs=;
+        b=W8XkwF95TjgPx2i+2CWVAqCgJTpPMX3SCtIPdIH66BvtxitG+E285Q+Ej47L0Tv6wa
+         5IlG2Awd1B/owwnAa3OWiNN7ZsXb0tXAFaTe3kbUlN110tR6EeLFHbEKyONp8JNtUrVd
+         ctG49yoJC214hUTVB3Y0Lue18et95wvMBC/0LZYWdUhegT479+Dzkapv/KktLkO4FPbD
+         BS1BFXUWRGTO3MbZny0FsCz2DSBOQUOvQk+t1RlbbrqO1+wCRnfOGwoRfuL/IbrNrGE4
+         0Iy7ydFyJbxgjJwt1R/vBlgIdP2ARaVpu0142duY9zBGyPCttdvHKxesZqFzQOeACcVA
+         fjcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786853792; x=1787458592;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=x4AoVOMsMK3rMZOZOWllsqcg2u1mx3uVn8qKNNd+UFs=;
+        b=ZryepPICkfS2D35UWr8GgFgydojfCz1csmdKygKo9FZhNreyWS1KXnIgFkjn5nTNFq
+         ssXw2TfXHOVbp6JHqaCE0H5OvZuM6UvJM6mf/U1SB4C1fWeJ7daRvBqlZSbNriwRcQRY
+         eRPi51F6Cdmf0FUSfqFYDtx9ya9joyWpH6mummQgdh5U/fxlh/qnRImvooJanP9VlMh2
+         yu2iOcdLdXnyRWNA9GgzEqbeyZf1H4RXgM6zMWv/oCwUI/W6vwZslb2ydc0fiby9u53l
+         /5/aaplBh1xCqKR4dEkbjQGvif/ahbj8AlMQT39TmxxhC6tEdusCZHab+OwnVK1Q8T4e
+         lR8A==
+X-Gm-Message-State: AOJu0Yzh3K1pPN+9Yg+6QZECG+VF+oRMnqjXkWFCeTE4Pz7HBCDS49pv
+	qnQOM6C/415+eMYjyT4c4Z+bs/qjws7RZROS+Ji3A20SF9RiiC4XJ4UB
+X-Gm-Gg: AR+sD10V48NAUXTMqjHbiH7TBthW0EPpf1jGap0hdfy8K4qf1TlSwlgzIVEh8eI+0Cu
+	GwrdWP4nmNwYfdVCxJNInDrH39KTYJkICu0wf1EAJUif4g5yXYn0x9G9AxauXWAD/bviPyUACyq
+	O8GPJPvVY+iCsnhfPjEdjPnD2qqzWeEME9zeO/FBhpRWai14ShQoB6XlWDwCQZbyfCfKurJYpJx
+	3l8JXVvRv9XxkavBdLpSOWom3BexEKD2vbCrXqBaVS2IewkRmH39dkLFqf67Bubga6UYVpokqGx
+	XUs7h6bmHVx6PUv+rAswNAyfdS1Utwx9qaTdZsu33SzJ4XM9miyWMMtGA33ik190DvVcoZWy5ZR
+	qnrHNf/dMxNfPGITbT3s1quMv7LaDnAi9sioNLYDBBgqLxT6Uv6RjyWLzTaPUOapvPp7W8eW+Tg
+	v8H1s6htfARoD1vTuhpzEwK+zDftu7+rsnOohBWnMri24QZZwfXgwQgatyZRYo5gTfG5RUDEgQB
+	cyQQWQYMZ5lyBFx7zuHcmblvlc6Q2+8UZnf9twWDXc+EZs3YaHHeqw5H183v3dRO3HqYQ/b
+X-Received: by 2002:a17:90b:590d:b0:38f:23d6:b4a9 with SMTP id 98e67ed59e1d1-3933ed66651mr20360162a91.21.1786853792215;
+        Sat, 15 Aug 2026 21:16:32 -0700 (PDT)
+Received: from mourii21.. (cm-27-145-52-219.revip12.asianet.co.th. [27.145.52.219])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-141387af4adsm24416232c88.1.2026.08.15.21.16.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 15 Aug 2026 21:16:31 -0700 (PDT)
+From: Mouri Vance <mourimcbusiness@gmail.com>
+To: hannelotta@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	johannes.berg@intel.com,
+	miriam.rachel.korenblit@intel.com,
+	Mouri Vance <mourimcbusiness@gmail.com>
+Subject: [PATCH v2] wifi: iwlwifi: fix spelling mistakes
+Date: Sun, 16 Aug 2026 00:15:36 -0400
+Message-ID: <20260816041536.16475-1-mourimcbusiness@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hardware: Realtek RTL8922AE (rtw89_8922ae driver)
-Also tested on: RTL8922AE-VS (same PCI ID: 10ec:8922)
-Systems: Lenovo Yoga 7 14AKP10 (Type 83JR) [laptop, PCIe],
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0desktop (RTL8922AE via M.2-to-PCIe adapte=
-r, replacing a
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0QCNFA765/ath11k card)
-Kernels tested: CachyOS default, CachyOS zen, Arch (vanilla),
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mainline LTS =
-=E2=80=94 regression reproduces identically
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 on all of them, rul=
-ing out kernel version as a
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 variable.
+Fix several spelling mistakes in the iwlwifi driver documentation
+and comments.
 
-=3D=3D=3D ISSUE 1: Firmware regression, reproduced across two
-=C2=A0 =C2=A0 linux-firmware releases =3D=3D=3D
+Reviewed-by: Hanne-Lotta Mäenpää <hannelotta@gmail.com>
+Signed-off-by: Mouri Vance <mourimcbusiness@gmail.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/error-dump.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 4 ++--
+ 6 files changed, 15 insertions(+), 15 deletions(-)
 
-Known-good firmware:
-=C2=A0 Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 1
-=C2=A0 Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 3
+Changes in v2:
+- Fix additional spelling/grammar issues suggested during review.
+- Add Reviewed-by tag and use full name in Signed-off-by.
 
-Known-bad firmware:
-=C2=A0 Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 1
-=C2=A0 Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 3
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 07f1240df866..692bb17dfc33 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -352,7 +352,7 @@ struct iwl_fw_ini_error_dump_register {
+  * struct iwl_fw_ini_dump_cfg_name - configuration name
+  * @image_type: image type the configuration is related to
+  * @cfg_name_len: length of the configuration name
+- * @cfg_name: name of the configuraiton
++ * @cfg_name: name of the configuration
+  */
+ struct iwl_fw_ini_dump_cfg_name {
+ 	__le32 image_type;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 3e73a6195fd9..730c07d22964 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2302,7 +2302,7 @@ int iwl_mvm_set_sta_pkt_ext(struct iwl_mvm *mvm,
+ 			iwl_mvm_parse_ppe(mvm, pkt_ext, nss, ru_index_bitmap,
+ 					  ppe, ppe_pos_bit, true);
+ 		/* EHT PPE Thresholds doesn't exist - set the API according to
+-		 * HE PPE Tresholds
++		 * HE PPE Thresholds
+ 		 */
+ 		} else if (link_sta->he_cap.he_cap_elem.phy_cap_info[6] &
+ 			   IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT) {
+@@ -2364,7 +2364,7 @@ int iwl_mvm_set_sta_pkt_ext(struct iwl_mvm *mvm,
+ }
+ 
+ /*
+- * This function sets the MU EDCA parameters ans returns whether MU EDCA
++ * This function sets the MU EDCA parameters and returns whether MU EDCA
+  * is enabled or not
+  */
+ bool iwl_mvm_set_fw_mu_edca_params(struct iwl_mvm *mvm,
+@@ -2897,7 +2897,7 @@ bool iwl_mvm_start_ap_ibss_common(struct ieee80211_hw *hw,
+ 		iwl_mvm_send_low_latency_cmd(mvm, true, mvmvif->id);
+ 	}
+ 
+-	/* power updated needs to be done before quotas */
++	/* power update needs to be done before quotas */
+ 	iwl_mvm_power_update_mac(mvm);
+ 
+ 	return false;
+@@ -3617,7 +3617,7 @@ static void iwl_mvm_mei_host_associated(struct iwl_mvm *mvm,
+ 		break;
+ 	default:
+ 		/* auth method / AKM not supported */
+-		/* TODO: All the FT vesions of these? */
++		/* TODO: All the FT versions of these? */
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 3831b3c27e0f..99d4dea4aec3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -2226,7 +2226,7 @@ static u16 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
+ 
+ 	/*
+ 	 * Extended dwell is relevant only for low band to start with, as it is
+-	 * being used for social channles only (1, 6, 11), so we can check
++	 * being used for social channels only (1, 6, 11), so we can check
+ 	 * only scan type on low band also for CDB.
+ 	 */
+ 	if (iwl_mvm_is_regular_scan(params) &&
+@@ -3441,7 +3441,7 @@ size_t iwl_mvm_scan_size(struct iwl_mvm *mvm)
+ 
+ /*
+  * This function is used in nic restart flow, to inform mac80211 about scans
+- * that was aborted by restart flow or by an assert.
++ * that were aborted by restart flow or by an assert.
+  */
+ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index ff099aec7886..1cc0f703d675 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -75,7 +75,7 @@ struct iwl_mvm_vif;
+ /**
+  * DOC: station table - introduction
+  *
+- * The station table is a list of data structure that reprensent the stations.
++ * The station table is a list of data structure that represent the stations.
+  * In STA/P2P client mode, the driver will hold one station for the AP/ GO.
+  * In GO/AP mode, the driver will have as many stations as associated clients.
+  * All these stations are reflected in the fw's station table. The driver
+@@ -292,7 +292,7 @@ enum iwl_mvm_rxq_notif_type {
+ /**
+  * struct iwl_mvm_internal_rxq_notif - Internal representation of the data sent
+  * in &iwl_rxq_sync_cmd. Should be DWORD aligned.
+- * FW is agnostic to the payload, so there are no endianity requirements.
++ * FW is agnostic to the payload, so there are no endianness requirements.
+  *
+  * @type: value from &iwl_mvm_rxq_notif_type
+  * @sync: ctrl path is waiting for all notifications to be received
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index d3c2fe830477..eb563b6e1233 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -497,7 +497,7 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
+ 		fallthrough;
+ 	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		/* TODO: Taking the key from the table might introduce a race
+-		 * when PTK rekeying is done, having an old packets with a PN
++		 * when PTK rekeying is done, having an old packet with a PN
+ 		 * based on the old key but the message encrypted with a new
+ 		 * one.
+ 		 * Need to handle this.
+@@ -530,7 +530,7 @@ static bool iwl_mvm_use_host_rate(struct iwl_mvm *mvm,
+ 	 * Not a data frame, use host rate if on an old device that
+ 	 * can't possibly be doing MLO (firmware may be selecting a
+ 	 * bad rate), if we might be doing MLO we need to let FW pick
+-	 * (since we don't necesarily know the link), but FW rate
++	 * (since we don't necessarily know the link), but FW rate
+ 	 * selection was fixed.
+ 	 */
+ 	return mvm->trans->mac_cfg->device_family < IWL_DEVICE_FAMILY_BZ;
+@@ -914,7 +914,7 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	/*
+ 	 * Do not build AMSDU for IPv6 with extension headers.
+-	 * ask stack to segment and checkum the generated MPDUs for us.
++	 * ask stack to segment and checksum the generated MPDUs for us.
+ 	 */
+ 	if (skb->protocol == htons(ETH_P_IPV6) &&
+ 	    ((struct ipv6hdr *)skb_network_header(skb))->nexthdr !=
+@@ -1664,7 +1664,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			 * its sequence control is 0. Note that for that same
+ 			 * reason, NDPs are never sent to A-MPDU'able queues
+ 			 * so that we can never have more than one freed frame
+-			 * for a single Tx resonse (see WARN_ON below).
++			 * for a single Tx response (see WARN_ON below).
+ 			 */
+ 			if (ieee80211_is_qos_nullfunc(hdr->frame_control))
+ 				is_ndp = true;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 2e12f93ad32b..9398c9e3193a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -135,7 +135,7 @@ int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd,
+ }
+ 
+ /*
+- * We assume that the caller set the status to the sucess value
++ * We assume that the caller set the status to the success value
+  */
+ int iwl_mvm_send_cmd_pdu_status(struct iwl_mvm *mvm, u32 id, u16 len,
+ 				const void *data, u32 *status)
+@@ -284,7 +284,7 @@ int iwl_mvm_send_lq_cmd(struct iwl_mvm *mvm, struct iwl_lq_cmd *lq)
+  * @smps_request: The request to change the SMPS mode.
+  * @link_id: for MLO link_id, otherwise 0 (deflink)
+  *
+- * Get a requst to change the SMPS mode,
++ * Get a request to change the SMPS mode,
+  * and change it according to all other requests in the driver.
+  */
+ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-- 
+2.43.0
 
-Symptoms on the bad firmware (0.35.80.3):
-=C2=A0 - Intermittent disconnects on both 5GHz and 6GHz, under load or afte=
-r 3-5 minutes
-=C2=A0 =C2=A0 (observed most reliably during sustained transfer / speedtest=
-)
-=C2=A0 - Recurring log line preceding drops:
-=C2=A0 =C2=A0 =C2=A0 "rtw89_8922ae 0000:03:00.0: sec cam entry is empty"
-=C2=A0 - Followed by reassociation failures:
-=C2=A0 =C2=A0 =C2=A0 "wlan0: deauthenticated from <MAC> while associating
-=C2=A0 =C2=A0 =C2=A0 =C2=A0(Reason: 9=3DSTA_REQ_ASSOC_WITHOUT_AUTH)"
-=C2=A0 - Ruled out as the cause before landing on firmware:
-=C2=A0 =C2=A0 =C2=A0 DFS channel-vacate events, router DCS (dynamic channel
-=C2=A0 =C2=A0 =C2=A0 selection), PCIe ASPM L1, GTK/group-rekey interval,
-=C2=A0 =C2=A0 =C2=A0 kernel choice (4 different kernels tested)
-
-Reproduction:
-=C2=A0 1. Install current linux-firmware (rtw8922a_fw-4.bin loads,
-=C2=A0 =C2=A0 =C2=A0version 0.35.80.3)
-=C2=A0 2. Sustained transfer / speedtest on 5GHz or 6GHz, wide channel
-=C2=A0 =C2=A0 =C2=A0(160MHz+) =E2=80=94 disconnect + "sec cam entry is empt=
-y" +
-=C2=A0 =C2=A0 =C2=A0reason-9 reassoc failure within minutes
-=C2=A0 3. Move/delete the -3.bin and -4.bin firmware files so the
-=C2=A0 =C2=A0 =C2=A0driver falls back to an earlier bundled version
-=C2=A0 =C2=A0 =C2=A0(0.35.42.1 (cc364c30) loads) =E2=80=94 stable indefinit=
-ely under
-=C2=A0 =C2=A0 =C2=A0the same load/test conditions
-
-This was independently reproduced a second time after a
-subsequent linux-firmware update reintroduced the same -3/-4
-files =E2=80=94 same fix (remove them, fall back to 0.35.42.1) resolved
-it identically both times. Confirms this isn't a one-off but a
-persistent regression carried across releases.
-
-Happy to test candidate fixes or provide a fuller dmesg/pcap
-capture around a live drop if useful =E2=80=94 I have the reproduction
-steps down to a few minutes reliably.
-
-=3D=3D=3D ISSUE 2 (informational, not a bug report): MLO/MLSR real-world
-=C2=A0 =C2=A0 test data =3D=3D=3D
-
-Tested the MLO patchset (MLSR =E2=80=94 link-switching) with an AP
-broadcasting one SSID across 5GHz and 6GHz simultaneously.
-AP-side confirms the client associated on both bands at once.
-`iw dev wlan0 station dump` shows only a single active tx/rx
-bitrate pair at a time (consistent with MLSR link-switching
-rather than MLMR aggregation, as expected given the current
-patchset).
-
-Real-world throughput/quality comparison from the same physical
-location (one interior wall between client and AP), same
-firmware (0.35.42.1):
-
-=C2=A0 5GHz, 240MHz (160+80 non-contiguous), separate SSID:
-=C2=A0 =C2=A0 RSSI: -34 to -57 dBm
-=C2=A0 =C2=A0 MCS: steady EHT-MCS 8-11 (2 streams), occasionally EHT-MCS 13
-=C2=A0 =C2=A0 iperf3 -P4: 728 Mbit/s aggregate, 81 retransmits/30s
-
-=C2=A0 6GHz, 160MHz, separate SSID:
-=C2=A0 =C2=A0 RSSI: -65 dBm (AP has no AFC =E2=80=94 confirmed with vendor,=
- LPI-only,
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 23dBm ceiling on 6GHz)
-=C2=A0 =C2=A0 MCS: oscillating EHT-MCS 5-7 (2 streams)
-=C2=A0 =C2=A0 iperf3 -P4: 889 Mbit/s aggregate, 800 retransmits/30s
-=C2=A0 =C2=A0 (~8x more retransmits per Mbit/s than the 5GHz link)
-
-Sharing in case it's useful data for prioritizing MLSR vs. MLMR
-work, or for anyone else's testing/comparison =E2=80=94 not filing this
-half as a bug, more as real-world confirmation that link quality
-(not just raw throughput) matters for whichever link MLSR
-switching logic favors.
-
-System info:
-=C2=A0 $ lspci -nn | grep -i realtek
-=C2=A0=C2=A007:00.0 Network controller [0280]: Realtek Semiconductor Co., L=
-td. RTL8922AE 802.11be PCIe Wireless Network Adapter [10ec:8922] (rev 01)
-
-=C2=A0 $ uname -a
-7.1.8-1-cachyos #1 SMP PREEMPT_DYNAMIC Mon, 10 Aug 2026 19:39:40 +0000 x86_=
-64 GNU/Linux
-=C2=A0 $ dmesg | grep -i "rtw89.*Firmware version"
-=C2=A0=C2=A0[ =C2=A0 =C2=A07.404909] rtw89_8922ae 0000:07:00.0: Firmware ve=
-rsion 0.35.42.1 (cc364c30), cmd version 1, type 1
-[ =C2=A0 =C2=A07.404912] rtw89_8922ae 0000:07:00.0: Firmware version 0.35.4=
-2.1 (cc364c30), cmd version 1, type 3
-[ =C2=A0 =C2=A07.427821] rtw89_8922ae 0000:07:00.0: Firmware version 0.1.0.=
-0 (86ec27bf), cmd version 0, types
