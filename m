@@ -1,84 +1,70 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9A233A9612
-	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 17:48:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405D5341ABB
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 18:09:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786902531; cv=none; b=a+2zxWtFlrlqe7CeXSILmVzMYfshk0w9BmW8Q+WrjEvA35k7K6sA+J1M3bycdAti+GkQl6qvdIBZZCqT/5edSW9S+iRPU4lec3r39LSVcjFfjXMHxNuJJ8IoLNAxvWe9hr+d1GBsfa7OGse0qmKoseeLNlMwnLdEG1tXuReRn0Y=
+	t=1786903742; cv=none; b=jbsctEpl4CR9RsgR7W5s9E1jWdleetsO0c6mCWrw36rQevernhoJXqI47w+pMUh6jvNCz4c8ex0So2BguAP2h8U6ImCrPqiAZBWwkPbxIZBTIzFhl/UEtWnMaey+kYlteIuAtEhQlQtybX8rNQskGwWtJ9l2mE97sAks6TBBRNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786902531; c=relaxed/simple;
-	bh=REzPd5tdBRbGao7/2vlngZA2mtzJ+akj5jfwnqD9A4Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OISkiG7SlMVeGk16XmJsuCfjgnBZbNHbkiIbljxU4Ic6WGWVcaphzlhGW5HDK5tOMA1pr7uWJoxKCtSRvzQhyal0WIFVroxyJZf+br2jhJSbicrVlrSrPWTcyBchTJ3kuinp233uDCQARSWqyapGy8gY3hOvmnFztwl4QHibPJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ELHDaGOt; arc=none smtp.client-ip=209.85.214.176
+	s=arc-20240116; t=1786903742; c=relaxed/simple;
+	bh=2zDKyRHyPhf2oWHRp/v5V7KNotfVnYHRtnbVYp4Q9mM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G3Ne7SiNbAZiB86oE8xgbKxqOzL/MHVuhsccc0cd1D8UQbfRwzt+IMwO5AuFhp5pOELXk9q1W9jjDSCGXbvqEb7YDFTOsVQqGI/dqzoKlcKLFxjSLygHcm5st+nuLKx01u1JX414NA9QAz/YyqeKGWEsD4Z4SAbzsgyrAK0A9tM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XA1dWl5v; arc=none smtp.client-ip=209.85.216.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ELHDaGOt"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2ced3386430so27704365ad.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 10:48:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XA1dWl5v"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-38fdeaed181so3750761a91.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 11:09:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786902529; x=1787507329; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=FflrZPo0SzDXc4fxWnUV1IFsVK9UvRmYYioklHORaLU=;
-        b=ELHDaGOtHxfT6++jk/gN3LDuD0N2ou0C55sK3zzwUKSVoZ46xaCzZsKKkw4UmR2DBt
-         LR7DSXG8S7s29MHv4R3vJ5lDLu/EnGH0kVfjwKblLMhfKlPu9NtGFUKv8Po/QOqeBZCL
-         sB0T5bAlxNkX4we8gMyCwHq152bT6Y/frtO0vRqUwW255XWdIhkwSGtLSq5M3IvnXcOu
-         pai93QDy3Z2X/uruIuDwTTkMCEEVLthua+LJcGrIlx68F1SwoifqIWJGBbHRvgjE7jvV
-         B6BpdKPt7LIcIYHrxmB1fIr15Bq43fW9yIcKfpo0LSwEs2nXfbSkAw1np8K+WOLidQSX
-         xHSA==
+        d=gmail.com; s=20251104; t=1786903740; x=1787508540; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3TtdL/NkN+keGAqKB6jyYtSlIZFOb4dN0M54o1F+xnc=;
+        b=XA1dWl5vrbKBFfwa4QiLojWKDvudSh1v3PvBD/K3dC5Blxn2IvazG6auKG8fyor37B
+         5GoIH0zQuGBzj9bzllWOj7+9LCMEHNkJDGaVfVw6KB4V7RRekpXMzdJzz2b5kII19Gt4
+         M2jC6FEM3Mc7XkkOx6iFONCY1yLhAFaknVJPhAhtRC3izGDORTtPbGAGVEkX6+roM/t+
+         h0h6HwOstsiOOcwhhMgXqC4S7PQn6RxHnfJnzEkjie+/2igAajEFCBzma9WnkryEOb02
+         3E+8s4VlecqgH95U7o4Us+AP4jR1ed6pAhcsNvmTAX4/M/Bc4AE6aN5EcID1gLH0amt4
+         5ijA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786902529; x=1787507329;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=FflrZPo0SzDXc4fxWnUV1IFsVK9UvRmYYioklHORaLU=;
-        b=ZckI0KnEs5rqLJEm+7cgQ9CREg7kt43kGSqsMNAvJ54rqU47OUwoMSqT/xwNRlr1F4
-         FIBYXVoCID4Ih81Ciqw2ZZUP378rdBM8ABTa/ZFtgxPkpHSgCb55X5EmkUa1PWcx7jY+
-         qXLqkqEX6TmpvHDTSPatDmfetnHVKpHXyG8+WnISjJl3hbEaEhhah37/mI3K8G7Vowga
-         t4aL3AErbt8SNdrBAD1AaIA+CRPS1AiqcGT2BFyobdQuZku1Sjs5a7vvX15aQPAdexxS
-         fRUH7X97pFa+7jUQAsYAu52300Y8g+PCLGgkeM4Ol92um3Nfdw5XGHT4yfF7Fx3RyV6Q
-         Snwg==
-X-Forwarded-Encrypted: i=1; AHgh+Rq4+8AKc8cfGegRetKclbkrKrCf3zWhaztwvp4k5ujmob2Kv+EUtoMIwItUmHxC6c5GZ/pcyD48g5aDHwDHlg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx8PQuGzROuymrQiE/8IzIinXIFj9i9QjG4/poBlmZ16ms5jpwz
-	r2eDlvaTCNNA/UwzuStrrta+MmDTT2VyweGYGdjVanxj2Obr7T27rym7
-X-Gm-Gg: AR+sD13g4yCq4Bp1Yz6fTYW54Gutx5YYcl6FiHmY0reYe7UaK+VROL1KeQOj6qLRw3M
-	KH9GYFkDPeGdNgaHU8q1G1ZpRyqZcQBj1UyHMQF05mfdPiKNqm86aoZzHXomidxt/mKXoEpgLks
-	7m+mNN5HILrd0U9lPK3XJnYYSV/2qjHjvCqCiNcgvOngIZxjorfGR9wTgpdgGmXDpJhE0PY1QLf
-	yHYJ03ZMl764SG0XNeNdFFQF0xCBB4uFh0FiQlWC4FlbpAyMpfyTXuOYb6pZowydufLIkD6n7NB
-	KxpvQ+F5pTPwk9IOtJYRSO1EEsyP0GLEUOdiPbvIB5mmEyh9cM5K952EfV/UhxppGXkS1Kyknvv
-	WpWUbNRo64ke3pm+i7TDkEEan17HTpe6nLufd4NJx9A+kY1FPhcHvG8qnAXsZwuFbqs1M2W3mQJ
-	BubROxBTk0GNCdRCigiGMxFCB/pCCTgCFUyiMMfpMDFN3Hu4IWg+oj7OPUHzavizYZuD35Vwhkq
-	OR3o0+W1/Zkk/7Ig+hRxhbvWXHJLj3njUeXNtyvH0V5YQlmCbWgiAGO5sSquunaEQfinfJO9L//
-	uVkeJMUM/f2ZmPDfLlPJ61deGrAhQqFHiEIVgbg8ihdBcJeBskXHDYmi6QdjpvlIel/5p0Q5/+z
-	i47+wqjTKD8G5agp26md8y5v3N2nnENdS4VM3uuYRRhQRU5Fq
-X-Received: by 2002:a05:6a21:3384:b0:3c3:64cb:9b99 with SMTP id adf61e73a8af0-3cc719c78e4mr25685428637.6.1786902528936;
-        Sun, 16 Aug 2026 10:48:48 -0700 (PDT)
-Received: from localhost.localdomain ([101.251.7.10])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1413889bca5sm46408707c88.12.2026.08.16.10.48.44
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sun, 16 Aug 2026 10:48:48 -0700 (PDT)
-From: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Deren Wu <deren.wu@mediatek.com>,
-	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
-	Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: mt76: mt7921: skip unknown CLC firmware records
-Date: Sun, 16 Aug 2026 23:33:40 +0545
-Message-ID: <20260816174841.1918-1-acharyalaxman8848@gmail.com>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <CAMyXUJmh=WfwC4_KHupNxYR5e2Gy5QhBDL5TSG6XEW-XLa+X4Q@mail.gmail.com>
-References: <CAMyXUJmh=WfwC4_KHupNxYR5e2Gy5QhBDL5TSG6XEW-XLa+X4Q@mail.gmail.com>
+        d=1e100.net; s=20251104; t=1786903740; x=1787508540;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=3TtdL/NkN+keGAqKB6jyYtSlIZFOb4dN0M54o1F+xnc=;
+        b=JOSuRViR63sCd8sUoII0hsB6oZ5JF8geH9jPOlBjiw1EfZTgi1F+bq2GcrRewSjlZI
+         OUPm8S9hqsHuUjl+UpKXv07pJmIRIVypWaIE82Ub/ZCMwGHja6WSGN6M5EdI6+MMyict
+         jR653SUq5Lkpec2g0qU47OmppwBmSDJu3wT0LQH2Uifw720h9rp1t8gRYqAtD566u+Ef
+         faKwTQ+ZdR8+nv911dktdEyhG1r/nKDhGxdld7Uf+VUy3UgVOuZlRyVfgnU2eUAs7RJl
+         IbeQwOj/3UK9+3KlgJNnHw0gSx+KVn+7JQAv/cQ7ksv+ptnxsvmo5At/tzDp9Zw0ENsX
+         NbDA==
+X-Forwarded-Encrypted: i=1; AHgh+Rre0nZJ8/9s6qiZ2mf71QdU01aAZvQAskPKvo/ni5iJJgehBjNea3baAL7Lg0xkTAWhNZCrYeflDEwJ26MM3w==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwoAMxawc1wxuMV+cUW19S3S4B6GiBhXnX26670Vks99aY96jmK
+	YlwFq4vMmzNp5LQvVbeMlQ2+PKJem4oxoa1qzovWztXROm2WL5lTt+Qs
+X-Gm-Gg: AR+sD10W+Kv1qsiyi2oJFmUExZ9xpmGoi6ewYPFNCcbOJoDrTl48fnhNeLtMWNZEkYo
+	ltN2kWbEPS9XQo4nc6r04GC6vkVzGLlEwEIfoknugj6h63DaSjSSjRjtQruOIuxOV6zGOC1xEvA
+	38ltvx5bdeySe3Q/smp9V61WlBzodR8IuX/1QXpI2t17qZ2TTuilvjE4tdyxNKH95BieuXtaeIy
+	8cRK/PuQMYcYd6mnG/ugrbZTkI2d3fj/9gN9dcMpOiX8GUbYdIGk3KhD+Rr5u+71Ehm+2DJuu6W
+	roMNokNVSHykgs7Ouyq61dOX2sqfZNHv5rgSdfXARzSb/1Y0CdUBKxIwJbYvHqOiN6dgzq+CmGg
+	mV6Pb2pBtNqAK+wJ+57XFanhb4grhevWQWC68Qkl8w70hnwyzD5FvFSTpUQohPm4Q+3/f+l7lbq
+	eo4HEKdRvFGCO6LkzqqYQGgpbbH7g3LTBiD+OFrQSEeejemMoiTWYCl6/h8N8X
+X-Received: by 2002:a17:90b:4b90:b0:37f:e177:f58 with SMTP id 98e67ed59e1d1-3933b874ba2mr19766676a91.9.1786903740556;
+        Sun, 16 Aug 2026 11:09:00 -0700 (PDT)
+Received: from tradnomic.. ([2601:646:8300:7570:9ea5:8cd4:8836:4621])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-141387ac9b1sm36444686c88.2.2026.08.16.11.08.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Aug 2026 11:09:00 -0700 (PDT)
+From: rafad900 <rafad900@gmail.com>
+To: Jes.Sorensen@gmail.com,
+	linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: rafad900 <rafad900@gmail.com>
+Subject: [PATCH] wifi: rtl8xxxu: Adjust logging pattern
+Date: Sun, 16 Aug 2026 11:08:57 -0700
+Message-ID: <20260816180857.4122090-1-rafad900@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -87,50 +73,38 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Treat an out-of-range CLC index as newer firmware rather than a
-malformed image. linux-firmware 20260810 ships MT7922 records with
-idx 3, and rejecting them made mt7921e fail to probe.
+To ensure consistent patterns, the device struct was
+defined and used when dev_warn() is called within
+rtl8188eu_rx_iqk_path_a().
+This follows the logging pattern used by all the
+other functions defined in the file.
 
-Keep the record-length checks, and report those as errors so a
-truncated table is visible instead of a silent retry loop.
-
-Fixes: 9417c5818a01 ("wifi: mt76: mt7921: validate CLC firmware records")
-Reported-by: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
-Signed-off-by: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
+Signed-off-by: rafad900 <rafad900@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/8188e.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-index a118a301564c..40546005c743 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
-@@ -477,18 +477,23 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/8188e.c b/drivers/net/wireless/realtek/rtl8xxxu/8188e.c
+index fea5aec9ced9..4a64633b2da3 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/8188e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/8188e.c
+@@ -643,6 +643,7 @@ static int rtl8188eu_iqk_path_a(struct rtl8xxxu_priv *priv)
  
- 	for (offset = 0; offset < len; offset += clc_len) {
- 		if (len - offset < sizeof(*clc)) {
-+			dev_err(mdev->dev, "Invalid CLC record\n");
- 			ret = -EINVAL;
- 			goto out;
- 		}
+ static int rtl8188eu_rx_iqk_path_a(struct rtl8xxxu_priv *priv)
+ {
++	struct device *dev = &priv->udev->dev;
+ 	u32 reg_ea4, reg_eac, reg_e94, reg_e9c, val32;
+ 	int result = 0;
  
- 		clc = (const struct mt7921_clc *)(clc_base + offset);
- 		clc_len = le32_to_cpu(clc->len);
--		if (clc_len < sizeof(*clc) || clc_len > len - offset ||
--		    clc->idx >= ARRAY_SIZE(phy->clc)) {
-+		if (clc_len < sizeof(*clc) || clc_len > len - offset) {
-+			dev_err(mdev->dev, "Invalid CLC record\n");
- 			ret = -EINVAL;
- 			goto out;
- 		}
+@@ -740,7 +741,7 @@ static int rtl8188eu_rx_iqk_path_a(struct rtl8xxxu_priv *priv)
+ 	    ((reg_eac & 0x03ff0000) != 0x00360000))
+ 		result |= 0x02;
+ 	else
+-		dev_warn(&priv->udev->dev, "%s: Path A RX IQK failed!\n",
++		dev_warn(dev, "%s: Path A RX IQK failed!\n",
+ 			 __func__);
  
-+		/* Newer firmware may add records this driver does not use yet */
-+		if (clc->idx >= ARRAY_SIZE(phy->clc))
-+			continue;
-+
- 		/* do not init buf again if chip reset triggered */
- 		if (phy->clc[clc->idx])
- 			continue;
+ out:
 -- 
-2.51.2
+2.43.0
 
