@@ -1,62 +1,63 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAFA52BDC0F
-	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 20:15:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE761A6817
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 20:15:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786911347; cv=none; b=C8LHpkIDCVL0QVWTFzYpnJe+HQjhSZ0Xgs2wQz02gjDRH4Oe+mFeYJ//1fsGjaXtNeE+qOUxipBfmz+3NXpaDTTEgEVLCFHSDx5OvTnWcMXQ1Qe9lvqFJLaaQMjevLXSW1fccq2QrYL8rHrArQVIDCYyF8QyVJOaELDsjt5n7Yo=
+	t=1786911356; cv=none; b=cI2mBpWgipGJPhitw2Sfid1Kx0eOY2xquftLqLGarn9o7L8onZ8w2FTMcY15IH9atNuFYF26QL6/rLPmhGfsY2ZXulevJiVXKL6lOGnr+8CKCHahbSS3mtX5NauBKB/eV/cuYEfgKtX5PBj4ol+KTLqfaXF+ZViuwRqWGiVWuLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786911347; c=relaxed/simple;
+	s=arc-20240116; t=1786911356; c=relaxed/simple;
 	bh=YLNFw0AG3etdwrl7ND3i6NgBpPAWyLQnnXdqNZDEzAE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=V7plD58OPpVULFSaspeFyjQla0L7f1OMXffGzKjYAA6gS/ojQAP6dBuut6k8ajMoUOz3zvPuuKwS5reYsIB9Xocn3lNu+J5ZFyi7jK9qSorGy28xF9fsm663et+ZpCV0tuRnoL4g765GwSgZX5p6L//waz81oYZg2OuGfsA9Umg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QXkDo/Td; arc=none smtp.client-ip=209.85.128.53
+	 MIME-Version; b=AEEhvw8uxwGGVKRNCKd6VMKZVmWb/srbTmHk4DZ7SyGycd+a73c1KC0n+TQ2XUgxT9MxiYXecklF640AQd0jLBDV2BLVTZz2EHLnb/d+t4QI9xD4rOMUEgx6HINopPQj8i1gPhSY/QwhkEg1JJx+x5M/72WjxRYsDsJaUsDvtLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mPl7pPXy; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QXkDo/Td"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-496bb7cdf51so34497565e9.2
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 13:15:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mPl7pPXy"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-49800c6a846so31432765e9.3
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 13:15:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786911344; x=1787516144; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1786911354; x=1787516154; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
         bh=hTar65Rimo56P+5q1sfLQwgooJmuM6Drj27jozp+ukw=;
-        b=QXkDo/TdepBojPSPAxhQPSyDDXuveKd5HMEocxdmaNAovCIrEXImChNobnvVivY/XH
-         gZTw82Nr/MNqP/ocjpvw3TAbje4/jUUVN9EaMaaxIvCXuWvLi0EKk8jGStW6fYT6w3Ca
-         Io8y4y+CrVcBfAoktXsJ1IKytbtaazY8BVdFg4ypaRw0wqb8kHb+XhKTX6JG7J2REbUB
-         tcShrwXV3wcn7PI0K8C1CbsxDeaXQTx5MskXUiVOR9Fq1drD1zmPce9ov/i8SaIWqCUM
-         ziswpIl0rrJ93ysTb3caeBCdyDzuVxomJ/EEhb9cMloQ6oHtAXBErCZ0N3JEppoKoPkc
-         DNuw==
+        b=mPl7pPXyYGRUH7q/JMFRxHfVMUmZFoOLhkukwTPOd4fR7wWR/Dt+9P530BXm3SKfvt
+         3OkuFr9mZCT2Qu5JRZFgOJ8vQ8sC61hykI678xecxHgB6/d42S6s9p4IT4NrLvq1MzYC
+         pCoj1zB8LE5uQfPEN+qfsJW01zNNI3J8hnhOXN3BMYKfhOp6XLm48dTeM3Fh5xkJJ1is
+         FfrVZ032/X1fMAbD5aM3vfaBmbhiFPTOjec8Fp81iWHuuIVOvobYILisvWxEzTXWn0in
+         Ql0LqFtXML3uQoq3v+12gd6G+fSbUhAMJy7tqhyHNfqUPuZ/A4JDLuUDtH0RQ6zYFtRX
+         rMew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786911344; x=1787516144;
+        d=1e100.net; s=20251104; t=1786911354; x=1787516154;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
         bh=hTar65Rimo56P+5q1sfLQwgooJmuM6Drj27jozp+ukw=;
-        b=HvMuFFXWxr4oKg2X06ZaVaFvDTAXC2p3qDjpBzU7YXxoi2CxfoG4aqfVPXdGBzNBbs
-         4EAH2Ss8pcocY/keytd0dQzHVg/S2VP28E1Aq782V2eSurjY2YBH0r6ONxQ1l8b90N+Y
-         9q8801Z8XyqJM5g+FK+Fs36m9ijZgfDi0idyQcnbPHOwCUhdHXMX6Ge28/XmAf+U29Nc
-         psRnbKTn3FUK3LprzzUHxe5emUkjw4rlOyEGRERgmtYXccVZQmtZKQ/5TKzQWfLwlR3k
-         dzJLtguRFsROufHyiM6lSpOf3z76GqcEIn7r1yhPi0vVRnNXjUTpd348Gu+yB3zWXIF1
-         QCOg==
-X-Gm-Message-State: AOJu0YwL1CJFtoosOvXfN95z+zhX3+jlY4qzFc4Y8sSo9mcMkDytwDQM
-	VADr5lTKeiOn991ta7qHCM74kwh1S3oU1ZMb37SQGFhSsSNQYFrJDAjN
-X-Gm-Gg: AR+sD13ejdjP+m8w9UWSZE/mUbFtuh3rsoaNAdOmAC++oymbkvyT5fXZQnE5EdxbyIp
-	OEdQs/YZNyMHMO7Lx46Maa92PsCsMehc/Ww2gOlIX6GVpWXWLHYr0ZhAHR0O89w5nUhQZ2LJrHz
-	Bv7SVihhNSfdj3PcSpDzlSMINDadbkIbFiwsAPMrqSOyrOuE/6uUPwJmw3HAWdUvf/cyaPeqrJr
-	HYdlSpAP1D0CnuFaMGwtxeX+kj4reXMyNaCsbyddfhfbLJHsRN2TRXSRrfqig2djxQxkwFmH9nK
-	ysD/e5SsCquouM+HYjuj6WjJsP75m1Aiz/yxruBl91C73nUY0HF5PVoCPg2NE4u1YWnkAqfeLg6
-	I7mgxD6B3baWy/usUw869su+rAJgM1PpiheoLazalSg/Nf1B+kRdBz+RyvXjW+cKsHwRf1MDl1Z
-	Uzl+RV+ObZO+3L3Y4QIhOB6pUi2OMYU9R5E4aWNDd7ALpZYVGEX24tVSXek7+iBqcpZQ==
-X-Received: by 2002:a05:600c:600a:b0:495:52a5:8829 with SMTP id 5b1f17b1804b1-49987981e14mr223870225e9.11.1786911343891;
-        Sun, 16 Aug 2026 13:15:43 -0700 (PDT)
+        b=QnLya309Evk4fSs/OEBdgdVoxH1iNmWYYfKLsAoaINxwhrzwMvwh0XSMFyISbo8xJU
+         /dVtEC4FjK5N0SCxkWjQBqm/44k+PpnVV2MtMmXZUjRrAnRRADNHJS2UKYPvOxHt23Ld
+         4ANwD2CHOu/ChchW1Q3AwWVF0/N+nRWhOIvPKniMtKDBFzgCiKeJbjnavLKlx751xg0+
+         cYA2h5qOGwgDmBTMMT1iU6gOc7G4zp6aFTADqEH0rzxQQMJSqokI2g6RFu01iR4pHA4v
+         gp1Dfa3zgF+DgFFeKgZ0YmYiejwhQaccc4N1lM8pFP+4qAA9bm/WSPlIowsCH0SmwPzj
+         NIGQ==
+X-Gm-Message-State: AOJu0Yy3FfhEURfAeBePJ6UplKyB5GeHhxTepOFOJDei3E2ZpvodtB6e
+	1ayqZI/KmmD4K84YQmlHHBoXzLrvdEMkUWHMycC3OvWGzdBrWliylBne
+X-Gm-Gg: AR+sD11PJLqrF6py1K7Wogi36D1Va3/PsX8kANxCQGxvp0EGPRTdqHAP0c6lhAYnEfN
+	Q0LvNlZaCpAoNp+3/ucy+uJ1GrsxH9W64ambIKmFuI+7Owwe/HrM6UcjP1m9tr6yLhLhaVC63NL
+	HtQVjLbrkW6EyBKSesVID3fiCJDxwapuGiqhV64Vqj4B6BOh7SQrOTp3/lfe2JBQwHNp0388RUm
+	8NvDR+Xq6sFGTTfrUFNb/+q01Wz6b7g8+nheyj87SzMwTrdWBrrPO/oomhWbW0EH50MfhePN0jB
+	IODV5mqPVYwv+ykeYMjceFntM1FM+rfxiUOcj9gx+zbinCgElQ1ypj6ak77ays51SQEQPjY++FX
+	csUk2azO4beTQ9CJPOG1hmixpLuFb+3zeltKGCyIXPHytNdTxsh4hacjvR9NTWw/V4hsN8vfGKs
+	z0YVgCBSwWP4azBPF9ey4pDKKxHsUWrTHd/wOGj1Hn0hn5t662kYBUGHWUOVe6u9wiEwgLq1hHq
+	w5y
+X-Received: by 2002:a05:600c:1d1a:b0:495:779a:ed33 with SMTP id 5b1f17b1804b1-49987937fa8mr291351105e9.7.1786911353587;
+        Sun, 16 Aug 2026 13:15:53 -0700 (PDT)
 Received: from deb05.proceq.com ([213.160.61.66])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49996127629sm67000195e9.14.2026.08.16.13.15.42
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4999610ecf4sm65027975e9.7.2026.08.16.13.15.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Aug 2026 13:15:43 -0700 (PDT)
+        Sun, 16 Aug 2026 13:15:53 -0700 (PDT)
 From: Mehmet Fide <mehmet.fide@gmail.com>
 To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
 	Ping-Ke Shih <pkshih@realtek.com>
@@ -64,8 +65,8 @@ Cc: linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	mehmet.fide@screeningeagle.com
 Subject: Re: [PATCH rtw-next] wifi: rtw88: usb: send broadcast/multicast via the AC queues
-Date: Sun, 16 Aug 2026 22:15:42 +0200
-Message-ID: <20260816201542.291030-1-mehmet.fide@gmail.com>
+Date: Sun, 16 Aug 2026 22:15:52 +0200
+Message-ID: <20260816201552.291195-1-mehmet.fide@gmail.com>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <9367d61a-bdc7-4d11-a424-428950d74f60@gmail.com>
 References: <20260813131845.1330003-1-mehmet.fide@gmail.com> <4bb13bf2-8588-4235-a1ec-b82e6668c982@gmail.com> <9367d61a-bdc7-4d11-a424-428950d74f60@gmail.com>
