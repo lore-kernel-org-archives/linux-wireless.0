@@ -1,130 +1,150 @@
-Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B3E13909A4
-	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 09:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9E8199FAB
+	for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 13:23:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786873432; cv=none; b=c8Cn6j42sA7gVh52Z1u3byvbKwyq+i2w/mbNB+yBEUyPMH9zBxJBaeCDbXR2pBa4pol1Bs6yhFPlKSy3yztwSSSxY7ZIn9TbktyIl38YLEQfo71D177eS+4bJXnRwKWPlxZ8dIiCqBH9Y1XdzBlXs//qmK5qCXmSPyuiAzO8E8E=
+	t=1786886612; cv=none; b=gSrHb30VvAZYfUGcf05uyTX/lfpRNvcPIGXHtiCfmIl2oGozPnxALcxNd+LtiBUOii/2HvaNixvCS3bdtiJD4xdKM2H0zc1c/DfLLI9bWmNzSWZ3PNZ0N7zVDKyuCuX0RImKWdIEq3zF4So8Sz6mP+ldns/kQS2iQI1gfVh3zTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786873432; c=relaxed/simple;
-	bh=G3V/6NnfckIOBq82ny3RmYXsBGcXvQhSxd8L66KrD90=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p6xspeHQWAPQZn9phHayM2x3NPVvTBbWWooramhMkkHY8B+bUNwaBzadxKQrIaqsNW9E4F6yzsv13575BrEbIHhGz6GBiY1/DadBgbOQ4/ewRE2nT8KbOzFrY71DGb37jd/tnaw1MjRV8udWqrKkLg0D59u0oSEV4PZzk3902NU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=JT3cshUR; arc=none smtp.client-ip=209.85.216.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1786886612; c=relaxed/simple;
+	bh=PN6gCG+z6B1utNgqkVVKBl3bE+RgOT9FuJT76I+438U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=DWyxlC9zRkPYoom0NRLh2gFTR37hFjO8LDEOzrM6ZaRzGYnsDPfvdSb3fonGDMwVTiYlKQQPFQy9GeQqYe4n+Nt4yGXbf1BE1kIQ88npEBaOeI2e+qTo+RvS+JiKfCn7J4rIjgfBwhLwBen/XmzSUzxCVC1x/AglyxahB21H6YY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iXIDmgu6; arc=none smtp.client-ip=209.85.208.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JT3cshUR"
-Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-38fdeaed181so3483523a91.1
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 02:43:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786873430; x=1787478230;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=JSVI9EmcUArZjAZ/au+br5pNZJa0DmSYRx0foLnLp38=;
-        b=eazrF84/FLIKZbyTYwB07HdwsGauG7aqpa8+0f2Y9fSfWEcKfFgehyoy0z8tXlPgi4
-         Z8KdweNJhnnHZWtMMmM1+Rf05TKJvB+oUS5+YxmnDwmS7uOz4WPwRTRVpxcIj2Hbm1Hj
-         eYKPJTIHOe4D4/GF+XGAY7QFR2QW4BWIzk+T5gx9xANIK5Ao3hcBwgGP0iBCirCsJYcG
-         ZNlBiTEFgT0x7RA0ELHLS+3mRl+ccErI6G8NjP6vefrUxc6Ndd+wPVjfY0Ov0qRJbfdw
-         TBmn6gibqDj44Qjp7Rk9fYFS87CwTY5H2ZnVa0bu2iaY9ui+LrWOLc5FwgCiOrBC6+ij
-         IbvA==
-X-Forwarded-Encrypted: i=1; AHgh+Rqfv0nkx48t1pNcyU9AMfDPfYIjhV4w83qTMAfeU6YXkePEZJFYqYwHeRo/LxWhwFl08QDAaoptQ5wDXhAfOQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx2OUrJXb4/Cc8ZBKbJzdVSNzMv9mBcSrk01/icHYlSL1Mgiv23
-	I9x8kE4x0Z3DRQmK9U7PrD0jNjFUUQR5YN7NpebMKVRFmu7Q6++SSr24aYFCODUqdf3iBkngUSV
-	s/qD49QbMjKFZLPP9R8tJtl1FWYHcmOc1xJLs+/Hnh8XQslcbSOwuink7lp2yMgLfgeACc9aZgS
-	jc83Dw4v9pKXv3CqnjVSUPndSaTuynofl5sS4jvnqYCiMb6ZEGDPNK5br1WdtomR2qbn9ZyiTZR
-	opPyCYrOBZOi5oSo0rfI1CB2B9F
-X-Gm-Gg: AR+sD13yZZRqoSrHRe2UlwMgPglpwT8XralN5aAHBuUl4bQEnJchiuhBn63clHkr5vs
-	aPFPau+xXwtJff7nf+TfrBoBsUJnt+1iSwpim8VfAHYNO3zLZjLSg4ulmGjxMU/9T0SlI3wE+83
-	OZFdGa9/O2nbq3udT4wC8EHkprJPI1AzY/t3eXOMjL6zkWebWloCpYMpA/HFHuiZ51/qK4pG1Dz
-	/IBptO7Iz4u0Gh9m69OsCBXgGYZuf0n34rXtFOng86ZomcCUne5Q7iBeQU/H0D+SZlECHBLqnIE
-	7JwURHrnLNfcj13tEfZ5qlGL4QaL+p329AouUR3+N9IwAzQAW3uUZHTAL3r7cr7+PEf1Ja9tn4m
-	IvhUQR9wF8OQcUb6O3pCxXHCL8VmxHNum6057OEw9uUYTnTL3hKxpjVQZv30miRSsLlItpgmWcF
-	XUULAp0Fyj/Vfgqose2YLMPJ2DTTQhTDqpnIA6Nv0=
-X-Received: by 2002:a17:90b:3b43:b0:393:1cd6:643a with SMTP id 98e67ed59e1d1-3933bac941dmr18633395a91.18.1786873430344;
-        Sun, 16 Aug 2026 02:43:50 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-29.dlp.protect.broadcom.com. [144.49.247.29])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-39531e138c7sm576282a91.7.2026.08.16.02.43.49
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 16 Aug 2026 02:43:50 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-392cf18db8eso1478790a91.3
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 02:43:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iXIDmgu6"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-39c86945164so23281411fa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 06:23:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1786873428; x=1787478228; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JSVI9EmcUArZjAZ/au+br5pNZJa0DmSYRx0foLnLp38=;
-        b=JT3cshURJxnF45hSmP1n3wvuY99IXfsVEoEKw4U4f9Xxb0l5WLabIVNRgeAxVTnFle
-         XVSngsW0o+eoOfeoGWDLHLxAUa31NFJQ4IrnakUpee0pNJqXcT5aTdrH7b3RHgSjfXGz
-         /BOLQd8vJ9GXndou62AMG+2+OaVhB7XlwSp4w=
-X-Forwarded-Encrypted: i=1; AHgh+RooLefmNQ3hOlE5QSF0hGOFtNd4NxUN3LjCDgoVkDcFXr1wFHJmJswEFkJhyVRKdGIvaZL+0qxZlY7EIMQfJQ==@vger.kernel.org
-X-Received: by 2002:a17:90b:4f8b:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3933bcc78a9mr18359416a91.19.1786873428464;
-        Sun, 16 Aug 2026 02:43:48 -0700 (PDT)
-X-Received: by 2002:a17:90b:4f8b:b0:38e:8021:2ea9 with SMTP id 98e67ed59e1d1-3933bcc78a9mr18359386a91.19.1786873427926;
-        Sun, 16 Aug 2026 02:43:47 -0700 (PDT)
-Received: from [10.229.42.78] ([192.19.176.227])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-320e9df2504sm24436596eec.17.2026.08.16.02.43.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 16 Aug 2026 02:43:47 -0700 (PDT)
-Message-ID: <83ef9f7b-4145-4985-b157-6fb9fbb0b3f0@broadcom.com>
-Date: Sun, 16 Aug 2026 11:43:41 +0200
+        d=gmail.com; s=20251104; t=1786886609; x=1787491409; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vg9qAqprJ1qT8ZCEcxsSaRPXUDpRR/0AcgE/OG5kf+U=;
+        b=iXIDmgu6EubDrlWbvqjp9UG+3s56TjwRJJeWUbMR2wxzpXAVQISLPUgRXMUFz75xgZ
+         RJ4YEsQE9pNr1PV3i93MKDQc9LxTvbOS1YZJX3I+zYcIBFQydijUCjzeF7Iz+rkgRpmd
+         bh2SdYdmL4Y4+FllWRcuRbAd/eyS/RiK0SEjjK+o3TcKSB4ti4PynIbiiE+CE307ys4J
+         uaTmdRuSX4cVcr+e8ORX0BnXVfbKJ8R1YCRlBGhhzPANZzgmGkRS0IuamNP2udD4RvVH
+         vhu/rBYgPvHMzHenap4ggErOE3gXmrOU6iNcbYYjNll2VHEWZCLLNJInNbRulzgl5w0v
+         9bfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1786886609; x=1787491409;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vg9qAqprJ1qT8ZCEcxsSaRPXUDpRR/0AcgE/OG5kf+U=;
+        b=Dh2INoGvx84LR5qlDPiqd429AAqgoY/LM3YvHAVModpb6kvWBG30dDD62h52Y8HNUr
+         +a6iIHnx/kkvFNLYqkksDGaTatA3NYS8Lh7xfkOzh5qkRS/QXkJ5MIkI3NVoITklPpT9
+         wo4GlJJewvVkXjrvXl64CxHVY2aqaQ0+zmhaPQHthRDRvuMXDRuO6OThvAM2PKr+AdJv
+         /ynBoHh2hwC+4DwHXXyH5hIwsk3qfDqDX5UrPlmIIQOyMee1K4HPg7K/uzpQ8P+eBAzW
+         6EW+2lWQvml7wDRMet+i38EdwVrp8n7IZ0/cy3y6sfMJop/8D9K5AkdM++C+AG+Mrg/x
+         lzNg==
+X-Forwarded-Encrypted: i=1; AHgh+RqnsER5JfvlvHu1K6OUZANrEm8O47THiS3VS19hF0ex5ewm92ewhQn2Q+7br6XVTsQm4/uKdURtIJLSBUlzLQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzXETN222S3lZDul2RWBPmPCAoxEJTaM3i82NVA5P83xVaZ6gi4
+	jRAVexsAM8DWmQ9cY4HwiTPMKiVv0VMn2ODsAzSp1D1QXvI1u4cK+Mqt
+X-Gm-Gg: AR+sD11FBClDWl4mENCoaqgQQmUCUhHWi/zswni++aFMT8pjcUQgMOe/rNF09yroOzk
+	u6q6+j5zBV9qxo+wFIKBikOhIVQyyXkiu9TbiVpKpehM6Le79IIinJqh6rzFkYAQQavF95StvX3
+	erwI9TM9qL/lyJS6TQqXj9rLSJveOM8+UsdOulrAjkdp9/5t+MNmZTiVBNddT+zm5RJeaYBQqKE
+	1eYXJD6eZSZGxoIRLSLLcJHUhsEcUvdnjLPMDecTmu8zhZLRZh0vLdMRV4qW298PW+KQlY0B28r
+	FNzrH8hdjyfc3mDF1cruws7TyZ5q5B7EfzGi6GGTqe4cmipTfRmw/l2uOeU8NYw6j4UamuCVKjn
+	UqbyucEeQB354e/dPJdiGxFMEUo0Z0qkdV0o56Q5Ef5COvOWOPWExKZJ2SlxVlC0XHStZAQUL+n
+	+IO1WWC4iQU1kPJVEvYJJ4k9OOCgC7bxr7NmQ6+XrItdVBaf0RIX3iErXOJoAfYmLZgbqN4R/Lr
+	tcXkLaRb7qy/C4dnb9Kqczftm2bRuze9r2KpXLQ+QtFG4dN49gItWxKvjAHokPqQj2XIFs=
+X-Received: by 2002:a05:651c:2113:b0:39c:71c9:e28f with SMTP id 38308e7fff4ca-3a1327dfff1mr17716681fa.25.1786886609125;
+        Sun, 16 Aug 2026 06:23:29 -0700 (PDT)
+Received: from localhost ([188.234.148.119])
+        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a130cfd4c8sm18812451fa.34.2026.08.16.06.23.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Aug 2026 06:23:27 -0700 (PDT)
+From: Mikhail Gavrilov <mikhail.v.gavrilov@gmail.com>
+To: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>,
+	Felix Fietkau <nbd@nbd.name>
+Cc: Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Ming Yen Hsieh <mingyen.hsieh@mediatek.com>,
+	Deren Wu <deren.wu@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: mt76: mt7921: validate CLC firmware records
+Date: Sun, 16 Aug 2026 18:23:25 +0500
+Message-ID: <20260816132325.23007-1-mikhail.v.gavrilov@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <CAMyXUJmh=WfwC4_KHupNxYR5e2Gy5QhBDL5TSG6XEW-XLa+X4Q@mail.gmail.com>
+References: <CAMyXUJmh=WfwC4_KHupNxYR5e2Gy5QhBDL5TSG6XEW-XLa+X4Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCHv2] dt-bindings: net: brcm,bcm4329-fmac: add nvmem-cells
- for MAC address
-To: Rosen Penev <rosenp@gmail.com>, devicetree@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, van Spriel <arend@broadcom.com>,
- "open list:NETWORKING DRIVERS (WIRELESS)" <linux-wireless@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260811192829.123410-1-rosenp@gmail.com>
-Content-Language: en-US
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-In-Reply-To: <20260811192829.123410-1-rosenp@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Transfer-Encoding: 8bit
 
-On 11/08/2026 21:28, Rosen Penev wrote:
-> The nvmem-cells and nvmem-cell-names properties are used to supply a
-> MAC address to the brcmfmac wireless controller. Nodes such as
-> bcm4709-linksys-ea9200.dts fail dtbs_check with:
-> 
->      Unevaluated properties are not allowed ('nvmem-cell-names',
->      'nvmem-cells' were unexpected)
-> 
-> nvmem-consumer.yaml cannot be referenced from the common
-> network-class.yaml because it does not constrain the number of entries
-> or their names, and not all network devices use the same cell names.
-> Each binding that uses nvmem must therefore define its own
-> nvmem-cells/nvmem-cell-names constraints, like ethernet-controller.yaml
-> and qca,ath9k.yaml already do.
-> 
-> Add the single-cell, mac-address-only constraints to the
-> brcm,bcm4329-fmac binding.
-> 
-> Assisted-by: opencode:deepseek-v4-flash-free
+This patch is in linux-next as 9417c5818a01, and on current shipping
+firmware it stops mt7921e from probing at all.
 
-Probably for this v2 it is better to say:
+An unknown clc->idx is treated as fatal:
 
-Suggested-by: Rob Herring <robh@kernel.org>
+	if (clc_len < sizeof(*clc) || clc_len > len - offset ||
+	    clc->idx >= ARRAY_SIZE(phy->clc)) {
+		ret = -EINVAL;
+		goto out;
+	}
 
-> Signed-off-by: Rosen Penev <rosenp@gmail.com>
-> ---
->   v2: don't use nvmem-consumer.yaml
->   .../bindings/net/wireless/brcm,bcm4329-fmac.yaml           | 7 +++++++
->   1 file changed, 7 insertions(+)
+but linux-firmware 20260810 ships an MT7922 image that legitimately
+carries records with idx 3. Dumping the CLC region of
+WIFI_RAM_CODE_MT7922_1.bin before and after that firmware update:
+
+  20260622, region len 366448:
+    idx=0 ver=1 nr_country=255 type=0 len=179384
+    idx=0 ver=1 nr_country=255 type=1 len=187064
+
+  20260810, region len 475488:
+    idx=0 ver=1 nr_country=255 type=0 len=179384
+    idx=0 ver=1 nr_country=255 type=1 len=187054
+    idx=3 ver=1 nr_country=0   type=0 len=54520
+    idx=3 ver=1 nr_country=0   type=1 len=54530
+
+So mt7921_load_clc() returns -EINVAL, mt7921_run_firmware() fails, and
+the probe retries the firmware ten times before giving up:
+
+  mt7921e 0000:0b:00.0: ASIC revision: 79220010
+  mt7921e 0000:0b:00.0: HW/SW Version: 0x8a108a10, Build Time: 20260724143257a
+  mt7921e 0000:0b:00.0: WM Firmware Version: ____000000, Build Time: 20260724143402
+  [ ... nine more identical pairs ... ]
+  mt7921e 0000:0b:00.0: hardware init failed
+
+No interface is created. There is no dev_err on this path, so the only
+clue is the retry loop. Loading mt7921_common with disable_clc=1, which
+makes mt7921_load_clc() return before any of this, brings the device up
+normally and the firmware is loaded once rather than ten times.
+
+The rest of the patch is a real improvement - bounds-checking the region
+table and each record length also closes an infinite loop on a
+zero-length record. Only the handling of an unknown index needs to
+change: an index the driver does not know about is not a malformed
+image, it is a newer firmware, and the record should be skipped:
+
+	if (clc_len < sizeof(*clc) || clc_len > len - offset) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (clc->idx >= ARRAY_SIZE(phy->clc))
+		continue;
+
+I sent an overlapping patch yesterday, "wifi: mt76: mt7921: fix
+array-index-out-of-bounds in mt7921_load_clc()", before I found this one
+in linux-next; I will mark mine superseded, since this patch is the
+broader fix. Happy to send the one-line change above as a follow-up
+patch and test it here, or leave it to you to fold in before this
+reaches mainline.
+
+Separately, it would be useful to know what CLC index 3 actually
+contains - roughly 109 KB of payload in two hw_encap variants that the
+driver currently discards either way.
