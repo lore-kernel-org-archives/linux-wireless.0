@@ -1,247 +1,133 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4444443E094
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 13:48:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786974500; cv=pass; b=k91c00GAQGPBR33RLFqWFXrYO4+Punfrdq5ZcKDbftfFxfLuIQuVmplXaHM49VrvBQPpiDUARuml6gUhH4ZpGKWZwI1DGhqSbthPahNqLSCZmfUjUXBSnjGJxUfgjn4eoH7duxwyvhUI53vhDTQtSAGmiFPqxhNR3DPiJl/yAqM=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786974500; c=relaxed/simple;
-	bh=nqI3jg67KA3IMhPePXOc6LbjzHjaub66adXfe4jkGsk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oO7qfYitu5F1pwdPK3MGGKFncWnxEL/JZvYLPveC42TDid4IvgNqhiOoXbTKF8fJDm/MTxAW+cpIzlfKg1mvKRWd+D1/LQtk9zT5fwBhjpv4rG1YGc0OmyxlquV0y5eDDqpsp9LAeoJpNbeIScMFKJpTjWKn36c9vj+4XZ3vM6Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZQx9VsXE; arc=pass smtp.client-ip=209.85.208.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308583DAACA
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 14:25:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786976720; cv=none; b=idtLvf4bQtbvXOjc3CLJjtsCwvHmxDiL68iupJCBGtq11AxM9r+yZ3+TbBhDYmiwdpJqjcIbEkYpJaaZXAt+UDCJCPuQBo5v9VxbtfdmrOwEOUd3snqEWLUOHy7wdpKbbfzNb5qn9HVwYUvADonIJA5OruRUQ4j6SGG3fZmVsZs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786976720; c=relaxed/simple;
+	bh=5NYCdV7DxO0yfbG8hSq4BoGXgeh/C3dc4BvFmYUP9OM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Px3JxRyksUtIlxUZedXHoZfYCx5wXxJJbczw0BR0NCqGmnnraEl2chb0eCTyD12169TXsvr3scfRGquU45986RZ9tuFuLCdrv/YWEex/nK3+c36HJsE0PvYuZJFJhkXdschETyX5QMBas+AmO7wyoeyjaW1ea5UCFTXRXXkLvKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=a+tsw9lR; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZQx9VsXE"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-39ca0a30148so29932241fa.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 06:48:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786974492; cv=none;
-        d=google.com; s=arc-20260327;
-        b=KLF/7bkSIJLprFuVNPPqHH7laq9/pOuE+MbUE+QKMsAZaOr+tir59INNH35xFGD8ma
-         7Z969DZos5bpjCY2SBrpXVekncPIvcm5w6w+Ie5g4zoeBS8gbxrqueQ0vjU8IPM1pYHz
-         qV8Aa6C8BoIUO82+C5vmIt55K3vQC5x93SUv9GcCNJvcX3YWCvzFbKeHIGKhy6bmSKPt
-         sfGMl8WQ30m1NnWuQQcPP6SW2RvYjm7NafOSeUoDecwOoZrON5XJ/Mk7j69SeyyDi5Xs
-         wCzOvASpq1xxkttCJUbNgvii7tq9TwemGU7IsjO8PypC07hJnVI70AEsSypj6RXeTulJ
-         Insw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=B7to3S/vyHJi4C50qM1skSCpv39eeSlcQqbFpwDuuSA=;
-        fh=Vi4p9rmerlEA6axwU8PYqAl5FymceMgvpJxfEfcukP0=;
-        b=UOEHAeZ48F9I9+px+Ue78ahgkOQ1m/pysGIBRIB5WJ1feSrF+AiF0whxPm7om6rh1Y
-         n9JEmBwMOAF4nXoFjoC5ZNd83MScgdeleyKAX+cv+fpw1TM/D8tLZYQq7p/algVaXh9U
-         PnoeEVd1hST0XQyww92/7PoeNqI1LIyjcQ9B4C/WjHDSWdqs/QkwOiqdVdh+Eyij6JS0
-         /Wtvui3l5ZnzYZcy3Zj433vV1NsHssRkXzPxB8K/l8gAju1HoSklpveGxVFTnG5jAKhI
-         rNUAzP4rpoCyDR/8RB5v+wToUpi1SM9xaxVayhOVU6LC8solfs0uJuVQvZpCbJoRQG0F
-         mdtw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786974492; x=1787579292; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=B7to3S/vyHJi4C50qM1skSCpv39eeSlcQqbFpwDuuSA=;
-        b=ZQx9VsXEX/UMMykIL14c4AULivEUev6dy906AsNuyVkxHiVMoY3YusNetbghnNVlF+
-         LXOms/XNB+J7Rvi/ekD/I/1wu0Vzw5kRzIcbWaUPhcLchrlP/3iHNv7nCE13pVj/oC7C
-         N7AOlvH3m1LZmQrvKy4AY6I87o3SouFIcfb9TRuarnU8YoNy6g4nPehsQ4wohUjTV5bh
-         UkByC8a4INxijrcNnaCZLuzK/WW+YUVacCQ0R187CKw7GI8LS/NaJNC9aIrV1158YFDG
-         Tp5J4ivLwKnqJLncfSkGNbPHSRS+/OKBYWnE9se/bW0J4iSvfr7PUwq9ZgkRyc5tbq2y
-         VhUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786974492; x=1787579292;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=B7to3S/vyHJi4C50qM1skSCpv39eeSlcQqbFpwDuuSA=;
-        b=UwV0wCPr29g1SyMez30f+bQDlxobzhJXiResZ1Zy503bgQLacpMzDGFrp5NkOj0K1I
-         TNJnkHkcyElY8BzaZcjMmJbEo7YlQNXPLmNbID4kbmzDkGNuUj5PjRENs7irnmBGT+wu
-         eukmgI2kMt8qMCT+P9mc9Kj8TAAb6qhI7jsrdh8Vi4YefMk7/aVCd5S284pCCxe4hi+e
-         pxxOaHn4/+TsxF6gxus6c9/ZdjBN8VBXe4cUW/rQPa0qW78/V3p55bU75Zlj3byqKQmi
-         Cb63FTiFPTNEeEaicrZjAA52S5++s8md+i5IMNYn67jmShPsJB7Zob+6aD9wFJTHySrz
-         BGUQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpwoguqxGb8rqUtgWFR/LbgXn4ha5ZPQW7bvuKCce2T3rCkUV0mexxk9gdO6frWOs7B0qh37EHNCpX589h8/A==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3Kvu4Q7tVo+KaoTyIxZDNYrBTyu1Dxt/dIAzAO9nGi/Q/bk4Q
-	tYicmFbGPwm38OBse5cEWYmQWjqPOJOKe9CQsGmzKkpUv0ZZc7St71x2gzxjhOUW28U5ZcqNd8s
-	2BHdEcF/x/TcU0w4KwwzWfby/byF/Svw=
-X-Gm-Gg: AR+sD13UYcEpGbPZML4lCKaSh+kIr3jI+NJzAgqAQi2rVu1syUuBKqPo5NIz8NO36Ly
-	NQv7xN6K5dsK+s1DjqK/UMLJYHtYjkepvCDRu4lbpj0mvdc/r1RqpOBoEf456X8hZMwVqe5ZHdf
-	kRza4Vsp2MZPb/u1yZdzQlR+6mGXsgG7Rue8ZbCTFMMIgsfh+vzYMfh5YAzGQEbbLNAVxDKnBw9
-	c9qJgjKs9Sihw7Av0XGZMiyuMytNJfBZZ1udnebRdQzn89zsT7jl8iUzkUnbLvZ87F1QbVpIkPl
-	d+CwR5fjO0fMwFDoLiSXoGcaRwMJmPtWCD4NY2+l7zdygSFydFTJQ0pWwojGPZBdgwzc85NPOy5
-	03cQSnxNqV6rcMH2MqE11I4Iy
-X-Received: by 2002:a2e:be21:0:b0:3a1:3299:4b72 with SMTP id
- 38308e7fff4ca-3a132994c9bmr27554591fa.5.1786974491759; Mon, 17 Aug 2026
- 06:48:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="a+tsw9lR"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id CB680240103
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 16:25:14 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
+	s=1984.8680eb; t=1786976714;
+	bh=SILDQTFVoY+AHwG+3Bgw2hvsn82dE9tOcH20jBz/6ro=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:Content-Type:
+	 Content-Transfer-Encoding:From;
+	b=a+tsw9lRrER2gTA9zq3zXBc2A8tWz6RINzlT2l2WJYQp4KPo9YY5Rrk3FdSpyi/Bl
+	 oEwppZGI6gFdmqSvrWhtnINB6HrUEJrw5SpnbX5sAMqLyAdgzjk6CWiTv/hNB08TDT
+	 na7FCVTEpz4LCKWVZw6jKdm+QLf8/GWQccToTpqQQQmYHyVyNkUlFxlPmElUpLxWzu
+	 2PX+Ai6z5RqecktfHpkDUTXooM1H6lX7Q6GgK5OWHlzyG9L/Hvm7McvGCyb9kwjVmx
+	 eW5pWcFo4zjlE0E0FPAnG6b0zonVgUGxzmGk8oYbl/CslWh40+GIUF0zKdTFgJBpKS
+	 3QDUmDTReH4/g==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4hNw8n1Txrz9rxB;
+	Mon, 17 Aug 2026 16:25:13 +0200 (CEST)
+Message-ID: <b83a5708-b5f4-48e9-85a5-37b3ab34af46@posteo.de>
+Date: Mon, 17 Aug 2026 14:25:14 +0000
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <anoYr9H4KojJv-aZ@google.com> <20260814125025.90522-1-gvalkov@gmail.com>
- <20260817-hairy-serval-of-refinement-49039a@quoll> <CADOrJmb3uJPpYR481rB-CnL0A9B_5PQ683XP+Gdis47uihqMBw@mail.gmail.com>
- <9b3b6f29-35a8-4b79-a002-bd0aac5dbee4@kernel.org> <CADOrJmZRBQb9u9oi2m=4iJuKDLVi6HNjOoSurRwE5QKPB_LetA@mail.gmail.com>
- <2f264b09-98e9-4260-b413-97a494ba789f@kernel.org>
-In-Reply-To: <2f264b09-98e9-4260-b413-97a494ba789f@kernel.org>
-From: George Valkov <gvalkov@gmail.com>
-Date: Mon, 17 Aug 2026 16:48:00 +0300
-X-Gm-Features: AcwNN1XSM-kUj0y-bm3ADk8-VJqO006hhwhFkIs6frzRNq7J5ZP1Fvf40UVJSGU
-Message-ID: <CADOrJmbTyrGGkq+9OJDXCgTa2HvNo8BWxoE6yjafcrOq7WNamw@mail.gmail.com>
-Subject: Re: [PATCH 1/3] dt-bindings: net: wireless: add flag marvell,ignore-regulatory-hint
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: briannorris@chromium.org, johannes@sipsolutions.net, andrew@lunn.ch, 
-	francesco@dolcini.it, johannes.berg@intel.com, kees@kernel.org, 
-	miriam.rachel.korenblit@intel.com, wenst@chromium.org, 
-	rafael.beims@toradex.com, avraham.stern@intel.com, error27@gmail.com, 
-	s.kerkmann@pengutronix.de, gregory.clement@bootlin.com, 
-	sebastian.hesselbarth@gmail.com, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, Frank.Li@nxp.com, chunfan.chen@gmail.com, 
-	linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz
+ link active
+To: Devin Wittmayer <lucid_duck@justthetip.ca>,
+ Thorsten Leemhuis <regressions@leemhuis.info>, regressions@lists.linux.dev
+Cc: linux-wireless@vger.kernel.org, lorenzo.bianconi83@gmail.com
+References: <066b30cc-a9e6-4aeb-964d-71551e8ea3ef@posteo.de>
+ <d8e493ef-90ff-4364-ad4e-1709fae97005@leemhuis.info>
+ <20260816204805.46779-1-lucid_duck@justthetip.ca>
+Content-Language: en-US, de-DE
+From: Jonas Hort <jonas.hort@posteo.de>
+In-Reply-To: <20260816204805.46779-1-lucid_duck@justthetip.ca>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon, 17 Aug 2026 at 16:25, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+First, thanks to everyone helping out with this - really appreciate
+the time you're all putting in.
+
+One correction to how I described this earlier: the connection does
+NOT reliably self-heal on its own. I have manually intervened every
+single time to restore connectivity - either by disconnecting and
+reconnecting the WiFi connection, or by switching to my band-lock
+workaround (forcing 5GHz-only, which disables MLO). What I can say
+for certain: the system itself has never needed a reboot - it stays
+fully responsive throughout, only the WiFi link itself needs manual
+action to recover. Wanted to correct that record before it causes
+confusion.
+
+Update on the ROC tracing: three real freezes captured now with the
+kprobes active (all confirmed via the WFDMA0 tail-frozen signature).
+
+- Freeze #1 (15:37): no ROC activity in the trace. Fixed by
+   disconnecting/reconnecting the WiFi connection fairly quickly.
+- Freeze #2 (15:43): this time I deliberately waited longer before
+   intervening. The trace shows several ROC events (rocabort, mloroc,
+   rocwork) clustered together. Fixed by switching to the band-lock
+   workaround (5GHz-only).
+- Freeze #3 (16:15): no ROC activity again. Fixed by
+   disconnecting/reconnecting the WiFi connection.
+
+Uploaded all three logs to the bugzilla ticket if useful:
+https://bugzilla.kernel.org/show_bug.cgi?id=221884
+
+Still haven't gotten to confirming 6.18 as a clean baseline on my own
+hardware - that's next on my list.
+
+Am 16.08.26 um 22:48 schrieb Devin Wittmayer:
+> On 15/08/2026 07:51, Thorsten Leemhuis wrote:
+>> CCing Devin, who wrote two of the following messages
+> Those are the mt7921 regd deadlock. mt7925 does not have it, there is no
+> equivalent of the mt7921_mac_sta_add() call site that creates it.
 >
-> On 17/08/2026 15:20, George Valkov wrote:
-> > On Mon, 17 Aug 2026 at 14:07, Krzysztof Kozlowski <krzk@kernel.org> wrote:
-> >>
-> >> On 17/08/2026 12:43, George Valkov wrote:
-> >>> On Mon, 17 Aug 2026 at 11:54, Krzysztof Kozlowski <krzk@kernel.org> wrote:
-> >>>>
-> >>>> On Fri, Aug 14, 2026 at 03:50:23PM +0300, Georgi Valkov wrote:
-> >>>>> WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
-> >>>>> from the mwifiex ROM, which conflicts with the platform regulatory
-> >>>>> configuration on units sold outside the US market. For example:
-> >>>>> - phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
-> >>>>> - phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
-> >>>>> - phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
-> >>>>
-> >>>> v1 as reply to v3 in big thread. How tools can parse that?
-> >>>
-> >>> Hello Krzysztof,
-> >>> I apologise, I forgot to add the v4 tag to the subject.
-> >>> I have documented the changes between each revision.
-> >>> I saw my mistake after sending the mail. But I wasn't sure
-> >>> what to do? I will make sure to add v5 to my next revision.
-> >>>
-> >>>> Does b4 diff work?
-> >>>>
-> >>>> b4 diff '20260814125025.90522-1-gvalkov@gmail.com'
-> >>>
-> >>> What is b4?
-> >>
-> >> Tool used by maintainers and contributors to handle/send patches. See
-> >> korg docs (or just google "What is b4 Linux kernel").
-> >
-> > Thanks!
-> >
-> >
-> >>>>> When the system boots, it detects a conflict between the user selected
-> >>>>> region and the radios, e.g. BG FR US, and applies extreme restrictions,
-> >>>>> preventing use of 5 GHz and DFS channels. This also affects phy0.
-> >>>>>
-> >>>>> Add a device-tree flag, which allows affected platforms to ignore
-> >>>>> an incorrect regulatory hint from ROM, so userspace can set the
-> >>>>> correct platform regulatory domain.
-> >>>>>
-> >>>>> [1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-> >>>>> [2] https://github.com/openwrt/openwrt/issues/9956
-> >>>>>
-> >>>>> Tested-on: WRT3200ACM, OpenWrt
-> >>>>
-> >>>> Not a valid tag, drop.
-> >>>
-> >>> I believe the tag is helpful because it describes that my changes
-> >>> have been tested on a certain device and platform. It's a common
-> >>> practice in OpenWrt contributions. My last two accepted patches
-> >>> have this tag. Should I still remove it?
-> >>
-> >> Drop the tag everywhere and instead on the patches which were possible
-> >> to be tested mention how did you test it.
-> >
-> > ok
-> >
-> >
-> >>>> And you cannot even do that, otherwise explain me
-> >>>> how did your device execute THIS (exactly THIS) code?
-> >>>
-> >>> I am not used to your terminology and this gets me completely confused.
-> >>> You have not quoted any particular code change, so I'm not sure what
-> >>> you are referring to. Here is a summary of the patch series:
-> >>
-> >> Tested means executing or parsing or using the code on the device under
-> >> test. How can you execute/parse/use this code on the device?
-> >
-> > Test procedure:
-> > Compile, FLASH and run OpenWrt firmware for WRT3200ACM.
-> > This compiles the Linux kernel along with all dts files and drivers.
-> >
-> > 1. Before the fix
-> > Notice how each radio has its own country:
-> > iw reg get
-> > https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-> >
-> > If the user sets their correct country code, e.g. BG, then global
-> > will be set to BG. This conflicts with FR from phy0 and phy1.
-> > And also conflicts with phy2 which reports US.
-> > Result: the main radio phy0 does not start.
-> >
-> > 2. With the fix applied
-> > iw reg get
-> > phy2 does not appear in the list, so there is no conflict with the US
-> > region. I can address phy0 and phy1 later in another PR. They need
-> > a similar device-tree flag in the board file. The actual driver is not part
-> > of Linux. So I'm not sure if there is any place to add documentation?
-> > Result: phy0 and phy2 work. 5 GHz and DFS work.
-> >
-> > I also used this test code to confirm that the flag is set:
-> > mwifiex_dbg(adapter, ERROR,
-> >             "[%s][%pfwP] ignore-regulatory-hint %u ++\n",
-> >             dev_name(adapter->dev), dev_fwnode(adapter->dev),
-> >             device_property_read_bool(adapter->dev,
-> >                                       "marvell,ignore-regulatory-hint"));
-> >
-> > [   19.927595] mwifiex_sdio mmc0:0001:1:
-> > [mmc0:0001:1][wifi@1] ignore-regulatory-hint 1 ++
+> Worth ruling in or out before you bisect. mt7925 sets
+> IEEE80211_MLD_CAP_OP_MAX_SIMUL_LINKS to 0 in mt7925/main.c. It is an N-1
+> field, mt7996 sets MT7996_MAX_RADIOS - 1, so 0 means one simultaneous link,
+> and mt7925/mcu.c then requests MT7925_ROC_REQ_MLSR_AG or _AA. MLSR is
+> multi-link single radio: your two links share one radio, and ROC is what
+> moves it between them.
 >
-> You are not responding to the actual problem.
+> If 5 GHz is your deflink, your pair is named on that path in
+> mt7925_mac_set_links():
 >
-> In very simple words, like one or two sentences, explain me how this
-> YAML file affected `iw reg get`?
-
-It does not affect `iw reg get`.
-I was asked to document the flag there, before I use it.
-Documentation/devicetree/bindings/net/wireless/marvell,sd8787.yaml
-
-
-> >>> Patch 1 documents a new flag: marvell,ignore-regulatory-hint.
-> >>> Patch 2 adds a device-tree node with the radio and the flag.
-> >>> Patch 3 skips the regulatory_hint() call when the flag is set.
-> >>
-> >> I can read your patchsets and above does not proof how can you test binding.
-> >
-> > Ah, you mean how I tested if the device-tree changes are valid?
-> > I have almost no experience with dts. I ran this command before
-> > sending v4, and I think it seems fine. Here's a link to the output:
-> > make dt_binding_check
-> > https://httpstorm.com/share/.openwrt/test/2026-08-17_mwifiex/dt_binding_check-01.txt
+> 	if (band == NL80211_BAND_2GHZ ||
+> 	    (band == NL80211_BAND_5GHZ && secondary_band == NL80211_BAND_6GHZ)) {
+> 		mt7925_abort_roc(...);
+> 		mt7925_set_mlo_roc(...);
+> 	}
 >
-> This is a make process, so build stage. Nothing related to testing on DUT.
+> That one only runs at association. The path that can run mid-session is
+> mt7925_change_vif_links(), which calls mt7925_set_mlo_roc() for each added
+> link. Both reach mt7925_mcu_set_mlo_roc(), and all of this is the same in
+> 7.1 and 7.2-rc7.
 >
-> Building kernel (and running standard tools) is not testing, so I repeat
-> - do not introduce "tested" statements to commits which is impossible to
-> test by the definition of "tested" in Linux kernel. We discuss all this
-> in this very specific patch, not some other patches.
-
-ok, I will drop the Tested-on tag for patch 1 and 2.
-For patch 3, which can be tested, I need to describe how
-I tested the changes, e.g: iw reg get, and print the flag.
-
-Note taken. Thank you!
-
-Georgi Valkov
+> Under your existing watchdog:
+>
+> 	cd /sys/kernel/debug/tracing
+> 	echo 'r:mloroc mt7925_mcu_set_mlo_roc ret=$retval:s32' > kprobe_events
+> 	echo 'r:rocabort mt7925_mcu_abort_roc ret=$retval:s32' >> kprobe_events
+> 	echo 'p:rocwork mt7925_roc_work' >> kprobe_events
+> 	echo 1 > events/kprobes/enable
+>
+> Association will fire mloroc once, so anything later is a mid-session
+> switch. If the WFDMA0 tail freezes while one of those is in flight, it is a
+> link switch that did not finish. If they are silent across a stall, the
+> whole path is ruled out and that is worth as much.
+>
+> On the bisect itself: your 6.18 good point is second-hand, from different
+> hardware and a different AP. Worth confirming on your own box before
+> spending steps against it.
+>
+> Devin
