@@ -1,134 +1,155 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB0F379C4E
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 05:37:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B347E379C4E
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 05:39:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786945031; cv=none; b=kFyBG9z28649oQL2WKMA05XWcDwQg+xLBCYtb2t1gspgfZ6qHIEP7thOXh+d+ybMXnKEzONmBM4y9YgclqCrw8YsHZj/BWa0aTUUtgW+ZnLdJ6LIY6CUWdpJHSc+BH07qG1JHE9HNg3MWvKZvmYjg985Jg4d1uOA54i5W6qCzsE=
+	t=1786945144; cv=none; b=JCbHlsEmRwnHIblUntuLMl+lYyEpuUmSbSrMqJEVu3NLh8yfqAjGeiU0An7mDJe9Xw0wCNrLnix1FkJfTpk65I511wMeRlbBY4629lwREm9rt2+y2xrhVdp2/krifLgTyauJyNrcpwn7FJZT5IXdBgYidsQ4hIPcjaiRrKFp7UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786945031; c=relaxed/simple;
-	bh=dt98ocUAux3K9VgwizS/m5coDULp0+CTjALDulWQdNY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=m6hPV5bon96ZTiPTCdSU3LeAugegiAWtc6eMRvehSXFha2Y2fINjReWFFrZ3ZivQmIwsWi3XsiGuxuv9FJ6abzG2bXVAAqz6G8p7CfCsgLN7rBFP0XbPZqFa+Gsnvz4UQW27pQfwmDjd0ZMR9q9vtxfAi4QRXwQ8M5+SAacxyw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DpqkFAUq; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1786945144; c=relaxed/simple;
+	bh=N1MUVCZRk+JnihPhSQrWFGKRrA06WF7Pa450bPU36Zk=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=kcb8PgwxjQs+O439TR+l612N2iyq2af1BeUlgshl2tFuYVMuOM337U2/fa8FlmGyG7BiWJrbqMnT1NMfioAvAUkIpK2xRrLyPUxX4FA6v8tO4oFud0/0j1Hr9kaitnW0h8yUv1sPuG/PlZFaT+KPwNofqL9J8NxqLCFx+o6e9iU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Nx7aODtr; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DpqkFAUq"
-X-UUID: 8fce3a0c99fb11f18dc8c9802ae25ab1-20260817
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=HTWfwGfzFc2XqVUlWrFEfYproDWYn0hNuxeA+miUg6I=;
-	b=DpqkFAUqs7I7mdMXgI8PgbwAUwmeEdktr28XRB47/umK7RaiR544ys63pDt9m5VMq/kcow8WnZgyTQvlrJ5BnULaG3VET+c/VcunBofNiAn7zrLuHFB0PGYMssDJYRSgYxFIZ258byrbIN347ot0t+oa/3i3ew/OffKCp5rAqU4=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:44a6bb69-c5a8-4dd3-aa1d-bcb13d3aba0f,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:131df2f1-0685-46a3-9cac-19d8f3a05ae7,B
-	ulkID:nil,BulkQuantity:0,SF:102|136|836|865|888|898,TC:-5,Content:0|15|50|
-	99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI
-	:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 8fce3a0c99fb11f18dc8c9802ae25ab1-20260817
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
-	(envelope-from <eason.lai@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1066881197; Mon, 17 Aug 2026 13:21:55 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Nx7aODtr"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67H5cwlaF3674103, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1786945138; bh=nyH4LTYKekB0phlEltwsEtmCkVuE/1yMiswuvtjR3Po=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=Nx7aODtrRAciDu0LqA41kreZkTdyZ1ko5xHkvjNF2aLsOJDQ8+QZDXoHom027xS4D
+	 354ht2o4ewJgJW/O+eWpPiGrklWz7KXFDH4ZTYq8zGMNBsu/W0s+N7nZIX8F33MiFZ
+	 +3Br2mAc6e4KhJ/11wg0ckmdi5a9G+EjaVyVZzqnXlsVX+0HcL61FFkq9vJXGr+oqb
+	 Fw/g5Qm00nHkY3ljscRIea5m4uiNN6YOGVvZT6YSwZB987oRRU0j05qSqQCNoSaWd+
+	 93ELeI9VUmFmZ0xH9zAXUfapqJ0BZ39So9jIhHz1fiNCu4gr8qMxipuewU/+rlcCyt
+	 9FhqSQlb0Z32Q==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67H5cwlaF3674103
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 17 Aug 2026 13:38:58 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 17 Aug 2026 13:21:54 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 17 Aug 2026 13:21:54 +0800
-From: Eason Lai <eason.lai@mediatek.com>
-To: <nbd@nbd.name>, <lorenzo@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<kun.wu@mediatek.com>, <deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
-	<quan.zhou@mediatek.com>, <ryder.lee@mediatek.com>, <leon.yen@mediatek.com>,
-	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>, <jeff.hsu@mediatek.com>,
-	<eason.lai@mediatek.com>, Jeff Hsu <Jeff.Hsu@mediatek.com>
-Subject: [PATCH] Fixes: a01a222ab4aa ("wifi: mt76: mt7928: Fix TX hang due to DMASHDL setting error")
-Date: Mon, 17 Aug 2026 13:21:50 +0800
-Message-ID: <20260817052151.98079-1-eason.lai@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+ 15.2.2562.43; Mon, 17 Aug 2026 13:38:58 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Mon, 17 Aug 2026 13:38:58 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Mon, 17 Aug 2026 13:38:58 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v4] wifi: rtw88: usb: do not log transfers lost
+ to a mode switch
+Thread-Topic: [PATCH rtw-next v4] wifi: rtw88: usb: do not log transfers lost
+ to a mode switch
+Thread-Index: AQHdLgWc8m0HmR+85EyqGCmj8+WIs7ahuMgw
+Date: Mon, 17 Aug 2026 05:38:58 +0000
+Message-ID: <025be0cbb3e14d6e9a32be33d107c234@realtek.com>
+References: <20260817050227.363362-1-mehmet.fide@gmail.com>
+In-Reply-To: <20260817050227.363362-1-mehmet.fide@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 
-From: Jeff Hsu <Jeff.Hsu@mediatek.com>
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
+> From: Mehmet Fide <mehmet.fide@screeningeagle.com>
+>=20
+> An RTL8822BU or RTL8822CU is asked to come back as a USB 3 device by
+> rtw_usb_switch_mode_new(). The chip powers off its MAC and leaves the bus
+> while the last control transfers of that sequence are still in flight, so
+> they complete with -EPROTO and the driver reports them as errors:
+>=20
+>   rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+>   rtw_8822bu 1-1:1.0: write register 0xc4 failed with -71
+>   usb 1-1: USB disconnect, device number 2
+>   usbcore: registered new interface driver rtw_8822bu
+>   rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+>=20
+> Register 0xc4 is REG_PAD_CTRL2 and the access losing the race is the
+> rtw_write32_set() that ends the switch sequence, a few milliseconds befor=
+e
+> the disconnect. Which transfer gets caught varies from boot to boot: 0xc4
+> is in the "always on" section, so every write to it is followed by a seco=
+nd
+> one from rtw_usb_reg_sec(), and sometimes that is the one that fails:
+>=20
+>   rtw_8822bu 1-1:1.0: rtw_usb_reg_sec: reg 0x4e0, usb write 1 fail,
+>   status: -71
+>=20
+> Nothing is wrong here. The device re-enumerates, probes again and registe=
+rs
+> normally, which is why rtw_usb_probe() already treats a non-zero return
+> from rtw_usb_switch_mode() as "Not a fail". On a USB 2 only port the
+> switch can never succeed, so the message returns on every boot and
+> everyone using such a port has to work out that it is harmless.
+>=20
+> Mark the window in which the chip is expected to leave the bus and skip t=
+he
+> error reports for transfers that fall into it. The mark is a rtw_flags bi=
+t
+> set in rtw_usb_switch_mode(), so it covers both the new and the old switc=
+h
+> sequence, and it is cleared again right after them: the transfers that lo=
+se
+> the race are issued from inside the sequences, and anything that fails
+> later must be reported again.
+>=20
+> Tested with an RTL8822BU (0x7392:0xb822) on a USB 2 root port of a TI AM6=
+2,
+> where the message appears exactly once per boot. With the patch both line=
+s
+> are gone while the disconnect, the re-enumeration and the second firmware
+> load are unchanged.
+>=20
+> Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+> ---
+> v4:
+>  - track the window with a RTW_FLAG_SWITCHING_USB_MODE bit in rtw_flags
+>    instead of a bool in struct rtw_usb, clear it unconditionally right
+>    after the switch sequences so later failures are reported again, and
+>    drop the comment block in usb.c (Ping-Ke Shih)
+>  - Signed-off-by switched to my work address to match my other patches
+> v3:
+>  - set the mark in rtw_usb_switch_mode() instead of in the two switch
+>    helpers (Ping-Ke Shih)
+>=20
+>  drivers/net/wireless/realtek/rtw88/main.h |  2 ++
+>  drivers/net/wireless/realtek/rtw88/usb.c  | 22 +++++++++++++++++-----
+>  2 files changed, 19 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wire=
+less/realtek/rtw88/main.h
+> index c6e981ba7..fc3fb617c 100644
+> --- a/drivers/net/wireless/realtek/rtw88/main.h
+> +++ b/drivers/net/wireless/realtek/rtw88/main.h
+> @@ -377,6 +377,8 @@ enum rtw_flags {
+>         RTW_FLAG_RESTARTING,
+>         RTW_FLAG_RESTART_TRIGGERING,
+>         RTW_FLAG_FORCE_LOWEST_RATE,
+> +       /* USB mode switch: the chip re-enumerates, transfers may be cut =
+off */
 
-Correct the setting for DMASHDL or it will result TX hang,
-due to upstream just used one TX data ring but setting DMASHDL
-with multiple TX ring
+As we didn't add comments for existing enumerators, add the comment in USB =
+code
+if you actually need this. (I think no need though)
 
-Signed-off-by: Jeff Hsu <Jeff.Hsu@mediatek.com>
----
- .../net/wireless/mediatek/mt76/mt7925/pci.c   | 29 ++++++++++---------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+> +       RTW_FLAG_SWITCHING_USB_MODE,
+>=20
+>         NUM_OF_RTW_FLAGS,
+>  };
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-index 154e4372664e..27f27ba2e587 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-@@ -401,16 +401,17 @@ static int mt7927_dma_init(struct mt792x_dev *dev)
- 
- static void mt7928_dma_shdl_lite_init(struct mt792x_dev *dev)
- {
--	u32 addr, idx, grp1_5_quota, grp15_quota;
-+	u32 addr, idx, grp0_quota, grp15_quota;
-+	/* Driver only uses TX ring 0, map all queues to group 0 */
- 	u32 q2group[8] = {
--		0x04000000, /* AC00->G0,..., AC03->G4 */
--		0x04010101, /* AC10->G1,..., AC13->G4 */
--		0x04020202, /* AC20->G2,..., AC23->G4 */
--		0x04030303, /* AC30->G3,..., AC33->G4 */
--		0x00000005, /* ALTX->G5,BMC->G0,BCN->G0 */
--		0x00000005, /* TGID=1 ALTX->G5 */
--		0x00000000, /* NAF/NBCN/FIXFID -> G0 */
--		0x00000005, /* TGID=2 ALTX->G5 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
-+		0x00000000, /* All queues -> G0 */
- 	};
- 
- 	/* RST */
-@@ -433,18 +434,18 @@ static void mt7928_dma_shdl_lite_init(struct mt792x_dev *dev)
- 	     idx < ARRAY_SIZE(q2group);
- 	     idx++, addr += 4)
- 		mt76_wr(dev, addr, q2group[idx]);
--	/* refill, set 0 to enable group 0,1,2,3,4,5 & 15 */
--	mt76_wr(dev, MT_DMASHDL_LITE_GROUP_DISABLE0, 0xffff7fc0);
-+	/* refill, set 0 to enable group 0 & 15 */
-+	mt76_wr(dev, MT_DMASHDL_LITE_GROUP_DISABLE0, 0xffff7ffe);
- 	mt76_wr(dev, MT_DMASHDL_LITE_GROUP_DISABLE1, 0xffffffff);
- 	/* max/min quota */
--	grp1_5_quota = FIELD_PREP(MT_DMASHDL_LITE_GROUP_MAX_QUOTA_MASK, 0x3f0) |
--		       FIELD_PREP(MT_DMASHDL_LITE_GROUP_MIN_QUOTA_MASK, 0x10);
-+	grp0_quota = FIELD_PREP(MT_DMASHDL_LITE_GROUP_MAX_QUOTA_MASK, 0x700) |
-+		     FIELD_PREP(MT_DMASHDL_LITE_GROUP_MIN_QUOTA_MASK, 0x10);
- 	grp15_quota = FIELD_PREP(MT_DMASHDL_LITE_GROUP_MAX_QUOTA_MASK, 0x30);
- 
- 	for (addr = MT_DMASHDL_LITE_GROUP0_QUOTA, idx = 0;
- 	     idx < DMASHDL_LITE_GROUP_NUM;
- 	     idx++, addr += 4)
--		mt76_wr(dev, addr, (idx <= 5) ? grp1_5_quota :
-+		mt76_wr(dev, addr, (idx == 0) ? grp0_quota :
- 			((idx == 15) ? grp15_quota : 0));
- }
- 
--- 
-2.45.2
 
