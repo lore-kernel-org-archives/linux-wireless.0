@@ -1,169 +1,151 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F154442390
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 15:17:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D9243E079
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 15:24:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786979840; cv=none; b=rLVRj8wReuEX5gjnJrfHS6ZnHw1h8FfgimQ8sHJyWCsRQjUaqmWCVzcXH/AnCoWwhg9DgPanLskwf3Ji8jzaKgE2UEvtluQOdUwf39RGmgoWMjmDb8U4uR3UX3B3hASz6d2h7ZWFjV/jXywqMGRjHFMydz6U8fuydv+T6YkM0iQ=
+	t=1786980299; cv=none; b=aaAiwWZwxFDyDrzEmd7QGQ86Yg345S5g17fV46epqmiH5OQ9E4dPegT9gXqMT55SIglGLDGDH3NYbDcFsQtp592glChXT8BwObjaLnOrKvm7BRSM9QUqPn6m9SEDlJOo7Rif/KfOVzrjmrS17kRMI2eWXhgbiZIZDGVOayZid1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786979840; c=relaxed/simple;
-	bh=95yA+WdRlTqFGt2+SNkdJin9HBogSOyIOfFjUaohKa8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=eeYUFHKcWz/HDfhWX8Hfzo/ViTJrzL0NwcNGz7w44I8F1YMAx8sQ1lK/ZYyPq5za7rgB5D5PrSVFmWZ9usfiIbHXhA587UdPzGU+5bfL27BwCX9ErANpimeI0+C88zbZBYk8J73oJTg8WG9WoeHBiATdUfF/O+qTFYhC3eIdJFw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gPC7OSHT; arc=none smtp.client-ip=209.85.160.173
+	s=arc-20240116; t=1786980299; c=relaxed/simple;
+	bh=ymnGzJSiTE8B12J4r4Wa7SDIJa77aCJcM2b5gs/7mug=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=qMionwEXERIYuze3ZcxFBtPQAR4zTxem0c6Bd76oQ7K35s4KtZMrlH61yyx+KJQqG+QGE6KN5248lTenx274oMuQhriIUbA9EJXDaDqkKXLqLXur32GfuBgvH5+VNnv4I89OGCZYf9l5McurOsgA6X6AonTKIMrVNcXlskwyKag=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L0KO1Qy5; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gPC7OSHT"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-52d7ef16f91so17905411cf.3
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 08:17:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L0KO1Qy5"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-49978908b35so27559455e9.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 08:24:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786979836; x=1787584636; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=95yA+WdRlTqFGt2+SNkdJin9HBogSOyIOfFjUaohKa8=;
-        b=gPC7OSHT7NaV+NeBYDDFZegZ9JtTNSPjXBJ0vDzQ5KMfNmTUsA/ff2U5TRiMlof5hz
-         YtpFONWtNU2xO8FDtnBjgTrJrjMqK/cCtc/rbu52SFIf/IRt64uvvPczEnhveWaZxRPC
-         /yoK+wWJ4tF1qv5taX25GGcP+DbdXAwUR211F3PnVWuNXyFUNF3DXxNBiLaIpXH8fqyJ
-         fYTNGODYOAwbLtREJ6x/rjlkInC7YAs7nKaC4Vo/nBWLSTYvdvCLIkkoogg5YfUnjSQ5
-         vvkzvJkt+9jLsdlysdIYgQU0otVb2TPSjPQwtHFX/YlWqdNQ3sEagEL6Uaabf/vHj0UJ
-         p80g==
+        d=gmail.com; s=20251104; t=1786980296; x=1787585096; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=96u/Pec4sBv6AYxfOAghL9e3mcqgiy3uS+ZPQ6F/+ho=;
+        b=L0KO1Qy5RLV++tXy7ANHp+7kNF/BEFh9WHJcPyWUgxwTR8CeDpuvUCPbMpbmCa1usO
+         Krsyq5IOCDGm/zQlXm3s1vxAdzIDBHCnAVFl/kQk3wVQv6oxz0gj9yuizmwD8QQY9Qmh
+         sP2hDgd6QGdMjWFjFX/Pa7JO48NQsHoasJXzPet0tHmvUPJQJokEAhLMcgrQB6iCmy+Z
+         c5PGEkle+zlcTKrhxfqz/SjGR2bwb994tOWgZCYszEXqy/A4NA712o7w7U53aQ/zCzYi
+         cqMq/rDSrxhu76/PG6DzdFo9YpbTkiBcCq9DgO2A1uDOa1TOsrA2uVhZg7YMXcn8CEM2
+         YhUQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786979836; x=1787584636;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=95yA+WdRlTqFGt2+SNkdJin9HBogSOyIOfFjUaohKa8=;
-        b=U8HPCNr53yG85JfiFo6UXoWhChHksO4G6f3GBAeCR53fWtti9BnsyVoDuL1eX32ChT
-         B4rc1FwlvJpfarqEvS+C+zssoQ0wHPuh3Ohy2L796WpwxqTidtZeEjvY1ypvgJOb3uf/
-         ajEryENNlNVqggPhaH3WxBVEXSP95slvQQW4AzGY88u6yAlRhJDmQH4TOtWHPTocAs4E
-         LRg/lmN7ueHNuoHoNnvw+elLy00Cemio7DVPGqN/D7CZYZUgoVpbA1LOG6Jn2tZB4h/x
-         iOiMA8YHj0i3scW2S/yFDxerMM7GDPABBy7izNz8sFGYqh79A9KKiv7WN2zhb8LPN73V
-         lPvw==
-X-Forwarded-Encrypted: i=1; AHgh+Rr04dIXNaGvNZTE6Gax9Tn0S0yX7iMFF/g7lJvrgy+tFLbuM+scEoXHlG3oo3gYsjhaUlklBdjoXNqoGALwlw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwUcfYQ/M78aPFe/oaorONrxX8zO257e+aeM2ebCIbHr9usSGkL
-	I3cu2WHLHsQ28y5AkI9qrTroUHYb+rFSO/JuFPrX2SraxHsVNyYSTMGdbaqN5w==
-X-Gm-Gg: AR+sD11B3wmEniqH+IQh4pzjO7sH0FNyKCsGCd0EKD4w4XqaHan3obcdOJU4rXlEOpN
-	cd0gWX9EaN8kaGpk0swYz28BnaK+R/FChiXQjXWy8l6EQLb1zYhzTaQfV7quGnOufjCHuiS2j5+
-	3tyjmaXsrdz2YwzepJPuCPFjqIEuR56WaPoL7DKqjgjIeJpbB0QKI4teCVezCe4OSTrdCxdJCG/
-	o+drroT+lOw6dsG0FKAKkV81qJ1WK/LTW9hVPlkJ6wYBtM8zupjpdi5HT4aFmIrGAKQOHhws1Iq
-	ly6d6+fl1SvSNRNRXd2rr+P/uyIU94fNEhdIrBgao4G6ZUhcPcQ86sALnK53fEXBOet/JabWohF
-	26VWnpwa5eiywKojboSz1kqHF7T4kzLiSJnt4QOFu1c4hrRD08lQNB7v5T3kPotu51/YxQGunaN
-	wwq1Zv2flUIYIAr7ac+CPcFhUSrBbMwXrEu4KE7rxpL809Nfny4jVU78pI4A/8UDY6VFhTtSipl
-	DPfGoRkKDqB5zj3rxxjF2NGAdDttphHmwitLHY=
-X-Received: by 2002:a05:622a:c6:b0:51c:167d:b328 with SMTP id d75a77b69052e-52d854fb4bfmr260666571cf.40.1786979835949;
-        Mon, 17 Aug 2026 08:17:15 -0700 (PDT)
-Received: from ?IPv6:2001:8a0:c4c6:f00:d76f:1095:5248:4cb1? ([2001:8a0:c4c6:f00:d76f:1095:5248:4cb1])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-52db610b491sm16716901cf.8.2026.08.17.08.17.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 08:17:14 -0700 (PDT)
-Message-ID: <eee05cd38c0d514b174cee132ddc44f6ca880f23.camel@gmail.com>
-Subject: Re: ath12k: recommended regulatory country source for embedded AP
- products?
-From: Vitor Soares <ivitro@gmail.com>
-To: Jeff Johnson <jjohnson@kernel.org>, Wen Gong <quic_wgong@quicinc.com>
-Cc: ath12k@lists.infradead.org, linux-wireless@vger.kernel.org, Kalle Valo
- <kvalo@kernel.org>, vdosreis@qti.qualcomm.com, lucia@qti.qualcomm.com, 
- dbenitez@qti.qualcomm.com, jeff.johnson@oss.qualcomm.com, 
- bqiang@qti.qualcomm.com, wgan@qti.qualcomm.com,
- francesco.dolcini@toradex.com
-Date: Mon, 17 Aug 2026 16:17:11 +0100
-In-Reply-To: <c7609911037798c2026636ddd13208cdf000cc55.camel@gmail.com>
-References: <3ac168e7dfe22133daf09adc3f6587098ec85619.camel@gmail.com>
-	 <c7609911037798c2026636ddd13208cdf000cc55.camel@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+        d=1e100.net; s=20251104; t=1786980296; x=1787585096;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=96u/Pec4sBv6AYxfOAghL9e3mcqgiy3uS+ZPQ6F/+ho=;
+        b=h1JAWqxzakZ4+Ni9jjrpCHWMTweUglbwxwaLytTsWEoAgfQsuxt7qigXNFty7ezOqz
+         IxpUE/q0YEVOhchx0Lns3D/iP7jtGzhePpGdbBYds1w/hvXM0WcDGWjvIAJYzmP8oXZG
+         Th4heTLYTggDzNbb1THeq7Ly7nLUIP2lzwiLhiGy/xn16c8i2BmARff2L2aj3NZil12y
+         NF1M5bRfr0aYw2BorRN63dF47cORL5PMio3kSz8Ne4rFaCw9LOKOtBkFWszSR3vHt/+d
+         V4qTkucBehKeahNWW1lKY8l3eDZugC9WI5vNqwB4Fq+5brSgtmLgY5M1Ia0HjyTdM6pn
+         pAag==
+X-Forwarded-Encrypted: i=1; AHgh+RoOHJnIsGIoJiv0R9RtQoJo4qzxZaN3XvIQyDsAXaw872O7BjzZ7pi9bgUnHAS0V2yow+El1SsVxbUKY3CG0Q==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyiVL/H4P+ghcxaCSW/OXbrTdrihFMuyRvzjUCL0arpO7zsrHGM
+	kMjs2mILBMkeDXFHU5j3tH0KyeVxiE4gBCWenp/uQm3Tja3U3U+jj99yfCszJw==
+X-Gm-Gg: AR+sD1239/dA8lif2W7IJ/l9R2wAHccr1sPVTqMR3MvkFphB2pQY2dDke71uqLy/S/N
+	wEVXDYEuBofsoAzkxVqI3GzRGYO+3A3lQLv9plXkUKObwrZe3nwonuS9RcIIg8bn1vfjMhcPyvk
+	34fPhLYRcwRCcoANLytA0vra+gLhmvwaR+dwa6LJbXthmvs8SXycJpu/7KFGcE24++ejSpJgdWN
+	9WTzR6xWJIK+3ILxgJbTX6lcgI2XFzRo/sJ7Pworv2LIxz/wkXy8FUaS3Ojn7opxXO2/VifkE3B
+	DhqAltsbs4nn3UvOphUDR9KrCDa9G8seL4uzNrns9mNKJRyqc5brcqc8YGwiN45pWwLCVFos+fk
+	iG2Tlc25NL8vHhMBa6uwG5VXzGX2cqZJDwkH4kPfUXVhMwPzsFfqH83K8XM7FJPbngF9MpGjOCN
+	rQZS8PHC08viaAaLkGGYZK/pXHU3Fd1GxDNgL+XrEPEsIS07dDRU9SLqrnmJzM9sJ+keLNLg==
+X-Received: by 2002:a05:600c:3596:b0:499:8ed2:8234 with SMTP id 5b1f17b1804b1-4998ed286c1mr301714455e9.0.1786980295750;
+        Mon, 17 Aug 2026 08:24:55 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.229])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49996109652sm199565975e9.4.2026.08.17.08.24.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 17 Aug 2026 08:24:55 -0700 (PDT)
+Message-ID: <7fb431e3-2c7d-407f-916c-108d718ba891@gmail.com>
+Date: Mon, 17 Aug 2026 18:24:53 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH rtw-next] wifi: rtw89: usb: Avoid crash with dynamically
+ added device ID
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <eb6870f7-79f0-4fa8-9148-5e48366d6672@gmail.com>
+ <84fa3f2903224073a3c5a9514d3f082a@realtek.com>
+Content-Language: en-US
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+In-Reply-To: <84fa3f2903224073a3c5a9514d3f082a@realtek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-++ Francesco Dolcini
+On 17/08/2026 06:38, Ping-Ke Shih wrote:
+> Bitterblue Smith <rtl8821cerfe2@gmail.com> wrote:
+>> Adding a device ID via sysfs causes a crash when the device is plugged
+>> in, because the driver_info pointer is null.
+> 
+> I don't know about this before. Does it looks like?
+> 
+>    echo "1234 5678" | sudo tee /sys/bus/usb/drivers/my_driver/new_id
+> 
 
-On Mon, 2026-08-17 at 16:04 +0100, Vitor Soares wrote:
->=20
->=20
-> Hello,
->=20
-> Adding a few Qualcomm contacts in Cc who may be able to help here, or poi=
-nt me
-> to the right people.
->=20
->=20
-> Thanks,
-> Vitor Soares
->=20
-> On Wed, 2026-07-29 at 10:29 +0100, Vitor Soares wrote:
-> > Hello,
-> >=20
-> > I'm integrationg the=C2=A0Silex SX-PCEBE module (Qualcomm WCN7850, ath1=
-2k) on the
-> > ARM-based Toradex Aquila SoM family, using a recent mainline kernel (7.=
-2-
-> > rc).
-> >=20
-> > Hardware/firmware: wcn7850 hw2.0 (PCI),
-> > WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
-> > (fw_version 0x1103006c).
-> >=20
-> > I'm trying to understand the intended way to set the regulatory country=
- for
-> > ath12k on embedded products where the country is configured by the
-> > integrator
-> > of
-> > our SoM or at deployment time by the end user.
-> >=20
-> > My current understanding is that ath12k registers the wiphy as self-man=
-aged,
-> > but
-> > userspace regulatory hints, e.g. "iw reg", are ignored in
-> > ath12k_reg_notifier()
-> > unless CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS=3Dy, which in turn depends=
- on
-> > CONFIG_CFG80211_CERTIFICATION_ONUS.
-> >=20
-> > The SMBIOS coounty-code path, looks intended for fixed regional SKUs,
-> > However,
-> > it is not available on our ARM platform.
-> >=20
-> > So, I have 2 related questions:
-> >=20
-> > 1 - Is the expected ath12k model for this type of product to enable=20
-> > ATH_REG_DYNAMIC_USER_REG_HINTS and use userspace regulatory hints befor=
-e
-> > starting hostapd, with the regulatory responsibility on the
-> > product/integrator?
-> >=20
-> >=20
-> > Or is there another mechanism you would recomment for this use case?
-> >=20
-> > 2 - Since ath12k is a self-managed regulatory device and the firmware o=
-wns
-> > and
-> > enforces the regulatory database, is the CFG80211_CERTIFICATION_ONUS ga=
-te
-> > intended to apply to this case as well?
-> >=20
-> > In other words, should a userspace-selected country for a self-managed
-> > ath12k
-> > device be treated the same as dynamic user regulatory hints for non-sel=
-f-
-> > managed
-> > devices, or is this dependency inherited from the common ath regulatory
-> > model?
-> >=20
-> > Without a country, the ath12k falls back to world "00", where 5 GHz AP
-> > operation
-> > is blocked by NO_IR.
-> >=20
-> > Thanks,
-> > Vitor Soares
-> >=20
->=20
+Yes, like that. A few people have tried to use it recently to test new
+devices and got crashes.
 
+>>
+>> Add a wrapper around rtw89_usb_probe() in each driver to check if
+>> driver_info is null and provide a reasonable default value for it.
+>>
+>> Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+> 
+> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> I'd give my acked-by in advance. But you still can consider my opinion below.
+> 
+>> ---
+>> The PCI side has the same problem, but new device IDs are a lot less
+>> likely there.
+> 
+> Thanks for the info.
+> 
+> [...]
+> 
+>> +static int rtw8851bu_probe(struct usb_interface *intf,
+>> +                          const struct usb_device_id *id)
+>> +{
+>> +       const struct rtw89_driver_info *info;
+>> +
+>> +       if (id->driver_info)
+>> +               info = (const struct rtw89_driver_info *)id->driver_info;
+>> +       else
+>> +               info = &rtw89_8851bu_info;
+>> +
+>> +       return rtw89_usb_probe(intf, info);
+>> +}
+>> +
+> 
+> If you want to simply specific probe(), here might be 
+> 
+> static int rtw8851bu_probe(struct usb_interface *intf,
+>                            const struct usb_device_id *id)
+> {
+>         return rtw89_usb_probe(intf, id, &rtw89_8851bu_info);
+> }
+> 
+> Then
+> 
+> int rtw89_usb_probe(struct usb_interface *intf,
+>                     const struct usb_device_id *id,
+>                     const struct rtw89_driver_info *default_info)
+> {
+>         ...
+> 
+>         info = (const struct rtw89_driver_info *)id->driver_info;
+>         if (!info)
+>                 info = default_info;
+> }
+> 
+> 
+
+Ah, yes, that is better.
