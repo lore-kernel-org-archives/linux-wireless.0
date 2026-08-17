@@ -1,228 +1,210 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54AF72E764D
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 06:17:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786947470; cv=pass; b=u0vHJS1eUIHPeL/+TysdkS8l6md2b1ULYwrRQxQl3vtYtcsLO7bsheQ5ndaXvRkoqLZYS5tCBy1SSKWb/Jom8Zf4tgzH1vTMRkqiJkzcelvu7R/7NE7K6dJJnf/weRjaU8ewbZl2P8TdiGGIkpfZrmnGRmude5qU18bxT9XpUeE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786947470; c=relaxed/simple;
-	bh=q62OUmLM+k48Kge64oBVn4iazSiNJptjiFrp81kytWM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=jqMit0HPd1wVOeUVLUq1y/6EkrDGEzYFWV9d+n9IrJcH2xdFB/NvABAnIKEG+jQ948x9mmvH2Hg2SWKddg7POROtRGaGJcUCJmNShj9SKPi3j9TWUwKwplXVmfJz7xCBI0h861FFMhUkemuvf1NvxWLzsJBKZfMyFjOsJmiByms=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V+OlC/yE; arc=pass smtp.client-ip=209.85.219.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D37E4226D05
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 06:33:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1786948404; cv=none; b=UY0ZlFQqygvegHKCMVBrGl5HQffHOZ1M6FvnfDOJ0/y2RiZuqGVDHl6gZmVWaPP04jAgIFeD6IHmgwkkBFz6FFC4BM7q1L7qz1Bi1geIT+BYRHf2SjPlo4dnlHQzbEzdgAoL3KON1MfHYG/nhrNT99/dWq5v7OXVC2IwefCtF0Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1786948404; c=relaxed/simple;
+	bh=TmpNhiUCxy3N7HKM/ZRnO9yV0Cb1ILfdfWpf7Xv+uEE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NOxB5NpADtIpvJEjMtx10wZ99qdN4CgwjSUXWZzWJWt0o4kUE71EVWL3YSxXmN1gXP608KanQ4ws5IGUqL4G5RYf08vb8fglBKccFNIGMk4lnvH1Osj61Sfq+KhvOXCTSFwuLXML9mVvN3fAiGfryKPllXSw+33GZM+ZaeqUWmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yp/PAf99; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V+OlC/yE"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-8eeb4508f29so18162706d6.0
-        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 23:17:46 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1786947465; cv=none;
-        d=google.com; s=arc-20260327;
-        b=R+4khPS3gwxIGxI0eYrGWHpOK7ZgQ1gb3sET7Sw2tE77EeJAXNZ3GO1LPfQvO+ifoh
-         lT/W1702QIEM5D8ld897zBqfknFiuZZGLooxJ4kMr7Uo7bkjGl6cUGsScIwbeh+7taca
-         oFfzsj5XzUbPGmVrQABXFldQcxz0XT5+DWP6HFm2jJB6YKFSQAx+vOTbfdEJoPsaZDAC
-         x8BcdGT2ceWgMx+NaGHOdxes/dHnVtQ77PuCJD78k+OwGQosjwbKLNGq9JrkWizzKFO+
-         vnQQYc9TAK8Iyq8AjJRy2rDXsx22LNum1Ek/n+XaZ3p2uhoKESqxWjlFlHxaywN4b8Wt
-         Q93g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=ULpKgCJjRO3FeWXvSmkBGFQFV6o2kwMzsT3tVXGHs2c=;
-        fh=EEqq1nyX5noIwz+ZeuRwJY5LeYNGO0SH4elp/69PwDE=;
-        b=Igfraezvqufg224hhx0vgO+nUZJFSufyyfNM1HsbR8df3wGKJt93GI8DBmWw6O07qS
-         e+Z/IqVWuqwzJUlBBxv0cck8pFJGk4nA0OWzrS5HiRYEwYKJoWO5qNCD1CDD+iYNA6g6
-         NZ2gBUJ84v8QPSxVR2+C6gs5tZgWexshesDya9RIUo46GNaHSCFz1vIAuF+GyDbcErES
-         ZVpMsY1hvpNphIyBYiXyLdblEdwxwTFDkCR+c4Y+poesjBc/Uf4henBRUWajXH9os4Ud
-         5RqGZ+pFsOKv5clvZFx53vf6lPstwe/vI0XIVDYlOPDd3sOAcnoW09e3ag3x1A4n0qlx
-         8q+Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yp/PAf99"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4955aa106b1so26349775e9.0
+        for <linux-wireless@vger.kernel.org>; Sun, 16 Aug 2026 23:33:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1786947465; x=1787552265; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=ULpKgCJjRO3FeWXvSmkBGFQFV6o2kwMzsT3tVXGHs2c=;
-        b=V+OlC/yE/OenSLaNlEjZjqh8u6n7NOGg/wHJGfByempBeF4rGWsRvdMUr72E+H9DoN
-         IfzMAsWynjRnpD+rd35U85uFky1qQDL5Ctohh8MZ4VHYqWMSfwJD8jfpXn+alNtQXisR
-         xyV4+p9GA7gSFSz2A+JvTIU9x6gaOr6K4AcyKOlA3NltFUEi8GfM90I06nFgBtUfAP9Y
-         g/eghQNqGjZrCap8zp4ESIteHMRSb/TZbQN2MHOBFJ1uE5q/2XLwjA+QX5+jtcUAnLA6
-         RNQzMCfB392lPm1UWNuQWqHEMK7LuDTcSesg443gcfi64eaOeCjgqgmNvAweL7/qQD5I
-         ZSKw==
+        d=gmail.com; s=20251104; t=1786948401; x=1787553201; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Rq5oSdvSsNmbcFg7I/GhMGq8aXHgsA6J0tR2XSEZNdA=;
+        b=Yp/PAf99KVxwNSRry6luPZ9WAV/6gkN1la6sgpcWMjVlv7IEUoPaWqePPyutq5hxMu
+         Oi9Y2cfh8HxaLAKokGLGNST8YbwVN5Z7InAewexXf6FaqYa0kL9k433e7QGCA86y7BQu
+         tz/NtA6KVTDTspkPmRTqMV6dHo1XQ/GyyqyKuVt8I5APS73I0iUKD1F3TQT+nBEPLRok
+         sbEOAfV+QS1G30k/I+xugPMkaEOvQCb+4iTU/WudzKUcwOXU66ytv4WL5MxePF539ast
+         ungKWlT7uit7oeWpXDaBQgo7jxr2fU+W+/zmBj097WQyrdbd86hBtNlaPOD868/zGi4i
+         g9NA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1786947465; x=1787552265;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ULpKgCJjRO3FeWXvSmkBGFQFV6o2kwMzsT3tVXGHs2c=;
-        b=bFwxty6/DD+jmIpBpw0JzF2URdyRqtlS01A4ieHjlinnN1Synqi9d6DvlOJ0hit6Hg
-         razMxCLH+JqKIH+IEffQE4BvkmgyxCiczKPdbWK+APPIj9sRqq0X++NY5Py9jOmw/sku
-         eN5IpbVraMx5o1Un2ODRP8lH6ZyxVdrn/Y09wLkQWqOst27QSZdla7SCzVvreHX2y+ZA
-         rUbG/eRpsYsVaxJ8nnDfqIosmzhNYA2cM967FDiR1EVazFXafVuitRUwfrFBwR9sY5S1
-         0AIXWM+TIrKDeWFsOa+m1htNHKDK5j5P4I5cwwpMeiBYtA05bREOQxuGdai2cnJjHJ7E
-         ZYkw==
-X-Gm-Message-State: AOJu0YzKAINPztV0sTT8DH2OTw9vkSd7GAK+VeNnhm5r5HuyCVPDo3j/
-	ZSbgHRxinM5OU/1b4oEwSZ+Cev4M3SV9sKmxG3dTPixjd8bXorf4vNwsBhWbmf7kdiTR/VEavn/
-	7rdV7ZeBRSdcanV+agfmPEGo1ZghMsTex2Q==
-X-Gm-Gg: AR+sD10DbtU8Q0dN8yU4LIaeLvyvV9v+aNy+6N2LrLWagqpio7jXbSCDSzKm0c8Q+N5
-	SP7hUrnLgTDtpmRO/D9R4sNISVx7L/OnKiEknahHa03TfcSZTnEDePFISAwcDSuC93E9GzC5Bsv
-	x7yu/u4kKyvk7S/8P3CLVg8bBFtlzO9nReIzRWQ61LdidR4kOy0d2IhrxCG/tCZshrGd8f5CJp0
-	EgJX8KhppgLumv7dpXuwoqnJqEvj9uQk4IH9WKMIq/8nvUJEM/poLegONpGg8PQb3z/NYiBazOF
-	D2rXa23hWgE5AAmsLUwQVdSABFXSl3b5dybAKXWD9JhViA==
-X-Received: by 2002:ad4:5ce9:0:b0:8fe:b7a6:4ff3 with SMTP id
- 6a1803df08f44-90a91d802c2mr263940006d6.23.1786947465150; Sun, 16 Aug 2026
- 23:17:45 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1786948401; x=1787553201;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Rq5oSdvSsNmbcFg7I/GhMGq8aXHgsA6J0tR2XSEZNdA=;
+        b=JrkfpGFa0Ap6rmYCdER0036NN7Knwj32KECd53337HiTsBqUgegTclkLr7w5MEvijx
+         Gusxk55Q7cQT+JGYBBmpEqBtLIzWIXPG8oI8MBgjLlx/CgIBEiDkK9Wyly35p3ec3ThY
+         2toSjKEpxH3UdrwGU5SeXMzaqdI3MYk8wkfS8e8tPKwn2zdS12slVk2RH1P60pETOi7C
+         uasAQMV/ryCrzhmbTyzYiqZ55w4SnQ7OifJifD4JjkJNFDNg/O5LxMyClDsk6sp3iBSv
+         MhsK4B2ZFCPMkS7OwyDxLfv/7YaNUvcOu350Mla22IRcYLXV+tI9y5uxMmVuIMGAmavc
+         ecpw==
+X-Forwarded-Encrypted: i=1; AHgh+Rqgn3siuRrLCUmx3bvuhcBc1FeeVgDmSVs5P21JqnIU/gz4+BvdC7Bsqr4MGzYnEchpdB5c1rK7Ho+JRvdxlQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxGIO0iTuHvLXj1tcLqGZLeIPxocZIRK2XEWHRkwiBgu8GFcwqj
+	O8y69HpfHbbHFNIRxcf2SDRVs5xYgLaRpZIHTXihJznew0YVFI4bj64b
+X-Gm-Gg: AR+sD11epMYQiJcTGNv0Y0iHoi2wbQ5xG3NB3WZkcZoVTi5vpisBrmqVLfER7bO4xzd
+	NR4a7sK8g63E+aNI5UsjErGXvIEJsBLxEFw5nuFzLPQcLBdpXsidu2YaCVtbwq5Ca/1gnOzQNf1
+	UanimhjurMhLQMEp/t8V9BnzTwGAfKCKT4WwKnk6c0U+RUqsB4O9DyVA9SZyCVVlC+8iT3HB9XX
+	WBtbL8d2btXKl6W3y96G9sXMdGIHUyfcurVJXv5h2vG4srceZxEpp+JntNiVcQIUcqDxcMTmHB/
+	QtT2eMRlIRRkX9o/vgw/B7xkcpTTXYQEep8BzCH1n0sXPLbFeiDLAObxPMaoUerkm4o6IBNkIvu
+	e4QSXEdauPNsbD74xAtoE7O8idB6Wzhkkcz8KhUvTeGmg0JlTQEWeQvFcXvfgOrWQfYQFviPbsI
+	0yxJde1f/GjhKOUWS1uWwJEE4p+cP3GcEHUZQg7dnZSuSAfA4gsi5lZFNdDmdR6tYK+g==
+X-Received: by 2002:a05:600c:4186:b0:499:757f:a9ba with SMTP id 5b1f17b1804b1-4998795f133mr223834405e9.9.1786948400815;
+        Sun, 16 Aug 2026 23:33:20 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482a5a3b660sm1300833f8f.15.2026.08.16.23.33.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 16 Aug 2026 23:33:20 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Mehmet Fide <mehmet.fide@screeningeagle.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH rtw-next v5] wifi: rtw88: usb: do not log transfers lost to a mode switch
+Date: Mon, 17 Aug 2026 08:33:19 +0200
+Message-ID: <20260817063319.389188-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CABzKGg0YEm5PfW9YtEM0G1SYY6RD80DmFpu_Jpb9hoioK+tH-w@mail.gmail.com>
- <CAGb2v66RnAr_yPhZuuandeoE=wSh9tJMdfqkLLudWKpDmDKc4Q@mail.gmail.com> <CABzKGg2C-kb673u4o9Nk28-bp9ONuQAaDA39x47bJOpq6RrNHg@mail.gmail.com>
-In-Reply-To: <CABzKGg2C-kb673u4o9Nk28-bp9ONuQAaDA39x47bJOpq6RrNHg@mail.gmail.com>
-From: Morgan Wong <pbodq2@gmail.com>
-Date: Mon, 17 Aug 2026 14:17:32 +0800
-X-Gm-Features: AcwNN1UGbJOzJrUdN01Ko_-VcJlNKqiySnt1yLlDBveeAaFXktz02q3MfOVLajo
-Message-ID: <CABzKGg3-5yE19-_fiBuvaM9CBUnyJ7UYmt6M6w3BrEqu+3Unbw@mail.gmail.com>
-Subject: Re: wireless-regdb: Update regulatory rules for Hong Kong (HK) on
- 5GHz and 6GHz
-To: wens@kernel.org
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Dear all,
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Is there any problem about the patch and the reason? Any regulative
-restriction conflict ?
+An RTL8822BU or RTL8822CU is asked to come back as a USB 3 device by
+rtw_usb_switch_mode_new(). The chip powers off its MAC and leaves the bus
+while the last control transfers of that sequence are still in flight, so
+they complete with -EPROTO and the driver reports them as errors:
 
-Morgan Wong <pbodq2@gmail.com> =E6=96=BC 2026=E5=B9=B48=E6=9C=884=E6=97=A5=
-=E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=8810:01=E5=AF=AB=E9=81=93=EF=BC=9A
->
-> Dear Tsai,
->
-> The patch from git diff is now attached.
->
-> I summarize again the changes, please decide.
->
-> 1. 30dbm (1W) of TPC condition is applied on 5470-5730.
->
-> 2. Now, 320MHz bandwidth can be applied in 6GHz as WIFI 7 rolled out.
->
-> Chen-Yu Tsai <wens@kernel.org> =E6=96=BC 2026=E5=B9=B48=E6=9C=884=E6=97=
-=A5=E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=888:48=E5=AF=AB=E9=81=93=EF=BC=9A
-> >
-> > On Mon, Aug 3, 2026 at 9:38=E2=80=AFPM Morgan Wong <pbodq2@gmail.com> w=
-rote:
-> > >
-> > > Dear all,
-> > >
-> > > Currently:
-> > >
-> > > # Source:
-> > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1039.pd=
-f
-> > > (2.4 GHz and 5 GHz)
-> > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1081.pd=
-f (6 GHz)
-> > > country HK: DFS-ETSI
-> > > (2400 - 2483.5 @ 40), (36)
-> > > (5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
-> > > (5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
-> > > (5470 - 5730 @ 160), (27), DFS
-> > > (5730 - 5850 @ 80), (36)
-> > > (5945 - 6425 @ 160), (24), NO-OUTDOOR
-> > >
-> > >
-> > >
-> > > Update :
-> > >
-> > > # Source:
-> > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1039.pd=
-f
-> > > (2.4 GHz and 5 GHz)
-> > > # https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-1=
-5/subpart-E
-> > > (2.4 GHz and 5 GHz)
-> > > # https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00.07_=
-20/en_301893v020007a.pdf
-> > > (2.4 GHz and 5 GHz)
-> > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca1081.pd=
-f (6 GHz)
-> > > # https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00.00_=
-20/en_303687v010000a.pdf
-> > > (6GHz)
-> > > country HK: DFS-ETSI
-> > > (2400 - 2483.5 @ 40), (36)
-> > > (5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
-> > > (5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
-> > > (5470 - 5730 @ 160), (30), DFS
-> > > (5730 - 5850 @ 80), (36)
-> > > (5945 - 6425 @ 320), (23), NO-OUTDOOR
-> >
-> > Please do a proper patch or at least diff. This is hard to spot differe=
-nces.
-> > And if it's not a patch it's more work.
-> >
-> > > Reason for change in 5470-5730 :
-> > > The HK department, OFCA has its own requirement, 30dbm in addition to
-> > > EITHER fulfilling FCC OR ETSI requirement. The rationale behind is
-> > > having the biggest tolerance among major world standards to be an
-> > > international city. The OFCA, 30dbm is the baseline value to be
-> > > fulfilled in the highest priority.
-> > >
-> > > About FCC
-> > > 27dbm (500mW) without TPC, 30dbm (1W) with TPC
-> > > # https://www.ecfr.gov/current/title-47/part-15/subpart-E#p-15.407(h)=
-(1)
-> > >
-> > > About UTSI (same as FCC)
-> > > 27dbm (500mW) without TPC, 30dbm (1W) with TPC
-> > > # https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00.07_=
-20/en_301893v020007a.pdf
-> > > (page 17)
-> > >
-> > > A TPC (30dbm), 802.11h edition should be taken instead of 27dbm as I =
-suggest.
-> > > Or a TPC regulation flag may be a good idea to bind with 30dbm togeth=
-er.
-> >
-> > There is no TPC flag, hence the limit is set at 27 dBm.
-> >
-> > > Reason for change in  5945 - 6425 :
-> > > The HK department, OFCA requires to have its own EIPR limit, 24dbm in
-> > > addition to ETSI 23dbm.
-> > > Therefore, the smaller value should be taken.
-> > > (6GHz in HK requires no reference to FCC standards, unlike 5GHz situa=
-tion)
-> > > WIFI 7 allows 320MHz, the previous value, 160MHz was in wifi 6E era.
-> > >
-> > > # https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00.00_=
-20/en_303687v010000a.pdf
-> > > (page 17)
-> >
-> > You mentioned in your reply that this change is invalid.
-> >
-> >
-> > So to summarize, I don't see any change at all.
-> >
-> >
-> > ChenYu
->
->
->
-> --
-> Regards,
->
-> Morgan Wong
+  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
+  rtw_8822bu 1-1:1.0: write register 0xc4 failed with -71
+  usb 1-1: USB disconnect, device number 2
+  usbcore: registered new interface driver rtw_8822bu
+  rtw_8822bu 1-1:1.0: Firmware version 27.2.0, H2C version 13
 
+Register 0xc4 is REG_PAD_CTRL2 and the access losing the race is the
+rtw_write32_set() that ends the switch sequence, a few milliseconds before
+the disconnect. Which transfer gets caught varies from boot to boot: 0xc4
+is in the "always on" section, so every write to it is followed by a second
+one from rtw_usb_reg_sec(), and sometimes that is the one that fails:
 
+  rtw_8822bu 1-1:1.0: rtw_usb_reg_sec: reg 0x4e0, usb write 1 fail,
+  status: -71
 
---=20
-Regards,
+Nothing is wrong here. The device re-enumerates, probes again and registers
+normally, which is why rtw_usb_probe() already treats a non-zero return
+from rtw_usb_switch_mode() as "Not a fail". On a USB 2 only port the
+switch can never succeed, so the message returns on every boot and
+everyone using such a port has to work out that it is harmless.
 
-Morgan Wong
+Mark the window in which the chip is expected to leave the bus and skip the
+error reports for transfers that fall into it. The mark is a rtw_flags bit
+set in rtw_usb_switch_mode(), so it covers both the new and the old switch
+sequence, and it is cleared again right after them: the transfers that lose
+the race are issued from inside the sequences, and anything that fails
+later must be reported again.
+
+Tested with an RTL8822BU (0x7392:0xb822) on a USB 2 root port of a TI AM62,
+where the message appears exactly once per boot. With the patch both lines
+are gone while the disconnect, the re-enumeration and the second firmware
+load are unchanged.
+
+Signed-off-by: Mehmet Fide <mehmet.fide@screeningeagle.com>
+---
+v5:
+ - drop the comment on the new rtw_flags enumerator (Ping-Ke Shih)
+v4:
+ - track the window with a RTW_FLAG_SWITCHING_USB_MODE bit in rtw_flags
+   instead of a bool in struct rtw_usb, clear it unconditionally right
+   after the switch sequences so later failures are reported again, and
+   drop the comment block in usb.c (Ping-Ke Shih)
+ - Signed-off-by switched to my work address to match my other patches
+v3:
+ - set the mark in rtw_usb_switch_mode() instead of in the two switch
+   helpers (Ping-Ke Shih)
+
+ drivers/net/wireless/realtek/rtw88/main.h |  1 +
+ drivers/net/wireless/realtek/rtw88/usb.c  | 22 +++++++++++++++++-----
+ 2 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index c6e981ba7..6883fbd9f 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -377,6 +377,7 @@ enum rtw_flags {
+ 	RTW_FLAG_RESTARTING,
+ 	RTW_FLAG_RESTART_TRIGGERING,
+ 	RTW_FLAG_FORCE_LOWEST_RATE,
++	RTW_FLAG_SWITCHING_USB_MODE,
+ 
+ 	NUM_OF_RTW_FLAGS,
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/usb.c b/drivers/net/wireless/realtek/rtw88/usb.c
+index 64e1c3420..e13faecfb 100644
+--- a/drivers/net/wireless/realtek/rtw88/usb.c
++++ b/drivers/net/wireless/realtek/rtw88/usb.c
+@@ -64,7 +64,8 @@ static void rtw_usb_reg_sec(struct rtw_dev *rtwdev, u32 addr, __le32 *data)
+ 				 RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
+ 				 t_reg, 0, data, t_len, 500);
+ 
+-	if (status != t_len && status != -ENODEV)
++	if (status != t_len && status != -ENODEV &&
++	    !test_bit(RTW_FLAG_SWITCHING_USB_MODE, rtwdev->flags))
+ 		rtw_err(rtwdev, "%s: reg 0x%x, usb write %u fail, status: %d\n",
+ 			__func__, t_reg, t_len, status);
+ }
+@@ -90,7 +91,9 @@ static u32 rtw_usb_read(struct rtw_dev *rtwdev, u32 addr, u16 len)
+ 	ret = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      RTW_USB_CMD_REQ, RTW_USB_CMD_READ, addr,
+ 			      RTW_USB_VENQT_CMD_IDX, data, len, 1000);
+-	if (ret < 0 && ret != -ENODEV && count++ < 4)
++	if (ret < 0 && ret != -ENODEV &&
++	    !test_bit(RTW_FLAG_SWITCHING_USB_MODE, rtwdev->flags) &&
++	    count++ < 4)
+ 		rtw_err(rtwdev, "read register 0x%x failed with %d\n",
+ 			addr, ret);
+ 
+@@ -140,7 +143,9 @@ static void rtw_usb_write(struct rtw_dev *rtwdev, u32 addr, u32 val, int len)
+ 	ret = usb_control_msg(udev, usb_sndctrlpipe(udev, 0),
+ 			      RTW_USB_CMD_REQ, RTW_USB_CMD_WRITE,
+ 			      addr, 0, data, len, 500);
+-	if (ret < 0 && ret != -ENODEV && count++ < 4)
++	if (ret < 0 && ret != -ENODEV &&
++	    !test_bit(RTW_FLAG_SWITCHING_USB_MODE, rtwdev->flags) &&
++	    count++ < 4)
+ 		rtw_err(rtwdev, "write register 0x%x failed with %d\n",
+ 			addr, ret);
+ 
+@@ -1173,6 +1178,7 @@ static bool rtw_usb3_chip_new(u8 chip_id)
+ static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
+ {
+ 	u8 id = rtwdev->chip->id;
++	int ret;
+ 
+ 	if (!rtw_usb3_chip_new(id) && !rtw_usb3_chip_old(id))
+ 		return 0;
+@@ -1189,10 +1195,16 @@ static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
+ 		return 0;
+ 	}
+ 
++	set_bit(RTW_FLAG_SWITCHING_USB_MODE, rtwdev->flags);
++
+ 	if (rtw_usb3_chip_old(id))
+-		return rtw_usb_switch_mode_old(rtwdev);
++		ret = rtw_usb_switch_mode_old(rtwdev);
+ 	else
+-		return rtw_usb_switch_mode_new(rtwdev);
++		ret = rtw_usb_switch_mode_new(rtwdev);
++
++	clear_bit(RTW_FLAG_SWITCHING_USB_MODE, rtwdev->flags);
++
++	return ret;
+ }
+ 
+ #define USB_REG_PAGE	0xf4
+-- 
+2.54.0
+
