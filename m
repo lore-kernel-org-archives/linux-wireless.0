@@ -1,29 +1,29 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4213C1985
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 09:00:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C19D353A64
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 09:02:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1786957244; cv=none; b=bdRtbUSLLbQ8c8dGFrjbmTjGIiM5dGdhWQlDvh5LKJKrkdUTPHNLW81/c7d8uq7aIynvkP+Vo5JBJiTAwwQns30gcFPF5S0Mv7qhkrfMTdO+k2OWfTQGc6Z46ST+zI2dQVSE8PlcbVmp6A2Kp11tAI47V5FqhJP7S0E+YE9iL5Q=
+	t=1786957331; cv=none; b=G5kMbvGT0gyNeHn08dJDmG0xquBpisbOnJe+9gGWRDe0/gXMz9DlovCauQsSq2CYB36dgzokRRiepJrdddthr4fDBbTkzIO7b7Uzzyoyb6S+I0W1H/EvqGq6AtkYPaMDExMgl1FmYsFPDCmsqu26dIom8YCsAn4l8nGYWZA+wJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1786957244; c=relaxed/simple;
-	bh=0qGIr0XxYUfgc5m7XxbrueWKO9o2wTVndRVZ3YJQiDo=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hkDMtAOUqjdOf/Qrm2nrXdBsiEeD0YfFyjCI1zjbx+GlacxasG/2Lqs6xbPUUGKg8zKplGJqm9uA/9Y9tr0xLPNTLiXiDdg5RlDek2ZpKqgbCfX29Fq4Ve+my4pW4ys/8bNq9un/EyXtPRVUQJPipIK8Oh61YgtBUPDS6iU57o8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=GGfpq8ES; arc=none smtp.client-ip=210.61.82.184
+	s=arc-20240116; t=1786957331; c=relaxed/simple;
+	bh=HG0C4ADtdjWYcsRJRczcwDxfkgx7DfuBM+yV+vopuh8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=e+Kbwnwe6B/igKMKdDq9/5bRlvApxUKyql7Ix+KsydCXB04ZxEBGyjgVkpm/yg6hmbA0NO5nX++0h9cmqYIbXzd0FBpsDMkupQNf/O1PWV7GhjsaDMNT4ImQfBJ7jKYs/VivBJU8pP0iiNrkxCgzAIIjkU2VP6ANPN9RryH6Pxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Sk6Lx0vb; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="GGfpq8ES"
-X-UUID: 1b6a4bdc9a1a11f18dc8c9802ae25ab1-20260817
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Sk6Lx0vb"
+X-UUID: 4ff5e8a29a1a11f1b1788b6acf885367-20260817
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=NZIevUDAFp93Glr3goDhS++tqmNblnJbtjd9gQvJZ5o=;
-	b=GGfpq8ESikoWiYkhiD+b72RLIkyIYTWhh604xrpyAjqWU3ExrIXcFMGhIFrhyILkLVjPsCy30vyuf3KSRcjgTDdCVdk2eLaZEaWRHZUZHTlK8/IJ2P1T73O0D1QTz2LowYWVS5vdem6zbelBSOqZbKycNBucU40YQVlpjR4apgo=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=PKCBb0fBbwusXGUcqkO4rNaDLmTafngKnn17PQKdlXg=;
+	b=Sk6Lx0vb6eBK4+bBYIJMVxVcv3X/Jn7DZ3tyDrJTDdry2erb0wVwCp3crrvIk3I1BEEGBBlrrS5YAohgufV2XH1g9idwIQcV35p9rtagvpH20tenENr2v0WyrbkM04PHzWQFlEGUTHqWbejPPkt4FWdFLD+X1bDosyq4mWwV0nU=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:d1ab08da-10e3-4988-9d28-dfde6e48066b,IP:0,U
+X-CID-O-INFO: VERSION:1.3.19,REQID:255c4e1a-d836-46c9-91bf-e0d339b220dc,IP:0,U
 	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
 	release,TS:0
-X-CID-META: VersionHash:7db8b62,CLOUDID:d6fa6101-0be7-4d29-848b-f75bedecbc73,B
+X-CID-META: VersionHash:7db8b62,CLOUDID:deed15a8-8a7b-4c49-a0c0-42d13e7adac0,B
 	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
 	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
 	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -31,28 +31,27 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 1b6a4bdc9a1a11f18dc8c9802ae25ab1-20260817
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
+X-UUID: 4ff5e8a29a1a11f1b1788b6acf885367-20260817
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
 	(envelope-from <eason.lai@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1406881880; Mon, 17 Aug 2026 17:00:34 +0800
+	with ESMTP id 773479515; Mon, 17 Aug 2026 17:02:02 +0800
 Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Mon, 17 Aug 2026 17:00:33 +0800
+ 15.2.2562.29; Mon, 17 Aug 2026 17:02:01 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.2562.29 via Frontend Transport; Mon, 17 Aug 2026 17:00:33 +0800
+ 15.2.2562.29 via Frontend Transport; Mon, 17 Aug 2026 17:02:01 +0800
 From: Eason Lai <eason.lai@mediatek.com>
 To: <nbd@nbd.name>, <lorenzo@kernel.org>
 CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
 	<kun.wu@mediatek.com>, <deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
 	<quan.zhou@mediatek.com>, <ryder.lee@mediatek.com>, <leon.yen@mediatek.com>,
-	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>,
-	<eason.lai@mediatek.com>, Devin Wittmayer <lucid_duck@justthetip.ca>
-Subject: [PATCH v1] wifi: mt76: mt792x: fix UAF in SDIO TX path when out of memory
-Date: Mon, 17 Aug 2026 17:00:29 +0800
-Message-ID: <20260817090029.167552-1-eason.lai@mediatek.com>
+	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>, <eason.lai@mediatek.com>
+Subject: [PATCH v2] wifi: mt76: mt792x: fix memory leak in USB TX path
+Date: Mon, 17 Aug 2026 17:01:57 +0800
+Message-ID: <20260817090157.168089-1-eason.lai@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -63,30 +62,88 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-Using __skb_pad() instead of skb_pad() in mt76_skb_adjust_pad()
-to prevent double-free, as the caller handles cleanup.
+When errors occur in mt76u_tx_queue_skb(), the skb is not properly
+freed, leading to memory leaks. This can happen when the queue is
+full, when tx_prepare_skb() drops zero-length frames (such as WNM
+NULL frames) to prevent hardware TX hangs, or when buffer setup
+fails.
 
-Fixes: 808f2767d421 ("wifi: mt76: mt792x: Fix memory leak in SDIO TX path")
+Fix this by:
+1. properly releasing the skb with ieee80211_tx_status_ext()
+   when the queue is full or tx_prepare_skb() fails
+2. using mt76_tx_complete_skb() when mt76u_tx_setup_buffers()
+   fails, since tx_prepare_skb() has already succeeded and may
+   have allocated resources that need cleanup
 
-Co-developed-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
+
 Signed-off-by: Eason Lai <eason.lai@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/tx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/usb.c | 31 ++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 3707ee19e4ae..ec503521ae63 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -879,7 +879,7 @@ int mt76_skb_adjust_pad(struct sk_buff *skb, int pad)
- 		}
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index a9af3aa6b80a..dfc12f6944a7 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -893,6 +893,9 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 		   enum mt76_txq_id qid, struct sk_buff *skb,
+ 		   struct mt76_wcid *wcid, struct ieee80211_sta *sta)
+ {
++	struct ieee80211_tx_status status = {
++		.sta = sta,
++	};
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -900,17 +903,27 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 	u16 idx = q->head;
+ 	int err;
  
--	if (skb_pad(last, pad))
-+	if (__skb_pad(last, pad, false))
- 		return -ENOMEM;
+-	if (q->queued == q->ndesc)
+-		return -ENOSPC;
++	if (q->queued == q->ndesc) {
++		err = -ENOSPC;
++		goto err_free_skb;
++	}
  
- 	__skb_put(last, pad);
+ 	skb->prev = skb->next = NULL;
+ 	err = dev->drv->tx_prepare_skb(dev, NULL, qid, wcid, sta, &tx_info);
+ 	if (err < 0)
+-		return err;
++		goto err_free_skb;
+ 
+ 	err = mt76u_tx_setup_buffers(dev, tx_info.skb, q->entry[idx].urb);
+-	if (err < 0)
+-		return err;
++	if (err < 0) {
++		/*
++		 * mt76_tx_status_skb_get() walks the idr and dereferences
++		 * a freed skb. This SKB is not counted in non-AQL counter
++		 * due to error return, so using 0xffff as wcid to keep
++		 * balanced.
++		 */
++		mt76_tx_complete_skb(dev, 0xffff, tx_info.skb);
++		goto err_ret;
++	}
+ 
+ 	mt76u_fill_bulk_urb(dev, USB_DIR_OUT, q->ep, q->entry[idx].urb,
+ 			    mt76u_complete_tx, &q->entry[idx]);
+@@ -921,6 +934,14 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 	q->queued++;
+ 
+ 	return idx;
++
++err_free_skb:
++	status.skb = tx_info.skb;
++	spin_lock_bh(&dev->rx_lock);
++	ieee80211_tx_status_ext(dev->hw, &status);
++	spin_unlock_bh(&dev->rx_lock);
++err_ret:
++	return err;
+ }
+ 
+ static void mt76u_tx_kick(struct mt76_dev *dev, struct mt76_queue *q)
 -- 
 2.45.2
 
