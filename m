@@ -1,152 +1,176 @@
-Received: from mail-ua1-f47.google.com (mail-ua1-f47.google.com [209.85.222.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 273FA3E4506
-	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 23:35:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACF115746F
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 23:46:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787009730; cv=none; b=mhmM5rCW342UaYUKphvjGqD5GIrY0Yzf5GDdX2ZYuFlMKpePathHBa8JBJlN3nbyu7z/LFZaUUsbF7rG18AYBXWLVre+bojkjGO1sBSCCf8ymH/h4OEbg4qJjuk1pxB0wFL3u47St7YTs6mSCxPBITMJymK3aYCW+DalBUlmTw8=
+	t=1787010400; cv=none; b=SMqUcTXzYKwim+CXG09zQMxXuQajWsOai07TlLOuk8Nzvy0jMdyPrh3jxbip4vPscYdXbXMF2TWgLIhbRVxfg4f9TbRmOtgaudjYAxpuURRI+bwohB+mE60eUDW+G/ErmVp6QZz1KZPUyap+jjb4dBvTXdw2CK3NU0EbE+/3bGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787009730; c=relaxed/simple;
-	bh=+FSm6Pd5Qrc6WiSlUy8cufs5ZsMoo2RzLUPmBaAh3L8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G2uk88RLY75zkIYW9lsGd2Pwr90uw+CdZwaOHXmJidt7sTUkURVz4tUwrJkx1Y3f7HuEAlPRjdhVpWJeP56CNKHgXT3UB+crkv+cFLIwAVN2Rq7mDFUerUrvf8+p3vAjLzY+lRzMyG7xG2wk+gbNuRokCK0lOd3yO4Xoi8EEWSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iPp5XdRX; arc=none smtp.client-ip=209.85.222.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787010400; c=relaxed/simple;
+	bh=PDmUKOmAKGHZJyPbhmnbu7isu5GWDVEupdxR1CCyeNw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=cYUW9VquWKHw0dS19kiwavqP7nuv8Xip/EqY8comK0cXEN47Jmt7BXCMdsynUsJStTXGeEbBd3ZjwSvSCA3OFwlzbNAodwny6bXm9xKY0qVrdLMh17lqGP1jYARSjYbISluUQXLhq/WgXVVwSEOyFPRiQPze6gjMjzSYV6IWw2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dDxTvk0N; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VvGtFsY0; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iPp5XdRX"
-Received: by mail-ua1-f47.google.com with SMTP id a1e0cc1a2514c-97bf90f4b41so1647089241.2
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 16:35:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dDxTvk0N";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VvGtFsY0"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67HLlNWX3883840
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 23:46:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=y4Omj204/uIeyve9oBEjC2
+	WLK/tG67t/xbLfOcYNJ2I=; b=dDxTvk0N5jty+8WsCM70xQIna6ThVK18KtOfcG
+	pkBgDPorOZllPVIJwY5n0txYs9prMfoRUZ98T/tfHSFNr/v/ViAhWmr/M8hqiUuf
+	r94hlWvFD3Tkx7z3j3DhMx48HIzbog0wwptDBI2THt3tiDL243nv1nRRDWfocW0a
+	oEHx3Y0bDU61IIbhmt887c/p4xSa7jlggbsBCfwbJ6kqzFrhaBjxRYUssh0G66bH
+	Q6oigplvCac33h4CSPa5MCnpXovFS7lFrVLexDc7PUTPve85P7+vXRJNAKOhmb1K
+	s2X1oWOh40r0yQNCTgOfkiTj1eW3Dbk0F5yd4wlpFOvsxVRA==
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g3y77bjdw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 23:46:37 +0000 (GMT)
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb4cdf95b5aso7235914a12.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Aug 2026 16:46:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787009728; x=1787614528; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qwqA6q08zrALDjNDnvuQJbv08KYcmrebUvDWpLD8J6Y=;
-        b=iPp5XdRXeZMYMM6mnNOID/5afVPax3pItw97e29YrvRiF/O2fIG/ZiyRr7BTXeumeS
-         5e0I7RCA9NDdby/J0xm+dEygWZixM7jgdpr5QTeKNZ6Y8r7VnW9vp/8z80jeET8IHoMU
-         DPd9GpbbOtkpEVUGFKySiV98zZlh1iR7waKjitqs5Iwi8hd1K8XDvXslNadwEx4Cj2k8
-         1sbJgcmfDD0HY0OWw3PDSIwIKSi19Xwu4yA5mh7QfVSwWf/QBIczBadbbddD7u1lHuSE
-         LqScDOXtOhVYUE55IRf49oMPQRCQTvEM3PpVxtok6geW85dDoeCLHHfB/CuZmAIrrlcv
-         fdMg==
+        d=oss.qualcomm.com; s=google; t=1787010397; x=1787615197; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=y4Omj204/uIeyve9oBEjC2WLK/tG67t/xbLfOcYNJ2I=;
+        b=VvGtFsY0nItq0rAuWNJMf2emlChbQcZFbACpTa4PDG6tb4cUCLikuwLlyWlTaXEu8i
+         +JWVGSPN/hIOSCDHnggdwfPLyRNbuZLoeuHTXWweJygxVs/kaCgzSO5EyQSmeyX5wXXK
+         s3qtk4QSVOVOhG5P7k8+acE6D1OZLjQKh3BCqRep23k7i0MyHIN7fcxvLu0bj8eBHE66
+         CEx49BlPMvPMqn/b8FvoQ1yOnR6kPP5Ugl/DPl+u5krb9SAjkSTMs4MK/BAQULFywDW0
+         IiiDL/02id3Zo6qXUin0QN9vrvQDao1soZUDdDxs+vQ+TAre9dpLIdfaWTxouqo/2HEO
+         HJZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787009728; x=1787614528;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qwqA6q08zrALDjNDnvuQJbv08KYcmrebUvDWpLD8J6Y=;
-        b=g67YHlnhkIgtRmQaH87sEOZSuKttU+8Iuokvj4tYsjhaI0DmPF7EplhsvJnNxhRDlP
-         G70B+fptFlTcIb9qsJgKVjILRlQ0/NZY1MQK8Jz9RYqMfLHTxrqcHBw/uXtPIls0l8iz
-         2mjhwU1JE3+7UxBtpUXdoQ3RXEJDFBAJscwkPJiGssOubdp4vUoqmldJJ4Ey5ksvhu6M
-         hqOptcT68EyOFa9QwztutYAhNZnT64+XtGcRJJrRLAIUojajGGU8TKiNA8u+VD26ybH5
-         LhCBLCJwtoY8p40i1IsK1tHQ9+D+XbWzoxFt/X7bAzZPIOzpQd8Hzxh9epoNwdaU7MTT
-         MVAg==
-X-Gm-Message-State: AOJu0YzJcI4HcEQgUk/D9fzsH5HNnTSF9vAI6FF7V2gmF2ls+L/n1nAH
-	/R5RHw4PTZWN8WOmWQdKbyfqHhhstPFCMPkkv8Va7bGUrI7bBj5dancpRVkL5g==
-X-Gm-Gg: AR+sD10JVqRfiXfgk2/ppef+FmXVZABjp7WUMWlkFdCSVh7Zb9e1ko01bfb29speX+j
-	dmYqL+wBSGOTDZtp34Wt7209a5x/sxkR9DuSpjnCDB6eDWrUHkT7pEMZsJQDRjC0p0qax8ThxA5
-	J22Sx9AwrEZl4ogzzMnouPamjJ5XaxIjhA4y8nbXNvy6j+sbRYg8E8il41I350KyGTPo84xms+Q
-	47z0oDADnfDi64DWX7F/2HNV3FasmpYLqVPH1W/bpDaysyPDHSodt/4fSDLB3wkJerD37hWT0Ai
-	NYFUjpBLNk/NQeAFtHbDtR8Vlj9HhWvuespKhwYQcUPIjVNVcd66IAZERq8IxJtqpZPOpBExaGa
-	rGUxkcETt2IkpRFo557KTBEFst6h2Qkwnxd/PF6oWSgZCr2aYIApIPAzASpwG6LzHiJVQL9Np5V
-	czk+w4hra5SSNRUoWmAu8FGzakcLq063quDHMnSbyMm4STr4Fa62Y3XodiQLn0nRK45lEm9Cmd8
-	PLuQ6iWha2ZXmmVQZGIRB4yGU2RvIbeJFDWbZLlim8jsg==
-X-Received: by 2002:a05:6102:1496:b0:738:9c30:2b7c with SMTP id ada2fe7eead31-76f2c541b8bmr6683493137.6.1787009728024;
-        Mon, 17 Aug 2026 16:35:28 -0700 (PDT)
-Received: from fedora.fibertel.com.ar ([200.55.79.212])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-773c3111383sm1966240137.4.2026.08.17.16.35.26
+        d=1e100.net; s=20251104; t=1787010397; x=1787615197;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=y4Omj204/uIeyve9oBEjC2WLK/tG67t/xbLfOcYNJ2I=;
+        b=tDvnqS0UNBIlVomM3mUfkEgvXaGMQ1CQIjsCWhOgEjxiyC4OY9ms7hkjVmHRnvf+1B
+         H3VqoCKeE0exajHyeNBVxUTLx2c73vnqwEJjojkLrMo6sxnuPG87b2pelBLlW/tl5O9A
+         vVsUHlB5eCFSQnuLVwkeCWdSvk8cJluh7zYX92khbCLQ40R+JeCPUHQ1emwOliygFmVI
+         UwQn3TVrJxO1asRlfDMBv8qB0WZrkm/7zXqukV8EE2ZUr/4lyuNk1Bu/SEUxBDBNWaTD
+         HQwCn+FzIeys2okrfVB6QNaW63DWFf8lXmBggxg8qntsWGpb8AV19EcC3W1IT5rzemiU
+         xFxg==
+X-Gm-Message-State: AOJu0YwXPIXFSThjqqpsOcgi80dOulCPQIuOlGwOnCwQpBH3QNYG7rZd
+	G5Ohr04e2Ecbj5DhOTn2lAn4vzw9RWmoec7GGWg/JtK7Xz965WuH7eBnQ482NkBXUNpoYlGxwvJ
+	2w9+8MZj+BBP8Bdk1gPeqKME+PjwSWeKkL0JIz3yGTVjagY8GTebUS6Vyu/V+C1kE3N3Jhp0ZZl
+	hDFQ==
+X-Gm-Gg: AR+sD13Nijm1+zY7OMJXn27NsJePL2V+AD3kA/fzc+7flpeqkHGWxTKn/LoRa6iIjsq
+	f4rK75siMG1NkalYT5ileLsLxuhxFDqbFz78nztQiwFFlxp7Sj3KlP/j9NQBDRaWl4Bi6Bg1mk9
+	8/1od3HqS1pvFmBhSk98G7YaIJC5xgQK96ySofnYBKd/p17iQlZn1Kx2f9rbjPNhUozRgdBlm1U
+	kgVVbbNIzkj9R8/O6z9G+eTELP73xTIRmMPBKT1WkoWNprrX4DD/qScExLLnLc6sK6UqlKisiOU
+	RTBkcDr3iLCJ8GoE3Wu20LY/OFag3MyzLwbmz2aCOiZZN03tgvm7uYryFTvAfvWYZg18rOS7rXB
+	n7DSsPan564xcGEYeUJdqwWcOhWTesQpr/Sh5u7FXkCKqYcNZxHLe74A=
+X-Received: by 2002:a05:6a21:3511:b0:3c3:b57b:6285 with SMTP id adf61e73a8af0-3cc71a2c74emr37886969637.13.1787010396907;
+        Mon, 17 Aug 2026 16:46:36 -0700 (PDT)
+X-Received: by 2002:a05:6a21:3511:b0:3c3:b57b:6285 with SMTP id adf61e73a8af0-3cc71a2c74emr37886894637.13.1787010396474;
+        Mon, 17 Aug 2026 16:46:36 -0700 (PDT)
+Received: from hu-jjohnson-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-32678dcedf4sm10043488eec.5.2026.08.17.16.46.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2026 16:35:27 -0700 (PDT)
-Sender: Mariano Baragiola <mariano.ignacio.baragiola@gmail.com>
-From: Mariano Baragiola <mbaragiola@linux.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Mariano Baragiola <mbaragiola@linux.com>
-Subject: [PATCH] wifi: mac80211: avoid trimming injected FCS twice
-Date: Mon, 17 Aug 2026 20:35:21 -0300
-Message-ID: <20260817233521.2747027-1-mbaragiola@linux.com>
-X-Mailer: git-send-email 2.55.0
+        Mon, 17 Aug 2026 16:46:35 -0700 (PDT)
+From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Date: Mon, 17 Aug 2026 16:46:34 -0700
+Subject: [PATCH ath-next] wifi: ath11k: fix reg_info_store leak in
+ ath11k_service_ready_ext_event()
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260817-reg_info_store-leak-v1-1-77025a99b074@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAFmdg2oC/32NUQqDMBBEryL73ZUkpaL96j2KSDAbXapJm1ixS
+ O7e1AP0Z2B4zJsdIgWmCNdih0ArR/YuF3kqoB+1GwjZ5A5KqErUQmGgoWNnfRcXHwgn0g+U2ta
+ yP1OlGwt5+QxkeTusd9DLiI62BdpMRv7NPsfdKg/+17xKlKiEaRpTm4ux6uZjLF9vPfV+nssc0
+ KaUvuaKWrvHAAAA
+X-Change-ID: 20260802-reg_info_store-leak-1af81c3e6a9f
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+X-Mailer: b4 0.14.3
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE3MDE4MiBTYWx0ZWRfX3TkW9xh/lqYR
+ kQ4PA9chC/PSd7AfEBR1uFDChjYFNPTOmVyUSx2rBPAKTWYuQMoRLCnr5XkqAsXLxx14Qo4LeGT
+ U7PEcaYu3/aFl9nWgkDwVg6ydqw7e5r30kkKIAnszTXo2nFm+t+3YoRepIOZHHLF2PTV+bEz7Ry
+ kuq75rSOr5ZDleHO9W9pOc+VXDhKeGI4EH/Lj59onn3ZTbztShFWEWyA8C/1TsBbSGs5PXzHFPK
+ H1kq9anfuMaocmftCLxXAcMp+1L7w5zx8qPZ6ndC6q/hv35MfFdmB/3KnAzA8zhoNydta1tp6qF
+ W/CYhjVZQBgEByqB4CtRO8UEid1lE21KtE/Zinn0SXmmEyXws/Ko2H5iKoGIJ67Va+aah5w99MZ
+ rTnJO17vQwP6iAqmX9SPjLgtsiv6+3l/7wZY00bG/7MAtMGOs/wEG1zeb0pNLW++wllf+Ye+Pkk
+ vEZqeRZhqsTwNIE95EQ==
+X-Proofpoint-ORIG-GUID: Gm_lR9soBkEZGRzl4Wr4wtp3KivOi1Bj
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE3MDE4MiBTYWx0ZWRfX1mvY+4+iwLgI
+ Sj0psMensR9lAxNCdQ82ulzKDicplUiPjSarE9gaOJrJ4niep7KB4FIvOWq2lMvYMswy7DXbyaR
+ /fQWK0ll27uwfxgdhiuadxA3tpHfwAs=
+X-Proofpoint-GUID: Gm_lR9soBkEZGRzl4Wr4wtp3KivOi1Bj
+X-Authority-Analysis: v=2.4 cv=WNhPmHsR c=1 sm=1 tr=0 ts=6a839d5d cx=c_pps
+ a=Qgeoaf8Lrialg5Z894R3/Q==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=EUspDBNiAAAA:8 a=ioZH6r-_hHwHCcFRKkYA:9 a=QEXdDO2ut3YA:10
+ a=x9snwWr2DeNwDh03kgHS:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-17_04,2026-08-12_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 spamscore=0 phishscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 priorityscore=1501 bulkscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608170182
 
-When packet sockets use PACKET_QDISC_BYPASS, mac80211 can parse the
-radiotap header while selecting the queue and again before transmit.
+Currently, while processing the WMI Service Ready Ext event, the iterator
+in ath11k_service_ready_ext_event() can dispatch the HAL Regulatory
+Capabilities handler ath11k_wmi_tlv_ext_soc_hal_reg_caps_parse() which can
+allocate ab->reg_info_store.
 
-If the header includes an FCS, both parses trim the skb. Validate the FCS
-on both parses, but trim it only before transmit. This keeps queue
-selection read-only and avoids trimming shared skb data twice.
+If a subsequent failure occurs during iteration, the ab->reg_info_store
+allocation is leaked.
 
-Fixes: cb17ed29a7a5 ("mac80211: parse radiotap header when selecting Tx queue")
-Signed-off-by: Mariano Baragiola <mbaragiola@linux.com>
+Directly free and clear the pointer on the error path.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4f95da023746..0becd3361010 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -7615,11 +7615,12 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
-  *
-  * @skb: packet injected by userspace
-  * @dev: the &struct device of this 802.11 device
-+ * @trim_fcs: trim the FCS trailer when present; validate it otherwise
-  *
-  * Return: %true if the radiotap header was parsed, %false otherwise
-  */
- bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
--				 struct net_device *dev);
-+				 struct net_device *dev, bool trim_fcs);
+Note that the normal cleanup function ath11k_reg_free() cannot be used
+since other regulatory-related fields are not yet populated at this point.
+
+Compile tested only.
+
+Fixes: 7004bdceef60 ("wifi: ath11k: store cur_regulatory_info for each radio")
+Assisted-by: Claude:claude-sonnet-4-6
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index bbca275a8289..08fd6795ed9e 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -5136,6 +5136,15 @@ static int ath11k_service_ready_ext_event(struct ath11k_base *ab,
  
- /**
-  * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 43460a705a6b..fdac729ca580 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -964,7 +964,7 @@ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
- 	/* reset flags and info before parsing radiotap header */
- 	memset(info, 0, sizeof(*info));
- 
--	if (!ieee80211_parse_tx_radiotap(skb, dev))
-+	if (!ieee80211_parse_tx_radiotap(skb, dev, false))
- 		return 0; /* doesn't matter, frame will be dropped */
- 
- 	len_rthdr = ieee80211_get_radiotap_len(skb->data);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 91b14112e24f..97990039695d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2097,7 +2097,7 @@ static bool ieee80211_validate_radiotap_len(struct sk_buff *skb)
+ err:
+ 	kfree(svc_rdy_ext.mac_phy_caps);
++
++	/*
++	 * During TLV iteration the WMI_TAG_SOC_HAL_REG_CAPABILITIES
++	 * handler may have allocated ab->reg_info_store, so free it
++	 * on error to avoid a memory leak
++	 */
++	kfree(ab->reg_info_store);
++	ab->reg_info_store = NULL;
++
+ 	ath11k_wmi_free_dbring_caps(ab);
+ 	return ret;
  }
- 
- bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
--				 struct net_device *dev)
-+				 struct net_device *dev, bool trim_fcs)
- {
- 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_radiotap_iterator iterator;
-@@ -2154,7 +2154,8 @@ bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
- 				if (skb->len < (iterator._max_length + FCS_LEN))
- 					return false;
- 
--				skb_trim(skb, skb->len - FCS_LEN);
-+				if (trim_fcs)
-+					skb_trim(skb, skb->len - FCS_LEN);
- 			}
- 			if (*iterator.this_arg & IEEE80211_RADIOTAP_F_WEP)
- 				info->flags &= ~IEEE80211_TX_INTFL_DONT_ENCRYPT;
-@@ -2470,7 +2471,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * selected chandef above to accurately set injection rates and
- 	 * retransmissions.
- 	 */
--	if (!ieee80211_parse_tx_radiotap(skb, dev))
-+	if (!ieee80211_parse_tx_radiotap(skb, dev, true))
- 		goto fail_rcu;
- 
- 	/* remove the injection radiotap header */
--- 
-2.55.0
+
+---
+base-commit: 8150c22bc80caef4ba8391eb98b25e9f7c6cb487
+change-id: 20260802-reg_info_store-leak-1af81c3e6a9f
 
