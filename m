@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B718C19B5A3
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 13:26:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C7819B5A3
+	for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 13:26:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787059596; cv=none; b=cWvlyZ43/gS4rLTxT0j0LlXTRxycpad1Myxk45+jYj7S94ZadH1aiDUTRjg5VEazMfNuYkdzkBvs0ZQgIPvxlTgfwHm6xInC2bKsShOsaCbc9rAZU7MawNNiU00nBbndB3jj0x574YRfNLJlVp2mzV9xTb04GCAiXLJTf81vIV8=
+	t=1787059599; cv=none; b=m6h1ECzSSjc1kVRyjkw12AW/Qb0x8az4ROMQH+ehGHykcMkNB6NXwhaqLIXPOO0RbQXdjrFq2cbfAp3YqbcDV9eDx/FuhbxbIhza8QC3MbydvalIoQAhcj9HrAZ32Mrgwg+So/NSLeuBNXV98hrkz8KZi6EXPFmq0v0BQ+MdbGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787059596; c=relaxed/simple;
-	bh=6Fl1wIU4U/rKXdb2Fc4vogB4NQpLilj+tG1m91XbSSw=;
+	s=arc-20240116; t=1787059599; c=relaxed/simple;
+	bh=ISEbcBhAENvS+/sCzzW13LYsAqRP8n1/XezGTv8DyEI=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SHY5ts0yQX0NsFvEmA7U7hv/XfgaxQKNW2ZV7MmCxxAjUbx6Po62soFbfmlq3dXtY6qPTRCYbekgt1M99jsN0CjyNmko28KQak8dfRTrY+ojcCL1w7wGIe02Kz3kRGwbCZVfYVIR2pWL3L4dkj2BYT+du4NjiSSO29Cyzk9U5WA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Bsa/nJGQ; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=eiangUJVxhjsNAziTZN2XmjdA6ADeHFIAnUj1C8+71pifUdYhZEZ+E+wLnV6IhwASuZ+eGUd2GptB8CNjw7JnTOKYljiEjdEOXFlXYPv6Mp+b1TOUQOqBGcmMx2IOHr7+N3hEh/siDId3eoh/rhJoWUQgt/wOj6qOGKEFudd6Sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=UyzENwaA; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Bsa/nJGQ"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UyzENwaA"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=wyBEc/iZ8tmRiDs//Zs31Q0lfy9NroKkJo0yUaDS87s=; b=Bsa/nJGQypvVsKpPU8Y3suF50U
-	PXd4rKt1NQm40VibhK07HO0gsFdsZ8fPwYvh/B7iauEeBG7OFEREWJaVvJPpFFmXrf8L7Ascl6ZGt
-	l1cW2hApeavT0zSkoNL5MearJwV0k6Am0qbVKg+D+ie3jY82putz0F2PuV5CNYP9KwuM=;
+	bh=rKZmnRdYUcqPIZ3ThNluxxst2RICSuxwPEVDdg8fHzg=; b=UyzENwaAMmis2MCZrHJeB4POIA
+	YDQwel8EujkYqK5MkaeLCQL+/IH9ygV2vTLJiCbdQMTXGd4kk6I2Fvhr+qIql0/8zEgyIdFbAC0+u
+	aLtSCHaCgmx5Digfu3NEeEfeNUGm9xDZTuZ96Sx/e/yC1CrGscEKw0+NERccDYXdqBb4=;
 Received: from p200300cadf14d100000000000000085c.dip0.t-ipconnect.de ([2003:ca:df14:d100::85c] helo=max)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1wwJOd-002b0i-3C
+	id 1wwJOe-002b0i-0V
 	for linux-wireless@vger.kernel.org;
 	Tue, 18 Aug 2026 14:58:28 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 4/5] wifi: mt76: clear offchannel state if a scan has no channel to restore
-Date: Tue, 18 Aug 2026 12:58:24 +0000
-Message-ID: <20260818125825.395538-4-nbd@nbd.name>
+Subject: [PATCH mt76 5/5] wifi: mt76: account non-AQL frames per peer rather than per link
+Date: Tue, 18 Aug 2026 12:58:25 +0000
+Message-ID: <20260818125825.395538-5-nbd@nbd.name>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260818125825.395538-1-nbd@nbd.name>
 References: <20260818125825.395538-1-nbd@nbd.name>
@@ -48,54 +48,85 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mt76_scan_complete() restores the operating channel only if the phy has one.
-__mt76_set_channel() is the only function that clears phy->offchannel.
-A phy can run a scan while it has no operating channel. A 6 GHz radio with
-no configured interface is one example. After such a scan, the flag stays
-set.
+The driver increments wcid->non_aql_packets when a frame goes to the
+hardware queue. The completion path decrements the counter again.
 
-mt76_txq_schedule_list() skips each TXQ whose wcid points to a phy in this
-state. All traffic for the stations on that band stops. The frames stay in
-the mac80211 queues. They do not reach the hardware, and no counter shows
-them. Only an unrelated channel set clears the flag.
+For an MLO peer, the hardware reports the completion on the link that it
+used for the transmission. This link can differ from the link that the
+driver queued the frame on. In that case, the increment and the
+decrement go to different link wcids, and the count drifts upwards until
+it blocks the station.
+
+Keep the count on the wcid of the primary link, like the other peer-wide
+state.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/channel.c | 2 ++
- drivers/net/wireless/mediatek/mt76/scan.c    | 7 +++++++
- 2 files changed, 9 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76.h |  7 +++++++
+ drivers/net/wireless/mediatek/mt76/tx.c   | 11 ++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/channel.c b/drivers/net/wireless/mediatek/mt76/channel.c
-index 1d2635672ac3..903f3a420e4c 100644
---- a/drivers/net/wireless/mediatek/mt76/channel.c
-+++ b/drivers/net/wireless/mediatek/mt76/channel.c
-@@ -330,6 +330,8 @@ void mt76_roc_complete(struct mt76_phy *phy)
- 	    !test_bit(MT76_MCU_RESET, &dev->phy.state)) {
- 		__mt76_set_channel(phy, &phy->main_chandef, false);
- 		mt76_offchannel_notify(phy, false);
-+	} else {
-+		phy->offchannel = false;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 62b41c8bb7c0..2ade848fe3bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -1426,6 +1426,13 @@ mtxq_to_txq(struct mt76_txq *mtxq)
+ 	return container_of(ptr, struct ieee80211_txq, drv_priv);
+ }
+ 
++/* peer-wide state uses the wcid of the primary link */
++static inline struct mt76_wcid *
++mt76_wcid_primary(struct mt76_wcid *wcid)
++{
++	return wcid->def_wcid ? wcid->def_wcid : wcid;
++}
++
+ static inline struct ieee80211_sta *
+ wcid_to_sta(struct mt76_wcid *wcid)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+index 3707ee19e4ae..b1e894b19cbd 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -234,6 +234,8 @@ mt76_tx_check_non_aql(struct mt76_dev *dev, struct mt76_wcid *wcid,
+ 	if (!wcid || info->tx_time_est)
+ 		return;
+ 
++	wcid = mt76_wcid_primary(wcid);
++
+ 	pending = atomic_dec_return(&wcid->non_aql_packets);
+ 	if (pending < 0)
+ 		atomic_cmpxchg(&wcid->non_aql_packets, pending, 0);
+@@ -344,7 +346,8 @@ __mt76_tx_queue_skb(struct mt76_phy *phy, int qid, struct sk_buff *skb,
+ 	if (!non_aql)
+ 		return idx;
+ 
+-	pending = atomic_inc_return(&wcid->non_aql_packets);
++	/* the hardware can report the completion on a different link */
++	pending = atomic_inc_return(&mt76_wcid_primary(wcid)->non_aql_packets);
+ 	if (stop && pending >= MT_MAX_NON_AQL_PKT)
+ 		*stop = true;
+ 
+@@ -506,7 +509,8 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
+ 			return 0;
  	}
- 	mt76_put_vif_phy_link(phy, phy->roc_vif, phy->roc_link);
- 	phy->roc_vif = NULL;
-diff --git a/drivers/net/wireless/mediatek/mt76/scan.c b/drivers/net/wireless/mediatek/mt76/scan.c
-index 3594b599662d..c8c4d096c809 100644
---- a/drivers/net/wireless/mediatek/mt76/scan.c
-+++ b/drivers/net/wireless/mediatek/mt76/scan.c
-@@ -29,6 +29,13 @@ static void mt76_scan_complete(struct mt76_dev *dev, bool abort)
- 		__mt76_set_channel(phy, &phy->main_chandef, false);
- 		if (offchannel)
- 			mt76_offchannel_notify(phy, false);
-+	} else {
-+		/* A phy that has no operating channel has nothing to restore,
-+		 * but the flag also gates the TX queues of every station whose
-+		 * wcid points at this band, so leaving it set stalls them until
-+		 * something else happens to set a channel.
-+		 */
-+		phy->offchannel = false;
- 	}
- 	mt76_put_vif_phy_link(phy, dev->scan.vif, dev->scan.mlink);
- 	memset(&dev->scan, 0, sizeof(dev->scan));
+ 
+-	if (atomic_read(&wcid->non_aql_packets) >= MT_MAX_NON_AQL_PKT)
++	if (atomic_read(&mt76_wcid_primary(wcid)->non_aql_packets) >=
++	    MT_MAX_NON_AQL_PKT)
+ 		return 0;
+ 
+ 	skb = mt76_txq_dequeue(phy, mtxq);
+@@ -603,7 +607,8 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
+ 			continue;
+ 		}
+ 
+-		if (atomic_read(&wcid->non_aql_packets) >= MT_MAX_NON_AQL_PKT)
++		if (atomic_read(&mt76_wcid_primary(wcid)->non_aql_packets) >=
++		    MT_MAX_NON_AQL_PKT)
+ 			continue;
+ 		if (dev->queue_ops->tx_cleanup &&
+ 		    q->queued + 2 * MT_TXQ_FREE_THR >= q->ndesc) {
 -- 
 2.53.0
 
