@@ -1,132 +1,110 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C7819B5A3
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 13:26:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0E922E9730;
+	Tue, 18 Aug 2026 14:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787059599; cv=none; b=m6h1ECzSSjc1kVRyjkw12AW/Qb0x8az4ROMQH+ehGHykcMkNB6NXwhaqLIXPOO0RbQXdjrFq2cbfAp3YqbcDV9eDx/FuhbxbIhza8QC3MbydvalIoQAhcj9HrAZ32Mrgwg+So/NSLeuBNXV98hrkz8KZi6EXPFmq0v0BQ+MdbGU=
+	t=1787065032; cv=none; b=rWXSMgG+l1F4vT4r6sYeaXaKZcYCy046jp1SFtiFbsPWZr68we50NWwpqUxezY456Q+cudhUSLXevKqSaTmaC9RmzHFqWA3XNAxMgGozgkcRKMgvZUuuCYVJLk9uqTdX100VO8pndPzPQacfrJeU7T1Btv2u0goIp9hd3xlTDD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787059599; c=relaxed/simple;
-	bh=ISEbcBhAENvS+/sCzzW13LYsAqRP8n1/XezGTv8DyEI=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=eiangUJVxhjsNAziTZN2XmjdA6ADeHFIAnUj1C8+71pifUdYhZEZ+E+wLnV6IhwASuZ+eGUd2GptB8CNjw7JnTOKYljiEjdEOXFlXYPv6Mp+b1TOUQOqBGcmMx2IOHr7+N3hEh/siDId3eoh/rhJoWUQgt/wOj6qOGKEFudd6Sk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=UyzENwaA; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1787065032; c=relaxed/simple;
+	bh=jCepnyRQKiy/0fJYVvG5+hkJYE2EYxoa1PmVNU3I8nU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=N8HU1q7H0oqA6QHit/0Q8gb0PVQ4iODBAX1TIm6vYcTKwYSWV2Et2tBPBCv1QM9viY5zZXUlismWI3Yy8MkMBpggaBD05g53019vGuyzh+8idnl2w/0zNAhr/6M3gldpr7HMpzau1dybHZnDeeLxie4vJRW5RPKazGGYFeRXSpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IlG2V5Ro; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="UyzENwaA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-	Message-ID:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=rKZmnRdYUcqPIZ3ThNluxxst2RICSuxwPEVDdg8fHzg=; b=UyzENwaAMmis2MCZrHJeB4POIA
-	YDQwel8EujkYqK5MkaeLCQL+/IH9ygV2vTLJiCbdQMTXGd4kk6I2Fvhr+qIql0/8zEgyIdFbAC0+u
-	aLtSCHaCgmx5Digfu3NEeEfeNUGm9xDZTuZ96Sx/e/yC1CrGscEKw0+NERccDYXdqBb4=;
-Received: from p200300cadf14d100000000000000085c.dip0.t-ipconnect.de ([2003:ca:df14:d100::85c] helo=max)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1wwJOe-002b0i-0V
-	for linux-wireless@vger.kernel.org;
-	Tue, 18 Aug 2026 14:58:28 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76 5/5] wifi: mt76: account non-AQL frames per peer rather than per link
-Date: Tue, 18 Aug 2026 12:58:25 +0000
-Message-ID: <20260818125825.395538-5-nbd@nbd.name>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260818125825.395538-1-nbd@nbd.name>
-References: <20260818125825.395538-1-nbd@nbd.name>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IlG2V5Ro"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB1211F000E9;
+	Tue, 18 Aug 2026 14:57:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787065030;
+	bh=m7dVJLkNi28+BTlhsO3WjBgH7kpW+cZErXxqcXKNxuE=;
+	h=From:Date:Subject:To:Cc;
+	b=IlG2V5RofAupbPL4mXBtWcP1II1kkYrwfkFijrAKD6EDmc1cAaUQskgFP08KeSj7W
+	 eP3KsuqOHQg1y0ushC6KK7vXuSKiyO0NoX3MQKCsl26RDqktrE07ZZS/B0L/3WhsyS
+	 yNO85xUL3vy6JygEfGXIDfV6JlEbhgq/c8f1jamIOnIfr+YzJMfYn2d3Pen4/VEFP+
+	 2JQLeRf/UoRKqEHFTFSH0e5lkC/p8+oVkT4OXKdm9Pi7+rN2+SosoDJMjl5EAtB/Bo
+	 pMgLRuGSHU0uB8ztaosnROXTQhlksykMuxLXZ20AtHeYRm3Ric30sdd1IoY9g4ADh5
+	 jm8jFerXJi3LQ==
+From: Konrad Dybcio <konradybcio@kernel.org>
+Date: Tue, 18 Aug 2026 16:57:05 +0200
+Subject: [PATCH ath-next] wifi: ath12k: wmi: Complete regulatory update for
+ dropped events
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260818-topic-wifi_reg_fix-v1-1-18c7c289e528@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMywqAIBCF4VeJWSeYUFSvEhE2jjUtKrQbhO+e1
+ fI7cP4bPDkmD3Vyg6ODPS9zRJYmgKOeBxJsokFJVcgyK8W2rIziZMudo6GzfAmtJFYqLzC3BuJ
+ xdRTnL9q0v/3eT4TbW4IQHqD0uxh2AAAA
+X-Change-ID: 20260818-topic-wifi_reg_fix-a20c9256c5fd
+To: Jeff Johnson <jjohnson@kernel.org>, 
+ Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>, 
+ Aditya Kumar Singh <aditya.kumar.singh@oss.qualcomm.com>
+Cc: Jeff Johnson <jeff.johnson@oss.qualcomm.com>, 
+ linux-wireless@vger.kernel.org, ath12k@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, 
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787065027; l=1840;
+ i=konrad.dybcio@oss.qualcomm.com; s=20230215; h=from:subject:message-id;
+ bh=hvZ5AUZfou67LdEvHueGUsn8P6t9OZp7Fyj2rqGhT0c=;
+ b=YegAy2qbb3sIHDaFpOU2QMaLFi9phuM0A3HuJNqUxyn5hdSI+uUZ+ZzlRY1iXJj7OkaFa3jeQ
+ +Nm8DcWlng7DP6TO3koWMnwKw1JY5mHsd/mmdrGJQZx9okOv72Rk7ql
+X-Developer-Key: i=konrad.dybcio@oss.qualcomm.com; a=ed25519;
+ pk=iclgkYvtl2w05SSXO5EjjSYlhFKsJ+5OSZBjOkQuEms=
 
-The driver increments wcid->non_aql_packets when a frame goes to the
-hardware queue. The completion path decrements the counter again.
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
-For an MLO peer, the hardware reports the completion on the link that it
-used for the transmission. This link can differ from the link that the
-driver queued the frame on. In that case, the increment and the
-decrement go to different link wcids, and the count drifts upwards until
-it blocks the station.
+If ath12k_reg_validate_reg_info() returns STATUS_FALLBACK/DROP (which
+are not fatal), the code then jumps to mem_free with pdev_idx still set
+to 255, making the following completion never take place.
 
-Keep the count on the wcid of the primary link, like the other peer-wide
-state.
+That then results in repeating "Timeout while waiting for regulatory
+update" messages, as observed e.g. on a Glymur-based ASUS Zenbook A16.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Fix that by updating the pdev_idx right after the actually-fatal case
+of not being able to extract the reg info data is ruled out.
+
+Fixes: 906619a00967 ("wifi: ath12k: handle regulatory hints during mac registration")
+Suggested-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Signed-off-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h |  7 +++++++
- drivers/net/wireless/mediatek/mt76/tx.c   | 11 ++++++++---
- 2 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath12k/wmi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 62b41c8bb7c0..2ade848fe3bb 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -1426,6 +1426,13 @@ mtxq_to_txq(struct mt76_txq *mtxq)
- 	return container_of(ptr, struct ieee80211_txq, drv_priv);
- }
- 
-+/* peer-wide state uses the wcid of the primary link */
-+static inline struct mt76_wcid *
-+mt76_wcid_primary(struct mt76_wcid *wcid)
-+{
-+	return wcid->def_wcid ? wcid->def_wcid : wcid;
-+}
-+
- static inline struct ieee80211_sta *
- wcid_to_sta(struct mt76_wcid *wcid)
- {
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index 3707ee19e4ae..b1e894b19cbd 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -234,6 +234,8 @@ mt76_tx_check_non_aql(struct mt76_dev *dev, struct mt76_wcid *wcid,
- 	if (!wcid || info->tx_time_est)
- 		return;
- 
-+	wcid = mt76_wcid_primary(wcid);
-+
- 	pending = atomic_dec_return(&wcid->non_aql_packets);
- 	if (pending < 0)
- 		atomic_cmpxchg(&wcid->non_aql_packets, pending, 0);
-@@ -344,7 +346,8 @@ __mt76_tx_queue_skb(struct mt76_phy *phy, int qid, struct sk_buff *skb,
- 	if (!non_aql)
- 		return idx;
- 
--	pending = atomic_inc_return(&wcid->non_aql_packets);
-+	/* the hardware can report the completion on a different link */
-+	pending = atomic_inc_return(&mt76_wcid_primary(wcid)->non_aql_packets);
- 	if (stop && pending >= MT_MAX_NON_AQL_PKT)
- 		*stop = true;
- 
-@@ -506,7 +509,8 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
- 			return 0;
+diff --git a/drivers/net/wireless/ath/ath12k/wmi.c b/drivers/net/wireless/ath/ath12k/wmi.c
+index d5160af60e00..4ac78ba6c790 100644
+--- a/drivers/net/wireless/ath/ath12k/wmi.c
++++ b/drivers/net/wireless/ath/ath12k/wmi.c
+@@ -6975,6 +6975,8 @@ static int ath12k_reg_chan_list_event(struct ath12k_base *ab, struct sk_buff *sk
+ 		goto mem_free;
  	}
  
--	if (atomic_read(&wcid->non_aql_packets) >= MT_MAX_NON_AQL_PKT)
-+	if (atomic_read(&mt76_wcid_primary(wcid)->non_aql_packets) >=
-+	    MT_MAX_NON_AQL_PKT)
- 		return 0;
++	pdev_idx = reg_info->phy_id;
++
+ 	ret = ath12k_reg_validate_reg_info(ab, reg_info);
+ 	if (ret == ATH12K_REG_STATUS_FALLBACK) {
+ 		ath12k_warn(ab, "failed to validate reg info %d\n", ret);
+@@ -6991,7 +6993,6 @@ static int ath12k_reg_chan_list_event(struct ath12k_base *ab, struct sk_buff *sk
+ 	}
  
- 	skb = mt76_txq_dequeue(phy, mtxq);
-@@ -603,7 +607,8 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
- 			continue;
- 		}
- 
--		if (atomic_read(&wcid->non_aql_packets) >= MT_MAX_NON_AQL_PKT)
-+		if (atomic_read(&mt76_wcid_primary(wcid)->non_aql_packets) >=
-+		    MT_MAX_NON_AQL_PKT)
- 			continue;
- 		if (dev->queue_ops->tx_cleanup &&
- 		    q->queued + 2 * MT_TXQ_FREE_THR >= q->ndesc) {
--- 
-2.53.0
+ 	/* free old reg_info if it exist */
+-	pdev_idx = reg_info->phy_id;
+ 	if (ab->reg_info[pdev_idx]) {
+ 		ath12k_reg_reset_reg_info(ab->reg_info[pdev_idx]);
+ 		kfree(ab->reg_info[pdev_idx]);
+
+---
+base-commit: e6664f2b33db9b6811eb4cec109f06cb2b4f458d
+change-id: 20260818-topic-wifi_reg_fix-a20c9256c5fd
+
+Best regards,
+--  
+Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
