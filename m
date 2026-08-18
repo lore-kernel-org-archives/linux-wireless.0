@@ -1,160 +1,274 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
+Received: from mail-qv1-f49.google.com (mail-qv1-f49.google.com [209.85.219.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9114477E3
-	for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 09:58:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90457474272
+	for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 13:10:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.219.49
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787047098; cv=pass; b=lmkGdatBWKsbvkoLKpG61oaLAT3FrHyucN9O3FxmH/DBQlPtUMMcsToxclQ058RbHqvRNndHAqkczLSz7qp2G/Krd5Mv5FzGicACjqAci6kbBwUbB3C/AQN75PGb94H5s+eSprpYkRwgxbM8YlR+EMK8T4ibFv9AkrDVkWwj2YA=
+	t=1787058653; cv=pass; b=fJB5gmM7InOGkWUxpFy9WxuNqt8TIUh43KNOOs8rrqzr1zOnHVGhnVVmrgPjGyb8GgKkahmE5NErKJT1akW8XrjnFqu7YNUT4cxfo0IGGGNgzoRJtDOn6iBhxDrUnHDdqltNFfTCCohbemB3nCKyjPBamcPEj0/rg1Bpbmk9heA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787047098; c=relaxed/simple;
-	bh=v7X5fOOgkMN7zwozDWTMmdpVAqvNyDVzElCQ5lmWHdo=;
+	s=arc-20240116; t=1787058653; c=relaxed/simple;
+	bh=lqj4n1WaqZ3NTZdgkD2iQcOU4gVUOfNnxygjucwvs2k=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GRkh64evusesck/H6LF4hYpr1nw4IcKaHXuFcmU2ZX3Yj61WbyxEjUHhtJenGCVrq542bBeDwkAzG1STp+vs3yGUtheoBkJReWQMv33yXqVzi18KxE81jqhk5W6Ky946vdpccNXXsx28G+3w28oL77lIkZmD7PVyOMXjlYEEqig=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XTn1BIgF; arc=pass smtp.client-ip=209.85.167.42
+	 To:Cc:Content-Type; b=HCsSJkGfB6yVV2wvvyFueG3hyPK+DUaM7epHlWMMxq9xe3L4xSYGDhOymarw0QB+jx/XnEX3+d4okWPvBC1ivbgjHMG2/GTk3FmqON/POpGwSk9V0apNS9GbO5bvMIDWWwfR5leycwwyPJeGj1wqjPod9QTKsj5ep+TJe4+qSV0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Wv+olwsl; arc=pass smtp.client-ip=209.85.219.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XTn1BIgF"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5aec6360133so3653525e87.1
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 02:58:16 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787047095; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wv+olwsl"
+Received: by mail-qv1-f49.google.com with SMTP id 6a1803df08f44-8efbafa1bacso24965616d6.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 06:10:51 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787058650; cv=none;
         d=google.com; s=arc-20260327;
-        b=Pf2g07lYe0BcewLaPoLkLfWvCerCj5+AWCZ8uUGZP2O0PUqpmY2atRIzEZOpeHyknq
-         s7EwBDmdF3tsIvG5JrlDTaCgvduK3ah+Wk6wMbZnFknZKTBRJahlUEGreikiar+TkCDn
-         jqFcmC0S8I53FkmgYJ5ZosG6CiZxCHrYVqGoXfg/vOdlj4GBCdttf3pB+FYWlF1rO/dC
-         k5HOh0oZMsnNmv0Er6kr2p/zijeA2PejD29BZBmSjtPRA1Morsjr5u8T+I0uvzVIDw5L
-         WEaBfSLqX4p4qfGr1CvENgYeNYBhF5wQW2IjQyLi7+jWet+pBtbKa485PipN/8IKtgJH
-         NIqg==
+        b=bpq6cIuqlqyf4nL5YWEj/lkYxBAEr/XlGVVEvfEgXDDC4OgxEyXAMkXrtltA2O+OEl
+         aTIOH7SsDHSqw5VXmVzefQqdPrw7NUjrkZX+jc3vSCwSJM7mlMmIPATjH/g/x8olpkNq
+         lWL09HLUF4ZTfGO+SDzeqCXGmKJl4fjhAwOZmf0fyRNkN6McWz1kJb8gMhRYpVp5gSBw
+         kzHGHMetu9S0Q8tO7sC/8nLuTGWiUZ0mbqMsYP7OEt20tnA7ejRqLusEhALJ2LMPbKmc
+         ej6IVEIAqqCVi2qmzfANP+9zLdAxwinYA0WBGYlBOHIE5RNWrLrbONY6bKWP+bliA8P9
+         TQhA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=wB5u1mD3caKiv5VwodTINCWhAlYduQugf9/JTmV6yLg=;
-        fh=/vG4OwYSxmSDgQF/eeRIwd9qOBhw9pLz7uJchUVvOR4=;
-        b=SgTZex+C9hYgToFo+GSRXVQrfecgw7dKTslKpbN1el4oIQavI/RERCZAkqi4BaQR52
-         9UCOz+LgadPxB0IgaDAigxF1odFRs4GO+yRJCdcm3V/wrMpaO9ZVegyYsdph4JYWN+mi
-         27dY3tqKdRC77+r2M18rlDJMo0JT/Sa5k9PufRFYPvgFVtDXnOoi4FobsAKAu9NqRNSk
-         c8B+k2mqvxR+k4J3jq9o1vZbCbQzDrF+JQ15jtIr9FvORuKSE2TSBb2oEH4JpiF2Ijdm
-         ej1YgBkvveCEDqECjPNcTdHZcqij+gJMqBpuy1Fr61Mu9mjOQbvyHmQaD940NezRWh6I
-         rJww==;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=1kLtpbFR5SYSksD0nL4IXXu9FNfott2NZaHxkpQa/Nc=;
+        fh=EEqq1nyX5noIwz+ZeuRwJY5LeYNGO0SH4elp/69PwDE=;
+        b=A9OLKvDQCYtl1doF1KVC4Li5kWw560rFD079ssQEXcbdlA75rh4tWT81AoLB4dFLMN
+         resiT/G2YCjCW+70h0AuDsvVjT8Aopju5qE8BelySi0OT0TvOhy+JXEqbaZvCUY+dMQI
+         dUTUtDuo2FxtlwOjOrpi3r3CbXR0LDOAdKYU0xJ2/YCwaRUpz26/e7AMuVsgs8CgyOc5
+         w3JJYCwQ6GUcYC0m4V1WJYlPFx0KJTxRk43/SJcW7op3UTUcoscRPSAou0Phh0UJk+DU
+         kWGzC6cFjQTldr4JfCxCgO9wY6od/bMGBS6rGZzA2OMRQv43rukMpPNOlq0ip3waDgVN
+         vCFQ==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787047095; x=1787651895; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=wB5u1mD3caKiv5VwodTINCWhAlYduQugf9/JTmV6yLg=;
-        b=XTn1BIgFrgnNUBoTe47C0ZSHKKiP97okpPyS1BjPkb1qn+3DbdNtn6UvsTNpQPcwED
-         PCR/IqGBZmSfV6SW6NiR42WxSnAx1kc++wDHZ20Mf3KeL05wHYDrMqlYtK/5pn00Ghju
-         twFU2mwtnVNZqjCRU5I099xRuq+J+319Pa+CsrBrCJIk4rK+cQGFC3cIpSkw/9QZuv4Z
-         oyTSdAsrcJLRK+vXKQlH1qMESygSNW8qTc/CTBlPcLfwQmdU3JsYplnEDRCmVtN9QS/t
-         nx5+Y8WuJdgT9dy+xJA79XM+/q5oTae6Itv+GL1nYNUzdPUy3ZMu0Cc28eZXF75T2Npn
-         z6Ig==
+        d=gmail.com; s=20251104; t=1787058650; x=1787663450; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=1kLtpbFR5SYSksD0nL4IXXu9FNfott2NZaHxkpQa/Nc=;
+        b=Wv+olwslOS1cDw8KAFUyY4ZQN4yrWnBiffiCP8i822Xw0LZXfEhHD3CJUH4xB9P4Ne
+         xBj6tEytuikxXAgeX01qEs7WQH//GmcIpb/jIbppb7hK34oQc3pioZQqafJQptCMM2Mx
+         SVQ0sZF8PvCp4/2zaXG6cucmJ+66emjpgMsc198tc+NEDjLVVbxgiYj2GLRbfSPBWrJa
+         /4khqx12RaIuPNM1ZLeBqOaGdB7vfV7g2qcaXGcoHzSI2oI8hWU53OCVuAw+MW1dF7up
+         HptKUnYzc98u3/3wMhmp6+esCjhIjvBY8a1v30DOCQBr75skLmGnO0m6UXeEGLzuQI8q
+         rDnw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787047095; x=1787651895;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=wB5u1mD3caKiv5VwodTINCWhAlYduQugf9/JTmV6yLg=;
-        b=mQ/J/0gKmxEfSulclprOp3vbL/e7ml5y2keOYUOpmak9MZSGN0Uz5kTdAiOJzXM+T3
-         Ss6qKkG7kuczY4rDEC7TF5cgQmddw7CoaVCHlboNq/vrbY61HtDqTnm2gQTQ0yvPTrF3
-         2WB/ByCN3chnpZALdshQHOhDJu6Is1s5N/cWYdxTIIL5lhIvu0lKCLVGeQettZ+q4aOB
-         lgPc3FJ0dIwEInDQSJ/6bRC6JwTy5vLVn4JDRI7TNu1xZyX2/V1k47vXY2rDY1/IOqub
-         i5aLxjraEM94WDhuLjJjhKXPck9FQeZIEU2TenzRWhm+PWTiC1ndGTiWv9GFf0LDhhOT
-         bfmQ==
-X-Forwarded-Encrypted: i=1; AHgh+RqQz28bPOfV1DtXOiorWYojgWtUoNFszpGyCKQOPu6WV0LcT/jsYtqh98zP6qUcNsklhdw/mv17J7uUP07ymw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwFScmUf5TEuh6OdXg/IvurVkRHlUd+bb2iuDfdc6ASVZaOfVyl
-	YeiBm2IYtwyNouSnPOgWfTzQNQJjePi7popx7EGZsG8cNlwTJA3oIpfJmmOEHz2ungQAwcMEnwZ
-	zrvCxnvof2jj12eCQyBmnV7mH9L8LQ+s=
-X-Gm-Gg: AR+sD12FjE8EER4rrLbZt13deXrCrjTqT/Ey9Zhq+y7nkzuTV0H7DbuZWGL2viSCHMU
-	YGMqrlDN5unoeH4cqpNqrVeOOZDQvmtl/VqQHBgM0QLtylgq5VbT30HGrxrwauon3zBJX7utKcJ
-	h+NPjFjyFnhSRkBXuInyRjds+oxdAM39UKh2WO1EcNZZF+PbHrmg3Dmr+M35qofpT75x3Ei0tpO
-	60WmbFgqNQ4qlc1tqHSHmf/AThLWn5LY9KSM3IaYUpH6iZXLdCzuzXYzVT5fkGNm9mczt24jUvj
-	73CnJARFNmFYVFP9Ih2ThW/reiZnCjFl8eEaEShVaEXEf2o3lLK46mD0fZgeIuizcR6+0x9+m9l
-	JOxS1SmJxU0SeDq2vbEmvThQYkg==
-X-Received: by 2002:a05:6512:3d12:b0:5b3:c15:c688 with SMTP id
- 2adb3069b0e04-5b470661ef1mr1563289e87.7.1787047094580; Tue, 18 Aug 2026
- 02:58:14 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787058650; x=1787663450;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1kLtpbFR5SYSksD0nL4IXXu9FNfott2NZaHxkpQa/Nc=;
+        b=Sx9io86Me36cdCctzmHUrVke6J3wOTcOtQ/L9/nCDp685ccJnhaL1T0YG9jz4EwXNJ
+         CxdCrQZLL2PUfimMg3TfRj9EeY620aVbdmSVi4uA00lDeCiTBU8pK5foPSXu3bJI7rtj
+         Ot38uqCjXLLQcFMi8ZKgf+g2JJrJCyvwaXrM3Wc2yXyIDSX/cyv9euPWjoag7ZmndNNr
+         fjB3kFolH/o4+uYrHQxGS2G0iqY2pgbJf6LmAKeyXJG0D4Mv4Xxfe8Hxm3K/D1llzUWe
+         r+iWx7Ng47j6QK2KWwpHmxQXiv20KEcTBcuD7XkfkODjN1sl+oMuweiMTiFYXp3vt1I5
+         vNiA==
+X-Gm-Message-State: AOJu0YykKs8td0PBFOP5ELASXd7OkuTI0eDuikALo9YcZNHkaXR7lEEM
+	4l2FkURu2ORDVIkPXAhE4hBKy+I30tCKQBk5W51oGB26WvtUJZxhKFiTIs7jrT47FvTfZRH17bm
+	Nv79d3nVuXH8DoQ6R/7EX2Xwpj4d2IAo=
+X-Gm-Gg: AR+sD13sczgSJoroMV+qUNi9+L5V6H7v4FptPTYTj1eOFjNoY2G9xFMK8z2XHwanSys
+	khC/N7VEMgD7baqRjPvZJDK/eqe2I5b/IV64GSaHv/izvtrkcVcgXH6wR9R7B16QFhYbAwLQVrX
+	nB0KJwE3+RWBbTJqCsYsB6Cgjl7iN6jmqBgBWLeTqBZiW2wTXaJbmTLEKdCelKmOFs0hjTbkjXE
+	bYlAzcj67Su156GwcOQBgcuqka4ASHQyrjqfreHAVghOeEr4Xi18HGSZ2qjoCZFS9SlSxnO3Z90
+	LknZZt+0ISKQKHCSNPEqtRgei79fxI2ToxOocfuHRadtDS05Ppzm6f2B
+X-Received: by 2002:a05:6214:130b:b0:8fe:40a0:7cbb with SMTP id
+ 6a1803df08f44-90a91d481cfmr367261746d6.15.1787058649864; Tue, 18 Aug 2026
+ 06:10:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CADOrJmbTyrGGkq+9OJDXCgTa2HvNo8BWxoE6yjafcrOq7WNamw@mail.gmail.com>
- <20260817215428.84740-1-gvalkov@gmail.com> <c10c5132-1bac-4bf7-acd5-1319ce072eaa@lunn.ch>
-In-Reply-To: <c10c5132-1bac-4bf7-acd5-1319ce072eaa@lunn.ch>
-From: George Valkov <gvalkov@gmail.com>
-Date: Tue, 18 Aug 2026 12:58:03 +0300
-X-Gm-Features: AcwNN1XJfTB43bmjv2TjXUd_fF7J3LtyinrySWzpxtBcHtKj_KY-OKWZu5UgGM4
-Message-ID: <CADOrJmZpJo+MDZpaAC=cGv-i_ZZ0wNjWsMP-dttnE3aQPpHLMA@mail.gmail.com>
-Subject: Re: [PATCH v5 1/3] dt-bindings: net: wireless: add flag marvell,ignore-regulatory-hint
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: briannorris@chromium.org, johannes@sipsolutions.net, krzk+dt@kernel.org, 
-	francesco@dolcini.it, johannes.berg@intel.com, kees@kernel.org, 
-	miriam.rachel.korenblit@intel.com, wenst@chromium.org, 
-	rafael.beims@toradex.com, avraham.stern@intel.com, error27@gmail.com, 
-	s.kerkmann@pengutronix.de, gregory.clement@bootlin.com, 
-	sebastian.hesselbarth@gmail.com, robh@kernel.org, conor+dt@kernel.org, 
-	Frank.Li@nxp.com, chunfan.chen@gmail.com, 
-	linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
-	stable@vger.kernel.org
+References: <CABzKGg0YEm5PfW9YtEM0G1SYY6RD80DmFpu_Jpb9hoioK+tH-w@mail.gmail.com>
+ <CAGb2v66RnAr_yPhZuuandeoE=wSh9tJMdfqkLLudWKpDmDKc4Q@mail.gmail.com>
+ <CABzKGg2C-kb673u4o9Nk28-bp9ONuQAaDA39x47bJOpq6RrNHg@mail.gmail.com>
+ <CABzKGg3-5yE19-_fiBuvaM9CBUnyJ7UYmt6M6w3BrEqu+3Unbw@mail.gmail.com> <CAGb2v6592_Tp7UbAKcXm3FZGMWCfxNriH3VJWDm5yZA-atYN0g@mail.gmail.com>
+In-Reply-To: <CAGb2v6592_Tp7UbAKcXm3FZGMWCfxNriH3VJWDm5yZA-atYN0g@mail.gmail.com>
+From: Morgan Wong <pbodq2@gmail.com>
+Date: Tue, 18 Aug 2026 21:10:35 +0800
+X-Gm-Features: AcwNN1WRpw_IiFjKGWtUde7Em2CGw78XjtwYZfIg6_z69NRkehqPU2QhCCj0PKw
+Message-ID: <CABzKGg0knPnFARuf_+yZjpVhFV_O2ihCRTAEZqcDJ=S6JN3NZw@mail.gmail.com>
+Subject: Re: wireless-regdb: Update regulatory rules for Hong Kong (HK) on
+ 5GHz and 6GHz
+To: wens@kernel.org
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 18 Aug 2026 at 03:53, Andrew Lunn <andrew@lunn.ch> wrote:
+Dear Tsai,
+
+Sorry about overlooking the second paragraph.
+
+
+1. About the TPC issue, you are right, please ignore this part of request.
+
+2. About 6GHz 320MHz bandwidth, I am grateful if you could generate the fil=
+e.
+
+Take your time. Thanks for your help. Have a good day.
+
+Chen-Yu Tsai <wens@kernel.org> =E6=96=BC 2026=E5=B9=B48=E6=9C=8817=E6=97=A5=
+=E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=882:54=E5=AF=AB=E9=81=93=EF=BC=9A
 >
-> > +  marvell,ignore-regulatory-hint:
-> > +    $ref: /schemas/types.yaml#/definitions/flag
-> > +    description:
-> > +      Ignore an incorrect regulatory hint from ROM,
-> > +      so userspace can set the correct regulatory domain.
-> > +
+> On Mon, Aug 17, 2026 at 2:17=E2=80=AFPM Morgan Wong <pbodq2@gmail.com> wr=
+ote:
+> >
+> > Dear all,
+> >
+> > Is there any problem about the patch and the reason? Any regulative
+> > restriction conflict ?
 >
-> Maybe this has been discussed in a previous version of this patch...
+> Sorry I haven't gotten around to it.
 >
-> What is Marvell specific here? I assume any vendor can mess up, and
-> make a US only device, but ship it elsewhere.
+> > Morgan Wong <pbodq2@gmail.com> =E6=96=BC 2026=E5=B9=B48=E6=9C=884=E6=97=
+=A5=E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=8810:01=E5=AF=AB=E9=81=93=EF=BC=9A
+> > >
+> > > Dear Tsai,
+> > >
+> > > The patch from git diff is now attached.
+> > >
+> > > I summarize again the changes, please decide.
+> > >
+> > > 1. 30dbm (1W) of TPC condition is applied on 5470-5730.
+>
+> As previously mentioned, Linux does not support TPC, so any power limits
+> that require TPC do not apply. So the option is to use the "without TPC"
+> option that normally halves the power limit.
+>
+> > > 2. Now, 320MHz bandwidth can be applied in 6GHz as WIFI 7 rolled out.
+>
+> This is fine.
+>
+> Do you want to do a proper Git patch? Or I will do the patch and list you
+> as the issue reporter.
+>
+>
+> Thanks
+> ChenYu
+>
+> > > Chen-Yu Tsai <wens@kernel.org> =E6=96=BC 2026=E5=B9=B48=E6=9C=884=E6=
+=97=A5=E9=80=B1=E4=BA=8C =E4=B8=8B=E5=8D=888:48=E5=AF=AB=E9=81=93=EF=BC=9A
+> > > >
+> > > > On Mon, Aug 3, 2026 at 9:38=E2=80=AFPM Morgan Wong <pbodq2@gmail.co=
+m> wrote:
+> > > > >
+> > > > > Dear all,
+> > > > >
+> > > > > Currently:
+> > > > >
+> > > > > # Source:
+> > > > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca103=
+9.pdf
+> > > > > (2.4 GHz and 5 GHz)
+> > > > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca108=
+1.pdf (6 GHz)
+> > > > > country HK: DFS-ETSI
+> > > > > (2400 - 2483.5 @ 40), (36)
+> > > > > (5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
+> > > > > (5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
+> > > > > (5470 - 5730 @ 160), (27), DFS
+> > > > > (5730 - 5850 @ 80), (36)
+> > > > > (5945 - 6425 @ 160), (24), NO-OUTDOOR
+> > > > >
+> > > > >
+> > > > >
+> > > > > Update :
+> > > > >
+> > > > > # Source:
+> > > > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca103=
+9.pdf
+> > > > > (2.4 GHz and 5 GHz)
+> > > > > # https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/pa=
+rt-15/subpart-E
+> > > > > (2.4 GHz and 5 GHz)
+> > > > > # https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00=
+.07_20/en_301893v020007a.pdf
+> > > > > (2.4 GHz and 5 GHz)
+> > > > > # https://www.ofca.gov.hk/filemanager/ofca/en/content_401/hkca108=
+1.pdf (6 GHz)
+> > > > > # https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00=
+.00_20/en_303687v010000a.pdf
+> > > > > (6GHz)
+> > > > > country HK: DFS-ETSI
+> > > > > (2400 - 2483.5 @ 40), (36)
+> > > > > (5150 - 5250 @ 80), (23), AUTO-BW, NO-OUTDOOR
+> > > > > (5250 - 5350 @ 80), (23), DFS, AUTO-BW, NO-OUTDOOR
+> > > > > (5470 - 5730 @ 160), (30), DFS
+> > > > > (5730 - 5850 @ 80), (36)
+> > > > > (5945 - 6425 @ 320), (23), NO-OUTDOOR
+> > > >
+> > > > Please do a proper patch or at least diff. This is hard to spot dif=
+ferences.
+> > > > And if it's not a patch it's more work.
+> > > >
+> > > > > Reason for change in 5470-5730 :
+> > > > > The HK department, OFCA has its own requirement, 30dbm in additio=
+n to
+> > > > > EITHER fulfilling FCC OR ETSI requirement. The rationale behind i=
+s
+> > > > > having the biggest tolerance among major world standards to be an
+> > > > > international city. The OFCA, 30dbm is the baseline value to be
+> > > > > fulfilled in the highest priority.
+> > > > >
+> > > > > About FCC
+> > > > > 27dbm (500mW) without TPC, 30dbm (1W) with TPC
+> > > > > # https://www.ecfr.gov/current/title-47/part-15/subpart-E#p-15.40=
+7(h)(1)
+> > > > >
+> > > > > About UTSI (same as FCC)
+> > > > > 27dbm (500mW) without TPC, 30dbm (1W) with TPC
+> > > > > # https://www.etsi.org/deliver/etsi_en/301800_301899/301893/02.00=
+.07_20/en_301893v020007a.pdf
+> > > > > (page 17)
+> > > > >
+> > > > > A TPC (30dbm), 802.11h edition should be taken instead of 27dbm a=
+s I suggest.
+> > > > > Or a TPC regulation flag may be a good idea to bind with 30dbm to=
+gether.
+> > > >
+> > > > There is no TPC flag, hence the limit is set at 27 dBm.
+> > > >
+> > > > > Reason for change in  5945 - 6425 :
+> > > > > The HK department, OFCA requires to have its own EIPR limit, 24db=
+m in
+> > > > > addition to ETSI 23dbm.
+> > > > > Therefore, the smaller value should be taken.
+> > > > > (6GHz in HK requires no reference to FCC standards, unlike 5GHz s=
+ituation)
+> > > > > WIFI 7 allows 320MHz, the previous value, 160MHz was in wifi 6E e=
+ra.
+> > > > >
+> > > > > # https://www.etsi.org/deliver/etsi_en/303600_303699/303687/01.00=
+.00_20/en_303687v010000a.pdf
+> > > > > (page 17)
+> > > >
+> > > > You mentioned in your reply that this change is invalid.
+> > > >
+> > > >
+> > > > So to summarize, I don't see any change at all.
+> > > >
+> > > >
+> > > > ChenYu
+> > >
+> > >
+> > >
+> > > --
+> > > Regards,
+> > >
+> > > Morgan Wong
+> >
+> >
+> >
+> > --
+> > Regards,
+> >
+> > Morgan Wong
 
-I don't recall any previous discussion on that topic, other than the
-use of a root flag in v3, which was objected to, because
-marvell,ignore-regulatory-hint does not belong there. I assume this is
-due to the marvell prefix. I guess we can have a generic flag?
-Implementation instructions, along with good design patterns are
-warmly welcomed.
 
-I like the idea of implementing a standardised approach, which is
-scalable to any platform or driver that needs this quirk. I would also
-like to add this feature to mwlwifi (not part of Linux), because the
-main radios (88W8964) on WRT3200ACM have a hard-coded region of 98
-(non-standard EU, translated to FR because it's the most restrictive).
-This way I can set my correct region: BG.
 
-In theory it is possible for other vendors to make the same mess. I
-think the chances are very low, because they would violate
-regulations. The story with this Linksys router is special:
-It was designed and marketed to be OpenWrt compatible. Likely because
-open-source gives a lot of power they made sure the hands of all users
-are well tied-up: all radios use proprietary firmware and are
-locked-down to their certified region in ROM. They do not allow
-anything related to regions to be set. A third radio 88W8887 using the
-mwifiex driver was added with the sole purpose to monitor for radars:
-this idea was later abandoned. I do not have any information about
-this choice, but my educated guess is that using a US radio created a
-conflict and they disabled support for this radio to avoid it.
+--=20
+Regards,
 
-openwrt-ai:
-https://github.com/openwrt/openwrt/pull/24458#pullrequestreview-4956971863
-TLDR: It suggests that the compatible string should be marvell,sd8887
-instead of marvell,sd8897. The string it suggested is not documented
-and would need more changes, which I hope to avoid. I prefer keeping
-things simple. The string I used works and is documented.
-
-Sashiko-bot complained that patch 2 adds a flag to the device-tree,
-with no support in the driver. Patch 3 adds support in the driver. Let
-me know if I should reorder them?
-
-Greetings!
-
-Georgi Valkov
+Morgan Wong
