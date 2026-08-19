@@ -1,57 +1,64 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30EEC38BF69;
-	Wed, 19 Aug 2026 00:22:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47FC338E5FE;
+	Wed, 19 Aug 2026 00:42:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787098976; cv=none; b=JQ4giQRkHJIKPUa/SRynAgzwqj/TGU0cyjU0ZMPCCpa2NLiJey1txmNc21AhIOvOvk4OsB5Q4nzQLYMpBpXcwO1mFGoYCFzlM34HEQhjb+NDXxcuFm5y+1QmMnzEoed8AeHHebcGL0Rm3fkdmHA4I/gXmtp52rO/PBA0eyrA9ro=
+	t=1787100181; cv=none; b=iDjpevF3xA+U9N5ARq1WLCs2OwiE8Hi9GcvkwLlwL6qvyiD6osImatuHHZsxJJEk9EhHmkCA2BXH8nVHTXkBfTbNEfcad1WRPY46ma1LCfi8JLNofuZXuwuteJn+xBrC0zyKeq70xTdX0OyxjPn6h1AgdUNC+Vog1J6E0ORsCco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787098976; c=relaxed/simple;
-	bh=LgbsACI0TefRjRijF9DAEEqTrRDTP6iYnOk0v+sjZqE=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=KXmVKep5myuGEyh1CRGTMtHkH+tYeNsbULMxRLCf/T92udF7K/x5JKvfIEP0p6hcGfxUAVPPbuTlldGmM0CPcMnJRgK9dCg5YjMXOdm6JJVB/J+DzUByn+6AECF9D6SQf2ax1OdoiUQ/uwxr2Jj1bNgexSS7KNBNFMV58wfG73I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=n3zBf+Mk; arc=none smtp.client-ip=211.75.126.72
+	s=arc-20240116; t=1787100181; c=relaxed/simple;
+	bh=usL5BVmYHbLGOnnlKanIU/I6Jqtr177v5E2v12uSi7Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=nJ5IbgprG8Qt8PMQCqos5Gtx85uwWvG5lDB4poq38xL2NQMRmWhZNLizQ+i28bNPq02alsqpmJ5VtlehCc+jpvSkZXif2Pz6hpq8/86mqwse5K35XDGQxH3GxNHO+//vqhdAXSchTEQmyR1nz6TgnSSDqNktHM5z/4kvEDUtYc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=RmvUKgpy; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="n3zBf+Mk"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67J0MfPdA1911497, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="RmvUKgpy"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67J0fvBJ31917311, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787098961; bh=QeJU0+umnOedZzWnDufzijNUN4i+e57o63OO/e4dNcc=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	t=1787100117; bh=usL5BVmYHbLGOnnlKanIU/I6Jqtr177v5E2v12uSi7Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=n3zBf+MkusoAVDq4H/nPg0Sk/1XJruPlr9b5V5u3QAJ2AAao+PNFHK2rC1j7wJ5i6
-	 YouXkCxV49PeiUqcfRTWc2KOn3uDgCUUDOeNlV0B7jbqKnNHDAfj30cM2poUk2dCQK
-	 dwP6+uxhGj0nBLeJmkc3WDiemjRVVHDcRTw2rNt7RzH4ghBRfv47VynWFZtfI6btTi
-	 7sBpOCjNyrNSVH7GDqXT+r+DJfaMQmANrMYysYa+gZDy7hF57/f3etXKGbiG9KBEPW
-	 wHOLg9Gj96izt1bXZ5XYTVWms60y0hgP5WGHbpsala5fJjQONQrYL8GGfV6t6hsEyJ
-	 7dH13emM68Cpw==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67J0MfPdA1911497
+	b=RmvUKgpyGcyfFaNACmC8Orb6qillo+b3SJ5Enm9j62GX3NtZy+qG8x1qY1GbdafR+
+	 hBqG+QhRONwMd6GGzRXJGWzdx/RZJlRmDkf+KkKEnYGvhcIxRnVnapD2gaYrUJiGBV
+	 CmUlzeCsN/N6gJDamsA7kbbSW3QX9z6HaeJ+wBo62v4rkX4TDbug3BCpfA9Wt7jDmu
+	 OiqZ/UgEO+uPrSUr5sB94fKWm7SoKu/b0N3ttl7roWZmvLmdpJynj3mmfpSxz9Gsij
+	 wR9lf+fAAyAuqO4XdWQ7utgQIFEWerIUxtEvoqqV8lloIrIk0dPoiGDRSdDTIZsBXc
+	 1OGimOyUav8ww==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67J0fvBJ31917311
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 19 Aug 2026 08:22:41 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+	Wed, 19 Aug 2026 08:41:57 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 19 Aug 2026 08:22:41 +0800
+ 15.2.2562.43; Wed, 19 Aug 2026 08:41:58 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 19 Aug 2026 08:41:57 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Wed, 19 Aug 2026 08:22:41 +0800
+ 15.02.2562.043; Wed, 19 Aug 2026 08:41:57 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
-To: rafad900 <rafad900@gmail.com>, "Jes.Sorensen@gmail.com"
-	<Jes.Sorensen@gmail.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH rtw-next v5] wifi: rtl8xxxu: Use local 'dev' variable for
- dev_warn()
-Thread-Topic: [PATCH rtw-next v5] wifi: rtl8xxxu: Use local 'dev' variable for
- dev_warn()
-Thread-Index: AQHdL0mfYevXINN71kKpfmR/NZF2pbakgbQg
-Date: Wed, 19 Aug 2026 00:22:41 +0000
-Message-ID: <51b1f52648c948a5b960d3e3196fa845@realtek.com>
-References: <20260818193402.2109269-1-rafad900@gmail.com>
-In-Reply-To: <20260818193402.2109269-1-rafad900@gmail.com>
+To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
+ Goede" <johannes.goede@oss.qualcomm.com>
+Subject: RE: [PATCH v5 2/6] wifi: rtw88: rx: mark zero length packets on
+ RTL8723BS
+Thread-Topic: [PATCH v5 2/6] wifi: rtw88: rx: mark zero length packets on
+ RTL8723BS
+Thread-Index: AQHdK9s6mS5GiSkAdE6uRxnciyIpubakjuOg
+Date: Wed, 19 Aug 2026 00:41:57 +0000
+Message-ID: <35a3339ffeb44e30bd93dfbfc179e131@realtek.com>
+References: <20260814105327.6687-1-luka.gejak@linux.dev>
+ <20260814105327.6687-3-luka.gejak@linux.dev>
+In-Reply-To: <20260814105327.6687-3-luka.gejak@linux.dev>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -63,63 +70,24 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-rafad900 <rafad900@gmail.com> wrote:
-> @@ -3173,7 +3175,7 @@ static int rtl8xxxu_iqk_path_b(struct rtl8xxxu_priv=
- *priv)
->             (((reg_ecc & 0x03ff0000) >> 16) !=3D 0x36))
->                 result |=3D 0x02;
->         else
-> -               dev_warn(&priv->udev->dev, "%s: Path B RX IQK failed!\n",
-> +               dev_warn(dev, "%s: Path B RX IQK failed!\n",
->                          __func__);
-
-Straighten ?
-
-Please check this kind of pattern across whole patch before sending out.
-
->  out:
->         return result;
-
-
-> @@ -5862,6 +5864,7 @@ static void rtl8xxxu_queue_rx_urb(struct rtl8xxxu_p=
-riv *priv,
->  static void rtl8xxxu_rx_urb_work(struct work_struct *work)
->  {
->         struct rtl8xxxu_priv *priv;
-> +       struct device *dev;
-
-In reverse X'mas tree order.=20
-
->         struct rtl8xxxu_rx_urb *rx_urb, *tmp;
->         struct list_head local;
->         struct sk_buff *skb;
-> @@ -5869,6 +5872,7 @@ static void rtl8xxxu_rx_urb_work(struct work_struct=
- *work)
->         int ret;
+luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
+> From: Luka Gejak <luka.gejak@linux.dev>
 >=20
->         priv =3D container_of(work, struct rtl8xxxu_priv, rx_urb_wq);
-> +       dev =3D &priv->udev->dev;
->         INIT_LIST_HEAD(&local);
+> Like the RTL8703B, the RTL8723BS reports receive descriptors with a zero
+> packet length, which the vendor driver drops outright. rtw88 already
+> flags these as having no PSDU for the RTL8703B, so extend the same
+> handling rather than passing an empty frame up.
 >=20
->         spin_lock_irqsave(&priv->rx_urb_lock, flags);
-> @@ -5894,8 +5898,7 @@ static void rtl8xxxu_rx_urb_work(struct work_struct=
- *work)
->                         rtl8xxxu_queue_rx_urb(priv, rx_urb);
->                         break;
->                 default:
-
-Only here use local 'dev'. Why not assign the value here?
-But for this case, it seems no gain. Just keep it as was?
-
-> -                       dev_warn(&priv->udev->dev,
-> -                                "failed to requeue urb with error %i\n",=
- ret);
-> +                       dev_warn(dev, "failed to requeue urb with error %=
-i\n", ret);
->                         skb =3D (struct sk_buff *)rx_urb->urb.context;
->                         dev_kfree_skb(skb);
->                         usb_free_urb(&rx_urb->urb);
-> --
-> 2.43.0
+> This is gated on the SDIO interface rather than the chip id, because it
+> has only been observed there; the USB variant is not known to do it.
 >=20
+> Co-developed-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Michael Straube <straube.linux@gmail.com>
+> Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+
+By the way, though you have added change log in cover letter. It'd be
+better to make a copy here (after --- delimiter).=20
+
 
