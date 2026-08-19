@@ -1,117 +1,247 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61174C9579
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 19:29:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA1F44063C
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 20:06:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787167781; cv=none; b=PVZhHXiRNdgBPOPwBtIIqxL9G3NAMPqmhQmNM+dnqiWqUWAV2aIc5o/AbSVxHMfL661lEfhSbnASKFcYKtOu933EiRDp/NJ+KVS+YUrR+wWqef3XYk8iJxg2Sawebv50FfSDEOa4aHl/gwtKHQPi4TEJ6XGNlazGs8YU8FtEdEM=
+	t=1787169976; cv=none; b=hlY9IEUQMLCPpUGLdsv8eB+68xj5TbtI2lpacaH02SzkmaUOG/BShRF/JvNnPSPzrgLYBPj2OksM4Fn4tZJAdpCW46LhmIltAVrTLvNsrjeUaRN/CApBL6PQPIqqZrmfXafoPK6neM2+KpThQgScaQzi41dZAaw4fIgnHw14XeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787167781; c=relaxed/simple;
-	bh=7SMHHseQ0rCn3j0B97vQN6SaBN0cr4CvM9PgJeMTewU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fJHidScJnlvsu5yVQFZv9/97XRAY/pvCSrlAY7tt0+gaMQpZdt7M/CHXQ96FNTdv44Yzo/IzlVE840FAijV0fYeqSg2Ne3yG2d6QpM5GedL2FX71sqywx0vBfRvhBJwvce5fhCLOpCMTtAosehUlxSzvgtu8SrojhUsKppULH7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=In9/Ek1m; arc=none smtp.client-ip=209.85.215.172
+	s=arc-20240116; t=1787169976; c=relaxed/simple;
+	bh=4dLIEaIDijGcljaUF1vn+F4h+7ThVL6b/5s2j+aMNKw=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=JLn2ENH2Lx0B3HdEYmM7JumTguUCv0B2ZhYzgNYuD0cnsxNq5m++O/w6IlE72rz+wR2hCBB5v905zCZL66h9xrzO4Ql9ozoOeDtsHYa0M3JGWSPyoMrvdZ2PG0E48oRDrlnI0ZM1Ub80qbHW52ZEHvcjAjtDhHWICvnkKPCnkho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L5LO0yC+; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="In9/Ek1m"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c9d1fff21edso938660a12.1
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 12:29:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L5LO0yC+"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4995b0343c1so13437145e9.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:06:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787167776; x=1787772576; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=O/sNYgJI7iTmex3XqzHbkrDBlq9Mkontfk7aIxaop2E=;
-        b=In9/Ek1mR6qhCaI5bDgV1fc98uTtgXuLqHSTLfK0GFGgs6UyRylurKuz5lBQpnINAd
-         cVV//wZRzbIVfLekDHNXYFATGtKZZt/+s9Bnk+ortnn+iTIjAHVud6Li3tNW7e9kHS4V
-         v6WSsNpY3vQ42gSVL2rYDB6SPe5oFBoFaGLkrHSVwN+U1tqFei/O4BBRVuRRhW7biHxA
-         hwwjBXYLgvzRRfBWBJHxYjsy2tYuXflHN64W+63qWqPHJYp0m2fc8v57Ryg6u6V0uKN/
-         IRtIrGYY79+hDw6RPkMcFOXlOnV6sizjgiIbAXJ2ZQKa3zn0KHJ0z7opvC560V6AKsbI
-         5guA==
+        d=gmail.com; s=20251104; t=1787169972; x=1787774772; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:content-language:cc:to
+         :subject:from:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=8qvkf08pEyjpUfpH3wxxev6LNXrjPV6hczsBjA3JW2A=;
+        b=L5LO0yC+gFvgX2jACf+cA1ZneBLxTC9G0x8e4POCkhPIZCEO5hfXVgR/mx/WqXDZBx
+         CHbhwN7wUvDnby/SX4z2xfbhmVQ7eUklaaEjuLaBobjD8NvUCImyRMhbBOhSpT85odYN
+         UDNBpoSIeoTJH3DuRQiFUdiqegmvnt+AvKTqlOplwSbzm40njn+kIUGmVsnfDnpvb/ao
+         RRZ2TX47QiZ2Z6peoUhtvbLYE5JzQItHpvXxDboiAEQcemh7sytU5jGIV35hlIXf2Iyv
+         RXQxKwC8G6Phkkv7gLalAK0yVjhIN21fI5Dgzu1oQTKkLcBCNT9fi0FBaAE0lY7bf7KA
+         lfNg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787167776; x=1787772576;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=O/sNYgJI7iTmex3XqzHbkrDBlq9Mkontfk7aIxaop2E=;
-        b=Hn3QkklALiZIz6ezclB7lJiCSU4aIMcK1QYDMTm+MKCAe74P3x9TBaIgceEE+KSMYv
-         G5nOEn1rWRpRfV5BtjTw6nN4bsxoYKSA1HYpW/8gCVl1o7fg2eWxXd7x/GM//9t0515v
-         fLRtElfJ8uaiER7SYejM3TVuLbXGwfwHC1ejDje+7qLz9fT5kCRH+rT1N3TNeGbe0u7M
-         WHHY43gRNEEuFYpzfeq95tx5fLGkZBNiNyH7o1khPLtx9z13TRzMHVvdMhFYstGwiD5j
-         TXq3gSi95UqINmCLKaLYTb5mR8bWBBN2uWk/5EZafUJtpEUUXK6Fn3ZAkyX2TvNJN2aG
-         gUDg==
-X-Forwarded-Encrypted: i=1; AHgh+Rq/e+6QNusMKHEGt1t1iMgFgqJh33UEh1B0cEj7FubHS3ZrfOSXXPUQNx7radbpO/cQtMYkA6vfo9CPXTAzzQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyobt1gFlIIhiRsbzh2jB4vuRdKyyc/uoMIlyCplpuQ0MlbdRlR
-	XBrnPbnWqBpt7fcr6ebLoqQf//siXaInZSCfRAW9sXtKP11rpAPQuAhc
-X-Gm-Gg: AR+sD11+jvvx/naxPNB7IRwa8tGaTqkIx3QJva3BFVnkeo/nMmlFgvtZl2sEh4iw4jS
-	AAFG2QImhuvWLe3WPemK57HEgnUIu8TX14dIjLIrCOamJDNhLRO4WIiNPYbWW2UhbFOlTUNOIrb
-	yP8heoKptvXliM6dmCv93pQt8LFuft1mMl3RuX2boPqCtOTYAqeXe/wgGYWkSshU/MxM+zRPjNR
-	ZWv7HAC+FjkidEXzbq4KnDlvoK6waObd72dgdwQH2Wz4dnBJZruXD3TOW3qgmMg4EV765FtfkZv
-	c3hjeF44EOIhProEOShj+G8L4nl+xKPJIsXA81vWif5Yw7R8+GqBAkZYpYojjzRmD9IKanm8qR9
-	CDcnhFtvveSVnYE0VRG5fOmXJvwGCw70oelGda41U8KmoKL5xi+dDMBM6nJXC28ud6rFzlmq8ZJ
-	B+aKXIqvz1e2sAIbCK8/VU74MrVRk2FZI/y6mqDu4+oJFE5m7On01BJFZhH1mQAl0No8r7oA==
-X-Received: by 2002:a05:6a20:d707:b0:3c1:fbf:1e2e with SMTP id adf61e73a8af0-3cd011d6123mr15174456637.10.1787167775719;
-        Wed, 19 Aug 2026 12:29:35 -0700 (PDT)
-Received: from DESKTOP-TIT0J8O.dm.ae ([49.47.196.141])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bef77be3sm9088789eec.10.2026.08.19.12.29.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 12:29:35 -0700 (PDT)
-From: Ahmed Naseef <naseefkm@gmail.com>
-To: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	naseefkm@gmail.com
-Subject: [PATCH wireless-next] wifi: mt76: mt7615: read MT7663 temperature from the correct offset
-Date: Wed, 19 Aug 2026 23:29:11 +0400
-Message-Id: <20260819192911.1886457-1-naseefkm@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        d=1e100.net; s=20251104; t=1787169972; x=1787774772;
+        h=content-transfer-encoding:content-type:content-language:cc:to
+         :subject:from:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=8qvkf08pEyjpUfpH3wxxev6LNXrjPV6hczsBjA3JW2A=;
+        b=PHwAEkiJItfps4fo5iFdbTCTh3RCSgiXhR5N5MlIVVELOtFPy+3Knf66vZOgggaepF
+         zCMMVrUBoACLjIu2jZE5FnsRofQLjmZlPva2lMXQHGqpDWIDzhyF10zw4sLKacJIBC7T
+         P+xkEsrktR+j60nG9N+l+tl2OkqXtOckHr2V1BpduDSynw+LVpuGNyNQMQqu50b0apwl
+         aPZpSqEsp+/iS4lsf1ECsi1xxQtBbkHoLOh3LCyCgC8Bf+mQPYXu3j7dqdkx4KK1yRN9
+         g7Qd2FDCjw9LMxLa3/FN65z0fcKelEMmiUuAc4cNMEmJu13Dr84EXyE7H1RHAGSVyf11
+         KNLQ==
+X-Gm-Message-State: AOJu0Yzm3rLSpUcoa9zIaBVDNOKccabQ2JvKrvuv/d8xNGZSkHBYYFu+
+	0Z5kP8b6GrHm3vcIE9GGCjD0xspR1CkuI9lq/VHo4s7rYr4oRckjQUdsDOFsqA==
+X-Gm-Gg: AR+sD13oKiQuurK5pZlSlKR6hiVOcE6qS8V0YoxBx4rbol1KTU4DdlxKuEjRZ6fC8+2
+	GPe1Ut+BfBVFA+Fgsf4n1TVeIUYM8PlixsGT9OFWuoRCRdwCtvU4tX4aHFeD0uYkcAla8nt4SMZ
+	P8D7fA8kuJcxF+ddVI8hpuRvLyfeSaam2aSYmiIej8hOkwsRUwnaiHz7le3/cYuK6dVkJbcBXlA
+	a/E9uHVV0pES3jXfZXc2UGdJ7PSrPL6A8xsHuPvogZ7QNZp13DnUXsDqKd79pYOKXsyEuipxZ68
+	7mng1Mf31CtkhnQp9qaYAQhJurjZWLLbEZMqjHq8pO/QSmTuz6bd8v4plmZgJaMnt73FoE8kX37
+	Vl7Vq9RfGn2Lj/mVNnXHPHm0dTCuwGwvmsBS0+QkzPO9YCPPi3kkKJ0IC77vbWimHPy1KDzlru3
+	wEBk6t5kdSYGuDc3OyFxsw2jCUHifDGuvili5lK3Akq4EuCB2y6EcMxI9eT2x5968CUNGh7A==
+X-Received: by 2002:a05:600c:5294:b0:492:4e09:9fc1 with SMTP id 5b1f17b1804b1-499aa1f5413mr145086285e9.15.1787169972200;
+        Wed, 19 Aug 2026 13:06:12 -0700 (PDT)
+Received: from [192.168.1.50] ([79.119.240.229])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499aa1111b2sm113893495e9.5.2026.08.19.13.06.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Aug 2026 13:06:11 -0700 (PDT)
+Message-ID: <7a537b2e-67d2-40fb-8ef2-fcbc7bbc93af@gmail.com>
+Date: Wed, 19 Aug 2026 23:06:10 +0300
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
+Subject: [PATCH rtw-next v2] wifi: rtw89: usb: Avoid crash with dynamically
+ added device ID
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On MT7663 the hwmon temp1_input attribute always reads 0.
+Adding a device ID via sysfs causes a crash when the device is plugged
+in, because the driver_info pointer is null.
 
-mt7615_mcu_parse_response() takes the temperature from the first dword of
-the THERMAL_CTRL response payload, but MT7663 firmware reports it in the
-second one. On a DASAN H660GM-A (MT7663E, N9 firmware 7663mp1827) the
-request and its response are:
+Check for null driver_info in rtw89_usb_probe() and add a wrapper in
+each driver to pass it a reasonable default value.
 
-  request:  00 00 00 00
-  response: 00 00 00 00 2a 00 00 00
-
-0x2a is the reading, 42 degrees, while the driver returns the leading
-zero. mt7915 and mt7921 already pull sizeof(*rxd) + 4 for this command.
-
-Restrict the extra pull to MT7663, as no MT7615 or MT7622 hardware was
-available to check whether their firmware uses the same layout.
-
-Fixes: f40ac0f3d3c0 ("mt76: mt7615: introduce mt7663e support")
-Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
+Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 2 ++
- 1 file changed, 2 insertions(+)
+v2:
+ - Simplify the wrappers, move the null check into rtw89_usb_probe().
+---
+ drivers/net/wireless/realtek/rtw89/rtw8851bu.c | 8 +++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852au.c | 8 +++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852bu.c | 8 +++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8852cu.c | 8 +++++++-
+ drivers/net/wireless/realtek/rtw89/rtw8922au.c | 8 +++++++-
+ drivers/net/wireless/realtek/rtw89/usb.c       | 5 ++++-
+ drivers/net/wireless/realtek/rtw89/usb.h       | 3 ++-
+ 7 files changed, 41 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index ff57ede87f71..1ce0192c2c91 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -153,6 +153,8 @@ int mt7615_mcu_parse_response(struct mt76_dev *mdev, int cmd,
- 		ret = *skb->data;
- 	} else if (cmd == MCU_EXT_CMD(THERMAL_CTRL)) {
- 		skb_pull(skb, sizeof(*rxd));
-+		if (is_mt7663(mdev))
-+			skb_pull(skb, 4);
- 		ret = le32_to_cpu(*(__le32 *)skb->data);
- 	} else if (cmd == MCU_EXT_QUERY(RF_REG_ACCESS)) {
- 		skb_pull(skb, sizeof(*rxd));
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+index 1e827205f254..6672ebe68f17 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+@@ -59,10 +59,16 @@ static const struct usb_device_id rtw_8851bu_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8851bu_id_table);
+ 
++static int rtw8851bu_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtw89_usb_probe(intf, id, &rtw89_8851bu_info);
++}
++
+ static struct usb_driver rtw_8851bu_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtw_8851bu_id_table,
+-	.probe = rtw89_usb_probe,
++	.probe = rtw8851bu_probe,
+ 	.disconnect = rtw89_usb_disconnect,
+ };
+ module_usb_driver(rtw_8851bu_driver);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852au.c b/drivers/net/wireless/realtek/rtw89/rtw8852au.c
+index 065f4e5b17af..1a2e5dfbaab3 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852au.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852au.c
+@@ -73,10 +73,16 @@ static const struct usb_device_id rtw_8852au_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8852au_id_table);
+ 
++static int rtw8852au_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtw89_usb_probe(intf, id, &rtw89_8852au_info);
++}
++
+ static struct usb_driver rtw_8852au_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtw_8852au_id_table,
+-	.probe = rtw89_usb_probe,
++	.probe = rtw8852au_probe,
+ 	.disconnect = rtw89_usb_disconnect,
+ };
+ module_usb_driver(rtw_8852au_driver);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852bu.c b/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
+index de79a19a2824..550fc4ac7a21 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
+@@ -73,10 +73,16 @@ static const struct usb_device_id rtw_8852bu_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8852bu_id_table);
+ 
++static int rtw8852bu_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtw89_usb_probe(intf, id, &rtw89_8852bu_info);
++}
++
+ static struct usb_driver rtw_8852bu_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtw_8852bu_id_table,
+-	.probe = rtw89_usb_probe,
++	.probe = rtw8852bu_probe,
+ 	.disconnect = rtw89_usb_disconnect,
+ };
+ module_usb_driver(rtw_8852bu_driver);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852cu.c b/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
+index 2dec9b845481..6f852f4a713e 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
+@@ -133,10 +133,16 @@ static const struct usb_device_id rtw_8852cu_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8852cu_id_table);
+ 
++static int rtw8852cu_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtw89_usb_probe(intf, id, &rtw89_8852cu_info);
++}
++
+ static struct usb_driver rtw_8852cu_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtw_8852cu_id_table,
+-	.probe = rtw89_usb_probe,
++	.probe = rtw8852cu_probe,
+ 	.disconnect = rtw89_usb_disconnect,
+ };
+ module_usb_driver(rtw_8852cu_driver);
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922au.c b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
+index 56c79b1ec865..2cd2b76d19ac 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8922au.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
+@@ -74,10 +74,16 @@ static const struct usb_device_id rtw_8922au_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(usb, rtw_8922au_id_table);
+ 
++static int rtw8922au_probe(struct usb_interface *intf,
++			   const struct usb_device_id *id)
++{
++	return rtw89_usb_probe(intf, id, &rtw89_8922au_info);
++}
++
+ static struct usb_driver rtw_8922au_driver = {
+ 	.name = KBUILD_MODNAME,
+ 	.id_table = rtw_8922au_id_table,
+-	.probe = rtw89_usb_probe,
++	.probe = rtw8922au_probe,
+ 	.disconnect = rtw89_usb_disconnect,
+ };
+ module_usb_driver(rtw_8922au_driver);
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
+index 6f19d0eb3417..129a8838f50f 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.c
++++ b/drivers/net/wireless/realtek/rtw89/usb.c
+@@ -1207,7 +1207,8 @@ static const struct attribute_group rtw89_usb_group = {
+ __ATTRIBUTE_GROUPS(rtw89_usb);
+ 
+ int rtw89_usb_probe(struct usb_interface *intf,
+-		    const struct usb_device_id *id)
++		    const struct usb_device_id *id,
++		    const struct rtw89_driver_info *default_info)
+ {
+ 	const struct rtw89_driver_info *info;
+ 	struct rtw89_dev *rtwdev;
+@@ -1215,6 +1216,8 @@ int rtw89_usb_probe(struct usb_interface *intf,
+ 	int ret;
+ 
+ 	info = (const struct rtw89_driver_info *)id->driver_info;
++	if (!info)
++		info = default_info;
+ 
+ 	rtwdev = rtw89_alloc_ieee80211_hw(&intf->dev,
+ 					  sizeof(struct rtw89_usb), info);
+diff --git a/drivers/net/wireless/realtek/rtw89/usb.h b/drivers/net/wireless/realtek/rtw89/usb.h
+index bdf312559743..d2af29d068f1 100644
+--- a/drivers/net/wireless/realtek/rtw89/usb.h
++++ b/drivers/net/wireless/realtek/rtw89/usb.h
+@@ -95,7 +95,8 @@ static inline struct rtw89_usb *rtw89_usb_priv(struct rtw89_dev *rtwdev)
+ }
+ 
+ int rtw89_usb_probe(struct usb_interface *intf,
+-		    const struct usb_device_id *id);
++		    const struct usb_device_id *id,
++		    const struct rtw89_driver_info *default_info);
+ void rtw89_usb_disconnect(struct usb_interface *intf);
+ 
+ #endif
 -- 
-2.34.1
+2.55.0
 
