@@ -1,170 +1,112 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta0.migadu.com (out-31.mta0.migadu.com [91.218.175.31])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F21033B27FF;
-	Wed, 19 Aug 2026 01:14:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A66346A0B
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 01:18:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787102065; cv=none; b=sNlsmGfiyKmSziqVxS4wwIIrCuas5PdPalsOQ5mCRi2hIMU5qPBOySjTRIew7zl6++8X/g0X1H1FrZa8cccopZ7P3Vsd66m2xCUCoYeTHeLSX6mvJyxsGF5+72IwtyxzUPZxb1gXcpGGrO1IXfriPYRpfxmZNkRuTzeXZQSOjPU=
+	t=1787102321; cv=none; b=jCjaPkO1/mM7xfMbfdEHBhuzcIV4OJd8WQurqSUOqOPriGyGzN3soP6wysd1GEhVs2n3xyWA3VkV1yYsRXb2qZtcVDE16P7wSZS+yYlz+mzO9Eg2CEKZlWM0P4E84blUwDrhu6STUZRBolqzu9m4jTPVoijqZACIZdKc+122+Zw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787102065; c=relaxed/simple;
-	bh=5hwrGOpmXabryIi9CyOkTtB2+XbZlDIGTZE/fGhVBZc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=N1JSwNKe0XEMov6+rg54Y7RzZJDYUoa2/iofo65Is4SNYTUkMjsTRVmufGzWTZqjfrvh16Md5PcvpuJsNpAFIqLut9LS4OjexvAxm1FmfQf5RKFIr/kTzFqBP8PZmtts+z8TMzsD+DpWOhHEQ4KhUMaSGzHL2P27nePtI+pj3uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=jnsgde7G; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1787102321; c=relaxed/simple;
+	bh=ZjugNn5Vq03eTTWqVLQlz6kQYnIMpwR3Qn5/6vVZObc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=eBJmJwZCx/Ru7fJMG6PvgbjYRElLbmxG6ydv7nhkbwQVbhlpD/+0xzSKw4bLvy3FzbzXtF8BzRWAUkU/sI1BC0+1XBinQ+L5gdsDGgWXMr3XVXWDguwe1xtuW3+3HmrSc4QkFoMTDtWAhHSgwTLMGijh0slaHOu1Uvy1AKLeoMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=XZ5x1p3a; arc=none smtp.client-ip=91.218.175.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="jnsgde7G"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67J1ECtrC1951784, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787102052; bh=XPeXvEJFVLQYQUVqv00G0RDCzdX5maTJk9BSlwy3W6Q=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=jnsgde7GuX9r0S3aOa9cAcIjuNjb9swk8AmAdxvyInxfSnJr+K4rksCt5kkq66H44
-	 pGHQmHpvYI8TA285RHs6rXmPo6pUYgsfQPwU70yioj1w2akkZvgALqerXLGLnpIeL/
-	 bNctTcUvuTu7hNQ8MFY+OCT9Nob9oLBMhbjLkABMp9tK0WrCZRPuOU6XIPTGRjklfD
-	 dT1hUtggZuqRTpm1tmMmYaMZTW/f3z7GV/FMC7UL0io9A8mOZVEO7UZnQ09bgfofjW
-	 nZP4u+tb8TRe/Uhe/07Ruv7UuBxCxHeJHX9ynrVAr240F/1AL3vGWWyMMvSbFGU7ud
-	 PaHwZWIcdBSkg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67J1ECtrC1951784
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 19 Aug 2026 09:14:12 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 19 Aug 2026 09:14:11 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Wed, 19 Aug 2026 09:14:11 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
- Straube" <straube.linux@gmail.com>, Bitterblue Smith
-	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
- Goede" <johannes.goede@oss.qualcomm.com>
-Subject: RE: [PATCH v5 6/6] wifi: rtw88: sdio: add TX back-pressure and retry
- on page starvation
-Thread-Topic: [PATCH v5 6/6] wifi: rtw88: sdio: add TX back-pressure and retry
- on page starvation
-Thread-Index: AQHdK9tF/dBhEaQ+I0uj6E6RhFUyKbaklmjw
-Date: Wed, 19 Aug 2026 01:14:11 +0000
-Message-ID: <257b9af907e84e439ae6a9fd55bf3f09@realtek.com>
-References: <20260814105327.6687-1-luka.gejak@linux.dev>
- <20260814105327.6687-7-luka.gejak@linux.dev>
-In-Reply-To: <20260814105327.6687-7-luka.gejak@linux.dev>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="XZ5x1p3a"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ZjugNn5Vq03eTTWqVLQlz6kQYnIMpwR3Qn5/6vVZObc=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787102316; v=1; x=1787707116;
+ b=XZ5x1p3a6mVYzy2UuX2oYCLZRKPJYNNnx+MonCJ9FLXSApIrE+cOk6gjIIFeiXGJ/QtxWClz
+ 30dtyTU1UolLN9Jg3H7+Q+q1peGCkIYrj4Be3qTSY++ViazKT00epHa5ek0KDgUtOi93fP8z6r5
+ buGBwCBsFcnkYaewlK/hmkfgkbcrzvqQWbBipsKTlKSTcVCo5oveJyjSvgL4D8QD0dBPGp77Is9
+ LtdfXM8zuJUdHmqXT0c1MX0DdylwQNQav/NtOHuD5IHGBWk5w6LzQf40Zrn9DaiLuiirT0KdIlK
+ hFTLF4W60xdmEvtLPSiXW/GWcoGB7gBpdSI43x4Nk4r+g==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
+	by smtp.migadu.com with ESMTPS id cd7e0096429ff81b;
+	Wed, 19 Aug 2026 01:18:26 +0000
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Jonas Hort <jonas.hort@posteo.de>,
+	Thorsten Leemhuis <regressions@leemhuis.info>,
+	regressions@lists.linux.dev
+Cc: linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@nbd.name>,
+	lorenzo.bianconi83@gmail.com
+Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz link active
+Date: Tue, 18 Aug 2026 18:18:24 -0700
+Message-ID: <20260819011824.40539-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <a3d6db95-7db8-4fa4-808f-46ed43d183ff@posteo.de>
+References: <066b30cc-a9e6-4aeb-964d-71551e8ea3ef@posteo.de> <d8e493ef-90ff-4364-ad4e-1709fae97005@leemhuis.info> <20260816204805.46779-1-lucid_duck@justthetip.ca> <b83a5708-b5f4-48e9-85a5-37b3ab34af46@posteo.de> <a3d6db95-7db8-4fa4-808f-46ed43d183ff@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
-> +
-> +static void rtw_sdio_reschedule_tx_work(struct rtw_dev *rtwdev,
-> +                                       struct rtw_sdio_work_data *work_d=
-ata,
-> +                                       unsigned long delay)
-> +{
-> +       struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> +
-> +       queue_delayed_work(rtwsdio->txwq, &work_data->work, delay);
->  }
+Thank you very much, that answers both things.
 
-Actually, I didn't request this wrapper by v4. (Also I don't prefer a
-simple wrapper like this that hides kernel API).
+The ROC tracing is the more useful of the two even though it came back
+negative. Two of the three freezes have no ROC activity in them at all, so a
+link switch that never finished cannot be what starts this. The middle one
+does have rocabort, mloroc and rocwork in it, but one out of three makes
+that look like the exception rather than the pattern. So the area I sent you
+looking at is out, and that is worth knowing before you spend nights on
+builds.
 
-(See below)
+One other thing worth saying first. There is a five patch mt76 series on the
+list at the moment and two of the patches look like they were written for
+exactly this bug. I do not think they were, and it is your own numbers that
+show it. The failure 4/5 fixes stops mt76_txq_schedule_list from servicing
+the queue, and the one 5/5 fixes stops mt76_txq_send_burst once the non-AQL
+count reaches its cap. Both of those keep frames from ever reaching the
+hardware, so if either were your problem head would be sitting still
+alongside tail. Yours does the opposite. Head climbs 390 to 408 while tail
+stays at 260, so the frames are getting into the ring and nothing is
+finishing them, which is the far end of the same path. 2/5 is a use after
+free when an interface goes away, so it does not fit either. I would not
+expect that series to change what you see.
 
->=20
->  static void rtw_sdio_tx_handler(struct work_struct *work)
->  {
->         struct rtw_sdio_work_data *work_data =3D
-> -               container_of(work, struct rtw_sdio_work_data, work);
-> +               container_of(to_delayed_work(work), struct rtw_sdio_work_=
-data,
-> +                            work);
->         struct rtw_sdio *rtwsdio;
->         struct rtw_dev *rtwdev;
-> -       int limit, queue;
-> +       int limit, queue, ret;
-> +       bool rtl8723bs;
->=20
->         rtwdev =3D work_data->rtwdev;
->         rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> +       rtl8723bs =3D rtw_is_8723bs(rtwdev);
->=20
->         if (!rtw_fw_feature_check(&rtwdev->fw, FW_FEATURE_TX_WAKE))
->                 rtw_sdio_deep_ps_leave(rtwdev);
->=20
->         for (queue =3D RTK_MAX_TX_QUEUE_NUM - 1; queue >=3D 0; queue--) {
->                 for (limit =3D 0; limit < 1000; limit++) {
-> -                       rtw_sdio_process_tx_queue(rtwdev, queue);
-> +                       ret =3D rtw_sdio_process_tx_queue(rtwdev, queue);
-> +                       if (ret > 0)
-> +                               break;
-> +
-> +                       if (ret < 0) {
-> +                               /*
-> +                                * A page or output queue shortage and a =
-failed
-> +                                * skb expansion are both transient, and =
-the
-> +                                * frame is still queued, so come back fo=
-r it.
-> +                                * That matters once the queue can be sto=
-pped:
-> +                                * a stopped queue is handed no further f=
-rames,
-> +                                * so nothing else would kick this work i=
-tem and
-> +                                * the queue would stay stopped for good.=
- The
-> +                                * remaining errors cannot succeed on a r=
-etry
-> +                                * and each log where they happen.
-> +                                */
-> +                               if (rtl8723bs &&
-> +                                   (ret =3D=3D -EBUSY || ret =3D=3D -ENO=
-MEM)) {
-> +                                       rtw_sdio_reschedule_tx_work(rtwde=
-v, work_data,
-> +                                                                   RTW_S=
-DIO_TX_RETRY_DELAY);
-> +                                       return;
-> +                               }
-> +                               break;
-> +                       }
-> +
-> +                       /*
-> +                        * Restart from the highest priority queue after =
-every
-> +                        * management frame so the join sequence is not h=
-eld up
-> +                        * behind a data backlog.
-> +                        */
-> +                       if (rtl8723bs && queue =3D=3D RTW_TX_QUEUE_MGMT) =
-{
-> +                               rtw_sdio_reschedule_tx_work(rtwdev, work_=
-data, 0);
-> +                               return;
-> +                       }
+On the bisect I would build v7.0 next. There are 32 mt7925 commits between
+7.0 and 7.1 and 19 of them are one run of work from Sean Wang, reworking how
+the driver tracks the per link mlink and WCID for an MLO station. That is
+the kind of change that fits a bug only showing up with two links up. If
+v7.0 comes back clean, that series is where I would look. If v7.0 is already
+broken then it is off the hook and 6.19 becomes the next split. The mt76
+core and mac80211 both moved in the same window, so mt7925 is where I would
+look first rather than the only place worth looking.
 
-I'd move this chunk you are adding to a function. I think it is just to
-reschedule TX work for RTL8723BS for certain conditions, but explaining=20
-a lot of things (conditions) in common flow makes people hard to read
-the flow.=20
+Devin
 
->=20
->                         if (skb_queue_empty(&rtwsdio->tx_queue[queue]))
->                                 break;
+Am 17.08.26 um 23:34 schrieb Jonas Hort:
 
+> Quick follow-up: managed to confirm 6.18 as a clean baseline on my
+> own hardware now (not just secondhand from others in the forum
+> thread) - running Linux 6.18.42-1-cachyos-lts with MLO active
+> (5GHz+6GHz, same FritzBox 5690 Pro) for 3 hours straight, no freeze
+> at all.
 
+Am 17.08.26 um 16:25 schrieb Jonas Hort:
 
+> One correction to how I described this earlier: the connection does
+> NOT reliably self-heal on its own. I have manually intervened every
+> single time to restore connectivity [...]
+>
+> Update on the ROC tracing: three real freezes captured now with the
+> kprobes active (all confirmed via the WFDMA0 tail-frozen signature).
+>
+> - Freeze #1 (15:37): no ROC activity in the trace.
+> - Freeze #2 (15:43): [...] The trace shows several ROC events
+>   (rocabort, mloroc, rocwork) clustered together.
+> - Freeze #3 (16:15): no ROC activity again.
+>
+> Uploaded all three logs to the bugzilla ticket if useful:
+> https://bugzilla.kernel.org/show_bug.cgi?id=221884
