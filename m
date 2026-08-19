@@ -1,106 +1,130 @@
-Received: from mta1.migadu.com (out-138.mta1.migadu.com [95.215.58.138])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A76F3C1D49
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 17:15:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBFF3C4B8D
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 17:44:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787159713; cv=none; b=oPN5nGArdPKAVg76g2a50WsY3GntFd/89vInzLZPM6i7VLNFkl47NO8809kJ5eBkEEvBp2Pnc6qU3vOOFEqKxpopDJ+0SAWjSw+K1aklKughrv1YbVmnE7H5sLVnTZlLQcy6UtEHBkRFOHT0hlq1s4LcqGEF4+9KEHyuLHSZXpA=
+	t=1787161482; cv=none; b=RP7Wy0ViVM0E6TRXqyB4jEDiwp1akS5InntfNKLuGHEH9TmljkAxylDJZIDisWyJ07ndbmcdSehJJFm0QngtBWYjz8YGTNbZUbUvcRevvj1BVm5qyyKosc1by3KGBPat3zBzxg6s3SaTn5+CV6SNka0ALVS02x4Fdf8UXbjj284=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787159713; c=relaxed/simple;
-	bh=ZGyWkzttW3nnagzLYFMbHLzIPd7mtY05HDR/82e8DcI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=f9w5Tpb26QPBINYhK7cUCVHzbMQ7OCcFU+xCFri0rU2RTeGyR6TNTohB7xQXdT+vrkFfnmafiUh9DQp3VB4P9rJQgXNL+bq0eKJHlpk6RP/ceLaUZ+NsnS2k/jXxXwAuI6StQVvxTjpMNRH/aGDi+bSGQGAQl2MuLUhgMyV6JGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=SUSkrFnJ; arc=none smtp.client-ip=95.215.58.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1787161482; c=relaxed/simple;
+	bh=kl2vAl6hTDL2AYJRAzbZ6h4vRN/KK/5gh6DpWrDWx1s=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=JfOy7yc4+YCbMkqSB50kCGhP1gAkUTr3Bl0qoCoLkyC3Er4xayZEuILjD8FC2IXhuv/vko7kp8AsyCUgJTY652SfxhIKUFAqJYCtxbQho+fC+0KK5UuOC1mI2p/mxu8iNQW/Pz+RKeGLSGyXc95pgp96DPtPs2BqM7Hnk4OR6fo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KR8ws3X+; arc=none smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="SUSkrFnJ"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ZGyWkzttW3nnagzLYFMbHLzIPd7mtY05HDR/82e8DcI=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787159702; v=1; x=1787764502;
- b=SUSkrFnJEmbJ2pb6e84rajVNq0XdJ3S34SBtjasq19cAWF8n0Ko83DpdaFglz1wzQs5aK9R3
- K+bZdeCXXCnHLJ7NcKxTYAxwjM9SK81KNAX+f2fPVHI61DqIy5d7GKwJsloTg90lVj1neNO4qqz
- 2x667X9jkwku0VL0yDlQXNelcEb/X/cJPw8FJZZAH3NSKVau40ueAwHmJOBopZp7yITjpONjRPj
- dCqex04nGqJLuPpQ30S6uXqw3DlkJwKLwAIM2EwLVYFCPi2U2FRdAJdE8BYyruGKeDQbcoMM3K/
- F0R/JfTxHpZdwT3BYIjM8QvolxO3Uv4Pa1bIv+tVfAxiw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from fedora.lan (2001:569:be59:c500:b340:3f2c:4486:21c1)
-	by smtp.migadu.com with ESMTPS id b01abdb8988f6c9c;
-	Wed, 19 Aug 2026 17:15:01 +0000
-X-Mizu-Trace-ID: b01abdb8988f6c9c
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: moosager <moosager90@gmail.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Shayne Chen <shayne.chen@mediatek.com>,
-	Sean Wang <sean.wang@mediatek.com>,
-	Deren Wu <deren.wu@mediatek.com>
-Subject: Re: [PATCH wireless] wifi: mt76: mt7921: check drv_pmctrl return in the PCIe reset path
-Date: Wed, 19 Aug 2026 10:14:54 -0700
-Message-ID: <20260819171454.21329-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <an23_8DALILoGLP6@fedora.fritz.box>
-References: <20260809012309.43657-1-lucid_duck@justthetip.ca> <an23_8DALILoGLP6@fedora.fritz.box>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KR8ws3X+"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4921eed3fa2so12505455e9.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 10:44:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787161479; x=1787766279; darn=vger.kernel.org;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cHI4k/qB4htx3KIUscycjSvTuvxYrwgRpa/2Edi5GwQ=;
+        b=KR8ws3X+5sdnMnl5kp2lTHP3kcbtDmWqbMjdlPdNkepuo+mxkOOefRILhYVaEcyBI+
+         5qq4KkbtxXS76wdWWuxv3Dfy3oMANz5+HmecGhkIOo1CAhNi/Y0eo7Ew0U4K8tVp3jJS
+         6M/DEcUxBN7beb7RCe8YAzB4w7EQFEvm9r0PE9I62KCoqFUDBlEdPoOcGIb/01jSoOPV
+         JygSlBGzG7CcBggpPqGS+EUG7dv8cKQYcRob2F9H5j/7XLcCq+VDfhR4CcWqhn4YfQUp
+         j35PqmVi3eEAjKKoOGTMLRdPhRqD2oFCDy2L2F5eP+LTdHw0iPtOVCfQ11uETup6zV8O
+         +v3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787161479; x=1787766279;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cHI4k/qB4htx3KIUscycjSvTuvxYrwgRpa/2Edi5GwQ=;
+        b=mIwku6jmSqBojuuEDVBQTecheeRvWpHO2ss9uSxWv7BtOFU/kPSQECcB0QVCxwoBIP
+         GGdxgXchHP81lMTL0nEeCPnif8a5Cri5NLXXVXU4MIfWe1gkK3otbZBuDGFR4bm0oFkq
+         i4pYsNWinRPmWsBu6eDLxpin4NfYlJEfMkfV1S5hrwiD62azZGpBRORxisaRV130cGDO
+         fNDsv0Ulo3HbUIx5nIDKwGH83dTbg5+3mRWL0gLJmIM/MTPfcWYCqOZ4s5BKRp5PNqKb
+         JoQDGm+ItobZ2F0cJnYusC0yjpw5w8Ajado/fSoz2Wm5XH0S+5qsCbdOpNGQW6AXC9KK
+         FLEA==
+X-Gm-Message-State: AOJu0YzvPIgRaEjnQIXhURjPHJR9Z/h53CXfY8NK1cwuHx2L1uVBzVGG
+	teCkXzNsMi87jCZBHC+H3fCAKs7fi9y+ZNNeFmx6PFAP7kqBdqWU2Kjr
+X-Gm-Gg: AR+sD13zAgb3Mez+V/MSyO8rlPQLD/7UX4ijQqCicbs51QPaKtpfUAGCTzv5urrLdl/
+	tJTO2ZFYKJrjaUdOntPSTSe6OkR5FmYbsHde44A9rW+ul3kklFvQVtcPhRiE70AXBOY6vBFSAvz
+	J5A6Syv80d+qn//v7OazOis8QS9Zkdwot/WEz8k1McGw/ZzNs49rQZyq6HHgep6aLTR5NfhOZRD
+	wTtY8zVT/dcjenRkmWEGoTizhl9hdP4vlZyG3fN8gRc6Cgk4YNHZazJg2N32MZyWAJC7uxz7Sf/
+	YVSOEEzn/4qg352DJPICtGziUbSH/C5NVGq//T3GgHXgLeqz3fAmB1WyREQ/4w3VR2ZhJ9TTBV/
+	Sm084EXBJJAUvCWrYFOoVyRm/4Gs0F5hH/zEYM/DRjNBDhuPiJpuH/8MWLzlsl+YxQ6X1BuAvqN
+	lXXRDyAKEvZJtavK0gsb5w6rKaaARlcVu+cnIki59+ymGOwYNQzZxxllG9
+X-Received: by 2002:a05:600c:1c22:b0:499:9240:9a1c with SMTP id 5b1f17b1804b1-499aa1f5589mr119427085e9.15.1787161479285;
+        Wed, 19 Aug 2026 10:44:39 -0700 (PDT)
+Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499ab2a8b34sm84045115e9.8.2026.08.19.10.44.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Aug 2026 10:44:38 -0700 (PDT)
+Date: Wed, 19 Aug 2026 20:44:35 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Ching-Te Ku <ku920601@realtek.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] wifi: rtw89: coex: Add Bluetooth binding for Bluetooth
+ RX gain setting
+Message-ID: <aoXrgwyFu851qVNV@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+Hello Ching-Te Ku,
 
-Thanks for testing it, and sorry for the slow reply.
+Commit fe8f6ddb9095 ("wifi: rtw89: coex: Add Bluetooth binding for
+Bluetooth RX gain setting") from Jul 6, 2026 (linux-next), leads to
+the following Smatch static checker warning:
 
-If you're up for it, reply with this line and it'll get picked up:
+	drivers/net/wireless/realtek/rtw89/coex.c:3943 _set_bt_rx_gain()
+	warn: duplicate check 'rf_band' (previous on line 3927)
 
-Tested-by: moosager <moosager90@gmail.com>
+drivers/net/wireless/realtek/rtw89/coex.c
+    3914 static void _set_bt_rx_gain(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
+    3915                             u8 rf_band, u8 level)
+    3916 {
+    3917         struct rtw89_btc *btc = &rtwdev->btc;
+    3918         struct rtw89_btc_cx *cx = &btc->cx;
+    3919         struct rtw89_btc_bt_info *bt = &cx->bt0;
+    3920         u8 h2c_func = SET_BT_LNA_CONSTRAIN;
+    3921         u8 i, id_start, id_stop;
+    3922         bool state = false;
+    3923         u32 scbd_bit = 0;
+    3924         u8 buf[2] = {};
+    3925         u8 len = sizeof(*buf);
+    3926 
+    3927         if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0 || !rf_band)
+                                                            ^^^^^^^
+The patch adds a check here
 
-Fair point on the 2022 one. The difference is Deren's had to be a goto
-because napi was already torn down by then, mine returns before any of that
-runs. Still doesn't tell you why the handshake fails though, you're right
-there.
+    3928                 return;
+    3929 
+    3930         if (bt->rf_para.rx_gain_freerun == level ||
+    3931             level > BTC_BT_RX_NORMAL_LVL || !rtwdev->chip->scbd ||
+    3932             bid > BTC_ALL_BT)
+    3933                 return;
+    3934 
+    3935         if (bid == BTC_ALL_BT) {
+    3936                 id_start = BTC_BT_1ST;
+    3937                 id_stop = BTC_BT_2ND;
+    3938         } else {
+    3939                 id_start = bid;
+    3940                 id_stop = bid;
+    3941         }
+    3942 
+--> 3943         if (rf_band == RTW89_BAND_2G)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+RTW89_BAND_2G is zero so this is dead code.
 
-On the debugging, I instrumented the same failure on an MT7922 back in July.
-Wedged, it read lpctl=0x00000004 and misc=0x00000003, and a scratch write of
-0xa5a5a5a5 read back exactly. So on mine the bus is fine and the chip is
-alive, it just won't give ownership up.
+    3944                 scbd_bit |= BTC_WSCB_RXGAIN;
+    3945         else
+    3946                 scbd_bit |= BTC_WSCB_RXGAIN_56G;
+    3947 
 
-Yours reads 0xffffffff where mine reads 0x4, and that's the part I'd chase.
-The same write test tells you which one you've got, no patch needed, and
-nothing on the host side reads that register:
+This email is a free service from the Smatch-CI project [smatch.sf.net].
 
-  echo 0x54000120 > /sys/kernel/debug/ieee80211/phy0/mt76/regidx
-  echo 0xa5a5a5a5 > /sys/kernel/debug/ieee80211/phy0/mt76/regval
-  cat /sys/kernel/debug/ieee80211/phy0/mt76/regval
-
-Comes back 0xa5a5a5a5 and it's alive and latched like mine. Comes back
-0xffffffff and it's off the bus, which is a different bug.
-
-Your repro wedges an MT7922 here too, for what it's worth, not just your
-laptop.
-
-Devin
-
-On 13 Aug 2026, moosager wrote:
-
-> I would like to reiterate, though, that a more complete fix should be
-> pursued by anyone who has more knowledge of the driver or firmware.
-> Previously, a marginal improvement like this one was applied, but the
-> issue persists to this day (see [1]).
-
-On 4 Aug 2026, moosager wrote:
-
-> and it expects to find 0x00000004 (which is PCIE_LPCR_HOST_OWN_SYNC).
-> Instead, when the issue happens, it finds 0xffffffff, which does not
-> change even after the driver attempts to write to it.
->
-> I would like some guidance as to how I could debug the issue further,
-> though ultimately the problem is likely in the firmware.
+regards,
+dan carpenter
