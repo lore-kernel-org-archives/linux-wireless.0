@@ -1,677 +1,296 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAB732EB856
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:01:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458063AA51F
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:26:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787144472; cv=none; b=YNPn1jWBQM5Tk3XNBS3F7/c/YnfTWR4DBBYkCkn+Qhl2Ca+IGYthp14M6sR6O+7wnDNYP/0CUCjfgn8SNBCUSH4HefkCeYIut0x3Z/zXGep0q+uSNxwk4x7R0Hlr1rPXLjZJs3u/bqjHvuBd7qWopI+2e6yvJXLZDWCzfr4LR8E=
+	t=1787145986; cv=none; b=qNugvQAlcHEolHgptJFR4nBgLCxnzji+CI37l4EOTZStzN9yztHK4BwKU5wY1Q80/aV9KiOuQ/AFVrpP3RTb3Huy8mTz28b/jd/KK3ZB1oLiTd7fnGEzklbqexkBxdpiFwImKXW+XqJhQK5USo/Ss3W7HMmbnEyOoewhWnrbTbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787144472; c=relaxed/simple;
-	bh=2dyIxUsqZm1vVmtYqF9L4idjdjgjIjjRi6sS6UuCfIE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sBSj1pwIWq7OXyJwpxzeIdG+rv01c/a2PyoN95Oo5/7BXzeuF15cjyFDYwfprjJDpImyK8b2ARpZ/cF4UdJkFbb56SlswMXlpRonjcXJv/PP3xi7u7jcnqOR7O4ZwcOX64Dl5KiBrRGcaS1jS3R5Au64Ewtb9CZ6QG5d97c4GlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=eLK1H8QO; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1787145986; c=relaxed/simple;
+	bh=CmlPJHuzWPOytQEU5R5xQXPPaYc5Od4DQGLS8DUdrmg=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=LYVdHZGj6a7ZCs4CDuATYUBoIl9dAjn1iSzD48yjtScYaHcJMse6jvOYeFWqAqFQ2snSMq50PYByrtb3E29ydlnOBfOvIeDjCQa8tYZiEpSvAVoo0PkwZacrFn14gVf2IY2nzKp4flGJGyHQA/n5ZBgrt3Z2z4AH2UcUlzHaPFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hPFqpjNc; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ChmHolLT; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="eLK1H8QO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=Bns12clAQ3XC0oDns07cw7yh6MAWFkZo/sx2ssRFbkI=;
-	t=1787144470; x=1788354070; b=eLK1H8QOBBtlrZ3BkBYXEHaQmTfXIAPg/sT0vBlqEU8bEKx
-	NM4ZRf2Wry1aLKKu++fq6gndbHSDNv3VziMk/dOp3hixxyp9LeSwH/UrCmbRKJbT+q8IV/tZ1DhPs
-	7wkFFo6+l4r+YTvsRjMqRWC+Vqp2g6W+50XQYFJ84NFSUHwM3QBYZGWLQo/6byL1KJLwuEZyQ8Ttw
-	MiOG8xD0V4gqKy3KJdCquaoRteXKH/h/zn/PFOsesbsYQQJB2g30EUcba92VZxbOQgdz3xOEr4dQm
-	b7SLjpmJ6inEBKCQ2YDmqUIvJYRyg1OD8sxhdjU0CZLU/k0p+bSr936XvPyXl5qA==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <benjamin@sipsolutions.net>)
-	id 1wwfbD-000000089Cs-31S8;
-	Wed, 19 Aug 2026 14:40:56 +0200
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [wireless-next PATCH v2 3/8] wifi: mac80211: refactor RX link_id and station handling
-Date: Wed, 19 Aug 2026 14:39:02 +0200
-Message-ID: <20260819143858.7740fbad5412.I8abe3601d0335dca22d48bcee864817cfccf0de0@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260819123858.4025935-10-benjamin@sipsolutions.net>
-References: <20260819123858.4025935-10-benjamin@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hPFqpjNc";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ChmHolLT"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67JDLms1399317
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:26:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=XMrepigsXGmXg7NqGr24NJ
+	p0iKyvLFf7rtCvX19jY7Y=; b=hPFqpjNc8wqg9bSHU/lHQu7wOHvu6SkMLRPWzV
+	rB7XPMvgZnB93DQPGi0mLaK+tC3SshCdsJ7nCOF5sK0srH1615r837MaZGRVDQEl
+	rqiNMQ/SoJ9rIgBbng5YSW8fmv6WsM3I8iIWf6PX2pKcU9DirvMWBjAoy4HvXSW0
+	qTAQJY3YrUA7JShUlAncqfeVBM/LzaTmSa0to+db6mTEc1DDockPidhRVXfcoYr/
+	ETwxHQVeVVQrSOQOJ51+sLJWg+FFMk49YJo3l9z6pIJBdEo96WHWi6Xgg/TR8aSE
+	/FGO+N++RpJzRqpIIOjQR/w8SdvOJb+lJ5edN0vNqwP9Ep0g==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g5daa00kd-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:26:20 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-38f0fe57470so2383274a91.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 06:26:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787145980; x=1787750780; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=XMrepigsXGmXg7NqGr24NJp0iKyvLFf7rtCvX19jY7Y=;
+        b=ChmHolLTZxN1n8GHSP+e9sxr4fh6Xvu9HVWxyWPv8wrAVfn/X6LWRjewdqNvKdlPU8
+         fZOu69qhGzW79SuZLjFxW/vroIq7/rUySFal43wKyUALj6gElEpnD3walmJIXgDjdu9K
+         PkImcp5Q2Qvgcfjv5tRvVpp5eELiRVv6EGgLpb6pILFnaKWKztrO3XJt5MMpACj9p7bK
+         OK5P7kVDC/dkHzId5IIZ1rCXCfnsKK/9S8R5mLpB3MKHFbuelDKHErQWnR9oJRgMvss1
+         lPuylHaQSN4x2faQ4PWe92BbHi7VrPQ0i5x8r0Tz18JnWaWr6EazYwwnT4328ZwKGdwK
+         E2Ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787145980; x=1787750780;
+        h=cc:to:content-transfer-encoding:content-type:mime-version
+         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=XMrepigsXGmXg7NqGr24NJp0iKyvLFf7rtCvX19jY7Y=;
+        b=b0vryw4x+0pCcXZ0aG+jeaQBlqqHw0LopYqUYk11/nplo/hJHHUElH5u1pv35diiqQ
+         +jqSaCRBukoIJRWQEXO6oIjaXRyjFaOQWP4jbpXCwE9bJx17sqJOxFyEtiFS2hNmqGgx
+         bfco/JWVU4OU5mP5Z+ZMoF1g7JqiL6qOwIwhqPDHd9y3RYwvxWym3RWJwry7Y/uodHUj
+         KHTFyLfsMoLF5GXCB74DtiWBTZNe7z3vClj2L1e0vDI/uPfE1F17HpO5/nT7UeMK/oEb
+         gv3hFOgKxyTbbFpphHcWjjSKNuhyAqqChntfoyrzA4xMDIAdgixKuHNwkB2UR+OUQuta
+         KEKQ==
+X-Forwarded-Encrypted: i=1; AHgh+RpEoOfAFzpbJ7oAs3q0AcXmsq4HkhrHlFICA033dd/zYLYVgmbAbknofegwslSdgF2hscRSywXcrY8lB8w4sw==@vger.kernel.org
+X-Gm-Message-State: AFuF++mHFnw/xC2t6oKYvsqNZ155N1ToybypKp4o4QWKSh69c++fHzv+
+	n+IjqXX1Lr+W+W/RuGskPiFhSNTN+bOnTP0aZXOofwmG38yvBPVYkbAgJHgZkJi6OZ9KKZUybEO
+	fJmd8eIGdQjzn7tam/Zc44TwGSX9N14O98xWvalvwBWFbBmVarcTxfrGwqktbK9nLXispSA==
+X-Gm-Gg: AR+sD127hrInwJ/oGJrlJfuxACz5QbVbnYtbHLjpj0Y3dHDy/olgXhhGeBW6y/khp7R
+	gCw/ADm30YMXoRPlVT/EXvfI6K65dXzjXTQ7M18FWmeNq1ly8NDc7wzjHNUWrpw6Sz295XEtWVS
+	L1pEYvTmbuz0lrPf/yNc1E/f+vg5EIco64WQ6hNCw3zFXa5rATbejujfWo6xAD7KeSQo199CuDP
+	T3LAZvanb3ROOoXkjmt8KdMRF0NY7wG2dQow87YVS14qUzGYVqA3sDY4aggQi3DJ2tD9ydbd/rT
+	ABDB3ZdVz6cSmFS0aU6epCXBQ/2y7C196C/M12KDu1piOmM9G0IqNF+Qm/c0Sgy3yPNoZF+Qln5
+	2noYfI6xZEQgLbqXX45KG7BXPxrEInM09hLk=
+X-Received: by 2002:a17:90b:3c48:b0:36d:b12b:f57d with SMTP id 98e67ed59e1d1-3957f997592mr6527338a91.12.1787145979798;
+        Wed, 19 Aug 2026 06:26:19 -0700 (PDT)
+X-Received: by 2002:a17:90b:3c48:b0:36d:b12b:f57d with SMTP id 98e67ed59e1d1-3957f997592mr6527260a91.12.1787145979275;
+        Wed, 19 Aug 2026 06:26:19 -0700 (PDT)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327c2a92406sm6126465eec.11.2026.08.19.06.26.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Aug 2026 06:26:18 -0700 (PDT)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v5 0/6] bus: mhi: host: Add support for mhi bus bw
+Date: Wed, 19 Aug 2026 18:55:51 +0530
+Message-Id: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAOGuhWoC/2WNS47CMBBErxJ5TUf+xHbIinsghBzTYTzkhzsJj
+ BB3HxPYsWmp1K9ePRhhDEisyh4s4hIoDH0KepMx/+P6M0I4pcwkl4aXQkF9I+9ahEIpu+XaGeE
+ 0S/QYsQn31bQ/vDPN9S/66VX/EBGvc5qY3hjrkMitE1W2DlhewugDOBo7SDpYFHAw9cnKQgtbG
+ NxdMPbY5kM8v5xfhkIImMgfp5Bef72HRYIA00jdWLktba12A1F+nV3rh67L02GH5/MfhXN2YQg
+ BAAA=
+X-Change-ID: 20260813-bwscale-4337905a61a5
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        qiang.yu@oss.qualcomm.com,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Miaoqing Pan <quic_miaoqing@quicinc.com>,
+        Krishna Chaitanya Chundru <krishnac@codeaurora.org>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1787145973; l=7237;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=CmlPJHuzWPOytQEU5R5xQXPPaYc5Od4DQGLS8DUdrmg=;
+ b=IJxhu7pLw2mKP1XbVqcRUrzhCr1uryRh3FKy4Ee2feSSbQoUlKwQim294R7215++m+Y/5gEGG
+ 0NRNSqIBQg4CoMZ517bgdkMMX+Sx5kH5f3yPfdGu9I8w5P0mjtUYb0R
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Authority-Analysis: v=2.4 cv=fv3sol4f c=1 sm=1 tr=0 ts=6a85aefc cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=1XWaLZrsAAAA:8 a=QyXUC8HyAAAA:8
+ a=pGLkceISAAAA:8 a=KKAkSRfTAAAA:8 a=NufY4J3AAAAA:8 a=JfrnYn6hAAAA:8
+ a=gbihCOOLvAovBIVTQvYA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22 a=cvBusfyB2V15izCimMoJ:22 a=TPcZfFuj8SYsoCJAFAiX:22
+ a=1CNFftbPRP8L7MoqJWF3:22
+X-Proofpoint-GUID: S2uBKS-aDHNI2VVF4U7s9D_x3LRoWFmb
+X-Proofpoint-ORIG-GUID: S2uBKS-aDHNI2VVF4U7s9D_x3LRoWFmb
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE5MDEwNCBTYWx0ZWRfX4SjqDYIwIOIc
+ JWc4RJBXls6TJs0oEhbS8tQ8bAOGCwUuuAIQTfXMwCaBKV5yHn29T6PXAfQmrWxSRBYowlkX3iy
+ +H/TX6ZEIp0D89gOeiy+Fv+XwEDwDeE=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE5MDEwNCBTYWx0ZWRfXynlNBm4xsWYB
+ +NUvndGXptAubVWUGAAS0uThBJAXo+PNuib4zYhYWkZybaJfgoA+gVqE46k4zeJIeHf2vw/dwjP
+ RWIfOZWwhY99PMy3hqAN5ltRS6TJ77EXq4o5y2DElLvGljOWymIT+4vp5ei+2O7h8gNSrf5DHvb
+ q6SGFg2IXtqS5fuzNQsBlG1w/4mMmRvRHtFyvwAw+8r0K6oJHzk5n3oJJy9Wuvv0U7Sj3YUBxAr
+ oSZscugheFGFX39P/TIECESSqv1K2Ef8/BDyDKjKGxUgAATa+9a2rnGgTcVFXL19Lz6V7IoX0ou
+ wnlC4Eezl28quC7BVaeDBfnlPI66NZBYBYAWJoibKSIcy1f7VQGnDN+CtJX6Ky9CfE2uUbhMbrp
+ qqq7m1NuG/Reeq6yKt4ZNk818NgKV+9w/ZvHHZzG4MqDS8nF0iap4hgbTwcOQjZTZrFglgx1K0y
+ FnSfav38TT/j+q8C7qQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-19_03,2026-08-19_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 bulkscore=0 spamscore=0 adultscore=0 suspectscore=0
+ impostorscore=0 lowpriorityscore=0 malwarescore=0 priorityscore=1501
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608190104
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+As per MHI spec sec 14, MHI supports bandwidth scaling to reduce power
+consumption. MHI bandwidth scaling is advertised in devices that contain
+the bandwidth scaling capability registers. If enabled, the device
+aggregates bandwidth requirements and sends them to the host in the form
+of an event. After the host performs the bandwidth switch, it sends an
+acknowledgment by ringing a doorbell.
 
-The link ID for one frequency may be different between VIFs. As such,
-the sensible thing is to set the link ID later in the flow once the SKB
-is duplicated for each VIF. As the link ID is not passed in from outside
-mac80211 it is always valid and the corresponding bit can be dropped.
+if the host supports bandwidth scaling events, then it must set
+BW_CFG.ENABLED bit, set BW_CFG.DB_CHAN_ID to the channel ID to the
+doorbell that will be used by the host to communicate the bandwidth
+scaling status and BW_CFG.ER_INDEX to the index for the event ring
+to which the device should send bandwidth scaling request in the
+bandwidth scaling capability register.
 
-Also switch a few more places to pass the link STA as that is a natural
-way to pass the link information around.
+As part of mmio init check if the bw scale capability is present or not,
+if present advertise host supports bw scale by setting all the required
+fields.
 
-This fixes the per-link statistics when frames are reordered.
+MHI layer will only forward the bw scaling request to the controller
+driver, it is responsibility of the controller driver to do actual bw
+scaling and then pass status to the MHI. MHI will response back to the
+device based up on the status of the bw scale received.
 
-Note that this patch deliberately leaves some places unchanged and even
-incorrect as this will be addressed by further refactorings.
+Add a new get_misc_doorbell() to get doorbell for misc capabilities to
+use the doorbell with mhi events like MHI BW scale etc.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
+Use workqueue & mutex for the bw scale events as the pci_set_target_speed()
+which will called by the mhi controller driver can sleep.
+
+This series depends on the PCI/ASPM patches[1] that are currently under review
+and not yet merged upstream. The ASPM patches provide the infrastructure
+(disable_aspm_for_retrain flag and related functionality) that this MHI bandwidth
+scaling series builds upon. While the ASPM patches are still being reviewed, we
+are sending this series now to enable early review and feedback on the MHI
+bandwidth scaling implementation. Once the ASPM patches are merged, this series
+can be applied on top without any conflicts.
+
+This series also depends on the mhi read capability patch[2], this patch
+is not merged as there is no user to use it, we can apply it along with
+this series.
+
+To: Bjorn Helgaas <bhelgaas@google.com>
+To: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+To: Jingoo Han <jingoohan1@gmail.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Krzysztof Wilczyński <kw@linux.com>
+To: Rob Herring <robh@kernel.org>
+To: Jeff Johnson <jjohnson@kernel.org>
+To: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org
+Cc: mhi@lists.linux.dev
+Cc: linux-wireless@vger.kernel.org
+Cc: ath11k@lists.infradead.org
+Cc: qiang.yu@oss.qualcomm.com
+
+Link [1]: https://lore.kernel.org/all/20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org/ 
+Link [2]: https://lore.kernel.org/all/20260411-tsc_timesync-v2-1-6f25f72987b3@oss.qualcomm.com/#t
+
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v5:
+- remove pre/post_link_speed_change (Bjorn)
+- Use opp directly in pci directly to scale bw votes (Mani).
+- Use disable aspm on link retrain field in host bridge (Mani).
+- In case bw scale failure, remove workqueue etc (Mani).
+- couple of nits in mhi & pci (Mani).
+- Link to v4: https://lore.kernel.org/r/20250609-mhi_bw_up-v4-0-3faa8fe92b05@qti.qualcomm.com
+
+Changes in v4:
+- Remove leftover type case, change the function names to pre/post_link_speed_change(Ilpo Järvinen)
+- Add check's for capability read and convert le32 to cpu (Jeffrey Hugo)
+- Add macros for GENMASK & BIT() (Ilpo Järvinen)
+- Link to v3: https://lore.kernel.org/r/20250519-mhi_bw_up-v3-0-3acd4a17bbb5@oss.qualcomm.com
+
+Changes in v3:
+- Move update speed logic to pwrctrl driver (Mani)
+- Move pre_bus_bw & post_bus_bw to bridge as these are bridge driver specific ops,
+it feels to me we need to add these in the host bridge driver similar to recently
+added one reset_slot.
+- Remove dwc level wrapper (Mani)
+- Enable ASPM only if they are enabled already (Mani)
+- Change the name of mhi_get_capability_offset to mhi_find_capability() (Bjorn)
+- Fix comments in the code, subjects etc (Mani & Bjorn)
+- Link to v2: https://lore.kernel.org/r/20250313-mhi_bw_up-v2-0-869ca32170bf@oss.qualcomm.com
+
+Changes in v2:
+- Update the comments.
+- Split the icc bw patch as sepertate one (Bjorn)
+- update the aspm disablement comment (Bjorn)
+- Use FIELD_GET & FIELD_PREP instead of hard macros and couple of nits
+  suggested by (Ilpo Järvinen)
+- Create a new function to change lnkcntrl2speed to enum pci_bus_speed (Jeff)
+- Link to v1: https://lore.kernel.org/r/20250217-mhi_bw_up-v1-0-9bad1e42bdb1@oss.qualcomm.com
 
 ---
+Krishna Chaitanya Chundru (5):
+      PCI/bwctrl: Set host bridge OPP and optionally disable ASPM around link retraining
+      PCI: Export pci_set_target_speed()
+      PCI: Add pci_lnkctl2_bus_speed() to convert lnkctl2speed to pci_bus_speed
+      bus: mhi: host: Add support for Bandwidth scale
+      PCI: qcom: Enable ASPM disabling during link retraining
 
-v2:
-* Use deflink link_sta for non-MLO stations on MLD AP interface
+Miaoqing Pan (1):
+      wifi: ath11k: Add support for MHI bandwidth scaling
+
+ drivers/bus/mhi/common.h               |  13 ++++
+ drivers/bus/mhi/host/init.c            |  93 +++++++++++++++++++++++++--
+ drivers/bus/mhi/host/internal.h        |   6 +-
+ drivers/bus/mhi/host/main.c            | 113 ++++++++++++++++++++++++++++++++-
+ drivers/bus/mhi/host/pm.c              |  10 ++-
+ drivers/bus/mhi/host/trace.h           |   7 ++
+ drivers/net/wireless/ath/ath11k/mhi.c  |  38 +++++++++++
+ drivers/pci/controller/dwc/pcie-qcom.c |   2 +
+ drivers/pci/pci.c                      |  15 +++++
+ drivers/pci/pcie/bwctrl.c              |  64 ++++++++++++++++++-
+ include/linux/mhi.h                    |  13 ++++
+ include/linux/pci.h                    |   2 +
+ 12 files changed, 367 insertions(+), 9 deletions(-)
 ---
- include/net/mac80211.h |   9 +-
- net/mac80211/ap.c      |   3 -
- net/mac80211/iface.c   |   7 +-
- net/mac80211/mlme.c    |  10 +-
- net/mac80211/rx.c      | 211 ++++++++++++++++++-----------------------
- net/mac80211/scan.c    |  10 +-
- 6 files changed, 106 insertions(+), 144 deletions(-)
+base-commit: f0ffb179a512e7be964f75b00202ad411cbfb0f3
+change-id: 20260813-bwscale-4337905a61a5
+prerequisite-message-id: 20260708-pci-aspm-fix-v3-0-6bd72451746e@kernel.org
+prerequisite-patch-id: 88006da4a3c4d94facb6ff3cb8e47269fb3e5636
+prerequisite-patch-id: e9132f8e053568f4259ae33a5f0dfa7d14f6bb43
+prerequisite-patch-id: 034cbc5c4004f7384122e454edaf10118495bb1c
+prerequisite-patch-id: 3f415cab42569c0fd8d88d3de9775a57b719f82e
+prerequisite-patch-id: ba94f33f11b19e08820dee482209dd1ba0d57523
+prerequisite-patch-id: 060f698bfdb0e16c64735abd90e21f699f975ece
+prerequisite-patch-id: 0451e6b0527b17f006d6649158abef8ae9010170
+prerequisite-patch-id: c7e7e403930415790a6075778b9c4851629f54d5
+prerequisite-message-id: 20260411-tsc_timesync-v2-1-6f25f72987b3@oss.qualcomm.com
+prerequisite-patch-id: 898bad65110d5bb8a51ebadebc00d21b0c0eddee
+prerequisite-patch-id: 927a45a5a418489c14481413149cd37840019354
+prerequisite-patch-id: 927b714345dfaeecc74ab17645bd73c62a0ed51d
+prerequisite-patch-id: 607cbbae4ab145955ba10db4c0eb2ec507c476c2
+prerequisite-patch-id: 3eeed070306fd8e1dd9a2edc11eaa91ea3cc9115
+prerequisite-patch-id: 77a89f3deee3b2a415c008fa533f3faab7e709ad
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index bc98fed6bc4c..7aae728e96d8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1770,10 +1770,9 @@ enum mac80211_rx_encoding {
-  * @ampdu_reference: A-MPDU reference number, must be a different value for
-  *	each A-MPDU but the same for each subframe within one A-MPDU
-  * @zero_length_psdu_type: radiotap type of the 0-length PSDU
-- * @link_valid: if the link which is identified by @link_id is valid. This flag
-- *	is set only when connection is MLO.
-- * @link_id: id of the link used to receive the packet. This is used along with
-- *	@link_valid.
-+ * @link_id: id of the link used to receive the packet. Set and used by
-+ *	mac80211 internally, it uses @freq set by the driver to identify the
-+ *	correct link per vif.
-  */
- struct ieee80211_rx_status {
- 	u64 mactime;
-@@ -1813,7 +1812,7 @@ struct ieee80211_rx_status {
- 	u8 chains;
- 	s8 chain_signal[IEEE80211_MAX_CHAINS];
- 	u8 zero_length_psdu_type;
--	u8 link_valid:1, link_id:4;
-+	u8 link_id:4;
- };
- 
- static_assert(sizeof(struct ieee80211_rx_status) <= sizeof_field(struct sk_buff, cb));
-diff --git a/net/mac80211/ap.c b/net/mac80211/ap.c
-index e7ac99c5a22e..fe255891c35f 100644
---- a/net/mac80211/ap.c
-+++ b/net/mac80211/ap.c
-@@ -82,9 +82,6 @@ ieee80211_rx_eml_op_mode_notif(struct ieee80211_sub_if_data *sdata,
- 	if (!ift_ext_capa)
- 		return;
- 
--	if (!status->link_valid)
--		return;
--
- 	sta = sta_info_get_bss(sdata, mgmt->sa);
- 	if (!sta)
- 		return;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 43460a705a6b..a0b214dbb8af 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1673,11 +1673,8 @@ static void ieee80211_iface_process_skb(struct ieee80211_local *local,
- 				break;
- 
- 			status = IEEE80211_SKB_RXCB(skb);
--			if (!status->link_valid)
--				link_sta = &sta->deflink;
--			else
--				link_sta = rcu_dereference_protected(sta->link[status->link_id],
--							lockdep_is_held(&local->hw.wiphy->mtx));
-+			link_sta = wiphy_dereference(local->hw.wiphy,
-+						     sta->link[status->link_id]);
- 			if (link_sta)
- 				ieee80211_ht_handle_chanwidth_notif(local, sdata, sta,
- 								    link_sta, chanwidth,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f51167f0fc46..361775fb931e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -11831,12 +11831,10 @@ void ieee80211_sta_rx_queued_frame(struct ieee80211_sub_if_data *sdata,
- 	rx_status = (struct ieee80211_rx_status *) skb->cb;
- 	fc = le16_to_cpu(mgmt->frame_control);
- 
--	if (rx_status->link_valid) {
--		link = sdata_dereference(sdata->link[rx_status->link_id],
--					 sdata);
--		if (!link)
--			return;
--	}
-+	link = sdata_dereference(sdata->link[rx_status->link_id],
-+				 sdata);
-+	if (!link)
-+		return;
- 
- 	switch (fc & IEEE80211_FCTL_STYPE) {
- 	case IEEE80211_STYPE_BEACON:
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index adb8fc1e20e1..b654b2d57f15 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -222,43 +222,21 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
- }
- 
- static void __ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
--					   int link_id,
--					   struct sta_info *sta,
-+					   struct link_sta_info *link_sta,
- 					   struct sk_buff *skb)
- {
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
--
--	if (link_id >= 0) {
--		status->link_valid = 1;
--		status->link_id = link_id;
--	} else {
--		status->link_valid = 0;
--	}
--
- 	skb_queue_tail(&sdata->skb_queue, skb);
- 	wiphy_work_queue(sdata->local->hw.wiphy, &sdata->work);
--	if (sta) {
--		struct link_sta_info *link_sta_info;
--
--		if (link_id >= 0) {
--			link_sta_info = rcu_dereference(sta->link[link_id]);
--			if (!link_sta_info)
--				return;
--		} else {
--			link_sta_info = &sta->deflink;
--		}
--
--		link_sta_info->rx_stats.packets++;
--	}
-+	if (link_sta)
-+		link_sta->rx_stats.packets++;
- }
- 
- static void ieee80211_queue_skb_to_iface(struct ieee80211_sub_if_data *sdata,
--					 int link_id,
--					 struct sta_info *sta,
-+					 struct link_sta_info *link_sta,
- 					 struct sk_buff *skb)
- {
- 	skb->protocol = 0;
--	__ieee80211_queue_skb_to_iface(sdata, link_id, sta, skb);
-+	__ieee80211_queue_skb_to_iface(sdata, link_sta, skb);
- }
- 
- static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
-@@ -301,7 +279,7 @@ static void ieee80211_handle_mu_mimo_mon(struct ieee80211_sub_if_data *sdata,
- 	if (!skb)
- 		return;
- 
--	ieee80211_queue_skb_to_iface(sdata, -1, NULL, skb);
-+	ieee80211_queue_skb_to_iface(sdata, NULL, skb);
- }
- 
- /*
-@@ -1498,7 +1476,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
- 	/* if this mpdu is fragmented - terminate rx aggregation session */
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	if (sc & IEEE80211_SCTL_FRAG) {
--		ieee80211_queue_skb_to_iface(rx->sdata, rx->link_id, NULL, skb);
-+		ieee80211_queue_skb_to_iface(rx->sdata, NULL, skb);
- 		return;
- 	}
- 
-@@ -2524,7 +2502,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 
-  out:
- 	ieee80211_led_rx(rx->local);
--	if (rx->sta)
-+	if (rx->link_sta)
- 		rx->link_sta->rx_stats.packets++;
- 	return RX_CONTINUE;
- }
-@@ -3335,8 +3313,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 		    (tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_REQUEST ||
- 		     tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_RESPONSE)) {
- 			rx->skb->protocol = cpu_to_be16(ETH_P_TDLS);
--			__ieee80211_queue_skb_to_iface(sdata, rx->link_id,
--						       rx->sta, rx->skb);
-+			__ieee80211_queue_skb_to_iface(sdata, rx->link_sta,
-+						       rx->skb);
- 			return RX_QUEUED;
- 		}
- 	}
-@@ -3991,7 +3969,7 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
- 	return RX_QUEUED;
- 
-  queue:
--	ieee80211_queue_skb_to_iface(sdata, rx->link_id, rx->sta, rx->skb);
-+	ieee80211_queue_skb_to_iface(sdata, rx->link_sta, rx->skb);
- 	return RX_QUEUED;
- }
- 
-@@ -4147,7 +4125,7 @@ ieee80211_rx_h_ext(struct ieee80211_rx_data *rx)
- 		return RX_DROP_U_UNEXPECTED_EXT_FRAME;
- 
- 	/* for now only beacons are ext, so queue them */
--	ieee80211_queue_skb_to_iface(sdata, rx->link_id, rx->sta, rx->skb);
-+	ieee80211_queue_skb_to_iface(sdata, rx->link_sta, rx->skb);
- 
- 	return RX_QUEUED;
- }
-@@ -4204,7 +4182,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
- 		return RX_DROP_U_UNHANDLED_MGMT_STYPE;
- 	}
- 
--	ieee80211_queue_skb_to_iface(sdata, rx->link_id, rx->sta, rx->skb);
-+	ieee80211_queue_skb_to_iface(sdata, rx->link_sta, rx->skb);
- 
- 	return RX_QUEUED;
- }
-@@ -4248,12 +4226,28 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
- 	spin_lock_bh(&rx->local->rx_path_lock);
- 
- 	while ((skb = __skb_dequeue(frames))) {
-+		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
-+
- 		/*
--		 * all the other fields are valid across frames
--		 * that belong to an aMPDU since they are on the
--		 * same TID from the same station
-+		 * Most fields are valid across frames. However,
-+		 * in the case of reordering frames may have arrived
-+		 * on different links, so adjust the link_id, link
-+		 * and link_sta accordingly.
- 		 */
- 		rx->skb = skb;
-+		if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
-+		    unlikely(rx->link_id != status->link_id)) {
-+			if (rx->sta) {
-+				rx->link_sta =
-+					rcu_dereference(rx->sta->link[rx->link_id]);
-+
-+				/* Link got disabled, just use deflink */
-+				if (!rx->link_sta)
-+					rx->link_sta = &rx->sta->deflink;
-+			}
-+			rx->link_id = status->link_id;
-+			rx->link = rcu_dereference(rx->sdata->link[status->link_id]);
-+		}
- 
- 		if (WARN_ON_ONCE(!rx->link)) {
- 			res = RX_DROP_U_NO_LINK;
-@@ -4323,7 +4317,10 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
- static bool
- ieee80211_rx_is_valid_sta_link_id(struct ieee80211_sta *sta, u8 link_id)
- {
--	return !!(sta->valid_links & BIT(link_id));
-+	if (sta->mlo)
-+		return !!(sta->valid_links & BIT(link_id));
-+	else
-+		return sta->deflink.link_id == link_id;
- }
- 
- static bool ieee80211_rx_data_set_link(struct ieee80211_rx_data *rx,
-@@ -4360,11 +4357,13 @@ static bool ieee80211_rx_data_set_sta(struct ieee80211_rx_data *rx,
- 
- 	if (link_id < 0) {
- 		if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
--		    sta && !sta->sta.valid_links)
-+		    sta && !sta->sta.valid_links) {
- 			rx->link =
- 				rcu_dereference(rx->sdata->link[sta->deflink.link_id]);
--		else
-+			rx->link_sta = &sta->deflink;
-+		} else {
- 			rx->link = &rx->sdata->deflink;
-+		}
- 	} else if (!ieee80211_rx_data_set_link(rx, link_id)) {
- 		return false;
- 	}
-@@ -4387,7 +4386,7 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 	struct tid_ampdu_rx *tid_agg_rx;
- 	int link_id = -1;
- 
--	/* FIXME: statistics won't be right with this */
-+	/* NOTE: the correct link STA for the frame is set later */
- 	if (sta->sta.valid_links)
- 		link_id = ffs(sta->sta.valid_links) - 1;
- 
-@@ -4914,20 +4913,14 @@ static void ieee80211_rx_8023(struct ieee80211_rx_data *rx,
- {
- 	struct ieee80211_sta_rx_stats *stats;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
--	struct sta_info *sta = rx->sta;
--	struct link_sta_info *link_sta;
-+	struct link_sta_info *link_sta = rx->link_sta;
- 	struct sk_buff *skb = rx->skb;
- 	void *sa = skb->data + ETH_ALEN;
- 	void *da = skb->data;
- 
--	if (rx->link_id >= 0) {
--		link_sta = rcu_dereference(sta->link[rx->link_id]);
--		if (WARN_ON_ONCE(!link_sta)) {
--			dev_kfree_skb(rx->skb);
--			return;
--		}
--	} else {
--		link_sta = &sta->deflink;
-+	if (WARN_ON_ONCE(!link_sta)) {
-+		dev_kfree_skb(rx->skb);
-+		return;
- 	}
- 
- 	stats = &link_sta->rx_stats;
-@@ -5154,6 +5147,9 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 		goto drop;
- 	}
- 
-+	status = IEEE80211_SKB_RXCB(skb);
-+	status->link_id = rx->link_id < 0 ? 0 : rx->link_id;
-+
- 	ieee80211_rx_8023(rx, fast_rx, orig_len);
- 
- 	return true;
-@@ -5178,6 +5174,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	struct link_sta_info *link_sta = rx->link_sta;
- 	struct ieee80211_link_data *link = rx->link;
-+	struct ieee80211_rx_status *status;
- 
- 	rx->skb = skb;
- 
-@@ -5221,6 +5218,9 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- 		hdr = (struct ieee80211_hdr *)rx->skb->data;
- 	}
- 
-+	status = IEEE80211_SKB_RXCB(rx->skb);
-+	status->link_id = rx->link_id < 0 ? 0 : rx->link_id;
-+
- 	if (ieee80211_is_s1g_beacon(hdr->frame_control)) {
- 		ieee80211_invoke_rx_handlers(rx);
- 		return true;
-@@ -5256,22 +5256,19 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
- }
- 
- static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
--				       struct ieee80211_sta *pubsta,
-+				       struct ieee80211_link_sta *link_pubsta,
- 				       struct sk_buff *skb,
- 				       struct list_head *list)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_fast_rx *fast_rx;
- 	struct ieee80211_rx_data rx;
- 	struct sta_info *sta;
--	int link_id = -1;
- 
- 	memset(&rx, 0, sizeof(rx));
- 	rx.skb = skb;
- 	rx.local = local;
- 	rx.list = list;
--	rx.link_id = -1;
- 
- 	I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
- 
-@@ -5279,23 +5276,15 @@ static void __ieee80211_rx_handle_8023(struct ieee80211_hw *hw,
- 	if (skb->len < sizeof(struct ethhdr))
- 		goto drop;
- 
--	if (!pubsta)
-+	if (!link_pubsta)
- 		goto drop;
- 
--	if (status->link_valid)
--		link_id = status->link_id;
--
--	/*
--	 * TODO: Should the frame be dropped if the right link_id is not
--	 * available? Or may be it is fine in the current form to proceed with
--	 * the frame processing because with frame being in 802.3 format,
--	 * link_id is used only for stats purpose and updating the stats on
--	 * the deflink is fine?
--	 */
--	sta = container_of(pubsta, struct sta_info, sta);
--	if (!ieee80211_rx_data_set_sta(&rx, sta, link_id))
-+	sta = container_of(link_pubsta->sta, struct sta_info, sta);
-+	if (!ieee80211_rx_data_set_sta(&rx, sta, link_pubsta->link_id))
- 		goto drop;
- 
-+	rx.link_id = link_pubsta->link_id;
-+
- 	fast_rx = rcu_dereference(rx.sta->fast_rx);
- 	if (!fast_rx)
- 		goto drop;
-@@ -5323,6 +5312,9 @@ static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
- 	}
- 
- 	/*
-+	 * FIXME: Here we can assume that link addresses have not
-+	 * been translated.
-+	 *
- 	 * Look up link station first, in case there's a
- 	 * chance that they might have a link address that
- 	 * is identical to the MLD address, that way we'll
-@@ -5336,10 +5328,8 @@ static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
- 		struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 
- 		sta = sta_info_get_bss(rx->sdata, hdr->addr2);
--		if (status->link_valid) {
--			link_id = status->link_id;
--		} else if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
--			   status->freq) {
-+		if (ieee80211_vif_is_mld(&rx->sdata->vif) &&
-+		    status->freq) {
- 			struct ieee80211_link_data *link;
- 			struct ieee80211_chanctx_conf *conf;
- 
-@@ -5367,12 +5357,11 @@ static bool ieee80211_rx_for_interface(struct ieee80211_rx_data *rx,
-  * be called with rcu_read_lock protection.
-  */
- static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
--					 struct ieee80211_sta *pubsta,
-+					 struct ieee80211_link_sta *link_pubsta,
- 					 struct sk_buff *skb,
- 					 struct list_head *list)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hdr *hdr;
- 	__le16 fc;
-@@ -5386,7 +5375,6 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	rx.skb = skb;
- 	rx.local = local;
- 	rx.list = list;
--	rx.link_id = -1;
- 
- 	if (ieee80211_is_data(fc) || ieee80211_is_mgmt(fc))
- 		I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
-@@ -5428,37 +5416,14 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 
- 	if (ieee80211_is_data(fc)) {
- 		struct sta_info *sta, *prev_sta;
--		int link_id = -1;
- 
--		if (status->link_valid)
--			link_id = status->link_id;
--
--		if (pubsta) {
--			sta = container_of(pubsta, struct sta_info, sta);
--			if (!ieee80211_rx_data_set_sta(&rx, sta, link_id))
-+		if (link_pubsta) {
-+			sta = container_of(link_pubsta->sta,
-+					   struct sta_info, sta);
-+			if (!ieee80211_rx_data_set_sta(&rx, sta,
-+						       link_pubsta->link_id))
- 				goto out;
- 
--			/*
--			 * In MLO connection, fetch the link_id using addr2
--			 * when the driver does not pass link_id in status.
--			 * When the address translation is already performed by
--			 * driver/hw, the valid link_id must be passed in
--			 * status.
--			 */
--
--			if (!status->link_valid && pubsta->mlo) {
--				struct link_sta_info *link_sta;
--
--				link_sta = link_sta_info_get_bss(rx.sdata,
--								 hdr->addr2);
--				if (!link_sta)
--					goto out;
--
--				if (!ieee80211_rx_data_set_link(&rx,
--								link_sta->link_id))
--					goto out;
--			}
--
- 			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
- 				return;
- 			goto out;
-@@ -5467,13 +5432,20 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		prev_sta = NULL;
- 
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
-+			int link_id;
-+
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
- 			}
- 
- 			rx.sdata = prev_sta->sdata;
--			if (!status->link_valid && prev_sta->sta.mlo) {
-+
-+			/*
-+			 * FIXME: This is not correct as the addr2 cannot be a
-+			 * link address if the loop itself is iterated.
-+			 */
-+			if (prev_sta->sta.mlo) {
- 				struct link_sta_info *link_sta;
- 
- 				link_sta = link_sta_info_get_bss(rx.sdata,
-@@ -5482,6 +5454,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 					continue;
- 
- 				link_id = link_sta->link_id;
-+			} else {
-+				link_id = sta->deflink.link_id;
- 			}
- 
- 			if (!ieee80211_rx_data_set_sta(&rx, prev_sta, link_id))
-@@ -5493,8 +5467,15 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 		}
- 
- 		if (prev_sta) {
-+			int link_id;
-+
- 			rx.sdata = prev_sta->sdata;
--			if (!status->link_valid && prev_sta->sta.mlo) {
-+
-+			/*
-+			 * FIXME: This is not correct as the addr2 cannot be a
-+			 * link address if the loop itself is iterated.
-+			 */
-+			if (prev_sta->sta.mlo) {
- 				struct link_sta_info *link_sta;
- 
- 				link_sta = link_sta_info_get_bss(rx.sdata,
-@@ -5503,6 +5484,8 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 					goto out;
- 
- 				link_id = link_sta->link_id;
-+			} else {
-+				link_id = sta->deflink.link_id;
- 			}
- 
- 			if (!ieee80211_rx_data_set_sta(&rx, prev_sta, link_id))
-@@ -5565,7 +5548,6 @@ void ieee80211_rx_list(struct ieee80211_hw *hw,
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ieee80211_sta *pubsta;
- 
- 	WARN_ON_ONCE(softirq_count() == 0);
- 
-@@ -5696,16 +5678,6 @@ void ieee80211_rx_list(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	/* FIXME: Emulate the old driver behaviour for now */
--	if (link_pubsta) {
--		status->link_valid = 1;
--		status->link_id = link_pubsta->link_id;
--		pubsta = link_pubsta->sta;
--	} else {
--		status->link_valid = 0;
--		pubsta = NULL;
--	}
--
- 	status->rx_flags = 0;
- 
- 	kcov_remote_start_common(skb_get_kcov_handle(skb));
-@@ -5724,9 +5696,10 @@ void ieee80211_rx_list(struct ieee80211_hw *hw,
- 			ieee80211_tpt_led_trig_rx(local, skb->len);
- 
- 		if (status->flag & RX_FLAG_8023)
--			__ieee80211_rx_handle_8023(hw, pubsta, skb, list);
-+			__ieee80211_rx_handle_8023(hw, link_pubsta, skb, list);
- 		else
--			__ieee80211_rx_handle_packet(hw, pubsta, skb, list);
-+			__ieee80211_rx_handle_packet(hw, link_pubsta, skb,
-+						     list);
- 	}
- 
- 	kcov_remote_stop();
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index eeff230bd909..324c2b6d7ce1 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -9,7 +9,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-  * Copyright 2016-2017  Intel Deutschland GmbH
-- * Copyright (C) 2018-2025 Intel Corporation
-+ * Copyright (C) 2018-2026 Intel Corporation
-  */
- 
- #include <linux/if_arp.h>
-@@ -204,12 +204,10 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 		 * an indication on which of the links the frame was received
- 		 */
- 		if (ieee80211_vif_is_mld(&scan_sdata->vif)) {
--			if (rx_status->link_valid) {
--				s8 link_id = rx_status->link_id;
-+			s8 link_id = rx_status->link_id;
- 
--				link_conf =
--					rcu_dereference(scan_sdata->vif.link_conf[link_id]);
--			}
-+			link_conf =
-+				rcu_dereference(scan_sdata->vif.link_conf[link_id]);
- 		} else {
- 			link_conf = &scan_sdata->vif.bss_conf;
- 		}
--- 
-2.55.0
+Best regards,
+--  
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
