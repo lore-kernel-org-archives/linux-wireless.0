@@ -1,102 +1,92 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.76.78.106])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3F3693C109A;
-	Wed, 19 Aug 2026 06:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.76.78.106
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D54A93D1707;
+	Wed, 19 Aug 2026 06:49:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787121770; cv=none; b=jQWt2WVZo4DwmolrtJ5QDPa0/V9D10UKWyDuIbWPgDWuf1zifgxs7bjJ4b77v4xiAfzWqkravAPG61HTCqqnTUTldZq30OQKNgTpGDV6WnKXuJb7trXJKueLN/HEXCix+P+hnQtdxCe+ILlEmqBLxlBwdSN8WxcXjgkm59DtKPY=
+	t=1787122200; cv=none; b=Pcy+8WxEKaYTbck8vGa/3mRccHrBwlXXgKefk4T14ggDGpx0alpsG35Q1yV23FEweoZnyqG2vdfD+WKCrosOUZm5dazbokKSnzzAGe6ibQZx90aS1lymcy4S5Ls+yn9qkFqMXNwqX/23F85ZzzFlEqsdGuqfgG/qSPLbWh5kg/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787121770; c=relaxed/simple;
-	bh=lZIDQoOOoz3iM0k+k7zjbJaDlAAGeBZJIqClYMnS1Gk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FWjvTCbQg7204F9/uscmJ/pXTuReFT0HzoLbq2tLXGB0WNZfyhyuCALiq6tXOuIG4Dvu7VL/d/DIyuk4cqhOJuc1QJvDKrRubpcYRm1/E+uRcgTPdCWW3ydIpKzUsMwrvFrMCBU1WwsKQyjhHE2pl8duB6WludzQVKpCMg/2DDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=13.76.78.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.98.66.117])
-	by mtasvr (Coremail) with SMTP id _____wBnQX5dUIVq9qGnAA--.35636S3;
-	Wed, 19 Aug 2026 14:42:38 +0800 (CST)
-Received: from localhost.localdomain (unknown [10.98.66.117])
-	by mail-app2 (Coremail) with SMTP id zC_KCgBn1cpbUIVqpb79Aw--.36573S2;
-	Wed, 19 Aug 2026 14:42:36 +0800 (CST)
-From: Fan Wu <fanwu01@zju.edu.cn>
-To: miriam.rachel.korenblit@intel.com,
-	linux-wireless@vger.kernel.org
-Cc: johannes.berg@intel.com,
-	ilan.peer@intel.com,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Fan Wu <fanwu01@zju.edu.cn>
-Subject: [PATCH] wifi: iwlwifi: mvm: fix use-after-free in MEI scan work
-Date: Wed, 19 Aug 2026 06:41:39 +0000
-Message-Id: <20260819064139.15270-1-fanwu01@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1787122200; c=relaxed/simple;
+	bh=VoznOeMowKN4UD93DwDQ2MPUFlonQ9gtDU6kuixlM3k=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=TKwYzyHMxbZdqfllc6s83M4zzNLCYo6SFgjWa13PWOqX9Gcs4REfLcm6tFAS5f2ALjbJ17i/zUfIj6b5EqUa6Q/+oFMJh38IjM/LMZfJZ1zJlfLnQ94R9tQoDYJZkYW9jcayGe8M9VykkfNfpp1k32Bh9WpLcPlADkHuN5ezbkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=mSpd4ZyH; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="mSpd4ZyH"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67J6nrwfF2174240, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787122194; bh=VoznOeMowKN4UD93DwDQ2MPUFlonQ9gtDU6kuixlM3k=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=mSpd4ZyHRuVE46S6FT8nPl3341E4AtIcH4Rxvm8wrBGsbO/W8f1GAcqmc6B7O2n+e
+	 sJhiLwBVHcN3IK46wV/L466h0buVSZW6SHpaLMqEoL6UaGoHj5RrpXENPzTj8oAlw8
+	 lkJUe9/i130QCvKXIB/6nFOC5rPOrzg/AlpZNBy4zbpSgEBYZaRhUHWqOhUhU6qakb
+	 XNb/eMM66nC1OZrtnf4rNXdYATzlgRxUS7XsIu4L2b6UdeeBPMo4KWJmRSyG9IIBS5
+	 bKV6rwmoIpPdqZ8nSChwJRV2yNIjTfStp1sRAgwAkhUatuahl2t4uFv5fZwV7DcH44
+	 mG5+HCQlWT8cA==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67J6nrwfF2174240
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 19 Aug 2026 14:49:54 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 19 Aug 2026 14:49:53 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 19 Aug 2026 14:49:53 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Wed, 19 Aug 2026 14:49:53 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: =?utf-8?B?UmFmYWVsIEFsZWphbmRybyBEw61heiBDcnV6?= <rafad900@gmail.com>
+CC: "Jes.Sorensen@gmail.com" <Jes.Sorensen@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v5] wifi: rtl8xxxu: Use local 'dev' variable for
+ dev_warn()
+Thread-Topic: [PATCH rtw-next v5] wifi: rtl8xxxu: Use local 'dev' variable for
+ dev_warn()
+Thread-Index: AQHdL0mfYevXINN71kKpfmR/NZF2pbakgbQg///hAgCAAIpvwA==
+Date: Wed, 19 Aug 2026 06:49:53 +0000
+Message-ID: <704a15b7526d479f8b5a644acb8ff534@realtek.com>
+References: <20260818193402.2109269-1-rafad900@gmail.com>
+ <51b1f52648c948a5b960d3e3196fa845@realtek.com>
+ <CALp66yG9PdUmrs1QS-shG3=gchxD2QOYX065tNVq4zrTCZLdwA@mail.gmail.com>
+In-Reply-To: <CALp66yG9PdUmrs1QS-shG3=gchxD2QOYX065tNVq4zrTCZLdwA@mail.gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zC_KCgBn1cpbUIVqpb79Aw--.36573S2
-X-CM-SenderInfo: qrstjiaswqq6lmxovvfxof0/
-X-CM-DELIVERINFO: =?B?//IYCwXKKxbFmtjJiESix3B1w3vZ3A9ovKVTomAyoQazvoRs/NHSP8GI2EvgeEEW7R
-	sfncGSG+szpQCInt5Y8rbJUI2JmA4ZISfe0HWiyBsO4pnbmA3jX6LpOmW94e5KT8E8D512
-	8+L0YQ9+13Yd+lPi3aep9E6mavGmQbzmcFsnzP86
-X-Coremail-Antispam: 1Uk129KBj93XoW7uF4UZF4UuF18uFW5Kr4Dtrc_yoW8CFWDpF
-	ZxC34UAr4j9FWIy3y5Ka1fuF95Jw4Yg393CFW5K3s8Jrn0qF1Yyr109ay7ZryFyFWkA3ya
-	vF4DtFW5WFn5X3cCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUU9Gb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
-	xVW0oVCq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc804V
-	CY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AK
-	xVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48Icx
-	kI7VAKI48JM4x0Y48IcxkI7VAKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s02
-	6xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_Jr
-	I_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v2
-	6r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj4
-	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
-	JrUvcSsGvfC2KfnxnUUI43ZEXa7IU85l1PUUUUU==
 
-While a MEI limited scan is in progress, iwl_mvm_mei_filter_scan()
-queues beacon and probe-response frames and schedules
-iwl_mvm_mei_scan_work() to re-inject matching frames into mac80211.
-
-Nothing cancels this work.  When the driver is unloaded,
-iwl_op_mode_mvm_stop() eventually frees mvm as part of
-ieee80211_free_hw().  A queued or running work item could then
-dereference the freed mvm: its handler obtains mvm with
-container_of(), takes mvm->mutex, and accesses csme_conn_info, which
-the stop path frees before ieee80211_free_hw().
-
-Cancel and drain the work in iwl_mvm_mac_stop(), after RX has been
-stopped and after releasing mvm->mutex, which the work handler takes.
-Also purge queued scan results.
-
-This issue was found by an in-house static analysis tool.
-
-Fixes: 0d2558838ee8 ("wifi: iwlwifi: modify scan request and results when in link protection")
-Cc: stable@vger.kernel.org
-Assisted-by: Codex:gpt-5.6
-Signed-off-by: Fan Wu <fanwu01@zju.edu.cn>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 74bd4038f..8b123f6df 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1423,6 +1423,10 @@ void iwl_mvm_mac_stop(struct ieee80211_hw *hw, bool suspend)
- 	 */
- 	cancel_work_sync(&mvm->async_handlers_wk);
- 	wiphy_work_cancel(hw->wiphy, &mvm->async_handlers_wiphy_wk);
-+
-+	/* The work takes mvm->mutex, so cancel it after releasing the mutex. */
-+	cancel_work_sync(&mvm->mei_scan_filter.scan_work);
-+	skb_queue_purge(&mvm->mei_scan_filter.scan_res);
- }
-
- struct iwl_mvm_phy_ctxt *iwl_mvm_get_free_phy_ctxt(struct iwl_mvm *mvm)
-
+UGxlYXNlIHBsYWluIHRleHQgb25seS4NCg0KUmFmYWVsIEFsZWphbmRybyBEw61heiBDcnV6IDxy
+YWZhZDkwMEBnbWFpbC5jb20+IHdyb3RlOg0KPiBUaGVyZSBhcmUgbXVsdGlwbGUgcGxhY2VzIHdo
+ZXJlIHRoZSBkZXYgdmFyaWFibGUgd291bGQgb25seSBiZSB1c2VkIG9uY2UuDQo+IEkgd2FzIGhv
+cGluZyB0byBvbmx5IGFkanVzdCB0aGUgZnVuY3Rpb24gY2FsbHMgdGhhdCBoYWQgJnByaXYtPnVk
+ZXYtPmRldg0KPiBtb3JlIHRoYW4gb25jZSB0byBhdm9pZCByZWR1bmRhbmN5Lg0KDQpJIGRpZG4n
+dCBnZXQgdGhpcyBwb2ludC4gQXMgSSBjb21lIGJhY2sgdG8geW91ciBmaXJzdCB2ZXJzaW9uIFsx
+XSwgeW91DQpkaWRuJ3QgbWVudGlvbiBhbmQgZG8gdGhpcy4NCg0KWzFdIGh0dHBzOi8vcGF0Y2h3
+b3JrLmtlcm5lbC5vcmcvcHJvamVjdC9saW51eC13aXJlbGVzcy9wYXRjaC8yMDI2MDgxNjE4MDg1
+Ny40MTIyMDkwLTEtcmFmYWQ5MDBAZ21haWwuY29tLw0KDQo+IEJ1dCBJJ20gYSBsaXR0bGUgY29u
+ZnVzZWQgYmVjYXVzZSB5b3UgbWVudGlvbmVkIGluIGEgcHJldmlvdXMgcGF0Y2g6DQo+ICLCoElm
+IGl0IGlzIHdvcnRoIHRvIGRvLCBwbGVhc2UgY29udmVydCBhbGwgb2YgdGhlbS4gIiBJIHdhcyBo
+b3BpbmcgdG8NCj4gY2hhbmdlIGFsbCB0aGUgZGV2X3dhcm4oKSwgZGV2X2VycigpLCBkZXZfaW5m
+bygpLCBkZXZfZGJnKCkgc2luY2UgdGhleQ0KPiBhbGwgdXNlIHRoZSBzYW1lwqAmcHJpdi0+dWRl
+di0+ZGV2wqBidXQgSSB3YXMgZ29pbmfCoHRvIHN1Ym1pdCBkaWZmZXJlbnQNCj4gcGF0Y2hlcyBm
+b3IgZWFjaCBvbmUuIFBlcmhhcHMgSSBzaG91bGQgdGFrZSBhbm90aGVyIGFwcHJvYWNoLg0KPiBJ
+IGd1ZXNzIHRoaXMgY2hhbmdlIG1pZ2h0IG5vdCBhY3R1YWxseSBiZSB3b3J0aCB0aGUgdHJvdWJs
+ZS7CoA0KDQpJIGRpZG4ndCBhY3R1YWxseSBrbm93IHlvdXIgZ29hbCwgc28gbm8gaWRlYSBpZiB0
+aGlzIGlzIHdvcnRoIHRvIHN0aXINCnRoZSBjb2RlLg0KDQo+IFRoYW5rcyBmb3IgeW91ciBwYXRp
+ZW5jZSBhbmQgaGVscCB3aXRoIHRoaXMgcGF0Y2guIEknbGwgcHV0IHRoaXMgb2ZmDQo+IHVudGls
+IEkgZmluZCBzb21ldGhpbmfCoGVsc2UgdG8gY29udHJpYnV0ZSB3aXRoIGl0LsKgDQoNCkkgZHJv
+cHBlZCB0aGlzIGZyb20gcGF0Y2h3b3JrIHRoZW4uDQoNCg0K
