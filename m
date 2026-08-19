@@ -1,118 +1,157 @@
-Received: from sipsolutions.net (s3.sipsolutions.net [168.119.38.16])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E07D218EBA
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 14:03:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=168.119.38.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D14434EEE5
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 15:13:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787148211; cv=none; b=USHJfeKfJ4QXb9ycXUpQbhlGMcfa3MGsQeIgZkl0ap7M51g3IXd/O2CXuTnp7qA+ECYzlcJboHx/7lSMRTtuF1c+jiidrQgkhFJBmu6rnDKo9+HuDsRh+OLJIHnRm8r5GW0OmjQkwpPBHbIu5gqoU4A66wgJ1eHoODFwFpJtMzY=
+	t=1787152434; cv=none; b=ca/gOPYtAkyWuANJYF9xeQtXmHSJQDEu+65NzjBiCMAWhiMT6k+DXmN0uRdR1AHwXfHTuNVV4sS49i4n6LIYtIaxAqG7NHv4sq7We8PtpS9wqhOnbENQIaHUKTZ04OomuYW8XA4TabbLCTcHTr2GtvRD1VfCpShcGJ2SopVBmUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787148211; c=relaxed/simple;
-	bh=Q3MhCxwPJGpjQJKMyrBLuzgawCo0Yl9l/5BLvIPctJo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MBZ3NDxFaLK35MVOuXJXyZtMKtYSf3m/QewL3tfF1KM0dySybIuNB4J+Nof1s0CYOTyRBypBb1kIAn5DL+xW7xAoAf2AsKqCCzOj9Z8CEw0xPN00gZWfuzfRgXsPnqVTIMdWRQexolRt02ZMDvSwA54ZvG9WzIRy2SXOTAkiZ3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net; spf=pass smtp.mailfrom=sipsolutions.net; dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b=N6zaUr2V; arc=none smtp.client-ip=168.119.38.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=sipsolutions.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sipsolutions.net
+	s=arc-20240116; t=1787152434; c=relaxed/simple;
+	bh=vWMg2hCqGSnSAaXqT2UQMJMCn8y+R+7Gf0lPzT1vuK4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OXPRy3jM61NMRc7QtLjzcPLzcQlOxVuOFbCAYk1dkW4JxKNDpfymlf61IQAzEBfHGuS/sZ4XeOzg3SJpQoIXhc7J88yirWU3LifD0efyCfLo3acc6M1ty3tpQtWlyKnMQECaVZi5LxCVZi7mp/4r+GX1HXO5/KeZPeMa1nz4zCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=V7trA4Ys; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=CQBr+/En; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sipsolutions.net header.i=@sipsolutions.net header.b="N6zaUr2V"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=sipsolutions.net; s=mail; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Content-Type:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-	Resent-Cc:Resent-Message-ID; bh=iTTHacjo3JAjq62LysYrValW8hFSvyVEKw224joKbQU=;
-	t=1787148210; x=1788357810; b=N6zaUr2VjDhC5QCEtOF2DBsoFFgRm1aqqvx44PGylIjSyUj
-	uyWNTijQIpL4aRhizJ/5Y38oFJ2x5XmvskHatrdRTd9YjAGmF+eXjVRsimHG0GIpQpD9Q77o8/D7P
-	hQrRksp4N9SXgwxwkaqcPtWuW88IH9V5ycElq7I9xl2tkFX9O6icMX/Q8abcZGEqfxw1+q9MNqXpS
-	5EsAOo4oQXOUMhPMYOCt/a+q6mppZ8de5FiugZxETEk5w4xwPq/ycaA/4KOW9TlUVfZ63c8yXT7to
-	+ZU4eWiuWSChY8nFigShsjx9a5L/a5UjxGq5asGfR3PXmPCJaw4hBCkp1ageJ6Xg==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__ECDSA_SECP256R1_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <benjamin@sipsolutions.net>)
-	id 1wwgt2-0000000B7qc-1K3P;
-	Wed, 19 Aug 2026 16:03:24 +0200
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	Benjamin Berg <benjamin.berg@intel.com>
-Subject: [PATCH wireless-next v3 8/8] uwifi: mac80211: pass error station if non-STA transmit was requested
-Date: Wed, 19 Aug 2026 15:57:12 +0200
-Message-ID: <20260819155703.64912484c2ba.I5ffe7bc0d4ccefca5c1e506d5d3d482e13989cda@changeid>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260819135703.4072215-10-benjamin@sipsolutions.net>
-References: <20260819135703.4072215-10-benjamin@sipsolutions.net>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="V7trA4Ys";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="CQBr+/En"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67JF22LB538739
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 15:13:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	Up1DH71ObPvN6KNXio6TFpjBxIEqcMT3urllRxgcTi4=; b=V7trA4Ys/FEYHxN1
+	EV+p9zegQnb5Lr4chKElUW2QQ8jwQmjJAs3l+k6H9jakgqibaQgrxc702o7KjVN5
+	2hyQxoGnTWFCnntyoOq9BM+/22BqaD4NhgnOVj2rJaL/pP4K6DQClB7kr/RfSyvG
+	STgO0gyg1A8yv1Td4HRWS5GC/cGEXpr/pUuycgfPR47BNXGuv/Sgt2ILRx8WDFbx
+	KmRIH0EsH/SHqwbhS7z3hUAzDo9GXfTn/t48VJczYPWxi6GPxOIOCXj1XYPn5VY5
+	AOdFrxyv8UCuLh7V5URaP20a4Pgm6Zt+16YHSsZG8K/A04xPKRv8FwngTFihgfa8
+	zx96AQ==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g5es581vs-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 15:13:51 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cce14a21faso17453325ad.0
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 08:13:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787152430; x=1787757230; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Up1DH71ObPvN6KNXio6TFpjBxIEqcMT3urllRxgcTi4=;
+        b=CQBr+/EnepzN3KMQUOes9SclWRYM0+2o+FvzBsYZzDbv2WtvypxJ2crbOI00Dym6bJ
+         2MUaZmVaIMILqTWaw30NJ5Jcmv7jHYo78B4zXzeuHJn3ZWtqaPP4I5D7QHzBkKU5iSjU
+         T/nE6yn92e0npkLwR+HKywWomx65ProFFYSHrX5QydlgnVpxuG9YWWtwR6uLqni8W5gb
+         AxTvlqnqQKh1K54ai0cV4U4gH1bmOKA9PwewpZ1CDZCWi1E49SX5VqXKcdyKYjaKJFK0
+         WA3LLDrRE3iYJpJHSKaYup4aqCa8uDvknnVTtUSRRV2rNItxEWUAxWgcg23zOfVAa63h
+         /lnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787152430; x=1787757230;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Up1DH71ObPvN6KNXio6TFpjBxIEqcMT3urllRxgcTi4=;
+        b=H9G4a1Vu1ra5+Mujd8K6ddsgqcVfeBYP+wEz9kSGaSpXykjJZTmLPToxXWgNXRYy3G
+         ubER1erRnc59hJ09JnV0i5EIGmaJI3eLr0W2Sx6XL3Ly4x8mmSfTPCIDq3uQLOfk6l16
+         qLbJ+I+3elH7sqA4YNqE/6P2adbKEkMInojIePrBCKElD6Z36WEriTwD7jtGJPq4iTfW
+         eAZib3KzbqCsjVn7CxQHMScLrZCfQFzh+h5v1hGglFo/9eBp2NHZ5QpwByLvhRxj/PSh
+         HAE8wpIyG+A+ojmrMMXb1WwWJfkMzSFIs3j+vfa+thnGGM+EfqaO78ONAXmnumFznILF
+         WNlA==
+X-Gm-Message-State: AFuF++mFNaYb6lU6bFPkuprxWmjW8ZptGuMINf1rA5UzkUSAdJIJR5vr
+	/Os5khu0Beg1xnl7+fgQyRt++msP3MO02DWmXlEjoG1fAefRI3uwDgLWO90pFcrzi/3i+v7xM0t
+	9JvbG6ijrVNAIkxudFnkyfx5BYk0dylFusMpUhQx/vWpliazLQpBoC6NJXIaFMcrhA7heGg==
+X-Gm-Gg: AR+sD13jGvx55NM2GEovPUXQLs8EpqyY5aAbSd1Lb1JFpMHyF604zC6PmqBKzDeUYPU
+	kuGPdt0GVFT/X2gfcTeW7vs1OHg+CVrx7lYhGcSzUXW1VYA4qSUaDq0hiWM9lpv6QQiWCs0HFPN
+	aTmA1vI/l2PPyLxpR7bPRCqAvZxIjvUkF/wGWQ38s/gNRKlgVsYekjUj6We1V0HJ5TSE8nitwlm
+	Ouw0LKl0JMmiIn9iwVY0FNm/DW5p4Cl6Z9GM4FVnI4KTBy/SnhozjK3OIn4ZNSYN2GXIjByyrtg
+	E55nwivDnV8kAjdhTSqF+ifnAY88w7oveUfkK6PQCyy4q0sWhu4q5Dmjr95k5tuQ3B94deiJBEy
+	6Env8tBd9SbSo9XUybZUcuIUA7Ujr8aa5LD2CvBiXkWVc
+X-Received: by 2002:a17:902:f64c:b0:2c6:8d95:fd7e with SMTP id d9443c01a7336-2d5fc8fae7dmr70485945ad.6.1787152430245;
+        Wed, 19 Aug 2026 08:13:50 -0700 (PDT)
+X-Received: by 2002:a17:902:f64c:b0:2c6:8d95:fd7e with SMTP id d9443c01a7336-2d5fc8fae7dmr70485145ad.6.1787152429691;
+        Wed, 19 Aug 2026 08:13:49 -0700 (PDT)
+Received: from [192.168.11.104] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bef77bfcsm7089834eec.9.2026.08.19.08.13.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Aug 2026 08:13:49 -0700 (PDT)
+Message-ID: <626c5a99-9327-4ea0-a504-9f55b26db7d2@oss.qualcomm.com>
+Date: Wed, 19 Aug 2026 20:43:43 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH ath-next v2 0/2] wifi: ath12k: Fix IRQ cleanup on PCI IRQ
+ configuration failure
+To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
+        ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, jjohnson@kernel.org,
+        quic_kiranv@quicinc.com, baochen.qiang@oss.qualcomm.com,
+        vasanthakumar.thiagarajan@oss.qualcomm.com
+References: <20260819110215.2485514-1-aaradhana.sahu@oss.qualcomm.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Content-Language: en-US
+In-Reply-To: <20260819110215.2485514-1-aaradhana.sahu@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: kfIb_mI3MayGTEfi35MCn_0PSldqo9Ir
+X-Proofpoint-GUID: kfIb_mI3MayGTEfi35MCn_0PSldqo9Ir
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE5MDExOCBTYWx0ZWRfX0sSw1ETcmCST
+ xwsQDqVy8rKbfPb4Ac0gZwgUphNh1OZJLjCWLj2sdDCm9blocjSEAtAD12Ti2JGQq6AUEeGLioZ
+ d7WnqFbA4a0zX+TObB0usTcMmA0Hzac=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE5MDExOCBTYWx0ZWRfX7wpD5b5XsLi2
+ GH7TSE8BZ2T8sxoen7S0LzBUgGUIAhbTnoBRramXu8lMeYzOefiUUAvYRyM31UWkLXchM2vNCtV
+ urTHkd5AQK1N2/8WIl3GCW0rdHCgsv3wj7jLd55iFYYy9kWBqUlyUdOMX/bIQEKi3VKsILa9z4j
+ 6HQSISAwdc0rONvzeysarSXTMDOsJOoNbHc8bM4rbsfhUzAJeevfRXAbO3SnGHB0USLK/mGKXCw
+ Xz6DETxDNc1y7tyOnX3saiJgZcFY+Pjk/rMTGp9VSnjGd8xixNAL5npINh5EEDU/bIt2UVs3r29
+ 09nZzs9/ObB2uL+K1o0sFNVB6xj5zIS4cmLLxIXGr2QA2Uz0rAJoDvSzFPBF2qvgb87vO/Cjepf
+ rWPvZqYDP51aDVEVVZMvP7vmoIWgG3G4JO7JVGFWY23nxORbkaNG1hsvt7r5Y2TksWO5Ccd3NvL
+ pl7DhFi1Ej8wzIkiXug==
+X-Authority-Analysis: v=2.4 cv=Oc+oyBTY c=1 sm=1 tr=0 ts=6a85c82f cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=EUspDBNiAAAA:8 a=JJR71pI42961Z5K6J_YA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
+ a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-19_04,2026-08-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 bulkscore=0 adultscore=0 lowpriorityscore=0
+ priorityscore=1501 phishscore=0 malwarescore=0 spamscore=0 suspectscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608190118
 
-From: Benjamin Berg <benjamin.berg@intel.com>
+On 8/19/2026 4:32 PM, Aaradhana Sahu wrote:
+> Free partially allocated IRQ resources when PCI IRQ configuration fails.
+> 
+> The first patch frees previously requested CE IRQs if CE IRQ configuration
+> fails.
+> 
+> The second patch frees previously requested external IRQs, stores the IRQ
+> number only after request_irq() succeeds, and cleans up allocated
+> resources on failure.
+> 
+> ---
+> v2:
+>    -Used ath12k_pci_free_ce_irq() in the external IRQ config failure path.
+> ---
+> 
+> Aaradhana Sahu (2):
+>    wifi: ath12k: Free allocated CE IRQs on request_irq() failure
+>    wifi: ath12k: Free allocated external IRQs on request_irq() failure
+> 
+>   drivers/net/wireless/ath/ath12k/pci.c | 55 ++++++++++++++++-----------
+>   1 file changed, 32 insertions(+), 23 deletions(-)
+> 
+> 
+> base-commit: e07447e654476262558bee570f4cf456e2b32565
 
-When cfg80211 requested a transmit without a station, pass an error
-station to ieee80211_tx_skb_tid instead of the correct one.
-
-Signed-off-by: Benjamin Berg <benjamin.berg@intel.com>
-
----
-
-v3:
- * Fix logic error in v1 update
-
-v1:
- * Only pass error station if NO_STA flag is set
----
- net/mac80211/offchannel.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 5cec8747b193..ddd7a96a2f81 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -854,8 +854,10 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			need_offchan = true;
- 
- 		rcu_read_lock();
--		sta = sta_info_get_bss(sdata, mgmt->da);
--		mlo_sta = sta && sta->sta.mlo;
-+		if (!params->no_sta) {
-+			sta = sta_info_get_bss(sdata, mgmt->da);
-+			mlo_sta = sta && sta->sta.mlo;
-+		}
- 
- 		if (!ieee80211_is_action(mgmt->frame_control) ||
- 		    mgmt->u.action.category == WLAN_CATEGORY_PUBLIC ||
-@@ -884,7 +886,8 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		     local->ops->remain_on_channel &&
- 		     memcmp(sdata->vif.cfg.ap_addr, mgmt->bssid, ETH_ALEN))) {
- 			need_offchan = true;
--		} else if (sdata->u.mgd.associated &&
-+		} else if (!params->no_sta &&
-+			   sdata->u.mgd.associated &&
- 			   ether_addr_equal(sdata->vif.cfg.ap_addr, mgmt->da)) {
- 			sta = sta_info_get_bss(sdata, mgmt->da);
- 			mlo_sta = sta && sta->sta.mlo;
-@@ -1022,7 +1025,9 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	}
- 
- 	if (!need_offchan) {
--		ieee80211_tx_skb_tid(sdata, skb, NULL, 7, link_id);
-+		ieee80211_tx_skb_tid(sdata, skb,
-+				     params->no_sta ? ERR_PTR(-ENOENT) : sta,
-+				     7, link_id);
- 		ret = 0;
- 		goto out_unlock;
- 	}
--- 
-2.55.0
-
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
