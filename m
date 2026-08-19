@@ -1,130 +1,117 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBFF3C4B8D
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 17:44:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61174C9579
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 19:29:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787161482; cv=none; b=RP7Wy0ViVM0E6TRXqyB4jEDiwp1akS5InntfNKLuGHEH9TmljkAxylDJZIDisWyJ07ndbmcdSehJJFm0QngtBWYjz8YGTNbZUbUvcRevvj1BVm5qyyKosc1by3KGBPat3zBzxg6s3SaTn5+CV6SNka0ALVS02x4Fdf8UXbjj284=
+	t=1787167781; cv=none; b=PVZhHXiRNdgBPOPwBtIIqxL9G3NAMPqmhQmNM+dnqiWqUWAV2aIc5o/AbSVxHMfL661lEfhSbnASKFcYKtOu933EiRDp/NJ+KVS+YUrR+wWqef3XYk8iJxg2Sawebv50FfSDEOa4aHl/gwtKHQPi4TEJ6XGNlazGs8YU8FtEdEM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787161482; c=relaxed/simple;
-	bh=kl2vAl6hTDL2AYJRAzbZ6h4vRN/KK/5gh6DpWrDWx1s=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=JfOy7yc4+YCbMkqSB50kCGhP1gAkUTr3Bl0qoCoLkyC3Er4xayZEuILjD8FC2IXhuv/vko7kp8AsyCUgJTY652SfxhIKUFAqJYCtxbQho+fC+0KK5UuOC1mI2p/mxu8iNQW/Pz+RKeGLSGyXc95pgp96DPtPs2BqM7Hnk4OR6fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KR8ws3X+; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1787167781; c=relaxed/simple;
+	bh=7SMHHseQ0rCn3j0B97vQN6SaBN0cr4CvM9PgJeMTewU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fJHidScJnlvsu5yVQFZv9/97XRAY/pvCSrlAY7tt0+gaMQpZdt7M/CHXQ96FNTdv44Yzo/IzlVE840FAijV0fYeqSg2Ne3yG2d6QpM5GedL2FX71sqywx0vBfRvhBJwvce5fhCLOpCMTtAosehUlxSzvgtu8SrojhUsKppULH7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=In9/Ek1m; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KR8ws3X+"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4921eed3fa2so12505455e9.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 10:44:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="In9/Ek1m"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c9d1fff21edso938660a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 12:29:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787161479; x=1787766279; darn=vger.kernel.org;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cHI4k/qB4htx3KIUscycjSvTuvxYrwgRpa/2Edi5GwQ=;
-        b=KR8ws3X+5sdnMnl5kp2lTHP3kcbtDmWqbMjdlPdNkepuo+mxkOOefRILhYVaEcyBI+
-         5qq4KkbtxXS76wdWWuxv3Dfy3oMANz5+HmecGhkIOo1CAhNi/Y0eo7Ew0U4K8tVp3jJS
-         6M/DEcUxBN7beb7RCe8YAzB4w7EQFEvm9r0PE9I62KCoqFUDBlEdPoOcGIb/01jSoOPV
-         JygSlBGzG7CcBggpPqGS+EUG7dv8cKQYcRob2F9H5j/7XLcCq+VDfhR4CcWqhn4YfQUp
-         j35PqmVi3eEAjKKoOGTMLRdPhRqD2oFCDy2L2F5eP+LTdHw0iPtOVCfQ11uETup6zV8O
-         +v3g==
+        d=gmail.com; s=20251104; t=1787167776; x=1787772576; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=O/sNYgJI7iTmex3XqzHbkrDBlq9Mkontfk7aIxaop2E=;
+        b=In9/Ek1mR6qhCaI5bDgV1fc98uTtgXuLqHSTLfK0GFGgs6UyRylurKuz5lBQpnINAd
+         cVV//wZRzbIVfLekDHNXYFATGtKZZt/+s9Bnk+ortnn+iTIjAHVud6Li3tNW7e9kHS4V
+         v6WSsNpY3vQ42gSVL2rYDB6SPe5oFBoFaGLkrHSVwN+U1tqFei/O4BBRVuRRhW7biHxA
+         hwwjBXYLgvzRRfBWBJHxYjsy2tYuXflHN64W+63qWqPHJYp0m2fc8v57Ryg6u6V0uKN/
+         IRtIrGYY79+hDw6RPkMcFOXlOnV6sizjgiIbAXJ2ZQKa3zn0KHJ0z7opvC560V6AKsbI
+         5guA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787161479; x=1787766279;
-        h=content-disposition:content-type:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20251104; t=1787167776; x=1787772576;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cHI4k/qB4htx3KIUscycjSvTuvxYrwgRpa/2Edi5GwQ=;
-        b=mIwku6jmSqBojuuEDVBQTecheeRvWpHO2ss9uSxWv7BtOFU/kPSQECcB0QVCxwoBIP
-         GGdxgXchHP81lMTL0nEeCPnif8a5Cri5NLXXVXU4MIfWe1gkK3otbZBuDGFR4bm0oFkq
-         i4pYsNWinRPmWsBu6eDLxpin4NfYlJEfMkfV1S5hrwiD62azZGpBRORxisaRV130cGDO
-         fNDsv0Ulo3HbUIx5nIDKwGH83dTbg5+3mRWL0gLJmIM/MTPfcWYCqOZ4s5BKRp5PNqKb
-         JoQDGm+ItobZ2F0cJnYusC0yjpw5w8Ajado/fSoz2Wm5XH0S+5qsCbdOpNGQW6AXC9KK
-         FLEA==
-X-Gm-Message-State: AOJu0YzvPIgRaEjnQIXhURjPHJR9Z/h53CXfY8NK1cwuHx2L1uVBzVGG
-	teCkXzNsMi87jCZBHC+H3fCAKs7fi9y+ZNNeFmx6PFAP7kqBdqWU2Kjr
-X-Gm-Gg: AR+sD13zAgb3Mez+V/MSyO8rlPQLD/7UX4ijQqCicbs51QPaKtpfUAGCTzv5urrLdl/
-	tJTO2ZFYKJrjaUdOntPSTSe6OkR5FmYbsHde44A9rW+ul3kklFvQVtcPhRiE70AXBOY6vBFSAvz
-	J5A6Syv80d+qn//v7OazOis8QS9Zkdwot/WEz8k1McGw/ZzNs49rQZyq6HHgep6aLTR5NfhOZRD
-	wTtY8zVT/dcjenRkmWEGoTizhl9hdP4vlZyG3fN8gRc6Cgk4YNHZazJg2N32MZyWAJC7uxz7Sf/
-	YVSOEEzn/4qg352DJPICtGziUbSH/C5NVGq//T3GgHXgLeqz3fAmB1WyREQ/4w3VR2ZhJ9TTBV/
-	Sm084EXBJJAUvCWrYFOoVyRm/4Gs0F5hH/zEYM/DRjNBDhuPiJpuH/8MWLzlsl+YxQ6X1BuAvqN
-	lXXRDyAKEvZJtavK0gsb5w6rKaaARlcVu+cnIki59+ymGOwYNQzZxxllG9
-X-Received: by 2002:a05:600c:1c22:b0:499:9240:9a1c with SMTP id 5b1f17b1804b1-499aa1f5589mr119427085e9.15.1787161479285;
-        Wed, 19 Aug 2026 10:44:39 -0700 (PDT)
-Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499ab2a8b34sm84045115e9.8.2026.08.19.10.44.38
+        bh=O/sNYgJI7iTmex3XqzHbkrDBlq9Mkontfk7aIxaop2E=;
+        b=Hn3QkklALiZIz6ezclB7lJiCSU4aIMcK1QYDMTm+MKCAe74P3x9TBaIgceEE+KSMYv
+         G5nOEn1rWRpRfV5BtjTw6nN4bsxoYKSA1HYpW/8gCVl1o7fg2eWxXd7x/GM//9t0515v
+         fLRtElfJ8uaiER7SYejM3TVuLbXGwfwHC1ejDje+7qLz9fT5kCRH+rT1N3TNeGbe0u7M
+         WHHY43gRNEEuFYpzfeq95tx5fLGkZBNiNyH7o1khPLtx9z13TRzMHVvdMhFYstGwiD5j
+         TXq3gSi95UqINmCLKaLYTb5mR8bWBBN2uWk/5EZafUJtpEUUXK6Fn3ZAkyX2TvNJN2aG
+         gUDg==
+X-Forwarded-Encrypted: i=1; AHgh+Rq/e+6QNusMKHEGt1t1iMgFgqJh33UEh1B0cEj7FubHS3ZrfOSXXPUQNx7radbpO/cQtMYkA6vfo9CPXTAzzQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyobt1gFlIIhiRsbzh2jB4vuRdKyyc/uoMIlyCplpuQ0MlbdRlR
+	XBrnPbnWqBpt7fcr6ebLoqQf//siXaInZSCfRAW9sXtKP11rpAPQuAhc
+X-Gm-Gg: AR+sD11+jvvx/naxPNB7IRwa8tGaTqkIx3QJva3BFVnkeo/nMmlFgvtZl2sEh4iw4jS
+	AAFG2QImhuvWLe3WPemK57HEgnUIu8TX14dIjLIrCOamJDNhLRO4WIiNPYbWW2UhbFOlTUNOIrb
+	yP8heoKptvXliM6dmCv93pQt8LFuft1mMl3RuX2boPqCtOTYAqeXe/wgGYWkSshU/MxM+zRPjNR
+	ZWv7HAC+FjkidEXzbq4KnDlvoK6waObd72dgdwQH2Wz4dnBJZruXD3TOW3qgmMg4EV765FtfkZv
+	c3hjeF44EOIhProEOShj+G8L4nl+xKPJIsXA81vWif5Yw7R8+GqBAkZYpYojjzRmD9IKanm8qR9
+	CDcnhFtvveSVnYE0VRG5fOmXJvwGCw70oelGda41U8KmoKL5xi+dDMBM6nJXC28ud6rFzlmq8ZJ
+	B+aKXIqvz1e2sAIbCK8/VU74MrVRk2FZI/y6mqDu4+oJFE5m7On01BJFZhH1mQAl0No8r7oA==
+X-Received: by 2002:a05:6a20:d707:b0:3c1:fbf:1e2e with SMTP id adf61e73a8af0-3cd011d6123mr15174456637.10.1787167775719;
+        Wed, 19 Aug 2026 12:29:35 -0700 (PDT)
+Received: from DESKTOP-TIT0J8O.dm.ae ([49.47.196.141])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327bef77be3sm9088789eec.10.2026.08.19.12.29.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Aug 2026 10:44:38 -0700 (PDT)
-Date: Wed, 19 Aug 2026 20:44:35 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Ching-Te Ku <ku920601@realtek.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] wifi: rtw89: coex: Add Bluetooth binding for Bluetooth
- RX gain setting
-Message-ID: <aoXrgwyFu851qVNV@stanley.mountain>
+        Wed, 19 Aug 2026 12:29:35 -0700 (PDT)
+From: Ahmed Naseef <naseefkm@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>
+Cc: Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	naseefkm@gmail.com
+Subject: [PATCH wireless-next] wifi: mt76: mt7615: read MT7663 temperature from the correct offset
+Date: Wed, 19 Aug 2026 23:29:11 +0400
+Message-Id: <20260819192911.1886457-1-naseefkm@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Hello Ching-Te Ku,
+On MT7663 the hwmon temp1_input attribute always reads 0.
 
-Commit fe8f6ddb9095 ("wifi: rtw89: coex: Add Bluetooth binding for
-Bluetooth RX gain setting") from Jul 6, 2026 (linux-next), leads to
-the following Smatch static checker warning:
+mt7615_mcu_parse_response() takes the temperature from the first dword of
+the THERMAL_CTRL response payload, but MT7663 firmware reports it in the
+second one. On a DASAN H660GM-A (MT7663E, N9 firmware 7663mp1827) the
+request and its response are:
 
-	drivers/net/wireless/realtek/rtw89/coex.c:3943 _set_bt_rx_gain()
-	warn: duplicate check 'rf_band' (previous on line 3927)
+  request:  00 00 00 00
+  response: 00 00 00 00 2a 00 00 00
 
-drivers/net/wireless/realtek/rtw89/coex.c
-    3914 static void _set_bt_rx_gain(struct rtw89_dev *rtwdev, bool force_exec, u8 bid,
-    3915                             u8 rf_band, u8 level)
-    3916 {
-    3917         struct rtw89_btc *btc = &rtwdev->btc;
-    3918         struct rtw89_btc_cx *cx = &btc->cx;
-    3919         struct rtw89_btc_bt_info *bt = &cx->bt0;
-    3920         u8 h2c_func = SET_BT_LNA_CONSTRAIN;
-    3921         u8 i, id_start, id_stop;
-    3922         bool state = false;
-    3923         u32 scbd_bit = 0;
-    3924         u8 buf[2] = {};
-    3925         u8 len = sizeof(*buf);
-    3926 
-    3927         if (bt->bcnt[BTC_BCNT_INFOUPDATE] == 0 || !rf_band)
-                                                            ^^^^^^^
-The patch adds a check here
+0x2a is the reading, 42 degrees, while the driver returns the leading
+zero. mt7915 and mt7921 already pull sizeof(*rxd) + 4 for this command.
 
-    3928                 return;
-    3929 
-    3930         if (bt->rf_para.rx_gain_freerun == level ||
-    3931             level > BTC_BT_RX_NORMAL_LVL || !rtwdev->chip->scbd ||
-    3932             bid > BTC_ALL_BT)
-    3933                 return;
-    3934 
-    3935         if (bid == BTC_ALL_BT) {
-    3936                 id_start = BTC_BT_1ST;
-    3937                 id_stop = BTC_BT_2ND;
-    3938         } else {
-    3939                 id_start = bid;
-    3940                 id_stop = bid;
-    3941         }
-    3942 
---> 3943         if (rf_band == RTW89_BAND_2G)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^
-RTW89_BAND_2G is zero so this is dead code.
+Restrict the extra pull to MT7663, as no MT7615 or MT7622 hardware was
+available to check whether their firmware uses the same layout.
 
-    3944                 scbd_bit |= BTC_WSCB_RXGAIN;
-    3945         else
-    3946                 scbd_bit |= BTC_WSCB_RXGAIN_56G;
-    3947 
+Fixes: f40ac0f3d3c0 ("mt76: mt7615: introduce mt7663e support")
+Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-This email is a free service from the Smatch-CI project [smatch.sf.net].
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index ff57ede87f71..1ce0192c2c91 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -153,6 +153,8 @@ int mt7615_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 		ret = *skb->data;
+ 	} else if (cmd == MCU_EXT_CMD(THERMAL_CTRL)) {
+ 		skb_pull(skb, sizeof(*rxd));
++		if (is_mt7663(mdev))
++			skb_pull(skb, 4);
+ 		ret = le32_to_cpu(*(__le32 *)skb->data);
+ 	} else if (cmd == MCU_EXT_QUERY(RF_REG_ACCESS)) {
+ 		skb_pull(skb, sizeof(*rxd));
+-- 
+2.34.1
 
-regards,
-dan carpenter
