@@ -1,91 +1,90 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17B5C1B4138
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F0F3A83A8
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787117588; cv=none; b=MJ6s03JgWIJjygWZ9sHX/drbLi2DepIx+yPPtLvlEqjOWWg61clF+Ggdrdzb+yKYim0UQhfLdcHGMoU0dYuNCs0XIwLt1xY2qFoYIi2/ld0mpUTf9QdcKiFcwseP/DhfHK3GXUzmR2yohzQaGuK7TQnQ/XC66U2lek9Z29V0WFA=
+	t=1787117592; cv=none; b=JcU5AuX3SUB3MQYbn2lrt5TBuISdtIpI+cRC2F+PMeuPb19QwFQ0K1JnjMRgH5gVTMN/pmYSp3oDDEBTVe47FyBc7wv1R7gWz5mcZ8tWJ7x875B4ECFH1ww0dArDV6v9ALTlyeW31p0JKJHTUxFhYMJphyu5+aPOlgmQuN6ZiS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787117588; c=relaxed/simple;
-	bh=6cGc4L7NA7gSihp+HkmNS6nrBdm+mhKbXgOLFu/+JBk=;
+	s=arc-20240116; t=1787117592; c=relaxed/simple;
+	bh=GrAVKFk9b8+Omhi+eJPRkC4+9zTLOxA/E0XxtSKuhc4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tVFN56SsEnfg+ahHSm5Y/KA84E55hR1eoucZnhDon8gxZQBbS5S40zWE4pg3s/dmm12RSAd2O1RowRk53afXYEI/b/DptJYSKuUcHrv1dkb4nL0lAV8ngikeg62z2EIA07xNtRiJB0uY963qu4Su3UYGuvqCHpuAW1RKzDquANI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ni6k4Bzo; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=O3J+ppXh; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=ao7JvmttKWkP8Geow2C0OtmmS+1hqDkdpZfTpbP21/152RuQYqTQaq5VzDCV8SoV/x4arFwEbf3n8LvAO1AwkQNhKruriSRcvbroO3cSG6Vnfbnz6GApmqRBstBMSjVcBNvJudENQnIoP60gOm6Ti43YLKYuDQdXs+j8g3qWxcw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=o6C7kcBm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ccWgtCGY; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ni6k4Bzo";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="O3J+ppXh"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67J5IFL94049283
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:06 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="o6C7kcBm";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ccWgtCGY"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67J5HvlZ2554943
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=ljCy5O5Q13z
-	J0R0deOdY6rUGXlXk5toVBCxTqHElnkE=; b=Ni6k4Bzofx4L9jeiHsfuornG53I
-	SNk8CEIgK5Wl4P6F2lwfEzJGs9gCyKU5L0ChuO2FfhAxr4j9mO09Jt3Z50W8U4eb
-	je/Pc/MXdF+Lf1S2zuiQUy4sTNmypAKMcbr/l7W8twE9yOuGTEsMa3suMkZTO0z5
-	/9fQQV+zQ2N9F6PWLllWpVGAcj/Pr1gDY+nn13ssPY9hpjqkxWeiifIzkTyafUp2
-	YJufLKIFZw+gL3i6VCkcIh2wtlcF4N2ug6TWy5valzl4fEjJUUmbRb/OMG7wvygc
-	aqZ/XGioAulVKN+Aibcxp4jflEHiIKxdcIXAU28tDgsj1IEjO0xFs519LMg==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g4yfpsf65-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=CDc+pb3v6Mf
+	SQtwl3l04JeLhGdo7Yuk7Oq1L+GHXJBo=; b=o6C7kcBmV6zl491SjbMeKbn39Xu
+	6VV8I7jqnVCMyM8sBCyKVrHClGqNugO94wHGeLpIi3KRMyDa/ULG+osC2VcXhToa
+	ia5brpNpNqTiwPplVNpSWCZfxrjD/4ZgNWlISUsUz0PfyqmjfmYiYaRTzvlupdyt
+	XPYU7MIevBRmaBksx2xrMCc3PwagdxL+z4w3fR2iwavtldmwwt0xvLrcy+f1qcg/
+	S+KGpnF8kaT4qKfQ493/+8G9lSiegcexgLXtBQEU0gCPRqfQWIXQXRRErDt9XFZc
+	8Cefd4R74h7EcDRFAuXRRAbxbUtlBFy59XZFojf8NR6JmIM6axj6zDPFcHg==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g4yfm1g8t-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:06 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-38dbf293831so1731486a91.3
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 22:33:06 -0700 (PDT)
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 05:33:10 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cb5cc1e13f8so429496a12.3
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Aug 2026 22:33:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1787117585; x=1787722385; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1787117589; x=1787722389; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ljCy5O5Q13zJ0R0deOdY6rUGXlXk5toVBCxTqHElnkE=;
-        b=O3J+ppXhC1QQt4f+dnSwicUmTLHKK+4Qy6i+YSppSR/kLjUHCJOmyqS7qZFK+3HOzb
-         nfR3mgz1yLxzZd5zzcSJKGnoWoVKyhmcWkTbG9LLp/s62O5NIaXVg4PWOokKQBV6Rela
-         KDxvr2cDlBzCHj+oUIQFzckwOy70Bg/JDKl+0vQt3y4O7qZPvPsIZL0uDtYQph0NRpbp
-         yaZWak85pndEGUnGcvW0xf6VpQiPW+b0K7ApXiObkLcRweCglNLAcOpwoOyRB3LqGcVn
-         XFQrgezprkz58Fuav0AHYSqVbCO4BY9agvzoBc6cpmkbheiLKY3fG+5WfT+OoiZERNMH
-         +1/Q==
+        bh=CDc+pb3v6MfSQtwl3l04JeLhGdo7Yuk7Oq1L+GHXJBo=;
+        b=ccWgtCGYi9+tZHS4V95iqPsxxpxDS2ndTKLEG201GaAuKjsF0Ci0T/f4e14Ubw3n7W
+         rcDSIls1JEWMB0l24X53lU6GAkHWuH6kcjCKhct/9zJBDJdJ7OjeUAM+8OxP2IdG247B
+         orhj4VByy2aSrAWlKoGCdvV77rZVVQaozH7cY9imq3FNYU8MtZAtzz9Dmaeh72vuWFHl
+         LhkoJcy4PrRXf1hH5L2Lm5fnBFwFobUVEnGaXNd8tNCj1LJi9DtdGIm/+BwuSYupVtL5
+         xk33oxGmbrOSOVcN8n5BZJEXQ1zbw+GjMrKlSQ/yXAjfwRGQYzE867Un72f/w+lANrRQ
+         lQqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787117585; x=1787722385;
+        d=1e100.net; s=20251104; t=1787117589; x=1787722389;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ljCy5O5Q13zJ0R0deOdY6rUGXlXk5toVBCxTqHElnkE=;
-        b=K482nUhHIBh8h27R24RCqUpf2KXM8re8MkqMJM4jsUYbOGU6xb8uCA9Hi2tG2um5D3
-         SWek222yFZ3XMo9hiTyPzES6Zp9zfRRt7Bk3Vque/GKWJMeMswpVbz4hPHkQoRDHu10w
-         DncMype0LtyHJQ0SlcwA6/B4h1zDxymhLkC/rxpEBYEUrAtn/71sf9ehV6YzRF4Nf+lX
-         5EBXiHflZhEV5ob5yehpKde17qk3pVM01AaRjfdhJI7MLP13YY7ycQb4JtdUlsXlU99d
-         IzMt0wJrNTZXZ8RNBGFFOk8sUDvWjScxWN1R6XrtTjDYs0OHz3S0tOh1nLNld1ho3YqC
-         mY4g==
-X-Gm-Message-State: AOJu0YyxymAg7M3BOyh9IGl+T6Stfu6a+LumzyVjJnh1PCM1sc+b92Ac
-	dXlxabqrxdTd+4MVp4518cHglVZVlSWgNfn7lsTACbPyfSIp1agDcnWgiFrQu/AzV2cpG3KnB0m
-	mX5IOlUd6M6RHOakNBij62lhXdTCgzLVl0uSkNifZpSaiLmBLK22g/fcMkjrvpdzoz0EGutVlvk
-	EFOw==
-X-Gm-Gg: AR+sD12SvWZAG1to088C4i2uGlcd6d9K5ew0zBzen1Lf4pQftqjIKqFxZowoy6mfv7K
-	bTZkMZHTBWyxnYazm1LPrIynF9VkbuTVBchLUfMABCpScQzFl59bwaF5Tuug2ODR9H0QFS4bspM
-	ZmTjch1qLLuMHi8GXYR1mHLkQzOkHU43t6QXwLvfFbTD4CiTXPMsdXIPxp5tRYnA7QPxzj8XPP1
-	1dNEkI0GrWzgf0QQaGdzr3XzoVR8BLZBonPRp3ZL9z0vAZec+9FxEfyIkO5kcmo5Vv9H69vpSvz
-	Shz/HO8Yi0AZg0NA/5KGH0aIU4FQ4Fdo+wEm1noeHlDnjLkKF9t311uz4qSSJ0dyFWA9Ty4uTUA
-	x+q91hYLnvwajlAF+BaJdrcOnIV4OAD2u6IHFKHH+GxXO8OTiUoyq
-X-Received: by 2002:a17:90a:e7cb:b0:38e:6f90:eabd with SMTP id 98e67ed59e1d1-39580aa5106mr3748470a91.5.1787117585418;
-        Tue, 18 Aug 2026 22:33:05 -0700 (PDT)
-X-Received: by 2002:a17:90a:e7cb:b0:38e:6f90:eabd with SMTP id 98e67ed59e1d1-39580aa5106mr3748378a91.5.1787117584916;
-        Tue, 18 Aug 2026 22:33:04 -0700 (PDT)
+        bh=CDc+pb3v6MfSQtwl3l04JeLhGdo7Yuk7Oq1L+GHXJBo=;
+        b=XFOIk8uL/vVV/sEop5oWVeBNeWvTXqO39WeMy3zY4zyZGWBnWRAIDrYMqKLM18FGkX
+         CHhwHUa5h30tZ8HqGFaQ0XcAeMqQjqRqRpYEWiYe/hDcZ56gPxqr1Rn/6C2Tou4P4Z/X
+         j9fiFwaUgU9dNCcNnHrn+dNWaVd0egSddM3tcLXmQZ1omQIE/9KTJVJbwmZK62qo/1Vm
+         IGorQTeg1/oadgdRAbBeuYBTajsvtXv3VV0LJmWg32ZAtPNPnht+45Tvkol7H7XL6I+K
+         KQTOmcfAOcu5UBAlhrgYtc6V8ksGmkxl5A2Ih+bAuDt1NEjQMQxei0B014fkz7cpLJzz
+         1LgQ==
+X-Gm-Message-State: AOJu0YzkChuF/OSETZIWVpRQqnYP+c3UYXE/hndndIL7aF7uMgHQrnr3
+	xO24YKuSyZoBXltnnz4fD2T3vWb0+VCVcPIQ+oD5H85cgsGuND4WF68O2Njne6W74BMZYhOc91m
+	b0WYHC6tKZHUONRv48udzqrQmGp/qNlS1NQF1gaHe2p2KyiDli2aysO+2thqJkKikYf2cMA==
+X-Gm-Gg: AR+sD10RCSuB+iRgOr2O9bw2ErZ2ItFkYSuZG12r7+IzErg/c9HM2f0dNLhTkhvgQja
+	CHsJvxHrXTKw+/H7OCeguYdi5eqSFPqrVXU3nHQ1Kq0imIsrf125nbjLUUalX8IEOuqz8QoCt0w
+	2tDoLn4O+w5W5M0WiowLxz0LAOsTW+FH/MU/ccaFdnXBda8OLXoVGYEmlB9pfTD6r3lfrvWaSgq
+	crpRdJxCYUPtVFWnR0YFvXcBV6XgTrI/e+/UW16pP2EqSCDNpuohhrsAM/M5zyNLJISaoZcXRUe
+	RXra4XHBhgLduuqzF3TaFx/WjDzEeTr/IDKGrI9bQzUtsJoURc2IX1Zbgp+M93lErpeThwIzSyx
+	FDIT0DJnxEyXjlgwio7mp4CljuXvsO/MiYIWjmtIKhNshPT1u64aa
+X-Received: by 2002:a17:90b:37cb:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-3958046ce9cmr4173457a91.0.1787117589247;
+        Tue, 18 Aug 2026 22:33:09 -0700 (PDT)
+X-Received: by 2002:a17:90b:37cb:b0:366:3517:1aa2 with SMTP id 98e67ed59e1d1-3958046ce9cmr4173411a91.0.1787117588786;
+        Tue, 18 Aug 2026 22:33:08 -0700 (PDT)
 Received: from hu-kaur-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3957f4c9918sm404261a91.0.2026.08.18.22.33.03
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3957f4c9918sm404261a91.0.2026.08.18.22.33.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2026 22:33:04 -0700 (PDT)
+        Tue, 18 Aug 2026 22:33:08 -0700 (PDT)
 From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 X-Google-Original-From: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com
 To: ath12k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
         Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>,
         Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
-Subject: [PATCH ath-next v4 2/8] wifi: ath12k: rename wbm_status to htt_status in HTT TX completion
-Date: Wed, 19 Aug 2026 11:02:41 +0530
-Message-Id: <20260819053247.1420393-3-pardeep.kaur@oss.qualcomm.com>
+Subject: [PATCH ath-next v4 3/8] wifi: ath12k: add TCL ring TX buffer allocation failure counter
+Date: Wed, 19 Aug 2026 11:02:42 +0530
+Message-Id: <20260819053247.1420393-4-pardeep.kaur@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260819053247.1420393-1-pardeep.kaur@oss.qualcomm.com>
 References: <20260819053247.1420393-1-pardeep.kaur@oss.qualcomm.com>
@@ -96,43 +95,46 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: CAyzbsizZZ6LtRfxlP4cl1N7Yhy4BiYY
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE5MDAzOSBTYWx0ZWRfX127taui88eS0
- 2ncka9rhCviQZIIPaTHKxLQs0vdjQWbjQu4VlzWYR8yQazgx8vu2MCUQrpBw5IMH9gsefYXj9+h
- MPRmRv7F/vJvF8AwfahVk//wzm7qs15EDuuqHtQd2/tPulAhXq8EqEyPgx4PtRcvzgsEgfv5iUQ
- 1z+VT+er4rRx89MA0RgTcJUMXKehR2Yy6DpevaSobx65ZpZPKqFRjd784J8E5ar8dbhmoC4xC3g
- CncTHx/lz9Axb5aB4WoiDL4lIx6sXdQ7MAKGU11NMALGWk/1kbBSqFCgU4bRWMFDIQ7GrbxT3Ms
- NQ55cNCsjdYiGZ24NKaJiCaTk5EuM6Gq20KYaZbXQ9nyAMi6pW10p893my13EydTfm0NmRwfPr/
- L2EktLzffpt6JlQEs4kz+ewBLmgH7v1lNOYEesM6QUS2XHBQJc/wL+mc703xWRUTrHt3sfZHk/C
- u5SRO9mfqgluTethUtA==
-X-Authority-Analysis: v=2.4 cv=aMrAb79m c=1 sm=1 tr=0 ts=6a854012 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+X-Proofpoint-GUID: JRt_ZsLwYvbfCgW3kkVsC8uiPjibEYRm
+X-Authority-Analysis: v=2.4 cv=bth8wkai c=1 sm=1 tr=0 ts=6a854016 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
  a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=EUspDBNiAAAA:8
- a=RuwI03aZ9ZQFnXGR-2kA:9 a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-ORIG-GUID: CAyzbsizZZ6LtRfxlP4cl1N7Yhy4BiYY
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODE5MDAzOSBTYWx0ZWRfX2C4+atQ53XIC
- omrS3+7AZj5VqxzxtzH8IXsYBpnsRvYogK1Qgm5YTMZ9y09alJwcUQGhFIba5vND0Tuq3Vuc7Dg
- 5yCaBgEvoKtAtnPT8McYP5iAyILMAGM=
+ a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22 a=EUspDBNiAAAA:8
+ a=vo2QL9yUnAtzEB9pKL0A:9 a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-ORIG-GUID: JRt_ZsLwYvbfCgW3kkVsC8uiPjibEYRm
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODE5MDAzOSBTYWx0ZWRfX0fMUR1UV5ZRX
+ khTrfhqvYrXQT7TKPHcEHsLvRFp8Wqlf81ZGLo8wTNgPiTz/sGA8X4M4hsAORKQ4PN/fPRXbRvP
+ FuLGbDDEXi4Dlc0kjwZZKdxPAdEbNQegJ2nV1VtPN2z98y/mGcTMYY5E54st5jY2BzITJ5ES9Ql
+ SRfx4EcBXQRPrUDeWdC+wJp4BGdN+ezcm2Vy3pyzVW80jUVx2vuzrCaeJFuhUN2S1G6V0pab9nZ
+ AggcRCkRof6ZLIKo61EvXgnSEBqWdX/5EMq4MSza85S3SxiNGlgCYtLG+SvMOJc1O3Ja/dBqQaw
+ PksIentTUQxFFDGI+hLcP0vgCkyqZ/i7cknBOVZ+LveRAfMyCyWStNFVdRM5d/NSW9Gu0mP2w+h
+ DClYO5bpJM88GZZYMBGEYWErdrJeec/NEJtUvMb2xmD/2Psubf/K97IAPZfUhcr7i1SPTO7AR21
+ WRiVHfZkmTMrQBXOsnQ==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODE5MDAzOSBTYWx0ZWRfX52x6XT+2E5G5
+ lCG0PgKt/YjGVnD86GRwl7UittJqhS8/a8o8xCsCoDSLeo/8b/O0Zx2L2XrptTK9RMK57hsjRCw
+ NFjGNJdDtQ2HIV3mdcL3NTfJHDvVIAg=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-08-19_01,2026-08-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 adultscore=0 lowpriorityscore=0 bulkscore=0 clxscore=1015
- priorityscore=1501 impostorscore=0 spamscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608190039
+ malwarescore=0 bulkscore=0 suspectscore=0 spamscore=0 phishscore=0
+ impostorscore=0 lowpriorityscore=0 adultscore=0 priorityscore=1501
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608190039
 
 From: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
 
-The variable wbm_status in ath12k_dp_tx_process_htt_tx_complete()
-holds a value from the HTT TX WBM completion status field, not a
-generic WBM status. Rename it to htt_status to accurately reflect
-the field origin and improve code clarity.
+When ath12k_dp_tx_assign_buffer() fails, the TX path returns -ENOMEM
+silently with no visibility into which traffic class is affected.
+Without a counter, TX descriptor pool exhaustion is invisible during
+debugging.
 
-Also fix ts.acked assignment inside the HAL_WBM_REL_HTT_TX_COMP_STATUS_OK
-case to use true directly since the condition is always true within
-that case branch.
+Add txbuf_na[] indexed by pool_id to ath12k_device_dp_tx_err_stats to
+track TX descriptor pool allocation failures per traffic class and
+increment it on assign failure in the TX path. Expose the per-pool
+counts in debugfs under a new 'TX Descriptor Pool Alloc Failures'
+section.
 
 Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6.r1-00402-QCAHKSWPL_SILICONZ-1
 
@@ -140,48 +142,56 @@ Signed-off-by: Hariharan Ramanathan <hariharan.ramanathan@oss.qualcomm.com>
 Co-developed-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 Signed-off-by: Pardeep Kaur <pardeep.kaur@oss.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath12k/debugfs.c     | 5 +++++
+ drivers/net/wireless/ath/ath12k/dp.h          | 2 ++
+ drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c | 4 +++-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath12k/debugfs.c b/drivers/net/wireless/ath/ath12k/debugfs.c
+index d54995b7adb2..ec49692107a8 100644
+--- a/drivers/net/wireless/ath/ath12k/debugfs.c
++++ b/drivers/net/wireless/ath/ath12k/debugfs.c
+@@ -1117,6 +1117,11 @@ static ssize_t ath12k_debugfs_dump_device_dp_stats(struct file *file,
+ 		len += scnprintf(buf + len, size - len, "ring%d: %u\n",
+ 				 i, device_stats->tx_err.desc_na[i]);
+ 
++	len += scnprintf(buf + len, size - len, "\nTX Descriptor Pool Alloc Failures:\n");
++	for (i = 0; i < ATH12K_HW_MAX_QUEUES; i++)
++		len += scnprintf(buf + len, size - len, "pool%d: %u\n",
++				 i, device_stats->tx_err.txbuf_na[i]);
++
+ 	len += scnprintf(buf + len, size - len,
+ 			 "\nMisc Transmit Failures: %d\n",
+ 			 atomic_read(&device_stats->tx_err.misc_fail));
+diff --git a/drivers/net/wireless/ath/ath12k/dp.h b/drivers/net/wireless/ath/ath12k/dp.h
+index bef0f2ba0560..16675210806a 100644
+--- a/drivers/net/wireless/ath/ath12k/dp.h
++++ b/drivers/net/wireless/ath/ath12k/dp.h
+@@ -429,6 +429,8 @@ struct ath12k_dp_arch_ops {
+ struct ath12k_device_dp_tx_err_stats {
+ 	/* TCL Ring Descriptor unavailable */
+ 	u32 desc_na[DP_TCL_NUM_RING_MAX];
++	/* TX descriptor pool exhausted (per pool_id / traffic class) */
++	u32 txbuf_na[ATH12K_HW_MAX_QUEUES];
+ 	/* Other failures during dp_tx due to mem allocation failure
+ 	 * idr unavailable etc.
+ 	 */
 diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
-index 3d635cac8f8c..a8afc1cb0712 100644
+index a8afc1cb0712..11048c568331 100644
 --- a/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
 +++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_tx.c
-@@ -575,19 +575,19 @@ ath12k_dp_tx_process_htt_tx_complete(struct ath12k_dp *dp, void *desc,
- {
- 	struct htt_tx_wbm_completion *status_desc;
- 	struct ath12k_dp_htt_wbm_tx_status ts = {};
--	enum hal_wbm_htt_tx_comp_status wbm_status;
-+	enum hal_wbm_htt_tx_comp_status htt_status;
- 	u16 peer_id;
+@@ -167,8 +167,10 @@ int ath12k_wifi7_dp_tx(struct ath12k_pdev_dp *dp_pdev, struct ath12k_link_vif *a
+ 	tx_ring = &dp->tx_ring[ti.ring_id];
  
- 	status_desc = desc;
+ 	tx_desc = ath12k_dp_tx_assign_buffer(dp, pool_id);
+-	if (!tx_desc)
++	if (!tx_desc) {
++		dp->device_stats.tx_err.txbuf_na[pool_id]++;
+ 		return -ENOMEM;
++	}
  
--	wbm_status = le32_get_bits(status_desc->info0,
-+	htt_status = le32_get_bits(status_desc->info0,
- 				   HTT_TX_WBM_COMP_INFO0_STATUS);
--	if (likely(wbm_status < MAX_FW_TX_STATUS))
--		dp->device_stats.fw_tx_status[wbm_status]++;
-+	if (likely(htt_status < MAX_FW_TX_STATUS))
-+		dp->device_stats.fw_tx_status[htt_status]++;
+ 	dp_link_vif = ath12k_dp_vif_to_dp_link_vif(&ahvif->dp_vif, arvif->link_id);
  
--	switch (wbm_status) {
-+	switch (htt_status) {
- 	case HAL_WBM_REL_HTT_TX_COMP_STATUS_OK:
--		ts.acked = (wbm_status == HAL_WBM_REL_HTT_TX_COMP_STATUS_OK);
-+		ts.acked = true;
- 		ts.ack_rssi = le32_get_bits(status_desc->info2,
- 					    HTT_TX_WBM_COMP_INFO2_ACK_RSSI);
- 
-@@ -609,7 +609,7 @@ ath12k_dp_tx_process_htt_tx_complete(struct ath12k_dp *dp, void *desc,
- 		 */
- 		break;
- 	default:
--		ath12k_warn(dp->ab, "Unknown htt wbm tx status %d\n", wbm_status);
-+		ath12k_warn(dp->ab, "Unknown htt tx status %d\n", htt_status);
- 		break;
- 	}
- }
 -- 
 2.34.1
 
