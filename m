@@ -1,44 +1,44 @@
 Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE5D4028CA
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 09:03:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633AB408039
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 09:03:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787130193; cv=none; b=W3IHA4NNJUL59TLa00lpo+ar0T8yWMea9RMSoNva/GrU+0dBap2lfF+bAcRz6GPrDfmL68iZP+yUaN69LAs2ROHxoQmgV6DN57KHf+r/VpaLuBLzuqz9BFyupYKva++BQbLVKNp9WTwxlOW7F0UoRy5mJylTv6eJEZxkA1KYQ0Y=
+	t=1787130237; cv=none; b=enjRSFtoIsHf98D2FnwWCWoazO/uukjpeBqmSHyEapNKYUGfepnMxCvBS6MzCF3yw0ys67iTOHaSt9f1jvukx00Ao4Tw77opuEieMMD3RfA5d8Q6ZSwOax4Me9Nq6WJ/k3utLaYnYftRrvHLHcIU6lu6WYfVjSNNndNA0pwi4Ak=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787130193; c=relaxed/simple;
+	s=arc-20240116; t=1787130237; c=relaxed/simple;
 	bh=V56WzWd2EHf/12E6ECIaHQNoiEpF3J1G/bBOD5bzeTU=;
-	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type; b=ESl6+MQ1gb42e2v1Cnu89kYV93SyU9ADoyPofLL9kHZDgDKi7K7NwpQP4Up6zTnXSQqKjlA7AHvnLdBvHY/oShBw0HGAwAnWQtGr/mclP+ASBLHh9UcpIj+ibdIZBMUbn7VdXqbLfvBcppnklzMbo9LMjRWW/9b/jWTdpJ/+pps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=mF4gVczD; arc=none smtp.client-ip=185.67.36.66
+	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type; b=LivNN+JIbCVhi1TaXyrn9oF1RggUCfeg5TpnsYPq/QVW9OxBCimGejz3hKU/dmfZlK7PQSK5BWXAfkcKlytFquMQ74Nt4kXppAJFk03LIXuuDo1mKKOnZ/JKk+V7BnITPNsGGc6N7oqkj/r6Q4H9MEcTTOJVUEYXdxne+Jw6hQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=f5cd3Qy4; arc=none smtp.client-ip=185.67.36.66
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="mF4gVczD"
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="f5cd3Qy4"
 Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 8860F240104
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 11:03:08 +0200 (CEST)
+	by mout02.posteo.de (Postfix) with ESMTPS id 5389A240101
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 11:03:53 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
-	s=1984.8680eb; t=1787130188;
+	s=1984.8680eb; t=1787130233;
 	bh=V56WzWd2EHf/12E6ECIaHQNoiEpF3J1G/bBOD5bzeTU=;
 	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:From;
-	b=mF4gVczDmFwyoB6Ak5G9k8Eza7d3mn8ITzzbcuQDDxXegVQI6bxRObsE3TneFQ2ZH
-	 hdURX8Cblw9oelo1b7kZnvZ0kA25tlb8Qg++t/hJsFEcUrgf12x06XcpZ9pgmtXXyb
-	 jt6fxzZIBMvN3WlfRTeYh8PDMZUs3Ja0jKpW3/9BkXAVXUrjy7ygeuHrpKFFK8pyJP
-	 2cThQDOmEFInzlw/XL6dsuKbtNPD1Ta9j/1xgnIc4Us8PnPszVN5NIF/3l50fqv2x3
-	 3fXET8hT803bPpfShLW/5T2mmFJdRamyc7I3JuSg4JCDulHe3y2IJojYdAJjEFaaEk
-	 JlWSqeNMcjcGg==
+	b=f5cd3Qy4JAkD4Rn6z7kfMbIDVtFIT9rkcKeixVt1A7e85NV5/I4FnFmkS4+T9wm5d
+	 CMpqq+6/XRLtu90eAGRy6uZkgDQQ3/UTZku8c8wc3NYEMmCJsARCcsPzDOhkbEv/tD
+	 p/UHdhsqaXOFBdUwFeaC0H+5rRPcbam/0CC71ybTd8kteZcLhut6p2mgJRTugYXsoI
+	 Vtt7qzoH2X56ylM0dGDYfpfgcTndQIRZ81CSnY+mSCwHWAIj4sX2FXOfHT+iFrVyny
+	 AvU+oeMFcVY4/eQ3yesvXHBpZiePpisLeLxvTcoEcZNS5Uu8skn3esUZWkGRegSdyC
+	 zRsKw49zSy2tg==
 Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4hQ0wB6xF9z9rxF;
-	Wed, 19 Aug 2026 11:03:06 +0200 (CEST)
-Date: Wed, 19 Aug 2026 09:03:08 +0000
+	by submission (posteo.de) with ESMTPSA id 4hQ0x40ypQz9rxG;
+	Wed, 19 Aug 2026 11:03:52 +0200 (CEST)
+Date: Wed, 19 Aug 2026 09:03:53 +0000
 From: Jonas Hort <jonas.hort@posteo.de>
 To: Devin Wittmayer <lucid_duck@justthetip.ca>
 Cc: Thorsten Leemhuis <regressions@leemhuis.info>,
 	regressions@lists.linux.dev, linux-wireless@vger.kernel.org,
 	Felix Fietkau <nbd@nbd.name>, lorenzo.bianconi83@gmail.com
-Message-ID: <49643be3-43e5-41f8-9ed7-689269adc7d4@posteo.de>
+Message-ID: <503eb10e-80cf-493e-95fd-04fc0f94ce01@posteo.de>
 Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz
  link active
 Precedence: bulk
@@ -49,7 +49,7 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-X-Correlation-ID: <49643be3-43e5-41f8-9ed7-689269adc7d4@posteo.de>
+X-Correlation-ID: <503eb10e-80cf-493e-95fd-04fc0f94ce01@posteo.de>
 
 Thanks for the detailed breakdown.
 
