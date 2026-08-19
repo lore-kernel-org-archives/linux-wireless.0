@@ -1,32 +1,33 @@
-Received: from mta1.migadu.com (out-1.mta1.migadu.com [95.215.58.1])
+Received: from mta0.migadu.com (out-199.mta0.migadu.com [91.218.175.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 593D13D6CDF
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 07:27:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 370E03D5C06
+	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 07:27:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787124464; cv=none; b=fUethSesTaAXXsAjyuHZZ+XrxHqTD1MFkG/Yk8dRp16jTDU9nCWiieVltvC2XDxNd1bnYGnI8O96DTSF1eTNFC/hQebGAk4Fc7r/R3TMUjDfgbc4t4MZXhSmug53ObSiQ4AVExXm7vXTRveLCmGdk4k30SK4FyRCeT5VgeTX9Cs=
+	t=1787124464; cv=none; b=fyD4Y60Q+ZfjWbAq0rdMIzB22/DzFD93ol/DiJfVC8LeuPpb9HwYevVkek0XsKv+1lPRBum0jcu15JxPbH+yw79toVsbnUutYvrFmHg0Tm/n/UvAJTzGzPHr0N8HjVHdVZN7dNGkn+GHT10W9w/60zEwm2weWXsbwXaRCgHMBaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1787124464; c=relaxed/simple;
-	bh=/OzR0Ga6dcdZUbBnsvQWMH7KtcGotB2sVaIQ6r6NrQ8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QKPfi/VBiJOJJjzC245NBhKK499p7skITyF1TWwy3fApXt65oiz9QXpwfZXMZY07iqCNfg4A/GcZAzwcEPXMhyKSxbvn4gXrJpvLW2r4ueRhhxyX8WNAs6nYHX+QLqlnpH6iU+BQshKABr6tZ/NyM3E9Ekp0qkMDXRYq0wxUX7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=LJPl+Qu2; arc=none smtp.client-ip=95.215.58.1
+	bh=7lm6MMiCURs+xkkByNrjJKiOlU6vTnHof8M+7gjnN4g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lFOCdmSlQXjVsyZ2OJdwWh39gCLrnVW9wZhf2vQEzMyctvWAr2/86NzBVyGO0GSlKolrZxaKf6stLzD4ylRUYt4MDtyBtBmrOMOuwyn7J+kIjVSv0tTF35JulVm2uvJTI0famaSCQKU9DOO8VsAxQ2LZ4N+2WwykMUEvz2XPuuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wGG266o3; arc=none smtp.client-ip=91.218.175.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="LJPl+Qu2"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wGG266o3"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/OzR0Ga6dcdZUbBnsvQWMH7KtcGotB2sVaIQ6r6NrQ8=;
+DKIM-Signature: a=rsa-sha256; bh=7lm6MMiCURs+xkkByNrjJKiOlU6vTnHof8M+7gjnN4g=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787124459; v=1; x=1787729259;
- b=LJPl+Qu29DkdPMNdOqruKIOfVCYKU1xPwJCzIh0HSk830IdKiPaoflgGtIjZV0H7Do9lqnUG
- 90RkBXalvf9bbkJL8v+URXOnHtbnwbjo2qiqqSkNnUm6qg6E6L+3JfZufYYAff5DQfRn6kC7tFr
- xqkhnCQDgfNmBZZmecTX/c6M=
+ t=1787124460; v=1; x=1787729260;
+ b=wGG266o3z5L33m0eEtB/9I5poLAY7lOZCOATK1mEUxjpdHKJROCn6jkJMeDoIyWJgix48iUo
+ rwvFvANl9r/alzeFhdPPMvw+ch5MMWQ0pia7oewfvSTut47zuSCW7mhQuVPyVORm0T5dM0UCR5O
+ +sq/Z0/Ysu+u1jM9IGmQGQPs=
 X-Envelope-To: linux-wireless@vger.kernel.org
 Received: from kali (2a06:63c5:9b00:3900:e1b3:d7a6:6110:4f65)
-	by smtp.migadu.com with ESMTPS id 5894fca14c54cc40;
-	Wed, 19 Aug 2026 07:27:29 +0000
+	by smtp.migadu.com with ESMTPS id 2dee097aeccc0baf;
+	Wed, 19 Aug 2026 07:27:40 +0000
 X-Migadu-Flow: FLOW_OUT
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>,
@@ -37,10 +38,12 @@ Cc: linux-kernel@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Hans de Goede <johannes.goede@oss.qualcomm.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v6 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
-Date: Wed, 19 Aug 2026 07:27:11 +0000
-Message-ID: <20260819072717.22648-1-luka.gejak@linux.dev>
+Subject: [PATCH v6 4/6] wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
+Date: Wed, 19 Aug 2026 07:27:15 +0000
+Message-ID: <20260819072717.22648-5-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260819072717.22648-1-luka.gejak@linux.dev>
+References: <20260819072717.22648-1-luka.gejak@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,454 +54,447 @@ Content-Transfer-Encoding: 8bit
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-This is the first of two series adding support for the Realtek RTL8723B
-802.11n chipset and its RTL8723BS SDIO variant to rtw88. It contains
-only the changes to the shared rtw88 core that the chip driver depends
-on. The chip itself, the build glue and the MAINTAINERS entry are a
-second series.
+The RTL8723BS reports free TX page counts that the generic 8051 path
+reads back from the chip on every transfer, which is both slow over SDIO
+and unreliable on this part: the register frequently reads back zero
+while pages are in fact available. It also gates transmission on a free
+count in the SDIO output queue, REG_SDIO_OQT_FREE_PG, which rtw88 does
+not track at all. The vendor driver calls this the OQT free space and
+never expands the acronym; the register holds the number of further
+transfers the SDIO output queue can accept, and the chip discards
+writes that arrive when it has run out.
 
-v1 had 19 patches, v2 had 11, v3 had 5, v4 had 7, v5 had 6, and
-this has 6.
+Mirror the vendor driver and keep the per-queue and public page counts
+in software, seeded at start and resynchronised from the chip only when
+the cached counts say there is not enough room. Wait for a free output
+queue entry before writing, and account for the pages consumed after a
+successful transfer.
 
-There is no rtw88-style firmware for this chip and no documentation for
-the vendor blob it does use, so while bringing it up I deliberately kept
-the driver as close to the vendor driver's behaviour as I could. With
-that many unknowns at once, matching the vendor exactly was the only way
-to tell which difference actually mattered when something did not work,
-rather than guessing. A number of the v1 patches came from that: they
-reproduced vendor behaviour that was useful to hold fixed during bring
-up, not behaviour the chip turns out to require.
+Transfers also have to be padded up to the SDIO block size for this
+chip rather than using the generic alignment, so size the write
+separately from the frame and trim the skb back afterwards.
 
-Bitterblue Smith's review of v1 prompted me to go back and remove each
-of those on hardware to find which were actually load bearing; eight
-were not. Ping-Ke Shih's review of v2 did the same for a further six,
-and the changelog below gives the measurement for each. In four of
-those cases I had told the list, or claimed in a commit message, that
-the chip needed something it does not, on the strength of bring-up
-notes I had not re-measured. All four corrections are in the changelog.
+Measured on RTL8723BS hardware against an iperf3 server one hop behind
+the AP, with the wlan0 byte counters as ground truth. On the generic
+path the association completes but no data passes at all: TCP and UDP
+both measure 0 bit/s in either direction. With this patch TCP is
+25.3 Mbit/s up and 37.3 Mbit/s down, and UDP is 25.0 Mbit/s up at 0%
+loss.
 
-What is left is there because removing it made something measurably
-worse, not because the vendor driver does it.
+Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+---
 
-What is left falls into these groups:
+Notes:
+    Changes in v6: none.
+    Changes in v5:
+      - the commit message now says what OQT is, as far as the vendor driver
+        reveals it.
+      - rtw_sdio_8723bs_sync_free_txpg() returns whether the chip reported
+        anything and is the only caller of _store_free_txpg(), and
+        _init_free_txpg() returns an error rather than nothing. That found a
+        real bug: the public pool size was acq_pg_num minus the reserved
+        queues with no check, so a chip coming up with no transmit page
+        allocation would underflow a u16 and leave about 65000 free pages.
+        It is now rtw_sdio_8723bs_pubq_num(), shared with the queue page
+        allocation repair path, and it fails cleanly.
+      - the output queue wait is bounded by a jiffies deadline rather than a
+        loop count, so RTW_SDIO_OQT_TIMEOUT_MS is really milliseconds.
+      - rtw_sdio_8723bs_check_rqpn() returns an error instead of silently
+        doing nothing when the pool cannot cover the reserved queues, and
+        rtw_sdio_start() propagates it. Both early returns are explained.
 
-  - patches 1 and 2: the chip type and helper plus a one-line receive
-    fix;
-  - patch 3: a longer TX-report purge timeout, needed on slower SDIO
-    hosts (see below);
-  - SDIO (patches 4, 5, 6): software free-page and output-queue
-    accounting, RX aggregation and interrupt setup, and TX back-pressure
-    with a retry on page starvation.
+ drivers/net/wireless/realtek/rtw88/sdio.c | 293 +++++++++++++++++++++-
+ drivers/net/wireless/realtek/rtw88/sdio.h |  10 +
+ 2 files changed, 291 insertions(+), 12 deletions(-)
 
-This series no longer touches coex.c, mac80211.c or fw.c at all.
-
-Scope
-=====
-
-Everything is gated on rtw_is_8723bs(), which is false for every chip
-currently supported, so behaviour for existing devices is unchanged.
-There is one exception, deliberate: patch 2 extends an existing RTL8703B
-zero-length-packet check and is gated on the SDIO interface rather than
-the chip id, since that is the only place the behaviour has been
-observed. Ping-Ke has suggested that check may not need a chip test at
-all; I would rather measure that on RTL8703B hardware than assume it,
-and I do not have that part, so it is unchanged here.
-
-Patch 5 changes how the SDIO interrupt status is acknowledged. In v1
-that applied to all SDIO parts; it is scoped to this chip only, and the
-others keep writing the status word back unchanged.
-
-Chip specific code in the common path
-=====================================
-
-Ping-Ke asked whether this needs a set of ops rather than a chip test
-sprinkled through the core. Working through that question is what
-removed most of this series: once the association and coexistence
-patches turned out not to be needed, the chip tests they carried went
-with them.
-
-What remains is one test in rx.c, one in tx.c and eleven in sdio.c.
-There are none in fw.c, mac80211.c or coex.c. The SDIO ones are in the
-bus driver rather than the chip driver, and rtw_sdio has no per-chip ops
-table today; Ping-Ke confirmed an inline chip id check there is fine.
-
-Fixed in the second series
-==========================
-
-Two of Bitterblue's review points are addressed in the chip driver
-rather than here, because that is the right place for both:
-
-  - the hardware capability is filled in from a chip-specific
-    read_efuse, instead of special casing rtw_dump_hw_feature() in the
-    core;
-  - the receive FCS handling is a chip configuration fix. v1 stopped the
-    core advertising RX_INCLUDES_FCS for this chip. The real cause was
-    that the chip cleared BIT_APP_FCS by assigning WLAN_RCR_CFG over
-    hal.rcr wholesale, where the 8723x siblings only write the register
-    and leave hal.rcr alone. Setting that bit in the chip's WLAN_RCR_CFG
-    makes the descriptor carry the FCS like every other rtw88 chip, so
-    the core needs no special case and both hunks are gone from this
-    series.
-
-Neither change is visible here. I planned to send that series once this
-one is applied to rtw-next, but I can send it now alongside if you would
-rather review them together, or fold the two into one series if that is
-easier.
-
-Testing
-=======
-
-Tested on RTL8723BS hardware together with the second series: repeated
-scan, authentication, association, WPA2-PSK/CCMP handshake, DHCP,
-bidirectional traffic, reconnects and module reloads.
-
-The full driver, this preparation series plus the chip support that
-follows in a second series, is available for testing at:
-
-  https://github.com/MocLG/rtw/tree/8723bs-v6
-
-Throughput is measured against an iperf3 server one hop behind the AP,
-with the wlan0 byte counters as ground truth because the test machine's
-wired interface shares the same subnet. On one AP at strong signal,
-2.4 GHz HT40, it runs at roughly 40 Mbit/s down and 20 Mbit/s up, with
-UDP showing no loss in either direction. The exact figures move by
-several Mbit/s from one day to the next with the radio environment, so
-they are a range rather than a benchmark.
-
-Uplink on this band drifts by several Mbit/s from day to day, enough to
-swamp the differences I was trying to measure, so where the changelog
-below compares two builds the comparison is a paired test: the two
-builds alternate within one session, rebuilt and reinstalled each time,
-rather than being measured on different days.
-
-Suspend and resume are not covered: this machine only offers s2idle and
-does not reliably come back from it.
-
-A five minute soak: 1495/1495 pings at 0% loss, 15/15 reconnects, 5/5
-link up/down cycles, 3/3 module reloads, 5/5 scans under traffic, 24
-group rekeys, no deauthentication, no SDIO errors, no warnings in the
-log. Scanning saw the target AP in 18 of 18 attempts across 6 cold
-module reloads, with 6/6 associations.
-
-The soak and scan figures were taken on a build that also carried the
-reserved page patch dropped in v3; the throughput figures above are from
-the tree posted here.
-
-Every patch builds with W=1 with no warnings on its own, sparse is clean
-at the tip, and smatch reports nothing in any file this series touches.
-checkpatch --strict is clean across this series. The other rtw88 bus and
-chip modules continue to build.
-
-Known limitation
-================
-
-After a long idle period the firmware intermittently fails to leave LPS,
-which rtw88 reports as "firmware failed to leave lps state". That check
-is the REG_TCR poll in __rtw_fw_leave_lps_check_reg(), and the failures
-arrive in long runs rather than singly, so it does not look like a
-timeout that is merely too short. On one occurrence here the warning was
-followed fourteen seconds later by a full reauthentication, so it is not
-only log noise.
-
-Power save is now enabled on my test machine and it reproduces there:
-five occurrences over three days of mostly idle uptime. It was first
-reported on ARM SDIO boards, but it is not specific to slow hosts.
-
-It is not caused by anything in this series, and it needs the chip
-driver from the second series to be reachable at all, but it is open and
-I am chasing it.
-
-Changes in v6:
-  - Each patch now carries its own changelog after the --- delimiter, as
-    you asked, so the notes sit next to the code they describe.
-  - sdio: dropped rtw_sdio_reschedule_tx_work(). You did not ask for it
-    in v4 and it was a thin wrapper that hid queue_delayed_work() for no
-    gain. I had read your comment as asking for one, which was my
-    mistake.
-  - sdio: the reschedule conditions moved into
-    rtw_sdio_8723bs_reschedule_tx(). rtw_sdio_tx_handler() no longer
-    explains any chip specific condition in the common flow, which is
-    what you were actually asking for. No functional change.
-  - sdio: dropped an unconditional break on a failed transfer that v4
-    and v5 carried. It changed the other SDIO parts without meaning to:
-    upstream requeues the frame and the loop retries, and breaking gave
-    up after the first failure. The two errors this chip needs to retry
-    are handled in the helper above, so the rest keep the existing
-    behaviour and the other parts really are untouched again, as the
-    Scope section claims.
-
-Changes in v5:
-  - Dropped "fw: handle the RTL8723BS management TX reports", which v4
-    had restored. It cannot do what its commit message claimed. This
-    firmware does not advertise FW_FEATURE_LPS_C2H, so
-    rtw_fw_leave_lps_check() takes the REG_TCR polling path and nothing
-    ever waits on the C2H completion the patch rerouted; and with the
-    driver instrumented, 93 TX reports over three scans all arrive as
-    C2H id 0x03, with no event ever arriving as a top level 0x12 or
-    0x32. Bitterblue Smith made exactly this point on v1 and was right.
-    A tester on a Rockchip RK3288 board confirmed the timeout patch in
-    this series is enough on its own. This is the fourth correction of
-    something I had claimed on the list; restoring it in v4 was based on
-    a tester reporting that a branch containing it cleared the warnings,
-    which showed the branch helped, not that this patch in it did.
-    With it gone the series no longer touches fw.c.
-  - Power save is now enabled on the test machine, so LPS is exercised
-    there. The v2 entry below dropped a patch that gated LPS entry on
-    smoothed throughput, partly on the grounds that LPS never engaged on
-    this setup at all, which was never a sound reason to drop it. It is
-    measured now, paired against this series in one session with power
-    save on: 60 idle pings average 5.1 ms without the gating and 6.0 ms
-    with it, and TCP is 30.0 down and 19.1 up against 32.3 and 18.9. It
-    makes no difference, because the gate tests the smoothed throughput
-    and interactive traffic rounds to zero there, so it never fires in
-    the case it was meant to help. It stays dropped, now on a
-    measurement rather than for want of one.
-  - sdio: fixed a transmit stall in the back-pressure patch, found while
-    auditing a tester report of transmit stopping under bidirectional
-    load with receive unaffected and nothing in the log. The TX work
-    item was only re-armed when a transfer failed with a page shortage.
-    Once the mac80211 queue can be stopped, that is not enough: a
-    stopped queue is handed no further frames, so on any other failure
-    nothing would kick the worker again and the affected access category
-    would stay stopped for good, with the link still up. It now also
-    re-arms on a failed skb expansion, which together with the page
-    shortage covers both of the failures that produce no log message.
-    The remaining errors are each logged where they happen, so unlike
-    those two they are visible rather than an unexplained hang, and they
-    keep the existing behaviour rather than being retried forever.
-  - rx: the zero length test now evaluates pkt_stat->pkt_len first, so
-    the unlikely case short circuits before the chip test.
-  - sdio: the commit message now says what OQT is, as far as the vendor
-    driver reveals it: the vendor calls the register the OQT free space
-    and never expands the acronym, and it holds the number of further
-    transfers the SDIO output queue will accept.
-  - sdio: rtw_sdio_8723bs_sync_free_txpg() now returns whether the chip
-    reported anything and is the only caller of
-    rtw_sdio_8723bs_store_free_txpg(), and
-    rtw_sdio_8723bs_init_free_txpg() returns an error rather than
-    nothing. Working through that suggestion found a real bug: the
-    public pool size was computed as acq_pg_num minus the reserved
-    queues with no check, so a chip that came up with no transmit page
-    allocation at all would underflow a u16 and leave the driver
-    believing it had about 65000 free pages. That calculation is now
-    rtw_sdio_8723bs_pubq_num(), shared with the queue page allocation
-    repair path, and it fails cleanly instead.
-  - sdio: the output queue wait is now bounded by a jiffies deadline
-    rather than a loop count, so RTW_SDIO_OQT_TIMEOUT_MS really is a
-    timeout in milliseconds. It was 1000 iterations of a 1 to 2 ms
-    sleep before, so the name was only approximately true.
-  - sdio: rtw_sdio_8723bs_check_rqpn() returns an error instead of
-    silently doing nothing when the transmit page pool cannot cover the
-    reserved queues, and rtw_sdio_start() propagates it. Both early
-    returns are now explained: a non-zero free page count means the
-    allocation latched during power on and must be left alone.
-  - sdio: fixed the interrupt acknowledgment. It masked the status word
-    with both irq_mask and RTW_SDIO_HISR_CLEAR_MASK, but for this chip
-    irq_mask is REG_SDIO_HIMR_RX_REQUEST alone and that bit is not in
-    the clear mask, so the two had no bits in common and the driver
-    acknowledged nothing at all. It now masks with the defined bits
-    only, which is what the comment described. Thanks to Ping-Ke for
-    catching this. Retested on hardware.
-  - sdio: the back-pressure and wake conditions moved into
-    rtw_sdio_8723bs_stop_tx_queue() and _wake_tx_queue(), and the two
-    requeue sites into rtw_sdio_reschedule_tx_work(), instead of long
-    conditions inline.
-  - sdio: rtw_sdio_process_tx_queue() now returns 0 on success and 1 for
-    the empty queue case, rather than the other way round.
-  - sdio: queue_stopped[] renamed to tx_queue_stopped[].
-  - RTW_SDIO_TX_RETRY_DELAY is left as msecs_to_jiffies(1). Ping-Ke
-    asked whether it becomes 0 when HZ is below 1000; it does not, since
-    msecs_to_jiffies() rounds up for HZ < 1000 and returns one jiffy.
-
-Changes in v4:
-  - Restored "tx: extend the TX report purge timeout to RTL8723BS",
-    dropped in v2 because I could not reproduce the failure on my test
-    machine, a fast x86 host, so the path never ran for me. Testers on
-    slower ARM SDIO hosts, Peter Robinson on the RFC and Zhang Ning on a
-    Rockchip RK3288 board, both hit "failed to get tx report from
-    firmware". It extends the exact fix from commit c80788f7c5ae ("wifi:
-    rtw88: increase TX report timeout to fix race condition"), already
-    applied to the RTL8723DU, to the RTL8723BS, since they run the same
-    firmware and hit the same off-channel-scan race.
-
-Changes in v3:
-  - Dropped "fw: fix the reserved page upload on RTL8723BS". Its commit
-    message said the BIT_BCN_VALID handshake fails on 8723BS SDIO
-    without it. That does not reproduce. The failure path is an explicit
-    rtw_err("error beacon valid") returning -EBUSY, reached from
-    BSS_CHANGED_ASSOC on every association; over three associations on
-    each of five builds with the patch reverted it never fired,
-    associations were 3/3, and there was no packet loss after 30 s idle
-    in power save, which is the path the reserved page's null data and
-    PS-poll frames serve. As a control, rtw_info messages appear in the
-    same captures and rtw_err outranks them, so a failure would have
-    been logged. AP mode and WoWLAN also download the reserved page and
-    are not tested here, so if it turns out to matter there it can come
-    back with evidence behind it.
-  - Kept "sdio: add TX back-pressure and retry on page starvation", now
-    with a measurement rather than an assertion, since you asked whether
-    the remaining chip tests are necessary. Counting
-    rtw_sdio_tx_handler invocations under an identical 60 Mbit/s UDP
-    flood, because the retry re-arms that same work item: 1798 and 3095
-    on two baseline runs against 69 with the patch reverted. Achievable
-    transmit rate falls by about a third without it, 25.5 Mbit/s against
-    38.3 and 40.2. tx_dropped and tx_errors stay at zero throughout, so
-    the failure is not dropping frames, it is failing to push them.
-  - Kept "sdio: set up RX aggregation and interrupts". The aggregation
-    half makes no measurable difference to throughput here, and on that
-    evidence alone I would have dropped it. The rest of the patch does
-    not show up in a throughput test at all: the chip keeps raising the
-    interrupt after resume if undefined status bits are written back
-    when acknowledging.
-
-    I have not been able to validate the suspend and resume path: the
-    test machine only offers s2idle and does not reliably resume from
-    it, so I cannot exercise the interrupt acknowledgment change. It is
-    kept because the failure it addresses was observed during bring up,
-    not because it has been re-measured. If someone with hardware that
-    suspends cleanly finds it unnecessary, it should go.
-  - Dropped "run the RTL8723BS association register sequence", 440
-    lines, which was the vendor join sequence, six sites in
-    rtw_ops_bss_info_changed() and both sites in rtw_ops_set_key().
-
-    Ping-Ke asked for this to run from rtw_chip_prepare_tx() rather than
-    a chip test in mgd_prepare_tx(), and I had done that with a new
-    chip_ops::prepare_tx. Since the whole patch is gone, so is the
-    callback; the core is left as it was rather than gaining an op with
-    no user.
-
-    I had told the list that association fails without these registers.
-    That was wrong, and it was bring-up-era data I repeated without
-    re-measuring. With the whole patch reverted: 18/18 scans saw the AP,
-    6/6 associations, and the five minute soak above, whose 15 reconnects
-    and 24 rekeys exercise the exact path the sequence ran on, since it
-    ran from mgd_prepare_tx() on every authentication. Uplink measured
-    paired against the full series, 19.0 against 19.2 Mbit/s over ten
-    runs each.
-
-    The default key search handling in that patch was also simply wrong:
-    rtw_sec_enable_sec_engine() sets sec->default_key_search itself and
-    programs all four USE_DK bits on that basis, so the enable path was
-    a no-op and the disable path was clearing bits the core had
-    deliberately set.
-  - Dropped "coex: add the RTL8723BS scan antenna workaround" and "coex:
-    reassert the antenna path when associating", and with them "fw: add
-    the GNT_BT firmware command", whose only caller they were.
-
-    The commit message on the first claimed the site survey does not
-    hear the AP reliably without it. That is also wrong: 18/18 scans
-    without it. Both were gated on the chip and on coex bt_disabled, so
-    that gate is their entire scope rather than a subset of it, and the
-    measurements above cover it.
-  - Dropped "record beacons from the target BSSID before
-    authenticating". Ping-Ke doubted the beacon wait affected the
-    connection and he was right: with the wait removed, association
-    succeeded 12/12 from a cold module reload and 12/12 from a warm
-    reconnect, against 10/10 and 10/10 with it, at the same latency.
-    The pre-auth deauth already sleeps 100 ms with the recording window
-    open, so on a 100 ms beacon interval the wait was almost always
-    already satisfied when it was reached. struct rtw_auth_sync and the
-    RX-path hook go with it.
-  - Dropped the BT_MP version queries and the BT_INFO query at scan
-    start, and the BT_INFO query plus two of three repeated PS-TDMA
-    H2Cs in the pre-auth replay. Measured over cold module reloads with
-    three scans each, 8 reloads with the queries and 10 without: 29/30
-    scans saw the target AP and 10/10 associations succeeded without
-    them, against 24/24 and 8/8 with them.
-  - The cached SDIO page counters are clamped at zero. A lost update
-    between the free page check and the accounting could previously
-    drive the public counter negative, and the sum was assigned to an
-    unsigned, which made the check pass unconditionally from then on and
-    suppressed the resync that was supposed to recover it.
-  - REG_SDIO_FREE_TXPG now has field masks and is decoded with
-    u32_get_bits(); the RX DMA burst count uses BIT_DMA_BURST_CNT;
-    open-coded BIT(0)|BIT(1) on REG_SYS_FUNC_EN uses the existing names.
-  - The RTL8723BS-specific SDIO helpers are named _8723bs_ and the chip
-    test moved to their callers.
-  - rtw_sdio_process_tx_queue() returns a value instead of taking a
-    "processed" out-parameter, which makes the retry and back-pressure
-    logic in the TX handler readable.
-  - mod_delayed_work() in rtw_sdio_tx_kick_off() carries a comment
-    saying why it is not queue_delayed_work(): a page-starvation retry
-    may already be armed with a delay, and the newly queued frame should
-    not wait for it.
-  - An argument that had a single value at every call site is gone,
-    along with its dead branch.
-  - Block comments use the general kernel style, per commit 82b8000c28b5
-    ("net: drop special comment style").
-
-Changes in v2:
-  - Dropped "tx: extend the TX report purge timeout". Instrumenting the
-    report path shows payload[6] & 0xfc equals the enqueued sequence
-    number, 32 out of 32 times, with rtw88's existing decode, and no
-    report is missed. The longer timeout was covering for the next
-    patch, not for the hardware.
-  - Dropped "fw: handle the RTL8723BS management TX reports". 0x12 and
-    0x32 are the first payload byte of C2H_CCX_TX_RPT, not C2H IDs;
-    every C2H event this chip sends carries a known id, so the existing
-    handler already covers them.
-  - Dropped "fw: send rate adaptation and RSSI info in the vendor
-    layout". The vendor byte layout is equivalent to what the existing
-    macros produce; uplink and the negotiated rate are unchanged without
-    it (16.4/16.5/17.0 against 15.4/16.7/16.6 Mbit/s, MCS7 both ways).
-  - Dropped "fw: send the media status report in the vendor layout". The
-    role field the vendor sets makes no difference here, as with the
-    other chips.
-  - Dropped "sdio: handle the RTL8723BS management TX path". Sequence
-    numbers do work for management frames on this chip, so reporting
-    completion at DMA completion is unnecessary.
-  - Dropped "calibrate and tune the PHY" entirely. All three parts were
-    vendor-matching scaffolding and none survived measurement: the
-    scan-time initial gain override is worse than
-    rtw_phy_dig_set_max_coverage() (five scans found 41 BSSes without it
-    against 34 with it); the IQ calibration works from the normal
-    phy_calibration path; and the hardcoded per-rate TX AGC table
-    overrode the efuse calibration by up to 22 index units and bypassed
-    the regulatory limit the by-rate path applies, which is not
-    something a driver should do.
-  - Dropped "match the RTL8723BS firmware connect and power save
-    behaviour". Deferring the connect report changes nothing, and the
-    LPS gating cannot be justified from measurement: with RTW_DBG_PS
-    enabled, LPS never engages on this setup at all, so the gating never
-    takes effect here.
-  - Dropped "advertise the correct receive capabilities". Both halves
-    move into the chip driver, as described above.
-  - "fw: add the vendor firmware commands" now adds only GNT_BT. rtw88
-    already implements MACID_CFG and the WL channel info report, and the
-    coexistence antenna select reserve became unused once the PHY patch
-    went.
-  - The zero-length packet check is gated on SDIO rather than the chip
-    id.
-  - The SDIO interrupt acknowledgment change is scoped to this chip.
-  - The association sequence no longer re-applies the BSS capability at
-    association time; BSS_CHANGED_ERP_PREAMBLE and BSS_CHANGED_ERP_SLOT
-    are handled later in the same callback.
-  - Register accesses that had raw addresses now use the existing
-    REG_GNT_BT and REG_BT_COEX_ENH_INTR_CTRL, plus a named define for
-    the BB antenna select register.
-
-The implementation is based on the initial RTL8723B work by Michael
-Straube <straube.linux@gmail.com>:
-
-  https://github.com/mistraube/rtw88/tree/rtl8723bs
-
-Based on the rtw-next branch from pkshih/rtw.
-
-Luka Gejak (6):
-  wifi: rtw88: add the RTL8723B chip type and SDIO helper
-  wifi: rtw88: rx: mark zero length packets on RTL8723BS
-  wifi: rtw88: tx: extend the TX report purge timeout to RTL8723BS
-  wifi: rtw88: sdio: track free TX pages and OQT credits for RTL8723BS
-  wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
-  wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
-
- drivers/net/wireless/realtek/rtw88/main.h |   7 +
- drivers/net/wireless/realtek/rtw88/rx.c   |   8 +-
- drivers/net/wireless/realtek/rtw88/sdio.c | 458 ++++++++++++++++++++--
- drivers/net/wireless/realtek/rtw88/sdio.h |  22 +-
- drivers/net/wireless/realtek/rtw88/tx.c   |   5 +-
- 5 files changed, 471 insertions(+), 29 deletions(-)
-
---
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+index 5b40d74b16ee..a8209b9acefd 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.c
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -20,6 +20,7 @@
+ #include "tx.h"
+ 
+ #define RTW_SDIO_INDIRECT_RW_RETRIES			50
++#define RTW_SDIO_OQT_TIMEOUT_MS				1000
+ 
+ static bool rtw_sdio_is_bus_addr(u32 addr)
+ {
+@@ -548,12 +549,157 @@ static int rtw_sdio_read_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
+ 	return ret;
+ }
+ 
++/*
++ * The cached free page counters are a fast path hint only. They are written
++ * from the single threaded TX work and, for H2C and reserved page writes,
++ * from process context, so they are atomic_t; whenever they claim there is
++ * not enough room they are resynchronised from the chip before the caller
++ * gives up, which also absorbs a lost update.
++ */
++static void rtw_sdio_8723bs_store_free_txpg(struct rtw_dev *rtwdev,
++					    u32 free_txpg)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	atomic_set(&rtwsdio->free_pg_high,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_HIGH));
++	atomic_set(&rtwsdio->free_pg_normal,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_NORMAL));
++	atomic_set(&rtwsdio->free_pg_low,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_LOW));
++	atomic_set(&rtwsdio->free_pg_pub,
++		   u32_get_bits(free_txpg, BIT_FREE_TXPG_PUB));
++}
++
++/*
++ * Refresh the cached counters from the chip. Returns false when the chip
++ * reports no free pages at all, which means the counts cannot be trusted
++ * and the caller has to decide what to do instead.
++ */
++static bool rtw_sdio_8723bs_sync_free_txpg(struct rtw_dev *rtwdev)
++{
++	u32 free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++
++	if (!free_txpg)
++		return false;
++
++	rtw_sdio_8723bs_store_free_txpg(rtwdev, free_txpg);
++
++	return true;
++}
++
++/*
++ * Size of the public page pool: whatever the transmit page allocation has
++ * left once the per queue pools are taken out. Fails if the allocation
++ * cannot cover the reserved queues, since the remainder would underflow and
++ * there would be no sensible pool to hand out.
++ */
++static int rtw_sdio_8723bs_pubq_num(struct rtw_dev *rtwdev, u16 *pubq_num)
++{
++	const struct rtw_page_table *pg_tbl = &rtwdev->chip->page_table[0];
++	u16 acq_pg_num = rtwdev->fifo.acq_pg_num;
++	u16 reserved_num;
++
++	reserved_num = pg_tbl->hq_num + pg_tbl->lq_num + pg_tbl->nq_num +
++		       pg_tbl->exq_num + pg_tbl->gapq_num;
++	if (acq_pg_num <= reserved_num) {
++		rtw_err(rtwdev,
++			"no transmit pages left for the public queue: %u of %u reserved\n",
++			reserved_num, acq_pg_num);
++		return -EINVAL;
++	}
++
++	*pubq_num = acq_pg_num - reserved_num;
++
++	return 0;
++}
++
++static int rtw_sdio_8723bs_init_free_txpg(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	const struct rtw_page_table *pg_tbl;
++	u16 pubq_num;
++	int ret;
++
++	/* Seed from the page table when the chip has nothing to report yet. */
++	if (!rtw_sdio_8723bs_sync_free_txpg(rtwdev)) {
++		ret = rtw_sdio_8723bs_pubq_num(rtwdev, &pubq_num);
++		if (ret)
++			return ret;
++
++		pg_tbl = &rtwdev->chip->page_table[0];
++		atomic_set(&rtwsdio->free_pg_high, pg_tbl->hq_num);
++		atomic_set(&rtwsdio->free_pg_normal, pg_tbl->nq_num);
++		atomic_set(&rtwsdio->free_pg_low, pg_tbl->lq_num);
++		atomic_set(&rtwsdio->free_pg_pub, pubq_num);
++	}
++
++	atomic_set(&rtwsdio->tx_oqt_free,
++		   rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG));
++
++	return 0;
++}
++
++/*
++ * Sum of the queue's dedicated counter and the public pool, clamped at zero:
++ * a lost update between the check below and rtw_sdio_8723bs_consume_txpg()
++ * can briefly drive a counter negative, and letting that wrap would hide the
++ * shortage instead of triggering a resync from the chip.
++ */
++static unsigned int rtw_sdio_8723bs_pages_free(struct rtw_dev *rtwdev,
++					       atomic_t *dedicated)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	int free;
++
++	free = atomic_read(dedicated) + atomic_read(&rtwsdio->free_pg_pub);
++
++	return free > 0 ? free : 0;
++}
++
++static atomic_t *rtw_sdio_8723bs_free_txpg(struct rtw_dev *rtwdev, u8 queue)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	switch (queue) {
++	case RTW_TX_QUEUE_VI:
++		return &rtwsdio->free_pg_normal;
++	case RTW_TX_QUEUE_BE:
++	case RTW_TX_QUEUE_BK:
++		return &rtwsdio->free_pg_low;
++	case RTW_TX_QUEUE_BCN:
++	case RTW_TX_QUEUE_H2C:
++	case RTW_TX_QUEUE_HI0:
++	case RTW_TX_QUEUE_MGMT:
++	case RTW_TX_QUEUE_VO:
++		return &rtwsdio->free_pg_high;
++	default:
++		return NULL;
++	}
++}
++
+ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 				    size_t count)
+ {
+ 	unsigned int pages_free, pages_needed;
+ 
+-	if (rtw_chip_wcpu_8051(rtwdev)) {
++	if (rtw_is_8723bs(rtwdev)) {
++		atomic_t *dedicated;
++
++		dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++		if (!dedicated) {
++			rtw_warn(rtwdev, "Unknown mapping for queue %u\n", queue);
++			return -EINVAL;
++		}
++
++		pages_free = rtw_sdio_8723bs_pages_free(rtwdev, dedicated);
++		pages_needed = DIV_ROUND_UP(count, rtwdev->chip->page_size);
++		if (pages_needed <= pages_free)
++			return 0;
++
++		rtw_sdio_8723bs_sync_free_txpg(rtwdev);
++		pages_free = rtw_sdio_8723bs_pages_free(rtwdev, dedicated);
++	} else if (rtw_chip_wcpu_8051(rtwdev)) {
+ 		u32 free_txpg;
+ 
+ 		free_txpg = rtw_sdio_read32(rtwdev, REG_SDIO_FREE_TXPG);
+@@ -632,44 +778,124 @@ static int rtw_sdio_check_free_txpg(struct rtw_dev *rtwdev, u8 queue,
+ 	return 0;
+ }
+ 
++static int rtw_sdio_8723bs_wait_tx_oqt(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	unsigned long deadline;
++	u8 free;
++
++	if (atomic_add_unless(&rtwsdio->tx_oqt_free, -1, 0))
++		return 0;
++
++	deadline = jiffies + msecs_to_jiffies(RTW_SDIO_OQT_TIMEOUT_MS);
++	do {
++		free = rtw_read8(rtwdev, REG_SDIO_OQT_FREE_PG);
++		if (free) {
++			atomic_set(&rtwsdio->tx_oqt_free, free - 1);
++			return 0;
++		}
++		usleep_range(1000, 2000);
++	} while (time_before(jiffies, deadline));
++
++	return -EBUSY;
++}
++
++static void rtw_sdio_8723bs_consume_txpg(struct rtw_dev *rtwdev, u8 queue,
++					 unsigned int pages)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	atomic_t *dedicated;
++	unsigned int taken;
++	int free;
++
++	dedicated = rtw_sdio_8723bs_free_txpg(rtwdev, queue);
++	if (!dedicated)
++		return;
++
++	free = atomic_read(dedicated);
++	taken = min_t(unsigned int, pages, free > 0 ? free : 0);
++	atomic_sub(taken, dedicated);
++
++	pages -= taken;
++	if (pages && atomic_sub_return(pages, &rtwsdio->free_pg_pub) < 0)
++		atomic_set(&rtwsdio->free_pg_pub, 0);
++}
++
+ static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *skb,
+ 			       enum rtw_tx_queue_type queue)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool rtl8723bs = rtw_is_8723bs(rtwdev);
++	unsigned int orig_len = skb->len;
++	unsigned int pages;
++	size_t write_size;
+ 	bool bus_claim;
+ 	size_t txsize;
+ 	u32 txaddr;
+ 	int ret;
+ 
+-	txaddr = rtw_sdio_get_tx_addr(rtwdev, skb->len, queue);
+-	if (!txaddr)
+-		return -EINVAL;
++	if (rtl8723bs) {
++		txsize = round_up(orig_len, 4);
++		write_size = txsize > RTW_SDIO_BLOCK_SIZE ?
++			     round_up(txsize, RTW_SDIO_BLOCK_SIZE) : txsize;
++	} else {
++		txsize = sdio_align_size(rtwsdio->sdio_func, orig_len);
++		write_size = txsize;
++	}
+ 
+-	txsize = sdio_align_size(rtwsdio->sdio_func, skb->len);
++	if (write_size > orig_len) {
++		unsigned int padding = write_size - orig_len;
++
++		if (skb_tailroom(skb) < padding) {
++			ret = pskb_expand_head(skb, 0,
++					       padding - skb_tailroom(skb),
++					       GFP_KERNEL);
++			if (ret)
++				return ret;
++		}
++		skb_put_zero(skb, padding);
++	}
++
++	txaddr = rtw_sdio_get_tx_addr(rtwdev, txsize, queue);
++	if (!txaddr) {
++		ret = -EINVAL;
++		goto out_trim;
++	}
+ 
+ 	ret = rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
+ 	if (ret)
+-		return ret;
++		goto out_trim;
++
++	if (rtl8723bs) {
++		ret = rtw_sdio_8723bs_wait_tx_oqt(rtwdev);
++		if (ret)
++			goto out_trim;
++	}
+ 
+ 	if (!IS_ALIGNED((unsigned long)skb->data, RTW_SDIO_DATA_PTR_ALIGN))
+ 		rtw_warn(rtwdev, "Got unaligned SKB in %s() for queue %u\n",
+ 			 __func__, queue);
+ 
+ 	bus_claim = rtw_sdio_bus_claim_needed(rtwsdio);
+-
+ 	if (bus_claim)
+ 		sdio_claim_host(rtwsdio->sdio_func);
+-
+-	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data, txsize);
+-
++	ret = sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data,
++			       write_size);
+ 	if (bus_claim)
+ 		sdio_release_host(rtwsdio->sdio_func);
+ 
+-	if (ret)
++	if (ret) {
+ 		rtw_warn(rtwdev,
+ 			 "Failed to write %zu byte(s) to SDIO port 0x%08x",
+-			 txsize, txaddr);
++			 write_size, txaddr);
++	} else if (rtl8723bs) {
++		pages = DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
++		rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
++	}
+ 
++out_trim:
++	if (write_size > orig_len)
++		skb_trim(skb, orig_len);
+ 	return ret;
+ }
+ 
+@@ -749,8 +975,51 @@ static int rtw_sdio_setup(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
++/*
++ * Reprogram the queue page allocation if the chip came up with none. This is
++ * a repair path, not part of the normal start sequence: a non-zero free page
++ * count means the allocation latched during power on and must be left alone,
++ * and without a transmit page pool there is nothing to divide up either.
++ */
++static int rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
++{
++	const struct rtw_chip_info *chip = rtwdev->chip;
++	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
++	const struct rtw_page_table *pg_tbl;
++	u32 free_txpg;
++	u16 pubq_num;
++	int ret;
++
++	free_txpg = rtw_read32(rtwdev, REG_SDIO_FREE_TXPG);
++	if (free_txpg || !fifo->acq_pg_num)
++		return 0;
++
++	ret = rtw_sdio_8723bs_pubq_num(rtwdev, &pubq_num);
++	if (ret)
++		return ret;
++
++	pg_tbl = &chip->page_table[0];
++	rtw_write32(rtwdev, REG_RQPN_NPQ,
++		    BIT_RQPN_NE(pg_tbl->nq_num, pg_tbl->exq_num));
++	rtw_write32(rtwdev, REG_RQPN,
++		    BIT_RQPN_HLP(pg_tbl->hq_num, pg_tbl->lq_num, pubq_num));
++
++	return 0;
++}
++
+ static int rtw_sdio_start(struct rtw_dev *rtwdev)
+ {
++	if (rtw_is_8723bs(rtwdev)) {
++		int ret = rtw_sdio_8723bs_check_rqpn(rtwdev);
++
++		if (ret)
++			return ret;
++
++		ret = rtw_sdio_8723bs_init_free_txpg(rtwdev);
++		if (ret)
++			return ret;
++	}
++
+ 	rtw_sdio_enable_rx_aggregation(rtwdev);
+ 	rtw_sdio_enable_interrupt(rtwdev);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+index 457e8b02380e..5b000cb8fac2 100644
+--- a/drivers/net/wireless/realtek/rtw88/sdio.h
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+@@ -86,6 +86,10 @@
+ #define REG_SDIO_OQT_FREE_PG			(SDIO_LOCAL_OFFSET + 0x001E)
+ /* Free Tx Buffer Page */
+ #define REG_SDIO_FREE_TXPG			(SDIO_LOCAL_OFFSET + 0x0020)
++#define BIT_FREE_TXPG_HIGH			GENMASK(7, 0)
++#define BIT_FREE_TXPG_NORMAL			GENMASK(15, 8)
++#define BIT_FREE_TXPG_LOW			GENMASK(23, 16)
++#define BIT_FREE_TXPG_PUB			GENMASK(31, 24)
+ /* HCI Current Power Mode 1 */
+ #define REG_SDIO_HCPWM1				(SDIO_LOCAL_OFFSET + 0x0024)
+ /* HCI Current Power Mode 2 */
+@@ -159,6 +163,12 @@ struct rtw_sdio {
+ 	struct workqueue_struct *txwq;
+ 	struct rtw_sdio_work_data *tx_handler_data;
+ 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
++
++	atomic_t free_pg_high;
++	atomic_t free_pg_normal;
++	atomic_t free_pg_low;
++	atomic_t free_pg_pub;
++	atomic_t tx_oqt_free;
+ };
+ 
+ extern const struct dev_pm_ops rtw_sdio_pm_ops;
+-- 
 2.53.0
 
