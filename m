@@ -1,38 +1,41 @@
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D51741A79A;
-	Thu, 20 Aug 2026 12:51:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5C844471A
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 13:18:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787230305; cv=none; b=jjtoD9dUEu5YGp3XLEkHYolAc6NqR0/t01RR36uhTvgfuFfRLqf90KooZX+lwIVvcSb7h3u/+sBdVd2PV09YlwQeG05mgTNF+efilG45EuvuLN5VTgQ3NTI8o4IKWErSKfcn+5vDMWErkMqmj34B0oYQPtbNul0BVADTIkPAD4Y=
+	t=1787231946; cv=none; b=hx0sMQzk21H5Wak7ZOj4lif8oBH5eHb2D3x5kwWKrTkGi+mPch4ZSf/6ippmfllXg8EBugPBFawcxpU1gtaixTejr3S0qbFpkR+s7Q/84edLHmUQ8qe0v7EWaiKwkqz5rezYiKA9FA0+HdBceLgI+uCO0f2SfQ0VDoEIg0xDZ9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787230305; c=relaxed/simple;
-	bh=5j2gBzM/H51adle+m2A7Vx/G3Gd64QINsSelGsYbVQk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ndgj9Xffq8vmm+rtL2H+y2DB8NoxEJRJVArNsBAWtLwlGIaWsEimYSWt0DdyzbQz5As+1HZRlBXhhXIbmW/cHS6qDaAdZVaqpSIr0avYJ14HMkyXnJIsRpEKzF36LlLv5zDiaKnXWc/Ud9jV02CCZ5ZL6xycRwTPcz8JEivc1AA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=CKBSeoN+; arc=none smtp.client-ip=101.71.155.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
+	s=arc-20240116; t=1787231946; c=relaxed/simple;
+	bh=BWBLcC43y00u6v+Y+h7GNtDflDGLzfGeFV6Zd3kxg0c=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XyetsD6/wVOmsWfpAhUaOqZgSKa7hicveoIw+QOXJlHZA22Co4cifiPseo9P3AJVMwZq9PxKAEicEuiBSvZEx4o+aRyndzL5V6ORKZvKqjffGvDjU3dJYx8GuPZsvC5EaLe+Z3BLUFbVakd6OCfw+l55M8WQtXLEs6MBrtdHRK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=rEkP3gF1; arc=none smtp.client-ip=212.77.101.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="CKBSeoN+"
-Received: from PC-202605011814.localdomain (unknown [223.112.146.162])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4ab7bc55b;
-	Thu, 20 Aug 2026 20:51:34 +0800 (GMT+08:00)
-From: Runyu Xiao <runyu.xiao@seu.edu.cn>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Kalle Valo <kvalo@kernel.org>,
-	Tony Lindgren <tony@atomide.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Runyu Xiao <runyu.xiao@seu.edu.cn>,
-	Jianhao Xu <jianhao.xu@seu.edu.cn>
-Subject: [PATCH] wifi: wlcore: release runtime PM ref on regdomain config failure
-Date: Thu, 20 Aug 2026 20:51:26 +0800
-Message-Id: <20260820125126.12757-1-runyu.xiao@seu.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="rEkP3gF1"
+Received: (wp-smtpd smtp.wp.pl 15893 invoked from network); 20 Aug 2026 15:12:17 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
+          t=1787231538; bh=zMap4A58a7q0c3p5AS1hsWEXzFWMyTnIFIZMeXjMhB8=;
+          h=From:To:Cc:Subject;
+          b=rEkP3gF1uvz48AHL+73slS070vWJ7uzU+B6vwiSzZzC61djGvcZC6tdyQblR3BUXM
+           g+e7OrpU/hMTxUoe3jvPRB254VmfkDx1if9S83Y+BuzZMsGcLw3cgqMxMRML470DYa
+           Pt/3BJJQ/p/jBGLNckhmujutRbtfCozs2Ul5q0SQbhzev04vAmcIhYTJI0GXJgEFfP
+           U9EpOzfc6jZJISKO2MlN6Eb+KNuw8NWNlY9zy3nICwtumMRus/QqO25zEQi3BtHsZJ
+           +ApWVsJJsD3Ou8DAE1vXW7/nTIY5a7bx4EpOyN2JPzEFc7p5LRZuQSw+Zd1Rn4xwvg
+           lEeEgVPmsZzVQ==
+Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
+          (envelope-sender <stf_xl@wp.pl>)
+          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <johannes@sipsolutions.net>; 20 Aug 2026 15:12:17 +0200
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: mac80211: queue frames while off-channel
+Date: Thu, 20 Aug 2026 15:12:17 +0200
+Message-Id: <20260820131217.21824-1-stf_xl@wp.pl>
+X-Mailer: git-send-email 2.25.4
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,50 +43,138 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa01f3a12f803a1kunm33934bed16d31e
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCTExCVh8ZHUhKGBlKTR0aTFYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSE
-	pPSExVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=CKBSeoN+ycjwyEqANooCMPxqZvqlo2BcPWxisbqjoKSPQ5QHJ5WELJCLX4CYARWSAip3iSV3WlVM4EtWI3L80KtWG6fdQZXN3PY/0S5TFdXd98P/YV5YXQKmeMU81SM6fDGacsikzP9/4hPLav6MDfK/6FJawcPp8fiGX0nTAZg=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
-	bh=CrclmvZKx98A+mwNnAfiYQzNP8CQ75RCU53MeFgKZpk=;
-	h=date:mime-version:subject:message-id:from;
+X-WP-MailID: 7cdcf4681a1e6c424f3b1843cb93c39d
+X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
+X-WP-SPAM: NO 0000000 [IfNA]                               
 
-wlcore_regdomain_config() gets a runtime PM reference before sending
-the regulatory-domain command. When
-wlcore_cmd_regdomain_config_locked() fails, the function queues recovery
-and returns without dropping that reference.
+Drivers without FAST_XMIT and hardware scan support currently drop TX
+frames during software scanning while being off-channel. This happens
+in ieee80211_tx_h_check_assoc() before frames reach internal TX queue.
 
-Release the reference after handling the command result so both success
-and failure paths balance the preceding
-pm_runtime_resume_and_get(). The recovery worker takes a separate
-runtime PM reference and cannot release the reference held here.
+Move the off-channel check to invoke_tx_handlers_late(), after
+ieee80211_queue_skb(). Frames can then remain queued and be transmitted
+when the interface returns on-channel. This is how TX works currently when
+code goes via ieee80211_xmit_fast() path.
 
-Fixes: fa2648a34e73 ("wlcore: Add support for runtime PM")
-Cc: stable@vger.kernel.org
-Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
+Below is rt2x00 driver ping output example while scanning, before and
+after the fix. After the fix, packets are no longer lost. Some have
+increased latency, what is expected behavior.
+
+BEFORE:
+64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.61 ms
+64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=3.33 ms # Missed 30
+64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.03 ms
+64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=3.10 ms # Missed 33
+64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=3.04 ms # Missed 35
+64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.05 ms # Missed 37
+64 bytes from 192.168.0.1: icmp_seq=40 ttl=64 time=4.14 ms # Missed 39
+64 bytes from 192.168.0.1: icmp_seq=41 ttl=64 time=4.50 ms
+
+AFTER:
+64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.40 ms
+64 bytes from 192.168.0.1: icmp_seq=30 ttl=64 time=6.10 ms
+64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=4.69 ms
+64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.49 ms
+64 bytes from 192.168.0.1: icmp_seq=33 ttl=64 time=148 ms
+64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=6.83 ms
+64 bytes from 192.168.0.1: icmp_seq=35 ttl=64 time=8.66 ms
+64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=13.0 ms
+64 bytes from 192.168.0.1: icmp_seq=37 ttl=64 time=4.78 ms
+64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.85 ms
+
+The change depends on the iTXQ resumption handling introduced by
+commit 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs for resumption")
+and the wake_tx_queue support introduced by
+commit a790cc3a4fad ("wifi: mac80211: add wake_tx_queue callback to drivers"),
+so use those in 'Fixes' tag.
+
+Cc: <stable@vger.kernel.org> # v6.2
+Fixes: a790cc3a4fad ("wifi: mac80211: add wake_tx_queue callback to drivers")
+Fixes: 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs for resumption")
+Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ net/mac80211/tx.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index be583ae331c0..ecf55e34caae 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3726,10 +3726,8 @@ void wlcore_regdomain_config(struct wl1271 *wl)
- 	ret = wlcore_cmd_regdomain_config_locked(wl);
--	if (ret < 0) {
--		wl12xx_queue_recovery_work(wl);
--		goto out;
--	}
-+	if (ret < 0)
-+		wl12xx_queue_recovery_work(wl);
- 
- 	pm_runtime_put_autosuspend(wl->dev);
- out:
- 	mutex_unlock(&wl->mutex);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 91b14112e24f..842368cc45dc 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -267,20 +267,14 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
  }
+ 
+ static ieee80211_tx_result debug_noinline
+-ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
++ieee80211_tx_h_check_offchannel(struct ieee80211_tx_data *tx)
+ {
+-
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+-	bool assoc = false;
+-
+-	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
+-		return TX_CONTINUE;
+ 
+ 	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
+ 	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
+ 	    !ieee80211_is_probe_req(hdr->frame_control) &&
+-	    !ieee80211_is_any_nullfunc(hdr->frame_control))
++	    !ieee80211_is_any_nullfunc(hdr->frame_control)) {
+ 		/*
+ 		 * When software scanning only nullfunc frames (to notify
+ 		 * the sleep state to the AP) and probe requests (for the
+@@ -290,6 +284,20 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 		 * off-channel. See __ieee80211_start_scan() for more.
+ 		 */
+ 		return TX_DROP;
++	}
++
++	return TX_CONTINUE;
++}
++
++static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
++	bool assoc = false;
++
++	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
++		return TX_CONTINUE;
+ 
+ 	if (tx->sdata->vif.type == NL80211_IFTYPE_OCB)
+ 		return TX_CONTINUE;
+@@ -1864,6 +1872,7 @@ static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx)
+ 		goto txh_done;
+ 	}
+ 
++	CALL_TXH(ieee80211_tx_h_check_offchannel);
+ 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+ 	CALL_TXH(ieee80211_tx_h_sequence);
+ 	CALL_TXH(ieee80211_tx_h_fragment);
+@@ -4686,10 +4695,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	queue = ieee80211_select_queue(sdata, sta, skb);
+ 	skb_set_queue_mapping(skb, queue);
+ 
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
+-	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
+-		goto out_free;
+-
+ 	skb = skb_share_check(skb, GFP_ATOMIC);
+ 	if (unlikely(!skb))
+ 		return;
+@@ -4756,11 +4761,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_tpt_led_trig_tx(local, len);
+ 
+ 	ieee80211_tx_8023(sdata, skb, sta, false);
+-
+-	return;
+-
+-out_free:
+-	kfree_skb(skb);
+ }
+ 
+ static bool ieee80211_check_mcast_offload(struct ieee80211_sub_if_data *sdata,
 -- 
-2.34.1
+2.50.1
+
