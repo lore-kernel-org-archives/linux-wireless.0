@@ -1,103 +1,89 @@
-Received: from mail-4319.protonmail.ch (mail-4319.protonmail.ch [185.70.43.19])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C6D4446F3;
-	Thu, 20 Aug 2026 12:50:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D51741A79A;
+	Thu, 20 Aug 2026 12:51:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787230210; cv=none; b=nHdTq3qZYkvvjI5EP4+mc4djJeMf2WCA6E3nWTJDY0hxiyAzHW31O5GtZgVCRgV4wWIn6MGdP3SOQlFY5gDSVysrK3EoU5agnb2odYQlJqLbhwTOEk6mERpb+vQ4Oa/MRvgdZvhN5iuRMTX54gZxPfOcgfYoNrf4Xl982QQtj3M=
+	t=1787230305; cv=none; b=jjtoD9dUEu5YGp3XLEkHYolAc6NqR0/t01RR36uhTvgfuFfRLqf90KooZX+lwIVvcSb7h3u/+sBdVd2PV09YlwQeG05mgTNF+efilG45EuvuLN5VTgQ3NTI8o4IKWErSKfcn+5vDMWErkMqmj34B0oYQPtbNul0BVADTIkPAD4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787230210; c=relaxed/simple;
-	bh=MluMhfnxSFFI8oqFjDLQfkIsKgi0izjj8u1gxqAmbmI=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=nH3rjGZ1J8j3cWGDtkppZ2V9HmIllMSHZWtBLNqvMonaDF7bc+3+OXslLI0SC0hNSzBtRpldFGG2iMqoHRpgNAgYLPiBlTW15x/N21Pmj2LTtGmPobxCaz2YNGHshD+9MlmjMuH8HcLLtoB6zTsZAUyV1epMbckuAnql2maqT9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=IzoqAMrm; arc=none smtp.client-ip=185.70.43.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
+	s=arc-20240116; t=1787230305; c=relaxed/simple;
+	bh=5j2gBzM/H51adle+m2A7Vx/G3Gd64QINsSelGsYbVQk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ndgj9Xffq8vmm+rtL2H+y2DB8NoxEJRJVArNsBAWtLwlGIaWsEimYSWt0DdyzbQz5As+1HZRlBXhhXIbmW/cHS6qDaAdZVaqpSIr0avYJ14HMkyXnJIsRpEKzF36LlLv5zDiaKnXWc/Ud9jV02CCZ5ZL6xycRwTPcz8JEivc1AA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=CKBSeoN+; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="IzoqAMrm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
-	s=protonmail3; t=1787230200; x=1787489400;
-	bh=MluMhfnxSFFI8oqFjDLQfkIsKgi0izjj8u1gxqAmbmI=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
-	b=IzoqAMrm8M+cJ281Qv1SirZK3czDeEDD0DdBx1yNlB66htP7fAZZouXnMJjFK5rNo
-	 6UboIPbLcRQwc2PI7rbJtX1xh7pEzPr79ljP1YWgVvUWwSvr/pfBVn1GXuhC2t3Bha
-	 sWaXuvhlsARAvZDZju4/p7g/lz6PkdAS2jhOzQ4GTzDQae1VOzuZMKDWPFKs3lQCTb
-	 30fbbe77hwK1T6ImRjHwEoPIE4FwS8yhV5wSy5/5M7LGNW5F56fGIh44lM36QpPh3a
-	 eF14pvc52Yd2sqZtcn6Z/Zbtw4qrbuO9EoSHlbZfFmNj6hPBnVt6rbCAM7MWT4hicZ
-	 toFmBjktedplg==
-Date: Thu, 20 Aug 2026 12:49:55 +0000
-To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Peter Chiu <chui-hao.chiu@mediatek.com>
-From: Ryan Leung <untilscour@protonmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
-Subject: [PATCH mt76] wifi: mt76: mt7915: publish wcid before MCU add commands
-Message-ID: <20260820-mt7915-wcid-publish-order-v1-1-79d2bc981d8b@protonmail.com>
-Feedback-ID: 184418679:user:proton
-X-Pm-Message-ID: 0e088586e06f860360d23c1e030fb46a5057ac8c
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="CKBSeoN+"
+Received: from PC-202605011814.localdomain (unknown [223.112.146.162])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4ab7bc55b;
+	Thu, 20 Aug 2026 20:51:34 +0800 (GMT+08:00)
+From: Runyu Xiao <runyu.xiao@seu.edu.cn>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Kalle Valo <kvalo@kernel.org>,
+	Tony Lindgren <tony@atomide.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Sasha Levin <sashal@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Runyu Xiao <runyu.xiao@seu.edu.cn>,
+	Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: [PATCH] wifi: wlcore: release runtime PM ref on regdomain config failure
+Date: Thu, 20 Aug 2026 20:51:26 +0800
+Message-Id: <20260820125126.12757-1-runyu.xiao@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa01f3a12f803a1kunm33934bed16d31e
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCTExCVh8ZHUhKGBlKTR0aTFYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSE
+	pPSExVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=CKBSeoN+ycjwyEqANooCMPxqZvqlo2BcPWxisbqjoKSPQ5QHJ5WELJCLX4CYARWSAip3iSV3WlVM4EtWI3L80KtWG6fdQZXN3PY/0S5TFdXd98P/YV5YXQKmeMU81SM6fDGacsikzP9/4hPLav6MDfK/6FJawcPp8fiGX0nTAZg=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=CrclmvZKx98A+mwNnAfiYQzNP8CQ75RCU53MeFgKZpk=;
+	h=date:mime-version:subject:message-id:from;
 
-mt7915_add_interface() enables the BSS/STA in firmware via
-mt7915_mcu_add_bss_info() and mt7915_mcu_add_sta() before publishing
-dev->mt76.wcid[idx] with rcu_assign_pointer(). Firmware can start
-generating tx-status/tx-free events referencing that wcid as soon as it
-processes those MCU commands, but mt76's rx/tx-free handlers (e.g.
-mt7915_mac_tx_free()) look up dev->mt76.wcid[idx] to service them, and
-won't find it published yet. This can lead to memory corruption and
-kernel crashes shortly after an AP interface is brought up.
+wlcore_regdomain_config() gets a runtime PM reference before sending
+the regulatory-domain command. When
+wlcore_cmd_regdomain_config_locked() fails, the function queues recovery
+and returns without dropping that reference.
 
-This ordering was introduced by commit 8e3e7567b8c1 ("mt76: mt7915: add
-sta_rec with EXTRA_INFO_NEW for the first time only"):
-mt7915_mcu_add_sta() derived its "newly added" flag from
-!rcu_access_pointer(dev->mt76.wcid[idx]), so the publish had to happen
-after that call. Commit 33eb14f10290 ("wifi: mt76: mt7915: use mac80211
-.sta_state op") later replaced that flag with a caller-supplied `newly`
-argument to mt7915_mcu_add_sta(), now simply hardcoded to true, so the
-ordering is no longer required.
+Release the reference after handling the command result so both success
+and failure paths balance the preceding
+pm_runtime_resume_and_get(). The recovery worker takes a separate
+runtime PM reference and cannot release the reference held here.
 
-Move the rcu_assign_pointer() before the MCU add_bss_info/add_sta
-calls, so that the wcid is visible to lookups before firmware is told
-it's live. This mirrors mt7915_remove_interface(), which already clears
-the pointer before the corresponding MCU disable calls.
-
-Closes: https://github.com/openwrt/openwrt/issues/24594
-Fixes: 8e3e7567b8c1 ("mt76: mt7915: add sta_rec with EXTRA_INFO_NEW for the=
- first time only")
-Signed-off-by: Ryan Leung <untilscour@protonmail.com>
+Fixes: fa2648a34e73 ("wlcore: Add support for runtime PM")
+Cc: stable@vger.kernel.org
+Signed-off-by: Runyu Xiao <runyu.xiao@seu.edu.cn>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/main.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net=
-/wireless/mediatek/mt76/mt7915/main.c
-index a8286f8becf9..9c6c339f1b38 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -273,9 +273,9 @@ static int mt7915_add_interface(struct ieee80211_hw *hw=
-,
- =09mt7915_init_bitrate_mask(vif);
- =09memset(&mvif->cap, -1, sizeof(mvif->cap));
-=20
-+=09rcu_assign_pointer(dev->mt76.wcid[idx], &mvif->sta.wcid);
- =09mt7915_mcu_add_bss_info(phy, vif, true);
- =09mt7915_mcu_add_sta(dev, vif, NULL, CONN_STATE_PORT_SECURE, true);
--=09rcu_assign_pointer(dev->mt76.wcid[idx], &mvif->sta.wcid);
-=20
- =09mutex_unlock(&dev->mt76.mutex);
-=20
-
----
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
-change-id: 20260820-mt7915-wcid-publish-order-bebef551330c
-
-Best regards,
--- =20
-Ryan Leung <untilscour@protonmail.com>
-
-
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index be583ae331c0..ecf55e34caae 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3726,10 +3726,8 @@ void wlcore_regdomain_config(struct wl1271 *wl)
+ 	ret = wlcore_cmd_regdomain_config_locked(wl);
+-	if (ret < 0) {
+-		wl12xx_queue_recovery_work(wl);
+-		goto out;
+-	}
++	if (ret < 0)
++		wl12xx_queue_recovery_work(wl);
+ 
+ 	pm_runtime_put_autosuspend(wl->dev);
+ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+-- 
+2.34.1
