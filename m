@@ -1,155 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0B33DA5DC;
-	Thu, 20 Aug 2026 08:14:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF424282F06;
+	Thu, 20 Aug 2026 08:16:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787213686; cv=none; b=ZZztFjUKoyZ7H3OCQh7eFufYoQpk2Da76yr61Nb9ALItjRYODw0JikHBjMx4NM3S99auw4EZeYe/c3JznfztSsUaAUBeXfnDE9uttb4hU6nxawjbdwWhmftrT6hn8rIINn6suFQEu8DQLeyfKKUDKhVcST5BzFNFlTtCz0aITYA=
+	t=1787213808; cv=none; b=e93xQiF9ZHsSoXdT9o7mrdvKDRzRYlc+k8CkrWdKWHpASDp0eZoDHM/6k8BfC4oW4kai3VYfH58pzL59vhafemgSRraN5IuVQ63Jy8lETI2UmyIx5XXnIqTKZ2IhUqwGpNqo7sUTHFDGYYoOLwM8aIwi+HCHZAzh9Fb7iGMhYoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787213686; c=relaxed/simple;
-	bh=9tPSuXov7GrM+xx4Zc0tr7mC330cYG8dhCPK9zcbXzU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=M7npVvIvIsYMs9kUvpyyCprnSCvZBfJKBVHdk+QWq/fKd9t6Y7bvx31wWJB0MuacCKL/J0EDclznzAjTPaE98db4+cjSazh9BvmHvaOpjhJM29pUPFNhJbpUp8wcTyrMFWhF22+dVR3S4zI1t7omg1syAt07gvI7bxspoaG4+ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MFlj5GDQ; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MFlj5GDQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 401171F000E9;
-	Thu, 20 Aug 2026 08:14:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787213678;
-	bh=jPi7sm06f+rNS7fquy7GY9UlFStzSoKD+j+fIOo56U8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=MFlj5GDQYfTBb96020wGzI27jJge3IEPrS/7HPMaR0/CmZi3UFGBs8FHwqklsQCmc
-	 PeppwrzCQ7gnFgwmpdwvC1U27xaI3U9+PrdZt/34jyOQN7jKBmSQBxrPvII3A3HB5q
-	 /vG15BaR9eKcchddxD+T7eAPszdqKE4g4/mNgiidJFMEivXl6uDsRnybI8VgkNR76o
-	 w7RNQ1jc/GLXs2h56IxlPaczB3rZRHFYI1ekrc3TWU4/7XOxuvWT9t1Q9Am9sYoYTI
-	 HN4RD+P1iCorA6VCP0jCXr12vDrkxSUGTUrxjOwQZqIJDDSYc6Br80ZvElja3gdBRP
-	 PprSprNFgoaEQ==
-Message-ID: <c38cb98e-0746-4b28-b0c9-ce59e8338048@kernel.org>
-Date: Thu, 20 Aug 2026 10:14:26 +0200
+	s=arc-20240116; t=1787213808; c=relaxed/simple;
+	bh=I7Leg6UhCygJlx6mUKjHFGNtpOZvBLd5qQ5Kig7ZBt0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IprkwRG/gNxBq9Qg9zbemlhjme57Mi/PWyiqZULh5eoKVN7ppIcCQDNiVTXlz5HNSZ/uOqJoDBKziDlRFBw3Nrs81pmYFsCyEQv77g18JEGcHrkuN9W77tMmO9t09fBg4MD901aMCY2lMc1YairS6bHXDgBMr+TWBlOCOD6sL9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 77df15f89c6f11f19a56ed5b684f684d-20260820
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:de78ca73-c2f6-40e4-81ae-f4ea902cbe33,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:20
+X-CID-META: VersionHash:7db8b62,CLOUDID:4087f9d0d051b94e765b50c2e9c155a8,BulkI
+	D:nil,BulkQuantity:0,SF:102|136|850|865|898,TC:nil,Content:0|15|50,EDM:5|-
+	100,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 77df15f89c6f11f19a56ed5b684f684d-20260820
+X-User: lilinmao@kylinos.cn
+Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lilinmao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1618554250; Thu, 20 Aug 2026 16:16:39 +0800
+From: Linmao Li <lilinmao@kylinos.cn>
+To: Jeff Chen <jeff.chen_1@nxp.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Francesco Dolcini <francesco@dolcini.it>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Linmao Li <lilinmao@kylinos.cn>
+Subject: [PATCH 0/2] wifi: nxpwifi: fix the host-MLME authentication frame path
+Date: Thu, 20 Aug 2026 16:16:32 +0800
+Message-Id: <20260820081634.4043666-1-lilinmao@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] dt-bindings: net: wireless: add flag
- marvell,ignore-regulatory-hint
-To: George Valkov <gvalkov@gmail.com>, Chen-Yu Tsai <wenst@chromium.org>
-Cc: briannorris@chromium.org, johannes@sipsolutions.net, andrew@lunn.ch,
- krzk+dt@kernel.org, francesco@dolcini.it, johannes.berg@intel.com,
- kees@kernel.org, miriam.rachel.korenblit@intel.com,
- rafael.beims@toradex.com, avraham.stern@intel.com, error27@gmail.com,
- s.kerkmann@pengutronix.de, gregory.clement@bootlin.com,
- sebastian.hesselbarth@gmail.com, robh@kernel.org, conor+dt@kernel.org,
- Frank.Li@nxp.com, chunfan.chen@gmail.com,
- linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org,
- linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
- stable@vger.kernel.org
-References: <CADOrJmbTyrGGkq+9OJDXCgTa2HvNo8BWxoE6yjafcrOq7WNamw@mail.gmail.com>
- <20260817215428.84740-1-gvalkov@gmail.com>
- <20260819-generous-nickel-dalmatian-b6bb08@quoll>
- <CADOrJmYfBe3ADun_kFjFSH6YOSTX7Vu3UsFsL57yuRdaQ=eJCA@mail.gmail.com>
- <e554c007-67e3-4fbf-b85e-5de02f649e83@kernel.org>
- <CAGXv+5H7AhZgZ06r9KO3HLZ9Cymkai+Cv9SgVTuSC1PjgGf8hg@mail.gmail.com>
- <d6c8f19e-f154-4b57-9101-cf3b73e9794f@kernel.org>
- <CADOrJmYxKTyDkKPaKCpH37RsyyZJZ+4uReE--+uvnHmEdNJVOw@mail.gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <CADOrJmYxKTyDkKPaKCpH37RsyyZJZ+4uReE--+uvnHmEdNJVOw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 20/08/2026 09:50, George Valkov wrote:
-> 
-> 
-> Krzysztof:
->> regulatory-hint for me means usually regdb, but even with your meaning
->> you tell SW what to do - ignore hardware regulatory information.
->> Property should not tell what SW should do with hardware. Property
->> should tell what is happening here in the hardware. In this case: what
->> is the reason behind.
->>
->> IOW, why user of a board in country X, where regulatory data says X,
->> should have the correct regulatory data ignored?
-> 
-> Because users in X buy a board for X and the regulatory data says U.
-> 
-> Indeed when the ROM regulatory hint is set to US and the driver
-> reports this to the OS, the wireless-regdb restrictions for US are
-> applied. This would normally be fine, however the third radio in
-> WRT3200ACM and WRT32x, reports US on all models including those sold
-> in the EU and other non US markets. This creates a conflict with
-> radios 0 and 1, which report FR and also with my correct setting: BG.
-> With the wireless-regdb restrictions for US, FR and BG applied, radio
-> 0 refuses to start.
+Two fixes to nxpwifi_cfg80211_authenticate(), found by reading the code
+rather than by hitting them on hardware.
 
-So if you move with your router to US, you would need to change DTB?
-IOW, the DTB is per user? This is obviously wrong... What if one device
-has correct regulatory data written and you ignore it? Why would you
-ignore it? If you decide to ignore correct regulatory data, then you can
-as well ignore it unconditionally and this property is not needed.
+Patch 1 is the one that matters.  The frame length is kept in a single u16
+that conflates two different lengths and gets both wrong.  req->ie_len and
+req->auth_data_len are both size_t; the IE policy caps req->ie_len at
+IEEE80211_MAX_DATA_LEN, but NL80211_ATTR_AUTH_DATA has only a four-byte
+minimum, and nla_len is a u16, so one auth data attribute can carry 65531
+bytes - enough for the sum to wrap when it is assigned to the u16.  With
+auth_data_len == 65510 and no IEs the length becomes 6, kzalloc(6)
+succeeds, and the copy below writes 65506 user-provided bytes past a
+6-byte heap object.  Separately, NXPWIFI_MGMT_HEADER_LEN already
+accounts for the address4 that nxpwifi_form_mgmt_frame() splices in, so
+that helper is asked to append ETH_ALEN to a length that already included
+it and overruns the skb tailroom by six bytes; SKB_DATA_ALIGN() slack
+normally hides it.
+
+The patch keeps the 3-address length the driver builds separate from the
+longer frame the firmware sees, and rejects lengths that cannot be
+represented once address4 is added.  The value handed to the firmware does
+not change for frames that were already valid.
+
+Patch 2 is the small one: the same function never checks that kzalloc(),
+and leaks the buffer when dev_alloc_skb() fails.
+
+Reaching patch 1's overflow needs CAP_NET_ADMIN in the netns user namespace
+(NL80211_CMD_AUTHENTICATE is GENL_UNS_ADMIN_PERM), an up netdev, and a
+suitable STA/BSS/SAE state.  I have not written a reproducer or looked at
+exploitability, so I would describe it as user-influenced heap corruption
+and leave it there.
+
+mwifiex has the same length handling in mwifiex_cfg80211_authenticate() -
+it is where this code came from - and it is in mainline since v6.12.  That
+needs its own fix against the fixes tree rather than being folded in here;
+I did not want to mix a wireless-next driver with a stable-bound one.
+
+Compile-tested only (allmodconfig, W=1, drivers/net/wireless/nxp/ clean).
+I do not have IW61x hardware.
+
+Linmao Li (2):
+  wifi: nxpwifi: fix the authentication frame length handling
+  wifi: nxpwifi: handle authentication frame allocation failures
+
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 24 ++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
 
-> 
-> Would you approve any of these or suggest a better name for the flag?
-> Should ROM be in upper or lower case?
-> I omitted 'in-ROM' to keep it short, because the driver check line is
-> already longer than 80 characters.
-> - marvell,ignore-regulatory-hint (current)
-> - marvell,ignore-regulatory-hint-in-ROM
-> - marvell,invalid-regulatory-hint-in-ROM
-> - marvell,invalid-regulatory-hint
-> - marvell,invalid-regulatory-ROM
-> - marvell,invalid-reg-hint-in-ROM
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+-- 
+2.25.1
 
-The point is that the regulatory hint is NOT INVALID. One device was
-sold in US with US data, so how could it be invalid?
-
-Best regards,
-Krzysztof
