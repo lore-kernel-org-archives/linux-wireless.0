@@ -1,180 +1,163 @@
-Received: from mx3.wp.pl (mx3.wp.pl [212.77.101.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-31.mta1.migadu.com [95.215.58.31])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5C844471A
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 13:18:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.77.101.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63EE35F163
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 14:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.31
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787231946; cv=none; b=hx0sMQzk21H5Wak7ZOj4lif8oBH5eHb2D3x5kwWKrTkGi+mPch4ZSf/6ippmfllXg8EBugPBFawcxpU1gtaixTejr3S0qbFpkR+s7Q/84edLHmUQ8qe0v7EWaiKwkqz5rezYiKA9FA0+HdBceLgI+uCO0f2SfQ0VDoEIg0xDZ9A=
+	t=1787236609; cv=none; b=k+kQjFza8nhhyckSJmj1mjbXfExQI/Dl2n08Q+izkKYv4zLyLP0PMsWIhdcsiBO1OVdu6/ZH5fqv3MDsXufArDDqlxNdVjiBU1xX+vlQYI0LssVCNX7AdtYwloh2D1yN+PDPV/DLGMVkCLgIGJhKGjd3Di3H+JEkBAH7LWxdqq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787231946; c=relaxed/simple;
-	bh=BWBLcC43y00u6v+Y+h7GNtDflDGLzfGeFV6Zd3kxg0c=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XyetsD6/wVOmsWfpAhUaOqZgSKa7hicveoIw+QOXJlHZA22Co4cifiPseo9P3AJVMwZq9PxKAEicEuiBSvZEx4o+aRyndzL5V6ORKZvKqjffGvDjU3dJYx8GuPZsvC5EaLe+Z3BLUFbVakd6OCfw+l55M8WQtXLEs6MBrtdHRK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl; spf=pass smtp.mailfrom=wp.pl; dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b=rEkP3gF1; arc=none smtp.client-ip=212.77.101.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=wp.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wp.pl
+	s=arc-20240116; t=1787236609; c=relaxed/simple;
+	bh=S6AY/DIy25GVpmeBJIq9mYIVtBbuxc4KcD8t4iwe2oE=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=h6tkKYf5j/4RnJmqTm+3lGb2EffjNllM7NUjpl1vYnFoPZrxrLJiGbXRhUSdWQKaWm/jjvIyGtvJ2bOX5yJSTQGXmlZ6dsET6ESTwUHNUXWAh1FwZWodQ5R9nMiQRNnyIJM7OffwRsFbUOUpKuO+RzTOBwc/DydLQS0q4gwIlXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=hRhR9OW8; arc=none smtp.client-ip=95.215.58.31
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wp.pl header.i=@wp.pl header.b="rEkP3gF1"
-Received: (wp-smtpd smtp.wp.pl 15893 invoked from network); 20 Aug 2026 15:12:17 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=20241105;
-          t=1787231538; bh=zMap4A58a7q0c3p5AS1hsWEXzFWMyTnIFIZMeXjMhB8=;
-          h=From:To:Cc:Subject;
-          b=rEkP3gF1uvz48AHL+73slS070vWJ7uzU+B6vwiSzZzC61djGvcZC6tdyQblR3BUXM
-           g+e7OrpU/hMTxUoe3jvPRB254VmfkDx1if9S83Y+BuzZMsGcLw3cgqMxMRML470DYa
-           Pt/3BJJQ/p/jBGLNckhmujutRbtfCozs2Ul5q0SQbhzev04vAmcIhYTJI0GXJgEFfP
-           U9EpOzfc6jZJISKO2MlN6Eb+KNuw8NWNlY9zy3nICwtumMRus/QqO25zEQi3BtHsZJ
-           +ApWVsJJsD3Ou8DAE1vXW7/nTIY5a7bx4EpOyN2JPzEFc7p5LRZuQSw+Zd1Rn4xwvg
-           lEeEgVPmsZzVQ==
-Received: from localhost (77-236-6-58.static.play.pl [77.236.6.58])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <johannes@sipsolutions.net>; 20 Aug 2026 15:12:17 +0200
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wifi: mac80211: queue frames while off-channel
-Date: Thu, 20 Aug 2026 15:12:17 +0200
-Message-Id: <20260820131217.21824-1-stf_xl@wp.pl>
-X-Mailer: git-send-email 2.25.4
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="hRhR9OW8"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=S6AY/DIy25GVpmeBJIq9mYIVtBbuxc4KcD8t4iwe2oE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787236604; v=1; x=1787841404;
+ b=hRhR9OW8O6+X3JsTsabAFo+akyEqhey32HWN9lsLUEfYuQ15KspNePBgVEBwsHM+WT76OV+V
+ g+9tLNq90fdk+E8ldxbcKSZavDrxAEJJokeJpwnxCBz+wF4/zG11c1dD8VFd/ceTco9eEQwSXvn
+ mygf4DWCURq5FNDQqkmMBmCs=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from ehlo.thunderbird.net (2a06:63c5:9b00:3900:e1b3:d7a6:6110:4f65)
+	by smtp.migadu.com with ESMTPS id 526fbf4cabd751e0;
+	Thu, 20 Aug 2026 14:36:34 +0000
+X-Mizu-Trace-ID: 526fbf4cabd751e0
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 20 Aug 2026 16:36:33 +0200
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Peter Robinson <pbrobinson@gmail.com>
+CC: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Michael Straube <straube.linux@gmail.com>,
+ Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+ Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
+Subject: Re: [PATCH v5 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+User-Agent: Thunderbird for Android
+In-Reply-To: <CALeDE9NmBpsBdVHYuzahgrxKtvzxs-ML1netc7OMOEMQ8j5+vg@mail.gmail.com>
+References: <20260814105327.6687-1-luka.gejak@linux.dev> <6C350314-0529-445E-9324-FD5C21C5B495@linux.dev> <CALeDE9NmBpsBdVHYuzahgrxKtvzxs-ML1netc7OMOEMQ8j5+vg@mail.gmail.com>
+Message-ID: <A119CD11-ACC4-403E-B2DD-77ED818708F1@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-WP-MailID: 7cdcf4681a1e6c424f3b1843cb93c39d
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [IfNA]                               
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Drivers without FAST_XMIT and hardware scan support currently drop TX
-frames during software scanning while being off-channel. This happens
-in ieee80211_tx_h_check_assoc() before frames reach internal TX queue.
+Hi Peter,
 
-Move the off-channel check to invoke_tx_handlers_late(), after
-ieee80211_queue_skb(). Frames can then remain queued and be transmitted
-when the interface returns on-channel. This is how TX works currently when
-code goes via ieee80211_xmit_fast() path.
+On August 20, 2026 1:37:22 PM GMT+02:00, Peter Robinson
+<pbrobinson@gmail=2Ecom> wrote:
+>Hi Luka,
+>
+>On Thu, 20 Aug 2026 at 10:02, Luka Gejak <luka=2Egejak@linux=2Edev> wrote=
+:
+>>
+>> On August 14, 2026 12:53:20 PM GMT+02:00, luka=2Egejak@linux=2Edev wrot=
+e:
+>> >From: Luka Gejak <luka=2Egejak@linux=2Edev>
+>> >
+>> >This is the first of two series adding support for the Realtek RTL8723=
+B
+>> >802=2E11n chipset and its RTL8723BS SDIO variant to rtw88=2E It contai=
+ns
+>> >only the changes to the shared rtw88 core that the chip driver depends
+>> >on=2E The chip itself, the build glue and the MAINTAINERS entry are a
+>> >second series=2E
+>> >
+>>
+>> =2E=2E=2E
+>>
+>> Hi Ping-Ke,
+>>
+>> Please do not apply patches 4 and 6 of v6=2E I found real bugs in both
+>> after posting and a v7 is on the way=2E
+>>
+>> Patch 6 touches the skb after handing it to the TX worker:
+>>
+>>         skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
+>>
+>>         rtw_sdio_8723bs_stop_tx_queue(rtwdev, queue,
+>>                                       skb_get_queue_mapping(skb));
+>>
+>> The worker can dequeue, transmit and free that skb before the second
+>> statement runs, so reading it there is a use after free=2E v7 reads the
+>> queue index into a local before the enqueue=2E
+>>
+>> Patch 4 concerns you more than me=2E It passed the padded size to
+>> rtw_sdio_get_tx_addr(), where upstream passes skb->len=2E That value is
+>> encoded into the CMD53 address as the transfer length, so on every othe=
+r
+>> SDIO chip the encoded length changed whenever sdio_align_size() padded=
+=2E
+>> For the RTL8723BS both expressions are the same value, so the change
+>> bought this chip nothing and only affected the other parts=2E The paddi=
+ng
+>> itself also ran on the generic path, giving those chips an allocation
+>> and an -ENOMEM path they did not have=2E v7 restores skb->len and gates
+>> the padding on the chip=2E
+>>
+>> The other v7 changes, all in patches 4 and 6:
+>>
+>>   - the free page check, the output queue wait and the accounting are
+>>     serialised=2E The TX worker and the H2C path both reach
+>>     rtw_sdio_write_port(), and two writers could each pass the checks
+>>     and claim the same pages and output queue entry, after which the
+>>     chip discards one transfer silently=2E The vendor driver has one
+>>     transmit thread and never needed this=2E
+>>   - the padding called skb_put_zero() after checking only tailroom, so =
+a
+>>     cloned skb had its shared buffer written=2E It uses __skb_pad() now=
+=2E
+>>   - the back-pressure stop could race the drain: the worker could empty
+>>     the queue while the stop was still in progress, see the flag clear,
+>>     and never wake it, leaving an access category stopped with nothing
+>>     left to wake it=2E
+>>
+>> Patches 1, 2, 3 and 5 are unchanged and keep your acks; patch 5 shifts
+>> only by hunk offsets because patch 4 grew above it=2E I dropped your ac=
+k
+>> from patch 4, since the rework is too substantive to carry it=2E
+>>
+>> Most of these came from Sashiko's automated review of v6=2E I checked e=
+ach
+>> against the code before acting on it, and one of its eight findings did
+>> not hold up=2E
+>>
+>> v7 follows shortly=2E It is hardware tested: 60 idle pings at 0% loss w=
+ith
+>> power save on, bidirectional load with no stall, 19=2E6 Mbit/s up and 3=
+6=2E8
+>> down, UDP at 0% loss, three scans, three reconnects and a clean log=2E
+>
+>I had done some basic testing with v5, and had left a v6 to build
+>overnight=2E I'll grab this shortly and do a build with v7 and do some
+>testing=2EIt was generally looking stable on the Pine64+ board I was
+>using for testing=2E
+>
 
-Below is rt2x00 driver ping output example while scanning, before and
-after the fix. After the fix, packets are no longer lost. Some have
-increased latency, what is expected behavior.
+Thanks a lot for testing=2E In my testing changes in v6 and v7 didn't impa=
+ct
+performance and v7 should be as stable if not more stable then v5 and v6=
+=2E
 
-BEFORE:
-64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.61 ms
-64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=3.33 ms # Missed 30
-64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.03 ms
-64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=3.10 ms # Missed 33
-64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=3.04 ms # Missed 35
-64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.05 ms # Missed 37
-64 bytes from 192.168.0.1: icmp_seq=40 ttl=64 time=4.14 ms # Missed 39
-64 bytes from 192.168.0.1: icmp_seq=41 ttl=64 time=4.50 ms
+>I think I may also have a device(s) with a 8723cs and/or a 8723ds I
+>can possibly test with, I'll see if I can remember/find it over the
+>weekend and get it running for some testing of that too=2E
 
-AFTER:
-64 bytes from 192.168.0.1: icmp_seq=29 ttl=64 time=3.40 ms
-64 bytes from 192.168.0.1: icmp_seq=30 ttl=64 time=6.10 ms
-64 bytes from 192.168.0.1: icmp_seq=31 ttl=64 time=4.69 ms
-64 bytes from 192.168.0.1: icmp_seq=32 ttl=64 time=4.49 ms
-64 bytes from 192.168.0.1: icmp_seq=33 ttl=64 time=148 ms
-64 bytes from 192.168.0.1: icmp_seq=34 ttl=64 time=6.83 ms
-64 bytes from 192.168.0.1: icmp_seq=35 ttl=64 time=8.66 ms
-64 bytes from 192.168.0.1: icmp_seq=36 ttl=64 time=13.0 ms
-64 bytes from 192.168.0.1: icmp_seq=37 ttl=64 time=4.78 ms
-64 bytes from 192.168.0.1: icmp_seq=38 ttl=64 time=3.85 ms
+That would be nice, so we can see if other chips are affected, as Ping-Ke
+said=2E
 
-The change depends on the iTXQ resumption handling introduced by
-commit 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs for resumption")
-and the wake_tx_queue support introduced by
-commit a790cc3a4fad ("wifi: mac80211: add wake_tx_queue callback to drivers"),
-so use those in 'Fixes' tag.
+>
+>Peter
 
-Cc: <stable@vger.kernel.org> # v6.2
-Fixes: a790cc3a4fad ("wifi: mac80211: add wake_tx_queue callback to drivers")
-Fixes: 4444bc2116ae ("wifi: mac80211: Proper mark iTXQs for resumption")
-Signed-off-by: Stanislaw Gruszka <stf_xl@wp.pl>
----
- net/mac80211/tx.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 91b14112e24f..842368cc45dc 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -267,20 +267,14 @@ ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
- }
- 
- static ieee80211_tx_result debug_noinline
--ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
-+ieee80211_tx_h_check_offchannel(struct ieee80211_tx_data *tx)
- {
--
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
--	bool assoc = false;
--
--	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
--		return TX_CONTINUE;
- 
- 	if (unlikely(test_bit(SCAN_SW_SCANNING, &tx->local->scanning)) &&
- 	    test_bit(SDATA_STATE_OFFCHANNEL, &tx->sdata->state) &&
- 	    !ieee80211_is_probe_req(hdr->frame_control) &&
--	    !ieee80211_is_any_nullfunc(hdr->frame_control))
-+	    !ieee80211_is_any_nullfunc(hdr->frame_control)) {
- 		/*
- 		 * When software scanning only nullfunc frames (to notify
- 		 * the sleep state to the AP) and probe requests (for the
-@@ -290,6 +284,20 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 		 * off-channel. See __ieee80211_start_scan() for more.
- 		 */
- 		return TX_DROP;
-+	}
-+
-+	return TX_CONTINUE;
-+}
-+
-+static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+	bool assoc = false;
-+
-+	if (unlikely(info->flags & IEEE80211_TX_CTL_INJECTED))
-+		return TX_CONTINUE;
- 
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_OCB)
- 		return TX_CONTINUE;
-@@ -1864,6 +1872,7 @@ static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx)
- 		goto txh_done;
- 	}
- 
-+	CALL_TXH(ieee80211_tx_h_check_offchannel);
- 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
- 	CALL_TXH(ieee80211_tx_h_sequence);
- 	CALL_TXH(ieee80211_tx_h_fragment);
-@@ -4686,10 +4695,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	queue = ieee80211_select_queue(sdata, sta, skb);
- 	skb_set_queue_mapping(skb, queue);
- 
--	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
--	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
--		goto out_free;
--
- 	skb = skb_share_check(skb, GFP_ATOMIC);
- 	if (unlikely(!skb))
- 		return;
-@@ -4756,11 +4761,6 @@ static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tpt_led_trig_tx(local, len);
- 
- 	ieee80211_tx_8023(sdata, skb, sta, false);
--
--	return;
--
--out_free:
--	kfree_skb(skb);
- }
- 
- static bool ieee80211_check_mcast_offload(struct ieee80211_sub_if_data *sdata,
--- 
-2.50.1
-
+Best regards,
+Luka Gejak
