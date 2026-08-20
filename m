@@ -1,247 +1,125 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA1F44063C
-	for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 20:06:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00614145B27;
+	Thu, 20 Aug 2026 00:32:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787169976; cv=none; b=hlY9IEUQMLCPpUGLdsv8eB+68xj5TbtI2lpacaH02SzkmaUOG/BShRF/JvNnPSPzrgLYBPj2OksM4Fn4tZJAdpCW46LhmIltAVrTLvNsrjeUaRN/CApBL6PQPIqqZrmfXafoPK6neM2+KpThQgScaQzi41dZAaw4fIgnHw14XeA=
+	t=1787185947; cv=none; b=XZ12l9XDDdOhBbjCG6TZ76Pv5vAMkClSisl/rnfw+OFry1letJjPOpSwaatkTzzEuT6YmxzBkDiyGY8xiHdpuSkPFKYzWdq5A3arz/GocFYdxwjxOnJh/Z+IKUzVzHaeBKgkRtkOy8Ln8JML0dysCv9EKdG1/40Z2DKqlb0mi5k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787169976; c=relaxed/simple;
-	bh=4dLIEaIDijGcljaUF1vn+F4h+7ThVL6b/5s2j+aMNKw=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=JLn2ENH2Lx0B3HdEYmM7JumTguUCv0B2ZhYzgNYuD0cnsxNq5m++O/w6IlE72rz+wR2hCBB5v905zCZL66h9xrzO4Ql9ozoOeDtsHYa0M3JGWSPyoMrvdZ2PG0E48oRDrlnI0ZM1Ub80qbHW52ZEHvcjAjtDhHWICvnkKPCnkho=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L5LO0yC+; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L5LO0yC+"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4995b0343c1so13437145e9.3
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 13:06:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787169972; x=1787774772; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:content-language:cc:to
-         :subject:from:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=8qvkf08pEyjpUfpH3wxxev6LNXrjPV6hczsBjA3JW2A=;
-        b=L5LO0yC+gFvgX2jACf+cA1ZneBLxTC9G0x8e4POCkhPIZCEO5hfXVgR/mx/WqXDZBx
-         CHbhwN7wUvDnby/SX4z2xfbhmVQ7eUklaaEjuLaBobjD8NvUCImyRMhbBOhSpT85odYN
-         UDNBpoSIeoTJH3DuRQiFUdiqegmvnt+AvKTqlOplwSbzm40njn+kIUGmVsnfDnpvb/ao
-         RRZ2TX47QiZ2Z6peoUhtvbLYE5JzQItHpvXxDboiAEQcemh7sytU5jGIV35hlIXf2Iyv
-         RXQxKwC8G6Phkkv7gLalAK0yVjhIN21fI5Dgzu1oQTKkLcBCNT9fi0FBaAE0lY7bf7KA
-         lfNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787169972; x=1787774772;
-        h=content-transfer-encoding:content-type:content-language:cc:to
-         :subject:from:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8qvkf08pEyjpUfpH3wxxev6LNXrjPV6hczsBjA3JW2A=;
-        b=PHwAEkiJItfps4fo5iFdbTCTh3RCSgiXhR5N5MlIVVELOtFPy+3Knf66vZOgggaepF
-         zCMMVrUBoACLjIu2jZE5FnsRofQLjmZlPva2lMXQHGqpDWIDzhyF10zw4sLKacJIBC7T
-         P+xkEsrktR+j60nG9N+l+tl2OkqXtOckHr2V1BpduDSynw+LVpuGNyNQMQqu50b0apwl
-         aPZpSqEsp+/iS4lsf1ECsi1xxQtBbkHoLOh3LCyCgC8Bf+mQPYXu3j7dqdkx4KK1yRN9
-         g7Qd2FDCjw9LMxLa3/FN65z0fcKelEMmiUuAc4cNMEmJu13Dr84EXyE7H1RHAGSVyf11
-         KNLQ==
-X-Gm-Message-State: AOJu0Yzm3rLSpUcoa9zIaBVDNOKccabQ2JvKrvuv/d8xNGZSkHBYYFu+
-	0Z5kP8b6GrHm3vcIE9GGCjD0xspR1CkuI9lq/VHo4s7rYr4oRckjQUdsDOFsqA==
-X-Gm-Gg: AR+sD13oKiQuurK5pZlSlKR6hiVOcE6qS8V0YoxBx4rbol1KTU4DdlxKuEjRZ6fC8+2
-	GPe1Ut+BfBVFA+Fgsf4n1TVeIUYM8PlixsGT9OFWuoRCRdwCtvU4tX4aHFeD0uYkcAla8nt4SMZ
-	P8D7fA8kuJcxF+ddVI8hpuRvLyfeSaam2aSYmiIej8hOkwsRUwnaiHz7le3/cYuK6dVkJbcBXlA
-	a/E9uHVV0pES3jXfZXc2UGdJ7PSrPL6A8xsHuPvogZ7QNZp13DnUXsDqKd79pYOKXsyEuipxZ68
-	7mng1Mf31CtkhnQp9qaYAQhJurjZWLLbEZMqjHq8pO/QSmTuz6bd8v4plmZgJaMnt73FoE8kX37
-	Vl7Vq9RfGn2Lj/mVNnXHPHm0dTCuwGwvmsBS0+QkzPO9YCPPi3kkKJ0IC77vbWimHPy1KDzlru3
-	wEBk6t5kdSYGuDc3OyFxsw2jCUHifDGuvili5lK3Akq4EuCB2y6EcMxI9eT2x5968CUNGh7A==
-X-Received: by 2002:a05:600c:5294:b0:492:4e09:9fc1 with SMTP id 5b1f17b1804b1-499aa1f5413mr145086285e9.15.1787169972200;
-        Wed, 19 Aug 2026 13:06:12 -0700 (PDT)
-Received: from [192.168.1.50] ([79.119.240.229])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499aa1111b2sm113893495e9.5.2026.08.19.13.06.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Aug 2026 13:06:11 -0700 (PDT)
-Message-ID: <7a537b2e-67d2-40fb-8ef2-fcbc7bbc93af@gmail.com>
-Date: Wed, 19 Aug 2026 23:06:10 +0300
+	s=arc-20240116; t=1787185947; c=relaxed/simple;
+	bh=/z03sx9hdGw6YJSBUL5u2FZjjb9OwGzbteA279601a0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=EO2oB3XpVxbuxuS1NvyNNFAACqLeEtXhhRu+Uq33rg6f38wb5mMQrzR0KWtvOTx0lDN4Eblg9vn3z4RXG2vhbKOZElcGGP0LUsIGBbjJSyHqKxTcLy33XHvESYuApW3TNulaNvfqY4+6I8ilUeT4deXuyq/RzzfSZHXJGaI4u74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
+Received: from local
+	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
+	 (Exim 4.99)
+	(envelope-from <daniel@makrotopia.org>)
+	id 1wwqhZ-000000007CJ-0pVm;
+	Thu, 20 Aug 2026 00:32:13 +0000
+Date: Thu, 20 Aug 2026 01:32:04 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Hans de Goede <johannes.goede@oss.qualcomm.com>
+Subject: [PATCH v2 0/4] device_schedule_reprobe(): core helper and conversions
+Message-ID: <cover.1787185594.git.daniel@makrotopia.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-Subject: [PATCH rtw-next v2] wifi: rtw89: usb: Avoid crash with dynamically
- added device ID
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Adding a device ID via sysfs causes a crash when the device is plugged
-in, because the driver_info pointer is null.
+Three in-tree drivers (iwlwifi, hci_h5, btintel_pcie) schedule a
+deferred re-probe of their own device from a work item whose work
+function lives in module text. The hand-rolled copies share two bug
+classes: the work function ends with module_put(THIS_MODULE), racing a
+concurrent rmmod freeing the module text (the race
+module_put_and_kthread_exit() exists to close for kthreads), and
+nothing synchronizes the deferred detach against device_shutdown() or
+an administrative unbind.
 
-Check for null driver_info in rtw89_usb_probe() and add a wrapper in
-each driver to pass it a reasonable default value.
+Patch 1 moves the deferred work into the driver core.
+device_schedule_reprobe() runs builtin code, so no module reference is
+needed; it checks under a single __device_driver_lock() hold that the
+device is still bound to the driver that scheduled the re-probe, and
+skips the detach once device_shutdown() has reached the device (a new
+one-bit shutdown_done flag in struct device_private). It pins both the
+device and its parent for the lifetime of the work and re-locks the
+parent across the attach on buses that require it. Patches 2 and 3 are
+mechanical conversions. Patch 4 (btintel_pcie) also retires that
+driver's remove()-from-own-work contract, replacing the current_work()
+dance with the deferred re-probe; it changes more and can be dropped
+without affecting patches 1-3.
 
-Signed-off-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
----
-v2:
- - Simplify the wrappers, move the null check into rtw89_usb_probe().
----
- drivers/net/wireless/realtek/rtw89/rtw8851bu.c | 8 +++++++-
- drivers/net/wireless/realtek/rtw89/rtw8852au.c | 8 +++++++-
- drivers/net/wireless/realtek/rtw89/rtw8852bu.c | 8 +++++++-
- drivers/net/wireless/realtek/rtw89/rtw8852cu.c | 8 +++++++-
- drivers/net/wireless/realtek/rtw89/rtw8922au.c | 8 +++++++-
- drivers/net/wireless/realtek/rtw89/usb.c       | 5 ++++-
- drivers/net/wireless/realtek/rtw89/usb.h       | 3 ++-
- 7 files changed, 41 insertions(+), 7 deletions(-)
+As Hans put it on the RFC: the tree already has device_reprobe() with
+15 callers, so this just adds a way to run one from a worker safely
+rather than having each of the open-coded copies reimplement the
+locking.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
-index 1e827205f254..6672ebe68f17 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
-@@ -59,10 +59,16 @@ static const struct usb_device_id rtw_8851bu_id_table[] = {
- };
- MODULE_DEVICE_TABLE(usb, rtw_8851bu_id_table);
- 
-+static int rtw8851bu_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw89_usb_probe(intf, id, &rtw89_8851bu_info);
-+}
-+
- static struct usb_driver rtw_8851bu_driver = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = rtw_8851bu_id_table,
--	.probe = rtw89_usb_probe,
-+	.probe = rtw8851bu_probe,
- 	.disconnect = rtw89_usb_disconnect,
- };
- module_usb_driver(rtw_8851bu_driver);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852au.c b/drivers/net/wireless/realtek/rtw89/rtw8852au.c
-index 065f4e5b17af..1a2e5dfbaab3 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852au.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852au.c
-@@ -73,10 +73,16 @@ static const struct usb_device_id rtw_8852au_id_table[] = {
- };
- MODULE_DEVICE_TABLE(usb, rtw_8852au_id_table);
- 
-+static int rtw8852au_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw89_usb_probe(intf, id, &rtw89_8852au_info);
-+}
-+
- static struct usb_driver rtw_8852au_driver = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = rtw_8852au_id_table,
--	.probe = rtw89_usb_probe,
-+	.probe = rtw8852au_probe,
- 	.disconnect = rtw89_usb_disconnect,
- };
- module_usb_driver(rtw_8852au_driver);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852bu.c b/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
-index de79a19a2824..550fc4ac7a21 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852bu.c
-@@ -73,10 +73,16 @@ static const struct usb_device_id rtw_8852bu_id_table[] = {
- };
- MODULE_DEVICE_TABLE(usb, rtw_8852bu_id_table);
- 
-+static int rtw8852bu_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw89_usb_probe(intf, id, &rtw89_8852bu_info);
-+}
-+
- static struct usb_driver rtw_8852bu_driver = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = rtw_8852bu_id_table,
--	.probe = rtw89_usb_probe,
-+	.probe = rtw8852bu_probe,
- 	.disconnect = rtw89_usb_disconnect,
- };
- module_usb_driver(rtw_8852bu_driver);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8852cu.c b/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
-index 2dec9b845481..6f852f4a713e 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8852cu.c
-@@ -133,10 +133,16 @@ static const struct usb_device_id rtw_8852cu_id_table[] = {
- };
- MODULE_DEVICE_TABLE(usb, rtw_8852cu_id_table);
- 
-+static int rtw8852cu_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw89_usb_probe(intf, id, &rtw89_8852cu_info);
-+}
-+
- static struct usb_driver rtw_8852cu_driver = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = rtw_8852cu_id_table,
--	.probe = rtw89_usb_probe,
-+	.probe = rtw8852cu_probe,
- 	.disconnect = rtw89_usb_disconnect,
- };
- module_usb_driver(rtw_8852cu_driver);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922au.c b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
-index 56c79b1ec865..2cd2b76d19ac 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922au.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922au.c
-@@ -74,10 +74,16 @@ static const struct usb_device_id rtw_8922au_id_table[] = {
- };
- MODULE_DEVICE_TABLE(usb, rtw_8922au_id_table);
- 
-+static int rtw8922au_probe(struct usb_interface *intf,
-+			   const struct usb_device_id *id)
-+{
-+	return rtw89_usb_probe(intf, id, &rtw89_8922au_info);
-+}
-+
- static struct usb_driver rtw_8922au_driver = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = rtw_8922au_id_table,
--	.probe = rtw89_usb_probe,
-+	.probe = rtw8922au_probe,
- 	.disconnect = rtw89_usb_disconnect,
- };
- module_usb_driver(rtw_8922au_driver);
-diff --git a/drivers/net/wireless/realtek/rtw89/usb.c b/drivers/net/wireless/realtek/rtw89/usb.c
-index 6f19d0eb3417..129a8838f50f 100644
---- a/drivers/net/wireless/realtek/rtw89/usb.c
-+++ b/drivers/net/wireless/realtek/rtw89/usb.c
-@@ -1207,7 +1207,8 @@ static const struct attribute_group rtw89_usb_group = {
- __ATTRIBUTE_GROUPS(rtw89_usb);
- 
- int rtw89_usb_probe(struct usb_interface *intf,
--		    const struct usb_device_id *id)
-+		    const struct usb_device_id *id,
-+		    const struct rtw89_driver_info *default_info)
- {
- 	const struct rtw89_driver_info *info;
- 	struct rtw89_dev *rtwdev;
-@@ -1215,6 +1216,8 @@ int rtw89_usb_probe(struct usb_interface *intf,
- 	int ret;
- 
- 	info = (const struct rtw89_driver_info *)id->driver_info;
-+	if (!info)
-+		info = default_info;
- 
- 	rtwdev = rtw89_alloc_ieee80211_hw(&intf->dev,
- 					  sizeof(struct rtw89_usb), info);
-diff --git a/drivers/net/wireless/realtek/rtw89/usb.h b/drivers/net/wireless/realtek/rtw89/usb.h
-index bdf312559743..d2af29d068f1 100644
---- a/drivers/net/wireless/realtek/rtw89/usb.h
-+++ b/drivers/net/wireless/realtek/rtw89/usb.h
-@@ -95,7 +95,8 @@ static inline struct rtw89_usb *rtw89_usb_priv(struct rtw89_dev *rtwdev)
- }
- 
- int rtw89_usb_probe(struct usb_interface *intf,
--		    const struct usb_device_id *id);
-+		    const struct usb_device_id *id,
-+		    const struct rtw89_driver_info *default_info);
- void rtw89_usb_disconnect(struct usb_interface *intf);
- 
- #endif
+This was first floated as an RFC [1]. In parallel the helper rode
+along in the mxl862xx DSA firmware-update series as its patch 3, and
+the v11 [2] and v12 [3] postings put it through further review: an
+automated review of v12 caught a parent use-after-free (the work locks
+the parent, but only the child was pinned) and a missing parent lock
+across device_attach() on need_parent_lock buses. Both are fixed here.
+net-next is closed and the mxl862xx feature waits for the next window,
+so the helper is submitted on its own now; mxl862xx converts to it
+once it lands.
+
+Testing: Patches 1-3 were runtime-tested (backported to 7.0.11) on
+Intel AX101 hardware with PROVE_LOCKING and DEBUG_OBJECTS_WORK,
+driving iwlwifi's crash escalation into the re-probe path: normal
+detach+rebind, an unbind racing a pending re-probe (the unbind is not
+undone), rmmod with a re-probe pending (now succeeds instead of
+EBUSY), and reboot with a re-probe pending; no lockdep or debugobjects
+reports. The same helper was exercised by the mxl862xx v11/v12
+hardware testing across repeated devlink firmware-flash and re-probe
+cycles, including a re-probe pending across unbind, rmmod and reboot.
+hci_h5 and btintel_pcie are compile-tested only.
+
+Changes since the RFC (v1) [1]:
+ - rebased from net-next onto v7.2-rc7
+ - pin the parent device across the deferred work and re-lock it
+   across device_attach() on need_parent_lock buses (found by the
+   automated review of the mxl862xx v12 posting)
+ - schedule the work on system_dfl_wq instead of the deprecated
+   system_unbound_wq
+ - thread the series properly (the RFC's patches were unthreaded)
+ - drop RFC status
+
+[1] https://lore.kernel.org/all/anpxFdwNxk0XwPjQ@makrotopia.org/
+[2] https://lore.kernel.org/all/cover.1786773971.git.daniel@makrotopia.org/
+[3] https://lore.kernel.org/all/cover.1786922210.git.daniel@makrotopia.org/
+
+Daniel Golle (4):
+  driver core: add device_schedule_reprobe()
+  wifi: iwlwifi: use device_schedule_reprobe()
+  Bluetooth: hci_h5: use device_schedule_reprobe()
+  Bluetooth: btintel_pcie: use device_schedule_reprobe() after reset
+
+ drivers/base/base.h                           |  5 +
+ drivers/base/core.c                           |  3 +
+ drivers/base/dd.c                             | 99 +++++++++++++++++++
+ drivers/bluetooth/btintel_pcie.c              | 51 +++++-----
+ drivers/bluetooth/hci_h5.c                    | 43 ++------
+ .../net/wireless/intel/iwlwifi/iwl-trans.c    | 40 +-------
+ include/linux/device.h                        |  2 +
+ 7 files changed, 144 insertions(+), 99 deletions(-)
+
+
+base-commit: db2ddb87143519e20a95aa36c60b36107b736a58
 -- 
 2.55.0
-
