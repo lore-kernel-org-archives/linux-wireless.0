@@ -1,34 +1,34 @@
-Received: from mta0.migadu.com (out-45.mta0.migadu.com [91.218.175.45])
+Received: from mta0.migadu.com (out-47.mta0.migadu.com [91.218.175.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC643DD879
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 09:04:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F2A3DB625
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 09:04:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787216696; cv=none; b=CIjioR1tzPJ+RWP5Ifu86fWWTv5iSyyUQE/h3H2ua1Qyo3k8mk4Md+N0AP/U1nDYk9OQvvRtIO4Ym+yMLShHdf2TdQOJRD9u2MeiElC3z/+r/IDNMXzc1F+AH+sEF64YKYw0j4BWJCpKMRwESOiMCwAKZE1pmLFc5OvYOfb1e8Q=
+	t=1787216698; cv=none; b=rcowpSbo1W0/bLtddOLjcAfYMd+XUmok4v37P14lJNYpPa8WAOah5SFfCoyMowsyzDftbOMiYckhHF4v7lcsD3nF8JHNd2s56rpFHBryWXTqlUHBJrds58EIEMcllhMP8DbpTbVARtejmELFlPurdM37mq//zxTH2H6VQVpQ58o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787216696; c=relaxed/simple;
-	bh=1jQxC1bTRgU2jI/pcfTSJmxQx8dxLL9G4TfkbHlEong=;
+	s=arc-20240116; t=1787216698; c=relaxed/simple;
+	bh=Anx4qjlWRnWUphss+u7dyVIBgFgfXmdwSGVowuVpcXY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tDI7tWQqyVkADEgko21jh+soSkqF1pe4VBit6MDcG47LSbU60GESnBh6/iRDYeHZA/zBzMNoUDrOj4xCY+73h+A3OGR2T88e8+idlfjY8xvEWYOx40dd2av7YngkmMiwT1KMFhmQY4XxOLVXrI7uKB98lrlAFsfLjNbVCavjUgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=V35ycYhB; arc=none smtp.client-ip=91.218.175.45
+	 MIME-Version; b=i9BKa/rqWfs4KsHyl6fQo1yrgaaL2UP1Y8t9Ubg1XafvGzkbRn3tIIfXNyLvOBCpRU670SE99DofUJHHby2wASr32QTEx3PdbyqhB0i7uMGp4ChiZ3NzfoKnmeRmIK/3FIk6M/DYrA49JUQMGxcQs+ZAkznoTHjAVfOzl2YYcqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lGMrAaWH; arc=none smtp.client-ip=91.218.175.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="V35ycYhB"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lGMrAaWH"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1jQxC1bTRgU2jI/pcfTSJmxQx8dxLL9G4TfkbHlEong=;
+DKIM-Signature: a=rsa-sha256; bh=Anx4qjlWRnWUphss+u7dyVIBgFgfXmdwSGVowuVpcXY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787216692; v=1; x=1787821492;
- b=V35ycYhBbh/OHXJZ63Z04hsigUlwt0m+6aebr57lH719HOpLyR9dwq4ev0ma8cdMGPNtrLZc
- ZI178ASUoWyZgcc3P7Aw6iHdSi1V/GE01nVYhB4slHvksfoVj0+iVQEEYptddDxeQ4U7f1KyuBA
- cZg2QAyf2P9Oz3F81d15PXkg=
+ t=1787216693; v=1; x=1787821493;
+ b=lGMrAaWHIpEJh9NzRCEua/kp4OTJprLtSFmkS+0LEI20PBfysM00XgMafSSSAoOimOW4rO3j
+ ZuRzApUTjbvhMiRX5yxen01gufFwQNQ2aB/GtNp5Nyrqk1eUsqjRZQ3N/w9oXyN5yowLs0QeKho
+ gjomp8GemxVAheOmbd0whY7I=
 X-Envelope-To: linux-wireless@vger.kernel.org
 Received: from kali (2a06:63c5:9b00:3900:e1b3:d7a6:6110:4f65)
-	by smtp.migadu.com with ESMTPS id f2717e8bdf999fdb;
-	Thu, 20 Aug 2026 09:04:52 +0000
-X-Mizu-Trace-ID: f2717e8bdf999fdb
+	by smtp.migadu.com with ESMTPS id fa5008d3c75b6d2b;
+	Thu, 20 Aug 2026 09:04:53 +0000
+X-Mizu-Trace-ID: fa5008d3c75b6d2b
 X-Migadu-Flow: FLOW_OUT
 From: luka.gejak@linux.dev
 To: Ping-Ke Shih <pkshih@realtek.com>,
@@ -39,9 +39,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Peter Robinson <pbrobinson@gmail.com>,
 	Hans de Goede <johannes.goede@oss.qualcomm.com>,
 	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v7 5/6] wifi: rtw88: sdio: set up RX aggregation and interrupts for RTL8723BS
-Date: Thu, 20 Aug 2026 09:04:11 +0000
-Message-ID: <20260820090412.19574-6-luka.gejak@linux.dev>
+Subject: [PATCH v7 6/6] wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
+Date: Thu, 20 Aug 2026 09:04:12 +0000
+Message-ID: <20260820090412.19574-7-luka.gejak@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260820090412.19574-1-luka.gejak@linux.dev>
 References: <20260820090412.19574-1-luka.gejak@linux.dev>
@@ -55,146 +55,357 @@ Content-Transfer-Encoding: 8bit
 
 From: Luka Gejak <luka.gejak@linux.dev>
 
-Enable the existing RX aggregation setup for this chip and select the
-larger DMA burst count it needs. The RTL8723BS does not raise CPWM1, so
-leave that source out of its interrupt mask, and set the SDIO TX control
-bit the vendor driver uses to have transfers always recognised.
+Two problems show up on RTL8723BS uplink. The per-AC software FIFO is
+unbounded, so mac80211 keeps handing frames down until latency collapses
+under load. And when a transfer cannot be completed the queue is simply
+abandoned for that pass, which stalls the AC until something else kicks
+the worker.
 
-The chip was also seen to keep raising the interrupt after resume when
-undefined status bits were written back on acknowledgment, so
-acknowledge only the bits this driver defines. That observation dates
-from bring up and I cannot re-measure it: the test machine only offers
-s2idle and does not reliably return from it, so the resume path is not
-exercised here. The change is scoped to this chip; the other SDIO parts
-keep writing the status word back unchanged.
+Stop the mac80211 queue once a data AC fills past a high watermark and
+wake it from the drain path when it falls back to a low one. The stop
+path re-checks the FIFO after setting the stopped flag and undoes the
+stop if the worker drained it meanwhile: the drain side had seen the
+flag still clear then, so neither side would ever have woken the queue
+and the AC would have stayed stopped with nothing left to wake it.
+
+Convert the TX work item to a delayed work and re-arm it when a transfer
+fails for a reason that can clear on its own, so it is retried rather
+than the AC abandoned, and cancel the work on teardown.
+
+Retrying matters once the queue can be stopped. A stopped queue is
+handed no further frames, so nothing else would kick the worker, and the
+AC would stay stopped for good with the link still up and receive
+unaffected. The two retried cases, a transmit page or output queue
+shortage and a failed skb expansion, are also the two that fail
+silently; the rest are logged where they happen, so they are visible
+rather than an unexplained hang, and they keep the existing behaviour
+rather than being retried indefinitely.
+
+Measured on RTL8723BS hardware, uplink goes from 11.9 Mbit/s with 204
+TCP retransmits to 20.1 Mbit/s with 2.
 
 Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 ---
 
 Notes:
-    Changes in v7: none.
-    Changes in v6: none.
-    Changes in v5: fixed the interrupt acknowledgment. It masked the status
-    word with both irq_mask and RTW_SDIO_HISR_CLEAR_MASK, but for this chip
-    irq_mask is REG_SDIO_HIMR_RX_REQUEST alone and that bit is not in the
-    clear mask, so the two had no bits in common and the driver acknowledged
-    nothing at all. It now masks with the defined bits only, which is what
-    the comment described. The commit message also no longer presents the
-    resume behaviour as re-measured, because it is not.
+    Changes in v7:
+      - the mac80211 queue index is read before skb_queue_tail() publishes
+        the skb to the TX worker, which may process and free it immediately;
+        reading it afterwards was a use after free.
+      - the stop path re-checks the FIFO after setting the stopped flag and
+        undoes the stop if the worker drained it meanwhile. In that window
+        the drain side still saw the flag clear, so neither side would have
+        woken the queue and the AC stayed stopped for good. The flag is
+        accessed with READ_ONCE/WRITE_ONCE and the re-check is ordered
+        against the drain path with a barrier pair.
+    
+    Changes in v6:
+      - dropped rtw_sdio_reschedule_tx_work(). It was a thin wrapper around
+        queue_delayed_work() and hid the kernel API for no gain.
+      - the reschedule conditions moved into rtw_sdio_8723bs_reschedule_tx(),
+        so rtw_sdio_tx_handler() no longer explains any chip specific
+        condition in the common flow.
+      - dropped the unconditional break on a failed transfer. v4 and v5 had
+        it, and it quietly changed the other SDIO parts: upstream requeues
+        the frame and the loop retries, and breaking gave up after the first
+        failure. The two errors this chip needs to retry are handled in the
+        helper above, so the rest can keep the existing behaviour and the
+        other parts are untouched again.
+    Changes in v5:
+      - the back-pressure and wake conditions moved into
+        rtw_sdio_8723bs_stop_tx_queue() and _wake_tx_queue().
+      - rtw_sdio_process_tx_queue() returns 0 on success and 1 for the empty
+        queue case, rather than the other way round.
+      - queue_stopped[] renamed to tx_queue_stopped[].
+      - fixed a transmit stall: the work item was only re-armed on a page
+        shortage, so on any other failure a stopped access category would
+        stay stopped for good. It now also re-arms on a failed skb
+        expansion, which with the page shortage covers both failures that
+        produce no log message.
+      - RTW_SDIO_TX_RETRY_DELAY is left as msecs_to_jiffies(1): it does not
+        become 0 for HZ < 1000, since msecs_to_jiffies() rounds up.
 
- drivers/net/wireless/realtek/rtw88/sdio.c | 28 ++++++++++++++++++++++-
- drivers/net/wireless/realtek/rtw88/sdio.h |  9 ++++++++
- 2 files changed, 36 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/sdio.c | 161 ++++++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/sdio.h |   3 +-
+ 2 files changed, 153 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 9777900f9bb8..8948f4b476b4 100644
+index 8948f4b476b4..a21c36737e78 100644
 --- a/drivers/net/wireless/realtek/rtw88/sdio.c
 +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -911,7 +911,11 @@ static void rtw_sdio_init(struct rtw_dev *rtwdev)
+@@ -22,6 +22,16 @@
+ #define RTW_SDIO_INDIRECT_RW_RETRIES			50
+ #define RTW_SDIO_OQT_TIMEOUT_MS				1000
+ 
++/*
++ * 8723BS SDIO TX FIFO back-pressure watermarks: stop the mac80211 queue once
++ * the per-AC software FIFO fills past the high watermark, and wake it from the
++ * TX drain path once it falls back to the low one. Bounds the queueing latency
++ * that otherwise causes uplink bufferbloat / congestion collapse.
++ */
++#define RTW_SDIO_TX_FIFO_HIWATER			16
++#define RTW_SDIO_TX_FIFO_LOWATER			8
++#define RTW_SDIO_TX_RETRY_DELAY			msecs_to_jiffies(1)
++
+ static bool rtw_sdio_is_bus_addr(u32 addr)
+ {
+ 	return !!(addr & RTW_SDIO_BUS_MSK);
+@@ -1108,7 +1118,11 @@ static void rtw_sdio_tx_kick_off(struct rtw_dev *rtwdev)
  {
  	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
  
--	rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CPWM1;
-+	if (rtw_is_8723bs(rtwdev))
-+		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST;
-+	else
-+		rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST |
-+				    REG_SDIO_HIMR_CPWM1;
+-	queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
++	/*
++	 * A retry may already be pending with a delay; re-arm it so a newly
++	 * queued frame is not held back by it.
++	 */
++	mod_delayed_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work, 0);
  }
  
- static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
-@@ -919,6 +923,7 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
- 	u8 size, timeout;
- 
- 	switch (rtwdev->chip->id) {
-+	case RTW_CHIP_TYPE_8723B:
- 	case RTW_CHIP_TYPE_8703B:
- 	case RTW_CHIP_TYPE_8821A:
- 	case RTW_CHIP_TYPE_8812A:
-@@ -946,6 +951,8 @@ static void rtw_sdio_enable_rx_aggregation(struct rtw_dev *rtwdev)
- 		    FIELD_PREP(BIT_DMA_AGG_TO_V1, timeout));
- 
- 	rtw_write8_set(rtwdev, REG_RXDMA_MODE, BIT_DMA_MODE);
-+	if (rtw_is_8723bs(rtwdev))
-+		rtw_write8_mask(rtwdev, REG_RXDMA_MODE, BIT_DMA_BURST_CNT, 0x3);
+ static void rtw_sdio_link_ps(struct rtw_dev *rtwdev, bool enter)
+@@ -1217,12 +1231,75 @@ static int rtw_sdio_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
+ 	return rtw_sdio_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
  }
  
- static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev)
-@@ -1017,6 +1024,8 @@ static int rtw_sdio_8723bs_check_rqpn(struct rtw_dev *rtwdev)
- 
- static int rtw_sdio_start(struct rtw_dev *rtwdev)
- {
-+	u32 clear;
++/*
++ * Back-pressure on the data ACs (BK/BE/VI/VO): once the software FIFO fills
++ * past the high watermark, stop the corresponding mac80211 queue so it stops
++ * handing frames down, which bounds the queueing latency. The queue is woken
++ * again from the TX drain path once the FIFO falls back to the low watermark.
++ */
++static void rtw_sdio_8723bs_stop_tx_queue(struct rtw_dev *rtwdev,
++					  enum rtw_tx_queue_type queue,
++					  u16 q_map)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
 +
- 	if (rtw_is_8723bs(rtwdev)) {
- 		int ret = rtw_sdio_8723bs_check_rqpn(rtwdev);
- 
-@@ -1029,6 +1038,13 @@ static int rtw_sdio_start(struct rtw_dev *rtwdev)
- 	}
- 
- 	rtw_sdio_enable_rx_aggregation(rtwdev);
++	if (!rtw_is_8723bs(rtwdev) || queue >= RTW_TX_QUEUE_BCN)
++		return;
 +
-+	if (rtw_is_8723bs(rtwdev)) {
-+		clear = rtw_read32(rtwdev, REG_SDIO_HISR) & RTW_SDIO_HISR_CLEAR_MASK;
-+		if (clear)
-+			rtw_write32(rtwdev, REG_SDIO_HISR, clear);
++	if (READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
++		return;
++
++	if (skb_queue_len(&rtwsdio->tx_queue[queue]) < RTW_SDIO_TX_FIFO_HIWATER)
++		return;
++
++	WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], true);
++	ieee80211_stop_queue(rtwdev->hw, q_map);
++
++	/*
++	 * The worker may have drained the queue between the length check
++	 * above and the flag becoming visible; its wake check then saw the
++	 * flag still clear and this stop would never be undone. Re-check
++	 * now that the flag is set and undo the stop if so. Both sides can
++	 * wake, which is harmless; the barrier pairs with the one in
++	 * rtw_sdio_8723bs_wake_tx_queue() so at least one side does.
++	 */
++	smp_mb();
++	if (skb_queue_len(&rtwsdio->tx_queue[queue]) <=
++	    RTW_SDIO_TX_FIFO_LOWATER) {
++		WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
++		ieee80211_wake_queue(rtwdev->hw, q_map);
 +	}
++}
 +
- 	rtw_sdio_enable_interrupt(rtwdev);
++static void rtw_sdio_8723bs_wake_tx_queue(struct rtw_dev *rtwdev,
++					  enum rtw_tx_queue_type queue,
++					  u16 q_map)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	if (!rtw_is_8723bs(rtwdev) || queue >= RTW_TX_QUEUE_BCN)
++		return;
++
++	/* pairs with the barrier in rtw_sdio_8723bs_stop_tx_queue() */
++	smp_mb();
++
++	if (!READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
++		return;
++
++	if (skb_queue_len(&rtwsdio->tx_queue[queue]) > RTW_SDIO_TX_FIFO_LOWATER)
++		return;
++
++	WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
++	ieee80211_wake_queue(rtwdev->hw, q_map);
++}
++
+ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
+ 			     struct rtw_tx_pkt_info *pkt_info,
+ 			     struct sk_buff *skb)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+ 	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
++	u16 q_map = skb_get_queue_mapping(skb);
+ 	struct rtw_sdio_tx_data *tx_data;
  
- 	return 0;
-@@ -1108,6 +1124,8 @@ static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
- 
- 	val = rtw_read32(rtwdev, REG_SDIO_TX_CTRL);
- 	val &= 0xfff8;
-+	if (rtw_is_8723bs(rtwdev))
-+		val |= BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE;
- 	rtw_write32(rtwdev, REG_SDIO_TX_CTRL, val);
- }
- 
-@@ -1372,6 +1390,14 @@ static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
- 		rtw_sdio_rx_isr(rtwdev);
- 	}
+ 	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
+@@ -1230,8 +1307,15 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
+ 	tx_data = rtw_sdio_get_tx_data(skb);
+ 	tx_data->sn = pkt_info->sn;
  
 +	/*
-+	 * RTL8723BS keeps raising the interrupt after resume if undefined
-+	 * status bits are written back, so acknowledge only the bits this
-+	 * driver defines. Other chips keep the existing behaviour.
++	 * skb_queue_tail() publishes the skb to the TX worker, which may
++	 * process and free it immediately, so nothing may touch the skb
++	 * past this point.
 +	 */
-+	if (rtw_is_8723bs(rtwdev))
-+		hisr &= RTW_SDIO_HISR_CLEAR_MASK;
-+
- 	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
+ 	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
  
- 	rtwsdio->irq_thread = NULL;
++	rtw_sdio_8723bs_stop_tx_queue(rtwdev, queue, q_map);
++
+ 	return 0;
+ }
+ 
+@@ -1534,33 +1618,81 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
+ 	ieee80211_tx_status_irqsafe(hw, skb);
+ }
+ 
+-static void rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
+-				      enum rtw_tx_queue_type queue)
++/*
++ * Send one frame from @queue. Returns 0 when a frame was written, 1 when the
++ * queue was empty and a negative errno when the write failed, in which case
++ * the frame is put back at the head of the queue.
++ */
++static int rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
++				     enum rtw_tx_queue_type queue)
+ {
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+ 	struct sk_buff *skb;
++	u16 q_map;
+ 	int ret;
+ 
+ 	skb = skb_dequeue(&rtwsdio->tx_queue[queue]);
+ 	if (!skb)
+-		return;
++		return 1;
+ 
++	q_map = skb_get_queue_mapping(skb);
+ 	ret = rtw_sdio_write_port(rtwdev, skb, queue);
+ 	if (ret) {
+ 		skb_queue_head(&rtwsdio->tx_queue[queue], skb);
+-		return;
++		return ret;
+ 	}
+ 
+ 	rtw_sdio_indicate_tx_status(rtwdev, skb);
++
++	rtw_sdio_8723bs_wake_tx_queue(rtwdev, queue, q_map);
++
++	return 0;
++}
++
++/*
++ * Decide whether the RTL8723BS wants the TX work to run again, and if so
++ * arrange it and tell the caller to stop draining. Two cases need it.
++ *
++ * A transmit page or output queue shortage and a failed skb expansion are
++ * transient and leave the frame queued, so come back for it shortly. That
++ * matters once the mac80211 queue can be stopped: a stopped queue is handed
++ * no further frames, so nothing else would kick this work item and the access
++ * category would stay stopped for good. The remaining errors are logged where
++ * they happen and are not retried.
++ *
++ * After a management frame, restart from the highest priority queue so the
++ * join sequence is not held up behind a data backlog.
++ */
++static bool rtw_sdio_8723bs_reschedule_tx(struct rtw_dev *rtwdev,
++					  struct rtw_sdio_work_data *work_data,
++					  enum rtw_tx_queue_type queue, int ret)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	unsigned long delay;
++
++	if (!rtw_is_8723bs(rtwdev))
++		return false;
++
++	if (ret == -EBUSY || ret == -ENOMEM)
++		delay = RTW_SDIO_TX_RETRY_DELAY;
++	else if (ret == 0 && queue == RTW_TX_QUEUE_MGMT)
++		delay = 0;
++	else
++		return false;
++
++	queue_delayed_work(rtwsdio->txwq, &work_data->work, delay);
++
++	return true;
+ }
+ 
+ static void rtw_sdio_tx_handler(struct work_struct *work)
+ {
+ 	struct rtw_sdio_work_data *work_data =
+-		container_of(work, struct rtw_sdio_work_data, work);
++		container_of(to_delayed_work(work), struct rtw_sdio_work_data,
++			     work);
+ 	struct rtw_sdio *rtwsdio;
+ 	struct rtw_dev *rtwdev;
+-	int limit, queue;
++	int limit, queue, ret;
+ 
+ 	rtwdev = work_data->rtwdev;
+ 	rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+@@ -1570,7 +1702,13 @@ static void rtw_sdio_tx_handler(struct work_struct *work)
+ 
+ 	for (queue = RTK_MAX_TX_QUEUE_NUM - 1; queue >= 0; queue--) {
+ 		for (limit = 0; limit < 1000; limit++) {
+-			rtw_sdio_process_tx_queue(rtwdev, queue);
++			ret = rtw_sdio_process_tx_queue(rtwdev, queue);
++			if (ret > 0)
++				break;
++
++			if (rtw_sdio_8723bs_reschedule_tx(rtwdev, work_data,
++							  queue, ret))
++				return;
+ 
+ 			if (skb_queue_empty(&rtwsdio->tx_queue[queue]))
+ 				break;
+@@ -1599,14 +1737,16 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
+ 
+ 	mutex_init(&rtwsdio->tx_credit_lock);
+ 
+-	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
++	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
+ 		skb_queue_head_init(&rtwsdio->tx_queue[i]);
++		rtwsdio->tx_queue_stopped[i] = false;
++	}
+ 	rtwsdio->tx_handler_data = kmalloc_obj(*rtwsdio->tx_handler_data);
+ 	if (!rtwsdio->tx_handler_data)
+ 		goto err_destroy_wq;
+ 
+ 	rtwsdio->tx_handler_data->rtwdev = rtwdev;
+-	INIT_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
++	INIT_DELAYED_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
+ 
+ 	return 0;
+ 
+@@ -1620,6 +1760,7 @@ static void rtw_sdio_deinit_tx(struct rtw_dev *rtwdev)
+ 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
+ 	int i;
+ 
++	cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
+ 	destroy_workqueue(rtwsdio->txwq);
+ 	kfree(rtwsdio->tx_handler_data);
+ 
 diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-index f43f1c6309b7..634c0b1339bb 100644
+index 634c0b1339bb..6e7e6009744b 100644
 --- a/drivers/net/wireless/realtek/rtw88/sdio.h
 +++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-@@ -22,6 +22,7 @@
+@@ -156,7 +156,7 @@ struct rtw_sdio_tx_data {
+ };
  
- /* SDIO Tx Control */
- #define REG_SDIO_TX_CTRL			(SDIO_LOCAL_OFFSET + 0x0000)
-+#define BIT_SDIO_TX_CTRL_ALWAYS_RECOGNIZE	BIT(4)
+ struct rtw_sdio_work_data {
+-	struct work_struct work;
++	struct delayed_work work;
+ 	struct rtw_dev *rtwdev;
+ };
  
- /*SDIO status timeout*/
- #define REG_SDIO_TIMEOUT			(SDIO_LOCAL_OFFSET + 0x0002)
-@@ -77,6 +78,14 @@
- /* the following two are RTL8188 SDIO Specific */
- #define REG_SDIO_HISR_MCU_ERR			BIT(28)
- #define REG_SDIO_HISR_TSF_BIT32_TOGGLE		BIT(29)
-+#define RTW_SDIO_HISR_CLEAR_MASK		\
-+	(REG_SDIO_HISR_TXERR | REG_SDIO_HISR_RXERR | \
-+	 REG_SDIO_HISR_TXFOVW | REG_SDIO_HISR_RXFOVW | \
-+	 REG_SDIO_HISR_TXBCNOK | REG_SDIO_HISR_TXBCNERR | \
-+	 REG_SDIO_HISR_C2HCMD | REG_SDIO_HISR_CPWM1 | \
-+	 REG_SDIO_HISR_CPWM2 | REG_SDIO_HISR_HSISR_IND | \
-+	 REG_SDIO_HISR_GTINT3_IND | REG_SDIO_HISR_GTINT4_IND | \
-+	 REG_SDIO_HISR_PSTIMEOUT | REG_SDIO_HISR_OCPINT)
+@@ -172,6 +172,7 @@ struct rtw_sdio {
+ 	struct workqueue_struct *txwq;
+ 	struct rtw_sdio_work_data *tx_handler_data;
+ 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
++	bool tx_queue_stopped[RTK_MAX_TX_QUEUE_NUM];
  
- /* HCI Current Power Mode */
- #define REG_SDIO_HCPWM				(SDIO_LOCAL_OFFSET + 0x0019)
+ 	atomic_t free_pg_high;
+ 	atomic_t free_pg_normal;
 -- 
 2.53.0
 
