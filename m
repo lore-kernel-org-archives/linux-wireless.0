@@ -1,411 +1,218 @@
-Received: from mta0.migadu.com (out-47.mta0.migadu.com [91.218.175.47])
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F2A3DB625
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 09:04:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.47
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787216698; cv=none; b=rcowpSbo1W0/bLtddOLjcAfYMd+XUmok4v37P14lJNYpPa8WAOah5SFfCoyMowsyzDftbOMiYckhHF4v7lcsD3nF8JHNd2s56rpFHBryWXTqlUHBJrds58EIEMcllhMP8DbpTbVARtejmELFlPurdM37mq//zxTH2H6VQVpQ58o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787216698; c=relaxed/simple;
-	bh=Anx4qjlWRnWUphss+u7dyVIBgFgfXmdwSGVowuVpcXY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=i9BKa/rqWfs4KsHyl6fQo1yrgaaL2UP1Y8t9Ubg1XafvGzkbRn3tIIfXNyLvOBCpRU670SE99DofUJHHby2wASr32QTEx3PdbyqhB0i7uMGp4ChiZ3NzfoKnmeRmIK/3FIk6M/DYrA49JUQMGxcQs+ZAkznoTHjAVfOzl2YYcqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lGMrAaWH; arc=none smtp.client-ip=91.218.175.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 919C83F44EF
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 09:34:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787218465; cv=pass; b=m6bPqpim8LVTGSGLhbf75H9kfxcu9Xlz2Rchr95SLBY703gfIk0s4JbRvAk+F/RbhIYgWd6jBZGKbIVG66yDn/JWpfTx7tj6ju6B3/7oNVXG+MjdbDNRvdBCVniwfAcX5ds4jJ1l2PVhuLDASZ/eOUJnYZZY9zuAY2fWa8UbwAk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787218465; c=relaxed/simple;
+	bh=nYYBXc76RfdtU54i/yfZoijMWBxoO6zClIQBh+szfn0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ya6OUANj39OimAtApLIWihl7T0Fso1MskogrlXCizEn7jLAs6Dm91u6pSmEdG7SXVvbVttJn0/A1nhFuWz6K0jhbQdDboLCOAQz7KvdgIpkpYs15on4O0wnaU7ut1Ipoxi603Zu8OFGsQPLXcV+saCp0Y6umbHBrmjOzkGxLD7E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S3kOmxpj; arc=pass smtp.client-ip=209.85.208.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lGMrAaWH"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Anx4qjlWRnWUphss+u7dyVIBgFgfXmdwSGVowuVpcXY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787216693; v=1; x=1787821493;
- b=lGMrAaWHIpEJh9NzRCEua/kp4OTJprLtSFmkS+0LEI20PBfysM00XgMafSSSAoOimOW4rO3j
- ZuRzApUTjbvhMiRX5yxen01gufFwQNQ2aB/GtNp5Nyrqk1eUsqjRZQ3N/w9oXyN5yowLs0QeKho
- gjomp8GemxVAheOmbd0whY7I=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from kali (2a06:63c5:9b00:3900:e1b3:d7a6:6110:4f65)
-	by smtp.migadu.com with ESMTPS id fa5008d3c75b6d2b;
-	Thu, 20 Aug 2026 09:04:53 +0000
-X-Mizu-Trace-ID: fa5008d3c75b6d2b
-X-Migadu-Flow: FLOW_OUT
-From: luka.gejak@linux.dev
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Michael Straube <straube.linux@gmail.com>,
-	Bitterblue Smith <rtl8821cerfe2@gmail.com>,
-	Peter Robinson <pbrobinson@gmail.com>,
-	Hans de Goede <johannes.goede@oss.qualcomm.com>,
-	Luka Gejak <luka.gejak@linux.dev>
-Subject: [PATCH v7 6/6] wifi: rtw88: sdio: add TX back-pressure and retry on page starvation
-Date: Thu, 20 Aug 2026 09:04:12 +0000
-Message-ID: <20260820090412.19574-7-luka.gejak@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260820090412.19574-1-luka.gejak@linux.dev>
-References: <20260820090412.19574-1-luka.gejak@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S3kOmxpj"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-3a1585728b5so17439451fa.0
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 02:34:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787218450; cv=none;
+        d=google.com; s=arc-20260327;
+        b=L2XABcMmG/tET31DHCwD8qgudhz25UmyJcBZSJrhkNx4XQCL+lw1nIVi622rF2pa1N
+         6xUzhTmMLEq27t/VDi/3Xih7rnCtl2AQra/utYgsGnYnXfmXEtD4zVKIRhMtF6qU7cxX
+         WlT7vsYGfVaEBHtpooJCFi7a2xbkAPnaGNfCfPTiSVLsrx41KGkKGdolvkGF5f96BGq5
+         pifTW6OVbvTL8BoYeCUS8nR7vD5wQQQYsZVmbJ0g3qTKEgAo0SzlsUvhOp0U5JCm49U6
+         0VJAkDd+sJllTeRddBd0UvuS5wtdKmzHOCh9rzSQeUZC4lP60TCYjE+QMgaOiqzEckCG
+         L5+A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=nYYBXc76RfdtU54i/yfZoijMWBxoO6zClIQBh+szfn0=;
+        fh=M357ojun8X6iPphMguibG9VBW65VZ9GaT3YjM4aEiNw=;
+        b=DeN4Aw04nGvsuiZwcYtBr5ThMjhavb72dTkKJ5Cka87cPKCQpJ5eStmhyzRsujWRMR
+         mjv1pOHU0OO2zF+/HgetZUx32HmKOKpyfTXzdcO5eWLE+sF7IwBRS94QpeE5xFMlVVsA
+         9C5ZLt9HoDnZfkteP5tkRUOS5CZ9bzkgDk8EBmh62pzVAkkxpEid/xV/9SEA7zWl+Pq3
+         2+O3EHEVk3Q8Ffej8MBUvXNjUqhcyHU14Fx0Io0FoGxPxcEJlOdEjE0z7nERldR+Tkhb
+         h/uwlyC9E55RPvIKD5HKXr63N855F2glocTIbBMfklwaT3PCI+t+6RdeUy/w47ap38Bu
+         6xqw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787218450; x=1787823250; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=nYYBXc76RfdtU54i/yfZoijMWBxoO6zClIQBh+szfn0=;
+        b=S3kOmxpjr8hALgLJmQEIN0nbQQ1PFcSjlZ2Rjp4qBk6XLRaTayQE2LWy9+usQDn++e
+         qJrw1kOUZe7DE2bwFxzn4IcKlib2GXJyoL8CCS+Gt/8T7SoUQH3Zx0/9fcm5/ENWwB4V
+         stbQrWbSUKCgXiG9mMLyGC7hLJrxG6uH+XZoW7W6XEIpB6KGFVJl3eVhIInzR07pqleo
+         u/0eHDN4tOqdEG/ZXqS78bRvLNDxaK6BoS0xlKxxJNQe8C4yN7BpJMqubz25ea/5VdKr
+         EYFOapSmNxoahpNxkKUkonR0fXpmsvR+Uvb/kANOuLUZYR/7vVAKJd7EsnjTUgIvdaRL
+         RRTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787218450; x=1787823250;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=nYYBXc76RfdtU54i/yfZoijMWBxoO6zClIQBh+szfn0=;
+        b=dsKW5sXstODWaAZzguOpebSqbPnkqTvmZ7Xv5wNKN8yHGqN7Ad+ayXv52yY59H+/aM
+         WBJO0yJQgAzzi5I9C9Y43JXzo8GuQzf/jK95HtAa+NHdY8QN5lsf1HA05BIucRwCPdea
+         Zq/Gk6bfwSQD7+8NtazRymvHEPe3J0XzrF0WEPU+rw4MWUFqMgxywmKF/86eY2kd9gM/
+         +ihFDYXKF+5VA5bbarbtcCKir6VK5OxChR/T7WDU0/mA3U459CmV4ELsADzbmZs0vRY1
+         pdGQJ+YYX+qGa6n8lV40KNFSwtQrduSNeumyJesNcW0r4y9w4neGscTTvdfR9J9sE6Cj
+         SEuQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rotc4oMvzP3UuwTR/hvyagd4qmvIemU12DOVvQ2c6tgELDlz0Z1yn2IQzxeYzHOsU3eSb3g2G1ayJE+VFUgjA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYNufRbr0SzIuo73QNwrOkBjZYQ6y97N9776qyzlQlSxiyTlOF
+	xhT9Z6IX/Ufekmy2fPp3kvlKLZQ5n58pRzULEXUWOO6Zjkx74sIAB6GkbRomsJ3f1S91deOInJb
+	T89oViGYppaOmTej42T0A+/yHgbBZBJo=
+X-Gm-Gg: AR+sD11vijauqfP89oKALkXO5aJ23w04Zkqw+NXdtxnSBQFTRn8tJ2mA8HDJiEXHOZQ
+	hXuJspDsRYZ+P8/IgdLzXtAag8orNIYeEh0KbHrb33HEgL45wKlODp2V1uduzT4uZj5smnYEV1J
+	b8xQ1u1lXF1SHRF67DJelkHeJamepCHbLnuPVfL6DaOFleVMxXAVzQPXJl4n8BF7UZL5nKuxsUx
+	LfKhjPrXelqLfTs7IZ9brxQ6r66qRkmUvFTbMJ2Etdm1RbTNooCRfMUW/XVGNoFM4trBWJr9ZiN
+	zYHRgPZGNzsMfCCHlNGUV7sfisJrj0zV3QUva1+ivBAkjDbZ6cWIclo7jvsY7mDEHlzRMYOqqjP
+	z/05NYavCNJwMskRYOcDD/voUZg==
+X-Received: by 2002:a05:651c:2118:b0:39e:a64f:d7a9 with SMTP id
+ 38308e7fff4ca-3a189725893mr23369941fa.2.1787218449766; Thu, 20 Aug 2026
+ 02:34:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CADOrJmbTyrGGkq+9OJDXCgTa2HvNo8BWxoE6yjafcrOq7WNamw@mail.gmail.com>
+ <20260817215428.84740-1-gvalkov@gmail.com> <20260819-generous-nickel-dalmatian-b6bb08@quoll>
+ <CADOrJmYfBe3ADun_kFjFSH6YOSTX7Vu3UsFsL57yuRdaQ=eJCA@mail.gmail.com>
+ <e554c007-67e3-4fbf-b85e-5de02f649e83@kernel.org> <CAGXv+5H7AhZgZ06r9KO3HLZ9Cymkai+Cv9SgVTuSC1PjgGf8hg@mail.gmail.com>
+ <d6c8f19e-f154-4b57-9101-cf3b73e9794f@kernel.org> <CADOrJmYxKTyDkKPaKCpH37RsyyZJZ+4uReE--+uvnHmEdNJVOw@mail.gmail.com>
+ <c38cb98e-0746-4b28-b0c9-ce59e8338048@kernel.org>
+In-Reply-To: <c38cb98e-0746-4b28-b0c9-ce59e8338048@kernel.org>
+From: George Valkov <gvalkov@gmail.com>
+Date: Thu, 20 Aug 2026 12:33:56 +0300
+X-Gm-Features: AcwNN1UdyfRyP4qTovLiX62_oFOyy91L008QCKICpAGE3pTfgFyxj68IsFBTyvc
+Message-ID: <CADOrJmb8CTkjRFp7OjynfQSFm3fHT87wemUM4X5yJjTtS=C7tA@mail.gmail.com>
+Subject: Re: [PATCH v5 1/3] dt-bindings: net: wireless: add flag marvell,ignore-regulatory-hint
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Chen-Yu Tsai <wenst@chromium.org>, briannorris@chromium.org, johannes@sipsolutions.net, 
+	andrew@lunn.ch, krzk+dt@kernel.org, francesco@dolcini.it, 
+	johannes.berg@intel.com, kees@kernel.org, miriam.rachel.korenblit@intel.com, 
+	rafael.beims@toradex.com, avraham.stern@intel.com, error27@gmail.com, 
+	s.kerkmann@pengutronix.de, gregory.clement@bootlin.com, 
+	sebastian.hesselbarth@gmail.com, robh@kernel.org, conor+dt@kernel.org, 
+	Frank.Li@nxp.com, chunfan.chen@gmail.com, 
+	linux-arm-kernel@lists.infradead.org, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-From: Luka Gejak <luka.gejak@linux.dev>
+On Thu, 20 Aug 2026 at 11:14, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+>
+> On 20/08/2026 09:50, George Valkov wrote:
+> >
+> >
+> > Krzysztof:
+> >> regulatory-hint for me means usually regdb, but even with your meaning
+> >> you tell SW what to do - ignore hardware regulatory information.
+> >> Property should not tell what SW should do with hardware. Property
+> >> should tell what is happening here in the hardware. In this case: what
+> >> is the reason behind.
+> >>
+> >> IOW, why user of a board in country X, where regulatory data says X,
+> >> should have the correct regulatory data ignored?
+> >
+> > Because users in X buy a board for X and the regulatory data says U.
+> >
+> > Indeed when the ROM regulatory hint is set to US and the driver
+> > reports this to the OS, the wireless-regdb restrictions for US are
+> > applied. This would normally be fine, however the third radio in
+> > WRT3200ACM and WRT32x, reports US on all models including those sold
+> > in the EU and other non US markets. This creates a conflict with
+> > radios 0 and 1, which report FR and also with my correct setting: BG.
+> > With the wireless-regdb restrictions for US, FR and BG applied, radio
+> > 0 refuses to start.
+>
+> So if you move with your router to US, you would need to change DTB?
+> IOW, the DTB is per user? This is obviously wrong... What if one device
+> has correct regulatory data written and you ignore it? Why would you
+> ignore it? If you decide to ignore correct regulatory data, then you can
+> as well ignore it unconditionally and this property is not needed.
 
-Two problems show up on RTL8723BS uplink. The per-AC software FIFO is
-unbounded, so mac80211 keeps handing frames down until latency collapses
-under load. And when a transfer cannot be completed the queue is simply
-abandoned for that pass, which stalls the AC until something else kicks
-the worker.
+All radios on these devices operate according to their certified
+region. The firmware for all radios is closed source, locked-down and
+there is no API to change any regional settings or affect TX power. By
+design, the regulatory information for this platform is configured
+from the devinfo partition mtd3:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts?h=v7.2#n106
 
-Stop the mac80211 queue once a data AC fills past a high watermark and
-wake it from the drain path when it falls back to a low one. The stop
-path re-checks the FIFO after setting the stopped flag and undoes the
-stop if the worker drained it meanwhile: the drain side had seen the
-flag still clear then, so neither side would ever have woken the queue
-and the AC would have stayed stopped with nothing left to wake it.
+cat /dev/mtd3
+admin1_passphrase=[...]
+admin2_passphrase=[...]
+cert_region=EU
+default_passphrase=[...]
+default_ssid=Linksys07770
+deviceType=urn:home-linksys-com:device:Router:1
+devinfo_version=20160121.1
+hw_mac_addr=[...]
+hw_revision=1
+hw_version=48SAM203.0GA
+manufacturer=Linksys, LLC
+manufacturerURL=http://www.linksys.com
+manufacturer_date=2017/12/26
+mfg_data_version=1
+modelDescription=Simultaneous Dual-Band Wireless-AC Gigabit Router
+modelNumber=WRT3200ACM-EU
+serial_number=[...]
+sw_version=v1.0.0
+tc_passphrase=[...]
+tc_ssid=[...]
+uuid_key=[...]
+wps_device_pin=[...]
 
-Convert the TX work item to a delayed work and re-arm it when a transfer
-fails for a reason that can clear on its own, so it is retried rather
-than the AC abandoned, and cancel the work on teardown.
+The intent of these patch series is not to make the radios operate in
+a region other than the one they are certified for, that's obviously
+not possible. As described in the commit description, the goal is to
+allow the platform to use the correct region, which is stored in the
+devinfo partition. The hard-coded region in the ROM of radio 2
+conflicts with the platform region and should be ignored, otherwise
+radio 0 and 2 won't even start. And yes this applies to the case where
+the user bought the device in Europe and has configured their correct
+country.
 
-Retrying matters once the queue can be stopped. A stopped queue is
-handed no further frames, so nothing else would kick the worker, and the
-AC would stay stopped for good with the link still up and receive
-unaffected. The two retried cases, a transmit page or output queue
-shortage and a failed skb expansion, are also the two that fail
-silently; the rest are logged where they happen, so they are visible
-rather than an unexplained hang, and they keep the existing behaviour
-rather than being retried indefinitely.
+With routes that allow the region to be changed, a user can move from
+EU to US, set the region to US and use their device.
+This is not the case with this model. The radios refuse region change
+so the user should not use it in other regions.
+For models sold on the US market, all 3 radios report US. The platform
+also enforces the US region from the devinfo partition. Even if we
+ignore the ROM hint from all radios, the platform will still use US. I
+don't see any regression. My changes are carefully scoped to a
+particular device which needs them and do not affect any other
+devices.
 
-Measured on RTL8723BS hardware, uplink goes from 11.9 Mbit/s with 204
-TCP retransmits to 20.1 Mbit/s with 2.
+> > Would you approve any of these or suggest a better name for the flag?
+> > Should ROM be in upper or lower case?
+> > I omitted 'in-ROM' to keep it short, because the driver check line is
+> > already longer than 80 characters.
+> > - marvell,ignore-regulatory-hint (current)
+> > - marvell,ignore-regulatory-hint-in-ROM
+> > - marvell,invalid-regulatory-hint-in-ROM
+> > - marvell,invalid-regulatory-hint
+> > - marvell,invalid-regulatory-ROM
+> > - marvell,invalid-reg-hint-in-ROM
+>
+> The point is that the regulatory hint is NOT INVALID. One device was
+> sold in US with US data, so how could it be invalid?
 
-Signed-off-by: Luka Gejak <luka.gejak@linux.dev>
----
+US devices have no issues, because all radios report US.
+I would love to ask Linksys the same question.
+My router was sold in Bulgaria and radio 3 reports US. Others bought
+it from the UK, DE, etc - same thing. Please allow me some time to
+install a clean firmware and I will post the output from
+iw reg get
+so you can see the incorrect regulatory hint and mix of three regions.
+This will take some time, and I will be left without a working Wi-Fi
+until I recover using UART.
 
-Notes:
-    Changes in v7:
-      - the mac80211 queue index is read before skb_queue_tail() publishes
-        the skb to the TX worker, which may process and free it immediately;
-        reading it afterwards was a use after free.
-      - the stop path re-checks the FIFO after setting the stopped flag and
-        undoes the stop if the worker drained it meanwhile. In that window
-        the drain side still saw the flag clear, so neither side would have
-        woken the queue and the AC stayed stopped for good. The flag is
-        accessed with READ_ONCE/WRITE_ONCE and the re-check is ordered
-        against the drain path with a barrier pair.
-    
-    Changes in v6:
-      - dropped rtw_sdio_reschedule_tx_work(). It was a thin wrapper around
-        queue_delayed_work() and hid the kernel API for no gain.
-      - the reschedule conditions moved into rtw_sdio_8723bs_reschedule_tx(),
-        so rtw_sdio_tx_handler() no longer explains any chip specific
-        condition in the common flow.
-      - dropped the unconditional break on a failed transfer. v4 and v5 had
-        it, and it quietly changed the other SDIO parts: upstream requeues
-        the frame and the loop retries, and breaking gave up after the first
-        failure. The two errors this chip needs to retry are handled in the
-        helper above, so the rest can keep the existing behaviour and the
-        other parts are untouched again.
-    Changes in v5:
-      - the back-pressure and wake conditions moved into
-        rtw_sdio_8723bs_stop_tx_queue() and _wake_tx_queue().
-      - rtw_sdio_process_tx_queue() returns 0 on success and 1 for the empty
-        queue case, rather than the other way round.
-      - queue_stopped[] renamed to tx_queue_stopped[].
-      - fixed a transmit stall: the work item was only re-armed on a page
-        shortage, so on any other failure a stopped access category would
-        stay stopped for good. It now also re-arms on a failed skb
-        expansion, which with the page shortage covers both failures that
-        produce no log message.
-      - RTW_SDIO_TX_RETRY_DELAY is left as msecs_to_jiffies(1): it does not
-        become 0 for HZ < 1000, since msecs_to_jiffies() rounds up.
-
- drivers/net/wireless/realtek/rtw88/sdio.c | 161 ++++++++++++++++++++--
- drivers/net/wireless/realtek/rtw88/sdio.h |   3 +-
- 2 files changed, 153 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
-index 8948f4b476b4..a21c36737e78 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.c
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.c
-@@ -22,6 +22,16 @@
- #define RTW_SDIO_INDIRECT_RW_RETRIES			50
- #define RTW_SDIO_OQT_TIMEOUT_MS				1000
- 
-+/*
-+ * 8723BS SDIO TX FIFO back-pressure watermarks: stop the mac80211 queue once
-+ * the per-AC software FIFO fills past the high watermark, and wake it from the
-+ * TX drain path once it falls back to the low one. Bounds the queueing latency
-+ * that otherwise causes uplink bufferbloat / congestion collapse.
-+ */
-+#define RTW_SDIO_TX_FIFO_HIWATER			16
-+#define RTW_SDIO_TX_FIFO_LOWATER			8
-+#define RTW_SDIO_TX_RETRY_DELAY			msecs_to_jiffies(1)
-+
- static bool rtw_sdio_is_bus_addr(u32 addr)
- {
- 	return !!(addr & RTW_SDIO_BUS_MSK);
-@@ -1108,7 +1118,11 @@ static void rtw_sdio_tx_kick_off(struct rtw_dev *rtwdev)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 
--	queue_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work);
-+	/*
-+	 * A retry may already be pending with a delay; re-arm it so a newly
-+	 * queued frame is not held back by it.
-+	 */
-+	mod_delayed_work(rtwsdio->txwq, &rtwsdio->tx_handler_data->work, 0);
- }
- 
- static void rtw_sdio_link_ps(struct rtw_dev *rtwdev, bool enter)
-@@ -1217,12 +1231,75 @@ static int rtw_sdio_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
- 	return rtw_sdio_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
- }
- 
-+/*
-+ * Back-pressure on the data ACs (BK/BE/VI/VO): once the software FIFO fills
-+ * past the high watermark, stop the corresponding mac80211 queue so it stops
-+ * handing frames down, which bounds the queueing latency. The queue is woken
-+ * again from the TX drain path once the FIFO falls back to the low watermark.
-+ */
-+static void rtw_sdio_8723bs_stop_tx_queue(struct rtw_dev *rtwdev,
-+					  enum rtw_tx_queue_type queue,
-+					  u16 q_map)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+
-+	if (!rtw_is_8723bs(rtwdev) || queue >= RTW_TX_QUEUE_BCN)
-+		return;
-+
-+	if (READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
-+		return;
-+
-+	if (skb_queue_len(&rtwsdio->tx_queue[queue]) < RTW_SDIO_TX_FIFO_HIWATER)
-+		return;
-+
-+	WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], true);
-+	ieee80211_stop_queue(rtwdev->hw, q_map);
-+
-+	/*
-+	 * The worker may have drained the queue between the length check
-+	 * above and the flag becoming visible; its wake check then saw the
-+	 * flag still clear and this stop would never be undone. Re-check
-+	 * now that the flag is set and undo the stop if so. Both sides can
-+	 * wake, which is harmless; the barrier pairs with the one in
-+	 * rtw_sdio_8723bs_wake_tx_queue() so at least one side does.
-+	 */
-+	smp_mb();
-+	if (skb_queue_len(&rtwsdio->tx_queue[queue]) <=
-+	    RTW_SDIO_TX_FIFO_LOWATER) {
-+		WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
-+		ieee80211_wake_queue(rtwdev->hw, q_map);
-+	}
-+}
-+
-+static void rtw_sdio_8723bs_wake_tx_queue(struct rtw_dev *rtwdev,
-+					  enum rtw_tx_queue_type queue,
-+					  u16 q_map)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+
-+	if (!rtw_is_8723bs(rtwdev) || queue >= RTW_TX_QUEUE_BCN)
-+		return;
-+
-+	/* pairs with the barrier in rtw_sdio_8723bs_stop_tx_queue() */
-+	smp_mb();
-+
-+	if (!READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
-+		return;
-+
-+	if (skb_queue_len(&rtwsdio->tx_queue[queue]) > RTW_SDIO_TX_FIFO_LOWATER)
-+		return;
-+
-+	WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
-+	ieee80211_wake_queue(rtwdev->hw, q_map);
-+}
-+
- static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 			     struct rtw_tx_pkt_info *pkt_info,
- 			     struct sk_buff *skb)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	enum rtw_tx_queue_type queue = rtw_tx_queue_mapping(skb);
-+	u16 q_map = skb_get_queue_mapping(skb);
- 	struct rtw_sdio_tx_data *tx_data;
- 
- 	rtw_sdio_tx_skb_prepare(rtwdev, pkt_info, skb, queue);
-@@ -1230,8 +1307,15 @@ static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
- 	tx_data = rtw_sdio_get_tx_data(skb);
- 	tx_data->sn = pkt_info->sn;
- 
-+	/*
-+	 * skb_queue_tail() publishes the skb to the TX worker, which may
-+	 * process and free it immediately, so nothing may touch the skb
-+	 * past this point.
-+	 */
- 	skb_queue_tail(&rtwsdio->tx_queue[queue], skb);
- 
-+	rtw_sdio_8723bs_stop_tx_queue(rtwdev, queue, q_map);
-+
- 	return 0;
- }
- 
-@@ -1534,33 +1618,81 @@ static void rtw_sdio_indicate_tx_status(struct rtw_dev *rtwdev,
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
- 
--static void rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
--				      enum rtw_tx_queue_type queue)
-+/*
-+ * Send one frame from @queue. Returns 0 when a frame was written, 1 when the
-+ * queue was empty and a negative errno when the write failed, in which case
-+ * the frame is put back at the head of the queue.
-+ */
-+static int rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
-+				     enum rtw_tx_queue_type queue)
- {
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	struct sk_buff *skb;
-+	u16 q_map;
- 	int ret;
- 
- 	skb = skb_dequeue(&rtwsdio->tx_queue[queue]);
- 	if (!skb)
--		return;
-+		return 1;
- 
-+	q_map = skb_get_queue_mapping(skb);
- 	ret = rtw_sdio_write_port(rtwdev, skb, queue);
- 	if (ret) {
- 		skb_queue_head(&rtwsdio->tx_queue[queue], skb);
--		return;
-+		return ret;
- 	}
- 
- 	rtw_sdio_indicate_tx_status(rtwdev, skb);
-+
-+	rtw_sdio_8723bs_wake_tx_queue(rtwdev, queue, q_map);
-+
-+	return 0;
-+}
-+
-+/*
-+ * Decide whether the RTL8723BS wants the TX work to run again, and if so
-+ * arrange it and tell the caller to stop draining. Two cases need it.
-+ *
-+ * A transmit page or output queue shortage and a failed skb expansion are
-+ * transient and leave the frame queued, so come back for it shortly. That
-+ * matters once the mac80211 queue can be stopped: a stopped queue is handed
-+ * no further frames, so nothing else would kick this work item and the access
-+ * category would stay stopped for good. The remaining errors are logged where
-+ * they happen and are not retried.
-+ *
-+ * After a management frame, restart from the highest priority queue so the
-+ * join sequence is not held up behind a data backlog.
-+ */
-+static bool rtw_sdio_8723bs_reschedule_tx(struct rtw_dev *rtwdev,
-+					  struct rtw_sdio_work_data *work_data,
-+					  enum rtw_tx_queue_type queue, int ret)
-+{
-+	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-+	unsigned long delay;
-+
-+	if (!rtw_is_8723bs(rtwdev))
-+		return false;
-+
-+	if (ret == -EBUSY || ret == -ENOMEM)
-+		delay = RTW_SDIO_TX_RETRY_DELAY;
-+	else if (ret == 0 && queue == RTW_TX_QUEUE_MGMT)
-+		delay = 0;
-+	else
-+		return false;
-+
-+	queue_delayed_work(rtwsdio->txwq, &work_data->work, delay);
-+
-+	return true;
- }
- 
- static void rtw_sdio_tx_handler(struct work_struct *work)
- {
- 	struct rtw_sdio_work_data *work_data =
--		container_of(work, struct rtw_sdio_work_data, work);
-+		container_of(to_delayed_work(work), struct rtw_sdio_work_data,
-+			     work);
- 	struct rtw_sdio *rtwsdio;
- 	struct rtw_dev *rtwdev;
--	int limit, queue;
-+	int limit, queue, ret;
- 
- 	rtwdev = work_data->rtwdev;
- 	rtwsdio = (struct rtw_sdio *)rtwdev->priv;
-@@ -1570,7 +1702,13 @@ static void rtw_sdio_tx_handler(struct work_struct *work)
- 
- 	for (queue = RTK_MAX_TX_QUEUE_NUM - 1; queue >= 0; queue--) {
- 		for (limit = 0; limit < 1000; limit++) {
--			rtw_sdio_process_tx_queue(rtwdev, queue);
-+			ret = rtw_sdio_process_tx_queue(rtwdev, queue);
-+			if (ret > 0)
-+				break;
-+
-+			if (rtw_sdio_8723bs_reschedule_tx(rtwdev, work_data,
-+							  queue, ret))
-+				return;
- 
- 			if (skb_queue_empty(&rtwsdio->tx_queue[queue]))
- 				break;
-@@ -1599,14 +1737,16 @@ static int rtw_sdio_init_tx(struct rtw_dev *rtwdev)
- 
- 	mutex_init(&rtwsdio->tx_credit_lock);
- 
--	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++)
-+	for (i = 0; i < RTK_MAX_TX_QUEUE_NUM; i++) {
- 		skb_queue_head_init(&rtwsdio->tx_queue[i]);
-+		rtwsdio->tx_queue_stopped[i] = false;
-+	}
- 	rtwsdio->tx_handler_data = kmalloc_obj(*rtwsdio->tx_handler_data);
- 	if (!rtwsdio->tx_handler_data)
- 		goto err_destroy_wq;
- 
- 	rtwsdio->tx_handler_data->rtwdev = rtwdev;
--	INIT_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
-+	INIT_DELAYED_WORK(&rtwsdio->tx_handler_data->work, rtw_sdio_tx_handler);
- 
- 	return 0;
- 
-@@ -1620,6 +1760,7 @@ static void rtw_sdio_deinit_tx(struct rtw_dev *rtwdev)
- 	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
- 	int i;
- 
-+	cancel_delayed_work_sync(&rtwsdio->tx_handler_data->work);
- 	destroy_workqueue(rtwsdio->txwq);
- 	kfree(rtwsdio->tx_handler_data);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
-index 634c0b1339bb..6e7e6009744b 100644
---- a/drivers/net/wireless/realtek/rtw88/sdio.h
-+++ b/drivers/net/wireless/realtek/rtw88/sdio.h
-@@ -156,7 +156,7 @@ struct rtw_sdio_tx_data {
- };
- 
- struct rtw_sdio_work_data {
--	struct work_struct work;
-+	struct delayed_work work;
- 	struct rtw_dev *rtwdev;
- };
- 
-@@ -172,6 +172,7 @@ struct rtw_sdio {
- 	struct workqueue_struct *txwq;
- 	struct rtw_sdio_work_data *tx_handler_data;
- 	struct sk_buff_head tx_queue[RTK_MAX_TX_QUEUE_NUM];
-+	bool tx_queue_stopped[RTK_MAX_TX_QUEUE_NUM];
- 
- 	atomic_t free_pg_high;
- 	atomic_t free_pg_normal;
--- 
-2.53.0
-
+Georgi Valkov
