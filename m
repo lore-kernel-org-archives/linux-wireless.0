@@ -1,152 +1,149 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BBE03DB31A;
-	Thu, 20 Aug 2026 08:16:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E953DD866
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 08:30:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787213813; cv=none; b=pSLIGhi8RRwBowY6NMIIJxwQ/ZKu/5qgUNSdprc23P1/7gU0EXm8wgLO2Ju5M+PvN1v7hVuddUuq4tOepSCw7BHeNVDmrQDk1aZOJjMEytsgKMCeLOCBogUgSRvmKzCMkkOQphuq/HD/t+mJFCbxzSpwsJJxqyuWDyWAMRpmOYM=
+	t=1787214633; cv=none; b=kWLuoQF0MJNYZrqic25IL+90nYAB/8nD+nRTiXwcb1ULH3mH1hj/Yc/3/MbGy4joJ0XtElpQBS82Y1jVy4hhQdMZGF8pKkhL1+sG+VIZSR3YpNXar0k5pVzQVtSbVaeNqJ0FiveDdoYRU1wwZ/v8pouDB6vURGxQHj3S17DjxLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787213813; c=relaxed/simple;
-	bh=FGYPx0LRJKfb0iYwBEjvpnDCvg2zwbNQhANX4tN50tg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tU7i7Q+Fm8N+VSmYuAwLGJWWpxdKSu3v3v1LzpoG1Crvtj6v8//6R4dUg+QhKcvqrBLWHOd7MteMYexE2F5hJ3Okg5hOdbBSZ9PhPVnK5ZcLSVK/CoVppYKyP/NFlfEcjHTnJLrD42p3Y1eqKrzsEmy+LcIKzilhJajEL4XYUi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 78dbb8949c6f11f19a56ed5b684f684d-20260820
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:0dcc9456-f667-44fb-a6c8-525331257e3d,IP:0,U
-	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-25
-X-CID-META: VersionHash:7db8b62,CLOUDID:c0c7c1aca98761d0803e44c9f586bc3c,BulkI
-	D:nil,BulkQuantity:0,SF:81|82|102|136|850|865|898,TC:nil,Content:0|15|50,E
-	DM:-3|-100,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:
-	0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 78dbb8949c6f11f19a56ed5b684f684d-20260820
-X-User: lilinmao@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lilinmao@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1663575881; Thu, 20 Aug 2026 16:16:40 +0800
-From: Linmao Li <lilinmao@kylinos.cn>
-To: Jeff Chen <jeff.chen_1@nxp.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Francesco Dolcini <francesco@dolcini.it>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Linmao Li <lilinmao@kylinos.cn>
-Subject: [PATCH 1/2] wifi: nxpwifi: fix the authentication frame length handling
-Date: Thu, 20 Aug 2026 16:16:33 +0800
-Message-Id: <20260820081634.4043666-2-lilinmao@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260820081634.4043666-1-lilinmao@kylinos.cn>
-References: <20260820081634.4043666-1-lilinmao@kylinos.cn>
+	s=arc-20240116; t=1787214633; c=relaxed/simple;
+	bh=OS8QQfKfa52Fm2hu/CMn6ziZOz3INaWk58IbQhN59Ys=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=NQqXWuRNN1F37ZHo/Tl9eAUzbrAa1qZDemH/NiRKsC+eHxEJORZgT8KHu5LiLHyoaGIKV4M3WOZy9WxIoPh7Yu993/ogadTwvdhMbFQZbRWSMXY9i9ZCQ6kalPt39SFQ4trZkIQd2ayLSyOeMbSFg/TgC4UsjGloEc5+QRWZPg4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=EdXroyqZ; arc=none smtp.client-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EdXroyqZ"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6a156627e22so1346141a12.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 01:30:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787214630; x=1787819430; darn=vger.kernel.org;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iCcFkuEwxJmH5FDcZ+ruFk0YOfoCkOWRnbqGE9ZnWD8=;
+        b=EdXroyqZ6MKa2GnjFrgrAnP9coGENvXVvI4lALJiCjVxDERjqjEEYMUG/KzyReqG+1
+         sgqbe+B/it15ZKsMJPVEZ1MqEMSj02ICi/xyGR5/002tvPeKMHRtiaLR2xT+YQ2erLtc
+         AhVGSekyQTT7DR6BjdQNl1x7XhgdwHE7aioFyXxjZQ1j3B9Z70mwFR7OdRcQJQ2Le2mL
+         Uz+XROpeNBtAQW6GLg6SfGJtfUdu5y5W2Q1/VwHpQXy7cTw6KOBOPGbNi5FjxrdYrJxK
+         UpqHZAYz77ylV082B8YkzUrBBLlDAtrrQn05aEsFH9Zhe8vPIqryK2hfVDMSxd9ZwqXV
+         gP8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787214630; x=1787819430;
+        h=content-disposition:content-type:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=iCcFkuEwxJmH5FDcZ+ruFk0YOfoCkOWRnbqGE9ZnWD8=;
+        b=pIymXukdOZ2/6dC974Go7t1k6P4DcOsutQ8eldQo4y9ndB+lEJFomTcb8WTxRPHWMx
+         Pn3xGJqNtRX+sPcOfnFks9jqhV3K4JZ0Os+jJZMLmJbH8SCWhPSV3QQe4SsWKX+XLiSk
+         O7myRkuk6GWufzv8sXFLcbAwogtMTkBKiD8mMnYcXJyf9e6XueBUAzgMdQbD/QvaYGmj
+         74BEwQjT1ekx8MrGavMUg8t/Lh92WWyAn6cQicpzs7/J+CTBAGvGmziIsswR1rEtqgms
+         OC3cQ/30KiRTtb59sXik+Lv0iZs9epV//UPNpXgKERuMU9mbxvLvJWvnsrJaVmyB/HZC
+         Lt+Q==
+X-Forwarded-Encrypted: i=1; AHgh+RqWVyFecP9NaqPKCtU7amESZ81bDe0F9ENMAnsCQuXYBXSQQJCgwh1/3PaRlUd+veYf8hGyfe5wQWjpxkHGfQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxaCcni1Zig6OVZndCeEv3w47ZFdbgLIJYJzFclIqfgNp6B1MXY
+	NOlhoHIBuuAio51+pdGOQJiYxzWIMZ80qFf3KsHUlaiIY1Jxi3maOF2G
+X-Gm-Gg: AR+sD130siRB2dRwWCLD9hbmLle55IpYGhFcy9Rcf6+YDaAPsRLAKwhpZ5EsEAN/UFj
+	beU3Yy96ONYzo8IV36GBYotYUPsg0IkpCjVGZ313mbN8+Y/Dh3SjsfARKSgVad/kjosfEY1sQcq
+	hDi8dyas9wn/8rbpRiOQYUbQ1weoZQ8pwor/IXoiaY8EI/5XOK9+wlKZ8BPB/56zwOA+VOnT99D
+	Xbt4eLGMXfjdOn396gmL3KVEuKX0gB1JZBp/eK3VeyaRRuq0WGd2l6nraAbMMRziv3y4k+P4twz
+	M5UA3I2AXm8mQXgpDFMOEstRl6U1t6Hzqofm15Ku5mtLtGZO4hsBH8JFOzWo1gdx49O25yvv81e
+	edJOJllNoaAw+Dx8Sy3UYZIcN35lOSQPoTw+GrrvT+hn60sFwKW3MK9ShJPG5KCSvC48HEdOMRC
+	hkfVwPwYH2FQlpbXxSWcR3I4+YyiBVoMmQuB0QI6jVgIEEK+oSDfta51MU
+X-Received: by 2002:a17:907:a88b:b0:c1c:2218:f317 with SMTP id a640c23a62f3a-c244d45ad2amr244163366b.2.1787214629611;
+        Thu, 20 Aug 2026 01:30:29 -0700 (PDT)
+Received: from localhost ([2c0f:3d00:6be:8900:ce5e:9212:ea4b:f30])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c24591df465sm39637166b.48.2026.08.20.01.30.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Aug 2026 01:30:26 -0700 (PDT)
+Date: Thu, 20 Aug 2026 11:30:22 +0300
+From: Dan Carpenter <error27@gmail.com>
+To: Lachlan Hodges <lachlan.hodges@morsemicro.com>
+Cc: Dan Callaghan <dan.callaghan@morsemicro.com>,
+	Arien Judge <arien.judge@morsemicro.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Chetan Mistry <chetan.mistry@morsemicro.com>,
+	Sahand Maleki <sahand.maleki@morsemicro.com>,
+	Simon Wadsworth <simon@morsemicro.com>,
+	James Herbert <james.herbert@morsemicro.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH next] wifi: mm81x: fix type bugs handling sdio_readl/writel()
+Message-ID: <aoa7Hj1W7ETOrOzO@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 
-nxpwifi_cfg80211_authenticate() builds a 3-address management frame in a
-temporary buffer and hands it to nxpwifi_form_mgmt_frame(), which copies
-it into the skb and splices in address4.  The frame length is tracked in
-a single u16 that conflates the two lengths, and it gets both wrong.
+The sdio_readl() and sdio_writel() functions, instead of returning kernel
+error codes, instead stores the error codes in a parameter.  These caller
+functions pass should pass an int pointer to store the error code but
+instead pass a signed long.
 
-Truncation.  req->ie_len and req->auth_data_len are both size_t.  The IE
-policy caps req->ie_len at IEEE80211_MAX_DATA_LEN, but
-NL80211_ATTR_AUTH_DATA only has a four-byte minimum length policy.  Since
-nla_len is a u16, a single authentication data attribute can carry up to
-65531 bytes, enough for the combined frame length to exceed U16_MAX
-before it is assigned to pkt_len.  With auth_data_len == 65510 and no IEs
-the length wraps to 6, kzalloc(6) succeeds, and the memcpy() below then
-writes 65506 user-provided bytes past a 6-byte heap object.
+This will not work on big endian systems.  On little endian systems
+passing a ssize_t means negative error codes are converted to positive
+values near UINT_MAX.  This doesn't cause a problem at runtime because
+in mm81x_sdio_reg32_write() the error codes are discarded and we always
+return -EIO.  In mm81x_sdio_reg32_read() the high bits are truncated
+away so the positive value is re-converted back to negative and the
+code works as intended.
 
-Geometry.  NXPWIFI_MGMT_HEADER_LEN is 30, which is the 24-byte 3-address
-header plus the address4 that the firmware expects.  The temporary buffer
-only holds a struct ieee80211_hdr_3addr, so six of the bytes accounted
-for are never used, and passing that length to nxpwifi_form_mgmt_frame()
-makes it append ETH_ALEN on top of a length that already included it.
-The skb is sized without those six bytes, so the last skb_put_data()
-overruns the tailroom by exactly ETH_ALEN.  It usually goes unnoticed
-because SKB_DATA_ALIGN() rounding leaves slack.  The driver's other
-caller of the helper, nxpwifi_cfg80211_mgmt_tx(), adds ETH_ALEN to the
-skb size before allocating and passes the 3-address length, which is what
-this path should do too.
+Either way, passing an int is the correct thing and is a cleanup.
 
-Keep the two lengths apart.  frame_len is the 3-address frame the driver
-builds: it sizes the temporary buffer and is what the helper is told.
-pkt_len is what the firmware sees, frame_len plus address4: it sizes the
-skb and goes into tx_info.  Computing frame_len in size_t and rejecting
-anything that cannot be represented once ETH_ALEN is added removes the
-wrap.
-
-The value handed to the firmware is unchanged, so this is not a
-behavioural change for frames that were already valid.  A tighter 802.11
-bound may make sense, but that depends on the firmware's frame format and
-is a separate decision.
-
-Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
-Signed-off-by: Linmao Li <lilinmao@kylinos.cn>
+Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ drivers/net/wireless/morsemicro/mm81x/sdio.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-index 5cc8cdf594d3e..1f46e4f0157e7 100644
---- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-@@ -3323,6 +3323,7 @@ nxpwifi_cfg80211_authenticate(struct wiphy *wiphy,
- 	struct nxpwifi_adapter *adapter = priv->adapter;
- 	struct sk_buff *skb;
- 	u16 pkt_len, auth_alg;
-+	size_t frame_len;
- 	int ret;
- 	struct ieee80211_mgmt *mgmt;
- 	struct nxpwifi_txinfo *tx_info;
-@@ -3396,13 +3397,23 @@ nxpwifi_cfg80211_authenticate(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/morsemicro/mm81x/sdio.c b/drivers/net/wireless/morsemicro/mm81x/sdio.c
+index 96fce187dd35..65277399bf18 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/sdio.c
++++ b/drivers/net/wireless/morsemicro/mm81x/sdio.c
+@@ -381,7 +381,7 @@ static int mm81x_sdio_dm_read(struct mm81x *mors, u32 address, u8 *data,
  
- 	nxpwifi_cancel_scan(adapter);
+ static int mm81x_sdio_reg32_write(struct mm81x *mors, u32 address, u32 val)
+ {
+-	ssize_t ret = 0;
++	int ret = 0;
+ 	u32 original_address = address;
+ 	struct mm81x_sdio *sdio = (struct mm81x_sdio *)mors->drv_priv;
+ 	struct sdio_func *func1 = sdio->func->card->sdio_func[0];
+@@ -391,7 +391,7 @@ static int mm81x_sdio_reg32_write(struct mm81x *mors, u32 address, u32 val)
  
--	pkt_len = (u16)req->ie_len + req->auth_data_len +
--		NXPWIFI_MGMT_HEADER_LEN + NXPWIFI_AUTH_BODY_LEN;
-+	frame_len = req->ie_len + req->auth_data_len +
-+		sizeof(struct ieee80211_hdr_3addr) + NXPWIFI_AUTH_BODY_LEN;
+ 	address &= 0x0000FFFF;
+ 	sdio_writel(func1, (__force u32)cpu_to_le32(val),
+-		    (__force u32)cpu_to_le32(address), (int *)&ret);
++		    (__force u32)cpu_to_le32(address), &ret);
+ 	if (ret)
+ 		goto error;
  
- 	if (req->auth_data_len >= 4)
--		pkt_len -= 4;
-+		frame_len -= 4;
+@@ -411,7 +411,7 @@ static int mm81x_sdio_reg32_write(struct mm81x *mors, u32 address, u32 val)
+ static int mm81x_sdio_reg32_read(struct mm81x *mors, u32 address, u32 *val)
+ {
+ 	u32 value;
+-	ssize_t ret = 0;
++	int ret = 0;
+ 	struct mm81x_sdio *sdio = (struct mm81x_sdio *)mors->drv_priv;
+ 	struct sdio_func *func1 = sdio->func->card->sdio_func[0];
  
--	mgmt = kzalloc(pkt_len, GFP_KERNEL);
-+	/* nxpwifi_form_mgmt_frame() inserts address4, so the frame handed to
-+	 * the firmware is ETH_ALEN longer than the one built here.
-+	 */
-+	if (frame_len > U16_MAX - ETH_ALEN) {
-+		nxpwifi_dbg(adapter, ERROR,
-+			    "auth frame too long: %zu bytes\n", frame_len);
-+		return -EINVAL;
-+	}
-+	pkt_len = frame_len + ETH_ALEN;
-+
-+	mgmt = kzalloc(frame_len, GFP_KERNEL);
+@@ -419,8 +419,7 @@ static int mm81x_sdio_reg32_read(struct mm81x *mors, u32 address, u32 *val)
+ 					 MM81X_CONFIG_ACCESS_4BYTE);
  
- 	skb = dev_alloc_skb(NXPWIFI_MIN_DATA_HEADER_LEN +
- 			    NXPWIFI_MGMT_FRAME_HEADER_SIZE +
-@@ -3448,7 +3459,7 @@ nxpwifi_cfg80211_authenticate(struct wiphy *wiphy,
- 		memcpy((u8 *)varptr, req->ie, req->ie_len);
- 	}
+ 	address &= 0x0000FFFF;
+-	value = sdio_readl(func1, (__force u32)cpu_to_le32(address),
+-			   (int *)&ret);
++	value = sdio_readl(func1, (__force u32)cpu_to_le32(address), &ret);
+ 	if (ret)
+ 		return ret;
  
--	nxpwifi_form_mgmt_frame(skb, (const u8 *)mgmt, pkt_len);
-+	nxpwifi_form_mgmt_frame(skb, (const u8 *)mgmt, frame_len);
- 	kfree(mgmt);
- 	priv->auth_flag = HOST_MLME_AUTH_PENDING;
- 	priv->auth_alg = auth_alg;
 -- 
-2.25.1
+2.53.0
 
