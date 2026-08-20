@@ -1,204 +1,292 @@
-Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85DC51D89EF;
-	Thu, 20 Aug 2026 00:33:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8A4A2D9EED
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 05:24:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787186009; cv=none; b=HeP+FNebchAuYorUttnhG6hMcR9JJlfyA5DwOHmTsS0M0gNQtj+yyLSM9A/LX886BtnBxQ1vmP4918OZXIzi6gHQWxm2wio/McbJBNiuIVWIH2x1cBmr/aGpPfxahZ7kLPRdq0qSYmZr5iIuMdPPH9X9x8VI6YW0EiPPR0j8YfE=
+	t=1787203477; cv=none; b=HczNFNuXgUy5IkU8DVYGj8MkzHjZbxnSX68TcsKtAAe7xhgoaBET8c5lwDEsN6urFNl5gp/WJWUP5QCQaSKJ7kecTgPMMcc4Vkle1tV5bcVZae63X+2ReLK7EkUmD5EQ78W8b5xlTbZW7XQUS5fj3G0ZOpuU6DPStBSE02kb3Wk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787186009; c=relaxed/simple;
-	bh=QAgLnNDiDXzjjZEQUqAZ7Pqs8CybStHSJ/BO7LhFx1o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CN9rVBbWGQBt+bm/hwW3O11Ku9xk5XSSPeJgCeBLNyUgm6RttM718eSGn7R6zGiGh3FeXgWSP2CGWmuGzXxFBnyhfT+lb+dtWOIGeGEKcITe/ZRYad4rNXYyB1IG0EU6jG0SkV6N96y+bzZA6dQQaUm5/0SnphknLkmml4wB7ps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
-Received: from local
-	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
-	 (Exim 4.99)
-	(envelope-from <daniel@makrotopia.org>)
-	id 1wwqij-000000007Dx-195i;
-	Thu, 20 Aug 2026 00:33:25 +0000
-Date: Thu, 20 Aug 2026 01:33:22 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Hans de Goede <johannes.goede@oss.qualcomm.com>
-Subject: [PATCH v2 4/4] Bluetooth: btintel_pcie: use
- device_schedule_reprobe() after reset
-Message-ID: <be8fcc664be90ea28b2ce580e146c5fc96499fb4.1787185594.git.daniel@makrotopia.org>
-References: <cover.1787185594.git.daniel@makrotopia.org>
+	s=arc-20240116; t=1787203477; c=relaxed/simple;
+	bh=up6HLiTczTm1MLidXzlW6DMMOoUFjrStRSohr0Y+mpQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Er5mGd+z2A3ZNtY+il5BBJN5lwMY5GaiPL+PNBWHmMYPOrJ/RcD63I/uq9erGtuGH42p8QWHjKGJ7KoUwQFA/vB4KOSlNlp/DbHmw/ANHJ9rfhInhM0VMTtUnaMmVk0bMAoFkBoVTnMn5rUGPDkxaMdasabBzkF/g98zTiBXzGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=i0eTCwpn; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=hyo2+DyT; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="i0eTCwpn";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="hyo2+DyT"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67JL8TJt1458722
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 05:24:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=FomK4b+Z6EE0AuWvd+hS/XzhCyVhhrMuKN8
+	vsjrrKOs=; b=i0eTCwpnlYYbUMJqdD4fGf5ofM250rMaPCYj5cRVbn238nlOk7b
+	iK2Ns+I0Cc+ZG7/AcideeUBBznEbB/o8J/TKmM3OG5C2einmKP7N2RlY7V+rPCi4
+	d5dGBh+vQHYldL0Z/yGma29WxUXhwRkW6fjfBfrNKewGC9PJQA5IxMU/zTEsX3TO
+	JLrTs/5/ImJ+J/oypWJmp7fLD9B2tBONognFb0L3/EZfjLDogIwkKCXYn7IhorvL
+	Lg/melMGIjlNX53BGLHVlUu/Evf/i2/iODHzkAteaxff+lAfW0WVeZtiMeLW7oXA
+	u5iNZNAUMQKPvxYJ2w9W0avwaEvjr4nYx+Q==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g5es4b6xw-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 05:24:34 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2cc86a9ef97so34828305ad.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Aug 2026 22:24:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787203473; x=1787808273; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=FomK4b+Z6EE0AuWvd+hS/XzhCyVhhrMuKN8vsjrrKOs=;
+        b=hyo2+DyTu8fzKZnZRtgf0TCsVDc1GYwspi+oQzEBcKoQqVKrju0ypln4ptfiOPhZjZ
+         alJzjemEElB/p44SmUdBPDc/oK5ja0npU+sLQ+JIjt2b65t1TDU7eGvaTosZ/oLV2NIk
+         x7fe/rgygEkLo9g4AB+gqpYGuPbuZc+UQilwDqW0QRVJZN5qni2/Vhx/RV97rGY59IUB
+         9ZFyr8gnvNCe2DSm7p4RNHAEKgjszqSRI0Xi7qzpBodWIhYrdH1TzIeOUOLrFh6qR4SC
+         fkWSyvYDbbH9TTWMqDkvujOQ67WgWqznHFme/Twx04U5kUP8c5YGPR3H8ltpTP0hqO9Q
+         n57A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787203473; x=1787808273;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=FomK4b+Z6EE0AuWvd+hS/XzhCyVhhrMuKN8vsjrrKOs=;
+        b=bEowgQOEIBMiY0yIEgLtZh+slod7MhpyzVjguGif5ivdsEgai0ncVbArNOFTv4iX8v
+         iGXOftLP8wLji5ibuzHbHz34Jv9E6/MMpvkUWUdLbOFGyN677Q7461asKfHlcS8r+E64
+         iFWBObge2x5YLn6SRr3Md8HZtlbPtswUVwFleRkmdzeRn85UmqUXBJ3wsw7FfJA84TSb
+         NvCAvsPLeW7su7Jk1uXV4atdughYxCvvRYNaNI4gzj5YFATH/6ovrwQD/ByDDZ3H0rGs
+         xnycBM/A0SbUQelCRX5E1liwpBlInGTGtv1c+NOZr7DGc3iKB3lKGu7SijIwc/Y3y+66
+         KZCQ==
+X-Gm-Message-State: AFuF++lzTS5t5O1S2e1hoMklCgyut2CiKNmj/sAOZihx32syEY3th06z
+	gF7l0GKRP4BGM8eSPbNz2dPdjvZW828JvzZVM/NciatfKPUiRwF9dQ3CjoTZ3BfzXm7a9yz3tm8
+	Qon3CDONrQDQYYjpRc8BFuU+P5bemAxuoNGv/hWg9uCtd/41VY87zf5ob6bwaxajRDGuyNFWOqG
+	9NdA==
+X-Gm-Gg: AR+sD10x/nZLtGkRCX9kY0+amml9Z76L1YiBG7g25lZCTQZLSKTH4c9NJOhyIdUGPg9
+	4x6yJjHbc8qnY9QUNqixptYr9mJo9g+SulT1dCLs8gLp5JtOKhSqne+2KGoiYyn0k0JpBHPdymX
+	MEWS5uy3AWAHqfHV7FTEa62fsPZubqi4JbXe1fxcBTNb3chQbwcol2Gg/DD/JSj8Uijmdj7HrpF
+	UABnccx6uS6s94RiFhhck4MBRSKeq1ABiThQxkbbuHr9+7j/VGAwxlMaFuOzgjNC0aQSbY8++Xf
+	BNuyLXf0xYIQo9qnGIU5OXMWEQC6wM4LKAGuyy0EFUnFxPvVYimUM+aETdAVq+1YAfMEdFnsy42
+	yW7dDmBmKtla3fD62FlaK0iLCO7mqesPORcPa4et2ybvQFoPeeycfAQgJtiadNi+ze9+trsum9I
+	C0FsoCSVRo5IiYqH7G5vIjyEg=
+X-Received: by 2002:a17:902:ef43:b0:2d5:e9d5:8ae with SMTP id d9443c01a7336-2d5fd62ae4fmr195489345ad.5.1787203473337;
+        Wed, 19 Aug 2026 22:24:33 -0700 (PDT)
+X-Received: by 2002:a17:902:ef43:b0:2d5:e9d5:8ae with SMTP id d9443c01a7336-2d5fd62ae4fmr195488625ad.5.1787203472853;
+        Wed, 19 Aug 2026 22:24:32 -0700 (PDT)
+Received: from hu-aarasahu-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2d62e3cb9f8sm2120665ad.73.2026.08.19.22.24.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Aug 2026 22:24:32 -0700 (PDT)
+From: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
+To: ath12k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
+        Ganesh Kariganuru Mahabalesh <quic_gkarigan@quicinc.com>
+Subject: [PATCH wireless-next] wifi: mac80211: Report parent AP BSS parameters for AP_VLAN
+Date: Thu, 20 Aug 2026 10:54:26 +0530
+Message-Id: <20260820052426.3177309-1-aaradhana.sahu@oss.qualcomm.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1787185594.git.daniel@makrotopia.org>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: GnE8FQlhMoM3Rxi0rbIeZXMj00SlqGIt
+X-Authority-Analysis: v=2.4 cv=PZXPQChd c=1 sm=1 tr=0 ts=6a868f92 cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22 a=COk6AnOGAAAA:8
+ a=EUspDBNiAAAA:8 a=IfjyXQZqvconvXi0t-4A:9 a=1OuFwYUASf3TG4hYMiVC:22
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODIwMDAzNiBTYWx0ZWRfXwfwRXFa12I/R
+ IJ6I5+QkBxBaCiSLsAtE63GfKR/3SZnczglOYCCuoAJH6gm+jNpigd1RjALIu8f6vQxg6JZfDNa
+ hYMa96vA4/0KlJr+HdVxTU1yt064wCA=
+X-Proofpoint-GUID: GnE8FQlhMoM3Rxi0rbIeZXMj00SlqGIt
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODIwMDAzNiBTYWx0ZWRfX8JKXy7eiuMFU
+ CjJNhuiWU+tY+RR6NwFs4Cqzcy2yBa9mAQJHZ3NkyGbxHF3FmbYs8tZx0XtYECHmtPW0DHrUcEx
+ HMDhZDs3fTYdldKlaexn/QbNJs76n602dYesqt9CPwn/+9NOSvciab2WgZwYMcHS6ySWpUb//wS
+ mSJBOzl8r7xzkEMy/0OhVVRnPmjuTgyypANDZ6Czt8OeTI39VM0V8+0TwENP4H+z4w3DF8P511Z
+ D1OA4C7bGUaOEtW/oBcq0+3+SMRBnBHVWnoED8rjrA5n+p9KXdrpJa1NQqj3WIMLgvxZ4IBHjI2
+ HYmaUnEtX8xbt2oYmpM+BlTzcsK7CaQvew87S+8VxUYEhSXy3ZKjnA0j2TonS+SilAsaG5lyzfv
+ zkcpY0vxrz+0WnVRSi0pVP9+QhkBG6PSS82jF2hZ0WA9l1pNUTmhIAaTn9Kks3FugIHRifR5gGp
+ 0AHJA3nJjos2gG9Xx+g==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-19_06,2026-08-19_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 phishscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0
+ impostorscore=0 clxscore=1015 malwarescore=0 priorityscore=1501 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608200036
 
-btintel_pcie re-probes its own device synchronously from its own reset
-work via device_reprobe(), both after an FLR and after an ACPI PLDR.
-The synchronous call runs .remove() from inside the reset work, which
-requires a hand-rolled correctness contract spanning several comments:
-.remove() must skip draining the very reset work it is running from
-(the current_work() check), the reset must use pci_try_reset_function()
-to dodge a device_lock ABBA against .remove(), and both reset paths
-must not touch 'data' after the reprobe call because .remove() has
-freed it.
+AP_VLAN interfaces do not maintain independent BSS configuration.
+When station information is reported for a 4-address station, BSS
+parameters are read from the AP_VLAN interface, causing beacon interval,
+DTIM period and BSS capability flags to be reported incorrectly.
 
-Convert the two BT self re-probes to device_schedule_reprobe(). The
-driver core's builtin work item now triggers .remove(), never the
-reset work itself, so the current_work() check in .remove() is dead
-and is removed: disable_work_sync(&data->reset_work) now also
-guarantees the reset work has fully returned before 'data' is freed.
-The Wi-Fi sibling re-probe in the PLDR path is left untouched; the
-sibling is a different device re-probed from a bounded context and has
-neither of the bug classes the helper addresses.
+Read the BSS configuration from the parent AP when populating station
+information for AP_VLAN interfaces. This ensures that beacon interval,
+DTIM period, CTS protection, short preamble and short slot time reflect
+the parent AP configuration for both legacy and MLO station dumps.
 
-Safety of the window between the reset work returning and the deferred
-detach running, during which 'data' now stays alive:
+For MLO, the per-link BSS configuration is used so that CTS protection,
+short preamble and short slot time reflect the configuration of the
+corresponding parent AP link.
 
-- hci callbacks: send_frame fails with -ENODEV while
-  BTINTEL_PCIE_RECOVERY_IN_PROGRESS is set, and that bit is only
-  cleared by a fresh probe. New reset requests coalesce into the
-  in-flight one via the same bit. open/close are no-ops.
+Only advertise NL80211_STA_INFO_BSS_PARAM when a valid BSS
+configuration is available. This avoids reporting zero-valued BSS
+parameters when corresponding BSS configuration is unavailable.
 
-- interrupts: the reset work masks all interrupt causes and
-  synchronizes the IRQs before the reset, the coredump worker stays
-  disabled (disable count >= 1) until .remove(), rx_work is flushed,
-  and the freshly reset device raises no traffic until the next probe
-  re-initialises it. The same exposure already exists today in the
-  window between pci_try_reset_function() and the synchronous
-  re-probe; the conversion only lengthens it.
-
-- work disable counts: the success-path contract is unchanged in
-  substance. The reset work's disable_work_sync() call stays
-  unbalanced on success, .remove() disables again, and the fresh
-  probe re-INIT_WORKs the coredump worker with disable count 0.
-
-pci_lock_rescan_remove() now only covers the reset itself, no longer
-the re-probe. Hot-removal between the reset and the deferred re-probe
-is handled by the helper's dead-device check.
-
-If scheduling the re-probe fails in the FLR path, the error is
-returned so the reset work re-enables the coredump worker, matching
-the existing FLR failure handling; unlike before, 'data' is still
-alive in that case. The PLDR path keeps logging only, as before.
-
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Co-developed-by: Ganesh Kariganuru Mahabalesh <quic_gkarigan@quicinc.com>
+Signed-off-by: Ganesh Kariganuru Mahabalesh <quic_gkarigan@quicinc.com>
+Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
 ---
- drivers/bluetooth/btintel_pcie.c | 51 +++++++++++++++++---------------
- 1 file changed, 27 insertions(+), 24 deletions(-)
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/sta_info.c    | 50 ++++++++++++++++++++++++--------------
+ net/mac80211/util.c        | 21 ++++++++++++++++
+ 3 files changed, 55 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index 2b7231be5973..2bd318f0d36c 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -2582,7 +2582,7 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
- 	 * BT needs pci_save_state()/pci_restore_state() because the BT driver
- 	 * is still partially attached when the _PRR runs (it hasn't been unbound yet).
- 	 * The PCI device needs to remain minimally functional so that
--	 * device_reprobe(&pdev->dev) can work afterward
-+	 * the deferred re-probe of the BT device can work afterward
- 	 */
- 	ret = btintel_pcie_acpi_reset_method(data);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 5761e9621491..f3e49d980a26 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2982,6 +2982,8 @@ ieee80211_uhr_cap_ie_to_sta_uhr_cap(struct ieee80211_sub_if_data *sdata,
+ 				    const struct ieee80211_uhr_cap *uhr_cap,
+ 				    u8 uhr_cap_len,
+ 				    struct link_sta_info *link_sta);
++struct ieee80211_bss_conf *
++ieee80211_get_sdata_bss_conf(struct ieee80211_sub_if_data *sdata, int link_id);
  
-@@ -2593,14 +2593,16 @@ static void btintel_pcie_perform_pldr(struct btintel_pcie_data *data)
+ #if IS_ENABLED(CONFIG_MAC80211_KUNIT_TEST)
+ #define EXPORT_SYMBOL_IF_MAC80211_KUNIT(sym) EXPORT_SYMBOL_IF_KUNIT(sym)
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index fdf00cbf49d8..7635e600d1df 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2843,6 +2843,7 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+ 	struct ieee80211_sta_rx_stats *last_rxstats;
+ 	int i, ac, cpu, link_id = link->link_id;
+ 	struct link_sta_info *link_sta_info;
++	struct ieee80211_bss_conf *bss_conf;
+ 	u32 thr = 0;
+ 
+ 	last_rxstats = sta_get_last_rx_stats(sta, link_id);
+@@ -2864,7 +2865,6 @@ static void sta_set_link_sinfo(struct sta_info *sta,
+ 				link_sinfo);
+ 
+ 	link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
+-			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
+ 			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+@@ -3038,14 +3038,21 @@ static void sta_set_link_sinfo(struct sta_info *sta,
  	}
  
- 	if (!ret) {
--		if (device_reprobe(&pdev->dev))
--			BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+		if (device_schedule_reprobe(&pdev->dev, 0))
-+			BT_ERR("BT reprobe scheduling failed for BDF:%s",
-+			       pci_name(pdev));
- 	}
+ 	link_sinfo->bss_param.flags = 0;
+-	if (sdata->vif.bss_conf.use_cts_prot)
+-		link_sinfo->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
+-	if (sdata->vif.bss_conf.use_short_preamble)
+-		link_sinfo->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
+-	if (sdata->vif.bss_conf.use_short_slot)
+-		link_sinfo->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
+-	link_sinfo->bss_param.dtim_period = link->conf->dtim_period;
+-	link_sinfo->bss_param.beacon_interval = link->conf->beacon_int;
++
++	bss_conf = ieee80211_get_sdata_bss_conf(sdata, link_id);
++	if (bss_conf) {
++		if (bss_conf->use_cts_prot)
++			link_sinfo->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
++		if (bss_conf->use_short_preamble)
++			link_sinfo->bss_param.flags |=
++				BSS_PARAM_FLAGS_SHORT_PREAMBLE;
++		if (bss_conf->use_short_slot)
++			link_sinfo->bss_param.flags |=
++				BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
++		link_sinfo->bss_param.dtim_period = bss_conf->dtim_period;
++		link_sinfo->bss_param.beacon_interval = bss_conf->beacon_int;
++		link_sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BSS_PARAM);
++	}
+ 
+ 	thr = sta_get_expected_throughput(sta);
+ 	if (!thr && (link_sinfo->filled & BIT_ULL(NL80211_STA_INFO_TX_BITRATE)))
+@@ -3081,6 +3088,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_bss_conf *bss_conf;
+ 	u32 thr = 0;
+ 	int i, ac, cpu;
+ 	struct ieee80211_sta_rx_stats *last_rxstats;
+@@ -3099,7 +3107,6 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
+ 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_INACTIVE_TIME) |
+ 			 BIT_ULL(NL80211_STA_INFO_STA_FLAGS) |
+-			 BIT_ULL(NL80211_STA_INFO_BSS_PARAM) |
+ 			 BIT_ULL(NL80211_STA_INFO_CONNECTED_TIME) |
+ 			 BIT_ULL(NL80211_STA_INFO_ASSOC_AT_BOOTTIME) |
+ 			 BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC);
+@@ -3268,14 +3275,21 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
+ #endif
+ 
+ 	sinfo->bss_param.flags = 0;
+-	if (sdata->vif.bss_conf.use_cts_prot)
+-		sinfo->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
+-	if (sdata->vif.bss_conf.use_short_preamble)
+-		sinfo->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
+-	if (sdata->vif.bss_conf.use_short_slot)
+-		sinfo->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
+-	sinfo->bss_param.dtim_period = sdata->vif.bss_conf.dtim_period;
+-	sinfo->bss_param.beacon_interval = sdata->vif.bss_conf.beacon_int;
++
++	bss_conf = ieee80211_get_sdata_bss_conf(sdata, -1);
++	if (bss_conf) {
++		if (bss_conf->use_cts_prot)
++			sinfo->bss_param.flags |= BSS_PARAM_FLAGS_CTS_PROT;
++		if (bss_conf->use_short_preamble)
++			sinfo->bss_param.flags |=
++				BSS_PARAM_FLAGS_SHORT_PREAMBLE;
++		if (bss_conf->use_short_slot)
++			sinfo->bss_param.flags |=
++				BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
++		sinfo->bss_param.dtim_period = bss_conf->dtim_period;
++		sinfo->bss_param.beacon_interval = bss_conf->beacon_int;
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_BSS_PARAM);
++	}
+ 
+ 	sinfo->sta_flags.set = 0;
+ 	sinfo->sta_flags.mask = BIT(NL80211_STA_FLAG_AUTHORIZED) |
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index a96078a6bfa2..edef61d061ae 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -4752,3 +4752,24 @@ bool ieee80211_vif_nan_started(struct ieee80211_vif *vif)
+ 	return vif->type == NL80211_IFTYPE_NAN && sdata->u.nan.started;
  }
- 
- /*
-- * Issue a Function Level Reset and hand teardown/re-init off to the PCI
-- * core via device_reprobe(), mirroring the PLDR path's contract.
-+ * Issue a Function Level Reset and hand teardown/re-init off to the
-+ * driver core via device_schedule_reprobe(), mirroring the PLDR path's
-+ * contract.
-  *
-  * Caller must hold pci_lock_rescan_remove() and must have already
-  * disabled interrupts and drained both rx_work and coredump_work.
-@@ -2622,14 +2624,12 @@ static int btintel_pcie_perform_flr(struct btintel_pcie_data *data)
- 		return err;
- 	}
- 
--	/* device_reprobe() always detaches the driver first (running
--	 * .remove(), which frees 'data'); any re-probe failure leaves the
--	 * device unbound but 'data' is already gone, so just log it.
--	 */
--	if (device_reprobe(&pdev->dev))
--		BT_ERR("BT reprobe failed for BDF:%s", pci_name(pdev));
-+	err = device_schedule_reprobe(&pdev->dev, 0);
-+	if (err)
-+		BT_ERR("BT reprobe scheduling failed for BDF:%s",
-+		       pci_name(pdev));
- 
--	return 0;
-+	return err;
- }
- 
- static void btintel_pcie_reset_work(struct work_struct *wk)
-@@ -2657,11 +2657,15 @@ static void btintel_pcie_reset_work(struct work_struct *wk)
- 
- 	bt_dev_dbg(data->hdev, "Release bluetooth interface");
- 
--	/* Both reset paths follow the same contract: on success they
--	 * destroy 'data' via device_reprobe() (a fresh probe re-INIT_WORKs
--	 * the coredump_work with disable count 0), so enable_work() must
--	 * NOT be called on the success path. Only the FLR path can fail
--	 * with 'data' still alive, in which case we balance the
-+	/* Both reset paths follow the same contract: on success the
-+	 * deferred re-probe scheduled with device_schedule_reprobe()
-+	 * destroys 'data' by re-running .probe() (which re-INIT_WORKs the
-+	 * coredump_work with disable count 0), so enable_work() must NOT
-+	 * be called on the success path. 'data' stays alive until the
-+	 * deferred detach runs; in this window new activity is fenced by
-+	 * BTINTEL_PCIE_RECOVERY_IN_PROGRESS, the masked interrupts and the
-+	 * disabled coredump_work. Only the FLR path can fail with no
-+	 * re-probe scheduled, in which case we balance the
- 	 * disable_work_sync() above so a later successful reset is not
- 	 * permanently blocked.
- 	 *
-@@ -2941,19 +2945,18 @@ static void btintel_pcie_remove(struct pci_dev *pdev)
- 	}
- 
- 	/* Permanently block coredump triggers and drain the worker before
--	 * tearing down. Must run before cancel_work_sync(&reset_work) so
-+	 * tearing down. Must run before disable_work_sync(&reset_work) so
- 	 * the disable counter stays >= 1 even after reset_work()'s
- 	 * balanced enable_work() (counter 2 -> 1, never reaching 0).
- 	 */
- 	disable_work_sync(&data->coredump_work);
- 
--	/* Cancel pending reset work. Skip only when remove() is called from
--	 * within the reset work itself (PLDR device_reprobe path) to avoid
--	 * deadlock. current_work() returns the work_struct of the caller if
--	 * we are in a workqueue context.
-+	/* The deferred re-probe triggers .remove() from the driver core's
-+	 * work item, never from reset_work itself, so this no longer runs
-+	 * nested in reset_work; disable_work_sync() also guarantees the
-+	 * reset work has fully returned before 'data' is freed.
- 	 */
--	if (current_work() != &data->reset_work)
--		disable_work_sync(&data->reset_work);
-+	disable_work_sync(&data->reset_work);
- 
- 	btintel_pcie_disable_interrupts(data);
- 
+ EXPORT_SYMBOL_GPL(ieee80211_vif_nan_started);
++
++struct ieee80211_bss_conf *
++ieee80211_get_sdata_bss_conf(struct ieee80211_sub_if_data *sdata, int link_id)
++{
++	struct ieee80211_sub_if_data *bss_sdata = sdata;
++
++	lockdep_assert_wiphy(sdata->local->hw.wiphy);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		if (!sdata->bss)
++			return NULL;
++
++		bss_sdata = get_bss_sdata(sdata);
++	}
++
++	if (link_id >= 0)
++		return sdata_dereference(bss_sdata->vif.link_conf[link_id],
++					 bss_sdata);
++
++	return &bss_sdata->vif.bss_conf;
++}
+
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
 -- 
-2.55.0
+2.34.1
+
