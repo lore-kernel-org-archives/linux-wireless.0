@@ -1,92 +1,143 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pidgin.makrotopia.org (pidgin.makrotopia.org [185.142.180.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA32A25B0A4;
-	Fri, 21 Aug 2026 02:54:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B3F35E1B9;
+	Fri, 21 Aug 2026 03:08:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.142.180.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787280891; cv=none; b=iM2qWvD8hs9QhozshEnROjix57NOGv6yk0SwdVtlTqIIRq82mh9xFRkTbUkUdcptFXcfJEougpmCY5Tsuxe1KObBrS1FKaJwxjF4hwljBS8m2pJt3185om/j/pi6BN/0/Ko7OY64zpktA+Djgm6rmLUNbw6qB3RlT3GzWI6RWyc=
+	t=1787281714; cv=none; b=dr6ok1fPOLdTel3y8X2JG9mVVoAqUSWfnn1aPSCKZSS9emXLqOIQwosnt73ow7qLLbtscNLGucKOXFqXGmj9PMdVK1IdxGRK6lhcIc2oubLxyAf5SJVBIJx/DyFNg+KP6t0WYMpVaxWc9hbqcuHws4DJl5mfJtW7hT0Hua9l7tA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787280891; c=relaxed/simple;
-	bh=4TprAzpQLLBG7JEa2ew2UgbAlQ/8mitUXSUu06PcV7o=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=uvCxB0JqGFpeNe9Zjp7raNG8HgL4QGbloRGaxkFt+4lwnYZlWe/qx+v2SPmMWcl5LSavMxxdyKofmn6Y6+eyqkt0pWKTGMb00a49Q4HUCdFeNF0djzHxf+icg2zggdmvQC2aeMrzpWVssELyfelK2ibVMHwMt3Rxef2Iqz+aNXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=OhqDNqQH; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="OhqDNqQH"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67L2sjwT74026951, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787280885; bh=4TprAzpQLLBG7JEa2ew2UgbAlQ/8mitUXSUu06PcV7o=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=OhqDNqQHYfCF6UgEtQ9gSuUmxSjDELT70pAsCzicyv4waiEiX5xp32DUFLBGH2I32
-	 LwiQO8p3QL5hzUH4uxtq6eZKyZQGGuGAo615uPecBO2RkUylV2lWuz1XqBSnDOScTp
-	 OcJeXbGF2IpmAHRZbMyTcPJj1Zt2L00Du1ZYk7RjlRosNyqu6xihlbiRPMW3UyCDwG
-	 GKno6NEtc6j8tUEQeYhkrio+vhWEdB9uOC57Ab3B7U1g/A2uSIaWX/1o5ZcDPIMkZB
-	 UQxJjAHOHMXUM3E67XSnKayJuDXP2ymqDAb/O/UVmgAQhSJaQDMbwvYZaY+HTdBNFo
-	 1NmDvpmupx20Q==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67L2sjwT74026951
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 21 Aug 2026 10:54:45 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Fri, 21 Aug 2026 10:54:45 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Fri, 21 Aug 2026 10:54:45 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: =?utf-8?B?QXRhIMSwbGhhbiBLw7ZrdMO8cms=?= <atailhan2006@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] wifi: rtw88: disable ASPM for Lenovo IdeaPad S340-14IWL
-Thread-Topic: [PATCH] wifi: rtw88: disable ASPM for Lenovo IdeaPad S340-14IWL
-Thread-Index: AQHdMI0ZkVxkkYU5IU6B69wle8oiYranz4dQ
-Date: Fri, 21 Aug 2026 02:54:45 +0000
-Message-ID: <5b28c2d41aca478a9d4e11581a934f29@realtek.com>
-References: <20260820101642.35003-1-atailhan2006@gmail.com>
-In-Reply-To: <20260820101642.35003-1-atailhan2006@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1787281714; c=relaxed/simple;
+	bh=CBDVKp9MlCzdwdAZgdYt7cIMkOdyGaTV/im6jhI9diA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=tRBDQ1/75LT9XbJKud2B8iasrjappnoAgLLc1iyhww0dczEf2TjukMoJ+Sk59HwzuKnwuFyrxZEFFJZQuJEaNbtvOjAhvqLvKm3kPTkbSncQRAzuCQl7lvTL0onoqWbASUffrdblOnijiactT8FiZiI4lXdmOFX9MzFp/UEWNBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org; spf=pass smtp.mailfrom=makrotopia.org; arc=none smtp.client-ip=185.142.180.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=makrotopia.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=makrotopia.org
+Received: from local
+	by pidgin.makrotopia.org with esmtpsa (TLS1.3:TLS_AES_256_GCM_SHA384:256)
+	 (Exim 4.99)
+	(envelope-from <daniel@makrotopia.org>)
+	id 1wxFcD-000000005TT-0RJQ;
+	Fri, 21 Aug 2026 03:08:21 +0000
+Date: Fri, 21 Aug 2026 04:08:12 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Hans de Goede <johannes.goede@oss.qualcomm.com>
+Subject: [PATCH v3 0/4] device_schedule_reprobe(): core helper and conversions
+Message-ID: <cover.1787281239.git.daniel@makrotopia.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-DQpBdGEgxLBsaGFuIEvDtmt0w7xyayA8YXRhaWxoYW4yMDA2QGdtYWlsLmNvbT4gd3JvdGU6DQo+
-IFRoZSBMZW5vdm8gSWRlYVBhZCBTMzQwLTE0SVdMIChETUkgcHJvZHVjdCBuYW1lICI4MU40Iikg
-ZXhwZXJpZW5jZXMNCj4gc2V2ZXJlIGNvbm5lY3Rpdml0eSBpc3N1ZXMgd2l0aCB0aGUgcnR3ODgg
-UENJZSB3aXJlbGVzcyBjYXJkIHdoZW4NCj4gQVNQTSBpcyBlbmFibGVkLiBSZXBvcnRlZCBzeW1w
-dG9tcyBpbmNsdWRlIGZyZXF1ZW50IGRpc2Nvbm5lY3Rpb25zLA0KPiBrZXJuZWwgcGFuaWNzLCBh
-bmQgdGhlIGRyaXZlciBmYWlsaW5nIHRvIGxvYWQuDQo+IA0KPiBUaGUgaXNzdWUgY2FuIGJlIHdv
-cmtlZCBhcm91bmQgYnkgZWl0aGVyIGFkZGluZyBwY2k9bm9hc3BtIHRvIHRoZQ0KPiBrZXJuZWwg
-Y29tbWFuZCBsaW5lIG9yIGJ5IHJlbG9hZGluZyB0aGUgZHJpdmVyIHZpYSBtb2Rwcm9iZS4gQWRk
-IGENCj4gRE1JIHF1aXJrIHRvIGRpc2FibGUgQVNQTSBhdXRvbWF0aWNhbGx5IGZvciB0aGlzIGRl
-dmljZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEF0YSDEsGxoYW4gS8O2a3TDvHJrIDxhdGFpbGhh
-bjIwMDZAZ21haWwuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsv
-cnR3ODgvcGNpLmMgfCA5ICsrKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9u
-cygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnR3
-ODgvcGNpLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jDQo+IGlu
-ZGV4IGEzMDQ2NzIyOC4uOWRmODk1NGQ4IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9yZWFsdGVrL3J0dzg4L3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Jl
-YWx0ZWsvcnR3ODgvcGNpLmMNCj4gQEAgLTE3NzksNiArMTc3OSwxNSBAQCBzdGF0aWMgY29uc3Qg
-c3RydWN0IGRtaV9zeXN0ZW1faWQgcnR3X3BjaV9xdWlya3NbXSA9IHsNCj4gICAgICAgICAgICAg
-ICAgIC5kcml2ZXJfZGF0YSA9ICh2b2lkICopKEJJVChRVUlSS19ESVNfQ0FQX1BDSV9BU1BNKSB8
-DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBCSVQoUVVJUktfRElT
-X0NBUF9MUFNfREVFUCkpLA0KPiAgICAgICAgIH0sDQo+ICsgICAgICAgew0KPiArICAgICAgICAg
-ICAgICAgLmNhbGxiYWNrID0gcnR3X3BjaV9kaXNhYmxlX2NhcHMsDQo+ICsgICAgICAgICAgICAg
-ICAuaWRlbnQgPSAiTGVub3ZvIElkZWFQYWQgUzM0MC0xNElXTCIsDQo+ICsgICAgICAgICAgICAg
-ICAubWF0Y2hlcyA9IHsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgRE1JX01BVENIKERNSV9T
-WVNfVkVORE9SLCAiTEVOT1ZPIiksDQo+ICsgICAgICAgICAgICAgICAgICAgICAgIERNSV9NQVRD
-SChETUlfUFJPRFVDVF9OQU1FLCAiODFONCIpLA0KPiArICAgICAgICAgICAgICAgfSwNCj4gKyAg
-ICAgICAgICAgICAgIC5kcml2ZXJfZGF0YSA9ICh2b2lkICopKEJJVChRVUlSS19ESVNfQ0FQX1BD
-SV9BU1BNKSksDQoNClJlbW92ZSByZWR1bmRhbnQgcGFyZW50aGVzaXMuIA0KDQouZHJpdmVyX2Rh
-dGEgPSAodm9pZCAqKUJJVChRVUlSS19ESVNfQ0FQX1BDSV9BU1BNKSwNCg0KDQo+ICsgICAgICAg
-fSwNCj4gICAgICAgICB7fQ0KPiAgfTsNCj4gDQo+IC0tDQo+IDIuNTUuMA0KDQo=
+Three in-tree drivers (iwlwifi, hci_h5, btintel_pcie) schedule a
+deferred re-probe of their own device from a work item whose work
+function lives in module text. The hand-rolled copies share two bug
+classes: the work function ends with module_put(THIS_MODULE), racing a
+concurrent rmmod freeing the module text (the race
+module_put_and_kthread_exit() exists to close for kthreads), and
+nothing synchronizes the deferred detach against device_shutdown() or
+an administrative unbind.
+
+Patch 1 moves the deferred work into the driver core.
+device_schedule_reprobe() runs builtin code, so no module reference is
+needed; it checks under a single __device_driver_lock() hold that the
+device is still bound to the driver that scheduled the re-probe, and
+skips the detach once device_shutdown() has reached the device (a new
+one-bit shutdown_done flag in struct device_private). It pins both the
+device and its parent for the lifetime of the work and re-locks the
+parent across the attach on buses that require it. Patches 2 and 3 are
+mechanical conversions; patch 4 (btintel_pcie) also retires that
+driver's remove()-from-own-work contract.
+
+This is a cross-tree series. Each patch applies cleanly on the tree
+that owns it:
+
+  patch 1 (driver core)      -> driver-core
+  patch 2 (iwlwifi)          -> wireless-next
+  patches 3, 4 (bluetooth)   -> bluetooth-next
+
+It is based on bluetooth-next so patches 3 and 4 apply there; patch 1
+applies equally on driver-core and patch 2 on wireless-next (verified
+against all three trees). Patches 2-4 depend on the helper from patch
+1, so they need it in their tree -- or an immutable branch/tag of it --
+before they build.
+
+As Hans put it on the RFC: the tree already has device_reprobe() with
+15 callers, so this just adds a way to run one from a worker safely
+rather than having each open-coded copy reimplement the locking.
+
+History: this was first floated as an RFC (v1) [1]. In parallel the
+helper rode along in the mxl862xx DSA firmware-update series, whose
+review [2] caught a parent use-after-free (the work locks the parent,
+but only the child was pinned) and a missing parent lock across
+device_attach() on need_parent_lock buses -- both fixed here. net-next
+is closed and the mxl862xx feature waits for the next window, so the
+helper is submitted on its own now; mxl862xx is going to use it once it
+lands.
+
+Testing: Hans de Goede reviewed and tested patches 1 and 3 on hci_h5
+hardware that hits the resume re-probe path. Patches 1-3 were also
+runtime-tested (backported to 7.0.11) on Intel AX101 with PROVE_LOCKING
+and DEBUG_OBJECTS_WORK, driving iwlwifi's crash escalation into the
+re-probe path: normal detach+rebind, an unbind racing a pending
+re-probe (not undone), rmmod with a re-probe pending (now succeeds
+instead of EBUSY), and reboot with a re-probe pending; no lockdep or
+debugobjects reports. The helper was exercised further by the mxl862xx
+v11/v12 hardware testing. btintel_pcie (patch 4) is compile-tested
+only.
+
+Changes since v2 [3]:
+ - patch 1: use dev_err_probe() for the re-probe error path so a
+   re-probe deferred at resume no longer logs a spurious error; pick up
+   Hans de Goede's Tested-by/Reviewed-by
+ - patch 3: pick up Hans de Goede's Tested-by/Reviewed-by
+ - patch 4: rebased onto bluetooth-next, whose btintel_pcie has four
+   dump workers rather than the single one the v2 mainline snapshot had
+ - base the series on bluetooth-next instead of v7.2-rc7 so the
+   bluetooth patches apply for their maintainers
+
+Changes since the RFC (v1) [1]:
+ - pin the parent device across the deferred work and re-lock it across
+   device_attach() on need_parent_lock buses (found reviewing the
+   mxl862xx posting [2])
+ - schedule the work on system_dfl_wq instead of the deprecated
+   system_unbound_wq
+ - thread the series properly (the RFC's patches were unthreaded)
+ - drop RFC status
+
+[1] https://lore.kernel.org/all/anpxFdwNxk0XwPjQ@makrotopia.org/
+[2] https://lore.kernel.org/all/cover.1786922210.git.daniel@makrotopia.org/
+[3] https://lore.kernel.org/all/cover.1787185594.git.daniel@makrotopia.org/
+
+Daniel Golle (4):
+  driver core: add device_schedule_reprobe()
+  wifi: iwlwifi: use device_schedule_reprobe()
+  Bluetooth: hci_h5: use device_schedule_reprobe()
+  Bluetooth: btintel_pcie: use device_schedule_reprobe() after reset
+
+ drivers/base/base.h                           |   5 +
+ drivers/base/core.c                           |   3 +
+ drivers/base/dd.c                             | 102 ++++++++++++++++++
+ drivers/bluetooth/btintel_pcie.c              |  49 +++++----
+ drivers/bluetooth/hci_h5.c                    |  43 ++------
+ .../net/wireless/intel/iwlwifi/iwl-trans.c    |  40 +------
+ include/linux/device.h                        |   2 +
+ 7 files changed, 146 insertions(+), 98 deletions(-)
+
+
+base-commit: 486f8908aa587ab2a213bbef39311743e4f8f57a
+-- 
+2.55.0
