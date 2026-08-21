@@ -1,188 +1,108 @@
-Received: from m4-bln.bund.de (m4-bln.bund.de [77.87.224.108])
+Received: from mail-43167.protonmail.ch (mail-43167.protonmail.ch [185.70.43.167])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC1C73BAD88;
-	Fri, 21 Aug 2026 11:25:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=77.87.224.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A32347798C;
+	Fri, 21 Aug 2026 11:43:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.167
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787311546; cv=none; b=fPlCS9sMeU/k56cojQuk4EkpsbV8V0PLBb3jVx9TC6JyM3wxwOjwvy/xO9dor3Phck6EULIsUZfuPrgeHfAZRPiDMkKN+1SN+MmvvnQLoJJYQZTjkgD5zP/Ea0YqNPy5+JWGOxBDs89IeCOppvB1A6UpLxXGdfP6z1NMwcfpQik=
+	t=1787312584; cv=none; b=H0uP7ZFVTrTc+2D9KGyOpY9HYmMsm6uc5+SDHG+wnC+nqhDQQ8r3y8GVr7diLuP/8ifZXxY3SJXjse186eJ1MvaiIUid101oJiC23jxA6O5rRssVEC7jkVJD0/A3EkUmEwBBZ+9bLXWGBKjf1pn04Q1NTdvdHDwhgr0RAjh+IQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787311546; c=relaxed/simple;
-	bh=DR/Y6w9+H+QQokCsnj/ldeIrwcOXxl6DD4X6JfBZJ3c=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=uoYOukvgf+BaAF+EFfP9kvnJDQbstQ83jnbwHc3xTDvWGMoFk48QS0O+B+LRExyzmJwIj/uIlMTDH4XQ3aZnzZ2Zz2srNLsDnbMqq9bQssGdRWQln/jZPQ7K2XXRdhwrJXfQxuhhzN94K6aywKFB+B0w4e+j1EV7ACExVUzlfdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bfs.de; spf=pass smtp.mailfrom=bfs.de; dkim=permerror (0-bit key) header.d=bfs.de header.i=@bfs.de header.b=u0X9G795; dkim=pass (2048-bit key) header.d=bfs.de header.i=@bfs.de header.b=ZkNQ2pFn; arc=none smtp.client-ip=77.87.224.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bfs.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bfs.de
+	s=arc-20240116; t=1787312584; c=relaxed/simple;
+	bh=Gn5rXzgaCQ+pN2I1F5DQj309TVsHIfh0rSytoOr+BSQ=;
+	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=l8Uf5ijYrcKzapHUy3pZkNMfmW3Dq2DVq8sVXBvlAfrYn2TFIrIpGUD1qHEFbjD062FaSBH4CL4YdILgBjTgyxV4ID8q/v69sBj5p44VplGXwtf9e9VcA580VBQpyWTkuibERRXikwWHEwK7o1ICj9bkLRHFRZl6EyiZTMETqOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com; spf=pass smtp.mailfrom=protonmail.com; dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b=g2m3bnfd; arc=none smtp.client-ip=185.70.43.167
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=protonmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=protonmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=permerror (0-bit key) header.d=bfs.de header.i=@bfs.de header.b="u0X9G795";
-	dkim=pass (2048-bit key) header.d=bfs.de header.i=@bfs.de header.b="ZkNQ2pFn"
-Received: from m4-bln.bund.de (localhost [127.0.0.1])
-	by m4-bln.bund.de (Postfix) with ESMTP id 8B9116AAA84;
-	Fri, 21 Aug 2026 13:15:31 +0200 (CEST)
-Received: (from localhost) by m4-bln.bund.de (MSCAN) id 5/m4-bln.bund.de/smtp-gw/mscan;
-     Fri Aug 21 13:15:31 2026
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=bfs.de;
-	s=260302-9830-ed25519; t=1787310927;
-	bh=ELP8XoqtwHpGXZp9s0PtfJjENoaqOIvGUl+aKyo3+mU=;
-	h=From:To:CC:Subject:Date:References:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:Autocrypt:Cc:
-	 Content-Transfer-Encoding:Date:From:In-Reply-To:Openpgp:References:
-	 Reply-To:Resent-To:Sender:Subject:To;
-	b=u0X9G795Qlf3KXw9Io2djjanTZJN3f9H12IpLVsEWdA/8Bl1MD+VXdQjqEA8rZsnP
-	 +Gik6ydRn+Wfrtbl1d7CA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bfs.de;
-	s=260302-9830-rsa; t=1787310927;
-	bh=ELP8XoqtwHpGXZp9s0PtfJjENoaqOIvGUl+aKyo3+mU=;
-	h=From:To:CC:Subject:Date:References:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:Autocrypt:Cc:
-	 Content-Transfer-Encoding:Date:From:In-Reply-To:Openpgp:References:
-	 Reply-To:Resent-To:Sender:Subject:To;
-	b=ZkNQ2pFngEbrzZ/N9/wZizUs4dHstSfl9R1mSkNuF1v4CQHBkQMgF311xySxYQuAw
-	 DFZWWfouMZEq7V9L1RqGDRbnPbhkuI7v+Z0BCIRNDoBoqoYKpEUVwPVAQbfdfOUCeQ
-	 5kFdViCa2Nhc4C1dZLXu2PBppsmOTrbVysJ07Mt6Kbl6hiQIVtus/JHxmfT4iElQMX
-	 FruNDCngmwchJmcVIUejY4UAL/JPoe/wynK3CLaNWIuCUNlDuprIjcV/w2VLxIUaeI
-	 Bti7dvqVCnCO/UofHLzOyFqO8rJPZ3dVk6yfLHmRLy64XekoPYR7revYAKUhpeAsY7
-	 UGMLs/WjmhquQ==
-X-NdB-Source: NdB
-X-P350-Id: 54419a78fc1360ae
-From: Walter Harms <wharms@bfs.de>
-To: Dan Carpenter <error27@gmail.com>, Lachlan Hodges
-	<lachlan.hodges@morsemicro.com>
-CC: Dan Callaghan <dan.callaghan@morsemicro.com>, Arien Judge
-	<arien.judge@morsemicro.com>, Johannes Berg <johannes@sipsolutions.net>,
-	Chetan Mistry <chetan.mistry@morsemicro.com>, Sahand Maleki
-	<sahand.maleki@morsemicro.com>, Simon Wadsworth <simon@morsemicro.com>,
-	"James Herbert" <james.herbert@morsemicro.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Subject: AW: [PATCH next] wifi: mm81x: fix type bugs handling
- sdio_readl/writel()
-Thread-Topic: [PATCH next] wifi: mm81x: fix type bugs handling
- sdio_readl/writel()
-Thread-Index: AQHdMH8qRRzVdgeNuESsQteZWvdtJ7aoWCnu
-Date: Fri, 21 Aug 2026 11:15:26 +0000
-Message-ID: <9dd07bf672c245a1a8656037d3b6ca72@bfs.de>
-References: <aoa7Hj1W7ETOrOzO@stanley.mountain>
-In-Reply-To: <aoa7Hj1W7ETOrOzO@stanley.mountain>
-Accept-Language: de-DE, en-US
-Content-Language: de-DE
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=protonmail.com header.i=@protonmail.com header.b="g2m3bnfd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=protonmail.com;
+	s=protonmail3; t=1787312573; x=1787571773;
+	bh=jjKPMwvPqtf/gUezHlyDyQGNtBYP8TfCL07SrlXZxuY=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=g2m3bnfd51Jj38PRgNL9Gm5kKdQWw87vtLK0N/oPBRFDXEIH+gOFzqOMLVZoIVtx4
+	 MP/ASCPT+DBlYB+wOX1RDmiA5yV/sNeSi7dAYhDCATwfqWUdMDVRAvZ9++kNFf3u0g
+	 7cKJ1WQ7BduiLLz66rRIF60B6ldZXeL8s+iAmGdmgBTsAuCtXDAFF7VdTjcsgE/3P3
+	 3Er4TOjnOID0UGtN/eWD3durdF7fBDuZOHUylmT1iq1MUroDsDVljOW56JEYWRvC8T
+	 K5xA/hzk61oLrIsLVgrkyQMdnAiHq8xvTU1OBRsdULnQf82AXwaE1MGAFw4/QuP2AJ
+	 P18m+iHQMaw1g==
+Date: Fri, 21 Aug 2026 11:42:49 +0000
+To: Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, Shayne Chen <shayne.chen@mediatek.com>, Sean Wang <sean.wang@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+From: Ryan Leung <untilscour@protonmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Ryan Leung <untilscour@protonmail.com>
+Subject: [PATCH mt76 v2] wifi: mt76: fix unlocked wcid check in mt76_tx_status_skb_add()
+Message-ID: <20260821-mt76-stale-wcid-race-v2-1-8f41ee96fb73@protonmail.com>
+Feedback-ID: 184418679:user:proton
+X-Pm-Message-ID: 5be2479b9671e0d2d5fe00c1fbaec1404868cb17
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Rusd: domwl, Pass through domain bfs.de
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-hi everyone,
-Dan has a point here as the function should use int as requiered by the int=
-erface.
-I would like to point to an other problem here;  too many casts.
+mt76_tx_status_skb_add() checks rcu_access_pointer(dev->wcid[wcid->idx])
+before taking dev->status_lock, then allocates a pktid afterwards. A
+concurrent mt76_wcid_cleanup() can run between the check and the lock,
+letting a stale wcid be re-added to dev->wcid_list after teardown.
+Worse, the check only tests for a non-NULL slot, so it also passes if a
+different wcid has since been published at the same idx.
 
-  sdio_writel(func1,
-          (__force u32)cpu_to_le32(val),
+Move the check under status_lock, alongside idr_alloc(), and compare
+identity (rcu_access_pointer(dev->wcid[wcid->idx]) !=3D wcid) instead of
+just testing for non-NULL, so that a reused index is correctly rejected.
 
-the code for sdio_writel() has this already ...    *(__le32 *)func->tmpbuf =
-=3D cpu_to_le32(b); //=3Dval
-the conversion for address is missing, is that intentional ?
-
-        (__force u32)cpu_to_le32(address), &ret);
-
-By adding the cpu_to_le32() it should be possible to drop all the casts. Th=
-at would improve the readability here.
-
-BTW: all other familymembers (e.g. sdio_f0_readb) check from  func !=3D NUL=
-L maybe this should be done here also ?
-
-jm2c,
-  WH
-________________________________________
-Von: Dan Carpenter <error27@gmail.com>
-Gesendet: Donnerstag, 20. August 2026 10:30:22
-An: Lachlan Hodges
-Cc: Dan Callaghan; Arien Judge; Johannes Berg; Chetan Mistry; Sahand Maleki=
-; Simon Wadsworth; James Herbert; linux-wireless@vger.kernel.org; linux-ker=
-nel@vger.kernel.org; kernel-janitors@vger.kernel.org
-Betreff: [PATCH next] wifi: mm81x: fix type bugs handling sdio_readl/writel=
-()
-
-The sdio_readl() and sdio_writel() functions, instead of returning kernel
-error codes, instead stores the error codes in a parameter.  These caller
-functions pass should pass an int pointer to store the error code but
-instead pass a signed long.
-
-This will not work on big endian systems.  On little endian systems
-passing a ssize_t means negative error codes are converted to positive
-values near UINT_MAX.  This doesn't cause a problem at runtime because
-in mm81x_sdio_reg32_write() the error codes are discarded and we always
-return -EIO.  In mm81x_sdio_reg32_read() the high bits are truncated
-away so the positive value is re-converted back to negative and the
-code works as intended.
-
-Either way, passing an int is the correct thing and is a cleanup.
-
-Fixes: b1906cea00b0 ("wifi: mm81x: add mm81x Wi-Fi HaLow driver")
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+Fixes: fcfe1b5e162b ("mt76: fix tx status related use-after-free race on st=
+ation removal")
+Signed-off-by: Ryan Leung <untilscour@protonmail.com>
 ---
- drivers/net/wireless/morsemicro/mm81x/sdio.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Changes in v2:
+- check that dev->wcid[wcid->idx] still points at this wcid, not just
+  that it is non-NULL, since the slot can be reused by a different
+  station between the unlocked check and the lock being taken.
+- Link to v1: https://patch.msgid.link/20260821-mt76-stale-wcid-race-v1-1-d=
+6de3f842506@protonmail.com
+---
+ drivers/net/wireless/mediatek/mt76/tx.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/sdio.c b/drivers/net/wir=
-eless/morsemicro/mm81x/sdio.c
-index 96fce187dd35..65277399bf18 100644
---- a/drivers/net/wireless/morsemicro/mm81x/sdio.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/sdio.c
-@@ -381,7 +381,7 @@ static int mm81x_sdio_dm_read(struct mm81x *mors, u32 a=
-ddress, u8 *data,
+diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless=
+/mediatek/mt76/tx.c
+index 3707ee19e4ae..0f74d808d328 100644
+--- a/drivers/net/wireless/mediatek/mt76/tx.c
++++ b/drivers/net/wireless/mediatek/mt76/tx.c
+@@ -129,7 +129,7 @@ mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt7=
+6_wcid *wcid,
+=20
+ =09memset(cb, 0, sizeof(*cb));
+=20
+-=09if (!wcid || !rcu_access_pointer(dev->wcid[wcid->idx]))
++=09if (!wcid)
+ =09=09return MT_PACKET_ID_NO_ACK;
+=20
+ =09if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+@@ -147,6 +147,11 @@ mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt=
+76_wcid *wcid,
+=20
+ =09spin_lock_bh(&dev->status_lock);
+=20
++=09if (rcu_access_pointer(dev->wcid[wcid->idx]) !=3D wcid) {
++=09=09pid =3D MT_PACKET_ID_NO_ACK;
++=09=09goto out;
++=09}
++
+ =09pid =3D idr_alloc(&wcid->pktid, skb, MT_PACKET_ID_FIRST,
+ =09=09=09MT_PACKET_ID_MASK, GFP_ATOMIC);
+ =09if (pid < 0) {
 
- static int mm81x_sdio_reg32_write(struct mm81x *mors, u32 address, u32 val=
-)
- {
--       ssize_t ret =3D 0;
-+       int ret =3D 0;
-        u32 original_address =3D address;
-        struct mm81x_sdio *sdio =3D (struct mm81x_sdio *)mors->drv_priv;
-        struct sdio_func *func1 =3D sdio->func->card->sdio_func[0];
-@@ -391,7 +391,7 @@ static int mm81x_sdio_reg32_write(struct mm81x *mors, u=
-32 address, u32 val)
+---
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+change-id: 20260821-mt76-stale-wcid-race-4d92f898437b
 
-        address &=3D 0x0000FFFF;
-        sdio_writel(func1, (__force u32)cpu_to_le32(val),
--                   (__force u32)cpu_to_le32(address), (int *)&ret);
-+                   (__force u32)cpu_to_le32(address), &ret);
-        if (ret)
-                goto error;
-
-@@ -411,7 +411,7 @@ static int mm81x_sdio_reg32_write(struct mm81x *mors, u=
-32 address, u32 val)
- static int mm81x_sdio_reg32_read(struct mm81x *mors, u32 address, u32 *val=
-)
- {
-        u32 value;
--       ssize_t ret =3D 0;
-+       int ret =3D 0;
-        struct mm81x_sdio *sdio =3D (struct mm81x_sdio *)mors->drv_priv;
-        struct sdio_func *func1 =3D sdio->func->card->sdio_func[0];
-
-@@ -419,8 +419,7 @@ static int mm81x_sdio_reg32_read(struct mm81x *mors, u3=
-2 address, u32 *val)
-                                         MM81X_CONFIG_ACCESS_4BYTE);
-
-        address &=3D 0x0000FFFF;
--       value =3D sdio_readl(func1, (__force u32)cpu_to_le32(address),
--                          (int *)&ret);
-+       value =3D sdio_readl(func1, (__force u32)cpu_to_le32(address), &ret=
-);
-        if (ret)
-                return ret;
-
---
-2.53.0
+Best regards,
+-- =20
+Ryan Leung <untilscour@protonmail.com>
 
 
