@@ -1,79 +1,75 @@
-Received: from mta1.migadu.com (out-24.mta1.migadu.com [95.215.58.24])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D12A435E93E
-	for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 23:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDEE2798F8
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 00:30:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787267825; cv=none; b=CMpQg2wfzYdeqkhXzDvDybqCvpL3AgOZrl1FFupp91VltVlnrQMta7ryKoDvyjRW+n+0OCcRMSf0c6nnxKTF2TIA3JtlAXv02tdwGpCxNJyRr28ZKnFHkystl+7JnOWu639wRIFmTqf0OPiXO3xnQpBjb2nryDnLOHnW3LCPLlk=
+	t=1787272229; cv=none; b=XZkwkJ2ybJuYTPyOqwx1tSEMV7p3r9gKvVYNzB5CIEAMCzscqjzjh/9pBmlCoRUahDys4EVrR4wHl98tfA6NMNPuse7hZRa26p4r+7LRLX1fiN/ojAHZCHF+r6+4gDalQ9pwWCxpHJKQNuyFGSE7kLGI9fufgZgJT/bbkNtYpNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787267825; c=relaxed/simple;
-	bh=5guak/l5UyDzlzPmHmh7n4osKYDtyW2ixRiNRrlsVf4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mZc+alNpML7pZdrf6TbYK07yjwh1JTZD5+oEGC2/Vi4/XKZ/5TXWMnTSKovACz699IjnL88hjKzkrFRRC7EwJWGJPi+nQt6zr3a0I8y5Z4breY0vtQTovs/3ymQL79gg3890NTgVcToYSA0UCRJIZsAbKft/7A+UGSeCxpzMoHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=in3SMw6V; arc=none smtp.client-ip=95.215.58.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1787272229; c=relaxed/simple;
+	bh=YgsmKIGVyiKk5ow4xBnymoqky1HeOY17xzDoQELSY+Q=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=kEPl+SetQ3HAJnTPu3hSQvBR5JFgysAN9Nvn+wWyXqoFJ1FpkeEkxqJFVwnbrR4/I8U3izASjAnJvcVDcq5E4P9GGk2S6Dwilew7zMmaLIjM1PQzkW8EvMaPtOCJnmsC7BU6yPu1iaZlh+tBn4wL3QDFEokYBXaHPnU6Pq7EEyc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=ntD6qaBF; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="in3SMw6V"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5guak/l5UyDzlzPmHmh7n4osKYDtyW2ixRiNRrlsVf4=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787267820; v=1; x=1787872620;
- b=in3SMw6VyM5Uf8XmGD2+iV73AO0EWiRd3g1fqLmoUNm74kSFI3ZrjklFZ9LoSs+szeO/fgw3
- OiS4bZNHBXTus4w0ltvdw8m+wy1YSxoHf2oCsr5roZMxTBF9fw3rzQuOEAf1NktptW2On+j8Ju3
- o+eGCnc3uLB2yEYAn4Mm9Z/Ngs09mfjUj1LyTkIW0cZeIxMMHZoSTj4Jr0VKoBBKRHY2xJQbgDU
- Cob7EY9gjT36MU8UDYva9miSl/peJbUll93nlp4KZOF7U2XzDAzflB+32VpYT5/9W25Kbgxtq5b
- Waq0cTJ0nOf61jGVkbL8iQBMJGmjXwJnxrFn3bzCSPRZg==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from fedora (187.15.154.68)
-	by smtp.migadu.com with ESMTPS id c467778d2f607571;
-	Thu, 20 Aug 2026 23:16:50 +0000
-X-Mizu-Trace-ID: c467778d2f607571
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Benjamin Berg <benjamin@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Jeff Johnson <jjohnson@kernel.org>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Benjamin Berg <benjamin.berg@intel.com>,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org
-Subject: Re: [PATCH wireless-next v3 2/8] wifi: mac80211: change public RX API to use link stations
-Date: Thu, 20 Aug 2026 16:15:04 -0700
-Message-ID: <20260820231504.137503-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <1bdf4b7d-2f05-4ae3-8304-60697d2c849d@oss.qualcomm.com>
-References: <20260819135703.4072215-10-benjamin@sipsolutions.net> <20260819155703.af6d319e6b61.I4a2d45609e94b52654b10ec572e59a45d09c41f4@changeid> <1bdf4b7d-2f05-4ae3-8304-60697d2c849d@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="ntD6qaBF"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67L0UMhzC3932933, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787272222; bh=YgsmKIGVyiKk5ow4xBnymoqky1HeOY17xzDoQELSY+Q=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=ntD6qaBFATrRwvhqtMmqseKL1GZUjjY7NSsEW0zF2MpDLN867twaJw1+hUgJiyiQs
+	 3nFoB6qVwwbJLL1JlnGrnqHd80/PmcWlxLqGD6lX1puRyl+nCeghSu9mxdtpDwq/yr
+	 HkTvbQhHw+gjjewJmJcJ6ngjBrrjm8kALN4oEg0LpnSDGL3WOVBQTgrJRtK/R3qV+e
+	 VCiVgIs14+Vf40TXbyplF34md29C7uiXnvaGtJJ8mt5lFb5nojg4Cc2Q49Fk8Kxe8L
+	 LGElLnS0F8pRSsIF7jht8fhwtyLwSXm2PsqcGLw6eVsRxDMjH3RFzL7t0lR/4qs6fU
+	 JI6lQKiIkcJrg==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67L0UMhzC3932933
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 21 Aug 2026 08:30:22 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 21 Aug 2026 08:30:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 21 Aug 2026 08:30:23 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Fri, 21 Aug 2026 08:30:23 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v2] wifi: rtw89: usb: Avoid crash with
+ dynamically added device ID
+Thread-Topic: [PATCH rtw-next v2] wifi: rtw89: usb: Avoid crash with
+ dynamically added device ID
+Thread-Index: AQHdMBYxl19Tb19PckyM5Pg10lEJmLanqD/Q
+Date: Fri, 21 Aug 2026 00:30:22 +0000
+Message-ID: <6230956f25584d59a97442ed12d280fd@realtek.com>
+References: <7a537b2e-67d2-40fb-8ef2-fcbc7bbc93af@gmail.com>
+In-Reply-To: <7a537b2e-67d2-40fb-8ef2-fcbc7bbc93af@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On Thu, Aug 20, 2026 at 10:56:14AM -0700, Jeff Johnson wrote:
-> The fix is trivially `= NULL`.
-
-That does fix the first frame in a batch, but it cannot fix the ones after
-it. The initialiser runs once, at entry, and mt76_rx_complete() reuses the
-same variable for every frame and again in the A-MSDU loop. So once a frame
-with a wcid has written a station into it, the next frame without one keeps
-that station rather than reading NULL.
-
-That is the case I measured on an MT7922. Sixteen frames out of roughly
-4000 were handed a leftover station, and every one had a wcid-bearing frame
-ahead of it in the same batch, so an initialiser would not have caught any
-of them.
-
-Clearing it on the no-wcid path inside mt76_rx_convert() covers both.
-
-Devin
+Qml0dGVyYmx1ZSBTbWl0aCA8cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+IHdyb3RlOg0KPiBBZGRp
+bmcgYSBkZXZpY2UgSUQgdmlhIHN5c2ZzIGNhdXNlcyBhIGNyYXNoIHdoZW4gdGhlIGRldmljZSBp
+cyBwbHVnZ2VkDQo+IGluLCBiZWNhdXNlIHRoZSBkcml2ZXJfaW5mbyBwb2ludGVyIGlzIG51bGwu
+DQo+IA0KPiBDaGVjayBmb3IgbnVsbCBkcml2ZXJfaW5mbyBpbiBydHc4OV91c2JfcHJvYmUoKSBh
+bmQgYWRkIGEgd3JhcHBlciBpbg0KPiBlYWNoIGRyaXZlciB0byBwYXNzIGl0IGEgcmVhc29uYWJs
+ZSBkZWZhdWx0IHZhbHVlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQml0dGVyYmx1ZSBTbWl0aCA8
+cnRsODgyMWNlcmZlMkBnbWFpbC5jb20+DQoNCkFja2VkLWJ5OiBQaW5nLUtlIFNoaWggPHBrc2hp
+aEByZWFsdGVrLmNvbT4NCg0KDQoNCg==
