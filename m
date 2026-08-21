@@ -1,98 +1,63 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD430313277
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 01:08:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23BE4330D25
+	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 01:25:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787274516; cv=none; b=ZAMFszxCwRZmTm0ltVRYLIxZWEevl3G7EfC2sQ0sEPqmVqN9vlSWpvd8YUV09O3JVA7xwUKVGyhP3cON0JlylEGPytXaxl07pV6JimX080bPhy2SaPFjNZUPy5m/egERMevPg/I1D5xXlNftDAV9i2gXdGDhJAuwUn32onhHvn8=
+	t=1787275552; cv=none; b=fIGJHzt9VxTp5o5jG5A/DlM1F/gnGylwN+1KMpw7Y5bdIdNaTsaC/4ZB2/mLtpnhLkSeccYVizSjMUpHbBag/Y7bPqNfEyLXhOTi8ioZ4lySUm/BJkW3h2NJ11zfLMmkLFdr0zKcdGdM9O4Ok4WprlHYq34Z/UdpM/wkh6U9BHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787274516; c=relaxed/simple;
-	bh=wY4uadi2HO3HpucjWOKrMcTP3ow9p1AFLbpJ29zEm14=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jBrG5N2THI+729hz5W6C6XRaFowfARYr2H9CdGeekOlRgfU5S5UGtaPl6P04xPih4ct7xC6tucbAhGRKyxq/L0ELs9YNfIM0DPkc8DNHwknSxmox+Digu0m4ObWrlsvZLHIq+oBaVfiweYMVwKIy4yTJx85rJ70ThvxADOebQvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VY3HNVo6; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787275552; c=relaxed/simple;
+	bh=zu8TP6c9fxg6fCSZX4M+hlnoxtfh3T/X9rUuotCxHOo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JQ4wlnIRpuKEWD27qY+1GG161yzht+xajx20V76ZGIKLrINuRTXbq29IT6UQbDC/0o/8BmXa+8Wdl7HSCbnD9UMzveUr6scenq1S8d3pANrLOPhGUvJbX6ztjptWqM2D7vI1oI/lxc+tfzyG2t2id2f7PRbuamlBADetNbcVefA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=oGT80TkW; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VY3HNVo6"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c15d47266baso56002566b.3
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Aug 2026 18:08:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787274513; x=1787879313; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mRGcQvnKLAeLq/zsHD6Ma8Ccz7ec9Urq2bWU0+6yeKw=;
-        b=VY3HNVo6scUFMDi9ENP2a5DdkpPIFV1E7yJfaMsi3+I/TuYLiMoDcN3ZsMci5qikXO
-         dp9ZQvmpht/ysQq/45bi+x1SGn24wC0Lpo2yMtjil+85an/9muHFTPgBGO3fdZK3KEJ7
-         LMQPQKAJi9vkzWesJViqxOfO6Too2aa2YqUCi122jYiMgXValjBeOwn10HcqYUT4luL3
-         2eaa7ge9iESgJR1tUo8QHzDFZf5cgM3sxNQTgbZJzjRP77r+5DXCnrupV5sliWBUub/A
-         O2ypbALm85ICU/QPG/5Y610gTMChy/pL4aZ5Z6ecRp3xY0CyBOUoROZXMXCqNhO8uYwu
-         Sj6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787274513; x=1787879313;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mRGcQvnKLAeLq/zsHD6Ma8Ccz7ec9Urq2bWU0+6yeKw=;
-        b=ruQ59pp4QKQsJO7D7h4LwNa+Y6yL/RICcW12b6Vxte6t5F+t4KrSDZDSVD2pikx+LP
-         wIAzmQryy4RcLiebhoh8r/k6XNhHbANjbMt5mJhuRAw0fBr7/o+54gZxNiRGCiM59MEZ
-         rTWUx2FzvQM/e0HXh0QJKc/AFklZApe0V4aRPL8ddU9mEkpDFpuLofvrtLpNBZy7mBF2
-         YJpG1jwYSUxSXI0jXjhCt2XoD6Q9i22c5m6XFQ3JFAT+64l26fz81ZRV8+NIL0UiLwZJ
-         XtJ06nqQQ8CrnGzrNeYgy3CUklESlm4wwKtX9RDHCFUz8hMICxr61o06/ugSzFroilmc
-         RAJA==
-X-Forwarded-Encrypted: i=1; AHgh+RrsUExtkUi3XRX2uNPEbZZIpRqSuzEU56aJRYs2hzimo6Y76kvHC494qiV8DaYkMorwEfabx5jRYswGKvpgsw==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy4S4k+Db4+UHaHFw5cMElKOZMo7zDDIfrZVPxqpbhYeEnOJb8l
-	lCq6xbHRWTRyapGAU6WIZdkukYkcCOwXRjlz/Fd9HKKa/xNPjIE/oB9W
-X-Gm-Gg: AR+sD10Pquctk0BwY0XZZ9Q/Mk3iCK6M0/U9a3s1LNoVPszVHuAqSy4l8HwjARGIgZt
-	y+zkIe7ds9c1cqnM7/2031JnMc0sNptCBmiwCrFMsWCN67SgwHonayMqiq27h0GTE27g/Z9dcVA
-	EH+qObkvaDwNbm2WKf0J0hnZHBxpli9arlGGiMBHOSCv1tdrqU/rSJcM4tt1Ghpy2q6FB51LOic
-	aljOm44od8fPJbUbYxZF/wRN52c9IH6Ql4dbgja6oxGTzOkjjspQLHqq3a8burxAAVnjE/Vlsr9
-	fr7vfJI74agS/77xqlpv6alsVSBseZcJcW0vy7fDlovi9vc++zV9s5PR2qv6J17nUc72aR9hS0M
-	Sl1s0miN9Hmxcs2N1UQpcZMWYm4W+xtFFSMjyePi5YepXBaHkCvkifsFwF8pn8eE/3AjFOHj7iI
-	vQmw/TlnQlwOHmnE7zDHxEp0o7kbFWQXqgd/jgqSX5JfErZA9izXjOUtqEdI1o36XGGCSsT8h4r
-	0D0uL5OzkIPDPnt5aaE2RXEA0cdmU1aFIR8iEpnX4+pGvRtc7MRklXmqxSWnRXPeA==
-X-Received: by 2002:a17:907:3e9b:b0:c21:9870:c4f7 with SMTP id a640c23a62f3a-c246a6799e3mr240994766b.20.1787274512882;
-        Thu, 20 Aug 2026 18:08:32 -0700 (PDT)
-Received: from localhost.localdomain ([151.251.247.22])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a3ff1563c5sm3913104a12.14.2026.08.20.18.08.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Aug 2026 18:08:32 -0700 (PDT)
-From: Georgi Valkov <gvalkov@gmail.com>
-To: briannorris@chromium.org,
-	johannes@sipsolutions.net,
-	andrew@lunn.ch,
-	krzk+dt@kernel.org
-Cc: francesco@dolcini.it,
-	johannes.berg@intel.com,
-	kees@kernel.org,
-	miriam.rachel.korenblit@intel.com,
-	wenst@chromium.org,
-	rafael.beims@toradex.com,
-	avraham.stern@intel.com,
-	error27@gmail.com,
-	s.kerkmann@pengutronix.de,
-	gregory.clement@bootlin.com,
-	sebastian.hesselbarth@gmail.com,
-	robh@kernel.org,
-	conor+dt@kernel.org,
-	Frank.Li@nxp.com,
-	chunfan.chen@gmail.com,
-	arend.vanspriel@broadcom.com,
-	peddolla.reddy@oss.qualcomm.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	stable@vger.kernel.org,
-	gvalkov@gmail.com
-Subject: [PATCH v6 3/3] ARM: dts: armada: WRT3200ACM: add marvell,invalid-reg-hint-in-rom
-Date: Fri, 21 Aug 2026 04:07:28 +0300
-Message-ID: <20260821010728.45065-3-gvalkov@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260821010728.45065-1-gvalkov@gmail.com>
-References: <20260821010728.45065-1-gvalkov@gmail.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oGT80TkW"
+X-UUID: 398d1fee9cff11f1b1788b6acf885367-20260821
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=gVcIWXhY2wz8NvM95p3hoeFhZkF3cOjz6bVDt67l2Xo=;
+	b=oGT80TkWQSHP+lLbTLeHa88NuS4XtH/NJN3jbjLEr/BF1tNfhU3u6Z/Lcdb8OT899wylFFH1JADtY3LZ+0xwzpUgykT9ISQmSdHnlfgzRgeoqMhYbs2z+rTzqWpkkG1qBLyr1937WiVlHdM+N4dIUrptvA/SdmeJ5381aEqyE38=;
+X-CID-CACHE: Type:Local,Time:202608210925+08,HitQuantity:1
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:3f065630-f380-448f-8aaa-3e8d805cd97a,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:7db8b62,CLOUDID:bde63efe-f4cb-4ad2-b022-e3ac6648bf25,B
+	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
+	0|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,
+	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 398d1fee9cff11f1b1788b6acf885367-20260821
+Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
+	(envelope-from <anthony.liu@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 2026610381; Fri, 21 Aug 2026 09:25:42 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 21 Aug 2026 09:25:41 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 21 Aug 2026 09:25:40 +0800
+From: Anthony Liu <anthony.liu@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <Sean.Wang@mediatek.com>, <Leon.Yen@mediatek.com>,
+	<Quan.Zhou@mediatek.com>, <Ryder.lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <kun.wu@mediatek.com>, <jb.tsai@mediatek.com>,
+	<emery.hsin@mediatek.com>, <linux-wireless@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, Anthony Liu <anthony.liu@mediatek.com>
+Subject: [PATCH v2] [PATCH 03/05] wifi: mt76: add ACPI MTFG option for bus configuration
+Date: Fri, 21 Aug 2026 09:25:26 +0800
+Message-ID: <20260821012528.2259093-3-anthony.liu@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260821012528.2259093-1-anthony.liu@mediatek.com>
+References: <20260821012528.2259093-1-anthony.liu@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -100,61 +65,30 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
-from the mwifiex ROM, which conflicts with the platform regulatory
-configuration on units sold outside the US market. For example:
-- phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
-- phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
-- phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
+Extend ACPI MTFG table parsing to support an additional MTFG bus
+configuration option.
 
-When the system boots, it detects a conflict between the user selected
-region and the radios, e.g. BG FR US, and applies extreme restrictions,
-preventing phy0 from starting on any DFS channel. phy2 works.
-
-Add a flag marvell,invalid-reg-hint-in-rom to the WRT3200ACM device-tree,
-which signals mwifiex that its regulatory hint from ROM conflicts with
-the platform and should be ignored, so the platform regulatory domain can
-be used. This does not allow the user to change the regulatory config of
-any radio. It only allows phy0 to start and operate according to its
-certified configuration. All radios in WRT3200ACM/WRT32x are locked to
-the hard-coded configuration for which they are certified.
-
-On WRT3200ACM, the platform configuration is stored on the devinfo mtd3
-partition, which is read-only: cert_region=EU modelNumber=WRT3200ACM-EU
-
-The Linux kernel sources do not have support for WRT32x. An equivalent
-patch for these routers has to be sent to OpenWrt.
-
-[1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-[2] https://github.com/openwrt/openwrt/issues/9956
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Georgi Valkov <gvalkov@gmail.com>
+Change-Id: I200f080d5b297e765b6a57c394f1006ae1bc585e
+Signed-off-by: Anthony Liu <anthony.liu@mediatek.com>
 ---
- arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts b/arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts
-index 4ab45f294de2..2bf29981a031 100644
---- a/arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts
-+++ b/arch/arm/boot/dts/marvell/armada-385-linksys-rango.dts
-@@ -165,6 +165,15 @@ &sdhci {
- 	wp-inverted;
- 	bus-width = <8>;
- 	status = "okay";
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	wifi@1 {
-+		compatible = "marvell,sd8897";
-+		reg = <1>;
-+		marvell,invalid-reg-hint-in-rom;
-+	};
- };
- 
- &usb3_1_vbus {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+index 946dd7956e4a..227a6960f135 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+@@ -355,6 +355,7 @@ u8 mt792x_acpi_get_flags(struct mt792x_phy *phy)
+ 	} map[] = {
+ 		{ 1, 1 },
+ 		{ 4, 2 },
++		{ 13, 3 },
+ 	};
+ 	u8 flags = BIT(0);
+ 	int i, j;
 -- 
-2.55.0
+2.45.2
 
