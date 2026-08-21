@@ -1,162 +1,128 @@
-Received: from mx-relay38-hz1-if1.hornetsecurity.com (mx-relay38-hz1-if1.hornetsecurity.com [94.100.128.48])
+Received: from smtp2.infineon.com (smtp2.infineon.com [217.10.52.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728E0347BA9
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 06:51:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=94.100.128.48
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787295067; cv=pass; b=Xj5G7D6t/99XdCsLfWWInDNPW0CVoiYyseiufhPTHvTzAt1r7bObF3YRnuvc/W4JV+L7IGKyosr3WK7oZTY64OtnTJFSafoVqMZXU4jqFtFtIc5equt5xOTny/0/heiGg7vsshze4noXJLGnfiCN85j9MNSrLvrBzKLpK/FHK3c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787295067; c=relaxed/simple;
-	bh=dmqPZVgfMRSVKaGhmQWhxyx2Fl2asnnJWzRYPeVvggw=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Tw22rPJxL2G2Zmn7fpNnnLhiorTrAF12b2Whd4fVma59VoWFsAGkXLDjIZfOEUROE0FbiTODNvnR0MVgVmpCCaZah1Mb1Xv70K+pVXxIgv7ylo4dCfMH5JfmAjxVD2ws5L6fRujt6nx7S4coJy2D2Rl+6tY94rsRey2HXzsVNpE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marcant.net; spf=pass smtp.mailfrom=marcant.net; dkim=pass (1024-bit key) header.d=marcant.net header.i=@marcant.net header.b=BorRw+sD; dkim=pass (2048-bit key) header.d=marcant.net header.i=@marcant.net header.b=eNktTeF7; arc=pass smtp.client-ip=94.100.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marcant.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marcant.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 900193932DB;
+	Fri, 21 Aug 2026 07:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787299010; cv=none; b=pdw0IF/GiPnQ9yA8zpgxIZM4UKlRDWLInmjdNFzNPHBftbbGDVVdOAcF2vQ+tTHCjkwBaBBRztJNkTluZ8DpBJTbU1kYDPEpfGdViiba5fISlPjXUNoLve1eW8C3j3TbEVNrIGEJPNzNbHv0W/OiCZjOqcpeWDA4N3xunTMSy5A=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787299010; c=relaxed/simple;
+	bh=pqV5zIsVJwu6oCyIejvTylXpCDETkfNZe8pi0nJksVc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T53w9OhlWY0ViTFT2UZuv14bEvescdo/BbdfGiaRAAkjS13c2W3tgFAW7/WCCit/we3wwMtVQ47x/aIgO9vpCGKYPna7n4NuV29zDuemfZ8KRrQCoU31MD3jWnqpW3YAVxlpCB8tjOuEueYoVFRcYKF60AE+9oL6x/GtgsU85ks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=V4wvHf0D; arc=none smtp.client-ip=217.10.52.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=marcant.net header.i=@marcant.net header.b="BorRw+sD";
-	dkim=pass (2048-bit key) header.d=marcant.net header.i=@marcant.net header.b="eNktTeF7"
-ARC-Authentication-Results: i=1; mx-gate38-hz1.hornetsecurity.com 1; spf=pass
- reason=mailfrom (ip=217.14.160.69, headerfrom=marcant.net)
- smtp.mailfrom=marcant.net smtp.helo=rossini.marcant.net; dkim=pass
- header.d=marcant.net header.s=gandalf header.a=rsa-sha256; dmarc=pass
- header.from=marcant.net orig.disposition=pass
-ARC-Message-Signature: a=rsa-sha256;
- bh=dmqPZVgfMRSVKaGhmQWhxyx2Fl2asnnJWzRYPeVvggw=; c=relaxed/relaxed;
- d=hornetsecurity.com; h=from:to:date:subject:mime-version:; i=1; s=hse1;
- t=1787295047;
- b=qSrbW0aeLDbS8T2mWAI51tpKJCaGuYT6PGzAsLM0NM7fPva5BuhAqyKpoG4YSar1WkUhbvRB
- 7UeGvYsqSeBwUw8pp/R8MP5hwSw/fsYEcP7agyITELRRfnKVscLQnys3c3eBsoNdQC/lR9ynL2D
- 9/L7Q0su5F/JwiEL5+A+xjpG7d5TASZVx931s4X9TP4ijpgzydChxNE3uOyu1iZ0hJ7tI0SUbMG
- 1te4ApT+9H4W/lC/twMyHPoI0PmlcU1ak14ggA9MYMLYF51ux5niFQXy2zd0frBVArY33Qb33XZ
- 0Hkp2bfHNYXyjLIqcZ70fgEHif9rXvjAOtgq4OJhnWGMA==
-ARC-Seal: a=rsa-sha256; cv=none; d=hornetsecurity.com; i=1; s=hse1;
- t=1787295047;
- b=IcBbI7FV2WUel8kHFtO2qfykQDCIqHnnTWQsqOM+7KYq+xMU7xxxKtoCO75Uo40I2i+Srwr/
- m45TdITfOfGEcGpUf6EUonhINifHOThXwFoznULc3fmIQgXeYId5eSDAvV733PDFh1LNUsI9gAI
- F2K+Rpw0D+8M5tqaQLMxT+JnPXIstI8FxEiH5UbzjCYpVhhgQ0c4LhHjnjMeJMDBHtbyjnC8Hgm
- fFOrpWuIcQptulN/4j6cvem58N9rbgQIOn8nKwQCNYyrvs2JbdSc/LB5YxyaOQcFRZWNGDOOMc7
- VLpsWJzgFLwqJL7+QA8sOgMxCyl63tuaws8MCeFGRgzBA==
-Received: from rossini.marcant.net ([217.14.160.69]) by mx-gate38-hz1;
- Fri, 21 Aug 2026 08:50:47 +0200
-Received: from [192.168.203.16] (unknown [192.168.203.16])
-	by rossini.marcant.net (Postfix) with ESMTP id 6C8E896163A;
-	Fri, 21 Aug 2026 08:50:41 +0200 (CEST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 rossini.marcant.net 6C8E896163A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marcant.net;
-	s=gandalf; t=1787295041;
-	bh=dmqPZVgfMRSVKaGhmQWhxyx2Fl2asnnJWzRYPeVvggw=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
-	b=BorRw+sDKf95caVnrYk19DWyZRj59G1T7Bkq8zIxpAGQuS38ERyBwcbXpb14iSWp5
-	 4IcF66CjN4cuCQ2Q8noP1WT/ivVzPBj/rBtnzkpsPvx3rUrJl0FYTEXG7KERE+5rqz
-	 3BZDzHjKE6qe/4/3S0cnM5vHPhXp9soegvmZEXz8=
-Message-ID: <a1ff9ecb-7338-4b14-848c-d4034a584b4d@marcant.net>
-Date: Fri, 21 Aug 2026 08:50:41 +0200
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="V4wvHf0D"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1787299009; x=1818835009;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=pqV5zIsVJwu6oCyIejvTylXpCDETkfNZe8pi0nJksVc=;
+  b=V4wvHf0Dhb+cgxtpcwVecVlDYFxdeSHGaQAsG8etHlLJy8kY3aTx6S7I
+   UCICHGJsltf4KE324SNi/0/beJ4DPT0GSJ+4LwkjNsd0EjWFPVFFleULg
+   5Y8ifwGBYN891TfiDU+IUNpuAHfPqtu7BNZlpCERcYv/HIlPlJ8tEdcyV
+   M=;
+X-CSE-ConnectionGUID: XyiW7hTOTeG363vfDvBgxQ==
+X-CSE-MsgGUID: iv5YheliTDSQtxHsT2WUzw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11881"; a="173751557"
+X-IronPort-AV: E=Sophos;i="6.25,234,1779141600"; 
+   d="scan'208";a="173751557"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE803.infineon.com) ([172.23.29.29])
+  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2026 09:56:39 +0200
+Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE803.infineon.com
+ (172.23.29.29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 21 Aug
+ 2026 09:56:39 +0200
+Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
+ MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 21 Aug 2026 09:56:35 +0200
+From: Jason Huang <Jason.Huang2@infineon.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes.berg@intel.com>, <johannes@sipsolutions.net>,
+	<arend.vanspriel@broadcom.com>, <hsin-hung.li@cypress.com>,
+	<linux-kernel@vger.kernel.org>, <brcm80211@lists.linux.dev>,
+	<brcm80211-dev-list.pdl@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
+	<jeff.johnson@oss.qualcomm.com>, Carella Chen <carella.chen@infineon.com>
+Subject: [PATCH v5 0/5] brcmfmac: add FT/OKC roaming offload support
+Date: Fri, 21 Aug 2026 15:56:12 +0800
+Message-ID: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: =?UTF-8?Q?Andr=C3=A9_Valentin?= <avalentin@marcant.net>
-Subject: Re: [PATCH v3] wifi: ath11k: run ahb shutdown() teardown only on
- WCN6750
-To: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Cc: Manikanta Pubbisetty <manikanta.pubbisetty@oss.qualcomm.com>,
- linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20260810192859.949348-1-avalentin@marcant.net>
-Content-Language: de-DE
-Autocrypt: addr=avalentin@marcant.net; keydata=
- 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 Gbeh
-Organization: MarcanT AG
-In-Reply-To: <20260810192859.949348-1-avalentin@marcant.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20260821-upstream-wireless-next-main-jason-11r-support-v1-0201e1f9c0e0
 Content-Transfer-Encoding: 8bit
-X-cloud-security-sender:avalentin@marcant.net
-X-cloud-security-recipient:linux-wireless@vger.kernel.org
-X-cloud-security-Mailarchiv: E-Mail archived for: avalentin@marcant.net
-X-cloud-security-Mailarchivtype:outbound
-X-cloud-security-Virusscan:CLEAN
-X-cloud-security-disclaimer: This E-Mail was scanned by E-Mailservice on mx-gate38-hz1 with 4hR9tT5MS2zLlxs
-X-cloud-security-connect: rossini.marcant.net[217.14.160.69], TLS=1, IP=217.14.160.69
-X-cloud-security-Digest:4ec1c4b26dbc0c14e3d9a22eb319e47c
-X-cloud-security:scantime:1.230
-DKIM-Signature: a=rsa-sha256;
- bh=dmqPZVgfMRSVKaGhmQWhxyx2Fl2asnnJWzRYPeVvggw=; c=relaxed/relaxed;
- d=marcant.net; h=content-type:mime-version:subject:from:to:message-id:date;
- s=hse1; t=1787295046; v=1;
- b=eNktTeF7alQnReHRgRBO8RPUzf1cvIU0pOC2SGie1mQvMu8iSd4T+eafQehaYvrvv6qSYcDI
- 4XKgz+5cRIFJ32QCdXmeM6vpESujCl/PGD6gmjhXhqohcL350cmhkvXLeJyhleL4CL71DOFxuKo
- BQoDU3njqNwKDmD7USS2xaqPSWsSqKYgAZb2yT6flIV+oFKAP6dgeFaGIr3uqrGOvjyxxbV+ogW
- LoU+SzAf0WParReu260IEyZrHPbk8ENrwRYfWonJHq6wdTE8qPb67/g3t2Z36FvWBXC9K9VWhUG
- NxfUoZXSP+HPHu4rN58xWByRkDSlI9WMccY16IAQFsI7g==
+X-ClientProxiedBy: MUCSE812.infineon.com (172.23.29.38) To
+ MUCSE809.infineon.com (172.23.29.35)
 
-Hi Jeff,
+From: Carella Chen <carella.chen@infineon.com>
 
-gentle ping on v3, sent 2026-08-10. It is still marked "new" in patchwork
-(https://patchwork.kernel.org/project/linux-wireless/patch/20260810192859.949348-1-avalentin@marcant.net/),
-so I want to make sure it did not simply fall through the cracks rather
-than that you are waiting on something from me.
+This series adds the cfg80211/nl80211 and brcmfmac pieces needed to
+support firmware-assisted FT/OKC roaming offload.
 
-v3 addresses all three points from your v2 review:
+Patch 1 adds an nl80211 extended feature bit so drivers can advertise
+roaming PMK programming support without claiming full 802.1X 4-way
+handshake offload. The brcmfmac patches then detect firmware FBT/OKC
+capabilities, keep roaming-offload connections in a firmware-supplicant
+profile state, program PMK material for FT/OKC roaming, report port
+authorization after offloaded roaming, and advertise the new capability
+when firmware support is present.
 
-- ahb.c and hw.h use the /* on its own line block comment style.
-- The comments in the generic code describe the behaviour only; no
-chipset is named there any more. Only the ath11k_hw_params initializer
-correlates the feature with the hardware.
-- .shutdown_teardown is now initialized explicitly in every
-ath11k_hw_params record (= false on all but WCN6750).
+Changes in v5:
+- Reworked nl80211_set_pmk() to avoid the 80-column checkpatch warning
+  on the 4-way handshake extended-feature check.
+- Added kernel-doc for the brcmfmac OKC profile state added by the PMK
+  programming patch.
+- Normalized Assisted-by trailers to the checkpatch-accepted
+  AGENT_NAME:MODEL_VERSION format.
+- Added Johannes and the wireless/brcm80211 lists to the cover letter
+  Cc list for the nl80211 and brcmfmac changes.
 
-Is there anything else you would like changed, or should I resend as v4
-with a fresh base?
+Changes in v4:
+- Resend the complete 5-patch series because v3 reached linux-wireless
+  without patch 5/5.
+- No code changes from v3.
 
-For context on the impact: without this, a plain reboot on the IPQ AHB
-targets (IPQ8074/IPQ6018/IPQ5018) stops in the boot ROM during DDR
-training and only a physical power cycle recovers, so the affected
-devices cannot be rebooted remotely at all.
+Changes in v3:
+- Send as a new standalone thread; v2 was accidentally posted once without
+  patches and once as a reply to v1.
+- Stop using deprecated NL80211_ATTR_PORT_AUTHORIZED and report
+  authorization through cfg80211_port_authorized(), which emits
+  NL80211_CMD_PORT_AUTHORIZED.
+- Squash OKC PMK programming and firmware roaming supplicant mode into one
+  brcmfmac patch.
+- Clean up authorship/trailers for the squashed patch.
 
-Kind regards,
-André
+---
+Carella Chen (3):
+      wifi: nl80211: add roam offload extended feature
+      wifi: brcmfmac: detect firmware FBT and OKC support
+      wifi: brcmfmac: advertise firmware roam offload support
+
+Darren Li (2):
+      wifi: brcmfmac: add PMK programming for firmware roaming offload
+      wifi: brcmfmac: report port authorization after offloaded roaming
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 125 +++++++++++++++++++--
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   5 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ include/uapi/linux/nl80211.h                       |   4 +
+ net/wireless/nl80211.c                             |   7 +-
+ 6 files changed, 132 insertions(+), 15 deletions(-)
+---
+base-commit: 6c5fc504d0d6934132637aa3db4b9b58148eaa78
+change-id: 20260821-upstream-wireless-next-main-jason-11r-support-v1-0201e1f9c0e0
+
+Best regards,
+-- 
+Jason Huang <jason.huang2@infineon.com>
