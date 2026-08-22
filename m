@@ -1,128 +1,167 @@
-Received: from mta0.migadu.com (out-216.mta0.migadu.com [91.218.175.216])
+Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9739F27EC7C
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 16:52:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607FA3DB97A
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 16:52:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787417530; cv=none; b=JayTXaZULAF0HOeTxUnfMthjNeVGue9WoJf8bdGie6nj7C5ZXBJHw/lXBeIncGjHHp8a3pw1eHDiBFD3Ip9CJRHYvggODBLg2UzlsrxtXeut0oHUeefpJoGzznj8zKQxmHaXIRJnylKjUCg52mBXD0Fgr/FKnuayPqQvS7sLzZI=
+	t=1787417540; cv=none; b=lY0mLQzAcb0A48AgIvPuwkP1PdFllLX+HMKPRZL7gWdpM6cE9DDfbz6ZnMXAitnh2fDd1lSGAsfNIhtZfqv2ORpSslIQIcg487ZwP2Oa3lmYuK/2L3TYbCR6AQ6vqfJm7Jqr46EI/CQknseDB9ixuGEVeRDbLi7UzH/aMYX+No8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787417530; c=relaxed/simple;
-	bh=wASOUdAJ+jefl6Fr5xINEmNRMBrFX2FNpFik+JXYll0=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=kCmbUSD6plFo7bBKW7HO0oEuyJkkS9cPkdpqHSmGgB34OJxwwuQtzTOtKweILAOzZ4Wol3xJjI0OveNqvCnvMp/kCPuXV/BzV7BUrmjmBovsNyR718w7rQxYim8fcd4ZyxEvyoqa9U9IjuZmxGD87MmRXdLw2rr3LIruTs8BQXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=i9/D2WNG; arc=none smtp.client-ip=91.218.175.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787417540; c=relaxed/simple;
+	bh=DByPZRUvyVcEdHD1jpRTlxqduptfCBNbhR048Af42tQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Jue+6JPEpwtvVVFhOa6Q6uJDmCsN2S/RH+0wIMpnk6n+p1L8/29IwwHwRjB74puLAhQxcxTexHeymaa+n9o7aUKkcOsoLan3S7Tq8S9EtHNfPRQHVCuJ5PhsKXZeYRLRrtusC4NFPzW1eHNvkrUVPJsQNEi6JhDpspTOZE0vQ5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kabsSs8m; arc=none smtp.client-ip=209.85.160.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="i9/D2WNG"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=wASOUdAJ+jefl6Fr5xINEmNRMBrFX2FNpFik+JXYll0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787417524; v=1; x=1788022324;
- b=i9/D2WNGtTwPbHkauECpBDGk4mpRd0Quu7VLu8oyoCB/XRnU1Qo/Nfz2aGd5rh+e0EuWGrEc
- Gm/ZB6+nVeWzzjdbk8f91ukPqF3BIS9xOB/40kl2Gc6/FdQvCQhV0gJSA95jARi35RUV4MmZMGs
- cZ8vaRpShrT+T9a23Kp5SJLM=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from ehlo.thunderbird.net (2a06:63c5:9b00:3900:6849:2575:4516:d712)
-	by smtp.migadu.com with ESMTPS id 643f7c8164119db2;
-	Sat, 22 Aug 2026 16:52:04 +0000
-X-Mizu-Trace-ID: 643f7c8164119db2
-X-Migadu-Flow: FLOW_OUT
-Date: Sat, 22 Aug 2026 18:51:59 +0200
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org, Michael Straube <straube.linux@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: Re: [PATCH v7 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
-User-Agent: Thunderbird for Android
-In-Reply-To: <20260820090412.19574-1-luka.gejak@linux.dev>
-References: <20260820090412.19574-1-luka.gejak@linux.dev>
-Message-ID: <44120736-F50E-4AD0-A380-3CEBB6A2F7F4@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kabsSs8m"
+Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-51c2cce930cso20712181cf.0
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 09:52:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787417537; x=1788022337; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Tzs5YoNsBThnaikyqAQZp9SOqHfVyefiIDTKcmb/YvU=;
+        b=kabsSs8mBV6ioyMIFKy7cbWcVD1130DI5qnGcxAeTaBz/b9G1a0sBeFsgMGYQxEEQp
+         ExvuQkMlWvC5vLEaCJOzcdjETRSDlw78SRi7zoCOt/j+vYA9X18sYRuUyTyQG0RrSXcX
+         BtqptQEG0YYnCIgwwmMJIFLKiuLwMH14jtewZ637MN+9tWDTsdmpkYeb7DrMiZHhdJqh
+         4DZDJniIaEhyIyFmClyDM8Jo4P2Bt5WcYRH7CztEEPKWaea8BSCDd48A9XYSFexolugN
+         AyLuhY5aGca1tYIBTCYBqUV7ZqnZ0DgC2k5gPruwFD5UgDAeJ5hgzhCnXGu+tbaDJ/OV
+         Plfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787417537; x=1788022337;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Tzs5YoNsBThnaikyqAQZp9SOqHfVyefiIDTKcmb/YvU=;
+        b=GKx65sXAXjT43NdRZNy354Oi9QL+S+XLuoXJKatsiYUWhFoe/kXDaFOsYSi1LnVI8P
+         MPO9PbfsRiYCwl6RDKhKNIi5dggrsbxJ2XT3Tkv1huXX1MKW1p0VhOdxItyzDtkkyHX4
+         NuaNTkQV/4VqqPNngcGpkOwAiffUL5G38ZHgEchLQ1gItGVOMVldiL24/Y1SdxwzGVQP
+         9bs5FodbmJV2KnAt0WfmKmJDr7JVaAf/r8EY7hXhzBRVEFdUcWjpVdoYbjq57eKXyUuF
+         3fhnNQL2FnLpsDD6MkgFNCN4g5/jgDWNL182/PDyEQPnAEGg9L5tzp+dEGDkGQYs3UG2
+         DH5Q==
+X-Gm-Message-State: AFuF++m8VJXsAI4KccC5t+oGa08hWE0zOSFO+1x7fYne/V162dd6Zbef
+	E8y3Y9J+DSGhq8gRSfkCjDJ7DCBO2EI1ZhxfMMdy2AJ9uBN/yGfK+V+L
+X-Gm-Gg: AR+sD11u29S/zNt0qV+HCLT6aAMpjbBzrDo2Nd5DJH8cNYLC/MV++Ix6pGFYIDAY+5I
+	Cd+Bvji2efhrMJDD3cUJeuA4Y5oGAkVB8bAjVxOHhfj/3kpgqdzIVc5A6BzhbZEeYWuT9gEqwEV
+	yP2zahAJjkZUzOGaOy+DI0KK8T/K1bU6q0R5lVXxHkhi7ulG3qbZBfsNo0RuwWpfPig2ZLZCPdb
+	7M0BhFczjlwgg4vExLtKgEMEBq9gMLbmrILrJNe0CzLgTHs88M1sDQLozrhDhiZ5QY6beg9QTId
+	HIKfaJRo7sgWucFvFCeDD+WqWjAsvsacg0kna/3Qlrip6cLWq2LICdAykZvcXGVxILZX+JmHtU2
+	IOwjCD/cOC5/7Z3cBoBPfJYfd9j7btz38u0tG1/m6RGkiGu8eWf5QY2FAf1EbLyDuUC41XuVzC+
+	JW73g6YwSf04Smr10ad2nqLaPVxE3VMT7SQ/1ZuCXX5FVTBDZTOpm7DymMDWBf38fMv10t9N7HM
+	6tQbvuWdKdCAkEc+CnQOyfJErCIag==
+X-Received: by 2002:ac8:58c9:0:b0:52d:796d:4563 with SMTP id d75a77b69052e-52df585c299mr147209511cf.26.1787417536703;
+        Sat, 22 Aug 2026 09:52:16 -0700 (PDT)
+Received: from reolab.localdomain ([146.70.168.136])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90c935e63e3sm17779056d6.5.2026.08.22.09.52.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 22 Aug 2026 09:52:16 -0700 (PDT)
+From: Amir Mohammad Jahangirzad <a.jahangirzad@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Amir Mohammad Jahangirzad <a.jahangirzad@gmail.com>
+Subject: [PATCH] mac80211: mesh: Fix missing bounds checks in prepare_for_gate()
+Date: Sat, 22 Aug 2026 20:21:17 +0330
+Message-ID: <20260822165117.34396-1-a.jahangirzad@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On August 20, 2026 11:04:06 AM GMT+02:00, luka=2Egejak@linux=2Edev wrote:
->From: Luka Gejak <luka=2Egejak@linux=2Edev>
->
->This is the first of two series adding support for the Realtek RTL8723B
->802=2E11n chipset and its RTL8723BS SDIO variant to rtw88=2E It contains
->only the changes to the shared rtw88 core that the chip driver depends
->on=2E The chip itself, the build glue and the MAINTAINERS entry are a
->second series=2E
->
+When moving or copying frames to a gate mpath, prepare_for_gate()
+processes incoming packets by reading the MAC header and modifying
+the packet to add Address Extension (AE) fields if necessary.
 
-=2E=2E=2E
+However, the function lacked proper bounds checking on the incoming
+skb, exposing the code to potential crashes and out-of-bounds reads.
+Specifically, the function calculates `hdrlen` from the frame control
+field and then directly accesses the mesh header at `skb->data + hdrlen`
+without checking if `skb->len` is actually large enough to hold this
+data. If a truncated packet is processed, this can result in an
+out-of-bounds read.
 
->Known limitation
->=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
->After a long idle period the firmware intermittently fails to leave LPS,
->which rtw88 reports as "firmware failed to leave lps state"=2E That check
->is the REG_TCR poll in __rtw_fw_leave_lps_check_reg()=2E On one occurrenc=
-e
->here the warning was followed fourteen seconds later by a full
->reauthentication, so it is not only log noise=2E
->
->Power save is enabled on my test machine and it reproduces there,
->roughly once per day of mostly idle uptime, and the occurrences cluster=
-=2E
->It was first reported on ARM SDIO boards, but it is not specific to slow
->hosts=2E
->
->Instrumenting the poll shows the wake is never immediate on this board=2E
->Over a run of a hundred consecutive wakes the bit was still set on the
->first read every time and cleared on the next 20 ms poll; logging only
->the outliers after that, the occasional wake takes two polls=2E So the
->budget is five polls and the ordinary cost is one, which also means
->every wake costs at least 20 ms here=2E A failure is then the far tail of
->that distribution, which leaves open whether the budget is simply too
->small=2E I would rather keep measuring than guess at a fix=2E
->
->It is not caused by anything in this series, and it needs the chip
->driver from the second series to be reachable at all, but it is open and
->I am chasing it=2E
->
+Furthermore, when the packet does not have the Address Extension flags,
+the function calls `skb_push(skb, 2 * ETH_ALEN)`. It performs this push
+without verifying if the `skb` actually has enough headroom available.
+If a packet exhausts the available headroom, this will trigger a BUG()
+in `skb_push` and cause a kernel crash.
 
-=2E=2E=2E
-Hi Ping-Ke,
+This patch fixes these issues by validating `skb->len` before reading
+any headers and checking `skb_headroom()` before modifying the packet.
+`prepare_for_gate()` is modified to return an `int` (-EINVAL on
+failure), and its caller is updated to gracefully drop malformed
+packets instead of queueing them.
 
-A correction to the "Known limitation" section of the cover letter=2E I wr=
-ote
-that a failure looks like the far tail of the wake time distribution,
-leaving open whether the poll budget is too small=2E I have since debugged=
- it
-and that turns out not to be the case=2E
+Signed-off-by: Amir Mohammad Jahangirzad <a.jahangirzad@gmail.com>
+---
+ net/mac80211/mesh_pathtbl.c | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
 
-With a local debug patch logging REG_TCR on every poll of
-__rtw_fw_leave_lps_check_reg(), I caught three failures=2E In every one
-BIT_PWRMGT_HWDATA_EN was still set after 600 ms, six times the budget=2E A=
-nd
-there is no tail=2E Counting how many polls each successful wake needed, a=
-t
-the third failure:
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 03171cf00855..b344f305a85f 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -131,22 +131,32 @@ void mesh_path_assign_nexthop(struct mesh_path *mpath, struct sta_info *sta)
+ 	spin_unlock_irqrestore(&mpath->frame_queue.lock, flags);
+ }
+ 
+-static void prepare_for_gate(struct sk_buff *skb, char *dst_addr,
+-			     struct mesh_path *gate_mpath)
++static int prepare_for_gate(struct sk_buff *skb, char *dst_addr,
++			    struct mesh_path *gate_mpath)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211s_hdr *mshdr;
+ 	int mesh_hdrlen, hdrlen;
+ 	char *next_hop;
+ 
++	if (skb->len < sizeof(struct ieee80211_hdr))
++		return -EINVAL;
++
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
++	if (skb->len < hdrlen + 6)
++		return -EINVAL;
++
+ 	mshdr = (struct ieee80211s_hdr *) (skb->data + hdrlen);
+ 
+ 	if (!(mshdr->flags & MESH_FLAGS_AE)) {
+ 		/* size of the fixed part of the mesh header */
+ 		mesh_hdrlen = 6;
+ 
++		if (skb_headroom(skb) < 2 * ETH_ALEN)
++			return -EINVAL;
++
+ 		/* make room for the two extended addresses */
+ 		skb_push(skb, 2 * ETH_ALEN);
+ 		memmove(skb->data, hdr, hdrlen + mesh_hdrlen);
+@@ -169,6 +179,7 @@ static void prepare_for_gate(struct sk_buff *skb, char *dst_addr,
+ 	rcu_read_unlock();
+ 	memcpy(hdr->addr2, gate_mpath->sdata->vif.addr, ETH_ALEN);
+ 	memcpy(hdr->addr3, dst_addr, ETH_ALEN);
++	return 0;
+ }
+ 
+ /**
+@@ -218,8 +229,10 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
+ 		if (WARN_ON(!skb))
+ 			break;
+ 
+-		prepare_for_gate(skb, gate_mpath->dst, gate_mpath);
+-		skb_queue_tail(&gate_mpath->frame_queue, skb);
++		if (prepare_for_gate(skb, gate_mpath->dst, gate_mpath) == 0)
++			skb_queue_tail(&gate_mpath->frame_queue, skb);
++		else
++			kfree_skb(skb);
+ 
+ 		if (copy)
+ 			continue;
+-- 
+2.55.0
 
-        poll0=3D25 poll1=3D27610 poll2=3D9 poll3=3D0 poll4=3D0 fails=3D3
-
-No wake in roughly 27600 ever took three or four polls, yet failures happe=
-n=2E
-The firmware either finishes within 40 ms or not at all=2E
-
-A larger LEAVE_LPS_TRY_CNT would not help=2E This is firmware side, and th=
-e
-existing code already does the sensible thing: give up, clear the bit, war=
-n=2E
-Nothing in this series changes=2E The rate is about one in 9200 wakes=2E
-
-Best regards,
-Luka Gejak
