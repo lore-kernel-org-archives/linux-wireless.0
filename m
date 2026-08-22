@@ -1,119 +1,100 @@
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3982649362F
-	for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 20:33:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 23F7A2DCC1F;
+	Sat, 22 Aug 2026 02:22:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787344420; cv=none; b=bfL25eeWUTjN+Bk+X147p+/XWgL0sKA0DFktUxCPL8SAeOisnkJiMDJluirx4QLMGAS0f2BJ8tymwQpXHNmC+N3R50Swsgo++OlCn7zZ0jLv1taffVXrDnOVR0daC6h79DXI3DEDdfXdWBPjxC53SEwuBZjbEFu95qRuyhrMwRI=
+	t=1787365357; cv=none; b=urg3wE+lBj9vLlFzBNtusGMjrWnN5IwOpAzPHQ6CI6lHydAWhGIguFAfE7amjbF2zQAxFqQiz7Sobn/dgqupr2zJTUFSyD0KjGFZD1c0NHeTaZIdAr/HLjbAwyibNadV2Z6+jWctXLBWGFKUQ87qUk9F8MkPCE0C4kQdMOcnMng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787344420; c=relaxed/simple;
-	bh=aIRTkgmWpbV76HbM3Q0AgIJJgZn+CAD2Er7fBmhVzgw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AGGZ5B7tDAL/SNooIN2v8baHGBuVw/40g1ADAP3OK/ECyzlM+rxPPgbLTV4G27ujul8vFdZtKVbHEekfeGhPUa3G1xUBAflJKmXQH3mjQNiQCBUkLeC15JAZEow5oypouC7gJ3KryhgZXer20nrNMPVGw9BftgvIofPSpg/Fmhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WeLbAvBW; arc=none smtp.client-ip=209.85.218.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WeLbAvBW"
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c15ca7a7ca9so169497066b.0
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Aug 2026 13:33:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787344417; x=1787949217; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VfyhNk7Ob1tC1JJ3rFOEQZPe86dpIKlLM8HAZGK51DY=;
-        b=WeLbAvBWhS3krBBFU1Fr/md29l86pxrAtwBq0S4EMfhM2Mjn01q8B3iRNXcFrZo3Sy
-         wm8Fa0henVB+zQAAOsw4WmL8IB8ozQFXeAyzskaux3GN35dD2JnVV31EedmU0s+LhiTU
-         kQqVjoI4ZJNuvDNa32ZeIcn+qjtEkx7ZuTybCA2KekbDuhv6iV8qcCH05T/jJ4hFX8Sh
-         /StSwwSKgIrOlW3q0vJn8NSVqUDLWtFPGvP3gcwACGO0DMgNI4P9UDxLo1NfznSGR3h2
-         /TZDTrcr9Kyn0moK6idKKrSiPL1Sgg6wqw+458o3WjZopmBMwS5P/gHBNg7PtDMJvYm9
-         uXdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787344417; x=1787949217;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VfyhNk7Ob1tC1JJ3rFOEQZPe86dpIKlLM8HAZGK51DY=;
-        b=tJDynpYkaOUhzHugJE0ZC+7vuQZSWvzpMcRe7sTBj1reJ411SRITcu5MQpENQgjZXG
-         ieuDPpZT7RBOh30dhFXdksf8W/meRX/O5lSHoyYTz/S9+51yitN5tZ+GZC40+7c+pMIV
-         QRyl6FaIVgrlNqln71pRuXmNglyaKmffurJTAnpMo3+utc7ftOYIJukg0RF4XpvvzaZs
-         v438rFTfWz4yk4jFXT2bngjtxjbT1ifPcU+dP8BPSLzfdFbubdqqxn7YAz9nUnPFi550
-         KEONnzgdJ1fyo2UbhlMCpWTGfPS/n51CblwSvJPkWFg0MbJsE3G3saF0PdFWg0Xc1xLR
-         FcnQ==
-X-Gm-Message-State: AFuF++miFtctDlM/y1f+zqFyhb9zDvvZpGg02R47vuc5DHC/EnLWeh7W
-	oy3z6ac+Uih21tEtzqHxTqJP3dPD3/9cwT9V7PbS9hBKKexOCCuDs6NP
-X-Gm-Gg: AR+sD11sLt21NFHeSA4OvOZQr8EEH6ycbDyJJwXjCnp46L4IAHYlFVpRchrAwKtiimy
-	iDTAU1jPCb/WpPixGYRO8D5IBFa6/v1Efc63qOtMeBRVjhUoJvZPycPBWZc5O6TNRvExNm2ZRbQ
-	ih09jqMMav6ErHcnL5TqQ9DQNT6g6l2YANhca/AL/MRu0NZjuhJv6CoUM+B0RgC2E+KAywKHjpw
-	li6gj0/o6vcBlhD3s8WsqYjy8xODW9U6CQWIDWg0q3iCi7p5Ts6DymOnTawCrkAxk8+DY9G2JmN
-	949c67FEyoV1ea8b4SABgvHXq/KCRS1anCrOUALP4tZ+Dbt+lbFjlpFDemALwmS0gXNb5ciwRkG
-	8p8STUqIpW6YKOqpl2bIQSqfShRs9cou6HDezatBZ/TlS7OVige2uf8LZ8/W3bPbdJUuq7dN2BE
-	rbe4FI0l3DfqTgstKRD9tz6n8r/3upaQavBKbtP78l6Xv2LE8siyYuF612TNkyIV5EMrZSCA==
-X-Received: by 2002:a17:907:c20:b0:c15:f4bb:e663 with SMTP id a640c23a62f3a-c246a3ab3dfmr889302666b.10.1787344417373;
-        Fri, 21 Aug 2026 13:33:37 -0700 (PDT)
-Received: from [192.168.1.50] ([79.119.240.229])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c2458b0933csm663790666b.18.2026.08.21.13.33.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Aug 2026 13:33:36 -0700 (PDT)
-Message-ID: <d51a0fe2-418f-418d-8ca7-9efc4844568c@gmail.com>
-Date: Fri, 21 Aug 2026 23:33:35 +0300
+	s=arc-20240116; t=1787365357; c=relaxed/simple;
+	bh=CR99sBFnfcKm4yMIDsuuo1j7lrWy5d+CVFupD7dEqOI=;
+	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=sfpY494oQzuiLRWjX7XvwSpLfNKjMvBHMNS862oxH2RDE3K/5OZJEKpJXNjOMqQeAbpBEcieHiLH9Ynyd4aAqCQE8LCbSqXSQQUhwfNE3SUL3QroI7y/leWNNKDNfxpnl4/VCXSzGRhf6bl8zbEXIEE0CSCT9ueo0QhU0uB+c8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=207.46.229.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [10.190.161.59])
+	by mtasvr (Coremail) with SMTP id _____wA3TnzdB4lqgBW0AA--.17784S3;
+	Sat, 22 Aug 2026 10:22:22 +0800 (CST)
+Received: from stitch$zju.edu.cn ( [10.190.161.59] ) by
+ ajax-webmail-mail-app4 (Coremail) ; Sat, 22 Aug 2026 10:22:21 +0800
+ (GMT+08:00)
+Date: Sat, 22 Aug 2026 10:22:21 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: "Jiacheng Xu" <stitch@zju.edu.cn>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject:  [PATCH net] wifi: cfg80211: reject invalid bss_entries_limit
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
+ 20260617(6f868824) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: rtw88: disable ASPM for Lenovo IdeaPad S340-14IWL
-To: =?UTF-8?B?QXRhIMSwbGhhbiBLw7ZrdMO8cms=?= <atailhan2006@gmail.com>,
- pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260820101642.35003-1-atailhan2006@gmail.com>
-Content-Language: en-US
-From: Bitterblue Smith <rtl8821cerfe2@gmail.com>
-In-Reply-To: <20260820101642.35003-1-atailhan2006@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Message-ID: <718c70a4.17a06.1a02746bac2.Coremail.stitch@zju.edu.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:zi_KCgCnRy7dB4lqO1JcAw--.26385W
+X-CM-SenderInfo: qtrxiiaqttimo62m3hxhgxhubq/1tbiAwQLC2qJAhcAZQAAsU
+X-CM-DELIVERINFO: =?B?hZxuHgXKKxbFmtjJiESix3B1w3tMoM3snk/k5SVzZVydjEqe1eefKHnLf95EnB4iem
+	egWx2b1XQTgwOlnfv+ZLCYlNQvCvOZN3tuMY8DEumdj9dUA4jX6JQSDpVfY/P0MxSwJuBE
+	YpAc1E4D3pqFM8kbj7cS6PToom5tWv95HmQKsM367KouAWbe58T/3nze79iaiA==
+X-Coremail-Antispam: 1Uk129KBj93XoW7Aw4xJFyrWrW3uF17Ar4DWrX_yoW8uF18pF
+	Wxury5tr4kKF17AwsYyr4Skr9Yq3y8Cr47WFyaq3ZYvw4fGr1fZF1xKr4Yvr17C34kXwn8
+	tF47tFyDKw4jyacCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUPlb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx1l5I
+	8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AK
+	xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7xvr2IYc2Ij64
+	vIr40E4x8a64kEw24lFcxC0VAYjxAxZF0Ew4CEw7xC0wACY4xI67k04243AVC20s07MxAI
+	w28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
+	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxG
+	rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
+	CI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2
+	z280aVCY1x0267AKxVWUJVW8JwCE64xvF2IEb7IF0Fy7YxBIdaVFxhVjvjDU0xZFpf9x07
+	jeXd8UUUUU=
 
-On 20/08/2026 13:16, Ata İlhan Köktürk wrote:
-> The Lenovo IdeaPad S340-14IWL (DMI product name "81N4") experiences
-> severe connectivity issues with the rtw88 PCIe wireless card when
-> ASPM is enabled. Reported symptoms include frequent disconnections,
-> kernel panics, and the driver failing to load.
-> 
-> The issue can be worked around by either adding pci=noaspm to the
-> kernel command line or by reloading the driver via modprobe. Add a
-> DMI quirk to disable ASPM automatically for this device.
-> 
-> Signed-off-by: Ata İlhan Köktürk <atailhan2006@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtw88/pci.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-> index a30467228..9df8954d8 100644
-> --- a/drivers/net/wireless/realtek/rtw88/pci.c
-> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> @@ -1779,6 +1779,15 @@ static const struct dmi_system_id rtw_pci_quirks[] = {
->  		.driver_data = (void *)(BIT(QUIRK_DIS_CAP_PCI_ASPM) |
->  					BIT(QUIRK_DIS_CAP_LPS_DEEP)),
->  	},
-> +	{
-> +		.callback = rtw_pci_disable_caps,
-> +		.ident = "Lenovo IdeaPad S340-14IWL",
-> +		.matches = {
-> +			DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
-> +			DMI_MATCH(DMI_PRODUCT_NAME, "81N4"),
-> +		},
-> +		.driver_data = (void *)(BIT(QUIRK_DIS_CAP_PCI_ASPM)),
-> +	},
->  	{}
->  };
->  
+VGhlIHdyaXRhYmxlIGNmZzgwMjExLmJzc19lbnRyaWVzX2xpbWl0IG1vZHVsZSBwYXJhbWV0ZXIg
+aXMgY3VycmVudGx5CnBhcnNlZCBieSB0aGUgZ2VuZXJpYyBpbnRlZ2VyIHBhcmFtZXRlciBzZXR0
+ZXIsIHdoaWNoIGFjY2VwdHMgemVybyBhbmQKbmVnYXRpdmUgdmFsdWVzLgoKV2hlbiBic3NfZW50
+cmllc19saW1pdCBpcyBzZXQgdG8gemVybywgdGhlIGZpcnN0IG5ldyBCU1MgZW50cnkgc2F0aXNm
+aWVzOgoKICAgIHJkZXYtPmJzc19lbnRyaWVzID49IGJzc19lbnRyaWVzX2xpbWl0CgpUaGlzIGNh
+dXNlcyBfX2NmZzgwMjExX2Jzc191cGRhdGUoKSB0byBjYWxsCmNmZzgwMjExX2Jzc19leHBpcmVf
+b2xkZXN0KCkgd2hpbGUgdGhlIEJTUyBsaXN0IGhhcyBubyBlbGlnaWJsZSBlbnRyeS4KVGhlIHJl
+c3VsdGluZyBOVUxMIG9sZGVzdCBlbnRyeSB0cmlnZ2VycyBXQVJOX09OKCFvbGRlc3QpLgoKQWRk
+IGEgY3VzdG9tIHBhcmFtZXRlciBzZXR0ZXIgdGhhdCBwcmVzZXJ2ZXMgbm9ybWFsIGludGVnZXIg
+cGFyc2luZyBidXQKcmVqZWN0cyB2YWx1ZXMgYmVsb3cgb25lLiBSZWdpc3RlciBpdCB3aXRoIG1v
+ZHVsZV9wYXJhbV9jYWxsKCksIHdoaWxlCnByZXNlcnZpbmcgdGhlIG9yaWdpbmFsIGdldHRlciwg
+cGVybWlzc2lvbnMsIGNvbXBpbGUtdGltZSB0eXBlIGNoZWNraW5nLAphbmQgbW9kdWxlIHBhcmFt
+ZXRlciB0eXBlIG1ldGFkYXRhLgoKVXBkYXRlIHRoZSBwYXJhbWV0ZXIgZGVzY3JpcHRpb24gdG8g
+ZG9jdW1lbnQgdGhlIG1pbmltdW0gdmFsdWUuCgpGaXhlczogOTg1M2E1NWVmMWJiICgiY2ZnODAy
+MTE6IGxpbWl0IHNjYW4gcmVzdWx0cyBjYWNoZSBzaXplIikKQ2M6IHN0YWJsZUB2Z2VyLmtlcm5l
+bC5vcmcKU2lnbmVkLW9mZi1ieTogSmlhY2hlbmcgWHUgPHN0aXRjaEB6anUuZWR1LmNuPgotLS0K
+bmV0L3dpcmVsZXNzL3NjYW4uYyB8IDIwICsrKysrKysrKysrKysrKysrKystCjEgZmlsZSBjaGFu
+Z2VkLCAxOSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgoKZGlmZiAtLWdpdCBhL25ldC93
+aXJlbGVzcy9zY2FuLmMgYi9uZXQvd2lyZWxlc3Mvc2Nhbi5jCmluZGV4IDA3MTA4M2NjMzM2Ny4u
+YTE0YWNjNjk5ZGM0IDEwMDY0NAotLS0gYS9uZXQvd2lyZWxlc3Mvc2Nhbi5jCisrKyBiL25ldC93
+aXJlbGVzcy9zY2FuLmMKQEAgLTcxLDkgKzcxLDI3IEBACiogZW50cmllcyBpbiB0b3RhbCwgc28g
+b3ZlcmhlYWQgaXMgYmlnZ2VyLikKKi8Kc3RhdGljIGludCBic3NfZW50cmllc19saW1pdCA9IDEw
+MDA7Ci1tb2R1bGVfcGFyYW0oYnNzX2VudHJpZXNfbGltaXQsIGludCwgMDY0NCk7CisKK3N0YXRp
+YyBpbnQgYnNzX2VudHJpZXNfbGltaXRfc2V0KGNvbnN0IGNoYXIgKnZhbCwKKyAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIGNvbnN0IHN0cnVjdCBrZXJuZWxfcGFyYW0gKmtwKQoreworICAg
+ICBpbnQgbGltaXQsIHJldDsKKworICAgICByZXQgPSBrc3RydG9pbnQodmFsLCAwLCAmbGltaXQp
+OworICAgICBpZiAocmV0KQorICAgICAgICAgICAgIHJldHVybiByZXQ7CisgICAgIGlmIChsaW1p
+dCA8IDEpCisgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7CisKKyAgICAgcmV0dXJuIHBhcmFt
+X3NldF9pbnQodmFsLCBrcCk7Cit9CisKK3BhcmFtX2NoZWNrX2ludChic3NfZW50cmllc19saW1p
+dCwgJmJzc19lbnRyaWVzX2xpbWl0KTsKK21vZHVsZV9wYXJhbV9jYWxsKGJzc19lbnRyaWVzX2xp
+bWl0LCBic3NfZW50cmllc19saW1pdF9zZXQsCisgICAgICAgICAgICAgICBwYXJhbV9nZXRfaW50
+LCAmYnNzX2VudHJpZXNfbGltaXQsIDA2NDQpOworX19NT0RVTEVfUEFSTV9UWVBFKGJzc19lbnRy
+aWVzX2xpbWl0LCAiaW50Iik7Ck1PRFVMRV9QQVJNX0RFU0MoYnNzX2VudHJpZXNfbGltaXQsCi0g
+ICAgICAgICAgICAgICAgICJsaW1pdCB0byBudW1iZXIgb2Ygc2NhbiBCU1MgZW50cmllcyAocGVy
+IHdpcGh5LCBkZWZhdWx0CjEwMDApIik7CisgICAgICAgICAgICAgICJsaW1pdCB0byBudW1iZXIg
+b2Ygc2NhbiBCU1MgZW50cmllcyAocGVyIHdpcGh5LCBkZWZhdWx0IDEwMDAsIG1pbmltdW0gMSki
+KTsKCgojZGVmaW5lIElFRUU4MDIxMV9TQ0FOX1JFU1VMVF9FWFBJUkUgKDMwICogSFopCg==
 
-By the way, what wifi chip do you have? It would be good to mention
-that in the summary.
