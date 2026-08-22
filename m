@@ -1,132 +1,132 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+Received: from mail-vk1-f227.google.com (mail-vk1-f227.google.com [209.85.221.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F70397E8A
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 17:43:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3E2133AD9B
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 18:24:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787420584; cv=none; b=oKCsbPNANudXzb+FJi/usfJl1SSdcF9NM0MBF6aSXBSHIcsB3SsDCNGFgt6fNv5ykgCoBO3+b/jSxLup/OmUv8CUNvdcoK0dhQcLhGcNFSRfdeMjH0OuZ4DWkbTnHTXAmpy1SqpSFhSyu8ZstiwfQo53BWt2l84ae6uOj5xn9MM=
+	t=1787423066; cv=none; b=SHAkA4xluFGJyysYJnvKPl1Bl9Iu/ZHX5fRqy7VD8lQLS0xY6gH/XLNMyglNRDtwpeLH5XvwmEg/uSYhI33nxjx/OpNADlmdHr7ph5dGq+2uyG8V5+2lqcy1pAc5L5killvK2J3E+DcnDjs8OxIDEbljg/XJLtnJu3CKu9HaSG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787420584; c=relaxed/simple;
-	bh=XaVXBkdgo5uChRXSHUQE+f90wx/pjzdm+aFfLX5wVO0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UEOugvUvuplpQ61DFW/mF/xeHMFAJO7nZjvoT0BPckavZFa8N65dgX26sydcfIICgqQTTkcFiRw3wtfgXmkXuh10JwVfvIh9kdqoOJ0uOcjV/dU5a3Lv2IQdr0z3NCBEVX0z8luImHC9yFFIWhPr8OIZiEreYAxiFRKgR+HuFYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ol0V56pR; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787423066; c=relaxed/simple;
+	bh=oY5nYB7gBY6C8eCXHKb+BZy4cqHwJbtML45bzXFEKOY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VNR00TNtwcora08Ip671CcwgMzCzfzIt7yP4BvxgTt9emn150B2lPlOZ/fyixpBo2sTkzgC3S90917kmFbwKsCEUQdYaRGs4Oe5CclKS+2Z5GKGoNX4MgIechltRGefbcWikh1kBQXkmhtaes3Cnqk80C+F4Vwek6O1LuVYa8jE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Z1ezlS2l; arc=none smtp.client-ip=209.85.221.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ol0V56pR"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6a378f90555so3549652a12.3
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:43:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787420579; x=1788025379; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KrbyE4aDt+HTCYrFhwWg7uCyuM3HPm006rl8AqvEDns=;
-        b=Ol0V56pRdMKha3+ZP+v1PnzG1Cg8qHUoNzPtYMRnZN6mG0xIwgNv3LHtpaBSm2IKdh
-         guqEjAXEewqcijCl8fvw0uFj94CnIEWkgwe0eXXszb6z/uxwLmC+RcVqmD3rhkSvaZsp
-         vHbRgji0oz/GAYb/MfK1aflEX9oqHYK65ENhvhAY2AVIfdKnGSDrrJ01NoOaHMFoE/67
-         +Qvnt3ctyJ3WTCn4X+7BZR/ARFFIAba4WcVn9vKeYo/VbSlpZ9kuKrDOJqxu9PsON0mU
-         gShlOTLx/4NosXRpkBScf9xui1bUxgfQsFz5UjEKbvPJiCKILIvVgtUn8z/7jaamqHO8
-         nN8g==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Z1ezlS2l"
+Received: by mail-vk1-f227.google.com with SMTP id 71dfb90a1353d-5bf94664327so1190321e0c.1
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 11:24:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787420579; x=1788025379;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KrbyE4aDt+HTCYrFhwWg7uCyuM3HPm006rl8AqvEDns=;
-        b=CMySkmAnUp6NtAzrphh00Uc/kraOKBKMthbqeSsu+9c14t3YuoksFyQCVNXq4+gcgq
-         vufX9S1fvp3HvH8DahF8DtwpOn48TXJyg3KICfZGPUmYTuQ+BqqGPYMlvvrA4oJfSW5D
-         eKVKJWtOCnMn9TE1yAc3hIUDUpRAezTjpHHUpzkNUXGjuagvXKlXas96ZWpSBUOd04Lu
-         TNY5ECiNUsIACBVyrdNKRW4QHKAzfn3GBIl3Ij7UaEgpZ+OBFKvpgMo0+LXuV2eN9CQi
-         TTD0M2sHO2vXMb7i7B2eez/ix3i06nntlIliqfrfOzSjlf7fgvbGexnJtQ57NJk88yO5
-         vrqg==
-X-Gm-Message-State: AFuF++nk+oalQi8zx6nJZlLC9FMN9QEHTp3z6Je4VswxmCgdPeAhHW6p
-	8cRe13vxU6zIV1BXcqTSOIL/ZkasYJxyr8ImHD5dUtbmIkU1yWnKFmRko+1Yo3q4
-X-Gm-Gg: AR+sD10ck6Ycro65tyID2P0JgqIiG/JqxOjAdcGjOQkp6MDK/ReLPBJo3+yPCT6BA5K
-	8PZkieXuKVLHaS2aOCbhELkxglD8u5fUtZrwwDt/v8xl5ZHNT69F+5giPISuCpnUiCpP+OWcedS
-	1keDJmGKra36jdOgHW/Bmrk6LCLxDjLLPKa67RdxEBIVA6i7bHD83Clbdq3GUpXQlMWYap2awXo
-	uB9njSV7KCiihPsTkEAAWE7GhALlL2GRQWer4e/+6+rw9eIsQYODLfdeXPdr/8LPqrw971D0IY7
-	spP9ReD9redEXgMGqDEx+66XcsDA/goeMmXi7P6Ks3Zf2kKXnhogLLQvWNudF6ES3KBieaO57SV
-	dMnuoGbamqIJ1K8jFi/NeUVSSrhQKUnUqYMhidZad/Ywk/kDvN019SiSY9qQ8MjEpQanqvj/O//
-	8mE5pHQv2D827Rrc9SCYgv0vLwRMy3wViWt5++1Gxdxj3zyCfaFgd2Bf1K7s7ElU1jS2AH2gMAq
-	JqyCZcIUV0jMQTXx32nbJF8MjFXfLWLEjr+oIk=
-X-Received: by 2002:a17:907:6094:b0:c1f:9c3b:96a7 with SMTP id a640c23a62f3a-c246a6269d2mr1569284166b.17.1787420579410;
-        Sat, 22 Aug 2026 10:42:59 -0700 (PDT)
-Received: from lenovocachyos.home (c83-251-3-7.bredband.tele2.se. [83.251.3.7])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249689fa97sm334367466b.57.2026.08.22.10.42.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Aug 2026 10:42:58 -0700 (PDT)
-From: andres parra <andres.parrab@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: andres parra <andres.parrab@gmail.com>
-Subject: [RFC PATCH 4/4] wifi: rtw89: raise RTW89_MAX_INTERFACE_NUM to 3 for P2P-Device concurrency
-Date: Sat, 22 Aug 2026 19:42:29 +0200
-Message-ID: <20260822174229.65643-5-andres.parrab@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260822174229.65643-1-andres.parrab@gmail.com>
-References: <20260822174229.65643-1-andres.parrab@gmail.com>
+        d=1e100.net; s=20251104; t=1787423064; x=1788027864;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=r5+8Ud1cCOK+HFvXxozibZFG1qXAcRUxAkWSfbO6NkQ=;
+        b=PwM5jcWf7sfG6gL1jIY0lyqxJjoh3JyQhZVHtVqEpibfCb+HYwjdXZkQo0wipJKuTO
+         V+Q9clz2UX+T4POcaifivFGTW/y/MaqDVJYC4DkJZmNVyYRkJ6Mqg7LCAkgDQImyzHno
+         Z7gOGiqjCsT1ZU8eKVL6zjH6Q18cVIaOJWWDJTkp7rGcOZH+4rdqJU38lrMwIyK6T5hD
+         +MVF+H9lbHgy2PULSIrowk8pWb7QIrc2P/y6TvJZDy5H36NM4r8b31RRDnQUjVQgG3H3
+         FCqtvpdceSik+KEIZsbBoXxQAaB5WvyrTfUBHEe/u41RfL+Q47XFMAJLUyanKS2/Y3oc
+         Bl2Q==
+X-Forwarded-Encrypted: i=1; AHgh+RrsNil565Vg402g50l9q736R/L3Zro3kb8xrxGcLTUSAyYHUQTXVtpe/D0N55noQIXpg1MT58DN5TbevGo0GQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++mf4rbEyrgyAgmqB8NqcTO3BmUl0kVUlB+a63Qawr7Lay/d9Hsr
+	/+DInXHWhhDB3wPW8WP7uypFvrkf1siVLT2FZBfhe7Es9E6Yl0fYrSTCR3rbpuhN8Mp5h+q8Ffw
+	kPWal/IF+axSVbyPe5hqA0X6JCP5TP5swyUKgzQNQfE1RU57dRNOZZdmRFDFw3nZURCTfd0vJjO
+	npUPrLLYxIp2/wWGlKKwt3wiyAlw2pqbnepA7GQIfWDmlxyuml98/nqmxPDIf18LfB+8HHp0BIy
+	fsIK14en/dz1AFBm1jBGK5Npdhr
+X-Gm-Gg: AR+sD13+STD3mebYHJ5sJOJg9IejF8FllvWsBC2E3/grbdoxGzKC8HDdiqlAByD395L
+	zSB9j/PvYp6tg7Dmd+xigFwgM3JDTWWFbyg4qQjbAfela9dnWS6dBXJvUqqiPX8hKFzt0W73ZLM
+	xpYTNyrslbLpE+tm57vWFuZ4FtXERhU8V5/f7zlhIJoUtUsI2S6MJdOCdHi63oLT5x/8KQZnTbO
+	aJtF1bi9OKM9jAHCvAxTVRXpK77GQ8IcGnHhoEYsxjUzL1M706wVhcelKEzhZ6tk6KLiEvDzoZ+
+	O7P3nbq5xx1BR+Hm4UGBBrR9ZBg8AterxvCfK9nDGMQ/8uL13v+81N10U1haN5TlpUMRUnB30oN
+	9ZayTqfB3O5dAez56weE7lV6XRCb0+EfgQyfQn/c2LqSeyJWcg3mXUa/13O5c9BiXdFFgbGoQBK
+	z18rGmLhT0dEUdhqcsybUlFEerLsALjigep/M3BWI=
+X-Received: by 2002:a05:6122:2216:b0:5ab:26f:49e3 with SMTP id 71dfb90a1353d-5c60de34cb7mr3061792e0c.3.1787423063716;
+        Sat, 22 Aug 2026 11:24:23 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-16.dlp.protect.broadcom.com. [144.49.247.16])
+        by smtp-relay.gmail.com with ESMTPS id 71dfb90a1353d-5c5e27c3cb4sm2734434e0c.5.2026.08.22.11.24.23
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 22 Aug 2026 11:24:23 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2cee894b3d8so40029045ad.2
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 11:24:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1787423062; x=1788027862; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=r5+8Ud1cCOK+HFvXxozibZFG1qXAcRUxAkWSfbO6NkQ=;
+        b=Z1ezlS2l6dSJNKOCtEJZUhzye2ye5kD72toyoLeGvIjsD9xNNSvq7sZB2btiXRD78f
+         cqimIoEWw6/vA5c82kivjBkJ0BZf/9Ir8931FdDfW8cBHzTmpUJaTbll5lEIyYOxDaLz
+         J4zUw0araaItVEQq+ClaZE0BarIWCPMRxkDy4=
+X-Forwarded-Encrypted: i=1; AHgh+Rq+8af7RynHW6nl7nu3+IIXH7892EM8wMgRHUxNrvugiCvq+zt6YD85AmGZRndT0WRGXSlwis9ROvuVZjkzPg==@vger.kernel.org
+X-Received: by 2002:a17:903:b8c:b0:2cc:d6de:d597 with SMTP id d9443c01a7336-2d670bb70d2mr140827545ad.7.1787423062464;
+        Sat, 22 Aug 2026 11:24:22 -0700 (PDT)
+X-Received: by 2002:a17:903:b8c:b0:2cc:d6de:d597 with SMTP id d9443c01a7336-2d670bb70d2mr140826885ad.7.1787423062030;
+        Sat, 22 Aug 2026 11:24:22 -0700 (PDT)
+Received: from [10.229.42.78] ([192.19.176.227])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f923f2c0sm13512614eec.30.2026.08.22.11.24.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 22 Aug 2026 11:24:21 -0700 (PDT)
+Message-ID: <71261493-e974-4f5c-a453-b4c2e449baf5@broadcom.com>
+Date: Sat, 22 Aug 2026 20:24:17 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 0/5] brcmfmac: add FT/OKC roaming offload support
+To: Jason Huang <Jason.Huang2@infineon.com>, linux-wireless@vger.kernel.org
+Cc: johannes.berg@intel.com, johannes@sipsolutions.net,
+ hsin-hung.li@cypress.com, linux-kernel@vger.kernel.org,
+ brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com,
+ wlan-kernel-dev-list@infineon.com, jeff.johnson@oss.qualcomm.com,
+ Carella Chen <carella.chen@infineon.com>
+References: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
+Content-Language: en-US
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+In-Reply-To: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-Live-tested last night: a real GO negotiation against an actual TV
-succeeded (P2P-GO-NEG-SUCCESS), but forming the actual data connection
-failed with P2P-GROUP-FORMATION-FAILURE while the laptop stayed
-connected to its normal STA WiFi -- completing the cast needs three
-concurrent interfaces (STA + P2P-Device + the new P2P-Client group
-link), and RTW89_MAX_INTERFACE_NUM was deliberately left at 2 in the
-v1 design.
+On 21/08/2026 09:56, Jason Huang wrote:
+> From: Carella Chen <carella.chen@infineon.com>
+> 
+> This series adds the cfg80211/nl80211 and brcmfmac pieces needed to
+> support firmware-assisted FT/OKC roaming offload.
+> 
+> Patch 1 adds an nl80211 extended feature bit so drivers can advertise
+> roaming PMK programming support without claiming full 802.1X 4-way
+> handshake offload. The brcmfmac patches then detect firmware FBT/OKC
+> capabilities, keep roaming-offload connections in a firmware-supplicant
+> profile state, program PMK material for FT/OKC roaming, report port
+> authorization after offloaded roaming, and advertise the new capability
+> when firmware support is present.
+> 
+> Changes in v5:
+> - Reworked nl80211_set_pmk() to avoid the 80-column checkpatch warning
+>    on the 4-way handshake extended-feature check.
+> - Added kernel-doc for the brcmfmac OKC profile state added by the PMK
+>    programming patch.
+> - Normalized Assisted-by trailers to the checkpatch-accepted
+>    AGENT_NAME:MODEL_VERSION format.
+> - Added Johannes and the wireless/brcm80211 lists to the cover letter
+>    Cc list for the nl80211 and brcmfmac changes.
 
-Traced whether raising this strains the driver's separate,
-firmware-capability-tied MCC (Multi-Channel-Concurrent) role limit,
-NUM_OF_RTW89_MCC_ROLES (= 2, unrelated to this constant, chan.h:51):
-it does not. rtw89_entity_mgnt's active_roles[]/chanctx_tbl[][] arrays
-(sized by RTW89_MAX_INTERFACE_NUM) are only populated for links with
-chanctx_assigned == true, which is set in exactly one place --
-rtw89_chanctx_ops_assign_vif(), the assign_vif_chanctx driver op --
-and a P2P-Device vif's remain_on_channel is dispatched straight to the
-driver's native ROC op, bypassing assign_vif_chanctx entirely (already
-established: this only applies to emulate_chanctx-less drivers, which
-this chip is not). So a P2P-Device link's chanctx_assigned stays false
-for its whole lifetime and never occupies an MCC-role slot -- in the
-real STA+P2P-Device+P2P-Client scenario, only STA and the P2P-Client
-link ever get a real chanctx assignment, exactly matching
-NUM_OF_RTW89_MCC_ROLES = 2, unchanged and unstrained.
+Hi Jason,
 
-The actual P2P-GROUP-FORMATION-FAILURE originates purely at the
-mac80211/cfg80211 layer (ieee80211_check_combinations(), a plain
-interface-count check against wiphy->iface_combinations[].max_interfaces,
-itself set from this constant) -- this one-line change is the complete
-fix for that. rtw89_iface_combs[]'s max_interfaces fields and
-rtw89_entity_mgnt's array sizes already reference the macro
-symbolically, so both grow automatically with no separate edit.
-static_assert(RTW89_MAX_INTERFACE_NUM >= NUM_OF_RTW89_MCC_ROLES) still
-holds (3 >= 2). Full research trail in this project's BUILD_LOG.md.
+Thanks for the follow-up, but looks like it happened again. Missing 
+patch 5/5 as happened with v3 series.
 
-Signed-off-by: andres parra <andres.parrab@gmail.com>
----
- core.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/core.h b/core.h
-index 2b21d96..83675f0 100644
---- a/core.h
-+++ b/core.h
-@@ -6340,7 +6340,7 @@ enum rtw89_entity_mode {
- 	RTW89_ENTITY_MODE_UNHANDLED = -ESRCH,
- };
- 
--#define RTW89_MAX_INTERFACE_NUM 2
-+#define RTW89_MAX_INTERFACE_NUM 3
- 
- /* only valid when running with chanctx_ops */
- struct rtw89_entity_mgnt {
--- 
-2.55.0
+Regards,
+Arend
 
