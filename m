@@ -1,69 +1,69 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33143793DE
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 17:42:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F70397E8A
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 17:43:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787420581; cv=none; b=RjHx+Hx082rKV3XdFwxCVUkRhhYq7MesCW2pdFe1powzeq4jzCHnCg+SYO2eZEY2/T8+jK7qu81OskUuhj4nG4IG3OFjWpY9Cg0emczfoNRAmTdDUsPt570IjeYOxceK0+M+qtHkeQmTNpsTFTXafX1mWe8XVehKCnktJYxwTmo=
+	t=1787420584; cv=none; b=oKCsbPNANudXzb+FJi/usfJl1SSdcF9NM0MBF6aSXBSHIcsB3SsDCNGFgt6fNv5ykgCoBO3+b/jSxLup/OmUv8CUNvdcoK0dhQcLhGcNFSRfdeMjH0OuZ4DWkbTnHTXAmpy1SqpSFhSyu8ZstiwfQo53BWt2l84ae6uOj5xn9MM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787420581; c=relaxed/simple;
-	bh=K3ZITh8TrwNoRq0QwdUOQbQjYERm4RsYnPBzkBoYiwU=;
+	s=arc-20240116; t=1787420584; c=relaxed/simple;
+	bh=XaVXBkdgo5uChRXSHUQE+f90wx/pjzdm+aFfLX5wVO0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hbsX3535tWKiVU1EOlI5mAbHYk5epbJFoMDwTOyFdWxPcTkilbwW0QQC9KzmPDgSMZx3cKKWVAn2k1mHn4XxIOUMR1zz8WblccSXFBczmA3jFJCQuPGEWBaygJjOKQsTvHUUyJYNvQNIXq8DJ+DbygFC2uF3IpiFlH0THW7oKPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ArlOxxXd; arc=none smtp.client-ip=209.85.218.50
+	 MIME-Version; b=UEOugvUvuplpQ61DFW/mF/xeHMFAJO7nZjvoT0BPckavZFa8N65dgX26sydcfIICgqQTTkcFiRw3wtfgXmkXuh10JwVfvIh9kdqoOJ0uOcjV/dU5a3Lv2IQdr0z3NCBEVX0z8luImHC9yFFIWhPr8OIZiEreYAxiFRKgR+HuFYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ol0V56pR; arc=none smtp.client-ip=209.85.208.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ArlOxxXd"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-c214321dc32so406704666b.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:42:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ol0V56pR"
+Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6a378f90555so3549652a12.3
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:43:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787420577; x=1788025377; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787420579; x=1788025379; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ftNd6Rqboz6yz0GJ3lruJ17651I4VX02H1X2TJeM0ak=;
-        b=ArlOxxXd+JSgmXrf7ajGFTRfBVe+afKcQ2p1TD+QH6XA0QcTYEKPvUMqxcFh7bK+U0
-         8zUzShfEffwFaftv9NB9vBWm9+7dJO29JK3YzjXRSRnbNuHzmK5K1pU5dWH6FAWO4rnS
-         hT3OT0r4W2QV809juX50ByQrSggLWzd/6UqcL8AnSpBao6clC89HXLNMj/0DdmrmIgSm
-         okshJw0MV2QJ8PTF1FoE2ASkVAhMy9HqNLb8qK5h9oT9gOoyr0+W/mzhFycBoXbE0HoF
-         p634lmTQ2jF4xQnl61BIDUYy70gjt5J87GEkLNrOs1y7M/OD3XbmsDOQIzFitm3C3Shs
-         6P5w==
+        bh=KrbyE4aDt+HTCYrFhwWg7uCyuM3HPm006rl8AqvEDns=;
+        b=Ol0V56pRdMKha3+ZP+v1PnzG1Cg8qHUoNzPtYMRnZN6mG0xIwgNv3LHtpaBSm2IKdh
+         guqEjAXEewqcijCl8fvw0uFj94CnIEWkgwe0eXXszb6z/uxwLmC+RcVqmD3rhkSvaZsp
+         vHbRgji0oz/GAYb/MfK1aflEX9oqHYK65ENhvhAY2AVIfdKnGSDrrJ01NoOaHMFoE/67
+         +Qvnt3ctyJ3WTCn4X+7BZR/ARFFIAba4WcVn9vKeYo/VbSlpZ9kuKrDOJqxu9PsON0mU
+         gShlOTLx/4NosXRpkBScf9xui1bUxgfQsFz5UjEKbvPJiCKILIvVgtUn8z/7jaamqHO8
+         nN8g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787420577; x=1788025377;
+        d=1e100.net; s=20251104; t=1787420579; x=1788025379;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ftNd6Rqboz6yz0GJ3lruJ17651I4VX02H1X2TJeM0ak=;
-        b=HHdyTSy4TvyDsxpLwsysvPDTS29tcS/2VrbL6b1r48QySy1xhtVVhNe6H4vhbN6ATY
-         iI/c/7dgkquBgKIqvavMKZP7HDAMCPUx6bZfS5nsTPZ0kplpaYrM7QDyXQWBqFmq0mxU
-         VKEt1V/oWgte48rnq1QkWdG6HSDldp8URZsMik6gbltccbi1kwQ2xzPF4daS65UDsQG9
-         H8pADXLewtoHcFEiwXCFPejJYYtWFIPuhOkqWzoavEM9xiLuXxcPcEIhQwTjzjPp6SZy
-         fB5Opn9oxa0CTkM6f+j9VPTmhgTUQchp+y/Tog1qsYVBG5VgB7o0PSwsmIRdJGJgH2P+
-         /lhw==
-X-Gm-Message-State: AFuF++n0TpAJ9avC2fe+MOql1lXJ+32FVuAAB1vDp4pcHKWT7MJIWcB1
-	neSfiNzAHidJQ7n6oANUeYwEbCitXFZmCZXfqJNWypgnvnNo7nTPB/wVkMiPrMhP
-X-Gm-Gg: AR+sD13hGYx02HU1Ylj9FCtEt0KW+5YB3bU21R80vtZVq2WBiKA8yr3QY9xWYRu5CHZ
-	YxIqcSXvKJKHigRkD/xZQmdGep/wbuWqDvB5LZMrFijyDIqABtQAP+gB7ZyW0dVjFAofbsqpxtb
-	kFx6BOyOQAn9ERL2xDdOILRU+gqElw3sVa+Tww30fU1k4aeKov9wsvSdmuDKHNA31L6qiv0O8jH
-	ZQJ49WjLXfLoK5qi2HTVOFWIL86kvIHrdh+ziUA71eGao7Q/nOUeF5C+IWEiX/QxD6aL8Twpk41
-	jEwmjnQQb2oGbh7ayOgurrJJHk3O8T94MmkfjIqOQ4u2bBJk8UyJ3PLd8qiVyB6i16wQsl/lWgm
-	AVrZ95c/rPr+ItPH44apvM3F2115smEQ2uuODrSm0jC4y//+Dnr6KQ7UzsQvwuKQpU503JeH0au
-	28V61FSvFD4juJ7PfaQqQoR4RL+OQXkK5XhjJegC1xXksbK9DzeAV5Xh6NP93DJBgcEGBI75z0Y
-	a/8QpsDEQQ0Az61Z6riWWXU3SCh
-X-Received: by 2002:a17:907:d0d:b0:c24:87e5:6491 with SMTP id a640c23a62f3a-c2487e58617mr1219703466b.2.1787420577426;
-        Sat, 22 Aug 2026 10:42:57 -0700 (PDT)
+        bh=KrbyE4aDt+HTCYrFhwWg7uCyuM3HPm006rl8AqvEDns=;
+        b=CMySkmAnUp6NtAzrphh00Uc/kraOKBKMthbqeSsu+9c14t3YuoksFyQCVNXq4+gcgq
+         vufX9S1fvp3HvH8DahF8DtwpOn48TXJyg3KICfZGPUmYTuQ+BqqGPYMlvvrA4oJfSW5D
+         eKVKJWtOCnMn9TE1yAc3hIUDUpRAezTjpHHUpzkNUXGjuagvXKlXas96ZWpSBUOd04Lu
+         TNY5ECiNUsIACBVyrdNKRW4QHKAzfn3GBIl3Ij7UaEgpZ+OBFKvpgMo0+LXuV2eN9CQi
+         TTD0M2sHO2vXMb7i7B2eez/ix3i06nntlIliqfrfOzSjlf7fgvbGexnJtQ57NJk88yO5
+         vrqg==
+X-Gm-Message-State: AFuF++nk+oalQi8zx6nJZlLC9FMN9QEHTp3z6Je4VswxmCgdPeAhHW6p
+	8cRe13vxU6zIV1BXcqTSOIL/ZkasYJxyr8ImHD5dUtbmIkU1yWnKFmRko+1Yo3q4
+X-Gm-Gg: AR+sD10ck6Ycro65tyID2P0JgqIiG/JqxOjAdcGjOQkp6MDK/ReLPBJo3+yPCT6BA5K
+	8PZkieXuKVLHaS2aOCbhELkxglD8u5fUtZrwwDt/v8xl5ZHNT69F+5giPISuCpnUiCpP+OWcedS
+	1keDJmGKra36jdOgHW/Bmrk6LCLxDjLLPKa67RdxEBIVA6i7bHD83Clbdq3GUpXQlMWYap2awXo
+	uB9njSV7KCiihPsTkEAAWE7GhALlL2GRQWer4e/+6+rw9eIsQYODLfdeXPdr/8LPqrw971D0IY7
+	spP9ReD9redEXgMGqDEx+66XcsDA/goeMmXi7P6Ks3Zf2kKXnhogLLQvWNudF6ES3KBieaO57SV
+	dMnuoGbamqIJ1K8jFi/NeUVSSrhQKUnUqYMhidZad/Ywk/kDvN019SiSY9qQ8MjEpQanqvj/O//
+	8mE5pHQv2D827Rrc9SCYgv0vLwRMy3wViWt5++1Gxdxj3zyCfaFgd2Bf1K7s7ElU1jS2AH2gMAq
+	JqyCZcIUV0jMQTXx32nbJF8MjFXfLWLEjr+oIk=
+X-Received: by 2002:a17:907:6094:b0:c1f:9c3b:96a7 with SMTP id a640c23a62f3a-c246a6269d2mr1569284166b.17.1787420579410;
+        Sat, 22 Aug 2026 10:42:59 -0700 (PDT)
 Received: from lenovocachyos.home (c83-251-3-7.bredband.tele2.se. [83.251.3.7])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249689fa97sm334367466b.57.2026.08.22.10.42.56
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249689fa97sm334367466b.57.2026.08.22.10.42.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Aug 2026 10:42:57 -0700 (PDT)
+        Sat, 22 Aug 2026 10:42:58 -0700 (PDT)
 From: andres parra <andres.parrab@gmail.com>
 To: linux-wireless@vger.kernel.org
 Cc: andres parra <andres.parrab@gmail.com>
-Subject: [RFC PATCH 3/4] wifi: rtw89: handle P2P_DEVICE in net_type/self_role switch
-Date: Sat, 22 Aug 2026 19:42:28 +0200
-Message-ID: <20260822174229.65643-4-andres.parrab@gmail.com>
+Subject: [RFC PATCH 4/4] wifi: rtw89: raise RTW89_MAX_INTERFACE_NUM to 3 for P2P-Device concurrency
+Date: Sat, 22 Aug 2026 19:42:29 +0200
+Message-ID: <20260822174229.65643-5-andres.parrab@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260822174229.65643-1-andres.parrab@gmail.com>
 References: <20260822174229.65643-1-andres.parrab@gmail.com>
@@ -75,53 +75,58 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-rtw89_vif_type_mapping() has a second switch (vif->type) beyond the
-wifi_role mapping already fixed -- this one sets net_type/self_role
-and also ends in a default: WARN_ON(1). Live-tested on real hardware
-(RTL8922AE): the moment wpa_supplicant/NetworkManager requested a
-P2P-Device wdev (NL80211_CMD_START_P2P_DEVICE), this WARN_ON fired
-immediately, confirmed via the exact call chain this project's
-BUILD_LOG.md had already traced by hand: nl80211_start_p2p_device ->
-ieee80211_start_p2p_device -> ieee80211_do_open -> drv_add_interface ->
-rtw89_ops_add_interface -> __rtw89_ops_add_iface_link ->
-rtw89_vif_type_mapping.
+Live-tested last night: a real GO negotiation against an actual TV
+succeeded (P2P-GO-NEG-SUCCESS), but forming the actual data connection
+failed with P2P-GROUP-FORMATION-FAILURE while the laptop stayed
+connected to its normal STA WiFi -- completing the cast needs three
+concurrent interfaces (STA + P2P-Device + the new P2P-Client group
+link), and RTW89_MAX_INTERFACE_NUM was deliberately left at 2 in the
+v1 design.
 
-This second switch was present in the original research grep
-(core.c:5702, two switch(vif->type) sites found) but was not actually
-read/analyzed at the time -- a real gap in that research pass, caught
-by this live test rather than by review.
+Traced whether raising this strains the driver's separate,
+firmware-capability-tied MCC (Multi-Channel-Concurrent) role limit,
+NUM_OF_RTW89_MCC_ROLES (= 2, unrelated to this constant, chan.h:51):
+it does not. rtw89_entity_mgnt's active_roles[]/chanctx_tbl[][] arrays
+(sized by RTW89_MAX_INTERFACE_NUM) are only populated for links with
+chanctx_assigned == true, which is set in exactly one place --
+rtw89_chanctx_ops_assign_vif(), the assign_vif_chanctx driver op --
+and a P2P-Device vif's remain_on_channel is dispatched straight to the
+driver's native ROC op, bypassing assign_vif_chanctx entirely (already
+established: this only applies to emulate_chanctx-less drivers, which
+this chip is not). So a P2P-Device link's chanctx_assigned stays false
+for its whole lifetime and never occupies an MCC-role slot -- in the
+real STA+P2P-Device+P2P-Client scenario, only STA and the P2P-Client
+link ever get a real chanctx assignment, exactly matching
+NUM_OF_RTW89_MCC_ROLES = 2, unchanged and unstrained.
 
-Add NL80211_IFTYPE_P2P_DEVICE alongside the existing MONITOR case,
-which also just breaks without setting net_type/self_role: a
-P2P-Device interface has no BSS/association state, so leaving these at
-their zero-initialized defaults (RTW89_NET_TYPE_NO_LINK,
-RTW89_SELF_ROLE_CLIENT) is correct, same reasoning already applied to
-MONITOR.
-
-Verified live: after this fix, wpa_supplicant successfully created a
-real P2P-Device wdev (confirmed via `iw dev`: phy#1 now lists a
-non-netdev interface, type P2P-device, alongside wlan0), with zero
-WARN/BUG in dmesg for the whole boot, and normal STA association/
-roaming continuing to work correctly (multiple successful associate/
-reassociate cycles observed with this driver loaded).
+The actual P2P-GROUP-FORMATION-FAILURE originates purely at the
+mac80211/cfg80211 layer (ieee80211_check_combinations(), a plain
+interface-count check against wiphy->iface_combinations[].max_interfaces,
+itself set from this constant) -- this one-line change is the complete
+fix for that. rtw89_iface_combs[]'s max_interfaces fields and
+rtw89_entity_mgnt's array sizes already reference the macro
+symbolically, so both grow automatically with no separate edit.
+static_assert(RTW89_MAX_INTERFACE_NUM >= NUM_OF_RTW89_MCC_ROLES) still
+holds (3 >= 2). Full research trail in this project's BUILD_LOG.md.
 
 Signed-off-by: andres parra <andres.parrab@gmail.com>
 ---
- core.c | 1 +
- 1 file changed, 1 insertion(+)
+ core.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/core.c b/core.c
-index c8f12ef..b4f8d27 100644
---- a/core.c
-+++ b/core.c
-@@ -5734,6 +5734,7 @@ void rtw89_vif_type_mapping(struct rtw89_vif_link *rtwvif_link, bool assoc)
- 		rtwvif_link->addr_cam.sec_ent_mode = RTW89_ADDR_CAM_SEC_NORMAL;
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	default:
- 		WARN_ON(1);
+diff --git a/core.h b/core.h
+index 2b21d96..83675f0 100644
+--- a/core.h
++++ b/core.h
+@@ -6340,7 +6340,7 @@ enum rtw89_entity_mode {
+ 	RTW89_ENTITY_MODE_UNHANDLED = -ESRCH,
+ };
+ 
+-#define RTW89_MAX_INTERFACE_NUM 2
++#define RTW89_MAX_INTERFACE_NUM 3
+ 
+ /* only valid when running with chanctx_ops */
+ struct rtw89_entity_mgnt {
 -- 
 2.55.0
 
