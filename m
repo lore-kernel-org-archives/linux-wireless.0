@@ -1,100 +1,92 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [207.46.229.174])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 23F7A2DCC1F;
-	Sat, 22 Aug 2026 02:22:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.46.229.174
+Received: from mta0.migadu.com (out-210.mta0.migadu.com [91.218.175.210])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1432DB79F
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 04:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787365357; cv=none; b=urg3wE+lBj9vLlFzBNtusGMjrWnN5IwOpAzPHQ6CI6lHydAWhGIguFAfE7amjbF2zQAxFqQiz7Sobn/dgqupr2zJTUFSyD0KjGFZD1c0NHeTaZIdAr/HLjbAwyibNadV2Z6+jWctXLBWGFKUQ87qUk9F8MkPCE0C4kQdMOcnMng=
+	t=1787372195; cv=none; b=osqHhHftHSyp2BD/t2QucA+pgvqZAarQLuL9vqhX2BiP5k2h5RKSqPiWmug9Sb1PgD8HkN+ijFZpfIAwZ2oEgnc1mjhD9yp6m0o0FpCJ9yMmDKGT1Z92LzA3ZkqfNGKSGD4FkBM/Jq9wyLukR+pThE0T66U/3tTXpD/Gdg/X7Y4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787365357; c=relaxed/simple;
-	bh=CR99sBFnfcKm4yMIDsuuo1j7lrWy5d+CVFupD7dEqOI=;
-	h=Date:From:To:Cc:Subject:Content-Type:MIME-Version:Message-ID; b=sfpY494oQzuiLRWjX7XvwSpLfNKjMvBHMNS862oxH2RDE3K/5OZJEKpJXNjOMqQeAbpBEcieHiLH9Ynyd4aAqCQE8LCbSqXSQQUhwfNE3SUL3QroI7y/leWNNKDNfxpnl4/VCXSzGRhf6bl8zbEXIEE0CSCT9ueo0QhU0uB+c8w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=207.46.229.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from zju.edu.cn (unknown [10.190.161.59])
-	by mtasvr (Coremail) with SMTP id _____wA3TnzdB4lqgBW0AA--.17784S3;
-	Sat, 22 Aug 2026 10:22:22 +0800 (CST)
-Received: from stitch$zju.edu.cn ( [10.190.161.59] ) by
- ajax-webmail-mail-app4 (Coremail) ; Sat, 22 Aug 2026 10:22:21 +0800
- (GMT+08:00)
-Date: Sat, 22 Aug 2026 10:22:21 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: "Jiacheng Xu" <stitch@zju.edu.cn>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject:  [PATCH net] wifi: cfg80211: reject invalid bss_entries_limit
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2025.3-cmXT6 build
- 20260617(6f868824) Copyright (c) 2002-2026 www.mailtech.cn zju.edu.cn
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1787372195; c=relaxed/simple;
+	bh=hYHUvvosxIblggxt5IxGcMuRUG+plNbbzXWgQpj5Q1s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ahpSBTefqCmSsiXKdICKsdmVbUxIqaXlsfgDHXHB0yVyFuCX+h/lRMQjAG2s9M2Uc2ti3MEWxKDEvTMA7qS+InRCdy7IOt6sANXgXUcU3y8FF6Uk8XulkTHM/B2R8vy59Bpfx7HihMtEpFVfQwQK7lti30Svj+5+Nfq3INIduwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=go/dmsRQ; arc=none smtp.client-ip=91.218.175.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="go/dmsRQ"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=hYHUvvosxIblggxt5IxGcMuRUG+plNbbzXWgQpj5Q1s=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787372190; v=1; x=1787976990;
+ b=go/dmsRQ7Mw+lVijlplkOo243DZPjS09QgkLe3JVmhC7vEN9sYcf8qf/i7v3xQiyhjVbuoWR
+ 1NF2e3/nKYd5xpwB3vSQ398MMtFCioH3L2YZIR85SZ0bLkC1fZE+hYJrxbhXh1VBWOh4kceUPRZ
+ biVZje+vJmsHcRe5w5Q1/q1GgrB2VbV8qXQY3r0lVhI8qBW46Ppo3xYXelTBZZWgRaXYtAQW5yu
+ FswkRUDBR02EqcqYo7vD4KUsPbPHP/4cCXow61Ke/FyKiGNhUwuyMdt8B3A99BXBgkR4Wp5+tTF
+ n8ymq4de4C5BdC+ZwBIt6f1pnfcc+o33w42sfJBkM0JKg==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
+	by smtp.migadu.com with ESMTPS id 7aca6eeae61922e9;
+	Sat, 22 Aug 2026 04:16:20 +0000
+X-Mizu-Trace-ID: 7aca6eeae61922e9
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: moosager <moosager90@gmail.com>
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Deren Wu <deren.wu@mediatek.com>
+Subject: Re: [PATCH wireless] wifi: mt76: mt7921: check drv_pmctrl return in the PCIe reset path
+Date: Fri, 21 Aug 2026 21:16:17 -0700
+Message-ID: <20260822041617.236931-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <aocbq-_gRsXgFV94@fedora.fritz.box>
+References: <aocbq-_gRsXgFV94@fedora.fritz.box>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <718c70a4.17a06.1a02746bac2.Coremail.stitch@zju.edu.cn>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:zi_KCgCnRy7dB4lqO1JcAw--.26385W
-X-CM-SenderInfo: qtrxiiaqttimo62m3hxhgxhubq/1tbiAwQLC2qJAhcAZQAAsU
-X-CM-DELIVERINFO: =?B?hZxuHgXKKxbFmtjJiESix3B1w3tMoM3snk/k5SVzZVydjEqe1eefKHnLf95EnB4iem
-	egWx2b1XQTgwOlnfv+ZLCYlNQvCvOZN3tuMY8DEumdj9dUA4jX6JQSDpVfY/P0MxSwJuBE
-	YpAc1E4D3pqFM8kbj7cS6PToom5tWv95HmQKsM367KouAWbe58T/3nze79iaiA==
-X-Coremail-Antispam: 1Uk129KBj93XoW7Aw4xJFyrWrW3uF17Ar4DWrX_yoW8uF18pF
-	Wxury5tr4kKF17AwsYyr4Skr9Yq3y8Cr47WFyaq3ZYvw4fGr1fZF1xKr4Yvr17C34kXwn8
-	tF47tFyDKw4jyacCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
-	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-	0xBIdaVrnRJUUUPlb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-	0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx1l5I
-	8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AK
-	xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7xvr2IYc2Ij64
-	vIr40E4x8a64kEw24lFcxC0VAYjxAxZF0Ew4CEw7xC0wACY4xI67k04243AVC20s07MxAI
-	w28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
-	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxG
-	rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
-	CI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2
-	z280aVCY1x0267AKxVWUJVW8JwCE64xvF2IEb7IF0Fy7YxBIdaVFxhVjvjDU0xZFpf9x07
-	jeXd8UUUUU=
+Content-Transfer-Encoding: 8bit
 
-VGhlIHdyaXRhYmxlIGNmZzgwMjExLmJzc19lbnRyaWVzX2xpbWl0IG1vZHVsZSBwYXJhbWV0ZXIg
-aXMgY3VycmVudGx5CnBhcnNlZCBieSB0aGUgZ2VuZXJpYyBpbnRlZ2VyIHBhcmFtZXRlciBzZXR0
-ZXIsIHdoaWNoIGFjY2VwdHMgemVybyBhbmQKbmVnYXRpdmUgdmFsdWVzLgoKV2hlbiBic3NfZW50
-cmllc19saW1pdCBpcyBzZXQgdG8gemVybywgdGhlIGZpcnN0IG5ldyBCU1MgZW50cnkgc2F0aXNm
-aWVzOgoKICAgIHJkZXYtPmJzc19lbnRyaWVzID49IGJzc19lbnRyaWVzX2xpbWl0CgpUaGlzIGNh
-dXNlcyBfX2NmZzgwMjExX2Jzc191cGRhdGUoKSB0byBjYWxsCmNmZzgwMjExX2Jzc19leHBpcmVf
-b2xkZXN0KCkgd2hpbGUgdGhlIEJTUyBsaXN0IGhhcyBubyBlbGlnaWJsZSBlbnRyeS4KVGhlIHJl
-c3VsdGluZyBOVUxMIG9sZGVzdCBlbnRyeSB0cmlnZ2VycyBXQVJOX09OKCFvbGRlc3QpLgoKQWRk
-IGEgY3VzdG9tIHBhcmFtZXRlciBzZXR0ZXIgdGhhdCBwcmVzZXJ2ZXMgbm9ybWFsIGludGVnZXIg
-cGFyc2luZyBidXQKcmVqZWN0cyB2YWx1ZXMgYmVsb3cgb25lLiBSZWdpc3RlciBpdCB3aXRoIG1v
-ZHVsZV9wYXJhbV9jYWxsKCksIHdoaWxlCnByZXNlcnZpbmcgdGhlIG9yaWdpbmFsIGdldHRlciwg
-cGVybWlzc2lvbnMsIGNvbXBpbGUtdGltZSB0eXBlIGNoZWNraW5nLAphbmQgbW9kdWxlIHBhcmFt
-ZXRlciB0eXBlIG1ldGFkYXRhLgoKVXBkYXRlIHRoZSBwYXJhbWV0ZXIgZGVzY3JpcHRpb24gdG8g
-ZG9jdW1lbnQgdGhlIG1pbmltdW0gdmFsdWUuCgpGaXhlczogOTg1M2E1NWVmMWJiICgiY2ZnODAy
-MTE6IGxpbWl0IHNjYW4gcmVzdWx0cyBjYWNoZSBzaXplIikKQ2M6IHN0YWJsZUB2Z2VyLmtlcm5l
-bC5vcmcKU2lnbmVkLW9mZi1ieTogSmlhY2hlbmcgWHUgPHN0aXRjaEB6anUuZWR1LmNuPgotLS0K
-bmV0L3dpcmVsZXNzL3NjYW4uYyB8IDIwICsrKysrKysrKysrKysrKysrKystCjEgZmlsZSBjaGFu
-Z2VkLCAxOSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgoKZGlmZiAtLWdpdCBhL25ldC93
-aXJlbGVzcy9zY2FuLmMgYi9uZXQvd2lyZWxlc3Mvc2Nhbi5jCmluZGV4IDA3MTA4M2NjMzM2Ny4u
-YTE0YWNjNjk5ZGM0IDEwMDY0NAotLS0gYS9uZXQvd2lyZWxlc3Mvc2Nhbi5jCisrKyBiL25ldC93
-aXJlbGVzcy9zY2FuLmMKQEAgLTcxLDkgKzcxLDI3IEBACiogZW50cmllcyBpbiB0b3RhbCwgc28g
-b3ZlcmhlYWQgaXMgYmlnZ2VyLikKKi8Kc3RhdGljIGludCBic3NfZW50cmllc19saW1pdCA9IDEw
-MDA7Ci1tb2R1bGVfcGFyYW0oYnNzX2VudHJpZXNfbGltaXQsIGludCwgMDY0NCk7CisKK3N0YXRp
-YyBpbnQgYnNzX2VudHJpZXNfbGltaXRfc2V0KGNvbnN0IGNoYXIgKnZhbCwKKyAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgIGNvbnN0IHN0cnVjdCBrZXJuZWxfcGFyYW0gKmtwKQoreworICAg
-ICBpbnQgbGltaXQsIHJldDsKKworICAgICByZXQgPSBrc3RydG9pbnQodmFsLCAwLCAmbGltaXQp
-OworICAgICBpZiAocmV0KQorICAgICAgICAgICAgIHJldHVybiByZXQ7CisgICAgIGlmIChsaW1p
-dCA8IDEpCisgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7CisKKyAgICAgcmV0dXJuIHBhcmFt
-X3NldF9pbnQodmFsLCBrcCk7Cit9CisKK3BhcmFtX2NoZWNrX2ludChic3NfZW50cmllc19saW1p
-dCwgJmJzc19lbnRyaWVzX2xpbWl0KTsKK21vZHVsZV9wYXJhbV9jYWxsKGJzc19lbnRyaWVzX2xp
-bWl0LCBic3NfZW50cmllc19saW1pdF9zZXQsCisgICAgICAgICAgICAgICBwYXJhbV9nZXRfaW50
-LCAmYnNzX2VudHJpZXNfbGltaXQsIDA2NDQpOworX19NT0RVTEVfUEFSTV9UWVBFKGJzc19lbnRy
-aWVzX2xpbWl0LCAiaW50Iik7Ck1PRFVMRV9QQVJNX0RFU0MoYnNzX2VudHJpZXNfbGltaXQsCi0g
-ICAgICAgICAgICAgICAgICJsaW1pdCB0byBudW1iZXIgb2Ygc2NhbiBCU1MgZW50cmllcyAocGVy
-IHdpcGh5LCBkZWZhdWx0CjEwMDApIik7CisgICAgICAgICAgICAgICJsaW1pdCB0byBudW1iZXIg
-b2Ygc2NhbiBCU1MgZW50cmllcyAocGVyIHdpcGh5LCBkZWZhdWx0IDEwMDAsIG1pbmltdW0gMSki
-KTsKCgojZGVmaW5lIElFRUU4MDIxMV9TQ0FOX1JFU1VMVF9FWFBJUkUgKDMwICogSFopCg==
+Thanks, tag will go on.
 
+Interesting though, neither of your readings matches mine. Mine reads
+the right value and takes a scratch write; both of yours refuse it. The
+all-ones one is the card not answering at all by that point. The other
+still has something on the end of it that just will not hand over. Two
+different problems like you said, and your script is reproducing the
+wrong one.
+
+On the natural one, I would check whether the card is still on the bus
+when it hangs. Anything from PCIe in dmesg, and whether lspci can still
+see it.
+
+Would not read too much into Windows, different driver, different reset
+path.
+
+Devin
+
+On 20 Aug 2026, moosager wrote:
+
+> So, when the issue happens on its own, your script (accessing register
+> 0x54000120) outputs 0xffffffff, and even me attempting to write
+> 0xa5a5a5a5 in a loop won't change anything.
+>
+> Instead, when the issue is triggered by my original script, your
+> script
+> outputs 0xffff0002; again, I cannot manage to manually write a
+> different value to the register.
+>
+> We may be looking at two different issues after all, both mitigated by
+> an error check that was missing anyway. I'm still inclined to say that
+> it is not a hardware issue, since nothing similar happens on Windows.
+>
+> Tested-by: moosager <moosager90@gmail.com>
