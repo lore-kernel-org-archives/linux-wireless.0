@@ -1,149 +1,188 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A4073ACA4D
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 08:00:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9452E3E63A2
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 14:39:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787385624; cv=none; b=MgaqfjPNJG5tlK0hegd621PLEx3cFETQw8j0ziGGieH71BlXHq8ZnUrFngHDxjUkjqYfM9un9y0CZdEuD4kelwYJyTCN5HkUxfdzc2Ck/RyTGiiwXxd4f4GPuGwqboRU/tp5VEHtUltjiscO6g6MHYSMwGimm+lheC9+HmBzSBA=
+	t=1787409554; cv=none; b=IjdonKdIfUxSqQMwmDq1M0hSXgP4aTvhrHv14302fDvls/j51UnX6Q4+HzGw+HGXdPFoN9fi4x4EPx8ZEr4c+j1+H1PSQBZGSbmngL7sLDY70rY06oDluSIgOyrhPlcrjNLzbObM/HbAEGEvSb/2M+w8tm+1xHeYpC0Y0HHiqPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787385624; c=relaxed/simple;
-	bh=yAOiruEm9L8AjUBZGFt6yw9dAsrnsAkjYEMNNqDarWo=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XvCwGkFbY0rsqLnqJZGsw7KvU5aw84DKIRQ1cIsNKAUPRpEFrBDguNsQek8akgD0kAGqJAn5sTGfIbOqqypG6JH3DhSLgRhBpWO7/qFBpHbdtd2R5lryPz0SIdCCCX/0+Aw9V4G0mQNNY8vn9HVWQOPravNSCvlmid0uZKcEhqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oagJeHyV; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787409554; c=relaxed/simple;
+	bh=2IV+hTjg7UUEhd+R8k1TuLXLvfZWQMTB7HpI7/zeElk=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=PqLZptY2iKVDkxfywc40BXsHxJ0nahfJbwUbE3QKAYduIpp+S0NgU959JzYSXAnPwQdml19Xpur01WklU9A45M4t8PUkZtuz4RRQWBYVlkmX7hLSugM4CnxoelI2d1AWFuXwk0gktSPKD4BTo5mdbCTz0zTtkCiIOo7tx8JEbWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hallaine.com; spf=pass smtp.mailfrom=hallaine.com; dkim=pass (2048-bit key) header.d=hallaine.com header.i=@hallaine.com header.b=lm6wXcrP; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BJM9PjsR; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hallaine.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hallaine.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oagJeHyV"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-38e041ea211so1567958a91.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 01:00:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787385621; x=1787990421; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vDG9YXYoRtMkAetCjmKzpnMDn+Xh8GlN8oNesgXLH1w=;
-        b=oagJeHyVlwtClV7l2gpw8K0kF9mFeM0vIb0o/2l9raenmWa9RvIqYNjrt4XrGfpZFx
-         MrOyb0TbA7pJREpdJ3cYl/ri5Wgl+3MlrYdR078YYiDnYjt3T4QZm7pkfAWVA+7xyoqX
-         WnsCuCrCeODPRbXtadDlw44OtguiKjAJtE5BkimYdCHRNbHov52PM+5RaR4lqxEmsB0+
-         jqDHthH3lTQFRHdyP/I+eyqdu4QYYJB5DJDnIJbFx5QifmLE6fBK8gqIJlYLkDDBcIkC
-         CWAmzh3AOUu26Kh8VYPbK2Iwp/R35alXDOhtNIWDWLsqWsxpISeEiuoao+HCgF9xqJV1
-         yl6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787385621; x=1787990421;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=vDG9YXYoRtMkAetCjmKzpnMDn+Xh8GlN8oNesgXLH1w=;
-        b=N0DQyI4zgjmzTF4NtneLZ2WqBVVh3ALIr5iNLVMTFBje070e1bSXpSjIXAjfY/rBeY
-         E2x5xq0p/WuaxNlM+TH8Rc1nbYx7tg4aK22NHrMvM5Ij0oUA8Myhc2kkSP2aIgOkr/Ri
-         UvrQDyUJBFkBBHjvD3v1jxJrF8K/Ii9aQUkkgAT7mkdbYZIaQ8hsk9ex61DITGyBN2Df
-         EntYoBz6D8gzsvtBjlUYe3jqWIu9JIVIGQNrUXS9sxRVIl0oChiZeyhZEyTg9cxONsLs
-         uSPPoQJ0vQCs6buwHm9aqD3zT1akuiryJI0bZY55ygECtQrG3ZpTq9HncqLYvw5HH6PH
-         k4Vg==
-X-Forwarded-Encrypted: i=1; AHgh+RqtDJBR2bYgUedDByx3OR67iLyIvQqQUJ15VsmvTKmxlVIq5e22Lst41Zw5TGvySdj9vKTN/fAbKSozfGoG+A==@vger.kernel.org
-X-Gm-Message-State: AFuF++mNK2itGQ1ETV/bCuL3/hJK3X20w5z3LUPkrVzGmGeuN1gmpNP6
-	czEzmZiFggQoV8cUlIUkIFn+ipWSVKtaBv9RX/P0L2yLwAqfXfceTg0N
-X-Gm-Gg: AR+sD13zyynsUCBij0wc98FNaVvbHVe0EzkIlBo4ESBuUnBR7NyB/8QLZFW4hudiIzv
-	Ndrpj2jeevzFY061JtXqE6msZ0YkkpaBhxu0mj2iNFlbiXlqvdmvIJG+yxidDgIRF9fEIIsoCLz
-	d1Fb/c/A8Pcg+8Y2tf/TTkZKQNCQoPr9J8KYEKjF+Eset/oompblszJLdepynJfDuw+conQ6TUT
-	nPSGg/ooyaErg44Sfh6JQ0vFsKGGljf5SI1AsEWB/S5UgY8dbDPihn/N4y9SNANw7p4StuVHPNe
-	Vx7/MtQzvyjq4z/hepCIJa2dvtlAhw7vpYIj7t0waHh4zbGyU6v7CiowSg8uYfBY1Q/Jtn1oarV
-	Etzs+nZ3jcxcpGhQZV4rbTgenxkWiPMBBUY1Em/5R/zThtXGoFDKHGquFjk8qUi7E6PPI/eSldO
-	NnsUmUc0zqs4EDadxuDxDi8GkVwv/+VjEU9ODAEObpmAicrs/R9eye+Qasw/Yz8d+ayNPEPxQgP
-	hhvYYlKLIhBQWai6I61hKYVWr8TeEuY3YEW2i8KKC9YwJ9fE1JlEHZidwqkuLrIV/hzW5N31MOF
-	9Tf4ojkzOrbw7VdhzrDXA/pV2VzDC+18Z/9OomovNcPgmIjv9OaAg9rrCGcmKg5sOYHPcBwHs5U
-	/zTDU14aqeds29Ai8nCYYQc6ADOnfpdIMbDn0PCjR3pubNeDi4VCs7Wn3gGtIrYCIOziz3w==
-X-Received: by 2002:a17:90b:3bc6:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-395c354da4fmr22617902a91.10.1787385620517;
-        Sat, 22 Aug 2026 01:00:20 -0700 (PDT)
-Received: from localhost.localdomain ([101.251.7.10])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f909c6c9sm4897116eec.6.2026.08.22.01.00.17
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 22 Aug 2026 01:00:19 -0700 (PDT)
-From: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
-To: Ping-Ke Shih <pkshih@realtek.com>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] wifi: rtw89: cap firmware section_num before parsing
-Date: Sat, 22 Aug 2026 13:45:14 +0545
-Message-ID: <20260822080014.29611-1-acharyalaxman8848@gmail.com>
-X-Mailer: git-send-email 2.51.2
+	dkim=pass (2048-bit key) header.d=hallaine.com header.i=@hallaine.com header.b="lm6wXcrP";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BJM9PjsR"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfout.phl.internal (Postfix) with ESMTP id 2BD25EC018E
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:39:11 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-01.internal (MEProxy); Sat, 22 Aug 2026 10:39:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hallaine.com; h=
+	cc:content-transfer-encoding:content-type:content-type:date:date
+	:from:from:in-reply-to:message-id:mime-version:reply-to:subject
+	:subject:to:to; s=fm1; t=1787409551; x=1787495951; bh=2IV+hTjg7U
+	UEhd+R8k1TuLXLvfZWQMTB7HpI7/zeElk=; b=lm6wXcrPc642H0/2AQUch+1Q2/
+	jg/DFQyqIivaTPJJuKw+ieDdg0MnBlfY7V2GyCwTuvMbVXW8z3WCXjgliAWIMrcf
+	G26amTuR5oCRuBVc71XQH5dL8WtR6DmP+wZvPVw7lzJiJjW1jL2LVU+iQFQOV03F
+	BDcBNEcEdbVdzXJg1byNwEGzXbCrL6iPF5d1afO1v9aBTQqB8YQI9Orv4M42VeDk
+	5+6VLmLFo00y9e0AimUxtUpNKeyhj4eMDJqWAtUM9QDA/YLqlk+eb2Araok+QRrj
+	vTQycMbj6Dq2HjoNIWXRJm/QZ03frfBGBg0YtJFTjvQEUDZLTr1GbUQB8YBQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:content-transfer-encoding:content-type
+	:content-type:date:date:feedback-id:feedback-id:from:from
+	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1787409551; x=1787495951; bh=2IV+hTjg7UUEhd+R8k1TuLXLvfZWQMTB7Hp
+	I7/zeElk=; b=BJM9PjsRO8gGRGWiNP260MZx/jNK6Q6Gdjmaw3s7Gb2XdWiVc+J
+	2fkBhjUC4ww8/8AyIua5SmE1KY4EzkSz8OwoCGPMC4VRC82sO6KslXCtpP8nOZZq
+	bqGdiieRKN02I5mEbcNVJsUerk938o6l0RTTS1jqK6jz25d2AWMU2DQtsxQVaAxz
+	JiMTCaqA90txNnm38e4CqYwiiXJpJzqRJ0xkdbsUC3ll6DRLdeZwuKekMKAfpaON
+	zNwyF6bcEEeODWTqUsF2uvhDfxH+c3Tbk/5kwz/gWsJJp4fRpzuXq6qduCgExlx3
+	9sUiu5Zjp1wIjQqaCjGMnbtG05+FFyc1X8Q==
+X-ME-Sender: <xms:j7SJaiMbQXUjEcGTcq2JdKopzM7bNABVTp3YMF0ju6KZAUyvDfVu0Q>
+    <xme:j7SJan4U_m-JIhYsF2fDkEdFKdZSOJOxxVIU6_DeoRFncyFjhRvfacqBOvHUdimp5
+    kfyQBtO7WdrGsahkxx0XquD0AxpuU8kWIqoXSNtqhLuRvzhmVyMj2o>
+X-ME-Received: <xmr:j7SJau5Y4plQu-zCEZF6IQrY1omSu28ChliqkNLYPuLysYwnt7WROkIxrHJ8pEvenFBtgqG4dSZ3V-MHzK1bK2BlyWFX8qFTiSSCTasD>
+X-ME-Proxy-Cause: dmFkZTG0ADQYGDjkbyKICs4tUeonBknnIBv5nAPR1KWpTU5j0J23ULR3Iv+DbOn4+lK/UE
+    WJ25h7YnXUKbmd4d+qC2ql7kbb2acq/CKBkaNWMhgmFKSKgS39oR3Jd5hdICfmKZCpBzQ0
+    9JiuPYWHWa5l2NS71a+s/2cndWW8WeUTY1EUmm9deY3/MwUrc0NkNp+u0MY/vqUAkSoI7f
+    zEcmB4RLHEjldI5F1H9c9nYx89Ld5mW5UhKG0SUlvIk2VX01fuhQFHe1y07Hx6KYgDAu4o
+    wECAbXd00HGSV8FlxeSxKEKdANqmAKcGlx1ljXRIQ/a4LYeAnGedSxciMX7hm4Y7DZqDIq
+    MFRsp/3HdqykjD4rrLjE8fv/lYCXem4XMIphwzjdQc53Q6GUlnaju10zf7bht6RGHN6Mmz
+    P30Zei1IMuUn7jbrucs2NEyIcTnYFO25DjimFs4eu5vqdGvUilVSf0oe1NSPWUSdCDuzC2
+    Knadr5TAD48of6N/8lbLDZHkMBOw/zmocXv4e2Yb/YW1eX9nKbs7N8w2vYNmjwFJv2wD7D
+    KJju+KetoWKDNmpoH2MJMZBQgmac6KxqKILfu9vpcpZv1z2GUMWO8WYXmAcPVUj1hX8x12
+    Z8N2Zdb8EbAvOG8wIeHsSAkATESfYFnxAd773fwn/FpFjdLGvwpe44wpeV7w
+X-ME-Proxy: <xmx:j7SJan0yI6mgD8EzMaSNMgTBqiyt6YP21miBpMij8W9xKBTPX9Kenw>
+    <xmx:j7SJaqXCuTVSujHa2ijX8FnmJ1fojgeApCLjO1KsW7dwfXLox967AQ>
+    <xmx:j7SJai4LvwyhG1W5PW1U_5iZW5ebNuXq7UizElinjj_gxcV26YtZgg>
+    <xmx:j7SJahIgylJf2KuwgEWk65CLnLQOD2md4LZqJfeJq4_czWgzLvYaJQ>
+    <xmx:j7SJai8b7VrkuLdw0bBV4lq3m_PTAFQRfjcSjabCERKYbD8hPkYYYnsd>
+Feedback-ID: ica3e4843:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA for
+ <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:39:10 -0400 (EDT)
+Message-ID: <e9a0c9af-6436-4143-9edc-36c30ea15434@hallaine.com>
+Date: Sat, 22 Aug 2026 10:39:10 -0400
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To: linux-wireless@vger.kernel.org
+From: Alexandre Hallaine <alexandre@hallaine.com>
+Subject: Re: Wi-Fi speeds degrade from 600Mps to 30Mps while using WPA2
+ security, but not on open network, shortly after ISP firmware upgrade.
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-rtw89_fw_bin_info.section_info has FWDL_SECTION_MAX_NUM (10) entries.
-The v0/v1 header parsers take section_num from an 8-bit firmware field
-(0..255) and write info->section_info[i] with no cap.
-rtw89_fw_download_suit() keeps that object on the stack, so a crafted
-firmware blob overflows the stack.
+Adding another data point to this thread. I'm on Videotron Helix
+(Quebec, Canada) — same Technicolor CGM4331COM Rev 2.0 as the
+Rogers XB7. This confirms the issue crosses ISPs using the same
+Comcast xFi platform.
 
-Reject a truncated header and a section table that does not fit in the
-firmware image before reading fw_hdr->sections[i].
+My client is an Intel AX210 (not yet tested in this thread),
+iwlwifi driver, NixOS 26.05, kernel 6.18.44, NetworkManager +
+wpa_supplicant. I also reproduced with multiple other WiFi cards,
+not just Intel.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
----
- drivers/net/wireless/realtek/rtw89/fw.c | 30 +++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+Gateway firmware: CGM4331COM_8.3p15s1_PROD_sey (newer than
+BensonBear's 8.3p12s1 — bug persists).
 
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index 0099c5c03e7a6..57d4252ee78f0 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -156,8 +156,23 @@ static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *rtwdev, const u8 *fw, u32 le
- 	if (!info)
- 		return -EINVAL;
- 
-+	if (len < sizeof(*fw_hdr)) {
-+		rtw89_err(rtwdev, "[ERR]fw header truncated\n");
-+		return -EINVAL;
-+	}
-+
- 	info->section_num = le32_get_bits(fw_hdr->w6, FW_HDR_W6_SEC_NUM);
-+	if (!info->section_num || info->section_num > FWDL_SECTION_MAX_NUM) {
-+		rtw89_err(rtwdev, "[ERR]invalid fw section num %u\n",
-+			  info->section_num);
-+		return -EINVAL;
-+	}
-+
- 	base_hdr_len = struct_size(fw_hdr, sections, info->section_num);
-+	if (base_hdr_len > len) {
-+		rtw89_err(rtwdev, "[ERR]fw header truncated\n");
-+		return -EINVAL;
-+	}
- 	info->dynamic_hdr_en = le32_get_bits(fw_hdr->w7, FW_HDR_W7_DYN_HDR);
- 	info->idmem_share_mode = le32_get_bits(fw_hdr->w7, FW_HDR_W7_IDMEM_SHARE_MODE);
- 
-@@ -455,9 +470,24 @@ static int rtw89_fw_hdr_parser_v1(struct rtw89_dev *rtwdev, const u8 *fw, u32 le
- 	int ret;
- 	u32 i;
- 
-+	if (len < sizeof(*fw_hdr)) {
-+		rtw89_err(rtwdev, "[ERR]fw header truncated\n");
-+		return -EINVAL;
-+	}
-+
- 	info->section_num = le32_get_bits(fw_hdr->w6, FW_HDR_V1_W6_SEC_NUM);
-+	if (!info->section_num || info->section_num > FWDL_SECTION_MAX_NUM) {
-+		rtw89_err(rtwdev, "[ERR]invalid fw section num %u\n",
-+			  info->section_num);
-+		return -EINVAL;
-+	}
-+
- 	info->dsp_checksum = le32_get_bits(fw_hdr->w6, FW_HDR_V1_W6_DSP_CHKSUM);
- 	base_hdr_len = struct_size(fw_hdr, sections, info->section_num);
-+	if (base_hdr_len > len) {
-+		rtw89_err(rtwdev, "[ERR]fw header truncated\n");
-+		return -EINVAL;
-+	}
- 	info->dynamic_hdr_en = le32_get_bits(fw_hdr->w7, FW_HDR_V1_W7_DYN_HDR);
- 	info->idmem_share_mode = le32_get_bits(fw_hdr->w7, FW_HDR_V1_W7_IDMEM_SHARE_MODE);
- 
--- 
-2.51.2
+Precise A/B measurements (same 5 GHz network, same BSSID, same
+PHY — only variable is PMF):
+
+   PMF negotiated (NM default):
+     Download: 47-57 Mbps
+     Latency under load: 300-1400 ms
+     TX retry rate: ~35%
+     PHY rate: 1200 MBit/s (HE-MCS 11, NSS 2, 80 MHz)
+
+   PMF disabled (pmf=1):
+     Download: 651 Mbps
+     Latency under load: 55 ms
+     TX retries: 0%
+     PHY rate: identical
+
+   iwd (no PMF by default):
+     Download: 514 Mbps
+     Latency: 34 ms
+     TX retries: ~3.7%
+     PHY rate: identical
+
+   Minimal wpa_supplicant (no NetworkManager, bgscan=none):
+     Download: 470 Mbps
+     TX retries: 0%
+     PHY rate: identical
+
+Two findings I haven't seen mentioned yet:
+
+1) I ran `iw event -t` during a download with PMF enabled.
+    TX retries spiked to 15,000+ in 10 minutes, but iw event
+    showed ZERO events — no scanning, no roaming, no channel
+    switches, no disconnects. This rules out off-channel behavior
+    as the cause. The retries are purely MAC-layer with no
+    control-plane disruption.
+
+2) Minimal wpa_supplicant without NetworkManager gets 470 Mbps
+    with 0% retries. This proves wpa_supplicant itself is not the
+    problem — NetworkManager's default PMF negotiation triggers
+    the bug.
+
+Regarding the kernel mechanism: Linux net/mac80211/agg-tx.c has
+an explicit guard:
+
+   "MFP STA not authorized - deny BA session request"
+
+If PMF negotiation puts the station in an incorrect authorization
+state (the mismatch Pablo described), mac80211 denies Block ACK
+session establishment. Without BA sessions, A-MPDU aggregation
+cannot operate. Without aggregation, each frame pays full overhead
+(preamble + contention + SIFS/DIFS + individual ACK), which
+mathematically produces ~24-48 Mbps at 1200 Mbps PHY rate —
+matching the observed numbers exactly.
+
+This aligns with Pablo's capture analysis: the STAs send ADDBA
+requests that get no response, then DELBA with reason 0x25 —
+no BA session is established, so performance is pre-11n.
+
+For the AP side: the public RDK-B OneWifi repository has
+documented PMF configuration defects:
+
+   PR #1295 (July 2026): "WPA2personal should have mfp as optional"
+   — fixes incorrect MFP configuration for WPA2-Personal
+
+   PR #1340 (August 2026): fixes security-mode translation errors
+   affecting WPA3, transition mode, and PMF handling
+
+These confirm RDK-B has had real PMF configuration bugs. The
+firmware on my gateway (8.3p15s1) may not include these fixes.
+
+What did NOT fix it (with PMF enabled):
+   - iw dev set power_save off
+   - iwlwifi uapsd_disable=1 + iwlmvm power_scheme=1
+   - BSSID lock
+   - Disabling P2P
+   - Forcing 5 GHz band
+
+Only disabling PMF fixed it.
+
+Workaround:
+   nmcli connection modify "SSID" 802-11-wireless-security.pmf 1
+
+I have full iw station dump output, NetworkManager logs, and
+wpa_supplicant logs available. I can also run packet captures
+of the AddBA/Block ACK exchange if it would help confirm whether
+the AP or the client is dropping the action frames.
+
+--
+Alexandre Hallaine
+NixOS 26.05, Intel AX210, kernel 6.18.44
+Videotron Helix CGM4331COM Rev 2.0
 
