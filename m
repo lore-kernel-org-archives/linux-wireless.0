@@ -1,188 +1,128 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta0.migadu.com (out-216.mta0.migadu.com [91.218.175.216])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9452E3E63A2
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 14:39:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9739F27EC7C
+	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 16:52:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787409554; cv=none; b=IjdonKdIfUxSqQMwmDq1M0hSXgP4aTvhrHv14302fDvls/j51UnX6Q4+HzGw+HGXdPFoN9fi4x4EPx8ZEr4c+j1+H1PSQBZGSbmngL7sLDY70rY06oDluSIgOyrhPlcrjNLzbObM/HbAEGEvSb/2M+w8tm+1xHeYpC0Y0HHiqPY=
+	t=1787417530; cv=none; b=JayTXaZULAF0HOeTxUnfMthjNeVGue9WoJf8bdGie6nj7C5ZXBJHw/lXBeIncGjHHp8a3pw1eHDiBFD3Ip9CJRHYvggODBLg2UzlsrxtXeut0oHUeefpJoGzznj8zKQxmHaXIRJnylKjUCg52mBXD0Fgr/FKnuayPqQvS7sLzZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787409554; c=relaxed/simple;
-	bh=2IV+hTjg7UUEhd+R8k1TuLXLvfZWQMTB7HpI7/zeElk=;
-	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=PqLZptY2iKVDkxfywc40BXsHxJ0nahfJbwUbE3QKAYduIpp+S0NgU959JzYSXAnPwQdml19Xpur01WklU9A45M4t8PUkZtuz4RRQWBYVlkmX7hLSugM4CnxoelI2d1AWFuXwk0gktSPKD4BTo5mdbCTz0zTtkCiIOo7tx8JEbWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hallaine.com; spf=pass smtp.mailfrom=hallaine.com; dkim=pass (2048-bit key) header.d=hallaine.com header.i=@hallaine.com header.b=lm6wXcrP; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BJM9PjsR; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=hallaine.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hallaine.com
+	s=arc-20240116; t=1787417530; c=relaxed/simple;
+	bh=wASOUdAJ+jefl6Fr5xINEmNRMBrFX2FNpFik+JXYll0=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=kCmbUSD6plFo7bBKW7HO0oEuyJkkS9cPkdpqHSmGgB34OJxwwuQtzTOtKweILAOzZ4Wol3xJjI0OveNqvCnvMp/kCPuXV/BzV7BUrmjmBovsNyR718w7rQxYim8fcd4ZyxEvyoqa9U9IjuZmxGD87MmRXdLw2rr3LIruTs8BQXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=i9/D2WNG; arc=none smtp.client-ip=91.218.175.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hallaine.com header.i=@hallaine.com header.b="lm6wXcrP";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BJM9PjsR"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id 2BD25EC018E
-	for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:39:11 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-01.internal (MEProxy); Sat, 22 Aug 2026 10:39:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hallaine.com; h=
-	cc:content-transfer-encoding:content-type:content-type:date:date
-	:from:from:in-reply-to:message-id:mime-version:reply-to:subject
-	:subject:to:to; s=fm1; t=1787409551; x=1787495951; bh=2IV+hTjg7U
-	UEhd+R8k1TuLXLvfZWQMTB7HpI7/zeElk=; b=lm6wXcrPc642H0/2AQUch+1Q2/
-	jg/DFQyqIivaTPJJuKw+ieDdg0MnBlfY7V2GyCwTuvMbVXW8z3WCXjgliAWIMrcf
-	G26amTuR5oCRuBVc71XQH5dL8WtR6DmP+wZvPVw7lzJiJjW1jL2LVU+iQFQOV03F
-	BDcBNEcEdbVdzXJg1byNwEGzXbCrL6iPF5d1afO1v9aBTQqB8YQI9Orv4M42VeDk
-	5+6VLmLFo00y9e0AimUxtUpNKeyhj4eMDJqWAtUM9QDA/YLqlk+eb2Araok+QRrj
-	vTQycMbj6Dq2HjoNIWXRJm/QZ03frfBGBg0YtJFTjvQEUDZLTr1GbUQB8YBQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:content-transfer-encoding:content-type
-	:content-type:date:date:feedback-id:feedback-id:from:from
-	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1787409551; x=1787495951; bh=2IV+hTjg7UUEhd+R8k1TuLXLvfZWQMTB7Hp
-	I7/zeElk=; b=BJM9PjsRO8gGRGWiNP260MZx/jNK6Q6Gdjmaw3s7Gb2XdWiVc+J
-	2fkBhjUC4ww8/8AyIua5SmE1KY4EzkSz8OwoCGPMC4VRC82sO6KslXCtpP8nOZZq
-	bqGdiieRKN02I5mEbcNVJsUerk938o6l0RTTS1jqK6jz25d2AWMU2DQtsxQVaAxz
-	JiMTCaqA90txNnm38e4CqYwiiXJpJzqRJ0xkdbsUC3ll6DRLdeZwuKekMKAfpaON
-	zNwyF6bcEEeODWTqUsF2uvhDfxH+c3Tbk/5kwz/gWsJJp4fRpzuXq6qduCgExlx3
-	9sUiu5Zjp1wIjQqaCjGMnbtG05+FFyc1X8Q==
-X-ME-Sender: <xms:j7SJaiMbQXUjEcGTcq2JdKopzM7bNABVTp3YMF0ju6KZAUyvDfVu0Q>
-    <xme:j7SJan4U_m-JIhYsF2fDkEdFKdZSOJOxxVIU6_DeoRFncyFjhRvfacqBOvHUdimp5
-    kfyQBtO7WdrGsahkxx0XquD0AxpuU8kWIqoXSNtqhLuRvzhmVyMj2o>
-X-ME-Received: <xmr:j7SJau5Y4plQu-zCEZF6IQrY1omSu28ChliqkNLYPuLysYwnt7WROkIxrHJ8pEvenFBtgqG4dSZ3V-MHzK1bK2BlyWFX8qFTiSSCTasD>
-X-ME-Proxy-Cause: dmFkZTG0ADQYGDjkbyKICs4tUeonBknnIBv5nAPR1KWpTU5j0J23ULR3Iv+DbOn4+lK/UE
-    WJ25h7YnXUKbmd4d+qC2ql7kbb2acq/CKBkaNWMhgmFKSKgS39oR3Jd5hdICfmKZCpBzQ0
-    9JiuPYWHWa5l2NS71a+s/2cndWW8WeUTY1EUmm9deY3/MwUrc0NkNp+u0MY/vqUAkSoI7f
-    zEcmB4RLHEjldI5F1H9c9nYx89Ld5mW5UhKG0SUlvIk2VX01fuhQFHe1y07Hx6KYgDAu4o
-    wECAbXd00HGSV8FlxeSxKEKdANqmAKcGlx1ljXRIQ/a4LYeAnGedSxciMX7hm4Y7DZqDIq
-    MFRsp/3HdqykjD4rrLjE8fv/lYCXem4XMIphwzjdQc53Q6GUlnaju10zf7bht6RGHN6Mmz
-    P30Zei1IMuUn7jbrucs2NEyIcTnYFO25DjimFs4eu5vqdGvUilVSf0oe1NSPWUSdCDuzC2
-    Knadr5TAD48of6N/8lbLDZHkMBOw/zmocXv4e2Yb/YW1eX9nKbs7N8w2vYNmjwFJv2wD7D
-    KJju+KetoWKDNmpoH2MJMZBQgmac6KxqKILfu9vpcpZv1z2GUMWO8WYXmAcPVUj1hX8x12
-    Z8N2Zdb8EbAvOG8wIeHsSAkATESfYFnxAd773fwn/FpFjdLGvwpe44wpeV7w
-X-ME-Proxy: <xmx:j7SJan0yI6mgD8EzMaSNMgTBqiyt6YP21miBpMij8W9xKBTPX9Kenw>
-    <xmx:j7SJaqXCuTVSujHa2ijX8FnmJ1fojgeApCLjO1KsW7dwfXLox967AQ>
-    <xmx:j7SJai4LvwyhG1W5PW1U_5iZW5ebNuXq7UizElinjj_gxcV26YtZgg>
-    <xmx:j7SJahIgylJf2KuwgEWk65CLnLQOD2md4LZqJfeJq4_czWgzLvYaJQ>
-    <xmx:j7SJai8b7VrkuLdw0bBV4lq3m_PTAFQRfjcSjabCERKYbD8hPkYYYnsd>
-Feedback-ID: ica3e4843:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA for
- <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 10:39:10 -0400 (EDT)
-Message-ID: <e9a0c9af-6436-4143-9edc-36c30ea15434@hallaine.com>
-Date: Sat, 22 Aug 2026 10:39:10 -0400
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="i9/D2WNG"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=wASOUdAJ+jefl6Fr5xINEmNRMBrFX2FNpFik+JXYll0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787417524; v=1; x=1788022324;
+ b=i9/D2WNGtTwPbHkauECpBDGk4mpRd0Quu7VLu8oyoCB/XRnU1Qo/Nfz2aGd5rh+e0EuWGrEc
+ Gm/ZB6+nVeWzzjdbk8f91ukPqF3BIS9xOB/40kl2Gc6/FdQvCQhV0gJSA95jARi35RUV4MmZMGs
+ cZ8vaRpShrT+T9a23Kp5SJLM=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from ehlo.thunderbird.net (2a06:63c5:9b00:3900:6849:2575:4516:d712)
+	by smtp.migadu.com with ESMTPS id 643f7c8164119db2;
+	Sat, 22 Aug 2026 16:52:04 +0000
+X-Mizu-Trace-ID: 643f7c8164119db2
+X-Migadu-Flow: FLOW_OUT
+Date: Sat, 22 Aug 2026 18:51:59 +0200
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>, linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org, Michael Straube <straube.linux@gmail.com>,
+ Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+ Peter Robinson <pbrobinson@gmail.com>,
+ Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
+Subject: Re: [PATCH v7 0/6] wifi: rtw88: preparations for RTL8723B/RTL8723BS
+User-Agent: Thunderbird for Android
+In-Reply-To: <20260820090412.19574-1-luka.gejak@linux.dev>
+References: <20260820090412.19574-1-luka.gejak@linux.dev>
+Message-ID: <44120736-F50E-4AD0-A380-3CEBB6A2F7F4@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-To: linux-wireless@vger.kernel.org
-From: Alexandre Hallaine <alexandre@hallaine.com>
-Subject: Re: Wi-Fi speeds degrade from 600Mps to 30Mps while using WPA2
- security, but not on open network, shortly after ISP firmware upgrade.
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Adding another data point to this thread. I'm on Videotron Helix
-(Quebec, Canada) — same Technicolor CGM4331COM Rev 2.0 as the
-Rogers XB7. This confirms the issue crosses ISPs using the same
-Comcast xFi platform.
+On August 20, 2026 11:04:06 AM GMT+02:00, luka=2Egejak@linux=2Edev wrote:
+>From: Luka Gejak <luka=2Egejak@linux=2Edev>
+>
+>This is the first of two series adding support for the Realtek RTL8723B
+>802=2E11n chipset and its RTL8723BS SDIO variant to rtw88=2E It contains
+>only the changes to the shared rtw88 core that the chip driver depends
+>on=2E The chip itself, the build glue and the MAINTAINERS entry are a
+>second series=2E
+>
 
-My client is an Intel AX210 (not yet tested in this thread),
-iwlwifi driver, NixOS 26.05, kernel 6.18.44, NetworkManager +
-wpa_supplicant. I also reproduced with multiple other WiFi cards,
-not just Intel.
+=2E=2E=2E
 
-Gateway firmware: CGM4331COM_8.3p15s1_PROD_sey (newer than
-BensonBear's 8.3p12s1 — bug persists).
+>Known limitation
+>=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>
+>After a long idle period the firmware intermittently fails to leave LPS,
+>which rtw88 reports as "firmware failed to leave lps state"=2E That check
+>is the REG_TCR poll in __rtw_fw_leave_lps_check_reg()=2E On one occurrenc=
+e
+>here the warning was followed fourteen seconds later by a full
+>reauthentication, so it is not only log noise=2E
+>
+>Power save is enabled on my test machine and it reproduces there,
+>roughly once per day of mostly idle uptime, and the occurrences cluster=
+=2E
+>It was first reported on ARM SDIO boards, but it is not specific to slow
+>hosts=2E
+>
+>Instrumenting the poll shows the wake is never immediate on this board=2E
+>Over a run of a hundred consecutive wakes the bit was still set on the
+>first read every time and cleared on the next 20 ms poll; logging only
+>the outliers after that, the occasional wake takes two polls=2E So the
+>budget is five polls and the ordinary cost is one, which also means
+>every wake costs at least 20 ms here=2E A failure is then the far tail of
+>that distribution, which leaves open whether the budget is simply too
+>small=2E I would rather keep measuring than guess at a fix=2E
+>
+>It is not caused by anything in this series, and it needs the chip
+>driver from the second series to be reachable at all, but it is open and
+>I am chasing it=2E
+>
 
-Precise A/B measurements (same 5 GHz network, same BSSID, same
-PHY — only variable is PMF):
+=2E=2E=2E
+Hi Ping-Ke,
 
-   PMF negotiated (NM default):
-     Download: 47-57 Mbps
-     Latency under load: 300-1400 ms
-     TX retry rate: ~35%
-     PHY rate: 1200 MBit/s (HE-MCS 11, NSS 2, 80 MHz)
+A correction to the "Known limitation" section of the cover letter=2E I wr=
+ote
+that a failure looks like the far tail of the wake time distribution,
+leaving open whether the poll budget is too small=2E I have since debugged=
+ it
+and that turns out not to be the case=2E
 
-   PMF disabled (pmf=1):
-     Download: 651 Mbps
-     Latency under load: 55 ms
-     TX retries: 0%
-     PHY rate: identical
+With a local debug patch logging REG_TCR on every poll of
+__rtw_fw_leave_lps_check_reg(), I caught three failures=2E In every one
+BIT_PWRMGT_HWDATA_EN was still set after 600 ms, six times the budget=2E A=
+nd
+there is no tail=2E Counting how many polls each successful wake needed, a=
+t
+the third failure:
 
-   iwd (no PMF by default):
-     Download: 514 Mbps
-     Latency: 34 ms
-     TX retries: ~3.7%
-     PHY rate: identical
+        poll0=3D25 poll1=3D27610 poll2=3D9 poll3=3D0 poll4=3D0 fails=3D3
 
-   Minimal wpa_supplicant (no NetworkManager, bgscan=none):
-     Download: 470 Mbps
-     TX retries: 0%
-     PHY rate: identical
+No wake in roughly 27600 ever took three or four polls, yet failures happe=
+n=2E
+The firmware either finishes within 40 ms or not at all=2E
 
-Two findings I haven't seen mentioned yet:
+A larger LEAVE_LPS_TRY_CNT would not help=2E This is firmware side, and th=
+e
+existing code already does the sensible thing: give up, clear the bit, war=
+n=2E
+Nothing in this series changes=2E The rate is about one in 9200 wakes=2E
 
-1) I ran `iw event -t` during a download with PMF enabled.
-    TX retries spiked to 15,000+ in 10 minutes, but iw event
-    showed ZERO events — no scanning, no roaming, no channel
-    switches, no disconnects. This rules out off-channel behavior
-    as the cause. The retries are purely MAC-layer with no
-    control-plane disruption.
-
-2) Minimal wpa_supplicant without NetworkManager gets 470 Mbps
-    with 0% retries. This proves wpa_supplicant itself is not the
-    problem — NetworkManager's default PMF negotiation triggers
-    the bug.
-
-Regarding the kernel mechanism: Linux net/mac80211/agg-tx.c has
-an explicit guard:
-
-   "MFP STA not authorized - deny BA session request"
-
-If PMF negotiation puts the station in an incorrect authorization
-state (the mismatch Pablo described), mac80211 denies Block ACK
-session establishment. Without BA sessions, A-MPDU aggregation
-cannot operate. Without aggregation, each frame pays full overhead
-(preamble + contention + SIFS/DIFS + individual ACK), which
-mathematically produces ~24-48 Mbps at 1200 Mbps PHY rate —
-matching the observed numbers exactly.
-
-This aligns with Pablo's capture analysis: the STAs send ADDBA
-requests that get no response, then DELBA with reason 0x25 —
-no BA session is established, so performance is pre-11n.
-
-For the AP side: the public RDK-B OneWifi repository has
-documented PMF configuration defects:
-
-   PR #1295 (July 2026): "WPA2personal should have mfp as optional"
-   — fixes incorrect MFP configuration for WPA2-Personal
-
-   PR #1340 (August 2026): fixes security-mode translation errors
-   affecting WPA3, transition mode, and PMF handling
-
-These confirm RDK-B has had real PMF configuration bugs. The
-firmware on my gateway (8.3p15s1) may not include these fixes.
-
-What did NOT fix it (with PMF enabled):
-   - iw dev set power_save off
-   - iwlwifi uapsd_disable=1 + iwlmvm power_scheme=1
-   - BSSID lock
-   - Disabling P2P
-   - Forcing 5 GHz band
-
-Only disabling PMF fixed it.
-
-Workaround:
-   nmcli connection modify "SSID" 802-11-wireless-security.pmf 1
-
-I have full iw station dump output, NetworkManager logs, and
-wpa_supplicant logs available. I can also run packet captures
-of the AddBA/Block ACK exchange if it would help confirm whether
-the AP or the client is dropping the action frames.
-
---
-Alexandre Hallaine
-NixOS 26.05, Intel AX210, kernel 6.18.44
-Videotron Helix CGM4331COM Rev 2.0
-
+Best regards,
+Luka Gejak
