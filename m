@@ -1,329 +1,151 @@
-Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazolkn19011008.outbound.protection.outlook.com [52.103.1.8])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E79D9381E9B
-	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 04:00:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B8981A23A6
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 04:23:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.1.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787457623; cv=pass; b=lUJLk8eEY/aEmetInLCa18fh4FO+IsQ2wvAJreWRQcuilrfO/g2tBKHejCl2jiPPVyGtw+T1+1Q5K23czk9kN8YuJvboFhXPVtdYnIaZYXSIMn03tAO/kRX77dlEqJ9wI3eXLYTGqstHn81BZu7G2Ktm3ZBEE2dw1B/tJzc6ZBI=
+	t=1787458984; cv=fail; b=hNAFJo10758UZ4PHB/CacRn424T4DZOjS0+zVpe0YfsN/UFlA0tkfD5pEy4HpfElpop5b/DsOTS/GYKSySfwI3FYOIMjO0gPdj9kcRtomUy/nQHcbBUgUS342/GKeXZ5Qo4l6xcxkd7yx53ek7rPdUryp3RXvDQs9OlQMcaFyAg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787457623; c=relaxed/simple;
-	bh=CNu+9EVfUBKnP4uW7HfUeHqrbB97I+6qysh1mVTXZlw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nHJQvS9y+3/65D9sfkTELppQJc3TAj+CcLa/6llmSJRgxG/GCa7Z6x8DuojD5S90fn1oQ783AR98qkwSRUCIMC2LuUPEMy4EZjpr11OKpBTvjtojerCIH7bWYYa35wz03DXirtK7ykRzv9oMuyBCUmQX/i+RsDb3oq2nvF1fYCI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pucp.edu.pe; spf=pass smtp.mailfrom=pucp.edu.pe; dkim=pass (2048-bit key) header.d=pucp.edu.pe header.i=@pucp.edu.pe header.b=o9qjbWXS; arc=pass smtp.client-ip=209.85.167.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=pucp.edu.pe
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pucp.edu.pe
+	s=arc-20240116; t=1787458984; c=relaxed/simple;
+	bh=jOJ1XyoxIFe6JNjBTJQ6V2mFzsfbfUK2TiROIkU1AXk=;
+	h=References:In-Reply-To:From:Date:Message-ID:Subject:To:Cc:
+	 Content-Type:MIME-Version; b=AADjr5tBNr9Dm7Xht3EPDmOHLyUlA8GYhG7OZbpIWDnNXnuIHe8mj7JEOI0G0IlCLA6fdo3UOUfTPAex6e9YM8hHOU3PruXMmrpK/4Fef8WgHLUoqwqrwoN1AnFfWrD5HfddRxvtbdS+8XCwzHeayz12pkBZfGoVZX37MmlgMxU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com; spf=pass smtp.mailfrom=live.com; dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b=Q2Nqy9m3; arc=fail smtp.client-ip=52.103.1.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=live.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=pucp.edu.pe header.i=@pucp.edu.pe header.b="o9qjbWXS"
-Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-495c49f8eccso1991616b6e.3
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Aug 2026 21:00:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787457617; cv=none;
-        d=google.com; s=arc-20260327;
-        b=cMqtNz3W+0w0IgXyxcrbU+ygfrKsSCAea+Am7+bFyokRj28cc8Kd3Oy/N2KA6O0hJ5
-         jynXE+J3OmkEgbwA0ZoMYbGPSKCoZcEpKdqWgwDhDM8kkEULdPfJo8XMC8VGW7dE95cH
-         B+R0Di7qlVsw7PC3fabjJhBm5wDjL1Q3ye7hagIr/TI2Np0h56sM9mNzyXqspDYbcSwz
-         d/PN4LWNb64eOh7AMCycvf+54krNIq2Vu/VUuzjUQhnNAda+k8F2tnsUCEnXJYZtQ4ne
-         QWJcYaMR8j3LxELtvm3aLqAIckDN62DR50AAbqxpCi8wMvyNh8GOTk4gmaubaythIqeV
-         8xFg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=c7v0zdFb+tH9oH/bA20dGm2YYptriPCQxJapEHHeh4o=;
-        fh=XaRn086w+sPpVULNVkYHuF0HSTsM+yhxiQd/AOJNWJI=;
-        b=byfLuYrbLrm795/l0DtmJ6TaSXV0H13AMIfTSryVbg6w8pHhZOeDVQ+gT/rqJCcAHf
-         wAo/axJ849sn4NkNf3kOuM0v3c9go/qBKIj+5EkIzqozQbBNq1ApayoRhmTEM2WA4Ptr
-         so+0BMEk1MGfgiijETc1osgewKl5BRUpocQWkBbqD9Y6+IeI0pyQ9cNCy5QEuWBfKrcl
-         CWsCju5SgLl3hR34pd425K0hwwLlucneAfFtYbYZJNDL77SamBJHQC+XvmpeCFzz3kJy
-         12A3/UcaER7Aml67PbP/9QDJHC6tcHnPyQmqBFTLhlAoO4gqPteyrbiHAwmCBGxSNhzb
-         rA2A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=pucp.edu.pe; s=google; t=1787457617; x=1788062417; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=c7v0zdFb+tH9oH/bA20dGm2YYptriPCQxJapEHHeh4o=;
-        b=o9qjbWXSr1yFTuXQcxufii2FDOPqi3vVlHf6hk36+6wZHlrEY9hVDA695bNOQvL+MQ
-         bhW+8Iahhr2Y4cI5HZhvRIToCPdW9vHLk89/GmsQ/xXnakv8LLqg5wYAfzl7k5/1gH3c
-         DdS675g5kw8YKBbZ9TaissgJcRD+973gMZZ4MjqvE2Ug+jYyX8NnEE126eXBESPsFZ4+
-         MtTjpOaCCGS7lfouTqeSqH54a5tnt23glwEOikwS12cP4BxMRj6GlXQ0on9Ke58InzzT
-         59DrwxSr+iShPFoAF/DrBvxKedHSwZMoRuZlxKj4XO5q6QjACdNZF5eRLDo9XHc7zMLa
-         YHtw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787457617; x=1788062417;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=c7v0zdFb+tH9oH/bA20dGm2YYptriPCQxJapEHHeh4o=;
-        b=AkjOfr9h0p2qnxMjcRJcINnvcONgxX4O2nT8e0fpohIad2LAF5MiaZERdfyIy/hCSW
-         ovy7oguBmNyTjsqNtfJjB1wQP8txqwcvWUiARuuvTI+m+otp3aDwjqi2+cKYiT+gTg9M
-         nwTbULCRIA40VQyi+UGkC65biQGm3PZI6SJrkhX4sbbAURdiGeuv3S7stjJM0kTsx+V4
-         2GeXHIBKSRYNVXjwkr6TgH1t68wNCoupOf3gsRkslBb5Ixn2EfgiojaeFus2+2OY4gMG
-         ToYeCCDynUixvM2MYMiOtbYAzxJ5ffLSdaotN7Fxq/K/25V6OKaiuLxb27NptKxVX72n
-         kL0Q==
-X-Gm-Message-State: AFuF++kmdtO5SBgl3PHB40Ef0uGuSuxiVBGuNsr3aW2BOlWj32XA+iKL
-	iAhbNPcvsvI+ixD4sltHfBea8rf6DBHmh6agH9XuSAA8mLs5Yq9w4Db/N9gwokZfE59gpJHvaWH
-	tg0kUeO8ujugS824qruCcle0vdNQrPdbTnvyqYsSEHE/pV+RFJl41hUN861Tk
-X-Gm-Gg: AR+sD10CoGm7BRMuBL9qxc3yNXvgVhwa2WZvjuDrRJazO0Oqehi8k48Yrufta5mWc/P
-	F9XxLeCh8VDBMZwGY85XS+TWyvZR4NUcCVg6YDnPK1/LM8KmxW+lQkrefEwXjcGUFyODZHjJvNK
-	CFmm69ONPeY7iLjGpRHdJJwYi3us20SUXqaeHGFBCO3Vad/hdQGDyy/Qyn+okGRhCCyM8BHmpxm
-	8g6qY8Mi8ZBjy+6Jmm1pA4XzhX168W1RChzM01sU6uwe4SxaGhnfVMthU2QduMxNTBN3cCF0VqJ
-	SVJqYBLtYPACcgwlxEl5DNeRDmsFtDpmtB1H411qCnRekSTua6d/iWhcitQI1I6gSQO0gGfw4Oo
-	=
-X-Received: by 2002:a05:6808:1785:b0:496:a01:458b with SMTP id
- 5614622812f47-4b2ef17635emr18588214b6e.2.1787457616535; Sat, 22 Aug 2026
- 21:00:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b="Q2Nqy9m3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=tI+q67y6i0ykAs/kuGSgZj5Fsxbc4J5FPVsv0PD8pCWg2Ea22SoWj75Vb2tKmK6BQ1rL4Ejh+b/H1oLGDm4yultqTL8gWS8RPO1VTuHo5HTQ++85/ekxhL0iosnTac9MdbfImT//YlKlWJ5SmzJ9RMo5pZPkqa6P+mVgsOVY5aTpLuGs4ZeIdUSAOmsjzhAUf6roZ0uiBDZ+OMT4Un5W5f/Ch9vcFSFpDWDQ0hIfoIV5Q7Y07PotPHB01YpcCLTNYeZBDw7pZE3MU97eLbR6YDyzHYF8PIfWrUB8B0ocvSH0DfswLVwgME92lNCmgTuZMQouSJiEQ6gE3wyIlWadfQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jOJ1XyoxIFe6JNjBTJQ6V2mFzsfbfUK2TiROIkU1AXk=;
+ b=FE91CFlAv3K6a/19e46uwmyE/hSjQ62DnJzmcaMEs+YQXB/lkp/kVKosZ2hF2UlNwL1MoVFbhBx0chITUp04d8hpII01fBwmI/Ae3m622jIxTg8XfpSkrJU1GwmbXDOKODGahprdFcvmE9+UOhqKrXPsFpnpdusQZvsRvr1mV3pvzgR7bhDuZGSO/NUyDB7fVU5ytXxPVNrcq2Lcu0Zp98WIe/R8A9th6Iac7co59GMhO/ZVhDT+oiF3SNIxCF/DVfhkMSFr9qie8Ik0UsvAWFOe49clFyKuLVdDtcpU4Q4Xmtr8E6LPsF6I+DxA3GGNKLKCGSsGiRSq6tjOTMWuVg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=live.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jOJ1XyoxIFe6JNjBTJQ6V2mFzsfbfUK2TiROIkU1AXk=;
+ b=Q2Nqy9m3WrkpSIN2nJIs7GRYMa0EvrW3rQHDAl21dLXGH4jEbJVt5nRgdpjBeTAyAbWwCBiO/Qhc31wuIhm6ytgWP9GC6BGGUVyIx7qJyxIJR3xTmr/WysZpB8ycVn23y+051hm5sMkq3NOe6GkpIbjlfHXEStE2CnOw2vFzqq1b0jskxeSyIqshx4vW34o2VBYofy0XEdKeuWMU5gxozfz7yJpcPENVe1XI+tQw4yMp/eWxmq3KFZ5jFrm17tY2HFLzjnT4rrqzlNirYNOO+Xo31tNuK1taVDeTfe/4uLUSa6VhtC2xkUdMuaCrxa8lw/MnVDoTeXvbeuYYInA+cQ==
+Received: from CH3PR15MB6020.namprd15.prod.outlook.com (2603:10b6:610:156::20)
+ by DSWPR15MB7112.namprd15.prod.outlook.com (2603:10b6:8:35f::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.339.11; Sun, 23 Aug
+ 2026 04:23:01 +0000
+Received: from CH3PR15MB6020.namprd15.prod.outlook.com
+ ([fe80::a655:4b65:19a2:85c1]) by CH3PR15MB6020.namprd15.prod.outlook.com
+ ([fe80::a655:4b65:19a2:85c1%6]) with mapi id 15.21.0339.010; Sun, 23 Aug 2026
+ 04:23:01 +0000
+X-Forwarded-Encrypted: i=1; AHgh+RqUFW5G2DJz1cNJ7G7WA5s5VaImGYagfmjEPoIaOHYuQsCCmsmB3cwEUsHVUEL77BYqF3fkzByIcdK1M4OnUg==@vger.kernel.org
+X-Gm-Message-State: AFuF++myl9qu2tgZZ3Yb8aM1W7rRJLLRqlf65PnH9fhOSjByqRAwSfwi
+	Ztekh9s57euQrzblWdncXEzd2HldJvCdGWmkdmSRvv0ttwC3Hl4LFpHnsahuIsKVSo/c/7pOUjz
+	niwN76oEeM9U+MvZKj1luOC7i6GGCgB4=
+X-Received: by 2002:a05:690c:6605:b0:7fd:4ef9:e5a4 with SMTP id
+ 00721157ae682-84c9ad37e57mr38079507b3.29.1787458501913; Sat, 22 Aug 2026
+ 21:15:01 -0700 (PDT)
+References: <20260715044431.1207-2-mbc07@live.com> <CAGsSZgFqeNpPXS8q9VYGGqE_ONVCD-V18vf0+R6tZTS2PeKv9Q@mail.gmail.com>
+ <CH3PR15MB6020E8912A56105D447332BEC8C82@CH3PR15MB6020.namprd15.prod.outlook.com>
+ <a7681525-b5fd-4a34-8ba5-99e79d77a694@nbd.name> <CAGsSZgFetjvj69w6MELzMcXyMjD76SQJRey3_UW=SpvR3arSCQ@mail.gmail.com>
+In-Reply-To: <CAGsSZgFetjvj69w6MELzMcXyMjD76SQJRey3_UW=SpvR3arSCQ@mail.gmail.com>
+From: "Mateus B. Cassiano" <mbc07@live.com>
+Date: Sun, 23 Aug 2026 00:14:48 -0400
+X-Gmail-Original-Message-ID: <CAGsSZgFAP+mmmynpZzi19xQUA2B+G0PVP9so2GobAShc4EuFqA@mail.gmail.com>
+X-Gm-Features: AcwNN1UQJ_OjBJCPrZDHwsf89IE1s4zjLW0leTnzvnyRO4FSdhmcjkFM0FG6IeM
+Message-ID:
+ <CH3PR15MB60205538E5911AC6214857BEC8A12@CH3PR15MB6020.namprd15.prod.outlook.com>
+Subject: Re: [PATCH] wifi: mt76: pass LED define via ccflags-y in driver submodules
+To: Felix Fietkau <nbd@nbd.name>
+Cc: lorenzo@kernel.org, ryder.lee@mediatek.com, shayne.chen@mediatek.com, 
+	sean.wang@mediatek.com, linux-wireless@vger.kernel.org, 
+	linux-mediatek@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+X-ClientProxiedBy: BN8PR04CA0065.namprd04.prod.outlook.com
+ (2603:10b6:408:d4::39) To CH3PR15MB6020.namprd15.prod.outlook.com
+ (2603:10b6:610:156::20)
+X-Microsoft-Original-Message-ID:
+ <CAGsSZgFAP+mmmynpZzi19xQUA2B+G0PVP9so2GobAShc4EuFqA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CA+Hv-VqAQ38g9hGf+-nBcpRNZrcowicSejRQKgBswPOR-o+adQ@mail.gmail.com>
-In-Reply-To: <CA+Hv-VqAQ38g9hGf+-nBcpRNZrcowicSejRQKgBswPOR-o+adQ@mail.gmail.com>
-From: Pablo Diaz <pablo.diazv@pucp.edu.pe>
-Date: Sat, 22 Aug 2026 23:00:04 -0500
-X-Gm-Features: AcwNN1XKn_Bds3eZu_xD8QK7GvVZygUfH9_12tjarqS5EkCJvL-fOe7yKwCAq50
-Message-ID: <CA+Hv-VrxZV6yg5eBBRsUrNFOzCx9upS735RDO-pfPatUEdWz4w@mail.gmail.com>
-Subject: Re: [BUG] mt7921e/MT7902: firmware programs near-zero Tx power for
- all 20/40 MHz rates -> assoc fails except at close range
-To: linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name, lorenzo@kernel.org, ryder.lee@mediatek.com, 
-	shayne.chen@mediatek.com, sean.wang@mediatek.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PR15MB6020:EE_|DSWPR15MB7112:EE_
+X-MS-Office365-Filtering-Correlation-Id: a43efcb2-c912-48ab-3ec8-08df00ce37ef
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|15080799012|51005399006|25010399006|8060799015|19110799012|5072599009|6090799003|23021999003|24021099003|19061999003|440099028|3412199025|40105399003|2607281247196008;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?cytzeHRQckpYazR4cW4xQVlSNFNtbjJLVUVaZ3dab0FSdXVBblNXLytmZXov?=
+ =?utf-8?B?VU1iMmJYSGdmYzZuNGN1REQ0VFBnODB1VitscnF5clFBdU92TGtsQlRNaERp?=
+ =?utf-8?B?ZWNuN1BvaVNjZ0swVFdRdURYeUk5c2EvYVp0R1lVUysxQXl5Y05JaXpndEZW?=
+ =?utf-8?B?TnJqRGttNnEwSm1ZdmFLUGtvQXMzVVRvQm9ic1VBRFdtTEJlR0RvUEYrV3NS?=
+ =?utf-8?B?WHZjTUQ5dGFsZk1YczJValdyYlNqRFE0UkM2OEdrYkI2bFdueXdyUVJSVm4v?=
+ =?utf-8?B?cmZENmM3andoUGtKcFpnbG5GVWNjdnJKS3YrcElvOFBta2x1RFYxS1RiWG0r?=
+ =?utf-8?B?bXNENzkyV21qMHZEdXB3ZFJMUnU5MEdvZFhHVW4zRmVHa0F0RVhONXNQK2VN?=
+ =?utf-8?B?VHFiS2JYZEVUdGY0UWJ3bFpaQ1hOZHVXSVpDVjFONHdLNjdGVUV4MktsZGdI?=
+ =?utf-8?B?ZVp5dFlxZzl4MFA0bU0yUWtWMDJ5TXZZVFRzSkg4Vm5Id0VDTWM3b1pEaW9u?=
+ =?utf-8?B?Y3I1QXlRdS9kazZZaWVQMFI5TFN3ZG45eDErWFdYT2pRei9XRnVyUzdScUhy?=
+ =?utf-8?B?RFVMclVuZVV1dWNHaERMd0kyNVVyZE1ZYWt2SlZOSmo0RllkOWNneUNxYnlr?=
+ =?utf-8?B?R1NsdmdEQmg0d29lUlFRK29VSk4xb2Vobng5Mnl2VWlyNjlWUzgybHdzYVpn?=
+ =?utf-8?B?TzNPdzVmc0VpYmowdG53SExkR2VaUXkwcnl5dTRnZHNlRFY0WTJsNWtwZ0ps?=
+ =?utf-8?B?UHRSeHNOVFRHWEZhd05KSXlBTUo4VUcvT3VPeklWNVVld2pPNkNTU0ZmKzBw?=
+ =?utf-8?B?NmkyemVxZ3MrczNBcURkKzN5TUdPM2RJekpBZVoxb3dBeUNtYmcvb2hySXZx?=
+ =?utf-8?B?cStvVTVlL0s3YzdYMmdhRlpEQ0Z2bHZwV2cyZjVkcklJWWw3OHdIa1g4L042?=
+ =?utf-8?B?dkNQK3BhRzNXQnF5Q3V6UEFuMzhwSzRBY3FvckJsUVRJR3RLY1hRZHk3OFhG?=
+ =?utf-8?B?bmRCUVB4clA3OUxkRWRvVkRPbHIwNnh4dEx4akFPOUpJU2tEWUtRU0RlQ0VN?=
+ =?utf-8?B?N21IR21uVFR6Y2FkWWJQd2tySnRteWNrelE3YkhYMTllYmNjME9YSVJEbzFB?=
+ =?utf-8?B?KzMvVCtQRFBrYlhRNW9UTC85bjBDNUl6QzV1VDI2ZVpXc3RxSmZVT0lkS3hS?=
+ =?utf-8?B?cDBvOG5nSGJEZmJVNldtR0loZlBIblVrM0dMZWtyZUE0cjc1L1hCclVSMXR1?=
+ =?utf-8?B?WUlvWFRvVGhRZVVIV2xaNGIydU9iYTBlelpBelhQU0NFNFNtUVEyS21Fd0tt?=
+ =?utf-8?Q?xm8GPvi8ocU1hb/XMEdZI3KJW9imts1IIM?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?d25rS0VOOGcwYlFZVFJQcDh5SFhnOUlPTm1DOW53ME9iR3luZ3NGSXhVY3l4?=
+ =?utf-8?B?Zi9CWlJMb0VUZTBOdVoyeEU0bkkvM3ROalVFeVZQVDRNK2daUVNOVjl4cjFy?=
+ =?utf-8?B?eUFMSWRWRGdjQS9CZDVVYzY1eHJYSHp0Y3FycWt0K09KdnJPbjFPWEp6ckpM?=
+ =?utf-8?B?WmRuTHIzUGdZOGxCQWRBUzFhNlUvWjJlcVdyT3RmN0hJdDF3SXNLQ2M0RUJQ?=
+ =?utf-8?B?T0Zlc0I5enJlSVVpeFJWS3RsTk5QOVVlaXlrVVVPeUNQc3BFcE1WR1VUak4w?=
+ =?utf-8?B?bTlhMVRHQ2RsV3oxRzJ6ZnpIa3V5K2lqZzNJclY2T25PRVFmdnZUaEZMc3Fr?=
+ =?utf-8?B?eEJkRWNQdWNWUmFCRGp6YzAvU3lqbnBCVWpjU1BqZDh2Njg3NGZxdmNLZVla?=
+ =?utf-8?B?Ym1zcDNUWXBYQWdTcUZnTjBEbitPcE1HSzNJY0NtNFgwYXdSUW9kb3JVdHhC?=
+ =?utf-8?B?amtha1liYnE4MGFESVFKdlltVjdvdlI5aHFqMXN3b0YvdnovNGE5dnpvTnhu?=
+ =?utf-8?B?UURaTDNNYjl6bXNHRXJGMEN0Yy9NN1RCY3FnM3JlMnFBNjM4TDM4cXRsa29Z?=
+ =?utf-8?B?Y1oxLzFUaG8wL0JMbGZlZUhLVmJya1JSemlYZzFZai9JN1RyeUZFY2RrRGlo?=
+ =?utf-8?B?TkFvRUxGcm5LM002T1RSL2IyWXJyaEluV0RLeU5nMjZoVnlwQW5BWmdMWWI0?=
+ =?utf-8?B?TmV2dHRRNUw1elNDZTlPYnI3UEswMnJPNUJlNlB3b1FnR2hFYmhxZGFUYmJq?=
+ =?utf-8?B?ZEVCMytoM294MDN3TmU3b1pIU3hnSFk0dVJ2OXZ2THBOeUhCc0ErUXg0Nmkw?=
+ =?utf-8?B?b2R0am1HOWJBWE55RU5kck9OSnpCZm82amNodU5IUmhlcjc5c0QxbjFtNGpL?=
+ =?utf-8?B?ZURtZjZ1bWlVN0tCRTJQc1AzNU5OL20zMjJJc2dadmxVZDh5NnJzNmNvWlpE?=
+ =?utf-8?B?MnNjbytPTkdUb2lEdjFMZTFwbXNzNEdjWGZ0MXMzT3NPQ0tGcFNSM2p1Vit5?=
+ =?utf-8?B?RDVGMTBsWkErMjNtd05vdTRHNjNTelNZcGJBRldNanJUODZXWVBlNUp4cHNI?=
+ =?utf-8?B?QVVwT3MxQnk3QUFBUTd1dlRPcEVUMk0vN2pjUldQbG5xa1RzL05WZE9UdFY3?=
+ =?utf-8?B?ak1aNldJYzZYZFJIZUhNYjJ1N1FEcFhTSSsyaWk3UkpaRWw2SkV3T0ROSG5q?=
+ =?utf-8?B?a3A3SGVPVzF5UWtSZ3VVT0xkcnRIU3NkVnQwNThGUG5mN3R1cWZRUVVNcU8x?=
+ =?utf-8?B?MTRXWjdGVjJzcG1SQUMvRTZCK2hjK0Fzd0dJcDhDK281cjBxYU43TmQrU0lh?=
+ =?utf-8?B?Nkx6ckJ1WXFYblQzR05PMEJGKzE5T0xVSVZVZC8rVW1WV0YwcEpvNlpJK2py?=
+ =?utf-8?B?VFJMS1BGWjFvaVRNQmt2VWxpTy9oMldlKzhjbS81elRWUVk5VEpGZTRzbGJV?=
+ =?utf-8?B?R1V2aFlZS215TDdKU3FSeThUT3lXenJTbXJVMi9GYU5uNFc3MXFNNGlud0h1?=
+ =?utf-8?B?emNRaXcyd0xzVnU1N2dlblF3YzBSNHhKWDJZV0dsQVY4M3J2U3VBaHk3SmZH?=
+ =?utf-8?B?cmFHbEs1Y1JmVnVEc2ZJV2l1RUhBMHNlQ3JjWi9jMksyQnU1eUN5M1I1Tm5Y?=
+ =?utf-8?B?cjJFNlhwZFZSUEQ3c2g3dEpqTGxuWTh3VVIrS202eEpvdnZRUnN5SG93NmdI?=
+ =?utf-8?B?MFAwWnZaNXJMVmNxb29vbmtWNjdXSVUvMGNyREFLMk9xaElmU2lYdmc5UHJm?=
+ =?utf-8?B?bmQ4T3l3RXZIb2VvY2xBQVA2eGM5MVZkRlNuQWFrSXY4RmhOczRnZTRraEMz?=
+ =?utf-8?Q?LkHUYm8O+KIi4lGpq1Zvgw7yTeT+jMaYWTUDg=3D?=
+X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-d4257.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: a43efcb2-c912-48ab-3ec8-08df00ce37ef
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR15MB6020.namprd15.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2026 04:23:01.6293
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSWPR15MB7112
 
-Self-correction to my original report: the root cause is not in the MT7902
-firmware. It is in mt76, in the ACPI SAR path, and it looks trivially
-fixable. Apologies for the misdirection in the first mail.
-
-## What actually happens
-
-I instrumented the tx power path with kprobes on 7.1.8, while associated to
-the same APs as in the original report:
-
-  mt76_connac_get_ch_power()  in=3D40 -> 40 / 34 / 24  (correct, 0.5 dBm)
-  mt76_get_sar_power()        in=3D40 -> -1            (684 of 684 calls)
-
-mt76_get_rate_power_limits() then does
-
-        memset(dest, target_power, sizeof(*dest) - sizeof(dest->path));
-
-so the entire limits struct becomes -1, mt76_connac_mcu_build_sku() sends -=
-1
-for every rate group, and the firmware programs tmac =3D 4 (2 dBm) against
-eeprom values of 38-40 (19-20 dBm).
-
-So the firmware is not inventing the near-zero power. It is being told to
-use it.
-
-## Where the -1 comes from
-
-mt76_get_sar_power() takes min() with phy->frp[i].power, which
-mt792x_init_acpi_sar_power() fills from the machine's ACPI SAR tables:
-
-        frp->power =3D min_t(s8, set_default ? 127 : frp->power,
-                           mt792x_asar_range_pwr(phy, frp->range, i));
-
-mt792x_asar_range_pwr() -> mt792x_asar_get_geo_pwr() returns
-min(geo_power, dyn_power + offset) straight out of MTDS/MTGS. This laptop's
-DSDT exports MTDS, MTGS and MTCL, and that path yields -1 for every
-frequency range.
-
-Whether the BIOS tables are bogus or we mis-parse them, mt76 applies the
-value with no sanity check. A limit of -0.5 dBm is not a plausible SAR limi=
-t
-and arguably should never reach the firmware.
-
-## Confirmation
-
-A kretprobe module forcing mt76_get_sar_power() to return its input
-argument, nothing else changed:
-
-  group     stock             with override
-  OFDM      4 4 4 4 ...       39 39 39 39 ...
-  HT40      4 4 4 4 ...       39 39 39 39 ...
-  HE484     4 4 4 4 ...       39 39 39 38 ...
-
-On air, same BSSID, tx rate control went from HE-MCS 3 (68.8 Mbit/s) to
-HE-MCS 9 (229.4 Mbit/s) with 3 dB worse RSSI.
-
-## What this invalidates from my first mail
-
-- Not 802.11h / TPC / Country IE. The regulatory domain never changes:
-  iw reg get stays at the user regdomain before and after associating to
-  the APs advertising Country: CO.
-
-- Not CLC. mt7921_common.disable_clc=3D1 gives a byte-identical txpower_sku
-  on the same channel while associated.
-
-- Not specific to those APs at all. The -1 is applied unconditionally on
-  this machine. The airport deployment only exposes it, because 2 dBm is
-  not enough at -72 dBm with heavy co-channel contention, while it is
-  plenty at close range to a home AP. That also explains why 80 MHz looked
-  healthy: the firmware appears to ignore the bogus limit for the
-  VHT80/HE996 groups, and my home AP runs 80 MHz.
-
-A much better reproducer than "association times out": the 40 MHz groups
-read the correct 43 while idle and collapse to 4 on association, i.e. as
-soon as SET_RATE_TX_POWER is pushed.
-
-## Suggested fix
-
-Reject non-positive ACPI SAR limits instead of applying them, e.g. in
-mt792x_init_acpi_sar_power():
-
-        s8 lim =3D mt792x_asar_range_pwr(phy, frp->range, i);
-
-        if (lim <=3D 0)
-                continue;
-
-or a sanity floor in mt76_get_sar_power(). I did not want to guess which
-one you prefer, nor whether it is worth warning once when the ACPI tables
-are clearly out of range.
-
-Happy to send a proper patch and to test anything on this hardware:
-
-  MT7902 [14c3:7902], subsystem [1a3b:5520] (AzureWave), ASIC rev 79020000,
-  mt7921e, kernel 7.1.8-200.fc44.x86_64, firmware WIFI_RAM_CODE_MT7902_1.bi=
-n
-  build 20251212032127 (linux-firmware, unchanged since the first report).
-
-Full kprobe traces, txpower_sku dumps before/after and the override module
-are available on request.
-
-Thanks,
-Pablo Diaz
-
-El mi=C3=A9, 15 jul 2026 a las 23:13, Pablo Diaz
-(<pablo.diazv@pucp.edu.pe>) escribi=C3=B3:
->
-> Hi,
->
-> Reporting a connectivity bug on MT7902 (mt7921e). Following
-> Documentation/admin-guide/reporting-issues.rst.
->
-> ## The one-line problem
->
-> mt7921e/MT7902 cannot authenticate/associate with a specific class of
-> enterprise AP (Huawei, 802.11h + TPC + Country IE + MBSSID + HE), while i=
-t
-> works at 100% with every other AP I use, including my home AP. Frames are
-> transmitted (HW Tx counters increment) but the AP never replies:
->
->     wlo1: send auth to <bssid> (try 1/3..3/3)
->     wlo1: authentication with <bssid> timed out
->     (occasionally: authenticated, then association timed out)
->
-> ## Scope / trigger (important)
->
-> - FAILS only with the airport (Jorge Chavez, Lima) Huawei enterprise APs.
-> - WORKS 100% with my home AP and all normal/consumer APs.
-> - So the trigger is something these APs advertise, not general breakage.
->
-> AP characteristics (from `iw scan`):
->   - Vendor: Huawei (BSSID OUIs 48:4c:29, 10:a4:da, 60:9b:b4, 3c:ff:d8)
->   - MBSSID: several SSIDs per radio (.FreeWifiJorgeChavez open, plus
->     WMIG_AIJCH/PACHACUTEC/T2_LAP incl. WPA3-SAE)
->   - 802.11ax / HE (HE Operation, BSS Color)
->   - 802.11h: SpectrumMgmt, Power constraint 0 dB, TPC report (9-16 dBm)
->   - Country IE =3D CO (Colombia) although the site is in Peru; my regdoma=
-in is PE
->   - fails on both 2.4 GHz (ch6) and 5 GHz (ch44)
->
-> ## Observed correlate: 20/40 MHz Tx power programmed near-zero
->
-> debugfs .../mt76/txpower_sku while in range of these APs
-> (tmac =3D value the firmware programmed, eeprom =3D calibration):
->
->     group (bandwidth)          eeprom   tmac
->     CCK (2.4 legacy)           29-34     34    OK
->     OFDM (20 MHz)              31-36      4    near-zero
->     HT20 / HT40                29-34      4    near-zero
->     VHT20 / VHT40              27-34      4    near-zero
->     VHT80                      27-34     39    OK
->     VHT160                     23-30     35    OK
->     HE26/52/106/242/484        23-34      4    near-zero
->     HE996                      23-34     39    OK
->     HE996x2                    18-30     35    OK
->
-> Every 20/40 MHz rate is programmed to ~4; only 80/160 MHz is correct.
-> Auth/mgmt frames go out at OFDM 6 Mbps / 20 MHz, i.e. at ~near-zero power=
-,
-> which matches "frames sent, AP never answers, works only at very close ra=
-nge".
->
-> Hypothesis: the MT7902 firmware mis-handles the 802.11h TPC / power-const=
-raint
-> / Country IE advertised by these APs and collapses the low-bandwidth Tx p=
-ower.
-> Consumer APs that do not advertise 802.11h do not trigger it. I could not=
- fully
-> prove causation in the field; maintainer insight is welcome.
->
-> ## Environment
->
-> - Adapter: [14c3:7902] MT7902 802.11ax PCIe [Filogic 310],
->   subsystem [1a3b:5520] (AzureWave), ASIC rev 79020000
-> - Driver: mt7921e (in-tree mt76)
-> - Kernel: 7.1.3-201.fc44.x86_64 (Fedora distro kernel)
-> - Firmware (linux-firmware commit edc18bd, the only MT7902 WiFi fw publis=
-hed,
->   already the latest): WIFI_RAM_CODE_MT7902_1.bin 20251212032127 +
->   WIFI_MT7902_patch_mcu_1_1_hdr.bin 20251212032046a
-> - Not a regression: MT7902 support is new; there is no known-good prior k=
-ernel.
->
-> ## Steps to reproduce
->
-> 1. Be in range of a Huawei enterprise AP advertising 802.11h TPC + Countr=
-y IE.
-> 2. Try to connect (open network). Auth/assoc time out repeatedly.
-> 3. Same adapter connects fine to a home/consumer AP.
->
-> ## What I already tried (ruled out)
->
-> - Rebuilt in-tree mt76 (v7.1) with SUPPORTS_MULTI_BSSID /
->   SUPPORTS_ONLY_HE_MULTI_BSSID disabled in mt792x_core.c: no fix (failure=
- only
->   moved from auth to assoc). So MBSSID handling is not the cause.
-> - mt7921e disable_aspm=3D1 and Wi-Fi power-save off: marginal only.
-> - Regdomain PE (correct for the site) vs forcing the AP-advertised CO:
-> no change.
-> - iw dev wlo1 set txpower fixed|auto: no effect (reports 0.00 dBm).
->
-> ## Code trace (why this looks firmware-side, v7.1 mt76)
->
-> - txpower_sku is read from the firmware via MCU_CE_CMD(GET_TXPWR)
->   (mt7921/mcu.c mt7921_get_txpwr_info): the fw reports correct eeprom (36=
-) but
->   programs tmac =3D 4 for 20/40 MHz.
-> - The only driver Tx-power input is a per-rate limit table
->   (mt76_connac_mcu_build_sku), which is bandwidth-agnostic (VHT20 and VHT=
-80
->   share limits->mcs); yet the fw applies 4 vs 39, so the per-bandwidth
->   reduction is a firmware decision.
-> - The driver writes no RF power registers (only MT_TMAC ODTR/CDTR/ICR0 ti=
-ming);
->   mt7921 exposes no writable txpower override and no per-BW power MCU com=
-mand.
-> - is_mt7902 special-casing covers only MCU_WA ring/TXQ/DMA/runtime-PM, no=
-thing
->   RF/Tx-power related.
->
-> ## Request
->
-> Can the MT7902 firmware be corrected to program the calibrated 20/40 MHz =
-Tx
-> power (the eeprom values already present) when these APs' 802.11h/Country=
- IE is
-> present, or is a driver-side workaround feasible? Happy to test patches o=
-r new
-> firmware and to provide full dmesg, complete txpower_sku, and iw scan dum=
-ps.
->
-> Thanks,
-> Pablo Diaz
+For the record, this has since been merged upstream as of
+c5a3bd91aa735b669618610d5f0ebfa5786845a6
