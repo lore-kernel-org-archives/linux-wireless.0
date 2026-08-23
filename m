@@ -1,77 +1,77 @@
-Received: from mail-yx2-f2.google.com (mail-yx2-f2.google.com [74.125.224.130])
+Received: from mail-yt2-f8.google.com (mail-yt2-f8.google.com [74.125.225.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2538233929
-	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 20:16:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B14372ECD1D
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 20:26:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.225.8
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787516163; cv=pass; b=jjBGg3+EqN24BFcibiTrnjrBxescfwuYX7tdjS2Ndb6n9mXohS3c6ViXz3TQ+zLh/vuEUZB3+7rR9lMqYIAXiqVzXPT7wwlw4dYW0dAtSSQlbFuGw9XqnAKzIHfPW7wyct3WxCfioEwLiDb7Sj2Xe+Dnm7xnymvZjjfARJ6uc8s=
+	t=1787516801; cv=pass; b=K3WlJM74R42OGsmYdOPssA3NOVt9ir9gEIVJ4JbqbXVIgl6Q2tRZ85G+NCSwBs6xr//vWdHRYl3KJcwhMJzZbCsnD0aFE8Ujgm87OMsxBzt+bwDPbkvB7tDThy7fjGTmqkxsn5ANhRWfWOi2my5F1v6vDt9LxkEUEVKcwtp2kZU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787516163; c=relaxed/simple;
-	bh=bmcgRaod3sLcy+cXPMICnEfC5m0wII+FLVl0QaumqQM=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=GSjNVWCzDF1RLiPodt1bImiCFrhCKfw8jvJLFuTO1N/nmcLAYn7e5aJcR8NWEE+iODk+y4Pc4qT5cFZOqq7LPuJjDt8loaGvIJAhPW03mD2rkiRHdZozUt7Fe0ZAn5Ld2fseZZQNsk/KwXrj6P6FLb1uDODFbBJvi++ZjffHtdg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=noUHklxx; arc=pass smtp.client-ip=74.125.224.130
+	s=arc-20240116; t=1787516801; c=relaxed/simple;
+	bh=LNjdT9Wgq5F4SR9bd4gxfpG4CKMZblvZTf5HauMFJLw=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=CvPTOd7P1Y9fbGo+kyI6kzSiAar0Z2DUX/tGxhg/svdHKcORDt8/URJvGCUi/ARytmBBgq13tI5y9Xcd4D3UODrU/Z8s9mHugxQXjY7mXqyFlTDW9GQ3mTuPmCrmYdSgdDARnxRBkSIo1E7aDFJuDeDkMXlGKChNebvEGti0igs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hVG2GgCk; arc=pass smtp.client-ip=74.125.225.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="noUHklxx"
-Received: by mail-yx2-f2.google.com with SMTP id 956f58d0204a3-66c70c7bc34so781720d50.0
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 13:16:00 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787516159; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVG2GgCk"
+Received: by mail-yt2-f8.google.com with SMTP id 00721157ae682-81ce92c1a48so15336907b3.1
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 13:26:38 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787516798; cv=none;
         d=google.com; s=arc-20260327;
-        b=nouaIbiJzFyLNX9TPG1JFGBuKQbBum8LAmYiTtJps30eaCvHgJvb9b+7UG7RejYzZB
-         Ty4Fn2Z9ZSvnGJLmI9rDvh0A7EnsjMWGup3oa4So5QECL7RNoSOQHBgXahVpq4rhpHeZ
-         5I93Dr3ph1h3RMxvYYSkHdMNdyd6LuJa6d2Me1Ly9byZDoP8DUEZeWg6HiBDa+blJ6/4
-         /pLHCvXam3UoXD+CaBpwwu3HdXg/Fq/E4sSq1o8NDUvoRBLorVAWtiyha6PCyYpR46EO
-         7x1WEgc1CXQHnLGxbO7hFDnTwDjC48Iyn0wDkzS6vBDTsgP/e0C68T9PXBQwH+zW4/Bg
-         HBlw==
+        b=makLbRndBg0o4zzJGDUT9tPq2w9HpFgNwsws4sQskUtUIS5b/oCnzKPGkm8V4FzJLo
+         0Doie760MOQg44kHKp8WYsN634Cdh62LC4eobbSzSSp7tu/U491W3a5xrPbcL3pcCsul
+         34kiZSxwidxQgXiBY+xEe4JdX2eNMyOfRQEW4YB+wvDx9dBQlOC2ITka3ojbWtR5F+UI
+         dmr/wvzJp+yhqW95Bindpj2BmpU1x/8ZFdrVS84+StHRMu5H6gb7HhQ5tCTjED97y+zd
+         mu14IvdTMRB5OibkjMQ1s9l2bBth8Ts5vo7dpQdDaiualit1MsaQ0bXv6hYPsevyCASl
+         3H4w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=IlrbuW6LUm+csYB4yEqf8VJ+4nyVSO/7U/RsEB5JcuM=;
+        bh=JEVg7ul0gxOESiuGVJ6pO3vE6ksCTjJq42HIudri+xQ=;
         fh=tTnDFQxWjPePP+UdHfWAelUkdxXRea8KXdLCNYD+4yM=;
-        b=fo9sWodym2LDIdbfYdU8Dt69WehO898OPqGCzuNvc9r6xbLVgfNdW4kjQh7dBJlEbe
-         A9ZO5yBGPNH3X6Go6WJ2nvpEF4riHwI7pkbsizCylf51PGmrmv+mvsC100ofpQoRIcAY
-         sTMy9dOe8fY5zvUHcmABfxEJCDdxOlRDPSi90LP+lpBvk1+jxvuvJb164mDV7wjRNbd2
-         dnD8hcfD3cIg3tKColC5y6cspPK4BvSVVMY0zk9HIY7Aj3gy9ud9XgZ5ITxHoPe1p19Q
-         MYheLUoj5C9LtEPgnRagGQWZT7otmJxZ4kXK3ZFiO1jceOXehktDeNRBmJwsxGiV+oGg
-         S4EQ==;
+        b=pdMOkGVPyomNoGSo3nzdKrMnRuPHy/ppSFNO9WJ5oUeCbFqcTNfcR+QAS/LAGHKWRO
+         W4xVYsU2fVUVRoOXl0PhESjLrZQdjFf/33s+Jcb9B0yfFi4QiqVswY6tzsHdK1Ia4S/A
+         vsr7qHa4iv1B5CCDMknnkQWB9kaoztwjWZLNz3fUrS2V6gnungCrpqAqhBLJ9r84BKAU
+         s1Jk4qcKC8qV6mEPBAJ5mQDcLtkUoqAT4NenktGS+GxJC1rtFSrD0XyI9Oa26T5y/haB
+         6BW65hzStesMpuTGej6wwWYU7nPZFSMAD+bRGddsBI0jtpgKVh/swV+zJh9M1OJcBtPO
+         vkNg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787516159; x=1788120959; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787516797; x=1788121597; darn=vger.kernel.org;
         h=content-type:cc:to:subject:message-id:date:from:mime-version:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=IlrbuW6LUm+csYB4yEqf8VJ+4nyVSO/7U/RsEB5JcuM=;
-        b=noUHklxx/xXYggvH5HEJQSyP0RPEz8/UggV54YnjN5RB1MqV8c8y2vCRSfZCDnlj8C
-         aRqAQGCxZwS6bmdhtrAcjhZ8UpRmO8b+4D1sIvlwpisG0noMStk3k8nGzs1yDpCCSH9e
-         HBmqvAb4MehdDhYlj/xNBoWxC54G5VHm/zmJMQWsLt793Zzax/PBZXyeZSGP/6B9kZzd
-         iwHcu1Byg+H3nncNWuGoGKOO+kNzit9BcvMsJ4ASWWz3+wg7V4GvwG0vkyYC+051zJoM
-         /z31BGlYjRqmZ9LaK4C0ogWly6TmWoePBLvjtZprLA12yZgFhyY7yXZiwWauAe7kA7K4
-         lbaQ==
+        bh=JEVg7ul0gxOESiuGVJ6pO3vE6ksCTjJq42HIudri+xQ=;
+        b=hVG2GgCkEvPpepYOsf+6yVhS5vzy1qgBJIHTHaDpENccbsg4OroU1Mqw4+VBXNH9bj
+         F5bPC7xQpGkAgqRBg7UFzwOVqd01hHdCRGYlYRUk4a41BjvN552MPUmSSkIDIkCu5Idz
+         yCPqEyZPlM5erw2WMAu7qSPmtB8jI9Vi4TQKtiMsvau/W1vdEJD88d1D1blDqL8dtCAr
+         GVQaa0/02SmOfmIVU7tqbDbQx/BJ33h15tQeY3PF9tdgh2t51/Npcd5VX+VYSpRXTDZs
+         ag0vqqH5v2lSe2TawYf5tPyoDz2SnRco7hguGENF2dfanrms6o+k4H7TuiygrqhfaUn2
+         eEFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787516159; x=1788120959;
+        d=1e100.net; s=20251104; t=1787516798; x=1788121598;
         h=content-type:cc:to:subject:message-id:date:from:mime-version
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to:content-type;
-        bh=IlrbuW6LUm+csYB4yEqf8VJ+4nyVSO/7U/RsEB5JcuM=;
-        b=WxjVpFoRwx9rVI0JQFbcarr0hHjghYzRb9pLEmNRtMG+jR8847k0Fy50z72+EKG85y
-         AinyJaXtNVQbwHc1NzW1tP+R/WLkqtkI6dakhBmmiJe7rL4m7FcpxZPM1d6pCpZonyqX
-         SUxfzXQBeA8i1icQ2zXeoNWSyUtiXGhJeq3LAR8/zx5EQI6ShpZx2q/12evqYcRkuWY0
-         OrvTjE4F6Bc+HXuZUd7YlnGEP/WSB2MNAOPCg9hOFlOzejLnKUiLpWBJWz18dESbY77d
-         SkoGAXwUjIakVa1ncN/PxLrdtn0/wNj+e4PiwiT78u1AA6gF6pHYXxNb1CjzUHpsaDfg
-         Qxww==
-X-Gm-Message-State: AFuF++m/oG1z3V8QH9jaCIoepBwrmlZd5WRHGSP5MafNdAs01lUTAuX2
-	R0MZEIOpFn0OoPB4sInCI6wNkvmfumHX0i5zZBtrOuX17+jCNIrGBM1NF93SBCBRGn7lUUAXJ12
-	xjC5DfI1Nsu4vrs8pFWYosItN1AhQj3NlH7Ei
-X-Gm-Gg: AR+sD10vUfJr2JRiK1O2HT6hz3VGnXrt/n/bbXt3rOLkp/69LtSuJ5LlXknpzgO/Uqc
-	OYuIVNJBb9qTBNVkodcN0oDpUhQ3/ajc1wK6sotaeIggV7SOYy3g+ER5q/Ej3TNZyyXWD6WlIs8
-	V0GUCYTqfPozWBHjFKMBHdDeqHdOnwM3gu8DpgOFXaVYHB41dD+DK4ytDLEa8djuNUHXrVu5Y6G
-	UdBLmvzzBwF0Cwpek6YTFd0gJHwZexxVCtf/5y672SXREC2/YuSbJAB9x+A6BKoVnHBXBYOo7dc
-	2GWG5kgfttVRJu/bv3vQl/vD6r4SvsLFWzqDvV9oXpeOawNqcyTDymWWu2xtp/n4UdytArL3kDU
-	Ioadfk7k=
-X-Received: by 2002:a05:690c:4881:b0:81e:8498:b970 with SMTP id
- 00721157ae682-84a0f5c0e81mr80904357b3.0.1787516159125; Sun, 23 Aug 2026
- 13:15:59 -0700 (PDT)
+        bh=JEVg7ul0gxOESiuGVJ6pO3vE6ksCTjJq42HIudri+xQ=;
+        b=LDrA1FOCoRBpZwAzHMy4SRrUwKC9eYy+Vna5Ps0jRyeXM26UW5eHdLtDANCt8DBNET
+         igR6p4ETseL7vxLiQutOI2q/sJcF3wrpyM1q/Me24RiqzBFsraIX7LSnt3E3vxmC0sUA
+         N3r/iHilx9QQouO8H5RGDODfhMBOy1PTitvrMbFUMXwb+p6O9/RURF1kW5zkUJmlDgz0
+         3XA/Fb1SC4b04y2sCyaV4mLyMT5sD2NKhe1ZqzbYm/ZgqG3okmxUo7rN666aqMeexJdE
+         wpcrSrVJm6PZv/qrQh236h1BXvovnw9sNvqyoIJlu6AoRx+gyCVcbXLgT2S6Zh++eP7A
+         tPNA==
+X-Gm-Message-State: AFuF++n9O9GUBiHwdQITdIbib/h/UaIEdRQLCpdS1oscN+2gKqp7DrAn
+	oltxKIQ6t/O6nmCYWQgtoquJ4Xnhbdnuis5QME3YmfFV1vNi+QaC57T7CAhjUEfhpPYPsGOk8Vt
+	XfMaMVFTiAqOksWi3H7y78R4/V1DCP86pMxfn9wHI3w==
+X-Gm-Gg: AR+sD11JnYesJLWSLvtU258cG7qKxNAesgTVA4KWv08F45aQ+TqMyebTgH+e+Jg8Z+T
+	YRIccP8v/yQB0SWcHjOTk4UXB/RTC5l1y94IPQprNIk6GCBBdUS39iGwQ1GAtvvTFwa5wL14UXJ
+	GI3rNuEC4CFR9QzsRR/9qFN5Ak2ti6wAKIVKln9gGYVtAjRply6Fu3/8OXGa4J8diEV4HwgDjv5
+	ZOgt9JsntnRdVK2pJ63PxVqQcyZWrnSF+qHi1VZ4M93qfYBfeKBJ2xF6PbiHTXI3qswMtztuCYz
+	uY3HfChvGcVHkWAW8a5EqZ6e2awSpp8zmoF5A/Ns+RgYQsCovckQ/kZC47ayN/h4ZYoLIyIlMPK
+	h
+X-Received: by 2002:a05:690c:8f:b0:82d:aa4d:95cc with SMTP id
+ 00721157ae682-84c93660594mr62197857b3.4.1787516797470; Sun, 23 Aug 2026
+ 13:26:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -79,18 +79,15 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 From: Ibrahim Hossain Abir <xbowpc@gmail.com>
-Date: Mon, 24 Aug 2026 02:15:46 +0600
-X-Gm-Features: AcwNN1UB95FpjJxyuPOITEk8R0eAf49K2p5SdmOvCCg-Tymsj7JeSXZgVCK52DA
-Message-ID: <CAJF5HCuXXK1nUGmOy3DdSNn2=vZN+PY_Qsh_naOPXn2Jsm3TMg@mail.gmail.com>
+Date: Mon, 24 Aug 2026 02:26:26 +0600
+X-Gm-Features: AcwNN1WVC8diaeO_8HLmxK31GzKx83Qgt9KTZjJuideNZMBF7F9my-ZMyMKvI9c
+Message-ID: <CAJF5HCtEvb-aiusJuzmCvu-db4orDwsSnG+mOfCbLXXYRCbtvg@mail.gmail.com>
 Subject: [PATCH] wireless-regdb: update regulatory rules for Bangladesh (BD)
 To: linux-wireless@vger.kernel.org
 Cc: sforshee@kernel.org, wens@kernel.org, wireless-regdb@lists.infradead.org
-Content-Type: multipart/mixed; boundary="000000000000b237dd0659bc89ea"
+Content-Type: multipart/mixed; boundary="000000000000be8e810659bcaf52"
 
---000000000000b237dd0659bc89ea
-Content-Type: multipart/alternative; boundary="000000000000b237db0659bc89e8"
-
---000000000000b237db0659bc89e8
+--000000000000be8e810659bcaf52
 Content-Type: text/plain; charset="UTF-8"
 
 wireless-regdb: update regulatory rules for Bangladesh (BD)
@@ -99,8 +96,7 @@ Update regulatory rules for Bangladesh (BD) based on the official BTRC
 (Bangladesh Telecommunication Regulatory Commission) directive dated
 September 15, 2024.
 
-Enables U-NII-1/2A, U-NII-2C (DFS), U-NII-3/4, and lower 6 GHz (5925-6425
-MHz).
+Enables U-NII-1/2A, U-NII-2C (DFS), U-NII-3/4, and lower 6 GHz (5925-6425 MHz).
 
 Official BTRC Notice:
 https://btrc.gov.bd/pages/notices/6922ee00dbfbab28ce0c438d
@@ -125,46 +121,13 @@ index 0000000..1111111 100644
 + (5725 - 5850 @ 80), (30)
 + (5925 - 6425 @ 320), (23), NO-OUTDOOR
 
---000000000000b237db0659bc89e8
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"auto">wireless-regdb: update regulatory rules for Bangladesh (B=
-D)<div dir=3D"auto"><br></div><div dir=3D"auto">Update regulatory rules for=
- Bangladesh (BD) based on the official BTRC=C2=A0</div><div dir=3D"auto">(B=
-angladesh Telecommunication Regulatory Commission) directive dated=C2=A0</d=
-iv><div dir=3D"auto">September 15, 2024.</div><div dir=3D"auto"><br></div><=
-div dir=3D"auto">Enables U-NII-1/2A, U-NII-2C (DFS), U-NII-3/4, and lower 6=
- GHz (5925-6425 MHz).</div><div dir=3D"auto"><br></div><div dir=3D"auto">Of=
-ficial BTRC Notice:</div><div dir=3D"auto"><a href=3D"https://btrc.gov.bd/p=
-ages/notices/6922ee00dbfbab28ce0c438d">https://btrc.gov.bd/pages/notices/69=
-22ee00dbfbab28ce0c438d</a></div><div dir=3D"auto"><br></div><div dir=3D"aut=
-o">User Impact Reference:</div><div dir=3D"auto"><a href=3D"https://communi=
-ty.intel.com/t5/Wireless/6-GHz-Wi-Fi-6E-Not-Detected-on-Intel-AX211-in-Bang=
-ladesh/m-p/1740885">https://community.intel.com/t5/Wireless/6-GHz-Wi-Fi-6E-=
-Not-Detected-on-Intel-AX211-in-Bangladesh/m-p/1740885</a></div><div dir=3D"=
-auto"><br></div><div dir=3D"auto">Signed-off-by: Ibrahim Hossain Abir &lt;<=
-a href=3D"mailto:xbowpc@gmail.com">xbowpc@gmail.com</a>&gt;</div><div dir=
-=3D"auto">---</div><div dir=3D"auto">=C2=A0db.txt | 8 +++++---</div><div di=
-r=3D"auto">=C2=A01 file changed, 5 insertions(+), 3 deletions(-)</div><div =
-dir=3D"auto"><br></div><div dir=3D"auto">diff --git a/db.txt b/db.txt</div>=
-<div dir=3D"auto">index 0000000..1111111 100644</div><div dir=3D"auto">--- =
-a/db.txt</div><div dir=3D"auto">+++ b/db.txt</div><div dir=3D"auto">@@ -223=
-,5 +223,7 @@ country BD: DFS-JP</div><div dir=3D"auto">=C2=A0 (2402 - 2482 =
-@ 40), (20)</div><div dir=3D"auto">-	(5735 - 5835 @ 80), (30)</div><div dir=
-=3D"auto">+	(5150 - 5350 @ 80), (20), NO-OUTDOOR, AUTO-BW</div><div dir=3D"=
-auto">+	(5470 - 5725 @ 160), (20), DFS, AUTO-BW</div><div dir=3D"auto">+	(5=
-725 - 5850 @ 80), (30)</div><div dir=3D"auto">+	(5925 - 6425 @ 320), (23), =
-NO-OUTDOOR</div><div dir=3D"auto"><br></div></div>
-
---000000000000b237db0659bc89e8--
---000000000000b237dd0659bc89ea
+--000000000000be8e810659bcaf52
 Content-Type: application/pdf; name="18337854ab6c487fa749464c7672c8a8.pdf"
 Content-Disposition: attachment; 
 	filename="18337854ab6c487fa749464c7672c8a8.pdf"
 Content-Transfer-Encoding: base64
-Content-ID: <1a03043beb98629afe1>
-X-Attachment-Id: 1a03043beb98629afe1
+Content-ID: <f_mt69c54c0>
+X-Attachment-Id: f_mt69c54c0
 
 JVBERi0xLjQNCiXi48/TDQoxIDAgb2JqDQo8PA0KL1R5cGUgL1BhZ2UNCi9NZWRpYUJveCBbIDAg
 MCA1OTUgODQyIF0NCi9SZXNvdXJjZXMgPDwgL1hPYmplY3QgPDwgL1gwIDMgMCBSID4+ID4+DQov
@@ -17321,4 +17284,4 @@ MCBuDQowMDAwMDAwMTcwIDAwMDAwIG4NCjAwMDA5NzcyOTMgMDAwMDAgbg0KMDAwMDk3NzQ4NiAw
 MDAwMCBuDQp0cmFpbGVyDQo8PA0KL1NpemUgNg0KL1Jvb3QgNSAwIFINCi9JRCBbPDk5MjQwMjM5
 OWQ1NjkyNjY4ZmM1OWE0ZjllZjQzMDZjPjw5OTI0MDIzOTlkNTY5MjY2OGZjNTlhNGY5ZWY0MzA2
 Yz5dDQo+Pg0Kc3RhcnR4cmVmDQo5Nzc1NDENCiUlRU9GDQo=
---000000000000b237dd0659bc89ea--
+--000000000000be8e810659bcaf52--
