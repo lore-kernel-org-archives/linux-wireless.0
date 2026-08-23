@@ -1,135 +1,92 @@
-Received: from mail-oa2-f1.google.com (mail-oa2-f1.google.com [74.125.231.65])
+Received: from mta0.migadu.com (out-139.mta0.migadu.com [91.218.175.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D3A6242D7B
-	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 16:52:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.231.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89CDD1891A9
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 18:08:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787503949; cv=none; b=BEbE+g8ol9xdLILeQD0d5DHVkpYB1DWSb3QTdAyCWqLpNvolMxtIsl8/vyhLCDAeLX6Mps/DIH5LoNTNfP98hSDBZM+YFWSI/g6xNQfjF+O/LMOkjhZmFNJhF9TpxjavntKzyjzvXXZ9ISsj8DHGDKfT297WgttSsKiil8H90K4=
+	t=1787508502; cv=none; b=VC2OcvuVfYPtMEErxdLOsHNFhruM90G1AxZYHP8trFIsE7kJbpRZ0y+it3ADbDCp5N6ZGb7+I6gc3nrZjSxzvJudQIu2iO6Pp5sEQad2kPC7ERiVb3174ErkJE5IPJxj2N96Ll0oyTei5fWfG5JX2rjPJTJEUkJuT6xYBjerBwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787503949; c=relaxed/simple;
-	bh=copDUyRMszbRIqNAsugt2MWx3EsI7GjK4ddKoONo6iM=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=mE1xkWNIAI8A8Bt0Pfunr9xrH0S8M3eiP51C/a8BHxN3SzZlx18waHyLEFpA9dUWmpc7YrOznqycox6St/eK1DMtDube6Dq3Jiv8nmt9H4FLKt/1mMxQC/sQKfZFWy9CL+7w+Bn/ha+C6sIYVebGlKpM4XC36dkYtNgvLAOhtTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=74.125.231.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-oa2-f1.google.com with SMTP id 586e51a60fabf-44cf1835ec3so1204957fac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 09:52:27 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787503947; x=1788108747;
-        h=content-type:to:from:subject:message-id:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=RezAGxIanJHuW5LH+wjmzvg9wFoKszoaBFkcFQbSQDQ=;
-        b=bTSaMdveDc5hI0dD4MgFU9K7LKUbhS7E+mwwtSUXieeuX9RHacxtyQNmv43eJIaQIp
-         5A89AZ7Foq4WK/i6+rX9i0Sr0ZonWAmmdpdjeuvdjKJ/VbitLM9cIVr2jUlYjDG1jtz/
-         XYJYRNsU5hLLPHCI3bFTRLaU+5CgdcRLpBqUxTCeq9p8lX8H9+r27Egp1lORNbdC84Ve
-         ZHLDxrm90Q4rOAhvRK1u6Jl+oNTsQO2O90EqmHzzjtqaDN6+0r+R7lOw4kr+FtDvnepm
-         0lQbx+erxY6nW89LvymD9vk4AiuhvPV1dIvMbn7of9oG70YAqZarYH1EHu+5suaOQJJY
-         0JXQ==
-X-Forwarded-Encrypted: i=1; AHgh+RpgY9x3mB6k2wzQlef2uA7tk05tImV9MNrc0nLjSUgGVQwUL2IckC6Y9vzB9ILhgy5htu5oX1/1Q/h017X+Jw==@vger.kernel.org
-X-Gm-Message-State: AFuF++mnHzwzCyl2hG7KXPN7qvu7w86yXat7D7L0YfcUHDcUWKjVuii2
-	e1fjgH3c0uoNQsTKtGhougHb7FtTV3+XjhHxYsG65pSNzMXZyiCvkVnq2WqgTAlRoDNCI87dLH1
-	bet3bSh6LucUAvVl4t8FowBL63z4gGfD3ppSe/xMlP5FurKV4MYA2g26hXjM=
+	s=arc-20240116; t=1787508502; c=relaxed/simple;
+	bh=Oh83goEouOlQ/vDQf3TwfhKOXlMvH5Ov0tIE/JvQI5g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=CWIE0DEl6qdOSGIvkr2aUEtfUpthv/KChh9+NNpYXT5J8CRc0UFOh5OwuZ8oBL9yBFe6lxWyIfnD3ehbfFBW66IsT49Qk3M7yGkgT8E+tXu5aXwoypnHtDfvVv95q2kFJ5Q/bammy9WrmcBPPzOiXqH73v74dfbAfsM0PvK2JLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=VxIl4qBZ; arc=none smtp.client-ip=91.218.175.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="VxIl4qBZ"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Oh83goEouOlQ/vDQf3TwfhKOXlMvH5Ov0tIE/JvQI5g=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787508497; v=1; x=1788113297;
+ b=VxIl4qBZpEDB191X8tUfuN6eULt7M7TzcjdHEiaaIu3SM3h0Nltbq7FdGpuiAL0Nqy8bn6M3
+ 8i0MyRYmDwjmKpaF7oG1/U01nf8ZL3pLTrbSpnnYXIUKbn369fF+AZjyCiGN4zqAPSRILd8P995
+ /4DQJmWSTcJaO7vRgm24RdgWJggIvUG1gVXPIAsWdS82nlN4JAdU+iur6IOXoE2pQ3C8Bvrq1Db
+ MyS0svGhANL3fidEn4MFF/PNxXOBsl6vzPdRXoVKufINSbTti91PPVnisL37hIgyS3GvM/tWYU4
+ BY+X70YQdghwSn2LMUmNSisnnZSCOVwRZf2O4mLVCvyIQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
+	by smtp.migadu.com with ESMTPS id 67df95abeecea53b;
+	Sun, 23 Aug 2026 18:08:17 +0000
+X-Mizu-Trace-ID: 67df95abeecea53b
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Pablo Diaz <pablo.diazv@pucp.edu.pe>,
+	linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com
+Subject: Re: [BUG] mt7921e/MT7902: firmware programs near-zero Tx power for all 20/40 MHz rates -> assoc fails except at close range
+Date: Sun, 23 Aug 2026 11:08:14 -0700
+Message-ID: <20260823180814.4081175-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <CA+Hv-VrxZV6yg5eBBRsUrNFOzCx9upS735RDO-pfPatUEdWz4w@mail.gmail.com>
+References: <CA+Hv-VqAQ38g9hGf+-nBcpRNZrcowicSejRQKgBswPOR-o+adQ@mail.gmail.com> <CA+Hv-VrxZV6yg5eBBRsUrNFOzCx9upS735RDO-pfPatUEdWz4w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6820:2016:b0:6ae:4d57:a5fe with SMTP id
- 006d021491bc7-6b16b4cc8e2mr11588208eaf.20.1787503947074; Sun, 23 Aug 2026
- 09:52:27 -0700 (PDT)
-Date: Sun, 23 Aug 2026 09:52:27 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <6a8b254b.91706f20.16b6e3.02c9.GAE@google.com>
-Subject: [syzbot] [wireless?] memory leak in ieee80211_mesh_csa_beacon
-From: syzbot <syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com>
-To: johannes@sipsolutions.net, linux-kernel@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Hi Pablo,
 
-syzbot found the following issue on:
+On Sat, 2026-08-22 at 23:00 -0500, Pablo Diaz wrote:
+> Whether the BIOS tables are bogus or we mis-parse them, mt76 applies the
+> value with no sanity check.
 
-HEAD commit:    bd5f485f3f02 Merge tag 'soc-arm-7.3' of git://git.kernel.o..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=16795679580000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=82c3db8c83e3e016
-dashboard link: https://syzkaller.appspot.com/bug?extid=f5752cd6b94fe38be666
-compiler:       gcc (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for Debian) 2.44
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=17913a25580000
+Only just came across this. Nice bit of digging, so here's the other half of
+it.
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/5cb73cc49d3d/disk-bd5f485f.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/dec5db798cfd/vmlinux-bd5f485f.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/a7a15e3d5e4d/bzImage-bd5f485f.xz
+Your -1 is the tell. Those tables are in half dB steps, so it's claiming minus
+half a dBm, and that isn't a cap anyone writes. Real entries in there are small
+positive numbers. What you're looking at is the driver reading bytes that
+aren't limits.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+f5752cd6b94fe38be666@syzkaller.appspotmail.com
+Same flat 4 showed up on an ASUS laptop back in July, an MT7922 rather than
+your part. Turned out the country list on that thing said one table layout and
+the power tables were written in the other. Driver takes its version from the
+country list and reads everything with it, so both tables came out a byte off.
+There it landed on a zero. Yours coming out negative would be the same fault
+reading different rubbish.
 
-2026/08/19 20:15:25 executed programs: 5
-BUG: memory leak
-unreferenced object 0xffff88810a69b000 (size 1024):
-  comm "syz.0.19", pid 5915, jiffies 4294944112
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    d8 23 c0 25 81 88 ff ff 00 00 00 00 00 00 00 00  .#.%............
-  backtrace (crc 46b98ecb):
-    kmemleak_alloc_recursive include/linux/kmemleak.h:44 [inline]
-    slab_post_alloc_hook mm/slub.c:4597 [inline]
-    slab_alloc_node mm/slub.c:4917 [inline]
-    __kmalloc_cache_noprof+0x359/0x440 mm/slub.c:5485
-    _kmalloc_noprof include/linux/slab.h:988 [inline]
-    ieee80211_mesh_csa_beacon+0x2e/0x100 net/mac80211/mesh.c:1547
-    ieee80211_set_csa_beacon net/mac80211/cfg.c:4674 [inline]
-    __ieee80211_channel_switch+0xb22/0xed0 net/mac80211/cfg.c:4795
-    rdev_channel_switch net/wireless/rdev-ops.h:1168 [inline]
-    nl80211_channel_switch+0x39b/0x780 net/wireless/nl80211.c:12234
-    genl_family_rcv_msg_doit+0x12e/0x1a0 net/netlink/genetlink.c:1114
-    genl_family_rcv_msg net/netlink/genetlink.c:1194 [inline]
-    genl_rcv_msg+0x302/0x440 net/netlink/genetlink.c:1209
-    netlink_rcv_skb+0x89/0x1c0 net/netlink/af_netlink.c:2556
-    genl_rcv+0x28/0x40 net/netlink/genetlink.c:1218
-    netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]
-    netlink_unicast+0x38f/0x4e0 net/netlink/af_netlink.c:1345
-    netlink_sendmsg+0x335/0x690 net/netlink/af_netlink.c:1900
-    sock_sendmsg_nosec net/socket.c:800 [inline]
-    __sock_sendmsg net/socket.c:815 [inline]
-    ____sys_sendmsg+0x54a/0x580 net/socket.c:2709
-    ___sys_sendmsg+0x101/0x140 net/socket.c:2763
-    __sys_sendmsg+0xcd/0x140 net/socket.c:2795
-    do_syscall_x64 arch/x86/entry/syscall_64.c:61 [inline]
-    do_syscall_64+0xe9/0x530 arch/x86/entry/syscall_64.c:84
-    entry_SYSCALL_64_after_hwframe+0x77/0x7f
+I sent a patch for it a couple of weeks ago. It throws out a table whose size
+doesn't match what the table says it holds, so a mismatched pair gets dropped
+and no limit gets applied at all. That machine's bytes and the walk through
+them are on the issue behind it, if you want something to compare yours to.
 
-connection error: failed to recv *flatrpc.ExecutorMessageRawT: EOF
+https://lore.kernel.org/linux-wireless/20260811232839.515463-1-lucid_duck@justthetip.ca/
+https://github.com/morrownr/mt76/issues/62
 
+Whether it covers you comes down to whether your tables fail those checks.
+Your MTCL, MTGS and MTDS bytes would settle it either way. And if they come
+back well formed, then something else is driving it negative and I'd sooner go
+find that than clamp it. A bad parse lands on a plausible number as easily as
+an implausible one. Which, imo, is the version nobody ever notices.
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+Devin
