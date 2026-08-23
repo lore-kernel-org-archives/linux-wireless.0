@@ -1,51 +1,78 @@
-Received: from mta0.migadu.com (out-139.mta0.migadu.com [91.218.175.139])
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89CDD1891A9
-	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 18:08:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A3622D3A75
+	for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 19:57:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787508502; cv=none; b=VC2OcvuVfYPtMEErxdLOsHNFhruM90G1AxZYHP8trFIsE7kJbpRZ0y+it3ADbDCp5N6ZGb7+I6gc3nrZjSxzvJudQIu2iO6Pp5sEQad2kPC7ERiVb3174ErkJE5IPJxj2N96Ll0oyTei5fWfG5JX2rjPJTJEUkJuT6xYBjerBwU=
+	t=1787515059; cv=none; b=KIcLx3d1qDU+k74ZYIk5Yo/UmCdeN1t7fhfjHiHOOOX0CKYiS+O8Bd9gmXLtKvBRqGVoG6F6DJfB3bLlb7SjPsBw+vlQQKKpCzG6ONudrhDHtEHdjALgVSFBsIAlvU1rm6phM9A1p8APgE44B6pOp0laRuRO1lninafaZhk/gW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787508502; c=relaxed/simple;
-	bh=Oh83goEouOlQ/vDQf3TwfhKOXlMvH5Ov0tIE/JvQI5g=;
+	s=arc-20240116; t=1787515059; c=relaxed/simple;
+	bh=Gk/7UroqYu8xW3qXwaYdRfxdTRLSMms8GPc4wLd/IMM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CWIE0DEl6qdOSGIvkr2aUEtfUpthv/KChh9+NNpYXT5J8CRc0UFOh5OwuZ8oBL9yBFe6lxWyIfnD3ehbfFBW66IsT49Qk3M7yGkgT8E+tXu5aXwoypnHtDfvVv95q2kFJ5Q/bammy9WrmcBPPzOiXqH73v74dfbAfsM0PvK2JLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=VxIl4qBZ; arc=none smtp.client-ip=91.218.175.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	 MIME-Version; b=Iz2kNCW9jtwrDjT9/5d77tUR5zo1Ohlfdzj62F4NKdisQuHoBunNnlTVK/5CojR3S5xHEObcAgSvLF7sB6cMm1thRlwQEdELtiMxr/b0LrzPccyzrFq1Z+qsTy/ZDJ/1iOq8tiv97b6g4XdoIxoM0ETtUXm8xG2/tgnqMskU9Ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=vTBzdOLS; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="VxIl4qBZ"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Oh83goEouOlQ/vDQf3TwfhKOXlMvH5Ov0tIE/JvQI5g=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787508497; v=1; x=1788113297;
- b=VxIl4qBZpEDB191X8tUfuN6eULt7M7TzcjdHEiaaIu3SM3h0Nltbq7FdGpuiAL0Nqy8bn6M3
- 8i0MyRYmDwjmKpaF7oG1/U01nf8ZL3pLTrbSpnnYXIUKbn369fF+AZjyCiGN4zqAPSRILd8P995
- /4DQJmWSTcJaO7vRgm24RdgWJggIvUG1gVXPIAsWdS82nlN4JAdU+iur6IOXoE2pQ3C8Bvrq1Db
- MyS0svGhANL3fidEn4MFF/PNxXOBsl6vzPdRXoVKufINSbTti91PPVnisL37hIgyS3GvM/tWYU4
- BY+X70YQdghwSn2LMUmNSisnnZSCOVwRZf2O4mLVCvyIQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
-	by smtp.migadu.com with ESMTPS id 67df95abeecea53b;
-	Sun, 23 Aug 2026 18:08:17 +0000
-X-Mizu-Trace-ID: 67df95abeecea53b
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Pablo Diaz <pablo.diazv@pucp.edu.pe>,
-	linux-wireless@vger.kernel.org
-Cc: nbd@nbd.name,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	shayne.chen@mediatek.com,
-	sean.wang@mediatek.com
-Subject: Re: [BUG] mt7921e/MT7902: firmware programs near-zero Tx power for all 20/40 MHz rates -> assoc fails except at close range
-Date: Sun, 23 Aug 2026 11:08:14 -0700
-Message-ID: <20260823180814.4081175-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <CA+Hv-VrxZV6yg5eBBRsUrNFOzCx9upS735RDO-pfPatUEdWz4w@mail.gmail.com>
-References: <CA+Hv-VqAQ38g9hGf+-nBcpRNZrcowicSejRQKgBswPOR-o+adQ@mail.gmail.com> <CA+Hv-VrxZV6yg5eBBRsUrNFOzCx9upS735RDO-pfPatUEdWz4w@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="vTBzdOLS"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c1670dad7a8so486087266b.3
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 12:57:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bairaktaris.de; s=google; t=1787515056; x=1788119856; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=drU16NpqjOVFYwneScziNmmGyeG2YnXzmWqCFYgIDxs=;
+        b=vTBzdOLS6vWwc8BKf2ADBa8oH1s4o6pG+Zvg/RYI73ELvkZrF6G8EEf3IQ6DY7ysuQ
+         iLEkYs+rBdAgYjgoS25h6YjlIXn4RE7C3zCvcPZL5uXu1xZ8/sNNeJ7z+E+Hw8+im9LU
+         O3nZul1T+Jz/ItYRI6XLWalVeWxvghmHgXazNDFuRbLKdf0m4qSakM3ZslRCEMDD9TbO
+         CdyU33POx3ElrxkDQCGO3AE5uVj4n9luABUGDEaLvWT0mdXmiJaAh6T5gU9wLtPR+Rdo
+         qOPrkQ55B3W+fkohUaI5f5/SzMJAUpN/uiRGt2Kc74dxyItLDEXKxQ4lLlGNilvrqtDa
+         Qsng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787515056; x=1788119856;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=drU16NpqjOVFYwneScziNmmGyeG2YnXzmWqCFYgIDxs=;
+        b=BmJlPTvSqkJP/FbeNtj2WvOk14dTP3W4+N40F2buOAq+++SglVvBqfGIHFa5XZYjqA
+         skOr2ac6XeiXgawIweQtbZM67WwDZ1SFu0tqfYjjvjmgr/cltNNFcVBGBo9PUzuSmyph
+         6j0W8gAInshARbWsa725tygm69ojSe4yjSHpoDu5W4m7pto3TkrSw2+0FknrgYrP9mq7
+         a6IUMVladMKhn8TFifPcUpJ8+AKmsdj8snM/TEM0TCyH5m6y5E0zlPYfmnmQAW1x3K2k
+         VDlZRIWA+rvAohNCayp8h5Btjj0EbQPR9jaSSiz4QdujuQ2hvgEyP8BTYg9LnVltgkwo
+         vVvQ==
+X-Gm-Message-State: AFuF++lYYtmP564swQ8IrK6AEkUBuS8UQ1qFQ0YHHjeMuTGLM8U9qQxw
+	AIAc6iWbaWYmNCZ8mAYjlb5AWRPXCiLQFHWZgNyyvr+us9FGL/O+6Hbv/EaouKx0aQ==
+X-Gm-Gg: AR+sD12AK+CkMqbD9O4ML6/Z77JeDLbUq6Ez6y1t7K8SgsRIJEfs70mgkUoriafTmcX
+	vRQsTDw25iF2ysnOSa3YLXPcSri18rwi285EH8iQch1hTAuUD9EWgUhhuFmhORJgBJ06kimiLc9
+	vTTJzecq03afKvGJuCjyITMj1NLKD3rrYLU/Mei5GNbTj0KjgHrfyJQ2/O/fZ+/3y91UQXeaz8u
+	zJjhWV3kdowluCFFNTjvv+fZcOqWeAomQ8OFfjzT8LhuBlJ3OY/2yV8aeAdTW6EuUufgLCZqj2K
+	J3aCBBFe3VNLH7mI3q8ZIBS1YqcXHpTuTHBrhzwAPRWFbjmZQ4UfI46IOXhKwrClXIntv0KYVZK
+	Hx4+gYXyrnNACf3wr7sqI2yWQnKujy8h2dkhuclouvB8T2wpjl5+SRCqwzQWlmTGJJv8o60c8dK
+	sW1KpNk6GCuUVAcs15BTKkhV+/fa0Go/xfha10LL8E8gaXSCknZQqTZHZZV3rS8Qyfe6AVoDPqn
+	bg3+Jwqbnn+cdrIwV0eOHpL+tyWoSauBNTEb8lAiJlfybtPSoCesnQPaYKDKPLknerbtCywmeQ/
+	VhT1KdMkm5YAUp+q68zwStLlF1ZFOdF1BuarcKOIsmLsEiBHlgT734OHUK/ULVFwX/kEz657GKR
+	aV1AclP7Z/V7g2RmOxcT7jDw1bSw8hWY5frWV6mIbSqvhtnFg3GKbC7yOu3qOIhqK7+ELCgB98T
+	Hk2BncpVBTA9RR
+X-Received: by 2002:a17:906:9f8b:b0:c1f:c061:569a with SMTP id a640c23a62f3a-c246a4c6d63mr2074267466b.7.1787515055706;
+        Sun, 23 Aug 2026 12:57:35 -0700 (PDT)
+Received: from Desktop (pd9513a95.dip0.t-ipconnect.de. [217.81.58.149])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249606a8edsm889532666b.6.2026.08.23.12.57.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 23 Aug 2026 12:57:35 -0700 (PDT)
+From: Julius Bairaktaris <julius@bairaktaris.de>
+To: Jeff Johnson <jjohnson@kernel.org>
+Cc: linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	stable@vger.kernel.org
+Subject: [PATCH v1 1/4] wifi: ath11k: free tx skbs through ieee80211_free_txskb()
+Date: Sun, 23 Aug 2026 21:57:00 +0200
+Message-ID: <20260823195703.49198-2-julius@bairaktaris.de>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260823195703.49198-1-julius@bairaktaris.de>
+References: <20260823195703.49198-1-julius@bairaktaris.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -54,39 +81,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi Pablo,
+ath11k_dp_tx_free_txbuf(), reached from the HTT tx completion handler for
+the REINJ and INSPECT statuses, releases the frame with
+dev_kfree_skb_any(). Every other tx completion path in dp_tx.c hands the
+skb back to mac80211, and this one is the last that does not.
 
-On Sat, 2026-08-22 at 23:00 -0500, Pablo Diaz wrote:
-> Whether the BIOS tables are bogus or we mis-parse them, mt76 applies the
-> value with no sanity check.
+A frame freed that way keeps whatever state mac80211 was holding for it.
+A data frame whose socket asked for tx status has a clone parked in
+local->ack_status_frames and an index allocated from an idr bounded at
+8191 entries; ieee80211_free_txskb() releases both through
+ieee80211_report_used_skb(), and dev_kfree_skb_any() leaks them for the
+lifetime of the hw. Commit 29d15589f084 ("wifi: ath11k: Cleanup mac80211
+references on failure during tx_complete") converted three sibling paths
+for exactly that reason and left this one.
 
-Only just came across this. Nice bit of digging, so here's the other half of
-it.
+Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
+Cc: stable@vger.kernel.org
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
+Assisted-by: Claude:claude-opus-5
+Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
+---
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Your -1 is the tell. Those tables are in half dB steps, so it's claiming minus
-half a dBm, and that isn't a cap anyone writes. Real entries in there are small
-positive numbers. What you're looking at is the driver reading bytes that
-aren't limits.
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index cac970c92806..52c4a9924a31 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -305,9 +305,10 @@ static void ath11k_dp_tx_free_txbuf(struct ath11k_base *ab, u8 mac_id,
+ 	skb_cb = ATH11K_SKB_CB(msdu);
+ 
+ 	dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+-	dev_kfree_skb_any(msdu);
+ 
+ 	ar = ab->pdevs[mac_id].ar;
++	ieee80211_free_txskb(ar->hw, msdu);
++
+ 	if (atomic_dec_and_test(&ar->dp.num_tx_pending))
+ 		wake_up(&ar->dp.tx_empty_waitq);
+ }
+-- 
+2.53.0
 
-Same flat 4 showed up on an ASUS laptop back in July, an MT7922 rather than
-your part. Turned out the country list on that thing said one table layout and
-the power tables were written in the other. Driver takes its version from the
-country list and reads everything with it, so both tables came out a byte off.
-There it landed on a zero. Yours coming out negative would be the same fault
-reading different rubbish.
-
-I sent a patch for it a couple of weeks ago. It throws out a table whose size
-doesn't match what the table says it holds, so a mismatched pair gets dropped
-and no limit gets applied at all. That machine's bytes and the walk through
-them are on the issue behind it, if you want something to compare yours to.
-
-https://lore.kernel.org/linux-wireless/20260811232839.515463-1-lucid_duck@justthetip.ca/
-https://github.com/morrownr/mt76/issues/62
-
-Whether it covers you comes down to whether your tables fail those checks.
-Your MTCL, MTGS and MTDS bytes would settle it either way. And if they come
-back well formed, then something else is driving it negative and I'd sooner go
-find that than clamp it. A bad parse lands on a plausible number as easily as
-an implausible one. Which, imo, is the version nobody ever notices.
-
-Devin
