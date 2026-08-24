@@ -1,49 +1,49 @@
-Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
+Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BCA925B094
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 19:53:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106C23876C7
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 19:53:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787601192; cv=none; b=bk+K+C1mJxhUhDkGcCzvscEcWBsSddzQhK+jVDy/ZtwRJ4eLNAbsalda09KjpPfS/EHygNhsIqd1T2sjc/w/vCgPx6p8vG6jVXWwR1umt8538iYcKb3co34ufJpnj80e8bzbfuziAa2qYxS1TClYp5zBPmcm234ExXCjZ72hfXI=
+	t=1787601196; cv=none; b=SsVkYSwo+QTJ+WM1W0DkJ2rE1kOBN4RuRgCvGWlu41TpuHwN8KTzziku0arBB+PfCkBqim0Uz1pwb4gwxstrGLvRd6vE9X11iTBlxsa3tfAmlqD0JvbxVfnh8Cz3yA67fKanWYf/yMFkBLRoY3jGtPpUpqxY9mRvJCdHG8dJ8jQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787601192; c=relaxed/simple;
-	bh=XOIRJa+7yZ7tsMXAC7l6YHGpL7D/rYBCpDEBn2B1jic=;
+	s=arc-20240116; t=1787601196; c=relaxed/simple;
+	bh=yiXha/gk8SdONcZqZTxBqFxcrFRizUBpfVADcOlXNXA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=It6DnQnaDWLDmvlev7r6RKIwfebf2ZLIm3++1d/3jKyACFVyS7+GehCTv0Pc/4YOfBjRhYLro/fRP/yYZGunPhNI2NHboNY6b2G2VEtKN34NhrIPbFTPD/d9hAGYlOVDvUmfSWeNUK9hzSkXaZexn6Ej4XKLMGB2tsGePLNo2U4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.47
+	 MIME-Version; b=e8MuDjPo9DVxqCtBkkwWujXeT+sfYBKxZd304L5IpjHwW+nJv8wN89KgIxzOBLUJ5pFhEM431J1G0zWIf48coUIuwh65i1rhcXfoVHcH57b2nO5k7CqP9BeRsfJyVwfqooO6n4iFfFgec3eUXFbvjkHY0FHlV+yKFWByYiTdKbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-44cedfaab6bso1928826fac.3
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 12:53:11 -0700 (PDT)
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-45eddb6fdccso2168049fac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 12:53:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787601190; x=1788205990;
+        d=1e100.net; s=20251104; t=1787601194; x=1788205994;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=q418RkM6qinLSHwTY7IgT/gNLjtyfu16DuBAIvo7lUM=;
-        b=c4hoSMnsAdOKkki/4ycDYls6nsHCgz7ccBf/7ognYWuIoecmnfUE5dJnGRHIYu1VCY
-         aeRf9PMH2G8Bm6pJ5G4xAd8Z4v997TKi79/wQ3kNWtxvbXRZbeJ7jSv2M625udFOzkCm
-         gKmW+BanrBvoZINmr0qZqGJl5La7xT4chs0IEdeTFzc4E+JLhajNtNRuT64nLLd3UCNX
-         +QcvWuL40XbP70LYLBMyrAFUhCzWljIySEAjL10kNIA1tS/UVYD7xCLr0q4KKZyhCEFi
-         ebP2UzBFPDIQvA3lwNtqr6pwxamufrU1wStsw355WcS8sfCtMEit88cGIQzxHwsgzLkU
-         ZaKg==
-X-Gm-Message-State: AFuF++k130D7Umzzhy5ZyrqPz+v6NVnID0tDWY7ZFyKIIGmtTrkSSmv+
-	tmecMTQqvq+Hqt9CXFvDvcsP1vyeniva0zkIweQduiwX/lTTw0AJsUVP
-X-Gm-Gg: AR+sD10ldUcwRNa5vYlQl6QtEMrRgdzwGDoNpldb9SMfk+SecdbddSxCbp6eKM5aDcR
-	m5imomTPCPRvvaqNT92MaYRxwTocpvms/YipKJKmDXcmyurNRpKXh39yI1KkW4xMulrVQdhTzlK
-	XJpUf7gO+N/a2EUXdTfe4Y/jX3z7YLeERQap1r9pMbUS9iZNzEm+r2Bo1xb5L6xIbdMUIGVCOPQ
-	V+HJr9dZAPbkSyQQjUzfacuX0ksH/aQf+76PdZ9ZpkAKfE9FX+ol1pc5x0e+vgVwB+WaKodg/0S
-	dXJT0PM4WDXy3JrDG1vgDOrUDlt5NAIbt9P6IMaWwSOeXAADGrhO00GoZHlB7uqJpC+7etmwuVQ
-	PjrAvLRrzWD87Vc3EzKd6v0JSPqMijtSYo/Trz6a8X8tafmFYz25ZdSsq8Yf7A+3d8gP3NvjYt1
-	yHUUAvFLe5uLwlTRG5GtAKgrTaSVP7TeyZxZooBj5FBHOyugiOZLu6SUVClsaA/UmjecFR8Ief6
-	rRKV62kwBASJpwbdrIO3Ts/aQs59jj2Dn16CHfjl/9X
-X-Received: by 2002:a05:6870:c088:b0:45e:caa2:4ea with SMTP id 586e51a60fabf-4637fa671b8mr20227908fac.6.1787601190327;
-        Mon, 24 Aug 2026 12:53:10 -0700 (PDT)
+        bh=50u75fL6ptaG9Rq88Gv3OLx35FZRL72ZpUeu9/HT7x4=;
+        b=bADdwToYWGRi012MO8ElzRHDKY5PIU2ED82Ooxjj5+MBuWi1JAgawqiUdm3zvdDrq+
+         AsrvrPCt2Gl/w+d+pPtoz5pOHT2b+0Mf8+lD2OdoQg9HCVJwSiObzMLBPRVsZEYCfrlM
+         90P1KQQlLSLHgXzslepko95Ui9DzNvsTlKNPGLG+V9b+SedOGgPiL4r++RUUkwvrtteC
+         yxyChDfLw3p4pwCnX7GDcRdLS+bdPtksy+m/3epHCtRiKHkdzu+rvX/WfeWPXwQspPxX
+         NqWg+Im4jkwvLl9lii7SCkus0CO8muYV2jgf/+VDoLtHVf8aqWUU9umzqPqPVewP2PUR
+         sH+Q==
+X-Gm-Message-State: AFuF++mM4BOiKuom5rLnkYPlx6PpYbmNcCtYQeUdW1cnTCTvJajc2kYK
+	ZXks90s25aQEXg2SLCWEoRiT2HC9LUTvI++ZkeWoFjs9nA2HW38oRf1P
+X-Gm-Gg: AR+sD134t1nor2rIhSTLSk1etXF1YzXoFDvXjp6SiCP9RZoD+itjTordwwB882ApdE8
+	e+giK8xDuFVy9aNKKCUSzlQMue/MJNF3VFnmtW/u1YO9x7dK5lm7bWvEkVhfPg/YopdQ/cywF6N
+	7f0RvTs2b/wuJCqc3Iohp46d5lG17nFRcZsZ3VMXr0lULHV2KftBsq7a3fuP3hnM/35m/zjvpNe
+	AgLVNZ296eKDsJNCA8lxq8vMD9OInuxYA/2avAoGm63KSeFcamQYY4S3LfOw420uiR2/IAeWM/M
+	cJbyYlSBa6SivIuQvidjcDTolz4llQONayh/f0WIauSo4VqMooADSnxiBXEDMzwwTQadWrz1170
+	EspwQy+h3e1xHbBkTt2li1gsmwnJyfjAXwR1O1x4B5id3zgV09TZGriV0VsYYJA/Re7MgVdfARM
+	zg+4TBPtTSMCYo3vC93XCgXKZjPgm7Af+7jMInoD3W0jbk2esbm2I6/2g2Db1J+4GAqadxBoSrA
+	ajkUBeClikUtJHKJXg/bt6G0Pnp6oN4Y9XkyGfWRLZW
+X-Received: by 2002:a05:6820:f030:b0:6ae:774d:45ab with SMTP id 006d021491bc7-6b19048e8f4mr886552eaf.27.1787601193943;
+        Mon, 24 Aug 2026 12:53:13 -0700 (PDT)
 Received: from sean-HP-EliteBook-830-G6.lan ([207.191.35.252])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-463835bcdcbsm5805896fac.18.2026.08.24.12.53.09
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-463835bcdcbsm5805896fac.18.2026.08.24.12.53.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 12:53:09 -0700 (PDT)
+        Mon, 24 Aug 2026 12:53:13 -0700 (PDT)
 From: Sean Wang <sean.wang@kernel.org>
 To: nbd@nbd.name,
 	lorenzo.bianconi@redhat.com
@@ -53,9 +53,9 @@ Cc: linux-wireless@vger.kernel.org,
 	jenhao.yang@mediatek.com,
 	posh.sun@mediatek.com,
 	Sean Wang <sean.wang@mediatek.com>
-Subject: [PATCH 05/15] wifi: mt76: mt7925: drop unused NAN 2.4/5 GHz support config
-Date: Mon, 24 Aug 2026 14:52:17 -0500
-Message-ID: <20260824195227.12589-6-sean.wang@kernel.org>
+Subject: [PATCH 06/15] wifi: mt76: mt7925: drop deferred NAN local schedule update handling
+Date: Mon, 24 Aug 2026 14:52:18 -0500
+Message-ID: <20260824195227.12589-7-sean.wang@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260824195227.12589-1-sean.wang@kernel.org>
 References: <20260824195227.12589-1-sean.wang@kernel.org>
@@ -69,56 +69,60 @@ Content-Transfer-Encoding: 8bit
 
 From: Stella Liu <yu-ching.liu@mediatek.com>
 
-The config_support_5g/support_5g_val and config_2dot4g_support/
-support_2dot4g_val fields in the NAN enable request are not used by the
-firmware, so stop setting them and drop mt7925_nan_set_2g_support().
+The deferred NAN local schedule update path in
+mt7925_nan_local_sched_changed() is removed for now; it will be
+implemented separately. Drop the now set-but-unused ret variable
+along with it.
 
 Fixes: 0f3605e4f8de ("wifi: mt76: mt7925: wire up NAN operations")
 Co-developed-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Stella Liu <yu-ching.liu@mediatek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7925/nan.c | 13 -------------
- 1 file changed, 13 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/nan.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-index c04b12cbf076..5c6598a0f3b6 100644
+index 5c6598a0f3b6..e6d6af4fc681 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7925/nan.c
-@@ -32,8 +32,6 @@ static void mt7925_nan_set_5g_channel(struct mt792x_dev *dev,
- 	if (!mt7925_regd_is_valid_channel(dev, NL80211_BAND_5GHZ, chan))
+@@ -602,15 +602,12 @@ void mt7925_nan_local_sched_changed(struct mt792x_dev *dev,
+ {
+ 	struct mt7925_nan_common_hdr *hdr;
+ 	struct mt76_dev *mdev;
+-	bool deferred;
+ 	struct sk_buff *skb;
+-	int ret = -ENOMEM;
+ 
+ 	if (!dev || !vif)
  		return;
  
--	req->config_support_5g = 1;
--	req->support_5g_val = 1;
- 	req->config_5g_channel = 1;
+ 	mdev = &dev->mt76;
+-	deferred = vif->cfg.nan_sched.deferred;
  
- 	if (chan->hw_value == NAN_5G_LOW_DISC_CHANNEL)
-@@ -44,16 +42,6 @@ static void mt7925_nan_set_5g_channel(struct mt792x_dev *dev,
- 	req->channel_5g_val = cpu_to_le32(ch5g);
+ 	mt792x_mutex_acquire(dev);
+ 
+@@ -627,19 +624,9 @@ void mt7925_nan_local_sched_changed(struct mt792x_dev *dev,
+ 		goto out;
+ 	}
+ 
+-	ret = mt76_mcu_skb_send_msg(mdev, skb,
+-				    MCU_UNI_CMD(NAN), true);
++	mt76_mcu_skb_send_msg(mdev, skb, MCU_UNI_CMD(NAN), true);
+ out:
+ 	mt792x_mutex_release(dev);
+-
+-	if (deferred) {
+-		if (ret)
+-			dev_err(mdev->dev,
+-				"NAN: local schedule update failed: %d\n",
+-				ret);
+-
+-		ieee80211_nan_sched_update_done(vif);
+-	}
  }
  
--static void mt7925_nan_set_2g_support(struct mt7925_nan_enable_req_tlv *req,
--				      struct cfg80211_nan_conf *conf)
--{
--	if (!conf->band_cfgs[NL80211_BAND_2GHZ].chan)
--		return;
--
--	req->config_2dot4g_support = 1;
--	req->support_2dot4g_val = 1;
--}
--
- static void mt7925_nan_set_cluster_id(struct mt7925_nan_enable_req_tlv *req,
- 				      const u8 *cluster_id)
- {
-@@ -172,7 +160,6 @@ int mt7925_nan_enable(struct ieee80211_vif *vif,
- 
- 	p_nan_req_tlv->master_pref = conf->master_pref;
- 
--	mt7925_nan_set_2g_support(p_nan_req_tlv, conf);
- 	mt7925_nan_set_5g_channel(dev, p_nan_req_tlv, conf);
- 	mt7925_nan_set_cluster_id(p_nan_req_tlv, conf->cluster_id);
- 	mt7925_nan_set_dw_interval(p_nan_req_tlv, conf);
+ static int mt7925_nan_peer_rec_tlv(struct sk_buff *skb,
 -- 
 2.43.0
 
