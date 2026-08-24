@@ -1,104 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-21.mta1.migadu.com [95.215.58.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC9935AC09
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 04:39:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8945B3161A2
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 04:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787546394; cv=none; b=Ry1eGhIbjR4jc2vaa+YYA3TC6nUwzz3DqHi+X2Z8TDgTKmK36w/FD/GN6nlwgy7nVKVp3IAkTzWBE65NZ8ObujxqK1fMWBJO8jRydUiOzpizxOupnBhsrVpoSTJuIOdLoJBpv1hys8gjBAtq3bLQsV2uFVXbBA/7+XmftMwcFA4=
+	t=1787547047; cv=none; b=Oj+uBsxN972rgg+hBrSLzg1EhA2H7Nxphkoi89M83QeN4f9tLyUnMBp9bSLnEM7TDgYlZif3gEwZdfLsA9uyicSPAZRJDYk7pYfTEAOhycjAiVoO/AVGZ3u9BgbR/1896QCm1bzukd6GNQLxMo0HBmM5/RyyAEQfW+o/5VWGIf4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787546394; c=relaxed/simple;
-	bh=bamvOZ5tUCgdaqL7D0Y/4JjSmYGsOedivVLNrTZcQ6U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lG+Jd44W+BjZ8yMaR9+l+9dfEikD7u7ieLQKP3vBqXOTimhz++sssjPMTn7+5kHduf7nQynt+c27MqgjLcpAd6EXAVj+wjjfiE2KdLcDjOverxDNSmAq6cAJGmmZWPOB9t5HaR4RDKLyyOGRNM+PilVK/mODRGgalrGGHB2Up/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G9TpU+IK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787547047; c=relaxed/simple;
+	bh=e3byyq4g1dQsxQ7PXakyFcYRfesWBe/OXxD5///SQFQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=d9HuhzcFF0Ij8UcnEKw+EjpPj3QqEsV8vEt4qyQzyz1KsHbDaJXMDMmIQ+kygqOTOFML2Og2RC5dxrYG4gO9AI8sgYwgLo+mZyLOeuHKaKTkVknxu18YXig3po0e1s/4/yZzcE3+XQooVlstfYHOUIaL9x94azyx7BMb+7ZoTbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=tBsH6hJT; arc=none smtp.client-ip=95.215.58.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G9TpU+IK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16DF51F00A3D
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 04:39:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787546393;
-	bh=bamvOZ5tUCgdaqL7D0Y/4JjSmYGsOedivVLNrTZcQ6U=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc;
-	b=G9TpU+IK2J5ouDaTwB5Qa7BPgw9uKp10IUHnobQ5bD2NgR9dhDvp+P6L3PtjpyQ3k
-	 4ozB1mtBei7uPrdOuy+vBPo4Rfe3wPLyWs1fkrCvbpONhKVNoDfuFTuQxksBgGblub
-	 A99k8RMQsppIgemXcJkfKqvccv96Ky9w0VoeNHPmiC6XQIRTdukeq2+clcw+ZjFq8W
-	 ce2Yi2zzZ2r2zXgjT1eUjP/Imx8nPNVzxcEyYfOIwmnqOmlAfdCWcSOMhdh4xFFcA4
-	 f6HzAC/kslCr7/CtJ+WP2gB2rVcawEm5D9ovXQceOTyyteUBHfNa37PtpGmuEbNFCo
-	 ucRdkE+8IcZyg==
-Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-39f75e1e9d9so20397351fa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Aug 2026 21:39:53 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AHgh+Rr6DLMV6/yh47OBZRYky5rc3108Mk2nIt54l3a50V6DSgndIMW9KQgrnl8XBcbgvi4duBcQFBri1Uz0bD+pxw==@vger.kernel.org
-X-Gm-Message-State: AFuF++kmkhFy4kXvQ474rhalQf3nKu1z9ZQXvqHjvWLF3pgrNi8a4L8e
-	5y7kVsXtMudk5aDnYF/XNCogCaS3srydhmNlqyUr1Sn4A0/GQaBY97FpuQO1BIKrLLQyt6fX6Nl
-	+zG67SQMPNUjaAPjgqa2SJtbIcglGVsE=
-X-Received: by 2002:a2e:bea6:0:b0:394:3b62:b6aa with SMTP id
- 38308e7fff4ca-3a1aec678fbmr51224111fa.12.1787546391501; Sun, 23 Aug 2026
- 21:39:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="tBsH6hJT"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=e3byyq4g1dQsxQ7PXakyFcYRfesWBe/OXxD5///SQFQ=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787547042; v=1; x=1788151842;
+ b=tBsH6hJTEWsBQAfR5i9RxEdcU6B+x8UR4R8KgfR8OEGuXFVFiR3akgj0tg4uV/0sZILue6M2
+ MfLFhJFFP8iozFzqJ5Kac9ej9SPTIZz2MynjQB6vK9Ubp7y+PwnczbLpTFlvGCJYjQQDdN49lG1
+ 4S5IXQ8hS2XiOLVzMhy01/gRZImUJqnACNraOD/AfHXkmlAUymUPeRfeHjAwg7mcDrmdcH6PnfD
+ 4rGD6cY3sJ/AfC4FIm7wpPj1rL9XQ3/6dSrvZSz5lsWAkcNjeDTdwhA9Fr1uKa2frHhfyq2x8OO
+ 7nYlET5jgx9WL5RevkF2OCMHwnzWGuyImagOTDJ/zKlZQ==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
+	by smtp.migadu.com with ESMTPS id 6a715984413e6a0c;
+	Mon, 24 Aug 2026 04:50:42 +0000
+X-Mizu-Trace-ID: 6a715984413e6a0c
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Jonas Hort <jonas.hort@posteo.de>
+Cc: Sean Wang <sean.wang@kernel.org>,
+	Felix Fietkau <nbd@nbd.name>,
+	Thorsten Leemhuis <regressions@leemhuis.info>,
+	regressions@lists.linux.dev,
+	linux-wireless@vger.kernel.org,
+	lorenzo.bianconi83@gmail.com
+Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz link active
+Date: Sun, 23 Aug 2026 21:50:39 -0700
+Message-ID: <20260824045039.50873-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <c64f5fa6-4c61-45b6-a513-b971e59d7723@posteo.de>
+References: <503eb10e-80cf-493e-95fd-04fc0f94ce01@posteo.de> <e4bc5ce3-9a6f-4365-9d36-f6440ded0865@posteo.de> <c64f5fa6-4c61-45b6-a513-b971e59d7723@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CACeKqZC+RCVtvGMaWmNYLnyA0OKsKM3YmaMxNk_KZqr3Ekji3Q@mail.gmail.com>
-In-Reply-To: <CACeKqZC+RCVtvGMaWmNYLnyA0OKsKM3YmaMxNk_KZqr3Ekji3Q@mail.gmail.com>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Mon, 24 Aug 2026 12:39:39 +0800
-X-Gmail-Original-Message-ID: <CAGb2v64zk4y4PBE6q6vendj_Rfnh8tZfk_sqoJJWghZEj5gOow@mail.gmail.com>
-X-Gm-Features: AcwNN1XH3otKghPwxmWqDEXTHV3SQNRzM0wewEl9BEaMb8A9id6-g_EuCy3q6gc
-Message-ID: <CAGb2v64zk4y4PBE6q6vendj_Rfnh8tZfk_sqoJJWghZEj5gOow@mail.gmail.com>
-Subject: Re: [PATCH] wireless-regdb: Update regulatory rules for Bangladesh
- (BD) for 6GHz
-To: Tahsinul Mohsin 2524687642 <tahsinul.mohsin.252@northsouth.edu>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi,
+On Sun, 2026-08-23 at 20:54 +0000, Jonas Hort wrote:
+> Bisect is done. First bad commit:
+>
+> ff643b81bc38eaff6c0ab783a62e4ba9e10d2476
+> wifi: mt76: mt7925: pass mlink and mconf to sta_mld_tlv()
 
-On Mon, Aug 24, 2026 at 4:19=E2=80=AFAM Tahsinul Mohsin 2524687642
-<tahsinul.mohsin.252@northsouth.edu> wrote:
->
-> Dear concern,
->
-> The Bangladesh Telecommunication Regulatory Commission (BTRC) has officia=
-lly approved the 5925=E2=80=936425 MHz frequency band for shared use in Wi-=
-Fi, IoT, and WLAN devices.
->
-> Here is the official BTRC circular (published
-> September 15, 2024):
->
-> https://btrc.gov.bd/pages/notices/6922ee00dbfbab28ce0c438d
->
->
-> Could we please get the db.txt file updated for country BD to allow the 5=
-925-6425 MHz range?
+Jonas, that is a careful bisect and it holds up here.  The commit is Sean
+Wang's, absent from v7.0, present in v7.1, and ea757740dd87 really is its
+parent.  Adding Sean, who knows this code far better than I do.
 
-A reference with the band and power limits, as well as any other
-restrictions like DFS or TPC (andif TPC is required, what is the limit
-if TPC is not implemented) needs to be provided. We cannot put random
-numbers into the database without justification.
+The part I would look at first is the link count.  Before, it came from the
+number of valid links, capped at two.  After, the primary is always written
+and a second only when the caller passes one, with the count taken from
+however many got written.  So a two link station updated on the primary
+would tell firmware it has one link where it used to say two.  Subtle, and
+easy to miss in a change that is otherwise a straight simplification.
 
-The BRTC circular only says that the band is allowed. It does not provide
-power limits.
+That is from reading the diff rather than reproducing it, so Sean may well
+see something I have not.  Nothing has touched that function since, so 7.1,
+7.2 and mainline all behave the same way.
 
+Jonas, yes please to the bisect log.  If the setup is still up, that commit
+also added a rate limited warning about a missing primary mconf, so it may
+be worth grepping your failing runs for MLD_TLV_LINK.
 
-Thanks
-ChenYu
+Thank you for the work you put into this, it was not a small ask.
 
-> Thank you.
->
->
-> Regards
->
->
-> Tahsinul Mohsin
-> Undergraduate student
-> Department of Electronic and Computer Engineering,
-> North South University
-> Plot - 15, Block B,
-> Bashundhara Residential Area, Dhaka 1229
-> Bangladesh
->
+Devin
