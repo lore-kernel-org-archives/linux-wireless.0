@@ -1,190 +1,209 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+Received: from mail-yw1-f196.google.com (mail-yw1-f196.google.com [209.85.128.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E11239CD0B
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 07:43:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787557384; cv=none; b=Cgq3p9JcvkcEuSw/VwUZ5GniElDfWFeNsWV0HzXg6gzR/2bnpLRCsF7qF6cG0f7r8XzvukCLziDL33iDUZNCR4HQ48kxvB6HXct0S7plyMkPkAhy/H9Bf6Hd25vfpcHoMod47DoqQUjtCLpedODJLO40xcGQ3CxcaP02gNogF0M=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787557384; c=relaxed/simple;
-	bh=jBU+6dFYFt1wbcIcVm2pNiBgqWCTHfH0WI0xzF32+/o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=I2rOY/Vdqxx3uyFuIaY2gE+MrsWtAzMgyI1BKBM5c1hUykSVQF8VSKmYgukKFhyyh5yjaXnEOIUrjPrz8rpUQ3/aW56ZS5vg5qyre8hCGdfZauuaEvlx99JpWDryR3JJ9gq1MDT5EJbebYaRx22vHnSwJN2ze6R5Fi+VcX/E3Iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de; spf=pass smtp.mailfrom=bairaktaris.de; dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b=pUXRvOHt; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bairaktaris.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bairaktaris.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728BB3AA1BB
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 08:16:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.196
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787559370; cv=pass; b=hDi3BR+ZAHmQW8Mi+U4cFrGEEZ0UBaDwHBESSqnapQzG7LoM3atnqV4izuqIU9yDP4zzcCNLAGBfI0L2eu0b5Dn+XaMOJM8Olf/c/tsfPPe7OYVJRhLoGyi9o++QCdMjtOfFDKjiWBDwYLqIg+1jqbWnIo573NdH5XTxUPLTU9M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787559370; c=relaxed/simple;
+	bh=v83smgx7ztvH3J6UYTs3bXMHXtPgYKSC9j+n3kf0ejo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ueZF+5EIpP+ffrcKoP9pX6jDoOgabNyG3YjP0Tb3a9x7hP6BHUXDF0bYIV13eEyfOUqBhdY8C6ZP47ei1My/2FcU7e8CfSxf9nRu5XQSanmS7MzLn1qVx6MXggqEHfQDYwdRDDk3JckFjfiG/Y6mf8p8w7YrhPLKzBnvjldd8sU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JYJ5Qx+w; arc=pass smtp.client-ip=209.85.128.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bairaktaris.de header.i=@bairaktaris.de header.b="pUXRvOHt"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6a374bea882so6041549a12.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 00:43:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JYJ5Qx+w"
+Received: by mail-yw1-f196.google.com with SMTP id 00721157ae682-836eac5682bso56914057b3.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 01:16:07 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787559365; cv=none;
+        d=google.com; s=arc-20260327;
+        b=m9tHj4CROjSm66Twq8CKgf83OZ38BGoHvujT0BE8AOfCftMdYjJG7zBmaj+YTwkbDs
+         /d6Bc+q+NE5kYcry5sPat8RsoNcmVcamUelj/wvmG6owN42KX/q+l++UQJvwhH5z+lA/
+         9MUPy9NJdPsEigcOg9KLmOHPd/9je33JGwO3jJWvV6FrLk/d8O7YKrpgS9UwaDbr4EiZ
+         BvcZRyuy3N2sWodHGUJXbHo/ofYhGT7OsG8vmzQbpaltN2lDtNpvxw0rPzjRlwrmCaEe
+         oeEnmjWFOiR3oosa4wLdVTHmp99dBxLKUJBnfZSpxChDuRp3e39zLRmbPQP8pr9rfbGS
+         VmJw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Y8fsAv1K91Un6gSOD8KCR5sbE7jcf0afTaQzn8RTJQw=;
+        fh=A5BFOlfGtNtLLVvovqo+K1m+qjaXwsuvZvBwq/NsLuU=;
+        b=EFFK62nR26+tz+8FuydE2DMOtAamBtjamwZtNvyAkpcg2yPR2Xb8o3Myg1r6UtKcZw
+         FpSDU9XmpWulepSMI7xNcUf1z4UTruaR8I3ZCwIb3pwREYL3fL6OHnGgbp7CTBK1UC6C
+         y6CQ5a3EzvyARsf4QjgcivgFnV5m3ikYuD0RSj6StfxE+kyuDs5tiBK+1MIibryNgCwC
+         3pNGc2g/hYH/2IjojgalZNeC1KucY/17sBdzy0o/7B88k3jfURLeRBG9isiVYoLaQPqn
+         X1GdmXIUO4bVeoeFS7E2Z/qruWa2mqLp3Sk+4JAfW10Qjllolcxq3oaaXwsCNLpFFXgk
+         9K+g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bairaktaris.de; s=google; t=1787557380; x=1788162180; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TAcQKsiHHrhl5U4tNXvyThYZ1gGnGcacUCSiyofhb0k=;
-        b=pUXRvOHtcSA/5EKH3CHYkdVu/HVXIGhppMietdBL+VTEj5cfxpwlu3xkIMbX+S8Eou
-         mZO7LlZ/RWfHY9vaandD+OH/wtwrLVHONOXAqLDC0Q2j1UiGiq2qhcqEpDFw4iVKfNpm
-         QH0NJ/kWH1MfAK3VsUy4wwoxVDWJpb31sCgRCuoOPl4JtZcEcAAXZp9kqySrCq+zbUfw
-         iWETGgENAjt5okjnNUaN0klEZJwkt3IcH0vkj5TFBd1VVKRxC4Rfk2EypS2PqnsTdtv7
-         I/DyYKeELeSl+iPxidZx5f9GNJdC3U+old4LE61H1+HME3Rp+aZdSV0o9Gd5Ta+K8ZMX
-         k/OQ==
+        d=gmail.com; s=20251104; t=1787559365; x=1788164165; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Y8fsAv1K91Un6gSOD8KCR5sbE7jcf0afTaQzn8RTJQw=;
+        b=JYJ5Qx+w25aEo2x/eWP8r7Um0A/Um/WUvJ+WHZUAnkwSEzZTp15STLTpo2mWlni+XC
+         dLNOXJmyR0bJNfz/TMNdmHcMXF6oHpIQpTi1HgCLJSr7j5HoentfYCPSWTll7Mf0sPh1
+         o59d6UOksKlkWrSJBPFI2TsLA8Py1CBxqJ1VKA9tKsXzUWw27FBD+cwCIJfVIqWC6nd/
+         fCge47FGrrZWZwasxizTGg3D+vT+MVhUYQxZ9JcmRHwax5wtnO4ElUobDSXgNQTwj9Fp
+         F/gvkWUxn+Xq0oEdHVid971wWSKq1bQ3wK+gVoD2/dljAWXtsjp6xDkzy9lULZee9VEY
+         luAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787557380; x=1788162180;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TAcQKsiHHrhl5U4tNXvyThYZ1gGnGcacUCSiyofhb0k=;
-        b=ReA9kHUIMmC3+DmlUz8pienZAyVKl+gfWAC5A2Amixbbva87tHJaazE56X9QrDTafO
-         zGEp1x2jwQbPilKxaJScKpVXJSHrJwR8zKQTloI4O5uQTgwxuqXLxjeEmfdWGhioixJ3
-         jJ8zYg1pq2IhMyw5XA33DOwdkXevYzmgweyBoasvslqiRoE+FuQuUbyCuIX29uewdMJl
-         uVw+ASpbb+HzrjY/ZneMnNTO55U09h6SFfKsMCEQDjYOVedWHg59F3FQ+rsqeV0AMTtz
-         gitWco4IEB6gB2fdpZdbHizQLh/4w8oqYErMLl0GdUMh4HspgIcyMx+p7MdJbvG6Boxc
-         d5hw==
-X-Gm-Message-State: AFuF++nSsCF7coNL18qoFXU37BD0n5nGQ4Kx3cWe9Rt86al9IwTmmr1i
-	XC9Fih/0kvc3fCA1lnggokxxn/PyTxjSIE/3W/AdlJBygbxuhG4gYEJmWrt+/Q7cjg==
-X-Gm-Gg: AR+sD11PhWOpUAVE9JrfN0xC99SK2QYvxbVntuvyxx/yFDnMnqswJ6oi3Zv8WZ8IQlw
-	2ymxbQsZ+pbkqvWRDtmlZMitpC+1TTLgv6nKZV82UkAB7hp0L9DDW1TKv5qKC94FeQb5jNBN916
-	rc+wm7Inb7U5DmoKWytv4ciJBOHHVXO5M5JAXmhaE25OSjVSJy5hjBSNSA6ggt1/mnphu10BZPa
-	zgV6UzB2iScBDjpJanFYUvGfI9XSuaVOe+7t2QSy65pnJl8j5JZ5Mj21eOz5T9qTfkYHnTHTl5D
-	0XGZNQZ2ZGm1DAET3Xy4qvS1vmNSwr4fR4OnTDES55Q1DlihgJczWEAvh/W0L7SUmaPHSVID4Ot
-	Z9ZGhXqBcrVBon0ePoUaBl/Q0rlb0CHR4exkKHhpXtDC8jvgJ1wyAbtWWAPQ2ayBqKKoF8t3Kvb
-	F6YPlnNfrpQ6R/stS8M9iuc2uJbBlv017WW+zv5t6M18d3kV0B5slHA1u9lk9T37UIu2yBrW1Eq
-	0MsZ9lSgbrKw9bdMH0y/+vwdC8Rei7cCEe+STE3fMWLyH9oZSZCZebMSYvkxsOvz2+1bGSO5oXI
-	UeCY9KruE4E7a9iTIaSksQREo1nY2yb0FruogDMJpJEzCcfUK2vP4oA2jxxXFCnxzCLvLJ9i2uN
-	tFEwIXbhVNim0bbgb45r2zZkPElrquU8cVUgg6zDOw259YO8P2RF18Fi8sTezcQHe62oAZIEzbx
-	qa0wByd6MLDrNDRfTxSJpvr7SQ
-X-Received: by 2002:a17:907:98d:b0:c12:b2db:873d with SMTP id a640c23a62f3a-c246a2ec634mr3075330866b.5.1787557379883;
-        Mon, 24 Aug 2026 00:42:59 -0700 (PDT)
-Received: from Desktop (p54affeee.dip0.t-ipconnect.de. [84.175.254.238])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249685ef7bsm1261549266b.52.2026.08.24.00.42.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Aug 2026 00:42:59 -0700 (PDT)
-From: Julius Bairaktaris <julius@bairaktaris.de>
-To: jjohnson@kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH ath-next v2 9/9] wifi: ath11k: budget the tx completion handler
-Date: Mon, 24 Aug 2026 09:42:28 +0200
-Message-ID: <20260824074228.2114579-10-julius@bairaktaris.de>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260824074228.2114579-1-julius@bairaktaris.de>
-References: <20260824074228.2114579-1-julius@bairaktaris.de>
+        d=1e100.net; s=20251104; t=1787559365; x=1788164165;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Y8fsAv1K91Un6gSOD8KCR5sbE7jcf0afTaQzn8RTJQw=;
+        b=Cof8s2utgJ8ng8cAQf6UjZHV2V5Y25D7giM2WucSn1e18Cvac3yRumAZbrVPfZnXNy
+         olwrujBts6iLtuDP+O/mzP7M7i0rD4FRhFl/+EqIk7wX6rBEiDycmS8QodvpTAtu7AEG
+         7XHDmMJdrTeclLrpT2nMY/Lbd698du39y84U5sfEAbQZxqncN2X2HvbHY+0Zqdw4iG9h
+         GxD3+QiFDdy4BxdNwKqvb3Nw7fit8KnNSS8Sqty216qgLsO+6MSpgvOtjGiln2V7Yf4u
+         8DTuUQYqdzhxUGeVOUWO+dCB9bNuu8nd2p41wARBQWK8aOplT6WLVwAE6g/0OtvhauQP
+         CJQA==
+X-Gm-Message-State: AFuF++mXjvu05ZlafLhjoxmguWN9xWa68LyyNsU3tuLEDdOJFtsoORQy
+	TShxs/iBpBo1y8ywWY1jfkcJveMpqqrnfZKiRHaIwUs72YQCYi4PW1ITT2Upxcldzr0tBIN3IIg
+	zV/Z70G51w/8HWZ5BteugthYNW/XXVmIyIThBCsi6fw==
+X-Gm-Gg: AR+sD11qZUI8zt2yW9y82+0cOlSpSOcVsbg7Ii+FQuEc9aIpoYUz/3rZ7fyOuSqasWV
+	nhGRzBVEEo/FknAKlb9NeRqBiFyHklxC2fZMemGea1E1NLZQ0g/uRpspHKX0qWuKrJx+GLwq2tw
+	EUIxpE+5C5uS8wYZQWR7SUPsTAYwQ4vwlLdPCeikiN9v4HVQ+4YRcTmnHMD95zbA67evOFAHYo9
+	Tm9NY/ofDfRuGtHAAm6oW924sj0x0OlhToDu8n9IQQ9W0F+XHM54OdKfyhJs8vg9CYRd/3IOfaP
+	VAeq8zYB/pWg1ovNmJUfdE1okh9cgnE9BFGivJ3KKdMHQOVXC9VhYK3OOTCLW9IDcrOzOu0joHW
+	xp7iKujTMEBxgQITPj21BQAv5349hLh4cD5XyBp6fNU9gpnJZW9l0Npz4xA==
+X-Received: by 2002:a05:690c:b96:b0:82d:8dc0:9cf with SMTP id
+ 00721157ae682-8470c1665aemr134502787b3.13.1787559365355; Mon, 24 Aug 2026
+ 01:16:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAJF5HCtEvb-aiusJuzmCvu-db4orDwsSnG+mOfCbLXXYRCbtvg@mail.gmail.com>
+ <CAGb2v66bvMC9wU9gYknRdM+0oG7UcGquHCu5KYiwJjWZDRtk1g@mail.gmail.com>
+ <CAJF5HCtAVMbarNYDkrKWE97Lib+YJk8ZE+5eWsEZ4fKVTp8tOw@mail.gmail.com> <CAGb2v66-ee1n9E2-GmFZu02HRmFFWPQ1KB-L9uPQcq1i5HSpEw@mail.gmail.com>
+In-Reply-To: <CAGb2v66-ee1n9E2-GmFZu02HRmFFWPQ1KB-L9uPQcq1i5HSpEw@mail.gmail.com>
+From: Ibrahim Hossain Abir <xbowpc@gmail.com>
+Date: Mon, 24 Aug 2026 14:15:54 +0600
+X-Gm-Features: AcwNN1VAObvE3DgFeXTbISGv9Hi8oremEZygJwgnlwIVruZknGGCk1Czd7Ce4bg
+Message-ID: <CAJF5HCsYhv-JTMvXRHLesuOFsVFnySqEKWYzK6_B-bWEoAEW0g@mail.gmail.com>
+Subject: Re: [PATCH] wireless-regdb: update regulatory rules for Bangladesh (BD)
+To: wens@kernel.org
+Cc: linux-wireless@vger.kernel.org, sforshee@kernel.org, 
+	wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-ath11k_dp_service_srng() calls ath11k_dp_tx_completion_handler() without a
-budget and discards its result, while every receive block below it takes
-the NAPI budget as a bound and reports what it consumed. The handler
-drains the whole software status FIFO, which holds one entry short of the
-32768-entry release ring, and each entry costs a DMA unmap, an idr
-removal, a peer lookup under the base lock and a call into
-ieee80211_tx_status_ext(). One poll can therefore run for as long as the
-hardware has completions to report, with the receive rings behind it
-waiting, and the scheduling round the handler now ends with adds to that.
+Hi ChenYu,
 
-Bound the drain by the budget it is given and account for it the way the
-receive blocks do. No new constant is introduced: the currency is the
-NAPI weight the poll already carries, so a poll that spends it on
-completions returns and is rescheduled rather than running on.
+Understood. I have reached out directly to the Spectrum Division of
+BTRC (sohel@btrc.gov.bd) requesting technical clarification on
+explicit EIRP limits and standards for 5925=E2=80=936425 MHz.
 
-Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
-Assisted-by: Claude:claude-opus-5
-Signed-off-by: Julius Bairaktaris <julius@bairaktaris.de>
----
- drivers/net/wireless/ath/ath11k/dp.c    | 10 ++++++++--
- drivers/net/wireless/ath/ath11k/dp_tx.c | 11 +++++++++--
- drivers/net/wireless/ath/ath11k/dp_tx.h |  3 ++-
- 3 files changed, 19 insertions(+), 5 deletions(-)
+I will update this thread as soon as I receive an official response from th=
+em.
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-index f389b97acbdd..676440ee742a 100644
---- a/drivers/net/wireless/ath/ath11k/dp.c
-+++ b/drivers/net/wireless/ath/ath11k/dp.c
-@@ -781,8 +781,14 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
- 
- 	for (i = 0; i < ab->hw_params.hal_params->num_tx_rings; i++) {
- 		if (BIT(ab->hw_params.hal_params->tcl2wbm_rbm_map[i].wbm_ring_num) &
--		    ab->hw_params.ring_mask->tx[grp_id])
--			ath11k_dp_tx_completion_handler(ab, i);
-+		    ab->hw_params.ring_mask->tx[grp_id]) {
-+			work_done =
-+				ath11k_dp_tx_completion_handler(ab, i, budget);
-+			budget -= work_done;
-+			tot_work_done += work_done;
-+			if (budget <= 0)
-+				goto done;
-+		}
- 	}
- 
- 	if (ab->hw_params.ring_mask->rx_err[grp_id]) {
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 2270b2079297..0a4381870496 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -685,7 +685,8 @@ static inline void ath11k_dp_tx_status_parse(struct ath11k_base *ab,
- 		ts->rate_stats = 0;
- }
- 
--void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
-+int ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id,
-+				    int budget)
- {
- 	struct ath11k *ar;
- 	struct ath11k_dp *dp = &ab->dp;
-@@ -695,6 +696,7 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 	struct hal_tx_status ts = {};
- 	struct dp_tx_ring *tx_ring = &dp->tx_ring[ring_id];
- 	unsigned long push = 0;
-+	int done = 0;
- 	u32 *desc;
- 	u32 msdu_id;
- 	u8 mac_id, i;
-@@ -723,10 +725,13 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 
- 	spin_unlock_bh(&status_ring->lock);
- 
--	while (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail) != tx_ring->tx_status_head) {
-+	while (done < budget &&
-+	       ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail) !=
-+	       tx_ring->tx_status_head) {
- 		struct hal_wbm_release_ring *tx_status;
- 		u32 desc_id;
- 
-+		done++;
- 		tx_ring->tx_status_tail =
- 			ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail);
- 		tx_status = &tx_ring->tx_status[tx_ring->tx_status_tail];
-@@ -772,6 +777,8 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
- 	 */
- 	for_each_set_bit(i, &push, ab->num_radios)
- 		ath11k_mac_tx_push_pending(ab->pdevs[i].ar);
-+
-+	return done;
- }
- 
- int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.h b/drivers/net/wireless/ath/ath11k/dp_tx.h
-index 9303b5ba6e01..b5296cda73e3 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.h
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.h
-@@ -21,7 +21,8 @@ void ath11k_dp_tx_update_txcompl(struct ath11k *ar, struct hal_tx_status *ts);
- int ath11k_dp_tx_htt_h2t_ver_req_msg(struct ath11k_base *ab);
- int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
- 		 struct ath11k_sta *arsta, struct sk_buff *skb);
--void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id);
-+int ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id,
-+				    int budget);
- int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
- 			      enum hal_reo_cmd_type type,
- 			      struct ath11k_hal_reo_cmd *cmd,
--- 
-2.53.0
+Thanks,
+Ibrahim Hossain Abir
 
+
+On Mon, Aug 24, 2026 at 1:39=E2=80=AFPM Chen-Yu Tsai <wens@kernel.org> wrot=
+e:
+>
+> On Mon, Aug 24, 2026 at 3:23=E2=80=AFPM Ibrahim Hossain Abir <xbowpc@gmai=
+l.com> wrote:
+> >
+> > Hi ChenYu,
+> >
+> > Thank you for the review.
+> >
+> > Regarding the reference:
+> > The official BTRC circular (dated Sept 15, 2024) specifically
+> > authorizes the 5925=E2=80=936425 MHz frequency range for Wi-Fi/WLAN/IoT=
+ shared
+> > usage in Bangladesh. However, this notice does not define explicit
+> > EIRP power limits, TPC, or DFS requirements.
+> >
+> > In the initial patch, standard conservative limits (such as 23 dBm for
+> > 6 GHz LPI) were derived from standard Wi-Fi 6E/7 spectrum norms.
+> >
+> > Could you advise on how wireless-regdb prefers to handle cases where
+> > the regulatory body approves the band without listing explicit EIRP
+> > limits in their notice? Would setting a conservative default (like 20
+> > dBm / 100 mW EIRP) for 5925=E2=80=936425 MHz be acceptable for Patch v2=
+?
+>
+> As previously mentioned we cannot accept random limits without justificat=
+ion.
+> The regulatory body needs to specify limits, or outright state they defer
+> to some other standard.
+>
+> Please help reach out to the regulatory body for clarification. They shou=
+ld
+> provide the information, otherwise folks doing the certification have not=
+hing
+> to base it off of.
+>
+>
+> Thanks
+> ChenYu
+>
+> > Thanks,
+> > Ibrahim Hossain Abir
+> >
+> >
+> > On Mon, Aug 24, 2026 at 10:38=E2=80=AFAM Chen-Yu Tsai <wens@kernel.org>=
+ wrote:
+> > >
+> > > On Mon, Aug 24, 2026 at 4:26=E2=80=AFAM Ibrahim Hossain Abir <xbowpc@=
+gmail.com> wrote:
+> > > >
+> > > > wireless-regdb: update regulatory rules for Bangladesh (BD)
+> > > >
+> > > > Update regulatory rules for Bangladesh (BD) based on the official B=
+TRC
+> > > > (Bangladesh Telecommunication Regulatory Commission) directive date=
+d
+> > > > September 15, 2024.
+> > > >
+> > > > Enables U-NII-1/2A, U-NII-2C (DFS), U-NII-3/4, and lower 6 GHz (592=
+5-6425 MHz).
+> > > >
+> > > > Official BTRC Notice:
+> > > > https://btrc.gov.bd/pages/notices/6922ee00dbfbab28ce0c438d
+> > >
+> > > This only says that the lower 6 GHz range is allowed. It does not say
+> > > what the power limits are, or if there are any other restrictions.
+> > >
+> > > > User Impact Reference:
+> > > > https://community.intel.com/t5/Wireless/6-GHz-Wi-Fi-6E-Not-Detected=
+-on-Intel-AX211-in-Bangladesh/m-p/1740885
+> > > >
+> > > > Signed-off-by: Ibrahim Hossain Abir <xbowpc@gmail.com>
+> > > > ---
+> > > >  db.txt | 8 +++++---
+> > > >  1 file changed, 5 insertions(+), 3 deletions(-)
+> > > >
+> > > > diff --git a/db.txt b/db.txt
+> > > > index 0000000..1111111 100644
+> > > > --- a/db.txt
+> > > > +++ b/db.txt
+> > > > @@ -223,5 +223,7 @@ country BD: DFS-JP
+> > > >   (2402 - 2482 @ 40), (20)
+> > > > - (5735 - 5835 @ 80), (30)
+> > > > + (5150 - 5350 @ 80), (20), NO-OUTDOOR, AUTO-BW
+> > > > + (5470 - 5725 @ 160), (20), DFS, AUTO-BW
+> > > > + (5725 - 5850 @ 80), (30)
+> > > > + (5925 - 6425 @ 320), (23), NO-OUTDOOR
+> > >
+> > > A reference with the band and power limits, as well as any other
+> > > restrictions like DFS or TPC (andif TPC is required, what is the
+> > > limit if TPC is not implemented) needs to be provided. We cannot
+> > > put random numbers into the database without justification.
+> > >
+> > >
+> > > Thanks
+> > > ChenYu
