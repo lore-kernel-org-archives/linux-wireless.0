@@ -1,179 +1,249 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08A61E7C23
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 08:18:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E89FA3A71BE
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 08:19:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787559498; cv=none; b=DhzosiRZc58LlTbqJWi4zsmjfQ8XakVXiC6hm83yIfGkVORRnQ6OcMTWRQuH3oromXLCCkjuG/0uJgQxdI3i9SSo8fLs/O4onBqBZ4qhmvFsYx8I6n+ASXEq1GTQRnEWkbUfm8WbjPy5kOPKlHp/CtaLP91rDYyk1oKK8BsIbsk=
+	t=1787559545; cv=none; b=MvIp7iMrghXOy0nSShizbHrJEq5N0U2c8wwgcZhepReFDed4hpUTgS08pFY+vCDFYvL6Nvc3SUsycdBWMy2aEMr7aaI2ly0c2rV9VNgMUTVwpjdZTih2D658RN80vw2Vjd6I5tCCKpHwWJ1QWK2lB+QFUeX1xynxWixc3OjCqLo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787559498; c=relaxed/simple;
-	bh=1dNtjkPdGPOdSoc8D2vfGUkHn7OOKugmS3Q+RYnCjmE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OHxHEfeYLuFqo3zEagQUkCARYwUGqiwxoKDO2pykJceI85SDFpsKRc/i/GGutKGqBha7FhgZ26Clt42n4lmYe1Lk4zSv4At4MeAdiXe/qXWAANrKujdskozjc+LfOEWHFMLBme+CWU4Xc+Vdxx4XI9vvDXCQDMGyCXPsX+7YGyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bexmzRqt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787559545; c=relaxed/simple;
+	bh=hz+NH0v7AwWKkdCJYg4+FKk8pFAsNZqPrMMyzTiYRes=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VV9deyzloKtU+VqeaaL+JYfMAUHnFghpegtM3l42u5GQXA9j5N1UarQKp8GzJ4RCnqYYq707wMFZoCwYevgRkCHzlv99N+CpOaFsmZnOWuVvZdWmXqOtmMX8ljyrH4rYG+WosQPei3JwIeOisE5IiQspGqgkKvaERH1KW8g2QtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=Ve9RRsfM; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bexmzRqt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C78D1F00A3D
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 08:18:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787559497;
-	bh=5LiJ6TZO52m4OOCLiCd71T+aefYjNDmhG2YJrXqJqxc=;
-	h=References:In-Reply-To:Reply-To:From:Date:Subject:To:Cc;
-	b=bexmzRqtF9JdHrYVsyp2yLgJhXylIfXLpXcS/tvkzZZ/HHNuqjnJqv0NRkPsXlK1p
-	 p9h0CDYOyO3l0jF5s6s/arPLS4No2GOl1HwNZY5zQ2JRSQhGFa/9orzitZri9NewcD
-	 FRjEN+YFrJIPmUx+9SNaRTyY7fETG6KPVlMEnMkOEASwbhFYlSFbt9C0HZqfDATDzz
-	 j6w+0AE9BenW9gKp+U7vZWK8Dglmv8zHZlMnM6YfWa3Qu+1h7BPOZ0v/mix3R1l0KU
-	 9vA66OuOHxNQ76wL/TJYGqXq35CBlmocgAdQ9xXHTbttsSTH09dR1e1IkmP0wDYD1r
-	 p8WEzJcZczbjQ==
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-39db07589caso26466671fa.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 01:18:17 -0700 (PDT)
-X-Gm-Message-State: AFuF++m8BuASRVzwroJ1Vz8tmGjhMI5LvVeYjx/AujHCIPHmA45V8YOc
-	7MLjL2ZBhkOb6HUZmiHUY8mPl9E7Gykv/dq2hqs91V9FDYiLd/IILsvMcGiW40G/TquaFEMlKYB
-	4J/1a3+IS12vh7xFhplzOnGVU2wstVEM=
-X-Received: by 2002:a05:651c:41d3:b0:39b:695:32a3 with SMTP id
- 38308e7fff4ca-3a1c1ea8683mr34487621fa.13.1787559495827; Mon, 24 Aug 2026
- 01:18:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="Ve9RRsfM"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 97BA224002A
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 10:18:59 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de;
+	s=1984.8680eb; t=1787559539;
+	bh=GRxYvEqjyMtNEHGGOwwpL7FG4/jjm1W32/akLYtRNnE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:Content-Type:
+	 Content-Transfer-Encoding:From;
+	b=Ve9RRsfMyI+t5Ee/IwwrAgf8RX5bNtTjBAABKbgZRhASpgXU10DR91PdsIF6RaCT5
+	 f+R2lrZwhlBuHBmWrYr49S410WqZrDg7HQc8bpOs/5hKRNGjEYo6X+bbUC+t2hjoik
+	 Z1XZz8s163pqtx0KW74Wq37p9/h8BlM1DNm1aZoOqKKdLqXW/WERoO0e/iALUIBC4B
+	 5dEQ2cUU/4QnAknfj8vkxU7uqc0301EKHiGow8jYlcf6mNZKvjOjIwgYX2ks9UIAnS
+	 eDtPPAumvOKbBltsTPWdBkyxVTZmevdeqC971cdFuscle2LCkqoeTqrPD2/EdlAbbX
+	 18rWaQTSSg+XQ==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4hT3hy2Bm8z6v0P;
+	Mon, 24 Aug 2026 10:18:58 +0200 (CEST)
+Message-ID: <c9f984c4-e3c4-4e41-a502-99db97ce724b@posteo.de>
+Date: Mon, 24 Aug 2026 08:18:59 +0000
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJF5HCtEvb-aiusJuzmCvu-db4orDwsSnG+mOfCbLXXYRCbtvg@mail.gmail.com>
- <CAGb2v66bvMC9wU9gYknRdM+0oG7UcGquHCu5KYiwJjWZDRtk1g@mail.gmail.com>
- <CAJF5HCtAVMbarNYDkrKWE97Lib+YJk8ZE+5eWsEZ4fKVTp8tOw@mail.gmail.com>
- <CAGb2v66-ee1n9E2-GmFZu02HRmFFWPQ1KB-L9uPQcq1i5HSpEw@mail.gmail.com> <CAJF5HCsYhv-JTMvXRHLesuOFsVFnySqEKWYzK6_B-bWEoAEW0g@mail.gmail.com>
-In-Reply-To: <CAJF5HCsYhv-JTMvXRHLesuOFsVFnySqEKWYzK6_B-bWEoAEW0g@mail.gmail.com>
-Reply-To: wens@kernel.org
-From: Chen-Yu Tsai <wens@kernel.org>
-Date: Mon, 24 Aug 2026 16:18:03 +0800
-X-Gmail-Original-Message-ID: <CAGb2v65qs7NkSEL8Zg3x8a8aytV47uauNo6gj2XMi7_FfADz0Q@mail.gmail.com>
-X-Gm-Features: AcwNN1XDB_opVvJUZeDD4_gg9MMwroqOpuME4HWa5-J3xyPciLYF7H2EolzrP88
-Message-ID: <CAGb2v65qs7NkSEL8Zg3x8a8aytV47uauNo6gj2XMi7_FfADz0Q@mail.gmail.com>
-Subject: Re: [PATCH] wireless-regdb: update regulatory rules for Bangladesh (BD)
-To: Ibrahim Hossain Abir <xbowpc@gmail.com>
-Cc: linux-wireless@vger.kernel.org, sforshee@kernel.org, 
-	wireless-regdb@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [REGRESSION] mt7925: MLO connectivity silently stalls with 6GHz
+ link active
+To: Thorsten Leemhuis <regressions@leemhuis.info>,
+ Sean Wang <sean.wang@mediatek.com>
+Cc: regressions@lists.linux.dev, linux-wireless@vger.kernel.org,
+ Devin Wittmayer <lucid_duck@justthetip.ca>, Felix Fietkau <nbd@nbd.name>,
+ lorenzo.bianconi83@gmail.com, linux-mediatek@lists.infradead.org
+References: <503eb10e-80cf-493e-95fd-04fc0f94ce01@posteo.de>
+ <e4bc5ce3-9a6f-4365-9d36-f6440ded0865@posteo.de>
+ <c64f5fa6-4c61-45b6-a513-b971e59d7723@posteo.de>
+ <476e7721-580e-4a6b-86e5-5ed782a2c7ec@leemhuis.info>
+Content-Language: en-US, de-DE
+From: Jonas Hort <jonas.hort@posteo.de>
+In-Reply-To: <476e7721-580e-4a6b-86e5-5ed782a2c7ec@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon, Aug 24, 2026 at 4:16=E2=80=AFPM Ibrahim Hossain Abir <xbowpc@gmail.=
-com> wrote:
->
-> Hi ChenYu,
->
-> Understood. I have reached out directly to the Spectrum Division of
-> BTRC (sohel@btrc.gov.bd) requesting technical clarification on
-> explicit EIRP limits and standards for 5925=E2=80=936425 MHz.
+Thanks Devin, and thanks for pulling Sean in.
 
-If possible, could you ask for status updates on the 5 GHz bands
-as well? You intended to add them in your patch.
+git biscet log:
+# bad: [8cd9520d35a6c38db6567e97dd93b1f11f185dc6] Linux 7.1
+# good: [028ef9c96e96197026887c0f092424679298aae8] Linux 7.0
+git bisect start 'v7.1' 'v7.0' '--' 
+'drivers/net/wireless/mediatek/mt76/mt7925/'
+# good: [ea757740dd87c0b00c4844dd3282dff4d83fa3c7] wifi: mt76: mt7925: 
+pass WCID indices to bss_basic_tlv()
+git bisect good ea757740dd87c0b00c4844dd3282dff4d83fa3c7
+# bad: [cf9db836b1e069a3d6a80c72b9bdc12df78b0dd1] wifi: mt76: mt7925: 
+pass mlink to set_link_key()
+git bisect bad cf9db836b1e069a3d6a80c72b9bdc12df78b0dd1
+# bad: [9e4d518a4707175e1154876b760d4f2b39967e9d] wifi: mt76: mt7925: 
+pass mlink to mac_link_sta_remove()
+git bisect bad 9e4d518a4707175e1154876b760d4f2b39967e9d
+# bad: [dc019e3294c7e3c6e997bb11732d46ce0d9211e9] wifi: mt76: mt7925: 
+pass mlink to mcu_sta_update()
+git bisect bad dc019e3294c7e3c6e997bb11732d46ce0d9211e9
+# bad: [ff643b81bc38eaff6c0ab783a62e4ba9e10d2476] wifi: mt76: mt7925: 
+pass mlink and mconf to sta_mld_tlv()
+git bisect bad ff643b81bc38eaff6c0ab783a62e4ba9e10d2476
+# first 'bad' commit: [ff643b81bc38eaff6c0ab783a62e4ba9e10d2476] wifi: 
+mt76: mt7925: pass mlink and mconf to sta_mld_tlv()
 
-> I will update this thread as soon as I receive an official response from =
-them.
+On the warning: no hits. I grepped all incident logs for MLD_TLV_LINK
+and for anything mentioning primary/mconf, and also checked the
+current boot directly. The only mt7925 lines present are the usual
+init ones:
+
+   mt7925e 0000:09:00.0: ASIC revision: 79250000
+   mt7925e 0000:09:00.0: HW/SW Version: 0x8a108a10, Build Time: 
+20260605184651a
+   mt7925e 0000:09:00.0: WM Firmware Version: ____000000, Build Time: 
+20260605184805
+
+Each incident log captures journalctl -k for the 5 minutes leading up
+to the freeze plus the last 400 dmesg lines, so if it had fired around
+the stall it should have been in there. Still on the ff643b81bc38
+kernel here, so happy to re-check with a different search term if I
+grepped for the wrong thing.
+
+Setup is still up and I can build and test whatever is useful.
+
+Thanks,
+Jonas
+Am 24.08.26 um 06:52 schrieb Thorsten Leemhuis:
+> On 8/23/26 22:54, Jonas Hort wrote:
+>> Bisect is done. First bad commit:
+>>
+>> ff643b81bc38eaff6c0ab783a62e4ba9e10d2476
+>> wifi: mt76: mt7925: pass mlink and mconf to sta_mld_tlv()
+>> Sean Wang, 2026-03-06
+>> https://patch.msgid.link/20260306232238.2039675-4-sean.wang@kernel.org
+> Then let's add Sean to the list of recipients. :-D
 >
-> Thanks,
-> Ibrahim Hossain Abir
+> Sean, FWIW, this thread starts here:
 >
+> https://lore.kernel.org/all/066b30cc-a9e6-4aeb-964d-71551e8ea3ef@posteo.de/t/#u
 >
-> On Mon, Aug 24, 2026 at 1:39=E2=80=AFPM Chen-Yu Tsai <wens@kernel.org> wr=
-ote:
-> >
-> > On Mon, Aug 24, 2026 at 3:23=E2=80=AFPM Ibrahim Hossain Abir <xbowpc@gm=
-ail.com> wrote:
-> > >
-> > > Hi ChenYu,
-> > >
-> > > Thank you for the review.
-> > >
-> > > Regarding the reference:
-> > > The official BTRC circular (dated Sept 15, 2024) specifically
-> > > authorizes the 5925=E2=80=936425 MHz frequency range for Wi-Fi/WLAN/I=
-oT shared
-> > > usage in Bangladesh. However, this notice does not define explicit
-> > > EIRP power limits, TPC, or DFS requirements.
-> > >
-> > > In the initial patch, standard conservative limits (such as 23 dBm fo=
-r
-> > > 6 GHz LPI) were derived from standard Wi-Fi 6E/7 spectrum norms.
-> > >
-> > > Could you advise on how wireless-regdb prefers to handle cases where
-> > > the regulatory body approves the band without listing explicit EIRP
-> > > limits in their notice? Would setting a conservative default (like 20
-> > > dBm / 100 mW EIRP) for 5925=E2=80=936425 MHz be acceptable for Patch =
-v2?
-> >
-> > As previously mentioned we cannot accept random limits without justific=
-ation.
-> > The regulatory body needs to specify limits, or outright state they def=
-er
-> > to some other standard.
-> >
-> > Please help reach out to the regulatory body for clarification. They sh=
-ould
-> > provide the information, otherwise folks doing the certification have n=
-othing
-> > to base it off of.
-> >
-> >
-> > Thanks
-> > ChenYu
-> >
-> > > Thanks,
-> > > Ibrahim Hossain Abir
-> > >
-> > >
-> > > On Mon, Aug 24, 2026 at 10:38=E2=80=AFAM Chen-Yu Tsai <wens@kernel.or=
-g> wrote:
-> > > >
-> > > > On Mon, Aug 24, 2026 at 4:26=E2=80=AFAM Ibrahim Hossain Abir <xbowp=
-c@gmail.com> wrote:
-> > > > >
-> > > > > wireless-regdb: update regulatory rules for Bangladesh (BD)
-> > > > >
-> > > > > Update regulatory rules for Bangladesh (BD) based on the official=
- BTRC
-> > > > > (Bangladesh Telecommunication Regulatory Commission) directive da=
-ted
-> > > > > September 15, 2024.
-> > > > >
-> > > > > Enables U-NII-1/2A, U-NII-2C (DFS), U-NII-3/4, and lower 6 GHz (5=
-925-6425 MHz).
-> > > > >
-> > > > > Official BTRC Notice:
-> > > > > https://btrc.gov.bd/pages/notices/6922ee00dbfbab28ce0c438d
-> > > >
-> > > > This only says that the lower 6 GHz range is allowed. It does not s=
-ay
-> > > > what the power limits are, or if there are any other restrictions.
-> > > >
-> > > > > User Impact Reference:
-> > > > > https://community.intel.com/t5/Wireless/6-GHz-Wi-Fi-6E-Not-Detect=
-ed-on-Intel-AX211-in-Bangladesh/m-p/1740885
-> > > > >
-> > > > > Signed-off-by: Ibrahim Hossain Abir <xbowpc@gmail.com>
-> > > > > ---
-> > > > >  db.txt | 8 +++++---
-> > > > >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > > > >
-> > > > > diff --git a/db.txt b/db.txt
-> > > > > index 0000000..1111111 100644
-> > > > > --- a/db.txt
-> > > > > +++ b/db.txt
-> > > > > @@ -223,5 +223,7 @@ country BD: DFS-JP
-> > > > >   (2402 - 2482 @ 40), (20)
-> > > > > - (5735 - 5835 @ 80), (30)
-> > > > > + (5150 - 5350 @ 80), (20), NO-OUTDOOR, AUTO-BW
-> > > > > + (5470 - 5725 @ 160), (20), DFS, AUTO-BW
-> > > > > + (5725 - 5850 @ 80), (30)
-> > > > > + (5925 - 6425 @ 320), (23), NO-OUTDOOR
-> > > >
-> > > > A reference with the band and power limits, as well as any other
-> > > > restrictions like DFS or TPC (andif TPC is required, what is the
-> > > > limit if TPC is not implemented) needs to be provided. We cannot
-> > > > put random numbers into the database without justification.
-> > > >
-> > > >
-> > > > Thanks
-> > > > ChenYu
+> To quote the summary: "WiFi 7 MLO (5GHz+6GHz) on MT7925 silently stops
+> passing traffic after a few minutes, while the driver continues to
+> report a fully healthy link. Root cause appears to be a stalled WFDMA0
+> TX hardware queue."
+>
+> Ciao, Thorsten
+>> Bisected on vanilla, path-restricted to
+>> drivers/net/wireless/mediatek/mt76/mt7925/, using v7.0 as good and
+>> v7.1 as bad. Each step was booted and tested with MLO active
+>> (5GHz+6GHz, FritzBox 5690 Pro), and every "bad" verdict was confirmed
+>> by the WFDMA0 signature (tail frozen while head keeps advancing),
+>> not just by the connection dropping.
+>>
+>>    ea757740dd87  pass WCID indices to bss_basic_tlv()      good (45 min
+>> clean)
+>>    ff643b81bc38  pass mlink and mconf to sta_mld_tlv()     bad (freeze
+>> after ~4 min)
+>>    dc019e3294c7  pass mlink to mcu_sta_update()            bad (freeze
+>> after ~3 min)
+>>    9e4d518a4707  pass mlink to mac_link_sta_remove()       bad (freeze
+>> after ~4 min)
+>>    cf9db836b1e0  pass mlink to set_link_key()              bad (freeze
+>> after ~4 min)
+>>
+>> git bisect log and the incident logs for each step are available if
+>> useful - happy to attach them to the bugzilla ticket or send them
+>> here.
+>>
+>> Let me know if you want anything else tested.
+>>
+>> Thanks,
+>> Jonas
+>>
+>> Am 22.08.26 um 22:18 schrieb Jonas Hort:
+>>> Quick update: v7.0 vanilla has been running clean for over 2 hours now
+>>> with MLO active (5GHz+6GHz, same FritzBox 5690 Pro), no freeze at all.
+>>>
+>>> Am 19.08.26 um 11:03 schrieb Jonas Hort:
+>>>> Thanks for the detailed breakdown.
+>>>>
+>>>> I'll build v7.0 vanilla and test it, as suggested. Fair warning
+>>>> though: I'm on vacation this week, so I'll pick this up next week.
+>>>> I've also never compiled a kernel before, so it'll likely take me a
+>>>> bit of trial and error the first time around - please bear with me
+>>>> if it takes a little longer than expected.
+>>>>
+>>>> Will report back once I have results.
+>>>>
+>>>> Thanks again,
+>>>> Jonas
+>>>>
+>>>> 19.08.2026 03:18:34 Devin Wittmayer <lucid_duck@justthetip.ca>:
+>>>>
+>>>>> Thank you very much, that answers both things.
+>>>>>
+>>>>> The ROC tracing is the more useful of the two even though it came back
+>>>>> negative. Two of the three freezes have no ROC activity in them at
+>>>>> all, so a
+>>>>> link switch that never finished cannot be what starts this. The
+>>>>> middle one
+>>>>> does have rocabort, mloroc and rocwork in it, but one out of three
+>>>>> makes
+>>>>> that look like the exception rather than the pattern. So the area I
+>>>>> sent you
+>>>>> looking at is out, and that is worth knowing before you spend nights on
+>>>>> builds.
+>>>>>
+>>>>> One other thing worth saying first. There is a five patch mt76
+>>>>> series on the
+>>>>> list at the moment and two of the patches look like they were
+>>>>> written for
+>>>>> exactly this bug. I do not think they were, and it is your own
+>>>>> numbers that
+>>>>> show it. The failure 4/5 fixes stops mt76_txq_schedule_list from
+>>>>> servicing
+>>>>> the queue, and the one 5/5 fixes stops mt76_txq_send_burst once the
+>>>>> non-AQL
+>>>>> count reaches its cap. Both of those keep frames from ever reaching the
+>>>>> hardware, so if either were your problem head would be sitting still
+>>>>> alongside tail. Yours does the opposite. Head climbs 390 to 408
+>>>>> while tail
+>>>>> stays at 260, so the frames are getting into the ring and nothing is
+>>>>> finishing them, which is the far end of the same path. 2/5 is a use
+>>>>> after
+>>>>> free when an interface goes away, so it does not fit either. I would
+>>>>> not
+>>>>> expect that series to change what you see.
+>>>>>
+>>>>> On the bisect I would build v7.0 next. There are 32 mt7925 commits
+>>>>> between
+>>>>> 7.0 and 7.1 and 19 of them are one run of work from Sean Wang,
+>>>>> reworking how
+>>>>> the driver tracks the per link mlink and WCID for an MLO station.
+>>>>> That is
+>>>>> the kind of change that fits a bug only showing up with two links
+>>>>> up. If
+>>>>> v7.0 comes back clean, that series is where I would look. If v7.0 is
+>>>>> already
+>>>>> broken then it is off the hook and 6.19 becomes the next split. The
+>>>>> mt76
+>>>>> core and mac80211 both moved in the same window, so mt7925 is where
+>>>>> I would
+>>>>> look first rather than the only place worth looking.
+>>>>>
+>>>>> Devin
+>>>>>
+>>>>> Am 17.08.26 um 23:34 schrieb Jonas Hort:
+>>>>>
+>>>>>> Quick follow-up: managed to confirm 6.18 as a clean baseline on my
+>>>>>> own hardware now (not just secondhand from others in the forum
+>>>>>> thread) - running Linux 6.18.42-1-cachyos-lts with MLO active
+>>>>>> (5GHz+6GHz, same FritzBox 5690 Pro) for 3 hours straight, no freeze
+>>>>>> at all.
+>>>>> Am 17.08.26 um 16:25 schrieb Jonas Hort:
+>>>>>
+>>>>>> One correction to how I described this earlier: the connection does
+>>>>>> NOT reliably self-heal on its own. I have manually intervened every
+>>>>>> single time to restore connectivity [...]
+>>>>>>
+>>>>>> Update on the ROC tracing: three real freezes captured now with the
+>>>>>> kprobes active (all confirmed via the WFDMA0 tail-frozen signature).
+>>>>>>
+>>>>>> - Freeze #1 (15:37): no ROC activity in the trace.
+>>>>>> - Freeze #2 (15:43): [...] The trace shows several ROC events
+>>>>>>     (rocabort, mloroc, rocwork) clustered together.
+>>>>>> - Freeze #3 (16:15): no ROC activity again.
+>>>>>>
+>>>>>> Uploaded all three logs to the bugzilla ticket if useful:
+>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=221884
