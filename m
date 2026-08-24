@@ -1,128 +1,95 @@
-Received: from mta0.migadu.com (out-192.mta0.migadu.com [91.218.175.192])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D38E17B418
-	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 00:37:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.192
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C1A14BF92;
+	Mon, 24 Aug 2026 01:10:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787531828; cv=none; b=N9SpYY4nhap0mirCBowjpM4Wn8ShrZTzExr+rFP1WXoXFXLT6GP4kWVIUNrPMMyunBKsLlXtttBqz4VHvEeyo8h7dICMplTCdgsIz2T3aNUrLMxziigodt16eR6eMK3BO0HMxfu8W1XSnbrE1htvqJln/NjBBzxAsnOSZ5APZtY=
+	t=1787533838; cv=none; b=NYPoGGDYeLMTvGd+G0wb9KRItZvIizXDvOzeDcYFM9AyDDGcKL2eE5h6ZevG4wSbcWQj/P0wzP0FjJVrl9qY3y2wGdUphYu98UTiqxqN8YhRiWrKN+u5Ze6yo6atV9IMDmVS+lUXCDssWVd77ErgOLfOC57OsX9stQNb3X8vNPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787531828; c=relaxed/simple;
-	bh=uoWdwa3RpAwzJqIgRTFihUod/33vvbItb8N4Mvr8jJg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WpqLgp2whh7t6UKfhsgodmEwH8/fFq9R1lXcvB8gq+B6zuNWFXXm72mVAWxFZUmuCCl+n1LDCf3hSbVa5LNxZZxUZF5jO4FYIwvfQHoHyRdmeu/+/fjB1c3/diHKdOd+5BUTNL9fvAwyhCQLSxjQApqFWDri7R5/UXR+nmku0Zg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=byuKYtX8; arc=none smtp.client-ip=91.218.175.192
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1787533838; c=relaxed/simple;
+	bh=WnIlgE/lt5X6jvNU3SYuW9E9/mNvCtOy1hmyF7berms=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=hnGUN2Jd571dlpgEtUTB6KeU5y89Wo+edKaLP+JA4fLiYLT3CNDeVdLveAVsaJFd9umJBFkljCLA1bxTbqfiJ27LX+Ap+hjzCQKWX0gUAGZhamjnFIYv15q5VzdhNK+lEG8oPdeNPuQAyRu+fJzJn3S+TFC1NuGHxhk/SLjf9Is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=LzdySCXE; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="byuKYtX8"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=uoWdwa3RpAwzJqIgRTFihUod/33vvbItb8N4Mvr8jJg=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787531822; v=1; x=1788136622;
- b=byuKYtX8W1jRM9AcBRX0ABnvtxPaVU4Ewe3+wlE+IoMAknQiNUzQ1aDa5KUVq8BRmbBOYj+w
- YKn3meyMq8iF7g5SFZiIttPRLBLNEJQgIrvOM5cRoUosNVt2d2vTuWSoP5CYAAtoDKosVZHuq1e
- d7XJC4/mBPgw0aWn6RBNINcx151n8bk+22mJpsWQJA1DS4yrZmQEOIIuwEkn0r57eHoS/+O2xaV
- 03nD2uGqd4QJFlKadpnziO0rZfC2mmjh4BuIWntFfUV2NedOZa6SiDq2cgFwP+IQYNce2IIqMcz
- a5XCIYKpljIaM6ifmj0BVrhswBgdrMTbPHGOgSmpSwwdw==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from fedora (2001:569:be59:c500:b340:3f2c:4486:21c1)
-	by smtp.migadu.com with ESMTPS id 63ef895034ec1925;
-	Mon, 24 Aug 2026 00:37:02 +0000
-X-Mizu-Trace-ID: 63ef895034ec1925
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH wireless] wifi: mac80211: refuse to make a monitor active when it has no queue
-Date: Sun, 23 Aug 2026 17:36:56 -0700
-Message-ID: <20260824003656.27049-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="LzdySCXE"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67O1AV1g82338985, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787533831; bh=WnIlgE/lt5X6jvNU3SYuW9E9/mNvCtOy1hmyF7berms=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=LzdySCXE8nEntilmGKFZOCquO4As8EiWdssfX2axABaJ4DtaturRj68pxmKoqOMPF
+	 aIyAY5rwParLb9d6cYG7GzvYTRg85pwHBi3V/pBoydLcK09eyUow2IqO30D1XBKz5t
+	 wgDRD21unPTcbwkcd+vKpaUcv3FI7MlPfa1fuW9a3bSTcvm/KW3mKYVGh/f1XGaqJn
+	 F52GPBVQWUy6amP+14Swaw/wHwxa7bH8dlQJGhm1ytBlt0djdYrrIxHuJFRwlqTPP4
+	 Xe34QaCdKXNGXo7maZL/7dPgshMA2kKlqf5zEQXIPqcAaUgq93GhfX/Yb1Tv4u/+nP
+	 82g55lypHZiUw==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67O1AV1g82338985
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 24 Aug 2026 09:10:31 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Mon, 24 Aug 2026 09:10:32 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Mon, 24 Aug 2026 09:10:32 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: "learn.rahul.rai@gmail.com" <learn.rahul.rai@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming
+ A15 FA506IH
+Thread-Topic: [PATCH] wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming
+ A15 FA506IH
+Thread-Index: AQHdMnlIuwiwUs73HECjS8SgnJZ6g7asZaow
+Date: Mon, 24 Aug 2026 01:10:32 +0000
+Message-ID: <2ae6b8b6c89844b1942e9ebf97bfaa16@realtek.com>
+References: <20260823-fa506ih-rtw88-quirk-v1-1-ef0984d59e72@gmail.com>
+In-Reply-To: <20260823-fa506ih-rtw88-quirk-v1-1-ef0984d59e72@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-commit 8105f9b8a887 ("mac80211: allocate TXQs for active monitor
-interfaces") reserved a TXQ for active monitors, because drivers using TXQ
-expect every interface handed to them to have one.  It covers only
-interfaces created active: vif.txq is assigned in ieee80211_txq_init()
-from ieee80211_if_add(), and cannot be added later.
-
-MONITOR_FLAG_ACTIVE can still be set afterwards.
-ieee80211_set_mon_options() refuses that while the interface is up, but
-while it is down it just stores the flag.  Such an interface then reaches
-the driver with vif->txq NULL, and ath9k resolves its multicast node's
-tids through that pointer unchecked:
-
-  BUG: kernel NULL pointer dereference, address: 0000000000000066
-  RIP: 0010:ath_tx_node_init+0x49/0x170 [ath9k]
-   ath9k_add_interface+0x10c/0x140 [ath9k]
-   drv_add_interface+0x54/0x250 [mac80211]
-   ieee80211_do_open+0x32f/0x800 [mac80211]
-
-Two commands from a user with CAP_NET_ADMIN reach it:
-
-  iw dev <iface> set monitor active
-  ip link set <iface> up
-
-The fault happens with RTNL held, so it is never released and all later
-netlink operations block.
-
-Refuse the promotion when there is no queue to give.
-
-Fixes: 79af1f866193 ("mac80211: avoid allocating TXQs that won't be used")
-Cc: stable@vger.kernel.org
-Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
----
-Reproduces on mac80211_hwsim, no hardware needed: create a monitor, take it
-down, make it active and bring it up, and the driver gets a NULL vif->txq.
-One created with flags active gets a real one.  With the patch the first is
-refused, the second still works, and an interface created active, set to
-none and back to active, is still accepted.  Same on an MT7922.
-
-Only drivers advertising NL80211_FEATURE_ACTIVE_MONITOR reach this, since
-cfg80211 refuses the flag otherwise.  ath9k, mt7603 and mt76x02 deref
-vif->txq unchecked.  mt7615, mt7915, mt7921, mt7925 and mt7996 test it
-first.
-
-Where it faults today, refusing costs nothing.  On the drivers that check,
-I could not test whether a promoted interface actually works, so that is
-where a regression would show.
-
-Reserving a queue for every monitor instead would make the promotion work
-rather than refuse it, and would also cover a passive monitor reaching the
-driver under NO_VIRTUAL_MONITOR.  That undoes 79af1f866193 deliberately, so
-I did not assume it.  Happy to write it if you prefer.
-
- net/mac80211/cfg.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b6163dcc7e92..523cef0a5526 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -115,6 +115,15 @@ static int ieee80211_set_mon_options(struct ieee80211_sub_if_data *sdata,
- 			return -EBUSY;
- 	}
- 
-+	/*
-+	 * An active monitor is passed to the driver and needs a TXQ, which is
-+	 * reserved with the netdev in ieee80211_if_add() and cannot be added
-+	 * later.  An interface created without the flag has none, so refuse to
-+	 * set it rather than hand the driver a NULL vif->txq.
-+	 */
-+	if ((params->flags & MONITOR_FLAG_ACTIVE) && !sdata->vif.txq)
-+		return -EOPNOTSUPP;
-+
- 	/* validate whether MU-MIMO can be configured */
- 	if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
- 	    !ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
--- 
-2.55.0
-
+UmFodWwgS3VtYXIgUmFpIHZpYSBCNCBSZWxheSA8ZGV2bnVsbCtsZWFybi5yYWh1bC5yYWkuZ21h
+aWwuY29tQGtlcm5lbC5vcmc+IHdyb3RlOg0KPiBGcm9tOiBSYWh1bCBLdW1hciBSYWkgPGxlYXJu
+LnJhaHVsLnJhaUBnbWFpbC5jb20+DQo+IA0KPiBUaGUgUlRMODgyMkNFIG9uIHRoZSBBU1VTIFRV
+RiBHYW1pbmcgQTE1IEZBNTA2SUggZmFpbHMgdG8gcmV0dXJuIGZyb20NCj4gUENJZSBsb3ctcG93
+ZXIgc3RhdGVzIGFjcm9zcyBzeXN0ZW0gc3VzcGVuZC4gVGhlIGRldmljZSBpcyBpbmFjY2Vzc2li
+bGUNCj4gb24gdGhlIHdheSBiYWNrIHRvIEQwLCBzbyB0aGUgTUFDIHBvd2VyLW9uIHNlcXVlbmNl
+IGFuZCB0aGUgZmlybXdhcmUNCj4gaGFuZHNoYWtlIHRoYXQgZm9sbG93IGl0IGZhaWwsIGFuZCB0
+aGUgZHJpdmVyIGdpdmVzIHVwLiBXaS1GaSBzdGF5cw0KPiB1bmF2YWlsYWJsZSB1bnRpbCB0aGUg
+bWFjaGluZSBpcyBwb3dlcmVkIG9mZiBjb21wbGV0ZWx5Og0KPiANCj4gICBydHc4OF84ODIyY2Ug
+MDAwMDowMzowMC4wOiBVbmFibGUgdG8gY2hhbmdlIHBvd2VyIHN0YXRlIGZyb20gRDNjb2xkIHRv
+IEQwLCBkZXZpY2UgaW5hY2Nlc3NpYmxlDQo+ICAgcnR3ODhfODgyMmNlIDAwMDA6MDM6MDAuMDog
+ZmFpbGVkIHRvIHBvbGwgb2Zmc2V0PTB4NSBtYXNrPTB4MiB2YWx1ZT0weDANCj4gICBydHc4OF84
+ODIyY2UgMDAwMDowMzowMC4wOiBtYWMgcG93ZXIgb24gZmFpbGVkDQo+ICAgcnR3ODhfODgyMmNl
+IDAwMDA6MDM6MDAuMDogcHJvYmUgd2l0aCBkcml2ZXIgcnR3ODhfODgyMmNlIGZhaWxlZCB3aXRo
+IGVycm9yIC0xMTQNCj4gDQo+IFJlYWRzIG9mIHRoZSBBU1BNIGxpbmstY29uZmlndXJhdGlvbiBy
+ZWdpc3RlciBvdmVyIERCSSBhbHNvIHRpbWUgb3V0DQo+IGFyb3VuZCB0aGUgc2FtZSB0cmFuc2l0
+aW9ucy4NCj4gDQo+IFRoaXMgaXMgbm90IGEgb25lLW9mZi4gSXQgaGFzIGJlZW4gcmVjdXJyaW5n
+IG9uIHRoaXMgbWFjaGluZSBmb3IgYSBsb25nDQo+IHRpbWUuIFRoZSBrZXJuZWwgbG9ncyBzdGls
+bCBvbiBkaXNrIGJlZ2luIGF0IDIwMjYtMDctMjAgYW5kIGFscmVhZHkNCj4gY29udGFpbiBzaXgg
+ZmFpbGVkIEQtc3RhdGUgdHJhbnNpdGlvbnMgYW5kIHRocmVlIHByb2JlIGZhaWx1cmVzIG9mIHRo
+aXMNCj4ga2luZCwgYW5kIHRoZSBwcm9ibGVtIHdhcyBwcmVzZW50IHdlbGwgYmVmb3JlIHRoYXQg
+d2luZG93Lg0KPiANCj4gVGhpcyBpcyB0aGUgc2FtZSBwbGF0Zm9ybSBBU1BNIGludGVyLW9wZXJh
+YmlsaXR5IHByb2JsZW0gYWxyZWFkeSBoYW5kbGVkDQo+IGZvciBvdGhlciBtYWNoaW5lcyB0aHJv
+dWdoIHJ0d19wY2lfcXVpcmtzW10sIGluY2x1ZGluZyB0aGUgY2xvc2VseQ0KPiByZWxhdGVkIEFT
+VVMgVFVGIEdhbWluZyBBMTUgRkE1MDZJSS4gVGhlIEZBNTA2SUggcmVwb3J0cyBhIGRpZmZlcmVu
+dCBETUkNCj4gYm9hcmQgbmFtZSwgc28gdGhhdCBlbnRyeSBkb2VzIG5vdCBtYXRjaC4gRGlzYWJs
+aW5nIFBDSSBBU1BNIGFuZCBkZWVwDQo+IHBvd2VyIHNhdmUgc3RvcHMgdGhlIGZhaWx1cmUgb24g
+dGhpcyBtb2RlbCBhcyB3ZWxsLg0KPiANCj4gICBETUlfU1lTX1ZFTkRPUiA9IEFTVVNUZUsgQ09N
+UFVURVIgSU5DLg0KPiAgIERNSV9CT0FSRF9OQU1FID0gRkE1MDZJSA0KPiANCj4gU2lnbmVkLW9m
+Zi1ieTogUmFodWwgS3VtYXIgUmFpIDxsZWFybi5yYWh1bC5yYWlAZ21haWwuY29tPg0KDQpBY2tl
+ZC1ieTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRlay5jb20+DQoNCg0K
