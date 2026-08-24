@@ -1,81 +1,103 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+Received: from mta1.migadu.com (out-180.mta1.migadu.com [95.215.58.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64AEE14BF92;
-	Mon, 24 Aug 2026 01:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC0D8280018
+	for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 02:14:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787533968; cv=none; b=daVnEBO3BI21xVrVL7KEKxREZpsJRHQd29BH/WR5oKKPN/BIh+rCJDdi5ZQ4BxzAofo3anxH8VemaMuKmufpuz9VyoTb0ZdFtzL5RRatqxcH/bHKX5vWRvxzvmePw5F5zkVh2knPgc/g22haPhTfjlWLRkSk1rOFqdykPh2uNMI=
+	t=1787537698; cv=none; b=nlOKfR1HHjf0DSesXdDAi+OoLra9Loarvqps+mEm6iYVf2l6I2Eu7ZoTCd52Ros0sXsX88clIXlVDYbqprWohH6w5EIZer2eYtRZBpvJYMSlZAsJ8jrTtfDK8L5Hn9vdVNQ51dNys1qMe84f003ANAAh4NHKnetPijdQWKDisJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787533968; c=relaxed/simple;
-	bh=f4Lk+ymv0W2W1IBQFXcPZSEmQQMkuDNqLZ2wKY+371U=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=SYEBwQqXnijA2awRWV/2vDexhZ6yVPHrPAb5HITR7UVlMY8963AYRQlVSi7/BxiVmR4kzw/1uePJhbxgnAK4Cjt7pvzd4qprZQadL0nZULl49dxHQuTENRBH5Ci0G56Keb6H4m6TTbyy3yK9if0Z0fVpJff91/3mn3EugiZcZ/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TrqGSNBq; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1787537698; c=relaxed/simple;
+	bh=NtQ2IOM/Mh5R17rSUOh8SsBc1MqYsMk2h3KzjPHs0PE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OG4NBs8EiKnLxgTD04QAf5kyOEVqBQCE+AoyWG+2Eh3LLAtkYc5oipgAsYw4Rcwsbs/TNRHvswFu5Ov9Ws22Rsv0OVXHGBGQODEBC37Heplev6w82wh+GT3Nb5ni8RDM4qWgAQyPRvCwcBgw0bRTkgD8OYlQc9B5nY7any5y408=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wQVvXueO; arc=none smtp.client-ip=95.215.58.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TrqGSNBq"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67O1CgJA22339663, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787533962; bh=f4Lk+ymv0W2W1IBQFXcPZSEmQQMkuDNqLZ2wKY+371U=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=TrqGSNBqF9K4m7t66xyobt+LZOdk07pknBE8s1J2+295sGQEFtjBNVDm+iq5Et3tk
-	 1keO3oInK0Iq9kQMQrrBqX9vT5Z62D7jM/JRGxV9JQ6KYCFwCvu4TzMVRYCDucx345
-	 gii2/HtI6VjmCyu8iQ+zdm0m4iuVN4OT53mN+wQuN7iNupQdpac1BWu1yqGvRAT6+3
-	 NGB33cgkg/0QXtSGoQWh7Ee+3UL5gTVEROzL2qZLfWG/kT1BUhICpN0eRaoRvcNhJ3
-	 jsUGLnnSogMJqFF80Iev6blX+q1HnzFanvPIb1wF8jTu6Pt3GQLaStlPhCat5R3hAL
-	 Rkpk7uKZTQjZg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67O1CgJA22339663
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 24 Aug 2026 09:12:42 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Mon, 24 Aug 2026 09:12:43 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Mon, 24 Aug 2026 09:12:43 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Mon, 24 Aug 2026 09:12:43 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: =?utf-8?B?QXRhIMSwbGhhbiBLw7ZrdMO8cms=?= <atailhan2006@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2] wifi: rtw88: disable ASPM for Lenovo IdeaPad
- S340-14IWL
-Thread-Topic: [PATCH v2] wifi: rtw88: disable ASPM for Lenovo IdeaPad
- S340-14IWL
-Thread-Index: AQHdMuRaDdn6aY0a5kGwUVP/YCiDlLasZXgw
-Date: Mon, 24 Aug 2026 01:12:43 +0000
-Message-ID: <070444ae1c564d0cac523952a26ae787@realtek.com>
-References: <20260823094640.22585-1-atailhan2006@gmail.com>
-In-Reply-To: <20260823094640.22585-1-atailhan2006@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wQVvXueO"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=NtQ2IOM/Mh5R17rSUOh8SsBc1MqYsMk2h3KzjPHs0PE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787537693; v=1; x=1788142493;
+ b=wQVvXueOFLtDN5Vz2tgoyaSRzYAX7FfBDKUOiijLrQlo2B4jI0dhYuab3bIgZezb0devHpaf
+ 8ONXFs7as3ZARCG/vhHg2mxL52GZlfBk9BR9XRzM04jrRUYlAxcprZSyp1kk9GYUnV9DyaHQKSR
+ uxGLG0tcaX8dIPAVqwNrobIo=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from localhost.localdomain (116.128.244.169)
+	by mta10.migadu.com with ESMTPS id 9bf3271d94a12da4;
+	Mon, 24 Aug 2026 02:14:53 +0000
+X-Mizu-Trace-ID: 9bf3271d94a12da4
+X-Migadu-Flow: FLOW_OUT
+From: Yi Cong <cong.yi@linux.dev>
+To: nbd@nbd.name,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com
+Cc: shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	Yi Cong <yicong@kylinos.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt792x: fix negative errno truncation in offload capability
+Date: Mon, 24 Aug 2026 10:14:29 +0800
+Message-Id: <20260824021429.43761-1-cong.yi@linux.dev>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-QXRhIMSwbGhhbiBLw7ZrdMO8cmsgPGF0YWlsaGFuMjAwNkBnbWFpbC5jb20+IHdyb3RlOg0KPiBU
-aGUgTGVub3ZvIElkZWFQYWQgUzM0MC0xNElXTCAoRE1JIHByb2R1Y3QgbmFtZSAiODFONCIpIGV4
-cGVyaWVuY2VzDQo+IHNldmVyZSBjb25uZWN0aXZpdHkgaXNzdWVzIHdpdGggdGhlIFJlYWx0ZWsg
-ODgyMkJFIHJ0dzg4IFBDSWUNCj4gd2lyZWxlc3MgY2FyZCB3aGVuIEFTUE0gaXMgZW5hYmxlZC4g
-UmVwb3J0ZWQgc3ltcHRvbXMgaW5jbHVkZQ0KPiBmcmVxdWVudCBkaXNjb25uZWN0aW9ucywgY2Fu
-bm90IHJlc3VtZSBhZnRlciBzbGVlcCwga2VybmVsIHBhbmljcywNCj4gYW5kIHRoZSBkcml2ZXIg
-ZmFpbGluZyB0byBsb2FkIHRpbWUgdG8gdGltZS4NCj4gDQo+IFRoZSBpc3N1ZSBjYW4gYmUgd29y
-a2VkIGFyb3VuZCBieSBlaXRoZXIgYWRkaW5nIHBjaT1ub2FzcG0gdG8gdGhlDQo+IGtlcm5lbCBj
-b21tYW5kIGxpbmUgb3IgYnkgcmVsb2FkaW5nIHRoZSBkcml2ZXIgd2l0aCBkaXNhYmxlX2FzcG09
-MQ0KPiB2aWEgbW9kcHJvYmUuIEFkZCBhIERNSSBxdWlyayB0byBkaXNhYmxlIEFTUE0gYXV0b21h
-dGljYWxseSBmb3INCj4gdGhpcyBkZXZpY2UuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBBdGEgxLBs
-aGFuIEvDtmt0w7xyayA8YXRhaWxoYW4yMDA2QGdtYWlsLmNvbT4NCg0KQWNrZWQtYnk6IFBpbmct
-S2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0KDQo=
+From: Yi Cong <yicong@kylinos.cn>
+
+Returning a negative errno as u8 turned -ENOENT into 0xfe, wrongly
+enabling CNM and NAN caps. Return int and default to no caps on error.
+
+Fixes: e8a264ccd2de0 ("wifi: mt76: mt7921: move init shared code in mt792x-lib module")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yi Cong <yicong@kylinos.cn>
+---
+ drivers/net/wireless/mediatek/mt76/mt792x_core.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_core.c b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+index 0ad33f74c2285..297c8a9f41ba3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_core.c
+@@ -857,7 +857,7 @@ int mt792x_init_wiphy(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL_GPL(mt792x_init_wiphy);
+ 
+-static u8
++static int
+ mt792x_get_offload_capability(struct device *dev, const char *fw_wm)
+ {
+ 	const struct mt76_connac2_fw_trailer *hdr;
+@@ -926,13 +926,20 @@ mt792x_get_mac80211_ops(struct device *dev,
+ 			void *drv_data, u8 *fw_features)
+ {
+ 	struct ieee80211_ops *ops;
++	int ret;
+ 
+ 	ops = devm_kmemdup(dev, mac80211_ops, sizeof(struct ieee80211_ops),
+ 			   GFP_KERNEL);
+ 	if (!ops)
+ 		return NULL;
+ 
+-	*fw_features = mt792x_get_offload_capability(dev, drv_data);
++	ret = mt792x_get_offload_capability(dev, drv_data);
++	if (ret < 0) {
++		dev_warn(dev, "failed to read firmware offload caps: %d\n", ret);
++		*fw_features = 0;
++	} else {
++		*fw_features = ret;
++	}
+ 
+ 	if (mt792x_needs_cnm_runtime(drv_data))
+ 		*fw_features |= MT792x_FW_CAP_CNM;
+-- 
+2.25.1
+
