@@ -1,221 +1,164 @@
-Received: from mail-106101.protonmail.ch (mail-106101.protonmail.ch [79.135.106.101])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390621A8F84
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 02:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F360B2E06D2;
+	Tue, 25 Aug 2026 03:54:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787625145; cv=none; b=QpiADGfI/k/0USPOoWm9NTRYG7fTVGmlOe9giAew5sd0Bq8XmXyS2L5WTks7N3YfDnf2UND5Qhu19jYEtARlUH1C1RV1kbT5LoJmHnfUHALFdaeS639VOrAy+bfE0dmMO8fpq1EwKiAjKy31sA8+fhaqAFvi88zfWNMaELqPTic=
+	t=1787630061; cv=none; b=WutjqY4tkgSfZCIgnp3/Sg9JVBjVHlhJgbSiDCtwSY2rWyPaGPEcJHmL8vYI5Ql/cNDC3fv7vTVbj4VPZ19kPIJjrwuB4EQ4D7rC1EgqQBca3gD7GUseRwwMs2arZF7WDyy2UzHqsY0bjTX00rszSHYm3dzOd9mJDptAu1ZZFAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787625145; c=relaxed/simple;
-	bh=ZG6d6zY13yF0YyZ1KJ+Aiq1Fsxb+I1yqY+Jek7Lf2o8=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b2EJkCUniz+W6RBcZAk8aHUkzzIoJidvDxbEXtxO5jX1cJWqeq21pJ2q8BdP7MKIfJKf64adCf5dBsSRL92tSfGJLP0/+EJ3N4r+uhqYtv9NeTRa3ZmyDqb0SBSf4KJai5E3sgGuszRpeGkUgkbbcnpmE4ZSowXi1MHGrqVFFs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=h2TwMZcP; arc=none smtp.client-ip=79.135.106.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
+	s=arc-20240116; t=1787630061; c=relaxed/simple;
+	bh=dFdr8G1vz6Vpx+B2PLtCdd5urz0EkbuxYwY7vvR5iZk=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=BVnzfA72j3gXKjphJFc6C3gksUJoeBWFT4Mv1+arAvvp5AVTHn9htvxvEf1pMpOjYAjhL/bbypS+Nvv3Zexyc81sKJNbF19PggsELs2QGkxppHNLbw8ZRACpyUCAkoAbUyNRZ28+bQEpqHsmQu1tgIpkdZFrze3R/wCnD3WePeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=XQQ1mkjz; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="h2TwMZcP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=hzypwy7bbzhizneszu6kthz64u.protonmail; t=1787625131; x=1787884331;
-	bh=v3N9Jqwe3IUpHeLYbBtokhi6IabSDW5d5gsud1jQ9EQ=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=h2TwMZcPr0qMEsc0d1KWxf9R8h3i94bDaFfF+LAZcblbIoPZFQRRlkDuM2O0CKnIi
-	 wuz1CVtqlc4LxONY+yZCeVWUCLemC/QmZKI71wxnKYvJEfPQ2OVC0PhmxRqF1JZe7Q
-	 jV8CQNBSmCU5CkRISC0iXlmz5gShQ5gZtS6h8xdgRMaR30ZnZIJLpHfTmX6TkmCe5r
-	 iCkPRvUogggBA2oF7POqndvCZ8g72cZlaPwDdkaT27WPWBizYlMonEW6U3e2/mpa6q
-	 dw8r4tFAihuuEMhKn0djdH48dkxaUo8iZqVo5q/TGjc7gktPJ7keP8FuYUk9+Qqr5s
-	 etPU2O7nyDkvg==
-Date: Tue, 25 Aug 2026 02:32:04 +0000
-To: Ping-Ke Shih <pkshih@realtek.com>
-From: Louis <tux823@proton.me>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RE: [BUG] wifi: rtw89: firmware regression on RTL8922AE (0.35.80.3 vs 0.35.42.1)
-Message-ID: <ntBTj6lgVjdRJmGOURjJKQbOBMl1yMi0Y3ZU2AXxTCaxnZY4TYJZMum-rn1bdrb0811MDltbz-4kGGegu6vD6EQIT-uTW7FEAeEbGGICEPw=@proton.me>
-In-Reply-To: <e18a5267e0454874a510a9669924e190@realtek.com>
-References: <-lvXDCNoYldP3-AEO0uA-s2_Ebvv7FA2sfz4o8Y-4GF7epAf9Qe8v7dBFApXrVhpR942H-CWduTWtKM31PAiEd44d-c2A4aVc3Z5uRmv7dE=@proton.me> <e18a5267e0454874a510a9669924e190@realtek.com>
-Feedback-ID: 215313278:user:proton
-X-Pm-Message-ID: 20a61833cc833a5acd307bbe6b99721e3b4eeced
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="XQQ1mkjz"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67P3sElpD3451056, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787630054; bh=pVUGGUtESPWCr8U+vx+Fo0CZMZDSVHEAUQUUytioJR4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=XQQ1mkjzoRPFgbNiG6pYiqbosL8zNv3A07jiRTfMAQebnnug7Qeo36b/tHXqPaRC5
+	 U3DUAgT0yjZat5ObicbT4l1h9iJoxWpdEvHbCR1pUTpXWu28HzlZpsy30pcyRmn2do
+	 9/o0NyiUlp9YrguHBgSP0bdXV+/Uc/xQRWMxDsrkyyqYIXhyL35iIupm7hY6zDEGcJ
+	 VZckowop+ZfCHTrGZYCtUgU7gAQIzTuOvi9PJQgalT6AT+C6ay2MaSx/Ie/XCDmL7k
+	 zdQV5478I0oLdvXh3NDCl7UD2CwLoa7kIhgxFeHjINdhrcMhEjZSZ97G2dHHwWCCiO
+	 GzjOEzPWJt1Dw==
+Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67P3sElpD3451056
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 25 Aug 2026 11:54:14 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 25 Aug 2026 11:54:14 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 25 Aug 2026 11:54:14 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Tue, 25 Aug 2026 11:54:14 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw89: cap firmware section_num before parsing
+Thread-Topic: [PATCH] wifi: rtw89: cap firmware section_num before parsing
+Thread-Index: AQHdMgxJ9Xw3tB5KAUijU9hAYY9J+rauJi5Q
+Date: Tue, 25 Aug 2026 03:54:14 +0000
+Message-ID: <26bf80f23bfa4fe49183d1f724fffc5c@realtek.com>
+References: <20260822080014.29611-1-acharyalaxman8848@gmail.com>
+In-Reply-To: <20260822080014.29611-1-acharyalaxman8848@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
+Laxman Acharya Padhya <acharyalaxman8848@gmail.com> wrote:
+> rtw89_fw_bin_info.section_info has FWDL_SECTION_MAX_NUM (10) entries.
+> The v0/v1 header parsers take section_num from an 8-bit firmware field
+> (0..255) and write info->section_info[i] with no cap.
+> rtw89_fw_download_suit() keeps that object on the stack, so a crafted
+> firmware blob overflows the stack.
+>=20
+> Reject a truncated header and a section table that does not fit in the
+> firmware image before reading fw_hdr->sections[i].
+>=20
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Laxman Acharya Padhya <acharyalaxman8848@gmail.com>
 
-> Can you enlarge the rekey period of AP to see if anything change?
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Will extend rekey interval on the AP (currently default, will bump to 24h o=
-r disable if the AP allows) and retest on 0.35.80.3.
+Logic is good to me, but please add empty lines.=20
 
-> sudo iw wlan0 set power_save off
+> ---
+>  drivers/net/wireless/realtek/rtw89/fw.c | 30 +++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wirele=
+ss/realtek/rtw89/fw.c
+> index 0099c5c03e7a6..57d4252ee78f0 100644
+> --- a/drivers/net/wireless/realtek/rtw89/fw.c
+> +++ b/drivers/net/wireless/realtek/rtw89/fw.c
+> @@ -156,8 +156,23 @@ static int rtw89_fw_hdr_parser_v0(struct rtw89_dev *=
+rtwdev, const u8 *fw, u32 le
+>         if (!info)
+>                 return -EINVAL;
+>=20
+> +       if (len < sizeof(*fw_hdr)) {
+> +               rtw89_err(rtwdev, "[ERR]fw header truncated\n");
+> +               return -EINVAL;
+> +       }
+> +
+>         info->section_num =3D le32_get_bits(fw_hdr->w6, FW_HDR_W6_SEC_NUM=
+);
+> +       if (!info->section_num || info->section_num > FWDL_SECTION_MAX_NU=
+M) {
+> +               rtw89_err(rtwdev, "[ERR]invalid fw section num %u\n",
+> +                         info->section_num);
+> +               return -EINVAL;
+> +       }
+> +
+>         base_hdr_len =3D struct_size(fw_hdr, sections, info->section_num)=
+;
+> +       if (base_hdr_len > len) {
+> +               rtw89_err(rtwdev, "[ERR]fw header truncated\n");
+> +               return -EINVAL;
+> +       }
 
-Was running NetworkManager wifi.powersave=3D2 during testing but hadn't con=
-firmed at the driver level. Will run this directly, verify with `iw wlan0 g=
-et power_save`, and retest.
+an empty line
 
-> Did you enable Bluetooth at the same time?
+>         info->dynamic_hdr_en =3D le32_get_bits(fw_hdr->w7, FW_HDR_W7_DYN_=
+HDR);
+>         info->idmem_share_mode =3D le32_get_bits(fw_hdr->w7, FW_HDR_W7_ID=
+MEM_SHARE_MODE);
+>=20
+> @@ -455,9 +470,24 @@ static int rtw89_fw_hdr_parser_v1(struct rtw89_dev *=
+rtwdev, const u8 *fw, u32 le
+>         int ret;
+>         u32 i;
+>=20
+> +       if (len < sizeof(*fw_hdr)) {
+> +               rtw89_err(rtwdev, "[ERR]fw header truncated\n");
+> +               return -EINVAL;
+> +       }
+> +
+>         info->section_num =3D le32_get_bits(fw_hdr->w6, FW_HDR_V1_W6_SEC_=
+NUM);
+> +       if (!info->section_num || info->section_num > FWDL_SECTION_MAX_NU=
+M) {
+> +               rtw89_err(rtwdev, "[ERR]invalid fw section num %u\n",
+> +                         info->section_num);
+> +               return -EINVAL;
+> +       }
+> +
+>         info->dsp_checksum =3D le32_get_bits(fw_hdr->w6, FW_HDR_V1_W6_DSP=
+_CHKSUM);
+>         base_hdr_len =3D struct_size(fw_hdr, sections, info->section_num)=
+;
+> +       if (base_hdr_len > len) {
+> +               rtw89_err(rtwdev, "[ERR]fw header truncated\n");
+> +               return -EINVAL;
+> +       }
 
-Yes, BT was on in both setups where this showed up. Will disable and retest=
- on 0.35.80.3.
+an empty line
 
-> Also, can you share full kernel log?
-
-Only had the two grepped lines so far. Will grab a full dmesg -T / journalc=
-tl -k -b across a live drop and send that.
-
-> Could you also do the same test with another AP (like hotspot of your pho=
-ne)?
-
-Will test against a phone hotspot too. My AP is a Zyxel Wi-Fi 7 model=
-=E2=80=94 given the rekey/BT/powersave questions, my guess is this ends up =
-being an interaction with one of those rather than a blanket regression, so=
- different AP behavior should help narrow it down.
-
-Will run rekey/BT-off/power_save-off/hotspot as separate variables where I =
-can and report back with the full log.
-
-> What is the MLO patchset you mentioned?
-
-Wasn't referring to a specific patch I applied =E2=80=94 just going off `iw=
- dev wlan0 info` showing MLD/link info when connected to an AP broadcasting=
- one SSID on 5/6GHz at once. Assumed that meant in-tree MLO (saw it referen=
-ced as MLSR in LWN's coverage). Matches what I saw =E2=80=94 dual associati=
-on at the AP, single active link in station dump =E2=80=94 so sounds like l=
-ink-switching logic is still WIP. Good to know, will treat it as unstable f=
-or now. Can keep sending link-quality data from my setup if that's useful f=
-or that work.
-
-Will follow up once I've run the above.
-
-
-
--------- Original Message --------
-On Monday, 08/24/26 at 21:58 Ping-Ke Shih <pkshih@realtek.com> wrote:
-Louis <tux823@proton.me> wrote:
-> Hardware: Realtek RTL8922AE (rtw89_8922ae driver)
-> Also tested on: RTL8922AE-VS (same PCI ID: 10ec:8922)
-> Systems: Lenovo Yoga 7 14AKP10 (Type 83JR) [laptop, PCIe],
->          desktop (RTL8922AE via M.2-to-PCIe adapter, replacing a
->          QCNFA765/ath11k card)
-> Kernels tested: CachyOS default, CachyOS zen, Arch (vanilla),
->                 mainline LTS =E2=80=94 regression reproduces identically
->                 on all of them, ruling out kernel version as a
->                 variable.
->
-> =3D=3D=3D ISSUE 1: Firmware regression, reproduced across two
->     linux-firmware releases =3D=3D=3D
->
-> Known-good firmware:
->   Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 1
->   Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 3
->
-> Known-bad firmware:
->   Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 1
->   Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 3
->
-> Symptoms on the bad firmware (0.35.80.3):
->   - Intermittent disconnects on both 5GHz and 6GHz, under load or after 3=
--5 minutes
->     (observed most reliably during sustained transfer / speedtest)
->   - Recurring log line preceding drops:
->       "rtw89_8922ae 0000:03:00.0: sec cam entry is empty"
-
-This says it can't find a corresponding security key entry, so
-I guess it happen after re-key. Can you enlarge the rekey
-period of AP to see if anything change?
-
-Since the firmware changes power save timing between the two
-firmware, so another try is to disable power save by:
-   sudo iw wlan0 set power_save off
-
-Did you enable Bluetooth at the same time? If so, please try
-to disable it because firmware also changed some BT-coexistence
-mechanism.
-
-Also, can you share full kernel log?
-
->   - Followed by reassociation failures:
->       "wlan0: deauthenticated from <MAC> while associating
->        (Reason: 9=3DSTA_REQ_ASSOC_WITHOUT_AUTH)"
->   - Ruled out as the cause before landing on firmware:
->       DFS channel-vacate events, router DCS (dynamic channel
->       selection), PCIe ASPM L1, GTK/group-rekey interval,
->       kernel choice (4 different kernels tested)
->
-> Reproduction:
->   1. Install current linux-firmware (rtw8922a_fw-4.bin loads,
->      version 0.35.80.3)
->   2. Sustained transfer / speedtest on 5GHz or 6GHz, wide channel
->      (160MHz+) =E2=80=94 disconnect + "sec cam entry is empty" +
->      reason-9 reassoc failure within minutes
->   3. Move/delete the -3.bin and -4.bin firmware files so the
->      driver falls back to an earlier bundled version
->      (0.35.42.1 (cc364c30) loads) =E2=80=94 stable indefinitely under
->      the same load/test conditions
-
-By the way, I setup my environment (I use the latest driver) to run iperf3
-with firmware 0.35.80.3 on 5GHz band for 999 seconds TX/RX respectively.
-No disconnection.
-Could you also do the same test with another AP (like hotspot of your phone=
-)?
-
->
-> This was independently reproduced a second time after a
-> subsequent linux-firmware update reintroduced the same -3/-4
-> files =E2=80=94 same fix (remove them, fall back to 0.35.42.1) resolved
-> it identically both times. Confirms this isn't a one-off but a
-> persistent regression carried across releases.
->
-> Happy to test candidate fixes or provide a fuller dmesg/pcap
-> capture around a live drop if useful =E2=80=94 I have the reproduction
-> steps down to a few minutes reliably.
->
-> =3D=3D=3D ISSUE 2 (informational, not a bug report): MLO/MLSR real-world
->     test data =3D=3D=3D
->
-> Tested the MLO patchset (MLSR =E2=80=94 link-switching) with an AP
-> broadcasting one SSID across 5GHz and 6GHz simultaneously.
-
-What is the MLO patchset you mentioned?
-
-> AP-side confirms the client associated on both bands at once.
-> `iw dev wlan0 station dump` shows only a single active tx/rx
-> bitrate pair at a time (consistent with MLSR link-switching
-> rather than MLMR aggregation, as expected given the current
-> patchset).
->
-> Real-world throughput/quality comparison from the same physical
-> location (one interior wall between client and AP), same
-> firmware (0.35.42.1):
->
->   5GHz, 240MHz (160+80 non-contiguous), separate SSID:
->     RSSI: -34 to -57 dBm
->     MCS: steady EHT-MCS 8-11 (2 streams), occasionally EHT-MCS 13
->     iperf3 -P4: 728 Mbit/s aggregate, 81 retransmits/30s
->
->   6GHz, 160MHz, separate SSID:
->     RSSI: -65 dBm (AP has no AFC =E2=80=94 confirmed with vendor, LPI-onl=
-y,
->           23dBm ceiling on 6GHz)
->     MCS: oscillating EHT-MCS 5-7 (2 streams)
->     iperf3 -P4: 889 Mbit/s aggregate, 800 retransmits/30s
->     (~8x more retransmits per Mbit/s than the 5GHz link)
->
-> Sharing in case it's useful data for prioritizing MLSR vs. MLMR
-> work, or for anyone else's testing/comparison =E2=80=94 not filing this
-> half as a bug, more as real-world confirmation that link quality
-> (not just raw throughput) matters for whichever link MLSR
-> switching logic favors.
-
-Currently, rtw89 has MLO capability (as you saw by iw) but we are
-still cooking the rules to switch link though.
-
-Ping-Ke
-
+>         info->dynamic_hdr_en =3D le32_get_bits(fw_hdr->w7, FW_HDR_V1_W7_D=
+YN_HDR);
+>         info->idmem_share_mode =3D le32_get_bits(fw_hdr->w7, FW_HDR_V1_W7=
+_IDMEM_SHARE_MODE);
+>=20
+> --
+> 2.51.2
 
