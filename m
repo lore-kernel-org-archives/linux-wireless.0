@@ -1,72 +1,80 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD9FD3955C9
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 10:49:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ACC422370A
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 11:25:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787655001; cv=none; b=KijDsO7M2SQB/rrSHSLL3BDf6J4pjBhLgnAn5KNmuuNNipWlFoR96hbyH/KQHXKEgw6DMffHyzFSHxEvSo3N8JelaLJTYkNiIxGv+7i9VB7A7MD5FFD86MLd90GGZ13BRg84VU3EZG28v6qUpsNiPLia/TtfuP25GTK95bnezQ4=
+	t=1787657133; cv=none; b=DRAR8sOZF6Wh/yLM+I9P4Lws54lDI61Qol7dwagcTFsf352x9kIJtk6EllUQD2NlgjFZydPwbJlr13NZeIJT8a2ALZCtuAJ3yq8lMkCvwtPstXI8KOvOk1Vpv+bKU19tWw25vuK1JgQ0ii3bCqNGv794ALzGaoV8E8+6JyawGNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787655001; c=relaxed/simple;
-	bh=oKsFKolW751cVh7WoVO7IbJoi9oC6RYNcmbiUQCNDmo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jMwgxEdYLbTQk558/0q3jtAqVFCH1WyulUNEW4ZgpQHSWEUqAR6h96KQDbzXiubinjOO1lN7VYrw9VNmE4aH8r0WFN+T0Bhodpu/z+niZbDVnOyZK3fTj7LUHwApiZ7CgELG9gFkxYH0I7jlzztfJHPm4r7m1uyIA/NruAZVIgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=INtUTQYK; arc=none smtp.client-ip=209.85.216.50
+	s=arc-20240116; t=1787657133; c=relaxed/simple;
+	bh=QAx9UwZc966QvaW1bHnvqvofEVuYy1Q2vCksFrWoe/0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NpfLOFiClmFetOv8nEk9Kh1YHhSV9cJKI46JH6Ez1Nso2pHf/DNBZXzdqTkbKkJVnZTLF/EzcK3JyTYv8JVmB3ya/Zt8m+DgFE1aLP7X6VPBUwuU3r20yWmsi/x3yLsu0QUGUC5hvA4rD+1cOlMKEkeyur69Mj3lmGeRVZjjC20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QcaAeMr1; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="INtUTQYK"
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-39647aa9d52so762031a91.0
-        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 03:49:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QcaAeMr1"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2d01663d816so37224245ad.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 04:25:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787654999; x=1788259799; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=RCa9jiLwlOAsAwXMXWcUM4Zdi0HPXNAMy8mFJLDxYHw=;
-        b=INtUTQYKrq1s9CxXYAjJglq+ZYD9JFDZAn+fC88BrY5Lv3I9fRmpom/XlGAiPnOwoS
-         lXA2jNKmzLpFQztDVJSoijua3dcv2R/KFcmbCj8l1LEIAG/TRUyemmZe/6FenlUdEjTr
-         79GACv/PcDWS6wSiRK/e/p1BeNZ8XKkdPw+yBBA1VXfb6N0lmvItXojmXavyCpCkxluC
-         YtFYnr/P5PVgVvUZONmpzunUPBcda83fOpcfqjuUinfJzXcZrMg/OgDQvDLLb/ZWyWM0
-         jEdctYFn3DljohKZKkPoDgxtLseuXZ+Q4TS3jnhlsy1IMuzl7kdAXfyuWQ0AYw3fzF1y
-         pxpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787654999; x=1788259799;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1787657132; x=1788261932; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=RCa9jiLwlOAsAwXMXWcUM4Zdi0HPXNAMy8mFJLDxYHw=;
-        b=iaQX5sMCJmNGCn2yzM8mkjZwEiy4n0TlxoUD6TaNGKZd74bNeJkeGXZe8iK/46umSv
-         5T78Klca0KbSPwUqQm+5ea6ij4J9KQ+jfBgvGU6NXr+lzGpvII9fUtBV+YcAc4WCAEU4
-         zucsid0XCqu6xXEJ/eUyDWhchSzsfUT9PEpCoLW/E4F8rN6jWr2/3Aw+ao0LXmDq8Rjz
-         ObpeWR7uz6fAbJuVIWxgyJYTA0nW+H/VyzsQiTWGvQEVj71C4ps7s76RrFHylCWKTLfu
-         j9VKM0CNbbJCva3Oy5XZAXKUbq/0EKZZd2fe9UkbV6t+OXsv0nScRsL9Ysn7dIQ1xk/a
-         xg7g==
-X-Gm-Message-State: AFuF++ktjsdSHd98cLQVUPaAOfanldUynQDAa2Hxr48AOi3MUrx0o2d/
-	gsH44+BPkSYgrckys7M4C49QFzwquhPakLEaS8BueZf5cUhhm+lQAtD4+Gcn+oxU
-X-Gm-Gg: AR+sD11uH9uMHv5cImMfACDea/hfsYFFQUFewGQKGLYXlH0NqEv/x4IkkZCnBDPXEKe
-	79iER6KSNz/QQDrWlTNK/PPiNQJhJ0aABQtshDIsLLR3cHnAdU87a7mBlM+zdOdD9ZjJqyi24Kn
-	WrItNcSwnD47c6r7miFUjUQ0Mw+OnRXpNN9F+kD+l0UERU8cR6GApg9HyIH3o16WIhOuVdk2vOz
-	Huhvu5jY9NaHd8/OZHZclwfPwVkvbqLi2VzvPApHN9/IpvDtAJ0YkJAE/vUHK0eXvB9bLYnl6uu
-	WpII4/89YMgtfdcaaFb6k3kGBxgtlxrPbpAQl+THs1hc1y1a7i0ug2SgiirgfvquqO6K/cIv1yH
-	sZls9ftSbgQZEho0/lNmSgVm1YjSUPKiSq7GtqDRqN7+RhFGpq0EN8ISTEzm7/s8fMa+n17W5Kk
-	M8s6VbMTmQwx3V6800pUMWKYOOwAncfqdogv1OZT+xG+NPyDVV9r96H23L4rwTeldjzfpxAdr7a
-	korS4Uf17ymzps+gqfiiGNMrwtp3qcZcUE3RnvQyJIRpovdky2PPFl9i59eeCxzBg3NQ6DNXgn0
-X-Received: by 2002:a17:90b:2b48:b0:38e:7297:a92e with SMTP id 98e67ed59e1d1-39645b5b2e7mr6373642a91.9.1787654998871;
-        Tue, 25 Aug 2026 03:49:58 -0700 (PDT)
-Received: from nxpwireless-Inspiron-14-Plus-7440.tw-tpe02.nxp.com (114-25-106-150.dynamic-ip.hinet.net. [114.25.106.150])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39645bbb87esm3479834a91.13.2026.08.25.03.49.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2026 03:49:58 -0700 (PDT)
-From: Jeff Chen <chunfan.chen@gmail.com>
-X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
+        bh=Z3XeY/668kVDZ4xfNnAVG7jTvY2qaZfXTD8D/1tCfTw=;
+        b=QcaAeMr1+e5SXe0Tkz1PcjxL3K5KcaiKYFz2BlN2b5/ZRqjHU1BCzmhTJJkUA3S2i+
+         3nBQniYt0H9uyYKhl0k/6yhDe0aVtUnfvW43OAfqGdvcoVNQtPKVe9qhWXVfgcIlT96q
+         fFdFjWg6PGjsCEZaN5WSyZGxygIhXEDodAEohnKGsEJVlSwx32MdiaYwZL8OYKZXfKZI
+         jbAayVRtMIuqk+aCvEyCOATLuzqUuPXZMf1inQHg+1kp/jOeon8yUCfwsL1waasg9dwM
+         UB1j27ALO5j60EWzcnpWkaU7dsNIClaGSd+WPf5Y4k9GG6Wq1ezR1faL1L7jaUQ4Nu5c
+         rj1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787657132; x=1788261932;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Z3XeY/668kVDZ4xfNnAVG7jTvY2qaZfXTD8D/1tCfTw=;
+        b=jN1+lCCgcHWVfWIb/Wz3W9990+A1cEYCFr6ut3BteePWkDQGXgOSVlcwLxM6Os7317
+         wkajv1ezgp4MriJUsHD9eJRilI7S+LzQ9Cl4FSv9e1WLwn10N4x3e+chZMZXqvHp6Mn3
+         ua1k4oiKTMG1rm12R3QwyUn9ypbRQp0bsMdDzXRg6g5YlDoQKUFiRJ/lnMcwmxOBjAP3
+         NlEoEdarqccH9ildbNHXjwdCSznZG5t2YeZZsH6W+Ft8VvxMfVqdWIeBnUmnOwQ9PLVd
+         aKKaCaU2smOH0SYQB5XxGy3SOkdaBmJAwDu3mDUNdaTlLmEkD8fAQLD/VF+ZPIAKas9E
+         PoQg==
+X-Gm-Message-State: AFuF++lFyWm3kFeElQ4ijhWhnYVyVp7yjQ4MPKFyV1EP+2qGSG6H+F4y
+	L259Qte19Uq+GDk22NAjHqcVGK0tRiT1yu/avBgTcYZTM7ubq/4YW7HoZfTDzowDb1v98g==
+X-Gm-Gg: AR+sD12r8P4OXgBsQKLuy1nsln4c47TbOk4Zqoh1yVDacDZ3Ij09W15+3IxUqN5AVRS
+	GUBIdWn9KtVMKL42Ig9FcX9yq/pgMNq8OmPzynbok4YEJl04nxWlXTkfq6a4lH8AOu7ZH+aVTOF
+	aNm4rY6zorDUWr6dhaSg/0RROKFQeQbf7c6+DKR86UUTKkI0g2+Q+qqjLoWFr32ComQFzHOI206
+	TwIUm+jMJjmk0kUoBwGqKad1uNo00OmPNrz0gLXV9wJNlMvk0uxJx30bQeMMrLQUFi5fPRM51I5
+	9X8MN++ywaxRFTbes8C42Qx1w8jmq2HFSsjOfQe38XXgAk4IIBOwokruwWLW7ApJu9ylQRFsbRG
+	T3LXoTkQjmCWKHwaww61pF7hCewSxgrmIPci/zBlzLsWxoheWmutHvH0Ub8eDEe9r4t1U3lfE1C
+	iqOi7lWfBP/JzUiZ0s3U2ftC0lweIsOI/fJG5HShbXoRW7tEPxy8gwxoPG5DaVXTGyq6ds2Lah1
+	yiI+qA7BAQFt0WaTGicVIo2DXP1ch/5Mw3mRw==
+X-Received: by 2002:a17:90a:c10f:b0:392:7f74:58c9 with SMTP id 98e67ed59e1d1-396465b298amr12936259a91.15.1787657131399;
+        Tue, 25 Aug 2026 04:25:31 -0700 (PDT)
+Received: from KRHW1CJW23.bytedance.net ([203.208.189.11])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-327f8e2a730sm38172287eec.0.2026.08.25.04.25.27
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 25 Aug 2026 04:25:30 -0700 (PDT)
+From: Zhao Li <enderaoelyther@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: error27@gmail.com,
-	johannes@sipsolutions.net,
-	Jeff Chen <jeff.chen_1@nxp.com>,
-	Dan Carpenter <dan.carpenter@linaro.org>
-Subject: [PATCH] wifi: nxpwifi: fix return value check in change_vif_to_sta/ap
-Date: Tue, 25 Aug 2026 18:49:42 +0800
-Message-Id: <20260825104942.5730-1-jeff.chen_1@nxp.com>
-X-Mailer: git-send-email 2.34.1
+Cc: Brian Norris <briannorris@chromium.org>,
+	Francesco Dolcini <francesco@dolcini.it>,
+	Kees Cook <kees@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Avinash Patil <patila@marvell.com>,
+	linville@tuxdriver.com,
+	Cathy Luo <cluo@marvell.com>,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH v4] wifi: mwifiex: validate action frame fixed fields
+Date: Tue, 25 Aug 2026 19:25:23 +0800
+Message-ID: <20260825112523.95774-1-enderaoelyther@gmail.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <anuWyiPQja6_5vly@google.com>
+References: <20260723011013.76968-1-enderaoelyther@gmail.com> <20260723202257.688-1-enderaoelyther@gmail.com> <anuWyiPQja6_5vly@google.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -75,52 +83,79 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-nxpwifi_change_vif_to_sta() and nxpwifi_change_vif_to_ap() both call
-nxpwifi_set_bss_mode() without storing the return value, then check
-'if (ret)' which tests the stale value from the previous call. The
-'if (ret) goto done' is therefore dead code, and errors from
-nxpwifi_set_bss_mode() are silently ignored.
+mwifiex_process_mgmt_packet() accepts an rx_pkt_length as small as a
+four-address struct ieee80211_hdr plus the two-byte firmware length prefix.
+After stripping the prefix, mwifiex_parse_mgmt_packet() can receive a
+frame equal to sizeof(struct ieee80211_hdr).
 
-Fix this by assigning the return value to ret, so the existing error
-path works correctly.
+For action frames, the parser reads the category byte immediately after
+that header and, for a public action frame, reads the following action
+code byte without verifying that either field is present. A truncated frame
+can therefore make the parser consume up to two bytes past the
+firmware-declared frame length. If those bytes look like a TDLS discovery
+response, the malformed frame can spuriously update peer signal state.
 
-Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-Closes: https://lore.kernel.org/linux-wireless/anwqp-LuExbRshYu@stanley.mountain/
-Assisted-by: Claude:claude-opus-4-8
-Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
+Require the category and public action-code fields before reading them.
+Use sizeof(*ieee_hdr) so the checks and field accesses directly match the
+firmware four-address layout being parsed before address4 is removed.
+
+Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Suggested-by: Brian Norris <briannorris@chromium.org>
+Fixes: 72e5aa8d2a6d ("mwifiex: support for parsing TDLS discovery frames")
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/all/66f148d83eb9f0970b9abbccc85d1b61244e54ad.camel@sipsolutions.net/
+Link: https://lore.kernel.org/all/20260708195911.84365-8-enderaoelyther@gmail.com/
+Link: https://lore.kernel.org/all/20260723011013.76968-1-enderaoelyther@gmail.com/
+Link: https://lore.kernel.org/all/20260723202257.688-1-enderaoelyther@gmail.com/
+Link: https://lore.kernel.org/all/anuWyiPQja6_5vly@google.com/
+Assisted-by: Codex:gpt-5
+Assisted-by: Kimi:K3
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
 ---
- drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+Changes in v4:
+- Match the actual four-address parser layout with sizeof(*ieee_hdr) + 1
+  and sizeof(*ieee_hdr) + 2, as suggested by Brian.
+- Use sizeof(*ieee_hdr) consistently for the corresponding field reads.
+- Audit the firmware-length containment concern: both callers reject an
+  rx_pkt_offset plus rx_pkt_length beyond skb->len before entering this
+  helper, so no redundant check is added here.
+- Describe the out-of-frame read and possible TDLS signal-state update
+  precisely.
 
-diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-index 5cc8cdf594d3..ee022fa40990 100644
---- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-+++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
-@@ -844,9 +844,7 @@ nxpwifi_change_vif_to_sta(struct net_device *dev,
- 	update_vif_type_counter(adapter, type, 1);
- 	dev->ieee80211_ptr->iftype = type;
- 
--	if (nxpwifi_set_bss_mode(priv))
--		return -1;
--
-+	ret = nxpwifi_set_bss_mode(priv);
- 	if (ret)
- 		goto done;
- 
-@@ -888,9 +886,7 @@ nxpwifi_change_vif_to_ap(struct net_device *dev,
- 	update_vif_type_counter(adapter, type, 1);
- 	dev->ieee80211_ptr->iftype = type;
- 
--	if (nxpwifi_set_bss_mode(priv))
--		return -1;
--
-+	ret = nxpwifi_set_bss_mode(priv);
- 	if (ret)
- 		goto done;
- 
+Changes in v3:
+- Drop the redundant parser-local header check; the caller already
+  guarantees the complete four-address header after removing the two-byte
+  firmware prefix.
 
-base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+Changes in v2:
+- Express the action-field sizes with IEEE80211_MIN_ACTION_SIZE(),
+  accounting for the firmware four-address layout.
+---
+ drivers/net/wireless/marvell/mwifiex/util.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
+index 7d3631d21223..71305efb77ac 100644
+--- a/drivers/net/wireless/marvell/mwifiex/util.c
++++ b/drivers/net/wireless/marvell/mwifiex/util.c
+@@ -317,10 +317,16 @@ mwifiex_parse_mgmt_packet(struct mwifiex_private *priv, u8 *payload, u16 len,
+ 
+ 	switch (stype) {
+ 	case IEEE80211_STYPE_ACTION:
+-		category = *(payload + sizeof(struct ieee80211_hdr));
++		if (len < sizeof(*ieee_hdr) + 1)
++			return -1;
++
++		category = *(payload + sizeof(*ieee_hdr));
+ 		switch (category) {
+ 		case WLAN_CATEGORY_PUBLIC:
+-			action_code = *(payload + sizeof(struct ieee80211_hdr)
++			if (len < sizeof(*ieee_hdr) + 2)
++				return -1;
++
++			action_code = *(payload + sizeof(*ieee_hdr)
+ 					+ 1);
+ 			if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
+ 				addr2 = ieee_hdr->addr2;
 -- 
-2.34.1
-
+2.50.1 (Apple Git-155)
