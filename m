@@ -1,92 +1,107 @@
-Received: from mta1.migadu.com (out-97.mta1.migadu.com [95.215.58.97])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C2A383329
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:32:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E4F3E49C8;
+	Tue, 25 Aug 2026 08:38:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787646737; cv=none; b=CCvSWLmSlLbkKMG/k2/XkyRHfllpo0kiKuz9nbHRHUamisVnc5lkWnZ1VKs5Okndc3AIOzZyyZ52znpnx99HVcBiR7SCLWWRmH/8tpeish/w5bdugd5ZHXr/MHP4BMhcEHa1fdB6WL0vkTcTl/6nhqJd/oLTXTvcjmlmhg8DZMQ=
+	t=1787647111; cv=none; b=D9BCveWDZ67bO9QHbTCfr1z+oh9SWDq35sGB8EkfEJu2uhBoPCHjVW7TT4QRlxjYTql6bxJtfEWjf0bkYWtKX1lBoaROahDo3XNdFO4FRMy4y8rSELH++L0Hu9cooA7jSYb+6DKMAj0UVUx6EEdYcBV3zIU6F0CUn+78i5KyHc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787646737; c=relaxed/simple;
-	bh=8Rsz+a5wXUsBYjuss7PLL7p77KJPmzZO7vA9P5Yq0KI=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=nX4BmIjHvac/2faeS6rVyIjEcYuFzBTyoCuaZDeEI2iX5TxS/kxWOAiARpFvE+ggsBx65QTxItfV0RTy0yeIUaJBaXUwoo6zcfpzVP8vO28vx4wc7KQW9f++Kohiz/gwq06A+Smnktrd1hYMMB4xmh0ffNrmZYB1ABFgt+IMZqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vFUJOOH7; arc=none smtp.client-ip=95.215.58.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787647111; c=relaxed/simple;
+	bh=QJPm1yPDgfKNuAeybPYU/ex3euJnoE0M3b97YTa9t1Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=BN+cqDHS+in9y5HWErZ5DsDA/hacLtNw1TrFs/fUVhtGugBs4U89SYngtkfSpt6YvcvjehsCOvjK3vuHENNyr4UeDXIanvFzql3XJAeYOcFOLLeSOSsEgMqQANge8ZW5cLxNKLfw7FEebDBJ3olZcx0dAcFONhnmSFPZ5ajYoB8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=m4NEkGDH; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vFUJOOH7"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8Rsz+a5wXUsBYjuss7PLL7p77KJPmzZO7vA9P5Yq0KI=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787646734; v=1; x=1788251534;
- b=vFUJOOH71AVof2mc4Eqawct6EwFDHxaSzENLIZaEA/1tM0z2x6UubOsFotlhEpApwgSYQzSB
- xPAY8UdU9Vq2DfG3Fd3bgkjsLCszt2w2BjSPEoskOFbXVscCwTbgBRaaOevLwUDEyo5NOzbNI0K
- 58ikh8Qd1EoIQZo2ungaOSLU=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from ehlo.thunderbird.net (31.223.131.35)
-	by smtp.migadu.com with ESMTPS id c3a1ce48f45f0779;
-	Tue, 25 Aug 2026 08:32:14 +0000
-X-Mizu-Trace-ID: c3a1ce48f45f0779
-X-Migadu-Flow: FLOW_OUT
-Date: Tue, 25 Aug 2026 10:32:06 +0200
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v7_4/6=5D_wifi=3A_rtw88=3A_sdio=3A_track?=
- =?US-ASCII?Q?_free_TX_pages_and_OQT_credits_for_RTL8723BS?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <5c6d6a1826334966a4f0893ad306fba4@realtek.com>
-References: <20260820090412.19574-1-luka.gejak@linux.dev> <20260820090412.19574-5-luka.gejak@linux.dev> <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com> <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev> <f3f44d1bf5c248ef8ccdc092c2354ac0@realtek.com> <E2ACBF1F-1C98-4091-A851-E2D8AF006911@linux.dev> <68a844f5ea2b4eea827da95080a9dbcb@realtek.com> <E037DFDC-7C17-4537-810A-2D5DBFF4EECC@linux.dev> <5c6d6a1826334966a4f0893ad306fba4@realtek.com>
-Message-ID: <2776B724-A5C6-4068-BFB5-3F0EC981F650@linux.dev>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="m4NEkGDH"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67P8cGnP53640552, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787647096; bh=QJPm1yPDgfKNuAeybPYU/ex3euJnoE0M3b97YTa9t1Q=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=m4NEkGDH0RHMe48xPpcmJz2UugIDiNimA8CAvwMlzVT43DbBD9TJav+mRBd6alnUe
+	 5BXzIa0M29CLPcAAcFL5pkkyE+kSW/rQAkqiasHukUAoBNXMpyU656NuOf1UzRj0ms
+	 aZkGQox+YOORdJ0uIqMpZmjVPf8gIDtPD4xNZTvphQGnaXAiB7B6uIS4j4VNDJgLUK
+	 siMqRQ9anxIACDO5uXeWgLkgkd+uMJwCGegTdbWggV3mrjmnMej+eNGBCj44FjEOQv
+	 0m2uoKTCgubTm581tDfOSusQB+GlBwvjGz/EaVn+iPWFEWCq3hK2DTjnjEtNJnyUou
+	 uVB8bzMKv5P+g==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67P8cGnP53640552
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 25 Aug 2026 16:38:16 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 25 Aug 2026 16:38:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Tue, 25 Aug 2026 16:38:15 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
+ Goede" <johannes.goede@oss.qualcomm.com>
+Subject: RE: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
+ credits for RTL8723BS
+Thread-Topic: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
+ credits for RTL8723BS
+Thread-Index: AQHdMIL3twfMpykyCEyz233XfbbmBLauSXrw//+T44CAAIcCsP//fHmAgACKsPD//38FgAAQ/dzw//9+zgD//3kBYA==
+Date: Tue, 25 Aug 2026 08:38:15 +0000
+Message-ID: <bb13c730fce14d7bbd54a3e5f7f21a2d@realtek.com>
+References: <20260820090412.19574-1-luka.gejak@linux.dev>
+ <20260820090412.19574-5-luka.gejak@linux.dev>
+ <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com>
+ <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev>
+ <f3f44d1bf5c248ef8ccdc092c2354ac0@realtek.com>
+ <E2ACBF1F-1C98-4091-A851-E2D8AF006911@linux.dev>
+ <68a844f5ea2b4eea827da95080a9dbcb@realtek.com>
+ <E037DFDC-7C17-4537-810A-2D5DBFF4EECC@linux.dev>
+ <5c6d6a1826334966a4f0893ad306fba4@realtek.com>
+ <2776B724-A5C6-4068-BFB5-3F0EC981F650@linux.dev>
+In-Reply-To: <2776B724-A5C6-4068-BFB5-3F0EC981F650@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-On August 25, 2026 10:22:53 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Eco=
-m> wrote:
-
-> But I don't find rtw_sdio_write_to_port()?
-
-My fault, it does not exist in v7=2E It is a function I added in v8 while
-splitting the locked region out for guard(), and I asked you about it
-without saying that=2E Sorry for the confusion=2E In v8 the transfer moved
-into rtw_sdio_write_to_port(), called from both the generic path and the
-8723BS one, and the warning had to go either inside it once or in both
-callers=2E That was the whole of my question=2E
-
-> Is this a normal case? Can current sdio=2Ec handle this properly?
-> If so, I'd change to debug level=2E
-
-It should never happen=2E rtw_sdio_tx_skb_prepare() aligns the pointer
-itself: it pushes the packet descriptor, and if the result is not aligned
-to RTW_SDIO_DATA_PTR_ALIGN it pushes the difference as padding and tells
-the firmware about the shifted offset=2E main=2Ec reserves those 8 bytes i=
-n
-hw->extra_tx_headroom for SDIO so the push always has room=2E So by the ti=
-me
-rtw_sdio_write_port() runs the pointer is aligned by construction, and the
-check is really an assertion that the alignment step did its job=2E
-
-It has never fired here, across all the testing on this chip=2E
-
-So I would keep it at warn rather than debug=2E If it ever does fire it me=
-ans
-the alignment path above is broken, and the transfer would go out with a
-misaligned pointer, which is worth being loud about=2E But it is your code
-and your call=2E
-
-Best regards,
-Luka Gejak
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBPbiBBdWd1c3QgMjUs
+IDIwMjYgMTA6MjI6NTMgQU0gR01UKzAyOjAwLCBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVr
+LmNvbT4gd3JvdGU6DQo+IA0KPiA+IEJ1dCBJIGRvbid0IGZpbmQgcnR3X3NkaW9fd3JpdGVfdG9f
+cG9ydCgpPw0KPiANCj4gTXkgZmF1bHQsIGl0IGRvZXMgbm90IGV4aXN0IGluIHY3LiBJdCBpcyBh
+IGZ1bmN0aW9uIEkgYWRkZWQgaW4gdjggd2hpbGUNCj4gc3BsaXR0aW5nIHRoZSBsb2NrZWQgcmVn
+aW9uIG91dCBmb3IgZ3VhcmQoKSwgYW5kIEkgYXNrZWQgeW91IGFib3V0IGl0DQo+IHdpdGhvdXQg
+c2F5aW5nIHRoYXQuIFNvcnJ5IGZvciB0aGUgY29uZnVzaW9uLiBJbiB2OCB0aGUgdHJhbnNmZXIg
+bW92ZWQNCj4gaW50byBydHdfc2Rpb193cml0ZV90b19wb3J0KCksIGNhbGxlZCBmcm9tIGJvdGgg
+dGhlIGdlbmVyaWMgcGF0aCBhbmQgdGhlDQo+IDg3MjNCUyBvbmUsIGFuZCB0aGUgd2FybmluZyBo
+YWQgdG8gZ28gZWl0aGVyIGluc2lkZSBpdCBvbmNlIG9yIGluIGJvdGgNCj4gY2FsbGVycy4gVGhh
+dCB3YXMgdGhlIHdob2xlIG9mIG15IHF1ZXN0aW9uLg0KDQpMZXQncyByZXZpZXcgaXQgYnkgdjgu
+IFBsZWFzZSBoZWxwIHRvIG1lbnRpb24gdGhpcyBieSBjaGFuZ2UgbG9nLg0KDQo+IA0KPiA+IElz
+IHRoaXMgYSBub3JtYWwgY2FzZT8gQ2FuIGN1cnJlbnQgc2Rpby5jIGhhbmRsZSB0aGlzIHByb3Bl
+cmx5Pw0KPiA+IElmIHNvLCBJJ2QgY2hhbmdlIHRvIGRlYnVnIGxldmVsLg0KPiANCj4gSXQgc2hv
+dWxkIG5ldmVyIGhhcHBlbi4gcnR3X3NkaW9fdHhfc2tiX3ByZXBhcmUoKSBhbGlnbnMgdGhlIHBv
+aW50ZXINCj4gaXRzZWxmOiBpdCBwdXNoZXMgdGhlIHBhY2tldCBkZXNjcmlwdG9yLCBhbmQgaWYg
+dGhlIHJlc3VsdCBpcyBub3QgYWxpZ25lZA0KPiB0byBSVFdfU0RJT19EQVRBX1BUUl9BTElHTiBp
+dCBwdXNoZXMgdGhlIGRpZmZlcmVuY2UgYXMgcGFkZGluZyBhbmQgdGVsbHMNCj4gdGhlIGZpcm13
+YXJlIGFib3V0IHRoZSBzaGlmdGVkIG9mZnNldC4gbWFpbi5jIHJlc2VydmVzIHRob3NlIDggYnl0
+ZXMgaW4NCj4gaHctPmV4dHJhX3R4X2hlYWRyb29tIGZvciBTRElPIHNvIHRoZSBwdXNoIGFsd2F5
+cyBoYXMgcm9vbS4gU28gYnkgdGhlIHRpbWUNCj4gcnR3X3NkaW9fd3JpdGVfcG9ydCgpIHJ1bnMg
+dGhlIHBvaW50ZXIgaXMgYWxpZ25lZCBieSBjb25zdHJ1Y3Rpb24sIGFuZCB0aGUNCj4gY2hlY2sg
+aXMgcmVhbGx5IGFuIGFzc2VydGlvbiB0aGF0IHRoZSBhbGlnbm1lbnQgc3RlcCBkaWQgaXRzIGpv
+Yi4NCj4gDQo+IEl0IGhhcyBuZXZlciBmaXJlZCBoZXJlLCBhY3Jvc3MgYWxsIHRoZSB0ZXN0aW5n
+IG9uIHRoaXMgY2hpcC4NCj4gDQo+IFNvIEkgd291bGQga2VlcCBpdCBhdCB3YXJuIHJhdGhlciB0
+aGFuIGRlYnVnLiBJZiBpdCBldmVyIGRvZXMgZmlyZSBpdCBtZWFucw0KPiB0aGUgYWxpZ25tZW50
+IHBhdGggYWJvdmUgaXMgYnJva2VuLCBhbmQgdGhlIHRyYW5zZmVyIHdvdWxkIGdvIG91dCB3aXRo
+IGENCj4gbWlzYWxpZ25lZCBwb2ludGVyLCB3aGljaCBpcyB3b3J0aCBiZWluZyBsb3VkIGFib3V0
+LiBCdXQgaXQgaXMgeW91ciBjb2RlDQo+IGFuZCB5b3VyIGNhbGwuDQoNCk9rYXkuIA0KDQpCeSB0
+aGUgd2F5LCBJJ20gbm90IHNvIGZhbWlsaWFyIHdpdGggU0RJTyBjb2RlLiBKdXN0IGxlYXJuIGJ5
+IHJldmlld2luZy4gOikNCg0KUGluZy1LZQ0KDQo=
