@@ -1,120 +1,140 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 338F9373BFE
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 07:55:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0EF23DB305
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:08:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787644551; cv=none; b=qyFcdRSftK+RzU6s6U1rKA5Kh/sW6vTYzlWMDP9QonoT2qFsV/YF+5Oh8KEVdh5axM+/ytjPBnjP7EfsoERR4iA4qNPdxyLWj7VClHxH+9GKOb5y6VMXaCBMim1EyzwML54oSO+TgjyTRcGRD60Nkf9TkSGOkwJL6yTRBaMpy2I=
+	t=1787645295; cv=none; b=Bawb3cEHAsQxOiW8mqlGvcLA/fl8HNnjhqVK8B1mY4VswurDujyoT98aX3VZsFg8BfVL0zKrxpyH4A5D5QNdQpZVB3drB71WlqnylGQzr81w5nuhtvpVLiFpb+I8qZ1CN/ClOr7CwgOwP8gshlH+8Q6vYBYX1J5zYmwNlniMCXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787644551; c=relaxed/simple;
-	bh=cEEg94RxDrjn+V/9mMrTEw7XG6ZVjtZXmvPUbdJ0qvQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YeAIb/rRBIFH3qcCVdSa6GsPkRKG8SRq7YPk/GF6VcYa2CcjVUqXTx6KJskK3IdCQf7Xn0ZdldzBqXwLDmQwvKaqootQcJar+th25XpryEpctTM3ebzUoT0DAdgdB+ARZXY8z7bmJUg5N2K6MrUFq1IKLRQcofr2y6AsK94621s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rl9katNx; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1787645295; c=relaxed/simple;
+	bh=xwSCTUisnEan090oTItdJ4c5cg/rEdInRMJkKPoeQ5I=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
+	 MIME-Version:Content-Type; b=j+HuCBOzJekydr4avDOu4BpfWtpcLYuESsayZ4W2U8J7T4nZSv4LIeL8ZK8Cj/PQ/j1Z22lDQDNh5yXS2+nf9OTuOdALqo3pvo5iwGrYxcEJUladquiB/XpxNy6WMmJArq0i7BKYCEtlr3AUR7LAYZfzBRhDEmoCH1jwZ5QaC9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uGJ/5VEu; arc=none smtp.client-ip=95.215.58.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rl9katNx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787644550; x=1819180550;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=cEEg94RxDrjn+V/9mMrTEw7XG6ZVjtZXmvPUbdJ0qvQ=;
-  b=Rl9katNxyMBlMuIedthTXGqyX5tR9q2PtjTeVgErEkLLxWiAy4r+9tqS
-   5izR5g3YMUp+oQKGqY2MxWNvhjaygeOqQq76p+XvNiMvHs+eb6C0UZYOR
-   1uoeR8ZjhXAqUwMMtjH3SBEG+Gf8MNelHH+mo378yXHZWp8eXPaBdj53S
-   5f6QzYjrcXeLNjCQmVLY1zXJO66KX+85t4nVwhJLyKEUQRMYiWlgbcOQT
-   VYQY2oJT/aEOC9aMwQOc+WWi/3/zrgCYSceNLPDcZLhTQAe4xGmf21uW7
-   6w5pec76GCJkIHMlYx4Bs0grxAdk1qa9qetYaQyqt+gkUp+7A0ZO27yoP
-   Q==;
-X-CSE-ConnectionGUID: 26vTnrS7S2qygUHzOZoQXA==
-X-CSE-MsgGUID: f9jsjj9zS4CYDPQgs01kbA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11885"; a="91785852"
-X-IronPort-AV: E=Sophos;i="6.25,242,1779174000"; 
-   d="scan'208";a="91785852"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2026 00:55:49 -0700
-X-CSE-ConnectionGUID: hN3GQjCqQlG5afb4P/iBHw==
-X-CSE-MsgGUID: abvU8nloQ8iQxVDMl3slLg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.25,242,1779174000"; 
-   d="scan'208";a="271424992"
-Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 25 Aug 2026 00:55:46 -0700
-Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wym0V-000000005FD-2WKr;
-	Tue, 25 Aug 2026 07:55:43 +0000
-Date: Tue, 25 Aug 2026 15:55:22 +0800
-From: kernel test robot <lkp@intel.com>
-To: Eason Lai <eason.lai@mediatek.com>, nbd@nbd.name, lorenzo@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org, kun.wu@mediatek.com,
-	deren.wu@mediatek.com, sean.wang@mediatek.com,
-	quan.zhou@mediatek.com, ryder.lee@mediatek.com,
-	leon.yen@mediatek.com, litien.chang@mediatek.com,
-	jb.tsai@mediatek.com, michael.shih@mediatek.com,
-	eason.lai@mediatek.com
-Subject: Re: [PATCH v1] wifi: mt76: mt7928: Add debugfs for stats to provide
- debug purpose
-Message-ID: <202608251526.VgKMT8Lv-lkp@intel.com>
-References: <20260824030746.60706-1-eason.lai@mediatek.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uGJ/5VEu"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=xwSCTUisnEan090oTItdJ4c5cg/rEdInRMJkKPoeQ5I=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787645286; v=1; x=1788250086;
+ b=uGJ/5VEuEM4AJegmm7zUrWaEqnoQ7IpMTYlNxHHw70kKDYfAFlPJzG5mLLzJRQFT82WV1M6M
+ t484Wq3vBFGrDw2nXrwo9DYZdmdXBeRjETn7veMo4VKHUql1hChz+RDsRePDCtswd7Gji0K5vK2
+ d+NhodXQMrRyspSLrBuTra0A=
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: from ehlo.thunderbird.net (31.223.131.35)
+	by smtp.migadu.com with ESMTPS id 93f490c8784e81a4;
+	Tue, 25 Aug 2026 08:08:05 +0000
+X-Mizu-Trace-ID: 93f490c8784e81a4
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 25 Aug 2026 10:07:59 +0200
+From: Luka Gejak <luka.gejak@linux.dev>
+To: Ping-Ke Shih <pkshih@realtek.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Michael Straube <straube.linux@gmail.com>,
+ Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+ Peter Robinson <pbrobinson@gmail.com>,
+ Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
+Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v7_4/6=5D_wifi=3A_rtw88=3A_sdio=3A_track?=
+ =?US-ASCII?Q?_free_TX_pages_and_OQT_credits_for_RTL8723BS?=
+User-Agent: Thunderbird for Android
+In-Reply-To: <68a844f5ea2b4eea827da95080a9dbcb@realtek.com>
+References: <20260820090412.19574-1-luka.gejak@linux.dev> <20260820090412.19574-5-luka.gejak@linux.dev> <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com> <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev> <f3f44d1bf5c248ef8ccdc092c2354ac0@realtek.com> <E2ACBF1F-1C98-4091-A851-E2D8AF006911@linux.dev> <68a844f5ea2b4eea827da95080a9dbcb@realtek.com>
+Message-ID: <E037DFDC-7C17-4537-810A-2D5DBFF4EECC@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260824030746.60706-1-eason.lai@mediatek.com>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hi Eason,
+On August 25, 2026 9:50:05 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ecom=
+> wrote:
+>Luka Gejak <luka=2Egejak@linux=2Edev> wrote:
+>> On August 25, 2026 9:25:13 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=
+=2Ecom> wrote:
+>> >Luka Gejak <luka=2Egejak@linux=2Edev> wrote:
+>> >> Hi Ping-Ke,
+>> >>
+>> >> On August 25, 2026 8:12:58 AM GMT+02:00, Ping-Ke Shih <pkshih@realte=
+k=2Ecom> wrote:
+>> >> > guard(mutex)(&rtwsdio->tx_credit_lock);
+>> >>
+>> >> The lock is only taken for this chip, and guard() is unconditional, =
+so I
+>> >> split the locked region into its own function instead of branching a=
+round
+>> >> the lock:
+>> >>
+>> >>         if (!rtw_is_8723bs(rtwdev)) {
+>> >>                 txsize =3D sdio_align_size(rtwsdio->sdio_func, skb->=
+len);
+>> >>
+>> >>                 ret =3D rtw_sdio_check_free_txpg(rtwdev, queue, txsi=
+ze);
+>> >>                 if (ret)
+>> >>                         return ret;
+>> >>
+>> >>                 return rtw_sdio_write_to_port(rtwdev, skb, queue, tx=
+addr,
+>> >>                                               txsize);
+>> >>         }
+>> >>         =2E=2E=2E
+>> >>         guard(mutex)(&rtwsdio->tx_credit_lock);
+>> >>
+>> >>         return rtw_sdio_8723bs_write_port(rtwdev, skb, queue, txaddr=
+, txsize,
+>> >>                                           write_size);
+>> >
+>> >I meant
+>> >
+>> >    if (rtw_is_8723bs(rtwdev))
+>> >        guard(mutex)(&rtwsdio->tx_credit_lock);
+>> >
+>> >Doesn't it work?
+>> >
+>> >
+>>=20
+>> I tried it, and no=2E guard() expands to a declaration, and a declarati=
+on
+>> cannot be the body of an if, so it does not build:
+>>=20
+>>   sdio=2Ec: In function 'rtw_sdio_write_port':
+>>   include/linux/cleanup=2Eh:302:9: error: expected expression before
+>>   'class_mutex_t'
+>>     302 |         class_##_name##_t var __cleanup(=2E=2E=2E) =3D
+>>=20
+>> Adding braces builds cleanly, which is the more dangerous version, beca=
+use
+>> the cleanup then runs at the closing brace and the mutex is released ag=
+ain
+>> before any of the code it is meant to protect runs=2E
+>>=20
+>> That is why I moved the locked part into its own function: the guard ne=
+eds
+>> a scope that is exactly the critical section, and an if body is either =
+too
+>> small or not allowed=2E
+>
+>Okay=2E Got it=2E
+>
+>
+Do you mind answering this question, it seems like you missed it:
 
-kernel test robot noticed the following build errors:
+The unaligned SKB warning now sits in both callers rather than once inside
+rtw_sdio_write_to_port(), because __func__ would otherwise report
+rtw_sdio_write_to_port for every other SDIO chip where it reports
+rtw_sdio_write_port today=2E Keeping that message identical costs three
+duplicated lines=2E Putting it once in rtw_sdio_write_to_port() is the
+tidier code and arguably the more accurate message, at the price of
+changing a log line on chips this series is not about=2E I went with the
+duplicate to leave the other parts alone, but I have no strong feeling
+either way, so say which you prefer=2E
 
-[auto build test ERROR on wireless-next/main]
-[also build test ERROR on linus/master next-20260821]
-[cannot apply to wireless/main v7.2]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Eason-Lai/wifi-mt76-mt7928-Add-debugfs-for-stats-to-provide-debug-purpose/20260824-110746
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20260824030746.60706-1-eason.lai%40mediatek.com
-patch subject: [PATCH v1] wifi: mt76: mt7928: Add debugfs for stats to provide debug purpose
-config: parisc-allyesconfig (https://download.01.org/0day-ci/archive/20260825/202608251526.VgKMT8Lv-lkp@intel.com/config)
-compiler: hppa-linux-gcc (GCC) 16.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260825/202608251526.VgKMT8Lv-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608251526.VgKMT8Lv-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/net/wireless/mediatek/mt76/mt7996/init.c:13:
->> drivers/net/wireless/mediatek/mt76/mt7996/mcu.h:1000:9: error: redeclaration of enumerator 'UNI_CMD_MIB_DATA'
-    1000 |         UNI_CMD_MIB_DATA,
-         |         ^~~~~~~~~~~~~~~~
-   In file included from drivers/net/wireless/mediatek/mt76/mt7996/mcu.h:9:
-   drivers/net/wireless/mediatek/mt76/mt7996/../mt76_connac_mcu.h:1511:9: note: previous definition of 'UNI_CMD_MIB_DATA' with type 'enum <anonymous>'
-    1511 |         UNI_CMD_MIB_DATA,
-         |         ^~~~~~~~~~~~~~~~
-
-
-vim +/UNI_CMD_MIB_DATA +1000 drivers/net/wireless/mediatek/mt76/mt7996/mcu.h
-
-98686cd21624c7 Shayne Chen 2022-11-22   998  
-98686cd21624c7 Shayne Chen 2022-11-22   999  enum {
-98686cd21624c7 Shayne Chen 2022-11-22 @1000  	UNI_CMD_MIB_DATA,
-98686cd21624c7 Shayne Chen 2022-11-22  1001  };
-98686cd21624c7 Shayne Chen 2022-11-22  1002  
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
