@@ -1,108 +1,221 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-106101.protonmail.ch (mail-106101.protonmail.ch [79.135.106.101])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D58A1A704B
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 02:02:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787623376; cv=pass; b=oyKJnu78fr9Oq6Sp52dRkAxZ9+6Hm5HNeGJWdDfISTaSHievPKmqUUhci4I72jt/9CDQVkoIi4azphcSHGAn7D5G089KuYUCcpPMI1pAll516DV0AoeIirDFgmXGZR8urkBz/MlWDR+DOTH8YV0z2SD6xNDbxBPUv5W3RC5tV8o=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787623376; c=relaxed/simple;
-	bh=UgHoeOjpKMJA7mUZSy6kBez7uuRxoNHSIzfVFhE5H6w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aTVelzQRJM7ntu0m0P/R8drB+y35HChPt+roZAKAkSz7EVKMBieucDqyNy+DBpPgMZ7eqtrHb/01Jeq3yZ7ksg+wxFOCZLGlGXx1G/btZvZVpNhPFwrbzEox2NrIUNcWYtNOzNOWk+OjxgOziaqj6XWLiXFBo7y5S8S6OmHvhJo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lWiI3HRL; arc=pass smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 390621A8F84
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 02:32:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.101
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787625145; cv=none; b=QpiADGfI/k/0USPOoWm9NTRYG7fTVGmlOe9giAew5sd0Bq8XmXyS2L5WTks7N3YfDnf2UND5Qhu19jYEtARlUH1C1RV1kbT5LoJmHnfUHALFdaeS639VOrAy+bfE0dmMO8fpq1EwKiAjKy31sA8+fhaqAFvi88zfWNMaELqPTic=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787625145; c=relaxed/simple;
+	bh=ZG6d6zY13yF0YyZ1KJ+Aiq1Fsxb+I1yqY+Jek7Lf2o8=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=b2EJkCUniz+W6RBcZAk8aHUkzzIoJidvDxbEXtxO5jX1cJWqeq21pJ2q8BdP7MKIfJKf64adCf5dBsSRL92tSfGJLP0/+EJ3N4r+uhqYtv9NeTRa3ZmyDqb0SBSf4KJai5E3sgGuszRpeGkUgkbbcnpmE4ZSowXi1MHGrqVFFs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=h2TwMZcP; arc=none smtp.client-ip=79.135.106.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lWiI3HRL"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6a1542cdb53so5112078a12.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Aug 2026 19:02:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787623373; cv=none;
-        d=google.com; s=arc-20260327;
-        b=J7sWYhFbpu8XWV93xB+Pd7G27bZTtZpxdU4yaDqZW0jPDMRey/FrlB0v85dd+lg79+
-         S/aAYGEJOTtkP8A1qo4PhTM5uVX1lSBL5CJ82Bt7TK4Z3vrORAFJb9C/SRvofW92XDwc
-         4b8qTl99Ypg+0Bxg9OaU1Lcf1fb4gQedt9+7h587XrjKCt4E/tBbMLQXIXiu2d+IczR0
-         kBIZb6g54CQl0QdiU63os9MyIZMd44usm4ssV7EZPI3AxQ5GuHqoOAgFy6zEaSGc7LjJ
-         JYt8Uzz7i25fYsLomKLFTgF/YP2VMuzqUa5NhEg2XtMQ8FpKI4X/2lriiXR3C10S3i+Q
-         DzuA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UgHoeOjpKMJA7mUZSy6kBez7uuRxoNHSIzfVFhE5H6w=;
-        fh=Yabq5cGb3tKtZsDl9qYRBEojaakeItLILH8JMK5v604=;
-        b=soXCp08FrenvXFL1eCd2tNToHnL1DcT9rvmuaZ63ouP14mWnAg+hJJm5ZhClJYn94j
-         1oTsvI04vVV1iEENr8GU8GF3czsTGuxqOfUsWwf88qF9v7Eh5/6B6OqFar+5d/N2Ahwm
-         LuIdewuyN/7EBGKzY+5VIR6Q35WpoX6DrA02iEh3iNM5Jcwgcnxt1LC7qxG9pEAoDcpE
-         gLKMFblUX0AhfNwQUXuJm6OyDBLW59ITJ1LWyYyRfgf+SCaD/oridZyK9v5bEhrzjjRJ
-         XRaf60Y31R9i4igYXaZhLNAcKxcRm0+daZ1+1u/IFR7UoOSOHGETczMPq3sYz46p76OU
-         rTyg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787623373; x=1788228173; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=UgHoeOjpKMJA7mUZSy6kBez7uuRxoNHSIzfVFhE5H6w=;
-        b=lWiI3HRLI/zmVJvyc2iBXFY6Uwr1FQz2nASparcOo67HuZs82hTHIDA1WkbptZyuu+
-         pykvmHyBcoH8wHZfRHeTgnZB63nsEj2HGugNjZjgHn78aUbaa187/UfcJFYNVV5unQ5P
-         A8hlf3KU+TKlnlSfNkJgCxlEZIl4BD8N1K8PC9NyN2gSA9yH0krhtjYJrm/S9tT6IBEQ
-         BxFL11K3pPu2co/xBwFWtcx40A0R5KFqXPro00LXSuhgFoI+9L2wLMrL3fR4qUDCWtG4
-         ilZTgQF1QGcB7TgkUXx8zMTtZjyEfCeEbzK3pQ6RNl0zq1L0BBrFND86JyCQfSsXjD3Y
-         UgrQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787623373; x=1788228173;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=UgHoeOjpKMJA7mUZSy6kBez7uuRxoNHSIzfVFhE5H6w=;
-        b=N8Mx+MMVt6ySNedGVCCLiOaLKw9C+HHV5ybSAmcMzQJHGqCZJVczcmHBdqaX12DnMo
-         WpvqgvDIxVyEV+S5dhK06TFjxVZ30AWpvxkZTdhu1MO/ljJKzLL9Ta92GbGubcdBIKYr
-         QMPDU/Br/bBg51uJdNwjJcgzJwxmUy0zrjqnvJEJCbV3aO609oFwxLc1eyS4KK5ThMwO
-         c+hOQJlzfbUsD5PVKZ2XaozAmcIey9HPeRsFcVC1e6k5dFZCpXD+Op/KToS1qB8tNBvJ
-         ycZCmutqQwMwooh4mMC8pwv3w45dZ4YoKjS7tdFhJJlnyg7LqSwfvOgXz/HlFye5NDsw
-         yfLg==
-X-Gm-Message-State: AFuF++khX+2zBBI3Q0I5Rhu3n2HGM4myi+TxNWD4BdCGDNHPUUpfkC4U
-	pbZJUFd+mNeIhAPiutNbh/TRBjtiTB9eTLIMJw/Gal+K79ArEDP9ForPHSVuE4lZDi9aTi2LOnh
-	xMQvhoTexZuxKCXF0vtE5oijKex4E2BGzrQ==
-X-Gm-Gg: AR+sD10DaaouTu1sSzpDZBtXItgv+IDhIVbPpQL0CUt0RKoFEVSDj392P8qvcT2ogLE
-	2V4vAzNN1coahs6EYVxpZz5DX2SS1uKAqDVgWxRcIHLRsueRnfWSE0X7dL+GgqEcZY3yVoI1L4B
-	/V5zKjahRh0v/1Bp7dmNXX9cGlPo+X5Ux7YakfQPWsqPJsdiL4yjKq/Y0eKyoEpFshoDz6QUsH8
-	84VR309tThx+iF8SMKR7uPq0v9l4+9CmdzNeWlT3eCRz5HV0LygfChootEAfoFL0GCS43vGy1lj
-	egevmlm2AJJsgl0gvCmH7BmAjlPSueaiRpQ5kqLzkbpRLw==
-X-Received: by 2002:a05:6402:3224:b0:6a1:fd14:8832 with SMTP id
- 4fb4d7f45d1cf-6a582b75aeamr28112975a12.12.1787623373188; Mon, 24 Aug 2026
- 19:02:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="h2TwMZcP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
+	s=hzypwy7bbzhizneszu6kthz64u.protonmail; t=1787625131; x=1787884331;
+	bh=v3N9Jqwe3IUpHeLYbBtokhi6IabSDW5d5gsud1jQ9EQ=;
+	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
+	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
+	 Message-ID:BIMI-Selector;
+	b=h2TwMZcPr0qMEsc0d1KWxf9R8h3i94bDaFfF+LAZcblbIoPZFQRRlkDuM2O0CKnIi
+	 wuz1CVtqlc4LxONY+yZCeVWUCLemC/QmZKI71wxnKYvJEfPQ2OVC0PhmxRqF1JZe7Q
+	 jV8CQNBSmCU5CkRISC0iXlmz5gShQ5gZtS6h8xdgRMaR30ZnZIJLpHfTmX6TkmCe5r
+	 iCkPRvUogggBA2oF7POqndvCZ8g72cZlaPwDdkaT27WPWBizYlMonEW6U3e2/mpa6q
+	 dw8r4tFAihuuEMhKn0djdH48dkxaUo8iZqVo5q/TGjc7gktPJ7keP8FuYUk9+Qqr5s
+	 etPU2O7nyDkvg==
+Date: Tue, 25 Aug 2026 02:32:04 +0000
+To: Ping-Ke Shih <pkshih@realtek.com>
+From: Louis <tux823@proton.me>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RE: [BUG] wifi: rtw89: firmware regression on RTL8922AE (0.35.80.3 vs 0.35.42.1)
+Message-ID: <ntBTj6lgVjdRJmGOURjJKQbOBMl1yMi0Y3ZU2AXxTCaxnZY4TYJZMum-rn1bdrb0811MDltbz-4kGGegu6vD6EQIT-uTW7FEAeEbGGICEPw=@proton.me>
+In-Reply-To: <e18a5267e0454874a510a9669924e190@realtek.com>
+References: <-lvXDCNoYldP3-AEO0uA-s2_Ebvv7FA2sfz4o8Y-4GF7epAf9Qe8v7dBFApXrVhpR942H-CWduTWtKM31PAiEd44d-c2A4aVc3Z5uRmv7dE=@proton.me> <e18a5267e0454874a510a9669924e190@realtek.com>
+Feedback-ID: 215313278:user:proton
+X-Pm-Message-ID: 20a61833cc833a5acd307bbe6b99721e3b4eeced
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260824070730.2089862-1-wens@kernel.org>
-In-Reply-To: <20260824070730.2089862-1-wens@kernel.org>
-From: Ping-Ke Shih <pkshih@gmail.com>
-Date: Tue, 25 Aug 2026 10:02:40 +0800
-X-Gm-Features: AcwNN1WCqIAYuLFHfMK8FerJDJO31a9qqA0CLcZEfBDzqQFP_HA8mVYap7UD_0g
-Message-ID: <CAHrRpukiMAvgozT0bVidjrHZKxuXX7hc2qYy3fR-TA8W+ihFoA@mail.gmail.com>
-Subject: Re: [PATCH] wireless-regdb: allow 320MHz channel width for Hong Kong (HK)
-To: Chen-Yu Tsai <wens@kernel.org>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org, 
-	Ping-Ke Shih <pkshih@realtek.com>, Morgan Wong <pbodq2@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-Chen-Yu Tsai <wens@kernel.org> wrote=EF=BC=9A
+
+> Can you enlarge the rekey period of AP to see if anything change?
+
+Will extend rekey interval on the AP (currently default, will bump to 24h o=
+r disable if the AP allows) and retest on 0.35.80.3.
+
+> sudo iw wlan0 set power_save off
+
+Was running NetworkManager wifi.powersave=3D2 during testing but hadn't con=
+firmed at the driver level. Will run this directly, verify with `iw wlan0 g=
+et power_save`, and retest.
+
+> Did you enable Bluetooth at the same time?
+
+Yes, BT was on in both setups where this showed up. Will disable and retest=
+ on 0.35.80.3.
+
+> Also, can you share full kernel log?
+
+Only had the two grepped lines so far. Will grab a full dmesg -T / journalc=
+tl -k -b across a live drop and send that.
+
+> Could you also do the same test with another AP (like hotspot of your pho=
+ne)?
+
+Will test against a phone hotspot too. My AP is a Zyxel Wi-Fi 7 model=
+=E2=80=94 given the rekey/BT/powersave questions, my guess is this ends up =
+being an interaction with one of those rather than a blanket regression, so=
+ different AP behavior should help narrow it down.
+
+Will run rekey/BT-off/power_save-off/hotspot as separate variables where I =
+can and report back with the full log.
+
+> What is the MLO patchset you mentioned?
+
+Wasn't referring to a specific patch I applied =E2=80=94 just going off `iw=
+ dev wlan0 info` showing MLD/link info when connected to an AP broadcasting=
+ one SSID on 5/6GHz at once. Assumed that meant in-tree MLO (saw it referen=
+ced as MLSR in LWN's coverage). Matches what I saw =E2=80=94 dual associati=
+on at the AP, single active link in station dump =E2=80=94 so sounds like l=
+ink-switching logic is still WIP. Good to know, will treat it as unstable f=
+or now. Can keep sending link-quality data from my setup if that's useful f=
+or that work.
+
+Will follow up once I've run the above.
+
+
+
+-------- Original Message --------
+On Monday, 08/24/26 at 21:58 Ping-Ke Shih <pkshih@realtek.com> wrote:
+Louis <tux823@proton.me> wrote:
+> Hardware: Realtek RTL8922AE (rtw89_8922ae driver)
+> Also tested on: RTL8922AE-VS (same PCI ID: 10ec:8922)
+> Systems: Lenovo Yoga 7 14AKP10 (Type 83JR) [laptop, PCIe],
+>          desktop (RTL8922AE via M.2-to-PCIe adapter, replacing a
+>          QCNFA765/ath11k card)
+> Kernels tested: CachyOS default, CachyOS zen, Arch (vanilla),
+>                 mainline LTS =E2=80=94 regression reproduces identically
+>                 on all of them, ruling out kernel version as a
+>                 variable.
+>
+> =3D=3D=3D ISSUE 1: Firmware regression, reproduced across two
+>     linux-firmware releases =3D=3D=3D
+>
+> Known-good firmware:
+>   Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 1
+>   Firmware version 0.35.42.1 (cc364c30), cmd version 1, type 3
+>
+> Known-bad firmware:
+>   Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 1
+>   Firmware version 0.35.80.3 (8ef4f0cf), cmd version 1, type 3
+>
+> Symptoms on the bad firmware (0.35.80.3):
+>   - Intermittent disconnects on both 5GHz and 6GHz, under load or after 3=
+-5 minutes
+>     (observed most reliably during sustained transfer / speedtest)
+>   - Recurring log line preceding drops:
+>       "rtw89_8922ae 0000:03:00.0: sec cam entry is empty"
+
+This says it can't find a corresponding security key entry, so
+I guess it happen after re-key. Can you enlarge the rekey
+period of AP to see if anything change?
+
+Since the firmware changes power save timing between the two
+firmware, so another try is to disable power save by:
+   sudo iw wlan0 set power_save off
+
+Did you enable Bluetooth at the same time? If so, please try
+to disable it because firmware also changed some BT-coexistence
+mechanism.
+
+Also, can you share full kernel log?
+
+>   - Followed by reassociation failures:
+>       "wlan0: deauthenticated from <MAC> while associating
+>        (Reason: 9=3DSTA_REQ_ASSOC_WITHOUT_AUTH)"
+>   - Ruled out as the cause before landing on firmware:
+>       DFS channel-vacate events, router DCS (dynamic channel
+>       selection), PCIe ASPM L1, GTK/group-rekey interval,
+>       kernel choice (4 different kernels tested)
+>
+> Reproduction:
+>   1. Install current linux-firmware (rtw8922a_fw-4.bin loads,
+>      version 0.35.80.3)
+>   2. Sustained transfer / speedtest on 5GHz or 6GHz, wide channel
+>      (160MHz+) =E2=80=94 disconnect + "sec cam entry is empty" +
+>      reason-9 reassoc failure within minutes
+>   3. Move/delete the -3.bin and -4.bin firmware files so the
+>      driver falls back to an earlier bundled version
+>      (0.35.42.1 (cc364c30) loads) =E2=80=94 stable indefinitely under
+>      the same load/test conditions
+
+By the way, I setup my environment (I use the latest driver) to run iperf3
+with firmware 0.35.80.3 on 5GHz band for 999 seconds TX/RX respectively.
+No disconnection.
+Could you also do the same test with another AP (like hotspot of your phone=
+)?
 
 >
-> There are no restrictions on channel width. Allow 320 MHz channels on
-> the 6 GHz band for WiFi 7.
+> This was independently reproduced a second time after a
+> subsequent linux-firmware update reintroduced the same -3/-4
+> files =E2=80=94 same fix (remove them, fall back to 0.35.42.1) resolved
+> it identically both times. Confirms this isn't a one-off but a
+> persistent regression carried across releases.
 >
-> Reported-by: Morgan Wong <pbodq2@gmail.com>
-> Link: https://lore.kernel.org/wireless-regdb/CABzKGg0YEm5PfW9YtEM0G1SYY6R=
-D80DmFpu_Jpb9hoioK+tH-w@mail.gmail.com/
-> Signed-off-by: Chen-Yu Tsai <wens@kernel.org>
+> Happy to test candidate fixes or provide a fuller dmesg/pcap
+> capture around a live drop if useful =E2=80=94 I have the reproduction
+> steps down to a few minutes reliably.
+>
+> =3D=3D=3D ISSUE 2 (informational, not a bug report): MLO/MLSR real-world
+>     test data =3D=3D=3D
+>
+> Tested the MLO patchset (MLSR =E2=80=94 link-switching) with an AP
+> broadcasting one SSID across 5GHz and 6GHz simultaneously.
 
-Reviewed-by: Ping-Ke Shih <pkshih@realtek.com>
+What is the MLO patchset you mentioned?
+
+> AP-side confirms the client associated on both bands at once.
+> `iw dev wlan0 station dump` shows only a single active tx/rx
+> bitrate pair at a time (consistent with MLSR link-switching
+> rather than MLMR aggregation, as expected given the current
+> patchset).
+>
+> Real-world throughput/quality comparison from the same physical
+> location (one interior wall between client and AP), same
+> firmware (0.35.42.1):
+>
+>   5GHz, 240MHz (160+80 non-contiguous), separate SSID:
+>     RSSI: -34 to -57 dBm
+>     MCS: steady EHT-MCS 8-11 (2 streams), occasionally EHT-MCS 13
+>     iperf3 -P4: 728 Mbit/s aggregate, 81 retransmits/30s
+>
+>   6GHz, 160MHz, separate SSID:
+>     RSSI: -65 dBm (AP has no AFC =E2=80=94 confirmed with vendor, LPI-onl=
+y,
+>           23dBm ceiling on 6GHz)
+>     MCS: oscillating EHT-MCS 5-7 (2 streams)
+>     iperf3 -P4: 889 Mbit/s aggregate, 800 retransmits/30s
+>     (~8x more retransmits per Mbit/s than the 5GHz link)
+>
+> Sharing in case it's useful data for prioritizing MLSR vs. MLMR
+> work, or for anyone else's testing/comparison =E2=80=94 not filing this
+> half as a bug, more as real-world confirmation that link quality
+> (not just raw throughput) matters for whichever link MLSR
+> switching logic favors.
+
+Currently, rtw89 has MLO capability (as you saw by iw) but we are
+still cooking the rules to switch link though.
+
+Ping-Ke
+
+
