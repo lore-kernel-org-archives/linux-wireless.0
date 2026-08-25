@@ -1,228 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7623D5222
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:09:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29CED3DB64B
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:13:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787645388; cv=none; b=uOneF+HnsbXVZa/fL5i/oevVM/YvhEhWKoPXha2xJN5y6F6SNTuBxvxWPHNBc9G7tTwb73faHrymOLrXMoWsJsOKp4/xPcHckeZ3HlYRO3kyYDGvGQsxsBAVXtd+N3LXx4MFZk2X6daURQSAP00xCSogs7rV8Bka/XlMpoXZkC0=
+	t=1787645605; cv=none; b=jpLodlp9TrtN4+2o7rn3YSC3jb0V3NGOW4tx6uFVHzOBThBLWk9SgHGIiJu9wSNMxExtenBAeOA5O4lwI2iFkokz24UAfpEIqsTDnOumpGLG1rwfEz/9Q4LOvWfrtD6m/xrlFVCay9mVMLF5Vi+oTpRc2MWasXYxHDspG3OmtHk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787645388; c=relaxed/simple;
-	bh=JS3zYppONvAuEDVWZ7rAxABKuO9vdZk4ALqKGB5uCdI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TUkLxtCHWNBaY0K32/9Vy3HA5vRSlP0VeBs+AkD0oyjgjf1N3alnr4KB+Qs4t4bLjAWwJYNUAJ1W/z5sEgjwen9cCrdg3QgT3Ddd36BnUNOf4gHPa0n4q9Erv5j71vY++3NIt74lbgns3Un6dZ6Sx0/tIEHsRQVzy6kuvFFViwI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cfnd+CDM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787645605; c=relaxed/simple;
+	bh=QQ4Mp+MQrZ0abZOXlL4Gh1EJOdpfUwc8kPhdt3VDwl0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FXfTX6fC6wmqD0PNfjB2uVFmD/TgaiJNHqKkLXyqghWWMyfeB8RDXDAah43+pfnq8MFNKHAYMYfVIkVyPQDZdi1W/0fXuhigEK5Kb9CfEY4C3Cbw0Ua9Hg7d7Grr8NgZRr+nnoueGdHmaP8JxNPzHWQC4v3XVDrtBITX+yDgP+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=mPyjSrU7; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=RUevpzYh; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cfnd+CDM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D0411F000E9;
-	Tue, 25 Aug 2026 08:09:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787645387;
-	bh=QHYvRb50MdqIPeYRe0+znoq6T68k12xscjcfmZzkBVM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Cfnd+CDMowaClKWWCT8lhpr+8hwiu2r7rS0NOr+JbLiZdmZ80jHfWndw1S32SttJa
-	 m/GOdM/3v+KYxOUvamLPfBQWDoL/S9ystFT5o4k3NQdMqeFh/hK815ylxh1aWO6FH9
-	 9o4xZUgiibr+NVGq4jKiiEgPMXGXs0GhebQhI8vPMtC9BC52USqA/3o9SF/JNHsSth
-	 baIeglt4sQsDkbSZv3vVqdbRmEQ6D8YYsURDGCoEl+u9afjqb2yehALDPRAznwtA2x
-	 hq7220vtSkAdZhLCASPdOO5smlPN5q2Yb840sOUQW9TxyJKJQ8qoJtNuuA2VZcOELJ
-	 zz3BOozc2Olkg==
-Message-ID: <90f8a48c-f7fa-4811-b3b5-5f47e32f4194@kernel.org>
-Date: Tue, 25 Aug 2026 10:09:43 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="mPyjSrU7";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="RUevpzYh"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67P88MGR2387935
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:13:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=hv9r+64K3KZer1HaUJU7uPLWJOybOoMeHi6
+	liK+PZew=; b=mPyjSrU7iaatxis04yo5xMJkEkXPAJr+nnE5OHTt8BYiDLc1cZR
+	EOSgU/rOYvIeKSZRChpG/pvhq12tZ91VmeTqt/MxIm/blYeAIXBeb+AxL+P48sFH
+	aoUwKwMWNLh4N2e/L74VXobdgEFb0B5PSsjoAOZnLMLptIjYRXAZipbgtvarTkKc
+	uk5WxTYMAq0YSkcp1JUXnUCdWfav1XC6jfIw09eIaeVQ683rfKAQ7b3E9D+ZADF4
+	uG/XAPwegx3i+MMndXMa7XyTvRTxsbyTmS5nBDGoxPMqkIi8aZFclObGkckmpJvn
+	gXuFucvE7yM4ersiW17v/NaenmPNdSpJXqQ==
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g8swraxsv-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 08:13:23 +0000 (GMT)
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-90410c668adso40144536d6.1
+        for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 01:13:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787645602; x=1788250402; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hv9r+64K3KZer1HaUJU7uPLWJOybOoMeHi6liK+PZew=;
+        b=RUevpzYhOcfCWE5kPDOzQCjlELq5P70931+QgTBOHaFGMkLHQhJARlYtYdPkrgdtaX
+         RJoVxx8ceW0OnT6nQSQmJFtzpc29EfJyJouvU3SPrhpWBfKtbmwaCj6MD1g79MNlqZ76
+         gSEFah+spLGQISOmv445JhINnUy4Gl7OAYn6VDbi9TiKqxmwsu/3MFM7xqX2Zo/0DhvZ
+         /XDWZILZaCKl2hm01Vs7h+BJyTUlJsSBETJkdj6ZP7AFommkoUvNCY83CzO4ZIB931mr
+         cWl65tfT/E2fiEwUiB/xFbYHcj1uQ8YfjudUG4c+FlMlNpBHhdi3WxumEeaY7NtaivQu
+         mslQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787645602; x=1788250402;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hv9r+64K3KZer1HaUJU7uPLWJOybOoMeHi6liK+PZew=;
+        b=rXvugU/tTiZeBPwcmMwBuKYOUOLE89eZoHef1zoshuE+wAqrvqj0OvSi98N5mUZkvf
+         iAI7h2kLKMNfac+ENeQiHNxkYJlweZV/9qTd3fF3fOkbNqMeqqvqv86xKHJtV0341IuD
+         CkczsgapQFv1pauor0mNMcKSnrg2CEZp96GhB2z4lLx9jvzskXwBV89iTQbm5dBOpJ+K
+         EYDEMBrec1nPNvzsXNz6Xq9qUVDciLfBx4TSZ81tKAWYVke4PhoAKGOVxbHJtVmplchz
+         6Dz3aRiEqqy9eqWuY8wXo+/xWhTcdP7HqiV2HjmsxRWC445Glo6rm14zu3fN7t3tbKSL
+         6hCg==
+X-Forwarded-Encrypted: i=1; AHgh+Rob64C+jRaFoZkw72L38fKLm5NxVm+y+7iMAsI3O8kCjWjNwSgj3jl1jaQGbBI3lB0uZDtA3vPTsXzTe3dqoA==@vger.kernel.org
+X-Gm-Message-State: AFuF++nbOAFH6z8cCludJdq1sgxqRb8BQhWc/05vkHhF/KKE2CZNINd4
+	VPqsGsmxOmKKTQzXgf3XJWFVv+gDLwflUr3D1U57XGzV4RahX5/JhJRPjwT3+Wg/TNFyFCLdHBq
+	qY67FJeN2AsbdsVpKsVzJqRnXP8QlJBOliKyE0Ww5LcNIF6tzJEF6A247T9qLMpTCdidIYw==
+X-Gm-Gg: AR+sD12EhXt/GrWwFMYrqoSePKH5QQ3JYnlQpgLGhLhNBCKvB26lz5A+oEcFzz9U/Qy
+	P1k5B1V4UtZS05VJXC/lN0O/ku1ltMSmNFVzucUQJLSMNAkaWJYxjLhx0qUd13zcC3+fZSku5a/
+	43jz/c/2gi24NktP+jhQi2jfAhSpa7M4R+ZGdfpuhVDP3fdDqzmwgKwoOdv/ZBontgc2iK1iTiO
+	2Oqq31AjKlqK3CJt1bK77PM0kIqx6YVhS3jw2vmWv5iD59ykRXghUugDJHsZvnPMN+oddtTHnm6
+	s+Bplx4cIh4niRRfYDDdi4WMQEwgseU43iFMAVnZpBQ7HL5LncgOMWsbQ0ZY1P/fqKoV8vsPCCh
+	KLoeS1uxIWgAV53Y=
+X-Received: by 2002:ac8:5f53:0:b0:52d:6afd:7db5 with SMTP id d75a77b69052e-52df59ec0d3mr344910591cf.25.1787645601990;
+        Tue, 25 Aug 2026 01:13:21 -0700 (PDT)
+X-Received: by 2002:ac8:5f53:0:b0:52d:6afd:7db5 with SMTP id d75a77b69052e-52df59ec0d3mr344910221cf.25.1787645601382;
+        Tue, 25 Aug 2026 01:13:21 -0700 (PDT)
+Received: from quoll ([178.197.219.214])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c249672becesm1687582866b.42.2026.08.25.01.13.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2026 01:13:20 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+To: Jeff Johnson <jjohnson@kernel.org>, linux-wireless@vger.kernel.org,
+        ath12k@lists.infradead.org, linux-kernel@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: [PATCH] wifi: ath12k: ahb: Revert undocumented ABI and dead code
+Date: Tue, 25 Aug 2026 10:13:14 +0200
+Message-ID: <20260825081313.71351-2-krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH ath-next 1/2] wifi: ath12k: add AHB platform descriptor
- support
-To: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>,
- ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-References: <20260721065038.126046-1-aaradhana.sahu@oss.qualcomm.com>
- <20260721065038.126046-2-aaradhana.sahu@oss.qualcomm.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <20260721065038.126046-2-aaradhana.sahu@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3254; i=krzysztof.kozlowski@oss.qualcomm.com;
+ h=from:subject; bh=QQ4Mp+MQrZ0abZOXlL4Gh1EJOdpfUwc8kPhdt3VDwl0=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBqjU6ZmH29I4c1VwrnjgwykypA4ZmZkqL3qWwfl
+ reZhLKS73GJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCao1OmQAKCRDBN2bmhouD
+ 1ziiD/45tKK4t4NoPjGQYgAtqj4adc82l82kkAMngH2NL7E/kDcnYCxrDWaafpAzJTp02bwCsWA
+ 7u9eaizT6xEKeG+y9bDo3lr/YvEaVSJ7bDH1Qzx8aaMWPl8GNM6xb4NqpPrca3L5fUHawOVjtCt
+ Iy0wMTsx0NfUeCWmLOyRooSf+zTlFAFlFl6IvApkQeOwrFohCdGKaZ+cV9VPSL5Gu9LOZLqZi0H
+ 4U8L44j68gY6jyybO+RXaSLTy4qg1nBrFCs1AAl1/1CASnZZ2rIIkt7rNz1NxYaXnGC14SvcbHU
+ zAsvVkDCDN00KuZNVc1Yaq1qs23PHelxcOm9/XakIklZMtkMM7y+9gty9GXXChBAwtWrul56jQR
+ Nskx1sxSFoMPAn8fk0t1yle1h7751f5nKKIzmb28nsF7W3yumsOfGwHyoZwSYVT0H8x79lKj+yb
+ wEKm8XhbjWjyEWazPIgTZuseVmVwrFiJRAuIvAhMDTM92ggo+8JV9OLBp3WGHqCpLcCqKBuZJVb
+ K0Dw/xkYdlX0ruTO/DIGLslbmUju5FnOvtXSmNPaP+SvNM3WtE6TlGRl4buc+Ff0w+UYw0++3R7
+ s+3W9CYaGpzlBvYDQwm7inXm15q49zNKvxrkxsOxKIIKdwHHEIEmIe2pUoe8AG5PdM0xAFRzQmW KQlKrpcbHCxZrug==
+X-Developer-Key: i=krzysztof.kozlowski@oss.qualcomm.com; a=openpgp; fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: FxTv2WhNFVRQW2U6hU01u67TQ-MezOWS
+X-Proofpoint-GUID: FxTv2WhNFVRQW2U6hU01u67TQ-MezOWS
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI1MDA2OCBTYWx0ZWRfX38u2vJ05WKU7
+ LjWJz46MU8hKX9Z6f+E7cDUqRqjiD1FzxIvNELsyiw0M4uW4u3Im6/RBjisV4GBn9yTYoGcjSmA
+ DHAs9Rxvpxvvu/T03TivGgEYA4C0pM4=
+X-Authority-Analysis: v=2.4 cv=TqPWQjXh c=1 sm=1 tr=0 ts=6a8d4ea3 cx=c_pps
+ a=oc9J++0uMp73DTRD5QyR2A==:117 a=+bKQE0WJfmhK2875HamI0Q==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22 a=EUspDBNiAAAA:8
+ a=Rjp3qrauO7Pr9jUhhQUA:9 a=iYH6xdkBrDN1Jqds4HTS:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI1MDA2OCBTYWx0ZWRfXyW0JFGgA5dpc
+ RcFxuAtBfT76XbxIKmnD0hmmUpCpUrmY0K7RmR/haFXAlzc5/MmOzTx3jn7xqcpVoZUUMMkEaiC
+ vGUkhpnthxlz2Ev3ZF+7xF6V4nbyDsL+bebNil87BG/1SN4XBSReqV00MyuC6kn/eJSIJYK4P24
+ duYRJGg0wwbLHx2bLIrLnxGjIrqXjzNSPrFIQ/BjHthpnDdW5DadoG/07dASJFY7EVOyWWTTmAY
+ XzB9xD9zruFH1Lz6JLtcSg0DAfaUitnM2PiqXN/nzxPaZYIUDLZ6TuUvpPh10pb1HA2VCdF1tpc
+ svcqv/7N+WFR3yk7JZUFRch+jkQZyvuRpdC2TvIN0HDutNn7jFlZV3RfoDvV3hu9oAl3EG5H2kh
+ 3rQeQ4aFJyChba3qUUxjuFsO4M5vWjGTFLDP1a8ocwNalEPj38oLKYZhH6k/XgWlKv2wh2iAMWz
+ TT6fK4CUq5fYUuQ5f7w==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-25_02,2026-08-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 impostorscore=0 malwarescore=0 spamscore=0 phishscore=0
+ lowpriorityscore=0 clxscore=1015 suspectscore=0 priorityscore=1501
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2608250068
 
-On 21/07/2026 08:50, Aaradhana Sahu wrote:
-> AHB-based platforms associate each device with a userPD ID that determines
-> the firmware name and Peripheral Authentication Service ID (PASID) used
-> during firmware authentication.
-> 
-> Current implementation does not support platforms with multiple devices
-> sharing the same compatible string but using different userPD IDs.
-> As a result, the driver cannot uniquely identify each device for firmware
-> selection and authentication.
-> 
-> Add an AHB platform descriptor to store device-specific configuration.
-> Implement userPD ID resolution by matching device tree reg properties, with
-> node name matching as a fallback. Centralize platform configuration to
-> simplify the probe path by removing hardware-specific conditionals.
-> 
-> Tested-on: IPQ5332 hw1.0 AHB WLAN.WBE.1.6-01275-QCAHKSWPL_SILICONZ-1
-> 
-> Signed-off-by: Aaradhana Sahu <aaradhana.sahu@oss.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath12k/ahb.c       |  4 +-
->  drivers/net/wireless/ath/ath12k/ahb.h       | 19 +++++
->  drivers/net/wireless/ath/ath12k/hw.h        |  1 -
->  drivers/net/wireless/ath/ath12k/wifi7/ahb.c | 90 +++++++++++++++++----
->  4 files changed, 94 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath12k/ahb.c b/drivers/net/wireless/ath/ath12k/ahb.c
-> index 07bb83710b1f..14ee696960c7 100644
-> --- a/drivers/net/wireless/ath/ath12k/ahb.c
-> +++ b/drivers/net/wireless/ath/ath12k/ahb.c
-> @@ -704,7 +704,7 @@ static int ath12k_ahb_map_service_to_pipe(struct ath12k_base *ab, u16 service_id
->  	return 0;
->  }
->  
-> -static const struct ath12k_hif_ops ath12k_ahb_hif_ops = {
-> +const struct ath12k_hif_ops ath12k_ahb_hif_ops = {
->  	.start = ath12k_ahb_start,
->  	.stop = ath12k_ahb_stop,
->  	.read32 = ath12k_ahb_read32,
-> @@ -715,6 +715,7 @@ static const struct ath12k_hif_ops ath12k_ahb_hif_ops = {
->  	.power_up = ath12k_ahb_power_up,
->  	.power_down = ath12k_ahb_power_down,
->  };
-> +EXPORT_SYMBOL(ath12k_ahb_hif_ops);
->  
->  static irqreturn_t ath12k_userpd_irq_handler(int irq, void *data)
->  {
-> @@ -1038,7 +1039,6 @@ static int ath12k_ahb_probe(struct platform_device *pdev)
->  
->  	ab_ahb = ath12k_ab_to_ahb(ab);
->  	ab_ahb->ab = ab;
-> -	ab->hif.ops = &ath12k_ahb_hif_ops;
->  	ab->pdev = pdev;
->  	platform_set_drvdata(pdev, ab);
->  
-> diff --git a/drivers/net/wireless/ath/ath12k/ahb.h b/drivers/net/wireless/ath/ath12k/ahb.h
-> index a153db6cf1d3..037347ccd21b 100644
-> --- a/drivers/net/wireless/ath/ath12k/ahb.h
-> +++ b/drivers/net/wireless/ath/ath12k/ahb.h
-> @@ -30,6 +30,24 @@
->  #define ATH12K_USERPD_ID_MASK			GENMASK(10, 8)
->  #define ATH12K_USERPD_FW_NAME_LEN		35
->  
-> +enum ath12k_ahb_userpd_id {
-> +	ATH12K_AHB_USERPD_ID_0 = 1,
-> +	ATH12K_AHB_USERPD_ID_1,
-> +	ATH12K_AHB_USERPD_ID_2,
-> +};
-> +
-> +struct ath12k_ahb_userpd_map {
-> +	phys_addr_t io_start;
-> +	const char *node_name;
-> +	u32 upd_id;
-> +};
-> +
-> +struct ath12k_ahb_desc {
-> +	enum ath12k_hw_rev hw_rev;
-> +	bool auth_enabled;
-> +	const struct ath12k_hif_ops *ops;
-> +};
-> +
->  enum ath12k_ahb_smp2p_msg_id {
->  	ATH12K_AHB_POWER_SAVE_ENTER = 1,
->  	ATH12K_AHB_POWER_SAVE_EXIT,
-> @@ -43,6 +61,7 @@ enum ath12k_ahb_userpd_irq {
->  };
->  
->  struct ath12k_base;
-> +extern const struct ath12k_hif_ops ath12k_ahb_hif_ops;
->  
->  struct ath12k_ahb_device_family_ops {
->  	int (*probe)(struct platform_device *pdev);
-> diff --git a/drivers/net/wireless/ath/ath12k/hw.h b/drivers/net/wireless/ath/ath12k/hw.h
-> index 49cfd5dfc70a..3ed38f8f2b48 100644
-> --- a/drivers/net/wireless/ath/ath12k/hw.h
-> +++ b/drivers/net/wireless/ath/ath12k/hw.h
-> @@ -100,7 +100,6 @@ struct ieee80211_rx_status;
->  #define ATH12K_REGDB_FILE_NAME		"regdb.bin"
->  
->  #define ATH12K_PCIE_MAX_PAYLOAD_SIZE	128
-> -#define ATH12K_IPQ5332_USERPD_ID	1
->  
->  enum ath12k_hw_rate_cck {
->  	ATH12K_HW_RATE_CCK_LP_11M = 0,
-> diff --git a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
-> index 6a8b8b2a56f9..98a6606ffd76 100644
-> --- a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
-> +++ b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
-> @@ -15,44 +15,100 @@
->  #include "dp.h"
->  #include "core.h"
->  
-> +/*
-> + * Node name to UserPD ID mapping
-> + *
-> + * The io_start field is used for additional validation when the reg
-> + * property is present in the device tree. If io_start is 0, only
-> + * node_name matching is performed.
-> + *
-> + * For platforms where not all WiFi nodes have a 'reg' property, set
-> + * io_start to 0 for those entries. The driver will match purely by
-> + * node name in such cases.
-> + */
-> +static const struct ath12k_ahb_userpd_map ath12k_wifi7_ahb_userpd_map[] = {
-> +	{ .io_start = 0x0c000000, .node_name = "wifi", .upd_id = ATH12K_AHB_USERPD_ID_0 },
+Commit 96f46607bbce ("wifi: ath12k: add AHB platform descriptor
+support") added undocumented OF ABI, by relying on a very specific node
+name.  This is not allowed and was never acked by Devicetree
+maintainers.
 
-NAK.
+Additionally that part of code is not even used, because all devices
+have exactly the same user pd, so this was added "for future".  Adding
+dead code just "for future" is heavily discouareged in kernel coding.
 
-This slipped past my filters so I will be reverting this. YOU CANNOT add
-such undocumented ABI.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath12k/wifi7/ahb.c | 51 +--------------------
+ 1 file changed, 1 insertion(+), 50 deletions(-)
 
-Test your code - how does it work when the node is called "wireless"?
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
+index 98a6606ffd76..6e9e9034cba1 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/ahb.c
+@@ -15,21 +15,6 @@
+ #include "dp.h"
+ #include "core.h"
+ 
+-/*
+- * Node name to UserPD ID mapping
+- *
+- * The io_start field is used for additional validation when the reg
+- * property is present in the device tree. If io_start is 0, only
+- * node_name matching is performed.
+- *
+- * For platforms where not all WiFi nodes have a 'reg' property, set
+- * io_start to 0 for those entries. The driver will match purely by
+- * node name in such cases.
+- */
+-static const struct ath12k_ahb_userpd_map ath12k_wifi7_ahb_userpd_map[] = {
+-	{ .io_start = 0x0c000000, .node_name = "wifi", .upd_id = ATH12K_AHB_USERPD_ID_0 },
+-};
+-
+ static const struct ath12k_ahb_desc ath12k_wifi7_ahb_desc[] = {
+ 	[ATH12K_HW_IPQ5332_HW10] = {
+ 		.hw_rev = ATH12K_HW_IPQ5332_HW10,
+@@ -55,40 +40,6 @@ static const struct of_device_id ath12k_wifi7_ahb_of_match[] = {
+ 
+ MODULE_DEVICE_TABLE(of, ath12k_wifi7_ahb_of_match);
+ 
+-/*
+- * ath12k_wifi7_ahb_get_userpd_id - Resolve UserPD ID from DT properties
+- * @ab: ath12k base structure
+- *
+- * Returns: UserPD ID (1-based) on success, 0 on failure
+- *
+- * Resolution logic:
+- * 1. If reg property exist in DT, get userpd_id from io_start
+- * 2. If reg property is absent, get userpd_id from DT node name
+- * 3. Return 0 if no match found (probe will fail)
+- */
+-static u32 ath12k_wifi7_ahb_get_userpd_id(struct ath12k_base *ab)
+-{
+-	const struct ath12k_ahb_userpd_map *map;
+-	struct resource *res;
+-	size_t i;
+-
+-	res = platform_get_resource(ab->pdev, IORESOURCE_MEM, 0);
+-
+-	for (i = 0; i < ARRAY_SIZE(ath12k_wifi7_ahb_userpd_map); i++) {
+-		map = &ath12k_wifi7_ahb_userpd_map[i];
+-
+-		if (res) {
+-			if (map->io_start && map->io_start == res->start)
+-				return map->upd_id;
+-		} else if (map->node_name &&
+-			   of_node_name_eq(ab->dev->of_node, map->node_name)) {
+-			return map->upd_id;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static int ath12k_wifi7_ahb_probe(struct platform_device *pdev)
+ {
+ 	const struct ath12k_ahb_desc *desc;
+@@ -106,7 +57,7 @@ static int ath12k_wifi7_ahb_probe(struct platform_device *pdev)
+ 	ab->hw_rev = desc->hw_rev;
+ 	ab->hif.ops = desc->ops;
+ 	ab_ahb->scm_auth_enabled = desc->auth_enabled;
+-	ab_ahb->userpd_id = ath12k_wifi7_ahb_get_userpd_id(ab);
++	ab_ahb->userpd_id = ATH12K_AHB_USERPD_ID_0;
+ 	if (!ab_ahb->userpd_id)
+ 		return -EOPNOTSUPP;
+ 
+-- 
+2.53.0
 
-
-Best regards,
-Krzysztof
