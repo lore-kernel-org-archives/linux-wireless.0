@@ -1,36 +1,36 @@
-Received: from mta0.migadu.com (out-82.mta0.migadu.com [91.218.175.82])
+Received: from mta1.migadu.com (out-219.mta1.migadu.com [95.215.58.219])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC13C184524
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 07:20:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.82
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1268123507B
+	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 07:22:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.219
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787642453; cv=none; b=M4FwVAmIfGDJmPsayWmLxDcUffNMV/t67pYIcIEsMU8oVOfsUc7C5BIfdfciTJM2O7eba/xx9V1hw9cyoaGpKfGmngTyPgQcsluKQ6sveA8x7+mTULeupMcslzh+drauT8U8E5pm9x6GQngjK49Jx2m91g/yX4D1vKG8xEMTiAs=
+	t=1787642544; cv=none; b=DR+fxPA3VvD/KlNTeGDHOVQYbxUhyydDnxo9cytp00ZKZDR0BttzKQNEMp7vdMw3Uw5OKAYYOnMN39AFkmleNIz3gpWTQ6iBg+Hqo+leaXcGhffRImElQtnm+0M1lfFsdj8buZ3orsshtdorsoq3HN8Sf1Ko6nwGOQeFqxE1JMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787642453; c=relaxed/simple;
-	bh=zbQoYKop0ApksTcvsd7Pk4080zwPSAAbo2YpIGmt1fc=;
+	s=arc-20240116; t=1787642544; c=relaxed/simple;
+	bh=mxU9wlyRRAMr/gT6bN02/hoVK5/SNJpEhZol6Kygds4=;
 	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=GfkdeTbyqvXVLFt3s/QRJMyDRVQiO2UzGWeOlP7857uXeTTME6KmH2NuoRjIBVPjmdv6ocmvSwlRR7D1KoecfCTiWe7s39AUaZYxOB+etAyD9uIQw4YVq4Sb/l2ONDLg6D6KI5XGRW78pLkdoO+QPrzHK/DfoRojlKDUezfsXTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=srKzbGV8; arc=none smtp.client-ip=91.218.175.82
+	 MIME-Version:Content-Type; b=J+VGM2zydy59elzPBWfVtoiJu/Ig3Kns0eodjoX5s0W07VnK/nv2zzMV7kBA/sl9YtXk6dalo7AmFxzDsHAfuIFpv4G/8kZoT7uljsNGVaAz+12rm3MzO0E0n+Cp7j/iSrLRt6oPGW1ljMhsI81Yr2yoV2NGIPAVI5rhrjTzX1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WnxLSFZY; arc=none smtp.client-ip=95.215.58.219
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="srKzbGV8"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WnxLSFZY"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=zbQoYKop0ApksTcvsd7Pk4080zwPSAAbo2YpIGmt1fc=;
+DKIM-Signature: a=rsa-sha256; bh=mxU9wlyRRAMr/gT6bN02/hoVK5/SNJpEhZol6Kygds4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787642449; v=1; x=1788247249;
- b=srKzbGV8zTT9ADlOMnYFKXWqxxTVKyA+CCHGvhSOhCjKGKLs8TWWYUKEOcpGHhay34xmvacY
- HRQ7ruFMTFYgY2LZGYrm8pW8DG8xsPQZEdlYY8eqEybhyTgVVtzlpI8urn9ADDJ8YJ0XufbV3yu
- PNjjHEIOezLgj7EAcSvi8ydI=
+ t=1787642540; v=1; x=1788247340;
+ b=WnxLSFZYDl1/spPj05OUHy2sdBlS2S7Bx1mtSbh8Kl0DpoCEwNV4+IGyVeocq3e3D9VUntau
+ 6fFnjAgABSM1hfdNmB6yvNVJxhPvHB/yU9bdrlKG2J25pGuCi6Y7pryy+aOKG5Yf5uioHNESDSW
+ X27/zqfScOZiumH66TyF7zeQ=
 X-Envelope-To: linux-wireless@vger.kernel.org
 Received: from ehlo.thunderbird.net (31.223.131.35)
-	by smtp.migadu.com with ESMTPS id 8276264f119ed4fb;
-	Tue, 25 Aug 2026 07:20:49 +0000
-X-Mizu-Trace-ID: 8276264f119ed4fb
+	by smtp.migadu.com with ESMTPS id f4c8cf3697fdc395;
+	Tue, 25 Aug 2026 07:22:20 +0000
+X-Mizu-Trace-ID: f4c8cf3697fdc395
 X-Migadu-Flow: FLOW_OUT
-Date: Tue, 25 Aug 2026 09:20:47 +0200
+Date: Tue, 25 Aug 2026 09:22:18 +0200
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>,
  "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
@@ -39,12 +39,12 @@ CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
  Bitterblue Smith <rtl8821cerfe2@gmail.com>,
  Peter Robinson <pbrobinson@gmail.com>,
  Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v7_4/6=5D_wifi=3A_rtw88=3A_sdio=3A_track?=
- =?US-ASCII?Q?_free_TX_pages_and_OQT_credits_for_RTL8723BS?=
+Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v7_6/6=5D_wifi=3A_rtw88=3A_sdio=3A_add_T?=
+ =?US-ASCII?Q?X_back-pressure_and_retry_on_page_starvation?=
 User-Agent: Thunderbird for Android
-In-Reply-To: <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com>
-References: <20260820090412.19574-1-luka.gejak@linux.dev> <20260820090412.19574-5-luka.gejak@linux.dev> <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com>
-Message-ID: <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev>
+In-Reply-To: <348bea609cee45179ee2a0c7dd03f0d1@realtek.com>
+References: <20260820090412.19574-1-luka.gejak@linux.dev> <20260820090412.19574-7-luka.gejak@linux.dev> <348bea609cee45179ee2a0c7dd03f0d1@realtek.com>
+Message-ID: <6EA9DEEA-DFF7-4AFC-9C46-55D0EDF256BB@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,90 +57,60 @@ Content-Transfer-Encoding: quoted-printable
 
 Hi Ping-Ke,
 
-On August 25, 2026 8:12:58 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Eco=
+On August 25, 2026 8:36:30 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Eco=
 m> wrote:
 
-> I think you only need to note 'not free the skb on failure'=2E
-> And move comment here to note __skb_pad()=2E
-> By the way, we can have a local variable 'pad_size'=2E
+> With WRITE_ONCE() and READ_ONCE(), I think it will concurrency work
+> well=2E Did you really encounter problems with smp_mb()?
 
-Done, all three:
-
-        if (write_size > skb->len) {
-                size_t pad_size =3D write_size - skb->len;
-
-                /*
-                 * __skb_pad() must not free the skb on failure: both call=
-ers
-                 * still own it, one requeues it and the other frees it=2E
-                 */
-                ret =3D __skb_pad(skb, pad_size, false);
-                if (ret)
-                        return ret;
-        }
-
-> Not sure if the comment along declaration of tx_credit_lock is enough?
-> If so, maybe we don't need this comment=2E
-
-Agreed, that one is gone=2E
-
-> guard(mutex)(&rtwsdio->tx_credit_lock);
-
-The lock is only taken for this chip, and guard() is unconditional, so I
-split the locked region into its own function instead of branching around
-the lock:
-
-        if (!rtw_is_8723bs(rtwdev)) {
-                txsize =3D sdio_align_size(rtwsdio->sdio_func, skb->len);
-
-                ret =3D rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
-                if (ret)
-                        return ret;
-
-                return rtw_sdio_write_to_port(rtwdev, skb, queue, txaddr,
-                                              txsize);
-        }
-        =2E=2E=2E
-        guard(mutex)(&rtwsdio->tx_credit_lock);
-
-        return rtw_sdio_8723bs_write_port(rtwdev, skb, queue, txaddr, txsi=
-ze,
-                                          write_size);
-
-The transfer itself moved to rtw_sdio_write_to_port() so both paths share
-it=2E That also removes the goto and the two rtl8723bs tests in the middle=
- of
-the function=2E
-
-One thing I would like your opinion on while it is still cheap to change=
+Not from a failure I hit, no=2E It came out of reading the code, and I thi=
+nk
+it is still needed, so let me lay out the case rather than just assert it=
 =2E
-The unaligned SKB warning now sits in both callers rather than once inside
-rtw_sdio_write_to_port(), because __func__ would otherwise report
-rtw_sdio_write_to_port for every other SDIO chip where it reports
-rtw_sdio_write_port today=2E Keeping that message identical costs three
-duplicated lines=2E Putting it once in rtw_sdio_write_to_port() is the
-tidier code and arguably the more accurate message, at the price of
-changing a log line on chips this series is not about=2E I went with the
-duplicate to leave the other parts alone, but I have no strong feeling
-either way, so say which you prefer=2E
 
-> I think you can add lockdep_assert_held() to the places the locks (mutex=
-)
-> must be held, and run test if somewhere throw warning (must not)=2E
+The flag alone is not enough because of this order:
 
-Added to rtw_sdio_8723bs_write_port(), rtw_sdio_8723bs_wait_tx_oqt() and
-rtw_sdio_8723bs_consume_txpg()=2E Each has exactly one caller and all thre=
-e
-sit under the guard, so the call graph says they cannot be reached without
-the lock=2E
+  producer                              worker
+  skb_queue_tail()
+  reads len, sees >=3D HIWATER
+                                        drains the queue to empty
+                                        reads the flag, still false,
+                                        so it does not wake
+  writes the flag true
+  ieee80211_stop_queue()
 
-I have to be straight about the test though: my test kernel is built
-without CONFIG_PROVE_LOCKING, so those asserts compile to nothing there an=
+The AC is now stopped with an empty queue and nobody left to wake it=2E Th=
+at
+is what the re-check under the barrier is for: once the flag is set, read
+the length again, and if the worker drained it meanwhile, undo the stop=2E
+
+For that re-check to mean anything the flag store has to be visible before
+the length is re-loaded=2E READ_ONCE and WRITE_ONCE stop the compiler from
+tearing or hoisting either access, but they do not order one against the
+other, so without smp_mb() the CPU may still perform the length re-load
+before the flag store lands=2E Then the worker can read the old flag, skip
+the wake, and the re-check reads a length that is already stale, which put=
+s
+us back at the same stuck AC=2E
+
+So I have kept it, with the blank line you asked for=2E If you would rathe=
+r
+drop the flag entirely, both watermark helpers become two-line functions
+and the barrier goes with it, since ieee80211_stop_queue() and
+_wake_queue() are idempotent and the watermarks alone can decide the state=
+=2E
+I did not do that here because it is a bigger change than the one you aske=
 d
-running it would prove nothing=2E I will build a kernel with lockdep enabl=
-ed
-and confirm before I would ask you to take the patch on that point, unless
-you would rather I just drop the asserts=2E
+about and I would rather not touch the concurrency in this patch without
+your say-so=2E
+
+> Can we move below just before the user?
+
+Moved, though not all the way: rtw_sdio_indicate_tx_status() consumes the
+skb, either handing it to rtw_tx_report_enqueue() or to
+ieee80211_tx_status_irqsafe(), so reading q_map after that call would be a
+use after free=2E It now sits immediately before it, with a comment saying
+why it cannot go further down=2E
 
 Best regards,
 Luka Gejak
