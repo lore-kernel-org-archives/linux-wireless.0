@@ -1,116 +1,94 @@
-Received: from mta1.migadu.com (out-219.mta1.migadu.com [95.215.58.219])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1268123507B
-	for <linux-wireless@vger.kernel.org>; Tue, 25 Aug 2026 07:22:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.219
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2398F3CFF55;
+	Tue, 25 Aug 2026 07:25:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787642544; cv=none; b=DR+fxPA3VvD/KlNTeGDHOVQYbxUhyydDnxo9cytp00ZKZDR0BttzKQNEMp7vdMw3Uw5OKAYYOnMN39AFkmleNIz3gpWTQ6iBg+Hqo+leaXcGhffRImElQtnm+0M1lfFsdj8buZ3orsshtdorsoq3HN8Sf1Ko6nwGOQeFqxE1JMA=
+	t=1787642728; cv=none; b=fILHKSE2BCc4qdbdi5Yk360RfkdlFQFp6DnaJiMfXxp34yvlyQkgZKk+C67lExQiCTtrk3by9Spr4ck6bIb4dXP/nLsueYbd88PEBbhZ7AA2ZhC6wpXWaYkuSSnClIE7fPoSpz9QI3rzI3LcXzyB/AErZ7pnqoUH13HwcpcjzgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787642544; c=relaxed/simple;
-	bh=mxU9wlyRRAMr/gT6bN02/hoVK5/SNJpEhZol6Kygds4=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=J+VGM2zydy59elzPBWfVtoiJu/Ig3Kns0eodjoX5s0W07VnK/nv2zzMV7kBA/sl9YtXk6dalo7AmFxzDsHAfuIFpv4G/8kZoT7uljsNGVaAz+12rm3MzO0E0n+Cp7j/iSrLRt6oPGW1ljMhsI81Yr2yoV2NGIPAVI5rhrjTzX1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=WnxLSFZY; arc=none smtp.client-ip=95.215.58.219
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787642728; c=relaxed/simple;
+	bh=v7RSpo7AWgck4/a9+ABc/eTalfzMaDPX8Ga/zd0v9Xw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=EX6mbcWiKagzq0a/nfLoF/W3vqbjKDZdSNLwINpn74hiz5JWRAO/bsatSSVXlYERzr0k5VJcvEDcvIOOb4rqxUU282iSS648urkNaMJ0r03DcIPJ/AY9xaZEqYLW9Min8AltqHRirRttVCh0MBU09ASd0S/pQGl/ilTJG8HJpYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=OAJoow9g; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="WnxLSFZY"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=mxU9wlyRRAMr/gT6bN02/hoVK5/SNJpEhZol6Kygds4=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787642540; v=1; x=1788247340;
- b=WnxLSFZYDl1/spPj05OUHy2sdBlS2S7Bx1mtSbh8Kl0DpoCEwNV4+IGyVeocq3e3D9VUntau
- 6fFnjAgABSM1hfdNmB6yvNVJxhPvHB/yU9bdrlKG2J25pGuCi6Y7pryy+aOKG5Yf5uioHNESDSW
- X27/zqfScOZiumH66TyF7zeQ=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: from ehlo.thunderbird.net (31.223.131.35)
-	by smtp.migadu.com with ESMTPS id f4c8cf3697fdc395;
-	Tue, 25 Aug 2026 07:22:20 +0000
-X-Mizu-Trace-ID: f4c8cf3697fdc395
-X-Migadu-Flow: FLOW_OUT
-Date: Tue, 25 Aug 2026 09:22:18 +0200
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v7_6/6=5D_wifi=3A_rtw88=3A_sdio=3A_add_T?=
- =?US-ASCII?Q?X_back-pressure_and_retry_on_page_starvation?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <348bea609cee45179ee2a0c7dd03f0d1@realtek.com>
-References: <20260820090412.19574-1-luka.gejak@linux.dev> <20260820090412.19574-7-luka.gejak@linux.dev> <348bea609cee45179ee2a0c7dd03f0d1@realtek.com>
-Message-ID: <6EA9DEEA-DFF7-4AFC-9C46-55D0EDF256BB@linux.dev>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="OAJoow9g"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67P7PDJh83583740, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787642714; bh=v7RSpo7AWgck4/a9+ABc/eTalfzMaDPX8Ga/zd0v9Xw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=OAJoow9gObwGR5kNjQZoaThSjLxil2mp+CWpHlqvmZWFy6xme2zkk7NPPCF/qN/91
+	 D5tUFT2kQiRx8h5V2AYj+IIED8YmZSu3/jVRCXbHlm6ImHmPAZIt9xG6TdlFewIjwc
+	 +dXEnJoS/9Yg9ehTiwAw4Va72KNw/+CPMnmhu0uKoN300JpxhV/Vo/ZavKqwrSIqf/
+	 zJXbLubpb5Dr0gsqCaIxVWl17xUQiGlTr0FxdjLGOq69Fnh/F4LzyRMsMxKIPcbHk4
+	 4FosVVchwS/Sw4GmI00DC8Awrt2p+nV9IW5pphNacNz7vyZToZKFxN0e9rH2HIHrP1
+	 ewLlkLxjBIEAw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67P7PDJh83583740
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 25 Aug 2026 15:25:14 +0800
+Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 25 Aug 2026 15:25:13 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 25 Aug 2026 15:25:13 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Tue, 25 Aug 2026 15:25:13 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Luka Gejak <luka.gejak@linux.dev>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
+ Straube" <straube.linux@gmail.com>, Bitterblue Smith
+	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
+ Goede" <johannes.goede@oss.qualcomm.com>
+Subject: RE: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
+ credits for RTL8723BS
+Thread-Topic: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
+ credits for RTL8723BS
+Thread-Index: AQHdMIL3twfMpykyCEyz233XfbbmBLauSXrw//+T44CAAIcCsA==
+Date: Tue, 25 Aug 2026 07:25:13 +0000
+Message-ID: <f3f44d1bf5c248ef8ccdc092c2354ac0@realtek.com>
+References: <20260820090412.19574-1-luka.gejak@linux.dev>
+ <20260820090412.19574-5-luka.gejak@linux.dev>
+ <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com>
+ <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev>
+In-Reply-To: <AD323744-AE68-4C77-92A9-CD215B8A7E43@linux.dev>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Hi Ping-Ke,
-
-On August 25, 2026 8:36:30 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Eco=
-m> wrote:
-
-> With WRITE_ONCE() and READ_ONCE(), I think it will concurrency work
-> well=2E Did you really encounter problems with smp_mb()?
-
-Not from a failure I hit, no=2E It came out of reading the code, and I thi=
-nk
-it is still needed, so let me lay out the case rather than just assert it=
-=2E
-
-The flag alone is not enough because of this order:
-
-  producer                              worker
-  skb_queue_tail()
-  reads len, sees >=3D HIWATER
-                                        drains the queue to empty
-                                        reads the flag, still false,
-                                        so it does not wake
-  writes the flag true
-  ieee80211_stop_queue()
-
-The AC is now stopped with an empty queue and nobody left to wake it=2E Th=
-at
-is what the re-check under the barrier is for: once the flag is set, read
-the length again, and if the worker drained it meanwhile, undo the stop=2E
-
-For that re-check to mean anything the flag store has to be visible before
-the length is re-loaded=2E READ_ONCE and WRITE_ONCE stop the compiler from
-tearing or hoisting either access, but they do not order one against the
-other, so without smp_mb() the CPU may still perform the length re-load
-before the flag store lands=2E Then the worker can read the old flag, skip
-the wake, and the re-check reads a length that is already stale, which put=
-s
-us back at the same stuck AC=2E
-
-So I have kept it, with the blank line you asked for=2E If you would rathe=
-r
-drop the flag entirely, both watermark helpers become two-line functions
-and the barrier goes with it, since ieee80211_stop_queue() and
-_wake_queue() are idempotent and the watermarks alone can decide the state=
-=2E
-I did not do that here because it is a bigger change than the one you aske=
-d
-about and I would rather not touch the concurrency in this patch without
-your say-so=2E
-
-> Can we move below just before the user?
-
-Moved, though not all the way: rtw_sdio_indicate_tx_status() consumes the
-skb, either handing it to rtw_tx_report_enqueue() or to
-ieee80211_tx_status_irqsafe(), so reading q_map after that call would be a
-use after free=2E It now sits immediately before it, with a comment saying
-why it cannot go further down=2E
-
-Best regards,
-Luka Gejak
+THVrYSBHZWphayA8bHVrYS5nZWpha0BsaW51eC5kZXY+IHdyb3RlOg0KPiBIaSBQaW5nLUtlLA0K
+PiANCj4gT24gQXVndXN0IDI1LCAyMDI2IDg6MTI6NTggQU0gR01UKzAyOjAwLCBQaW5nLUtlIFNo
+aWggPHBrc2hpaEByZWFsdGVrLmNvbT4gd3JvdGU6DQo+ID4gZ3VhcmQobXV0ZXgpKCZydHdzZGlv
+LT50eF9jcmVkaXRfbG9jayk7DQo+IA0KPiBUaGUgbG9jayBpcyBvbmx5IHRha2VuIGZvciB0aGlz
+IGNoaXAsIGFuZCBndWFyZCgpIGlzIHVuY29uZGl0aW9uYWwsIHNvIEkNCj4gc3BsaXQgdGhlIGxv
+Y2tlZCByZWdpb24gaW50byBpdHMgb3duIGZ1bmN0aW9uIGluc3RlYWQgb2YgYnJhbmNoaW5nIGFy
+b3VuZA0KPiB0aGUgbG9jazoNCj4gDQo+ICAgICAgICAgaWYgKCFydHdfaXNfODcyM2JzKHJ0d2Rl
+dikpIHsNCj4gICAgICAgICAgICAgICAgIHR4c2l6ZSA9IHNkaW9fYWxpZ25fc2l6ZShydHdzZGlv
+LT5zZGlvX2Z1bmMsIHNrYi0+bGVuKTsNCj4gDQo+ICAgICAgICAgICAgICAgICByZXQgPSBydHdf
+c2Rpb19jaGVja19mcmVlX3R4cGcocnR3ZGV2LCBxdWV1ZSwgdHhzaXplKTsNCj4gICAgICAgICAg
+ICAgICAgIGlmIChyZXQpDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiByZXQ7DQo+
+IA0KPiAgICAgICAgICAgICAgICAgcmV0dXJuIHJ0d19zZGlvX3dyaXRlX3RvX3BvcnQocnR3ZGV2
+LCBza2IsIHF1ZXVlLCB0eGFkZHIsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICB0eHNpemUpOw0KPiAgICAgICAgIH0NCj4gICAgICAgICAuLi4NCj4gICAg
+ICAgICBndWFyZChtdXRleCkoJnJ0d3NkaW8tPnR4X2NyZWRpdF9sb2NrKTsNCj4gDQo+ICAgICAg
+ICAgcmV0dXJuIHJ0d19zZGlvXzg3MjNic193cml0ZV9wb3J0KHJ0d2Rldiwgc2tiLCBxdWV1ZSwg
+dHhhZGRyLCB0eHNpemUsDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHdyaXRlX3NpemUpOw0KDQpJIG1lYW50DQoNCiAgICBpZiAocnR3X2lzXzg3MjNicyhydHdk
+ZXYpKQ0KICAgICAgICBndWFyZChtdXRleCkoJnJ0d3NkaW8tPnR4X2NyZWRpdF9sb2NrKTsNCg0K
+RG9lc24ndCBpdCB3b3JrPw0KDQoNCg==
