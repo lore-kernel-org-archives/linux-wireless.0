@@ -1,47 +1,47 @@
 Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B7B3B388A;
-	Tue, 25 Aug 2026 06:13:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D03BE37757D;
+	Tue, 25 Aug 2026 06:36:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787638399; cv=none; b=mHfDCrsPVjQznF2q2N8u8IopNmdTvdSQXDjykuhtF2qzA3FlpChqb5a2PLJC56r1FFxkDX4iRXe2AtSGrzVR/W4t5RceppXSGURSgcbEG6fxscx561SLR6pXA1HlslWfcax5PtkDaUtWOa7uOF3+sf8PFGi3A+npsOd9E4UdlpA=
+	t=1787639807; cv=none; b=OOk/WAHz/oORSHx8OK0frhNPYeTArxtOq2SNpQghCfslwwa5XpYQVBMisDFXuF+bHKScpbiEktN1B+IoIGkF+sAmlk7uAhpal9vhLcGMCyFXcT3W1on9xQlAyKlOY2nbH3trDMgh7l3k1XpkWAdcP2RnR7pDlmrEDR8nCODvLos=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787638399; c=relaxed/simple;
-	bh=VvRvrfLk6g1WTW7NZy05xUGJZLg+M1vzfxYtxvnDukw=;
+	s=arc-20240116; t=1787639807; c=relaxed/simple;
+	bh=umpCwq8wpVyk3iQWWZV4x/SY7gHDLHRX/uIta/s5tzU=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=HKJd0jRq9b+LBoJKrgL1zlMQDPPKUmP/DdaQS9PUWxr/n+a2O3RdyjlCmLgaYaSTOzVURnnw/YnmJw6ddlvc8U/65Pb6uQKOkQiyebY9GTvJGOCMxwgF03eaACzppjPlxGtFu0bF3RqbOnVUwnNEVa8dxEGLrUYDS65DNFZhz40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=dhL1ZuL2; arc=none smtp.client-ip=211.75.126.72
+	 Content-Type:MIME-Version; b=D3v86YdiHPXi6UR4durNwBX3pSDLMNlP90ySyqKMRABCWH8cv5m/xRKaAWPNzm9qjUMMN8fFqVN76mPZMPFaWhVY+QCTg2ADfU46uUduG6+vnNUCs/0zRvrrOEfbSsUFZmrqrGlMpNOZzHNZ/0YVAhLr8buhj1SkGs/2bS/I73g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=aRl+5xf/; arc=none smtp.client-ip=211.75.126.72
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="dhL1ZuL2"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67P6Cw2bA3530939, This message is accepted by code: ctloc85258
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="aRl+5xf/"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67P6aU4V13543457, This message is accepted by code: ctloc85258
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787638378; bh=cYNgnlQ0iAcgy3yCX/DMnYwPfyfyn42FgsYyk5PL4Vk=;
+	t=1787639790; bh=TEdtak1K52xeGBBp7XqbZrTMMqQD0bAY30KxaYWmciQ=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=dhL1ZuL2Pli1O3t6iEh2BDPiGZUbfo1Y5F1DspBHXO5qR3H6IaDtTPxsNBoHj+m3u
-	 8VreTMFK4bm+XEGxA0tkuIP73Cj2qzqAbZ59UYPXIr6STBEFZ2MgDldmV+H+dkq1YX
-	 pl0Hm5ebahIueVpzIrPgzD2wrZYnDEWoN/MVTRCZevQ5GdvSLj2e2hx559RnhMBaRY
-	 gf1Znv2tqYY0EVwZxYl9Angl9A+N/9PnbpZeWo+/FrGbaIVeKCj2ahr0b+SopHo1gR
-	 XiVJtM+uz6f5iL61Xolkaz/z5Eyo/ONp5cskcTChwELDk5eBWXajXBS8VcqJOxLH2M
-	 nk2GzF+xKTIJg==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67P6Cw2bA3530939
+	b=aRl+5xf/riRMuIJHFjJMLDWbknbefZhkww+2FHWbczdRCmfL3psRpaHcyTP1FF/XA
+	 F6dmNnf0TURWrNKL08oPlMtc4WPHyUBkNrD+cdEdkEHL8irqyy8jxlqLmCZZ900toY
+	 brCBo0u9gvDIETWS+qVFbOK3Bc5oFITgrUwFDTsa+vK1lAcLDK9ZbojmIAGsrPcxzg
+	 Jj/nOZ0tPMifNf8Qed1twgvLCsG4HdoRdPbsh6pdPtFC+z+FBOT4zeFJ1gjARScx2v
+	 ROdDpQJQPqRxaLiYOoDXo5LtwA8E0zEK0N0UQVTtxMfq857mfuIhyeCznWZ/mb/Zd5
+	 w6zxdgziClPJg==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67P6aU4V13543457
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 25 Aug 2026 14:12:58 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+	Tue, 25 Aug 2026 14:36:30 +0800
+Received: from RTKEXHMBS01.realtek.com.tw (172.21.6.40) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 25 Aug 2026 14:12:59 +0800
+ 15.2.2562.43; Tue, 25 Aug 2026 14:36:31 +0800
 Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
+ RTKEXHMBS01.realtek.com.tw (172.21.6.40) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Tue, 25 Aug 2026 14:12:58 +0800
+ 15.2.2562.43; Tue, 25 Aug 2026 14:36:30 +0800
 Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
  RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Tue, 25 Aug 2026 14:12:58 +0800
+ 15.02.2562.043; Tue, 25 Aug 2026 14:36:30 +0800
 From: Ping-Ke Shih <pkshih@realtek.com>
 To: "luka.gejak@linux.dev" <luka.gejak@linux.dev>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
@@ -49,16 +49,16 @@ CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Michael
  Straube" <straube.linux@gmail.com>, Bitterblue Smith
 	<rtl8821cerfe2@gmail.com>, Peter Robinson <pbrobinson@gmail.com>, "Hans de
  Goede" <johannes.goede@oss.qualcomm.com>
-Subject: RE: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Topic: [PATCH v7 4/6] wifi: rtw88: sdio: track free TX pages and OQT
- credits for RTL8723BS
-Thread-Index: AQHdMIL3twfMpykyCEyz233XfbbmBLauSXrw
-Date: Tue, 25 Aug 2026 06:12:58 +0000
-Message-ID: <17c3c1f641fe41c4bfacb989af4b75a6@realtek.com>
+Subject: RE: [PATCH v7 6/6] wifi: rtw88: sdio: add TX back-pressure and retry
+ on page starvation
+Thread-Topic: [PATCH v7 6/6] wifi: rtw88: sdio: add TX back-pressure and retry
+ on page starvation
+Thread-Index: AQHdMIL7G//TSj3zZkqzYEB+swGRO7auVSeA
+Date: Tue, 25 Aug 2026 06:36:30 +0000
+Message-ID: <348bea609cee45179ee2a0c7dd03f0d1@realtek.com>
 References: <20260820090412.19574-1-luka.gejak@linux.dev>
- <20260820090412.19574-5-luka.gejak@linux.dev>
-In-Reply-To: <20260820090412.19574-5-luka.gejak@linux.dev>
+ <20260820090412.19574-7-luka.gejak@linux.dev>
+In-Reply-To: <20260820090412.19574-7-luka.gejak@linux.dev>
 Accept-Language: en-US, zh-TW
 Content-Language: zh-TW
 Content-Type: text/plain; charset="us-ascii"
@@ -74,139 +74,125 @@ luka.gejak@linux.dev <luka.gejak@linux.dev> wrote:
 
 [...]
 
->  static int rtw_sdio_write_port(struct rtw_dev *rtwdev, struct sk_buff *s=
-kb,
->                                enum rtw_tx_queue_type queue)
->  {
->         struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
-> +       bool rtl8723bs =3D rtw_is_8723bs(rtwdev);
-> +       unsigned int pages;
-> +       size_t write_size;
->         bool bus_claim;
->         size_t txsize;
->         u32 txaddr;
-> @@ -645,31 +837,73 @@ static int rtw_sdio_write_port(struct rtw_dev *rtwd=
-ev, struct sk_buff *skb,
->         if (!txaddr)
->                 return -EINVAL;
->=20
-> -       txsize =3D sdio_align_size(rtwsdio->sdio_func, skb->len);
-> +       if (rtl8723bs) {
-> +               txsize =3D round_up(skb->len, 4);
-> +               write_size =3D txsize > RTW_SDIO_BLOCK_SIZE ?
-> +                            round_up(txsize, RTW_SDIO_BLOCK_SIZE) : txsi=
-ze;
+> +/*
+> + * Back-pressure on the data ACs (BK/BE/VI/VO): once the software FIFO f=
+ills
+> + * past the high watermark, stop the corresponding mac80211 queue so it =
+stops
+> + * handing frames down, which bounds the queueing latency. The queue is =
+woken
+> + * again from the TX drain path once the FIFO falls back to the low wate=
+rmark.
+> + */
+> +static void rtw_sdio_8723bs_stop_tx_queue(struct rtw_dev *rtwdev,
+> +                                         enum rtw_tx_queue_type queue,
+> +                                         u16 q_map)
+> +{
+> +       struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
 > +
-> +               /*
-> +                * __skb_pad() zeroes the padding without moving skb->len=
- and
-> +                * reallocates when the skb is cloned or short on tailroo=
-m,
-> +                * so the padding can never land in a buffer a clone stil=
-l
-> +                * shares. It must not free the skb on failure: both call=
-ers
-> +                * still own it, one requeues it and the other frees it.
-> +                */
-
-I think you only need to note 'not free the skb on failure'.=20
-
-> +               if (write_size > skb->len) {
-
-And move comment here to note __skb_pad().
-
-By the way, we can have a local variable 'pad_size =3D write_size > skb->le=
-n'.
-Then,
-
-    if (pad_size) {
-        ret =3D __skb_pad( ..., pad_size, ...);
-        ...
-    }
-
-> +                       ret =3D __skb_pad(skb, write_size - skb->len, fal=
-se);
-> +                       if (ret)
-> +                               return ret;
-> +               }
-> +       } else {
-> +               txsize =3D sdio_align_size(rtwsdio->sdio_func, skb->len);
-> +               write_size =3D txsize;
-> +       }
+> +       if (!rtw_is_8723bs(rtwdev) || queue >=3D RTW_TX_QUEUE_BCN)
+> +               return;
+> +
+> +       if (READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
+> +               return;
+> +
+> +       if (skb_queue_len(&rtwsdio->tx_queue[queue]) < RTW_SDIO_TX_FIFO_H=
+IWATER)
+> +               return;
+> +
+> +       WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], true);
+> +       ieee80211_stop_queue(rtwdev->hw, q_map);
 > +
 > +       /*
-> +        * The free page check, the output queue wait and the accounting
-> +        * after the transfer must not interleave with another writer: th=
-e
-> +        * TX worker and the H2C path run concurrently, and two writers t=
-hat
-> +        * both pass the checks can claim the same pages and output queue
-> +        * entry, after which the chip silently discards whichever transf=
-er
-> +        * arrives second.
+> +        * The worker may have drained the queue between the length check
+> +        * above and the flag becoming visible; its wake check then saw t=
+he
+> +        * flag still clear and this stop would never be undone. Re-check
+> +        * now that the flag is set and undo the stop if so. Both sides c=
+an
+> +        * wake, which is harmless; the barrier pairs with the one in
+> +        * rtw_sdio_8723bs_wake_tx_queue() so at least one side does.
 > +        */
+> +       smp_mb();
 
-Not sure if the comment along declaration of tx_credit_lock is enough?
-If so, maybe we don't need this comment.=20
+With WRITE_ONCE() and READ_ONCE(), I think it will concurrency work
+well. Did you really encounter problems with smp_mb()?
 
-> +       if (rtl8723bs)
-> +               mutex_lock(&rtwsdio->tx_credit_lock);
+a blank line.
 
-guard(mutex)(&rtwsdio->tx_credit_lock);
-
-I think you can add lockdep_assert_held() to the places the locks (mutex)
-must be held, and run test if somewhere throw warning (must not).=20
-
->=20
->         ret =3D rtw_sdio_check_free_txpg(rtwdev, queue, txsize);
->         if (ret)
-> -               return ret;
-> +               goto out_unlock;
+> +       if (skb_queue_len(&rtwsdio->tx_queue[queue]) <=3D
+> +           RTW_SDIO_TX_FIFO_LOWATER) {
+> +               WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
+> +               ieee80211_wake_queue(rtwdev->hw, q_map);
+> +       }
+> +}
 > +
-> +       if (rtl8723bs) {
-> +               ret =3D rtw_sdio_8723bs_wait_tx_oqt(rtwdev);
-> +               if (ret)
-> +                       goto out_unlock;
-> +       }
->=20
->         if (!IS_ALIGNED((unsigned long)skb->data, RTW_SDIO_DATA_PTR_ALIGN=
-))
->                 rtw_warn(rtwdev, "Got unaligned SKB in %s() for queue %u\=
-n",
->                          __func__, queue);
->=20
->         bus_claim =3D rtw_sdio_bus_claim_needed(rtwsdio);
-> -
->         if (bus_claim)
->                 sdio_claim_host(rtwsdio->sdio_func);
-> -
-> -       ret =3D sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data, t=
-xsize);
-> -
-> +       ret =3D sdio_memcpy_toio(rtwsdio->sdio_func, txaddr, skb->data,
-> +                              write_size);
->         if (bus_claim)
->                 sdio_release_host(rtwsdio->sdio_func);
->=20
-> -       if (ret)
-> +       if (ret) {
->                 rtw_warn(rtwdev,
->                          "Failed to write %zu byte(s) to SDIO port 0x%08x=
-",
-> -                        txsize, txaddr);
-> +                        write_size, txaddr);
-> +       } else if (rtl8723bs) {
-> +               pages =3D DIV_ROUND_UP(txsize, rtwdev->chip->page_size);
-> +               rtw_sdio_8723bs_consume_txpg(rtwdev, queue, pages);
-> +       }
->=20
-> +out_unlock:
-> +       if (rtl8723bs)
-> +               mutex_unlock(&rtwsdio->tx_credit_lock);
->         return ret;
->  }
->=20
+> +static void rtw_sdio_8723bs_wake_tx_queue(struct rtw_dev *rtwdev,
+> +                                         enum rtw_tx_queue_type queue,
+> +                                         u16 q_map)
+> +{
+> +       struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
+> +
+> +       if (!rtw_is_8723bs(rtwdev) || queue >=3D RTW_TX_QUEUE_BCN)
+> +               return;
+> +
+> +       /* pairs with the barrier in rtw_sdio_8723bs_stop_tx_queue() */
+> +       smp_mb();
+> +
+> +       if (!READ_ONCE(rtwsdio->tx_queue_stopped[queue]))
+> +               return;
+> +
+> +       if (skb_queue_len(&rtwsdio->tx_queue[queue]) > RTW_SDIO_TX_FIFO_L=
+OWATER)
+> +               return;
+> +
+> +       WRITE_ONCE(rtwsdio->tx_queue_stopped[queue], false);
+> +       ieee80211_wake_queue(rtwdev->hw, q_map);
+> +}
+> +
 
 [...]
+
+>=20
+> -static void rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
+> -                                     enum rtw_tx_queue_type queue)
+> +/*
+> + * Send one frame from @queue. Returns 0 when a frame was written, 1 whe=
+n the
+> + * queue was empty and a negative errno when the write failed, in which =
+case
+> + * the frame is put back at the head of the queue.
+> + */
+> +static int rtw_sdio_process_tx_queue(struct rtw_dev *rtwdev,
+> +                                    enum rtw_tx_queue_type queue)
+>  {
+>         struct rtw_sdio *rtwsdio =3D (struct rtw_sdio *)rtwdev->priv;
+>         struct sk_buff *skb;
+> +       u16 q_map;
+>         int ret;
+>=20
+>         skb =3D skb_dequeue(&rtwsdio->tx_queue[queue]);
+>         if (!skb)
+> -               return;
+> +               return 1;
+>=20
+> +       q_map =3D skb_get_queue_mapping(skb);
+
+Can we move below just before the user?
+
+>         ret =3D rtw_sdio_write_port(rtwdev, skb, queue);
+>         if (ret) {
+>                 skb_queue_head(&rtwsdio->tx_queue[queue], skb);
+> -               return;
+> +               return ret;
+>         }
+>=20
+>         rtw_sdio_indicate_tx_status(rtwdev, skb);
+> +
+> +       rtw_sdio_8723bs_wake_tx_queue(rtwdev, queue, q_map);
+> +
+> +       return 0;
+> +}
+> +
 
 
