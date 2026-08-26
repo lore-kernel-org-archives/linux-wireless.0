@@ -1,139 +1,164 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E0DE3537FB
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 07:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E0E3A7F69
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787727817; cv=none; b=h82cYJTfOYOCabk4WM/DH6ixITWcyxW1QHzQaHJJf/JGv7N0IF/N0egNtgJAKjs6ejRc/PJNBxoQ6d5Hwxs2KX1hlxXFH563RuRu1WSA3+FMcJHeaII4AgDcJ3dqvNbHunq94HQO2OZTJTHk4B9dQRVUow6ZDjftLb4UKV4F7ks=
+	t=1787731770; cv=none; b=phPwtw8z5uay/UFWY/c1aSmw81ihaw94PFOKhsofOl6e+SmbrnYLNkFIT/fM0EqUT/mu8QO7I323MRLzDo3099WP+Svy4xZpzHtdedORifD0YyVURUTqD3oKadKe5r10JJE1pkdA1pafwh7JBFM3U7nmnbo4nj50CIhaoo3Pa+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787727817; c=relaxed/simple;
-	bh=MyX0yAops1+75R1pwZ0rLCW2gFTqz6P/8DNu8GTzgoY=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Tv10h4p7JIbWQ35ysZ2uLFOX85Oh6rlmevMGgn9k1vIs7kU+tGl3veMTozo9pPj1uzZ3iaSVWFgDMHL9A7W9kGf6WysemJvQ0dWEz8NgJfVLv46y2KAehf4F/OzeaDIlrbV0JcLDkXhiAEbOHfF+Fz8T/bmy64PLIVy1d5Q6P1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=TyGUuHzJ; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1787731770; c=relaxed/simple;
+	bh=rEbNkFigjp0FGDCJsty0si0XKQ+e9anzsk0sFIsDhoU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KOu5iIdDNT3gKLIeTxUWeaBsm996+4M4laFgzrRiccHgeEmDcjH+MwH/v78fQl3YNUt1Q7nAnLdAICK0l/a7pmZDTkl+urIJh3xNxj3hk7bqpm/5Kxvphto5TfK2U6zbawutLvbWdC1MDYoajSEi4qjMOJUkqvmOL0g0wYooSLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YuQ1hN9N; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EesU6/Ck; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="TyGUuHzJ"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67Q73Uc84364056, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1787727810; bh=qachGVxptJC1JeMG91RSil+GHjUs9OCy4PiqoEptV8k=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=TyGUuHzJ1is5yeMI3qy26giC01W6NE9uAN2xBQuCRGihKTamDEkoDNioFiVUOJNr9
-	 Bwwrco6seg72ffDariv3qxFQnMrZw+zokjGNVkn33cZZ21vK6jtM35TI5JzWHXyGgk
-	 MFGu71aHFpxbFwL1EX+tQ2E8qdyvlPvfqOgs6xV7JYyCUdAM1S3aZuE5EWxrAlGiVG
-	 yBI+xErSia9pUPpEa+3DeMByVaxqD57FnDL4FXIhX6yKfFtkXG7BA0pNBs6CvzXdna
-	 I+qoLUVIq4X5Lj33qwXhEGq/HqFU4sD4+w+7bbqKtULa/UwC+d/F/cMgkZTNIjrg9H
-	 XTioUTW5KFSww==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67Q73Uc84364056
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 26 Aug 2026 15:03:30 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 26 Aug 2026 15:03:31 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS06.realtek.com.tw (10.21.1.56) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 26 Aug 2026 15:03:31 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Wed, 26 Aug 2026 15:03:31 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: andres parra <andres.parrab@gmail.com>, "linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>
-Subject: RE: [RFC PATCH 0/4] wifi: rtw89: add NL80211_IFTYPE_P2P_DEVICE
- support
-Thread-Topic: [RFC PATCH 0/4] wifi: rtw89: add NL80211_IFTYPE_P2P_DEVICE
- support
-Thread-Index: AQHdMl2v7tQ2zv4uLUO5Yj5iw+rPVLav6JQw
-Date: Wed, 26 Aug 2026 07:03:31 +0000
-Message-ID: <fe4778c07f644ed38a03c467ef1293d7@realtek.com>
-References: <20260822174229.65643-1-andres.parrab@gmail.com>
-In-Reply-To: <20260822174229.65643-1-andres.parrab@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YuQ1hN9N";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EesU6/Ck"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67Q6RlmZ3689530
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=; b=YuQ1hN9NkB+j/f2K
+	jM4IdS4G+UxnMIRU84VU68/00IK/Or+kzo4uaBrPFYs+NqjhdZ3MONsOrl1mXxAV
+	Dwj/k1yXeXte7091lspDKCgublXsw+jOBMltcaZFLiUxA+xJ9cghEBkD6925xiAw
+	N01RVw4hEZlasO1juIDloEqq5SAL1aC0P2DqultRwCzLNHDq0UH+IKYpsxjfgT2L
+	BHGYYkD58l2QL0GpcEDWFPz0giEt7t4wAXs23Ej/tn6kfPB2Y7Ngp+Volbb1PHl4
+	bI0WpaxoBUjUO4+HrOIgYSZKTC9LERCexEGDfXVwjKm4JelbNEFSrSYxdjkaFRzM
+	HmuAjg==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g9fjn2uvx-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-52ee59064d2so236591cf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 01:09:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1787731766; x=1788336566; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
+        b=EesU6/CkhAShe5PRTIpIMtJ2EBGbKbyHgadTLRkeuz92p10et/KS2G4evShrQJ2ku3
+         N5ZbmM4jlP03LgKr6fQs2HGhqg06lvPdERZI0MQGVb3XxFpVpKPxg5S/WkG5AkSvRl9v
+         Pzq7BldSswNrmgs5QfVZoBCrR+HbdrbF6ApUvfr6UxyE83sW7QKd7DVNQwldCF5AwdL0
+         gFVdNbram0CmziAySg0BJ49YCDIWtWKRDZSiFwP46vPZoG32d+Smu0zDMR5NBQtCjsct
+         l2mYWM4saXam+j9LkjaTQIF8crimRdG26FrGnc39y5bxS257rJThH9yEIuuFFvz26QDg
+         hMFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787731766; x=1788336566;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
+        b=MCva+Cwg+bkpBjeglFRA8k/myYVUwztbr5w6HGKRn42mRDd8fhazPPQ+QROs92MOFm
+         wOl7N+woKNEm3xK5Tkh0virmiL0uHM8TJ8fhkh5I821XbjoWJZ2t372ZH/SZbqK4yjOE
+         EtB3IvmffDmvz5yqE4/vf+ApOHIR/EAOLjAdhYm6Up+8FTiY+4BeOtDCaTaURH669640
+         UNEEv4f9DkAp/c40kgWCoPgvNHPVBjGctItio5aWySxOgvGExFYOEnWcNNQ5FpAIzF38
+         ZKnupvIXhWgJ+It9Ll8fHwlc4yVDdHolqEsYIYPVy8vqreYVyBeER6I0zgPa9ZDEdGKJ
+         xzgQ==
+X-Forwarded-Encrypted: i=1; AHgh+Rp5vaGRRpbU0d+5nVKUcwSu5G8t9DtHEpiosl2dASKhQkJy3HXdpNyIxFYJmDGxx5iUSFYABWEOQu+DKVFJHQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++k4Q9iAjquoPSV2KFh8fZuKncPAY19VaSpEXo34/MGI/zKBvWBL
+	VVE2R/NtSsrRcD+qL5p2wDueBmahHMswy7gW2EK4Fw/BscEpOWJQNJYXBiAoPkqQOK7cf8T8Wv4
+	ep8bI7NloZ8hlnDnrhiWhepLQgglrNjZDw1AyrhUSFpzdWAxBr8/h40QMEkTKBqK/pN8daA==
+X-Gm-Gg: AR+sD11ebFx9m9Z8MYZMdQoSiFYysYnerQ0EeMsVHVtIWR9t3ohSX3gg5bHX44iWvu+
+	xCoShRXskg/lUi0rKPLrkFBfaBwPtt2ZWMyeKbjVMfvrVIyu8pAtMu4psWa557mUqaylO7+FP21
+	5CyLQxodMLAIbPEY84vDlEztuUb92hSQ7VtSY//NcZOVHm9D9db/YEn+2QTi6lM3ln2PYaLgltR
+	UaoV4fXOf2vTIFWO7Yulj/NZsn9AlLoJ4kMmbIx9IavfOXa25PTq0rqNCUSb/w17XI1+PHXY481
+	2Em8LvNIae1iVaBBrqz1grUpA2Qs/8DCpmk24PrMXnnRMy25hEF4aMdgljeTZUA6Qx0S6pl/fXv
+	W9CKw5n1T/rnIByPFNYDZGVkyIURI
+X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721361cf.1.1787731766281;
+        Wed, 26 Aug 2026 01:09:26 -0700 (PDT)
+X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721221cf.1.1787731765865;
+        Wed, 26 Aug 2026 01:09:25 -0700 (PDT)
+Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:dfd4:a0a3:2df2:7724])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dc96bff9sm18773245e9.5.2026.08.26.01.09.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Aug 2026 01:09:24 -0700 (PDT)
+From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+To: Bartosz Golaszewski <brgl@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Alessio Belle <alessio.belle@imgtec.com>,
+        Luigi Santivetti <luigi.santivetti@imgtec.com>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+        Jeff Johnson <jjohnson@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>,
+        Loic Poulain <loic.poulain@oss.qualcomm.com>,
+        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Cc: linux-pm@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-bluetooth@vger.kernel.org, imagination@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-pci@vger.kernel.org,
+        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: Re: [PATCH v3] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
+Date: Wed, 26 Aug 2026 10:09:22 +0200
+Message-ID: <178773176015.26343.5524450275043262993.b4-ty@oss.qualcomm.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
+References: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-
-andres parra <andres.parrab@gmail.com> wrote:
-> Hi,
->=20
-> I'm not a professional kernel developer -- this is my first
-> substantive contribution to this subsystem, so please bear with me if
-> anything here doesn't follow convention, and I'd appreciate direct
-> correction on anything I've gotten wrong.
-
-You should apply your patch to kernel tree, and generate patches.
-Otherwise, the path is wrong:
-   diff --git a/core.c b/core.c
-
-For Realtek WiFi drivers, the tree should be rtw-next [1].
-
-It seems like you repeatedly describe similar messages in every
-patch. Not sure if this is because the 4 patches are small.=20
-
-[1] https://github.com/pkshih/rtw.git rtw-next
-
->=20
-> rtw89 does not currently declare NL80211_IFTYPE_P2P_DEVICE anywhere in
-> interface_modes, which means wpa_supplicant/NetworkManager can never
-> create a real P2P-Device wdev on this hardware, and Wi-Fi Direct
-> casting (Miracast/WFD) to a smart TV never works: GO negotiation never
-> even starts. Confirmed absent across every rtw89 chip variant, not
-> just RTL8922AE. mt792x (mt7921/7922/7925) implements this correctly on
-> comparable modern, MCU-firmware-based hardware, and was used as the
-> reference model for this series.
-
-We have developed this recently [2]. Please take patches 11/14 ~14/14
-and test if it works in your side.
-
-[2] https://lore.kernel.org/linux-wireless/20260826064101.58892-12-pkshih@r=
-ealtek.com/T/#u
-
->=20
-> 1. If the AP the STA link is associated to does an ordinary channel
->    switch (CTRL-EVENT-CHANNEL-SWITCH) onto a different channel than
->    the one an active P2P-Client group is using, the P2P link is
->    dropped outright (beacon loss, then a locally-generated disconnect)
->    and never re-established automatically. I don't know whether this
->    is a pre-existing limitation in the existing MCC entity-management
->    code (rtw89_entity_mgnt / chan.c) that would reproduce identically
->    with a stock, unmodified P2P_CLIENT/GO connection unrelated to this
->    series, or something specific to a P2P-Device wdev being present.
->    Have not yet had the chance to test against a stock driver to
->    isolate which.
-
-Could you try the same test on the patches I mentioned above?
-And, share the test flow step by step.
-
->=20
-> 2. If the STA link and the P2P-Client link end up on genuinely
->    different *bands* (STA on 5GHz, P2P on 2.4GHz -- WFD is 2.4GHz-only)
->    rather than just different channels on the same band, the
->    connection stays up but has a real, repeatable performance cost --
->    confirmed clean at the RF link level (zero tx retries/failures on
->    the P2P link, good signal, decent PHY rate throughout) via
->    `station dump`, so it doesn't look like a radio-quality problem.
->    Grepped this driver for any equivalent to Intel iwlwifi's CDB
->    (Concurrent Dual-Band, IWL_UCODE_TLV_CAPA_CDB_SUPPORT, a distinct
->    LMAC per band) or MediaTek mt76's DBDC (Dual-Band Dual-Concurrent,
->    MCU_EXT_CMD_DBDC_CTRL) -- found nothing under either name. Is that
->    because RTL8922AE genuinely lacks equivalent hardware/firmware
->    capability (in which case this is a real ceiling, not something
->    software can fix), or does it exist under different terminology I
->    haven't found?
-
-rtw89 doesn't support dual bands concurrency simultaneously, it uses
-power saving mechanism to do TDMA timeslot sharing.=20
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: ELwS038ZJbIT_OAEGV9JVfG-JtLoKXW_
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX76IceXAAaci4
+ +eOZpFwwSYw2T3rYIi5g4T54y/z/wzMqi4H3RvTvjVWw1D2FrqtlPMN0WrdzC+HzDYw1qiEqxYu
+ v5RtKULyb75lpFSxu0ixp/9uX375iJQ=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX8GdK3HLj+4tV
+ vlmHyiK4TKlsT5yV8r2dVL3EdhaoRt/Ny91pfp6K/27d0dD/3jL2zBYOOfSsfn7KaFmgP/6WrG4
+ TlL2n6nUuIPqGXaGOcn9SIYwgXfCYMCAMibJPNSyYNqFjVwxmhwMVWmHW0J8MYa791HP2FObZxa
+ uOAhl3KV2045R0Vh2wGJ6VX5rE0yAT3DyHs/l5WHUyaaj1usHllZBPanQh1GWU5/UlJ37Omd4aL
+ 5ezLB1sGj5VLK5+TT/NeKYoMAx4LoL0ckEdN98H9EvHJkwDNlFKrsW7SBOtAv2BvMDvJkEzcVzh
+ ySp26nNZ3P3VZoYSkoZ+KU534/JtLck9Z5SURV2xYtkZhrKPP3zVw+xY4P/rAri4HobilWSJu5u
+ eqp3/CjZW/0nmiJnKsC1qP5BNZa1yNMkK0L3gKfsZF9ucLcsXtiB3r/kEwQzwz3U4AtnpJLNIeG
+ rz0bFfi7NUlznK3U58w==
+X-Authority-Analysis: v=2.4 cv=ccziaHDM c=1 sm=1 tr=0 ts=6a8e9f37 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=VwQbUJbxAAAA:8
+ a=EUspDBNiAAAA:8 a=_EivlD1RsPJwtJxW0JgA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
+ a=uxP6HrT_eTzRwkO_Te1X:22
+X-Proofpoint-ORIG-GUID: ELwS038ZJbIT_OAEGV9JVfG-JtLoKXW_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-26_02,2026-08-24_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 spamscore=0 suspectscore=0
+ clxscore=1015 malwarescore=0 bulkscore=0 adultscore=0 impostorscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608260066
 
 
+On Fri, 31 Jul 2026 15:42:18 +0200, Bartosz Golaszewski wrote:
+> The way power sequencing works means that a call to pwrseq_power_on()
+> does not necessarily result in the pwrseq target being powered-on at
+> that time: it may have already been powered on before. Similarly: a call
+> to pwrseq_power_off() does not have to result in an actual powering off
+> of resources: there may still be other users that requested a power-on
+> before.
+> 
+> [...]
+
+Applied, thanks!
+
+[1/1] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
+      https://git.kernel.org/brgl/c/d51fc9d4cd6eb18ac82913d83ecf7bd8c85f71ee
+
+Best regards,
+-- 
+Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
