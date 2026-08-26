@@ -1,164 +1,173 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv2-f0.google.com (mail-qv2-f0.google.com [74.125.230.128])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E0E3A7F69
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3420F3BB9EF
+	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 09:18:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.230.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787731770; cv=none; b=phPwtw8z5uay/UFWY/c1aSmw81ihaw94PFOKhsofOl6e+SmbrnYLNkFIT/fM0EqUT/mu8QO7I323MRLzDo3099WP+Svy4xZpzHtdedORifD0YyVURUTqD3oKadKe5r10JJE1pkdA1pafwh7JBFM3U7nmnbo4nj50CIhaoo3Pa+c=
+	t=1787735892; cv=none; b=f3lRFVPaxBwHGPZfTPBQyc1zv+ZN9dt9Fzjzch7s+F11H+ngs7X+o7rhKYyibQts/GJiOTnDKl+nXfIVnAMNvIWRL75Q6PjkneQekG9/ilR9YvdxdNqUKD7mNDhChagyYJliWexf/5a12XbYqdueDT6gbNsh9w/zfDy/61WFnxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787731770; c=relaxed/simple;
-	bh=rEbNkFigjp0FGDCJsty0si0XKQ+e9anzsk0sFIsDhoU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KOu5iIdDNT3gKLIeTxUWeaBsm996+4M4laFgzrRiccHgeEmDcjH+MwH/v78fQl3YNUt1Q7nAnLdAICK0l/a7pmZDTkl+urIJh3xNxj3hk7bqpm/5Kxvphto5TfK2U6zbawutLvbWdC1MDYoajSEi4qjMOJUkqvmOL0g0wYooSLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=YuQ1hN9N; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=EesU6/Ck; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1787735892; c=relaxed/simple;
+	bh=Qm4aVEDp5iVYR7W7mVql/Uo6ZLz8pH0sIXRqHNFQJLQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ugNmicg1priw2oBHSoor4r3ajyLmiSg2DaZRPyqd+pCl+sHoUHWkKCbXJ0ouF/nDbo6IZvtQbLHWKFHGU96lqw95JFt8s9hgq5wsRkLxeZYR53bGTuzboraZRRngfpDDo9OsMrl9ARMEwce97ow/r7Pge3wuTtQ0toyKldvipnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WaoMOLVR; arc=none smtp.client-ip=74.125.230.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="YuQ1hN9N";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="EesU6/Ck"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67Q6RlmZ3689530
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=; b=YuQ1hN9NkB+j/f2K
-	jM4IdS4G+UxnMIRU84VU68/00IK/Or+kzo4uaBrPFYs+NqjhdZ3MONsOrl1mXxAV
-	Dwj/k1yXeXte7091lspDKCgublXsw+jOBMltcaZFLiUxA+xJ9cghEBkD6925xiAw
-	N01RVw4hEZlasO1juIDloEqq5SAL1aC0P2DqultRwCzLNHDq0UH+IKYpsxjfgT2L
-	BHGYYkD58l2QL0GpcEDWFPz0giEt7t4wAXs23Ej/tn6kfPB2Y7Ngp+Volbb1PHl4
-	bI0WpaxoBUjUO4+HrOIgYSZKTC9LERCexEGDfXVwjKm4JelbNEFSrSYxdjkaFRzM
-	HmuAjg==
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4g9fjn2uvx-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 08:09:27 +0000 (GMT)
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-52ee59064d2so236591cf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 01:09:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WaoMOLVR"
+Received: by mail-qv2-f0.google.com with SMTP id 6a1803df08f44-8ef118ead8eso5780596d6.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 02:18:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1787731766; x=1788336566; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
-        b=EesU6/CkhAShe5PRTIpIMtJ2EBGbKbyHgadTLRkeuz92p10et/KS2G4evShrQJ2ku3
-         N5ZbmM4jlP03LgKr6fQs2HGhqg06lvPdERZI0MQGVb3XxFpVpKPxg5S/WkG5AkSvRl9v
-         Pzq7BldSswNrmgs5QfVZoBCrR+HbdrbF6ApUvfr6UxyE83sW7QKd7DVNQwldCF5AwdL0
-         gFVdNbram0CmziAySg0BJ49YCDIWtWKRDZSiFwP46vPZoG32d+Smu0zDMR5NBQtCjsct
-         l2mYWM4saXam+j9LkjaTQIF8crimRdG26FrGnc39y5bxS257rJThH9yEIuuFFvz26QDg
-         hMFw==
+        d=gmail.com; s=20251104; t=1787735888; x=1788340688; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3MKQPh2C4GF9FMSVOY2+ZQfDuvG76VBsD6KML05fJ6E=;
+        b=WaoMOLVRdzNYJ9FEjos8GhWRjX3u4bSsvYW6gvmzEWitrMoGILdjEF5+NFihvjbTx5
+         faVA2J4kv2yWisNlS+RoJLxUOYKXF6GPlf0RtGvRmkmtJlUk3YhCE42/ghP/3WGkxH48
+         Q5luH6nLwiIoyApPxPmUtAqTNP0hUQ11a1MbQo3LAIzdl1oA5PaSwkXmpVAttt6548gR
+         Cd0VnxPVGVtPZDEXTQ/p4zQBA7cUi30/dLSAOtZ9vp6jgeoZlleqFg3OiAc7c3ONfS4w
+         L6Q+yr4Q8KOVkt+NTGT/JV8InTXmW3Y2mTtpIK6ajkLjVm/++IbdIPs/BpzDhTcP2+Ap
+         nkrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787731766; x=1788336566;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OJXQT0c6OYFN2aHcq1lc8qaGVj0md3a70HDIO/2Fy+0=;
-        b=MCva+Cwg+bkpBjeglFRA8k/myYVUwztbr5w6HGKRn42mRDd8fhazPPQ+QROs92MOFm
-         wOl7N+woKNEm3xK5Tkh0virmiL0uHM8TJ8fhkh5I821XbjoWJZ2t372ZH/SZbqK4yjOE
-         EtB3IvmffDmvz5yqE4/vf+ApOHIR/EAOLjAdhYm6Up+8FTiY+4BeOtDCaTaURH669640
-         UNEEv4f9DkAp/c40kgWCoPgvNHPVBjGctItio5aWySxOgvGExFYOEnWcNNQ5FpAIzF38
-         ZKnupvIXhWgJ+It9Ll8fHwlc4yVDdHolqEsYIYPVy8vqreYVyBeER6I0zgPa9ZDEdGKJ
-         xzgQ==
-X-Forwarded-Encrypted: i=1; AHgh+Rp5vaGRRpbU0d+5nVKUcwSu5G8t9DtHEpiosl2dASKhQkJy3HXdpNyIxFYJmDGxx5iUSFYABWEOQu+DKVFJHQ==@vger.kernel.org
-X-Gm-Message-State: AFuF++k4Q9iAjquoPSV2KFh8fZuKncPAY19VaSpEXo34/MGI/zKBvWBL
-	VVE2R/NtSsrRcD+qL5p2wDueBmahHMswy7gW2EK4Fw/BscEpOWJQNJYXBiAoPkqQOK7cf8T8Wv4
-	ep8bI7NloZ8hlnDnrhiWhepLQgglrNjZDw1AyrhUSFpzdWAxBr8/h40QMEkTKBqK/pN8daA==
-X-Gm-Gg: AR+sD11ebFx9m9Z8MYZMdQoSiFYysYnerQ0EeMsVHVtIWR9t3ohSX3gg5bHX44iWvu+
-	xCoShRXskg/lUi0rKPLrkFBfaBwPtt2ZWMyeKbjVMfvrVIyu8pAtMu4psWa557mUqaylO7+FP21
-	5CyLQxodMLAIbPEY84vDlEztuUb92hSQ7VtSY//NcZOVHm9D9db/YEn+2QTi6lM3ln2PYaLgltR
-	UaoV4fXOf2vTIFWO7Yulj/NZsn9AlLoJ4kMmbIx9IavfOXa25PTq0rqNCUSb/w17XI1+PHXY481
-	2Em8LvNIae1iVaBBrqz1grUpA2Qs/8DCpmk24PrMXnnRMy25hEF4aMdgljeTZUA6Qx0S6pl/fXv
-	W9CKw5n1T/rnIByPFNYDZGVkyIURI
-X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721361cf.1.1787731766281;
-        Wed, 26 Aug 2026 01:09:26 -0700 (PDT)
-X-Received: by 2002:a05:622a:cc:b0:516:82e2:7788 with SMTP id d75a77b69052e-52e2ec1e3c5mr116721221cf.1.1787731765865;
-        Wed, 26 Aug 2026 01:09:25 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:dfd4:a0a3:2df2:7724])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dc96bff9sm18773245e9.5.2026.08.26.01.09.23
+        d=1e100.net; s=20251104; t=1787735888; x=1788340688;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=3MKQPh2C4GF9FMSVOY2+ZQfDuvG76VBsD6KML05fJ6E=;
+        b=ZVk8Qdh7GwzP4U0/+zyW6AymambHTf/O4rOFzs4L/WGCYaRByHVKEXPHqr7q1BE4Nj
+         DR6EWBMX/x6uTMEz/9mngnUvp+CLtdLTdPzPx/24CBxJmX3F0ZHTqMacVs0OVGeKr1dz
+         DSLPG+wfZ0bpC2Ix+l1AyeOeW26vxYX5Z3wToQJ+DnkX0KU2w08LCkjIHShNV1OSSMtn
+         BBXrxK66POwPImJ30GsUmNZMif7F7UdVxElJT+1TjJUZuCt5MswvLfWB2ZrtXIrO24dW
+         geqbJmB+7cY0iqAcWu2DldpxnvUXI/Ft4FZazbHp7Nn99tgOJLEoaPWKjqqwk+7AOG8h
+         So/g==
+X-Gm-Message-State: AFuF++lnCZjrdbbKMBa2G6P8TiCBLnDo+Q85Nh+r9ozQcuxWSNWRogzX
+	aB6cyXfhhpxPpIZwnl01TfTJ2KC3IZIs/mPnxfX7SYhPCwiY7PjMQJHLDgrxRS16KNU=
+X-Gm-Gg: AR+sD10nFZbDuAjGzxnL84jBs2ykqx5WUwYrrMjTK5ijMJsNfAJZZ7+70WoL2dUfhox
+	DXD/25Fl7JEY8p6HxVqvJkO0T/nn7Vy8InUpdyFfsh0nS3XahR0fCq1fIRVrHuHfwq2N+kwTNBA
+	hrV6iD6uAGhArvzixW88rUULAjZNqgr/iJtlCNn4ctdl7Sw8jFoH25jW9exvFEF+7bIOYk6Nd2w
+	i17syQfwX4zaMtr6LygTO5OblKWudgC7AooW0PAEYgtgdCKpPUc+p7B34LQkAc7N1j88x0GdV5/
+	Uxa99IPVkMa48zrE5uJi8urHDDge1l8+/Ub9SbZaAKgC8aA77Xkgxg3xGh1CS899cmm0sZ5J1hN
+	Lg8anUxbgmZrZl3fuy116o2MmpIbggbFegTK8Dw/PY4p3wMf256FOdMuxmMGqXO7VkJrmQc4TNm
+	tab9+4oJl/Yo5LqMUDsJkl8jvVjviTejMrftMXVoopDJqJaXWRKZFQOO002O93hl0WR6JKWfK7F
+	xZkIO+eGy/aUw==
+X-Received: by 2002:a05:6214:260d:b0:907:94e6:f8bc with SMTP id 6a1803df08f44-90cc79998c3mr49398766d6.15.1787735888267;
+        Wed, 26 Aug 2026 02:18:08 -0700 (PDT)
+Received: from localhost.localdomain ([2606:6d00:39f:4500:5acb:2301:2b5a:c076])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90cc65448f5sm20748926d6.45.2026.08.26.02.18.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2026 01:09:24 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Bartosz Golaszewski <brgl@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Alessio Belle <alessio.belle@imgtec.com>,
-        Luigi Santivetti <luigi.santivetti@imgtec.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Chen-Yu Tsai <wens@kernel.org>,
-        Loic Poulain <loic.poulain@oss.qualcomm.com>,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Cc: linux-pm@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, imagination@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, linux-pci@vger.kernel.org,
-        Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Subject: Re: [PATCH v3] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
-Date: Wed, 26 Aug 2026 10:09:22 +0200
-Message-ID: <178773176015.26343.5524450275043262993.b4-ty@oss.qualcomm.com>
+        Wed, 26 Aug 2026 02:18:07 -0700 (PDT)
+From: Mark Anthony Agarro <markanthonyagarro@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-mediatek@lists.infradead.org,
+	Mark Anthony Agarro <markanthonyagarro@gmail.com>,
+	Devin Wittmayer <lucid_duck@justthetip.ca>
+Subject: [PATCH wireless] wifi: mt76: mt7925: honour mac80211's FIF_FCSFAIL instead of hardcoding drop_err
+Date: Wed, 26 Aug 2026 05:17:57 -0400
+Message-ID: <20260826091757.469953-1-markanthonyagarro@gmail.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
-References: <20260731-pwrseq-vote-rename-v3-1-44e60b8be053@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: ELwS038ZJbIT_OAEGV9JVfG-JtLoKXW_
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX76IceXAAaci4
- +eOZpFwwSYw2T3rYIi5g4T54y/z/wzMqi4H3RvTvjVWw1D2FrqtlPMN0WrdzC+HzDYw1qiEqxYu
- v5RtKULyb75lpFSxu0ixp/9uX375iJQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI2MDA2NiBTYWx0ZWRfX8GdK3HLj+4tV
- vlmHyiK4TKlsT5yV8r2dVL3EdhaoRt/Ny91pfp6K/27d0dD/3jL2zBYOOfSsfn7KaFmgP/6WrG4
- TlL2n6nUuIPqGXaGOcn9SIYwgXfCYMCAMibJPNSyYNqFjVwxmhwMVWmHW0J8MYa791HP2FObZxa
- uOAhl3KV2045R0Vh2wGJ6VX5rE0yAT3DyHs/l5WHUyaaj1usHllZBPanQh1GWU5/UlJ37Omd4aL
- 5ezLB1sGj5VLK5+TT/NeKYoMAx4LoL0ckEdN98H9EvHJkwDNlFKrsW7SBOtAv2BvMDvJkEzcVzh
- ySp26nNZ3P3VZoYSkoZ+KU534/JtLck9Z5SURV2xYtkZhrKPP3zVw+xY4P/rAri4HobilWSJu5u
- eqp3/CjZW/0nmiJnKsC1qP5BNZa1yNMkK0L3gKfsZF9ucLcsXtiB3r/kEwQzwz3U4AtnpJLNIeG
- rz0bFfi7NUlznK3U58w==
-X-Authority-Analysis: v=2.4 cv=ccziaHDM c=1 sm=1 tr=0 ts=6a8e9f37 cx=c_pps
- a=JbAStetqSzwMeJznSMzCyw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=_EivlD1RsPJwtJxW0JgA:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
- a=uxP6HrT_eTzRwkO_Te1X:22
-X-Proofpoint-ORIG-GUID: ELwS038ZJbIT_OAEGV9JVfG-JtLoKXW_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-26_02,2026-08-24_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 phishscore=0 lowpriorityscore=0 spamscore=0 suspectscore=0
- clxscore=1015 malwarescore=0 bulkscore=0 adultscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608260066
 
+mt7925_mcu_config_sniffer() hardcodes drop_err = 1, ignoring what
+mac80211 actually requested via configure_filter(). FIF_FCSFAIL is
+computed there but discarded instead of persisted.
 
-On Fri, 31 Jul 2026 15:42:18 +0200, Bartosz Golaszewski wrote:
-> The way power sequencing works means that a call to pwrseq_power_on()
-> does not necessarily result in the pwrseq target being powered-on at
-> that time: it may have already been powered on before. Similarly: a call
-> to pwrseq_power_off() does not have to result in an actual powering off
-> of resources: there may still be other users that requested a power-on
-> before.
-> 
-> [...]
+Persist the FCSFAIL bit on the phy in mt7925_configure_filter() and
+read it back in mt7925_mcu_config_sniffer() to derive drop_err, so the
+firmware sniffer only passes through unfiltered/marginal frames when a
+monitor listener actually requested them.
 
-Applied, thanks!
+mt7925_mcu_config_sniffer() is only reached from mt7925_change_chanctx(),
+which is itself only exercised on a monitor-mode chanctx, so this stays
+scoped to monitor mode.
 
-[1/1] power: sequencing: rename pwrseq_power_on/off() to pwrseq_enable/disable()
-      https://git.kernel.org/brgl/c/d51fc9d4cd6eb18ac82913d83ecf7bd8c85f71ee
+Fixes: c948b5da6bbe ("wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips")
+Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Signed-off-by: Mark Anthony Agarro <markanthonyagarro@gmail.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt7925/main.c   | 7 +++----
+ drivers/net/wireless/mediatek/mt76/mt7925/mcu.c    | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h | 5 +++++
+ drivers/net/wireless/mediatek/mt76/mt792x.h        | 1 +
+ 4 files changed, 10 insertions(+), 5 deletions(-)
 
-Best regards,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/main.c b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+index a9059866b..cfbfd77e8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/main.c
+@@ -832,11 +832,8 @@ static void mt7925_configure_filter(struct ieee80211_hw *hw,
+ 				    unsigned int *total_flags,
+ 				    u64 multicast)
+ {
+-#define MT7925_FILTER_FCSFAIL    BIT(2)
+-#define MT7925_FILTER_CONTROL    BIT(5)
+-#define MT7925_FILTER_OTHER_BSS  BIT(6)
+-#define MT7925_FILTER_ENABLE     BIT(31)
+ 	struct mt792x_dev *dev = mt792x_hw_dev(hw);
++	struct mt792x_phy *phy = mt792x_hw_phy(hw);
+ 	u32 flags = MT7925_FILTER_ENABLE;
+ 
+ #define MT7925_FILTER(_fif, _type) do {			\
+@@ -848,6 +845,8 @@ static void mt7925_configure_filter(struct ieee80211_hw *hw,
+ 	MT7925_FILTER(FIF_CONTROL, CONTROL);
+ 	MT7925_FILTER(FIF_OTHER_BSS, OTHER_BSS);
+ 
++	phy->rxfilter = flags;
++
+ 	mt792x_mutex_acquire(dev);
+ 	mt7925_mcu_set_rxfilter(dev, flags, 0, 0);
+ 	mt792x_mutex_release(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+index e94fa544f..adc137a0e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mcu.c
+@@ -2251,7 +2251,7 @@ int mt7925_mcu_config_sniffer(struct mt792x_vif *vif,
+ 			.len = cpu_to_le16(sizeof(req.tlv)),
+ 			.control_ch = chandef->chan->hw_value,
+ 			.center_ch = ieee80211_frequency_to_channel(freq1),
+-			.drop_err = 1,
++			.drop_err = !(vif->phy->rxfilter & MT7925_FILTER_FCSFAIL),
+ 		},
+ 	};
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+index 4cc259418..8fb8a4c13 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mt7925.h
+@@ -7,6 +7,11 @@
+ #include "../mt792x.h"
+ #include "regs.h"
+ 
++#define MT7925_FILTER_FCSFAIL		BIT(2)
++#define MT7925_FILTER_CONTROL		BIT(5)
++#define MT7925_FILTER_OTHER_BSS	BIT(6)
++#define MT7925_FILTER_ENABLE		BIT(31)
++
+ #define MT7925_BEACON_RATES_TBL		25
+ 
+ #define MT7925_TX_RING_SIZE		2048
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x.h b/drivers/net/wireless/mediatek/mt76/mt792x.h
+index 70073b43a..75d32a4ad 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x.h
++++ b/drivers/net/wireless/mediatek/mt76/mt792x.h
+@@ -168,6 +168,7 @@ struct mt792x_phy {
+ 	s16 coverage_class;
+ 	u8 slottime;
+ 
++	u32 rxfilter;
+ 	u32 rx_ampdu_ts;
+ 	u32 ampdu_ref;
+ 
 -- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+2.47.3
+
