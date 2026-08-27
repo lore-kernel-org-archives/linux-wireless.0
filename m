@@ -1,77 +1,73 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A9A40B0EC
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 13:13:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11399378D9C
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 13:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787836395; cv=none; b=RjKrMEP6eDFeDH1S+E5gCfRri3bEJ/14t279pg4WZnV6Cl8SX+hce5xTJpbaufZKTnchaigZNN15bqzwpzf5c3zJt/cYWizhCwa5/5iuYBLu18JCRpwGRd0xxoDNf1fmxIzJg0QxkD7ve8Tqn1SIePZZYPisn7Qa70KksdxP1hw=
+	t=1787838511; cv=none; b=Wba7Q5WkAQkwW4Gs9oytz+sV45zvOGXcCj7s45HDC1RN/Qs2wdmhqyzfespK2/3ZviT1VUwUoLCb0hoUmeK5rSDZ5F2E3lFrP4xsiy7gPLZxMcuZGUt3M++f/zJf7gMD7YNzemkgRvD4oAf6UTRiHCB28RJLwJGJwb/NvQ5t/nQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787836395; c=relaxed/simple;
-	bh=31CUeemL+eQQbUBoYqrag2sUv8JBAfW59q4FvsljVrg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EYOsftmbovfC2UC4XQYtj4JXTPwo4UoFwbcmkguM8aAtIDz6vWfwTCuN4Fg1jsJj4jNK3Rv74J4U4l9ScjopUkJ8o7+3fnNDiMz8v2F+YS2LfNK0TbfNYgA3IRFr90iSi1OiDmNzL8lP8t1txTDi+XlkKi0ukZWEx4PRXSlB1CU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l33GG/lv; arc=none smtp.client-ip=209.85.128.53
+	s=arc-20240116; t=1787838511; c=relaxed/simple;
+	bh=B21WIJfF3OL4nulXscrdt7J/PoHva+xwa0r/5bkgZf8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PtIn+7SLgqGacqoXNNwIiQ2h1RylkGNsGw0VDMHp28wxEYKZKLLImOGC2kEwm+813jAi8z4kIoxIKx4/C0EKwDSd+QIisWKtNUB/AawPy45FNBklq5ldj+jaL69rQcL2Nt5Bd4X6qI5YUsQacfxdRIJmlu5iZY1a6mvxqdmlleU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kCqK5JZu; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l33GG/lv"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-498028b3d5eso21146805e9.1
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 06:13:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kCqK5JZu"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2cedda2ce6fso4749785ad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 06:48:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787836388; x=1788441188; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=YWJcL1I0OwWaQgShlWqUYQ+qUtUeV+AX1JUrEJNdqMo=;
-        b=l33GG/lv+ZqNPdmTVjDEKGVGkyMsU11W+QhcXIL32WnQxjXWkS11rBJwXmZ9rt2G7+
-         LoK8B/LYBPziI4QpNWO0704EX7joINql3y0xEAnx49eevoKmOueV4VmwVQ8kXkB1Njy6
-         6KMK5oT1rBu1Nb2c5v7NzgezCdf3emFPyL4MO/07zoOA5GTyNvcVQwQtFWYUS1pupu9m
-         1mc5Kb90bTU+vwJGx1cKx0pyimsM+i5nib1aidIX3QfFhEVZDdI7YTWCzKgkty01qMMj
-         gbCLqQURYIUI81SA1UDhbWEMhYtMDy+seHAKl5q9msv4dU6JWWxOg34cIjY2DD6ZS6s0
-         1uVQ==
+        d=gmail.com; s=20251104; t=1787838509; x=1788443309; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=hWIouarLBH7JuHWJjN8tUII0KICbScsgCYFIy7YWfw0=;
+        b=kCqK5JZum+Bo9MOmGMAYxYUYIGzrgW5hrXgNYPNCseBfszBJ2Y6BUp9yehBuTQtQiU
+         wLKnoapYl+TgN6uD+cPbDJBN0De3L2W0qnksiwzhctD4eOkASbq4OVtdiZr9/1XDDBe+
+         7d7VQqnOUFU5YUK8Se48oG5tIIQ0bTz8jKhoEZcmmAcpyfGio1howNE8WSGVJ2x8guaH
+         6pVjhT1ZJUXoseNAvqs3woFStzF5qFfm1Si4f0hKSilHqOW7ERGHUosHEi+P+2kC67Oo
+         4RtAuVRD4M0jJ7pbwE958gYJ4/ViVsPtrmqDrKWhm0+Fm5hrnYtcOZdr1/lPUP9z9Laz
+         +uKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787836388; x=1788441188;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=YWJcL1I0OwWaQgShlWqUYQ+qUtUeV+AX1JUrEJNdqMo=;
-        b=pKHsh4JqadsYA1EPHwMN8OP+a+o/CKDKt2tOCx0AcKJ6+bqlP7ntnCJ0nwlLJtHpph
-         2t0ZxQpj/PAdeb9fmccuBJSrGFyIonH6T6PHo6oNlfJihSNyb70W0Z/OurZB4XkZLkit
-         Txcegw5kNyMEEARpDDvGu8lSZQTjDoETf0VlW+rLwu/iO+lmrO1lPNuj24+EqNnmQtT7
-         eJKpaIAvlUJR8lnZ4kPfQiHmJZC5VSZCe3g1AJph7oGTWPw1Yn0Gwl26UnOybH8KatZZ
-         Od3TVyHAdDNakMBjp+bCofLc1LVqdblQzW5RoWtyaD2wmWp62V3iORukgOWtKKZaFy5d
-         lcXQ==
-X-Gm-Message-State: AFuF++ntioplmqIb40hprKxiMw99f8J4QellJclkHCGdWvdKxauG6yK7
-	SoHir6UhFuDioq5vkAtwFE2/jDRKYBgjXngeltXvXeIf87PxT1nQJ0CzO0AKwB9b
-X-Gm-Gg: AR+sD10+3Bgxz0HOTVilLXTiqicQ1j/uagvTsmM9VObE2WiBl+F8JrwA94yUZoeAZEd
-	avOs579zxsvz9B4qFbWtSNcWZ/9ekA+upyk8GCEURBhqymF+Ed3HU8duW2CxkHysEjQWTkz8r8C
-	cv7UwjuQfrH77opRHwqIE25r7pDmC4G4Bonk0trKNR3w4TRa9YA225F9CkDhlo9nOqkt0aYfu1c
-	VSmp+rGsWiUG6zAH3192nas4LIft1F2zELfSjJk5ILwrwHMYBpTKvtvdv1fNYsdU9PrWymqehXh
-	R4o63NMkZHf52FmQB7LO3v7PBPgwP2RTohVIScOtddNHwv0JCvDhEMa9jgGMEMS/u+A01OW2FhT
-	RRYUoX7rLqovpZPRvpfGwymNbm3xqKRONOfFxGoDgktmrGBtDrBjYXxwCzEYElgQz5VVEba7Clv
-	8ZfAF1ELh26jZzWTkI/SNA0qaxg9vV0+PP3g+7ZOQRjX+2uoamgXI1Cmy4QScmbuBS6BYGNotOd
-	ZloExsxcKy4sKKYEg6CCq/N7rsV6HUwJjYS8spkugBT9wluA72/PZHDppDn2VQMHPeNqr2eEdPL
-	DXKYg8YS
-X-Received: by 2002:a05:600c:3b1a:b0:493:c47f:3c55 with SMTP id 5b1f17b1804b1-499dc6fb0fcmr176333935e9.5.1787836387697;
-        Thu, 27 Aug 2026 06:13:07 -0700 (PDT)
-Received: from omarchy ([31.223.97.101])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dd56acedsm81184345e9.3.2026.08.27.06.13.05
+        d=1e100.net; s=20251104; t=1787838509; x=1788443309;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=hWIouarLBH7JuHWJjN8tUII0KICbScsgCYFIy7YWfw0=;
+        b=q0lddf3aE/7CinhIFZKcVasOeb8FbcfthMYnYHapFCfG4BN/c4VnR5Lqli7pL7OJsL
+         D3atmpiM9nmpOig4bqBsw6CAMPfhKFYetKc+tytai6SLixKZdzDm94j0kK8S4+wOfaiH
+         D5+vMGe48Q+AOQCAEitshD/hmK4n5XnIOuiNd5xGWjzyNp3kMmZuI14lnxJsA6r5QvEf
+         5PMuXkOvGfy0+v3xipBfMIHvu+DTDA1DOazGLdqxnfzAgu/RHn/gMxXcd2Y0OqGoBcx4
+         3sMGZNKoLcpFjcgmTdv2/DUz0vz3cw95WVBZ3UtFqIxoH2qD3vLs5T/PvwQFGM4q35Ag
+         dkUA==
+X-Gm-Message-State: AFuF++mlWZsNUmVY5S49a/z/Jbg6JqS4yy+gCW0kS5RcCBYsK/XisDws
+	/jO4wXzjI6+DvLR+Gx9OZKhv1cJiyXKypQKNe+11EGwG3G81mw0sEYZWzkmxRcVZ
+X-Gm-Gg: AR+sD10G5ufUyNw9RSN/jGHHXvTugoa7GmIsl/U2NZaTwqXQvp+FZR1wrd7nY+CbAVr
+	HDXMt95BFjUfSV3dShg8KwWV46wmdDcChFHtek6AImGqx+6rMeCtAjl6CjgCVnpEtQnwTGj/P6G
+	gu1zpQr0fACWQBMksZe1e5kSfmIBqMwCzL1KWyY3EO4zrMgALsxV2ejZZs7kmGOeZKZnf5EIFoa
+	JTVnyt3eQNJG/BQvZNbmbLU3pRIAsdeDWrdYvBAqlYG8uK+jvbmsdd+L49VK+g6O9iZCq2cemS4
+	zvjrg+3dXLC+n/KFM1wkDQc+eB+Csw2uYTyzOS4kRvJkuMTS4eHJEGxZluVBJJYRcv2YhhzEB22
+	llI5AAI5CeU+tcLa/nzJovD6j63k5SIsW+fpa4z6p05bQGPB+RrRivT0aGcemfY/n0VV4YpZ/dp
+	938ijikK3LtcMhvL7j4isrPcpAcCIEWPxOwlJe7EyjM1EjrkO1GTSnM0QmJjphUP1NYKFey9nTP
+	1Ca5bLBhcGhEW4OOtzUcj/HhaNisN0oOV786wmPZVkhNbbl0iDbdv+vX4Zar7AnR8DsL7plnUt7
+	xEU+MO0idyM8D3h2Vz1BWS/slvVrbcS0fXFA+m+16v+YhQHdmk+gouGLX/iTUYOr32BUhokZerg
+	BtVbtrGmFjx0FDXxd
+X-Received: by 2002:a17:902:e550:b0:2ca:1479:d9dc with SMTP id d9443c01a7336-2d707b64aecmr290601105ad.12.1787838508938;
+        Thu, 27 Aug 2026 06:48:28 -0700 (PDT)
+Received: from silver.tail241a39.ts.net ([2402:800:63a6:a199:ad96:d99:29d:5e21])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3283da25c09sm33302987eec.31.2026.08.27.06.48.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Aug 2026 06:13:06 -0700 (PDT)
-From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+        Thu, 27 Aug 2026 06:48:28 -0700 (PDT)
+From: Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com,
-	johannes@sipsolutions.net,
-	kvalo@kernel.org,
-	briannorris@chromium.org,
-	Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
-Subject: [PATCH v2 wireless] wifi: rtw88: debugfs: don't vzalloc(0) when rsvd_page is read unconfigured
-Date: Thu, 27 Aug 2026 16:12:44 +0300
-Message-ID: <20260827131244.35623-1-abdurrahmankaradag19@gmail.com>
+Cc: linux-mediatek@lists.infradead.org,
+	nbd@nbd.name,
+	lorenzo@kernel.org,
+	Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>
+Subject: [PATCH RFC] wifi: mt76: mt792x: treat ACPI MTGS 0xff as no geo limit
+Date: Thu, 27 Aug 2026 20:48:20 +0700
+Message-ID: <20260827134820.2607530-1-huynguyendinhquang@gmail.com>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
-References: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -80,49 +76,45 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reading the rsvd_page debugfs entry before writing a page offset and
-count to it calls vzalloc() with a size of zero, because
-rsvd_page.page_num defaults to 0.  vmalloc warns about this:
+Some OEM ACPI MTGS tables fill unused geo power/offset slots with
+0xff. Windows treats that as "no cap". Linux assigned the u8 value
+to s8 and min()'d it, clamping every rate to about -1 dBm
+(txpower_sku tmac = 3).
 
-  WARNING: mm/vmalloc.c:4019 at __vmalloc_node_range_noprof+0x9ac/0xa30
-  ...
-  Call Trace:
-   __vmalloc_node_noprof+0x4c/0x70
-   rtw_debugfs_get_rsvd_page+0x4c/0x110 [rtw88_core]
-   seq_read_iter+0x132/0x4b0
-   seq_read+0x12e/0x1c0
-   full_proxy_read+0x6f/0xc0
-   vfs_read+0xdd/0x490
+Skip geo capping when pwr is 0xff, and do not apply offset when it
+is 0xff.
 
-rtw_fw_dump_fifo() would reject the zero size anyway, but only after
-the allocation.  Check for a zero buffer size first and print a short
-usage hint instead of allocating.
+Tested on ASUS Vivobook S 14 M5406WA (MT7922, mt7921e):
+- 5 GHz: tmac 3 -> 25, TX ~40 Mbps -> 200-350 Mbps (80 MHz)
+- 2.4 GHz: tmac 30 after the change (channel 6, 20 MHz)
 
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
-Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+Fixes: f965333e491e ("mt76: mt7921: introduce ACPI SAR support")
+Signed-off-by: Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>
 ---
-v2: no code change. Add the wireless target tree to the subject and Cc
-    the maintainers/blamed authors that v1 missed.
+ drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/realtek/rtw88/debug.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index b67d69b..84e45af 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -315,6 +315,11 @@ static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
- 	int i;
- 	int ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+index 946dd79..fa539cd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
++++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+@@ -280,7 +280,15 @@ mt792x_asar_get_geo_pwr(struct mt792x_phy *phy,
+ 		return dyn_power;
  
-+	if (!buf_size) {
-+		seq_puts(m, "usage: echo <page_offset> <page_num> > rsvd_page\n");
-+		return 0;
-+	}
-+
- 	buf = vzalloc(buf_size);
- 	if (!buf)
- 		return -ENOMEM;
+ 	geo_power = (band_pwr + idx)->pwr;
+-	dyn_power += (band_pwr + idx)->offset;
++	/*
++	 * ASUS (and some other OEM) ACPI MTGS tables fill unused geo
++	 * slots with 0xFF. Windows treats that as "no cap". Linux took
++	 * it as s8 -1 dBm and min()'d every rate down to ~3 dBm tmac.
++	 */
++	if ((u8)geo_power == 0xff)
++		return dyn_power;
++	if ((band_pwr + idx)->offset != 0xff)
++		dyn_power += (band_pwr + idx)->offset;
+ 
+ 	return min(geo_power, dyn_power);
+ }
 -- 
 2.55.0
 
