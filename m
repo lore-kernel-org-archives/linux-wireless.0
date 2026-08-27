@@ -1,71 +1,71 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B5CD1632E7
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 05:50:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EDAB1632E7
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 05:50:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787809839; cv=none; b=Fh9ILrkOqpolPDi6sM53LYLIaKwZoSfisLpxWw1CmeC+mLeapW6hgo6AoiYCha3z9Sje1V2PIcui/KqSwnrdqr+EQSmHnFMdlzfjsNez6ERxEPUXk5O3LpQxDK37ptxt/lhApt9v8NiF9gWbDf/HmPI4j6cUH3jD4rSyIM6+kSA=
+	t=1787809845; cv=none; b=hMwif+kIgCifclEGTndv55Bm0qlWjyYIZlou5XTO9lVq9/DeFtfQHbZfUkFk5cVwsjufzocafAZO0OCZzN4Imd7lfJzOaephbsvjP7U0qUE/rNpzCxlNGqkQhUK3+Djn2udVTSKtu7urzq6EJ3/5zQuJTUiOJY3xlQLXR1JuPJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787809839; c=relaxed/simple;
-	bh=QIilISweQgg5PHBdIHg3PEbO4cdL4PDWo++0peMKboo=;
+	s=arc-20240116; t=1787809845; c=relaxed/simple;
+	bh=IM/lfhf+9mjV0i/YqjuP53U8MHQP7sBmjM6ypdVKMg4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VNLxTRlOJFf1USIlFbuf6ylNxojvKCZJ5xrSe8Gyy4JwkINJNBImVGILjO6fNuRzpwCy3LFqfgQZpLJA2Y++VLlhXm1uCjZ51uZFK0ht2ZeAbJRMGtU7XHSoAsCBWiQbcu7SJg30DWLvFqyBu3KLCFTDQg6gfwRbk/bsQJDlDHo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=vBfZ3EZd; arc=none smtp.client-ip=209.85.210.176
+	 MIME-Version; b=XCfu8PvWzd3+BMumqkuiZbp2r8NfVd1KRH9nn9VAgialt1PfAIvmEXxhqannV4tjSoijAq9osoCU5vjcgKih4vxTI/5wvru5Gp7zzsNMJE18AzYpR6Er4YBHVu4+IIXpkCs32fZVdzCk/S5kNW5kaOLVGExAInHzCmquuLM36jE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=wZnqckf6; arc=none smtp.client-ip=209.85.215.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="vBfZ3EZd"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8548db7428aso831935b3a.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 22:50:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="wZnqckf6"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cc1cc97b84bso295887a12.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 22:50:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1787809838; x=1788414638; darn=vger.kernel.org;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1787809844; x=1788414644; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=1DxO01FvYRl2FzLMQ3Q5ySGmASmrP0fydsTcX9cwgls=;
-        b=vBfZ3EZd8V4tutRQtJ8aY7kwn3m3RFqs3rgVkegZ579zhk0G6EWux4Ep6oIouAqE0/
-         iv7Nx6Q3Q2kBw0WLpOcDFuIPyV7+GT8fZTwVWHY6w7R7VdeOkqS2R1BP+zD4heKIzumd
-         jeFeNlzhhAA2wPnn+Y/idOhQ3Nolv9+6s6cnB4sFSbG3BBRSURW5WE93MSb/Iq2MbTD5
-         59x1EWqXnxy+PIeWfFFlxPLbK9bjlPT2qz/8XINRkfQTLlwqa/s/Ekz3pnbfttUgZPRo
-         5Et+3rNuQlVRBxazVMx3bsryCMDir6cUJyv6r2Yo35ZqYv3EfSXGbAXXPw/MQxBSAoDH
-         qf8A==
+        bh=xfynFv2SMwYnUk0M4IAEemAi4hR6mIGHrqfM2qqM/Nw=;
+        b=wZnqckf6Z+U1oKc3/Rk+OPcI6Gmo2pLiH+GOHaGcbOQUehsF9TC9xQtvxTGlZJLIsP
+         giKaGGhD15kSToPddGJo2B8EmMTt9jgMpi5f+QxlHUsLa960fZaIE6/DhCa2bVlaRupd
+         TcGtNO5SoAjw8DhtSQZ3lRRZJYrDCE4JymzSD/kmT+07zjxhN9PJfSQntL9Ce4sFVZfo
+         iRa1jPJKw+O89nSr6CIjmHbqnN9VDs2sn+sMpOcROPPtyknR0MLromlFDURw7a/Jo3Oh
+         c7V0DWjbOBCi1MsnAvegtCnuUSPNNVfRAdDO6kc7RmiisqrFojiRUW39v1zQAP8eGch/
+         pPug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787809838; x=1788414638;
+        d=1e100.net; s=20251104; t=1787809844; x=1788414644;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1DxO01FvYRl2FzLMQ3Q5ySGmASmrP0fydsTcX9cwgls=;
-        b=Iy03twD0iwjOxujTAEUvL+oNhs5cd1ZyZvtJD79fA/sGMFKshrVzB19PBPeI46ZxpK
-         b1lfO2s9E4rJMWcTxtKVRHenRXeI2ybeuY+GvTcks1R6WNDmoKeOZDBGAQNzEnRheD1g
-         4QnnqWKiBecYcPScW7ujCzrdB5U2BbW5cHIfwo6m1xWx9UwcqTG8DKuQXJDXhV4DVAGp
-         SONzkbmEVU4jA1SPutSJqQtfzIbBZMTAuwUcwH/gwh0a5n8NbIGZrWTj3Ii/i6wcyroP
-         fdU2YCnh6+51ZWFdy1vG9hN+Yudma2ZoEbCruEERhS7+TwHPXvuD+dB9ztBshySxxX+t
-         mtSA==
-X-Gm-Message-State: AFuF++naBNWBx8Ew6MruvTOKXM00EhcGS3WTgTrGsA4Zwr0JXCOWu1Wx
-	NOnaFi6JbAS7YDoXEv8lhjZmYWV7tas5M6B3hLFMCu4rcfZWflxsEebO389rpEiPu1c=
-X-Gm-Gg: AR+sD114byBwRRHRL4jezOwfZEJOq/hbpLw3zYkw6ZEUoJ4tMS+AcSVIHFbP7J9bid6
-	gffqkZdWTqyILAoDpvgHQe3l6Q4cOO8jWKsRFtMJxpznCnjJJvm4qL4qdTXxLhHTXm8JYRVHvYG
-	iCzTgS6/nUDx3Exi/cnv7vDepEDOLDnrv0IHkM56iHF3K4Dy036S0sfgUkJQpDvODIOxVzXK6ol
-	ASSktZPFcCRha/RjWaCtkJcNuohkxvvgjHpdocRzOijGs5YRPqCjwMvT3s7d5tpKfJx2JBBNq2W
-	5RugFC4KNq8gxvfE9coH0Xvikd/A+MGjHyZEivJLhVdVFRuoBZEmReXRNmxJFGf2JbfhEMfRk5N
-	etyWL1wtys2Vz2VCXPNnpmNeZIXE6TX8qbcMjXFwPaJc419f/mnJB2vbP33AOP2VL+/DOuskxx1
-	jO/ARhaMJyB2GKp9IihSr5Sy96LHLo2Ybg+zevBVgJnYvoWOIm7N1robGjfKpeUfKKWkU0b+xea
-	nsCUvCRuduqlo8hufLVlVOSvCIY4U48njhEBUNJTol+/S6eBnBkUj2lpmel/ScrTNA9RViI8PNj
-X-Received: by 2002:a05:6a00:bd03:b0:847:77e9:acbb with SMTP id d2e1a72fcca58-85374ab4b70mr21898823b3a.13.1787809837900;
-        Wed, 26 Aug 2026 22:50:37 -0700 (PDT)
+        bh=xfynFv2SMwYnUk0M4IAEemAi4hR6mIGHrqfM2qqM/Nw=;
+        b=ayGvdpK09HLwtYGf9gsSPfM7wEmxBqeJVlsygSAywhv+n7JLQ/1HBAXcp8/gr6ZzpT
+         CRPVi7Vem2jMi/Ejoc35C/cKHOCl4aNgT7Dri43i5ZWj5VQj/I6OL1cVmTN7WGtAgRXN
+         XGI5fV9v52i8Xz9M7F2dcHdsd5X94OM19GVn1RuKiL4ig1taMFHWmc1LbZ3iUKz+Vjpu
+         HFGLAy6ks0vmhWOWHsJNPE3wmnwA1qdHwYToz8GPT3Phvo7SM69zCWvRj241V7Vmx3wx
+         VID3ugV8s7E0qB+O2x9WsKuQGZoCyn8mZ13cos3m97+PxyRgXZOMtAmobAlPjwJ8yxOX
+         E3yg==
+X-Gm-Message-State: AFuF++mLUzW2f8igQaAcQ/Aqv4tQ0EKoNO+UrovPiZ+ZWJM3oM5g95P3
+	GzICEU2PDzQKVAEwqRQ2gqIm9XdvWtd23GNAt1ssRYgFXtgcDYIzmT+23kbDKW82HNU=
+X-Gm-Gg: AR+sD115OMPxruOsKaw2dszBG3v8qdEQzsdMlkYUMTxVCmVlWFsdaHGvikRsKLrRqnI
+	OJg1ww/OQq5eeBZtVm1nwEamz/KxrnIVROGv4mICcUH0QkoBaXTYKH4KHDhyjFidLhAnfU8E8uA
+	1yuoie3hNCUy1TF/Wz6naJttVQtq1S94XJN50ED/11UD0JKGBGgLmsrvPXTt8BX9InNRd44HDs1
+	xQ6Uy8ElSjK1kHPnfRxVa2bbHu6KyMM7nY1DKrcmFNn9WDicVZl3AtYHxSiEnWS9b0/d78SwInB
+	kIbe9llrvAm4TSskf6WKvY3ODLinLc+dL/WMhUNm4FY9AgUgylU7L0unX7Y+x/9vxqMNGYJjnwd
+	kyHhFYNHvRJfMpXiD9lmDb9eJBOGAlvQDeb0qNV9+i6rcMzpTTlVNnQ8ijqiw+QkIpWyWHxWzJ2
+	63wDvoisA/5CpaHFvdyN46wQP58xhKclMiTDM10wO4rirQdnzRBgUmaV2qjrukqbAF+h6ihcaiz
+	TVGWyufnddDMV0yLVgCQ4eyryM7YP2SRsJuCMHsHgEl88qcB1Sl2QiRTX7F4GroXvq0BNqLzoMZ
+X-Received: by 2002:a05:6a20:cfa1:b0:3c3:875d:7053 with SMTP id adf61e73a8af0-3cf830394a4mr25566298637.8.1787809843788;
+        Wed, 26 Aug 2026 22:50:43 -0700 (PDT)
 Received: from localhost.localdomain (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc1beae5b51sm1732274a12.3.2026.08.26.22.50.35
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc1beae5b51sm1732274a12.3.2026.08.26.22.50.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2026 22:50:37 -0700 (PDT)
+        Wed, 26 Aug 2026 22:50:43 -0700 (PDT)
 From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 To: lachlan.hodges@morsemicro.com,
 	dan.callaghan@morsemicro.com
 Cc: linux-wireless@vger.kernel.org,
 	arien.judge@morsemicro.com
-Subject: [PATCH wireless-next 7/8] wifi: mm81x: clamp tx width to stas max supported width
-Date: Thu, 27 Aug 2026 15:49:16 +1000
-Message-ID: <20260827054917.255584-8-lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless-next 8/8] wifi: mm81x: tx multicast frames from AP at primary width
+Date: Thu, 27 Aug 2026 15:49:17 +1000
+Message-ID: <20260827054917.255584-9-lachlan.hodges@morsemicro.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260827054917.255584-1-lachlan.hodges@morsemicro.com>
 References: <20260827054917.255584-1-lachlan.hodges@morsemicro.com>
@@ -77,82 +77,36 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-max_bw_mhz is not populated with the stas maximum supported width
-during association. This means data frames are sent at the operating
-width, regardless of whether the sta can support the operating width.
-For example a STA that supports up to 4MHz receiving frames from an AP
-running on an 8MHz operating channel will be sent frames at 8MHz which
-it cannot receive.
-
-Make sure we initialise the stas maximum support bandwidth and while
-we are here rename it to max_rx_bw_mhz to indicate its the maximum
-bandwidth the sta can receive frames from.
-
-Note: This should be conveyed via ieee80211_link_sta::bandwidth, but
-the ieee80211_sta_rx_bandwidth enum does not support S1G widths as of
-now and will require some non-trivial work to support in the future.
+If an AP has stations that are operating on a sub-primary (i.e using
+the 4MHz primary of the 8MHz operating) multicast frames sent on the
+operating width will be lost. Make sure we tx them on the primary width
+to ensure all stations are capabile of receiving them.
 
 Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- drivers/net/wireless/morsemicro/mm81x/core.h |  7 ++++++-
- drivers/net/wireless/morsemicro/mm81x/mac.c  | 11 +++++++----
- 2 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/net/wireless/morsemicro/mm81x/mac.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/core.h b/drivers/net/wireless/morsemicro/mm81x/core.h
-index 2fd4b4786e77..75e998e8e324 100644
---- a/drivers/net/wireless/morsemicro/mm81x/core.h
-+++ b/drivers/net/wireless/morsemicro/mm81x/core.h
-@@ -192,7 +192,12 @@ struct mm81x_sta {
- 	bool tid_tx[IEEE80211_NUM_TIDS];
- 	bool tid_start_tx[IEEE80211_NUM_TIDS];
- 	u8 tid_params[IEEE80211_NUM_TIDS];
--	int max_bw_mhz;
-+
-+	/*
-+	 * We really should be using link_sta::bandwidth but
-+	 * that requires non-trivial work.
-+	 */
-+	int max_rx_bw_mhz;
- 	struct mm81x_rc_sta rc;
- 	struct mmrc_rate last_sta_tx_rate;
- 	s16 avg_rssi;
 diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
-index fa3b0cfccffe..d77df6e9af85 100644
+index d77df6e9af85..4485748518b4 100644
 --- a/drivers/net/wireless/morsemicro/mm81x/mac.c
 +++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
-@@ -325,7 +325,7 @@ static int mm81x_mac_ops_start(struct ieee80211_hw *hw)
- 	return 0;
- }
+@@ -1257,6 +1257,15 @@ static int mm81x_tx_h_get_bw(struct mm81x *mors, struct ieee80211_sta *sta,
+ 	if (is_mgmt || info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)
+ 		return cfg80211_chandef_s1g_pri_width(&mors->chandef);
  
--static int mm81x_tx_h_get_max_bw(struct mm81x *mors)
-+static int mm81x_tx_h_get_max_tx_bw(struct mm81x *mors)
- {
- 	return MM81X_FW_SUPP(&mors->fw_caps, 8MHZ) ? 8 :
- 	       MM81X_FW_SUPP(&mors->fw_caps, 4MHZ) ? 4 :
-@@ -1260,10 +1260,10 @@ static int mm81x_tx_h_get_bw(struct mm81x *mors, struct ieee80211_sta *sta,
++	/*
++	 * In AP mode group addressed frames go out at the primary width so
++	 * that every associated STA can receive them, including any that
++	 * cannot support the operating width.
++	 */
++	if (info->control.vif->type == NL80211_IFTYPE_AP &&
++	    is_multicast_ether_addr(ieee80211_get_DA(hdr)))
++		return cfg80211_chandef_s1g_pri_width(&mors->chandef);
++
  	if (sta)
  		mors_sta = (struct mm81x_sta *)sta->drv_priv;
  
--	tx_bw_mhz = min(mm81x_tx_h_get_max_bw(mors),
-+	tx_bw_mhz = min(mm81x_tx_h_get_max_tx_bw(mors),
- 			cfg80211_chandef_get_width(&mors->chandef));
--	if (mors_sta && mors_sta->max_bw_mhz)
--		tx_bw_mhz = min(tx_bw_mhz, mors_sta->max_bw_mhz);
-+	if (mors_sta && mors_sta->max_rx_bw_mhz)
-+		tx_bw_mhz = min(tx_bw_mhz, mors_sta->max_rx_bw_mhz);
- 
- 	return tx_bw_mhz;
- }
-@@ -1718,6 +1718,9 @@ static int mm81x_mac_ops_sta_state(struct ieee80211_hw *hw,
- 			mors_vif->u.ap.num_stas++;
- 		else if (vif->type == NL80211_IFTYPE_STATION)
- 			mors_vif->u.sta.is_assoc = true;
-+
-+		mors_sta->max_rx_bw_mhz =
-+			S1G_SUPP_CH_WIDTH_MAX(sta->deflink.s1g_cap.cap);
- 	}
- 
- 	if (new_state < old_state && new_state == IEEE80211_STA_NONE) {
 -- 
 2.43.0
 
