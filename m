@@ -1,146 +1,128 @@
-Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCB1146E010
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 13:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.180
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787836154; cv=pass; b=m1SObN+KJfwwXcmE2/BXMbfjj/rpg00cARn6jSqx2b991LHjyn2KZePB027p5BkEVjshwWNEazK9IdgHpQDCKVcToB1VRZGaIGFgQbAaO+oCqJpAxF0UnpJRdLS5UXlLNL7IBeWaF7s0MZX8MtGVyVstuth6EFt0lNRnjD5Az7U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787836154; c=relaxed/simple;
-	bh=yVbl3Z9HVr6Uibx2P5f7A2CJaisyDJjFLYgGyEoH47M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GTpCbTGXkGojb7P0vCkJ9PL+k1+AFQI/tJTzfhQcW/dx2C/Rm0Vn/47ur3TCgHAi6N4mOl0P0sCytulQtjZHa8gKRrvwhdkB5mSSyJuGDazmD9CWwdqdYPMKuuymYCc9gP8YfmSlm0swR/tyEE2frLHcN1aXLK5KNgts530unDk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lRcTrciv; arc=pass smtp.client-ip=209.85.208.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A9A40B0EC
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 13:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787836395; cv=none; b=RjKrMEP6eDFeDH1S+E5gCfRri3bEJ/14t279pg4WZnV6Cl8SX+hce5xTJpbaufZKTnchaigZNN15bqzwpzf5c3zJt/cYWizhCwa5/5iuYBLu18JCRpwGRd0xxoDNf1fmxIzJg0QxkD7ve8Tqn1SIePZZYPisn7Qa70KksdxP1hw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787836395; c=relaxed/simple;
+	bh=31CUeemL+eQQbUBoYqrag2sUv8JBAfW59q4FvsljVrg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=EYOsftmbovfC2UC4XQYtj4JXTPwo4UoFwbcmkguM8aAtIDz6vWfwTCuN4Fg1jsJj4jNK3Rv74J4U4l9ScjopUkJ8o7+3fnNDiMz8v2F+YS2LfNK0TbfNYgA3IRFr90iSi1OiDmNzL8lP8t1txTDi+XlkKi0ukZWEx4PRXSlB1CU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l33GG/lv; arc=none smtp.client-ip=209.85.128.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lRcTrciv"
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-3a20f56876eso7742541fa.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 06:09:07 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1787836145; cv=none;
-        d=google.com; s=arc-20260327;
-        b=h5zmuleaEHcwHiJ528zvHDcVMj8DKdCwpXJ9YdO8ydyOnXxCHUN2vj9ZpL5Go1lE+M
-         KrZxZ/4BVMlnaXa8wWKIxRAkat4fk8z/AAb0NhKbLdMNNrKPWFQPtsE1QnaSXV2d1HwO
-         vjyeTXyXkuPmNyCrHOHgyoAhk0i0zNkfueuGmfz/G1ndGwwYu3e6lfljbhedfV3Q5o0g
-         g54W6R0PfPddiDUwP8sCvCUiL9wBm2ayceVz38TB54WeRdEgky7MSvp/DJOkPojx86Z9
-         veXEoubcrfcbkcHFmBmx1dkmHNZ9rOEElZLAkV34FFnLLivQJJM4H8+Rbomz6rPQ6fMk
-         3sDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=yVbl3Z9HVr6Uibx2P5f7A2CJaisyDJjFLYgGyEoH47M=;
-        fh=UDrUtONT9rFGCAMw1Rg6jdRZ7seKf9zF5wvdlMcnbCM=;
-        b=NzJgC9Ne0pN15MJOpQktbTB0hYEYUnk/hout/dZirL9pYzA7Qk5MY9xXcLAygOEVK0
-         xap9YlsqQgZhkaYauUmEMKoAfDSB6Q5+MtGvBDAcft9l6Qjf0jb3KVtppInLcE94Fk9w
-         S0t5eUTMk5WEXqrCfx4L2Q68IjiGU/DvNhxddBOzEqcMFESg37/WxbD3SGV3coMk2leo
-         VqUnDSTqKmsWDRmNVQGmxFYxI7slhuAVl33Lx6Dv+Q9pZ/1BdnrNySIwYiENecylJe8d
-         Ve/oln/YpNGvtURxG+Wvq1oTiS/Bfk0Hcw3ftQ1ghAKagyXMYu89EZU6pW16/qWCmTeY
-         rDSw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l33GG/lv"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-498028b3d5eso21146805e9.1
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 06:13:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787836145; x=1788440945; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yVbl3Z9HVr6Uibx2P5f7A2CJaisyDJjFLYgGyEoH47M=;
-        b=lRcTrciv1tpI+038IVPgCI2tC2Pcj6vTAlv+YwTWScJuGM4KIs5fvLPs3iLlRepcd8
-         AdoyoJLWwxxvYyFHX1e8Vrly9rpYjMkUYmPfyLUB3ebqKwIBSdiB7pXJwi8iA9WaMSxB
-         IBhFCqTLUDfJ+VQjvOtZ8RDl5NdtzoxL1rUDrKwfTkkgAOA8khrsn12UMfyXWZmOne/l
-         AcMVSb5VCFypAc8pyurjApvpr2NtCKy7Z/KKJsMWspF8VIFzfY6Sd4qGkDwseP32tF54
-         mxNQtguRbY57Gfq7Ease6C27QqN7v8YjofkIHg1zkG0uKKk69kos5EZ+laUGa7rZA1c4
-         mOVg==
+        d=gmail.com; s=20251104; t=1787836388; x=1788441188; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=YWJcL1I0OwWaQgShlWqUYQ+qUtUeV+AX1JUrEJNdqMo=;
+        b=l33GG/lv+ZqNPdmTVjDEKGVGkyMsU11W+QhcXIL32WnQxjXWkS11rBJwXmZ9rt2G7+
+         LoK8B/LYBPziI4QpNWO0704EX7joINql3y0xEAnx49eevoKmOueV4VmwVQ8kXkB1Njy6
+         6KMK5oT1rBu1Nb2c5v7NzgezCdf3emFPyL4MO/07zoOA5GTyNvcVQwQtFWYUS1pupu9m
+         1mc5Kb90bTU+vwJGx1cKx0pyimsM+i5nib1aidIX3QfFhEVZDdI7YTWCzKgkty01qMMj
+         gbCLqQURYIUI81SA1UDhbWEMhYtMDy+seHAKl5q9msv4dU6JWWxOg34cIjY2DD6ZS6s0
+         1uVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787836145; x=1788440945;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=yVbl3Z9HVr6Uibx2P5f7A2CJaisyDJjFLYgGyEoH47M=;
-        b=KtHAMjOeNkwEizyScgihAqG2F98EWLR4MlIi0uc3yyAvXvwdmSMOpnoHDUqHT1fN8n
-         MFXbIysQ+Yoq5H8Msp2r0Hyp2+Y6Hx3ID4m1Tu82v3qP9INcGPWONmyIUYacW9YUx5Pj
-         0PuN1UIDe46qa58zipU4koCrqzfewn86Oh0Ab0pUjJGRTqwZTlPVWfjyKzTamFdc8WgY
-         qwjUuH5PbzA89bACgo6nfKXCnmxW17k9FnN008RKsQLPs0H74wDSVvPMMRF+AMtk0+kv
-         Nnwe0JX07NvFeBPYVHG/3zH5IElwVWti6PM4Ull7DvKgnIowGGB6dRxAT4yAe5rk5I+4
-         NeeA==
-X-Forwarded-Encrypted: i=1; AHgh+RqHjD8QUW5Pct5KP3ovnhBM2TmTGhkVPZiK+nyZ4ph0YMZVQJa3LkTGbu5E4I0PFo/3giZoMw3haUuvLAG8Dw==@vger.kernel.org
-X-Gm-Message-State: AFuF++nALc1ML45E8iNmE4N5duyRozY8orXmrj5/q2if37sW4uDJSgV9
-	rTk3+P5nXqYk/oLgAveWEqNnkz3Nv5A9WRoHSBLseDKZ8X8C12D5huv670fpS4hNerzSDlldvBa
-	yuJnDnVRxHNomHP5klZIZ/LQ4odujaho=
-X-Gm-Gg: AR+sD10QbzHg98TjkF+2EdKCHmzpVZRa4eEzshFOzb/QvLxaR4i4GByUGlJuwYzHOtE
-	mN/Lh5KPv4tYAmknA7S5YNHPDcCo5c8bMJLlte5CUZ0+VT2rosAfOXnHZwjIcobc3QG95X+cTXS
-	v0H8nzfO04ZIlsA1oCQiqBgDMRsllGt4/JmmkgBheXOKBUh28FfFWljnfLowWvrWDQ+E543jMW6
-	cq9ofCkkz22nC2gRB+Wgufa+6VtABJsI1iAK/wcMuRwJuhoz32CsQlyp/ZnEXY+Dtj1LBhEIbMg
-	b/z0tO5rdBD2VZr7PpLxerQt35vCE6xv+Q9muvQ3b+XJDZ/VpWIOtleUEjTHkQILyEDGn9xNkzF
-	eZvqqQkeYBSB3UyZEBWWoyuyHH65D+YruWrWCtYIOp6cXzBT9al/zMQUu6g==
-X-Received: by 2002:a2e:be27:0:b0:3a1:d468:f988 with SMTP id
- 38308e7fff4ca-3a1fd453e09mr37025921fa.1.1787836144417; Thu, 27 Aug 2026
- 06:09:04 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1787836388; x=1788441188;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=YWJcL1I0OwWaQgShlWqUYQ+qUtUeV+AX1JUrEJNdqMo=;
+        b=pKHsh4JqadsYA1EPHwMN8OP+a+o/CKDKt2tOCx0AcKJ6+bqlP7ntnCJ0nwlLJtHpph
+         2t0ZxQpj/PAdeb9fmccuBJSrGFyIonH6T6PHo6oNlfJihSNyb70W0Z/OurZB4XkZLkit
+         Txcegw5kNyMEEARpDDvGu8lSZQTjDoETf0VlW+rLwu/iO+lmrO1lPNuj24+EqNnmQtT7
+         eJKpaIAvlUJR8lnZ4kPfQiHmJZC5VSZCe3g1AJph7oGTWPw1Yn0Gwl26UnOybH8KatZZ
+         Od3TVyHAdDNakMBjp+bCofLc1LVqdblQzW5RoWtyaD2wmWp62V3iORukgOWtKKZaFy5d
+         lcXQ==
+X-Gm-Message-State: AFuF++ntioplmqIb40hprKxiMw99f8J4QellJclkHCGdWvdKxauG6yK7
+	SoHir6UhFuDioq5vkAtwFE2/jDRKYBgjXngeltXvXeIf87PxT1nQJ0CzO0AKwB9b
+X-Gm-Gg: AR+sD10+3Bgxz0HOTVilLXTiqicQ1j/uagvTsmM9VObE2WiBl+F8JrwA94yUZoeAZEd
+	avOs579zxsvz9B4qFbWtSNcWZ/9ekA+upyk8GCEURBhqymF+Ed3HU8duW2CxkHysEjQWTkz8r8C
+	cv7UwjuQfrH77opRHwqIE25r7pDmC4G4Bonk0trKNR3w4TRa9YA225F9CkDhlo9nOqkt0aYfu1c
+	VSmp+rGsWiUG6zAH3192nas4LIft1F2zELfSjJk5ILwrwHMYBpTKvtvdv1fNYsdU9PrWymqehXh
+	R4o63NMkZHf52FmQB7LO3v7PBPgwP2RTohVIScOtddNHwv0JCvDhEMa9jgGMEMS/u+A01OW2FhT
+	RRYUoX7rLqovpZPRvpfGwymNbm3xqKRONOfFxGoDgktmrGBtDrBjYXxwCzEYElgQz5VVEba7Clv
+	8ZfAF1ELh26jZzWTkI/SNA0qaxg9vV0+PP3g+7ZOQRjX+2uoamgXI1Cmy4QScmbuBS6BYGNotOd
+	ZloExsxcKy4sKKYEg6CCq/N7rsV6HUwJjYS8spkugBT9wluA72/PZHDppDn2VQMHPeNqr2eEdPL
+	DXKYg8YS
+X-Received: by 2002:a05:600c:3b1a:b0:493:c47f:3c55 with SMTP id 5b1f17b1804b1-499dc6fb0fcmr176333935e9.5.1787836387697;
+        Thu, 27 Aug 2026 06:13:07 -0700 (PDT)
+Received: from omarchy ([31.223.97.101])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-499dd56acedsm81184345e9.3.2026.08.27.06.13.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 06:13:06 -0700 (PDT)
+From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	johannes@sipsolutions.net,
+	kvalo@kernel.org,
+	briannorris@chromium.org,
+	Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+Subject: [PATCH v2 wireless] wifi: rtw88: debugfs: don't vzalloc(0) when rsvd_page is read unconfigured
+Date: Thu, 27 Aug 2026 16:12:44 +0300
+Message-ID: <20260827131244.35623-1-abdurrahmankaradag19@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
+References: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260821010728.45065-1-gvalkov@gmail.com> <20260827-helpful-icy-donkey-9bfdaf@quoll>
-In-Reply-To: <20260827-helpful-icy-donkey-9bfdaf@quoll>
-From: George Valkov <gvalkov@gmail.com>
-Date: Thu, 27 Aug 2026 16:08:52 +0300
-X-Gm-Features: AcwNN1UImZDtg3-upEabUa_XGggulmtbmlnjP2_UXhZYxbNMdjonIxEdG5ok4DI
-Message-ID: <CADOrJmaF0UpRefk1+BDyn5iU5La4ke1gFWwzyRr5-9wp7Zr2+A@mail.gmail.com>
-Subject: Re: [PATCH v6 1/3] dt-bindings: net: wireless: add flag marvell,invalid-reg-hint-in-rom
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: briannorris@chromium.org, johannes@sipsolutions.net, andrew@lunn.ch, 
-	krzk+dt@kernel.org, francesco@dolcini.it, johannes.berg@intel.com, 
-	kees@kernel.org, miriam.rachel.korenblit@intel.com, wenst@chromium.org, 
-	rafael.beims@toradex.com, avraham.stern@intel.com, error27@gmail.com, 
-	s.kerkmann@pengutronix.de, gregory.clement@bootlin.com, 
-	sebastian.hesselbarth@gmail.com, robh@kernel.org, conor+dt@kernel.org, 
-	Frank.Li@nxp.com, chunfan.chen@gmail.com, arend.vanspriel@broadcom.com, 
-	peddolla.reddy@oss.qualcomm.com, linux-arm-kernel@lists.infradead.org, 
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	devicetree@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Thu, 27 Aug 2026 at 13:34, Krzysztof Kozlowski <krzk@kernel.org> wrote:
->
-> On Fri, Aug 21, 2026 at 04:07:26AM +0300, Georgi Valkov wrote:
-> > WRT3200ACM and WRT32x routers always report a fixed US regulatory domain
-> > from the mwifiex ROM, which conflicts with the platform regulatory
-> > configuration on units sold outside the US market. For example:
-> > - phy0 mwlwifi 5 GHz, hard-coded region 98 EU mapped to FR
-> > - phy1 mwlwifi 2.4 GHz, hard-coded region 98 EU mapped to FR
-> > - phy2 mwifiex 2.4 and 5 GHz, hard-coded region US
-> >
-> > When the system boots, it detects a conflict between the user selected
-> > region and the radios, e.g. BG FR US, and applies extreme restrictions,
-> > preventing phy0 from starting on any DFS channel. phy2 works.
-> >
-> > Add a device-tree flag, which allows affected devices, where the radio
-> > conflicts with the platform to ignore the incorrect regulatory hint in
-> > the ROM of the radio, so the platform regulatory domain can be used.
-> > This does not allow the user to change the regulatory configuration of
-> > any radio. It only allows phy0 to start and operate according to its
-> > certified configuration.
-> >
-> > [1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
-> > [2] https://github.com/openwrt/openwrt/issues/9956
-> >
-> > Cc: stable@vger.kernel.org
->
-> I don't think there is any bug to be fixed here. Support was incomplete,
-> so you add a missing quirk, but there was no bug in the binding.
-> Binding was correct.
->
-> With stable dropped:
->
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reading the rsvd_page debugfs entry before writing a page offset and
+count to it calls vzalloc() with a size of zero, because
+rsvd_page.page_num defaults to 0.  vmalloc warns about this:
 
-I added Reviewed-by to the first patch and sent v7 with these changes:
-1. drop Cc: stable, the first patch only documents a binding
-2. restore colon after Tested-on as requested by openwrt-ai
-3. mention the added wifi@1 node
-https://lore.kernel.org/linux-wireless/20260827130335.6606-1-gvalkov@gmail.com/T/#t
+  WARNING: mm/vmalloc.c:4019 at __vmalloc_node_range_noprof+0x9ac/0xa30
+  ...
+  Call Trace:
+   __vmalloc_node_noprof+0x4c/0x70
+   rtw_debugfs_get_rsvd_page+0x4c/0x110 [rtw88_core]
+   seq_read_iter+0x132/0x4b0
+   seq_read+0x12e/0x1c0
+   full_proxy_read+0x6f/0xc0
+   vfs_read+0xdd/0x490
 
-Thank you for your help and patience!
-Georgi Valkov
+rtw_fw_dump_fifo() would reject the zero size anyway, but only after
+the allocation.  Check for a zero buffer size first and print a short
+usage hint instead of allocating.
+
+Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+---
+v2: no code change. Add the wireless target tree to the subject and Cc
+    the maintainers/blamed authors that v1 missed.
+
+ drivers/net/wireless/realtek/rtw88/debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index b67d69b..84e45af 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -315,6 +315,11 @@ static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
+ 	int i;
+ 	int ret;
+ 
++	if (!buf_size) {
++		seq_puts(m, "usage: echo <page_offset> <page_num> > rsvd_page\n");
++		return 0;
++	}
++
+ 	buf = vzalloc(buf_size);
+ 	if (!buf)
+ 		return -ENOMEM;
+-- 
+2.55.0
+
