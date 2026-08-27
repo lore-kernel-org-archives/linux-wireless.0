@@ -1,180 +1,163 @@
-Received: from enxio.de (enxio.de [91.210.227.97])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F6F723645D
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 06:01:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.210.227.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F7173EB0E9;
+	Thu, 27 Aug 2026 08:35:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787810473; cv=none; b=dJAslelkpGac5cPxCez52htv5bTm6jDTBPH90CZ7g2TMcprpGFXetJjdblVoDHDiTEf3q/4MycsXUuq6yPWZ0omwGGR9Xs2KW+80gHjNPfHfiNQ1JyWWOHSLE7fAtZALP+enIylkIcXGh7VLjOo90bPlUb3RvuSUI+pIDwxHCOc=
+	t=1787819764; cv=none; b=uqDXo/jtqqacsuBsLM7eWBqinpp1Hrtc8HQi2PSu9OCCAxokbKXUOLYhOHRGlwz67zkGGDj/L95gFFFhU5MxziCMQKFqbSAFRDD2D5gkMc7+VvUfYGdQiq0A++11F54DoclBA+TXYQqSuMkPgBslqY4sEBDYYtlvQEud8eCImN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787810473; c=relaxed/simple;
-	bh=r2n2VScm62GdFbicZXvcFoGUfhIMy0g7yZ9+6G25TiI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mSu9LJd1MQMp9HY7EiixLksZGL+9HxOIU3IGvh7MawRVD4ldwotcn5Bu5u4FoD7cchZ7YC+h7AgCfH4V/PnZzEx4h8T/SP/DaEdCDRw12uV1t5g/G6zHCzh8aZOvaI52/+JmEfgs+NANVzU68BO0b57CjtIj8tp3Wf/DneGj4wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de; spf=pass smtp.mailfrom=enxio.de; arc=none smtp.client-ip=91.210.227.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=enxio.de
-Received: from [95.157.48.181] (helo=roja.toh.cx)
-	by enxio.de with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <anthrop@enxio.de>)
-	id 1wzSup-00000007AeC-2YIN;
-	Thu, 27 Aug 2026 07:44:43 +0200
-Received: from localhost ([127.0.0.1])
-	by roja.toh.cx with esmtp (Exim 4.94.2)
-	(envelope-from <anthrop@enxio.de>)
-	id 1wzSup-003T3B-01; Thu, 27 Aug 2026 07:44:43 +0200
-From: Thomas Hilber <anthrop@enxio.de>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com, linux-mediatek@lists.infradead.org
-Subject: AP drops STA data frames for ~130-170ms after 4-way handshake
- completes (ath9k_htc, mt76; not brcmfmac)
-Date: Thu, 27 Aug 2026 07:44:42 +0200
-Message-ID: <20260827074442.826644@enxio.de>
+	s=arc-20240116; t=1787819764; c=relaxed/simple;
+	bh=a5hVxq6LsdPaGZL8cgmOHYVv9xwT484PbZbwWvtw32A=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lK+cdqW8FHYyxWCjboO6W/0wrnKq4zhkGEQkpkUGt957nJ47H3Yz09zA1M+i5A8Rv/rKNu3JSplftrw4BwoIsyuabENGf4ATLHcCyaWC8vUypd8uZhuj3FVTPgmjwR5hRnPpX5o+gCp0LY6xImw9lZJXlw3lyqEiek5Bb1WYYmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=LGi+XB/y; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LGi+XB/y"
+X-UUID: 50759568a1f211f18dc8c9802ae25ab1-20260827
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=2GYAWy93vU+SgBTPaOMBhulGC9yfgAhV3/e/GSc5t2c=;
+	b=LGi+XB/yXxYA+byZXQ/cCzbUGNIU8Dk8nToLwxkCH8APb6PBTHHN8nzE3VBOSBL+t7zACy0HROYa7wxVggakhm/CRy6eR2K+wA+dL9nqtH7LTTYpUnC9KuEtOh61hM6SqDflG+u2XYdRiiiRud5dlb+zXf7KRorerA2jcM0N48A=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:1214b1fc-61ad-4b82-abec-b1f7325dfa61,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:d55a69b9-70a6-46ee-89b5-5e757858aa60,B
+	ulkID:nil,BulkQuantity:0,SF:81|82|102|836|865|888|898,TC:-5,Content:0|15|5
+	0|99,EDM:-3,IP:nil,URL:1,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,
+	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 50759568a1f211f18dc8c9802ae25ab1-20260827
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <eason.lai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1460448243; Thu, 27 Aug 2026 16:35:52 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 27 Aug 2026 16:35:51 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Thu, 27 Aug 2026 16:35:51 +0800
+From: Eason Lai <eason.lai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<kun.wu@mediatek.com>, <deren.wu@mediatek.com>, <sean.wang@mediatek.com>,
+	<quan.zhou@mediatek.com>, <ryder.lee@mediatek.com>, <leon.yen@mediatek.com>,
+	<litien.chang@mediatek.com>, <jb.tsai@mediatek.com>,
+	<lucid_duck@justthetip.ca>, <eason.lai@mediatek.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH v4 2/2] wifi: mt76: fix memory leak in USB TX path
+Date: Thu, 27 Aug 2026 16:35:26 +0800
+Message-ID: <20260827083526.1621600-3-eason.lai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20260827083526.1621600-1-eason.lai@mediatek.com>
+References: <20260819082129.1062282-1-eason.lai@mediatek.com>
+ <20260827083526.1621600-1-eason.lai@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 
+When errors occur in mt76u_tx_queue_skb(), the skb is not properly
+freed, leading to memory leaks. This happens when:
+- The queue is full
+- tx_prepare_skb() drops zero-length frames (such as WMM NULL frames)
+  to prevent hardware TX hangs
+- Buffer setup fails
 
-Hi,
+Fix by properly releasing the skb with ieee80211_tx_status_ext() when
+the queue is full or tx_prepare_skb() fails, and using
+mt76_tx_complete_skb() when mt76u_tx_setup_buffers() fails (since
+tx_prepare_skb() has already succeeded and may have allocated resources
+that need cleanup)
 
-When an AP runs on a mac80211 SoftMAC driver, data frames sent by a
-freshly associated station are acknowledged at the MAC layer but never
-reach the network stack for ~130-170ms after the WPA2 4-way handshake
-has completed. The same station against FullMAC APs shows no such gap.
+Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
+Cc: stable@vger.kernel.org
+Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Closes: https://github.com/morrownr/mt76/issues/83
+Signed-off-by: Eason Lai <eason.lai@mediatek.com>
+---
+v2:
+  - add error handling for queue full and tx_prepare_skb()
+  - correct error handling for mt76u_tx_setup_buffers()
+v3: add Tested-by: Devin Wittmayer and cc stable
+v4: add Closes line
+---
+ drivers/net/wireless/mediatek/mt76/usb.c | 31 ++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 5 deletions(-)
 
-Because the frames are hardware-ACKed, the station receives no
-backpressure and TCP cannot detect the loss; a dropped SYN therefore
-costs a full initial RTO (~1.3s) rather than a retransmit.
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index a9af3aa6b80a..dfc12f6944a7 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -893,6 +893,9 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 		   enum mt76_txq_id qid, struct sk_buff *skb,
+ 		   struct mt76_wcid *wcid, struct ieee80211_sta *sta)
+ {
++	struct ieee80211_tx_status status = {
++		.sta = sta,
++	};
+ 	struct mt76_tx_info tx_info = {
+ 		.skb = skb,
+ 	};
+@@ -900,17 +903,27 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 	u16 idx = q->head;
+ 	int err;
+ 
+-	if (q->queued == q->ndesc)
+-		return -ENOSPC;
++	if (q->queued == q->ndesc) {
++		err = -ENOSPC;
++		goto err_free_skb;
++	}
+ 
+ 	skb->prev = skb->next = NULL;
+ 	err = dev->drv->tx_prepare_skb(dev, NULL, qid, wcid, sta, &tx_info);
+ 	if (err < 0)
+-		return err;
++		goto err_free_skb;
+ 
+ 	err = mt76u_tx_setup_buffers(dev, tx_info.skb, q->entry[idx].urb);
+-	if (err < 0)
+-		return err;
++	if (err < 0) {
++		/*
++		 * mt76_tx_status_skb_get() walks the idr and dereferences
++		 * a freed skb. This SKB is not counted in non-AQL counter
++		 * due to error return, so using 0xffff as wcid to keep
++		 * balanced.
++		 */
++		mt76_tx_complete_skb(dev, 0xffff, tx_info.skb);
++		goto err_ret;
++	}
+ 
+ 	mt76u_fill_bulk_urb(dev, USB_DIR_OUT, q->ep, q->entry[idx].urb,
+ 			    mt76u_complete_tx, &q->entry[idx]);
+@@ -921,6 +934,14 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, struct mt76_queue *q,
+ 	q->queued++;
+ 
+ 	return idx;
++
++err_free_skb:
++	status.skb = tx_info.skb;
++	spin_lock_bh(&dev->rx_lock);
++	ieee80211_tx_status_ext(dev->hw, &status);
++	spin_unlock_bh(&dev->rx_lock);
++err_ret:
++	return err;
+ }
+ 
+ static void mt76u_tx_kick(struct mt76_dev *dev, struct mt76_queue *q)
+-- 
+2.45.2
 
-
-Test setup
-----------
-
-One station, five APs, measured one at a time, everything else held
-constant: same SSID, same WPA2-PSK passphrase, channel 11, hw_mode=g,
-ieee80211n=1, 20MHz, hostapd v2.10, AP bridged to the wired LAN. The
-station associates, sends one short TCP request, disconnects and deep
-sleeps, repeating about once per second, so every cycle is a fresh
-association. 100-140 cycles per AP. No other stations associated.
-
-  AP  radio                    driver              kernel
-  --  -----------------------  ------------------  -----------------
-  1   Espressif ESP32 softAP   vendor stack        (ESP-IDF v5.5.5)
-  2   MediaTek MT7986          mt76      SoftMAC   6.12.51
-  3   Broadcom CYW43455        brcmfmac  FullMAC   6.18.39
-  4   Atheros AR9271 (USB)     ath9k_htc SoftMAC   6.18.39
-  5   Atheros AR958x           ath9k     SoftMAC   excluded, see below
-
-Station: ESP32-C5, ESP-IDF v5.5.5.
-
-APs 3 and 4 are the *same machine, same kernel, same hostapd binary,
-same bridge, same channel*, differing only in radio and driver.
-
-
-Results
--------
-
-"attempts" is the number of TCP connect() attempts the station needed
-before one succeeded; it retries every 30ms. Time is the median from
-association to a completed TCP handshake.
-
-  AP  driver              n    attempts   assoc->connected
-  --  ------------------  ---  --------   ----------------
-  1   vendor (FullMAC)    132     1.00           2.7 ms
-  3   brcmfmac (FullMAC)  140     1.01           4.8 ms
-  4   ath9k_htc (SoftMAC) 105     5.04         134   ms
-  2   mt76 (SoftMAC)      118     6.19         168   ms
-
-Association itself is 23-30ms on all four; the entire difference is in
-how long the AP takes to start passing the station's data frames.
-
-
-Air trace
----------
-
-Captured with a separate monitor-mode radio (AR9271 on an unrelated
-host), against AP2. Times relative to the station's Assoc Request:
-
-    +0.0 ms   ASSOC-REQ    from STA
-    +3.2 ms   ASSOC-RESP   to STA
-    +7.8 ms   EAPOL        from STA      (4-way)
-   +12.5 ms   EAPOL        from STA
-   +15.1 ms   DATA (enc)   from STA      <- ACKed by AP
-   +45.2 ms   DATA (enc)   from STA      <- ACKed
-   +76 / +105 / +135 / +165 ms           <- ACKed (BlockAck)
-  +178.1 ms   DATA (enc)   to STA        <- first downlink; SYN-ACK
-
-Every one of those uplink data frames is acknowledged. None of them
-appears on the AP's netdev: tcpdump on the AP interface sees no TCP SYN
-until roughly the +165ms frame.
-
-Corresponding hostapd -dd output for the same association:
-
-  .697155  AP-STA-CONNECTED
-  .697237  nl80211: Set STA flags ... flags_or=0x1
-  .698663  IEEE 802.1X: authorizing port
-  .698795  WPA: pairwise key handshake completed (RSN)
-  .698816  EAPOL-4WAY-HS-COMPLETED
-
-The port is authorized 0.2ms before the handshake-complete line, so
-hostapd is not the one holding the frames back. Association to
-EAPOL-4WAY-HS-COMPLETED is a median of 70.7ms (n=229).
-
-There is no group-key handshake in these logs, and the behaviour is
-unchanged with RADIUS accounting absent from the configuration.
-
-
-Why this looks like mac80211 rather than one driver
----------------------------------------------------
-
-Two SoftMAC drivers from unrelated vendors (ath9k_htc, mt76) both show
-it; two FullMAC/firmware-offloaded stacks (brcmfmac, Espressif) both do
-not. The AP3/AP4 pair isolates this to the radio and driver with
-everything else identical.
-
-That suggests the pairwise key becomes usable for RX some time after
-hostapd authorizes the controlled port, rather than atomically with it.
-I have not instrumented the kernel, so the split above is inference
-from black-box behaviour, not from code inspection - happy to run
-whatever tracing would settle it.
-
-
-Anticipated objection
----------------------
-
-The station does transmit its first data frame ~3ms after sending EAPOL
-4/4, i.e. before the AP has finished installing the key. That is legal,
-and more importantly the AP acknowledges those frames, so the station
-has no way to learn they were discarded. FullMAC APs carry the very
-same frames from the very same station without loss.
-
-
-AP5 excluded
-------------
-
-The AR958x card came up in regulatory domain 00 advertising 30 dBm;
-"iw reg set DE" corrected it to 20 dBm. Even then, association and the
-4-way handshake succeed while no data frame ever reaches the netdev, so
-that card looks miscalibrated and is not reported as a data point.
-
-
-Reproducing
------------
-
-Any station that sends immediately on association will show it. The
-metric that makes it obvious is "TCP connect attempts before success"
-with a short (20-40ms) per-attempt timeout; with a normal blocking
-connect it is masked as a single ~1.3s stall, which is how it went
-unnoticed here for a long time.
-
-Happy to provide pcaps, full hostapd -dd logs, or to test patches.
-
-I am not subscribed to the list; please keep me on Cc for replies.
-
-Thanks,
-Thomas Hilber
