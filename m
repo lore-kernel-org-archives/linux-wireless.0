@@ -1,162 +1,118 @@
-Received: from bg-bec.cloudflare-smtp.org (bg-bec.cloudflare-smtp.org [104.30.16.142])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC643F1656
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 12:43:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=104.30.16.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 178AA26B2D2
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 12:49:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787834643; cv=none; b=u30Njd+BPdlv2KSaxVbGjOXu/3w0T0vQDHbvMU+v1HQ+z4VUGAfY7Xzkk2A7k3vrbmPxxKZp7WAN0jsHIXcJtj60E08ITjkT/pgEITxV42TROUvZ7fejxEAs/qIn3WxB7pNW2fkBtG5+BgKJ/gX56G+zTlWkzGumMMMXifGIwcE=
+	t=1787834969; cv=none; b=g2GSYrVqK6HcRcg0QoDUJidB1b3hAz/XOisKh6MWw9CUQ5dbYCIUfAguOLVqnFX3JBMiSKE8SB6JNNQ5R+5tamHK3ObNIInJ1KqBVlKKVuDMGMbqFs6A4IxRs0RbqHFBPtiZcYX3MC4y0yXT3Etf6zKXgu8x7pVQHWFaaWw+G4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787834643; c=relaxed/simple;
-	bh=uKH+BnJ8BwULUBNwrth04oBdJK0t5SnpKxbLc0f+6S0=;
-	h=From:Message-ID:Date:Subject:To:MIME-Version:Content-Type; b=GGSWkGsy6jDPA3cRZKN7WkP7g3l4Om+MRFhkWbl5HXfIg6SAk7y7n7KY8/FG7QG4yp0tgebmGSYRncwkd9HzUH/pahDulmT+Gb4r99polzYwcYQv46MnWz1dwgNy0wbGvRNn9I2ZnWsidHegVxzLBDlkxlPqlDTmRhTHdm4w/Ks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh; spf=pass smtp.mailfrom=cf-bounce.bugs.sh; dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b=S7MNqn0Z; dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b=DUH4FUou; arc=none smtp.client-ip=104.30.16.142
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cf-bounce.bugs.sh
+	s=arc-20240116; t=1787834969; c=relaxed/simple;
+	bh=6X+7aspQeWZrNJKQdfJqRHl3TSyYszr2i4+ksrcNn14=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OirbfIgg4s8clWo335/qTpCObX9ng5vNgx90RQ9dGoVtnWdTxT210MFVCuxX7ZtAoVPQJrX0+0AKI8sslsMN00ObYRpoapZFkhWEuASVK8Oj/Y2R3itBkJGHTISEp5/yGNVqkxwIysW/zogtl9yFmn2F+kQI8ztLzZASj3GYEmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=pU0+ERqT; arc=none smtp.client-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b="S7MNqn0Z";
-	dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b="DUH4FUou"
-DKIM-Signature: v=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-smtp.org; c=relaxed/relaxed;
-	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
-	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
-	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787834634; x=1788439434; bh=xp2UYImYLvVNRXatr5
-	a5DXypt3Cwtz69p7mp3b3OH5I=; b=S7MNqn0Zrjbu2N/jPZw1oYctnM6k/4Ruu1N3H+k4dAX1F
-	vaExgGIQgb3oqOnIkgNGnifZ4aj9U+WV34QGDov7b1pBSH5ZH4sWoVio7qJfHLV+tgMuDRM3cJA
-	ddHULM+RE4/w3vTwADQMticPRtVbmYe5T0eYo0F4aL3uYYHGFRgBrnrG16bIn0EdDJzu+/2IfMN
-	z06BjCEW0xtXl93IN0vjMWwtDP1uWq7OVQkZMYc+0FB7haWrcTS5hk6CFGjXd6GRQwHitOgzacs
-	QyHSJX63EydtdFxmLjKIPS0ai2GiiCt21n8PBTL2Lze7EZKpRi6XM1o15ABSyCtgStFyUdGw==;
-DKIM-Signature: v=1; a=rsa-sha256; s=cf-bounce; d=bugs.sh; c=relaxed/relaxed;
-	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
-	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
-	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787834634; x=1788439434; bh=xp2UYImYLvVNRXatr5
-	a5DXypt3Cwtz69p7mp3b3OH5I=; b=DUH4FUouvi6B/OIq2VewwfTspEV5YKU0bOgvH1juxi3Dk
-	2cl67BGtXe9S1CU2uut7dx551s5b4cEpUTIAHOYj9Pttv1w5gYot/tDMAWOgWH730m0qBa9WMXR
-	b/q40RmbJvroistsHf6QfoFt5VVPbqnGVjaAKtFspVIjtUvyVgcrstntGFhnKK7LnAq1Tj3InNE
-	YNv5GyKWd3gwnIRYJZ1qS9zKx+JAvv6pHiJkgFJGZ/PkwVnCaj0cQwkfFR1WTdjUA6MM3NdQqFG
-	NgYponU5LQPtJ195meIPomCSKwPWS4X4D2C0aTAm++Ve9G/iACBMeSwa81szucFTf+KqhRHQ==;
-Feedback-ID: bugs.sh:5:6:Cloudflare
-From: co <co+cd639b9313e09550@bugs.sh>
-Message-ID: <v5hPFETntwh5YjR1fbSXichnMBMrX4irbVAf@bugs.sh>
-Date: Thu, 27 Aug 2026 12:43:47 +0000
-Subject: [BUG] use-after-free in ar5523_rx_refill_work()
-To: linux-wireless@vger.kernel.org, "Petr Mladek" <pmladek@suse.com>, "Geert
- Uytterhoeven" <geert+renesas@glider.be>, "John Ogness" <john.ogness@linutronix.de>, "Josh
- Poimboeuf" <jpoimboe@kernel.org>, "Sebastian Andrzej Siewior" <bigeasy@linutronix.de>, "Oleg
- Nesterov" <oleg@redhat.com>, "Biju Das" <biju.das.jz@bp.renesas.com>, "Kees
- Cook" <kees@kernel.org>, "Song Liu" <song@kernel.org>, "Pontus Fuchs" <pontus.fuchs@gmail.com>, "John
- W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pU0+ERqT"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-482dbe4d247so314696f8f.2
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 05:49:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787834945; x=1788439745; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=deQLONOLHQouvAEnQ9EvfbjW6sYhRlV+/puu/9H1X+g=;
+        b=pU0+ERqT6HQE1lDXruH0OpUyayeScv0X+a7ZVv1Y4LmFxs4l6dClZ2r5qRpdsOoE4g
+         anaJ3vJN/AepaLfJT87F3X9YodON6taPmtptTP1cD+HTsAYyqi+65K0JOqTMQnCNIjUb
+         7EpH+/MVgfN68K2RhbFB3gXDUFtuuPpblWrTPLmT1pHXgdx2eYGl1Srhd+WSwcmOkdMf
+         GkVKvC7u0cDUazbdG7j8tzxIb3eZHVmMQ912Mxgoxli3jKny3+9xzHtj2AV/VKTw3eDE
+         Xip0QYYoj44rQAdk6VJxYoA0ODyIWSr0C72FPz/kQjTFYDBjFcdo3juq1IxFwZGw8QRq
+         YgKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787834945; x=1788439745;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=deQLONOLHQouvAEnQ9EvfbjW6sYhRlV+/puu/9H1X+g=;
+        b=jKttTI37Kvf13iOdaekZqfP3+Roup2FTkTDWvpCPvGKpqgb5cI7FjAmGk87qvhjMDn
+         tEnH0LY3VaMbQyAh7rq07K8RfsSf7rk9x5wRmzUSo2sRolpKbCjFSBAPXOwLctmD8BQY
+         GZoktZYJulXsYQML5q0oUOJLkfMmMIWNEHvXkfNVv3ES6l9NIXEEwK9205nSwCXc+Hlq
+         Vglq47x35CfkBqtKRoYuWHVb6zhWanzowEJQ0gwIUZkRX1zTrM/+e82YWdoRk1wBt3UB
+         UIs4jljjRHG6F1IvJfKEyOgZlieUNgOTaRoiGZh23Sf2bwTl+WKxrOwk0cKmfJTv6A3Y
+         ABIg==
+X-Gm-Message-State: AFuF++mx2U9WH7LvvLj1qwD3PrRfG5ozihTlnRkHmMOHgdLg9Xx3RNmU
+	OCcBphCiu8KatC7F+t5JbzA4oewKc9d+caV64+Lq2heWTi8jBNnggIg970al2Q==
+X-Gm-Gg: AR+sD12B4gYvLS8L9oRUP5+OzTt1hA94ETjNRNM3z3n/j+3yu0yG9qLN04pwX1YFX5E
+	1ffl84o2zeUtZfKFsGQIR4rRcA3X8r00ksn8AhBMfjwdWIJGn38gsCX2EWYheAPTxAwpMxAakAH
+	YzE+l+i8T0oj3SqCC7ZRTKWgcY/BABmztLKuxKh9ULOPd7McsWBYS6AJAInod2oPhagCjZTkLQF
+	umggR2Zxt4IByMf9iv+7xjnLeBw3bZyQeru6wU0+4swJbvTtHfP9eL8MH7UupGN8yaBTUP2JGN0
+	0nWkXjcoteJF98fSp5W9PQXCRz3mIdyJKRqiManA8xSTwo/s5EaopwlrpIeUjnYUXBNX9SaBnBx
+	Z4wZVZDtpSx2H57hYnJXFdxuu+c+ACp6s1+ZfSe64pPsnATONfMQVMHXtw9vwZK7YjiLoIYMWjQ
+	+kzwPTZskLqEzGztoHVs0JpUFpCe6GBW/CxGLCBV8WKTfIo21aNqcPy5AMlHX/tkh5Bs/sO+8f8
+	dylilVFxv1gHKy/B1Lts5rPDZvKbda5RICSM2TU5S9m6LTdopdOEuW8B60xFFlp6NVCiPEXB9yG
+	CKslMEAZlUpVOGasDd8=
+X-Received: by 2002:a5d:64e8:0:b0:482:eabd:642c with SMTP id ffacd0b85a97d-482eabd665dmr10554372f8f.1.1787834944283;
+        Thu, 27 Aug 2026 05:49:04 -0700 (PDT)
+Received: from omarchy ([31.223.97.101])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482e28fe2ecsm8880568f8f.37.2026.08.27.05.49.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Aug 2026 05:49:02 -0700 (PDT)
+From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
+Subject: [PATCH] wifi: rtw88: debugfs: don't vzalloc(0) when rsvd_page is read unconfigured
+Date: Thu, 27 Aug 2026 15:48:37 +0300
+Message-ID: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-We found a bug reachable in:
+Reading the rsvd_page debugfs entry before writing a page offset and
+count to it calls vzalloc() with a size of zero, because
+rsvd_page.page_num defaults to 0.  vmalloc warns about this:
 
-    path    lib
-    crash   use-after-free in ar5523_rx_refill_work()
-    commit  3cd8b194bf34 ("Merge tag 'v7.1-rc-part1-smbdirect-fixes' of git=
-://git.samba.org/ksmbd")
+  WARNING: mm/vmalloc.c:4019 at __vmalloc_node_range_noprof+0x9ac/0xa30
+  ...
+  Call Trace:
+   __vmalloc_node_noprof+0x4c/0x70
+   rtw_debugfs_get_rsvd_page+0x4c/0x110 [rtw88_core]
+   seq_read_iter+0x132/0x4b0
+   seq_read+0x12e/0x1c0
+   full_proxy_read+0x6f/0xc0
+   vfs_read+0xdd/0x490
 
-Config, environment, the sanitizer report and a C reproducer follow.
+rtw_fw_dump_fifo() would reject the zero size anyway, but only after
+the allocation.  Check for a zero buffer size first and print a short
+usage hint instead of allocating.
 
-=3D=3D Notes =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    If you patch the bug based on our artifacts, a tag would be
-    appreciated:
-
-Reported-by: co+cd639b9313e09550@bugs.sh
-
-    Everything in this mail is validated by the reproducer below.
-
-    We also hold an LLM-generated root-cause analysis and a candidate
-    patch. The patch passes an A/B test: the same reproducer panics the
-    unpatched kernel and runs clean on the patched one. Neither has had
-    human review, so both still require validation before you send or
-    apply them. Available on:
-
-        patch.diff  https://bugs.sh/b/cd639b9313e09550/patch.diff
-        report.md   https://bugs.sh/b/cd639b9313e09550/report.md
-
-    This is an open science project. The code and the full set of PoCs
-    are not public at this moment, as we intend to disclose our findings
-    in an ethical way.
-
-    Happy to test patches. Complaints and suggestions about our work
-    are welcome at:
-
-        cedalion@bugs.sh
-
-=3D=3D Environment =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    Reproduced on  3cd8b194bf34 ("Merge tag 'v7.1-rc-part1-smbdirect-fixes'=
- of git://git.samba.org/ksmbd")
-    VM setup       https://bugs.sh/b/cd639b9313e09550/run.sh
-    config         https://bugs.sh/b/cd639b9313e09550/config.gz
-    poc            https://bugs.sh/b/cd639b9313e09550/repro.c
-
-=3D=3D Sanitizer Report =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-BUG: KASAN: slab-use-after-free in ar5523_rx_refill_work (./include/linux/u=
-sb.h:1739 drivers/net/wireless/ath/ar5523/ar5523.c:743)
-Write of size 8 at addr ffff8880173a3940 by task kworker/u8:0/12
-Workqueue: ar5523 ar5523_rx_refill_work
-Call Trace:
-dump_stack_lvl (lib/dump_stack.c:123)
-print_report (mm/kasan/report.c:379 mm/kasan/report.c:482)
-kasan_report (mm/kasan/report.c:597)
-ar5523_rx_refill_work (./include/linux/usb.h:1739 drivers/net/wireless/ath/=
-ar5523/ar5523.c:743)
-process_one_work (kernel/workqueue.c:3307)
-worker_thread (kernel/workqueue.c:3379 (discriminator 2) kernel/workqueue.c=
-:3466 (discriminator 2))
-kthread (kernel/kthread.c:436)
-ret_from_fork (arch/x86/kernel/process.c:164)
-ret_from_fork_asm (arch/x86/entry/entry_64.S:255)
-which belongs to the cache kmalloc-192 of size 192
-freed 192-byte region [ffff8880173a3900, ffff8880173a39c0)
-list_del corruption, ffff88801bf220d0->next is LIST_POISON1 (dead0000000001=
-00)
-kernel BUG at lib/list_debug.c:56!
-Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
-Workqueue: ar5523 ar5523_rx_refill_work
-RIP: 0010:__list_del_entry_valid_or_report (lib/list_debug.c:56 (discrimina=
-tor 1))
-Call Trace:
-ar5523_rx_refill_work (./include/linux/list.h:223 (discriminator 1) ./inclu=
-de/linux/list.h:306 (discriminator 1) drivers/net/wireless/ath/ar5523/ar552=
-3.c:748 (discriminator 1))
-process_one_work (kernel/workqueue.c:3307)
-worker_thread (kernel/workqueue.c:3379 (discriminator 2) kernel/workqueue.c=
-:3466 (discriminator 2))
-kthread (kernel/kthread.c:436)
-ret_from_fork (arch/x86/kernel/process.c:164)
-ret_from_fork_asm (arch/x86/entry/entry_64.S:255)
-
-
+Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
 ---
-The report format is based on syzbot bug report.
+ drivers/net/wireless/realtek/rtw88/debug.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-This report is generated by a bot. It may contain errors.
-See https://github.com/n132/cedalion for more information.
-
-For any issue with this report, reach out to cedalion@bugs.sh
-
-If the report is already addressed, let us know by replying with:
-#co fix: <commit hash>
-
-If the report is a duplicate of another one, reply with:
-#co dup: <lore link>
-
-If you want to undo deduplication, reply with:
-#co undup
-
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index b67d69b..84e45af 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -315,6 +315,11 @@ static int rtw_debugfs_get_rsvd_page(struct seq_file *m, void *v)
+ 	int i;
+ 	int ret;
+ 
++	if (!buf_size) {
++		seq_puts(m, "usage: echo <page_offset> <page_num> > rsvd_page\n");
++		return 0;
++	}
++
+ 	buf = vzalloc(buf_size);
+ 	if (!buf)
+ 		return -ENOMEM;
+-- 
+2.55.0
 
