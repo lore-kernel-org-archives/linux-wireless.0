@@ -1,51 +1,52 @@
 Received: from bg-bec.cloudflare-smtp.org (bg-bec.cloudflare-smtp.org [104.30.16.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 514CF40F755
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 12:43:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFC643F1656
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 12:43:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=104.30.16.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787834615; cv=none; b=MLQd1zUdZRjQn1EvNSLsXeS2rD4BHqF0a0j0XfV7LCthyILNwJfpj8RLwp3yQ2fvotrmUfusziF1KOP12zd4CZJrPcZnSmh/bVt6um5QViEQmBSHpzwW/KePiWPIPV0w9/lKT5eTANef5kSYTdQcsh2ZJa4EDHWr8HSUu4P4Od4=
+	t=1787834643; cv=none; b=u30Njd+BPdlv2KSaxVbGjOXu/3w0T0vQDHbvMU+v1HQ+z4VUGAfY7Xzkk2A7k3vrbmPxxKZp7WAN0jsHIXcJtj60E08ITjkT/pgEITxV42TROUvZ7fejxEAs/qIn3WxB7pNW2fkBtG5+BgKJ/gX56G+zTlWkzGumMMMXifGIwcE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787834615; c=relaxed/simple;
-	bh=n9WR3ATZuYJtweK4TbsSpXqNJg8ItWkcIaJHhzhu7nY=;
-	h=From:Message-ID:Date:Subject:To:MIME-Version:Content-Type; b=QdCMy8is7g8Ds/yMKI07v7RJNH+Ofa54NbH9pQow1s7rlNxUIDdAKbMcL0bF758CXwrfXMxI6A2+nHjlaabr36uWuxJRaMYfSN3jsVM8notmZGIqvTwMuqJUUg3P2irAWpbLsjvBRBSDhdIf/T0ta94S9VE13KCI7jYcbL6V14o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh; spf=pass smtp.mailfrom=cf-bounce.bugs.sh; dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b=MLgMqY9p; dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b=OYxkDRE9; arc=none smtp.client-ip=104.30.16.142
+	s=arc-20240116; t=1787834643; c=relaxed/simple;
+	bh=uKH+BnJ8BwULUBNwrth04oBdJK0t5SnpKxbLc0f+6S0=;
+	h=From:Message-ID:Date:Subject:To:MIME-Version:Content-Type; b=GGSWkGsy6jDPA3cRZKN7WkP7g3l4Om+MRFhkWbl5HXfIg6SAk7y7n7KY8/FG7QG4yp0tgebmGSYRncwkd9HzUH/pahDulmT+Gb4r99polzYwcYQv46MnWz1dwgNy0wbGvRNn9I2ZnWsidHegVxzLBDlkxlPqlDTmRhTHdm4w/Ks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh; spf=pass smtp.mailfrom=cf-bounce.bugs.sh; dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b=S7MNqn0Z; dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b=DUH4FUou; arc=none smtp.client-ip=104.30.16.142
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cf-bounce.bugs.sh
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b="MLgMqY9p";
-	dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b="OYxkDRE9"
+	dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b="S7MNqn0Z";
+	dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b="DUH4FUou"
 DKIM-Signature: v=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-smtp.org; c=relaxed/relaxed;
 	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
 	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
 	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787834607; x=1788439407; bh=xe9WDSkYADTRTVbdgb
-	wjf87ZWh3NcSJd9Q58QZsmXds=; b=MLgMqY9pxHfCj2/VTXAUwYjv603tK5ooQpQRFk9M8OOCT
-	XJp2umw2z3En8ocqMyPuP3s9iE7FL2N8VWjgS7fqkAj9wy880UiKpsBhGPVueP1gFpgFG6xkR80
-	D7IMxcRu7a5xHhWcQjvuj+mhBWDb10Z0teWyfJksFJ4gLt0GsxKnvqUxFwhuQ0igPDoFBWJyuO4
-	0pzWdDcYK+ehmSyaI/0LO6jcoNJYowKy308pnnoK6VD4icS8rGK0uTNbjRVxt08eBOj4ccfx7GB
-	f6pN5tB5mRIIyYnZCdF6+07guCqzSzW+E7r2qFcf46PrupbpLDFCBQ3f3aOMecI4sB7USWJg==;
+	:list-owner:list-archive; t=1787834634; x=1788439434; bh=xp2UYImYLvVNRXatr5
+	a5DXypt3Cwtz69p7mp3b3OH5I=; b=S7MNqn0Zrjbu2N/jPZw1oYctnM6k/4Ruu1N3H+k4dAX1F
+	vaExgGIQgb3oqOnIkgNGnifZ4aj9U+WV34QGDov7b1pBSH5ZH4sWoVio7qJfHLV+tgMuDRM3cJA
+	ddHULM+RE4/w3vTwADQMticPRtVbmYe5T0eYo0F4aL3uYYHGFRgBrnrG16bIn0EdDJzu+/2IfMN
+	z06BjCEW0xtXl93IN0vjMWwtDP1uWq7OVQkZMYc+0FB7haWrcTS5hk6CFGjXd6GRQwHitOgzacs
+	QyHSJX63EydtdFxmLjKIPS0ai2GiiCt21n8PBTL2Lze7EZKpRi6XM1o15ABSyCtgStFyUdGw==;
 DKIM-Signature: v=1; a=rsa-sha256; s=cf-bounce; d=bugs.sh; c=relaxed/relaxed;
 	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
 	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
 	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787834607; x=1788439407; bh=xe9WDSkYADTRTVbdgb
-	wjf87ZWh3NcSJd9Q58QZsmXds=; b=OYxkDRE9Py2N6kuO0eFiWnNttsAuH1tCL+H6W8Szkmcsq
-	dk0gIGz4wzLg16hcXJiD21KiYS1A5nSJM/PiOo2tL+fjj8CGyphQXQgGRzSKBWEBkDq07OjlW7Z
-	QhcC/5C7ym0imfQLNxnHd7He9zHHRaMSldeDyek7gmNOS4/3u7B4z9ex/AR3tWSmHnW6RPfjY5U
-	yIE8XbNZjQwFrPbsYDljmBgCgETgI7hQSAqxiN/nSXPEqwyIpP4jpnmdzBHpDg1jM4K8WgEMg5K
-	7fUnMyeSQt1ytqLEPVKZod4wQ/Z9Ec+USg5rYBsfsqPWq4KtjQWyXd/6SvgXiGvS0jXLuCaw==;
+	:list-owner:list-archive; t=1787834634; x=1788439434; bh=xp2UYImYLvVNRXatr5
+	a5DXypt3Cwtz69p7mp3b3OH5I=; b=DUH4FUouvi6B/OIq2VewwfTspEV5YKU0bOgvH1juxi3Dk
+	2cl67BGtXe9S1CU2uut7dx551s5b4cEpUTIAHOYj9Pttv1w5gYot/tDMAWOgWH730m0qBa9WMXR
+	b/q40RmbJvroistsHf6QfoFt5VVPbqnGVjaAKtFspVIjtUvyVgcrstntGFhnKK7LnAq1Tj3InNE
+	YNv5GyKWd3gwnIRYJZ1qS9zKx+JAvv6pHiJkgFJGZ/PkwVnCaj0cQwkfFR1WTdjUA6MM3NdQqFG
+	NgYponU5LQPtJ195meIPomCSKwPWS4X4D2C0aTAm++Ve9G/iACBMeSwa81szucFTf+KqhRHQ==;
 Feedback-ID: bugs.sh:5:6:Cloudflare
-From: co <co+a27ae3497f0074da@bugs.sh>
-Message-ID: <K9HvthWDvq4gyjBVMeGsnsvA26mYMZ9v4gW7@bugs.sh>
-Date: Thu, 27 Aug 2026 12:43:17 +0000
-Subject: [BUG] drivers/net: out-of-bounds in ar5523_cmd_rx_cb()
+From: co <co+cd639b9313e09550@bugs.sh>
+Message-ID: <v5hPFETntwh5YjR1fbSXichnMBMrX4irbVAf@bugs.sh>
+Date: Thu, 27 Aug 2026 12:43:47 +0000
+Subject: [BUG] use-after-free in ar5523_rx_refill_work()
 To: linux-wireless@vger.kernel.org, "Petr Mladek" <pmladek@suse.com>, "Geert
- Uytterhoeven" <geert+renesas@glider.be>, "Kees Cook" <kees@kernel.org>, "Oleg
- Nesterov" <oleg@redhat.com>, "Josh Poimboeuf" <jpoimboe@kernel.org>, "Song
- Liu" <song@kernel.org>, "Biju Das" <biju.das.jz@bp.renesas.com>, "John W.
- Linville" <linville@tuxdriver.com>, "Pontus Fuchs" <pontus.fuchs@gmail.com>, linux-kernel@vger.kernel.org
+ Uytterhoeven" <geert+renesas@glider.be>, "John Ogness" <john.ogness@linutronix.de>, "Josh
+ Poimboeuf" <jpoimboe@kernel.org>, "Sebastian Andrzej Siewior" <bigeasy@linutronix.de>, "Oleg
+ Nesterov" <oleg@redhat.com>, "Biju Das" <biju.das.jz@bp.renesas.com>, "Kees
+ Cook" <kees@kernel.org>, "Song Liu" <song@kernel.org>, "Pontus Fuchs" <pontus.fuchs@gmail.com>, "John
+ W. Linville" <linville@tuxdriver.com>, linux-kernel@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -57,10 +58,10 @@ Content-Transfer-Encoding: quoted-printable
 
 We found a bug reachable in:
 
-    path    drivers/net/wireless/ath/ar5523
-    crash   out-of-bounds in ar5523_cmd_rx_cb()
-    commit  4e15e89faac9 ("net: bnxt: ring the doorbell when SW USO exits e=
-arly")
+    path    lib
+    crash   use-after-free in ar5523_rx_refill_work()
+    commit  3cd8b194bf34 ("Merge tag 'v7.1-rc-part1-smbdirect-fixes' of git=
+://git.samba.org/ksmbd")
 
 Config, environment, the sanitizer report and a C reproducer follow.
 
@@ -70,7 +71,7 @@ Config, environment, the sanitizer report and a C reproducer follow.
     If you patch the bug based on our artifacts, a tag would be
     appreciated:
 
-Reported-by: co+a27ae3497f0074da@bugs.sh
+Reported-by: co+cd639b9313e09550@bugs.sh
 
     Everything in this mail is validated by the reproducer below.
 
@@ -80,8 +81,8 @@ Reported-by: co+a27ae3497f0074da@bugs.sh
     human review, so both still require validation before you send or
     apply them. Available on:
 
-        patch.diff  https://bugs.sh/b/a27ae3497f0074da/patch.diff
-        report.md   https://bugs.sh/b/a27ae3497f0074da/report.md
+        patch.diff  https://bugs.sh/b/cd639b9313e09550/patch.diff
+        report.md   https://bugs.sh/b/cd639b9313e09550/report.md
 
     This is an open science project. The code and the full set of PoCs
     are not public at this moment, as we intend to disclose our findings
@@ -95,62 +96,50 @@ Reported-by: co+a27ae3497f0074da@bugs.sh
 =3D=3D Environment =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    Reproduced on  4e15e89faac9 ("net: bnxt: ring the doorbell when SW USO =
-exits early")
-    VM setup       https://bugs.sh/b/a27ae3497f0074da/run.sh
-    config         https://bugs.sh/b/a27ae3497f0074da/config.gz
-    poc            https://bugs.sh/b/a27ae3497f0074da/repro.c
+    Reproduced on  3cd8b194bf34 ("Merge tag 'v7.1-rc-part1-smbdirect-fixes'=
+ of git://git.samba.org/ksmbd")
+    VM setup       https://bugs.sh/b/cd639b9313e09550/run.sh
+    config         https://bugs.sh/b/cd639b9313e09550/config.gz
+    poc            https://bugs.sh/b/cd639b9313e09550/repro.c
 
 =3D=3D Sanitizer Report =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-BUG: KASAN: out-of-bounds in ar5523_cmd_rx_cb (drivers/net/wireless/ath/ar5=
-523/ar5523.c:83 (discriminator 6) drivers/net/wireless/ath/ar5523/ar5523.c:=
-125 (discriminator 6))
-Read of size 18446744071562067968 at addr ffff88800df00024 by task swapper/=
-1/0
-CPU: 1 UID: 0 PID: 0 Comm: swapper/1 Not tainted 7.2.0+ #56 PREEMPTLAZY
+BUG: KASAN: slab-use-after-free in ar5523_rx_refill_work (./include/linux/u=
+sb.h:1739 drivers/net/wireless/ath/ar5523/ar5523.c:743)
+Write of size 8 at addr ffff8880173a3940 by task kworker/u8:0/12
+Workqueue: ar5523 ar5523_rx_refill_work
 Call Trace:
-<IRQ>
-dump_stack_lvl (lib/dump_stack.c:94 lib/dump_stack.c:120)
-print_report (mm/kasan/report.c:378 mm/kasan/report.c:482)
-kasan_report (mm/kasan/report.c:595)
-kasan_check_range (mm/kasan/generic.c:186 mm/kasan/generic.c:200)
-__asan_memcpy (mm/kasan/shadow.c:105 (discriminator 1))
-ar5523_cmd_rx_cb (drivers/net/wireless/ath/ar5523/ar5523.c:83 (discriminato=
-r 6) drivers/net/wireless/ath/ar5523/ar5523.c:125 (discriminator 6))
-__usb_hcd_giveback_urb (drivers/usb/core/hcd.c:1657)
-dummy_timer (drivers/usb/gadget/udc/dummy_hcd.c:2019 (discriminator 1))
-__hrtimer_run_queues (kernel/time/hrtimer.c:2067 kernel/time/hrtimer.c:2124)
-hrtimer_run_softirq (kernel/time/hrtimer.c:2141)
-handle_softirqs (kernel/softirq.c:645)
-__irq_exit_rcu (kernel/softirq.c:679 kernel/softirq.c:519 kernel/softirq.c:=
-767)
-sysvec_apic_timer_interrupt (arch/x86/kernel/apic/apic.c:1062 (discriminato=
-r 35) arch/x86/kernel/apic/apic.c:1062 (discriminator 35))
-</IRQ>
-asm_sysvec_apic_timer_interrupt (./arch/x86/include/asm/idtentry.h:674)
-default_idle (./arch/x86/include/asm/paravirt.h:62 arch/x86/kernel/process.=
-c:768)
-default_idle_call (kernel/sched/idle.c:122)
-do_idle (kernel/sched/idle.c:199 kernel/sched/idle.c:355)
-cpu_startup_entry (kernel/sched/idle.c:454 (discriminator 1))
-start_secondary (arch/x86/kernel/smpboot.c:312)
-common_startup_64 (arch/x86/kernel/head_64.S:418)
-Allocated by task 45:
-The buggy address belongs to the object at ffff88800df00000
-which belongs to the cache kmalloc-1k of size 1024
-The buggy address is located 36 bytes inside of
-1024-byte region [ffff88800df00000, ffff88800df00400)
-The buggy address belongs to the physical page:
-Memory state around the buggy address:
-ffff88800defff00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-ffff88800defff80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
->ffff88800df00000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-^
-ffff88800df00080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-ffff88800df00100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-Kernel panic - not syncing: Fatal exception in interrupt
+dump_stack_lvl (lib/dump_stack.c:123)
+print_report (mm/kasan/report.c:379 mm/kasan/report.c:482)
+kasan_report (mm/kasan/report.c:597)
+ar5523_rx_refill_work (./include/linux/usb.h:1739 drivers/net/wireless/ath/=
+ar5523/ar5523.c:743)
+process_one_work (kernel/workqueue.c:3307)
+worker_thread (kernel/workqueue.c:3379 (discriminator 2) kernel/workqueue.c=
+:3466 (discriminator 2))
+kthread (kernel/kthread.c:436)
+ret_from_fork (arch/x86/kernel/process.c:164)
+ret_from_fork_asm (arch/x86/entry/entry_64.S:255)
+which belongs to the cache kmalloc-192 of size 192
+freed 192-byte region [ffff8880173a3900, ffff8880173a39c0)
+list_del corruption, ffff88801bf220d0->next is LIST_POISON1 (dead0000000001=
+00)
+kernel BUG at lib/list_debug.c:56!
+Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
+Workqueue: ar5523 ar5523_rx_refill_work
+RIP: 0010:__list_del_entry_valid_or_report (lib/list_debug.c:56 (discrimina=
+tor 1))
+Call Trace:
+ar5523_rx_refill_work (./include/linux/list.h:223 (discriminator 1) ./inclu=
+de/linux/list.h:306 (discriminator 1) drivers/net/wireless/ath/ar5523/ar552=
+3.c:748 (discriminator 1))
+process_one_work (kernel/workqueue.c:3307)
+worker_thread (kernel/workqueue.c:3379 (discriminator 2) kernel/workqueue.c=
+:3466 (discriminator 2))
+kthread (kernel/kthread.c:436)
+ret_from_fork (arch/x86/kernel/process.c:164)
+ret_from_fork_asm (arch/x86/entry/entry_64.S:255)
 
 
 ---
