@@ -1,157 +1,96 @@
-Received: from bg-bec.cloudflare-smtp.org (bg-bec.cloudflare-smtp.org [104.30.16.142])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12726366567
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 01:24:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=104.30.16.142
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7E638D3ED
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 03:58:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787793862; cv=none; b=iPoUr6p/6yFJ7wOw35y/xCBe1ak1EW8yyBtFV+3fmB+houKY6KP4N6fkVkMF/MqhmaxNionr5pHKspdwwfM3J0lLcCLAB5v6eYvldGUiVR4GWmHtTaUj3Evy7o03VygOv63CvsgwF2eewL7LRSHXymQCZgrcOTMXVosmA4/3NaE=
+	t=1787803133; cv=none; b=tHTqjgiBxqDNKaEAspRUPVGZcTf2g2cEPBSVwesrId4swXsBQphhwGOuxdQVgI1r8g5pSidLQYYZWd+QivvlCjKUkt00cUO88+NpQUwIbYSXHPfUHNVZmYCC/ZTpkPTj/npvIPxpDOIyHtwciIRXgVKoOF33n0RlLN2ujVZvLr8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787793862; c=relaxed/simple;
-	bh=n5MyuTScv6wA5T78EY70uekJ0jWe3IYyMcz1KjEJrPo=;
-	h=From:Message-ID:Date:Subject:To:MIME-Version:Content-Type; b=lT3mLC70oEc4j8XM57ZmDVVobRhUVecMrFZU7HVswMrVCGvoeQzSCW+HY+yP/hwFhR2EuuBS8bZEAtJJ7ZFZFAKm+guqr0kDxfuN6qooVNfh1qB79Bn5B9a4Zm6zG3fMDaZyhSaw7hScQ+moumNnAig0R6CB46xJI1yGRyFhnwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh; spf=pass smtp.mailfrom=cf-bounce.bugs.sh; dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b=bZUOIyRd; dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b=dQMwgbPO; arc=none smtp.client-ip=104.30.16.142
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bugs.sh
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cf-bounce.bugs.sh
+	s=arc-20240116; t=1787803133; c=relaxed/simple;
+	bh=xVRZFbDUIViTRBkZ8muOyVesN8/ZBW2mU/Uvr8Y3YBM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SJo1neqSFne5zCG/PFOtYSkQybz7T91iW8x6hFvn0NtVz8QncvwdK2fyzVJ5m+L52dohr2smrf53q280oAAn1azK6M6d1vTpTCjcqnjkTAHDLnt43iVhwunfqxfpEkgpMX2grGPPY6HfXZoPZvIc7TjSzrPWBQBxhVRz8yNWvsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k/ZzM0wz; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cloudflare-smtp.org header.i=@cloudflare-smtp.org header.b="bZUOIyRd";
-	dkim=pass (2048-bit key) header.d=bugs.sh header.i=@bugs.sh header.b="dQMwgbPO"
-DKIM-Signature: v=1; a=rsa-sha256; s=cf2024-1; d=cloudflare-smtp.org; c=relaxed/relaxed;
-	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
-	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
-	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787793860; x=1788398660; bh=R8agjWfYY2oYlUhImh
-	VsejiTu0JFw9qNn6R1p25lThc=; b=bZUOIyRdyQvRRoGy3MwDbXcIez4fu5S56kcZQlQGvpO8C
-	bJIuaLE3OCs2JrOjFI4/easzNv4iaTJq4Lob3xuYz6KrRXsf22Ys/39ChcDnMJ9yF5keKmo1Aug
-	HXAppH+lGZ0mqkqtfwZOJYkhnNL51lsU/Q6JfOggzudEW+wHFONSQPI/dozwuXY41ogImXOiwZj
-	baqkuKyThzIJ4j16o4k5LiCyWfiVrIvicfn2gSgiT4m8rkGxytT6MtawfhLJrKjHINH2mkDu+1F
-	wiqQ0KOx3mhQtNOaH65y/DDSVzSvENB1TT7lTHEti+TXLMzui0RMpTyqqWCkatg09OVdf/VQ==;
-DKIM-Signature: v=1; a=rsa-sha256; s=cf-bounce; d=bugs.sh; c=relaxed/relaxed;
-	h=To:Subject:Date:From:Feedback-ID:from:reply-to:cc:resent-date
-	:resent-from:resent-to:resent-cc:in-reply-to:references:list-id:list-help
-	:list-unsubscribe:list-unsubscribe-post:list-subscribe:list-post
-	:list-owner:list-archive; t=1787793860; x=1788398660; bh=R8agjWfYY2oYlUhImh
-	VsejiTu0JFw9qNn6R1p25lThc=; b=dQMwgbPOyRALSaTON8TeS5s83VmsItG9QyNxmSNLcrg//
-	JkOzqQhndA+uT29QQSVyfOfV3rjCffyn+HOy3NUN8KG/qCD4EV0vgVApXbpUVpju1lwaYmZ4FlA
-	Ts1RfixI2g5szk58duHX9UpGIFdsvZRKpepQs8Aw3bZc8DQ526gtxnHZVmeLoRNblQLTjJ6Dtxu
-	uenWSZF4AeS5nkbo1jUjjrfU7G5gExmDS4m8bGr6rom89JnLWh3F0CbKA/gLVqkq9W0ai59Sft6
-	8AYM+UdfEYFrFQJoeMt8ktZDlWGGWrJkwnxn3kEfhcwmI6VdDMXwkJzDkZ7rQoUuUx0Pg1Xg==;
-Feedback-ID: bugs.sh:5:6:Cloudflare
-From: co <co+36935f8953d6874a@bugs.sh>
-Message-ID: <s6BRFbJoyNpjUBu6NC9TdJxvXM9vpQsN1FcY@bugs.sh>
-Date: Thu, 27 Aug 2026 01:24:09 +0000
-Subject: [BUG] net/mac80211: use-after-free in ieee80211_remove_link_keys()
-To: linux-wireless@vger.kernel.org, "Johannes Berg" <johannes@sipsolutions.net>, "Ilan
- Peer" <ilan.peer@intel.com>, linux-kernel@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k/ZzM0wz"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-482e29049adso514403f8f.2
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 20:58:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787803130; x=1788407930; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=CAzoKxSQ3b+/c/GS7UxwHGejvR1ze+cQZf36sXyzK8o=;
+        b=k/ZzM0wzkjGJVIv06/2nIxQg0rw/2WFH8sB/IOe7PXW8XcOfZnsXM8QhviCoZdRfZ5
+         MuWezIlSPnrIod1xOmGjZyVWzkAA0WuJelOZKlp7entOwl6sfD5Nbxa/4/dNs+o0TwWA
+         dOA5GdA+J2QvP2VDbvv/aFkd/C3MyKxyWHpYy9K7q4pq9WvQq+ro6qrMKTPq7mwCbXYL
+         HxIQOGJxJKvs6clxePKVGhuX0iTmOibG9Xli6vjjMnxFh7OklgIJeIb78QCjnYCqAW/0
+         AfVzIJ76770I5mjCNn+5oZ4qnSo4cuIeW4+rXqsXc79m67VA+i0qWBRn+WvRs5wLw7oB
+         /HZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787803130; x=1788407930;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=CAzoKxSQ3b+/c/GS7UxwHGejvR1ze+cQZf36sXyzK8o=;
+        b=VmiqEHrz2TjRlUQvmyrmKr9Umh8OXzy23odAwWOWbnbCNH3cOsCOFUu0fpPy7h+IdW
+         1ntAKSk7p6cxY4/Qmmq0pMoHV2PL30adjCY4N3Car5kPQuTY+9oo19NSvdmwMpOD3NRS
+         bU0KFQktaU9wd/Dbgg3aoCAgtXYPAwQkzhvry6KdRwKTeH6+4cyzo0HhzSv+87FJjLrS
+         E+HA3KFE5x8iDtD9P6jbTUmIxenFsc1wSd75QdS+8ZBw0M/YPrAFJ5sT5HqFgxBDa2TV
+         QQZAavH0Atb3aOJvpGskJXDR5Th1xrO98u1PC3cH7vZA3JYpL0MR9KLOT6JMvmGb6K2E
+         ZIJA==
+X-Forwarded-Encrypted: i=1; AHgh+RqiY3/evwCuqQTY9zJBccjLFkZH03nYGVO3fftY6uQ3V1yFJzUlHh+vYB89wGnTPCWqkbGEuxar24ud+hLonA==@vger.kernel.org
+X-Gm-Message-State: AFuF++luAc/D+Mqi3CK9MKdJW5OUbmAxIwBEsmyIjj2lz0y/IAnQlxIt
+	Tje90y04yrCdCs4mL0rZOfwtKoBv1wG2RTjZWPYYYfDZisiuC3NSaN+M
+X-Gm-Gg: AR+sD115VMWXBnYGH90DNtnaGUJuHByHI/Gv52EDg/P7CFcfrQp6Xy4eIlqbIZO+JgM
+	HnIiM4d+3AWrOUyrzF0Y1qQ1YkUpqOUta7dGTiHt+WcRf6sgrgJM2U2unSFXLxHxuH262kHLu+Z
+	2YAyCHfjPbPZzQn1mqj7nb3AjATRH7ZQq4cwQGFNs0F4hNbUSFf1xIYzO9KqMd7bYl5xNCzbsCU
+	gdP/Sjqqx+1d0BDJf/+d3/yTkmooxxiS+VZjRQvdeExQdaCuGDgGUt+YjzeHANvWDwpI4Y/itML
+	uL4DMyf2DzBY93swp7cfoYLnvYqgXUeDNIcAn3wWYTwjAa7MdDQw3vRRxtYVZ3kbymDBAKrFf9m
+	Vi2cG8jEGHxy+WXWkRCwkD/3DYu4gzJZn1JxdZB7C85hxygUAYbnVm3o/24oLCdoip1cPOPjHKc
+	FP988mEl7HzfUnxODHduylV4UlrYfp3LKfEyTigO0/lqvy2X5QP+r4Ee1nJS9xz91qnOQiXHQxD
+	o2HuFB//gKEoJeIqpebgV86Df0qu8N4fKe8Fj5zpIubnDCL/ursiWmM3XlgAml8RJgal/nSMSex
+	/1vP8T4yLO1ZPiuS5DH3C7Q=
+X-Received: by 2002:a05:6000:238a:b0:482:e968:86f9 with SMTP id ffacd0b85a97d-482e968892bmr7778855f8f.14.1787803129596;
+        Wed, 26 Aug 2026 20:58:49 -0700 (PDT)
+Received: from unknown748F3CBA5068 (dynamic-095-114-154-097.95.114.pool.telefonica.de. [95.114.154.97])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-482e27ab569sm5601745f8f.16.2026.08.26.20.58.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Aug 2026 20:58:49 -0700 (PDT)
+Date: Thu, 27 Aug 2026 05:58:18 +0200
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>, 
+	linux-wireless@vger.kernel.org
+Cc: Hante Meuleman <meuleman@broadcom.com>, 
+	"John W. Linville" <linville@tuxdriver.com>, Franky Lin <frankyl@broadcom.com>, 
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>, brcm80211@lists.linux.dev, brcm80211-dev-list.pdl@broadcom.com, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wifi: brcmfmac: fix lost 802.1x TX completion wakeup
+Message-ID: <ao-1n5uWuVPKjhb1@gmail.com>
+References: <20260811082702.44521-1-kmehltretter@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260811082702.44521-1-kmehltretter@gmail.com>
 
-We found a bug reachable in:
+On Tue, Aug 11, 2026 at 10:27:02AM +0100, Karl Mehltretter wrote:
+> Fixes: 21fff75d2fb6 ("brcmfmac: use wait_event_timeout for 8021x pending count")
+> Assisted-by: Claude:claude-fable-5
+> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+> ---
+> LKMM results with herdtools7 7.58:
+> 
 
-    path    net/mac80211
-    crash   use-after-free in ieee80211_remove_link_keys()
-    commit  53d3c6ddbb97 ("Linux 6.12.62")
+Just a friendly ping in case this got missed.
 
-Config, environment, the sanitizer report and a C reproducer follow.
-
-=3D=3D Notes =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    If you patch the bug based on our artifacts, a tag would be
-    appreciated:
-
-Reported-by: co+36935f8953d6874a@bugs.sh
-
-    Everything in this mail is validated by the reproducer below.
-
-    We also hold an LLM-generated root-cause analysis and a candidate
-    patch. The patch passes an A/B test: the same reproducer panics the
-    unpatched kernel and runs clean on the patched one. Neither has had
-    human review, so both still require validation before you send or
-    apply them. Available on:
-
-        patch.diff  https://bugs.sh/b/36935f8953d6874a/patch.diff
-        report.md   https://bugs.sh/b/36935f8953d6874a/report.md
-
-    This is an open science project. The code and the full set of PoCs
-    are not public at this moment, as we intend to disclose our findings
-    in an ethical way.
-
-    Happy to test patches. Complaints and suggestions about our work
-    are welcome at:
-
-        cedalion@bugs.sh
-
-=3D=3D Environment =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-    Reproduced on  53d3c6ddbb97 ("Linux 6.12.62")
-    VM setup       https://bugs.sh/b/36935f8953d6874a/run.sh
-    config         https://bugs.sh/b/36935f8953d6874a/config.gz
-    poc            https://bugs.sh/b/36935f8953d6874a/repro.c
-
-=3D=3D Sanitizer Report =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-BUG: KASAN: slab-use-after-free in ieee80211_remove_link_keys (net/mac80211=
-/key.c:1114)
-Read of size 8 at addr ffff888028c3c818 by task exploit/5192
-CPU: 1 UID: 65534 PID: 5192 Comm: exploit Not tainted 6.12.62 #3
-Call Trace:
-dump_stack_lvl (lib/dump_stack.c:123)
-print_report (mm/kasan/report.c:378 mm/kasan/report.c:481)
-kasan_report (mm/kasan/report.c:596)
-ieee80211_remove_link_keys (net/mac80211/key.c:1114)
-ieee80211_vif_update_links (net/mac80211/link.c:192 net/mac80211/link.c:351)
-ieee80211_vif_set_links (net/mac80211/link.c:408)
-cfg80211_remove_link (arch/x86/include/asm/jump_label.h:27 include/linux/ju=
-mp_label.h:207 net/wireless/trace.h:425 net/wireless/rdev-ops.h:1460 net/wi=
-reless/util.c:2894)
-nl80211_remove_link (net/wireless/nl80211.c:16312)
-genl_family_rcv_msg_doit (net/netlink/genetlink.c:1117)
-genl_rcv_msg (net/netlink/genetlink.c:1195 net/netlink/genetlink.c:1210)
-netlink_rcv_skb (net/netlink/af_netlink.c:2546)
-genl_rcv (net/netlink/genetlink.c:1220)
-netlink_unicast (net/netlink/af_netlink.c:1314 net/netlink/af_netlink.c:133=
-9)
-netlink_sendmsg (net/netlink/af_netlink.c:1889)
-__sys_sendto (net/socket.c:729 (discriminator 1) net/socket.c:744 (discrimi=
-nator 1) net/socket.c:2214 (discriminator 1))
-__x64_sys_sendto (net/socket.c:2222)
-do_syscall_64 (arch/x86/entry/common.c:52 (discriminator 1) arch/x86/entry/=
-common.c:83 (discriminator 1))
-entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)
-Allocated by task 5192:
-Freed by task 5192:
-The buggy address belongs to the object at ffff888028c3c800
-which belongs to the cache kmalloc-1k of size 1024
-The buggy address is located 24 bytes inside of
-freed 1024-byte region [ffff888028c3c800, ffff888028c3cc00)
-The buggy address belongs to the physical page:
-Kernel panic - not syncing: KASAN: panic_on_warn set ...
-
-
----
-The report format is based on syzbot bug report.
-
-This report is generated by a bot. It may contain errors.
-See https://github.com/n132/cedalion for more information.
-
-For any issue with this report, reach out to cedalion@bugs.sh
-
-If the report is already addressed, let us know by replying with:
-#co fix: <commit hash>
-
-If the report is a duplicate of another one, reply with:
-#co dup: <lore link>
-
-If you want to undo deduplication, reply with:
-#co undup
-
-
+Thanks,
+Karl
