@@ -1,72 +1,72 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D01D12DE70D
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 05:50:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 185421A5B8A
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 05:50:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787809817; cv=none; b=Qz/wCWuZpRbNh/E1p2UB9MkphBnBBtjfDoro5WpYz2+dyL5HHWogKY1qnDPVqMSZfCLeKl+qkIYq83oaw6X3AkppIzM9mb1KX5XbICaOfdZeHalByPNh2t247LRhv5Kx4c1mcu2MEY2iqIdjHbfG95ut494KF5nJZuT0MaLMqqo=
+	t=1787809822; cv=none; b=fyuVbop8wCasEmaieQ/+3MFoUMoyjyqC+7OB6tMyU9fc+PFbYsm2h3i/XW6vhgh7GOkxAFnlRQX0o6oJvH66kB8tNaHgOYLFJSKhJPSy7WrWZgydMu7SvKLa7aGxvUnvmMK73b4AsYGAeAL0mzUienyV+FPhOgO0ymBWqbGFyLc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787809817; c=relaxed/simple;
-	bh=nMDUhOJVTinmcnk6gdNQyNcxwtnvBXS/Fh5wyqnPzt0=;
+	s=arc-20240116; t=1787809822; c=relaxed/simple;
+	bh=glo7ODYClZcjNMDxZa93dsuZVgLLjoaNbtXFfPESXHU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Tc1QRBwSoePyq4u/j04sljXnv7TUlXBNaF5bqGTPGcywImdzWGHmj2fp3nm7nSkISBIHQ3YRqaIS3d3BqFhLHzoUzMzqSFSmNwnAGRGqirIHykxG152pvmGh1xjoSYV5pLYdixCCo7o2Gq19mF4qE5Xpxw0NSlqQ5/rPy9XTA0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=wglZLSw4; arc=none smtp.client-ip=209.85.210.178
+	 MIME-Version; b=Yg6BcOBKS72qfXtpXzAD6v2jdbQJPPLtdKrj99EwkfbvpWQGK81mP6x8dLIDgmehvcT+s0CDFdIt0Qfus6g7TG1r4HjOEm+xvCaTj7fjwcz5Cxp9gWoP46XOsUKHgty2YvjmtmKf1nmfQNp8knAKoVwB9/j3jnCieAxtUymc6kQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com; spf=pass smtp.mailfrom=morsemicro.com; dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b=JDcRDgLd; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=morsemicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="wglZLSw4"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-84f38f3b36eso1505412b3a.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 22:50:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=morsemicro-com.20251104.gappssmtp.com header.i=@morsemicro-com.20251104.gappssmtp.com header.b="JDcRDgLd"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-84f3ab8750cso226975b3a.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Aug 2026 22:50:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1787809815; x=1788414615; darn=vger.kernel.org;
+        d=morsemicro-com.20251104.gappssmtp.com; s=20251104; t=1787809820; x=1788414620; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=nNMebGSZAQh2P0DsjJGP5MtdlAPelKFLwDmulJaEQpE=;
-        b=wglZLSw4VobV2cKZXrfZLQKj83F2KWyZylRgiZYotg8NlHk1fbVFUi4YSs/v4FwbYl
-         INF7IZ0PA4EjmikeJVD9t9t8NVw4Ze0IF+7f/iWE9kSlZHAXxzKjcfVY5Nh3dkzbgCkz
-         TT2B4rgtyhadWvddc4/H4zB3PP4/7K4TaJaI/uuUyjmoijOLYlEGFItxXr6mD8r5/iiw
-         prLOQIaIoE2zcj+eVHxHhhEGr/PxTtLX7lD4+E4k7puSJSlWl9i9larmqgTPHFIpbY4D
-         sIRsx/LyMz/15U1/fss8tELInN/8F3IZyUxt/RZnVsK1UDicG/39v0EP/83jCNqZNp8o
-         4bFw==
+        bh=YjEtESSJVXYg+8nTWINYoD/xP4gt7h+ZV0dapPP//fw=;
+        b=JDcRDgLdWkKI4y+DtYWfgYle+d/WAQS0gpyYLA7QsyZxxOnQsfwHAvUHA5fmmunn5Z
+         M03xSdYPF6Y6APYcNOgJVnOMZXtW+/lv/9MasRdjzS/RYfcR2aHtxNyi8oXLX77luuo4
+         IZouy9TWlA5tVVb/KWLFitQjyO/f9Y7DnhT5LCPVe1KIgmPUh94ZvIyOq/rPU0LKZqHx
+         JDQyEW+rZ9kq1zd+5GfRBzEjwlHlcJBLX0+kl9c0aCspMrvOMvcYdJsAn7nB3RJty9Nq
+         +Y7J/e0wK0cvw0qi0BVvcMDNRQ2ylQwmnTJboK/fwj/Hqsm+Pbym8DTDT7Opnsn2fMug
+         oFjA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787809815; x=1788414615;
+        d=1e100.net; s=20251104; t=1787809820; x=1788414620;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nNMebGSZAQh2P0DsjJGP5MtdlAPelKFLwDmulJaEQpE=;
-        b=Gd8G9yQ4GlUJ0TedylhgZPBLYKrH+Ezh78os+qlKH/RjKTuXqyLPMpPAEdK9cYWkBn
-         v8QrNx7+dVjN1aKYEl5miqIZCRU/Ay/jFcptI/SKYALj54Yx/EKPSiC+FRXIKXRtH64K
-         kT3npp8/JIOLR8Kmf2USOJEyIqkKpijM4MikTBSDtA9qa/7KFSAxFcKGYf6ryEj+7FkL
-         D9rarjVppSMB6K9iC+fDH+EkRrYNbsmyvn+lddfR+oxlw9cwt6dejw32Uf33gZ4trcGa
-         MNn61GS4DlPcwUJXb6H+KXHnC7wJ3EiNB3Ntq9MOHWHtsvePWX+t/RG9PBcjE1/3A/TE
-         AKmA==
-X-Gm-Message-State: AFuF++ndxrhWlczV72PP3BNAMZOcsZfwZc+oQgv/+kNA+pGD0vDddsOZ
-	OCQaB4YAvv1FUjQP6TydcjZ5sY0IF9mlDWmO8g+HU/Io+B+ya1L53QuFk+Svj66WO6o=
-X-Gm-Gg: AR+sD11+eurslY7zw595rjOxmltgH3EpsHIlmDsTxTnTiGsnoEQdNKQvkUUiDJVZ3Y+
-	GkfTuYfxtgDxdFu4uq6x0krNYiPPcIqjnvLJ1VFPuy2NIRuPOJGFhKfVl/ZgKz2hTvY0GFnTAqp
-	fZI+rfLKfzs3wkX/JF5Rzz6x367AASVRa2bCYzK9CReXT7mJKT0bBUPs79k9dLB+DFj8K0gwZlz
-	YJIG8mwZ3jhqoHIWlDWLO7SuxizU7+aWwOnqTuhicdxrADD8onkuOcLWSCxZclj+RSwDxDkRV42
-	9pkj9QX1KT91IIRGDXK2F2/+eXs2H5XDqpIOPLrLoVDnDGZXwcGyu8UeaXz2eURw0F2KKtzcOM5
-	1EJu4KxywjKtaRu2yRacGaZTgdsePiVdnmWM1pP63Ba7AdTY+3nE5qOdAwR3iHdGLQcVkqAWgWt
-	rNY56LVqXeT5/3nPq/AhAXTbI94Xdjkyvx/9WTqgf/vDJ+wGJRyE+Wx9GCFDtSOPkeajxki1kVg
-	+xRzZslSCfY4vLp2w9TXmPfxmh3iRldhsXHeoG7nJpS4647/pR2dDWxmcYVznu3b0yF+zZ8XDv0
-	zlVRDrfLHTs=
-X-Received: by 2002:a05:6a21:898e:b0:3d1:60d3:99f8 with SMTP id adf61e73a8af0-3d160d3ce78mr4255687637.5.1787809815053;
-        Wed, 26 Aug 2026 22:50:15 -0700 (PDT)
+        bh=YjEtESSJVXYg+8nTWINYoD/xP4gt7h+ZV0dapPP//fw=;
+        b=rKyYPhir6kIpJ3GBPRVuXs5e1Egn+9spIhwJaTvMecWwBI/VdugxwswVd16pZfir7V
+         BjLo2Cw9i8iFK6Ap7QHs1Y/ZzPdsPOkwIga+yUV6DxiJcUgI/8jwJ/vF3pwu1u80tKEw
+         GN8C5qCG6qcAorXZKON1t6Em+BKS6osEPe8u6XeXLnF0SVl0yZcC6Nz2zH2pL3tHf4bE
+         iXx84FSCrraut8umoj/2wzHtBxPuxYdSP3zc0cZ7OcqENLcHgkpmZtIRmTUnvJzEWP+K
+         a83fT+E/D2Rcf0dVVbKVUpOUeYc3umJQG2rKwEMxVtEtJdwxlEfPtQnkPvdh0ANcvBgY
+         Lncg==
+X-Gm-Message-State: AFuF++l82Bzr7K4xbdNfOEa8wqmbuQBOgRt9+b9eijCq9pO45kHIshYM
+	ZDranK9S/dBP1H0RBvTlolUgMLcxLp2H5QSfWGWgeeKsBwY4zF04aVkHEeBatNuXsIU=
+X-Gm-Gg: AR+sD13I04sr1aSov3FwzETt1DyfESXoklgDv5O93BMobvQNcOnbgO0SReIC5C8E+v5
+	ErJ9mDEG0rXoVVe3W4gclFFSp1zq3HhbpiXlniRY6nUmBLASzsQ7mWISbrsaRXe1gz1GuJl8w6i
+	5jakpIDKJXeVfeFLSEaNSKorq5FxY9a4pqYbt3hgWl0Wovbr8IT4WRMmX8KeyFPT1fO1Sl91KOY
+	M06MEpqmU3NHLZYOOwSM5OWh+WsAubVpoJVEgm6ptiokSq5qS05w7l+MpJGQPXKIi9R9j+VO7hZ
+	9u67FzoUMTfk1Pu2jysmqGiCpf0YmFEb1yYBMlAL/iPNDdF0K68KZGZ0ORHYsRfQ9JMz0n4dMC7
+	DCjwVgDyaWRxrbmd2+7zt+irfIpA3r9kTKOk7jKBc3nqb2ncV0qQN14vN/zlpbJTXB4Ua6dcZxN
+	rNhAp9GHHyjP0D1L+v7DSLQ5EUcZmJZPlhT9kHslHI04oAOFYac2eE/LLU3c3YiZ71cTnYXb32C
+	eQ5mov8llhfspegAd6RrlxGCBTNZ+kUYGBo/x6Npx6SoFGC0lCnuZ94BCn2CdZCxgFHM3ttnONN
+	rQL+5HsjHR0=
+X-Received: by 2002:a05:6a21:4596:b0:3d0:cc29:ff63 with SMTP id adf61e73a8af0-3d0cc2a04a0mr13928450637.12.1787809820498;
+        Wed, 26 Aug 2026 22:50:20 -0700 (PDT)
 Received: from localhost.localdomain (60-242-93-14.static.tpgi.com.au. [60.242.93.14])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc1beae5b51sm1732274a12.3.2026.08.26.22.50.12
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cc1beae5b51sm1732274a12.3.2026.08.26.22.50.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2026 22:50:14 -0700 (PDT)
+        Wed, 26 Aug 2026 22:50:20 -0700 (PDT)
 From: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 To: lachlan.hodges@morsemicro.com,
 	dan.callaghan@morsemicro.com
 Cc: linux-wireless@vger.kernel.org,
 	arien.judge@morsemicro.com
-Subject: [PATCH wireless-next 3/8] wifi: mm81x: do not drop PS filtered frames in AP mode
-Date: Thu, 27 Aug 2026 15:49:12 +1000
-Message-ID: <20260827054917.255584-4-lachlan.hodges@morsemicro.com>
+Subject: [PATCH wireless-next 4/8] wifi: mm81x: implement .tx_frames_pending() mac op
+Date: Thu, 27 Aug 2026 15:49:13 +1000
+Message-ID: <20260827054917.255584-5-lachlan.hodges@morsemicro.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260827054917.255584-1-lachlan.hodges@morsemicro.com>
 References: <20260827054917.255584-1-lachlan.hodges@morsemicro.com>
@@ -78,40 +78,41 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When the firmware reports a frame as filtered because the station has
-entered power save, the AP-mode path dropped the frame and returned
-"handled". In AP mode mac80211 owns the per-station power-save
-re-buffering, so the frame must instead be reported with
-IEEE80211_TX_STAT_TX_FILTERED and left for mac80211 to re-queue once
-the station wakes.
+Implement .tx_frames_pending() to assist mac80211 when deciding whether
+we should enter powersave such that we don't enter when there are
+pending tx frames.
 
-Return false for AP interfaces so the tx-status path flags the frame as
-filtered rather than silently dropping it.
-
-Assisted-by: Claude:claude-opus-5
 Signed-off-by: Lachlan Hodges <lachlan.hodges@morsemicro.com>
 ---
- drivers/net/wireless/morsemicro/mm81x/skbq.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/morsemicro/mm81x/mac.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/morsemicro/mm81x/skbq.c b/drivers/net/wireless/morsemicro/mm81x/skbq.c
-index 25655bd56d14..3bf15e7c38d8 100644
---- a/drivers/net/wireless/morsemicro/mm81x/skbq.c
-+++ b/drivers/net/wireless/morsemicro/mm81x/skbq.c
-@@ -231,10 +231,9 @@ static bool mm81x_tx_h_is_ps_filtered(struct mm81x_skbq *mq,
- 	WARN_ON_ONCE(!(le32_to_cpu(tx_sts->flags) &
- 		       MM81X_TX_STATUS_FLAGS_PS_FILTERED));
+diff --git a/drivers/net/wireless/morsemicro/mm81x/mac.c b/drivers/net/wireless/morsemicro/mm81x/mac.c
+index 0bbedcdd0b3d..5bae7c6251df 100644
+--- a/drivers/net/wireless/morsemicro/mm81x/mac.c
++++ b/drivers/net/wireless/morsemicro/mm81x/mac.c
+@@ -2035,6 +2035,13 @@ static void mm81x_mac_ops_flush(struct ieee80211_hw *hw,
+ 		mm81x_mac_wait_queues(mors);
+ }
  
--	if (vif->type == NL80211_IFTYPE_AP) {
--		__mm81x_skbq_drop_pending_skb(mq, skb);
--		return true;
--	}
-+	/* mac80211 buffers frames in AP mode */
-+	if (vif->type == NL80211_IFTYPE_AP)
-+		return false;
- 
- 	if (vif->type == NL80211_IFTYPE_STATION) {
- 		mm81x_skbq_insert_pending(mq, skb, tx_sts->pkt_id);
++static bool mm81x_mac_ops_tx_frames_pending(struct ieee80211_hw *hw)
++{
++	struct mm81x *mors = hw->priv;
++
++	return mm81x_mac_has_tx_pending(mors);
++}
++
+ static int mm81x_mac_ops_set_rts_threshold(struct ieee80211_hw *hw,
+ 					   int radio_idx, u32 value)
+ {
+@@ -2260,6 +2267,7 @@ static const struct ieee80211_ops mm81x_ops = {
+ 	.configure_filter = mm81x_mac_ops_configure_filter,
+ 	.sta_state = mm81x_mac_ops_sta_state,
+ 	.flush = mm81x_mac_ops_flush,
++	.tx_frames_pending = mm81x_mac_ops_tx_frames_pending,
+ 	.set_frag_threshold = mm81x_mac_set_frag_threshold,
+ 	.set_rts_threshold = mm81x_mac_ops_set_rts_threshold,
+ 	.sta_statistics = mm81x_mac_ops_sta_statistics,
 -- 
 2.43.0
 
