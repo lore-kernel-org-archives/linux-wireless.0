@@ -1,96 +1,117 @@
-Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+Received: from mta1.migadu.com (out-58.mta1.migadu.com [95.215.58.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA5F4252D9
-	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 19:20:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8052288D5
+	for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 19:32:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787858450; cv=none; b=O6XraAAGDPGLXKyU4X3vtIiBL0PrdsYxmD6pATP8spUQMg1OEf9u/O3x0N30mbmx7ukoc5JWFxdzdciX16II52/fN7Jh6vIUH2ATF+pEf5yD0YwJKHZIepENC+LkN++Cw9OQ1JZuS3FApE/TEMolKzWMfc+y2nUOMAy3u2Hy/qE=
+	t=1787859146; cv=none; b=ru0b118gZjIFBaHGe3/FzIHFQXCQSkmesS/Lh/F30cXI2VPY8yW4RzuHsnnUA8Q9OuKNilx12AYJY8lrDOv8fvXZpFMkkubSoTEl5vDiiMX1UDp8jUnfCkAnwOyHSfpsBjKBjCpJuFM+29JVbg6osU8uNByCj7WlyRtAIObWZ1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787858450; c=relaxed/simple;
-	bh=LeKjYL5+yTA3NfXPZPt+LEC+alaKDyr+SYK1msxENcw=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=JgBu30DHsAjQYcCN6WMaiixckoPyWtNck8qVEqaRaahAdSiYWddOor9yYNvbeg9A97K0VO9BgrA71ciJMAt64kKlSYoCILppYiskxST08j7Cem36N/RyuuB1mUPpXjOzDgqbCL3K0cvf8Qcl2ki+n+ZWPzdkCIM/B9puii4tR6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b56HiDHt; arc=none smtp.client-ip=209.85.208.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787859146; c=relaxed/simple;
+	bh=Dxb0QZdyGHiqp2xjGNxhfkA9d4hWZawABxo1RHuBiVU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=s50Mgg0iJXmnIQ3ySI/f+UzDNJ8ZX5D9dw3JIEGxiiHYbyI+gNVjfC+87jzD3IfZvwLCnILvBhqtLNczwVlL1F9pLCfdW1zOE0kQXfusQw2OPSwMwX/gFwG21plWDkIAc54AOphVFDWnJHfk0xAkuC5blU+qtEb4jFo63Kg3isc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=BqMr0QNO; arc=none smtp.client-ip=95.215.58.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b56HiDHt"
-Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6a17211b9ecso277522a12.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 12:20:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787858447; x=1788463247; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id
-         :references:in-reply-to:user-agent:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=7ci6gaSLreVAxo6xpjQcp/WLCj5FsRQyspYgaCCbiJs=;
-        b=b56HiDHtqXbkkf38mIOvROZrY6+RRLalGOHF45mQYf4iEk30V/dTzTezFR1+Yzf/4H
-         oJwf4ruwnnumjHlxsj3NuURTyV3jJkzW0uNMsTyVdlGs+pBPSp4e6kfklmBDx9WrJOfL
-         9ncAKpK+lV+u+ZQl9CewAhZ747gmki+zXOO9jz0iZ+m6TakMZmq0I1wp43uIdhMK35Ln
-         gMvlhUGxM6BCnCHG7GgPSGpDyN4+nxYYJcxw7XeiAJZngtGredkwVI/3/HE3c4gbxHyi
-         9GGp4IjZlJ36dP/rK5disPAC9wuOwuQpcfKrnFhAvE5I9vTpedQofKt47pJZvinN0Ebt
-         Wgbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787858447; x=1788463247;
-        h=content-transfer-encoding:content-type:mime-version:message-id
-         :references:in-reply-to:user-agent:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=7ci6gaSLreVAxo6xpjQcp/WLCj5FsRQyspYgaCCbiJs=;
-        b=SMoPqIYwuF/NFIvaxUFoUEC7aqIENIXSeRxLKNLrk+fe/e7C8cQOVSAHHp1FRIgzxO
-         U+PcuJAHu9+7/B6ZvwOT9oRv7uIM57keP6dLJgPWHusBEJpULLZX39GfJwICV7+Gp3aq
-         KDW/G4okS9eBRC2sPux85KJfR+F2gWObCcJLTJ6X1LTKvCG7fW7NgCKQzK7fFrLHA+oe
-         pJDa51yXPby5LD6WDbMBmw3B1SjsoqT6fd6cnw8OohK2yFDacJu1n8RtJtCEhSl4f0jz
-         QCADuvrvZ52UsRbSC14tsvUMQL+O81VpKYWEjMhsOYVN9B9IctRbZDm97CbhgrGvPKNs
-         2ing==
-X-Gm-Message-State: AFuF++mbNe8AoS9bk6rG+TihzF/fWa0MiJMCFEUnBAEiLq2uJwjTU2KE
-	RGLZxefQhtv03MM60F5ZZAYxJeF1fanasY+735sE81dBWic0GH4igzqyUaDONg==
-X-Gm-Gg: AR+sD13jTvshO/sLJ+yvcIIhKhgMTbaZDnf4AwvblQFDMqlB3Zkn0cwsOyMZP1ltt36
-	0H8dbhfbq6LLtpVCHUD6uvAqcFCOf1hGilJyiE8E09Jsq5YP1NWGAHvLOLidVAZPD338TkFCdgD
-	QwWG4uW0xI/Zr2/iAoimo8jTn2mr9OhoWhTIWNAknApuIxn5DS9LUoyoafSWhg11/1Bhlshcgzj
-	35orPrNyv6kJ3ml3W3N1f+uBP2nM57UfHnMvqf+Bjam+Gt9EMkUuEPCz7fRx8wip/RXZfYpSfwW
-	noNfv7J8e0ozGH1xnmBswz+V6f05UuVAwTLQY198KuQmqlRCAkVZMbHe4EbcNRB79AHtBQrf7ou
-	a1Nb/V95jd5QPq/NwJ0IOQte2Fxyx3lK9cl0Yd1JB3bv7cWiDKfZz7iLcx1JXc8stv0VHPCOTEF
-	48rMr4GeNjSAIl0GspMewzLjMozXmFVGVD6ejOY2IP1FlkKYZNl8Czvj1yIz56U6V8YZCz/94gi
-	GreBA==
-X-Received: by 2002:a05:6402:3605:b0:6a4:ae1:333a with SMTP id 4fb4d7f45d1cf-6a60d39964cmr614064a12.12.1787858447016;
-        Thu, 27 Aug 2026 12:20:47 -0700 (PDT)
-Received: from ehlo.thunderbird.net ([217.196.163.190])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a5de8d0b71sm6269444a12.9.2026.08.27.12.20.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Aug 2026 12:20:46 -0700 (PDT)
-Date: Thu, 27 Aug 2026 22:20:44 +0300
-From: Bohdan <boulderobscura@gmail.com>
-To: Mark <markmunene827@gmail.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_=5BBUG=5D_iwlwifi=3A_Comet_Lake_PCH_CNVi_AX201_=28?=
- =?US-ASCII?Q?8086=3A06f0=29_fails_with_error_-110_on_warm_reboot?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <CAMSTZOkWe9C2pGS75zX=_H4_Up6B6qSddkUPeaU8=br0geh-xA@mail.gmail.com>
-References: <CAMSTZOnSYZjqj4AyBpLg2hQfRs6JYZA5H26MwQ+G2WMGgNzBkg@mail.gmail.com> <025FFEEC-E57A-4C74-BF1E-D273253F4D9A@gmail.com> <CAMSTZO=2dm21hYcKKeDGCTb4KJ6R0ukDAFBQtsp4QVzPmCfcSg@mail.gmail.com> <1EF6CC70-90BC-4B9F-9F96-9DB1F3A69F1E@gmail.com> <CAMSTZOkWe9C2pGS75zX=_H4_Up6B6qSddkUPeaU8=br0geh-xA@mail.gmail.com>
-Message-ID: <AC809A9E-A3B7-4DB4-A267-7A183F60CA72@gmail.com>
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="BqMr0QNO"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Dxb0QZdyGHiqp2xjGNxhfkA9d4hWZawABxo1RHuBiVU=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787859139; v=1; x=1788463939;
+ b=BqMr0QNO2deM6IHmL0saVMCyFosklG1xubtArdegeVL1ViTnEj1CSYam3HlTEgIEfqdRMMid
+ quw6D3Piv7pkxfnlCYt7UvVgJVpMbcHhqboWglrfwDkrhueN0J+Bo4x39+uVT1NPB9wpEL2MjqB
+ /2KkbgjEf5158Fah//cvY5sWlOX8pqcoDR570cFZCSI90bMxkH2lITg/VQ8dLkbuibxzH7a3djW
+ txbuDFybpiqslkj9jEKt18erkWQ7NY14sMbv2ECEZYvOX8qL5e8PhJSJ9vp6VTA+UbJpM+4vSmr
+ x96j2wHE9jsQYfg8dmMI8uEVYmibn7AUZ8BneSEqxVhwA==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4c9131677e2def36;
+	Thu, 27 Aug 2026 19:32:09 +0000
+X-Mizu-Trace-ID: 4c9131677e2def36
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	nbd@nbd.name,
+	lorenzo@kernel.org
+Subject: Re: [PATCH RFC] wifi: mt76: mt792x: treat ACPI MTGS 0xff as no geo limit
+Date: Thu, 27 Aug 2026 12:32:02 -0700
+Message-ID: <20260827193202.12033-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260827134820.2607530-1-huynguyendinhquang@gmail.com>
+References: <20260827134820.2607530-1-huynguyendinhquang@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-So, the firmware does not really tear down the state before going to sleep=
-=2E
+Thanks for measuring both bands.
 
-Try this instead of modprobe:
+There is another one of these from July with the same symptom and a
+different cause. ASUS ROG laptop, geo table in the v2 shape but the
+version byte says v1, so it gets read a byte early and the 5 GHz slot
+comes out 0x00 rather than 0xff. I sent a fix for that one on the 11th:
 
-    echo 1 > /sys/bus/pci/devices/0000:00:14=2E3/remove
-    echo 1 > /sys/bus/pci/rescan
+  https://lore.kernel.org/linux-wireless/20260811232839.515463-1-lucid_duck@justthetip.ca/
 
-Also, disabling Intel AMT may help, re: [1]=2E Could be Dell screwing up B=
-IOS yet again=2E
+Both are probably real. Your MTGS and MTCL bytes would settle which one
+you have, and MTCL is the one that decides it, since every table gets
+read with whatever version that one declares. If yours look like the
+ASUS tables then the 0xff is wreckage from the misparse and the patch
+above already covers you. Building it would answer the same question.
 
-linux-firmware version could also be useful=2E
+Two things on yours. Skipping the offset when the power byte is filler
+wants a sentence saying why. And I would test the raw field rather than
+the value after it has been through the signed conversion.
 
-[1]: <https://discussion=2Efedoraproject=2Eorg/t/wifi-not-working-on-dell-=
-latitude-5420-intel-ax201-device-is-unclaimed/169425>
+Devin
+
+On Thu, Aug 27, 2026 at 8:48 PM Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com> wrote:
+
+> Some OEM ACPI MTGS tables fill unused geo power/offset slots with
+> 0xff. Windows treats that as "no cap". Linux assigned the u8 value
+> to s8 and min()'d it, clamping every rate to about -1 dBm
+> (txpower_sku tmac = 3).
+>
+> Skip geo capping when pwr is 0xff, and do not apply offset when it
+> is 0xff.
+>
+> Tested on ASUS Vivobook S 14 M5406WA (MT7922, mt7921e):
+> - 5 GHz: tmac 3 -> 25, TX ~40 Mbps -> 200-350 Mbps (80 MHz)
+> - 2.4 GHz: tmac 30 after the change (channel 6, 20 MHz)
+>
+> Fixes: f965333e491e ("mt76: mt7921: introduce ACPI SAR support")
+> Signed-off-by: Huy Nguyen Dinh Quang <huynguyendinhquang@gmail.com>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> index 946dd79..fa539cd 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
+> @@ -280,7 +280,15 @@ mt792x_asar_get_geo_pwr(struct mt792x_phy *phy,
+>  		return dyn_power;
+>
+>  	geo_power = (band_pwr + idx)->pwr;
+> -	dyn_power += (band_pwr + idx)->offset;
+> +	/*
+> +	 * ASUS (and some other OEM) ACPI MTGS tables fill unused geo
+> +	 * slots with 0xFF. Windows treats that as "no cap". Linux took
+> +	 * it as s8 -1 dBm and min()'d every rate down to ~3 dBm tmac.
+> +	 */
+> +	if ((u8)geo_power == 0xff)
+> +		return dyn_power;
+> +	if ((band_pwr + idx)->offset != 0xff)
+> +		dyn_power += (band_pwr + idx)->offset;
+>
+>  	return min(geo_power, dyn_power);
+>  }
+> --
+> 2.55.0
