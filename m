@@ -1,49 +1,94 @@
-Received: from mta1.migadu.com (out-77.mta1.migadu.com [95.215.58.77])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0002e601.pphosted.com (mx0a-0002e601.pphosted.com [148.163.150.75])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABD2F34CFC5
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 17:18:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.77
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787937536; cv=none; b=AlPzPAkMnTc0cmF7/Qt+WSzrojn0Hp82qTBb1Dd+UoR5RSmcuOctSF3WJfYQ+uyKKRaeJdQy6sOt6UyC9Ut0CipEMeDL3p+zaJ3nk9Qg8z1aFznXi8gE9YDxT0SNRLRyuOJ5jGuyFkzqX6WnwpgdvJPeREVo9HJbro4E3CjZEoI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787937536; c=relaxed/simple;
-	bh=JSBFu5mtYAAxSf1z/Sc5HZpi1iqCxqQNp9ErZEemACM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u1VDHBdATdYBmL9loZtpT/wx8xvEvAHRAF6oinQ2NV5yfimd09oUAY8P2OQip6z0RAdrfqvfkkNRNdNkbh0EBw2NcZVTnLc/r38Z3wkFS+TVrUREO7ydDoKKXLm7xUKwNoitd6ULQJS5X5nzHLzVYy+aHtFREO0rEqcUFw4vv3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=KKmmhBM6; arc=none smtp.client-ip=95.215.58.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1A4360EED
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 18:25:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.150.75
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787941552; cv=fail; b=Jre8y0aDhX89foFfqH5Uuk7p+opBYvgJMw3KWf1K3OKTVqoQcMmEmp9HgTrZjhz4i3MTjY1U0p6Y6PUU9ftNB+iQb5XLRjPZqiiVl0iPN0RgyG5ytDfdoFITPNzosWU8GmkckVtt+ehaWiRV/gQwP6iMw1IUynB08+soGlwtE2A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787941552; c=relaxed/simple;
+	bh=bINtlYAxzjQRVl7Lbn0dXKpyL79Pmz2Wv/OznyR3B14=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NPFpssnB6qGdOmHiyh+IrnAsoBizg/hv1G49NrH3C5Xp49nVXT4zFxXicBroYA12PTkiqB2vq2syvEnXQ+r5DGQtZ/TCCoPUhfdi2sBGUpl/9Ay/R5/Kcz3lv+RuTL3wGB4Vjyr6XaNFxB9gmTqLnhQkVltiVHgLnoVx5ZJdrd8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b=StB/SytC; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=L/+O6ZEc; arc=fail smtp.client-ip=148.163.150.75
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="KKmmhBM6"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JSBFu5mtYAAxSf1z/Sc5HZpi1iqCxqQNp9ErZEemACM=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787937531; v=1; x=1788542331;
- b=KKmmhBM68x9yX1z07xOBrJk7YoG6eEoRl07hBiBVXSeVTOslr21mNeBO77Bb3mX2w8hPjKFU
- l+/BSQVLmz7cjNYc18NAh8frF8MJ9NdQV5aFtF73nBJLMO9fWB/yMFhekKafa58Ly+eYv0ZGUN2
- E89bI+wbgj2SRuJQl3w8VIK3fF/eRkw2iHtvAL2s5wfIjbwB2zmzYabW8RR/t3OST6k1Jb5bjLe
- cX/MrtsVfAlZNzDm3avsJuE0zYhtir/1gflBr5iF5t/mWQ5/AqdnI7xkGafptVMvSwUpmBJSBK2
- r/w12R1CgzvYRQO8aDWMQijZl+DsjCkDccGydAOW5wA+w==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 3182c772a689ec26;
-	Fri, 28 Aug 2026 17:18:41 +0000
-X-Mizu-Trace-ID: 3182c772a689ec26
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Klara Modin <klarasmodin@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	nbd@nbd.name,
-	lorenzo@kernel.org,
-	regressions@lists.linux.dev
-Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI SAR init during probe
-Date: Fri, 28 Aug 2026 10:18:38 -0700
-Message-ID: <20260828171838.22038-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <apGWXuPOSqZJ_ShO@parmesan.int.kasm.eu>
-References: <20260825181712.28548-1-lucid_duck@justthetip.ca> <ao3dyqWJ3nf3rMMW@soda.int.kasm.eu> <20260828011737.22809-1-lucid_duck@justthetip.ca> <apGWXuPOSqZJ_ShO@parmesan.int.kasm.eu>
+	dkim=pass (2048-bit key) header.d=ti.com header.i=@ti.com header.b="StB/SytC";
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="L/+O6ZEc"
+Received: from pps.filterd (m0380145.ppops.net [127.0.0.1])
+	by m0380145.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 67SGLI4n1947144;
+	Fri, 28 Aug 2026 13:25:45 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=proofpoint-05-2026; bh=noqh8w/XmmhVV
+	41iOoEU4DSc3erTfhEGvQrwztliFsY=; b=StB/SytCrv3Lt1/9Sd1gTy9GjPcvA
+	g1U7HQbjjVDP89koMy4Jd/LJzPddqsBPXpP6+cHXoOiuEsqFH4l8dy1L0aN7Z6p4
+	pAAqHdBxH5pa84Trc1BVW5G0bnzc9iXyYx6I3xboAKt+yenPN09L203MWVaFs7q+
+	gyiNlsJyHOeAqglsisPuEGqcQUeQFyxqj4cQ8c3J+aIN88RW6rkUwSJV+2c8wr8U
+	Iq5uCrQ0Bi7ab7oJURMPDrmAHm5QKDy/jo9S/cHxFMYdnaGB4gLPYFjjPYfinNIl
+	YFwpGj4OiVlgnw7TA3OWPJM3yKAKJt1KaKMO0uikQ5wm1UmiwUQpiuKXw==
+Received: from dm5pr21cu001.outbound.protection.outlook.com (mail-centralusazon11011070.outbound.protection.outlook.com [52.101.62.70])
+	by m0380145.ppops.net (PPS) with ESMTPS id 4gb5kdkuu2-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 28 Aug 2026 13:25:44 -0500 (CDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=BokaWwajpg8LUEx1ysfmntWsXICLCyRIJ5OzY9qeX6NmEzhXcA2CwZHwmtYPsqVAsDL2eSYkx7n0tDaHIstBb/WKlekKMUDyWYIDodSqe1ygCLiAjjkHe8CTxuvfX9Yl7Pd33C2OpCI/Xqh96AUzoMMD/ivqvZk+b92GnMjBv8qG3U5f/JTckrUYaJqoYidwwE/0rPdFQBJH9F2Mkx6gofPzxTFehmJ8ZjaR8XQCiOwNiLsuE6p51NRKoWrPKAnCJS4CsSIPmyNAM7QnKW68JMfBLkgiQQB4VdgZtdUaPi5Ypk4BDUFF1TAWfbhd0qXaREIBYeASChh04pbl3+9+jw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=noqh8w/XmmhVV41iOoEU4DSc3erTfhEGvQrwztliFsY=;
+ b=Oifke3KLCAkVvrYENTbN5eEWIBqBJz8QHNQdUJ1gDr3ok3dPyy5Bj6IRBQiEjJktD5TUPt3vCiAvTkN2dcjXPeBatqqGOD5rU2zfR1pZFdfCZOFhxk/EGWJ9lV+7jOkR8yXIw8Ww+QOFu2aCB6QgUkQZ3KmBVq7974K5rzue8TtKAAoV/78QpZ9BAqaW+9lzU3IzjeFekvHRD98r4BixKMXidbur56WEAzeDsA3NlF3d5SUo7NGeDK0u3W30ynepJzY48XQEQJO+XrPYwRFd/OoXtjYxkCPfjeloC5BXpk6KRfgvs46MVlAVgLxV8JbzO1yI0bfBe0Heo+8XFfNYPQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=noqh8w/XmmhVV41iOoEU4DSc3erTfhEGvQrwztliFsY=;
+ b=L/+O6ZEcL6m4KEVa4AQJz2J7BITyJfIuUPJKx6Dohr6kp9U3mcNI6UCACfc3YdaZxj/gFyvzfLj+tzlGmReDEEduKoB+D5hDK4n7ecLBG11o+pcA+fTbI/0o3ZSZBQoj8TCxZPPmgR7DJKVnR77+SdCxag4yry77ife3bvPOags=
+Received: from PH5P220CA0007.NAMP220.PROD.OUTLOOK.COM (2603:10b6:510:34a::12)
+ by DS0PR10MB8198.namprd10.prod.outlook.com (2603:10b6:8:1f4::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.382.7; Fri, 28 Aug
+ 2026 18:25:36 +0000
+Received: from SN1PEPF00036F42.namprd05.prod.outlook.com
+ (2603:10b6:510:34a:cafe::3d) by PH5P220CA0007.outlook.office365.com
+ (2603:10b6:510:34a::12) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.360.11 via Frontend Transport; Fri,
+ 28 Aug 2026 18:25:36 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ SN1PEPF00036F42.mail.protection.outlook.com (10.167.248.26) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.382.8 via Frontend Transport; Fri, 28 Aug 2026 18:25:34 +0000
+Received: from DFLE205.ent.ti.com (10.64.6.63) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 28 Aug
+ 2026 13:25:11 -0500
+Received: from DFLE207.ent.ti.com (10.64.6.65) by DFLE205.ent.ti.com
+ (10.64.6.63) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45; Fri, 28 Aug
+ 2026 13:25:11 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE207.ent.ti.com
+ (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.45 via Frontend
+ Transport; Fri, 28 Aug 2026 13:25:11 -0500
+Received: from thinkstationp3.dhcp.ti.com (thinkstationp3.dhcp.ti.com [128.247.83.245])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 67SIPBk33282498;
+	Fri, 28 Aug 2026 13:25:11 -0500
+From: Sabeeh Khan <sabeeh-khan@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, Sabeeh Khan <sabeeh-khan@ti.com>
+Subject: [PATCH] wifi: mac80211: mlme: allow VHT/HE connections for 20MHz BW STAs
+Date: Fri, 28 Aug 2026 13:25:01 -0500
+Message-ID: <20260828182501.1540352-1-sabeeh-khan@ti.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -51,45 +96,99 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SN1PEPF00036F42:EE_|DS0PR10MB8198:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2c5c0988-b66a-4a6b-c693-08df0531c05b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|23010399003|376014|1800799024|82310400026|10067099003|5023799004|56012099006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	/Ct454/5vmMAqtBfPXVdr5IKZZR58WS+TAZX6+PZnGTw86I8AVd4Kk1W6M3uXy6WhGkKzC7ql80jyyI2Bn9V3tbU59XwU5jlt3OWxudV2oYt1lPTW+RQGGpwSkqiqVeSXKRc5yefmpqXstfPDiJCfxvvCYz5OR1g/H6t7j5pSf+njVig0A+mj6eH+mZSUe7pCsbljn4+/dnvkqngNFdAZeanrv0ksJMGZwS9CrkFDv6Z34gaz5hizqMhl55EekPtTfVUPp2WJNaKX8UcIeNHJoOc1/sgZ80Cp8hZrgVdt1XKTVWT/93gDEV27TnpLnJIFtu+0uaJFDW3GtHqdSt+EYu7iOLyHweXFiUWJx2TeOF70QrH+fAVVpP+yAfDM7ZKvNPjq4QZ0XG+5LOm/XTsw5oSS41TAhSM1rwFkTITL30eTDt2W7UthqTUbXCqjgk+iN9fXH78Xs2C+mLdfkd49rM5wjKvFUp9aDI+H2+mIo80gL9sXvNpBnPyxnnXShrjrn2zjx1vyFI64PQjjxT9KM62an9LEZQi9dSGn8sdT6ivzfzGlaunyIAcrcDgoWSzxAKMg7W/OAnaIkq2kxaZhA4bqysO0jwoN0m5dmTQlZJVpsfi5ZhA/dkuAmd0KB/CZULrgjjL3jVjBcWTFubIKvmMru+DI55MhsYJdmgn4fGPemfg9QJulS2Bn8ioFReW11BZiCmxnvaknWQz9XPqoA==
+X-Forefront-Antispam-Report:
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700016)(23010399003)(376014)(1800799024)(82310400026)(10067099003)(5023799004)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	7DHUrmn4swbC4E6lodIfoFE7hpBcjGDdI6cGiDkvzZRlljiFCM4a222DVR+o+DHOR7x0Cx/8NXwCJkjRuv3e3f7CvDDwteDg7HCz9KZMcH34GVyGIdeuypE6h0btNV/WU2aTQ2SUr9YMFk9O3sr823pIG3YDOVadj+ecPTMQtQDF/6giAn/178WwOlOsWT+NWWgfZ8paqfCLggpy5qPacZYW8GWX2DC8Mm5UJYJm/6Osk/T9jcyF5zPWQiu89G1wtoVXmY4ZvwHaFJ0eX6TRsatWKBnfYB4a6RC39Ji6MytTTvsgtsMS6nqwB8qoQIMhp7Cy5zO7URA48Dc7N8YVPMC2Xi1jmsXS2V112wiSwH4sqYUQ4ax9SjB4c52sW3C7yX+z57LBvbqieEk/DCwaWCJyYR3ci9e+wuudG6Weyx7VJVXeV+oA8aHpAbvTc3lO
+X-Exchange-RoutingPolicyChecked:
+	Tsr0f6f8/G5g/T5lsm6Gq2P87r9JzfN3Qn0lyhoMHDvjOqpn4gTBx455rBXIJzKwL4v32bO/7IJDcvDIW3Fs9Os5WEqI9uQTbGAAHVUdPq1/aZxRoZXvi1/2pR3wBckgqvDXp+MUAZK/TYzj2RhwvHY15/nxZOUKeefZcrLp2s8Z4hv5SyrFXISNbSdOwbgB0FKrNSmJsfKWbnVfTHFZLlYK33Y6d8mLu6dj0w/6+9rgccLB2jyClK3BkP+VeETCPqIHZliw7u9t/8rYkTILImyOCHnNEZPtQQOOHjmxFKUURgYwXCdT04O4UzERbS/ZjNSTMkgx1we2IyvccHoMAQ==
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Aug 2026 18:25:34.7980
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2c5c0988-b66a-4a6b-c693-08df0531c05b
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SN1PEPF00036F42.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB8198
+X-Proofpoint-ORIG-GUID: IZBia5BiMmtOendgT08PnFYANLJIOcDA
+X-Proofpoint-GUID: IZBia5BiMmtOendgT08PnFYANLJIOcDA
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI4MDE2MCBTYWx0ZWRfXzsb0WSJKEE8T
+ 3Uw41WEdtEC1szG4ZzUn7ugUG2NGj0e3f4LcNNOcE3fbDfzc4OvoyTckXx1D3IT5GWQBr8Vn4/O
+ VaGISkUfrNwYcfyUnZ0zpGeLQHGcoWY=
+X-Authority-Analysis: v=2.4 cv=UPPt2ify c=1 sm=1 tr=0 ts=6a91d2a9 cx=c_pps
+ a=CrKnoqqb99nOpAJSR4mnrQ==:117 a=tJyPKKxUohctrY4NYmUjkA==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=Sv0fKeRqtYgA:10 a=V5UXEbMT0ywA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=Z8NIEmU8O1QQgoT56wFK:22 a=gO1vWkAQAl3rybz1DQOp:22
+ a=sozttTNsAAAA:8 a=9r33CVE-P9eGOcI5jScA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI4MDE2MCBTYWx0ZWRfX9tiVAN5XdNG3
+ JiMCLe+AiHoED7h5n786gLdCF2gtu9bHNFPP63EkWq3cwAaYeQZ83t0t2nH83EIGCz5mC+CdMtd
+ j8tpnIfEDuc6CW1rK6lKS2uoxE17krEfo0Yoiu69sKTZPlBfEYzhwFPrUviFVtb4g+t/SxjT1Kg
+ 2261fjEarINTd+jZsx8FHz6Bj442cwe65EYz4cMkqIaWB63KLRFwW2POQoqpByDr1UxRMD+2z9A
+ wkEW/g3QVPttYyfuOTPWMPne9oLZcipZA/pcfr+ONHlye8S2sXG4+WmPugLj5s8mPHVzXs9iPus
+ AezKunC3jVzsul0IjRFMa8dDeg9wUP/a5u9XrOnilFGLYdLaiGtQW3QQ+PGwTe2TRZ1eQ9M5m0m
+ qbA4kXvpsppbrimQyzZr4dUab1q13QpM3w15zOr8Da+50Yi0tBD6JXT8YfBC1ToPf0ZYgfqPrEc
+ E88eMisqa6lSSwah7AA==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-28_05,2026-08-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 phishscore=0 clxscore=1011 spamscore=0
+ bulkscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608280160
 
-On 2026-08-28 15:27:10 +0000, Klara Modin wrote:
-> Wouldn't the Intel 11th generation have come with the Intel AX201 or
-> AX210 originally?
+The ieee80211_determine_our_sta_mode function assumes that
+if a radio supports VHT and is limited to 20MHz BW,
+then it must be limited to use HT connection.
 
-It would, and thanks for the correction. This board's firmware carries
-Intel's wireless power methods and none of MediaTek's four. I put an
-MT7927 in it recently and the MediaTek ones did not appear, so they do
-not come with the card.
+This is incorrect by spec as VHT/HE connections can still
+be allowed. Specify VHT connection and then goto current
+checks for HE capable and flag.
 
-> I don't think so (if this is the MTGS table above?), but I don't really
-> know how to parse the table contents.
+Signed-off-by: Sabeeh Khan <sabeeh-khan@ti.com>
+---
+ net/mac80211/mlme.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-That is the right table, and nothing in it is padded. Yours is fine.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f51167f0fc46..eed6294f4c65 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -6586,8 +6586,9 @@ ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
+ 
+ 		if (conn->bw_limit == IEEE80211_CONN_BW_LIMIT_20) {
+ 			mlme_link_id_dbg(sdata, link_id,
+-					 "no 40 MHz support on 5 GHz, limiting to HT\n");
+-			goto out;
++					 "no 40 MHz support on 5 GHz\n");
++			conn->mode = IEEE80211_CONN_MODE_VHT;
++			goto conn_band_5ghz_vht_bw_20;
+ 		}
+ 
+ 		/* Allow VHT if at least one channel on the sband supports 80 MHz */
+@@ -6626,6 +6627,7 @@ ieee80211_determine_our_sta_mode(struct ieee80211_sub_if_data *sdata,
+ 				 "no VHT 160 MHz capability on 5 GHz, limiting to 80 MHz");
+ 	}
+ 
++conn_band_5ghz_vht_bw_20:
+ 	if (req && req->flags & ASSOC_REQ_DISABLE_HE) {
+ 		mlme_link_id_dbg(sdata, link_id,
+ 				 "HE disabled by flag, limiting to HT/VHT\n");
+-- 
+2.34.1
 
-> so the transmit power limits actually look like they are too high for
-> some bands, especially 5735-5835, but maybe it will limit to the AP
-> transmit power and be fine? However, according to `iw list` the channels
-> in 5735-5835 do not have the "no IR" flag, so in AP mode the card could
-> potentially transmit ~8 times the allowed power (I would rather not test
-> this)?
-
-Every line reads the same because the driver writes the same number into
-all of them:
-
-	/* not used by fw */
-	rule->power_rule.max_antenna_gain = DBI_TO_MBI(6);
-	rule->power_rule.max_eirp = DBM_TO_MBM(22);
-
-It is a placeholder rather than anything the card sent up, which is why
-the same twenty-two turns up under every country code and not only
-yours. So it is not evidence of what the radio will do in that band, in
-either direction. The card has a power table of its own, separate from
-this one, and debugfs shows it as txpower_sku.
-
-> The 5710-5735 range is also not covered, which results in 5 GHz channel
-> 144 being disabled (visible in `iw list`).
-
-That hole is in what the card replied with. The driver copies the ranges
-across untouched, so 144 goes with it.
-
-Devin
