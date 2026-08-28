@@ -1,35 +1,35 @@
-Received: from mta0.migadu.com (out-157.mta0.migadu.com [91.218.175.157])
+Received: from mta0.migadu.com (out-233.mta0.migadu.com [91.218.175.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 663963AAF65
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 09:42:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8297435675E
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 09:47:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787910155; cv=none; b=Je+5NZx1yiInvN99AMGqTsRZUrW7Kw/t6Jx5u6opD2hXaV26gEhm124C1cP4TwigY+h+GUmN3PaIcY2UEni9zhGyygha9JFQYmcv2fq4YJX6TP2gy+UiI8CF/TnDJwTRjW6KbIPh51ip+/kMiN+O4A5vYPeaGUgoGfQ3lQa3raY=
+	t=1787910447; cv=none; b=JlICGr9bE4CnIEjtJOFtTgnihM2oUV9FHjtRwd5e6noBvGo3avNk0UVX3TxfJ/O8a21+aDGG29gJV8gCJ/Dx8adIg65qXK50ylf52f4+BQSAxQbLgOSBXCEzIZiXoPv3Cq/4mYjzF1zHEKHyN3Ix1HujFYtpEYAfH6YTmYqfS3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787910155; c=relaxed/simple;
-	bh=v9vCeFjjWdCaZX0qUFMhQUFMMGJjCoSdwhKrwSMC+v8=;
+	s=arc-20240116; t=1787910447; c=relaxed/simple;
+	bh=e2tq/2mp/rNEDN4L24NTPonrqDPRQjbDqRitpaYNyjU=;
 	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=hLentKW/q7gNBjUk2cTN4SBtXR/g1PcBDiAd2L1yVRNR8cr00aTb1jgfSqvgelH9DD7Z/Tw7MUflA5YjnpYZUXa3kPECnCJESQS434IwNHtaOpY8q1MKFt/LAQBjpiW8cpDTMPnc/NK0QrVRFUS/a1Dilhi6nij1iLlm/Hjjxgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=griu3GK6; arc=none smtp.client-ip=91.218.175.157
+	 MIME-Version:Content-Type; b=X5zO0CHT23N/csWIK5lVId7hYGzSSFgoENV7I1Z9l6ZcqKnL/Zy/wvu3rVBOArnl6QN6KsG1BbrqjuWCs79S/lkC3t25iN5GhY7pZwxTKnkZGvkIpP/zoRhmGM1YI5JJIbGDqnjmieEM4cyCKum67d9vjDfVBbKK7Xo1CKYWfWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kCIopN4M; arc=none smtp.client-ip=91.218.175.233
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="griu3GK6"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kCIopN4M"
 X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=v9vCeFjjWdCaZX0qUFMhQUFMMGJjCoSdwhKrwSMC+v8=;
+DKIM-Signature: a=rsa-sha256; bh=e2tq/2mp/rNEDN4L24NTPonrqDPRQjbDqRitpaYNyjU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787910150; v=1; x=1788514950;
- b=griu3GK6yvYBqxcKacrqcrMGjG0DcovwNuIl6zUXe18iYpctKimfLVmQGAiJ5Ep0xmR89UiW
- CC9QNjDcVAmo8Gh9lH7wGHMBr7wsvJasUKqbXvKgaGEljv4v5B3qZjObGf5RjkCX73GmkXquxsw
- qdRVPbYqbyJDmssBhzbBHJDY=
+ t=1787910443; v=1; x=1788515243;
+ b=kCIopN4MwssuJf6/js/6iQSBuimUle+n//ZaHJZkqePCjhvwt7LYHzXiVMxE2N8kjt6IidnV
+ nwdwU9UPYF/6rRu91LPZQ99q7yn91jXNK5IGSlIMj8fMbWjAY+Mz0YfsuB91+M3/ec523eB/ah/
+ Ydw143ZI96+3XxqkIoap9UxA=
 X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8e3f9164ce0b4e86;
-	Fri, 28 Aug 2026 09:42:30 +0000
-X-Mizu-Trace-ID: 8e3f9164ce0b4e86
+Received: by smtp.migadu.com with ESMTPS id 656fa8ba58c7583a;
+	Fri, 28 Aug 2026 09:47:23 +0000
+X-Mizu-Trace-ID: 656fa8ba58c7583a
 X-Migadu-Flow: FLOW_OUT
-Date: Fri, 28 Aug 2026 11:40:04 +0200
+Date: Fri, 28 Aug 2026 11:47:21 +0200
 From: Luka Gejak <luka.gejak@linux.dev>
 To: Ping-Ke Shih <pkshih@realtek.com>,
  "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
@@ -38,12 +38,12 @@ CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
  Bitterblue Smith <rtl8821cerfe2@gmail.com>,
  Peter Robinson <pbrobinson@gmail.com>,
  Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v8_4/6=5D_wifi=3A_rtw88=3A_sdio=3A_track?=
- =?US-ASCII?Q?_free_TX_pages_and_OQT_credits_for_RTL8723BS?=
+Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v8_6/6=5D_wifi=3A_rtw88=3A_sdio=3A_add_T?=
+ =?US-ASCII?Q?X_back-pressure_and_retry_on_page_starvation?=
 User-Agent: Thunderbird for Android
-In-Reply-To: <068b8747563444869e19399fbfa78654@realtek.com>
-References: <20260825163314.1590-1-luka.gejak@linux.dev> <20260825163314.1590-5-luka.gejak@linux.dev> <068b8747563444869e19399fbfa78654@realtek.com>
-Message-ID: <78117767-9F3F-4A53-A1C0-02B22ED32C52@linux.dev>
+In-Reply-To: <abbadda4537640eab1bce5620ade5f47@realtek.com>
+References: <20260825163314.1590-1-luka.gejak@linux.dev> <20260825163314.1590-7-luka.gejak@linux.dev> <abbadda4537640eab1bce5620ade5f47@realtek.com>
+Message-ID: <FCC54106-9CBC-4987-899B-4C7E0C997063@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -56,41 +56,58 @@ Content-Transfer-Encoding: quoted-printable
 
 Hi Ping-Ke,
 
-On August 28, 2026 11:23:26 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ec=
+On August 28, 2026 11:29:29 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ec=
 om> wrote:
 
-> Since you have two branches for RTL8723BS and others, let's implement
-> them by individual functions=2E Here can just dispatch, like
+> At the last review (I think v9), I will focus on the changes of this
+> patchset doesn't affect existing chips=2E
 
-Will do in v9=2E
+That is the right thing to focus on and it is the part I cannot test, so
+let me set out what the other parts actually run, and correct something
+in the v8 cover letter while I am at it=2E
 
-Two details I would rather ask about than decide on my own, since both
-touch the other SDIO parts rather than this chip=2E
+New code that is not behind rtw_is_8723bs(), all of it structural:
 
-The unaligned SKB warning uses __func__, and today that resolves to
-rtw_sdio_write_port on every chip=2E Once the generic path moves into its
-own function the string becomes that function's name for 8703b, 8723d,
-8821c, 8822b and 8822c=2E Nothing reads it, but it is still a visible
-change to parts this series is not about=2E The options I see are to let
-it change and say so in the change log, to drop __func__ and word the
-message without a function name, or to keep the check in the dispatcher
-so the string stays as it is=2E
+  sdio=2Eh                   struct delayed_work work
+  rtw_sdio_init_tx()       INIT_DELAYED_WORK(), mutex_init(), and
+                           mutex_destroy() on its error path
+  rtw_sdio_tx_kick_off()   mod_delayed_work(=2E=2E=2E, 0) in place of
+                           queue_work()
+  rtw_sdio_deinit_tx()     cancel_delayed_work_sync(), mutex_destroy()
 
-I would take the first, since the name then simply follows whichever
-function ran=2E The third is the only one that leaves the other parts
-completely alone, but it would move the warning ahead of
-rtw_sdio_check_free_txpg() on the generic path, so a page shortage would
-start logging a line it does not log today=2E That seems worse than the
-string changing=2E Say if you would rather have it either of the other
-ways=2E
+Only this chip ever arms a delay, so on the other parts the work is
+still queued immediately, and only this chip ever takes the mutex=2E
 
-> rtw_sdio_write_port_8723bs()
+Two existing functions were also restructured and every chip runs
+through them, so I should not describe the above as the whole story=2E
+rtw_sdio_process_tx_queue() now returns a value instead of void, and
+rtw_sdio_tx_handler() uses it=2E The behaviour is meant to be identical
+for the other parts: on an empty queue the new "if (ret > 0) break"
+takes the place of the old skb_queue_empty() break, and on a failed
+write the frame is still requeued and the loop still retries, since
+rtw_sdio_8723bs_reschedule_tx() returns false for anything that is not
+this chip=2E That is the piece I would most like you to check=2E
 
-The chip specific helpers already use the _8723bs_ prefix, which is the
-convention you asked for in v4, so I plan to keep
-rtw_sdio_8723bs_write_port() and add rtw_sdio_write_port_common()
-next to it=2E Happy to rename them to match your sketch if you would
-rather they read that way=2E
+Two things I verified against the base commit that I will spell out in
+the v9 cover letter rather than leave implied:
+rtw_sdio_check_free_txpg() differs by exactly one inserted branch ahead
+of the existing 8051 test, which becomes an else if, everything else
+unchanged; and the generic path through rtw_sdio_write_port() is step
+for step what it was, same address from skb->len, same
+sdio_align_size(), same check, same transfer, same failure message=2E
+
+The correction: the v8 cover letter says patch 2 is "gated on the SDIO
+interface rather than the chip id"=2E That was true of an earlier version
+and I did not update it=2E The code you have uses rtw_is_8723bs(), so it
+is gated on the chip id as well, and the sentence understates how narrow
+the check is=2E I will fix that section in v9=2E
+
+One thing that would settle this better than any argument from me=2E rtw88
+already supports five other SDIO parts that share sdio=2Ec: RTL8723CS,
+RTL8723DS, RTL8821CS, RTL8822BS and RTL8822CS=2E If anyone on the list has
+any of them, a boot and some traffic with this series applied would
+answer the question directly=2E I do not have that hardware=2E If nobody
+does, I will say so in the cover letter rather than let it look tested=2E
 
 Best regards,
 Luka Gejak
