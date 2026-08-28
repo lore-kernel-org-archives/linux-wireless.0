@@ -1,147 +1,161 @@
-Received: from mta1.migadu.com (out-198.mta1.migadu.com [95.215.58.198])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DE7017B425
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 01:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC97D12CDA5
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 03:48:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787879865; cv=none; b=UiqIA1t5BNVq5rSuS3ao/FbNsaZ/TTW3QtfDmbGDj7Za1i5syicCvWDX+Ky01cX1pCXPw+5GlO7h2Wq03kPV3q3lpAXbYqElHjB8O6CIlX44DetLIlYhBAGMdagNvDPI8JnZG4WrgqWvtMRZAyEkUQbCmdARZZBkFe4TPYs5u7o=
+	t=1787888918; cv=none; b=T+IupgQVRkJYgAWAK1DGOOeLZNm8gaPmr9oyTEw0QGfHbhgyNXkUbcQuufBk8RBJSw962Uoyh4vu3280F5LiTzGH0Wohmnlo27n0HYji30BcdtC7oMPdTXBOeQfAtDb6W/htVxq7e/oO5fSmw1u6F+xBIBtnJhtiP0SxK26ceqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787879865; c=relaxed/simple;
-	bh=vkWAAncEPqSCfjPN3H3wr6ysqgrRP13JfyJKI8czm9Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DeF7mPOwfdPQxMlk4/IC7kYC9Qw/lv9uxb32GYZY4o8qXpmB9bQgFHLqTicJ3xlINwVQD2SD6R0FyR+cLKUt8hHxIctdYD9DlrBGqs13X+/NTE8Lrjm7FQlgnhGbhiarbWRkbaFgJwp+OBYx43CKy3pZRSgkrvcNno/8FMAAJOQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=IE7GmnqR; arc=none smtp.client-ip=95.215.58.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1787888918; c=relaxed/simple;
+	bh=mJz4f6a/MHovBCRkuNY5N2SofwQWgJqPaLNBS33XDJ4=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=IScpL4scEKvcl0JTQoQ8hOcmy508umrOV7OQt/aToJ+UAOFmBW/Ibqf9PwxyTZH1WIfll1kTL7LM3eiptF8mfRyLUk5ab8sxStPGBGibUDnE/815pPHuboeXJG8DvVB2gpf3mjiNGJj4x2uDKn8ICcaqQKxHL4aAXM0J0togduw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=Iq70BLgR; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="IE7GmnqR"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=vkWAAncEPqSCfjPN3H3wr6ysqgrRP13JfyJKI8czm9Q=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787879860; v=1; x=1788484660;
- b=IE7GmnqR+SVgQB5hUB5t+yVdF5gGPZcyaeMFPQYBddrIlc47km0nAQ6A8G9yYNTHCID1Ag1/
- VU/TE4j1kp8uOjyhVQfQj4ONYSocsXlbOKoWruE6WGZBFS7TZG7WXtJCzhbm9fX894GsVukjAQs
- 782h7FI/88s8JcwOOuoNqj1BLwZHZ2zHuZ14fjZ+OpWA1GRruQ3VjzZqeHGOyMuait5cRv3zBQV
- g/h4aV4O0660EwBJVAsuy5+3NQGbE0XBkcU85zT2WNgj//8SRpb7Ya+sJh4qhD7bZmVovZVKZqV
- 7n8VfqUMimnOTljJg0kvdAVD0zbuWupz2ObjrnKazdccQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4063e950ceabd68a;
-	Fri, 28 Aug 2026 01:17:39 +0000
-X-Mizu-Trace-ID: 4063e950ceabd68a
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Klara Modin <klarasmodin@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	nbd@nbd.name,
-	lorenzo@kernel.org,
-	regressions@lists.linux.dev
-Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI SAR init during probe
-Date: Thu, 27 Aug 2026 18:17:37 -0700
-Message-ID: <20260828011737.22809-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <ao3dyqWJ3nf3rMMW@soda.int.kasm.eu>
-References: <20260825181712.28548-1-lucid_duck@justthetip.ca> <ao3dyqWJ3nf3rMMW@soda.int.kasm.eu>
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="Iq70BLgR"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67S3mSoC52132614, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787888909; bh=rdKE98tzsKeCIxsc+66+T4d4wU6y11l/aV6tTbmMC50=;
+	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=Iq70BLgRXhUqryC6DvPjKwptwyJApuGzfKztqjoeFY665vK1TFW6MqZZ1YyEZbaZ/
+	 IGOgjjvZhJPZMHUTXA02xI38th1obXMIIqGfoA3LC7vWrQKID9M6PLqPImQ2vWMalg
+	 /7uV6u57iDi08q3HOCfwlLBkuaph+KMNna2HVS1LA2ipJ70xzjEt5U3CuvMhrZTxAO
+	 jAstSQvBOJgsbI13K9dhw0d3WO4yuIp/bOYuKaxjHau/mkG9AuEkVitnTsazCvHzYA
+	 EQlf0gyL5aFnsaj3exLyyQ6rv83If2f9DsVIiDJdIGbDa5hRhsO6kJjM042o4p3UyW
+	 QRKK9gjgDmjvQ==
+Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67S3mSoC52132614
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 28 Aug 2026 11:48:29 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 28 Aug 2026 11:48:28 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Fri, 28 Aug 2026 11:48:28 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot)
+ with station power save
+Thread-Topic: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot)
+ with station power save
+Thread-Index: AQHdNXenhFnJjakLnk6yTA3qd/0xAray0ibw
+Date: Fri, 28 Aug 2026 03:48:28 +0000
+Message-ID: <8ca74ba7d3164357ab644f2ddd456758@realtek.com>
+References: <20260826162514.80580-1-abdurrahmankaradag19@gmail.com>
+In-Reply-To: <20260826162514.80580-1-abdurrahmankaradag19@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Thank you for the Tested-by, and for bisecting it in the first place. The
-report arrived with the commit named and a revert confirmed, which is most of
-the work already done.
+Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
+> Hardware:
+>   RTL8821CE [10ec:c821], subsystem AzureWave [1a3b:304a]
+>   PCIe root port Intel [8086:51be] (00:1c.6)
+>   ASUS Vivobook X1504ZA, firmware rtw8821c_fw.bin 24.11.0
+>   (feature word 0x7: SIG|LPS_C2H|LCLK, no TX_WAKE)
+>   Arch Linux, kernel 7.1.9 (also seen on 7.0.12).
 
-Something odd, since we are on the same laptop. Mine is a Framework 13 that
-shipped with an MT7922, and it has no MediaTek power tables at all. I checked
-every ACPI table on the machine rather than only the main one, and there is
-nothing there for any vendor. So your oops cannot fire here on the same model
-with the same card, which is why I had to inject tables to reproduce it.
+Is there are version it works well on your platform?
+I'm thinking bisect is a method to find cause.=20
 
-Which means the difference is somewhere in the firmware, and I can only see my
-side of it. Mine is an Intel 11th generation board on BIOS 3.17, dated October
-2022. What are you on? Whether these tables came with a later release or only
-ever appeared on certain boards decides whether anyone else is about to walk
-into this.
+>=20
+> Symptom:
+>   At some unpredictable point the connection wedges: traffic goes to 100%
+>   packet loss and STAYS there until a reboot. The interface still shows a=
+s
+>   associated (iwd/networkd report it connected, DHCP lease held), but not=
+hing
+>   passes - gateway ARP goes INCOMPLETE and stays that way. It does not
+>   gradually degrade or self-heal; it is a hard stop that only a reboot cl=
+ears.
+>   It tends to hit soon after boot / when joining a network rather than on=
+ a
+>   connection that has already been up for a long time.
 
-While you are in there, does your geo table carry 0xff in the unused slots?
-Someone turned up on the list yesterday with an ASUS padded that way, which
-the driver takes as roughly -1 dBm and clamps every rate down to it. Whether
-that is one vendor's habit or common changes what the right fix looks like.
+I'd reply this by the latter mail of yours.
 
-Devin
+>=20
+>   The one reliable workaround is disabling station power save:
+>       iw dev wlan0 set power_save off
+>   With power save off I have not hit the wedge; with it on it recurs. Thi=
+s is
+>   the strongest signal I have that the station-PS path is involved.
 
-On 2026-08-25 11:27:15 +0000, Klara Modin wrote:
-> On 2026-08-25 11:17:12 -0700, Devin Wittmayer wrote:
-> > Some laptops carry a MediaTek power table in their firmware, and the
-> > driver reads it to set a transmit limit for each frequency range. It
-> > only fills in the ranges themselves when it registers the device.
-> >
-> > The startup step that does this existed already, but it never programmed
-> > anything. These two commits made it run a regulatory update instead,
-> > which sets the limits on the way through, long before registration. So on
-> > a machine that has the table the driver reads through an empty pointer
-> > and the interface never appears:
-> >
-> >   BUG: kernel NULL pointer dereference, address: 0000000000000004
-> >   RIP: 0010:mt792x_init_acpi_sar_power
-> >   Call Trace:
-> >    mt7921_set_tx_sar_pwr
-> >    mt7921_mcu_regd_update
-> >    mt7921_regd_update
-> >    mt7921_run_firmware
-> >    mt7921e_mcu_init
-> >    mt7921_init_work
-> >
-> > Skip it when the ranges are missing. They are applied again once the
-> > device is up, which is where they came from before.
-> >
-> > Reported-by: Klara Modin <klarasmodin@gmail.com>
-> > Closes: https://lore.kernel.org/linux-wireless/aoyxqHYvSuaBeubf@soda.int.kasm.eu/
-> > Fixes: 9b80bd9cab40 ("wifi: mt76: mt7921: add regulatory wiphy self manager support")
-> > Fixes: e9f3f1cc133f ("wifi: mt76: mt7925: add regulatory wiphy self manager support")
-> > Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
-> > ---
-> >
-> > Reproduced on both chips before sending, an MT7922 and an MT7925, and the
-> > fix clears both. Neither machine here ships a vendor power table, so I
-> > supplied one through an ACPI override in the initrd. It also wants recent
-> > firmware. The June builds do not turn on self-managed regulatory and
-> > nothing happens; the builds now in linux-firmware do, and then it dies
-> > exactly as reported with no interface at all. Patched, both come up and
-> > scan normally, and the injected limits still show through in the power
-> > table afterwards, so the skip does not lose them.
-> >
-> > With that table still in place and the fix absent, backing out the mt7921
-> > commit on its own also boots clean, so the table is not what causes this.
-> >
->
-> Thanks for the quick fix!
->
-> Regards,
-> Tested-by: Klara Modin <klarasmodin@gmail.com>
->
-> >  drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> > index 946dd7956e4a..b468051fbe68 100644
-> > --- a/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> > +++ b/drivers/net/wireless/mediatek/mt76/mt792x_acpi_sar.c
-> > @@ -323,7 +323,8 @@ int mt792x_init_acpi_sar_power(struct mt792x_phy *phy, bool set_default)
-> >  	const struct cfg80211_sar_capa *capa = phy->mt76->hw->wiphy->sar_capa;
-> >  	int i;
-> >
-> > -	if (!phy->acpisar || !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
-> > +	if (!capa || !phy->acpisar ||
-> > +	    !((struct mt792x_acpi_sar *)phy->acpisar)->dyn)
-> >  		return 0;
-> >
-> >  	/* When ACPI SAR enabled in HW, we should apply rules for .frp
-> > --
-> > 2.55.0
-> >
+(Asked to disregard this.)
+
+>=20
+> What I ruled out (each tested on this machine):
+>   - rtw88_pci disable_aspm=3Dy      : no effect (the module param only ga=
+tes the
+>                                     device DBI 0x719 bit; it does not cal=
+l
+>                                     pci_disable_link_state, so host ASPM
+>                                     L1/L1ss stay on - link/l1* remain 1)
+>   - rtw88_core disable_lps_deep=3Dy : no effect (firmware deep-PS off)
+
+The full cold power-off boot includes above two settings, right?
+
+>   - full cold power-off boot      : no effect
+>   - suspend/resume                : NOT the trigger - connectivity recove=
+rs
+>                                     fine after resume in my tests
+>   - The correctable PCIe "Physical Layer / RxErr" this card logs is DECOU=
+PLED
+>     from the failure: I measured the link working perfectly both while Rx=
+Err is
+>     being logged and while it is absent. RxErr is not the cause.
+
+How did you measure the link? CAT-C?
+
+>=20
+> Reproduction (honest):
+>   I could not reproduce the wedge deterministically. Controlled tests all
+>   passed on the stock driver: steady-state idle (minutes), long idle with=
+ an
+>   off-device pinger sending to the sleeping STA, and disconnect/reconnect
+>   loops. So it is intermittent and tied to station PS being active, but I=
+ have
+>   not found the exact trigger - which is why the reliable handle is
+>   "power_save off makes it stop".
+>=20
+> Questions:
+>   - Is a hard wedge (RX/TX stops until reboot) with station power save a =
+known
+>     failure mode on 8821ce? Does the driver have any watchdog/recovery fo=
+r a
+>     firmware or RX-DMA stall on this chip, or does it rely on the firmwar=
+e?
+
+The latter mail of yours explain RX is fully intact.
+
+For RX path, if beacon gets loss, it will disconnect, so I think RX still w=
+orks
+for your case.
+
+>   - rtw_enter_lps_core() (ps.c) programs the same PS config for every chi=
+p
+>     (rlbm=3D1, smart_ps=3D2, awake_interval=3D1) with no chip-specific ov=
+erride.
+>     Given fw feature word 0x7 (no TX_WAKE) on 8821ce, could smart-PS mode=
+ 2
+>     be the problem, and would legacy PS-Poll (smart_ps=3D0) for
+>     RTW_CHIP_TYPE_8821C be worth trying?
+
+It looks like it still happened if you entirely turn off power save, so
+ignore this...
+
+
