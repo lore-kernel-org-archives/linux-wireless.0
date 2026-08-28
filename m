@@ -1,73 +1,81 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63B7B443A86
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 12:51:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9CA636E49B
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 15:02:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787921508; cv=none; b=BuJ7Rxvb74Teg0hIXyuMaPEJFuGT8TSEHetv7gJPMQAbuFiaRlhSenu7eeygQYnRVxRjnkq04PR0evOj99I+Odbhfyx5nOe8l928izzQYfLVhHMNKuQjgsYQq7vr42EFN45Z6Y75vOCJv5jT6uga5BdnTjVrFL9IZfkIZNxYRWU=
+	t=1787929366; cv=none; b=qtahFmw9AnAr+F/JRlTXAaNqsKNSw5Sf6E22A/mEvFAYtMDzwgzf8SkPYRnGU4Rk5AAsw0JF5rDyy+Xc6dTy44WQy68WBW7y58hfCxEcOPhjwReKCR3jGhBiaiIGGENb6Yt1uJVm8hbrw08dNzR+k7yTRoMeCLSRcP0pQ/rve3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787921508; c=relaxed/simple;
-	bh=8W98vqdVKfE7dp9cKK2tjyXef+7Iyvmb7AYrSCT3Hb8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Yz2y0WPScL2qGGJJPHTAUlJD7NvvPtlWssAqBgpVlTESNXrT3DTFwzn8grKG63fwIds6JQnzs/mIqjQZ8ObimySYMK5+7soYhsGTL7HC58ltqyjLQ58VzFubAIiWEdjxl302e40k0Q3tY0mTFns8+GCwTm6nL7OM4DwedWD27mQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ckKvR7DX; arc=none smtp.client-ip=209.85.128.54
+	s=arc-20240116; t=1787929366; c=relaxed/simple;
+	bh=3PzgDiqiy1oNIWRe2oB+sNV62Q+Jw0+EhuWagGqurb0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nSTfxBeepP6nO3aaVnPG+DOqoCJ9EcDjGwacoqOQ1YhvLUNP4zvvEH1ln+BDGOgCnB0qI0Q8pEq+YNbCogIAhd+EOylrPV/EJB2E7wOUneW6Fibi1nv/r0vXBlYkZihJOHLorGkaFQZRhx7LI/Uz7nlnArowIMSuAi8BUwHMilE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DC9l9AWh; arc=none smtp.client-ip=209.85.216.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ckKvR7DX"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-49b9320423cso7674155e9.0
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 05:51:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DC9l9AWh"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-39686abd426so1088706a91.1
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 08:02:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787921503; x=1788526303; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=GKgfeLMqAUg8eslRWTps4qHRasu8nODkMvH1yUxPj3A=;
-        b=ckKvR7DXrS26ieG83xE2+fBatWBJMYMMadVTvMqPZ3bjBLH+G0f+fkxgJ2jaZdlOhG
-         KgeOnUuaJJGsesc3JvknT99ZpO7d//ggUQzpapUh7rdPBGNzhKoIlqBhpK38SjvDUqH6
-         q5AOrqLQXiOO2UXeB67w8dGSjV7m1AXKTV1CFV4dCt9SwsglvKQuiRWYPhGrv3xO9pOf
-         cSWVfCLd8n5nUdmOd6PX84epoWHeRQmADycQld9P3ItAI1jnHCOmkrvhtHM8GhU2FTe0
-         0tFRhq6+ixGRBwrv/lm25vjCeU1Z1DkM7aVmX0T3ZItsyiC1miBKP+liainhndurcgI+
-         mfqQ==
+        d=gmail.com; s=20251104; t=1787929364; x=1788534164; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=NOOUEhwDmB12LFQNSiGGCOAzSpgGLKnq2vsZHwr0Wgg=;
+        b=DC9l9AWh2tEERohee0xTeMTX1jaMWPyFSqqJrgyAi+O+9AomXM4stMgrZu9EpZ0CO8
+         VTzj7daDu4fZlkKT9QaSHlMk1GV8SFKrWMGlom+Meh9c8LNZiLCwTO//We/bpQtRTuZg
+         QbCS3SoGX53dVqjo9abU/wkJL6qIIWVfLLLu40tru+akgdd+HW74MBiMyR/5R3if9LCN
+         FUJeJNrQdUsCpW6gKcx3NBnkAESilUo+L6w83OTj/KokRL4vq4iOJ3sRjlD+/UPeJgxw
+         6O7h2gRCxZkAHjax096yG5UQFrO95Oh1PPhqfwIHJR6KJvDPZbvyYVCHZ9BN35vDI2XZ
+         OkRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787921503; x=1788526303;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=GKgfeLMqAUg8eslRWTps4qHRasu8nODkMvH1yUxPj3A=;
-        b=aNi9A3KbC8RDQoT+7uw6HmnatYliNo6jGGU/X9Rz4qXfkDvS6OUMV69wJfqB0Raa+E
-         3NrABo6ibuUjRfVTE2xI3xj/ny2SZQbA5l7T4Emdzj/jhfKn6lMYhuS2SyJA1UG5Dehl
-         P2w5RgyOpvGk8StXj2K/noW45zNNTaLcyUxR6VhWgIbSnU/RRe7sUp7fZMugw59JGa1v
-         t1Uho3ZGL8eKheL88lE192g/h6807xFiBwD88KsjpuQvMylmmWhZR5X5FUTXouTSJ6yc
-         lFh+HkJv4le1NR8pkWUGOkz7J2A5TEEHwm2tO3EESrG3QE95d/B3dnmX6UxH1ZHVeNqM
-         8QbQ==
-X-Gm-Message-State: AFuF++kipjOdvTbwIF9JqJ157WrVbJQdUwHhGXAmjFrTx9mTCta3ay01
-	2A8w8gIdjndTdEojW4lneSSkchACB3oV5D3obbMaAwFm+DXuDfEvLnDyjVFLMDan
-X-Gm-Gg: AR+sD12A8CvAiGasaiLGb40If2r6TYTrMrNuZYrdYfudChsq53k0HHb1DCI+2PwgMi7
-	V5eoNKr23V0zt4cspg3JLjJIg5K1MzYJ9l5TUHupRzL41J5y87Wd8/nKUUG3IbZ/9WosXCXhrKk
-	yQnnd7OFywZCHK4eoDoDnM4DXwPm1XySFRG/hsNjst39JgNEkZifDAj+oXjHMQUEkhc1f7gjKGg
-	UaFihp9DDQgALItJDFqH2+I+V9OPgXuSJeIv5cSrjV+zzA18Q7dbrmfFhv+cTr/10aGeZw6Qo1R
-	TWJD5LIpiI05H/3zLwYQOEu6aSX2dDePRyv9/1bSpcWxVKRzIPQ2kDMdkKcsFSva70j2j1x165M
-	bd+l/cQGoFmEH7CUVPPh/3H4JnRKUYH+W7YIbN/IRJqxY5uHw3X/TpZBjp+aqGAKU934SxSMZz3
-	QrdYgMybQMrtNeaXVwKxn2v90wtnopxshKJvl6EASPY9vbozTFIUUUHM0XJrWoZORCGipGSflYx
-	mOEvE7dT+MU0j50Uom2a1tCYSFe9DQS1Sjdav6MO+aDRi3WOWJPOGOmAhubNozwy5+bNWCvC/VL
-	4Zm5yyo=
-X-Received: by 2002:a05:600c:19ca:b0:495:52a5:8829 with SMTP id 5b1f17b1804b1-49b91c47b3dmr95701575e9.11.1787921502954;
-        Fri, 28 Aug 2026 05:51:42 -0700 (PDT)
-Received: from omarchy ([85.105.43.40])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49b497fa9c5sm124804525e9.4.2026.08.28.05.51.41
+        d=1e100.net; s=20251104; t=1787929364; x=1788534164;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=NOOUEhwDmB12LFQNSiGGCOAzSpgGLKnq2vsZHwr0Wgg=;
+        b=CoB3Ocs0ZdPBRARIBerrnunqrYupRjFrABxMzvkSQGf8SSTwmmqcxhl/P7LIyHQJM4
+         +kRUYl2EkkExxA3FXLpBUnE1xrfqmakEBuxMDuVDQpKfNkBFZ+fQEsOj9Sn5Vg5UDmNt
+         RwesmObQMwkZb4vOQGIcJRHbr5Aj6hXJhhc//nXnVxhXfa/0U0O14Wcq6qGsILh5fa3r
+         WmhTPT36qZI/q3pu0dQZBCF8Kf141ESg7he6zlFaDC4eH4s5dxlOncUtOzKJtpl/N4A3
+         Hv5vgqOlv8l4xBmylgQ/Q1QpXiYsNr/d1u8r6vd05KiEISfjVYdiK4CWnz76MrPLyufz
+         hmtg==
+X-Forwarded-Encrypted: i=1; AHgh+RpinlknVRoGD58OzNMkqd1zrn3tZD1b3lNO1OhRKq+yI3LftEwydRfHmdmWRgULpY/AUA2GHsASZF7YIftHQg==@vger.kernel.org
+X-Gm-Message-State: AFuF++mVqLBleYO7OGnwfvWaUU6O7GIxIgVefKH7d+Hgfo8apI4YSgzq
+	Xn3ZteZ1gRLyAIBzNIWKBx52AWaYEyF5xAS/XnKMOGeZtfLK0PbAFwnL
+X-Gm-Gg: AR+sD11Bt26okvkBlHeoSyffUN4+KJ7H5qfq+T4UNJOnPLcdQivlO5z0bLjpCod1O6A
+	k8RpkJwp1xRPOL9GaKqBj1KCBPUhDHGfixaBE0qUZxbYaB0SLqCpMziI8erU44KjSN4+ssxJrhN
+	Qmh1V3sOZT46S3RlUB4htJlLU+3VTt6sqUz3LWXl+eDiVtesvAUDZ+sKSIzA+1JaR8I2qrC670e
+	cP8zpCbplmAu5pfHrp+TWf/AWbbUSUYsZuKzatLilCQ0ClELPnxuCkHN0cRoFXY0RNE9+uBTnTW
+	uO2rBtAca4jhiI/OV13Dwzvrcdu+BkSD1FRuub3bkognpe5+4Af4+d7/NRo9J1POU1TbOssD248
+	t4WXkeuB9amsCXXbJVmrAot4xUEfqSxp4k0atYsxu4APM63ugpUgu7SMHRMG5X2T5a9Y/51Z9gy
+	ePkZRIOzUzfKLms+K1VNK0gpVAKk+e/k0e2T3+6e3uWWg+BFFVR9OaeaTrbimrmIJGIce2Ts92m
+	7QRMkmYAA==
+X-Received: by 2002:a17:90b:5188:b0:396:5fce:8e24 with SMTP id 98e67ed59e1d1-396d0ea530emr17557004a91.4.1787929360339;
+        Fri, 28 Aug 2026 08:02:40 -0700 (PDT)
+Received: from cfarm424.jing.rocks (cfarm424.jing.rocks. [2600:3c18:e002:2e11::c424])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396db196903sm2911068a91.0.2026.08.28.08.02.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2026 05:51:42 -0700 (PDT)
-From: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: pkshih@realtek.com
-Subject: Re: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot) with station power save
-Date: Fri, 28 Aug 2026 06:37:46 +0300
-Message-ID: <20260828033746.23039-1-abdurrahmankaradag19@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <51079deb603845768db7cbe491f40e3c@realtek.com>
-References: <51079deb603845768db7cbe491f40e3c@realtek.com>
+        Fri, 28 Aug 2026 08:02:39 -0700 (PDT)
+From: Ridham Khurana <khurana.ridham222@gmail.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Ridham Khurana <khurana.ridham222@gmail.com>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Shuah Khan <shuah@kernel.org>,
+	Jori Koolstra <jkoolstra@xs4all.nl>,
+	Brigham Campbell <me@brighamcampbell.com>,
+	linux-kernel-mentees@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH] wifi: mt76: mt7915: validate default EEPROM firmware size
+Date: Fri, 28 Aug 2026 15:02:22 +0000
+Message-ID: <20260828150227.1062217-1-khurana.ridham222@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,103 +84,44 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-> Is there are version it works well on your platform?
-> I'm thinking bisect is a method to find cause.
+mt7915_eeprom_load_default() checks that the default EEPROM firmware was
+loaded, but not how big it is. It then copies mt7915_eeprom_size() bytes
+out of it, which is 3584 on MT7915 and 4096 on MT7916.
 
-Yes - and I have to correct my first mail, which said "also seen on
-7.0.12". Going back through the system journal and pacman log:
+If the file is smaller than that, the copy reads past the end of the
+firmware buffer. The extra bytes are whatever happens to follow it in
+memory, and they end up in the EEPROM buffer that is later used for band
+configuration, chainmask and TX power.
 
-  - 7.0.12 (Arch) ran on this laptop from 2026-06-16 to 2026-08-23. The
-    14 boots the journal holds from that period show no wedge episode
-    (defined as: DHCP lease acquired, then the gateway unreachable / DNS
-    failing continuously until reboot). The few candidates are either
-    sessions caught in the separate 63 s regulatory reconnect loop, or
-    sporadic DNS timeouts spread over hours-long otherwise-working
-    sessions (14-27 timeouts in 0.8-3.5 h), plus one 176 s blip - none is
-    the 100%-loss-until-reboot pattern.
-  - On 2026-08-23 18:41 pacman upgraded linux 7.0.12 -> 7.1.9 (in the same
-    transaction: linux-firmware-realtek 20260519 -> 20260810, whose
-    rtw8821c_fw.bin is byte-identical by sha256, and systemd 260.2 ->
-    261.2 a few minutes earlier).
-  - The first boot on 7.1.9 (2026-08-23 23:37) logged 12 wedge episodes,
-    and it has recurred on most days since.
+Check the size before copying, the same way
+mt7996_eeprom_check_or_use_default() already does.
 
-So for a bisect: good = 7.0.12, bad = 7.1.9 (with the caveat that
-systemd changed in the same upgrade; I don't think networkd can explain
-a per-AC L2 TX failure, but I mention it for completeness). I still have
-the 7.0.12 package and can confirm by running it again for a few days,
-and I'm happy to bisect the rtw88/mac80211 range between the two if you
-think that's the right next step. (Under Windows the same laptop has
-never shown this.)
+Fixes: bbc1d4154ec1 ("mt76: mt7915: add default calibrated data support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ridham Khurana <khurana.ridham222@gmail.com>
+---
+Based on next-20260828; applies cleanly to v7.2.
 
-> The full cold power-off boot includes above two settings, right?
+ drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Yes. /etc/modprobe.d had "options rtw88_pci disable_aspm=y" and
-"options rtw88_core disable_lps_deep=y", initramfs rebuilt, full power
-off, and after boot both parameters read Y in /sys/module/. The wedge
-still happened on that boot.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+index fe7b29ebc0bf..145d14a1012d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/eeprom.c
+@@ -111,6 +111,12 @@ mt7915_eeprom_load_default(struct mt7915_dev *dev)
+ 		goto out;
+ 	}
+ 
++	if (fw->size < mt7915_eeprom_size(dev)) {
++		dev_err(dev->mt76.dev, "Invalid default bin size\n");
++		ret = -EINVAL;
++		goto out;
++	}
++
+ 	memcpy(eeprom, fw->data, mt7915_eeprom_size(dev));
+ 	dev->flash_mode = true;
+ 
+-- 
+2.47.3
 
-> How did you measure the link? CAT-C?
-
-Nothing special: 30-second windows of ping to the gateway plus
-"ip neigh" state and "iw dev wlan0 station dump" counters, while
-recording the delta of /sys/bus/pci/devices/0000:02:00.0/aer_dev_correctable
-and counting RxErr lines in the kernel log for the same window. Examples:
-one window had 0% loss with 6 new RxErr; another had 0% loss with 0
-RxErr; over that boot 329 RxErr accumulated while the link was fine. And
-the wedge itself occurred in a window with almost no RxErr. So I could
-not find any correlation in either direction.
-
-> Can you setup another WiFi as monitor mode to capture 802.11 packets?
-> Use another WiFi monitor to see if RTL8821CE actually transmitted the packets.
-
-Yes, I will. I need a second adapter for that; I'll do it on a 2.4 GHz
-20 MHz network so a simple monitor-mode dongle is enough, and filter on
-the laptop's TA/RA. I'll report whether the ARP/BE frames appear on the
-air at all, and if they do, whether the AP ACKs them.
-
-> I'm not sure why the size can affect the result. Normally large size
-> is harder to transmit basically though.
-
-You are right, and I withdraw the size theory. Re-examining the same
-capture by 802.11 access category instead of size explains every frame
-with no exceptions:
-
-  - every laptop TX frame that provably reached the AP carries IP DSCP
-    0xc0 (CS6 -> UP 6 -> AC_VO): the DHCP DISCOVER/REQUEST frames
-    (systemd-networkd's DHCP client marks them CS6) and IGMPv3 reports;
-  - every laptop TX frame that provably never arrived is AC_BE:
-    89 ARP requests (no IP header -> BE), 13 unicast ARP replies,
-    83 DNS queries (0 answers), 2 TCP SYNs (no SYN-ACK), mDNS/LLMNR;
-  - sizes overlap the wrong way for a size theory: BE frames of 42-201 B
-    all fail, VO frames of 54-345 B all pass.
-
-So the wedge looks like "AC_BE TX dead, AC_VO TX alive", RX intact, and
-it persists across disconnect/reconnect and across AP changes (so not
-per-association state), cleared only by a reboot. It happened with
-power save fully off.
-
-As far as I can tell from reading the driver, BE and VO take different
-paths (separate PCIe TX rings per AC, and on 8821C BE/BK on the LOW
-TX-FIFO queue vs VO/VI on NORMAL), so a per-AC stall - e.g. the BE ring's
-mac80211 queue left stopped, or the LOW queue paused/page-starved - would
-match what I see (BE frames silently aged out, VO flowing, no driver
-message). Does that sound plausible to you, or is there a more likely
-place for a per-AC TX stall on this chip? The monitor-mode capture
-should at least show whether BE frames reach the air at all.
-
-When it wedges, besides the air capture, I plan to dump before rebooting:
-/sys/kernel/debug/ieee80211/phy0/queues (per-hw-queue stop reasons),
-stations/<ap>/aqm (per-TID backlog), and via rtw88 debugfs read_reg:
-REG_TXPAUSE (0x522), REG_TXDMA_STATUS (0x210), REG_FIFOPAGE_INFO_2/3
-(0x234/0x238) and the BE/VO TXBD indices (0x3A8/0x3A0), compared with a
-healthy baseline. If there are better registers or a debugfs page for
-the BE ring / LOW queue state on 8821C, please tell me and I'll dump
-those instead.
-
-> Please fully turn off power save when you do the tests to reduce one
-> factor that can possibly cause TX slowly or stuck.
-
-Will do - power save stays off for all further tests.
-
-Thanks a lot for looking at this.
