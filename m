@@ -1,124 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39CAE349CD2;
-	Thu, 27 Aug 2026 21:32:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9663F3033DE
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 00:42:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787866370; cv=none; b=QKiOv9eMUefLjXnnU/mM4bCe6geeg01ocsg7h9rPClta8+WqCEpzP6QjwsGMYqGBq3wEk9V3VVJkwUV6ZMZQgqJR9JrwHGuZwrK6Ajx02OXd9UOyfVNPZWG4KU+hUJ2NlthQuO3hu0nfY5UIbM8g8kt+M0g+glee27djCe7ZxG8=
+	t=1787877744; cv=none; b=ll8wnFCUr2vfJn2CelANkFyJ4NfGGyjFHp6QdBHkOiy5w+TRiWojzHCCU9Qn2H+GLBtFjJlm36SsVUVOMPf/HNWm+jiXE+BwWUpaLhxthdCBURw3H6W/JY5eFtTr21akt1/eQWrJq4uHKwTJMWAYWYaPbwgEAJJ1eE+nUxhqY08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787866370; c=relaxed/simple;
-	bh=Nr0Cy+uBT0Flm2v7WVmkxQoA9wjhO9C0Wl0ja0+g8yg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DA/5jfYwUxJ8jbOCJfopQShVCzzC+0UBbLO1FxoTx+2pRaxeMhmBt2H/kQXtYDVqh5seyGLfiL60T1cWO2Mezhd1FDnF3nZTxCk92aOo2kdmCgAtcnWouqw5L1RF6IQASUX4QNX3VA3Ybn74rq8bnczDefn9yFq0wL6ue846BkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=edygtnii; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1787877744; c=relaxed/simple;
+	bh=X4JAAI9nzyl96hq6dC1vq4fo3jafSSI6R9EKqTCxPbQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=tcxcCXdrBI7QZEYHTjbb3TbsinpSyN0ExBgAtWINY7YvTFjGuU6cPH4bKzKC1s38fPdHbT70hYF2aW13bSIMF8c+NXsQViREKGNS2MMrqgSpX76Aao9yz55JT0eE9IFoNL+FOuZ9GWFnEiXYWsJw/XRlEKlKmCpzpDoie7CsspE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=YJTFu14n; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="edygtnii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46ACC1F000E9;
-	Thu, 27 Aug 2026 21:32:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787866368;
-	bh=LkJBPyUwA+hyO/JesG4AiAf3V7aNlVVXoW+RmWZs2F4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=edygtnii9K6HXbSrjcTddfpEsrJ3lPRpekgDoU9c+ejrv97vEuWw7hayd6mX76tse
-	 RpsRg76wTwrW04lUOZ+4xjGfSXEJRWsNvttoa1AGgmgIHtbRkhxuwwjNABf2fVOeU2
-	 ORI9eBfeEDmAxX3CF24bt3lnEpidjRD1wbuYOGjwn0/N7DWCY/VsAHoDcBJvTRr14p
-	 LEiBb4OgbOtb3p/Kjg3+v/h3yxq1NRXnYgU28jWWgzIjMoSDAUyVLCB8VqDPAfYNo9
-	 K4sY0ejVdaNvY+nnRuurlKdNDejPCqmFSvVGP+v9WYCQg9+7W4+Cw6Sn7gYpsGfTnI
-	 60UomytggBGeA==
-Message-ID: <164b4f99-a642-4c88-8ff9-78930264d093@kernel.org>
-Date: Thu, 27 Aug 2026 23:32:37 +0200
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="YJTFu14n"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67S0g28k92025889, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1787877722; bh=95n6xohoBtCyCj7PGIYNd63jCXR4zV42/4QiaYW6auY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=YJTFu14nEV2GfopKcbfEP9YBPqWH0yoV5SVhRc07F0tkeizWdXqPDx+JDt7i1MmB9
+	 TizNADOxISto5bfoNSyzckQaQYhRT/JICvmVnLZxx5VYDHTJ5uGIBrJoMfgpUfTJP/
+	 7ZSPdvLfmzxaSfsBKdYiQKJmAR5n8OdBbKsjKRgfvPEM6Ixw8K2RNMwPJaauHBDWA8
+	 wpiqWrC+Z8VLzRod+rV/1uvJ49olJYpKPBEPeYC+PH7Y8cCnwV5J4XgiHSCDHRdvzZ
+	 UgBjLCFDZRuZ5ostJLgfGBHbMcNmzfKdM7oHKdodfmHboJ65ff0VuPXVRXkZ4BhjWR
+	 /eVUhHeas1jOw==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67S0g28k92025889
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 28 Aug 2026 08:42:02 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Fri, 28 Aug 2026 08:42:02 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Fri, 28 Aug 2026 08:42:02 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"kvalo@kernel.org" <kvalo@kernel.org>, "briannorris@chromium.org"
+	<briannorris@chromium.org>
+Subject: RE: [PATCH v2 wireless] wifi: rtw88: debugfs: don't vzalloc(0) when
+ rsvd_page is read unconfigured
+Thread-Topic: [PATCH v2 wireless] wifi: rtw88: debugfs: don't vzalloc(0) when
+ rsvd_page is read unconfigured
+Thread-Index: AQHdNiXQ2DSQRW3iuUeeies1MedeQrayn1VA
+Date: Fri, 28 Aug 2026 00:42:02 +0000
+Message-ID: <bd7176af6556460882d032f7da593d6f@realtek.com>
+References: <20260827124837.14370-1-abdurrahmankaradag19@gmail.com>
+ <20260827131244.35623-1-abdurrahmankaradag19@gmail.com>
+In-Reply-To: <20260827131244.35623-1-abdurrahmankaradag19@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 2/3] wifi: mwifiex: add dt flag to avoid conflict with
- platform reg domain
-To: George Valkov <gvalkov@gmail.com>
-Cc: briannorris@chromium.org, johannes@sipsolutions.net, andrew@lunn.ch,
- krzk+dt@kernel.org, francesco@dolcini.it, johannes.berg@intel.com,
- kees@kernel.org, miriam.rachel.korenblit@intel.com, rongqianfeng@vivo.com,
- wenst@chromium.org, rafael.beims@toradex.com, avraham.stern@intel.com,
- error27@gmail.com, s.kerkmann@pengutronix.de, gregory.clement@bootlin.com,
- sebastian.hesselbarth@gmail.com, robh@kernel.org, conor+dt@kernel.org,
- Frank.Li@nxp.com, chunfan.chen@gmail.com, arend.vanspriel@broadcom.com,
- peddolla.reddy@oss.qualcomm.com, linux-arm-kernel@lists.infradead.org,
- linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org, stable@vger.kernel.org
-References: <20260827130335.6606-1-gvalkov@gmail.com>
- <20260827130335.6606-2-gvalkov@gmail.com>
- <fbde1932-5433-48e8-b352-bf27eb545149@kernel.org>
- <CADOrJmY5jZvn8zEu-jCntGChXSY9wRd3bsOy1GB0EWNTY9GK6Q@mail.gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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
-In-Reply-To: <CADOrJmY5jZvn8zEu-jCntGChXSY9wRd3bsOy1GB0EWNTY9GK6Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 27/08/2026 19:27, George Valkov wrote:
-> On Thu, 27 Aug 2026 at 18:33, Krzysztof Kozlowski <krzk@kernel.org> wrote:
->>> [1] https://github.com/kaloz/mwlwifi/issues/173#issuecomment-307879699
->>> [2] https://github.com/openwrt/openwrt/issues/9956
->>>
->>> Tested-on: WRT3200ACM, OpenWrt
->>
->> OK, so this comment from v6 was not about binding, but this is still
->> wrong - there is no such tag. Just make it a standard sentence.
->>
->> Do not introduce OpenWRT rules in to the upstream kernel.
-> 
-> Dropped the invalid tag. I hope this is suitable:
-> The change has been tested on OpenWrt and fixes the issue where
-> phy0 does not start on WRT3200ACM-EU when a DFS channel is used
-> 
+Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
+> Reading the rsvd_page debugfs entry before writing a page offset and
+> count to it calls vzalloc() with a size of zero, because
+> rsvd_page.page_num defaults to 0.  vmalloc warns about this:
+>=20
+>   WARNING: mm/vmalloc.c:4019 at __vmalloc_node_range_noprof+0x9ac/0xa30
+>   ...
+>   Call Trace:
+>    __vmalloc_node_noprof+0x4c/0x70
+>    rtw_debugfs_get_rsvd_page+0x4c/0x110 [rtw88_core]
+>    seq_read_iter+0x132/0x4b0
+>    seq_read+0x12e/0x1c0
+>    full_proxy_read+0x6f/0xc0
+>    vfs_read+0xdd/0x490
+>=20
+> rtw_fw_dump_fifo() would reject the zero size anyway, but only after
+> the allocation.  Check for a zero buffer size first and print a short
+> usage hint instead of allocating.
+>=20
+> Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+> Signed-off-by: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>
 
-Thanks.
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 
-Best regards,
-Krzysztof
+> ---
+> v2: no code change. Add the wireless target tree to the subject and Cc
+>     the maintainers/blamed authors that v1 missed.
+
+Actually, target tree of Realtek Wifi driver should be rtw-next or rtw.=20
+
+[1] https://github.com/pkshih/rtw.git rtw-next
+
+
