@@ -1,115 +1,95 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+Received: from mta1.migadu.com (out-77.mta1.migadu.com [95.215.58.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC7B53806B0
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 16:14:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABD2F34CFC5
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 17:18:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.77
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787933696; cv=none; b=ianRrK2EmEO25cimgrWwCQi0m4yVAejRxzTuJ47qI2FpqjSgbhrdjpnVqRVnmQYfn6/EakKziqbzcIIwTNHlAQqtD9FSDUAOs8QW2GboHNyXNLfgImzhif2Pg+J5y2jY2FBTBT0fnMqtUdxQiNtinM39PFjPIdfzXWqHrK778AY=
+	t=1787937536; cv=none; b=AlPzPAkMnTc0cmF7/Qt+WSzrojn0Hp82qTBb1Dd+UoR5RSmcuOctSF3WJfYQ+uyKKRaeJdQy6sOt6UyC9Ut0CipEMeDL3p+zaJ3nk9Qg8z1aFznXi8gE9YDxT0SNRLRyuOJ5jGuyFkzqX6WnwpgdvJPeREVo9HJbro4E3CjZEoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787933696; c=relaxed/simple;
-	bh=d9mdZdI8mE+Rq+cniY8y+BlJXYiRYQNFyxTIXRZPaHk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pz61dw7tcz+SzufnV4mEgfq2AhZYpXIwW1btgi71UR1bHH2XCWacFZGU0rXPsJlxAveTtBb7ewC3rxxE081IuEFi6lhyivbekGiw6SvYJhlfme1qkNz3wVTm5rF8sUZHfNSa9BVu/m2V0UnJT0rb6ZjhVOuBWF8Y6OI5Cx6VhEU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FnOQJ0YU; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787937536; c=relaxed/simple;
+	bh=JSBFu5mtYAAxSf1z/Sc5HZpi1iqCxqQNp9ErZEemACM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=u1VDHBdATdYBmL9loZtpT/wx8xvEvAHRAF6oinQ2NV5yfimd09oUAY8P2OQip6z0RAdrfqvfkkNRNdNkbh0EBw2NcZVTnLc/r38Z3wkFS+TVrUREO7ydDoKKXLm7xUKwNoitd6ULQJS5X5nzHLzVYy+aHtFREO0rEqcUFw4vv3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=KKmmhBM6; arc=none smtp.client-ip=95.215.58.77
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FnOQJ0YU"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-6a5f968ada7so2364571a12.0
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 09:14:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787933693; x=1788538493; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=ga8LNRiX5i3NUDso3oFwMVOMM4tp2kZF02NR17rC2nY=;
-        b=FnOQJ0YU82Q5xX6Cii+PHJGBnkCyvv9V+tzS4W0miQ7Ty7y5KDVgyCVL/HWUWKFa8H
-         nsVWpRssu0w6TPpaRPKSPFMoky5kbNxm/r9VLbRWFVkNw36FiALqXFWrh+I4bTwC2G45
-         4Vt3dqZH3W5tDuWJ+cE2sdeTd/No8hvurovZn8fMHqXrmkFwtFqiR5F7Nb+gGifx6Dvu
-         A85gYbTfxIzfModvU8hM64UaFoJp/6xxa4jdFI+0ByFu44C34n5bxrdsh+JQliLJxcwO
-         6JIOD3+DoArsEkSB0p/9XunGlXJnjYR+6Z5956amLSlSJtjkg+IJdsYTrvtfBA97I1nq
-         a7uA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787933693; x=1788538493;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ga8LNRiX5i3NUDso3oFwMVOMM4tp2kZF02NR17rC2nY=;
-        b=aXVo0Rrnr/a26Og2T3GGqRcm/paqzGVYsaj0pUOuk6yi6MuJWFWlGc6FncjC3ae4hw
-         WogLF9O+Nk2GyeHmggud4K+H4fnUhALVzL6isYcZ5Lq+sgKjU2VkgjDX9ZxGqKMsUHON
-         U/r+n+tocK0kmiF2XEjyECPnhOkiSYy0iN/d0KoRHP9o98eAKT8YdRriV0oPK/5+6hTO
-         1ej/YYKnP8jegya37fJxDBEMIplCm9hZrc4/O3d2B7a1Z7rskgeJ7uliSGLO25MGQSKK
-         OYoXyHHaGQnu4j1bqjyOCQSjZmCSA8dlBv485AAS174qJWl1Sq7O03WTvJCopBANgddf
-         m1KQ==
-X-Forwarded-Encrypted: i=1; AHgh+RrP7jXjV7gA5BPALdQD4EbjEf4tc5EhNm6KKekPEYORfpXtTeLrFAKffDx1e2lRD0GN/s/Jiwt4bTtFjPQi/g==@vger.kernel.org
-X-Gm-Message-State: AFuF++nMUvNYFMCgpHjFvlBb9uWk46TVMKvA0sMYe/CPoixePTUsflzt
-	P7vQiI0XeUqEb5KsZiYgsmQ1VuT3Pzfn5UmlebsHoBHtJVX806yShsA=
-X-Gm-Gg: AR+sD11YGjaOvalf/ymSfeXBGUKKBxK+tsGnuh/MUU+Mi1QGJwVDqQA0sjcm7G72LhM
-	CjIqTmuSRulZFp5XUE8QQMB/mgBFvjDvejFPqdoruzejhfSXIaOfwfEccIS78eGqAnfSTwE3Olf
-	cLm/9bDtSAfGG/A4KuC/xsimDIUIJ+QJyenCrk+/JRv1exZId/DpO6WKhrKzv4cI9TfQ6BKOIDy
-	unRJHV4YbEECZrxESNX/Ne2O51mtIrFqLIgqtrVncDg6woRG1neR1nqb3mHhkxzBCZhBxw2QVt0
-	Xqk8c5hf/OLVS52ofKagU6NuIVVVc28EdprGGl8vNalRVNV/dV32r/4GTey8QYu8i2XVnWOspie
-	PeoDqAyJEs8UM8JCn1XTQztwBEOh7XMYuG1zkuJx8i+nfN9Y+qj7RRwp8NKvLlm9j9RE6hUzVC5
-	Omy/K5HDi6F6iQqQyZ3/ramZvl0+gpoAI67AI/fL90/BmLb5G4VjaqhapFYl4ZEl6tpDqGQpyL7
-	4TFZbHx4QnS1QICUd4zMcL01MDBlfEOsrz5ubgNK2ugePP/SHi/JFAiNS0cHx0JEzr4sX6hNnu1
-	4W5R
-X-Received: by 2002:a05:6402:c285:b0:6a5:c47e:8d6d with SMTP id 4fb4d7f45d1cf-6a5f4fef749mr7587362a12.9.1787933692579;
-        Fri, 28 Aug 2026 09:14:52 -0700 (PDT)
-Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6a611b5c572sm667210a12.4.2026.08.28.09.14.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2026 09:14:51 -0700 (PDT)
-Sender: N B <gen.benner@gmail.com>
-From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@kernel.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: ath9k_htc: fix the byte count of a full RMW buffer flush
-Date: Fri, 28 Aug 2026 19:14:07 +0300
-Message-ID: <20260828161407.1030798-1-nerijus.bendziunas@gmail.com>
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="KKmmhBM6"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=JSBFu5mtYAAxSf1z/Sc5HZpi1iqCxqQNp9ErZEemACM=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1787937531; v=1; x=1788542331;
+ b=KKmmhBM68x9yX1z07xOBrJk7YoG6eEoRl07hBiBVXSeVTOslr21mNeBO77Bb3mX2w8hPjKFU
+ l+/BSQVLmz7cjNYc18NAh8frF8MJ9NdQV5aFtF73nBJLMO9fWB/yMFhekKafa58Ly+eYv0ZGUN2
+ E89bI+wbgj2SRuJQl3w8VIK3fF/eRkw2iHtvAL2s5wfIjbwB2zmzYabW8RR/t3OST6k1Jb5bjLe
+ cX/MrtsVfAlZNzDm3avsJuE0zYhtir/1gflBr5iF5t/mWQ5/AqdnI7xkGafptVMvSwUpmBJSBK2
+ r/w12R1CgzvYRQO8aDWMQijZl+DsjCkDccGydAOW5wA+w==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 3182c772a689ec26;
+	Fri, 28 Aug 2026 17:18:41 +0000
+X-Mizu-Trace-ID: 3182c772a689ec26
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Klara Modin <klarasmodin@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	nbd@nbd.name,
+	lorenzo@kernel.org,
+	regressions@lists.linux.dev
+Subject: Re: [PATCH wireless] wifi: mt76: mt792x: fix NULL dereference in ACPI SAR init during probe
+Date: Fri, 28 Aug 2026 10:18:38 -0700
+Message-ID: <20260828171838.22038-1-lucid_duck@justthetip.ca>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <apGWXuPOSqZJ_ShO@parmesan.int.kasm.eu>
+References: <20260825181712.28548-1-lucid_duck@justthetip.ca> <ao3dyqWJ3nf3rMMW@soda.int.kasm.eu> <20260828011737.22809-1-lucid_duck@justthetip.ca> <apGWXuPOSqZJ_ShO@parmesan.int.kasm.eu>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-ath9k_reg_rmw_buffer() sizes the WMI command with struct register_write
-when it sends a buffer that has filled up, but the buffer holds struct
-register_rmw entries, which are 12 bytes rather than 8. The firmware is
-handed 120 bytes instead of 180 and applies only the first ten of the
-fifteen queued read-modify-writes, silently dropping the rest.
-ath9k_reg_rmw_flush() right below it already uses the correct type.
+On 2026-08-28 15:27:10 +0000, Klara Modin wrote:
+> Wouldn't the Intel 11th generation have come with the Intel AX201 or
+> AX210 originally?
 
-No caller is known to queue the full fifteen entries today, the closest
-being ath9k_hw_4k_set_gain() at fourteen, so this is a latent bug rather
-than an observed failure.
+It would, and thanks for the correction. This board's firmware carries
+Intel's wireless power methods and none of MediaTek's four. I put an
+MT7927 in it recently and the MediaTek ones did not appear, so they do
+not come with the card.
 
-Fixes: 8badb50cfab6 ("ath9k_htc: add new WMI_REG_RMW_CMDID command")
-Cc: stable@vger.kernel.org
-Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> I don't think so (if this is the MTGS table above?), but I don't really
+> know how to parse the table contents.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 6de78ae85726..0b49d2cc99f0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -405,7 +405,7 @@ static void ath9k_reg_rmw_buffer(void *hw_priv,
- 	if (priv->wmi->multi_rmw_idx == MAX_RMW_CMD_NUMBER) {
- 		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
- 			  (u8 *) &priv->wmi->multi_rmw,
--			  sizeof(struct register_write) * priv->wmi->multi_rmw_idx,
-+			  sizeof(struct register_rmw) * priv->wmi->multi_rmw_idx,
- 			  (u8 *) &rsp_status, sizeof(rsp_status),
- 			  100);
- 		if (unlikely(r)) {
--- 
-2.55.0
+That is the right table, and nothing in it is padded. Yours is fine.
 
+> so the transmit power limits actually look like they are too high for
+> some bands, especially 5735-5835, but maybe it will limit to the AP
+> transmit power and be fine? However, according to `iw list` the channels
+> in 5735-5835 do not have the "no IR" flag, so in AP mode the card could
+> potentially transmit ~8 times the allowed power (I would rather not test
+> this)?
+
+Every line reads the same because the driver writes the same number into
+all of them:
+
+	/* not used by fw */
+	rule->power_rule.max_antenna_gain = DBI_TO_MBI(6);
+	rule->power_rule.max_eirp = DBM_TO_MBM(22);
+
+It is a placeholder rather than anything the card sent up, which is why
+the same twenty-two turns up under every country code and not only
+yours. So it is not evidence of what the radio will do in that band, in
+either direction. The card has a power table of its own, separate from
+this one, and debugfs shows it as txpower_sku.
+
+> The 5710-5735 range is also not covered, which results in 5 GHz channel
+> 144 being disabled (visible in `iw list`).
+
+That hole is in what the card replied with. The driver copies the ranges
+across untouched, so 144 goes with it.
+
+Devin
