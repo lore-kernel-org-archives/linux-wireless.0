@@ -1,322 +1,144 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C09C3CBE74
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 07:40:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AFA53E6381
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 08:21:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787902855; cv=none; b=WtSB38oIsXiaPiYeqOKH/IjkTfMXuncsHJ9Uiarc/ghwmDL/KobuLvh8pZJ/Ok8PfJ+x58stU+edwk6f/OfvvuumHvvVpbxRurB+nnFQVsbkQbCqeFiKfa03L+2MrNjOuZ+uVG1P1hFd+2fNmcSyYfgTXIVM02T4iD57oZQ5Ey4=
+	t=1787905299; cv=none; b=Yq+2z+XY5kzfY4Zc9inDQlT4rxWAmNaUyqb1SyD7oSgSJAAMlmCP1BEIZCSORY5CW2KvAnupsv8As/89REgYA2h2a23Udt6M+Ulp9IAhqEGHbVJGCwaPmfYDebHjZunaXU1+OHjELw8h7HkSXb3zQTIBGwIrkxS221iO7EvF8aE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787902855; c=relaxed/simple;
-	bh=Fzg4C2XBSsG3+gxax1UcohuhsDQhZoPjQ+UDQxQA1EE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bp8Km5BbgmFd5EwgU7bNqCK1k2brhYCwYkiadttizntQcT4Vh/IszazeHUNuKRIf1T0EhAyEEFRzygooiI1K5CtkpsFid2wrlter7dj5QNcgYpxWfXA3oWeHtUTXbOxmM9/ljMIhrzTL1VFh7/pK2I3x/ihAwiSjbIuYXkT1ZhE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=glmO9hNG; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1787905299; c=relaxed/simple;
+	bh=Je8GlVwt60clWuSHBdJAbscyBCU5/EAwgn7p1NPaCBE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=a609iQgjv3dYkYF9EPEhQAmXpmxPCizAcyipH61lQpUk+2cC7DlGScymfyyjbY5ondsUCTejpWTWEpYgM8H9YOW0tNJXEDtNs5gAizucOdIPIgPHjlh/qyOk3+A4iCYL5b1vxSuV8Gnp2hXK4B85eksfpXMAceKCu86Zqv76vM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=KNSDsCOq; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="glmO9hNG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1787902853; x=1819438853;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Fzg4C2XBSsG3+gxax1UcohuhsDQhZoPjQ+UDQxQA1EE=;
-  b=glmO9hNG7gESgU4Qrk4eNcIDQj6A2amghrtC0gQtB2k/XHFdDPpglApB
-   2tqZhPPDdA5nOMpj2otE+25Yqh/vhvCJNtRoPvKyIteq1VYi46Ry8v/1J
-   dgCOuV/wjnGEYijfxrTg329zdwVZKgJDB8K9Cw+xaAgxXRzVIW3bXy7D7
-   lO/8PPXehOElzlsld+eAvhsQBXhdiRUMMl7cm4SHVD3vEX+65DtACOzao
-   g0hTIbiEul7Kp59inMpHIHW3466oWfP/J0u8Tyv06cOsovQcZ7g3yp5Eq
-   uWF1BkRU0EuqnbFdXilvjnYOy5XLtjYCSBeQrX8M/gi6qjCdcZ4oXgsiw
-   w==;
-X-CSE-ConnectionGUID: yUhPmAqNTTm739qCUkJfhA==
-X-CSE-MsgGUID: DTtMqLFeQQewlliRRhawug==
-X-IronPort-AV: E=McAfee;i="6800,10657,11888"; a="88173653"
-X-IronPort-AV: E=Sophos;i="6.25,248,1779174000"; 
-   d="scan'208";a="88173653"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2026 00:40:53 -0700
-X-CSE-ConnectionGUID: Z2gUKGXPRjqmhCdOVNk/yA==
-X-CSE-MsgGUID: 3GsM/yrgSsK0+JCGr1bIBw==
-X-ExtLoop1: 1
-Received: from lkp-server01.sh.intel.com (HELO 3532383e6126) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 28 Aug 2026 00:40:48 -0700
-Received: from kbuild by 3532383e6126 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wzrCf-00000000Ab7-2PeG;
-	Fri, 28 Aug 2026 07:40:45 +0000
-Date: Fri, 28 Aug 2026 15:39:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Eason Lai <eason.lai@mediatek.com>, nbd@nbd.name, lorenzo@kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org,
-	linux-mediatek@lists.infradead.org, kun.wu@mediatek.com,
-	deren.wu@mediatek.com, sean.wang@mediatek.com,
-	quan.zhou@mediatek.com, ryder.lee@mediatek.com,
-	leon.yen@mediatek.com, litien.chang@mediatek.com,
-	jb.tsai@mediatek.com, michael.shih@mediatek.com,
-	eason.lai@mediatek.com, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v3] wifi: mt76: mt7928: Add debugfs for stats to provide
- debug purpose
-Message-ID: <202608281532.s7sXQ2Cc-lkp@intel.com>
-References: <20260827084427.1624598-1-eason.lai@mediatek.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="KNSDsCOq"
+X-UUID: 785a1d0ca2b911f1b1788b6acf885367-20260828
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=o1iJVpXPxN5M1wi8b5iaikX8HD4mwaKe/+SrOg4ReAA=;
+	b=KNSDsCOq/9uB4Y/PFmycVLkWmauvt0UDYOxVxxttNvx+KnyYQqexlX/KAu7ihLKur5obqQXSeNs2SgHr89LeSJ4XqMubEB5/4C4x8IvTwVcSV6XeyMQ0AN94WLS37bRSRvAv2+0eHKxAsmWK+gCDfv8um4LOhO8U2FVj53refl8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:787da7d4-f933-4838-b62e-517f7c26fa37,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:46f43723-5869-48e3-bf78-b0f483615649,B
+	ulkID:nil,BulkQuantity:0,SF:102|836|865|888|898,TC:-5,Content:0|15|50|99,E
+	DM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,OSI:0,OSA:0,
+	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 785a1d0ca2b911f1b1788b6acf885367-20260828
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+	(envelope-from <jb.tsai@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1263994598; Fri, 28 Aug 2026 16:21:29 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 28 Aug 2026 16:21:28 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.2562.29 via Frontend Transport; Fri, 28 Aug 2026 16:21:28 +0800
+From: JB Tsai <jb.tsai@mediatek.com>
+To: <nbd@nbd.name>, <lorenzo@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<Sean.Wang@mediatek.com>, <Quan.Zhou@mediatek.com>, <Ryder.Lee@mediatek.com>,
+	<litien.chang@mediatek.com>, <Charlie-cy.Wu@mediatek.com>,
+	<jb.tsai@mediatek.com>
+Subject: [PATCH] wifi: mt76: connac2: fill TXD spe_idx for connac2 fixed-rate frames
+Date: Fri, 28 Aug 2026 16:21:27 +0800
+Message-ID: <20260828082127.2226819-1-jb.tsai@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260827084427.1624598-1-eason.lai@mediatek.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Hi Eason,
+From: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
 
-kernel test robot noticed the following build warnings:
+On connac2 chipsets - MT7920, MT7921 and MT7922 - the spe_idx of
+fixed-rate frames was never programmed, so every management frame -
+auth and assoc req included - went out 1SS 1T on WF0 instead of 1SS 2T
+duplicate, giving up ~3dB of array gain during connection setup, which
+is exactly when the link budget is worst.
 
-[auto build test WARNING on wireless-next/main]
-[also build test WARNING on linus/master next-20260826]
-[cannot apply to wireless/main v7.2]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+mt76_connac2_mac_write_txwi() takes the MT_TXD2_FIX_RATE path for any
+non-data frame, but the block filling MT_TXD7_SPE_IDX was guarded by
+!is_connac2(), leaving the field at 0. As spe_idx 0 also encodes "WF0"
+the hardware happily transmitted on a single path. Drop the guard so
+connac2 fills the index like the other generations do.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Eason-Lai/wifi-mt76-mt7928-Add-debugfs-for-stats-to-provide-debug-purpose/20260827-164427
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-next.git main
-patch link:    https://lore.kernel.org/r/20260827084427.1624598-1-eason.lai%40mediatek.com
-patch subject: [PATCH v3] wifi: mt76: mt7928: Add debugfs for stats to provide debug purpose
-config: sparc-randconfig-r073-20260828 (https://download.01.org/0day-ci/archive/20260828/202608281532.s7sXQ2Cc-lkp@intel.com/config)
-compiler: sparc-linux-gcc (GCC) 14.3.0
-smatch: v0.5.0-9187-g5189e3fb
+Do not set MT_TXD6_SPE_ID_IDX along with it: on connac2 that bit points
+the hardware at the WTBL instead of the TXD, and the WTBL spe_idx is
+still 0 while connecting, so setting it puts the frames back on WF0.
+This matches connac3, where SPE_IXD_SELECT_TXD is 0 and
+SPE_IXD_SELECT_BMC_WTBL is 1, and is the opposite of what the falcon
+firmware macro name HAL_MAC_TX_DESC_SET_FR_SPE_IDX_SPE_BY_TXD suggests.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202608281532.s7sXQ2Cc-lkp@intel.com/
+Guard the duplicate fallback with hweight8() as well: ant_to_spe[] maps
+a single-antenna mask to 0 too, so without the check a user asking for
+one antenna would still get spe_idx 24 and duplicate onto both paths.
 
-smatch warnings:
-drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c:437 mt792x_stats() warn: inconsistent indenting
-drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c:540 mt792x_stats() error: testing array offset 'band_idx' after use.
+Verified on MT7922: TXD DW7 spe_idx now reads 0x18 and the in-chip
+sniffer reports spe_idx 0x18 in the TXV of auth and assoc req, where it
+previously reported 0x0. MT7920 and MT7921 share the same connac2 TXD
+path and are fixed by the same change.
 
-vim +437 drivers/net/wireless/mediatek/mt76/mt7925/debugfs.c
+Fixes: 00dd59264dcb ("wifi: mt76: connac: use is_connac2() to replace is_mt7921() checks")
 
-   415	
-   416	static int mt792x_stats(struct seq_file *s, void *data)
-   417	{
-   418		s8 rssi = 0;
-   419		u8 band_idx = 0;
-   420		bool wtbl_rate_valid = false;
-   421		int ret = 0;
-   422		int i = 0;
-   423		u32 stats_value = 0;
-   424		u32 tx_link_speed_kbps = 0;
-   425		u64 tx_total = 0;
-   426		u64 tx_fail = 0;
-   427		u64 tx_per = 0;
-   428		u32 tx_per_rem = 0;
-   429		/* UNI_CMD_MIB_DATA */
-   430		u64 mib_values[ARRAY_SIZE(stats_query_mib_counters)];
-   431		struct mt792x_dev *dev = dev_get_drvdata(s->private);
-   432		struct mt7925_wtbl_rate wtbl_rate;
-   433		struct mt7925_sta_stats *stats = NULL;
-   434	
-   435		band_idx = dev->mphy.band_idx;
-   436	
- > 437		 stats = kzalloc(sizeof(*stats), GFP_KERNEL);
-   438		if (!stats)
-   439			return -ENOMEM;
-   440	
-   441		/* Get STA_STATS */
-   442		mt792x_mutex_acquire(dev);
-   443		ret = mt792x_mcu_get_stat(dev, stats);
-   444		mt792x_mutex_release(dev);
-   445		if (ret)
-   446			goto out;
-   447	
-   448		/* Get MIB_STATS */
-   449		mt792x_mutex_acquire(dev);
-   450		ret = mt7925_mcu_get_mib_info(dev, band_idx, stats_query_mib_counters,
-   451					      ARRAY_SIZE(stats_query_mib_counters), mib_values);
-   452		mt792x_mutex_release(dev);
-   453		if (ret)
-   454			goto out;
-   455	
-   456		/* Get Link_Speed and RSSI */
-   457		mt792x_mutex_acquire(dev);
-   458		ret = mt7925_mcu_get_link_quality(dev, stats->bss_idx, &rssi, &tx_link_speed_kbps);
-   459		mt792x_mutex_release(dev);
-   460		if (ret)
-   461			goto out;
-   462	
-   463		/* Get the firmware auto-rate table (best effort; do not abort the
-   464		 * whole stats dump if the WTBL query is not available).
-   465		 */
-   466		mt792x_mutex_acquire(dev);
-   467		if (!mt792x_mcu_get_wtbl_rate(dev, stats->wtbl_idx, &wtbl_rate))
-   468			wtbl_rate_valid = true;
-   469		mt792x_mutex_release(dev);
-   470	
-   471		/* Print STA_STATS info */
-   472		seq_printf(s, "(STA) connected AP MAC Address = %pM\n", stats->mac_addr);
-   473		seq_printf(s, "%-22s  BssIdx = [%u]\n", " ", stats->bss_idx);
-   474		seq_printf(s, "%-22s  StaRecIdx = [%u]\n",
-   475			   " ", stats->sta_idx);
-   476		seq_printf(s, "%-22s  RSSI = %d\n", " ", rssi);
-   477		seq_printf(s, "%-22s  Link_Speed = %u (kbit/s)\n", " ", tx_link_speed_kbps);
-   478	
-   479		seq_printf(s, "%-22s  temperature = %u\n",
-   480			   " ", stats->temperature);
-   481	
-   482		stats_value = le32_to_cpu(stats->transmit_count) - le32_to_cpu(stats->transmit_fail_count);
-   483		seq_printf(s, "%-22s  Tx success = %u\n",
-   484			   " ", stats_value);
-   485	
-   486		stats_value = le32_to_cpu(stats->tx_fail_count) - le32_to_cpu(stats->tx_life_timeout_count);
-   487		seq_printf(s, "%-22s  Tx fail to Rcv ACK after retry = %u\n",
-   488			   " ", stats_value);
-   489	
-   490		seq_printf(s, "%-22s  Rx Mpdu = %u\n",
-   491			   " ", le32_to_cpu(stats->mib[band_idx].rx_mpdu_cnt));
-   492	
-   493		seq_printf(s, "%-22s  Rx Fcs Error = %u (MPDU)\n",
-   494			   " ", le32_to_cpu(stats->mib[band_idx].fcs_error));
-   495		seq_printf(s, "%-22s  Rx FIFO full = %u (MPDU)\n",
-   496			   " ", le32_to_cpu(stats->mib[band_idx].rx_fifo_full));
-   497	
-   498		for (i = 0; i < STAT_MIB_CNT_TRX_AGG_RANGE_MAX_NUM; i++)
-   499			seq_printf(s, "%-22s  TRX_AGG_RANGE[%d] = %u (PPDU)\n",
-   500				   " ", i, le32_to_cpu(stats->mib[band_idx].tx_range_ampdu_cnt[i]));
-   501	
-   502		seq_printf(s, "%-22s  MPDUs in AMPDUs transmitted = %u (MPDU)\n",
-   503			   " ", le32_to_cpu(stats->mib[band_idx].ampdu_tx_sf_cnt));
-   504		seq_printf(s, "%-22s  MPDUs in AMPDUs transmitted with ACK reply = %u (MPDU)\n",
-   505			   " ", le32_to_cpu(stats->mib[band_idx].ampdu_tx_ack_sf_cnt));
-   506		seq_printf(s, "%-22s  rate1_tx_cnt = %u\n",
-   507			   " ", le32_to_cpu(stats->rate1_tx_cnt));
-   508		seq_printf(s, "%-22s  rate1_fail_cnt = %u\n",
-   509			   " ", le32_to_cpu(stats->rate1_fail_cnt));
-   510		seq_printf(s, "%-22s  train_up = %u\n",
-   511			   " ", le16_to_cpu(stats->train_up));
-   512		seq_printf(s, "%-22s  train_down = %u\n",
-   513			   " ", le16_to_cpu(stats->train_down));
-   514		seq_printf(s, "%-22s  is_force_tx_stream = %u\n",
-   515			   " ", stats->is_force_tx_stream);
-   516		seq_printf(s, "%-22s  is_force_se_off = %u\n",
-   517			   " ", stats->is_force_se_off);
-   518		seq_printf(s, "%-22s  max_ampdu_factor = %u\n",
-   519			   " ", stats->max_ampdu_factor);
-   520		seq_printf(s, "%-22s  tx_rate_up_penalty = %u\n",
-   521			   " ", stats->tx_rate_up_penalty);
-   522		seq_printf(s, "%-22s  low_traffic_mode = %u\n",
-   523			   " ", stats->low_traffic_mode);
-   524		seq_printf(s, "%-22s  low_traffic_count = %u\n",
-   525			   " ", stats->low_traffic_count);
-   526		seq_printf(s, "%-22s  low_traffic_dashboard = %u\n",
-   527			   " ", stats->low_traffic_dashboard);
-   528		seq_printf(s, "%-22s  dynamic_sgi_state = %u\n",
-   529			   " ", stats->dynamic_sgi_state);
-   530		seq_printf(s, "%-22s  dynamic_sgi_score = %u\n",
-   531			   " ", stats->dynamic_sgi_score);
-   532		seq_printf(s, "%-22s  dynamic_bw_state = %u\n",
-   533			   " ", stats->dynamic_bw_state);
-   534		seq_printf(s, "%-22s  dynamic_gband_256qam_state = %u\n",
-   535			   " ", stats->dynamic_gband_256qam_state);
-   536		seq_printf(s, "%-22s  vht_non_sp_rate_state = %u\n",
-   537			   " ", stats->vht_non_sp_rate_state);
-   538	
-   539		/* Decode the TX Vector BBP latch to show the current TX MCS rate */
- > 540		if (band_idx < MT7925_STA_STATS_BAND_NUM)
-   541			mt7925_print_last_tx_rate(s, stats->tx_vector[band_idx].txv);
-   542	
-   543		/* Dump the whole firmware auto-rate table and mark the entry currently */
-   544		if (wtbl_rate_valid)
-   545			mt7925_dump_auto_rate_table(s, &wtbl_rate);
-   546	
-   547		seq_puts(s, "\nmib state:\n");
-   548		/* ===Rx Related Counters=== */
-   549		seq_puts(s, "=== Rx Related Counters ===\n");
-   550		seq_printf(s, "%-22s  Rx with CRC = %llu (MPDU)\n",
-   551			   " ", mib_values[QUERY_MIB_CNT_RX_FCS_ERR]);
-   552		seq_printf(s, "%-22s  Rx drop due to out of resource = %llu (MPDU)\n",
-   553			   " ", mib_values[QUERY_MIB_CNT_RX_FIFO_OVERFLOW]);
-   554		seq_printf(s, "%-22s  Rx Mpdu = %llu (MPDU)\n",
-   555			   " ", mib_values[QUERY_MIB_CNT_RX_MPDU]);
-   556		seq_printf(s, "%-22s  Rx AMpdu = %llu (PPDU)\n",
-   557			   " ", mib_values[QUERY_MIB_CNT_AMPDU_RX_COUNT]);
-   558		seq_printf(s, "%-22s  Rx PF Drop = %llu (MPDU)\n",
-   559			   " ", mib_values[QUERY_MIB_CNT_PF_DROP]);
-   560		seq_printf(s, "%-22s  Rx Len Mismatch = %llu (PPDU)\n",
-   561			   " ", mib_values[QUERY_MIB_CNT_LEN_MISMATCH]);
-   562	
-   563		/* ===Phy/Timing Related Counters=== */
-   564		seq_puts(s, "\n=== Phy/Timing Related Counters ===\n");
-   565		seq_printf(s, "%-22s  ChannelIdleCnt = %llu\n",
-   566			   " ", mib_values[QUERY_MIB_CNT_CHANNEL_IDLE]);
-   567		seq_printf(s, "%-22s  CCA_NAV_Tx_Time = %llu\n",
-   568			   " ", mib_values[QUERY_MIB_CNT_CCA_NAV_TX_TIME]);
-   569		seq_printf(s, "%-22s  Rx_MDRDY_CNT = %llu (PPDU)\n",
-   570			   " ", mib_values[QUERY_MIB_CNT_MDRDY]);
-   571		seq_printf(s, "%-22s  CCK_MDRDY = %llu\n",
-   572			   " ", mib_values[QUERY_MIB_CNT_RX_CCK_MDRDY_TIME]);
-   573		seq_printf(s, "%-22s  OFDM_MDRDY = %llu\n",
-   574			   " ", mib_values[QUERY_MIB_CNT_RX_OFDM_LG_MIXED_MDRDY_TIME]);
-   575		seq_printf(s, "%-22s  OFDM_GREEN_MDRDY = %llu\n",
-   576			   " ", mib_values[QUERY_MIB_CNT_RX_OFDM_GREEN_MDRDY_TIME]);
-   577		seq_printf(s, "%-22s  Prim CCA Time = %llu\n",
-   578			   " ", mib_values[QUERY_MIB_CNT_P_CCA_TIME]);
-   579		seq_printf(s, "%-22s  Sec CCA Time = %llu\n",
-   580			   " ", mib_values[QUERY_MIB_CNT_S_CCA_TIME]);
-   581		seq_printf(s, "%-22s  Prim ED Time = %llu\n",
-   582			   " ", mib_values[QUERY_MIB_CNT_P_ED_TIME]);
-   583	
-   584		/* ===Tx Related Counters(Generic)=== */
-   585		seq_puts(s, "\n=== Tx Related Counters(Generic) ===\n");
-   586		seq_printf(s, "%-22s  BeaconTxCnt = %llu\n",
-   587			   " ", mib_values[QUERY_MIB_CNT_BCN_TX]);
-   588		seq_printf(s, "%-22s  Tx 40MHz Cnt = %llu  (MPDU)\n",
-   589			   " ", mib_values[QUERY_MIB_CNT_TX_BW_40MHZ]);
-   590		seq_printf(s, "%-22s  Tx 80MHz Cnt = %llu  (MPDU)\n",
-   591			   " ", mib_values[QUERY_MIB_CNT_TX_BW_80MHZ]);
-   592		seq_printf(s, "%-22s  Tx 160MHz Cnt = %llu  (MPDU)\n",
-   593			   " ", mib_values[QUERY_MIB_CNT_TX_BW_160MHZ]);
-   594	
-   595		/* ===BSSID[0] Related Counters=== */
-   596		seq_puts(s, "\n=== BSSID[0] Related Counters ===\n");
-   597		seq_printf(s, "%-22s  BA Miss Cnt = %llu  (PPDU)\n",
-   598			   " ", mib_values[QUERY_MIB_CNT_BSS0_BA_MISS]);
-   599		seq_printf(s, "%-22s  RTS Tx Cnt = %llu  (MPDU)\n",
-   600			   " ", mib_values[QUERY_MIB_CNT_BSS0_RTS_TX_CNT]);
-   601		seq_printf(s, "%-22s  Frame Retry Cnt = %llu (MPDU)\n",
-   602			   " ", mib_values[QUERY_MIB_CNT_BSS0_FRAME_RETRY]);
-   603		seq_printf(s, "%-22s  Frame Retry 2 Cnt = %llu (MPDU)\n",
-   604			   " ", mib_values[QUERY_MIB_CNT_BSS0_FRAME_RETRY_2]);
-   605		seq_printf(s, "%-22s  RTS Retry Cnt = %llu (MPDU)\n",
-   606			   " ", mib_values[QUERY_MIB_CNT_BSS0_RTS_RETRY]);
-   607		seq_printf(s, "%-22s  Ack Failed Cnt = %llu (PPDU)\n",
-   608			   " ", mib_values[QUERY_MIB_CNT_BSS0_ACK_FAIL]);
-   609	
-   610		/* ===AMPDU Related Counters=== */
-   611		seq_puts(s, "\n=== AMPDU Related Counters ===\n");
-   612		seq_printf(s, "%-22s  Tx AMPDU_Pkt_Cnt = %llu  (PPDU)\n",
-   613			   " ", mib_values[QUERY_MIB_CNT_AMPDU]);
-   614		seq_printf(s, "%-22s  Tx AMPDU_MPDU_Pkt_Cnt = %llu  (MPDU)\n",
-   615			   " ", mib_values[QUERY_MIB_CNT_AMPDU_MPDU]);
-   616		seq_printf(s, "%-22s  AMPDU Tx success = %llu (MPDU)\n",
-   617			   " ", mib_values[QUERY_MIB_CNT_AMPDU_ACKED]);
-   618	
-   619		tx_total = mib_values[QUERY_MIB_CNT_AMPDU_MPDU];
-   620		tx_fail =  mib_values[QUERY_MIB_CNT_AMPDU_MPDU] - mib_values[QUERY_MIB_CNT_AMPDU_ACKED];
-   621		tx_per = tx_total == 0 ? 0 : div64_u64(1000 * tx_fail, tx_total);
-   622		seq_printf(s, "%-22s  AMPDU Tx fail count   = %llu  (MPDU), PER=%llu.%1llu%%\n",
-   623			   " ",
-   624			   tx_fail,
-   625			   div_u64_rem(tx_per, 10, &tx_per_rem), (u64)tx_per_rem);
-   626	
-   627	out:
-   628		kfree(stats);
-   629		return ret;
-   630	}
-   631	
+CR-Id: BORA00085543
+Signed-off-by: Charlie-cy Wu <Charlie-cy.Wu@mediatek.com>
+---
+ .../wireless/mediatek/mt76/mt76_connac_mac.c  | 20 ++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+index de38ba9a4a26..9b40bac2b036 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76_connac_mac.c
+@@ -600,6 +600,7 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 							vif ? &vif->bss_conf : NULL,
+ 							beacon, multicast);
+ 		u32 val = MT_TXD6_FIXED_BW;
++		u8 spe_idx = mt76_connac_spe_idx(mphy->antenna_mask);
+ 
+ 		/* hardware won't add HTC for mgmt/ctrl frame */
+ 		txwi[2] |= cpu_to_le32(MT_TXD2_HTC_VLD);
+@@ -608,13 +609,18 @@ void mt76_connac2_mac_write_txwi(struct mt76_dev *dev, __le32 *txwi,
+ 		txwi[6] |= cpu_to_le32(val);
+ 		txwi[3] |= cpu_to_le32(MT_TXD3_BA_DISABLE);
+ 
+-		if (!is_connac2(dev)) {
+-			u8 spe_idx = mt76_connac_spe_idx(mphy->antenna_mask);
+-
+-			if (!spe_idx)
+-				spe_idx = 24 + phy_idx;
+-			txwi[7] |= cpu_to_le32(FIELD_PREP(MT_TXD7_SPE_IDX, spe_idx));
+-		}
++		/* Fixed-rate frames (all mgmt, so auth/assoc req too) otherwise
++		 * carry spe_idx 0 and TX 1SS 1T on WF0. Fill spe_idx like the
++		 * other connac generations do, but do NOT touch
++		 * MT_TXD6_SPE_ID_IDX: on connac2 setting it points HW at the
++		 * WTBL and the index below is ignored.
++		 *
++		 * spe_idx 0 is also a valid single-path index (WF0), so only
++		 * take the duplicate fallback when a second path exists.
++		 */
++		if (!spe_idx && hweight8(mphy->antenna_mask) > 1)
++			spe_idx = 24 + phy_idx;
++		txwi[7] |= cpu_to_le32(FIELD_PREP(MT_TXD7_SPE_IDX, spe_idx));
+ 
+ 		txwi[7] &= ~cpu_to_le32(MT_TXD7_HW_AMSDU);
+ 	}
+-- 
+2.18.0
+
