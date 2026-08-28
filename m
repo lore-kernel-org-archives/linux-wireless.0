@@ -1,3738 +1,448 @@
-Received: from va-2-19.ptr.blmpb.com (va-2-19.ptr.blmpb.com [209.127.231.19])
+Received: from va-2-60.ptr.blmpb.com (va-2-60.ptr.blmpb.com [209.127.231.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00EF44A3E6
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 12:12:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8894643CE79
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 12:12:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787919150; cv=none; b=g8MFoV95flz/CMFi/ZjApgxXrosenhdU4cg2dzfJhfrvjmZrwHz3dgKBNyedXbItlwHlqlQZ+NbHtBl81R1qkQ0k8Ff4uHBRz8t54JBwx84L0fVbh2Hk/xkQnxMDL33w+/VpnCFvFKtDBYyNjyOTRhC97Cl7NP+hGlflbvSEtlk=
+	t=1787919171; cv=none; b=KyGiBLNnJqNTNJzaBGv6yIkr5Nx1mOfvk76lM4mlWkLR5XsSgARxvqfu/JCcuABETssVNgyWbW+G8UDBCpczTbN8tcw88v+rhAdAXgzy1mxl+tsVs8W8vzNr2itYVdpw3y9cVgPvkTUF7RQlBWjetH2x6mXPYAOGkTODAB+ihAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787919150; c=relaxed/simple;
-	bh=y1fomUpO4lcq11JXEkZSZ1ydm7X2YvFJxjpKJgFPBgQ=;
-	h=To:Message-Id:Content-Type:Cc:From:Date:References:In-Reply-To:
-	 Subject:Mime-Version; b=Cq6UQJBjJdaYD3jDZfTYOk4Np/DRuoZK89nlnFQaElfTejjeaQJXD0/jUDnWdjxq+REpE19AxZPPuc7plo4nq7iFY3u5rlqLWURuzfUsmHE/KslHad3/gToSXcoK58PzPc8wvo+pXH4kjAKsBiLmYXRNgNRZBWj8FXdwa0Eh8Po=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bedmex.com; spf=none smtp.mailfrom=bedmex.com; dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b=I0MNrubI; arc=none smtp.client-ip=209.127.231.19
+	s=arc-20240116; t=1787919171; c=relaxed/simple;
+	bh=nqW+6Psck/aW2xDozYefrI4KQiduuStJOAMljInjwkM=;
+	h=References:From:Message-Id:Content-Type:In-Reply-To:Subject:Date:
+	 Mime-Version:To:Cc; b=WHWhEu2eI3ahvvVCDErImPqIFad6tvbKtReNKpU1bLXfKGw2QwHmox8fEFGlBmj01WC18d8Sm96phhm/8BHqhVTTw4WNBdDnyw3VrliEDaquPqqfwd06MjeMamZMms4/b6qUJ6HCV9sRxgTpdL5akq8ybMtmsFOUwSVX7B5iTk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bedmex.com; spf=none smtp.mailfrom=bedmex.com; dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b=O/ohMr30; arc=none smtp.client-ip=209.127.231.60
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bedmex.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bedmex.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b="I0MNrubI"
+	dkim=pass (2048-bit key) header.d=bedmex-com.20200927.dkim.feishu.cn header.i=@bedmex-com.20200927.dkim.feishu.cn header.b="O/ohMr30"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=bedmex-com.20200927.dkim.feishu.cn; t=1787919101;
+ s=s1; d=bedmex-com.20200927.dkim.feishu.cn; t=1787919104;
   h=from:subject:mime-version:from:date:message-id:subject:to:cc:
  reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=DjXQLY40V+Fk6/QxQPEe5yczU1pmJrOsooJoZp51Ag8=;
- b=I0MNrubIBO1GkwdNULHzJZ/fMEj6FXg4PhUSv64G+7ODvcJIRUUpp4jq4fFQd9LPOMZTUD
- 3nPY+QLHsi1eaWnwAnlQDBsaV1ZWDRPfAnNPXYjEFnqghzA4krDgdocwa6l7DAykySq7hQ
- DG71nTXqYdqVPGVvdJx1O2RVNzRlf+U+z7ppO5sa1bVUC4uGagXvMMoXn0vTriZ7++y04f
- yPsDbox4sJ7MNNfjW0HrpoPi5wNnjJttpaXgg3cZaySWB85/pLZBNBnM3PfFvROkiOKPu/
- 1fizV5JzMXSFz0Y0etGd4ANbnZ2jUP03S9y5HYicf75iSngFGHdQjpu7Z5gSTw==
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <395cd2d678c7b53c927daec2860a7d3f3d5c2025.1787903339.git.yanli.yang@bedmex.com>
-Content-Type: text/plain; charset=UTF-8
-X-Mailer: git-send-email 2.34.1
-Cc: <linux-wireless@vger.kernel.org>, "Zhirun Liu" <zhirunliu@aicsemi.com>, 
-	"Dijia Xu" <dijiaxu@aicsemi.com>, "Chunqiu Liu" <chunqiuliu@aicsemi.com>, 
-	"Liheng Wei" <liheng.wei@bedmex.com>
-From: "Yanli Yang" <yanli.yang@bedmex.com>
-Date: Fri, 28 Aug 2026 20:11:30 +0800
-Received: from bmxpxe-virtual-desktop.. ([36.141.79.164]) by smtp.feishu.cn with ESMTPS; Fri, 28 Aug 2026 20:11:38 +0800
+ bh=di717+D5ZQylIptnhD68n/BZAPGYEon8Tnrj8jTu8UI=;
+ b=O/ohMr30HzmDPtA9ckYffithv9LyBv19MJJo+hjaalcnIcNcUecyR8l7ZWmTbgK3p2anMa
+ TL9pkhZ2yMz4vsnMM49eiTc39f07cWjrrsMoJlo+o7sahqi803rDn9STpv5D+YKleRf10y
+ adgp0/+5jkA1+d5ZWAmHnzLacQCzO5AZl8vMssHgVOvvcMzcXiimEr6PL88bUM+yBMm0Kx
+ FdE/LXhPIx4PhYCUm5Gl1nTL3w41DYkk/OA5Maz5ce30MQzlqp63NOzNvm2VSbuci4RGS0
+ riLSJmVllJcDxPzqjsvmnVOBZS5Qzm4qcwvlX+gF3k2Ar5RLZ2h61IvOLh+Bww==
+X-Original-From: Yanli Yang <yanli.yang@bedmex.com>
 References: <cover.1784724170.git.yanli.yang@bedmex.com> <ef855527f564086a498e95d31a35935762fa60e1.camel@sipsolutions.net> <007a0362a36d2318ea7a50c6feb8ad2ce1361c0d.camel@sipsolutions.net> <cover.1787903339.git.yanli.yang@bedmex.com>
+Received: from bmxpxe-virtual-desktop.. ([36.141.79.164]) by smtp.feishu.cn with ESMTPS; Fri, 28 Aug 2026 20:11:40 +0800
+X-Mailer: git-send-email 2.34.1
+From: "Yanli Yang" <yanli.yang@bedmex.com>
+Message-Id: <889d77ac490250ef796dae67cad0a828e9552cb2.1787903339.git.yanli.yang@bedmex.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 In-Reply-To: <cover.1787903339.git.yanli.yang@bedmex.com>
-Subject: [RFC PATCH wireless-next v3 1/4] wifi: aic: add SDIO BSP and build configuration
+X-Lms-Return-Path: <lba+26a917afd+7191b8+vger.kernel.org+yanli.yang@bedmex.com>
+Subject: [RFC PATCH wireless-next v3 2/4] wifi: aic: add FullMAC firmware and platform interface
+Date: Fri, 28 Aug 2026 20:11:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-X-Lms-Return-Path: <lba+26a917afb+f91e59+vger.kernel.org+yanli.yang@bedmex.com>
-X-Original-From: Yanli Yang <yanli.yang@bedmex.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, "Zhirun Liu" <zhirunliu@aicsemi.com>, 
+	"Dijia Xu" <dijiaxu@aicsemi.com>, "Chunqiu Liu" <chunqiuliu@aicsemi.com>, 
+	"Liheng Wei" <liheng.wei@bedmex.com>
 
 From: Zhirun Liu <zhirunliu@aicsemi.com>
 
-Add the build configuration and SDIO board-support layer for the initial
-AIC8800D80 U02 upstream target.  The BSP handles platform power sequencing,
-SDIO transport setup, firmware loading and chip initialization.
+Add the LMAC message definitions, IPC host support, firmware command/event
+handling and platform bring-up required by the AIC8800D80 U02 FullMAC
+firmware.
 
-Limit the selectable configuration to the D80 U02 SDIO station baseline and
-use the kernel crypto library for firmware MD5 diagnostics.
+The interface is scoped to the current in-tree kernel APIs and the SDIO
+station baseline selected by the first patch.
 
 Signed-off-by: Zhirun Liu <zhirunliu@aicsemi.com>
 Signed-off-by: Yanli Yang <yanli.yang@bedmex.com>
 ---
- drivers/net/wireless/aic/Kconfig              |   40 +
- drivers/net/wireless/aic/Makefile             |    7 +
- drivers/net/wireless/aic/aic8800_bsp/Kconfig  |    3 +
- drivers/net/wireless/aic/aic8800_bsp/Makefile |   16 +
- .../aic/aic8800_bsp/aic8800d80_compat.c       |  292 +++
- .../aic/aic8800_bsp/aic8800d80_compat.h       |   11 +
- .../aic/aic8800_bsp/aic8800dc_compat.c        | 1342 +++++++++++
- .../aic/aic8800_bsp/aic8800dc_compat.h        |   34 +
- .../wireless/aic/aic8800_bsp/aic_bsp_driver.c | 1670 ++++++++++++++
- .../wireless/aic/aic8800_bsp/aic_bsp_driver.h |  598 +++++
- .../wireless/aic/aic8800_bsp/aic_bsp_export.h |   70 +
- .../wireless/aic/aic8800_bsp/aic_bsp_main.c   |  310 +++
- .../aic/aic8800_bsp/aic_chip_8800d80.c        |   98 +
- .../aic/aic8800_bsp/aic_chip_8800dc.c         |  133 ++
- .../wireless/aic/aic8800_bsp/aic_chip_8801.c  |  117 +
- .../wireless/aic/aic8800_bsp/aic_chip_ops.c   |   64 +
- .../wireless/aic/aic8800_bsp/aic_chip_ops.h   |   69 +
- .../net/wireless/aic/aic8800_bsp/aicsdio.c    | 2027 +++++++++++++++++
- .../net/wireless/aic/aic8800_bsp/aicsdio.h    |  176 ++
- .../wireless/aic/aic8800_bsp/aicsdio_txrxif.c |  464 ++++
- .../wireless/aic/aic8800_bsp/aicsdio_txrxif.h |  180 ++
- .../aic/aic8800_bsp/aicwf_txq_prealloc.c      |   72 +
- .../aic/aic8800_bsp/aicwf_txq_prealloc.h      |    8 +
- drivers/net/wireless/aic/aic8800_fdrv/Kconfig |   37 +
- .../net/wireless/aic/aic8800_fdrv/Makefile    |   46 +
- 25 files changed, 7884 insertions(+)
- create mode 100644 drivers/net/wireless/aic/Kconfig
- create mode 100644 drivers/net/wireless/aic/Makefile
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/Kconfig
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/Makefile
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.=
-c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.=
-h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_bsp_export.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_bsp_main.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800d80.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800dc.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_chip_8801.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicsdio.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicsdio.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.h
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc=
-.c
- create mode 100644 drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc=
-.h
- create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/Kconfig
- create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/Makefile
+ .../aic/aic8800_fdrv/aic_bsp_export.h         |   62 +
+ .../net/wireless/aic/aic8800_fdrv/aic_bus.h   |  191 +
+ .../wireless/aic/aic8800_fdrv/aicwf_debug.h   |   37 +
+ .../net/wireless/aic/aic8800_fdrv/hal_desc.h  |  359 ++
+ .../wireless/aic/aic8800_fdrv/ipc_compat.h    |   25 +
+ .../net/wireless/aic/aic8800_fdrv/ipc_host.c  |   42 +
+ .../net/wireless/aic/aic8800_fdrv/ipc_host.h  |  169 +
+ .../wireless/aic/aic8800_fdrv/ipc_shared.h    |  770 ++++
+ .../net/wireless/aic/aic8800_fdrv/lmac_mac.h  |  437 ++
+ .../net/wireless/aic/aic8800_fdrv/lmac_msg.h  | 3101 ++++++++++++++
+ .../wireless/aic/aic8800_fdrv/lmac_types.h    |   22 +
+ .../wireless/aic/aic8800_fdrv/reg_access.h    |  146 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_cmds.c |  471 +++
+ .../net/wireless/aic/aic8800_fdrv/rwnx_cmds.h |   99 +
+ .../wireless/aic/aic8800_fdrv/rwnx_compat.h   |   80 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_defs.h |  704 ++++
+ .../wireless/aic/aic8800_fdrv/rwnx_events.h   |  938 +++++
+ .../net/wireless/aic/aic8800_fdrv/rwnx_irqs.c |   49 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_irqs.h |   12 +
+ .../wireless/aic/aic8800_fdrv/rwnx_msg_rx.c   | 1620 ++++++++
+ .../wireless/aic/aic8800_fdrv/rwnx_msg_rx.h   |    8 +
+ .../wireless/aic/aic8800_fdrv/rwnx_msg_tx.c   | 3619 +++++++++++++++++
+ .../wireless/aic/aic8800_fdrv/rwnx_msg_tx.h   |  266 ++
+ .../wireless/aic/aic8800_fdrv/rwnx_platform.c | 2868 +++++++++++++
+ .../wireless/aic/aic8800_fdrv/rwnx_platform.h |  183 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_prof.h |  142 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_strs.c |  269 ++
+ .../net/wireless/aic/aic8800_fdrv/rwnx_strs.h |   31 +
+ .../wireless/aic/aic8800_fdrv/rwnx_utils.c    |   35 +
+ .../wireless/aic/aic8800_fdrv/rwnx_utils.h    |  131 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_v7.c   |  181 +
+ .../net/wireless/aic/aic8800_fdrv/rwnx_v7.h   |   21 +
+ 32 files changed, 17088 insertions(+)
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/aic_bsp_export.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/aic_bus.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/aicwf_debug.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/hal_desc.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/ipc_compat.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/ipc_host.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/ipc_host.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/ipc_shared.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/lmac_mac.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/lmac_msg.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/lmac_types.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/reg_access.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_compat.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_defs.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_events.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_prof.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.h
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.c
+ create mode 100644 drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.h
 
-diff --git a/drivers/net/wireless/aic/Kconfig b/drivers/net/wireless/aic/Kc=
-onfig
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/aic_bsp_export.h b/drive=
+rs/net/wireless/aic/aic8800_fdrv/aic_bsp_export.h
 new file mode 100644
-index 0000000000000..5218351da5e38
+index 0000000000000..11b414df42ce3
 --- /dev/null
-+++ b/drivers/net/wireless/aic/Kconfig
-@@ -0,0 +1,40 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+
-+config WLAN_VENDOR_AIC
-+	bool "AIC devices"
-+	default y
-+	help
-+	  Say Y to expose the AIC8800D80 U02 SDIO Wi-Fi driver.
-+	  The first upstreaming target is a narrow D80 U02 SDIO station
-+	  configuration; legacy transport, Bluetooth, Android, test and
-+	  manufacturing build switches are intentionally not exposed.
-+
-+if WLAN_VENDOR_AIC
-+
-+menuconfig AIC8800_BSP_SUPPORT
-+	tristate "AIC8800D80 U02 SDIO bus support"
-+	depends on MMC
-+	select CRYPTO_LIB_MD5
-+	help
-+	  Enable the AIC8800D80 U02 SDIO bus support package. It provides
-+	  the SDIO transport, chip operations and firmware download path used
-+	  by the AIC8800 FullMAC WLAN driver.
-+
-+	  Firmware files are loaded from the aic8800/ subdirectory of the
-+	  kernel firmware search path, normally /lib/firmware/aic8800/.
-+
-+	  If unsure, say N.
-+
-+if AIC8800_BSP_SUPPORT
-+
-+config AIC8800_SDIO_SUPPORT
-+	def_bool y
-+
-+config AIC8800_SDIO_PWRCTRL
-+	def_bool y
-+
-+source "drivers/net/wireless/aic/aic8800_bsp/Kconfig"
-+source "drivers/net/wireless/aic/aic8800_fdrv/Kconfig"
-+
-+endif # AIC8800_BSP_SUPPORT
-+endif # WLAN_VENDOR_AIC
-diff --git a/drivers/net/wireless/aic/Makefile b/drivers/net/wireless/aic/M=
-akefile
-new file mode 100644
-index 0000000000000..1ce5651aa4a75
---- /dev/null
-+++ b/drivers/net/wireless/aic/Makefile
-@@ -0,0 +1,7 @@
-+# SPDX-License-Identifier: GPL-2.0
-+
-+obj-$(CONFIG_AIC8800_BSP_SUPPORT) +=3D aic8800_bsp/
-+obj-$(CONFIG_AIC8800_WLAN_SUPPORT) +=3D aic8800_fdrv/
-+
-+ccflags-y +=3D -DAICWF_SDIO_SUPPORT
-+ccflags-y +=3D -DCONFIG_SDIO_PWRCTRL
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/Kconfig b/drivers/net/wir=
-eless/aic/aic8800_bsp/Kconfig
-new file mode 100644
-index 0000000000000..e82acc8875bc2
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/Kconfig
-@@ -0,0 +1,3 @@
-+# SPDX-License-Identifier: GPL-2.0-only
-+
-+# The D80 U02 SDIO station baseline has no selectable BSP suboptions.
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/Makefile b/drivers/net/wi=
-reless/aic/aic8800_bsp/Makefile
-new file mode 100644
-index 0000000000000..ad9763e704b89
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/Makefile
-@@ -0,0 +1,16 @@
-+# SPDX-License-Identifier: GPL-2.0
-+
-+obj-$(CONFIG_AIC8800_BSP_SUPPORT) +=3D aic8800_bsp.o
-+
-+aic8800_bsp-y :=3D \
-+	aic_chip_8800d80.o \
-+	aic_chip_ops.o \
-+	aic8800d80_compat.o \
-+	aic_bsp_main.o \
-+	aic_bsp_driver.o \
-+	aicsdio.o \
-+	aicsdio_txrxif.o
-+
-+ccflags-y +=3D -I$(src)/../aic8800_fdrv
-+ccflags-y +=3D -DAICWF_SDIO_SUPPORT
-+ccflags-y +=3D -DCONFIG_SDIO_PWRCTRL
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.c b/dri=
-vers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.c
-new file mode 100644
-index 0000000000000..45ce1edf7a800
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.c
-@@ -0,0 +1,292 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ *************************************************************************=
-*****
-+ *
-+ * Copyright (C) 2020 AIC semiconductor.
-+ *
-+ * @brief 8800d80 chip config
-+ *
-+ *************************************************************************=
-*****
-+ */
-+
-+#include "aic8800d80_compat.h"
-+#include "aic_bsp_driver.h"
-+
-+extern struct aicbsp_info_t aicbsp_info;
-+
-+u8 chip_sub_id;
-+
-+typedef u32 (*array2_tbl_t)[2];
-+
-+#define AIC_PATCH_MAGIG_NUM   0x48435450 // "PTCH"
-+#define AIC_PATCH_MAGIG_NUM_2 0x50544348 // "HCTP"
-+#define AIC_PATCH_BLOCK_MAX   4
-+
-+struct aic_patch_t {
-+	u32 magic_num;
-+	u32 pair_start;
-+	u32 magic_num_2;
-+	u32 pair_count;
-+	u32 block_dst[AIC_PATCH_BLOCK_MAX];
-+	u32 block_src[AIC_PATCH_BLOCK_MAX];
-+	u32 block_size[AIC_PATCH_BLOCK_MAX]; // word count
-+};
-+
-+//#define AIC_PATCH_OFST(mem) ((size_t)&((struct aic_patch_t *)0)->(mem))
-+#define AIC_PATCH_OFST(mem) offsetof(struct aic_patch_t, mem)
-+#define AIC_PATCH_ADDR(mem) ((u32)(aic_patch_str_base + AIC_PATCH_OFST(mem=
-)))
-+
-+static u32 aicbsp_syscfg_tbl_8800d80[][2] =3D {};
-+
-+int aicbsp_system_config_8800d80(struct aic_sdio_dev *sdiodev)
-+{
-+	int syscfg_num =3D sizeof(aicbsp_syscfg_tbl_8800d80) / sizeof(u32) / 2;
-+	int ret, cnt;
-+
-+	for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev,
-+						  aicbsp_syscfg_tbl_8800d80[cnt][0],
-+						  aicbsp_syscfg_tbl_8800d80[cnt][1]);
-+		if (ret) {
-+			pr_err("%x write fail: %d\n", aicbsp_syscfg_tbl_8800d80[cnt][0],
-+			       ret);
-+			return ret;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static u32 adaptivity_patch_tbl_8800d80[][2] =3D {
-+	{0x000C, 0x0000320A}, // linkloss_thd
-+	{0x009C, 0x00000000}, // ac_param_conf
-+	{0x0168, 0x00010000}, // tx_adaptivity_en
-+};
-+
-+#define USER_CHAN_MAX_TXPWR_EN_FLAG (0x01U << 1)
-+#define USER_TX_USE_ANA_F_FLAG      (0x01U << 2)
-+
-+#define CFG_USER_CHAN_MAX_TXPWR_EN 1
-+#define CFG_USER_TX_USE_ANA_F      0
-+
-+#define CFG_USER_EXT_FLAGS_EN                                             =
-     \
-+	(CFG_USER_CHAN_MAX_TXPWR_EN || CFG_USER_TX_USE_ANA_F)
-+
-+static u32 patch_tbl_8800d80[][2] =3D {
-+#ifdef AIC8800_USE_5G
-+	{0x00b4, 0xf3010001},
-+#else
-+	{0x00b4, 0xf3010000},
-+#endif
-+#if defined(CONFIG_AMSDU_RX)
-+	{0x170, 0x0100000a},
-+#endif
-+#ifdef CONFIG_IRQ_FALL
-+	{0x00000170, 0x0000010a}, // irqf
-+#endif
-+
-+#if CFG_USER_EXT_FLAGS_EN
-+	{0x0188, 0x00000001
-+#if CFG_USER_CHAN_MAX_TXPWR_EN
-+				 | USER_CHAN_MAX_TXPWR_EN_FLAG
-+#endif
-+#if CFG_USER_TX_USE_ANA_F
-+				 | USER_TX_USE_ANA_F_FLAG
-+#endif
-+	}, // user_ext_flags
-+#endif
-+};
-+
-+#ifdef CONFIG_OOB
-+// for 8800d40/d80     map data1 isr to gpiob1
-+static u32 gpio_cfg_tbl_8800d40d80[][2] =3D {
-+	{0x40504084, 0x00000006}, {0x40500040, 0x00000000},
-+	{0x40100030, 0x00000001}, {0x40241020, 0x00000001},
-+	{0x40240030, 0x00000004}, {0x40240020, 0x03020700},
-+};
-+#endif
-+
-+int aicwifi_sys_config_8800d80(struct aic_sdio_dev *sdiodev)
-+{
-+#ifdef CONFIG_OOB
-+	int ret, cnt;
-+	int gpiocfg_num =3D sizeof(gpio_cfg_tbl_8800d40d80) / sizeof(u32) / 2;
-+
-+	for (cnt =3D 0; cnt < gpiocfg_num; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev,
-+						  gpio_cfg_tbl_8800d40d80[cnt][0],
-+						  gpio_cfg_tbl_8800d40d80[cnt][1]);
-+		if (ret) {
-+			pr_err("%x write fail: %d\n", gpio_cfg_tbl_8800d40d80[cnt][0], ret);
-+			return ret;
-+		}
-+	}
-+#endif
-+
-+	return 0;
-+}
-+
-+#define NEW_PATCH_BUFFER_MAP 1
-+
-+int aicwifi_patch_config_8800d80(struct aic_sdio_dev *sdiodev)
-+{
-+	const u32 rd_patch_addr =3D RAM_FMAC_FW_ADDR + 0x0198;
-+	u32 aic_patch_addr;
-+	u32 config_base, aic_patch_str_base;
-+#if (NEW_PATCH_BUFFER_MAP)
-+	u32 patch_buff_addr, patch_buff_base, rd_version_addr, rd_version_val;
-+#endif
-+	u32 start_addr =3D 0x0016F800;
-+	u32 patch_addr =3D start_addr;
-+	u32 patch_cnt =3D sizeof(patch_tbl_8800d80) / sizeof(u32) / 2;
-+	struct dbg_mem_read_cfm rd_patch_addr_cfm;
-+	int ret =3D 0;
-+	int cnt =3D 0;
-+	// adap test
-+	int adap_patch_cnt =3D 0;
-+
-+	if (aicbsp_info.adap_test) { //(adap_test) {
-+		pr_info("%s for adaptivity test \r\n", __func__);
-+		adap_patch_cnt =3D sizeof(adaptivity_patch_tbl_8800d80) / sizeof(u32) / =
-2;
-+	}
-+
-+	aic_patch_addr =3D rd_patch_addr + 8;
-+
-+	ret =3D
-+		rwnx_send_dbg_mem_read_req(sdiodev, rd_patch_addr, &rd_patch_addr_cfm);
-+	if (ret) {
-+		pr_info("patch rd fail\n");
-+		return ret;
-+	}
-+
-+	config_base =3D rd_patch_addr_cfm.memdata;
-+
-+	ret =3D
-+		rwnx_send_dbg_mem_read_req(sdiodev, aic_patch_addr, &rd_patch_addr_cfm);
-+	if (ret) {
-+		pr_info("patch str rd fail\n");
-+		return ret;
-+	}
-+	aic_patch_str_base =3D rd_patch_addr_cfm.memdata;
-+
-+#if (NEW_PATCH_BUFFER_MAP)
-+	rd_version_addr =3D RAM_FMAC_FW_ADDR + 0x01C;
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, rd_version_addr,
-+					 &rd_patch_addr_cfm);
-+	if (ret) {
-+		pr_err("version val[0x%x] rd fail: %d\n", rd_version_addr, ret);
-+		return ret;
-+	}
-+	rd_version_val =3D rd_patch_addr_cfm.memdata;
-+	pr_info("AICWF rd_version_val=3D%08X\n", rd_version_val);
-+	sdiodev->fw_version_uint =3D rd_version_val;
-+	if (rd_version_val > 0x06090100) {
-+		patch_buff_addr =3D rd_patch_addr + 12;
-+		ret =3D rwnx_send_dbg_mem_read_req(sdiodev, patch_buff_addr,
-+						 &rd_patch_addr_cfm);
-+		if (ret) {
-+			pr_err("patch buf rd fail\n");
-+			return ret;
-+		}
-+		patch_buff_base =3D rd_patch_addr_cfm.memdata;
-+		start_addr =3D patch_buff_base;
-+		patch_addr =3D start_addr;
-+	}
-+#endif
-+
-+	ret =3D rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(magic_num),
-+					  AIC_PATCH_MAGIG_NUM);
-+	if (ret) {
-+		pr_err("0x%x write fail\n", AIC_PATCH_ADDR(magic_num));
-+		return ret;
-+	}
-+
-+	ret =3D rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(magic_num_2),
-+					  AIC_PATCH_MAGIG_NUM_2);
-+	if (ret) {
-+		pr_err("0x%x write fail\n", AIC_PATCH_ADDR(magic_num_2));
-+		return ret;
-+	}
-+
-+	ret =3D rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(pair_start),
-+					  patch_addr);
-+	if (ret) {
-+		pr_err("0x%x write fail\n", AIC_PATCH_ADDR(pair_start));
-+		return ret;
-+	}
-+
-+	ret =3D rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(pair_count),
-+					  patch_cnt + adap_patch_cnt);
-+	if (ret) {
-+		pr_err("0x%x write fail\n", AIC_PATCH_ADDR(pair_count));
-+		return ret;
-+	}
-+
-+	for (cnt =3D 0; cnt < patch_cnt; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt,
-+						  patch_tbl_8800d80[cnt][0] +
-+						  config_base);
-+		if (ret) {
-+			pr_err("%x write fail\n", start_addr + 8 * cnt);
-+			return ret;
-+		}
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt + 4,
-+						  patch_tbl_8800d80[cnt][1]);
-+		if (ret) {
-+			pr_err("%x write fail\n", start_addr + 8 * cnt + 4);
-+			return ret;
-+		}
-+	}
-+
-+	if (aicbsp_info.adap_test) {
-+		int tmp_cnt =3D patch_cnt + adap_patch_cnt;
-+
-+		for (cnt =3D patch_cnt; cnt < tmp_cnt; cnt++) {
-+			int tbl_idx =3D cnt - patch_cnt;
-+
-+			ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt,
-+							  adaptivity_patch_tbl_8800d80[tbl_idx][0]
-+							  + config_base);
-+			if (ret) {
-+				pr_err("%x write fail\n", start_addr + 8 * cnt);
-+				return ret;
-+			}
-+			ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt + 4,
-+							  adaptivity_patch_tbl_8800d80[tbl_idx][1]);
-+			if (ret) {
-+				pr_err("%x write fail\n", start_addr + 8 * cnt + 4);
-+				return ret;
-+			}
-+		}
-+	}
-+
-+	ret =3D
-+		rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(block_size[0]), 0);
-+	if (ret) {
-+		pr_err("block_size[0x%x] write fail: %d\n",
-+		       AIC_PATCH_ADDR(block_size[0]), ret);
-+		return ret;
-+	}
-+	ret =3D
-+		rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(block_size[1]), 0);
-+	if (ret) {
-+		pr_err("block_size[0x%x] write fail: %d\n",
-+		       AIC_PATCH_ADDR(block_size[1]), ret);
-+		return ret;
-+	}
-+	ret =3D
-+		rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(block_size[2]), 0);
-+	if (ret) {
-+		pr_err("block_size[0x%x] write fail: %d\n",
-+		       AIC_PATCH_ADDR(block_size[2]), ret);
-+		return ret;
-+	}
-+	ret =3D
-+		rwnx_send_dbg_mem_write_req(sdiodev, AIC_PATCH_ADDR(block_size[3]), 0);
-+	if (ret) {
-+		pr_err("block_size[0x%x] write fail: %d\n",
-+		       AIC_PATCH_ADDR(block_size[3]), ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.h b/dri=
-vers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.h
-new file mode 100644
-index 0000000000000..a22e440b09a66
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic8800d80_compat.h
-@@ -0,0 +1,11 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/aic_bsp_export.h
+@@ -0,0 +1,62 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _AIC8800D80_COMPAT_H_
-+#define _AIC8800D80_COMPAT_H_
-+
-+#include "aicsdio.h"
-+
-+int aicbsp_system_config_8800d80(struct aic_sdio_dev *sdiodev);
-+int aicwifi_sys_config_8800d80(struct aic_sdio_dev *sdiodev);
-+int aicwifi_patch_config_8800d80(struct aic_sdio_dev *sdiodev);
-+
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.c b/driv=
-ers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.c
-new file mode 100644
-index 0000000000000..e3f05fc41376d
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.c
-@@ -0,0 +1,1342 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ *************************************************************************=
-*****
-+ *
-+ * Copyright (C) 2020 AIC semiconductor.
-+ *
-+ * @brief 8800dc chip config
-+ *
-+ *************************************************************************=
-*****
-+ */
-+
-+#include "aic8800dc_compat.h"
-+#include "aic_bsp_driver.h"
-+#include <linux/version.h>
-+
-+u8 chip_sub_id;
-+u8 chip_mcu_id;
-+
-+static u32 syscfg_tbl_8800dc[][2] =3D {
-+	{0x40500010, 0x00000004}, {0x40500010, 0x00000006}, // 160m clk
-+};
-+
-+static u32 syscfg_tbl_8800dc_sdio_u01[][2] =3D {
-+	{0x40030000, 0x00036724}, // loop forever after assert_err
-+	{0x0011E800, 0xE7FE4070}, {0x40030084, 0x0011E800},
-+	{0x40030080, 0x00000001}, {0x4010001C, 0x00000000},
-+};
-+
-+static u32 syscfg_tbl_8800dc_sdio_u02[][2] =3D {
-+	{0x40030000, 0x00036DA4}, // loop forever after assert_err
-+	{0x0011E800, 0xE7FE4070}, {0x40030084, 0x0011E800},
-+	{0x40030080, 0x00000001}, {0x4010001C, 0x00000000},
-+};
-+
-+#ifdef CONFIG_OOB
-+static u32 oobcfg_tbl_8800dc_sdio_u02[][2] =3D {
-+	{0x40504044, 0x2}, // oob_enable
-+	{0x40500060, 0x03020700}, {0x40500040, 0},        {0x40100030, 1},
-+	{0x40241020, 1},          {0x402400f0, 0x340022},
-+};
-+#endif // CONFIG_OOB
-+
-+static u32 syscfg_tbl_masked_8800dc[][3] =3D {
-+// #ifdef CONFIG_PMIC_SETTING
-+#if defined(CONFIG_VRF_DCDC_MODE)
-+	{0x7000216C, (0x3 << 2), (0x1 << 2)}, // pmic_pmu_init
-+	{0x700021BC, (0x3 << 2), (0x1 << 2)},
-+	{0x70002118, ((0x7 << 4) | (0x1 << 7)), ((0x2 << 4) | (0x1 << 7))},
-+	{0x70002104, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x7000210C, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x70002170, (0xF << 0), (0x1 << 0)},
-+	{0x70002190, (0x3F << 0), (24 << 0)},
-+	{0x700021CC, ((0x7 << 4) | (0x1 << 7)), ((0x0 << 4) | (0x0 << 7))},
-+	{0x700010A0, (0x1 << 11), (0x1 << 11)},
-+	{0x70001034, ((0x1 << 20) | (0x7 << 26)), ((0x0 << 20) | (0x2 << 26))},
-+	{0x70001038, (0x1 << 8), (0x1 << 8)},
-+	{0x70001094, (0x3 << 2), (0x0 << 2)},
-+	{0x700021D0, ((0x1 << 5) | (0x1 << 6)), ((0x1 << 5) | (0x1 << 6))},
-+	{0x70001000, ((0x1 << 0) | (0x1 << 20) | (0x1 << 22)),
-+	 ((0x1 << 0) | (0x1 << 20) | (0x0 << 22))},
-+	{0x70001028, (0xf << 2), (0x1 << 2)},
-+#else
-+	{0x7000216C, (0x3 << 2), (0x1 << 2)}, // pmic_pmu_init
-+	{0x700021BC, (0x3 << 2), (0x1 << 2)},
-+	{0x70002118, ((0x7 << 4) | (0x1 << 7)), ((0x2 << 4) | (0x1 << 7))},
-+	{0x70002104, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x7000210C, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x70002170, (0xF << 0), (0x1 << 0)},
-+	{0x70002190, (0x3F << 0), (24 << 0)},
-+	{0x700021CC, ((0x7 << 4) | (0x1 << 7)), ((0x0 << 4) | (0x0 << 7))},
-+	{0x700010A0, (0x1 << 11), (0x1 << 11)},
-+	{0x70001034, ((0x1 << 20) | (0x7 << 26)), ((0x0 << 20) | (0x2 << 26))},
-+	{0x70001038, (0x1 << 8), (0x1 << 8)},
-+	{0x70001094, (0x3 << 2), (0x0 << 2)},
-+	{0x700021D0, ((0x1 << 5) | (0x1 << 6)), ((0x1 << 5) | (0x1 << 6))},
-+	{0x70001000, ((0x1 << 0) | (0x1 << 20) | (0x1 << 22)),
-+	 ((0x0 << 0) | (0x1 << 20) | (0x0 << 22))},
-+	{0x70001028, (0xf << 2), (0x1 << 2)},
-+#endif
-+	// #endif /* CONFIG_PMIC_SETTING */
-+	{0x00000000, 0x00000000, 0x00000000}, // last one
-+};
-+
-+static u32 syscfg_tbl_masked_8800dc_h[][3] =3D {
-+	{0x7000216C, ((0x3 << 2) | (0x3 << 4)),
-+	 ((0x2 << 2) | (0x2 << 4))}, // pmic_pmu_init
-+	{0x70002138, (0xFF << 0), (0xFF << 0)},
-+	{0x7000213C, (0xFF << 0), (0xFF << 0)},
-+	{0x70002144, (0xFF << 0), (0xFF << 0)},
-+	{0x700021BC, (0x3 << 2), (0x1 << 2)},
-+	{0x70002118, ((0x7 << 4) | (0x1 << 7)), ((0x2 << 4) | (0x1 << 7))},
-+	{0x70002104, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x7000210C, ((0x3F << 0) | (0x1 << 6)), ((0x2 << 0) | (0x1 << 6))},
-+	{0x70002170, (0xF << 0), (0x1 << 0)},
-+	{0x70002190, (0x3F << 0), (24 << 0)},
-+	{0x700021CC, ((0x7 << 4) | (0x1 << 7)), ((0x0 << 4) | (0x0 << 7))},
-+	{0x700010A0, (0x1 << 11), (0x1 << 11)},
-+	//{0x70001034, ((0x1 << 20) | (0x7 << 26)), ((0x0 << 20) | (0x2 << 26))},
-+	{0x70001038, (0x1 << 8), (0x1 << 8)},
-+	{0x70001094, (0x3 << 2), (0x0 << 2)},
-+	{0x700021D0, ((0x1 << 5) | (0x1 << 6)), ((0x1 << 5) | (0x1 << 6))},
-+#if defined(CONFIG_VRF_DCDC_MODE)
-+	{0x70001000, ((0x1 << 0) | (0x1 << 20) | (0x1 << 22)),
-+	 ((0x1 << 0) | (0x1 << 20) | (0x0 << 22))},
-+#else
-+	{0x70001000, ((0x1 << 0) | (0x1 << 20) | (0x1 << 22)),
-+	 ((0x0 << 0) | (0x1 << 20) | (0x0 << 22))},
-+#endif
-+	{0x70001028, (0xf << 2), (0x1 << 2)},
-+
-+	{0x00000000, 0x00000000, 0x00000000}, // last one
-+};
-+
-+static u32 syscfg_tbl_masked_8800dc_u01[][3] =3D {
-+	// #ifdef CONFIG_PMIC_SETTING
-+	{0x70001000, (0x1 << 16), (0x1 << 16)}, // for low temperature
-+	{0x70001028, (0x1 << 6), (0x1 << 6)},
-+	{0x70001000, (0x1 << 16), (0x0 << 16)},
-+	// #endif /* CONFIG_PMIC_SETTING */
-+};
-+
-+static u32 patch_tbl_wifisetting_8800dc_u01[][2] =3D {{0x010c, 0x01001E01}=
-};
-+
-+static u32 patch_tbl_wifisetting_8800dc_u02[][2] =3D {
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	{0x0124, 0x01011E01}
-+#else
-+	{0x0124, 0x01001E01}
-+#endif
-+};
-+
-+static u32 ldpc_cfg_ram[] =3D {
-+	0x00767679, 0x1DF8F870, 0x1DF8F870, 0x1DF8F870, 0x1DF8F870, 0x006E6E72,
-+	0x1DF8F869, 0x1DF8F869, 0x1DF8F869, 0x1DF8F869, 0x0076767B, 0x1DF8F870,
-+	0x1DF8F870, 0x1DF8F870, 0x1DF8F870, 0x007E7E85, 0x1DF4F876, 0x1DF4F876,
-+	0x1DF4F876, 0x1DF8F876, 0x0081818A, 0x1DF8F87B, 0x1DF8F87B, 0x1DF8F87B,
-+	0x1DF8F87B, 0x0081818D, 0x1DF8F87B, 0x1DF8F87B, 0x1DF8F87B, 0x1DF8F87B,
-+	0x0081818A, 0x1DF8F87B, 0x1DF8F87C, 0x1DF8F87B, 0x1DF8F87B, 0x007E7E40,
-+	0x1DF8F87B, 0x1DF8F87B, 0x1DF8F87B, 0x1DF8F87B, 0x008B8B92, 0x1DF8F887,
-+	0x1DF8F889, 0x1DF8F887, 0x1DF8F887, 0x00515155, 0x1DF8F84C, 0x1DF8F84C,
-+	0x1DF8F889, 0x1DF8F889, 0x00515154, 0x1DF8F84C, 0x1DF8F84C, 0x1DF8F888,
-+	0x1DF8F888, 0x004F4F53, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A,
-+	0x004F4F53, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x004F4F53,
-+	0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x004E4E53, 0x1DF8F849,
-+	0x1DF8F848, 0x1DF8F848, 0x1DF8F848, 0x004D4D52, 0x1DF8F847, 0x1DF8F847,
-+	0x1DF8F847, 0x1DF8F847, 0x004F4F55, 0x1DF8F84B, 0x1DF8F84A, 0x1DF8F84A,
-+	0x1DF8F84A, 0x004E4E53, 0x1DF8F849, 0x1DF8F848, 0x1DF8F848, 0x1DF8F848,
-+	0x0049494D, 0x1DF8F844, 0x1DF8F844, 0x1DF8F844, 0x1DF8F844, 0x0051518F,
-+	0x1DF8F849, 0x1DF8F848, 0x1DF8F848, 0x1DF8F848, 0x00424277, 0x1DF8F83F,
-+	0x1DF8F83C, 0x1DF8F83C, 0x1DF8F83C, 0x00424275, 0x1DF8F89E, 0x1DF8F83C,
-+	0x1DF8F83C, 0x1DF8F83C, 0x0055555C, 0x1DF8F84C, 0x1DF8F84C, 0x1DF8F84C,
-+	0x1DF8F84C, 0x0053535C, 0x1DF8F84C, 0x1DF8F84B, 0x1DF8F84B, 0x1DF8F84B,
-+	0x00F8F89E, 0x1DF8F88C, 0x1DF8F84A, 0x1DF8F84A, 0x1DF8F84A, 0x00898940,
-+	0x18F8F846, 0x18CFF845, 0x18CFF844, 0x18CFF844, 0x0056565F, 0x1DF8F84F,
-+	0x1DF8F84F, 0x1DF8F84F, 0x1DF8F84F, 0x0055555E, 0x1DF8F84E, 0x1DF8F84E,
-+	0x1DF8F84E, 0x1DF8F84E, 0x0056565F, 0x1DF8F84F, 0x1DF8F84F, 0x1DF8F84F,
-+	0x1DF8F84F, 0x00555561, 0x1DF8F850, 0x1DF8F84E, 0x1DF8F84E, 0x1DF8F84E,
-+	0x0053535F, 0x1DF8F84D, 0x1DF8F84C, 0x1DF8F84C, 0x1DF8F84C, 0x0055555F,
-+	0x1DF8F84F, 0x1DF8F84E, 0x1DF8F84E, 0x1DF8F84E, 0x005555AA, 0x1DF8F854,
-+	0x1DF8F84E, 0x1DF8F84E, 0x1DF8F84E, 0x005959A6, 0x1DF8F84D, 0x1DF8F84C,
-+	0x1DF8F84C, 0x1DF8F84C, 0x004F4F9B, 0x1DF8F84E, 0x1DF8F846, 0x1DF8F846,
-+	0x1DF8F846, 0x00F8F8A5, 0x1DF8F894, 0x1DF8F84C, 0x1DF8F84C, 0x1DF8F84C,
-+	0x009898A4, 0x1DF8F84D, 0x1DF8F84C, 0x1DF8F84C, 0x1DF8F84C, 0x00464686,
-+	0x1DF8F8B3, 0x1DF8F83D, 0x1DF8F83D, 0x1DF8F83D, 0x008E8E40, 0x1AF8F848,
-+	0x1ADFF848, 0x1ADFF846, 0x1ADFF846, 0x007F7F40, 0x18D2D275, 0x18D2D23A,
-+	0x18D2D23A, 0x18D2D239, 0x00454540, 0x0F868664, 0x0F86863E, 0x0F86863D,
-+	0x0F86863D, 0x005C5C64, 0x1DF8F856, 0x1DF8F855, 0x1DF8F855, 0x1DF8F855,
-+	0x005B5B68, 0x1DF8F858, 0x1DF8F855, 0x1DF8F855, 0x1DF8F855, 0x005A5A64,
-+	0x1DF8F855, 0x1DF8F854, 0x1DF8F854, 0x1DF8F854, 0x005A5AB5, 0x1DF8F85B,
-+	0x1DF8F855, 0x1DF8F854, 0x1DF8F854, 0x00F8F8B0, 0x1DF8F8A3, 0x1DF8F852,
-+	0x1DF8F852, 0x1DF8F852, 0x00A4A4AE, 0x1DF8F854, 0x1DF8F852, 0x1DF8F852,
-+	0x1DF8F852, 0x009A9A40, 0x1DF8F84E, 0x1DF8F84D, 0x1DF8F84C, 0x1DF8F84C,
-+	0x009C9C40, 0x1DF8F895, 0x1DF8F849, 0x1DF8F84A, 0x1DF8F84A, 0x00494940,
-+	0x1197976F, 0x11979742, 0x11979741, 0x11979741, 0x006E6E74, 0x1DF8F869,
-+	0x1DF8F869, 0x1DF8F869, 0x1DF8F869, 0x006E6E40, 0x1ADEF869, 0x1ADEF869,
-+	0x1ADEF869, 0x1ADEF869, 0x00757540, 0x0D78F86E, 0x0D78F86E, 0x0D78F86E,
-+	0x0D79F86E, 0x00787885, 0x1DF8F873, 0x1DF8F873, 0x1DF8F873, 0x1DF8F873,
-+	0x00787840, 0x1DF8F873, 0x1DF8F873, 0x1DF8F873, 0x1DF8F873, 0x00787840,
-+	0x0E81F873, 0x0E81F873, 0x0E81F873, 0x0E82F873, 0x00404040, 0x0E82F873,
-+	0x0E82F873, 0x0E82F873, 0x0E82F873, 0x00818140, 0x1092F87E, 0x1092F87E,
-+	0x1092F87E, 0x1092F87E, 0x00404040, 0x1092F87E, 0x1092F87E, 0x1092F87E,
-+	0x1092F87E, 0x00737340, 0x14B2B26B, 0x14B2B235, 0x14B2B235, 0x14B2B235,
-+	0x00404040, 0x0E828260, 0x0E82823D, 0x0E82823C, 0x0E82823C, 0x00404040,
-+	0x0F8B8B66, 0x0F8B8B3F, 0x0F8B8B3D, 0x0F8B8B3D, 0x00404040, 0x0B68683D,
-+	0x0B68681E, 0x0B68681E, 0x0B68681E, 0x00222240, 0x06434318, 0x06434329,
-+	0x06434318, 0x06434318, 0x00404040, 0x129D9D72, 0x129D9D43, 0x129D9D41,
-+	0x129D9D41, 0x00404040, 0x0D757542, 0x0D757520, 0x0D757520, 0x0D757520,
-+	0x00232340, 0x084C4C19, 0x084C4C2C, 0x084C4C19, 0x084C4C19
-+};
-+
-+static u32 agc_cfg_ram[] =3D {
-+	0x20000000, 0x0400000E, 0x3000200E, 0x5B000000, 0x0400004B, 0x3000008E,
-+	0x32000000, 0x0400007B, 0x40000000, 0xF8000026, 0x04000011, 0x4819008E,
-+	0x9C000020, 0x08000191, 0x38008000, 0x0A000000, 0x08104411, 0x38018000,
-+	0x0C004641, 0x08D00014, 0x30000000, 0x01000000, 0x04000017, 0x30000000,
-+	0x3C000000, 0x0400001A, 0x38020000, 0x40000001, 0x0800001D, 0x3808008E,
-+	0x14000050, 0x08000020, 0x4000008E, 0xA400007B, 0x00000101, 0x3000339F,
-+	0x41000700, 0x04104420, 0x90000000, 0x49000000, 0xF00E842F, 0xEC0E842C,
-+	0xEC0E842C, 0x04000032, 0x30000000, 0x48000101, 0x04000032, 0x30000000,
-+	0x48000202, 0x04000032, 0x30000000, 0x46000000, 0x04000011, 0x58010006,
-+	0x3D040472, 0xDC204439, 0x081DD4D2, 0x480A0006, 0xDC2044DC, 0x081DD43C,
-+	0x38050004, 0x0EF1F1C3, 0x342044DC, 0x30000000, 0x01000000, 0x04000042,
-+	0x30000000, 0x33000000, 0x04104445, 0x38008000, 0x2200109C, 0x08104448,
-+	0x38008000, 0x23D4509C, 0x08104417, 0x9000A000, 0x32000000, 0x18000063,
-+	0x14000060, 0x1C000051, 0x10000057, 0x38028000, 0x0C000001, 0x08D04466,
-+	0x3000200F, 0x00000000, 0x00000000, 0x38030000, 0x0C002601, 0x08D0445A,
-+	0x30000000, 0x3D020230, 0x0400005D, 0x30000000, 0x3E000100, 0x04000066,
-+	0x38028000, 0x0C001601, 0x34204466, 0x38028000, 0x0C000A01, 0x34204466,
-+	0x38008004, 0xFF000000, 0x0800007B, 0x3800802F, 0x26000000, 0x0800006C,
-+	0x380404AF, 0x1F191010, 0x0800006F, 0x20000CAF, 0x04000071, 0x60000CAF,
-+	0x18700079, 0x14000077, 0x10000075, 0x28140CAF, 0x09B00084, 0x280A0CAF,
-+	0x09B00084, 0x28060CAF, 0x09B00084, 0x28048086, 0x0800007D, 0x38000086,
-+	0x22800000, 0x04000080, 0x30000000, 0x0EF1F101, 0x36004883, 0x28020000,
-+	0x08000085, 0x3802008E, 0x3D040431, 0x08000088, 0x3805008E, 0x1F241821,
-+	0x0800008B, 0x3000008E, 0xA0163021, 0x0400008E, 0x3000008E, 0x0EF10012,
-+	0x34000091, 0x300000CC, 0x50000000, 0x04000094, 0x380095FE, 0x32010000,
-+	0x04000097, 0x50001FFE, 0x5A010000, 0x6DC9989B, 0xFC19D4B9, 0x30000186,
-+	0x3D840373, 0x0400009E, 0x3000008E, 0x0A000000, 0x040000A1, 0x3000008E,
-+	0x22C00000, 0x040000A4, 0x9000028E, 0x32010001, 0x8E4000AA, 0xC80000B0,
-+	0x00000000, 0x00000000, 0x3000008E, 0x32010001, 0x040000CB, 0x3000008E,
-+	0x29000000, 0x94045011, 0x300019B6, 0x32010000, 0x040000B3, 0x300019B6,
-+	0x3D040431, 0x040000B6, 0x300019B6, 0x22800000, 0x04000097, 0x30000186,
-+	0x3D840473, 0x040000BC, 0x3000008E, 0x29030000, 0x040000BF, 0x9AEE028E,
-+	0x32010100, 0x7C0000C5, 0xCC0000B0, 0x080000B0, 0x00000000, 0x3000008E,
-+	0x32010100, 0x040000C8, 0x3000028E, 0x29000000, 0x94045011, 0x5000038E,
-+	0x29000000, 0x94045011, 0xC0000035, 0x38010006, 0x3D040472, 0x080000D2,
-+	0x30000004, 0x0EF1F141, 0x340000D5, 0x28040004, 0x080000D7, 0x2808000E,
-+	0x080000D9, 0x3000018E, 0x0EF10052, 0x340000DC, 0x3000038E, 0x29000000,
-+	0x94045011, 0x38020000, 0x32000000, 0x080000E2, 0x60000000, 0xD80000E6,
-+	0xD40000E9, 0x040000EC, 0x30000000, 0x0EF1F121, 0x360048EF, 0x30000000,
-+	0x0C002421, 0x360048EF, 0x30000000, 0x0C000021, 0x360048EF, 0x28020000,
-+	0x0800007B, 0x50001EFE, 0x5A010000, 0x6DC998F5, 0xFC19D4F8, 0x3000028E,
-+	0x32000040, 0x040000FB, 0x3AEE028E, 0x32000080, 0x040000FB, 0x30000000,
-+	0x0EF1F101, 0x360048FE, 0x28020000, 0x08000100, 0x3802008E, 0x3D040431,
-+	0x08000103, 0x3805008E, 0x1F241821, 0x08000106, 0x3000008E, 0xA0163021,
-+	0x04000109, 0x3000008E, 0x0EF10012, 0x3400010C, 0x300014F6, 0x32010000,
-+	0x04000114, 0x20000000, 0x04000111, 0x300000EC, 0x50000000, 0x040000F1,
-+	0x300014F6, 0x32030000, 0x04000117, 0x30001086, 0x3D840473, 0x0400011A,
-+	0x5000108E, 0x22C00000, 0x8E47C0CB, 0xCB30011E, 0x300019B6, 0x32040000,
-+	0x04000121, 0x300019B6, 0x3D040431, 0x04000124, 0x300019B6, 0x22800000,
-+	0x04000111, 0x00000000, 0x00000000, 0x00000000, 0x30000186, 0x3D840473,
-+	0x0400012D, 0x5000038E, 0x29000000, 0x94045011, 0xC0000131, 0x380C800E,
-+	0xFF000000, 0x08000134, 0x30000004, 0x0FF1F103, 0x34000137, 0x28020000,
-+	0x08000139, 0x3000038E, 0x29000000, 0x94045011, 0x00000000, 0x00000000,
-+	0x00000000, 0x58010006, 0x3D040472, 0xDC204543, 0x081DD4D2, 0x480A0006,
-+	0xDC2044DC, 0x081DD546, 0x38050004, 0x0EF1F141, 0x342044DC, 0x2802800E,
-+	0x080000DC, 0x48000035, 0x0400014A, 0x7896638F, 0x4100000F, 0x8C00014F,
-+	0x080450C4, 0x90104574, 0x88C8620F, 0xC000015A, 0x90104574, 0x08104554,
-+	0x94104557, 0x3000628F, 0x29000000, 0x9404517A, 0x3000638F, 0x29000000,
-+	0x0410457A, 0x3800E005, 0x3D010131, 0x0810455D, 0xA832600F, 0x90104574,
-+	0x08000154, 0x94104557, 0xC6104567, 0xC4185563, 0x5802E00F, 0x0FEEEA07,
-+	0x80000174, 0x3420456B, 0x5802E00F, 0x0EEEEA07, 0x80000174, 0x3420456B,
-+	0x30004000, 0x33000001, 0x0400016E, 0x38034005, 0x3D030373, 0x08000171,
-+	0x30006007, 0x33000000, 0x04000174, 0x3000608F, 0x29000000, 0x94045177,
-+	0x4000608F, 0xA010457D, 0x0410457A, 0x3000608F, 0x64000101, 0x04104411,
-+	0x3000608F, 0x64000101, 0x04104580, 0x3000618F, 0x42000001, 0x04000183,
-+	0x38028000, 0x32000000, 0x08104586, 0x280A618F, 0x08000188, 0x480A618F,
-+	0xBC00018B, 0x0800018E, 0x3000618F, 0x34000001, 0x04000005, 0x3000618F,
-+	0x34000000, 0x04000008, 0x3000008F, 0x0EEAED0F, 0x36000194, 0x38038000,
-+	0x34000000, 0x08000197, 0x38028005, 0x29010002, 0x0800019A, 0x3000028F,
-+	0x2200209C, 0x0400019D, 0x3000028F, 0x23D4509C, 0x040001A0, 0x2814028F,
-+	0x080001A2, 0x3000028F, 0x43010201, 0x040001A5, 0x3000128F, 0x32000100,
-+	0x040001A8, 0x5AEE138F, 0x4100000F, 0x7C0001AC, 0x080000F9, 0x592C138F,
-+	0x29000000, 0x8C0001B0, 0x080000F9, 0x2000138F, 0x94045011, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-+	0x00000000, 0x00000000};
-+
-+static u32 txgain_map[96] =3D {
-+#ifdef CONFIG_FPGA_VERIFICATION
-+	0x20c0c971, 0x20c0c980, 0x20c0c992, 0x20c0c9a6, 0x20c0c9bf, 0x20c0caa5,
-+	0x20c0cabd, 0x20c0cba0, 0x20c0cbb6, 0x20c0cbea, 0x20c0ccc5, 0x20c0cdac,
-+	0x20c0cdd0, 0x20c0ceb2, 0x20c0ceff, 0x20c0cfff, 0x20c0c922, 0x20c0c922,
-+	0x20c0c922, 0x20c0c922, 0x20c0c922, 0x20c0c922, 0x20c0c922, 0x20c0c927,
-+	0x20c0c92c, 0x20c0c931, 0x20c0c937, 0x20c0c93f, 0x20c0c946, 0x20c0c94f,
-+	0x20c0c959, 0x20c0c964, 0x20c0cbee, 0x20c0cce0, 0x20c0ccff, 0x20c0cde2,
-+	0x20c0cdfe, 0x20c0cede, 0x20c0cefc, 0x20c0cfd9, 0x20c0cff8, 0x20c0cfff,
-+	0x20c0cfff, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff,
-+	0x20c0c97c, 0x20c0c97c, 0x20c0c97c, 0x20c0c97c, 0x20c0c97c, 0x20c0c97c,
-+	0x20c0c97c, 0x20c0c98c, 0x20c0ca79, 0x20c0ca89, 0x20c0cb74, 0x20c0cb84,
-+	0x20c0cb94, 0x20c0cba8, 0x20c0cbbb, 0x20c0cbd2, 0x20c0cbee, 0x20c0cce0,
-+	0x20c0ccff, 0x20c0cde2, 0x20c0cdfe, 0x20c0cede, 0x20c0cefc, 0x20c0cfd9,
-+	0x20c0cff8, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff, 0x20c0cfff,
-+	0x20c0cfff, 0x20c0cfff, 0x20c0c97c, 0x20c0c97c, 0x20c0c97c, 0x20c0c97c,
-+	0x20c0c97c, 0x20c0c97c, 0x20c0c97c, 0x20c0c98c, 0x20c0ca79, 0x20c0ca89,
-+	0x20c0cb74, 0x20c0cb84, 0x20c0cb94, 0x20c0cba8, 0x20c0cbbb, 0x20c0cbd2,
-+#else
-+	// 11b
-+	0x00ffd780,
-+	0x00ffd872,
-+	0x00ffd880,
-+	0x00ffd972,
-+	0x00ffd980,
-+	0x00ffda75,
-+	0x00ffda86,
-+	0x00ffdb77,
-+	0x00ffdb86,
-+	0x00ffdc78,
-+	0x00ffdc89,
-+	0x00ffdd79,
-+	0x00ffdd89,
-+	0x00ffde83,
-+	0x00ffdf79,
-+	0x00ffdf8b,
-+	0x00ffd072,
-+	0x00ffd072,
-+	0x00ffd080,
-+	0x00ffd172,
-+	0x00ffd180,
-+	0x00ffd272,
-+	0x00ffd280,
-+	0x00ffd36d,
-+	0x00ffd379,
-+	0x00ffd46d,
-+	0x00ffd479,
-+	0x00ffd572,
-+	0x00ffd580,
-+	0x00ffd672,
-+	0x00ffd680,
-+	0x00ffd772,
-+	// high
-+	0x00ffc87d,
-+	0x00ffc88b,
-+	0x00ffc979,
-+	0x00ffc989,
-+	0x00ffcc4b,
-+	0x00ffcc54,
-+	0x00ffcc5e,
-+	0x00ffcc69,
-+	0x00ffcc78,
-+	0x00ffcc85,
-+	0x00ffcd70,
-+	0x00ffcd80,
-+	0x00ffce70,
-+	0x00ffce80,
-+	0x00ffcf7d,
-+	0x00ffcf90,
-+	0x00ffc080,
-+	0x00ffc090,
-+	0x00ffc180,
-+	0x00ffc190,
-+	0x00ffc27b,
-+	0x00ffc28b,
-+	0x00ffc37b,
-+	0x00ffc390,
-+	0x00ffc485,
-+	0x00ffc495,
-+	0x00ffc579,
-+	0x00ffc589,
-+	0x00ffc679,
-+	0x00ffc689,
-+	0x00ffc780,
-+	0x00ffc790,
-+	// low
-+	0x00ffc87d,
-+	0x00ffc88b,
-+	0x00ffc979,
-+	0x00ffc989,
-+	0x00ffcc4b,
-+	0x00ffcc54,
-+	0x00ffcc5e,
-+	0x00ffcc69,
-+	0x00ffcc78,
-+	0x00ffcc85,
-+	0x00ffcd70,
-+	0x00ffcd80,
-+	0x00ffcd90,
-+	0x00ffce80,
-+	0x00ffce93,
-+	0x00ffcf90,
-+	0x00ffc080,
-+	0x00ffc090,
-+	0x00ffc180,
-+	0x00ffc190,
-+	0x00ffc27b,
-+	0x00ffc28b,
-+	0x00ffc37b,
-+	0x00ffc390,
-+	0x00ffc485,
-+	0x00ffc495,
-+	0x00ffc579,
-+	0x00ffc589,
-+	0x00ffc679,
-+	0x00ffc689,
-+	0x00ffc780,
-+	0x00ffc790,
-+#endif
-+};
-+
-+static const u32 txgain_map_h[96] =3D {
-+	// 11b
-+	0xffd888, // 11
-+	0xffd979, // 12
-+	0xffd988, // 13
-+	0xffda79, // 14
-+	0xffda88, // 15
-+	0xffdb79, // 16
-+	0xffdb88, // 17
-+	0xffdc72, // 18
-+	0xffdc80, // 19
-+	0xffdd80, // 20
-+	0xffde66, // 21
-+	0xffde72, // 22
-+	0xffde80, // 23
-+	0xffdf79, // 24
-+	0xffdf88, // 25
-+	0xffdf98, // 26
-+	0xffd079, //-5
-+	0xffd088, //-4
-+	0xffd179, //-3
-+	0xffd188, //-2
-+	0xffd288, //-1
-+	0xffd36c, // 0
-+	0xffd379, // 1
-+	0xffd388, // 2
-+	0xffd479, // 3
-+	0xffd488, // 4
-+	0xffd579, // 5
-+	0xffd588, // 6
-+	0xffd679, // 7
-+	0xffd688, // 8
-+	0xffd779, // 9
-+	0xffd879, // 10
-+	// high
-+	0xffc879, // 8
-+	0xffc96b, // 9
-+	0xffc979, // 10
-+	0xffcc45, // 11
-+	0xffcc4d, // 12
-+	0xffcc56, // 13
-+	0xffcc60, // 14
-+	0xffcc6b, // 15
-+	0xffcc79, // 16
-+	0xffcd72, // 17
-+	0xffce60, // 18
-+	0xffce72, // 19
-+	0xffcf72, // 20
-+	0xffcf80, // 21
-+	0xffcf90, // 22
-+	0xffcf90, // 23
-+	0xffc079, //-8
-+	0xffc16b, //-7
-+	0xffc179, //-6
-+	0xffc26b, //-5
-+	0xffc279, //-4
-+	0xffc36b, //-3
-+	0xffc379, //-2
-+	0xffc46b, //-1
-+	0xffc479, // 0
-+	0xffc56b, // 1
-+	0xffc579, // 2
-+	0xffc66b, // 3
-+	0xffc679, // 4
-+	0xffc76b, // 5
-+	0xffc779, // 6
-+	0xffc86b, // 7
-+	// low
-+	0xffc879, // 8
-+	0xffc96b, // 9
-+	0xffc979, // 10
-+	0xffcc45, // 11
-+	0xffcc4d, // 12
-+	0xffcc56, // 13
-+	0xffcc60, // 14
-+	0xffcc6b, // 15
-+	0xffcc79, // 16
-+	0xffcd72, // 17
-+	0xffce60, // 18
-+	0xffce72, // 19
-+	0xffcf72, // 20
-+	0xffcf80, // 21
-+	0xffcf90, // 22
-+	0xffcf90, // 23
-+	0xffc079, //-8
-+	0xffc16b, //-7
-+	0xffc179, //-6
-+	0xffc26b, //-5
-+	0xffc279, //-4
-+	0xffc36b, //-3
-+	0xffc379, //-2
-+	0xffc46b, //-1
-+	0xffc479, // 0
-+	0xffc56b, // 1
-+	0xffc579, // 2
-+	0xffc66b, // 3
-+	0xffc679, // 4
-+	0xffc76b, // 5
-+	0xffc779, // 6
-+	0xffc86b, // 7
-+};
-+
-+static u32 jump_tbl[][2] =3D {
-+#ifndef CONFIG_FOR_IPCOM
-+	{296, 0x180001}, {137, 0x180011}, {303, 0x1810f9},
-+	{168, 0x18186d}, {308, 0x181bbd}, {288, 0x1820c1},
-+#else
-+	{308, 0x181001}, {288, 0x181031}, {296, 0x18120d}, {137, 0x18121d},
-+	{303, 0x182305}, {168, 0x182a79}, {258, 0x182ae1},
-+#endif
-+};
-+
-+static u32 patch_tbl_func[][2] =3D {
-+#ifndef CONFIG_FOR_IPCOM
-+	{0x00110054, 0x0018186D}, // same as jump_tbl idx 168
-+	{0x0011005C, 0x0018186D}, // same as jump_tbl idx 168
-+#else
-+	{0x00110054, 0x00182A79}, // same as jump_tbl idx 168
-+	{0x0011005C, 0x00182A79}, // same as jump_tbl idx 168
-+	{0x001118D4, 0x00000011},
-+#endif
-+};
-+
-+static u32 patch_tbl_rf_func[][2] =3D {
-+	{0x00110bf0, 0x00180001},
-+};
-+
-+// adap test
-+static u32 adaptivity_patch_tbl_8800dc[][2] =3D {
-+	{0x000C, 0x0000320A}, // linkloss_thd
-+	{0x009C, 0x00000000}, // ac_param_conf
-+	{0x0128, 0xF6140001}, // tx_adaptivity_en
-+};
-+
-+static u8 chip_id;
-+#define CHIP_ID_H_MASK 0xC0
-+#define IS_CHIP_ID_H() ((chip_id & CHIP_ID_H_MASK) =3D=3D CHIP_ID_H_MASK)
-+
-+// Crystal provided by CPU (start)
-+int set_bbpll_config(struct aic_sdio_dev *rwnx_hw)
-+{
-+	int ret =3D 0;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+
-+	// Read crystal provided by CPU or not.
-+	ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, 0x40500148, &rd_mem_addr_cfm)=
-;
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "%x rd fail: %d\n", 0x40500148, ret);
-+		return -1;
-+	}
-+
-+	AICWFDBG(LOGDEBUG, "%s rd_mem_addr_cfm.memdata:%x \r\n", __func__,
-+		 rd_mem_addr_cfm.memdata);
-+
-+	if (!(rd_mem_addr_cfm.memdata & 0x01)) {
-+		AICWFDBG(LOGINFO, "%s Crystal not provided by CPU \r\n", __func__);
-+		return 0;
-+	}
-+	AICWFDBG(LOGINFO, "%s Crystal provided by CPU \r\n", __func__);
-+	// Read 0x40505010 value to check bbpll set or not.
-+	ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, 0x40505010, &rd_mem_addr_cfm)=
-;
-+	if (ret < 0) {
-+		AICWFDBG(LOGERROR, "%s error ret_val:%d\r\n", __func__, ret);
-+		return -1;
-+	}
-+
-+	if ((rd_mem_addr_cfm.memdata >> 29) =3D=3D 3) {
-+		AICWFDBG(LOGERROR, "%s Not need to set \r\n", __func__);
-+		return 0;
-+	}
-+	rd_mem_addr_cfm.memdata |=3D ((0x1 << 29) | (0x1 << 30));
-+	rd_mem_addr_cfm.memdata &=3D (~(0x1 << 31));
-+	rwnx_send_dbg_mem_write_req(rwnx_hw, 0x40505010,
-+				    rd_mem_addr_cfm.memdata);
-+	return 0;
-+}
-+
-+void system_config_8800dc(struct aic_sdio_dev *rwnx_hw)
-+{
-+	int syscfg_num;
-+	array3_tbl_t p_syscfg_msk_tbl;
-+	int ret, cnt;
-+	const u32 mem_addr =3D 0x40500000;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+#ifdef CONFIG_OOB
-+	int oobcfg_num;
-+#endif
-+
-+	ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, mem_addr, &rd_mem_addr_cfm);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "%x rd fail: %d\n", mem_addr, ret);
-+		return;
-+	}
-+	chip_id =3D (u8)(rd_mem_addr_cfm.memdata >> 16);
-+	// printk("%x=3D%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memdata);
-+	if (((rd_mem_addr_cfm.memdata >> 25) & 0x01UL) =3D=3D 0x00UL)
-+		chip_mcu_id =3D 1;
-+
-+	ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, 0x00000020, &rd_mem_addr_cfm)=
-;
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "[0x00000020] rd fail: %d\n", ret);
-+		return;
-+	}
-+	chip_sub_id =3D (u8)(rd_mem_addr_cfm.memdata);
-+	AICWFDBG(LOGINFO, "chip_id=3D%x, chip_sub_id=3D%x!!\n", chip_id, chip_sub=
-_id);
-+
-+	// Crystal provided by CPU (start)
-+	ret =3D set_bbpll_config(rwnx_hw);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "set_bbpll_config fail: %d\n", ret);
-+		return;
-+	}
-+	// Crystal provided by CPU (end)
-+
-+	ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, 0x40500010, &rd_mem_addr_cfm)=
-;
-+	AICWFDBG(LOGDEBUG, "[0x40500010]=3D%x\n", rd_mem_addr_cfm.memdata);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "[0x40500010] rd fail: %d\n", ret);
-+		return;
-+	}
-+
-+	syscfg_num =3D sizeof(syscfg_tbl_8800dc) / sizeof(uint32_t) / 2;
-+
-+	for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw, syscfg_tbl_8800dc[cnt][0],
-+						  syscfg_tbl_8800dc[cnt][1]);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "%x write fail: %d\n", syscfg_tbl_8800dc[cnt][0],
-+				 ret);
-+			return;
-+		}
-+	}
-+
-+	u32 tmp_mem_addr =3D 0;
-+	u32 mem_mask =3D 0;
-+	u32 mem_data =3D 0;
-+
-+	if (chip_mcu_id =3D=3D 0) {
-+		if (chip_sub_id =3D=3D 0) {
-+			syscfg_num =3D sizeof(syscfg_tbl_8800dc_sdio_u01) / sizeof(u32) / 2;
-+			for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+				tmp_mem_addr =3D syscfg_tbl_8800dc_sdio_u01[cnt][0];
-+				mem_data =3D syscfg_tbl_8800dc_sdio_u01[cnt][1];
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw,
-+								  tmp_mem_addr,
-+								  mem_data);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "%x write fail: %d\n",
-+						 syscfg_tbl_8800dc_sdio_u01[cnt][0], ret);
-+					return;
-+				}
-+			}
-+		} else if ((chip_sub_id =3D=3D 1) || (chip_sub_id =3D=3D 2)) {
-+			syscfg_num =3D sizeof(syscfg_tbl_8800dc_sdio_u02) / sizeof(u32) / 2;
-+			for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+				tmp_mem_addr =3D syscfg_tbl_8800dc_sdio_u02[cnt][0];
-+				mem_data =3D syscfg_tbl_8800dc_sdio_u02[cnt][1];
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw,
-+								  tmp_mem_addr,
-+								  mem_data);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "%x write fail: %d\n",
-+						 syscfg_tbl_8800dc_sdio_u02[cnt][0], ret);
-+					return;
-+				}
-+			}
-+		}
-+	}
-+#ifdef CONFIG_OOB
-+	if (chip_sub_id =3D=3D 1 || chip_sub_id =3D=3D 2) {
-+		oobcfg_num =3D sizeof(oobcfg_tbl_8800dc_sdio_u02) / sizeof(u32) / 2;
-+		for (cnt =3D 0; cnt < oobcfg_num; cnt++) {
-+			tmp_mem_addr =3D oobcfg_tbl_8800dc_sdio_u02[cnt][0];
-+			mem_data =3D oobcfg_tbl_8800dc_sdio_u02[cnt][1];
-+			ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw,
-+							  tmp_mem_addr,
-+							  mem_data);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "%x write fail: %d\n",
-+					 oobcfg_tbl_8800dc_sdio_u02[cnt][0], ret);
-+				return;
-+			}
-+		}
-+	}
-+#endif
-+	if (IS_CHIP_ID_H()) {
-+		syscfg_num =3D sizeof(syscfg_tbl_masked_8800dc_h) / sizeof(u32) / 3;
-+		p_syscfg_msk_tbl =3D syscfg_tbl_masked_8800dc_h;
-+	} else {
-+		syscfg_num =3D sizeof(syscfg_tbl_masked_8800dc) / sizeof(u32) / 3;
-+		p_syscfg_msk_tbl =3D syscfg_tbl_masked_8800dc;
-+	}
-+
-+	for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+		if (p_syscfg_msk_tbl[cnt][0] =3D=3D 0x00000000) {
-+			break;
-+		} else if (p_syscfg_msk_tbl[cnt][0] =3D=3D 0x70001000) {
-+			if (chip_mcu_id =3D=3D 0) {
-+				p_syscfg_msk_tbl[cnt][1] |=3D ((0x1 << 8) | (0x1 << 15)); // mask
-+				p_syscfg_msk_tbl[cnt][2] |=3D ((0x1 << 8) | (0x1 << 15));
-+			}
-+		}
-+
-+		ret =3D rwnx_send_dbg_mem_mask_write_req(rwnx_hw, p_syscfg_msk_tbl[cnt][=
-0],
-+						       p_syscfg_msk_tbl[cnt][1],
-+						       p_syscfg_msk_tbl[cnt][2]);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "%x mask write fail: %d\n",
-+				 p_syscfg_msk_tbl[cnt][0], ret);
-+			return;
-+		}
-+	}
-+
-+	if (chip_sub_id =3D=3D 0) {
-+		syscfg_num =3D sizeof(syscfg_tbl_masked_8800dc_u01) / sizeof(u32) / 3;
-+		for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+			tmp_mem_addr =3D syscfg_tbl_masked_8800dc_u01[cnt][0];
-+			mem_mask =3D syscfg_tbl_masked_8800dc_u01[cnt][1];
-+			mem_data =3D syscfg_tbl_masked_8800dc_u01[cnt][2];
-+			ret =3D rwnx_send_dbg_mem_mask_write_req(rwnx_hw,
-+							       tmp_mem_addr,
-+							       mem_mask,
-+							       mem_data);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "%x mask write fail: %d\n",
-+					 syscfg_tbl_masked_8800dc_u01[cnt][0], ret);
-+				return;
-+			}
-+		}
-+	}
-+}
-+
-+extern struct aicbsp_info_t aicbsp_info;
-+
-+void aicwf_patch_config_8800dc(struct aic_sdio_dev *rwnx_hw)
-+{
-+	int ret =3D 0;
-+	int cnt =3D 0;
-+	u32 mem_addr =3D 0;
-+	u32 mem_data =3D 0;
-+
-+	if (testmode =3D=3D 0) {
-+		const u32 cfg_base =3D 0x10164;
-+		struct dbg_mem_read_cfm cfm;
-+		int i;
-+		u32 wifisetting_cfg_addr;
-+		u32 ldpc_cfg_addr;
-+		u32 agc_cfg_addr;
-+		u32 txgain_cfg_addr;
-+		u32 jump_tbl_addr =3D 0;
-+
-+		u32 patch_tbl_wifisetting_num; // =3D
-+		// sizeof(patch_tbl_wifisetting_8800dc_u02)/sizeof(u32)/2;
-+		u32 ldpc_cfg_size =3D sizeof(ldpc_cfg_ram);
-+		u32 agc_cfg_size =3D sizeof(agc_cfg_ram);
-+		u32 txgain_cfg_size, *txgain_cfg_array;
-+		u32 jump_tbl_size =3D 0;
-+		u32 patch_tbl_func_num =3D 0;
-+
-+		// adap test
-+		int adap_patch_num =3D 0;
-+		// adap test
-+
-+		array2_tbl_t jump_tbl_base =3D NULL;
-+		array2_tbl_t patch_tbl_func_base =3D NULL;
-+		array2_tbl_t patch_tbl_wifisetting_8800dc_base =3D NULL;
-+
-+		if (chip_sub_id =3D=3D 0) {
-+			jump_tbl_base =3D jump_tbl;
-+			jump_tbl_size =3D sizeof(jump_tbl) / 2;
-+			patch_tbl_func_base =3D patch_tbl_func;
-+			patch_tbl_func_num =3D sizeof(patch_tbl_func) / sizeof(u32) / 2;
-+			patch_tbl_wifisetting_num =3D
-+				sizeof(patch_tbl_wifisetting_8800dc_u01) / sizeof(u32) / 2;
-+			patch_tbl_wifisetting_8800dc_base =3D
-+				patch_tbl_wifisetting_8800dc_u01;
-+		} else if ((chip_sub_id =3D=3D 1) || (chip_sub_id =3D=3D 2)) {
-+			patch_tbl_wifisetting_num =3D
-+				sizeof(patch_tbl_wifisetting_8800dc_u02) / sizeof(u32) / 2;
-+			patch_tbl_wifisetting_8800dc_base =3D
-+				patch_tbl_wifisetting_8800dc_u02;
-+		} else {
-+			pr_info("unsupported id: %d", chip_sub_id);
-+			return;
-+		}
-+
-+		ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, cfg_base, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "setting base[0x%x] rd fail: %d\n", cfg_base,
-+				 ret);
-+		}
-+		wifisetting_cfg_addr =3D cfm.memdata;
-+
-+		if (chip_sub_id =3D=3D 0) {
-+			ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, cfg_base + 4, &cfm);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "setting base[0x%x] rd fail: %d\n",
-+					 cfg_base + 4, ret);
-+			}
-+			jump_tbl_addr =3D cfm.memdata;
-+		}
-+
-+		ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, cfg_base + 8, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "setting base[0x%x] rd fail: %d\n", cfg_base + 8,
-+				 ret);
-+		}
-+		ldpc_cfg_addr =3D cfm.memdata;
-+
-+		ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, cfg_base + 0xc, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "setting base[0x%x] rd fail: %d\n",
-+				 cfg_base + 0xc, ret);
-+		}
-+		agc_cfg_addr =3D cfm.memdata;
-+
-+		ret =3D rwnx_send_dbg_mem_read_req(rwnx_hw, cfg_base + 0x10, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "setting base[0x%x] rd fail: %d\n",
-+				 cfg_base + 0x10, ret);
-+		}
-+		txgain_cfg_addr =3D cfm.memdata;
-+
-+		AICWFDBG(LOGINFO,
-+			 "wifisetting_cfg_addr=3D%x, ldpc_cfg_addr=3D%x, agc_cfg_addr=3D%x, txg=
-ain_cfg_addr=3D%x\n",
-+			 wifisetting_cfg_addr, ldpc_cfg_addr, agc_cfg_addr,
-+			 txgain_cfg_addr);
-+
-+		for (cnt =3D 0; cnt < patch_tbl_wifisetting_num; cnt++) {
-+			mem_addr =3D wifisetting_cfg_addr +
-+				patch_tbl_wifisetting_8800dc_base[cnt][0];
-+			mem_data =3D patch_tbl_wifisetting_8800dc_base[cnt][1];
-+			ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw, mem_addr, mem_data);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "wifisetting %x write fail\n",
-+					 patch_tbl_wifisetting_8800dc_base[cnt][0]);
-+			}
-+		}
-+
-+		// adap test
-+		if (aicbsp_info.adap_test) {
-+			AICWFDBG(LOGINFO, "%s for adaptivity test \r\n", __func__);
-+			adap_patch_num =3D
-+				sizeof(adaptivity_patch_tbl_8800dc) / sizeof(u32) / 2;
-+			for (cnt =3D 0; cnt < adap_patch_num; cnt++) {
-+				mem_addr =3D wifisetting_cfg_addr +
-+					adaptivity_patch_tbl_8800dc[cnt][0];
-+				mem_data =3D adaptivity_patch_tbl_8800dc[cnt][1];
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw, mem_addr, mem_data);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "%x write fail\n",
-+						 wifisetting_cfg_addr +
-+						 adaptivity_patch_tbl_8800dc[cnt][0]);
-+				}
-+			}
-+		}
-+		// adap test
-+
-+		if (ldpc_cfg_size > 512) { // > 0.5KB data
-+			for (i =3D 0; i < (ldpc_cfg_size - 512);
-+				 i +=3D 512) { // each time write 0.5KB
-+				ret =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, ldpc_cfg_addr + i,
-+									512, ldpc_cfg_ram + i / 4);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "ldpc upload fail: %x, err:%d\r\n",
-+						 ldpc_cfg_addr + i, ret);
-+					break;
-+				}
-+			}
-+		}
-+
-+		if (!ret && i < ldpc_cfg_size) { // < 0.5KB data
-+			ret =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, ldpc_cfg_addr + i,
-+								ldpc_cfg_size - i,
-+								ldpc_cfg_ram + i / 4);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "ldpc upload fail: %x, err:%d\r\n",
-+					 ldpc_cfg_addr + i, ret);
-+			}
-+		}
-+
-+		if (agc_cfg_size > 512) { // > 0.5KB data
-+			for (i =3D 0; i < (agc_cfg_size - 512);
-+				 i +=3D 512) { // each time write 0.5KB
-+				ret =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, agc_cfg_addr + i,
-+									512, agc_cfg_ram + i / 4);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "agc upload fail: %x, err:%d\r\n",
-+						 agc_cfg_addr + i, ret);
-+					break;
-+				}
-+			}
-+		}
-+
-+		if (!ret && i < agc_cfg_size) { // < 0.5KB data
-+			ret =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, agc_cfg_addr + i,
-+								agc_cfg_size - i,
-+								agc_cfg_ram + i / 4);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "agc upload fail: %x, err:%d\r\n",
-+					 agc_cfg_addr + i, ret);
-+			}
-+		}
-+
-+#if !defined(CONFIG_FPGA_VERIFICATION)
-+		if ((IS_CHIP_ID_H())) {
-+			txgain_cfg_size =3D sizeof(txgain_map_h);
-+			txgain_cfg_array =3D (u32 *)txgain_map_h;
-+		} else {
-+			txgain_cfg_size =3D sizeof(txgain_map);
-+			txgain_cfg_array =3D (u32 *)txgain_map;
-+		}
-+		ret =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, txgain_cfg_addr,
-+							txgain_cfg_size, txgain_cfg_array);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "txgain upload fail: %x, err:%d\r\n",
-+				 txgain_cfg_addr, ret);
-+		}
-+
-+		if (chip_sub_id =3D=3D 0) {
-+			for (cnt =3D 0; cnt < jump_tbl_size / 4; cnt +=3D 1) {
-+				AICWFDBG(LOGDEBUG, "%x =3D %x\n",
-+					 jump_tbl_base[cnt][0] * 4 + jump_tbl_addr,
-+						 jump_tbl_base[cnt][1]);
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw,
-+								  jump_tbl_base[cnt][0] *
-+								  4 + jump_tbl_addr,
-+								  jump_tbl_base[cnt][1]);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "%x write fail\n",
-+						 jump_tbl_addr + 8 * cnt);
-+				}
-+			}
-+			for (cnt =3D 0; cnt < patch_tbl_func_num; cnt++) {
-+				mem_addr =3D patch_tbl_func_base[cnt][0];
-+				mem_data =3D patch_tbl_func_base[cnt][1];
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw, mem_addr, mem_data);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "patch_tbl_func %x write fail\n",
-+						 patch_tbl_func_base[cnt][0]);
-+				}
-+			}
-+		} else if (chip_sub_id =3D=3D 1) {
-+			ret =3D aicwf_patch_table_load(rwnx_hw,
-+						     RWNX_MAC_PATCH_TABLE_8800DC_U02);
-+			if (ret)
-+				pr_warn("patch_tbl upload fail: err:%d\r\n", ret);
-+		} else if (chip_sub_id =3D=3D 2) {
-+			ret =3D aicwf_patch_table_load(rwnx_hw,
-+						     RWNX_MAC_PATCH_TABLE_8800DC_H_U02);
-+			if (ret)
-+				pr_warn("patch_tbl upload fail: err:%d\r\n", ret);
-+		} else {
-+			pr_info("unsupported id: %d\n", chip_sub_id);
-+		}
-+
-+#endif
-+	} else {
-+		if (chip_sub_id =3D=3D 0) {
-+			u32 patch_tbl_rf_func_num =3D
-+				sizeof(patch_tbl_rf_func) / sizeof(u32) / 2;
-+			for (cnt =3D 0; cnt < patch_tbl_rf_func_num; cnt++) {
-+				mem_addr =3D patch_tbl_rf_func[cnt][0];
-+				mem_data =3D patch_tbl_rf_func[cnt][1];
-+				ret =3D rwnx_send_dbg_mem_write_req(rwnx_hw, mem_addr, mem_data);
-+				if (ret) {
-+					AICWFDBG(LOGERROR, "patch_tbl_rf_func %x write fail\n",
-+						 patch_tbl_rf_func[cnt][0]);
-+				}
-+			}
-+		}
-+	}
-+}
-+
-+int rwnx_plat_patch_load_8800dc(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	RWNX_DBG(RWNX_FN_ENTRY_STR);
-+
-+	AICWFDBG(LOGINFO, "testmode=3D%d\n", testmode);
-+	if (chip_sub_id =3D=3D 0) {
-+		if (testmode =3D=3D FW_NORMAL_MODE) {
-+			AICWFDBG(LOGINFO, "rwnx_plat_patch_loading\n");
-+			ret =3D aicwf_plat_patch_load_8800dc(sdiodev);
-+			if (ret) {
-+				AICWFDBG(LOGINFO, "load patch bin fail: %d\n", ret);
-+				return ret;
-+			}
-+		} else if (testmode =3D=3D FW_RFTEST_MODE) {
-+			ret =3D aicwf_plat_rftest_load_8800dc(sdiodev);
-+			if (ret) {
-+				AICWFDBG(LOGINFO, "load rftest bin fail: %d\n", ret);
-+				return ret;
-+			}
-+		}
-+	} else if (chip_sub_id >=3D 1) {
-+		if (testmode =3D=3D FW_NORMAL_MODE) {
-+			AICWFDBG(LOGINFO, "rwnx_plat_patch_loading\n");
-+			ret =3D aicwf_plat_patch_load_8800dc(sdiodev);
-+			if (ret) {
-+				AICWFDBG(LOGINFO, "load patch bin fail: %d\n", ret);
-+				return ret;
-+			}
-+#ifdef CONFIG_DPD
-+#ifdef CONFIG_FORCE_DPD_CALIB
-+			if (1) {
-+				AICWFDBG(LOGINFO, "dpd calib & write\n");
-+				ret =3D aicwf_dpd_calib_8800dc(sdiodev, &dpd_res);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "dpd calib fail: %d\n", ret);
-+					return ret;
-+				}
-+			}
-+#else
-+			if (is_file_exist(FW_DPDRESULT_NAME_8800DC) =3D=3D 1) {
-+				AICWFDBG(LOGINFO, "dpd bin load\n");
-+				ret =3D aicwf_dpd_result_load_8800dc(sdiodev, &dpd_res);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "load dpd bin fail: %d\n", ret);
-+					return ret;
-+				}
-+				ret =3D aicwf_dpd_result_apply_8800dc(sdiodev, &dpd_res);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "apply dpd bin fail: %d\n", ret);
-+					return ret;
-+				}
-+			}
-+#endif
-+			else
-+#endif
-+			{
-+				ret =3D aicwf_misc_ram_init_8800dc(sdiodev);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "misc ram init fail: %d\n", ret);
-+					return ret;
-+				}
-+			}
-+		} else if (testmode =3D=3D FW_RFTEST_MODE) {
-+#ifdef CONFIG_DPD
-+#ifdef CONFIG_FORCE_DPD_CALIB
-+			if (1) {
-+				AICWFDBG(LOGINFO, "patch load\n");
-+				ret =3D aicwf_plat_patch_load_8800dc(sdiodev);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "load patch bin fail: %d\n", ret);
-+					return ret;
-+				}
-+				AICWFDBG(LOGINFO, "dpd calib & write\n");
-+				ret =3D aicwf_dpd_calib_8800dc(sdiodev, &dpd_res);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "dpd calib fail: %d\n", ret);
-+					return ret;
-+				}
-+			}
-+#endif
-+#endif
-+			ret =3D aicwf_plat_rftest_load_8800dc(sdiodev);
-+			if (ret) {
-+				AICWFDBG(LOGINFO, "load rftest bin fail: %d\n", ret);
-+				return ret;
-+			}
-+		} else if (testmode =3D=3D FW_DPDCALIB_MODE) {
-+#if (defined(CONFIG_DPD) && !defined(CONFIG_FORCE_DPD_CALIB))
-+			if (is_file_exist(FW_DPDRESULT_NAME_8800DC) =3D=3D 0) {
-+				AICWFDBG(LOGINFO, "patch load\n");
-+				ret =3D aicwf_plat_patch_load_8800dc(sdiodev);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "load patch bin fail: %d\n", ret);
-+					return ret;
-+				}
-+				AICWFDBG(LOGINFO, "dpd calib & write\n");
-+				ret =3D aicwf_dpd_calib_8800dc(sdiodev, &dpd_res);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "dpd calib fail: %d\n", ret);
-+					return ret;
-+				}
-+				ret =3D aicwf_dpd_result_write_8800dc((void *)&dpd_res,
-+								    DPD_RESULT_SIZE_8800DC);
-+				if (ret) {
-+					AICWFDBG(LOGINFO, "file write fail: %d\n", ret);
-+					return ret;
-+				}
-+			}
-+#endif
-+			return 1; // exit calib mode
-+		}
-+	}
-+
-+	return ret;
-+}
-+
-+int aicwf_misc_ram_init_8800dc(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+	u32 cfg_base =3D 0x10164;
-+	struct dbg_mem_read_cfm cfm;
-+	u32 misc_ram_addr;
-+	u32 misc_ram_size =3D 12;
-+	int i;
-+
-+	if (testmode =3D=3D FW_RFTEST_MODE)
-+		cfg_base =3D RAM_LMAC_FW_ADDR + 0x0164;
-+	// init misc ram
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base + 0x14, &cfm);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "rf misc ram[0x%x] rd fail: %d\n", cfg_base + 0x14,
-+			 ret);
-+		return ret;
-+	}
-+	misc_ram_addr =3D cfm.memdata;
-+	AICWFDBG(LOGERROR, "misc_ram_addr=3D%x\n", misc_ram_addr);
-+	for (i =3D 0; i < (misc_ram_size / 4); i++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, misc_ram_addr + i * 4, 0);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "rf misc ram[0x%x] wr fail: %d\n",
-+				 misc_ram_addr + i * 4, ret);
-+			return ret;
-+		}
-+	}
-+	return ret;
-+}
-+
-+int start_from_bootrom_8800DC(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+	u32 rd_addr;
-+	u32 fw_addr;
-+	u32 boot_type;
-+	struct dbg_mem_read_cfm rd_cfm;
-+
-+	/* memory access */
-+	if (testmode =3D=3D 1) {
-+		rd_addr =3D RAM_LMAC_FW_ADDR;
-+		fw_addr =3D RAM_LMAC_FW_ADDR;
-+	} else {
-+		rd_addr =3D RAM_FMAC_FW_ADDR;
-+		fw_addr =3D RAM_FMAC_FW_ADDR;
-+	}
-+
-+	AICWFDBG(LOGINFO, "Read FW mem: %08x\n", rd_addr);
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, rd_addr, &rd_cfm);
-+	if (ret)
-+		return -1;
-+	AICWFDBG(LOGINFO, "cfm: [%08x] =3D %08x\n", rd_cfm.memaddr, rd_cfm.memdat=
-a);
-+
-+	if (testmode =3D=3D 0)
-+		boot_type =3D HOST_START_APP_DUMMY;
-+	else
-+		boot_type =3D HOST_START_APP_AUTO;
-+	/* fw start */
-+	AICWFDBG(LOGINFO, "Start app: %08x, %d\n", fw_addr, boot_type);
-+	ret =3D rwnx_send_dbg_start_app_req(sdiodev, fw_addr, boot_type, NULL);
-+	if (ret)
-+		return -1;
-+	return 0;
-+}
-+
-+#ifdef CONFIG_DPD
-+int aicwf_dpd_calib_8800dc(struct aic_sdio_dev *sdiodev,
-+			   struct rf_misc_ram_lite_t *dpd_res)
-+{
-+	int ret =3D 0;
-+	u32 fw_addr, boot_type;
-+	int valid_flag;
-+
-+	ret =3D aicwf_misc_ram_valid_check_8800dc(sdiodev, &valid_flag);
-+	if (ret) {
-+		AICWFDBG(LOGINFO, "misc ram check fail: %d\n", ret);
-+		return ret;
-+	}
-+	if (valid_flag) {
-+		AICWFDBG(LOGINFO, "misc ram valid, skip calib process\n");
-+		return ret;
-+	}
-+	ret =3D aicwf_plat_calib_load_8800dc(sdiodev);
-+	if (ret) {
-+		AICWFDBG(LOGINFO, "load calib bin fail: %d\n", ret);
-+		return ret;
-+	}
-+	/* fw start */
-+	fw_addr =3D 0x00130009;
-+	boot_type =3D HOST_START_APP_FNCALL;
-+	AICWFDBG(LOGINFO, "Start app: %08x, %d\n", fw_addr, boot_type);
-+	ret =3D rwnx_send_dbg_start_app_req(sdiodev, fw_addr, boot_type, NULL);
-+	if (ret) {
-+		AICWFDBG(LOGINFO, "start app fail: %d\n", ret);
-+		return ret;
-+	}
-+	{ // read dpd res
-+		const u32 cfg_base =3D 0x10164;
-+		struct dbg_mem_read_cfm cfm;
-+		u32 misc_ram_addr;
-+		u32 ram_base_addr, ram_word_cnt;
-+		int i;
-+
-+		ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base + 0x14, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "rf misc ram[0x%x] rd fail: %d\n",
-+				 cfg_base + 0x14, ret);
-+			return ret;
-+		}
-+		misc_ram_addr =3D cfm.memdata;
-+		// bit_mask
-+		ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, bit_mas=
-k);
-+		ram_word_cnt =3D (MEMBER_SIZE(struct rf_misc_ram_t, bit_mask) +
-+						MEMBER_SIZE(struct rf_misc_ram_t, reserved)) /
-+					   4;
-+		for (i =3D 0; i < ram_word_cnt; i++) {
-+			ret =3D rwnx_send_dbg_mem_read_req(sdiodev, ram_base_addr + i * 4,
-+							 &cfm);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "bit_mask[0x%x] rd fail: %d\n",
-+					 ram_base_addr + i * 4, ret);
-+				return ret;
-+			}
-+			dpd_res->bit_mask[i] =3D cfm.memdata;
-+		}
-+		// dpd_high
-+		ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, dpd_hig=
-h);
-+		ram_word_cnt =3D MEMBER_SIZE(struct rf_misc_ram_t, dpd_high) / 4;
-+		for (i =3D 0; i < ram_word_cnt; i++) {
-+			ret =3D rwnx_send_dbg_mem_read_req(sdiodev, ram_base_addr + i * 4,
-+							 &cfm);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "bit_mask[0x%x] rd fail: %d\n",
-+					 ram_base_addr + i * 4, ret);
-+				return ret;
-+			}
-+			dpd_res->dpd_high[i] =3D cfm.memdata;
-+		}
-+		// loft_res
-+		ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, loft_re=
-s);
-+		ram_word_cnt =3D MEMBER_SIZE(struct rf_misc_ram_t, loft_res) / 4;
-+		for (i =3D 0; i < ram_word_cnt; i++) {
-+			ret =3D rwnx_send_dbg_mem_read_req(sdiodev, ram_base_addr + i * 4,
-+							 &cfm);
-+			if (ret) {
-+				AICWFDBG(LOGERROR, "bit_mask[0x%x] rd fail: %d\n",
-+					 ram_base_addr + i * 4, ret);
-+				return ret;
-+			}
-+			dpd_res->loft_res[i] =3D cfm.memdata;
-+		}
-+	}
-+	return ret;
-+}
-+
-+int aicwf_dpd_result_apply_8800dc(struct aic_sdio_dev *sdiodev,
-+				  struct rf_misc_ram_lite_t *dpd_res)
-+{
-+	int ret =3D 0;
-+	u32 cfg_base =3D 0x10164;
-+	struct dbg_mem_read_cfm cfm;
-+	u32 misc_ram_addr;
-+	u32 ram_base_addr, ram_byte_cnt;
-+
-+	AICWFDBG(LOGINFO, "bit_mask[1]=3D%x\n", dpd_res->bit_mask[1]);
-+	if (dpd_res->bit_mask[1] =3D=3D 0) {
-+		AICWFDBG(LOGERROR, "void dpd_res, bypass it.\n");
-+		return 0;
-+	}
-+	if (testmode =3D=3D FW_RFTEST_MODE)
-+		cfg_base =3D RAM_LMAC_FW_ADDR + 0x0164;
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base + 0x14, &cfm);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "rf misc ram[0x%x] rd fail: %d\n", cfg_base + 0x14,
-+			 ret);
-+		return ret;
-+	}
-+	misc_ram_addr =3D cfm.memdata;
-+	AICWFDBG(LOGINFO, "misc_ram_addr: %x\n", misc_ram_addr);
-+	/* Copy dpd_res on the Embedded side */
-+	// bit_mask
-+	AICWFDBG(LOGINFO, "bit_mask[0]=3D%x\n", dpd_res->bit_mask[0]);
-+	ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, bit_mask=
-);
-+	ram_byte_cnt =3D MEMBER_SIZE(struct rf_misc_ram_t, bit_mask) +
-+				   MEMBER_SIZE(struct rf_misc_ram_t, reserved);
-+	ret =3D rwnx_send_dbg_mem_block_write_req(sdiodev, ram_base_addr, ram_byt=
-e_cnt,
-+						(u32 *)&dpd_res->bit_mask[0]);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "bit_mask wr fail: %x, ret:%d\r\n", ram_base_addr,
-+			 ret);
-+		return ret;
-+	}
-+	// dpd_high
-+	AICWFDBG(LOGINFO, "dpd_high[0]=3D%x\n", dpd_res->dpd_high[0]);
-+	ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, dpd_high=
-);
-+	ram_byte_cnt =3D MEMBER_SIZE(struct rf_misc_ram_t, dpd_high);
-+	ret =3D rwnx_send_dbg_mem_block_write_req(sdiodev, ram_base_addr, ram_byt=
-e_cnt,
-+						(u32 *)&dpd_res->dpd_high[0]);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "dpd_high wr fail: %x, ret:%d\r\n", ram_base_addr,
-+			 ret);
-+		return ret;
-+	}
-+	// loft_res
-+	AICWFDBG(LOGINFO, "loft_res[0]=3D%x\n", dpd_res->loft_res[0]);
-+	ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, loft_res=
-);
-+	ram_byte_cnt =3D MEMBER_SIZE(struct rf_misc_ram_t, loft_res);
-+	ret =3D rwnx_send_dbg_mem_block_write_req(sdiodev, ram_base_addr, ram_byt=
-e_cnt,
-+						(u32 *)&dpd_res->loft_res[0]);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "loft_res wr fail: %x, ret:%d\r\n", ram_base_addr,
-+			 ret);
-+		return ret;
-+	}
-+	return ret;
-+}
-+
-+#ifndef CONFIG_FORCE_DPD_CALIB
-+int aicwf_dpd_result_load_8800dc(struct aic_sdio_dev *sdiodev,
-+				 struct rf_misc_ram_lite_t *dpd_res)
-+{
-+	int ret =3D 0;
-+	int size;
-+	u32 *dst =3D NULL;
-+	char *filename =3D FW_DPDRESULT_NAME_8800DC;
-+	struct device *dev =3D sdiodev->dev;
-+
-+	AICWFDBG(LOGINFO, "%s: dpd_res file path:%s \r\n", __func__, filename);
-+	/* load file */
-+	size =3D rwnx_load_firmware(&dst, filename, dev);
-+	if (size <=3D 0) {
-+		AICWFDBG(LOGERROR, "wrong size of dpd_res file\n");
-+		if (dst) {
-+			vfree(dst);
-+			dst =3D NULL;
-+		}
-+		return -1;
-+	}
-+	AICWFDBG(LOGINFO, "### Load file done: %s, size=3D%d, dst[0]=3D%x\n", fil=
-ename,
-+		 size, dst[0]);
-+	memcpy((u8 *)dpd_res, (u8 *)dst, sizeof(struct rf_misc_ram_lite_t));
-+	if (dst) {
-+		vfree(dst);
-+		dst =3D NULL;
-+	}
-+	return ret;
-+}
-+
-+#endif /* !CONFIG_FORCE_DPD_CALIB */
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.h b/driv=
-ers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.h
-new file mode 100644
-index 0000000000000..0edee0f8d6cc3
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic8800dc_compat.h
-@@ -0,0 +1,34 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _AIC8800DC_COMPAT_H_
-+#define _AIC8800DC_COMPAT_H_
++#ifndef __AIC_BSP_EXPORT_H
++#define __AIC_BSP_EXPORT_H
 +
 +#include <linux/types.h>
 +
-+#include "aicsdio.h"
-+typedef u32 (*array2_tbl_t)[2];
-+typedef u32 (*array3_tbl_t)[3];
-+
-+extern u8 chip_sub_id;
-+extern u8 chip_mcu_id;
-+#define FW_PATH_MAX_LEN 200
-+
-+void aicwf_patch_config_8800dc(struct aic_sdio_dev *rwnx_hw);
-+void system_config_8800dc(struct aic_sdio_dev *rwnx_hw);
-+int rwnx_plat_patch_load_8800dc(struct aic_sdio_dev *sdiodev);
-+int aicwf_misc_ram_init_8800dc(struct aic_sdio_dev *sdiodev);
-+int start_from_bootrom_8800DC(struct aic_sdio_dev *sdiodev);
-+
-+#ifdef CONFIG_DPD
-+int aicwf_dpd_calib_8800dc(struct aic_sdio_dev *sdiodev,
-+			   struct rf_misc_ram_lite_t *dpd_res);
-+int aicwf_dpd_result_apply_8800dc(struct aic_sdio_dev *sdiodev,
-+				  struct rf_misc_ram_lite_t *dpd_res);
-+#ifndef CONFIG_FORCE_DPD_CALIB
-+int aicwf_dpd_result_load_8800dc(struct aic_sdio_dev *sdiodev,
-+				 struct rf_misc_ram_lite_t *dpd_res);
-+#endif /* !CONFIG_FORCE_DPD_CALIB */
-+#endif
-+
-+int set_bbpll_config(struct aic_sdio_dev *rwnx_hw);
-+
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.c b/driver=
-s/net/wireless/aic/aic8800_bsp/aic_bsp_driver.c
-new file mode 100644
-index 0000000000000..167c161b097d3
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.c
-@@ -0,0 +1,1670 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ *************************************************************************=
-*****
-+ *
-+ * Copyright (C) 2020 AIC semiconductor.
-+ *
-+ * @brief bsp sdio declarations
-+ *
-+ *************************************************************************=
-*****
-+ */
-+
-+#include <linux/delay.h>
-+#include <crypto/md5.h>
-+#include <linux/firmware.h>
-+#include <linux/list.h>
-+#include <linux/slab.h>
-+#include <linux/sprintf.h>
-+#include <linux/string.h>
-+#include <linux/version.h>
-+#include <linux/vmalloc.h>
-+
-+#include "aic8800d80_compat.h"
-+#include "aic8800dc_compat.h"
-+#include "aic_bsp_driver.h"
-+#include "aicsdio.h"
-+#include "aicsdio_txrxif.h"
-+#include "aic_chip_ops.h"
-+#include <linux/fs.h>
-+
-+int cur_mode;
-+
-+static void cmd_dump(const struct rwnx_cmd *cmd)
-+{
-+	if (!cmd) {
-+		pr_err("aicbsp %s cmd is null\n", __func__);
-+		return;
-+	}
-+	pr_crit("aicbsp tkn[%d]  flags:%04x  result:%3d  cmd:%4d - reqcfm(%4d)\n"=
-,
-+		cmd->tkn, cmd->flags, cmd->result, cmd->id, cmd->reqid);
-+}
-+
-+static void cmd_complete(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cm=
-d)
-+{
-+	lockdep_assert_held(&cmd_mgr->lock);
-+
-+	list_del(&cmd->list);
-+	cmd_mgr->queue_sz--;
-+
-+	cmd->flags |=3D RWNX_CMD_FLAG_DONE;
-+	if (cmd->flags & RWNX_CMD_FLAG_NONBLOCK) {
-+		kfree(cmd);
-+	} else {
-+		if (RWNX_CMD_WAIT_COMPLETE(cmd->flags)) {
-+			cmd->result =3D 0;
-+			complete(&cmd->complete);
-+		}
-+	}
-+}
-+
-+static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cm=
-d)
-+{
-+	bool defer_push =3D false;
-+	int err =3D 0;
-+
-+	spin_lock_bh(&cmd_mgr->lock);
-+
-+	if (cmd_mgr->state =3D=3D RWNX_CMD_MGR_STATE_CRASHED) {
-+		pr_crit("aicbsp cmd queue crashed\n");
-+		cmd->result =3D -EPIPE;
-+		spin_unlock_bh(&cmd_mgr->lock);
-+		return -EPIPE;
-+	}
-+
-+	if (!list_empty(&cmd_mgr->cmds)) {
-+		struct rwnx_cmd *last;
-+
-+		if (cmd_mgr->queue_sz =3D=3D cmd_mgr->max_queue_sz) {
-+			pr_crit("aicbsp Too many cmds (%d) already queued\n",
-+				cmd_mgr->max_queue_sz);
-+			cmd->result =3D -ENOMEM;
-+			spin_unlock_bh(&cmd_mgr->lock);
-+			return -ENOMEM;
-+		}
-+		last =3D list_entry(cmd_mgr->cmds.prev, struct rwnx_cmd, list);
-+		if (last->flags & (RWNX_CMD_FLAG_WAIT_ACK | RWNX_CMD_FLAG_WAIT_PUSH)) {
-+			cmd->flags |=3D RWNX_CMD_FLAG_WAIT_PUSH;
-+			defer_push =3D true;
-+		}
-+	}
-+
-+	if (cmd->flags & RWNX_CMD_FLAG_REQ_CFM)
-+		cmd->flags |=3D RWNX_CMD_FLAG_WAIT_CFM;
-+
-+	cmd->tkn =3D cmd_mgr->next_tkn++;
-+	cmd->result =3D -EINTR;
-+
-+	if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK))
-+		init_completion(&cmd->complete);
-+
-+	list_add_tail(&cmd->list, &cmd_mgr->cmds);
-+	cmd_mgr->queue_sz++;
-+	spin_unlock_bh(&cmd_mgr->lock);
-+
-+	if (!defer_push) {
-+		rwnx_set_cmd_tx((void *)(cmd_mgr->sdiodev), cmd->a2e_msg,
-+				sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
-+		kfree(cmd->a2e_msg);
-+	} else {
-+		pr_err("aicbsp ERR: never defer push!!!!");
-+		return 0;
-+	}
-+
-+	if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK)) {
-+		unsigned long tout =3D
-+			msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS * cmd_mgr->queue_sz);
-+		if (!wait_for_completion_timeout(&cmd->complete, tout)) {
-+			pr_crit("aicbsp cmd timed-out\n");
-+			cmd_dump(cmd);
-+			spin_lock_bh(&cmd_mgr->lock);
-+			cmd_mgr->state =3D RWNX_CMD_MGR_STATE_CRASHED;
-+			if (!(cmd->flags & RWNX_CMD_FLAG_DONE)) {
-+				cmd->result =3D -ETIMEDOUT;
-+				cmd_complete(cmd_mgr, cmd);
-+			}
-+			spin_unlock_bh(&cmd_mgr->lock);
-+			err =3D -ETIMEDOUT;
-+		} else {
-+			kfree(cmd);
-+		}
-+	} else {
-+		cmd->result =3D 0;
-+	}
-+
-+	return err;
-+}
-+
-+static int cmd_mgr_run_callback(struct rwnx_cmd_mgr *cmd_mgr,
-+				struct rwnx_cmd *cmd,
-+				struct rwnx_cmd_e2amsg *msg, msg_cb_fct cb)
-+{
-+	int res;
-+
-+	if (!cb)
-+		return 0;
-+	spin_lock(&cmd_mgr->cb_lock);
-+	res =3D cb(cmd, msg);
-+	spin_unlock(&cmd_mgr->cb_lock);
-+
-+	return res;
-+}
-+
-+static int cmd_mgr_msgind(struct rwnx_cmd_mgr *cmd_mgr,
-+			  struct rwnx_cmd_e2amsg *msg, msg_cb_fct cb)
-+{
-+	struct rwnx_cmd *cmd;
-+	bool found =3D false;
-+
-+	// printk("aicbsp cmd->id=3D%x\n", msg->id);
-+	spin_lock(&cmd_mgr->lock);
-+	list_for_each_entry(cmd, &cmd_mgr->cmds, list) {
-+		if (cmd->reqid =3D=3D msg->id && (cmd->flags & RWNX_CMD_FLAG_WAIT_CFM)) =
-{
-+			if (!cmd_mgr_run_callback(cmd_mgr, cmd, msg, cb)) {
-+				found =3D true;
-+				cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_CFM;
-+
-+				if (WARN(msg->param_len > RWNX_CMD_E2AMSG_LEN_MAX,
-+					 "Unexpect E2A msg len %d > %d\n", msg->param_len,
-+						 RWNX_CMD_E2AMSG_LEN_MAX)) {
-+					msg->param_len =3D RWNX_CMD_E2AMSG_LEN_MAX;
-+				}
-+
-+				if (cmd->e2a_msg && msg->param_len)
-+					memcpy(cmd->e2a_msg, &msg->param, msg->param_len);
-+
-+				if (RWNX_CMD_WAIT_COMPLETE(cmd->flags))
-+					cmd_complete(cmd_mgr, cmd);
-+
-+				break;
-+			}
-+		}
-+	}
-+	spin_unlock(&cmd_mgr->lock);
-+
-+	if (!found)
-+		cmd_mgr_run_callback(cmd_mgr, NULL, msg, cb);
-+
-+	return 0;
-+}
-+
-+static void cmd_mgr_print(struct rwnx_cmd_mgr *cmd_mgr)
-+{
-+	struct rwnx_cmd *cur;
-+
-+	if (!cmd_mgr) {
-+		pr_err("aicbsp %s cmd_mgr is null\n", __func__);
-+		return;
-+	}
-+
-+	spin_lock_bh(&cmd_mgr->lock);
-+	list_for_each_entry(cur, &cmd_mgr->cmds, list) {
-+		cmd_dump(cur);
-+	}
-+	spin_unlock_bh(&cmd_mgr->lock);
-+}
-+
-+static void cmd_mgr_drain(struct rwnx_cmd_mgr *cmd_mgr)
-+{
-+	struct rwnx_cmd *cur, *nxt;
-+
-+	if (!cmd_mgr) {
-+		pr_err("aicbsp %s cmd_mgr is null\n", __func__);
-+		return;
-+	}
-+
-+	spin_lock_bh(&cmd_mgr->lock);
-+	list_for_each_entry_safe(cur, nxt, &cmd_mgr->cmds, list) {
-+		list_del(&cur->list);
-+		cmd_mgr->queue_sz--;
-+		if (!(cur->flags & RWNX_CMD_FLAG_NONBLOCK))
-+			complete(&cur->complete);
-+	}
-+	spin_unlock_bh(&cmd_mgr->lock);
-+}
-+
-+void rwnx_cmd_mgr_init(struct rwnx_cmd_mgr *cmd_mgr)
-+{
-+	cmd_mgr->max_queue_sz =3D RWNX_CMD_MAX_QUEUED;
-+	INIT_LIST_HEAD(&cmd_mgr->cmds);
-+	cmd_mgr->state =3D RWNX_CMD_MGR_STATE_INITED;
-+	spin_lock_init(&cmd_mgr->lock);
-+	spin_lock_init(&cmd_mgr->cb_lock);
-+	cmd_mgr->queue =3D &cmd_mgr_queue;
-+	cmd_mgr->print =3D &cmd_mgr_print;
-+	cmd_mgr->drain =3D &cmd_mgr_drain;
-+	cmd_mgr->llind =3D NULL;
-+	cmd_mgr->msgind =3D &cmd_mgr_msgind;
-+}
-+
-+void rwnx_cmd_mgr_deinit(struct rwnx_cmd_mgr *cmd_mgr)
-+{
-+	if (!cmd_mgr) {
-+		pr_err("aicbsp %s cmd_mgr is null\n", __func__);
-+		return;
-+	}
-+	cmd_mgr->print(cmd_mgr);
-+	cmd_mgr->drain(cmd_mgr);
-+	cmd_mgr->print(cmd_mgr);
-+	memset(cmd_mgr, 0, sizeof(*cmd_mgr));
-+}
-+
-+void rwnx_set_cmd_tx(void *dev, struct lmac_msg *msg, uint len)
-+{
-+	struct aic_sdio_dev *sdiodev =3D (struct aic_sdio_dev *)dev;
-+	struct aicwf_bus *bus =3D sdiodev->bus_if;
-+	u8 *buffer =3D bus->cmd_buf;
-+	u16 index =3D 0;
-+
-+	memset(buffer, 0, CMD_BUF_MAX);
-+	buffer[0] =3D (len + 4) & 0x00ff;
-+	buffer[1] =3D ((len + 4) >> 8) & 0x0f;
-+	buffer[2] =3D 0x11;
-+	if (sdiodev->chip_ops->use_hdr_checksum)
-+		buffer[3] =3D crc8_ponl_107(&buffer[0], 3); // crc8
-+	else
-+		buffer[3] =3D 0x0;
-+
-+	index +=3D 4;
-+	// there is a dummy word
-+	index +=3D 4;
-+
-+	// make sure little endian
-+	put_u16(&buffer[index], msg->id);
-+	index +=3D 2;
-+	put_u16(&buffer[index], msg->dest_id);
-+	index +=3D 2;
-+	put_u16(&buffer[index], msg->src_id);
-+	index +=3D 2;
-+	put_u16(&buffer[index], msg->param_len);
-+	index +=3D 2;
-+	memcpy(&buffer[index], (u8 *)msg->param, msg->param_len);
-+
-+	aicwf_bus_txmsg(bus, buffer, len + 8);
-+}
-+
-+static inline void *rwnx_msg_zalloc(lmac_msg_id_t const id,
-+				    lmac_task_id_t const dest_id,
-+									lmac_task_id_t const src_id,
-+									uint16_t const param_len)
-+{
-+	struct lmac_msg *msg;
-+	gfp_t flags;
-+
-+	if (in_softirq())
-+		flags =3D GFP_ATOMIC;
-+	else
-+		flags =3D GFP_KERNEL;
-+
-+	msg =3D
-+		kzalloc(sizeof(struct lmac_msg) + param_len, flags);
-+	if (!msg) {
-+		pr_crit("aicbsp %s: msg allocation failed\n", __func__);
-+		return NULL;
-+	}
-+	msg->id =3D id;
-+	msg->dest_id =3D dest_id;
-+	msg->src_id =3D src_id;
-+	msg->param_len =3D param_len;
-+
-+	return msg->param;
-+}
-+
-+static void rwnx_msg_free(struct lmac_msg *msg, const void *msg_params)
-+{
-+	kfree(msg);
-+}
-+
-+static int rwnx_send_msg(struct aic_sdio_dev *sdiodev, const void *msg_par=
-ams,
-+			 int reqcfm, lmac_msg_id_t reqid, void *cfm)
-+{
-+	struct lmac_msg *msg;
-+	struct rwnx_cmd *cmd;
-+	bool nonblock;
-+	int ret =3D 0;
-+
-+	msg =3D container_of((void *)msg_params, struct lmac_msg, param);
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST) {
-+		rwnx_msg_free(msg, msg_params);
-+		pr_info("aicbsp bus is down\n");
-+		return 0;
-+	}
-+
-+	nonblock =3D 0;
-+	cmd =3D kzalloc_obj(*cmd, nonblock ? GFP_ATOMIC : GFP_KERNEL);
-+	cmd->result =3D -EINTR;
-+	cmd->id =3D msg->id;
-+	cmd->reqid =3D reqid;
-+	cmd->a2e_msg =3D msg;
-+	cmd->e2a_msg =3D cfm;
-+	if (nonblock)
-+		cmd->flags =3D RWNX_CMD_FLAG_NONBLOCK;
-+	if (reqcfm)
-+		cmd->flags |=3D RWNX_CMD_FLAG_REQ_CFM;
-+
-+	if (reqcfm) {
-+		cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_ACK; // we don't need ack any more
-+		ret =3D sdiodev->cmd_mgr.queue(&sdiodev->cmd_mgr, cmd);
-+	} else {
-+		rwnx_set_cmd_tx((void *)(sdiodev), cmd->a2e_msg,
-+				sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
-+	}
-+
-+	if (!reqcfm)
-+		kfree(cmd);
-+
-+	return ret;
-+}
-+
-+int rwnx_send_dbg_mem_block_write_req(struct aic_sdio_dev *sdiodev,
-+				      u32 mem_addr, u32 mem_size, u32 *mem_data)
-+{
-+	struct dbg_mem_block_write_req *mem_blk_write_req;
-+
-+	/* Build the DBG_MEM_BLOCK_WRITE_REQ message */
-+	mem_blk_write_req =3D
-+		rwnx_msg_zalloc(DBG_MEM_BLOCK_WRITE_REQ, TASK_DBG, DRV_TASK_ID,
-+				sizeof(struct dbg_mem_block_write_req));
-+	if (!mem_blk_write_req)
-+		return -ENOMEM;
-+
-+	/* Set parameters for the DBG_MEM_BLOCK_WRITE_REQ message */
-+	mem_blk_write_req->memaddr =3D mem_addr;
-+	mem_blk_write_req->memsize =3D mem_size;
-+	memcpy(mem_blk_write_req->memdata, mem_data, mem_size);
-+
-+	/* Send the DBG_MEM_BLOCK_WRITE_REQ message to LMAC FW */
-+	return rwnx_send_msg(sdiodev, mem_blk_write_req, 1, DBG_MEM_BLOCK_WRITE_C=
-FM,
-+						 NULL);
-+}
-+
-+int rwnx_send_dbg_mem_read_req(struct aic_sdio_dev *sdiodev, u32 mem_addr,
-+			       struct dbg_mem_read_cfm *cfm)
-+{
-+	struct dbg_mem_read_req *mem_read_req;
-+
-+	/* Build the DBG_MEM_READ_REQ message */
-+	mem_read_req =3D rwnx_msg_zalloc(DBG_MEM_READ_REQ, TASK_DBG, DRV_TASK_ID,
-+				       sizeof(struct dbg_mem_read_req));
-+	if (!mem_read_req)
-+		return -ENOMEM;
-+
-+	/* Set parameters for the DBG_MEM_READ_REQ message */
-+	mem_read_req->memaddr =3D mem_addr;
-+
-+	/* Send the DBG_MEM_READ_REQ message to LMAC FW */
-+	return rwnx_send_msg(sdiodev, mem_read_req, 1, DBG_MEM_READ_CFM, cfm);
-+}
-+
-+int rwnx_send_dbg_mem_write_req(struct aic_sdio_dev *sdiodev, u32 mem_addr=
-,
-+				u32 mem_data)
-+{
-+	struct dbg_mem_write_req *mem_write_req;
-+
-+	/* Build the DBG_MEM_WRITE_REQ message */
-+	mem_write_req =3D rwnx_msg_zalloc(DBG_MEM_WRITE_REQ, TASK_DBG, DRV_TASK_I=
-D,
-+					sizeof(struct dbg_mem_write_req));
-+	if (!mem_write_req)
-+		return -ENOMEM;
-+
-+	/* Set parameters for the DBG_MEM_WRITE_REQ message */
-+	mem_write_req->memaddr =3D mem_addr;
-+	mem_write_req->memdata =3D mem_data;
-+
-+	/* Send the DBG_MEM_WRITE_REQ message to LMAC FW */
-+	return rwnx_send_msg(sdiodev, mem_write_req, 1, DBG_MEM_WRITE_CFM, NULL);
-+}
-+
-+int rwnx_send_dbg_mem_mask_write_req(struct aic_sdio_dev *sdiodev, u32 mem=
-_addr,
-+				     u32 mem_mask, u32 mem_data)
-+{
-+	struct dbg_mem_mask_write_req *mem_mask_write_req;
-+
-+	/* Build the DBG_MEM_MASK_WRITE_REQ message */
-+	mem_mask_write_req =3D
-+		rwnx_msg_zalloc(DBG_MEM_MASK_WRITE_REQ, TASK_DBG, DRV_TASK_ID,
-+				sizeof(struct dbg_mem_mask_write_req));
-+	if (!mem_mask_write_req)
-+		return -ENOMEM;
-+
-+	/* Set parameters for the DBG_MEM_MASK_WRITE_REQ message */
-+	mem_mask_write_req->memaddr =3D mem_addr;
-+	mem_mask_write_req->memmask =3D mem_mask;
-+	mem_mask_write_req->memdata =3D mem_data;
-+
-+	/* Send the DBG_MEM_MASK_WRITE_REQ message to LMAC FW */
-+	return rwnx_send_msg(sdiodev, mem_mask_write_req, 1, DBG_MEM_MASK_WRITE_C=
-FM,
-+						 NULL);
-+}
-+
-+int rwnx_send_dbg_start_app_req(struct aic_sdio_dev *sdiodev, u32 boot_add=
-r,
-+				u32 boot_type,
-+				struct dbg_start_app_cfm *start_app_cfm)
-+{
-+	struct dbg_start_app_req *start_app_req;
-+
-+	/* Build the DBG_START_APP_REQ message */
-+	start_app_req =3D rwnx_msg_zalloc(DBG_START_APP_REQ, TASK_DBG, DRV_TASK_I=
-D,
-+					sizeof(struct dbg_start_app_req));
-+	if (!start_app_req) {
-+		pr_err("aicbsp start app nomen\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* Set parameters for the DBG_START_APP_REQ message */
-+	start_app_req->bootaddr =3D boot_addr;
-+	start_app_req->boottype =3D boot_type;
-+
-+	/* Send the DBG_START_APP_REQ message to LMAC FW */
-+	return rwnx_send_msg(sdiodev, start_app_req, 1, DBG_START_APP_CFM,
-+						 start_app_cfm);
-+}
-+
-+static msg_cb_fct dbg_hdlrs[MSG_I(DBG_MAX)] =3D {};
-+
-+static msg_cb_fct *msg_hdlrs[] =3D {
-+	[TASK_DBG] =3D dbg_hdlrs,
++enum aicbsp_subsys {
++	AIC_BLUETOOTH,
++	AIC_WIFI,
 +};
 +
-+void rwnx_rx_handle_msg(struct aic_sdio_dev *sdiodev, struct ipc_e2a_msg *=
-msg)
-+{
-+	sdiodev->cmd_mgr.msgind(&sdiodev->cmd_mgr, msg,
-+							msg_hdlrs[MSG_T(msg->id)][MSG_I(msg->id)]);
-+}
++enum aicbsp_pwr_state {
++	AIC_PWR_OFF,
++	AIC_PWR_ON,
++};
 +
-+static inline void print_md5(const u8 *x)
-+{
-+	pr_info("aicbsp file md5:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x=
-%02x%02x%02x%02x\r\n",
-+		x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7],
-+		x[8], x[9], x[10], x[11], x[12], x[13], x[14], x[15]);
-+}
++struct aicbsp_feature_t {
++	int hwinfo;
++	u32 sdio_clock;
++	u8 sdio_phase;
++	int fwlog_en;
++	u8 irqf;
++	u8 cpmode;
++	int adapt;
++};
 +
-+static int aicbsp_request_firmware(const struct firmware **fw,
-+				   const char *name, struct device *dev)
-+{
-+	char *fw_name;
-+	int ret;
-+
-+	if (!name || !name[0])
-+		return -EINVAL;
-+
-+	fw_name =3D kasprintf(GFP_KERNEL, AIC8800_FW_DIR "%s", name);
-+	if (!fw_name)
-+		return -ENOMEM;
-+
-+	ret =3D request_firmware(fw, fw_name, dev);
-+	kfree(fw_name);
-+
-+	return ret;
-+}
-+
-+int rwnx_load_firmware(u32 **fw_buf, const char *name, struct device *devi=
-ce)
-+{
-+	const struct firmware *fw =3D NULL;
-+	u32 *dst =3D NULL;
-+	void *buffer =3D NULL;
-+#ifdef CONFIG_TEDIOUS_PRT
-+	u8 digest[MD5_DIGEST_SIZE];
-+#endif
-+	int size =3D 0;
-+	int ret =3D 0;
-+
-+	pr_info("aicbsp %s: request firmware =3D %s\n", __func__, name);
-+
-+	ret =3D aicbsp_request_firmware(&fw, name, device);
-+
-+	if (ret < 0) {
-+		pr_err("aicbsp Load %s fail\n", name);
-+		return ret;
-+	}
-+
-+	size =3D fw->size;
-+	dst =3D (u32 *)fw->data;
-+
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of firmware file\n");
-+		release_firmware(fw);
-+		return -1;
-+	}
-+
-+	buffer =3D vmalloc(size);
-+	if (!buffer) {
-+		release_firmware(fw);
-+		return -ENOMEM;
-+	}
-+	memset(buffer, 0, size);
-+	memcpy(buffer, dst, size);
-+
-+	*fw_buf =3D buffer;
-+
-+#ifdef CONFIG_TEDIOUS_PRT
-+	md5(buffer, size, digest);
-+	print_md5(digest);
-+#endif
-+
-+	release_firmware(fw);
-+
-+	return size;
-+}
-+
-+extern int testmode;
-+
-+#ifdef CONFIG_M2D_OTA_AUTO_SUPPORT
-+int rwnx_plat_m2d_flash_ota(struct aic_sdio_dev *sdiodev,
-+			    char *filename)
-+{
-+	struct device *dev =3D sdiodev->dev;
-+	unsigned int i =3D 0;
-+	int size;
-+	u32 *dst =3D NULL;
-+	int err =3D 0;
-+	int ret;
-+	u8 bond_id;
-+	const u32 mem_addr =3D 0x40500000;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, mem_addr, &rd_mem_addr_cfm);
-+	if (ret) {
-+		pr_err("aicbsp m2d %x rd fail: %d\n", mem_addr, ret);
-+		return ret;
-+	}
-+	bond_id =3D (u8)(rd_mem_addr_cfm.memdata >> 24);
-+	pr_info("aicbsp %x=3D%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memd=
-ata);
-+	if (bond_id & (1 << 1)) {
-+		// flash is invalid
-+		pr_err("aicbsp m2d flash is invalid\n");
-+		return -1;
-+	}
-+
-+	/* load aic firmware */
-+	size =3D rwnx_load_firmware(&dst, filename, dev);
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of m2d file\n");
-+		vfree(dst);
-+		dst =3D NULL;
-+		return -1;
-+	}
-+
-+	/* Copy the file on the Embedded side */
-+	pr_info("aicbsp ### Upload m2d %s flash, size=3D%d\n", filename, size);
-+
-+	/*send info first */
-+	err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, AIC_M2D_OTA_INFO_ADDR,=
- 4,
-+						(u32 *)&size);
-+
-+	/*send data first */
-+	if (size > 1024) {                              // > 1KB data
-+		for (i =3D 0; i < (size - 1024); i +=3D 1024) { // each time write 1KB
-+			err =3D rwnx_send_dbg_mem_block_write_req(sdiodev,
-+								AIC_M2D_OTA_DATA_ADDR,
-+								1024, dst + i / 4);
-+			if (err) {
-+				pr_err("aicbsp m2d upload fail: %x, err:%d\r\n",
-+				       AIC_M2D_OTA_DATA_ADDR, err);
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!err && i < size) { // <1KB data
-+		err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, AIC_M2D_OTA_DATA_ADDR=
-,
-+							size - i, dst + i / 4);
-+		if (err) {
-+			pr_err("aicbsp m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR,
-+			       err);
-+		}
-+	}
-+
-+	if (dst) {
-+		vfree(dst);
-+		dst =3D NULL;
-+	}
-+	testmode =3D FW_NORMAL_MODE;
-+	aicbsp_info.cpmode =3D testmode;
-+
-+	pr_info("aicbsp m2d flash update complete\n\n");
-+
-+	return err;
-+}
-+
-+int rwnx_plat_m2d_flash_ota_check(struct aic_sdio_dev *sdiodev, char *file=
-name)
-+{
-+	struct device *dev =3D sdiodev->dev;
-+	unsigned int i =3D 0, j =3D 0;
-+	int size;
-+	u32 *dst =3D NULL;
-+	int err =3D 0;
-+	int ret =3D 0;
-+	u8 bond_id;
-+	const u32 mem_addr =3D 0x40500000;
-+	const u32 mem_addr_code_start =3D AIC_M2D_OTA_CODE_START_ADDR;
-+	const u32 mem_addr_sdk_ver =3D AIC_M2D_OTA_VER_ADDR;
-+	const u32 driver_code_start_idx =3D
-+		(AIC_M2D_OTA_CODE_START_ADDR - AIC_M2D_OTA_FLASH_ADDR) / 4;
-+	const u32 driver_sdk_ver_idx =3D
-+		(AIC_M2D_OTA_VER_ADDR - AIC_M2D_OTA_FLASH_ADDR) / 4;
-+	u32 driver_sdk_ver_addr_idx =3D 0;
-+	u32 code_start_addr =3D 0xffffffff;
-+	u32 sdk_ver_addr =3D 0xffffffff;
-+	u32 drv_code_start_addr =3D 0xffffffff;
-+	u32 drv_sdk_ver_addr =3D 0xffffffff;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+	char m2d_sdk_ver[64];
-+	char flash_sdk_ver[64];
-+	u32 flash_ver[16];
-+	u32 ota_ver[16];
-+
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, mem_addr, &rd_mem_addr_cfm);
-+	if (ret) {
-+		pr_err("aicbsp m2d %x rd fail: %d\n", mem_addr, ret);
-+		return ret;
-+	}
-+	bond_id =3D (u8)(rd_mem_addr_cfm.memdata >> 24);
-+	pr_info("aicbsp %x=3D%x\n", rd_mem_addr_cfm.memaddr, rd_mem_addr_cfm.memd=
-ata);
-+	if (bond_id & (1 << 1)) {
-+		// flash is invalid
-+		pr_err("aicbsp m2d flash is invalid\n");
-+		return -1;
-+	}
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, mem_addr_code_start,
-+					 &rd_mem_addr_cfm);
-+	if (ret) {
-+		pr_err("mem_addr_code_start %x rd fail: %d\n", mem_addr_code_start,
-+		       ret);
-+		return ret;
-+	}
-+	code_start_addr =3D rd_mem_addr_cfm.memdata;
-+
-+#if !defined(CONFIG_M2D_OTA_LZMA_SUPPORT)
-+	ret =3D
-+		rwnx_send_dbg_mem_read_req(sdiodev, mem_addr_sdk_ver, &rd_mem_addr_cfm);
-+	if (ret) {
-+		pr_err("aicbsp mem_addr_sdk_ver %x rd fail: %d\n", mem_addr_code_start, =
-ret);
-+		return ret;
-+	}
-+	sdk_ver_addr =3D rd_mem_addr_cfm.memdata;
-+#else
-+	sdk_ver_addr =3D mem_addr_sdk_ver;
-+#endif
-+	pr_info("aicbsp code_start_addr: 0x%x,	sdk_ver_addr: 0x%x\n", code_start_=
-addr,
-+		sdk_ver_addr);
-+
-+	/* load aic firmware */
-+	size =3D rwnx_load_firmware(&dst, filename, dev);
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of m2d file\n");
-+		vfree(dst);
-+		dst =3D NULL;
-+		return -1;
-+	}
-+	if (code_start_addr =3D=3D 0xffffffff && sdk_ver_addr =3D=3D 0xffffffff) =
-{
-+		pr_warn("aicbsp ########m2d flash old version , must be upgrade\n");
-+		drv_code_start_addr =3D dst[driver_code_start_idx];
-+		drv_sdk_ver_addr =3D dst[driver_sdk_ver_idx];
-+
-+		pr_info("aicbsp drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n",
-+			drv_code_start_addr, drv_sdk_ver_addr);
-+
-+		if (drv_sdk_ver_addr =3D=3D 0xffffffff) {
-+			pr_err("aicbsp ########driver m2d_ota.bin is old ,not need upgrade\n");
-+			return -1;
-+		}
-+
-+	} else {
-+		for (i =3D 0; i < 16; i++) {
-+			ret =3D rwnx_send_dbg_mem_read_req(sdiodev, (sdk_ver_addr + i * 4),
-+							 &rd_mem_addr_cfm);
-+			if (ret) {
-+				pr_err("aicbsp mem_addr_sdk_ver %x rd fail: %d\n",
-+				       mem_addr_code_start, ret);
-+				return ret;
-+			}
-+			flash_ver[i] =3D rd_mem_addr_cfm.memdata;
-+		}
-+		memcpy((u8 *)flash_sdk_ver, (u8 *)flash_ver, 64);
-+		memcpy((u8 *)saved_sdk_ver, (u8 *)flash_sdk_ver, 64);
-+		pr_info("aicbsp flash SDK Version: %s\r\n\r\n", flash_sdk_ver);
-+
-+		drv_code_start_addr =3D dst[driver_code_start_idx];
-+		drv_sdk_ver_addr =3D dst[driver_sdk_ver_idx];
-+
-+		pr_info("aicbsp drv_code_start_addr: 0x%x,	drv_sdk_ver_addr: 0x%x\n",
-+			drv_code_start_addr, drv_sdk_ver_addr);
-+
-+		if (drv_sdk_ver_addr =3D=3D 0xffffffff) {
-+			pr_err("aicbsp ########driver m2d_ota.bin is old ,not need upgrade\n");
-+			return -1;
-+		}
-+#if !defined(CONFIG_M2D_OTA_LZMA_SUPPORT)
-+		driver_sdk_ver_addr_idx =3D (drv_sdk_ver_addr - drv_code_start_addr) / 4=
-;
-+#else
-+		driver_sdk_ver_addr_idx =3D driver_sdk_ver_idx;
-+#endif
-+		pr_info("aicbsp driver_sdk_ver_addr_idx %d\n", driver_sdk_ver_addr_idx);
-+
-+		if (driver_sdk_ver_addr_idx) {
-+			for (j =3D 0; j < 16; j++)
-+				ota_ver[j] =3D dst[driver_sdk_ver_addr_idx + j];
-+
-+			memcpy((u8 *)m2d_sdk_ver, (u8 *)ota_ver, 64);
-+			pr_info("aicbsp m2d_ota SDK Version: %s\r\n\r\n", m2d_sdk_ver);
-+		} else {
-+			return -1;
-+		}
-+
-+		if (!strcmp(m2d_sdk_ver, flash_sdk_ver)) {
-+			pr_err("aicbsp ######## m2d %s flash is not need upgrade\r\n", filename=
-);
-+			return -1;
-+		}
-+	}
-+
-+	/* Copy the file on the Embedded side */
-+	pr_info("aicbsp ### Upload m2d %s flash, size=3D%d\n", filename, size);
-+
-+	/*send info first */
-+	err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, AIC_M2D_OTA_INFO_ADDR,=
- 4,
-+						(u32 *)&size);
-+
-+	/*send data first */
-+	if (size > 1024) {                              // > 1KB data
-+		for (i =3D 0; i < (size - 1024); i +=3D 1024) { // each time write 1KB
-+			err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, AIC_M2D_OTA_DATA_ADD=
-R,
-+								1024, dst + i / 4);
-+			if (err) {
-+				pr_err("aicbsp m2d upload fail: %x, err:%d\r\n",
-+				       AIC_M2D_OTA_DATA_ADDR, err);
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!err && i < size) {
-+		err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, AIC_M2D_OTA_DATA_ADDR=
-,
-+							size - i, dst + i / 4);
-+		if (err) {
-+			pr_err("aicbsp m2d upload fail: %x, err:%d\r\n", AIC_M2D_OTA_DATA_ADDR,
-+			       err);
-+		}
-+	}
-+
-+	if (dst) {
-+		vfree(dst);
-+		dst =3D NULL;
-+	}
-+	testmode =3D FW_NORMAL_MODE;
-+
-+	pr_info("aicbsp m2d flash update complete\n\n");
-+
-+	return err;
-+}
-+#endif // CONFIG_M2D_OTA_AUTO_SUPPORT
-+
-+int aicwf_patch_table_load(struct aic_sdio_dev *rwnx_hw, char *filename)
-+{
-+	struct device *dev =3D rwnx_hw->dev;
-+	int err =3D 0;
-+	unsigned int i =3D 0, size;
-+	u32 *dst =3D NULL;
-+	u8 *describle;
-+	u32 fmacfw_patch_tbl_8800dc_u02_describe_size =3D 124;
-+	u32 fmacfw_patch_tbl_8800dc_u02_describe_base; // read from patch_tbl
-+
-+	/* Copy the file on the Embedded side */
-+	pr_info("aicbsp ### Upload %s\n", filename);
-+
-+	size =3D rwnx_load_firmware(&dst, filename, dev);
-+	if (!dst) {
-+		pr_err("aicbsp No such file or directory\n");
-+		return -1;
-+	}
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of firmware file\n");
-+		dst =3D NULL;
-+		err =3D -1;
-+	}
-+
-+	pr_info("aicbsp tbl size =3D %d\n", size);
-+
-+	fmacfw_patch_tbl_8800dc_u02_describe_base =3D dst[0];
-+	AICWFDBG(LOGINFO, "FMACFW_PATCH_TBL_8800DC_U02_DESCRIBE_BASE =3D %x\n",
-+		 fmacfw_patch_tbl_8800dc_u02_describe_base);
-+
-+	if (!err && i < size) {
-+		err =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw,
-+							fmacfw_patch_tbl_8800dc_u02_describe_base,
-+			fmacfw_patch_tbl_8800dc_u02_describe_size + 4, dst);
-+		if (err)
-+			pr_err("aicbsp write describe information fail\n");
-+
-+		describle =3D
-+			kzalloc(fmacfw_patch_tbl_8800dc_u02_describe_size, GFP_KERNEL);
-+		memcpy(describle, &dst[1], fmacfw_patch_tbl_8800dc_u02_describe_size);
-+		pr_info("aicbsp %s", describle);
-+		kfree(describle);
-+		describle =3D NULL;
-+	}
-+
-+	if (!err && i < size) {
-+		for (i =3D (128 / 4); i < (size / 4); i +=3D 2) {
-+			pr_info("aicbsp patch_tbl:  %x  %x\n", dst[i], dst[i + 1]);
-+			err =3D rwnx_send_dbg_mem_write_req(rwnx_hw, dst[i], dst[i + 1]);
-+		}
-+		if (err)
-+			pr_err("aicbsp bin upload fail: %x, err:%d\r\n", dst[i], err);
-+	}
-+
-+	if (dst) {
-+		vfree(dst);
-+		dst =3D NULL;
-+	}
-+
-+	return err;
-+}
-+
-+int aicwf_plat_patch_load_8800dc(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+#if !defined(CONFIG_FPGA_VERIFICATION)
-+	if (chip_sub_id =3D=3D 0) {
-+		pr_info("aicbsp u01 is loaing ###############\n");
-+		ret =3D rwnx_plat_bin_fw_upload(sdiodev, ROM_FMAC_PATCH_ADDR,
-+					      RWNX_MAC_PATCH_NAME2_8800DC);
-+	} else if (chip_sub_id =3D=3D 1) {
-+		pr_info("aicbsp u02 is loaing ###############\n");
-+		ret =3D rwnx_plat_bin_fw_upload(sdiodev, ROM_FMAC_PATCH_ADDR,
-+					      RWNX_MAC_PATCH_NAME2_8800DC_U02);
-+	} else if (chip_sub_id =3D=3D 2) {
-+		pr_info("aicbsp h_u02 is loaing ###############\n");
-+		ret =3D rwnx_plat_bin_fw_upload(sdiodev, ROM_FMAC_PATCH_ADDR,
-+					      RWNX_MAC_PATCH_NAME2_8800DC_H_U02);
-+	} else {
-+		pr_info("aicbsp unsupported id: %d\n", chip_sub_id);
-+	}
-+#endif
-+	return ret;
-+}
-+
-+int aicwf_plat_rftest_load_8800dc(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	ret =3D rwnx_plat_bin_fw_upload(sdiodev, RAM_LMAC_FW_ADDR,
-+				      RWNX_MAC_FW_RF_BASE_NAME_8800DC);
-+	if (ret) {
-+		AICWFDBG(LOGINFO, "load rftest bin fail: %d\n", ret);
-+		return ret;
-+	}
-+	return ret;
-+}
++enum skb_buff_id {
++	AIC_RESV_MEM_TXDATA,
++};
 +
 +#ifdef CONFIG_DPD
-+int aicwf_misc_ram_valid_check_8800dc(struct aic_sdio_dev *sdiodev,
-+				      int *valid_out)
-+{
-+	int ret =3D 0;
-+	u32 cfg_base =3D 0x10164;
-+	struct dbg_mem_read_cfm cfm;
-+	u32 misc_ram_addr;
-+	u32 ram_base_addr, ram_word_cnt;
++struct rf_misc_ram_t {
++	u32 bit_mask[3];
++	u32 reserved;
++	u32 dpd_high[96];
++	u32 dpd_11b[96];
++	u32 dpd_low[96];
++	u32 idac_11b[48];
++	u32 idac_high[48];
++	u32 idac_low[48];
++	u32 loft_res[18];
++	u32 rx_iqim_res[16];
++};
++
++struct rf_misc_ram_lite_t {
 +	u32 bit_mask[4];
-+	int i;
++	u32 dpd_high[96];
++	u32 loft_res[18];
++};
 +
-+	if (valid_out)
-+		*valid_out =3D 0;
++#define MEMBER_SIZE(type, member) sizeof_field(type, member)
++#define DPD_RESULT_SIZE_8800DC    sizeof(struct rf_misc_ram_lite_t)
 +
-+	if (testmode =3D=3D FW_RFTEST_MODE) {
-+		u32 vect1 =3D 0;
-+		u32 vect2 =3D 0;
-+
-+		cfg_base =3D RAM_LMAC_FW_ADDR + 0x0004;
-+		ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "cfg_base:%x vcet1 rd fail: %d\n", cfg_base,
-+				 ret);
-+			return ret;
-+		}
-+		vect1 =3D cfm.memdata;
-+		if ((vect1 & 0xFFFF0000) !=3D (RAM_LMAC_FW_ADDR & 0xFFFF0000)) {
-+			AICWFDBG(LOGERROR, "vect1 invalid: %x\n", vect1);
-+			return ret;
-+		}
-+		cfg_base =3D RAM_LMAC_FW_ADDR + 0x0008;
-+		ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base, &cfm);
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "cfg_base:%x vcet2 rd fail: %d\n", cfg_base,
-+				 ret);
-+			return ret;
-+		}
-+		vect2 =3D cfm.memdata;
-+		if ((vect2 & 0xFFFF0000) !=3D (RAM_LMAC_FW_ADDR & 0xFFFF0000)) {
-+			AICWFDBG(LOGERROR, "vect2 invalid: %x\n", vect2);
-+			return ret;
-+		}
-+
-+		cfg_base =3D RAM_LMAC_FW_ADDR + 0x0164;
-+	}
-+	// init misc ram
-+	ret =3D rwnx_send_dbg_mem_read_req(sdiodev, cfg_base + 0x14, &cfm);
-+	if (ret) {
-+		AICWFDBG(LOGERROR, "rf misc ram[0x%x] rd fail: %d\n", cfg_base + 0x14,
-+			 ret);
-+		return ret;
-+	}
-+	misc_ram_addr =3D cfm.memdata;
-+	AICWFDBG(LOGERROR, "misc_ram_addr=3D%x\n", misc_ram_addr);
-+	// bit_mask
-+	ram_base_addr =3D misc_ram_addr + offsetof(struct rf_misc_ram_t, bit_mask=
-);
-+	ram_word_cnt =3D (MEMBER_SIZE(struct rf_misc_ram_t, bit_mask) +
-+					MEMBER_SIZE(struct rf_misc_ram_t, reserved)) /
-+				   4;
-+	for (i =3D 0; i < ram_word_cnt; i++) {
-+		ret =3D rwnx_send_dbg_mem_read_req(sdiodev, ram_base_addr + i * 4, &cfm)=
-;
-+		if (ret) {
-+			AICWFDBG(LOGERROR, "bit_mask[0x%x] rd fail: %d\n",
-+				 ram_base_addr + i * 4, ret);
-+			return ret;
-+		}
-+		bit_mask[i] =3D cfm.memdata;
-+	}
-+	AICWFDBG(LOGTRACE, "bit_mask:%x,%x,%x,%x\n", bit_mask[0], bit_mask[1],
-+		 bit_mask[2], bit_mask[3]);
-+	if (bit_mask[0] =3D=3D 0 && ((bit_mask[1] & 0xFFF00000) =3D=3D 0x80000000=
-) &&
-+	    bit_mask[2] =3D=3D 0 && ((bit_mask[3] & 0xFFFFFF00) =3D=3D 0x00000000=
-)) {
-+		if (valid_out)
-+			*valid_out =3D 1;
-+	}
-+	return ret;
-+}
-+
-+int aicwf_plat_calib_load_8800dc(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	if (chip_sub_id =3D=3D 1) {
-+		ret =3D rwnx_plat_bin_fw_upload(sdiodev, ROM_FMAC_CALIB_ADDR,
-+					      RWNX_MAC_CALIB_NAME_8800DC_U02);
-+		if (ret) {
-+			AICWFDBG(LOGINFO, "load rftest bin fail: %d\n", ret);
-+			return ret;
-+		}
-+	} else if (chip_sub_id =3D=3D 2) {
-+		ret =3D rwnx_plat_bin_fw_upload(sdiodev, ROM_FMAC_CALIB_ADDR,
-+					      RWNX_MAC_CALIB_NAME_8800DC_H_U02);
-+		if (ret) {
-+			AICWFDBG(LOGINFO, "load rftest bin fail: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+	return ret;
-+}
-+
++extern struct rf_misc_ram_lite_t dpd_res;
 +#endif
 +
-+#ifdef CONFIG_DPD
-+/**
-+ * var dpd_res - DPD calibration result shared with the WLAN driver
-+ */
-+struct rf_misc_ram_lite_t dpd_res =3D {
-+	{0},
-+};
-+EXPORT_SYMBOL_GPL(dpd_res);
-+#endif
-+
-+int rwnx_plat_bin_fw_upload(struct aic_sdio_dev *sdiodev, u32 fw_addr,
-+			    const char *filename)
-+{
-+	struct device *dev =3D sdiodev->dev;
-+	unsigned int i =3D 0;
-+	int size;
-+	u32 *dst =3D NULL;
-+	int err =3D 0;
-+
-+	pr_info("aicbsp %s\n", __func__);
-+
-+	/* load aic firmware */
-+	size =3D rwnx_load_firmware(&dst, filename, dev);
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of firmware file\n");
-+		vfree(dst);
-+		dst =3D NULL;
-+		return -1;
-+	}
-+
-+	/* Copy the file on the Embedded side */
-+	if (size > 1024) {                              // > 1KB data
-+		for (i =3D 0; i < (size - 1024); i +=3D 1024) { // each time write 1KB
-+			err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, fw_addr + i, 1024,
-+								dst + i / 4);
-+			if (err) {
-+				pr_err("aicbsp bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!err && i < size) { // <1KB data
-+		err =3D rwnx_send_dbg_mem_block_write_req(sdiodev, fw_addr + i, size - i=
-,
-+							dst + i / 4);
-+		if (err)
-+			pr_err("aicbsp bin upload fail: %x, err:%d\r\n", fw_addr + i, err);
-+	}
-+
-+	if (dst) {
-+		vfree(dst);
-+		dst =3D NULL;
-+	}
-+
-+	return err;
-+}
-+
-+int aicbt_patch_table_free(struct aicbt_patch_table **head)
-+{
-+	struct aicbt_patch_table *p =3D *head, *n =3D NULL;
-+
-+	while (p) {
-+		n =3D p->next;
-+		vfree(p->name);
-+		vfree(p->data);
-+		vfree(p);
-+		p =3D n;
-+	}
-+	*head =3D NULL;
-+	return 0;
-+}
-+
-+struct aicbt_patch_table *aicbt_patch_table_alloc(const char *filename)
-+{
-+	u8 *rawdata =3D NULL, *p;
-+	int size;
-+	struct aicbt_patch_table *head =3D NULL, *new =3D NULL, *cur =3D NULL;
-+
-+	/* load aic firmware */
-+	size =3D rwnx_load_firmware((u32 **)&rawdata, filename, NULL);
-+	if (size <=3D 0) {
-+		pr_err("aicbsp wrong size of firmware file\n");
-+		goto err;
-+	}
-+
-+	p =3D rawdata;
-+	if (memcmp(p, AICBT_PT_TAG,
-+		   sizeof(AICBT_PT_TAG) < 16 ? sizeof(AICBT_PT_TAG) : 16)) {
-+		pr_err("aicbsp TAG err\n");
-+		goto err;
-+	}
-+	p +=3D 16;
-+
-+	while (p - rawdata < size) {
-+		new =3D vmalloc(sizeof(*new));
-+		memset(new, 0, sizeof(struct aicbt_patch_table));
-+		if (!head) {
-+			head =3D new;
-+			cur =3D new;
-+		} else {
-+			cur->next =3D new;
-+			cur =3D cur->next;
-+		}
-+
-+		cur->name =3D vmalloc(sizeof(char) * 16);
-+		memset(cur->name, 0, sizeof(char) * 16);
-+		memcpy(cur->name, p, 16);
-+		p +=3D 16;
-+
-+		cur->type =3D *(uint32_t *)p;
-+		p +=3D 4;
-+
-+		cur->len =3D *(uint32_t *)p;
-+		p +=3D 4;
-+
-+		if (cur->type >=3D 1000) { // Temp Workaround
-+			cur->len =3D 0;
-+		} else {
-+			if (cur->len > 0) {
-+				cur->data =3D vmalloc(sizeof(uint8_t) * cur->len * 8);
-+				memset(cur->data, 0, sizeof(uint8_t) * cur->len * 8);
-+				memcpy(cur->data, p, cur->len * 8);
-+				p +=3D cur->len * 8;
-+			}
-+		}
-+	}
-+	vfree(rawdata);
-+	return head;
-+
-+err:
-+	aicbt_patch_table_free(&head);
-+	if (rawdata)
-+		vfree(rawdata);
-+	return NULL;
-+}
-+
-+int aicbt_patch_info_unpack(struct aicbt_patch_info_t *patch_info,
-+			    struct aicbt_patch_table *head_t)
-+{
-+	u8 *patch_info_array =3D (u8 *)patch_info;
-+
-+	if (head_t->type =3D=3D AICBT_PT_INF) {
-+		patch_info->info_len =3D head_t->len;
-+		if (patch_info->info_len =3D=3D 0)
-+			return 0;
-+
-+		memcpy(patch_info_array + sizeof(patch_info->info_len),
-+		       head_t->data,
-+		       patch_info->info_len * sizeof(uint32_t) * 2);
-+		AICWFDBG(LOGDEBUG, "%s adid_addrinf:%x addr_adid:%x \r\n", __func__,
-+			 ((struct aicbt_patch_info_t *)patch_info_array)->adid_addrinf,
-+			 ((struct aicbt_patch_info_t *)patch_info_array)->addr_adid);
-+	}
-+	return 0;
-+}
-+
-+int aicbt_patch_trap_data_load(struct aic_sdio_dev *sdiodev,
-+			       struct aicbt_patch_table *head)
-+{
-+	struct aicbt_patch_info_t patch_info =3D {
-+		.info_len =3D 0,
-+		.adid_addrinf =3D 0,
-+		.addr_adid =3D 0,
-+		.patch_addrinf =3D 0,
-+		.addr_patch =3D 0,
-+		.reset_addr =3D 0,
-+		.reset_val =3D 0,
-+		.adid_flag_addr =3D 0,
-+		.adid_flag =3D 0,
-+	};
-+
-+	int ret;
-+
-+	if (!head)
-+		return -1;
-+
-+	ret =3D aic_chip_set_patch_info(sdiodev, &patch_info, &aicbsp_info, head)=
-;
-+	if (ret) {
-+		pr_err("aicbsp chip set patch info fail\n");
-+		return ret;
-+	}
-+
-+	if (rwnx_plat_bin_fw_upload(sdiodev, patch_info.addr_adid,
-+				    aicbsp_firmware_list[aicbsp_info.cpmode].bt_adid))
-+		return -1;
-+	if (rwnx_plat_bin_fw_upload(sdiodev, patch_info.addr_patch,
-+				    aicbsp_firmware_list[aicbsp_info.cpmode].bt_patch))
-+		return -1;
-+	return 0;
-+}
-+
-+static struct aicbt_info_t aicbt_info[] =3D {
-+	{
-+		.btmode =3D AICBT_BTMODE_DEFAULT,
-+		.btport =3D AICBT_BTPORT_DEFAULT,
-+		.uart_baud =3D AICBT_UART_BAUD_DEFAULT,
-+		.uart_flowctrl =3D AICBT_UART_FC_DEFAULT,
-+		.lpm_enable =3D AICBT_LPM_ENABLE_DEFAULT,
-+		.txpwr_lvl =3D AICBT_TXPWR_LVL_DEFAULT,
-+	}, // PRODUCT_ID_AIC8801
-+	{
-+		.btmode =3D AICBT_BTMODE_BT_WIFI_COMBO,
-+		.btport =3D AICBT_BTPORT_DEFAULT,
-+		.uart_baud =3D AICBT_UART_BAUD_DEFAULT,
-+		.uart_flowctrl =3D AICBT_UART_FC_DEFAULT,
-+		.lpm_enable =3D AICBT_LPM_ENABLE_DEFAULT,
-+		.txpwr_lvl =3D AICBT_TXPWR_LVL_DEFAULT_8800dc,
-+	}, // PRODUCT_ID_AIC8800DC
-+	{
-+		.btmode =3D AICBT_BTMODE_BT_WIFI_COMBO,
-+		.btport =3D AICBT_BTPORT_DEFAULT,
-+		.uart_baud =3D AICBT_UART_BAUD_DEFAULT,
-+		.uart_flowctrl =3D AICBT_UART_FC_DEFAULT,
-+		.lpm_enable =3D AICBT_LPM_ENABLE_DEFAULT,
-+		.txpwr_lvl =3D AICBT_TXPWR_LVL_DEFAULT_8800dc,
-+	}, // PRODUCT_ID_AIC8800DW
-+	{
-+		.btmode =3D AICBT_BTMODE_DEFAULT_8800d80,
-+		.btport =3D AICBT_BTPORT_DEFAULT,
-+		.uart_baud =3D AICBT_UART_BAUD_DEFAULT,
-+		.uart_flowctrl =3D AICBT_UART_FC_DEFAULT,
-+		.lpm_enable =3D AICBT_LPM_ENABLE_DEFAULT,
-+		.txpwr_lvl =3D AICBT_TXPWR_LVL_DEFAULT_8800d80,
-+	} // PRODUCT_ID_AIC8800D80
-+};
-+
-+int aicbt_patch_table_load(struct aic_sdio_dev *sdiodev,
-+			   struct aicbt_patch_table *head)
-+{
-+	struct aicbt_patch_table *p;
-+	int ret =3D 0, i;
-+	u32 *data =3D NULL;
-+
-+	if (!head)
-+		return -1;
-+
-+	for (p =3D head; p; p =3D p->next) {
-+		data =3D p->data;
-+		if (p->type =3D=3D AICBT_PT_BTMODE) {
-+			*(data + 1) =3D aicbsp_info.hwinfo < 0;
-+			*(data + 3) =3D aicbsp_info.hwinfo;
-+			*(data + 5) =3D (sdiodev->chipid =3D=3D PRODUCT_ID_AIC8800DC
-+							   ? aicbsp_info.cpmode
-+							   : 0); // 0;//aicbsp_info.cpmode;
-+
-+			*(data + 7) =3D aicbt_info[sdiodev->chipid].btmode;
-+			*(data + 9) =3D aicbt_info[sdiodev->chipid].btport;
-+			*(data + 11) =3D aicbt_info[sdiodev->chipid].uart_baud;
-+			*(data + 13) =3D aicbt_info[sdiodev->chipid].uart_flowctrl;
-+			*(data + 15) =3D aicbt_info[sdiodev->chipid].lpm_enable;
-+			*(data + 17) =3D aicbt_info[sdiodev->chipid].txpwr_lvl;
-+
-+			pr_info("aicbsp %s bt btmode[%d]:%d \r\n", __func__, sdiodev->chipid,
-+				aicbt_info[sdiodev->chipid].btmode);
-+			pr_info("aicbsp %s bt uart_baud[%d]:%d \r\n", __func__, sdiodev->chipid=
-,
-+				aicbt_info[sdiodev->chipid].uart_baud);
-+			pr_info("aicbsp %s bt uart_flowctrl[%d]:%d \r\n", __func__, sdiodev->ch=
-ipid,
-+				aicbt_info[sdiodev->chipid].uart_flowctrl);
-+			pr_info("aicbsp %s bt lpm_enable[%d]:%d \r\n", __func__, sdiodev->chipi=
-d,
-+				aicbt_info[sdiodev->chipid].lpm_enable);
-+			pr_info("aicbsp %s bt tx_pwr[%d]:%d \r\n", __func__, sdiodev->chipid,
-+				aicbt_info[sdiodev->chipid].txpwr_lvl);
-+		}
-+
-+		if (p->type =3D=3D AICBT_PT_VER) {
-+			pr_info("aicbsp bt patch version: %s\n", (char *)p->data);
-+			continue;
-+		}
-+
-+		for (i =3D 0; i < p->len; i++) {
-+			ret =3D rwnx_send_dbg_mem_write_req(sdiodev, *data, *(data + 1));
-+			if (ret !=3D 0)
-+				return ret;
-+			data +=3D 2;
-+		}
-+		if (p->type =3D=3D AICBT_PT_PWRON)
-+			usleep_range(50, 100);
-+	}
-+
-+	return 0;
-+}
-+
-+int aicbt_init(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+	struct aicbt_patch_table *head =3D
-+		aicbt_patch_table_alloc(aicbsp_firmware_list[aicbsp_info.cpmode].bt_tabl=
-e);
-+	if (!head) {
-+		pr_err("aicbsp aicbt_patch_table_alloc fail\n");
-+		return -1;
-+	}
-+
-+	if (aicbt_patch_trap_data_load(sdiodev, head)) {
-+		pr_err("aicbsp aicbt_patch_trap_data_load fail\n");
-+		ret =3D -1;
-+		goto err;
-+	}
-+
-+	if (aicbt_patch_table_load(sdiodev, head)) {
-+		pr_err("aicbsp aicbt_patch_table_load fail\n");
-+		ret =3D -1;
-+		goto err;
-+	}
-+
-+err:
-+	aicbt_patch_table_free(&head);
-+	return ret;
-+}
-+
-+int aicwifi_start_from_bootrom(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	/* memory access */
-+	const u32 fw_addr =3D RAM_FMAC_FW_ADDR;
-+	struct dbg_start_app_cfm start_app_cfm;
-+
-+	/* fw start */
-+	ret =3D rwnx_send_dbg_start_app_req(sdiodev, fw_addr, HOST_START_APP_AUTO=
-,
-+					  &start_app_cfm);
-+	if (ret)
-+		return -1;
-+	aicbsp_info.hwinfo_r =3D start_app_cfm.bootstatus & 0xFF;
-+
-+	return 0;
-+}
-+
-+static u32 adaptivity_patch_tbl[][2] =3D {
-+	{0x0004, 0x0000320A}, // linkloss_thd
-+	{0x0094, 0x00000000}, // ac_param_conf
-+	{0x00F8, 0x00010138}, // tx_adaptivity_en
-+};
-+
-+static u32 patch_tbl[][2] =3D {
-+#if !defined(CONFIG_LINK_DET_5G)
-+	{0x0104, 0x00000000}, // link_det_5g
-+#endif
-+};
-+
-+static u32 syscfg_tbl_masked[][3] =3D {
-+	{0x40506024, 0x000000FF, 0x000000DF}, // for clk gate lp_level
-+};
-+
-+static u32 rf_tbl_masked[][3] =3D {
-+	{0x40344058, 0x00800000, 0x00000000}, // pll trx
-+};
-+
-+int aicwifi_sys_config(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret, cnt;
-+	int syscfg_num =3D sizeof(syscfg_tbl_masked) / sizeof(u32) / 3;
-+
-+	for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_mask_write_req(sdiodev, syscfg_tbl_masked[cnt]=
-[0],
-+						       syscfg_tbl_masked[cnt][1],
-+						       syscfg_tbl_masked[cnt][2]);
-+		if (ret) {
-+			pr_err("aicbsp %x mask write fail: %d\n", syscfg_tbl_masked[cnt][0], re=
-t);
-+			return ret;
-+		}
-+	}
-+
-+	ret =3D rwnx_send_dbg_mem_mask_write_req(sdiodev, rf_tbl_masked[0][0], rf=
-_tbl_masked[0][1],
-+					       rf_tbl_masked[0][2]);
-+	if (ret) {
-+		pr_err("aicbsp rf config %x write fail: %d\n", rf_tbl_masked[0][0], ret)=
-;
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+int aicwifi_patch_config(struct aic_sdio_dev *sdiodev)
-+{
-+	const u32 rd_patch_addr =3D RAM_FMAC_FW_ADDR + 0x0180;
-+	u32 config_base;
-+	u32 start_addr =3D 0x1e6000;
-+	u32 patch_addr =3D start_addr;
-+	u32 patch_num =3D sizeof(patch_tbl) / 4;
-+	struct dbg_mem_read_cfm rd_patch_addr_cfm;
-+	u32 patch_addr_reg =3D 0x1e5318;
-+	u32 patch_num_reg =3D 0x1e531c;
-+	int ret =3D 0;
-+	u16 cnt =3D 0;
-+	int tmp_cnt =3D 0;
-+	int adap_patch_num =3D 0;
-+
-+	if (aicbsp_info.cpmode =3D=3D AICBSP_CPMODE_TEST) {
-+		patch_addr_reg =3D 0x1e5304;
-+		patch_num_reg =3D 0x1e5308;
-+	}
-+
-+	ret =3D
-+		rwnx_send_dbg_mem_read_req(sdiodev, rd_patch_addr, &rd_patch_addr_cfm);
-+	if (ret) {
-+		pr_err("aicbsp patch rd fail\n");
-+		return ret;
-+	}
-+
-+	config_base =3D rd_patch_addr_cfm.memdata;
-+
-+	ret =3D rwnx_send_dbg_mem_write_req(sdiodev, patch_addr_reg, patch_addr);
-+	if (ret) {
-+		pr_err("aicbsp 0x%x write fail\n", patch_addr_reg);
-+		return ret;
-+	}
-+
-+	if (aicbsp_info.adap_test) {
-+		pr_err("aicbsp %s for adaptivity test \r\n", __func__);
-+		adap_patch_num =3D sizeof(adaptivity_patch_tbl) / 4;
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, patch_num_reg,
-+						  patch_num + adap_patch_num);
-+	} else {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, patch_num_reg, patch_num);
-+	}
-+	if (ret) {
-+		pr_err("aicbsp 0x%x write fail\n", patch_num_reg);
-+		return ret;
-+	}
-+
-+	for (cnt =3D 0; cnt < patch_num / 2; cnt +=3D 1) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt,
-+						  patch_tbl[cnt][0] + config_base);
-+		if (ret) {
-+			pr_err("aicbsp %x write fail\n", start_addr + 8 * cnt);
-+			return ret;
-+		}
-+
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr + 8 * cnt + 4,
-+						  patch_tbl[cnt][1]);
-+		if (ret) {
-+			pr_err("aicbsp %x write fail\n", start_addr + 8 * cnt + 4);
-+			return ret;
-+		}
-+	}
-+
-+	tmp_cnt =3D cnt;
-+
-+	if (aicbsp_info.adap_test) { //(adap_test){
-+		for (cnt =3D 0; cnt < adap_patch_num / 2; cnt +=3D 1) {
-+			ret =3D rwnx_send_dbg_mem_write_req(sdiodev,
-+							  start_addr + 8 * (cnt + tmp_cnt),
-+							  adaptivity_patch_tbl[cnt][0]
-+							  + config_base);
-+			if (ret)
-+				pr_err("aicbsp %x write fail\n", start_addr + 8 * cnt);
-+
-+			ret =3D rwnx_send_dbg_mem_write_req(sdiodev, start_addr +
-+							  8 * (cnt + tmp_cnt) + 4,
-+							  adaptivity_patch_tbl[cnt][1]);
-+			if (ret)
-+				pr_err("aicbsp %x write fail\n", start_addr + 8 * cnt + 4);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+int aicwifi_init(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	ret =3D aic_chip_wifi_init(sdiodev, testmode);
-+	if (ret) {
-+		pr_err("aicbsp wifi init fail\n");
-+		return ret;
-+	}
-+
-+#ifdef CONFIG_GPIO_WAKEUP
-+	if (aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.wakeup_reg, 4)) {
-+		sdio_err("reg:%d write failed!\n", sdiodev->sdio_reg.wakeup_reg);
-+		return -1;
-+	}
-+#endif
-+	return 0;
-+}
-+
-+static u32 aicbsp_syscfg_tbl[][2] =3D {
-+	{0x40500014, 0x00000101}, // 1)
-+	{0x40500018, 0x00000109}, // 2)
-+	{0x40500004, 0x00000010}, // 3) the order should not be changed
-+
-+	// def CONFIG_PMIC_SETTING
-+	// U02 bootrom only
-+	{0x40040000, 0x00001AC8}, // 1) fix panic
-+	{0x40040084, 0x00011580},
-+	{0x40040080, 0x00000001},
-+	{0x40100058, 0x00000000},
-+
-+	{0x50000000, 0x03220204}, // 2) pmic interface init
-+	{0x50019150, 0x00000002}, // 3) for 26m xtal, set div1
-+	{0x50017008, 0x00000000}, // 4) stop wdg
-+};
-+
-+int aicbsp_system_config(struct aic_sdio_dev *sdiodev)
-+{
-+	int syscfg_num =3D sizeof(aicbsp_syscfg_tbl) / sizeof(u32) / 2;
-+	int ret, cnt;
-+
-+	for (cnt =3D 0; cnt < syscfg_num; cnt++) {
-+		ret =3D rwnx_send_dbg_mem_write_req(sdiodev, aicbsp_syscfg_tbl[cnt][0],
-+						  aicbsp_syscfg_tbl[cnt][1]);
-+		if (ret) {
-+			sdio_err("%x write fail: %d\n", aicbsp_syscfg_tbl[cnt][0], ret);
-+			return ret;
-+		}
-+	}
-+	return 0;
-+}
-+
-+int aicbsp_platform_init(struct aic_sdio_dev *sdiodev)
-+{
-+	rwnx_cmd_mgr_init(&sdiodev->cmd_mgr);
-+	sdiodev->cmd_mgr.sdiodev =3D (void *)sdiodev;
-+
-+	return 0;
-+}
-+
-+void aicbsp_platform_deinit(struct aic_sdio_dev *sdiodev)
-+{
-+	(void)sdiodev;
-+}
-+
-+int aicbsp_driver_fw_init(struct aic_sdio_dev *sdiodev)
-+{
-+	u32 btenable =3D 0;
-+	int ret =3D 0;
-+
-+	aicbsp_info.cpmode =3D AICBSP_CPMODE_WORK;
-+	testmode =3D AICBSP_CPMODE_WORK;
-+	cur_mode =3D AICBSP_CPMODE_WORK;
-+
-+	ret =3D aic_chip_driver_fw_init(sdiodev, &btenable, &aicbsp_info, &aicbsp=
-_firmware_list);
-+	if (ret) {
-+		pr_err("aicbsp chip driver fw init fail\n");
-+		return -1;
-+	}
-+
-+	AICWFDBG(LOGINFO, "aicbsp: %s, chip rev: %d\n", __func__,
-+		 aicbsp_info.chip_rev);
-+
-+	ret =3D aicwifi_init(sdiodev);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+
-+/**
-+ * aicbsp_get_feature - Read BSP settings required by the WLAN driver
-+ * @feature: Location in which to return the current BSP settings
-+ *
-+ * Return: 0 on success, or a negative error code if the SDIO device is ab=
-sent.
-+ */
-+int aicbsp_get_feature(struct aicbsp_feature_t *feature)
-+{
-+	if (!aicbsp_sdiodev) {
-+		sdio_err("%s, aicbsp_sdiodev is null\n", __func__);
-+		return -1;
-+	}
-+
-+	feature->sdio_clock =3D aicbsp_sdiodev->chip_ops->sdio_clock;
-+
-+	feature->sdio_phase =3D FEATURE_SDIO_PHASE;
-+	feature->cpmode =3D aicbsp_info.cpmode;
-+	feature->adapt =3D aicbsp_info.adap_test;
-+	feature->hwinfo =3D aicbsp_info.hwinfo;
-+	feature->fwlog_en =3D aicbsp_info.fwlog_en;
-+	feature->irqf =3D aicbsp_info.irqf;
-+	sdio_dbg("%s, set FEATURE_SDIO_CLOCK %d MHz\n", __func__,
-+		 feature->sdio_clock / 1000000);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(aicbsp_get_feature);
-+
-+#ifdef CONFIG_RESV_MEM_SUPPORT
-+static struct skb_buff_pool resv_skb[] =3D {
-+	{AIC_RESV_MEM_TXDATA, 1536 * 64, "resv_mem_txdata", 0, NULL},
-+};
-+
-+int aicbsp_resv_mem_init(void)
-+{
-+	int i =3D 0;
-+
-+	pr_info("aicbsp %s\n", __func__);
-+	for (i =3D 0; i < ARRAY_SIZE(resv_skb); i++)
-+		resv_skb[i].skb =3D dev_alloc_skb(resv_skb[i].size);
-+	return 0;
-+}
-+
-+int aicbsp_resv_mem_deinit(void)
-+{
-+	int i =3D 0;
-+
-+	pr_info("aicbsp %s\n", __func__);
-+	for (i =3D 0; i < ARRAY_SIZE(resv_skb); i++) {
-+		if (resv_skb[i].used =3D=3D 0 && resv_skb[i].skb)
-+			dev_kfree_skb(resv_skb[i].skb);
-+	}
-+	return 0;
-+}
-+
-+/**
-+ * aicbsp_resv_mem_alloc_skb - Acquire a reserved socket buffer
-+ * @length: Minimum required buffer size
-+ * @id: Reserved-buffer pool identifier
-+ *
-+ * Return: The reserved buffer, or %NULL if it is too small, already in us=
-e,
-+ * or cannot be allocated.
-+ */
++int aicbsp_set_subsys(int, int);
++int aicbsp_get_feature(struct aicbsp_feature_t *feature);
 +struct sk_buff *aicbsp_resv_mem_alloc_skb(unsigned int length, uint32_t id=
+);
++void aicbsp_resv_mem_kfree_skb(struct sk_buff *skb, uint32_t id);
++
++#endif
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/aic_bus.h b/drivers/net/=
+wireless/aic/aic8800_fdrv/aic_bus.h
+new file mode 100644
+index 0000000000000..2498d3d592b42
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/aic_bus.h
+@@ -0,0 +1,191 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (C) 2024 AIC semiconductor.
++ *
++ * @file aic_bus.h
++ * @brief Common bus abstraction layer for AIC8800 series.
++ *
++ * This header defines the bus-level operations that abstract the
++ * underlying transport (SDIO, USB, etc.) from the upper driver layers.
++ * The design follows the pattern used by silabs/wfx and broadcom/b43.
++ *
++ * Key principles:
++ *  - struct aicwf_bus_ops provides a complete set of low-level bus
++ *    primitives (read/write registers, send/recv packets, flow control,
++ *    power management, interrupt handling).
++ *  - Upper-layer code accesses the bus only through the ops table and
++ *    inline wrappers defined here.  It MUST NOT dereference the
++ *    bus-private structure (aic_sdio_dev etc.) directly.
++ *  - When a new transport (e.g. USB) is added, only the bus_ops
++ *    implementation needs to change; upper layers are unaffected.
++ */
++
++#ifndef _AIC_BUS_H_
++#define _AIC_BUS_H_
++
++#include <linux/device.h>
++#include <linux/skbuff.h>
++#include <linux/types.h>
++
++/* Bus operational state */
++enum aicwf_bus_state { BUS_DOWN_ST, BUS_UP_ST };
++
++struct aicwf_bus {
++	union {
++		struct aic_sdio_dev *sdio;
++		struct aic_usb_dev *usb;
++	} bus_priv;
++	struct device *dev;
++	struct aicwf_bus_ops *ops;
++	enum aicwf_bus_state state;
++	u8 *cmd_buf;
++	struct completion bustx_trgg;
++	struct completion busrx_trgg;
++	struct completion busirq_trgg; // new oob feature
++	struct task_struct *bustx_thread;
++	struct task_struct *busrx_thread;
++	struct task_struct *busirq_thread; // new oob feature
++};
++
++/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++ *  Bus-level operation vectors
++ *
++ *  Every transport (SDIO, USB, ...) provides one instance of this
++ *  struct.  The bus-private data pointer is carried inside
++ *  struct aicwf_bus so that ops callbacks can retrieve it via
++ *  bus->bus_priv.
++ * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++ */
++
++struct aicwf_bus_ops {
++	/* ----- Lifecycle ----- */
++	int  (*start)(struct device *dev);
++	void (*stop)(struct device *dev);
++
++	/* ----- Data / message transmission ----- */
++	int (*txdata)(struct device *dev, struct sk_buff *skb);
++	int (*txmsg)(struct device *dev, u8 *msg, uint len);
++
++	/* ----- Low-level register access -----
++	 * These replace the direct aicwf_sdio_readb/writeb calls.
++	 */
++	int (*read_reg)(struct device *dev, u32 regaddr, u8 *val);
++	int (*write_reg)(struct device *dev, u32 regaddr, u8 val);
++
++	/* ----- Bulk data transfer -----
++	 * send_pkt  =E2=80=93 write a buffer to the chip's TX FIFO
++	 * recv_pkt  =E2=80=93 read  a buffer from the chip's RX FIFO
++	 */
++	int (*send_pkt)(struct device *dev, u8 *buf, uint count);
++	int (*recv_pkt)(struct device *dev, u8 *buf, u32 size);
++
++	/* ----- Interrupt handling ----- */
++	int  (*enable_irq)(struct device *dev);
++	void (*disable_irq)(struct device *dev);
++
++	/* ----- Flow control -----
++	 * Returns true if the device is ready to accept more data.
++	 */
++	bool (*flow_ctrl)(struct device *dev);
++
++	/* ----- Power management ----- */
++	int (*sleep_allow)(struct device *dev);
++	int (*wakeup)(struct device *dev);
++
++	/* ----- Chip-specific hardware info -----
++	 * Returns a pointer to chip hardware properties (SDIO register
++	 * layout, feature flags, etc.).  The caller treats this as
++	 * opaque; only the bus layer interprets it.
++	 */
++	const void *(*get_hw_props)(struct device *dev);
++};
++
++/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++ *  Inline wrappers =E2=80=93 upper layers call these instead of touching
++ *  bus_priv internals.
++ * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++ */
++
++static inline int aicwf_bus_start(struct aicwf_bus *bus)
++{
++	return bus->ops->start(bus->dev);
++}
++
++static inline void aicwf_bus_stop(struct aicwf_bus *bus)
++{
++	bus->ops->stop(bus->dev);
++}
++
++static inline int aicwf_bus_txdata(struct aicwf_bus *bus, struct sk_buff *=
+skb)
++{
++	return bus->ops->txdata(bus->dev, skb);
++}
++
++static inline int aicwf_bus_txmsg(struct aicwf_bus *bus, u8 *msg, uint len=
 )
 +{
-+	if (resv_skb[id].size < length) {
-+		pr_err("aicbsp: %s, no enough mem\n", __func__);
-+		goto fail;
-+	}
-+
-+	if (resv_skb[id].used) {
-+		pr_err("aicbsp: %s, mem in use\n", __func__);
-+		goto fail;
-+	}
-+
-+	if (!resv_skb[id].skb) {
-+		//pr_err("aicbsp: %s, skb not initialazed\n", __func__);
-+		resv_skb[id].skb =3D
-+			dev_alloc_skb(resv_skb[id].size);
-+		if (!resv_skb[id].skb) {
-+			pr_err("aicbsp: %s, mem reinitial still fail\n", __func__);
-+			goto fail;
-+		}
-+	}
-+
-+	pr_info("aicbsp: %s, alloc %s succuss, id: %d, size: %d\n", __func__,
-+		resv_skb[id].name, resv_skb[id].id, resv_skb[id].size);
-+
-+	resv_skb[id].used =3D 1;
-+	return resv_skb[id].skb;
-+
-+fail:
-+	return NULL;
++	return bus->ops->txmsg(bus->dev, msg, len);
 +}
-+EXPORT_SYMBOL_GPL(aicbsp_resv_mem_alloc_skb);
 +
-+/**
-+ * aicbsp_resv_mem_kfree_skb - Release a reserved socket buffer for reuse
-+ * @skb: Reserved buffer returned by aicbsp_resv_mem_alloc_skb()
-+ * @id: Reserved-buffer pool identifier
++static inline int aicwf_bus_read_reg(struct aicwf_bus *bus,
++				     u32 regaddr, u8 *val)
++{
++	return bus->ops->read_reg(bus->dev, regaddr, val);
++}
++
++static inline int aicwf_bus_write_reg(struct aicwf_bus *bus,
++				      u32 regaddr, u8 val)
++{
++	return bus->ops->write_reg(bus->dev, regaddr, val);
++}
++
++static inline int aicwf_bus_send_pkt(struct aicwf_bus *bus,
++				     u8 *buf, uint count)
++{
++	return bus->ops->send_pkt(bus->dev, buf, count);
++}
++
++static inline int aicwf_bus_recv_pkt(struct aicwf_bus *bus,
++				     u8 *buf, u32 size)
++{
++	return bus->ops->recv_pkt(bus->dev, buf, size);
++}
++
++static inline int aicwf_bus_enable_irq(struct aicwf_bus *bus)
++{
++	return bus->ops->enable_irq(bus->dev);
++}
++
++static inline void aicwf_bus_disable_irq(struct aicwf_bus *bus)
++{
++	bus->ops->disable_irq(bus->dev);
++}
++
++static inline bool aicwf_bus_flow_ctrl(struct aicwf_bus *bus)
++{
++	return bus->ops->flow_ctrl(bus->dev);
++}
++
++static inline int aicwf_bus_sleep_allow(struct aicwf_bus *bus)
++{
++	return bus->ops->sleep_allow(bus->dev);
++}
++
++static inline int aicwf_bus_wakeup(struct aicwf_bus *bus)
++{
++	return bus->ops->wakeup(bus->dev);
++}
++
++static inline const void *aicwf_bus_get_hw_props(struct aicwf_bus *bus)
++{
++	return bus->ops->get_hw_props(bus->dev);
++}
++
++/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
++ *  Bus-level init / deinit (shared across transports)
++ * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 + */
-+void aicbsp_resv_mem_kfree_skb(struct sk_buff *skb, uint32_t id)
-+{
-+	resv_skb[id].used =3D 0;
-+	pr_info("aicbsp: %s, free %s succuss, id: %d, size: %d\n", __func__,
-+		resv_skb[id].name, resv_skb[id].id, resv_skb[id].size);
-+}
-+EXPORT_SYMBOL_GPL(aicbsp_resv_mem_kfree_skb);
 +
-+#else
++int aicwf_bus_init(uint bus_hdrlen, struct device *dev);
++void aicwf_bus_deinit(struct device *dev);
 +
-+int aicbsp_resv_mem_init(void)
-+{
-+	return 0;
-+}
-+
-+int aicbsp_resv_mem_deinit(void)
-+{
-+	return 0;
-+}
-+
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.h b/driver=
-s/net/wireless/aic/aic8800_bsp/aic_bsp_driver.h
++#endif /* _AIC_BUS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/aicwf_debug.h b/drivers/=
+net/wireless/aic/aic8800_fdrv/aicwf_debug.h
 new file mode 100644
-index 0000000000000..16da7a2557220
+index 0000000000000..4a49c16f15a31
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_driver.h
-@@ -0,0 +1,598 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/aicwf_debug.h
+@@ -0,0 +1,37 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _AIC_BSP_DRIVER_H
-+#define _AIC_BSP_DRIVER_H
-+
-+#include "aic_bsp_export.h"
-+#include <linux/completion.h>
-+#include <linux/device.h>
-+#include <linux/module.h>
-+#include <linux/spinlock.h>
-+
-+#define AIC8800_FW_DIR "aic8800/"
-+
-+#define RWNX_80211_CMD_TIMEOUT_MS 6000
-+
-+#define RWNX_CMD_FLAG_NONBLOCK  BIT(0)
-+#define RWNX_CMD_FLAG_REQ_CFM   BIT(1)
-+#define RWNX_CMD_FLAG_WAIT_PUSH BIT(2)
-+#define RWNX_CMD_FLAG_WAIT_ACK  BIT(3)
-+#define RWNX_CMD_FLAG_WAIT_CFM  BIT(4)
-+#define RWNX_CMD_FLAG_DONE      BIT(5)
-+/* ATM IPC design makes it possible to get the CFM before the ACK,
-+ * otherwise this could have simply been a state enum
-+ */
-+#define RWNX_CMD_WAIT_COMPLETE(flags)                                     =
-     \
-+	(!((flags) & (RWNX_CMD_FLAG_WAIT_ACK | RWNX_CMD_FLAG_WAIT_CFM)))
-+
-+#define RWNX_CMD_MAX_QUEUED 8
-+
-+#define IPC_E2A_MSG_PARAM_SIZE 256
++#ifndef _AICWF_DEBUG_H_
++#define _AICWF_DEBUG_H_
 +
 +#define RWNX_FN_ENTRY_STR ">>> %s()\n", __func__
 +
 +/* message levels */
-+#define LOGERROR 0x0001
-+#define LOGINFO  0x0002
-+#define LOGTRACE 0x0004
-+#define LOGDEBUG 0x0008
-+#define LOGDATA  0x0010
++#define LOGERROR    0x0001
++#define LOGINFO     0x0002
++#define LOGTRACE    0x0004
++#define LOGDEBUG    0x0008
++#define LOGDATA     0x0010
++#define LOGIRQ      0x0020
++#define LOGSDPWRC   0x0040
++#define LOGWAKELOCK 0x0080
++#define LOGRXPOLL   0x0100
 +
-+extern int testmode;
-+extern int cur_mode;
-+extern int adap_test;
-+extern struct aic_sdio_dev *aicbsp_sdiodev;
-+extern int aicwf_dbg_level_bsp;
-+#ifdef CONFIG_M2D_OTA_AUTO_SUPPORT
-+extern char saved_sdk_ver[64];
-+#endif
++extern int aicwf_dbg_level;
++void rwnx_data_dump(char *tag, void *data, unsigned long len);
 +
-+#define AICWF_LOG "AICBSP("
++#define AICWF_LOG "AICWFDBG("
 +
 +#define AICWFDBG(level, args, arg...)                                     =
      \
 +	do {                                                                     =
   \
-+		if (aicwf_dbg_level_bsp & (level)) {                                    =
++		if (aicwf_dbg_level & (level)) {                                        =
  \
 +			pr_debug(AICWF_LOG #level ")\t" args, ##arg);                        \
 +		}                                                                      \
@@ -3742,10 +452,1183 @@ index 0000000000000..16da7a2557220
      \
 +	do {                                                                     =
   \
-+		if (aicwf_dbg_level_bsp & LOGTRACE) {                                  \
++		if (aicwf_dbg_level & LOGTRACE) {                                      \
 +			pr_debug(AICWF_LOG "LOGTRACE)\t" fmt, ##__VA_ARGS__);                \
 +		}                                                                      \
 +	} while (0)
++
++#endif /* _AICWF_DEBUG_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/hal_desc.h b/drivers/net=
+/wireless/aic/aic8800_fdrv/hal_desc.h
+new file mode 100644
+index 0000000000000..35809ccd5cef5
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/hal_desc.h
+@@ -0,0 +1,359 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file hal_desc.c
++ *
++ * @brief File containing the definition of HW descriptors
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef _HAL_DESC_H_
++#define _HAL_DESC_H_
++
++#include "lmac_types.h"
++#include "rwnx_compat.h"
++
++/* Rate and policy table */
++
++#define N_CCK   8
++#define N_OFDM  8
++#define N_HT    (8 * 2 * 2 * 4)
++#define N_VHT   (10 * 4 * 2 * 8)
++#define N_HE_SU (12 * 4 * 3 * 8)
++#define N_HE_MU (12 * 6 * 3 * 8)
++#define N_HE_ER (3 * 3 + 3) // RU242 + RU106
++
++/* conversion table from NL80211 to MACHW enum */
++extern const int chnl2bw[];
++
++/* conversion table from MACHW to NL80211 enum */
++extern const int bw2chnl[];
++
++/* Values for formatModTx */
++#define FORMATMOD_NON_HT          0
++#define FORMATMOD_NON_HT_DUP_OFDM 1
++#define FORMATMOD_HT_MF           2
++#define FORMATMOD_HT_GF           3
++#define FORMATMOD_VHT             4
++#define FORMATMOD_HE_SU           5
++#define FORMATMOD_HE_MU           6
++#define FORMATMOD_HE_ER           7
++#define FORMATMOD_HE_TB           8
++
++/* Values for navProtFrmEx */
++#define NAV_PROT_NO_PROT_BIT          0
++#define NAV_PROT_SELF_CTS_BIT         1
++#define NAV_PROT_RTS_CTS_BIT          2
++#define NAV_PROT_RTS_CTS_WITH_QAP_BIT 3
++#define NAV_PROT_STBC_BIT             4
++
++/* THD MACCTRLINFO2 fields, used in  struct umacdesc umac.flags */
++/// WhichDescriptor definition - contains aMPDU bit and position value
++/// Offset of WhichDescriptor field in the MAC CONTROL INFO 2 word
++#define WHICHDESC_OFT                   19
++/// Mask of the WhichDescriptor field
++#define WHICHDESC_MSK                   (0x07 << WHICHDESC_OFT)
++/// Only 1 THD possible, describing an unfragmented MSDU
++#define WHICHDESC_UNFRAGMENTED_MSDU     (0x00 << WHICHDESC_OFT)
++/// THD describing the first MPDU of a fragmented MSDU
++#define WHICHDESC_FRAGMENTED_MSDU_FIRST (0x01 << WHICHDESC_OFT)
++/// THD describing intermediate MPDUs of a fragmented MSDU
++#define WHICHDESC_FRAGMENTED_MSDU_INT   (0x02 << WHICHDESC_OFT)
++/// THD describing the last MPDU of a fragmented MSDU
++#define WHICHDESC_FRAGMENTED_MSDU_LAST  (0x03 << WHICHDESC_OFT)
++/// THD for extra descriptor starting an AMPDU
++#define WHICHDESC_AMPDU_EXTRA           (0x04 << WHICHDESC_OFT)
++/// THD describing the first MPDU of an A-MPDU
++#define WHICHDESC_AMPDU_FIRST           (0x05 << WHICHDESC_OFT)
++/// THD describing intermediate MPDUs of an A-MPDU
++#define WHICHDESC_AMPDU_INT             (0x06 << WHICHDESC_OFT)
++/// THD describing the last MPDU of an A-MPDU
++#define WHICHDESC_AMPDU_LAST            (0x07 << WHICHDESC_OFT)
++
++/// aMPDU bit offset
++#define AMPDU_OFT 21
++/// aMPDU bit
++#define AMPDU_BIT CO_BIT(AMPDU_OFT)
++
++union rwnx_mcs_index {
++	struct {
++		u32 mcs : 3;
++		u32 nss : 2;
++	} ht;
++	struct {
++		u32 mcs : 4;
++		u32 nss : 3;
++	} vht;
++	struct {
++		u32 mcs : 4;
++		u32 nss : 3;
++	} he;
++	u32 legacy : 7;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++union rwnx_rate_ctrl_info {
++	struct {
++		u32 mcs_index_tx : 7;
++		u32 bw_tx : 2;
++		u32 gi_and_pre_type_tx : 2;
++		u32 format_mod_tx : 3;
++		u32 nav_prot_frm_ex : 3;
++		u32 mcs_index_prot_tx : 7;
++		u32 bw_prot_tx : 2;
++		u32 format_mod_prot_tx : 3;
++		u32 n_retry : 3;
++	};
++	u32 value;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++struct rwnx_power_ctrl_info {
++	u32 tx_pwr_level_pt : 8;
++	u32 tx_pwr_level_prot_pt : 8;
++	u32 reserved : 16;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++union rwnx_pol_phy_ctrl_info_1 {
++	struct {
++		u32 rsvd1 : 3;
++		u32 bf_frm_ex : 1;
++		u32 num_extn_ss : 2;
++		u32 fec_coding : 1;
++		u32 stbc : 2;
++		u32 rsvd2 : 5;
++		u32 n_tx : 3;
++		u32 n_tx_prot : 3;
++	};
++	u32 value;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++union rwnx_pol_phy_ctrl_info_2 {
++	struct {
++		u32 antenna_set : 8;
++		u32 smm_index : 8;
++		u32 beam_formed : 1;
++	};
++	u32 value;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++union rwnx_pol_mac_ctrl_info_1 {
++	struct {
++		u32 key_sram_index : 10;
++		u32 key_sram_index_ra : 10;
++	};
++	u32 value;
++};
++
++/* c.f RW-WLAN-nX-MAC-HW-UM */
++union rwnx_pol_mac_ctrl_info_2 {
++	struct {
++		u32 long_retry_limit : 8;
++		u32 short_retry_limit : 8;
++		u32 rts_threshold : 12;
++	};
++	u32 value;
++};
++
++#define POLICY_TABLE_PATTERN 0xBADCAB1E
++
++struct tx_policy_tbl {
++	/* Unique Pattern at the start of Policy Table */
++	u32 upatterntx;
++	/* PHY Control 1 Information used by MAC HW */
++	union rwnx_pol_phy_ctrl_info_1 phyctrlinfo_1;
++	/* PHY Control 2 Information used by MAC HW */
++	union rwnx_pol_phy_ctrl_info_2 phyctrlinfo_2;
++	/* MAC Control 1 Information used by MAC HW */
++	union rwnx_pol_mac_ctrl_info_1 macctrlinfo_1;
++	/* MAC Control 2 Information used by MAC HW */
++	union rwnx_pol_mac_ctrl_info_2 macctrlinfo_2;
++
++	union rwnx_rate_ctrl_info ratectrlinfos[NX_TX_MAX_RATES];
++	struct rwnx_power_ctrl_info powerctrlinfos[NX_TX_MAX_RATES];
++};
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++/**
++ * union rwnx_hw_txstatus - Bitfield of confirmation status
++ *
++ * @tx_done: Packet has been processed by the firmware
++ * @retry_required: Packet was transmitted but not acknowledged and must b=
+e
++ *                  submitted again by the driver
++ * @sw_retry_required: Packet was not transmitted by the firmware and must=
+ be
++ *                     submitted again by the driver
++ * @acknowledged: Packet was acknowledged by the peer
++ * @reserved: Reserved status bits
++ * @value: Complete status word
++ */
++union rwnx_hw_txstatus {
++	struct {
++		u32 tx_done : 1;
++		u32 retry_required : 1;
++		u32 sw_retry_required : 1;
++		u32 acknowledged : 1;
++		u32 reserved : 28;
++	};
++	u32 value;
++};
++
++/**
++ * struct tx_cfm_tag - Structure indicating the status and other
++ * information about the transmission
++ *
++ * @credits: Number of credits returned to the TX queue (0 or 1)
++ * @ampdu_size: Number of frames in the A-MPDU when this was its last fram=
+e,
++ *              0 when this was not the last frame, or 1 for a singleton
++ * @amsdu_size: Maximum A-MSDU size in bytes
++ * @status: Transmission status
++ * @hostid: Host identifier of the transmitted buffer
++ */
++struct tx_cfm_tag {
++	/*
++	 *	u16 pn[4];
++	 *	u16 sn;
++	 *	u16 timestamp;
++	 */
++	s8 credits;
++	u8 ampdu_size;
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++	u16 amsdu_size;
++#endif
++	union rwnx_hw_txstatus status;
++	u32 hostid;
++};
++
++/**
++ * struct rwnx_hw_txhdr - Hardware part of tx header
++ *
++ * @cfm: Information updated by fw/hardware after sending a frame
++ */
++struct rwnx_hw_txhdr {
++	struct tx_cfm_tag cfm;
++};
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/* Modem */
++
++#define MDM_PHY_CONFIG_TRIDENT 0
++#define MDM_PHY_CONFIG_ELMA    1
++#define MDM_PHY_CONFIG_KARST   2
++
++// MODEM features (from reg_mdm_stat.h)
++/// MUMIMOTX field bit
++#define MDM_MUMIMOTX_BIT ((u32)0x80000000)
++/// MUMIMOTX field position
++#define MDM_MUMIMOTX_POS 31
++/// MUMIMORX field bit
++#define MDM_MUMIMORX_BIT ((u32)0x40000000)
++/// MUMIMORX field position
++#define MDM_MUMIMORX_POS 30
++/// BFMER field bit
++#define MDM_BFMER_BIT    ((u32)0x20000000)
++/// BFMER field position
++#define MDM_BFMER_POS    29
++/// BFMEE field bit
++#define MDM_BFMEE_BIT    ((u32)0x10000000)
++/// BFMEE field position
++#define MDM_BFMEE_POS    28
++/// LDPCDEC field bit
++#define MDM_LDPCDEC_BIT  ((u32)0x08000000)
++/// LDPCDEC field position
++#define MDM_LDPCDEC_POS  27
++/// LDPCENC field bit
++#define MDM_LDPCENC_BIT  ((u32)0x04000000)
++/// LDPCENC field position
++#define MDM_LDPCENC_POS  26
++/// CHBW field mask
++#define MDM_CHBW_MASK    ((u32)0x03000000)
++/// CHBW field LSB position
++#define MDM_CHBW_LSB     24
++/// CHBW field width
++#define MDM_CHBW_WIDTH   ((u32)0x00000002)
++/// DSSSCCK field bit
++#define MDM_DSSSCCK_BIT  ((u32)0x00800000)
++/// DSSSCCK field position
++#define MDM_DSSSCCK_POS  23
++/// VHT field bit
++#define MDM_VHT_BIT      ((u32)0x00400000)
++/// VHT field position
++#define MDM_VHT_POS      22
++/// HE field bit
++#define MDM_HE_BIT       ((u32)0x00200000)
++/// HE field position
++#define MDM_HE_POS       21
++/// ESS field bit
++#define MDM_ESS_BIT      ((u32)0x00100000)
++/// ESS field position
++#define MDM_ESS_POS      20
++/// RFMODE field mask
++#define MDM_RFMODE_MASK  ((u32)0x000F0000)
++/// RFMODE field LSB position
++#define MDM_RFMODE_LSB   16
++/// RFMODE field width
++#define MDM_RFMODE_WIDTH ((u32)0x00000004)
++/// NSTS field mask
++#define MDM_NSTS_MASK    ((u32)0x0000F000)
++/// NSTS field LSB position
++#define MDM_NSTS_LSB     12
++/// NSTS field width
++#define MDM_NSTS_WIDTH   ((u32)0x00000004)
++/// NSS field mask
++#define MDM_NSS_MASK     ((u32)0x00000F00)
++/// NSS field LSB position
++#define MDM_NSS_LSB      8
++/// NSS field width
++#define MDM_NSS_WIDTH    ((u32)0x00000004)
++/// NTX field mask
++#define MDM_NTX_MASK     ((u32)0x000000F0)
++/// NTX field LSB position
++#define MDM_NTX_LSB      4
++/// NTX field width
++#define MDM_NTX_WIDTH    ((u32)0x00000004)
++/// NRX field mask
++#define MDM_NRX_MASK     ((u32)0x0000000F)
++/// NRX field LSB position
++#define MDM_NRX_LSB      0
++/// NRX field width
++#define MDM_NRX_WIDTH    ((u32)0x00000004)
++
++#define __MDM_PHYCFG_FROM_VERS(v) (((v) & MDM_RFMODE_MASK) >> MDM_RFMODE_L=
+SB)
++
++#define RIU_FCU_PRESENT_MASK ((u32)0xFF000000)
++#define RIU_FCU_PRESENT_LSB  24
++
++#define __RIU_FCU_PRESENT(v)                                              =
+     \
++	(((v) & RIU_FCU_PRESENT_MASK) >> RIU_FCU_PRESENT_LSB =3D=3D 5)
++
++/// AGC load version field mask
++#define RIU_AGC_LOAD_MASK ((u32)0x00C00000)
++/// AGC load version field LSB position
++#define RIU_AGC_LOAD_LSB  22
++
++#define __RIU_AGCLOAD_FROM_VERS(v)                                        =
+     \
++	(((v) & RIU_AGC_LOAD_MASK) >> RIU_AGC_LOAD_LSB)
++
++#define __FPGA_TYPE(v) (((v) & 0xFFFF0000) >> 16)
++
++#define __MDM_MAJOR_VERSION(v) (((v) & 0xFF000000) >> 24)
++#define __MDM_MINOR_VERSION(v) (((v) & 0x00FF0000) >> 16)
++/*
++ * #define __MDM_VERSION(v)                                               =
+        \
++ *	((__MDM_MAJOR_VERSION(v) + 2) * 10 + __MDM_MINOR_VERSION(v))
++ */
++#define __MDM_VERSION(v)	\
++({								\
++	u32 __v =3D (v);						\
++	(__MDM_MAJOR_VERSION(__v) + 2) * 10 + __MDM_MINOR_VERSION(__v);	\
++})
++
++#endif // _HAL_DESC_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/ipc_compat.h b/drivers/n=
+et/wireless/aic/aic8800_fdrv/ipc_compat.h
+new file mode 100644
+index 0000000000000..cf1fe0d737b84
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/ipc_compat.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef _IPC_H_
++#define _IPC_H_
++
++#define __INLINE inline
++
++#define __ALIGN4 __aligned(4)
++
++#define ASSERT_ERR(condition)                                             =
+     \
++	do {                                                                     =
+  \
++		if (unlikely(!(condition))) {                                          \
++			pr_err("%s:%d:ASSERT_ERR(" #condition ")\n", __FILE__,    \
++				   __LINE__);                                                  \
++		}                                                                      \
++	} while (0)
++
++#endif /* _IPC_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/ipc_host.c b/drivers/net=
+/wireless/aic/aic8800_fdrv/ipc_host.c
+new file mode 100644
+index 0000000000000..5962d8b3fcf3f
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/ipc_host.c
+@@ -0,0 +1,42 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief IPC module
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef __KERNEL__
++#include <stdio.h>
++#else
++#include "rwnx_defs.h"
++#include "rwnx_prof.h"
++#include <linux/spinlock.h>
++#endif
++
++#include "ipc_host.h"
++
++/*
++ * TYPES DEFINITION
++ *************************************************************************=
+*****
++ */
++
++const int nx_txdesc_cnt[] =3D {
++	NX_TXDESC_CNT0, NX_TXDESC_CNT1, NX_TXDESC_CNT2, NX_TXDESC_CNT3,
++#if NX_TXQ_CNT =3D=3D 5
++	NX_TXDESC_CNT4,
++#endif
++};
++
++const int nx_txuser_cnt[] =3D {
++	CONFIG_USER_MAX,
++	CONFIG_USER_MAX,
++	CONFIG_USER_MAX,
++	CONFIG_USER_MAX,
++#if NX_TXQ_CNT =3D=3D 5
++	1,
++#endif
++};
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/ipc_host.h b/drivers/net=
+/wireless/aic/aic8800_fdrv/ipc_host.h
+new file mode 100644
+index 0000000000000..b1cafbf30f73d
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/ipc_host.h
+@@ -0,0 +1,169 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief IPC module
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef _IPC_HOST_H_
++#define _IPC_HOST_H_
++
++/*
++ * INCLUDE FILES
++ *************************************************************************=
+*****
++ */
++#include "ipc_shared.h"
++#ifndef __KERNEL__
++#include "arch.h"
++#else
++#include "ipc_compat.h"
++#endif
++
++/*
++ *************************************************************************=
+*****
++ * @brief This structure is used to initialize the MAC SW
++ *
++ * The WLAN device driver provides functions call-back with this structure
++ *************************************************************************=
+*****
++ */
++struct ipc_host_cb_tag {
++	/// WLAN driver call-back function: send_data_cfm
++	int (*send_data_cfm)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_data_ind
++	uint8_t (*recv_data_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_radar_ind
++	uint8_t (*recv_radar_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_unsup_rx_vec_ind
++	uint8_t (*recv_unsup_rx_vec_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_msg_ind
++	uint8_t (*recv_msg_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_msgack_ind
++	uint8_t (*recv_msgack_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: recv_dbg_ind
++	uint8_t (*recv_dbg_ind)(void *pthis, void *host_id);
++
++	/// WLAN driver call-back function: prim_tbtt_ind
++	void (*prim_tbtt_ind)(void *pthis);
++
++	/// WLAN driver call-back function: sec_tbtt_ind
++	void (*sec_tbtt_ind)(void *pthis);
++};
++
++/*
++ * Struct used to store information about host buffers (DMA Address and lo=
+cal
++ * pointer)
++ */
++struct ipc_hostbuf {
++	void *hostid;      ///< ptr to hostbuf client (ipc_host client) structure
++	u32 dma_addr; ///< ptr to real hostbuf dma address
++};
++
++/// Definition of the IPC Host environment structure.
++struct ipc_host_env_tag {
++	/// Structure containing the callback pointers
++	struct ipc_host_cb_tag cb;
++
++	/// Pointer to the shared environment
++	struct ipc_shared_env_tag *shared;
++
++#ifdef CONFIG_RWNX_FULLMAC
++	// Array used to store the descriptor addresses
++	struct ipc_hostbuf ipc_host_rxdesc_array[IPC_RXDESC_CNT];
++	// Index of the host RX descriptor array (ipc_shared environment)
++	u8 ipc_host_rxdesc_idx;
++	/// Store the number of RX Descriptors
++	u8 rxdesc_nb;
++#endif //(CONFIG_RWNX_FULLMAC)
++
++	/// Fields for Data Rx handling
++	// Index used for ipc_host_rxbuf_array to point to current buffer
++	u8 ipc_host_rxbuf_idx;
++	// Store the number of Rx Data buffers
++	u32 rx_bufnb;
++	// Store the size of the Rx Data buffers
++	u32 rx_bufsz;
++
++	/// Fields for Radar events handling
++	// Global array used to store the hostid and hostbuf addresses
++	struct ipc_hostbuf ipc_host_radarbuf_array[IPC_RADARBUF_CNT];
++	// Index used for ipc_host_rxbuf_array to point to current buffer
++	u8 ipc_host_radarbuf_idx;
++	// Store the number of radar event buffers
++	u32 radar_bufnb;
++	// Store the size of the radar event buffers
++	u32 radar_bufsz;
++
++	/// Fields for Unsupported frame handling
++	// Global array used to store the hostid and hostbuf addresses
++	struct ipc_hostbuf ipc_host_unsuprxvecbuf_array[IPC_UNSUPRXVECBUF_CNT];
++	// Index used for ipc_host_unsuprxvecbuf_array to point to current buffer
++	u8 ipc_host_unsuprxvecbuf_idx;
++	// Store the number of unsupported rx vector buffers
++	u32 unsuprxvec_bufnb;
++	// Store the size of unsupported rx vector buffers
++	u32 unsuprxvec_bufsz;
++
++	// Index used that points to the first free TX desc
++	u32 txdesc_free_idx[IPC_TXQUEUE_CNT][CONFIG_USER_MAX];
++	// Index used that points to the first used TX desc
++	u32 txdesc_used_idx[IPC_TXQUEUE_CNT][CONFIG_USER_MAX];
++	// Array storing the currently pushed host ids for the BK queue
++	void *tx_host_id0[CONFIG_USER_MAX][NX_TXDESC_CNT0];
++	// Array storing the currently pushed host ids for the BE queue
++	void *tx_host_id1[CONFIG_USER_MAX][NX_TXDESC_CNT1];
++	// Array storing the currently pushed host ids for the VI queue
++	void *tx_host_id2[CONFIG_USER_MAX][NX_TXDESC_CNT2];
++	// Array storing the currently pushed host ids for the VO queue
++	void *tx_host_id3[CONFIG_USER_MAX][NX_TXDESC_CNT3];
++#if NX_TXQ_CNT =3D=3D 5
++	// Array storing the currently pushed host ids for the BCN queue
++	void *tx_host_id4[1][NX_TXDESC_CNT4];
++#endif
++	// Pointer to the different host ids arrays, per IPC queue
++	void **tx_host_id[IPC_TXQUEUE_CNT][CONFIG_USER_MAX];
++	// Pointer to the different TX descriptor arrays, per IPC queue
++	struct txdesc_host *txdesc[IPC_TXQUEUE_CNT][CONFIG_USER_MAX];
++
++	/// Fields for Emb->App MSGs handling
++	// Global array used to store the hostid and hostbuf addresses for msg/in=
+d
++	struct ipc_hostbuf ipc_host_msgbuf_array[IPC_MSGE2A_BUF_CNT];
++	// Index of the MSG E2A buffers array to point to current buffer
++	u8 ipc_host_msge2a_idx;
++	// Store the number of E2A MSG buffers
++	u32 ipc_e2amsg_bufnb;
++	// Store the size of the E2A MSG buffers
++	u32 ipc_e2amsg_bufsz;
++
++	/// E2A ACKs of A2E MSGs
++	u8 msga2e_cnt;
++	void *msga2e_hostid;
++
++	/// Fields for Debug MSGs handling
++	// Global array used to store the hostid and hostbuf addresses for Debug
++	// messages
++	struct ipc_hostbuf ipc_host_dbgbuf_array[IPC_DBGBUF_CNT];
++	// Index of the Debug messages buffers array to point to current buffer
++	u8 ipc_host_dbg_idx;
++	// Store the number of Debug messages buffers
++	u32 ipc_dbg_bufnb;
++	// Store the size of the Debug messages buffers
++	u32 ipc_dbg_bufsz;
++
++	/// Pointer to the attached object (used in callbacks and register access=
+es)
++	void *pthis;
++};
++
++extern const int nx_txdesc_cnt[];
++extern const int nx_txuser_cnt[];
++
++#endif // _IPC_HOST_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/ipc_shared.h b/drivers/n=
+et/wireless/aic/aic8800_fdrv/ipc_shared.h
+new file mode 100644
+index 0000000000000..5773567c65adc
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/ipc_shared.h
+@@ -0,0 +1,770 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief Shared data between both IPC modules
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef _IPC_SHARED_H_
++#define _IPC_SHARED_H_
++
++/*
++ * INCLUDE FILES
++ *************************************************************************=
+***************
++ */
++#include "ipc_compat.h"
++#include "lmac_mac.h"
++#include "rwnx_compat.h"
++
++/*
++ * DEFINES AND MACROS
++ *************************************************************************=
+***************
++ */
++#define CO_BIT(pos) (1U << (pos))
++
++#define IPC_TXQUEUE_CNT NX_TXQ_CNT
++#define NX_TXDESC_CNT0  8
++#define NX_TXDESC_CNT1  64
++#define NX_TXDESC_CNT2  64
++#define NX_TXDESC_CNT3  32
++#if NX_TXQ_CNT =3D=3D 5
++#define NX_TXDESC_CNT4 8
++#endif
++
++/*
++ * Number of Host buffers available for Data Rx handling (through DMA)
++ */
++#define IPC_RXBUF_CNT 128
++
++/*
++ * Number of shared descriptors available for Data RX handling
++ */
++#define IPC_RXDESC_CNT 128
++
++/*
++ * Number of Host buffers available for Radar events handling (through DMA=
+)
++ */
++#define IPC_RADARBUF_CNT 16
++
++/*
++ * Number of Host buffers available for unsupported Rx vectors handling (t=
+hrough
++ * DMA)
++ */
++#define IPC_UNSUPRXVECBUF_CNT 8
++
++/*
++ *  Size of RxVector
++ */
++#define IPC_RXVEC_SIZE 16
++
++/*
++ * Number of Host buffers available for Emb->App MSGs sending (through DMA=
+)
++ */
++#ifdef CONFIG_RWNX_FULLMAC
++#define IPC_MSGE2A_BUF_CNT 64
++#endif
++/*
++ * Number of Host buffers available for Debug Messages sending (through DM=
+A)
++ */
++#define IPC_DBGBUF_CNT 32
++
++/*
++ * Length used in MSGs structures
++ */
++#define IPC_A2E_MSG_BUF_SIZE 127 // size in 4-byte words
++#ifdef CONFIG_RWNX_FULLMAC
++#define IPC_E2A_MSG_SIZE_BASE 256 // size in 4-byte words
++#endif
++
++#define IPC_E2A_MSG_PARAM_SIZE IPC_E2A_MSG_SIZE_BASE
++
++/*
++ * Debug messages buffers size (in bytes)
++ */
++#define IPC_DBG_PARAM_SIZE 256
++
++/*
++ * Define used for Rx hostbuf validity.
++ * This value should appear only when hostbuf was used for a Reception.
++ */
++#define RX_DMA_OVER_PATTERN 0xAAAAAA00
++
++/*
++ * Define used for MSG buffers validity.
++ * This value will be written only when a MSG buffer is used for sending f=
+rom
++ * Emb to App.
++ */
++#define IPC_MSGE2A_VALID_PATTERN 0xADDEDE2A
++
++/*
++ * Define used for Debug messages buffers validity.
++ * This value will be written only when a DBG buffer is used for sending f=
+rom
++ * Emb to App.
++ */
++#define IPC_DBG_VALID_PATTERN 0x000CACA0
++
++/*
++ *  Length of the receive vectors, in bytes
++ */
++#define DMA_HDR_PHYVECT_LEN 36
++
++/*
++ * Maximum number of payload addresses and lengths present in the descript=
+or
++ */
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++#define NX_TX_PAYLOAD_MAX 6
++#else
++#define NX_TX_PAYLOAD_MAX 1
++#endif
++
++/*
++ * Message struct/ID API version
++ */
++#define MSG_API_VER 33
++
++/*
++ *************************************************************************=
+***************
++ */
++// c.f LMAC/src/tx/tx_swdesc.h
++/// Descriptor filled by the Host
++struct hostdesc {
++	/// Pointer to packet payload
++	// u32 packet_addr;
++	/// Size of the payload
++	u16 packet_len;
++	u16 flags_ext;
++
++	u32 hostid;
++#ifdef CONFIG_RWNX_FULLMAC
++	/// Address of the status descriptor in host memory (used for confirmatio=
+n
++	/// upload)
++	// u32 status_desc_addr;
++	/// Destination Address
++	struct mac_addr eth_dest_addr;
++	/// Source Address
++	struct mac_addr eth_src_addr;
++	/// Ethernet Type
++	__be16 ethertype;
++#else /* ! CONFIG_RWNX_FULLMAC */
++#ifdef CONFIG_RWNX_AGG_TX
++	/// Sequence Number for AMPDU MPDUs - for quick check if it's allowed wit=
+hin
++	/// window
++	u16 sn;
++#endif /* CONFIG_RWNX_AGG_TX */
++	/// Padding between the buffer control structure and the MPDU in host mem=
+ory
++	u8 padding;
++#endif /* CONFIG_RWNX_FULLMAC */
++	u8 ac;
++	/// Packet TID (0xFF if not a QoS frame)
++	u8 tid;
++	/// Interface Id
++	u8 vif_idx;
++	/// Station Id (0xFF if station is unknown)
++	u8 staid;
++#ifdef CONFIG_RWNX_MUMIMO_TX
++	/// MU-MIMO information (GroupId and User Position in the group) - The
++	/// GroupId is located on bits 0-5 and the User Position on bits 6-7. The
++	/// GroupId value is set to 63 if MU-MIMO shall not be used
++	u8 mumimo_info;
++#endif /* CONFIG_RWNX_MUMIMO_TX */
++#ifdef CONFIG_RWNX_FULLMAC
++	/// TX flags
++	u16 flags;
++#endif /* CONFIG_RWNX_FULLMAC */
++};
++
++/// Descriptor filled by the UMAC
++struct umacdesc {
++#ifdef CONFIG_RWNX_AGG_TX
++	/// First Sequence Number of the BlockAck window
++	u16 sn_win;
++	/// Flags from UMAC (match tx_hd.macctrlinfo2 format)
++	u32 flags;
++	/// PHY related flags field - rate, GI type, BW type - filled by driver
++	u32 phy_flags;
++#endif //(CONFIG_RWNX_AGG_TX)
++};
++
++struct txdesc_api {
++	/// Information provided by Host
++	struct hostdesc host;
++};
++
++struct txdesc_host {
++	u32 ready;
++
++	/// API of the embedded part
++	struct txdesc_api api;
++};
++
++/// Comes from ipc_dma.h
++/// Element in the pool of TX DMA bridge descriptors.
++struct dma_desc {
++	/* Application subsystem address which is used as source address for DMA
++	 * payload transfer
++	 */
++	u32 src;
++	/** Points to the start of the embedded data buffer associated with this
++	 * descriptor. This address acts as the destination address for the DMA
++	 * payload transfer
++	 */
++	u32 dest;
++	/// Complete length of the buffer in memory
++	u16 length;
++	/// Control word for the DMA engine (e.g. for interrupt generation)
++	u16 ctrl;
++	/// Pointer to the next element of the chained list
++	u32 next;
++};
++
++// Comes from la.h
++/// Length of the configuration data of a logic analyzer
++#define LA_CONF_LEN 10
++
++/// Structure containing the configuration data of a logic analyzer
++struct la_conf_tag {
++	u32 conf[LA_CONF_LEN];
++	u32 trace_len;
++	u32 diag_conf;
++};
++
++/// Size of a logic analyzer memory
++#define LA_MEM_LEN (1024 * 1024)
++
++/// Type of errors
++enum {
++	/// Recoverable error, not requiring any action from Upper MAC
++	DBG_ERROR_RECOVERABLE =3D 0,
++	/// Fatal error, requiring Upper MAC to reset Lower MAC and HW and restar=
+t
++	/// operation
++	DBG_ERROR_FATAL
++};
++
++/// Maximum length of the SW diag trace
++#define DBG_SW_DIAG_MAX_LEN 1024
++
++/// Maximum length of the error trace
++#define DBG_ERROR_TRACE_SIZE 256
++
++/// Number of MAC diagnostic port banks
++#define DBG_DIAGS_MAC_MAX 48
++
++/// Number of PHY diagnostic port banks
++#define DBG_DIAGS_PHY_MAX 32
++
++/// Maximum size of the RX header descriptor information in the debug dump
++#define DBG_RHD_MEM_LEN (5 * 1024)
++
++/// Maximum size of the RX buffer descriptor information in the debug dump
++#define DBG_RBD_MEM_LEN (5 * 1024)
++
++/// Maximum size of the TX header descriptor information in the debug dump
++#define DBG_THD_MEM_LEN (10 * 1024)
++
++/// Structure containing the information about the PHY channel that is use=
+d
++struct phy_channel_info {
++	/// PHY channel information 1
++	u32 info1;
++	/// PHY channel information 2
++	u32 info2;
++};
++
++/// Debug information forwarded to host when an error occurs
++struct dbg_debug_info_tag {
++	/// Type of error (0: recoverable, 1: fatal)
++	u32 error_type;
++	/// Pointer to the first RX Header Descriptor chained to the MAC HW
++	u32 rhd;
++	/// Size of the RX header descriptor buffer
++	u32 rhd_len;
++	/// Pointer to the first RX Buffer Descriptor chained to the MAC HW
++	u32 rbd;
++	/// Size of the RX buffer descriptor buffer
++	u32 rbd_len;
++	/// Pointer to the first TX Header Descriptors chained to the MAC HW
++	u32 thd[NX_TXQ_CNT];
++	/// Size of the TX header descriptor buffer
++	u32 thd_len[NX_TXQ_CNT];
++	/// MAC HW diag configuration
++	u32 hw_diag;
++	/// Error message
++	u32 error[DBG_ERROR_TRACE_SIZE / 4];
++	/// SW diag configuration length
++	u32 sw_diag_len;
++	/// SW diag configuration
++	u32 sw_diag[DBG_SW_DIAG_MAX_LEN / 4];
++	/// PHY channel information
++	struct phy_channel_info chan_info;
++	/// Embedded LA configuration
++	struct la_conf_tag la_conf;
++	/// MAC diagnostic port state
++	u16 diags_mac[DBG_DIAGS_MAC_MAX];
++	/// PHY diagnostic port state
++	u16 diags_phy[DBG_DIAGS_PHY_MAX];
++	/// MAC HW RX Header descriptor pointer
++	u32 rhd_hw_ptr;
++	/// MAC HW RX Buffer descriptor pointer
++	u32 rbd_hw_ptr;
++};
++
++/// Full debug dump that is forwarded to host in case of error
++struct dbg_debug_dump_tag {
++	/// Debug information
++	struct dbg_debug_info_tag dbg_info;
++
++	/// RX header descriptor memory
++	u32 rhd_mem[DBG_RHD_MEM_LEN / 4];
++
++	/// RX buffer descriptor memory
++	u32 rbd_mem[DBG_RBD_MEM_LEN / 4];
++
++	/// TX header descriptor memory
++	u32 thd_mem[NX_TXQ_CNT][DBG_THD_MEM_LEN / 4];
++
++	/// Logic analyzer memory
++	u32 la_mem[LA_MEM_LEN / 4];
++};
++
++/// Number of pulses in a radar event structure
++#define RADAR_PULSE_MAX 4
++
++/// Definition of an array of radar pulses
++struct radar_pulse_array_desc {
++	/// Buffer containing the radar pulses
++	u32 pulse[RADAR_PULSE_MAX];
++	/// Index of the radar detection chain that detected those pulses
++	u32 idx;
++	/// Number of valid pulses in the buffer
++	u32 cnt;
++};
++
++/// Bit mapping inside a radar pulse element
++struct radar_pulse {
++	s32
++		freq : 6;  /** Freq (resolution is 2Mhz range is [-Fadc/4 .. Fadc/4]) */
++	u32 fom : 4; /** Figure of Merit */
++	u32 len : 6; /** Length of the current radar pulse (resolution is 2us) */
++	u32 rep : 16; /* Time interval between the previous radar event
++			 * and the current one (in us)
++			 */
++};
++
++/// Definition of a RX vector descriptor
++struct rx_vector_desc {
++	/// PHY channel information
++	struct phy_channel_info phy_info;
++
++	/// RX vector 1
++	u32 rx_vect1[IPC_RXVEC_SIZE / 4];
++
++	/// Used to print a valid rx vector
++	u32 pattern;
++};
++
++///
++struct rxdesc_tag {
++	/// Host Buffer Address
++	u32 host_id;
++	/// Length
++	u32 frame_len;
++	/// Status
++	u16 status;
++};
++
++/*
++ *************************************************************************=
+***************
++ * @addtogroup IPC_TX IPC Tx path
++ *  @ingroup IPC
++ *  @brief IPC Tx path structures and functions
++ *
++ * A typical use case of the IPC Tx path API:
++ * @msc
++ * hscale =3D "2";
++ *
++ * a [label=3DDriver],
++ * b [label=3D"IPC host"],
++ * c [label=3D"IPC emb"],
++ * d [label=3DFirmware];
++ *
++ * ---   [label=3D"Tx descriptor queue example"];
++ * a=3D>a  [label=3D"Driver receives a Tx packet from OS"];
++ * a=3D>b  [label=3D"ipc_host_txdesc_get()"];
++ * a<<b  [label=3D"struct txdesc_host *"];
++ * a=3D>a  [label=3D"Driver fill the descriptor"];
++ * a=3D>b  [label=3D"ipc_host_txdesc_push()"];
++ * ...   [label=3D"(several Tx desc can be pushed)"];
++ * b:>c  [label=3D"Tx desc queue filled IRQ"];
++ * c=3D>>d [label=3D"EDCA sub-scheduler callback"];
++ * c<<d  [label=3D"Tx desc queue to pop"];
++ * c=3D>>d [label=3D"UMAC Tx desc callback"];
++ * ...   [label=3D"(several Tx desc can be popped)"];
++ * d=3D>d  [label=3D"Packets are sent or discarded"];
++ * ---   [label=3D"Tx confirm queue example"];
++ * c<=3Dd  [label=3D"ipc_emb_txcfm_push()"];
++ * c>>d  [label=3D"Request accepted"];
++ * ...   [label=3D"(several Tx cfm can be pushed)"];
++ * b<:c  [label=3D"Tx cfm queue filled IRQ"];
++ * a<<=3Db [label=3D"Driver's Tx Confirm callback"];
++ * a=3D>b  [label=3D"ipc_host_txcfm_pop()"];
++ * a<<b  [label=3D"struct ipc_txcfm"];
++ * a<=3Da  [label=3D"Packets are freed by the driver"];
++ * @endmsc
++ *
++ * @{
++ *************************************************************************=
+***************
++ */
++
++/// @} IPC_TX
++
++/*
++ *************************************************************************=
+***************
++ *  @defgroup IPC_RX IPC Rx path
++ *  @ingroup IPC
++ *  @brief IPC Rx path functions and structures
++ *
++ * A typical use case of the IPC Rx path API:
++ * @msc
++ * hscale =3D "2";
++ *
++ * a [label=3DFirmware],
++ * b [label=3D"IPC emb"],
++ * c [label=3D"IPC host"],
++ * d [label=3DDriver];
++ *
++ * ---   [label=3D"Rx buffer and desc queues usage example"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * ...   [label=3D"(several Rx buffer are pushed)"];
++ * a=3D>a  [label=3D" Frame is received\n from the medium"];
++ * a<<b  [label=3D"struct ipc_rxbuf"];
++ * a=3D>a  [label=3D" Firmware fill the buffer\n with received frame"];
++ * a<<b  [label=3D"Push accepted"];
++ * ...   [label=3D"(several Rx desc can be pushed)"];
++ * b:>c  [label=3D"Rx desc queue filled IRQ"];
++ * c=3D>>d [label=3D"Driver Rx packet callback"];
++ * c<=3Dd  [label=3D"ipc_host_rxdesc_pop()"];
++ * d=3D>d  [label=3D"Rx packet is handed\nover to the OS "];
++ * ...   [label=3D"(several Rx desc can be poped)"];
++ * ---   [label=3D"Rx buffer request exemple"];
++ * b:>c  [label=3D"Low Rx buffer count IRQ"];
++ * a<<b  [label=3D"struct ipc_rxbuf"];
++ * c=3D>>d [label=3D"Driver Rx buffer callback"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * d=3D>c  [label=3D"ipc_host_rxbuf_push()"];
++ * ...   [label=3D"(several Rx buffer are pushed)"];
++ * @endmsc
++ *
++ * @addtogroup IPC_RX
++ * @{
++ *************************************************************************=
+***************
++ */
++
++/// @} IPC_RX
++
++/*
++ *************************************************************************=
+***************
++ *  @defgroup IPC_MISC IPC Misc
++ *  @ingroup IPC
++ *  @brief IPC miscellaneous functions
++ *************************************************************************=
+***************
++ */
++/** IPC header structure.  This structure is stored at the beginning of ev=
+ery
++ * IPC message.
++ * @warning This structure's size must NOT exceed 4 bytes in length.
++ */
++struct ipc_header {
++	/// IPC message type.
++	u16 type;
++	/// IPC message size in number of bytes.
++	u16 size;
++};
++
++struct ipc_msg_elt {
++	/// Message header (alignment forced on word size, see allocation in shar=
+ed
++	/// env).
++	struct ipc_header header __ALIGN4;
++};
 +
 +/// Message structure for MSGs from Emb to App
 +struct ipc_e2a_msg {
@@ -3756,87 +1639,763 @@ index 0000000000000..16da7a2557220
 +	u32 pattern;                       ///< Used to stamp a valid MSG buffer
 +	u32 param[IPC_E2A_MSG_PARAM_SIZE]; ///< Parameter embedded struct. Must b=
 e
-+									   ///< word-aligned.
++										 ///< word-aligned.
 +};
 +
-+typedef u16 lmac_msg_id_t;
-+typedef u16 lmac_task_id_t;
-+
-+struct lmac_msg {
-+	lmac_msg_id_t id;       ///< Message id.
-+	lmac_task_id_t dest_id; ///< Destination kernel identifier.
-+	lmac_task_id_t src_id;  ///< Source kernel identifier.
-+	u16 param_len;          ///< Parameter embedded struct length.
-+	u32 param[]; ///< Parameter embedded struct. Must be word-aligned.
++/// Message structure for Debug messages from Emb to App
++struct ipc_dbg_msg {
++	u32 string[IPC_DBG_PARAM_SIZE / 4]; ///< Debug string
++	u32 pattern;                        ///< Used to stamp a valid buffer
 +};
 +
-+#define rwnx_cmd_e2amsg         ipc_e2a_msg
-+#define rwnx_cmd_a2emsg         lmac_msg
-+#define RWNX_CMD_A2EMSG_LEN(m)  (sizeof(struct lmac_msg) + (m)->param_len)
-+#define RWNX_CMD_E2AMSG_LEN_MAX (IPC_E2A_MSG_PARAM_SIZE * 4)
-+
-+static inline void put_u16(u8 *buf, u16 data)
-+{
-+	buf[0] =3D (u8)(data & 0x00ff);
-+	buf[1] =3D (u8)((data >> 8) & 0x00ff);
-+}
-+
-+enum rwnx_cmd_mgr_state {
-+	RWNX_CMD_MGR_STATE_DEINIT,
-+	RWNX_CMD_MGR_STATE_INITED,
-+	RWNX_CMD_MGR_STATE_CRASHED,
++/// Message structure for MSGs from App to Emb.
++/// Actually a sub-structure will be used when filling the messages.
++struct ipc_a2e_msg {
++	u32 dummy_word; // used to cope with kernel message structure
++	u32 msg[IPC_A2E_MSG_BUF_SIZE]; // body of the msg
 +};
 +
-+struct rwnx_cmd {
-+	struct list_head list;
-+	lmac_msg_id_t id;
-+	lmac_msg_id_t reqid;
-+	struct rwnx_cmd_a2emsg *a2e_msg;
-+	char *e2a_msg;
-+	u32 tkn;
-+	u16 flags;
-+	struct completion complete;
-+	u32 result;
++struct ipc_shared_rx_buf {
++	/// < ptr to hostbuf client (ipc_host client) structure
++	u32 hostid;
++	/// < ptr to real hostbuf dma address
++	u32 dma_addr;
 +};
 +
-+struct aic_sdio_dev;
-+struct rwnx_cmd;
-+typedef int (*msg_cb_fct)(struct rwnx_cmd *cmd, struct rwnx_cmd_e2amsg *ms=
-g);
-+
-+struct rwnx_cmd_mgr {
-+	enum rwnx_cmd_mgr_state state;
-+	/* lock for cmd mgr */
-+	spinlock_t lock;
-+	u32 next_tkn;
-+	u32 queue_sz;
-+	u32 max_queue_sz;
-+	/* lock for cb */
-+	spinlock_t cb_lock;
-+	void *sdiodev;
-+
-+	struct list_head cmds;
-+
-+	int (*queue)(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd);
-+	int (*llind)(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cmd);
-+	int (*msgind)(struct rwnx_cmd_mgr *cmd_mgr,
-+		      struct rwnx_cmd_e2amsg *cmd_e2amsg,
-+		      msg_cb_fct cb_fct);
-+	void (*print)(struct rwnx_cmd_mgr *cmd_mgr);
-+	void (*drain)(struct rwnx_cmd_mgr *cmd_mgr);
-+
-+	struct work_struct cmd_work;
-+	struct workqueue_struct *cmd_wq;
++struct ipc_shared_rx_desc {
++	/// DMA Address
++	u32 dma_addr;
 +};
 +
-+void rwnx_cmd_mgr_init(struct rwnx_cmd_mgr *cmd_mgr);
-+void rwnx_cmd_mgr_deinit(struct rwnx_cmd_mgr *cmd_mgr);
-+int cmd_mgr_queue_force_defer(struct rwnx_cmd_mgr *cmd_mgr,
-+			      struct rwnx_cmd *cmd);
-+void rwnx_set_cmd_tx(void *dev, struct lmac_msg *msg, uint len);
++/// Structure containing FW characteristics for compatibility checking
++struct compatibility_tag {
++	/// Size of IPC shared memory
++	u16 ipc_shared_size;
++	/// Message struct/ID API version
++	u16 msg_api;
++	/// Version of IPC shared
++	u8 ipc_shared_version;
++	/// Number of host buffers available for Emb->App MSGs sending
++	u8 msge2a_buf_cnt;
++	/// Number of host buffers available for Debug Messages sending
++	u8 dbgbuf_cnt;
++	/// Number of host buffers available for Radar events handling
++	u8 radarbuf_cnt;
++	/// Number of host buffers available for unsupported Rx vectors handling
++	u8 unsuprxvecbuf_cnt;
++	/// Number of shared descriptors available for Data RX handling
++	u8 rxdesc_cnt;
++	/// Number of host buffers available for Data Rx handling
++	u8 rxbuf_cnt;
++	/// Number of descriptors in BK TX queue (power of 2, min 4, max 64)
++	u8 bk_txq;
++	/// Number of descriptors in BE TX queue (power of 2, min 4, max 64)
++	u8 be_txq;
++	/// Number of descriptors in VI TX queue (power of 2, min 4, max 64)
++	u8 vi_txq;
++	/// Number of descriptors in VO TX queue (power of 2, min 4, max 64)
++	u8 vo_txq;
++	/// Number of descriptors in BCN TX queue (power of 2, min 4, max 64)
++	u8 bcn_txq;
++};
 +
++/*
++ * TYPE and STRUCT DEFINITIONS
++ *************************************************************************=
+***************
++ */
++
++// Indexes are defined in the MIB shared structure
++struct ipc_shared_env_tag {
++	struct compatibility_tag comp_info; // FW characteristics
++
++	struct ipc_a2e_msg
++		msg_a2e_buf; // room for MSG to be sent from App to Emb
++
++	// Fields for MSGs sending from Emb to App
++	struct ipc_e2a_msg
++		msg_e2a_buf; // room to build the MSG to be DMA Xferred
++	struct dma_desc
++		msg_dma_desc; // DMA descriptor for Emb->App MSGs Xfers
++	u32 msg_e2a_hostbuf_addr[IPC_MSGE2A_BUF_CNT]; // buffers @ for DMA Xfers
++
++	// Fields for Debug MSGs sending from Emb to App
++	struct ipc_dbg_msg
++		dbg_buf; // room to build the MSG to be DMA Xferred
++	struct dma_desc
++		dbg_dma_desc; // DMA descriptor for Emb->App MSGs Xfers
++	u32 dbg_hostbuf_addr[IPC_DBGBUF_CNT]; // buffers @ for MSGs DMA Xfers
++	u32 la_dbginfo_addr; // Host buffer address for the debug information
++	u32 pattern_addr;
++
++	u32 radarbuf_hostbuf[IPC_RADARBUF_CNT]; // buffers @ for Radar Events
++	u32 unsuprxvecbuf_hostbuf[IPC_UNSUPRXVECBUF_CNT]; // buffers @ for
++	// unsupported Rx vectors
++	struct txdesc_host txdesc0[CONFIG_USER_MAX][NX_TXDESC_CNT0];
++	struct txdesc_host txdesc1[CONFIG_USER_MAX][NX_TXDESC_CNT1];
++	struct txdesc_host txdesc2[CONFIG_USER_MAX][NX_TXDESC_CNT2];
++	struct txdesc_host txdesc3[CONFIG_USER_MAX][NX_TXDESC_CNT3];
++#if NX_TXQ_CNT =3D=3D 5
++	struct txdesc_host txdesc4[1][NX_TXDESC_CNT4];
++#endif
++#ifdef CONFIG_RWNX_FULLMAC
++	// RX Descriptors Array
++	struct ipc_shared_rx_desc host_rxdesc[IPC_RXDESC_CNT];
++	// RX Buffers Array
++	struct ipc_shared_rx_buf host_rxbuf[IPC_RXBUF_CNT];
++#else
++	// buffers @ for Data Rx
++	u32 host_rxbuf[IPC_RXBUF_CNT];
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	u32 buffered[NX_REMOTE_STA_MAX][TID_MAX];
++
++	u16 trace_pattern;
++	u32 trace_start;
++	u32 trace_end;
++	u32 trace_size;
++	u32 trace_offset;
++	u32 trace_nb_compo;
++	u32 trace_offset_compo;
++};
++
++extern struct ipc_shared_env_tag ipc_shared_env;
++
++/*
++ * TYPE and STRUCT DEFINITIONS
++ *************************************************************************=
+***************
++ */
++
++// IRQs from app to emb
++/// Interrupts bits used for the TX descriptors of the AC queues
++#ifdef CONFIG_RWNX_MUMIMO_TX
++/// Interrupts bits used
++#if CONFIG_USER_MAX > 3
++#define IPC_IRQ_A2E_USER_MSK 0xF
++#elif CONFIG_USER_MAX > 2
++#define IPC_IRQ_A2E_USER_MSK 0x7
++#else
++#define IPC_IRQ_A2E_USER_MSK 0x3
++#endif
++
++/// Offset of the interrupts for AC0
++#define IPC_IRQ_A2E_AC0_OFT 8
++/// Mask of the interrupts for AC0
++#define IPC_IRQ_A2E_AC0_MSK (IPC_IRQ_A2E_USER_MSK << IPC_IRQ_A2E_AC0_OFT)
++/// Offset of the interrupts for AC1
++#define IPC_IRQ_A2E_AC1_OFT (IPC_IRQ_A2E_AC0_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC1
++#define IPC_IRQ_A2E_AC1_MSK (IPC_IRQ_A2E_USER_MSK << IPC_IRQ_A2E_AC1_OFT)
++/// Offset of the interrupts for AC2
++#define IPC_IRQ_A2E_AC2_OFT (IPC_IRQ_A2E_AC1_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC2
++#define IPC_IRQ_A2E_AC2_MSK (IPC_IRQ_A2E_USER_MSK << IPC_IRQ_A2E_AC2_OFT)
++/// Offset of the interrupts for AC3
++#define IPC_IRQ_A2E_AC3_OFT (IPC_IRQ_A2E_AC2_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC3
++#define IPC_IRQ_A2E_AC3_MSK (IPC_IRQ_A2E_USER_MSK << IPC_IRQ_A2E_AC3_OFT)
++/// Offset of the interrupts for BCN
++#define IPC_IRQ_A2E_BCN_OFT (IPC_IRQ_A2E_AC3_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for BCN
++#define IPC_IRQ_A2E_BCN_MSK CO_BIT(IPC_IRQ_A2E_BCN_OFT)
++
++#define IPC_IRQ_A2E_AC_TXDESC                                             =
+     \
++	(IPC_IRQ_A2E_AC0_MSK | IPC_IRQ_A2E_AC1_MSK | IPC_IRQ_A2E_AC2_MSK |       =
+  \
++	 IPC_IRQ_A2E_AC3_MSK)
++
++/// Interrupts bits used for the TX descriptors of the BCN queue
++#if NX_TXQ_CNT < 5
++#define IPC_IRQ_A2E_BCN_TXDESC 0
++#else
++#define IPC_IRQ_A2E_BCN_TXDESC (0x01 << IPC_IRQ_A2E_BCN_OFT)
++#endif
++
++/// IPC TX descriptor interrupt mask
++#define IPC_IRQ_A2E_TXDESC (IPC_IRQ_A2E_AC_TXDESC | IPC_IRQ_A2E_BCN_TXDESC=
+)
++#else
++/// IPC TX descriptor interrupt mask
++#define IPC_IRQ_A2E_TXDESC 0xFF00
++#endif
++
++#define IPC_IRQ_A2E_TXDESC_FIRSTBIT (8)
++#define IPC_IRQ_A2E_RXBUF_BACK      CO_BIT(5)
++#define IPC_IRQ_A2E_RXDESC_BACK     CO_BIT(4)
++
++#define IPC_IRQ_A2E_MSG CO_BIT(1)
++#define IPC_IRQ_A2E_DBG CO_BIT(0)
++
++#define IPC_IRQ_A2E_ALL (IPC_IRQ_A2E_TXDESC | IPC_IRQ_A2E_MSG | IPC_IRQ_A2=
+E_DBG)
++
++// IRQs from emb to app
++#define IPC_IRQ_E2A_TXCFM_POS 7
++
++#ifdef CONFIG_RWNX_MUMIMO_TX
++/// Interrupts bits used
++#if CONFIG_USER_MAX > 3
++#define IPC_IRQ_E2A_USER_MSK 0xF
++#elif CONFIG_USER_MAX > 2
++#define IPC_IRQ_E2A_USER_MSK 0x7
++#else
++#define IPC_IRQ_E2A_USER_MSK 0x3
++#endif
++
++/// Offset of the interrupts for AC0
++#define IPC_IRQ_E2A_AC0_OFT IPC_IRQ_E2A_TXCFM_POS
++/// Mask of the interrupts for AC0
++#define IPC_IRQ_E2A_AC0_MSK (IPC_IRQ_E2A_USER_MSK << IPC_IRQ_E2A_AC0_OFT)
++/// Offset of the interrupts for AC1
++#define IPC_IRQ_E2A_AC1_OFT (IPC_IRQ_E2A_AC0_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC1
++#define IPC_IRQ_E2A_AC1_MSK (IPC_IRQ_E2A_USER_MSK << IPC_IRQ_E2A_AC1_OFT)
++/// Offset of the interrupts for AC2
++#define IPC_IRQ_E2A_AC2_OFT (IPC_IRQ_E2A_AC1_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC2
++#define IPC_IRQ_E2A_AC2_MSK (IPC_IRQ_E2A_USER_MSK << IPC_IRQ_E2A_AC2_OFT)
++/// Offset of the interrupts for AC3
++#define IPC_IRQ_E2A_AC3_OFT (IPC_IRQ_E2A_AC2_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for AC3
++#define IPC_IRQ_E2A_AC3_MSK (IPC_IRQ_E2A_USER_MSK << IPC_IRQ_E2A_AC3_OFT)
++/// Offset of the interrupts for BCN
++#define IPC_IRQ_E2A_BCN_OFT (IPC_IRQ_E2A_AC3_OFT + CONFIG_USER_MAX)
++/// Mask of the interrupts for BCN
++#define IPC_IRQ_E2A_BCN_MSK CO_BIT(IPC_IRQ_E2A_BCN_OFT)
++
++#define IPC_IRQ_E2A_AC_TXCFM                                              =
+     \
++	(IPC_IRQ_E2A_AC0_MSK | IPC_IRQ_E2A_AC1_MSK | IPC_IRQ_E2A_AC2_MSK |       =
+  \
++	 IPC_IRQ_E2A_AC3_MSK)
++
++/// Interrupts bits used for the TX descriptors of the BCN queue
++#if NX_TXQ_CNT < 5
++#define IPC_IRQ_E2A_BCN_TXCFM 0
++#else
++#define IPC_IRQ_E2A_BCN_TXCFM (0x01 << IPC_IRQ_E2A_BCN_OFT)
++#endif
++
++/// IPC TX descriptor interrupt mask
++#define IPC_IRQ_E2A_TXCFM (IPC_IRQ_E2A_AC_TXCFM | IPC_IRQ_E2A_BCN_TXCFM)
++
++#else
++
++#define IPC_IRQ_E2A_TXCFM (((1 << NX_TXQ_CNT) - 1) << IPC_IRQ_E2A_TXCFM_PO=
+S)
++
++#endif /* CONFIG_RWNX_MUMIMO_TX */
++
++#define IPC_IRQ_E2A_UNSUP_RX_VEC CO_BIT(7)
++#define IPC_IRQ_E2A_RADAR        CO_BIT(6)
++#define IPC_IRQ_E2A_TBTT_SEC     CO_BIT(5)
++#define IPC_IRQ_E2A_TBTT_PRIM    CO_BIT(4)
++#define IPC_IRQ_E2A_RXDESC       CO_BIT(3)
++#define IPC_IRQ_E2A_MSG_ACK      CO_BIT(2)
++#define IPC_IRQ_E2A_MSG          CO_BIT(1)
++#define IPC_IRQ_E2A_DBG          CO_BIT(0)
++
++#define IPC_IRQ_E2A_ALL                                                   =
+     \
++	(IPC_IRQ_E2A_TXCFM | IPC_IRQ_E2A_RXDESC | IPC_IRQ_E2A_MSG_ACK |          =
+  \
++	 IPC_IRQ_E2A_MSG | IPC_IRQ_E2A_DBG | IPC_IRQ_E2A_TBTT_PRIM |             =
+  \
++	 IPC_IRQ_E2A_TBTT_SEC | IPC_IRQ_E2A_RADAR | IPC_IRQ_E2A_UNSUP_RX_VEC)
++
++// FLAGS for RX desc
++#define IPC_RX_FORWARD  CO_BIT(1)
++#define IPC_RX_INTRABSS CO_BIT(0)
++
++// IPC message TYPE
 +enum {
-+	TASK_NONE =3D (u8)-1,
++	IPC_MSG_NONE =3D 0,
++	IPC_MSG_WRAP,
++	IPC_MSG_KMSG,
++
++	IPC_DBG_STRING,
++
++};
++
++#endif // _IPC_SHARED_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/lmac_mac.h b/drivers/net=
+/wireless/aic/aic8800_fdrv/lmac_mac.h
+new file mode 100644
+index 0000000000000..114ed14f4ad55
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/lmac_mac.h
+@@ -0,0 +1,437 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief MAC related definitions.
++ *
++ * Adapted from mac_types.h to used lmac_types.h instead of standard types
++ * eg: perl -pi -e '$_ =3D~ s/uint(\d{1,2})_t/u$1_l/g; \
++ *                  $_ =3D~ s/int(\d{1,2})_t/s$1_l/g; \
++ *                  $_ =3D~ s/CO_BIT/BIT/g;'
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef LMAC_MAC_H_
++#define LMAC_MAC_H_
++
++#include "lmac_types.h"
++
++/// Interface types
++enum mac_vif_type {
++	/// ESS STA interface
++	VIF_STA,
++	/// IBSS STA interface
++	VIF_IBSS,
++	/// AP interface
++	VIF_AP,
++	/// Mesh Point interface
++	VIF_MESH_POINT,
++	/// Monitor interface
++	VIF_MONITOR,
++	/// Unknown type
++	VIF_UNKNOWN
++};
++
++/// MAC address length in bytes.
++#define MAC_ADDR_LEN 6
++
++/// MAC address structure.
++struct mac_addr {
++	/// Array of 16-bit words that make up the MAC address.
++	u16 array[MAC_ADDR_LEN / 2];
++};
++
++/// SSID maximum length.
++#define MAC_SSID_LEN 32
++
++/// SSID.
++struct mac_ssid {
++	/// Actual length of the SSID.
++	u8 length;
++	/// Array containing the SSID name.
++	u8 array[MAC_SSID_LEN];
++};
++
++/// BSS type
++enum mac_bss_type {
++	INFRASTRUCTURE_MODE =3D 1,
++	INDEPENDENT_BSS_MODE,
++	ANY_BSS_MODE
++};
++
++/// Channel Band
++enum mac_chan_band {
++	/// 2.4GHz Band
++	PHY_BAND_2G4,
++	/// 5GHz band
++	PHY_BAND_5G,
++	/// Number of bands
++	PHY_BAND_MAX,
++};
++
++/// Operating Channel Bandwidth
++enum mac_chan_bandwidth {
++	/// 20MHz BW
++	PHY_CHNL_BW_20,
++	/// 40MHz BW
++	PHY_CHNL_BW_40,
++	/// 80MHz BW
++	PHY_CHNL_BW_80,
++	/// 160MHz BW
++	PHY_CHNL_BW_160,
++	/// 80+80MHz BW
++	PHY_CHNL_BW_80P80,
++	/// Reserved BW
++	PHY_CHNL_BW_OTHER,
++};
++
++/// max number of channels in the 2.4 GHZ band
++#define MAC_DOMAINCHANNEL_24G_MAX 14
++
++/// max number of channels in the 5 GHZ band
++#define MAC_DOMAINCHANNEL_5G_MAX 28
++
++/// Channel Flag
++enum mac_chan_flags {
++	/// Cannot initiate radiation on this channel
++	CHAN_NO_IR =3D BIT(0),
++	/// Channel is not allowed
++	CHAN_DISABLED =3D BIT(1),
++	/// Radar detection required on this channel
++	CHAN_RADAR =3D BIT(2),
++};
++
++/// Primary Channel definition
++struct mac_chan_def {
++	/// Frequency of the channel (in MHz)
++	u16 freq;
++	/// RF band (@ref mac_chan_band)
++	u8 band;
++	/// Additional information (@ref mac_chan_flags)
++	u8 flags;
++	/// Max transmit power allowed on this channel (dBm)
++	s8 tx_power;
++};
++
++/// Operating Channel
++struct mac_chan_op {
++	/// Band (@ref mac_chan_band)
++	u8 band;
++	/// Channel type (@ref mac_chan_bandwidth)
++	u8 type;
++	/// Frequency for Primary 20MHz channel (in MHz)
++	u16 prim20_freq;
++	/// Frequency center of the contiguous channel or center of Primary 80+80
++	/// (in MHz)
++	u16 center1_freq;
++	/// Frequency center of the non-contiguous secondary 80+80 (in MHz)
++	u16 center2_freq;
++	/// Max transmit power allowed on this channel (dBm)
++	s8 tx_power;
++	/// Additional information (@ref mac_chan_flags)
++	u8 flags;
++};
++
++/// Cipher suites (order is important as it is used by MACHW)
++enum mac_cipher_suite {
++	/// 00-0F-AC 1
++	MAC_CIPHER_WEP40 =3D 0,
++	/// 00-0F-AC 2
++	MAC_CIPHER_TKIP =3D 1,
++	/// 00-0F-AC 4
++	MAC_CIPHER_CCMP =3D 2,
++	/// 00-0F-AC 5
++	MAC_CIPHER_WEP104 =3D 3,
++	/// 00-14-72 1
++	MAC_CIPHER_WPI_SMS4 =3D 4,
++	/// 00-0F-AC 6  (aka AES_CMAC)
++	MAC_CIPHER_BIP_CMAC_128 =3D 5,
++
++	// following cipher are not supported by MACHW
++	/// 00-0F-AC 08
++	MAC_CIPHER_GCMP_128,
++	/// 00-0F-AC 09
++	MAC_CIPHER_GCMP_256,
++	/// 00-0F-AC 10
++	MAC_CIPHER_CCMP_256,
++	/// 00-0F-AC 11
++	MAC_CIPHER_BIP_GMAC_128,
++	/// 00-0F-AC 12
++	MAC_CIPHER_BIP_GMAC_256,
++	/// 00-0F-AC 13
++	MAC_CIPHER_BIP_CMAC_256,
++
++	MAC_CIPHER_INVALID =3D 0xFF
++};
++
++/// Authentication and Key Management suite
++enum mac_akm_suite {
++	/// No security
++	MAC_AKM_NONE,
++	/// Pre RSN (WEP or WPA)
++	MAC_AKM_PRE_RSN,
++	/// 00-0F-AC 1
++	MAC_AKM_8021X,
++	/// 00-0F-AC 2
++	MAC_AKM_PSK,
++	/// 00-0F-AC 3
++	MAC_AKM_FT_8021X,
++	/// 00-0F-AC 4
++	MAC_AKM_FT_PSK,
++	/// 00-0F-AC 5
++	MAC_AKM_8021X_SHA256,
++	/// 00-0F-AC 6
++	MAC_AKM_PSK_SHA256,
++	/// 00-0F-AC 7
++	MAC_AKM_TDLS,
++	/// 00-0F-AC 8
++	MAC_AKM_SAE,
++	/// 00-0F-AC 9
++	MAC_AKM_FT_OVER_SAE,
++	/// 00-0F-AC 11
++	MAC_AKM_8021X_SUITE_B,
++	/// 00-0F-AC 12
++	MAC_AKM_8021X_SUITE_B_192,
++	/// 00-0F-AC 14
++	MAC_AKM_FILS_SHA256,
++	/// 00-0F-AC 15
++	MAC_AKM_FILS_SHA384,
++	/// 00-0F-AC 16
++	MAC_AKM_FT_FILS_SHA256,
++	/// 00-0F-AC 17
++	MAC_AKM_FT_FILS_SHA384,
++	/// 00-0F-AC 18
++	MAC_AKM_OWE,
++
++	/// 00-14-72 1
++	MAC_AKM_WAPI_CERT,
++	/// 00-14-72 2
++	MAC_AKM_WAPI_PSK,
++};
++
++/// Scan result element, parsed from beacon or probe response frames.
++struct mac_scan_result {
++	/// Scan result is valid
++	bool valid_flag;
++	/// Network BSSID.
++	struct mac_addr bssid;
++	/// Network name.
++	struct mac_ssid ssid;
++	/// Network type (@ref mac_bss_type).
++	u16 bsstype;
++	/// Network channel.
++	struct mac_chan_def *chan;
++	/// Network beacon period (in TU).
++	u16 beacon_period;
++	/// Capability information
++	u16 cap_info;
++	/// Supported AKM (bit-field of @ref mac_akm_suite)
++	u32 akm;
++	/// Group cipher (bit-field of @ref mac_cipher_suite)
++	u16 group_cipher;
++	/// Group cipher (bit-field of @ref mac_cipher_suite)
++	u16 pairwise_cipher;
++	/// RSSI of the scanned BSS (in dBm)
++	s8 rssi;
++};
++
++/// Legacy rate 802.11 definitions
++enum mac_legacy_rates {
++	/// DSSS/CCK 1Mbps
++	MAC_RATE_1MBPS =3D 2,
++	/// DSSS/CCK 2Mbps
++	MAC_RATE_2MBPS =3D 4,
++	/// DSSS/CCK 5.5Mbps
++	MAC_RATE_5_5MBPS =3D 11,
++	/// OFDM 6Mbps
++	MAC_RATE_6MBPS =3D 12,
++	/// OFDM 9Mbps
++	MAC_RATE_9MBPS =3D 18,
++	/// DSSS/CCK 11Mbps
++	MAC_RATE_11MBPS =3D 22,
++	/// OFDM 12Mbps
++	MAC_RATE_12MBPS =3D 24,
++	/// OFDM 18Mbps
++	MAC_RATE_18MBPS =3D 36,
++	/// OFDM 24Mbps
++	MAC_RATE_24MBPS =3D 48,
++	/// OFDM 36Mbps
++	MAC_RATE_36MBPS =3D 72,
++	/// OFDM 48Mbps
++	MAC_RATE_48MBPS =3D 96,
++	/// OFDM 54Mbps
++	MAC_RATE_54MBPS =3D 108
++};
++
++/// BSS Membership Selector definitions
++enum mac_bss_membership {
++	/// HT PHY
++	MAC_BSS_MEMBERSHIP_HT_PHY =3D 127,
++	/// VHT PHY
++	MAC_BSS_MEMBERSHIP_VHT_PHY =3D 126,
++};
++
++/// MAC rateset maximum length
++#define MAC_RATESET_LEN 12
++
++/// Structure containing the legacy rateset of a station
++struct mac_rateset {
++	/// Number of legacy rates supported
++	u8 length;
++	/// Array of legacy rates
++	u8 array[MAC_RATESET_LEN];
++};
++
++/// MAC Security Key maximum length
++#define MAC_SEC_KEY_LEN 32 // TKIP keys 256 bits (max length) with MIC key=
+s
++
++/// Structure defining a security key
++struct mac_sec_key {
++	/// Key material length
++	u8 length;
++	/// Key material
++	u32 array[MAC_SEC_KEY_LEN / 4];
++};
++
++/// Access Category enumeration
++enum mac_ac {
++	/// Background
++	AC_BK =3D 0,
++	/// Best-effort
++	AC_BE,
++	/// Video
++	AC_VI,
++	/// Voice
++	AC_VO,
++	/// Number of access categories
++	AC_MAX
++};
++
++/// Traffic ID enumeration
++enum mac_tid {
++	/// TID_0. Mapped to @ref AC_BE as per 802.11 standard.
++	TID_0,
++	/// TID_1. Mapped to @ref AC_BK as per 802.11 standard.
++	TID_1,
++	/// TID_2. Mapped to @ref AC_BK as per 802.11 standard.
++	TID_2,
++	/// TID_3. Mapped to @ref AC_BE as per 802.11 standard.
++	TID_3,
++	/// TID_4. Mapped to @ref AC_VI as per 802.11 standard.
++	TID_4,
++	/// TID_5. Mapped to @ref AC_VI as per 802.11 standard.
++	TID_5,
++	/// TID_6. Mapped to @ref AC_VO as per 802.11 standard.
++	TID_6,
++	/// TID_7. Mapped to @ref AC_VO as per 802.11 standard.
++	TID_7,
++	/// Non standard Management TID used internally
++	TID_MGT,
++	/// Number of TID supported
++	TID_MAX
++};
++
++/// MCS bitfield maximum size (in bytes)
++#define MAX_MCS_LEN 16 // 16 * 8 =3D 128
++
++/// MAC HT capability information element
++struct mac_htcapability {
++	/// HT capability information
++	__le16 ht_capa_info;
++	/// A-MPDU parameters
++	u8 a_mpdu_param;
++	/// Supported MCS
++	u8 mcs_rate[MAX_MCS_LEN];
++	/// HT extended capability information
++	__le16 ht_extended_capa;
++	/// Beamforming capability information
++	__le32 tx_beamforming_capa;
++	/// Antenna selection capability information
++	u8 asel_capa;
++};
++
++/// MAC VHT capability information element
++struct mac_vhtcapability {
++	/// VHT capability information
++	__le32 vht_capa_info;
++	/// RX MCS map
++	__le16 rx_mcs_map;
++	/// RX highest data rate
++	__le16 rx_highest;
++	/// TX MCS map
++	__le16 tx_mcs_map;
++	/// TX highest data rate
++	__le16 tx_highest;
++};
++
++/// Length (in bytes) of the MAC HE capability field
++#define MAC_HE_MAC_CAPA_LEN      6
++/// Length (in bytes) of the PHY HE capability field
++#define MAC_HE_PHY_CAPA_LEN      11
++/// Maximum length (in bytes) of the PPE threshold data
++#define MAC_HE_PPE_THRES_MAX_LEN 25
++
++/// Structure listing the per-NSS, per-BW supported MCS combinations
++struct mac_he_mcs_nss_supp {
++	/// per-NSS supported MCS in RX, for BW <=3D 80MHz
++	__le16 rx_mcs_80;
++	/// per-NSS supported MCS in TX, for BW <=3D 80MHz
++	__le16 tx_mcs_80;
++	/// per-NSS supported MCS in RX, for BW =3D 160MHz
++	__le16 rx_mcs_160;
++	/// per-NSS supported MCS in TX, for BW =3D 160MHz
++	__le16 tx_mcs_160;
++	/// per-NSS supported MCS in RX, for BW =3D 80+80MHz
++	__le16 rx_mcs_80p80;
++	/// per-NSS supported MCS in TX, for BW =3D 80+80MHz
++	__le16 tx_mcs_80p80;
++};
++
++/// MAC HE capability information element
++struct mac_hecapability {
++	/// MAC HE capabilities
++	u8 mac_cap_info[MAC_HE_MAC_CAPA_LEN];
++	/// PHY HE capabilities
++	u8 phy_cap_info[MAC_HE_PHY_CAPA_LEN];
++	/// Supported MCS combinations
++	struct mac_he_mcs_nss_supp mcs_supp;
++	/// PPE Thresholds data
++	u8 ppe_thres[MAC_HE_PPE_THRES_MAX_LEN];
++};
++
++/// Station flags
++enum mac_sta_flags {
++	/// Bit indicating that a STA has QoS (WMM) capability
++	STA_QOS_CAPA =3D BIT(0),
++	/// Bit indicating that a STA has HT capability
++	STA_HT_CAPA =3D BIT(1),
++	/// Bit indicating that a STA has VHT capability
++	STA_VHT_CAPA =3D BIT(2),
++	/// Bit indicating that a STA has MFP capability
++	STA_MFP_CAPA =3D BIT(3),
++	/// Bit indicating that the STA included the Operation Notification IE
++	STA_OPMOD_NOTIF =3D BIT(4),
++	/// Bit indicating that a STA has HE capability
++	STA_HE_CAPA =3D BIT(5),
++};
++
++/// Connection flags
++enum mac_connection_flags {
++	/// Flag indicating whether the control port is controlled by host or not
++	CONTROL_PORT_HOST =3D BIT(0),
++	/// Flag indicating whether the control port frame shall be sent unencryp=
+ted
++	CONTROL_PORT_NO_ENC =3D BIT(1),
++	/// Flag indicating whether HT and VHT shall be disabled or not
++	DISABLE_HT =3D BIT(2),
++	/// Flag indicating whether WPA or WPA2 authentication is in use
++	WPA_WPA2_IN_USE =3D BIT(3),
++	/// Flag indicating whether MFP is in use
++	MFP_IN_USE =3D BIT(4),
++	//  Flag indicating Roam
++	REASSOCIATION =3D BIT(5),
++};
++
++#endif // LMAC_MAC_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/lmac_msg.h b/drivers/net=
+/wireless/aic/aic8800_fdrv/lmac_msg.h
+new file mode 100644
+index 0000000000000..8253fd8152fd1
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/lmac_msg.h
+@@ -0,0 +1,3101 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief Main definitions for message exchanges with LMAC
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef LMAC_MSG_H_
++#define LMAC_MSG_H_
++
++#include "lmac_mac.h"
++
++/* Task identifiers for communication between LMAC and DRIVER */
++enum {
++	TASK_NONE =3D 0xff,
 +
 +	// MAC Management task.
 +	TASK_MM =3D 0,
@@ -3860,20 +2419,2855 @@ g);
 +	TASK_MESH,
 +	/// RXU task
 +	TASK_RXU,
++	/// RM_task
++	TASK_RM,
++	/// TWT task
++	TASK_TWT,
++#if defined CONFIG_RWNX_FULLMAC
 +	// This is used to define the last task that is running on the EMB proces=
 sor
-+	TASK_LAST_EMB =3D TASK_RXU,
-+
++	TASK_LAST_EMB =3D TASK_TWT,
++#else
++#error "Need to define SOFTMAC or FULLMAC"
++#endif
 +	// nX API task
 +	TASK_API,
 +	TASK_MAX,
 +};
 +
-+#define LMAC_FIRST_MSG(task) ((lmac_msg_id_t)((task) << 10))
-+#define DRV_TASK_ID          100
-+#define MSG_I(msg)           ((msg) & ((1 << 10) - 1))
-+#define MSG_T(msg)           ((lmac_task_id_t)((msg) >> 10))
++/// For MAC HW States copied from "hal_machw.h"
++enum {
++	/// MAC HW IDLE State.
++	HW_IDLE =3D 0,
++	/// MAC HW RESERVED State.
++	HW_RESERVED,
++	/// MAC HW DOZE State.
++	HW_DOZE,
++	/// MAC HW ACTIVE State.
++	HW_ACTIVE
++};
 +
++/// Power Save mode setting
++enum mm_ps_mode_state {
++	MM_PS_MODE_OFF,
++	MM_PS_MODE_ON,
++	MM_PS_MODE_ON_DYN,
++};
++
++/// Status/error codes used in the MAC software.
++enum {
++	CO_OK,
++	CO_FAIL,
++	CO_EMPTY,
++	CO_FULL,
++	CO_BAD_PARAM,
++	CO_NOT_FOUND,
++	CO_NO_MORE_ELT_AVAILABLE,
++	CO_NO_ELT_IN_USE,
++	CO_BUSY,
++	CO_OP_IN_PROGRESS,
++};
++
++/// Remain on channel operation codes
++enum mm_remain_on_channel_op {
++	MM_ROC_OP_START =3D 0,
++	MM_ROC_OP_CANCEL,
++};
++
++#define DRV_TASK_ID 100
++
++/// Message Identifier. The number of messages is limited to 0xFFFF.
++/// The message ID is divided in two parts:
++/// - bits[15..10] : task index (no more than 64 tasks supported).
++/// - bits[9..0] : message index (no more that 1024 messages per task).
++typedef u16 lmac_msg_id_t;
++
++typedef u16 lmac_task_id_t;
++
++/// Build the first message ID of a task.
++#define LMAC_FIRST_MSG(task) ((lmac_msg_id_t)((task) << 10))
++
++#define MSG_T(msg) ((lmac_task_id_t)((msg) >> 10))
++#define MSG_I(msg) ((msg) & ((1 << 10) - 1))
++
++/// Message structure.
++struct lmac_msg {
++	lmac_msg_id_t id;       ///< Message id.
++	lmac_task_id_t dest_id; ///< Destination kernel identifier.
++	lmac_task_id_t src_id;  ///< Source kernel identifier.
++	u16 param_len;          ///< Parameter embedded struct length.
++	u32 param[]; ///< Parameter embedded struct. Must be word-aligned.
++};
++
++/// List of messages related to the task.
++enum mm_msg_tag {
++	/// RESET Request.
++	MM_RESET_REQ =3D LMAC_FIRST_MSG(TASK_MM),
++	/// RESET Confirmation.
++	MM_RESET_CFM,
++	/// START Request.
++	MM_START_REQ,
++	/// START Confirmation.
++	MM_START_CFM,
++	/// Read Version Request.
++	MM_VERSION_REQ,
++	/// Read Version Confirmation.
++	MM_VERSION_CFM,
++	/// ADD INTERFACE Request.
++	MM_ADD_IF_REQ,
++	/// ADD INTERFACE Confirmation.
++	MM_ADD_IF_CFM,
++	/// REMOVE INTERFACE Request.
++	MM_REMOVE_IF_REQ,
++	/// REMOVE INTERFACE Confirmation.
++	MM_REMOVE_IF_CFM,
++	/// STA ADD Request.
++	MM_STA_ADD_REQ,
++	/// STA ADD Confirm.
++	MM_STA_ADD_CFM,
++	/// STA DEL Request.
++	MM_STA_DEL_REQ,
++	/// STA DEL Confirm.
++	MM_STA_DEL_CFM,
++	/// RX FILTER CONFIGURATION Request.
++	MM_SET_FILTER_REQ,
++	/// RX FILTER CONFIGURATION Confirmation.
++	MM_SET_FILTER_CFM,
++	/// CHANNEL CONFIGURATION Request.
++	MM_SET_CHANNEL_REQ,
++	/// CHANNEL CONFIGURATION Confirmation.
++	MM_SET_CHANNEL_CFM,
++	/// DTIM PERIOD CONFIGURATION Request.
++	MM_SET_DTIM_REQ,
++	/// DTIM PERIOD CONFIGURATION Confirmation.
++	MM_SET_DTIM_CFM,
++	/// BEACON INTERVAL CONFIGURATION Request.
++	MM_SET_BEACON_INT_REQ,
++	/// BEACON INTERVAL CONFIGURATION Confirmation.
++	MM_SET_BEACON_INT_CFM,
++	/// BASIC RATES CONFIGURATION Request.
++	MM_SET_BASIC_RATES_REQ,
++	/// BASIC RATES CONFIGURATION Confirmation.
++	MM_SET_BASIC_RATES_CFM,
++	/// BSSID CONFIGURATION Request.
++	MM_SET_BSSID_REQ,
++	/// BSSID CONFIGURATION Confirmation.
++	MM_SET_BSSID_CFM,
++	/// EDCA PARAMETERS CONFIGURATION Request.
++	MM_SET_EDCA_REQ,
++	/// EDCA PARAMETERS CONFIGURATION Confirmation.
++	MM_SET_EDCA_CFM,
++	/// ABGN MODE CONFIGURATION Request.
++	MM_SET_MODE_REQ,
++	/// ABGN MODE CONFIGURATION Confirmation.
++	MM_SET_MODE_CFM,
++	/// Request setting the VIF active state (i.e associated or AP started)
++	MM_SET_VIF_STATE_REQ,
++	/// Confirmation of the @ref MM_SET_VIF_STATE_REQ message.
++	MM_SET_VIF_STATE_CFM,
++	/// SLOT TIME PARAMETERS CONFIGURATION Request.
++	MM_SET_SLOTTIME_REQ,
++	/// SLOT TIME PARAMETERS CONFIGURATION Confirmation.
++	MM_SET_SLOTTIME_CFM,
++	/// Power Mode Change Request.
++	MM_SET_IDLE_REQ,
++	/// Power Mode Change Confirm.
++	MM_SET_IDLE_CFM,
++	/// KEY ADD Request.
++	MM_KEY_ADD_REQ,
++	/// KEY ADD Confirm.
++	MM_KEY_ADD_CFM,
++	/// KEY DEL Request.
++	MM_KEY_DEL_REQ,
++	/// KEY DEL Confirm.
++	MM_KEY_DEL_CFM,
++	/// Block Ack agreement info addition
++	MM_BA_ADD_REQ,
++	/// Block Ack agreement info addition confirmation
++	MM_BA_ADD_CFM,
++	/// Block Ack agreement info deletion
++	MM_BA_DEL_REQ,
++	/// Block Ack agreement info deletion confirmation
++	MM_BA_DEL_CFM,
++	/// Indication of the primary TBTT to the upper MAC. Upon the reception o=
+f
++	/// this
++	// message the upper MAC has to push the beacon(s) to the beacon
++	// transmission queue.
++	MM_PRIMARY_TBTT_IND,
++	/// Indication of the secondary TBTT to the upper MAC. Upon the reception=
+ of
++	/// this
++	// message the upper MAC has to push the beacon(s) to the beacon
++	// transmission queue.
++	MM_SECONDARY_TBTT_IND,
++	/// Request for changing the TX power
++	MM_SET_POWER_REQ,
++	/// Confirmation of the TX power change
++	MM_SET_POWER_CFM,
++	/// Request to the LMAC to trigger the embedded logic analyzer and forwar=
+d
++	/// the debug
++	/// dump.
++	MM_DBG_TRIGGER_REQ,
++	/// Set Power Save mode
++	MM_SET_PS_MODE_REQ,
++	/// Set Power Save mode confirmation
++	MM_SET_PS_MODE_CFM,
++	/// Request to add a channel context
++	MM_CHAN_CTXT_ADD_REQ,
++	/// Confirmation of the channel context addition
++	MM_CHAN_CTXT_ADD_CFM,
++	/// Request to delete a channel context
++	MM_CHAN_CTXT_DEL_REQ,
++	/// Confirmation of the channel context deletion
++	MM_CHAN_CTXT_DEL_CFM,
++	/// Request to link a channel context to a VIF
++	MM_CHAN_CTXT_LINK_REQ,
++	/// Confirmation of the channel context link
++	MM_CHAN_CTXT_LINK_CFM,
++	/// Request to unlink a channel context from a VIF
++	MM_CHAN_CTXT_UNLINK_REQ,
++	/// Confirmation of the channel context unlink
++	MM_CHAN_CTXT_UNLINK_CFM,
++	/// Request to update a channel context
++	MM_CHAN_CTXT_UPDATE_REQ,
++	/// Confirmation of the channel context update
++	MM_CHAN_CTXT_UPDATE_CFM,
++	/// Request to schedule a channel context
++	MM_CHAN_CTXT_SCHED_REQ,
++	/// Confirmation of the channel context scheduling
++	MM_CHAN_CTXT_SCHED_CFM,
++	/// Request to change the beacon template in LMAC
++	MM_BCN_CHANGE_REQ,
++	/// Confirmation of the beacon change
++	MM_BCN_CHANGE_CFM,
++	/// Request to update the TIM in the beacon (i.e to indicate traffic
++	/// bufferized at AP)
++	MM_TIM_UPDATE_REQ,
++	/// Confirmation of the TIM update
++	MM_TIM_UPDATE_CFM,
++	/// Connection loss indication
++	MM_CONNECTION_LOSS_IND,
++	/// Channel context switch indication to the upper layers
++	MM_CHANNEL_SWITCH_IND,
++	/// Channel context pre-switch indication to the upper layers
++	MM_CHANNEL_PRE_SWITCH_IND,
++	/// Request to remain on channel or cancel remain on channel
++	MM_REMAIN_ON_CHANNEL_REQ,
++	/// Confirmation of the (cancel) remain on channel request
++	MM_REMAIN_ON_CHANNEL_CFM,
++	/// Remain on channel expired indication
++	MM_REMAIN_ON_CHANNEL_EXP_IND,
++	/// Indication of a PS state change of a peer device
++	MM_PS_CHANGE_IND,
++	/// Indication that some buffered traffic should be sent to the peer devi=
+ce
++	MM_TRAFFIC_REQ_IND,
++	/// Request to modify the STA Power-save mode options
++	MM_SET_PS_OPTIONS_REQ,
++	/// Confirmation of the PS options setting
++	MM_SET_PS_OPTIONS_CFM,
++	/// Indication of PS state change for a P2P VIF
++	MM_P2P_VIF_PS_CHANGE_IND,
++	/// Indication that CSA counter has been updated
++	MM_CSA_COUNTER_IND,
++	/// Channel occupation report indication
++	MM_CHANNEL_SURVEY_IND,
++	/// Message containing Beamformer Information
++	MM_BFMER_ENABLE_REQ,
++	/// Request to Start/Stop/Update NOA - GO Only
++	MM_SET_P2P_NOA_REQ,
++	/// Request to Start/Stop/Update Opportunistic PS - GO Only
++	MM_SET_P2P_OPPPS_REQ,
++	/// Start/Stop/Update NOA Confirmation
++	MM_SET_P2P_NOA_CFM,
++	/// Start/Stop/Update Opportunistic PS Confirmation
++	MM_SET_P2P_OPPPS_CFM,
++	/// P2P NoA Update Indication - GO Only
++	MM_P2P_NOA_UPD_IND,
++	/// Request to set RSSI threshold and RSSI hysteresis
++	MM_CFG_RSSI_REQ,
++	/// Indication that RSSI level is below or above the threshold
++	MM_RSSI_STATUS_IND,
++	/// Indication that CSA is done
++	MM_CSA_FINISH_IND,
++	/// Indication that CSA is in prorgess (resp. done) and traffic must be
++	/// stopped (resp. restarted)
++	MM_CSA_TRAFFIC_IND,
++	/// Request to update the group information of a station
++	MM_MU_GROUP_UPDATE_REQ,
++	/// Confirmation of the @ref MM_MU_GROUP_UPDATE_REQ message
++	MM_MU_GROUP_UPDATE_CFM,
++	/// Request to initialize the antenna diversity algorithm
++	MM_ANT_DIV_INIT_REQ,
++	/// Request to stop the antenna diversity algorithm
++	MM_ANT_DIV_STOP_REQ,
++	/// Request to update the antenna switch status
++	MM_ANT_DIV_UPDATE_REQ,
++	/// Request to switch the antenna connected to path_0
++	MM_SWITCH_ANTENNA_REQ,
++	/// Indication that a packet loss has occurred
++	MM_PKTLOSS_IND,
++
++	MM_SET_ARPOFFLOAD_REQ,
++	MM_SET_ARPOFFLOAD_CFM,
++	MM_SET_AGG_DISABLE_REQ,
++	MM_SET_AGG_DISABLE_CFM,
++	MM_SET_COEX_REQ,
++	MM_SET_COEX_CFM,
++	MM_SET_RF_CONFIG_REQ,
++	MM_SET_RF_CONFIG_CFM,
++	MM_SET_RF_CALIB_REQ,
++	MM_SET_RF_CALIB_CFM,
++
++	/// MU EDCA PARAMETERS Configuration Request.
++	MM_SET_MU_EDCA_REQ,
++	/// MU EDCA PARAMETERS Configuration Confirmation.
++	MM_SET_MU_EDCA_CFM,
++	/// UORA PARAMETERS Configuration Request.
++	MM_SET_UORA_REQ,
++	/// UORA PARAMETERS Configuration Confirmation.
++	MM_SET_UORA_CFM,
++	/// TXOP RTS THRESHOLD Configuration Request.
++	MM_SET_TXOP_RTS_THRES_REQ,
++	/// TXOP RTS THRESHOLD Configuration Confirmation.
++	MM_SET_TXOP_RTS_THRES_CFM,
++	/// HE BSS Color Configuration Request.
++	MM_SET_BSS_COLOR_REQ,
++	/// HE BSS Color Configuration Confirmation.
++	MM_SET_BSS_COLOR_CFM,
++
++	MM_GET_MAC_ADDR_REQ,
++	MM_GET_MAC_ADDR_CFM,
++
++	MM_GET_STA_INFO_REQ,
++	MM_GET_STA_INFO_CFM,
++
++	MM_SET_TXPWR_IDX_LVL_REQ,
++	MM_SET_TXPWR_IDX_LVL_CFM,
++
++	MM_SET_TXPWR_OFST_REQ,
++	MM_SET_TXPWR_OFST_CFM,
++
++	MM_SET_STACK_START_REQ,
++	MM_SET_STACK_START_CFM,
++
++	MM_APM_STALOSS_IND,
++
++	MM_SET_VENDOR_HWCONFIG_REQ,
++	MM_SET_VENDOR_HWCONFIG_CFM,
++
++	MM_GET_FW_VERSION_REQ,
++	MM_GET_FW_VERSION_CFM,
++
++	MM_SET_RESUME_RESTORE_REQ,
++	MM_SET_RESUME_RESTORE_CFM,
++
++	MM_GET_WIFI_DISABLE_REQ,
++	MM_GET_WIFI_DISABLE_CFM,
++
++	MM_CFG_RSSI_CFM,
++
++	MM_SET_VENDOR_SWCONFIG_REQ,
++	MM_SET_VENDOR_SWCONFIG_CFM,
++
++	MM_SET_TXPWR_LVL_ADJ_REQ,
++	MM_SET_TXPWR_LVL_ADJ_CFM,
++
++	MM_RADAR_DETECT_IND,
++
++	MM_SET_APF_PROG_REQ,
++	MM_SET_APF_PROG_CFM,
++
++	MM_GET_APF_PROG_REQ,
++	MM_GET_APF_PROG_CFM,
++
++	/// arp announcement frame reception indication
++	MM_ARP_ANNOUNCEMENT_IND,
++
++	/// MAX number of messages
++	MM_MAX,
++};
++
++/// Interface types
++enum {
++	/// ESS STA interface
++	MM_STA,
++	/// IBSS STA interface
++	MM_IBSS,
++	/// AP interface
++	MM_AP,
++	// Mesh Point interface
++	MM_MESH_POINT,
++	// Monitor interface
++	MM_MONITOR,
++};
++
++/// BA agreement types
++enum {
++	/// BlockAck agreement for TX
++	BA_AGMT_TX,
++	/// BlockAck agreement for RX
++	BA_AGMT_RX,
++};
++
++/// BA agreement related status
++enum {
++	/// Correct BA agreement establishment
++	BA_AGMT_ESTABLISHED,
++	/// BA agreement already exists for STA+TID requested, cannot override it
++	/// (should have been deleted first)
++	BA_AGMT_ALREADY_EXISTS,
++	/// Correct BA agreement deletion
++	BA_AGMT_DELETED,
++	/// BA agreement for the (STA, TID) doesn't exist so nothing to delete
++	BA_AGMT_DOESNT_EXIST,
++};
++
++/// Features supported by LMAC - Positions
++enum mm_features {
++	/// Beaconing
++	MM_FEAT_BCN_BIT =3D 0,
++	/*
++	 *	/// Autonomous Beacon Transmission
++	 *	MM_FEAT_AUTOBCN_BIT,
++	 *	/// Scan in LMAC
++	 *	MM_FEAT_HWSCAN_BIT,
++	 *	/// Connection Monitoring
++	 *	MM_FEAT_CMON_BIT,
++	 *	/// Multi Role
++	 *	MM_FEAT_MROLE_BIT,
++	 */
++	/// Radar Detection
++	MM_FEAT_RADAR_BIT,
++	/// Power Save
++	MM_FEAT_PS_BIT,
++	/// UAPSD
++	MM_FEAT_UAPSD_BIT,
++	/// DPSM
++	//  MM_FEAT_DPSM_BIT,
++	/// A-MPDU
++	MM_FEAT_AMPDU_BIT,
++	/// A-MSDU
++	MM_FEAT_AMSDU_BIT,
++	/// Channel Context
++	//  MM_FEAT_CHNL_CTXT_BIT,
++	/// Packet reordering
++	//  MM_FEAT_REORD_BIT,
++	/// P2P
++	MM_FEAT_P2P_BIT,
++	/// P2P Go
++	MM_FEAT_P2P_GO_BIT,
++	/// UMAC Present
++	MM_FEAT_UMAC_BIT,
++	/// VHT support
++	MM_FEAT_VHT_BIT,
++	/// Beamformee
++	MM_FEAT_BFMEE_BIT,
++	/// Beamformer
++	MM_FEAT_BFMER_BIT,
++	/// WAPI
++	MM_FEAT_WAPI_BIT,
++	/// MFP
++	MM_FEAT_MFP_BIT,
++	/// Mu-MIMO RX support
++	MM_FEAT_MU_MIMO_RX_BIT,
++	/// Mu-MIMO TX support
++	MM_FEAT_MU_MIMO_TX_BIT,
++	/// Wireless Mesh Networking
++	MM_FEAT_MESH_BIT,
++	/// TDLS support
++	MM_FEAT_TDLS_BIT,
++	/// Antenna Diversity support
++	MM_FEAT_ANT_DIV_BIT,
++	/// UF support
++	MM_FEAT_UF_BIT,
++	/// A-MSDU maximum size (bit0)
++	MM_AMSDU_MAX_SIZE_BIT0,
++	/// A-MSDU maximum size (bit1)
++	MM_AMSDU_MAX_SIZE_BIT1,
++	/// MON_DATA support
++	MM_FEAT_MON_DATA_BIT,
++	/// HE (802.11ax) support
++	MM_FEAT_HE_BIT,
++	/// TWT support
++	MM_FEAT_TWT_BIT,
++};
++
++/// Maximum number of words in the configuration buffer
++#define PHY_CFG_BUF_SIZE 16
++
++/// Structure containing the parameters of the PHY configuration
++struct phy_cfg_tag {
++	/// Buffer containing the parameters specific for the PHY used
++	u32 parameters[PHY_CFG_BUF_SIZE];
++};
++
++/// Structure containing the parameters of the Trident PHY configuration
++struct phy_trd_cfg_tag {
++	/// MDM type(nxm)(upper nibble) and MDM2RF path mapping(lower nibble)
++	u8 path_mapping;
++	/// TX DC offset compensation
++	u32 tx_dc_off_comp;
++};
++
++/// Structure containing the parameters of the Karst PHY configuration
++struct phy_karst_cfg_tag {
++	/// TX IQ mismatch compensation in 2.4GHz
++	u32 tx_iq_comp_2_4G[2];
++	/// RX IQ mismatch compensation in 2.4GHz
++	u32 rx_iq_comp_2_4G[2];
++	/// TX IQ mismatch compensation in 5GHz
++	u32 tx_iq_comp_5G[2];
++	/// RX IQ mismatch compensation in 5GHz
++	u32 rx_iq_comp_5G[2];
++	/// RF path used by default (0 or 1)
++	u8 path_used;
++};
++
++/// Structure containing the parameters of the @ref MM_START_REQ message
++struct mm_start_req {
++	/// PHY configuration
++	struct phy_cfg_tag phy_cfg;
++	/// UAPSD timeout
++	u32 uapsd_timeout;
++	/// Local LP clock accuracy (in ppm)
++	u16 lp_clk_accuracy;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_CHANNEL_REQ mes=
+sage
++struct mm_set_channel_req {
++	/// Channel information
++	struct mac_chan_op chan;
++	/// Index of the RF for which the channel has to be set (0: operating
++	/// (primary), 1: secondary RF (used for additional radar detection). Thi=
+s
++	/// parameter is reserved if no secondary RF is available in the system
++	u8 index;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_CHANNEL_CFM mes=
+sage
++struct mm_set_channel_cfm {
++	/// Radio index to be used in policy table
++	u8 radio_idx;
++	/// TX power configured (in dBm)
++	s8 power;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_DTIM_REQ messag=
+e
++struct mm_set_dtim_req {
++	/// DTIM period
++	u8 dtim_period;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_POWER_REQ messa=
+ge
++struct mm_set_power_req {
++	/// Index of the interface for which the parameter is configured
++	u8 inst_nbr;
++	/// TX power (in dBm)
++	s8 power;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_POWER_CFM messa=
+ge
++struct mm_set_power_cfm {
++	/// Radio index to be used in policy table
++	u8 radio_idx;
++	/// TX power configured (in dBm)
++	s8 power;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_BEACON_INT_REQ
++/// message
++struct mm_set_beacon_int_req {
++	/// Beacon interval
++	u16 beacon_int;
++	/// Index of the interface for which the parameter is configured
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_BASIC_RATES_REQ
++/// message
++struct mm_set_basic_rates_req {
++	/// Basic rate set (as expected by bssBasicRateSet field of Rates MAC HW
++	/// register)
++	u32 rates;
++	/// Index of the interface for which the parameter is configured
++	u8 inst_nbr;
++	/// Band on which the interface will operate
++	u8 band;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_BSSID_REQ messa=
+ge
++struct mm_set_bssid_req {
++	/// BSSID to be configured in HW
++	struct mac_addr bssid;
++	/// Index of the interface for which the parameter is configured
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_FILTER_REQ mess=
+age
++struct mm_set_filter_req {
++	/// RX filter to be put into rxCntrlReg HW register
++	u32 filter;
++};
++
++/// Structure containing the parameters of the @ref MM_ADD_IF_REQ message.
++struct mm_add_if_req {
++	/// Type of the interface (AP, STA, ADHOC, ...)
++	u8 type;
++	/// MAC ADDR of the interface to start
++	struct mac_addr addr;
++	/// P2P Interface
++	bool p2p;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_EDCA_REQ messag=
+e
++struct mm_set_edca_req {
++	/// EDCA parameters of the queue (as expected by edcaACxReg HW register)
++	u32 ac_param;
++	/// Flag indicating if UAPSD can be used on this queue
++	bool uapsd;
++	/// HW queue for which the parameters are configured
++	u8 hw_queue;
++	/// Index of the interface for which the parameters are configured
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_MU_EDCA_REQ mes=
+sage
++struct mm_set_mu_edca_req {
++	/// MU EDCA parameters of the different HE queues
++	u32 param[AC_MAX];
++};
++
++/// Structure containing the parameters of the @ref MM_SET_UORA_REQ messag=
+e
++struct mm_set_uora_req {
++	/// Minimum exponent of OFDMA Contention Window.
++	u8 eocw_min;
++	/// Maximum exponent of OFDMA Contention Window.
++	u8 eocw_max;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_TXOP_RTS_THRES_=
+REQ
++/// message
++struct mm_set_txop_rts_thres_req {
++	/// TXOP RTS threshold
++	u16 txop_dur_rts_thres;
++	/// Index of the interface for which the parameter is configured
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_BSS_COLOR_REQ m=
+essage
++struct mm_set_bss_color_req {
++	/// HE BSS color, formatted as per BSS_COLOR MAC HW register
++	u32 bss_color;
++};
++
++struct mm_set_idle_req {
++	u8 hw_idle;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_SLOTTIME_REQ me=
+ssage
++struct mm_set_slottime_req {
++	/// Slot time expressed in us
++	u8 slottime;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_MODE_REQ messag=
+e
++struct mm_set_mode_req {
++	/// abgnMode field of macCntrl1Reg register
++	u8 abgnmode;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_VIF_STATE_REQ m=
+essage
++struct mm_set_vif_state_req {
++	/// Association Id received from the AP (valid only if the VIF is of STA
++	/// type)
++	__le16 aid;
++	/// Flag indicating if the VIF is active or not
++	bool active;
++	/// Interface index
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_ADD_IF_CFM message.
++struct mm_add_if_cfm {
++	/// Status of operation (different from 0 if unsuccessful)
++	u8 status;
++	/// Interface index assigned by the LMAC
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_REMOVE_IF_REQ messa=
+ge.
++struct mm_remove_if_req {
++	/// Interface index assigned by the LMAC
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_VERSION_CFM message=
+.
++struct mm_version_cfm {
++	/// Version of the LMAC FW
++	u32 version_lmac;
++	/// Version1 of the MAC HW (as encoded in version1Reg MAC HW register)
++	u32 version_machw_1;
++	/// Version2 of the MAC HW (as encoded in version2Reg MAC HW register)
++	u32 version_machw_2;
++	/// Version1 of the PHY (depends on actual PHY)
++	u32 version_phy_1;
++	/// Version2 of the PHY (depends on actual PHY)
++	u32 version_phy_2;
++	/// Supported Features
++	u32 features;
++	/// Maximum number of supported stations
++	u16 max_sta_nb;
++	/// Maximum number of supported virtual interfaces
++	u8 max_vif_nb;
++};
++
++/// Structure containing the parameters of the @ref MM_STA_ADD_REQ message=
+.
++struct mm_sta_add_req {
++	/// Bitfield showing some capabilities of the STA (@ref enum mac_sta_flag=
+s)
++	u32 capa_flags;
++	/// Maximum A-MPDU size, in bytes, for HE frames
++	u32 ampdu_size_max_he;
++	/// Maximum A-MPDU size, in bytes, for VHT frames
++	u32 ampdu_size_max_vht;
++	/// PAID/GID
++	u32 paid_gid;
++	/// Maximum A-MPDU size, in bytes, for HT frames
++	u16 ampdu_size_max_ht;
++	/// MAC address of the station to be added
++	struct mac_addr mac_addr;
++	/// A-MPDU spacing, in us
++	u8 ampdu_spacing_min;
++	/// Interface index
++	u8 inst_nbr;
++	/// TDLS station
++	bool tdls_sta;
++	/// Indicate if the station is TDLS link initiator station
++	bool tdls_sta_initiator;
++	/// Indicate if the TDLS Channel Switch is allowed
++	bool tdls_chsw_allowed;
++	/// nonTransmitted BSSID index, set to the BSSID index in case the STA ad=
+ded
++	/// is an AP that is a nonTransmitted BSSID. Should be set to 0 otherwise
++	u8 bssid_index;
++	/// Maximum BSSID indicator, valid if the STA added is an AP that is a
++	/// nonTransmitted BSSID
++	u8 max_bssid_ind;
++};
++
++/// Structure containing the parameters of the @ref MM_STA_ADD_CFM message=
+.
++struct mm_sta_add_cfm {
++	/// Status of the operation (different from 0 if unsuccessful)
++	u8 status;
++	/// Index assigned by the LMAC to the newly added station
++	u8 sta_idx;
++	/// MAC HW index of the newly added station
++	u8 hw_sta_idx;
++};
++
++/// Structure containing the parameters of the @ref MM_STA_DEL_REQ message=
+.
++struct mm_sta_del_req {
++	/// Index of the station to be deleted
++	u8 sta_idx;
++};
++
++/// Structure containing the parameters of the @ref MM_STA_DEL_CFM message=
+.
++struct mm_sta_del_cfm {
++	/// Status of the operation (different from 0 if unsuccessful)
++	u8 status;
++};
++
++/// Structure containing the parameters of the SET_POWER_MODE REQ message.
++struct mm_setpowermode_req {
++	u8 mode;
++	u8 sta_idx;
++};
++
++/// Structure containing the parameters of the SET_POWER_MODE CFM message.
++struct mm_setpowermode_cfm {
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_KEY_ADD REQ message=
+.
++struct mm_key_add_req {
++	/// Key index (valid only for default keys)
++	u8 key_idx;
++	/// STA index (valid only for pairwise or mesh group keys)
++	u8 sta_idx;
++	/// Key material
++	struct mac_sec_key key;
++	/// Cipher suite (WEP64, WEP128, TKIP, CCMP)
++	u8 cipher_suite;
++	/// Index of the interface for which the key is set (valid only for defau=
+lt
++	/// keys or mesh group keys)
++	u8 inst_nbr;
++	/// A-MSDU SPP parameter
++	u8 spp;
++	/// Indicate if provided key is a pairwise key or not
++	bool pairwise;
++};
++
++/// Structure containing the parameters of the @ref MM_KEY_ADD_CFM message=
+.
++struct mm_key_add_cfm {
++	/// Status of the operation (different from 0 if unsuccessful)
++	u8 status;
++	/// HW index of the key just added
++	u8 hw_key_idx;
++};
++
++/// Structure containing the parameters of the @ref MM_KEY_DEL_REQ message=
+.
++struct mm_key_del_req {
++	/// HW index of the key to be deleted
++	u8 hw_key_idx;
++};
++
++/// Structure containing the parameters of the @ref MM_BA_ADD_REQ message.
++struct mm_ba_add_req {
++	/// Type of agreement (0: TX, 1: RX)
++	u8 type;
++	/// Index of peer station with which the agreement is made
++	u8 sta_idx;
++	/// TID for which the agreement is made with peer station
++	u8 tid;
++	/// Buffer size - number of MPDUs that can be held in its buffer per TID
++	u8 bufsz;
++	/// Start sequence number negotiated during BA setup - the one in first
++	/// aggregated MPDU counts more
++	u16 ssn;
++};
++
++/// Structure containing the parameters of the @ref MM_BA_ADD_CFM message.
++struct mm_ba_add_cfm {
++	/// Index of peer station for which the agreement is being confirmed
++	u8 sta_idx;
++	/// TID for which the agreement is being confirmed
++	u8 tid;
++	/// Status of ba establishment
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_BA_DEL_REQ message.
++struct mm_ba_del_req {
++	/// Type of agreement (0: TX, 1: RX)
++	u8 type;
++	/// Index of peer station for which the agreement is being deleted
++	u8 sta_idx;
++	/// TID for which the agreement is being deleted
++	u8 tid;
++};
++
++/// Structure containing the parameters of the @ref MM_BA_DEL_CFM message.
++struct mm_ba_del_cfm {
++	/// Index of peer station for which the agreement deletion is being
++	/// confirmed
++	u8 sta_idx;
++	/// TID for which the agreement deletion is being confirmed
++	u8 tid;
++	/// Status of ba deletion
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_ADD_REQ m=
+essage
++struct mm_chan_ctxt_add_req {
++	/// Operating channel
++	struct mac_chan_op chan;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_ADD_REQ m=
+essage
++struct mm_chan_ctxt_add_cfm {
++	/// Status of the addition
++	u8 status;
++	/// Index of the new channel context
++	u8 index;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_DEL_REQ m=
+essage
++struct mm_chan_ctxt_del_req {
++	/// Index of the new channel context to be deleted
++	u8 index;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_LINK_REQ
++/// message
++struct mm_chan_ctxt_link_req {
++	/// VIF index
++	u8 vif_index;
++	/// Channel context index
++	u8 chan_index;
++	/// Indicate if this is a channel switch (unlink current ctx first if tru=
+e)
++	u8 chan_switch;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_UNLINK_RE=
+Q
++/// message
++struct mm_chan_ctxt_unlink_req {
++	/// VIF index
++	u8 vif_index;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_UPDATE_RE=
+Q
++/// message
++struct mm_chan_ctxt_update_req {
++	/// Channel context index
++	u8 chan_index;
++	/// New channel information
++	struct mac_chan_op chan;
++};
++
++/// Structure containing the parameters of the @ref MM_CHAN_CTXT_SCHED_REQ
++/// message
++struct mm_chan_ctxt_sched_req {
++	/// VIF index
++	u8 vif_index;
++	/// Channel context index
++	u8 chan_index;
++	/// Type of the scheduling request (0: normal scheduling, 1: derogatory
++	/// scheduling)
++	u8 type;
++};
++
++/// Structure containing the parameters of the @ref MM_CHANNEL_SWITCH_IND
++/// message
++struct mm_channel_switch_ind {
++	/// Index of the channel context we will switch to
++	u8 chan_index;
++	/// Indicate if the switch has been triggered by a Remain on channel requ=
+est
++	bool roc;
++	/// VIF on which remain on channel operation has been started (if roc =3D=
+=3D 1)
++	u8 vif_index;
++	/// Indicate if the switch has been triggered by a TDLS Remain on channel
++	/// request
++	bool roc_tdls;
++};
++
++/// Structure containing the parameters of the @ref MM_CHANNEL_PRE_SWITCH_=
+IND
++/// message
++struct mm_channel_pre_switch_ind {
++	/// Index of the channel context we will switch to
++	u8 chan_index;
++};
++
++/// Structure containing the parameters of the @ref MM_CONNECTION_LOSS_IND
++/// message.
++struct mm_connection_loss_ind {
++	/// VIF instance number
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_DBG_TRIGGER_REQ mes=
+sage.
++struct mm_dbg_trigger_req {
++	/// Error trace to be reported by the LMAC
++	char error[64];
++};
++
++/// Structure containing the parameters of the @ref MM_SET_PS_MODE_REQ mes=
+sage.
++struct mm_set_ps_mode_req {
++	/// Power Save is activated or deactivated
++	u8 new_state;
++};
++
++/// Structure containing the parameters of the @ref MM_BCN_CHANGE_REQ mess=
+age.
++#define BCN_MAX_CSA_CPT 2
++struct mm_bcn_change_req {
++	/// Pointer, in host memory, to the new beacon template
++	u32 bcn_ptr;
++	/// Length of the beacon template
++	u16 bcn_len;
++	/// Offset of the TIM IE in the beacon
++	u16 tim_oft;
++	/// Length of the TIM IE
++	u8 tim_len;
++	/// Index of the VIF for which the beacon is updated
++	u8 inst_nbr;
++	/// Offset of CSA (channel switch announcement) counters (0 means no
++	/// counter)
++	u8 csa_oft[BCN_MAX_CSA_CPT];
++};
++
++/// Structure containing the parameters of the @ref MM_TIM_UPDATE_REQ mess=
+age.
++struct mm_tim_update_req {
++	/// Association ID of the STA the bit of which has to be updated (0 for
++	/// BC/MC traffic)
++	u16 aid;
++	/// Flag indicating the availability of data packets for the given STA
++	u8 tx_avail;
++	/// Index of the VIF for which the TIM is updated
++	u8 inst_nbr;
++};
++
++/// Structure containing the parameters of the @ref MM_REMAIN_ON_CHANNEL_R=
+EQ
++/// message.
++struct mm_remain_on_channel_req {
++	/// Operation Code
++	u8 op_code;
++	/// VIF Index
++	u8 vif_index;
++	/// Band (2.4GHz or 5GHz)
++	u8 band;
++	/// Channel type: 20,40,80,160 or 80+80 MHz
++	u8 type;
++	/// Frequency for Primary 20MHz channel (in MHz)
++	u16 prim20_freq;
++	/// Frequency for Center of the contiguous channel or center of Primary
++	/// 80+80
++	u16 center1_freq;
++	/// Frequency for Center of the non-contiguous secondary 80+80
++	u16 center2_freq;
++	/// Duration (in ms)
++	u32 duration_ms;
++	/// TX power (in dBm)
++	s8 tx_power;
++};
++
++/// Structure containing the parameters of the @ref MM_REMAIN_ON_CHANNEL_C=
+FM
++/// message
++struct mm_remain_on_channel_cfm {
++	/// Operation Code
++	u8 op_code;
++	/// Status of the operation
++	u8 status;
++	/// Channel Context index
++	u8 chan_ctxt_index;
++};
++
++/// Structure containing the parameters of the @ref MM_REMAIN_ON_CHANNEL_E=
+XP_IND
++/// message
++struct mm_remain_on_channel_exp_ind {
++	/// VIF Index
++	u8 vif_index;
++	/// Channel Context index
++	u8 chan_ctxt_index;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_UAPSD_TMR_REQ
++/// message.
++struct mm_set_uapsd_tmr_req {
++	/// action: Start or Stop the timer
++	u8 action;
++	/// timeout value, in milliseconds
++	u32 timeout;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_UAPSD_TMR_CFM
++/// message.
++struct mm_set_uapsd_tmr_cfm {
++	/// Status of the operation (different from 0 if unsuccessful)
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_PS_CHANGE_IND messa=
+ge
++struct mm_ps_change_ind {
++	/// Index of the peer device that is switching its PS state
++	u8 sta_idx;
++	/// New PS state of the peer device (0: active, 1: sleeping)
++	u8 ps_state;
++};
++
++/// Structure containing the parameters of the @ref MM_P2P_VIF_PS_CHANGE_I=
+ND
++/// message
++struct mm_p2p_vif_ps_change_ind {
++	/// Index of the P2P VIF that is switching its PS state
++	u8 vif_index;
++	/// New PS state of the P2P VIF interface (0: active, 1: sleeping)
++	u8 ps_state;
++};
++
++/// Structure containing the parameters of the @ref MM_TRAFFIC_REQ_IND mes=
+sage
++struct mm_traffic_req_ind {
++	/// Index of the peer device that needs traffic
++	u8 sta_idx;
++	/// Number of packets that need to be sent (if 0, all buffered traffic sh=
+all
++	/// be sent and if set to @ref PS_SP_INTERRUPTED, it means that current
++	/// service period has been interrupted)
++	u8 pkt_cnt;
++	/// Flag indicating if the traffic request concerns U-APSD queues or not
++	bool uapsd;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_PS_OPTIONS_REQ
++/// message.
++struct mm_set_ps_options_req {
++	/// VIF Index
++	u8 vif_index;
++	/// Listen interval (0 if wake up shall be based on DTIM period)
++	u16 listen_interval;
++	/// Flag indicating if we shall listen the BC/MC traffic or not
++	bool dont_listen_bc_mc;
++};
++
++/// Structure containing the parameters of the @ref MM_CSA_COUNTER_IND mes=
+sage
++struct mm_csa_counter_ind {
++	/// Index of the VIF
++	u8 vif_index;
++	/// Updated CSA counter value
++	u8 csa_count;
++};
++
++/// Structure containing the parameters of the @ref MM_CHANNEL_SURVEY_IND
++/// message
++struct mm_channel_survey_ind {
++	/// Frequency of the channel
++	u16 freq;
++	/// Noise in dbm
++	s8 noise_dbm;
++	/// Amount of time spent of the channel (in ms)
++	u32 chan_time_ms;
++	/// Amount of time the primary channel was sensed busy
++	u32 chan_time_busy_ms;
++};
++
++/// Structure containing the parameters of the @ref MM_BFMER_ENABLE_REQ me=
+ssage.
++struct mm_bfmer_enable_req {
++	/**
++	 * Address of the beamforming report space allocated in host memory
++	 * (Valid only if vht_su_bfmee is true)
++	 */
++	u32 host_bfr_addr;
++	/**
++	 * Size of the beamforming report space allocated in host memory. This sp=
+ace
++	 * should be twice the maximum size of the expected beamforming reports a=
+s
++	 * the FW will divide it in two in order to be able to upload a new repor=
+t
++	 * while another one is used in transmission
++	 */
++	u16 host_bfr_size;
++	/// AID
++	u16 aid;
++	/// Station Index
++	u8 sta_idx;
++	/// Maximum number of spatial streams the station can receive
++	u8 rx_nss;
++	/**
++	 * Indicate if peer STA is MU Beamformee (VHT) capable
++	 * (Valid only if vht_su_bfmee is true)
++	 */
++	bool vht_mu_bfmee;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_P2P_NOA_REQ mes=
+sage.
++struct mm_set_p2p_noa_req {
++	/// VIF Index
++	u8 vif_index;
++	/// Allocated NOA Instance Number - Valid only if count =3D 0
++	u8 noa_inst_nb;
++	/// Count
++	u8 count;
++	/// Indicate if NoA can be paused for traffic reason
++	bool dyn_noa;
++	/// Duration (in us)
++	u32 duration_us;
++	/// Interval (in us)
++	u32 interval_us;
++	/// Start Time offset from next TBTT (in us)
++	u32 start_offset;
++};
++
++#ifdef AICWF_ARP_OFFLOAD
++struct mm_set_arpoffload_en_req {
++	u32 ipaddr;
++	u8 enable;
++	u8 vif_idx;
++};
++
++struct mm_set_arpoffload_en_cfm {
++	u8 status;
++};
++#endif
++
++struct mm_set_agg_disable_req {
++	u8 disable;
++	u8 staidx;
++	u8 disable_rx;
++};
++
++struct mm_set_coex_req {
++	u8 bt_on;
++	u8 disable_coexnull;
++	u8 enable_nullcts;
++	u8 enable_periodic_timer;
++	u8 coex_timeslot_set;
++	u32 coex_timeslot[2];
++};
++
++struct mm_set_rf_config_req {
++	u8 table_sel;
++	u8 table_ofst;
++	u8 table_num;
++	u8 deft_page;
++	u32 data[64];
++};
++
++struct mm_set_rf_calib_req {
++	u32 cal_cfg_24g;
++	u32 cal_cfg_5g;
++	u32 param_alpha;
++	u32 bt_calib_en;
++	u32 bt_calib_param;
++	u8 xtal_cap;
++	u8 xtal_cap_fine;
++};
++
++struct mm_set_rf_calib_cfm {
++	u32 rxgain_24g_addr;
++	u32 rxgain_5g_addr;
++	u32 txgain_24g_addr;
++	u32 txgain_5g_addr;
++};
++
++struct mm_get_mac_addr_req {
++	u32 get;
++};
++
++struct mm_get_mac_addr_cfm {
++	u8 mac_addr[6];
++};
++
++struct mm_get_sta_info_req {
++	u8 sta_idx;
++};
++
++struct mm_get_sta_info_cfm {
++	u32 rate_info;
++	u32 txfailed;
++	u8 rssi;
++};
++
++#define REGION_NUM_MAX 5
++
++struct txpwr_lvl_conf {
++	u8 enable;
++	u8 dsss;
++	u8 ofdmlowrate_2g4;
++	u8 ofdm64qam_2g4;
++	u8 ofdm256qam_2g4;
++	u8 ofdm1024qam_2g4;
++	u8 ofdmlowrate_5g;
++	u8 ofdm64qam_5g;
++	u8 ofdm256qam_5g;
++	u8 ofdm1024qam_5g;
++};
++
++struct txpwr_lvl_conf_v2 {
++	u8 enable;
++	s8 pwrlvl_11b_11ag_2g4[12];
++	s8 pwrlvl_11n_11ac_2g4[10];
++	s8 pwrlvl_11ax_2g4[12];
++};
++
++struct txpwr_lvl_conf_v3 {
++	u8 enable;
++	s8 pwrlvl_11b_11ag_2g4[12];
++	s8 pwrlvl_11n_11ac_2g4[10];
++	s8 pwrlvl_11ax_2g4[12];
++	s8 pwrlvl_11a_5g[12];
++	s8 pwrlvl_11n_11ac_5g[10];
++	s8 pwrlvl_11ax_5g[12];
++};
++
++struct txpwr_lvl_adj_conf {
++	u8 enable;
++	s8 pwrlvl_adj_tbl_2g4[3];
++	s8 pwrlvl_adj_tbl_5g[6];
++};
++
++struct txpwr_loss_conf {
++	u8 loss_enable_2g4;
++	s8 loss_value_2g4;
++	u8 loss_enable_5g;
++	s8 loss_value_5g;
++};
++
++struct mm_set_txpwr_lvl_req {
++	union {
++		struct txpwr_lvl_conf txpwr_lvl;
++		struct txpwr_lvl_conf_v2 txpwr_lvl_v2;
++		struct txpwr_lvl_conf_v3 txpwr_lvl_v3;
++	};
++};
++
++struct mm_set_txpwr_lvl_adj_req {
++	struct txpwr_lvl_adj_conf txpwr_lvl_adj;
++};
++
++struct txpwr_idx_conf {
++	u8 enable;
++	u8 dsss;
++	u8 ofdmlowrate_2g4;
++	u8 ofdm64qam_2g4;
++	u8 ofdm256qam_2g4;
++	u8 ofdm1024qam_2g4;
++	u8 ofdmlowrate_5g;
++	u8 ofdm64qam_5g;
++	u8 ofdm256qam_5g;
++	u8 ofdm1024qam_5g;
++};
++
++struct mm_set_txpwr_idx_req {
++	struct txpwr_idx_conf txpwr_idx;
++};
++
++struct txpwr_ofst_conf {
++	u8 enable;
++	s8 chan_1_4;
++	s8 chan_5_9;
++	s8 chan_10_13;
++	s8 chan_36_64;
++	s8 chan_100_120;
++	s8 chan_122_140;
++	s8 chan_142_165;
++};
++
++/*
++ * pwrofst2x_tbl_2g4[3][3]:
++ * +---------------+----------+----------+----------+
++ * | RateTyp\ChGrp |  CH_1_4  |  CH_5_9  | CH_10_13 |
++ * +---------------+----------+----------+----------+
++ * | DSSS          |  [0][0]  |  [0][1]  |  [0][2]  |
++ * +---------------+----------+----------+----------+
++ * | OFDM_HIGHRATE |  [1][0]  |  [1][1]  |  [1][2]  |
++ * +---------------+----------+----------+----------+
++ * | OFDM_LOWRATE  |  [2][0]  |  [2][1]  |  [2][2]  |
++ * +---------------+----------+----------+----------+
++ * pwrofst2x_tbl_5g[3][6]:
++ * +---------------+--------------+--------------+----------------+-------=
+---------+--+--+
++ * | RateTyp\ChGrp | CH_42(36~50) | CH_58(51~64) | CH_106(98~114) |
++ * CH_122(115~130)| CH_138(131~146)| CH_155(147~166)|
++ * +---------------+--------------+--------------+----------------+-------=
+---------+--+--+
++ * | OFDM_LOWRATE  |    [0][0]    |    [0][1]    |     [0][2]     |     [0=
+][3]
++ * |     [0][4]     |     [0][5]     |
++ * +---------------+--------------+--------------+----------------+-------=
+---------+--+--+
++ * | OFDM_HIGHRATE |    [1][0]    |    [1][1]    |     [1][2]     |     [1=
+][3]
++ * |     [1][4]     |     [1][5]     |
++ * +---------------+--------------+--------------+----------------+-------=
+---------+--+--+
++ * | OFDM_MIDRATE  |    [2][0]    |    [2][1]    |     [2][2]     |     [2=
+][3]
++ * |     [2][4]     |     [2][5]     |
++ * +---------------+--------------+--------------+----------------+-------=
+---------+--+--+
++ */
++
++struct txpwr_ofst2x_conf {
++	s8 enable;
++	s8 pwrofst2x_tbl_2g4[3][3];
++	s8 pwrofst2x_tbl_5g[3][6];
++};
++
++struct xtal_cap_conf {
++	u8 enable;
++	u8 xtal_cap;
++	u8 xtal_cap_fine;
++};
++
++struct mm_set_txpwr_ofst_req {
++	union {
++		struct txpwr_ofst_conf txpwr_ofst;
++		struct txpwr_ofst2x_conf txpwr_ofst2x;
++	};
++};
++
++struct mm_set_stack_start_req {
++	u8 is_stack_start;
++	u8 efuse_valid;
++	u8 set_vendor_info;
++	u8 fwtrace_redir;
++};
++
++struct mm_set_stack_start_cfm {
++	u8 is_5g_support;
++	u8 vendor_info;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_P2P_OPPPS_REQ
++/// message.
++struct mm_set_p2p_oppps_req {
++	/// VIF Index
++	u8 vif_index;
++	/// CTWindow
++	u8 ctwindow;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_P2P_NOA_CFM mes=
+sage.
++struct mm_set_p2p_noa_cfm {
++	/// Request status
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_SET_P2P_OPPPS_CFM
++/// message.
++struct mm_set_p2p_oppps_cfm {
++	/// Request status
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MM_P2P_NOA_UPD_IND mes=
+sage.
++struct mm_p2p_noa_upd_ind {
++	/// VIF Index
++	u8 vif_index;
++	/// NOA Instance Number
++	u8 noa_inst_nb;
++	/// NoA Type
++	u8 noa_type;
++	/// Count
++	u8 count;
++	/// Duration (in us)
++	u32 duration_us;
++	/// Interval (in us)
++	u32 interval_us;
++	/// Start Time
++	u32 start_time;
++};
++
++/// Structure containing the parameters of the @ref MM_CFG_RSSI_REQ messag=
+e
++struct mm_cfg_rssi_req {
++	/// Index of the VIF
++	u8 vif_index;
++	/// RSSI threshold
++	s8 rssi_thold;
++	/// RSSI hysteresis
++	u8 rssi_hyst;
++};
++
++/// Structure containing the parameters of the @ref MM_RSSI_STATUS_IND mes=
+sage
++struct mm_rssi_status_ind {
++	/// Index of the VIF
++	u8 vif_index;
++	/// Status of the RSSI
++	bool rssi_status;
++	/// Current RSSI
++	s8 rssi;
++};
++
++/// Structure containing the parameters of the @ref MM_PKTLOSS_IND message
++struct mm_pktloss_ind {
++	/// Index of the VIF
++	u8 vif_index;
++	/// Address of the STA for which there is a packet loss
++	struct mac_addr mac_addr;
++	/// Number of packets lost
++	u32 num_packets;
++};
++
++/// Structure containing the parameters of the @ref MM_CSA_FINISH_IND mess=
+age
++struct mm_csa_finish_ind {
++	/// Index of the VIF
++	u8 vif_index;
++	/// Status of the operation
++	u8 status;
++	/// New channel ctx index
++	u8 chan_idx;
++};
++
++/// Structure containing the parameters of the @ref MM_CSA_TRAFFIC_IND mes=
+sage
++struct mm_csa_traffic_ind {
++	/// Index of the VIF
++	u8 vif_index;
++	/// Is tx traffic enable or disable
++	bool enable;
++};
++
++/// Structure containing the parameters of the @ref MM_MU_GROUP_UPDATE_REQ
++/// message. Size allocated for the structure depends of the number of gro=
+up
++struct mm_mu_group_update_req {
++	/// Station index
++	u8 sta_idx;
++	/// Number of groups the STA belongs to
++	u8 group_cnt;
++	/// Group information
++	struct {
++		/// Group Id
++		u8 group_id;
++		/// User position
++		u8 user_pos;
++	} groups[];
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For Scan messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++enum scan_msg_tag {
++	/// Scanning start Request.
++	SCAN_START_REQ =3D LMAC_FIRST_MSG(TASK_SCAN),
++	/// Scanning start Confirmation.
++	SCAN_START_CFM,
++	/// End of scanning indication.
++	SCAN_DONE_IND,
++	/// Cancel scan request
++	SCAN_CANCEL_REQ,
++	/// Cancel scan confirmation
++	SCAN_CANCEL_CFM,
++
++	/// MAX number of messages
++	SCAN_MAX,
++};
++
++/// Maximum number of SSIDs in a scan request
++#define SCAN_SSID_MAX 3
++
++/// Maximum number of channels in a scan request
++#define SCAN_CHANNEL_MAX (MAC_DOMAINCHANNEL_24G_MAX + MAC_DOMAINCHANNEL_5G=
+_MAX)
++
++/// Maximum length of the ProbeReq IEs (SoftMAC mode)
++#define SCAN_MAX_IE_LEN 300
++
++/// Maximum number of PHY bands supported
++#define SCAN_BAND_MAX 2
++
++/// Structure containing the parameters of the @ref SCAN_START_REQ message
++struct scan_start_req {
++	/// List of channel to be scanned
++	struct mac_chan_def chan[SCAN_CHANNEL_MAX];
++	/// List of SSIDs to be scanned
++	struct mac_ssid ssid[SCAN_SSID_MAX];
++	/// BSSID to be scanned
++	struct mac_addr bssid;
++	/// Pointer (in host memory) to the additional IEs that need to be added =
+to
++	/// the ProbeReq (following the SSID element)
++	u32 add_ies;
++	/// Length of the additional IEs
++	u16 add_ie_len;
++	/// Index of the VIF that is scanning
++	u8 vif_idx;
++	/// Number of channels to scan
++	u8 chan_cnt;
++	/// Number of SSIDs to scan for
++	u8 ssid_cnt;
++	/// no CCK - For P2P frames not being sent at CCK rate in 2GHz band.
++	bool no_cck;
++	/// Scan duration, in us
++	u32 duration;
++};
++
++/// Structure containing the parameters of the @ref SCAN_START_CFM message
++struct scan_start_cfm {
++	/// Status of the request
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref SCAN_CANCEL_REQ messag=
+e
++struct scan_cancel_req {
++};
++
++/// Structure containing the parameters of the @ref SCAN_START_CFM message
++struct scan_cancel_cfm {
++	/// Status of the request
++	u8 status;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For Scanu messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++/// Messages that are logically related to the task.
++enum {
++	/// Scan request from host.
++	SCANU_START_REQ =3D LMAC_FIRST_MSG(TASK_SCANU),
++	/// Scanning start Confirmation.
++	SCANU_START_CFM,
++	/// Join request
++	SCANU_JOIN_REQ,
++	/// Join confirmation.
++	SCANU_JOIN_CFM,
++	/// Scan result indication.
++	SCANU_RESULT_IND,
++	/// Fast scan request from any other module.
++	SCANU_FAST_REQ,
++	/// Confirmation of fast scan request.
++	SCANU_FAST_CFM,
++
++	SCANU_VENDOR_IE_REQ,
++	SCANU_VENDOR_IE_CFM,
++	SCANU_START_CFM_ADDTIONAL,
++	SCANU_CANCEL_REQ,
++	SCANU_CANCEL_CFM,
++
++	/// MAX number of messages
++	SCANU_MAX,
++};
++
++/// Maximum length of the additional ProbeReq IEs (FullMAC mode)
++#define SCANU_MAX_IE_LEN 200
++
++/// Structure containing the parameters of the @ref SCANU_START_REQ messag=
+e
++struct scanu_start_req {
++	/// List of channel to be scanned
++	struct mac_chan_def chan[SCAN_CHANNEL_MAX];
++	/// List of SSIDs to be scanned
++	struct mac_ssid ssid[SCAN_SSID_MAX];
++	/// BSSID to be scanned (or WILDCARD BSSID if no BSSID is searched in
++	/// particular)
++	struct mac_addr bssid;
++	/// Address (in host memory) of the additional IEs that need to be added =
+to
++	/// the ProbeReq (following the SSID element)
++	u32 add_ies;
++	/// Length of the additional IEs
++	u16 add_ie_len;
++	/// Index of the VIF that is scanning
++	u8 vif_idx;
++	/// Number of channels to scan
++	u8 chan_cnt;
++	/// Number of SSIDs to scan for
++	u8 ssid_cnt;
++	/// no CCK - For P2P frames not being sent at CCK rate in 2GHz band.
++	bool no_cck;
++	/// Scan duration, in us
++	u32 duration;
++};
++
++struct scanu_vendor_ie_req {
++	u16 add_ie_len;
++	u8 vif_idx;
++	u8 ie[256];
++};
++
++/// Structure containing the parameters of the @ref SCANU_START_CFM messag=
+e
++struct scanu_start_cfm {
++	/// Index of the VIF that was scanning
++	u8 vif_idx;
++	/// Status of the request
++	u8 status;
++	/// Number of scan results available
++	u8 result_cnt;
++};
++
++/// Parameters of the @SCANU_RESULT_IND message
++struct scanu_result_ind {
++	/// Length of the frame
++	u16 length;
++	/// Frame control field of the frame.
++	u16 framectrl;
++	/// Center frequency on which we received the packet
++	u16 center_freq;
++	/// PHY band
++	u8 band;
++	/// Index of the station that sent the frame. 0xFF if unknown.
++	u8 sta_idx;
++	/// Index of the VIF that received the frame. 0xFF if unknown.
++	u8 inst_nbr;
++	/// RSSI of the received frame.
++	s8 rssi;
++	/// Frame payload.
++	u32 payload[];
++};
++
++struct rxu_arp_announcement_ind {
++	/// index of the vif
++	u8 vif_index;
++	u8 offset;
++	/// length of the frame
++	u16 length;
++	u32 rx_status;
++	/// frame payload
++	u8 payload[];
++};
++
++/// Structure containing the parameters of the message.
++struct scanu_fast_req {
++	/// The SSID to scan in the channel.
++	struct mac_ssid ssid;
++	/// BSSID.
++	struct mac_addr bssid;
++	/// Probe delay.
++	u16 probe_delay;
++	/// Minimum channel time.
++	u16 minch_time;
++	/// Maximum channel time.
++	u16 maxch_time;
++	/// The channel number to scan.
++	u16 ch_nbr;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For ME messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++/// Messages that are logically related to the task.
++enum {
++	/// Configuration request from host.
++	ME_CONFIG_REQ =3D LMAC_FIRST_MSG(TASK_ME),
++	/// Configuration confirmation.
++	ME_CONFIG_CFM,
++	/// Configuration request from host.
++	ME_CHAN_CONFIG_REQ,
++	/// Configuration confirmation.
++	ME_CHAN_CONFIG_CFM,
++	/// Set control port state for a station.
++	ME_SET_CONTROL_PORT_REQ,
++	/// Control port setting confirmation.
++	ME_SET_CONTROL_PORT_CFM,
++	/// TKIP MIC failure indication.
++	ME_TKIP_MIC_FAILURE_IND,
++	/// Add a station to the FW (AP mode)
++	ME_STA_ADD_REQ,
++	/// Confirmation of the STA addition
++	ME_STA_ADD_CFM,
++	/// Delete a station from the FW (AP mode)
++	ME_STA_DEL_REQ,
++	/// Confirmation of the STA deletion
++	ME_STA_DEL_CFM,
++	/// Indication of a TX RA/TID queue credit update
++	ME_TX_CREDITS_UPDATE_IND,
++	/// Request indicating to the FW that there is traffic buffered on host
++	ME_TRAFFIC_IND_REQ,
++	/// Confirmation that the @ref ME_TRAFFIC_IND_REQ has been executed
++	ME_TRAFFIC_IND_CFM,
++	/// Request of RC statistics to a station
++	ME_RC_STATS_REQ,
++	/// RC statistics confirmation
++	ME_RC_STATS_CFM,
++	/// RC fixed rate request
++	ME_RC_SET_RATE_REQ,
++	/// Configure monitor interface
++	ME_CONFIG_MONITOR_REQ,
++	/// Configure monitor interface response
++	ME_CONFIG_MONITOR_CFM,
++	/// Setting power Save mode request from host
++	ME_SET_PS_MODE_REQ,
++	/// Set power Save mode confirmation
++	ME_SET_PS_MODE_CFM,
++	/// Setting Low Power level request from host
++	ME_SET_LP_LEVEL_REQ,
++	/// Set Low Power level confirmation
++	ME_SET_LP_LEVEL_CFM,
++	/// MAX number of messages
++	ME_MAX,
++};
++
++/// Structure containing the parameters of the @ref ME_START_REQ message
++struct me_config_req {
++	/// HT Capabilities
++	struct mac_htcapability ht_cap;
++	/// VHT Capabilities
++	struct mac_vhtcapability vht_cap;
++	/// HE capabilities
++	struct mac_hecapability he_cap;
++	/// Lifetime of packets sent under a BlockAck agreement (expressed in TUs=
+)
++	u16 tx_lft;
++	/// Maximum supported BW
++	u8 phy_bw_max;
++	/// Boolean indicating if HT is supported or not
++	bool ht_supp;
++	/// Boolean indicating if VHT is supported or not
++	bool vht_supp;
++	/// Boolean indicating if HE is supported or not
++	bool he_supp;
++	/// Boolean indicating if HE OFDMA UL is enabled or not
++	bool he_ul_on;
++	/// Boolean indicating if PS mode shall be enabled or not
++	bool ps_on;
++	/// Boolean indicating if Antenna Diversity shall be enabled or not
++	bool ant_div_on;
++	/// Boolean indicating if Dynamic PS mode shall be used or not
++	bool dpsm;
++};
++
++/// Structure containing the parameters of the @ref ME_CHAN_CONFIG_REQ mes=
+sage
++struct me_chan_config_req {
++	/// List of 2.4GHz supported channels
++	struct mac_chan_def chan2G4[MAC_DOMAINCHANNEL_24G_MAX];
++	/// List of 5GHz supported channels
++	struct mac_chan_def chan5G[MAC_DOMAINCHANNEL_5G_MAX];
++	/// Number of 2.4GHz channels in the list
++	u8 chan2G4_cnt;
++	/// Number of 5GHz channels in the list
++	u8 chan5G_cnt;
++};
++
++/// Structure containing the parameters of the @ref ME_SET_CONTROL_PORT_RE=
+Q
++/// message
++struct me_set_control_port_req {
++	/// Index of the station for which the control port is opened
++	u8 sta_idx;
++	/// Control port state
++	bool control_port_open;
++};
++
++/// Structure containing the parameters of the @ref ME_TKIP_MIC_FAILURE_IN=
+D
++/// message
++struct me_tkip_mic_failure_ind {
++	/// Address of the sending STA
++	struct mac_addr addr;
++	/// TSC value
++	u64 tsc;
++	/// Boolean indicating if the packet was a group or unicast one (true if
++	/// group)
++	bool ga;
++	/// Key Id
++	u8 keyid;
++	/// VIF index
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref ME_STA_ADD_REQ message
++struct me_sta_add_req {
++	/// MAC address of the station to be added
++	struct mac_addr mac_addr;
++	/// Supported legacy rates
++	struct mac_rateset rate_set;
++	/// HT Capabilities
++	struct mac_htcapability ht_cap;
++	/// VHT Capabilities
++	struct mac_vhtcapability vht_cap;
++	/// HE capabilities
++	struct mac_hecapability he_cap;
++	/// Flags giving additional information about the station (@ref
++	/// mac_sta_flags)
++	u32 flags;
++	/// Association ID of the station
++	__le16 aid;
++	/// Bit field indicating which queues have U-APSD enabled
++	u8 uapsd_queues;
++	/// Maximum size, in frames, of a APSD service period
++	u8 max_sp_len;
++	/// Operation mode information (valid if bit @ref STA_OPMOD_NOTIF is
++	/// set in the flags)
++	u8 opmode;
++	/// Index of the VIF the station is attached to
++	u8 vif_idx;
++	/// Whether the station is TDLS station
++	bool tdls_sta;
++	/// Indicate if the station is TDLS link initiator station
++	bool tdls_sta_initiator;
++	/// Indicate if the TDLS Channel Switch is allowed
++	bool tdls_chsw_allowed;
++};
++
++/// Structure containing the parameters of the @ref ME_STA_ADD_CFM message
++struct me_sta_add_cfm {
++	/// Station index
++	u8 sta_idx;
++	/// Status of the station addition
++	u8 status;
++	/// PM state of the station
++	u8 pm_state;
++};
++
++/// Structure containing the parameters of the @ref ME_STA_DEL_REQ message=
+.
++struct me_sta_del_req {
++	/// Index of the station to be deleted
++	u8 sta_idx;
++	/// Whether the station is TDLS station
++	bool tdls_sta;
++};
++
++/// Structure containing the parameters of the @ref ME_TX_CREDITS_UPDATE_I=
+ND
++/// message.
++struct me_tx_credits_update_ind {
++	/// Index of the station for which the credits are updated
++	u8 sta_idx;
++	/// TID for which the credits are updated
++	u8 tid;
++	/// Offset to be applied on the credit count
++	s8 credits;
++};
++
++/// Structure containing the parameters of the @ref ME_TRAFFIC_IND_REQ mes=
+sage.
++struct me_traffic_ind_req {
++	/// Index of the station for which UAPSD traffic is available on host
++	u8 sta_idx;
++	/// Flag indicating the availability of UAPSD packets for the given STA
++	u8 tx_avail;
++	/// Indicate if traffic is on uapsd-enabled queues
++	bool uapsd;
++};
++
++struct mm_apm_staloss_ind {
++	u8 sta_idx;
++	u8 vif_idx;
++	u8 mac_addr[6];
++};
++
++enum vendor_hwconfig_tag {
++	ACS_TXOP_REQ =3D 0,
++	CHANNEL_ACCESS_REQ,
++	MAC_TIMESCALE_REQ,
++	CCA_THRESHOLD_REQ,
++	BWMODE_REQ,
++	CHIP_TEMP_GET_REQ,
++	AP_PS_LEVEL_SET_REQ,
++	CUSTOMIZED_FREQ_REQ,
++	WAKEUP_INFO_REQ,
++	KEEPALIVE_PKT_REQ,
++};
++
++enum {
++	BWMODE20M =3D 0,
++	BWMODE10M,
++	BWMODE5M,
++};
++
++struct mm_set_acs_txop_req {
++	u32 hwconfig_id;
++	u16 txop_bk;
++	u16 txop_be;
++	u16 txop_vi;
++	u16 txop_vo;
++};
++
++struct mm_set_channel_access_req {
++	u32 hwconfig_id;
++	u32 edca[4];
++	u8 vif_idx;
++	u8 retry_cnt;
++	u8 rts_en;
++	u8 long_nav_en;
++	u8 cfe_en;
++	u8 rc_retry_cnt[3];
++	s8 ccademod_th;
++};
++
++struct mm_set_mac_timescale_req {
++	u32 hwconfig_id;
++	u8 sifs_a_time;
++	u8 sifs_b_time;
++	u8 slot_time;
++	u8 rx_startdelay_ofdm;
++	u8 rx_startdelay_long;
++	u8 rx_startdelay_short;
++};
++
++struct mm_set_cca_threshold_req {
++	u32 hwconfig_id;
++	u8 auto_cca_en;
++	s8 cca20p_rise_th;
++	s8 cca20s_rise_th;
++	s8 cca20p_fall_th;
++	s8 cca20s_fall_th;
++};
++
++struct mm_set_bwmode_req {
++	u32 hwconfig_id;
++	u8 bwmode;
++};
++
++struct mm_get_chip_temp_req {
++	u32 hwconfig_id;
++};
++
++struct mm_get_chip_temp_cfm {
++	/// Temp degree val
++	s8 degree;
++};
++
++struct mm_set_ap_ps_level_req {
++	u32 hwconfig_id;
++	u8 ap_ps_level;
++};
++
++struct mm_set_vendor_hwconfig_cfm {
++	u32 hwconfig_id;
++	union {
++		struct mm_get_chip_temp_cfm chip_temp_cfm;
++	};
++};
++
++struct mm_set_customized_freq_req {
++	u32 hwconfig_id;
++	u16 raw_freq[4];
++	u16 map_freq[4];
++};
++
++struct mm_set_keepalive_req {
++	u32 hwconfig_id;
++	u16 code;
++	u16 length;
++	u32 intv;
++	u8 payload[];
++};
++
++struct mm_set_txop_req {
++	u16 txop_bk;
++	u16 txop_be;
++	u16 txop_vi;
++	u16 txop_vo;
++	u8 long_nav_en;
++	u8 cfe_en;
++};
++
++struct mm_set_wakeup_info_req {
++	u32 hwconfig_id;
++	u16 code;
++	u16 offset;
++	u16 length;
++	u16 length_win;
++	u8 mask_and_pattern[];
++};
++
++struct mm_get_fw_version_cfm {
++	u8 fw_version_len;
++	u8 fw_version[63];
++};
++
++struct mm_get_wifi_disable_cfm {
++	u8 wifi_disable;
++};
++
++enum vendor_swconfig_tag {
++	BCN_CFG_REQ =3D 0,
++	TEMP_COMP_SET_REQ,
++	TEMP_COMP_GET_REQ,
++	EXT_FLAGS_SET_REQ,
++	EXT_FLAGS_GET_REQ,
++	EXT_FLAGS_MASK_SET_REQ,
++};
++
++struct mm_set_bcn_cfg_req {
++	/// Ignore or not bcn tim bcmc bit
++	bool tim_bcmc_ignored_enable;
++};
++
++struct mm_set_bcn_cfg_cfm {
++	/// Request status
++	bool tim_bcmc_ignored_status;
++};
++
++struct mm_set_temp_comp_req {
++	/// Enable or not temp comp
++	u8 enable;
++	u8 reserved[3];
++	u32 tmr_period_ms;
++};
++
++struct mm_set_temp_comp_cfm {
++	/// Request status
++	u8 status;
++};
++
++struct mm_get_temp_comp_cfm {
++	/// Request status
++	u8 status;
++	/// Temp degree val
++	s8 degree;
++};
++
++struct mm_set_ext_flags_req {
++	u32 user_flags;
++};
++
++struct mm_set_ext_flags_cfm {
++	u32 user_flags;
++};
++
++struct mm_get_ext_flags_cfm {
++	u32 user_flags;
++};
++
++struct mm_mask_set_ext_flags_req {
++	u32 user_flags_mask;
++	u32 user_flags_val;
++};
++
++struct mm_mask_set_ext_flags_cfm {
++	u32 user_flags;
++};
++
++struct mm_set_vendor_swconfig_req {
++	u32 swconfig_id;
++	union {
++		struct mm_set_bcn_cfg_req bcn_cfg_req;
++		struct mm_set_temp_comp_req temp_comp_set_req;
++		struct mm_set_ext_flags_req ext_flags_set_req;
++		struct mm_mask_set_ext_flags_req ext_flags_mask_set_req;
++	};
++};
++
++struct mm_set_vendor_swconfig_cfm {
++	u32 swconfig_id;
++	union {
++		struct mm_set_bcn_cfg_cfm bcn_cfg_cfm;
++		struct mm_set_temp_comp_cfm temp_comp_set_cfm;
++		struct mm_get_temp_comp_cfm temp_comp_get_cfm;
++		struct mm_set_ext_flags_cfm ext_flags_set_cfm;
++		struct mm_get_ext_flags_cfm ext_flags_get_cfm;
++		struct mm_mask_set_ext_flags_cfm ext_flags_mask_set_cfm;
++	};
++};
++
++/// Structure containing the parameters of the @ref ME_RC_STATS_REQ messag=
+e.
++struct me_rc_stats_req {
++	/// Index of the station for which the RC statistics are requested
++	u8 sta_idx;
++};
++
++/// Structure containing the rate control statistics
++struct rc_rate_stats {
++	/// Number of attempts (per sampling interval)
++	u16 attempts;
++	/// Number of success (per sampling interval)
++	u16 success;
++	/// Estimated probability of success (EWMA)
++	u16 probability;
++	/// Rate configuration of the sample
++	u16 rate_config;
++	union {
++		struct {
++			/// Number of times the sample has been skipped (per sampling
++			/// interval)
++			u8 sample_skipped;
++			/// Whether the old probability is available
++			bool old_prob_available;
++			/// Whether the rate can be used in the retry chain
++			bool rate_allowed;
++		};
++		struct {
++			/// RU size and UL length received in the latest HE trigger frame
++			u16 ru_and_length;
++		};
++	};
++};
++
++/// Number of RC samples
++#define RC_MAX_N_SAMPLE 10
++/// Index of the HE statistics element in the table
++#define RC_HE_STATS_IDX RC_MAX_N_SAMPLE
++
++/// Structure containing the parameters of the @ref ME_RC_STATS_CFM messag=
+e.
++struct me_rc_stats_cfm {
++	/// Index of the station for which the RC statistics are provided
++	u8 sta_idx;
++	/// Number of samples used in the RC algorithm
++	u16 no_samples;
++	/// Number of MPDUs transmitted (per sampling interval)
++	u16 ampdu_len;
++	/// Number of AMPDUs transmitted (per sampling interval)
++	u16 ampdu_packets;
++	/// Average number of MPDUs in each AMPDU frame (EWMA)
++	u32 avg_ampdu_len;
++	// Current step 0 of the retry chain
++	u8 sw_retry_step;
++	/// Trial transmission period
++	u8 sample_wait;
++	/// Retry chain steps
++	u16 retry_step_idx[4];
++	/// RC statistics - Max number of RC samples, plus one for the HE TB
++	/// statistics
++	struct rc_rate_stats rate_stats[RC_MAX_N_SAMPLE + 1];
++	/// Throughput - Max number of RC samples, plus one for the HE TB statist=
+ics
++	u32 tp[RC_MAX_N_SAMPLE + 1];
++};
++
++/// Structure containing the parameters of the @ref ME_RC_SET_RATE_REQ mes=
+sage.
++struct me_rc_set_rate_req {
++	/// Index of the station for which the fixed rate is set
++	u8 sta_idx;
++	/// Rate configuration to be set
++	u16 fixed_rate_cfg;
++};
++
++/// Structure containing the parameters of the @ref ME_CONFIG_MONITOR_REQ
++/// message.
++struct me_config_monitor_req {
++	/// Channel to configure
++	struct mac_chan_op chan;
++	/// Is channel data valid
++	bool chan_set;
++	/// Enable report of unsupported HT frames
++	bool uf;
++	/// Enable auto-reply as the mac_addr matches
++	bool auto_reply;
++};
++
++/// Structure containing the parameters of the @ref ME_CONFIG_MONITOR_CFM
++/// message.
++struct me_config_monitor_cfm {
++	/// Channel context index
++	u8 chan_index;
++	/// Channel parameters
++	struct mac_chan_op chan;
++};
++
++/// Structure containing the parameters of the @ref ME_SET_PS_MODE_REQ mes=
+sage.
++struct me_set_ps_mode_req {
++	/// Power Save is activated or deactivated
++	u8 ps_state;
++};
++
++/// Structure containing the parameters of the @ref ME_SET_LP_LEVEL_REQ me=
+ssage.
++struct me_set_lp_level_req {
++	/// Low Power level
++	u8 lp_level;
++	u8 disable_filter;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For SM messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++/// Message API of the SM task
++enum sm_msg_tag {
++	/// Request to connect to an AP
++	SM_CONNECT_REQ =3D LMAC_FIRST_MSG(TASK_SM),
++	/// Confirmation of connection
++	SM_CONNECT_CFM,
++	/// Indicates that the SM associated to the AP
++	SM_CONNECT_IND,
++	/// Request to disconnect
++	SM_DISCONNECT_REQ,
++	/// Confirmation of disconnection
++	SM_DISCONNECT_CFM,
++	/// Indicates that the SM disassociated the AP
++	SM_DISCONNECT_IND,
++	/// Request to start external authentication
++	SM_EXTERNAL_AUTH_REQUIRED_IND,
++	/// Response to external authentication request
++	SM_EXTERNAL_AUTH_REQUIRED_RSP,
++	/// Request to update assoc elements after FT over the air authentication
++	SM_FT_AUTH_IND,
++	/// Response to FT authentication with updated assoc elements
++	SM_FT_AUTH_RSP,
++
++	SM_RSP_TIMEOUT_IND,
++
++	SM_COEX_TS_TIMEOUT_IND,
++
++	SM_EXTERNAL_AUTH_REQUIRED_RSP_CFM,
++	/// MAX number of messages
++	SM_MAX,
++};
++
++/// Structure containing the parameters of @ref SM_CONNECT_REQ message.
++struct sm_connect_req {
++	/// SSID to connect to
++	struct mac_ssid ssid;
++	/// BSSID to connect to (if not specified, set this field to WILDCARD BSS=
+ID)
++	struct mac_addr bssid;
++	/// Channel on which we have to connect (if not specified, set -1 in the
++	/// chan.freq field)
++	struct mac_chan_def chan;
++	/// Connection flags (see @ref mac_connection_flags)
++	u32 flags;
++	/// Control port Ethertype (in network endianness)
++	__be16 ctrl_port_ethertype;
++	/// Length of the association request IEs
++	u16 ie_len;
++	/// Listen interval to be used for this connection
++	u16 listen_interval;
++	/// Flag indicating if the we have to wait for the BC/MC traffic after
++	/// beacon or not
++	bool dont_wait_bcmc;
++	/// Authentication type
++	u8 auth_type;
++	/// UAPSD queues (bit0: VO, bit1: VI, bit2: BE, bit3: BK)
++	u8 uapsd_queues;
++	/// VIF index
++	u8 vif_idx;
++	/// Buffer containing the additional information elements to be put in th=
+e
++	/// association request
++	u32 ie_buf[64];
++};
++
++/// Structure containing the parameters of the @ref SM_CONNECT_CFM message=
+.
++struct sm_connect_cfm {
++	/// Status. If 0, it means that the connection procedure will be performe=
+d
++	/// and that a subsequent @ref SM_CONNECT_IND message will be forwarded o=
+nce
++	/// the procedure is completed
++	u8 status;
++};
++
++#define SM_ASSOC_IE_LEN 800
++/// Structure containing the parameters of the @ref SM_CONNECT_IND message=
+.
++struct sm_connect_ind {
++	/// Status code of the connection procedure
++	u16 status_code;
++	/// BSSID
++	struct mac_addr bssid;
++	/// Flag indicating if the indication refers to an internal roaming or fr=
+om
++	/// a host request
++	bool roamed;
++	/// Index of the VIF for which the association process is complete
++	u8 vif_idx;
++	/// Index of the STA entry allocated for the AP
++	u8 ap_idx;
++	/// Index of the LMAC channel context the connection is attached to
++	u8 ch_idx;
++	/// Flag indicating if the AP is supporting QoS
++	bool qos;
++	/// ACM bits set in the AP WMM parameter element
++	u8 acm;
++	/// Length of the AssocReq IEs
++	u16 assoc_req_ie_len;
++	/// Length of the AssocRsp IEs
++	u16 assoc_rsp_ie_len;
++	/// IE buffer
++	u32 assoc_ie_buf[SM_ASSOC_IE_LEN / 4];
++
++	u16 aid;
++	u8 band;
++	u16 center_freq;
++	u8 width;
++	u32 center_freq1;
++	u32 center_freq2;
++
++	/// EDCA parameters
++	u32 ac_param[AC_MAX];
++};
++
++/// Structure containing the parameters of the @ref SM_DISCONNECT_REQ mess=
+age.
++struct sm_disconnect_req {
++	/// Reason of the deauthentication.
++	u16 reason_code;
++	/// Index of the VIF.
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of SM_ASSOCIATION_IND the message
++struct sm_association_ind {
++	// MAC ADDR of the STA
++	struct mac_addr me_mac_addr;
++};
++
++/// Structure containing the parameters of the @ref SM_DISCONNECT_IND mess=
+age.
++struct sm_disconnect_ind {
++	/// Reason of the disconnection.
++	u16 reason_code;
++	/// Index of the VIF.
++	u8 vif_idx;
++	/// FT over DS is ongoing
++	bool ft_over_ds;
++	u8 reassoc;
++};
++
++/// Structure containing the parameters of the @ref
++/// SM_EXTERNAL_AUTH_REQUIRED_IND
++struct sm_external_auth_required_ind {
++	/// Index of the VIF.
++	u8 vif_idx;
++	/// SSID to authenticate to
++	struct mac_ssid ssid;
++	/// BSSID to authenticate to
++	struct mac_addr bssid;
++	/// AKM suite of the respective authentication
++	u32 akm;
++};
++
++/// Structure containing the parameters of the @ref
++/// SM_EXTERNAL_AUTH_REQUIRED_RSP
++struct sm_external_auth_required_rsp {
++	/// Index of the VIF.
++	u8 vif_idx;
++	/// Authentication status
++	u16 status;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For APM messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++/// Message API of the APM task
++enum apm_msg_tag {
++	/// Request to start the AP.
++	APM_START_REQ =3D LMAC_FIRST_MSG(TASK_APM),
++	/// Confirmation of the AP start.
++	APM_START_CFM,
++	/// Request to stop the AP.
++	APM_STOP_REQ,
++	/// Confirmation of the AP stop.
++	APM_STOP_CFM,
++	/// Request to start CAC
++	APM_START_CAC_REQ,
++	/// Confirmation of the CAC start
++	APM_START_CAC_CFM,
++	/// Request to stop CAC
++	APM_STOP_CAC_REQ,
++	/// Confirmation of the CAC stop
++	APM_STOP_CAC_CFM,
++
++	APM_SET_BEACON_IE_REQ,
++	APM_SET_BEACON_IE_CFM,
++
++	/// MAX number of messages
++	APM_MAX,
++};
++
++/// Structure containing the parameters of the @ref APM_START_REQ message.
++struct apm_start_req {
++	/// Basic rate set
++	struct mac_rateset basic_rates;
++	/// Control channel on which we have to enable the AP
++	struct mac_chan_def chan;
++	/// Center frequency of the first segment
++	u32 center_freq1;
++	/// Center frequency of the second segment (only in 80+80 configuration)
++	u32 center_freq2;
++	/// Width of channel
++	u8 ch_width;
++	/// Address, in host memory, to the beacon template
++	u32 bcn_addr;
++	/// Length of the beacon template
++	u16 bcn_len;
++	/// Offset of the TIM IE in the beacon
++	u16 tim_oft;
++	/// Beacon interval
++	u16 bcn_int;
++	/// Flags (@ref mac_connection_flags)
++	u32 flags;
++	/// Control port Ethertype
++	__be16 ctrl_port_ethertype;
++	/// Length of the TIM IE
++	u8 tim_len;
++	/// Index of the VIF for which the AP is started
++	u8 vif_idx;
++};
++
++struct apm_set_bcn_ie_req {
++	u8 vif_idx;
++	u16 bcn_ie_len;
++	u8 bcn_ie[512];
++};
++
++/// Structure containing the parameters of the @ref APM_START_CFM message.
++struct apm_start_cfm {
++	/// Status of the AP starting procedure
++	u8 status;
++	/// Index of the VIF for which the AP is started
++	u8 vif_idx;
++	/// Index of the channel context attached to the VIF
++	u8 ch_idx;
++	/// Index of the STA used for BC/MC traffic
++	u8 bcmc_idx;
++};
++
++/// Structure containing the parameters of the @ref APM_STOP_REQ message.
++struct apm_stop_req {
++	/// Index of the VIF for which the AP has to be stopped
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref APM_START_CAC_REQ mess=
+age.
++struct apm_start_cac_req {
++	/// Control channel on which we have to start the CAC
++	struct mac_chan_def chan;
++	/// Center frequency of the first segment
++	u32 center_freq1;
++	/// Center frequency of the second segment (only in 80+80 configuration)
++	u32 center_freq2;
++	/// Width of channel
++	u8 ch_width;
++	/// Index of the VIF for which the CAC is started
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref APM_START_CAC_CFM mess=
+age.
++struct apm_start_cac_cfm {
++	/// Status of the CAC starting procedure
++	u8 status;
++	/// Index of the channel context attached to the VIF for CAC
++	u8 ch_idx;
++};
++
++/// Structure containing the parameters of the @ref APM_STOP_CAC_REQ messa=
+ge.
++struct apm_stop_cac_req {
++	/// Index of the VIF for which the CAC has to be stopped
++	u8 vif_idx;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For MESH messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++
++/// Maximum length of the Mesh ID
++#define MESH_MESHID_MAX_LEN (32)
++
++/// Message API of the MESH task
++enum mesh_msg_tag {
++	/// Request to start the MP
++	MESH_START_REQ =3D LMAC_FIRST_MSG(TASK_MESH),
++	/// Confirmation of the MP start.
++	MESH_START_CFM,
++
++	/// Request to stop the MP.
++	MESH_STOP_REQ,
++	/// Confirmation of the MP stop.
++	MESH_STOP_CFM,
++
++	// Request to update the MP
++	MESH_UPDATE_REQ,
++	/// Confirmation of the MP update
++	MESH_UPDATE_CFM,
++
++	/// Request information about a given link
++	MESH_PEER_INFO_REQ,
++	/// Response to the MESH_PEER_INFO_REQ message
++	MESH_PEER_INFO_CFM,
++
++	/// Request automatic establishment of a path with a given mesh STA
++	MESH_PATH_CREATE_REQ,
++	/// Confirmation to the MESH_PATH_CREATE_REQ message
++	MESH_PATH_CREATE_CFM,
++
++	/// Request a path update (delete path, modify next hop mesh STA)
++	MESH_PATH_UPDATE_REQ,
++	/// Confirmation to the MESH_PATH_UPDATE_REQ message
++	MESH_PATH_UPDATE_CFM,
++
++	/// Indication from Host that the indicated Mesh Interface is a proxy for=
+ an
++	/// external STA
++	MESH_PROXY_ADD_REQ,
++
++	/// Indicate that a connection has been established or lost
++	MESH_PEER_UPDATE_IND,
++	/// Notification that a connection has been established or lost (when MPM
++	/// handled by userspace)
++	MESH_PEER_UPDATE_NTF =3D MESH_PEER_UPDATE_IND,
++
++	/// Indicate that a path is now active or inactive
++	MESH_PATH_UPDATE_IND,
++	/// Indicate that proxy information have been updated
++	MESH_PROXY_UPDATE_IND,
++
++	/// MAX number of messages
++	MESH_MAX,
++};
++
++/// Structure containing the parameters of the @ref MESH_START_REQ message=
+.
++struct mesh_start_req {
++	/// Basic rate set
++	struct mac_rateset basic_rates;
++	/// Control channel on which we have to enable the AP
++	struct mac_chan_def chan;
++	/// Center frequency of the first segment
++	u32 center_freq1;
++	/// Center frequency of the second segment (only in 80+80 configuration)
++	u32 center_freq2;
++	/// Width of channel
++	u8 ch_width;
++	/// DTIM Period
++	u8 dtim_period;
++	/// Beacon Interval
++	u16 bcn_int;
++	/// Index of the VIF for which the MP is started
++	u8 vif_index;
++	/// Length of the Mesh ID
++	u8 mesh_id_len;
++	/// Mesh ID
++	u8 mesh_id[MESH_MESHID_MAX_LEN];
++	/// Address of the IEs to download
++	u32 ie_addr;
++	/// Length of the provided IEs
++	u8 ie_len;
++	/// Indicate if Mesh Peering Management (MPM) protocol is handled in
++	/// userspace
++	bool user_mpm;
++	/// Indicate if Mesh Point is using authentication
++	bool is_auth;
++	/// Indicate which authentication method is used
++	u8 auth_id;
++};
++
++/// Structure containing the parameters of the @ref MESH_START_CFM message=
+.
++struct mesh_start_cfm {
++	/// Status of the MP starting procedure
++	u8 status;
++	/// Index of the VIF for which the MP is started
++	u8 vif_idx;
++	/// Index of the channel context attached to the VIF
++	u8 ch_idx;
++	/// Index of the STA used for BC/MC traffic
++	u8 bcmc_idx;
++};
++
++/// Structure containing the parameters of the @ref MESH_STOP_REQ message.
++struct mesh_stop_req {
++	/// Index of the VIF for which the MP has to be stopped
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref MESH_STOP_CFM message.
++struct mesh_stop_cfm {
++	/// Index of the VIF for which the MP has to be stopped
++	u8 vif_idx;
++	/// Status
++	u8 status;
++};
++
++/// Bit fields for mesh_update_req message's flags value
++enum mesh_update_flags_bit {
++	/// Root Mode
++	MESH_UPDATE_FLAGS_ROOT_MODE_BIT =3D 0,
++	/// Gate Mode
++	MESH_UPDATE_FLAGS_GATE_MODE_BIT,
++	/// Mesh Forwarding
++	MESH_UPDATE_FLAGS_MESH_FWD_BIT,
++	/// Local Power Save Mode
++	MESH_UPDATE_FLAGS_LOCAL_PSM_BIT,
++};
++
++/// Structure containing the parameters of the @ref MESH_UPDATE_REQ messag=
+e.
++struct mesh_update_req {
++	/// Flags, indicate fields which have been updated
++	u8 flags;
++	/// VIF Index
++	u8 vif_idx;
++	/// Root Mode
++	u8 root_mode;
++	/// Gate Announcement
++	bool gate_announ;
++	/// Mesh Forwarding
++	bool mesh_forward;
++	/// Local PS Mode
++	u8 local_ps_mode;
++};
++
++/// Structure containing the parameters of the @ref MESH_UPDATE_CFM messag=
+e.
++struct mesh_update_cfm {
++	/// Status
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref MESH_PEER_INFO_REQ mes=
+sage.
++struct mesh_peer_info_req {
++	/// Index of the station allocated for the peer
++	u8 sta_idx;
++};
++
++/// Structure containing the parameters of the @ref MESH_PEER_INFO_CFM mes=
+sage.
++struct mesh_peer_info_cfm {
++	/// Response status
++	u8 status;
++	/// Index of the station allocated for the peer
++	u8 sta_idx;
++	/// Local Link ID
++	u16 local_link_id;
++	/// Peer Link ID
++	u16 peer_link_id;
++	/// Local PS Mode
++	u8 local_ps_mode;
++	/// Peer PS Mode
++	u8 peer_ps_mode;
++	/// Non-peer PS Mode
++	u8 non_peer_ps_mode;
++	/// Link State
++	u8 link_state;
++};
++
++/// Structure containing the parameters of the @ref MESH_PATH_CREATE_REQ
++/// message.
++struct mesh_path_create_req {
++	/// Index of the interface on which path has to be created
++	u8 vif_idx;
++	/// Indicate if originator MAC Address is provided
++	bool has_orig_addr;
++	/// Path Target MAC Address
++	struct mac_addr tgt_mac_addr;
++	/// Originator MAC Address
++	struct mac_addr orig_mac_addr;
++};
++
++/// Structure containing the parameters of the @ref MESH_PATH_CREATE_CFM
++/// message.
++struct mesh_path_create_cfm {
++	/// Confirmation status
++	u8 status;
++	/// VIF Index
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref MESH_PATH_UPDATE_REQ
++/// message.
++struct mesh_path_update_req {
++	/// Indicate if path must be deleted
++	bool delete;
++	/// Index of the interface on which path has to be created
++	u8 vif_idx;
++	/// Path Target MAC Address
++	struct mac_addr tgt_mac_addr;
++	/// Next Hop MAC Address
++	struct mac_addr nhop_mac_addr;
++};
++
++/// Structure containing the parameters of the @ref MESH_PATH_UPDATE_CFM
++/// message.
++struct mesh_path_update_cfm {
++	/// Confirmation status
++	u8 status;
++	/// VIF Index
++	u8 vif_idx;
++};
++
++/// Structure containing the parameters of the @ref MESH_PROXY_ADD_REQ mes=
+sage.
++struct mesh_proxy_add_req {
++	/// VIF Index
++	u8 vif_idx;
++	/// MAC Address of the External STA
++	struct mac_addr ext_sta_addr;
++};
++
++/// Structure containing the parameters of the @ref MESH_PROXY_UPDATE_IND
++struct mesh_proxy_update_ind {
++	/// Indicate if proxy information has been added or deleted
++	bool delete;
++	/// Indicate if we are a proxy for the external STA
++	bool local;
++	/// VIF Index
++	u8 vif_idx;
++	/// MAC Address of the External STA
++	struct mac_addr ext_sta_addr;
++	/// MAC Address of the proxy (only valid if local is false)
++	struct mac_addr proxy_mac_addr;
++};
++
++/// Structure containing the parameters of the @ref MESH_PEER_UPDATE_IND
++/// message.
++struct mesh_peer_update_ind {
++	/// Indicate if connection has been established or lost
++	bool estab;
++	/// VIF Index
++	u8 vif_idx;
++	/// STA Index
++	u8 sta_idx;
++	/// Peer MAC Address
++	struct mac_addr peer_addr;
++};
++
++/// Structure containing the parameters of the @ref MESH_PEER_UPDATE_NTF
++/// message.
++struct mesh_peer_update_ntf {
++	/// VIF Index
++	u8 vif_idx;
++	/// STA Index
++	u8 sta_idx;
++	/// Mesh Link State
++	u8 state;
++};
++
++/// Structure containing the parameters of the @ref MESH_PATH_UPDATE_IND
++/// message.
++struct mesh_path_update_ind {
++	/// Indicate if path is deleted or not
++	bool delete;
++	/// Indicate if path is towards an external STA (not part of MBSS)
++	bool ext_sta;
++	/// VIF Index
++	u8 vif_idx;
++	/// Path Index
++	u8 path_idx;
++	/// Target MAC Address
++	struct mac_addr tgt_mac_addr;
++	/// External STA MAC Address (only if ext_sta is true)
++	struct mac_addr ext_sta_mac_addr;
++	/// Next Hop STA Index
++	u8 nhop_sta_idx;
++};
++
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For Debug messages
++//////////////////////////////////////////////////////////////////////////=
+/////
++
++/// Messages related to Debug Task
 +enum dbg_msg_tag {
 +	/// Memory read request
 +	DBG_MEM_READ_REQ =3D LMAC_FIRST_MSG(TASK_DBG),
@@ -3926,35 +5320,40 @@ sor
 +
 +	DBG_GPIO_WRITE_REQ,
 +	DBG_GPIO_WRITE_CFM,
++	DBG_GPIO_READ_REQ,
++	DBG_GPIO_READ_CFM,
++	DBG_GPIO_INIT_REQ,
++	DBG_GPIO_INIT_CFM,
++
++	/// EF usrdata read request
++	DBG_EF_USRDATA_READ_REQ,
++	/// EF usrdata read confirm
++	DBG_EF_USRDATA_READ_CFM,
++	/// Memory block read request
++	DBG_MEM_BLOCK_READ_REQ,
++	/// Memory block read confirm
++	DBG_MEM_BLOCK_READ_CFM,
++
++	DBG_PWM_INIT_REQ,
++	DBG_PWM_INIT_CFM,
++	DBG_PWM_DEINIT_REQ,
++	DBG_PWM_DEINIT_CFM,
 +
 +	/// Max number of Debug messages
 +	DBG_MAX,
 +};
 +
-+#if !defined(CONFIG_M2D_OTA_LZMA_SUPPORT)
-+#define FW_M2D_OTA_NAME "m2d_ota.bin"
-+#else
-+#define FW_M2D_OTA_NAME "m2d_ota_lzma.bin"
-+#endif
-+
-+enum {
-+	HOST_START_APP_AUTO =3D 1,
-+	HOST_START_APP_CUSTOM,
-+	HOST_START_APP_FNCALL =3D 4,
-+	HOST_START_APP_DUMMY =3D 5,
-+};
-+
-+struct dbg_mem_block_write_req {
++/// Structure containing the parameters of the @ref DBG_MEM_READ_REQ messa=
+ge.
++struct dbg_mem_read_req {
 +	u32 memaddr;
-+	u32 memsize;
-+	u32 memdata[1024 / sizeof(u32)];
 +};
 +
-+/// Structure containing the parameters of the @ref DBG_MEM_BLOCK_WRITE_CF=
-M
-+/// message.
-+struct dbg_mem_block_write_cfm {
-+	u32 wstatus;
++/// Structure containing the parameters of the @ref DBG_MEM_READ_CFM messa=
+ge.
++struct dbg_mem_read_cfm {
++	u32 memaddr;
++	u32 memdata;
 +};
 +
 +/// Structure containing the parameters of the @ref DBG_MEM_WRITE_REQ mess=
@@ -3967,19 +5366,6 @@ age.
 +/// Structure containing the parameters of the @ref DBG_MEM_WRITE_CFM mess=
 age.
 +struct dbg_mem_write_cfm {
-+	u32 memaddr;
-+	u32 memdata;
-+};
-+
-+/// Structure containing the parameters of the @ref DBG_MEM_READ_REQ messa=
-ge.
-+struct dbg_mem_read_req {
-+	u32 memaddr;
-+};
-+
-+/// Structure containing the parameters of the @ref DBG_MEM_READ_CFM messa=
-ge.
-+struct dbg_mem_read_cfm {
 +	u32 memaddr;
 +	u32 memdata;
 +};
@@ -3999,6 +5385,77 @@ ge.
 +	u32 memdata;
 +};
 +
++struct dbg_rftest_cmd_req {
++	u32 cmd;
++	u32 argc;
++	u8 argv[30];
++};
++
++struct dbg_rftest_cmd_cfm {
++	u32 rftest_result[18];
++};
++
++struct dbg_gpio_write_req {
++	u8 gpio_idx;
++	u8 gpio_val;
++};
++
++struct dbg_gpio_read_req {
++	u8 gpio_idx;
++};
++
++struct dbg_gpio_read_cfm {
++	u8 gpio_idx;
++	u8 gpio_val;
++};
++
++struct dbg_gpio_init_req {
++	u8 gpio_idx;
++	u8 gpio_dir; // 1 output, 0 input;
++	u8 gpio_val; // for output, 1 high, 0 low;
++};
++
++/// Structure containing the parameters of the @ref DBG_SET_MOD_FILTER_REQ
++/// message.
++struct dbg_set_mod_filter_req {
++	/// Bit field indicating for each module if the traces are enabled or not
++	u32 mod_filter;
++};
++
++/// Structure containing the parameters of the @ref DBG_SEV_MOD_FILTER_REQ
++/// message.
++struct dbg_set_sev_filter_req {
++	/// Bit field indicating the severity threshold for the traces
++	u32 sev_filter;
++};
++
++/// Structure containing the parameters of the @ref DBG_GET_SYS_STAT_CFM
++/// message.
++struct dbg_get_sys_stat_cfm {
++	/// Time spent in CPU sleep since last reset of the system statistics
++	u32 cpu_sleep_time;
++	/// Time spent in DOZE since last reset of the system statistics
++	u32 doze_time;
++	/// Total time spent since last reset of the system statistics
++	u32 stats_time;
++};
++
++/// Structure containing the parameters of the @ref DBG_MEM_BLOCK_WRITE_RE=
+Q
++/// message.
++struct dbg_mem_block_write_req {
++	u32 memaddr;
++	u32 memsize;
++	u32 memdata[1024 / sizeof(u32)];
++};
++
++/// Structure containing the parameters of the @ref DBG_MEM_BLOCK_WRITE_CF=
+M
++/// message.
++struct dbg_mem_block_write_cfm {
++	u32 wstatus;
++};
++
 +/// Structure containing the parameters of the @ref DBG_START_APP_REQ mess=
 age.
 +struct dbg_start_app_req {
@@ -4012,3489 +5469,2796 @@ age.
 +	u32 bootstatus;
 +};
 +
-+int aicwf_plat_patch_load_8800dc(struct aic_sdio_dev *sdiodev);
-+int aicwf_plat_rftest_load_8800dc(struct aic_sdio_dev *sdiodev);
-+#ifdef CONFIG_DPD
-+int aicwf_misc_ram_valid_check_8800dc(struct aic_sdio_dev *sdiodev,
-+				      int *valid_out);
-+int aicwf_plat_calib_load_8800dc(struct aic_sdio_dev *sdiodev);
-+#endif
++enum {
++	HOST_START_APP_AUTO =3D 1,
++	HOST_START_APP_CUSTOM,
++	HOST_START_APP_FNCALL =3D 4,
++	HOST_START_APP_DUMMY =3D 5,
++};
 +
-+int rwnx_load_firmware(u32 **fw_buf, const char *name, struct device *devi=
-ce);
-+int aicwf_patch_table_load(struct aic_sdio_dev *rwnx_hw, char *filename);
++//////////////////////////////////////////////////////////////////////////=
+/////
++/////////// For TDLS messages
++//////////////////////////////////////////////////////////////////////////=
+/////
 +
-+int rwnx_send_dbg_mem_read_req(struct aic_sdio_dev *sdiodev, u32 mem_addr,
-+			       struct dbg_mem_read_cfm *cfm);
-+int rwnx_send_dbg_mem_block_write_req(struct aic_sdio_dev *sdiodev,
-+				      u32 mem_addr, u32 mem_size,
-+				      u32 *mem_data);
-+int rwnx_send_dbg_mem_write_req(struct aic_sdio_dev *sdiodev, u32 mem_addr=
-,
-+				u32 mem_data);
-+int rwnx_send_dbg_mem_mask_write_req(struct aic_sdio_dev *sdiodev, u32 mem=
-_addr,
-+				     u32 mem_mask, u32 mem_data);
-+int rwnx_send_dbg_start_app_req(struct aic_sdio_dev *sdiodev, u32 boot_add=
-r,
-+				u32 boot_type,
-+				struct dbg_start_app_cfm *start_app_cfm);
++/// List of messages related to the task.
++enum tdls_msg_tag {
++	/// TDLS channel Switch Request.
++	TDLS_CHAN_SWITCH_REQ =3D LMAC_FIRST_MSG(TASK_TDLS),
++	/// TDLS channel switch confirmation.
++	TDLS_CHAN_SWITCH_CFM,
++	/// TDLS channel switch indication.
++	TDLS_CHAN_SWITCH_IND,
++	/// TDLS channel switch to base channel indication.
++	TDLS_CHAN_SWITCH_BASE_IND,
++	/// TDLS cancel channel switch request.
++	TDLS_CANCEL_CHAN_SWITCH_REQ,
++	/// TDLS cancel channel switch confirmation.
++	TDLS_CANCEL_CHAN_SWITCH_CFM,
++	/// TDLS peer power save indication.
++	TDLS_PEER_PS_IND,
++	/// TDLS peer traffic indication request.
++	TDLS_PEER_TRAFFIC_IND_REQ,
++	/// TDLS peer traffic indication confirmation.
++	TDLS_PEER_TRAFFIC_IND_CFM,
 +
-+int rwnx_plat_bin_fw_upload(struct aic_sdio_dev *sdiodev, u32 fw_addr,
-+			    const char *filename);
-+#ifdef CONFIG_M2D_OTA_AUTO_SUPPORT
-+int rwnx_plat_m2d_flash_ota(struct aic_sdio_dev *sdiodev, char *filename);
-+int rwnx_plat_m2d_flash_ota_check(struct aic_sdio_dev *sdiodev,
-+				  char *filename);
-+#endif
++	/// MAX number of messages
++	TDLS_MAX
++};
 +
-+void rwnx_rx_handle_msg(struct aic_sdio_dev *sdiodev, struct ipc_e2a_msg *=
-msg);
-+int aicbsp_platform_init(struct aic_sdio_dev *sdiodev);
-+void aicbsp_platform_deinit(struct aic_sdio_dev *sdiodev);
-+int aicbsp_driver_fw_init(struct aic_sdio_dev *sdiodev);
-+#if (defined(CONFIG_DPD) && !defined(CONFIG_FORCE_DPD_CALIB))
-+#endif
-+int aicbsp_resv_mem_init(void);
-+int aicbsp_resv_mem_deinit(void);
++/// Structure containing the parameters of the @ref TDLS_CHAN_SWITCH_REQ m=
+essage
++struct tdls_chan_switch_req {
++	/// Index of the VIF
++	u8 vif_index;
++	/// STA Index
++	u8 sta_idx;
++	/// MAC address of the TDLS station
++	struct mac_addr peer_mac_addr;
++	bool initiator;
++	/// Band (2.4GHz or 5GHz)
++	u8 band;
++	/// Channel type: 20,40,80,160 or 80+80 MHz
++	u8 type;
++	/// Frequency for Primary 20MHz channel (in MHz)
++	u16 prim20_freq;
++	/// Frequency for Center of the contiguous channel or center of Primary
++	/// 80+80
++	u16 center1_freq;
++	/// Frequency for Center of the non-contiguous secondary 80+80
++	u16 center2_freq;
++	/// TX power (in dBm)
++	s8 tx_power;
++	/// Operating class
++	u8 op_class;
++};
 +
-+#define RAM_FMAC_FW_ADDR                    0x00120000
-+#define RAM_FMAC_FW_PATCH_ADDR              0x00190000
-+#define FW_RAM_ADID_BASE_ADDR               0x00161928
-+#define FW_RAM_ADID_BASE_ADDR_U03           0x00161928
-+#define FW_RAM_PATCH_BASE_ADDR              0x00100000
-+#define RAM_8800DC_U01_ADID_ADDR            0x00101788
-+#define RAM_8800DC_U02_ADID_ADDR            0x001017d8
-+#define RAM_8800DC_FW_PATCH_ADDR            0x00184000
-+#define FW_RESET_START_ADDR                 0x40500128
-+#define FW_RESET_START_VAL                  0x40
-+#define FW_ADID_FLAG_ADDR                   0x40500150
-+#define FW_ADID_FLAG_VAL                    0x01
-+#define FW_RAM_ADID_BASE_ADDR_8800D80       0x002017E0
-+#define FW_RAM_PATCH_BASE_ADDR_8800D80      0x0020B2B0
-+#define FW_RAM_ADID_BASE_ADDR_8800D80_U02   0x00201940
-+#define FW_RAM_PATCH_BASE_ADDR_8800D80_U02  0x0020b43c
++/// Structure containing the parameters of the @ref TDLS_CANCEL_CHAN_SWITC=
+H_REQ
++/// message
++struct tdls_cancel_chan_switch_req {
++	/// Index of the VIF
++	u8 vif_index;
++	/// STA Index
++	u8 sta_idx;
++	/// MAC address of the TDLS station
++	struct mac_addr peer_mac_addr;
++};
 +
-+#define AICBT_PT_TAG "AICBT_PT_TAG"
++/// Structure containing the parameters of the @ref TDLS_CHAN_SWITCH_CFM m=
+essage
++struct tdls_chan_switch_cfm {
++	/// Status of the operation
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref TDLS_CANCEL_CHAN_SWITC=
+H_CFM
++/// message
++struct tdls_cancel_chan_switch_cfm {
++	/// Status of the operation
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref TDLS_CHAN_SWITCH_IND m=
+essage
++struct tdls_chan_switch_ind {
++	/// VIF Index
++	u8 vif_index;
++	/// Channel Context Index
++	u8 chan_ctxt_index;
++	/// Status of the operation
++	u8 status;
++};
++
++/// Structure containing the parameters of the @ref TDLS_CHAN_SWITCH_BASE_=
+IND
++/// message
++struct tdls_chan_switch_base_ind {
++	/// VIF Index
++	u8 vif_index;
++	/// Channel Context index
++	u8 chan_ctxt_index;
++};
++
++/// Structure containing the parameters of the @ref TDLS_PEER_PS_IND messa=
+ge
++struct tdls_peer_ps_ind {
++	/// VIF Index
++	u8 vif_index;
++	/// STA Index
++	u8 sta_idx;
++	/// MAC ADDR of the TDLS STA
++	struct mac_addr peer_mac_addr;
++	/// Flag to indicate if the TDLS peer is going to sleep
++	bool ps_on;
++};
++
++/// Structure containing the parameters of the @ref TDLS_PEER_TRAFFIC_IND_=
+REQ
++/// message
++struct tdls_peer_traffic_ind_req {
++	/// VIF Index
++	u8 vif_index;
++	/// STA Index
++	u8 sta_idx;
++	// MAC ADDR of the TDLS STA
++	struct mac_addr peer_mac_addr;
++	/// Dialog token
++	u8 dialog_token;
++	/// TID of the latest MPDU transmitted over the TDLS direct link to the T=
+DLS
++	/// STA
++	u8 last_tid;
++	/// Sequence number of the latest MPDU transmitted over the TDLS direct l=
+ink
++	/// to the TDLS STA
++	u16 last_sn;
++};
++
++/// Structure containing the parameters of the @ref TDLS_PEER_TRAFFIC_IND_=
+CFM
++/// message
++struct tdls_peer_traffic_ind_cfm {
++	/// Status of the operation
++	u8 status;
++};
++
++#endif // LMAC_MSG_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/lmac_types.h b/drivers/n=
+et/wireless/aic/aic8800_fdrv/lmac_types.h
+new file mode 100644
+index 0000000000000..76f251607a7b9
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/lmac_types.h
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file co_types.h
++ *
++ * @brief Provides the kernel fixed-width types used by LMAC interfaces.
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef _LMAC_INT_H_
++#define _LMAC_INT_H_
++
++#include <linux/types.h>
++#include <linux/version.h>
++#include <linux/bits.h>
++
++/// @} CO_INT
++#endif // _LMAC_INT_H_
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/reg_access.h b/drivers/n=
+et/wireless/aic/aic8800_fdrv/reg_access.h
+new file mode 100644
+index 0000000000000..2654ab8523436
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/reg_access.h
+@@ -0,0 +1,146 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief Definitions and macros for MAC HW and platform register accesses
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef REG_ACCESS_H_
++#define REG_ACCESS_H_
 +
 +/*************************************************************************=
 ****
-+ * Addresses within RWNX_ADDR_CPU
++ * Addresses within RWNX_ADDR_SYSTEM
 + *************************************************************************=
 ****/
-+#define RAM_LMAC_FW_ADDR 0x00150000
++/* Shard RAM */
++#define SHARED_RAM_START_ADDR 0x00000000
 +
-+#define ROM_FMAC_FW_ADDR    0x00010000
-+#define ROM_FMAC_PATCH_ADDR 0x00180000
++/* IPC registers */
++#define IPC_REG_BASE_ADDR 0x00800000
 +
-+#define RAM_FMAC_FW_PATCH_NAME			"fmacfw_patch.bin"
-+#define RWNX_MAC_CALIB_BASE_NAME_8800DC         "fmacfw_calib_8800dc"
-+#define RWNX_MAC_CALIB_NAME_8800DC_U02          RWNX_MAC_CALIB_BASE_NAME_8=
-800DC "_u02.bin"
-+#define RWNX_MAC_CALIB_NAME_8800DC_H_U02                                  =
++/* System Controller Registers */
++#define SYSCTRL_SIGNATURE_ADDR    0x00900000
++// old diag register name
++#define SYSCTRL_DIAG_CONF_ADDR    0x00900068
++#define SYSCTRL_PHYDIAG_CONF_ADDR 0x00900074
++#define SYSCTRL_RIUDIAG_CONF_ADDR 0x00900078
++// new diag register name
++#define SYSCTRL_DIAG_CONF0        0x00900064
++#define SYSCTRL_DIAG_CONF1        0x00900068
++#define SYSCTRL_DIAG_CONF2        0x00900074
++#define SYSCTRL_DIAG_CONF3        0x00900078
++#define SYSCTRL_MISC_CNTL_ADDR    0x009000E0
++#define BOOTROM_ENABLE            BIT(4)
++#define FPGA_B_RESET              BIT(1)
++#define SOFT_RESET                BIT(0)
++
++/* MAC platform */
++#define NXMAC_VERSION_1_ADDR         0x00B00004
++#define NXMAC_MU_MIMO_TX_BIT         BIT(19)
++#define NXMAC_BFMER_BIT              BIT(18)
++#define NXMAC_BFMEE_BIT              BIT(17)
++#define NXMAC_MAC_80211MH_FORMAT_BIT BIT(16)
++#define NXMAC_COEX_BIT               BIT(14)
++#define NXMAC_WAPI_BIT               BIT(13)
++#define NXMAC_TPC_BIT                BIT(12)
++#define NXMAC_VHT_BIT                BIT(11)
++#define NXMAC_HT_BIT                 BIT(10)
++#define NXMAC_RCE_BIT                BIT(8)
++#define NXMAC_CCMP_BIT               BIT(7)
++#define NXMAC_TKIP_BIT               BIT(6)
++#define NXMAC_WEP_BIT                BIT(5)
++#define NXMAC_SECURITY_BIT           BIT(4)
++#define NXMAC_SME_BIT                BIT(3)
++#define NXMAC_HCCA_BIT               BIT(2)
++#define NXMAC_EDCA_BIT               BIT(1)
++#define NXMAC_QOS_BIT                BIT(0)
++
++#define NXMAC_RX_CNTRL_ADDR                   0x00B00060
++#define NXMAC_EN_DUPLICATE_DETECTION_BIT      BIT(31)
++#define NXMAC_ACCEPT_UNKNOWN_BIT              BIT(30)
++#define NXMAC_ACCEPT_OTHER_DATA_FRAMES_BIT    BIT(29)
++#define NXMAC_ACCEPT_QO_S_NULL_BIT            BIT(28)
++#define NXMAC_ACCEPT_QCFWO_DATA_BIT           BIT(27)
++#define NXMAC_ACCEPT_Q_DATA_BIT               BIT(26)
++#define NXMAC_ACCEPT_CFWO_DATA_BIT            BIT(25)
++#define NXMAC_ACCEPT_DATA_BIT                 BIT(24)
++#define NXMAC_ACCEPT_OTHER_CNTRL_FRAMES_BIT   BIT(23)
++#define NXMAC_ACCEPT_CF_END_BIT               BIT(22)
++#define NXMAC_ACCEPT_ACK_BIT                  BIT(21)
++#define NXMAC_ACCEPT_CTS_BIT                  BIT(20)
++#define NXMAC_ACCEPT_RTS_BIT                  BIT(19)
++#define NXMAC_ACCEPT_PS_POLL_BIT              BIT(18)
++#define NXMAC_ACCEPT_BA_BIT                   BIT(17)
++#define NXMAC_ACCEPT_BAR_BIT                  BIT(16)
++#define NXMAC_ACCEPT_OTHER_MGMT_FRAMES_BIT    BIT(15)
++#define NXMAC_ACCEPT_BFMEE_FRAMES_BIT         BIT(14)
++#define NXMAC_ACCEPT_ALL_BEACON_BIT           BIT(13)
++#define NXMAC_ACCEPT_NOT_EXPECTED_BA_BIT      BIT(12)
++#define NXMAC_ACCEPT_DECRYPT_ERROR_FRAMES_BIT BIT(11)
++#define NXMAC_ACCEPT_BEACON_BIT               BIT(10)
++#define NXMAC_ACCEPT_PROBE_RESP_BIT           BIT(9)
++#define NXMAC_ACCEPT_PROBE_REQ_BIT            BIT(8)
++#define NXMAC_ACCEPT_MY_UNICAST_BIT           BIT(7)
++#define NXMAC_ACCEPT_UNICAST_BIT              BIT(6)
++#define NXMAC_ACCEPT_ERROR_FRAMES_BIT         BIT(5)
++#define NXMAC_ACCEPT_OTHER_BSSID_BIT          BIT(4)
++#define NXMAC_ACCEPT_BROADCAST_BIT            BIT(3)
++#define NXMAC_ACCEPT_MULTICAST_BIT            BIT(2)
++#define NXMAC_DONT_DECRYPT_BIT                BIT(1)
++#define NXMAC_EXC_UNENCRYPTED_BIT             BIT(0)
++
++#define NXMAC_DEBUG_PORT_SEL_ADDR     0x00B00510
++#define NXMAC_SW_SET_PROFILING_ADDR   0x00B08564
++#define NXMAC_SW_CLEAR_PROFILING_ADDR 0x00B08568
++
++/* Modem Status */
++#define MDM_HDMCONFIG_ADDR 0x00C00000
++
++/* Clock gating configuration */
++#define MDM_MEMCLKCTRL0_ADDR   0x00C00848
++#define MDM_CLKGATEFCTRL0_ADDR 0x00C00874
++#define CRM_CLKGATEFCTRL0_ADDR 0x00940010
++
++/* AGC (trident) */
++#define AGC_RWNXAGCCNTL_ADDR 0x00C02060
++
++/* LDPC RAM*/
++#define PHY_LDPC_RAM_ADDR 0x00C09000
++
++/* FCU (elma )*/
++#define FCU_RWNXFCAGCCNTL_ADDR 0x00C09034
++
++/* AGC RAM */
++#define PHY_AGC_UCODE_ADDR 0x00C0A000
++
++/* RIU */
++#define RIU_RWNXVERSION_ADDR         0x00C0B000
++#define RIU_RWNXDYNAMICCONFIG_ADDR   0x00C0B008
++#define RIU_AGCMEMBISTSTAT_ADDR      0x00C0B238
++#define RIU_AGCMEMSIGNATURESTAT_ADDR 0x00C0B23C
++#define RIU_RWNXAGCCNTL_ADDR         0x00C0B390
++
++/* FCU RAM */
++#define PHY_FCU_UCODE_ADDR 0x00C0E000
++
++/* RF ITF */
++#define FPGAB_MPIF_SEL_ADDR       0x00C10030
++#define RF_V6_DIAGPORT_CONF1_ADDR 0x00C10010
++#define RF_v6_PHYDIAG_CONF1_ADDR  0x00C10018
++
++#define RF_V7_DIAGPORT_CONF1_ADDR 0x00F10010
++#define RF_v7_PHYDIAG_CONF1_ADDR  0x00F10018
++
++/*************************************************************************=
+****
++ * Macros for generated register files
++ *************************************************************************=
+****/
++/* Macros for IPC registers access (used in reg_ipc_app.h) */
++#define REG_IPC_APP_RD(env, INDEX)                                        =
      \
-+	RWNX_MAC_CALIB_BASE_NAME_8800DC "_h_u02.bin"
++	(*(u32 *)((u8 *)(env) + IPC_REG_BASE_ADDR + 4 * (INDEX)))
 +
-+#ifdef CONFIG_DPD
-+#define ROM_FMAC_CALIB_ADDR 0x00130000
-+#ifndef CONFIG_FORCE_DPD_CALIB
-+#define FW_DPDRESULT_NAME_8800DC "aic_dpdresult_lite_8800dc.bin"
-+#endif
-+#endif
-+
-+#define RWNX_MAC_FW_RF_BASE_NAME_8800DC "lmacfw_rf_8800dc.bin"
-+
-+#ifdef CONFIG_FOR_IPCOM
-+#define RWNX_MAC_PATCH_BASE_NAME_8800DC "fmacfw_patch_8800dc_ipc"
-+#define RWNX_MAC_PATCH_NAME2_8800DC     RWNX_MAC_PATCH_BASE_NAME_8800DC ".=
-bin"
-+#else
-+#define RWNX_MAC_PATCH_BASE_NAME_8800DC "fmacfw_patch_8800dc"
-+#define RWNX_MAC_PATCH_NAME2_8800DC     RWNX_MAC_PATCH_BASE_NAME_8800DC ".=
-bin"
-+#define RWNX_MAC_PATCH_NAME2_8800DC_U02                                   =
++#define REG_IPC_APP_WR(env, INDEX, value)                                 =
      \
-+	RWNX_MAC_PATCH_BASE_NAME_8800DC "_u02.bin"
-+#define RWNX_MAC_PATCH_NAME2_8800DC_H_U02                                 =
-     \
-+	RWNX_MAC_PATCH_BASE_NAME_8800DC "_h_u02.bin"
-+#endif
++	(*(u32 *)((u8 *)(env) + IPC_REG_BASE_ADDR + 4 * (INDEX)) =3D value)
 +
-+#define RWNX_MAC_PATCH_TABLE_NAME_8800DC "fmacfw_patch_tbl_8800dc"
-+#define RWNX_MAC_PATCH_TABLE_8800DC      RWNX_MAC_PATCH_TABLE_NAME_8800DC =
-".bin"
-+#define RWNX_MAC_PATCH_TABLE_8800DC_U02                                   =
-     \
-+	RWNX_MAC_PATCH_TABLE_NAME_8800DC "_u02.bin"
-+#define RWNX_MAC_PATCH_TABLE_8800DC_H_U02                                 =
-     \
-+	RWNX_MAC_PATCH_TABLE_NAME_8800DC "_h_u02.bin"
-+
-+#define RWNX_MAC_RF_PATCH_BASE_NAME_8800DC "fmacfw_rf_patch_8800dc"
-+#define RWNX_MAC_RF_PATCH_NAME_8800DC      RWNX_MAC_RF_PATCH_BASE_NAME_880=
-0DC ".bin"
-+#define FW_USERCONFIG_NAME_8800DC          "aic_userconfig_8800dc.txt"
-+
-+enum {
-+	FW_NORMAL_MODE =3D 0,
-+	FW_RFTEST_MODE =3D 1,
-+	FW_BLE_SCAN_WAKEUP_MODE =3D 2,
-+	FW_M2D_OTA_MODE =3D 3,
-+	FW_DPDCALIB_MODE =3D 4,
-+	FW_BLE_SCAN_AD_FILTER_MODE =3D 5,
-+};
-+
-+enum aicbt_patch_table_type {
-+	AICBT_PT_INF =3D 0x00,
-+	AICBT_PT_TRAP =3D 0x1,
-+	AICBT_PT_B4,
-+	AICBT_PT_BTMODE,
-+	AICBT_PT_PWRON,
-+	AICBT_PT_AF,
-+	AICBT_PT_VER,
-+};
-+
-+enum aicbt_btport_type {
-+	AICBT_BTPORT_NULL,
-+	AICBT_BTPORT_MB,
-+	AICBT_BTPORT_UART,
-+};
-+
-+/*  btmode
-+ * used for force bt mode,if not AICBSP_MODE_NULL
-+ * efuse valid and vendor_info will be invalid, even has beed set valid
-+ */
-+enum aicbt_btmode_type {
-+	AICBT_BTMODE_BT_ONLY_SW =3D 0x0,   // bt only mode with switch
-+	AICBT_BTMODE_BT_WIFI_COMBO,      // wifi/bt combo mode
-+	AICBT_BTMODE_BT_ONLY,            // bt only mode without switch
-+	AICBT_BTMODE_BT_ONLY_TEST,       // bt only test mode
-+	AICBT_BTMODE_BT_WIFI_COMBO_TEST, // wifi/bt combo test mode
-+	AICBT_BTMODE_BT_ONLY_COANT,      // bt only mode with no external switch
-+	AICBT_MODE_NULL =3D 0xFF,          // invalid value
-+};
-+
-+/*  uart_baud
-+ * used for config uart baud when btport set to uart,
-+ * otherwise meaningless
-+ */
-+enum aicbt_uart_baud_type {
-+	AICBT_UART_BAUD_115200 =3D 115200,
-+	AICBT_UART_BAUD_921600 =3D 921600,
-+	AICBT_UART_BAUD_1_5M =3D 1500000,
-+	AICBT_UART_BAUD_3_25M =3D 3250000,
-+};
-+
-+enum aicbt_uart_flowctrl_type {
-+	AICBT_UART_FLOWCTRL_DISABLE =3D 0x0, // uart without flow ctrl
-+	AICBT_UART_FLOWCTRL_ENABLE,        // uart with flow ctrl
-+};
-+
-+enum aicbsp_cpmode_type {
-+	AICBSP_CPMODE_WORK,
-+	AICBSP_CPMODE_TEST,
-+	AICBSP_CPMODE_MAX,
-+};
-+
-+enum chip_rev {
-+	CHIP_REV_U01 =3D 1,
-+	CHIP_REV_U02 =3D 3,
-+	CHIP_REV_U03 =3D 7,
-+	CHIP_REV_U04 =3D 7,
-+};
-+
-+#define AIC_M2D_OTA_INFO_ADDR 0x88000020
-+#define AIC_M2D_OTA_DATA_ADDR 0x88000040
-+#if !defined(CONFIG_M2D_OTA_LZMA_SUPPORT)
-+#define AIC_M2D_OTA_FLASH_ADDR      0x08004000
-+#define AIC_M2D_OTA_CODE_START_ADDR (AIC_M2D_OTA_FLASH_ADDR + 0x0188)
-+#define AIC_M2D_OTA_VER_ADDR        (AIC_M2D_OTA_FLASH_ADDR + 0x018C)
-+#else
-+#define AIC_M2D_OTA_FLASH_ADDR      0x08005000
-+#define AIC_M2D_OTA_CODE_START_ADDR (AIC_M2D_OTA_FLASH_ADDR + 0x1188)
-+#define AIC_M2D_OTA_VER_ADDR        (AIC_M2D_OTA_FLASH_ADDR + 0x0010)
-+#endif
-+/// aic bt tx pwr lvl :lsb->msb: first byte, min pwr lvl; second byte, max=
- pwr
-+/// lvl; pwr lvl:20(min), 30 , 40 , 50 , 60(max)
-+#define AICBT_TXPWR_LVL         0x00006020
-+#define AICBT_TXPWR_LVL_8800dc  0x00006f2f
-+#define AICBT_TXPWR_LVL_8800d80 0x00006f2f
-+
-+#define AICBSP_HWINFO_DEFAULT   (-1)
-+#define AICBSP_CPMODE_DEFAULT   AICBSP_CPMODE_WORK
-+#define AICBSP_FWLOG_EN_DEFAULT 0
-+
-+#define AICBT_BTMODE_DEFAULT_8800d80 AICBT_BTMODE_BT_ONLY_COANT
-+#define AICBT_BTMODE_DEFAULT         AICBT_BTMODE_BT_ONLY_SW
-+#define AICBT_BTPORT_DEFAULT AICBT_BTPORT_UART
-+#define AICBT_UART_BAUD_DEFAULT         AICBT_UART_BAUD_1_5M
-+#define AICBT_UART_FC_DEFAULT           AICBT_UART_FLOWCTRL_ENABLE
-+#define AICBT_LPM_ENABLE_DEFAULT        1
-+#define AICBT_TXPWR_LVL_DEFAULT         AICBT_TXPWR_LVL
-+#define AICBT_TXPWR_LVL_DEFAULT_8800dc  AICBT_TXPWR_LVL_8800dc
-+#define AICBT_TXPWR_LVL_DEFAULT_8800d80 AICBT_TXPWR_LVL_8800d80
-+
-+#define FEATURE_SDIO_CLOCK    50000000  // 0: default, other: target clock=
- rate
-+#define FEATURE_SDIO_CLOCK_V3 150000000 // 0: default, other: target clock=
- rate
-+#define FEATURE_SDIO_PHASE    2         // 0: default, 2: 180=C2=B0
-+
-+struct aicbt_patch_table {
-+	char *name;
-+	u32 type;
-+	u32 *data;
-+	u32 len;
-+	struct aicbt_patch_table *next;
-+};
-+
-+struct aicbt_info_t {
-+	u32 btmode;
-+	u32 btport;
-+	u32 uart_baud;
-+	u32 uart_flowctrl;
-+	u32 lpm_enable;
-+	u32 txpwr_lvl;
-+};
-+
-+struct aicbt_patch_info_t {
-+	u32 info_len;
-+	u32 adid_addrinf;
-+	u32 addr_adid;
-+	u32 patch_addrinf;
-+	u32 addr_patch;
-+	u32 reset_addr;
-+	u32 reset_val;
-+	u32 adid_flag_addr;
-+	u32 adid_flag;
-+};
-+
-+struct aicbsp_firmware {
-+	const char *desc;
-+	const char *bt_adid;
-+	const char *bt_patch;
-+	const char *bt_table;
-+	const char *wl_fw;
-+};
-+
-+struct aicbsp_info_t {
-+	int hwinfo;
-+	int hwinfo_r;
-+	u32 cpmode;
-+	u32 adap_test;
-+	u32 chip_rev;
-+	bool fwlog_en;
-+	u8 irqf;
-+};
-+
-+extern int adap_test;
-+
-+extern struct aicbsp_info_t aicbsp_info;
-+extern struct mutex aicbsp_power_lock;
-+extern const struct aicbsp_firmware *aicbsp_firmware_list;
-+extern const struct aicbsp_firmware fw_8800d80_u02[];
-+
-+int aicbsp_system_config(struct aic_sdio_dev *sdiodev);
-+int aicwifi_patch_config(struct aic_sdio_dev *sdiodev);
-+int aicwifi_sys_config(struct aic_sdio_dev *sdiodev);
-+int aicbt_patch_table_free(struct aicbt_patch_table **head);
-+struct aicbt_patch_table *aicbt_patch_table_alloc(const char *filename);
-+int aicbt_patch_info_unpack(struct aicbt_patch_info_t *patch_info,
-+			    struct aicbt_patch_table *head_t);
-+int aicbt_patch_trap_data_load(struct aic_sdio_dev *sdiodev,
-+			       struct aicbt_patch_table *head);
-+int aicbt_patch_table_load(struct aic_sdio_dev *sdiodev,
-+			   struct aicbt_patch_table *head);
-+int aicbt_init(struct aic_sdio_dev *sdiodev);
-+int aicwifi_init(struct aic_sdio_dev *sdiodev);
-+int aicwifi_start_from_bootrom(struct aic_sdio_dev *sdiodev);
-+
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_export.h b/driver=
-s/net/wireless/aic/aic8800_bsp/aic_bsp_export.h
++#endif /* REG_ACCESS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.c b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_cmds.c
 new file mode 100644
-index 0000000000000..5d2a5c38c95e6
+index 0000000000000..2bb0c58dc984e
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_export.h
-@@ -0,0 +1,70 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __AIC_BSP_EXPORT_H
-+#define __AIC_BSP_EXPORT_H
-+
-+#include <linux/types.h>
-+
-+enum aicbsp_subsys {
-+	AIC_BLUETOOTH,
-+	AIC_WIFI,
-+};
-+
-+enum aicbsp_pwr_state {
-+	AIC_PWR_OFF,
-+	AIC_PWR_ON,
-+};
-+
-+enum skb_buff_id {
-+	AIC_RESV_MEM_TXDATA,
-+};
-+
-+struct skb_buff_pool {
-+	u32 id;
-+	u32 size;
-+	const char *name;
-+	u8 used;
-+	struct sk_buff *skb;
-+};
-+
-+struct aicbsp_feature_t {
-+	int hwinfo;
-+	u32 sdio_clock;
-+	u8 sdio_phase;
-+	bool fwlog_en;
-+	u8 irqf;
-+	u8 cpmode;
-+	int adapt;
-+};
-+
-+#ifdef CONFIG_DPD
-+struct rf_misc_ram_t {
-+	u32 bit_mask[3];
-+	u32 reserved;
-+	u32 dpd_high[96];
-+	u32 dpd_11b[96];
-+	u32 dpd_low[96];
-+	u32 idac_11b[48];
-+	u32 idac_high[48];
-+	u32 idac_low[48];
-+	u32 loft_res[18];
-+	u32 rx_iqim_res[16];
-+};
-+
-+struct rf_misc_ram_lite_t {
-+	u32 bit_mask[4];
-+	u32 dpd_high[96];
-+	u32 loft_res[18];
-+};
-+
-+#define MEMBER_SIZE(type, member) sizeof_field(type, member)
-+#define DPD_RESULT_SIZE_8800DC    sizeof(struct rf_misc_ram_lite_t)
-+
-+extern struct rf_misc_ram_lite_t dpd_res;
-+#endif
-+
-+int aicbsp_set_subsys(int, int);
-+int aicbsp_get_feature(struct aicbsp_feature_t *feature);
-+struct sk_buff *aicbsp_resv_mem_alloc_skb(unsigned int length, uint32_t id=
-);
-+void aicbsp_resv_mem_kfree_skb(struct sk_buff *skb, uint32_t id);
-+
-+#endif
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_main.c b/drivers/=
-net/wireless/aic/aic8800_bsp/aic_bsp_main.c
-new file mode 100644
-index 0000000000000..f753f124d1df8
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_bsp_main.c
-@@ -0,0 +1,310 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.c
+@@ -0,0 +1,471 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + *************************************************************************=
 *****
-+ *
 + * Copyright (C) 2020 AIC semiconductor.
 + *
-+ * @brief bsp sdio main function
++ * @brief Handles queueing (push to IPC, ack/cfm from IPC) of commands iss=
+ued to
++ * LMAC FW
 + *
 + *************************************************************************=
 *****
 + */
 +
-+#include "aic_bsp_driver.h"
-+#include "aicwf_txq_prealloc.h"
-+#include <linux/errno.h>
-+#include <linux/inetdevice.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/platform_device.h>
-+#include <linux/version.h>
-+#include <generated/utsrelease.h>
-+
-+#include <linux/gpio.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/of_platform.h>
-+
-+#define DRV_DESCRIPTION "AIC BSP"
-+#define DRV_COPYRIGHT   "Copyright(c) 2015-2020 AICSemi"
-+#define DRV_AUTHOR      "AICSemi"
-+
-+int aicwf_dbg_level_bsp =3D LOGERROR; // | LOGINFO | LOGDEBUG | LOGTRACE;
-+module_param(aicwf_dbg_level_bsp, int, 0660);
-+
-+static struct platform_device *aicbsp_pdev;
-+
-+const struct aicbsp_firmware fw_8800d80_u02[AICBSP_CPMODE_MAX] =3D {
-+	[AICBSP_CPMODE_WORK] =3D {
-+		.desc =3D "normal work mode(8800d80 sdio u02)",
-+		.wl_fw =3D "fmacfw_8800d80_u02.bin",
-+	},
-+};
-+
-+const struct aicbsp_firmware *aicbsp_firmware_list =3D fw_8800d80_u02;
-+
-+struct aicbsp_info_t aicbsp_info =3D {
-+	.hwinfo_r =3D AICBSP_HWINFO_DEFAULT,
-+	.hwinfo =3D AICBSP_HWINFO_DEFAULT,
-+	.cpmode =3D AICBSP_CPMODE_DEFAULT,
-+	.fwlog_en =3D AICBSP_FWLOG_EN_DEFAULT,
-+	.adap_test =3D 0,
-+#ifdef CONFIG_IRQ_FALL
-+	.irqf =3D 1,
++#include "rwnx_cmds.h"
++#include "aicwf_txrxif.h"
++#include "rwnx_defs.h"
++#include "rwnx_events.h"
++#include "rwnx_strs.h"
++#include <linux/list.h>
++#ifdef AICWF_SDIO_SUPPORT
++#include "aicwf_sdio.h"
 +#else
-+	.irqf =3D 0,
-+#endif
-+};
-+
-+/* mutex for aicbsp power */
-+struct mutex aicbsp_power_lock;
-+
-+static struct platform_driver aicbsp_driver =3D {
-+	.driver =3D {
-+			.owner =3D THIS_MODULE,
-+			.name =3D "aic_bsp",
-+		},
-+};
-+
-+static ssize_t hwinfo_show(struct device *dev, struct device_attribute *at=
-tr,
-+			   char *buf)
-+{
-+	ssize_t count =3D 0;
-+
-+	count +=3D sprintf(&buf[count], "chip hw rev: ");
-+	if (aicbsp_info.hwinfo_r < 0)
-+		count +=3D sprintf(&buf[count], "-1(not avalible)\n");
-+	else
-+		count +=3D sprintf(&buf[count], "0x%02X\n", aicbsp_info.chip_rev);
-+
-+	count +=3D sprintf(&buf[count], "hwinfo read: ");
-+	if (aicbsp_info.hwinfo_r < 0)
-+		count +=3D
-+			sprintf(&buf[count], "%d(not avalible), ", aicbsp_info.hwinfo_r);
-+	else
-+		count +=3D sprintf(&buf[count], "0x%02X, ", aicbsp_info.hwinfo_r);
-+
-+	if (aicbsp_info.hwinfo < 0)
-+		count +=3D
-+			sprintf(&buf[count], "set: %d(not avalible)\n", aicbsp_info.hwinfo);
-+	else
-+		count +=3D sprintf(&buf[count], "set: 0x%02X\n", aicbsp_info.hwinfo);
-+
-+	return count;
-+}
-+
-+static ssize_t hwinfo_store(struct device *dev, struct device_attribute *a=
-ttr,
-+			    const char *buf, size_t count)
-+{
-+	long val;
-+	int err =3D kstrtol(buf, 0, &val);
-+
-+	if (err) {
-+		pr_err("invalid input\n");
-+		return err;
-+	}
-+
-+	if ((val =3D=3D -1) || (val >=3D 0 && val <=3D 0xFF)) {
-+		aicbsp_info.hwinfo =3D val;
-+	} else {
-+		pr_err("invalid values\n");
-+		return -EINVAL;
-+	}
-+	return count;
-+}
-+
-+static ssize_t fwdebug_show(struct device *dev, struct device_attribute *a=
-ttr,
-+			    char *buf)
-+{
-+	ssize_t count =3D 0;
-+
-+	count +=3D sprintf(&buf[count], "fw log status: %s\n",
-+					 aicbsp_info.fwlog_en ? "on" : "off");
-+
-+	return count;
-+}
-+
-+static ssize_t fwdebug_store(struct device *dev, struct device_attribute *=
-attr,
-+			     const char *buf, size_t count)
-+{
-+	long val;
-+	int err =3D kstrtol(buf, 0, &val);
-+
-+	if (err) {
-+		pr_err("invalid input\n");
-+		return err;
-+	}
-+
-+	if (val > 1 || val < 0) {
-+		pr_err("must be 0 or 1\n");
-+		return -EINVAL;
-+	}
-+
-+	aicbsp_info.fwlog_en =3D val;
-+	return count;
-+}
-+
-+static ssize_t adapt_show(struct device *dev, struct device_attribute *att=
-r,
-+			  char *buf)
-+{
-+	ssize_t count =3D 0;
-+
-+	count +=3D sprintf(&buf[count], "adapt status: %s\n",
-+					 aicbsp_info.adap_test ? "on" : "off");
-+
-+	return count;
-+}
-+
-+static ssize_t adapt_store(struct device *dev, struct device_attribute *at=
-tr,
-+			   const char *buf, size_t count)
-+{
-+	long val;
-+	int err =3D kstrtol(buf, 0, &val);
-+
-+	if (err) {
-+		pr_err("invalid input\n");
-+		return err;
-+	}
-+
-+	if (val > 1 || val < 0) {
-+		pr_err("must be 0 or 1\n");
-+		return err;
-+	}
-+
-+	aicbsp_info.adap_test =3D val;
-+	return count;
-+}
-+
-+static DEVICE_ATTR_RW(hwinfo);
-+
-+static DEVICE_ATTR_RW(fwdebug);
-+
-+static DEVICE_ATTR_RW(adapt);
-+
-+static struct attribute *aicbsp_attributes[] =3D {
-+	&dev_attr_hwinfo.attr,
-+	&dev_attr_fwdebug.attr,
-+	&dev_attr_adapt.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group aicbsp_attribute_group =3D {
-+	.name =3D "aicbsp_info",
-+	.attrs =3D aicbsp_attributes,
-+};
-+
-+int testmode =3D AICBSP_CPMODE_DEFAULT;
-+int adap_test;
-+module_param(adap_test, int, 0660);
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+int gpio_pwr;
-+bool gpio_pwr_assert;
-+
-+void nxp_pwr_ctrl(int value)
-+{
-+	pr_info("aic_bsp: %s: %d\n", __func__, value);
-+	gpio_set_value(gpio_pwr, value);
-+}
-+
-+static int aicbsp_pwr_node(void)
-+{
-+	struct device_node *np;
-+	int err;
-+
-+	np =3D of_find_compatible_node(NULL, NULL, "aic,wifi-power");
-+	if (!np) {
-+		pr_err("aic_bsp: %s np not found\n", __func__);
-+		return -ENODEV;
-+	}
-+
-+	gpio_pwr =3D of_get_named_gpio(np, "wifi-power", 0);
-+	if (!gpio_is_valid(gpio_pwr)) {
-+		pr_err("aic_bsp: %s is invalid\n", __func__);
-+		return -ENODEV;
-+	}
-+
-+	err =3D gpio_request(gpio_pwr, "wifi-power");
-+	if (err < 0) {
-+		pr_err("aic_bsp: %s can't request gpio_pwr gpio %d\n", __func__,
-+		       gpio_pwr);
-+		return -ENODEV;
-+	}
-+
-+	err =3D gpio_direction_output(gpio_pwr, 1);
-+	if (err < 0) {
-+		pr_err("aic_bsp: %s can't request output direction gpio_pwr gpio %d\n",
-+		       __func__, gpio_pwr);
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
++#include "aicwf_usb.h"
 +#endif
 +
-+static int __init aicbsp_init(void)
++static void cmd_dump(const struct rwnx_cmd *cmd)
 +{
-+	int ret;
-+
-+	testmode =3D AICBSP_CPMODE_WORK;
-+	aicbsp_info.cpmode =3D AICBSP_CPMODE_WORK;
-+
-+	pr_info("AIC_BSP driver, built against Linux %s\n", UTS_RELEASE);
-+
-+	aicbsp_resv_mem_init();
-+	ret =3D platform_driver_register(&aicbsp_driver);
-+	if (ret) {
-+		pr_err("register platform driver failed: %d\n", ret);
-+		return ret;
-+	}
-+
-+	aicbsp_pdev =3D platform_device_alloc("aic-bsp", -1);
-+	ret =3D platform_device_add(aicbsp_pdev);
-+	if (ret) {
-+		pr_err("register platform device failed: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret =3D sysfs_create_group(&aicbsp_pdev->dev.kobj, &aicbsp_attribute_grou=
-p);
-+	if (ret) {
-+		pr_err("register sysfs create group failed!\n");
-+		return ret;
-+	}
-+
-+	mutex_init(&aicbsp_power_lock);
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+	ret =3D aicbsp_pwr_node();
-+	if (ret) {
-+		pr_err("aic_bsp: aicbsp_pwr_node fail\n");
-+		return ret;
-+	}
-+#endif
-+	return 0;
-+}
-+
-+void aicbsp_sdio_exit(void);
-+
-+static void __exit aicbsp_exit(void)
-+{
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+	gpio_free(gpio_pwr);
-+#endif
-+
-+	sysfs_remove_group(&aicbsp_pdev->dev.kobj, &aicbsp_attribute_group);
-+	platform_device_del(aicbsp_pdev);
-+	platform_driver_unregister(&aicbsp_driver);
-+	mutex_destroy(&aicbsp_power_lock);
-+	aicbsp_resv_mem_deinit();
-+#ifdef CONFIG_PREALLOC_TXQ
-+	aicwf_prealloc_txq_free();
-+#endif
-+}
-+
-+module_init(aicbsp_init);
-+module_exit(aicbsp_exit);
-+
-+MODULE_FIRMWARE(AIC8800_FW_DIR "fmacfw_8800d80_u02.bin");
-+
-+MODULE_DESCRIPTION(DRV_DESCRIPTION);
-+MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800d80.c b/driv=
-ers/net/wireless/aic/aic8800_bsp/aic_chip_8800d80.c
-new file mode 100644
-index 0000000000000..1648b01d588a4
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800d80.c
-@@ -0,0 +1,98 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2024 AIC semiconductor.
-+ *
-+ * @file aic_chip_8800d80.c
-+ * @brief Chip operations for AIC8800D80
-+ */
-+
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include <linux/ieee80211.h>
-+#include "aic_chip_ops.h"
-+
-+#include "aic8800d80_compat.h"
-+#include "aic_bsp_driver.h"
-+
-+static int aic8800d80_wifi_init(struct aic_sdio_dev *sdiodev, int testmode=
-)
-+{
-+	const char *fw_path =3D fw_8800d80_u02[AICBSP_CPMODE_WORK].wl_fw;
-+
-+	(void)testmode;
-+	aicbsp_firmware_list =3D fw_8800d80_u02;
-+	aicbsp_info.cpmode =3D AICBSP_CPMODE_WORK;
-+	if (!fw_path)
-+		return -ENOENT;
-+
-+	pr_info("aicbsp 8800d80 u02 wifi firmware: %s\n", fw_path);
-+
-+	if (rwnx_plat_bin_fw_upload(sdiodev, RAM_FMAC_FW_ADDR,
-+				    fw_path)) {
-+		pr_err("aicbsp 8800d80 download wifi fw fail\n");
-+		return -1;
-+	}
-+
-+	if (aicwifi_patch_config_8800d80(sdiodev)) {
-+		pr_err("aicbsp aicwifi_patch_config_8800d80 fail\n");
-+		return -1;
-+	}
-+
-+	if (aicwifi_sys_config_8800d80(sdiodev)) {
-+		pr_err("aicbsp aicwifi_patch_config_8800d80 fail\n");
-+		return -1;
-+	}
-+
-+	if (aicwifi_start_from_bootrom(sdiodev)) {
-+		pr_err("aicbsp 8800d80 wifi start fail\n");
-+		return -1;
-+	}
-+	return 0;
-+}
-+
-+static int aic8800d80_driver_fw_init(struct aic_sdio_dev *sdiodev, u32 *bt=
-enable,
-+				     struct aicbsp_info_t *aicbsp_info,
-+				     const struct aicbsp_firmware **aicbsp_firmware_list)
-+{
-+	u32 mem_addr;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+	u8 is_chip_id_h =3D 0;
-+
-+	mem_addr =3D 0x40500000;
-+
-+	if (rwnx_send_dbg_mem_read_req(sdiodev, mem_addr, &rd_mem_addr_cfm))
-+		return -1;
-+
-+	aicbsp_info->chip_rev =3D (u8)((rd_mem_addr_cfm.memdata >> 16) & 0x3F);
-+	is_chip_id_h =3D (u8)(((rd_mem_addr_cfm.memdata >> 16) & 0xC0) =3D=3D 0xC=
-0);
-+	if (is_chip_id_h || aicbsp_info->chip_rev !=3D CHIP_REV_U02) {
-+		pr_err("aicbsp: AIC8800D80 U02 is required (revision %u)\n",
-+		       aicbsp_info->chip_rev);
-+		return -ENODEV;
-+	}
-+
-+	*btenable =3D 0;
-+	*aicbsp_firmware_list =3D fw_8800d80_u02;
-+	if (aicbsp_system_config_8800d80(sdiodev))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D Ops instances =3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D */
-+
-+const struct aic_chip_ops aic_chip_aic8800d80_ops =3D {
-+	.name						=3D "AIC8800D80",
-+	.use_func_msg				=3D false,
-+	.use_sdiov3_func			=3D true,
-+	.need_flowctrl_mask			=3D false,
-+	.wakeup_reg_val				=3D 0x11,
-+	.use_flowctrl_msg			=3D true,
-+	.use_hdr_checksum			=3D true,
-+	.need_fix_hdr_len			=3D false,
-+	.need_func0_intr			=3D true,
-+	.use_func2					=3D false,
-+	.sdio_clock					=3D FEATURE_SDIO_CLOCK_V3,
-+	.wifi_init					=3D aic8800d80_wifi_init,
-+	.driver_fw_init				=3D aic8800d80_driver_fw_init,
-+
-+};
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800dc.c b/drive=
-rs/net/wireless/aic/aic8800_bsp/aic_chip_8800dc.c
-new file mode 100644
-index 0000000000000..b3841261312f9
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8800dc.c
-@@ -0,0 +1,133 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2024 AIC semiconductor.
-+ *
-+ * @file aic_chip_8800dc.c
-+ * @brief Chip operations for AIC8801 / AIC8800DC / AIC8800DW
-+ */
-+
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include <linux/ieee80211.h>
-+#include "aic_chip_ops.h"
-+
-+#include "aic8800dc_compat.h"
-+#include "aic_bsp_driver.h"
-+
-+static int aic8800dc_wifi_init(struct aic_sdio_dev *sdiodev, int testmode)
-+{
-+	int ret;
-+
-+	pr_info("aicbsp ############ %s begin\n", __func__);
-+
-+	system_config_8800dc(sdiodev);
-+	pr_info("aicbsp ############ system_config_8800dc done\n");
-+
-+	ret =3D rwnx_plat_patch_load_8800dc(sdiodev);
-+	if (ret) {
-+		pr_err("aicbsp patch load return %d\n", ret);
-+		return ret;
-+	}
-+	pr_info("aicbsp ############ rwnx_plat_patch_load done\n");
-+
-+	// rwnx_plat_userconfig_load(sdiodev);
-+
-+	aicwf_patch_config_8800dc(sdiodev);
-+	pr_info("aicbsp ############ aicwf_patch_config_8800dc done\n");
-+
-+	start_from_bootrom_8800DC(sdiodev);
-+
-+	return 0;
-+}
-+
-+static int aic8800dc_set_patch_info(struct aic_sdio_dev *sdiodev,
-+				    struct aicbt_patch_info_t *patch_info,
-+				    struct aicbsp_info_t *aicbsp_info,
-+				    struct aicbt_patch_table *head)
-+{
-+	if (aicbsp_info->chip_rev =3D=3D CHIP_REV_U01)
-+		patch_info->addr_adid =3D RAM_8800DC_U01_ADID_ADDR;
-+	else if (aicbsp_info->chip_rev =3D=3D CHIP_REV_U02)
-+		patch_info->addr_adid =3D RAM_8800DC_U02_ADID_ADDR;
-+	patch_info->addr_patch =3D RAM_8800DC_FW_PATCH_ADDR;
-+	aicbt_patch_info_unpack(patch_info, head);
-+	if (patch_info->reset_addr =3D=3D 0) {
-+		patch_info->reset_addr =3D FW_RESET_START_ADDR;
-+		patch_info->reset_val =3D FW_RESET_START_VAL;
-+		patch_info->adid_flag_addr =3D FW_ADID_FLAG_ADDR;
-+		patch_info->adid_flag =3D FW_ADID_FLAG_VAL;
-+		if (rwnx_send_dbg_mem_write_req(sdiodev, patch_info->reset_addr,
-+						patch_info->reset_val))
-+			return -1;
-+		if (rwnx_send_dbg_mem_write_req(sdiodev, patch_info->adid_flag_addr,
-+						patch_info->adid_flag))
-+			return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int aic8800dc_driver_fw_init(struct aic_sdio_dev *sdiodev, u32 *bte=
-nable,
-+				    struct aicbsp_info_t *aicbsp_info,
-+				    const struct aicbsp_firmware **aicbsp_firmware_list)
-+{
-+	u32 mem_addr;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+	u8 is_chip_id_h =3D 0;
-+
-+	mem_addr =3D 0x40500000;
-+
-+	if (rwnx_send_dbg_mem_read_req(sdiodev, mem_addr, &rd_mem_addr_cfm))
-+		return -1;
-+
-+	aicbsp_info->chip_rev =3D (u8)((rd_mem_addr_cfm.memdata >> 16) & 0x3F);
-+	is_chip_id_h =3D (u8)(((rd_mem_addr_cfm.memdata >> 16) & 0xC0) =3D=3D 0xC=
-0);
-+
-+	*btenable =3D ((rd_mem_addr_cfm.memdata >> 26) & 0x1);
-+	AICWFDBG(LOGINFO, "btenable =3D %d\n", *btenable);
-+
-+	if (*btenable =3D=3D 0) {
-+		sdiodev->chipid =3D PRODUCT_ID_AIC8800DW;
-+		AICWFDBG(LOGINFO, "AIC8800DC change to AIC8800DW\n");
-+	}
-+
-+	if (aicbsp_info->chip_rev !=3D CHIP_REV_U01 &&
-+	    aicbsp_info->chip_rev !=3D CHIP_REV_U02 &&
-+		aicbsp_info->chip_rev !=3D CHIP_REV_U03 &&
-+		aicbsp_info->chip_rev !=3D CHIP_REV_U04) {
-+		pr_err("aicbsp: %s, unsupport chip rev: %d\n", __func__,
-+		       aicbsp_info->chip_rev);
-+		return -1;
-+	}
-+	if (is_chip_id_h) {
-+		AICWFDBG(LOGINFO, "IS_CHIP_ID_H\n");
-+		*aicbsp_firmware_list =3D fw_8800dc_h_u02;
-+	} else {
-+		if (aicbsp_info->chip_rev =3D=3D CHIP_REV_U01)
-+			*aicbsp_firmware_list =3D fw_8800dc_u01;
-+		else
-+			*aicbsp_firmware_list =3D fw_8800dc_u02;
-+	}
-+
-+	return 0;
-+}
-+
-+/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D Ops instances =3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D */
-+
-+const struct aic_chip_ops aic_chip_aic8800dc_ops =3D {
-+	.name						=3D "AIC8800DC",
-+	.use_func_msg				=3D true,
-+	.use_sdiov3_func			=3D false,
-+	.need_flowctrl_mask			=3D true,
-+	.wakeup_reg_val				=3D 1,
-+	.use_flowctrl_msg			=3D false,
-+	.use_hdr_checksum			=3D false,
-+	.need_fix_hdr_len			=3D true,
-+	.need_func0_intr			=3D false,
-+	.use_func2					=3D true,
-+	.sdio_clock					=3D FEATURE_SDIO_CLOCK,
-+	.wifi_init					=3D aic8800dc_wifi_init,
-+	.set_patch_info				=3D aic8800dc_set_patch_info,
-+	.driver_fw_init				=3D aic8800dc_driver_fw_init,
-+
-+};
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8801.c b/drivers=
-/net/wireless/aic/aic8800_bsp/aic_chip_8801.c
-new file mode 100644
-index 0000000000000..f28979e25a28c
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_chip_8801.c
-@@ -0,0 +1,117 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2024 AIC semiconductor.
-+ *
-+ * @file aic_chip_8801.c
-+ * @brief Chip operations for AIC8801 / AIC8800DC / AIC8800DW
-+ */
-+
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include <linux/ieee80211.h>
-+#include "aic_chip_ops.h"
-+#include "aic_bsp_driver.h"
-+
-+#include "aic8800dc_compat.h"
-+#include "aic8800d80_compat.h"
-+
-+static int aic8801_wifi_init(struct aic_sdio_dev *sdiodev, int testmode)
-+{
-+#ifdef CONFIG_M2D_OTA_AUTO_SUPPORT
-+	if (testmode =3D=3D FW_M2D_OTA_MODE)
-+		rwnx_plat_m2d_flash_ota(sdiodev, FW_M2D_OTA_NAME);
-+	else if (testmode =3D=3D FW_NORMAL_MODE)
-+		rwnx_plat_m2d_flash_ota_check(sdiodev, FW_M2D_OTA_NAME);
-+#endif
-+	const char *fw_path =3D aicbsp_firmware_list[aicbsp_info.cpmode].wl_fw;
-+
-+	if (rwnx_plat_bin_fw_upload(sdiodev, RAM_FMAC_FW_ADDR,
-+				    fw_path)) {
-+		pr_err("aicbsp download wifi fw fail\n");
-+		return -1;
-+	}
-+	if (testmode =3D=3D FW_NORMAL_MODE) {
-+		if (rwnx_plat_bin_fw_upload(sdiodev, RAM_FMAC_FW_PATCH_ADDR,
-+					    RAM_FMAC_FW_PATCH_NAME)) {
-+			pr_err("aicbsp download wifi fw patch fail\n");
-+			return -1;
-+		}
-+	}
-+
-+	if (aicwifi_patch_config(sdiodev)) {
-+		pr_err("aicbsp aicwifi_patch_config fail\n");
-+		return -1;
-+	}
-+
-+	if (aicwifi_sys_config(sdiodev)) {
-+		pr_err("aicbsp aicwifi_sys_config fail\n");
-+		return -1;
-+	}
-+
-+	if (aicwifi_start_from_bootrom(sdiodev)) {
-+		pr_err("aicbsp wifi start fail\n");
-+		return -1;
-+	}
-+	return 0;
-+}
-+
-+static int aic8801_set_patch_info(struct aic_sdio_dev *sdiodev,
-+				  struct aicbt_patch_info_t *patch_info,
-+				  struct aicbsp_info_t *aicbsp_info,
-+				  struct aicbt_patch_table *head)
-+{
-+	patch_info->addr_adid =3D FW_RAM_ADID_BASE_ADDR;
-+	patch_info->addr_patch =3D FW_RAM_PATCH_BASE_ADDR;
-+	return 0;
-+}
-+
-+static int aic8801_driver_fw_init(struct aic_sdio_dev *sdiodev, u32 *btena=
-ble,
-+				  struct aicbsp_info_t *aicbsp_info,
-+				  const struct aicbsp_firmware **aicbsp_firmware_list)
-+{
-+	u32 mem_addr;
-+	struct dbg_mem_read_cfm rd_mem_addr_cfm;
-+
-+	mem_addr =3D 0x40500000;
-+
-+	if (rwnx_send_dbg_mem_read_req(sdiodev, mem_addr, &rd_mem_addr_cfm))
-+		return -1;
-+
-+	aicbsp_info->chip_rev =3D (u8)(rd_mem_addr_cfm.memdata >> 16);
-+	*btenable =3D 1;
-+
-+	if (aicbsp_info->chip_rev !=3D CHIP_REV_U02 &&
-+	    aicbsp_info->chip_rev !=3D CHIP_REV_U03 &&
-+		aicbsp_info->chip_rev !=3D CHIP_REV_U04) {
-+		pr_err("aicbsp: %s, unsupport chip rev: %d\n", __func__,
-+		       aicbsp_info->chip_rev);
-+		return -1;
-+	}
-+
-+	if (aicbsp_info->chip_rev !=3D CHIP_REV_U02)
-+		*aicbsp_firmware_list =3D fw_u03;
-+
-+	if (aicbsp_system_config(sdiodev))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D Ops instances =3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D */
-+
-+const struct aic_chip_ops aic_chip_aic8801_ops =3D {
-+	.name						=3D "AIC8801",
-+	.use_func_msg				=3D false,
-+	.use_sdiov3_func			=3D false,
-+	.need_flowctrl_mask			=3D true,
-+	.wakeup_reg_val				=3D 1,
-+	.use_flowctrl_msg			=3D true,
-+	.use_hdr_checksum			=3D false,
-+	.need_fix_hdr_len			=3D true,
-+	.need_func0_intr			=3D false,
-+	.use_func2					=3D true,
-+	.sdio_clock					=3D FEATURE_SDIO_CLOCK,
-+	.wifi_init					=3D aic8801_wifi_init,
-+	.set_patch_info				=3D aic8801_set_patch_info,
-+	.driver_fw_init				=3D aic8801_driver_fw_init,
-+};
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.c b/drivers/=
-net/wireless/aic/aic8800_bsp/aic_chip_ops.c
-new file mode 100644
-index 0000000000000..6a874bbe23df0
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.c
-@@ -0,0 +1,64 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2024 AIC semiconductor.
-+ *
-+ * @file aic_chip_ops.c
-+ * @brief Wrapper function implementations for chip-specific operations.
-+ */
-+
-+#include <linux/errno.h>
-+#include <linux/types.h>
-+#include "aic_chip_ops.h"
-+#include "aicsdio.h"
-+
-+int aicwf_sdio_chipmatch(u16 vid, u16 did, u16 *chipid)
-+{
-+	if (vid !=3D SDIO_VENDOR_ID_AIC8800D80)
-+		return -ENODEV;
-+
-+	if (did !=3D SDIO_DEVICE_ID_AIC8800D80 &&
-+	    did !=3D SDIO_DEVICE_ID_AIC8800D80_FUNC2)
-+		return -ENODEV;
-+
-+	*chipid =3D PRODUCT_ID_AIC8800D80;
-+	AICWFDBG(LOGINFO, "%s USE AIC8800D80\r\n", __func__);
-+	return 0;
-+}
-+
-+/*=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D Chip ops wrappers =3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D */
-+int aic_chip_wifi_init(struct aic_sdio_dev *sdiodev, int testmode)
-+{
-+	if (sdiodev->chip_ops && sdiodev->chip_ops->wifi_init)
-+		return sdiodev->chip_ops->wifi_init(sdiodev, testmode);
-+	return 0;
-+}
-+
-+int aic_chip_set_patch_info(struct aic_sdio_dev *sdiodev,
-+			    struct aicbt_patch_info_t *patch_info,
-+			    struct aicbsp_info_t *aicbsp_info,
-+			    struct aicbt_patch_table *head)
-+{
-+	if (sdiodev->chip_ops && sdiodev->chip_ops->set_patch_info)
-+		return sdiodev->chip_ops->set_patch_info(sdiodev, patch_info,
-+							 aicbsp_info, head);
-+	return 0;
-+}
-+
-+int aic_chip_driver_fw_init(struct aic_sdio_dev *sdiodev, u32 *btenable,
-+			    struct aicbsp_info_t *aicbsp_info,
-+			    const struct aicbsp_firmware **aicbsp_firmware_list)
-+{
-+	if (sdiodev->chip_ops && sdiodev->chip_ops->driver_fw_init)
-+		return sdiodev->chip_ops->driver_fw_init(sdiodev, btenable,
-+							 aicbsp_info,
-+							 aicbsp_firmware_list);
-+	return 0;
-+}
-+
-+const struct aic_chip_ops *aic_chip_ops_select(u16 chipid)
-+{
-+	if (chipid =3D=3D PRODUCT_ID_AIC8800D80)
-+		return &aic_chip_aic8800d80_ops;
-+
-+	return NULL;
-+}
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.h b/drivers/=
-net/wireless/aic/aic8800_bsp/aic_chip_ops.h
-new file mode 100644
-index 0000000000000..702b0a4a73baa
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aic_chip_ops.h
-@@ -0,0 +1,69 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2024 AIC semiconductor.
-+ *
-+ * @file aic_chip_ops.h
-+ * @brief Chip-specific operation interfaces for AIC8800 series.
-+ */
-+#ifndef _AIC_BSP_CHIP_OPS_H_
-+#define _AIC_BSP_CHIP_OPS_H_
-+
-+#include <linux/types.h>
-+
-+struct aic_sdio_dev;
-+struct aicbsp_info_t;
-+struct aicbt_patch_info_t;
-+struct aicbt_patch_table;
-+struct aicbsp_firmware;
-+
-+/* Match SDIO vendor/device IDs to a chip product ID */
-+int aicwf_sdio_chipmatch(u16 vendor, u16 device, u16 *chipid);
-+
-+/*
-+ * struct aic_chip_ops - Chip-specific operations
-+ *
-+ * Each chip variant provides an instance of this struct.
-+ * Selected at probe time based on chipid, then used to
-+ * eliminate chipid-based if-else branching throughout the driver.
-+ */
-+struct aic_chip_ops {
-+	const char *name;
-+	const bool use_func_msg;
-+	const bool use_sdiov3_func;
-+	const bool need_flowctrl_mask;
-+	const u8 wakeup_reg_val;
-+	const bool use_flowctrl_msg;
-+	const bool use_hdr_checksum;
-+	const bool need_fix_hdr_len;
-+	const bool need_func0_intr;
-+	const bool use_func2;
-+	const u32  sdio_clock;
-+
-+	int (*wifi_init)(struct aic_sdio_dev *sdiodev, int testmode);
-+
-+	int (*set_patch_info)(struct aic_sdio_dev *sdiodev,
-+			      struct aicbt_patch_info_t *patch_info,
-+			      struct aicbsp_info_t *aicbsp_info,
-+			      struct aicbt_patch_table *head);
-+
-+	int (*driver_fw_init)(struct aic_sdio_dev *sdiodev, u32 *btenable,
-+			      struct aicbsp_info_t *aicbsp_info,
-+			      const struct aicbsp_firmware **aicbsp_firmware_list);
-+};
-+
-+extern const struct aic_chip_ops aic_chip_aic8800d80_ops;
-+
-+/* Select the appropriate chip ops based on chip product ID */
-+const struct aic_chip_ops *aic_chip_ops_select(u16 chipid);
-+
-+/* Wrapper function declarations (implemented in aic_chip_ops.c) */
-+int aic_chip_wifi_init(struct aic_sdio_dev *sdiodev, int testmode);
-+int aic_chip_set_patch_info(struct aic_sdio_dev *sdiodev,
-+			    struct aicbt_patch_info_t *patch_info,
-+			    struct aicbsp_info_t *aicbsp_info,
-+			    struct aicbt_patch_table *head);
-+int aic_chip_driver_fw_init(struct aic_sdio_dev *sdiodev, u32 *btenable,
-+			    struct aicbsp_info_t *aicbsp_info,
-+			    const struct aicbsp_firmware **aicbsp_firmware_list);
-+
-+#endif /* _AIC_BSP_CHIP_OPS_H_ */
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicsdio.c b/drivers/net/w=
-ireless/aic/aic8800_bsp/aicsdio.c
-new file mode 100644
-index 0000000000000..e17a6b2e6c838
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicsdio.c
-@@ -0,0 +1,2027 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ *************************************************************************=
-*****
-+ *
-+ * Copyright (C) 2020 AIC semiconductor.
-+ *
-+ * @brief bsp sdio config
-+ *
-+ *************************************************************************=
-*****
-+ */
-+#include "aicsdio.h"
-+#include "aic_bsp_driver.h"
-+#include "aicsdio_txrxif.h"
-+#include "aic_bsp_export.h"
-+#include "aic_chip_ops.h"
-+
-+#include <linux/completion.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/kthread.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/semaphore.h>
-+#include <linux/version.h>
-+#include <linux/gpio.h>
-+#include <linux/gpio/consumer.h>
-+#include <linux/of_platform.h>
-+
-+static int aicbsp_platform_power_on(void);
-+static void aicbsp_platform_power_off(void);
-+
-+struct aic_sdio_dev *aicbsp_sdiodev;
-+static struct completion *aicbsp_notify_completion;
-+static struct completion *aicbsp_probe_completion;
-+
-+static const struct sdio_device_id aicbsp_sdmmc_ids[];
-+static int bsp_init;
-+static int bsp_func_init;
-+
-+#ifdef CONFIG_M2D_OTA_AUTO_SUPPORT
-+char saved_sdk_ver[64];
-+module_param_string(saved_sdk_ver, saved_sdk_ver, 64, 0660);
-+#endif
-+
-+extern int testmode;
-+
-+static int aicbsp_dummy_probe(struct sdio_func *func,
-+			      const struct sdio_device_id *id)
-+{
-+	if (func && func->num !=3D 2)
-+		return 0;
-+
-+	if (aicbsp_notify_completion)
-+		complete(aicbsp_notify_completion);
-+	return 0;
-+}
-+
-+static void aicbsp_dummy_remove(struct sdio_func *func)
-+{
-+}
-+
-+static struct sdio_driver aicbsp_dummy_sdmmc_driver =3D {
-+	.probe =3D aicbsp_dummy_probe,
-+	.remove =3D aicbsp_dummy_remove,
-+	.name =3D "aicbsp_dummy_sdmmc",
-+	.id_table =3D aicbsp_sdmmc_ids,
-+};
-+
-+static int aicbsp_reg_sdio_notify(void *semaphore)
-+{
-+	aicbsp_notify_completion =3D semaphore;
-+	return sdio_register_driver(&aicbsp_dummy_sdmmc_driver);
-+}
-+
-+static void aicbsp_unreg_sdio_notify(void)
-+{
-+	mdelay(15);
-+	sdio_unregister_driver(&aicbsp_dummy_sdmmc_driver);
-+}
-+
-+static const char *aicbsp_subsys_name(int subsys)
-+{
-+	switch (subsys) {
-+	case AIC_BLUETOOTH:
-+		return "AIC_BLUETOOTH";
-+	case AIC_WIFI:
-+		return "AIC_WIFI";
-+	default:
-+		return "unknown subsys";
-+	}
-+}
-+
-+/**
-+ * aicbsp_set_subsys - Change the power request of an AIC subsystem
-+ * @subsys: Subsystem identifier from &enum aicbsp_subsys
-+ * @state: Requested power state from &enum aicbsp_pwr_state
-+ *
-+ * Return: The resulting aggregate power state, or a negative error code.
-+ */
-+int aicbsp_set_subsys(int subsys, int state)
-+{
-+	static int pre_power_map;
-+	int cur_power_map;
-+	int pre_power_state;
-+	int cur_power_state;
-+
-+	mutex_lock(&aicbsp_power_lock);
-+	cur_power_map =3D pre_power_map;
-+	if (state)
-+		cur_power_map |=3D (1 << subsys);
-+	else
-+		cur_power_map &=3D ~(1 << subsys);
-+
-+	pre_power_state =3D pre_power_map > 0;
-+	cur_power_state =3D cur_power_map > 0;
-+
-+	sdio_dbg("%s, subsys: %s, state to: %d\n", __func__,
-+		 aicbsp_subsys_name(subsys), state);
-+
-+	if (cur_power_state !=3D pre_power_state) {
-+		sdio_dbg("%s, power state change to %d dure to %s\n", __func__,
-+			 cur_power_state, aicbsp_subsys_name(subsys));
-+		if (cur_power_state) {
-+			if (aicbsp_platform_power_on() < 0)
-+				goto err0;
-+			if (aicbsp_sdio_init())
-+				goto err1;
-+			if (aicbsp_driver_fw_init(aicbsp_sdiodev))
-+				goto err2;
-+#ifndef CONFIG_FDRV_NO_REG_SDIO
-+			aicbsp_sdio_release(aicbsp_sdiodev);
-+#endif
-+		} else {
-+			aicbsp_sdio_exit();
-+			aicbsp_platform_power_off();
-+		}
-+	} else {
-+		sdio_dbg("%s, power state no need to change, current: %d\n", __func__,
-+			 cur_power_state);
-+	}
-+	pre_power_map =3D cur_power_map;
-+	mutex_unlock(&aicbsp_power_lock);
-+
-+	return cur_power_state;
-+
-+err2:
-+	aicbsp_sdio_release(aicbsp_sdiodev);
-+	aicbsp_sdio_exit();
-+
-+err1:
-+	aicbsp_platform_power_off();
-+
-+err0:
-+	sdio_dbg("%s, fail to set %s power state to %d\n", __func__,
-+		 aicbsp_subsys_name(subsys), state);
-+	mutex_unlock(&aicbsp_power_lock);
-+	return -1;
-+}
-+EXPORT_SYMBOL_GPL(aicbsp_set_subsys);
-+
-+void *aicbsp_get_drvdata(void *args)
-+{
-+	(void)args;
-+	if (aicbsp_sdiodev)
-+		return aicbsp_sdiodev->bus_if;
-+	return dev_get_drvdata((const struct device *)args);
-+}
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+extern void nxp_pwr_ctrl(int value);
-+struct mmc_host *g_host;
-+#endif
-+
-+static int aicbsp_sdio_probe(struct sdio_func *func,
-+			     const struct sdio_device_id *id)
-+{
-+	struct mmc_host *host;
-+	struct aic_sdio_dev *sdiodev;
-+	struct aicwf_bus *bus_if;
-+	int err =3D -ENODEV;
-+	u16 chipid;
-+
-+	bsp_init =3D 1;
-+	bsp_func_init =3D 1;
-+
-+	if (!func) {
-+		sdio_err("%s func is null\n", __func__);
-+		return err;
-+	}
-+
-+	if (!aicbsp_probe_completion) {
-+		sdio_err("%s bsp_probe_semaphore is null\n", __func__);
-+		return err;
-+	}
-+
-+	sdio_dbg("%s:%d vid:0x%04X  did:0x%04X\n", __func__, func->num,
-+		 func->vendor, func->device);
-+
-+	if (func->num !=3D 2) {
-+		sdio_dbg("%s func num !=3D 2\n", __func__);
-+		return err;
-+	}
-+
-+	host =3D func->card->host;
-+	host->caps |=3D MMC_CAP_NONREMOVABLE;
-+
-+	func =3D func->card->sdio_func[1 - 1]; // replace 2 with 1
-+
-+	sdio_dbg("%s after replace:%d\n", __func__, func->num);
-+
-+	bus_if =3D
-+		kzalloc_obj(*bus_if, GFP_KERNEL);
-+	if (!bus_if) {
-+		sdio_err("alloc bus fail\n");
-+		return -ENOMEM;
-+	}
-+
-+	sdiodev =3D
-+		kzalloc_obj(*sdiodev, GFP_KERNEL);
-+	if (!sdiodev) {
-+		sdio_err("alloc sdiodev fail\n");
-+		kfree(bus_if);
-+		return -ENOMEM;
-+	}
-+	aicbsp_sdiodev =3D sdiodev;
-+
-+	err =3D aicwf_sdio_chipmatch(func->vendor, func->device, &chipid);
-+	if (err) {
-+		sdio_err("unsupported SDIO device %04x:%04x\n",
-+			 func->vendor, func->device);
-+		goto fail;
-+	}
-+	sdiodev->chipid =3D chipid;
-+	sdiodev->chip_ops =3D aic_chip_ops_select(sdiodev->chipid);
-+	if (!sdiodev->chip_ops) {
-+		sdio_err("unsupported AIC chip id %u\n", sdiodev->chipid);
-+		err =3D -ENODEV;
-+		goto fail;
-+	}
-+
-+	sdiodev->func =3D func;
-+	if (sdiodev->chip_ops->use_func_msg)
-+		sdiodev->func_msg =3D func->card->sdio_func[1];
-+	sdiodev->bus_if =3D bus_if;
-+	bus_if->bus_priv.sdio =3D sdiodev;
-+
-+	if (sdiodev->chip_ops->use_func_msg) {
-+		dev_set_drvdata(&sdiodev->func_msg->dev, bus_if);
-+		pr_info("aicbsp the device is PRODUCT_ID_AIC8800DC\n");
-+	}
-+	dev_set_drvdata(&func->dev, bus_if);
-+	sdiodev->dev =3D &func->dev;
-+
-+	if (!sdiodev->chip_ops->use_sdiov3_func)
-+		err =3D aicwf_sdio_func_init(sdiodev);
-+	else
-+		err =3D aicwf_sdiov3_func_init(sdiodev);
-+
-+	if (err < 0) {
-+		sdio_err("sdio func init fail\n");
-+		goto fail;
-+	}
-+
-+	if (!aicwf_sdio_bus_init(sdiodev)) {
-+		sdio_err("sdio bus init err\r\n");
-+		goto fail;
-+	}
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+	g_host =3D host;
-+#endif
-+
-+	aicbsp_platform_init(sdiodev);
-+
-+	complete(aicbsp_probe_completion);
-+
-+	return 0;
-+fail:
-+	aicwf_sdio_func_deinit(sdiodev);
-+	dev_set_drvdata(&func->dev, NULL);
-+	if (aicbsp_sdiodev =3D=3D sdiodev)
-+		aicbsp_sdiodev =3D NULL;
-+	kfree(sdiodev);
-+	kfree(bus_if);
-+	return err;
-+}
-+
-+static void aicbsp_sdio_remove(struct sdio_func *func)
-+{
-+	struct mmc_host *host;
-+	struct aicwf_bus *bus_if =3D NULL;
-+	struct aic_sdio_dev *sdiodev =3D NULL;
-+
-+	pr_info("aicbsp %s\n", __func__);
-+
-+	if (!aicbsp_sdiodev) {
-+		AICWFDBG(LOGERROR, "%s: allready unregister\n", __func__);
-+		goto done;
-+	}
-+	if (!func) {
-+		AICWFDBG(LOGERROR, "%s, sdio func is null\n", __func__);
-+		goto done;
-+	}
-+
-+	host =3D func->card->host;
-+	host->caps &=3D ~MMC_CAP_NONREMOVABLE;
-+
-+	bus_if =3D aicbsp_get_drvdata(&func->dev);
-+
-+	if (!bus_if) {
-+		AICWFDBG(LOGERROR, "%s bus_if is NULL \r\n", __func__);
-+		goto done;
-+	}
-+
-+	sdiodev =3D bus_if->bus_priv.sdio;
-+	if (!sdiodev) {
-+		AICWFDBG(LOGERROR, "%s sdiodev is NULL \r\n", __func__);
-+		goto done;
-+	}
-+
-+	aicwf_sdio_release(sdiodev);
-+	aicwf_sdio_func_deinit(sdiodev);
-+
-+	if (bsp_init !=3D 0 && bsp_func_init !=3D 0) {
-+		dev_set_drvdata(&sdiodev->func->dev, NULL);
-+		kfree(sdiodev);
-+	}
-+
-+done:
-+	if (bsp_init !=3D 0 && bsp_func_init !=3D 0 && bus_if)
-+		kfree(bus_if);
-+	aicbsp_sdiodev =3D NULL;
-+	aicbsp_probe_completion =3D NULL;
-+}
-+
-+static int aicbsp_sdio_suspend(struct device *dev)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(dev);
-+	int err;
-+	mmc_pm_flag_t sdio_flags;
-+
-+	//sdio_dbg("%s, func->num =3D %d\n", __func__, func->num);
-+	if (func->num !=3D 2)
-+		return 0;
-+
-+	sdio_flags =3D sdio_get_host_pm_caps(func);
-+	if (!(sdio_flags & MMC_PM_KEEP_POWER)) {
-+		sdio_dbg("%s: can't keep power while host is suspended\n", __func__);
-+		return -EINVAL;
-+	}
-+
-+	/* keep power while host suspended */
-+	err =3D sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+	if (err) {
-+		sdio_dbg("%s: error while trying to keep power\n", __func__);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static int aicbsp_sdio_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static const struct sdio_device_id aicbsp_sdmmc_ids[] =3D {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_AIC8800D80,
-+		      SDIO_DEVICE_ID_AIC8800D80_FUNC2) },
-+	{ }
-+};
-+
-+MODULE_DEVICE_TABLE(sdio, aicbsp_sdmmc_ids);
-+
-+static const struct dev_pm_ops aicbsp_sdio_pm_ops =3D {
-+	SET_SYSTEM_SLEEP_PM_OPS(aicbsp_sdio_suspend, aicbsp_sdio_resume)};
-+
-+static struct sdio_driver aicbsp_sdio_driver =3D {
-+	.probe =3D aicbsp_sdio_probe,
-+	.remove =3D aicbsp_sdio_remove,
-+	.name =3D AICBSP_SDIO_NAME,
-+	.id_table =3D aicbsp_sdmmc_ids,
-+	.drv =3D {
-+			.pm =3D &aicbsp_sdio_pm_ops,
-+		},
-+};
-+
-+static int aicbsp_platform_power_on(void)
-+{
-+	int ret =3D 0;
-+	struct completion aic_chipup_comp;
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+	if (g_host) {
-+		nxp_pwr_ctrl(0);
-+		mdelay(10);
-+		nxp_pwr_ctrl(1);
-+		mdelay(50);
-+		sdio_dbg("mmc detect change\n");
-+		mmc_detect_change(g_host, 0);
-+	}
-+#endif
-+
-+	init_completion(&aic_chipup_comp);
-+	ret =3D aicbsp_reg_sdio_notify(&aic_chipup_comp);
-+	if (ret) {
-+		sdio_dbg("%s aicbsp_reg_sdio_notify fail(%d)\n", __func__, ret);
-+		return ret;
-+	}
-+
-+	if (wait_for_completion_timeout(&aic_chipup_comp, msecs_to_jiffies(2000))=
-) {
-+		aicbsp_unreg_sdio_notify();
-+		return 0;
-+	}
-+
-+	aicbsp_unreg_sdio_notify();
-+
-+	return -1;
-+}
-+
-+static void aicbsp_platform_power_off(void)
-+{
-+// TODO wifi disable and sdio card detection
-+
-+#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-+	nxp_pwr_ctrl(0);
-+#endif
-+}
-+
-+int aicbsp_sdio_init(void)
-+{
-+	struct completion aic_chipup_comp;
-+
-+	init_completion(&aic_chipup_comp);
-+	aicbsp_probe_completion =3D &aic_chipup_comp;
-+
-+	if (sdio_register_driver(&aicbsp_sdio_driver))
-+		return -1;
-+
-+	if (wait_for_completion_timeout(aicbsp_probe_completion, msecs_to_jiffies=
-(2000)) =3D=3D 0) {
-+		pr_err("aicbsp %s aicbsp_sdio_probe fail\r\n", __func__);
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+void aicbsp_sdio_exit(void)
-+{
-+	sdio_unregister_driver(&aicbsp_sdio_driver);
-+}
-+
-+void aicbsp_sdio_release(struct aic_sdio_dev *sdiodev)
-+{
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
++	if (!cmd) {
++		AICWFDBG(LOGDEBUG, KERN_ERR "AICWF %s cmd is null\n", __func__);
 +		return;
 +	}
-+
-+	sdiodev->bus_if->state =3D BUS_DOWN_ST;
-+	sdio_claim_host(sdiodev->func);
-+	sdio_release_irq(sdiodev->func);
-+	sdio_release_host(sdiodev->func);
-+	if (sdiodev->chip_ops->use_func_msg) {
-+		sdio_claim_host(sdiodev->func_msg);
-+		sdio_release_irq(sdiodev->func_msg);
-+		sdio_release_host(sdiodev->func_msg);
-+	}
++	AICWFDBG(LOGDEBUG, KERN_CRIT
++		 "tkn[%d]  flags:%04x  result:%3d  cmd:%4d-%-24s - reqcfm(%4d-%-s)\n",
++		 cmd->tkn, cmd->flags, cmd->result, cmd->id, RWNX_ID2STR(cmd->id),
++		 cmd->reqid,
++		 cmd->reqid !=3D (lmac_msg_id_t)-1 ? RWNX_ID2STR(cmd->reqid) : "none");
 +}
 +
-+int aicwf_sdio_readb(struct aic_sdio_dev *sdiodev, uint regaddr, u8 *val)
++static void cmd_complete(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cm=
+d)
 +{
-+	int ret;
++	// RWNX_DBG(RWNX_FN_ENTRY_STR); //debug trace
++	lockdep_assert_held(&cmd_mgr->lock);
 +
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
++	list_del(&cmd->list);
++	cmd_mgr->queue_sz--;
 +
-+	sdio_claim_host(sdiodev->func);
-+	*val =3D sdio_readb(sdiodev->func, regaddr, &ret);
-+	sdio_release_host(sdiodev->func);
-+	return ret;
-+}
-+
-+int aicwf_sdio_readb_func2(struct aic_sdio_dev *sdiodev, uint regaddr, u8 =
-*val)
-+{
-+	int ret;
-+
-+	if (!sdiodev->func_msg) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	sdio_claim_host(sdiodev->func_msg);
-+	*val =3D sdio_readb(sdiodev->func_msg, regaddr, &ret);
-+	sdio_release_host(sdiodev->func_msg);
-+	return ret;
-+}
-+
-+int aicwf_sdio_writeb(struct aic_sdio_dev *sdiodev, uint regaddr, u8 val)
-+{
-+	int ret;
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	sdio_claim_host(sdiodev->func);
-+	sdio_writeb(sdiodev->func, val, regaddr, &ret);
-+	sdio_release_host(sdiodev->func);
-+	return ret;
-+}
-+
-+int aicwf_sdio_writeb_func2(struct aic_sdio_dev *sdiodev, uint regaddr, u8=
- val)
-+{
-+	int ret;
-+
-+	if (!sdiodev->func_msg) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+	sdio_claim_host(sdiodev->func_msg);
-+	sdio_writeb(sdiodev->func_msg, val, regaddr, &ret);
-+	sdio_release_host(sdiodev->func_msg);
-+	return ret;
-+}
-+
-+int aicwf_sdio_flow_ctrl(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D -1;
-+	u8 fc_reg =3D 0;
-+	u32 count =3D 0;
-+
-+	while (true) {
-+		ret =3D
-+			aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.flow_ctrl_reg, &fc_reg);
-+		if (ret)
-+			return -1;
-+
-+		if (sdiodev->chip_ops->need_flowctrl_mask)
-+			fc_reg &=3D SDIOWIFI_FLOWCTRL_MASK_REG;
-+
-+		if (fc_reg !=3D 0) {
-+			ret =3D fc_reg;
-+			return ret;
-+		}
-+		if (count >=3D FLOW_CTRL_RETRY_COUNT) {
-+			ret =3D -fc_reg;
-+			break;
-+		}
-+		count++;
-+		if (count < 30)
-+			usleep_range(30, 50);
-+		else if (count < 40)
-+			mdelay(1);
-+		else
-+			mdelay(10);
-+	}
-+
-+	return ret;
-+}
-+
-+int aicwf_sdio_send_msg(struct aic_sdio_dev *sdiodev, u8 *buf, uint count)
-+{
-+	int ret =3D 0;
-+
-+	if (!sdiodev->func_msg) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+	sdio_claim_host(sdiodev->func_msg);
-+	ret =3D sdio_writesb(sdiodev->func_msg, 7, buf, count);
-+	sdio_release_host(sdiodev->func_msg);
-+
-+	return ret;
-+}
-+
-+int aicwf_sdio_send_pkt(struct aic_sdio_dev *sdiodev, u8 *buf, uint count)
-+{
-+	int ret =3D 0;
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	sdio_claim_host(sdiodev->func);
-+	ret =3D
-+		sdio_writesb(sdiodev->func, sdiodev->sdio_reg.wr_fifo_addr, buf, count);
-+	sdio_release_host(sdiodev->func);
-+
-+	return ret;
-+}
-+
-+int aicwf_sdio_recv_pkt(struct aic_sdio_dev *sdiodev, struct sk_buff *skbb=
-uf,
-+			u32 size, u8 msg)
-+{
-+	int ret;
-+
-+	if (!skbbuf || !size)
-+		return -EINVAL;
-+
-+	if (!msg) {
-+		if (!sdiodev->func) {
-+			pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+			return 0;
-+		}
-+		sdio_claim_host(sdiodev->func);
-+		ret =3D sdio_readsb(sdiodev->func, skbbuf->data,
-+				  sdiodev->sdio_reg.rd_fifo_addr, size);
-+		sdio_release_host(sdiodev->func);
++	cmd->flags |=3D RWNX_CMD_FLAG_DONE;
++	if (cmd->flags & RWNX_CMD_FLAG_NONBLOCK) {
++		rwnx_cmd_free(cmd); // kfree(cmd);
 +	} else {
-+		if (!sdiodev->func_msg) {
-+			pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+			return 0;
++		if (RWNX_CMD_WAIT_COMPLETE(cmd->flags)) {
++			cmd->result =3D 0;
++			complete(&cmd->complete);
 +		}
-+		sdio_claim_host(sdiodev->func_msg);
-+		ret =3D sdio_readsb(sdiodev->func_msg, skbbuf->data,
-+				  sdiodev->sdio_reg.rd_fifo_addr, size);
-+		sdio_release_host(sdiodev->func_msg);
 +	}
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	skbbuf->len =3D size;
-+
-+	return ret;
 +}
 +
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+int aicwf_sdio_wakeup(struct aic_sdio_dev *sdiodev)
++int cmd_mgr_queue_force_defer(struct rwnx_cmd_mgr *cmd_mgr,
++			      struct rwnx_cmd *cmd)
 +{
-+	int ret =3D 0;
-+	int read_retry;
-+	int write_retry =3D 20;
-+	int wakeup_reg_val =3D 0;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++#ifdef AIC8800_CREATE_TRACE_POINTS
++	trace_msg_send(cmd->id);
++#endif
++	spin_lock_bh(&cmd_mgr->lock);
 +
-+	wakeup_reg_val =3D sdiodev->chip_ops->wakeup_reg_val;
++	if (cmd_mgr->state =3D=3D RWNX_CMD_MGR_STATE_CRASHED) {
++		AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF cmd queue crashed\n");
++		cmd->result =3D -EPIPE;
++		spin_unlock_bh(&cmd_mgr->lock);
++		return -EPIPE;
++	}
 +
-+	if (sdiodev->state =3D=3D SDIO_SLEEP_ST) {
-+		down(&sdiodev->pwrctl_wakeup_sema);
-+		while (write_retry) {
-+			ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.wakeup_reg,
-+						wakeup_reg_val);
-+			if (ret) {
-+				txrx_err("sdio wakeup fail\n");
-+				ret =3D -1;
-+			} else {
-+				read_retry =3D 10;
-+				while (read_retry) {
-+					u8 val;
++	if (!list_empty(&cmd_mgr->cmds)) {
++		if (cmd_mgr->queue_sz =3D=3D cmd_mgr->max_queue_sz) {
++			AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF Too many cmds (%d) already queued\n=
+",
++				 cmd_mgr->max_queue_sz);
++			cmd->result =3D -ENOMEM;
++			spin_unlock_bh(&cmd_mgr->lock);
++			return -ENOMEM;
++		}
++	}
 +
-+					ret =3D aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.sleep_reg,
-+							       &val);
-+					if (ret =3D=3D 0 && val & 0x10)
-+						break;
++	cmd->flags |=3D RWNX_CMD_FLAG_WAIT_PUSH;
 +
-+					read_retry--;
-+					usleep_range(30, 50);
-+				}
-+				if (read_retry !=3D 0)
-+					break;
++	if (cmd->flags & RWNX_CMD_FLAG_REQ_CFM)
++		cmd->flags |=3D RWNX_CMD_FLAG_WAIT_CFM;
++
++	cmd->tkn =3D cmd_mgr->next_tkn++;
++	cmd->result =3D -EINTR;
++
++	if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK))
++		init_completion(&cmd->complete);
++
++	list_add_tail(&cmd->list, &cmd_mgr->cmds);
++	cmd_mgr->queue_sz++;
++	spin_unlock_bh(&cmd_mgr->lock);
++
++	WAKE_CMD_WORK(cmd_mgr);
++	return 0;
++}
++
++static int cmd_mgr_queue(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cm=
+d)
++{
++#ifdef AICWF_SDIO_SUPPORT
++	int ret;
++	struct aic_sdio_dev *sdiodev =3D
++		container_of(cmd_mgr, struct aic_sdio_dev, cmd_mgr);
++#endif
++	bool defer_push =3D false;
++
++	// RWNX_DBG(RWNX_FN_ENTRY_STR); //debug trace
++#ifdef AIC8800_CREATE_TRACE_POINTS
++	trace_msg_send(cmd->id);
++#endif
++	spin_lock_bh(&cmd_mgr->lock);
++
++	if (cmd_mgr->state =3D=3D RWNX_CMD_MGR_STATE_CRASHED) {
++		AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF cmd queue crashed\n");
++		cmd->result =3D -EPIPE;
++		spin_unlock_bh(&cmd_mgr->lock);
++		return -EPIPE;
++	}
++
++	if (!list_empty(&cmd_mgr->cmds)) {
++		struct rwnx_cmd *last;
++
++		if (cmd_mgr->queue_sz =3D=3D cmd_mgr->max_queue_sz) {
++			AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF Too many cmds (%d) already queued\n=
+",
++				 cmd_mgr->max_queue_sz);
++			cmd->result =3D -ENOMEM;
++			spin_unlock_bh(&cmd_mgr->lock);
++			return -ENOMEM;
++		}
++		last =3D list_entry(cmd_mgr->cmds.prev, struct rwnx_cmd, list);
++		if (last->flags & (RWNX_CMD_FLAG_WAIT_ACK | RWNX_CMD_FLAG_WAIT_PUSH |
++				   RWNX_CMD_FLAG_WAIT_CFM)) {
++			cmd->flags |=3D RWNX_CMD_FLAG_WAIT_PUSH;
++			defer_push =3D true;
++		}
++	}
++
++	if (cmd->flags & RWNX_CMD_FLAG_REQ_CFM)
++		cmd->flags |=3D RWNX_CMD_FLAG_WAIT_CFM;
++
++	cmd->tkn =3D cmd_mgr->next_tkn++;
++	cmd->result =3D -EINTR;
++
++	if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK))
++		init_completion(&cmd->complete);
++
++	list_add_tail(&cmd->list, &cmd_mgr->cmds);
++	cmd_mgr->queue_sz++;
++
++#ifdef AICWF_ARP_OFFLOAD
++	if (cmd->a2e_msg->id =3D=3D ME_TRAFFIC_IND_REQ ||
++	    cmd->a2e_msg->id =3D=3D MM_SET_ARPOFFLOAD_REQ) {
++#else
++	if (cmd->a2e_msg->id =3D=3D ME_TRAFFIC_IND_REQ) {
++#endif
++		defer_push =3D true;
++		cmd->flags |=3D RWNX_CMD_FLAG_WAIT_PUSH;
++	}
++
++	spin_unlock_bh(&cmd_mgr->lock);
++	if (!defer_push) {
++#ifdef AICWF_SDIO_SUPPORT
++		aicwf_set_cmd_tx((void *)(sdiodev), cmd->a2e_msg,
++				 sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
++#else
++		aicwf_set_cmd_tx((void *)(usbdev), cmd->a2e_msg,
++				 sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
++#endif
++		kfree(cmd->a2e_msg);
++	} else {
++		if (cmd_mgr->queue_sz <=3D 1)
++			WAKE_CMD_WORK(cmd_mgr);
++		return 0;
++	}
++
++	if (!(cmd->flags & RWNX_CMD_FLAG_NONBLOCK)) {
++		unsigned long tout =3D
++			msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS * cmd_mgr->queue_sz);
++		if (!wait_for_completion_timeout(&cmd->complete, tout)) {
++			AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF cmd timed-out\n");
++#ifdef AICWF_SDIO_SUPPORT
++			ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.wakeup_reg, 2);
++			if (ret < 0) {
++				sdio_err("reg:%d write failed!\n",
++					 sdiodev->sdio_reg.wakeup_reg);
 +			}
-+			sdio_dbg("write retry:  %d\n", write_retry);
-+			write_retry--;
-+			usleep_range(30, 50);
-+		}
-+		up(&sdiodev->pwrctl_wakeup_sema);
-+	}
-+
-+	sdiodev->state =3D SDIO_ACTIVE_ST;
-+	aicwf_sdio_pwrctl_timer(sdiodev, sdiodev->active_duration);
-+
-+	return ret;
-+}
-+
-+int aicwf_sdio_sleep_allow(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+	struct aicwf_bus *bus_if =3D sdiodev->bus_if;
-+
-+	if (bus_if->state =3D=3D BUS_DOWN_ST) {
-+		ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.sleep_reg, 0x10);
-+		if (ret)
-+			sdio_err("Write sleep fail!\n");
-+
-+		aicwf_sdio_pwrctl_timer(sdiodev, 0);
-+		return ret;
-+	}
-+
-+	if (sdiodev->state =3D=3D SDIO_ACTIVE_ST) {
-+		{
-+			sdio_dbg("s\n");
-+			ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.sleep_reg, 0x10);
-+			if (ret)
-+				sdio_err("Write sleep fail!\n");
-+		}
-+		sdiodev->state =3D SDIO_SLEEP_ST;
-+		aicwf_sdio_pwrctl_timer(sdiodev, 0);
-+	} else {
-+		aicwf_sdio_pwrctl_timer(sdiodev, sdiodev->active_duration);
-+	}
-+
-+	return ret;
-+}
-+
-+int aicwf_sdio_pwr_stctl(struct aic_sdio_dev *sdiodev, uint target)
-+{
-+	int ret =3D 0;
-+
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST)
-+		return -1;
-+
-+	if (sdiodev->state =3D=3D target) {
-+		if (target =3D=3D SDIO_ACTIVE_ST)
-+			aicwf_sdio_pwrctl_timer(sdiodev, sdiodev->active_duration);
-+
-+		return ret;
-+	}
-+
-+	switch (target) {
-+	case SDIO_ACTIVE_ST:
-+		aicwf_sdio_wakeup(sdiodev);
-+		break;
-+	case SDIO_SLEEP_ST:
-+		aicwf_sdio_sleep_allow(sdiodev);
-+		break;
-+	}
-+
-+	return ret;
-+}
 +#endif
 +
-+int aicwf_sdio_txpkt(struct aic_sdio_dev *sdiodev, struct sk_buff *pkt)
-+{
-+	int ret =3D 0;
-+	u32 len =3D 0;
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(sdiodev->dev);
-+
-+	if (bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_dbg("tx bus is down!\n");
-+		return -EINVAL;
-+	}
-+
-+	len =3D pkt->len;
-+	len =3D (len + SDIOWIFI_FUNC_BLOCKSIZE - 1) / SDIOWIFI_FUNC_BLOCKSIZE *
-+		  SDIOWIFI_FUNC_BLOCKSIZE;
-+	ret =3D aicwf_sdio_send_pkt(sdiodev, pkt->data, len);
-+	if (ret)
-+		sdio_err("aicwf_sdio_send_pkt fail%d\n", ret);
-+
-+	return ret;
-+}
-+
-+static int aicwf_sdio_intr_get_len_bytemode(struct aic_sdio_dev *sdiodev,
-+					    u8 *byte_len)
-+{
-+	int ret =3D 0;
-+
-+	if (!byte_len)
-+		return -EBADE;
-+
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST) {
-+		*byte_len =3D 0;
-+	} else {
-+		ret =3D aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.bytemode_len_reg,
-+				       byte_len);
-+		sdiodev->rx_priv->data_len =3D (*byte_len) * 4;
-+	}
-+
-+	return ret;
-+}
-+
-+static void aicwf_sdio_bus_stop(struct device *dev)
-+{
-+	struct aicwf_bus *bus_if =3D aicbsp_get_drvdata(dev);
-+	struct aic_sdio_dev *sdiodev =3D bus_if->bus_priv.sdio;
-+	int ret;
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	aicwf_sdio_pwrctl_timer(sdiodev, 0);
-+	if (sdiodev->pwrctl_tsk) {
-+		complete_all(&sdiodev->pwrctrl_trgg);
-+		kthread_stop(sdiodev->pwrctl_tsk);
-+		sdiodev->pwrctl_tsk =3D NULL;
-+	}
-+#endif
-+	bus_if->state =3D BUS_DOWN_ST;
-+	ret =3D down_interruptible(&sdiodev->tx_priv->txctl_sema);
-+	if (ret)
-+		sdio_err("down txctl_sema fail\n");
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	aicwf_sdio_pwr_stctl(sdiodev, SDIO_SLEEP_ST);
-+#endif
-+	if (!ret)
-+		up(&sdiodev->tx_priv->txctl_sema);
-+	aicwf_frame_queue_flush(&sdiodev->tx_priv->txq);
-+}
-+
-+struct sk_buff *aicwf_sdio_readframes(struct aic_sdio_dev *sdiodev, u8 msg=
-)
-+{
-+	int ret =3D 0;
-+	u32 size =3D 0;
-+	struct sk_buff *skb =3D NULL;
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(sdiodev->dev);
-+
-+	if (bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_dbg("bus down\n");
-+		return NULL;
-+	}
-+
-+	size =3D sdiodev->rx_priv->data_len;
-+	skb =3D __dev_alloc_skb(size, GFP_KERNEL);
-+	if (!skb)
-+		return NULL;
-+
-+	ret =3D aicwf_sdio_recv_pkt(sdiodev, skb, size, msg);
-+	if (ret) {
-+		dev_kfree_skb(skb);
-+		skb =3D NULL;
-+	}
-+
-+	return skb;
-+}
-+
-+static int aicwf_sdio_tx_msg(struct aic_sdio_dev *sdiodev)
-+{
-+	int err =3D 0;
-+	u16 len;
-+	u8 *payload =3D sdiodev->tx_priv->cmd_buf;
-+	u16 payload_len =3D sdiodev->tx_priv->cmd_len;
-+	u8 adjust_str[4] =3D {0, 0, 0, 0};
-+	int adjust_len =3D 0;
-+	int buffer_cnt =3D 0;
-+	u8 retry =3D 0;
-+
-+	len =3D payload_len;
-+	if ((len % TX_ALIGNMENT) !=3D 0) {
-+		adjust_len =3D roundup(len, TX_ALIGNMENT);
-+		memcpy(payload + payload_len, adjust_str, (adjust_len - len));
-+		payload_len +=3D (adjust_len - len);
-+	}
-+	len =3D payload_len;
-+
-+	// link tail is necessary
-+	if ((len % SDIOWIFI_FUNC_BLOCKSIZE) !=3D 0) {
-+		memset(payload + payload_len, 0, TAIL_LEN);
-+		payload_len +=3D TAIL_LEN;
-+		len =3D (payload_len / SDIOWIFI_FUNC_BLOCKSIZE + 1) *
-+			  SDIOWIFI_FUNC_BLOCKSIZE;
-+	} else {
-+		len =3D payload_len;
-+	}
-+
-+	if (sdiodev->chip_ops->use_flowctrl_msg) {
-+		buffer_cnt =3D aicwf_sdio_flow_ctrl(sdiodev);
-+		while ((buffer_cnt <=3D 0 ||
-+			(buffer_cnt > 0 && len > (buffer_cnt * BUFFER_SIZE))) &&
-+			   retry < 10) {
-+			retry++;
-+			buffer_cnt =3D aicwf_sdio_flow_ctrl(sdiodev);
-+			pr_info("aicbsp buffer_cnt =3D %d\n", buffer_cnt);
-+		}
-+	}
-+	down(&sdiodev->tx_priv->cmd_txsema);
-+
-+	if (sdiodev->chip_ops->use_flowctrl_msg) {
-+		if (buffer_cnt > 0 && len < (buffer_cnt * BUFFER_SIZE)) {
-+			err =3D aicwf_sdio_send_pkt(sdiodev, payload, len);
-+			if (err)
-+				sdio_err("aicwf_sdio_send_pkt fail%d\n", err);
-+
++			cmd_dump(cmd);
++			spin_lock_bh(&cmd_mgr->lock);
++			cmd_mgr->state =3D RWNX_CMD_MGR_STATE_CRASHED;
++			if (!(cmd->flags & RWNX_CMD_FLAG_DONE)) {
++				cmd->result =3D -ETIMEDOUT;
++				cmd_complete(cmd_mgr, cmd);
++			}
++			spin_unlock_bh(&cmd_mgr->lock);
 +		} else {
-+			sdio_err("tx msg fc retry fail:%d, %d\n", buffer_cnt, len);
-+			up(&sdiodev->tx_priv->cmd_txsema);
-+			return -1;
++			rwnx_cmd_free(cmd); // kfree(cmd);
++			if (!list_empty(&cmd_mgr->cmds))
++				WAKE_CMD_WORK(cmd_mgr);
 +		}
 +	} else {
-+		err =3D aicwf_sdio_send_msg(sdiodev, payload, len);
-+		if (err)
-+			sdio_err("aicwf_sdio_send_pkt fail%d\n", err);
++		cmd->result =3D 0;
 +	}
 +
-+	sdiodev->tx_priv->cmd_txstate =3D false;
-+	if (!err)
-+		sdiodev->tx_priv->cmd_tx_succ =3D true;
-+	else
-+		sdiodev->tx_priv->cmd_tx_succ =3D false;
-+
-+	up(&sdiodev->tx_priv->cmd_txsema);
-+
-+	return err;
++	return 0;
 +}
 +
-+static void aicwf_sdio_tx_process(struct aic_sdio_dev *sdiodev)
++static int cmd_mgr_llind(struct rwnx_cmd_mgr *cmd_mgr, struct rwnx_cmd *cm=
+d)
 +{
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_err("Bus is down\n");
-+		return;
-+	}
++	struct rwnx_cmd *cur, *acked =3D NULL;
 +
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	aicwf_sdio_pwr_stctl(sdiodev, SDIO_ACTIVE_ST);
-+#endif
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
-+	// config
-+	sdio_info("send cmd\n");
-+	if (sdiodev->tx_priv->cmd_txstate) {
-+		if (down_interruptible(&sdiodev->tx_priv->txctl_sema)) {
-+			txrx_err("txctl down bus->txctl_sema fail\n");
-+			return;
++	spin_lock_bh(&cmd_mgr->lock);
++	list_for_each_entry(cur, &cmd_mgr->cmds, list) {
++		if (!acked) {
++			if (cur->tkn =3D=3D cmd->tkn) {
++				if (WARN_ON_ONCE(cur !=3D cmd))
++					cmd_dump(cmd);
++				acked =3D cur;
++				continue;
++			}
 +		}
-+		if (sdiodev->state !=3D SDIO_ACTIVE_ST) {
-+			txrx_err("state err\n");
-+			up(&sdiodev->tx_priv->txctl_sema);
-+			txrx_err("txctl up bus->txctl_sema fail\n");
-+			return;
-+		}
-+
-+		if (aicwf_sdio_tx_msg(sdiodev))
-+			sdio_err("failed to send command\n");
-+		up(&sdiodev->tx_priv->txctl_sema);
-+		/* to prevent race conditions with wake-up operations */
-+		if (waitqueue_active(&sdiodev->tx_priv->cmd_txdone_wait))
-+			wake_up(&sdiodev->tx_priv->cmd_txdone_wait);
-+	}
-+
-+	// data
-+	sdio_info("send data\n");
-+	if (down_interruptible(&sdiodev->tx_priv->txctl_sema)) {
-+		txrx_err("txdata down bus->txctl_sema\n");
-+		return;
-+	}
-+
-+	if (sdiodev->state !=3D SDIO_ACTIVE_ST) {
-+		txrx_err("sdio state err\n");
-+		up(&sdiodev->tx_priv->txctl_sema);
-+		return;
-+	}
-+
-+	if (!aicwf_is_framequeue_empty(&sdiodev->tx_priv->txq))
-+		sdiodev->tx_priv->fw_avail_bufcnt =3D aicwf_sdio_flow_ctrl(sdiodev);
-+	while (!aicwf_is_framequeue_empty(&sdiodev->tx_priv->txq)) {
-+		aicwf_sdio_send(sdiodev->tx_priv);
-+		if (sdiodev->tx_priv->cmd_txstate)
++		if (cur->flags & RWNX_CMD_FLAG_WAIT_PUSH)
 +			break;
 +	}
-+
-+	up(&sdiodev->tx_priv->txctl_sema);
-+}
-+
-+static int aicwf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
-+{
-+	uint prio;
-+	int ret =3D -EBADE;
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(dev);
-+	struct aic_sdio_dev *sdiodev =3D bus_if->bus_priv.sdio;
-+
-+	prio =3D (pkt->priority & 0x7);
-+	spin_lock_bh(&sdiodev->tx_priv->txqlock);
-+	if (!aicwf_frame_enq(sdiodev->dev, &sdiodev->tx_priv->txq, pkt, prio)) {
-+		spin_unlock_bh(&sdiodev->tx_priv->txqlock);
-+		return -ENOSR;
-+	}
-+	ret =3D 0;
-+
-+	if (bus_if->state !=3D BUS_UP_ST) {
-+		sdio_err("bus_if stopped\n");
-+		spin_unlock_bh(&sdiodev->tx_priv->txqlock);
-+		return -1;
-+	}
-+
-+	atomic_inc(&sdiodev->tx_priv->tx_pktcnt);
-+	spin_unlock_bh(&sdiodev->tx_priv->txqlock);
-+	complete(&bus_if->bustx_trgg);
-+
-+	return ret;
-+}
-+
-+static int aicwf_sdio_bus_txmsg(struct device *dev, u8 *msg, uint msglen)
-+{
-+	int ret =3D -1;
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(dev);
-+	struct aic_sdio_dev *sdiodev =3D bus_if->bus_priv.sdio;
-+
-+	down(&sdiodev->tx_priv->cmd_txsema);
-+	sdiodev->tx_priv->cmd_txstate =3D true;
-+	sdiodev->tx_priv->cmd_tx_succ =3D false;
-+	sdiodev->tx_priv->cmd_buf =3D msg;
-+	sdiodev->tx_priv->cmd_len =3D msglen;
-+	up(&sdiodev->tx_priv->cmd_txsema);
-+
-+	if (bus_if->state !=3D BUS_UP_ST) {
-+		sdio_err("bus has stop\n");
-+		return -1;
-+	}
-+
-+	complete(&bus_if->bustx_trgg);
-+
-+	if (sdiodev->tx_priv->cmd_txstate) {
-+		int timeout =3D msecs_to_jiffies(CMD_TX_TIMEOUT);
-+
-+		ret =3D wait_event_timeout(sdiodev->tx_priv->cmd_txdone_wait,
-+					 !(sdiodev->tx_priv->cmd_txstate), timeout);
-+	}
-+
-+	if (!sdiodev->tx_priv->cmd_txstate && sdiodev->tx_priv->cmd_tx_succ) {
-+		ret =3D 0;
++	if (!acked) {
++		AICWFDBG(LOGDEBUG, KERN_CRIT "Error: acked cmd not found\n");
 +	} else {
-+		sdio_err("send failed:%d, %d,%x\n", sdiodev->tx_priv->cmd_txstate,
-+			 sdiodev->tx_priv->cmd_tx_succ, ret);
-+		ret =3D -EIO;
++		cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_ACK;
++		if (RWNX_CMD_WAIT_COMPLETE(cmd->flags))
++			cmd_complete(cmd_mgr, cmd);
 +	}
++	spin_unlock(&cmd_mgr->lock);
 +
-+	return ret;
-+}
-+
-+int aicwf_sdio_send(struct aicwf_tx_priv *tx_priv)
-+{
-+	struct sk_buff *pkt;
-+	struct aic_sdio_dev *sdiodev =3D tx_priv->sdiodev;
-+	u16 aggr_len =3D 0;
-+	int retry_times =3D 0;
-+	int max_retry_times =3D 5;
-+
-+	aggr_len =3D (tx_priv->tail - tx_priv->head);
-+	if (((atomic_read(&tx_priv->aggr_count) =3D=3D 0) && aggr_len !=3D 0) ||
-+	    ((atomic_read(&tx_priv->aggr_count) !=3D 0) && aggr_len =3D=3D 0)) {
-+		if (aggr_len > 0)
-+			aicwf_sdio_aggrbuf_reset(tx_priv);
-+		goto done;
-+	}
-+
-+	if (tx_priv->fw_avail_bufcnt <=3D 0) { // flow control failed
-+		tx_priv->fw_avail_bufcnt =3D aicwf_sdio_flow_ctrl(sdiodev);
-+		while (tx_priv->fw_avail_bufcnt <=3D 0 && retry_times < max_retry_times)=
- {
-+			retry_times++;
-+			tx_priv->fw_avail_bufcnt =3D aicwf_sdio_flow_ctrl(sdiodev);
-+		}
-+		if (tx_priv->fw_avail_bufcnt <=3D 0) {
-+			sdio_err("fc retry %d fail\n", tx_priv->fw_avail_bufcnt);
-+			goto done;
-+		}
-+	}
-+
-+	if (atomic_read(&tx_priv->aggr_count) =3D=3D tx_priv->fw_avail_bufcnt) {
-+		if (atomic_read(&tx_priv->aggr_count) > 0) {
-+			tx_priv->fw_avail_bufcnt -=3D atomic_read(&tx_priv->aggr_count);
-+			aicwf_sdio_aggr_send(tx_priv); // send and check the next pkt;
-+		}
-+	} else {
-+		spin_lock_bh(&sdiodev->tx_priv->txqlock);
-+		pkt =3D aicwf_frame_dequeue(&sdiodev->tx_priv->txq);
-+		if (!pkt) {
-+			sdio_err("txq no pkt\n");
-+			spin_unlock_bh(&sdiodev->tx_priv->txqlock);
-+			goto done;
-+		}
-+		atomic_dec(&sdiodev->tx_priv->tx_pktcnt);
-+		spin_unlock_bh(&sdiodev->tx_priv->txqlock);
-+
-+		if (!tx_priv || !tx_priv->tail || !pkt)
-+			txrx_err("null error\n");
-+		if (aicwf_sdio_aggr(tx_priv, pkt)) {
-+			aicwf_sdio_aggrbuf_reset(tx_priv);
-+			sdio_err("add aggr pkts failed!\n");
-+			goto done;
-+		}
-+
-+		// when aggr finish or there is cmd to send, just send this aggr pkt to
-+		// fw
-+		if ((int)atomic_read(&sdiodev->tx_priv->tx_pktcnt) =3D=3D 0 ||
-+		    sdiodev->tx_priv->cmd_txstate) { // no more pkt send it!
-+			tx_priv->fw_avail_bufcnt -=3D atomic_read(&tx_priv->aggr_count);
-+			aicwf_sdio_aggr_send(tx_priv);
-+		} else {
-+			goto done;
-+		}
-+	}
-+
-+done:
 +	return 0;
 +}
 +
-+int aicwf_sdio_aggr(struct aicwf_tx_priv *tx_priv, struct sk_buff *pkt)
++void cmd_mgr_task_process(struct work_struct *work)
 +{
-+	// struct rwnx_txhdr *txhdr =3D (struct rwnx_txhdr *)pkt->data;
-+	u8 *start_ptr =3D tx_priv->tail;
-+	u8 sdio_header[4];
-+	u8 adjust_str[4] =3D {0, 0, 0, 0};
-+	u16 curr_len =3D 0;
-+	int allign_len =3D 0;
++	struct rwnx_cmd_mgr *cmd_mgr =3D
++		container_of(work, struct rwnx_cmd_mgr, cmd_work);
++	struct rwnx_cmd *cur, *next =3D NULL;
++	unsigned long tout;
 +
-+	sdio_header[2] =3D 0x01; // data
-+	if (aicbsp_sdiodev->chip_ops->use_hdr_checksum)
-+		sdio_header[3] =3D crc8_ponl_107(&sdio_header[0], 3); // crc8
-+	else
-+		sdio_header[3] =3D 0; // reserved
-+
-+	memcpy(tx_priv->tail, (u8 *)&sdio_header, sizeof(sdio_header));
-+	tx_priv->tail +=3D sizeof(sdio_header);
-+
-+	// word alignment
-+	curr_len =3D tx_priv->tail - tx_priv->head;
-+	if (curr_len & (TX_ALIGNMENT - 1)) {
-+		allign_len =3D roundup(curr_len, TX_ALIGNMENT) - curr_len;
-+		memcpy(tx_priv->tail, adjust_str, allign_len);
-+		tx_priv->tail +=3D allign_len;
-+	}
-+
-+	if (aicbsp_sdiodev->chip_ops->need_fix_hdr_len) {
-+		start_ptr[0] =3D ((tx_priv->tail - start_ptr - 4) & 0xff);
-+		start_ptr[1] =3D (((tx_priv->tail - start_ptr - 4) >> 8) & 0x0f);
-+	}
-+
-+	tx_priv->aggr_buf->dev =3D pkt->dev;
-+
-+	consume_skb(pkt);
-+	atomic_inc(&tx_priv->aggr_count);
-+	return 0;
-+}
-+
-+void aicwf_sdio_aggr_send(struct aicwf_tx_priv *tx_priv)
-+{
-+	struct sk_buff *tx_buf =3D tx_priv->aggr_buf;
-+	int ret =3D 0;
-+	int curr_len =3D 0;
-+
-+	// link tail is necessary
-+	curr_len =3D tx_priv->tail - tx_priv->head;
-+	if ((curr_len % TXPKT_BLOCKSIZE) !=3D 0) {
-+		memset(tx_priv->tail, 0, TAIL_LEN);
-+		tx_priv->tail +=3D TAIL_LEN;
-+	}
-+
-+	tx_buf->len =3D tx_priv->tail - tx_priv->head;
-+	ret =3D aicwf_sdio_txpkt(tx_priv->sdiodev, tx_buf);
-+	if (ret < 0)
-+		sdio_err("fail to send aggr pkt!\n");
-+
-+	aicwf_sdio_aggrbuf_reset(tx_priv);
-+}
-+
-+void aicwf_sdio_aggrbuf_reset(struct aicwf_tx_priv *tx_priv)
-+{
-+	struct sk_buff *aggr_buf =3D tx_priv->aggr_buf;
-+
-+	tx_priv->tail =3D tx_priv->head;
-+	aggr_buf->len =3D 0;
-+	atomic_set(&tx_priv->aggr_count, 0);
-+}
-+
-+static int aicwf_sdio_bus_start(struct device *dev)
-+{
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(dev);
-+	struct aic_sdio_dev *sdiodev =3D bus_if->bus_priv.sdio;
-+	int ret =3D 0;
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	if (sdiodev->chip_ops->use_func_msg) {
-+		sdio_claim_host(sdiodev->func);
-+
-+		// since we have func2 we don't register irq handler
-+		sdio_claim_irq(sdiodev->func, NULL);
-+		sdio_claim_irq(sdiodev->func_msg, NULL);
-+
-+		sdiodev->func->irq_handler =3D
-+			(sdio_irq_handler_t *)aicwf_sdio_hal_irqhandler;
-+		sdiodev->func_msg->irq_handler =3D
-+			(sdio_irq_handler_t *)aicwf_sdio_hal_irqhandler_func2;
-+		sdio_release_host(sdiodev->func);
-+
-+		// enable sdio interrupt
-+		ret =3D
-+			aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.intr_config_reg, 0x07);
-+
-+		if (ret !=3D 0)
-+			sdio_err("intr register failed:%d\n", ret);
-+
-+		// enable sdio interrupt
-+		ret =3D aicwf_sdio_writeb_func2(sdiodev,
-+					      sdiodev->sdio_reg.intr_config_reg, 0x07);
-+
-+		if (ret !=3D 0)
-+			sdio_err("func2 intr register failed:%d\n", ret);
-+	} else {
-+		sdio_claim_host(sdiodev->func);
-+		sdio_claim_irq(sdiodev->func, aicwf_sdio_hal_irqhandler);
-+
-+		if (sdiodev->chip_ops->need_func0_intr) {
-+			sdio_f0_writeb(sdiodev->func, 0x07, 0x04, &ret);
-+			if (ret)
-+				sdio_err("set func0 int en fail %d\n", ret);
-+		}
-+		sdio_release_host(sdiodev->func);
-+		// enable sdio interrupt
-+		ret =3D
-+			aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.intr_config_reg, 0x07);
-+		if (ret !=3D 0)
-+			sdio_err("intr register failed:%d\n", ret);
-+	}
-+
-+	bus_if->state =3D BUS_UP_ST;
-+	return ret;
-+}
-+
-+int aicwf_sdio_bustx_thread(void *data)
-+{
-+	struct aicwf_bus *bus =3D (struct aicwf_bus *)data;
-+	struct aic_sdio_dev *sdiodev =3D bus->bus_priv.sdio;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
 +	while (1) {
-+		if (kthread_should_stop()) {
-+			sdio_dbg("sdio bustx thread stop\n");
++		next =3D NULL;
++		spin_lock_bh(&cmd_mgr->lock);
++
++		list_for_each_entry(cur, &cmd_mgr->cmds, list) {
++			if (cur->flags & RWNX_CMD_FLAG_WAIT_PUSH)
++				next =3D cur;
 +			break;
 +		}
-+		if (!wait_for_completion_interruptible(&bus->bustx_trgg)) {
-+			if ((int)(atomic_read(&sdiodev->tx_priv->tx_pktcnt) > 0) ||
-+			    sdiodev->tx_priv->cmd_txstate)
-+				aicwf_sdio_tx_process(sdiodev);
-+		}
-+	}
++		spin_unlock_bh(&cmd_mgr->lock);
 +
-+	return 0;
-+}
-+
-+int aicwf_sdio_busrx_thread(void *data)
-+{
-+	struct aicwf_rx_priv *rx_priv =3D (struct aicwf_rx_priv *)data;
-+	struct aicwf_bus *bus_if =3D rx_priv->sdiodev->bus_if;
-+
-+	while (1) {
-+		if (kthread_should_stop()) {
-+			sdio_dbg("sdio busrx thread stop\n");
++		if (!next)
 +			break;
-+		}
-+		if (!wait_for_completion_interruptible(&bus_if->busrx_trgg))
-+			aicwf_process_rxframes(rx_priv);
-+	}
 +
-+	return 0;
-+}
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+static void aicwf_sdio_bus_pwrctl(struct timer_list *t)
-+{
-+	//struct aic_sdio_dev *sdiodev =3D from_timer(sdiodev, t, timer);
-+	struct aic_sdio_dev *sdiodev =3D timer_container_of(sdiodev, t, timer);
-+
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_info("bus down\n");
-+		return;
-+	}
-+
-+	if (sdiodev->pwrctl_tsk)
-+		complete(&sdiodev->pwrctrl_trgg);
-+}
++		if (next) {
++#ifdef AICWF_SDIO_SUPPORT
++			struct aic_sdio_dev *sdiodev =3D
++				container_of(cmd_mgr, struct aic_sdio_dev, cmd_mgr);
 +#endif
++			next->flags &=3D ~RWNX_CMD_FLAG_WAIT_PUSH;
 +
-+static void aicwf_sdio_enq_rxpkt(struct aic_sdio_dev *sdiodev,
-+				 struct sk_buff *pkt)
-+{
-+	struct aicwf_rx_priv *rx_priv =3D sdiodev->rx_priv;
-+	unsigned long flags =3D 0;
++#ifdef AICWF_SDIO_SUPPORT
++			aicwf_set_cmd_tx((void *)(sdiodev), next->a2e_msg,
++					 sizeof(struct lmac_msg) +
++						next->a2e_msg->param_len);
++#else
++			aicwf_set_cmd_tx((void *)(usbdev), next->a2e_msg,
++					 sizeof(struct lmac_msg) +
++						next->a2e_msg->param_len);
++#endif
++			kfree(next->a2e_msg);
 +
-+	spin_lock_irqsave(&rx_priv->rxqlock, flags);
-+	if (!aicwf_rxframe_enqueue(sdiodev->dev, &rx_priv->rxq, pkt)) {
-+		spin_unlock_irqrestore(&rx_priv->rxqlock, flags);
-+		aicwf_dev_skb_free(pkt);
-+		return;
++			tout =3D
++				msecs_to_jiffies(RWNX_80211_CMD_TIMEOUT_MS * cmd_mgr->queue_sz);
++			if (!wait_for_completion_timeout(&next->complete, tout)) {
++				AICWFDBG(LOGDEBUG, KERN_CRIT "AICWF cmd timed-out\n");
++#ifdef AICWF_SDIO_SUPPORT
++				if (aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.wakeup_reg,
++						      2) < 0) {
++					sdio_err("reg:%d write failed!\n",
++						 sdiodev->sdio_reg.wakeup_reg);
++				}
++#endif
++				cmd_dump(next);
++				spin_lock_bh(&cmd_mgr->lock);
++				cmd_mgr->state =3D RWNX_CMD_MGR_STATE_CRASHED;
++				if (!(next->flags & RWNX_CMD_FLAG_DONE)) {
++					next->result =3D -ETIMEDOUT;
++					cmd_complete(cmd_mgr, next);
++				}
++				spin_unlock_bh(&cmd_mgr->lock);
++			} else {
++				rwnx_cmd_free(next); // kfree(next);
++			}
++		}
 +	}
-+	spin_unlock_irqrestore(&rx_priv->rxqlock, flags);
-+
-+	atomic_inc(&rx_priv->rx_cnt);
 +}
 +
-+#define SDIO_OTHER_INTERRUPT (0x1ul << 7)
-+
-+void aicwf_sdio_hal_irqhandler(struct sdio_func *func)
++static int cmd_mgr_run_callback(struct rwnx_hw *rwnx_hw, struct rwnx_cmd *=
+cmd,
++				struct rwnx_cmd_e2amsg *msg, msg_cb_fct cb)
 +{
-+	struct aicwf_bus *bus_if =3D NULL;
-+	struct aic_sdio_dev *sdiodev =3D NULL;
-+	u8 intstatus =3D 0;
-+	u8 byte_len =3D 0;
-+	struct sk_buff *pkt =3D NULL;
-+	int ret;
++	int res;
 +
-+	if (!func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return;
-+	}
-+	bus_if =3D dev_get_drvdata(&func->dev);
-+	sdiodev =3D bus_if->bus_priv.sdio;
++	if (!cb)
++		return 0;
 +
-+	if (aicbsp_sdiodev->sdio_hal_irqhandler) {
-+		aicbsp_sdiodev->sdio_hal_irqhandler(func);
-+		return;
-+	}
++	res =3D cb(rwnx_hw, cmd, msg);
 +
-+	if (!bus_if || bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_err("bus err\n");
-+		return;
-+	}
++	return res;
++}
 +
-+	if (aicbsp_sdiodev->chip_ops->use_func2) {
-+		ret =3D aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.block_cnt_reg,
-+				       &intstatus);
++static int cmd_mgr_msgind(struct rwnx_cmd_mgr *cmd_mgr,
++			  struct rwnx_cmd_e2amsg *msg, msg_cb_fct cb)
++{
++#ifdef AICWF_SDIO_SUPPORT
++	struct aic_sdio_dev *sdiodev =3D
++		container_of(cmd_mgr, struct aic_sdio_dev, cmd_mgr);
++	struct rwnx_hw *rwnx_hw =3D sdiodev->rwnx_hw;
++#endif
++	struct rwnx_cmd *cmd, *pos;
++	bool found =3D false;
 +
-+		while (intstatus) {
-+			sdiodev->rx_priv->data_len =3D intstatus * SDIOWIFI_FUNC_BLOCKSIZE;
-+			if (intstatus > 0) {
-+				if (intstatus < 64) {
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 0);
-+				} else {
-+					// byte_len must<=3D 128
-+					aicwf_sdio_intr_get_len_bytemode(sdiodev, &byte_len);
-+					sdio_info("byte mode len=3D%d\r\n", byte_len);
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 0);
-+				}
-+			} else {
-+				sdio_err("Interrupt but no data\n");
-+			}
++	// RWNX_DBG(RWNX_FN_ENTRY_STR); //debug trace
++#ifdef AIC8800_CREATE_TRACE_POINTS
++	trace_msg_recv(msg->id);
++#endif
++	// AICWFDBG(LOGDEBUG, "cmd->id=3D%x\n", msg->id); //debug trace
++	spin_lock_bh(&cmd_mgr->lock);
++	list_for_each_entry_safe(cmd, pos, &cmd_mgr->cmds, list) {
++		if (cmd->reqid =3D=3D msg->id && (cmd->flags & RWNX_CMD_FLAG_WAIT_CFM)) =
+{
++			if (!cmd_mgr_run_callback(rwnx_hw, cmd, msg, cb)) {
++				found =3D true;
++				cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_CFM;
++				if (WARN(msg->param_len > RWNX_CMD_E2AMSG_LEN_MAX,
++					 "Unexpect E2A msg len %d > %d\n", msg->param_len,
++					 RWNX_CMD_E2AMSG_LEN_MAX))
++					msg->param_len =3D RWNX_CMD_E2AMSG_LEN_MAX;
 +
-+			if (pkt)
-+				aicwf_sdio_enq_rxpkt(sdiodev, pkt);
++				if (cmd->e2a_msg && msg->param_len)
++					memcpy(cmd->e2a_msg, &msg->param, msg->param_len);
 +
-+			ret =3D aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.block_cnt_reg,
-+					       &intstatus);
-+		}
-+	} else {
-+		do {
-+			ret =3D aicwf_sdio_readb(sdiodev,
-+					       sdiodev->sdio_reg.misc_int_status_reg,
-+					       &intstatus);
-+			if (!ret)
++				if (RWNX_CMD_WAIT_COMPLETE(cmd->flags))
++					cmd_complete(cmd_mgr, cmd);
++
 +				break;
-+			sdio_err("ret=3D%d, intstatus=3D%x\r\n", ret, intstatus);
-+		} while (1);
-+		if (intstatus & SDIO_OTHER_INTERRUPT) {
-+			u8 int_pending;
-+
-+			ret =3D aicwf_sdio_readb(sdiodev, sdiodev->sdio_reg.sleep_reg,
-+					       &int_pending);
-+			if (ret < 0)
-+				sdio_err("reg:%d read failed!\n", sdiodev->sdio_reg.sleep_reg);
-+			int_pending &=3D ~0x01; // dev to host soft irq
-+			ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.sleep_reg,
-+						int_pending);
-+			if (ret < 0)
-+				sdio_err("reg:%d write failed!\n", sdiodev->sdio_reg.sleep_reg);
-+		}
-+
-+		if (intstatus > 0) {
-+			u8 intmaskf2 =3D intstatus | (0x1UL << 3);
-+
-+			if (intmaskf2 > 120U) {      // func2
-+				if (intmaskf2 =3D=3D 127U) { // byte mode
-+					// byte_len must<=3D 128
-+					aicwf_sdio_intr_get_len_bytemode(sdiodev, &byte_len);
-+					sdio_info("byte mode len=3D%d\r\n", byte_len);
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 1);
-+				} else { // block mode
-+					sdiodev->rx_priv->data_len =3D
-+						(intstatus & 0x7U) * SDIOWIFI_FUNC_BLOCKSIZE;
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 1);
-+				}
-+			} else {                     // func1
-+				if (intstatus =3D=3D 120U) { // byte mode
-+					// byte_len must<=3D 128
-+					aicwf_sdio_intr_get_len_bytemode(sdiodev, &byte_len);
-+					sdio_info("byte mode len=3D%d\r\n", byte_len);
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 0);
-+				} else { // block mode
-+					sdiodev->rx_priv->data_len =3D
-+						(intstatus & 0x7FU) * SDIOWIFI_FUNC_BLOCKSIZE;
-+					pkt =3D aicwf_sdio_readframes(sdiodev, 0);
-+				}
 +			}
-+		} else {
-+			sdio_err("Interrupt but no data\n");
 +		}
-+
-+		if (pkt)
-+			aicwf_sdio_enq_rxpkt(sdiodev, pkt);
 +	}
++	spin_unlock_bh(&cmd_mgr->lock);
 +
-+	complete(&bus_if->busrx_trgg);
++	if (!found)
++		cmd_mgr_run_callback(rwnx_hw, NULL, msg, cb);
++
++	return 0;
 +}
 +
-+void aicwf_sdio_hal_irqhandler_func2(struct sdio_func *func)
++static void cmd_mgr_print(struct rwnx_cmd_mgr *cmd_mgr)
 +{
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(&func->dev);
-+	struct aic_sdio_dev *sdiodev =3D bus_if->bus_priv.sdio;
-+	u8 intstatus =3D 0;
-+	u8 byte_len =3D 0;
-+#ifdef CONFIG_PREALLOC_RX_SKB
-+	struct rx_buff *pkt =3D NULL;
++	struct rwnx_cmd *cur;
++
++	spin_lock_bh(&cmd_mgr->lock);
++	RWNX_DBG("q_sz/max: %2d / %2d - next tkn: %d\n", cmd_mgr->queue_sz,
++		 cmd_mgr->max_queue_sz, cmd_mgr->next_tkn);
++	list_for_each_entry(cur, &cmd_mgr->cmds, list) {
++		cmd_dump(cur);
++	}
++	spin_unlock_bh(&cmd_mgr->lock);
++}
++
++static void cmd_mgr_drain(struct rwnx_cmd_mgr *cmd_mgr)
++{
++	struct rwnx_cmd *cur, *nxt;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	spin_lock_bh(&cmd_mgr->lock);
++	list_for_each_entry_safe(cur, nxt, &cmd_mgr->cmds, list) {
++		list_del(&cur->list);
++		cmd_mgr->queue_sz--;
++		if (!(cur->flags & RWNX_CMD_FLAG_NONBLOCK))
++			complete(&cur->complete);
++	}
++	spin_unlock_bh(&cmd_mgr->lock);
++}
++
++void rwnx_cmd_mgr_init(struct rwnx_cmd_mgr *cmd_mgr)
++{
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	INIT_LIST_HEAD(&cmd_mgr->cmds);
++	cmd_mgr->state =3D RWNX_CMD_MGR_STATE_INITED;
++	spin_lock_init(&cmd_mgr->lock);
++	cmd_mgr->max_queue_sz =3D RWNX_CMD_MAX_QUEUED;
++	cmd_mgr->queue =3D &cmd_mgr_queue;
++	cmd_mgr->print =3D &cmd_mgr_print;
++	cmd_mgr->drain =3D &cmd_mgr_drain;
++	cmd_mgr->llind =3D &cmd_mgr_llind;
++	cmd_mgr->msgind =3D &cmd_mgr_msgind;
++
++	INIT_WORK(&cmd_mgr->cmd_work, cmd_mgr_task_process);
++	cmd_mgr->cmd_wq =3D create_singlethread_workqueue("cmd_wq");
++	if (!cmd_mgr->cmd_wq) {
++		txrx_err("insufficient memory to create cmd workqueue.\n");
++		return;
++	}
++}
++
++void rwnx_cmd_mgr_deinit(struct rwnx_cmd_mgr *cmd_mgr)
++{
++	cmd_mgr->print(cmd_mgr);
++	cmd_mgr->drain(cmd_mgr);
++	cmd_mgr->print(cmd_mgr);
++	flush_workqueue(cmd_mgr->cmd_wq);
++	destroy_workqueue(cmd_mgr->cmd_wq);
++	memset(cmd_mgr, 0, sizeof(*cmd_mgr));
++}
++
++void aicwf_set_cmd_tx(void *dev, struct lmac_msg *msg, uint len)
++{
++	u8 *buffer =3D NULL;
++	u16 index =3D 0;
++#ifdef AICWF_SDIO_SUPPORT
++	struct aic_sdio_dev *sdiodev =3D (struct aic_sdio_dev *)dev;
++	struct aicwf_bus *bus =3D sdiodev->bus_if;
 +#else
-+	struct sk_buff *pkt =3D NULL;
++	struct aic_usb_dev *usbdev =3D (struct aic_usb_dev *)dev;
++	struct aicwf_bus *bus =3D NULL;
++
++	if (!usbdev->state) {
++		AICWFDBG(LOGDEBUG, "down msg\n");
++		return;
++	}
++	bus =3D usbdev->bus_if;
 +#endif
-+	int ret;
++	buffer =3D bus->cmd_buf;
 +
-+	if (!bus_if || bus_if->state =3D=3D BUS_DOWN_ST) {
-+		sdio_err("bus err\n");
-+		return;
-+	}
++	memset(buffer, 0, CMD_BUF_MAX);
++	buffer[0] =3D (len + 4) & 0x00ff;
++	buffer[1] =3D ((len + 4) >> 8) & 0x0f;
++	buffer[2] =3D 0x11;
 +
-+#ifdef CONFIG_PREALLOC_RX_SKB
-+	if (list_empty(&aic_rx_buff_list.rxbuff_list)) {
-+		pr_warn("aicbsp %s %d, rxbuff list is empty\n", __func__, __LINE__);
-+		return;
-+	}
-+#endif
++	buffer[3] =3D aic_chip_cmd_hdr_checksum(sdiodev->rwnx_hw, &buffer[0], 3);
 +
-+	ret =3D aicwf_sdio_readb_func2(sdiodev, sdiodev->sdio_reg.block_cnt_reg,
-+				     &intstatus);
-+	if (ret) {
-+		sdio_err("failed to read interrupt status: %d\n", ret);
-+		return;
-+	}
++	index +=3D 4;
++	// there is a dummy word
++	index +=3D 4;
 +
-+	while (intstatus) {
-+		sdiodev->rx_priv->data_len =3D intstatus * SDIOWIFI_FUNC_BLOCKSIZE;
-+		if (intstatus > 0) {
-+			if (intstatus < 64) {
-+				pkt =3D aicwf_sdio_readframes(sdiodev, 1);
-+			} else {
-+				sdio_info("byte mode len=3D%d\r\n", byte_len);
-+				// byte_len must<=3D 128
-+				aicwf_sdio_intr_get_len_bytemode(sdiodev, &byte_len);
-+				pkt =3D aicwf_sdio_readframes(sdiodev, 1);
-+			}
-+		} else {
-+			sdio_err("Interrupt but no data\n");
-+		}
++	// make sure little endian
++	put_u16(&buffer[index], msg->id);
++	index +=3D 2;
++	put_u16(&buffer[index], msg->dest_id);
++	index +=3D 2;
++	put_u16(&buffer[index], msg->src_id);
++	index +=3D 2;
++	put_u16(&buffer[index], msg->param_len);
++	index +=3D 2;
++	memcpy(&buffer[index], (u8 *)msg->param, msg->param_len);
 +
-+		if (pkt)
-+			aicwf_sdio_enq_rxpkt(sdiodev, pkt);
-+
-+		ret =3D aicwf_sdio_readb_func2(sdiodev, sdiodev->sdio_reg.block_cnt_reg,
-+					     &intstatus);
-+		if (ret) {
-+			sdio_err("failed to read interrupt status: %d\n", ret);
-+			break;
-+		}
-+	}
-+
-+	complete(&bus_if->busrx_trgg);
++	aicwf_bus_txmsg(bus, buffer, len + 8);
 +}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.h b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_cmds.h
+new file mode 100644
+index 0000000000000..adb4bc49c188a
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_cmds.h
+@@ -0,0 +1,99 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_CMDS_H_
++#define _RWNX_CMDS_H_
 +
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+void aicwf_sdio_pwrctl_timer(struct aic_sdio_dev *sdiodev, uint duration)
++#include "lmac_msg.h"
++#include "ipc_shared.h"
++#include <linux/completion.h>
++#include <linux/module.h>
++#include <linux/spinlock.h>
++
++#define RWNX_80211_CMD_TIMEOUT_MS 6000
++
++#define RWNX_CMD_FLAG_NONBLOCK  BIT(0)
++#define RWNX_CMD_FLAG_REQ_CFM   BIT(1)
++#define RWNX_CMD_FLAG_WAIT_PUSH BIT(2)
++#define RWNX_CMD_FLAG_WAIT_ACK  BIT(3)
++#define RWNX_CMD_FLAG_WAIT_CFM  BIT(4)
++#define RWNX_CMD_FLAG_DONE      BIT(5)
++/* ATM IPC design makes it possible to get the CFM before the ACK,
++ * otherwise this could have simply been a state enum
++ */
++#define RWNX_CMD_WAIT_COMPLETE(flags)                                     =
+     \
++	(!((flags) & (RWNX_CMD_FLAG_WAIT_ACK | RWNX_CMD_FLAG_WAIT_CFM)))
++
++#define RWNX_CMD_MAX_QUEUED 16
++
++#define rwnx_cmd_e2amsg         ipc_e2a_msg
++#define rwnx_cmd_a2emsg         lmac_msg
++#define RWNX_CMD_A2EMSG_LEN(m)  (sizeof(struct lmac_msg) + (m)->param_len)
++#define RWNX_CMD_E2AMSG_LEN_MAX (IPC_E2A_MSG_PARAM_SIZE * 4)
++
++struct rwnx_hw;
++struct rwnx_cmd;
++typedef int (*msg_cb_fct)(struct rwnx_hw *rwnx_hw, struct rwnx_cmd *cmd,
++			  struct rwnx_cmd_e2amsg *msg);
++
++static inline void put_u16(u8 *buf, u16 data)
 +{
-+	uint timeout;
-+
-+	if (sdiodev->bus_if->state =3D=3D BUS_DOWN_ST && duration)
-+		return;
-+
-+	spin_lock_bh(&sdiodev->pwrctl_lock);
-+	if (!duration) {
-+		if (timer_pending(&sdiodev->timer))
-+			//del_timer_sync(&sdiodev->timer);
-+			timer_delete_sync(&sdiodev->timer);
-+	} else {
-+		sdiodev->active_duration =3D duration;
-+		timeout =3D msecs_to_jiffies(sdiodev->active_duration);
-+		mod_timer(&sdiodev->timer, jiffies + timeout);
-+	}
-+	spin_unlock_bh(&sdiodev->pwrctl_lock);
++	buf[0] =3D (u8)(data & 0x00ff);
++	buf[1] =3D (u8)((data >> 8) & 0x00ff);
 +}
-+#endif
 +
-+/* Forward declarations for new bus_ops callbacks */
-+static int aicwf_bsp_bus_read_reg(struct device *dev, u32 regaddr, u8 *val=
-);
-+static int aicwf_bsp_bus_write_reg(struct device *dev, u32 regaddr, u8 val=
-);
-+static int aicwf_bsp_bus_send_pkt(struct device *dev, u8 *buf, uint count)=
-;
-+static int aicwf_bsp_bus_recv_pkt(struct device *dev, u8 *buf, u32 size);
-+static int aicwf_bsp_bus_enable_irq(struct device *dev);
-+static void aicwf_bsp_bus_disable_irq(struct device *dev);
-+static bool aicwf_bsp_bus_flow_ctrl(struct device *dev);
-+static int aicwf_bsp_bus_sleep_allow(struct device *dev);
-+static int aicwf_bsp_bus_wakeup(struct device *dev);
-+static const void *aicwf_bsp_bus_get_hw_props(struct device *dev);
-+
-+static struct aicwf_bus_ops aicwf_sdio_bus_ops =3D {
-+	.start          =3D aicwf_sdio_bus_start,
-+	.stop           =3D aicwf_sdio_bus_stop,
-+	.txdata         =3D aicwf_sdio_bus_txdata,
-+	.txmsg          =3D aicwf_sdio_bus_txmsg,
-+	.read_reg       =3D aicwf_bsp_bus_read_reg,
-+	.write_reg      =3D aicwf_bsp_bus_write_reg,
-+	.send_pkt       =3D aicwf_bsp_bus_send_pkt,
-+	.recv_pkt       =3D aicwf_bsp_bus_recv_pkt,
-+	.enable_irq     =3D aicwf_bsp_bus_enable_irq,
-+	.disable_irq    =3D aicwf_bsp_bus_disable_irq,
-+	.flow_ctrl      =3D aicwf_bsp_bus_flow_ctrl,
-+	.sleep_allow    =3D aicwf_bsp_bus_sleep_allow,
-+	.wakeup         =3D aicwf_bsp_bus_wakeup,
-+	.get_hw_props   =3D aicwf_bsp_bus_get_hw_props,
++enum rwnx_cmd_mgr_state {
++	RWNX_CMD_MGR_STATE_DEINIT,
++	RWNX_CMD_MGR_STATE_INITED,
++	RWNX_CMD_MGR_STATE_CRASHED,
 +};
 +
-+void aicwf_sdio_release_func2(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret =3D 0;
-+
-+	if (!sdiodev->func_msg) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return;
-+	}
-+	sdio_claim_host(sdiodev->func_msg);
-+	// disable sdio interrupt
-+	ret =3D aicwf_sdio_writeb_func2(sdiodev, sdiodev->sdio_reg.intr_config_re=
-g,
-+				      0x0);
-+	if (ret < 0)
-+		sdio_err("reg:%d write failed!\n", sdiodev->sdio_reg.intr_config_reg);
-+
-+	sdio_release_irq(sdiodev->func_msg);
-+	sdio_release_host(sdiodev->func_msg);
-+}
-+
-+void aicwf_sdio_release(struct aic_sdio_dev *sdiodev)
-+{
-+	struct aicwf_bus *bus_if =3D NULL;
-+
-+	if (bsp_init =3D=3D 0) {
-+		pr_err("aicbsp already sdio_release\n");
-+		return;
-+	}
-+
-+	bsp_init =3D 0;
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return;
-+	}
-+
-+	bus_if =3D aicbsp_get_drvdata(sdiodev->dev);
-+	if (bus_if)
-+		bus_if->state =3D BUS_DOWN_ST;
-+
-+	if (aicbsp_sdiodev->chip_ops->use_func_msg)
-+		aicwf_sdio_release_func2(sdiodev);
-+
-+	if (sdiodev->dev)
-+		aicwf_bus_deinit(sdiodev->dev);
-+
-+	if (sdiodev->tx_priv)
-+		aicwf_tx_deinit(sdiodev->tx_priv);
-+
-+	if (sdiodev->rx_priv)
-+		aicwf_rx_deinit(sdiodev->rx_priv);
-+
-+	if (sdiodev->cmd_mgr.state =3D=3D RWNX_CMD_MGR_STATE_INITED)
-+		rwnx_cmd_mgr_deinit(&sdiodev->cmd_mgr);
-+}
-+
-+void aicwf_sdio_reg_init(struct aic_sdio_dev *sdiodev)
-+{
-+	if (aicbsp_sdiodev->chip_ops->use_func2) {
-+		sdiodev->sdio_reg.bytemode_len_reg =3D SDIOWIFI_BYTEMODE_LEN_REG;
-+		sdiodev->sdio_reg.intr_config_reg =3D SDIOWIFI_INTR_CONFIG_REG;
-+		sdiodev->sdio_reg.sleep_reg =3D SDIOWIFI_SLEEP_REG;
-+		sdiodev->sdio_reg.wakeup_reg =3D SDIOWIFI_WAKEUP_REG;
-+		sdiodev->sdio_reg.flow_ctrl_reg =3D SDIOWIFI_FLOW_CTRL_REG;
-+		sdiodev->sdio_reg.register_block =3D SDIOWIFI_REGISTER_BLOCK;
-+		sdiodev->sdio_reg.bytemode_enable_reg =3D SDIOWIFI_BYTEMODE_ENABLE_REG;
-+		sdiodev->sdio_reg.block_cnt_reg =3D SDIOWIFI_BLOCK_CNT_REG;
-+		sdiodev->sdio_reg.rd_fifo_addr =3D SDIOWIFI_RD_FIFO_ADDR;
-+		sdiodev->sdio_reg.wr_fifo_addr =3D SDIOWIFI_WR_FIFO_ADDR;
-+	} else {
-+		sdiodev->sdio_reg.bytemode_len_reg =3D SDIOWIFI_BYTEMODE_LEN_REG_V3;
-+		sdiodev->sdio_reg.intr_config_reg =3D SDIOWIFI_INTR_ENABLE_REG_V3;
-+		sdiodev->sdio_reg.sleep_reg =3D SDIOWIFI_INTR_PENDING_REG_V3;
-+		sdiodev->sdio_reg.wakeup_reg =3D SDIOWIFI_INTR_TO_DEVICE_REG_V3;
-+		sdiodev->sdio_reg.flow_ctrl_reg =3D SDIOWIFI_FLOW_CTRL_Q1_REG_V3;
-+		sdiodev->sdio_reg.bytemode_enable_reg =3D SDIOWIFI_BYTEMODE_ENABLE_REG_V=
-3;
-+		sdiodev->sdio_reg.misc_int_status_reg =3D SDIOWIFI_MISC_INT_STATUS_REG_V=
-3;
-+		sdiodev->sdio_reg.rd_fifo_addr =3D SDIOWIFI_RD_FIFO_ADDR_V3;
-+		sdiodev->sdio_reg.wr_fifo_addr =3D SDIOWIFI_WR_FIFO_ADDR_V3;
-+	}
-+}
-+
-+int aicwf_sdio_func_init(struct aic_sdio_dev *sdiodev)
-+{
-+	struct mmc_host *host;
-+	u8 block_bit0 =3D 0x1;
-+	u8 byte_mode_disable =3D 0x1; // 1: no byte mode
-+	int ret =3D 0;
-+	struct aicbsp_feature_t feature;
-+
-+	aicbsp_get_feature(&feature);
-+	aicwf_sdio_reg_init(sdiodev);
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	host =3D sdiodev->func->card->host;
-+
-+	sdio_claim_host(sdiodev->func);
-+
-+	ret =3D sdio_set_block_size(sdiodev->func, SDIOWIFI_FUNC_BLOCKSIZE);
-+	if (ret < 0) {
-+		sdio_err("set blocksize fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	ret =3D sdio_enable_func(sdiodev->func);
-+	if (ret < 0) {
-+		sdio_err("enable func fail %d.\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	usleep_range(20, 40);
-+	// SDIO CLOCK SETTING
-+	if (feature.sdio_clock > 0) {
-+		host->ios.clock =3D feature.sdio_clock;
-+		host->ops->set_ios(host, &host->ios);
-+		sdio_dbg("Set SDIO Clock %d MHz\n", host->ios.clock / 1000000);
-+	}
-+	sdio_release_host(sdiodev->func);
-+
-+	if (aicbsp_sdiodev->chip_ops->use_func_msg) {
-+		sdio_claim_host(sdiodev->func_msg);
-+
-+		// set sdio blocksize
-+		ret =3D sdio_set_block_size(sdiodev->func_msg, SDIOWIFI_FUNC_BLOCKSIZE);
-+		if (ret < 0) {
-+			AICWFDBG(LOGERROR, "set func2 blocksize fail %d\n", ret);
-+			sdio_release_host(sdiodev->func_msg);
-+			return ret;
-+		}
-+
-+		// set sdio enable func
-+		ret =3D sdio_enable_func(sdiodev->func_msg);
-+		if (ret < 0)
-+			AICWFDBG(LOGERROR, "enable func2 fail %d.\n", ret);
-+
-+		sdio_release_host(sdiodev->func_msg);
-+
-+		ret =3D aicwf_sdio_writeb_func2(sdiodev, sdiodev->sdio_reg.register_bloc=
-k,
-+					      block_bit0);
-+		if (ret < 0) {
-+			AICWFDBG(LOGERROR, "reg:%d write failed!\n",
-+				 sdiodev->sdio_reg.register_block);
-+			return ret;
-+		}
-+
-+		// 1: no byte mode
-+		ret =3D aicwf_sdio_writeb_func2(sdiodev,
-+					      sdiodev->sdio_reg.bytemode_enable_reg,
-+					      byte_mode_disable);
-+		if (ret < 0) {
-+			AICWFDBG(LOGERROR, "reg:%d write failed!\n",
-+				 sdiodev->sdio_reg.bytemode_enable_reg);
-+			return ret;
-+		}
-+	}
-+
-+	ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.register_block,
-+				block_bit0);
-+	if (ret < 0) {
-+		sdio_err("reg:%d write failed!\n", sdiodev->sdio_reg.register_block);
-+		return ret;
-+	}
-+
-+	// 1: no byte mode
-+	ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.bytemode_enable_reg,
-+				byte_mode_disable);
-+	if (ret < 0) {
-+		sdio_err("reg:%d write failed!\n",
-+			 sdiodev->sdio_reg.bytemode_enable_reg);
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+int aicwf_sdiov3_func_init(struct aic_sdio_dev *sdiodev)
-+{
-+	struct mmc_host *host;
-+	u8 byte_mode_disable =3D 0x1; // 1: no byte mode
-+	int ret =3D 0;
-+	struct aicbsp_feature_t feature;
-+	int val;
-+
-+	aicbsp_get_feature(&feature);
-+	aicwf_sdio_reg_init(sdiodev);
-+
-+	if (!sdiodev->func) {
-+		pr_warn("aicbsp %s, NULL sdio func\n", __func__);
-+		return 0;
-+	}
-+
-+	host =3D sdiodev->func->card->host;
-+
-+	sdio_claim_host(sdiodev->func);
-+	sdiodev->func->card->quirks |=3D MMC_QUIRK_LENIENT_FN0;
-+
-+	ret =3D sdio_set_block_size(sdiodev->func, SDIOWIFI_FUNC_BLOCKSIZE);
-+	if (ret < 0) {
-+		sdio_err("set blocksize fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	ret =3D sdio_enable_func(sdiodev->func);
-+	if (ret < 0) {
-+		sdio_err("enable func fail %d.\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+
-+	sdio_f0_writeb(sdiodev->func, 0x7F, 0xF2, &ret);
-+	if (ret) {
-+		sdio_err("set fn0 0xF2 fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	// mod sdio phase
-+	if (host->ios.timing =3D=3D MMC_TIMING_UHS_DDR50)
-+		val =3D 0x20; // 0x21; //0x1D; //0x5;
-+	else
-+		val =3D 0x00; // 0x01; //0x19; //0x1;
-+	val |=3D SDIOCLK_FREE_RUNNING_BIT;
-+	sdio_f0_writeb(sdiodev->func, val, 0xF0, &ret);
-+	if (ret) {
-+		sdio_err("set iopad ctrl fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	sdio_f0_writeb(sdiodev->func, 0x00, 0xF8, &ret);
-+	if (ret) {
-+		sdio_err("set iopad delay2 fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	sdio_f0_writeb(sdiodev->func, 0x00, 0xF1, &ret);
-+	if (ret) {
-+		sdio_err("set iopad delay1 fail %d\n", ret);
-+		sdio_release_host(sdiodev->func);
-+		return ret;
-+	}
-+	usleep_range(1000, 2000);
-+	sdio_dbg("Set SDIO Clock %d MHz\n", host->ios.clock / 1000000);
-+	sdio_release_host(sdiodev->func);
-+
-+	// 1: no byte mode
-+	ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.bytemode_enable_reg,
-+				byte_mode_disable);
-+	if (ret < 0) {
-+		sdio_err("reg:%d write failed!\n",
-+			 sdiodev->sdio_reg.bytemode_enable_reg);
-+		return ret;
-+	}
-+
-+	return ret;
-+}
-+
-+void aicwf_sdio_func_deinit(struct aic_sdio_dev *sdiodev)
-+{
-+	struct aicwf_bus *bus_if =3D NULL;
-+
-+	if (bsp_func_init =3D=3D 0) {
-+		pr_err("aicbsp already func_deinit\n");
-+		return;
-+	}
-+
-+	bsp_func_init =3D 0;
-+
-+	if (!sdiodev->func) {
-+		sdio_info("%s, NULL sdio func\n", __func__);
-+		return;
-+	}
-+
-+	bus_if =3D dev_get_drvdata(sdiodev->dev);
-+	if (!bus_if) {
-+		sdio_info("%s, bus_if is null\n", __func__);
-+		return;
-+	}
-+
-+	if (sdiodev->bus_if =3D=3D bus_if) {
-+		sdio_dbg("%s bsp disable\n", __func__);
-+		sdio_claim_host(sdiodev->func);
-+		sdio_disable_func(sdiodev->func);
-+		sdio_release_host(sdiodev->func);
-+	}
-+
-+	if (aicbsp_sdiodev->chip_ops->use_func_msg) {
-+		sdio_claim_host(sdiodev->func_msg);
-+		sdio_disable_func(sdiodev->func_msg);
-+		sdio_release_host(sdiodev->func_msg);
-+	}
-+}
-+
-+void *aicwf_sdio_bus_init(struct aic_sdio_dev *sdiodev)
-+{
-+	int ret;
-+	struct aicwf_bus *bus_if;
-+	struct aicwf_rx_priv *rx_priv;
-+	struct aicwf_tx_priv *tx_priv;
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	spin_lock_init(&sdiodev->pwrctl_lock);
-+	sema_init(&sdiodev->pwrctl_wakeup_sema, 1);
-+#endif
-+
-+	bus_if =3D sdiodev->bus_if;
-+	bus_if->dev =3D sdiodev->dev;
-+	bus_if->ops =3D &aicwf_sdio_bus_ops;
-+	bus_if->state =3D BUS_DOWN_ST;
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	sdiodev->state =3D SDIO_SLEEP_ST;
-+	sdiodev->active_duration =3D SDIOWIFI_PWR_CTRL_INTERVAL;
-+#else
-+	sdiodev->state =3D SDIO_ACTIVE_ST;
-+#endif
-+
-+	rx_priv =3D aicwf_rx_init(sdiodev);
-+	if (!rx_priv) {
-+		sdio_err("rx init fail\n");
-+		goto fail;
-+	}
-+	sdiodev->rx_priv =3D rx_priv;
-+
-+	tx_priv =3D aicwf_tx_init(sdiodev);
-+	if (!tx_priv) {
-+		sdio_err("tx init fail\n");
-+		goto fail;
-+	}
-+	sdiodev->tx_priv =3D tx_priv;
-+	aicwf_frame_queue_init(&tx_priv->txq, 8, TXQLEN);
-+	spin_lock_init(&tx_priv->txqlock);
-+	sema_init(&tx_priv->txctl_sema, 1);
-+	sema_init(&tx_priv->cmd_txsema, 1);
-+	init_waitqueue_head(&tx_priv->cmd_txdone_wait);
-+	atomic_set(&tx_priv->tx_pktcnt, 0);
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	timer_setup(&sdiodev->timer, aicwf_sdio_bus_pwrctl, 0);
-+	init_completion(&sdiodev->pwrctrl_trgg);
-+#endif
-+	ret =3D aicwf_bus_init(0, sdiodev->dev);
-+	if (ret < 0) {
-+		sdio_err("bus init fail\n");
-+		goto fail;
-+	}
-+
-+	ret =3D aicwf_bus_start(bus_if);
-+	if (ret !=3D 0) {
-+		sdio_err("bus start fail\n");
-+		goto fail;
-+	}
-+
-+	return sdiodev;
-+
-+fail:
-+	aicwf_sdio_release(sdiodev);
-+	return NULL;
-+}
-+
-+/**
-+ * get_testmode - Get the firmware test mode selected by the BSP
-+ *
-+ * Return: Current firmware test mode.
-+ */
-+int get_testmode(void)
-+{
-+	return testmode;
-+}
-+EXPORT_SYMBOL_GPL(get_testmode);
-+
-+/**
-+ * get_sdio_func - Get the active AIC SDIO function
-+ *
-+ * Return: Pointer to the active SDIO function.
-+ */
-+struct sdio_func *get_sdio_func(void)
-+{
-+	return aicbsp_sdiodev->func;
-+}
-+EXPORT_SYMBOL_GPL(get_sdio_func);
-+
-+/**
-+ * set_irq_handler - Set the WLAN driver's SDIO interrupt callback
-+ * @fn: Callback invoked for an SDIO interrupt
-+ */
-+void set_irq_handler(void *fn)
-+{
-+	aicbsp_sdiodev->sdio_hal_irqhandler =3D (sdio_irq_handler_t *)fn;
-+}
-+EXPORT_SYMBOL_GPL(set_irq_handler);
-+
-+u8 crc8_ponl_107(u8 *p_buffer, u16 cal_size)
-+{
-+	u8 i;
-+	u8 crc =3D 0;
-+
-+	if (cal_size =3D=3D 0)
-+		return crc;
-+	while (cal_size--) {
-+		for (i =3D 0x80; i > 0; i /=3D 2) {
-+			if (crc & 0x80) {
-+				crc *=3D 2;
-+				crc ^=3D 0x07; // polynomial X8 + X2 + X + 1,(0x107)
-+			} else {
-+				crc *=3D 2;
-+			}
-+			if ((*p_buffer) & i)
-+				crc ^=3D 0x07;
-+		}
-+		p_buffer++;
-+	}
-+	return crc;
-+}
-+
-+/* =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-+ *  Bus abstraction layer =E2=80=93 BSP SDIO bus_ops callbacks
-+ * =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-+ */
-+
-+static inline struct aic_sdio_dev *aicwf_bsp_bus_to_sdiodev(struct device =
-*dev)
-+{
-+	struct aicwf_bus *bus_if =3D dev_get_drvdata(dev);
-+
-+	return bus_if->bus_priv.sdio;
-+}
-+
-+static int aicwf_bsp_bus_read_reg(struct device *dev, u32 regaddr, u8 *val=
-)
-+{
-+	return aicwf_sdio_readb(aicwf_bsp_bus_to_sdiodev(dev), regaddr, val);
-+}
-+
-+static int aicwf_bsp_bus_write_reg(struct device *dev, u32 regaddr, u8 val=
-)
-+{
-+	return aicwf_sdio_writeb(aicwf_bsp_bus_to_sdiodev(dev), regaddr, val);
-+}
-+
-+static int aicwf_bsp_bus_send_pkt(struct device *dev, u8 *buf, uint count)
-+{
-+	return aicwf_sdio_send_pkt(aicwf_bsp_bus_to_sdiodev(dev), buf, count);
-+}
-+
-+static int aicwf_bsp_bus_recv_pkt(struct device *dev, u8 *buf, u32 size)
-+{
-+	struct aic_sdio_dev *sdiodev =3D aicwf_bsp_bus_to_sdiodev(dev);
-+	int ret;
-+
-+	sdio_claim_host(sdiodev->func);
-+	ret =3D sdio_readsb(sdiodev->func, buf,
-+			  sdiodev->sdio_reg.rd_fifo_addr, size);
-+	sdio_release_host(sdiodev->func);
-+
-+	return ret;
-+}
-+
-+static int aicwf_bsp_bus_enable_irq(struct device *dev)
-+{
-+	struct aic_sdio_dev *sdiodev =3D aicwf_bsp_bus_to_sdiodev(dev);
-+	int ret;
-+
-+	sdio_claim_host(sdiodev->func);
-+	sdio_claim_irq(sdiodev->func, sdiodev->sdio_hal_irqhandler);
-+	sdio_release_host(sdiodev->func);
-+
-+	ret =3D aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.intr_config_reg, 0x0=
-7);
-+	if (ret)
-+		sdio_err("intr register failed:%d\n", ret);
-+
-+	return ret;
-+}
-+
-+static void aicwf_bsp_bus_disable_irq(struct device *dev)
-+{
-+	struct aic_sdio_dev *sdiodev =3D aicwf_bsp_bus_to_sdiodev(dev);
-+
-+	sdio_claim_host(sdiodev->func);
-+	aicwf_sdio_writeb(sdiodev, sdiodev->sdio_reg.intr_config_reg, 0x0);
-+	sdio_release_irq(sdiodev->func);
-+	sdio_release_host(sdiodev->func);
-+}
-+
-+static bool aicwf_bsp_bus_flow_ctrl(struct device *dev)
-+{
-+	int ret;
-+
-+	ret =3D aicwf_sdio_flow_ctrl(aicwf_bsp_bus_to_sdiodev(dev));
-+	return (ret > 0);
-+}
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+static int aicwf_bsp_bus_sleep_allow(struct device *dev)
-+{
-+	return aicwf_sdio_sleep_allow(aicwf_bsp_bus_to_sdiodev(dev));
-+}
-+
-+static int aicwf_bsp_bus_wakeup(struct device *dev)
-+{
-+	return aicwf_sdio_wakeup(aicwf_bsp_bus_to_sdiodev(dev));
-+}
-+#else
-+static int aicwf_bsp_bus_sleep_allow(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static int aicwf_bsp_bus_wakeup(struct device *dev)
-+{
-+	return 0;
-+}
-+#endif /* CONFIG_SDIO_PWRCTRL */
-+
-+static const void *aicwf_bsp_bus_get_hw_props(struct device *dev)
-+{
-+	return NULL; /* BSP layer does not expose chip HW props via bus_ops */
-+}
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicsdio.h b/drivers/net/w=
-ireless/aic/aic8800_bsp/aicsdio.h
++struct rwnx_cmd {
++	struct list_head list;
++	lmac_msg_id_t id;
++	lmac_msg_id_t reqid;
++	struct rwnx_cmd_a2emsg *a2e_msg;
++	char *e2a_msg;
++	u32 tkn;
++	u16 flags;
++
++	struct completion complete;
++	u32 result;
++	u8 used;
++	int array_id;
++};
++
++struct rwnx_cmd_mgr {
++	enum rwnx_cmd_mgr_state state;
++	spinlock_t lock; //
++	u32 next_tkn;
++	u32 queue_sz;
++	u32 max_queue_sz;
++
++	struct list_head cmds;
++
++	int (*queue)(struct rwnx_cmd_mgr *mgr, struct rwnx_cmd *cmd);
++	int (*llind)(struct rwnx_cmd_mgr *mgr, struct rwnx_cmd *cmd);
++	int (*msgind)(struct rwnx_cmd_mgr *mgr, struct rwnx_cmd_e2amsg *msg, msg_=
+cb_fct cb);
++	void (*print)(struct rwnx_cmd_mgr *mgr);
++	void (*drain)(struct rwnx_cmd_mgr *mgr);
++
++	struct work_struct cmd_work;
++	struct workqueue_struct *cmd_wq;
++};
++
++#define WAKE_CMD_WORK(_cmd_mgr)							\
++	do {									\
++		struct rwnx_cmd_mgr *__mgr =3D (_cmd_mgr);                        \
++		queue_work((__mgr)->cmd_wq, &__mgr->cmd_work);		        \
++	} while (0)
++
++void rwnx_cmd_mgr_init(struct rwnx_cmd_mgr *cmd_mgr);
++void rwnx_cmd_mgr_deinit(struct rwnx_cmd_mgr *cmd_mgr);
++int cmd_mgr_queue_force_defer(struct rwnx_cmd_mgr *cmd_mgr,
++			      struct rwnx_cmd *cmd);
++void aicwf_set_cmd_tx(void *dev, struct lmac_msg *msg, uint len);
++
++void cmd_mgr_task_process(struct work_struct *work);
++
++void rwnx_cmd_free(struct rwnx_cmd *cmd);
++
++#endif /* _RWNX_CMDS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_compat.h b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_compat.h
 new file mode 100644
-index 0000000000000..14915b1447b2a
+index 0000000000000..9a127b659e2b6
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicsdio.h
-@@ -0,0 +1,176 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_compat.h
+@@ -0,0 +1,80 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
-+ * aicwf_sdio.h
++ *************************************************************************=
+*****
 + *
-+ * SDIO function declarations
++ * Copyright (C) 2020 AIC semiconductor.
 + *
-+ * Copyright (C) AICSemi 2018-2020
++ * @brief Ensure driver compilation for linux 3.16 to 3.19
++ * To avoid too many #if LINUX_VERSION_CODE if the code, when prototype ch=
+ange
++ * between different kernel version:
++ * - For external function, define a macro whose name is the function name=
+ with
++ *   _compat suffix and prototype (actually the number of parameter) of th=
+e
++ *   latest version. Then latest version this macro simply call the functi=
+on
++ *   and for older kernel version it call the function adapting the api.
++ * - For internal function (e.g. cfg80211_ops) do the same but the macro n=
+ame
++ *   doesn't need to have the _compat suffix when the function is not used
++ *   directly by the driver
++ *
++ *************************************************************************=
+*****
 + */
 +
-+#ifndef _AICWF_SDMMC_H_
-+#define _AICWF_SDMMC_H_
++#ifndef _RWNX_COMPAT_H_
++#define _RWNX_COMPAT_H_
++#include <linux/version.h>
++
++#include <linux/bitfield.h>
++
++/* CFG80211 */
++
++#ifdef CONFIG_RWNX_MUMIMO_TX
++#define CONFIG_USER_MAX 2
++#else
++#define CONFIG_USER_MAX 1
++#endif
++
++#define NX_VIRT_DEV_MAX 4
++
++#define NX_REMOTE_STA_MAX_FOR_OLD_IC 10
++#define NX_REMOTE_STA_MAX 32
++
++#define NX_MU_GROUP_MAX 62
++#define NX_TXDESC_CNT 64
++#define NX_TX_MAX_RATES 4
++#define NX_CHAN_CTXT_CNT 3
++
++#ifdef CONFIG_RWNX_BCMC
++#define NX_TXQ_CNT 5
++#else
++#define NX_TXQ_CNT 4
++#endif
++
++#define IEEE80211_MAX_AMPDU_BUF IEEE80211_MAX_AMPDU_BUF_HE
++#define IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMER_FB                       =
+     \
++	IEEE80211_HE_PHY_CAP6_TRIG_MU_BEAMFORMING_PARTIAL_BW_FB
++#define IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMER_FB                       =
+     \
++	IEEE80211_HE_PHY_CAP6_TRIG_SU_BEAMFORMING_FB
++#define IEEE80211_HE_PHY_CAP3_RX_HE_MU_PPDU_FROM_NON_AP_STA               =
+     \
++	IEEE80211_HE_PHY_CAP3_RX_PARTIAL_BW_SU_IN_20MHZ_MU
++
++#define CCFS0(vht) ((vht)->center_freq_seg0_idx)
++#define CCFS1(vht) ((vht)->center_freq_seg1_idx)
++
++#define SURVEY_TIME(s)      ((s)->time)
++#define SURVEY_TIME_BUSY(s) ((s)->time_busy)
++#define STA_TDLS_INITIATOR(sta) ((sta)->tdls_initiator)
++
++#define RX_ENC_HT(s) ((s)->encoding =3D RX_ENC_HT)
++#define RX_ENC_VHT(s) ((s)->encoding =3D RX_ENC_VHT)
++#define RX_ENC_HE(s) ((s)->encoding =3D RX_ENC_HE)
++#define RX_ENC_FLAG_SHORT_GI(s)  ((s)->enc_flags |=3D RX_ENC_FLAG_SHORT_GI=
+)
++#define RX_ENC_FLAG_SHORT_PRE(s) ((s)->enc_flags |=3D RX_ENC_FLAG_SHORTPRE=
+)
++#define RX_ENC_FLAG_LDPC(s)      ((s)->enc_flags |=3D RX_ENC_FLAG_LDPC)
++#define RX_BW_40MHZ(s)           ((s)->bw =3D RATE_INFO_BW_40)
++#define RX_BW_80MHZ(s)           ((s)->bw =3D RATE_INFO_BW_80)
++#define RX_BW_160MHZ(s)          ((s)->bw =3D RATE_INFO_BW_160)
++#define RX_NSS(s)                ((s)->nss)
++
++#ifndef CONFIG_VENDOR_RWNX_AMSDUS_TX
++#endif /* CONFIG_VENDOR_RWNX_AMSDUS_TX */
++
++#endif /* _RWNX_COMPAT_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_defs.h b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_defs.h
+new file mode 100644
+index 0000000000000..1dc9cc778f46a
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_defs.h
+@@ -0,0 +1,704 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief Main driver structure declarations for fullmac driver
++ *
++ *************************************************************************=
+*****
++ */
++
++#ifndef _RWNX_DEFS_H_
++#define _RWNX_DEFS_H_
++
++#include <linux/device.h>
++#include <linux/dmapool.h>
++#include <linux/interrupt.h>
++#include <linux/skbuff.h>
++#include <linux/slab.h>
++#include <net/cfg80211.h>
++
++#include "rwnx_cmds.h"
++#include "rwnx_mod_params.h"
++#include "rwnx_mu_group.h"
++#include "rwnx_platform.h"
++#include "rwnx_radar.h"
++#include "rwnx_rx.h"
++#include "rwnx_tx.h"
++#include "rwnx_utils.h"
++#include "rwnx_compat.h"
++#ifdef CONFIG_AIC8800_FILTER_TCP_ACK
++#include "aicwf_tcp_ack.h"
++#endif
 +
 +#ifdef AICWF_SDIO_SUPPORT
-+#include "aic_bsp_driver.h"
-+#include <linux/ieee80211.h>
-+#include <linux/if_ether.h>
-+#include <linux/semaphore.h>
-+#include <linux/skbuff.h>
++#include "aicwf_sdio.h"
++#include "sdio_host.h"
++#endif
 +
-+#define AICBSP_SDIO_NAME        "aicbsp_sdio"
-+#define SDIOWIFI_FUNC_BLOCKSIZE 512
++#include "lmac_mac.h"
++#include "aicwf_chip_ops.h"
 +
-+#define SDIO_VENDOR_ID_AIC           0x8800
-+#define SDIO_DEVICE_ID_AIC           0x0001
-+#define SDIOWIFI_BYTEMODE_LEN_REG    0x02
-+#define SDIOWIFI_INTR_CONFIG_REG     0x04
-+#define SDIOWIFI_SLEEP_REG           0x05
-+#define SDIOWIFI_WAKEUP_REG          0x09
-+#define SDIOWIFI_FLOW_CTRL_REG       0x0A
-+#define SDIOWIFI_REGISTER_BLOCK      0x0B
-+#define SDIOWIFI_BYTEMODE_ENABLE_REG 0x11
-+#define SDIOWIFI_BLOCK_CNT_REG       0x12
-+#define SDIOWIFI_FLOWCTRL_MASK_REG   0x7F
-+#define SDIOWIFI_WR_FIFO_ADDR        0x07
-+#define SDIOWIFI_RD_FIFO_ADDR        0x08
++#define WPI_HDR_LEN    18
++#define WPI_PN_LEN     16
++#define WPI_PN_OFST    2
++#define WPI_MIC_LEN    16
++#define WPI_KEY_LEN    32
++#define WPI_SUBKEY_LEN 16 // WPI key is actually two 16bytes key
 +
-+#define SDIOWIFI_INTR_ENABLE_REG_V3      0x00
-+#define SDIOWIFI_INTR_PENDING_REG_V3     0x01
-+#define SDIOWIFI_INTR_TO_DEVICE_REG_V3   0x02
-+#define SDIOWIFI_FLOW_CTRL_Q1_REG_V3     0x03
-+#define SDIOWIFI_MISC_INT_STATUS_REG_V3  0x04
-+#define SDIOWIFI_BYTEMODE_LEN_REG_V3     0x05
-+#define SDIOWIFI_BYTEMODE_LEN_MSB_REG_V3 0x06
-+#define SDIOWIFI_BYTEMODE_ENABLE_REG_V3  0x07
-+#define SDIOWIFI_MISC_CTRL_REG_V3        0x08
-+#define SDIOWIFI_FLOW_CTRL_Q2_REG_V3     0x09
-+#define SDIOWIFI_CLK_TEST_RESULT_REG_V3  0x0A
-+#define SDIOWIFI_RD_FIFO_ADDR_V3         0x0F
-+#define SDIOWIFI_WR_FIFO_ADDR_V3         0x10
++#define LEGACY_PS_ID 0
++#define UAPSD_ID     1
 +
-+#define SDIOCLK_FREE_RUNNING_BIT BIT(6)
++#define PS_SP_INTERRUPTED 255
++#define MAC_ADDR_LEN      6
 +
-+#define SDIOWIFI_PWR_CTRL_INTERVAL 30
-+#define FLOW_CTRL_RETRY_COUNT      50
-+#define BUFFER_SIZE                1536
-+#define TAIL_LEN                   4
-+#define TXQLEN                     (2048 * 4)
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++#define MAX_SEARCH_CNT 10
 +
-+#define SDIO_SLEEP_ST  0
-+#define SDIO_ACTIVE_ST 1
++/// Structure containing the parameters of the auto ccode
++struct scanu_ccode {
++	/// ccode auto/manual switch, auto--true, manual--false
++	bool auto_set;
++	/// ccode find
++	bool ccode_find;
++	/// ccode set
++	bool ccode_set;
++	/// ccode find cnt
++	u8 ccode_cnt;
++	/// ccode rssi
++	s8 ccode_rssi;
++	/// link scan
++	atomic_t link_scan;
++	/// record mac addr
++	struct mac_addr bssid;
++};
++#endif
 +
-+/* SDIO Device ID */
-+#define SDIO_VENDOR_ID_AIC8801    0x5449
-+#define SDIO_VENDOR_ID_AIC8800DC  0xc8a1
-+#define SDIO_VENDOR_ID_AIC8800D80 0xc8a1
-+
-+#define SDIO_DEVICE_ID_AIC8801    0x0145
-+#define SDIO_DEVICE_ID_AIC8800DC  0xc08d
-+#define SDIO_DEVICE_ID_AIC8800D80 0x0082
-+#define SDIO_DEVICE_ID_AIC8801_FUNC2    0x0146
-+#define SDIO_DEVICE_ID_AIC8800D80_FUNC2 0x0182
-+
-+enum sdio_type {
-+	SDIO_TYPE_DATA =3D 0X00,
-+	SDIO_TYPE_CFG =3D 0X10,
-+	SDIO_TYPE_CFG_CMD_RSP =3D 0X11,
-+	SDIO_TYPE_CFG_DATA_CFM =3D 0X12
++struct wf_bss_info {
++	u32 length;
++	s8 rssi;
++	u16 chan;
++	enum nl80211_band band; /* Band */
++	u8 width;             /* Channel width  0/1/2--20/40/80 */
++	u16 center_freq;        /* Center frequency */
++	u32 center_freq1;       /* Center frequency 1 */
++	u32 center_freq2;       /* Center frequency 2 */
++	bool ht;
++	bool vht;
++	u8 bssid[ETH_ALEN];
++	u8 ssid_len;
++	unsigned char ssid[33];
 +};
 +
-+enum AICWF_IC {
-+	PRODUCT_ID_AIC8801 =3D 0,
-+	PRODUCT_ID_AIC8800DC,
-+	PRODUCT_ID_AIC8800DW,
-+	PRODUCT_ID_AIC8800D80
++/**
++ * struct rwnx_bcn - Information of the beacon in used (AP mode)
++ *
++ * @head: head portion of beacon (before TIM IE)
++ * @tail: tail portion of beacon (after TIM IE)
++ * @ies: extra IEs (not used ?)
++ * @head_len: length of head data
++ * @tail_len: length of tail data
++ * @ies_len: length of extra IEs data
++ * @tim_len: length of TIM IE
++ * @len: Total beacon len (head + tim + tail + extra)
++ * @dtim: dtim period
++ */
++struct rwnx_bcn {
++	u8 *head;
++	u8 *tail;
++	u8 *ies;
++	size_t head_len;
++	size_t tail_len;
++	size_t ies_len;
++	size_t tim_len;
++	size_t len;
++	u8 dtim;
 +};
 +
-+struct aic_sdio_reg {
-+	u8 bytemode_len_reg;
-+	u8 intr_config_reg;
-+	u8 sleep_reg;
-+	u8 wakeup_reg;
-+	u8 flow_ctrl_reg;
-+	u8 flowctrl_mask_reg;
-+	u8 register_block;
-+	u8 bytemode_enable_reg;
-+	u8 block_cnt_reg;
-+	u8 misc_int_status_reg;
-+	u8 rd_fifo_addr;
-+	u8 wr_fifo_addr;
++/**
++ * struct rwnx_key - Key information
++ *
++ * @hw_idx: Idx of the key from hardware point of view
++ */
++struct rwnx_key {
++	u8 hw_idx;
 +};
 +
-+struct aic_sdio_dev {
-+	struct rwnx_cmd_mgr cmd_mgr;
-+	struct sdio_func *func;
-+	struct sdio_func *func_msg;
++/*
++ * Structure containing information about a Mesh Path
++ */
++struct rwnx_mesh_path {
++	struct list_head list;        /* For rwnx_vif.mesh_paths */
++	u8 path_idx;                  /* Path Index */
++	struct mac_addr tgt_mac_addr; /* Target MAC Address */
++	struct rwnx_sta *p_nhop_sta;  /* Pointer to the Next Hop STA */
++};
++
++struct rwnx_mesh_proxy {
++	struct list_head list;        /* For rwnx_vif.mesh_proxy */
++	struct mac_addr ext_sta_addr; /* Address of the External STA */
++	struct mac_addr proxy_addr;   /* Proxy MAC Address */
++	bool local; /* Indicate if interface is a proxy for the device */
++};
++
++/**
++ * struct rwnx_csa - Information for CSA (Channel Switch Announcement)
++ *
++ * @vif: Pointer to the vif doing the CSA
++ * @bcn: Beacon to use after CSA
++ * @elem: IPC buffer to send the new beacon to the fw
++ * @chandef: defines the channel to use after the switch
++ * @count: Current csa counter
++ * @status: Status of the CSA at fw level
++ * @ch_idx: Index of the new channel context
++ * @work: work scheduled at the end of CSA
++ */
++struct rwnx_csa {
++	struct rwnx_vif *vif;
++	struct rwnx_bcn bcn;
++	struct rwnx_ipc_elem_var elem;
++	struct cfg80211_chan_def chandef;
++	int count;
++	int status;
++	int ch_idx;
++	struct work_struct work;
++};
++
++struct apm_probe_sta {
++	u8 sta_mac_addr[6];
++	u8 vif_idx;
++	u64 probe_id;
++	struct work_struct apmprobesta_work;
++	struct workqueue_struct *apmprobesta_wq;
++};
++
++/// Possible States of the TDLS link.
++enum tdls_status_tag {
++	/// TDLS link is not active (no TDLS peer connected)
++	TDLS_LINK_IDLE,
++	/// TDLS Setup Request transmitted
++	TDLS_SETUP_REQ_TX,
++	/// TDLS Setup Response transmitted
++	TDLS_SETUP_RSP_TX,
++	/// TDLS link is active (TDLS peer connected)
++	TDLS_LINK_ACTIVE,
++	/// TDLS Max Number of states.
++	TDLS_STATE_MAX
++};
++
++/*
++ * Structure used to save information relative to the TDLS peer.
++ * This is also linked within the rwnx_hw vifs list.
++ *
++ */
++struct rwnx_tdls {
++	bool active;       /* Indicate if TDLS link is active */
++	bool initiator;    /* Indicate if TDLS peer is the TDLS initiator */
++	bool chsw_en;      /* Indicate if channel switch is enabled */
++	u8 last_tid;       /* TID of the latest MPDU transmitted over the
++			    * TDLS direct link to the TDLS STA
++			    */
++	u16 last_sn;       /* Sequence number of the latest MPDU transmitted
++			    * over the TDLS direct link to the TDLS STA
++			    */
++	bool ps_on;        /* Indicate if the power save is enabled on the
++			    * TDLS STA
++			    */
++	bool chsw_allowed; /* Indicate if TDLS channel switch is allowed */
++};
++
++/**
++ * enum rwnx_ap_flags - AP flags
++ *
++ * @RWNX_AP_ISOLATE: Isolate clients (i.e. don't bridge packets transmitte=
+d by
++ *                   one client for another one)
++ */
++enum rwnx_ap_flags {
++	RWNX_AP_ISOLATE =3D BIT(0),
++};
++
++/*
++ * Structure used to save information relative to the managed interfaces.
++ * This is also linked within the rwnx_hw vifs list.
++ *
++ */
++struct rwnx_vif {
++	struct list_head list;
++	struct rwnx_hw *rwnx_hw;
++	struct wireless_dev wdev;
++	struct net_device *ndev;
++	struct net_device_stats net_stats;
++	struct rwnx_key key[6];
++	unsigned long drv_flags;
++	atomic_t drv_conn_state;
++	u8 drv_vif_index;  /* Identifier of the VIF in driver */
++	u8 vif_index;      /* Identifier of the station in FW */
++	u8 ch_index;       /* Channel context identifier */
++	bool up;           /* Indicate if associated netdev is up
++			    * (i.e. Interface is created at fw level)
++			    */
++	bool use_4addr;    /* Should we use 4addresses mode */
++	bool is_resending; /* Indicate if a frame is being resent on this interfa=
+ce */
++	bool user_mpm;  /* In case of Mesh Point VIF, indicate if MPM is handled =
+by
++			 * userspace
++			 */
++	bool roc_tdls;  /* Indicate if the ROC has been called by a
++			 * TDLS station
++			 */
++	u8 tdls_status; /* Status of the TDLS link */
++	bool tdls_chsw_prohibited; /* Indicate if TDLS Channel Switch is prohibit=
+ed */
++	bool wep_enabled;          /* 1 if WEP is enabled */
++	bool wep_auth_err; /* 1 if auth status code is not supported auth alg whe=
+n
++			    * WEP enabled
++			    */
++	enum nl80211_auth_type
++		last_auth_type; /* Authentication type (algorithm) sent in the last
++				 * connection when WEP enabled
++				 */
++	union {
++		struct {
++			struct rwnx_sta *ap; /* Pointer to the peer STA entry allocated for
++					      * the AP
++					      */
++			struct rwnx_sta *tdls_sta; /* Pointer to the TDLS station */
++			bool external_auth; /* Indicate if external authentication is in
++					     * progress
++					     */
++			u32 group_cipher_type;
++			u32 paired_cipher_type;
++			// connected network info start
++			char ssid[32];
++			int ssid_len;
++			u8 bssid[ETH_ALEN];
++			u32 conn_owner_nlportid;
++			bool is_roam;
++			unsigned long link_time;
++			u16 b_interval;
++			u8 dtim_peroid;
++			u16 capability;
++			enum nl80211_auth_type auth_type;
++			// connected network info end
++		} sta;
++		struct {
++			u16 flags;                 /* see rwnx_ap_flags */
++			struct list_head sta_list; /* List of STA connected to the AP */
++			struct rwnx_bcn bcn;       /* beacon */
++			u8 bcmc_index;             /* Index of the BCMC sta to use */
++			struct rwnx_csa *csa;
++
++			struct list_head
++				mpath_list; /* List of Mesh Paths used on this interface */
++			struct list_head proxy_list; /* List of Proxies Information used on
++						      * this interface
++						      */
++			bool create_path;            /* Indicate if we are waiting for a
++						      * MESH_CREATE_PATH_CFM message
++						      */
++			int generation; /* Increased each time the list of Mesh Paths is
++					 * updated
++					 */
++			enum nl80211_mesh_power_mode
++				mesh_pm; /* mesh power save mode currently set in firmware */
++			enum nl80211_mesh_power_mode
++				next_mesh_pm; /* mesh power save mode for next peer */
++		} ap;
++		struct {
++			struct rwnx_vif *master; /* pointer on master interface */
++			struct rwnx_sta *sta_4a;
++		} ap_vlan;
++	};
++
++	u8 key_has_add;
++	u8 is_p2p_vif;
++	struct apm_probe_sta sta_probe;
++
++};
++
++#define RWNX_VIF_TYPE(rwnx_vif) ((rwnx_vif)->wdev.iftype)
++
++/*
++ * Structure used to store information relative to PS mode.
++ *
++ * @active: True when the sta is in PS mode.
++ *          If false, other values should be ignored
++ * @pkt_ready: Number of packets buffered for the sta in drv's txq
++ *             (1 counter for Legacy PS and 1 for U-APSD)
++ * @sp_cnt: Number of packets that remain to be pushed in the service peri=
+od.
++ *          0 means that no service period is in progress
++ *          (1 counter for Legacy PS and 1 for U-APSD)
++ */
++struct rwnx_sta_ps {
++	bool active;
++	u16 pkt_ready[2];
++	u16 sp_cnt[2];
++};
++
++/**
++ * struct rwnx_rx_rate_stats - Store statistics for RX rates
++ *
++ * @table: Number of received frames for each rate index
++ * @size: Number of entries in @table
++ * @cpt: Total number of received frames
++ * @rate_cnt: Number of rate indexes with at least one received frame
++ */
++struct rwnx_rx_rate_stats {
++	int *table;
++	int size;
++	int cpt;
++	int rate_cnt;
++};
++
++/**
++ * struct rwnx_sta_stats - Structure Used to store statistics specific to =
+a STA
++ *
++ * @last_rx: Hardware vector of the last received frame
++ * @rx_rate: Statistics of the received rates
++ */
++struct rwnx_sta_stats {
++	struct hw_vect last_rx;
++	struct rwnx_rx_rate_stats rx_rate;
++};
++
++/*
++ * Structure used to save information relative to the managed stations.
++ */
++struct rwnx_sta {
++	struct list_head list;
++	u16 aid;                /* association ID */
++	u8 sta_idx;             /* Identifier of the station */
++	u8 vif_idx;             /* Identifier of the VIF (fw id) the station
++				 * belongs to
++				 */
++	u8 vlan_idx;            /* Identifier of the VLAN VIF (fw id) the station
++				 * belongs to (=3D vif_idx if no vlan in used)
++				 */
++	enum nl80211_band band; /* Band */
++	enum nl80211_chan_width width; /* Channel width */
++	u16 center_freq;               /* Center frequency */
++	u32 center_freq1;              /* Center frequency 1 */
++	u32 center_freq2;              /* Center frequency 2 */
++	u8 ch_idx;                     /* Identifier of the channel
++					* context the station belongs to
++					*/
++	bool qos;                      /* Flag indicating if the station
++					* supports QoS
++					*/
++	u8 acm;                        /* Bitfield indicating which queues
++					* have AC mandatory
++					*/
++	u16 uapsd_tids;        /* Bitfield indicating which tids are subject to
++				* UAPSD
++				*/
++	u8 mac_addr[ETH_ALEN]; /* MAC address of the station */
++	struct rwnx_key key;
++	bool valid;            /* Flag indicating if the entry is valid */
++	struct rwnx_sta_ps ps; /* Information when STA is in PS (AP only) */
++#ifdef CONFIG_RWNX_BFMER
++	struct rwnx_bfmer_report *bfm_report; /* Beamforming report to be used fo=
+r
++					       * VHT TX Beamforming
++					       */
++#ifdef CONFIG_RWNX_MUMIMO_TX
++	struct rwnx_sta_group_info
++		group_info; /* MU grouping information for the STA */
++#endif              /* CONFIG_RWNX_MUMIMO_TX */
++#endif              /* CONFIG_RWNX_BFMER */
++
++	bool ht;               /* Flag indicating if the station
++				* supports HT
++				*/
++	bool vht;              /* Flag indicating if the station
++				* supports VHT
++				*/
++	u32 ac_param[AC_MAX];  /* EDCA parameters */
++	struct rwnx_tdls tdls; /* TDLS station information */
++	struct rwnx_sta_stats stats;
++	enum nl80211_mesh_power_mode
++		mesh_pm; /*  link-specific mesh power save mode */
++};
++
++static inline const u8 *rwnx_sta_addr(struct rwnx_sta *rwnx_sta)
++{
++	return rwnx_sta->mac_addr;
++}
++
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++struct rwnx_amsdu_stats {
++	int done;
++	int failed;
++};
++#endif
++
++struct rwnx_stats {
++	int cfm_balance[NX_TXQ_CNT];
++	unsigned long last_rx, last_tx; /* jiffies */
++	int ampdus_tx[IEEE80211_MAX_AMPDU_BUF];
++	int ampdus_rx[IEEE80211_MAX_AMPDU_BUF];
++	int ampdus_rx_map[4];
++	int ampdus_rx_miss;
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++	struct rwnx_amsdu_stats amsdus[NX_TX_PAYLOAD_MAX];
++#endif
++	int amsdus_rx[64];
++};
++
++struct rwnx_sec_phy_chan {
++	u16 prim20_freq;
++	u16 center_freq1;
++	u16 center_freq2;
++	enum nl80211_band band;
++	u8 type;
++};
++
++/* Structure that will contains all RoC information received from cfg80211=
+ */
++struct rwnx_roc_elem {
++	struct wireless_dev *wdev;
++	struct ieee80211_channel *chan;
++	unsigned int duration;
++	/* Used to avoid call of CFG80211 callback upon expiration of RoC */
++	bool mgmt_roc;
++	/* Indicate if we have switch on the RoC channel */
++	bool on_chan;
++};
++
++/* Structure containing channel survey information received from MAC */
++struct rwnx_survey_info {
++	// Filled
++	u32 filled;
++	// Amount of time in ms the radio spent on the channel
++	u32 chan_time_ms;
++	// Amount of time the primary channel was sensed busy
++	u32 chan_time_busy_ms;
++	// Noise in dbm
++	s8 noise_dbm;
++};
++
++#define RWNX_CH_NOT_SET  0xFF
++#define RWNX_INVALID_VIF 0xFF
++#define RWNX_INVALID_STA 0xFF
++
++/* Structure containing channel context information */
++struct rwnx_chanctx {
++	struct cfg80211_chan_def chan_def; /* channel description */
++	u8 count;                          /* number of vif using this ctxt */
++};
++
++/**
++ * struct rwnx_phy_info - PHY information
++ *
++ * @cnt: Number of PHY interfaces
++ * @cfg: Configuration sent to the firmware
++ * @sec_chan: Channel configuration of the second PHY interface, when pres=
+ent
++ * @limit_bw: Whether to limit the requested channel bandwidth for legacy =
+PHYs
++ */
++struct rwnx_phy_info {
++	u8 cnt;
++	struct phy_cfg_tag cfg;
++	struct rwnx_sec_phy_chan sec_chan;
++	bool limit_bw;
++};
++
++struct defrag_ctrl_info {
++	struct list_head list;
++	u8 sta_idx;
++	u8 tid;
++	u16 sn;
++	u8 next_fn;
++	u16 frm_len;
++	struct sk_buff *skb;
++	struct timer_list defrag_timer;
++	struct rwnx_hw *rwnx_hw;
++};
++
++struct amsdu_subframe_hdr {
++	u8 da[6];
++	u8 sa[6];
++	u16 sublen;
++};
++
++/* rwnx driver status */
++void rwnx_set_conn_state(atomic_t *drv_conn_state, int state);
++
++enum rwnx_drv_connect_status {
++	RWNX_DRV_STATUS_DISCONNECTED =3D 0,
++	RWNX_DRV_STATUS_DISCONNECTING,
++	RWNX_DRV_STATUS_CONNECTING,
++	RWNX_DRV_STATUS_CONNECTED,
++	RWNX_DRV_STATUS_ROAMING,
++};
++
++struct rwnx_hw {
++	struct rwnx_mod_params *mod_params;
 +	struct device *dev;
-+	struct aicwf_bus *bus_if;
-+
-+	struct aicwf_rx_priv *rx_priv;
-+	struct aicwf_tx_priv *tx_priv;
-+	u32 state;
-+
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	// for sdio pwr ctrl
-+	struct timer_list timer;
-+	uint active_duration;
-+	struct completion pwrctrl_trgg;
-+	struct task_struct *pwrctl_tsk;
-+	/* lock for pwrctl */
-+	spinlock_t pwrctl_lock;
-+	struct semaphore pwrctl_wakeup_sema;
++#ifdef AICWF_SDIO_SUPPORT
++	struct aic_sdio_dev *sdiodev;
 +#endif
-+	u16 chipid;
++	struct wiphy *wiphy;
++	struct list_head vifs;
++	struct rwnx_vif *
++		vif_table[NX_VIRT_DEV_MAX + NX_REMOTE_STA_MAX]; /* indexed with fw id */
++	struct rwnx_sta sta_table[NX_REMOTE_STA_MAX + NX_VIRT_DEV_MAX];
++	struct rwnx_survey_info survey[SCAN_CHANNEL_MAX];
++	struct cfg80211_scan_request *scan_request;
++	/* The normal scan path owns one SDIO activity until its terminal event. =
+*/
++	atomic_t scan_activity_held;
++#ifdef CONFIG_AIC8800_SCHED_SCAN
++	struct cfg80211_sched_scan_request *sched_scan_req;
++#endif
++	struct rwnx_chanctx chanctx_table[NX_CHAN_CTXT_CNT];
++	u8 cur_chanctx;
++
++	u8 monitor_vif; /* FW id of the monitor interface, RWNX_INVALID_VIF if no
++			 * monitor vif at fw level
++			 */
++
++#ifdef CONFIG_AIC8800_FILTER_TCP_ACK
++	/* tcp ack management */
++	struct tcp_ack_manage ack_m;
++#endif
++
++	/* RoC Management */
++	struct rwnx_roc_elem *roc_elem; /* Information provided by cfg80211 in it=
+s
++					 * remain on channel request
++					 */
++	u32 roc_cookie_cnt; /* Counter used to identify RoC request sent by cfg80=
+211 */
++
++	struct rwnx_cmd_mgr *cmd_mgr;
++
++	struct rwnx_plat *plat;
++
++	spinlock_t tx_lock; //
++	spinlock_t cb_lock; //
++	struct mutex mutex; /* per-device perimeter lock */
++
++	struct tasklet_struct task;
++	struct mm_version_cfm
++		version_cfm; /* Lower layers versions - obtained via MM_VERSION_REQ */
++
++	u32 tcp_pacing_shift;
++
++	/* IPC */
++	struct ipc_host_env_tag *ipc_env;
++#ifdef AICWF_SDIO_SUPPORT
++	struct sdio_host_env_tag sdio_env;
++#endif
++
++	struct rwnx_ipc_elem_pool e2amsgs_pool;
++	struct rwnx_ipc_elem_pool dbgmsgs_pool;
++	struct rwnx_ipc_elem_pool e2aradars_pool;
++	struct rwnx_ipc_elem_var pattern_elem;
++	struct rwnx_ipc_dbgdump_elem dbgdump_elem;
++	struct rwnx_ipc_elem_pool e2arxdesc_pool;
++	struct rwnx_ipc_skb_elem *e2aunsuprxvec_elems;
++	// struct rwnx_ipc_rxbuf_elems rxbuf_elems;
++	struct rwnx_ipc_elem_var scan_ie;
++
++	struct kmem_cache *sw_txhdr_cache;
++
++	struct rwnx_stats stats;
++
++#ifdef CONFIG_PREALLOC_TXQ
++	struct rwnx_txq *txq;
++#else
++	struct rwnx_txq txq[NX_NB_TXQ];
++#endif
++
++	struct rwnx_hwq hwq[NX_TXQ_CNT];
++
++	u64 avail_idx_map;
++	u8 vif_started;
++	bool adding_sta;
++	struct rwnx_phy_info phy;
++
++	struct rwnx_radar radar;
++
++	/* extended capabilities supported */
++	u8 ext_capa[8];
++
++#ifdef CONFIG_RWNX_MUMIMO_TX
++	struct rwnx_mu_info mu;
++#endif
++	u8 is_p2p_alive;
++	u8 is_p2p_connected;
++	struct timer_list p2p_alive_timer;
++	struct rwnx_vif *p2p_dev_vif;
++	atomic_t p2p_alive_timer_count;
++	bool band_5g_support;
++	u8 vendor_info;
++	bool fwlog_en;
++	int testmode;
++	u8 scanning;
++	char country_abbr[4];
 +	const struct aic_chip_ops *chip_ops;
-+	u32 fw_version_uint;
-+	struct aic_sdio_reg sdio_reg;
-+	void (*sdio_hal_irqhandler)(struct sdio_func *func);
++
++	struct list_head defrag_list;
++	spinlock_t defrag_lock; //
++
++	struct work_struct apm_staloss_work;
++	struct workqueue_struct *apm_staloss_wq;
++	u8 apm_vif_idx;
++	u8 sta_mac_addr[6];
++
++	struct wakeup_source *ws_rx;
++	struct wakeup_source *ws_irqrx;
++	struct wakeup_source *ws_tx;
++	struct wakeup_source *ws_pwrctrl;
++	struct wakeup_source *ws_scan;
++
++#ifdef CONFIG_AIC8800_SCHED_SCAN
++	bool is_sched_scan;
++#endif
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	struct scanu_ccode ccode;
++#endif
++
++#ifdef CONFIG_AIC8800_TEMP_CONTROL
++	unsigned long started_jiffies;
++	s8 temp;
++#endif
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++	struct work_struct pwlt_wk;
++#endif
++#ifdef CONFIG_AIC8800_REGION_PW
++	struct work_struct region_wk;
++#endif
++	char fw_version[32];
++
 +};
 +
-+int aicwf_sdio_readb(struct aic_sdio_dev *sdiodev, uint regaddr, u8 *val);
-+int aicwf_sdio_readb_func2(struct aic_sdio_dev *sdiodev, uint regaddr, u8 =
-*val);
-+int aicwf_sdio_writeb_func2(struct aic_sdio_dev *sdiodev, uint regaddr, u8=
- val);
-+int aicwf_sdio_send_msg(struct aic_sdio_dev *sdiodev, u8 *buf, uint count)=
++u8 *rwnx_build_bcn(struct rwnx_bcn *bcn, struct cfg80211_beacon_data *new)=
 ;
-+struct sk_buff *aicwf_sdio_readframes(struct aic_sdio_dev *sdiodev, u8 msg=
-);
-+void aicwf_sdio_release_func2(struct aic_sdio_dev *sdiodev);
-+int get_testmode(void);
-+struct sdio_func *get_sdio_func(void);
-+void set_irq_handler(void *fn);
 +
-+void *aicbsp_get_drvdata(void *args);
-+int aicwf_sdio_writeb(struct aic_sdio_dev *sdiodev, uint regaddr, u8 val);
-+void aicwf_sdio_hal_irqhandler(struct sdio_func *func);
-+void aicwf_sdio_hal_irqhandler_func2(struct sdio_func *func);
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+int aicwf_sdio_wakeup(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdio_sleep_allow(struct aic_sdio_dev *sdiodev);
++void rwnx_chanctx_link(struct rwnx_vif *vif, u8 idx,
++		       struct cfg80211_chan_def *chandef);
++void rwnx_chanctx_unlink(struct rwnx_vif *vif);
++int rwnx_chanctx_valid(struct rwnx_hw *rwnx_hw, u8 idx);
 +
-+void aicwf_sdio_pwrctl_timer(struct aic_sdio_dev *sdiodev, uint duration);
-+int aicwf_sdio_pwr_stctl(struct aic_sdio_dev *sdiodev, uint target);
++extern u8 chip_id;
++
++static inline bool is_multicast_sta(int sta_idx)
++{
++	if (g_rwnx_plat->sdiodev->rwnx_hw->chip_ops->is_old_ic)
++		return (sta_idx >=3D NX_REMOTE_STA_MAX_FOR_OLD_IC);
++	else
++		return (sta_idx >=3D NX_REMOTE_STA_MAX);
++}
++
++struct rwnx_sta *rwnx_get_sta(struct rwnx_hw *rwnx_hw, const u8 *mac_addr)=
+;
++
++static inline uint8_t master_vif_idx(struct rwnx_vif *vif)
++{
++#if IS_ENABLED(CONFIG_AIC8800_STA_ONLY)
++	return vif->vif_index;
++#else
++	if (unlikely(vif->wdev.iftype =3D=3D NL80211_IFTYPE_AP_VLAN))
++		return vif->ap_vlan.master->vif_index;
++	else
++		return vif->vif_index;
 +#endif
-+void aicwf_sdio_reg_init(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdio_func_init(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdiov3_func_init(struct aic_sdio_dev *sdiodev);
-+void aicwf_sdio_func_deinit(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdio_flow_ctrl(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdio_recv_pkt(struct aic_sdio_dev *sdiodev, struct sk_buff *skbb=
-uf,
-+			u32 size, u8 msg);
-+int aicwf_sdio_send_pkt(struct aic_sdio_dev *sdiodev, u8 *buf, uint count)=
-;
-+void *aicwf_sdio_bus_init(struct aic_sdio_dev *sdiodev);
-+void aicwf_sdio_release(struct aic_sdio_dev *sdiodev);
-+void aicbsp_sdio_exit(void);
-+int aicbsp_sdio_init(void);
-+void aicbsp_sdio_release(struct aic_sdio_dev *sdiodev);
-+int aicwf_sdio_txpkt(struct aic_sdio_dev *sdiodev, struct sk_buff *pkt);
-+int aicwf_sdio_bustx_thread(void *data);
-+int aicwf_sdio_busrx_thread(void *data);
-+int aicwf_sdio_aggr(struct aicwf_tx_priv *tx_priv, struct sk_buff *pkt);
-+int aicwf_sdio_send(struct aicwf_tx_priv *tx_priv);
-+void aicwf_sdio_aggr_send(struct aicwf_tx_priv *tx_priv);
-+void aicwf_sdio_aggrbuf_reset(struct aicwf_tx_priv *tx_priv);
-+void aicwf_hostif_ready(void);
-+int aicwf_process_rxframes(struct aicwf_rx_priv *rx_priv);
-+u8 crc8_ponl_107(u8 *p_buffer, u16 cal_size);
-+#endif /* AICWF_SDIO_SUPPORT */
++}
 +
-+#endif /*_AICWF_SDMMC_H_*/
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.c b/driver=
-s/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.c
++void rwnx_external_auth_enable(struct rwnx_vif *vif);
++void rwnx_external_auth_disable(struct rwnx_vif *vif);
++
++#endif /* _RWNX_DEFS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_events.h b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_events.h
 new file mode 100644
-index 0000000000000..120f0ec267fc0
+index 0000000000000..c40751ea8b980
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.c
-@@ -0,0 +1,464 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_events.h
+@@ -0,0 +1,938 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief Trace events definition
++ *
++ *************************************************************************=
+*****
++ */
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM rwnx
++
++#if !defined(_RWNX_EVENTS_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _RWNX_EVENTS_H
++
++#include <linux/tracepoint.h>
++#include "rwnx_tx.h"
++
++#include "rwnx_compat.h"
++
++/*************************************************************************=
+****
++ * TRACE function for MGMT TX (FULLMAC)
++ *************************************************************************=
+***/
++#ifdef CONFIG_RWNX_FULLMAC
++#include "linux/ieee80211.h"
++#if defined(CONFIG_TRACEPOINTS) && defined(AIC8800_CREATE_TRACE_POINTS) &&=
+ \
++	!defined(TRACE_HEADER_MULTI_READ)
++#include <linux/trace_seq.h>
++
++/* P2P Public Action Frames Definitions (see WiFi P2P Technical Specificat=
+ion,
++ * section 4.2.8)
++ */
++/* IEEE 802.11 Public Action Usage Category - Define P2P public action fra=
+mes */
++#define MGMT_ACTION_PUBLIC_CAT         (0x04)
++/* Offset of OUI Subtype field in P2P Action Frame format */
++#define MGMT_ACTION_OUI_SUBTYPE_OFFSET (6)
++/* P2P Public Action Frame Types */
++enum p2p_action_type {
++	P2P_ACTION_GO_NEG_REQ =3D 0, /* GO Negociation Request */
++	P2P_ACTION_GO_NEG_RSP,     /* GO Negociation Response */
++	P2P_ACTION_GO_NEG_CFM,     /* GO Negociation Confirmation */
++	P2P_ACTION_INVIT_REQ,      /* P2P Invitation Request */
++	P2P_ACTION_INVIT_RSP,      /* P2P Invitation Response */
++	P2P_ACTION_DEV_DISC_REQ,   /* Device Discoverability Request */
++	P2P_ACTION_DEV_DISC_RSP,   /* Device Discoverability Response */
++	P2P_ACTION_PROV_DISC_REQ,  /* Provision Discovery Request */
++	P2P_ACTION_PROV_DISC_RSP,  /* Provision Discovery Response */
++};
++
++static inline const char *ftrace_print_mgmt_info(struct trace_seq *p,
++						 u16 frame_control, u8 cat, u8 type,
++						 u8 p2p)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++	switch (frame_control & IEEE80211_FCTL_STYPE) {
++	case (IEEE80211_STYPE_ASSOC_REQ):
++		trace_seq_printf(p, "Association Request");
++		break;
++	case (IEEE80211_STYPE_ASSOC_RESP):
++		trace_seq_printf(p, "Association Response");
++		break;
++	case (IEEE80211_STYPE_REASSOC_REQ):
++		trace_seq_printf(p, "Reassociation Request");
++		break;
++	case (IEEE80211_STYPE_REASSOC_RESP):
++		trace_seq_printf(p, "Reassociation Response");
++		break;
++	case (IEEE80211_STYPE_PROBE_REQ):
++		trace_seq_printf(p, "Probe Request");
++		break;
++	case (IEEE80211_STYPE_PROBE_RESP):
++		trace_seq_printf(p, "Probe Response");
++		break;
++	case (IEEE80211_STYPE_BEACON):
++		trace_seq_printf(p, "Beacon");
++		break;
++	case (IEEE80211_STYPE_ATIM):
++		trace_seq_printf(p, "ATIM");
++		break;
++	case (IEEE80211_STYPE_DISASSOC):
++		trace_seq_printf(p, "Disassociation");
++		break;
++	case (IEEE80211_STYPE_AUTH):
++		trace_seq_printf(p, "Authentication");
++		break;
++	case (IEEE80211_STYPE_DEAUTH):
++		trace_seq_printf(p, "Deauthentication");
++		break;
++	case (IEEE80211_STYPE_ACTION):
++		trace_seq_printf(p, "Action");
++		if (cat =3D=3D MGMT_ACTION_PUBLIC_CAT && type =3D=3D 0x9) {
++			switch (p2p) {
++			case (P2P_ACTION_GO_NEG_REQ):
++				trace_seq_printf(p, ": GO Negociation Request");
++				break;
++			case (P2P_ACTION_GO_NEG_RSP):
++				trace_seq_printf(p, ": GO Negociation Response");
++				break;
++			case (P2P_ACTION_GO_NEG_CFM):
++				trace_seq_printf(p, ": GO Negociation Confirmation");
++				break;
++			case (P2P_ACTION_INVIT_REQ):
++				trace_seq_printf(p, ": P2P Invitation Request");
++				break;
++			case (P2P_ACTION_INVIT_RSP):
++				trace_seq_printf(p, ": P2P Invitation Response");
++				break;
++			case (P2P_ACTION_DEV_DISC_REQ):
++				trace_seq_printf(p, ": Device Discoverability Request");
++				break;
++			case (P2P_ACTION_DEV_DISC_RSP):
++				trace_seq_printf(p, ": Device Discoverability Response");
++				break;
++			case (P2P_ACTION_PROV_DISC_REQ):
++				trace_seq_printf(p, ": Provision Discovery Request");
++				break;
++			case (P2P_ACTION_PROV_DISC_RSP):
++				trace_seq_printf(p, ": Provision Discovery Response");
++				break;
++			default:
++				trace_seq_printf(p, "Unknown p2p %d", p2p);
++				break;
++			}
++		} else {
++			switch (cat) {
++			case 0:
++				trace_seq_printf(p, ":Spectrum %d", type);
++				break;
++			case 1:
++				trace_seq_printf(p, ":QOS %d", type);
++				break;
++			case 2:
++				trace_seq_printf(p, ":DLS %d", type);
++				break;
++			case 3:
++				trace_seq_printf(p, ":BA %d", type);
++				break;
++			case 4:
++				trace_seq_printf(p, ":Public %d", type);
++				break;
++			case 5:
++				trace_seq_printf(p, ":Radio Measure %d", type);
++				break;
++			case 6:
++				trace_seq_printf(p, ":Fast BSS %d", type);
++				break;
++			case 7:
++				trace_seq_printf(p, ":HT Action %d", type);
++				break;
++			case 8:
++				trace_seq_printf(p, ":SA Query %d", type);
++				break;
++			case 9:
++				trace_seq_printf(p, ":Protected Public %d", type);
++				break;
++			case 10:
++				trace_seq_printf(p, ":WNM %d", type);
++				break;
++			case 11:
++				trace_seq_printf(p, ":Unprotected WNM %d", type);
++				break;
++			case 12:
++				trace_seq_printf(p, ":TDLS %d", type);
++				break;
++			case 13:
++				trace_seq_printf(p, ":Mesh %d", type);
++				break;
++			case 14:
++				trace_seq_printf(p, ":MultiHop %d", type);
++				break;
++			case 15:
++				trace_seq_printf(p, ":Self Protected %d", type);
++				break;
++			case 126:
++				trace_seq_printf(p, ":Vendor protected");
++				break;
++			case 127:
++				trace_seq_printf(p, ":Vendor");
++				break;
++			default:
++				trace_seq_printf(p, ":Unknown category %d", cat);
++				break;
++			}
++		}
++		break;
++	default:
++		trace_seq_printf(p, "Unknown subtype %d",
++				 frame_control & IEEE80211_FCTL_STYPE);
++		break;
++	}
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++#endif /* defined(CONFIG_TRACEPOINTS) && defined(AIC8800_CREATE_TRACE_POIN=
+TS) */
++
++#undef __print_mgmt_info
++#define __print_mgmt_info(frame_control, cat, type, p2p)                  =
+     \
++	ftrace_print_mgmt_info(p, frame_control, cat, type, p2p)
++
++TRACE_EVENT(roc, TP_PROTO(u8 vif_idx, u16 freq, unsigned int duration),
++	    TP_ARGS(vif_idx, freq, duration),
++	    TP_STRUCT__entry(__field(u8, vif_idx) __field(u16, freq)
++			     __field(unsigned int, duration)),
++	    TP_fast_assign(__entry->vif_idx =3D vif_idx; __entry->freq =3D freq;
++			   __entry->duration =3D duration;),
++	    TP_printk("f=3D%d vif=3D%d dur=3D%d", __entry->freq, __entry->vif_idx=
+,
++		      __entry->duration));
++
++TRACE_EVENT(cancel_roc, TP_PROTO(u8 vif_idx), TP_ARGS(vif_idx),
++	    TP_STRUCT__entry(__field(u8, vif_idx)),
++	    TP_fast_assign(__entry->vif_idx =3D vif_idx;),
++	    TP_printk("vif=3D%d", __entry->vif_idx));
++
++TRACE_EVENT(roc_exp, TP_PROTO(u8 vif_idx), TP_ARGS(vif_idx),
++	    TP_STRUCT__entry(__field(u8, vif_idx)),
++	    TP_fast_assign(__entry->vif_idx =3D vif_idx;),
++	    TP_printk("vif=3D%d", __entry->vif_idx));
++
++TRACE_EVENT(switch_roc, TP_PROTO(u8 vif_idx), TP_ARGS(vif_idx),
++	    TP_STRUCT__entry(__field(u8, vif_idx)),
++	    TP_fast_assign(__entry->vif_idx =3D vif_idx;),
++	    TP_printk("vif=3D%d", __entry->vif_idx));
++
++DECLARE_EVENT_CLASS(mgmt_template,
++		    TP_PROTO(u16 freq, u8 vif_idx, u8 sta_idx, struct ieee80211_mgmt *mg=
+mt),
++		    TP_ARGS(freq, vif_idx, sta_idx, mgmt),
++		    TP_STRUCT__entry(__field(u16, freq) __field(u8, vif_idx)
++				     __field(u8, sta_idx) __field(u16, frame_control)
++				     __field(u8, action_cat) __field(u8, action_type)
++				     __field(u8, action_p2p)),
++		    TP_fast_assign(__entry->freq =3D freq; __entry->vif_idx =3D vif_idx;
++				   __entry->sta_idx =3D sta_idx;
++				   __entry->frame_control =3D le16_to_cpu(mgmt->frame_control);
++				   __entry->action_cat =3D mgmt->u.action.category;
++				   __entry->action_type =3D mgmt->u.action.action_code;
++				   __entry->action_p2p =3D *((u8 *)&mgmt->u.action.category +
++								MGMT_ACTION_OUI_SUBTYPE_OFFSET);),
++		    TP_printk("f=3D%d vif=3D%d sta=3D%d -> %s", __entry->freq, __entry->=
+vif_idx,
++			      __entry->sta_idx,
++			      __print_mgmt_info(__entry->frame_control, __entry->action_cat,
++						__entry->action_type, __entry->action_p2p)));
++
++DEFINE_EVENT(mgmt_template, mgmt_tx,
++	     TP_PROTO(u16 freq, u8 vif_idx, u8 sta_idx,
++		      struct ieee80211_mgmt *mgmt),
++	     TP_ARGS(freq, vif_idx, sta_idx, mgmt));
++
++DEFINE_EVENT(mgmt_template, mgmt_rx,
++	     TP_PROTO(u16 freq, u8 vif_idx, u8 sta_idx,
++		      struct ieee80211_mgmt *mgmt),
++	     TP_ARGS(freq, vif_idx, sta_idx, mgmt));
++
++TRACE_EVENT(mgmt_cfm, TP_PROTO(u8 vif_idx, u8 sta_idx, bool acked),
++	    TP_ARGS(vif_idx, sta_idx, acked),
++	    TP_STRUCT__entry(__field(u8, vif_idx) __field(u8, sta_idx)
++			     __field(bool, acked)),
++	    TP_fast_assign(__entry->vif_idx =3D vif_idx;
++			   __entry->sta_idx =3D sta_idx; __entry->acked =3D acked;),
++	    TP_printk("vif=3D%d sta=3D%d ack=3D%d", __entry->vif_idx,
++		      __entry->sta_idx, __entry->acked));
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+****
++ * TRACE function for TXQ
++ *************************************************************************=
+***/
++
++#if defined(CONFIG_TRACEPOINTS) && defined(AIC8800_CREATE_TRACE_POINTS) &&=
+ \
++	!defined(TRACE_HEADER_MULTI_READ)
++
++#include <linux/trace_seq.h>
++#include <linux/trace_events.h>
++
++static inline const char *ftrace_print_txq(struct trace_seq *p, int txq_id=
+x)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++	if (txq_idx =3D=3D TXQ_INACTIVE) {
++		trace_seq_printf(p, "[INACTIVE]");
++	} else if (txq_idx < NX_FIRST_VIF_TXQ_IDX) {
++		trace_seq_printf(p, "[STA %d/%d]", txq_idx / NX_NB_TXQ_PER_STA,
++				 txq_idx % NX_NB_TXQ_PER_STA);
++#ifdef CONFIG_RWNX_FULLMAC
++	} else if (txq_idx < NX_FIRST_UNK_TXQ_IDX) {
++		trace_seq_printf(p, "[BC/MC %d]", txq_idx - NX_FIRST_BCMC_TXQ_IDX);
++	} else if (txq_idx < NX_OFF_CHAN_TXQ_IDX) {
++		trace_seq_printf(p, "[UNKNOWN %d]", txq_idx - NX_FIRST_UNK_TXQ_IDX);
++	} else if (txq_idx =3D=3D NX_OFF_CHAN_TXQ_IDX) {
++		trace_seq_printf(p, "[OFFCHAN]");
++#else
++	} else if (txq_idx < NX_NB_TXQ) {
++		txq_idx -=3D NX_FIRST_VIF_TXQ_IDX;
++		trace_seq_printf(p, "[VIF %d/%d]", txq_idx / NX_NB_TXQ_PER_VIF,
++				 txq_idx % NX_NB_TXQ_PER_VIF);
++#endif
++	} else {
++		trace_seq_printf(p, "[ERROR %d]", txq_idx);
++	}
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++
++static inline const char *ftrace_print_sta(struct trace_seq *p, int sta_id=
+x)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++	if (sta_idx < NX_REMOTE_STA_MAX)
++		trace_seq_printf(p, "[STA %d]", sta_idx);
++	else
++		trace_seq_printf(p, "[BC/MC %d]", sta_idx - NX_REMOTE_STA_MAX);
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++
++static inline const char *ftrace_print_hwq(struct trace_seq *p, int hwq_id=
+x)
++{
++	static const struct trace_print_flags symbols[] =3D {{RWNX_HWQ_BK, "BK"},
++							   {RWNX_HWQ_BE, "BE"},
++							   {RWNX_HWQ_VI, "VI"},
++							   {RWNX_HWQ_VO, "VO"},
++#ifdef CONFIG_RWNX_FULLMAC
++							   {RWNX_HWQ_BCMC, "BCMC"},
++#else
++							   {RWNX_HWQ_BCN, "BCN"},
++#endif
++							   {-1, NULL}};
++	return trace_print_symbols_seq(p, hwq_idx, symbols, ARRAY_SIZE(symbols));
++}
++
++static inline const char *ftrace_print_hwq_cred(struct trace_seq *p, u8 *c=
+red)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++#if CONFIG_USER_MAX =3D=3D 1
++	trace_seq_printf(p, "%d", cred[0]);
++#else
++	int i;
++
++	for (i =3D 0; i < CONFIG_USER_MAX - 1; i++)
++		trace_seq_printf(p, "%d-", cred[i]);
++	trace_seq_printf(p, "%d", cred[i]);
++#endif
++
++	trace_seq_putc(p, 0);
++	return ret;
++}
++
++static inline const char *ftrace_print_mu_info(struct trace_seq *p, u8 mu_=
+info)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++	if (mu_info)
++		trace_seq_printf(p, "MU: %d-%d", (mu_info & 0x3f), (mu_info >> 6));
++
++	trace_seq_putc(p, 0);
++	return ret;
++}
++
++static inline const char *ftrace_print_mu_group(struct trace_seq *p, int n=
+b_user,
++						u8 *users)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++	int i;
++
++	if (users[0] !=3D 0xff)
++		trace_seq_printf(p, "(%d", users[0]);
++	else
++		trace_seq_printf(p, "(-");
++	for (i =3D 1; i < CONFIG_USER_MAX; i++) {
++		if (users[i] !=3D 0xff)
++			trace_seq_printf(p, ",%d", users[i]);
++		else
++			trace_seq_printf(p, ",-");
++	}
++
++	trace_seq_printf(p, ")");
++	trace_seq_putc(p, 0);
++	return ret;
++}
++
++static inline const char *ftrace_print_amsdu(struct trace_seq *p, u16 nb_p=
+kt)
++{
++	const char *ret =3D trace_seq_buffer_ptr(p);
++
++	if (nb_pkt > 1)
++		trace_seq_printf(p, "(AMSDU %d)", nb_pkt);
++
++	trace_seq_putc(p, 0);
++	return ret;
++}
++#endif /* defined(CONFIG_TRACEPOINTS) && defined(AIC8800_CREATE_TRACE_POIN=
+TS) */
++
++#undef __print_txq
++#define __print_txq(txq_idx) ftrace_print_txq(p, txq_idx)
++
++#undef __print_sta
++#define __print_sta(sta_idx) ftrace_print_sta(p, sta_idx)
++
++#undef __print_hwq
++#define __print_hwq(hwq) ftrace_print_hwq(p, hwq)
++
++#undef __print_hwq_cred
++#define __print_hwq_cred(cred) ftrace_print_hwq_cred(p, cred)
++
++#undef __print_mu_info
++#define __print_mu_info(mu_info) ftrace_print_mu_info(p, mu_info)
++
++#undef __print_mu_group
++#define __print_mu_group(nb, users) ftrace_print_mu_group(p, nb, users)
++
++#undef __print_amsdu
++#define __print_amsdu(nb_pkt) ftrace_print_amsdu(p, nb_pkt)
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++TRACE_EVENT(txq_select, TP_PROTO(int txq_idx, u16 pkt_ready_up, struct sk_=
+buff *skb),
++	    TP_ARGS(txq_idx, pkt_ready_up, skb),
++	    TP_STRUCT__entry(__field(u16, txq_idx) __field(u16, pkt_ready)
++			     __field(struct sk_buff *, skb)),
++	    TP_fast_assign(__entry->txq_idx =3D txq_idx;
++			   __entry->pkt_ready =3D pkt_ready_up; __entry->skb =3D skb;),
++	    TP_printk("%s pkt_ready_up=3D%d skb=3D%p", __print_txq(__entry->txq_i=
+dx),
++		      __entry->pkt_ready, __entry->skb));
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++DECLARE_EVENT_CLASS(hwq_template, TP_PROTO(u8 hwq_idx), TP_ARGS(hwq_idx),
++		    TP_STRUCT__entry(__field(u8, hwq_idx)),
++		    TP_fast_assign(__entry->hwq_idx =3D hwq_idx;),
++		    TP_printk("%s", __print_hwq(__entry->hwq_idx)));
++
++DEFINE_EVENT(hwq_template, hwq_flowctrl_stop, TP_PROTO(u8 hwq_idx),
++	     TP_ARGS(hwq_idx));
++
++DEFINE_EVENT(hwq_template, hwq_flowctrl_start, TP_PROTO(u8 hwq_idx),
++	     TP_ARGS(hwq_idx));
++
++DECLARE_EVENT_CLASS(txq_template, TP_PROTO(struct rwnx_txq *txq), TP_ARGS(=
+txq),
++		    TP_STRUCT__entry(__field(u16, txq_idx)),
++		    TP_fast_assign(__entry->txq_idx =3D txq->idx;),
++		    TP_printk("%s", __print_txq(__entry->txq_idx)));
++
++DEFINE_EVENT(txq_template, txq_add_to_hw, TP_PROTO(struct rwnx_txq *txq),
++	     TP_ARGS(txq));
++
++DEFINE_EVENT(txq_template, txq_del_from_hw, TP_PROTO(struct rwnx_txq *txq)=
+,
++	     TP_ARGS(txq));
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++DEFINE_EVENT(txq_template, txq_flowctrl_stop, TP_PROTO(struct rwnx_txq *tx=
+q),
++	     TP_ARGS(txq));
++
++DEFINE_EVENT(txq_template, txq_flowctrl_restart, TP_PROTO(struct rwnx_txq =
+*txq),
++	     TP_ARGS(txq));
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++TRACE_EVENT(process_txq, TP_PROTO(struct rwnx_txq *txq), TP_ARGS(txq),
++	    TP_STRUCT__entry(__field(u16, txq_idx) __field(u16, len)
++			     __field(u16, len_retry) __field(s8, credit)
++#ifdef CONFIG_RWNX_FULLMAC
++			     __field(u16, limit)
++#endif /* CONFIG_RWNX_FULLMAC */
++						),
++	    TP_fast_assign(__entry->txq_idx =3D txq->idx;
++			   __entry->len =3D skb_queue_len(&txq->sk_list);
++#ifdef CONFIG_MAC80211_TXQ
++			   __entry->len +=3D txq->nb_ready_mac80211;
++#endif
++			   __entry->len_retry =3D txq->nb_retry;
++			   __entry->credit =3D txq->credits;
++#ifdef CONFIG_RWNX_FULLMAC
++			   __entry->limit =3D txq->push_limit;
++#endif /* CONFIG_RWNX_FULLMAC */
++						),
++#ifdef CONFIG_RWNX_FULLMAC
++	    TP_printk("%s txq_credits=3D%d, len=3D%d, retry_len=3D%d, push_limit=
+=3D%d",
++		      __print_txq(__entry->txq_idx), __entry->credit,
++		      __entry->len, __entry->len_retry, __entry->limit)
++#else
++	    TP_printk("%s txq_credits=3D%d, len=3D%d, retry_len=3D%d",
++		      __print_txq(__entry->txq_idx), __entry->credit,
++		      __entry->len, __entry->len_retry)
++#endif /* CONFIG_RWNX_FULLMAC */
++);
++
++DECLARE_EVENT_CLASS(txq_reason_template, TP_PROTO(struct rwnx_txq *txq, u1=
+6 reason),
++		    TP_ARGS(txq, reason),
++		    TP_STRUCT__entry(__field(u16, txq_idx) __field(u16, reason)
++				     __field(u16, status)),
++		    TP_fast_assign(__entry->txq_idx =3D txq->idx; __entry->reason =3D re=
+ason;
++				   __entry->status =3D txq->status;),
++		    TP_printk("%s reason=3D%s status=3D%s", __print_txq(__entry->txq_idx=
+),
++			      __print_symbolic(__entry->reason, {RWNX_TXQ_STOP_FULL, "FULL"},
++					       {RWNX_TXQ_STOP_CSA, "CSA"},
++					       {RWNX_TXQ_STOP_STA_PS, "PS"},
++					       {RWNX_TXQ_STOP_VIF_PS, "VPS"},
++					       {RWNX_TXQ_STOP_CHAN, "CHAN"},
++					       {RWNX_TXQ_STOP_MU_POS, "MU"}),
++			      __print_flags(__entry->status, "|",
++					    {RWNX_TXQ_IN_HWQ_LIST, "IN LIST"},
++					    {RWNX_TXQ_STOP_FULL, "FULL"},
++					    {RWNX_TXQ_STOP_CSA, "CSA"},
++					    {RWNX_TXQ_STOP_STA_PS, "PS"},
++					    {RWNX_TXQ_STOP_VIF_PS, "VPS"},
++					    {RWNX_TXQ_STOP_CHAN, "CHAN"},
++					    {RWNX_TXQ_STOP_MU_POS, "MU"},
++					    {RWNX_TXQ_NDEV_FLOW_CTRL, "FLW_CTRL"})));
++
++DEFINE_EVENT(txq_reason_template, txq_start,
++	     TP_PROTO(struct rwnx_txq *txq, u16 reason), TP_ARGS(txq, reason));
++
++DEFINE_EVENT(txq_reason_template, txq_stop,
++	     TP_PROTO(struct rwnx_txq *txq, u16 reason), TP_ARGS(txq, reason));
++
++TRACE_EVENT(push_desc,
++	    TP_PROTO(struct sk_buff *skb, struct rwnx_sw_txhdr *sw_txhdr, int pus=
+h_flags),
++	    TP_ARGS(skb, sw_txhdr, push_flags),
++	    TP_STRUCT__entry(__field(struct sk_buff *, skb) __field(unsigned int,=
+ len)
++			     __field(u16, tx_queue) __field(u8, hw_queue)
++			     __field(u8, push_flag) __field(u32, flag)
++			     __field(s8, txq_cred) __field(u8, hwq_cred)
++			     __field(u16, pkt_cnt)
++			     __field(u8, mu_info)),
++	    TP_fast_assign(__entry->skb =3D skb; __entry->tx_queue =3D sw_txhdr->=
+txq->idx;
++			   __entry->push_flag =3D push_flags;
++			   __entry->hw_queue =3D sw_txhdr->txq->hwq->id;
++			   __entry->txq_cred =3D sw_txhdr->txq->credits;
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++			   __entry->pkt_cnt =3D sw_txhdr->desc.host.packet_cnt;
++#endif
++#ifdef CONFIG_RWNX_FULLMAC
++			   __entry->flag =3D sw_txhdr->desc.host.flags;
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++#ifdef CONFIG_RWNX_AMSDUS_TX
++			if (sw_txhdr->amsdu.len)
++				__entry->len =3D sw_txhdr->amsdu.len;
++			else
++#endif /* CONFIG_RWNX_AMSDUS_TX */
++				__entry->len =3D sw_txhdr->desc.host.packet_len[0];
++#else
++			   __entry->len =3D sw_txhdr->desc.host.packet_len;
++#endif /* CONFIG_RWNX_SPLIT_TX_BUF */
++#else  /* !CONFIG_RWNX_FULLMAC */
++			   __entry->flag =3D sw_txhdr->desc.umac.flags;
++			   __entry->len =3D sw_txhdr->frame_len;
++			   __entry->sn =3D sw_txhdr->sn;
++#endif /* CONFIG_RWNX_FULLMAC */
++#ifdef CONFIG_RWNX_MUMIMO_TX
++			   __entry->mu_info =3D sw_txhdr->desc.host.mumimo_info;
++#else
++			   __entry->mu_info =3D 0;
++#endif
++					),
++#ifdef CONFIG_RWNX_FULLMAC
++	TP_printk("%s skb=3D%p (len=3D%d) hw_queue=3D%s cred_txq=3D%d cred_hwq=3D=
+%d %s flag=3D%s %s %s %s",
++		  __print_txq(__entry->tx_queue), __entry->skb, __entry->len,
++		  __print_hwq(__entry->hw_queue), __entry->txq_cred,
++		  __entry->hwq_cred, __print_mu_info(__entry->mu_info),
++		  __print_flags(__entry->flag, "|", {TXU_CNTRL_RETRY, "RETRY"},
++				{TXU_CNTRL_MORE_DATA, "MOREDATA"}, {TXU_CNTRL_MGMT, "MGMT"},
++				{TXU_CNTRL_MGMT_NO_CCK, "NO_CCK"},
++				{TXU_CNTRL_MGMT_ROBUST, "ROBUST"}, {TXU_CNTRL_AMSDU, "AMSDU"},
++				{TXU_CNTRL_USE_4ADDR, "4ADDR"}, {TXU_CNTRL_EOSP, "EOSP"},
++				{TXU_CNTRL_MESH_FWD, "MESH_FWD"}, {TXU_CNTRL_TDLS, "TDLS"}),
++		  (__entry->push_flag & RWNX_PUSH_IMMEDIATE) ? "(IMMEDIATE)" : "",
++		  (!(__entry->flag & TXU_CNTRL_RETRY) &&
++		  (__entry->push_flag & RWNX_PUSH_RETRY))
++		  ? "(SW_RETRY)" : "",
++		  __print_amsdu(__entry->pkt_cnt))
++#else
++	TP_printk("%s skb=3D%p (len=3D%d) hw_queue=3D%s cred_txq=3D%d cred_hwq=3D=
+%d %s flag=3D%x (%s) sn=3D%d %s",
++		  __print_txq(__entry->tx_queue), __entry->skb, __entry->len,
++		  __print_hwq(__entry->hw_queue), __entry->txq_cred,
++		  __entry->hwq_cred, __print_mu_info(__entry->mu_info),
++		  __entry->flag,
++		  __print_flags(__entry->push_flag, "|", {RWNX_PUSH_RETRY, "RETRY"},
++				{RWNX_PUSH_IMMEDIATE, "IMMEDIATE"}),
++		  __entry->sn, __print_amsdu(__entry->pkt_cnt))
++#endif /* CONFIG_RWNX_FULLMAC */
++);
++
++TRACE_EVENT(txq_queue_skb, TP_PROTO(struct sk_buff *skb, struct rwnx_txq *=
+txq, bool retry),
++	    TP_ARGS(skb, txq, retry),
++	    TP_STRUCT__entry(__field(struct sk_buff *, skb) __field(u16, txq_idx)
++			     __field(s8, credit) __field(u16, q_len)
++			     __field(u16, q_len_retry) __field(bool, retry)),
++	TP_fast_assign(__entry->skb =3D skb; __entry->txq_idx =3D txq->idx;
++		       __entry->credit =3D txq->credits;
++		       __entry->q_len =3D skb_queue_len(&txq->sk_list);
++		       __entry->q_len_retry =3D txq->nb_retry;
++		       __entry->retry =3D retry;),
++	TP_printk("%s skb=3D%p retry=3D%d txq_credits=3D%d queue_len=3D%d (retry =
+=3D %d)",
++		  __print_txq(__entry->txq_idx), __entry->skb, __entry->retry,
++		  __entry->credit, __entry->q_len, __entry->q_len_retry));
++
++#ifdef CONFIG_MAC80211_TXQ
++TRACE_EVENT(txq_wake, TP_PROTO(struct rwnx_txq *txq), TP_ARGS(txq),
++	    TP_STRUCT__entry(__field(u16, txq_idx) __field(u16, q_len)),
++	    TP_fast_assign(__entry->txq_idx =3D txq->idx;
++			   __entry->q_len =3D txq->nb_ready_mac80211;),
++	    TP_printk("%s mac80211_queue_len=3D%d", __print_txq(__entry->txq_idx)=
+,
++		      __entry->q_len));
++
++TRACE_EVENT(txq_drop, TP_PROTO(struct rwnx_txq *txq, unsigned long nb_drop=
+),
++	    TP_ARGS(txq, nb_drop),
++	    TP_STRUCT__entry(__field(u16, txq_idx) __field(u16, nb_drop)),
++	    TP_fast_assign(__entry->txq_idx =3D txq->idx;
++			   __entry->nb_drop =3D nb_drop;),
++	    TP_printk("%s %u pkt have been dropped by codel in mac80211 txq",
++		      __print_txq(__entry->txq_idx), __entry->nb_drop));
++
++#endif
++
++DECLARE_EVENT_CLASS(idx_template, TP_PROTO(u16 idx), TP_ARGS(idx),
++		    TP_STRUCT__entry(__field(u16, idx)),
++		    TP_fast_assign(__entry->idx =3D idx;),
++		    TP_printk("idx=3D%d", __entry->idx));
++
++DEFINE_EVENT(idx_template, txq_vif_start, TP_PROTO(u16 idx), TP_ARGS(idx))=
+;
++
++DEFINE_EVENT(idx_template, txq_vif_stop, TP_PROTO(u16 idx), TP_ARGS(idx));
++
++TRACE_EVENT(process_hw_queue, TP_PROTO(struct rwnx_hwq *hwq), TP_ARGS(hwq)=
+,
++	    TP_STRUCT__entry(__field(u16, hwq)
++			     __array(u8, credits, CONFIG_USER_MAX)),
++	    TP_fast_assign(__entry->hwq =3D hwq->id;),
++	    TP_printk("hw_queue=3D%s hw_credits=3D%s", __print_hwq(__entry->hwq),
++		      __print_hwq_cred(__entry->credits)));
++
++DECLARE_EVENT_CLASS(sta_idx_template, TP_PROTO(u16 idx), TP_ARGS(idx),
++		    TP_STRUCT__entry(__field(u16, idx)),
++		    TP_fast_assign(__entry->idx =3D idx;),
++		    TP_printk("%s", __print_sta(__entry->idx)));
++
++DEFINE_EVENT(sta_idx_template, txq_sta_start, TP_PROTO(u16 idx), TP_ARGS(i=
+dx));
++
++DEFINE_EVENT(sta_idx_template, txq_sta_stop, TP_PROTO(u16 idx), TP_ARGS(id=
+x));
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++DEFINE_EVENT(sta_idx_template, ps_disable, TP_PROTO(u16 idx), TP_ARGS(idx)=
+);
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++TRACE_EVENT(skb_confirm,
++	    #ifdef CONFIG_RWNX_FULLMAC
++	    TP_PROTO(struct sk_buff *skb, struct rwnx_txq *txq,
++		     struct rwnx_hwq *hwq, struct tx_cfm_tag *cfm),
++	    #else
++	    TP_PROTO(struct sk_buff *skb, struct rwnx_txq *txq,
++		     struct rwnx_hwq *hwq, u8 cfm),
++	    #endif
++	TP_ARGS(skb, txq, hwq, cfm),
++	TP_STRUCT__entry(__field(struct sk_buff *, skb) __field(u16, txq_idx)
++			 __field(u8, hw_queue) __array(u8, hw_credit, CONFIG_USER_MAX)
++			 __field(s8, sw_credit) __field(s8, sw_credit_up)
++#ifdef CONFIG_RWNX_FULLMAC
++			 __field(u8, ampdu_size)
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++			 __field(u16, amsdu)
++#endif /* CONFIG_RWNX_SPLIT_TX_BUF */
++			 __field(u16, sn)
++#endif /* CONFIG_RWNX_FULLMAC */
++					),
++	TP_fast_assign(__entry->skb =3D skb; __entry->txq_idx =3D txq->idx;
++		       __entry->hw_queue =3D hwq->id;
++		       __entry->sw_credit =3D txq->credits;
++#if defined CONFIG_RWNX_FULLMAC
++		       __entry->sw_credit_up =3D cfm->credits;
++		       __entry->ampdu_size =3D cfm->ampdu_size;
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++		       __entry->amsdu =3D cfm->amsdu_size; __entry->sn =3D cfm->sn;
++#endif
++#else
++		       __entry->sw_credit_up =3D cfm
++#endif /* CONFIG_RWNX_FULLMAC */
++				),
++	TP_printk("%s skb=3D%p hw_queue=3D%s, hw_credits=3D%s, txq_credits=3D%d (=
++%d)"
++#ifdef CONFIG_RWNX_FULLMAC
++		  " sn=3D%u ampdu=3D%d"
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++		  " amsdu=3D%u"
++#endif
++#endif
++		,
++		  __print_txq(__entry->txq_idx), __entry->skb,
++		  __print_hwq(__entry->hw_queue),
++		  __print_hwq_cred(__entry->hw_credit), __entry->sw_credit,
++		  __entry->sw_credit_up
++#ifdef CONFIG_RWNX_FULLMAC
++		,
++		  __entry->sn, __entry->ampdu_size
++#ifdef CONFIG_RWNX_SPLIT_TX_BUF
++		,
++		  __entry->amsdu
++#endif
++#endif
++			));
++
++TRACE_EVENT(credit_update, TP_PROTO(struct rwnx_txq *txq, s8 cred_up),
++	    TP_ARGS(txq, cred_up),
++	    TP_STRUCT__entry(__field(struct sk_buff *, skb)
++			     __field(u16, txq_idx) __field(s8, sw_credit)
++			     __field(s8, sw_credit_up)),
++	    TP_fast_assign(__entry->txq_idx =3D txq->idx;
++			   __entry->sw_credit =3D txq->credits;
++			   __entry->sw_credit_up =3D cred_up;),
++	    TP_printk("%s txq_credits=3D%d (%+d)", __print_txq(__entry->txq_idx),
++		      __entry->sw_credit, __entry->sw_credit_up))
++#ifdef CONFIG_RWNX_FULLMAC
++DECLARE_EVENT_CLASS(ps_template, TP_PROTO(struct rwnx_sta *sta), TP_ARGS(s=
+ta),
++		    TP_STRUCT__entry(__field(u16, idx) __field(u16, ready_ps)
++				     __field(u16, sp_ps) __field(u16, ready_uapsd)
++				     __field(u16, sp_uapsd)),
++		    TP_fast_assign(__entry->idx =3D sta->sta_idx;
++				   __entry->ready_ps =3D sta->ps.pkt_ready[LEGACY_PS_ID];
++				   __entry->sp_ps =3D sta->ps.sp_cnt[LEGACY_PS_ID];
++				   __entry->ready_uapsd =3D sta->ps.pkt_ready[UAPSD_ID];
++				   __entry->sp_uapsd =3D sta->ps.sp_cnt[UAPSD_ID];),
++		    TP_printk("%s [PS] ready=3D%d sp=3D%d [UAPSD] ready=3D%d sp=3D%d",
++			      __print_sta(__entry->idx), __entry->ready_ps, __entry->sp_ps,
++			      __entry->ready_uapsd, __entry->sp_uapsd));
++
++DEFINE_EVENT(ps_template, ps_queue, TP_PROTO(struct rwnx_sta *sta), TP_ARG=
+S(sta));
++
++DEFINE_EVENT(ps_template, ps_push, TP_PROTO(struct rwnx_sta *sta), TP_ARGS=
+(sta));
++
++DEFINE_EVENT(ps_template, ps_enable, TP_PROTO(struct rwnx_sta *sta), TP_AR=
+GS(sta));
++
++TRACE_EVENT(ps_traffic_update, TP_PROTO(u16 sta_idx, u8 traffic, bool uaps=
+d),
++	    TP_ARGS(sta_idx, traffic, uapsd),
++	    TP_STRUCT__entry(__field(u16, sta_idx) __field(u8, traffic)
++			     __field(bool, uapsd)),
++	    TP_fast_assign(__entry->sta_idx =3D sta_idx;
++			   __entry->traffic =3D traffic; __entry->uapsd =3D uapsd;),
++	    TP_printk("%s %s%s traffic available ",
++		      __print_sta(__entry->sta_idx),
++		      __entry->traffic ? "" : "no more ",
++		      __entry->uapsd ? "U-APSD" : "legacy PS"));
++
++TRACE_EVENT(ps_traffic_req, TP_PROTO(struct rwnx_sta *sta, u16 pkt_req, u8=
+ ps_id),
++	    TP_ARGS(sta, pkt_req, ps_id),
++	    TP_STRUCT__entry(__field(u16, idx) __field(u16, pkt_req)
++			     __field(u8, ps_id) __field(u16, ready)
++			     __field(u16, sp)),
++	    TP_fast_assign(__entry->idx =3D sta->sta_idx;
++			   __entry->pkt_req =3D pkt_req; __entry->ps_id =3D ps_id;
++			   __entry->ready =3D sta->ps.pkt_ready[ps_id];
++			   __entry->sp =3D sta->ps.sp_cnt[ps_id];),
++	    TP_printk("%s %s traffic request %d pkt (ready=3D%d, sp=3D%d)",
++		      __print_sta(__entry->idx),
++		      __entry->ps_id =3D=3D UAPSD_ID ? "U-APSD" : "legacy PS",
++		      __entry->pkt_req, __entry->ready, __entry->sp));
++
++#ifdef CONFIG_RWNX_AMSDUS_TX
++TRACE_EVENT(amsdu_subframe, TP_PROTO(struct rwnx_sw_txhdr *sw_txhdr),
++	    TP_ARGS(sw_txhdr),
++	    TP_STRUCT__entry(__field(struct sk_buff *, skb)
++			     __field(u16, txq_idx) __field(u8, nb)
++			     __field(u32, len)),
++	    TP_fast_assign(__entry->skb =3D sw_txhdr->skb;
++			   __entry->nb =3D sw_txhdr->amsdu.nb;
++			   __entry->len =3D sw_txhdr->amsdu.len;
++			   __entry->txq_idx =3D sw_txhdr->txq->idx;),
++	    TP_printk("%s skb=3D%p %s nb_subframe=3D%d, len=3D%u",
++		      __print_txq(__entry->txq_idx), __entry->skb,
++		      (__entry->nb =3D=3D 2) ? "Start new AMSDU" : "Add subframe",
++		      __entry->nb, __entry->len));
++#endif
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++#ifdef CONFIG_RWNX_MUMIMO_TX
++TRACE_EVENT(mu_group_update, TP_PROTO(struct rwnx_mu_group *group),
++	    TP_ARGS(group),
++	    TP_STRUCT__entry(__field(u8, nb_user) __field(u8, group_id)
++			     __array(u8, users, CONFIG_USER_MAX)),
++	    TP_fast_assign(int i; __entry->nb_user =3D group->user_cnt;
++			for (i =3D 0; i < CONFIG_USER_MAX; i++) {
++				if (group->users[i])
++					__entry->users[i] =3D group->users[i]->sta_idx;
++				else
++					__entry->users[i] =3D 0xff;
++			}
++			__entry->group_id =3D group->group_id;),
++	    TP_printk("Group-id =3D %d, Users =3D %s", __entry->group_id,
++		      __print_mu_group(__entry->nb_user, __entry->users)));
++
++TRACE_EVENT(mu_group_delete, TP_PROTO(int group_id), TP_ARGS(group_id),
++	    TP_STRUCT__entry(__field(u8, group_id)),
++	    TP_fast_assign(__entry->group_id =3D group_id;),
++	    TP_printk("Group-id =3D %d", __entry->group_id));
++
++TRACE_EVENT(mu_group_selection, TP_PROTO(struct rwnx_sta *sta, int group_i=
+d),
++	    TP_ARGS(sta, group_id),
++	    TP_STRUCT__entry(__field(u8, sta_idx) __field(u8, group_id)),
++	    TP_fast_assign(__entry->sta_idx =3D sta->sta_idx;
++			   __entry->group_id =3D group_id;),
++	    TP_printk("[Sta %d] Group-id =3D %d", __entry->sta_idx,
++		      __entry->group_id));
++
++TRACE_EVENT(txq_select_mu_group,
++	    TP_PROTO(struct rwnx_txq *txq, int group_id, int pos),
++	    TP_ARGS(txq, group_id, pos),
++	    TP_STRUCT__entry(__field(u16, txq_idx) __field(u8, group_id)
++			     __field(u8, pos)),
++	    TP_fast_assign(__entry->txq_idx =3D txq->idx;
++			   __entry->group_id =3D group_id; __entry->pos =3D pos;),
++	    TP_printk("%s: group=3D%d pos=3D%d", __print_txq(__entry->txq_idx),
++		      __entry->group_id, __entry->pos));
++
++#endif /* CONFIG_RWNX_MUMIMO_TX */
++
++/*************************************************************************=
+****
++ * TRACE functions for MESH
++ *************************************************************************=
+***/
++#ifdef CONFIG_RWNX_FULLMAC
++DECLARE_EVENT_CLASS(mesh_path_template, TP_PROTO(struct rwnx_mesh_path *me=
+sh_path),
++		    TP_ARGS(mesh_path),
++		    TP_STRUCT__entry(__field(u8, idx) __field(u8, next_hop_sta)
++				     __array(u8, tgt_mac, ETH_ALEN)),
++		    TP_fast_assign(__entry->idx =3D mesh_path->path_idx;
++				   memcpy(__entry->tgt_mac, &mesh_path->tgt_mac_addr, ETH_ALEN);
++				if (mesh_path->p_nhop_sta)
++					__entry->next_hop_sta =3D mesh_path->p_nhop_sta->sta_idx;
++				else
++					__entry->next_hop_sta =3D 0xff;),
++		    TP_printk("Mpath(%d): target=3D%pM next_hop=3DSTA-%d", __entry->idx,
++			      __entry->tgt_mac, __entry->next_hop_sta));
++
++DEFINE_EVENT(mesh_path_template, mesh_create_path,
++	     TP_PROTO(struct rwnx_mesh_path *mesh_path), TP_ARGS(mesh_path));
++
++DEFINE_EVENT(mesh_path_template, mesh_delete_path,
++	     TP_PROTO(struct rwnx_mesh_path *mesh_path), TP_ARGS(mesh_path));
++
++DEFINE_EVENT(mesh_path_template, mesh_update_path,
++	     TP_PROTO(struct rwnx_mesh_path *mesh_path), TP_ARGS(mesh_path));
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+****
++ * TRACE functions for RADAR
++ *************************************************************************=
+***/
++#ifdef CONFIG_RWNX_RADAR
++TRACE_EVENT(radar_pulse, TP_PROTO(u8 chain, struct radar_pulse *pulse),
++	    TP_ARGS(chain, pulse),
++	    TP_STRUCT__entry(__field(u8, chain) __field(s16, freq)
++			     __field(u16, pri) __field(u8, len)
++			     __field(u8, fom)),
++	    TP_fast_assign(__entry->freq =3D pulse->freq * 2;
++			   __entry->len =3D pulse->len * 2;
++			   __entry->fom =3D pulse->fom * 6;
++			   __entry->pri =3D pulse->rep; __entry->chain =3D chain;),
++	    TP_printk("%s: PRI=3D%.5d LEN=3D%.3d FOM=3D%.2d%% freq=3D%dMHz ",
++		      __print_symbolic(__entry->chain, {RWNX_RADAR_RIU, "RIU"},
++				       {RWNX_RADAR_FCU, "FCU"}),
++				       __entry->pri, __entry->len, __entry->fom, __entry->freq));
++
++TRACE_EVENT(radar_detected, TP_PROTO(u8 chain, u8 region, s16 freq, u8 typ=
+e, u16 pri),
++	    TP_ARGS(chain, region, freq, type, pri),
++	    TP_STRUCT__entry(__field(u8, chain) __field(u8, region) __field(s16, =
+freq)
++			     __field(u8, type) __field(u16, pri)),
++	    TP_fast_assign(__entry->chain =3D chain; __entry->region =3D region;
++			   __entry->freq =3D freq; __entry->type =3D type;
++			   __entry->pri =3D pri;),
++	    TP_printk("%s: region=3D%s type=3D%d freq=3D%dMHz (pri=3D%dus)",
++		      __print_symbolic(__entry->chain, {RWNX_RADAR_RIU, "RIU"},
++				       {RWNX_RADAR_FCU, "FCU"}),
++		      __print_symbolic(__entry->region, {NL80211_DFS_UNSET, "UNSET"},
++				       {NL80211_DFS_FCC, "FCC"},
++				       {NL80211_DFS_ETSI, "ETSI"},
++				       {NL80211_DFS_JP, "JP"}),
++		      __entry->type, __entry->freq, __entry->pri));
++
++TRACE_EVENT(radar_set_region, TP_PROTO(u8 region), TP_ARGS(region),
++	    TP_STRUCT__entry(__field(u8, region)),
++	    TP_fast_assign(__entry->region =3D region;),
++	    TP_printk("region=3D%s",
++		      __print_symbolic(__entry->region,
++				       {NL80211_DFS_UNSET, "UNSET"},
++				       {NL80211_DFS_FCC, "FCC"},
++				       {NL80211_DFS_ETSI, "ETSI"},
++				       {NL80211_DFS_JP, "JP"})));
++
++TRACE_EVENT(radar_enable_detection, TP_PROTO(u8 region, u8 enable, u8 chai=
+n),
++	    TP_ARGS(region, enable, chain),
++	    TP_STRUCT__entry(__field(u8, region) __field(u8, chain)
++			     __field(u8, enable)),
++	    TP_fast_assign(__entry->chain =3D chain; __entry->enable =3D enable;
++			   __entry->region =3D region;),
++	    TP_printk("%s: %s radar detection %s",
++		      __print_symbolic(__entry->chain, {RWNX_RADAR_RIU, "RIU"},
++				       {RWNX_RADAR_FCU, "FCU"}),
++		      __print_symbolic(__entry->enable,
++				       {RWNX_RADAR_DETECT_DISABLE, "Disable"},
++				       {RWNX_RADAR_DETECT_ENABLE,
++				       "Enable (no report)"},
++				       {RWNX_RADAR_DETECT_REPORT, "Enable"}),
++		      __entry->enable =3D=3D RWNX_RADAR_DETECT_DISABLE
++				? ""	: __print_symbolic(__entry->region,
++							   {NL80211_DFS_UNSET, "UNSET"},
++							   {NL80211_DFS_FCC, "FCC"},
++							   {NL80211_DFS_ETSI, "ETSI"},
++							   {NL80211_DFS_JP, "JP"})));
++#endif /* CONFIG_RWNX_RADAR */
++
++/*************************************************************************=
+****
++ * TRACE functions for IPC message
++ *************************************************************************=
+***/
++#include "rwnx_strs.h"
++
++DECLARE_EVENT_CLASS(ipc_msg_template, TP_PROTO(u16 id), TP_ARGS(id),
++		    TP_STRUCT__entry(__field(u16, id)),
++		    TP_fast_assign(__entry->id =3D id;),
++		    TP_printk("%s (%d - %d)", RWNX_ID2STR(__entry->id),
++			      MSG_T(__entry->id), MSG_I(__entry->id)));
++
++DEFINE_EVENT(ipc_msg_template, msg_send, TP_PROTO(u16 id), TP_ARGS(id));
++
++DEFINE_EVENT(ipc_msg_template, msg_recv, TP_PROTO(u16 id), TP_ARGS(id));
++
++#endif /* !defined(_RWNX_EVENTS_H) || defined(TRACE_HEADER_MULTI_READ) */
++
++#undef TRACE_INCLUDE_PATH
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_PATH AIC_TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_FILE rwnx_events
++#include <trace/define_trace.h>
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.c b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_irqs.c
+new file mode 100644
+index 0000000000000..994b6f84cdaac
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.c
+@@ -0,0 +1,49 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + *************************************************************************=
@@ -7502,673 +8266,5791 @@ index 0000000000000..120f0ec267fc0
 + *
 + * Copyright (C) 2020 AIC semiconductor.
 + *
-+ * @brief bsp tx/rx interface
++ * @brief IRQ handler
++ *
++ *************************************************************************=
+*****
++ */
++#include <linux/interrupt.h>
++
++#include "rwnx_irqs.h"
++#include "ipc_host.h"
++#include "rwnx_defs.h"
++#include "rwnx_prof.h"
++
++/**
++ * rwnx_irq_hdlr - IRQ handler
++ * @irq: Interrupt number
++ * @dev_id: Driver private data registered for the interrupt
++ *
++ * Handler registered by the platform driver
++ *
++ * Return: %IRQ_HANDLED after scheduling the interrupt bottom half.
++ */
++irqreturn_t rwnx_irq_hdlr(int irq, void *dev_id)
++{
++	struct rwnx_hw *rwnx_hw =3D (struct rwnx_hw *)dev_id;
++
++	disable_irq_nosync(irq);
++	tasklet_schedule(&rwnx_hw->task);
++	return IRQ_HANDLED;
++}
++
++/**
++ * rwnx_task - Bottom half for IRQ handler
++ * @data: Driver private data passed to the tasklet
++ *
++ * Read irq status and process accordingly
++ */
++void rwnx_task(unsigned long data)
++{
++	struct rwnx_hw *rwnx_hw =3D (struct rwnx_hw *)data;
++
++	spin_lock_bh(&rwnx_hw->tx_lock);
++	rwnx_hwq_process_all(rwnx_hw);
++	spin_unlock_bh(&rwnx_hw->tx_lock);
++}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.h b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_irqs.h
+new file mode 100644
+index 0000000000000..ff6c766c727c3
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_irqs.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_IRQS_H_
++#define _RWNX_IRQS_H_
++
++#include <linux/interrupt.h>
++
++/* IRQ handler to be registered by platform driver */
++irqreturn_t rwnx_irq_hdlr(int irq, void *dev_id);
++
++void rwnx_task(unsigned long data);
++
++#endif /* _RWNX_IRQS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.c b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.c
+new file mode 100644
+index 0000000000000..7de555f3eb8a0
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.c
+@@ -0,0 +1,1620 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief RX function definitions
 + *
 + *************************************************************************=
 *****
 + */
 +
-+#include "aicsdio_txrxif.h"
-+#include "aic_bsp_driver.h"
-+#include <linux/atomic.h>
-+#include <linux/completion.h>
-+#include <linux/interrupt.h>
-+#include <linux/kthread.h>
-+#include <linux/netdevice.h>
-+#include <linux/printk.h>
-+#include <linux/sched.h>
-+#include <linux/semaphore.h>
++#include "rwnx_defs.h"
++#include "rwnx_prof.h"
++#include "rwnx_tx.h"
++#include "rwnx_rx.h"
++#include <linux/rtnetlink.h>
 +#include <linux/vmalloc.h>
-+
-+int aicwf_bus_init(uint bus_hdrlen, struct device *dev)
-+{
-+	int ret =3D 0;
-+	struct aicwf_bus *bus_if;
-+
-+	if (!dev) {
-+		txrx_err("device not found\n");
-+		return -1;
-+	}
-+	bus_if =3D dev_get_drvdata(dev);
-+	bus_if->cmd_buf =3D kzalloc(CMD_BUF_MAX, GFP_KERNEL);
-+	if (!bus_if->cmd_buf) {
-+		ret =3D -ENOMEM;
-+		txrx_err("proto_attach failed\n");
-+		goto out;
-+	}
-+	memset(bus_if->cmd_buf, '\0', CMD_BUF_MAX);
-+
-+	init_completion(&bus_if->bustx_trgg);
-+	init_completion(&bus_if->busrx_trgg);
-+#ifdef AICWF_SDIO_SUPPORT
-+	bus_if->bustx_thread =3D kthread_run(aicwf_sdio_bustx_thread, (void *)bus=
-_if,
-+					   "aicwf_bustx_thread");
-+	bus_if->busrx_thread =3D kthread_run(aicwf_sdio_busrx_thread,
-+					   (void *)bus_if->bus_priv.sdio->rx_priv,
-+									   "aicwf_busrx_thread");
++#ifdef CONFIG_RWNX_BFMER
++#include "rwnx_bfmer.h"
++#endif //(CONFIG_RWNX_BFMER)
++#ifdef CONFIG_RWNX_FULLMAC
++#include "rwnx_msg_tx.h"
++#include "rwnx_tdls.h"
++#endif /* CONFIG_RWNX_FULLMAC */
++#include "aicwf_txrxif.h"
++#include "aicwf_sdio.h"
++#include "rwnx_compat.h"
++#include "rwnx_events.h"
++#include "rwnx_msg_rx.h"
++#include "rwnx_mod_params.h"
++#include <linux/pm.h>
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++#include "aicwf_compat_8800d80.h"
 +#endif
 +
-+	if (IS_ERR(bus_if->bustx_thread)) {
-+		bus_if->bustx_thread =3D NULL;
-+		txrx_err("aicwf_bustx_thread run fail\n");
-+		ret =3D -1;
++void rwnx_cfg80211_unlink_bss(struct rwnx_hw *rwnx_hw,
++			      struct rwnx_vif *rwnx_vif);
++
++static int rwnx_freq_to_idx(struct rwnx_hw *rwnx_hw, int freq)
++{
++	struct ieee80211_supported_band *sband =3D NULL;
++	int band, ch, idx =3D 0;
++
++	for (band =3D NL80211_BAND_2GHZ; band < NUM_NL80211_BANDS; band++) {
++#ifdef CONFIG_RWNX_FULLMAC
++		sband =3D rwnx_hw->wiphy->bands[band];
++#endif /* CONFIG_RWNX_FULLMAC */
++		if (!sband)
++			continue;
++
++		for (ch =3D 0; ch < sband->n_channels; ch++, idx++) {
++			if (sband->channels[ch].center_freq =3D=3D freq)
++				goto exit;
++		}
 +	}
 +
-+	if (IS_ERR(bus_if->busrx_thread)) {
-+		bus_if->busrx_thread =3D NULL;
-+		txrx_err("aicwf_bustx_thread run fail\n");
-+		ret =3D -1;
-+	}
++	WARN_ON_ONCE(1);
 +
-+	if (ret < 0)
-+		goto out;
-+
-+	return ret;
-+
-+out:
-+	return ret;
++exit:
++	// Channel has been found, return the index
++	return idx;
 +}
 +
-+void aicwf_bus_deinit(struct device *dev)
++/*************************************************************************=
+**
++ * Messages from MM task
++ *************************************************************************=
+*/
++static inline int rwnx_rx_chan_pre_switch_ind(struct rwnx_hw *rwnx_hw,
++					      struct rwnx_cmd *cmd,
++					      struct ipc_e2a_msg *msg)
 +{
-+	struct aicwf_bus *bus_if;
++	struct rwnx_vif *rwnx_vif;
++	int chan_idx =3D ((struct mm_channel_pre_switch_ind *)msg->param)->chan_i=
+ndex;
 +
-+	if (!dev) {
-+		txrx_err("device not found\n");
++	REG_SW_SET_PROFILING_CHAN(rwnx_hw, SW_PROF_CHAN_CTXT_PSWTCH_BIT);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	list_for_each_entry(rwnx_vif, &rwnx_hw->vifs, list) {
++		if (rwnx_vif->up && rwnx_vif->ch_index =3D=3D chan_idx)
++			rwnx_txq_vif_stop(rwnx_vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++	}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	REG_SW_CLEAR_PROFILING_CHAN(rwnx_hw, SW_PROF_CHAN_CTXT_PSWTCH_BIT);
++
++	return 0;
++}
++
++static inline int rwnx_rx_chan_switch_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	struct rwnx_vif *rwnx_vif;
++	int chan_idx =3D ((struct mm_channel_switch_ind *)msg->param)->chan_index=
+;
++	bool roc =3D ((struct mm_channel_switch_ind *)msg->param)->roc;
++	bool roc_tdls =3D ((struct mm_channel_switch_ind *)msg->param)->roc_tdls;
++
++	REG_SW_SET_PROFILING_CHAN(rwnx_hw, SW_PROF_CHAN_CTXT_SWTCH_BIT);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	if (roc_tdls) {
++		u8 vif_index =3D ((struct mm_channel_switch_ind *)msg->param)->vif_index=
+;
++
++		list_for_each_entry(rwnx_vif, &rwnx_hw->vifs, list) {
++			if (rwnx_vif->vif_index =3D=3D vif_index) {
++				rwnx_vif->roc_tdls =3D true;
++				rwnx_txq_tdls_sta_start(rwnx_vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++			}
++		}
++	} else if (!roc) {
++		list_for_each_entry(rwnx_vif, &rwnx_hw->vifs, list) {
++			if (rwnx_vif->up && rwnx_vif->ch_index =3D=3D chan_idx)
++				rwnx_txq_vif_start(rwnx_vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++		}
++	} else {
++		/* Retrieve the allocated RoC element */
++		struct rwnx_roc_elem *roc_elem =3D rwnx_hw->roc_elem;
++		/* Get VIF on which RoC has been started */
++		// rwnx_vif =3D netdev_priv(roc_elem->wdev->netdev);
++
++		/* For debug purpose (use ftrace kernel option) */
++		// trace_switch_roc(rwnx_vif->vif_index);
++
++		if (roc_elem) {
++			/* If mgmt_roc is true, remain on channel has been started by
++			 * ourself
++			 */
++			if (!roc_elem->mgmt_roc) {
++				/* Inform the host that we have switch on the indicated
++				 * off-channel
++				 */
++				cfg80211_ready_on_channel(roc_elem->wdev,
++							  (u64)(rwnx_hw->roc_cookie_cnt),
++							  roc_elem->chan, roc_elem->duration,
++							  GFP_ATOMIC);
++			}
++
++			/* Keep in mind that we have switched on the channel */
++			roc_elem->on_chan =3D true;
++		} else {
++			AICWFDBG(LOGDEBUG, "roc_elem =3D=3D null\n");
++		}
++		// Enable traffic on OFF channel queue
++		rwnx_txq_offchan_start(rwnx_hw);
++	}
++
++	tasklet_schedule(&rwnx_hw->task);
++
++	rwnx_hw->cur_chanctx =3D chan_idx;
++	rwnx_radar_detection_enable_on_cur_channel(rwnx_hw);
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	REG_SW_CLEAR_PROFILING_CHAN(rwnx_hw, SW_PROF_CHAN_CTXT_SWTCH_BIT);
++
++	return 0;
++}
++
++static inline int rwnx_rx_tdls_chan_switch_cfm(struct rwnx_hw *rwnx_hw,
++					       struct rwnx_cmd *cmd,
++					       struct ipc_e2a_msg *msg)
++{
++	return 0;
++}
++
++static inline int rwnx_rx_tdls_chan_switch_ind(struct rwnx_hw *rwnx_hw,
++					       struct rwnx_cmd *cmd,
++					       struct ipc_e2a_msg *msg)
++{
++#ifdef CONFIG_RWNX_FULLMAC
++	// Enable traffic on OFF channel queue
++	rwnx_txq_offchan_start(rwnx_hw);
++
++	return 0;
++#endif
++}
++
++static inline int rwnx_rx_tdls_chan_switch_base_ind(struct rwnx_hw *rwnx_h=
+w,
++						    struct rwnx_cmd *cmd,
++						    struct ipc_e2a_msg *msg)
++{
++	struct rwnx_vif *rwnx_vif;
++	u8 vif_index =3D ((struct tdls_chan_switch_base_ind *)msg->param)->vif_in=
+dex;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	list_for_each_entry(rwnx_vif, &rwnx_hw->vifs, list) {
++		if (rwnx_vif->vif_index =3D=3D vif_index) {
++			rwnx_vif->roc_tdls =3D false;
++			rwnx_txq_tdls_sta_stop(rwnx_vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++		}
++	}
++	return 0;
++#endif
++}
++
++static inline int rwnx_rx_tdls_peer_ps_ind(struct rwnx_hw *rwnx_hw,
++					   struct rwnx_cmd *cmd,
++					   struct ipc_e2a_msg *msg)
++{
++	struct rwnx_vif *rwnx_vif;
++	u8 vif_index =3D ((struct tdls_peer_ps_ind *)msg->param)->vif_index;
++	bool ps_on =3D ((struct tdls_peer_ps_ind *)msg->param)->ps_on;
++
++#ifdef CONFIG_RWNX_FULLMAC
++	list_for_each_entry(rwnx_vif, &rwnx_hw->vifs, list) {
++		if (rwnx_vif->vif_index =3D=3D vif_index) {
++			rwnx_vif->sta.tdls_sta->tdls.ps_on =3D ps_on;
++			// Update PS status for the TDLS station
++			rwnx_ps_bh_enable(rwnx_hw, rwnx_vif->sta.tdls_sta, ps_on);
++		}
++	}
++
++	return 0;
++#endif
++}
++
++static inline int rwnx_rx_remain_on_channel_exp_ind(struct rwnx_hw *rwnx_h=
+w,
++						    struct rwnx_cmd *cmd,
++						    struct ipc_e2a_msg *msg)
++{
++#ifdef CONFIG_RWNX_FULLMAC
++	/* Retrieve the allocated RoC element */
++	struct rwnx_roc_elem *roc_elem =3D rwnx_hw->roc_elem;
++	/* Get VIF on which RoC has been started */
++	struct rwnx_vif *rwnx_vif;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (!roc_elem)
++		return 0;
++
++	rwnx_vif =3D container_of(roc_elem->wdev, struct rwnx_vif, wdev);
++	/* For debug purpose (use ftrace kernel option) */
++#ifdef AIC8800_CREATE_TRACE_POINTS
++	trace_roc_exp(rwnx_vif->vif_index);
++#endif
++	/* If mgmt_roc is true, remain on channel has been started by ourself */
++	/* If RoC has been cancelled before we switched on channel, do not call
++	 * cfg80211
++	 */
++	if (!roc_elem->mgmt_roc && roc_elem->on_chan) {
++		/* Inform the host that off-channel period has expired */
++		cfg80211_remain_on_channel_expired(roc_elem->wdev,
++						   (u64)(rwnx_hw->roc_cookie_cnt),
++						   roc_elem->chan, GFP_ATOMIC);
++	}
++
++	/* De-init offchannel TX queue */
++	rwnx_txq_offchan_deinit(rwnx_vif);
++
++	/* Increase the cookie counter cannot be zero */
++	rwnx_hw->roc_cookie_cnt++;
++
++	if (rwnx_hw->roc_cookie_cnt =3D=3D 0)
++		rwnx_hw->roc_cookie_cnt =3D 1;
++
++	/* Free the allocated RoC element */
++	kfree(roc_elem);
++	rwnx_hw->roc_elem =3D NULL;
++
++#endif /* CONFIG_RWNX_FULLMAC */
++	return 0;
++}
++
++static inline int rwnx_rx_p2p_vif_ps_change_ind(struct rwnx_hw *rwnx_hw,
++						struct rwnx_cmd *cmd,
++						struct ipc_e2a_msg *msg)
++{
++	int vif_idx =3D ((struct mm_p2p_vif_ps_change_ind *)msg->param)->vif_inde=
+x;
++	int ps_state =3D ((struct mm_p2p_vif_ps_change_ind *)msg->param)->ps_stat=
+e;
++	struct rwnx_vif *vif_entry;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	vif_entry =3D rwnx_hw->vif_table[vif_idx];
++
++	if (vif_entry)
++		goto found_vif;
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	goto exit;
++found_vif:
++
++#ifdef CONFIG_RWNX_FULLMAC
++	if (ps_state =3D=3D MM_PS_MODE_OFF) {
++		// Start TX queues for provided VIF
++		rwnx_txq_vif_start(vif_entry, RWNX_TXQ_STOP_VIF_PS, rwnx_hw);
++	} else {
++		// Stop TX queues for provided VIF
++		rwnx_txq_vif_stop(vif_entry, RWNX_TXQ_STOP_VIF_PS, rwnx_hw);
++	}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++exit:
++	return 0;
++}
++
++static inline int rwnx_rx_channel_survey_ind(struct rwnx_hw *rwnx_hw,
++					     struct rwnx_cmd *cmd,
++					     struct ipc_e2a_msg *msg)
++{
++	struct mm_channel_survey_ind *ind =3D
++		(struct mm_channel_survey_ind *)msg->param;
++	// Get the channel index
++	int idx =3D rwnx_freq_to_idx(rwnx_hw, ind->freq);
++	// Get the survey
++	struct rwnx_survey_info *rwnx_survey;
++
++	if (idx > ARRAY_SIZE(rwnx_hw->survey))
++		return 0;
++
++	rwnx_survey =3D &rwnx_hw->survey[idx];
++
++	// Store the received parameters
++	rwnx_survey->chan_time_ms =3D ind->chan_time_ms;
++	rwnx_survey->chan_time_busy_ms =3D ind->chan_time_busy_ms;
++	rwnx_survey->noise_dbm =3D ind->noise_dbm;
++	rwnx_survey->filled =3D (SURVEY_INFO_TIME | SURVEY_INFO_TIME_BUSY);
++
++	if (ind->noise_dbm !=3D 0)
++		rwnx_survey->filled |=3D SURVEY_INFO_NOISE_DBM;
++
++	return 0;
++}
++
++static inline int rwnx_rx_p2p_noa_upd_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	return 0;
++}
++
++static inline int rwnx_rx_rssi_status_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	struct mm_rssi_status_ind *ind =3D (struct mm_rssi_status_ind *)msg->para=
+m;
++	int vif_idx =3D ind->vif_index;
++	bool rssi_status =3D ind->rssi_status;
++
++	struct rwnx_vif *vif_entry;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	vif_entry =3D rwnx_hw->vif_table[vif_idx];
++	if (vif_entry) {
++		cfg80211_cqm_rssi_notify(vif_entry->ndev,
++					 rssi_status ? NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW
++					 : NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++					 ind->rssi, GFP_ATOMIC);
++	}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	return 0;
++}
++
++static inline int rwnx_rx_pktloss_notify_ind(struct rwnx_hw *rwnx_hw,
++					     struct rwnx_cmd *cmd,
++					     struct ipc_e2a_msg *msg)
++{
++#ifdef CONFIG_RWNX_FULLMAC
++	struct mm_pktloss_ind *ind =3D (struct mm_pktloss_ind *)msg->param;
++	struct rwnx_vif *vif_entry;
++	int vif_idx =3D ind->vif_index;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	vif_entry =3D rwnx_hw->vif_table[vif_idx];
++	if (vif_entry) {
++		cfg80211_cqm_pktloss_notify(vif_entry->ndev,
++					    (const u8 *)ind->mac_addr.array,
++					    ind->num_packets, GFP_ATOMIC);
++	}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	return 0;
++}
++
++static inline int rwnx_apm_staloss_ind(struct rwnx_hw *rwnx_hw,
++				       struct rwnx_cmd *cmd,
++				       struct ipc_e2a_msg *msg)
++{
++	struct mm_apm_staloss_ind *ind =3D (struct mm_apm_staloss_ind *)msg->para=
+m;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	memcpy(rwnx_hw->sta_mac_addr, ind->mac_addr, 6);
++	rwnx_hw->apm_vif_idx =3D ind->vif_idx;
++
++	queue_work(rwnx_hw->apm_staloss_wq, &rwnx_hw->apm_staloss_work);
++
++	return 0;
++}
++
++static struct sk_buff *arp_80211_to_8023(struct sk_buff *skb, u8 hdrlen)
++{
++	struct ethhdr *eth;
++	size_t payload_len;
++	struct sk_buff *new_skb =3D NULL;
++	char *llc;
++	u8 da[MAC_ADDR_LEN] =3D {0};
++	u8 sa[MAC_ADDR_LEN] =3D {0};
++
++	if (skb->len <=3D hdrlen) {
++		AICWFDBG(LOGERROR, "%s skb_len err1\n", __func__);
++		return NULL;
++	}
++
++	memcpy(da, &skb->data[4], 6);
++	memcpy(sa, &skb->data[16], 6);
++
++	skb_pull(skb, hdrlen);
++	llc =3D skb->data;
++	if (llc[0] =3D=3D 0xAA && llc[1] =3D=3D 0xAA && llc[2] =3D=3D 0x03) {
++		if (skb->len < 8) {
++			AICWFDBG(LOGERROR, "%s skb_len err2\n", __func__);
++			return NULL;
++		}
++		skb_pull(skb, 8);
++	}
++	payload_len =3D skb->len;
++
++	new_skb =3D __dev_alloc_skb(ETH_HLEN + payload_len, GFP_ATOMIC);
++	if (!new_skb) {
++		AICWFDBG(LOGERROR, "%s skb alloc fail\n", __func__);
++		return NULL;
++	}
++
++	skb_reserve(new_skb, ETH_HLEN);
++	skb_put(new_skb, payload_len);
++	memcpy(new_skb->data, skb->data, payload_len);
++
++	eth =3D (struct ethhdr *)skb_push(new_skb, ETH_HLEN);
++
++	memcpy(eth->h_dest, da, ETH_ALEN);
++	memcpy(eth->h_source, sa, ETH_ALEN);
++
++	eth->h_proto =3D htons(ETH_P_ARP);
++
++	new_skb->protocol =3D eth->h_proto;
++	new_skb->dev =3D skb->dev;
++
++	return new_skb;
++}
++
++static inline int rwnx_arp_announcement_ind(struct rwnx_hw *rwnx_hw,
++					    struct rwnx_cmd *cmd,
++					    struct ipc_e2a_msg *msg)
++{
++	struct rwnx_vif *vif;
++	struct sk_buff *skb =3D NULL;
++	struct sk_buff *new_skb =3D NULL;
++	struct hw_rxhdr rxhdr;
++	int hdrlen =3D 24;
++	struct rxu_arp_announcement_ind *ind =3D (struct rxu_arp_announcement_ind=
+ *)msg->param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	//AICWFDBG(LOGDEBUG, "vif: %d, length: %d, offset: %d\n",
++	// ind->vif_index, ind->length, ind->offset);
++
++	AICWFDBG(LOGDEBUG, "%s, vif: %d, length: %d, offset: %d\n",
++		 __func__, ind->vif_index, ind->length, ind->offset);
++
++	vif =3D rwnx_hw->vif_table[ind->vif_index];
++	rxhdr.flags_is_amsdu =3D false;
++	rxhdr.flags_dst_idx =3D 0xff;
++
++	if (ind->payload[0] & 0x80)
++		hdrlen +=3D 2;
++
++	switch ((ind->rx_status >> 2) & 0x7) {
++	case RWNX_RX_HD_DECR_CCMP128:
++		hdrlen +=3D 8;
++		break;
++	case RWNX_RX_HD_DECR_TKIP:
++		hdrlen +=3D 8;
++		break;
++	case RWNX_RX_HD_DECR_WEP:
++		hdrlen +=3D 4;
++		break;
++	case RWNX_RX_HD_DECR_WAPI:
++		hdrlen +=3D 18;
++		break;
++	default:
++		break;
++	}
++
++	skb =3D __dev_alloc_skb(ind->length, GFP_ATOMIC);
++	if (!skb) {
++		AICWFDBG(LOGERROR, "%s skb alloc fail\n", __func__);
++		return -1;
++	}
++	skb_put(skb, ind->length);
++	memcpy(skb->data, ind->payload, ind->length);
++	skb->dev =3D vif->ndev;
++
++	new_skb =3D arp_80211_to_8023(skb, hdrlen);
++	if (!new_skb) {
++		AICWFDBG(LOGERROR, "arp_80211_to_8023 fail\n");
++		dev_kfree_skb(skb);
++		return -1;
++	}
++	if (!rwnx_rx_data_skb(rwnx_hw, vif, new_skb, &rxhdr)) {
++		AICWFDBG(LOGERROR, "rwnx_rx_data_skb fail\n");
++		dev_kfree_skb(new_skb);
++		dev_kfree_skb(skb);
++		return -1;
++	}
++
++	dev_kfree_skb(skb);
++	return 0;
++}
++
++static inline int rwnx_rx_csa_counter_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	struct mm_csa_counter_ind *ind =3D (struct mm_csa_counter_ind *)msg->para=
+m;
++	struct rwnx_vif *vif;
++	bool found =3D false;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	// Look for VIF entry
++	list_for_each_entry(vif, &rwnx_hw->vifs, list) {
++		if (vif->vif_index =3D=3D ind->vif_index) {
++			found =3D true;
++			break;
++		}
++	}
++
++	if (found) {
++#ifdef CONFIG_RWNX_FULLMAC
++		if (vif->ap.csa)
++			vif->ap.csa->count =3D ind->csa_count;
++		else
++			netdev_err(vif->ndev, "CSA counter update but no active CSA");
++
++#endif
++	}
++
++	return 0;
++}
++
++#ifdef CONFIG_RWNX_FULLMAC
++static inline int rwnx_rx_csa_finish_ind(struct rwnx_hw *rwnx_hw,
++					 struct rwnx_cmd *cmd,
++					 struct ipc_e2a_msg *msg)
++{
++	struct mm_csa_finish_ind *ind =3D (struct mm_csa_finish_ind *)msg->param;
++	struct rwnx_vif *vif;
++	bool found =3D false;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	// Look for VIF entry
++	list_for_each_entry(vif, &rwnx_hw->vifs, list) {
++		if (vif->vif_index =3D=3D ind->vif_index) {
++			found =3D true;
++			break;
++		}
++	}
++
++	if (found) {
++		if (RWNX_VIF_TYPE(vif) =3D=3D NL80211_IFTYPE_AP ||
++		    RWNX_VIF_TYPE(vif) =3D=3D NL80211_IFTYPE_P2P_GO) {
++			if (vif->ap.csa) {
++				vif->ap.csa->status =3D ind->status;
++				vif->ap.csa->ch_idx =3D ind->chan_idx;
++				schedule_work(&vif->ap.csa->work);
++			} else {
++				netdev_err(vif->ndev,
++					   "CSA finish indication but no active CSA");
++			}
++		} else {
++			if (ind->status =3D=3D 0) {
++				rwnx_chanctx_unlink(vif);
++				rwnx_chanctx_link(vif, ind->chan_idx, NULL);
++				if (rwnx_hw->cur_chanctx =3D=3D ind->chan_idx) {
++					rwnx_radar_detection_enable_on_cur_channel(rwnx_hw);
++					rwnx_txq_vif_start(vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++				} else {
++					rwnx_txq_vif_stop(vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
++				}
++			}
++		}
++	}
++
++	return 0;
++}
++
++static inline int rwnx_rx_csa_traffic_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	struct mm_csa_traffic_ind *ind =3D (struct mm_csa_traffic_ind *)msg->para=
+m;
++	struct rwnx_vif *vif;
++	bool found =3D false;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	// Look for VIF entry
++	list_for_each_entry(vif, &rwnx_hw->vifs, list) {
++		if (vif->vif_index =3D=3D ind->vif_index) {
++			found =3D true;
++			break;
++		}
++	}
++
++	if (found) {
++		if (ind->enable)
++			rwnx_txq_vif_start(vif, RWNX_TXQ_STOP_CSA, rwnx_hw);
++		else
++			rwnx_txq_vif_stop(vif, RWNX_TXQ_STOP_CSA, rwnx_hw);
++	}
++
++	return 0;
++}
++
++static inline int rwnx_rx_ps_change_ind(struct rwnx_hw *rwnx_hw,
++					struct rwnx_cmd *cmd,
++					struct ipc_e2a_msg *msg)
++{
++	struct mm_ps_change_ind *ind =3D (struct mm_ps_change_ind *)msg->param;
++	struct rwnx_sta *sta =3D &rwnx_hw->sta_table[ind->sta_idx];
++
++	if (ind->sta_idx >=3D (NX_REMOTE_STA_MAX + NX_VIRT_DEV_MAX)) {
++		wiphy_err(rwnx_hw->wiphy, "Invalid sta index reported by fw %d\n",
++			  ind->sta_idx);
++		return 1;
++	}
++
++	netdev_dbg(rwnx_hw->vif_table[sta->vif_idx]->ndev,
++		   "Sta %d, change PS mode to %s", sta->sta_idx,
++		   ind->ps_state ? "ON" : "OFF");
++
++	if (sta->valid) {
++		rwnx_ps_bh_enable(rwnx_hw, sta, ind->ps_state);
++	} else if (rwnx_hw->adding_sta) {
++		sta->ps.active =3D ind->ps_state ? true : false;
++	} else {
++		if (rwnx_hw->vif_table[sta->vif_idx] &&
++		    rwnx_hw->vif_table[sta->vif_idx]->ndev)
++			netdev_err(rwnx_hw->vif_table[sta->vif_idx]->ndev,
++				   "Ignore PS mode change on invalid sta\n");
++	}
++
++	return 0;
++}
++
++static inline int rwnx_rx_traffic_req_ind(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++	struct mm_traffic_req_ind *ind =3D (struct mm_traffic_req_ind *)msg->para=
+m;
++	struct rwnx_sta *sta =3D &rwnx_hw->sta_table[ind->sta_idx];
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	netdev_dbg(rwnx_hw->vif_table[sta->vif_idx]->ndev,
++		   "Sta %d, asked for %d pkt", sta->sta_idx, ind->pkt_cnt);
++
++	rwnx_ps_bh_traffic_req(rwnx_hw, sta, ind->pkt_cnt,
++			       ind->uapsd ? UAPSD_ID : LEGACY_PS_ID);
++
++	return 0;
++}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+**
++ * Messages from SCANU task
++ *************************************************************************=
+*/
++#ifdef CONFIG_RWNX_FULLMAC
++
++static inline int rwnx_rx_scanu_start_cfm(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_cmd *cmd,
++					  struct ipc_e2a_msg *msg)
++{
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	const struct ieee80211_regdomain *regdomain;
++#endif
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++#ifdef CONFIG_AIC8800_SCHED_SCAN
++	if (rwnx_hw->scan_request && !rwnx_hw->is_sched_scan)
++#endif // CONFIG_AIC8800_SCHED_SCAN
++	{
++		struct cfg80211_scan_info info =3D {
++			.aborted =3D false,
++		};
++
++		cfg80211_scan_done(rwnx_hw->scan_request, &info);
++	}
++
++#ifdef CONFIG_AIC8800_SCHED_SCAN
++	if (rwnx_hw->is_sched_scan) {
++		AICWFDBG(LOGINFO, "%s cfg80211_sched_scan_results \r\n", __func__);
++		cfg80211_sched_scan_results(rwnx_hw->scan_request->wiphy,
++					    rwnx_hw->sched_scan_req->reqid);
++		kfree(rwnx_hw->scan_request);
++		rwnx_hw->is_sched_scan =3D false;
++	}
++#endif // CONFIG_AIC8800_SCHED_SCAN
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	if (rwnx_hw->ccode.auto_set && rwnx_hw->ccode.ccode_find) {
++#ifdef CONFIG_AIC8800_REGION_PW
++		schedule_work(&rwnx_hw->region_wk);
++#endif
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++		if (!work_pending(&rwnx_hw->pwlt_wk))
++			schedule_work(&rwnx_hw->pwlt_wk);
++#endif
++		regdomain =3D get_regdomain_from_rwnx_db(rwnx_hw->wiphy, rwnx_hw->countr=
+y_abbr);
++		rwnx_regulatory_set_wiphy_regd(rwnx_hw->wiphy, regdomain);
++		rwnx_hw->ccode.ccode_cnt =3D 0;
++		rwnx_hw->ccode.ccode_find =3D false;
++		rwnx_hw->ccode.ccode_set =3D true;
++	}
++#endif
++
++	rwnx_hw->scan_request =3D NULL;
++	rwnx_hw->scanning =3D 0;
++	aicwf_sdio_scan_activity_put(rwnx_hw);
++
++	return 0;
++}
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++static void parse_ssid_from_id(const u8 *ssid_id, char ssid_name[33], u8 *=
+ssid_len)
++{
++	u8 len;
++
++	if (!ssid_id)
++		return;
++
++	len =3D *(ssid_id + 1);
++	if (len > 32)
++		len =3D 32;
++
++	strscpy(ssid_name, ssid_id + 2, len);
++	ssid_name[len] =3D '\0';
++	*ssid_len =3D len;
++
++	if (len > 0)
++		AICWFDBG(LOGDEBUG, "find_ccode ssid: %s\n", ssid_name);
++	else
++		AICWFDBG(LOGDEBUG, "find_ccode ssid is null\n");
++}
++
++static void rwnx_update_country(struct rwnx_hw *rwnx_hw,
++				const u8 *country_id,
++				const struct ieee80211_regdomain **regdomain)
++{
++	if (!country_id)
++		return;
++
++	if (memcmp(rwnx_hw->country_abbr, country_id + 2, 2) !=3D 0) {
++		AICWFDBG(LOGINFO, "update ccode of the connected ap\n");
++
++		strscpy(rwnx_hw->country_abbr, country_id + 2, 2);
++
++		*regdomain =3D get_regdomain_from_rwnx_db(rwnx_hw->wiphy, rwnx_hw->count=
+ry_abbr);
++
++#ifdef CONFIG_AIC8800_REGION_PW
++		schedule_work(&rwnx_hw->region_wk);
++#endif
++
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++		if (!work_pending(&rwnx_hw->pwlt_wk))
++			schedule_work(&rwnx_hw->pwlt_wk);
++#endif
++
++		rwnx_regulatory_set_wiphy_regd(rwnx_hw->wiphy, *regdomain);
++	}
++}
++#endif
++
++static inline int rwnx_rx_scanu_result_ind(struct rwnx_hw *rwnx_hw,
++					   struct rwnx_cmd *cmd,
++					   struct ipc_e2a_msg *msg)
++{
++	struct cfg80211_bss *bss =3D NULL;
++	struct ieee80211_channel *chan;
++	struct scanu_result_ind *ind =3D (struct scanu_result_ind *)msg->param;
++	struct ieee80211_mgmt *mgmt =3D (struct ieee80211_mgmt *)ind->payload;
++	u64 tsf;
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	const u8 *country_id;
++	const u8 *ssid_id;
++	char ssid_name[33];
++	u8 ssid_len;
++	const struct ieee80211_regdomain *regdomain;
++#endif
++
++
++	// RWNX_DBG(RWNX_FN_ENTRY_STR); //debug trace
++
++	chan =3D ieee80211_get_channel(rwnx_hw->wiphy, ind->center_freq);
++
++	if (chan) {
++		struct timespec64 ts;
++
++		ts =3D ktime_to_timespec64(ktime_get_boottime());
++		tsf =3D (u64)ts.tv_sec * 1000000 + div_u64(ts.tv_nsec, 1000);
++		mgmt->u.probe_resp.timestamp =3D cpu_to_le64(tsf);
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++		if (rwnx_hw->ccode.auto_set && !rwnx_hw->ccode.ccode_set &&
++		    rwnx_hw->ccode.ccode_cnt < MAX_SEARCH_CNT) {
++			country_id =3D
++				cfg80211_find_ie(WLAN_EID_COUNTRY, mgmt->u.beacon.variable,
++						 ind->length - offsetof(struct ieee80211_mgmt,
++									u.beacon.variable));
++			if (country_id) {
++				if (ind->rssi > rwnx_hw->ccode.ccode_rssi) {
++					rwnx_hw->ccode.ccode_rssi =3D ind->rssi;
++					// AICWFDBG(LOGINFO, "find_ccode, bssid: %pM\n",
++					// mgmt->bssid); //debug trace
++					if (!rwnx_hw->ccode.ccode_find)
++						rwnx_hw->ccode.ccode_find =3D true;
++					strscpy(rwnx_hw->country_abbr, country_id + 2, 2);
++					ssid_id =3D
++					cfg80211_find_ie(WLAN_EID_SSID, mgmt->u.beacon.variable,
++							 ind->length -
++							 offsetof(struct ieee80211_mgmt,
++								  u.beacon.variable));
++					parse_ssid_from_id(ssid_id, ssid_name, &ssid_len);
++				}
++			}
++			rwnx_hw->ccode.ccode_cnt +=3D 1;
++			AICWFDBG(LOGDEBUG, "find cnt: %d\n",
++				 rwnx_hw->ccode.ccode_cnt); // debug trace
++		} else if (rwnx_hw->ccode.auto_set && !rwnx_hw->ccode.ccode_find &&
++			   !rwnx_hw->ccode.ccode_set &&
++			   rwnx_hw->ccode.ccode_cnt >=3D MAX_SEARCH_CNT) {
++			AICWFDBG(LOGINFO, "find cnt over !!!\n");
++			strscpy(rwnx_hw->country_abbr, "XX", 2);
++			rwnx_hw->ccode.ccode_find =3D true;
++		}
++
++		if (rwnx_hw->ccode.auto_set &&
++		    atomic_read(&rwnx_hw->ccode.link_scan) =3D=3D 1) {
++			if (memcmp(&rwnx_hw->ccode.bssid, mgmt->bssid, ETH_ALEN) =3D=3D 0) {
++				country_id =3D
++				cfg80211_find_ie(WLAN_EID_COUNTRY,
++						 mgmt->u.probe_resp.variable,
++						 ind->length - offsetof(struct ieee80211_mgmt,
++									u.probe_resp.variable));
++				rwnx_update_country(rwnx_hw, country_id, &regdomain);
++				memset(&rwnx_hw->ccode.bssid, 0, sizeof(rwnx_hw->ccode.bssid));
++			}
++			atomic_set(&rwnx_hw->ccode.link_scan, 0);
++			rwnx_hw->ccode.ccode_cnt =3D 0;
++		}
++#endif
++		bss =3D
++		cfg80211_inform_bss_frame(rwnx_hw->wiphy, chan,
++					  (struct ieee80211_mgmt *)ind->payload,
++					  ind->length, ind->rssi * 100, GFP_ATOMIC);
++
++	}
++	if (bss)
++		cfg80211_put_bss(rwnx_hw->wiphy, bss);
++	return 0;
++}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+**
++ * Messages from ME task
++ *************************************************************************=
+*/
++#ifdef CONFIG_RWNX_FULLMAC
++static inline int rwnx_rx_me_tkip_mic_failure_ind(struct rwnx_hw *rwnx_hw,
++						  struct rwnx_cmd *cmd,
++						  struct ipc_e2a_msg *msg)
++{
++	struct me_tkip_mic_failure_ind *ind =3D
++		(struct me_tkip_mic_failure_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct net_device *dev =3D rwnx_vif->ndev;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	cfg80211_michael_mic_failure(dev, (u8 *)&ind->addr,
++				     (ind->ga ? NL80211_KEYTYPE_GROUP : NL80211_KEYTYPE_PAIRWISE),
++				     ind->keyid, (u8 *)&ind->tsc, GFP_ATOMIC);
++
++	return 0;
++}
++
++static inline int rwnx_rx_me_tx_credits_update_ind(struct rwnx_hw *rwnx_hw=
+,
++						   struct rwnx_cmd *cmd,
++						   struct ipc_e2a_msg *msg)
++{
++	struct me_tx_credits_update_ind *ind =3D
++		(struct me_tx_credits_update_ind *)msg->param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	rwnx_txq_credit_update(rwnx_hw, ind->sta_idx, ind->tid, ind->credits);
++
++	return 0;
++}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+**
++ * Messages from SM task
++ *************************************************************************=
+*/
++#ifdef CONFIG_RWNX_FULLMAC
++static inline int rwnx_rx_sm_connect_ind(struct rwnx_hw *rwnx_hw,
++					 struct rwnx_cmd *cmd,
++					 struct ipc_e2a_msg *msg)
++{
++	struct sm_connect_ind *ind =3D (struct sm_connect_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct net_device *dev =3D rwnx_vif->ndev;
++	const u8 *req_ie, *rsp_ie;
++	const u8 *extcap_ie;
++	const struct ieee_types_extcap *extcap;
++	struct ieee80211_channel *chan;
++	const u8 *ht_ie =3D NULL;
++	const u8 *vht_ie =3D NULL;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Retrieve IE addresses and lengths */
++	req_ie =3D (const u8 *)ind->assoc_ie_buf;
++	rsp_ie =3D req_ie + ind->assoc_req_ie_len;
++
++	// Fill-in the AP information
++	AICWFDBG(LOGINFO, "%s ind->status_code:%d \r\n", __func__,
++		 ind->status_code);
++
++	if (ind->status_code =3D=3D 0) {
++		struct rwnx_sta *sta =3D &rwnx_hw->sta_table[ind->ap_idx];
++		u8 txq_status;
++		struct cfg80211_chan_def chandef;
++
++		sta->valid =3D true;
++		sta->sta_idx =3D ind->ap_idx;
++		sta->ch_idx =3D ind->ch_idx;
++		sta->vif_idx =3D ind->vif_idx;
++		sta->vlan_idx =3D sta->vif_idx;
++		sta->qos =3D ind->qos;
++		sta->acm =3D ind->acm;
++		sta->ps.active =3D false;
++		sta->aid =3D ind->aid;
++		sta->band =3D ind->band;                 // ind->chan.band;
++		sta->width =3D ind->width;               // ind->chan.type;
++		sta->center_freq =3D ind->center_freq;   // ind->chan.prim20_freq;
++		sta->center_freq1 =3D ind->center_freq1; // ind->chan.center1_freq;
++		sta->center_freq2 =3D ind->center_freq2; // ind->chan.center2_freq;
++		rwnx_vif->sta.ap =3D sta;
++		// ind->chan.prim20_freq);
++		chan =3D ieee80211_get_channel(rwnx_hw->wiphy, ind->center_freq);
++		cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
++		if (!rwnx_hw->mod_params->ht_on)
++			chandef.width =3D NL80211_CHAN_WIDTH_20_NOHT;
++		else
++			chandef.width =3D chnl2bw[ind->width];  //[ind->chan.type];
++		chandef.center_freq1 =3D ind->center_freq1; // ind->chan.center1_freq;
++		chandef.center_freq2 =3D ind->center_freq2; // ind->chan.center2_freq;
++		rwnx_chanctx_link(rwnx_vif, ind->ch_idx, &chandef);
++		memcpy(sta->mac_addr, ind->bssid.array, ETH_ALEN);
++		if (ind->ch_idx =3D=3D rwnx_hw->cur_chanctx)
++			txq_status =3D 0;
++		else
++			txq_status =3D RWNX_TXQ_STOP_CHAN;
++		memcpy(sta->ac_param, ind->ac_param, sizeof(sta->ac_param));
++		rwnx_txq_sta_init(rwnx_hw, sta, txq_status);
++		rwnx_txq_tdls_vif_init(rwnx_vif);
++		rwnx_mu_group_sta_init(sta, NULL);
++		/* Look for TDLS Channel Switch Prohibited flag in the Extended
++		 * Capability Information Element
++		 */
++		extcap_ie =3D cfg80211_find_ie(WLAN_EID_EXT_CAPABILITY, rsp_ie,
++					     ind->assoc_rsp_ie_len);
++		if (extcap_ie && extcap_ie[1] >=3D 5) {
++			extcap =3D (void *)(extcap_ie);
++			rwnx_vif->tdls_chsw_prohibited =3D
++				extcap->ext_capab[4] & WLAN_EXT_CAPA5_TDLS_CH_SW_PROHIBITED;
++		}
++
++		if (rwnx_vif->wep_enabled)
++			rwnx_vif->wep_auth_err =3D false;
++
++#ifdef CONFIG_RWNX_BFMER
++		/* If Beamformer feature is activated, check if features can be used
++		 * with the new peer device
++		 */
++		if (rwnx_hw->mod_params->bfmer) {
++			const u8 *vht_capa_ie;
++			const struct ieee80211_vht_cap *vht_cap;
++
++			do {
++				/* Look for VHT Capability Information Element */
++				vht_capa_ie =3D cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, rsp_ie,
++							       ind->assoc_rsp_ie_len);
++
++				/* Stop here if peer device does not support VHT */
++				if (!vht_capa_ie)
++					break;
++
++				vht_cap =3D (const struct ieee80211_vht_cap *)(vht_capa_ie + 2);
++
++				/* Send MM_BFMER_ENABLE_REQ message if needed */
++				rwnx_send_bfmer_enable(rwnx_hw, sta, vht_cap);
++			} while (0);
++		}
++#endif //(CONFIG_RWNX_BFMER)
++
++		ht_ie =3D cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, rsp_ie,
++					 ind->assoc_rsp_ie_len);
++		if (ht_ie)
++			rwnx_vif->sta.ap->ht =3D true;
++		vht_ie =3D cfg80211_find_ie(WLAN_EID_VHT_CAPABILITY, rsp_ie,
++					  ind->assoc_rsp_ie_len);
++		if (vht_ie)
++			rwnx_vif->sta.ap->vht =3D true;
++
++#ifdef CONFIG_RWNX_MON_DATA
++		// If there are 1 sta and 1 monitor interface active at the same time
++		// then monitor interface channel context is always the same as the STA
++		// interface. This doesn't work with 2 STA interfaces but we don't want
++		// to support it.
++		if (rwnx_hw->monitor_vif !=3D RWNX_INVALID_VIF) {
++			struct rwnx_vif *rwnx_mon_vif =3D
++				rwnx_hw->vif_table[rwnx_hw->monitor_vif];
++			rwnx_chanctx_unlink(rwnx_mon_vif);
++			rwnx_chanctx_link(rwnx_mon_vif, ind->ch_idx, NULL);
++		}
++#endif
++		// atomic_set(&rwnx_vif->drv_conn_state,
++		// (int)RWNX_DRV_STATUS_CONNECTED);
++	} else if (ind->status_code =3D=3D WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG) {
++		if (rwnx_vif->wep_enabled) {
++			rwnx_vif->wep_auth_err =3D true;
++			AICWFDBG(LOGINFO, "con ind wep_auth_err %d\n",
++				 rwnx_vif->wep_auth_err);
++		}
++		rwnx_set_conn_state(&rwnx_vif->drv_conn_state, (int)RWNX_DRV_STATUS_DISC=
+ONNECTED);
++	} else {
++		rwnx_set_conn_state(&rwnx_vif->drv_conn_state, (int)RWNX_DRV_STATUS_DISC=
+ONNECTED);
++	}
++
++	AICWFDBG(LOGINFO,
++		 "%s ind->roamed:%d ind->status_code:%d rwnx_vif->drv_conn_state:%d\r\n"=
+,
++		 __func__, ind->roamed, ind->status_code,
++		 (int)atomic_read(&rwnx_vif->drv_conn_state));
++
++	if (ind->status_code =3D=3D 0 &&
++	    (int)atomic_read(&rwnx_vif->drv_conn_state) =3D=3D RWNX_DRV_STATUS_DI=
+SCONNECTING) {
++		AICWFDBG(LOGINFO, "%s the disconnection has been requested, return it\r\=
+n",
++			 __func__);
++		goto exit;
++	}
++
++	if (!ind->roamed) { // not roaming
++		cfg80211_connect_result(dev, (const u8 *)ind->bssid.array,
++					req_ie, ind->assoc_req_ie_len,
++					rsp_ie, ind->assoc_rsp_ie_len, ind->status_code,
++					GFP_ATOMIC);
++		if (ind->status_code =3D=3D 0) {
++			rwnx_set_conn_state(&rwnx_vif->drv_conn_state,
++					    (int)RWNX_DRV_STATUS_CONNECTED);
++			AICWFDBG(LOGINFO,
++				 "%s cfg80211_connect_result pass, rwnx_vif->drv_conn_state:%d\r\n",
++				 __func__, (int)atomic_read(&rwnx_vif->drv_conn_state));
++			rwnx_vif->sta.link_time =3D jiffies;
++		} else {
++			rwnx_set_conn_state(&rwnx_vif->drv_conn_state,
++					    (int)RWNX_DRV_STATUS_DISCONNECTED);
++			rwnx_external_auth_disable(rwnx_vif);
++		}
++	} else { // roaming
++		if (ind->status_code !=3D 0) {
++			AICWFDBG(LOGINFO, "%s roaming fail to notify disconnect \r\n",
++				 __func__);
++			cfg80211_disconnected(dev, 0, NULL, 0, 1, GFP_ATOMIC);
++			rwnx_set_conn_state(&rwnx_vif->drv_conn_state,
++					    (int)RWNX_DRV_STATUS_DISCONNECTED);
++			rwnx_external_auth_disable(rwnx_vif);
++		} else {
++			struct cfg80211_roam_info info;
++
++			memset(&info, 0, sizeof(info));
++			if (rwnx_vif->ch_index < NX_CHAN_CTXT_CNT)
++				info.links[0].channel =3D
++					rwnx_hw->chanctx_table[rwnx_vif->ch_index].chan_def.chan;
++			info.links[0].bssid =3D (const u8 *)ind->bssid.array;
++			info.req_ie =3D req_ie;
++			info.req_ie_len =3D ind->assoc_req_ie_len;
++			info.resp_ie =3D rsp_ie;
++			info.resp_ie_len =3D ind->assoc_rsp_ie_len;
++			cfg80211_roamed(dev, &info, GFP_ATOMIC);
++			rwnx_vif->sta.link_time =3D jiffies;
++
++			rwnx_set_conn_state(&rwnx_vif->drv_conn_state,
++					    (int)RWNX_DRV_STATUS_CONNECTED);
++			rwnx_vif->sta.link_time =3D jiffies;
++		}
++		rwnx_vif->sta.is_roam =3D false;
++	}
++
++	if (ind->status_code =3D=3D 0) {
++		netif_tx_start_all_queues(dev);
++		netif_carrier_on(dev);
++	}
++
++exit:
++	rwnx_vif->sta.is_roam =3D false;
++	return 0;
++}
++
++void rwnx_cfg80211_unlink_bss(struct rwnx_hw *rwnx_hw,
++			      struct rwnx_vif *rwnx_vif)
++{
++	struct wiphy *wiphy =3D rwnx_hw->wiphy;
++	struct cfg80211_bss *bss =3D NULL;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	bss =3D cfg80211_get_bss(wiphy, NULL /*notify_channel */, rwnx_vif->sta.b=
+ssid,
++			       rwnx_vif->sta.ssid, rwnx_vif->sta.ssid_len,
++			       IEEE80211_BSS_TYPE_ESS,
++			       IEEE80211_PRIVACY(true)); // temp set true
++	if (bss) {
++		cfg80211_unlink_bss(wiphy, bss);
++		AICWFDBG(LOGINFO, "%s(): cfg80211_unlink %s!!\n", __func__,
++			 rwnx_vif->sta.ssid);
++		cfg80211_put_bss(wiphy, bss);
++	} else {
++		AICWFDBG(LOGINFO, "%s(): cfg80211_unlink error %s!!\n", __func__,
++			 rwnx_vif->sta.ssid);
++	}
++}
++
++static inline int rwnx_rx_sm_disconnect_ind(struct rwnx_hw *rwnx_hw,
++					    struct rwnx_cmd *cmd,
++					    struct ipc_e2a_msg *msg)
++{
++	struct sm_disconnect_ind *ind =3D (struct sm_disconnect_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct net_device *dev;
++#ifdef AICWF_RX_REORDER
++	struct reord_ctrl_info *reord_info, *tmp;
++	u8 *macaddr;
++	struct aicwf_rx_priv *rx_priv;
++#endif
++
++	AICWFDBG(LOGINFO, "%s reason code:%d \r\n", __func__, ind->reason_code);
++
++	if (!rwnx_vif)
++		return 0;
++
++	if ((int)atomic_read(&rwnx_vif->drv_conn_state) =3D=3D
++		(int)RWNX_DRV_STATUS_DISCONNECTED) {
++		AICWFDBG(LOGINFO, "%s, is already disconnected, drop disconnect ind",
++			 __func__);
++		return 0;
++	}
++
++	dev =3D rwnx_vif->ndev;
++
++	if (!rwnx_vif->sta.is_roam)
++		rwnx_cfg80211_unlink_bss(rwnx_hw, rwnx_vif);
++	else
++		AICWFDBG(LOGINFO, "%s roaming no rwnx_cfg80211_unlink_bss \r\n",
++			 __func__);
++	if (rwnx_vif->wdev.iftype =3D=3D NL80211_IFTYPE_P2P_CLIENT)
++		rwnx_hw->is_p2p_connected =3D 0;
++	/* if vif is not up, rwnx_close has already been called */
++	if (rwnx_vif->up) {
++		if (!ind->ft_over_ds && !ind->reassoc) {
++			cfg80211_disconnected(dev, ind->reason_code, NULL, 0,
++					      (ind->reason_code < 1), GFP_ATOMIC);
++		}
++		netif_tx_stop_all_queues(dev);
++		netif_carrier_off(dev);
++	}
++
++#ifdef CONFIG_RWNX_BFMER
++	/* Disable Beamformer if supported */
++	rwnx_bfmer_report_del(rwnx_hw, rwnx_vif->sta.ap);
++#endif //(CONFIG_RWNX_BFMER)
++
++#ifdef AICWF_RX_REORDER
++#ifdef AICWF_SDIO_SUPPORT
++	rx_priv =3D rwnx_hw->sdiodev->rx_priv;
++#else
++	rx_priv =3D rwnx_hw->usbdev->rx_priv;
++#endif
++	if (rwnx_vif->wdev.iftype =3D=3D NL80211_IFTYPE_STATION ||
++	    rwnx_vif->wdev.iftype =3D=3D NL80211_IFTYPE_P2P_CLIENT) {
++		macaddr =3D (u8 *)rwnx_vif->ndev->dev_addr;
++		AICWFDBG(LOGDEBUG, "deinit:macaddr:%x,%x,%x,%x,%x,%x\r\n", macaddr[0], m=
+acaddr[1],
++			 macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
++
++		// spin_lock_bh(&rx_priv->stas_reord_lock);
++		list_for_each_entry_safe(reord_info, tmp, &rx_priv->stas_reord_list,
++					 list) {
++			macaddr =3D (u8 *)rwnx_vif->ndev->dev_addr;
++			AICWFDBG(LOGDEBUG, "reord_mac:%x,%x,%x,%x,%x,%x\r\n",
++				 reord_info->mac_addr[0], reord_info->mac_addr[1],
++				 reord_info->mac_addr[2], reord_info->mac_addr[3],
++				 reord_info->mac_addr[4], reord_info->mac_addr[5]);
++			if (!memcmp(reord_info->mac_addr, macaddr, 6)) {
++				reord_deinit_sta(rx_priv, reord_info);
++				break;
++			}
++		}
++		// spin_unlock_bh(&rx_priv->stas_reord_lock);
++	} else if (rwnx_vif->wdev.iftype =3D=3D NL80211_IFTYPE_AP ||
++		   rwnx_vif->wdev.iftype =3D=3D NL80211_IFTYPE_P2P_GO) {
++		// WARN_ON_ONCE(); // should be not here: del_sta function
++	}
++#endif
++
++	rwnx_txq_sta_deinit(rwnx_hw, rwnx_vif->sta.ap);
++	rwnx_txq_tdls_vif_deinit(rwnx_vif);
++	rwnx_vif->sta.ap->valid =3D false;
++	rwnx_vif->sta.ap =3D NULL;
++	rwnx_external_auth_disable(rwnx_vif);
++	rwnx_chanctx_unlink(rwnx_vif);
++
++	// msleep(200);
++	if (!rwnx_vif->sta.is_roam)
++		rwnx_set_conn_state(&rwnx_vif->drv_conn_state, (int)RWNX_DRV_STATUS_DISC=
+ONNECTED);
++
++	return 0;
++}
++
++static inline int rwnx_rx_sm_external_auth_required_ind(struct rwnx_hw *rw=
+nx_hw,
++							struct rwnx_cmd *cmd,
++							struct ipc_e2a_msg *msg)
++{
++	struct sm_external_auth_required_ind *ind =3D
++		(struct sm_external_auth_required_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct net_device *dev =3D rwnx_vif->ndev;
++	struct cfg80211_external_auth_params params;
++	int ret =3D 0;
++	struct wireless_dev *wdev =3D dev->ieee80211_ptr;
++	int retry_counter =3D 10;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	params.action =3D NL80211_EXTERNAL_AUTH_START;
++	memcpy(params.bssid, ind->bssid.array, ETH_ALEN);
++	params.ssid.ssid_len =3D ind->ssid.length;
++	memcpy(params.ssid.ssid, ind->ssid.array,
++	       min_t(size_t, ind->ssid.length, sizeof(params.ssid.ssid)));
++	params.key_mgmt_suite =3D ind->akm;
++
++	while (wdev->conn_owner_nlportid =3D=3D 0) {
++		AICWFDBG(LOGINFO,
++			 "%s WARNING conn_owner_nlportid =3D 0, msleep 100ms.\r\n",
++			 __func__);
++		msleep(100);
++		retry_counter--;
++		if (retry_counter =3D=3D 0)
++			break;
++	}
++	AICWFDBG(LOGINFO, "%s wdev->conn_owner_nlportid:%d \r\n", __func__,
++		 (int)wdev->conn_owner_nlportid);
++	ret =3D cfg80211_external_auth_request(dev, &params, GFP_ATOMIC);
++	if (ind->vif_idx > NX_VIRT_DEV_MAX || !rwnx_vif->up ||
++	    RWNX_VIF_TYPE(rwnx_vif) !=3D NL80211_IFTYPE_STATION ||
++	    ret) {
++		wiphy_err(rwnx_hw->wiphy,
++			  "Failed to start external auth on vif %d, rwnx_vif->up %d, iftype:%d,=
+ ret %d",
++			  ind->vif_idx, rwnx_vif->up, RWNX_VIF_TYPE(rwnx_vif), ret);
++		rwnx_send_sm_external_auth_required_rsp(rwnx_hw, rwnx_vif,
++							WLAN_STATUS_UNSPECIFIED_FAILURE);
++		return 0;
++	}
++
++	rwnx_external_auth_enable(rwnx_vif);
++	return 0;
++}
++
++static inline int rwnx_rx_mesh_path_create_cfm(struct rwnx_hw *rwnx_hw,
++					       struct rwnx_cmd *cmd,
++					       struct ipc_e2a_msg *msg)
++{
++	struct mesh_path_create_cfm *cfm =3D
++		(struct mesh_path_create_cfm *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[cfm->vif_idx];
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Check we well have a Mesh Point Interface */
++	if (rwnx_vif && RWNX_VIF_TYPE(rwnx_vif) =3D=3D NL80211_IFTYPE_MESH_POINT)
++		rwnx_vif->ap.create_path =3D false;
++
++	return 0;
++}
++
++static inline int rwnx_rx_mesh_peer_update_ind(struct rwnx_hw *rwnx_hw,
++					       struct rwnx_cmd *cmd,
++					       struct ipc_e2a_msg *msg)
++{
++	struct mesh_peer_update_ind *ind =3D
++		(struct mesh_peer_update_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct rwnx_sta *rwnx_sta =3D &rwnx_hw->sta_table[ind->sta_idx];
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (ind->vif_idx >=3D (NX_VIRT_DEV_MAX + NX_REMOTE_STA_MAX) ||
++	    (rwnx_vif && RWNX_VIF_TYPE(rwnx_vif) !=3D NL80211_IFTYPE_MESH_POINT) =
+||
++	    ind->sta_idx >=3D NX_REMOTE_STA_MAX)
++		return 1;
++
++	/* Check we well have a Mesh Point Interface */
++	if (!rwnx_vif->user_mpm) {
++		/* Check if peer link has been established or lost */
++		if (ind->estab) {
++			if (!rwnx_sta->valid) {
++				u8 txq_status;
++
++				rwnx_sta->valid =3D true;
++				rwnx_sta->sta_idx =3D ind->sta_idx;
++				rwnx_sta->ch_idx =3D rwnx_vif->ch_index;
++				rwnx_sta->vif_idx =3D ind->vif_idx;
++				rwnx_sta->vlan_idx =3D rwnx_sta->vif_idx;
++				rwnx_sta->ps.active =3D false;
++				rwnx_sta->qos =3D true;
++				rwnx_sta->aid =3D ind->sta_idx + 1;
++				// rwnx_sta->acm =3D ind->acm;
++				memcpy(rwnx_sta->mac_addr, ind->peer_addr.array, ETH_ALEN);
++
++				rwnx_chanctx_link(rwnx_vif, rwnx_sta->ch_idx, NULL);
++
++				/* Add the station in the list of VIF's stations */
++				INIT_LIST_HEAD(&rwnx_sta->list);
++				list_add_tail(&rwnx_sta->list, &rwnx_vif->ap.sta_list);
++
++				/* Initialize the TX queues */
++				if (rwnx_sta->ch_idx =3D=3D rwnx_hw->cur_chanctx)
++					txq_status =3D 0;
++				else
++					txq_status =3D RWNX_TXQ_STOP_CHAN;
++
++				rwnx_txq_sta_init(rwnx_hw, rwnx_sta, txq_status);
++#ifdef CONFIG_RWNX_BFMER
++				// TODO: update indication to contains vht capabilities
++				if (rwnx_hw->mod_params->bfmer)
++					rwnx_send_bfmer_enable(rwnx_hw, rwnx_sta, NULL);
++
++				rwnx_mu_group_sta_init(rwnx_sta, NULL);
++#endif /* CONFIG_RWNX_BFMER */
++
++			} else {
++				WARN_ON(0);
++			}
++		} else {
++			if (rwnx_sta->valid) {
++				rwnx_sta->ps.active =3D false;
++				rwnx_sta->valid =3D false;
++
++				/* Remove the station from the list of VIF's station */
++				list_del_init(&rwnx_sta->list);
++
++				rwnx_txq_sta_deinit(rwnx_hw, rwnx_sta);
++			} else {
++				WARN_ON(0);
++			}
++		}
++	} else {
++		if (!ind->estab && rwnx_sta->valid) {
++			/* There is no way to inform upper layer for lost of peer, still
++			 * clean everything in the driver
++			 */
++			rwnx_sta->ps.active =3D false;
++			rwnx_sta->valid =3D false;
++
++			/* Remove the station from the list of VIF's station */
++			list_del_init(&rwnx_sta->list);
++
++			rwnx_txq_sta_deinit(rwnx_hw, rwnx_sta);
++		} else {
++			WARN_ON(0);
++		}
++	}
++
++	return 0;
++}
++
++static inline int rwnx_rx_mesh_path_update_ind(struct rwnx_hw *rwnx_hw,
++					       struct rwnx_cmd *cmd,
++					       struct ipc_e2a_msg *msg)
++{
++	struct mesh_path_update_ind *ind =3D
++		(struct mesh_path_update_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct rwnx_mesh_path *mesh_path;
++	bool found =3D false;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (ind->vif_idx >=3D (NX_VIRT_DEV_MAX + NX_REMOTE_STA_MAX))
++		return 1;
++
++	if (!rwnx_vif || (RWNX_VIF_TYPE(rwnx_vif) !=3D NL80211_IFTYPE_MESH_POINT)=
+)
++		return 0;
++
++	/* Look for path with provided target address */
++	list_for_each_entry(mesh_path, &rwnx_vif->ap.mpath_list, list) {
++		if (mesh_path->path_idx =3D=3D ind->path_idx) {
++			found =3D true;
++			break;
++		}
++	}
++
++	/* Check if element has been deleted */
++	if (ind->delete) {
++		if (found) {
++#ifdef AIC8800_CREATE_TRACE_POINTS
++			trace_mesh_delete_path(mesh_path);
++#endif
++			/* Remove element from list */
++			list_del_init(&mesh_path->list);
++			/* Free the element */
++			kfree(mesh_path);
++		}
++	} else {
++		if (found) {
++			// Update the Next Hop STA
++			mesh_path->p_nhop_sta =3D &rwnx_hw->sta_table[ind->nhop_sta_idx];
++#ifdef AIC8800_CREATE_TRACE_POINTS
++			trace_mesh_update_path(mesh_path);
++#endif
++		} else {
++			// Allocate a Mesh Path structure
++			mesh_path =3D
++				kmalloc_obj(struct rwnx_mesh_path, GFP_ATOMIC);
++
++			if (mesh_path) {
++				INIT_LIST_HEAD(&mesh_path->list);
++
++				mesh_path->path_idx =3D ind->path_idx;
++				mesh_path->p_nhop_sta =3D &rwnx_hw->sta_table[ind->nhop_sta_idx];
++				memcpy(&mesh_path->tgt_mac_addr, &ind->tgt_mac_addr,
++				       MAC_ADDR_LEN);
++
++				// Insert the path in the list of path
++				list_add_tail(&mesh_path->list, &rwnx_vif->ap.mpath_list);
++#ifdef AIC8800_CREATE_TRACE_POINTS
++				trace_mesh_create_path(mesh_path);
++#endif
++			}
++		}
++	}
++
++	return 0;
++}
++
++static inline int rwnx_rx_mesh_proxy_update_ind(struct rwnx_hw *rwnx_hw,
++						struct rwnx_cmd *cmd,
++						struct ipc_e2a_msg *msg)
++{
++	struct mesh_proxy_update_ind *ind =3D
++		(struct mesh_proxy_update_ind *)msg->param;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[ind->vif_idx];
++	struct rwnx_mesh_proxy *mesh_proxy;
++	bool found =3D false;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (ind->vif_idx >=3D (NX_VIRT_DEV_MAX + NX_REMOTE_STA_MAX))
++		return 1;
++
++	if (!rwnx_vif || RWNX_VIF_TYPE(rwnx_vif) !=3D NL80211_IFTYPE_MESH_POINT)
++		return 0;
++
++	/* Look for path with provided external STA address */
++	list_for_each_entry(mesh_proxy, &rwnx_vif->ap.proxy_list, list) {
++		if (!memcmp(&ind->ext_sta_addr, &mesh_proxy->ext_sta_addr, ETH_ALEN)) {
++			found =3D true;
++			break;
++		}
++	}
++
++	if (ind->delete && found) {
++		/* Delete mesh path */
++		list_del_init(&mesh_proxy->list);
++		kfree(mesh_proxy);
++	} else if (!ind->delete && !found) {
++		/* Allocate a Mesh Path structure */
++		mesh_proxy =3D
++			kmalloc_obj(*mesh_proxy, GFP_ATOMIC);
++
++		if (mesh_proxy) {
++			INIT_LIST_HEAD(&mesh_proxy->list);
++
++			memcpy(&mesh_proxy->ext_sta_addr, &ind->ext_sta_addr, MAC_ADDR_LEN);
++			mesh_proxy->local =3D ind->local;
++
++			if (!ind->local)
++				memcpy(&mesh_proxy->proxy_addr, &ind->proxy_mac_addr,
++				       MAC_ADDR_LEN);
++
++			/* Insert the path in the list of path */
++			list_add_tail(&mesh_proxy->list, &rwnx_vif->ap.proxy_list);
++		}
++	}
++
++	return 0;
++}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++/*************************************************************************=
+**
++ * Messages from DEBUG task
++ *************************************************************************=
+*/
++static inline int rwnx_rx_dbg_error_ind(struct rwnx_hw *rwnx_hw,
++					struct rwnx_cmd *cmd,
++					struct ipc_e2a_msg *msg)
++{
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	return 0;
++}
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++static msg_cb_fct mm_hdlrs[MSG_I(MM_MAX)] =3D {
++	[MSG_I(MM_CHANNEL_SWITCH_IND)] =3D rwnx_rx_chan_switch_ind,
++	[MSG_I(MM_CHANNEL_PRE_SWITCH_IND)] =3D rwnx_rx_chan_pre_switch_ind,
++	[MSG_I(MM_REMAIN_ON_CHANNEL_EXP_IND)] =3D rwnx_rx_remain_on_channel_exp_i=
+nd,
++	[MSG_I(MM_PS_CHANGE_IND)] =3D rwnx_rx_ps_change_ind,
++	[MSG_I(MM_TRAFFIC_REQ_IND)] =3D rwnx_rx_traffic_req_ind,
++	[MSG_I(MM_P2P_VIF_PS_CHANGE_IND)] =3D rwnx_rx_p2p_vif_ps_change_ind,
++	[MSG_I(MM_CSA_COUNTER_IND)] =3D rwnx_rx_csa_counter_ind,
++	[MSG_I(MM_CSA_FINISH_IND)] =3D rwnx_rx_csa_finish_ind,
++	[MSG_I(MM_CSA_TRAFFIC_IND)] =3D rwnx_rx_csa_traffic_ind,
++	[MSG_I(MM_CHANNEL_SURVEY_IND)] =3D rwnx_rx_channel_survey_ind,
++	[MSG_I(MM_P2P_NOA_UPD_IND)] =3D rwnx_rx_p2p_noa_upd_ind,
++	[MSG_I(MM_RSSI_STATUS_IND)] =3D rwnx_rx_rssi_status_ind,
++	[MSG_I(MM_PKTLOSS_IND)] =3D rwnx_rx_pktloss_notify_ind,
++	[MSG_I(MM_APM_STALOSS_IND)] =3D rwnx_apm_staloss_ind,
++	[MSG_I(MM_ARP_ANNOUNCEMENT_IND)] =3D rwnx_arp_announcement_ind,
++};
++
++static msg_cb_fct scan_hdlrs[MSG_I(SCANU_MAX)] =3D {
++	[MSG_I(SCANU_START_CFM)] =3D rwnx_rx_scanu_start_cfm,
++	[MSG_I(SCANU_RESULT_IND)] =3D rwnx_rx_scanu_result_ind,
++};
++
++static msg_cb_fct me_hdlrs[MSG_I(ME_MAX)] =3D {
++	[MSG_I(ME_TKIP_MIC_FAILURE_IND)] =3D rwnx_rx_me_tkip_mic_failure_ind,
++	[MSG_I(ME_TX_CREDITS_UPDATE_IND)] =3D rwnx_rx_me_tx_credits_update_ind,
++};
++
++static msg_cb_fct sm_hdlrs[MSG_I(SM_MAX)] =3D {
++	[MSG_I(SM_CONNECT_IND)] =3D rwnx_rx_sm_connect_ind,
++	[MSG_I(SM_DISCONNECT_IND)] =3D rwnx_rx_sm_disconnect_ind,
++	[MSG_I(SM_EXTERNAL_AUTH_REQUIRED_IND)] =3D
++		rwnx_rx_sm_external_auth_required_ind,
++};
++
++static msg_cb_fct apm_hdlrs[MSG_I(APM_MAX)] =3D {};
++
++static msg_cb_fct mesh_hdlrs[MSG_I(MESH_MAX)] =3D {
++	[MSG_I(MESH_PATH_CREATE_CFM)] =3D rwnx_rx_mesh_path_create_cfm,
++	[MSG_I(MESH_PEER_UPDATE_IND)] =3D rwnx_rx_mesh_peer_update_ind,
++	[MSG_I(MESH_PATH_UPDATE_IND)] =3D rwnx_rx_mesh_path_update_ind,
++	[MSG_I(MESH_PROXY_UPDATE_IND)] =3D rwnx_rx_mesh_proxy_update_ind,
++};
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++static msg_cb_fct dbg_hdlrs[MSG_I(DBG_MAX)] =3D {
++	[MSG_I(DBG_ERROR_IND)] =3D rwnx_rx_dbg_error_ind,
++};
++
++static msg_cb_fct tdls_hdlrs[MSG_I(TDLS_MAX)] =3D {
++	[MSG_I(TDLS_CHAN_SWITCH_CFM)] =3D rwnx_rx_tdls_chan_switch_cfm,
++	[MSG_I(TDLS_CHAN_SWITCH_IND)] =3D rwnx_rx_tdls_chan_switch_ind,
++	[MSG_I(TDLS_CHAN_SWITCH_BASE_IND)] =3D rwnx_rx_tdls_chan_switch_base_ind,
++	[MSG_I(TDLS_PEER_PS_IND)] =3D rwnx_rx_tdls_peer_ps_ind,
++};
++
++static msg_cb_fct *msg_hdlrs[] =3D {
++	[TASK_MM] =3D mm_hdlrs,     [TASK_DBG] =3D dbg_hdlrs,
++#ifdef CONFIG_RWNX_FULLMAC
++	[TASK_TDLS] =3D tdls_hdlrs, [TASK_SCANU] =3D scan_hdlrs,
++	[TASK_ME] =3D me_hdlrs,     [TASK_SM] =3D sm_hdlrs,
++	[TASK_APM] =3D apm_hdlrs,   [TASK_MESH] =3D mesh_hdlrs,
++#endif /* CONFIG_RWNX_FULLMAC */
++};
++
++/*
++ *
++ */
++void rwnx_rx_handle_msg(struct rwnx_hw *rwnx_hw, struct ipc_e2a_msg *msg)
++{
++	// AICWFDBG(LOGDEBUG, "%s msg->id:0x%x \r\n", __func__, msg->id);
++
++	rwnx_hw->cmd_mgr->msgind(rwnx_hw->cmd_mgr, msg,
++				 msg_hdlrs[MSG_T(msg->id)][MSG_I(msg->id)]);
++}
++
++void rwnx_rx_handle_print(struct rwnx_hw *rwnx_hw, u8 *msg, u32 len)
++{
++	(void)len;
++
++	if (!rwnx_hw || !rwnx_hw->fwlog_en) {
++		pr_err("FWLOG-OVFL: %s", msg);
 +		return;
 +	}
-+	bus_if =3D aicbsp_get_drvdata(dev);
-+	aicwf_bus_stop(bus_if);
 +
-+	kfree(bus_if->cmd_buf);
-+	if (bus_if->cmd_buf)
-+		bus_if->cmd_buf =3D NULL;
++	AICWFDBG(LOGDEBUG, "FWLOG: %s", msg);
++}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.h b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.h
+new file mode 100644
+index 0000000000000..211f2e616cbf4
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_rx.h
+@@ -0,0 +1,8 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_MSG_RX_H_
++#define _RWNX_MSG_RX_H_
 +
-+	if (bus_if->bustx_thread) {
-+		complete_all(&bus_if->bustx_trgg);
-+		kthread_stop(bus_if->bustx_thread);
-+		bus_if->bustx_thread =3D NULL;
++void rwnx_rx_handle_msg(struct rwnx_hw *rwnx_hw, struct ipc_e2a_msg *msg);
++void rwnx_rx_handle_print(struct rwnx_hw *rwnx_hw, u8 *msg, u32 len);
++
++#endif /* _RWNX_MSG_RX_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.c b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.c
+new file mode 100644
+index 0000000000000..08dd58442b8a7
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.c
+@@ -0,0 +1,3619 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+*****
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @brief TX function definitions
++ *
++ *************************************************************************=
+*****
++ */
++
++#include "rwnx_msg_tx.h"
++#include "reg_access.h"
++#include "rwnx_mod_params.h"
++#ifdef CONFIG_RWNX_BFMER
++#include "rwnx_bfmer.h"
++#endif //(CONFIG_RWNX_BFMER)
++#include "aicwf_txrxif.h"
++#include "rwnx_cmds.h"
++#include "rwnx_compat.h"
++#include "rwnx_main.h"
++#include "rwnx_strs.h"
++#include <linux/pm.h>
++#include "aicwf_sdio.h"
++#include "aicwf_chip_ops.h"
++
++static const struct mac_addr mac_addr_bcst =3D {{0xFFFF, 0xFFFF, 0xFFFF}};
++
++/* Default MAC Rx filters that can be changed by mac80211
++ * (via the configure_filter() callback)
++ */
++#define RWNX_MAC80211_CHANGEABLE                                          =
+     \
++	(NXMAC_ACCEPT_BA_BIT | NXMAC_ACCEPT_BAR_BIT |                            =
+  \
++	 NXMAC_ACCEPT_OTHER_DATA_FRAMES_BIT | NXMAC_ACCEPT_PROBE_REQ_BIT |       =
+  \
++	 NXMAC_ACCEPT_PS_POLL_BIT)
++
++/* Default MAC Rx filters that cannot be changed by mac80211 */
++#define RWNX_MAC80211_NOT_CHANGEABLE                                      =
+     \
++	(NXMAC_ACCEPT_QO_S_NULL_BIT | NXMAC_ACCEPT_Q_DATA_BIT |                  =
+  \
++	 NXMAC_ACCEPT_DATA_BIT | NXMAC_ACCEPT_OTHER_MGMT_FRAMES_BIT |            =
+  \
++	 NXMAC_ACCEPT_MY_UNICAST_BIT | NXMAC_ACCEPT_BROADCAST_BIT |              =
+  \
++	 NXMAC_ACCEPT_BEACON_BIT | NXMAC_ACCEPT_PROBE_RESP_BIT)
++
++/* Default MAC Rx filter */
++#define RWNX_DEFAULT_RX_FILTER                                            =
+     \
++	(RWNX_MAC80211_CHANGEABLE | RWNX_MAC80211_NOT_CHANGEABLE)
++
++const int bw2chnl[] =3D {
++	[NL80211_CHAN_WIDTH_20_NOHT] =3D PHY_CHNL_BW_20,
++	[NL80211_CHAN_WIDTH_20] =3D PHY_CHNL_BW_20,
++	[NL80211_CHAN_WIDTH_40] =3D PHY_CHNL_BW_40,
++	[NL80211_CHAN_WIDTH_80] =3D PHY_CHNL_BW_80,
++	[NL80211_CHAN_WIDTH_160] =3D PHY_CHNL_BW_160,
++	[NL80211_CHAN_WIDTH_80P80] =3D PHY_CHNL_BW_80P80,
++};
++
++const int chnl2bw[] =3D {
++	[PHY_CHNL_BW_20] =3D NL80211_CHAN_WIDTH_20,
++	[PHY_CHNL_BW_40] =3D NL80211_CHAN_WIDTH_40,
++	[PHY_CHNL_BW_80] =3D NL80211_CHAN_WIDTH_80,
++	[PHY_CHNL_BW_160] =3D NL80211_CHAN_WIDTH_160,
++	[PHY_CHNL_BW_80P80] =3D NL80211_CHAN_WIDTH_80P80,
++};
++
++#define RWNX_CMD_ARRAY_SIZE      20
++#define RWNX_CMD_HIGH_WATER_SIZE (RWNX_CMD_ARRAY_SIZE / 2)
++
++static struct rwnx_cmd cmd_array[RWNX_CMD_ARRAY_SIZE];
++static spinlock_t cmd_array_lock;
++static int cmd_array_index;
++
++/*************************************************************************=
+****/
++/*
++ * Parse the ampdu density to retrieve the value in usec, according to the
++ * values defined in ieee80211.h
++ */
++static inline u8 rwnx_ampdudensity2usec(u8 ampdudensity)
++{
++	switch (ampdudensity) {
++	case IEEE80211_HT_MPDU_DENSITY_NONE:
++		return 0;
++		/* 1 microsecond is our granularity */
++	case IEEE80211_HT_MPDU_DENSITY_0_25:
++	case IEEE80211_HT_MPDU_DENSITY_0_5:
++	case IEEE80211_HT_MPDU_DENSITY_1:
++		return 1;
++	case IEEE80211_HT_MPDU_DENSITY_2:
++		return 2;
++	case IEEE80211_HT_MPDU_DENSITY_4:
++		return 4;
++	case IEEE80211_HT_MPDU_DENSITY_8:
++		return 8;
++	case IEEE80211_HT_MPDU_DENSITY_16:
++		return 16;
++	default:
++		return 0;
 +	}
 +}
 +
-+void aicwf_frame_tx(void *dev, struct sk_buff *skb)
++static inline bool use_pairwise_key(struct cfg80211_crypto_settings *crypt=
+o)
 +{
-+	struct aic_sdio_dev *sdiodev =3D (struct aic_sdio_dev *)dev;
-+
-+	aicwf_bus_txdata(sdiodev->bus_if, skb);
-+}
-+
-+struct aicwf_tx_priv *aicwf_tx_init(void *arg)
-+{
-+	struct aicwf_tx_priv *tx_priv;
-+
-+	tx_priv =3D kzalloc_obj(*tx_priv, GFP_KERNEL);
-+	if (!tx_priv)
-+		return NULL;
-+
-+	tx_priv->sdiodev =3D (struct aic_sdio_dev *)arg;
-+
-+	atomic_set(&tx_priv->aggr_count, 0);
-+	tx_priv->aggr_buf =3D dev_alloc_skb(MAX_AGGR_TXPKT_LEN);
-+	if (!tx_priv->aggr_buf) {
-+		txrx_err("Alloc bus->txdata_buf failed!\n");
-+		kfree(tx_priv);
-+		return NULL;
-+	}
-+	tx_priv->head =3D tx_priv->aggr_buf->data;
-+	tx_priv->tail =3D tx_priv->aggr_buf->data;
-+
-+	return tx_priv;
-+}
-+
-+void aicwf_tx_deinit(struct aicwf_tx_priv *tx_priv)
-+{
-+	if (tx_priv && tx_priv->aggr_buf)
-+		dev_kfree_skb(tx_priv->aggr_buf);
-+
-+	kfree(tx_priv);
-+}
-+
-+static bool aicwf_another_ptk(struct sk_buff *skb)
-+{
-+	u16 aggr_len =3D 0;
-+
-+	if (!skb->data || skb->len =3D=3D 0)
-+		return false;
-+	aggr_len =3D (*skb->data | (*(skb->data + 1) << 8));
-+	if (aggr_len =3D=3D 0)
++	if (crypto->cipher_group =3D=3D WLAN_CIPHER_SUITE_WEP40 ||
++	    crypto->cipher_group =3D=3D WLAN_CIPHER_SUITE_WEP104)
 +		return false;
 +
 +	return true;
 +}
 +
-+int aicwf_process_rxframes(struct aicwf_rx_priv *rx_priv)
++static inline bool is_non_blocking_msg(int id)
 +{
-+	int ret =3D 0;
++	return (id =3D=3D MM_TIM_UPDATE_REQ || id =3D=3D ME_RC_SET_RATE_REQ ||
++		id =3D=3D MM_BFMER_ENABLE_REQ || id =3D=3D ME_TRAFFIC_IND_REQ ||
++		id =3D=3D TDLS_PEER_TRAFFIC_IND_REQ || id =3D=3D MESH_PATH_CREATE_REQ ||
++		id =3D=3D MESH_PROXY_ADD_REQ || id =3D=3D SM_EXTERNAL_AUTH_REQUIRED_RSP)=
+;
++}
++
++static inline u8 get_chan_flags(uint32_t flags)
++{
++	u8 chan_flags =3D 0;
++#ifdef AIC8800_RADAR_OR_IR_DETECT
++
++	if (flags & IEEE80211_CHAN_NO_IR)
++		chan_flags |=3D CHAN_NO_IR;
++
++	if (flags & IEEE80211_CHAN_RADAR)
++		chan_flags |=3D CHAN_RADAR;
++#endif
++	return chan_flags;
++}
++
++static inline s8 chan_to_fw_pwr(int power)
++{
++	return power > 127 ? 127 : (s8)power;
++}
++
++static inline void limit_chan_bw(u8 *bw, u16 primary, u16 *center1)
++{
++	int oft, new_oft =3D 10;
++
++	if (*bw <=3D PHY_CHNL_BW_40)
++		return;
++
++	oft =3D *center1 - primary;
++	*bw =3D PHY_CHNL_BW_40;
++
++	if (oft < 0)
++		new_oft =3D new_oft * -1;
++	if (abs(oft) =3D=3D 10 || abs(oft) =3D=3D 50)
++		new_oft =3D new_oft * -1;
++
++	*center1 =3D primary + new_oft;
++}
++
++struct rwnx_cmd *rwnx_cmd_malloc(void)
++{
++	struct rwnx_cmd *cmd =3D NULL;
 +	unsigned long flags =3D 0;
-+	struct sk_buff *skb =3D NULL;
-+	u16 pkt_len =3D 0;
-+	struct sk_buff *skb_inblock =3D NULL;
-+	u16 aggr_len =3D 0, adjust_len =3D 0;
-+	u8 *data =3D NULL;
 +
-+	while (1) {
-+		spin_lock_irqsave(&rx_priv->rxqlock, flags);
-+		if (aicwf_is_framequeue_empty(&rx_priv->rxq)) {
-+			spin_unlock_irqrestore(&rx_priv->rxqlock, flags);
++	spin_lock_irqsave(&cmd_array_lock, flags);
++
++	for (cmd_array_index =3D 0; cmd_array_index < RWNX_CMD_ARRAY_SIZE;
++		 cmd_array_index++) {
++		if (cmd_array[cmd_array_index].used =3D=3D 0) {
++			AICWFDBG(LOGTRACE, "%s get cmd_array[%d]:%p \r\n", __func__,
++				 cmd_array_index, &cmd_array[cmd_array_index]);
++			cmd =3D &cmd_array[cmd_array_index];
++			cmd_array[cmd_array_index].used =3D 1;
 +			break;
 +		}
-+		skb =3D aicwf_frame_dequeue(&rx_priv->rxq);
-+		spin_unlock_irqrestore(&rx_priv->rxqlock, flags);
-+		if (!skb) {
-+			txrx_err("skb_error\r\n");
-+			break;
-+		}
-+		while (aicwf_another_ptk(skb)) {
-+			data =3D skb->data;
-+			pkt_len =3D (*skb->data | (*(skb->data + 1) << 8));
-+
-+			if ((skb->data[2] & SDIO_TYPE_CFG) !=3D
-+				SDIO_TYPE_CFG) { // type : data
-+				aggr_len =3D pkt_len + RX_HWHRD_LEN;
-+
-+				if (aggr_len & (RX_ALIGNMENT - 1))
-+					adjust_len =3D roundup(aggr_len, RX_ALIGNMENT);
-+				else
-+					adjust_len =3D aggr_len;
-+
-+				skb_inblock =3D
-+					__dev_alloc_skb(aggr_len + CCMP_OR_WEP_INFO,
-+							GFP_KERNEL); // 8 is for ccmp mic or wep icv
-+				if (!skb_inblock) {
-+					txrx_err("no more space!\n");
-+					aicwf_dev_skb_free(skb);
-+					return -EBADE;
-+				}
-+
-+				skb_put(skb_inblock, aggr_len);
-+				memcpy(skb_inblock->data, data, aggr_len);
-+				skb_pull(skb, adjust_len);
-+			} else { //  type : config
-+				aggr_len =3D pkt_len;
-+
-+				if (aggr_len & (RX_ALIGNMENT - 1))
-+					adjust_len =3D roundup(aggr_len, RX_ALIGNMENT);
-+				else
-+					adjust_len =3D aggr_len;
-+
-+				skb_inblock =3D
-+					__dev_alloc_skb(aggr_len + 4, GFP_KERNEL);
-+				if (!skb_inblock) {
-+					txrx_err("no more space!\n");
-+					aicwf_dev_skb_free(skb);
-+					return -EBADE;
-+				}
-+
-+				skb_put(skb_inblock, aggr_len + 4);
-+				memcpy(skb_inblock->data, data, aggr_len + 4);
-+				if ((*(skb_inblock->data + 2) & 0x7f) =3D=3D SDIO_TYPE_CFG_CMD_RSP)
-+					rwnx_rx_handle_msg(rx_priv->sdiodev,
-+							   (struct ipc_e2a_msg *)(skb_inblock->data
-+							   + 4));
-+				skb_pull(skb, adjust_len + 4);
-+			}
-+		}
-+
-+		/* skb_inblock no used currently, just free it! */
-+		dev_kfree_skb(skb_inblock);
-+		dev_kfree_skb(skb);
-+		atomic_dec(&rx_priv->rx_cnt);
 +	}
 +
-+#if defined(CONFIG_SDIO_PWRCTRL)
-+	aicwf_sdio_pwr_stctl(rx_priv->sdiodev, SDIO_ACTIVE_ST);
++	if (cmd_array_index >=3D RWNX_CMD_HIGH_WATER_SIZE) {
++		AICWFDBG(LOGERROR, "%s cmd(%d) was pending...\r\n", __func__,
++			 cmd_array_index);
++		mdelay(100);
++	}
++
++	if (!cmd)
++		AICWFDBG(LOGERROR, "%s array is empty...\r\n", __func__);
++
++	spin_unlock_irqrestore(&cmd_array_lock, flags);
++
++	return cmd;
++}
++
++void rwnx_cmd_free(struct rwnx_cmd *cmd)
++{
++	unsigned long flags =3D 0;
++
++	spin_lock_irqsave(&cmd_array_lock, flags);
++	cmd->used =3D 0;
++	AICWFDBG(LOGTRACE, "%s cmd_array[%d]:%p \r\n", __func__, cmd->array_id,
++		 cmd);
++	spin_unlock_irqrestore(&cmd_array_lock, flags);
++}
++
++int rwnx_init_cmd_array(void)
++{
++	AICWFDBG(LOGTRACE, "%s Enter \r\n", __func__);
++	spin_lock_init(&cmd_array_lock);
++
++	for (cmd_array_index =3D 0; cmd_array_index < RWNX_CMD_ARRAY_SIZE;
++	     cmd_array_index++) {
++		AICWFDBG(LOGTRACE, "%s cmd_queue[%d]:%p \r\n", __func__,
++			 cmd_array_index, &cmd_array[cmd_array_index]);
++		cmd_array[cmd_array_index].used =3D 0;
++		cmd_array[cmd_array_index].array_id =3D cmd_array_index;
++	}
++	AICWFDBG(LOGTRACE, "%s Exit \r\n", __func__);
++
++	return 0;
++}
++
++void rwnx_free_cmd_array(void)
++{
++	AICWFDBG(LOGTRACE, "%s Enter \r\n", __func__);
++
++	for (cmd_array_index =3D 0; cmd_array_index < RWNX_CMD_ARRAY_SIZE;
++	     cmd_array_index++)
++		cmd_array[cmd_array_index].used =3D 0;
++
++	AICWFDBG(LOGTRACE, "%s Exit \r\n", __func__);
++}
++
++/*
++ *************************************************************************=
+*****
++ * @brief Allocate memory for a message
++ *
++ * This primitive allocates memory for a message that has to be sent. The =
+memory
++ * is allocated dynamically on the heap and the length of the variable par=
+ameter
++ * structure has to be provided in order to allocate the correct size.
++ *
++ * Several additional parameters are provided which will be preset in the
++ *message and which may be used internally to choose the kind of memory to
++ *allocate.
++ *
++ * The memory allocated will be automatically freed by the kernel, after t=
+he
++ * pointer has been sent to ke_msg_send(). If the message is not sent, it =
+must
++ * be freed explicitly with ke_msg_free().
++ *
++ * Allocation failure is considered critical and should not happen.
++ *
++ * @param[in] id        Message identifier
++ * @param[in] dest_id   Destination Task Identifier
++ * @param[in] src_id    Source Task Identifier
++ * @param[in] param_len Size of the message parameters to be allocated
++ *
++ * @return Pointer to the parameter member of the ke_msg. If the parameter
++ *         structure is empty, the pointer will point to the end of the me=
+ssage
++ *         and should not be used (except to retrieve the message pointer =
+or to
++ *         send the message)
++ *************************************************************************=
+*****
++ */
++static inline void *rwnx_msg_zalloc(lmac_msg_id_t const id,
++				    lmac_task_id_t const dest_id,
++				    lmac_task_id_t const src_id,
++				    uint16_t const param_len)
++{
++	struct lmac_msg *msg;
++	gfp_t flags;
++
++	//  if (is_non_blocking_msg(id) && (in_softirq()||in_atomic()))
++	flags =3D GFP_ATOMIC;
++	//  else
++	//      flags =3D GFP_KERNEL;
++
++	// msg =3D (struct lmac_msg *)kzalloc(sizeof(struct lmac_msg) + param_len=
+, flags);
++	msg =3D kzalloc(sizeof(*msg) + param_len, flags);
++	if (!msg) {
++		AICWFDBG(LOGERROR, "%s: msg allocation failed\n", __func__);
++		return NULL;
++	}
++	msg->id =3D id;
++	msg->dest_id =3D dest_id;
++	msg->src_id =3D src_id;
++	msg->param_len =3D param_len;
++	// AICWFDBG(LOGDEBUG, "rwnx_msg_zalloc size=3D%d  id=3D%d\n",msg->param_l=
+en,msg->id);
++
++	return msg->param;
++}
++
++static void rwnx_msg_free(struct rwnx_hw *rwnx_hw, const void *msg_params)
++{
++	struct lmac_msg *msg =3D container_of((void *)msg_params, struct lmac_msg=
+, param);
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++	/* Free the message */
++	kfree(msg);
++}
++
++// void rwnx_pm_relax(struct aic_sdio_dev *sdiodev);
++// void rwnx_pm_stay_awake(struct aic_sdio_dev *sdiodev);
++
++static int rwnx_send_msg(struct rwnx_hw *rwnx_hw, const void *msg_params,
++			 int reqcfm, lmac_msg_id_t reqid, void *cfm)
++{
++	struct lmac_msg *msg;
++	struct rwnx_cmd *cmd;
++	bool nonblock;
++	int ret =3D 0;
++	u8 empty =3D 0;
++
++	// RWNX_DBG(RWNX_FN_ENTRY_STR);
++	AICWFDBG(LOGTRACE,
++		 "%s (%d)%s reqcfm:%d in_hardirq:%d in_softirq:%d irqs_disabled:%d\r\n",
++		 __func__, reqid, RWNX_ID2STR(reqid), reqcfm, (int)in_hardirq(),
++		 (int)in_softirq(), (int)irqs_disabled());
++
++#ifdef AICWF_SDIO_SUPPORT
++	if (!aicwf_sdio_activity_get(rwnx_hw, rwnx_hw->ws_tx)) {
++		rwnx_msg_free(rwnx_hw, msg_params);
++		return -EBUSY;
++	}
++	if (rwnx_hw->sdiodev->bus_if->state =3D=3D BUS_DOWN_ST) {
++		rwnx_msg_free(rwnx_hw, msg_params);
++		sdio_err("bus is down\n");
++		aicwf_sdio_activity_put(rwnx_hw, rwnx_hw->ws_tx);
++		return 0;
++	}
++#endif
++
++	msg =3D container_of((void *)msg_params, struct lmac_msg, param);
++
++	// nonblock =3D is_non_blocking_msg(msg->id);
++	nonblock =3D 0;
++	cmd =3D rwnx_cmd_malloc(); // kzalloc_obj(struct rwnx_cmd, nonblock ?
++							 // GFP_ATOMIC : GFP_KERNEL);
++	cmd->result =3D -EINTR;
++	cmd->id =3D msg->id;
++	cmd->reqid =3D reqid;
++	cmd->a2e_msg =3D msg;
++	cmd->e2a_msg =3D cfm;
++	if (nonblock)
++		cmd->flags =3D RWNX_CMD_FLAG_NONBLOCK;
++	if (reqcfm)
++		cmd->flags |=3D RWNX_CMD_FLAG_REQ_CFM;
++
++	if (cfm) {
++		do {
++			if (rwnx_hw->cmd_mgr->state =3D=3D RWNX_CMD_MGR_STATE_CRASHED)
++				break;
++			spin_lock_bh(&rwnx_hw->cmd_mgr->lock);
++			empty =3D list_empty(&rwnx_hw->cmd_mgr->cmds);
++			spin_unlock_bh(&rwnx_hw->cmd_mgr->lock);
++			if (!empty) {
++				if (in_softirq()) {
++					AICWFDBG(LOGDEBUG,
++						 "AICWF_LOG in_softirq:check cmdqueue empty\n");
++					mdelay(10);
++				} else {
++					AICWFDBG(LOGDEBUG, "AICWF_LOG check cmdqueue empty\n");
++					msleep(50);
++				}
++			}
++		} while (!empty); // wait for cmd queue empty
++	}
++
++	if (reqcfm) {
++		cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_ACK; // we don't need ack any more
++		ret =3D rwnx_hw->cmd_mgr->queue(rwnx_hw->cmd_mgr, cmd);
++	} else {
++#ifdef AICWF_SDIO_SUPPORT
++		aicwf_set_cmd_tx((void *)(rwnx_hw->sdiodev), cmd->a2e_msg,
++				 sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
++#else
++		aicwf_set_cmd_tx((void *)(rwnx_hw->usbdev), cmd->a2e_msg,
++				 sizeof(struct lmac_msg) + cmd->a2e_msg->param_len);
++#endif
++	}
++
++	if (!reqcfm || ret)
++		rwnx_cmd_free(cmd); // kfree(cmd);
++
++	aicwf_sdio_activity_put(rwnx_hw, rwnx_hw->ws_tx);
++	return 0;
++}
++
++static int rwnx_send_msg1(struct rwnx_hw *rwnx_hw, const void *msg_params,
++			  int reqcfm, lmac_msg_id_t reqid, void *cfm,
++			  bool defer)
++{
++	struct lmac_msg *msg;
++	struct rwnx_cmd *cmd;
++	bool nonblock;
++	int ret =3D 0;
++
++	//  RWNX_DBG(RWNX_FN_ENTRY_STR);
++	AICWFDBG(LOGDEBUG,
++		 "AICWF_LOG %s (%d)%s reqcfm:%d in_hardirq:%d in_softirq:%d irqs_disable=
+d:%d\r\n",
++		 __func__, reqid, RWNX_ID2STR(reqid), reqcfm, (int)in_hardirq(),
++		 (int)in_softirq(), (int)irqs_disabled());
++
++	if (!aicwf_sdio_activity_get(rwnx_hw, rwnx_hw->ws_tx)) {
++		rwnx_msg_free(rwnx_hw, msg_params);
++		return -EBUSY;
++	}
++	msg =3D container_of((void *)msg_params, struct lmac_msg, param);
++
++	// nonblock =3D is_non_blocking_msg(msg->id);
++	nonblock =3D 0;
++	cmd =3D rwnx_cmd_malloc(); // kzalloc_obj(struct rwnx_cmd, nonblock ?
++							 // GFP_ATOMIC : GFP_KERNEL);
++	cmd->result =3D -EINTR;
++	cmd->id =3D msg->id;
++	cmd->reqid =3D reqid;
++	cmd->a2e_msg =3D msg;
++	cmd->e2a_msg =3D cfm;
++	if (nonblock)
++		cmd->flags =3D RWNX_CMD_FLAG_NONBLOCK;
++	if (reqcfm)
++		cmd->flags |=3D RWNX_CMD_FLAG_REQ_CFM;
++
++	if (reqcfm) {
++		cmd->flags &=3D ~RWNX_CMD_FLAG_WAIT_ACK; // we don't need ack any more
++		if (!defer)
++			ret =3D rwnx_hw->cmd_mgr->queue(rwnx_hw->cmd_mgr, cmd);
++		else
++			ret =3D cmd_mgr_queue_force_defer(rwnx_hw->cmd_mgr, cmd);
++	}
++
++	if (!reqcfm || ret)
++		rwnx_cmd_free(cmd); // kfree(cmd);
++
++	if (!ret)
++		ret =3D cmd->result;
++
++	aicwf_sdio_activity_put(rwnx_hw, rwnx_hw->ws_tx);
++	// return ret;
++	return 0;
++}
++
++/*************************************************************************=
+*****
++ *    Control messages handling functions (FULLMAC)
++ *************************************************************************=
+****/
++int rwnx_send_reset(struct rwnx_hw *rwnx_hw)
++{
++	void *void_param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* RESET REQ has no parameter */
++	void_param =3D rwnx_msg_zalloc(MM_RESET_REQ, TASK_MM, DRV_TASK_ID, 0);
++	if (!void_param)
++		return -ENOMEM;
++
++	return rwnx_send_msg(rwnx_hw, void_param, 1, MM_RESET_CFM, NULL);
++}
++
++int rwnx_send_start(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_start_req *start_req_param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the START REQ message */
++	start_req_param =3D rwnx_msg_zalloc(MM_START_REQ, TASK_MM, DRV_TASK_ID,
++					  sizeof(struct mm_start_req));
++	if (!start_req_param)
++		return -ENOMEM;
++
++	/* Set parameters for the START message */
++	memcpy(&start_req_param->phy_cfg, &rwnx_hw->phy.cfg,
++	       sizeof(rwnx_hw->phy.cfg));
++	start_req_param->uapsd_timeout =3D (u32)rwnx_hw->mod_params->uapsd_timeou=
+t;
++	start_req_param->lp_clk_accuracy =3D (u16)rwnx_hw->mod_params->lp_clk_ppm=
+;
++
++	/* Send the START REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, start_req_param, 1, MM_START_CFM, NULL);
++}
++
++int rwnx_send_version_req(struct rwnx_hw *rwnx_hw, struct mm_version_cfm *=
+cfm)
++{
++	void *void_param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* VERSION REQ has no parameter */
++	void_param =3D rwnx_msg_zalloc(MM_VERSION_REQ, TASK_MM, DRV_TASK_ID, 0);
++	if (!void_param)
++		return -ENOMEM;
++
++	return rwnx_send_msg(rwnx_hw, void_param, 1, MM_VERSION_CFM, cfm);
++}
++
++int rwnx_send_add_if(struct rwnx_hw *rwnx_hw, const unsigned char *mac,
++		     enum nl80211_iftype iftype, bool p2p,
++		     struct mm_add_if_cfm *cfm)
++{
++	struct mm_add_if_req *add_if_req_param;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ADD_IF_REQ message */
++	add_if_req_param =3D rwnx_msg_zalloc(MM_ADD_IF_REQ, TASK_MM, DRV_TASK_ID,
++					   sizeof(struct mm_add_if_req));
++	if (!add_if_req_param)
++		return -ENOMEM;
++
++	/* Set parameters for the ADD_IF_REQ message */
++	memcpy(&add_if_req_param->addr.array[0], mac, ETH_ALEN);
++	switch (iftype) {
++#if !IS_ENABLED(CONFIG_AIC8800_STA_ONLY)
++#ifdef CONFIG_RWNX_FULLMAC
++		// case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_P2P_CLIENT:
++		add_if_req_param->p2p =3D true;
++		fallthrough;
++		// no break
++#endif /* CONFIG_RWNX_FULLMAC */
++#endif
++	case NL80211_IFTYPE_STATION:
++		add_if_req_param->type =3D MM_STA;
++		break;
++
++#if !IS_ENABLED(CONFIG_AIC8800_STA_ONLY)
++	case NL80211_IFTYPE_ADHOC:
++		add_if_req_param->type =3D MM_IBSS;
++		break;
++
++#ifdef CONFIG_RWNX_FULLMAC
++	case NL80211_IFTYPE_P2P_GO:
++		add_if_req_param->p2p =3D true;
++		fallthrough;
++		// no break
++#endif /* CONFIG_RWNX_FULLMAC */
++	case NL80211_IFTYPE_AP:
++		add_if_req_param->type =3D MM_AP;
++		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		add_if_req_param->type =3D MM_MESH_POINT;
++		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		return -1;
++	case NL80211_IFTYPE_MONITOR:
++		add_if_req_param->type =3D MM_MONITOR;
++		break;
++#endif
++	default:
++		rwnx_msg_free(rwnx_hw, add_if_req_param);
++		return -EOPNOTSUPP;
++	}
++
++	/* Send the ADD_IF_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, add_if_req_param, 1, MM_ADD_IF_CFM, cfm);
++}
++
++int rwnx_send_remove_if(struct rwnx_hw *rwnx_hw, u8 vif_index, bool defer)
++{
++	struct mm_remove_if_req *remove_if_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_REMOVE_IF_REQ message */
++	remove_if_req =3D rwnx_msg_zalloc(MM_REMOVE_IF_REQ, TASK_MM, DRV_TASK_ID,
++					sizeof(struct mm_remove_if_req));
++	if (!remove_if_req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_REMOVE_IF_REQ message */
++	remove_if_req->inst_nbr =3D vif_index;
++
++	/* Send the MM_REMOVE_IF_REQ message to LMAC FW */
++	return rwnx_send_msg1(rwnx_hw, remove_if_req, 1, MM_REMOVE_IF_CFM, NULL,
++						  defer);
++}
++
++int rwnx_send_set_channel(struct rwnx_hw *rwnx_hw, int phy_idx,
++			  struct mm_set_channel_cfm *cfm)
++{
++	struct mm_set_channel_req *req;
++	enum nl80211_chan_width width =3D NL80211_CHAN_WIDTH_20_NOHT;
++	u16 center_freq =3D 2412, center_freq1 =3D 2412, center_freq2 =3D 2412;
++	s8 tx_power =3D 0;
++	u8 flags =3D 0;
++	enum nl80211_band band =3D NL80211_BAND_2GHZ;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (phy_idx >=3D rwnx_hw->phy.cnt)
++		return -EOPNOTSUPP;
++
++	req =3D rwnx_msg_zalloc(MM_SET_CHANNEL_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_channel_req));
++	if (!req)
++		return -ENOMEM;
++
++	if (phy_idx =3D=3D 0) {
++#ifdef CONFIG_RWNX_FULLMAC
++		/* On FULLMAC only setting channel of secondary chain */
++		wiphy_err(rwnx_hw->wiphy, "Trying to set channel of primary chain");
++		return 0;
++#endif /* CONFIG_RWNX_FULLMAC */
++	} else {
++		struct rwnx_sec_phy_chan *chan =3D &rwnx_hw->phy.sec_chan;
++
++		width =3D chnl2bw[chan->type];
++		band =3D chan->band;
++		center_freq =3D chan->prim20_freq;
++		center_freq1 =3D chan->center_freq1;
++		center_freq2 =3D chan->center_freq2;
++		flags =3D 0;
++	}
++
++	req->chan.band =3D band;
++	req->chan.type =3D bw2chnl[width];
++	req->chan.prim20_freq =3D center_freq;
++	req->chan.center1_freq =3D center_freq1;
++	req->chan.center2_freq =3D center_freq2;
++	req->chan.tx_power =3D tx_power;
++	req->chan.flags =3D flags;
++	req->index =3D phy_idx;
++
++	if (rwnx_hw->phy.limit_bw)
++		limit_chan_bw(&req->chan.type, req->chan.prim20_freq,
++			      &req->chan.center1_freq);
++
++	RWNX_DBG("mac80211:   freq=3D%d(c1:%d - c2:%d)/width=3D%d - band=3D%d\n"
++		 "   hw(%d): prim20=3D%d(c1:%d - c2:%d)/ type=3D%d - band=3D%d\n",
++		 center_freq, center_freq1, center_freq2, width, band, phy_idx,
++		 req->chan.prim20_freq, req->chan.center1_freq,
++		 req->chan.center2_freq, req->chan.type, req->chan.band);
++
++	/* Send the MM_SET_CHANNEL_REQ REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_SET_CHANNEL_CFM, cfm);
++}
++
++int rwnx_send_key_add(struct rwnx_hw *rwnx_hw, u8 vif_idx, u8 sta_idx,
++		      bool pairwise, u8 *key, u8 key_len, u8 key_idx,
++		      u8 cipher_suite, struct mm_key_add_cfm *cfm)
++{
++	struct mm_key_add_req *key_add_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_KEY_ADD_REQ message */
++	key_add_req =3D rwnx_msg_zalloc(MM_KEY_ADD_REQ, TASK_MM, DRV_TASK_ID,
++				      sizeof(struct mm_key_add_req));
++	if (!key_add_req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_KEY_ADD_REQ message */
++	if (sta_idx !=3D 0xFF) {
++		/* Pairwise key */
++		key_add_req->sta_idx =3D sta_idx;
++	} else {
++		/* Default key */
++		key_add_req->sta_idx =3D sta_idx;
++		key_add_req->key_idx =3D (u8)key_idx; /* only useful for default keys */
++	}
++	key_add_req->pairwise =3D pairwise;
++	key_add_req->inst_nbr =3D vif_idx;
++	key_add_req->key.length =3D key_len;
++	memcpy(&key_add_req->key.array[0], key, key_len);
++
++	key_add_req->cipher_suite =3D cipher_suite;
++
++	RWNX_DBG("%s: sta_idx:%d key_idx:%d inst_nbr:%d cipher:%d key_len:%d\n",
++		 __func__, key_add_req->sta_idx, key_add_req->key_idx,
++		 key_add_req->inst_nbr, key_add_req->cipher_suite,
++		 key_add_req->key.length);
++#if defined(CONFIG_RWNX_DBG) || defined(CONFIG_DYNAMIC_DEBUG)
++	print_hex_dump_bytes("key: ", DUMP_PREFIX_OFFSET, key_add_req->key.array,
++			     key_add_req->key.length);
++#endif
++
++	/* Send the MM_KEY_ADD_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, key_add_req, 1, MM_KEY_ADD_CFM, cfm);
++}
++
++int rwnx_send_key_del(struct rwnx_hw *rwnx_hw, uint8_t hw_key_idx)
++{
++	struct mm_key_del_req *key_del_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_KEY_DEL_REQ message */
++	key_del_req =3D rwnx_msg_zalloc(MM_KEY_DEL_REQ, TASK_MM, DRV_TASK_ID,
++				      sizeof(struct mm_key_del_req));
++	if (!key_del_req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_KEY_DEL_REQ message */
++	key_del_req->hw_key_idx =3D hw_key_idx;
++
++	/* Send the MM_KEY_DEL_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, key_del_req, 1, MM_KEY_DEL_CFM, NULL);
++}
++
++int rwnx_send_bcn(struct rwnx_hw *rwnx_hw, u8 *buf, u8 vif_idx, u16 bcn_le=
+n)
++{
++	struct apm_set_bcn_ie_req *bcn_ie_req;
++
++	bcn_ie_req =3D rwnx_msg_zalloc(APM_SET_BEACON_IE_REQ, TASK_APM, DRV_TASK_=
+ID,
++				     sizeof(struct apm_set_bcn_ie_req));
++	if (!bcn_ie_req)
++		return -ENOMEM;
++
++	bcn_ie_req->vif_idx =3D vif_idx;
++	bcn_ie_req->bcn_ie_len =3D bcn_len;
++	memcpy(bcn_ie_req->bcn_ie, (u8 *)buf, bcn_len);
++	kfree(buf);
++
++	return rwnx_send_msg(rwnx_hw, bcn_ie_req, 1, APM_SET_BEACON_IE_CFM, NULL)=
+;
++}
++
++int rwnx_send_bcn_change(struct rwnx_hw *rwnx_hw, u8 vif_idx, u32 bcn_addr=
+,
++			 u16 bcn_len, u16 tim_oft, u16 tim_len, u16 *csa_oft)
++{
++	struct mm_bcn_change_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_BCN_CHANGE_REQ message */
++	req =3D rwnx_msg_zalloc(MM_BCN_CHANGE_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_bcn_change_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_BCN_CHANGE_REQ message */
++	req->bcn_ptr =3D bcn_addr;
++	req->bcn_len =3D bcn_len;
++	req->tim_oft =3D tim_oft;
++	req->tim_len =3D tim_len;
++	req->inst_nbr =3D vif_idx;
++
++	if (csa_oft) {
++		int i;
++
++		for (i =3D 0; i < BCN_MAX_CSA_CPT; i++)
++			req->csa_oft[i] =3D csa_oft[i];
++	}
++
++	/* Send the MM_BCN_CHANGE_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_BCN_CHANGE_CFM, NULL);
++}
++
++int rwnx_send_roc(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++		  struct ieee80211_channel *chan, unsigned int duration,
++		  struct mm_remain_on_channel_cfm *roc_cfm)
++{
++	struct mm_remain_on_channel_req *req;
++	struct cfg80211_chan_def chandef;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Create channel definition structure */
++	cfg80211_chandef_create(&chandef, chan, NL80211_CHAN_NO_HT);
++
++	/* Build the MM_REMAIN_ON_CHANNEL_REQ message */
++	req =3D rwnx_msg_zalloc(MM_REMAIN_ON_CHANNEL_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_remain_on_channel_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_REMAIN_ON_CHANNEL_REQ message */
++	req->op_code =3D MM_ROC_OP_START;
++	req->vif_index =3D vif->vif_index;
++	req->duration_ms =3D duration;
++	req->band =3D chan->band;
++	req->type =3D bw2chnl[chandef.width];
++	req->prim20_freq =3D chan->center_freq;
++	req->center1_freq =3D chandef.center_freq1;
++	req->center2_freq =3D chandef.center_freq2;
++	req->tx_power =3D chan_to_fw_pwr(chan->max_power);
++
++	/* Send the MM_REMAIN_ON_CHANNEL_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_REMAIN_ON_CHANNEL_CFM, roc_cfm);
++}
++
++int rwnx_send_cancel_roc(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_remain_on_channel_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_REMAIN_ON_CHANNEL_REQ message */
++	req =3D rwnx_msg_zalloc(MM_REMAIN_ON_CHANNEL_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_remain_on_channel_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_REMAIN_ON_CHANNEL_REQ message */
++	req->op_code =3D MM_ROC_OP_CANCEL;
++
++	/* Send the MM_REMAIN_ON_CHANNEL_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_REMAIN_ON_CHANNEL_CFM, NULL);
++}
++
++int rwnx_send_set_power(struct rwnx_hw *rwnx_hw, u8 vif_idx, s8 pwr,
++			struct mm_set_power_cfm *cfm)
++{
++	struct mm_set_power_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_POWER_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_POWER_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_power_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_SET_POWER_REQ message */
++	req->inst_nbr =3D vif_idx;
++	req->power =3D pwr;
++
++	/* Send the MM_SET_POWER_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_SET_POWER_CFM, cfm);
++}
++
++int rwnx_send_set_edca(struct rwnx_hw *rwnx_hw, u8 hw_queue, u32 param,
++		       bool uapsd, u8 inst_nbr)
++{
++	struct mm_set_edca_req *set_edca_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_EDCA_REQ message */
++	set_edca_req =3D rwnx_msg_zalloc(MM_SET_EDCA_REQ, TASK_MM, DRV_TASK_ID,
++				       sizeof(struct mm_set_edca_req));
++	if (!set_edca_req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_SET_EDCA_REQ message */
++	set_edca_req->ac_param =3D param;
++	set_edca_req->uapsd =3D uapsd;
++	set_edca_req->hw_queue =3D hw_queue;
++	set_edca_req->inst_nbr =3D inst_nbr;
++
++	/* Send the MM_SET_EDCA_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, set_edca_req, 1, MM_SET_EDCA_CFM, NULL);
++}
++
++#ifdef AICWF_ARP_OFFLOAD
++int rwnx_send_arpoffload_en_req(struct rwnx_hw *rwnx_hw,
++				struct rwnx_vif *rwnx_vif, u32 ipaddr,
++				u8 enable)
++{
++	struct mm_set_arpoffload_en_req *arp_offload_req;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_P2P_NOA_REQ message */
++	arp_offload_req =3D
++		rwnx_msg_zalloc(MM_SET_ARPOFFLOAD_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_arpoffload_en_req));
++
++	if (!arp_offload_req)
++		return -ENOMEM;
++
++	/* Fill the message parameters */
++	arp_offload_req->enable =3D enable;
++	arp_offload_req->vif_idx =3D rwnx_vif->vif_index;
++	arp_offload_req->ipaddr =3D ipaddr;
++
++	/* Send the MM_ARPOFFLOAD_EN_REQ message to UMAC FW */
++	error =3D
++		rwnx_send_msg(rwnx_hw, arp_offload_req, 1, MM_SET_ARPOFFLOAD_CFM, NULL);
++
++	return error;
++}
++#endif
++
++int rwnx_send_disable_agg_req(struct rwnx_hw *rwnx_hw, u8 agg_disable,
++			      u8 agg_disable_rx, u8 sta_idx)
++{
++	struct mm_set_agg_disable_req *req;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_AGG_DISABLE_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_AGG_DISABLE_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_agg_disable_req));
++
++	if (!req)
++		return -ENOMEM;
++
++	req->disable =3D agg_disable;
++	req->staidx =3D sta_idx;
++	req->disable_rx =3D agg_disable_rx;
++
++	/* Send the MM_SET_AGG_DISABLE_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_AGG_DISABLE_CFM, NULL);
++
++	return error;
++};
++
++int rwnx_send_coex_req(struct rwnx_hw *rwnx_hw, u8 disable_coexnull,
++		       u8 enable_nullcts)
++{
++	struct mm_set_coex_req *coex_req;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_COEX_REQ message */
++	coex_req =3D rwnx_msg_zalloc(MM_SET_COEX_REQ, TASK_MM, DRV_TASK_ID,
++				   sizeof(struct mm_set_coex_req));
++
++	if (!coex_req)
++		return -ENOMEM;
++
++	coex_req->bt_on =3D 1;
++	coex_req->disable_coexnull =3D disable_coexnull;
++	coex_req->enable_nullcts =3D enable_nullcts;
++	coex_req->enable_periodic_timer =3D 0;
++	coex_req->coex_timeslot_set =3D 0;
++
++	/* Send the MM_SET_COEX_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, coex_req, 1, MM_SET_COEX_CFM, NULL);
++
++	return error;
++};
++
++int rwnx_send_rf_config_req(struct rwnx_hw *rwnx_hw, u8 ofst, u8 sel,
++			    u8 *tbl, u16 len)
++{
++	struct mm_set_rf_config_req *rf_config_req;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_RF_CONFIG_REQ message */
++	rf_config_req =3D rwnx_msg_zalloc(MM_SET_RF_CONFIG_REQ, TASK_MM, DRV_TASK=
+_ID,
++					sizeof(struct mm_set_rf_config_req));
++
++	if (!rf_config_req)
++		return -ENOMEM;
++
++	rf_config_req->table_sel =3D sel;
++	rf_config_req->table_ofst =3D ofst;
++	rf_config_req->table_num =3D 16;
++	rf_config_req->deft_page =3D 0;
++
++	memcpy(rf_config_req->data, tbl, len);
++
++	/* Send the MM_SET_RF_CONFIG_REQ message to UMAC FW */
++	error =3D
++		rwnx_send_msg(rwnx_hw, rf_config_req, 1, MM_SET_RF_CONFIG_CFM, NULL);
++
++	return error;
++}
++
++int rwnx_send_rf_calib_req(struct rwnx_hw *rwnx_hw,
++			   struct mm_set_rf_calib_cfm *cfm)
++{
++	struct mm_set_rf_calib_req *rf_calib_req;
++	struct xtal_cap_conf xtal_cap =3D {
++		0,
++	};
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_P2P_NOA_REQ message */
++	rf_calib_req =3D rwnx_msg_zalloc(MM_SET_RF_CALIB_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_rf_calib_req));
++
++	if (!rf_calib_req)
++		return -ENOMEM;
++
++	aic_chip_set_rf_calib_cfg(rwnx_hw, rf_calib_req);
++
++	rf_calib_req->param_alpha =3D 0x0c34c008;
++	rf_calib_req->bt_calib_en =3D 0;
++	rf_calib_req->bt_calib_param =3D 0x264203;
++
++	get_userconfig_xtal_cap(&xtal_cap);
++
++	if (xtal_cap.enable) {
++		AICWFDBG(LOGDEBUG, "user xtal cap: %d, cap_fine: %d\n", xtal_cap.xtal_ca=
+p,
++			 xtal_cap.xtal_cap_fine);
++		rf_calib_req->xtal_cap =3D xtal_cap.xtal_cap;
++		rf_calib_req->xtal_cap_fine =3D xtal_cap.xtal_cap_fine;
++	} else {
++		rf_calib_req->xtal_cap =3D 0;
++		rf_calib_req->xtal_cap_fine =3D 0;
++	}
++
++	/* Send the MM_SET_RF_CALIB_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, rf_calib_req, 1, MM_SET_RF_CALIB_CFM, cf=
+m);
++
++	return error;
++};
++
++int rwnx_send_get_macaddr_req(struct rwnx_hw *rwnx_hw,
++			      struct mm_get_mac_addr_cfm *cfm)
++{
++	struct mm_get_mac_addr_req *get_macaddr_req;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_GET_MAC_ADDR_REQ message */
++	get_macaddr_req =3D rwnx_msg_zalloc(MM_GET_MAC_ADDR_REQ, TASK_MM, DRV_TAS=
+K_ID,
++					  sizeof(struct mm_get_mac_addr_req));
++
++	if (!get_macaddr_req)
++		return -ENOMEM;
++
++	get_macaddr_req->get =3D 1;
++
++	/* Send the MM_GET_MAC_ADDR_REQ  message to UMAC FW */
++	error =3D
++		rwnx_send_msg(rwnx_hw, get_macaddr_req, 1, MM_GET_MAC_ADDR_CFM, cfm);
++
++	return error;
++};
++
++int rwnx_send_get_sta_info_req(struct rwnx_hw *rwnx_hw, u8 sta_idx,
++			       struct mm_get_sta_info_cfm *cfm)
++{
++	struct mm_get_sta_info_req *get_info_req;
++	int error;
++
++	/* Build the MM_GET_STA_INFO_REQ message */
++	get_info_req =3D rwnx_msg_zalloc(MM_GET_STA_INFO_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_get_sta_info_req));
++
++	if (!get_info_req)
++		return -ENOMEM;
++
++	get_info_req->sta_idx =3D sta_idx;
++
++	/* Send the MM_GET_STA_INFO_REQ  message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, get_info_req, 1, MM_GET_STA_INFO_CFM, cf=
+m);
++
++	return error;
++};
++
++int rwnx_send_set_stack_start_req(struct rwnx_hw *rwnx_hw, u8 on,
++				  u8 efuse_valid, u8 set_vendor_info,
++				  u8 fwtrace_redir_en,
++				  struct mm_set_stack_start_cfm *cfm)
++{
++	struct mm_set_stack_start_req *req;
++	int error;
++
++	/* Build the MM_SET_STACK_START_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_STACK_START_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_stack_start_req));
++
++	if (!req)
++		return -ENOMEM;
++
++	req->is_stack_start =3D on;
++	req->efuse_valid =3D efuse_valid;
++	req->set_vendor_info =3D set_vendor_info;
++	req->fwtrace_redir =3D fwtrace_redir_en;
++	/* Send the MM_SET_STACK_START_REQ  message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_STACK_START_CFM, cfm);
++
++	return error;
++}
++
++int rwnx_send_get_temp_req(struct rwnx_hw *rwnx_hw,
++			   struct mm_set_vendor_swconfig_cfm *cfm)
++{
++	struct mm_set_vendor_swconfig_req *req;
++	int ret;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the TEMP_COMP_GET_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_VENDOR_SWCONFIG_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_vendor_swconfig_req));
++	if (!req) {
++		AICWFDBG(LOGINFO, "%s msg_alloc fail\n", __func__);
++		return -ENOMEM;
++	}
++	req->swconfig_id =3D TEMP_COMP_GET_REQ;
++
++	ret =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, cfm);
++	if (!ret) {
++		AICWFDBG(LOGDEBUG, "status=3D%d, temp=3D%d\n", cfm->temp_comp_get_cfm.st=
+atus,
++			 cfm->temp_comp_get_cfm.degree);
++	} else {
++		AICWFDBG(LOGINFO, "%s msg_fail\n", __func__);
++		return ret;
++	}
++#ifdef CONFIG_AIC8800_TEMP_CONTROL
++	// rwnx_hw->started_jiffies =3D jiffies;
++	rwnx_hw->temp =3D cfm->temp_comp_get_cfm.degree;
 +#endif
 +
 +	return ret;
 +}
 +
-+static struct recv_msdu *aicwf_rxframe_queue_init(struct list_head *q,
-+						  int qsize)
++int rwnx_send_get_temp_hwconfig_req(struct rwnx_hw *rwnx_hw,
++				    struct mm_set_vendor_hwconfig_cfm *cfm)
 +{
++	struct mm_get_chip_temp_req *req;
++	int ret;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++	/* Build the TEMP_COMP_HWCONFIG_GET_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_get_chip_temp_req));
++	if (!req) {
++		AICWFDBG(LOGINFO, "%s msg_alloc fail\n", __func__);
++		return -ENOMEM;
++	}
++	req->hwconfig_id =3D CHIP_TEMP_GET_REQ;
++
++	ret =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_HWCONFIG_CFM, cfm);
++	if (!ret) {
++		AICWFDBG(LOGDEBUG, "get_chip_temp degree=3D%d\n",
++			 cfm->chip_temp_cfm.degree);
++	} else {
++		AICWFDBG(LOGINFO, "%s msg_fail\n", __func__);
++		return ret;
++	}
++	return ret;
++}
++
++int rwnx_send_set_temp_comp_req(struct rwnx_hw *rwnx_hw,
++				struct mm_set_vendor_swconfig_cfm *cfm)
++{
++	struct mm_set_vendor_swconfig_req *req;
++	int ret;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++	/* Build the TEMP_COMP_SET_REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_VENDOR_SWCONFIG_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_vendor_swconfig_req));
++	if (!req) {
++		AICWFDBG(LOGERROR, "%s msg_alloc fail\n", __func__);
++		return -ENOMEM;
++	}
++	req->swconfig_id =3D TEMP_COMP_SET_REQ;
++	req->temp_comp_set_req.enable =3D 1;
++#ifdef CONFIG_AIC8800_TEMP_CONTROL
++	req->temp_comp_set_req.tmr_period_ms =3D TEMP_GET_INTERVAL;
++#else
++	req->temp_comp_set_req.tmr_period_ms =3D 15 * 1000;
++#endif
++
++	ret =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, cfm);
++	if (!ret) {
++		AICWFDBG(LOGINFO, "temp_comp status: %d\n", cfm->temp_comp_set_cfm.statu=
+s);
++	} else {
++		AICWFDBG(LOGINFO, "%s msg_fail\n", __func__);
++		return ret;
++	}
++	return ret;
++}
++
++int rwnx_send_vendor_hwconfig_req(struct rwnx_hw *rwnx_hw, u32 hwconfig_id=
+,
++				  s32 *param, s32 *param_out)
++{
++	struct mm_set_acs_txop_req *req0;
++	struct mm_set_channel_access_req *req1;
++	struct mm_set_mac_timescale_req *req2;
++	struct mm_set_cca_threshold_req *req3;
++	struct mm_set_bwmode_req *req4;
++	struct mm_set_ap_ps_level_req *req5 =3D NULL;
++	struct mm_set_customized_freq_req *req6;
++
++	int error =3D 0;
 +	int i;
-+	struct recv_msdu *req, *reqs;
 +
-+	reqs =3D vmalloc(qsize * sizeof(struct recv_msdu));
-+	if (!reqs)
-+		return NULL;
++	switch (hwconfig_id) {
++	case ACS_TXOP_REQ:
++		/* Build the ACS_TXOP_REQ message */
++		req0 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_acs_txop_req));
++		if (!req0)
++			return -ENOMEM;
++		req0->hwconfig_id =3D hwconfig_id;
++		req0->txop_be =3D param[0];
++		req0->txop_bk =3D param[1];
++		req0->txop_vi =3D param[2];
++		req0->txop_vo =3D param[3];
++		AICWFDBG(LOGDEBUG, "set_acs_txop_req: be: %x,bk: %x,vi: %x,vo: %x\n", re=
+q0->txop_be,
++			 req0->txop_bk, req0->txop_vi, req0->txop_vo);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req0, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		break;
 +
-+	req =3D reqs;
-+	for (i =3D 0; i < qsize; i++) {
-+		INIT_LIST_HEAD(&req->rxframe_list);
-+		list_add(&req->rxframe_list, q);
-+		req->len =3D 0;
-+		req++;
++	case CHANNEL_ACCESS_REQ:
++		/* Build the CHANNEL_ACCESS_REQ message */
++		req1 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_channel_access_req));
++		if (!req1)
++			return -ENOMEM;
++		req1->hwconfig_id =3D hwconfig_id;
++		req1->edca[0] =3D param[0];
++		req1->edca[1] =3D param[1];
++		req1->edca[2] =3D param[2];
++		req1->edca[3] =3D param[3];
++		req1->vif_idx =3D param[4];
++		req1->retry_cnt =3D param[5];
++		req1->rts_en =3D param[6];
++		req1->long_nav_en =3D param[7];
++		req1->cfe_en =3D param[8];
++		req1->rc_retry_cnt[0] =3D param[9];
++		req1->rc_retry_cnt[1] =3D param[10];
++		req1->rc_retry_cnt[2] =3D param[11];
++		req1->ccademod_th =3D param[12];
++		AICWFDBG(LOGDEBUG,
++			 "set_channel_access_req:edca[]=3D %x %x %x %x\nvif_idx: %x, retry_cnt:=
+ %x, rts_en: %x, long_nav_en: %x, cfe_en: %x, rc_retry_cnt: %x:%x:%x, ccade=
+mod_th =3D %d\n",
++			 req1->edca[0], req1->edca[1], req1->edca[2], req1->edca[3],
++			 req1->vif_idx, req1->retry_cnt, req1->rts_en, req1->long_nav_en,
++			 req1->cfe_en, req1->rc_retry_cnt[0], req1->rc_retry_cnt[1],
++			 req1->rc_retry_cnt[2], req1->ccademod_th);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req1, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		break;
++
++	case MAC_TIMESCALE_REQ:
++		/* Build the MAC_TIMESCALE_REQ message */
++		req2 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_mac_timescale_req));
++		if (!req2)
++			return -ENOMEM;
++		req2->hwconfig_id =3D hwconfig_id;
++		req2->sifs_a_time =3D param[0];
++		req2->sifs_b_time =3D param[1];
++		req2->slot_time =3D param[2];
++		req2->rx_startdelay_ofdm =3D param[3];
++		req2->rx_startdelay_long =3D param[4];
++		req2->rx_startdelay_short =3D param[5];
++		AICWFDBG(LOGDEBUG,
++			 "set_mac_timescale_req:sifsA_time: %x, sifsB_time: %x, slot_time: %x, =
+rx_startdelay ofdm:%x long %x short %x\n",
++			 req2->sifs_a_time, req2->sifs_b_time, req2->slot_time,
++			 req2->rx_startdelay_ofdm, req2->rx_startdelay_long,
++			 req2->rx_startdelay_short);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req2, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		break;
++
++	case CCA_THRESHOLD_REQ:
++		/* Build the CCA_THRESHOLD_REQ message */
++		req3 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_cca_threshold_req));
++		if (!req3)
++			return -ENOMEM;
++		req3->hwconfig_id =3D hwconfig_id;
++		req3->auto_cca_en =3D param[0];
++		req3->cca20p_rise_th =3D param[1];
++		req3->cca20s_rise_th =3D param[2];
++		req3->cca20p_fall_th =3D param[3];
++		req3->cca20s_fall_th =3D param[4];
++		AICWFDBG(LOGDEBUG,
++			 "cca_threshold_req: auto_cca_en:%d\ncca20p_rise_th =3D %d\ncca20s_rise=
+_th =3D %d\ncca20p_fall_th =3D %d\ncca20s_fall_th =3D %d\n",
++			 req3->auto_cca_en, req3->cca20p_rise_th, req3->cca20s_rise_th,
++			 req3->cca20p_fall_th, req3->cca20s_fall_th);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req3, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		break;
++	case BWMODE_REQ:
++		/* Build the SET_BWMODE_REQ message */
++		req4 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_bwmode_req));
++		if (!req4)
++			return -ENOMEM;
++		req4->hwconfig_id =3D hwconfig_id;
++		req4->bwmode =3D param[0];
++		AICWFDBG(LOGDEBUG, "bwmode :%d\n", req4->bwmode);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req4, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		break;
++	case CHIP_TEMP_GET_REQ:
++		aic_chip_get_temp(rwnx_hw, param_out);
++		break;
++	case AP_PS_LEVEL_SET_REQ:
++		/*
++		 * AP_PS_CLK_1 =3D 1,  // 3:7 -> active 3, doze 7
++		 * AP_PS_CLK_2,      // 5:5 -> active 5, doze 5
++		 * AP_PS_CLK_3,      // 7:3 -> active 7, doze 3
++		 * AP_PS_CLK_4,      // 8:2 -> active 8, doze 2
++		 * AP_PS_CLK_5,      // 9:1 -> active 9, doze 1
++		 */
++		/* Build the MM_SET_VENDOR_HWCONFIG_REQ message */
++		req5 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_ap_ps_level_req));
++		if (!req5)
++			return -ENOMEM;
++		req5->hwconfig_id =3D hwconfig_id;
++		req5->ap_ps_level =3D param[0];
++
++		/* Send the MM_GET_MAC_ADDR_REQ  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req5, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++		if (!error)
++			AICWFDBG(LOGDEBUG, "set ap_ps_level=3D%d\n", param[0]);
++		break;
++
++	case CUSTOMIZED_FREQ_REQ:
++		/* Build the CUSTOMIZED_FREQ_REQ message */
++		req6 =3D rwnx_msg_zalloc(MM_SET_VENDOR_HWCONFIG_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_set_customized_freq_req));
++		if (!req6)
++			return -ENOMEM;
++		req5->hwconfig_id =3D hwconfig_id;
++		for (i =3D 0; i < 4; i++) {
++			req6->raw_freq[i] =3D param[i];
++			req6->map_freq[i] =3D param[i + 4];
++		}
++		AICWFDBG(LOGDEBUG,
++			 "customized_freq_req: raw_freq[ %d %d %d %d ], map_freq[ %d %d %d %d]\=
+n",
++			 param[0], param[1], param[2], param[3], param[4], param[5],
++			 param[6], param[7]);
++		/* Send the MM_SET_VENDOR_HWCONFIG_CFM  message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req5, 1, MM_SET_VENDOR_HWCONFIG_CFM, NULL);
++
++		break;
++	default:
++		return -ENOMEM;
++	}
++	return error;
++}
++
++int rwnx_send_vendor_swconfig_req(struct rwnx_hw *rwnx_hw, u32 swconfig_id=
+,
++				  s32 *param_in, s32 *param_out)
++{
++	struct mm_set_vendor_swconfig_req *req;
++	struct mm_set_vendor_swconfig_cfm cfm =3D {
++		0,
++	};
++	int error;
++
++	req =3D rwnx_msg_zalloc(MM_SET_VENDOR_SWCONFIG_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_vendor_swconfig_req));
++	if (!req)
++		return -ENOMEM;
++	req->swconfig_id =3D swconfig_id;
++
++	switch (swconfig_id) {
++	case BCN_CFG_REQ:
++		/* Build the BCN_CFG_REQ message */
++		req->bcn_cfg_req.tim_bcmc_ignored_enable =3D (bool)param_in[0];
++		AICWFDBG(LOGDEBUG, "bcn_cfg_req: tim_bcmc_ignd=3D%d\n",
++			 req->bcn_cfg_req.tim_bcmc_ignored_enable);
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (s32)cfm.bcn_cfg_cfm.tim_bcmc_ignored_status;
++			AICWFDBG(LOGDEBUG, "status=3D%d\n", cfm.bcn_cfg_cfm.tim_bcmc_ignored_st=
+atus);
++		}
++		break;
++
++	case TEMP_COMP_SET_REQ:
++		/* Build the TEMP_COMP_SET_REQ message */
++		req->temp_comp_set_req.enable =3D (u8)param_in[0];
++		req->temp_comp_set_req.tmr_period_ms =3D (u32)param_in[1];
++		AICWFDBG(LOGDEBUG, "temp_comp_set_req: en=3D%d, tmr=3D%x\n",
++			 req->temp_comp_set_req.enable,
++			 req->temp_comp_set_req.tmr_period_ms);
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (s32)cfm.temp_comp_set_cfm.status;
++			AICWFDBG(LOGDEBUG, "status=3D%d\n", cfm.temp_comp_set_cfm.status);
++		}
++		break;
++
++	case TEMP_COMP_GET_REQ:
++		AICWFDBG(LOGDEBUG, "temp_comp_get_req\n");
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (s32)cfm.temp_comp_get_cfm.status;
++			param_out[1] =3D (s32)cfm.temp_comp_get_cfm.degree;
++			AICWFDBG(LOGDEBUG, "status=3D%d, degree=3D%d\n", cfm.temp_comp_get_cfm.=
+status,
++				 cfm.temp_comp_get_cfm.degree);
++		}
++		break;
++
++	case EXT_FLAGS_SET_REQ:
++		/* Build the EXT_FLAGS_SET_REQ message */
++		req->ext_flags_set_req.user_flags =3D (u32)param_in[0];
++		AICWFDBG(LOGDEBUG, "ext_flags_set_req: flags=3D%x\n",
++			 req->ext_flags_set_req.user_flags);
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (u32)cfm.ext_flags_set_cfm.user_flags;
++			AICWFDBG(LOGDEBUG, "cfm flags=3D%x\n", cfm.ext_flags_set_cfm.user_flags=
+);
++		}
++		break;
++
++	case EXT_FLAGS_GET_REQ:
++		/* Build the EXT_FLAGS_GET_REQ message */
++		AICWFDBG(LOGDEBUG, "ext_flags_get_req\n");
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (u32)cfm.ext_flags_get_cfm.user_flags;
++			AICWFDBG(LOGDEBUG, "cfm flags=3D%x\n", cfm.ext_flags_get_cfm.user_flags=
+);
++		}
++		break;
++
++	case EXT_FLAGS_MASK_SET_REQ:
++		/* Build the EXT_FLAGS_MASK_SET_REQ message */
++		req->ext_flags_mask_set_req.user_flags_mask =3D (u32)param_in[0];
++		req->ext_flags_mask_set_req.user_flags_val =3D (u32)param_in[1];
++		AICWFDBG(LOGDEBUG, "ext_flags_mask_set_req: flags mask=3D0x%x, val=3D0x%=
+x\n",
++			 req->ext_flags_mask_set_req.user_flags_mask,
++			 req->ext_flags_mask_set_req.user_flags_val);
++		/* Send the MM_SET_VENDOR_SWCONFIG_REQ message to UMAC FW */
++		error =3D
++			rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, &cfm);
++		if (!error) {
++			param_out[0] =3D (u32)cfm.ext_flags_mask_set_cfm.user_flags;
++			AICWFDBG(LOGDEBUG, "cfm flags=3D%x\n", cfm.ext_flags_mask_set_cfm.user_=
+flags);
++		}
++		break;
++
++	default:
++		error =3D -ENOMEM;
++		break;
 +	}
 +
-+	return reqs;
++	return error;
 +}
 +
-+struct aicwf_rx_priv *aicwf_rx_init(void *arg)
++int rwnx_send_mask_set_ext_flags_req(struct rwnx_hw *rwnx_hw,
++				     u32 flags_mask, u32 flags_val,
++				     struct mm_set_vendor_swconfig_cfm *cfm)
 +{
-+	struct aicwf_rx_priv *rx_priv;
++	struct mm_set_vendor_swconfig_req *req;
++	int ret;
 +
-+	rx_priv =3D kzalloc_obj(*rx_priv, GFP_KERNEL);
-+	if (!rx_priv)
-+		return NULL;
-+
-+	rx_priv->sdiodev =3D (struct aic_sdio_dev *)arg;
-+	aicwf_frame_queue_init(&rx_priv->rxq, 1, MAX_RXQLEN);
-+	spin_lock_init(&rx_priv->rxqlock);
-+	atomic_set(&rx_priv->rx_cnt, 0);
-+
-+	INIT_LIST_HEAD(&rx_priv->rxframes_freequeue);
-+	spin_lock_init(&rx_priv->freeq_lock);
-+	rx_priv->recv_frames =3D aicwf_rxframe_queue_init(&rx_priv->rxframes_free=
-queue,
-+							MAX_REORD_RXFRAME);
-+	if (!rx_priv->recv_frames) {
-+		txrx_err("no enough buffer for free recv frame queue!\n");
-+		kfree(rx_priv);
-+		return NULL;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++	/* Build the REQ message */
++	req =3D rwnx_msg_zalloc(MM_SET_VENDOR_SWCONFIG_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_set_vendor_swconfig_req));
++	if (!req) {
++		AICWFDBG(LOGERROR, "%s msg_alloc fail\n", __func__);
++		return -ENOMEM;
 +	}
-+	spin_lock_init(&rx_priv->stas_reord_lock);
-+	INIT_LIST_HEAD(&rx_priv->stas_reord_list);
++	req->swconfig_id =3D EXT_FLAGS_MASK_SET_REQ;
++	req->ext_flags_mask_set_req.user_flags_mask =3D (u32)flags_mask;
++	req->ext_flags_mask_set_req.user_flags_val =3D (u32)flags_val;
 +
-+	return rx_priv;
++	ret =3D rwnx_send_msg(rwnx_hw, req, 1, MM_SET_VENDOR_SWCONFIG_CFM, cfm);
++	if (!ret) {
++		AICWFDBG(LOGINFO, "curr ext_flags=3D%x\n",
++			 cfm->ext_flags_mask_set_cfm.user_flags);
++	} else {
++		AICWFDBG(LOGERROR, "%s send_msg_fail\n", __func__);
++		return ret;
++	}
++	return ret;
 +}
 +
-+static void aicwf_recvframe_queue_deinit(struct list_head *q)
++int rwnx_send_get_fw_version_req(struct rwnx_hw *rwnx_hw,
++				 struct mm_get_fw_version_cfm *cfm)
 +{
-+	struct recv_msdu *req, *next;
++	void *req;
++	int error;
 +
-+	list_for_each_entry_safe(req, next, q, rxframe_list) {
-+		list_del_init(&req->rxframe_list);
++	/* Build the MM_GET_FW_VERSION_REQ message */
++	req =3D rwnx_msg_zalloc(MM_GET_FW_VERSION_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(u8));
++
++	if (!req)
++		return -ENOMEM;
++
++	/* Send the MM_GET_FW_VERSION_REQ  message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, req, 1, MM_GET_FW_VERSION_CFM, cfm);
++
++	return error;
++}
++
++int rwnx_send_txpwr_lvl_req(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_set_txpwr_lvl_req *txpwr_lvl_req;
++	struct txpwr_lvl_conf_v2 txpwr_lvl_v2_tmp;
++	struct txpwr_lvl_conf_v2 *txpwr_lvl_v2;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_LVL_REQ message */
++	txpwr_lvl_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_IDX_LVL_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_lvl_req));
++
++	if (!txpwr_lvl_req)
++		return -ENOMEM;
++
++	txpwr_lvl_v2 =3D &txpwr_lvl_v2_tmp;
++
++	get_userconfig_txpwr_lvl_v2_in_fdrv(txpwr_lvl_v2);
++
++	if (txpwr_lvl_v2->enable =3D=3D 0) {
++		rwnx_msg_free(rwnx_hw, txpwr_lvl_req);
++		return 0;
++	}
++
++	AICWFDBG(LOGINFO, "%s:enable:%d\r\n", __func__, txpwr_lvl_v2->enable);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_1m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[0]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_2m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[1]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_5m5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[2]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_11m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[3]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_6m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[4]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_9m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[5]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_12m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[6]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_18m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[7]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_24m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[8]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_36m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[9]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_48m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[10]);
++	AICWFDBG(LOGINFO, "%s:lvl_11b_11ag_54m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[11]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs0_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[0]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs1_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[1]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs2_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[2]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs3_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[3]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs4_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[4]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[5]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs6_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[6]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs7_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[7]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs8_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[8]);
++	AICWFDBG(LOGINFO, "%s:lvl_11n_11ac_mcs9_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[9]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs0_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[0]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs1_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[1]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs2_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[2]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs3_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[3]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs4_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[4]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[5]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs6_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[6]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs7_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[7]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs8_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[8]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs9_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[9]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs10_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[10]);
++	AICWFDBG(LOGINFO, "%s:lvl_11ax_mcs11_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[11]);
++
++	if (rwnx_hw->testmode =3D=3D 0 && chip_sub_id =3D=3D 0) {
++		txpwr_lvl_req->txpwr_lvl.enable =3D txpwr_lvl_v2->enable;
++		txpwr_lvl_req->txpwr_lvl.dsss =3D
++			txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[3]; // 11M
++		txpwr_lvl_req->txpwr_lvl.ofdmlowrate_2g4 =3D
++			txpwr_lvl_v2->pwrlvl_11ax_2g4[4]; // MCS4
++		txpwr_lvl_req->txpwr_lvl.ofdm64qam_2g4 =3D
++			txpwr_lvl_v2->pwrlvl_11ax_2g4[7]; // MCS7
++		txpwr_lvl_req->txpwr_lvl.ofdm256qam_2g4 =3D
++			txpwr_lvl_v2->pwrlvl_11ax_2g4[9]; // MCS9
++		txpwr_lvl_req->txpwr_lvl.ofdm1024qam_2g4 =3D
++			txpwr_lvl_v2->pwrlvl_11ax_2g4[11];        // MCS11
++		txpwr_lvl_req->txpwr_lvl.ofdmlowrate_5g =3D 13; // unused
++		txpwr_lvl_req->txpwr_lvl.ofdm64qam_5g =3D 13;   // unused
++		txpwr_lvl_req->txpwr_lvl.ofdm256qam_5g =3D 13;  // unused
++		txpwr_lvl_req->txpwr_lvl.ofdm1024qam_5g =3D 13; // unused
++	} else {
++		txpwr_lvl_req->txpwr_lvl_v2 =3D *txpwr_lvl_v2;
++	}
++
++	/* Send the MM_SET_TXPWR_LVL_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, txpwr_lvl_req, 1,
++			      MM_SET_TXPWR_IDX_LVL_CFM, NULL);
++
++	return error;
++}
++
++int rwnx_send_txpwr_lvl_v3_req(struct rwnx_hw *rwnx_hw, int index_reg)
++{
++	struct mm_set_txpwr_lvl_req *txpwr_lvl_req;
++	struct txpwr_lvl_conf_v3 txpwr_lvl_v3_tmp;
++	struct txpwr_lvl_conf_v3 *txpwr_lvl_v3;
++	struct txpwr_loss_conf txpwr_loss_tmp;
++	struct txpwr_loss_conf *txpwr_loss;
++	int error;
++	int i;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_LVL_REQ message */
++	txpwr_lvl_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_IDX_LVL_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_lvl_req));
++
++	if (!txpwr_lvl_req)
++		return -ENOMEM;
++
++	txpwr_lvl_v3 =3D &txpwr_lvl_v3_tmp;
++	txpwr_loss =3D &txpwr_loss_tmp;
++	txpwr_loss->loss_enable_2g4 =3D 0;
++	txpwr_loss->loss_enable_5g =3D 0;
++
++	//get_userconfig_txpwr_lvl_v3_in_fdrv(txpwr_lvl_v3);
++	get_userconfig_txpwr_lvl_group_in_fdrv(txpwr_lvl_v3, index_reg);
++	get_userconfig_txpwr_loss(txpwr_loss);
++
++	if (txpwr_loss->loss_enable_2g4 =3D=3D 1) {
++		AICWFDBG(LOGINFO, "%s:loss_value_2g4: %d\r\n", __func__,
++			 txpwr_loss->loss_value_2g4);
++
++		for (i =3D 0; i <=3D 11; i++)
++			txpwr_lvl_v3->pwrlvl_11b_11ag_2g4[i] -=3D txpwr_loss->loss_value_2g4;
++		for (i =3D 0; i <=3D 9; i++)
++			txpwr_lvl_v3->pwrlvl_11n_11ac_2g4[i] -=3D txpwr_loss->loss_value_2g4;
++		for (i =3D 0; i <=3D 11; i++)
++			txpwr_lvl_v3->pwrlvl_11ax_2g4[i] -=3D txpwr_loss->loss_value_2g4;
++	}
++
++	if (txpwr_loss->loss_enable_5g =3D=3D 1) {
++		AICWFDBG(LOGINFO, "%s:loss_value_5g: %d\r\n", __func__,
++			 txpwr_loss->loss_value_5g);
++
++		for (i =3D 0; i <=3D 11; i++)
++			txpwr_lvl_v3->pwrlvl_11a_5g[i] -=3D txpwr_loss->loss_value_5g;
++		for (i =3D 0; i <=3D 9; i++)
++			txpwr_lvl_v3->pwrlvl_11n_11ac_5g[i] -=3D txpwr_loss->loss_value_5g;
++		for (i =3D 0; i <=3D 11; i++)
++			txpwr_lvl_v3->pwrlvl_11ax_5g[i] -=3D txpwr_loss->loss_value_5g;
++	}
++
++	if (txpwr_lvl_v3->enable =3D=3D 0) {
++		rwnx_msg_free(rwnx_hw, txpwr_lvl_req);
++		return 0;
++	}
++
++	AICWFDBG(LOGDEBUG, "%s: dump\n", __func__);
++	AICWFDBG(LOGDEBUG, "txpwr_lvl_v3->enable: %d\r\n", txpwr_lvl_v3->enable);
++	AICWFDBG(LOGDEBUG, "lvl_11b_11ag_1m_2g4:%d\r\n",
++		 txpwr_lvl_v3->pwrlvl_11b_11ag_2g4[0]);
++
++	txpwr_lvl_req->txpwr_lvl_v3 =3D *txpwr_lvl_v3;
++
++	/* Send the MM_SET_TXPWR_LVL_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, txpwr_lvl_req, 1,
++			      MM_SET_TXPWR_IDX_LVL_CFM, NULL);
++
++	return error;
++}
++
++int rwnx_send_txpwr_lvl_adj_req(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_set_txpwr_lvl_adj_req *txpwr_lvl_adj_req;
++	struct txpwr_lvl_adj_conf txpwr_lvl_adj_tmp;
++	struct txpwr_lvl_adj_conf *txpwr_lvl_adj;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_LVL_REQ message */
++	txpwr_lvl_adj_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_LVL_ADJ_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_lvl_adj_req));
++
++	if (!txpwr_lvl_adj_req)
++		return -ENOMEM;
++
++	txpwr_lvl_adj =3D &txpwr_lvl_adj_tmp;
++
++	get_userconfig_txpwr_lvl_adj_in_fdrv(txpwr_lvl_adj);
++
++	if (txpwr_lvl_adj->enable =3D=3D 0) {
++		rwnx_msg_free(rwnx_hw, txpwr_lvl_adj_req);
++		return 0;
++	}
++
++	AICWFDBG(LOGINFO, "%s:enable:%d\r\n", __func__, txpwr_lvl_adj->enable);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_2g4_chan_1_4:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_2g4[0]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_2g4_chan_5_9:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_2g4[1]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_2g4_chan_10_13:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_2g4[2]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_42:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[0]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_58:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[1]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_106:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[2]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_122:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[3]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_138:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[4]);
++	AICWFDBG(LOGINFO, "%s:lvl_adj_5g_chan_155:%d\r\n", __func__,
++		 txpwr_lvl_adj->pwrlvl_adj_tbl_5g[5]);
++
++	txpwr_lvl_adj_req->txpwr_lvl_adj =3D *txpwr_lvl_adj;
++
++	/* Send the MM_SET_TXPWR_LVL_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, txpwr_lvl_adj_req, 1,
++			      MM_SET_TXPWR_LVL_ADJ_CFM, NULL);
++
++	return error;
++}
++
++int rwnx_send_txpwr_idx_req(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_set_txpwr_idx_req *txpwr_idx_req;
++	struct txpwr_idx_conf *txpwr_idx;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_IDX_LVL_REQ message */
++	txpwr_idx_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_IDX_LVL_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_idx_req));
++
++	if (!txpwr_idx_req)
++		return -ENOMEM;
++
++	txpwr_idx =3D &txpwr_idx_req->txpwr_idx;
++	txpwr_idx->enable =3D 1;
++	txpwr_idx->dsss =3D 9;
++	txpwr_idx->ofdmlowrate_2g4 =3D 8;
++	txpwr_idx->ofdm64qam_2g4 =3D 8;
++	txpwr_idx->ofdm256qam_2g4 =3D 8;
++	txpwr_idx->ofdm1024qam_2g4 =3D 8;
++	txpwr_idx->ofdmlowrate_5g =3D 11;
++	txpwr_idx->ofdm64qam_5g =3D 10;
++	txpwr_idx->ofdm256qam_5g =3D 9;
++	txpwr_idx->ofdm1024qam_5g =3D 9;
++
++	get_userconfig_txpwr_idx(txpwr_idx);
++
++	if (txpwr_idx->enable =3D=3D 0) {
++		rwnx_msg_free(rwnx_hw, txpwr_idx_req);
++		return 0;
++	}
++	/* Send the MM_SET_TXPWR_IDX_LVL_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, txpwr_idx_req, 1,
++			      MM_SET_TXPWR_IDX_LVL_CFM, NULL);
++
++	return error;
++};
++
++int rwnx_send_txpwr_ofst_req(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_set_txpwr_ofst_req *txpwr_ofst_req;
++	struct txpwr_ofst_conf *txpwr_ofst;
++	int error;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_OFST_REQ message */
++	txpwr_ofst_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_OFST_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_ofst_req));
++
++	if (!txpwr_ofst_req)
++		return -ENOMEM;
++
++	txpwr_ofst =3D &txpwr_ofst_req->txpwr_ofst;
++	txpwr_ofst->enable =3D 1;
++	txpwr_ofst->chan_1_4 =3D 0;
++	txpwr_ofst->chan_5_9 =3D 0;
++	txpwr_ofst->chan_10_13 =3D 0;
++	txpwr_ofst->chan_36_64 =3D 0;
++	txpwr_ofst->chan_100_120 =3D 0;
++	txpwr_ofst->chan_122_140 =3D 0;
++	txpwr_ofst->chan_142_165 =3D 0;
++
++	aic_chip_get_userconfig_txpwr_ofst(rwnx_hw, txpwr_ofst);
++
++	if (txpwr_ofst->enable =3D=3D 0) {
++		rwnx_msg_free(rwnx_hw, txpwr_ofst_req);
++		return 0;
++	}
++	/* Send the MM_SET_TXPWR_OFST_REQ message to UMAC FW */
++	error =3D rwnx_send_msg(rwnx_hw, txpwr_ofst_req, 1, MM_SET_TXPWR_OFST_CFM=
+,
++			      NULL);
++
++	return error;
++};
++
++int rwnx_send_txpwr_ofst2x_req(struct rwnx_hw *rwnx_hw)
++{
++	struct mm_set_txpwr_ofst_req *txpwr_ofst_req;
++	struct txpwr_ofst2x_conf *txpwr_ofst2x;
++	int error =3D 0;
++	int type, ch_grp;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_SET_TXPWR_OFST_REQ message */
++	txpwr_ofst_req =3D
++		rwnx_msg_zalloc(MM_SET_TXPWR_OFST_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_set_txpwr_ofst_req));
++
++	if (!txpwr_ofst_req)
++		return -ENOMEM;
++
++	txpwr_ofst2x =3D &txpwr_ofst_req->txpwr_ofst2x;
++	txpwr_ofst2x->enable =3D 0;
++	for (type =3D 0; type < 3; type++) {
++		for (ch_grp =3D 0; ch_grp < 6; ch_grp++) {
++			if (ch_grp < 3)
++				txpwr_ofst2x->pwrofst2x_tbl_2g4[type][ch_grp] =3D 0;
++			txpwr_ofst2x->pwrofst2x_tbl_5g[type][ch_grp] =3D 0;
++		}
++	}
++
++	aic_chip_get_userconfig_txpwr_ofst2x(rwnx_hw, txpwr_ofst2x);
++
++	if (txpwr_ofst2x->enable) {
++		AICWFDBG(LOGINFO, "%s:enable:%d\r\n", __func__, txpwr_ofst2x->enable);
++		AICWFDBG(LOGDEBUG,
++			 "pwrofst2x 2.4g: [0]:11b, [1]:ofdm_highrate, [2]:ofdm_lowrate\n  chan=
+=3D\t1-4\t5-9\t10-13");
++		for (type =3D 0; type < 3; type++) {
++			AICWFDBG(LOGDEBUG, "\n  [%d] =3D", type);
++			for (ch_grp =3D 0; ch_grp < 3; ch_grp++) {
++				AICWFDBG(LOGDEBUG, "\t%d",
++					 txpwr_ofst2x->pwrofst2x_tbl_2g4[type][ch_grp]);
++			}
++		}
++		AICWFDBG(LOGDEBUG,
++			 "\npwrofst2x 5g: [0]:ofdm_lowrate, [1]:ofdm_highrate, [2]:ofdm_midrate=
+\n  chan=3D\t36-50\t51-64\t98-114\t115-130\t131-146\t147-166");
++		for (type =3D 0; type < 3; type++) {
++			AICWFDBG(LOGDEBUG, "\n  [%d] =3D", type);
++			for (ch_grp =3D 0; ch_grp < 6; ch_grp++)
++				AICWFDBG(LOGDEBUG, "\t%d",
++					 txpwr_ofst2x->pwrofst2x_tbl_5g[type][ch_grp]);
++		}
++		AICWFDBG(LOGDEBUG, "\n");
++
++		/* Send the MM_SET_TXPWR_OFST_REQ message to UMAC FW */
++		error =3D rwnx_send_msg(rwnx_hw, txpwr_ofst_req, 1, MM_SET_TXPWR_OFST_CF=
+M,
++				      NULL);
++	} else {
++		AICWFDBG(LOGDEBUG, "%s:Do not use txpwr_ofst2x\r\n", __func__);
++		rwnx_msg_free(rwnx_hw, txpwr_ofst_req);
++	}
++
++	return error;
++}
++
++/*************************************************************************=
+*****
++ *    Control messages handling functions (FULLMAC only)
++ *************************************************************************=
+****/
++#ifdef CONFIG_RWNX_FULLMAC
++int rwnx_send_me_config_req(struct rwnx_hw *rwnx_hw)
++{
++	struct me_config_req *req;
++	struct wiphy *wiphy =3D rwnx_hw->wiphy;
++	struct ieee80211_supported_band *band_2ghz =3D
++		wiphy->bands[NL80211_BAND_2GHZ];
++	struct ieee80211_sta_ht_cap *ht_cap;
++	struct ieee80211_sta_vht_cap *vht_cap;
++	struct ieee80211_sta_he_cap const *he_cap =3D NULL;
++
++	u8 *ht_mcs;
++	int i;
++
++	if (rwnx_hw->chip_ops->use_80_bandwidth)
++		rwnx_hw->mod_params->use_80 =3D true;
++
++	if (rwnx_hw->band_5g_support) {
++		ht_cap =3D &wiphy->bands[NL80211_BAND_5GHZ]->ht_cap;
++		vht_cap =3D &wiphy->bands[NL80211_BAND_5GHZ]->vht_cap;
++	} else {
++		ht_cap =3D &wiphy->bands[NL80211_BAND_2GHZ]->ht_cap;
++		vht_cap =3D &wiphy->bands[NL80211_BAND_2GHZ]->vht_cap;
++	}
++
++	ht_mcs =3D (u8 *)&ht_cap->mcs;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_CONFIG_REQ message */
++	req =3D rwnx_msg_zalloc(ME_CONFIG_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_config_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_CONFIG_REQ message */
++	req->ht_supp =3D ht_cap->ht_supported;
++	req->vht_supp =3D vht_cap->vht_supported;
++	req->ht_cap.ht_capa_info =3D
++		cpu_to_le16(ht_cap->cap | IEEE80211_HT_CAP_LDPC_CODING);
++	req->ht_cap.a_mpdu_param =3D
++		ht_cap->ampdu_factor |
++		(ht_cap->ampdu_density << IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT);
++	for (i =3D 0; i < sizeof(ht_cap->mcs); i++)
++		req->ht_cap.mcs_rate[i] =3D ht_mcs[i];
++	req->ht_cap.ht_extended_capa =3D 0;
++	req->ht_cap.tx_beamforming_capa =3D 0;
++	req->ht_cap.asel_capa =3D 0;
++
++	if (req->vht_supp) {
++		req->vht_cap.vht_capa_info =3D cpu_to_le32(vht_cap->cap);
++		req->vht_cap.rx_highest =3D vht_cap->vht_mcs.rx_highest;
++		req->vht_cap.rx_mcs_map =3D vht_cap->vht_mcs.rx_mcs_map;
++		req->vht_cap.tx_highest =3D vht_cap->vht_mcs.tx_highest;
++		req->vht_cap.tx_mcs_map =3D vht_cap->vht_mcs.tx_mcs_map;
++	}
++
++	he_cap =3D ieee80211_get_he_iftype_cap(band_2ghz, NL80211_IFTYPE_STATION)=
+;
++	if (he_cap) {
++		req->he_supp =3D he_cap->has_he;
++		for (i =3D 0; i < ARRAY_SIZE(he_cap->he_cap_elem.mac_cap_info); i++)
++			req->he_cap.mac_cap_info[i] =3D he_cap->he_cap_elem.mac_cap_info[i];
++
++		for (i =3D 0; i < ARRAY_SIZE(he_cap->he_cap_elem.phy_cap_info); i++)
++			req->he_cap.phy_cap_info[i] =3D he_cap->he_cap_elem.phy_cap_info[i];
++
++		req->he_cap.mcs_supp.rx_mcs_80 =3D he_cap->he_mcs_nss_supp.rx_mcs_80;
++		req->he_cap.mcs_supp.tx_mcs_80 =3D he_cap->he_mcs_nss_supp.tx_mcs_80;
++		req->he_cap.mcs_supp.rx_mcs_160 =3D he_cap->he_mcs_nss_supp.rx_mcs_160;
++		req->he_cap.mcs_supp.tx_mcs_160 =3D he_cap->he_mcs_nss_supp.tx_mcs_160;
++		req->he_cap.mcs_supp.rx_mcs_80p80 =3D
++			he_cap->he_mcs_nss_supp.rx_mcs_80p80;
++		req->he_cap.mcs_supp.tx_mcs_80p80 =3D
++			he_cap->he_mcs_nss_supp.tx_mcs_80p80;
++		for (i =3D 0; i < MAC_HE_PPE_THRES_MAX_LEN; i++)
++			req->he_cap.ppe_thres[i] =3D he_cap->ppe_thres[i];
++
++		req->he_ul_on =3D rwnx_hw->mod_params->he_ul_on;
++	}
++	req->ps_on =3D rwnx_hw->mod_params->ps_on;
++	req->dpsm =3D rwnx_hw->mod_params->dpsm;
++	req->tx_lft =3D rwnx_hw->mod_params->tx_lft;
++	req->ant_div_on =3D rwnx_hw->mod_params->ant_div;
++	if (rwnx_hw->mod_params->use_80)
++		req->phy_bw_max =3D PHY_CHNL_BW_80;
++	else if (rwnx_hw->mod_params->use_2040)
++		req->phy_bw_max =3D PHY_CHNL_BW_40;
++	else
++		req->phy_bw_max =3D PHY_CHNL_BW_20;
++
++	wiphy_info(wiphy, "AICWF HT supp %d, VHT supp %d, HE supp %d\n", req->ht_=
+supp,
++		   req->vht_supp, req->he_supp);
++	/* Send the ME_CONFIG_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_CONFIG_CFM, NULL);
++}
++
++int rwnx_send_me_chan_config_req(struct rwnx_hw *rwnx_hw)
++{
++	struct me_chan_config_req *req;
++	struct wiphy *wiphy =3D rwnx_hw->wiphy;
++	int i;
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++	u8 enable =3D 0;
++	s8 max_pwr;
++	struct txpwr_loss_conf txpwr_loss_tmp;
++	struct txpwr_loss_conf *txpwr_loss;
++#endif
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_CHAN_CONFIG_REQ message */
++	req =3D rwnx_msg_zalloc(ME_CHAN_CONFIG_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_chan_config_req));
++	if (!req)
++		return -ENOMEM;
++
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++	txpwr_loss =3D &txpwr_loss_tmp;
++	get_userconfig_txpwr_loss(txpwr_loss);
++
++	if (txpwr_loss->loss_enable_2g4 =3D=3D 1)
++		AICWFDBG(LOGINFO, "%s:loss_value_2g4: %d\r\n", __func__,
++			 txpwr_loss->loss_value_2g4);
++	if (txpwr_loss->loss_enable_5g =3D=3D 1)
++		AICWFDBG(LOGINFO, "%s:loss_value_5g: %d\r\n", __func__,
++			 txpwr_loss->loss_value_5g);
++#endif
++
++	req->chan2G4_cnt =3D 0;
++	if (wiphy->bands[NL80211_BAND_2GHZ]) {
++		struct ieee80211_supported_band *b =3D wiphy->bands[NL80211_BAND_2GHZ];
++
++		for (i =3D 0; i < b->n_channels; i++) {
++			req->chan2G4[req->chan2G4_cnt].flags =3D 0;
++
++			if (b->channels[i].flags & IEEE80211_CHAN_DISABLED)
++				req->chan2G4[req->chan2G4_cnt].flags |=3D CHAN_DISABLED;
++			req->chan2G4[req->chan2G4_cnt].flags |=3D
++				get_chan_flags(b->channels[i].flags);
++			req->chan2G4[req->chan2G4_cnt].band =3D NL80211_BAND_2GHZ;
++			req->chan2G4[req->chan2G4_cnt].freq =3D b->channels[i].center_freq;
++			req->chan2G4[req->chan2G4_cnt].tx_power =3D
++				chan_to_fw_pwr(b->channels[i].max_power);
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++			max_pwr =3D get_powerlimit_by_freq(PHY_BAND_2G4,
++							 req->chan2G4[req->chan2G4_cnt].freq,
++							 &enable);
++			if (txpwr_loss->loss_enable_2g4 =3D=3D 1)
++				max_pwr -=3D txpwr_loss->loss_value_2g4;
++			if (enable) {
++				if (req->chan2G4[req->chan2G4_cnt].tx_power > max_pwr)
++					req->chan2G4[req->chan2G4_cnt].tx_power =3D max_pwr;
++			}
++#endif
++			req->chan2G4_cnt++;
++			if (req->chan2G4_cnt =3D=3D MAC_DOMAINCHANNEL_24G_MAX)
++				break;
++		}
++	}
++
++	req->chan5G_cnt =3D 0;
++	if (wiphy->bands[NL80211_BAND_5GHZ]) {
++		struct ieee80211_supported_band *b =3D wiphy->bands[NL80211_BAND_5GHZ];
++
++		for (i =3D 0; i < b->n_channels; i++) {
++			req->chan5G[req->chan5G_cnt].flags =3D 0;
++			if (b->channels[i].flags & IEEE80211_CHAN_DISABLED)
++				req->chan5G[req->chan5G_cnt].flags |=3D CHAN_DISABLED;
++			req->chan5G[req->chan5G_cnt].flags |=3D
++				get_chan_flags(b->channels[i].flags);
++			req->chan5G[req->chan5G_cnt].band =3D NL80211_BAND_5GHZ;
++			req->chan5G[req->chan5G_cnt].freq =3D b->channels[i].center_freq;
++			req->chan5G[req->chan5G_cnt].tx_power =3D
++				chan_to_fw_pwr(b->channels[i].max_power);
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++			max_pwr =3D get_powerlimit_by_freq(PHY_BAND_5G,
++							 req->chan5G[req->chan5G_cnt].freq,
++							 &enable);
++			if (txpwr_loss->loss_enable_5g =3D=3D 1)
++				max_pwr -=3D txpwr_loss->loss_value_5g;
++			if (enable) {
++				if (req->chan5G[req->chan5G_cnt].tx_power > max_pwr)
++					req->chan5G[req->chan5G_cnt].tx_power =3D max_pwr;
++			}
++#endif
++			req->chan5G_cnt++;
++			if (req->chan5G_cnt =3D=3D MAC_DOMAINCHANNEL_5G_MAX)
++				break;
++		}
++	}
++
++	/* Send the ME_CHAN_CONFIG_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_CHAN_CONFIG_CFM, NULL);
++}
++
++int rwnx_send_me_set_control_port_req(struct rwnx_hw *rwnx_hw, bool opened=
+,
++				      u8 sta_idx)
++{
++	struct me_set_control_port_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_SET_CONTROL_PORT_REQ message */
++	req =3D rwnx_msg_zalloc(ME_SET_CONTROL_PORT_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_set_control_port_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_SET_CONTROL_PORT_REQ message */
++	req->sta_idx =3D sta_idx;
++	req->control_port_open =3D opened;
++
++	/* Send the ME_SET_CONTROL_PORT_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_SET_CONTROL_PORT_CFM, NULL);
++}
++
++int rwnx_send_me_sta_add(struct rwnx_hw *rwnx_hw,
++			 struct station_parameters *params, const u8 *mac,
++			 u8 inst_nbr, struct me_sta_add_cfm *cfm)
++{
++	struct me_sta_add_req *req;
++	struct link_station_parameters *link_sta_params =3D &params->link_sta_par=
+ams;
++	struct rwnx_vif *rwnx_vif =3D rwnx_hw->vif_table[inst_nbr];
++
++	u8 *ht_mcs =3D (u8 *)&link_sta_params->ht_capa->mcs;
++
++	int i;
++
++	/* Build the MM_STA_ADD_REQ message */
++	req =3D rwnx_msg_zalloc(ME_STA_ADD_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_sta_add_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_STA_ADD_REQ message */
++	memcpy(&req->mac_addr.array[0], mac, ETH_ALEN);
++
++	req->rate_set.length =3D link_sta_params->supported_rates_len;
++	for (i =3D 0; i < link_sta_params->supported_rates_len; i++)
++		req->rate_set.array[i] =3D link_sta_params->supported_rates[i];
++
++	req->flags =3D 0;
++	if (link_sta_params->ht_capa) {
++		const struct ieee80211_ht_cap *ht_capa =3D link_sta_params->ht_capa;
++
++		req->flags |=3D STA_HT_CAPA;
++		req->ht_cap.ht_capa_info =3D ht_capa->cap_info;
++		req->ht_cap.a_mpdu_param =3D ht_capa->ampdu_params_info;
++		for (i =3D 0; i < sizeof(ht_capa->mcs); i++)
++			req->ht_cap.mcs_rate[i] =3D ht_mcs[i];
++		req->ht_cap.ht_extended_capa =3D ht_capa->extended_ht_cap_info;
++		req->ht_cap.tx_beamforming_capa =3D ht_capa->tx_BF_cap_info;
++		req->ht_cap.asel_capa =3D ht_capa->antenna_selection_info;
++	}
++
++	if (link_sta_params->vht_capa) {
++		const struct ieee80211_vht_cap *vht_capa =3D link_sta_params->vht_capa;
++
++		req->flags |=3D STA_VHT_CAPA;
++		req->vht_cap.vht_capa_info =3D vht_capa->vht_cap_info;
++		req->vht_cap.rx_highest =3D vht_capa->supp_mcs.rx_highest;
++		req->vht_cap.rx_mcs_map =3D vht_capa->supp_mcs.rx_mcs_map;
++		req->vht_cap.tx_highest =3D vht_capa->supp_mcs.tx_highest;
++		req->vht_cap.tx_mcs_map =3D vht_capa->supp_mcs.tx_mcs_map;
++	}
++
++	if (link_sta_params->he_capa) {
++		const struct ieee80211_he_cap_elem *he_capa =3D link_sta_params->he_capa=
+;
++		struct ieee80211_he_mcs_nss_supp *mcs_nss_supp =3D
++			(struct ieee80211_he_mcs_nss_supp *)(he_capa + 1);
++
++		req->flags |=3D STA_HE_CAPA;
++		for (i =3D 0; i < ARRAY_SIZE(he_capa->mac_cap_info); i++)
++			req->he_cap.mac_cap_info[i] =3D he_capa->mac_cap_info[i];
++		for (i =3D 0; i < ARRAY_SIZE(he_capa->phy_cap_info); i++)
++			req->he_cap.phy_cap_info[i] =3D he_capa->phy_cap_info[i];
++		req->he_cap.mcs_supp.rx_mcs_80 =3D mcs_nss_supp->rx_mcs_80;
++		req->he_cap.mcs_supp.tx_mcs_80 =3D mcs_nss_supp->tx_mcs_80;
++		req->he_cap.mcs_supp.rx_mcs_160 =3D mcs_nss_supp->rx_mcs_160;
++		req->he_cap.mcs_supp.tx_mcs_160 =3D mcs_nss_supp->tx_mcs_160;
++		req->he_cap.mcs_supp.rx_mcs_80p80 =3D mcs_nss_supp->rx_mcs_80p80;
++		req->he_cap.mcs_supp.tx_mcs_80p80 =3D mcs_nss_supp->tx_mcs_80p80;
++	}
++
++	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_WME))
++		req->flags |=3D STA_QOS_CAPA;
++
++	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_MFP))
++		req->flags |=3D STA_MFP_CAPA;
++
++	if (link_sta_params->opmode_notif_used) {
++		req->flags |=3D STA_OPMOD_NOTIF;
++		req->opmode =3D link_sta_params->opmode_notif_used;
++	}
++
++	req->aid =3D cpu_to_le16(params->aid);
++	req->uapsd_queues =3D params->uapsd_queues;
++	req->max_sp_len =3D params->max_sp * 2;
++	req->vif_idx =3D inst_nbr;
++
++	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) {
++		req->tdls_sta =3D true;
++		if ((params->ext_capab[3] & WLAN_EXT_CAPA4_TDLS_CHAN_SWITCH) &&
++		    !rwnx_vif->tdls_chsw_prohibited)
++			req->tdls_chsw_allowed =3D true;
++		if (rwnx_vif->tdls_status =3D=3D TDLS_SETUP_RSP_TX)
++			req->tdls_sta_initiator =3D true;
++	}
++
++	/* Send the ME_STA_ADD_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_STA_ADD_CFM, cfm);
++}
++
++int rwnx_send_me_sta_del(struct rwnx_hw *rwnx_hw, u8 sta_idx, bool tdls_st=
+a)
++{
++	struct me_sta_del_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_STA_DEL_REQ message */
++	req =3D rwnx_msg_zalloc(ME_STA_DEL_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_sta_del_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_STA_DEL_REQ message */
++	req->sta_idx =3D sta_idx;
++	req->tdls_sta =3D tdls_sta;
++
++	/* Send the ME_STA_DEL_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_STA_DEL_CFM, NULL);
++}
++
++int rwnx_send_me_traffic_ind(struct rwnx_hw *rwnx_hw, u8 sta_idx, bool uap=
+sd,
++			     u8 tx_status)
++{
++	struct me_traffic_ind_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_UTRAFFIC_IND_REQ message */
++	req =3D rwnx_msg_zalloc(ME_TRAFFIC_IND_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_traffic_ind_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_TRAFFIC_IND_REQ message */
++	req->sta_idx =3D sta_idx;
++	req->tx_avail =3D tx_status;
++	req->uapsd =3D uapsd;
++
++	/* Send the ME_TRAFFIC_IND_REQ to UMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_TRAFFIC_IND_CFM, NULL);
++}
++
++int rwnx_send_me_rc_stats(struct rwnx_hw *rwnx_hw, u8 sta_idx,
++			  struct me_rc_stats_cfm *cfm)
++{
++	struct me_rc_stats_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_RC_STATS_REQ message */
++	req =3D rwnx_msg_zalloc(ME_RC_STATS_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_rc_stats_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_RC_STATS_REQ message */
++	req->sta_idx =3D sta_idx;
++
++	/* Send the ME_RC_STATS_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_RC_STATS_CFM, cfm);
++}
++
++int rwnx_send_me_rc_set_rate(struct rwnx_hw *rwnx_hw, u8 sta_idx, u16 rate=
+_cfg)
++{
++	struct me_rc_set_rate_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_RC_SET_RATE_REQ message */
++	req =3D rwnx_msg_zalloc(ME_RC_SET_RATE_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_rc_set_rate_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_RC_SET_RATE_REQ message */
++	req->sta_idx =3D sta_idx;
++	req->fixed_rate_cfg =3D rate_cfg;
++
++	/* Send the ME_RC_SET_RATE_REQ message to FW */
++	return rwnx_send_msg(rwnx_hw, req, 0, 0, NULL);
++}
++
++int rwnx_send_me_set_ps_mode(struct rwnx_hw *rwnx_hw, u8 ps_mode)
++{
++	struct me_set_ps_mode_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_SET_PS_MODE_REQ message */
++	req =3D rwnx_msg_zalloc(ME_SET_PS_MODE_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_set_ps_mode_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_SET_PS_MODE_REQ message */
++	req->ps_state =3D ps_mode;
++
++	/* Send the ME_SET_PS_MODE_REQ message to FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_SET_PS_MODE_CFM, NULL);
++}
++
++int rwnx_send_me_set_lp_level(struct rwnx_hw *rwnx_hw, u8 lp_level, u8 dis=
+able_filter)
++{
++	struct me_set_lp_level_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++	AICWFDBG(LOGDEBUG, "lp_lvl: %d %d\n", lp_level, disable_filter);
++	/* Build the ME_SET_LP_LEVEL_REQ message */
++	req =3D rwnx_msg_zalloc(ME_SET_LP_LEVEL_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_set_lp_level_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the ME_SET_LP_LEVEL_REQ message */
++	req->lp_level =3D lp_level;
++	req->disable_filter =3D disable_filter;
++
++	/* Send the ME_SET_LP_LEVEL_REQ message to FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_SET_LP_LEVEL_CFM, NULL);
++}
++
++int rwnx_send_sm_connect_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwn=
+x_vif,
++			     struct cfg80211_connect_params *sme,
++			     struct sm_connect_cfm *cfm)
++{
++	struct sm_connect_req *req;
++	int i;
++	u32 flags =3D 0;
++	bool gval =3D false;
++	bool pval =3D false;
++
++	rwnx_vif->wep_enabled =3D false;
++	rwnx_vif->wep_auth_err =3D false;
++	rwnx_vif->last_auth_type =3D 0;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the SM_CONNECT_REQ message */
++	req =3D rwnx_msg_zalloc(SM_CONNECT_REQ, TASK_SM, DRV_TASK_ID,
++			      sizeof(struct sm_connect_req));
++	if (!req)
++		return -ENOMEM;
++
++	if (sme->crypto.cipher_group =3D=3D WLAN_CIPHER_SUITE_WEP40 ||
++	    sme->crypto.cipher_group =3D=3D WLAN_CIPHER_SUITE_WEP104)
++		gval =3D true;
++
++	if (sme->crypto.n_ciphers_pairwise &&
++	    (sme->crypto.ciphers_pairwise[0] =3D=3D WLAN_CIPHER_SUITE_WEP40 ||
++	     sme->crypto.ciphers_pairwise[0] =3D=3D WLAN_CIPHER_SUITE_WEP104))
++		pval =3D true;
++
++	/* Set parameters for the SM_CONNECT_REQ message */
++	if (sme->crypto.n_ciphers_pairwise &&
++	    (sme->crypto.ciphers_pairwise[0] =3D=3D WLAN_CIPHER_SUITE_WEP40 ||
++	     sme->crypto.ciphers_pairwise[0] =3D=3D WLAN_CIPHER_SUITE_TKIP ||
++	     sme->crypto.ciphers_pairwise[0] =3D=3D WLAN_CIPHER_SUITE_WEP104))
++		flags |=3D DISABLE_HT;
++
++	if (sme->crypto.control_port)
++		flags |=3D CONTROL_PORT_HOST;
++
++	if (sme->crypto.control_port_no_encrypt)
++		flags |=3D CONTROL_PORT_NO_ENC;
++
++	if (use_pairwise_key(&sme->crypto))
++		flags |=3D WPA_WPA2_IN_USE;
++
++	if (sme->mfp =3D=3D NL80211_MFP_REQUIRED)
++		flags |=3D MFP_IN_USE;
++
++	if (rwnx_vif->sta.ap)
++		flags |=3D REASSOCIATION;
++
++	req->ctrl_port_ethertype =3D sme->crypto.control_port_ethertype;
++
++	if (sme->bssid)
++		memcpy(&req->bssid, sme->bssid, ETH_ALEN);
++	else
++		req->bssid =3D mac_addr_bcst;
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	if (rwnx_hw->ccode.auto_set) {
++		memcpy(&rwnx_hw->ccode.bssid, &req->bssid, ETH_ALEN);
++		atomic_set(&rwnx_hw->ccode.link_scan, 1);
++	}
++#endif
++	req->vif_idx =3D rwnx_vif->vif_index;
++	if (sme->channel) {
++		req->chan.band =3D sme->channel->band;
++		req->chan.freq =3D sme->channel->center_freq;
++		req->chan.flags =3D get_chan_flags(sme->channel->flags);
++	} else {
++		req->chan.freq =3D (u16)-1;
++	}
++	for (i =3D 0; i < sme->ssid_len; i++)
++		req->ssid.array[i] =3D sme->ssid[i];
++	req->ssid.length =3D sme->ssid_len;
++	req->flags =3D flags;
++	if (WARN_ON(sme->ie_len > sizeof(req->ie_buf)))
++		goto invalid_param;
++	if (sme->ie_len)
++		memcpy(req->ie_buf, sme->ie, sme->ie_len);
++	req->ie_len =3D sme->ie_len;
++	req->listen_interval =3D rwnx_mod_params.listen_itv;
++	req->dont_wait_bcmc =3D !rwnx_mod_params.listen_bcmc;
++
++	/* Set auth_type */
++	if (sme->auth_type =3D=3D NL80211_AUTHTYPE_AUTOMATIC)
++		req->auth_type =3D WLAN_AUTH_OPEN;
++	else if (sme->auth_type =3D=3D NL80211_AUTHTYPE_OPEN_SYSTEM)
++		req->auth_type =3D WLAN_AUTH_OPEN;
++	else if (sme->auth_type =3D=3D NL80211_AUTHTYPE_SHARED_KEY)
++		req->auth_type =3D WLAN_AUTH_SHARED_KEY;
++	else if (sme->auth_type =3D=3D NL80211_AUTHTYPE_FT)
++		req->auth_type =3D WLAN_AUTH_FT;
++	else if (sme->auth_type =3D=3D NL80211_AUTHTYPE_SAE)
++		req->auth_type =3D WLAN_AUTH_SAE;
++	else
++		goto invalid_param;
++
++	rwnx_vif->sta.auth_type =3D sme->auth_type;
++
++	/* Set UAPSD queues */
++	req->uapsd_queues =3D rwnx_mod_params.uapsd_queues;
++
++	rwnx_vif->wep_enabled =3D pval & gval;
++
++	if (rwnx_vif->wep_enabled)
++		rwnx_vif->last_auth_type =3D sme->auth_type;
++
++	rwnx_vif->sta.ssid_len =3D (int)sme->ssid_len;
++	memset(rwnx_vif->sta.ssid, 0, rwnx_vif->sta.ssid_len + 1);
++	memcpy(rwnx_vif->sta.ssid, sme->ssid, rwnx_vif->sta.ssid_len);
++	if (sme->bssid)
++		memcpy(rwnx_vif->sta.bssid, sme->bssid, ETH_ALEN);
++
++	AICWFDBG(LOGDEBUG,
++		 "AICWF %s drv_vif_index:%d connect to %s(%d) channel:%d auth_type:%d\r\=
+n",
++		 __func__, rwnx_vif->drv_vif_index, rwnx_vif->sta.ssid,
++		 rwnx_vif->sta.ssid_len, req->chan.freq, req->auth_type);
++
++	/* Send the SM_CONNECT_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, SM_CONNECT_CFM, cfm);
++
++invalid_param:
++	rwnx_msg_free(rwnx_hw, req);
++	return -EINVAL;
++}
++
++int rwnx_send_sm_disconnect_req(struct rwnx_hw *rwnx_hw,
++				struct rwnx_vif *rwnx_vif, u16 reason)
++{
++	struct sm_disconnect_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the SM_DISCONNECT_REQ message */
++	req =3D rwnx_msg_zalloc(SM_DISCONNECT_REQ, TASK_SM, DRV_TASK_ID,
++			      sizeof(struct sm_disconnect_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the SM_DISCONNECT_REQ message */
++	req->reason_code =3D reason;
++	req->vif_idx =3D rwnx_vif->vif_index;
++
++	/* Send the SM_DISCONNECT_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, SM_DISCONNECT_CFM, NULL);
++}
++
++int rwnx_send_sm_external_auth_required_rsp(struct rwnx_hw *rwnx_hw,
++					    struct rwnx_vif *rwnx_vif,
++					    u16 status)
++{
++	struct sm_external_auth_required_rsp *rsp;
++
++	/* Build the SM_EXTERNAL_AUTH_CFM message */
++	rsp =3D rwnx_msg_zalloc(SM_EXTERNAL_AUTH_REQUIRED_RSP, TASK_SM, DRV_TASK_=
+ID,
++			      sizeof(struct sm_external_auth_required_rsp));
++	if (!rsp)
++		return -ENOMEM;
++
++	rsp->status =3D status;
++	rsp->vif_idx =3D rwnx_vif->vif_index;
++
++	/* send the SM_EXTERNAL_AUTH_REQUIRED_RSP message UMAC FW */
++	return rwnx_send_msg(rwnx_hw, rsp, 1, SM_EXTERNAL_AUTH_REQUIRED_RSP_CFM,
++			     NULL);
++}
++
++int rwnx_send_apm_start_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++			    struct cfg80211_ap_settings *settings,
++			    struct apm_start_cfm *cfm,
++			    struct rwnx_ipc_elem_var *elem)
++{
++	struct apm_start_req *req;
++	struct rwnx_bcn *bcn =3D &vif->ap.bcn;
++	u8 *buf;
++	u32 flags =3D 0;
++	const u8 *rate_ie;
++	u8 rate_len =3D 0;
++	int var_offset =3D offsetof(struct ieee80211_mgmt, u.beacon.variable);
++	const u8 *var_pos;
++	int len, i;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the APM_START_REQ message */
++	req =3D rwnx_msg_zalloc(APM_START_REQ, TASK_APM, DRV_TASK_ID,
++			      sizeof(struct apm_start_req));
++	if (!req)
++		return -ENOMEM;
++
++	// Build the beacon
++	bcn->dtim =3D (u8)settings->dtim_period;
++	buf =3D rwnx_build_bcn(bcn, &settings->beacon);
++	if (!buf) {
++		rwnx_msg_free(rwnx_hw, req);
++		return -ENOMEM;
++	}
++
++	// Retrieve the basic rate set from the beacon buffer
++	len =3D bcn->len - var_offset;
++	var_pos =3D buf + var_offset;
++
++// Assume that rate higher that 54 Mbps are BSS membership
++
++	rate_ie =3D cfg80211_find_ie(WLAN_EID_SUPP_RATES, var_pos, len);
++	if (rate_ie) {
++		const u8 *rates =3D rate_ie + 2;
++		u8 rate1 =3D 0;
++		bool is_basic1;
++
++		for (i =3D 0; i < rate_ie[1] && rate_len < MAC_RATESET_LEN; i++) {
++			rate1 =3D rates[i];
++			is_basic1 =3D ((rate1 & 0x80) && ((rate1 & ~0x80) <=3D (54 * 2)));
++			if (is_basic1)
++				req->basic_rates.array[rate_len++] =3D rate1;
++		}
++	}
++	rate_ie =3D cfg80211_find_ie(WLAN_EID_EXT_SUPP_RATES, var_pos, len);
++	if (rate_ie) {
++		const u8 *rates =3D rate_ie + 2;
++		u8 rate2 =3D 0;
++		bool is_basic2;
++
++		for (i =3D 0; i < rate_ie[1] && rate_len < MAC_RATESET_LEN; i++) {
++			rate2 =3D rates[i];
++			is_basic2 =3D ((rate2 & 0x80) && ((rate2 & ~0x80) <=3D (54 * 2)));
++			if (is_basic2)
++				req->basic_rates.array[rate_len++] =3D rate2;
++		}
++	}
++	req->basic_rates.length =3D rate_len;
++
++	rwnx_send_bcn(rwnx_hw, buf, vif->vif_index, bcn->len);
++
++	/* Set parameters for the APM_START_REQ message */
++	req->vif_idx =3D vif->vif_index;
++	req->bcn_addr =3D elem->dma_addr;
++	req->bcn_len =3D bcn->len;
++	req->tim_oft =3D bcn->head_len;
++	req->tim_len =3D bcn->tim_len;
++	req->chan.band =3D settings->chandef.chan->band;
++	req->chan.freq =3D settings->chandef.chan->center_freq;
++	req->chan.flags =3D 0;
++	req->chan.tx_power =3D chan_to_fw_pwr(settings->chandef.chan->max_power);
++	req->center_freq1 =3D settings->chandef.center_freq1;
++	req->center_freq2 =3D settings->chandef.center_freq2;
++	req->ch_width =3D bw2chnl[settings->chandef.width];
++	req->bcn_int =3D settings->beacon_interval;
++
++	if (settings->crypto.control_port)
++		flags |=3D CONTROL_PORT_HOST;
++
++	if (settings->crypto.control_port_no_encrypt)
++		flags |=3D CONTROL_PORT_NO_ENC;
++
++	if (use_pairwise_key(&settings->crypto))
++		flags |=3D WPA_WPA2_IN_USE;
++
++	if (settings->crypto.control_port_ethertype)
++		req->ctrl_port_ethertype =3D settings->crypto.control_port_ethertype;
++	else
++		req->ctrl_port_ethertype =3D cpu_to_be16(ETH_P_PAE);
++	req->flags =3D flags;
++
++	/* Send the APM_START_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, APM_START_CFM, cfm);
++}
++
++int rwnx_send_apm_stop_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif)
++{
++	struct apm_stop_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the APM_STOP_REQ message */
++	req =3D rwnx_msg_zalloc(APM_STOP_REQ, TASK_APM, DRV_TASK_ID,
++			      sizeof(struct apm_stop_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the APM_STOP_REQ message */
++	req->vif_idx =3D vif->vif_index;
++
++	/* Send the APM_STOP_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, APM_STOP_CFM, NULL);
++}
++
++#define P2P_WILDCARD_SSID     "DIRECT-"
++#define P2P_WILDCARD_SSID_LEN (sizeof(P2P_WILDCARD_SSID) - 1)
++
++#ifdef CONFIG_AIC8800_SET_VENDOR_EXTENSION_IE
++u8 vendor_extension_data[256];
++u8 vendor_extension_len;
++
++static void rwnx_insert_vendor_extension_data(struct scanu_vendor_ie_req *=
+ie_req)
++{
++	u8 temp_ie[256];
++	u8 vendor_extension_subelement[3] =3D {0x00, 0x37, 0x2A};
++	u8 vendor_extension_id[2] =3D {0x10, 0x49};
++	int index =3D 0;
++	int vendor_extension_subelement_len =3D 0;
++
++	memset(temp_ie, 0, 256);
++
++	// find vendor_extension_subelement
++	for (index =3D 0; index < ie_req->add_ie_len; index++) {
++		if (ie_req->ie[index] =3D=3D vendor_extension_id[0]) {
++			index++;
++			if (index =3D=3D ie_req->add_ie_len)
++				return;
++
++			if (ie_req->ie[index] =3D=3D vendor_extension_id[1] &&
++			    ie_req->ie[index + 3] =3D=3D vendor_extension_subelement[0] &&
++			    ie_req->ie[index + 4] =3D=3D vendor_extension_subelement[1] &&
++			    ie_req->ie[index + 5] =3D=3D vendor_extension_subelement[2]) {
++				index =3D index + 2;
++				vendor_extension_subelement_len =3D ie_req->ie[index];
++				AICWFDBG(LOGDEBUG,
++					 "AICWF %s find vendor_extension_subelement,index:%d len:%d\r\n",
++					 __func__, index, ie_req->ie[index]);
++				break;
++			}
++		}
++	}
++	index =3D index + vendor_extension_subelement_len;
++
++	// insert vendor extension
++	memcpy(&temp_ie[0], ie_req->ie, index + 1);
++	memcpy(&temp_ie[index + 1], vendor_extension_data,
++	       vendor_extension_len /*sizeof(vendor_extension_data) */);
++	memcpy(&temp_ie[index + 1 +
++	       vendor_extension_len /*sizeof(vendor_extension_data) */],
++	       &ie_req->ie[index + 1], ie_req->add_ie_len - index);
++
++	memcpy(ie_req->ie, temp_ie,
++	       ie_req->add_ie_len +
++	       vendor_extension_len /*sizeof(vendor_extension_data) */);
++	ie_req->add_ie_len =3D
++		ie_req->add_ie_len +
++		vendor_extension_len /*sizeof(vendor_extension_data) */;
++	ie_req->ie[1] =3D
++		ie_req->ie[1] + vendor_extension_len /*sizeof(vendor_extension_data) */;
++
++	// rwnx_data_dump((char*)__func__, (void*)ie_req->ie,
++	// ie_req->add_ie_len);
++}
++#endif // CONFIG_AIC8800_SET_VENDOR_EXTENSION_IE
++
++int rwnx_send_scanu_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif=
+,
++			struct cfg80211_scan_request *param)
++{
++	struct scanu_start_req *req =3D NULL;
++	struct scanu_vendor_ie_req *ie_req =3D NULL;
++	struct mm_add_if_cfm add_if_cfm;
++	int i;
++	u8 chan_flags =3D 0;
++	int err;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the SCANU_START_REQ message */
++	req =3D rwnx_msg_zalloc(SCANU_START_REQ, TASK_SCANU, DRV_TASK_ID,
++			      sizeof(struct scanu_start_req));
++	if (!req)
++		return -ENOMEM;
++
++	rwnx_hw->scanning =3D 1;
++	/* Set parameters */
++	req->vif_idx =3D rwnx_vif->vif_index;
++	req->chan_cnt =3D (u8)min_t(int, SCAN_CHANNEL_MAX, param->n_channels);
++
++#ifdef CONFIG_AIC8800_AUTO_CUSTREG
++	if (rwnx_hw->ccode.ccode_set || rwnx_hw->ccode.ccode_cnt >=3D MAX_SEARCH_=
+CNT)
++		req->ssid_cnt =3D (u8)min_t(int, SCAN_SSID_MAX, param->n_ssids);
++	else
++		req->ssid_cnt =3D (u8)min_t(int, 0, param->n_ssids);
++#else
++	req->ssid_cnt =3D (u8)min_t(int, SCAN_SSID_MAX, param->n_ssids);
++#endif
++
++	req->bssid =3D mac_addr_bcst;
++	req->no_cck =3D param->no_cck;
++	if (param->duration_mandatory)
++		// req->duration =3D ieee80211_tu_to_usec(param->duration);
++		req->duration =3D 0;
++
++#ifdef AIC8800_RADAR_OR_IR_DETECT
++	if (req->ssid_cnt =3D=3D 0)
++		chan_flags |=3D CHAN_NO_IR;
++#endif
++	for (i =3D 0; i < req->ssid_cnt; i++) {
++		int j;
++
++		for (j =3D 0; j < param->ssids[i].ssid_len; j++)
++			req->ssid[i].array[j] =3D param->ssids[i].ssid[j];
++		req->ssid[i].length =3D param->ssids[i].ssid_len;
++
++		if (!memcmp(P2P_WILDCARD_SSID, param->ssids[i].ssid,
++			    P2P_WILDCARD_SSID_LEN)) {
++			AICWFDBG(LOGINFO, "p2p scanu:%d,%d,%d\n", rwnx_vif->vif_index,
++				 rwnx_vif->is_p2p_vif, rwnx_hw->is_p2p_alive);
++#ifdef CONFIG_AIC8800_USE_P2P0
++			if (rwnx_vif->is_p2p_vif && !rwnx_hw->is_p2p_alive) {
++#else
++			if (rwnx_vif =3D=3D rwnx_hw->p2p_dev_vif && !rwnx_vif->up) {
++#endif
++				err =3D rwnx_send_add_if(rwnx_hw, rwnx_vif->wdev.address,
++						       RWNX_VIF_TYPE(rwnx_vif), false,
++						       &add_if_cfm);
++				if (err)
++					goto error;
++
++				if (add_if_cfm.status !=3D 0)
++					return -EIO;
++
++				/* Save the index retrieved from LMAC */
++				spin_lock_bh(&rwnx_hw->cb_lock);
++				rwnx_vif->vif_index =3D add_if_cfm.inst_nbr;
++				rwnx_vif->up =3D true;
++				rwnx_hw->vif_started++;
++				rwnx_hw->vif_table[add_if_cfm.inst_nbr] =3D rwnx_vif;
++				spin_unlock_bh(&rwnx_hw->cb_lock);
++			}
++			rwnx_hw->is_p2p_alive =3D 1;
++#ifndef CONFIG_AIC8800_USE_P2P0
++			mod_timer(&rwnx_hw->p2p_alive_timer,
++				  jiffies + msecs_to_jiffies(1000));
++			atomic_set(&rwnx_hw->p2p_alive_timer_count, 0);
++#endif
++			AICWFDBG(LOGINFO, "p2p scan start\n");
++		}
++	}
++
++	if (param->ie) {
++		ie_req =3D rwnx_msg_zalloc(SCANU_VENDOR_IE_REQ, TASK_SCANU, DRV_TASK_ID,
++					 sizeof(struct scanu_vendor_ie_req));
++		if (!ie_req)
++			return -ENOMEM;
++
++		ie_req->add_ie_len =3D param->ie_len;
++		ie_req->vif_idx =3D rwnx_vif->vif_index;
++		memcpy(ie_req->ie, param->ie, param->ie_len);
++#ifdef CONFIG_AIC8800_SET_VENDOR_EXTENSION_IE
++		rwnx_insert_vendor_extension_data(ie_req);
++#endif // CONFIG_AIC8800_SET_VENDOR_EXTENSION_IE
++		req->add_ie_len =3D 0;
++		req->add_ies =3D 0;
++
++		err =3D rwnx_send_msg(rwnx_hw, ie_req, 1, SCANU_VENDOR_IE_CFM, NULL);
++		if (err)
++			goto error;
++	} else {
++		req->add_ie_len =3D 0;
++		req->add_ies =3D 0;
++	}
++
++	for (i =3D 0; i < req->chan_cnt; i++) {
++		struct ieee80211_channel *chan =3D param->channels[i];
++
++		AICWFDBG(LOGDEBUG, "scan channel:%d(%d) \r\n",
++			 ieee80211_frequency_to_channel(chan->center_freq),
++			 chan->center_freq);
++		req->chan[i].band =3D chan->band;
++		req->chan[i].freq =3D chan->center_freq;
++		req->chan[i].flags =3D chan_flags | get_chan_flags(chan->flags);
++		req->chan[i].tx_power =3D chan_to_fw_pwr(chan->max_reg_power);
++	}
++
++	/* Send the SCANU_START_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, SCANU_START_CFM_ADDTIONAL, NULL);
++error:
++	if (req)
++		rwnx_msg_free(rwnx_hw, req);
++	if (ie_req)
++		rwnx_msg_free(rwnx_hw, ie_req);
++	return -ENOMEM;
++}
++
++int rwnx_send_scanu_cancel_req(struct rwnx_hw *rwnx_hw,
++			       struct scan_cancel_cfm *cfm)
++{
++	struct scan_cancel_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the SCAN_CANCEL_REQ message */
++	req =3D rwnx_msg_zalloc(SCANU_CANCEL_REQ, TASK_SCANU, DRV_TASK_ID,
++			      sizeof(struct scan_cancel_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Send the SCAN_CANCEL_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, SCANU_CANCEL_CFM, cfm);
++}
++
++int rwnx_send_apm_start_cac_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *=
+vif,
++				struct cfg80211_chan_def *chandef,
++				struct apm_start_cac_cfm *cfm)
++{
++	struct apm_start_cac_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the APM_START_CAC_REQ message */
++	req =3D rwnx_msg_zalloc(APM_START_CAC_REQ, TASK_APM, DRV_TASK_ID,
++			      sizeof(struct apm_start_cac_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the APM_START_CAC_REQ message */
++	req->vif_idx =3D vif->vif_index;
++	req->chan.band =3D chandef->chan->band;
++	req->chan.freq =3D chandef->chan->center_freq;
++	req->chan.flags =3D 0;
++	req->center_freq1 =3D chandef->center_freq1;
++	req->center_freq2 =3D chandef->center_freq2;
++	req->ch_width =3D bw2chnl[chandef->width];
++
++	/* Send the APM_START_CAC_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, APM_START_CAC_CFM, cfm);
++}
++
++int rwnx_send_apm_stop_cac_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *v=
+if)
++{
++	struct apm_stop_cac_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the APM_STOP_CAC_REQ message */
++	req =3D rwnx_msg_zalloc(APM_STOP_CAC_REQ, TASK_APM, DRV_TASK_ID,
++			      sizeof(struct apm_stop_cac_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the APM_STOP_CAC_REQ message */
++	req->vif_idx =3D vif->vif_index;
++
++	/* Send the APM_STOP_CAC_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, APM_STOP_CAC_CFM, NULL);
++}
++
++int rwnx_send_mesh_start_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif=
+,
++			     const struct mesh_config *conf,
++			     const struct mesh_setup *setup,
++			     struct mesh_start_cfm *cfm)
++{
++	// Message to send
++	struct mesh_start_req *req;
++	// Supported basic rates
++	struct ieee80211_supported_band *band_2ghz =3D
++		rwnx_hw->wiphy->bands[NL80211_BAND_2GHZ];
++	/* Counter */
++	int i;
++	/* Return status */
++	int status;
++	/* DMA Address to be unmapped after confirmation reception */
++	u32 dma_addr =3D 0;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MESH_START_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_START_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_start_req));
++	if (!req)
++		return -ENOMEM;
++
++	req->vif_index =3D vif->vif_index;
++	req->bcn_int =3D setup->beacon_interval;
++	req->dtim_period =3D setup->dtim_period;
++	req->mesh_id_len =3D setup->mesh_id_len;
++
++	for (i =3D 0; i < setup->mesh_id_len; i++)
++		req->mesh_id[i] =3D *(setup->mesh_id + i);
++
++	req->user_mpm =3D setup->user_mpm;
++	req->is_auth =3D setup->is_authenticated;
++	req->auth_id =3D setup->auth_id;
++	req->ie_len =3D setup->ie_len;
++
++	if (setup->ie_len) {
++		/*
++		 * Need to provide a Virtual Address to the MAC so that it can
++		 * download the additional information elements.
++		 */
++		req->ie_addr =3D dma_map_single(rwnx_hw->dev, (void *)setup->ie,
++					      setup->ie_len, DMA_FROM_DEVICE);
++
++		/* Check DMA mapping result */
++		if (dma_mapping_error(rwnx_hw->dev, req->ie_addr)) {
++			AICWFDBG(LOGDEBUG, KERN_CRIT
++				 "AICWF %s - DMA Mapping error on additional IEs\n",
++				 __func__);
++
++			/* Consider there is no Additional IEs */
++			req->ie_len =3D 0;
++		} else {
++			/* Store DMA Address so that we can unmap the memory section
++			 * once MESH_START_CFM is received
++			 */
++			dma_addr =3D req->ie_addr;
++		}
++	}
++
++	/* Provide rate information */
++	req->basic_rates.length =3D 0;
++	for (i =3D 0; i < band_2ghz->n_bitrates; i++) {
++		u16 rate =3D band_2ghz->bitrates[i].bitrate;
++
++		/* Read value is in units of 100 Kbps, provided value is in units
++		 * of 1Mbps, and multiplied by 2 so that 5.5 becomes 11
++		 */
++		rate =3D (rate << 1) / 10;
++
++		if (setup->basic_rates & CO_BIT(i))
++			rate |=3D 0x80;
++
++		req->basic_rates.array[i] =3D (u8)rate;
++		req->basic_rates.length++;
++	}
++
++	/* Provide channel information */
++	req->chan.band =3D setup->chandef.chan->band;
++	req->chan.freq =3D setup->chandef.chan->center_freq;
++	req->chan.flags =3D 0;
++	req->chan.tx_power =3D chan_to_fw_pwr(setup->chandef.chan->max_power);
++	req->center_freq1 =3D setup->chandef.center_freq1;
++	req->center_freq2 =3D setup->chandef.center_freq2;
++	req->ch_width =3D bw2chnl[setup->chandef.width];
++
++	/* Send the MESH_START_REQ message to UMAC FW */
++	status =3D rwnx_send_msg(rwnx_hw, req, 1, MESH_START_CFM, cfm);
++
++	/* Unmap DMA area */
++	if (setup->ie_len)
++		dma_unmap_single(rwnx_hw->dev, dma_addr, setup->ie_len, DMA_TO_DEVICE);
++
++	/* Return the status */
++	return status;
++}
++
++int rwnx_send_mesh_stop_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++			    struct mesh_stop_cfm *cfm)
++{
++	// Message to send
++	struct mesh_stop_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MESH_STOP_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_STOP_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_stop_req));
++	if (!req)
++		return -ENOMEM;
++
++	req->vif_idx =3D vif->vif_index;
++
++	/* Send the MESH_STOP_REQ message to UMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MESH_STOP_CFM, cfm);
++}
++
++int rwnx_send_mesh_update_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vi=
+f,
++			      u32 mask, const struct mesh_config *p_mconf,
++			      struct mesh_update_cfm *cfm)
++{
++	// Message to send
++	struct mesh_update_req *req;
++	// Keep only bit for fields which can be updated
++	u32 supp_mask =3D (mask << 1) & (CO_BIT(NL80211_MESHCONF_GATE_ANNOUNCEMEN=
+TS) |
++			CO_BIT(NL80211_MESHCONF_HWMP_ROOTMODE) |
++			CO_BIT(NL80211_MESHCONF_FORWARDING) |
++			CO_BIT(NL80211_MESHCONF_POWER_MODE));
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (!supp_mask)
++		return -ENOENT;
++
++	/* Build the MESH_UPDATE_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_UPDATE_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_update_req));
++
++	if (!req)
++		return -ENOMEM;
++
++	req->vif_idx =3D vif->vif_index;
++
++	if (supp_mask & CO_BIT(NL80211_MESHCONF_GATE_ANNOUNCEMENTS)) {
++		req->flags |=3D CO_BIT(MESH_UPDATE_FLAGS_GATE_MODE_BIT);
++		req->gate_announ =3D p_mconf->dot11MeshGateAnnouncementProtocol;
++	}
++
++	if (supp_mask & CO_BIT(NL80211_MESHCONF_HWMP_ROOTMODE)) {
++		req->flags |=3D CO_BIT(MESH_UPDATE_FLAGS_ROOT_MODE_BIT);
++		req->root_mode =3D p_mconf->dot11MeshHWMPRootMode;
++	}
++
++	if (supp_mask & CO_BIT(NL80211_MESHCONF_FORWARDING)) {
++		req->flags |=3D CO_BIT(MESH_UPDATE_FLAGS_MESH_FWD_BIT);
++		req->mesh_forward =3D p_mconf->dot11MeshForwarding;
++	}
++
++	if (supp_mask & CO_BIT(NL80211_MESHCONF_POWER_MODE)) {
++		req->flags |=3D CO_BIT(MESH_UPDATE_FLAGS_LOCAL_PSM_BIT);
++		req->local_ps_mode =3D p_mconf->power_mode;
++	}
++
++	/* Send the MESH_UPDATE_REQ message to UMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MESH_UPDATE_CFM, cfm);
++}
++
++int rwnx_send_mesh_peer_info_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif =
+*vif,
++				 u8 sta_idx, struct mesh_peer_info_cfm *cfm)
++{
++	// Message to send
++	struct mesh_peer_info_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MESH_PEER_INFO_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_PEER_INFO_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_peer_info_req));
++	if (!req)
++		return -ENOMEM;
++
++	req->sta_idx =3D sta_idx;
++
++	/* Send the MESH_PEER_INFO_REQ message to UMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MESH_PEER_INFO_CFM, cfm);
++}
++
++void rwnx_send_mesh_peer_update_ntf(struct rwnx_hw *rwnx_hw,
++				    struct rwnx_vif *vif, u8 sta_idx,
++				    u8 mlink_state)
++{
++	// Message to send
++	struct mesh_peer_update_ntf *ntf;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MESH_PEER_UPDATE_NTF message */
++	ntf =3D rwnx_msg_zalloc(MESH_PEER_UPDATE_NTF, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_peer_update_ntf));
++
++	if (ntf) {
++		ntf->vif_idx =3D vif->vif_index;
++		ntf->sta_idx =3D sta_idx;
++		ntf->state =3D mlink_state;
++
++		/* Send the MESH_PEER_INFO_REQ message to UMAC FW */
++		rwnx_send_msg(rwnx_hw, ntf, 0, 0, NULL);
 +	}
 +}
 +
-+void aicwf_rx_deinit(struct aicwf_rx_priv *rx_priv)
++void rwnx_send_mesh_path_create_req(struct rwnx_hw *rwnx_hw,
++				    struct rwnx_vif *vif, u8 *tgt_addr)
 +{
-+	if (rx_priv->sdiodev->bus_if->busrx_thread) {
-+		complete_all(&rx_priv->sdiodev->bus_if->busrx_trgg);
-+		kthread_stop(rx_priv->sdiodev->bus_if->busrx_thread);
-+		rx_priv->sdiodev->bus_if->busrx_thread =3D NULL;
-+	}
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
-+	aicwf_frame_queue_flush(&rx_priv->rxq);
-+	aicwf_recvframe_queue_deinit(&rx_priv->rxframes_freequeue);
-+	if (rx_priv->recv_frames)
-+		vfree(rx_priv->recv_frames);
++	/* Check if we are already waiting for a confirmation */
++	if (!vif->ap.create_path) {
++		// Message to send
++		struct mesh_path_create_req *req;
 +
-+	kfree(rx_priv);
-+}
++		/* Build the MESH_PATH_CREATE_REQ message */
++		req =3D rwnx_msg_zalloc(MESH_PATH_CREATE_REQ, TASK_MESH, DRV_TASK_ID,
++				      sizeof(struct mesh_path_create_req));
 +
-+bool aicwf_rxframe_enqueue(struct device *dev, struct frame_queue *q,
-+			   struct sk_buff *pkt)
-+{
-+	return aicwf_frame_enq(dev, q, pkt, 0);
-+}
++		if (req) {
++			req->vif_idx =3D vif->vif_index;
++			memcpy(&req->tgt_mac_addr, tgt_addr, ETH_ALEN);
 +
-+void aicwf_dev_skb_free(struct sk_buff *skb)
-+{
-+	if (!skb)
-+		return;
++			vif->ap.create_path =3D true;
 +
-+	dev_kfree_skb_any(skb);
-+}
-+
-+static struct sk_buff *aicwf_frame_queue_penq(struct frame_queue *pq, int =
-prio,
-+					      struct sk_buff *p)
-+{
-+	struct sk_buff_head *q;
-+
-+	if (pq->queuelist[prio].qlen >=3D pq->qmax)
-+		return NULL;
-+
-+	q =3D &pq->queuelist[prio];
-+	__skb_queue_tail(q, p);
-+	pq->qcnt++;
-+	if (pq->hi_prio < prio)
-+		pq->hi_prio =3D (u16)prio;
-+
-+	return p;
-+}
-+
-+void aicwf_frame_queue_flush(struct frame_queue *pq)
-+{
-+	int prio;
-+	struct sk_buff_head *q;
-+	struct sk_buff *p, *next;
-+
-+	for (prio =3D 0; prio < pq->num_prio; prio++) {
-+		q =3D &pq->queuelist[prio];
-+		skb_queue_walk_safe(q, p, next)
-+		{
-+			skb_unlink(p, q);
-+			aicwf_dev_skb_free(p);
-+			pq->qcnt--;
++			/* Send the MESH_PATH_CREATE_REQ message to UMAC FW */
++			rwnx_send_msg(rwnx_hw, req, 0, 0, NULL);
 +		}
 +	}
 +}
 +
-+void aicwf_frame_queue_init(struct frame_queue *pq, int num_prio, int max_=
-len)
++int rwnx_send_mesh_path_update_req(struct rwnx_hw *rwnx_hw,
++				   struct rwnx_vif *vif, const u8 *tgt_addr,
++				   const u8 *p_nhop_addr,
++				   struct mesh_path_update_cfm *cfm)
 +{
-+	int prio;
++	// Message to send
++	struct mesh_path_update_req *req;
 +
-+	memset(pq, 0,
-+	       offsetof(struct frame_queue, queuelist) +
-+			   (sizeof(struct sk_buff_head) * num_prio));
-+	pq->num_prio =3D (u16)num_prio;
-+	pq->qmax =3D (u16)max_len;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
-+	for (prio =3D 0; prio < num_prio; prio++)
-+		skb_queue_head_init(&pq->queuelist[prio]);
++	/* Build the MESH_PATH_UPDATE_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_PATH_UPDATE_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_path_update_req));
++	if (!req)
++		return -ENOMEM;
++
++	req->delete =3D (!p_nhop_addr);
++	req->vif_idx =3D vif->vif_index;
++	memcpy(&req->tgt_mac_addr, tgt_addr, ETH_ALEN);
++
++	if (p_nhop_addr)
++		memcpy(&req->nhop_mac_addr, p_nhop_addr, ETH_ALEN);
++
++	/* Send the MESH_PATH_UPDATE_REQ message to UMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MESH_PATH_UPDATE_CFM, cfm);
 +}
 +
-+struct sk_buff *aicwf_frame_queue_peek_tail(struct frame_queue *pq,
-+					    int *prio_out)
++void rwnx_send_mesh_proxy_add_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif=
+ *vif,
++				  u8 *ext_addr)
 +{
-+	int prio;
++	// Message to send
++	struct mesh_proxy_add_req *req;
 +
-+	if (pq->qcnt =3D=3D 0)
-+		return NULL;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
-+	for (prio =3D 0; prio < pq->hi_prio; prio++)
-+		if (!skb_queue_empty(&pq->queuelist[prio]))
-+			break;
++	/* Build the MESH_PROXY_ADD_REQ message */
++	req =3D rwnx_msg_zalloc(MESH_PROXY_ADD_REQ, TASK_MESH, DRV_TASK_ID,
++			      sizeof(struct mesh_proxy_add_req));
 +
-+	if (prio_out)
-+		*prio_out =3D prio;
++	if (req) {
++		req->vif_idx =3D vif->vif_index;
++		memcpy(&req->ext_sta_addr, ext_addr, ETH_ALEN);
 +
-+	return skb_peek_tail(&pq->queuelist[prio]);
++		/* Send the MESH_PROXY_ADD_REQ message to UMAC FW */
++		rwnx_send_msg(rwnx_hw, req, 0, 0, NULL);
++	}
 +}
 +
-+bool aicwf_is_framequeue_empty(struct frame_queue *pq)
++int rwnx_send_tdls_peer_traffic_ind_req(struct rwnx_hw *rwnx_hw,
++					struct rwnx_vif *rwnx_vif)
 +{
-+	int prio, len =3D 0;
++	struct tdls_peer_traffic_ind_req *tdls_peer_traffic_ind_req;
 +
-+	for (prio =3D 0; prio <=3D pq->hi_prio; prio++)
-+		len +=3D pq->queuelist[prio].qlen;
++	if (!rwnx_vif->sta.tdls_sta)
++		return -ENOLINK;
 +
-+	if (len > 0)
-+		return false;
++	/* Build the TDLS_PEER_TRAFFIC_IND_REQ message */
++	tdls_peer_traffic_ind_req =3D
++		rwnx_msg_zalloc(TDLS_PEER_TRAFFIC_IND_REQ, TASK_TDLS, DRV_TASK_ID,
++				sizeof(struct tdls_peer_traffic_ind_req));
++
++	if (!tdls_peer_traffic_ind_req)
++		return -ENOMEM;
++
++	/* Set parameters for the TDLS_PEER_TRAFFIC_IND_REQ message */
++	tdls_peer_traffic_ind_req->vif_index =3D rwnx_vif->vif_index;
++	tdls_peer_traffic_ind_req->sta_idx =3D rwnx_vif->sta.tdls_sta->sta_idx;
++	memcpy(&tdls_peer_traffic_ind_req->peer_mac_addr.array[0],
++	       rwnx_vif->sta.tdls_sta->mac_addr, ETH_ALEN);
++	tdls_peer_traffic_ind_req->dialog_token =3D 0; // check dialog token valu=
+e
++	tdls_peer_traffic_ind_req->last_tid =3D rwnx_vif->sta.tdls_sta->tdls.last=
+_tid;
++	tdls_peer_traffic_ind_req->last_sn =3D rwnx_vif->sta.tdls_sta->tdls.last_=
+sn;
++
++	/* Send the TDLS_PEER_TRAFFIC_IND_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, tdls_peer_traffic_ind_req, 0, 0, NULL);
++}
++
++int rwnx_send_config_monitor_req(struct rwnx_hw *rwnx_hw,
++				 struct cfg80211_chan_def *chandef,
++				 struct me_config_monitor_cfm *cfm)
++{
++	struct me_config_monitor_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the ME_CONFIG_MONITOR_REQ message */
++	req =3D rwnx_msg_zalloc(ME_CONFIG_MONITOR_REQ, TASK_ME, DRV_TASK_ID,
++			      sizeof(struct me_config_monitor_req));
++	if (!req)
++		return -ENOMEM;
++
++	if (chandef) {
++		req->chan_set =3D true;
++
++		req->chan.band =3D chandef->chan->band;
++		req->chan.type =3D bw2chnl[chandef->width];
++		req->chan.prim20_freq =3D chandef->chan->center_freq;
++		req->chan.center1_freq =3D chandef->center_freq1;
++		req->chan.center2_freq =3D chandef->center_freq2;
++		req->chan.tx_power =3D chan_to_fw_pwr(chandef->chan->max_power);
++
++		if (rwnx_hw->phy.limit_bw)
++			limit_chan_bw(&req->chan.type, req->chan.prim20_freq,
++				      &req->chan.center1_freq);
++	} else {
++		req->chan_set =3D false;
++	}
++
++	req->uf =3D rwnx_hw->mod_params->uf;
++	req->auto_reply =3D rwnx_hw->mod_params->auto_reply;
++
++	/* Send the ME_CONFIG_MONITOR_REQ message to FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, ME_CONFIG_MONITOR_CFM, cfm);
++}
++#endif /* CONFIG_RWNX_FULLMAC */
++
++int rwnx_send_tdls_chan_switch_req(struct rwnx_hw *rwnx_hw,
++				   struct rwnx_vif *rwnx_vif,
++				   struct rwnx_sta *rwnx_sta,
++				   bool sta_initiator, u8 oper_class,
++				   struct cfg80211_chan_def *chandef,
++				   struct tdls_chan_switch_cfm *cfm)
++{
++	struct tdls_chan_switch_req *tdls_chan_switch_req;
++
++	/* Build the TDLS_CHAN_SWITCH_REQ message */
++	tdls_chan_switch_req =3D
++		rwnx_msg_zalloc(TDLS_CHAN_SWITCH_REQ, TASK_TDLS, DRV_TASK_ID,
++				sizeof(struct tdls_chan_switch_req));
++
++	if (!tdls_chan_switch_req)
++		return -ENOMEM;
++
++	/* Set parameters for the TDLS_CHAN_SWITCH_REQ message */
++	tdls_chan_switch_req->vif_index =3D rwnx_vif->vif_index;
++	tdls_chan_switch_req->sta_idx =3D rwnx_sta->sta_idx;
++	memcpy(&tdls_chan_switch_req->peer_mac_addr.array[0],
++	       rwnx_sta_addr(rwnx_sta), ETH_ALEN);
++	tdls_chan_switch_req->initiator =3D sta_initiator;
++	tdls_chan_switch_req->band =3D chandef->chan->band;
++	tdls_chan_switch_req->type =3D bw2chnl[chandef->width];
++	tdls_chan_switch_req->prim20_freq =3D chandef->chan->center_freq;
++	tdls_chan_switch_req->center1_freq =3D chandef->center_freq1;
++	tdls_chan_switch_req->center2_freq =3D chandef->center_freq2;
++	tdls_chan_switch_req->tx_power =3D chan_to_fw_pwr(chandef->chan->max_powe=
+r);
++	tdls_chan_switch_req->op_class =3D oper_class;
++
++	/* Send the TDLS_CHAN_SWITCH_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, tdls_chan_switch_req, 1, TDLS_CHAN_SWITCH_C=
+FM,
++			     cfm);
++}
++
++int rwnx_send_tdls_cancel_chan_switch_req(struct rwnx_hw *rwnx_hw,
++					  struct rwnx_vif *rwnx_vif,
++					  struct rwnx_sta *rwnx_sta,
++					  struct tdls_cancel_chan_switch_cfm *cfm)
++{
++	struct tdls_cancel_chan_switch_req *tdls_cancel_chan_switch_req;
++
++	/* Build the TDLS_CHAN_SWITCH_REQ message */
++	tdls_cancel_chan_switch_req =3D
++		rwnx_msg_zalloc(TDLS_CANCEL_CHAN_SWITCH_REQ, TASK_TDLS, DRV_TASK_ID,
++				sizeof(struct tdls_cancel_chan_switch_req));
++	if (!tdls_cancel_chan_switch_req)
++		return -ENOMEM;
++
++	/* Set parameters for the TDLS_CHAN_SWITCH_REQ message */
++	tdls_cancel_chan_switch_req->vif_index =3D rwnx_vif->vif_index;
++	tdls_cancel_chan_switch_req->sta_idx =3D rwnx_sta->sta_idx;
++	memcpy(&tdls_cancel_chan_switch_req->peer_mac_addr.array[0],
++	       rwnx_sta_addr(rwnx_sta), ETH_ALEN);
++
++	/* Send the TDLS_CHAN_SWITCH_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, tdls_cancel_chan_switch_req, 1,
++			     TDLS_CANCEL_CHAN_SWITCH_CFM, cfm);
++}
++
++#ifdef CONFIG_RWNX_BFMER
++#ifdef CONFIG_RWNX_FULLMAC
++void rwnx_send_bfmer_enable(struct rwnx_hw *rwnx_hw, struct rwnx_sta *rwnx=
+_sta,
++			    const struct ieee80211_vht_cap *vht_cap)
++#endif /* CONFIG_RWNX_FULLMAC */
++{
++	struct mm_bfmer_enable_req *bfmer_en_req;
++#ifdef CONFIG_RWNX_FULLMAC
++	u32 vht_capability;
++	u8 rx_nss =3D 0;
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++#ifdef CONFIG_RWNX_FULLMAC
++	if (!vht_cap) {
++#endif /* CONFIG_RWNX_FULLMAC */
++		goto end;
++	}
++
++#ifdef CONFIG_RWNX_FULLMAC
++	vht_capability =3D le32_to_cpu(vht_cap->vht_cap_info);
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	if (!(vht_capability & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE))
++		goto end;
++
++#ifdef CONFIG_RWNX_FULLMAC
++	rx_nss =3D rwnx_bfmer_get_rx_nss(vht_cap);
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	/* Allocate a structure that will contain the beamforming report */
++	if (rwnx_bfmer_report_add(rwnx_hw, rwnx_sta,
++				  RWNX_BFMER_REPORT_SPACE_SIZE))
++		goto end;
++
++	/* Build the MM_BFMER_ENABLE_REQ message */
++	bfmer_en_req =3D rwnx_msg_zalloc(MM_BFMER_ENABLE_REQ, TASK_MM, DRV_TASK_I=
+D,
++				       sizeof(struct mm_bfmer_enable_req));
++
++	/* Check message allocation */
++	if (!bfmer_en_req) {
++		/* Free memory allocated for the report */
++		rwnx_bfmer_report_del(rwnx_hw, rwnx_sta);
++		/* Do not use beamforming */
++		goto end;
++	}
++
++	/* Provide DMA address to the MAC */
++	bfmer_en_req->host_bfr_addr =3D rwnx_sta->bfm_report->dma_addr;
++	bfmer_en_req->host_bfr_size =3D RWNX_BFMER_REPORT_SPACE_SIZE;
++	bfmer_en_req->sta_idx =3D rwnx_sta->sta_idx;
++#ifdef CONFIG_RWNX_FULLMAC
++	bfmer_en_req->aid =3D rwnx_sta->aid;
++	bfmer_en_req->rx_nss =3D rx_nss;
++#endif /* CONFIG_RWNX_FULLMAC */
++
++	if (vht_capability & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)
++		bfmer_en_req->vht_mu_bfmee =3D true;
 +	else
-+		return true;
++		bfmer_en_req->vht_mu_bfmee =3D false;
++
++	/* Send the MM_BFMER_EN_REQ message to LMAC FW */
++	rwnx_send_msg(rwnx_hw, bfmer_en_req, 0, 0, NULL);
++
++end:
++	return;
 +}
 +
-+struct sk_buff *aicwf_frame_dequeue(struct frame_queue *pq)
++#ifdef CONFIG_RWNX_MUMIMO_TX
++int rwnx_send_mu_group_update_req(struct rwnx_hw *rwnx_hw,
++				  struct rwnx_sta *rwnx_sta)
 +{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p;
-+	int prio;
++	struct mm_mu_group_update_req *req;
++	int group_id, i =3D 0;
++	u64 map;
 +
-+	if (pq->qcnt =3D=3D 0)
-+		return NULL;
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
 +
-+	while ((prio =3D pq->hi_prio) > 0 && skb_queue_empty(&pq->queuelist[prio]=
-))
-+		pq->hi_prio--;
++	/* Build the MM_MU_GROUP_UPDATE_REQ message */
++	req =3D
++		rwnx_msg_zalloc(MM_MU_GROUP_UPDATE_REQ, TASK_MM, DRV_TASK_ID,
++				sizeof(struct mm_mu_group_update_req) +
++				rwnx_sta->group_info.cnt * sizeof(req->groups[0]));
 +
-+	q =3D &pq->queuelist[prio];
-+	p =3D __skb_dequeue(q);
-+	if (!p)
-+		return NULL;
++	/* Check message allocation */
++	if (!req)
++		return -ENOMEM;
 +
-+	pq->qcnt--;
++	map =3D rwnx_sta->group_info.map & RWNX_MU_GROUP_MASK;
++	for (group_id =3D (fls64(map) - 1); group_id > 0;
++	     map &=3D ~(u64)BIT_ULL(group_id), group_id =3D (fls64(map) - 1)) {
++		int user_pos =3D rwnx_mu_group_sta_get_pos(rwnx_hw, rwnx_sta, group_id);
 +
-+	return p;
-+}
-+
-+static struct sk_buff *aicwf_skb_dequeue_tail(struct frame_queue *pq, int =
-prio)
-+{
-+	struct sk_buff_head *q =3D &pq->queuelist[prio];
-+	struct sk_buff *p =3D skb_dequeue_tail(q);
-+
-+	if (!p)
-+		return NULL;
-+
-+	pq->qcnt--;
-+	return p;
-+}
-+
-+bool aicwf_frame_enq(struct device *dev, struct frame_queue *q,
-+		     struct sk_buff *pkt, int prio)
-+{
-+	struct sk_buff *p =3D NULL;
-+	int prio_modified =3D -1;
-+
-+	if (q->queuelist[prio].qlen < q->qmax && q->qcnt < q->qmax) {
-+		aicwf_frame_queue_penq(q, prio, pkt);
-+		return true;
-+	}
-+	if (q->queuelist[prio].qlen >=3D q->qmax) {
-+		prio_modified =3D prio;
-+	} else if (q->qcnt >=3D q->qmax) {
-+		p =3D aicwf_frame_queue_peek_tail(q, &prio_modified);
-+		if (prio_modified > prio)
-+			return false;
-+	}
-+
-+	if (prio_modified >=3D 0) {
-+		if (prio_modified =3D=3D prio)
-+			return false;
-+
-+		p =3D aicwf_skb_dequeue_tail(q, prio_modified);
-+		aicwf_dev_skb_free(p);
-+
-+		p =3D aicwf_frame_queue_penq(q, prio_modified, pkt);
-+		if (!p)
-+			txrx_err("failed\n");
-+	}
-+
-+	return p;
-+}
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.h b/driver=
-s/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.h
-new file mode 100644
-index 0000000000000..2ed64b3ae9949
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicsdio_txrxif.h
-@@ -0,0 +1,180 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * aicwf_txrxif.h
-+ *
-+ * bus function declarations
-+ *
-+ * Copyright (C) AICSemi 2018-2020
-+ */
-+
-+#ifndef _AICWF_TXRXIF_H_
-+#define _AICWF_TXRXIF_H_
-+
-+#include "aicsdio.h"
-+#include <linux/sched.h>
-+#include <linux/skbuff.h>
-+#include "aic_bus.h"
-+
-+#define CMD_BUF_MAX        1536
-+#define TXPKT_BLOCKSIZE    512
-+#define MAX_AGGR_TXPKT_LEN (1536 * 4)
-+#define CMD_TX_TIMEOUT     5000
-+#define TX_ALIGNMENT       4
-+
-+#define RX_HWHRD_LEN     60 // 58->60 word allined
-+#define CCMP_OR_WEP_INFO 8
-+#define MAX_RXQLEN       2000
-+#define RX_ALIGNMENT     4
-+
-+#define DEBUG_ERROR_LEVEL 0
-+#define DEBUG_DEBUG_LEVEL 1
-+#define DEBUG_INFO_LEVEL  2
-+
-+#define DBG_LEVEL DEBUG_DEBUG_LEVEL
-+
-+#define txrx_err(fmt, ...)                                                =
-     \
-+	pr_err("aicbsp: txrx_err:<%s,%d>: " fmt, __func__, __LINE__, ##__VA_ARGS_=
-_)
-+#define sdio_err(fmt, ...)                                                =
-     \
-+	pr_err("aicbsp: sdio_err:<%s,%d>: " fmt, __func__, __LINE__, ##__VA_ARGS_=
-_)
-+#define usb_err(fmt, ...)                                                 =
-     \
-+	pr_err("aicbsp: usb_err:<%s,%d>: " fmt, __func__, __LINE__, ##__VA_ARGS__=
-)
-+#if DBG_LEVEL >=3D DEBUG_DEBUG_LEVEL
-+#define sdio_dbg(fmt, ...) pr_debug("aicbsp: " fmt, ##__VA_ARGS__)
-+#define usb_dbg(fmt, ...)  pr_debug("aicbsp: " fmt, ##__VA_ARGS__)
-+#else
-+#define sdio_dbg(fmt, ...)
-+#define usb_dbg(fmt, ...)
-+#endif
-+#if DBG_LEVEL >=3D DEBUG_INFO_LEVEL
-+#define sdio_info(fmt, ...) pr_info("aicbsp: " fmt, ##__VA_ARGS__)
-+#define usb_info(fmt, ...)  pr_info("aicbsp: " fmt, ##__VA_ARGS__)
-+#else
-+#define sdio_info(fmt, ...)
-+#define usb_info(fmt, ...)
-+#endif
-+
-+/* aicwf_bus_state and aicwf_bus_ops are now defined in aic_bus.h */
-+
-+struct frame_queue {
-+	u16 num_prio;
-+	u16 hi_prio;
-+	u16 qmax; /* max number of queued frames */
-+	u16 qcnt;
-+	struct sk_buff_head queuelist[8];
-+};
-+
-+struct aicwf_tx_priv {
-+#ifdef AICWF_SDIO_SUPPORT
-+	struct aic_sdio_dev *sdiodev;
-+	int fw_avail_bufcnt;
-+	// for cmd tx
-+	u8 *cmd_buf;
-+	uint cmd_len;
-+	bool cmd_txstate;
-+	bool cmd_tx_succ;
-+	struct semaphore cmd_txsema;
-+	wait_queue_head_t cmd_txdone_wait;
-+	// for data tx
-+	atomic_t tx_pktcnt;
-+
-+	struct frame_queue txq;
-+	/* lock for tx_priv */
-+	spinlock_t txqlock;
-+	struct semaphore txctl_sema;
-+#endif
-+	struct sk_buff *aggr_buf;
-+	atomic_t aggr_count;
-+	u8 *head;
-+	u8 *tail;
-+};
-+
-+#define MAX_REORD_RXFRAME     250
-+#define REORDER_UPDATE_TIME   50
-+#define AICWF_REORDER_WINSIZE 64
-+#define SN_LESS(a, b)         ((((a) - (b)) & 0x800) !=3D 0)
-+#define SN_EQUAL(a, b)        ((a) =3D=3D (b))
-+
-+struct reord_ctrl {
-+	struct aicwf_rx_priv *rx_priv;
-+	u8 enable;
-+	u16 ind_sn;
-+	u8 wsize_b;
-+	/* lock for reord list */
-+	spinlock_t reord_list_lock;
-+	struct list_head reord_list;
-+	struct timer_list reord_timer;
-+	struct work_struct reord_timer_work;
-+};
-+
-+struct reord_ctrl_info {
-+	u8 mac_addr[6];
-+	struct reord_ctrl preorder_ctrl[8];
-+	struct list_head list;
-+};
-+
-+struct recv_msdu {
-+	struct sk_buff *pkt;
-+	u8 tid;
-+	u16 seq_num;
-+	uint len;
-+	u8 *rx_data;
-+	// for pending rx reorder list
-+	struct list_head reord_pending_list;
-+	// for total frame list, when rxframe from busif, dequeue, when submit fr=
-ame
-+	// to net, enqueue
-+	struct list_head rxframe_list;
-+	struct reord_ctrl *preorder_ctrl;
-+};
-+
-+struct aicwf_rx_priv {
-+	struct aic_sdio_dev *sdiodev;
-+	void *rwnx_vif;
-+	atomic_t rx_cnt;
-+	u32 data_len;
-+	/* lock for rx priv */
-+	spinlock_t rxqlock;
-+	struct frame_queue rxq;
-+
-+	/* lock for freeq */
-+	spinlock_t freeq_lock;
-+	struct list_head rxframes_freequeue;
-+	struct list_head stas_reord_list;
-+	/* lock for reord */
-+	spinlock_t stas_reord_lock;
-+	struct recv_msdu *recv_frames;
-+};
-+
-+/* Inline bus wrappers and aicwf_bus_init/deinit are now in aic_bus.h */
-+
-+static inline void aicwf_sched_timeout(u32 millisec)
-+{
-+	ulong timeout =3D 0, expires =3D 0;
-+
-+	expires =3D jiffies + msecs_to_jiffies(millisec);
-+	timeout =3D millisec;
-+
-+	while (timeout) {
-+		timeout =3D schedule_timeout(timeout);
-+		if (time_after(jiffies, expires))
++		if (WARN(i >=3D rwnx_sta->group_info.cnt,
++			 "STA%d: Too much group (%d)\n", rwnx_sta->sta_idx, i + 1))
 +			break;
++
++		req->groups[i].group_id =3D group_id;
++		req->groups[i].user_pos =3D user_pos;
++
++		i++;
 +	}
++
++	req->group_cnt =3D rwnx_sta->group_info.cnt;
++	req->sta_idx =3D rwnx_sta->sta_idx;
++
++	/* Send the MM_MU_GROUP_UPDATE_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_MU_GROUP_UPDATE_CFM, NULL);
++}
++#endif /* CONFIG_RWNX_MUMIMO_TX */
++#endif /* CONFIG_RWNX_BFMER */
++
++/**********************************************************************
++ *    Debug Messages
++ *********************************************************************/
++int rwnx_send_dbg_trigger_req(struct rwnx_hw *rwnx_hw, char *msg)
++{
++	struct mm_dbg_trigger_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_DBG_TRIGGER_REQ message */
++	req =3D rwnx_msg_zalloc(MM_DBG_TRIGGER_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_dbg_trigger_req));
++	if (!req)
++		return -ENOMEM;
++
++	/* Set parameters for the MM_DBG_TRIGGER_REQ message */
++	strscpy(req->error, msg, sizeof(req->error));
++
++	/* Send the MM_DBG_TRIGGER_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 0, -1, NULL);
 +}
 +
-+void aicwf_tx_deinit(struct aicwf_tx_priv *tx_priv);
-+void aicwf_rx_deinit(struct aicwf_rx_priv *rx_priv);
-+struct aicwf_tx_priv *aicwf_tx_init(void *arg);
-+struct aicwf_rx_priv *aicwf_rx_init(void *arg);
-+void aicwf_frame_queue_init(struct frame_queue *pq, int num_prio, int max_=
-len);
-+void aicwf_frame_queue_flush(struct frame_queue *pq);
-+bool aicwf_frame_enq(struct device *dev, struct frame_queue *q,
-+		     struct sk_buff *pkt, int prio);
-+bool aicwf_rxframe_enqueue(struct device *dev, struct frame_queue *q,
-+			   struct sk_buff *pkt);
-+bool aicwf_is_framequeue_empty(struct frame_queue *pq);
-+void aicwf_frame_tx(void *dev, struct sk_buff *skb);
-+void aicwf_dev_skb_free(struct sk_buff *skb);
-+struct sk_buff *aicwf_frame_dequeue(struct frame_queue *pq);
-+struct sk_buff *aicwf_frame_queue_peek_tail(struct frame_queue *pq,
-+					    int *prio_out);
++int rwnx_send_dbg_mem_read_req(struct rwnx_hw *rwnx_hw, u32 mem_addr,
++			       struct dbg_mem_read_cfm *cfm)
++{
++	struct dbg_mem_read_req *mem_read_req;
 +
-+#endif /* _AICWF_TXRXIF_H_ */
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.c b/dr=
-ivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.c
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_MEM_READ_REQ message */
++	mem_read_req =3D rwnx_msg_zalloc(DBG_MEM_READ_REQ, TASK_DBG, DRV_TASK_ID,
++				       sizeof(struct dbg_mem_read_req));
++	if (!mem_read_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_MEM_READ_REQ message */
++	mem_read_req->memaddr =3D mem_addr;
++
++	/* Send the DBG_MEM_READ_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, mem_read_req, 1, DBG_MEM_READ_CFM, cfm);
++}
++
++int rwnx_send_dbg_mem_write_req(struct rwnx_hw *rwnx_hw, u32 mem_addr,
++				u32 mem_data)
++{
++	struct dbg_mem_write_req *mem_write_req;
++
++	// RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_MEM_WRITE_REQ message */
++	mem_write_req =3D rwnx_msg_zalloc(DBG_MEM_WRITE_REQ, TASK_DBG, DRV_TASK_I=
+D,
++					sizeof(struct dbg_mem_write_req));
++	if (!mem_write_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_MEM_WRITE_REQ message */
++	mem_write_req->memaddr =3D mem_addr;
++	mem_write_req->memdata =3D mem_data;
++
++	/* Send the DBG_MEM_WRITE_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, mem_write_req, 1, DBG_MEM_WRITE_CFM, NULL);
++}
++
++int rwnx_send_dbg_mem_mask_write_req(struct rwnx_hw *rwnx_hw, u32 mem_addr=
+,
++				     u32 mem_mask, u32 mem_data)
++{
++	struct dbg_mem_mask_write_req *mem_mask_write_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_MEM_MASK_WRITE_REQ message */
++	mem_mask_write_req =3D
++		rwnx_msg_zalloc(DBG_MEM_MASK_WRITE_REQ, TASK_DBG, DRV_TASK_ID,
++				sizeof(struct dbg_mem_mask_write_req));
++	if (!mem_mask_write_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_MEM_MASK_WRITE_REQ message */
++	mem_mask_write_req->memaddr =3D mem_addr;
++	mem_mask_write_req->memmask =3D mem_mask;
++	mem_mask_write_req->memdata =3D mem_data;
++
++	/* Send the DBG_MEM_MASK_WRITE_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, mem_mask_write_req, 1, DBG_MEM_MASK_WRITE_C=
+FM,
++			     NULL);
++}
++
++int rwnx_send_rftest_req(struct rwnx_hw *rwnx_hw, u32 cmd, u32 argc,
++			 u8 *argv, struct dbg_rftest_cmd_cfm *cfm)
++{
++	struct dbg_rftest_cmd_req *mem_rftest_cmd_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_RFTEST_CMD_REQ message */
++	mem_rftest_cmd_req =3D
++		rwnx_msg_zalloc(DBG_RFTEST_CMD_REQ, TASK_DBG, DRV_TASK_ID,
++				sizeof(struct dbg_rftest_cmd_req));
++	if (!mem_rftest_cmd_req)
++		return -ENOMEM;
++
++	if (argc > 10)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_MEM_MASK_WRITE_REQ message */
++	mem_rftest_cmd_req->cmd =3D cmd;
++	mem_rftest_cmd_req->argc =3D argc;
++	if (argc !=3D 0)
++		memcpy(mem_rftest_cmd_req->argv, argv, argc);
++
++	/* Send the DBG_RFTEST_CMD_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, mem_rftest_cmd_req, 1, DBG_RFTEST_CMD_CFM,
++			     cfm);
++}
++
++int rwnx_send_dbg_set_mod_filter_req(struct rwnx_hw *rwnx_hw, u32 filter)
++{
++	struct dbg_set_mod_filter_req *set_mod_filter_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_SET_MOD_FILTER_REQ message */
++	set_mod_filter_req =3D
++		rwnx_msg_zalloc(DBG_SET_MOD_FILTER_REQ, TASK_DBG, DRV_TASK_ID,
++				sizeof(struct dbg_set_mod_filter_req));
++	if (!set_mod_filter_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_SET_MOD_FILTER_REQ message */
++	set_mod_filter_req->mod_filter =3D filter;
++
++	/* Send the DBG_SET_MOD_FILTER_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, set_mod_filter_req, 1, DBG_SET_MOD_FILTER_C=
+FM,
++						 NULL);
++}
++
++int rwnx_send_dbg_set_sev_filter_req(struct rwnx_hw *rwnx_hw, u32 filter)
++{
++	struct dbg_set_sev_filter_req *set_sev_filter_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_SET_SEV_FILTER_REQ message */
++	set_sev_filter_req =3D
++		rwnx_msg_zalloc(DBG_SET_SEV_FILTER_REQ, TASK_DBG, DRV_TASK_ID,
++				sizeof(struct dbg_set_sev_filter_req));
++	if (!set_sev_filter_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_SET_SEV_FILTER_REQ message */
++	set_sev_filter_req->sev_filter =3D filter;
++
++	/* Send the DBG_SET_SEV_FILTER_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, set_sev_filter_req, 1, DBG_SET_SEV_FILTER_C=
+FM,
++			     NULL);
++}
++
++int rwnx_send_dbg_get_sys_stat_req(struct rwnx_hw *rwnx_hw,
++				   struct dbg_get_sys_stat_cfm *cfm)
++{
++	void *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Allocate the message */
++	req =3D rwnx_msg_zalloc(DBG_GET_SYS_STAT_REQ, TASK_DBG, DRV_TASK_ID, 0);
++	if (!req)
++		return -ENOMEM;
++
++	/* Send the DBG_MEM_READ_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, DBG_GET_SYS_STAT_CFM, cfm);
++}
++
++int rwnx_send_dbg_mem_block_write_req(struct rwnx_hw *rwnx_hw, u32 mem_add=
+r,
++				      u32 mem_size, u32 *mem_data)
++{
++	struct dbg_mem_block_write_req *mem_blk_write_req;
++
++	// RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_MEM_BLOCK_WRITE_REQ message */
++	mem_blk_write_req =3D
++		rwnx_msg_zalloc(DBG_MEM_BLOCK_WRITE_REQ, TASK_DBG, DRV_TASK_ID,
++				sizeof(struct dbg_mem_block_write_req));
++	if (!mem_blk_write_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_MEM_BLOCK_WRITE_REQ message */
++	mem_blk_write_req->memaddr =3D mem_addr;
++	mem_blk_write_req->memsize =3D mem_size;
++	memcpy(mem_blk_write_req->memdata, mem_data, mem_size);
++
++	/* Send the DBG_MEM_BLOCK_WRITE_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, mem_blk_write_req, 1, DBG_MEM_BLOCK_WRITE_C=
+FM,
++			     NULL);
++}
++
++int rwnx_send_dbg_start_app_req(struct rwnx_hw *rwnx_hw, u32 boot_addr,
++				u32 boot_type)
++{
++	struct dbg_start_app_req *start_app_req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the DBG_START_APP_REQ message */
++	start_app_req =3D rwnx_msg_zalloc(DBG_START_APP_REQ, TASK_DBG, DRV_TASK_I=
+D,
++					sizeof(struct dbg_start_app_req));
++	if (!start_app_req)
++		return -ENOMEM;
++
++	/* Set parameters for the DBG_START_APP_REQ message */
++	start_app_req->bootaddr =3D boot_addr;
++	start_app_req->boottype =3D boot_type;
++
++	/* Send the DBG_START_APP_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, start_app_req, 1, DBG_START_APP_CFM, NULL);
++}
++
++int rwnx_send_cfg_rssi_req(struct rwnx_hw *rwnx_hw, u8 vif_index,
++			   int rssi_thold, u32 rssi_hyst)
++{
++	struct mm_cfg_rssi_req *req;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	/* Build the MM_CFG_RSSI_REQ message */
++	req =3D rwnx_msg_zalloc(MM_CFG_RSSI_REQ, TASK_MM, DRV_TASK_ID,
++			      sizeof(struct mm_cfg_rssi_req));
++	if (!req)
++		return -ENOMEM;
++
++	if (!rwnx_hw->vif_table[vif_index])
++		return 0;
++
++	/* Set parameters for the MM_CFG_RSSI_REQ message */
++	req->vif_index =3D vif_index;
++	req->rssi_thold =3D (s8)rssi_thold;
++	req->rssi_hyst =3D (u8)rssi_hyst;
++
++	/* Send the MM_CFG_RSSI_REQ message to LMAC FW */
++	return rwnx_send_msg(rwnx_hw, req, 1, MM_CFG_RSSI_CFM, NULL);
++}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.h b/drivers/=
+net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.h
 new file mode 100644
-index 0000000000000..0e0387f502e12
+index 0000000000000..1e01ef8f7976c
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.c
-@@ -0,0 +1,72 @@
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_msg_tx.h
+@@ -0,0 +1,266 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_MSG_TX_H_
++#define _RWNX_MSG_TX_H_
++
++#include "lmac_types.h"
++#include "rwnx_defs.h"
++
++int rwnx_send_reset(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_start(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_version_req(struct rwnx_hw *rwnx_hw, struct mm_version_cfm *=
+cfm);
++
++int rwnx_send_add_if(struct rwnx_hw *rwnx_hw, const unsigned char *mac,
++		     enum nl80211_iftype iftype, bool p2p,
++		     struct mm_add_if_cfm *cfm);
++
++int rwnx_send_remove_if(struct rwnx_hw *rwnx_hw, u8 vif_index, bool defer)=
+;
++
++int rwnx_send_set_channel(struct rwnx_hw *rwnx_hw, int phy_idx,
++			  struct mm_set_channel_cfm *cfm);
++
++int rwnx_send_key_add(struct rwnx_hw *rwnx_hw, u8 vif_idx, u8 sta_idx,
++		      bool pairwise, u8 *key, u8 key_len, u8 key_idx,
++		      u8 cipher_suite, struct mm_key_add_cfm *cfm);
++
++int rwnx_send_key_del(struct rwnx_hw *rwnx_hw, uint8_t hw_key_idx);
++
++int rwnx_send_bcn(struct rwnx_hw *rwnx_hw, u8 *buf, u8 vif_idx, u16 bcn_le=
+n);
++
++int rwnx_send_bcn_change(struct rwnx_hw *rwnx_hw, u8 vif_idx, u32 bcn_addr=
+,
++			 u16 bcn_len, u16 tim_oft, u16 tim_len, u16 *csa_oft);
++
++int rwnx_send_tim_update(struct rwnx_hw *rwnx_hw, u8 vif_idx, u16 aid,
++			 u8 tx_status);
++
++int rwnx_send_roc(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++		  struct ieee80211_channel *chan, unsigned int duration,
++		  struct mm_remain_on_channel_cfm *roc_cfm);
++
++int rwnx_send_cancel_roc(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_set_power(struct rwnx_hw *rwnx_hw, u8 vif_idx, s8 pwr,
++			struct mm_set_power_cfm *cfm);
++
++int rwnx_send_set_edca(struct rwnx_hw *rwnx_hw, u8 hw_queue, u32 param,
++		       bool uapsd, u8 inst_nbr);
++
++int rwnx_send_tdls_chan_switch_req(struct rwnx_hw *rwnx_hw,
++				   struct rwnx_vif *rwnx_vif,
++				   struct rwnx_sta *rwnx_sta,
++				   bool sta_initiator, u8 oper_class,
++				   struct cfg80211_chan_def *chandef,
++				   struct tdls_chan_switch_cfm *cfm);
++
++int rwnx_send_tdls_cancel_chan_switch_req(struct rwnx_hw *rwnx_hw, struct =
+rwnx_vif *rwnx_vif,
++					  struct rwnx_sta *rwnx_sta,
++					  struct tdls_cancel_chan_switch_cfm *cfm);
++
++#ifdef AICWF_ARP_OFFLOAD
++int rwnx_send_arpoffload_en_req(struct rwnx_hw *rwnx_hw,
++				struct rwnx_vif *rwnx_vif, u32 ipaddr,
++				u8 enable);
++#endif
++int rwnx_send_rf_config_req(struct rwnx_hw *rwnx_hw, u8 ofst, u8 sel, u8 *=
+tbl, u16 len);
++
++int rwnx_send_rf_calib_req(struct rwnx_hw *rwnx_hw,
++			   struct mm_set_rf_calib_cfm *cfm);
++
++int rwnx_send_get_macaddr_req(struct rwnx_hw *rwnx_hw,
++			      struct mm_get_mac_addr_cfm *cfm);
++
++#ifdef CONFIG_RWNX_FULLMAC
++int rwnx_send_me_config_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_me_chan_config_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_me_set_control_port_req(struct rwnx_hw *rwnx_hw, bool opened=
+,
++				      u8 sta_idx);
++
++int rwnx_send_me_sta_add(struct rwnx_hw *rwnx_hw,
++			 struct station_parameters *params, const u8 *mac,
++			 u8 inst_nbr, struct me_sta_add_cfm *cfm);
++
++int rwnx_send_me_sta_del(struct rwnx_hw *rwnx_hw, u8 sta_idx, bool tdls_st=
+a);
++
++int rwnx_send_me_traffic_ind(struct rwnx_hw *rwnx_hw, u8 sta_idx, bool uap=
+sd,
++			     u8 tx_status);
++
++int rwnx_send_me_rc_stats(struct rwnx_hw *rwnx_hw, u8 sta_idx,
++			  struct me_rc_stats_cfm *cfm);
++
++int rwnx_send_me_rc_set_rate(struct rwnx_hw *rwnx_hw, u8 sta_idx, u16 rate=
+_idx);
++
++int rwnx_send_me_set_ps_mode(struct rwnx_hw *rwnx_hw, u8 ps_mode);
++
++int rwnx_send_me_set_lp_level(struct rwnx_hw *rwnx_hw, u8 lp_level, u8 dis=
+able_filter);
++
++int rwnx_send_sm_connect_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwn=
+x_vif,
++			     struct cfg80211_connect_params *sme, struct sm_connect_cfm *cfm);
++
++int rwnx_send_sm_disconnect_req(struct rwnx_hw *rwnx_hw,
++				struct rwnx_vif *rwnx_vif, u16 reason);
++
++int rwnx_send_sm_external_auth_required_rsp(struct rwnx_hw *rwnx_hw,
++					    struct rwnx_vif *rwnx_vif, u16 status);
++
++int rwnx_send_apm_start_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++			    struct cfg80211_ap_settings *settings, struct apm_start_cfm *cfm,
++			    struct rwnx_ipc_elem_var *elem);
++
++int rwnx_send_apm_stop_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif);
++
++int rwnx_send_scanu_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_vif=
+,
++			struct cfg80211_scan_request *param);
++
++int rwnx_send_scanu_cancel_req(struct rwnx_hw *rwnx_hw,
++			       struct scan_cancel_cfm *cfm);
++
++int rwnx_send_apm_start_cac_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *=
+vif,
++				struct cfg80211_chan_def *chandef,
++				struct apm_start_cac_cfm *cfm);
++
++int rwnx_send_apm_stop_cac_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *v=
+if);
++
++int rwnx_send_tdls_peer_traffic_ind_req(struct rwnx_hw *rwnx_hw,
++					struct rwnx_vif *rwnx_vif);
++
++int rwnx_send_config_monitor_req(struct rwnx_hw *rwnx_hw,
++				 struct cfg80211_chan_def *chandef,
++				 struct me_config_monitor_cfm *cfm);
++
++int rwnx_send_mesh_start_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif=
+,
++			     const struct mesh_config *conf, const struct mesh_setup *setup,
++			     struct mesh_start_cfm *cfm);
++
++int rwnx_send_mesh_stop_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vif,
++			    struct mesh_stop_cfm *cfm);
++
++int rwnx_send_mesh_update_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif *vi=
+f,
++			      u32 mask, const struct mesh_config *p_mconf,
++			      struct mesh_update_cfm *cfm);
++
++int rwnx_send_mesh_peer_info_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif =
+*vif,
++				 u8 sta_idx, struct mesh_peer_info_cfm *cfm);
++
++void rwnx_send_mesh_peer_update_ntf(struct rwnx_hw *rwnx_hw,
++				    struct rwnx_vif *vif, u8 sta_idx,
++				    u8 mlink_state);
++
++void rwnx_send_mesh_path_create_req(struct rwnx_hw *rwnx_hw,
++				    struct rwnx_vif *vif, u8 *tgt_addr);
++
++int rwnx_send_mesh_path_update_req(struct rwnx_hw *rwnx_hw,
++				   struct rwnx_vif *vif, const u8 *tgt_addr,
++				   const u8 *p_nhop_addr,
++				   struct mesh_path_update_cfm *cfm);
++
++void rwnx_send_mesh_proxy_add_req(struct rwnx_hw *rwnx_hw, struct rwnx_vif=
+ *vif,
++				  u8 *ext_addr);
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++#ifdef CONFIG_RWNX_BFMER
++#ifdef CONFIG_RWNX_FULLMAC
++void rwnx_send_bfmer_enable(struct rwnx_hw *rwnx_hw, struct rwnx_sta *rwnx=
+_sta,
++			    const struct ieee80211_vht_cap *vht_cap);
++
++#endif /* CONFIG_RWNX_FULLMAC */
++#ifdef CONFIG_RWNX_MUMIMO_TX
++int rwnx_send_mu_group_update_req(struct rwnx_hw *rwnx_hw,
++				  struct rwnx_sta *rwnx_sta);
++#endif /* CONFIG_RWNX_MUMIMO_TX */
++#endif /* CONFIG_RWNX_BFMER */
++
++/* Debug messages */
++int rwnx_send_dbg_trigger_req(struct rwnx_hw *rwnx_hw, char *msg);
++
++int rwnx_send_dbg_mem_read_req(struct rwnx_hw *rwnx_hw, u32 mem_addr,
++			       struct dbg_mem_read_cfm *cfm);
++
++int rwnx_send_dbg_mem_write_req(struct rwnx_hw *rwnx_hw, u32 mem_addr,
++				u32 mem_data);
++
++int rwnx_send_dbg_mem_mask_write_req(struct rwnx_hw *rwnx_hw, u32 mem_addr=
+,
++				     u32 mem_mask, u32 mem_data);
++
++int rwnx_send_dbg_set_mod_filter_req(struct rwnx_hw *rwnx_hw, u32 filter);
++
++int rwnx_send_rftest_req(struct rwnx_hw *rwnx_hw, u32 cmd, u32 argc,
++			 u8 *argv, struct dbg_rftest_cmd_cfm *cfm);
++
++int rwnx_send_dbg_set_sev_filter_req(struct rwnx_hw *rwnx_hw, u32 filter);
++
++int rwnx_send_dbg_get_sys_stat_req(struct rwnx_hw *rwnx_hw,
++				   struct dbg_get_sys_stat_cfm *cfm);
++
++int rwnx_send_dbg_mem_block_write_req(struct rwnx_hw *rwnx_hw, u32 mem_add=
+r,
++				      u32 mem_size, u32 *mem_data);
++
++int rwnx_send_dbg_start_app_req(struct rwnx_hw *rwnx_hw, u32 boot_addr,
++				u32 boot_type);
++
++int rwnx_send_cfg_rssi_req(struct rwnx_hw *rwnx_hw, u8 vif_index,
++			   int rssi_thold, u32 rssi_hyst);
++
++int rwnx_send_disable_agg_req(struct rwnx_hw *rwnx_hw, u8 agg_disable,
++			      u8 agg_disable_rx, u8 sta_idx);
++
++int rwnx_send_coex_req(struct rwnx_hw *rwnx_hw, u8 disable_coexnull,
++		       u8 enable_nullcts);
++
++int rwnx_send_get_sta_info_req(struct rwnx_hw *rwnx_hw, u8 sta_idx,
++			       struct mm_get_sta_info_cfm *cfm);
++
++int rwnx_send_set_stack_start_req(struct rwnx_hw *rwnx_hw, u8 on,
++				  u8 efuse_valid, u8 set_vendor_info,
++				  u8 fwtrace_redir_en,
++				  struct mm_set_stack_start_cfm *cfm);
++
++int rwnx_send_get_temp_req(struct rwnx_hw *rwnx_hw,
++			   struct mm_set_vendor_swconfig_cfm *cfm);
++
++int rwnx_send_get_temp_hwconfig_req(struct rwnx_hw *rwnx_hw,
++				    struct mm_set_vendor_hwconfig_cfm *cfm);
++
++int rwnx_send_set_temp_comp_req(struct rwnx_hw *rwnx_hw,
++				struct mm_set_vendor_swconfig_cfm *cfm);
++
++int rwnx_send_txop_req(struct rwnx_hw *rwnx_hw, uint16_t *txop,
++		       u8 long_nav_en, u8 cfe_en);
++
++int rwnx_send_vendor_hwconfig_req(struct rwnx_hw *rwnx_hw, u32 hwconfig_id=
+,
++				  s32 *param, s32 *param_out);
++
++int rwnx_send_vendor_swconfig_req(struct rwnx_hw *rwnx_hw, u32 swconfig_id=
+,
++				  s32 *param_in, s32 *param_out);
++
++int rwnx_send_mask_set_ext_flags_req(struct rwnx_hw *rwnx_hw,
++				     u32 flags_mask, u32 flags_val,
++				     struct mm_set_vendor_swconfig_cfm *cfm);
++
++int rwnx_send_get_fw_version_req(struct rwnx_hw *rwnx_hw,
++				 struct mm_get_fw_version_cfm *cfm);
++
++int rwnx_send_txpwr_idx_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_txpwr_ofst_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_txpwr_ofst2x_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_txpwr_lvl_req(struct rwnx_hw *rwnx_hw);
++
++int rwnx_send_txpwr_lvl_v3_req(struct rwnx_hw *rwnx_hw, int index_reg);
++
++int rwnx_send_txpwr_lvl_adj_req(struct rwnx_hw *rwnx_hw);
++
++struct rwnx_cmd *rwnx_cmd_malloc(void);
++
++void rwnx_cmd_free(struct rwnx_cmd *cmd);
++
++int rwnx_init_cmd_array(void);
++
++void rwnx_free_cmd_array(void);
++
++#endif /* _RWNX_MSG_TX_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.c b/driver=
+s/net/wireless/aic/aic8800_fdrv/rwnx_platform.c
+new file mode 100644
+index 0000000000000..a4d96a6a082f5
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.c
+@@ -0,0 +1,2868 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + *************************************************************************=
@@ -8176,185 +14058,4114 @@ index 0000000000000..0e0387f502e12
 + *
 + * Copyright (C) 2020 AIC semiconductor.
 + *
-+ * @brief bsp txq prealloc mem
++ * @file rwnx_platform.c
++ *
++ * @brief Platform profile
 + *
 + *************************************************************************=
 *****
 + */
-+#include "aic_bsp_driver.h"
-+#include "aicsdio_txrxif.h"
-+#include "aicwf_txq_prealloc.h"
-+#include <linux/slab.h>
 +
-+struct prealloc_txq {
-+	int prealloced;
-+	void *txq;
++#include <linux/delay.h>
++#include <crypto/md5.h>
++#include <linux/firmware.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/sprintf.h>
++#include <linux/string.h>
++#include <linux/vmalloc.h>
++
++#include "hal_desc.h"
++#include "reg_access.h"
++#include "rwnx_main.h"
++#include "rwnx_platform.h"
++#include "ipc_host.h"
++#include "rwnx_msg_tx.h"
++
++#ifdef AICWF_SDIO_SUPPORT
++#include "aicwf_sdio.h"
++#endif
++
++#include "aicwf_compat_8800d80.h"
++#include "aicwf_compat_8800dc.h"
++#include "aicwf_chip_ops.h"
++
++// Parser state
++#define INIT      0
++#define CMD       1
++#define PRINT     2
++#define GET_VALUE 3
++
++struct reg_table {
++	char ccode[3];
++	enum regions_code region;
++};
++
++/* If the region conflicts with the kernel, the actual authentication stan=
+dard prevails */
++static struct reg_table reg_tables[] =3D {
++	{.ccode =3D "CN", .region =3D REGIONS_SRRC},
++	{.ccode =3D "US", .region =3D REGIONS_FCC},
++	{.ccode =3D "DE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "00", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "WW", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "XX", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "JP", .region =3D REGIONS_JP},
++	{.ccode =3D "AD", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AF", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AI", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AN", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AR", .region =3D REGIONS_FCC},
++	{.ccode =3D "AS", .region =3D REGIONS_FCC},
++	{.ccode =3D "AT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AU", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AW", .region =3D REGIONS_ETSI},
++	{.ccode =3D "AZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BB", .region =3D REGIONS_FCC},
++	{.ccode =3D "BD", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BF", .region =3D REGIONS_FCC},
++	{.ccode =3D "BG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BM", .region =3D REGIONS_FCC},
++	{.ccode =3D "BN", .region =3D REGIONS_JP},
++	{.ccode =3D "BO", .region =3D REGIONS_JP},
++	{.ccode =3D "BR", .region =3D REGIONS_FCC},
++	{.ccode =3D "BS", .region =3D REGIONS_FCC},
++	{.ccode =3D "BT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BW", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BY", .region =3D REGIONS_ETSI},
++	{.ccode =3D "BZ", .region =3D REGIONS_JP},
++	{.ccode =3D "CA", .region =3D REGIONS_FCC},
++	{.ccode =3D "CF", .region =3D REGIONS_FCC},
++	{.ccode =3D "CH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "CI", .region =3D REGIONS_FCC},
++	{.ccode =3D "CL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "CO", .region =3D REGIONS_FCC},
++	{.ccode =3D "CR", .region =3D REGIONS_FCC},
++	{.ccode =3D "CU", .region =3D REGIONS_FCC},
++	{.ccode =3D "CX", .region =3D REGIONS_FCC},
++	{.ccode =3D "CY", .region =3D REGIONS_ETSI},
++	{.ccode =3D "CZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "DK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "DM", .region =3D REGIONS_FCC},
++	{.ccode =3D "DO", .region =3D REGIONS_FCC},
++	{.ccode =3D "DZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "EC", .region =3D REGIONS_FCC},
++	{.ccode =3D "EE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "EG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ES", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ET", .region =3D REGIONS_ETSI},
++	{.ccode =3D "FI", .region =3D REGIONS_ETSI},
++	{.ccode =3D "FK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "FM", .region =3D REGIONS_FCC},
++	{.ccode =3D "FO", .region =3D REGIONS_ETSI},
++	{.ccode =3D "FR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GB", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GD", .region =3D REGIONS_FCC},
++	{.ccode =3D "GE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GF", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GI", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GP", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "GT", .region =3D REGIONS_FCC},
++	{.ccode =3D "GU", .region =3D REGIONS_FCC},
++	{.ccode =3D "GY", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "HK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "HN", .region =3D REGIONS_FCC},
++	{.ccode =3D "HR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "HT", .region =3D REGIONS_FCC},
++	{.ccode =3D "HU", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ID", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IN", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IQ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IR", .region =3D REGIONS_JP},
++	{.ccode =3D "IS", .region =3D REGIONS_ETSI},
++	{.ccode =3D "IT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "JM", .region =3D REGIONS_FCC},
++	{.ccode =3D "JO", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KN", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KP", .region =3D REGIONS_JP},
++	{.ccode =3D "KR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KW", .region =3D REGIONS_ETSI},
++	{.ccode =3D "KY", .region =3D REGIONS_FCC},
++	{.ccode =3D "KZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LB", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LC", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LI", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LK", .region =3D REGIONS_FCC},
++	{.ccode =3D "LS", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LU", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LV", .region =3D REGIONS_ETSI},
++	{.ccode =3D "LY", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MC", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MD", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ME", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MF", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MH", .region =3D REGIONS_FCC},
++	{.ccode =3D "MK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MN", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MO", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MP", .region =3D REGIONS_FCC},
++	{.ccode =3D "MQ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MU", .region =3D REGIONS_FCC},
++	{.ccode =3D "MV", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MW", .region =3D REGIONS_ETSI},
++	{.ccode =3D "MX", .region =3D REGIONS_FCC},
++	{.ccode =3D "MY", .region =3D REGIONS_ETSI},
++	{.ccode =3D "NA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "NG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "NI", .region =3D REGIONS_FCC},
++	{.ccode =3D "NL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "NO", .region =3D REGIONS_ETSI},
++	{.ccode =3D "NP", .region =3D REGIONS_JP},
++	{.ccode =3D "NZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "OM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PA", .region =3D REGIONS_FCC},
++	{.ccode =3D "PE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PF", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PG", .region =3D REGIONS_FCC},
++	{.ccode =3D "PH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PL", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PR", .region =3D REGIONS_FCC},
++	{.ccode =3D "PT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "PW", .region =3D REGIONS_FCC},
++	{.ccode =3D "PY", .region =3D REGIONS_FCC},
++	{.ccode =3D "QA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "RE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "RO", .region =3D REGIONS_ETSI},
++	{.ccode =3D "RS", .region =3D REGIONS_ETSI},
++	{.ccode =3D "RU", .region =3D REGIONS_ETSI},
++	{.ccode =3D "RW", .region =3D REGIONS_FCC},
++	{.ccode =3D "SA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SE", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SI", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SK", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SN", .region =3D REGIONS_FCC},
++	{.ccode =3D "SR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "SV", .region =3D REGIONS_FCC},
++	{.ccode =3D "SY", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "TC", .region =3D REGIONS_FCC},
++	{.ccode =3D "TD", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TG", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TH", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TJ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TN", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TR", .region =3D REGIONS_ETSI},
++	{.ccode =3D "TT", .region =3D REGIONS_FCC},
++	{.ccode =3D "TW", .region =3D REGIONS_FCC},
++	{.ccode =3D "TZ", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "UA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "UG", .region =3D REGIONS_FCC},
++	{.ccode =3D "UY", .region =3D REGIONS_ETSI},
++	{.ccode =3D "UZ", .region =3D REGIONS_ETSI},
++	{.ccode =3D "VC", .region =3D REGIONS_ETSI},
++	{.ccode =3D "VE", .region =3D REGIONS_FCC},
++	{.ccode =3D "VI", .region =3D REGIONS_FCC},
++	{.ccode =3D "VN", .region =3D REGIONS_JP},
++	{.ccode =3D "VU", .region =3D REGIONS_FCC},
++	{.ccode =3D "WF", .region =3D REGIONS_ETSI},
++	{.ccode =3D "WS", .region =3D REGIONS_ETSI},
++	{.ccode =3D "YE", .region =3D REGIONS_DEFAULT},
++	{.ccode =3D "YT", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ZA", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ZM", .region =3D REGIONS_ETSI},
++	{.ccode =3D "ZW", .region =3D REGIONS_ETSI},
++	{.ccode =3D "XK", .region =3D REGIONS_ETSI},
++};
++
++struct rwnx_plat *g_rwnx_plat;
++
++struct userconfig_info_t {
++	struct txpwr_lvl_conf txpwr_lvl;
++	struct txpwr_lvl_conf_v2 txpwr_lvl_v2;
++	struct txpwr_lvl_conf_v3 txpwr_lvl_v3;
++	struct txpwr_lvl_conf_v3 txpwr_lvl_v3_gp[REGION_NUM_MAX];
++	struct txpwr_lvl_adj_conf txpwr_lvl_adj;
++	struct txpwr_loss_conf txpwr_loss;
++	struct txpwr_ofst_conf txpwr_ofst;
++	struct txpwr_ofst2x_conf txpwr_ofst2x;
++	struct xtal_cap_conf xtal_cap;
++};
++
++static struct userconfig_info_t userconfig_info =3D {
++	.txpwr_lvl =3D { .enable =3D 1,
++				  .dsss =3D 9,
++				  .ofdmlowrate_2g4 =3D 8,
++				  .ofdm64qam_2g4 =3D 8,
++				  .ofdm256qam_2g4 =3D 8,
++				  .ofdm1024qam_2g4 =3D 8,
++				  .ofdmlowrate_5g =3D 11,
++				  .ofdm64qam_5g =3D 10,
++				  .ofdm256qam_5g =3D 9,
++				  .ofdm1024qam_5g =3D 9},
++	.txpwr_lvl_v2 =3D	{ .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D
++				// 1M,   2M,   5M5,  11M,  6M,   9M,   12M,  18M,  24M,  36M,
++				// 48M,  54M
++			{20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 16},
++			.pwrlvl_11n_11ac_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9,
++				// MCS10,MCS11
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++		},
++	.txpwr_lvl_v3 =3D	{ .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D
++				// 1M,   2M,   5M5,  11M,  6M,   9M,   12M,  18M,  24M,  36M,
++				// 48M,  54M
++			{20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 16},
++			.pwrlvl_11n_11ac_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9,
++				// MCS10,MCS11
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D
++				// NA,   NA,   NA,   NA,   6M,   9M,   12M,  18M,  24M,  36M,
++				// 48M,  54M
++			{0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16, 16},
++			.pwrlvl_11n_11ac_5g =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9,
++				// MCS10,MCS11
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_lvl_v3_gp[0] =3D { .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D
++				// 1M,   2M,   5M5,  11M,  6M,   9M,   12M,  18M,  24M,  36M,
++				// 48M,  54M
++			{20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 16},
++			.pwrlvl_11n_11ac_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9,
++				// MCS10,MCS11
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D
++				// NA,   NA,   NA,   NA,   6M,   9M,   12M,  18M,  24M,  36M,
++				// 48M,  54M
++			{0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16, 16},
++			.pwrlvl_11n_11ac_5g =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D
++				// MCS0, MCS1, MCS2, MCS3, MCS4, MCS5, MCS6, MCS7, MCS8, MCS9,
++				// MCS10,MCS11
++			{20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_lvl_v3_gp[1] =3D { .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D {20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 1=
+6},
++			.pwrlvl_11n_11ac_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D {0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16,=
+ 16},
++			.pwrlvl_11n_11ac_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_lvl_v3_gp[2] =3D { .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D {20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 1=
+6},
++			.pwrlvl_11n_11ac_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D {0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16,=
+ 16},
++			.pwrlvl_11n_11ac_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_lvl_v3_gp[3] =3D { .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D {20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 1=
+6},
++			.pwrlvl_11n_11ac_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D {0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16,=
+ 16},
++			.pwrlvl_11n_11ac_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_lvl_v3_gp[4] =3D { .enable =3D 1,
++			.pwrlvl_11b_11ag_2g4 =3D {20, 20, 20, 20, 20, 20, 20, 20, 18, 18, 16, 1=
+6},
++			.pwrlvl_11n_11ac_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16},
++			.pwrlvl_11ax_2g4 =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 16, 15, 15},
++			.pwrlvl_11a_5g =3D {0x80, 0x80, 0x80, 0x80, 20, 20, 20, 20, 18, 18, 16,=
+ 16},
++			.pwrlvl_11n_11ac_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15},
++			.pwrlvl_11ax_5g =3D {20, 20, 20, 20, 18, 18, 16, 16, 16, 15, 14, 14},
++		},
++	.txpwr_loss =3D { .loss_enable_2g4 =3D 1,
++			.loss_value_2g4 =3D 0,
++			.loss_enable_5g =3D 1,
++			.loss_value_5g =3D 0,
++		},
++	.txpwr_ofst =3D { .enable =3D 1,
++			.chan_1_4 =3D 0,
++			.chan_5_9 =3D 0,
++			.chan_10_13 =3D 0,
++			.chan_36_64 =3D 0,
++			.chan_100_120 =3D 0,
++			.chan_122_140 =3D 0,
++			.chan_142_165 =3D 0,
++		},
++	.txpwr_ofst2x =3D { .enable =3D 0,
++			.pwrofst2x_tbl_2g4 =3D {
++					// ch1-4, ch5-9, ch10-13
++					{0, 0, 0}, // 11b
++					{0, 0, 0}, // ofdm_highrate
++					{0, 0, 0}, // ofdm_lowrate
++				},
++			.pwrofst2x_tbl_5g =3D {
++					// ch42,  ch58, ch106,ch122,ch138,ch155
++					{0, 0, 0, 0, 0, 0}, // ofdm_lowrate
++					{0, 0, 0, 0, 0, 0}, // ofdm_highrate
++					{0, 0, 0, 0, 0, 0}, // ofdm_midrate
++				},
++		},
++	.xtal_cap =3D { .enable =3D 0,
++			.xtal_cap =3D 24,
++			.xtal_cap_fine =3D 31,
++		},
++};
++
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++#define POWER_LIMIT_INVALID_VAL POWER_LEVEL_INVALID_VAL
++
++#define POWER_LIMIT_CC_MATCHED_BIT (0x1U << 0)
++
++struct txpwr_lmt_info_t {
++	u8 ch_cnt_2g4;
++	u8 ch_cnt_5g;
++	u8 ch_num_2g4[MAC_DOMAINCHANNEL_24G_MAX];
++	u8 ch_num_5g[MAC_DOMAINCHANNEL_5G_MAX];
++	s8 max_pwr_2g4[MAC_DOMAINCHANNEL_24G_MAX];
++	s8 max_pwr_5g[MAC_DOMAINCHANNEL_5G_MAX];
++};
++
++struct powerlimit_info_t {
++	u32 flags;
++	struct txpwr_lmt_info_t txpwr_lmt;
++};
++
++static struct powerlimit_info_t powerlimit_info =3D {
++	0,
++};
++#endif
++
++int aicwf_request_firmware(const struct firmware **fw, const char *name,
++			   struct device *dev)
++{
++	char *fw_name;
++	int ret;
++
++	if (!name || !name[0])
++		return -EINVAL;
++
++	fw_name =3D kasprintf(GFP_KERNEL, AIC8800_FW_DIR "%s", name);
++	if (!fw_name)
++		return -ENOMEM;
++
++	ret =3D request_firmware(fw, fw_name, dev);
++	kfree(fw_name);
++
++	return ret;
++}
++
++#define MD5PINRT                                                          =
+     \
++	"file "                                                                  =
+  \
++	"md5:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\r\n=
+"
++
++static int rwnx_load_firmware(u32 **fw_buf, const char *name,
++			      struct device *device)
++{
++	const struct firmware *fw =3D NULL;
++	u32 *dst =3D NULL;
++	void *buffer =3D NULL;
++	u8 digest[MD5_DIGEST_SIZE];
++	int size =3D 0;
++	int ret =3D 0;
++
++	AICWFDBG(LOGINFO, "AICWF %s: request firmware =3D %s\n", __func__, name);
++
++	ret =3D aicwf_request_firmware(&fw, name, device);
++
++	if (ret < 0) {
++		AICWFDBG(LOGDEBUG, "AICWF Load %s fail\n", name);
++		return ret;
++	}
++
++	size =3D fw->size;
++	dst =3D (u32 *)fw->data;
++
++	if (size <=3D 0) {
++		AICWFDBG(LOGDEBUG, "AICWF wrong size of firmware file\n");
++		release_firmware(fw);
++		return -1;
++	}
++
++	buffer =3D vmalloc(size);
++	if (!buffer) {
++		release_firmware(fw);
++		return -ENOMEM;
++	}
++	memset(buffer, 0, size);
++	memcpy(buffer, dst, size);
++
++	*fw_buf =3D buffer;
++
++	md5(buffer, size, digest);
++	AICWFDBG(LOGDEBUG, "AICWF " MD5PINRT, digest[0], digest[1], digest[2], di=
+gest[3],
++		 digest[4], digest[5], digest[6], digest[7], digest[8], digest[9],
++		 digest[10], digest[11], digest[12], digest[13], digest[14], digest[15])=
+;
++
++	release_firmware(fw);
++
++	return size;
++}
++
++/* buffer is allocated by kzalloc */
++int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32 **buffer,
++				 const char *filename)
++{
++	int size;
++
++	AICWFDBG(LOGDEBUG, "### Load file %s\n", filename);
++
++	size =3D rwnx_load_firmware(buffer, filename, rwnx_hw->dev);
++
++	return size;
++}
++
++static void rwnx_restore_firmware(u32 **fw_buf)
++{
++	vfree(*fw_buf);
++	*fw_buf =3D NULL;
++}
++
++void rwnx_release_firmware_common(u32 **buffer)
++{
++	rwnx_restore_firmware(buffer);
++}
++
++/**
++ * rwnx_plat_bin_fw_upload_2 - Load the requested binary FW into embedded
++ * side.
++ *
++ * @rwnx_hw: Main driver data
++ * @fw_addr: Address where the fw must be loaded
++ * @filename: Name of the fw.
++ *
++ * Load a fw, stored as a binary file, into the specified address
++ *
++ * Return: 0 on success, or a negative error code.
++ */
++int rwnx_plat_bin_fw_upload_2(struct rwnx_hw *rwnx_hw, u32 fw_addr,
++			      char *filename)
++{
++	int err =3D 0;
++	unsigned int i =3D 0, size;
++	//    u32 *src;
++	u32 *dst =3D NULL;
++
++	/* Copy the file on the Embedded side */
++	AICWFDBG(LOGINFO, "### Upload %s firmware, @ =3D %x\n", filename, fw_addr=
+);
++
++	size =3D rwnx_request_firmware_common(rwnx_hw, &dst, filename);
++	if (!dst) {
++		AICWFDBG(LOGERROR, "No such file or directory\n");
++		return -1;
++	}
++	if (size <=3D 0) {
++		AICWFDBG(LOGERROR, "wrong size of firmware file\n");
++		dst =3D NULL;
++		err =3D -1;
++	}
++
++	AICWFDBG(LOGINFO, "size=3D%d, dst[0]=3D%x\n", size, dst[0]);
++	if (size > 512) {
++		for (; i < (size - 512); i +=3D 512) {
++			// AICWFDBG(LOGDEBUG, "AICWF wr blk 0: %p -> %x\r\n",
++			// dst + i / 4, fw_addr + i);
++			err =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, fw_addr + i, 512,
++								dst + i / 4);
++			if (err) {
++				AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n",
++					 fw_addr + i, err);
++				break;
++			}
++		}
++	}
++	if (!err && i < size) {
++		// AICWFDBG(LOGDEBUG, "AICWF wr blk 1: %p -> %x\r\n", dst + i / 4, fw_ad=
+dr + i);
++		err =3D rwnx_send_dbg_mem_block_write_req(rwnx_hw, fw_addr + i, size - i=
+,
++							dst + i / 4);
++		if (err) {
++			AICWFDBG(LOGERROR, "bin upload fail: %x, err:%d\r\n", fw_addr + i,
++				 err);
++		}
++	}
++
++	if (dst)
++		rwnx_release_firmware_common(&dst);
++
++	return err;
++}
++
++struct nvram_info_t {
++	struct txpwr_idx_conf txpwr_idx;
++	struct txpwr_ofst_conf txpwr_ofst;
++	struct xtal_cap_conf xtal_cap;
++};
++
++static struct nvram_info_t nvram_info =3D {
++	.txpwr_idx =3D {.enable =3D 1,
++			.dsss =3D 9,
++			.ofdmlowrate_2g4 =3D 8,
++			.ofdm64qam_2g4 =3D 8,
++			.ofdm256qam_2g4 =3D 8,
++			.ofdm1024qam_2g4 =3D 8,
++			.ofdmlowrate_5g =3D 11,
++			.ofdm64qam_5g =3D 10,
++			.ofdm256qam_5g =3D 9,
++			.ofdm1024qam_5g =3D 9},
++	.txpwr_ofst =3D { .enable =3D 1,
++			.chan_1_4 =3D 0,
++			.chan_5_9 =3D 0,
++			.chan_10_13 =3D 0,
++			.chan_36_64 =3D 0,
++			.chan_100_120 =3D 0,
++			.chan_122_140 =3D 0,
++			.chan_142_165 =3D 0,
++		},
++	.xtal_cap =3D { .enable =3D 0,
++			.xtal_cap =3D 24,
++			.xtal_cap_fine =3D 31,
++		},
++};
++
++void get_userconfig_txpwr_ofst_in_fdrv(struct txpwr_ofst_conf *txpwr_ofst)
++{
++	txpwr_ofst->enable =3D userconfig_info.txpwr_ofst.enable;
++	txpwr_ofst->chan_1_4 =3D userconfig_info.txpwr_ofst.chan_1_4;
++	txpwr_ofst->chan_5_9 =3D userconfig_info.txpwr_ofst.chan_5_9;
++	txpwr_ofst->chan_10_13 =3D userconfig_info.txpwr_ofst.chan_10_13;
++	txpwr_ofst->chan_36_64 =3D userconfig_info.txpwr_ofst.chan_36_64;
++	txpwr_ofst->chan_100_120 =3D userconfig_info.txpwr_ofst.chan_100_120;
++	txpwr_ofst->chan_122_140 =3D userconfig_info.txpwr_ofst.chan_122_140;
++	txpwr_ofst->chan_142_165 =3D userconfig_info.txpwr_ofst.chan_142_165;
++
++	AICWFDBG(LOGINFO, "%s:enable      :%d\r\n", __func__, txpwr_ofst->enable)=
+;
++	AICWFDBG(LOGINFO, "%s:chan_1_4    :%d\r\n", __func__, txpwr_ofst->chan_1_=
+4);
++	AICWFDBG(LOGINFO, "%s:chan_5_9    :%d\r\n", __func__, txpwr_ofst->chan_5_=
+9);
++	AICWFDBG(LOGINFO, "%s:chan_10_13  :%d\r\n", __func__,
++		 txpwr_ofst->chan_10_13);
++	AICWFDBG(LOGINFO, "%s:chan_36_64  :%d\r\n", __func__,
++		 txpwr_ofst->chan_36_64);
++	AICWFDBG(LOGINFO, "%s:chan_100_120:%d\r\n", __func__,
++		 txpwr_ofst->chan_100_120);
++	AICWFDBG(LOGINFO, "%s:chan_122_140:%d\r\n", __func__,
++		 txpwr_ofst->chan_122_140);
++	AICWFDBG(LOGINFO, "%s:chan_142_165:%d\r\n", __func__,
++		 txpwr_ofst->chan_142_165);
++}
++
++void get_userconfig_txpwr_ofst2x_in_fdrv(struct txpwr_ofst2x_conf *txpwr_o=
+fst2x)
++{
++	int type, ch_grp;
++	*txpwr_ofst2x =3D userconfig_info.txpwr_ofst2x;
++	AICWFDBG(LOGINFO, "%s:enable      :%d\r\n", __func__, txpwr_ofst2x->enabl=
+e);
++	AICWFDBG(LOGDEBUG,
++		 "pwrofst2x 2.4g: [0]:11b, [1]:ofdm_highrate, [2]:ofdm_lowrate\n  chan=
+=3D\t1-4\t5-9\t10-13");
++
++	for (type =3D 0; type < 3; type++) {
++		AICWFDBG(LOGDEBUG, "\n  [%d] =3D", type);
++		for (ch_grp =3D 0; ch_grp < 3; ch_grp++) {
++			AICWFDBG(LOGDEBUG, "\t%d",
++				 txpwr_ofst2x->pwrofst2x_tbl_2g4[type][ch_grp]);
++		}
++	}
++	AICWFDBG(LOGDEBUG,
++		 "\npwrofst2x 5g: [0]:ofdm_lowrate, [1]:ofdm_highrate, [2]:ofdm_midrate\=
+n  chan=3D\t36-50\t51-64\t98-114\t115-130\t131-146\t147-166");
++	for (type =3D 0; type < 3; type++) {
++		AICWFDBG(LOGDEBUG, "\n  [%d] =3D", type);
++		for (ch_grp =3D 0; ch_grp < 6; ch_grp++) {
++			AICWFDBG(LOGDEBUG, "\t%d",
++				 txpwr_ofst2x->pwrofst2x_tbl_5g[type][ch_grp]);
++		}
++	}
++	AICWFDBG(LOGDEBUG, "\n");
++}
++
++void get_userconfig_txpwr_idx(struct txpwr_idx_conf *txpwr_idx)
++{
++	memcpy(txpwr_idx, &nvram_info.txpwr_idx, sizeof(struct txpwr_idx_conf));
++}
++
++void get_userconfig_txpwr_ofst(struct txpwr_ofst_conf *txpwr_ofst)
++{
++	memcpy(txpwr_ofst, &nvram_info.txpwr_ofst, sizeof(struct txpwr_ofst_conf)=
+);
++}
++
++void get_userconfig_xtal_cap(struct xtal_cap_conf *xtal_cap)
++{
++	if (nvram_info.xtal_cap.enable)
++		*xtal_cap =3D nvram_info.xtal_cap;
++
++	if (userconfig_info.xtal_cap.enable)
++		*xtal_cap =3D userconfig_info.xtal_cap;
++
++	AICWFDBG(LOGINFO, "%s:enable       :%d\r\n", __func__, xtal_cap->enable);
++	AICWFDBG(LOGINFO, "%s:xtal_cap     :%d\r\n", __func__, xtal_cap->xtal_cap=
+);
++	AICWFDBG(LOGINFO, "%s:xtal_cap_fine:%d\r\n", __func__,
++		 xtal_cap->xtal_cap_fine);
++}
++
++s8 get_txpwr_max(s8 power)
++{
++	int i =3D 0;
++
++	for (i =3D 0; i <=3D 11; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[i];
++	}
++	for (i =3D 0; i <=3D 9; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[i];
++	}
++	for (i =3D 0; i <=3D 11; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[i];
++	}
++	for (i =3D 4; i <=3D 11; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[i];
++	}
++	for (i =3D 0; i <=3D 9; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[i];
++	}
++	for (i =3D 0; i <=3D 11; i++) {
++		if (power < userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[i])
++			power =3D userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[i];
++	}
++
++	if (userconfig_info.txpwr_loss.loss_enable_2g4 =3D=3D 1 ||
++	    userconfig_info.txpwr_loss.loss_enable_5g =3D=3D 1) {
++		if (userconfig_info.txpwr_loss.loss_value_2g4 <
++		    userconfig_info.txpwr_loss.loss_value_5g)
++			power +=3D userconfig_info.txpwr_loss.loss_value_5g;
++		else
++			power +=3D userconfig_info.txpwr_loss.loss_value_2g4;
++	}
++
++	AICWFDBG(LOGDEBUG, "AICWF %s:txpwr_max:%d \r\n", __func__, power);
++	return power;
++}
++
++void set_txpwr_loss_ofst(s8 value)
++{
++	int i =3D 0;
++
++	for (i =3D 0; i <=3D 11; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[i] +=3D value;
++
++	for (i =3D 0; i <=3D 9; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[i] +=3D value;
++
++	for (i =3D 0; i <=3D 11; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[i] +=3D value;
++
++	for (i =3D 4; i <=3D 11; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[i] +=3D value;
++
++	for (i =3D 0; i <=3D 9; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[i] +=3D value;
++
++	for (i =3D 0; i <=3D 11; i++)
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[i] +=3D value;
++
++	AICWFDBG(LOGDEBUG, "AICWF %s:value:%d\r\n", __func__, value);
++}
++
++#define MATCH_NODE(type, node, cfg_key) {cfg_key, offsetof(type, node)}
++
++struct parse_match_t {
++	char keyname[64];
++	int offset;
++};
++
++static const char * const parse_key_prefix[] =3D {
++	[0x01] =3D "module0_",
++	[0x21] =3D "module1_",
++};
++
++static const struct parse_match_t parse_match_tab[] =3D {
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.enable, "enable"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.dsss, "dsss"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdmlowrate_2g4, "ofdmlowrate_2=
+g4"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm64qam_2g4, "ofdm64qam_2g4")=
+,
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm256qam_2g4, "ofdm256qam_2g4=
+"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm1024qam_2g4, "ofdm1024qam_2=
+g4"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdmlowrate_5g, "ofdmlowrate_5g=
+"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm64qam_5g, "ofdm64qam_5g"),
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm256qam_5g, "ofdm256qam_5g")=
+,
++	MATCH_NODE(struct nvram_info_t, txpwr_idx.ofdm1024qam_5g, "ofdm1024qam_5g=
+"),
++
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.enable, "ofst_enable"),
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_1_4, "ofst_chan_1_4"),
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_5_9, "ofst_chan_5_9"),
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_10_13, "ofst_chan_10_13")=
+,
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_36_64, "ofst_chan_36_64")=
+,
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_100_120, "ofst_chan_100_1=
+20"),
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_122_140, "ofst_chan_122_1=
+40"),
++	MATCH_NODE(struct nvram_info_t, txpwr_ofst.chan_142_165, "ofst_chan_142_1=
+65"),
++
++	MATCH_NODE(struct nvram_info_t, xtal_cap.enable, "xtal_enable"),
++	MATCH_NODE(struct nvram_info_t, xtal_cap.xtal_cap, "xtal_cap"),
++	MATCH_NODE(struct nvram_info_t, xtal_cap.xtal_cap_fine, "xtal_cap_fine"),
++};
++
++static int parse_key_val(const char *str, const char *key, char *val)
++{
++	const char *p =3D NULL;
++	const char *dst =3D NULL;
++	int keysize =3D 0;
++	int bufsize =3D 0;
++
++	if (!str || !key || !val)
++		return -1;
++
++	keysize =3D strlen(key);
++	bufsize =3D strlen(str);
++	if (bufsize <=3D keysize)
++		return -1;
++
++	p =3D str;
++	while (*p !=3D 0 && *p =3D=3D ' ')
++		p++;
++
++	if (*p =3D=3D '#')
++		return -1;
++
++	if (str + bufsize - p <=3D keysize)
++		return -1;
++
++	if (strncmp(p, key, keysize) !=3D 0)
++		return -1;
++
++	p +=3D keysize;
++
++	while (*p !=3D 0 && *p =3D=3D ' ')
++		p++;
++
++	if (*p !=3D '=3D')
++		return -1;
++
++	p++;
++	while (*p !=3D 0 && *p =3D=3D ' ')
++		p++;
++
++	if (*p =3D=3D '"')
++		p++;
++
++	dst =3D p;
++	while (*p !=3D 0)
++		p++;
++
++	p--;
++	while (*p =3D=3D ' ')
++		p--;
++
++	if (*p =3D=3D '"')
++		p--;
++
++	while (*p =3D=3D '\r' || *p =3D=3D '\n')
++		p--;
++
++	p++;
++	strscpy(val, dst, p - dst);
++	val[p - dst] =3D 0;
++	return 0;
++}
++
++int rwnx_atoi(char *value)
++{
++	int len =3D 0;
++	int i =3D 0;
++	int result =3D 0;
++	int flag =3D 1;
++
++	if (value[0] =3D=3D '-') {
++		flag =3D -1;
++		value++;
++	}
++	len =3D strlen(value);
++
++	for (i =3D 0; i < len; i++) {
++		result =3D result * 10;
++		if (value[i] >=3D 48 && value[i] <=3D 57) {
++			result +=3D value[i] - 48;
++		} else {
++			result =3D 0;
++			break;
++		}
++	}
++
++	return result * flag;
++}
++
++static int rwnx_parse_mul_value(char *line, char *val[])
++{
++	int nargs =3D 0;
++
++	while (nargs < 10) {
++		while ((*line =3D=3D ' ') || (*line =3D=3D '\t'))
++			++line;
++
++		if (*line =3D=3D '\0') { /* end of line, no more args    */
++			//AICWFDBG(LOGDEBUG, "%s p1,%d\n", __func__, nargs);
++			return nargs;
++		}
++
++		val[nargs++] =3D line; /* begin of argument string    */
++
++		/* find end of string */
++		while (*line && (*line !=3D ' ') && (*line !=3D '\t'))
++			++line;
++
++		if (*line =3D=3D '\0') { /* end of line, no more args    */
++			//AICWFDBG(LOGDEBUG, "%s p2,%d\n", __func__, nargs);
++			return nargs;
++		}
++
++		*line++ =3D '\0'; /* terminate current arg     */
++	}
++
++	AICWFDBG(LOGDEBUG, "nargs: %d\n", nargs);
++	//AICWFDBG(LOGDEBUG, "%s exit,%d\n", __func__, nargs);
++	return nargs;
++}
++
++int get_ccode_region(char *ccode)
++{
++	int i, cnt;
++
++	AICWFDBG(LOGDEBUG, "%s ccode:%s\r\n", __func__, ccode);
++	cnt =3D ARRAY_SIZE(reg_tables);
++
++	for (i =3D 0; i < cnt; i++) {
++		if (reg_tables[i].ccode[0] =3D=3D ccode[0] &&
++		    reg_tables[i].ccode[1] =3D=3D ccode[1]) {
++			AICWFDBG(LOGDEBUG, "region: %d\r\n", reg_tables[i].region);
++			return reg_tables[i].region;
++		}
++	}
++	AICWFDBG(LOGDEBUG, "use default region\r\n");
++	return REGIONS_DEFAULT;
++}
++
++void rwnx_plat_nvram_set_value(char *command, char *value)
++{
++	// TODO send command
++	AICWFDBG(LOGDEBUG, "%s:command=3D%s value=3D%s\n", __func__, command, val=
+ue);
++	if (!strcmp(command, "enable")) {
++		userconfig_info.txpwr_lvl.enable =3D rwnx_atoi(value);
++		userconfig_info.txpwr_lvl_v2.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "dsss")) {
++		userconfig_info.txpwr_lvl.dsss =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_2g4")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_5g")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11b_11ag_1m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_2m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_5m5_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_11m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_6m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_9m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_12m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[6] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_18m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[7] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_24m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[8] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_36m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[9] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_48m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[10] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "lvl_11b_11ag_54m_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11b_11ag_2g4[11] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs0_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs1_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs2_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs3_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs4_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs5_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs6_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[6] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs7_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[7] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs8_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[8] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs9_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11n_11ac_2g4[9] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11ax_mcs0_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs1_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs2_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs3_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs4_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs5_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs6_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[6] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs7_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[7] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs8_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[8] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs9_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[9] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs10_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[10] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs11_2g4")) {
++		userconfig_info.txpwr_lvl_v2.pwrlvl_11ax_2g4[11] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_enable")) {
++		userconfig_info.txpwr_ofst.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_1_4")) {
++		userconfig_info.txpwr_ofst.chan_1_4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_5_9")) {
++		userconfig_info.txpwr_ofst.chan_5_9 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_10_13")) {
++		userconfig_info.txpwr_ofst.chan_10_13 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_36_64")) {
++		userconfig_info.txpwr_ofst.chan_36_64 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_100_120")) {
++		userconfig_info.txpwr_ofst.chan_100_120 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_122_140")) {
++		userconfig_info.txpwr_ofst.chan_122_140 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_142_165")) {
++		userconfig_info.txpwr_ofst.chan_142_165 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_enable")) {
++		userconfig_info.xtal_cap.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap")) {
++		userconfig_info.xtal_cap.xtal_cap =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap_fine")) {
++		userconfig_info.xtal_cap.xtal_cap_fine =3D rwnx_atoi(value);
++	} else {
++		AICWFDBG(LOGERROR, "invalid cmd: %s\n", command);
++	}
++}
++
++void rwnx_plat_nvram_set_value_group(char *command, char *value)
++{
++	char *mul_val[10];
++	int i;
++
++	// TODO send command
++	AICWFDBG(LOGDEBUG, "%s:command=3D%s value=3D%s\n", __func__, command, val=
+ue);
++	if (!strcmp(command, "enable")) {
++		userconfig_info.txpwr_lvl.enable =3D rwnx_atoi(value);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "dsss")) {
++		userconfig_info.txpwr_lvl.dsss =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_2g4")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_5g")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11b_11ag_1m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_2m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_5m5_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_11m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_6m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_9m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_12m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_18m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_24m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_36m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_48m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[10] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11b_11ag_54m_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11b_11ag_2g4[11] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs0_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs1_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs2_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs3_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs4_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs5_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs6_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs7_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs8_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs9_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_2g4[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs0_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs1_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs2_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs3_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs4_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs5_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs6_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs7_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs8_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs9_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs10_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[10] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs11_2g4")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_2g4[11] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_1m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_2m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_5m5_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_11m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_6m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_9m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_12m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_18m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_24m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_36m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_48m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[10] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11a_54m_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11a_5g[11] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs0_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs1_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs2_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs3_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs4_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs5_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs6_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs7_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs8_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs9_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11n_11ac_5g[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs0_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[0] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs1_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[1] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs2_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[2] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs3_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[3] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs4_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[4] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs5_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[5] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs6_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[6] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs7_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[7] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs8_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[8] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs9_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[9] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs10_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[10] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_11ax_mcs11_5g")) {
++		rwnx_parse_mul_value(value, mul_val);
++		for (i =3D 0; i < REGION_NUM_MAX; i++)
++			userconfig_info.txpwr_lvl_v3_gp[i].pwrlvl_11ax_5g[11] =3D
++				rwnx_atoi(mul_val[i]);
++	} else if (!strcmp(command, "lvl_adj_enable")) {
++		userconfig_info.txpwr_lvl_adj.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_1_4")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_5_9")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_10_13")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_5g_chan_42")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_58")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_106")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_122")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_138")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_155")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_enable_2g4")) {
++		userconfig_info.txpwr_loss.loss_enable_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_value_2g4")) {
++		userconfig_info.txpwr_loss.loss_value_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_enable_5g")) {
++		userconfig_info.txpwr_loss.loss_enable_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_value_5g")) {
++		userconfig_info.txpwr_loss.loss_value_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_enable")) {
++		userconfig_info.txpwr_ofst.enable =3D rwnx_atoi(value);
++		userconfig_info.txpwr_ofst2x.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_1_4")) {
++		userconfig_info.txpwr_ofst.chan_1_4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_5_9")) {
++		userconfig_info.txpwr_ofst.chan_5_9 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_10_13")) {
++		userconfig_info.txpwr_ofst.chan_10_13 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_36_64")) {
++		userconfig_info.txpwr_ofst.chan_36_64 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_100_120")) {
++		userconfig_info.txpwr_ofst.chan_100_120 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_122_140")) {
++		userconfig_info.txpwr_ofst.chan_122_140 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_142_165")) {
++		userconfig_info.txpwr_ofst.chan_142_165 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][2] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][2] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "xtal_enable")) {
++		userconfig_info.xtal_cap.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap")) {
++		userconfig_info.xtal_cap.xtal_cap =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap_fine")) {
++		userconfig_info.xtal_cap.xtal_cap_fine =3D rwnx_atoi(value);
++	} else {
++		AICWFDBG(LOGERROR, "invalid cmd: %s\n", command);
++	}
++}
++
++void rwnx_plat_nvram_set_value_v3(char *command, char *value)
++{
++	// TODO send command
++	AICWFDBG(LOGDEBUG, "%s:command=3D%s value=3D%s\n", __func__, command, val=
+ue);
++	//AICWFDBG(LOGDEBUG, "AICWF command=3D%s value=3D%s\n", command, value);
++	if (!strcmp(command, "enable")) {
++		userconfig_info.txpwr_lvl.enable =3D rwnx_atoi(value);
++		userconfig_info.txpwr_lvl_v3.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "dsss")) {
++		userconfig_info.txpwr_lvl.dsss =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_2g4")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_2g4")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdmlowrate_5g")) {
++		userconfig_info.txpwr_lvl.ofdmlowrate_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm64qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm64qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm256qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm256qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofdm1024qam_5g")) {
++		userconfig_info.txpwr_lvl.ofdm1024qam_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11b_11ag_1m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_2m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_5m5_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_11m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_6m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_9m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_12m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[6] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_18m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[7] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_24m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[8] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_36m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[9] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11b_11ag_48m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[10] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "lvl_11b_11ag_54m_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11b_11ag_2g4[11] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs0_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs1_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs2_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs3_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs4_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs5_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs6_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[6] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs7_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[7] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs8_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[8] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs9_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_2g4[9] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_11ax_mcs0_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs1_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs2_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs3_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs4_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs5_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs6_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[6] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs7_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[7] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs8_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[8] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs9_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[9] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs10_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[10] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs11_2g4")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_2g4[11] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_1m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_2m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_5m5_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_11m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_6m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_9m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_12m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[6] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_18m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[7] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_24m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[8] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_36m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[9] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_48m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[10] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11a_54m_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11a_5g[11] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs0_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs1_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs2_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs3_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs4_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs5_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs6_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[6] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs7_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[7] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs8_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[8] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11n_11ac_mcs9_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11n_11ac_5g[9] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs0_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs1_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs2_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs3_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs4_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs5_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs6_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[6] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs7_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[7] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs8_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[8] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs9_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[9] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs10_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[10] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_11ax_mcs11_5g")) {
++		userconfig_info.txpwr_lvl_v3.pwrlvl_11ax_5g[11] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_enable")) {
++		userconfig_info.txpwr_lvl_adj.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_1_4")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_5_9")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_2g4_chan_10_13")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_2g4[2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "lvl_adj_5g_chan_42")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[0] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_58")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[1] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_106")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[2] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_122")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[3] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_138")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[4] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "lvl_adj_5g_chan_155")) {
++		userconfig_info.txpwr_lvl_adj.pwrlvl_adj_tbl_5g[5] =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_enable_2g4")) {
++		userconfig_info.txpwr_loss.loss_enable_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_value_2g4")) {
++		userconfig_info.txpwr_loss.loss_value_2g4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_enable_5g")) {
++		userconfig_info.txpwr_loss.loss_enable_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "loss_value_5g")) {
++		userconfig_info.txpwr_loss.loss_value_5g =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_enable")) {
++		userconfig_info.txpwr_ofst.enable =3D rwnx_atoi(value);
++		userconfig_info.txpwr_ofst2x.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_1_4")) {
++		userconfig_info.txpwr_ofst.chan_1_4 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_5_9")) {
++		userconfig_info.txpwr_ofst.chan_5_9 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_10_13")) {
++		userconfig_info.txpwr_ofst.chan_10_13 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_36_64")) {
++		userconfig_info.txpwr_ofst.chan_36_64 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_100_120")) {
++		userconfig_info.txpwr_ofst.chan_100_120 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_122_140")) {
++		userconfig_info.txpwr_ofst.chan_122_140 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_chan_142_165")) {
++		userconfig_info.txpwr_ofst.chan_142_165 =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_11b_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[0][2] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_highrate_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[1][2] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_1_4")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_5_9")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][1] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_2g4_ofdm_lowrate_chan_10_13")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_2g4[2][0] =3D rwnx_atoi(value=
+);
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_lowrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[0][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_highrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[1][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_42")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][0] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_58")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][1] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_106")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][2] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_122")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][3] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_138")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][4] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "ofst_5g_ofdm_midrate_chan_155")) {
++		userconfig_info.txpwr_ofst2x.pwrofst2x_tbl_5g[2][5] =3D rwnx_atoi(value)=
+;
++	} else if (!strcmp(command, "xtal_enable")) {
++		userconfig_info.xtal_cap.enable =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap")) {
++		userconfig_info.xtal_cap.xtal_cap =3D rwnx_atoi(value);
++	} else if (!strcmp(command, "xtal_cap_fine")) {
++		userconfig_info.xtal_cap.xtal_cap_fine =3D rwnx_atoi(value);
++	} else {
++		AICWFDBG(LOGERROR, "invalid cmd: %s\n", command);
++	}
++}
++
++void rwnx_plat_userconfig_parsing2(char *buffer, int size)
++{
++	int i =3D 0;
++	int parse_state =3D 0;
++	char command[30];
++	char value[100];
++	int char_counter =3D 0;
++
++	memset(command, 0, 30);
++	memset(value, 0, 100);
++
++	for (i =3D 0; i < size; i++) {
++		// Send command or print nvram log when char is \r or \n
++		if (buffer[i] =3D=3D 0x0a || buffer[i] =3D=3D 0x0d) {
++			if (command[0] !=3D 0 && value[0] !=3D 0) {
++				if (parse_state =3D=3D PRINT)
++					AICWFDBG(LOGINFO, "%s:%s\r\n", __func__, value);
++				else if (parse_state =3D=3D GET_VALUE)
++					rwnx_plat_nvram_set_value(command, value);
++			}
++			// Reset command value and char_counter
++			memset(command, 0, 30);
++			memset(value, 0, 100);
++			char_counter =3D 0;
++			parse_state =3D INIT;
++			continue;
++		}
++
++		// Switch parser state
++		if (parse_state =3D=3D INIT) {
++			if (buffer[i] =3D=3D '#') {
++				parse_state =3D PRINT;
++				continue;
++			} else if (buffer[i] =3D=3D 0x0a || buffer[i] =3D=3D 0x0d) {
++				parse_state =3D INIT;
++				continue;
++			} else {
++				parse_state =3D CMD;
++			}
++		}
++
++		// Fill data to command and value
++		if (parse_state =3D=3D PRINT) {
++			command[0] =3D 0x01;
++			value[char_counter] =3D buffer[i];
++			char_counter++;
++		} else if (parse_state =3D=3D CMD) {
++			if (command[0] !=3D 0 && buffer[i] =3D=3D '=3D') {
++				parse_state =3D GET_VALUE;
++				char_counter =3D 0;
++				continue;
++			}
++			command[char_counter] =3D buffer[i];
++			char_counter++;
++		} else if (parse_state =3D=3D GET_VALUE) {
++			value[char_counter] =3D buffer[i];
++			char_counter++;
++		}
++	}
++}
++
++void rwnx_plat_userconfig_parsing3(char *buffer, int size)
++{
++	int i =3D 0;
++	int parse_state =3D 0;
++	char command[64];
++	char value[100];
++	int char_counter =3D 0;
++	u8 area_pw =3D 0;
++
++	memset(command, 0, 64);
++	memset(value, 0, 100);
++
++	for (i =3D 0; i < size; i++) {
++		// Send command or print nvram log when char is \r or \n
++		if (buffer[i] =3D=3D 0x0a || buffer[i] =3D=3D 0x0d) {
++			if (command[0] !=3D 0 && value[0] !=3D 0) {
++				if (parse_state =3D=3D PRINT) {
++					if (area_pw =3D=3D 0 &&
++					    strnstr(value, "SRRC", strlen(value))) {
++						area_pw =3D 1;
++						AICWFDBG(LOGINFO,
++							 "use diff_area_power userconfig\n");
++					}
++					AICWFDBG(LOGINFO, "%s:%s\r\n", __func__, value);
++				} else if (parse_state =3D=3D GET_VALUE) {
++					if (area_pw)
++						rwnx_plat_nvram_set_value_group(command, value);
++					else
++						rwnx_plat_nvram_set_value_v3(command, value);
++				}
++			}
++			// Reset command value and char_counter
++			memset(command, 0, 64);
++			memset(value, 0, 100);
++			char_counter =3D 0;
++			parse_state =3D INIT;
++			continue;
++		}
++
++		// Switch parser state
++		if (parse_state =3D=3D INIT) {
++			if (buffer[i] =3D=3D '#') {
++				parse_state =3D PRINT;
++				continue;
++			} else if (buffer[i] =3D=3D 0x0a || buffer[i] =3D=3D 0x0d) {
++				parse_state =3D INIT;
++				continue;
++			} else {
++				parse_state =3D CMD;
++			}
++		}
++
++		// Fill data to command and value
++		if (parse_state =3D=3D PRINT) {
++			command[0] =3D 0x01;
++			value[char_counter] =3D buffer[i];
++			char_counter++;
++		} else if (parse_state =3D=3D CMD) {
++			if (command[0] !=3D 0 && buffer[i] =3D=3D '=3D') {
++				parse_state =3D GET_VALUE;
++				char_counter =3D 0;
++				continue;
++			}
++			command[char_counter] =3D buffer[i];
++			char_counter++;
++		} else if (parse_state =3D=3D GET_VALUE) {
++			if (buffer[i] !=3D 0x2D &&
++			    (buffer[i] < 0x30 || buffer[i] > 0x39) &&
++			    buffer[i] !=3D 0x20)
++				continue;
++			value[char_counter] =3D buffer[i];
++			char_counter++;
++		}
++	}
++}
++
++void rwnx_plat_userconfig_parsing(struct rwnx_hw *rwnx_hw, char *buffer,
++				  int size)
++{
++	char conf[100], keyname[64];
++	char *line;
++	char *data;
++	int i =3D 0, len =3D 0;
++	long val;
++
++	if (size <=3D 0) {
++		pr_err("Config buffer size %d error\n", size);
++		return;
++	}
++
++	AICWFDBG(LOGDEBUG, "AICWF %s rwnx_hw->vendor_info:0x%02X \r\n", __func__,
++		 rwnx_hw->vendor_info);
++	if (rwnx_hw->vendor_info =3D=3D 0x00 ||
++	    rwnx_hw->vendor_info > (ARRAY_SIZE(parse_key_prefix) - 1)) {
++		AICWFDBG(LOGDEBUG, "AICWF Unsuppor vendor info config\n");
++		AICWFDBG(LOGDEBUG, "AICWF Using module0 config\n");
++		rwnx_hw->vendor_info =3D 0x01;
++		// return;
++	}
++
++	data =3D vmalloc(size + 1);
++	if (!data) {
++		AICWFDBG(LOGERROR, "%s vmalloc fail\n", __func__);
++		return;
++	}
++
++	memcpy(data, buffer, size);
++	buffer =3D data;
++
++	while (1) {
++		line =3D buffer;
++		if (*line =3D=3D 0)
++			break;
++
++		while (*buffer !=3D '\r' && *buffer !=3D '\n' &&
++		       *buffer !=3D 0 && len++ < size)
++			buffer++;
++
++		while ((*buffer =3D=3D '\r' || *buffer =3D=3D '\n') && len++ < size)
++			*buffer++ =3D 0;
++
++		if (len >=3D size)
++			*buffer =3D 0;
++
++		// store value to data struct
++		for (i =3D 0; i < ARRAY_SIZE(parse_match_tab); i++) {
++			scnprintf(keyname, sizeof(keyname), "%s%s",
++				  parse_key_prefix[rwnx_hw->vendor_info],
++				  parse_match_tab[i].keyname);
++			if (parse_key_val(line, keyname, conf) =3D=3D 0) {
++				if (kstrtol(conf, 0, &val)) {
++					pr_warn("Invalid value for %s\n", keyname);
++					continue;
++				}
++				*(unsigned long *)((unsigned long)&nvram_info +
++								parse_match_tab[i].offset) =3D val;
++				AICWFDBG(LOGDEBUG, "AICWF %s, %s =3D %ld\n", __func__,
++					 parse_match_tab[i].keyname, val);
++				break;
++			}
++		}
++	}
++	vfree(data);
++}
++
++int rwnx_plat_userconfig_upload(struct rwnx_hw *rwnx_hw,
++				const char *filename)
++{
++	int size;
++	u32 *dst =3D NULL;
++
++	AICWFDBG(LOGDEBUG, "AICWF userconfig file path:%s \r\n", filename);
++
++	/* load aic firmware */
++	size =3D rwnx_load_firmware(&dst, filename, rwnx_hw->dev);
++	if (size <=3D 0) {
++		AICWFDBG(LOGDEBUG, "AICWF wrong size of firmware file\n");
++		vfree(dst);
++		dst =3D NULL;
++		return 0;
++	}
++
++	/* Copy the file on the Embedded side */
++	AICWFDBG(LOGDEBUG, "AICWF ### Upload %s userconfig, size=3D%d\n", filenam=
+e, size);
++
++	rwnx_plat_userconfig_parsing(rwnx_hw, (char *)dst, size);
++
++	if (dst) {
++		vfree(dst);
++		dst =3D NULL;
++	}
++
++	AICWFDBG(LOGDEBUG, "AICWF userconfig download complete\n\n");
++
++	return 0;
++}
++
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++static inline char *get_line_from_buffer(char **buffer)
++{
++	return strsep(buffer, "\n");
++}
++
++int is_all_space_or_tab(u8 *data, u8 size)
++{
++	u8 cnt =3D 0;
++	u8 num_of_space_and_tab =3D 0;
++
++	while (size > cnt) {
++		if (data[cnt] =3D=3D ' ' || data[cnt] =3D=3D '\t' || data[cnt] =3D=3D '\=
+0')
++			++num_of_space_and_tab;
++		++cnt;
++	}
++	return size =3D=3D num_of_space_and_tab;
++}
++
++int is_comment_string(char *sz_str)
++{
++	if (*sz_str =3D=3D '#' && *(sz_str + 1) =3D=3D ' ')
++		return 1;
++	else
++		return 0;
++}
++
++int is_enable_limit(char *szs_str)
++{
++	int i =3D 0, value =3D 0;
++	char en[15];
++
++	if (*szs_str =3D=3D '#' && *(szs_str + 1) =3D=3D '*') {
++		i =3D 2;
++		while (szs_str[i] !=3D '=3D' && (i < 15)) {
++			en[i - 2] =3D szs_str[i];
++			i++;
++		}
++		en[i - 2] =3D '\0';
++		i +=3D 1;
++		if (strncmp(en, "enable", 6) =3D=3D 0) {
++			value =3D rwnx_atoi(szs_str + i);
++			if (value =3D=3D 1)
++				return 1;
++			else
++				return 0;
++		}
++	}
++	return -1;
++}
++
++int parse_qualified_string(char *in, u32 *start, char *out, char left_qual=
+ifier,
++			   char right_qualifier)
++{
++	u32 i =3D 0, j =3D 0;
++	char c =3D in[(*start)++];
++
++	if (c !=3D left_qualifier)
++		return 0;
++	i =3D (*start);
++	c =3D in[(*start)++];
++	while (c !=3D right_qualifier && c !=3D '\0')
++		c =3D in[(*start)++];
++	if (c =3D=3D '\0')
++		return 0;
++	j =3D (*start) - 2;
++	strscpy((char *)out, (const char *)(in + i), j - i + 1);
++	return 1;
++}
++
++int get_u1_byte_integer_from_string_in_decimal(char *str, u8 *p_int)
++{
++	u16 i =3D 0;
++	*p_int =3D 0;
++	while (str[i] !=3D '\0') {
++		if (str[i] >=3D '0' && str[i] <=3D '9') {
++			*p_int *=3D 10;
++			*p_int +=3D (str[i] - '0');
++		} else {
++			return 0;
++		}
++		++i;
++	}
++	return 1;
++}
++
++int get_s1_byte_integer_from_string_in_decimal(char *str, s8 *val)
++{
++	u8 negative =3D 0;
++	u16 i =3D 0;
++	*val =3D 0;
++	while (str[i] !=3D '\0') {
++		if (i =3D=3D 0 && (str[i] =3D=3D '+' || str[i] =3D=3D '-')) {
++			if (str[i] =3D=3D '-')
++				negative =3D 1;
++		} else if (str[i] >=3D '0' && str[i] <=3D '9') {
++			*val *=3D 10;
++			*val +=3D (str[i] - '0');
++		} else {
++			return 0;
++		}
++		++i;
++	}
++	if (negative)
++		*val =3D -*val;
++	return 1;
++}
++
++static void update_power_limit(u8 band_cc, const char *channel, u8 channel=
+_num,
++			       const char *power_limit, u8 power_limit_val,
++			       struct powerlimit_info_t *powerlimit_info)
++{
++	if (band_cc =3D=3D PHY_BAND_2G4) {
++		u8 cur_idx =3D powerlimit_info->txpwr_lmt.ch_cnt_2g4;
++
++		if (cur_idx =3D=3D 0)
++			AICWFDBG(LOGDEBUG, "[%d]: ch=3D%s, pwr=3D%s\n", cur_idx, channel, power=
+_limit);
++		if (cur_idx < MAC_DOMAINCHANNEL_24G_MAX) {
++			powerlimit_info->txpwr_lmt.ch_num_2g4[cur_idx] =3D channel_num;
++			powerlimit_info->txpwr_lmt.max_pwr_2g4[cur_idx] =3D power_limit_val;
++			powerlimit_info->txpwr_lmt.ch_cnt_2g4++;
++		} else {
++			AICWFDBG(LOGERROR, "band %d chan_cnt reached %d\n",
++				 band_cc, MAC_DOMAINCHANNEL_24G_MAX);
++			AICWFDBG(LOGERROR, "channel=3D%s(%d) powerLimit=3D%s(%d)\n",
++				 channel, channel_num, power_limit, power_limit_val);
++		}
++	} else if (band_cc =3D=3D PHY_BAND_5G) {
++		u8 cur_idx =3D powerlimit_info->txpwr_lmt.ch_cnt_5g;
++
++		if (cur_idx =3D=3D 0)
++			AICWFDBG(LOGDEBUG, "[%d]: ch=3D%s, pwr=3D%s\n", cur_idx, channel, power=
+_limit);
++		if (cur_idx < MAC_DOMAINCHANNEL_5G_MAX) {
++			powerlimit_info->txpwr_lmt.ch_num_5g[cur_idx] =3D channel_num;
++			powerlimit_info->txpwr_lmt.max_pwr_5g[cur_idx] =3D power_limit_val;
++			powerlimit_info->txpwr_lmt.ch_cnt_5g++;
++		} else {
++			AICWFDBG(LOGERROR, "band %d chan_cnt reached %d\n",
++				 band_cc, MAC_DOMAINCHANNEL_5G_MAX);
++			AICWFDBG(LOGERROR, "channel=3D%s(%d) powerLimit=3D%s(%d)\n",
++				 channel, channel_num, power_limit, power_limit_val);
++		}
++	}
++}
++
++void rwnx_plat_powerlimit_parsing(char *buffer, int size, char *cc)
++{
++#define LD_STAGE_EXC_MAPPING   0
++#define LD_STAGE_TAB_DEFINE    1
++#define LD_STAGE_TAB_START     2
++#define LD_STAGE_COLUMN_DEFINE 3
++#define LD_STAGE_CH_ROW        4
++
++	u8 loading_stage =3D LD_STAGE_EXC_MAPPING;
++	u32 i =3D 0, for_cnt =3D 0;
++	u32 i_cc;
++	char *sz_line, *ptmp;
++	char band[10], col_num_buf[10];
++	u8 col_num =3D 0, col_num_cc =3D 255, band_cc =3D 0;
++	bool sp_cc =3D false;
++	// clear powerlimit info at first
++	memset((void *)&powerlimit_info, 0, sizeof(struct powerlimit_info_t));
++	ptmp =3D buffer;
++	for (sz_line =3D get_line_from_buffer(&ptmp); sz_line;
++	     sz_line =3D get_line_from_buffer(&ptmp)) {
++		if (is_all_space_or_tab(sz_line, sizeof(*sz_line)))
++			continue;
++
++		if (is_enable_limit(sz_line) =3D=3D 0)
++			return;
++
++		if (is_comment_string(sz_line))
++			continue;
++
++		if (loading_stage =3D=3D LD_STAGE_EXC_MAPPING) {
++			if (sz_line[0] =3D=3D '#' || sz_line[1] =3D=3D '#')
++				loading_stage =3D LD_STAGE_TAB_DEFINE;
++			else
++				continue;
++		}
++
++		if (loading_stage =3D=3D LD_STAGE_TAB_DEFINE) {
++			/* read "##	2.4G" */
++			if (sz_line[0] !=3D '#' || sz_line[1] !=3D '#')
++				continue;
++
++			/* skip the space */
++			i =3D 2;
++			while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++				++i;
++
++			sz_line[--i] =3D
++				' '; /* return the space in front of the regulation info */
++
++			/* Parse the label of the table */
++			memset((void *)band, 0, 10);
++			if (!parse_qualified_string(sz_line, &i, band, ' ', ',')) {
++				AICWFDBG(LOGERROR, "Fail to parse band!\n");
++				goto exit;
++			}
++			if (strncmp(band, "2.4G", 4) =3D=3D 0)
++				band_cc =3D PHY_BAND_2G4;
++			else if (strncmp(band, "5G", 2) =3D=3D 0)
++				band_cc =3D PHY_BAND_5G;
++
++			memset((void *)col_num_buf, 0, 10);
++			if (!parse_qualified_string(sz_line, &i, col_num_buf, '#', '#')) {
++				AICWFDBG(LOGERROR, "Fail to parse column number!\n");
++				goto exit;
++			}
++			if (!get_u1_byte_integer_from_string_in_decimal(col_num_buf, &col_num))=
+ {
++				AICWFDBG(LOGERROR,
++					 "Column number \"%s\" is not unsigned decimal\n",
++					 col_num_buf);
++				goto exit;
++			}
++			if (col_num =3D=3D 0) {
++				AICWFDBG(LOGERROR, "Column number is 0\n");
++				goto exit;
++			}
++
++			AICWFDBG(LOGDEBUG, "band=3D%s(%d)\n", band, band_cc);
++			loading_stage =3D LD_STAGE_TAB_START;
++		} else if (loading_stage =3D=3D LD_STAGE_TAB_START) {
++			/* read "##	START" */
++			if (sz_line[0] !=3D '#' || sz_line[1] !=3D '#')
++				continue;
++
++			/* skip the space */
++			i =3D 2;
++			while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++				++i;
++
++			if (strncmp((u8 *)(sz_line + i), "START", 5)) {
++				AICWFDBG(LOGERROR, "Missing \"##   START\" label\n");
++				goto exit;
++			}
++
++			loading_stage =3D LD_STAGE_COLUMN_DEFINE;
++		} else if (loading_stage =3D=3D LD_STAGE_COLUMN_DEFINE) {
++			/* read "##	CN	US" */
++			if (sz_line[0] !=3D '#' || sz_line[1] !=3D '#')
++				continue;
++
++			/* skip the space */
++			i =3D 2;
++			while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++				++i;
++
++			for (for_cnt =3D 0; for_cnt < col_num; for_cnt++) {
++				/* skip the space */
++				while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++					i++;
++				i_cc =3D i;
++
++				while (sz_line[i] !=3D ' ' && sz_line[i] !=3D '\t' &&
++				       sz_line[i] !=3D '\0')
++					i++;
++
++				if ((i - i_cc) !=3D 2) {
++					AICWFDBG(LOGERROR, "CC len err\n");
++					goto exit;
++				} else if ((sz_line[i_cc] =3D=3D cc[0]) &&
++						   (sz_line[i_cc + 1] =3D=3D cc[1])) {
++					AICWFDBG(LOGDEBUG, "CC matched: %s, col=3D%d\n", cc, for_cnt);
++					col_num_cc =3D for_cnt;
++					powerlimit_info.flags |=3D POWER_LIMIT_CC_MATCHED_BIT;
++					sp_cc =3D true;
++					break;
++				}
++			}
++			if (!sp_cc) {
++				col_num_cc =3D col_num - 1;
++				AICWFDBG(LOGDEBUG, "use 00: %s, col_num_cc=3D%d\n", cc, col_num_cc);
++				powerlimit_info.flags |=3D POWER_LIMIT_CC_MATCHED_BIT;
++			}
++
++			loading_stage =3D LD_STAGE_CH_ROW;
++		} else if (loading_stage =3D=3D LD_STAGE_CH_ROW) {
++			char channel[10] =3D {0}, power_limit[10] =3D {0};
++			u8 channel_num, power_limit_val, cnt =3D 0;
++
++			/* the table ends */
++			if (sz_line[0] =3D=3D '#' && sz_line[1] =3D=3D '#') {
++				i =3D 2;
++				while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++					++i;
++
++				if (strncmp((u8 *)(sz_line + i), "END", 3) =3D=3D 0) {
++					loading_stage =3D LD_STAGE_TAB_DEFINE;
++					col_num =3D 0;
++					continue;
++				} else {
++					AICWFDBG(LOGERROR, "Missing \"##   END\" label\n");
++					goto exit;
++				}
++			}
++
++			if ((sz_line[0] !=3D 'c' && sz_line[0] !=3D 'C') ||
++			    (sz_line[1] !=3D 'h' && sz_line[1] !=3D 'H')) {
++				AICWFDBG(LOGERROR, "Wrong channel prefix: '%c','%c'(%d,%d)\n",
++					 sz_line[0], sz_line[1], sz_line[0], sz_line[1]);
++				continue;
++			}
++			i =3D 2; /* move to the  location behind 'h' */
++
++			/* load the channel number */
++			cnt =3D 0;
++			while (sz_line[i] >=3D '0' && sz_line[i] <=3D '9') {
++				channel[cnt] =3D sz_line[i];
++				++cnt;
++				++i;
++			}
++
++			for (for_cnt =3D 0; for_cnt < col_num; ++for_cnt) {
++				/* skip the space between channel number and the power limit
++				 * value
++				 */
++				while (sz_line[i] =3D=3D ' ' || sz_line[i] =3D=3D '\t')
++					++i;
++
++				/* load the power limit value */
++				memset((void *)power_limit, 0, 10);
++
++				if (sz_line[i] =3D=3D 'N' && sz_line[i + 1] =3D=3D 'A') {
++					/*
++					 * means channel not available
++					 */
++					sprintf(power_limit, "%d", POWER_LIMIT_INVALID_VAL);
++					i +=3D 2;
++				} else if ((sz_line[i] >=3D '0' && sz_line[i] <=3D '9') ||
++						   sz_line[i] =3D=3D '+' || sz_line[i] =3D=3D '-') {
++					/* case of dBm value */
++					cnt =3D 0;
++					while ((sz_line[i] >=3D '0' && sz_line[i] <=3D '9') ||
++					       sz_line[i] =3D=3D '+' || sz_line[i] =3D=3D '-') {
++						power_limit[cnt] =3D sz_line[i];
++						++cnt;
++						++i;
++					}
++				} else {
++					AICWFDBG
++					(LOGERROR, "Wrong limit expression \"%c%c\"(%d, %d)\n",
++					 sz_line[i], sz_line[i + 1], sz_line[i], sz_line[i + 1]);
++					goto exit;
++				}
++
++				if (for_cnt =3D=3D col_num_cc) {
++					/* store the power limit value */
++					if (get_u1_byte_integer_from_string_in_decimal
++						((char *)channel, &channel_num) =3D=3D 0 ||
++					    get_s1_byte_integer_from_string_in_decimal
++						((char *)power_limit, &power_limit_val) =3D=3D 0) {
++						AICWFDBG(LOGERROR,
++							 "Illegal index of power limit table [ch %s][val %s]\n",
++							 channel, power_limit);
++						goto exit;
++					}
++
++					update_power_limit(band_cc, channel, channel_num,
++							   power_limit, power_limit_val,
++							   &powerlimit_info);
++					break;
++				}
++			}
++		}
++	}
++exit:
++	return;
++}
++
++/// 5G lower bound freq
++#define PHY_FREQ_5G 5000
++
++u16 phy_channel_to_freq(u8 band, int channel)
++{
++	if (band =3D=3D PHY_BAND_2G4 && channel >=3D 1 && channel <=3D 14) {
++		if (channel =3D=3D 14)
++			return 2484;
++		else
++			return 2407 + channel * 5;
++	} else if (band =3D=3D PHY_BAND_5G && channel >=3D 1 && channel <=3D 165)=
+ {
++		return PHY_FREQ_5G + channel * 5;
++	}
++	return 0;
++}
++
++s8 get_powerlimit_by_freq(u8 band, u16 freq, u8 *enable)
++{
++	s8 ret =3D POWER_LIMIT_INVALID_VAL;
++	u8 idx;
++
++	if ((powerlimit_info.flags & POWER_LIMIT_CC_MATCHED_BIT) =3D=3D 0) {
++		*enable =3D 0;
++	} else if (powerlimit_info.flags & POWER_LIMIT_CC_MATCHED_BIT) {
++		*enable =3D 1;
++
++		if (band =3D=3D PHY_BAND_2G4) {
++			u8 idx_cnt =3D powerlimit_info.txpwr_lmt.ch_cnt_2g4;
++
++			for (idx =3D 0; idx < idx_cnt; idx++) {
++				int ch_num =3D powerlimit_info.txpwr_lmt.ch_num_2g4[idx];
++				u16 freq_tmp =3D phy_channel_to_freq(PHY_BAND_2G4, ch_num);
++
++				if (freq =3D=3D freq_tmp) {
++					ret =3D powerlimit_info.txpwr_lmt.max_pwr_2g4[idx];
++					// AICWFDBG(LOGINFO, "[%d]: ch=3D%d(freq=3D%d), pwr=3D%d\n", idx,
++					// ch_num, freq, ret);
++					break;
++				}
++			}
++			if (idx =3D=3D idx_cnt) {
++				AICWFDBG(LOGERROR,
++					 "powerlimit search failed: band=3D%d freq=3D%d\n", band,
++					 freq);
++			}
++		} else if (band =3D=3D PHY_BAND_5G) {
++			u8 idx_cnt =3D powerlimit_info.txpwr_lmt.ch_cnt_5g;
++
++			for (idx =3D 0; idx < idx_cnt; idx++) {
++				int ch_num =3D powerlimit_info.txpwr_lmt.ch_num_5g[idx];
++				u16 freq_tmp =3D phy_channel_to_freq(PHY_BAND_5G, ch_num);
++
++				if (freq =3D=3D freq_tmp) {
++					ret =3D powerlimit_info.txpwr_lmt.max_pwr_5g[idx];
++					// AICWFDBG(LOGINFO, "[%d]: ch=3D%d(freq=3D%d), pwr=3D%d\n", idx,
++					// ch_num, freq, ret);
++					break;
++				}
++			}
++			if (idx =3D=3D idx_cnt) {
++				AICWFDBG(LOGERROR,
++					 "powerlimit search failed: band=3D%d freq=3D%d\n", band,
++					 freq);
++			}
++		}
++	}
++	return ret;
++}
++
++s8 get_powerlimit_by_chnum(u8 chnum, u8 *enable)
++{
++	s8 ret =3D POWER_LIMIT_INVALID_VAL;
++	u8 idx;
++
++	if ((powerlimit_info.flags & POWER_LIMIT_CC_MATCHED_BIT) =3D=3D 0) {
++		*enable =3D 0;
++	} else if (powerlimit_info.flags & POWER_LIMIT_CC_MATCHED_BIT) {
++		*enable =3D 1;
++
++		if (chnum <=3D 14) {
++			u8 idx_cnt =3D powerlimit_info.txpwr_lmt.ch_cnt_2g4;
++
++			for (idx =3D 0; idx < idx_cnt; idx++) {
++				u8 ch_num =3D powerlimit_info.txpwr_lmt.ch_num_2g4[idx];
++
++				if (chnum =3D=3D ch_num) {
++					ret =3D powerlimit_info.txpwr_lmt.max_pwr_2g4[idx];
++					// AICWFDBG(LOGINFO, "[%d]: ch=3D%d, pwr=3D%d\n", idx, ch_num,
++					// ret);
++					break;
++				}
++			}
++			if (idx =3D=3D idx_cnt) {
++				AICWFDBG(LOGERROR, "powerlimit search failed: chnum=3D%d\n",
++					 chnum);
++			}
++		} else if (chnum <=3D 165) {
++			u8 idx_cnt =3D powerlimit_info.txpwr_lmt.ch_cnt_5g;
++
++			for (idx =3D 0; idx < idx_cnt; idx++) {
++				int ch_num =3D powerlimit_info.txpwr_lmt.ch_num_5g[idx];
++
++				if (chnum =3D=3D ch_num) {
++					ret =3D powerlimit_info.txpwr_lmt.max_pwr_5g[idx];
++					// AICWFDBG(LOGINFO, "[%d]: ch=3D%d, pwr=3D%d\n", idx, ch_num,
++					// ret);
++					break;
++				}
++			}
++			if (idx =3D=3D idx_cnt) {
++				AICWFDBG(LOGERROR, "powerlimit search failed: chnum=3D%d\n",
++					 chnum);
++			}
++		}
++	}
++	return ret;
++}
++#endif
++
++/**
++ * rwnx_platform_reset - Reset the platform
++ *
++ * @rwnx_plat: platform data
++ *
++ * Return: 0 on success, or %-EIO if the platform did not reset.
++ */
++static int rwnx_platform_reset(struct rwnx_plat *rwnx_plat)
++{
++	u32 regval;
++
++#if defined(AICWF_SDIO_SUPPORT)
++	return 0;
++#endif
++
++	/*
++	 * the doc states that SOFT implies FPGA_B_RESET
++	 * adding FPGA_B_RESET is clearer
++	 */
++	RWNX_REG_WRITE(SOFT_RESET | FPGA_B_RESET, rwnx_plat, RWNX_ADDR_SYSTEM,
++		       SYSCTRL_MISC_CNTL_ADDR);
++	msleep(100);
++
++	regval =3D RWNX_REG_READ(rwnx_plat, RWNX_ADDR_SYSTEM, SYSCTRL_MISC_CNTL_A=
+DDR);
++
++	if (regval & SOFT_RESET) {
++		dev_err(rwnx_platform_get_dev(rwnx_plat), "reset: failed\n");
++		return -EIO;
++	}
++
++	RWNX_REG_WRITE(regval & ~FPGA_B_RESET, rwnx_plat, RWNX_ADDR_SYSTEM,
++		       SYSCTRL_MISC_CNTL_ADDR);
++	msleep(100);
++	return 0;
++}
++
++/*
++ * rwmx_platform_save_config() - Save hardware config before reload
++ *
++ * @rwnx_plat: Pointer to platform data
++ *
++ * Return configuration registers values.
++ */
++static void *rwnx_term_save_config(struct rwnx_plat *rwnx_plat)
++{
++	const u32 *reg_list;
++	u32 *reg_value, *res;
++	int i, size =3D 0;
++
++	if (rwnx_plat->get_config_reg)
++		size =3D rwnx_plat->get_config_reg(rwnx_plat, &reg_list);
++
++	if (size <=3D 0)
++		return NULL;
++
++	// res =3D kmalloc(sizeof(u32) * size, GFP_KERNEL);
++	res =3D kmalloc_array(size, sizeof(u32), GFP_KERNEL);
++	if (!res)
++		return NULL;
++
++	reg_value =3D res;
++	for (i =3D 0; i < size; i++)
++		*reg_value++ =3D RWNX_REG_READ(rwnx_plat, RWNX_ADDR_SYSTEM, *reg_list++)=
+;
++
++	return res;
++}
++
++void get_userconfig_txpwr_lvl_in_fdrv(struct txpwr_lvl_conf *txpwr_lvl)
++{
++	txpwr_lvl->enable =3D userconfig_info.txpwr_lvl.enable;
++	txpwr_lvl->dsss =3D userconfig_info.txpwr_lvl.dsss;
++	txpwr_lvl->ofdmlowrate_2g4 =3D userconfig_info.txpwr_lvl.ofdmlowrate_2g4;
++	txpwr_lvl->ofdm64qam_2g4 =3D userconfig_info.txpwr_lvl.ofdm64qam_2g4;
++	txpwr_lvl->ofdm256qam_2g4 =3D userconfig_info.txpwr_lvl.ofdm256qam_2g4;
++	txpwr_lvl->ofdm1024qam_2g4 =3D userconfig_info.txpwr_lvl.ofdm1024qam_2g4;
++	txpwr_lvl->ofdmlowrate_5g =3D userconfig_info.txpwr_lvl.ofdmlowrate_5g;
++	txpwr_lvl->ofdm64qam_5g =3D userconfig_info.txpwr_lvl.ofdm64qam_5g;
++	txpwr_lvl->ofdm256qam_5g =3D userconfig_info.txpwr_lvl.ofdm256qam_5g;
++	txpwr_lvl->ofdm1024qam_5g =3D userconfig_info.txpwr_lvl.ofdm1024qam_5g;
++
++	AICWFDBG(LOGDEBUG, "%s:enable:%d\r\n", __func__, txpwr_lvl->enable);
++	AICWFDBG(LOGDEBUG, "%s:dsss:%d\r\n", __func__, txpwr_lvl->dsss);
++	AICWFDBG(LOGDEBUG, "%s:ofdmlowrate_2g4:%d\r\n", __func__,
++		 txpwr_lvl->ofdmlowrate_2g4);
++	AICWFDBG(LOGDEBUG, "%s:ofdm64qam_2g4:%d\r\n", __func__,
++		 txpwr_lvl->ofdm64qam_2g4);
++	AICWFDBG(LOGDEBUG, "%s:ofdm256qam_2g4:%d\r\n", __func__,
++		 txpwr_lvl->ofdm256qam_2g4);
++	AICWFDBG(LOGDEBUG, "%s:ofdm1024qam_2g4:%d\r\n", __func__,
++		 txpwr_lvl->ofdm1024qam_2g4);
++	AICWFDBG(LOGDEBUG, "%s:ofdmlowrate_5g:%d\r\n", __func__,
++		 txpwr_lvl->ofdmlowrate_5g);
++	AICWFDBG(LOGDEBUG, "%s:ofdm64qam_5g:%d\r\n", __func__,
++		 txpwr_lvl->ofdm64qam_5g);
++	AICWFDBG(LOGDEBUG, "%s:ofdm256qam_5g:%d\r\n", __func__,
++		 txpwr_lvl->ofdm256qam_5g);
++	AICWFDBG(LOGDEBUG, "%s:ofdm1024qam_5g:%d\r\n", __func__,
++		 txpwr_lvl->ofdm1024qam_5g);
++}
++
++void get_userconfig_txpwr_lvl_v2_in_fdrv(struct txpwr_lvl_conf_v2 *txpwr_l=
+vl_v2)
++{
++	*txpwr_lvl_v2 =3D userconfig_info.txpwr_lvl_v2;
++
++	AICWFDBG(LOGDEBUG, "%s:enable:%d\r\n", __func__, txpwr_lvl_v2->enable);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_1m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[0]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_2m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[1]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_5m5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[2]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_11m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[3]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_6m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[4]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_9m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[5]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_12m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[6]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_18m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[7]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_24m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[8]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_36m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[9]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_48m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[10]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11b_11ag_54m_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11b_11ag_2g4[11]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs0_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[0]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs1_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[1]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs2_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[2]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs3_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[3]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs4_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[4]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[5]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs6_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[6]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs7_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[7]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs8_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[8]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11n_11ac_mcs9_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11n_11ac_2g4[9]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs0_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[0]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs1_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[1]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs2_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[2]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs3_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[3]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs4_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[4]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs5_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[5]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs6_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[6]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs7_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[7]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs8_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[8]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs9_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[9]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs10_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[10]);
++	AICWFDBG(LOGDEBUG, "%s:lvl_11ax_mcs11_2g4:%d\r\n", __func__,
++		 txpwr_lvl_v2->pwrlvl_11ax_2g4[11]);
++}
++
++void get_userconfig_txpwr_lvl_group_in_fdrv(struct txpwr_lvl_conf_v3 *txpw=
+r_lvl_v3, int index_reg)
++{
++	*txpwr_lvl_v3 =3D userconfig_info.txpwr_lvl_v3_gp[index_reg];
++
++	AICWFDBG(LOGDEBUG, "%s:enable:%d\r\n", __func__, txpwr_lvl_v3->enable);
++	AICWFDBG(LOGDEBUG, "lvl_11b_11ag_1m_2g4:%d\r\n", txpwr_lvl_v3->pwrlvl_11b=
+_11ag_2g4[0]);
++}
++
++void get_userconfig_txpwr_lvl_v3_in_fdrv(struct txpwr_lvl_conf_v3 *txpwr_l=
+vl_v3)
++{
++	*txpwr_lvl_v3 =3D userconfig_info.txpwr_lvl_v3;
++
++	AICWFDBG(LOGDEBUG, "%s:enable:%d\r\n", __func__, txpwr_lvl_v3->enable);
++	AICWFDBG(LOGDEBUG, "lvl_11b_11ag_1m_2g4:%d\r\n", txpwr_lvl_v3->pwrlvl_11b=
+_11ag_2g4[0]);
++}
++
++void get_userconfig_txpwr_lvl_adj_in_fdrv(struct txpwr_lvl_adj_conf *txpwr=
+_lvl_adj)
++{
++	*txpwr_lvl_adj =3D userconfig_info.txpwr_lvl_adj;
++
++	AICWFDBG(LOGDEBUG, "%s:enable:%d\r\n", __func__, txpwr_lvl_adj->enable);
++	AICWFDBG(LOGDEBUG, "lvl_adj_2g4_chan_1_4:%d\r\n", txpwr_lvl_adj->pwrlvl_a=
+dj_tbl_2g4[0]);
++}
++
++/*
++ * rwnx_plat_userconfig_load  ---Load aic_userconfig.txt
++ *@filename name of config
++ */
++static int rwnx_plat_userconfig_load(struct rwnx_hw *rwnx_hw)
++{
++	aic_chip_userconfig_load(rwnx_hw);
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++	aic_chip_powerlimit_load(rwnx_hw);
++#endif
++	return 0;
++}
++
++void get_userconfig_txpwr_loss(struct txpwr_loss_conf *txpwr_loss)
++{
++	txpwr_loss->loss_enable_2g4 =3D userconfig_info.txpwr_loss.loss_enable_2g=
+4;
++	txpwr_loss->loss_value_2g4 =3D userconfig_info.txpwr_loss.loss_value_2g4;
++	txpwr_loss->loss_enable_5g =3D userconfig_info.txpwr_loss.loss_enable_5g;
++	txpwr_loss->loss_value_5g =3D userconfig_info.txpwr_loss.loss_value_5g;
++
++	AICWFDBG(LOGDEBUG,
++		 "%s:loss_enable_2g4: %d, val_2g4: %d, loss_enable_5g: %d, val_5g: %d\r\=
+n",
++		 __func__,
++		 txpwr_loss->loss_enable_2g4, txpwr_loss->loss_value_2g4,
++		 txpwr_loss->loss_enable_5g, txpwr_loss->loss_value_5g);
++}
++
++/**
++ * rwnx_platform_on - Start the platform
++ *
++ * @rwnx_hw: Main driver data
++ * @config: Config to restore (NULL if nothing to restore)
++ *
++ * It starts the platform :
++ * - load fw and ucodes
++ * - initialize IPC
++ * - boot the fw
++ * - enable link communication/IRQ
++ *
++ * Called by 802.11 part
++ *
++ * Return: 0 on success, or a negative error code.
++ */
++int rwnx_platform_on(struct rwnx_hw *rwnx_hw, void *config)
++{
++	int ret;
++	struct rwnx_plat *rwnx_plat =3D rwnx_hw->plat;
++	(void)ret;
++
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	if (rwnx_plat->enabled)
++		return 0;
++
++	rwnx_plat_userconfig_load(rwnx_hw);
++	// rwnx_plat->enabled =3D true;
++	return 0;
++}
++
++/**
++ * rwnx_platform_off() - Stop the platform
++ *
++ * @rwnx_hw: Main driver data
++ * @config: Updated with pointer to config, to be able to restore it with
++ * rwnx_platform_on(). It's up to the caller to free the config. Set to NU=
+LL
++ * if configuration is not needed.
++ *
++ * Called by 802.11 part
++ */
++void rwnx_platform_off(struct rwnx_hw *rwnx_hw, void **config)
++{
++#if defined(AICWF_SDIO_SUPPORT)
++	tasklet_kill(&rwnx_hw->task);
++	rwnx_hw->plat->enabled =3D false;
++	return;
++#endif
++
++	if (!rwnx_hw->plat->enabled) {
++		if (config)
++			*config =3D NULL;
++		return;
++	}
++
++	if (config)
++		*config =3D rwnx_term_save_config(rwnx_hw->plat);
++
++	rwnx_hw->plat->disable(rwnx_hw);
++
++	tasklet_kill(&rwnx_hw->task);
++	rwnx_platform_reset(rwnx_hw->plat);
++
++	rwnx_hw->plat->enabled =3D false;
++}
++
++/**
++ * rwnx_platform_init() - Initialize the platform
++ *
++ * @rwnx_plat: platform data (already updated by platform driver)
++ * @platform_data: Pointer to store the main driver data pointer (aka rwnx=
+_hw)
++ *                That will be set as driver data for the platform driver
++ * Return: 0 on success, < 0 otherwise
++ *
++ * Called by the platform driver after it has been probed
++ */
++int rwnx_platform_init(struct rwnx_plat *rwnx_plat, void **platform_data)
++{
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	rwnx_plat->enabled =3D false;
++	g_rwnx_plat =3D rwnx_plat;
++
++	return rwnx_cfg80211_init(rwnx_plat, platform_data);
++}
++
++/**
++ * rwnx_platform_deinit() - Deinitialize the platform
++ *
++ * @rwnx_hw: main driver data
++ *
++ * Called by the platform driver after it is removed
++ */
++void rwnx_platform_deinit(struct rwnx_hw *rwnx_hw)
++{
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++
++	rwnx_cfg80211_deinit(rwnx_hw);
++}
++
++struct device *rwnx_platform_get_dev(struct rwnx_plat *rwnx_plat)
++{
++#ifdef AICWF_SDIO_SUPPORT
++	return rwnx_plat->sdiodev->dev;
++#endif
++}
++
++MODULE_FIRMWARE(AIC8800_FW_DIR RWNX_AGC_FW_NAME);
++MODULE_FIRMWARE(AIC8800_FW_DIR RWNX_FCU_FW_NAME);
++MODULE_FIRMWARE(AIC8800_FW_DIR RWNX_LDPC_RAM_NAME);
++
++MODULE_FIRMWARE(AIC8800_FW_DIR RWNX_MAC_FW_NAME);
++MODULE_FIRMWARE(AIC8800_FW_DIR RWNX_MAC_FW_NAME2);
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.h b/driver=
+s/net/wireless/aic/aic8800_fdrv/rwnx_platform.h
+new file mode 100644
+index 0000000000000..efcff3b08b2a3
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_platform.h
+@@ -0,0 +1,183 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_PLATFORM_H_
++#define _RWNX_PLATFORM_H_
++
++#include "lmac_msg.h"
++#include <linux/pci.h>
++
++#define AIC8800_FW_DIR "aic8800/"
++
++#define RWNX_CONFIG_FW_NAME        "rwnx_settings.ini"
++#define RWNX_PHY_CONFIG_TRD_NAME   "rwnx_trident.ini"
++#define RWNX_PHY_CONFIG_KARST_NAME "rwnx_karst.ini"
++#define RWNX_AGC_FW_NAME           "agcram.bin"
++#define RWNX_LDPC_RAM_NAME         "ldpcram.bin"
++
++#define RWNX_MAC_FW_BASE_NAME "fmacfw"
++
++#define RWNX_MAC_FW_NAME  RWNX_MAC_FW_BASE_NAME ".ihex"
++#define RWNX_MAC_FW_NAME2 RWNX_MAC_FW_BASE_NAME ".bin"
++
++#define RWNX_FCU_FW_NAME "fcuram.bin"
++#if (defined(CONFIG_DPD) && !defined(CONFIG_FORCE_DPD_CALIB))
++#define FW_DPDRESULT_NAME_8800DC "aic_dpdresult_lite_8800dc.bin"
++#endif
++
++#define POWER_LEVEL_INVALID_VAL (127)
++
++/*
++ * Type of memory to access (cf rwnx_plat.get_address)
++ *
++ * @RWNX_ADDR_CPU To access memory of the embedded CPU
++ * @RWNX_ADDR_SYSTEM To access memory/registers of one subsystem of the
++ * embedded system
++ *
++ */
++enum rwnx_platform_addr {
++	RWNX_ADDR_CPU,
++	RWNX_ADDR_SYSTEM,
++	RWNX_ADDR_MAX,
++};
++
++enum regions_code {
++	REGIONS_SRRC,
++	REGIONS_FCC,
++	REGIONS_ETSI,
++	REGIONS_JP,
++	REGIONS_DEFAULT,
++};
++
++struct rwnx_hw;
++struct device;
++struct firmware;
++
++int aicwf_request_firmware(const struct firmware **fw, const char *name,
++			   struct device *dev);
++
++/**
++ * struct rwnx_plat - Operations and state for an RWNX platform
++ *
++ * @pci_dev: pointer to pci dev
++ * @sdiodev: SDIO device data
++ * @enabled: Set if embedded platform has been enabled (i.e. fw loaded and
++ *          ipc started)
++ * @enable: Configure communication with the fw (i.e. configure the transf=
+ers
++ *         enable and register interrupt)
++ * @disable: Stop communication with the fw
++ * @deinit: Free all resources allocated for the embedded platform
++ * @get_address: Return the virtual address to access the requested addres=
+s on
++ *              the platform.
++ * @ack_irq: Acknowledge the irq at link level.
++ * @get_config_reg: Return the list (size + pointer) of registers to resto=
+re in
++ * order to reload the platform while keeping the current configuration.
++ *
++ * @priv: Private data for the link driver
++ */
++struct rwnx_plat {
++	struct pci_dev *pci_dev;
++
++#ifdef AICWF_SDIO_SUPPORT
++	struct aic_sdio_dev *sdiodev;
++#endif
++
++	bool enabled;
++
++	int (*enable)(struct rwnx_hw *rwnx_hw);
++	int (*disable)(struct rwnx_hw *rwnx_hw);
++	void (*deinit)(struct rwnx_plat *rwnx_plat);
++	u8 __iomem *(*get_address)(struct rwnx_plat *rwnx_plat, int addr_name,
++				   unsigned int offset);
++	void (*ack_irq)(struct rwnx_plat *rwnx_plat);
++	int (*get_config_reg)(struct rwnx_plat *rwnx_plat, const u32 **list);
++
++	u8 priv[0] __aligned(sizeof(void *));
++};
++
++static inline void __iomem *RWNX_ADDR(void *plat, int base, int offset)
++{
++	struct rwnx_plat *p =3D (struct rwnx_plat *)plat;
++
++	return p->get_address(p, base, offset);
++}
++
++static inline u32 RWNX_REG_READ(void *plat, int base, int offset)
++{
++	struct rwnx_plat *p =3D (struct rwnx_plat *)plat;
++
++	return readl(p->get_address(p, base, offset));
++}
++
++static inline void RWNX_REG_WRITE(u32 val, void *plat, int base, int offse=
+t)
++{
++	struct rwnx_plat *p =3D (struct rwnx_plat *)plat;
++
++	writel(val, p->get_address(p, base, offset));
++}
++
++extern struct rwnx_plat *g_rwnx_plat;
++
++int rwnx_platform_init(struct rwnx_plat *rwnx_plat, void **platform_data);
++void rwnx_platform_deinit(struct rwnx_hw *rwnx_hw);
++
++int rwnx_platform_on(struct rwnx_hw *rwnx_hw, void *config);
++void rwnx_platform_off(struct rwnx_hw *rwnx_hw, void **config);
++
++int rwnx_platform_register_drv(void);
++void rwnx_platform_unregister_drv(void);
++
++void get_userconfig_txpwr_idx(struct txpwr_idx_conf *txpwr_idx);
++void get_userconfig_txpwr_ofst(struct txpwr_ofst_conf *txpwr_ofst);
++void get_userconfig_xtal_cap(struct xtal_cap_conf *xtal_cap);
++s8 get_txpwr_max(s8 power);
++void set_txpwr_loss_ofst(s8 value);
++
++int get_ccode_region(char *ccode);
++
++void rwnx_release_firmware_common(u32 **buffer);
++
++int rwnx_plat_userconfig_upload(struct rwnx_hw *rwnx_hw,
++				const char *filename);
++void rwnx_plat_userconfig_parsing(struct rwnx_hw *rwnx_hw, char *buffer, i=
+nt size);
++void rwnx_plat_userconfig_parsing2(char *buffer, int size);
++void rwnx_plat_userconfig_parsing3(char *buffer, int size);
++
++void get_userconfig_txpwr_lvl_in_fdrv(struct txpwr_lvl_conf *txpwr_lvl);
++void get_userconfig_txpwr_lvl_v2_in_fdrv(struct txpwr_lvl_conf_v2 *txpwr_l=
+vl_v2);
++void get_userconfig_txpwr_lvl_group_in_fdrv(struct txpwr_lvl_conf_v3 *txpw=
+r_lvl_v3, int index_reg);
++void get_userconfig_txpwr_lvl_v3_in_fdrv(struct txpwr_lvl_conf_v3 *txpwr_l=
+vl_v3);
++void get_userconfig_txpwr_lvl_adj_in_fdrv(struct txpwr_lvl_adj_conf *txpwr=
+_lvl_adj);
++
++void get_userconfig_txpwr_ofst_in_fdrv(struct txpwr_ofst_conf *txpwr_ofst)=
+;
++void get_userconfig_txpwr_ofst2x_in_fdrv(struct txpwr_ofst2x_conf *txpwr_o=
+fst2x);
++void get_userconfig_txpwr_loss(struct txpwr_loss_conf *txpwr_loss);
++#ifdef CONFIG_AIC8800_POWER_LIMIT
++int is_all_space_or_tab(u8 *data, u8 size);
++int is_comment_string(char *sz_str);
++int is_enable_limit(char *sz_str);
++int parse_qualified_string(char *in, u32 *start, char *out, char left_qual=
+ifier,
++			   char right_qualifier);
++int get_u1_byte_integer_from_string_in_decimal(char *str, u8 *p_int);
++int get_s1_byte_integer_from_string_in_decimal(char *str, s8 *val);
++void rwnx_plat_powerlimit_parsing(char *buffer, int size, char *cc);
++s8 get_powerlimit_by_freq(u8 band, u16 freq, u8 *enable);
++s8 get_powerlimit_by_chnum(u8 chnum, u8 *enable);
++u16 phy_channel_to_freq(u8 band, int channel);
++#endif
++
++struct device *rwnx_platform_get_dev(struct rwnx_plat *rwnx_plat);
++
++int rwnx_request_firmware_common(struct rwnx_hw *rwnx_hw, u32 **buffer,
++				 const char *filename);
++int rwnx_plat_bin_fw_upload_2(struct rwnx_hw *rwnx_hw, u32 fw_addr,
++			      char *filename);
++int rwnx_atoi(char *value);
++void rwnx_plat_nvram_set_value(char *command, char *value);
++void rwnx_plat_nvram_set_value_group(char *command, char *value);
++void rwnx_plat_nvram_set_value_v3(char *command, char *value);
++
++static inline unsigned int rwnx_platform_get_irq(struct rwnx_plat *rwnx_pl=
+at)
++{
++	return rwnx_plat->pci_dev->irq;
++}
++
++#endif /* _RWNX_PLATFORM_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_prof.h b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_prof.h
+new file mode 100644
+index 0000000000000..093e243f3c94f
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_prof.h
+@@ -0,0 +1,142 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _RWNX_PROF_H_
++#define _RWNX_PROF_H_
++
++#include "reg_access.h"
++#include "rwnx_platform.h"
++#include "rwnx_radar.h"
++
++static inline void rwnx_prof_set(struct rwnx_hw *rwnx_hw, int val)
++{
++	struct rwnx_plat *rwnx_plat =3D rwnx_hw->plat;
++
++	RWNX_REG_WRITE(val, rwnx_plat, RWNX_ADDR_SYSTEM,
++		       NXMAC_SW_SET_PROFILING_ADDR);
++}
++
++static inline void rwnx_prof_clear(struct rwnx_hw *rwnx_hw, int val)
++{
++	struct rwnx_plat *rwnx_plat =3D rwnx_hw->plat;
++
++	RWNX_REG_WRITE(val, rwnx_plat, RWNX_ADDR_SYSTEM,
++		       NXMAC_SW_CLEAR_PROFILING_ADDR);
++}
++
++enum {
++	SW_PROF_HOSTBUF_IDX =3D 12,
++	/****** IPC IRQs related signals ******/
++	/* E2A direction */
++	SW_PROF_IRQ_E2A_RXDESC =3D
++		16, // to make sure we let 16 bits available for LMAC FW
++	SW_PROF_IRQ_E2A_TXCFM,
++	SW_PROF_IRQ_E2A_DBG,
++	SW_PROF_IRQ_E2A_MSG,
++	SW_PROF_IPC_MSGPUSH,
++	SW_PROF_MSGALLOC,
++	SW_PROF_MSGIND,
++	SW_PROF_DBGIND,
++
++	/* A2E direction */
++	SW_PROF_IRQ_A2E_TXCFM_BACK,
++
++	/****** Driver functions related signals ******/
++	SW_PROF_WAIT_QUEUE_STOP,
++	SW_PROF_WAIT_QUEUE_WAKEUP,
++	SW_PROF_RWNXDATAIND,
++	SW_PROF_RWNX_IPC_IRQ_HDLR,
++	SW_PROF_RWNX_IPC_THR_IRQ_HDLR,
++	SW_PROF_IEEE80211RX,
++	SW_PROF_RWNX_PATTERN,
++	SW_PROF_MAX
++};
++
++// [LT]For debug purpose only
++#if (0)
++#define SW_PROF_CHAN_CTXT_CFM_HDL_BIT    (21)
++#define SW_PROF_CHAN_CTXT_CFM_BIT        (22)
++#define SW_PROF_CHAN_CTXT_CFM_SWDONE_BIT (23)
++#define SW_PROF_CHAN_CTXT_PUSH_BIT       (24)
++#define SW_PROF_CHAN_CTXT_QUEUE_BIT      (25)
++#define SW_PROF_CHAN_CTXT_TX_BIT         (26)
++#define SW_PROF_CHAN_CTXT_TX_PAUSE_BIT   (27)
++#define SW_PROF_CHAN_CTXT_PSWTCH_BIT     (28)
++#define SW_PROF_CHAN_CTXT_SWTCH_BIT      (29)
++
++#else
++#define SW_PROF_CHAN_CTXT_CFM_HDL_BIT    (0)
++#define SW_PROF_CHAN_CTXT_CFM_BIT        (0)
++#define SW_PROF_CHAN_CTXT_CFM_SWDONE_BIT (0)
++#define SW_PROF_CHAN_CTXT_PUSH_BIT       (0)
++#define SW_PROF_CHAN_CTXT_QUEUE_BIT      (0)
++#define SW_PROF_CHAN_CTXT_TX_BIT         (0)
++#define SW_PROF_CHAN_CTXT_TX_PAUSE_BIT   (0)
++#define SW_PROF_CHAN_CTXT_PSWTCH_BIT     (0)
++#define SW_PROF_CHAN_CTXT_SWTCH_BIT      (0)
++#endif
++
++static inline void REG_SW_SET_PROFILING_CHAN(void *env, int bit)
++{
++#if (0)
++	rwnx_prof_clear((struct rwnx_hw *)env, BIT(bit));
++#else
++
++#endif
++}
++
++static inline void REG_SW_CLEAR_PROFILING_CHAN(void *env, int bit)
++{
++#if (0)
++	rwnx_prof_clear((struct rwnx_hw *)env, BIT(bit));
++#else
++
++#endif
++}
++
++#ifdef CONFIG_RWNX_SW_PROFILING
++/* Macros for SW PRofiling registers access */
++static inline void REG_SW_SET_PROFILING(void *env, int bit)
++{
++	rwnx_prof_set((struct rwnx_hw *)env, BIT(bit));
++}
++
++static inline void REG_SW_SET_HOSTBUF_IDX_PROFILING(void *env, int val)
++{
++	rwnx_prof_set((struct rwnx_hw *)env, (val) << (SW_PROF_HOSTBUF_IDX));
++}
++
++static inline void REG_SW_CLEAR_PROFILING(void *env, int bit)
++{
++	rwnx_prof_clear((struct rwnx_hw *)env, BIT(bit));
++}
++
++static inline void REG_SW_CLEAR_HOSTBUF_IDX_PROFILING(void *env)
++{
++	rwnx_prof_clear((struct rwnx_hw *)env, 0x0F << (SW_PROF_HOSTBUF_IDX));
++}
++
++#else
++static inline void REG_SW_SET_PROFILING(void *env, int value)
++{
++	(void)env;
++	(void)value;
++}
++
++static inline void REG_SW_CLEAR_PROFILING(void *env, int value)
++{
++	(void)env;
++	(void)value;
++}
++
++static inline void REG_SW_SET_HOSTBUF_IDX_PROFILING(void *env, int val)
++{
++	(void)env;
++	(void)val;
++}
++
++static inline void REG_SW_CLEAR_HOSTBUF_IDX_PROFILING(void *env)
++{
++	(void)env;
++}
++#endif
++
++#endif /* _RWNX_PROF_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.c b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_strs.c
+new file mode 100644
+index 0000000000000..50e81d81abf1e
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.c
+@@ -0,0 +1,269 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_strs.c
++ *
++ * @brief Miscellaneous debug strings
++ *
++ *************************************************************************=
+***************
++ */
++
++#include "lmac_msg.h"
++#include "rwnx_strs.h"
++static const char *const rwnx_mmid2str[MSG_I(MM_MAX)] =3D {
++	[MSG_I(MM_RESET_REQ)] =3D "MM_RESET_REQ",
++	[MSG_I(MM_RESET_CFM)] =3D "MM_RESET_CFM",
++	[MSG_I(MM_START_REQ)] =3D "MM_START_REQ",
++	[MSG_I(MM_START_CFM)] =3D "MM_START_CFM",
++	[MSG_I(MM_VERSION_REQ)] =3D "MM_VERSION_REQ",
++	[MSG_I(MM_VERSION_CFM)] =3D "MM_VERSION_CFM",
++	[MSG_I(MM_ADD_IF_REQ)] =3D "MM_ADD_IF_REQ",
++	[MSG_I(MM_ADD_IF_CFM)] =3D "MM_ADD_IF_CFM",
++	[MSG_I(MM_REMOVE_IF_REQ)] =3D "MM_REMOVE_IF_REQ",
++	[MSG_I(MM_REMOVE_IF_CFM)] =3D "MM_REMOVE_IF_CFM",
++	[MSG_I(MM_STA_ADD_REQ)] =3D "MM_STA_ADD_REQ",
++	[MSG_I(MM_STA_ADD_CFM)] =3D "MM_STA_ADD_CFM",
++	[MSG_I(MM_STA_DEL_REQ)] =3D "MM_STA_DEL_REQ",
++	[MSG_I(MM_STA_DEL_CFM)] =3D "MM_STA_DEL_CFM",
++	[MSG_I(MM_SET_FILTER_REQ)] =3D "MM_SET_FILTER_REQ",
++	[MSG_I(MM_SET_FILTER_CFM)] =3D "MM_SET_FILTER_CFM",
++	[MSG_I(MM_SET_CHANNEL_REQ)] =3D "MM_SET_CHANNEL_REQ",
++	[MSG_I(MM_SET_CHANNEL_CFM)] =3D "MM_SET_CHANNEL_CFM",
++	[MSG_I(MM_SET_DTIM_REQ)] =3D "MM_SET_DTIM_REQ",
++	[MSG_I(MM_SET_DTIM_CFM)] =3D "MM_SET_DTIM_CFM",
++	[MSG_I(MM_SET_BEACON_INT_REQ)] =3D "MM_SET_BEACON_INT_REQ",
++	[MSG_I(MM_SET_BEACON_INT_CFM)] =3D "MM_SET_BEACON_INT_CFM",
++	[MSG_I(MM_SET_BASIC_RATES_REQ)] =3D "MM_SET_BASIC_RATES_REQ",
++	[MSG_I(MM_SET_BASIC_RATES_CFM)] =3D "MM_SET_BASIC_RATES_CFM",
++	[MSG_I(MM_SET_BSSID_REQ)] =3D "MM_SET_BSSID_REQ",
++	[MSG_I(MM_SET_BSSID_CFM)] =3D "MM_SET_BSSID_CFM",
++	[MSG_I(MM_SET_EDCA_REQ)] =3D "MM_SET_EDCA_REQ",
++	[MSG_I(MM_SET_EDCA_CFM)] =3D "MM_SET_EDCA_CFM",
++	[MSG_I(MM_SET_MODE_REQ)] =3D "MM_SET_MODE_REQ",
++	[MSG_I(MM_SET_MODE_CFM)] =3D "MM_SET_MODE_CFM",
++	[MSG_I(MM_SET_VIF_STATE_REQ)] =3D "MM_SET_VIF_STATE_REQ",
++	[MSG_I(MM_SET_VIF_STATE_CFM)] =3D "MM_SET_VIF_STATE_CFM",
++	[MSG_I(MM_SET_SLOTTIME_REQ)] =3D "MM_SET_SLOTTIME_REQ",
++	[MSG_I(MM_SET_SLOTTIME_CFM)] =3D "MM_SET_SLOTTIME_CFM",
++	[MSG_I(MM_SET_IDLE_REQ)] =3D "MM_SET_IDLE_REQ",
++	[MSG_I(MM_SET_IDLE_CFM)] =3D "MM_SET_IDLE_CFM",
++	[MSG_I(MM_KEY_ADD_REQ)] =3D "MM_KEY_ADD_REQ",
++	[MSG_I(MM_KEY_ADD_CFM)] =3D "MM_KEY_ADD_CFM",
++	[MSG_I(MM_KEY_DEL_REQ)] =3D "MM_KEY_DEL_REQ",
++	[MSG_I(MM_KEY_DEL_CFM)] =3D "MM_KEY_DEL_CFM",
++	[MSG_I(MM_BA_ADD_REQ)] =3D "MM_BA_ADD_REQ",
++	[MSG_I(MM_BA_ADD_CFM)] =3D "MM_BA_ADD_CFM",
++	[MSG_I(MM_BA_DEL_REQ)] =3D "MM_BA_DEL_REQ",
++	[MSG_I(MM_BA_DEL_CFM)] =3D "MM_BA_DEL_CFM",
++	[MSG_I(MM_PRIMARY_TBTT_IND)] =3D "MM_PRIMARY_TBTT_IND",
++	[MSG_I(MM_SECONDARY_TBTT_IND)] =3D "MM_SECONDARY_TBTT_IND",
++	[MSG_I(MM_SET_POWER_REQ)] =3D "MM_SET_POWER_REQ",
++	[MSG_I(MM_SET_POWER_CFM)] =3D "MM_SET_POWER_CFM",
++	[MSG_I(MM_DBG_TRIGGER_REQ)] =3D "MM_DBG_TRIGGER_REQ",
++	[MSG_I(MM_SET_PS_MODE_REQ)] =3D "MM_SET_PS_MODE_REQ",
++	[MSG_I(MM_SET_PS_MODE_CFM)] =3D "MM_SET_PS_MODE_CFM",
++	[MSG_I(MM_CHAN_CTXT_ADD_REQ)] =3D "MM_CHAN_CTXT_ADD_REQ",
++	[MSG_I(MM_CHAN_CTXT_ADD_CFM)] =3D "MM_CHAN_CTXT_ADD_CFM",
++	[MSG_I(MM_CHAN_CTXT_DEL_REQ)] =3D "MM_CHAN_CTXT_DEL_REQ",
++	[MSG_I(MM_CHAN_CTXT_DEL_CFM)] =3D "MM_CHAN_CTXT_DEL_CFM",
++	[MSG_I(MM_CHAN_CTXT_LINK_REQ)] =3D "MM_CHAN_CTXT_LINK_REQ",
++	[MSG_I(MM_CHAN_CTXT_LINK_CFM)] =3D "MM_CHAN_CTXT_LINK_CFM",
++	[MSG_I(MM_CHAN_CTXT_UNLINK_REQ)] =3D "MM_CHAN_CTXT_UNLINK_REQ",
++	[MSG_I(MM_CHAN_CTXT_UNLINK_CFM)] =3D "MM_CHAN_CTXT_UNLINK_CFM",
++	[MSG_I(MM_CHAN_CTXT_UPDATE_REQ)] =3D "MM_CHAN_CTXT_UPDATE_REQ",
++	[MSG_I(MM_CHAN_CTXT_UPDATE_CFM)] =3D "MM_CHAN_CTXT_UPDATE_CFM",
++	[MSG_I(MM_CHAN_CTXT_SCHED_REQ)] =3D "MM_CHAN_CTXT_SCHED_REQ",
++	[MSG_I(MM_CHAN_CTXT_SCHED_CFM)] =3D "MM_CHAN_CTXT_SCHED_CFM",
++	[MSG_I(MM_BCN_CHANGE_REQ)] =3D "MM_BCN_CHANGE_REQ",
++	[MSG_I(MM_BCN_CHANGE_CFM)] =3D "MM_BCN_CHANGE_CFM",
++	[MSG_I(MM_TIM_UPDATE_REQ)] =3D "MM_TIM_UPDATE_REQ",
++	[MSG_I(MM_TIM_UPDATE_CFM)] =3D "MM_TIM_UPDATE_CFM",
++	[MSG_I(MM_CONNECTION_LOSS_IND)] =3D "MM_CONNECTION_LOSS_IND",
++	[MSG_I(MM_CHANNEL_SWITCH_IND)] =3D "MM_CHANNEL_SWITCH_IND",
++	[MSG_I(MM_CHANNEL_PRE_SWITCH_IND)] =3D "MM_CHANNEL_PRE_SWITCH_IND",
++	[MSG_I(MM_REMAIN_ON_CHANNEL_REQ)] =3D "MM_REMAIN_ON_CHANNEL_REQ",
++	[MSG_I(MM_REMAIN_ON_CHANNEL_CFM)] =3D "MM_REMAIN_ON_CHANNEL_CFM",
++	[MSG_I(MM_REMAIN_ON_CHANNEL_EXP_IND)] =3D "MM_REMAIN_ON_CHANNEL_EXP_IND",
++	[MSG_I(MM_PS_CHANGE_IND)] =3D "MM_PS_CHANGE_IND",
++	[MSG_I(MM_TRAFFIC_REQ_IND)] =3D "MM_TRAFFIC_REQ_IND",
++	[MSG_I(MM_SET_PS_OPTIONS_REQ)] =3D "MM_SET_PS_OPTIONS_REQ",
++	[MSG_I(MM_SET_PS_OPTIONS_CFM)] =3D "MM_SET_PS_OPTIONS_CFM",
++	[MSG_I(MM_P2P_VIF_PS_CHANGE_IND)] =3D "MM_P2P_VIF_PS_CHANGE_IND",
++	[MSG_I(MM_CSA_COUNTER_IND)] =3D "MM_CSA_COUNTER_IND",
++	[MSG_I(MM_CHANNEL_SURVEY_IND)] =3D "MM_CHANNEL_SURVEY_IND",
++	[MSG_I(MM_SET_P2P_NOA_REQ)] =3D "MM_SET_P2P_NOA_REQ",
++	[MSG_I(MM_SET_P2P_OPPPS_REQ)] =3D "MM_SET_P2P_OPPPS_REQ",
++	[MSG_I(MM_SET_P2P_NOA_CFM)] =3D "MM_SET_P2P_NOA_CFM",
++	[MSG_I(MM_SET_P2P_OPPPS_CFM)] =3D "MM_SET_P2P_OPPPS_CFM",
++	[MSG_I(MM_CFG_RSSI_REQ)] =3D "MM_CFG_RSSI_REQ",
++	[MSG_I(MM_RSSI_STATUS_IND)] =3D "MM_RSSI_STATUS_IND",
++	[MSG_I(MM_CSA_FINISH_IND)] =3D "MM_CSA_FINISH_IND",
++	[MSG_I(MM_CSA_TRAFFIC_IND)] =3D "MM_CSA_TRAFFIC_IND",
++	[MSG_I(MM_MU_GROUP_UPDATE_REQ)] =3D "MM_MU_GROUP_UPDATE_REQ",
++	[MSG_I(MM_MU_GROUP_UPDATE_CFM)] =3D "MM_MU_GROUP_UPDATE_CFM",
++
++	[MSG_I(MM_SET_ARPOFFLOAD_REQ)] =3D "MM_SET_ARPOFFLOAD_REQ",
++	[MSG_I(MM_SET_ARPOFFLOAD_CFM)] =3D "MM_SET_ARPOFFLOAD_CFM",
++	[MSG_I(MM_SET_AGG_DISABLE_REQ)] =3D "MM_SET_AGG_DISABLE_REQ",
++	[MSG_I(MM_SET_AGG_DISABLE_CFM)] =3D "MM_SET_AGG_DISABLE_CFM",
++	[MSG_I(MM_SET_COEX_REQ)] =3D "MM_SET_COEX_REQ",
++	[MSG_I(MM_SET_COEX_CFM)] =3D "MM_SET_COEX_CFM",
++	[MSG_I(MM_SET_RF_CONFIG_REQ)] =3D "MM_SET_RF_CONFIG_REQ",
++	[MSG_I(MM_SET_RF_CONFIG_CFM)] =3D "MM_SET_RF_CONFIG_CFM",
++	[MSG_I(MM_SET_RF_CALIB_REQ)] =3D "MM_SET_RF_CALIB_REQ",
++	[MSG_I(MM_SET_RF_CALIB_CFM)] =3D "MM_SET_RF_CALIB_CFM",
++
++	[MSG_I(MM_GET_MAC_ADDR_REQ)] =3D "MM_GET_MAC_ADDR_REQ",
++	[MSG_I(MM_GET_MAC_ADDR_CFM)] =3D "MM_GET_MAC_ADDR_CFM",
++	[MSG_I(MM_GET_STA_INFO_REQ)] =3D "MM_GET_STA_INFO_REQ",
++	[MSG_I(MM_GET_STA_INFO_CFM)] =3D "MM_GET_STA_INFO_CFM",
++	[MSG_I(MM_SET_TXPWR_IDX_LVL_REQ)] =3D "MM_SET_TXPWR_IDX_LVL_REQ",
++	[MSG_I(MM_SET_TXPWR_IDX_LVL_CFM)] =3D "MM_SET_TXPWR_IDX_LVL_CFM",
++	[MSG_I(MM_SET_TXPWR_OFST_REQ)] =3D "MM_SET_TXPWR_OFST_REQ",
++	[MSG_I(MM_SET_TXPWR_OFST_CFM)] =3D "MM_SET_TXPWR_OFST_CFM",
++	[MSG_I(MM_SET_STACK_START_REQ)] =3D "MM_SET_STACK_START_REQ",
++	[MSG_I(MM_SET_STACK_START_CFM)] =3D "MM_SET_STACK_START_CFM",
++	[MSG_I(MM_APM_STALOSS_IND)] =3D "MM_APM_STALOSS_IND",
++	[MSG_I(MM_SET_VENDOR_HWCONFIG_REQ)] =3D "MM_SET_VENDOR_HWCONFIG_REQ",
++	[MSG_I(MM_SET_VENDOR_HWCONFIG_CFM)] =3D "MM_SET_VENDOR_HWCONFIG_CFM",
++	[MSG_I(MM_GET_FW_VERSION_REQ)] =3D "MM_GET_FW_VERSION_REQ",
++	[MSG_I(MM_GET_FW_VERSION_CFM)] =3D "MM_GET_FW_VERSION_CFM",
++	[MSG_I(MM_SET_RESUME_RESTORE_REQ)] =3D "MM_SET_RESUME_RESTORE_REQ",
++	[MSG_I(MM_SET_RESUME_RESTORE_CFM)] =3D "MM_SET_RESUME_RESTORE_CFM",
++	[MSG_I(MM_GET_WIFI_DISABLE_REQ)] =3D "MM_GET_WIFI_DISABLE_REQ",
++	[MSG_I(MM_GET_WIFI_DISABLE_CFM)] =3D "MM_GET_WIFI_DISABLE_CFM",
++	[MSG_I(MM_CFG_RSSI_CFM)] =3D "MM_CFG_RSSI_CFM",
++	[MSG_I(MM_SET_VENDOR_SWCONFIG_REQ)] =3D "MM_SET_VENDOR_SWCONFIG_REQ",
++	[MSG_I(MM_SET_VENDOR_SWCONFIG_CFM)] =3D "MM_SET_VENDOR_SWCONFIG_CFM",
++};
++
++static const char *const rwnx_dbgid2str[MSG_I(DBG_MAX)] =3D {
++	[MSG_I(DBG_MEM_READ_REQ)] =3D "DBG_MEM_READ_REQ",
++	[MSG_I(DBG_MEM_READ_CFM)] =3D "DBG_MEM_READ_CFM",
++	[MSG_I(DBG_MEM_WRITE_REQ)] =3D "DBG_MEM_WRITE_REQ",
++	[MSG_I(DBG_MEM_WRITE_CFM)] =3D "DBG_MEM_WRITE_CFM",
++	[MSG_I(DBG_SET_MOD_FILTER_REQ)] =3D "DBG_SET_MOD_FILTER_REQ",
++	[MSG_I(DBG_SET_MOD_FILTER_CFM)] =3D "DBG_SET_MOD_FILTER_CFM",
++	[MSG_I(DBG_SET_SEV_FILTER_REQ)] =3D "DBG_SET_SEV_FILTER_REQ",
++	[MSG_I(DBG_SET_SEV_FILTER_CFM)] =3D "DBG_SET_SEV_FILTER_CFM",
++	[MSG_I(DBG_ERROR_IND)] =3D "DBG_ERROR_IND",
++	[MSG_I(DBG_GET_SYS_STAT_REQ)] =3D "DBG_GET_SYS_STAT_REQ",
++	[MSG_I(DBG_GET_SYS_STAT_CFM)] =3D "DBG_GET_SYS_STAT_CFM",
++};
++
++static const char *const rwnx_scanid2str[MSG_I(SCAN_MAX)] =3D {
++	[MSG_I(SCAN_START_REQ)] =3D "SCAN_START_REQ",
++	[MSG_I(SCAN_START_CFM)] =3D "SCAN_START_CFM",
++	[MSG_I(SCAN_DONE_IND)] =3D "SCAN_DONE_IND",
++};
++
++static const char *const rwnx_tdlsid2str[MSG_I(TDLS_MAX)] =3D {
++	[MSG_I(TDLS_CHAN_SWITCH_CFM)] =3D "TDLS_CHAN_SWITCH_CFM",
++	[MSG_I(TDLS_CHAN_SWITCH_REQ)] =3D "TDLS_CHAN_SWITCH_REQ",
++	[MSG_I(TDLS_CHAN_SWITCH_IND)] =3D "TDLS_CHAN_SWITCH_IND",
++	[MSG_I(TDLS_CHAN_SWITCH_BASE_IND)] =3D "TDLS_CHAN_SWITCH_BASE_IND",
++	[MSG_I(TDLS_CANCEL_CHAN_SWITCH_REQ)] =3D "TDLS_CANCEL_CHAN_SWITCH_REQ",
++	[MSG_I(TDLS_CANCEL_CHAN_SWITCH_CFM)] =3D "TDLS_CANCEL_CHAN_SWITCH_CFM",
++	[MSG_I(TDLS_PEER_PS_IND)] =3D "TDLS_PEER_PS_IND",
++	[MSG_I(TDLS_PEER_TRAFFIC_IND_REQ)] =3D "TDLS_PEER_TRAFFIC_IND_REQ",
++	[MSG_I(TDLS_PEER_TRAFFIC_IND_CFM)] =3D "TDLS_PEER_TRAFFIC_IND_CFM",
++};
++
++#ifdef CONFIG_RWNX_FULLMAC
++
++static const char *const rwnx_scanuid2str[MSG_I(SCANU_MAX)] =3D {
++	[MSG_I(SCANU_START_REQ)] =3D "SCANU_START_REQ",
++	[MSG_I(SCANU_START_CFM)] =3D "SCANU_START_CFM",
++	[MSG_I(SCANU_JOIN_REQ)] =3D "SCANU_JOIN_REQ",
++	[MSG_I(SCANU_JOIN_CFM)] =3D "SCANU_JOIN_CFM",
++	[MSG_I(SCANU_RESULT_IND)] =3D "SCANU_RESULT_IND",
++	[MSG_I(SCANU_FAST_REQ)] =3D "SCANU_FAST_REQ",
++	[MSG_I(SCANU_FAST_CFM)] =3D "SCANU_FAST_CFM",
++	[MSG_I(SCANU_VENDOR_IE_REQ)] =3D "SCANU_VENDOR_IE_REQ",
++	[MSG_I(SCANU_VENDOR_IE_CFM)] =3D "SCANU_VENDOR_IE_CFM",
++	[MSG_I(SCANU_START_CFM_ADDTIONAL)] =3D "SCANU_START_CFM_ADDTIONAL",
++	[MSG_I(SCANU_CANCEL_REQ)] =3D "SCANU_CANCEL_REQ",
++	[MSG_I(SCANU_CANCEL_CFM)] =3D "SCANU_CANCEL_CFM",
++};
++
++static const char *const rwnx_meid2str[MSG_I(ME_MAX)] =3D {
++	[MSG_I(ME_CONFIG_REQ)] =3D "ME_CONFIG_REQ",
++	[MSG_I(ME_CONFIG_CFM)] =3D "ME_CONFIG_CFM",
++	[MSG_I(ME_CHAN_CONFIG_REQ)] =3D "ME_CHAN_CONFIG_REQ",
++	[MSG_I(ME_CHAN_CONFIG_CFM)] =3D "ME_CHAN_CONFIG_CFM",
++	[MSG_I(ME_SET_CONTROL_PORT_REQ)] =3D "ME_SET_CONTROL_PORT_REQ",
++	[MSG_I(ME_SET_CONTROL_PORT_CFM)] =3D "ME_SET_CONTROL_PORT_CFM",
++	[MSG_I(ME_TKIP_MIC_FAILURE_IND)] =3D "ME_TKIP_MIC_FAILURE_IND",
++	[MSG_I(ME_STA_ADD_REQ)] =3D "ME_STA_ADD_REQ",
++	[MSG_I(ME_STA_ADD_CFM)] =3D "ME_STA_ADD_CFM",
++	[MSG_I(ME_STA_DEL_REQ)] =3D "ME_STA_DEL_REQ",
++	[MSG_I(ME_STA_DEL_CFM)] =3D "ME_STA_DEL_CFM",
++	[MSG_I(ME_TX_CREDITS_UPDATE_IND)] =3D "ME_TX_CREDITS_UPDATE_IND",
++	[MSG_I(ME_RC_STATS_REQ)] =3D "ME_RC_STATS_REQ",
++	[MSG_I(ME_RC_STATS_CFM)] =3D "ME_RC_STATS_CFM",
++	[MSG_I(ME_RC_SET_RATE_REQ)] =3D "ME_RC_SET_RATE_REQ",
++	[MSG_I(ME_TRAFFIC_IND_REQ)] =3D "ME_TRAFFIC_IND_REQ",
++	[MSG_I(ME_TRAFFIC_IND_CFM)] =3D "ME_TRAFFIC_IND_CFM",
++	[MSG_I(ME_SET_PS_MODE_REQ)] =3D "ME_SET_PS_MODE_REQ",
++	[MSG_I(ME_SET_PS_MODE_CFM)] =3D "ME_SET_PS_MODE_CFM",
++	[MSG_I(ME_SET_LP_LEVEL_REQ)] =3D "ME_SET_LP_LEVEL_REQ",
++	[MSG_I(ME_SET_LP_LEVEL_CFM)] =3D "ME_SET_LP_LEVEL_CFM",
++};
++
++static const char *const rwnx_smid2str[MSG_I(SM_MAX)] =3D {
++	[MSG_I(SM_CONNECT_REQ)] =3D "SM_CONNECT_REQ",
++	[MSG_I(SM_CONNECT_CFM)] =3D "SM_CONNECT_CFM",
++	[MSG_I(SM_CONNECT_IND)] =3D "SM_CONNECT_IND",
++	[MSG_I(SM_DISCONNECT_REQ)] =3D "SM_DISCONNECT_REQ",
++	[MSG_I(SM_DISCONNECT_CFM)] =3D "SM_DISCONNECT_CFM",
++	[MSG_I(SM_DISCONNECT_IND)] =3D "SM_DISCONNECT_IND",
++	[MSG_I(SM_EXTERNAL_AUTH_REQUIRED_IND)] =3D "SM_EXTERNAL_AUTH_REQUIRED_IND=
+",
++	[MSG_I(SM_EXTERNAL_AUTH_REQUIRED_RSP)] =3D "SM_EXTERNAL_AUTH_REQUIRED_RSP=
+",
++	[MSG_I(SM_EXTERNAL_AUTH_REQUIRED_RSP_CFM)] =3D
++		"SM_EXTERNAL_AUTH_REQUIRED_RSP_CFM",
++};
++
++static const char *const rwnx_apmid2str[MSG_I(APM_MAX)] =3D {
++	[MSG_I(APM_START_REQ)] =3D "APM_START_REQ",
++	[MSG_I(APM_START_CFM)] =3D "APM_START_CFM",
++	[MSG_I(APM_STOP_REQ)] =3D "APM_STOP_REQ",
++	[MSG_I(APM_STOP_CFM)] =3D "APM_STOP_CFM",
++	[MSG_I(APM_START_CAC_REQ)] =3D "APM_START_CAC_REQ",
++	[MSG_I(APM_START_CAC_CFM)] =3D "APM_START_CAC_CFM",
++	[MSG_I(APM_STOP_CAC_REQ)] =3D "APM_STOP_CAC_REQ",
++	[MSG_I(APM_STOP_CAC_CFM)] =3D "APM_STOP_CAC_CFM",
++	[MSG_I(APM_SET_BEACON_IE_REQ)] =3D "APM_SET_BEACON_IE_REQ",
++	[MSG_I(APM_SET_BEACON_IE_CFM)] =3D "APM_SET_BEACON_IE_CFM",
++};
++
++static const char *const rwnx_meshid2str[MSG_I(MESH_MAX)] =3D {
++	[MSG_I(MESH_START_REQ)] =3D "MESH_START_REQ",
++	[MSG_I(MESH_START_CFM)] =3D "MESH_START_CFM",
++	[MSG_I(MESH_STOP_REQ)] =3D "MESH_STOP_REQ",
++	[MSG_I(MESH_STOP_CFM)] =3D "MESH_STOP_CFM",
++	[MSG_I(MESH_UPDATE_REQ)] =3D "MESH_UPDATE_REQ",
++	[MSG_I(MESH_UPDATE_CFM)] =3D "MESH_UPDATE_CFM",
++	[MSG_I(MESH_PATH_CREATE_REQ)] =3D "MESH_PATH_CREATE_REQ",
++	[MSG_I(MESH_PATH_CREATE_CFM)] =3D "MESH_PATH_CREATE_CFM",
++	[MSG_I(MESH_PATH_UPDATE_REQ)] =3D "MESH_PATH_UPDATE_REQ",
++	[MSG_I(MESH_PATH_UPDATE_CFM)] =3D "MESH_PATH_UPDATE_CFM",
++	[MSG_I(MESH_PROXY_ADD_REQ)] =3D "MESH_PROXY_ADD_REQ",
++	[MSG_I(MESH_PEER_UPDATE_IND)] =3D "MESH_PEER_UPDATE_IND",
++	[MSG_I(MESH_PATH_UPDATE_IND)] =3D "MESH_PATH_UPDATE_IND",
++	[MSG_I(MESH_PROXY_UPDATE_IND)] =3D "MESH_PROXY_UPDATE_IND",
++};
++
++#endif /* CONFIG_RWNX_FULLMAC */
++
++const char *const *rwnx_id2str[TASK_LAST_EMB + 1] =3D {
++	[TASK_MM] =3D rwnx_mmid2str,       [TASK_DBG] =3D rwnx_dbgid2str,
++	[TASK_SCAN] =3D rwnx_scanid2str,   [TASK_TDLS] =3D rwnx_tdlsid2str,
++#ifdef CONFIG_RWNX_FULLMAC
++	[TASK_SCANU] =3D rwnx_scanuid2str, [TASK_ME] =3D rwnx_meid2str,
++	[TASK_SM] =3D rwnx_smid2str,       [TASK_APM] =3D rwnx_apmid2str,
++	[TASK_MESH] =3D rwnx_meshid2str,
++#endif
++};
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.h b/drivers/ne=
+t/wireless/aic/aic8800_fdrv/rwnx_strs.h
+new file mode 100644
+index 0000000000000..1b4df40f2a912
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_strs.h
+@@ -0,0 +1,31 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_strs.h
++ *
++ * @brief Miscellaneous debug strings
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef _RWNX_STRS_H_
++#define _RWNX_STRS_H_
++
++#include "lmac_msg.h"
++
++#define RWNX_ID2STR(tag)                                               \
++	({                                                                 \
++		const typeof(tag) __tag =3D (tag);                               \
++		((MSG_T(__tag) < ARRAY_SIZE(rwnx_id2str)) &&                   \
++		 (rwnx_id2str[MSG_T(__tag)]) &&                                \
++		 ((rwnx_id2str[MSG_T(__tag)])[MSG_I(__tag)]))                  \
++		 ? (rwnx_id2str[MSG_T(__tag)])[MSG_I(__tag)]                \
++		 : "unknown";                                               \
++	})
++
++extern const char *const *rwnx_id2str[TASK_LAST_EMB + 1];
++
++#endif /* _RWNX_STRS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.c b/drivers/n=
+et/wireless/aic/aic8800_fdrv/rwnx_utils.c
+new file mode 100644
+index 0000000000000..73e8ab7c8af5c
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.c
+@@ -0,0 +1,35 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_utils.c
++ *
++ * @brief IPC utility function declarations
++ *
++ *************************************************************************=
+***************
++ */
++
++#include "rwnx_utils.h"
++#include "ipc_host.h"
++#include "rwnx_defs.h"
++#include "rwnx_msg_rx.h"
++#include "rwnx_prof.h"
++#include "rwnx_rx.h"
++#include "rwnx_tx.h"
++
++int rwnx_init_aic(struct rwnx_hw *rwnx_hw)
++{
++	RWNX_DBG(RWNX_FN_ENTRY_STR);
++#ifdef AICWF_SDIO_SUPPORT
++	aicwf_sdio_host_init(&rwnx_hw->sdio_env, NULL, NULL, rwnx_hw);
++#else
++	aicwf_usb_host_init(&rwnx_hw->usb_env, NULL, NULL, rwnx_hw);
++#endif
++	rwnx_cmd_mgr_init(rwnx_hw->cmd_mgr);
++
++	rwnx_hw->testmode =3D get_testmode();
++
++	return 0;
++}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.h b/drivers/n=
+et/wireless/aic/aic8800_fdrv/rwnx_utils.h
+new file mode 100644
+index 0000000000000..aecd627ff9867
+--- /dev/null
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_utils.h
+@@ -0,0 +1,131 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_utils.c
++ *
++ * @brief IPC utility function declarations
++ *
++ *************************************************************************=
+***************
++ */
++
++#ifndef _RWNX_IPC_UTILS_H_
++#define _RWNX_IPC_UTILS_H_
++
++#include "aicwf_debug.h"
++#include <linux/dma-mapping.h>
++#include <linux/dmapool.h>
++#include <linux/skbuff.h>
++#include "lmac_msg.h"
++#include "rwnx_compat.h"
++
++enum rwnx_dev_flag {
++	RWNX_DEV_RESTARTING,
++	RWNX_DEV_STACK_RESTARTING,
++	RWNX_DEV_STARTED,
++};
++
++struct rwnx_hw;
++struct rwnx_sta;
++
++/**
++ * struct rwnx_ipc_elem - Generic IPC buffer of fixed size
++ *
++ * @addr: Host address of the buffer.
++ * @dma_addr: DMA address of the buffer.
++ */
++struct rwnx_ipc_elem {
++	void *addr;
++	dma_addr_t dma_addr;
++};
++
++/**
++ * struct rwnx_ipc_elem_pool - Generic pool of IPC buffers of fixed size
++ *
++ * @nb: Number of buffers currenlty allocated in the pool
++ * @buf: Array of buffers (size of array is @nb)
++ * @pool: DMA pool in which buffers have been allocated
++ */
++struct rwnx_ipc_elem_pool {
++	int nb;
++	struct rwnx_ipc_elem *buf;
++	struct dma_pool *pool;
++};
++
++/**
++ * struct rwnx_ipc_elem_var - Generic IPC buffer of variable size
++ *
++ * @addr: Host address of the buffer.
++ * @dma_addr: DMA address of the buffer.
++ * @size: Size, in bytes, of the buffer
++ */
++struct rwnx_ipc_elem_var {
++	void *addr;
++	dma_addr_t dma_addr;
 +	size_t size;
 +};
 +
-+static struct prealloc_txq prealloc_txq;
-+#define MAX_TXQ_SIZE (100 * 1024)
++/**
++ * struct rwnx_ipc_dbgdump_elem - IPC buffer for debug dump
++ *
++ * @mutex: Mutex to protect access to debug dump
++ * @buf: IPC buffer
++ */
++struct rwnx_ipc_dbgdump_elem {
++	struct mutex mutex; //Mutex to protect access to debug dump
++	struct rwnx_ipc_elem_var buf;
++};
++
++/*
++ * Maximum Length of Radiotap header vendor specific data(in bytes)
++ */
++#define RADIOTAP_HDR_VEND_MAX_LEN 16
++
++/*
++ * Maximum Radiotap Header Length without vendor specific data (in bytes)
++ */
++#define RADIOTAP_HDR_MAX_LEN 80
++
++/*
++ * Unsupported HT Frame data length (in bytes)
++ */
++#define UNSUP_RX_VEC_DATA_LEN 2
 +
 +/**
-+ * aicwf_prealloc_txq_alloc - Allocate or reuse the preallocated TX queue
-+ * @size: Required queue size in bytes
++ * struct rwnx_ipc_skb_elem - IPC buffer for SKB element
 + *
-+ * Return: Pointer to a zeroed queue buffer, or %NULL if allocation failed=
-.
++ * @skb: Pointer to the skb buffer allocated
++ * @dma_addr: DMA address of the data buffer fo skb
++ *
 + */
-+void *aicwf_prealloc_txq_alloc(size_t size)
-+{
-+	WARN_ON_ONCE(size > MAX_TXQ_SIZE);
++struct rwnx_ipc_skb_elem {
++	struct sk_buff *skb;
++	dma_addr_t dma_addr;
++};
 +
-+	// check prealloc_txq.size
-+	if ((int)prealloc_txq.size !=3D (int)size) {
-+		AICWFDBG(LOGINFO, "%s size is diff will to be kzalloc \r\n", __func__);
++#ifdef CONFIG_RWNX_FULLMAC
 +
-+		if (prealloc_txq.txq) {
-+			AICWFDBG(LOGINFO, "%s txq to kfree \r\n", __func__);
-+			kfree(prealloc_txq.txq);
-+			prealloc_txq.txq =3D NULL;
-+		}
++/* Maximum number of rx buffer the fw may use at the same time */
++#define RWNX_RXBUFF_MAX (64 * NX_REMOTE_STA_MAX)
 +
-+		prealloc_txq.size =3D size;
-+		prealloc_txq.prealloced =3D 0;
-+	}
-+	// check prealloc or not
-+	if (!prealloc_txq.prealloced) {
-+		prealloc_txq.txq =3D kzalloc(size, GFP_KERNEL);
-+		if (!prealloc_txq.txq) {
-+			AICWFDBG(LOGERROR, "%s txq kzalloc fail \r\n", __func__);
-+		} else {
-+			AICWFDBG(LOGINFO, "%s txq kzalloc successful \r\n", __func__);
-+			prealloc_txq.prealloced =3D 1;
-+		}
-+	} else {
-+		AICWFDBG(LOGINFO, "%s txq not need to kzalloc \r\n", __func__);
-+	}
++/**
++ * struct rwnx_ipc_rxbuf_elems - IPC buffers for RX
++ *
++ * @skb: Array of buffer push to FW.
++ * @idx: Index of the last pushed skb.(Use to find the next free entry qui=
+cker)
++ *
++ * Note: contrary to softmac version, dma_addr are stored inside skb->cb.
++ */
++struct rwnx_ipc_rxbuf_elems {
++	struct sk_buff *skb[RWNX_RXBUFF_MAX];
++	int idx;
++};
 +
-+	return prealloc_txq.txq;
-+}
++#endif /* CONFIG_RWNX_FULLMAC */
++int rwnx_init_aic(struct rwnx_hw *rwnx_hw);
 +
-+void aicwf_prealloc_txq_free(void)
-+{
-+	if (prealloc_txq.txq) {
-+		AICWFDBG(LOGINFO, "%s txq to kfree \r\n", __func__);
-+		kfree(prealloc_txq.txq);
-+		prealloc_txq.txq =3D NULL;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(aicwf_prealloc_txq_alloc);
-diff --git a/drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.h b/dr=
-ivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.h
++int get_testmode(void);
++
++#endif /* _RWNX_IPC_UTILS_H_ */
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.c b/drivers/net/=
+wireless/aic/aic8800_fdrv/rwnx_v7.c
 new file mode 100644
-index 0000000000000..680d37ffca931
+index 0000000000000..4138c7f7d07e4
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_bsp/aicwf_txq_prealloc.h
-@@ -0,0 +1,8 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _AICWF_TXQ_PREALLOC_H_
-+#define _AICWF_TXQ_PREALLOC_H_
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.c
+@@ -0,0 +1,181 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_v7.h
++ *
++ *************************************************************************=
+***************
++ */
 +
-+void *aicwf_prealloc_txq_alloc(size_t size);
-+void aicwf_prealloc_txq_free(void);
++#include "rwnx_v7.h"
++#include "hal_desc.h"
++#include "reg_access.h"
++#include "rwnx_defs.h"
++#include "rwnx_irqs.h"
 +
++struct rwnx_v7 {
++	u8 __iomem *pci_bar0_vaddr;
++	u8 __iomem *pci_bar1_vaddr;
++};
++
++static int rwnx_v7_platform_enable(struct rwnx_hw *rwnx_hw)
++{
++	int ret;
++
++	/* sched_setscheduler on ONESHOT threaded irq handler for BCNs ? */
++	ret =3D request_irq(rwnx_hw->plat->pci_dev->irq, rwnx_irq_hdlr, 0, "rwnx"=
+,
++			  rwnx_hw);
++	return ret;
++}
++
++static int rwnx_v7_platform_disable(struct rwnx_hw *rwnx_hw)
++{
++	free_irq(rwnx_hw->plat->pci_dev->irq, rwnx_hw);
++	return 0;
++}
++
++static void rwnx_v7_platform_deinit(struct rwnx_plat *rwnx_plat)
++{
++#ifdef CONFIG_PCI
++	struct rwnx_v7 *rwnx_v7 =3D (struct rwnx_v7 *)rwnx_plat->priv;
++
++	pci_disable_device(rwnx_plat->pci_dev);
++	iounmap(rwnx_v7->pci_bar0_vaddr);
++	iounmap(rwnx_v7->pci_bar1_vaddr);
++	pci_release_regions(rwnx_plat->pci_dev);
++	pci_clear_master(rwnx_plat->pci_dev);
++	pci_disable_msi(rwnx_plat->pci_dev);
 +#endif
-diff --git a/drivers/net/wireless/aic/aic8800_fdrv/Kconfig b/drivers/net/wi=
-reless/aic/aic8800_fdrv/Kconfig
++	kfree(rwnx_plat);
++}
++
++static u8 __iomem *rwnx_v7_get_address(struct rwnx_plat *rwnx_plat,
++				       int addr_name, unsigned int offset)
++{
++	struct rwnx_v7 *rwnx_v7 =3D (struct rwnx_v7 *)rwnx_plat->priv;
++
++	if (WARN(addr_name >=3D RWNX_ADDR_MAX, "Invalid address %d", addr_name))
++		return NULL;
++
++	if (addr_name =3D=3D RWNX_ADDR_CPU)
++		return rwnx_v7->pci_bar0_vaddr + offset;
++	else
++		return rwnx_v7->pci_bar1_vaddr + offset;
++}
++
++static void rwnx_v7_ack_irq(struct rwnx_plat *rwnx_plat)
++{
++}
++
++static const u32 rwnx_v7_config_reg[] =3D {
++	NXMAC_DEBUG_PORT_SEL_ADDR, SYSCTRL_DIAG_CONF_ADDR,
++	SYSCTRL_PHYDIAG_CONF_ADDR, SYSCTRL_RIUDIAG_CONF_ADDR,
++	RF_V7_DIAGPORT_CONF1_ADDR,
++};
++
++static const u32 rwnx_v7_he_config_reg[] =3D {
++	SYSCTRL_DIAG_CONF0,
++	SYSCTRL_DIAG_CONF1,
++	SYSCTRL_DIAG_CONF2,
++	SYSCTRL_DIAG_CONF3,
++};
++
++static int rwnx_v7_get_config_reg(struct rwnx_plat *rwnx_plat, const u32 *=
+*list)
++{
++	u32 fpga_sign;
++
++	if (!list)
++		return 0;
++
++	fpga_sign =3D
++		RWNX_REG_READ(rwnx_plat, RWNX_ADDR_SYSTEM, SYSCTRL_SIGNATURE_ADDR);
++	if (__FPGA_TYPE(fpga_sign) =3D=3D 0xc0ca) {
++		*list =3D rwnx_v7_he_config_reg;
++		return ARRAY_SIZE(rwnx_v7_he_config_reg);
++	}
++	*list =3D rwnx_v7_config_reg;
++	return ARRAY_SIZE(rwnx_v7_config_reg);
++}
++
++/**
++ * rwnx_v7_platform_init - Initialize the DINI platform
++ * @pci_dev: PCI device
++ * @rwnx_plat: Location in which to return the allocated platform data
++ *
++ * Allocate and initialize a rwnx_plat structure for the dini platform.
++ *
++ * Return: 0 on success, or a negative error code.
++ */
++int rwnx_v7_platform_init(struct pci_dev *pci_dev, struct rwnx_plat **rwnx=
+_plat)
++{
++	struct rwnx_v7 *rwnx_v7;
++	u16 pci_cmd;
++	int ret =3D 0;
++
++	*rwnx_plat =3D
++		kzalloc(sizeof(struct rwnx_plat) + sizeof(struct rwnx_v7), GFP_KERNEL);
++	if (!*rwnx_plat)
++		return -ENOMEM;
++
++	rwnx_v7 =3D (struct rwnx_v7 *)(*rwnx_plat)->priv;
++
++	/* Hotplug fixups */
++	pci_read_config_word(pci_dev, PCI_COMMAND, &pci_cmd);
++	pci_cmd |=3D PCI_COMMAND_PARITY | PCI_COMMAND_SERR;
++	pci_write_config_word(pci_dev, PCI_COMMAND, pci_cmd);
++
++	ret =3D pci_enable_device(pci_dev);
++	if (ret) {
++		dev_err(&pci_dev->dev, "pci_enable_device failed\n");
++		goto out_enable;
++	}
++
++	pci_set_master(pci_dev);
++
++#ifdef CONFIG_PCI
++	if (pci_enable_msi(pci_dev)) {
++		dev_err(&pci_dev->dev, "pci_enable_msi failed\n");
++		goto out_msi;
++	}
++#endif
++
++	rwnx_v7->pci_bar0_vaddr =3D pci_ioremap_bar(pci_dev, 0);
++	if (!rwnx_v7->pci_bar0_vaddr) {
++		dev_err(&pci_dev->dev, "pci_ioremap_bar(%d) failed\n", 0);
++		ret =3D -ENOMEM;
++		goto out_bar0;
++	}
++	rwnx_v7->pci_bar1_vaddr =3D pci_ioremap_bar(pci_dev, 1);
++	if (!rwnx_v7->pci_bar1_vaddr) {
++		dev_err(&pci_dev->dev, "pci_ioremap_bar(%d) failed\n", 1);
++		ret =3D -ENOMEM;
++		goto out_bar1;
++	}
++
++	(*rwnx_plat)->enable =3D rwnx_v7_platform_enable;
++	(*rwnx_plat)->disable =3D rwnx_v7_platform_disable;
++	(*rwnx_plat)->deinit =3D rwnx_v7_platform_deinit;
++	(*rwnx_plat)->get_address =3D rwnx_v7_get_address;
++	(*rwnx_plat)->ack_irq =3D rwnx_v7_ack_irq;
++	(*rwnx_plat)->get_config_reg =3D rwnx_v7_get_config_reg;
++
++	return 0;
++
++out_bar1:
++	iounmap(rwnx_v7->pci_bar0_vaddr);
++out_bar0:
++#ifdef CONFIG_PCI
++	pci_disable_msi(pci_dev);
++out_msi:
++#endif
++	pci_release_regions(pci_dev);
++#ifdef CONFIG_PCI
++	pci_clear_master(pci_dev);
++#endif
++	pci_disable_device(pci_dev);
++out_enable:
++	kfree(*rwnx_plat);
++	return ret;
++}
+diff --git a/drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.h b/drivers/net/=
+wireless/aic/aic8800_fdrv/rwnx_v7.h
 new file mode 100644
-index 0000000000000..59cf740aa6202
+index 0000000000000..709553f96c2a1
 --- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_fdrv/Kconfig
-@@ -0,0 +1,37 @@
-+# SPDX-License-Identifier: GPL-2.0-only
++++ b/drivers/net/wireless/aic/aic8800_fdrv/rwnx_v7.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *************************************************************************=
+***************
++ *
++ * Copyright (C) 2020 AIC semiconductor.
++ *
++ * @file rwnx_v7.h
++ *
++ *************************************************************************=
+***************
++ */
 +
-+menuconfig AIC8800_WLAN_SUPPORT
-+	tristate "AIC8800D80 U02 SDIO station support"
-+	depends on AIC8800_BSP_SUPPORT
-+	depends on CFG80211
-+	help
-+	  Enable the AIC8800D80 U02 FullMAC Wi-Fi driver for the first
-+	  upstreaming baseline. This build is restricted to the SDIO station
-+	  path and uses cfg80211/nl80211 for normal Wi-Fi operation.
++#ifndef _RWNX_V7_H_
++#define _RWNX_V7_H_
 +
-+	  If unsure, say N.
++#include "rwnx_platform.h"
++#include <linux/pci.h>
 +
-+if AIC8800_WLAN_SUPPORT
++int rwnx_v7_platform_init(struct pci_dev *pci_dev,
++			  struct rwnx_plat **rwnx_plat);
 +
-+config RWNX_FULLMAC
-+	def_bool y
-+
-+config AIC8800_STA_ONLY
-+	def_bool y
-+	help
-+	  Limit the initial upstream driver to station mode. The AP, P2P,
-+	  monitor, mesh and TDLS implementations remain in the source tree
-+	  so they can be enabled when those modes are ready for upstream.
-+
-+config AIC8800_NONSTA_SUPPORT
-+	def_bool y if !AIC8800_STA_ONLY
-+
-+config AIC8800_GENL
-+	bool "AIC8800 private generic netlink interface"
-+	help
-+	  Enable the private generic netlink command interface used by
-+	  vendor tools.
-+
-+	  If unsure, say N.
-+
-+endif # AIC8800_WLAN_SUPPORT
-diff --git a/drivers/net/wireless/aic/aic8800_fdrv/Makefile b/drivers/net/w=
-ireless/aic/aic8800_fdrv/Makefile
-new file mode 100644
-index 0000000000000..025a7906612df
---- /dev/null
-+++ b/drivers/net/wireless/aic/aic8800_fdrv/Makefile
-@@ -0,0 +1,46 @@
-+# SPDX-License-Identifier: GPL-2.0
-+
-+obj-$(CONFIG_AIC8800_WLAN_SUPPORT) +=3D aic8800_fdrv.o
-+
-+aic8800_fdrv-y :=3D \
-+	rwnx_msg_tx.o \
-+	rwnx_msg_rx.o \
-+	rwnx_utils.o \
-+	rwnx_cmds.o \
-+	rwnx_irqs.o \
-+	rwnx_cfgfile.o \
-+	rwnx_strs.o \
-+	rwnx_rx.o \
-+	rwnx_tx.o \
-+	rwnx_txq.o \
-+	rwnx_main.o \
-+	rwnx_mod_params.o \
-+	rwnx_platform.o \
-+	aicwf_chip_8800d80.o \
-+	aicwf_chip_ops.o \
-+	rwnx_v7.o \
-+	ipc_host.o \
-+	aicwf_compat_8800d80.o \
-+	regdb.o \
-+	aic_priv_cmd.o \
-+	sdio_host.o \
-+	aicwf_txrxif.o \
-+	aicwf_sdio.o \
-+	aicwf_rx_prealloc.o
-+
-+aic8800_fdrv-$(CONFIG_AIC8800_NONSTA_SUPPORT) +=3D rwnx_mesh.o rwnx_tdls.o
-+
-+aic8800_fdrv-$(CONFIG_AIC8800_GENL) +=3D aicwf_genl.o
-+
-+ccflags-y +=3D -I$(srctree)
-+ccflags-y +=3D -I$(src)
-+ccflags-y +=3D -I$(src)/../aic8800_bsp
-+ccflags-y +=3D -DAIC_TRACE_INCLUDE_PATH=3D$(src)
-+ccflags-y +=3D -DAICWF_SDIO_SUPPORT
-+ccflags-y +=3D -DCONFIG_SDIO_PWRCTRL
-+ccflags-y +=3D -DCONFIG_RWNX_FULLMAC
-+ccflags-y +=3D -DUSE_5G
-+ccflags-y +=3D -DAICWF_RX_REORDER
-+ccflags-y +=3D -DAICWF_ARP_OFFLOAD
-+ccflags-y +=3D -DCONFIG_RX_NETIF_RECV_SKB
-+ccflags-y +=3D -DCONFIG_AIC8800_RX_NETIF_RECV_SKB
++#endif /* _RWNX_V7_H_ */
 --=20
 2.34.1
