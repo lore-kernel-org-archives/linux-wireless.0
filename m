@@ -1,105 +1,142 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58D73D9550
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 11:15:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787915754; cv=none; b=pjgyRwMRLB1WrggCDwIg//IlzpK7FnLNy8xA9Gflts+IS6XjENW6uPktgs2xJyuIJ1m9xL5c6IUlf7kSGOvebxFxlZg/+ok+UB6odDeLPu5UuLZyEEoLbjRvfjGt20HUoF761ej5su7rIoJJIvUVDnDLjMepqghGr47GC3Q87ZI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787915754; c=relaxed/simple;
-	bh=LbwSdh6R2dBOwvLGQb1nFehByoMDHDuoL76968xCAAI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WX3neN48hkbWxWytC8SCQQy9xxd74AgUf2MTIlEcoLHe4F46vTwssIExNU6YUi2FRIiB+lauvhQVRYmc9m4MlXC+rthMULOALhFqnTQ34fmiS3zVUeVtX/IqYWdR5S1dP+6uq9vbmRMC3Pbx7OzVvpZZtaOeXJPinswV14/mM8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OFqCTftI; arc=none smtp.client-ip=209.85.210.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BD63442FD1
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 11:46:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1787917594; cv=pass; b=drEVaZ7+CHtTh1IaSmNg5s8I208kqccRmuaLy1AshGcHyXr+gsAJz3X3KWTHG6Vbr7ZGa+iRDsjO9E9EDNDYKtQU7jRncss45HCM69sgFBEdSk4XrtsmCbwGLmIH8z3OG60m2YCcatSrKkN7RuLek2uglXASglA7lOxxeJElXuc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1787917594; c=relaxed/simple;
+	bh=czq0iY86tE9vmk1UpEtdE66iRV2mN8LTKlZ3L7FI82A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=cPt67W2YW8gexqtpyCzCvZAbezxyr8UE+LoRYGqPdiLtyWWGpRfOfQ5aaedupKdKwoQ8zt68uNzGddVtH5m+1KesvB0H5Cw7pbSXgfBAMA+WRwAPjRZXEqoYQOBF4bhsg7JiOMd9B2ZM6xOxJsJ2cfnd6ZEGYOPVZ7vvSUnqaTM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cUJ2nVeq; arc=pass smtp.client-ip=209.85.208.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OFqCTftI"
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-84f3ab8750cso706793b3a.0
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 04:15:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cUJ2nVeq"
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-69c600f76ccso1194051a12.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 04:46:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1787917578; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ENaAqiJYnNAGC6+RcfD6MW3x61PepGH2YONIVCED0RVNt8s9IXEwHpeRCfxWWiKEAo
+         Vxy3pxMDIP7phwGZFIBj8bQ2qudTEs+DymfzmxbKM1iaHkDBcz7qNg5FE6sii0WH6dXl
+         8HGa04yOfHrFXcY1b4Lu9Lm/wIofegsNfmasQRPZWh21TuqA3umnj7Hj//hYYBdnGvQr
+         72aFEez6pEHXwfgclnZNsBEIs17Xmut5HCHoV4zVbIDuq21QixK6w4zeA8dW6B+mjnp5
+         ws/gRl3Ucy8wdpTBpRtW7ORABmt1AttqosZZdfmX3SDz+98MAdGJITAKWiLGqk/fnprI
+         2U5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=/J9olIsIhTk7fKZiLNVC6UMyj9uo0DyblzLYos7atQA=;
+        fh=3cxnlwf33Fs/QMqI974j15Wk5rhoofLNUqgVWEiKnbg=;
+        b=NUlw8YwEdfgvbye/D+RfMGlTdaNK4Pxa76D2qulayTbYIOhMLt7/hzFbIm8UFJ0nCw
+         X2SU/VgDK+6z3SlvB6bFTw3rxghf+nt5CZIcCdqvy9jxofN0qsTy1anualREA7Ck76uf
+         QbK1FEeJfmQOIB8lR45t1FYaC7EoH9Xuf/12k22jT1buoP9Rx1wx6Y4+KQJaBtEMeBii
+         D6Ec+h6Y6vdhIHMig83j8XoF6XdMNV+mi0PnHF3ovGo3mg+69GrvbjYg1ChmFVmkKC2S
+         MKTMfZVkzLEBEl9YWdt7nhuim5RVYRL4TmaGtPy8OfJ+zg775X3teBRKYDfJX5qd5E/i
+         K0Jg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787915752; x=1788520552; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=jYj6RkLZusaHKjs259c4fa5IazaGtg6pAsDeKhHoJb4=;
-        b=OFqCTftIolbTP/gChAsXqrd5efEgtdhG8lqHijP7sdUu45/rhs/nzEg90Twir+rtVs
-         lWVWgSZmMpz0rN/DYzNCPo8M+lI/5f9iXD61/Dx6UXb/mv1Z7/JSg8+4TUfa2RI9yUZF
-         5RQC3WDkDs6saENBvexjt2+5V2wAf8+6IFdUlF/CtdhTWrKx9pPxN045UtJQw/jsOL9q
-         v3pI0Zxl0h9DfyorIW+2oSk6e5mbNAfSwAYhM5KPWxwDnSE48wdzM2iDHgTCwbrpNNXw
-         iGtNUqigaLK/7cs9Pb3HcRQn8fEh8eN8XOYJ+T5MrO7I5kylehzgOnfPacgOp2ukr4wC
-         0FeQ==
+        d=gmail.com; s=20251104; t=1787917578; x=1788522378; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=/J9olIsIhTk7fKZiLNVC6UMyj9uo0DyblzLYos7atQA=;
+        b=cUJ2nVeqOcVpyJMcBKkrcCAu4kWacl5pXWrTo58eMVvXrcGGDDYIdvSHWRta51RLtM
+         M6ktSWZjpRFDORxChRQqb+R3/20PlGhKfsacV4UoLfu61+j28g2tWUYEw+qeIxHOX1XZ
+         ZD0r9E/0BZJPykXfnznoojyDJPyWId0PnMakDUf+kNUkXA64sFcfV+wgNs4Y7umFLJU2
+         F7fnIdSpZ0tCKiWdsOLOmFaGRfrt/QECWGb74PTEMFCb/wDumE7gQvjupcX62Y5ZA8+E
+         0xn6HgFoITRKr0P5Q8oC2hXbhi4FkEZPXvNkbzejxeFt8bufKi2gUKNY+PFs+puX6tWm
+         npqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787915752; x=1788520552;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=jYj6RkLZusaHKjs259c4fa5IazaGtg6pAsDeKhHoJb4=;
-        b=o+A9vBfvPK9u/wV4eb7FLXpfMsXFIAHIJXBvCO6T3eS7LId8Bm8e6py3TmYb+7f0W3
-         L/NvfIvL78yosDN92Wpn3V38bf9iTvnW8rMbY5baPc2R0Eieg+b+Dgq0V5NNPMjOry3R
-         jBDX1a5/fQlAEwXuJajpHSpC1/P9Xxt29Q+X4mkw5/2tl6P9Oeg2k6uh+b5DZ9hK1tto
-         rgktLjOaVuZHb6WkekkmpMwWaAaEAJoRWMwQn2aCqr3a7xRBIW3eQkfP22/X4uSR6YlJ
-         +k7YLHVVD0Adul10P/PtDW0KUlxw2+s4or5X5n+9cZklAPUJipubVWRvKkyx0gcFxW4r
-         8ZYg==
-X-Gm-Message-State: AFuF++nJ5mPaQIDpaGKbEdejVNAa6OJeniUuRe0Ig8sK3FcEB1ST3k5T
-	EXCCD19mEqcpImaHN0hccWrK17O8Cc2ZKiEBYIltcWnvtJi51gNIsWvh
-X-Gm-Gg: AR+sD11cSordwr9SMF4SOBr8BjYcDKjOK6XxdWAfz6MAkrekvLo4/49Fmu4oyCd4YuO
-	AH4BZSQxJDlZmvYoure5AN/gsaEMOB6ZqZQmun7ILwnJKchs4hloJYmHFN/4eawDXTRBMHGcg/R
-	LWpKFHQnzrU44PXg8xaN0ND790CikdJPVqbxRaRxwC5rBwFzRCEN2FHJjAgQzT81nHgqQ3iJAVb
-	BU+LDh/7oXIwEM5DpoPTnmLKCHbOylAm6R+ECjv9nMJSYPE1OOrfCKdhb5p5xOylcAk+HWfoVdj
-	2ELknMIcQiKkwnC3meLKm1EFVMBWqyslc3uX8treuKV7oEkH2AEDjqYSIrIcfPTdHAk6RU/c1Q9
-	wiZKZ60sS/ib0e3qzA6g9zfZctuxzCnFifHm551sefinyomfMSRIXhBslFxiaXGRDnIvZPrqoq9
-	ED3VohBXrwCD0EHl0CURfNvZxRo0JXgH2yIiC54x51urCna3Ix3QewB3shR7j1rw9buBPOEEX3t
-	6M0GJENe4AjujndxaxLy5nLaYXTiMx51JHiqHzC6jM=
-X-Received: by 2002:a05:6a00:4109:b0:847:7f3c:b5f5 with SMTP id d2e1a72fcca58-8562a6e1024mr12521963b3a.11.1787915736033;
-        Fri, 28 Aug 2026 04:15:36 -0700 (PDT)
-Received: from FLYINGPENG-MC2.tencent.com ([43.132.141.20])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-856a2ea7666sm445780b3a.30.2026.08.28.04.15.34
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Fri, 28 Aug 2026 04:15:35 -0700 (PDT)
-From: Peng Hao <flyingpenghao@gmail.com>
-X-Google-Original-From: Peng Hao <flyingpeng@tencent.com>
-To: briannorris@chromium.org,
-	francesco@dolcini.it
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wifi: mwifiex: fix IRQ leak using wrong index in MSI-X error path
-Date: Fri, 28 Aug 2026 19:15:31 +0800
-Message-ID: <20260828111531.56723-1-flyingpeng@tencent.com>
-X-Mailer: git-send-email 2.47.0
+        d=1e100.net; s=20251104; t=1787917578; x=1788522378;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=/J9olIsIhTk7fKZiLNVC6UMyj9uo0DyblzLYos7atQA=;
+        b=cH/KHit0lRycMHwWnOZXL6YxOPadpBpppZqX1dY/oSY/tistoRzVRZTbJXepw7ZLvW
+         +ZIU1uM177/7+LNUkwS0jdhr34oNsSBgqoZ818OpbRDYdD/L53gifJlS6yoTq22ceca0
+         rW+xuIxR2b8R5nZQbg6u/tc8MM+Dq+UGBLGcS/kQzOlveDa6mx208wazvm4s4IH2ka+c
+         i+vqagNAH1xEkx5IhyJf41eSr3jvkMJ6pWvrzs1mamrtelismkftaDuO2ME6ipbiQm8A
+         pcbTYOO2PW4j8Gof1LH8YqUXiq0wxqFjPpZw2IMsSzYNAyVV0ZZho/NCOw9fwZ5/uACc
+         2rUw==
+X-Gm-Message-State: AFuF++lngWj9xUpX58nFXqaLltIP96bKnFvxuJOejGoY+HJHWc8anAAo
+	Be88WSOISpeezs/qc5BlVF31FB6ebgn/FadcReuQJLP6Xs0WaCDAhzwHG5ydmK5GsNdDM634aV+
+	/o4iJfDrZZ0IFI+6EqwFDu7ICH50YOPU=
+X-Gm-Gg: AR+sD11jFOebMR1thvtXpRTZldY/KkrAFmQ8w96P78mmeeHQsWDvEwgeeY68nxt2DX/
+	9Nb83wlbWliD5B9c8TmovsaBw4HIAhItw1oNXEZceBoH9RjKnWnvdJpaztQ0lW9CqzSUfBEQncn
+	q317/vhdR9q7H3vbQ7TKK7N8ay0pqCcwesbJUkowfnKAYzhQKGR4jjqDgaRSTRS3VXVAVNUPS35
+	EbtnkDOhlZFXiPDhg0AELITdIMrtqIr1MPS92668EN+m2zhUEEZrdECFgjB/NxwIYLNjtLnMlOv
+	lyTRHn+fqbMG8iNFC08V4p3TTjsQLc5xDeUVCJyFF0Z1mYLubNgEePHYHwJvcSiQ6GIDQCuRqAh
+	6H1l1nua/NXjpA/q+adSreRbWcQ8kpL2U9UZfl0iom9lepnJQRFtf2iCtvOsDMYRgD85pHA0=
+X-Received: by 2002:a05:6402:43c6:b0:6a1:4458:7f2d with SMTP id
+ 4fb4d7f45d1cf-6a60d35f215mr4409501a12.5.1787917578299; Fri, 28 Aug 2026
+ 04:46:18 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAMSTZOnSYZjqj4AyBpLg2hQfRs6JYZA5H26MwQ+G2WMGgNzBkg@mail.gmail.com>
+ <025FFEEC-E57A-4C74-BF1E-D273253F4D9A@gmail.com> <CAMSTZO=2dm21hYcKKeDGCTb4KJ6R0ukDAFBQtsp4QVzPmCfcSg@mail.gmail.com>
+ <1EF6CC70-90BC-4B9F-9F96-9DB1F3A69F1E@gmail.com> <CAMSTZOkWe9C2pGS75zX=_H4_Up6B6qSddkUPeaU8=br0geh-xA@mail.gmail.com>
+ <AC809A9E-A3B7-4DB4-A267-7A183F60CA72@gmail.com>
+In-Reply-To: <AC809A9E-A3B7-4DB4-A267-7A183F60CA72@gmail.com>
+From: Mark <markmunene827@gmail.com>
+Date: Fri, 28 Aug 2026 14:46:06 +0300
+X-Gm-Features: AcwNN1UmI5M8lOLcrjuqT5vvcILd_sSk1zBQiCz1dA9ktvI7z9mOXknkvedT__0
+Message-ID: <CAMSTZO==h8Z+mDqF=bQOBOq=icRh8O0okDS9T2x-ovPwt0g7fg@mail.gmail.com>
+Subject: Re: [BUG] iwlwifi: Comet Lake PCH CNVi AX201 (8086:06f0) fails with
+ error -110 on warm reboot
+To: Bohdan <boulderobscura@gmail.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-mwifiex_pcie_request_irq() registers each MSI-X vector with a per-index
-dev_id (&card->msix_ctx[i]). On a request_irq() failure the cleanup loop
-"for (j = 0; j < i; j++)" frees msix_entries[j].vector but passes the
-failed index's &card->msix_ctx[i] as the dev_id. free_irq() matches on
-(irq, dev_id), so it fails to find the action registered with
-&card->msix_ctx[j]: the already-requested IRQ j is not freed (leaked) and
-free_irq() warns about freeing a non-existent IRQ. Use &card->msix_ctx[j].
+Hi Bohdan,
 
-Fixes: 99074fc1e67b ("mwifiex: enable pcie MSIx interrupt mode support")
-Signed-off-by: Peng Hao <flyingpeng@tencent.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I tried the PCI remove/rescan suggestion you mentioned:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a760de191fce..a9425e9a94f4 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3068,7 +3068,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
- 					    ret);
- 				for (j = 0; j < i; j++)
- 					free_irq(card->msix_entries[j].vector,
--						 &card->msix_ctx[i]);
-+						 &card->msix_ctx[j]);
- 				pci_disable_msix(pdev);
- 			} else {
- 				mwifiex_dbg(adapter, MSG, "MSIx enabled!");
--- 
-2.43.7
+echo 1 > /sys/bus/pci/devices/0000:00:14.3/remove
+echo 1 > /sys/bus/pci/rescan
 
+The device does come back at `00:14.3`, but the driver fails the exact
+same way =E2=80=94 same `-110`, never even gets to loading firmware, no
+wireless interface shows up afterward.
+
+Here's the relevant bit from dmesg right after the rescan:
+
+[174005.380038] iwlwifi 0000:00:14.3: Host monitor block 0x0 vector 0x6
+[174005.380057] iwlwifi 0000:00:14.3:     value [iter 0]: 0x00000003
+...
+[174005.380178] iwlwifi 0000:00:14.3: Host monitor block 0x22 vector 0x0
+[174005.380198] iwlwifi 0000:00:14.3:     value [iter 0]: 0x00000003
+[174005.397491] iwlwifi 0000:00:14.3: probe with driver iwlwifi failed
+with error -110
+
+
+A few other details in case they help:
+
+- Intel AMT: disabled in BIOS
+- POST fastboot set to Thorough
+- linux-firmware version: 20240318.git3b128b60-0ubuntu2.27
+- Also tried it with the upstream rev 77 ucode dropped into
+/lib/firmware/intel/iwlwifi/, same result
+- Device is the Intel Comet Lake PCH CNVi WiFi, `8086:06f0`, using the
+iwlwifi module
+
+What stands out to me is that even a full PCI remove/rescan doesn't
+bring it back; only an actual cold power cycle does. So whatever bad
+state the CNVi ends up in, it's not something the PCI bus reset is
+touching at all. That's starting to point more toward the platform's
+own power/reset handling rather than the driver itself, though I
+honestly can't tell yet if that's ACPI, the EC, or something internal
+to the CNVi's own power state.
+
+Best,
+Mark
