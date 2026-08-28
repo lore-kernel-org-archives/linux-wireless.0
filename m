@@ -1,74 +1,88 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7510A3C4542
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 05:40:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CABE3C1D7C
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 06:55:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787895640; cv=none; b=rzr8nrZbgf1i7P2ZETYuDlAIrJOUGGAmylfLPyaZUDZSIzvHgN3amn4k+KHu6uUF4Z52lCdUoSkBhr8W1EXl+OpHLkGIEaezjwV+hZquG0NjDETvs55E37oB1R4w2SybKFLa2ldWo9e3OL3AKi4zd4Hbq/6Zub2axLPUnFoio9A=
+	t=1787900144; cv=none; b=fDC+Fo/qL8G0bABuw8J/NLSSXqcQ0F9HS/Nhzw/4Fn3dQI1Zx+gy2Aut8d8B+VO5YRqo3GUUnFlXgXlaDWgfd903jF3c3H7TU3KfdAcJgCd7mWfT839R0mPnbRtpckpOdhp4+xGX1djeV5YMI7Tq9qPZQ2gzFg1Agf++ZalSrHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787895640; c=relaxed/simple;
-	bh=CrsK0MwXr7Oe9+IYQCl8a58FC1Uiv/HYB/SAmXC3HSg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n+ycECckc52M2+1I44eNeOlyq6n49+/xJoeTQP0vGcFCQaYs+IK8UWKMohQX3uxyzzsRkUWg2AaqWjozfi8kbSf45G+weJW3bpUxOpEzC9qfrf+/OmMA2HGJICz+YXL/zNa2UH0HDhhOFzzlFL7WS2bncHWaGORNf2ABnaG7gvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g6svmCd4; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787900144; c=relaxed/simple;
+	bh=oNb9E1q7HXZ8eql3K2fZoYp1+uoNi7D3g464mwIxVNw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VHvnAfXn/kW2yCE/daAGECVFVkyovovo74y+HvqEChQvQzzZwpNRvA7YC3+SmITcQuiSYzbzjsGKtjH7UmU67w6joUvjMRrwUO2kx5clZ6sBHdLgrEST+1Ga9U4D9qgFxIktyJw4FXJLJKPLqkLeYdbFNtSLYGJ/sDZjj7tVtMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Iie2yS+j; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ggsDHgRo; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g6svmCd4"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5b159850b16so592595e87.3
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 22:40:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Iie2yS+j";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ggsDHgRo"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67S66TZg2761900
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 06:55:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=o2fQ68e9gCnXrHQgHUSdcidWOyupvsi9PXk
+	ryOUrOFA=; b=Iie2yS+jxX3GpCmehl1uLyCBDqMk6QmuhSlNC8Ck1zaZLwtfp10
+	GDMb3h9xrzVGovTY0bzA8tjlAf+T/0wrLjXxvyy5zL+QivFtUVeu/t5B17R8M2j+
+	OZnJXlZmk15Da1s5WB3vVsnNk/68M6YK9d4/akzWDhDQP4ISDm7Cz/s/EwQCGTIl
+	RKOHyzx44S0TmWlHHbO3Hea8yfSq2TqLTUOuUrWYBX3RqWGh+hNOAFIDnnjJTHan
+	ooRkiREQ385QI8dVQPvkQaLSN635z+yCZfDbM7w9X8cYvFKiI7ud1q+wtX5qk2pV
+	auAK4HhmjGcrPh2Q/RcvRRGOZKyntUVNMFQ==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gb42p8b9c-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 06:55:42 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-396638f9a18so1165712a91.2
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Aug 2026 23:55:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787895633; x=1788500433; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=tQKVsIuuwigFUQGx9DU71mFvKHQtdN6YB39hyzuIzIM=;
-        b=g6svmCd4WirSEJ4WLK0kMUUn8yXLs6DwPia/9ewY6Edre3WC8yfUhbosLFmTq6ZBX+
-         CxGN6sqbkS6W0J/+omTltH9lyzsyHFzZvedRkHJncEugL3ztbU+e82STLJVMe9W/AFWz
-         dNGPiQrKOwJLeDJxZXp9ThmIbYBtJR7W+jcN6dwcr7NDGgK4np9fj88dxzLIb5P5sdo2
-         HmCKioqaHhPqgYrEKc58XDFUR+NZRInSnPFcA0A8EmKl1bdU2xKSTSh9gFkKC7mZa86P
-         cqFJSC6ZxiGxm2QcqlR5j90Tss9KwwJxNZOBilro9704D4GcpnO2CxpRGXM71O1reP/e
-         mvtA==
+        d=oss.qualcomm.com; s=google; t=1787900142; x=1788504942; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=o2fQ68e9gCnXrHQgHUSdcidWOyupvsi9PXkryOUrOFA=;
+        b=ggsDHgRo3CLIRa6d4S4IqFHX2gphAYof230HZ0BlgvStPu9KUQipaXIhPiynXunuPV
+         U3wl+RRqUzb3q9ltLeDSy4EQ2eUieZxZVVFLLD5N4FUY/1ECtb/tz1z8kuGXTSQ2vNUn
+         z7EqVl6I0RKz9azpc+uCW8iGtO8DCZ+KyZJaZRGM0Y5yNoNJWzgW92Tbcmi6iOKjKXP6
+         G5BR6IoVtfUdehs+jmKkMR7mDOx7vFQdmUwATO4EeRI0MjyqeO973gXGgIDdT1SgG+sI
+         DhL+B2mqSM7bNwUoldZaVZZb6eY3fFEW8ACxlPS5vSflRvVrm0vxMo5BJqRbF6nHuny3
+         MIVQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787895633; x=1788500433;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=tQKVsIuuwigFUQGx9DU71mFvKHQtdN6YB39hyzuIzIM=;
-        b=UXkCOiVCpBdsoQ2C4jF/7OxnogcVngFrH02U355lclWKFtqQxbVgQ1WtDKxofCD+06
-         M2TGtbuZurfTrW3k6QY5SQ+/25Nd+Hn1zmq2rqUR98TT2GeE5PnCEvU0VYOY+8BLPckl
-         gm0l0Q5afgBLW82UGh5fmHc5TU422QM9bd7ATnYUnsN8g5PFrM79Ms3EnOaiQOteF4tW
-         Q/zvjY3mJ/THx4BTfirnjkQRFATFAhqVXPt2TNKc9OT1MIrgKybaVGgWyiDUZ9wDw9Zr
-         QmbTKOSDT7CBmQTBmL1OgddgvUvTpwcxlfyXD4Ef2Zhc9YNWuDmn58JcnMU+lxKO6/RA
-         7TEg==
-X-Gm-Message-State: AFuF++kqAXoZaoeBPwTapvFIWRS3+lnWmaGqkVI/oCjSf6VdLacXLG/d
-	Tuctfio56VmlV7tZswdwNl9Wfr9iDlC5PnVaYKIMha4fgtxGtfD5M8IIdkfSdRut
-X-Gm-Gg: AR+sD12EeqYi745BvEDas8HIBNWo3I75drEGfeXO0P75ySRCL7cRFOsVHzZEDmKeJME
-	SjJ9qobYdVjkY5ZKYCHXNGsPblbxegEUCY4UyDM3d4E1m1pZt0ukQhK62n832IbLtqfGby5ewbv
-	1VBh2nWGwhO9LzcfHfJGnJOyLU5LxpwIcMpy8NCWdJFjj/oYNPPcy0KQehEfkV0yeQo6KbeHUNY
-	datZnY7ZTm947O5tSGCQcTbO9VXnDS2WTTFCzQU0/7mJwn9I058RzLDBv2DytUw99syeJfnUtcA
-	PSfoS9vQ21qtwNXln3qxjYoDbzpV1x2ff/LMZhQ4S3Cah0w7OqgRE6xItAPits4/e8Sn91IHT7K
-	MG7YDI7eLSWE+hR7DNSfHzhRe4eezcH943BodMrawSzjXsozF4Jlz7Zzd6S9q6oSE6Jew+oOuMK
-	5VRuI6peb4hNitJbHV0P/H3DQLLlrSY+mYwmxHCqX4xJ792Dakp1dyU9qVJ8EvJV2Lbzf88MEPj
-	2QQdVj+F77RAu+hzvired2qS25b+wUfJwZXwfdyLPB7Ecis050mJ6zgH83ELQ==
-X-Received: by 2002:a05:6512:6190:b0:5b4:5880:b50b with SMTP id 2adb3069b0e04-5b5e68af4camr1038303e87.4.1787895633169;
-        Thu, 27 Aug 2026 22:40:33 -0700 (PDT)
-Received: from archlinux ([94.180.48.0])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b5e8a1a8edsm166172e87.79.2026.08.27.22.40.32
+        d=1e100.net; s=20251104; t=1787900142; x=1788504942;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=o2fQ68e9gCnXrHQgHUSdcidWOyupvsi9PXkryOUrOFA=;
+        b=lHW30b+J62kZWDEvwBgQw8pwdWFQSjY+/bdg0MjuXRhEH8lw0mCO5IvpsrOVTX+DXH
+         fyZfonMABKqPxsbC3IwHBV5jklsdsLV0oVu75Vepj+l9H1BLC+hTw22x5NT3N/MRCa+1
+         f5y56XC4l+Aqfg3szqamb8i66x/Y9432ZbgrOj+zmjUvuBLRnHgiEvjIcofhaXgAYpkz
+         OURJvDmNhy9gyG5kkDyNPXX+OnRsgmdkDWnZzf96hvdb53FhIsXEW4fS7Y43sTad+kVb
+         ZMATPc6QUT4FDVMTKUPh62ArcH8R7eShkLRyByQkGSYiB11YlQ2AMtjKmcFadfJtZt4L
+         Edag==
+X-Gm-Message-State: AFuF++lCsaDzAwXC53euRFv4m5/CuNvYtJcrKMGdO2naAxULO/q60Wc5
+	qfliD1IAGCMbbHGEGQ/GUIpyvm0kJU9bCMrkH51fkfbGiX3br/EJibEPVVhIoaOLJ7gSkZg8sdr
+	JMZ4gF7gIuQDbKxJ1lCAOFVfuR+ZPuQ961mAzE0Y7K9sx4v322RCD+FihZSfpuIc3bvE/OPNKH3
+	7Q3Q==
+X-Gm-Gg: AR+sD10WZetGV1SOqQAfiToIVIBvqjyMz91MxVnjPFx14rGxOun27UYsI6vc/hapVXK
+	j9gxnDdXkIVJlnceS3vJ/Q8z8k5or7dDgONvj0zkrVfLirKo6w9T/BOheMfKoSrF2P3D9ltKz/b
+	pFUHDJ5Xl5VVerzeFBYfg67PP2Ve8dP3R3/U0KkvTh6qCisehyue4pBcvmvjEvygA1Qn++0Wtwe
+	SHtnmJwhgXenE3BXcBKoFhs1Z4RqLcq9qyRrdPKgD4gzYYXQ1yhdLdxPEumoUKfjXp6SkerLooP
+	QEq5ScVGUPDbLIqbi85uXXbqQrBNk8Sl/FChoD2QqZAV+POfb/iYEbCuaK+hX0wclJ3QCI9neB/
+	kGTmzJ/UaigNcKYtME4eoFSwFZAhpvwnYyoxJp83j8F2e+ZYGc0U8y/+O3nBv0L2jsEI2wiZl7K
+	sq5QXnccPa9wmHMg==
+X-Received: by 2002:a17:90a:15d6:b0:396:d28e:bd8 with SMTP id 98e67ed59e1d1-396d28e1164mr6132973a91.3.1787900141596;
+        Thu, 27 Aug 2026 23:55:41 -0700 (PDT)
+X-Received: by 2002:a17:90a:15d6:b0:396:d28e:bd8 with SMTP id 98e67ed59e1d1-396d28e1164mr6132910a91.3.1787900141131;
+        Thu, 27 Aug 2026 23:55:41 -0700 (PDT)
+Received: from QCOM-kZLYnuwaz1.na.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-396d29b342dsm804873a91.1.2026.08.27.23.55.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Aug 2026 22:40:32 -0700 (PDT)
-From: Arsenii Pashchenko <ulijg308@gmail.com>
-To: pkshih@realtek.com
-Cc: linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arsenii Pashchenko <ulijg308@gmail.com>
-Subject: [PATCH rtw-next v7 3/3] wifi: rtw88: rtw8822c: Replace custom DAC IQ sorting with kernel sort
-Date: Fri, 28 Aug 2026 12:40:23 +0700
-Message-ID: <7d0ab2352317b81df10dca7ddb3e855a303b8be7.1787895379.git.ulijg308@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <cover.1787895379.git.ulijg308@gmail.com>
-References: <cover.1787895379.git.ulijg308@gmail.com>
+        Thu, 27 Aug 2026 23:55:40 -0700 (PDT)
+From: Kang Yang <kang.yang@oss.qualcomm.com>
+To: ath12k@lists.infradead.org, kang.yang@oss.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH ath-next] wifi: ath12k: preserve PPDU state across monitor status buffers
+Date: Fri, 28 Aug 2026 14:55:34 +0800
+Message-ID: <20260828065534.1537-1-kang.yang@oss.qualcomm.com>
+X-Mailer: git-send-email 2.49.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -76,72 +90,122 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: EHLHF9OLWJUsTL0gG463k2QTH-YAL7pK
+X-Authority-Analysis: v=2.4 cv=ToDWQjXh c=1 sm=1 tr=0 ts=6a9130ee cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=Sv0fKeRqtYgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=EUspDBNiAAAA:8
+ a=Pa4Wmf_9FgtUqcf0cncA:9 a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-GUID: EHLHF9OLWJUsTL0gG463k2QTH-YAL7pK
+X-Proofpoint-Spam-Info: AW1haW4tMjYwODI4MDA1OCBTYWx0ZWRfX+fxiX67t0sAZ
+ Kv5QltSCtYpkpR+FhL6EaFCvC1YxCp0WdIJWljQwgD4V8FhgXlWrcvFLPSL2FZ3hwNTKp2q0N/w
+ rQf/1stsVY/wgTJlSU/jgWFPD9InJFQ=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODI4MDA1OCBTYWx0ZWRfX9gIi9MtePd56
+ l1QhK1bZ+b2aSX0vEklCanjLgbO1HEnp2n1Xg1F9gbdhlloRl4RgmllPjORY9dk0YRU6iH8wBQw
+ 6+YC3TkqZdcnUMtF82SLlPfSAZYWeZpM36RXofJTfaRrnnfES6FIXtYGfkJon/kNmSwzlZ1eAkn
+ xtt3SfSpDB31sSG971EamXZym0EFYIg0oS38H8Q/f0VtrHJrGwLTWHywNgiLTzOYlTKG0AmbPVI
+ hGYAN7jyg5C0IUlltYYDvs36wq2BjcceyhBkIlE/RZeh8NRJX94KWxBLFc24c3vujPMnPAKAqPR
+ 6PWB5gSGF7v/k3dTgS0VfAjR3mGmu+f61XzRIFHgrd3hTphudgakkLUS8Bc4OdphIE+os6DjJXu
+ fLAPC5VpT4igRH6/1aUOOsk+qZrM9j4FkGXimOrXZiPkDwVHOLXh8bLqRF0joD5riBa70EyIiPv
+ QzJLRe7ruyav1fp+yyw==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-08-28_02,2026-08-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 priorityscore=1501 adultscore=0 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 phishscore=0 spamscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608280058
 
-Replace the custom, nested bubble-sort logic in the calibration loop
-with direct calls to the kernel's optimized heapsort implementation
-inside rtw8822c_dac_cal_iq_search().
+A monitor PPDU may span multiple status buffers. However,
+__ath12k_wifi7_dp_mon_process_ring() clears mon_ppdu_info before
+processing every buffer.
 
-Implement a safe, overflow-proof s32 comparator using the subtraction
-of relationals pattern. Since the input values are already properly
-sign-extended into signed arrays, the custom circular index sorting
-rules and helper functions completely disappear, reducing lines of code.
+As a result, continuation buffers lose PPDU state collected from
+earlier buffers, including ppdu_id and PHY metadata.
 
-Signed-off-by: Arsenii Pashchenko <ulijg308@gmail.com>
+This can cause monitor RX processing to fail when
+ath12k_wifi7_dp_rx_mon_dest_process() observes a PPDU ID mismatch
+between status and destination rings, preventing MSDUs from being
+delivered. It can also produce incomplete EHT metadata that triggers
+warnings from mac80211:
+	Rate marked as an EHT rate but data is invalid: MCS:0, NSS:0
+
+ath12k_wifi7_dp_mon_srng_process() already tracks status TLV
+continuations via ppdu_continuation. Apply the same logic here and
+only reinitialize mon_ppdu_info when starting a new PPDU.
+
+mon_ppdu_info persists across ar->monitor_started transitions. If
+monitor mode stops while a PPDU is mid-continuation, ppdu_continuation
+stays set and could leak into the next monitor session. Reset it
+when monitor mode starts.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c7-00108-QCAHMTSWPL_V1.0_V2.0_SILICONZ_UPSTREAM-3
+
+Fixes: 78d3d907d0f1 ("wifi: ath12k: add support to reap and process monitor status ring")
+Signed-off-by: Kang Yang <kang.yang@oss.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 22 ++++++-------------
- 1 file changed, 7 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath12k/mac.c         |  7 ++++++
+ .../net/wireless/ath/ath12k/wifi7/dp_mon.c    | 23 +++++++++++--------
+ 2 files changed, 21 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index b010e17c9..bec1bb376 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3,6 +3,7 @@
-  */
- 
- #include <linux/module.h>
-+#include <linux/sort.h>
- #include "main.h"
- #include "coex.h"
- #include "fw.h"
-@@ -153,24 +154,14 @@ static void rtw8822c_dac_restore_reg(struct rtw_dev *rtwdev,
+diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
+index 9a775602775d..bda055a86f06 100644
+--- a/drivers/net/wireless/ath/ath12k/mac.c
++++ b/drivers/net/wireless/ath/ath12k/mac.c
+@@ -1502,6 +1502,13 @@ static int ath12k_mac_monitor_start(struct ath12k *ar)
+ 		return ret;
  	}
- }
  
--static void __rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, s32 *v1, s32 *v2)
-+static int rtw8822c_dac_iq_cmp_s32(const void *a, const void *b)
- {
--	if (*v1 > *v2)
--		swap(*v1, *v2);
-+	s32 val_a = *(const s32 *)a;
-+	s32 val_b = *(const s32 *)b;
++	/*
++	 * A previous monitor session may have stopped mid-PPDU, leaving
++	 * ppdu_continuation set. Clear it so the first status buffer of
++	 * this session is not merged with stale state from before.
++	 */
++	ar->dp.mon_data.mon_ppdu_info.ppdu_continuation = false;
++
+ 	ar->monitor_started = true;
+ 	ar->num_started_vdevs++;
  
-+	return (val_a > val_b) - (val_a < val_b);
- }
+diff --git a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
+index 016b0c38e51e..ded7d56cd79b 100644
+--- a/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
++++ b/drivers/net/wireless/ath/ath12k/wifi7/dp_mon.c
+@@ -3211,18 +3211,23 @@ __ath12k_wifi7_dp_mon_process_ring(struct ath12k *ar, int mac_id,
+ 		goto exit;
  
--static void rtw8822c_dac_iq_sort(struct rtw_dev *rtwdev, s32 *iv, s32 *qv)
--{
--	u32 i, j;
--
--	for (i = 0; i < DACK_SN_8822C - 1; i++) {
--		for (j = 0; j < (DACK_SN_8822C - 1 - i) ; j++) {
--			__rtw8822c_dac_iq_sort(rtwdev, &iv[j], &iv[j + 1]);
--			__rtw8822c_dac_iq_sort(rtwdev, &qv[j], &qv[j + 1]);
--		}
--	}
--}
+ 	while ((skb = __skb_dequeue(&skb_list))) {
+-		memset(ppdu_info, 0, sizeof(*ppdu_info));
+-		ppdu_info->peer_id = HAL_INVALID_PEERID;
++		if (!ppdu_info->ppdu_continuation)
++			ath12k_wifi7_dp_mon_rx_memset_ppdu_info(ppdu_info);
  
- static u32 rtw8822c_dac_iq_offset(struct rtw_dev *rtwdev, s32 *vec)
- {
-@@ -291,7 +282,8 @@ static void rtw8822c_dac_cal_iq_search(struct rtw_dev *rtwdev,
- 			"[DACK] q: min=%d, max=%d, delta=%d",
- 			q_min, q_max, q_delta);
+ 		hal_status = ath12k_wifi7_dp_mon_parse_rx_dest(&ar->dp, pmon, skb);
  
--		rtw8822c_dac_iq_sort(rtwdev, iv, qv);
-+		sort(iv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NULL);
-+		sort(qv, DACK_SN_8822C, sizeof(s32), rtw8822c_dac_iq_cmp_s32, NULL);
+-		if (ar->monitor_started &&
+-		    pmon->mon_ppdu_status == DP_PPDU_STATUS_START &&
+-		    hal_status == HAL_TLV_STATUS_PPDU_DONE) {
+-			rx_mon_stats->status_ppdu_done++;
+-			pmon->mon_ppdu_status = DP_PPDU_STATUS_DONE;
+-			ath12k_wifi7_dp_rx_mon_dest_process(ar, mac_id, *budget, napi);
+-			pmon->mon_ppdu_status = DP_PPDU_STATUS_START;
++		if (hal_status == HAL_TLV_STATUS_PPDU_DONE) {
++			ppdu_info->ppdu_continuation = false;
++			if (ar->monitor_started &&
++			    pmon->mon_ppdu_status == DP_PPDU_STATUS_START) {
++				rx_mon_stats->status_ppdu_done++;
++				pmon->mon_ppdu_status = DP_PPDU_STATUS_DONE;
++				ath12k_wifi7_dp_rx_mon_dest_process(ar, mac_id,
++								    *budget, napi);
++				pmon->mon_ppdu_status = DP_PPDU_STATUS_START;
++			}
++		} else {
++			ppdu_info->ppdu_continuation = true;
+ 		}
  
- 		if (i_delta > 5 || q_delta > 5) {
- 			temp = rtw_read32(rtwdev, 0x2dbc);
+ 		dev_kfree_skb_any(skb);
+
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
 -- 
-2.55.0
+2.34.1
 
