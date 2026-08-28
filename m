@@ -1,113 +1,105 @@
-Received: from mta0.migadu.com (out-233.mta0.migadu.com [91.218.175.233])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8297435675E
-	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 09:47:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.233
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58D73D9550
+	for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 11:15:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787910447; cv=none; b=JlICGr9bE4CnIEjtJOFtTgnihM2oUV9FHjtRwd5e6noBvGo3avNk0UVX3TxfJ/O8a21+aDGG29gJV8gCJ/Dx8adIg65qXK50ylf52f4+BQSAxQbLgOSBXCEzIZiXoPv3Cq/4mYjzF1zHEKHyN3Ix1HujFYtpEYAfH6YTmYqfS3Q=
+	t=1787915754; cv=none; b=pjgyRwMRLB1WrggCDwIg//IlzpK7FnLNy8xA9Gflts+IS6XjENW6uPktgs2xJyuIJ1m9xL5c6IUlf7kSGOvebxFxlZg/+ok+UB6odDeLPu5UuLZyEEoLbjRvfjGt20HUoF761ej5su7rIoJJIvUVDnDLjMepqghGr47GC3Q87ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787910447; c=relaxed/simple;
-	bh=e2tq/2mp/rNEDN4L24NTPonrqDPRQjbDqRitpaYNyjU=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=X5zO0CHT23N/csWIK5lVId7hYGzSSFgoENV7I1Z9l6ZcqKnL/Zy/wvu3rVBOArnl6QN6KsG1BbrqjuWCs79S/lkC3t25iN5GhY7pZwxTKnkZGvkIpP/zoRhmGM1YI5JJIbGDqnjmieEM4cyCKum67d9vjDfVBbKK7Xo1CKYWfWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kCIopN4M; arc=none smtp.client-ip=91.218.175.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1787915754; c=relaxed/simple;
+	bh=LbwSdh6R2dBOwvLGQb1nFehByoMDHDuoL76968xCAAI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WX3neN48hkbWxWytC8SCQQy9xxd74AgUf2MTIlEcoLHe4F46vTwssIExNU6YUi2FRIiB+lauvhQVRYmc9m4MlXC+rthMULOALhFqnTQ34fmiS3zVUeVtX/IqYWdR5S1dP+6uq9vbmRMC3Pbx7OzVvpZZtaOeXJPinswV14/mM8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OFqCTftI; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kCIopN4M"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=e2tq/2mp/rNEDN4L24NTPonrqDPRQjbDqRitpaYNyjU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1787910443; v=1; x=1788515243;
- b=kCIopN4MwssuJf6/js/6iQSBuimUle+n//ZaHJZkqePCjhvwt7LYHzXiVMxE2N8kjt6IidnV
- nwdwU9UPYF/6rRu91LPZQ99q7yn91jXNK5IGSlIMj8fMbWjAY+Mz0YfsuB91+M3/ec523eB/ah/
- Ydw143ZI96+3XxqkIoap9UxA=
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 656fa8ba58c7583a;
-	Fri, 28 Aug 2026 09:47:23 +0000
-X-Mizu-Trace-ID: 656fa8ba58c7583a
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 28 Aug 2026 11:47:21 +0200
-From: Luka Gejak <luka.gejak@linux.dev>
-To: Ping-Ke Shih <pkshih@realtek.com>,
- "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Michael Straube <straube.linux@gmail.com>,
- Bitterblue Smith <rtl8821cerfe2@gmail.com>,
- Peter Robinson <pbrobinson@gmail.com>,
- Hans de Goede <johannes.goede@oss.qualcomm.com>, luka.gejak@linux.dev
-Subject: =?US-ASCII?Q?RE=3A_=5BPATCH_v8_6/6=5D_wifi=3A_rtw88=3A_sdio=3A_add_T?=
- =?US-ASCII?Q?X_back-pressure_and_retry_on_page_starvation?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <abbadda4537640eab1bce5620ade5f47@realtek.com>
-References: <20260825163314.1590-1-luka.gejak@linux.dev> <20260825163314.1590-7-luka.gejak@linux.dev> <abbadda4537640eab1bce5620ade5f47@realtek.com>
-Message-ID: <FCC54106-9CBC-4987-899B-4C7E0C997063@linux.dev>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OFqCTftI"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-84f3ab8750cso706793b3a.0
+        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 04:15:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1787915752; x=1788520552; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=jYj6RkLZusaHKjs259c4fa5IazaGtg6pAsDeKhHoJb4=;
+        b=OFqCTftIolbTP/gChAsXqrd5efEgtdhG8lqHijP7sdUu45/rhs/nzEg90Twir+rtVs
+         lWVWgSZmMpz0rN/DYzNCPo8M+lI/5f9iXD61/Dx6UXb/mv1Z7/JSg8+4TUfa2RI9yUZF
+         5RQC3WDkDs6saENBvexjt2+5V2wAf8+6IFdUlF/CtdhTWrKx9pPxN045UtJQw/jsOL9q
+         v3pI0Zxl0h9DfyorIW+2oSk6e5mbNAfSwAYhM5KPWxwDnSE48wdzM2iDHgTCwbrpNNXw
+         iGtNUqigaLK/7cs9Pb3HcRQn8fEh8eN8XOYJ+T5MrO7I5kylehzgOnfPacgOp2ukr4wC
+         0FeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1787915752; x=1788520552;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=jYj6RkLZusaHKjs259c4fa5IazaGtg6pAsDeKhHoJb4=;
+        b=o+A9vBfvPK9u/wV4eb7FLXpfMsXFIAHIJXBvCO6T3eS7LId8Bm8e6py3TmYb+7f0W3
+         L/NvfIvL78yosDN92Wpn3V38bf9iTvnW8rMbY5baPc2R0Eieg+b+Dgq0V5NNPMjOry3R
+         jBDX1a5/fQlAEwXuJajpHSpC1/P9Xxt29Q+X4mkw5/2tl6P9Oeg2k6uh+b5DZ9hK1tto
+         rgktLjOaVuZHb6WkekkmpMwWaAaEAJoRWMwQn2aCqr3a7xRBIW3eQkfP22/X4uSR6YlJ
+         +k7YLHVVD0Adul10P/PtDW0KUlxw2+s4or5X5n+9cZklAPUJipubVWRvKkyx0gcFxW4r
+         8ZYg==
+X-Gm-Message-State: AFuF++nJ5mPaQIDpaGKbEdejVNAa6OJeniUuRe0Ig8sK3FcEB1ST3k5T
+	EXCCD19mEqcpImaHN0hccWrK17O8Cc2ZKiEBYIltcWnvtJi51gNIsWvh
+X-Gm-Gg: AR+sD11cSordwr9SMF4SOBr8BjYcDKjOK6XxdWAfz6MAkrekvLo4/49Fmu4oyCd4YuO
+	AH4BZSQxJDlZmvYoure5AN/gsaEMOB6ZqZQmun7ILwnJKchs4hloJYmHFN/4eawDXTRBMHGcg/R
+	LWpKFHQnzrU44PXg8xaN0ND790CikdJPVqbxRaRxwC5rBwFzRCEN2FHJjAgQzT81nHgqQ3iJAVb
+	BU+LDh/7oXIwEM5DpoPTnmLKCHbOylAm6R+ECjv9nMJSYPE1OOrfCKdhb5p5xOylcAk+HWfoVdj
+	2ELknMIcQiKkwnC3meLKm1EFVMBWqyslc3uX8treuKV7oEkH2AEDjqYSIrIcfPTdHAk6RU/c1Q9
+	wiZKZ60sS/ib0e3qzA6g9zfZctuxzCnFifHm551sefinyomfMSRIXhBslFxiaXGRDnIvZPrqoq9
+	ED3VohBXrwCD0EHl0CURfNvZxRo0JXgH2yIiC54x51urCna3Ix3QewB3shR7j1rw9buBPOEEX3t
+	6M0GJENe4AjujndxaxLy5nLaYXTiMx51JHiqHzC6jM=
+X-Received: by 2002:a05:6a00:4109:b0:847:7f3c:b5f5 with SMTP id d2e1a72fcca58-8562a6e1024mr12521963b3a.11.1787915736033;
+        Fri, 28 Aug 2026 04:15:36 -0700 (PDT)
+Received: from FLYINGPENG-MC2.tencent.com ([43.132.141.20])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-856a2ea7666sm445780b3a.30.2026.08.28.04.15.34
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 28 Aug 2026 04:15:35 -0700 (PDT)
+From: Peng Hao <flyingpenghao@gmail.com>
+X-Google-Original-From: Peng Hao <flyingpeng@tencent.com>
+To: briannorris@chromium.org,
+	francesco@dolcini.it
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wifi: mwifiex: fix IRQ leak using wrong index in MSI-X error path
+Date: Fri, 28 Aug 2026 19:15:31 +0800
+Message-ID: <20260828111531.56723-1-flyingpeng@tencent.com>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Ping-Ke,
+mwifiex_pcie_request_irq() registers each MSI-X vector with a per-index
+dev_id (&card->msix_ctx[i]). On a request_irq() failure the cleanup loop
+"for (j = 0; j < i; j++)" frees msix_entries[j].vector but passes the
+failed index's &card->msix_ctx[i] as the dev_id. free_irq() matches on
+(irq, dev_id), so it fails to find the action registered with
+&card->msix_ctx[j]: the already-requested IRQ j is not freed (leaked) and
+free_irq() warns about freeing a non-existent IRQ. Use &card->msix_ctx[j].
 
-On August 28, 2026 11:29:29 AM GMT+02:00, Ping-Ke Shih <pkshih@realtek=2Ec=
-om> wrote:
+Fixes: 99074fc1e67b ("mwifiex: enable pcie MSIx interrupt mode support")
+Signed-off-by: Peng Hao <flyingpeng@tencent.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> At the last review (I think v9), I will focus on the changes of this
-> patchset doesn't affect existing chips=2E
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a760de191fce..a9425e9a94f4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3068,7 +3068,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ 					    ret);
+ 				for (j = 0; j < i; j++)
+ 					free_irq(card->msix_entries[j].vector,
+-						 &card->msix_ctx[i]);
++						 &card->msix_ctx[j]);
+ 				pci_disable_msix(pdev);
+ 			} else {
+ 				mwifiex_dbg(adapter, MSG, "MSIx enabled!");
+-- 
+2.43.7
 
-That is the right thing to focus on and it is the part I cannot test, so
-let me set out what the other parts actually run, and correct something
-in the v8 cover letter while I am at it=2E
-
-New code that is not behind rtw_is_8723bs(), all of it structural:
-
-  sdio=2Eh                   struct delayed_work work
-  rtw_sdio_init_tx()       INIT_DELAYED_WORK(), mutex_init(), and
-                           mutex_destroy() on its error path
-  rtw_sdio_tx_kick_off()   mod_delayed_work(=2E=2E=2E, 0) in place of
-                           queue_work()
-  rtw_sdio_deinit_tx()     cancel_delayed_work_sync(), mutex_destroy()
-
-Only this chip ever arms a delay, so on the other parts the work is
-still queued immediately, and only this chip ever takes the mutex=2E
-
-Two existing functions were also restructured and every chip runs
-through them, so I should not describe the above as the whole story=2E
-rtw_sdio_process_tx_queue() now returns a value instead of void, and
-rtw_sdio_tx_handler() uses it=2E The behaviour is meant to be identical
-for the other parts: on an empty queue the new "if (ret > 0) break"
-takes the place of the old skb_queue_empty() break, and on a failed
-write the frame is still requeued and the loop still retries, since
-rtw_sdio_8723bs_reschedule_tx() returns false for anything that is not
-this chip=2E That is the piece I would most like you to check=2E
-
-Two things I verified against the base commit that I will spell out in
-the v9 cover letter rather than leave implied:
-rtw_sdio_check_free_txpg() differs by exactly one inserted branch ahead
-of the existing 8051 test, which becomes an else if, everything else
-unchanged; and the generic path through rtw_sdio_write_port() is step
-for step what it was, same address from skb->len, same
-sdio_align_size(), same check, same transfer, same failure message=2E
-
-The correction: the v8 cover letter says patch 2 is "gated on the SDIO
-interface rather than the chip id"=2E That was true of an earlier version
-and I did not update it=2E The code you have uses rtw_is_8723bs(), so it
-is gated on the chip id as well, and the sentence understates how narrow
-the check is=2E I will fix that section in v9=2E
-
-One thing that would settle this better than any argument from me=2E rtw88
-already supports five other SDIO parts that share sdio=2Ec: RTL8723CS,
-RTL8723DS, RTL8821CS, RTL8822BS and RTL8822CS=2E If anyone on the list has
-any of them, a boot and some traffic with this series applied would
-answer the question directly=2E I do not have that hardware=2E If nobody
-does, I will say so in the cover letter rather than let it look tested=2E
-
-Best regards,
-Luka Gejak
