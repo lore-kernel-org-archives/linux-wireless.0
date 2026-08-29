@@ -1,64 +1,64 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 409952D12ED
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 09:54:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0DE12BDC0F
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 09:55:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787997297; cv=none; b=YbSV4AyfWZVujPCnyEkMYZ4jVMZKCQqn52t58V6dNopiC23AaYnP1N82dFaUAWimQ0DOpuWN22QrJhvgKIpExKitrOPq+hEl/23boHZcq6teNGnWqasl26GfQUBembgIk7X/h7A7maeWVN/aTBg713uMhhQOlGq5ImR3yBjaq9U=
+	t=1787997302; cv=none; b=BnRa7dqAo15Y+QtwU5ZYKgF8rbOSO7AVTRnDo/VEt907ZCg0nK6BfYH4dsB962zMwy8BoiUJrSO2HYadqYfq2oJxXLWKmNk1in3JeZiVCi48l6o9AE/L8p2YK7f8lUenEplNDwaJNSSU2vneLHUP13INLoQmPt9MWPNCPjJgiy8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787997297; c=relaxed/simple;
-	bh=7hM5WaRrHs2c3LW1CjwRnik2dDd+6Q2n4lB4uydT71o=;
+	s=arc-20240116; t=1787997302; c=relaxed/simple;
+	bh=tGg7OnyL8/9JmC2shM+2pm7rQpu1dy5h3ZLrB4k//cU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bpiY9/3OtGm/OcEQR4UqS6oVtcLGTsZ65I51AjHdleDG934pzn44FEehALqgbX0i6lrQep1/s7liT+9ipvlUGhad/v/8rNksG6yTA1Ifrt9iLcDcaIf79vZvejLPCGIks8gUmiEbdhNRN9BxtE/bhjUJBcepfImZUiTGtUyg9Vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CpXUncpn; arc=none smtp.client-ip=209.85.214.179
+	 MIME-Version; b=QdoyKkb8xaebRnoAm0ufE814cjXGRYJ+3ihgvAYPr6B91U9YxbBzHWDT4K52k76oLA4jClYLG+n13btVxDp4Hq9PzCQhcL5scuHZGYVWyyjCcPF0E6bFZJpGQ3mm8QFveDXzqUHU7f7XwSvpllEvqp24ZctYdTgN7gLe8+To/u8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kTB0P2os; arc=none smtp.client-ip=209.85.214.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CpXUncpn"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2d590f4c291so5027765ad.0
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 02:54:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kTB0P2os"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2cad68425a7so1004135ad.1
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 02:55:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787997295; x=1788602095; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1787997301; x=1788602101; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=u+bx+HWR1lJgM1IpCVaNlI18J07SWUFh64Ef3O2YpAQ=;
-        b=CpXUncpnnvrvuLB+Fg4ojrZzSGnwrTN3kZkN69xW619n0Zst/ynY1HhErtHPEvrQUA
-         n86qnV3ppao0z4gDC39rjx+sFtZTtkJmT8FrYg9V1ekF3QbTY3x9I9PkowZFzDF5kbaU
-         K1cVlVh1kj7CzSCY6pjDhwwb58Kwh7NZOSbjE1dWi8VeU8WaxKlGYxabWy45CUcu+9az
-         PArZv4c5Sp48HZrLiClVn8GkvNz5OvgAmDiaAE9wSXBQJzzin+E4YJD8wRl+enlRmgz0
-         3bw50s5V4iNvPlCsKqdDV3lwL1ajGex+vnOF7T2/5TYfhlDGvv1f/Pu5XRULq4wTT1BX
-         M3fQ==
+        bh=r+XYc/uhp00twA6hJyfMPfZH8ZjPnbMc9r1vC8WbHMM=;
+        b=kTB0P2osEwYH7u+U9W9rnjkE1jsj5xpqGXD7R6EJLXyvjV/gtzAYRTjZ+irtalDgeD
+         gM2X+o+6/cLbTPaHr9Ybfleyqge4eTX8tqwAQv7PEMbwAf6zb1dZ+PHk+TEVuFKR9uT6
+         AL5YvsdNoqHH+kHXanuZEqeKCoC5FQEOI+gtD1e7UVIzXBW/kLWYamBHVq/F4CTGNLjZ
+         qlYXKh+4lpvXUeCPYQpe0NR8nZdiGyl3tOeivAJkXz5gBZVI7RKxX3kNeT618UXtLaWC
+         C4eARuRrFyMuhGkqMzcp3U5Ylzt/BQj54CX4bVsmkvbrGa32LAdzVBHLsH4CJrNzVmbu
+         VOpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787997295; x=1788602095;
+        d=1e100.net; s=20251104; t=1787997301; x=1788602101;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=u+bx+HWR1lJgM1IpCVaNlI18J07SWUFh64Ef3O2YpAQ=;
-        b=ZkoHIxFMLE0Pm7Ruffr8YKKuMuU4rTkN/MrlNt3b8g3L3ldt34uI4RNiPpXl8rw1pC
-         Q9vy8lxOJD4AnsiVpQnVk+bHJyl06131D5+GJvJm3Hkl9bkOdrPADNn9XeCOQn9IsJNN
-         HUNWNXJaM9ntTTxJ+xx5p4sIO/oB0iDZ1E21g25mjYr/z44YKWDCAYKmglac3aoA1JiE
-         jFgp7XHEktVE6t+pJDB0FyQK5rw5PWqoQTko8nDTl9jeNRCxwtJM+OuvumkupzBN3nov
-         MG/BvhrAF3hLS2sSRWoWlr9q4pckjO5xQTSnbQZGFn4zSBBw3vT6J2efxzEl61lhNy+k
-         nrOw==
-X-Forwarded-Encrypted: i=1; AKwUvByppJLApx9A7UL1xClOetoCRF/TCPF+bnpU2WKWFk3DkZvX8sI96SS4JsZhtsZSMQsw99it58d/bOjhr8kh5A==@vger.kernel.org
-X-Gm-Message-State: AFuF++l5CpY4ktkwQJRNBldJCvyRh8bl8mC88+0/0ligSz74iU9H8eDx
-	Axp8WQntwlxwK7CoOg1iS3A5OJqOlPDlMvu5Yc1/iaPu0ODLreXXIuKk
-X-Gm-Gg: AYBFou1vSaINQG03bh/Wg4CU8dwHoGYBlQeXsVzXw8OSwkbjZ/UJq/ch3O9XBh/djKr
-	UYCakOhD//1qOp3EseKgdqyKdHzhcfedOHceMR9E48c3YTYJlYTRhxRrOw/VCLjFRieQqQ4jZHC
-	1CLgZOh2mSPtkgBclF/6ZgA1Y0GhUhBCx4U/ibgferGB+T9RCJbKzMev9wX4o86gNOXnzkLI4ZI
-	jPvpfWvn96gEroKVOM7e0rzcbA//tXoISQA5hrdKbT38njhHQD8PV9QwYo7eOWdV0NVuo1lTQEM
-	FMlt2g3I46VGTpRKvRhxeKWR9D/6GODKdSvTgHBor9elFI2GHhJUcBhhqukXN6uIjIwT4KwyCbY
-	L8EOVL4hpAamwdk7LYmgIb7cwi5yVU6egeUove6R40F20bHzKy4in4VtBo7u/wrknJnNLAP1+q4
-	NOp8Ne+40YbqSlUQ01BVbm9LqlGPTitgTwbcIaOwfAEhv2LfRLNe8bePW55vx174lTiq9nxbgP1
-	yak5aGvWX3/AmdpyQXXaEkn6912435tJg==
-X-Received: by 2002:a17:902:d2c7:b0:2c9:ed4a:c3a4 with SMTP id d9443c01a7336-2d74ce38075mr120434055ad.0.1787997295482;
-        Sat, 29 Aug 2026 02:54:55 -0700 (PDT)
+        bh=r+XYc/uhp00twA6hJyfMPfZH8ZjPnbMc9r1vC8WbHMM=;
+        b=ek+qMjCWFgEXRj14wadS1fD6ysk5JJhvdfHiEyd306zL+Llk2xxkZUSk+7d3qVVm4j
+         sWL1F9snDbaZlrEor3TKQbwWiSJZvdiayLsKj046oS/bbTS7axPZoemGFl5tBTyR2sYl
+         AdIFBfN7Sjp8VTJ5V5OSy+fZ4sDBUTafLp3H2EyZJA0ZarmQJ0p8EwsaJbvPQgc49aQ6
+         6GawDn4PJL92X+RIo7u1rYJHFIA/cHn5yxw1IoG6Rrl4xUdLFi7HaS46EaKdqPU8vJ4O
+         /dz062GyxkfXJrrqNtPvaolFtlAMDP+jTF2Cih2V6w2GioW91pt9LZ5D4w8OcR38G1km
+         gccg==
+X-Forwarded-Encrypted: i=1; AKwUvBxLDDQKjKncxXAZCaWd+8Lkl7blsthqs9gUPrfCupXJdoVKwZKoleUPeGPJG9s6RtDK9Ypvo8sla/aCveBKYQ==@vger.kernel.org
+X-Gm-Message-State: AFuF++lwhDEEAAIX+tJkxMIQK40fUiIPn25NBK0NTf7CqImv9shhHDIC
+	La/1hi3i8QvmvwX8GpUhveENAQ0L9OBqsRQWro4ZYEim9lSH9aWp5/wf
+X-Gm-Gg: AYBFou35tkBgtNzDKtmn0OWLUKsix3dAo5dmqUV5BTzHNXDl2lF3KvRCg5ZQQEUktjj
+	Q3DvtNFfglQvKoeSkdsMTLxL+NVkdQgceRmMbooMIaiGsV/NeBEgwNILd/wfbUp4l53nCb4VKxb
+	/ZwPvpXZlVjWgVB4yxJxsmRHqyL14EXvxjUTNCLklaR8B3F5yFsAvPFzcfvGHXFCzoc3ormRcwF
+	+z8vpIVxYTBbDdo4RLjX1jjnwqiqdi1/ffezmBuhccXwdZQJxv61MiMdEPBLO7WCWG5zR3A9UlQ
+	ePQiUIMhO3XKbu06nzKoncnsym6FfYCkXVNIel+UOvX1exmjUH3p7hRh6ohQ1hlTtJp8nUIZofg
+	4YkVgVnZbkL7tGxzrSZ+mQM3GrEBV1wp4Sr1QVmljBq0x1up7YibJNJkA8xflZ+3QW74dM8ldYb
+	CXSnTfBAPV8JL8VWcUosQEuMoWDL8iv/+BOx9+DmwJRDBreurKeL+2CAs0EXdJdK4thC8sYhM1H
+	YkbHSJlGZlDCqpIGDqCnjK4SvfTdtXDHLY=
+X-Received: by 2002:a17:903:228a:b0:2cb:2b50:d9da with SMTP id d9443c01a7336-2d74df53523mr116538065ad.3.1787997301027;
+        Sat, 29 Aug 2026 02:55:01 -0700 (PDT)
 Received: from cachyos-aura ([2409:40f2:3104:d691:c7eb:3b03:2c8d:127f])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f783c37sm15775697eec.6.2026.08.29.02.54.49
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f783c37sm15775697eec.6.2026.08.29.02.54.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 29 Aug 2026 02:54:54 -0700 (PDT)
+        Sat, 29 Aug 2026 02:55:00 -0700 (PDT)
 From: Navon John Lukose <navonjohnlukose@gmail.com>
 To: miriam.rachel.korenblit@intel.com,
 	linux-wireless@vger.kernel.org
@@ -70,9 +70,9 @@ Cc: nika@nikableh.moe,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	Navon John Lukose <navonjohnlukose@gmail.com>
-Subject: [PATCH wireless 1/2] wifi: iwlwifi: pcie: arm the product reset at probe
-Date: Sat, 29 Aug 2026 15:24:36 +0530
-Message-ID: <20260829095437.44716-2-navonjohnlukose@gmail.com>
+Subject: [PATCH wireless 2/2] wifi: iwlwifi: pcie: request a product reset when the device is gone after resume
+Date: Sat, 29 Aug 2026 15:24:37 +0530
+Message-ID: <20260829095437.44716-3-navonjohnlukose@gmail.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20260829095437.44716-1-navonjohnlukose@gmail.com>
 References: <20260829095437.44716-1-navonjohnlukose@gmail.com>
@@ -84,52 +84,47 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The driver already implements the platform-level device reset (PLDR):
-iwl_trans_pcie_call_reset() walks _PRR and evaluates _RST, and
-iwl_trans_pcie_set_product_reset() arms it over the vendor _DSM. But it
-is armed too late to ever help.
+On platforms where D3cold removes the WiFi module's power rail, the
+device can come back from suspend completely absent from the bus: config
+space reads 0xffffffff and the downstream link never trains.
+_iwl_pci_resume() currently notices only a subset of this (scratch ==
+~0U, and only when the device was enabled), then "hopes for the best" by
+re-initialising over PCI, which cannot work - the hardware is not there.
+The result is several seconds of handshake timeouts and a bogus
+ADVANCED_SYSASSERT dump before giving up, and the device stays gone
+until reboot.
 
-set_product_reset() is only called from iwl_trans_pcie_removal_wk(),
-i.e. once the device is already being torn down. On these platforms the
-_DSM dispatch is gated on the firmware reading the device's PCI ID back
-out of config space:
+Check whether the device answers config cycles at all, and if not ask
+for a product reset, which power-cycles the module and re-enumerates it.
 
-    Method (WIST) { Switch (ToInteger (VDID)) { Case (0x272B8086) {...} } }
+The check is deliberately placed before the STATUS_DEVICE_ENABLED block:
+that block is skipped entirely when the device was idle or down at
+suspend time, which is a common case (e.g. the radio was switched off)
+and one where the device is just as dead.
 
-If the device has lost power VDID reads 0xffffffff, WIST() returns 0,
-the _DSM never reaches the vendor functions and acpi_check_dsm() fails:
-
-  scheduling reset (mode=6)
-  ACPI _DSM not available (-19), cannot do product reset
-
-So the reset stays disarmed, _RST falls back to a plain function-level
-reset and the device is unrecoverable in exactly the case PLDR exists
-for. Observed on Intel BE200 (8086:272b) on Meteor Lake laptops, where a
-D3cold transition removes the M.2 module's power rail and the card does
-not restart when the rail and PERST# are restored.
-
-Arm it during probe instead, while the device still answers. The mode is
-sticky in the platform's namespace, so it is still set when the device
-later disappears. _RST is only evaluated when the driver actually asks
-for a reset, and a subsequent non-product reset re-runs the existing
-disarm path as before. On platforms with no such _DSM this is a no-op.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=221695
 Fixes: 9673c35486d4 ("wifi: iwlwifi: implement product reset for TOP errors")
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221695
 Cc: stable@vger.kernel.org
 Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
 ---
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -4252,6 +4252,11 @@
- 	iwl_trans_pcie_check_product_reset_status(pdev);
- 	iwl_trans_pcie_check_product_reset_mode(pdev);
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1232,6 +1232,18 @@
+ 	if (!trans->op_mode)
+ 		return 0;
  
-+	/* must be armed while the device still answers: the _DSM is gated on
-+	 * reading its PCI ID out of config space
++	/* Not answering config cycles: it fell off the bus and will not come
++	 * back from a PCI-level re-init. Deliberately checked before the
++	 * STATUS_DEVICE_ENABLED block below, which is skipped entirely if the
++	 * device was idle or down when we suspended.
 +	 */
-+	iwl_trans_pcie_set_product_reset(pdev, true, mac_cfg->integrated);
++	if (!pci_device_is_present(pdev)) {
++		IWL_ERR(trans,
++			"device is not on the bus after resume, requesting product reset\n");
++		iwl_trans_pcie_reset(trans, IWL_RESET_MODE_PROD_RESET);
++		return 0;
++	}
 +
- 	/* set the things we know so far for the grab NIC access */
- 	iwl_trans_set_info(iwl_trans, &info);
- 
+ 	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
+ 		/*
+ 		 * Scratch value was altered, this means the device was powered
