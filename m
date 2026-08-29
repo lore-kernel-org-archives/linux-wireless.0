@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD301F3BA2
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 08:18:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6479146A66
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 08:21:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787991542; cv=none; b=YPTv35NOPCbowVNEekOxWJ5Zs+1E8ZX4bURyYZaZWIQhtUkLcutNVMID9RqObzrOOJWC/B8TbLks/Rv4T+xS/apCVO4X7ANNUWasfGgDWoyp2sYUccB9e8y9ZrEML5Xmw1FaAaKrxwCRaqH373BGAB+hlXF5vaCGbFKl/IJ9YYI=
+	t=1787991667; cv=none; b=hnyCV+PdUk3/jJor9G/Myaz11+fErEOZHL8RwPMLu1vvxgXRjisOWCpgEME8K+GpkM/0VLFVTilv75vE52UF1zcpt7WWszz0CEOkZWPP8gku7S04A5AzGdt3gwaZnnHulxLZCzSDJAg7lfTPm/MsyyejyGkezaUyCYZ/ndjfGX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787991542; c=relaxed/simple;
-	bh=v+aWFiqZUP2AW8f+kRIKMwUZ2Rh6EogLxpcx+G8AQBo=;
+	s=arc-20240116; t=1787991667; c=relaxed/simple;
+	bh=vGemPxKDNj/wjYZfMuagHyEPucRqUdfWCMsNPqSi4iE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jxEVVsIgywMMkNkRluoqLwHgWp0sAdFi/DWQgEIgTze7VrRE8um429CSHu97vrFUJ+ZBGNm9Z2pBhjdAT8kMCB+qnJvG8XRLzTj2gG2ZycKBg8ptJ0Hom8HHAvEta9QACLAtzfYRG23ohxiB5km/qytV26E/QHrpPwgBnZoiKhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Og3Eiqbm; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=OzFAySl6gyaz8txOEcSxDJ1OiM1aQI+7e5W0gkkeoCfg77t30HGdSGv2CMd61k/d+QVcOmrxm/bVoLrbWMo2AYTjmGd5GjBQfZWR8IvSvKTXb83cO3BxO3t/a7PM2JS9EovC7EdohjSgYM6TkQVW+HQ69xPhuWWK8EbwxaNkdnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z6caTQ0s; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Og3Eiqbm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F07AC1F000E9;
-	Sat, 29 Aug 2026 08:18:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z6caTQ0s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B18D1F000E9;
+	Sat, 29 Aug 2026 08:21:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1787991538;
-	bh=6zA5WS2zaQbUnSdIGVGh77V3TtsB5L9w2bGdVkoSJi4=;
+	s=k20260515; t=1787991666;
+	bh=MjqsRucL+ZlgfIXuQ7jtPEXCiwTpSV53H3GDO+WKlRw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Og3EiqbmovTeNEyE84oWM/qVKdpsREUMQNs8gP6jfmpWq2kplUAU+LUExB0sRPui5
-	 l5vMEqL59d+Lnbcu0DFcOTrIVxJqOVP8PZabymsYfklBXM0QUJOmLQw8XCO/UO8wWp
-	 bKFhMnBYy1zm5v+iO1n+JwFdxGMwCcsaJtrwjHytF52W+juVsSkif1sW+QkK7NII+V
-	 ZP7Yvnod0hJEUAwoYM7xx5DUOTuo9fQgJQcVRJx02bY+5gLiYq1kivnwpombIJ94xr
-	 wYRPx1fNawTCBZZ4pKyFVyJSBw7I/djTs1OchL/JLffS0jiO4tmlmqPy6v1LSAfRle
-	 oGq2WdOYc0XWg==
-Message-ID: <c33a1ea9-5608-4770-992e-a3dbe1226a65@kernel.org>
-Date: Sat, 29 Aug 2026 10:18:53 +0200
+	b=Z6caTQ0stGPA6Yo8AFfyZ8sRLcTFyyJsa6DlUEHCD0XMu7idmfDlFXa5GnTcR4pua
+	 7nsgN9Z5sFnHiwc1Tyco9fau8iklX9jQr08aVCTyAvEEWGHwfzsgcasbE9r4JFb9f5
+	 WndQh8NK7osh0RV+teLyjNwcn/zrLwM0UP9OTNbMqXeKsgZ/0dUgJ/A3S8YE6UOJij
+	 kacGK64CZDFqT1EQq3/FKDfHruRDCKsNQaqqYrxeM+4Qf58mlaW1hX+gamW8i08pYb
+	 aYN5le0a3JqJtrw49TanWMI//AhRp1owV5HJLOzs24ls4GtWBnT2KUBDnmfJu1dIPL
+	 LaYexNkDBezsQ==
+Message-ID: <229f5d99-4aae-4f51-baee-37794c2236dc@kernel.org>
+Date: Sat, 29 Aug 2026 10:21:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH wireless-next v3 1/4] wifi: aic: add SDIO BSP and
- build configuration
+Subject: Re: [RFC PATCH wireless-next v3 3/4] wifi: aic: add FullMAC WLAN
+ driver
 To: Yanli Yang <yanli.yang@bedmex.com>,
  Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org, Zhirun Liu <zhirunliu@aicsemi.com>,
@@ -46,7 +46,7 @@ References: <cover.1784724170.git.yanli.yang@bedmex.com>
  <ef855527f564086a498e95d31a35935762fa60e1.camel@sipsolutions.net>
  <007a0362a36d2318ea7a50c6feb8ad2ce1361c0d.camel@sipsolutions.net>
  <cover.1787903339.git.yanli.yang@bedmex.com>
- <395cd2d678c7b53c927daec2860a7d3f3d5c2025.1787903339.git.yanli.yang@bedmex.com>
+ <f22a875eefa398eea9fc80bff1468dfacc47c683.1787903339.git.yanli.yang@bedmex.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -92,177 +92,61 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <395cd2d678c7b53c927daec2860a7d3f3d5c2025.1787903339.git.yanli.yang@bedmex.com>
+In-Reply-To: <f22a875eefa398eea9fc80bff1468dfacc47c683.1787903339.git.yanli.yang@bedmex.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 28/08/2026 14:11, Yanli Yang wrote:
-> From: Zhirun Liu <zhirunliu@aicsemi.com>
-> 
-> Add the build configuration and SDIO board-support layer for the initial
-> AIC8800D80 U02 upstream target.  The BSP handles platform power sequencing,
-> SDIO transport setup, firmware loading and chip initialization.
-> 
-> Limit the selectable configuration to the D80 U02 SDIO station baseline and
-> use the kernel crypto library for firmware MD5 diagnostics.
-> 
-> Signed-off-by: Zhirun Liu <zhirunliu@aicsemi.com>
-> Signed-off-by: Yanli Yang <yanli.yang@bedmex.com>
+> +
+> +#ifndef CONFIG_PLATFORM_EXTERNAL
+> +#ifdef CONFIG_GPIO_WAKEUP
+> +static int wakeup_enable;
+> +static u32 hostwake_irq_num;
+> +#endif
+> +#endif
+> +
 
-You still did not run checkpatch and has obvious issues pointed out by
-it, but more importantly - you still did not document bindings for your
-device.
+What?
 
+> +/* debug trace */
+> +// static struct wakeup_source *ws_rx_sdio;
+> +// static struct wakeup_source *ws_sdio_pwrctrl;
+> +// static struct wakeup_source *ws_tx_sdio;
+> +#ifdef CONFIG_GPIO_WAKEUP
+> +// static struct wakeup_source *ws;
+> +#endif
+> +
+> +#ifdef CONFIG_PLATFORM_EXTERNAL
 
-
-...
+NAK, there is no such CONFIG symbol.
 
 > +
-> +static DEVICE_ATTR_RW(hwinfo);
-> +
-> +static DEVICE_ATTR_RW(fwdebug);
-> +
-> +static DEVICE_ATTR_RW(adapt);
+> +#define ENTER() (pr_info("AICWF enter %s\n", __func__))
+> +#define LEAVE() (pr_info("AICWF exit %s\n", __func__))
 
-Where did you document the sysfs ABI?
+
+No. You cannot re-implement tracing. Drop this from EVERYWHERE.
 
 > +
-> +static struct attribute *aicbsp_attributes[] = {
-> +	&dev_attr_hwinfo.attr,
-> +	&dev_attr_fwdebug.attr,
-> +	&dev_attr_adapt.attr,
-> +	NULL,
-> +};
-> +
-> +static struct attribute_group aicbsp_attribute_group = {
-> +	.name = "aicbsp_info",
-> +	.attrs = aicbsp_attributes,
-> +};
-> +
-> +int testmode = AICBSP_CPMODE_DEFAULT;
-> +int adap_test;
-
-Drop, not suitable for module params.
-
-> +module_param(adap_test, int, 0660);
-> +
-> +#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
-> +int gpio_pwr;
-> +bool gpio_pwr_assert;
-
-You should not have globals. You need properly organize Linux device
-driver structures.
-
-> +
-> +void nxp_pwr_ctrl(int value)
+> +int regist_wakeup_irq(struct aic_sdio_dev *sdiodev)
 > +{
-> +	pr_info("aic_bsp: %s: %d\n", __func__, value);
-> +	gpio_set_value(gpio_pwr, value);
-> +}
+> +	int ret = -EINVAL;
+> +	struct device *dev = sdiodev->dev;
+> +	struct device_node *node;
 > +
-> +static int aicbsp_pwr_node(void)
-> +{
-> +	struct device_node *np;
-> +	int err;
+> +	ENTER();
 > +
-> +	np = of_find_compatible_node(NULL, NULL, "aic,wifi-power");
+> +	node = of_find_compatible_node(NULL, NULL, "aic,wifi-wake-host");
 
-
-Undocumented compatible. But also unlikely to be accepted. Please read
-writing bindings, DTS101 slides or some other guidelines for beginners,
-how to properly describe hardware in DTS.
+Undocumented ABI. Would not be accepted anyway.
 
 
 
-> +	if (!np) {
-> +		pr_err("aic_bsp: %s np not found\n", __func__);
-> +		return -ENODEV;
-> +	}
-> +
-> +	gpio_pwr = of_get_named_gpio(np, "wifi-power", 0);
-
-Do not use legacy API. Please open recent Linux drivers and look how
-they manage GPIOs.
-
-
-> +	if (!gpio_is_valid(gpio_pwr)) {
-> +		pr_err("aic_bsp: %s is invalid\n", __func__);
-> +		return -ENODEV;
-> +	}
-> +
-
-
-...
-
-
-> +
-> +	(void)testmode;
-
-Heh?
-
-> +	aicbsp_firmware_list = fw_8800d80_u02;
-> +	aicbsp_info.cpmode = AICBSP_CPMODE_WORK;
-> +	if (!fw_path)
-> +		return -ENOENT;
-> +
-> +	pr_info("aicbsp 8800d80 u02 wifi firmware: %s\n", fw_path);
-
-Why your driver does not use dev_* calls? And why does it print so much?
-
-Drivers should be silent on success:
-https://elixir.bootlin.com/linux/v6.15-rc7/source/Documentation/process/coding-style.rst#L913
-https://elixir.bootlin.com/linux/v6.15-rc7/source/Documentation/process/debugging/driver_development_debugging_guide.rst#L79
-
-...
-
-> +
-> +aic8800_fdrv-y := \
-> +	rwnx_msg_tx.o \
-> +	rwnx_msg_rx.o \
-> +	rwnx_utils.o \
-> +	rwnx_cmds.o \
-> +	rwnx_irqs.o \
-> +	rwnx_cfgfile.o \
-> +	rwnx_strs.o \
-> +	rwnx_rx.o \
-> +	rwnx_tx.o \
-> +	rwnx_txq.o \
-> +	rwnx_main.o \
-> +	rwnx_mod_params.o \
-> +	rwnx_platform.o \
-> +	aicwf_chip_8800d80.o \
-> +	aicwf_chip_ops.o \
-> +	rwnx_v7.o \
-> +	ipc_host.o \
-> +	aicwf_compat_8800d80.o \
-> +	regdb.o \
-> +	aic_priv_cmd.o \
-> +	sdio_host.o \
-> +	aicwf_txrxif.o \
-> +	aicwf_sdio.o \
-> +	aicwf_rx_prealloc.o
-> +
-> +aic8800_fdrv-$(CONFIG_AIC8800_NONSTA_SUPPORT) += rwnx_mesh.o rwnx_tdls.o
-> +
-> +aic8800_fdrv-$(CONFIG_AIC8800_GENL) += aicwf_genl.o
-> +
-> +ccflags-y += -I$(srctree)
-> +ccflags-y += -I$(src)
-> +ccflags-y += -I$(src)/../aic8800_bsp
-> +ccflags-y += -DAIC_TRACE_INCLUDE_PATH=$(src)
-> +ccflags-y += -DAICWF_SDIO_SUPPORT
-> +ccflags-y += -DCONFIG_SDIO_PWRCTRL
-> +ccflags-y += -DCONFIG_RWNX_FULLMAC
-> +ccflags-y += -DUSE_5G
-> +ccflags-y += -DAICWF_RX_REORDER
-> +ccflags-y += -DAICWF_ARP_OFFLOAD
-> +ccflags-y += -DCONFIG_RX_NETIF_RECV_SKB
-> +ccflags-y += -DCONFIG_AIC8800_RX_NETIF_RECV_SKB
-
-I do not understand what is a ll this. Looks like out of tree module
-build. We do not define defines via Makefile. Integrate the driver into
-Linux.
-
+> +	if (!node)
+> +		goto err_exit;
+> 
+This driver does not look like upstream code at all. You should clean it
+up before you post next v4.
 
 Best regards,
 Krzysztof
