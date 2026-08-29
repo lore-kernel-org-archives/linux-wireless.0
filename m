@@ -1,122 +1,268 @@
-Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CCA3502A3
-	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 05:44:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD301F3BA2
+	for <linux-wireless@vger.kernel.org>; Sat, 29 Aug 2026 08:18:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1787982266; cv=none; b=HjzMQfr0WXNoTIUnQLASaw16lU7tTwydU0wXPbUpxc9eJIYx0Rjb5//yvdAYy4+VfYUI0l3mEGwcXkdsrCbWOP4v+C9SohLB7cMKFV6gtZ2UNFHIi29lM1zZBmG/gXybrrNSgqsQuF2NhmmW8YuGo4XJaZFqT9ik6wbCUY8lTdo=
+	t=1787991542; cv=none; b=YPTv35NOPCbowVNEekOxWJ5Zs+1E8ZX4bURyYZaZWIQhtUkLcutNVMID9RqObzrOOJWC/B8TbLks/Rv4T+xS/apCVO4X7ANNUWasfGgDWoyp2sYUccB9e8y9ZrEML5Xmw1FaAaKrxwCRaqH373BGAB+hlXF5vaCGbFKl/IJ9YYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1787982266; c=relaxed/simple;
-	bh=qsFwjBfu2NKtEcsDviKHxw63ntmppkT8r3P6UxlkbOc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mU+T9Ia+c19Narvo3gdzexWMEpYYlaMSIiRIHehqZYapkEIExmcRfSZeTLULeNUbhMWUX/aRRYwJNZg0VpNrPqkbJHAJbpAhoNe01VH2wpug1toDG0qMjCwpQTGISmzlCsTdUH+/aDpC4MQV/pGF56gH0ZzajkC9AYyOaPP4iKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DwnJ6Xbu; arc=none smtp.client-ip=209.85.167.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1787991542; c=relaxed/simple;
+	bh=v+aWFiqZUP2AW8f+kRIKMwUZ2Rh6EogLxpcx+G8AQBo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jxEVVsIgywMMkNkRluoqLwHgWp0sAdFi/DWQgEIgTze7VrRE8um429CSHu97vrFUJ+ZBGNm9Z2pBhjdAT8kMCB+qnJvG8XRLzTj2gG2ZycKBg8ptJ0Hom8HHAvEta9QACLAtzfYRG23ohxiB5km/qytV26E/QHrpPwgBnZoiKhg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Og3Eiqbm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DwnJ6Xbu"
-Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-5b28c91fba5so2039077e87.1
-        for <linux-wireless@vger.kernel.org>; Fri, 28 Aug 2026 22:44:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1787982263; x=1788587063; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:sender:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=ShvhKa6MyfZ1jEWheQQ6SuhEnn7upG8Sh84fZvzR0n8=;
-        b=DwnJ6XbuW9HyStr/+sjdmqX/1p3AwRzsRfcaXD+7D3hY5507Q3LcyEpzMljSfekt9D
-         JY9UEtaVycKVOzZldxacosJEtlpNSpzoBd1R9R+D56FoOoZqPWJu5kZx/OJTZnSWg9r1
-         NzCnCnPXdOWyAQc9WBp7Y1tf2q81PWfPjDnwgknUHK5PnV+KYkXcJJHWNBC6E7eHB1K0
-         uLIh9NPl8pVlhqekUUKmCChpli2UCKFNw/BxvaQProsf+l3NbEy93sRQv9MhL8/jYjeT
-         2vuMNtHeBfmlfa4pThNnkpYqnnXMzbtDOoyfh2p5vSfEUoCHjrjCm7L4aqvsE6SrKgwC
-         YARw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1787982263; x=1788587063;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:sender:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=ShvhKa6MyfZ1jEWheQQ6SuhEnn7upG8Sh84fZvzR0n8=;
-        b=qFQPjb1rudpkNcGNaABSvDzC6XRcwSM1kIcuUD8DT1WE/PNJ3cBZnB/jp8frj2CIiV
-         t8G90hUAM/E2dcXtgioHKrZPoj7mGoAkQ40eWh0LS9oCJ4/qtd0RBnBvJ27XndizmRzf
-         z0//Qdo1nIe3qeVRlXyaNpX78z2IyVASljZmliFcslCPU+ZaqUq/yQzzW7+9i4o/f0hP
-         tS4EYPxTSSTlW3/yR6aC2DQ2COSSrCFSqYFxoBFh2/atbZNMuu0wkcw0eq675rd7Omvc
-         am32rJkKGbYncSWmhI5s7JEnLGLMjqcZoEKo6Qr4xQHlpGF05ydJ5ucR3Q8sbcE6JpMx
-         5L+g==
-X-Forwarded-Encrypted: i=1; AKwUvByLQX8OO1QdGBabkuMxjPytOTFNPsUw+xjGm5v8ytHWBuSX11DWBnBSToAnb0Ue34xrHo/KDiONQHEV1qKE6w==@vger.kernel.org
-X-Gm-Message-State: AFuF++ln/mVXw9gmhqjc1ZQGgwOB6mByU5lLU9SGUc4wE/20kGqYEKS0
-	l5q87GRuGS4epNAaykHKvXDpf+V8Dy+6SzGBd1ShD94dpY/S31RhNXbnSlIr
-X-Gm-Gg: AYBFou04bmLHyjl91EetTvPdpC+vc4Yyy5b/63xoOycgErrUORRmeoT637vrWmqrhhy
-	QHIyZrGwSrq+EW/TjhHv9hGm+Pyojksb20lSUJS0TO/bntAsz5F3IO0YQdB0ZU7BT6RwRWv1ibo
-	4EmqnncatgCWjSG0E+DZoihNiyFeLg1EwYaxsuI4nP/gaPtaKncestHWIA2p4gqhIpPGV9Wm93a
-	jBOzWXeXys1wMHHeNHIdVP/2otKX6Jjfi14tZamn1PKCw+xMAhbxuW2C9Z5yCQwJMOysNwJ/yOh
-	2hNlOBg22rjmykhWR3zchBzQP7U6ifLAvifxX4HO7VV+tE+c289Vf9JoJWj5Wyd9/qNnkWDXwRx
-	hYbkvl8kjT6zpW/dlOMEUDW3UQwEmQjf03xdGLS48qSMFQjVNih3/iOA+BwPGDh6PJLl/1zqxFa
-	Kcp7vpcrJ6b6OnwCEIUsDYNteByL5ogwD9HT15xg+UuVleaQAhWlmyf/5eeBg9jSSIZEE2g++Yi
-	nY4/Ur2AHTQzX5r5LCAVU5BG2ZE//S3Lhc5Dzx9G3VyjWv9Pq+tmj484WsNGqXsIQMyxVafM9Ba
-	JpoU
-X-Received: by 2002:a05:6512:670b:b0:5b2:a22c:50ff with SMTP id 2adb3069b0e04-5b4afeedfe6mr4552889e87.19.1787982262802;
-        Fri, 28 Aug 2026 22:44:22 -0700 (PDT)
-Received: from nn ([2001:1ab8:1003:0:5454:f357:ba89:4e22])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5b5e89c5b86sm803040e87.12.2026.08.28.22.44.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Aug 2026 22:44:21 -0700 (PDT)
-Sender: N B <gen.benner@gmail.com>
-From: =?UTF-8?q?Nerijus=20Bend=C5=BEi=C5=ABnas?= <nerijus.bendziunas@gmail.com>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] wifi: ath9k: skip the departing channel's noise floor on USB fast changes
-Date: Sat, 29 Aug 2026 08:44:01 +0300
-Message-ID: <20260829054401.1198574-5-nerijus.bendziunas@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260829054401.1198574-1-nerijus.bendziunas@gmail.com>
-References: <20260829054401.1198574-1-nerijus.bendziunas@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Og3Eiqbm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F07AC1F000E9;
+	Sat, 29 Aug 2026 08:18:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1787991538;
+	bh=6zA5WS2zaQbUnSdIGVGh77V3TtsB5L9w2bGdVkoSJi4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Og3EiqbmovTeNEyE84oWM/qVKdpsREUMQNs8gP6jfmpWq2kplUAU+LUExB0sRPui5
+	 l5vMEqL59d+Lnbcu0DFcOTrIVxJqOVP8PZabymsYfklBXM0QUJOmLQw8XCO/UO8wWp
+	 bKFhMnBYy1zm5v+iO1n+JwFdxGMwCcsaJtrwjHytF52W+juVsSkif1sW+QkK7NII+V
+	 ZP7Yvnod0hJEUAwoYM7xx5DUOTuo9fQgJQcVRJx02bY+5gLiYq1kivnwpombIJ94xr
+	 wYRPx1fNawTCBZZ4pKyFVyJSBw7I/djTs1OchL/JLffS0jiO4tmlmqPy6v1LSAfRle
+	 oGq2WdOYc0XWg==
+Message-ID: <c33a1ea9-5608-4770-992e-a3dbe1226a65@kernel.org>
+Date: Sat, 29 Aug 2026 10:18:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH wireless-next v3 1/4] wifi: aic: add SDIO BSP and
+ build configuration
+To: Yanli Yang <yanli.yang@bedmex.com>,
+ Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Zhirun Liu <zhirunliu@aicsemi.com>,
+ Dijia Xu <dijiaxu@aicsemi.com>, Chunqiu Liu <chunqiuliu@aicsemi.com>,
+ Liheng Wei <liheng.wei@bedmex.com>
+References: <cover.1784724170.git.yanli.yang@bedmex.com>
+ <ef855527f564086a498e95d31a35935762fa60e1.camel@sipsolutions.net>
+ <007a0362a36d2318ea7a50c6feb8ad2ce1361c0d.camel@sipsolutions.net>
+ <cover.1787903339.git.yanli.yang@bedmex.com>
+ <395cd2d678c7b53c927daec2860a7d3f3d5c2025.1787903339.git.yanli.yang@bedmex.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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
+In-Reply-To: <395cd2d678c7b53c927daec2860a7d3f3d5c2025.1787903339.git.yanli.yang@bedmex.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-ath9k_hw_reset() reads the noise floor of the channel it is leaving so
-that channel's calibration history stays current. The readout is several
-register reads, which on the USB devices are as many synchronous WMI
-round trips, and a frequency-hopping monitor pays them on every hop for
-a value that only matters if the radio returns to that channel later.
+On 28/08/2026 14:11, Yanli Yang wrote:
+> From: Zhirun Liu <zhirunliu@aicsemi.com>
+> 
+> Add the build configuration and SDIO board-support layer for the initial
+> AIC8800D80 U02 upstream target.  The BSP handles platform power sequencing,
+> SDIO transport setup, firmware loading and chip initialization.
+> 
+> Limit the selectable configuration to the D80 U02 SDIO station baseline and
+> use the kernel crypto library for firmware MD5 diagnostics.
+> 
+> Signed-off-by: Zhirun Liu <zhirunliu@aicsemi.com>
+> Signed-off-by: Yanli Yang <yanli.yang@bedmex.com>
 
-Leave the readout out when a fast channel change is asked for on a USB
-device. Periodic calibration refreshes the history while a channel is in
-use, and the arriving channel's noise floor is loaded either way, so
-only a channel that is left and revisited without calibrating in between
-sees an older history.
+You still did not run checkpatch and has obvious issues pointed out by
+it, but more importantly - you still did not document bindings for your
+device.
 
-Signed-off-by: Nerijus Bendžiūnas <nerijus.bendziunas@gmail.com>
----
- drivers/net/wireless/ath/ath9k/hw.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d204cdf3fa8f..64fefbec46d5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1878,7 +1878,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
- 		return -EIO;
- 
--	if (ah->curchan && !ah->chip_fullsleep)
-+	/*
-+	 * Over USB the departing channel's noise-floor readout costs several
-+	 * round trips and only feeds its history; the fast path reloads the
-+	 * arriving channel's noise floor regardless.
-+	 */
-+	if (ah->curchan && !ah->chip_fullsleep &&
-+	    !(fastcc && common->bus_ops->ath_bus_type == ATH_USB))
- 		ath9k_hw_getnf(ah, ah->curchan);
- 
- 	ah->caldata = caldata;
--- 
-2.55.0
 
+...
+
+> +
+> +static DEVICE_ATTR_RW(hwinfo);
+> +
+> +static DEVICE_ATTR_RW(fwdebug);
+> +
+> +static DEVICE_ATTR_RW(adapt);
+
+Where did you document the sysfs ABI?
+
+> +
+> +static struct attribute *aicbsp_attributes[] = {
+> +	&dev_attr_hwinfo.attr,
+> +	&dev_attr_fwdebug.attr,
+> +	&dev_attr_adapt.attr,
+> +	NULL,
+> +};
+> +
+> +static struct attribute_group aicbsp_attribute_group = {
+> +	.name = "aicbsp_info",
+> +	.attrs = aicbsp_attributes,
+> +};
+> +
+> +int testmode = AICBSP_CPMODE_DEFAULT;
+> +int adap_test;
+
+Drop, not suitable for module params.
+
+> +module_param(adap_test, int, 0660);
+> +
+> +#if defined CONFIG_PLATFORM_EXTERNAL && defined CONFIG_CUSTOM_PWF
+> +int gpio_pwr;
+> +bool gpio_pwr_assert;
+
+You should not have globals. You need properly organize Linux device
+driver structures.
+
+> +
+> +void nxp_pwr_ctrl(int value)
+> +{
+> +	pr_info("aic_bsp: %s: %d\n", __func__, value);
+> +	gpio_set_value(gpio_pwr, value);
+> +}
+> +
+> +static int aicbsp_pwr_node(void)
+> +{
+> +	struct device_node *np;
+> +	int err;
+> +
+> +	np = of_find_compatible_node(NULL, NULL, "aic,wifi-power");
+
+
+Undocumented compatible. But also unlikely to be accepted. Please read
+writing bindings, DTS101 slides or some other guidelines for beginners,
+how to properly describe hardware in DTS.
+
+
+
+> +	if (!np) {
+> +		pr_err("aic_bsp: %s np not found\n", __func__);
+> +		return -ENODEV;
+> +	}
+> +
+> +	gpio_pwr = of_get_named_gpio(np, "wifi-power", 0);
+
+Do not use legacy API. Please open recent Linux drivers and look how
+they manage GPIOs.
+
+
+> +	if (!gpio_is_valid(gpio_pwr)) {
+> +		pr_err("aic_bsp: %s is invalid\n", __func__);
+> +		return -ENODEV;
+> +	}
+> +
+
+
+...
+
+
+> +
+> +	(void)testmode;
+
+Heh?
+
+> +	aicbsp_firmware_list = fw_8800d80_u02;
+> +	aicbsp_info.cpmode = AICBSP_CPMODE_WORK;
+> +	if (!fw_path)
+> +		return -ENOENT;
+> +
+> +	pr_info("aicbsp 8800d80 u02 wifi firmware: %s\n", fw_path);
+
+Why your driver does not use dev_* calls? And why does it print so much?
+
+Drivers should be silent on success:
+https://elixir.bootlin.com/linux/v6.15-rc7/source/Documentation/process/coding-style.rst#L913
+https://elixir.bootlin.com/linux/v6.15-rc7/source/Documentation/process/debugging/driver_development_debugging_guide.rst#L79
+
+...
+
+> +
+> +aic8800_fdrv-y := \
+> +	rwnx_msg_tx.o \
+> +	rwnx_msg_rx.o \
+> +	rwnx_utils.o \
+> +	rwnx_cmds.o \
+> +	rwnx_irqs.o \
+> +	rwnx_cfgfile.o \
+> +	rwnx_strs.o \
+> +	rwnx_rx.o \
+> +	rwnx_tx.o \
+> +	rwnx_txq.o \
+> +	rwnx_main.o \
+> +	rwnx_mod_params.o \
+> +	rwnx_platform.o \
+> +	aicwf_chip_8800d80.o \
+> +	aicwf_chip_ops.o \
+> +	rwnx_v7.o \
+> +	ipc_host.o \
+> +	aicwf_compat_8800d80.o \
+> +	regdb.o \
+> +	aic_priv_cmd.o \
+> +	sdio_host.o \
+> +	aicwf_txrxif.o \
+> +	aicwf_sdio.o \
+> +	aicwf_rx_prealloc.o
+> +
+> +aic8800_fdrv-$(CONFIG_AIC8800_NONSTA_SUPPORT) += rwnx_mesh.o rwnx_tdls.o
+> +
+> +aic8800_fdrv-$(CONFIG_AIC8800_GENL) += aicwf_genl.o
+> +
+> +ccflags-y += -I$(srctree)
+> +ccflags-y += -I$(src)
+> +ccflags-y += -I$(src)/../aic8800_bsp
+> +ccflags-y += -DAIC_TRACE_INCLUDE_PATH=$(src)
+> +ccflags-y += -DAICWF_SDIO_SUPPORT
+> +ccflags-y += -DCONFIG_SDIO_PWRCTRL
+> +ccflags-y += -DCONFIG_RWNX_FULLMAC
+> +ccflags-y += -DUSE_5G
+> +ccflags-y += -DAICWF_RX_REORDER
+> +ccflags-y += -DAICWF_ARP_OFFLOAD
+> +ccflags-y += -DCONFIG_RX_NETIF_RECV_SKB
+> +ccflags-y += -DCONFIG_AIC8800_RX_NETIF_RECV_SKB
+
+I do not understand what is a ll this. Looks like out of tree module
+build. We do not define defines via Makefile. Integrate the driver into
+Linux.
+
+
+Best regards,
+Krzysztof
