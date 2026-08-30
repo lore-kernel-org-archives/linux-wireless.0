@@ -1,28 +1,29 @@
 Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50EB3FFD;
-	Sun, 30 Aug 2026 13:57:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFFB70809;
+	Sun, 30 Aug 2026 14:04:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788098228; cv=none; b=tj92gvTQbj9HiQWwviKLmEyNyigQTQaU2f5x7kGa/R1HjHHwE0+I0R5qyP1SCwdZsNPMEEovEB+oWciK4UGUBEnEU1JU/hHZUI6n8tscnKeq+ZYiJ82hWFwnLfJRdzfGienZaED9Vc86OjbOflpyu5l8L4AFuQY4toes48pEw3k=
+	t=1788098666; cv=none; b=KChsdhFJkf/6WxZ2mBnowR4KSBcUZL3zdCUhK7hbrIoo/wcReioFW401heaeRdLYKWERjes+9Lgk5iabonO9Z33ugDWnAjHKOpT44NxmJSkumdl4yuq5ZTpSL55gcD7yOzthlQI6uU/78emtQhycEdqT6swm6Wn4ht3GOtGD+wI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788098228; c=relaxed/simple;
-	bh=SFr/jG1P6J7E5kz6/PvNMke/movN76BOtXQEiLG6IFg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lqJ0Qm6SJWequ9ELStbvCufy/uao7jL1nIsnlOfpIZAGs4tNKr6E7Q3tRY0HNdbWqtX23cb21HvUDNPv3uA2ZzAYMnzrx3LPKx+nz5QTX/nPbkANbOk50W3pAWI/T3ZckR8zslPQKyibg45bNKpecz+irnvzYtsUAzBZWC0L+oI=
+	s=arc-20240116; t=1788098666; c=relaxed/simple;
+	bh=6s/LVD45pdGhRdTG39+oa/jmFG+YAdSmgTHycNEpV+0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CfO/s8Vf5NC05e0qAYotHvxBDavjs3wUmprPZJsIsEWkuy8dynShalrJXcp65MsfaLwPQp3BSWnm0/f4HhMcaDiLh0KG2ZcseFV+V9O88Nk235C3LAxMRkiidbEx6ECcv8TX+ifr3SnDCsclcA6QJO8lF9a7Rge0yzvAYEcbKtw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from localhost.localdomain (unknown [111.196.241.250])
-	by APP-03 (Coremail) with SMTP id rQCowADHyzmvNpRqxmubBg--.17628S2;
-	Sun, 30 Aug 2026 21:57:03 +0800 (CST)
+	by APP-03 (Coremail) with SMTP id rQCowADHyjhmOJRqNoGbBg--.17727S2;
+	Sun, 30 Aug 2026 22:04:22 +0800 (CST)
 From: Pengpeng Hou <pengpeng@iscas.ac.cn>
 To: linux-wireless@vger.kernel.org
 Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	libertas-dev@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: cw1200: validate RX header before use
-Date: Sun, 30 Aug 2026 21:57:01 +0800
-Message-ID: <20260830135701.18080-1-pengpeng@iscas.ac.cn>
+Subject: [PATCH] wifi: libertas: validate firmware block extents
+Date: Sun, 30 Aug 2026 22:04:20 +0800
+Message-ID: <20260830140420.26399-1-pengpeng@iscas.ac.cn>
 X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
@@ -31,64 +32,61 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowADHyzmvNpRqxmubBg--.17628S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFyDtrWkAF1UXw1UtrykAFb_yoW8Wr1DpF
-	45X34xtrs5Jrs0v3WUJF1rZrWrZan3X3ZrWrWxC3yrZrs3tr1rJryku3WfJFn8trs3Za4S
-	9FWqkrs3AFn5XrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyC14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+X-CM-TRANSID:rQCowADHyjhmOJRqNoGbBg--.17727S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7WF13CF1fGr15Zw4xJw48Xrb_yoW8Gw4UpF
+	yY9ry7Xr45Xa12v3ZrAw4kAay5Ka1ak3W7KFy0ya4F9rs5Xr1fZFyrXFy8Xr4Yqr4UJasI
+	vF4Utry8CFykJ3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyG14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
 	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
-	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
-	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxAIw28IcxkI7VAK
-	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
-	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxGrwCI42IY6xII
-	jxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw2
-	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x02
-	67AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUa9akUUUUU=
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vI
+	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
+	cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8V
+	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E
+	14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUj9a97UUUUU==
 X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-cw1200_rx_cb() interprets frame_control and management-frame fields before
-reaching its existing minimum IEEE 802.11 header check. A short firmware
-frame can therefore be read before it is rejected.
+check_fwfile_format() reads each block header and trusts its data length
+before proving that both fit in the firmware image. A truncated header or
+oversized block can therefore pass malformed extents to the download path.
 
-Move the existing length check ahead of the first header consumer.
+Require the remaining image to contain the complete header and payload
+before accepting each block.
 
-Fixes: a910e4a94f69 ("cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets")
+Fixes: 954ee164f4f4 ("[PATCH] libertas: reorganize and simplify init sequence")
 Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 ---
- drivers/net/wireless/st/cw1200/txrx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/marvell/libertas/if_usb.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/txrx.c b/drivers/net/wireless/st/cw1200/txrx.c
-index 084d52b11f5b0..e5435595a78f0 100644
---- a/drivers/net/wireless/st/cw1200/txrx.c
-+++ b/drivers/net/wireless/st/cw1200/txrx.c
-@@ -1018,6 +1018,11 @@ void cw1200_rx_cb(struct cw1200_common *priv,
- 		/* STA is stopped. */
- 		goto drop;
- 	}
-+	if (skb->len < sizeof(struct ieee80211_pspoll)) {
-+		wiphy_warn(priv->hw->wiphy,
-+			   "Malformed SDU rx'ed. Size is lesser than IEEE header.\n");
-+		goto drop;
-+	}
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index 5cc0c5cac2574..74870c9bd091c 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -798,10 +798,18 @@ static int check_fwfile_format(const uint8_t *data, uint32_t totlen)
+ 	exit = len = 0;
  
- 	if (link_id && link_id <= CW1200_MAX_STA_IN_AP_MODE) {
- 		entry =	&priv->link_id_db[link_id - 1];
-@@ -1062,11 +1067,6 @@ void cw1200_rx_cb(struct cw1200_common *priv,
- 		}
- 	}
+ 	do {
+-		struct fwheader *fwh = (void *)data;
++		struct fwheader *fwh;
++
++		if (totlen - len < sizeof(*fwh))
++			break;
++
++		fwh = (void *)data;
  
--	if (skb->len < sizeof(struct ieee80211_pspoll)) {
--		wiphy_warn(priv->hw->wiphy, "Malformed SDU rx'ed. Size is lesser than IEEE header.\n");
--		goto drop;
--	}
--
- 	if (ieee80211_is_pspoll(frame->frame_control))
- 		if (cw1200_handle_pspoll(priv, skb))
- 			goto drop;
+ 		bincmd = le32_to_cpu(fwh->dnldcmd);
+ 		blksize = le32_to_cpu(fwh->datalength);
++		if (blksize > totlen - len - sizeof(*fwh))
++			break;
++
+ 		switch (bincmd) {
+ 		case FW_HAS_DATA_TO_RECV:
+ 			offset = sizeof(struct fwheader) + blksize;
 
 base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
 -- 
