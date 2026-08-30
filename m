@@ -1,40 +1,38 @@
-Received: from mail.berlin.ccc.de (mail.berlin.ccc.de [195.160.173.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39463B0AD7
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 13:10:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.160.173.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6473B47F7;
+	Sun, 30 Aug 2026 13:10:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788095410; cv=none; b=LRHIjrhMTJcAt9i1KnbOePSDHQXWwNzUS21gSr1xyoUiV9tRzaVUNlc9a5bsLZLVOxniUA7LDXWruovXzVTY02xXcEiOuBTWloh9L1FUrUp6SPTYKGQ+cWhlJ1bZ1m6ZA778pNFMDYoBLdSjZloKPrNk35eG2ahLQ2N4eFSLYN8=
+	t=1788095461; cv=none; b=LiDTrl9PPQaDhWBGhto4p581nawbvQAVn0dHMlFcYRDTLUfjSL1M2FI1zWaNVFZptQmn54kB7HcNUOvkO7TRaccdWmXWa0m6VyUs5lNne9opjIgbMwFPlfbuCZc3H9DQ/z4cLlBEGV82VdO90O23L+Wgtsw1/cbhEajwH95rK0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788095410; c=relaxed/simple;
-	bh=mhkgHT9iV0YRYwCXEwrxtH8mOLWWVASGFkhqksnLN0A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FmvaARsBOzf+ThegE3mB+T0GkbuwEOVUguuaG0XbJojmNnF597Q9tIkhO+Zz1t1xnII3XDhEJ2VYt9IeK4SDdnOpULYyTZMUOH6UaPE2gWXpa6n3+mjZhTOksTJf3QvRbxy0AtWwtzyQop1EBhqMdIa32wmnUUp3apK9AsS1nyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=berlin.ccc.de; spf=pass smtp.mailfrom=berlin.ccc.de; dkim=pass (2048-bit key) header.d=berlin.ccc.de header.i=@berlin.ccc.de header.b=J43j21qR; arc=none smtp.client-ip=195.160.173.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=berlin.ccc.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=berlin.ccc.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=berlin.ccc.de header.i=@berlin.ccc.de header.b="J43j21qR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed; d=berlin.ccc.de; h=from:to
-	:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=default; bh=mhkgHT9iV0YRYwCXEwrxtH
-	8mOLWWVASGFkhqksnLN0A=; b=J43j21qRUIiYM/mHoNuW558DeXxS39h7Wt1b4r
-	9hn4TN+ogDnxducQdVI2PYp3QpZKvDRyJ8JBRrxDI5Eo0u80xraqUWvOP0eyQ4LY
-	SqfBSiddQ9HNCHZHwpIrGLrpAGIga4UncJU1WXGbdgZBRWMqTKSdtoFEmpmIT1N0
-	aZ0TyNLak040ZIVKKiXOKjTdO/R0SYMEz04ev8RYgxNm5MiwDowpXj6JENJBUy6p
-	2ByHNHWVQfWcYhZDBH7+VEzjhV7XMCRbo6zF64aMjJUsusXFGzAxxs1QWvhr5z7X
-	IxZJlsSfsIN8qYnK4mKbqvUkBVDHmbGevVTtVakDVUjF4PEg==
-Received: (qmail 43146 invoked from network); 30 Aug 2026 13:03:23 -0000
-Received: from mail.berlin.ccc.de (HELO mail.berlin.ccc.de) (aprl@berlin.ccc.de)
-  by mail.berlin.ccc.de with SMTP; 30 Aug 2026 13:03:23 -0000
-From: April John <aprl@berlin.ccc.de>
-To: linux-wireless@vger.kernel.org
-Cc: miriam.rachel.korenblit@intel.com,
-	April John <aprl@acab.dev>
-Subject: [PATCH 1/2] wifi: iwlwifi: mld: add KUnit tests for TLC rate helpers
-Date: Sun, 30 Aug 2026 15:03:22 +0200
-Message-ID: <20260830130323.187435-1-aprl@berlin.ccc.de>
-X-Mailer: git-send-email 2.53.0
+	s=arc-20240116; t=1788095461; c=relaxed/simple;
+	bh=X4r92/t6pk8o6AWocdvpZdh0ZxRn0z8KXqjbM/EwlPw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pK+A4bUYi4oulIePgBw8rusw4FNyNacsdj8TLds3XJlwiFPaAeSo1rdeAi52TEZDHkVB9xkAoumAf0h7dy46tarP2zZCmj2jWJFc5kvMMVAfTesHtansRTXom0QyGkN+fZK/3vI6zEq9UYALJ1vJmh9Ar/OCRE+pOeGzD7TPXoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-03 (Coremail) with SMTP id rQCowACnrjzbK5Rq7N+aBg--.43594S2;
+	Sun, 30 Aug 2026 21:10:52 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH] wifi: mt76: mt7615: validate MCU response lengths
+Date: Sun, 30 Aug 2026 21:10:49 +0800
+Message-ID: <20260830131049.2097-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -42,234 +40,89 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowACnrjzbK5Rq7N+aBg--.43594S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zry7CryUJw47uF18Jry5urg_yoW5JFWxpF
+	WjgFyayr4DJrsFga10vw1ku3yaq3s3tFyaqa4DW3s5J3s5C3WrCF4F9a4Fvr1rJFZ8Cr1r
+	Jw4qqrsxuFZ0q3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9I14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
+	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
+	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r
+	4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
+	6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJb
+	IYCTnIWIevJa73UjIFyTuYvjfU5dgADUUUU
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-From: April John <aprl@acab.dev>
+mt7615_mcu_parse_response() reads the common response header before
+checking its size and then consumes command-specific fields after unchecked
+skb_pull() calls. A short firmware response can therefore be read beyond
+its current extent.
 
-Add tests for iwl_mld_get_highest_fw_mcs() covering the 2-bit VHT
-MCS field extraction for different NSS values, and for
-iwl_mld_get_eht_max_nss() covering the min() of the peer RX and own
-TX NSS capabilities.
+Validate the common header and each command-specific payload before reading
+it.
 
-Signed-off-by: April John <aprl@acab.dev>
+Fixes: 0e6a29e477f3 ("mt76: mt7615: add support to read temperature from mcu")
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
 ---
- .../wireless/intel/iwlwifi/mld/tests/Makefile |   1 +
- .../wireless/intel/iwlwifi/mld/tests/tlc.c    | 138 ++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mld/tlc.c  |   6 +-
- drivers/net/wireless/intel/iwlwifi/mld/tlc.h  |   6 +
- 4 files changed, 149 insertions(+), 2 deletions(-)
- create mode 100644 drivers/net/wireless/intel/iwlwifi/mld/tests/tlc.c
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tests/Makefile b/drivers/net/wireless/intel/iwlwifi/mld/tests/Makefile
-index efa61638b8ee..2af1fb838520 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tests/Makefile
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tests/Makefile
-@@ -1,6 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- iwlmld-tests-y += module.o hcmd.o utils.o link.o rx.o agg.o link-selection.o
- iwlmld-tests-y += chan_load_thresh.o
-+iwlmld-tests-y += tlc.o
- 
- ccflags-y += -I$(src)/../
- obj-$(CONFIG_IWLWIFI_KUNIT_TESTS) += iwlmld-tests.o
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tests/tlc.c b/drivers/net/wireless/intel/iwlwifi/mld/tests/tlc.c
-new file mode 100644
-index 000000000000..704a1bb1a5ea
---- /dev/null
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tests/tlc.c
-@@ -0,0 +1,138 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/*
-+ * KUnit tests for TLC rate-selection helper functions
-+ *
-+ * Copyright (C) 2026 Intel Corporation
-+ */
-+#include <kunit/test.h>
-+
-+#include "tlc.h"
-+
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-+
-+struct highest_fw_mcs_case {
-+	const char *desc;
-+	int nss;
-+	u16 rx_mcs_map;
-+	int expected_mcs;
-+};
-+
-+static const struct highest_fw_mcs_case highest_fw_mcs_cases[] = {
-+	{
-+		.desc = "NSS 1 supports MCS 0-7",
-+		.nss = 1,
-+		.rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_7,
-+		.expected_mcs = IWL_TLC_MNG_HT_RATE_MCS7,
-+	},
-+	{
-+		.desc = "NSS 1 supports MCS 0-8",
-+		.nss = 1,
-+		.rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_8,
-+		.expected_mcs = IWL_TLC_MNG_HT_RATE_MCS8,
-+	},
-+	{
-+		.desc = "NSS 1 supports MCS 0-9",
-+		.nss = 1,
-+		.rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9,
-+		.expected_mcs = IWL_TLC_MNG_HT_RATE_MCS9,
-+	},
-+	{
-+		.desc = "NSS 2 supports MCS 0-9",
-+		.nss = 2,
-+		.rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_9 << 2,
-+		.expected_mcs = IWL_TLC_MNG_HT_RATE_MCS9,
-+	},
-+	{
-+		.desc = "NSS 4 supports MCS 0-8",
-+		.nss = 4,
-+		.rx_mcs_map = IEEE80211_VHT_MCS_SUPPORT_0_8 << 6,
-+		.expected_mcs = IWL_TLC_MNG_HT_RATE_MCS8,
-+	},
-+};
-+
-+KUNIT_ARRAY_PARAM_DESC(highest_fw_mcs_cases, highest_fw_mcs_cases, desc);
-+
-+static void test_highest_fw_mcs(struct kunit *test)
-+{
-+	const struct highest_fw_mcs_case *tc = test->param_value;
-+	struct ieee80211_sta_vht_cap vht_cap = {
-+		.vht_mcs.rx_mcs_map = cpu_to_le16(tc->rx_mcs_map),
-+	};
-+
-+	KUNIT_EXPECT_EQ(test, tc->expected_mcs,
-+			iwl_mld_get_highest_fw_mcs(&vht_cap, tc->nss));
-+}
-+
-+static struct kunit_case highest_fw_mcs_test_cases[] = {
-+	KUNIT_CASE_PARAM(test_highest_fw_mcs, highest_fw_mcs_cases_gen_params),
-+	{},
-+};
-+
-+static struct kunit_suite highest_fw_mcs_tests = {
-+	.name = "iwl_mld_highest_fw_mcs_tests",
-+	.test_cases = highest_fw_mcs_test_cases,
-+};
-+
-+kunit_test_suite(highest_fw_mcs_tests);
-+
-+struct eht_max_nss_case {
-+	const char *desc;
-+	u8 rx_nss;
-+	u8 tx_nss;
-+	u8 expected_nss;
-+};
-+
-+static const struct eht_max_nss_case eht_max_nss_cases[] = {
-+	{
-+		.desc = "RX limited",
-+		.rx_nss = 0x02,
-+		.tx_nss = 0x80,
-+		.expected_nss = 2,
-+	},
-+	{
-+		.desc = "TX limited",
-+		.rx_nss = 0x0f,
-+		.tx_nss = 0x30,
-+		.expected_nss = 3,
-+	},
-+	{
-+		.desc = "Equal",
-+		.rx_nss = 0x05,
-+		.tx_nss = 0x50,
-+		.expected_nss = 5,
-+	},
-+	{
-+		.desc = "Both zero",
-+		.rx_nss = 0x00,
-+		.tx_nss = 0x00,
-+		.expected_nss = 0,
-+	},
-+	{
-+		.desc = "Both max",
-+		.rx_nss = 0x0f,
-+		.tx_nss = 0xf0,
-+		.expected_nss = 15,
-+	},
-+};
-+
-+KUNIT_ARRAY_PARAM_DESC(eht_max_nss_cases, eht_max_nss_cases, desc);
-+
-+static void test_eht_max_nss(struct kunit *test)
-+{
-+	const struct eht_max_nss_case *tc = test->param_value;
-+
-+	KUNIT_EXPECT_EQ(test, tc->expected_nss,
-+			iwl_mld_get_eht_max_nss(tc->rx_nss, tc->tx_nss));
-+}
-+
-+static struct kunit_case eht_max_nss_test_cases[] = {
-+	KUNIT_CASE_PARAM(test_eht_max_nss, eht_max_nss_cases_gen_params),
-+	{},
-+};
-+
-+static struct kunit_suite eht_max_nss_tests = {
-+	.name = "iwl_mld_eht_max_nss_tests",
-+	.test_cases = eht_max_nss_test_cases,
-+};
-+
-+kunit_test_suite(eht_max_nss_tests);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-index b6c2fa3664cb..72ddb788ad3e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tlc.c
-@@ -161,7 +161,7 @@ static u8 iwl_mld_get_fw_sgi(struct iwl_mld_tlc_sta_capa *capa)
- 	return sgi_chwidths;
- }
- 
--static int
-+VISIBLE_IF_IWLWIFI_KUNIT int
- iwl_mld_get_highest_fw_mcs(const struct ieee80211_sta_vht_cap *vht_cap,
- 			   int nss)
- {
-@@ -183,6 +183,7 @@ iwl_mld_get_highest_fw_mcs(const struct ieee80211_sta_vht_cap *vht_cap,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_IF_IWLWIFI_KUNIT(iwl_mld_get_highest_fw_mcs);
- 
- static void
- iwl_mld_fill_vht_rates(struct iwl_mld_tlc_sta_capa *capa,
-@@ -316,7 +317,7 @@ iwl_mld_get_eht_mcs_of_bw(enum IWL_TLC_MCS_PER_BW bw,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index ff57ede87f717..084949dd3e94e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -143,18 +143,26 @@ int mt7615_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 			cmd, seq);
+ 		return -ETIMEDOUT;
  	}
- }
++	if (skb->len < sizeof(*rxd))
++		return -EMSGSIZE;
  
--static u8 iwl_mld_get_eht_max_nss(u8 rx_nss, u8 tx_nss)
-+VISIBLE_IF_IWLWIFI_KUNIT u8 iwl_mld_get_eht_max_nss(u8 rx_nss, u8 tx_nss)
- {
- 	u8 tx = u8_get_bits(tx_nss, IEEE80211_EHT_MCS_NSS_TX);
- 	u8 rx = u8_get_bits(rx_nss, IEEE80211_EHT_MCS_NSS_RX);
-@@ -325,6 +326,7 @@ static u8 iwl_mld_get_eht_max_nss(u8 rx_nss, u8 tx_nss)
- 	 */
- 	return min(tx, rx);
- }
-+EXPORT_SYMBOL_IF_IWLWIFI_KUNIT(iwl_mld_get_eht_max_nss);
+ 	rxd = (struct mt7615_mcu_rxd *)skb->data;
+ 	if (seq != rxd->seq)
+ 		return -EAGAIN;
  
- #define MAX_NSS_MCS(mcs_num, rx, tx) \
- 	iwl_mld_get_eht_max_nss((rx)->rx_tx_mcs ##mcs_num## _max_nss, \
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tlc.h b/drivers/net/wireless/intel/iwlwifi/mld/tlc.h
-index c7ff209c9ab6..269d0f2a61ef 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/tlc.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/tlc.h
-@@ -23,4 +23,10 @@ int iwl_mld_send_tlc_dhc(struct iwl_mld *mld, u8 sta_id, u32 type, u32 data);
- void iwl_mld_tlc_update_phy(struct iwl_mld *mld, struct ieee80211_vif *vif,
- 			    struct ieee80211_bss_conf *link_conf);
+ 	if (cmd == MCU_CMD(PATCH_SEM_CONTROL)) {
++		if (skb->len < sizeof(*rxd) - 4 + sizeof(skb->data[0]))
++			return -EMSGSIZE;
+ 		skb_pull(skb, sizeof(*rxd) - 4);
+ 		ret = *skb->data;
+ 	} else if (cmd == MCU_EXT_CMD(THERMAL_CTRL)) {
++		if (skb->len < sizeof(*rxd) + sizeof(__le32))
++			return -EMSGSIZE;
+ 		skb_pull(skb, sizeof(*rxd));
+ 		ret = le32_to_cpu(*(__le32 *)skb->data);
+ 	} else if (cmd == MCU_EXT_QUERY(RF_REG_ACCESS)) {
++		if (skb->len < sizeof(*rxd) + 8 + sizeof(__le32))
++			return -EMSGSIZE;
+ 		skb_pull(skb, sizeof(*rxd));
+ 		ret = le32_to_cpu(*(__le32 *)&skb->data[8]);
+ 	} else if (cmd == MCU_UNI_CMD(DEV_INFO_UPDATE) ||
+@@ -165,12 +173,16 @@ int mt7615_mcu_parse_response(struct mt76_dev *mdev, int cmd,
+ 		   cmd == MCU_UNI_CMD(SUSPEND)) {
+ 		struct mt76_connac_mcu_uni_event *event;
  
-+#if IS_ENABLED(CONFIG_IWLWIFI_KUNIT_TESTS)
-+int iwl_mld_get_highest_fw_mcs(const struct ieee80211_sta_vht_cap *vht_cap,
-+			       int nss);
-+u8 iwl_mld_get_eht_max_nss(u8 rx_nss, u8 tx_nss);
-+#endif
-+
- #endif /* __iwl_mld_tlc_h__ */
++		if (skb->len < sizeof(*rxd) + sizeof(*event))
++			return -EMSGSIZE;
+ 		skb_pull(skb, sizeof(*rxd));
+ 		event = (struct mt76_connac_mcu_uni_event *)skb->data;
+ 		ret = le32_to_cpu(event->status);
+ 	} else if (cmd == MCU_CE_QUERY(REG_READ)) {
+ 		struct mt76_connac_mcu_reg_event *event;
+ 
++		if (skb->len < sizeof(*rxd) + sizeof(*event))
++			return -EMSGSIZE;
+ 		skb_pull(skb, sizeof(*rxd));
+ 		event = (struct mt76_connac_mcu_reg_event *)skb->data;
+ 		ret = (int)le32_to_cpu(event->val);
 
-base-commit: 4a2610a5a9fcf77eaad82bb030ec77ec5e381db8
+base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
 -- 
-2.53.0
+2.50.1
 
