@@ -1,113 +1,217 @@
-Received: from enxio.de (enxio.de [91.210.227.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 322F125A321
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 10:43:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.210.227.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A037D28686;
+	Sun, 30 Aug 2026 12:37:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788086589; cv=none; b=cCpOtC8OX17HEjSMbRv0SDldj2ZFVR5RvVYMVnTxcSVpTM+23bH+IpXxTmsolCmfsRxWtlB9hzFN73SeimOF8E3BInnmVkeiLf3dwLSvsobBRYSj6oDe/FSpVXWhr5AzYGKphRoEFZuC4lwF8XSgSVZ9AfAmnMLMp4tDcRiC960=
+	t=1788093464; cv=none; b=jngDOlIHeMB0fxclMyNLAqOB7OLACpQQ4osbxx8N67zJrg8B86lwKJJdFu+llO5yogI7liR3ox/DLoKrSfnatAnsS8l6R9zNH/zmpgVuo778vLQ8Z8XrgelHLZsdG0GG1nRocqhLl/kEzpbzWR7InZSfmAQiYNOPh1QV8mJLx0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788086589; c=relaxed/simple;
-	bh=cQk0OPgvZsbNcuW0kyCvd4bbvbaJ+/nG6CHx2Y8fOJQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Zlvlr544Q0WFj1uQZbIkwgWHGkzdBMs0yJinxzXXgF5EGBoAz2jz6P/Py5lVqRzm3L0xFH2yPKZXXTeY5gsy6cwo84luVQo/rlJc5Yuj0QT3q6OfkuVxTJ9Vlw8hXe4pXuRgccU1HWDhDqI7RIVnwm0vorcAbW81XMEfEZCycY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de; spf=pass smtp.mailfrom=enxio.de; arc=none smtp.client-ip=91.210.227.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=enxio.de
-Received: from [95.157.48.181] (helo=roja.toh.cx)
-	by enxio.de with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-	(Exim 4.98.2)
-	(envelope-from <anthrop@enxio.de>)
-	id 1x0d06-0000000854c-18iz;
-	Sun, 30 Aug 2026 12:42:58 +0200
-Received: from localhost ([127.0.0.1])
-	by roja.toh.cx with esmtp (Exim 4.94.2)
-	(envelope-from <anthrop@enxio.de>)
-	id 1x0d05-002BfQ-M0; Sun, 30 Aug 2026 12:42:57 +0200
-From: Thomas Hilber <anthrop@enxio.de>
-To: Devin Wittmayer <lucid_duck@justthetip.ca>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com,
+	s=arc-20240116; t=1788093464; c=relaxed/simple;
+	bh=Z7CMZS7Iuq7n7DX1pXPlGhYcGCqs9OOi6V69DXiOe5c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kQA6vka9np1Y/9QtE14T262UYex4p577Tkb48zUe72WnF1z59SCAlx8FvbJzP03XmuFLJigomxnDy6H0gaIuxj+6MSZlQLjS+j2luixurJOJC2Ad7wGP0hvFhXyhk2ZK34lOT9E/XAM7U6RmegnA8ulDnCoSOCQNv7gpQBT/4LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost.localdomain (unknown [111.196.241.250])
+	by APP-03 (Coremail) with SMTP id rQCowAAHDDoCJJRq53aaBg--.16982S2;
+	Sun, 30 Aug 2026 20:37:22 +0800 (CST)
+From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Lorenzo Bianconi <lorenzo@kernel.org>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Shayne Chen <shayne.chen@mediatek.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: Re: AP drops STA data frames for ~130-170ms after 4-way handshake
- completes (ath9k_htc, mt76; not brcmfmac)
-Date: Sun, 30 Aug 2026 12:42:36 +0200
-Message-ID: <20260830104236.521389@enxio.de>
-In-Reply-To: <20260829232532.29622-1-lucid_duck@justthetip.ca>
-References: <20260827074442.826644@enxio.de>
-	<20260829232532.29622-1-lucid_duck@justthetip.ca>
+Subject: [PATCH] wifi: mt76: mt7921: validate capability TLV extents
+Date: Sun, 30 Aug 2026 20:37:18 +0800
+Message-ID: <20260830123720.94876-1-pengpeng@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowAAHDDoCJJRq53aaBg--.16982S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxZr1kZr4kZw1UCr43CF47XFb_yoWrGry8pF
+	WYgrW5G3yUJrsFkwn5Arsxua98tas7trW3Ka45Z3WFq3sFyr18CFsaqFy0vrWak3ykGryf
+	ZFWvv3Z5WrnFqaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1I6r4UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: pshqw1xhqjqxpvfd2hldfou0/
 
-On Sat, 2026-08-29 at 16:25 -0700, Devin Wittmayer wrote:
-> Your Atheros access point will skip hardware encryption if you ask it
-> to, with the nohwcrypt parameter.
->
-> If the gap goes with it, that is your answer for the price of a reload.
+The NIC capability walker can accept truncated generic TLV headers or
+payloads, and its type-specific consumers read fixed payloads without
+proving that the current TLV contains those bytes.
 
-It goes with it, and it takes the whole effect with it.
+Reject malformed generic extents and require every known capability type
+to provide its minimum payload before parsing or copying it.
 
-AP4 from my table (AR9271, ath9k_htc, kernel 6.18.39). Same station, same
-hostapd, same channel, same bridge, no other station associated; the two
-arms were alternated and differ only in the module parameter:
+Fixes: dab35009fc1c ("wifi: mt76: mt7921: move connac nic capability handling to mt7921")
+Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+---
+ drivers/net/wireless/mediatek/mt76/mt7921/mcu.c | 89 ++++++++++++++++---------
+ 1 file changed, 59 insertions(+), 30 deletions(-)
 
-  ath9k_htc         n     connect attempts   >1 attempt   TCP connect
-  --------------   ---    ----------------   ----------   -----------
-  nohwcrypt=0      216          5.20            97%         134.9 ms
-  nohwcrypt=1      302          1.06             3%           4.1 ms
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+index a118a301564c8..8e6be9f63659a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7921/mcu.c
+@@ -515,21 +515,38 @@ static int mt7921_load_clc(struct mt792x_dev *dev, const char *fw_name)
+ 	return ret;
+ }
+ 
++struct mt7921_tx_resource {
++	__le32 version;
++	__le32 pse_data_quota;
++	__le32 pse_mcu_quota;
++	__le32 ple_data_quota;
++	__le32 ple_mcu_quota;
++	__le16 pse_page_size;
++	__le16 ple_page_size;
++	u8 pp_padding;
++	u8 pad[3];
++} __packed;
++
++struct mt7921_phy_cap {
++	u8 ht;
++	u8 vht;
++	u8 _5g;
++	u8 max_bw;
++	u8 nss;
++	u8 dbdc;
++	u8 tx_ldpc;
++	u8 rx_ldpc;
++	u8 tx_stbc;
++	u8 rx_stbc;
++	u8 hw_path;
++	u8 he;
++} __packed;
++
+ static void mt7921_mcu_parse_tx_resource(struct mt76_dev *dev,
+ 					 struct sk_buff *skb)
+ {
+ 	struct mt76_sdio *sdio = &dev->sdio;
+-	struct mt7921_tx_resource {
+-		__le32 version;
+-		__le32 pse_data_quota;
+-		__le32 pse_mcu_quota;
+-		__le32 ple_data_quota;
+-		__le32 ple_mcu_quota;
+-		__le16 pse_page_size;
+-		__le16 ple_page_size;
+-		u8 pp_padding;
+-		u8 pad[3];
+-	} __packed * tx_res;
++	struct mt7921_tx_resource *tx_res;
+ 
+ 	tx_res = (struct mt7921_tx_resource *)skb->data;
+ 	sdio->sched.pse_data_quota = le32_to_cpu(tx_res->pse_data_quota);
+@@ -545,20 +562,7 @@ static void mt7921_mcu_parse_tx_resource(struct mt76_dev *dev,
+ static void mt7921_mcu_parse_phy_cap(struct mt76_dev *dev,
+ 				     struct sk_buff *skb)
+ {
+-	struct mt7921_phy_cap {
+-		u8 ht;
+-		u8 vht;
+-		u8 _5g;
+-		u8 max_bw;
+-		u8 nss;
+-		u8 dbdc;
+-		u8 tx_ldpc;
+-		u8 rx_ldpc;
+-		u8 tx_stbc;
+-		u8 rx_stbc;
+-		u8 hw_path;
+-		u8 he;
+-	} __packed * cap;
++	struct mt7921_phy_cap *cap;
+ 
+ 	enum {
+ 		WF0_24G,
+@@ -603,31 +607,56 @@ static int mt7921_mcu_get_nic_capability(struct mt792x_phy *mphy)
+ 		} __packed * tlv = (struct tlv_hdr *)skb->data;
+ 		int len;
+ 
+-		if (skb->len < sizeof(*tlv))
+-			break;
++		if (skb->len < sizeof(*tlv)) {
++			ret = -EINVAL;
++			goto out;
++		}
+ 
+ 		skb_pull(skb, sizeof(*tlv));
+ 
+ 		len = le32_to_cpu(tlv->len);
+-		if (skb->len < len)
+-			break;
++		if (skb->len < len) {
++			ret = -EINVAL;
++			goto out;
++		}
+ 
+ 		switch (le32_to_cpu(tlv->type)) {
+ 		case MT_NIC_CAP_6G:
++			if (len < sizeof(skb->data[0])) {
++				ret = -EINVAL;
++				goto out;
++			}
+ 			phy->cap.has_6ghz = skb->data[0];
+ 			break;
+ 		case MT_NIC_CAP_MAC_ADDR:
++			if (len < ETH_ALEN) {
++				ret = -EINVAL;
++				goto out;
++			}
+ 			memcpy(phy->macaddr, (void *)skb->data, ETH_ALEN);
+ 			break;
+ 		case MT_NIC_CAP_PHY:
++			if (len < sizeof(struct mt7921_phy_cap)) {
++				ret = -EINVAL;
++				goto out;
++			}
+ 			mt7921_mcu_parse_phy_cap(phy->dev, skb);
+ 			break;
+ 		case MT_NIC_CAP_TX_RESOURCE:
+-			if (mt76_is_sdio(phy->dev))
++			if (mt76_is_sdio(phy->dev)) {
++				if (len < sizeof(struct mt7921_tx_resource)) {
++					ret = -EINVAL;
++					goto out;
++				}
+ 				mt7921_mcu_parse_tx_resource(phy->dev,
+ 							     skb);
++			}
+ 			break;
+ 		case MT_NIC_CAP_CHIP_CAP:
++			if (len < sizeof(mphy->chip_cap)) {
++				ret = -EINVAL;
++				goto out;
++			}
+ 			memcpy(&mphy->chip_cap, (void *)skb->data, sizeof(u64));
+ 			break;
+ 		default:
 
-For reference, the AP4 row of my original mail was 105 cycles at 5.04
-attempts and 134 ms, taken 11 days earlier. The hardware-crypto arm above
-reproduces it to within noise, which is the best evidence I have that
-nothing else about the bench moved in between.
+base-commit: 08dbfad3f5040f5bdb6c529da20d6d4e81fefd72
+-- 
+2.50.1
 
-Attempt distribution, since the shape matters more than the mean:
-
-  nohwcrypt=0    1:6   2:27  3:24  4:17  5:71  6:29  7:13  8:7  ... 16:1
-  nohwcrypt=1    1:292 2:6   3:1   4:2   5:1
-
-Under software crypto 292 of 302 associations placed their first frame
-successfully. Under hardware crypto 6 of 216 did.
-
-Two caveats, both of which cut against the result rather than for it.
-Cycles where the station never got a reply at all are excluded above: 33 of
-249 hardware-crypto cycles and 22 of 324 software-crypto cycles. Dropping
-the hardware side's worst cycles understates the gap. And a late arm in the
-session degraded for unrelated local reasons and was discarded whole rather
-than pooled.
-
-One corroboration measured at the AP, which does not depend on the station's
-TCP target at all - completed four-way handshakes in fixed 120s windows,
-with the station associating and deep-sleeping in a loop throughout:
-
-  nohwcrypt=0     64, 65 associations per 120s
-  nohwcrypt=1     87, 86 associations per 120s
-
-About a third more cycles in the same wall time, which is what you would
-expect if every cycle stops losing ~130ms to the dead window.
-
-So the split in my table is not SoftMAC vs FullMAC. It is where the key
-lives, exactly as you said - the same driver, on the same silicon, in the
-same box, lands in either column depending on one module parameter.
-Espressif and brcmfmac looked clean because the key is already in the device
-by the time the port opens; ath9k_htc and mt76 look bad because the port
-opens first and the key is still on its way to the chip.
-
-That also fits your reorder-buffer point: with hardware crypto the frames
-are ACKed, so they have been through the reorder window before they are
-discarded, and no hole ever opens.
-
-I have not instrumented the key-install path itself, so I still cannot say
-whether the right fix is to defer authorization until the key is confirmed
-installed, or to buffer rather than drop in that window. Happy to test
-patches, or to run whatever tracing would distinguish those.
-
-Thanks - that was a good call, and a cheap one.
-
-Thomas
