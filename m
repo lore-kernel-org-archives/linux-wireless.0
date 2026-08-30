@@ -1,89 +1,91 @@
-Received: from sg-2-5.ptr.blmpb.com (sg-2-5.ptr.blmpb.com [71.18.227.5])
+Received: from sg-2-3.ptr.blmpb.com (sg-2-3.ptr.blmpb.com [71.18.227.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D61B2EEE7B
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 18:42:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=71.18.227.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE3CD244694
+	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 18:42:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=71.18.227.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788115346; cv=none; b=XT8ENLThCS8oRZQQMG4zHehpsUjkqTvX6MNe81SJvvfGclH0V2aWDybTGtUPDYK2E4T6ew+X5cAOHpXv1NOb81ztAH8eBqRswAPt4sAJrdzfYk8Bmp+jUuXast60h+2CQE5PimLYs3CYT5ZoizxsHitWz0q0QN8FdSfZKGQD0/4=
+	t=1788115350; cv=none; b=Gv7KQXlWZ6L0i6T73inOu6PDACyjWNsZR0mxuGe6vSR1Kj5wotXDTwNM9Zc2gcO8/rt604vVIuVo3MB0pQuuG3Mp+pqhtn0hDcKIt4JiD7SI6hnIFjkB+0/RP1CJVBIjwF9+3bZwJqFpHekn13mLSUt+gv6ZB5K0+Ju0VWwC0G4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788115346; c=relaxed/simple;
-	bh=CL0/kY3bZfJVBbAxvDY0/bQoDkW/j7WSp2TzqY/TE7I=;
-	h=Mime-Version:In-Reply-To:To:Subject:Message-Id:References:
-	 Content-Type:Date:Cc:From; b=X+26UUwA+h1tl+mL6LzWHxaihPw1WrFefcZzm33Y1Q+/iHXkqk0Z0gpEVcgZGfSnLEGUHsjIwQEnt5l8Dvwa0PwfX5Zpv8XsnYE2t+ged8a2h103mafa5LgiKTEEyVUa6xx3Gj7IZnEyftBOtriXB4eazqSvQ3b2ri805feYvoc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc; spf=pass smtp.mailfrom=cherr.cc; dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b=Mx2foPvK; arc=none smtp.client-ip=71.18.227.5
+	s=arc-20240116; t=1788115350; c=relaxed/simple;
+	bh=SrF4lGDuqb18AiYQK+XAitOgl2PdPBmmpoICN3rX6cs=;
+	h=To:Cc:Message-Id:Subject:Content-Type:From:Mime-Version:Date; b=mUWmyPc1q0RZIw56embJM9PeP2VvJkz0+1DDAfPfBbsfwujbBfai3e40cI4mfjX/zb0MCT+NlgMVPVq2y1rOBPw5ztoS4jrhKsQHJ7fL2dl/TxUMbmEChqT+dLVPM8buF6G9FP4p9Onpnh7t89ZMcmhsnxCE+35Bej+s9GuNV3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc; spf=pass smtp.mailfrom=cherr.cc; dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b=Mdb51yEm; arc=none smtp.client-ip=71.18.227.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cherr.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b="Mx2foPvK"
+	dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b="Mdb51yEm"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=feishu2604220257; d=cherr.cc; t=1788115338; h=from:subject:
+ s=feishu2604220257; d=cherr.cc; t=1788115336; h=from:subject:
  mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
  mime-version:in-reply-to:message-id;
- bh=7KRhxGIVwdrzN+rJYLkuSNUS8MiHyIi4c/SKannXfOI=;
- b=Mx2foPvKWAwGNZtoxnw0/HO9s4PNHmiDi4hNueRtO8nncKT204MTnh+BJXqjr0WPfjT3Cq
- 3v6xeSetoaHr9zmhdsZYuQ8baTnsHfbaALM3uZQFICyfhU9rXFc8Fo5YI2XNtWtkQyXHVb
- a8wagT7WSobEUjNeieObXfhaqdAj0QDoCVL6eT+yrK3Kxul+C1kEr/wkPMTVhbhwRSVtOo
- thlET6oGXcIceqVGgSI3fkdvEWChk4bkSKdPZujeMG84P0uRL7MzxczvPQv3EJ2DZ+Pn12
- BiR0C+FkgtlytGJiY4mERAlsshoMP4Eg9P/Rk4ykpK307sgrUd184Ok3dY+8gw==
+ bh=bB01TT1YdOFmumjs5xBfnT0rs/gQGK8/OqDRpsjfOIg=;
+ b=Mdb51yEm8oqtUuCpxG0dp3bZ+Slgpzbj1n/xdumMF5hXj5kVtZO0ScYxEs+bJKAunMNZ6N
+ 0PGGJOIJOktrJb81/xMDud7HvozydfFTQBe0lmBW5OxdWukUHi3PU8mIRA5wzKCtpYgsVG
+ l77W4DDbOm5ZOewrWPQ+Y3qyY8ZdEcaheox4mvThdb1zSWlLTjIvKavRPAltmUzf5kCWBc
+ XS+FUQN1Txy4/a3/2z26i8/LoIaT2zuGK0JjjF2M+TR93s5Nezr644+YRZmRJ54jtT8rul
+ nEzXZzt2sshxVfCWMcaYPJcl7ytEpx0simjhzcqYqHhKZjCZCgu3FH1DB7o4rg==
+To: "Christian Lamparter" <chunkeey@googlemail.com>, 
+	"Michael Wu" <flamingice@sourmilk.net>, 
+	"David S. Miller" <davem@davemloft.net>, 
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<stable@vger.kernel.org>, "Shengzhuo Wei" <me@cherr.cc>, 
+	"Christian Lamparter" <chunkeey@gmail.com>
+Message-Id: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc>
+X-Mailer: b4 0.16.0
+X-Original-From: Shengzhuo Wei <me@cherr.cc>
+X-B4-Tracking: v=1; b=H4sIAIN5lGoC/22NwQrCMBBEf6Xs2ZV0bVP15H9ID2mytQvShqQEp eTfjQVvHt8w82aDyEE4wrXaIHCSKMtcgA4V2MnMD0ZxhYEUaXUmjb5t0DuDyTzFmbXUsRuIL/X YWG1OUIY+8CivXXrvC08S1yW8949Uf9OfrvunSzUqHJylQemuVa2+2YlDOFoLfc75A0enJ8+zA AAA
+Subject: [PATCH v2 0/2] wifi: p54: validate PDA entry data lengths in eeprom parser
+Content-Type: text/plain; charset=UTF-8
+X-Lms-Return-Path: <lba+26a947986+1fe1fb+vger.kernel.org+me@cherr.cc>
+Content-Transfer-Encoding: 7bit
+From: "Shengzhuo Wei" <me@cherr.cc>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-In-Reply-To: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc>
-Received: from [192.168.9.107] ([111.42.148.195]) by smtp.feishu.cn with ESMTPS; Mon, 31 Aug 2026 02:42:16 +0800
-Content-Transfer-Encoding: 7bit
-X-Lms-Return-Path: <lba+26a947989+2cf692+vger.kernel.org+me@cherr.cc>
-To: "Christian Lamparter" <chunkeey@googlemail.com>, 
-	"Michael Wu" <flamingice@sourmilk.net>, 
-	"David S. Miller" <davem@davemloft.net>, 
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 2/2] wifi: p54: require a full exp_if record in PDR_INTERFACE_LIST
-Message-Id: <20260831-p54-pda-validation-v2-2-dae566b388c8@cherr.cc>
-X-Original-From: Shengzhuo Wei <me@cherr.cc>
-References: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc>
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 31 Aug 2026 02:42:13 +0800
-X-Mailer: b4 0.16.0
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<stable@vger.kernel.org>, "Christian Lamparter" <chunkeey@gmail.com>, 
-	"Shengzhuo Wei" <me@cherr.cc>
-From: "Shengzhuo Wei" <me@cherr.cc>
+Date: Mon, 31 Aug 2026 02:42:11 +0800
+Received: from [192.168.9.107] ([111.42.148.195]) by smtp.feishu.cn with ESMTPS; Mon, 31 Aug 2026 02:42:13 +0800
+X-Change-Id: 20260826-p54-pda-validation-7b2e91f4c6a3
 
-The PDR_INTERFACE_LIST loop only checks that the record start is within
-the entry before reading an entire struct exp_if from it. A truncated
-trailing record makes the if_id/variant reads cross the entry boundary
-into the heap beyond the EEPROM buffer (verified with a KASAN
-reproducer of the loop). The variant also feeds the synth front-end
-selection, so this is not only a leak.
+p54_parse_eeprom() walks PDA records supplied in the device EEPROM but
+several handlers consume entry->data without first checking that the
+entry actually carries enough bytes, so a malformed or truncated image
+makes them read past the EEPROM buffer. This series adds the missing
+length checks in two places: the PA calibration curve data and the
+interface-list records. It continues the EEPROM trust-boundary
+hardening of da1b9a55ff11 ("wifi: p54: prevent buffer-overflow in
+p54_rx_eeprom_readback()") and ebd6d37fa94b ("wifi: p54: validate RX
+frame length in p54_rx_eeprom_readback()").
 
-Advance only while a full record still fits in the entry.
+Patch 1 rejects the PA calibration curve entry when the channel and
+points-per-channel counts it advertises do not fit in the entry data,
+the same check p54_convert_output_limits() and p54_convert_db() already
+apply to their counts. Patch 2 advances the interface-list walk only
+while a full struct exp_if record still fits, instead of reading one
+from a trailing partial record.
 
-Fixes: eff1a59c48e3 ("[P54]: add mac80211-based driver for prism54 softmac hardware")
-Cc: stable@vger.kernel.org
-Acked-by: Christian Lamparter <chunkeey@gmail.com>
-Assisted-by: GLM:5.3
-Signed-off-by: Shengzhuo Wei <me@cherr.cc>
 ---
- drivers/net/wireless/intersil/p54/eeprom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changes in v2:
+- move the curve data length checks into p54_convert_rev0() and
+  p54_convert_rev1() (Christian Lamparter)
+- collect Acked-by from Christian for the interface-list patch
+- Link to v1: https://lore.kernel.org/r/20260827-p54-pda-validation-v1-0-bdc2b0675056@cherr.cc
 
-diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
-index 0dc848d77c5e..0475222d54fc 100644
---- a/drivers/net/wireless/intersil/p54/eeprom.c
-+++ b/drivers/net/wireless/intersil/p54/eeprom.c
-@@ -812,7 +812,8 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 			break;
- 		case PDR_INTERFACE_LIST:
- 			tmp = entry->data;
--			while ((u8 *)tmp < entry->data + data_len) {
-+			while ((u8 *)tmp + sizeof(struct exp_if) <=
-+			       entry->data + data_len) {
- 				struct exp_if *exp_if = tmp;
- 				if (exp_if->if_id == cpu_to_le16(IF_ID_ISL39000))
- 					synth = le16_to_cpu(exp_if->variant);
+---
+Shengzhuo Wei (2):
+      wifi: p54: validate curve data length in the calibration curve converters
+      wifi: p54: require a full exp_if record in PDR_INTERFACE_LIST
 
--- 
-2.47.3
+ drivers/net/wireless/intersil/p54/eeprom.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
+---
+base-commit: 66fb95a521110da673090294561844c9f76ebe64
+change-id: 20260826-p54-pda-validation-7b2e91f4c6a3
+
+Best regards,
+--  
+Shengzhuo Wei <me@cherr.cc>
