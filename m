@@ -1,148 +1,81 @@
-Received: from sg-2-3.ptr.blmpb.com (sg-2-3.ptr.blmpb.com [71.18.227.3])
+Received: from mta1.migadu.com (out-88.mta1.migadu.com [95.215.58.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE4BF3016E0
-	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 18:42:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=71.18.227.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91EFF238C2A
+	for <linux-wireless@vger.kernel.org>; Sun, 30 Aug 2026 19:00:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788115350; cv=none; b=ojdiuHBVbV2sb3bHBrzVHRU6oJd7gmo4xdtLtVGlNh3ftVe/VRufr6h6IqYqrDLeqf3Bbwt7Z8vWALquvVSvK5J/rYvd4S8N4DKxKx1yzkgaWQRIZchGLAxesbAnc6+uo6GfvnRdEPbSsnms6oFXhozOh2Gf4/QRPSM+4sDyE4g=
+	t=1788116445; cv=none; b=KOlv2RnLeyC/cxKsbxTWndwT1Y5Pqb52NGRyMWC5S5jBMAOlvVKIbGJDiOIuVo/TpZqulbF6IA6pBN3Z+zeZIyNh4mU7CNbWbjUdeBxr7GVE1SQdh5+OumpX+p98IE1jytE95+sJGr+xXHts9kurYPryHQogk59bqj5T07WF+pk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788115350; c=relaxed/simple;
-	bh=qcWikxX63RDf+q1f319g6Cdqm4MSPds23j+RGAf3Z/Q=;
-	h=Date:Message-Id:To:Content-Type:In-Reply-To:Cc:From:Subject:
-	 Mime-Version:References; b=L88a6QeHy+/kfRZg2Wk9RrO/UnLc4SYmfyFqEj3B5poIYiuMN2CXEGym8X/ZXVhFB9WsKFdkj+jywOuuVjyWrdYaE0TnQbGj0103YtiAHR3MZl3i8XPuyCh5XLV2OjOGx0VXS4LAiQWx56EcHdtHOp90lW2yEWzeGx084QZJN5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc; spf=pass smtp.mailfrom=cherr.cc; dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b=Er4sR+X7; arc=none smtp.client-ip=71.18.227.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cherr.cc
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cherr.cc
+	s=arc-20240116; t=1788116445; c=relaxed/simple;
+	bh=qK6iwww5JrQ3vyns8B4jz2tWg+m13M7aEYKC8BhkdtA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=fMdVYgdCaOW1v5n06BsaYC4CYc9A0LjEonP7cFIbIbIM9ze/UNDntrBqMoLjWjtnM33rM8hdYkTe86hJwPn1IZOVyqrQPsdhMpJGa6unrXCODMs4b+kanrGXuppegYH4lgBo5Bej1E1PZtMRMx7iIFEZd1Esf3CFa33Lcm98WSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=nHTJWVH0; arc=none smtp.client-ip=95.215.58.88
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cherr.cc header.i=@cherr.cc header.b="Er4sR+X7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=feishu2604220257; d=cherr.cc; t=1788115337; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=S2oGoSOjmfoakjBqcCh3/7CaRO1KAtC9csSDQBDkjrM=;
- b=Er4sR+X7V2QMJZOoY8TBjC+DM50q8AuCD3MdouvE5KKkbstSXyKN4hBm9oFXu3KQSLr07o
- AtjyAmQh3tbJYjUagjoVbEpWOiaNX2DtI3lllNuWHANx4OIz5/5cnRtszoJlvSuIwSVklv
- Q5eTWF5EfcPqNvCpwjlvZhqTA8HD2MbevkdEA0y4hFHTMCFP6mPS6rNVH9n1b/LibyuNz/
- g+T8K4l0YMMJID/GUCKKaLqqfTQbfLKArpLWgM5MO/mThA1Xc490RsJkKF6kAFUIPHAk8Q
- ZIUjbwh+SeW6T9+J7pABrbDXXDOw8WMLGoZOEXwGymp067z5M2Qeq0zNPqTOpQ==
-Date: Mon, 31 Aug 2026 02:42:12 +0800
-Message-Id: <20260831-p54-pda-validation-v2-1-dae566b388c8@cherr.cc>
-X-Mailer: b4 0.16.0
-To: "Christian Lamparter" <chunkeey@googlemail.com>, 
-	"Michael Wu" <flamingice@sourmilk.net>, 
-	"David S. Miller" <davem@davemloft.net>, 
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
-Received: from [192.168.9.107] ([111.42.148.195]) by smtp.feishu.cn with ESMTPS; Mon, 31 Aug 2026 02:42:15 +0800
-In-Reply-To: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc>
-X-Original-From: Shengzhuo Wei <me@cherr.cc>
-X-Lms-Return-Path: <lba+26a947987+417126+vger.kernel.org+me@cherr.cc>
-Content-Transfer-Encoding: 7bit
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<stable@vger.kernel.org>, "Shengzhuo Wei" <me@cherr.cc>
-From: "Shengzhuo Wei" <me@cherr.cc>
-Subject: [PATCH v2 1/2] wifi: p54: validate curve data length in the calibration curve converters
+	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="nHTJWVH0"
+X-Envelope-To: linux-wireless@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=qK6iwww5JrQ3vyns8B4jz2tWg+m13M7aEYKC8BhkdtA=;
+ c=simple/simple; d=justthetip.ca;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1788116440; v=1; x=1788721240;
+ b=nHTJWVH0hRAzsqhDdYkhoCiSheiIifO6kul+l6Xy9S1mdpsb94VU/jRXo72+sq9zZKW4SVs+
+ WWDmEgDJ4h7BJGWHqjnO/FsIy9JrXXQNcIV71RIy2W1wmGu4AZrTFLWMru409IuRBG2YpWzeY51
+ RbbisfFoodynsS2OVJsJ8ZrYOsGIVnenpHfYwANA4nTfNF1PbU4ES4Le1+PVpSqiTDHAb+64j36
+ BGwuACiWM/QT56wkbM4R1hzYSpDSBWt4jzWteran2Yvw/XDgRQ6Yv8+3lBiORcMTS2ekA3vKDZr
+ +VW1BhsP/8c4uCW3M8VakmmFe2NUarx2OG75F6v+mwsvA==
+X-Envelope-To: linux-wireless@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 430c9ddc9c3fcc46;
+	Sun, 30 Aug 2026 19:00:30 +0000
+X-Mizu-Trace-ID: 430c9ddc9c3fcc46
+X-Migadu-Flow: FLOW_OUT
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
+To: Thomas Hilber <anthrop@enxio.de>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com,
+	linux-mediatek@lists.infradead.org
+Subject: Re: AP drops STA data frames for ~130-170ms after 4-way handshake
+Date: Sun, 30 Aug 2026 12:00:28 -0700
+Message-ID: <20260830190028.20209-1-lucid_duck@justthetip.ca>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20260830104236.521389@enxio.de>
+References: <20260827074442.826644@enxio.de> <20260829232532.29622-1-lucid_duck@justthetip.ca> <20260830104236.521389@enxio.de>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260831-p54-pda-validation-v2-0-dae566b388c8@cherr.cc>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-p54_convert_rev0() and p54_convert_rev1() read calibration curve
-data from the device-supplied EEPROM entry using channel and
-points-per-channel counts taken verbatim from that same entry, so
-an entry that declares more data than it carries drives an
-out-of-bounds read past the EEPROM buffer (verified with a KASAN
-reproducer of the conversion loop). The sibling converters
-p54_convert_output_limits() and p54_convert_db() already validate
-their counts against the entry length; this path was missed.
+On Sun, 2026-08-30 at 12:42 +0200, Thomas Hilber wrote:
+> It goes with it, and it takes the whole effect with it.
 
-Reject the entry when the counts do not fit in the entry data.
+Thanks for running that. Six of 216 against 292 of 302 does not need
+arguing.
 
-Fixes: eff1a59c48e3 ("[P54]: add mac80211-based driver for prism54 softmac hardware")
-Cc: stable@vger.kernel.org
-Assisted-by: GLM:5.3
-Signed-off-by: Shengzhuo Wei <me@cherr.cc>
----
- drivers/net/wireless/intersil/p54/eeprom.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+I have it on an MT7922 built to your AP2 spec: 27 of 95 associations hold
+134 to 189 ms after the handshake, which is your 130 to 170.
 
-diff --git a/drivers/net/wireless/intersil/p54/eeprom.c b/drivers/net/wireless/intersil/p54/eeprom.c
-index 95580921d933..0dc848d77c5e 100644
---- a/drivers/net/wireless/intersil/p54/eeprom.c
-+++ b/drivers/net/wireless/intersil/p54/eeprom.c
-@@ -414,17 +414,22 @@ static int p54_generate_channel_lists(struct ieee80211_hw *dev)
- }
- 
- static int p54_convert_rev0(struct ieee80211_hw *dev,
--			    struct pda_pa_curve_data *curve_data)
-+			    struct pda_pa_curve_data *curve_data, size_t len)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct p54_pa_curve_data_sample *dst;
- 	struct pda_pa_curve_data_sample_rev0 *src;
-+	size_t needed = curve_data->channels *
-+		(sizeof(*src) * curve_data->points_per_channel + 2);
- 	size_t cd_len = sizeof(*curve_data) +
- 		(curve_data->points_per_channel*sizeof(*dst) + 2) *
- 		 curve_data->channels;
- 	unsigned int i, j;
- 	void *source, *target;
- 
-+	if (len < sizeof(*curve_data) + needed)
-+		return -EINVAL;
-+
- 	priv->curve_data = kmalloc(sizeof(*priv->curve_data) + cd_len,
- 				   GFP_KERNEL);
- 	if (!priv->curve_data)
-@@ -466,17 +471,22 @@ static int p54_convert_rev0(struct ieee80211_hw *dev,
- }
- 
- static int p54_convert_rev1(struct ieee80211_hw *dev,
--			    struct pda_pa_curve_data *curve_data)
-+			    struct pda_pa_curve_data *curve_data, size_t len)
- {
- 	struct p54_common *priv = dev->priv;
- 	struct p54_pa_curve_data_sample *dst;
- 	struct pda_pa_curve_data_sample_rev1 *src;
-+	size_t needed = curve_data->channels *
-+		(sizeof(*src) * curve_data->points_per_channel + 3);
- 	size_t cd_len = sizeof(*curve_data) +
- 		(curve_data->points_per_channel*sizeof(*dst) + 2) *
- 		 curve_data->channels;
- 	unsigned int i, j;
- 	void *source, *target;
- 
-+	if (len < sizeof(*curve_data) + needed)
-+		return -EINVAL;
-+
- 	priv->curve_data = kzalloc(cd_len + sizeof(*priv->curve_data),
- 				   GFP_KERNEL);
- 	if (!priv->curve_data)
-@@ -763,6 +773,7 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 		case PDR_PRISM_PA_CAL_CURVE_DATA: {
- 			struct pda_pa_curve_data *curve_data =
- 				(struct pda_pa_curve_data *)entry->data;
-+
- 			if (data_len < sizeof(*curve_data)) {
- 				err = -EINVAL;
- 				goto err;
-@@ -770,10 +781,10 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
- 
- 			switch (curve_data->cal_method_rev) {
- 			case 0:
--				err = p54_convert_rev0(dev, curve_data);
-+				err = p54_convert_rev0(dev, curve_data, data_len);
- 				break;
- 			case 1:
--				err = p54_convert_rev1(dev, curve_data);
-+				err = p54_convert_rev1(dev, curve_data, data_len);
- 				break;
- 			default:
- 				wiphy_err(dev->wiphy,
+They are held, not dropped. On a slow cycle my station's attempts go out
+every 5 ms for 150 ms and none of them reaches the access point's
+interface, until fourteen arrive within sixteen microseconds of each other
+and every one is answered. Across the capture the station retransmitted
+three of 110, so they were arriving all along.
 
--- 
-2.47.3
+A monitor radio says why. Over twenty-five associations, every request to
+open a block acknowledgement session declared a starting sequence number
+of zero, and zero never arrived under any of them: the first frame after
+the request was one, two, three or seven. In fourteen of them the station
+had already sent zero before it asked for the session.
+
+So the reorder window opens on a sequence the station will not send. The
+first slot can never be filled, everything queues behind it, and the
+release timer is what eventually lets go.
+
+Worth a look in your own captures: the starting sequence number in the
+request against the sequence number of the first frame after it.
+
+Devin
