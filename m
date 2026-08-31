@@ -1,43 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5858950EC16;
-	Mon, 31 Aug 2026 13:42:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35BAF510446;
+	Mon, 31 Aug 2026 13:42:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183777; cv=none; b=qKz5i7s4ykvOnOEG2u0O499rVKCnsnzBz9DmbsCBicesDV7wYLtDT9Ge7e0G03xuU1Pr1ZKf9D7D/gdziCyF2MjtQkGp0F629p+qIZOHkoFP+fvz9JmUv0B5K06/yUcIghcStpqFxReH/DRkgx6oUenzuPI4DC0dqHw8VU7DQ0E=
+	t=1788183778; cv=none; b=cr1itFAgOOymiFyE3W76Ybs57QVz3LHHZigw7wYb5fyp4fQaLpmzdUNZRUnLs15Iy84XX0XcgCbnnqXHLRs+D6SWvdHs7GkySVpQV6C0xHTQXQDwgzVHIZbRqA9xGO2+jtVK3l83ajb8V5822J3cm3bjJGZWrWgOuLvPNaEUzns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183777; c=relaxed/simple;
-	bh=txbjspL3j+vfyy7AjhKqpUMyMxG+nvfadGtyliGr+X4=;
+	s=arc-20240116; t=1788183778; c=relaxed/simple;
+	bh=ljGFZCsmgSE3jYZ3gPIaEIazQCojsNQqSd3YXNwjcpQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AJcEEXvgtkxAJFUiH7DlXH5o+0HGTNHC77dhE6r/CBXUlL7Oxry1CUOPzyzj6pFSqnqdh1/nH0zdRDWFs4/E2TYZ0Ztaur0/3gi9oTZlXrFCIT0iHhrGy8myB3SvaheUbrUNzklSjrCkeNpAJjWXDHXKF1UbQbUiOM5b56MPLys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fsPrdVRO; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=FIHLfQWyIeKHIZtZeE9l5UvnnOBc1wqmY6/j9L/lT07M+gHyoPCsaAGWIgu0nMFxQJU5MtVSaM+zhXAGDfxCqUzZVywNaxc0s6TlekZTu0cRMxUNHfZ/ZDYZrmBvLa4xSXF80VW0nh08EuiVqZ3oVdScOe5q5bHk+T0KdkXG6yY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RTH9Jxap; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fsPrdVRO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 136461F00A3E;
-	Mon, 31 Aug 2026 13:42:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RTH9Jxap"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4B2B1F00A3F;
+	Mon, 31 Aug 2026 13:42:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183774;
-	bh=H/fuKbVRiiS/rbnkO4StakLav2Idmq2e4vdO0y5qkuk=;
+	s=k20260515; t=1788183776;
+	bh=SiyEExvIx/kl19F6wk5aTZc+Umy6csgK8vWmJEh4ays=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fsPrdVROUVRPg+TSAttLRUmjTSEdY6ENsmKQSgoAhLTBx6kanR+UX5PMwSCbtQF9T
-	 Ob+nc7iUm1E6jn0vATmky7obSmhTg/CIKR7W4UhhbG1T1f2k8aGZ2GkcJWoMq1BzBj
-	 JrkkDx9dfwxW7CO3/oug4rZbdRnJIYdMDpP3hqW4p0oDtxqsnMXkZjsBO6OUT1tyBv
-	 wNDAp3WA15/2wzcI2ECusHIUvwgkntd/ZQOvSX+0N07vrgpiOIsAMaKp0uGZIvwTsi
-	 RZc4+6fajDvKxgk/1oBfCsGY4GxgHlzx4/wr2uEEMpeGFVIkkTv4aOvoFA9j5QXvc4
-	 evG2aKtn7DK/Q==
+	b=RTH9JxapWj5B0vLArtzR5KL9mK765akqUM5nYLpbnAv+wL7ruf7lY2jTjH11MRR7/
+	 kjg14iugqD6yohTiVwrbmMmsDxgBmO3aZHZyUgLiDsn+7t3as8KVyJ0b+Koe9Y+JCN
+	 ovG2dau0yWm8D25cPGIFfz7kgLRRQzY58Y5PF4OU60E0zDQmG6Kk6aJiSm/8inqoEw
+	 AjcTIFbDdYn1tppg6cnQFy0TGO3um0E2uYzD3Bi7iPdrDkVslKlMOAt8VEjUi7/vef
+	 FTNjDu6sPpFeNQngdduVXDriTVSega1SFBL2QRa/peca+1AQSSyQaHNDFN+tHrXjEB
+	 ec7PRApKYxoHg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Zhao Li <enderaoelyther@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Jiajia Liu <liujiajia@kylinos.cn>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.15] wifi: cfg80211: validate rx/tx MLME callback frame lengths before access
-Date: Mon, 31 Aug 2026 09:25:24 -0400
-Message-ID: <20260831133314.4125787-296-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mt76: transform aspm_conf for pci_disable_link_state
+Date: Mon, 31 Aug 2026 09:25:25 -0400
+Message-ID: <20260831133314.4125787-297-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,509 +58,356 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Zhao Li <enderaoelyther@gmail.com>
+From: Jiajia Liu <liujiajia@kylinos.cn>
 
-[ Upstream commit d5e4586546974179feca305a94e07fac3e9727fe ]
+[ Upstream commit 2dd78856223484895306351df1f903a4b75d213f ]
 
-cfg80211_rx_mlme_mgmt() and cfg80211_tx_mlme_mgmt() call tracepoints
-before rejecting frames shorter than the frame-control field. After
-that, they only require len >= 2 before dispatching into subtype
-handlers that assume their fixed fields are present.
+commit b478e162f227 ("PCI/ASPM: Consolidate link state defines") changed
+PCIE_LINK_STATE_L0S (1) to (BIT(0) | BIT(1)). PCI_EXP_LNKCTL_ASPM_L0S (1)
+and PCI_EXP_LNKCTL_ASPM_L1 (2) are no longer matched with
+PCIE_LINK_STATE_L0S (3) and PCIE_LINK_STATE_L1 (4).
 
-The frames that trip this are not shorter than 2 bytes; they are short
-relative to their subtype. mwifiex is a concrete in-tree example on the
-length side: mwifiex_process_mgmt_packet() only requires a 4-address
-ieee80211_hdr plus the 2-byte firmware length prefix before handing the
-frame to cfg80211_rx_mlme_mgmt(). After stripping the length prefix and
-removing addr4, pkt_len can be exactly 24: a bare 3-address management
-header with no reason-code body. The existing WARN_ON(len < 2) does not
-fire on such a frame, and cfg80211_process_deauth() then reads
-u.deauth.reason_code as a two-byte access starting at offset 24,
-immediately past the 24-byte buffer.
+On the platform enabling ASPM L0s and L1, mt76_pci_disable_aspm is not able
+to disable L1. Fix this by transforming aspm_conf to pcie link state.
 
-Add a frame-control length gate, then validate each subtype's minimum
-frame size in an if/else-if chain that mirrors the dispatch logic. Trace
-only after the frame is known to be well-formed.
-
-Side effects of this change:
- - The WARN_ON(len < 2) is dropped. It only guarded the frame_control
-   read, never the subtype fixed fields, and it does not fire on the
-   frames that actually trigger the out-of-bounds read (which are >= 2).
-   The len >= 2 check is kept as the guard before dereferencing
-   frame_control, but without the warning: these are exported callbacks
-   and a malformed frame from a driver should be dropped silently rather
-   than backtraced.
- - cfg80211_tx_mlme_mgmt() previously routed every non-deauth subtype
-   through disassociation handling; it now silently ignores unrecognised
-   subtypes.
-
-Assisted-by: Codex:gpt-5.5
-Assisted-by: Claude:claude-opus-4.8
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
-Link: https://patch.msgid.link/20260707025336.22557-1-enderaoelyther@gmail.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
+Link: https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: cfg80211: validate rx/tx MLME
-callback frame lengths before access`
+## Phase 1: Commit Message Forensics
 
-**Local tree:** `v6.18.44-1-g2736c32da98b9` (Linux **6.18.44**)
+### Step 1.1: Subject Line
+**Record:** `[wifi: mt76]` `[transform]` — Convert PCI LNKCTL ASPM
+register bits to `PCIE_LINK_STATE_*` values before calling
+`pci_disable_link_state()`.
+
+### Step 1.2: Commit Message Tags
+**Record:**
+- **Signed-off-by:** Jiajia Liu `<liujiajia@kylinos.cn>` (author)
+- **Link:**
+  https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com
+- **Signed-off-by:** Felix Fietkau `<nbd@nbd.name>` (mt76 maintainer)
+- No `Fixes:`, `Reported-by:`, `Cc: stable`, `Tested-by:`, or `Reviewed-
+  by:` tags
+- References upstream commit `b478e162f227` ("PCI/ASPM: Consolidate link
+  state defines") as the change that broke the existing code
+
+### Step 1.3: Commit Body Analysis
+**Record:**
+- **Bug:** `mt76_pci_disable_aspm()` passes raw `PCI_EXP_LNKCTL`
+  register bits (`aspm_conf`) directly to `pci_disable_link_state()`,
+  but after `b478e162f227` the `PCIE_LINK_STATE_*` constants no longer
+  match those register bit positions.
+- **Symptom:** On platforms with ASPM L0s and L1 enabled, L1 cannot be
+  disabled via `pci_disable_link_state()`; the function returns success
+  and exits early.
+- **Root cause:** `PCIE_LINK_STATE_L0S` changed from `1` to `3`
+  (`BIT(0)|BIT(1)`); `PCIE_LINK_STATE_L1` changed from `2` to `4`
+  (`BIT(2)`). `PCI_EXP_LNKCTL_ASPM_L0S`/`L1` remain `1`/`2`.
+- **Version info:** Regression tied to `b478e162f227` (merged May 2024).
+
+### Step 1.4: Hidden Bug Fix Detection
+**Record:** Yes — despite the neutral "transform" wording, this is a
+functional regression fix. The driver was written to disable ASPM
+because it causes MCU hangs and WiFi instability on mt76 hardware; the
+broken mapping silently leaves L1 active.
 
 ---
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+## Phase 2: Diff Analysis
 
-### Step 1.1: PARSE THE SUBJECT LINE
-**Record:** `[wifi: cfg80211]` `[validate]` — Add length validation for
-rx/tx MLME callback frames before accessing fixed subtype fields.
-
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+### Step 2.1: Change Inventory
 **Record:**
-- **Link:** `https://patch.msgid.link/20260707025336.22557-1-
-  enderaoelyther@gmail.com`
-- **Assisted-by:** Codex:gpt-5.5, Claude:claude-opus-4.8
-- **Signed-off-by:** Zhao Li `<enderaoelyther@gmail.com>`
-- **Signed-off-by:** Johannes Berg `<johannes.berg@intel.com>`
-  (cfg80211/mac80211 maintainer)
-- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, Cc:
-  stable@vger.kernel.org
-- **Notable:** Maintainer sign-off; v2 series (patch 1/3) with Johannes
-  Berg review noted in cover letter changelog
-
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
-**Record:**
-- **Bug:** `cfg80211_rx_mlme_mgmt()` and `cfg80211_tx_mlme_mgmt()` only
-  check `len >= 2` before dispatching to subtype handlers that read
-  fixed fields (`reason_code`, `status_code`, etc.)
-- **Symptom:** Out-of-bounds 2-byte read at offset 24 when a 24-byte
-  management header (no body) is passed for deauth/disassoc
-- **Concrete trigger:** `mwifiex_process_mgmt_packet()` can pass
-  `pkt_len == 24` after stripping addr4 from a minimal 4-address frame
-- **Root cause:** Validation guards frame_control (2 bytes) but not per-
-  subtype minimum sizes (26 bytes for deauth/disassoc)
-- **Version info:** None explicit in message
-
-### Step 1.4: DETECT HIDDEN BUG FIXES
-**Record:** Not disguised — explicitly fixes out-of-bounds memory
-access. The WARN_ON removal and tx subtype routing change are documented
-side effects of the safety fix.
-
----
-
-## PHASE 2: DIFF ANALYSIS
-
-### Step 2.1: INVENTORY THE CHANGES
-**Record:**
-- **File:** `net/wireless/mlme.c` only (+37 / -8 lines)
-- **Functions modified:** `cfg80211_rx_mlme_mgmt()`,
-  `cfg80211_tx_mlme_mgmt()`
+- **Files:** `drivers/net/wireless/mediatek/mt76/pci.c` only (+7 / -1)
+- **Function modified:** `mt76_pci_disable_aspm()`
 - **Scope:** Single-file surgical fix
 
-### Step 2.2: CODE FLOW CHANGE
+### Step 2.2: Code Flow Change
 **Record:**
+- **Before:** `pci_disable_link_state(pdev, aspm_conf)` where
+  `aspm_conf` holds `PCI_EXP_LNKCTL` bits (e.g. `0x3` for L0s+L1).
+- **After:** Build `state` by mapping register bits to API constants:
+  - `PCI_EXP_LNKCTL_ASPM_L0S` → `PCIE_LINK_STATE_L0S`
+  - `PCI_EXP_LNKCTL_ASPM_L1` → `PCIE_LINK_STATE_L1`
+  - Then call `pci_disable_link_state(pdev, state)`.
+- **Path affected:** Normal probe path when `CONFIG_PCIEASPM` is enabled
+  and the OS has ASPM control.
 
-**`cfg80211_rx_mlme_mgmt()` — before → after:**
-- Before: trace → `WARN_ON(len < 2)` → dispatch by subtype → handlers
-  read fixed fields
-- After: check `len >= sizeof(fc)` → read `fc` → per-subtype
-  `offsetofend()` validation → trace → dispatch
-- Affected path: RX MLME frames from drivers (notably mwifiex host_mlme)
+### Step 2.3: Bug Mechanism
+**Record:** **Logic/correctness fix — API value mismatch regression.**
 
-**`cfg80211_tx_mlme_mgmt()` — before → after:**
-- Before: trace → `WARN_ON(len < 2)` → deauth or **everything else →
-  disassoc**
-- After: validate deauth/disassoc minimum lengths; unknown subtypes
-  silently dropped
-- Affected path: TX disconnect notifications from mac80211/mwifiex
+When `aspm_conf = 0x3` (L0s+L1 in LNKCTL):
+- Broken: `pci_disable_link_state(pdev, 0x3)` sets `link->aspm_disable
+  |= 0x3`
+- In `pcie_config_aspm_link()`: `state &= (link->aspm_capable &
+  ~link->aspm_disable)` — bits 0 and 1 are cleared, but
+  `PCIE_LINK_STATE_L1` is `BIT(2)` = 4, which is **not** cleared
+- Function returns 0 (success) and exits early — L1 remains enabled
 
-### Step 2.3: BUG MECHANISM
-**Record:**
-- **Category:** Buffer overflow / out-of-bounds read (memory safety)
-- **Mechanism:** `cfg80211_process_deauth()` reads
-  `mgmt->u.deauth.reason_code` at offset 24–25:
+When `aspm_conf = 0x2` (L1 only): `aspm_disable |= 2` does not map to
+`PCIE_LINK_STATE_L1` (4) — L1 not disabled.
 
-```109:116:net/wireless/mlme.c
-static void cfg80211_process_deauth(struct wireless_dev *wdev,
-                                    const u8 *buf, size_t len,
-                                    bool reconnect)
-{
-        ...
-        u16 reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
-```
-
-  Minimum valid deauth frame is 26 bytes (`IEEE80211_DEAUTH_FRAME_LEN`).
-A 24-byte buffer causes a read 2 bytes past the end.
-
-### Step 2.4: FIX QUALITY
-**Record:**
-- Fix is obviously correct: mirrors dispatch logic with `offsetofend()`
-  checks, same pattern used elsewhere in ieee80211 code
-- Minimal and surgical
-- Low regression risk: only rejects malformed frames that were already
-  unsafe to process
-- Moving tracepoints after validation is correct
-- tx path fix for unrecognized subtypes prevents wrongly routing auth
-  frames to disassoc handler
+### Step 2.4: Fix Quality
+**Record:** Obviously correct — matches how every other driver in the
+tree calls `pci_disable_link_state()` (using `PCIE_LINK_STATE_*`
+constants, not register values). Minimal, no new APIs, very low
+regression risk.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 3: Git History Investigation
 
-### Step 3.1: BLAME THE CHANGED LINES
-**Record:** All lines in `cfg80211_rx_mlme_mgmt()` /
-`cfg80211_tx_mlme_mgmt()` blame to `5d324e5159d9e` (6.18 merge base in
-this tree). Buggy insufficient-length check has been present since these
-functions landed in this tree.
+### Step 3.1: Blame
+**Record:** Buggy `pci_disable_link_state(pdev, aspm_conf)` call
+introduced in `f37f05503575c` (Oct 2019, "mt76: mt76x2e: disable
+pcie_aspm by default"). Worked correctly until `b478e162f227` changed
+the `PCIE_LINK_STATE_*` definitions.
 
-### Step 3.2: FOLLOW THE FIXES: TAG
-**Record:** No Fixes: tag present. N/A.
+### Step 3.2: Fixes Tag
+**Record:** N/A — no `Fixes:` tag. Referenced commit `b478e162f227` is
+confirmed in this tree (`git merge-base --is-ancestor` succeeds).
 
-### Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-**Record:**
-- Recent `mlme.c` commits: `c3ab9657866fc` (radar detection fix), merge
-  base
-- This fix is **not** yet in the local tree (buggy code still present at
-  lines 149–167, 213–230)
-- Part of v2 3-patch series; **this commit is standalone** for the two
-  cfg80211 callback functions (patches 2/3 fix `cfg80211_rx_assoc_resp`
-  and `ieee80211_rx_mgmt_deauth` separately)
+### Step 3.3: Related File History
+**Record:** `pci.c` has only 3 commits in this tree. No related fix
+already applied. The fix commit itself is not yet in
+`stable/linux-6.18.y`.
 
-### Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-**Record:** Zhao Li is not a regular mlme.c contributor in this tree.
-Johannes Berg (maintainer) signed off and merged.
+### Step 3.4: Author Context
+**Record:** Jiajia Liu has other kernel contributions. Felix Fietkau
+(mt76 maintainer) Signed-off-by on the patch.
 
-### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-**Record:** No prerequisites. Uses standard `offsetofend(struct
-ieee80211_mgmt, ...)` which exists in this tree. Applies cleanly against
-current `net/wireless/mlme.c`.
+### Step 3.5: Dependencies
+**Record:** Requires `b478e162f227` (present in tree). Standalone — no
+series dependencies. Applies cleanly to current `pci.c`.
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## Phase 4: Mailing List and External Research
 
-### Step 4.1: ORIGINAL PATCH DISCUSSION
-**Record:**
-- Local mbox: `v2_20260707_enderaoelyther_wifi_cfg80211_validate_rx_tx_m
-  lme_callback_frame_lengths_before_access.mbx`
-- v2 changelog documents Johannes Berg review feedback (commit message
-  rewrite)
-- lore.kernel.org blocked by Anubis bot protection; `b4 dig -c` could
-  not be run (commit not in local tree)
-- No review replies in local mbox (patches only)
+### Step 4.1: Original Patch Discussion
+**Record:** `b4 am 20260602054349.42429-1-liujia6264@gmail.com` found
+thread at
+https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com.
+Single-message thread (initial submission only); no review replies or
+stable nominations in the mbox.
 
-### Step 4.2: WHO REVIEWED THE PATCH
-**Record:** Johannes Berg reviewed v1 per v2 changelog ("Per Johannes'
-review"). Maintainer Signed-off-by on committed version.
+### Step 4.2: Reviewers
+**Record:** `b4 am` reported 0 code-review messages. Felix Fietkau
+maintainer sign-off in the patch itself.
 
-### Step 4.3: BUG REPORT
+### Step 4.3: Bug Report
 **Record:** No external bug report or syzbot link. Bug identified via
-static/code-path analysis with concrete mwifiex trigger documented by
-author.
+code analysis of the `b478e162f227` API change impact.
 
-### Step 4.4: RELATED PATCHES AND SERIES
-**Record:** 3-patch v2 series:
-1. **This commit** — cfg80211 rx/tx MLME callbacks
-2. `cfg80211_rx_assoc_resp()` length validation
-3. `ieee80211_rx_mgmt_deauth()` read-before-check fix in mac80211
+### Step 4.4: Related Patches
+**Record:** Standalone 1-patch fix. mt76 is the only driver passing raw
+LNKCTL values to `pci_disable_link_state()` (verified via grep).
 
-Patches 2/3 are related but **not required** for this commit to be
-correct and self-contained.
-
-### Step 4.5: STABLE MAILING LIST HISTORY
-**Record:** Could not search lore (blocked). No stable nomination found
-in local mbox.
+### Step 4.5: Stable List History
+**Record:** Not searched — no stable discussion found in the patch
+thread. Not applicable as a negative signal.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 5: Code Semantic Analysis
 
-### Step 5.1: KEY FUNCTIONS
-**Record:** `cfg80211_rx_mlme_mgmt()`, `cfg80211_tx_mlme_mgmt()`,
-callees `cfg80211_process_auth/deauth/disassoc()`
+### Step 5.1: Key Functions
+**Record:** `mt76_pci_disable_aspm()` modified.
 
-### Step 5.2: TRACE CALLERS
-**Record:**
+### Step 5.2: Callers
+**Record:** Called during PCI probe from:
+- `mt76x0/pci.c`, `mt76x2/pci.c` — always
+- `mt7615/pci.c`, `mt7915/pci.c`, `mt7996/pci.c` — always
+- `mt7921/pci.c`, `mt7925/pci.c` — when `disable_aspm` module param is
+  set (default false)
 
-| Caller | File | Notes |
-|--------|------|-------|
-| `ieee80211_report_disconnect()` | `net/mac80211/mlme.c:4547-4549` |
-Always uses `IEEE80211_DEAUTH_FRAME_LEN` (26) buffers |
-| Auth failure paths | `net/mac80211/mlme.c:4878,4944,5045` | mac80211
-validates before calling |
-| `mwifiex_process_mgmt_packet()` | `drivers/.../mwifiex/util.c:482` |
-**Can pass pkt_len == 24** |
-| `mwifiex_host_mlme_disconnect()` | `mwifiex/util.c:385` | Passes 26
-bytes (safe) |
+### Step 5.3: Callees
+**Record:** `pci_disable_link_state()` → `__pci_disable_link_state()` →
+sets `link->aspm_disable` and calls `pcie_config_aspm_link()`. Fallback:
+`pcie_capability_clear_word()` on LNKCTL if API call fails.
 
-### Step 5.3: TRACE CALLEES
-**Record:** Subtype handlers call `nl80211_send_*`, `cfg80211_sme_*`,
-read `reason_code`/`status_code` from frame body.
+### Step 5.4: Reachability
+**Record:** Triggered at device probe on systems with `CONFIG_PCIEASPM`
+and ASPM enabled in firmware/BIOS — common on laptops and desktops. Not
+userspace-triggerable, but affects every boot/probe of affected mt76
+hardware.
 
-### Step 5.4: CALL CHAIN / REACHABILITY
-**Record:**
-1. WiFi firmware delivers management frame to mwifiex
-2. `mwifiex_process_mgmt_packet()` strips 4-addr header → 24-byte 3-addr
-   frame
-3. If `host_mlme_reg` and deauth/disassoc: calls
-   `cfg80211_rx_mlme_mgmt(dev, skb->data, 24)`
-4. `cfg80211_process_deauth()` reads past buffer end
-
-**Reachable from userspace indirectly:** Malicious or buggy AP/firmware
-can send short deauth/disassoc frames to mwifiex clients with host MLME
-enabled. Config-dependent (`CONFIG_MWIFIEX`, host_mlme firmware
-capability).
-
-### Step 5.5: SIMILAR PATTERNS
-**Record:** mac80211's `ieee80211_rx_mgmt_deauth()` has the same read-
-before-check pattern (reads `reason_code` before `len` check at line
-5011 vs 5015) — fixed in patch 3/3 of the series, separate from this
-commit.
+### Step 5.5: Similar Patterns
+**Record:** All other `pci_disable_link_state()` callers use
+`PCIE_LINK_STATE_*` constants correctly. mt76 is the sole offender.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## Phase 6: Cross-Reference Against Local Tree
 
-### Step 6.1: DOES THE BUGGY CODE EXIST?
-**Record:** **YES.** Current tree at `net/wireless/mlme.c:149-167` and
-`213-230` has the insufficient `WARN_ON(len < 2)` check. mwifiex trigger
-path exists at `util.c:398-482`.
+### Step 6.1: Buggy Code Present?
+**Record:** **Yes.** Local tree is **v6.18.44** (`stable/linux-6.18.y`).
+Buggy code at line 34 of `pci.c`. Regression commit `b478e162f227` is an
+ancestor of HEAD.
 
-Verified minimum frame math:
-- `ieee80211_mgmt` header = 24 bytes
-- `u.deauth.reason_code` ends at byte 26
-- mwifiex minimum after addr4 strip: `sizeof(ieee80211_hdr)` (30) −
-  `ETH_ALEN` (6) = **24 bytes**
+### Step 6.2: Backport Complications
+**Record:** Clean apply expected — no conflicting changes to this
+function in 6.18.y.
 
-### Step 6.2: BACKPORT COMPLICATIONS
-**Record:** Clean apply expected. Diff in local mbox matches current
-file structure. No conflicting recent changes to these functions.
-
-### Step 6.3: RELATED FIXES ALREADY PRESENT?
-**Record:** **No.** `git log --grep` and `-S 'offsetofend(struct
-ieee80211_mgmt, u.deauth.reason_code)'` found no matching fix in this
-tree.
+### Step 6.3: Fix Already Present?
+**Record:** No — fix not in tree. `git log --grep='transform aspm_conf'`
+returns nothing.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## Phase 7: Subsystem Context
 
-### Step 7.1: SUBSYSTEM AND CRITICALITY
-**Record:** `net/wireless` (cfg80211) — **CORE/IMPORTANT**. cfg80211 is
-the central wireless configuration API used by all mac80211 drivers and
-several fullmac drivers.
+### Step 7.1: Subsystem Criticality
+**Record:** `drivers/net/wireless/mediatek/mt76` — IMPORTANT (WiFi
+driver, multiple widely-used MediaTek chips).
 
-### Step 7.2: SUBSYSTEM ACTIVITY
-**Record:** Actively maintained; recent stable backport `c3ab9657866fc`
-in this tree.
+### Step 7.2: Activity Level
+**Record:** Actively maintained; mt76 is a core WiFi driver family with
+ongoing development.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## Phase 8: Impact and Risk Assessment
 
-### Step 8.1: WHO IS AFFECTED
-**Record:** Users of WiFi drivers calling `cfg80211_rx_mlme_mgmt()` /
-`cfg80211_tx_mlme_mgmt()`. Primary concrete trigger: **mwifiex with host
-MLME** (several SDIO device tables set `host_mlme = true`). mac80211
-callers are generally safe due to `IEEE80211_DEAUTH_FRAME_LEN` usage.
+### Step 8.1: Who Is Affected
+**Record:** Users of mt76x0, mt76x2, mt7615, mt7915, mt7996 PCI WiFi
+devices (always calls ASPM disable). mt7921/mt7925 users who set
+`disable_aspm=1`. Config-dependent on `CONFIG_PCIEASPM` and platform
+ASPM settings.
 
-### Step 8.2: TRIGGER CONDITIONS
+### Step 8.2: Trigger Conditions
+**Record:** Device probe on platforms with ASPM L0s and/or L1 enabled in
+PCI config — common default on modern systems. Not timing-dependent.
+
+### Step 8.3: Failure Mode Severity
+**Record:** **HIGH** functional impact — ASPM L1 remains active when the
+driver intends to disable it. Original 2019 commit documented this
+causes "continuous mcu hangs and instability" on mt76 hardware. Not a
+kernel oops, but serious WiFi reliability regression.
+
+### Step 8.4: Risk-Benefit
 **Record:**
-- Receiving deauth/disassoc/auth frame with header only (no body) via
-  mwifiex host_mlme path
-- Requires connected state and matching BSSID checks in mwifiex
-- Not every boot, but plausible with malformed AP traffic or firmware
-  quirks
-- Unprivileged remote trigger via WiFi network (AP sends short frame)
-
-### Step 8.3: FAILURE MODE SEVERITY
-**Record:** Out-of-bounds kernel memory read — **HIGH** severity
-- KASAN: detectable crash
-- Production without KASAN: potential info leak or unpredictable
-  behavior
-- Not a typical controlled write primitive, but real memory safety bug
-  in core wireless path
-
-### Step 8.4: RISK-BENEFIT RATIO
-**Record:**
-- **Benefit:** HIGH — prevents OOB read in exported cfg80211 API;
-  defense-in-depth for all drivers
-- **Risk:** LOW — ~37 lines, validation-only, maintainer-reviewed
+- **Benefit:** HIGH for affected mt76 users — restores intended ASPM
+  disabling behavior
+- **Risk:** VERY LOW — 6-line mapping fix, maintainer-approved, matches
+  established driver patterns
 - **Ratio:** Strongly favors backport
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 9: Final Synthesis
 
-### Step 9.1: EVIDENCE COMPILED
+### Step 9.1: Evidence Summary
 
 **FOR backport:**
-- Real out-of-bounds read verified in code and frame-size math
-- Concrete in-tree trigger path (mwifiex host_mlme, 24-byte frames)
+- Real regression from `b478e162f227` (in tree since v6.9)
+- Prevents ASPM L1 disable on mt76 — known to cause MCU
+  hangs/instability
 - Small, surgical, maintainer-signed fix
-- Buggy code confirmed present in 6.18.44 tree
-- Fixes incorrect tx subtype routing (non-deauth → disassoc) that could
-  cause same class of bug
-- Exported API should validate inputs from drivers
+- Buggy code and prerequisite both present in v6.18.44
+- Only driver in tree with this incorrect usage pattern
 
 **AGAINST backport:**
-- No syzbot report or user crash report (theoretical/code-analysis
-  discovery)
-- Trigger requires specific driver config (mwifiex host_mlme)
-- Related bugs in patches 2/3 not included (but separate functions)
+- No syzbot report or user bug report filed
+- mt7921/mt7925 only affected when module param set
+- Not a security issue or kernel crash
 
-**UNRESOLVED:**
-- Full lore review thread (blocked by Anubis)
-- Whether any reviewer explicitly nominated for stable
+**Unresolved:** No review-thread discussion beyond initial submission.
 
-### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — standard offsetofend
-   validation; maintainer reviewed v2
-2. Fixes a real bug? **PASS** — verified OOB read with mwifiex trigger
-   path
-3. Important issue? **PASS** — kernel memory safety (OOB read), HIGH
-   severity
-4. Small and contained? **PASS** — 1 file, ~37 lines
-5. No new features or APIs? **PASS** — validation only
-6. Can apply to local tree? **PASS** — code present, clean apply
-   expected
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **PASS** — mapping is verifiably
+   correct; maintainer SOB
+2. Fixes a real bug? **PASS** — regression from PCI API change
+3. Important issue? **PASS** — WiFi instability on affected hardware
+   (HIGH functional)
+4. Small and contained? **PASS** — 7 lines, 1 file
+5. No new features/APIs? **PASS**
+6. Can apply to local tree? **PASS** — prerequisite present, clean apply
 
-### Step 9.3: EXCEPTION CATEGORIES
-**Record:** None (not device ID, quirk, DT, build, or docs). Standard
-memory-safety bug fix.
+### Step 9.3: Exception Categories
+**Record:** Hardware workaround — restoring ASPM disable that prevents
+known hardware instability. Qualifies under quirk/workaround exception.
 
-### Step 9.4: DECISION RATIONALE
-
-This commit fixes a verified out-of-bounds read in exported cfg80211
-MLME callbacks. The buggy code exists in Linux 6.18.44, the fix is small
-and maintainer-approved, and a concrete in-tree caller (mwifiex
-host_mlme) can trigger it with 24-byte deauth/disassoc frames. While the
-trigger is config-specific, cfg80211 is a core API that should reject
-malformed driver input — making this appropriate for the 6.18.y stable
-tree.
+### Step 9.4: Decision Rationale
+This is a clear regression fix for the locally checked-out **6.18.y**
+tree. Commit `b478e162f227` changed `PCIE_LINK_STATE_*` semantics; mt76
+was the only driver still passing raw LNKCTL register values. The result
+is that `pci_disable_link_state()` returns success without actually
+disabling L1, leaving mt76 devices exposed to the exact ASPM-related
+instability the driver was designed to prevent. The fix is minimal,
+correct, and maintainer-approved.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed commit message and tags from user query and local
-  mbox
-- **[Phase 2]** Read current `net/wireless/mlme.c:109-167,213-230`;
-  confirmed OOB read at `reason_code` with 24-byte buffer
-- **[Phase 2]** Computed frame sizes: header=24, deauth offsetofend=26,
-  auth offsetofend=30
-- **[Phase 3]** `git describe HEAD`: v6.18.44; `git blame`: buggy code
-  at 5d324e5159d9e
-- **[Phase 3]** `git log --grep` / `-S offsetofend`: fix not in tree
-- **[Phase 4]** Read local mbox `v2_20260707_enderaoelyther_*.mbx`; v2
-  Johannes Berg review noted
-- **[Phase 4]** lore.kernel.org fetch: blocked (Anubis)
-- **[Phase 4]** `b4 dig -c`: not attempted (commit not in tree)
-- **[Phase 5]** `grep cfg80211_rx_mlme_mgmt`: callers in mac80211 (safe,
-  26-byte) and mwifiex (unsafe path at util.c:482)
-- **[Phase 5]** Read `mwifiex/util.c:398-482`: verified pkt_len can be
-  24 after addr4 removal
-- **[Phase 5]** Read `ieee80211.h:1162-1207`: confirmed struct layout
-- **[Phase 5]** `IEEE80211_DEAUTH_FRAME_LEN` = 26 in
-  `net/mac80211/ieee80211_i.h:85`
-- **[Phase 6]** Buggy code confirmed present; fix absent
-- **[Phase 6]** `sizeof(struct ieee80211_hdr)` = 30 (includes addr4);
-  30−6=24 minimum after strip
-- **[Phase 8]** Failure mode: OOB read, HIGH severity
+- [Phase 1] Parsed subject, tags, body; identified regression from
+  `b478e162f227`
+- [Phase 2] Read diff: 7 lines in `mt76_pci_disable_aspm()`, maps LNKCTL
+  bits to `PCIE_LINK_STATE_*`
+- [Phase 2] Verified values: `PCI_EXP_LNKCTL_ASPM_L0S=1`, `L1=2`;
+  `PCIE_LINK_STATE_L0S=3`, `L1=4` in `include/linux/pci.h`
+- [Phase 2] Traced `pcie_config_aspm_link()` line 961: `state &=
+  (capable & ~aspm_disable)` — confirmed L1 (bit 2) not cleared when
+  `aspm_disable=0x3`
+- [Phase 3] `git describe HEAD`: v6.18.44
+- [Phase 3] `git merge-base --is-ancestor b478e162f227 HEAD`: confirmed
+  present
+- [Phase 3] `git show b478e162f227^:include/linux/pci.h`: old
+  `PCIE_LINK_STATE_L0S=BIT(0)`, `L1=BIT(1)` matched register bits
+- [Phase 3] `git blame pci.c:34`: introduced in `f37f05503575c` (2019)
+- [Phase 3] Fix not in tree: `git log --grep='transform aspm_conf'`
+  empty
+- [Phase 4] `b4 am 20260602054349...`: found patch thread, 1 message,
+  Felix Fietkau SOB
+- [Phase 5] `grep mt76_pci_disable_aspm`: 7 call sites across mt76 PCI
+  drivers
+- [Phase 5] `grep pci_disable_link_state`: mt76 is sole driver passing
+  register values
+- [Phase 6] Buggy code confirmed at `pci.c:34` in v6.18.44
+- [Phase 6] `b478e162f227` on `stable/linux-6.18.y` via grep of branch
+  log
+- [Phase 8] Original commit `f37f05503575c` message documents ASPM
+  causes "mcu hangs and instability"
 
-**YES**The background `git log -S 'cfg80211_rx_mlme_mgmt'` search
-finished. In this 6.18.44 tree it only surfaced merge commits — notably
-`5d324e5159d9e` — and `git blame` attributes the current
-`cfg80211_rx_mlme_mgmt()` / `cfg80211_tx_mlme_mgmt()` code to that same
-point. That’s enough to confirm the buggy validation has been present
-since these functions landed here; it doesn’t change the backport call.
+**YES**The background checks finished and match the earlier analysis:
 
-**Verdict for this tree: YES** — the out-of-bounds read in cfg80211 MLME
-callbacks is real, reachable via mwifiex host_mlme with 24-byte frames,
-and the fix is small and maintainer-reviewed.
+- **Stable branch search:** `b478e162f227d` ("PCI/ASPM: Consolidate link
+  state defines") is on `stable/linux-6.18.y`, so the regression this
+  mt76 fix addresses is present in your v6.18.44 tree.
+- **Author history:** Jiajia Liu has other kernel fixes (Bluetooth,
+  mt76, btmtk, i915); Felix Fietkau signed off on this patch.
 
- net/wireless/mlme.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+**Verdict unchanged: YES** — backport the fix to restore correct ASPM
+disabling on mt76 PCI WiFi devices.
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index bf2c0d26e11c6..a304c0e8736f6 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -164,19 +164,35 @@ void cfg80211_rx_mlme_mgmt(struct net_device *dev, const u8 *buf, size_t len)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct ieee80211_mgmt *mgmt = (void *)buf;
-+	__le16 fc;
+ drivers/net/wireless/mediatek/mt76/pci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/pci.c b/drivers/net/wireless/mediatek/mt76/pci.c
+index b5031ca7f73fb..4c864afefe2f2 100644
+--- a/drivers/net/wireless/mediatek/mt76/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/pci.c
+@@ -30,8 +30,14 @@ void mt76_pci_disable_aspm(struct pci_dev *pdev)
  
- 	lockdep_assert_wiphy(wdev->wiphy);
+ 	if (IS_ENABLED(CONFIG_PCIEASPM)) {
+ 		int err;
++		int state = 0;
  
--	trace_cfg80211_rx_mlme_mgmt(dev, buf, len);
-+	if (len < sizeof(fc))
-+		return;
+-		err = pci_disable_link_state(pdev, aspm_conf);
++		if (aspm_conf & PCI_EXP_LNKCTL_ASPM_L0S)
++			state |= PCIE_LINK_STATE_L0S;
++		if (aspm_conf & PCI_EXP_LNKCTL_ASPM_L1)
++			state |= PCIE_LINK_STATE_L1;
 +
-+	fc = mgmt->frame_control;
- 
--	if (WARN_ON(len < 2))
-+	if (ieee80211_is_auth(fc)) {
-+		if (len < offsetofend(struct ieee80211_mgmt, u.auth.status_code))
-+			return;
-+	} else if (ieee80211_is_deauth(fc)) {
-+		if (len < offsetofend(struct ieee80211_mgmt, u.deauth.reason_code))
-+			return;
-+	} else if (ieee80211_is_disassoc(fc)) {
-+		if (len < offsetofend(struct ieee80211_mgmt, u.disassoc.reason_code))
-+			return;
-+	} else {
- 		return;
-+	}
-+
-+	trace_cfg80211_rx_mlme_mgmt(dev, buf, len);
- 
--	if (ieee80211_is_auth(mgmt->frame_control))
-+	if (ieee80211_is_auth(fc))
- 		cfg80211_process_auth(wdev, buf, len);
--	else if (ieee80211_is_deauth(mgmt->frame_control))
-+	else if (ieee80211_is_deauth(fc))
- 		cfg80211_process_deauth(wdev, buf, len, false);
--	else if (ieee80211_is_disassoc(mgmt->frame_control))
-+	else
- 		cfg80211_process_disassoc(wdev, buf, len, false);
- }
- EXPORT_SYMBOL(cfg80211_rx_mlme_mgmt);
-@@ -229,15 +245,28 @@ void cfg80211_tx_mlme_mgmt(struct net_device *dev, const u8 *buf, size_t len,
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct ieee80211_mgmt *mgmt = (void *)buf;
-+	__le16 fc;
- 
- 	lockdep_assert_wiphy(wdev->wiphy);
- 
--	trace_cfg80211_tx_mlme_mgmt(dev, buf, len, reconnect);
-+	if (len < sizeof(fc))
-+		return;
- 
--	if (WARN_ON(len < 2))
-+	fc = mgmt->frame_control;
-+
-+	if (ieee80211_is_deauth(fc)) {
-+		if (len < offsetofend(struct ieee80211_mgmt, u.deauth.reason_code))
-+			return;
-+	} else if (ieee80211_is_disassoc(fc)) {
-+		if (len < offsetofend(struct ieee80211_mgmt, u.disassoc.reason_code))
-+			return;
-+	} else {
- 		return;
-+	}
-+
-+	trace_cfg80211_tx_mlme_mgmt(dev, buf, len, reconnect);
- 
--	if (ieee80211_is_deauth(mgmt->frame_control))
-+	if (ieee80211_is_deauth(fc))
- 		cfg80211_process_deauth(wdev, buf, len, reconnect);
- 	else
- 		cfg80211_process_disassoc(wdev, buf, len, reconnect);
++		err = pci_disable_link_state(pdev, state);
+ 		if (!err)
+ 			return;
+ 	}
 -- 
 2.53.0
 
