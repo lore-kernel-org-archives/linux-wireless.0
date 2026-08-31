@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42B9B545281;
-	Mon, 31 Aug 2026 13:46:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28FD4A9D76;
+	Mon, 31 Aug 2026 13:46:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183972; cv=none; b=heC5mVRohm0gRDY9lUlco6NS0O7aNoKQkyTcbKr7tzuH3vvPECGIK6TDKUwuO88Ee117KaGnTYiwKgKX8Sf9ESczkWWVivDWZgHaeLhsCFLtx6KuWpA+09U+wUYcykxKPUSl62qcy4KKN4aNYiFYaHP/Qq2GZ8ebVb3TNcsdhdg=
+	t=1788183988; cv=none; b=LAnIK9dRkNoT6nMJOvWl1rk4R9AyXXX4+LJVdt/azcw8LRKdFm1LvwHLpaORwD6vniOyDSV+ahq2UZoCd3wQdOltSoMeqAXRUrZ/VHBcTGFeBLLLIrxkTSacMa6r8wqua6hrgMh/U9r7lTVmpak6C+Kkk5DTXHHXDiJR4f9s1UY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183972; c=relaxed/simple;
-	bh=b4DTqo5FvFIy5AqMW3T2xxF8pGsbNqZjFdxVccvjIIU=;
+	s=arc-20240116; t=1788183988; c=relaxed/simple;
+	bh=bG6HE97XeTbZtwJczo+3R7kVtqCn1sg/nwCk5Pw33OU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nDQsrT0cg2db5bcwqk0qtJ7rLe44NddT3eH2yxfHb7HKK/XUeXlatrwdDSLzcLoPOUz5kcTX2FctNpvfN+BFoFwmhRIDqwv47zJfwlfgcTx01Ee5iCtZILM0PxKf566V5z9t6V0NMeBTZcRV+z7D6kOzc3SnSM7NH/sus0UstoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ayGhAm54; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=QCd3zNnxfi2YMV/9Qv5M9+7v6yGpC7wvdc9YvqEPWVLYCpv6Q0Lkk+Ddfj83EejuBRD8guFsMEo6tMbPr2ASkSqoV80VDzTfxN7kjKIBk8+wU4PJkcfabJW/IRpcye3kVwpC3AklUwlT9/xj+Oowt1QSiyuk5TjCRnIW6EBEJGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d5PuIKvQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ayGhAm54"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C040C1F00A3F;
-	Mon, 31 Aug 2026 13:46:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d5PuIKvQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E98371F00A3D;
+	Mon, 31 Aug 2026 13:46:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183968;
-	bh=jLWiOl+oEcyUeRXWZBezCLaWKqLNiKK1v07cQaOuK4g=;
+	s=k20260515; t=1788183984;
+	bh=Mk0Kqx6Y2AMx5CFVQu6LfnWMNetcPw3qURDJ/mI0Q+E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ayGhAm542qSIdGGZIZBjVsJjazOu/D7wm6PC8WxehgP009j7p4/uZzU/mxGFLvKze
-	 SCqmiokk3IYubX5yOP/ZWVJ9Tc93HVdmDwcJERCCXJ5W6Vv8dsZLJvv79+8JQ/auIR
-	 LB2V8puxdpdVmsqdn/0uNXzb3PlAsX73MEr3jA2V76jBHxArpoNfwk4cetc3XfJaXy
-	 IjcnykB0mBNXNgjfzIt0RkuWfx2hU9eTShdGR8abig3sLgsQ3PUlQzu+FXmnyx6pmM
-	 /63jwIIk4uyn2bERU/eLhudl8Q62nwU8bxzCdx0uNqmqPlpwZzNxltFZgenFmOeprK
-	 pFeziE41qeYmw==
+	b=d5PuIKvQlmzpDQJ3zD/IxjqArkNlGkrzl3DxMEuIDmjfFIKPV/2DYjuNGuZ15J9qu
+	 SMC6y0tPepxn0sZ6IgseMieoDt3LNPHEMrig+e3zNXxAjEIzQrhTfrOMEoPYYbAqEb
+	 AvOvFecrsCFlFTD7SdkII5snJNi6gho9bLqP0vqhs+AZdPsNRX7l1SS1oFyVvDFACr
+	 W218pHpgd9pYXHFwe7nVXw6p81Ysjeu9EvJ1bV5lWPS7PnPcxq/lXIv9W44cxjX5qc
+	 2KFRnOIJxsa5xb0hrsCdwg4eVE0G/QRP00qZbaBTVzp6UIhrKrDDxJ0qvnXM1Xs4xZ
+	 oEvWWZ89q1qEA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Chih-Kang Chang <gary.chang@realtek.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: rtw89: suspend DIG when remain-on-channel
-Date: Mon, 31 Aug 2026 09:27:19 -0400
-Message-ID: <20260831133314.4125787-411-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: clear tzone on fail
+Date: Mon, 31 Aug 2026 09:27:29 -0400
+Message-ID: <20260831133314.4125787-421-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,299 +52,265 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Chih-Kang Chang <gary.chang@realtek.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 602b58bb45b2f2bf848215560406ff87dc9a0ab6 ]
+[ Upstream commit 5c55827ef5c74a5d56939ed0e93df21e6f1f864e ]
 
-The PD (Packet Detection) lower bound is set after the STA interface
-connects. When the P2P interface attempts to find peers, it enters
-the remain-on-channel flow to listen for probe requests. However, if
-the RSSI of the connected AP is too high, the P2P interface fails to
-receive it. To resolve this, suspend the DIG during the
-remain-on-channel period.
+iwl_mld_thermal_zone_register() stores the thermal zone pointer in
+mld->tzone before calling thermal_zone_device_enable(). If enable
+fails, the code unregisters the zone but leaves mld->tzone stale,
+so iwl_mld_thermal_zone_unregister() can unregister it again.
+Clear mld->tzone after unregister in the error path.
 
-Signed-off-by: Chih-Kang Chang <gary.chang@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/20260420034051.17666-15-pkshih@realtek.com
+While at it remove a pointless if in iwl_mld_thermal_zone_unregister
+after we've alredy checked the tzone pointer is not NULL.
+
+Assisted-by: GitHubCopilot:gpt-5.3-codex
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Link: https://patch.msgid.link/20260714141909.595dcb8cb7fe.I8125e4a2eeb0390798e3f4074c62c00443eda8e8@changeid
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: rtw89: suspend DIG when remain-on-
-channel`
+# Stable Backport Analysis: `wifi: iwlwifi: mld: clear tzone on fail`
 
-**Local tree:** `v6.18.43` (Makefile: 6.18.43)
+**Local tree:** `v6.18.44-1-g2736c32da98b9` (kernel version **6.18.44**)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: Parse the subject line
-**Record:** `[wifi: rtw89]` — no explicit "fix" verb, but describes
-corrective behavior — `[suspend DIG when remain-on-channel]` — suspend
-Dynamic Integrity Gain (DIG) during P2P remain-on-channel (ROC)
-operation.
+### Step 1.1: Subject line
+**Record:** `[wifi: iwlwifi: mld]` `[clear]` — clear stale thermal-zone
+pointer on registration failure path in the iwlwifi MLD driver.
 
-### Step 1.2: Parse all commit message tags
+### Step 1.2: Tags
 **Record:**
-- **Signed-off-by:** Chih-Kang Chang `<gary.chang@realtek.com>` (author)
-- **Signed-off-by:** Ping-Ke Shih `<pkshih@realtek.com>` (Realtek rtw89
-  maintainer)
-- **Link:**
-  `https://patch.msgid.link/20260420034051.17666-15-pkshih@realtek.com`
-  (patch 15 in a series, per message-id)
-- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or
-  Cc: stable tags (absence of Cc: stable is expected per review pipeline
-  rules)
+- **Link:** `https://patch.msgid.link/20260714141909.595dcb8cb7fe...`
+  (patch submission reference; lore blocked by bot protection)
+- **Assisted-by:** GitHubCopilot:gpt-5.3-codex
+- **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
+  (author)
+- **Signed-off-by:** Miri Korenblit
+  `<miriam.rachel.korenblit@intel.com>` (committer)
+- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc: stable, or
+  syzbot tags
 
-**Notable patterns:** Maintainer sign-off from Ping-Ke Shih; message-id
-suffix `-15` suggests a multi-patch series, but the change itself is
-self-contained.
+**Notable patterns:** Intel iwlwifi maintainers; no external bug report
+cited.
 
-### Step 1.3: Analyze commit body
+### Step 1.3: Body analysis
 **Record:**
-- **Bug:** After STA association, Packet Detection (PD) lower bound is
-  set by DIG based on connected AP RSSI. When P2P uses remain-on-channel
-  to listen for probe requests during peer discovery, a strong AP RSSI
-  drives the PD lower bound too high.
-- **Symptom:** P2P interface fails to receive probe requests from peers
-  (peer discovery broken).
-- **Root cause (author):** DIG PD lower bound not suspended during ROC,
-  unlike scan/MCC paths.
-- **Fix approach:** Call `rtw89_phy_dig_suspend()` at ROC start and
-  `rtw89_phy_dig_resume(rtwdev, true)` at ROC end.
-- **Version info:** None stated in commit message.
+- **Bug:** `iwl_mld_thermal_zone_register()` stores `mld->tzone` before
+  calling `thermal_zone_device_enable()`. On enable failure, the zone is
+  unregistered but `mld->tzone` is left non-NULL.
+- **Symptom:** `iwl_mld_thermal_zone_unregister()` can call
+  `thermal_zone_device_unregister()` again on a freed/stale pointer.
+- **Root cause:** Missing `mld->tzone = NULL` in the enable-failure
+  error path (the register-failure path already clears it correctly).
+- **Secondary change:** Remove redundant inner `if (mld->tzone)` in
+  unregister after the outer NULL check.
 
-### Step 1.4: Detect hidden bug fixes
-**Record:** Despite no "fix" in the subject, this is a functional bug
-fix disguised as a behavioral adjustment. It corrects missing DIG
-suspend/resume pairing in the ROC path — the same pattern already used
-for hardware scan and MCC in this driver.
+### Step 1.4: Hidden bug fix?
+**Record:** **Yes** — described as cleanup but is a real lifecycle bug:
+stale pointer after `thermal_zone_device_unregister()` → use-after-free
+on later access/unregister.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: Inventory the changes
+### Step 2.1: Inventory
 **Record:**
-- **File:** `drivers/net/wireless/realtek/rtw89/core.c` (+2 lines)
-- **Functions modified:** `rtw89_roc_start()`, `rtw89_roc_end()`
-- **Scope:** Single-file, surgical, 2-line functional fix
+- **File:** `drivers/net/wireless/intel/iwlwifi/mld/thermal.c` (+3
+  meaningful lines, -4 lines including copyright year)
+- **Functions:** `iwl_mld_thermal_zone_register()`,
+  `iwl_mld_thermal_zone_unregister()`
+- **Scope:** Single-file surgical fix under `#ifdef CONFIG_THERMAL`
 
-### Step 2.2: Code flow change per hunk
+### Step 2.2: Code flow per hunk
 
-**Hunk 1 — `rtw89_roc_start()`:**
-- **Before:** After RX filter setup, immediately calls
-  `ieee80211_ready_on_channel()` and schedules ROC timeout work.
-- **After:** Suspends DIG (`rtw89_phy_dig_suspend`) before notifying
-  mac80211 that the device is on-channel.
-- **Path affected:** P2P/WiFi-Direct remain-on-channel entry (normal and
-  mgmt-tx ROC types).
+**Hunk 1 — `iwl_mld_thermal_zone_register()` error path:**
+**Record:** Before: on `thermal_zone_device_enable()` failure →
+unregister zone, leave dangling `mld->tzone`. After: set `mld->tzone =
+NULL` after unregister, matching the `IS_ERR()` path at lines 263–268.
 
-**Hunk 2 — `rtw89_roc_end()`:**
-- **Before:** After pending TX handling, checks idle state and may
-  schedule IPS work.
-- **After:** Resumes DIG with `restore=true` before the idle check.
-- **Path affected:** ROC expiry or cancellation
-  (`cancel_remain_on_channel`).
+**Hunk 2 — `iwl_mld_thermal_zone_unregister()`:**
+**Record:** Before: redundant double-check `if (mld->tzone)`. After:
+direct unregister + NULL assignment (behavior unchanged for valid
+paths).
 
 ### Step 2.3: Bug mechanism
-**Record:** **Category:** Logic/correctness — missing state management
-in ROC path.
+**Record:** **Category:** use-after-free / stale pointer after resource
+teardown.
 
-**Mechanism:** `rtw89_phy_dig_dyn_pd_th()` sets `dig->bak_dig` and
-writes the PD lower bound based on connected STA RSSI. With a
-nearby/strong AP, the PD threshold is raised, filtering out weaker
-incoming frames. During ROC peer discovery, probe requests from distant
-peers fall below that threshold and are not received.
-`rtw89_phy_dig_suspend()` sets PD lower bound to 0 and disables DIG
-tracking; `rtw89_phy_dig_resume(rtwdev, true)` restores the backed-up
-value — matching scan (`fw.c`) and MCC (`chan.c`) behavior.
+**Mechanism verified in `thermal_zone_device_unregister()`:**
 
-### Step 2.4: Fix quality assessment
-**Record:**
-- **Obviously correct:** Yes — mirrors existing suspend/resume usage in
-  scan, MCC, and STA-association paths.
-- **Minimal:** Two function calls at symmetric entry/exit points.
-- **Idempotent:** `rtw89_phy_dig_ctrl()` early-returns if already in the
-  requested pause state.
-- **Regression risk:** Very low. DIG suspend/resume is already exercised
-  on hot paths; ROC is relatively infrequent.
-- **Minor concern:** `rtw89_roc_end()` has an early return if the link
-  is not found (line 4068–4071); if ROC start succeeded but end hits
-  that path, DIG could remain suspended. This path is unlikely in normal
-  operation and is a pre-existing structural issue, not introduced by
-  this patch's logic.
+```1716:1742:drivers/thermal/thermal_core.c
+void thermal_zone_device_unregister(struct thermal_zone_device *tz)
+{
+        if (!tz)
+                return;
+        // ...
+        kfree(tz);
+}
+```
+
+First unregister on enable failure frees `tz`. Without clearing
+`mld->tzone`, later code dereferences freed memory:
+- **Unload path:** `iwl_mld_thermal_exit()` →
+  `iwl_mld_thermal_zone_unregister()` (line 465)
+- **Runtime path:** e.g. `iwl_mld_handle_ct_kill_notif()` at lines 76–77
+  checks `if (mld->tzone)` then calls `thermal_zone_device_update()`
+
+### Step 2.4: Fix quality
+**Record:** Obviously correct; mirrors existing pattern in the same
+function. Minimal regression risk. The redundant-if removal is pure
+cleanup.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: Blame changed lines
-**Record:** Current `rtw89_roc_start()`/`rtw89_roc_end()` body (lines
-3989–4095) and `rtw89_phy_dig_suspend()`/`rtw89_phy_dig_resume()`
-(phy.c:6923–6937) are present in this tree. Git blame attributes them to
-`19eef1d98eeda` (squashed/import history in this stable checkout). The
-ROC path and DIG APIs both exist in v6.18.43.
+### Step 3.1: Blame
+**Record:** Buggy register/enable path present in current tree at lines
+271–275. `git blame` attributes lines to `5d324e5159d9e` (limited
+history in this stable checkout). Bug present since MLD thermal support
+landed in this tree.
 
-### Step 3.2: Follow Fixes: tag
+### Step 3.2: Fixes: tag
 **Record:** N/A — no Fixes: tag in commit message.
 
 ### Step 3.3: Related file history
-**Record:** Recent rtw89 commits in this tree include `98a774e2c58df`
-("fix unable to receive probe responses under MLO connection") — same
-symptom class (probe reception failure), already backported here. Other
-recent rtw89 stable commits are unrelated PCI/PHY fixes. No commit in
-this tree already adds DIG suspend to ROC.
+**Record:** `git log --
+drivers/net/wireless/intel/iwlwifi/mld/thermal.c` shows only the base
+import commit in this tree's history. Related iwlwifi mld fixes (e.g.
+`3a74aaad04735` UAF fix in `link.c`) are already backported here,
+indicating active stable maintenance of iwl_mld.
 
-### Step 3.4: Author's other commits
-**Record:** Chih-Kang Chang and Ping-Ke Shih are active Realtek rtw89
-contributors. Ping-Ke Shih is the rtw89 maintainer. Recent commits from
-these authors in this tree include MCC, MAC, and PCI fixes — established
-subsystem contributors.
+### Step 3.4: Author context
+**Record:** Emmanuel Grumbach is iwlwifi maintainer. Miri Korenblit is
+active iwlwifi contributor. No other commits from Grumbach on
+`mld/thermal.c` in this tree's log.
 
-### Step 3.5: Prerequisites / dependencies
-**Record:** No dependencies identified. `rtw89_phy_dig_suspend()` and
-`rtw89_phy_dig_resume()` are declared in `phy.h` and implemented in
-`phy.c`. Patch applies cleanly to this tree (verified with `git apply
---check`). Standalone despite being patch 15/N in a series.
+### Step 3.5: Dependencies
+**Record:** Standalone fix. No series dependencies. No prerequisite
+commits required. Patch context matches current tree code exactly.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original patch discussion
-**Record:** Lore.kernel.org and patch.msgid.link are blocked by Anubis
-bot protection from this environment. `b4 dig -c <commit>` could not be
-run because the commit is not in this checkout. **UNVERIFIED:** Full
-mailing list review thread, series context, and any stable nominations.
+### Step 4.1: Original discussion
+**Record:** `b4 dig` returned no results (empty output). Link URL
+blocked by Anubis bot protection. Local `.mbx` files contain no match
+for "clear tzone". **Could not retrieve lore discussion.**
 
 ### Step 4.2: Reviewers
-**Record:** **UNVERIFIED** via b4 dig -w. Ping-Ke Shih (maintainer) has
-Signed-off-by on the commit.
+**Record:** UNVERIFIED — `b4 dig -w` not available.
 
 ### Step 4.3: Bug report
-**Record:** No Reported-by: or bugzilla/syzbot links. Bug described by
-author based on known DIG/ROC interaction. No external user report
-verified.
+**Record:** No Reported-by: or syzbot link. Bug identified by code
+inspection during driver development.
 
-### Step 4.4: Related patches / series
-**Record:** Message-id `17666-15` indicates patch 15 of a series. The
-diff uses only existing APIs and is self-contained. No other series
-patches required for this fix to function.
+### Step 4.4: Related patches
+**Record:** The legacy MVM driver (`mvm/tt.c` lines 688–692) has the
+same missing-NULL pattern but is **not** fixed by this commit. Out of
+scope for this evaluation.
 
-### Step 4.5: Stable mailing list history
-**Record:** **UNVERIFIED** — could not search lore stable list due to
-bot protection.
+### Step 4.5: Stable list discussion
+**Record:** UNVERIFIED — lore blocked.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: Key functions modified
-**Record:** `rtw89_roc_start()`, `rtw89_roc_end()`, plus callees
-`rtw89_phy_dig_suspend()`, `rtw89_phy_dig_resume()`,
-`rtw89_phy_dig_ctrl()`.
+### Step 5.1: Key functions
+**Record:** `iwl_mld_thermal_zone_register()`,
+`iwl_mld_thermal_zone_unregister()`, `iwl_mld_thermal_initialize()`,
+`iwl_mld_thermal_exit()`
 
-### Step 5.2: Callers of affected code
+### Step 5.2: Callers
 **Record:**
-- `rtw89_roc_start()` called from `rtw89_ops_remain_on_channel()` in
-  `mac80211.c:1466`
-- `rtw89_roc_end()` called from `rtw89_ops_cancel_remain_on_channel()`
-  (`mac80211.c:1484`) and `rtw89_roc_work()` on timeout (`core.c:4112`)
-- ROC is triggered by mac80211/cfg80211 for P2P peer discovery, P2P GO
-  negotiation, and off-channel management frame TX
+- `iwl_mld_thermal_initialize()` called from `iwl_op_mode_mld_start()`
+  (`mld.c:478`) during driver start
+- `iwl_mld_thermal_exit()` called from `iwl_op_mode_mld_stop()`
+  (`mld.c:506`) during driver stop/unload
 
 ### Step 5.3: Callees
-**Record:** `rtw89_phy_dig_suspend()` → `rtw89_phy_dig_ctrl(rtwdev, bb,
-true, false)` — sets PD lower bound to 0, disables DIG.
-`rtw89_phy_dig_resume(rtwdev, true)` → `rtw89_phy_dig_ctrl(rtwdev, bb,
-false, true)` — restores `dig->bak_dig`.
+**Record:** `thermal_zone_device_register_with_trips()`,
+`thermal_zone_device_enable()`, `thermal_zone_device_unregister()`
 
-### Step 5.4: Call chain / reachability
-**Record:** Userspace (wpa_supplicant, NetworkManager, Android WiFi
-Direct) → nl80211/cfg80211 → `remain_on_channel` →
-`rtw89_ops_remain_on_channel()` → `rtw89_roc_start()`. Reachable from
-userspace during P2P operations. Trigger: P2P peer discovery while STA
-is associated to an AP (common WiFi Direct scenario).
+### Step 5.4: Reachability
+**Record:** Trigger requires `CONFIG_THERMAL` + `CONFIG_IWLMLD`. Path is
+reachable on Intel MLD WiFi device probe with thermal support enabled.
+`iwl_mld_thermal_zone_register()` is `void` and does not abort probe on
+enable failure — driver continues with stale pointer. Unload always
+calls `iwl_mld_thermal_exit()`.
 
 ### Step 5.5: Similar patterns
-**Record:** DIG suspend/resume already used in:
-- `fw.c:8099/8134` — hardware scan start/complete
-- `chan.c:2347/2447` — MCC start/stop
-- `chan.c:2903` — MCC prepare
-- `core.c:4626/4818` — STA association start/end (P2P STA)
-
-ROC was the missing path — consistent oversight.
+**Record:** Register-failure path already sets `mld->tzone = NULL` (line
+267). MVM `tt.c` has identical enable-failure bug (not addressed here).
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE (v6.18.43)
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
 
-### Step 6.1: Does the buggy code exist?
-**Record:** **Yes.** `rtw89_roc_start()` at lines 4041–4047 does not
-call `rtw89_phy_dig_suspend()`. `rtw89_roc_end()` at lines 4089–4094
-does not call `rtw89_phy_dig_resume()`. DIG suspend/resume APIs exist
-and are used elsewhere. Bug is present in this tree.
+### Step 6.1: Buggy code present?
+**Record:** **YES.** Current tree at lines 271–275 lacks `mld->tzone =
+NULL` after unregister on enable failure. Fix commit is **not** yet
+applied.
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply** — `git apply --check` succeeded with no
-conflicts. Minor contextual differences from mainline (e.g., RX filter
-setup style) do not affect placement of the two new calls.
+**Record:** **Clean apply expected.** Diff context matches current file
+exactly. No conflicting changes in recent history.
 
 ### Step 6.3: Related fixes already present?
-**Record:** `98a774e2c58df` fixes probe-response reception under MLO
-(different root cause — MAC address matching). No existing fix for DIG-
-during-ROC issue.
+**Record:** No equivalent fix found. `git log --grep='clear tzone'`
+returns nothing.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## PHASE 7: SUBSYSTEM CONTEXT
 
-### Step 7.1: Subsystem and criticality
-**Record:** **Subsystem:** `drivers/net/wireless/realtek/rtw89` —
-Realtek 802.11ax WiFi driver. **Criticality:** IMPORTANT (peripheral
-driver, but WiFi connectivity affects many laptop/desktop users with
-RTL8852/8922 chips).
+### Step 7.1: Subsystem criticality
+**Record:** **IMPORTANT** — Intel WiFi driver
+(`drivers/net/wireless/intel/iwlwifi/mld/`), device-driver subsystem.
+Affects users of MLD-capable Intel WiFi hardware with thermal support.
 
-### Step 7.2: Subsystem activity
-**Record:** Actively maintained — multiple rtw89 fixes backported to
-this 6.18.y tree in recent history.
+### Step 7.2: Activity
+**Record:** Active — multiple iwl_mld stable backports in this tree (PTP
+race, NULL deref, BA session fixes).
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users of Realtek rtw89 hardware (RTL8852AE/BE, RTL8922AE,
-etc.) running P2P/WiFi Direct while simultaneously associated as STA to
-an AP. Config-dependent: `CONFIG_RTW89` and specific hardware.
+**Record:** Config-specific (`CONFIG_IWLMLD` + `CONFIG_THERMAL`). Users
+of newer Intel MLD WiFi devices with thermal framework enabled.
 
 ### Step 8.2: Trigger conditions
-**Record:**
-- STA connected to AP with strong RSSI
-- P2P interface initiates remain-on-channel for peer discovery
-- **Likelihood:** Common in WiFi Direct use (screen mirroring, file
-  sharing, P2P GO negotiation)
-- **Unprivileged trigger:** Yes — userspace WiFi management triggers ROC
-  via standard nl80211 APIs
+**Record:** `thermal_zone_device_enable()` fails after successful
+registration. Uncommon but explicitly handled error path. Any subsequent
+driver unload or thermal notification using `mld->tzone` triggers UAF.
+Not userspace-triggerable directly, but reachable during normal driver
+lifecycle on affected hardware.
 
 ### Step 8.3: Failure mode severity
-**Record:** **Failure mode:** P2P peer discovery fails — probe requests
-from peers not received. **Severity:** MEDIUM — functional/connectivity
-breakage, not kernel crash, data corruption, or security vulnerability.
-Degrades WiFi Direct usability in a realistic scenario.
+**Record:** **HIGH** — use-after-free on freed `struct
+thermal_zone_device`. Can cause kernel oops on module unload or during
+thermal event handling. Potential security relevance (UAF class).
 
-### Step 8.4: Risk-benefit ratio
+### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** Restores P2P peer discovery for rtw89 users; aligns ROC
-  with established DIG handling; precedent exists in this tree for
-  similar probe-reception fixes
-- **Risk:** Very low — 2 lines, proven API, symmetric pairing,
-  idempotent implementation
-- **Ratio:** Favorable — low risk, real user-visible benefit for
-  affected hardware
+- **Benefit:** Prevents UAF on driver teardown and runtime thermal
+  paths; one-line meaningful fix
+- **Risk:** Very low — adds NULL assignment matching existing pattern;
+  cleanup-only hunk in unregister
+- **Ratio:** Strong benefit, minimal risk
 
 ---
 
@@ -353,113 +319,135 @@ Degrades WiFi Direct usability in a realistic scenario.
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real functional bug with clear mechanism (PD lower bound too high
-  during ROC)
-- Small, surgical, obviously correct fix following existing driver
-  patterns
-- Applies cleanly to v6.18.43
-- Maintainer sign-off (Ping-Ke Shih)
-- Precedent: `98a774e2c58df` (probe response reception) already
-  backported to this tree
-- Userspace-reachable via standard P2P/ROC nl80211 operations
-- Stable rules allow "real bug that bothers people" and "interactivity
-  issue"
+- Real UAF bug on error path with clear mechanism
+- Fix is minimal, obviously correct, matches existing code pattern
+- Buggy code confirmed present in 6.18.44 tree
+- Driver unload path always hits unregister — crash risk on affected
+  hardware
+- iwl_mld actively maintained in this stable series
+- Similar iwl_mld UAF fixes already backported here
 
 **AGAINST backport:**
-- Not a crash, security issue, or data corruption
-- Hardware-specific (rtw89 only)
-- No user bug report or syzbot evidence verified
-- Mailing list review unverified
-- Strict "important issue" bar (oops/hang/corruption) not met literally
+- No syzbot/user bug report (theoretical until enable fails)
+- Narrow audience (IWLMLD + CONFIG_THERMAL)
+- MVM driver has same bug but is not fixed by this commit
+- Could not verify lore review discussion
 
-**Unresolved:** Lore discussion content, explicit stable nomination,
-user bug reports.
+**Unresolved:** Lore review thread inaccessible; exact frequency of
+`thermal_zone_device_enable()` failure unverified.
 
 ### Step 9.2: Stable rules checklist
-1. **Obviously correct and tested?** PASS — mirrors scan/MCC pattern;
-   maintainer SOB; logic verifiable in code (testing not independently
-   verified)
-2. **Fixes a real bug affecting users?** PASS — P2P peer discovery
-   failure on rtw89 with strong AP signal
-3. **Important issue?** PASS (borderline) — connectivity/interactivity
-   issue per stable-kernel-rules.rst allowance for "real bug that
-   bothers people" and notable interactivity issues; not CRITICAL
-   severity
-4. **Small and contained?** PASS — 2 lines, 1 file
-5. **No new features or APIs?** PASS — uses existing internal APIs only
-6. **Can apply to local tree?** PASS — clean apply verified; all
-   prerequisites present
+1. Obviously correct and tested? **PASS** — logic is self-evident; no
+   Tested-by but pattern matches existing error path
+2. Fixes a real bug? **PASS** — stale pointer after free confirmed by
+   code reading
+3. Important issue? **PASS** — UAF, HIGH severity on unload
+4. Small and contained? **PASS** — ~3 meaningful lines in one file
+5. No new features/APIs? **PASS**
+6. Can apply to local tree? **PASS** — code present, clean apply
+   expected
 
 ### Step 9.3: Exception categories
-**Record:** None directly (not device ID, quirk, DT, build fix, or
-docs). Qualifies as a hardware driver functional bug fix.
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+bug fix.
 
-### Step 9.4: Decision rationale
+### Step 9.4: Problem and decision rationale
 
-For **v6.18.43**, the bug exists: ROC does not suspend DIG while scan
-and MCC already do. The fix is minimal, follows established driver
-conventions, applies cleanly, and addresses a real WiFi Direct peer-
-discovery failure on rtw89 hardware. This tree already backported a
-closely related rtw89 probe-reception fix (`98a774e2c58df`),
-establishing precedent for this class of connectivity bug. The risk is
-negligible; the benefit to P2P users on affected hardware is concrete.
+When `thermal_zone_device_enable()` fails during iwl_mld thermal zone
+setup, the driver unregisters the zone but leaves `mld->tzone` pointing
+at freed memory. Because registration failure does not abort driver
+probe, the WiFi device continues operating with a dangling pointer. On
+driver removal (`iwl_op_mode_mld_stop` → `iwl_mld_thermal_exit`),
+`iwl_mld_thermal_zone_unregister()` dereferences that freed structure —
+a classic use-after-free that can oops the kernel. Runtime thermal
+notification paths (`iwl_mld_handle_ct_kill_notif`) are similarly
+affected.
+
+For 6.18.44 users running Intel MLD WiFi with thermal support, this is a
+real stability fix with negligible backport risk. The fix mirrors the
+already-correct `IS_ERR()` path in the same function.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed commit message: subject, body, SOBs from Realtek
-  authors, Link tag; no Fixes/Reported-by/Cc: stable
-- **[Phase 2]** Read diff and `core.c` ROC functions (lines 3989–4117);
-  read `rtw89_phy_dig_ctrl/suspend/resume` in `phy.c` (6880–6937)
-- **[Phase 2]** Confirmed suspend sets PD lower bound to 0; resume with
-  `restore=true` restores `bak_dig`
-- **[Phase 3]** `git describe HEAD`: v6.18.43
-- **[Phase 3]** `git blame` on ROC and DIG functions: present in tree
-- **[Phase 3]** `git log --grep="probe response"`: found `98a774e2c58df`
-  already in tree
-- **[Phase 3]** `git apply --check`: patch applies cleanly
-- **[Phase 4]** WebFetch/curl to lore.kernel.org: BLOCKED by Anubis
-- **[Phase 4]** `b4 dig -c HEAD`: N/A (commit not in tree)
-- **[Phase 5]** Grep callers: `mac80211.c:1466,1484`, `core.c:4112`
-- **[Phase 5]** Grep all `rtw89_phy_dig_suspend/resume` sites: fw.c,
-  chan.c, core.c (assoc) — ROC missing
-- **[Phase 6]** Confirmed buggy code present at `core.c:4041–4094`
-  without DIG calls
-- **[Phase 6]** Confirmed `rtw89_phy_dig_suspend/resume` declared in
-  `phy.h`, implemented in `phy.c`
-- **[Phase 7]** Confirmed rtw89 driver directory exists; recent stable
-  rtw89 activity in git log
-- **[Phase 8]** Traced ROC path from `rtw89_ops_remain_on_channel()` —
-  userspace-reachable
-- **UNVERIFIED:** Mailing list review, stable nominations, user bug
-  reports, series prerequisite patches
+- **[Phase 1]** Parsed commit message and tags from user-provided diff
+- **[Phase 2]** Read `thermal.c` lines 65–467; confirmed missing
+  `mld->tzone = NULL` at lines 271–275
+- **[Phase 2]** Read `thermal_core.c:1716–1742`; confirmed
+  `thermal_zone_device_unregister()` frees `tz` via `kfree(tz)`
+- **[Phase 2]** Read `thermal_core.c:1691–1709`; confirmed second
+  unregister accesses `tz->node` on potentially freed memory
+- **[Phase 3]** `git describe HEAD` → `v6.18.44-1-g2736c32da98b9`; `make
+  kernelversion` → `6.18.44`
+- **[Phase 3]** `git blame -L 242,276 thermal.c` → buggy code in current
+  tree
+- **[Phase 3]** `git log --grep='clear tzone'` → no existing fix
+- **[Phase 3]** `git show 3a74aaad04735` → confirmed iwl_mld fixes are
+  backported to this tree
+- **[Phase 4]** `b4 dig` → empty/no match
+- **[Phase 4]** WebFetch lore/patch.msgid.link → blocked by Anubis
+- **[Phase 4]** Grep `*.mbx` for "clear tzone" → no matches
+- **[Phase 5]** Grep `iwl_mld_thermal` → callers in `mld.c:478,506`
+- **[Phase 5]** Read `mld.c:460–527` → thermal init on start, exit on
+  stop
+- **[Phase 6]** Confirmed
+  `drivers/net/wireless/intel/iwlwifi/mld/thermal.c` exists (467 lines)
+- **[Phase 6]** Confirmed `CONFIG_IWLMLD` in `Kconfig:84`
+- **[Phase 6]** Diff context matches current tree — clean apply expected
+- **[Phase 8]** Grep `mvm/tt.c` → same bug pattern at lines 688–692 (not
+  fixed by this commit)
+- **UNVERIFIED:** Lore review discussion and stable nomination comments
+- **UNVERIFIED:** How often `thermal_zone_device_enable()` fails on
+  iwl_mld hardware
 
-**YES**
+**YES**The `b4 dig` search for the patch thread finished with no match —
+it returned empty output for both the commit hash and the subject line
+`wifi: iwlwifi: mld: clear tzone on fail`. Lore/patch.msgid.link was
+also unreachable (bot protection), so the review thread couldn’t be
+retrieved that way.
 
- drivers/net/wireless/realtek/rtw89/core.c | 2 ++
- 1 file changed, 2 insertions(+)
+That doesn’t change the earlier conclusion: the bug is a real stale-
+pointer/UAF on the thermal-zone enable-failure path in `iwl_mld`, the
+fix is small and applies cleanly to this 6.18.44 tree, and the backport
+recommendation remains **YES**.
 
-diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
-index 018857d3569a8..d10483210ccca 100644
---- a/drivers/net/wireless/realtek/rtw89/core.c
-+++ b/drivers/net/wireless/realtek/rtw89/core.c
-@@ -4041,6 +4041,7 @@ void rtw89_roc_start(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
- 	reg = rtw89_mac_reg_by_idx(rtwdev, mac->rx_fltr, rtwvif_link->mac_idx);
- 	rtw89_write32_clr(rtwdev, reg, B_AX_A_UC_CAM_MATCH | B_AX_A_BC_CAM_MATCH);
+ drivers/net/wireless/intel/iwlwifi/mld/thermal.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+index f8a8c35066beb..e445b1d7d4b00 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2024-2025 Intel Corporation
++ * Copyright (C) 2024-2026 Intel Corporation
+  */
+ #ifdef CONFIG_THERMAL
+ #include <linux/sort.h>
+@@ -272,6 +272,7 @@ static void iwl_mld_thermal_zone_register(struct iwl_mld *mld)
+ 	if (ret) {
+ 		IWL_DEBUG_TEMP(mld, "Failed to enable thermal zone\n");
+ 		thermal_zone_device_unregister(mld->tzone);
++		mld->tzone = NULL;
+ 	}
+ }
  
-+	rtw89_phy_dig_suspend(rtwdev);
- 	ieee80211_ready_on_channel(hw);
- 	wiphy_delayed_work_cancel(hw->wiphy, &rtwvif->roc.roc_work);
- 	wiphy_delayed_work_queue(hw->wiphy, &rtwvif->roc.roc_work,
-@@ -4088,6 +4089,7 @@ void rtw89_roc_end(struct rtw89_dev *rtwdev, struct rtw89_vif *rtwvif)
+@@ -385,10 +386,8 @@ static void iwl_mld_thermal_zone_unregister(struct iwl_mld *mld)
+ 		return;
  
- 	rtw89_core_handle_sta_pending_tx(rtwdev, rtwvif_link);
- 	queue_work(rtwdev->txq_wq, &rtwdev->txq_work);
-+	rtw89_phy_dig_resume(rtwdev, true);
+ 	IWL_DEBUG_TEMP(mld, "Thermal zone device unregister\n");
+-	if (mld->tzone) {
+-		thermal_zone_device_unregister(mld->tzone);
+-		mld->tzone = NULL;
+-	}
++	thermal_zone_device_unregister(mld->tzone);
++	mld->tzone = NULL;
+ }
  
- 	if (hw->conf.flags & IEEE80211_CONF_IDLE)
- 		wiphy_delayed_work_queue(hw->wiphy, &roc->roc_work,
+ static void iwl_mld_cooling_device_unregister(struct iwl_mld *mld)
 -- 
 2.53.0
 
