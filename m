@@ -1,42 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3AC4510452;
-	Mon, 31 Aug 2026 13:43:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF75F51355A;
+	Mon, 31 Aug 2026 13:43:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183783; cv=none; b=hEVClr4Kl8OzxXxNPeRHwiYeLwbpWBf/tBh4h1bJ7P/dLafK9R+72h8LSmjvfgfzo2U/VVQwe1gE9VIxGB8zD8vPzKHRIpHzzApk7Xxy8nsc7aLvNhHQdCBkmZegrBIsQV3UnZZrVCluv3VPhTI9ydcIkeX8GhDdJSkGkv6tm5A=
+	t=1788183792; cv=none; b=C+42ebYPZWymh/hQ0g020UjYVZeHkBQVwye8Fv1yJv1+A5qEpoLnap3gFVnRThfxh1nsznLe1vZmZsA12U3dg97N0IX955c2O0WJ2uXmIX6IoFcHA0L7SzpCaRRHCIFdlTt+FVh4c4b9R3EOeoKYfm5tZjLZfYrLSBacdKkq8P0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183783; c=relaxed/simple;
-	bh=1cP5rBgxxLWpKqkFzZ8P53HPnPcg/IunrnTMaYZwWfM=;
+	s=arc-20240116; t=1788183792; c=relaxed/simple;
+	bh=oFgL3RP1wxKXiJlASNNSke7KZ6fX5kaK2e6l/jZfKFE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k0VO3RIF6TX7KjcrMIP5bLDVzPG4R7ZOnOsKliTN0LXGUjDem8+fDwPw5GacoozaqrwS5j1HPi3LIkzG0Zu9DozDiFHZuduewH07Q/UEjXN+blwJC2QNsy4Y2VPY6akK+eqhPTJUPgB+bLn/QikeOJY9YHIyOYLETvvvEG26BQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FlaLGiii; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ihpKQ7tdx87plMbhOTuHkQfgbA8aIJ3epCvjQmtt4r7D91AkHwKdRmPMJK5o2Xy7UczMBl5rp43Ii9gGHndq+0e9/hQ0mGUojUBjAk0MKXaaaaOuswKqd5JejMm526AOgMa48m2qQtGEPYw+h9mhsmdi1G5CDnKLPIDgzvJd8YA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K6jHC2Up; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FlaLGiii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E4121F000E9;
-	Mon, 31 Aug 2026 13:42:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K6jHC2Up"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 534A91F00A3F;
+	Mon, 31 Aug 2026 13:43:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183780;
-	bh=k0KTPZiwC329MUEJR9yhp7CIuCchxZYNZ4GrrKiS+8o=;
+	s=k20260515; t=1788183789;
+	bh=uoiUdB65pL39pRygv8E6gcLlcbqoHjqbhN8SRMJbg6U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=FlaLGiii4wN/1G2un+xexnEmCKMPz8YuOCLii6HxH4nMOuqN7Vj855hdVeY2juanH
-	 Wf4NPYkw8Ak18dj/R8PCE5uGcAoBxX/KKBhVDQBe+M/oBp0xInmqWel8XlClQGw2e9
-	 PG/uDgVReFdiVfIYCzpLwaNFB1t/5vx5uxawuaG2PRY66hwZsI0kyF0DlWWvoYsM/p
-	 VYR6jrGxMv7TDc9ZhLYwhUucbX+wIQhHSOwm1o+zxceohXl5qFkSiIbc3tfCAgSnsC
-	 kokopH2G3PvL+p/CVkH3bw7QizpY/S9esYc5HUbjDVa8VMc1pyyTewUdmQlbGOzBdH
-	 9Cp3ii7aL+bwQ==
+	b=K6jHC2UpVC49+xxeTISAjHy+FR8tZjbAGcWTH5JB63d9oTgsnCtzSLypuvQ+QeelH
+	 sQWWX/xQzYg3IkiSIibMHN+csJRPndw6MMtr/aqhbjhuh/SgNulgCNvR48iqxcBZmQ
+	 GDh37qCCtShftGM8BsurKjPX9II3BPQ42q0jWbLt4BCmnUNneT2DnSCD27qFXWqAnJ
+	 EjrAmykexD1GPMWbtdn4U6izeol6QgYzk9UW7APBQIz9qC/dg19yb+7eufB4G3b7hq
+	 kHdJT3u5kRHM9rPnduPGPBG14YYLyS6zZzqFQl70pInpUmqO8nkwpYk0tgHi5wnpza
+	 JrSn1QrEEAhyg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Devin Wittmayer <lucid_duck@justthetip.ca>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.6] wifi: iwlwifi: mvm: fix a possible underflow
-Date: Mon, 31 Aug 2026 09:25:28 -0400
-Message-ID: <20260831133314.4125787-300-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18-6.12] wifi: mt76: mt7925: add Netgear A8500 USB device ID
+Date: Mon, 31 Aug 2026 09:25:33 -0400
+Message-ID: <20260831133314.4125787-305-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,375 +58,367 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Devin Wittmayer <lucid_duck@justthetip.ca>
 
-[ Upstream commit 0cb5260a1027a43f8cdb961e128f2ddd42e46832 ]
+[ Upstream commit 291b067a02b9c1fd272057ebf47c365260955fd2 ]
 
-We shouldn't trust the firmware about the length of the wowlan packet.
+Add USB device ID for the Netgear A8500 (0846:9050) which uses
+the mt7925 chipset.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20260715215523.fbd989cc85e2.If68de403bfa4943732c025961154c20b01b09e83@changeid
+Signed-off-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+Link: https://patch.msgid.link/20260527144735.10254-1-lucid_duck@justthetip.ca
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mvm: fix a possible
-underflow`
+# Stable Backport Analysis: `wifi: mt76: mt7925: add Netgear A8500 USB
+device ID`
 
-**Local tree:** Linux **6.18.44** (`v6.18.44-2-g1b9e1abadee04`)
+**Local tree:** `v6.18.44` (Linux 6.18.44)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: Subject line
-**Record:** `[wifi: iwlwifi: mvm]` `[fix]` — validate WoWLAN wake-packet
-size from firmware before arithmetic/copy to prevent integer underflow.
+### Step 1.1: Parse the subject line
+**Record:** `[wifi: mt76: mt7925]` `[add]` — Add USB device ID for
+Netgear A8500 (0846:9050) to the existing mt7925u driver.
 
-### Step 1.2: Tags
+### Step 1.2: Parse all commit message tags
 **Record:**
-- **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
+- **Signed-off-by:** Devin Wittmayer `<lucid_duck@justthetip.ca>`
   (author)
-- **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (iwlwifi maintainer)
-- **Link:** `https://patch.msgid.link/20260715215523.fbd989cc85e2...`
-- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc: stable, or
-  syzbot tags
-- Part of series `[PATCH 14/15]` in
-  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
+- **Link:** https://patch.msgid.link/20260527144735.10254-1-
+  lucid_duck@justthetip.ca
+- **Signed-off-by:** Felix Fietkau `<nbd@nbd.name>` (mt76 maintainer)
+- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
+  by:`, or `Cc: stable@vger.kernel.org`
+- Notable pattern: maintainer (Felix Fietkau) Signed-off-by is a strong
+  quality signal; absence of `Cc: stable` is expected per review
+  pipeline rules.
 
-### Step 1.3: Body
+### Step 1.3: Analyze commit body
 **Record:**
-- **Bug:** Driver trusts firmware-reported WoWLAN wake-packet length
-  (`wake_packet_bufsize`) without validating it is large enough for
-  header/crypto overhead.
-- **Symptom:** Integer underflow on `pktsize -= hdrlen` / `pktsize -=
-  ivlen + icvlen`, then `skb_put_data()` with a huge effective size →
-  kernel crash on WoWLAN resume.
-- **Root cause:** Missing bounds checks before subtracting lengths from
-  `pktsize`.
-- **Version info:** None in message; wake-packet path dates to 2022.
+- **Bug description:** Netgear A8500 USB WiFi adapter (VID:PID
+  0846:9050) uses the mt7925 chipset but is not recognized by the kernel
+  because its USB ID is missing from `mt7925u_device_table[]`.
+- **Symptom:** Device enumerates as USB hardware but does not bind to
+  `mt7925u` driver; WiFi is non-functional.
+- **Root cause:** Missing entry in the USB device ID table.
+- **Version info:** None stated in commit message.
 
-### Step 1.4: Hidden bug fix?
-**Record:** No — explicitly labeled “fix a possible underflow”; clearly
-a firmware-validation / memory-safety fix, not cosmetic cleanup.
+### Step 1.4: Detect hidden bug fixes
+**Record:** Not a hidden bug fix in the traditional sense (no
+crash/UAF/leak). This is an explicit **hardware enablement** fix — a
+device ID addition that allows an existing, fully functional driver to
+bind to real hardware. Falls under the stable exception category for new
+device IDs.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: Inventory
+### Step 2.1: Inventory the changes
 **Record:**
-- **File:** `drivers/net/wireless/intel/iwlwifi/mvm/d3.c` (+15 / −4)
-- **Function:** `iwl_mvm_report_wakeup_reasons()`
-- **Scope:** Single-file, surgical fix in WoWLAN wake-packet handling
+- **Files changed:** `drivers/net/wireless/mediatek/mt76/mt7925/usb.c`
+  (+3 lines)
+- **Functions modified:** None functionally; only
+  `mt7925u_device_table[]` static data
+- **Scope:** Single-file, surgical, 3-line addition
 
 ### Step 2.2: Code flow change
 **Record:**
-
-| Hunk | Before | After |
-|------|--------|-------|
-| Early guard | Dereference `hdr->frame_control` immediately |
-`WARN_ON_ONCE(pktsize < sizeof(*hdr)); return;` before further header
-use |
-| Data-frame path | Copy header (`skb_put_data`) before validating total
-size | Validate `pktsize > hdrlen + ivlen + icvlen` via `IWL_FW_CHECK`,
-then copy |
-| Underflow site | `pktsize -= ivlen + icvlen` without prior size check
-| Same subtraction only after validation |
+- **Before:** USB core matches 0846:9050 against
+  `mt7925u_device_table[]` → no match → driver does not probe.
+- **After:** USB core matches 0846:9050 → `mt7925u_probe()` is called
+  with `driver_info = MT7925_FIRMWARE_WM` → normal mt7925u
+  initialization path.
+- **Path affected:** USB device enumeration / driver binding at plug-in
+  time.
 
 ### Step 2.3: Bug mechanism
-**Record:** **Integer underflow / out-of-bounds access (memory
-safety).**
-- `pktsize` is `int`; subtracting `hdrlen`, `ivlen`, `icvlen` when
-  firmware reports a too-small value makes `pktsize` negative.
-- `skb_put_data(pkt, pktdata, pktsize)` treats size as unsigned → ~4 GB
-  copy attempt.
-- Header fields are read before validating minimum buffer size.
-- Complements `2d5dec517b539` (validates notification at store time);
-  this validates again at report time.
+**Record:**
+- **Category:** Hardware workaround / device ID addition (stable
+  exception)
+- **Mechanism:** Without the VID/PID entry, `usb_driver.id_table`
+  matching fails and the adapter is unusable despite the mt7925 driver
+  being present and functional for other devices.
 
-### Step 2.4: Fix quality
-**Record:** Obviously correct, minimal, matches existing `IWL_FW_CHECK`
-patterns in iwlwifi. Low regression risk.
-- **Minor concern:** Early `return` skips
-  `ieee80211_report_wowlan_wakeup()` (unlike `goto report` on alloc
-  failure). Acceptable trade-off to avoid processing corrupt firmware
-  data.
-- **Note:** Current tree has `icvlen = 0; truncated -= icvlen;` ordering
-  at lines 1548–1550 (subtracts after zeroing). This commit does not fix
-  that; separate issue.
+### Step 2.4: Fix quality assessment
+**Record:**
+- **Obviously correct:** Yes — identical pattern to the existing A9000
+  entry (0846:9072) already in this tree.
+- **Minimal/surgical:** Yes — 3 lines, no logic changes.
+- **Regression risk:** Very low — only adds a new match entry; does not
+  alter behavior for existing devices.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: Blame
-**Record:** Wake-packet handling in `iwl_mvm_report_wakeup_reasons()`
-traces to merge `5d324e5159d9e` (v6.18 base). Original wake-packet
-support in commit `219ed58feda9` (Sep 2022) already had unchecked
-`pktsize` arithmetic. Bug present since feature introduction.
+### Step 3.1: Blame the changed lines
+**Record:**
+- `mt7925u_device_table[]` introduced in `c948b5da6bbec` (Sep 2023, "add
+  Mediatek Wi-Fi7 driver for mt7925 chips")
+- A9000 entry added in `f6159b2051e15` (Jul 2025, Nick Morrow) — already
+  present in this tree
+- A8500 entry (0846:9050) is **not yet** in this tree
 
-### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag.
+### Step 3.2: Follow Fixes: tag
+**Record:** No `Fixes:` tag present. N/A.
 
 ### Step 3.3: Related file history
 **Record:**
-- `2d5dec517b539` — related wake-packet notification validation;
-  **already in this tree**
-- `dd90880eb5ec5` — OOB read fix in `iwl_mvm_nd_match_info_handler()`
-- Patch 15/15 (ND match struct sizing) is **independent**; patch 14/15
-  is standalone
+- Recent commits to `mt7925/usb.c` include functional fixes (crash, NULL
+  deref, deadlock) and the A9000 ID addition `f6159b2051e15`
+- Similar precedent: `fc6627ca8a5f8` added Netgear A7500 (0846:9065) to
+  `mt7921/usb.c` with `Cc: stable@vger.kernel.org`
+- **Standalone:** Yes — single patch, no series dependency
 
-### Step 3.4: Author context
-**Record:** Emmanuel Grumbach is a core iwlwifi developer; July 2026
-series is a batch of firmware-validation hardening fixes. Miri Korenblit
-is iwlwifi maintainer.
+### Step 3.4: Author's other commits
+**Record:** Devin Wittmayer has no other commits in this tree (author is
+new contributor). Felix Fietkau is the mt76 maintainer who applied the
+patch.
 
-### Step 3.5: Dependencies
-**Record:** No prerequisites. `IWL_FW_CHECK` exists in `fw/dbg.h`. Self-
-contained; does not need patch 15/15.
+### Step 3.5: Prerequisites
+**Record:**
+- Requires `CONFIG_MT7925U` and existing mt7925u driver — both present
+  in v6.18.44
+- Uses `MT7925_FIRMWARE_WM` — already declared via `MODULE_FIRMWARE` in
+  same file
+- **Can apply standalone:** Yes
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original discussion
-**Record:** Local mbox
-`20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`,
-patch 14/15. Cover letter lists it under “bugfixes.” `b4 dig -c
-2d5dec517b539` worked for the related patch; direct `b4 dig` on this
-commit hash unavailable (not yet committed upstream in this checkout).
-Lore URL blocked by bot protection.
+### Step 4.1: Original patch discussion
+**Record:** `b4 dig -c` could not be run (commit not in local tree). `b4
+dig` with message-id failed (incorrect syntax for message-id lookup).
+WebFetch of patch.msgid.link and lore.kernel.org returned bot-protection
+page. **UNVERIFIED:** Full mailing list review thread not accessible.
 
-### Step 4.2: Reviewers
-**Record:** Series cover shows Intel iwlwifi maintainers as authors; no
-explicit review thread found in local mbox for patch 14.
+### Step 4.2: Reviewers from b4 dig -w
+**Record:** UNVERIFIED — could not retrieve recipient list.
 
-### Step 4.3: Bug report
-**Record:** No external bug report or syzbot link. Intel-internal
-firmware-trust hardening, consistent with related fixes in the same
-series.
+### Step 4.3: Bug report search
+**Record:** No `Reported-by:` or bugzilla/syzbot links in commit
+message. Hardware enablement request from contributor.
 
-### Step 4.4: Series context
-**Record:** Patch 14/15 of 15; independent of patch 15/15 (struct layout
-change).
+### Step 4.4: Related patches/series
+**Record:** Part of a well-established pattern of Netgear USB ID
+additions to mt76 drivers (mt7921 A7500, mt7925 A9000). Standalone one-
+patch submission.
 
-### Step 4.5: Stable list history
-**Record:** No stable-list discussion found. Not a negative signal.
+### Step 4.5: Stable mailing list history
+**Record:** UNVERIFIED — lore.kernel.org inaccessible. However, the
+nearly identical A9000 commit (`f6159b2051e15`) in this tree included
+`Cc: stable@vger.kernel.org`, establishing subsystem precedent for such
+patches.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `iwl_mvm_report_wakeup_reasons()` (modified)
+**Record:** No functions modified. Data table `mt7925u_device_table[]`
+consumed by `module_usb_driver(mt7925u_driver)` via `.id_table`.
 
-### Step 5.2: Callers
-**Record:**
-- `iwl_mvm_query_wakeup_reasons()` → called from D3 resume path (~line
-  2770)
-- Triggered on **system resume from suspend** when WoWLAN wakes the host
-- Requires `CONFIG_PM`, `CONFIG_IWLMVM`, WoWLAN enabled
+### Step 5.2: Trace callers
+**Record:** USB core calls `usb_match_device()` against
+`mt7925u_device_table[]` during enumeration → on match, calls
+`mt7925u_probe()` (line 132 of `usb.c`). Triggered when user plugs in
+the USB adapter.
 
-### Step 5.3: Callees
-**Record:** `WARN_ON_ONCE`, `IWL_FW_CHECK`, `alloc_skb`, `skb_put_data`,
-`ieee80211_data_to_8023`, `kfree_skb`, `ieee80211_report_wowlan_wakeup`
+### Step 5.3: Trace callees
+**Record:** On successful match, `mt7925u_probe()` initializes the
+mt7925 chipset using existing driver infrastructure and
+`MT7925_FIRMWARE_WM` firmware.
 
-### Step 5.4: Reachability
-**Record:** Reachable on every WoWLAN wakeup with a wake packet on Intel
-MVM hardware — common laptop suspend/resume path. Not userspace-
-triggerable directly, but affects all WoWLAN users on resume.
+### Step 5.4: Call chain / reachability
+**Record:** USB hotplug during normal desktop/laptop use. Any user with
+this hardware who plugs in the adapter is affected. No privilege
+required to trigger enumeration.
 
 ### Step 5.5: Similar patterns
-**Record:** Same series and tree already have multiple `IWL_FW_CHECK`
-validations (`mvm/tx.c`, `mvm/rxmq.c`, `mld/tx.c`). This follows
-established iwlwifi defensive pattern.
+**Record:** Identical pattern in same file for A9000 (0846:9072).
+Similar Netgear IDs in `mt7921/usb.c` (0846:9060, 0846:9065). All use
+same `USB_DEVICE_AND_INTERFACE_INFO` + `MT7925_FIRMWARE_WM` / equivalent
+firmware constant.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
+## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
 
-### Step 6.1: Buggy code present?
-**Record:** **YES.** Lines 1508–1559 in `d3.c` lack the proposed checks.
-Underflow path is live.
+### Step 6.1: Does the buggy code exist?
+**Record:** **Yes.** The mt7925u driver and device table exist in
+v6.18.44, but the A8500 entry (0846:9050) is **missing**. Current table
+has only MediaTek reference (0e8d:7925) and Netgear A9000 (0846:9072).
+Driver has been present since `c948b5da6bbec` (confirmed ancestor of
+HEAD).
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply.** Patch 14 hunks applied to `d3.c` with +7
-line offset. No structural conflicts.
+**Record:** **Clean apply expected.** File exists with identical
+structure. Insertion point is between the MediaTek entry and the A9000
+entry (as shown in the candidate diff). Only minor difference: local
+file uses `ISC` license header vs `BSD-3-Clause-Clear` in candidate diff
+— irrelevant to the 3-line ID addition.
 
 ### Step 6.3: Related fixes already present?
-**Record:** `2d5dec517b539` (notification-time validation) is in tree.
-This underflow fix is **not** present (`grep "pktsize is too small"`
-only in mbox).
+**Record:** A9000 ID (`f6159b2051e15`) is already in this tree. No
+duplicate A8500 entry found. No alternate fix for A8500.
 
 ---
 
-## PHASE 7: SUBSYSTEM CONTEXT
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-### Step 7.1: Subsystem / criticality
-**Record:** `drivers/net/wireless/intel/iwlwifi/mvm` — **IMPORTANT**
-(Intel WiFi on a large share of laptops/desktops).
+### Step 7.1: Subsystem criticality
+**Record:** `drivers/net/wireless/mediatek/mt76/` — **IMPORTANT**
+(wireless networking driver). Affects users of specific USB WiFi
+hardware, not universal.
 
-### Step 7.2: Activity
-**Record:** Actively maintained; several iwlwifi validation fixes
-already backported to this 6.18.y tree in 2026.
+### Step 7.2: Subsystem activity
+**Record:** mt7925 subsystem is actively maintained in this tree —
+numerous bugfix commits in recent history (NULL deref, deadlock, crash
+fixes), indicating mature driver with ongoing stable fixes.
 
 ---
 
-## PHASE 8: IMPACT AND RISK
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
 ### Step 8.1: Who is affected
-**Record:** Intel WiFi users with WoWLAN (`CONFIG_IWLMVM` + PM). Large
-population on laptops.
+**Record:** Users of the Netgear A8500 USB WiFi 7 adapter (0846:9050)
+running kernel 6.18.y with `CONFIG_MT7925U` enabled.
 
 ### Step 8.2: Trigger conditions
-**Record:** Firmware reports `wake_packet_bufsize` smaller than actual
-802.11 header + IV/ICV overhead during WoWLAN wakeup. Requires firmware
-bug or corruption; rare but plausible. Not unprivileged-userspace-
-triggerable.
+**Record:** Plugging in the Netgear A8500 USB adapter. Common,
+deterministic, no special conditions. Unprivileged user can trigger via
+USB device insertion.
 
-### Step 8.3: Failure severity
-**Record:** Integer underflow → massive `skb_put_data()` → **kernel
-oops/panic on resume** — **CRITICAL** for affected path.
+### Step 8.3: Failure mode severity
+**Record:** Without fix: adapter is completely non-functional (no driver
+binding). **Severity: MEDIUM** for affected hardware users (device
+unusable, but not a crash/corruption). With fix: normal WiFi operation.
 
-### Step 8.4: Risk/benefit
+### Step 8.4: Risk-benefit ratio
 **Record:**
-- **Benefit:** HIGH — prevents crash on WoWLAN resume
-- **Risk:** LOW — ~15 lines, defensive checks only, established macro
-- **Ratio:** Strongly favors backport
+- **Benefit:** Enables WiFi on a commercially available Netgear USB
+  adapter for stable kernel users
+- **Risk:** Very low — 3-line ID table entry, zero logic change,
+  identical to already-accepted A9000 entry
+- **Ratio:** Strongly favorable
 
 ---
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence summary
+### Step 9.1: Evidence compilation
 
-**FOR:**
-- Real integer underflow → crash on resume
-- Buggy code confirmed in 6.18.44 tree
-- Small, surgical, obviously correct
-- Complements existing backport `2d5dec517b539`
-- Applies cleanly
-- iwlwifi maintainer authorship
-- Matches stable firmware-validation pattern
+**FOR backporting:**
+- Classic device ID addition to existing driver (explicit stable
+  exception)
+- Driver fully exists in v6.18.44 (`CONFIG_MT7925U`, probe/remove,
+  firmware)
+- Identical pattern to A9000 entry already in this tree
+- Subsystem precedent: similar Netgear ID patches nominated for stable
+  (`Cc: stable` on A9000, A7500)
+- Maintained by Felix Fietkau (Signed-off-by)
+- 3 lines, zero regression risk to existing devices
+- Enables real hardware for stable users
 
-**AGAINST:**
-- Requires firmware misreporting (not syzbot-proven)
-- Early `return` drops wakeup report on corrupt packet (minor, vs.
-  crash)
-- `icvlen`/`truncated` ordering bug in current tree is separate (not
-  introduced by this patch)
+**AGAINST backporting:**
+- Not a crash/security/corruption fix — hardware enablement only
+- No Tested-by or Reported-by in commit message
+- Mailing list discussion unverified
 
-**UNRESOLVED:** No public review thread or syzbot reproducer (not needed
-for decision).
+**UNRESOLVED:**
+- Full lore review thread not accessible
+- No explicit Tested-by confirmation
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — logic verified; maintainer-
-   signed
-2. Fixes a real bug? **PASS** — demonstrated underflow path
-3. Important issue? **PASS** — resume-time kernel crash
-4. Small and contained? **PASS** — one function, ~19 lines
-5. No new features/APIs? **PASS**
-6. Can apply to local tree? **PASS** — verified clean apply
+1. Obviously correct and tested? **PASS** — trivial ID entry,
+   maintainer-applied; Tested-by absent but pattern is standard
+2. Fixes a real bug affecting users? **PASS** — device non-functional
+   without ID
+3. Important issue? **PASS** — hardware enablement for real product
+   (stable exception category)
+4. Small and contained? **PASS** — 3 lines, 1 file
+5. No new features or APIs? **PASS** — device ID only
+6. Can apply to local tree? **PASS** — driver and file present, clean
+   apply expected
 
 ### Step 9.3: Exception category
-**Record:** N/A (not device ID, quirk, DT, docs, or build fix — standard
-bug fix).
+**Record:** **NEW DEVICE ID** — adding PCI/USB ID to existing driver.
+Explicitly listed as a stable exception. The mt7925u driver exists; only
+the ID is new.
 
 ### Step 9.4: Decision rationale
-For Linux **6.18.44**, the vulnerable WoWLAN wake-packet code is present
-and unpatched. Malicious or buggy firmware length fields can underflow
-`pktsize` and crash the kernel during suspend resume — a high-severity,
-low-risk fix that belongs in stable.
+
+This commit adds USB VID/PID `0846:9050` for the Netgear A8500 to the
+existing `mt7925u` driver in the v6.18.44 stable tree. The driver is
+fully present; the A9000 sibling device (0846:9072) is already supported
+in this tree via an identical 3-line patch that was nominated for
+stable. Without this entry, the A8500 adapter cannot bind to any driver
+and is completely unusable. The change is minimal, obviously correct,
+introduces no new APIs, and matches established stable backport practice
+for mt76 Netgear USB adapters.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body from user query and mbox
-  patch 14/15
-- **[Phase 1]** Confirmed patch 14/15 in
-  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
-- **[Phase 2]** Read `d3.c` lines 1454–1588; confirmed missing
-  validation
-- **[Phase 2]** Simulated underflow: `pktsize=10, hdrlen=24` →
-  `pktsize=-34` → `4294967262` unsigned
-- **[Phase 3]** `git describe HEAD` → `v6.18.44-2-g1b9e1abadee04`;
-  Makefile `6.18.44`
-- **[Phase 3]** `git blame` lines 1508–1560 → merge `5d324e5159d9e`
-- **[Phase 3]** `git show 219ed58feda9` → wake packet support from Sep
-  2022 with same unchecked arithmetic
-- **[Phase 3]** `git show 2d5dec517b539` → related fix already in tree
-- **[Phase 3]** `git log --oneline -20 --
-  drivers/net/wireless/intel/iwlwifi/mvm/d3.c` → fix not present
-- **[Phase 4]** Read cover letter: listed as “bugfixes”, patch 14/15
-  standalone
-- **[Phase 4]** `b4 dig -c 2d5dec517b539` → lore URL for related patch
-- **[Phase 4]** WebFetch lore URL → blocked (bot protection); relied on
-  local mbox
-- **[Phase 5]** Traced call chain: resume →
-  `iwl_mvm_query_wakeup_reasons` → `iwl_mvm_report_wakeup_reasons`
-- **[Phase 5]** `grep IWL_FW_CHECK` → macro present in `fw/dbg.h`
-- **[Phase 6]** `grep "pktsize is too small"` → only in mbox, not in
-  tree
-- **[Phase 6]** `git apply --check` on patch 14 d3.c hunks → succeeded
-  (offset +7)
-- **[Phase 6]** Confirmed `iwl_mvm_wowlan_store_wake_pkt` and wake-
-  packet path exist
-- **[Phase 8]** Assessed severity: resume crash on WoWLAN path
+- [Phase 1] Parsed subject, tags, body from user-provided commit message
+- [Phase 1] Confirmed: no Fixes/Reported-by/Tested-by/Cc:stable tags;
+  Felix Fietkau Signed-off-by present
+- [Phase 2] Diff analysis: 3 lines added to `mt7925u_device_table[]` in
+  `usb.c`
+- [Phase 3] `git describe HEAD`: v6.18.44
+- [Phase 3] `git blame` on usb.c lines 12-18: table from c948b5da6bbec
+  (2023), A9000 from f6159b2051e15 (2025)
+- [Phase 3] `git merge-base --is-ancestor c948b5da6bbec HEAD`: mt7925
+  driver is in tree
+- [Phase 3] `git show f6159b2051e15`: A9000 precedent with Cc:
+  stable@vger.kernel.org
+- [Phase 3] `git show fc6627ca8a5f8`: mt7921 A7500 precedent with Cc:
+  stable
+- [Phase 4] WebFetch patch.msgid.link: blocked by bot protection —
+  UNVERIFIED
+- [Phase 4] WebFetch lore.kernel.org: blocked — UNVERIFIED
+- [Phase 4] b4 dig: commit not in tree, could not dig by hash —
+  UNVERIFIED
+- [Phase 5] Read `mt7925u_probe()` at line 132: standard USB probe path
+- [Phase 5] `grep 0846` in mt76: A9000 (9072) present, A8500 (9050)
+  absent
+- [Phase 6] Read current `usb.c`: A8500 ID missing, driver fully
+  functional
+- [Phase 6] `Kconfig` confirms `CONFIG_MT7925U` exists
+- [Phase 6] `MODULE_FIRMWARE(MT7925_FIRMWARE_WM)` present in usb.c
+- [Phase 7] `git log --oneline -20 -- mt7925/`: active subsystem with
+  many stable-worthy fixes
+- [Phase 8] Failure mode: no driver binding → device unusable (not
+  crash)
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7925/usb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index dd1c21065bc33..82dca6ba56c7f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1516,6 +1516,10 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
- 		if (WARN_ON_ONCE(truncated < 0))
- 			truncated = 0;
- 
-+		/* this would be a firmware bug */
-+		if (WARN_ON_ONCE(pktsize < sizeof(*hdr)))
-+			return;
-+
- 		if (ieee80211_is_data(hdr->frame_control)) {
- 			int hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 			int ivlen = 0, icvlen = 4; /* also FCS */
-@@ -1524,10 +1528,6 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
- 			if (!pkt)
- 				goto report;
- 
--			skb_put_data(pkt, pktdata, hdrlen);
--			pktdata += hdrlen;
--			pktsize -= hdrlen;
--
- 			if (ieee80211_has_protected(hdr->frame_control)) {
- 				/*
- 				 * This is unlocked and using gtk_i(c)vlen,
-@@ -1553,6 +1553,17 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
- 				truncated = 0;
- 			}
- 
-+			if (IWL_FW_CHECK(mvm,
-+					 pktsize <= hdrlen + ivlen + icvlen,
-+					 "pktsize is too small %d\n",
-+					 pktsize)) {
-+				kfree_skb(pkt);
-+				return;
-+			}
-+
-+			skb_put_data(pkt, pktdata, hdrlen);
-+			pktdata += hdrlen;
-+			pktsize -= hdrlen;
- 			pktsize -= ivlen + icvlen;
- 			pktdata += ivlen;
- 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+index bf040f34e4b9f..995a7fcc419fd 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/usb.c
+@@ -12,6 +12,9 @@
+ static const struct usb_device_id mt7925u_device_table[] = {
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0e8d, 0x7925, 0xff, 0xff, 0xff),
+ 		.driver_info = (kernel_ulong_t)MT7925_FIRMWARE_WM },
++	/* Netgear, Inc. A8500 */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x0846, 0x9050, 0xff, 0xff, 0xff),
++		.driver_info = (kernel_ulong_t)MT7925_FIRMWARE_WM },
+ 	/* Netgear, Inc. A9000 */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0846, 0x9072, 0xff, 0xff, 0xff),
+ 		.driver_info = (kernel_ulong_t)MT7925_FIRMWARE_WM },
 -- 
 2.53.0
 
