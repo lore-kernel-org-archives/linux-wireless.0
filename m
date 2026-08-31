@@ -1,140 +1,127 @@
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA9AA2FD69D
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 07:16:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 653C02853E0
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 07:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788160606; cv=none; b=T7GLGP5XM2DUZ+JQMeDYOPtywXben+NgYl7AhVFiSr93jiyqocEn+qC8YgoB+I+DqQgfL09bVA/3eOF5l7le/donQEraSs/m2s5OT19+HA7vhHa9txqLlyL5eVUZitsBzMFUAggncVdwzYOOoqlUrSkzV7hNqWWydXNlCV8zYIU=
+	t=1788162756; cv=none; b=j8kimE2c0YhP4PHRnGgqG7W7ORd3Tw4zTD7e2VN1sHL10GLVQTFbdwYqZbM5hW3nKwgCE7EuXq8u3pY+rrxB59iP+SHfQyKBSTFdbtGekBvJTbLunXBmUaKLXUak7zgcwSX1jHEYz4ejzFNriOgoW/VwY3DesyuMSxwBMVVY77w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788160606; c=relaxed/simple;
-	bh=V15gEU3nF7lHT94F1KN0+5/4dDjO3y9sQ0nL8buWCGA=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=kuwtJ5DsB//xxeqbv7UiSgr9wdp4vhGp5S7lSfMRJzXzD+B1gIEGHoU4XsIj3KDff144kFcPrCkiEeuUmrIUo0ZgeZ8e6qRR+ZNOuOWmlAihaHrnLheUMKUiG5cwna26eur4stU9Mvb1oZrKFx8b0dTjnU1PfQ7wqNryTrGEP9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b97Mnant; arc=none smtp.client-ip=209.85.208.172
+	s=arc-20240116; t=1788162756; c=relaxed/simple;
+	bh=OXDgkpkpNgPyl7oWvgcmu7eMaUg2MwDcP6GbniOs4gc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kZ1GtF6enLK29WSefbJmdx/ZMTlnuHk7xAg7T+zc7EFdC0DI7J47pj1OY45iJIkp40DwkrRQ2EZ5AuGrxO1tVLgc2EfAPBBktbcJO8Eu+tRrpaUkxEsJD7FV5gHoBnjrXC37pHh7dR+Hg1XdpTyb+LHKK9fLO30UnwE8+JZhVwk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TWBbC8vE; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b97Mnant"
-Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-39c953950dfso31318721fa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 00:16:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TWBbC8vE"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-8518b3ff3e9so3195193b3a.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 00:52:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788160603; x=1788765403; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:content-type:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=trfHiKNxLwKts3a9TkQ/McrWvv/qxtbxcDQ/ll2fJu0=;
-        b=b97MnanthQFawrEKJJKity5y1EUwVpQU1nZ3a5DC6MysgS23YYttzvffA+W/aRHRDq
-         8rBgvkGb5wdzAkicyulxcGupSN/DuzBqhj/DilAIWPc2o9i1MwbYZMob5AP6bLPxTAan
-         1Y7OayTB/2xj63qjkIe4nhIRmoiH8JIBx9710G6SKIm25wJPaDqMRAvVz+GPzXypynrR
-         /IWByX9e1X9tCeP47mzPiOwkOsRVHl4mIllV/0K2uP3NitTA2S5v8LJhyG+NnGXLicGi
-         j7NVtbcNWEQlPRobHPeTur9Rw1eHY2oRgye6EEpzFSmrz70biDYVeP9nFfMqt/0SJJFo
-         Qtmw==
+        d=gmail.com; s=20251104; t=1788162755; x=1788767555; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=7XOLnI0Bp74nz7GsZdhQ+Q24V6cVlLUr+JGeJJ8isyc=;
+        b=TWBbC8vEkJ90wYLjn9xrjWXyiPdAqx4HTOialh3ulwiByKXaD4DufYm6iyeP1hzaXX
+         kJ16qsV+qzZ4/TE38kBoT2A71KZ5chz3SoERfREwxbebJcd7IouJLCpa6gXrqne+6P5u
+         3hgqzHgYykgEMX0QUmCsPq792ieLBWBhBEJWsKjp04NGzFsn6P82WvHAwBulcAxgOtEl
+         YyM5ObuLye7yRQMGwwtPA6Axg3jl88bQy7nSkJaPS6vke7SHHvqtJCJb2rbbuAAwnDPq
+         UO6hEdEvvxiWpSqTc/4OujClCvoK2sdB0mFpCYzOTHen/6ITKkAxZdg0dl3ztjspkbyt
+         H2Ow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788160603; x=1788765403;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:content-type:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=trfHiKNxLwKts3a9TkQ/McrWvv/qxtbxcDQ/ll2fJu0=;
-        b=dfeQqsRYczot/grQVDHJKsT8AMteVPn8REc3y3Sw+1uzENIaVU8FgoUNx0M06VOJML
-         NywGCPTvL/bEBtOSmS50UgfszWYykeIXVWf17kw4T7nr6QNDlpN40Rlwwrvwgx6OyDLu
-         h47l7ehg23WVEtUQAEdLT7wdOy/sDhKn5dDzb6H9WNTBsOLVZ250nF+aPV490jljgROK
-         TVqVjaAAhymASvtcrmO4ectessFbAFuioqe4joy9XiIxjzxjy64ynKdwUDvqtwHkhXgm
-         l/3+hGpzCFII9jIKPD0ADHihK0qynGaNNwLxe7ftC14wopV5dBo+I4kLfJqz6zDnoZ37
-         PC9w==
-X-Gm-Message-State: AFuF++mqk3E1aR3FtpoC7cBaKbf8F+6aRb8fj156bUX0RbnuxypHfH5F
-	6Wg3Zc/J7LeXWy7ui12LPX/WfGvIJHIXmq4xaxr/fFoF7t/v2/kIe1oa
-X-Gm-Gg: AYBFou3uAEP84xtm+WP5VU567YHZSkvuhx0r8JWWbGiBgG3VrDMuSivJzGlUAxao1eg
-	gdReUDtnX8l/tc5YeCAzNE7CsZJJz9WlZB83dQzykRKaWEZ2RtmOxjVSwtr5aGxC+7rWDG2Yhpb
-	TumoPYZRJ98qjZohHxXSSfndpKthMyuicnxeQZar66dvk6SRVTErdbI3OPAjUUQoWIRbfAslBzN
-	4bhmwD7+THciyvSOcXeNFJoM8E7fvMN7U7PyxuNJgRiINSFjYvfQc0H077HZbgJFZM5CyClfbY9
-	FISETfc6yxX0nFJOC1S8lm+NtlKJfQsv+JeNBFLmQPQSYtgbLePZviXcdwKmakH3+njzyxENgJ8
-	Ee9Y2th6SqeOVyHwl/XThViKfvIba/aPLDqGdEnvU57aQaSnSvSVtPrnxxLUu7C4N7yftRjNNMi
-	+oBIXC+M4sHqz67Thr7AytR+6/JV4OdJnkee3vDIxLeF1ReYucXbSr6d6gj4E6Nl46EQVW6TwqO
-	PAihxJ4QzXxIMXxOw==
-X-Received: by 2002:a05:651c:1505:b0:3a1:ab57:ea2c with SMTP id 38308e7fff4ca-3a33545f5e6mr2923771fa.2.1788160602452;
-        Mon, 31 Aug 2026 00:16:42 -0700 (PDT)
-Received: from smtpclient.apple ([87.200.95.144])
-        by smtp.gmail.com with ESMTPSA id 38308e7fff4ca-3a32702b31asm7257761fa.6.2026.08.31.00.16.39
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 31 Aug 2026 00:16:41 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+        d=1e100.net; s=20251104; t=1788162755; x=1788767555;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7XOLnI0Bp74nz7GsZdhQ+Q24V6cVlLUr+JGeJJ8isyc=;
+        b=rltIitfDIpxYavA2kj/yhM47L5TzZe4fbbs7q6WknKoxV9QmQ/5D216l91FIhY28Dt
+         T7+hqUeaaI4aB5I018nUI8CVyWHI8zew1B1Vw/NIUT6wQgCq8kP6MX9jf9+S3j/cfw5x
+         koth0VBDYA2O4tUHR3NI6lj43GYzB/cG9UznJEKO8rwr3a2KoUyMdMx4O+j0SJck9+NZ
+         QBfOtmXuVkZVVILYmHe/wwmMvm/9bR8nms96Qjq82rT8ZQP+2bZTTvh/U2aTTmupCiVA
+         G5mjtqVrMcSs2Fp7Ib6Nv4yPn3M0ShpNbE6ysymPIvifTy7RsO3u/FGQK13qITn0Ca98
+         YERQ==
+X-Gm-Message-State: AFuF++nBIlahQqz3+H5tA3sRh5aZhS7oQRhoh/UriVIaqYvs+o81gGX1
+	s246SUziavb2+g7iw5pNzPExy/02uwcd0UH/8197Su/zSXztHgwNWwOgh9Qq9Fi8
+X-Gm-Gg: AR+sD12J2MtZD/JDrBZc9vzgw0LFvKEauhdYOeUEq+PHxlvduptv5R8ymHBwqYZel4/
+	jolgu/sZOB/M/1Ogno472ZzYKiVydUYsRU1Qk0VVmAoJ8ZZY2j1vJeBjHGhxt+MpJeLVeIyRdAn
+	KcTCCY0+G/IQstvaM705jVMfwUQ5cF139TrqJrr8F3fNA4YD6KZVG1YCLCDDmoeo+nHQg21MIFq
+	zWU62VUQLuzSvCC+LmnAvz51piUIiCmEo8r4ExzV8A3TIMWngfhkCbZGJw4rzf7ohxq7j+tgttg
+	YEkxOfdVScKy51SO0tqGUlyrq+rXHsgNlozYLK64EXQfrklUbO9N1AUEn4TfzvP8ZWRI6jxyKFD
+	QvtpXT4qN5OmSGCFYhOeu0QfinzBmHhdX/ysQXI5mjJsVxn2OaaWsC3l3Hx9XOIPINZzmwGjIHP
+	aO5OKkX3nPMHjwyafLIzHA5mHtv9KG8HFB+hLxQ0MiN5bcZoGTvVYSO3Ho9vk6oefxX7Ne4FGTa
+	2OEpgHR4ydbQElKrRHTyDWhF17i0L8Sqp4fu4d5zmqUTdsw8xoZmppfF3u1/DbjSYy7jyL+c/R6
+	2w==
+X-Received: by 2002:a05:6a00:f0c:b0:848:6c9c:4074 with SMTP id d2e1a72fcca58-85ad9242840mr2294361b3a.1.1788162754590;
+        Mon, 31 Aug 2026 00:52:34 -0700 (PDT)
+Received: from nxpwireless-Inspiron-14-Plus-7440.tw-tpe02.nxp.com (61-228-209-44.dynamic-ip.hinet.net. [61.228.209.44])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8569f984f4asm3163147b3a.15.2026.08.31.00.52.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 31 Aug 2026 00:52:33 -0700 (PDT)
+From: Jeff Chen <chunfan.chen@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	francesco@dolcini.it,
+	arend.vanspriel@broadcom.com,
+	Jeff Chen <jeff.chen_1@nxp.com>,
+	Dan Carpenter <error27@gmail.com>
+Subject: [PATCH v2] wifi: nxpwifi: fix return value check in change_vif_to_sta/ap
+Date: Mon, 31 Aug 2026 15:52:26 +0800
+Message-Id: <20260831075226.136883-1-chunfan.chen@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.600.51.1.1\))
-Subject: Re: [RFC PATCH wireless-next v4 0/4] wifi: aic: add AIC8800D80 SDIO
- FullMAC driver
-From: Christian Hewitt <christianshewitt@gmail.com>
-In-Reply-To: <cover.1787991457.git.yanli.yang@bedmex.com>
-Date: Mon, 31 Aug 2026 11:16:27 +0400
-Cc: linux-wireless@vger.kernel.org,
- Johannes Berg <johannes@sipsolutions.net>,
- Zhirun Liu <zhirunliu@aicsemi.com>,
- Dijia Xu <dijiaxu@aicsemi.com>,
- Chunqiu Liu <chunqiuliu@aicsemi.com>,
- Liheng Wei <liheng.wei@bedmex.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E0243DAE-3690-40EF-B38E-BEE2A226BC50@gmail.com>
-References: <cover.1787903339.git.yanli.yang@bedmex.com>
- <cover.1787991457.git.yanli.yang@bedmex.com>
-To: Yanli Yang <yanli.yang@bedmex.com>
-X-Mailer: Apple Mail (2.3864.600.51.1.1)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-> On 29 Aug 2026, at 12:21=E2=80=AFpm, Yanli Yang =
-<yanli.yang@bedmex.com> wrote:
->=20
-> Johannes,
->=20
-> This v4 fixes the build failure in v3 against current wireless-next.
->=20
-> Commit 914781c72813 ("wifi: cfg80211: convert cookie output to input
-> parameter") changed the cfg80211 remain_on_channel and mgmt_tx =
-callbacks
-> from u64 pointer output parameters to preassigned u64 input =
-parameters.
-> The driver now accepts each cookie by value, carries it through the
-> remain-on-channel and management-TX state, and reports the same cookie =
-in
-> the corresponding cfg80211 completion notification.  The obsolete =
-local
-> remain-on-channel cookie counter has been removed.
->=20
-> This revision also removes two unused global definitions found during =
-the
-> rebuild.  The feature scope and the status of the outstanding RFC =
-review
-> items are otherwise unchanged from v3.
->=20
-> Validation performed for v4 against wireless-next at ca800a9302764:
->=20
->  - x86-64 GCC build with AIC8800_BSP_SUPPORT=3Dm,
->    AIC8800_WLAN_SUPPORT=3Dm and W=3D1;
->  - sequential application of all four patches; and
->  - comparison of the applied series with the current AIC source tree.
->=20
-> No runtime retest was performed for v4.  The AIC8800D80 U02 SDIO =
-hardware
-> validation reported with v3 is unchanged.
+From: Jeff Chen <jeff.chen_1@nxp.com>
 
-I picked the four patches in this series into my rockchip-7.2.y kernel
-branch [0] and compile failed. Claude Opus suggested fixes [1] which
-allowed compile to succeed. Sadly I've no idea if the changes resulted
-in a working driver as I've enthusiastically powered up a Radxa Rock4D
-board and rediscovered its AIC8800 is connected via USB not SDIO; but I
-figured I'd share the finding anyway, in case it's valid.
+nxpwifi_change_vif_to_sta() and nxpwifi_change_vif_to_ap() both call
+nxpwifi_set_bss_mode() without storing the return value, then check
+'if (ret)' which tests the stale value from the previous call. The
+'if (ret) goto done' is therefore dead code, and errors from
+nxpwifi_set_bss_mode() are silently ignored.
 
-Keep up the good work, I look forward to USB support in the future!
+Fix this by assigning the return value to ret, so the existing error
+path works correctly.
 
-Christian
+Fixes: 73b01e57ed3e ("wifi: nxp: add nxpwifi driver for IW61x")
+Reported-by: Dan Carpenter <error27@gmail.com>
+Closes: https://lore.kernel.org/linux-wireless/anwqp-LuExbRshYu@stanley.mountain/
+Assisted-by: Claude:claude-opus-4-8
+Signed-off-by: Jeff Chen <jeff.chen_1@nxp.com>
+---
+ drivers/net/wireless/nxp/nxpwifi/cfg80211.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-[0] https://github.com/chewitt/linux/commits/rockchip-7.2.y
-[1] =
-https://github.com/chewitt/linux/commit/9bc092d55a76ec5a647494223147dfc1f1=
-700853
+diff --git a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+index 5cc8cdf594d3..335221c4f17d 100644
+--- a/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
++++ b/drivers/net/wireless/nxp/nxpwifi/cfg80211.c
+@@ -844,8 +844,7 @@ nxpwifi_change_vif_to_sta(struct net_device *dev,
+ 	update_vif_type_counter(adapter, type, 1);
+ 	dev->ieee80211_ptr->iftype = type;
+ 
+-	if (nxpwifi_set_bss_mode(priv))
+-		return -1;
++	ret = nxpwifi_set_bss_mode(priv);
+ 
+ 	if (ret)
+ 		goto done;
+@@ -888,8 +887,7 @@ nxpwifi_change_vif_to_ap(struct net_device *dev,
+ 	update_vif_type_counter(adapter, type, 1);
+ 	dev->ieee80211_ptr->iftype = type;
+ 
+-	if (nxpwifi_set_bss_mode(priv))
+-		return -1;
++	ret = nxpwifi_set_bss_mode(priv);
+ 
+ 	if (ret)
+ 		goto done;
 
+base-commit: ca800a9302764c445de0da0e84d2252400a770ee
+-- 
+2.34.1
 
