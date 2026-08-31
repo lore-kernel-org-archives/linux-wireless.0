@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37CBA33936C;
-	Mon, 31 Aug 2026 13:49:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 306C74AF68F;
+	Mon, 31 Aug 2026 13:49:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184165; cv=none; b=Dff1y2I8sXvQSUyDa9bIqd4iCAaVI7EZRO0x6u3MmOljqvokFHUZSjhqEYbnC07YQEetAr83++h3SG+sdzKj85X6HSM4TbrOqEK+6paCMje+H2TT3dXmo2zgHNOWEbR/M4uOUHxiLi+P7iXkVGRXdupvufVU4pdw2cqXj2eh4I4=
+	t=1788184168; cv=none; b=QBTQDxyrNv0lNnF2iRUf47QjzByOzgU6GMq4WKdX4Vurvxcbfv3z2JUhvLa3dANXJ63OsUoscs42NzDG4VKN7I99+H/SscD5H5Ut7hofdaygXn2Evkuo1F9P4KYUyBNXyNrX7G77m1JWDWZssifsDA4rAaxSRz2otz9uWlXm2sg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184165; c=relaxed/simple;
-	bh=P43ptgByxMJNvhdVYQD3OBuf+iwUNXF+nmLaDKab8go=;
+	s=arc-20240116; t=1788184168; c=relaxed/simple;
+	bh=Fktpoa+rHuodAX69lPbwecMbEI02Tc37kNfJWPKcr7k=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eYXDY53q75Wyj/0iWXdgkwGLRS2rIK7ccg6O0CpLziIl9SifrRHHmyn9gjjhgZeUBGRoozw80svLBbpWp0++A1mqagU2LvHOxtMTOFfSSDhGDq0f8mZfwndYduVY1qpXZMNQQ3C7V98AZSbtMQC4nWvFGPBoqRVE6IaPNHbLvzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M8EMEdTE; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=s5XGsyWOlNGuQafhyZpOSZYMhSvIZAqXEwQCaBTJrJjUyFzqR4PQ1gAcA6P+ggkRv3MTFn/XYafH1o6YTr7xY9tGGk7yE7fdUu4VHXtw+mAvgLavFq9NMRj38tRhuyGxQKAdip6iRb62fo0G0NIKJIWHdv5oeO6DAqkwhJsoyLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RR76AlF0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M8EMEdTE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EF071F000E9;
-	Mon, 31 Aug 2026 13:49:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RR76AlF0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EA551F000E9;
+	Mon, 31 Aug 2026 13:49:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184162;
-	bh=1nQyxmkp8tlhFDXVLiFpoKYrMGHF3fMThmSxilPpkeA=;
+	s=k20260515; t=1788184167;
+	bh=2OFXdO2l633BQG1/737ziFQxGuAzwEgWTVFtIE0sk3w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=M8EMEdTEXjZcLkKJCz1SSbGMlLrGhFNQXf/cdo0i30LWwSdCoBklH7GWhi3pdTLNO
-	 A7T2mf67OJXd7muC35vAbdj+1KR06TzW5FeN37K1inL9krLV07wH1wqObg1mpcwP+2
-	 bSCYVEKv+RjnpC3PSeejBR70HzeZwGmoQMJ/9bTBbo0CsqNbo2vJJiBWkYiEwRxyEp
-	 KZMPiLRcYRcH99KoaE39GKekXcYv4P5ixLm9kmQoZYrRjxj3C3kD9dl5lc6hNDoS9F
-	 307FKeBsEvbK+Qabcf2GcmM4gVBp3A60IxDtwm05Wb9IXqd1+9WG+9jAsN1VZ0ASTP
-	 M4oisIk3DPcwQ==
+	b=RR76AlF0mF6I2cVbuAqzpS+srHJSJ4H22LtnPRvRWHLpzsazr2QDX60aPzlhsRpdj
+	 GObMRbgFBLEGc1qLRNPM/LJsgLhGshO4viKuhQDF4j1E/AK5g2Z/WnyukQOC3hCM5y
+	 MDBu1RRNmqTpY1hUGXq+fawReNAz1JB5XDsCZC7IUTt4AyC+ZDU31JW2XEr+7EiK6+
+	 1Gi62bfrtZkiJwqlBBxtvyJz1S3GILKyqFbxDYWHRnfq3SBa+0bnZgSgEUT3MPHwLp
+	 vGnNpE7cOYKt/XQdL1pGlkjef8ZTVzdAciB5AVmTEsUrZZ+UcTw9jJ7PD++twoEr0F
+	 aKgPyY8OAUH2A==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	GitHub Copilot <copilot@github.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Kuan-Chung Chen <damon.chen@realtek.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mvm: d3: validate D3 resume notification payloads
-Date: Mon, 31 Aug 2026 09:29:16 -0400
-Message-ID: <20260831133314.4125787-528-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: rtw89: mlo: rearrange MLSR link decision flow
+Date: Mon, 31 Aug 2026 09:29:19 -0400
+Message-ID: <20260831133314.4125787-531-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,76 +52,71 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Kuan-Chung Chen <damon.chen@realtek.com>
 
-[ Upstream commit c1a1dc162870a5447cb0fbcf81983473744772d2 ]
+[ Upstream commit 7284f5be5d298c901be1fc9fda6a2476f5ffdbaf ]
 
-D3 resume notification handlers read firmware notification fields
-before validating that the payload contains the complete fixed structure.
-This causes buffer underread on malformed or truncated notifications.
+The original MLSR link decision refers to RSSI, but it should be
+based on the premise of an existing link. Otherwise, make a link
+decision to select a new link from any available band.
 
-Move payload length validation to occur before any field access in:
-- iwl_mvm_parse_wowlan_info_notif: validate before reading num_mlo_link_keys
-- iwl_mvm_wait_d3_notif D3_END handler: validate before reading flags
-
-Assisted-by: GitHub Copilot <copilot@github.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714141909.762193753434.I148991b8136cc5042fa08b5faf7b57d38aa2fb47@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Kuan-Chung Chen <damon.chen@realtek.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20260429132625.1659182-2-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The branch check finished: the fix commit `23939b1d1be` is only on the
-`autosel` branch, not on current HEAD (`v6.18.44-1-g2736c32da98b9`). The
-ancestry-path from that commit to HEAD is empty, so the buggy code is
-still present in the checked-out tree.
+Two background git history lookups were interrupted (one had used `git
+log --all`, which is too slow in this repo).
 
-That matches the earlier analysis: this is a prepared backport candidate
-that hasn’t been applied to 6.18.y yet, and the **YES** recommendation
-still stands.
+The follow-up without `--all` completed: `rtw89_core_mlo_track` first
+appears in this 6.18.43 tree at `5d324e5159d9e` (v6.18-rc8 era), so the
+MLSR code the patch fixes is present here. That matches the earlier
+analysis — **YES** for backport.
 
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw89/core.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 46e95e25dcd44..dd1c21065bc33 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -2141,16 +2141,16 @@ static void iwl_mvm_parse_wowlan_info_notif(struct iwl_mvm *mvm,
- 					    struct iwl_wowlan_status_data *status,
- 					    u32 len)
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index 989c6b09b2706..c2bf839fd82a9 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -4276,13 +4276,19 @@ static void rtw89_core_mlsr_link_decision(struct rtw89_dev *rtwdev,
  {
--	if (IWL_FW_CHECK(mvm, data->num_mlo_link_keys,
--			 "MLO is not supported, shouldn't receive MLO keys\n"))
--		return;
+ 	unsigned int sel_link_id = IEEE80211_MLD_MAX_NUM_LINKS;
+ 	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
++	u8 decided_bands = BIT(RTW89_BAND_NUM) - 1;
+ 	struct rtw89_vif_link *rtwvif_link;
+ 	const struct rtw89_chan *chan;
+ 	unsigned long usable_links;
+ 	unsigned int link_id;
+-	u8 decided_bands;
+ 	u8 rssi;
+ 
++	usable_links = ieee80211_vif_usable_links(vif);
++
++	rtwvif_link = rtw89_get_designated_link(rtwvif);
++	if (unlikely(!rtwvif_link))
++		goto select;
++
+ 	rssi = ewma_rssi_read(&rtwdev->phystat.bcn_rssi);
+ 	if (unlikely(!rssi))
+ 		return;
+@@ -4294,12 +4300,6 @@ static void rtw89_core_mlsr_link_decision(struct rtw89_dev *rtwdev,
+ 	else
+ 		return;
+ 
+-	usable_links = ieee80211_vif_usable_links(vif);
 -
- 	if (len < sizeof(*data)) {
- 		IWL_ERR(mvm, "Invalid WoWLAN info notification!\n");
- 		status = NULL;
+-	rtwvif_link = rtw89_get_designated_link(rtwvif);
+-	if (unlikely(!rtwvif_link))
+-		goto select;
+-
+ 	chan = rtw89_chan_get(rtwdev, rtwvif_link->chanctx_idx);
+ 	if (decided_bands & BIT(chan->band_type))
  		return;
- 	}
- 
-+	if (IWL_FW_CHECK(mvm, data->num_mlo_link_keys,
-+			 "MLO is not supported, shouldn't receive MLO keys\n"))
-+		return;
-+
- 	if (mvm->fast_resume)
- 		return;
- 
-@@ -2970,6 +2970,11 @@ static bool iwl_mvm_wait_d3_notif(struct iwl_notif_wait_data *notif_wait,
- 	case WIDE_ID(PROT_OFFLOAD_GROUP, D3_END_NOTIFICATION): {
- 		struct iwl_d3_end_notif *notif = (void *)pkt->data;
- 
-+		if (len < sizeof(*notif)) {
-+			IWL_ERR(mvm, "Invalid D3 end notification size\n");
-+			break;
-+		}
-+
- 		d3_data->d3_end_flags = __le32_to_cpu(notif->flags);
- 		d3_data->notif_received |= IWL_D3_NOTIF_D3_END_NOTIF;
- 
 -- 
 2.53.0
 
