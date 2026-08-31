@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16AAA4A3D2E;
-	Mon, 31 Aug 2026 13:42:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5858950EC16;
+	Mon, 31 Aug 2026 13:42:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183761; cv=none; b=JfmFdHENe6fPCWZNijNwsKR4MjZSsLl9pSmJL1GKrh4QEpk+/hvoiqPSQ+a6hp6f4PB2t1XrBBemJne/x6drp9NJh69d44k80mSCbHaYTw8n1uLkyv4k+Q3HPsHND5tMHsaeVU1pxK6fxgzXV/zXSoQDawEmuaL0rAXx/oKrQxE=
+	t=1788183777; cv=none; b=qKz5i7s4ykvOnOEG2u0O499rVKCnsnzBz9DmbsCBicesDV7wYLtDT9Ge7e0G03xuU1Pr1ZKf9D7D/gdziCyF2MjtQkGp0F629p+qIZOHkoFP+fvz9JmUv0B5K06/yUcIghcStpqFxReH/DRkgx6oUenzuPI4DC0dqHw8VU7DQ0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183761; c=relaxed/simple;
-	bh=vxmJcLupZkpUAR/HflilJMgIbOetQ4oPQ/ZS9PfmMUc=;
+	s=arc-20240116; t=1788183777; c=relaxed/simple;
+	bh=txbjspL3j+vfyy7AjhKqpUMyMxG+nvfadGtyliGr+X4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ucnvy3TlS+gh3UnvPwGi7K9oyhH1UVvHV9rqWu1LHulRJLkaEGD0OBSEAgpiHgYyOJU/yg/uwRqSk/4oCOLO4JFlDfUu1EoyIKBoIgBhQ1wDlBckuCi3d0aA3zng4s4+UqNDJXstib5HVz67Bl+rnPs7d0J6Fn/HXThi44EQutU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hs96HTxM; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=AJcEEXvgtkxAJFUiH7DlXH5o+0HGTNHC77dhE6r/CBXUlL7Oxry1CUOPzyzj6pFSqnqdh1/nH0zdRDWFs4/E2TYZ0Ztaur0/3gi9oTZlXrFCIT0iHhrGy8myB3SvaheUbrUNzklSjrCkeNpAJjWXDHXKF1UbQbUiOM5b56MPLys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fsPrdVRO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hs96HTxM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E253C1F00ACF;
-	Mon, 31 Aug 2026 13:42:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fsPrdVRO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 136461F00A3E;
+	Mon, 31 Aug 2026 13:42:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183758;
-	bh=NfOqvkeLMNrceIJZx7M6vieQjyLnddgjmusYXLXfMjY=;
+	s=k20260515; t=1788183774;
+	bh=H/fuKbVRiiS/rbnkO4StakLav2Idmq2e4vdO0y5qkuk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=hs96HTxMgEhx7lSDRWO4uFL3rfxnD6p1Oy61hF/gO+OPgSmzfrr7H+xYu8ECAzK6d
-	 0hK5+vJ72AHuaDbc4t0iTkazsaNlLjAF6kS6XOazGTCrPyUaSSGNpuers2XQ5X/AOb
-	 fEL3yGTMmezfOpUFqyw0F9U1gbj7LnQGZgbeS4EogZK1Z1TGql/QqEU9VJjDzJIYH8
-	 7jXXVemgn35YWxFMRR8b4IpMzudG4rRDj1p1ZEAOyBUlbKrfYU4NKTJ6tsVaT4nAss
-	 PZuLalYjVNvsIjgMLWcUDEhKwNNCIZkBkOFRlaAaT83kVfsxwr3mV+dg3bdw1nrUp6
-	 H6j3B+K3QRFNQ==
+	b=fsPrdVROUVRPg+TSAttLRUmjTSEdY6ENsmKQSgoAhLTBx6kanR+UX5PMwSCbtQF9T
+	 Ob+nc7iUm1E6jn0vATmky7obSmhTg/CIKR7W4UhhbG1T1f2k8aGZ2GkcJWoMq1BzBj
+	 JrkkDx9dfwxW7CO3/oug4rZbdRnJIYdMDpP3hqW4p0oDtxqsnMXkZjsBO6OUT1tyBv
+	 wNDAp3WA15/2wzcI2ECusHIUvwgkntd/ZQOvSX+0N07vrgpiOIsAMaKp0uGZIvwTsi
+	 RZc4+6fajDvKxgk/1oBfCsGY4GxgHlzx4/wr2uEEMpeGFVIkkTv4aOvoFA9j5QXvc4
+	 evG2aKtn7DK/Q==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Oleksandr Havrylov <goainwo@gmail.com>,
+Cc: Zhao Li <enderaoelyther@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.1] wifi: rtw88: Add NULL check for chip->edcca_th in rtw_fw_adaptivity_result()
-Date: Mon, 31 Aug 2026 09:25:14 -0400
-Message-ID: <20260831133314.4125787-286-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.15] wifi: cfg80211: validate rx/tx MLME callback frame lengths before access
+Date: Mon, 31 Aug 2026 09:25:24 -0400
+Message-ID: <20260831133314.4125787-296-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,395 +53,509 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>
+From: Zhao Li <enderaoelyther@gmail.com>
 
-[ Upstream commit d5e6f353ce1e1c25b8458ea390ed09d2377412c5 ]
+[ Upstream commit d5e4586546974179feca305a94e07fac3e9727fe ]
 
-It was recently reported that rtw_fw_adaptivity_result()
-in fw.c dereferences rtwdev->chip->edcca_th without
-a NULL check. The issue is that devices with the
-8821CE chip don't define edcca_th in their chip
-info. As a result, when rtw_fw_adaptivity_result()
-tries to dereference it, the kernel triggers an oops.
+cfg80211_rx_mlme_mgmt() and cfg80211_tx_mlme_mgmt() call tracepoints
+before rejecting frames shorter than the frame-control field. After
+that, they only require len >= 2 before dispatching into subtype
+handlers that assume their fixed fields are present.
 
-Add a NULL check for edcca_th before dereferencing
-it in rtw_fw_adaptivity_result() in fw.c. Placing
-the check at the function entry avoids logging any
-garbage values.
+The frames that trip this are not shorter than 2 bytes; they are short
+relative to their subtype. mwifiex is a concrete in-tree example on the
+length side: mwifiex_process_mgmt_packet() only requires a 4-address
+ieee80211_hdr plus the 2-byte firmware length prefix before handing the
+frame to cfg80211_rx_mlme_mgmt(). After stripping the length prefix and
+removing addr4, pkt_len can be exactly 24: a bare 3-address management
+header with no reason-code body. The existing WARN_ON(len < 2) does not
+fire on such a frame, and cfg80211_process_deauth() then reads
+u.deauth.reason_code as a two-byte access starting at offset 24,
+immediately past the 24-byte buffer.
 
-This change does not address the root cause for
-this behavior, but it prevents the NULL dereference
-and the resulting oops while a more permanent solution
-is developed.
+Add a frame-control length gate, then validate each subtype's minimum
+frame size in an if/else-if chain that mirrors the dispatch logic. Trace
+only after the frame is known to be well-formed.
 
-Tested on a 8822CE chip which defines edcca_th, so
-this issue is not present on it, but it still uses
-this driver and I can verify there are no regressions.
+Side effects of this change:
+ - The WARN_ON(len < 2) is dropped. It only guarded the frame_control
+   read, never the subtype fixed fields, and it does not fire on the
+   frames that actually trigger the out-of-bounds read (which are >= 2).
+   The len >= 2 check is kept as the guard before dereferencing
+   frame_control, but without the warning: these are exported callbacks
+   and a malformed frame from a driver should be dropped silently rather
+   than backtraced.
+ - cfg80211_tx_mlme_mgmt() previously routed every non-deauth subtype
+   through disassociation handling; it now silently ignores unrecognised
+   subtypes.
 
-Suggested-by: Ping-Ke Shih <pkshih@realtek.com>
-Reported-by: Oleksandr Havrylov <goainwo@gmail.com>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=221286
-Signed-off-by: Panagiotis Petrakopoulos <npetrakopoulos2003@gmail.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-Tested-by: Oleksandr Havrylov <goainwo@gmail.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/20260415052959.14844-1-npetrakopoulos2003@gmail.com
+Assisted-by: Codex:gpt-5.5
+Assisted-by: Claude:claude-opus-4.8
+Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
+Link: https://patch.msgid.link/20260707025336.22557-1-enderaoelyther@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit Message Forensics
+# Stable Backport Analysis: `wifi: cfg80211: validate rx/tx MLME
+callback frame lengths before access`
 
-### Step 1.1: Subject Line
-**Record:** `[wifi: rtw88]` `[Add]` — Add NULL check for
-`chip->edcca_th` in `rtw_fw_adaptivity_result()`.
-
-### Step 1.2: Tags
-**Record:**
-- **Suggested-by:** Ping-Ke Shih \<pkshih@realtek.com\> (Realtek rtw88
-  maintainer)
-- **Reported-by:** Oleksandr Havrylov \<goainwo@gmail.com\> (user hit
-  the bug on RTL8821CE)
-- **Closes:** https://bugzilla.kernel.org/show_bug.cgi?id=221286
-- **Tested-by:** Oleksandr Havrylov (commit message); also Panagiotis on
-  8822CE
-- **Acked-by:** Ping-Ke Shih (v2/v3 review on lore)
-- **Signed-off-by:** Panagiotis Petrakopoulos, Ping-Ke Shih
-- **Link:** https://patch.msgid.link/20260415052959.14844-1-
-  npetrakopoulos2003@gmail.com
-- No **Fixes:** tag (expected for manual review)
-- No **Cc: stable@vger.kernel.org** (expected; not a negative signal)
-
-Notable: maintainer **Acked-by**, user **Reported-by** + **Tested-by**,
-kernel bugzilla filing.
-
-### Step 1.3: Body Analysis
-**Record:**
-- **Bug:** `rtw_fw_adaptivity_result()` in `fw.c` dereferences
-  `rtwdev->chip->edcca_th` without a NULL check.
-- **Symptom:** Kernel oops (and per bugzilla title, system hang) on
-  RTL8821CE when firmware sends `C2H_ADAPTIVITY`.
-- **Root cause (as stated):** `rtw8821c_hw_spec` does not set
-  `.edcca_th`, so the pointer is NULL for 8821CE.
-- **Fix approach:** Early return at function entry if `!edcca_th`.
-- **Caveat:** Author notes this is a workaround, not a full root-cause
-  fix (maintainer also discussed garbage/malformed C2H as underlying
-  issue).
-- **Version info:** Bug reported on Linux 6.19.9; patch dated April
-  2026.
-
-### Step 1.4: Hidden Bug Fix?
-**Record:** Yes — despite "Add NULL check" wording, this is a real NULL
-pointer dereference crash fix, not cosmetic cleanup.
+**Local tree:** `v6.18.44-1-g2736c32da98b9` (Linux **6.18.44**)
 
 ---
 
-## Phase 2: Diff Analysis
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 2.1: Inventory
+### Step 1.1: PARSE THE SUBJECT LINE
+**Record:** `[wifi: cfg80211]` `[validate]` — Add length validation for
+rx/tx MLME callback frames before accessing fixed subtype fields.
+
+### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
 **Record:**
-- **Files:** `drivers/net/wireless/realtek/rtw88/fw.c` only (v3; `phy.c`
-  hunk dropped per maintainer review)
-- **Scope:** +3 lines, 1 function, single-file surgical fix
-- **Function modified:** `rtw_fw_adaptivity_result()`
+- **Link:** `https://patch.msgid.link/20260707025336.22557-1-
+  enderaoelyther@gmail.com`
+- **Assisted-by:** Codex:gpt-5.5, Claude:claude-opus-4.8
+- **Signed-off-by:** Zhao Li `<enderaoelyther@gmail.com>`
+- **Signed-off-by:** Johannes Berg `<johannes.berg@intel.com>`
+  (cfg80211/mac80211 maintainer)
+- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, Cc:
+  stable@vger.kernel.org
+- **Notable:** Maintainer sign-off; v2 series (patch 1/3) with Johannes
+  Berg review noted in cover letter changelog
 
-### Step 2.2: Code Flow Change
+### Step 1.3: ANALYZE THE COMMIT BODY TEXT
 **Record:**
-- **Before:** Load `edcca_th = rtwdev->chip->edcca_th`, then
-  unconditionally use `edcca_th[...]` in `rtw_dbg()` arguments (and
-  `rtw_read32_mask()` calls).
-- **After:** After loading `edcca_th`, if NULL, return immediately;
-  otherwise unchanged.
-- **Path affected:** Firmware C2H adaptivity result handling (workqueue
-  context).
+- **Bug:** `cfg80211_rx_mlme_mgmt()` and `cfg80211_tx_mlme_mgmt()` only
+  check `len >= 2` before dispatching to subtype handlers that read
+  fixed fields (`reason_code`, `status_code`, etc.)
+- **Symptom:** Out-of-bounds 2-byte read at offset 24 when a 24-byte
+  management header (no body) is passed for deauth/disassoc
+- **Concrete trigger:** `mwifiex_process_mgmt_packet()` can pass
+  `pkt_len == 24` after stripping addr4 from a minimal 4-address frame
+- **Root cause:** Validation guards frame_control (2 bytes) but not per-
+  subtype minimum sizes (26 bytes for deauth/disassoc)
+- **Version info:** None explicit in message
 
-### Step 2.3: Bug Mechanism
-**Record:** **NULL pointer dereference** — category (e). On 8821CE,
-`chip->edcca_th` is NULL; indexing `edcca_th[EDCCA_TH_L2H_IDX]` reads
-from address 0. Bitterblue's disassembly analysis on lore confirms `movl
-(%r12), %esi` with R12=0.
-
-Note: `rtw_dbg()` is a no-op when `CONFIG_RTW88_DEBUG` is unset, but C
-still evaluates its arguments before the call, so the crash is not
-debug-only.
-
-### Step 2.4: Fix Quality
-**Record:** Obviously correct, minimal, low regression risk. Chips that
-define `edcca_th` (8822B/C) are unaffected. Maintainer requested check
-at function entry (v3) to avoid logging garbage. No API changes.
+### Step 1.4: DETECT HIDDEN BUG FIXES
+**Record:** Not disguised — explicitly fixes out-of-bounds memory
+access. The WARN_ON removal and tx subtype routing change are documented
+side effects of the safety fix.
 
 ---
 
-## Phase 3: Git History Investigation
+## PHASE 2: DIFF ANALYSIS
 
-### Step 3.1: Blame
-**Record:** `rtw_fw_adaptivity_result()` and `C2H_ADAPTIVITY` handling
-exist at least since `ac3fd01e4c1ef` (Linux 6.18-rc7), which is an
-ancestor of HEAD. `rtw8821c_hw_spec` has never set `.edcca_th` in this
-tree (verified at 6.18-rc7 and current HEAD). Git blame in this checkout
-is flattened (lines attributed to unrelated squash commit); pickaxe
-search confirms code present since 6.18-rc7.
-
-### Step 3.2: Fixes: Tag
-**Record:** N/A — no Fixes: tag in commit message.
-
-### Step 3.3: Related File History
-**Record:** Recent rtw88 stable fixes in this tree include OOB read fix
-(`01155ded5d4da`), PCI AER fix, USB leak fix — unrelated. This NULL-
-check fix is **not** present in HEAD (verified: no `if (!edcca_th)` in
-`fw.c`).
-
-### Step 3.4: Author Context
-**Record:** Panagiotis Petrakopoulos is a community contributor; Ping-Ke
-Shih (Realtek rtw88 maintainer) reviewed v1→v3, provided **Acked-by**,
-and guided placement of the NULL check.
-
-### Step 3.5: Dependencies
-**Record:** Standalone. v3 is self-contained (1 file, 3 lines). No
-prerequisite commits required. Final version dropped unnecessary `phy.c`
-hunk.
-
----
-
-## Phase 4: Mailing List and External Research
-
-### Step 4.1: Original Discussion
-**Record:** Thread found via yhbt.net lore mirror at
-https://yhbt.net/lore/linux-
-wireless/efc1c1c91b81447a8ca8f9b1d087b371@realtek.com/T/
-(lore.kernel.org blocked by bot protection; `b4 shazam` did not find
-message-id). Series: v1 (fw.c + phy.c) → v2 (entry check, drop phy.c) →
-v3 (subject/tags per maintainer). v3 is the committed version.
-
-### Step 4.2: Reviewers
-**Record:** Ping-Ke Shih (maintainer) CC'd throughout; provided review
-feedback and **Acked-by** on v2/v3. Reporter Oleksandr Havrylov
-participated. Bitterblue Smith referenced for deeper root-cause
-analysis.
-
-### Step 4.3: Bug Report
-**Record:** Bugzilla #221286 — "NULL pointer dereference in
-rtw_fw_adaptivity_result() causes kernel oops and system hang on
-RTL8821CE". Reported 2026-03-27 by Oleksandr on kernel 6.19.9. Severity:
-kernel oops + hang on common laptop WiFi hardware.
-
-### Step 4.4: Series Context
-**Record:** 3-patch revision series; v3 is final and applies only to
-`fw.c`. Maintainer noted root cause may be malformed C2H packets, but
-endorsed the workaround to prevent oops.
-
-### Step 4.5: Stable List
-**Record:** No explicit "Cc: stable" found in lore thread. Maintainer
-endorsed resolving bugzilla with this workaround. Absence of stable
-nomination is not a negative signal per review rules.
-
----
-
-## Phase 5: Code Semantic Analysis
-
-### Step 5.1: Key Functions
-**Record:** `rtw_fw_adaptivity_result()` (modified); callers:
-`rtw_fw_c2h_cmd_handle()` case `C2H_ADAPTIVITY`.
-
-### Step 5.2: Callers
+### Step 2.1: INVENTORY THE CHANGES
 **Record:**
-- `rtw_fw_c2h_cmd_handle()` ← `rtw_c2h_work()` (workqueue)
-- `rtw_c2h_work` queued from `fw.c` when firmware C2H commands arrive
-  (`ieee80211_queue_work`)
-- Trigger: firmware sends `C2H_ADAPTIVITY` (0x37) to driver
+- **File:** `net/wireless/mlme.c` only (+37 / -8 lines)
+- **Functions modified:** `cfg80211_rx_mlme_mgmt()`,
+  `cfg80211_tx_mlme_mgmt()`
+- **Scope:** Single-file surgical fix
 
-### Step 5.3: Callees
-**Record:** `rtw_dbg()`, `rtw_read32_mask()` — the crash is in argument
-evaluation for register reads via NULL `edcca_th`.
-
-### Step 5.4: Reachability
+### Step 2.2: CODE FLOW CHANGE
 **Record:**
-- `rtw_phy_dynamic_mechanism()` → `rtw_fw_adaptivity()` when firmware
-  advertises `FW_FEATURE_ADAPTIVITY` (regular watchdog path in `main.c`)
-- Firmware can respond with `C2H_ADAPTIVITY` →
-  `rtw_fw_adaptivity_result()`
-- RTL8821CE (`CONFIG_RTW88_8821CE`, `rtw8821ce.c`) uses
-  `rtw8821c_hw_spec` which lacks `.edcca_th`
-- Reachable during normal WiFi operation on affected hardware; not an
-  obscure init-only path
 
-### Step 5.5: Similar Patterns
-**Record:** `rtw_phy_set_edcca_th()` in `phy.c` also dereferences
-`edcca_th` without check, but is only called from 8822B/C adaptivity
-paths that define `edcca_th`. Maintainer correctly had v3 drop that
-hunk.
+**`cfg80211_rx_mlme_mgmt()` — before → after:**
+- Before: trace → `WARN_ON(len < 2)` → dispatch by subtype → handlers
+  read fixed fields
+- After: check `len >= sizeof(fc)` → read `fc` → per-subtype
+  `offsetofend()` validation → trace → dispatch
+- Affected path: RX MLME frames from drivers (notably mwifiex host_mlme)
 
----
+**`cfg80211_tx_mlme_mgmt()` — before → after:**
+- Before: trace → `WARN_ON(len < 2)` → deauth or **everything else →
+  disassoc**
+- After: validate deauth/disassoc minimum lengths; unknown subtypes
+  silently dropped
+- Affected path: TX disconnect notifications from mac80211/mwifiex
 
-## Phase 6: Cross-Reference Against Local Tree
-
-### Step 6.1: Buggy Code Exists?
-**Record:** **YES.** Local tree is **v6.18.43** (`git describe HEAD`).
-Current `fw.c` lines 276–291 show unchecked `edcca_th` dereference.
-`rtw8821c_hw_spec` (lines 1973–2057 of `rtw8821c.c`) has no `.edcca_th`
-field — pointer is NULL for 8821CE.
-
-### Step 6.2: Backport Complications
-**Record:** **Clean apply expected.** v3 hunk targets `fw.c` at lines
-matching current tree structure (`@@ -279,6 +279,9 @@`). No conflicting
-changes observed.
-
-### Step 6.3: Related Fixes Already Present?
-**Record:** **NO.** `grep` confirms `if (!edcca_th)` is absent from
-`fw.c`. Fix not yet in this 6.18.43 tree.
-
----
-
-## Phase 7: Subsystem and Maintainer Context
-
-### Step 7.1: Subsystem
-**Record:** `drivers/net/wireless/realtek/rtw88` — **IMPORTANT** (widely
-deployed USB/PCI WiFi, especially RTL8821CE in laptops).
-
-### Step 7.2: Activity
-**Record:** Actively maintained; recent stable backports in this tree
-(OOB read, USB leaks, PCI fixes) show ongoing rtw88 stable attention.
-
----
-
-## Phase 8: Impact and Risk Assessment
-
-### Step 8.1: Who Is Affected
-**Record:** Users of RTL8821CE (and potentially other 8821C variants)
-with `CONFIG_RTW88_8821CE` / rtw88 driver loaded. Driver-specific, but
-8821CE is extremely common hardware.
-
-### Step 8.2: Trigger Conditions
-**Record:** Firmware sends `C2H_ADAPTIVITY` command while driver is
-running. Occurs during normal dynamic mechanism / adaptivity handling.
-User-visible during regular WiFi use; unprivileged users can trigger
-WiFi traffic that causes firmware interaction.
-
-### Step 8.3: Failure Mode Severity
-**Record:** **CRITICAL** — NULL pointer dereference → kernel oops;
-bugzilla reports system hang. Workqueue holds `rtwdev->mutex` during
-crash, compounding severity.
-
-### Step 8.4: Risk-Benefit
+### Step 2.3: BUG MECHANISM
 **Record:**
-- **Benefit:** HIGH — prevents crashes/hangs on very common hardware
-- **Risk:** VERY LOW — 3-line guard, maintainer-reviewed, tested on
-  8822CE for regressions
+- **Category:** Buffer overflow / out-of-bounds read (memory safety)
+- **Mechanism:** `cfg80211_process_deauth()` reads
+  `mgmt->u.deauth.reason_code` at offset 24–25:
+
+```109:116:net/wireless/mlme.c
+static void cfg80211_process_deauth(struct wireless_dev *wdev,
+                                    const u8 *buf, size_t len,
+                                    bool reconnect)
+{
+        ...
+        u16 reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+```
+
+  Minimum valid deauth frame is 26 bytes (`IEEE80211_DEAUTH_FRAME_LEN`).
+A 24-byte buffer causes a read 2 bytes past the end.
+
+### Step 2.4: FIX QUALITY
+**Record:**
+- Fix is obviously correct: mirrors dispatch logic with `offsetofend()`
+  checks, same pattern used elsewhere in ieee80211 code
+- Minimal and surgical
+- Low regression risk: only rejects malformed frames that were already
+  unsafe to process
+- Moving tracepoints after validation is correct
+- tx path fix for unrecognized subtypes prevents wrongly routing auth
+  frames to disassoc handler
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
+
+### Step 3.1: BLAME THE CHANGED LINES
+**Record:** All lines in `cfg80211_rx_mlme_mgmt()` /
+`cfg80211_tx_mlme_mgmt()` blame to `5d324e5159d9e` (6.18 merge base in
+this tree). Buggy insufficient-length check has been present since these
+functions landed in this tree.
+
+### Step 3.2: FOLLOW THE FIXES: TAG
+**Record:** No Fixes: tag present. N/A.
+
+### Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
+**Record:**
+- Recent `mlme.c` commits: `c3ab9657866fc` (radar detection fix), merge
+  base
+- This fix is **not** yet in the local tree (buggy code still present at
+  lines 149–167, 213–230)
+- Part of v2 3-patch series; **this commit is standalone** for the two
+  cfg80211 callback functions (patches 2/3 fix `cfg80211_rx_assoc_resp`
+  and `ieee80211_rx_mgmt_deauth` separately)
+
+### Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
+**Record:** Zhao Li is not a regular mlme.c contributor in this tree.
+Johannes Berg (maintainer) signed off and merged.
+
+### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
+**Record:** No prerequisites. Uses standard `offsetofend(struct
+ieee80211_mgmt, ...)` which exists in this tree. Applies cleanly against
+current `net/wireless/mlme.c`.
+
+---
+
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+
+### Step 4.1: ORIGINAL PATCH DISCUSSION
+**Record:**
+- Local mbox: `v2_20260707_enderaoelyther_wifi_cfg80211_validate_rx_tx_m
+  lme_callback_frame_lengths_before_access.mbx`
+- v2 changelog documents Johannes Berg review feedback (commit message
+  rewrite)
+- lore.kernel.org blocked by Anubis bot protection; `b4 dig -c` could
+  not be run (commit not in local tree)
+- No review replies in local mbox (patches only)
+
+### Step 4.2: WHO REVIEWED THE PATCH
+**Record:** Johannes Berg reviewed v1 per v2 changelog ("Per Johannes'
+review"). Maintainer Signed-off-by on committed version.
+
+### Step 4.3: BUG REPORT
+**Record:** No external bug report or syzbot link. Bug identified via
+static/code-path analysis with concrete mwifiex trigger documented by
+author.
+
+### Step 4.4: RELATED PATCHES AND SERIES
+**Record:** 3-patch v2 series:
+1. **This commit** — cfg80211 rx/tx MLME callbacks
+2. `cfg80211_rx_assoc_resp()` length validation
+3. `ieee80211_rx_mgmt_deauth()` read-before-check fix in mac80211
+
+Patches 2/3 are related but **not required** for this commit to be
+correct and self-contained.
+
+### Step 4.5: STABLE MAILING LIST HISTORY
+**Record:** Could not search lore (blocked). No stable nomination found
+in local mbox.
+
+---
+
+## PHASE 5: CODE SEMANTIC ANALYSIS
+
+### Step 5.1: KEY FUNCTIONS
+**Record:** `cfg80211_rx_mlme_mgmt()`, `cfg80211_tx_mlme_mgmt()`,
+callees `cfg80211_process_auth/deauth/disassoc()`
+
+### Step 5.2: TRACE CALLERS
+**Record:**
+
+| Caller | File | Notes |
+|--------|------|-------|
+| `ieee80211_report_disconnect()` | `net/mac80211/mlme.c:4547-4549` |
+Always uses `IEEE80211_DEAUTH_FRAME_LEN` (26) buffers |
+| Auth failure paths | `net/mac80211/mlme.c:4878,4944,5045` | mac80211
+validates before calling |
+| `mwifiex_process_mgmt_packet()` | `drivers/.../mwifiex/util.c:482` |
+**Can pass pkt_len == 24** |
+| `mwifiex_host_mlme_disconnect()` | `mwifiex/util.c:385` | Passes 26
+bytes (safe) |
+
+### Step 5.3: TRACE CALLEES
+**Record:** Subtype handlers call `nl80211_send_*`, `cfg80211_sme_*`,
+read `reason_code`/`status_code` from frame body.
+
+### Step 5.4: CALL CHAIN / REACHABILITY
+**Record:**
+1. WiFi firmware delivers management frame to mwifiex
+2. `mwifiex_process_mgmt_packet()` strips 4-addr header → 24-byte 3-addr
+   frame
+3. If `host_mlme_reg` and deauth/disassoc: calls
+   `cfg80211_rx_mlme_mgmt(dev, skb->data, 24)`
+4. `cfg80211_process_deauth()` reads past buffer end
+
+**Reachable from userspace indirectly:** Malicious or buggy AP/firmware
+can send short deauth/disassoc frames to mwifiex clients with host MLME
+enabled. Config-dependent (`CONFIG_MWIFIEX`, host_mlme firmware
+capability).
+
+### Step 5.5: SIMILAR PATTERNS
+**Record:** mac80211's `ieee80211_rx_mgmt_deauth()` has the same read-
+before-check pattern (reads `reason_code` before `len` check at line
+5011 vs 5015) — fixed in patch 3/3 of the series, separate from this
+commit.
+
+---
+
+## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+
+### Step 6.1: DOES THE BUGGY CODE EXIST?
+**Record:** **YES.** Current tree at `net/wireless/mlme.c:149-167` and
+`213-230` has the insufficient `WARN_ON(len < 2)` check. mwifiex trigger
+path exists at `util.c:398-482`.
+
+Verified minimum frame math:
+- `ieee80211_mgmt` header = 24 bytes
+- `u.deauth.reason_code` ends at byte 26
+- mwifiex minimum after addr4 strip: `sizeof(ieee80211_hdr)` (30) −
+  `ETH_ALEN` (6) = **24 bytes**
+
+### Step 6.2: BACKPORT COMPLICATIONS
+**Record:** Clean apply expected. Diff in local mbox matches current
+file structure. No conflicting recent changes to these functions.
+
+### Step 6.3: RELATED FIXES ALREADY PRESENT?
+**Record:** **No.** `git log --grep` and `-S 'offsetofend(struct
+ieee80211_mgmt, u.deauth.reason_code)'` found no matching fix in this
+tree.
+
+---
+
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+
+### Step 7.1: SUBSYSTEM AND CRITICALITY
+**Record:** `net/wireless` (cfg80211) — **CORE/IMPORTANT**. cfg80211 is
+the central wireless configuration API used by all mac80211 drivers and
+several fullmac drivers.
+
+### Step 7.2: SUBSYSTEM ACTIVITY
+**Record:** Actively maintained; recent stable backport `c3ab9657866fc`
+in this tree.
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
+
+### Step 8.1: WHO IS AFFECTED
+**Record:** Users of WiFi drivers calling `cfg80211_rx_mlme_mgmt()` /
+`cfg80211_tx_mlme_mgmt()`. Primary concrete trigger: **mwifiex with host
+MLME** (several SDIO device tables set `host_mlme = true`). mac80211
+callers are generally safe due to `IEEE80211_DEAUTH_FRAME_LEN` usage.
+
+### Step 8.2: TRIGGER CONDITIONS
+**Record:**
+- Receiving deauth/disassoc/auth frame with header only (no body) via
+  mwifiex host_mlme path
+- Requires connected state and matching BSSID checks in mwifiex
+- Not every boot, but plausible with malformed AP traffic or firmware
+  quirks
+- Unprivileged remote trigger via WiFi network (AP sends short frame)
+
+### Step 8.3: FAILURE MODE SEVERITY
+**Record:** Out-of-bounds kernel memory read — **HIGH** severity
+- KASAN: detectable crash
+- Production without KASAN: potential info leak or unpredictable
+  behavior
+- Not a typical controlled write primitive, but real memory safety bug
+  in core wireless path
+
+### Step 8.4: RISK-BENEFIT RATIO
+**Record:**
+- **Benefit:** HIGH — prevents OOB read in exported cfg80211 API;
+  defense-in-depth for all drivers
+- **Risk:** LOW — ~37 lines, validation-only, maintainer-reviewed
 - **Ratio:** Strongly favors backport
 
 ---
 
-## Phase 9: Final Synthesis
+## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence Summary
+### Step 9.1: EVIDENCE COMPILED
 
 **FOR backport:**
-- Real, reproducible NULL deref → kernel oops/hang
-- Affects RTL8821CE, common laptop WiFi
-- Tiny, surgical, maintainer-Acked fix
-- User-reported with bugzilla, Tested-by from reporter
-- Bug present in v6.18.43 tree; fix not yet applied
-- Clean apply expected
+- Real out-of-bounds read verified in code and frame-size math
+- Concrete in-tree trigger path (mwifiex host_mlme, 24-byte frames)
+- Small, surgical, maintainer-signed fix
+- Buggy code confirmed present in 6.18.44 tree
+- Fixes incorrect tx subtype routing (non-deauth → disassoc) that could
+  cause same class of bug
+- Exported API should validate inputs from drivers
 
 **AGAINST backport:**
-- Workaround only; root cause may be malformed C2H packets (maintainer
-  discussion) — but stable trees routinely take crash-prevention
-  workarounds while root-cause fixes develop
-- No explicit stable nomination in lore — not disqualifying
+- No syzbot report or user crash report (theoretical/code-analysis
+  discovery)
+- Trigger requires specific driver config (mwifiex host_mlme)
+- Related bugs in patches 2/3 not included (but separate functions)
 
-**Unresolved:** Exact mainline merge commit SHA not verified in this
-checkout (fix not merged here yet). Does not affect backport decision
-for this tree.
+**UNRESOLVED:**
+- Full lore review thread (blocked by Anubis)
+- Whether any reviewer explicitly nominated for stable
 
-### Step 9.2: Stable Rules Checklist
-1. Obviously correct and tested? **PASS** — 3-line NULL guard; Acked-by
-   maintainer; Tested-by on 8822CE and reporter testing on 8821CE
-2. Fixes real bug affecting users? **PASS** — bugzilla #221286, user
-   oops on 8821CE
-3. Important issue? **PASS** — kernel oops / system hang (CRITICAL)
-4. Small and contained? **PASS** — 1 file, +3 lines
-5. No new features/APIs? **PASS** — defensive guard only
-6. Can apply to local tree? **PASS** — buggy code present, fix not
-   present, clean apply
+### Step 9.2: STABLE RULES CHECKLIST
+1. Obviously correct and tested? **PASS** — standard offsetofend
+   validation; maintainer reviewed v2
+2. Fixes a real bug? **PASS** — verified OOB read with mwifiex trigger
+   path
+3. Important issue? **PASS** — kernel memory safety (OOB read), HIGH
+   severity
+4. Small and contained? **PASS** — 1 file, ~37 lines
+5. No new features or APIs? **PASS** — validation only
+6. Can apply to local tree? **PASS** — code present, clean apply
+   expected
 
-### Step 9.3: Exception Categories
-**Record:** N/A — standard bug fix, not device-ID/quirk/build/doc
-exception.
+### Step 9.3: EXCEPTION CATEGORIES
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+memory-safety bug fix.
 
-### Step 9.4: Decision Rationale
-For **Linux 6.18.43**, the unchecked NULL dereference in
-`rtw_fw_adaptivity_result()` is present, affects widely deployed
-RTL8821CE hardware, causes kernel oops/hang, and is fixed by a minimal
-3-line patch reviewed and Acked by the rtw88 maintainer. This is
-textbook stable material.
+### Step 9.4: DECISION RATIONALE
+
+This commit fixes a verified out-of-bounds read in exported cfg80211
+MLME callbacks. The buggy code exists in Linux 6.18.44, the fix is small
+and maintainer-approved, and a concrete in-tree caller (mwifiex
+host_mlme) can trigger it with 24-byte deauth/disassoc frames. While the
+trigger is config-specific, cfg80211 is a core API that should reject
+malformed driver input — making this appropriate for the 6.18.y stable
+tree.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags (Reported-by, Tested-by, Acked-by,
-  Closes bugzilla, Suggested-by)
-- [Phase 1] Read commit body; identified NULL deref on 8821CE,
-  workaround nature noted
-- [Phase 2] Confirmed v3 diff: +3 lines in `fw.c` only, early `if
-  (!edcca_th) return;`
-- [Phase 2] Read current `fw.c:276-296` — buggy code without NULL check
-- [Phase 2] Read `rtw8821c_hw_spec` — no `.edcca_th` field (lines
-  1973-2057)
-- [Phase 2] Compared `rtw8822b_hw_spec` — has `.edcca_th =
-  rtw8822b_edcca_th` (line 2568)
-- [Phase 2] Read `debug.h:61-62` — `rtw_dbg` is empty inline when debug
-  off; args still evaluated in C
-- [Phase 3] `git describe HEAD` → v6.18.43; Makefile VERSION 6.18.43
-- [Phase 3] `git show ac3fd01e4c1ef:fw.c` — same buggy function at
-  6.18-rc7
-- [Phase 3] `git show ac3fd01e4c1ef:rtw8821c.c` — no edcca_th at
-  6.18-rc7
-- [Phase 3] `grep "if (!edcca_th)" fw.c` — NOT present in HEAD
-- [Phase 3] Pickaxe search: `C2H_ADAPTIVITY`/`rtw_fw_adaptivity_result`
-  present since 6.18-rc7
-- [Phase 4] Lore thread via yhbt.net mirror — v1/v2/v3 evolution, Ping-
-  Ke Acked-by, review feedback
-- [Phase 4] Bugzilla #221286 fetched — oops/hang on RTL8821CE confirmed
-- [Phase 4] `b4 shazam` — lore.kernel.org message not found (bot/cache);
-  used yhbt mirror instead
-- [Phase 5] Traced call chain: firmware C2H → `rtw_c2h_work` →
-  `rtw_fw_c2h_cmd_handle` → `rtw_fw_adaptivity_result`
-- [Phase 5] `main.c:280` — `rtw_phy_dynamic_mechanism` in watchdog path
-  can trigger adaptivity H2C
-- [Phase 5] Verified `CONFIG_RTW88_8821CE` exists in Kconfig/Makefile
-- [Phase 6] Confirmed local tree 6.18.43 has bug, lacks fix, expects
-  clean apply
-- [Phase 8] Severity: NULL deref → oops/hang on common hardware
+- **[Phase 1]** Parsed commit message and tags from user query and local
+  mbox
+- **[Phase 2]** Read current `net/wireless/mlme.c:109-167,213-230`;
+  confirmed OOB read at `reason_code` with 24-byte buffer
+- **[Phase 2]** Computed frame sizes: header=24, deauth offsetofend=26,
+  auth offsetofend=30
+- **[Phase 3]** `git describe HEAD`: v6.18.44; `git blame`: buggy code
+  at 5d324e5159d9e
+- **[Phase 3]** `git log --grep` / `-S offsetofend`: fix not in tree
+- **[Phase 4]** Read local mbox `v2_20260707_enderaoelyther_*.mbx`; v2
+  Johannes Berg review noted
+- **[Phase 4]** lore.kernel.org fetch: blocked (Anubis)
+- **[Phase 4]** `b4 dig -c`: not attempted (commit not in tree)
+- **[Phase 5]** `grep cfg80211_rx_mlme_mgmt`: callers in mac80211 (safe,
+  26-byte) and mwifiex (unsafe path at util.c:482)
+- **[Phase 5]** Read `mwifiex/util.c:398-482`: verified pkt_len can be
+  24 after addr4 removal
+- **[Phase 5]** Read `ieee80211.h:1162-1207`: confirmed struct layout
+- **[Phase 5]** `IEEE80211_DEAUTH_FRAME_LEN` = 26 in
+  `net/mac80211/ieee80211_i.h:85`
+- **[Phase 6]** Buggy code confirmed present; fix absent
+- **[Phase 6]** `sizeof(struct ieee80211_hdr)` = 30 (includes addr4);
+  30−6=24 minimum after strip
+- **[Phase 8]** Failure mode: OOB read, HIGH severity
 
-**YES**The pickaxe search finished: `C2H_ADAPTIVITY` handling and
-`rtw_fw_adaptivity_result()` have been in this tree since at least Linux
-6.18-rc7, and the bug is still present in v6.18.43 — `rtw8821c_hw_spec`
-never sets `.edcca_th`, but `fw.c` dereferences it without a check.
+**YES**The background `git log -S 'cfg80211_rx_mlme_mgmt'` search
+finished. In this 6.18.44 tree it only surfaced merge commits — notably
+`5d324e5159d9e` — and `git blame` attributes the current
+`cfg80211_rx_mlme_mgmt()` / `cfg80211_tx_mlme_mgmt()` code to that same
+point. That’s enough to confirm the buggy validation has been present
+since these functions landed here; it doesn’t change the backport call.
 
-**Backport recommendation: YES.** This is a small, maintainer-Acked
-NULL-deref fix that prevents kernel oops/hangs on RTL8821CE when
-firmware sends adaptivity C2H commands. It should apply cleanly as a
-3-line addition to `drivers/net/wireless/realtek/rtw88/fw.c`.
+**Verdict for this tree: YES** — the out-of-bounds read in cfg80211 MLME
+callbacks is real, reachable via mwifiex host_mlme with 24-byte frames,
+and the fix is small and maintainer-reviewed.
 
- drivers/net/wireless/realtek/rtw88/fw.c | 3 +++
- 1 file changed, 3 insertions(+)
+ net/wireless/mlme.c | 45 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index c68a9fff68082..7ea8390f4d5a8 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -279,6 +279,9 @@ static void rtw_fw_adaptivity_result(struct rtw_dev *rtwdev, u8 *payload,
- 	const struct rtw_hw_reg_offset *edcca_th = rtwdev->chip->edcca_th;
- 	struct rtw_c2h_adaptivity *result = (struct rtw_c2h_adaptivity *)payload;
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index bf2c0d26e11c6..a304c0e8736f6 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -164,19 +164,35 @@ void cfg80211_rx_mlme_mgmt(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct ieee80211_mgmt *mgmt = (void *)buf;
++	__le16 fc;
  
-+	if (!edcca_th)
+ 	lockdep_assert_wiphy(wdev->wiphy);
+ 
+-	trace_cfg80211_rx_mlme_mgmt(dev, buf, len);
++	if (len < sizeof(fc))
 +		return;
 +
- 	rtw_dbg(rtwdev, RTW_DBG_ADAPTIVITY,
- 		"Adaptivity: density %x igi %x l2h_th_init %x l2h %x h2l %x option %x\n",
- 		result->density, result->igi, result->l2h_th_init, result->l2h,
++	fc = mgmt->frame_control;
+ 
+-	if (WARN_ON(len < 2))
++	if (ieee80211_is_auth(fc)) {
++		if (len < offsetofend(struct ieee80211_mgmt, u.auth.status_code))
++			return;
++	} else if (ieee80211_is_deauth(fc)) {
++		if (len < offsetofend(struct ieee80211_mgmt, u.deauth.reason_code))
++			return;
++	} else if (ieee80211_is_disassoc(fc)) {
++		if (len < offsetofend(struct ieee80211_mgmt, u.disassoc.reason_code))
++			return;
++	} else {
+ 		return;
++	}
++
++	trace_cfg80211_rx_mlme_mgmt(dev, buf, len);
+ 
+-	if (ieee80211_is_auth(mgmt->frame_control))
++	if (ieee80211_is_auth(fc))
+ 		cfg80211_process_auth(wdev, buf, len);
+-	else if (ieee80211_is_deauth(mgmt->frame_control))
++	else if (ieee80211_is_deauth(fc))
+ 		cfg80211_process_deauth(wdev, buf, len, false);
+-	else if (ieee80211_is_disassoc(mgmt->frame_control))
++	else
+ 		cfg80211_process_disassoc(wdev, buf, len, false);
+ }
+ EXPORT_SYMBOL(cfg80211_rx_mlme_mgmt);
+@@ -229,15 +245,28 @@ void cfg80211_tx_mlme_mgmt(struct net_device *dev, const u8 *buf, size_t len,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct ieee80211_mgmt *mgmt = (void *)buf;
++	__le16 fc;
+ 
+ 	lockdep_assert_wiphy(wdev->wiphy);
+ 
+-	trace_cfg80211_tx_mlme_mgmt(dev, buf, len, reconnect);
++	if (len < sizeof(fc))
++		return;
+ 
+-	if (WARN_ON(len < 2))
++	fc = mgmt->frame_control;
++
++	if (ieee80211_is_deauth(fc)) {
++		if (len < offsetofend(struct ieee80211_mgmt, u.deauth.reason_code))
++			return;
++	} else if (ieee80211_is_disassoc(fc)) {
++		if (len < offsetofend(struct ieee80211_mgmt, u.disassoc.reason_code))
++			return;
++	} else {
+ 		return;
++	}
++
++	trace_cfg80211_tx_mlme_mgmt(dev, buf, len, reconnect);
+ 
+-	if (ieee80211_is_deauth(mgmt->frame_control))
++	if (ieee80211_is_deauth(fc))
+ 		cfg80211_process_deauth(wdev, buf, len, reconnect);
+ 	else
+ 		cfg80211_process_disassoc(wdev, buf, len, reconnect);
 -- 
 2.53.0
 
