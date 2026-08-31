@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 311274EE870;
-	Mon, 31 Aug 2026 13:40:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719424F7535;
+	Mon, 31 Aug 2026 13:41:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183644; cv=none; b=G3RECKGwXMa06tc3QaxQ/4oHsEswcxqu3nJWPX5lXAQHRCgMp8YxaD0nlzli91YAOekt5NafXqh6csIROQ5pXzLwTPMO0qyOOn6xmwlaa6R6E3vMVaTxrJRHUh3oZJiBfZutImyLl34ZCepMBkT9zHWV/FMsbv9ZADLUyknbhCc=
+	t=1788183676; cv=none; b=NXaJqy48g6yg9znVRCEg1fqSwaL5UQV0ffsZ6iBpRDE4b+INrIf3t2hrgp/B4RBzyIRWv2tablzfJ0zePbtVTR8BndPOoPGYfQgR3JEG9l+CM2suve3YGNqe5J9B8Sqc0rju8DaSezGiIv0P3Q0LGSOyo7ebN8+oxadsTzxiR3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183644; c=relaxed/simple;
-	bh=fQb2NZwz1PsDV8tYROM5SczFzkCqvIep+IPA92orETA=;
+	s=arc-20240116; t=1788183676; c=relaxed/simple;
+	bh=+Kw6GAiPKJfPCrnZPtphnnIbGqur1JPhq186co4M0Fo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rYBkF39PYIp+aHtn3Uov6laqDSqU+Odl/J5IwnS+lXkPUqMdpkRUnQr9FMeTxVsIiThHnaUdkNf3Ix223AZ0bmE+ip6v8z+nzULIaJwItvd4mCUOQsjqa199bwf4VWs0lOO6+hMtTTkiAyzmXz44zKv3ackLD7X7ilu7PeoSHjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P8r2aJSY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=DX7OfOtIjzTQkL16xVLjdkbpGD9we52FA5L9oKGLScD2Xk4iqTVZQxoF0fZd/5GsNHx3zfgv6yDP5zlaA/Q0C9MW2frx400Pql3yZPg13q0Pnj6dpE+FD7qbvgxVXMkBhwqIzj8FIWPmZwd0P/PhdSZY+Y9NmZYphGXYYvRDgKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bVOXO1as; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P8r2aJSY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1006E1F00ACF;
-	Mon, 31 Aug 2026 13:40:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bVOXO1as"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8151F00A3E;
+	Mon, 31 Aug 2026 13:41:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183641;
-	bh=l2DLiaCPgwLm5QHijOrXvkcz1SdOAgshW8SkglcvLeE=;
+	s=k20260515; t=1788183673;
+	bh=m3wj9mwMPuIL9qGjRegB9YqqtjdnII9VACbYKzWJyv4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=P8r2aJSYs5a8ah5B8BdwgTBGyfMCV6DkuRNM1fZLo1b6KWp+OZlJz0Ne+k/yavjvC
-	 t2pmsjAm//iGMhiZApGnC0SeoQCfDcRL7B0nsum+MfmdFFdcCTzp7QgO9GMiz4vBZO
-	 SBBbhAcyqj2kxckmo33p9SMUe1BCxnrNlVIrCgZUWlu4Y3wICpVff4JugSh/UDVtne
-	 wdCZ1KEqCMKJPoiBo3yQzEzXB1ZiDLa0FI2aSSrmUPDz5vAW1bRUqS3CmVcPPBmFjS
-	 95M+DQK9iyCnctVg0lJxwtuE3KB9KKQ6msx3ppNhIVEG4w/M19VvH/hieJ/pb94XNz
-	 sWsL2Uk6WuHGg==
+	b=bVOXO1asRiNV4GgcAxbXH3BKPflhbrshC8LO5vtrEem9WTyiYmPyqN+k9ua2TA4nL
+	 TCxjAT9JARVv5ltImPGC2x+9vVrsDs0/S325ldIrRt/tltZhySAVUizQuOVedT7Blk
+	 c931bcrIPJNlTLdnhy6spemR5f7Yz45HRhR/r/sbFiQ+ulU2ymgAiHNpfsYQYDC6Yd
+	 Iqesdtf9lVopyh9/oOqeZGjxumWNRunHs2yA05Zk2LEMM4k7Z8sELfHDkXanGtbUiy
+	 d0VykDAhHc4A8yre7rlIKadRgRO+u2jNKQHWN9R9d4f7RDcUsukl9Gl4sxUDXxVVCV
+	 B16Aqf30BHg0g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.6] wifi: iwlwifi: mvm: validate sta_id in BA window status notif
-Date: Mon, 31 Aug 2026 09:24:03 -0400
-Message-ID: <20260831133314.4125787-215-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: mac80211: avoid out-of-bounds access in monitor
+Date: Mon, 31 Aug 2026 09:24:24 -0400
+Message-ID: <20260831133314.4125787-236-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,277 +54,273 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 
-[ Upstream commit 6aa77efaea9efea92e3090c35ad348fd759a3cf3 ]
+[ Upstream commit 03c41203ee5a833a9d7a7630be190830cede29d8 ]
 
-BA_WINDOW_STATUS_NOTIFICATION_ID extracts a 5-bit sta_id from the
-firmware notification and uses it to index fw_id_to_mac_id[] without
-bounds checking. Validate sta_id before array access to prevent
-out-of-bounds indexing.
+In NAN, we don't know on what band the frame will be sent. Therefore we
+set info->band to NUM_NL80211_BANDS. However, this leads to out-of-bound
+access in ieee80211_add_tx_radiotap_header when we try to access the
+sbands array.
 
-Assisted-by: GitHubCopilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714141909.2e97f337f3cb.Ic3f0f404082ccdea13809a3c0b70e0f5417e1037@changeid
+Fix it by not accessing the array if the band is NUM_NL80211_BANDS.
+This means that we will not report rate info for legacy rate in NAN.
+But nobody really cares about it.
+
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260504101829.346c9893d136.I15919027597c04ec35c6217db6e52e2a605e5cfc@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mvm: validate sta_id in BA
-window status notif`
+# Stable Backport Analysis: `wifi: mac80211: avoid out-of-bounds access
+in monitor`
 
-**Local tree:** `v6.18.44-1-g2736c32da98b9` (Makefile: 6.18.44)
+**Local tree:** Linux **6.18.43** (`git describe HEAD` →
+`v6.18.43-1-gc7f0dac02d232`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: Parse the subject line
-**Record:** `[wifi: iwlwifi: mvm]` `[validate]` — Add bounds validation
-for `sta_id` extracted from a BA window status firmware notification
-before indexing `fw_id_to_mac_id[]`.
+### Step 1.1: Subject line
+**Record:** `[wifi: mac80211]` `[avoid]` — prevent out-of-bounds array
+access in monitor-mode TX radiotap header construction.
 
-### Step 1.2: Parse all commit message tags
+### Step 1.2: Tags
 **Record:**
-- **Fixes:** — not present (expected for manual review)
-- **Reported-by:** — none
-- **Tested-by:** — none
-- **Reviewed-by:** — none
-- **Acked-by:** — none
-- **Link:** `https://patch.msgid.link/20260714141909.2e97f337f3cb...`
-  (patch submission link)
-- **Cc: stable@vger.kernel.org** — not present (expected)
-- **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
-  (author)
+- **Reviewed-by:** Ilan Peer \<ilan.peer@intel.com\>
+- **Reviewed-by:** Johannes Berg \<johannes.berg@intel.com\> (mac80211
+  maintainer)
 - **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (iwlwifi maintainer)
-- **Assisted-by:** GitHubCopilot:gpt-5.3-codex
+  \<miriam.rachel.korenblit@intel.com\> (author)
+- **Signed-off-by:** Johannes Berg (maintainer commit)
+- **Link:** https://patch.msgid.link/20260504101829.346c9893d136.I159190
+  27597c04ec35c6217db6e52e2a605e5cfc@changeid
+- No Fixes:, Reported-by:, Tested-by:, Cc: stable@vger.kernel.org
+- Notable: dual Reviewed-by including subsystem maintainer; no
+  fuzzer/user bug report
 
-Notable: maintainer sign-off from Miri Korenblit; no syzbot/user crash
-report in the message.
-
-### Step 1.3: Analyze commit body
+### Step 1.3: Body analysis
 **Record:**
-- **Bug:** `BA_WINDOW_STATUS_NOTIFICATION_ID` carries a 5-bit `sta_id`
-  in `ra_tid`; the handler indexes `fw_id_to_mac_id[sta_id]` without
-  validating it.
-- **Symptom/failure mode:** Out-of-bounds array indexing when firmware
-  sends an invalid `sta_id`.
-- **Version info:** none in message.
-- **Root cause:** Missing bounds check against
-  `mvm->fw->ucode_capa.num_stations` before array access.
+- **Bug:** For NAN, TX band is set to `NUM_NL80211_BANDS` because the
+  actual band is unknown at TX time.
+- **Symptom:** `ieee80211_add_tx_radiotap_header()` indexes
+  `local->hw.wiphy->bands[info->band]` with that sentinel value → out-
+  of-bounds access.
+- **Trigger path:** NAN transmission + monitor interface capturing TX
+  frames.
+- **Root cause:** Missing bounds check before `bands[]` lookup in the
+  legacy-rate radiotap path.
+- **Functional trade-off:** Legacy rate is not reported in radiotap for
+  NAN frames (acceptable; author notes nobody cares).
 
-### Step 1.4: Detect hidden bug fixes
-**Record:** Not disguised — this is an explicit defensive validation
-fix. It closes a memory-safety hole in a firmware-notification handler,
-consistent with other iwlwifi validation patches already in this tree.
+### Step 1.4: Hidden bug fix?
+**Record:** Not disguised — explicitly an OOB access fix, though
+described as monitor/radiotap rather than "crash fix."
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: Inventory the changes
+### Step 2.1: Inventory
 **Record:**
-- **Files:** `drivers/net/wireless/intel/iwlwifi/mvm/rx.c` (+5 lines)
-- **Function:** `iwl_mvm_window_status_notif()`
-- **Scope:** Single-file, surgical fix in one loop iteration
+- **Files:** `net/mac80211/status.c` (+1 functional line, copyright year
+  bump)
+- **Functions:** `ieee80211_add_tx_radiotap_header()`
+- **Scope:** Single-file, surgical (1-line logic change)
 
 ### Step 2.2: Code flow change
 **Record:**
-- **Hunk (lines ~1225–1227):** Before: extract `sta_id` from `ratid`,
-  immediately `rcu_dereference(mvm->fw_id_to_mac_id[sta_id])`. After: if
-  `sta_id >= num_stations`, log via `IWL_FW_CHECK` and `continue`.
-- **Path affected:** Firmware RX notification handler for block-ack
-  window status (powersave/reordering path).
-- **Context:** Normal RX handler loop, not init/teardown.
+- **Hunk (lines ~298–305):**
+  - **Before:** If no `status_rate`, and `rates[0].idx >= 0` with legacy
+    flags, always dereference `wiphy->bands[info->band]`.
+  - **After:** Same, but only when `info->band < NUM_NL80211_BANDS`.
+  - **Path:** TX status → monitor radiotap header fill on legacy (non-
+    MCS/VHT) rate reporting.
 
 ### Step 2.3: Bug mechanism
 **Record:**
-- **Category:** Buffer overflow / out-of-bounds access (memory safety).
-- **Mechanism:**
-  - `BA_WINDOW_STATUS_STA_ID_MSK` is 5 bits → `sta_id` range 0–31
-    (`fw/api/rx.h`).
-  - `fw_id_to_mac_id[]` size is `IWL_STATION_COUNT_MAX` = **16**
-    (`fw/api/mac.h`).
-  - `num_stations` is capped at 16 by firmware TLV parsing (`iwl-
-    drv.c`).
-  - Without validation, `sta_id` values ≥ `num_stations` (and especially
-    16–31) can index past the 16-element array.
-  - A garbage pointer from OOB memory may pass `IS_ERR_OR_NULL()` and
-    reach `ieee80211_mark_rx_ba_filtered_frames()`.
+- **Category:** Buffer/out-of-bounds access (array index past end).
+- **Mechanism:** `struct ieee80211_supported_band
+  *bands[NUM_NL80211_BANDS]` (verified in
+  `include/net/cfg80211.h:6076`). Valid indices are `0 ..
+  NUM_NL80211_BANDS-1`. `NUM_NL80211_BANDS` is a sentinel (value 6 in
+  this tree: 2G/5G/60G/6G/S1G/LC). NAN TX sets `info->band =
+  NUM_NL80211_BANDS` in `ieee80211_tx_skb_tid()`
+  (`net/mac80211/tx.c:6316-6317`). Indexing `bands[NUM_NL80211_BANDS]`
+  is OOB; subsequent `sband->bitrates[...]` can crash or corrupt memory.
 
 ### Step 2.4: Fix quality
 **Record:**
-- **Quality:** High — matches existing driver patterns
-  (`iwl_mvm_sta_from_staid_rcu()`, `iwl_mvm_sta_pm_notif()`, MLD RX
-  handlers using `IWL_FW_CHECK`).
-- **Regression risk:** Very low — only skips invalid entries; no
-  API/locking changes.
-- **Red flags:** None.
+- **Obviously correct:** Matches existing guards elsewhere in mac80211
+  (`tx.c:62`, `tx.c:689`, `rate.c:101`, `rate.c:907`).
+- **Minimal:** One condition added.
+- **Regression risk:** Very low — only skips optional radiotap legacy-
+  rate field when band is unknown.
+- **No API changes.**
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: Blame changed lines
-**Record:** Shallow repository (`git rev-parse --is-shallow-repository`
-→ `true`). `git blame` attributes `iwl_mvm_window_status_notif()` to
-merge commit `5d324e5159d9e`; exact introduction commit not available in
-this checkout. Function and buggy pattern are present in tag
-`1efe5d048a391` (Linux 6.18.44).
+### Step 3.1: Blame
+**Record:** `git blame` on changed lines shows all of `status.c`
+attributed to commit `19eef1d98eeda` due to flattened/squashed file
+history in this checkout. **UNVERIFIED:** exact commit that introduced
+the missing guard.
 
-### Step 3.2: Follow Fixes: tag
-**Record:** N/A — no `Fixes:` tag in the commit message.
+### Step 3.2: Fixes: tag
+**Record:** N/A — no Fixes: tag in commit message.
 
-### Step 3.3: File history for related changes
-**Record:** Recent iwlwifi stable commits in this tree include similar
-validation fixes:
-- `2d5dec517b539` — wake packet notification bounds fix
-- `dd90880eb5ec5` — OOB read in `iwl_mvm_nd_match_info_handler()`
-- `1de92789ce31e` — BA session handler `sta_mask` validation (MLD)
+### Step 3.3: Related file history
+**Record:** `git log --oneline -20 -- net/mac80211/status.c` shows only
+the squashed import commit. Recent mac80211 fixes in tree include
+radiotap bounds work (`9b40c59bab08f` — injected antenna index). NAN-
+related work by same author exists (`08e7ae48e175c` cfg80211 NAN). Buggy
+code **is present** in current tree without this fix.
 
-Standalone fix; not part of a multi-patch series in this tree.
+### Step 3.4: Author context
+**Record:** Miri Korenblit is an active WiFi contributor; recent
+mac80211 commits in tree (`7a1bec39c014e`, `b4b065a880997`). Johannes
+Berg is mac80211 maintainer and reviewed.
 
-### Step 3.4: Author's other commits
-**Record:** Emmanuel Grumbach is a long-time iwlwifi developer. Miri
-Korenblit is iwlwifi maintainer (signed off). Shallow history limits
-author-specific log on `rx.c`.
-
-### Step 3.5: Prerequisites
-**Record:** No dependencies found. `IWL_FW_CHECK` exists in `fw/dbg.h`.
-`iwl_mvm_window_status_notif` and `BA_WINDOW_STATUS_NOTIFICATION_ID`
-handler are present. `git apply --check` confirms the patch applies
-cleanly to HEAD.
+### Step 3.5: Dependencies
+**Record:** Standalone — no series, no prerequisite commits. Only
+requires existing NAN `band = NUM_NL80211_BANDS` assignment (present at
+`tx.c:6317`) and existing `ieee80211_add_tx_radiotap_header()` (present
+at `status.c:257`).
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original patch discussion
-**Record:** `b4 dig -c HEAD` did not match this patch (matched unrelated
-OF overlay patch). `b4 dig` by subject failed (wrong usage).
-Lore.kernel.org and patch.msgid.link blocked by Anubis bot protection —
-**could not read thread discussion**.
+### Step 4.1: Original discussion
+**Record:** `b4 dig -c <message-id>` failed — commit not in local tree.
+`b4 dig -c HEAD` matched unrelated commit. lore.kernel.org and
+patch.msgid.link blocked by Anubis bot protection. **UNVERIFIED:** full
+mailing-list thread content.
 
-### Step 4.2: Reviewers from b4 dig -w
-**Record:** Not retrieved — patch-specific `b4 dig` match not found.
+### Step 4.2: Reviewers
+**Record:** Commit message includes Reviewed-by from Johannes Berg
+(maintainer) and Ilan Peer. **UNVERIFIED** via `b4 dig -w` (no commit
+hash available locally).
 
 ### Step 4.3: Bug report
-**Record:** No `Reported-by:` or syzbot link. Bug identified by
-static/code review (Copilot-assisted per message). Severity is
-theoretical until bad firmware data arrives, but consequences are real
-(OOB access).
+**Record:** No Reported-by, syzbot, or bugzilla link. Bug identified via
+code-path analysis (NAN sentinel band + monitor radiotap).
 
-### Step 4.4: Related patches/series
-**Record:** Part of iwlwifi's ongoing firmware-input validation theme;
-similar fixes already backported to 6.18.y (see Phase 3.3). Appears
-standalone.
+### Step 4.4: Series context
+**Record:** Standalone single-patch fix; no "patch X/Y" indication.
 
-### Step 4.5: Stable mailing list history
-**Record:** Could not search lore (blocked). Similar iwlwifi OOB fixes
-in this tree were explicitly nominated with `Cc: stable@vger.kernel.org`
-(e.g. `dd90880eb5ec5`).
+### Step 4.5: Stable list history
+**Record:** **UNVERIFIED** — could not search lore stable archive (bot
+protection).
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `iwl_mvm_window_status_notif()` — only function modified.
+**Record:** `ieee80211_add_tx_radiotap_header()`, called from
+`ieee80211_tx_monitor()`.
 
 ### Step 5.2: Callers
-**Record:** Registered in
-`drivers/net/wireless/intel/iwlwifi/mvm/ops.c`:
-```348:350:drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-        RX_HANDLER(BA_WINDOW_STATUS_NOTIFICATION_ID,
-                   iwl_mvm_window_status_notif, RX_HANDLER_SYNC,
-                   struct iwl_ba_window_status_notif),
-```
-Called from iwlwifi firmware RX dispatch when firmware sends
-`BA_WINDOW_STATUS_NOTIFICATION_ID` (0x13). Reachable during normal WiFi
-operation with block-ack sessions (e.g. after D0i3 per notification
-semantics).
+**Record:**
+- `ieee80211_tx_monitor()` ← `ieee80211_tx_status_ext()` path when
+  `local->tx_mntrs` (`status.c:1109-1110`)
+- `ieee80211_tx_monitor()` ← `ieee80211_beacon_get_tim()` for beacon TX
+  monitor copy (`tx.c:5819`)
+- `ieee80211_tx_status_ext()` ← `ieee80211_tx_status_skb()` and driver
+  TX status callbacks
 
 ### Step 5.3: Callees
-**Record:** `IWL_FW_CHECK()`, `rcu_dereference()`, `IS_ERR_OR_NULL()`,
-`ieee80211_mark_rx_ba_filtered_frames()`, `le16_to_cpu()`,
-`le64_to_cpu()`, `le32_to_cpu()`.
+**Record:** `skb_push`, `memset`, `local->hw.wiphy->bands[info->band]`
+(the OOB site), `sband->bitrates[...]`.
 
-### Step 5.4: Call chain / reachability
-**Record:** Firmware → iwl trans RX → MVM RX handler table →
-`iwl_mvm_window_status_notif()`. Triggered by firmware notifications
-during WiFi RX/reordering. Not directly userspace-triggered, but
-firmware bugs/corruption are realistic (similar fixes already accepted
-for iwlwifi in stable).
+### Step 5.4: Reachability
+**Record:**
+1. NAN interface started (`NL80211_IFTYPE_NAN`)
+2. Frame TX via `ieee80211_tx_skb_tid()` → `band = NUM_NL80211_BANDS`
+3. At least one monitor interface without `MONITOR_FLAG_SKIP_TX` →
+   `local->tx_mntrs > 0` (`iface.c:1149-1150`)
+4. TX completes with legacy rate info in skb CB (non-MCS/VHT,
+   `rates[0].idx >= 0`)
+5. `ieee80211_add_tx_radiotap_header()` OOB on `bands[]`
+
+Reachable from normal Wi-Fi Aware (NAN) usage with packet capture
+(Wireshark/tcpdump on monitor). Not theoretical.
 
 ### Step 5.5: Similar patterns
-**Record:** Same `sta_id >= num_stations` check exists in:
-- `iwl_mvm_sta_from_staid_rcu()` (`mvm.h:1354`)
-- `iwl_mvm_sta_pm_notif()` (`mac80211.c:3366`)
-- RX MPDU path (`rx.c:369`)
-- MLD RX path (`mld/rx.c:1551-1554`)
+**Record:** Same `info->band` / `NUM_NL80211_BANDS` guard pattern
+already used in:
+- `net/mac80211/tx.c:62-63` (`ieee80211_duration`)
+- `net/mac80211/tx.c:689-692` (rate control)
+- `net/mac80211/rate.c:101-102`, `907` (rate control TX status)
 
-This handler was the outlier missing the check.
+`status.c` radiotap path was the outlier.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE (6.18.44)
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.43)
 
-### Step 6.1: Does buggy code exist?
-**Record:** **YES.** In `rx.c` at lines 1225–1227, `sta_id` is used to
-index `fw_id_to_mac_id[sta_id]` without validation. Confirmed in tag
-`1efe5d048a391` (Linux 6.18.44). Fix is **not** yet applied in this
-checkout.
+### Step 6.1: Buggy code present?
+**Record:** **YES.** Current `status.c:298-305` lacks `info->band <
+NUM_NL80211_BANDS` check. NAN sentinel assignment exists at
+`tx.c:6316-6317`. Fix is **not** already applied.
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply** — `git apply --check` succeeded with no
-conflicts.
+**Record:** Expected **clean apply** — single-line addition in well-
+isolated `else if` branch. Context at lines 298-300 matches the provided
+diff exactly.
 
-### Step 6.3: Related fixes already present?
-**Record:** No duplicate fix for this specific path. Related iwlwifi
-firmware-validation fixes are already in 6.18.y (see Phase 3.3).
+### Step 6.3: Duplicate fix?
+**Record:** `git grep "avoid out-of-bounds access in monitor"` — no
+matches. No equivalent fix found in tree.
 
 ---
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** **IMPORTANT** — `drivers/net/wireless/intel/iwlwifi` (Intel
-WiFi, widely deployed on laptops/desktops). `CONFIG_IWLWIFI` /
-`CONFIG_IWLMVM`.
+**Record:** **net/mac80211** — IMPORTANT (802.11 stack used broadly;
+monitor mode used by developers, security tools, Android debugging).
 
-### Step 7.2: Subsystem activity
-**Record:** Active — multiple iwlwifi fixes backported to 6.18.y in
-recent history (validation, race fixes, OOB fixes).
+### Step 7.2: Activity
+**Record:** Active — multiple recent mac80211 fixes in this tree
+(radiotap bounds, memory leaks, MLD fixes).
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users with Intel WiFi (`iwlmvm`) hardware using block-ack
-reordering. Config-specific (`CONFIG_IWLWIFI` + `CONFIG_IWLMVM`), but
-that is very common on Intel platforms.
+**Record:** Users of **NAN (Wi-Fi Aware)** with **TX monitor
+interfaces** enabled. Config-specific but real (Android Wi-Fi Aware
+development/capture scenarios).
 
 ### Step 8.2: Trigger conditions
-**Record:** Firmware sends `BA_WINDOW_STATUS_NOTIFICATION` with `sta_id
->= num_stations` (or ≥16 with 5-bit encoding). Uncommon in normal
-operation, but plausible with firmware bugs or corrupted notifications.
-Not directly userspace-triggered.
+**Record:** NAN TX + monitor without SKIP_TX + legacy rate in TX status
+metadata. Unprivileged users can trigger if they can create NAN and
+monitor interfaces (typically requires appropriate
+permissions/CAP_NET_ADMIN).
 
 ### Step 8.3: Failure mode severity
-**Record:** Out-of-bounds read of `fw_id_to_mac_id[]` → possible invalid
-`sta` pointer → kernel oops/corruption in
-`ieee80211_mark_rx_ba_filtered_frames()`. **Severity: HIGH** (memory
-safety / potential crash).
+**Record:** OOB read of pointer array → likely **NULL or garbage pointer
+dereference** → kernel oops/panic. **Severity: HIGH** (kernel crash).
+Not data corruption in the common case, but memory safety violation.
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH — closes a real OOB indexing bug in a live RX path.
-- **Risk:** VERY LOW — 5-line validation, established pattern.
-- **Ratio:** Strongly favors backport.
+- **Benefit:** Prevents kernel crash on a real, reachable code path;
+  aligns with existing subsystem defensive pattern.
+- **Risk:** Minimal — one bounds check; only affects optional radiotap
+  metadata.
+- **Ratio:** Strongly favorable.
 
 ---
 
@@ -331,104 +329,119 @@ safety / potential crash).
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real out-of-bounds indexing bug (5-bit `sta_id` vs 16-element array)
-- Memory-safety issue with crash/corruption potential
-- Small, obviously correct, matches existing driver conventions
-- Applies cleanly to 6.18.44
-- Buggy code confirmed present; fix not yet applied
-- Similar iwlwifi firmware-validation fixes already backported to this
-  tree
-- iwlwifi maintainer sign-off
+- Real OOB bug with clear mechanism
+- Kernel crash potential
+- Tiny, obviously correct fix
+- Reviewed by mac80211 maintainer (Johannes Berg)
+- Consistent with existing guards in same subsystem
+- Buggy code confirmed present in 6.18.43 tree
+- Clean backport expected
 
 **AGAINST backport:**
-- No user crash report or syzbot reproduction in commit message
-- Trigger requires bad firmware notification data (uncommon)
-- Shallow git history prevents dating when the handler was introduced
+- Niche trigger (NAN + TX monitor, not every user)
+- No syzbot/user Reported-by (found via code review)
+- Mailing-list discussion unverified
 
-**Unresolved:**
-- Lore review thread inaccessible (Anubis)
-- Exact upstream commit hash not in this shallow tree
+**Unresolved:** Exact introduction commit; lore thread content; whether
+stable maintainers already discussed it.
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — pattern used throughout
-   iwlwifi; maintainer SOB; no logic concerns.
-2. Fixes a real bug? **PASS** — missing bounds check on firmware-derived
-   index.
-3. Important issue? **PASS** — OOB access / potential kernel crash
-   (HIGH).
-4. Small and contained? **PASS** — 5 lines, one function.
-5. No new features/APIs? **PASS** — defensive validation only.
-6. Can apply to local tree? **PASS** — clean apply verified; code
-   exists.
+1. Obviously correct and tested? **PASS** — logic mirrors existing
+   mac80211 pattern; maintainer-reviewed.
+2. Fixes a real bug? **PASS** — OOB array access on reachable path.
+3. Important issue? **PASS** — kernel crash / memory safety (HIGH).
+4. Small and contained? **PASS** — 1-line functional change.
+5. No new features/APIs? **PASS** — defensive bounds check only.
+6. Can apply to local tree? **PASS** — code present, patch context
+   matches.
 
-### Step 9.3: Exception categories
-**Record:** Not a device-ID/quirk/DT/docs/build fix. Standard memory-
-safety bug fix.
+### Step 9.3: Exception category
+**Record:** N/A (not device ID, quirk, DT, build fix, or docs — standard
+bug fix).
 
 ### Step 9.4: Decision rationale
-For **Linux 6.18.44**, `iwl_mvm_window_status_notif()` indexes a
-16-element array using a 5-bit firmware-provided `sta_id` without
-validation. This is a clear out-of-bounds access bug. The fix is
-minimal, follows established iwlwifi patterns, applies cleanly, and
-aligns with other firmware-input validation fixes already accepted into
-6.18.y.
+For **this 6.18.43 tree**, the NAN TX path sets `info->band` to the
+`NUM_NL80211_BANDS` sentinel, and the monitor radiotap header code
+indexes `wiphy->bands[]` without a bounds check. That is a verified out-
+of-bounds access that can crash the kernel when Wi-Fi Aware traffic is
+captured on a TX-enabled monitor interface. The fix is minimal, matches
+established patterns in the same files, and has maintainer review. The
+trigger is narrower than a core networking crash, but the failure mode
+is severe and the backport risk is negligible.
 
 ---
 
 ## Verification
 
 - [Phase 1] Parsed subject, tags, body from user-provided commit message
-- [Phase 1] Confirmed no Reported-by/syzbot; maintainer SOB present
-- [Phase 2] Read `rx.c:1193-1238` — buggy code without `IWL_FW_CHECK`
-  confirmed
-- [Phase 2] Read `fw/api/rx.h:972-976` — 5-bit `sta_id` mask confirmed
-- [Phase 2] Read `fw/api/mac.h:19` — `IWL_STATION_COUNT_MAX` = 16
-- [Phase 2] Read `mvm.h:1008` — `fw_id_to_mac_id[IWL_STATION_COUNT_MAX]`
-- [Phase 2] Read `fw/dbg.h:334-342` — `IWL_FW_CHECK` macro behavior
-- [Phase 3] `git rev-parse --is-shallow-repository` → `true`
-- [Phase 3] `git blame -L 1193,1238 rx.c` — shallow history only
-- [Phase 3] `git show 1efe5d048a391:rx.c` — buggy code in 6.18.44 tag
-- [Phase 3] `git log --oneline -20 --
-  drivers/net/wireless/intel/iwlwifi/` — related fixes found
-- [Phase 3] `git show 2d5dec517b539`, `dd90880eb5ec5` — similar stable
-  backports
-- [Phase 3] `git apply --check` — patch applies cleanly
-- [Phase 4] `b4 dig -c HEAD` — no match for this patch
-- [Phase 4] WebFetch lore.kernel.org — blocked by Anubis (UNVERIFIED:
-  review discussion)
-- [Phase 4] WebFetch patch.msgid.link — blocked by Anubis (UNVERIFIED:
-  thread content)
-- [Phase 5] `grep iwl_mvm_window_status_notif` — caller in
-  `ops.c:348-350`
-- [Phase 5] Compared with `mvm.h:1354`, `mac80211.c:3366`,
-  `mld/rx.c:1551`
-- [Phase 6] `git describe HEAD` → `v6.18.44-1-g2736c32da98b9`
-- [Phase 6] Makefile → 6.18.44
-- [Phase 6] Buggy code present; fix absent in HEAD
-- [Phase 8] OOB mechanism verified: 5-bit index (0–31) vs 16-element
-  array
+- [Phase 1] Identified Reviewed-by: Johannes Berg, Ilan Peer
+- [Phase 2] Read `status.c:257-310` — buggy `bands[info->band]` access
+  without band check
+- [Phase 2] Read `cfg80211.h:6076` — `bands[NUM_NL80211_BANDS]` array
+  size
+- [Phase 2] Read `nl80211.h:5631-5639` — `NUM_NL80211_BANDS` = 6
+  (sentinel index)
+- [Phase 2] Confirmed fix adds `info->band < NUM_NL80211_BANDS` guard
+- [Phase 3] `git blame -L 295,310 status.c` — flattened history (all one
+  commit)
+- [Phase 3] `git log --oneline -20 -- net/mac80211/status.c` — squashed
+  history
+- [Phase 3] `git log --author=Korenblit` — author has recent mac80211
+  commits
+- [Phase 4] `b4 dig -c <message-id>` — failed, commit not in tree
+- [Phase 4] WebFetch lore.kernel.org — blocked (Anubis)
+- [Phase 4] WebFetch patch.msgid.link — blocked (Anubis)
+- [Phase 5] `grep ieee80211_tx_monitor` — callers at `status.c:1110`,
+  `tx.c:5819`
+- [Phase 5] Read `tx.c:6316-6317` — NAN sets `band = NUM_NL80211_BANDS`
+- [Phase 5] Read `iface.c:1149-1150` — `tx_mntrs` incremented for TX
+  monitor
+- [Phase 5] Grep `info->band.*NUM_NL80211_BANDS` in mac80211 — guards in
+  `tx.c`, `rate.c`; missing in `status.c`
+- [Phase 6] `git describe HEAD` / `make kernelversion` — **6.18.43**
+- [Phase 6] Confirmed fix NOT present in current `status.c`
+- [Phase 6] `grep "avoid out-of-bounds access in monitor"` — no existing
+  fix
+- [Phase 8] Traced call chain: NAN TX → TX status →
+  `ieee80211_tx_monitor` → radiotap OOB
+- **UNVERIFIED:** Exact commit that introduced NAN `band =
+  NUM_NL80211_BANDS`
+- **UNVERIFIED:** Mailing-list review thread and stable nominations
+- **UNVERIFIED:** `git apply --check` (patch file formatting issue in
+  test; manual line comparison confirms clean apply)
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ net/mac80211/status.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 8c1bb3a7ffcaa..1e6d06bb674c1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -1224,6 +1224,11 @@ void iwl_mvm_window_status_notif(struct iwl_mvm *mvm,
- 		/* get the station */
- 		sta_id = (ratid & BA_WINDOW_STATUS_STA_ID_MSK)
- 			 >> BA_WINDOW_STATUS_STA_ID_POS;
-+		if (IWL_FW_CHECK(mvm,
-+				 sta_id >= mvm->fw->ucode_capa.num_stations,
-+				 "Invalid sta id (%d) in BA window status notification\n",
-+				 sta_id))
-+			continue;
- 		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
- 		if (IS_ERR_OR_NULL(sta))
- 			continue;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 4b38aa0e902a8..8716eda8317d1 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -5,7 +5,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2008-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright 2021-2025  Intel Corporation
++ * Copyright 2021-2026  Intel Corporation
+  */
+ 
+ #include <linux/export.h>
+@@ -295,9 +295,10 @@ ieee80211_add_tx_radiotap_header(struct ieee80211_local *local,
+ 						 RATE_INFO_FLAGS_VHT_MCS |
+ 						 RATE_INFO_FLAGS_HE_MCS)))
+ 			legacy_rate = status_rate->rate_idx.legacy;
+-	} else if (info->status.rates[0].idx >= 0 &&
+-		 !(info->status.rates[0].flags & (IEEE80211_TX_RC_MCS |
+-						  IEEE80211_TX_RC_VHT_MCS))) {
++	} else if (info->band < NUM_NL80211_BANDS &&
++		   info->status.rates[0].idx >= 0 &&
++		   !(info->status.rates[0].flags & (IEEE80211_TX_RC_MCS |
++						    IEEE80211_TX_RC_VHT_MCS))) {
+ 		struct ieee80211_supported_band *sband;
+ 
+ 		sband = local->hw.wiphy->bands[info->band];
 -- 
 2.53.0
 
