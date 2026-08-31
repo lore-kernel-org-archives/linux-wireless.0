@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 635C6438037;
-	Mon, 31 Aug 2026 13:33:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F9A244A400;
+	Mon, 31 Aug 2026 13:34:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183215; cv=none; b=oHLgal7RICHH3W0ghUEgJ73DLwhKAWz5V6EqIs4K3LZ0/09RXoKlhie6q/mGBxOP8nfg+EFO/EpHdOJ4qZuA9w47TUzln6yivpDCJBToM9srSHvKERUVwOx9Ik3/Bk7T8K/PGAbvvDVlL85A0Ju0WB/TYVz1IgLxRmJqK8jngnw=
+	t=1788183254; cv=none; b=Tc9RKJrmnnk3TML41IT4ahxbzVi8iWXnLbIvlRpRgdFAIQdJJu/gEf4PPUHdyfQp0aLR6gXecaqClRoL3eaTzzjcxlBdrBBH7SQDnvKjliXsVdYmMySWzyt7PFcTYAuTcChcA9azsuVZWMCtfVaCdRUGrtqUeBeYAJOxXDAwCuU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183215; c=relaxed/simple;
-	bh=dOULyuJuHCpIb6JIT/K4mhv4WoWfnlEAUTJs2Fjl22M=;
+	s=arc-20240116; t=1788183254; c=relaxed/simple;
+	bh=XDxuBPFmz957YXRDN3G+Fvtv4sTdp217PAFXDircdks=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qEw+uic65RjT8p+kRWAZm6d9ZcTlrWEaAbEzgVl+010Cg5ScbJARhZzl7uq2FIe7PJSEzk9X7UG1cEC2Oy8lsYf2BKN//n0NTCn64i4RDlJzVUfbBCQGiXNfimMZlLXrC/FrneShGR0iS09PGkHhlnrxn77UjV2WqG1hMJn2UL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dnl08ySa; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=cY800IA3x22kAHBvvi1hnnw1P6/fUEwe7KlqvObBH4EJvrwwpGCIXlusI8XITPzCJNJIpXxJnEYpFrh85WL0jSdvhIvIE6UCb2VmmnAmjLrcIG2WNcKcOKreSZFXLrC3b9um9kazSUyMerwc0TE6ssf6E/Y95Q7+h1de9cnIMUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hyRd9uvt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dnl08ySa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 396AB1F000E9;
-	Mon, 31 Aug 2026 13:33:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hyRd9uvt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 495781F000E9;
+	Mon, 31 Aug 2026 13:34:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183213;
-	bh=eH6YN2ybjH+OMbJ5psW34LIPNDoEREetcOKN/tvEAK4=;
+	s=k20260515; t=1788183252;
+	bh=qKKiT9zSevn4nBBGZoSgxkneBjYrg3Mq8hCg18KSQWU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Dnl08ySaaI/Qjqb/2NWgAGgJA21lWvLFbjauoa9EXKQcidhR84ElU39lBRGLolcSh
-	 PFRYwd/rkU6OUSGxQYfKnAu/+qFhiD9/NxE7nsk69el8Evu3j4hMRfyZteQXgEbBcx
-	 F1tSYCgQ44Pcd0bOZ2pU0K5jBP0pLhg90Wqu19AL8IYHNoivcb9oztu8L7GAchobqC
-	 X0xxwsILtM34K8+xsVu4Fhi1sZMhrqi3oon229HlLtkzyB1S0lD8bGea3mtlhygWo+
-	 hlTgLAOuG+vB0/EHQ4TSrdYdIUmWWUSuPR7WoV6GvcBS1SJ1R0ce9myZuyEeK63bSg
-	 yl6FNx9ioTQIg==
+	b=hyRd9uvtZDVu4sY7uyLqsl3gYcMxW2rvxuIuLNvMq495gkY8YKrcz4s5Nc8koL5AO
+	 G2hiudllKORsEhAVgjLQiZ+CBrrY/KVMy9Lz0piPJGImNzYSaSOlS7sy1RHWZJzhC9
+	 yMVxbIyfHGPwKCWVTHxzuOlGikKe5FC5qw7rcmYr06ectQA16JJmGU7BWW6NHfixrW
+	 wLlaZxjFTxsdnvmqe7CCx0iJbmQxlVVpJeFfuPiGbhkJJAeCL5FXlXm43lK8W/ZUVg
+	 I9d3+On3aWAphuFEEMdHVhRNZ9byR2NNyvz3S14oQbbZVLcJMgGtKlvyLx//7ArzIa
+	 3rwCIeIfDDQNQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc: Johannes Berg <johannes.berg@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.12] wifi: iwlwifi: mvm: parse beacon notif per layout
-Date: Mon, 31 Aug 2026 09:20:40 -0400
-Message-ID: <20260831133314.4125787-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mvm: fix P2P-Device binding handling
+Date: Mon, 31 Aug 2026 09:21:05 -0400
+Message-ID: <20260831133314.4125787-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,466 +52,525 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit b77c6f50b1f80414cb3f542ae72e532ed90fc7f7 ]
+[ Upstream commit b74e377cad9271950c57472867c469e4b5b2ff0c ]
 
-The beacon TX notification can arrive in different layouts, and fields
-must be read only after selecting the expected format.
+Our binding handling for P2P-Device can run into the following
+scenario, as observed by our testing:
 
-Parse gp2 and TSF from the matching notification structure in each
-branch, and keep using the parsed gp2 for CSA countdown and debug output.
-Drop the obsolete cached gp2 field.
+ - a station interface is connected on some channel
+ - the P2P-Device does a remain-on-channel (ROC) on that channel
+ - the ROC ends, and the P2P-Device is removed from the binding,
+   but the phy_ctxt pointer is left around as a PHY cache so we
+   don't need to recalibrate to the channel again and again in
+   case it's not shared
+ - a binding update by the station interface, even a removal,
+   will re-add the P2P-Device to the binding
+ - the P2P-Device is removed, which removes the PHY context, but
+   it's still in the binding so the firmware crashes
 
-Assisted-by: GitHub Copilot:gpt-5.3-codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714141909.cc8aa937f8e5.I921f8dadcb20cb73e8283e1b8546e1778205411f@changeid
+Since the P2P device is removed from the binding and only re-
+added by unrelated code, but we want to keep the phy_ctxt around
+as a cache for future ROC usage, fix it by adding a boolean that
+indicates whether or not the P2P-Device should be added to the
+binding, and handle that in the binding iterator. That way, the
+station interface cannot re-add the P2P-Device to the binding
+when that isn't active.
+
+Assisted-by: Github Copilot:claude-opus-4-6
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://patch.msgid.link/20260527230313.07f94335ae06.I384238b0859343c4a9a9dda20682be1aad89cc9d@changeid
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mvm: parse beacon notif per
-layout`
+# Stable Backport Analysis: `wifi: iwlwifi: mvm: fix P2P-Device binding
+handling`
 
-**Local tree:** Linux **6.18.44** (`v6.18.44-1-g2736c32da98b9`, detached
-from `stable/linux-6.18.y`)
+**Local tree:** Linux **6.18.44** (`git describe HEAD` → `v6.18.44`,
+Makefile `VERSION=6 PATCHLEVEL=18 SUBLEVEL=44`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: Parse the subject line
-**Record:** `[wifi: iwlwifi: mvm]` `[parse]` — Parse beacon TX
-notification fields according to the correct firmware layout before use.
+### Step 1.1: Parse Subject Line
+**Record:** `[wifi: iwlwifi: mvm]` `[fix]` — Correct P2P-Device binding
+handling so a cached PHY context does not cause stale re-inclusion in
+firmware bindings.
 
-### Step 1.2: Parse all commit message tags
+### Step 1.2: Parse All Commit Message Tags
 **Record:**
-- **Link:** https://patch.msgid.link/20260714141909.cc8aa937f8e5.I921f8d
-  adcb20cb73e8283e1b8546e1778205411f@changeid
-- **Assisted-by:** GitHub Copilot:gpt-5.3-codex
-- **Signed-off-by:** Emmanuel Grumbach \<emmanuel.grumbach@intel.com\>
-- **Signed-off-by:** Miri Korenblit
-  \<miriam.rachel.korenblit@intel.com\>
-- **No** Fixes:, Reported-by:, Tested-by:, Acked-by:, or Cc:
-  stable@vger.kernel.org
-- **Notable:** Part of `[PATCH iwlwifi-fixes 07/15]` series; Reviewed-
-  by: Ilan Peer (from lore thread, verified via b4)
+| Tag | Value |
+|-----|-------|
+| Assisted-by | Github Copilot:claude-opus-4-6 |
+| Signed-off-by | Johannes Berg \<johannes.berg@intel.com\> |
+| Link | https://patch.msgid.link/20260527230313.07f94335ae06.I384238b08
+59343c4a9a9dda20682be1aad89cc9d@changeid |
+| Signed-off-by | Miri Korenblit \<miriam.rachel.korenblit@intel.com\> |
 
-### Step 1.3: Analyze commit body
+**Notable patterns:** No `Fixes:`, `Reported-by:`, `Cc: stable`, or
+syzbot tags. Author is iwlwifi subsystem maintainer (Johannes Berg).
+Link points to patch submission (May 2026 message ID).
+
+### Step 1.3: Analyze Commit Body
 **Record:**
-- **Bug:** `gp2` (and implicitly `tsf`) are read from the v6
-  (`iwl_extended_beacon_notif`) layout before the code selects which
-  notification layout the firmware actually sent.
-- **Symptom:** Wrong `gp2` timestamp used for CSA countdown scheduling
-  and debug output on firmware using the v5 layout.
-- **Root cause:** Early unconditional `beacon->gp2` read assumes v6
-  offsets regardless of `iwl_mvm_is_short_beacon_notif_supported()`
-  result.
-- **Version info:** None in commit message.
+- **Bug:** After P2P-Device ROC ends, driver removes P2P from binding
+  but keeps `phy_ctxt` as a channel cache. A later station-interface
+  binding update re-adds the inactive P2P-Device to the binding via the
+  binding iterator (matching `phy_ctxt`). When the P2P-Device is later
+  removed, PHY context is torn down while P2P remains in the firmware
+  binding → **firmware crash**.
+- **Symptom:** Firmware crash on a specific P2P + station coexistence
+  sequence.
+- **Root cause:** Binding iterator cannot distinguish “has cached
+  phy_ctxt” from “should be in binding”.
+- **Fix approach:** Add `p2p_in_binding` boolean; only include
+  P2P-Device in binding when actively in ROC.
 
-### Step 1.4: Detect hidden bug fixes
-**Record:** Not disguised — this is an explicit correctness fix for
-struct layout mis-parsing, though the subject uses "parse" rather than
-"fix".
+### Step 1.4: Detect Hidden Bug Fixes
+**Record:** Not disguised — explicitly a bug fix. The error-path
+rollback in `iwl_mvm_roc_link()` (clear flag + `binding_remove_vif` on
+`add_p2p_bcast_sta` failure) is a secondary correctness fix preventing a
+leaked binding state.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: Inventory the changes
+### Step 2.1: Inventory Changes
 **Record:**
-- `mac-ctxt.c`: +15/-14 — `iwl_mvm_rx_beacon_notif()`
-- `mac80211.c`: -1 — remove `mvm->ap_last_beacon_gp2 = 0` in
-  `iwl_mvm_stop_ap_ibss_common()`
-- `mvm.h`: -3 — remove `ap_last_beacon_gp2` field from `struct iwl_mvm`
-- **Scope:** Single-subsystem, surgical fix (3 files, ~30 lines net)
+| File | Change |
+|------|--------|
+| `binding.c` | +3 lines in iterator |
+| `mac80211.c` | +10 lines (cleanup, roc_link, error path) |
+| `mvm.h` | +1 bool field + doc comment |
+| `time-event.c` | +1 line (clear flag on ROC cleanup) |
 
-### Step 2.2: Code flow change per hunk
-**Record:**
-1. **Before:** `mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2)` runs
-   unconditionally at function entry using v6 struct pointer, then
-   branches on layout.
-2. **After:** Each branch declares the correct struct type, validates
-   packet length, then reads `beacon_gp2` from the matching structure.
-   CSA countdown and debug use local `beacon_gp2`.
-3. **Cleanup:** Removes cached `ap_last_beacon_gp2` from `struct
-   iwl_mvm` and its reset on AP stop.
+**Functions modified:** `iwl_mvm_iface_iterator`,
+`iwl_mvm_cleanup_iterator`, `iwl_mvm_roc_link`, `iwl_mvm_cleanup_roc`.
+**Scope:** Single-subsystem, surgical (≈15 functional lines).
 
-### Step 2.3: Bug mechanism
-**Record:**
-- **Category:** Logic / correctness fix (struct layout mis-parse)
-- **Mechanism:** On v5-layout firmware
-  (`!iwl_mvm_is_short_beacon_notif_supported()`), `beacon->gp2` reads at
-  byte offset 16 (v6 layout: after 4-byte status + 8-byte tsf + 4-byte
-  ibss_mgr_status). In v5 layout, `gp2` is at `sizeof(struct
-  iwl_tx_resp) + 16` ≈ offset 54+. The read pulls data from inside
-  `beacon_notify_hdr` instead of the real `gp2` field. Similarly,
-  `beacon->tsf` in the v5 debug path used v6 offset instead of
-  `beacon_v5->tsf`.
+### Step 2.2: Code Flow Change (per hunk)
 
-### Step 2.4: Fix quality assessment
-**Record:** Fix is obviously correct — parse layout first, then read
-fields. Minimal, no API changes. Very low regression risk; only affects
-field extraction order and removes an unnecessary cached field.
+**Hunk 1 — `iwl_mvm_iface_iterator` (binding.c):**
+- **Before:** Any vif sharing `phy_ctxt` is included in binding updates.
+- **After:** P2P-Device vifs with `!p2p_in_binding` are skipped even if
+  `phy_ctxt` matches.
+- **Path:** All binding add/remove/update operations via
+  `iwl_mvm_binding_update()`.
+
+**Hunk 2 — `iwl_mvm_cleanup_iterator` (mac80211.c):**
+- **Before:** No `p2p_in_binding` reset on interface cleanup.
+- **After:** `p2p_in_binding = false` on cleanup.
+- **Path:** HW restart / interface teardown cleanup.
+
+**Hunk 3 — `iwl_mvm_roc_link` (mac80211.c):**
+- **Before:** Add binding, add bcast sta; no flag tracking.
+- **After:** Set `p2p_in_binding = true` after binding add; on bcast-sta
+  failure, remove binding and clear flag.
+- **Path:** P2P ROC start (non-MLD binding path).
+
+**Hunk 4 — `iwl_mvm_cleanup_roc` (time-event.c):**
+- **Before:** Remove binding on ROC end (non-MLD path) but leave
+  `phy_ctxt` cached.
+- **After:** Also clear `p2p_in_binding = false`.
+- **Path:** P2P ROC completion/cancellation.
+
+**Hunk 5 — `mvm.h`:**
+- Add `bool p2p_in_binding` to `struct iwl_mvm_vif`.
+
+### Step 2.3: Bug Mechanism
+**Record:** **Category:** Logic/correctness bug in driver–firmware state
+synchronization. **Mechanism:** Commit `84ef7cbe90e9e` (“Don't always
+bind/link the P2P Device interface”) decoupled binding lifetime from
+`phy_ctxt` lifetime for performance (PHY cache reuse after ROC). The
+binding iterator still keyed only on `phy_ctxt` equality, so inactive
+P2P-Device could be silently re-bound during unrelated station binding
+updates, leaving firmware with a binding entry pointing at removed PHY
+state.
+
+### Step 2.4: Fix Quality
+**Record:** Fix is minimal and clearly correct — tracks binding intent
+separately from PHY cache. Low regression risk: flag defaults to `false`
+(safe); only set `true` during active ROC binding. MLD firmware path
+uses `link_changed` instead of bindings for P2P ROC, so unaffected; the
+iterator guard is harmless for MLD.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: Blame changed lines
-**Record:** Current buggy lines in `mac-ctxt.c:1516-1549` blame to
-`5d324e5159d9e` (v6.18 merge). Dual-layout handling with the early `gp2`
-read was introduced in `15e28c78c3864` (Nov 2018, "support new format
-for the beacon notification"). The `ap_last_beacon_gp2` field dates to
-extended beacon notification support (2014 era).
+### Step 3.1: Blame Changed Lines
+**Record:**
+- `binding.c` iterator logic: original binding code from 2013
+  (`8ca151b568b67a`, Johannes Berg); `phy_ctxt` check from 2023
+  (`650cadb730105f`).
+- `time-event.c` “keep PHY context” comment and `binding_remove_vif` on
+  ROC end: **`84ef7cbe90e9e`** (Ilan Peer, 2023-10-23) — this commit
+  introduced the bug scenario.
+- Bug present since **v6.7** (`git describe --contains 84ef7cbe90e9e5` →
+  `v6.7_rc2~...`).
 
-### Step 3.2: Follow Fixes: tag
-**Record:** N/A — no Fixes: tag present.
+### Step 3.2: Follow Fixes Tag
+**Record:** No `Fixes:` tag present. N/A.
 
-### Step 3.3: Related file history
-**Record:** Recent iwlwifi mvm commits in this tree include CSA-related
-`ece13ddb9791e` (noa_len validity) and other iwlwifi fixes. Fix commit
-`b77c6f50b1f80` is on `master`/linux-next but **not** on
-`stable/linux-6.18.y`.
+### Step 3.3: Related File History
+**Record:** Recent related commits in affected files include
+`f9751163bffd3` (“clean up ROC on failure”) and `84ef7cbe90e9e`
+(introduced the PHY-cache-without-binding design). No other fix for this
+specific binding/PHY desync found in tree. **Standalone patch** — not
+part of a multi-patch series in the commit message.
 
-### Step 3.4: Author context
-**Record:** Emmanuel Grumbach is a long-standing iwlwifi maintainer.
-Miri Korenblit committed the fix. Ilan Peer (Intel) reviewed on lore.
+### Step 3.4: Author Context
+**Record:** Johannes Berg is iwlwifi/mac80211 maintainer. Miri Korenblit
+is active Intel iwlwifi contributor. High subsystem credibility.
 
 ### Step 3.5: Dependencies
-**Record:** Standalone fix within the iwlwifi-fixes 07/15 series slot,
-but does not depend on patches 01–06 for correctness. Applies cleanly to
-this tree (`git show b77c6f50b1f80 | git apply --check` succeeded).
+**Record:** No prerequisite commits referenced. All modified symbols
+(`iwl_mvm_binding_*`, `iwl_mvm_roc_link`, `iwl_mvm_cleanup_roc`, `struct
+iwl_mvm_vif`) exist in 6.18.44. **Can apply standalone.**
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original patch discussion
-**Record:** b4 dig found thread at https://patch.msgid.link/202607141419
-09.cc8aa937f8e5.I921f8dadcb20cb73e8283e1b8546e1778205411f@changeid. Part
-of v1 iwlwifi-fixes 15-patch series (2026-07-14). No stable nomination
-found in thread. No NAKs found.
+### Step 4.1: Original Patch Discussion
+**Record:** `b4 dig -c <commit>` could not be run — commit is not in
+this checkout (no matching `git log --grep`). `Link:` URL and
+lore.kernel.org search blocked by Anubis bot protection. **UNVERIFIED:**
+Full mailing-list review thread and any explicit stable nominations.
 
 ### Step 4.2: Reviewers
-**Record:** CC'd to linux-wireless@vger.kernel.org,
-johannes@sipsolutions.net, Miri Korenblit, Emmanuel Grumbach.
-**Reviewed-by: Ilan Peer \<ilan.peer@intel.com\>**.
+**Record:** UNVERIFIED — `b4 dig -w` requires commit hash not available
+locally.
 
-### Step 4.3: Bug reports
-**Record:** No Reported-by, syzbot, or bugzilla links. Bug identified by
-code inspection / development, not a crash report.
+### Step 4.3: Bug Report
+**Record:** Bug found by Intel internal testing per commit message (“as
+observed by our testing”). No syzbot, bugzilla, or user `Reported-by:`
+tags. Severity claimed: **firmware crash**.
 
-### Step 4.4: Series context
-**Record:** Patch 07/15 of iwlwifi-fixes series. This specific change is
-self-contained.
+### Step 4.4: Related Patches/Series
+**Record:** UNVERIFIED from lore. Commit appears standalone from diff
+scope.
 
-### Step 4.5: Stable mailing list
-**Record:** Not searched exhaustively on lore stable@; no stable
-nomination in patch thread.
+### Step 4.5: Stable Mailing List
+**Record:** UNVERIFIED — lore blocked.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: Key functions modified
-**Record:** `iwl_mvm_rx_beacon_notif()`, `iwl_mvm_stop_ap_ibss_common()`
-(cleanup only)
+### Step 5.1: Key Functions
+**Record:** `iwl_mvm_iface_iterator`, `iwl_mvm_binding_update`,
+`iwl_mvm_binding_add_vif`, `iwl_mvm_binding_remove_vif`,
+`iwl_mvm_roc_link`, `iwl_mvm_cleanup_roc`,
+`__iwl_mvm_assign_vif_chanctx`, `__iwl_mvm_unassign_vif_chanctx`.
 
-### Step 5.2: Callers
-**Record:** `iwl_mvm_rx_beacon_notif` registered in `ops.c` as
-`RX_HANDLER_NO_SIZE(BEACON_NOTIFICATION, ...)`. Called from iwlwifi RX
-path on every beacon TX notification from firmware — hot path for
-AP/IBSS/P2P GO modes.
+### Step 5.2: Callers (impact surface)
+**Record:**
+- `iwl_mvm_binding_add_vif` / `remove_vif` called from:
+  - Station/AP chanctx assign/unassign (`mac80211.c` ~2991, ~3057,
+    ~3144, ~5081, ~5143, ~5230)
+  - P2P ROC link (`mac80211.c` ~4688)
+  - ROC cleanup (`time-event.c` ~91)
+- Binding iterator runs on **every** binding update for any interface
+  sharing a PHY context.
 
 ### Step 5.3: Callees
-**Record:** `iwl_mvm_csa_count_down()` (uses `gp2` for P2P GO CSA period
-scheduling), `iwl_mvm_get_agg_status()`, debug macros, RCU accessors for
-CSA state.
+**Record:** `ieee80211_iterate_active_interfaces_atomic`,
+`iwl_mvm_binding_cmd` (firmware command), `iwl_mvm_phy_ctxt_unref` (on
+P2P removal, `mac80211.c` ~1917).
 
-### Step 5.4: Call chain / reachability
-**Record:** Firmware → RX handler → `iwl_mvm_rx_beacon_notif` →
-`iwl_mvm_csa_count_down` when CSA is active. Reachable during normal
-AP/P2P GO operation with channel switch. Not a syscall path directly,
-but triggered by normal WiFi operation.
+### Step 5.4: Call Chain / Reachability
+**Record:** Triggerable by normal userspace WiFi operations:
+1. Station connected (`NL80211_IFTYPE_STATION`)
+2. P2P-Device ROC (WiFi Direct discovery/off-channel operations)
+3. ROC ends → station binding update (channel change, disconnect,
+   interface removal)
 
-### Step 5.5: Similar patterns
-**Record:** MLD driver (`mld/notif.c`) uses only v6
-`iwl_extended_beacon_notif` via CMD_VERSIONS — not affected. The dual-
-layout bug is mvm-specific.
+Reachable from mac80211/nl80211 without root-only ioctl tricks.
+**Userspace-reachable via standard WiFi stack.**
+
+### Step 5.5: Similar Patterns
+**Record:** The Oct 2023 commit `84ef7cbe90e9e` intentionally split
+binding from PHY caching; this fix completes that design by tracking
+binding membership explicitly. No other instances of this pattern found
+in binding code.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.44)
 
-### Step 6.1: Does buggy code exist?
-**Record:** **YES.** Current tree at `mac-ctxt.c:1516` has the
-unconditional `mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2)`
-before layout selection. `ap_last_beacon_gp2` exists in `mvm.h:1181`.
-Bug present since dual-layout support (2018); code exists in 6.18.44.
+### Step 6.1: Does Buggy Code Exist?
+**Record:** **YES.** Verified:
+- `p2p_in_binding` does **not** exist (`grep` → no matches).
+- `binding.c` iterator has no P2P guard (lines 76–87).
+- `time-event.c` removes binding on ROC end but keeps PHY (lines 89–98).
+- `mac80211.c` `iwl_mvm_roc_link` adds binding without flag (lines
+  4682–4695).
+- Bug-introducing commit `84ef7cbe90e9e` is ancestor of HEAD.
 
-### Step 6.2: Backport complications
-**Record:** **Clean apply** — `git apply --check` passes without
-modification.
+### Step 6.2: Backport Complications
+**Record:** **Clean apply expected.** All four files and target
+locations match the patch context. Local `mvm.h` has additional fields
+(`esr_active`, `link_selection_*`) but `roc_activity` placement is
+identical; `bool p2p_in_binding` fits naturally after `roc_activity` at
+line 502.
 
-### Step 6.3: Related fixes already present?
-**Record:** Fix commit `b77c6f50b1f80` is **not** in this tree (only
-`master` contains it per `git branch --contains`). No alternate fix
-found.
+### Step 6.3: Related Fixes Already Present?
+**Record:** No — `grep p2p_in_binding` and `grep 'P2P-Device binding'`
+found nothing in tree or local mbx files.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-### Step 7.1: Subsystem criticality
+### Step 7.1: Subsystem Criticality
 **Record:** `drivers/net/wireless/intel/iwlwifi/mvm` — **IMPORTANT**
-(Intel WiFi, widely deployed on laptops/desktops).
+(Intel WiFi, widely deployed; not core kernel but affects many
+laptop/desktop users with `CONFIG_IWLWIFI`).
 
-### Step 7.2: Subsystem activity
-**Record:** Actively maintained; multiple iwlwifi fixes already landed
-in 6.18.y (wake packet read fix, noa_len, PTP race, etc.).
+### Step 7.2: Subsystem Activity
+**Record:** Active development — recent ROC/binding changes
+(`f4c737d44969c`, `792eb35718367`, `f9751163bffd3`). The underlying bug
+has existed since the Oct 2023 P2P binding refactor.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: Who is affected
-**Record:** Users with Intel iwlwifi hardware whose firmware does
-**not** advertise `IWL_UCODE_TLV_API_SHORT_BEACON_NOTIF` (v5 beacon
-notification layout) and who use AP/P2P GO mode with CSA (channel
-switch). Config: `CONFIG_IWLWIFI`, `CONFIG_IWLMVM`.
+### Step 8.1: Who Is Affected
+**Record:** Users of Intel iwlwifi (`CONFIG_IWLWIFI`) with
+**P2P-Device** (WiFi Direct) on **non-MLD firmware API** (binding-based
+ROC path, not `mld_api_is_used`). Station + P2P coexistence is common on
+laptops.
 
-### Step 8.2: Trigger conditions
-**Record:** Every beacon TX notification on v5-layout firmware; CSA
-impact only when `csa_vif` is active and CSA countdown runs. Common
-during beacon TX on AP/GO; CSA is less frequent but normal for
-regulatory/P2P channel changes.
-
-### Step 8.3: Failure mode severity
-**Record:** Wrong `gp2` → incorrect `apply_time` in
-`iwl_mvm_csa_count_down()` for P2P GO (`apply_time = gp2 + rel_time *
-1024`). Can cause mistimed channel switch, CSA failure, or client
-disconnection. **Severity: MEDIUM-HIGH** (functional connectivity bug,
-not kernel crash/corruption).
-
-### Step 8.4: Risk-benefit
+### Step 8.2: Trigger Conditions
 **Record:**
-- **Benefit:** Correct CSA timing and debug data for a large installed
-  base of older Intel WiFi firmware; fixes long-standing bug (since
-  2018).
-- **Risk:** Very low — 3 files, layout-guarded field reads, reviewed by
-  Intel developer.
-- **Ratio:** Favorable for backport.
+1. Station interface connected on a channel
+2. P2P-Device ROC on same channel
+3. ROC ends (PHY cached, binding removed)
+4. Station binding update (even removal)
+5. P2P-Device interface removed
+
+**Likelihood:** Moderate for P2P users — requires specific sequencing
+but each step is normal WiFi operation. Unprivileged users can trigger
+via standard nl80211/mac80211.
+
+### Step 8.3: Failure Mode Severity
+**Record:** **Firmware crash** when P2P-Device removed with stale
+binding entry. **Severity: CRITICAL** — device becomes non-functional
+until reset/reload; potential for broader system instability depending
+on firmware recovery.
+
+### Step 8.4: Risk-Benefit
+**Record:**
+- **Benefit:** HIGH — prevents firmware crash on realistic P2P + station
+  workflow.
+- **Risk:** LOW — ~15 lines, single bool, no API changes, default-false
+  is safe.
+- **Ratio:** Strongly favors backport.
 
 ---
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence compile
+### Step 9.1: Evidence Summary
 
 **FOR backport:**
-- Verified struct layout bug: reads v6 offsets on v5-format
-  notifications
-- Affects CSA countdown timing on P2P GO — real user-visible WiFi
-  failure mode
-- Bug present in 6.18.44 since 2018 dual-layout introduction
-- Small, surgical, reviewed (Ilan Peer), authored by iwlwifi maintainer
-- Applies cleanly to this tree
-- Similar CSA-related iwlwifi fixes already in 6.18.y (e.g., noa_len)
+- Fixes real, reproducible (per Intel testing) firmware crash
+- Bug exists in 6.18.44 (introduced 2023, never fixed here)
+- Small, surgical, maintainer-authored fix
+- No new features or APIs
+- Affects common WiFi P2P + station scenario
+- Error-path improvement in `iwl_mvm_roc_link` prevents secondary
+  binding leak
 
 **AGAINST backport:**
-- No user crash reports or syzbot findings
-- Only affects v5-layout firmware (not newest devices)
-- CSA is not the most common WiFi operation
-- No explicit stable nomination
+- Only affects non-MLD binding path (newer MLD firmware uses links, not
+  bindings, for P2P ROC)
+- No external user reports or syzbot — internal testing only
+- Lore review unverified
 
-**Unresolved:** Exact count of devices still on v5 layout in production
-(qualitatively: many pre-recent firmware generations).
+**Unresolved:** Full mailing-list review thread; whether reviewers
+nominated for stable.
 
-### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — logic is clear; Reviewed-by
-   present; no Tested-by
-2. Fixes a real bug affecting users? **PASS** — wrong firmware field
-   parsing on v5 layout
-3. Important issue? **PASS** — CSA timing failure causes connectivity
-   loss (MEDIUM-HIGH)
-4. Small and contained? **PASS** — 3 files, ~30 lines
-5. No new features or APIs? **PASS** — correctness fix only
-6. Can apply to local tree? **PASS** — clean apply verified
+### Step 9.2: Stable Rules Checklist
+| Criterion | Result |
+|-----------|--------|
+| 1. Obviously correct and tested? | **PASS** — logic is clear; Intel
+internal testing cited |
+| 2. Fixes real bug affecting users? | **PASS** — firmware crash on P2P
++ station sequence |
+| 3. Important issue? | **PASS** — CRITICAL (firmware crash) |
+| 4. Small and contained? | **PASS** — ~15 functional lines, 4 files |
+| 5. No new features/APIs? | **PASS** — internal driver state flag only
+|
+| 6. Can apply to local tree? | **PASS** — all code present, clean apply
+expected |
 
-### Step 9.3: Exception categories
-**Record:** None applicable (not device ID, quirk, DT, build, or docs).
+### Step 9.3: Exception Categories
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+bug fix.
 
-### Step 9.4: Problem summary for stable users
-
-On Intel iwlwifi hardware using the older v5 beacon notification layout,
-the driver reads the `gp2` timestamp from the wrong byte offset in every
-beacon TX notification. When a P2P GO (or AP) performs a channel switch
-announcement (CSA), the driver uses this garbage timestamp to schedule
-the switch, potentially causing mistimed or failed channel switches and
-client disconnections. The fix reads `gp2` (and `tsf`) only after
-selecting the correct notification structure for the firmware layout.
-This is a long-standing bug (since 2018) affecting real hardware still
-supported in 6.18.y.
+### Step 9.4: Decision Rationale
+For Linux **6.18.44**, the buggy code path is present and unfixed. The
+commit addresses a firmware crash in a realistic P2P + station workflow
+with a minimal, obviously correct state-tracking fix. Risk is low;
+impact for affected iwlwifi P2P users is high. This meets all stable
+kernel criteria.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed commit message and tags from user-provided diff and
-  `git show b77c6f50b1f80`
-- [Phase 2] Diff analysis: 3 files, `iwl_mvm_rx_beacon_notif()`
-  restructured; `ap_last_beacon_gp2` removed
-- [Phase 3] `git describe HEAD`: v6.18.44; tree is 6.18.y stable
-- [Phase 3] `git blame -L 1514,1520 mac-ctxt.c`: buggy lines at
-  5d324e5159d9e
-- [Phase 3] `git show 15e28c78c3864`: dual-layout code introduced early
-  unconditional `beacon->gp2` read in 2018
-- [Phase 3] `git show b77c6f50b1f80 | git apply --check`: applies
-  cleanly
-- [Phase 3] `git branch --contains b77c6f50b1f80`: only `master`, not
-  stable branch
-- [Phase 4] `b4 dig -c b77c6f50b1f80`: found lore thread, patch 07/15
-- [Phase 4] `b4 dig -w`: CC linux-wireless, johannes, Intel authors
-- [Phase 4] `b4 dig -a`: v1 series, 15 patches
-- [Phase 4] `b4 dig -m /tmp/iwlwifi_beacon_thread.mbox`: Reviewed-by
-  Ilan Peer confirmed; no stable CC
-- [Phase 5] `grep iwl_mvm_rx_beacon_notif`: registered in `ops.c` RX
-  handler table
-- [Phase 5] Read `iwl_mvm_csa_count_down()`: `gp2` used for P2P GO
-  `apply_time` calculation
-- [Phase 5] Read struct definitions in `fw/api/tx.h`: v5 has
-  `iwl_tx_resp` prefix, v6 has 4-byte status prefix
-- [Phase 6] `grep ap_last_beacon_gp2`: field present in current tree
-  (mvm.h, mac-ctxt.c, mac80211.c)
-- [Phase 6] Read `mac-ctxt.c:1502-1550`: confirmed buggy unconditional
-  read before layout branch
-- [Phase 6] `iwl_mvm_is_short_beacon_notif_supported()` in mvm.h: checks
-  `IWL_UCODE_TLV_API_SHORT_BEACON_NOTIF`
-- [Phase 8] Offset analysis: v6 gp2 at offset 16; v5 gp2 at ~offset 54+
-  (after `iwl_tx_resp`); reading v6 offset on v5 data is verified wrong
-  by struct layout inspection
-- [Phase 8] Fix not yet in stable/linux-6.18.y per `git branch
-  --contains`
+- [Phase 1] Parsed subject, tags, body; no Fixes/Reported-by/Cc:stable;
+  maintainer authorship confirmed
+- [Phase 2] Diff analysis: 4 files, binding iterator guard + flag
+  lifecycle + error rollback
+- [Phase 3] `git blame binding.c:79-87` → 2013 iterator, 2023 phy_ctxt
+  check
+- [Phase 3] `git blame time-event.c:89-98` → `84ef7cbe90e9e` introduced
+  PHY-cache-without-binding
+- [Phase 3] `git merge-base --is-ancestor 84ef7cbe90e9e HEAD` → bug
+  commit in tree
+- [Phase 3] `git describe --contains 84ef7cbe90e9e5` → first in v6.7
+- [Phase 3] No Fixes: tag to follow
+- [Phase 3] `git log --oneline -20` on affected files — no duplicate fix
+  found
+- [Phase 4] `b4 dig -c` — FAILED (commit not in checkout)
+- [Phase 4] WebFetch lore/patch.msgid.link — BLOCKED by Anubis
+- [Phase 4] Grep local mbx files for patch — not found
+- [Phase 5] `grep binding_add_vif/binding_remove_vif` — traced all call
+  sites
+- [Phase 5] Read `iwl_mvm_roc_common`, `iwl_mvm_mld_roc_link` — MLD uses
+  links not bindings for P2P ROC
+- [Phase 5] Read `mac80211.c:1915-1920` — P2P removal calls
+  `phy_ctxt_unref` (crash trigger)
+- [Phase 6] `git describe HEAD` → v6.18.44
+- [Phase 6] `grep p2p_in_binding` → not present (fix not applied)
+- [Phase 6] Read current `binding.c:70-88`, `time-event.c:65-99`,
+  `mac80211.c:4682-4695` — buggy code confirmed
+- [Phase 8] Failure mode: firmware crash, severity CRITICAL
+- **UNVERIFIED:** Mailing-list review feedback and stable nominations
+- **UNVERIFIED:** Exact mainline commit SHA (not in this tree)
 
-**YES**The background git searches finished and line up with the earlier
-analysis:
+**YES**
 
-- **Beacon gp2 history:** The early unconditional `beacon->gp2` read
-  traces to the 2018 dual-layout change; `ap_last_beacon_gp2` has been
-  in the driver since extended beacon notifications were added.
-- **Fix location:** The fix is commit `b77c6f50b1f80` (`wifi: iwlwifi:
-  mvm: parse beacon notif per layout`) on mainline/linux-next.
-- **Stable status:** That commit is only on `master` — it is **not** in
-  `stable/linux-6.18.y` yet, and it applies cleanly to the current
-  6.18.44 tree.
+ drivers/net/wireless/intel/iwlwifi/mvm/binding.c    |  5 ++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   | 12 +++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |  3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/time-event.c |  3 ++-
+ 4 files changed, 20 insertions(+), 3 deletions(-)
 
-That supports the **YES** backport recommendation: real layout-parsing
-bug on v5-format firmware, CSA timing impact, small reviewed fix, not
-yet in stable.
-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 25 +++++++++++--------
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ---
- 3 files changed, 15 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 44380ebfe09d0..cee6bde6ec822 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1504,49 +1504,54 @@ void iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
--	struct iwl_extended_beacon_notif *beacon = (void *)pkt->data;
--	struct iwl_extended_beacon_notif_v5 *beacon_v5 = (void *)pkt->data;
- 	struct ieee80211_vif *csa_vif;
- 	struct ieee80211_vif *tx_blocked_vif;
- 	struct agg_tx_status *agg_status;
-+	u32 beacon_gp2;
- 	u16 status;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/binding.c b/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
+index 58e9a940024db..0812522edea0d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/binding.c
+@@ -2,7 +2,7 @@
+ /*
+  * Copyright (C) 2012-2014, 2020 Intel Corporation
+  * Copyright (C) 2016 Intel Deutschland GmbH
+- * Copyright (C) 2022, 2024 Intel Corporation
++ * Copyright (C) 2022, 2024, 2026 Intel Corporation
+  */
+ #include <net/mac80211.h>
+ #include "fw-api.h"
+@@ -76,6 +76,9 @@ static void iwl_mvm_iface_iterator(void *_data, u8 *mac,
+ 	if (vif == data->ignore_vif)
+ 		return;
  
- 	lockdep_assert_held(&mvm->mutex);
- 
--	mvm->ap_last_beacon_gp2 = le32_to_cpu(beacon->gp2);
--
- 	if (!iwl_mvm_is_short_beacon_notif_supported(mvm)) {
-+		struct iwl_extended_beacon_notif_v5 *beacon = (void *)pkt->data;
- 		struct iwl_tx_resp *beacon_notify_hdr =
--			&beacon_v5->beacon_notify_hdr;
-+			&beacon->beacon_notify_hdr;
- 
--		if (unlikely(pkt_len < sizeof(*beacon_v5)))
-+		if (unlikely(pkt_len < sizeof(*beacon)))
- 			return;
- 
--		mvm->ibss_manager = beacon_v5->ibss_mgr_status != 0;
-+		beacon_gp2 = le32_to_cpu(beacon->gp2);
++	if (vif->type == NL80211_IFTYPE_P2P_DEVICE && !mvmvif->p2p_in_binding)
++		return;
 +
-+		mvm->ibss_manager = beacon->ibss_mgr_status != 0;
- 		agg_status = iwl_mvm_get_agg_status(mvm, beacon_notify_hdr);
- 		status = le16_to_cpu(agg_status->status) & TX_STATUS_MSK;
- 		IWL_DEBUG_RX(mvm,
- 			     "beacon status %#x retries:%d tsf:0x%016llX gp2:0x%X rate:%d\n",
- 			     status, beacon_notify_hdr->failure_frame,
- 			     le64_to_cpu(beacon->tsf),
--			     mvm->ap_last_beacon_gp2,
-+			     beacon_gp2,
- 			     le32_to_cpu(beacon_notify_hdr->initial_rate));
- 	} else {
-+		const struct iwl_extended_beacon_notif *beacon =
-+			(void *)pkt->data;
-+
- 		if (unlikely(pkt_len < sizeof(*beacon)))
- 			return;
+ 	if (mvmvif->deflink.phy_ctxt != data->phyctxt)
+ 		return;
  
-+		beacon_gp2 = le32_to_cpu(beacon->gp2);
-+
- 		mvm->ibss_manager = beacon->ibss_mgr_status != 0;
- 		status = le32_to_cpu(beacon->status) & TX_STATUS_MSK;
- 		IWL_DEBUG_RX(mvm,
- 			     "beacon status %#x tsf:0x%016llX gp2:0x%X\n",
- 			     status, le64_to_cpu(beacon->tsf),
--			     mvm->ap_last_beacon_gp2);
-+			     beacon_gp2);
- 	}
- 
- 	csa_vif = rcu_dereference_protected(mvm->csa_vif,
- 					    lockdep_is_held(&mvm->mutex));
- 	if (unlikely(csa_vif && csa_vif->bss_conf.csa_active))
--		iwl_mvm_csa_count_down(mvm, csa_vif, mvm->ap_last_beacon_gp2,
-+		iwl_mvm_csa_count_down(mvm, csa_vif, beacon_gp2,
- 				       (status == TX_STATUS_SUCCESS));
- 
- 	tx_blocked_vif = rcu_dereference_protected(mvm->csa_tx_blocked_vif,
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 92471bc7b505b..83fb3f9af4745 100644
+index 44029ceb8f779..2d2587c6e9757 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -3100,7 +3100,6 @@ void iwl_mvm_stop_ap_ibss_common(struct iwl_mvm *mvm,
- 	}
+@@ -1104,6 +1104,7 @@ static void iwl_mvm_cleanup_iterator(void *data, u8 *mac,
+ 	spin_unlock_bh(&mvm->time_event_lock);
  
- 	mvmvif->ap_ibss_active = false;
--	mvm->ap_last_beacon_gp2 = 0;
+ 	mvmvif->roc_activity = ROC_NUM_ACTIVITIES;
++	mvmvif->p2p_in_binding = false;
  
- 	if (vif->type == NL80211_IFTYPE_AP && !vif->p2p) {
- 		iwl_mvm_vif_set_low_latency(mvmvif, false,
+ 	mvmvif->bf_enabled = false;
+ 	mvmvif->ba_enabled = false;
+@@ -4681,6 +4682,7 @@ static int iwl_mvm_add_aux_sta_for_hs20(struct iwl_mvm *mvm, u32 lmac_id)
+ 
+ static int iwl_mvm_roc_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int ret;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+@@ -4689,10 +4691,18 @@ static int iwl_mvm_roc_link(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	if (WARN(ret, "Failed binding P2P_DEVICE\n"))
+ 		return ret;
+ 
++	mvmvif->p2p_in_binding = true;
++
+ 	/* The station and queue allocation must be done only after the binding
+ 	 * is done, as otherwise the FW might incorrectly configure its state.
+ 	 */
+-	return iwl_mvm_add_p2p_bcast_sta(mvm, vif);
++	ret = iwl_mvm_add_p2p_bcast_sta(mvm, vif);
++	if (ret) {
++		iwl_mvm_binding_remove_vif(mvm, vif);
++		mvmvif->p2p_in_binding = false;
++	}
++
++	return ret;
+ }
+ 
+ static int iwl_mvm_roc(struct ieee80211_hw *hw,
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 2628361332895..319301504b7eb 100644
+index e05efcecaaf3f..2628361332895 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1180,9 +1180,6 @@ struct iwl_mvm {
- 	struct ieee80211_vif __rcu *csa_tx_blocked_vif;
- 	u8 csa_tx_block_bcn_timeout;
+@@ -390,6 +390,8 @@ struct iwl_mvm_vif_link_info {
+  *	and in eSR mode. Valid only for a STA.
+  * @roc_activity: currently running ROC activity for this vif (or
+  *	ROC_NUM_ACTIVITIES if no activity is running).
++ * @p2p_in_binding: indicates that this P2P-Device interface should be
++ *	added to the binding, i.e. is running ROC right now
+  * @session_prot_connection_loss: the connection was lost due to session
+  *	protection ending without receiving a beacon, so we need to now
+  *	protect the deauth separately
+@@ -500,6 +502,7 @@ struct iwl_mvm_vif {
+ 	struct iwl_mvm_time_event_data time_event_data;
+ 	struct iwl_mvm_time_event_data hs_time_event_data;
+ 	enum iwl_roc_activity roc_activity;
++	bool p2p_in_binding;
  
--	/* system time of last beacon (for AP/GO interface) */
--	u32 ap_last_beacon_gp2;
--
- 	/* indicates that we transmitted the last beacon */
- 	bool ibss_manager;
+ 	/* TCP Checksum Offload */
+ 	netdev_features_t features;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+index 0b12ee8ad6180..1a3a8a3f0fb49 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/time-event.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2017 Intel Deutschland GmbH
+  */
+@@ -89,6 +89,7 @@ static void iwl_mvm_cleanup_roc(struct iwl_mvm *mvm)
+ 			} else {
+ 				iwl_mvm_rm_p2p_bcast_sta(mvm, vif);
+ 				iwl_mvm_binding_remove_vif(mvm, vif);
++				mvmvif->p2p_in_binding = false;
+ 			}
  
+ 			/* Do not remove the PHY context as removing and adding
 -- 
 2.53.0
 
