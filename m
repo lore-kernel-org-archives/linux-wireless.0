@@ -1,162 +1,116 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from enxio.de (enxio.de [91.210.227.97])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7E263B47C9
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 03:35:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4F263AAF5A
+	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 05:47:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.210.227.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788147330; cv=none; b=oIQRjHZ/OhDA9+2LErs9lOReuF9y5S186KjQ6LWN6eTsc6zpG/w17Vu3xcuXIrp1iwUkXjqLN2+1yjGcCCJ+lAbKIn1J8YJI6g2qknbkKuuMKlGj2d1IxO+UK7oAeUuHq8lW460Ff1QMMh6TP2TTHi92ypf1zDb8f0wYLsV25R4=
+	t=1788155274; cv=none; b=ultdqqmYc/kB0zOnm5HZamaF3Z2AKt3GkXW0in94fkG0knEjnF08JqRCR0avmU2HdJZgoyT3ENHzBq1J0xL2xJEPUIoxZOnLBISbB9BUrd77kJ1FVVynN+erFgU+1B2s186Pw0K7BHBn3aC2+SzJqFCkT6UxpIoBltrPt1Hmqac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788147330; c=relaxed/simple;
-	bh=r8qMZxpA14z0eBpEIhyOaBVGiA0pQ5Oi0yy0Yewd/gY=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=EhnWQn3NfH4QkC/EAqyBxmQSwv/iryIPR/Uj+xohFiPnPK1mWnmLDKos/FEVGd6SiuCesG5+IyYNko/eZ4trAYQGvafVEPMPwXvtQAk9n1vhVStSH2bEUETchu1Z0+xyMArTMh+0uKOJiGhELzqgnhFZcA55nVIwMNs+FEEuAV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=SQg80psL; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="SQg80psL"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 67V3Z7fpC409138, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788147308; bh=/qrBleGWkz+xNTvNeWbYzmZWrrpOkaXA7jVesbF/REg=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	b=SQg80psLDRxXx3RhGA2qZQurc3M7rZd7IinWl11Uubjam/ZbPBNqZVBdU+mRlkdM+
-	 T62ApGv2u/RapoNL5Posaq28WHiEEt16NGu1EUGCTLlR+XAAdyAob2Yws5A200DVU6
-	 vD8huPC+a9mzxcmj+yQIKbg8po4uWLMZYx6wp7TsQGQR2Y6QLrAbvAFFnEQzOlJleY
-	 GhT9avvXHA3BpMIbMOyLwrg7DUhfKcaPynZlVvrlwJWStWMWGKYUAtp+/PG3vAC6M4
-	 nPyhxCILPoJVOvNKFUQ0KPPD4SYLMhit6keWy+xYePX3cVBEilJ8GwT7i6Wk+Un8Al
-	 e3ZWf2K7QrmiA==
-Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 67V3Z7fpC409138
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Mon, 31 Aug 2026 11:35:07 +0800
-Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
- RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Mon, 31 Aug 2026 11:35:07 +0800
-Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
- RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
- 15.02.2562.043; Mon, 31 Aug 2026 11:35:07 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Abdurrahman Karadag <abdurrahmankaradag19@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot)
- with station power save
-Thread-Topic: [BUG] rtw88 8821ce: connection wedges (100% loss until reboot)
- with station power save
-Thread-Index: AQHdNXenhFnJjakLnk6yTA3qd/0xArawGJIAgAK8rSD//3bjAIAFLEIQ
-Date: Mon, 31 Aug 2026 03:35:07 +0000
-Message-ID: <516290e0e8a84988a9219069596e61a3@realtek.com>
-References: <51079deb603845768db7cbe491f40e3c@realtek.com>
- <20260828033746.23039-1-abdurrahmankaradag19@gmail.com>
-In-Reply-To: <20260828033746.23039-1-abdurrahmankaradag19@gmail.com>
-Accept-Language: en-US, zh-TW
-Content-Language: zh-TW
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	s=arc-20240116; t=1788155274; c=relaxed/simple;
+	bh=5FOmbZPUQirDZUBgCl7rmOhHZq2VfX6H6uJunNL1HeM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KSns+o7BxDkxfkRG5SaEklGBkKA0vp9r7hukuQ+D7jBSwuZ0BMDvfjpuGK9x38Kp0iNnSM0CJvIiwI6thX5smR5weE8Q/S2GAuiBk3GfVObBvrFkm2QYglPtwzdUrPCsJX9QcbtWukKBscDZOwIbV9k0YPWWfuzdOjtz8gaTFok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de; spf=pass smtp.mailfrom=enxio.de; arc=none smtp.client-ip=91.210.227.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=enxio.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=enxio.de
+Received: from [95.157.48.181] (helo=roja.toh.cx)
+	by enxio.de with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.98.2)
+	(envelope-from <thomas.hilber@enxio.de>)
+	id 1x0us1-00000008J08-3dMs;
+	Mon, 31 Aug 2026 07:47:49 +0200
+Received: from localhost ([127.0.0.1])
+	by roja.toh.cx with esmtp (Exim 4.94.2)
+	(envelope-from <thomas.hilber@enxio.de>)
+	id 1x0us1-006TfZ-2v; Mon, 31 Aug 2026 07:47:49 +0200
+From: Thomas Hilber <thomas.hilber@enxio.de>
+To: Devin Wittmayer <lucid_duck@justthetip.ca>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com,
+	linux-mediatek@lists.infradead.org
+Subject: Re: AP drops STA data frames for ~130-170ms after 4-way handshake
+ completes (ath9k_htc, mt76; not brcmfmac)
+Date: Mon, 31 Aug 2026 07:47:40 +0200
+Message-ID: <20260831054740.1543875@enxio.de>
+In-Reply-To: <20260830190028.20209-1-lucid_duck@justthetip.ca>
+References: <20260827074442.826644@enxio.de>
+	<20260829232532.29622-1-lucid_duck@justthetip.ca>
+	<20260830104236.521389@enxio.de>
+	<20260830190028.20209-1-lucid_duck@justthetip.ca>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Abdurrahman Karadag <abdurrahmankaradag19@gmail.com> wrote:
-> > Is there are version it works well on your platform?
-> > I'm thinking bisect is a method to find cause.
->=20
-> Yes - and I have to correct my first mail, which said "also seen on
-> 7.0.12". Going back through the system journal and pacman log:
->=20
->   - 7.0.12 (Arch) ran on this laptop from 2026-06-16 to 2026-08-23. The
->     14 boots the journal holds from that period show no wedge episode
->     (defined as: DHCP lease acquired, then the gateway unreachable / DNS
->     failing continuously until reboot). The few candidates are either
->     sessions caught in the separate 63 s regulatory reconnect loop, or
->     sporadic DNS timeouts spread over hours-long otherwise-working
->     sessions (14-27 timeouts in 0.8-3.5 h), plus one 176 s blip - none is
->     the 100%-loss-until-reboot pattern.
->   - On 2026-08-23 18:41 pacman upgraded linux 7.0.12 -> 7.1.9 (in the sam=
-e
->     transaction: linux-firmware-realtek 20260519 -> 20260810, whose
->     rtw8821c_fw.bin is byte-identical by sha256, and systemd 260.2 ->
->     261.2 a few minutes earlier).
->   - The first boot on 7.1.9 (2026-08-23 23:37) logged 12 wedge episodes,
->     and it has recurred on most days since.
->=20
-> So for a bisect: good =3D 7.0.12, bad =3D 7.1.9 (with the caveat that
-> systemd changed in the same upgrade; I don't think networkd can explain
-> a per-AC L2 TX failure, but I mention it for completeness). I still have
-> the 7.0.12 package and can confirm by running it again for a few days,
-> and I'm happy to bisect the rtw88/mac80211 range between the two if you
-> think that's the right next step. (Under Windows the same laptop has
-> never shown this.)
+On Sun, 2026-08-30 at 12:00 -0700, Devin Wittmayer wrote:
+> Worth a look in your own captures: the starting sequence number in the
+> request against the sequence number of the first frame after it.
 
-Checking commits between 7.0.12 and 7.1.9, the only related commit might be
-   c95323ea9dfb ("wifi: rtw88: coex: Solve LE-HID lag & update coex version=
- to 26020420")
+Done, and it does not hold here. The window is filled correctly and my
+stall happens anyway.
 
-You can revert the patch from 7.1.9 to see if it becomes normal.
+First, in case it is useful to anyone: I have only the one radio, and it
+is the access point under test. It turns out ath9k_htc will give you a
+monitor interface on the same phy while hostapd is running on it:
 
-Another simple way is to use 7.0.12 kernel + 7.1.9 rtw88 driver and
-opposite combination to address the cause, like
+  iw dev wlan1 interface add mon0 type monitor
 
-     kernel         rtw88 driver         result
-     ------         ------------         ------
-     7.0.12         (built-in)           Good
-     7.0.12         7.1.9
-     7.1.9          (built-in)           NG
-     7.1.9          7.0.12=20
+No second radio needed. (Use "iw dev <dev>", not "iw phy phyN" - rmmod
+plus modprobe renumbers the phy, which cost me a run.)
 
-This can also bisect if the cause is driver or mac80211.
+Air capture and the AP's netdev, captured together, so the sequence
+numbers and the stall are measured on the same associations:
 
->=20
-> > I'm not sure why the size can affect the result. Normally large size
-> > is harder to transmit basically though.
->=20
-> You are right, and I withdraw the size theory. Re-examining the same
-> capture by 802.11 access category instead of size explains every frame
-> with no exceptions:
->=20
->   - every laptop TX frame that provably reached the AP carries IP DSCP
->     0xc0 (CS6 -> UP 6 -> AC_VO): the DHCP DISCOVER/REQUEST frames
->     (systemd-networkd's DHCP client marks them CS6) and IGMPv3 reports;
->   - every laptop TX frame that provably never arrived is AC_BE:
->     89 ARP requests (no IP header -> BE), 13 unicast ARP replies,
->     83 DNS queries (0 answers), 2 TCP SYNs (no SYN-ACK), mDNS/LLMNR;
->   - sizes overlap the wrong way for a size theory: BE frames of 42-201 B
->     all fail, VO frames of 54-345 B all pass.
->=20
-> So the wedge looks like "AC_BE TX dead, AC_VO TX alive", RX intact, and
-> it persists across disconnect/reconnect and across AP changes (so not
-> per-association state), cleared only by a reboot. It happened with
-> power save fully off.
->=20
-> As far as I can tell from reading the driver, BE and VO take different
-> paths (separate PCIe TX rings per AC, and on 8821C BE/BK on the LOW
-> TX-FIFO queue vs VO/VI on NORMAL), so a per-AC stall - e.g. the BE ring's
-> mac80211 queue left stopped, or the LOW queue paused/page-starved - would
-> match what I see (BE frames silently aged out, VO flowing, no driver
-> message). Does that sound plausible to you, or is there a more likely
-> place for a per-AC TX stall on this chip? The monitor-mode capture
-> should at least show whether BE frames reach the air at all.
+                        station side          TID 0     SSN      seq==SSN
+                                            sessions  declared   arrived
+  nohwcrypt=0    5.36 attempts, 134.9 ms       259     0 in all   256/259
+  nohwcrypt=1    1.01 attempts,   3.8 ms       348     0 in all   345/348
 
-I think BE and VO should almost the same, but as your perspective
-BE and VO go via different paths. It is worth to do an experiment
-to let all packets (by driver modification) go via VO queue.
+n=249 and n=342 cycles respectively. Of the 256 arrivals under hardware
+crypto, 237 were fresh transmissions rather than retries.
 
->=20
-> When it wedges, besides the air capture, I plan to dump before rebooting:
-> /sys/kernel/debug/ieee80211/phy0/queues (per-hw-queue stop reasons),
-> stations/<ap>/aqm (per-TID backlog), and via rtw88 debugfs read_reg:
-> REG_TXPAUSE (0x522), REG_TXDMA_STATUS (0x210), REG_FIFOPAGE_INFO_2/3
-> (0x234/0x238) and the BE/VO TXBD indices (0x3A8/0x3A0), compared with a
-> healthy baseline. If there are better registers or a debugfs page for
-> the BE ring / LOW queue state on 8821C, please tell me and I'll dump
-> those instead.
+So on this hardware the reorder window opens on zero, zero arrives, and
+the 134.9 ms is still there. Whatever holds my frames, it is not a slot
+that can never be filled.
 
-Before checking these values, let's bisect the code, check sniffer, and=20
-do experiment first.
+One thing that did reproduce your signature, and then disqualified
+itself. My station opens three sessions per association, TIDs 0, 5 and 7.
+TID 0 carries the traffic. TID 7 declares SSN=2, the first frame to
+arrive under it is seq 0, and the declared SSN never arrives in about 97%
+of sessions - exactly what you describe. But it is 251/259 under hardware
+crypto and 340/348 under software crypto: the same mismatch, at the same
+rate, in the arm that has no stall at all. So the pattern is real here
+and simply does not track the symptom.
 
+I would not lean on my TID 7 numbers anyway. It carries 538 frames
+against 3116 on TID 0, and if my station keeps one sequence counter
+across TIDs rather than one per TID, a per-TID comparison there is
+meaningless. TID 0 is the measurement I trust.
 
+I also timed the first frame of each cycle from the air to the AP's
+netdev: 22.2 ms median with hardware crypto against 2.4 ms with
+software. The right direction, but an order of magnitude short of the
+135 ms, so the frames are not simply being held for the whole window
+either.
+
+Which leaves the two of us with different mechanisms producing timings
+that look alike. Mine responds to one module parameter and does not
+involve a reorder hole; yours involves a reorder hole on a part that has
+no such parameter to test. It may be that a missing first frame is
+sufficient but not necessary, and that hardware key install can also
+stall delivery some other way.
+
+If your MT7922 will hand you a monitor interface on its own phy the way
+ath9k_htc does, the cheap check on your side is whether your slow cycles
+survive a session where the declared SSN *does* arrive. If they do, we
+are looking at one mechanism with two symptoms; if they never do, we
+have two.
+
+Captures available if anyone wants them.
+
+Thomas
