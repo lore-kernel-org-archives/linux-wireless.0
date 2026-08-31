@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28FD4A9D76;
-	Mon, 31 Aug 2026 13:46:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A4FE4AA3FE;
+	Mon, 31 Aug 2026 13:46:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183988; cv=none; b=LAnIK9dRkNoT6nMJOvWl1rk4R9AyXXX4+LJVdt/azcw8LRKdFm1LvwHLpaORwD6vniOyDSV+ahq2UZoCd3wQdOltSoMeqAXRUrZ/VHBcTGFeBLLLIrxkTSacMa6r8wqua6hrgMh/U9r7lTVmpak6C+Kkk5DTXHHXDiJR4f9s1UY=
+	t=1788184007; cv=none; b=TY5wd8gNFDP24lzGnTzjbRywqSfSdyQfQ+qd4bLurFrpGjUM17BNY7QvbCcyQ+6lyAehhbPcJsPr/dc45ohC9t1JMi+zgPzHEzDggMHUjNh3PuBw0hLXlsriP03TCBeMjkvtHR0nUuyDViGyRzpB8I+KPTaro2ai5jKN4WIsbQU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183988; c=relaxed/simple;
-	bh=bG6HE97XeTbZtwJczo+3R7kVtqCn1sg/nwCk5Pw33OU=;
+	s=arc-20240116; t=1788184007; c=relaxed/simple;
+	bh=WB+f9TzNRoGgZwon+SI33FdAdwqrZKA9RN+IbyqZCtg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QCd3zNnxfi2YMV/9Qv5M9+7v6yGpC7wvdc9YvqEPWVLYCpv6Q0Lkk+Ddfj83EejuBRD8guFsMEo6tMbPr2ASkSqoV80VDzTfxN7kjKIBk8+wU4PJkcfabJW/IRpcye3kVwpC3AklUwlT9/xj+Oowt1QSiyuk5TjCRnIW6EBEJGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d5PuIKvQ; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=YB99EY5IT8bx2DeGFLuQfRP67GffNpJjkgp4HntCHan/B/JfN8Ax3tsg7pDSMKSEWfzAEWAhfaseF2JiKTsJ5mYGwlblB9Ctf+wVJsDdAvju+IgHUlaWl6hP3IfC4nvMWnzEGIpN18rX3LQcol1ISfQMW0/hGfZ+xfHghtMYA6o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fJiBie8+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d5PuIKvQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E98371F00A3D;
-	Mon, 31 Aug 2026 13:46:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fJiBie8+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21F1C1F00A3E;
+	Mon, 31 Aug 2026 13:46:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183984;
-	bh=Mk0Kqx6Y2AMx5CFVQu6LfnWMNetcPw3qURDJ/mI0Q+E=;
+	s=k20260515; t=1788184002;
+	bh=FpXrqiS4I00ayqbEOnR9AiBOSu5k6dNYuuvgpi5JfdA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=d5PuIKvQlmzpDQJ3zD/IxjqArkNlGkrzl3DxMEuIDmjfFIKPV/2DYjuNGuZ15J9qu
-	 SMC6y0tPepxn0sZ6IgseMieoDt3LNPHEMrig+e3zNXxAjEIzQrhTfrOMEoPYYbAqEb
-	 AvOvFecrsCFlFTD7SdkII5snJNi6gho9bLqP0vqhs+AZdPsNRX7l1SS1oFyVvDFACr
-	 W218pHpgd9pYXHFwe7nVXw6p81Ysjeu9EvJ1bV5lWPS7PnPcxq/lXIv9W44cxjX5qc
-	 2KFRnOIJxsa5xb0hrsCdwg4eVE0G/QRP00qZbaBTVzp6UIhrKrDDxJ0qvnXM1Xs4xZ
-	 oEvWWZ89q1qEA==
+	b=fJiBie8+vuSA1Vmt5+svmtzvD7gg7CqEdj1p6QnJmXvu4xizHREvAGwz6LFCe3SNh
+	 HD4gORi8BcwcwzWnvhqmg2w2eUlu3iNhiMgK0ZbSJHBcHfIup/RRE3+T/jrN1a5ZK1
+	 sy1hOzfRl6A5lMjaaCkiYxtDxXodMZlSQKYERg9PMsX2MJ9w+VNOEVDECOthJDv/x9
+	 ibZxQ7XP4HpXpnA637O4ZEydEvra5jDYCi/UdwLgndRci117n//rse8UxMvYi8UQZa
+	 pWmJVcHbvCltZyBjTwfsusAhBWDXzVJf+fzLRCKxoFKWzuz/kLkYtIasLMio7D1WHB
+	 iFeypU6MZkppw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -34,9 +34,9 @@ Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: clear tzone on fail
-Date: Mon, 31 Aug 2026 09:27:29 -0400
-Message-ID: <20260831133314.4125787-421-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mvm: validate MCC header before n_channels
+Date: Mon, 31 Aug 2026 09:27:39 -0400
+Message-ID: <20260831133314.4125787-431-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -54,400 +54,454 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 5c55827ef5c74a5d56939ed0e93df21e6f1f864e ]
+[ Upstream commit 77f33bed0cb49a11f03427f2fa368830c1cae3c2 ]
 
-iwl_mld_thermal_zone_register() stores the thermal zone pointer in
-mld->tzone before calling thermal_zone_device_enable(). If enable
-fails, the code unregisters the zone but leaves mld->tzone stale,
-so iwl_mld_thermal_zone_unregister() can unregister it again.
-Clear mld->tzone after unregister in the error path.
+MCC response parsing read n_channels from v8/v4/v3 response variants
+before ensuring the payload contained the fixed response header.
 
-While at it remove a pointless if in iwl_mld_thermal_zone_unregister
-after we've alredy checked the tzone pointer is not NULL.
+Add a minimum payload-length check for each response version before
+reading n_channels, and keep the existing exact-size validation for the
+channels array payload.
 
-Assisted-by: GitHubCopilot:gpt-5.3-codex
+Assisted-by: GitHub Copilot:gpt-5.3-codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714141909.595dcb8cb7fe.I8125e4a2eeb0390798e3f4074c62c00443eda8e8@changeid
+Link: https://patch.msgid.link/20260714141909.cb2cef3d3e7e.Iee7b48614289da576de842157ad3730b7589a4b1@changeid
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mld: clear tzone on fail`
+## Phase 1: Commit Message Forensics
 
-**Local tree:** `v6.18.44-1-g2736c32da98b9` (kernel version **6.18.44**)
+### Step 1.1: Parse the subject line
+**Record:** `[wifi: iwlwifi: mvm]` `[validate]` — validate MCC response
+header before reading `n_channels` from firmware MCC update responses.
 
----
-
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-### Step 1.1: Subject line
-**Record:** `[wifi: iwlwifi: mld]` `[clear]` — clear stale thermal-zone
-pointer on registration failure path in the iwlwifi MLD driver.
-
-### Step 1.2: Tags
+### Step 1.2: Parse all commit message tags
 **Record:**
-- **Link:** `https://patch.msgid.link/20260714141909.595dcb8cb7fe...`
-  (patch submission reference; lore blocked by bot protection)
-- **Assisted-by:** GitHubCopilot:gpt-5.3-codex
+- **Fixes:** — none
+- **Reported-by:** — none
+- **Tested-by:** — none
+- **Reviewed-by:** — none
+- **Acked-by:** — none
+- **Link:** `https://patch.msgid.link/20260714141909.cb2cef3d3e7e.Iee7b4
+  8614289da576de842157ad3730b7589a4b1@changeid`
+- **Cc: stable@vger.kernel.org:** — none (expected for manual review)
+- **Assisted-by:** GitHub Copilot:gpt-5.3-codex
 - **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
-  (author)
 - **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (committer)
-- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc: stable, or
-  syzbot tags
+  `<miriam.rachel.korenblit@intel.com>`
 
-**Notable patterns:** Intel iwlwifi maintainers; no external bug report
-cited.
+Notable: Intel iwlwifi maintainers authored/reviewed; no syzbot or user
+bug report.
 
-### Step 1.3: Body analysis
+### Step 1.3: Analyze commit body
 **Record:**
-- **Bug:** `iwl_mld_thermal_zone_register()` stores `mld->tzone` before
-  calling `thermal_zone_device_enable()`. On enable failure, the zone is
-  unregistered but `mld->tzone` is left non-NULL.
-- **Symptom:** `iwl_mld_thermal_zone_unregister()` can call
-  `thermal_zone_device_unregister()` again on a freed/stale pointer.
-- **Root cause:** Missing `mld->tzone = NULL` in the enable-failure
-  error path (the register-failure path already clears it correctly).
-- **Secondary change:** Remove redundant inner `if (mld->tzone)` in
-  unregister after the outer NULL check.
+- **Bug:** MCC response parsing reads `n_channels` from v8/v4/v3
+  response layouts before confirming the payload contains the fixed
+  header.
+- **Symptom:** Out-of-bounds read from `pkt->data` on
+  truncated/malformed firmware responses; subsequent `struct_size()` /
+  `kzalloc()` / `memcpy()` use an unvalidated `n_channels`.
+- **Root cause:** Validation order — field access precedes minimum-
+  length check.
+- **Version info:** Affects all three MCC response variants (v8, v4,
+  v3).
 
-### Step 1.4: Hidden bug fix?
-**Record:** **Yes** — described as cleanup but is a real lifecycle bug:
-stale pointer after `thermal_zone_device_unregister()` → use-after-free
-on later access/unregister.
+### Step 1.4: Detect hidden bug fixes
+**Record:** Not disguised as cleanup — explicit defensive validation
+fix. Same class of bug as iwlwifi “read field before payload size check”
+fixes already in this tree.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 2: Diff Analysis
 
-### Step 2.1: Inventory
+### Step 2.1: Inventory changes
 **Record:**
-- **File:** `drivers/net/wireless/intel/iwlwifi/mld/thermal.c` (+3
-  meaningful lines, -4 lines including copyright year)
-- **Functions:** `iwl_mld_thermal_zone_register()`,
-  `iwl_mld_thermal_zone_unregister()`
-- **Scope:** Single-file surgical fix under `#ifdef CONFIG_THERMAL`
+- **File:** `drivers/net/wireless/intel/iwlwifi/mvm/nvm.c` (~29 lines
+  added, minor refactor)
+- **Function:** `iwl_mvm_update_mcc()`
+- **Scope:** Single-file surgical fix in one function
 
-### Step 2.2: Code flow per hunk
-
-**Hunk 1 — `iwl_mld_thermal_zone_register()` error path:**
-**Record:** Before: on `thermal_zone_device_enable()` failure →
-unregister zone, leave dangling `mld->tzone`. After: set `mld->tzone =
-NULL` after unregister, matching the `IS_ERR()` path at lines 263–268.
-
-**Hunk 2 — `iwl_mld_thermal_zone_unregister()`:**
-**Record:** Before: redundant double-check `if (mld->tzone)`. After:
-direct unregister + NULL assignment (behavior unchanged for valid
-paths).
+### Step 2.2: Code flow change
+**Record:**
+- **Before:** Cast `pkt->data`, read `n_channels`, then compare full
+  payload length to `struct_size(..., channels, n_channels)`.
+- **After:** Cache `pkt_len = iwl_rx_packet_payload_len(pkt)`; for each
+  variant, `IWL_FW_CHECK(pkt_len < sizeof(*mcc_resp_vN))` before reading
+  `n_channels`; keep exact-size check, now via `IWL_FW_CHECK` with
+  better diagnostics.
+- **Paths:** All three MCC response version branches; error path returns
+  `ERR_PTR(-EINVAL)` and jumps to `exit`.
 
 ### Step 2.3: Bug mechanism
-**Record:** **Category:** use-after-free / stale pointer after resource
-teardown.
-
-**Mechanism verified in `thermal_zone_device_unregister()`:**
-
-```1716:1742:drivers/thermal/thermal_core.c
-void thermal_zone_device_unregister(struct thermal_zone_device *tz)
-{
-        if (!tz)
-                return;
-        // ...
-        kfree(tz);
-}
-```
-
-First unregister on enable failure frees `tz`. Without clearing
-`mld->tzone`, later code dereferences freed memory:
-- **Unload path:** `iwl_mld_thermal_exit()` →
-  `iwl_mld_thermal_zone_unregister()` (line 465)
-- **Runtime path:** e.g. `iwl_mld_handle_ct_kill_notif()` at lines 76–77
-  checks `if (mld->tzone)` then calls `thermal_zone_device_update()`
+**Record:**
+- **Category:** Memory safety / out-of-bounds read (buffer bounds)
+- **Mechanism:** `n_channels` sits at offset 12 (v3), 16 (v4), or 20
+  (v8). Header sizes are 16/20/24 bytes respectively. A payload shorter
+  than `sizeof(*mcc_resp_vN)` causes OOB read when dereferencing
+  `mcc_resp_vN->n_channels`. Garbage `n_channels` can then drive
+  `struct_size()` and `memcpy()` logic on a still-untrusted buffer.
 
 ### Step 2.4: Fix quality
-**Record:** Obviously correct; mirrors existing pattern in the same
-function. Minimal regression risk. The redundant-if removal is pure
-cleanup.
+**Record:**
+- Matches established iwlwifi pattern (`IWL_FW_CHECK` + `pkt_len`
+  caching) used in `mvm/fw.c`, `mvm/rxmq.c`, `mvm/mac-ctxt.c`, etc.
+- Minimal, obviously correct ordering fix.
+- **Regression risk:** Low — only rejects responses that were already
+  invalid; successful paths unchanged.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 3: Git History Investigation
 
-### Step 3.1: Blame
-**Record:** Buggy register/enable path present in current tree at lines
-271–275. `git blame` attributes lines to `5d324e5159d9e` (limited
-history in this stable checkout). Bug present since MLD thermal support
-landed in this tree.
+### Step 3.1: Blame changed lines
+**Record:** Current buggy code in `iwl_mvm_update_mcc()` is present at
+HEAD (`v6.18.44`). Blame points to base import `5d324e5159d9e` (shallow
+history in this checkout). All three version branches share the same
+pattern.
 
-### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag in commit message.
+### Step 3.2: Follow Fixes: tag
+**Record:** N/A — no `Fixes:` tag in commit message.
 
 ### Step 3.3: Related file history
-**Record:** `git log --
-drivers/net/wireless/intel/iwlwifi/mld/thermal.c` shows only the base
-import commit in this tree's history. Related iwlwifi mld fixes (e.g.
-`3a74aaad04735` UAF fix in `link.c`) are already backported here,
-indicating active stable maintenance of iwl_mld.
+**Record:** Recent iwlwifi mvm commits in this tree include closely
+related backports:
+- `2d5dec517b539` — move field read after size check in WoWLAN wake
+  packet handler
+- `a076b0c457c71` — validate SAR GEO response payload before access
+- `dd90880eb5ec5` — OOB read fix in `iwl_mvm_nd_match_info_handler()`
+
+This MCC fix is the same bug class and same Intel batch (July 2026). The
+MCC fix itself is **not** yet in this tree (`git log --grep` found
+nothing; no `MCC v8 response too short` string in tree).
 
 ### Step 3.4: Author context
-**Record:** Emmanuel Grumbach is iwlwifi maintainer. Miri Korenblit is
-active iwlwifi contributor. No other commits from Grumbach on
-`mld/thermal.c` in this tree's log.
+**Record:** Emmanuel Grumbach is iwlwifi maintainer; Miri Korenblit is
+Intel iwlwifi lead. Same review chain as other July 2026 iwlwifi stable
+backports already merged here.
 
 ### Step 3.5: Dependencies
-**Record:** Standalone fix. No series dependencies. No prerequisite
-commits required. Patch context matches current tree code exactly.
+**Record:** Standalone — uses existing `IWL_FW_CHECK`,
+`iwl_rx_packet_payload_len()`, and MCC structs already in tree. No
+series dependencies.
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## Phase 4: Mailing List and External Research
 
-### Step 4.1: Original discussion
-**Record:** `b4 dig` returned no results (empty output). Link URL
-blocked by Anubis bot protection. Local `.mbx` files contain no match
-for "clear tzone". **Could not retrieve lore discussion.**
+### Step 4.1: Original patch discussion
+**Record:** `b4 dig` could not match this commit (not in local git
+history). Link URL blocked by bot protection (403). No local `.mbx` for
+this patch found.
 
 ### Step 4.2: Reviewers
-**Record:** UNVERIFIED — `b4 dig -w` not available.
+**Record:** UNVERIFIED from lore; commit SOBs show Intel iwlwifi
+maintainers.
 
 ### Step 4.3: Bug report
-**Record:** No Reported-by: or syzbot link. Bug identified by code
-inspection during driver development.
+**Record:** No external bug report, syzbot, or sanitizer report
+referenced.
 
 ### Step 4.4: Related patches
-**Record:** The legacy MVM driver (`mvm/tt.c` lines 688–692) has the
-same missing-NULL pattern but is **not** fixed by this commit. Out of
-scope for this evaluation.
+**Record:** Part of Intel iwlwifi July 2026 validation batch; sibling
+fixes (`2d5dec517b539`, `a076b0c457c71`) already backported to this
+6.18.y tree.
 
-### Step 4.5: Stable list discussion
-**Record:** UNVERIFIED — lore blocked.
+### Step 4.5: Stable list history
+**Record:** UNVERIFIED on lore stable list; analogous iwlwifi fixes
+already accepted into this stable tree.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 5: Code Semantic Analysis
 
 ### Step 5.1: Key functions
-**Record:** `iwl_mld_thermal_zone_register()`,
-`iwl_mld_thermal_zone_unregister()`, `iwl_mld_thermal_initialize()`,
-`iwl_mld_thermal_exit()`
+**Record:** `iwl_mvm_update_mcc()` (modified)
 
 ### Step 5.2: Callers
 **Record:**
-- `iwl_mld_thermal_initialize()` called from `iwl_op_mode_mld_start()`
-  (`mld.c:478`) during driver start
-- `iwl_mld_thermal_exit()` called from `iwl_op_mode_mld_stop()`
-  (`mld.c:506`) during driver stop/unload
+- `iwl_mvm_get_regdomain()` in `mac80211.c` (primary caller)
+- Indirect callers: `iwl_mvm_init_mcc()`,
+  `iwl_mvm_rx_chub_update_mcc()`, `iwl_mvm_apply_last_mcc()` in `nvm.c`
+  / `mac80211.c`
+- Gated by `iwl_mvm_is_lar_supported(mvm)` (LAR-capable Intel devices
+  with NVM+FW support)
 
 ### Step 5.3: Callees
-**Record:** `thermal_zone_device_register_with_trips()`,
-`thermal_zone_device_enable()`, `thermal_zone_device_unregister()`
+**Record:** `iwl_mvm_send_cmd()`, `iwl_fw_lookup_notif_ver()`,
+`iwl_rx_packet_payload_len()`, `IWL_FW_CHECK()`, `kzalloc()`,
+`memcpy()`, `iwl_free_resp()`
 
 ### Step 5.4: Reachability
-**Record:** Trigger requires `CONFIG_THERMAL` + `CONFIG_IWLMLD`. Path is
-reachable on Intel MLD WiFi device probe with thermal support enabled.
-`iwl_mld_thermal_zone_register()` is `void` and does not abort probe on
-enable failure — driver continues with stale pointer. Unload always
-calls `iwl_mld_thermal_exit()`.
+**Record:** Triggered during driver init (regulatory setup), BIOS MCC
+application, and runtime Chub MCC notifications. Userspace can
+indirectly trigger regulatory/MCC paths via cfg80211 country updates on
+LAR-enabled hardware. Requires `CONFIG_IWLMVM`.
 
 ### Step 5.5: Similar patterns
-**Record:** Register-failure path already sets `mld->tzone = NULL` (line
-267). MVM `tt.c` has identical enable-failure bug (not addressed here).
+**Record:** Same “validate before read” pattern fixed in
+`iwl_mvm_wowlan_store_wake_pkt()` (`2d5dec517b539`) in this tree.
+`mld/mcc.c` `iwl_mld_copy_mcc_resp()` has a similar ordering issue but
+is **outside** this commit’s scope.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
+## Phase 6: Cross-Reference Against Local Tree
 
-### Step 6.1: Buggy code present?
-**Record:** **YES.** Current tree at lines 271–275 lacks `mld->tzone =
-NULL` after unregister on enable failure. Fix commit is **not** yet
-applied.
+### Step 6.1: Does buggy code exist?
+**Record:** **YES.** Local tree is **6.18.44** (`git describe HEAD` →
+`v6.18.44-1-g2736c32da98b9`). `nvm.c` lines 442–493 read `n_channels`
+before any minimum header-length check. Fix not present.
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply expected.** Diff context matches current file
-exactly. No conflicting changes in recent history.
+**Record:** Clean apply expected — same file structure, `IWL_FW_CHECK`
+exists, no conflicting recent changes to `iwl_mvm_update_mcc()`.
 
 ### Step 6.3: Related fixes already present?
-**Record:** No equivalent fix found. `git log --grep='clear tzone'`
-returns nothing.
+**Record:** Same-category iwlwifi firmware-response validation fixes are
+already in tree; this specific MCC fix is not.
 
 ---
 
-## PHASE 7: SUBSYSTEM CONTEXT
+## Phase 7: Subsystem and Maintainer Context
 
 ### Step 7.1: Subsystem criticality
-**Record:** **IMPORTANT** — Intel WiFi driver
-(`drivers/net/wireless/intel/iwlwifi/mld/`), device-driver subsystem.
-Affects users of MLD-capable Intel WiFi hardware with thermal support.
+**Record:** `drivers/net/wireless/intel/iwlwifi/mvm` — **IMPORTANT**
+(Intel WiFi, widely deployed on laptops; regulatory/MCC path affects
+channel legality).
 
-### Step 7.2: Activity
-**Record:** Active — multiple iwl_mld stable backports in this tree (PTP
-race, NULL deref, BA session fixes).
+### Step 7.2: Subsystem activity
+**Record:** Active — multiple iwlwifi mvm fixes landed recently in this
+6.18.y tree.
 
 ---
 
-## PHASE 8: IMPACT AND RISK
+## Phase 8: Impact and Risk Assessment
 
 ### Step 8.1: Who is affected
-**Record:** Config-specific (`CONFIG_IWLMLD` + `CONFIG_THERMAL`). Users
-of newer Intel MLD WiFi devices with thermal framework enabled.
+**Record:** Users of Intel iwlwifi MVM devices with LAR support
+(`CONFIG_IWLMVM`). Not universal, but a large laptop population.
 
 ### Step 8.2: Trigger conditions
-**Record:** `thermal_zone_device_enable()` fails after successful
-registration. Uncommon but explicitly handled error path. Any subsequent
-driver unload or thermal notification using `mld->tzone` triggers UAF.
-Not userspace-triggerable directly, but reachable during normal driver
-lifecycle on affected hardware.
+**Record:** Truncated or malformed `MCC_UPDATE_CMD` firmware response.
+Uncommon in normal operation (requires FW bug, communication error, or
+corrupted response), but the code path runs at init and on MCC updates.
+Not directly userspace-injectable, but reachable from normal driver
+operation.
 
 ### Step 8.3: Failure mode severity
-**Record:** **HIGH** — use-after-free on freed `struct
-thermal_zone_device`. Can cause kernel oops on module unload or during
-thermal event handling. Potential security relevance (UAF class).
+**Record:** Out-of-bounds read from SKB payload; possible kernel
+oops/KASAN report; potential follow-on issues from garbage `n_channels`.
+**Severity: HIGH** (memory safety in kernel), though trigger likelihood
+is **MEDIUM-LOW**.
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** Prevents UAF on driver teardown and runtime thermal
-  paths; one-line meaningful fix
-- **Risk:** Very low — adds NULL assignment matching existing pattern;
-  cleanup-only hunk in unregister
-- **Ratio:** Strong benefit, minimal risk
+- **Benefit:** Prevents OOB read on a real driver path; aligns with
+  fixes already accepted for this tree.
+- **Risk:** Very low — adds early rejection of invalid packets only.
+- **Ratio:** Strong benefit, minimal risk.
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 9: Final Synthesis
 
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real UAF bug on error path with clear mechanism
-- Fix is minimal, obviously correct, matches existing code pattern
-- Buggy code confirmed present in 6.18.44 tree
-- Driver unload path always hits unregister — crash risk on affected
-  hardware
-- iwl_mld actively maintained in this stable series
-- Similar iwl_mld UAF fixes already backported here
+- Real out-of-bounds read before bounds checking
+- Small, surgical, maintainer-authored fix
+- Matches iwlwifi conventions (`IWL_FW_CHECK`)
+- Buggy code confirmed present in 6.18.44
+- Same bug pattern as `2d5dec517b539` already backported here
+- Intel iwlwifi maintainers signed off
+- Standalone, no dependencies
 
 **AGAINST backport:**
-- No syzbot/user bug report (theoretical until enable fails)
-- Narrow audience (IWLMLD + CONFIG_THERMAL)
-- MVM driver has same bug but is not fixed by this commit
-- Could not verify lore review discussion
+- No syzbot/user report (defensive hardening)
+- Trigger requires malformed FW response (rare)
+- Only LAR-enabled iwlwifi hardware
 
-**Unresolved:** Lore review thread inaccessible; exact frequency of
-`thermal_zone_device_enable()` failure unverified.
+**Unresolved:**
+- Full lore review thread (blocked/unavailable)
+- Exact upstream commit SHA not in local git
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — logic is self-evident; no
-   Tested-by but pattern matches existing error path
-2. Fixes a real bug? **PASS** — stale pointer after free confirmed by
-   code reading
-3. Important issue? **PASS** — UAF, HIGH severity on unload
-4. Small and contained? **PASS** — ~3 meaningful lines in one file
-5. No new features/APIs? **PASS**
-6. Can apply to local tree? **PASS** — code present, clean apply
-   expected
+1. Obviously correct and tested? **PASS** — ordering fix is standard;
+   tested implicitly by maintainer merge; no Tested-by.
+2. Fixes a real bug? **PASS** — OOB read on short payload verified by
+   struct layout.
+3. Important issue? **PASS** — memory safety / potential crash (HIGH
+   severity, medium-low likelihood).
+4. Small and contained? **PASS** — ~30 lines, one function, one file.
+5. No new features/APIs? **PASS** — validation only.
+6. Can apply to local tree? **PASS** — code exists, fix not present,
+   clean apply expected.
 
 ### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build, or docs). Standard
-bug fix.
+**Record:** None (not device ID, quirk, DT, build, or docs). Qualifies
+as a standard bug fix.
 
-### Step 9.4: Problem and decision rationale
+### Step 9.4: Problem and decision
 
-When `thermal_zone_device_enable()` fails during iwl_mld thermal zone
-setup, the driver unregisters the zone but leaves `mld->tzone` pointing
-at freed memory. Because registration failure does not abort driver
-probe, the WiFi device continues operating with a dangling pointer. On
-driver removal (`iwl_op_mode_mld_stop` → `iwl_mld_thermal_exit`),
-`iwl_mld_thermal_zone_unregister()` dereferences that freed structure —
-a classic use-after-free that can oops the kernel. Runtime thermal
-notification paths (`iwl_mld_handle_ct_kill_notif`) are similarly
-affected.
+This commit fixes an ordering bug in `iwl_mvm_update_mcc()` where
+`n_channels` is read from the firmware response before verifying the
+packet is large enough to contain the fixed MCC header (16/20/24 bytes
+for v3/v4/v8). On a truncated response, that is an out-of-bounds read.
+The existing exact-size check does not prevent the initial invalid read.
 
-For 6.18.44 users running Intel MLD WiFi with thermal support, this is a
-real stability fix with negligible backport risk. The fix mirrors the
-already-correct `IS_ERR()` path in the same function.
+For **6.18.44**, the vulnerable code is present and the fix is absent.
+The change is small, follows patterns already backported in this tree
+(`2d5dec517b539`, `a076b0c457c71`), and addresses a real memory-safety
+defect on a regulatory/MCC path used by LAR-enabled Intel WiFi hardware.
+Risk of regression is negligible.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed commit message and tags from user-provided diff
-- **[Phase 2]** Read `thermal.c` lines 65–467; confirmed missing
-  `mld->tzone = NULL` at lines 271–275
-- **[Phase 2]** Read `thermal_core.c:1716–1742`; confirmed
-  `thermal_zone_device_unregister()` frees `tz` via `kfree(tz)`
-- **[Phase 2]** Read `thermal_core.c:1691–1709`; confirmed second
-  unregister accesses `tz->node` on potentially freed memory
-- **[Phase 3]** `git describe HEAD` → `v6.18.44-1-g2736c32da98b9`; `make
-  kernelversion` → `6.18.44`
-- **[Phase 3]** `git blame -L 242,276 thermal.c` → buggy code in current
-  tree
-- **[Phase 3]** `git log --grep='clear tzone'` → no existing fix
-- **[Phase 3]** `git show 3a74aaad04735` → confirmed iwl_mld fixes are
-  backported to this tree
-- **[Phase 4]** `b4 dig` → empty/no match
-- **[Phase 4]** WebFetch lore/patch.msgid.link → blocked by Anubis
-- **[Phase 4]** Grep `*.mbx` for "clear tzone" → no matches
-- **[Phase 5]** Grep `iwl_mld_thermal` → callers in `mld.c:478,506`
-- **[Phase 5]** Read `mld.c:460–527` → thermal init on start, exit on
-  stop
-- **[Phase 6]** Confirmed
-  `drivers/net/wireless/intel/iwlwifi/mld/thermal.c` exists (467 lines)
-- **[Phase 6]** Confirmed `CONFIG_IWLMLD` in `Kconfig:84`
-- **[Phase 6]** Diff context matches current tree — clean apply expected
-- **[Phase 8]** Grep `mvm/tt.c` → same bug pattern at lines 688–692 (not
-  fixed by this commit)
-- **UNVERIFIED:** Lore review discussion and stable nomination comments
-- **UNVERIFIED:** How often `thermal_zone_device_enable()` fails on
-  iwl_mld hardware
+- **[Phase 1]** Parsed subject, tags, body from provided commit message
+- **[Phase 2]** Analyzed provided diff; verified `IWL_FW_CHECK` in
+  `fw/dbg.h`
+- **[Phase 2]** Computed struct sizes: v3=16, v4=20, v8=24 bytes;
+  `n_channels` offsets 12/16/20
+- **[Phase 3]** `git blame` on `nvm.c:439-495`: buggy pattern at HEAD
+- **[Phase 3]** `git log --oneline -20 --
+  drivers/net/wireless/intel/iwlwifi/mvm/`: found related backports
+- **[Phase 3]** `git show 2d5dec517b539`, `a076b0c457c71`,
+  `dd90880eb5ec5`: confirmed same fix class already in tree
+- **[Phase 3]** `git log --grep="validate MCC"` / `--grep="MCC header"`:
+  no matches (fix not applied)
+- **[Phase 4]** `b4 dig` with message-id: failed (wrong usage / no
+  match)
+- **[Phase 4]** WebFetch/curl lore + patch.msgid.link: blocked (403 /
+  bot protection)
+- **[Phase 4]** Grep `*.mbx` for patch subject: no local mbox found
+- **[Phase 5]** `grep iwl_mvm_update_mcc`: callers in `mac80211.c`,
+  `nvm.c`
+- **[Phase 5]** Read `iwl_mvm_is_lar_supported()` in `mvm.h`
+- **[Phase 5]** Grep `pkt_len < sizeof` in iwlwifi: established
+  validation pattern
+- **[Phase 6]** `git describe HEAD`: `v6.18.44-1-g2736c32da98b9`;
+  Makefile 6.18.44
+- **[Phase 6]** Read `nvm.c:439-514`: confirmed buggy code at HEAD
+- **[Phase 6]** Grep `MCC v8 response too short`: not in tree
+- **[Phase 8]** Read MCC struct definitions in `fw/api/nvm-reg.h`
 
-**YES**The `b4 dig` search for the patch thread finished with no match —
-it returned empty output for both the commit hash and the subject line
-`wifi: iwlwifi: mld: clear tzone on fail`. Lore/patch.msgid.link was
-also unreachable (bot protection), so the review thread couldn’t be
-retrieved that way.
+**YES**The analysis is done. For the **6.18.44** tree checked out here,
+the iwlwifi MCC validation commit should be backported.
 
-That doesn’t change the earlier conclusion: the bug is a real stale-
-pointer/UAF on the thermal-zone enable-failure path in `iwl_mld`, the
-fix is small and applies cleanly to this 6.18.44 tree, and the backport
-recommendation remains **YES**.
+**Verdict: YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/thermal.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+The bug is real: `iwl_mvm_update_mcc()` reads `n_channels` from firmware
+MCC responses before checking that the payload is large enough for the
+fixed header (16/20/24 bytes for v3/v4/v8), which can cause an out-of-
+bounds read on truncated responses. The vulnerable code is present in
+this tree; the fix is not.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
-index f8a8c35066beb..e445b1d7d4b00 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+The patch is small, uses the existing `IWL_FW_CHECK` pattern, and
+matches similar iwlwifi validation fixes already backported here (e.g.
+wake-packet and SAR GEO payload checks). Risk is low; benefit is
+preventing a memory-safety defect on the LAR/MCC regulatory path for
+Intel WiFi hardware.
+
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 43 ++++++++++++++++----
+ 1 file changed, 36 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 953218f1e025a..f76e57399c1f3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
 @@ -1,6 +1,6 @@
  // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  /*
-- * Copyright (C) 2024-2025 Intel Corporation
-+ * Copyright (C) 2024-2026 Intel Corporation
+- * Copyright (C) 2012-2014, 2018-2019, 2021-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2019, 2021-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
   */
- #ifdef CONFIG_THERMAL
- #include <linux/sort.h>
-@@ -272,6 +272,7 @@ static void iwl_mld_thermal_zone_register(struct iwl_mld *mld)
- 	if (ret) {
- 		IWL_DEBUG_TEMP(mld, "Failed to enable thermal zone\n");
- 		thermal_zone_device_unregister(mld->tzone);
-+		mld->tzone = NULL;
- 	}
- }
+@@ -416,6 +416,7 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 	int ret, resp_ver;
+ 	u32 status;
+ 	int resp_len, n_channels;
++	unsigned int pkt_len;
+ 	u16 mcc;
  
-@@ -385,10 +386,8 @@ static void iwl_mld_thermal_zone_unregister(struct iwl_mld *mld)
- 		return;
+ 	if (WARN_ON_ONCE(!iwl_mvm_is_lar_supported(mvm)))
+@@ -431,6 +432,7 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 		return ERR_PTR(ret);
  
- 	IWL_DEBUG_TEMP(mld, "Thermal zone device unregister\n");
--	if (mld->tzone) {
--		thermal_zone_device_unregister(mld->tzone);
--		mld->tzone = NULL;
--	}
-+	thermal_zone_device_unregister(mld->tzone);
-+	mld->tzone = NULL;
- }
+ 	pkt = cmd.resp_pkt;
++	pkt_len = iwl_rx_packet_payload_len(pkt);
  
- static void iwl_mld_cooling_device_unregister(struct iwl_mld *mld)
+ 	resp_ver = iwl_fw_lookup_notif_ver(mvm->fw, IWL_ALWAYS_LONG_GROUP,
+ 					   MCC_UPDATE_CMD, 0);
+@@ -439,9 +441,18 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 	if (resp_ver >= 8) {
+ 		struct iwl_mcc_update_resp_v8 *mcc_resp_v8 = (void *)pkt->data;
+ 
++		if (IWL_FW_CHECK(mvm, pkt_len < sizeof(*mcc_resp_v8),
++				 "MCC v8 response too short: %u\n", pkt_len)) {
++			resp_cp = ERR_PTR(-EINVAL);
++			goto exit;
++		}
++
+ 		n_channels =  __le32_to_cpu(mcc_resp_v8->n_channels);
+-		if (iwl_rx_packet_payload_len(pkt) !=
+-		    struct_size(mcc_resp_v8, channels, n_channels)) {
++		if (IWL_FW_CHECK(mvm,
++				 pkt_len !=
++				 struct_size(mcc_resp_v8, channels, n_channels),
++				 "invalid MCC v8 response size: %u (n_channels=%d)\n",
++				 pkt_len, n_channels)) {
+ 			resp_cp = ERR_PTR(-EINVAL);
+ 			goto exit;
+ 		}
+@@ -464,9 +475,18 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 			       IWL_UCODE_TLV_CAPA_MCC_UPDATE_11AX_SUPPORT)) {
+ 		struct iwl_mcc_update_resp_v4 *mcc_resp_v4 = (void *)pkt->data;
+ 
++		if (IWL_FW_CHECK(mvm, pkt_len < sizeof(*mcc_resp_v4),
++				 "MCC v4 response too short: %u\n", pkt_len)) {
++			resp_cp = ERR_PTR(-EINVAL);
++			goto exit;
++		}
++
+ 		n_channels =  __le32_to_cpu(mcc_resp_v4->n_channels);
+-		if (iwl_rx_packet_payload_len(pkt) !=
+-		    struct_size(mcc_resp_v4, channels, n_channels)) {
++		if (IWL_FW_CHECK(mvm,
++				 pkt_len !=
++				 struct_size(mcc_resp_v4, channels, n_channels),
++				 "invalid MCC v4 response size: %u (n_channels=%d)\n",
++				 pkt_len, n_channels)) {
+ 			resp_cp = ERR_PTR(-EINVAL);
+ 			goto exit;
+ 		}
+@@ -489,9 +509,18 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
+ 	} else {
+ 		struct iwl_mcc_update_resp_v3 *mcc_resp_v3 = (void *)pkt->data;
+ 
++		if (IWL_FW_CHECK(mvm, pkt_len < sizeof(*mcc_resp_v3),
++				 "MCC v3 response too short: %u\n", pkt_len)) {
++			resp_cp = ERR_PTR(-EINVAL);
++			goto exit;
++		}
++
+ 		n_channels =  __le32_to_cpu(mcc_resp_v3->n_channels);
+-		if (iwl_rx_packet_payload_len(pkt) !=
+-		    struct_size(mcc_resp_v3, channels, n_channels)) {
++		if (IWL_FW_CHECK(mvm,
++				 pkt_len !=
++				 struct_size(mcc_resp_v3, channels, n_channels),
++				 "invalid MCC v3 response size: %u (n_channels=%d)\n",
++				 pkt_len, n_channels)) {
+ 			resp_cp = ERR_PTR(-EINVAL);
+ 			goto exit;
+ 		}
 -- 
 2.53.0
 
