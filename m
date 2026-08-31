@@ -1,43 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AFF2594815;
-	Mon, 31 Aug 2026 13:51:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A2275964F6;
+	Mon, 31 Aug 2026 13:51:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184276; cv=none; b=o/kJIBf7Q6hcEfG1khd9Ef0Q8z4FOmIRWtFqqInf6t3PkDmxGIb+sOppStTNq4w0UV+hxnZ2IMD5M2aeKNBzlUYIGqgR1+8+vbrnazYKJUARLAPcKQzLox594iYBSAdGpDwggNMbZ/zgl1OSoiBglzL0DdXNa9Re9s+QtF5+ET8=
+	t=1788184282; cv=none; b=UIlywbf08HGa6dTglLRENdRHVN6i8bpi1z6JQazOAA5cSUqrJZXdZ1dthXXFYzGMY1WfquPOeFEr6ma7Z6MefKuhth41k1yKNE0Islu+v7TgFbV0c/rp2GgfcXx/b0lSzLplbOgc2x9pBIJZbDsxu3JXYDLajCo71fg3i7MjtqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184276; c=relaxed/simple;
-	bh=w9LjQbiQkf/ncT2iS1CBNHG/KaIN6aSRmIpMNqAKSkM=;
+	s=arc-20240116; t=1788184282; c=relaxed/simple;
+	bh=7DQPlXEzN7WI/ZJhNp1OCOCeojyf0YI5nPKpWjPOezw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bS4GUIHP78847iVszNUFkXsdETlNSx9Bj8BlfUaZNzA+C5hK5dPW/Gf1CK4BNo47POG0Ew6YzKd8RaA56lGUN61s9QWIDLUk5MDKMqWcoB/sDCAMR/o31qkFO43avouEiPZ7xrmcihDbhNapbQH2YYCTd7hh7WrXiVYobeTIDQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gCUEQGaP; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=fH0vK3lPWYSkgVI0Yu+A5fZnhbLN6iLlkXWuZ5RM/0Dz6enz0Y36YaWO2kweoU3jUl67maFl6rgMSk4GqyPEBXSLITb4WJquiZUBsF0sTRAgi++oLGYzbyAHOukf1aW+VRZqX8BBAbCGdb/q3jbfJUVDlp7+xFqq/gawnTfveas=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TKwFqX6j; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gCUEQGaP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B1081F000E9;
-	Mon, 31 Aug 2026 13:51:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TKwFqX6j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAB631F00A3D;
+	Mon, 31 Aug 2026 13:51:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184273;
-	bh=pQeFEof46QBMBkVESYK5gF360fC+EaAR/W0HEtI6wnk=;
+	s=k20260515; t=1788184280;
+	bh=JcFqPQ4TWgXMnuZg61x6R9zAyZTT0bouo2OLeij6rhA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gCUEQGaPSoy4c/8IYXo92US6uA53BUs1iZVrpKtizyOdMG1Cq8qqdDXzxt78eiNDl
-	 OggYGODjhVDBcdZvxByyA/d2CcvMH1ExG68jxf7YUA3/i3KCKwjsxSW1HLRAGoay3w
-	 49XeD/rZsmykirLp8BxfFFm7kNKGUhx0G6UrtoAlow/Y2VhjweUmyJkQaS8DNo7/B7
-	 DnmJGx1N2NAC/rUZ7ot4+o5b8J5nuXq1ejbhpfrT2ZzvX6qG5AIys977un5Jl+aZc0
-	 5McKO0eVLgIcI2LAQH8rSmzFnyhEJAefmGCGlzpHqiNCv86WcfMEQYxcUU3semqYWy
-	 gooMtfVUL+zPQ==
+	b=TKwFqX6j44cQfaj+wnVOw8es1MnZZ6IY3hlkJctVp0b998Iyb6q15MR6ZCQPWNbnh
+	 6ubOeaKyFguozVIxwKHrStnYJ8YDMcE+ClyG2kQnm4mhKORzKgfCaHjHI+vXWxouhR
+	 BsTEaNDK59Jb7Xq126Nsap66zGYmrjBbQ6ISchQ+0cq0VHO3jobzO6yCXu+g69AtYd
+	 sgKSwR4djguYLWnHJ2i2enitKQ/DkeU5L0mXBO4eFc9bHjmxQzt6j5oFZNwjPV1p+/
+	 wu4qXzwLqvwhgWPfSmVLbUVNRPhIj6M/PUucah9Xf+DnKaARm9eXJKlvacHlTxwZGU
+	 c5kHQI37ri8Wg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Pengpeng Hou <pengpeng@iscas.ac.cn>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>,
+	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
+	Baochen Qiang <baochen.qiang@oss.qualcomm.com>,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>,
 	Sasha Levin <sashal@kernel.org>,
-	stas.yakovlev@gmail.com,
+	jjohnson@kernel.org,
 	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: libipw: fix key index receive bound checks
-Date: Mon, 31 Aug 2026 09:30:22 -0400
-Message-ID: <20260831133314.4125787-594-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.1] wifi: ath11k: fix invalid data access in ath11k_dp_rx_h_undecap_nwifi
+Date: Mon, 31 Aug 2026 09:30:26 -0400
+Message-ID: <20260831133314.4125787-598-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,363 +56,181 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Pengpeng Hou <pengpeng@iscas.ac.cn>
+From: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
 
-[ Upstream commit 74ed3669f26803b1761c1f55403062bea44c3466 ]
+[ Upstream commit 6b471e9aefee9ed73278eb1141e0d8530a56fae9 ]
 
-libipw_rx() reads skb->data[hdrlen + 3] to extract the WEP key index in
-both the software-decrypt key selection path and the hardware-decrypted
-IV/ICV strip path. In both places the existing guard only checks
-skb->len >= hdrlen + 3, which proves bytes up to hdrlen + 2 but not the
-byte at hdrlen + 3.
+In certain cases, hardware might provide packets with a
+length greater than the maximum native Wi-Fi header length.
+This can lead to accessing and modifying fields in the header
+within the ath11k_dp_rx_h_undecap_nwifi() function for the
+DP_RX_DECAP_TYPE_NATIVE_WIFI decap type and
+potentially result in invalid data access and memory corruption.
 
-Require hdrlen + 4 bytes before reading that item in both paths. This is
-a local source-boundary check only; it does not change the key index
-semantics.
+Kernel stack is corrupted in: ath11k_dp_rx_h_undecap+0x6b0/0x6b0 [ath11k]
+Call trace:
+ ath11k_dp_rx_h_mpdu+0x0/0x2e8 [ath11k]
+ ath11k_dp_rx_h_mpdu+0x1e0/0x2e8 [ath11k]
+ ath11k_dp_rx_wbm_err+0x1e0/0x450 [ath11k]
+ ath11k_dp_rx_process_wbm_err+0x2fc/0x460 [ath11k]
+ ath11k_dp_service_srng+0x2e0/0x348 [ath11k]
 
-Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
-Link: https://patch.msgid.link/20260705083519.23567-1-pengpeng@iscas.ac.cn
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Add a sanity check before processing the SKB to prevent invalid
+data access in the undecap native Wi-Fi function for the
+DP_RX_DECAP_TYPE_NATIVE_WIFI decap type.
+
+This adapted from the discussion/patch of the ath12k driver [1].
+
+Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+
+Link: https://lore.kernel.org/linux-wireless/20250211090302.4105141-1-tamizh.raja@oss.qualcomm.com/ # [1]
+Signed-off-by: Miaoqing Pan <miaoqing.pan@oss.qualcomm.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://patch.msgid.link/20260512022351.2033155-2-miaoqing.pan@oss.qualcomm.com
+Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: libipw: fix key index receive bound
-checks`
-
-**Local tree:** `v6.18.44` (`6.18.44`, Makefile `VERSION=6 PATCHLEVEL=18
-SUBLEVEL=44`)
-
----
-
-## PHASE 1: COMMIT MESSAGE FORENSICS
-
-### Step 1.1: PARSE THE SUBJECT LINE
-**Record:** `[wifi: libipw]` `[fix]` — correct off-by-one bounds check
-when reading WEP key index byte from received skb data in `libipw_rx()`.
-
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
-**Record:**
-- **Signed-off-by:** Pengpeng Hou `<pengpeng@iscas.ac.cn>` (author)
-- **Link:**
-  https://patch.msgid.link/20260705083519.23567-1-pengpeng@iscas.ac.cn
-- **Signed-off-by:** Johannes Berg `<johannes.berg@intel.com>` (wireless
-  maintainer, committer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable@vger.kernel.org`
-- Notable: no fuzzer or user bug report; maintainer SOB present
-
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
-**Record:**
-- **Bug:** `libipw_rx()` reads `skb->data[hdrlen + 3]` after checking
-  `skb->len >= hdrlen + 3`. That guard only guarantees bytes
-  `0..hdrlen+2`; index `hdrlen+3` needs `skb->len >= hdrlen + 4`.
-- **Symptom:** Out-of-bounds read past skb tail on truncated protected
-  frames.
-- **Affected paths:** (1) software-decrypt key selection, (2) hardware-
-  decrypt IV/ICV strip path.
-- **Root cause:** Classic off-by-one length check (confusing “number of
-  bytes after hdrlen” with “index of last byte needed”).
-
-### Step 1.4: DETECT HIDDEN BUG FIXES
-**Record:** Not disguised — explicitly a bounds-check fix. No hidden
-semantics change; when the check fails, `keyidx` stays at its
-initialized value `0`.
-
----
-
-## PHASE 2: DIFF ANALYSIS
-
-### Step 2.1: INVENTORY THE CHANGES
-**Record:**
-- **File:** `drivers/net/wireless/intel/ipw2x00/libipw_rx.c` (+2/−2
-  lines)
-- **Functions:** `libipw_rx()` (two hunks)
-- **Scope:** Single-file, surgical fix
-
-### Step 2.2: CODE FLOW CHANGE
-**Record:**
-- **Hunk 1 (~line 417):** Before: read key index if `len >= hdrlen+3`.
-  After: read only if `len >= hdrlen+4`. Affects software-decrypt path
-  when `can_be_decrypted` is true.
-- **Hunk 2 (~line 663):** Same change on hardware-decrypt IV/ICV strip
-  path when `!can_be_decrypted && PROTECTED && host_strip_iv_icv`.
-- **Unchanged behavior:** When the frame is long enough, key index
-  extraction is identical.
-
-### Step 2.3: BUG MECHANISM
-**Record:** **Category:** Memory safety / out-of-bounds read.
-**Mechanism:** With `skb->len == hdrlen + 3`, `skb->data[hdrlen + 3]`
-reads one byte past allocated skb data — slab OOB read (info leak or
-fault under KASAN).
-
-### Step 2.4: FIX QUALITY
-**Record:** Obviously correct; minimal; zero functional change for valid
-frames. **Regression risk:** Very low — only skips the read on frames
-that were already too short to contain the byte.
-
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
-
-### Step 3.1: BLAME THE CHANGED LINES
-**Record:** Blame points to `5d324e5159d9e` (merge, 2025-11-28). This
-autosel tree has only **1 commit** touching `libipw_rx.c`; the buggy
-`hdrlen + 3` pattern is long-standing legacy code, not a recent
-regression.
-
-### Step 3.2: FOLLOW THE FIXES: TAG
-**Record:** N/A — no `Fixes:` tag.
-
-### Step 3.3: FILE HISTORY FOR RELATED CHANGES
-**Record:** Recent ipw2x00 activity includes `f442e581a8893` (ipw2100
-memory leak fix). No prior fix for this bounds issue. Standalone one-
-patch submission.
-
-### Step 3.4: AUTHOR'S OTHER COMMITS
-**Record:** Pengpeng Hou has multiple similar validation/bounds fixes
-(CAN, media, Bluetooth, hwmon). Johannes Berg is the wireless maintainer
-who committed this.
-
-### Step 3.5: DEPENDENT/PREREQUISITE COMMITS
-**Record:** No dependencies. Patch applies cleanly to current
-`libipw_rx.c` (buggy `hdrlen + 3` still present at lines 417 and 663).
-
----
-
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-
-### Step 4.1: ORIGINAL PATCH DISCUSSION
-**Record:** `b4 am 20260705083519.23567-1-pengpeng@iscas.ac.cn` found
-the thread. Mbox has a single patch message, no replies. No stable
-nomination or NAK in thread. WebFetch of lore URL blocked by bot
-protection; content obtained via b4 mbox.
-
-### Step 4.2: REVIEWERS
-**Record:** `b4 dig -w` did not yield additional recipient detail beyond
-the patch itself. Johannes Berg SOB indicates maintainer acceptance.
-
-### Step 4.3: BUG REPORT
-**Record:** No external bug report, syzbot link, or stack trace.
-Static/code-review discovery.
-
-### Step 4.4: RELATED PATCHES/SERIES
-**Record:** Standalone 1/1 patch, not part of a series.
-
-### Step 4.5: STABLE MAILING LIST HISTORY
-**Record:** Not searched separately; no stable discussion found in the
-patch thread.
-
----
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-### Step 5.1: KEY FUNCTIONS
-**Record:** `libipw_rx()` — central RX handler for libipw stack.
-
-### Step 5.2: CALLERS
-**Record:** Called from:
-- `ipw2200.c`: lines 7674, 7831, 8037, 10332
-- `ipw2100.c`: lines 2479, 2566
-
-All are RX paths (tasklet/ISR context) for every received 802.11 frame.
-
-### Step 5.3: CALLEES
-**Record:** Uses `libipw_get_hdrlen()`, decryption helpers, frame drop
-paths. Bug is a direct skb indexed read before further validation.
-
-### Step 5.4: CALL CHAIN / REACHABILITY
-**Record:**
-1. Wireless frame received by ipw2100/ipw2200 firmware → skb built with
-   firmware-reported length
-2. `libipw_rx()` validates `skb->len >= 10` and `skb->len >= hdrlen`
-3. A protected frame with `skb->len == hdrlen + 3` passes those checks
-4. OOB read at `skb->data[hdrlen + 3]`
-
-`ipw2200.c` rejects `length < hdrlen` (line 8315) but not `length <
-hdrlen + 4`. `ipw_handle_data_packet()` (line 7663) sets skb length from
-hardware with no extra minimum beyond `libipw_rx()` checks.
-
-**Userspace trigger:** Indirect — attacker in radio range can send
-malformed 802.11 frames; no syscall needed.
-
-### Step 5.5: SIMILAR PATTERNS
-**Record:** Line 286 in `libipw_rx_frame_decrypt()` also reads
-`skb->data[hdrlen + 3]` in a debug path after failed decrypt (not fixed
-by this patch). The two fixed sites are the ones described in the commit
-message.
-
----
-
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
-
-### Step 6.1: DOES THE BUGGY CODE EXIST?
-**Record:** **Yes.** `drivers/net/wireless/intel/ipw2x00/libipw_rx.c`
-lines 417 and 663 still use `hdrlen + 3`. Driver and
-`CONFIG_LIBIPW`/`CONFIG_IPW2100`/`CONFIG_IPW2200` exist in 6.18.44. Bug
-predates this stable branch (legacy code).
-
-### Step 6.2: BACKPORT COMPLICATIONS
-**Record:** **Clean apply** — two identical `+3` → `+4` substitutions,
-no context conflicts.
-
-### Step 6.3: RELATED FIXES ALREADY PRESENT?
-**Record:** **No.** `git log --grep="key index"` and `git log
---grep="hdrlen + 4"` return nothing for this file.
-
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-### Step 7.1: SUBSYSTEM CRITICALITY
-**Record:** **Subsystem:** `drivers/net/wireless/intel/ipw2x00` (legacy
-Intel PRO/Wireless 2100/2200). **Criticality:** PERIPHERAL — deprecated
-libipw stack, very old hardware, small active user base.
-
-### Step 7.2: SUBSYSTEM ACTIVITY
-**Record:** Intel wireless tree is active (many iwlwifi fixes in
-6.18.y). ipw2x00 itself sees occasional maintenance (e.g., memory leak
-fix `f442e581a8893`).
-
----
-
-## PHASE 8: IMPACT AND RISK ASSESSMENT
-
-### Step 8.1: WHO IS AFFECTED
-**Record:** **Config-specific / driver-specific** — users with `IPW2100`
-or `IPW2200` modules loaded and WEP/WPA decryption paths active.
-
-### Step 8.2: TRIGGER CONDITIONS
-**Record:** Protected frame with `skb->len == hdrlen + 3` (e.g.,
-hdrlen=24, len=27). Requires malformed/truncated over-the-air frame or
-firmware passing a short frame. **Likelihood:** Low in normal operation;
-realistic for malicious RF traffic. **Unprivileged remote trigger:**
-Yes, within wireless range.
-
-### Step 8.3: FAILURE MODE SEVERITY
-**Record:** **Out-of-bounds read** past skb buffer. Without KASAN:
-possible slab info leak; possible fault at page boundary. With KASAN:
-BUG report. **Severity: MEDIUM** (memory safety on network RX; limited
-by obsolete hardware and narrow config).
-
-### Step 8.4: RISK-BENEFIT
-**Record:**
-- **Benefit:** Closes a real OOB read on RX path; defense-in-depth for
-  malformed frames; zero-risk 2-line fix.
-- **Risk:** Negligible — only tightens an existing guard.
-- **Ratio:** Moderate benefit (small user base) vs. very low risk →
-  **favorable for backport**.
-
----
-
-## PHASE 9: FINAL SYNTHESIS
-
-### Step 9.1: EVIDENCE COMPILED
-
-**FOR backport:**
-- Real, verifiable off-by-one OOB read
-- Trivial, obviously correct 2-line fix
-- RX path reachable from wireless input
-- Applies cleanly to 6.18.44
-- Maintainer (Johannes Berg) committed
-- Matches stable pattern of bounds-check hardening
-
-**AGAINST backport:**
-- Legacy deprecated driver (libipw); hardware from ~2003–2005
-- No user report, syzbot, or CVE
-- Very small installed base today
-- Trigger requires specific truncated protected frame
-
-**Unresolved:** Whether firmware typically filters frames short enough
-to hit this exact length before they reach `libipw_rx()`.
-
-### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — mathematically correct
-   bounds fix; no Tested-by.
-2. Fixes a real bug? **PASS** — OOB read on `skb->data[hdrlen+3]`.
-3. Important issue? **PASS (MEDIUM)** — memory safety on network RX,
-   remotely triggerable in principle.
-4. Small and contained? **PASS** — 2 lines, 1 file.
-5. No new features or APIs? **PASS**.
-6. Can apply to local tree? **PASS** — buggy code present, clean apply.
-
-### Step 9.3: EXCEPTION CATEGORIES
-**Record:** N/A — standard memory-safety bug fix, not a
-quirk/DT/build/doc exception.
-
-### Step 9.4: DECISION RATIONALE
-
-For **6.18.44**, the buggy code is present and the fix is surgical. Even
-with a small user population, an out-of-bounds read on a wireless RX
-path is appropriate stable material: the patch is obviously correct,
-cannot regress valid frames, and closes a reachable memory-safety hole.
-The lack of syzbot/user reports lowers urgency but does not negate the
-technical merit.
-
----
-
-## Verification
-
-- **[Phase 1]** Parsed subject, tags, body from provided commit message
-  and mbox
-- **[Phase 2]** Diff: 2 lines in `libipw_rx.c`, `hdrlen+3` → `hdrlen+4`
-  at lines 417 and 663
-- **[Phase 3]** `git describe HEAD` → `v6.18.44`; `make kernelversion` →
-  `6.18.44`
-- **[Phase 3]** `git blame -L 417,419` and `-L 663,664` → lines from
-  `5d324e5159d9e`
-- **[Phase 3]** `git rev-list --count HEAD -- libipw_rx.c` → 1 (shallow
-  history for this file)
-- **[Phase 3]** No `Fixes:` tag; no prerequisite commits found
-- **[Phase 4]** `b4 am 20260705083519.23567-1-pengpeng@iscas.ac.cn` →
-  single-patch thread
-- **[Phase 4]** Mbox read: no replies, no stable nomination, no NAK
-- **[Phase 4]** WebFetch of lore URL → blocked (bot protection); used b4
-  mbox instead
-- **[Phase 5]** `grep libipw_rx(` → callers in `ipw2200.c` (4) and
-  `ipw2100.c` (2)
-- **[Phase 5]** Read `libipw_rx()` lines 325–366: validates `len >= 10`
-  and `len >= hdrlen` only
-- **[Phase 5]** Read `ipw2200.c` 8315–8324: rejects `length < hdrlen`,
-  not `length < hdrlen+4`
-- **[Phase 5]** Read `ipw_handle_data_packet()` 7659–7674: skb length
-  from firmware, no extra min check
-- **[Phase 6]** Grep confirmed buggy `hdrlen + 3` at lines 417, 663; fix
-  not present
-- **[Phase 6]** Kconfig confirms `IPW2100`, `IPW2200`, `LIBIPW` exist;
-  libipw marked deprecated
-- **[Phase 8]** Failure mode: OOB read, severity MEDIUM
-- **UNVERIFIED:** Exact frequency of firmware delivering frames with
-  `len == hdrlen+3` to `libipw_rx()`
-
-**YES**
-
- drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-index b7bc94f7abd8a..c8841f9b9ad91 100644
---- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-@@ -414,7 +414,7 @@ int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
- 	    ieee->host_mc_decrypt : ieee->host_decrypt;
+The background searches finished and match the earlier analysis:
+
+- **Ath11k fix not in tree** — `git log --grep` found no commit for
+  `ath11k_dp_rx_check_nwifi_hdr_len_valid` or the ath11k undecap_nwifi
+  fix.
+- **Ath12k analogue present** — `9a0dddfb30f12` (`wifi: ath12k: Fix
+  invalid data access in ath12k_dp_rx_h_undecap_nwifi`) is already in
+  v6.18.44.
+
+That supports the **YES** backport verdict: the bug is still present in
+ath11k here, and the fix is a proven port of code already merged for
+ath12k in this tree.
+
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 50 +++++++++++++++++++++++--
+ 1 file changed, 47 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 330446f279cd6..1514f8657d546 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -2501,6 +2501,29 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
+ 	ieee80211_rx_napi(ar->hw, pubsta, msdu, napi);
+ }
  
- 	if (can_be_decrypted) {
--		if (skb->len >= hdrlen + 3) {
-+		if (skb->len >= hdrlen + 4) {
- 			/* Top two-bits of byte 3 are the key index */
- 			keyidx = skb->data[hdrlen + 3] >> 6;
++static bool ath11k_dp_rx_check_nwifi_hdr_len_valid(struct ath11k_base *ab,
++						   struct hal_rx_desc *rx_desc,
++						   struct sk_buff *msdu)
++{
++	struct ieee80211_hdr *hdr;
++	u8 decap_type;
++	u32 hdr_len;
++
++	decap_type = ath11k_dp_rx_h_msdu_start_decap_type(ab, rx_desc);
++	if (decap_type != DP_RX_DECAP_TYPE_NATIVE_WIFI)
++		return true;
++
++	hdr = (struct ieee80211_hdr *)msdu->data;
++	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++
++	if (likely(hdr_len <= DP_MAX_NWIFI_HDR_LEN))
++		return true;
++
++	ab->soc_stats.invalid_rbm++;
++	WARN_ON_ONCE(1);
++	return false;
++}
++
+ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
+ 				     struct sk_buff *msdu,
+ 				     struct sk_buff_head *msdu_list,
+@@ -2571,6 +2594,11 @@ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
  		}
-@@ -660,7 +660,7 @@ int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
- 		int trimlen = 0;
+ 	}
  
- 		/* Top two-bits of byte 3 are the key index */
--		if (skb->len >= hdrlen + 3)
-+		if (skb->len >= hdrlen + 4)
- 			keyidx = skb->data[hdrlen + 3] >> 6;
++	if (unlikely(!ath11k_dp_rx_check_nwifi_hdr_len_valid(ab, rx_desc, msdu))) {
++		ret = -EINVAL;
++		goto free_out;
++	}
++
+ 	ath11k_dp_rx_h_ppdu(ar, rx_desc, rx_status);
+ 	ath11k_dp_rx_h_mpdu(ar, msdu, rx_desc, rx_status);
  
- 		/* To strip off any security data which appears before the
+@@ -3306,6 +3334,12 @@ static int ath11k_dp_rx_h_verify_tkip_mic(struct ath11k *ar, struct ath11k_peer
+ 		    RX_FLAG_IV_STRIPPED | RX_FLAG_DECRYPTED;
+ 	skb_pull(msdu, hal_rx_desc_sz);
+ 
++	if (unlikely(!ath11k_dp_rx_check_nwifi_hdr_len_valid(ar->ab, rx_desc,
++							     msdu))) {
++		dev_kfree_skb_any(msdu);
++		return -EINVAL;
++	}
++
+ 	ath11k_dp_rx_h_ppdu(ar, rx_desc, rxs);
+ 	ath11k_dp_rx_h_undecap(ar, msdu, rx_desc,
+ 			       HAL_ENCRYPT_TYPE_TKIP_MIC, rxs, true);
+@@ -3998,6 +4032,10 @@ static int ath11k_dp_rx_h_null_q_desc(struct ath11k *ar, struct sk_buff *msdu,
+ 		skb_put(msdu, hal_rx_desc_sz + l3pad_bytes + msdu_len);
+ 		skb_pull(msdu, hal_rx_desc_sz + l3pad_bytes);
+ 	}
++
++	if (unlikely(!ath11k_dp_rx_check_nwifi_hdr_len_valid(ar->ab, desc, msdu)))
++		return -EINVAL;
++
+ 	ath11k_dp_rx_h_ppdu(ar, desc, status);
+ 
+ 	ath11k_dp_rx_h_mpdu(ar, msdu, desc, status);
+@@ -4042,7 +4080,7 @@ static bool ath11k_dp_rx_h_reo_err(struct ath11k *ar, struct sk_buff *msdu,
+ 	return drop;
+ }
+ 
+-static void ath11k_dp_rx_h_tkip_mic_err(struct ath11k *ar, struct sk_buff *msdu,
++static bool ath11k_dp_rx_h_tkip_mic_err(struct ath11k *ar, struct sk_buff *msdu,
+ 					struct ieee80211_rx_status *status)
+ {
+ 	u16 msdu_len;
+@@ -4050,6 +4088,7 @@ static void ath11k_dp_rx_h_tkip_mic_err(struct ath11k *ar, struct sk_buff *msdu,
+ 	u8 l3pad_bytes;
+ 	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
+ 	u32 hal_rx_desc_sz = ar->ab->hw_params.hal_desc_sz;
++	struct ath11k_base *ab = ar->ab;
+ 
+ 	rxcb->is_first_msdu = ath11k_dp_rx_h_msdu_end_first_msdu(ar->ab, desc);
+ 	rxcb->is_last_msdu = ath11k_dp_rx_h_msdu_end_last_msdu(ar->ab, desc);
+@@ -4059,6 +4098,9 @@ static void ath11k_dp_rx_h_tkip_mic_err(struct ath11k *ar, struct sk_buff *msdu,
+ 	skb_put(msdu, hal_rx_desc_sz + l3pad_bytes + msdu_len);
+ 	skb_pull(msdu, hal_rx_desc_sz + l3pad_bytes);
+ 
++	if (unlikely(!ath11k_dp_rx_check_nwifi_hdr_len_valid(ab, desc, msdu)))
++		return true;
++
+ 	ath11k_dp_rx_h_ppdu(ar, desc, status);
+ 
+ 	status->flag |= (RX_FLAG_MMIC_STRIPPED | RX_FLAG_MMIC_ERROR |
+@@ -4066,19 +4108,21 @@ static void ath11k_dp_rx_h_tkip_mic_err(struct ath11k *ar, struct sk_buff *msdu,
+ 
+ 	ath11k_dp_rx_h_undecap(ar, msdu, desc,
+ 			       HAL_ENCRYPT_TYPE_TKIP_MIC, status, false);
++
++	return false;
+ }
+ 
+ static bool ath11k_dp_rx_h_rxdma_err(struct ath11k *ar,  struct sk_buff *msdu,
+ 				     struct ieee80211_rx_status *status)
+ {
+ 	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
+-	bool drop = false;
++	bool drop;
+ 
+ 	ar->ab->soc_stats.rxdma_error[rxcb->err_code]++;
+ 
+ 	switch (rxcb->err_code) {
+ 	case HAL_REO_ENTR_RING_RXDMA_ECODE_TKIP_MIC_ERR:
+-		ath11k_dp_rx_h_tkip_mic_err(ar, msdu, status);
++		drop = ath11k_dp_rx_h_tkip_mic_err(ar, msdu, status);
+ 		break;
+ 	default:
+ 		/* TODO: Review other rxdma error code to check if anything is
 -- 
 2.53.0
 
