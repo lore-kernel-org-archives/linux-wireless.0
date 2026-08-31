@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D6C570968;
-	Mon, 31 Aug 2026 13:48:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E8654AE8D8;
+	Mon, 31 Aug 2026 13:48:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184123; cv=none; b=jcF/HdqBGZByiwWw4OpxjPI3fj3NP2iM/2ScV+UMPTwq1e5JiNwJbUiNevGWbh1ETut0reOJSUENmzj8CqSIowHgzebgE4E1qCexdGi+k9qRLUCLTelARClT5oGQwTMW1lzIK8GbDunprOxE3cXkHXERa6NKc9KozrdiwDbolvk=
+	t=1788184134; cv=none; b=pxcgxNIsnzfx+i1ael782obAt2TDc33XZVd2Q5FwSy3I7bTUaCNsouR0N0pjxp1SvbF2lihPpTqL1G9N3KADgkccpEmV6IeQ2EhdkPNr9hH6HmjXFWQjiFVtomSdorGZFsxcAwn6WVkPitgTdueujumONoJ37L91poyvVN2I/AU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184123; c=relaxed/simple;
-	bh=mpjtqHeKpKlYJNv6qneam1hU3pUvmE24NiYPxMgMIW0=;
+	s=arc-20240116; t=1788184134; c=relaxed/simple;
+	bh=usQ+555wlzWzlWitzMtRYdHRxVS64XGgOIbEylHWs00=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j+kQhWgCmywRnWv76wXv0SJQdBmqRT18f6t7K39AnbP3TSt4ZIOauAv8HuiQw9jVkHGNd4b5vI1Fhv8397fZoKgrW/9am/Y2UX4C3iKqgykY57qJk271ZHMsqWcXuS8HeLTt9lyEfxx4GygJjdJ7sryP9QWLbxwHBHBd6jMEjYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XBdSfq0w; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=PVkNVYUGCHLb76CcGO2VnkMzlOU1oNoQIhBrxWQS4tXxmER2PSa/b88ObSi3pMDfeUQBKHXdVsSSHQcZGfF0KXlSu9ZHM8k2zhF4QcT7GlMSvfva4uGYvpBMAG7D4fwIuOvJbngRzfpcKmvZJAQZ3o+zShhrXatru2kNRUd/f2c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PunhU1+v; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XBdSfq0w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08E501F00ACA;
-	Mon, 31 Aug 2026 13:48:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PunhU1+v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5F7D1F000E9;
+	Mon, 31 Aug 2026 13:48:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184120;
-	bh=1KhTpkn9Gs5/XGZEuqcuUtf2rr5RFDnDzDilx9TUMJw=;
+	s=k20260515; t=1788184131;
+	bh=xnW+UXwVu7hXANiGJYr0xt2sOtYWpffiHMNx1fjqmOc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=XBdSfq0wKrYi7AXQ86WjpCHQpR4tuHExNrJVbSm6fueBaajxQxeYYy+s38g0HCmdc
-	 Z9SC3fKBwftawBaMDPyMqW022fR/pk/wHkmvaxN2QmXP+5MMaxAoLl2kUm98hLLL3S
-	 eAdiRPgDmlCqV1U/2NU9mrDaECu02jx0NceM3oJzuIlGPD5vT4dHK7GAYkJZJVEmyb
-	 dx6kb4nYSuzaO303CmgHrAB81opv+8ZqwYN/dOuxS7cg7EMb94pIwIP7tcJstBpXfs
-	 KxP3u+vXF52JWouOwd4SZgX6oAyUDpv1QJ7XyA/rrfX6A6abxkbcuvoi+5T0e4cCbK
-	 Slu7A6NSoY1NA==
+	b=PunhU1+vZWbuTVxJssgTrWEbalGOjG3efk/+/jlrvhKPweClgIZnjbk0cgnI/QKPe
+	 0MeZxjUpc3nZPq3uTc6aMXMIZMcQX/Xr/16vqJjCwQls3tlP4SG8Phh7Y5eT2gK6HZ
+	 ptKqDnpnGv4i2gB5Uyz7Z5pnGBWcftviO5IYuGPEg7ShwBXejP2ucwpVDBtTkUzCPz
+	 vA4GVitYst6VPNRxOXHyk6M/ibMxdVEjIg8QLozdPuae9Dxqt4DpyHRXOtr/IM9RN1
+	 8BbuDprO7ZnlOJg3d7f7K8Rx+yDixLUZq2UrdgjdiX1jQUlc/BWCk+5JAjfAxh1TBO
+	 2fmcO0yGQDuxw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Dian-Syuan Yang <dian_syuan0116@realtek.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
+Cc: Avinash Bhatt <avinash.bhatt@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.12] wifi: rtw89: disable CSI STBC for VHT 160MHz
-Date: Mon, 31 Aug 2026 09:28:52 -0400
-Message-ID: <20260831133314.4125787-504-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: Transition to basic uAPSD with MAC_PM_POWER_TABLE API VER_3
+Date: Mon, 31 Aug 2026 09:28:58 -0400
+Message-ID: <20260831133314.4125787-510-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,391 +52,843 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Dian-Syuan Yang <dian_syuan0116@realtek.com>
+From: Avinash Bhatt <avinash.bhatt@intel.com>
 
-[ Upstream commit d1fba55228685a7a237681be739683eaf698b9bc ]
+[ Upstream commit fc58bb9ecef04aa46f201fc421a16e670b5dc01f ]
 
-Fix interoperability problem where CSI feedback with STBC enabled at
-VHT 160MHz BW cannot be properly decoded by certain APs, causing CSI
-reports to be rejected. This problem is specific to Wi-Fi 7 chips,
-as Wi-Fi 6 defaults to 20MHz CSI BW. Therefore, disable STBC encoding
-for CSI transmission in VHT 160MHz mode to ensure CSI feedback is
-accepted by these APs and maintain smooth throughput.
+uAPSD is transitioning to a certification-only feature. The new
+firmware API version 3 removes advanced uAPSD fields, keeping only
+basic parameters needed for certification testing.
 
-Signed-off-by: Dian-Syuan Yang <dian_syuan0116@realtek.com>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Link: https://patch.msgid.link/20260424072552.59220-4-pkshih@realtek.com
+Support the new VER_3 API in the MLD driver while maintaining
+backward compatibility with VER_1/2. The MVM driver continues
+using VER_2 only. Remove the obsolete PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION
+notification from the MLD driver
+
+Signed-off-by: Avinash Bhatt <avinash.bhatt@intel.com>
+Link: https://patch.msgid.link/20260512222731.96b6f53c8708.I4f01b97b25d91ebb1561845d7925103e274574fa@changeid
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-Connection lost, reconnecting to https://agentn.us.api5.cursor.sh
-(attempt 1)...
-Retry attempt 1...
-# Stable Backport Analysis: `wifi: rtw89: disable CSI STBC for VHT
-160MHz`
+## Phase 1: Commit Message Forensics
 
-**Local tree:** Linux **6.18.43** (`git describe HEAD` → `v6.18.43`)
+**Step 1.1 — Subject line**
+Record: `[wifi: iwlwifi]` `[Transition]` — MLD driver support for
+`MAC_PM_POWER_TABLE` firmware API version 3, keeping backward
+compatibility with VER_1/2.
 
----
+**Step 1.2 — Tags**
+Record:
+- `Signed-off-by: Avinash Bhatt <avinash.bhatt@intel.com>`
+- `Link: https://patch.msgid.link/20260512222731...`
+- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
+- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
+  by:`, or `Cc: stable@vger.kernel.org`
+- Notable: Intel iwlwifi maintainers; no user/fuzzer reports
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+**Step 1.3 — Body analysis**
+Record:
+- **Bug described:** Firmware API v3 removes advanced uAPSD fields;
+  driver must use a smaller command layout and stop using obsolete
+  notification/flags.
+- **Symptom:** Driver/firmware ABI mismatch on MLD devices when firmware
+  advertises API v3.
+- **Root cause:** MLD driver always builds/sends the VER_1/2-sized
+  `iwl_mac_power_cmd` and handles
+  `PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION`, which v3 firmware no longer
+  supports.
+- **Version info:** MVM stays on VER_2; only MLD needs v3 handling.
 
-### Step 1.1: Parse the subject line
-**Record:** `[wifi: rtw89]` `[disable]` — disable STBC encoding for CSI
-feedback in VHT 160MHz mode on BE-generation (Wi-Fi 7) chips.
-
-### Step 1.2: Parse all commit message tags
-**Record:**
-- **Signed-off-by:** Dian-Syuan Yang `<dian_syuan0116@realtek.com>`
-  (author)
-- **Signed-off-by:** Ping-Ke Shih `<pkshih@realtek.com>` (Realtek rtw89
-  maintainer)
-- **Link:**
-  https://patch.msgid.link/20260424072552.59220-4-pkshih@realtek.com
-- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
-  stable tags
-- Notable: no syzbot/fuzzer report; vendor-driven IOT fix
-
-### Step 1.3: Analyze commit body
-**Record:**
-- **Bug:** CSI feedback with STBC enabled at VHT 160MHz cannot be
-  decoded by certain APs; CSI reports are rejected.
-- **Symptom:** Degraded throughput when beamforming CSI feedback fails
-  on 160MHz links with incompatible APs.
-- **Root cause (author):** Wi-Fi 7 chips use wider CSI bandwidth than
-  Wi-Fi 6 (which defaults to 20MHz CSI BW); STBC in CSI at 160MHz
-  triggers AP-side rejection.
-- **Version info:** Commit message says Wi-Fi 7 chips; cover letter
-  (series 0/3) incorrectly says "WiFi 6 chips" — code only touches
-  `mac_be.c`, which is the BE/Wi-Fi 7 path.
-
-### Step 1.4: Detect hidden bug fixes
-**Record:** Not disguised — this is an explicit interoperability (IOT)
-workaround, not cleanup. It falls under the hardware-quirk / AP-
-compatibility exception category.
+**Step 1.4 — Hidden bug fix?**
+Record: **Yes.** Despite “transition” wording, this is firmware API
+compatibility: wrong command size and unsupported flags when firmware
+reports `MAC_PM_POWER_TABLE` v3.
 
 ---
 
-## PHASE 2: DIFF ANALYSIS
+## Phase 2: Diff Analysis
 
-### Step 2.1: Inventory the changes
-**Record:**
-- **Files:** `drivers/net/wireless/realtek/rtw89/mac_be.c` (+4 lines)
-- **Function:** `rtw89_mac_set_csi_para_reg_be()`
-- **Scope:** Single-file, surgical fix
+**Step 2.1 — Inventory**
+Record:
+- 8 files changed (~+200/−60 lines)
+- Files: `fw/api/power.h`, `mld/power.c`, `mld/notif.c`, `mld/iface.c`,
+  `mld/iface.h`, `mld/mld.c`, `mvm/mvm.h`, `mvm/power.c`
+- Functions: `iwl_mld_update_mac_power()`, `iwl_mld_power_build_cmd*()`,
+  `iwl_mld_power_configure_uapsd*()`, notification handlers; MVM rename-
+  only to `iwl_mac_power_cmd_v2`
+- Scope: multi-file, localized to iwlwifi power management
 
-### Step 2.2: Code flow change
-**Record:**
-- **Before:** `stbc_en` could remain set (default 1, masked by peer
-  capabilities) and was written into `B_BE_BFMEE_CSIINFO0_STBC_EN` for
-  all VHT configurations.
-- **After:** If the link STA advertises
-  `IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ`, `stbc_en` is forced to 0
-  before register encoding.
-- **Path:** Called during association when the peer AP has beamformer
-  capability (`rtw89_mac_bf_assoc_be()` →
-  `rtw89_mac_set_csi_para_reg_be()`).
+**Step 2.2 — Code flow changes**
+Record:
+- **Before:** MLD always fills/sends full VER_2 struct via
+  `iwl_mld_send_cmd_pdu()` (uses `sizeof(*data)`).
+- **After:** `iwl_fw_lookup_cmd_ver(..., MAC_PM_POWER_TABLE, 0)` selects
+  v3 (20-byte) or v2 (40-byte) struct; explicit `sizeof` passed to
+  `iwl_mld_send_cmd_with_flags_pdu()`.
+- **Before:** MLD registers/handles
+  `PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION`.
+- **After:** Handler/registration removed (obsolete in v3).
+- **MVM:** Type rename only; still sends VER_2 struct.
 
-### Step 2.3: Bug mechanism
-**Record:**
-- **Category:** Logic / interoperability (hardware quirk workaround)
-- **Mechanism:** STBC-enabled CSI frames at VHT 160MHz are malformed or
-  incompatible with certain AP decoders; disabling STBC makes CSI
-  feedback acceptable, restoring beamforming throughput.
+**Step 2.3 — Bug mechanism**
+Record: **Logic/correctness + firmware ABI mismatch.** Driver sends
+oversized command and sets unsupported flags
+(`POWER_FLAGS_SNOOZE_ENA_MSK`, `POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK`)
+when firmware expects v3 layout.
 
-### Step 2.4: Fix quality assessment
-**Record:** Obviously correct vendor IOT workaround; minimal diff; very
-low regression risk. Only affects CSI parameter encoding on the BE chip
-path when 160MHz VHT capability is present. No lock/API changes.
-
----
-
-## PHASE 3: GIT HISTORY INVESTIGATION
-
-### Step 3.1: Blame changed lines
-**Record:** The surrounding CSI setup code in `mac_be.c` dates to the
-file's introduction in this tree (commit `19eef1d98eeda`, Linux 6.18-rc7
-merge base). The buggy STBC-default behavior has been present since
-`mac_be.c` was added.
-
-### Step 3.2: Follow Fixes: tag
-**Record:** N/A — no Fixes: tag present.
-
-### Step 3.3: File history for related changes
-**Record:**
-- Related CSI fix already in this tree: `fa8301c29079a` ("wifi: rtw89:
-  mac: correct page number for CSI response") — also a beamforming/CSI
-  fix in `mac_be.c`.
-- Part of a 3-patch interoperability series submitted Apr 2026:
-  1. PCI CLK ready for RTL8922DE
-  2. Disable HTC field in AP mode
-  3. **This patch** (CSI STBC)
-- Series applied to `rtw-next` branch; this patch is **standalone**
-  (only touches `mac_be.c`).
-
-### Step 3.4: Author's other commits
-**Record:** Ping-Ke Shih is the rtw89 maintainer (authored CSI page fix
-`fa8301c29079a` already backported here). Dian-Syuan Yang is a Realtek
-contributor.
-
-### Step 3.5: Prerequisites
-**Record:** No dependencies. Applies independently of patches 1/2 in the
-series. Only requires `mac_be.c` and `rtw89_mac_set_csi_para_reg_be()` —
-both present in 6.18.43.
+**Step 2.4 — Fix quality**
+Record: Follows existing iwlwifi version-selection pattern (e.g.
+`iwl_phy_cfg_cmd` in `mvm/fw.c`). Minimal risk for v1/v2 firmware.
+Moderate duplication (v2/v3 paths). Low regression risk on MVM (rename
+only).
 
 ---
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+## Phase 3: Git History Investigation
 
-### Step 4.1: Original patch discussion
-**Record:**
-- **URL:** https://lore.kernel.org/linux-
-  wireless/20260424072552.59220-4-pkshih@realtek.com/
-- **Series:** `[PATCH rtw-next 0/3] wifi: rtw89: update hardware
-  settings to fix interoperability`
-- **Revisions:** Single submission (rtw-next 3/3); applied to rtw-next
-  branch Apr 29, 2026
-- **Reviewer feedback:** Only maintainer self-reply confirming series
-  applied; no NAKs, no explicit stable nomination
-- Cover letter describes patch 3 as fixing beamforming CSI that "can't
-  reply on 160MHz bandwidth"
+**Step 3.1 — Blame**
+Record: Local repo history is shallow; blame on
+`iwl_mld_update_mac_power()` not useful for introduction date. MLD
+`power.c` copyright is 2024–2025; MLD driver is recent WiFi 7 code
+present in this tree.
 
-### Step 4.2: Reviewers
-**Record:** Sent to `linux-wireless@vger.kernel.org`; CC'd
-`dian_syuan0116@realtek.com`. Maintainer applied directly to rtw-next.
+**Step 3.2 — Fixes: tag**
+Record: N/A — no `Fixes:` tag.
 
-### Step 4.3: Bug report
-**Record:** No external bug report, syzbot, or Bugzilla link. Vendor-
-internal IOT discovery.
+**Step 3.3 — Related file history**
+Record: `git log --oneline -15 --
+drivers/net/wireless/intel/iwlwifi/mld/power.c` returned only unrelated
+commits (shallow history). MLD driver and `iwl_mld_update_mac_power()`
+are present in v6.18.44.
 
-### Step 4.4: Related patches
-**Record:** Sibling patches fix PCI L1SS stability and AP-mode HTC field
-— separate issues. This patch does not depend on them.
+**Step 3.4 — Author context**
+Record: Intel iwlwifi team (Avinash Bhatt, Miri Korenblit). Subsystem-
+appropriate authors.
 
-### Step 4.5: Stable mailing list
-**Record:** No stable-list discussion found for this specific fix.
+**Step 3.5 — Dependencies**
+Record: Standalone. No “patch X/Y” references. Uses existing
+`iwl_fw_lookup_cmd_ver()` and `iwl_mld_send_cmd_with_flags_pdu()`
+already in tree.
 
 ---
 
-## PHASE 5: CODE SEMANTIC ANALYSIS
+## Phase 4: Mailing List and External Research
 
-### Step 5.1: Key functions
-**Record:** `rtw89_mac_set_csi_para_reg_be()`, called from
-`rtw89_mac_bf_assoc_be()`.
+**Step 4.1 — Original discussion**
+Record: `b4 dig -c <commit>` unavailable (commit not in checkout).
+`patch.msgid.link` and `lore.kernel.org` blocked by bot protection.
+**UNVERIFIED:** review thread content, stable nominations, NAKs.
 
-### Step 5.2: Callers
-**Record:**
-- `rtw89_mac_bf_assoc_be()` → `rtw89_mac_ops.bf_assoc` (BE generation
-  only)
-- Invoked from `rtw89_mac_bf_assoc()` in `core.c` during STA association
-  (`rtw89_core_sta_assoc()` path, line ~4787)
-- Only runs when peer AP has beamformer capability
-  (`rtw89_sta_has_beamformer_cap()`)
+**Step 4.2 — Reviewers**
+Record: **UNVERIFIED** — could not fetch thread recipients.
 
-### Step 5.3: Callees
-**Record:** RCU lock for `link_sta`, register read/write
-(`rtw89_write16`, `rtw89_mac_reg_by_idx`), capability bit checks. No
-allocation or complex locking.
+**Step 4.3 — Bug reports**
+Record: None in commit message. No syzbot/bugzilla links.
 
-### Step 5.4: Call chain / reachability
-**Record:** Userspace connects to Wi-Fi → driver association →
-beamforming init → CSI parameter setup. Reachable on every association
-to a beamforming-capable AP. Unprivileged users trigger this via normal
-Wi-Fi connection.
+**Step 4.4 — Related patches/series**
+Record: Likely part of Intel iwlwifi May 2026 update series;
+**UNVERIFIED** whether other series commits are required.
 
-### Step 5.5: Similar patterns
-**Record:** Wi-Fi 6 path (`rtw89_mac_set_csi_para_reg_ax()` in `mac.c`)
-does **not** need this fix per commit message (20MHz default CSI BW).
-Only BE chips (`RTW89_CHIP_BE`, currently RTL8922A only) use `mac_be.c`.
+**Step 4.5 — Stable list history**
+Record: **UNVERIFIED** — lore blocked.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## Phase 5: Code Semantic Analysis
 
-### Step 6.1: Does the buggy code exist?
-**Record:** **Yes.** `rtw89_mac_set_csi_para_reg_be()` at lines
-2109–2176 in `mac_be.c` sets `stbc_en = 1` by default with no 160MHz
-guard. Fix comment/string not present (grep confirmed). RTL8922A
-(`RTW89_CHIP_BE`) and `rtw8922ae.c` PCI driver are present.
+**Step 5.1 — Key functions**
+Record: `iwl_mld_update_mac_power()`, `iwl_mld_power_build_cmd()`,
+`iwl_mld_power_build_cmd_v2()`, `iwl_mld_power_configure_uapsd()`,
+`iwl_mld_handle_uapsd_misbehaving_ap_notif()` (removed).
 
-### Step 6.2: Backport complications
-**Record:** **Clean apply expected.** Identical context at lines
-2148–2150 matches the patch hunk. No conflicting recent changes in this
-function.
+**Step 5.2 — Callers**
+Record: `iwl_mld_update_mac_power()` called from:
+- `mld/mac80211.c` — association, BSS/PM changes (6 call sites)
+- `mld/d3.c` — suspend/WoWLAN
+- `mld/low_latency.c`, `mld/debugfs.c`
 
-### Step 6.3: Related fixes already present?
-**Record:** `fa8301c29079a` (CSI page number) is present; this STBC fix
-is **not** yet applied or duplicated.
+Common runtime paths on WiFi 7 MLD hardware.
 
----
+**Step 5.3 — Callees**
+Record: `iwl_fw_lookup_cmd_ver()`, `iwl_mld_send_cmd_with_flags_pdu()` →
+`iwl_trans_send_cmd()`.
 
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+**Step 5.4 — Reachability**
+Record: Triggered on normal STA association and power-management updates
+for `CONFIG_IWLMLD` devices (WiFi 7, firmware major ≥ 97 per
+`IWL_MLD_SUPPORTED_FW_VERSION`).
 
-### Step 7.1: Subsystem criticality
-**Record:** `drivers/net/wireless/realtek/rtw89/` — **IMPORTANT** (Wi-Fi
-driver, affects users of RTL8922A/8922AE hardware). Not core kernel, but
-real production hardware.
-
-### Step 7.2: Subsystem activity
-**Record:** Actively maintained; multiple rtw89 fixes already backported
-to 6.18.y (CSI, PCI validation, bounds checks, resume fixes).
+**Step 5.5 — Similar patterns**
+Record: `mvm/fw.c` already uses `iwl_fw_lookup_cmd_ver()` + version-
+specific `sizeof()` for `iwl_phy_cfg_cmd` — same established pattern.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## Phase 6: Cross-Reference Against Local Tree (v6.18.44)
 
-### Step 8.1: Who is affected
-**Record:** Users of **RTL8922A/8922AE** (Wi-Fi 7) hardware on
-**6.18.y**, connecting to beamforming-capable APs at VHT 160MHz. Driver-
-specific, config-dependent (beamforming + 160MHz).
+**Step 6.1 — Buggy code present?**
+Record: **Yes.** Current tree at
+`drivers/net/wireless/intel/iwlwifi/mld/power.c`:
 
-### Step 8.2: Trigger conditions
-**Record:**
-- Wi-Fi 7 BE chip (8922A family)
-- Association to AP with SU/MU beamformer capability
-- VHT 160MHz channel width capability advertised
-- **Common** for intended use case of this hardware; not a rare edge
-  case
+```295:302:drivers/net/wireless/intel/iwlwifi/mld/power.c
+int iwl_mld_update_mac_power(struct iwl_mld *mld, struct ieee80211_vif
+*vif,
+                             bool d3)
+{
+        struct iwl_mac_power_cmd cmd = {};
 
-### Step 8.3: Failure mode severity
-**Record:** CSI reports rejected → beamforming feedback loop broken →
-**throughput degradation** (not crash, hang, oops, or data corruption).
-Severity: **MEDIUM** — functional performance issue on supported
-hardware with common AP configurations. Per `stable-kernel-rules.rst`,
-hardware quirks and notable performance issues qualify.
+        iwl_mld_power_build_cmd(mld, vif, &cmd, d3);
 
-### Step 8.4: Risk-benefit ratio
-**Record:**
-- **Benefit:** HIGH for affected 8922AE users — restores beamforming CSI
-  at 160MHz with incompatible APs
-- **Risk:** VERY LOW — 4 lines, BE-path only, no API/lock changes
-- **Ratio:** Favorable
+        return iwl_mld_send_cmd_pdu(mld, MAC_PM_POWER_TABLE, &cmd);
+}
+```
+
+Always sends full VER_2 struct; no v3 handling. MLD driver,
+`CONFIG_IWLMLD`, and WiFi 7 opmode selection
+(`IWL_MLD_SUPPORTED_FW_VERSION 97`) all exist in this tree.
+
+**Step 6.2 — Backport complications**
+Record: Expected **clean apply** — target code exists and matches patch
+context. MVM changes are type renames only.
+
+**Step 6.3 — Related fixes already present?**
+Record: No existing v3 handling found (`grep` for `cmd_ver >= 3` under
+`mld/` returned nothing). Fix not already applied.
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 7: Subsystem Context
 
-### Step 9.1: Evidence compile
+**Step 7.1 — Subsystem/criticality**
+Record: `drivers/net/wireless/intel/iwlwifi` — **IMPORTANT** (WiFi
+driver, affects connectivity and power management on Intel WiFi 7
+hardware).
 
-**FOR backport:**
-- Real IOT/AP compatibility bug on supported Wi-Fi 7 hardware in this
-  tree
-- Hardware quirk / interoperability workaround (stable-rules exception)
-- Small (4 lines), obviously correct, standalone
-- Same driver's CSI/beamforming fixes already backported to 6.18.y
-- rtw89 maintainer authorship and sign-off
-- Buggy code confirmed present; clean apply expected
-- Affects normal association path for primary hardware use case (160MHz
-  + beamforming)
+**Step 7.2 — Activity**
+Record: MLD is actively developed recent subsystem in 6.18; WiFi 7
+support is current focus.
 
-**AGAINST backport:**
-- No crash, security, corruption, or deadlock
-- Throughput/performance impact only (not connectivity failure)
-- Narrow hardware scope (8922A BE chips only)
-- No external user/syzbot reports
-- Not yet in mainline at time of tree inspection (rtw-next only)
+---
 
-**Unresolved:** No independent Tested-by or distribution bug report;
-severity is vendor-reported throughput impact only.
+## Phase 8: Impact and Risk Assessment
 
-### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — vendor IOT workaround,
-   maintainer SOB, applied to rtw-next
-2. Fixes a real bug affecting users? **PASS** — CSI rejection with
-   certain APs on 8922AE at 160MHz
-3. Important issue? **PASS** — hardware quirk / notable performance
-   issue per stable-kernel-rules.rst (not CRITICAL crash class, but
-   qualifies)
-4. Small and contained? **PASS** — 4 lines, 1 file
-5. No new features or APIs? **PASS** — workaround only
-6. Can apply to local tree? **PASS** — code exists, clean apply
+**Step 8.1 — Who is affected**
+Record: Users with `CONFIG_IWLMLD` on Intel WiFi 7 hardware (BZ/SC/DR
+families, FM+ RF) running firmware that advertises `MAC_PM_POWER_TABLE`
+API v3.
 
-### Step 9.3: Exception category
-**Record:** **Hardware quirk / interoperability workaround** —
-explicitly labeled "IOT issues with certain APs" in the patch.
+**Step 8.2 — Trigger conditions**
+Record: Firmware reports command API v3 at init; driver then sends power
+table on association/PM changes. Likely with newer Intel firmware
+releases coordinated with this change. Not userspace-triggerable as a
+security primitive.
 
-### Step 9.4: Decision rationale
+**Step 8.3 — Failure mode severity**
+Record: **MEDIUM–HIGH** — firmware command rejection/misparsing → broken
+power management, connectivity instability, battery impact. Not a kernel
+oops/panic, but real user-visible hardware malfunction.
 
-This is a vendor IOT workaround for RTL8922A Wi-Fi 7 hardware that is
-already supported in Linux 6.18.43. Without it, CSI beamforming feedback
-at VHT 160MHz is rejected by certain APs, causing measurable throughput
-loss on a common configuration for this chipset. The fix is minimal,
-touches only the BE MAC path, matches the pattern of other rtw89 CSI
-fixes already backported to this stable tree, and fits the stable-
-kernel-rules.rst hardware-quirk category. It does not fix a kernel crash
-or security issue, but the conservative stable bar explicitly includes
-hardware quirks and user-visible performance problems on supported
-hardware.
+**Step 8.4 — Risk/benefit**
+Record:
+- **Benefit:** Prevents PM breakage on supported WiFi 7 hardware with v3
+  firmware; backward compatible.
+- **Risk:** Low–medium (duplicated code paths, but pattern is proven in
+  iwlwifi).
+- **Ratio:** Favorable for backport once v3 firmware is deployed to
+  stable users.
+
+---
+
+## Phase 9: Final Synthesis
+
+**Evidence FOR:**
+- Real firmware/driver ABI bug when API v3 is advertised
+- Buggy code confirmed in v6.18.44 MLD driver
+- Affects common association/PM code paths
+- Small, reviewable change following existing iwlwifi conventions
+- Backward compatible with VER_1/2
+- MLD/WiFi 7 hardware supported in this tree
+
+**Evidence AGAINST:**
+- No crash, security, or corruption report
+- Commit framed as uAPSD certification API transition
+- Moderate size (~200 lines, duplicated v2/v3 paths)
+- MVM portion is rename-only (no MVM bug fix)
+- Mailing-list review/stable nomination unverified
+- Impact depends on v3 firmware actually shipping to 6.18 users
+
+**Stable rules checklist:**
+1. Obviously correct and tested? **PASS** (clear version branching; no
+   Tested-by in message)
+2. Fixes real bug affecting users? **PASS** (ABI mismatch on MLD + v3
+   firmware)
+3. Important issue? **PASS** (PM/connectivity malfunction, MEDIUM–HIGH)
+4. Small and contained? **PASS** (localized iwlwifi PM; moderate line
+   count)
+5. No new features/APIs? **PASS** (firmware compatibility, not new
+   userspace API)
+6. Can apply to local tree? **PASS** (MLD code present, clean apply
+   expected)
+
+**Exception category:** Firmware API compatibility for existing hardware
+— qualifies similarly to other iwlwifi command-version fixes.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags, body; fetched patch 3/3 from lore mbox
-- [Phase 1] Cover letter vs. commit body chip-generation discrepancy
-  noted (cover says WiFi 6, patch says Wi-Fi 7; code is `mac_be.c` only)
-- [Phase 2] Read `mac_be.c` lines 2109–2176; confirmed 4-line addition
-  point matches diff
-- [Phase 2] Confirmed `stbc_en` encoded into
-  `B_BE_BFMEE_CSIINFO0_STBC_EN` at line 2164
-- [Phase 3] `git describe HEAD` → v6.18.43
-- [Phase 3] `git blame` lines 2141–2148 → present since `mac_be.c`
-  introduction
-- [Phase 3] `git log --oneline -20 -- mac_be.c` → CSI page fix
-  `fa8301c29079a` present
-- [Phase 3] `git log -S rtw89_mac_set_csi_para_reg_be` → function
-  introduced with `mac_be.c`
-- [Phase 4] curl lore mbox: series 0/3 interoperability, patch applied
-  to rtw-next Apr 29 2026
-- [Phase 4] Thread: no NAKs, no stable nomination, maintainer applied
-  confirmation only
-- [Phase 5] `grep bf_assoc` → `core.c:4787` calls during association
-- [Phase 5] `grep RTW89_CHIP_BE` → only `rtw8922a.c` sets BE generation
-- [Phase 5] `mac_ax` CSI function (`rtw89_mac_set_csi_para_reg_ax`) has
-  no 160MHz STBC guard — unaffected by design
-- [Phase 6] `grep "Disable stbc_en in VHT 160MHz"` → not in tree (fix
-  absent)
-- [Phase 6] `rtw8922ae.c` PCI IDs and `rtw8922a_chip_info` with
-  `RTW89_CHIP_BE` confirmed present
-- [Phase 6] Patch context at lines 2148–2150 matches upstream diff hunk
-- [Phase 8] Failure mode: throughput degradation, severity MEDIUM; no
-  crash/security path identified
+- [Phase 1] Parsed subject, tags, body from provided commit message
+- [Phase 2] Analyzed full diff: 8 files, version-based struct selection,
+  notification removal
+- [Phase 3] `git describe HEAD` → `v6.18.44`; Makefile → 6.18.44
+- [Phase 3] `git log --oneline -15 -- mld/power.c` → shallow/unhelpful
+  history
+- [Phase 3] `git blame` on `iwl_mld_update_mac_power()` → shallow repo
+  artifact
+- [Phase 4] `b4 dig` without commit hash → not usable;
+  lore/patch.msgid.link → bot-blocked (**UNVERIFIED** review discussion)
+- [Phase 5] `grep iwl_mld_update_mac_power` → 10 call sites in
+  mac80211/d3/debugfs/low_latency
+- [Phase 5] Read `iwl-drv.c`: `IWL_MLD_SUPPORTED_FW_VERSION 97`, MLD
+  opmode selection for WiFi 7
+- [Phase 5] Read `mvm/fw.c:577-586` → confirmed version-based sizeof
+  pattern
+- [Phase 6] Read current `mld/power.c:295-302` → always sends VER_2
+  struct (bug confirmed)
+- [Phase 6] Read `fw/api/power.h` → single `iwl_mac_power_cmd` (VER_1/2
+  layout, no v3 split)
+- [Phase 6] `grep cmd_ver >= 3` in mld/ → no matches (fix absent)
+- [Phase 6] `grep iwl_mld_handle_uapsd_misbehaving` → handler present
+  (to be removed)
+- [Phase 7] `Kconfig`: `CONFIG_IWLMLD` tristate MLD firmware support
+  exists
+- [Phase 8] Struct size: v3 ≈ 20 bytes vs v2 ≈ 40 bytes (verified by
+  field layout)
+- **UNVERIFIED:** Whether v3 firmware is already distributed to 6.18.y
+  users
+- **UNVERIFIED:** Mailing-list reviewer feedback or explicit stable
+  nomination
 
-**YES**The analysis is complete: **this commit should be backported to
-the local 6.18.43 tree.**
+## Conclusion
 
-It’s a small Realtek rtw89 interoperability fix for RTL8922A/8922AE (Wi-
-Fi 7) hardware. When beamforming CSI feedback runs at VHT 160MHz with
-STBC enabled, certain APs reject the reports and throughput suffers. The
-patch disables STBC for that case in `mac_be.c` — 4 lines, low risk, and
-the buggy code is already present in this tree.
-
-It fits the stable “hardware quirk / interoperability” category, similar
-to other rtw89 CSI fixes already in 6.18.y. It’s not a crash or security
-fix, but it does address a real performance issue on supported hardware.
+For **this tree (v6.18.44)**, the MLD driver unconditionally sends the
+wrong `MAC_PM_POWER_TABLE` command layout when firmware advertises API
+v3. That is a real compatibility bug on supported Intel WiFi 7 hardware,
+on common runtime paths, with a contained fix that preserves v1/v2
+behavior. It meets stable criteria as a firmware ABI compatibility fix
+for existing hardware.
 
 **YES**
 
- drivers/net/wireless/realtek/rtw89/mac_be.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../net/wireless/intel/iwlwifi/fw/api/power.h |  48 ++++-
+ .../net/wireless/intel/iwlwifi/mld/iface.c    |  18 --
+ .../net/wireless/intel/iwlwifi/mld/iface.h    |   3 -
+ drivers/net/wireless/intel/iwlwifi/mld/mld.c  |   1 -
+ .../net/wireless/intel/iwlwifi/mld/notif.c    |   6 -
+ .../net/wireless/intel/iwlwifi/mld/power.c    | 177 ++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   4 +-
+ .../net/wireless/intel/iwlwifi/mvm/power.c    |  14 +-
+ 8 files changed, 214 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/mac_be.c b/drivers/net/wireless/realtek/rtw89/mac_be.c
-index e5a61c628b731..b03392612f252 100644
---- a/drivers/net/wireless/realtek/rtw89/mac_be.c
-+++ b/drivers/net/wireless/realtek/rtw89/mac_be.c
-@@ -2147,6 +2147,10 @@ static int rtw89_mac_set_csi_para_reg_be(struct rtw89_dev *rtwdev,
- 		sound_dim = min(sound_dim, t);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+index 535864e226260..9eeb3600ed1f4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/power.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+@@ -85,12 +85,13 @@ struct iwl_ltr_config_cmd {
+  *		'1' PM could sleep over DTIM till listen Interval.
+  * @POWER_FLAGS_SNOOZE_ENA_MSK: Enable snoozing only if uAPSD is enabled and all
+  *		access categories are both delivery and trigger enabled.
++ *		(Not supported since version 3)
+  * @POWER_FLAGS_BT_SCO_ENA: Enable BT SCO coex only if uAPSD and
+  *		PBW Snoozing enabled
+  * @POWER_FLAGS_ADVANCE_PM_ENA_MSK: Advanced PM (uAPSD) enable mask
+  * @POWER_FLAGS_LPRX_ENA_MSK: Low Power RX enable.
+  * @POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK: AP/GO's uAPSD misbehaving
+- *		detection enablement
++ *		detection enablement (Not supported since version 3)
+  * @POWER_FLAGS_ENABLE_SMPS_MSK: SMPS is allowed for this vif
+ */
+ enum iwl_power_flags {
+@@ -175,9 +176,9 @@ struct iwl_device_power_cmd {
+ } __packed;
+ 
+ /**
+- * struct iwl_mac_power_cmd - New power command containing uAPSD support
++ * struct iwl_mac_power_cmd_v2 - power command V2 containing uAPSD support
+  * MAC_PM_POWER_TABLE = 0xA9 (command, has simple generic response)
+- * @id_and_color:	MAC contex identifier, &enum iwl_ctxt_id_and_color
++ * @id_and_color:	MAC context identifier, &enum iwl_ctxt_id_and_color
+  * @flags:		Power table command flags from POWER_FLAGS_*
+  * @keep_alive_seconds:	Keep alive period in seconds. Default - 25 sec.
+  *			Minimum allowed:- 3 * DTIM. Keep alive period must be
+@@ -216,7 +217,7 @@ struct iwl_device_power_cmd {
+  * @limited_ps_threshold: (unused)
+  * @reserved: reserved (padding)
+  */
+-struct iwl_mac_power_cmd {
++struct iwl_mac_power_cmd_v2 {
+ 	/* CONTEXT_DESC_API_T_VER_1 */
+ 	__le32 id_and_color;
+ 
+@@ -242,6 +243,43 @@ struct iwl_mac_power_cmd {
+ 	u8 reserved;
+ } __packed; /* CLIENT_PM_POWER_TABLE_S_VER_1, VER_2 */
+ 
++/**
++ * struct iwl_mac_power_cmd - power command
++ * MAC_PM_POWER_TABLE = 0xA9 (command, has simple generic response)
++ * @id_and_color:	MAC context identifier, &enum iwl_ctxt_id_and_color
++ * @flags:		Power table command flags from POWER_FLAGS_*
++ * @keep_alive_seconds:	Keep alive period in seconds. Default - 25 sec.
++ *			Minimum allowed:- 3 * DTIM. Keep alive period must be
++ *			set regardless of power scheme or current power state.
++ *			FW use this value also when PM is disabled.
++ * @rx_data_timeout:    Minimum time (usec) from last Rx packet for AM to
++ *			PSM transition - legacy PM
++ * @tx_data_timeout:    Minimum time (usec) from last Tx packet for AM to
++ *			PSM transition - legacy PM
++ * @lprx_rssi_threshold: Signal strength up to which LP RX can be enabled.
++ *			Default: 80dbm
++ * @skip_dtim_periods:	Number of DTIM periods to skip if Skip over DTIM flag
++ *			is set. For example, if it is required to skip over
++ *			one DTIM, this value need to be set to 2 (DTIM periods).
++ * @qndp_tid:		TID client shall use for uAPSD QNDP triggers
++ * @uapsd_ac_flags:	Set trigger-enabled and delivery-enabled indication for
++ *			each corresponding AC.
++ *			Use IEEE80211_WMM_IE_STA_QOSINFO_AC* for correct values.
++ */
++struct iwl_mac_power_cmd {
++	/* CONTEXT_DESC_API_T_VER_1 */
++	__le32 id_and_color;
++
++	__le16 flags;
++	__le16 keep_alive_seconds;
++	__le32 rx_data_timeout;
++	__le32 tx_data_timeout;
++	u8 lprx_rssi_threshold;
++	u8 skip_dtim_periods;
++	u8 qndp_tid;
++	u8 uapsd_ac_flags;
++} __packed; /* CLIENT_PM_POWER_TABLE_S_VER_3 */
++
+ /*
+  * struct iwl_uapsd_misbehaving_ap_notif - FW sends this notification when
+  * associated AP is identified as improperly implementing uAPSD protocol.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.c b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+index 80bcd18930c57..b07e9e34a711a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.c
+@@ -588,24 +588,6 @@ void iwl_mld_handle_probe_resp_data_notif(struct iwl_mld *mld,
+ 		kfree_rcu(old_data, rcu_head);
+ }
+ 
+-void iwl_mld_handle_uapsd_misbehaving_ap_notif(struct iwl_mld *mld,
+-					       struct iwl_rx_packet *pkt)
+-{
+-	struct iwl_uapsd_misbehaving_ap_notif *notif = (void *)pkt->data;
+-	struct ieee80211_vif *vif;
+-
+-	if (IWL_FW_CHECK(mld, notif->mac_id >= ARRAY_SIZE(mld->fw_id_to_vif),
+-			 "mac id is invalid: %d\n", notif->mac_id))
+-		return;
+-
+-	vif = wiphy_dereference(mld->wiphy, mld->fw_id_to_vif[notif->mac_id]);
+-
+-	if (WARN_ON(!vif) || ieee80211_vif_is_mld(vif))
+-		return;
+-
+-	IWL_WARN(mld, "uapsd misbehaving AP: %pM\n", vif->bss_conf.bssid);
+-}
+-
+ void iwl_mld_handle_datapath_monitor_notif(struct iwl_mld *mld,
+ 					   struct iwl_rx_packet *pkt)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/iface.h b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+index a3573d20f214a..b5e4852cb0374 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/iface.h
++++ b/drivers/net/wireless/intel/iwlwifi/mld/iface.h
+@@ -234,9 +234,6 @@ void iwl_mld_handle_probe_resp_data_notif(struct iwl_mld *mld,
+ void iwl_mld_handle_datapath_monitor_notif(struct iwl_mld *mld,
+ 					   struct iwl_rx_packet *pkt);
+ 
+-void iwl_mld_handle_uapsd_misbehaving_ap_notif(struct iwl_mld *mld,
+-					       struct iwl_rx_packet *pkt);
+-
+ void iwl_mld_reset_cca_40mhz_workaround(struct iwl_mld *mld,
+ 					struct ieee80211_vif *vif);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+index 3cfe1bcb7d4e5..48b8ec6a5a12d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
+@@ -162,7 +162,6 @@ static const struct iwl_hcmd_names iwl_mld_legacy_names[] = {
+ 	HCMD_NAME(PHY_CONFIGURATION_CMD),
+ 	HCMD_NAME(SCAN_OFFLOAD_UPDATE_PROFILES_CMD),
+ 	HCMD_NAME(POWER_TABLE_CMD),
+-	HCMD_NAME(PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION),
+ 	HCMD_NAME(BEACON_NOTIFICATION),
+ 	HCMD_NAME(BEACON_TEMPLATE_CMD),
+ 	HCMD_NAME(TX_ANT_CONFIGURATION_CMD),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/notif.c b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+index a3fd0b7387d69..5f2216f8c58f5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/notif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/notif.c
+@@ -338,8 +338,6 @@ CMD_VERSIONS(emlsr_mode_notif,
+ 	     CMD_VER_ENTRY(2, iwl_esr_mode_notif))
+ CMD_VERSIONS(emlsr_trans_fail_notif,
+ 	     CMD_VER_ENTRY(1, iwl_esr_trans_fail_notif))
+-CMD_VERSIONS(uapsd_misbehaving_ap_notif,
+-	     CMD_VER_ENTRY(1, iwl_uapsd_misbehaving_ap_notif))
+ CMD_VERSIONS(time_msmt_notif,
+ 	     CMD_VER_ENTRY(1, iwl_time_msmt_notify))
+ CMD_VERSIONS(time_sync_confirm_notif,
+@@ -360,8 +358,6 @@ DEFINE_SIMPLE_CANCELLATION(scan_complete, iwl_umac_scan_complete, uid)
+ DEFINE_SIMPLE_CANCELLATION(scan_start, iwl_umac_scan_start, uid)
+ DEFINE_SIMPLE_CANCELLATION(probe_resp_data, iwl_probe_resp_data_notif,
+ 			   mac_id)
+-DEFINE_SIMPLE_CANCELLATION(uapsd_misbehaving_ap, iwl_uapsd_misbehaving_ap_notif,
+-			   mac_id)
+ DEFINE_SIMPLE_CANCELLATION(ftm_resp, iwl_tof_range_rsp_ntfy, request_id)
+ DEFINE_SIMPLE_CANCELLATION(beacon_filter, iwl_beacon_filter_notif, link_id)
+ 
+@@ -452,8 +448,6 @@ const struct iwl_rx_handler iwl_mld_rx_handlers[] = {
+ 			     emlsr_mode_notif, RX_HANDLER_ASYNC)
+ 	RX_HANDLER_NO_OBJECT(MAC_CONF_GROUP, EMLSR_TRANS_FAIL_NOTIF,
+ 			     emlsr_trans_fail_notif, RX_HANDLER_ASYNC)
+-	RX_HANDLER_OF_VIF(LEGACY_GROUP, PSM_UAPSD_AP_MISBEHAVING_NOTIFICATION,
+-			  uapsd_misbehaving_ap_notif)
+ 	RX_HANDLER_NO_OBJECT(LEGACY_GROUP,
+ 			     WNM_80211V_TIMING_MEASUREMENT_NOTIFICATION,
+ 			     time_msmt_notif, RX_HANDLER_SYNC)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/power.c b/drivers/net/wireless/intel/iwlwifi/mld/power.c
+index f664b277adf7d..38c77a33871d1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/power.c
+@@ -113,10 +113,10 @@ static bool iwl_mld_power_is_radar(struct iwl_mld *mld,
+ 	return chanctx_conf->def.chan->flags & IEEE80211_CHAN_RADAR;
+ }
+ 
+-static void iwl_mld_power_configure_uapsd(struct iwl_mld *mld,
+-					  struct iwl_mld_link *link,
+-					  struct iwl_mac_power_cmd *cmd,
+-					  bool ps_poll)
++static void iwl_mld_power_configure_uapsd_v2(struct iwl_mld *mld,
++					     struct iwl_mld_link *link,
++					     struct iwl_mac_power_cmd_v2 *cmd,
++					     bool ps_poll)
+ {
+ 	bool tid_found = false;
+ 
+@@ -175,10 +175,54 @@ static void iwl_mld_power_configure_uapsd(struct iwl_mld *mld,
+ 	cmd->uapsd_max_sp = mld->hw->uapsd_max_sp_len;
+ }
+ 
++static void iwl_mld_power_configure_uapsd(struct iwl_mld *mld,
++					  struct iwl_mld_link *link,
++					  struct iwl_mac_power_cmd *cmd,
++					  bool ps_poll)
++{
++	bool tid_found = false;
++
++	/* set advanced pm flag with no uapsd ACs to enable ps-poll */
++	if (ps_poll) {
++		cmd->flags |= cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
++		return;
++	}
++
++	for (enum ieee80211_ac_numbers ac = IEEE80211_AC_VO;
++	     ac <= IEEE80211_AC_BK;
++	     ac++) {
++		if (!link->queue_params[ac].uapsd)
++			continue;
++
++		cmd->flags |=
++			cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
++		cmd->uapsd_ac_flags |= BIT(ac);
++
++		/* QNDP TID - the highest TID with no admission control */
++		if (!tid_found && !link->queue_params[ac].acm) {
++			tid_found = true;
++			switch (ac) {
++			case IEEE80211_AC_VO:
++				cmd->qndp_tid = 6;
++				break;
++			case IEEE80211_AC_VI:
++				cmd->qndp_tid = 5;
++				break;
++			case IEEE80211_AC_BE:
++				cmd->qndp_tid = 0;
++				break;
++			case IEEE80211_AC_BK:
++				cmd->qndp_tid = 1;
++				break;
++			}
++		}
++	}
++}
++
+ static void
+ iwl_mld_power_config_skip_dtim(struct iwl_mld *mld,
+ 			       const struct ieee80211_bss_conf *link_conf,
+-			       struct iwl_mac_power_cmd *cmd)
++			       u8 *skip_dtim_periods, __le16 *flags)
+ {
+ 	unsigned int dtimper_tu;
+ 	unsigned int dtimper;
+@@ -196,15 +240,15 @@ iwl_mld_power_config_skip_dtim(struct iwl_mld *mld,
+ 	/* configure skip over dtim up to 900 TU DTIM interval */
+ 	skip = max_t(int, 1, 900 / dtimper_tu);
+ 
+-	cmd->skip_dtim_periods = skip;
+-	cmd->flags |= cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
++	*skip_dtim_periods = skip;
++	*flags |= cpu_to_le16(POWER_FLAGS_SKIP_OVER_DTIM_MSK);
+ }
+ 
+ #define POWER_KEEP_ALIVE_PERIOD_SEC    25
+-static void iwl_mld_power_build_cmd(struct iwl_mld *mld,
+-				    struct ieee80211_vif *vif,
+-				    struct iwl_mac_power_cmd *cmd,
+-				    bool d3)
++static void iwl_mld_power_build_cmd_v2(struct iwl_mld *mld,
++				       struct ieee80211_vif *vif,
++				       struct iwl_mac_power_cmd_v2 *cmd,
++				       bool d3)
+ {
+ 	int dtimper, bi;
+ 	int keep_alive;
+@@ -265,7 +309,9 @@ static void iwl_mld_power_build_cmd(struct iwl_mld *mld,
  	}
  
-+	/* Disable stbc_en in VHT 160MHz to avoid IOT issues with certain APs */
-+	if (link_sta->vht_cap.cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ)
-+		stbc_en = 0;
+ 	if (d3) {
+-		iwl_mld_power_config_skip_dtim(mld, link_conf, cmd);
++		iwl_mld_power_config_skip_dtim(mld, link_conf,
++					       &cmd->skip_dtim_periods,
++					       &cmd->flags);
+ 		cmd->rx_data_timeout =
+ 			cpu_to_le32(IWL_MLD_WOWLAN_PS_RX_DATA_TIMEOUT);
+ 		cmd->tx_data_timeout =
+@@ -286,6 +332,95 @@ static void iwl_mld_power_build_cmd(struct iwl_mld *mld,
+ 	 * mac80211 will allow uAPSD. Always call iwl_mld_power_configure_uapsd
+ 	 * which will look at what mac80211 is saying.
+ 	 */
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++	ps_poll = mld_vif->use_ps_poll;
++#endif
++	iwl_mld_power_configure_uapsd_v2(mld, link, cmd, ps_poll);
++}
 +
- 	nc = min(nc, sound_dim);
- 	nr = min(nr, sound_dim);
++static void iwl_mld_power_build_cmd(struct iwl_mld *mld,
++				    struct ieee80211_vif *vif,
++				    struct iwl_mac_power_cmd *cmd,
++				    bool d3)
++{
++	int dtimper, bi;
++	int keep_alive;
++	struct iwl_mld_vif *mld_vif = iwl_mld_vif_from_mac80211(vif);
++	struct ieee80211_bss_conf *link_conf = &vif->bss_conf;
++	struct iwl_mld_link *link = &mld_vif->deflink;
++	bool ps_poll = false;
++	__le32 fw_id = cpu_to_le32(mld_vif->fw_id);
++
++	if (ieee80211_vif_is_mld(vif)) {
++		int link_id;
++
++		if (WARN_ON(!vif->active_links))
++			return;
++
++		/* The firmware consumes one single configuration for the vif
++		 * and can't differentiate between links, just pick the lowest
++		 * link_id's configuration and use that.
++		 */
++		link_id = __ffs(vif->active_links);
++		link_conf = link_conf_dereference_check(vif, link_id);
++		link = iwl_mld_link_dereference_check(mld_vif, link_id);
++
++		if (WARN_ON(!link_conf || !link))
++			return;
++	}
++	dtimper = link_conf->dtim_period;
++	bi = link_conf->beacon_int;
++
++	/* Regardless of power management state the driver must set
++	 * keep alive period. FW will use it for sending keep alive NDPs
++	 * immediately after association. Check that keep alive period
++	 * is at least 3 * DTIM
++	 */
++	keep_alive = DIV_ROUND_UP(ieee80211_tu_to_usec(3 * dtimper * bi),
++				  USEC_PER_SEC);
++	keep_alive = max(keep_alive, POWER_KEEP_ALIVE_PERIOD_SEC);
++
++	cmd->id_and_color = fw_id;
++	cmd->keep_alive_seconds = cpu_to_le16(keep_alive);
++
++	if (iwlmld_mod_params.power_scheme != IWL_POWER_SCHEME_CAM)
++		cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
++
++	if (vif->cfg.ps && iwl_mld_tdls_sta_count(mld) == 0) {
++		cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
++		cmd->flags |= cpu_to_le16(POWER_FLAGS_ENABLE_SMPS_MSK);
++
++		/* firmware supports LPRX for beacons at rate 1 Mbps or
++		 * 6 Mbps only
++		 */
++		if (link_conf->beacon_rate &&
++		    (link_conf->beacon_rate->bitrate == 10 ||
++		     link_conf->beacon_rate->bitrate == 60)) {
++			cmd->flags |= cpu_to_le16(POWER_FLAGS_LPRX_ENA_MSK);
++			cmd->lprx_rssi_threshold = POWER_LPRX_RSSI_THRESHOLD;
++		}
++	}
++
++	if (d3) {
++		iwl_mld_power_config_skip_dtim(mld, link_conf,
++					       &cmd->skip_dtim_periods,
++					       &cmd->flags);
++		cmd->rx_data_timeout =
++			cpu_to_le32(IWL_MLD_WOWLAN_PS_RX_DATA_TIMEOUT);
++		cmd->tx_data_timeout =
++			cpu_to_le32(IWL_MLD_WOWLAN_PS_TX_DATA_TIMEOUT);
++	} else if (iwl_mld_vif_low_latency(mld_vif) && vif->p2p) {
++		cmd->tx_data_timeout =
++			cpu_to_le32(IWL_MLD_SHORT_PS_TX_DATA_TIMEOUT);
++		cmd->rx_data_timeout =
++			cpu_to_le32(IWL_MLD_SHORT_PS_RX_DATA_TIMEOUT);
++	} else {
++		cmd->rx_data_timeout =
++			cpu_to_le32(IWL_MLD_DEFAULT_PS_RX_DATA_TIMEOUT);
++		cmd->tx_data_timeout =
++			cpu_to_le32(IWL_MLD_DEFAULT_PS_TX_DATA_TIMEOUT);
++	}
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	ps_poll = mld_vif->use_ps_poll;
+ #endif
+@@ -295,11 +430,23 @@ static void iwl_mld_power_build_cmd(struct iwl_mld *mld,
+ int iwl_mld_update_mac_power(struct iwl_mld *mld, struct ieee80211_vif *vif,
+ 			     bool d3)
+ {
+-	struct iwl_mac_power_cmd cmd = {};
++	int cmd_ver = iwl_fw_lookup_cmd_ver(mld->fw, MAC_PM_POWER_TABLE, 0);
  
+-	iwl_mld_power_build_cmd(mld, vif, &cmd, d3);
++	if (cmd_ver >= 3) {
++		struct iwl_mac_power_cmd cmd = {};
+ 
+-	return iwl_mld_send_cmd_pdu(mld, MAC_PM_POWER_TABLE, &cmd);
++		iwl_mld_power_build_cmd(mld, vif, &cmd, d3);
++		return iwl_mld_send_cmd_with_flags_pdu(mld,
++						       MAC_PM_POWER_TABLE, 0,
++						       &cmd, sizeof(cmd));
++	} else {
++		struct iwl_mac_power_cmd_v2 cmd = {};
++
++		iwl_mld_power_build_cmd_v2(mld, vif, &cmd, d3);
++		return iwl_mld_send_cmd_with_flags_pdu(mld,
++						       MAC_PM_POWER_TABLE, 0,
++						       &cmd, sizeof(cmd));
++	}
+ }
+ 
+ static void
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b515028adc8f5..e05efcecaaf3f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -477,7 +477,7 @@ struct iwl_mvm_vif {
+ 	struct dentry *dbgfs_slink;
+ 	struct iwl_dbgfs_pm dbgfs_pm;
+ 	struct iwl_dbgfs_bf dbgfs_bf;
+-	struct iwl_mac_power_cmd mac_pwr_cmd;
++	struct iwl_mac_power_cmd_v2 mac_pwr_cmd;
+ 	int dbgfs_quota_min;
+ 	bool ftm_unprotected;
+ #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index 610de29b7be0d..46792c5087532 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ /*
+- * Copyright (C) 2012-2014, 2018-2019, 2021-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2019, 2021-2026 Intel Corporation
+  * Copyright (C) 2013-2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015-2017 Intel Deutschland GmbH
+  */
+@@ -83,7 +83,7 @@ void iwl_mvm_beacon_filter_set_cqm_params(struct iwl_mvm *mvm,
+ }
+ 
+ static void iwl_mvm_power_log(struct iwl_mvm *mvm,
+-			      struct iwl_mac_power_cmd *cmd)
++			      struct iwl_mac_power_cmd_v2 *cmd)
+ {
+ 	IWL_DEBUG_POWER(mvm,
+ 			"Sending power table command on mac id 0x%X for power level %d, flags = 0x%X\n",
+@@ -121,7 +121,7 @@ static void iwl_mvm_power_log(struct iwl_mvm *mvm,
+ 
+ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 					  struct ieee80211_vif *vif,
+-					  struct iwl_mac_power_cmd *cmd)
++					  struct iwl_mac_power_cmd_v2 *cmd)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	enum ieee80211_ac_numbers ac;
+@@ -296,7 +296,7 @@ static bool iwl_mvm_power_is_radar(struct ieee80211_bss_conf *link_conf)
+ 
+ static void iwl_mvm_power_config_skip_dtim(struct iwl_mvm *mvm,
+ 					   struct ieee80211_vif *vif,
+-					   struct iwl_mac_power_cmd *cmd)
++					   struct iwl_mac_power_cmd_v2 *cmd)
+ {
+ 	struct ieee80211_bss_conf *link_conf;
+ 	unsigned int min_link_skip = ~0;
+@@ -344,7 +344,7 @@ static void iwl_mvm_power_config_skip_dtim(struct iwl_mvm *mvm,
+ 
+ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif,
+-				    struct iwl_mac_power_cmd *cmd)
++				    struct iwl_mac_power_cmd_v2 *cmd)
+ {
+ 	int dtimper, bi;
+ 	int keep_alive;
+@@ -466,7 +466,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
+ static int iwl_mvm_power_send_cmd(struct iwl_mvm *mvm,
+ 					 struct ieee80211_vif *vif)
+ {
+-	struct iwl_mac_power_cmd cmd = {};
++	struct iwl_mac_power_cmd_v2 cmd = {};
+ 
+ 	iwl_mvm_power_build_cmd(mvm, vif, &cmd);
+ 	iwl_mvm_power_log(mvm, &cmd);
+@@ -717,7 +717,7 @@ int iwl_mvm_power_mac_dbgfs_read(struct iwl_mvm *mvm,
+ 				 int bufsz)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	struct iwl_mac_power_cmd cmd = {};
++	struct iwl_mac_power_cmd_v2 cmd = {};
+ 	int pos = 0;
+ 
+ 	mutex_lock(&mvm->mutex);
 -- 
 2.53.0
 
