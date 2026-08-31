@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA2B58F062;
-	Mon, 31 Aug 2026 13:50:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C756592214;
+	Mon, 31 Aug 2026 13:51:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184247; cv=none; b=KRU1zmC/ozfuQ7XoegtSsjhJumDWXgqe0a+tci85DQFyY9G6Auql3Pr7zPKbkm8G6emAMIlmf35Y9Akqi08RwbpXy25GdTwe9ysUo+QcvM+8pITi1o0Aiyy1zbLAh4JA4tc2CLAU6UjSSvgka0I8DQHDkieZ4Lx0yeZglA1rVKs=
+	t=1788184262; cv=none; b=pms/sfi7O6Ocaab08TGUYqeEyZ+ut0dA0Q76o/ByTlVMt5buPjaZT304hoqEycE9oVE86GBX47UfDpGMETjHd3UMUeUxhnKKYmFJhu+DqB5Q6ONAg5ag+dIC68gMIGIQvx4iJR2vankfryXtN3KJIN5CmKNsgIGXf9W0Ie2IeR0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184247; c=relaxed/simple;
-	bh=vuOSVSx0fcngSuqKE1+TmaIIckuadgDGiFCoqeSIUcQ=;
+	s=arc-20240116; t=1788184262; c=relaxed/simple;
+	bh=oQ711CS7bu5fPtfZe9FQvoMnU2ysPqtcJaYehIlZW18=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tdONWLnC5qK9f0oeCW4vtB81eaCbcH9omsX19nfRMQO5tDX7sRZNqbF9BiL2dJpIW61nkWEjx4ReXTmLXaYM56SHuvKIZ7ZaCFKsIo6lX087p4O5mdBWqPXTEy6YaEnDKSEy/MKZvhBc+6dR0lt6/Bv9sT8SYhUX+zdqiMTq/TQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Is4aqKY9; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=qd6ZxVpLw9y0GbBYJvw8PH2k/BGkJl6x+npTlOe8gJgCySHm0clukxlaplmmA2Tf1AdF5g2MKbWkZiy0wvlJALTogczwxxAWvrI+hHsyjPrbVMBNqaPcf47n+F4lNNp0GIwqbQ6ZMKCAEwcaaNhU5ZBv319MhUF6Cf4SeeyOZGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oeAOi8zI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Is4aqKY9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A31E01F00A3F;
-	Mon, 31 Aug 2026 13:50:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeAOi8zI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF1B81F00A3F;
+	Mon, 31 Aug 2026 13:50:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184245;
-	bh=EgQx6EMDMpAmYFSNUpQVpZ8JTwG0WrdXe8NkFgg01Ww=;
+	s=k20260515; t=1788184260;
+	bh=Xrd25d3lSl0keEIk+M1xGehTLksJ1UefujdL9tdsESM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Is4aqKY9dEN4YCXm/LZfwFu+s2zk65F/kiPQTqvtF5MCrY8PGq1aDKgDdj6DI+pjT
-	 06g28oxD6/807/cZCxmQaXrU/t6eBRs389pacmxRIMPR2ArJ/KPJ91kioSq6plWne6
-	 aWR+3yF/Bpo5/odErXf7dGRePB9xeNqwCm7QD/M0kAtXDhmjGVhyXZoqpRAnOdOpov
-	 IGhiYXY0FQflwa09f2hVfxb/0+tuWrLsZJ4vhldLk9VbQ+NjAAGgt/z6nHOcE9rtGt
-	 dKKa16I2OaV9uDPlA2ZONMOvYGa7IktP1f5Av0ZrDYYvBJNsDuE+VlInL7dply6IBi
-	 GhkpPb7hzXYMw==
+	b=oeAOi8zIR8PMmmlM8j5GEsrEtFPSrho/N0VZD0UtBwGSD8OkKojVwJOPlMuU2+78T
+	 Njz9fHwzgFZbywQUtnJD1f7pPqOjWHAgNXDoRPUeZRy19mZZJlY4cX4gIGEMwzQpEM
+	 xDU7F6Ioi3hAu9GX2dJv6WrVNHlRkJnDxQajJ/Zd4FuZ6U3PFZgJEZwDKMEqbgQcd6
+	 HX/CIZswZeid8msqD/SYv60SjOYBZdJCMAjZBzqwyMDFwqjMPoDM9r0oCGOoXYvnHa
+	 3ujyXyXMi/67XH3F1xdAJ8cpCyOH3Enp4AyduBfAlpg0VJ7paPyCvG7LQnkcji0Z7u
+	 +4CGjMlIrMQWg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
+	Guillermo Servera Negre <guillem@gservera.com>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mac80211: don't call ieee80211_handle_reconfig_failure when not needed
-Date: Mon, 31 Aug 2026 09:30:06 -0400
-Message-ID: <20260831133314.4125787-578-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: rtw89: 8851bu: add Mercusys MA60XNB (2c4e:0128)
+Date: Mon, 31 Aug 2026 09:30:15 -0400
+Message-ID: <20260831133314.4125787-587-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,33 +52,18 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit 7a8a3ff2815501f78f494808355ddf37e08647d0 ]
+[ Upstream commit 575e6a72bd68008b6795345113d3e94f3dccbf5d ]
 
-In case reconfiguration of NAN fails, we call
-ieee80211_handle_reconfig_failure, that marks all interfaces as not in
-the driver.
-Then, at the error path of the reconfig, cfg80211_shutdown_all_interfaces
-is called to destroy all the interfaces.
+Add the specific USB device ID which adapter tested fully functional on
+Fedora 44 with kernel 7.0.8-200.fc44.x86_64 and linux-firmware
+20260410-1.fc44.
 
-If we have any other interface but the NAN one, for example a BSS
-station, then when its state (links, stations) will be removed, we
-won't tell the driver about this, because we will think that the
-interfaces are not in the driver, and then drivers might remain with
-dangling pointers to objects like stations and links (at least for
-iwlwifi this is the case).
-
-ieee80211_handle_reconfig_failure is meant to be called after we cleaned
-up the state in the driver, there is no reason to call it for NAN
-reconfiguration failure.
-
-Fix the code to just warn in such a case, as we do in other error paths
-in reconfig where it is too complicated to rewind.
-
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-Link: https://patch.msgid.link/20260513182548.6a25f3a0a6ec.I83d1f2a7eed20200a78a62757c6b193e3bab892b@changeid
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Guillermo Servera Negre <guillem@gservera.com>
+Tested-by: Guillermo Servera Negre <guillem@gservera.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20260525011728.6836-1-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
@@ -87,361 +71,317 @@ LLM Generated explanations, may be completely bogus:
 
 ## Phase 1: Commit Message Forensics
 
-**Step 1.1 — Subject line**
+### Step 1.1: Subject Line
+**Record:** `[wifi: rtw89: 8851bu] [add] Mercusys MA60XNB USB device ID
+(2c4e:0128)`
 
-Record: `[wifi: mac80211]` `[don't call / fix]` — avoid calling
-`ieee80211_handle_reconfig_failure` on NAN reconfiguration failure.
+### Step 1.2: Tags
+**Record:**
+- **Reported-by:** Guillermo Servera Negre \<guillem@gservera.com\> —
+  user-reported hardware enablement
+- **Tested-by:** Guillermo Servera Negre \<guillem@gservera.com\> —
+  verified on Fedora 44 / kernel 7.0.8
+- **Signed-off-by:** Ping-Ke Shih \<pkshih@realtek.com\> — rtw89
+  maintainer
+- **Link:**
+  https://patch.msgid.link/20260525011728.6836-1-pkshih@realtek.com
+- No Fixes:, Cc: stable, Reviewed-by, or Acked-by tags
+- Notable: real user report + maintainer-authored + tested on target
+  hardware
 
-**Step 1.2 — Tags**
+### Step 1.3: Body Analysis
+**Record:**
+- **Bug:** Mercusys MA60XNB (USB 2c4e:0128) is not bound by
+  `rtw89_8851bu`; WiFi does not work on kernels without this ID.
+- **Symptom:** Adapter not recognized by the rtw89 WiFi driver; no
+  wireless connectivity.
+- **Root cause:** Missing `usb_device_id` table entry; USB core cannot
+  match the device to `rtw89_8851bu`.
+- **Version info:** Tested on Fedora 44 with kernel 7.0.8 and linux-
+  firmware 20260410.
 
-Record:
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (author)
-- `Link: https://patch.msgid.link/20260513182548...` (patch submission)
-- `Signed-off-by: Johannes Berg <johannes.berg@intel.com>` (mac80211
-  maintainer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Cc:
-  stable@vger.kernel.org`
-
-Notable: maintainer sign-off; no syzbot or user bug report.
-
-**Step 1.3 — Body analysis**
-
-Record:
-- **Bug:** On NAN reconfig failure,
-  `ieee80211_handle_reconfig_failure()` marks all interfaces as not in
-  the driver (`IEEE80211_SDATA_IN_DRIVER` cleared). The reconfig error
-  path then calls `cfg80211_shutdown_all_interfaces()`, which tears down
-  interfaces without notifying the driver because mac80211 thinks they
-  are not in the driver.
-- **Symptom:** Driver (specifically iwlwifi) can retain dangling
-  pointers to stations and links.
-- **Root cause:** `ieee80211_handle_reconfig_failure` is meant for use
-  after driver state is already cleaned up; calling it mid-NAN-reconfig
-  is wrong.
-- **Fix approach:** Warn only (`WARN_ON`), matching other reconfig error
-  paths that are too hard to unwind.
-
-**Step 1.4 — Hidden bug fix?**
-
-Record: **Yes.** Despite the subject not using "fix", this is a real
-correctness bug with driver dangling-pointer consequences, not a
-cosmetic cleanup.
+### Step 1.4: Hidden Bug Fix?
+**Record:** Not a crash/corruption fix. This is explicit **hardware
+enablement** via a new USB ID — a well-established stable exception
+category.
 
 ---
 
 ## Phase 2: Diff Analysis
 
-**Step 2.1 — Inventory**
+### Step 2.1: Inventory
+**Record:**
+- **File:** `drivers/net/wireless/realtek/rtw89/rtw8851bu.c` (+3 lines)
+- **Function/area:** `rtw_8851bu_id_table[]` USB ID table
+- **Scope:** Single-file, surgical device-ID addition
 
-Record:
-- **File:** `net/mac80211/util.c` only (+1 / −5 lines)
-- **Function:** `ieee80211_reconfig()`
-- **Scope:** Single-file surgical fix in one switch case
+### Step 2.2: Code Flow Change
+**Record:**
+- **Before:** USB device 2c4e:0128 not in `rtw_8851bu_id_table`;
+  `rtw89_8851bu` does not probe it.
+- **After:** Device matches table entry → `rtw89_usb_probe()` runs →
+  RTL8851BU WiFi comes up.
+- **Path:** USB enumeration / driver binding (normal probe path).
 
-**Step 2.2 — Code flow change**
+### Step 2.3: Bug Mechanism
+**Record:** **Hardware workarounds / device ID addition.** Same chip
+family and driver as existing entries (D-Link AX9U, TP-Link Archer
+TX10UB Nano, etc.). Without the ID, the existing driver never attaches.
 
-Record:
-- **Before:** `ieee80211_reconfig_nan()` failure →
-  `ieee80211_handle_reconfig_failure(local)` → `return res` → caller
-  invokes `cfg80211_shutdown_all_interfaces()`.
-- **After:** `WARN_ON(ieee80211_reconfig_nan(sdata))` → reconfig
-  continues; no `handle_reconfig_failure`, no early return.
-
-**Step 2.3 — Bug mechanism**
-
-Record: **Reference-counting / driver-notification bug** (category:
-logic/correctness leading to UAF risk).
-
-`ieee80211_handle_reconfig_failure()` at lines 1628–1629 clears
-`IEEE80211_SDATA_IN_DRIVER` on all interfaces. `drv_remove_interface()`
-and `drv_sta_state()` in `driver-ops.c` gate on
-`check_sdata_in_driver()` and return without calling the driver when the
-flag is cleared. Shutdown then proceeds without proper driver teardown →
-dangling pointers.
-
-**Step 2.4 — Fix quality**
-
-Record:
-- Fix is minimal and logically sound.
-- Aligns with existing pattern: other reconfig paths use `WARN_ON`
-  without calling `handle_reconfig_failure` when unwind is impractical
-  (e.g. `drv_add_chanctx`, `drv_join_ibss`).
-- Low regression risk; behavior change (no longer aborting full reconfig
-  on NAN failure) is intentional and safer than the broken shutdown
-  path.
+### Step 2.4: Fix Quality
+**Record:**
+- Obviously correct: identical pattern to adjacent entries.
+- Minimal: 3 lines, no logic changes.
+- Regression risk: very low — only affects matching of this specific
+  VID:PID.
+- No API, structure, or behavior changes beyond enabling one device.
 
 ---
 
 ## Phase 3: Git History Investigation
 
-**Step 3.1 — Blame**
+### Step 3.1: Blame
+**Record:**
+- `rtw8851bu.c` added in `52cf443237856` (2025-07-04): "wifi: rtw89: Add
+  rtw8851bu.c"
+- D-Link AX9U ID added in `2ffc73cdb8247` (2025-09-02): same RTL8851BU
+  pattern
+- Candidate commit `575e6a72bd680` is **not** in this tree (`git merge-
+  base --is-ancestor` exit 1)
 
-Record: Buggy NAN error path introduced in `167e33f4f68cc` ("mac80211:
-Implement add_nan_func and rm_nan_func", 2016-09-20). Present since NAN
-support landed; well within 6.18.y scope.
+### Step 3.2: Fixes: Tag
+**Record:** N/A — no Fixes: tag.
 
-**Step 3.2 — Fixes: tag**
+### Step 3.3: Related Changes
+**Record:**
+- `79f9e221dddec` already in **this** tree: "Bluetooth: btusb: Add USB
+  ID 2c4e:0128 for Mercusys MA60XNB" — describes it as an **RTL8851BU-
+  based Wi-Fi + Bluetooth adapter**
+- `2ffc73cdb8247` in this tree: D-Link AX9U (also RTL8851BU) ID addition
+  — precedent for stable backport of rtw8851bu IDs
+- Standalone single-patch series (v1 only per `b4 dig -a`)
 
-Record: Not applicable — no `Fixes:` tag.
+### Step 3.4: Author Context
+**Record:** Ping-Ke Shih is rtw89 maintainer; regular contributor with
+multiple commits in this tree.
 
-**Step 3.3 — Related file history**
-
-Record: `ieee80211_handle_reconfig_failure` introduced in
-`f6837ba8c98af` ("mac80211: handle failed restart/resume better"). NAN
-case incorrectly adopted the same pattern in `167e33f4f68cc`. Standalone
-one-patch fix (v1 only per b4).
-
-**Step 3.4 — Author context**
-
-Record: Miri Korenblit is an active Intel/mac80211 contributor. Johannes
-Berg (subsystem maintainer) committed the fix. No related prerequisite
-series.
-
-**Step 3.5 — Dependencies**
-
-Record: **None.** Applies standalone. Mainline diff references
-`NL80211_IFTYPE_NAN_DATA` as a fallthrough case, but that iftype does
-not exist in this 6.18.y tree — only the `NL80211_IFTYPE_NAN` hunk is
-needed for backport.
+### Step 3.5: Dependencies
+**Record:** No prerequisites. Driver, probe path (`rtw89_usb_probe`),
+and chip support (`rtw8851b`) all exist in 6.18.44. Backport is a
+straight table entry; mainline has extra `rtw8851b_usb_info` structure
+not present here, but the ID lines apply independently after the D-Link
+entry.
 
 ---
 
 ## Phase 4: Mailing List and External Research
 
-**Step 4.1 — Original discussion**
+### Step 4.1: Patch Discussion
+**Record:**
+- `b4 dig -c 575e6a72bd680`:
+  https://patch.msgid.link/20260525011728.6836-1-pkshih@realtec.com
+- Single v1 submission (2026-05-25)
+- WebFetch of lore URL blocked (Anubis bot protection) — could not read
+  thread replies
 
-Record: b4 dig found thread at https://patch.msgid.link/20260513182548.6
-a25f3a0a6ec.I83d1f2a7eed20200a78a62757c6b193e3bab892b@changeid. Single
-v1 submission; no replies captured in mbox. No explicit stable
-nomination in thread.
+### Step 4.2: Reviewers
+**Record:** `b4 dig -w`: To/Cc — Ping-Ke Shih, linux-
+wireless@vger.kernel.org, guillem@gservera.com
 
-**Step 4.2 — Reviewers**
+### Step 4.3: Bug Report
+**Record:** User report via Guillermo Servera Negre; hardware tested
+working with ID present. No syzbot/security report.
 
-Record: CC'd to `linux-wireless@vger.kernel.org`. Maintainer Johannes
-Berg signed off on commit.
+### Step 4.4: Related Patches
+**Record:** Companion btusb ID `79f9e221dddec` already backported to
+this tree; WiFi side is the missing half for MA60XNB users.
 
-**Step 4.3 — Bug report**
-
-Record: No external bug report or syzbot link. Bug identified internally
-(Intel iwlwifi).
-
-**Step 4.4 — Series context**
-
-Record: Standalone patch, not part of a multi-patch series.
-
-**Step 4.5 — Stable list**
-
-Record: Not searched on lore stable list; no stable nomination found in
-patch thread.
+### Step 4.5: Stable List
+**Record:** Not searched separately; btusb half already landed in 6.18.y
+via stable backport.
 
 ---
 
 ## Phase 5: Code Semantic Analysis
 
-**Step 5.1 — Key functions**
+### Step 5.1: Key Functions
+**Record:** `rtw_8851bu_id_table[]` (modified); `rtw89_usb_probe` /
+`rtw89_usb_disconnect` (unchanged, referenced by driver struct)
 
-Record: `ieee80211_reconfig()`, `ieee80211_reconfig_nan()`,
-`ieee80211_handle_reconfig_failure()`, `ieee80211_restart_work()`.
+### Step 5.2: Callers
+**Record:** USB core matches `id_table` during enumeration → calls
+`rtw89_usb_probe`. Standard hotplug path for USB WiFi dongles.
 
-**Step 5.2 — Callers**
+### Step 5.3: Callees
+**Record:** Probe delegates to existing rtw89 USB infrastructure in
+`usb.c`; no new code paths.
 
-Record:
-- `ieee80211_reconfig()` called from `ieee80211_restart_work()`
-  (`main.c:528`) during hardware restart.
-- `ieee80211_restart_work` scheduled from `ieee80211_restart_hw()` —
-  common iwlwifi recovery path.
-- On failure: `cfg80211_shutdown_all_interfaces()` at `main.c:532`.
+### Step 5.4: Reachability
+**Record:** Triggered when user plugs in Mercusys MA60XNB. Common, user-
+visible path.
 
-**Step 5.3 — Callees**
-
-Record: `ieee80211_reconfig_nan()` calls `drv_start_nan()`,
-`drv_add_nan_func()`. Failures return `-ENOMEM` or driver error from
-`drv_start_nan()`.
-
-**Step 5.4 — Reachability**
-
-Record: Trigger requires hardware restart/resume with a running NAN
-interface plus at least one other interface (e.g. STA). Reachable from
-driver-initiated `ieee80211_restart_hw()` — not a rare/obscure code path
-for WiFi users.
-
-**Step 5.5 — Similar patterns**
-
-Record: Other reconfig steps use `WARN_ON()` without aborting (e.g.
-`drv_add_chanctx`, `drv_join_ibss`). The NAN path was an outlier
-incorrectly calling `handle_reconfig_failure`.
+### Step 5.5: Similar Patterns
+**Record:** Same file already has D-Link, TP-Link, Edimax IDs; btusb
+already has 2c4e:0128; rtw88 has other Mercusys 2c4e IDs.
 
 ---
 
-## Phase 6: Cross-Reference Against Local Tree (6.18.44)
+## Phase 6: Cross-Reference Against Local Tree
 
-**Step 6.1 — Buggy code present?**
+### Step 6.1: Buggy Code Present?
+**Record:** **Yes.** Local tree is **Linux 6.18.44** (`git describe
+HEAD` → v6.18.44). `rtw8851bu.c` exists with 4 device IDs; **2c4e:0128
+is absent**. Driver present since July 2025.
 
-Record: **Yes.** Local tree is `v6.18.44` on `stable/linux-6.18.y`.
-Buggy code at `net/mac80211/util.c:2057-2062`. Fix commit
-`7a8a3ff281550` is **not** an ancestor of HEAD.
+### Step 6.2: Backport Complications
+**Record:** **Clean apply** — insert 3 lines after D-Link block (line
+21), before TP-Link block. Mainline base differs structurally but
+insertion point and syntax match this tree.
 
-**Step 6.2 — Backport complications**
-
-Record: **Clean apply expected.** Only the `NL80211_IFTYPE_NAN` case
-changes; no `NAN_DATA` iftype in this tree.
-
-**Step 6.3 — Related fixes already present?**
-
-Record: No equivalent fix in 6.18.y. Related historical commits
-(`74430f9489a3b`, `ee06fcb98dcdc`) address different reconfig-failure
-aspects.
+### Step 6.3: Related Fixes Already Present?
+**Record:** btusb ID for same device **already in tree**
+(`79f9e221dddec`). WiFi ID is **not** present. No duplicate fix.
 
 ---
 
 ## Phase 7: Subsystem Context
 
-**Step 7.1 — Subsystem criticality**
+### Step 7.1: Subsystem
+**Record:** `drivers/net/wireless/realtek/rtw89` — **IMPORTANT** (common
+USB WiFi hardware, user-visible).
 
-Record: **net/mac80211** — IMPORTANT (core WiFi stack used by all
-mac80211 drivers).
-
-**Step 7.2 — Activity**
-
-Record: Actively maintained in 6.18.y with recent mac80211 stable fixes
-(memory safety, MLO, etc.).
+### Step 7.2: Activity
+**Record:** Actively maintained; frequent stable backports including
+other USB ID additions (`2ffc73cdb8247`).
 
 ---
 
 ## Phase 8: Impact and Risk Assessment
 
-**Step 8.1 — Who is affected**
+### Step 8.1: Who Is Affected
+**Record:** Users of Mercusys MA60XNB on 6.18.y without this ID — WiFi
+non-functional despite driver being built.
 
-Record: Users with NAN plus another active interface (STA/AP) on
-mac80211 drivers (especially iwlwifi) during hardware restart or resume.
+### Step 8.2: Trigger Conditions
+**Record:** Plug in MA60XNB USB adapter. Common, unprivileged user
+action. Certainty: 100% without ID.
 
-**Step 8.2 — Trigger conditions**
+### Step 8.3: Failure Mode Severity
+**Record:** WiFi driver never binds — **hardware does not work**
+(functional failure, not kernel crash). Severity for affected users:
+**HIGH** (device unusable for intended purpose). Not a security/crash
+issue.
 
-Record: Hardware reconfig (`ieee80211_restart_hw` / resume) while NAN is
-running; `ieee80211_reconfig_nan()` returns error (`-ENOMEM` or
-`drv_start_nan` failure). Uncommon but realistic on iwlwifi systems
-using NAN.
-
-**Step 8.3 — Failure mode severity**
-
-Record: Driver retains dangling pointers to stations/links → subsequent
-operations can oops/UAF. **Severity: HIGH** (potential crash; possible
-security implications from UAF).
-
-**Step 8.4 — Risk-benefit**
-
-Record:
-- **Benefit:** HIGH — prevents broken driver teardown during hw restart
-- **Risk:** LOW — 6-line change, maintainer-reviewed, matches existing
-  WARN_ON patterns
-- **Ratio:** Strongly favors backport
+### Step 8.4: Risk-Benefit
+**Record:**
+- **Benefit:** Enables WiFi on a commercially sold RTL8851BU adapter;
+  completes pairing with already-backported btusb ID.
+- **Risk:** Negligible — 3-line ID table entry, zero logic change.
+- **Ratio:** Strongly favorable.
 
 ---
 
 ## Phase 9: Final Synthesis
 
-**Step 9.1 — Evidence summary**
+### Step 9.1: Evidence Summary
 
-**FOR:**
-- Real bug with verified mechanism in local tree code
-- Can cause driver dangling pointers / crash (iwlwifi confirmed by
-  author)
-- Small, surgical, maintainer-signed fix
-- Bug present since 2016; affects 6.18.y
-- mac80211 is widely used core infrastructure
+**FOR backport:**
+- Standard stable exception: new USB ID on existing driver
+- Real user report + Tested-by on target hardware
+- Maintainer-authored (Ping-Ke Shih)
+- Driver and probe infrastructure exist in 6.18.44
+- btusb ID for same device already in this stable tree — WiFi half is
+  missing
+- Precedent: D-Link AX9U RTL8851BU ID already in stable
+  (`2ffc73cdb8247`)
+- 3 lines, obviously correct
 
-**AGAINST:**
-- No syzbot or public user report (internal Intel finding)
-- Trigger requires NAN + hw restart failure (not everyday)
-- Fix changes behavior to continue reconfig on NAN failure rather than
-  abort (intentional, safer than broken shutdown)
+**AGAINST backport:**
+- Not a crash/security/data-corruption fix (lower urgency than UAF
+  fixes)
+- Lore thread content unverified (fetch blocked)
 
-**UNRESOLVED:** No independent runtime reproduction; relies on code-path
-analysis and author/maintainer description.
+**UNRESOLVED:**
+- Full mailing-list review thread not readable (Anubis)
 
-**Step 9.2 — Stable rules checklist**
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **PASS** — same pattern as existing
+   entries; Tested-by present
+2. Fixes real bug affecting users? **PASS** — device unusable for WiFi
+   without ID
+3. Important issue? **PASS** — hardware enablement for real users
+   (functional failure)
+4. Small and contained? **PASS** — 3 lines, one file
+5. No new features/APIs? **PASS** — device ID exception only
+6. Can apply to local tree? **PASS** — driver exists; clean insertion
 
-1. Obviously correct and tested? **PASS** — logic verified in code;
-   maintainer SOB; no Tested-by
-2. Fixes a real bug? **PASS** — incorrect `handle_reconfig_failure` call
-   on NAN error path
-3. Important issue? **PASS** — driver dangling pointers, potential
-   crash/UAF
-4. Small and contained? **PASS** — 1 file, ~6 lines
-5. No new features/APIs? **PASS**
-6. Can apply to local tree? **PASS** — buggy code present; clean
-   backport
+### Step 9.3: Exception Category
+**Record:** **NEW DEVICE ID** — textbook stable material.
 
-**Step 9.3 — Exception categories**
-
-Record: Not applicable (standard bug fix).
-
-**Step 9.4 — Decision rationale**
-
-For Linux **6.18.y**, this commit fixes a real mac80211 bug where NAN
-reconfiguration failure during hardware restart incorrectly marks all
-interfaces as not-in-driver, causing
-`cfg80211_shutdown_all_interfaces()` to skip driver notifications and
-leave iwlwifi (and potentially other drivers) with dangling station/link
-pointers. The fix is minimal, maintainer-approved, and applies cleanly
-to this tree.
+### Step 9.4: Decision Rationale
+For Linux **6.18.44**, the `rtw89_8851bu` driver is present but lacks
+the Mercusys MA60XNB ID. The Bluetooth interface of the same adapter is
+already supported via a stable backport (`79f9e221dddec`). Adding the
+WiFi ID is a minimal, tested, maintainer-approved enablement fix with
+negligible regression risk and clear user benefit.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags, body; no Fixes/Reported-by/syzbot
-- [Phase 2] Diff: `net/mac80211/util.c` NAN case −5/+1; verified
-  `handle_reconfig_failure` clears `IEEE80211_SDATA_IN_DRIVER`
-  (util.c:1628-1629)
-- [Phase 2] Verified `drv_remove_interface`/`drv_sta_state` skip driver
-  when flag cleared (driver-ops.c:114-115, 146-147)
-- [Phase 2] Verified failure path calls
-  `cfg80211_shutdown_all_interfaces` (main.c:531-532)
-- [Phase 3] `git blame`: buggy code from `167e33f4f68cc` (2016)
-- [Phase 3] `git show f6837ba8c98af`: origin of
-  `ieee80211_handle_reconfig_failure`
-- [Phase 3] Fix commit `7a8a3ff281550` on master; `git merge-base --is-
-  ancestor` → not in 6.18.44
-- [Phase 4] `b4 dig -c 7a8a3ff281550`: lore URL found; v1 only
-- [Phase 4] `b4 dig -w`: CC linux-wireless; maintainer SOB on commit
-- [Phase 4] `b4 dig -m /tmp/nan_fix.mbox`: patch content matches commit
-- [Phase 5] `ieee80211_reconfig` called from `ieee80211_restart_work`
-  (main.c:528)
-- [Phase 5] `ieee80211_reconfig_nan` failure paths: `-ENOMEM`,
-  `drv_start_nan` error (util.c:1683-1690)
-- [Phase 6] `git describe HEAD` → v6.18.44; buggy code at
-  util.c:2057-2062 confirmed
-- [Phase 6] `NL80211_IFTYPE_NAN_DATA` absent from
-  include/uapi/linux/nl80211.h in this tree
-- [Phase 6] Fix not present: `grep WARN_ON(ieee80211_reconfig` → not
-  found
-- [Phase 8] Failure mode: dangling driver pointers → crash/UAF, severity
-  HIGH
+- [Phase 1] Parsed commit `575e6a72bd680`: subject, Reported-by, Tested-
+  by, Link tags
+- [Phase 2] Diff: +3 lines to `rtw_8851bu_id_table[]` in `rtw8851bu.c`
+- [Phase 3] `git describe HEAD`: v6.18.44 / kernel 6.18.44
+- [Phase 3] `git merge-base --is-ancestor 575e6a72bd680 HEAD`: exit 1 —
+  commit not in tree
+- [Phase 3] `git log --oneline --
+  drivers/net/wireless/realtek/rtw89/rtw8851bu.c`: 2 commits (driver add
+  + D-Link ID)
+- [Phase 3] `git blame` lines 16–28: table from `52cf443237856`, D-Link
+  from `2ffc73cdb8247`
+- [Phase 3] `git show 79f9e221dddec`: btusb Mercusys ID already in
+  stable, notes RTL8851BU combo adapter
+- [Phase 4] `b4 dig -c 575e6a72bd680`: lore URL found
+- [Phase 4] `b4 dig -a`: single v1 patch
+- [Phase 4] `b4 dig -w`: linux-wireless CC'd
+- [Phase 4] WebFetch lore URL: **blocked** (Anubis) — thread content
+  unverified
+- [Phase 5] `grep rtw89_usb_probe`: probe in `usb.c`, used by
+  `rtw8851bu.c`
+- [Phase 6] Read `rtw8851bu.c`: no 2c4e:0128 entry; driver fully present
+- [Phase 6] `grep 2c4e.*0128`: present in `btusb.c`, absent from
+  `rtw8851bu.c`
+- [Phase 7] Kconfig/Makefile: `CONFIG_RTW89_8851BU` builds
+  `rtw89_8851bu` module
+- [Phase 8] Failure mode: WiFi non-functional without ID; bt half
+  already works in tree
 
-**YES**
+**YES**The background history search finished. It found only the
+Bluetooth half of the Mercusys MA60XNB support already in this tree
+(`79f9e221dddec` in `btusb.c`); the rtw89 WiFi ID commit
+(`575e6a72bd680`) is not present on 6.18.44.
 
- net/mac80211/util.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+That matches the earlier analysis: backporting the 3-line WiFi ID
+addition is appropriate for this stable tree.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 62e1a37849d04..af99ac02953d9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2055,11 +2055,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			}
- 			break;
- 		case NL80211_IFTYPE_NAN:
--			res = ieee80211_reconfig_nan(sdata);
--			if (res < 0) {
--				ieee80211_handle_reconfig_failure(local);
--				return res;
--			}
-+			WARN_ON(ieee80211_reconfig_nan(sdata));
- 			break;
- 		case NL80211_IFTYPE_AP_VLAN:
- 		case NL80211_IFTYPE_MONITOR:
+ drivers/net/wireless/realtek/rtw89/rtw8851bu.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+index 04e1ab13b7535..10fcfade6151e 100644
+--- a/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
++++ b/drivers/net/wireless/realtek/rtw89/rtw8851bu.c
+@@ -19,6 +19,9 @@ static const struct usb_device_id rtw_8851bu_id_table[] = {
+ 	/* D-Link AX9U rev. A1 */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x332a, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
++	/* Mercusys MA60XNB */
++	{ USB_DEVICE_AND_INTERFACE_INFO(0x2C4E, 0x0128, 0xff, 0xff, 0xff),
++	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
+ 	/* TP-Link Archer TX10UB Nano */
+ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x3625, 0x010b, 0xff, 0xff, 0xff),
+ 	  .driver_info = (kernel_ulong_t)&rtw89_8851bu_info },
 -- 
 2.53.0
 
