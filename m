@@ -1,48 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35BAF510446;
-	Mon, 31 Aug 2026 13:42:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3AC4510452;
+	Mon, 31 Aug 2026 13:43:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183778; cv=none; b=cr1itFAgOOymiFyE3W76Ybs57QVz3LHHZigw7wYb5fyp4fQaLpmzdUNZRUnLs15Iy84XX0XcgCbnnqXHLRs+D6SWvdHs7GkySVpQV6C0xHTQXQDwgzVHIZbRqA9xGO2+jtVK3l83ajb8V5822J3cm3bjJGZWrWgOuLvPNaEUzns=
+	t=1788183783; cv=none; b=hEVClr4Kl8OzxXxNPeRHwiYeLwbpWBf/tBh4h1bJ7P/dLafK9R+72h8LSmjvfgfzo2U/VVQwe1gE9VIxGB8zD8vPzKHRIpHzzApk7Xxy8nsc7aLvNhHQdCBkmZegrBIsQV3UnZZrVCluv3VPhTI9ydcIkeX8GhDdJSkGkv6tm5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183778; c=relaxed/simple;
-	bh=ljGFZCsmgSE3jYZ3gPIaEIazQCojsNQqSd3YXNwjcpQ=;
+	s=arc-20240116; t=1788183783; c=relaxed/simple;
+	bh=1cP5rBgxxLWpKqkFzZ8P53HPnPcg/IunrnTMaYZwWfM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FIHLfQWyIeKHIZtZeE9l5UvnnOBc1wqmY6/j9L/lT07M+gHyoPCsaAGWIgu0nMFxQJU5MtVSaM+zhXAGDfxCqUzZVywNaxc0s6TlekZTu0cRMxUNHfZ/ZDYZrmBvLa4xSXF80VW0nh08EuiVqZ3oVdScOe5q5bHk+T0KdkXG6yY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RTH9Jxap; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=k0VO3RIF6TX7KjcrMIP5bLDVzPG4R7ZOnOsKliTN0LXGUjDem8+fDwPw5GacoozaqrwS5j1HPi3LIkzG0Zu9DozDiFHZuduewH07Q/UEjXN+blwJC2QNsy4Y2VPY6akK+eqhPTJUPgB+bLn/QikeOJY9YHIyOYLETvvvEG26BQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FlaLGiii; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RTH9Jxap"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4B2B1F00A3F;
-	Mon, 31 Aug 2026 13:42:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FlaLGiii"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E4121F000E9;
+	Mon, 31 Aug 2026 13:42:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183776;
-	bh=SiyEExvIx/kl19F6wk5aTZc+Umy6csgK8vWmJEh4ays=;
+	s=k20260515; t=1788183780;
+	bh=k0KTPZiwC329MUEJR9yhp7CIuCchxZYNZ4GrrKiS+8o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RTH9JxapWj5B0vLArtzR5KL9mK765akqUM5nYLpbnAv+wL7ruf7lY2jTjH11MRR7/
-	 kjg14iugqD6yohTiVwrbmMmsDxgBmO3aZHZyUgLiDsn+7t3as8KVyJ0b+Koe9Y+JCN
-	 ovG2dau0yWm8D25cPGIFfz7kgLRRQzY58Y5PF4OU60E0zDQmG6Kk6aJiSm/8inqoEw
-	 AjcTIFbDdYn1tppg6cnQFy0TGO3um0E2uYzD3Bi7iPdrDkVslKlMOAt8VEjUi7/vef
-	 FTNjDu6sPpFeNQngdduVXDriTVSega1SFBL2QRa/peca+1AQSSyQaHNDFN+tHrXjEB
-	 ec7PRApKYxoHg==
+	b=FlaLGiii4wN/1G2un+xexnEmCKMPz8YuOCLii6HxH4nMOuqN7Vj855hdVeY2juanH
+	 Wf4NPYkw8Ak18dj/R8PCE5uGcAoBxX/KKBhVDQBe+M/oBp0xInmqWel8XlClQGw2e9
+	 PG/uDgVReFdiVfIYCzpLwaNFB1t/5vx5uxawuaG2PRY66hwZsI0kyF0DlWWvoYsM/p
+	 VYR6jrGxMv7TDc9ZhLYwhUucbX+wIQhHSOwm1o+zxceohXl5qFkSiIbc3tfCAgSnsC
+	 kokopH2G3PvL+p/CVkH3bw7QizpY/S9esYc5HUbjDVa8VMc1pyyTewUdmQlbGOzBdH
+	 9Cp3ii7aL+bwQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Jiajia Liu <liujiajia@kylinos.cn>,
-	Felix Fietkau <nbd@nbd.name>,
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	lorenzo@kernel.org,
-	ryder.lee@mediatek.com,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mt76: transform aspm_conf for pci_disable_link_state
-Date: Mon, 31 Aug 2026 09:25:25 -0400
-Message-ID: <20260831133314.4125787-297-sashal@kernel.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-6.6] wifi: iwlwifi: mvm: fix a possible underflow
+Date: Mon, 31 Aug 2026 09:25:28 -0400
+Message-ID: <20260831133314.4125787-300-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -58,356 +52,375 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Jiajia Liu <liujiajia@kylinos.cn>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 2dd78856223484895306351df1f903a4b75d213f ]
+[ Upstream commit 0cb5260a1027a43f8cdb961e128f2ddd42e46832 ]
 
-commit b478e162f227 ("PCI/ASPM: Consolidate link state defines") changed
-PCIE_LINK_STATE_L0S (1) to (BIT(0) | BIT(1)). PCI_EXP_LNKCTL_ASPM_L0S (1)
-and PCI_EXP_LNKCTL_ASPM_L1 (2) are no longer matched with
-PCIE_LINK_STATE_L0S (3) and PCIE_LINK_STATE_L1 (4).
+We shouldn't trust the firmware about the length of the wowlan packet.
 
-On the platform enabling ASPM L0s and L1, mt76_pci_disable_aspm is not able
-to disable L1. Fix this by transforming aspm_conf to pcie link state.
-
-Signed-off-by: Jiajia Liu <liujiajia@kylinos.cn>
-Link: https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715215523.fbd989cc85e2.If68de403bfa4943732c025961154c20b01b09e83@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit Message Forensics
+# Stable Backport Analysis: `wifi: iwlwifi: mvm: fix a possible
+underflow`
 
-### Step 1.1: Subject Line
-**Record:** `[wifi: mt76]` `[transform]` — Convert PCI LNKCTL ASPM
-register bits to `PCIE_LINK_STATE_*` values before calling
-`pci_disable_link_state()`.
-
-### Step 1.2: Commit Message Tags
-**Record:**
-- **Signed-off-by:** Jiajia Liu `<liujiajia@kylinos.cn>` (author)
-- **Link:**
-  https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com
-- **Signed-off-by:** Felix Fietkau `<nbd@nbd.name>` (mt76 maintainer)
-- No `Fixes:`, `Reported-by:`, `Cc: stable`, `Tested-by:`, or `Reviewed-
-  by:` tags
-- References upstream commit `b478e162f227` ("PCI/ASPM: Consolidate link
-  state defines") as the change that broke the existing code
-
-### Step 1.3: Commit Body Analysis
-**Record:**
-- **Bug:** `mt76_pci_disable_aspm()` passes raw `PCI_EXP_LNKCTL`
-  register bits (`aspm_conf`) directly to `pci_disable_link_state()`,
-  but after `b478e162f227` the `PCIE_LINK_STATE_*` constants no longer
-  match those register bit positions.
-- **Symptom:** On platforms with ASPM L0s and L1 enabled, L1 cannot be
-  disabled via `pci_disable_link_state()`; the function returns success
-  and exits early.
-- **Root cause:** `PCIE_LINK_STATE_L0S` changed from `1` to `3`
-  (`BIT(0)|BIT(1)`); `PCIE_LINK_STATE_L1` changed from `2` to `4`
-  (`BIT(2)`). `PCI_EXP_LNKCTL_ASPM_L0S`/`L1` remain `1`/`2`.
-- **Version info:** Regression tied to `b478e162f227` (merged May 2024).
-
-### Step 1.4: Hidden Bug Fix Detection
-**Record:** Yes — despite the neutral "transform" wording, this is a
-functional regression fix. The driver was written to disable ASPM
-because it causes MCU hangs and WiFi instability on mt76 hardware; the
-broken mapping silently leaves L1 active.
+**Local tree:** Linux **6.18.44** (`v6.18.44-2-g1b9e1abadee04`)
 
 ---
 
-## Phase 2: Diff Analysis
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 2.1: Change Inventory
+### Step 1.1: Subject line
+**Record:** `[wifi: iwlwifi: mvm]` `[fix]` — validate WoWLAN wake-packet
+size from firmware before arithmetic/copy to prevent integer underflow.
+
+### Step 1.2: Tags
 **Record:**
-- **Files:** `drivers/net/wireless/mediatek/mt76/pci.c` only (+7 / -1)
-- **Function modified:** `mt76_pci_disable_aspm()`
-- **Scope:** Single-file surgical fix
+- **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
+  (author)
+- **Signed-off-by:** Miri Korenblit
+  `<miriam.rachel.korenblit@intel.com>` (iwlwifi maintainer)
+- **Link:** `https://patch.msgid.link/20260715215523.fbd989cc85e2...`
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Cc: stable, or
+  syzbot tags
+- Part of series `[PATCH 14/15]` in
+  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
 
-### Step 2.2: Code Flow Change
+### Step 1.3: Body
 **Record:**
-- **Before:** `pci_disable_link_state(pdev, aspm_conf)` where
-  `aspm_conf` holds `PCI_EXP_LNKCTL` bits (e.g. `0x3` for L0s+L1).
-- **After:** Build `state` by mapping register bits to API constants:
-  - `PCI_EXP_LNKCTL_ASPM_L0S` → `PCIE_LINK_STATE_L0S`
-  - `PCI_EXP_LNKCTL_ASPM_L1` → `PCIE_LINK_STATE_L1`
-  - Then call `pci_disable_link_state(pdev, state)`.
-- **Path affected:** Normal probe path when `CONFIG_PCIEASPM` is enabled
-  and the OS has ASPM control.
+- **Bug:** Driver trusts firmware-reported WoWLAN wake-packet length
+  (`wake_packet_bufsize`) without validating it is large enough for
+  header/crypto overhead.
+- **Symptom:** Integer underflow on `pktsize -= hdrlen` / `pktsize -=
+  ivlen + icvlen`, then `skb_put_data()` with a huge effective size →
+  kernel crash on WoWLAN resume.
+- **Root cause:** Missing bounds checks before subtracting lengths from
+  `pktsize`.
+- **Version info:** None in message; wake-packet path dates to 2022.
 
-### Step 2.3: Bug Mechanism
-**Record:** **Logic/correctness fix — API value mismatch regression.**
-
-When `aspm_conf = 0x3` (L0s+L1 in LNKCTL):
-- Broken: `pci_disable_link_state(pdev, 0x3)` sets `link->aspm_disable
-  |= 0x3`
-- In `pcie_config_aspm_link()`: `state &= (link->aspm_capable &
-  ~link->aspm_disable)` — bits 0 and 1 are cleared, but
-  `PCIE_LINK_STATE_L1` is `BIT(2)` = 4, which is **not** cleared
-- Function returns 0 (success) and exits early — L1 remains enabled
-
-When `aspm_conf = 0x2` (L1 only): `aspm_disable |= 2` does not map to
-`PCIE_LINK_STATE_L1` (4) — L1 not disabled.
-
-### Step 2.4: Fix Quality
-**Record:** Obviously correct — matches how every other driver in the
-tree calls `pci_disable_link_state()` (using `PCIE_LINK_STATE_*`
-constants, not register values). Minimal, no new APIs, very low
-regression risk.
+### Step 1.4: Hidden bug fix?
+**Record:** No — explicitly labeled “fix a possible underflow”; clearly
+a firmware-validation / memory-safety fix, not cosmetic cleanup.
 
 ---
 
-## Phase 3: Git History Investigation
+## PHASE 2: DIFF ANALYSIS
+
+### Step 2.1: Inventory
+**Record:**
+- **File:** `drivers/net/wireless/intel/iwlwifi/mvm/d3.c` (+15 / −4)
+- **Function:** `iwl_mvm_report_wakeup_reasons()`
+- **Scope:** Single-file, surgical fix in WoWLAN wake-packet handling
+
+### Step 2.2: Code flow change
+**Record:**
+
+| Hunk | Before | After |
+|------|--------|-------|
+| Early guard | Dereference `hdr->frame_control` immediately |
+`WARN_ON_ONCE(pktsize < sizeof(*hdr)); return;` before further header
+use |
+| Data-frame path | Copy header (`skb_put_data`) before validating total
+size | Validate `pktsize > hdrlen + ivlen + icvlen` via `IWL_FW_CHECK`,
+then copy |
+| Underflow site | `pktsize -= ivlen + icvlen` without prior size check
+| Same subtraction only after validation |
+
+### Step 2.3: Bug mechanism
+**Record:** **Integer underflow / out-of-bounds access (memory
+safety).**
+- `pktsize` is `int`; subtracting `hdrlen`, `ivlen`, `icvlen` when
+  firmware reports a too-small value makes `pktsize` negative.
+- `skb_put_data(pkt, pktdata, pktsize)` treats size as unsigned → ~4 GB
+  copy attempt.
+- Header fields are read before validating minimum buffer size.
+- Complements `2d5dec517b539` (validates notification at store time);
+  this validates again at report time.
+
+### Step 2.4: Fix quality
+**Record:** Obviously correct, minimal, matches existing `IWL_FW_CHECK`
+patterns in iwlwifi. Low regression risk.
+- **Minor concern:** Early `return` skips
+  `ieee80211_report_wowlan_wakeup()` (unlike `goto report` on alloc
+  failure). Acceptable trade-off to avoid processing corrupt firmware
+  data.
+- **Note:** Current tree has `icvlen = 0; truncated -= icvlen;` ordering
+  at lines 1548–1550 (subtracts after zeroing). This commit does not fix
+  that; separate issue.
+
+---
+
+## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** Buggy `pci_disable_link_state(pdev, aspm_conf)` call
-introduced in `f37f05503575c` (Oct 2019, "mt76: mt76x2e: disable
-pcie_aspm by default"). Worked correctly until `b478e162f227` changed
-the `PCIE_LINK_STATE_*` definitions.
+**Record:** Wake-packet handling in `iwl_mvm_report_wakeup_reasons()`
+traces to merge `5d324e5159d9e` (v6.18 base). Original wake-packet
+support in commit `219ed58feda9` (Sep 2022) already had unchecked
+`pktsize` arithmetic. Bug present since feature introduction.
 
-### Step 3.2: Fixes Tag
-**Record:** N/A — no `Fixes:` tag. Referenced commit `b478e162f227` is
-confirmed in this tree (`git merge-base --is-ancestor` succeeds).
+### Step 3.2: Fixes: tag
+**Record:** N/A — no Fixes: tag.
 
-### Step 3.3: Related File History
-**Record:** `pci.c` has only 3 commits in this tree. No related fix
-already applied. The fix commit itself is not yet in
-`stable/linux-6.18.y`.
+### Step 3.3: Related file history
+**Record:**
+- `2d5dec517b539` — related wake-packet notification validation;
+  **already in this tree**
+- `dd90880eb5ec5` — OOB read fix in `iwl_mvm_nd_match_info_handler()`
+- Patch 15/15 (ND match struct sizing) is **independent**; patch 14/15
+  is standalone
 
-### Step 3.4: Author Context
-**Record:** Jiajia Liu has other kernel contributions. Felix Fietkau
-(mt76 maintainer) Signed-off-by on the patch.
+### Step 3.4: Author context
+**Record:** Emmanuel Grumbach is a core iwlwifi developer; July 2026
+series is a batch of firmware-validation hardening fixes. Miri Korenblit
+is iwlwifi maintainer.
 
 ### Step 3.5: Dependencies
-**Record:** Requires `b478e162f227` (present in tree). Standalone — no
-series dependencies. Applies cleanly to current `pci.c`.
+**Record:** No prerequisites. `IWL_FW_CHECK` exists in `fw/dbg.h`. Self-
+contained; does not need patch 15/15.
 
 ---
 
-## Phase 4: Mailing List and External Research
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original Patch Discussion
-**Record:** `b4 am 20260602054349.42429-1-liujia6264@gmail.com` found
-thread at
-https://patch.msgid.link/20260602054349.42429-1-liujia6264@gmail.com.
-Single-message thread (initial submission only); no review replies or
-stable nominations in the mbox.
+### Step 4.1: Original discussion
+**Record:** Local mbox
+`20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`,
+patch 14/15. Cover letter lists it under “bugfixes.” `b4 dig -c
+2d5dec517b539` worked for the related patch; direct `b4 dig` on this
+commit hash unavailable (not yet committed upstream in this checkout).
+Lore URL blocked by bot protection.
 
 ### Step 4.2: Reviewers
-**Record:** `b4 am` reported 0 code-review messages. Felix Fietkau
-maintainer sign-off in the patch itself.
+**Record:** Series cover shows Intel iwlwifi maintainers as authors; no
+explicit review thread found in local mbox for patch 14.
 
-### Step 4.3: Bug Report
-**Record:** No external bug report or syzbot link. Bug identified via
-code analysis of the `b478e162f227` API change impact.
+### Step 4.3: Bug report
+**Record:** No external bug report or syzbot link. Intel-internal
+firmware-trust hardening, consistent with related fixes in the same
+series.
 
-### Step 4.4: Related Patches
-**Record:** Standalone 1-patch fix. mt76 is the only driver passing raw
-LNKCTL values to `pci_disable_link_state()` (verified via grep).
+### Step 4.4: Series context
+**Record:** Patch 14/15 of 15; independent of patch 15/15 (struct layout
+change).
 
-### Step 4.5: Stable List History
-**Record:** Not searched — no stable discussion found in the patch
-thread. Not applicable as a negative signal.
+### Step 4.5: Stable list history
+**Record:** No stable-list discussion found. Not a negative signal.
 
 ---
 
-## Phase 5: Code Semantic Analysis
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: Key Functions
-**Record:** `mt76_pci_disable_aspm()` modified.
+### Step 5.1: Key functions
+**Record:** `iwl_mvm_report_wakeup_reasons()` (modified)
 
 ### Step 5.2: Callers
-**Record:** Called during PCI probe from:
-- `mt76x0/pci.c`, `mt76x2/pci.c` — always
-- `mt7615/pci.c`, `mt7915/pci.c`, `mt7996/pci.c` — always
-- `mt7921/pci.c`, `mt7925/pci.c` — when `disable_aspm` module param is
-  set (default false)
+**Record:**
+- `iwl_mvm_query_wakeup_reasons()` → called from D3 resume path (~line
+  2770)
+- Triggered on **system resume from suspend** when WoWLAN wakes the host
+- Requires `CONFIG_PM`, `CONFIG_IWLMVM`, WoWLAN enabled
 
 ### Step 5.3: Callees
-**Record:** `pci_disable_link_state()` → `__pci_disable_link_state()` →
-sets `link->aspm_disable` and calls `pcie_config_aspm_link()`. Fallback:
-`pcie_capability_clear_word()` on LNKCTL if API call fails.
+**Record:** `WARN_ON_ONCE`, `IWL_FW_CHECK`, `alloc_skb`, `skb_put_data`,
+`ieee80211_data_to_8023`, `kfree_skb`, `ieee80211_report_wowlan_wakeup`
 
 ### Step 5.4: Reachability
-**Record:** Triggered at device probe on systems with `CONFIG_PCIEASPM`
-and ASPM enabled in firmware/BIOS — common on laptops and desktops. Not
-userspace-triggerable, but affects every boot/probe of affected mt76
-hardware.
+**Record:** Reachable on every WoWLAN wakeup with a wake packet on Intel
+MVM hardware — common laptop suspend/resume path. Not userspace-
+triggerable directly, but affects all WoWLAN users on resume.
 
-### Step 5.5: Similar Patterns
-**Record:** All other `pci_disable_link_state()` callers use
-`PCIE_LINK_STATE_*` constants correctly. mt76 is the sole offender.
-
----
-
-## Phase 6: Cross-Reference Against Local Tree
-
-### Step 6.1: Buggy Code Present?
-**Record:** **Yes.** Local tree is **v6.18.44** (`stable/linux-6.18.y`).
-Buggy code at line 34 of `pci.c`. Regression commit `b478e162f227` is an
-ancestor of HEAD.
-
-### Step 6.2: Backport Complications
-**Record:** Clean apply expected — no conflicting changes to this
-function in 6.18.y.
-
-### Step 6.3: Fix Already Present?
-**Record:** No — fix not in tree. `git log --grep='transform aspm_conf'`
-returns nothing.
+### Step 5.5: Similar patterns
+**Record:** Same series and tree already have multiple `IWL_FW_CHECK`
+validations (`mvm/tx.c`, `mvm/rxmq.c`, `mld/tx.c`). This follows
+established iwlwifi defensive pattern.
 
 ---
 
-## Phase 7: Subsystem Context
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
 
-### Step 7.1: Subsystem Criticality
-**Record:** `drivers/net/wireless/mediatek/mt76` — IMPORTANT (WiFi
-driver, multiple widely-used MediaTek chips).
+### Step 6.1: Buggy code present?
+**Record:** **YES.** Lines 1508–1559 in `d3.c` lack the proposed checks.
+Underflow path is live.
 
-### Step 7.2: Activity Level
-**Record:** Actively maintained; mt76 is a core WiFi driver family with
-ongoing development.
+### Step 6.2: Backport complications
+**Record:** **Clean apply.** Patch 14 hunks applied to `d3.c` with +7
+line offset. No structural conflicts.
+
+### Step 6.3: Related fixes already present?
+**Record:** `2d5dec517b539` (notification-time validation) is in tree.
+This underflow fix is **not** present (`grep "pktsize is too small"`
+only in mbox).
 
 ---
 
-## Phase 8: Impact and Risk Assessment
+## PHASE 7: SUBSYSTEM CONTEXT
 
-### Step 8.1: Who Is Affected
-**Record:** Users of mt76x0, mt76x2, mt7615, mt7915, mt7996 PCI WiFi
-devices (always calls ASPM disable). mt7921/mt7925 users who set
-`disable_aspm=1`. Config-dependent on `CONFIG_PCIEASPM` and platform
-ASPM settings.
+### Step 7.1: Subsystem / criticality
+**Record:** `drivers/net/wireless/intel/iwlwifi/mvm` — **IMPORTANT**
+(Intel WiFi on a large share of laptops/desktops).
 
-### Step 8.2: Trigger Conditions
-**Record:** Device probe on platforms with ASPM L0s and/or L1 enabled in
-PCI config — common default on modern systems. Not timing-dependent.
+### Step 7.2: Activity
+**Record:** Actively maintained; several iwlwifi validation fixes
+already backported to this 6.18.y tree in 2026.
 
-### Step 8.3: Failure Mode Severity
-**Record:** **HIGH** functional impact — ASPM L1 remains active when the
-driver intends to disable it. Original 2019 commit documented this
-causes "continuous mcu hangs and instability" on mt76 hardware. Not a
-kernel oops, but serious WiFi reliability regression.
+---
 
-### Step 8.4: Risk-Benefit
+## PHASE 8: IMPACT AND RISK
+
+### Step 8.1: Who is affected
+**Record:** Intel WiFi users with WoWLAN (`CONFIG_IWLMVM` + PM). Large
+population on laptops.
+
+### Step 8.2: Trigger conditions
+**Record:** Firmware reports `wake_packet_bufsize` smaller than actual
+802.11 header + IV/ICV overhead during WoWLAN wakeup. Requires firmware
+bug or corruption; rare but plausible. Not unprivileged-userspace-
+triggerable.
+
+### Step 8.3: Failure severity
+**Record:** Integer underflow → massive `skb_put_data()` → **kernel
+oops/panic on resume** — **CRITICAL** for affected path.
+
+### Step 8.4: Risk/benefit
 **Record:**
-- **Benefit:** HIGH for affected mt76 users — restores intended ASPM
-  disabling behavior
-- **Risk:** VERY LOW — 6-line mapping fix, maintainer-approved, matches
-  established driver patterns
+- **Benefit:** HIGH — prevents crash on WoWLAN resume
+- **Risk:** LOW — ~15 lines, defensive checks only, established macro
 - **Ratio:** Strongly favors backport
 
 ---
 
-## Phase 9: Final Synthesis
+## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence Summary
+### Step 9.1: Evidence summary
 
-**FOR backport:**
-- Real regression from `b478e162f227` (in tree since v6.9)
-- Prevents ASPM L1 disable on mt76 — known to cause MCU
-  hangs/instability
-- Small, surgical, maintainer-signed fix
-- Buggy code and prerequisite both present in v6.18.44
-- Only driver in tree with this incorrect usage pattern
+**FOR:**
+- Real integer underflow → crash on resume
+- Buggy code confirmed in 6.18.44 tree
+- Small, surgical, obviously correct
+- Complements existing backport `2d5dec517b539`
+- Applies cleanly
+- iwlwifi maintainer authorship
+- Matches stable firmware-validation pattern
 
-**AGAINST backport:**
-- No syzbot report or user bug report filed
-- mt7921/mt7925 only affected when module param set
-- Not a security issue or kernel crash
+**AGAINST:**
+- Requires firmware misreporting (not syzbot-proven)
+- Early `return` drops wakeup report on corrupt packet (minor, vs.
+  crash)
+- `icvlen`/`truncated` ordering bug in current tree is separate (not
+  introduced by this patch)
 
-**Unresolved:** No review-thread discussion beyond initial submission.
+**UNRESOLVED:** No public review thread or syzbot reproducer (not needed
+for decision).
 
-### Step 9.2: Stable Rules Checklist
-1. Obviously correct and tested? **PASS** — mapping is verifiably
-   correct; maintainer SOB
-2. Fixes a real bug? **PASS** — regression from PCI API change
-3. Important issue? **PASS** — WiFi instability on affected hardware
-   (HIGH functional)
-4. Small and contained? **PASS** — 7 lines, 1 file
+### Step 9.2: Stable rules checklist
+1. Obviously correct and tested? **PASS** — logic verified; maintainer-
+   signed
+2. Fixes a real bug? **PASS** — demonstrated underflow path
+3. Important issue? **PASS** — resume-time kernel crash
+4. Small and contained? **PASS** — one function, ~19 lines
 5. No new features/APIs? **PASS**
-6. Can apply to local tree? **PASS** — prerequisite present, clean apply
+6. Can apply to local tree? **PASS** — verified clean apply
 
-### Step 9.3: Exception Categories
-**Record:** Hardware workaround — restoring ASPM disable that prevents
-known hardware instability. Qualifies under quirk/workaround exception.
+### Step 9.3: Exception category
+**Record:** N/A (not device ID, quirk, DT, docs, or build fix — standard
+bug fix).
 
-### Step 9.4: Decision Rationale
-This is a clear regression fix for the locally checked-out **6.18.y**
-tree. Commit `b478e162f227` changed `PCIE_LINK_STATE_*` semantics; mt76
-was the only driver still passing raw LNKCTL register values. The result
-is that `pci_disable_link_state()` returns success without actually
-disabling L1, leaving mt76 devices exposed to the exact ASPM-related
-instability the driver was designed to prevent. The fix is minimal,
-correct, and maintainer-approved.
+### Step 9.4: Decision rationale
+For Linux **6.18.44**, the vulnerable WoWLAN wake-packet code is present
+and unpatched. Malicious or buggy firmware length fields can underflow
+`pktsize` and crash the kernel during suspend resume — a high-severity,
+low-risk fix that belongs in stable.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags, body; identified regression from
-  `b478e162f227`
-- [Phase 2] Read diff: 7 lines in `mt76_pci_disable_aspm()`, maps LNKCTL
-  bits to `PCIE_LINK_STATE_*`
-- [Phase 2] Verified values: `PCI_EXP_LNKCTL_ASPM_L0S=1`, `L1=2`;
-  `PCIE_LINK_STATE_L0S=3`, `L1=4` in `include/linux/pci.h`
-- [Phase 2] Traced `pcie_config_aspm_link()` line 961: `state &=
-  (capable & ~aspm_disable)` — confirmed L1 (bit 2) not cleared when
-  `aspm_disable=0x3`
-- [Phase 3] `git describe HEAD`: v6.18.44
-- [Phase 3] `git merge-base --is-ancestor b478e162f227 HEAD`: confirmed
-  present
-- [Phase 3] `git show b478e162f227^:include/linux/pci.h`: old
-  `PCIE_LINK_STATE_L0S=BIT(0)`, `L1=BIT(1)` matched register bits
-- [Phase 3] `git blame pci.c:34`: introduced in `f37f05503575c` (2019)
-- [Phase 3] Fix not in tree: `git log --grep='transform aspm_conf'`
-  empty
-- [Phase 4] `b4 am 20260602054349...`: found patch thread, 1 message,
-  Felix Fietkau SOB
-- [Phase 5] `grep mt76_pci_disable_aspm`: 7 call sites across mt76 PCI
-  drivers
-- [Phase 5] `grep pci_disable_link_state`: mt76 is sole driver passing
-  register values
-- [Phase 6] Buggy code confirmed at `pci.c:34` in v6.18.44
-- [Phase 6] `b478e162f227` on `stable/linux-6.18.y` via grep of branch
-  log
-- [Phase 8] Original commit `f37f05503575c` message documents ASPM
-  causes "mcu hangs and instability"
+- **[Phase 1]** Parsed subject, tags, body from user query and mbox
+  patch 14/15
+- **[Phase 1]** Confirmed patch 14/15 in
+  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
+- **[Phase 2]** Read `d3.c` lines 1454–1588; confirmed missing
+  validation
+- **[Phase 2]** Simulated underflow: `pktsize=10, hdrlen=24` →
+  `pktsize=-34` → `4294967262` unsigned
+- **[Phase 3]** `git describe HEAD` → `v6.18.44-2-g1b9e1abadee04`;
+  Makefile `6.18.44`
+- **[Phase 3]** `git blame` lines 1508–1560 → merge `5d324e5159d9e`
+- **[Phase 3]** `git show 219ed58feda9` → wake packet support from Sep
+  2022 with same unchecked arithmetic
+- **[Phase 3]** `git show 2d5dec517b539` → related fix already in tree
+- **[Phase 3]** `git log --oneline -20 --
+  drivers/net/wireless/intel/iwlwifi/mvm/d3.c` → fix not present
+- **[Phase 4]** Read cover letter: listed as “bugfixes”, patch 14/15
+  standalone
+- **[Phase 4]** `b4 dig -c 2d5dec517b539` → lore URL for related patch
+- **[Phase 4]** WebFetch lore URL → blocked (bot protection); relied on
+  local mbox
+- **[Phase 5]** Traced call chain: resume →
+  `iwl_mvm_query_wakeup_reasons` → `iwl_mvm_report_wakeup_reasons`
+- **[Phase 5]** `grep IWL_FW_CHECK` → macro present in `fw/dbg.h`
+- **[Phase 6]** `grep "pktsize is too small"` → only in mbox, not in
+  tree
+- **[Phase 6]** `git apply --check` on patch 14 d3.c hunks → succeeded
+  (offset +7)
+- **[Phase 6]** Confirmed `iwl_mvm_wowlan_store_wake_pkt` and wake-
+  packet path exist
+- **[Phase 8]** Assessed severity: resume crash on WoWLAN path
 
-**YES**The background checks finished and match the earlier analysis:
+**YES**
 
-- **Stable branch search:** `b478e162f227d` ("PCI/ASPM: Consolidate link
-  state defines") is on `stable/linux-6.18.y`, so the regression this
-  mt76 fix addresses is present in your v6.18.44 tree.
-- **Author history:** Jiajia Liu has other kernel fixes (Bluetooth,
-  mt76, btmtk, i915); Felix Fietkau signed off on this patch.
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-**Verdict unchanged: YES** — backport the fix to restore correct ASPM
-disabling on mt76 PCI WiFi devices.
-
- drivers/net/wireless/mediatek/mt76/pci.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/pci.c b/drivers/net/wireless/mediatek/mt76/pci.c
-index b5031ca7f73fb..4c864afefe2f2 100644
---- a/drivers/net/wireless/mediatek/mt76/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/pci.c
-@@ -30,8 +30,14 @@ void mt76_pci_disable_aspm(struct pci_dev *pdev)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index dd1c21065bc33..82dca6ba56c7f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1516,6 +1516,10 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
+ 		if (WARN_ON_ONCE(truncated < 0))
+ 			truncated = 0;
  
- 	if (IS_ENABLED(CONFIG_PCIEASPM)) {
- 		int err;
-+		int state = 0;
- 
--		err = pci_disable_link_state(pdev, aspm_conf);
-+		if (aspm_conf & PCI_EXP_LNKCTL_ASPM_L0S)
-+			state |= PCIE_LINK_STATE_L0S;
-+		if (aspm_conf & PCI_EXP_LNKCTL_ASPM_L1)
-+			state |= PCIE_LINK_STATE_L1;
++		/* this would be a firmware bug */
++		if (WARN_ON_ONCE(pktsize < sizeof(*hdr)))
++			return;
 +
-+		err = pci_disable_link_state(pdev, state);
- 		if (!err)
- 			return;
- 	}
+ 		if (ieee80211_is_data(hdr->frame_control)) {
+ 			int hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 			int ivlen = 0, icvlen = 4; /* also FCS */
+@@ -1524,10 +1528,6 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
+ 			if (!pkt)
+ 				goto report;
+ 
+-			skb_put_data(pkt, pktdata, hdrlen);
+-			pktdata += hdrlen;
+-			pktsize -= hdrlen;
+-
+ 			if (ieee80211_has_protected(hdr->frame_control)) {
+ 				/*
+ 				 * This is unlocked and using gtk_i(c)vlen,
+@@ -1553,6 +1553,17 @@ static void iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
+ 				truncated = 0;
+ 			}
+ 
++			if (IWL_FW_CHECK(mvm,
++					 pktsize <= hdrlen + ivlen + icvlen,
++					 "pktsize is too small %d\n",
++					 pktsize)) {
++				kfree_skb(pkt);
++				return;
++			}
++
++			skb_put_data(pkt, pktdata, hdrlen);
++			pktdata += hdrlen;
++			pktsize -= hdrlen;
+ 			pktsize -= ivlen + icvlen;
+ 			pktdata += ivlen;
+ 
 -- 
 2.53.0
 
