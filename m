@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A0A14F9C59;
-	Mon, 31 Aug 2026 13:41:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595C44A0927;
+	Mon, 31 Aug 2026 13:41:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183685; cv=none; b=bF+38o1/i8W3H/sVtf6Q6PSKstP9aS+U7MDd0RTy5f7GAasdTkpk8RQkiITlChOzPYrp/297wNX9G9cAMGXeHeraLr52J2a10OyrF/2+1k/gkK/HJxJm/fO87H+9X8RQRejRrbCrf5gBzvTTY+9dE5AFqlXWmPezOAvsydXeH48=
+	t=1788183688; cv=none; b=CTgNN/tFsNHdBMix7re6NWXWLH/3hMOBDyDThsie7CV1GVgUyyD8t+h29vfKJeG6z4QvA+TLiThwdpYgajKC2p5IKyAH6XBEQM6Gv/Z4ZraJV5UPRKGU/jYDzXETdNeENraG2IDnCLy8WrrrLNU6zBTbUQUNqNOL4LhKVMhiVcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183685; c=relaxed/simple;
-	bh=Y8dCegj07B7euELog3kJEI9tthNoN/0BVGnEnwhZ7Z4=;
+	s=arc-20240116; t=1788183688; c=relaxed/simple;
+	bh=98dAFk8oW6aPfWaMsLFH6NmvYeEs02fg8AF/i05tdio=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WXv4OTjNwF797MYYCOWOxzuClXiT3C9vJSSe/QCQpc5XHa5atU0enE3ASl/hOPW5rUaFowT5ABY7fQNvnSzF3z8f7xcZNR5RYU/fAERrKT6C+dUOOiRDBK++7Ncge/A897WVinv0iQ0KofTGCIjHCsqpvomxi3fzWlG/bKZvtcY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jEiN8FXY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=u2mPiaUserGYmbiXHGipo78QQ0B/9MWk5B/bcqlk9lzYxHutXw1+PD1bifeRB98+OlnzkpEgNDxuvcDTS+BaKdsHTAFgi0g30xZC83Ms95g/3yBe4Jm4Ed2MplWUt0pLPSoGsrZ1HSU35sYrrdNlVeScLrWXqohinlWue9OPXww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LBnUVA3S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jEiN8FXY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F34701F00ACA;
-	Mon, 31 Aug 2026 13:41:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LBnUVA3S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3C0891F00A3D;
+	Mon, 31 Aug 2026 13:41:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183681;
-	bh=8Cxx+Cx6ZoOKmjmysVGpWX0i/NLrpcbN0wj0rLzZ+fs=;
+	s=k20260515; t=1788183686;
+	bh=Hx2z5k1Uq4wfvI+d1q0h0X0hPB81KDLNqDGz4Wg5BYs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jEiN8FXYhNq6GdXhi901pIQjgcNNXNlpeMRGBM20ehzmPa/DfXB73ZgcQddYKBkM1
-	 FzUOm7YF/3OWaNNvLO+6JPHtvysW41ssFLspdtR3pzFJF8OKSy9FEfgu0LO9J2sgc6
-	 6oYuSsUyy7Fmm9nwBLXW9YQh7vpuuB7RAK7NS4droZ9NaodtlBOpRCzSC3GXz/a1m/
-	 3VZa4ThM4mVF8kMf2UZy7M8sA26gmPeGTnzooz7oECjyo3wlQJCIfEfcS5vXS6KTei
-	 Ja+ifJTQNvm/ThhhFsl7QNWeeH7HqCpPSLk0KZ95VhURm9XyU40lOBdkByPYEbY/Fz
-	 MSUOvokucNtyQ==
+	b=LBnUVA3SDxOvLt/+PgKcu9CrL9BV+kpZ3VtfnOR45ZA5qXauPjIKlEU7vjcldjSnd
+	 /EC3AHfQ1gTNP8DjzAIz8dfqDkGosvUTmpRWQnHaciQ51Npo7bZRtezLXlv4XAE3VK
+	 xxlQZeRYqwjUIUCaj/AfgrMj9YUhoCREWGtQAguKOq7YCDxT0LUaI/5WWtjTrq7Ekj
+	 C4tFcdsQQQVLIqU08xRRrk6AAXF1I1wnzahvYvfn4cwhBfDdkuQG78qrELRQyDvOyF
+	 7oSialsfqzbdcQEbVgqrtW1CgE+Pdp9HiRUAlTxIM3UeOUau+iLq6YavFmnz3l8ICC
+	 n3xEHgS6s4M8g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: purge async notifications upon nic error
-Date: Mon, 31 Aug 2026 09:24:29 -0400
-Message-ID: <20260831133314.4125787-241-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: mac80211: use chandef in ieee80211_get_sta_bw()
+Date: Mon, 31 Aug 2026 09:24:32 -0400
+Message-ID: <20260831133314.4125787-244-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,95 +53,72 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit a40ad60a47f7c904b75a9ff83b39edebf3961c85 ]
+[ Upstream commit e36b3322a41b7de0168ad6a37bdd1219cfe35077 ]
 
-This fixes a kernel panic in reconfig failure:
+When getting the bandwidth the station uses in order to
+calculate the channel context's min_def, pass the channel
+for the link to _ieee80211_sta_cap_rx_bw() instead of using
+ieee80211_sta_cap_rx_bw(), which looks it up.
 
-1. we have a BSS connection
-2. we have a NAN connection
-3. FW error occurs
-4. reconfig restores the BSS connection
-5. however, restoring the NAN connection fails due to a FW error.
-6. erroneously, ieee80211_handle_reconfig_failure is called and marks all
-   interfaces as not-in-driver (will be fixed in a different patch).
-7. mac80211 frees the links of the BSS connection but doesn't tell the
-   driver about that, as it thinks that this vif is not in the driver.
-8. in ieee80211_stop_device, *ALL* wiphy works are getting flushed
-   (erroneously?)
-9. Therefore, async_handlers_wk is being executed, processing the
-   statistics notification that was received after we restored the BSS
-   connection.
-10. the notification handler dereferences fw_id_to_bss_conf[id], which is
-    now a dangling pointer, as mac80211 already freed this link in (7).
-11. On the first access to one of the links fields, we panic.
-
-While this can and should be fixed by removing the call to
-ieee80211_handle_reconfig_failure in (6), it is also not a good idea to
-carry and maybe handle notifications from a dead FW.
-
-We do purge the notifications when we stop the FW, but in reconfig
-failure we stop the FW too late, after the notifications are processed.
-In addition, async_handlers_wk can always be scheduled before the
-reconfig work.
-
-Purge the notifications immediately when transport notifies about a nic
-error.
-
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Link: https://patch.msgid.link/20260517100550.4414228bf1d1.I1926a2b2e7827eaac22882699880ec04a3cb95f0@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260415144514.d2bdf106a39f.I6ae07289a272dd9e27118f9fa324a4865f994003@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mld: purge async
-notifications upon nic error`
+# Stable Backport Analysis: `wifi: mac80211: use chandef in
+ieee80211_get_sta_bw()`
 
-**Local tree:** `v6.18.44` (`stable/linux-6.18.y`, `VERSION = 6`,
-`PATCHLEVEL = 18`, `SUBLEVEL = 44`)
+**Local tree:** Linux **6.18.43** (`git describe HEAD` → `v6.18.43`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: Subject line
-**Record:** `[wifi: iwlwifi: mld]` **`purge`** — purge stale async FW
-notifications when the NIC reports a firmware error.
+**Record:** `[wifi: mac80211]` `[use]` — When computing per-station
+bandwidth for channel-context `min_def`, pass the link's channel
+definition explicitly instead of looking it up indirectly.
 
 ### Step 1.2: Tags
 **Record:**
-- **Reviewed-by:** Johannes Berg `<johannes.berg@intel.com>` (mac80211 /
-  iwlwifi maintainer)
-- **Link:** `https://patch.msgid.link/20260517100550...` (patch
-  submission thread)
-- **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (author)
+- **Reviewed-by:** Miriam Rachel Korenblit
+  \<miriam.rachel.korenblit@intel.com\>
+- **Link:** https://patch.msgid.link/20260415144514.d2bdf106a39f.I6ae072
+  89a272dd9e27118f9fa324a4865f994003@changeid
+- **Signed-off-by:** Johannes Berg \<johannes.berg@intel.com\>
 - No Fixes:, Reported-by:, Tested-by:, Cc: stable@vger.kernel.org
-- Notable: maintainer review; no syzbot/user crash report tags
+- Part of **[PATCH 4/20]** in series "wifi: mac80211: clean up and fix
+  per-STA BW handling"
+- Notable pattern: subsystem maintainer-authored, Intel reviewer; no
+  syzbot/fuzzer report
 
 ### Step 1.3: Body analysis
 **Record:**
-- **Bug:** After a FW error during HW reconfig/recovery, stale async
-  statistics notifications can still run via `async_handlers_wk` after
-  mac80211 has freed BSS link state. The stats handler dereferences
-  `fw_id_to_bss_conf[id]`, which is now dangling → **kernel panic**.
-- **Symptom:** Kernel panic on reconfig failure with BSS + NAN (or
-  similar multi-interface) setup.
-- **Root cause:** `iwl_mld_cancel_async_notifications()` is only called
-  in `iwl_mld_stop_fw()`, which runs too late; `async_handlers_wk` can
-  be scheduled/executed before restart cleanup.
-- **Fix approach:** Call `iwl_mld_cancel_async_notifications(mld)`
-  immediately in `iwl_mld_nic_error()` when transport reports FW death.
-- **Version info:** None stated; commit references a separate mac80211
-  fix for `ieee80211_handle_reconfig_failure` behavior.
+- **Bug:** `ieee80211_get_sta_bw()` calls `ieee80211_sta_cap_rx_bw()`,
+  which internally looks up the band from the STA's own
+  `sdata->vif.link_conf[]` when no `chandef` is passed.
+- **Symptom:** Wrong band used when computing STA RX bandwidth
+  capability for channel-context `min_def` recalculation.
+- **Root cause:** The function should use the channel of the **link
+  being evaluated** (`link->conf->chanreq.oper`), not whatever channel
+  the STA's `sdata` happens to reference.
+- No explicit crash/stack trace in the commit message; failure mode is
+  incorrect bandwidth derivation.
 
 ### Step 1.4: Hidden bug fix?
-**Record:** Yes — described as a purge/cleanup, but it fixes a **use-
-after-free / dangling pointer → kernel panic** on the FW error recovery
-path.
+**Record:** **Yes.** Although the subject doesn't say "fix", this
+corrects a real logic error. When `ieee80211_get_max_required_bw()`
+includes stations from sibling interfaces in the same BSS (notably
+**AP_VLAN** clients), `ieee80211_sta_cap_rx_bw()` with `chandef == NULL`
+looks up band from the VLAN `sdata`'s `link_conf`, not the parent AP
+link's channel. That parallels the already-backported AP_VLAN crash fix
+(`5a86d4e920d97`) but in the `ieee80211_get_sta_bw()` →
+`ieee80211_recalc_chanctx_min_def()` path.
 
 ---
 
@@ -148,329 +126,368 @@ path.
 
 ### Step 2.1: Inventory
 **Record:**
-- **Files:** `drivers/net/wireless/intel/iwlwifi/mld/mld.c` (+9 lines, 0
-  removed)
-- **Function modified:** `iwl_mld_nic_error()`
+- **Files:** `net/mac80211/chan.c` only (+5 / -5 lines)
+- **Functions modified:** `ieee80211_get_sta_bw()`,
+  `ieee80211_get_max_required_bw()`
 - **Scope:** Single-file, surgical fix
 
 ### Step 2.2: Code flow change
 **Record:**
-- **Hunk (iwl_mld_nic_error):** After setting `in_hw_restart`,
-  **before** return:
-  - **Before:** FW error recorded; scan aborted; `in_hw_restart` set;
-    async notification queue untouched until later `iwl_mld_stop_fw()`.
-  - **After:** Same, plus immediate
-    `iwl_mld_cancel_async_notifications(mld)` to cancel
-    `async_handlers_wk` and purge queued async RX handlers.
-- **Path affected:** FW error / NIC error path (IRQ and other transport
-  error entry points).
+- **Hunk 1 (`ieee80211_get_sta_bw`):** Before: takes `link_id`, calls
+  `ieee80211_sta_cap_rx_bw(link_sta)` (NULL chandef → internal RCU band
+  lookup from `link_sta->sta->sdata`). After: takes `struct
+  ieee80211_link_data *link`, calls `_ieee80211_sta_cap_rx_bw(link_sta,
+  &link->conf->chanreq.oper)` — uses the evaluating link's operating
+  channel.
+- **Hunk 2 (`ieee80211_get_max_required_bw`):** Before: passes `link_id`
+  to `ieee80211_get_sta_bw()`. After: passes full `link` pointer.
+- **Path affected:** Normal AP/station channel-context `min_def`
+  recalculation (hot path, not error-only).
 
 ### Step 2.3: Bug mechanism
 **Record:**
-- **Category:** Memory safety — dangling pointer / UAF-class bug
-- **Mechanism:** `STATISTICS_OPER_NOTIF` is registered as
-  `RX_HANDLER_ASYNC` and handled in `iwl_mld_handle_stats_oper_notif()`
-  → `iwl_mld_process_per_link_stats()`, which dereferences
-  `mld->fw_id_to_bss_conf[fw_id]`. On reconfig failure, mac80211 can
-  free link state while queued async notifications remain;
-  `async_handlers_wk` then runs against freed `bss_conf` pointers.
+- **Category:** Logic / correctness fix; potential NULL pointer
+  dereference on AP_VLAN path
+- **Mechanism:** `ieee80211_get_max_required_bw()` iterates all STAs on
+  the same BSS:
+
+```298:303:net/mac80211/chan.c
+        list_for_each_entry(sta, &sdata->local->sta_list, list) {
+                if (sdata != sta->sdata &&
+                    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
+                        continue;
+
+                max_bw = max(max_bw, ieee80211_get_sta_bw(sta,
+link_id));
+```
+
+For AP_VLAN clients, `sta->sdata` is the VLAN interface.
+`ieee80211_sta_cap_rx_bw()` with NULL chandef enters
+`__ieee80211_sta_cap_rx_bw()` and does:
+
+```368:376:net/mac80211/vht.c
+                if (chandef) {
+                        band = chandef->chan->band;
+                } else {
+                        struct ieee80211_bss_conf *link_conf;
+
+                        rcu_read_lock();
+                        link_conf =
+rcu_dereference(sdata->vif.link_conf[link_id]);
+                        band = link_conf->chanreq.oper.chan->band;
+                        rcu_read_unlock();
+```
+
+Here `sdata` is the VLAN `sdata`, whose link never participates in
+chanctx reservations (documented in `5a86d4e920d97`). The fix passes the
+parent AP link's valid `chanreq.oper` instead.
 
 ### Step 2.4: Fix quality
-**Record:**
-- **Obviously correct:** Yes — reuses existing
-  `iwl_mld_cancel_async_notifications()` already called from
-  `iwl_mld_stop_fw()` and `d3.c`.
-- **Minimal:** 9 lines, one call site.
-- **Regression risk:** Low-medium —
-  `iwl_mld_cancel_async_notifications()` asserts wiphy lock
-  (`lockdep_assert_wiphy`), while `nic_error` op_mode callback is
-  documented as atomic; see Phase 5/8 notes. Maintainer reviewed.
+**Record:** Obviously correct — the caller already has the correct link
+context and other code in the same file (e.g.
+`ieee80211_chan_bw_change()`) already passes explicit chandefs. Minimal
+regression risk; no new locks or APIs.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** `git blame` on `iwl_mld_nic_error()` shows all lines
-attributed to `7e22de67e545d` (unrelated amdgpu commit) — indicates
-**shallow/truncated history** in this checkout, not reliable for
-introduction dating. Function and buggy pattern are present in current
-tree.
+**Record:** Buggy lines in `ieee80211_get_sta_bw()` present in current
+tree at lines 238–303. Git blame points to `19eef1d98eeda` (merge
+artifact in this stable tree's truncated history). The function and
+`_ieee80211_sta_cap_rx_bw()` API both exist in 6.18.43.
 
 ### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag in commit message.
+**Record:** N/A — no Fixes: tag present.
 
 ### Step 3.3: Related file history
-**Record:** `git log -- drivers/net/wireless/intel/iwlwifi/mld/` returns
-only the amdgpu commit — history too shallow for series/prerequisite
-analysis. `iwl_mld_cancel_async_notifications()` **already exists** in
-this tree (`notif.c`, `fw.c`, `d3.c`).
+**Record:**
+- `5a86d4e920d97` — "mac80211: fix crash in ieee80211_chan_bw_change for
+  AP_VLAN stations" — already in this tree; fixes same class of
+  AP_VLAN/wrong-sdata problem in a different function
+- This commit is patch 4/20; patches 1–3 change NAN/HT handling in other
+  files; patch 5 fixes TDLS similarly; patches 19–20 are larger
+  refactors — **patch 4 is standalone** for the current code layout
 
-### Step 3.4: Author commits
-**Record:** `git log --author=Korenblit -- mld/` returns empty (shallow
-history). Author is Intel iwlwifi developer; Johannes Berg reviewed.
+### Step 3.4: Author context
+**Record:** Johannes Berg is mac80211/cfg80211 maintainer. Reviewed by
+Intel mac80211 developer Miriam Rachel Korenblit.
 
 ### Step 3.5: Dependencies
-**Record:** **Standalone** — only adds a call to an existing function.
-Commit mentions a related mac80211 fix for
-`ieee80211_handle_reconfig_failure`, but this patch is independently
-valuable as defensive cleanup on FW death. No patch X/Y series
-indicator.
+**Record:** No prerequisites. `_ieee80211_sta_cap_rx_bw(struct
+link_sta_info *, struct cfg80211_chan_def *)` is declared in
+`ieee80211_i.h` and implemented in `vht.c` in this tree. Patch applies
+cleanly to current `chan.c`.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 ### Step 4.1: Original discussion
-**Record:** `b4 dig -c <sha>` not possible — commit SHA not provided.
-`WebFetch` of Link URL blocked (Anubis bot protection). Patch text not
-found in local `.mbx` files. **Could not retrieve lore thread.**
+**Record:** Local mbox `20260415_johannes_wifi_mac80211_clean_up_and_fix
+_per_sta_bw_handling.mbx` contains patch 4/20. Cover letter references
+earlier RFC at lore.kernel.org (blocked by bot protection). `b4 dig -c`
+could not run without upstream commit hash. Link URL also blocked. No
+stable nomination found in mbox (no "Cc: stable" anywhere in series).
 
 ### Step 4.2: Reviewers
-**Record:** Reviewed-by Johannes Berg confirmed in commit message. `b4
-dig -w` not run (no commit SHA).
+**Record:** Reviewed-by from Miriam Rachel Korenblit (Intel). Series
+author is subsystem maintainer.
 
-### Step 4.3: Bug report
-**Record:** No external bug report tags. Bug described in detail in
-commit message with step-by-step reproduction (FW error + reconfig
-failure + BSS/NAN).
+### Step 4.3: Bug reports
+**Record:** No external bug report, syzbot, or stack trace linked to
+this specific patch. Related AP_VLAN NULL-deref was reported/fixed
+separately in `5a86d4e920d97`.
 
-### Step 4.4: Related patches
-**Record:** Commit references a separate fix for erroneous
-`ieee80211_handle_reconfig_failure` call; this patch is complementary
-defensive fix, not dependent on it.
+### Step 4.4: Series context
+**Record:** Patch 4/20 is independent of patches 1–3 (NAN/HT changes).
+Patch 5 is a similar chandef fix for TDLS. Patches 19–20 rename/refactor
+functions — not required for this fix in 6.18.43.
 
 ### Step 4.5: Stable list history
-**Record:** Not searched (lore unavailable). No Cc: stable in commit
-(expected for manual review pipeline).
+**Record:** Not searched successfully (lore blocked). No stable
+discussion found in local mbox.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:**
-- Modified: `iwl_mld_nic_error()`
-- Called helper: `iwl_mld_cancel_async_notifications()`
-- Affected handler: `iwl_mld_handle_stats_oper_notif()` →
-  `iwl_mld_process_per_link_stats()`
+**Record:** `ieee80211_get_sta_bw()`, `ieee80211_get_max_required_bw()`,
+`_ieee80211_sta_cap_rx_bw()`, `__ieee80211_sta_cap_rx_bw()`
 
-### Step 5.2: Callers of `iwl_mld_nic_error`
-**Record:** Registered as `.nic_error` in `iwl_mld_ops`; invoked via
-`iwl_op_mode_nic_error()` from:
-- `iwl_trans_fw_error()` (IRQ error path in `pcie/gen1_2/rx.c`)
-- Command queue full (`tx.c`, `tx-gen2.c`)
-- Debugfs-triggered errors (`trans.c`)
-- Reset timeout / TOP reset failure (`trans-gen2.c`)
-- NMI path (`iwl-io.c`)
+### Step 5.2: Callers
+**Record:** `ieee80211_get_max_required_bw()` called from
+`ieee80211_get_chanctx_max_required_bw()` for `NL80211_IFTYPE_AP`,
+`NL80211_IFTYPE_AP_VLAN`, and associated `NL80211_IFTYPE_STATION`. That
+feeds `_ieee80211_recalc_chanctx_min_def()` →
+`ieee80211_recalc_chanctx_min_def()`, which is invoked from many paths
+(client connect/disconnect, HE operations, channel changes in `chan.c`,
+`he.c`, `util.c`).
 
 ### Step 5.3: Callees
-**Record:** `iwl_mld_cancel_async_notifications()` calls
-`wiphy_work_cancel()` + spinlock-protected list purge of
-`async_handlers_list`.
+**Record:** `_ieee80211_sta_cap_rx_bw()` uses HE/EHT/VHT capability
+parsing band-specifically; wrong band → wrong bandwidth enum returned.
 
 ### Step 5.4: Reachability
-**Record:** **Reachable** on any FW/HW error on IWLMLD devices —
-transport calls `iwl_trans_fw_error()` from IRQ on microcode errors. FW
-errors are a normal operational event on iwlwifi hardware. Panic occurs
-during subsequent recovery/reconfig, not on every error, but the stale-
-notification race is plausible whenever FW dies with queued async
-notifications.
+**Record:** Triggered during normal AP operation with VLAN clients
+(4-address/WDS) or any multi-interface BSS sharing. Common operational
+path, not obscure init-only code. Reachable without special privileges
+beyond having WiFi AP+VLAN configured.
 
 ### Step 5.5: Similar patterns
-**Record:** MVM purges async handlers in restart path
-(`iwl_mvm_async_handlers_purge()` in `mvm/mac80211.c`), not in
-`nic_error`. MLD lacked the early purge that MVM's restart path provides
-implicitly; this patch closes that gap at the earliest safe point (FW
-death notification).
+**Record:** Patch 5 in same series applies identical chandef-passing
+pattern to TDLS. `ieee80211_chan_bw_change()` already uses explicit
+chandef and `get_bss_sdata()` after the AP_VLAN crash fix — this patch
+closes the analogous gap in `ieee80211_get_sta_bw()`.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.44)
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.43)
 
-### Step 6.1: Buggy code exists?
-**Record:** **YES.** Current `iwl_mld_nic_error()` (lines 643–674 in
-`mld.c`) does **not** call `iwl_mld_cancel_async_notifications()`. The
-helper exists and is used in `iwl_mld_stop_fw()` (`fw.c:373`).
-`fw_id_to_bss_conf` dereference in stats path confirmed
-(`stats.c:409–417`). IWLMLD driver fully present (65 files under
-`mld/`).
+### Step 6.1: Buggy code present?
+**Record:** **Yes.** Current tree still has `width =
+ieee80211_sta_cap_rx_bw(link_sta);` at line 257 of `chan.c`. Fix not yet
+applied.
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply expected** — single hunk, no structural
-conflicts. Fix not already present. Git history too shallow to assess
-merge conflicts beyond reading current file.
+**Record:** **Clean apply expected** — 5-line change, no structural
+conflicts. `_ieee80211_sta_cap_rx_bw()` API exists. No dependency on
+later series refactors.
 
 ### Step 6.3: Related fixes already present?
-**Record:** **No.** `grep` for `cancel_async` / `FW is dead` in `mld.c`
-returns nothing. No equivalent early-purge in `iwl_mld_nic_error()`.
+**Record:** `5a86d4e920d97` (AP_VLAN crash in
+`ieee80211_chan_bw_change`) is present but does **not** fix this code
+path. This commit is complementary, not duplicate.
 
 ---
 
 ## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** **IMPORTANT** — `drivers/net/wireless/intel/iwlwifi/mld/`
-(Intel WiFi, IWLMLD firmware path). Not universal core code, but iwlwifi
-is widely deployed on laptops/desktops with recent Intel WiFi hardware
-using MLD opmode.
+**Record:** `net/mac80211` — **IMPORTANT** (WiFi stack; affects
+connectivity for AP/station users)
 
 ### Step 7.2: Activity
-**Record:** IWLMLD is actively developed (full MLO, stats, reconfig
-support in tree). Shallow git history prevents trend analysis.
+**Record:** Actively maintained; recent stable backport of related
+AP_VLAN fix confirms this area is live in 6.18.y.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users with **CONFIG_IWLMLD** devices (Intel BZ/SC/DR-family
-hardware using MLD opmode). Not all iwlwifi users (IWLMVM/IWLDVM
-unaffected).
+**Record:** Users of mac80211 AP mode with **AP_VLAN** (multi-
+BSSID/VLAN) or any setup where `ieee80211_get_max_required_bw()`
+evaluates stations whose `sta->sdata` differs from the link's `sdata`.
+Also affects associated station mode path that includes TDLS/BSS-shared
+peers.
 
 ### Step 8.2: Trigger conditions
-**Record:**
-- FW/HW error occurs
-- Recovery/reconfig attempted (e.g., `ieee80211_restart_hw` path)
-- Partial reconfig failure leaves stale async notifications (especially
-  statistics)
-- `async_handlers_wk` runs after link `bss_conf` freed
-- **Likelihood:** Uncommon (requires FW error + reconfig failure), but
-  FW errors themselves are not rare
-- **Unprivileged trigger:** Indirectly — normal WiFi usage; no special
-  syscall needed
+**Record:** Channel-context `min_def` recalculation while VLAN-
+associated stations exist on the BSS. Common during client association,
+bandwidth changes, and HE/EHT operations. Not timing-dependent race.
 
 ### Step 8.3: Failure mode severity
-**Record:** **Kernel panic** (dereference of freed `bss_conf` via
-`fw_id_to_bss_conf`) — **CRITICAL**
+**Record:**
+- **Wrong bandwidth for `min_def`:** incorrect channel-width degradation
+  decisions → connectivity/performance issues (**MEDIUM**)
+- **Potential NULL deref** on AP_VLAN `link_conf->chanreq.oper.chan`
+  (same class as fixed `5a86d4e920d97`) → kernel oops (**HIGH** if
+  triggered; analogous path already proven crash-worthy)
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH for affected hardware — prevents crash during FW
-  error recovery
-- **Risk:** LOW — 9-line addition, reuses existing tested helper,
-  maintainer-reviewed
-- **Locking nuance:** `iwl_mld_cancel_async_notifications()` asserts
-  wiphy held; `nic_error` is atomic per op_mode contract.
-  `wiphy_work_cancel()` functionally uses internal spinlock; maintainer
-  approved. Possible lockdep warnings in debug builds — noted but not
-  blocking given review.
-- **Ratio:** Strong benefit, low risk
+- **Benefit:** HIGH for AP+VLAN deployments; fixes correctness bug in
+  common chanctx path
+- **Risk:** VERY LOW — 5-line change passing already-available chandef;
+  matches established pattern in same file
+- **Ratio:** Strongly favors backport
 
 ---
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence compile
+### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Fixes real kernel panic (dangling pointer in stats async handler)
-- Small, surgical, obviously correct intent
-- Reuses existing `iwl_mld_cancel_async_notifications()`
-- Reviewed by Johannes Berg (subsystem maintainer)
-- Buggy code confirmed present in 6.18.44
-- No new APIs or features
-- Defensive fix valuable even if related mac80211 bug is fixed
-  separately
+- Real bug: wrong band lookup when STA `sdata` ≠ link `sdata` (AP_VLAN
+  case)
+- Complements already-backported AP_VLAN crash fix in same subsystem
+- Affects common `ieee80211_recalc_chanctx_min_def()` path
+- Small, surgical, maintainer-reviewed
+- API and buggy code both exist in 6.18.43
+- Clean apply, no series dependencies
 
 **AGAINST backport:**
-- Affects only IWLMLD hardware (subset of iwlwifi users)
-- Trigger requires FW error + reconfig failure (not everyday)
-- Locking context mismatch between atomic `nic_error` and wiphy-locked
-  cancel helper (mitigated by maintainer review)
-- Related mac80211 fix mentioned but not included (this patch still has
-  standalone value)
+- No explicit user crash report for this exact path
+- Part of larger 20-patch series (but this patch is self-contained)
+- No Cc: stable tag (expected for manual review)
 
-**Unresolved:**
-- Exact mainline commit SHA and lore discussion (tools blocked / not
-  available)
-- When iwl MLD was first introduced (git history shallow)
-- Whether lockdep fires in practice from IRQ `nic_error` path
+**UNRESOLVED:**
+- Could not fetch lore discussion (bot protection)
+- Exact NULL-deref on this specific path not confirmed with a reported
+  crash (inferred from parallel AP_VLAN fix and code analysis)
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — reuses existing purge
-   function; maintainer reviewed
-2. Fixes real bug affecting users? **PASS** — kernel panic on FW error
-   recovery
-3. Important issue? **PASS** — CRITICAL (kernel panic)
-4. Small and contained? **PASS** — 9 lines, one file
+1. Obviously correct and tested? **PASS** — logic is clear; Reviewed-by
+   present; no Tested-by
+2. Fixes real bug? **PASS** — wrong chandef/band for per-STA BW in
+   chanctx min_def
+3. Important issue? **PASS** — MEDIUM-HIGH (connectivity correctness;
+   potential oops on AP_VLAN)
+4. Small and contained? **PASS** — 5 lines, one file
 5. No new features/APIs? **PASS**
-6. Can apply to local tree? **PASS** — code and helper exist; fix not
-   yet applied
+6. Can apply to local tree? **PASS** — verified present and applicable
 
 ### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build fix, or docs).
-Standard bug fix.
+**Record:** None (not device ID, quirk, DT, build, or docs). Standard
+bug fix.
 
-### Step 9.4: Decision rationale
-This commit fixes a confirmed kernel panic on the IWLMLD FW error
-recovery path in a tree where the iwlwifi MLD driver, the dangling-
-pointer bug, and `iwl_mld_cancel_async_notifications()` all exist. The
-fix is minimal, maintainer-reviewed, and prevents processing
-notifications from a dead firmware after BSS link state may have been
-torn down. For **linux-6.18.y (v6.18.44)**, this meets stable kernel
-criteria.
+### Step 9.4: Problem summary for stable users
+
+When mac80211 recalculates the minimum channel width for a channel
+context, it sums per-station bandwidth requirements. For stations on
+AP_VLAN interfaces (same BSS, different `sdata`), the old code looked up
+the RF band from the VLAN interface's link configuration instead of the
+parent AP link's operating channel. That yields incorrect HE/EHT/VHT
+bandwidth capability parsing and wrong `min_def` values. This is the
+same class of AP_VLAN sdata confusion that already caused a NULL-pointer
+crash in `ieee80211_chan_bw_change()` (fixed in this tree as
+`5a86d4e920d97`). This patch closes the gap in the
+`ieee80211_get_sta_bw()` path with a minimal, obviously-correct change.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, tags (Reviewed-by: Johannes Berg, Link:,
-  SOB); no Fixes/Reported-by
-- [Phase 1] Identified hidden UAF/panic fix from commit body
-- [Phase 2] Diff: +9 lines in `mld.c`, `iwl_mld_nic_error()` only
-- [Phase 2] Confirmed stats handler uses `fw_id_to_bss_conf`
-  (`stats.c:409-417`)
-- [Phase 2] Confirmed `STATISTICS_OPER_NOTIF` is `RX_HANDLER_ASYNC`
-  (`notif.c:417-418`)
-- [Phase 3] `git describe HEAD`: v6.18.44
-- [Phase 3] `git blame iwl_mld_nic_error`: shallow history (unreliable)
-- [Phase 3] `iwl_mld_cancel_async_notifications` exists in tree
-  (`notif.c:671`, `fw.c:373`, `d3.c:1431`)
-- [Phase 4] `b4 dig -c HEAD`: no match for release commit
-- [Phase 4] WebFetch lore Link: blocked by bot protection
-- [Phase 4] UNVERIFIED: Full lore review thread and stable nominations
-- [Phase 5] Traced `iwl_op_mode_nic_error` callers via grep (IRQ, reset,
-  debugfs paths)
-- [Phase 5] Confirmed `iwl_mld_async_handlers_wk` processes async
-  notification list (`notif.c:648-668`)
-- [Phase 5] Confirmed `wiphy_work_cancel` requires wiphy mtx
-  (`core.c:1710`)
-- [Phase 6] `git describe`: v6.18.44 on `stable/linux-6.18.y`
-- [Phase 6] Buggy code present: `iwl_mld_nic_error` lacks cancel call
-  (read `mld.c:643-674`)
-- [Phase 6] Fix not present: grep for `cancel_async` in `mld.c` — no
-  matches
-- [Phase 6] IWLMLD Kconfig and full `mld/` directory present
-- [Phase 7] Subsystem: iwlwifi MLD driver (IMPORTANT, driver-specific)
-- [Phase 8] Failure mode: kernel panic — CRITICAL
-- [Phase 8] Affected population: CONFIG_IWLMLD users
+- [Phase 1] Parsed subject, tags; identified as patch 4/20; Reviewed-by
+  Miriam Rachel Korenblit; no Fixes:/Reported-by/Cc: stable
+- [Phase 1] Read commit body from user query and local mbox
+- [Phase 2] Diff analysis: 5 lines in `chan.c`;
+  `ieee80211_sta_cap_rx_bw()` → `_ieee80211_sta_cap_rx_bw(...,
+  &link->conf->chanreq.oper)`
+- [Phase 3] `git describe HEAD`: v6.18.43 / 6.18.43
+- [Phase 3] `git blame -L 238,303 net/mac80211/chan.c`: buggy code at
+  lines 257, 303
+- [Phase 3] `git show 5a86d4e920d97`: related AP_VLAN crash fix already
+  in tree
+- [Phase 3] Verified `_ieee80211_sta_cap_rx_bw()` exists in
+  `ieee80211_i.h` and `vht.c`
+- [Phase 4] Read local mbox `20260415_johannes_wifi_mac80211_clean_up_an
+  d_fix_per_sta_bw_handling.mbx` patch 4/20 and cover letter
+- [Phase 4] `b4 dig -c HEAD`: failed (no commit hash in detached stable
+  tree)
+- [Phase 4] lore.kernel.org / patch.msgid.link: blocked by bot
+  protection — UNVERIFIED for thread content
+- [Phase 4] No Cc: stable in mbox series — verified via grep
+- [Phase 5] `grep ieee80211_get_max_required_bw`: called from
+  `ieee80211_get_chanctx_max_required_bw()` line 352
+- [Phase 5] `grep ieee80211_recalc_chanctx_min_def`: many callers in
+  `chan.c`, `he.c`, `util.c`
+- [Phase 5] Read `__ieee80211_sta_cap_rx_bw()` NULL-chandef path in
+  `vht.c` lines 368–376
+- [Phase 5] Read `get_bss_sdata()` AP_VLAN handling in `driver-ops.h`
+  lines 25–29
+- [Phase 6] Confirmed buggy `ieee80211_sta_cap_rx_bw(link_sta)` at
+  `chan.c:257` in 6.18.43
+- [Phase 6] Confirmed fix not yet applied; API available for clean
+  backport
+- [Phase 8] AP_VLAN NULL-deref on analogous path: documented in
+  `5a86d4e920d97`; this path inferred — UNVERIFIED with separate crash
+  report
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/mld.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ net/mac80211/chan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mld.c b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-index 48b8ec6a5a12d..49e46babf8221 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mld.c
-@@ -670,6 +670,15 @@ iwl_mld_nic_error(struct iwl_op_mode *op_mode,
- 	if (type != IWL_ERR_TYPE_RESET_HS_TIMEOUT &&
- 	    mld->fw_status.running)
- 		mld->fw_status.in_hw_restart = true;
-+
-+	/* FW is dead. We don't want to process its notifications.
-+	 * Right, we cancel them also in iwl_mld_stop_fw, but
-+	 * iwl_mld_async_handlers_wk might be executed before
-+	 * ieee80211_restart_work.
-+	 * In addition, in case of an error during recovery,
-+	 * iwl_mld_stop_fw might be too late.
-+	 */
-+	iwl_mld_cancel_async_notifications(mld);
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index a6895b40d4322..8403b5248a953 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -235,11 +235,12 @@ ieee80211_find_reservation_chanctx(struct ieee80211_local *local,
+ 	return NULL;
  }
  
- static void iwl_mld_dump_error(struct iwl_op_mode *op_mode,
+-static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta,
+-						    unsigned int link_id)
++static enum nl80211_chan_width
++ieee80211_get_sta_bw(struct sta_info *sta, struct ieee80211_link_data *link)
+ {
+ 	enum ieee80211_sta_rx_bandwidth width;
+ 	struct link_sta_info *link_sta;
++	int link_id = link->link_id;
+ 
+ 	link_sta = wiphy_dereference(sta->local->hw.wiphy, sta->link[link_id]);
+ 
+@@ -254,7 +255,7 @@ static enum nl80211_chan_width ieee80211_get_sta_bw(struct sta_info *sta,
+ 	 * capabilities here. Calling it RX bandwidth capability is a bit
+ 	 * wrong though, since capabilities are in fact symmetric.
+ 	 */
+-	width = ieee80211_sta_cap_rx_bw(link_sta);
++	width = _ieee80211_sta_cap_rx_bw(link_sta, &link->conf->chanreq.oper);
+ 
+ 	switch (width) {
+ 	case IEEE80211_STA_RX_BW_20:
+@@ -289,7 +290,6 @@ static enum nl80211_chan_width
+ ieee80211_get_max_required_bw(struct ieee80211_link_data *link)
+ {
+ 	struct ieee80211_sub_if_data *sdata = link->sdata;
+-	unsigned int link_id = link->link_id;
+ 	enum nl80211_chan_width max_bw = NL80211_CHAN_WIDTH_20_NOHT;
+ 	struct sta_info *sta;
+ 
+@@ -300,7 +300,7 @@ ieee80211_get_max_required_bw(struct ieee80211_link_data *link)
+ 		    !(sta->sdata->bss && sta->sdata->bss == sdata->bss))
+ 			continue;
+ 
+-		max_bw = max(max_bw, ieee80211_get_sta_bw(sta, link_id));
++		max_bw = max(max_bw, ieee80211_get_sta_bw(sta, link));
+ 	}
+ 
+ 	return max_bw;
 -- 
 2.53.0
 
