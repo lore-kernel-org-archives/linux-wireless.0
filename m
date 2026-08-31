@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8689E584949;
-	Mon, 31 Aug 2026 13:50:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE08D5867CB;
+	Mon, 31 Aug 2026 13:50:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184206; cv=none; b=DSoIcC9fPJhu1llJwDDiKIGonFkMbXYaOR7t9NEyT18KC7pqv3mRsLZLV+15TvfAxHPcnXMPh8DIrjB/DyTiBHx5Whw/MvvnkRjYCB7BXgeuoxK31faSJ837qnBe5KBnj8FJ6TCx7+bebMQJ6hSOM3FTaV46Y2j0FsztAIJyatM=
+	t=1788184212; cv=none; b=RgwcumMIU9/j16Hry17Mje/CsiW65B9UcbJ7wIyee0X1pb5UgUrAJ89wDFQLC10BRmFS0I5TXDEySpviYS7Sg8TH7IzjEfxBrWSu6jZsSBuWO2TTCzFsW/m1EeSII6u/xYylfljkD4CmXRxK2TyOuyC0WPKYMV5CITTJvJU4LjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184206; c=relaxed/simple;
-	bh=4y03MqQclKP8jiIqOyJb40JHX+rL0b1xDEjpCRCms5g=;
+	s=arc-20240116; t=1788184212; c=relaxed/simple;
+	bh=hTZuVltYnGs6nIldBwENmgDV+Ad8mGIEfICJloZZVpQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PNgmB78C3Dlp0YDYSr3AReMa4QNDv0RfpRbKQo6oVQ0v+BFe+7tbrmYB/Ot5MT6yM2l63SF1SRirb1CKt57esOXfA/Ndx/JzkTdHeDGLzgVFTb/NOE0EfyFYPQOtkCpkZ5TYpECchAcznPjnHgZvp/Md/t+0+LffChZ83OIwZSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g1UeJ6SM; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ASJbJ01Auab6A12Dq4rBw4Ag0aDGx+MaksGRQnRS07rsBAMjR417tAehsjLUDVjHV+Y1vKAN9BMksTo4+RErxhoRvb2ozS+vbF4wnXnJE0HfifQTVcXjRbSCR3bzCV3T7AlyMrvUedjYnOlMw2yeb7qSO5BXEnqLVP4ShgHI+l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQoZMOn4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g1UeJ6SM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75C0F1F00ADE;
-	Mon, 31 Aug 2026 13:50:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQoZMOn4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0576A1F00ADE;
+	Mon, 31 Aug 2026 13:50:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184203;
-	bh=fXc9SvZzWsuRQJ4R+6xHP+5bAiTCqeAN3HTLReOWjjc=;
+	s=k20260515; t=1788184209;
+	bh=HUWwZyEc9oRi3Lq+6Ai4YP+4omOm4VH3qZKeHvjVXwI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=g1UeJ6SMAGewV/g0ccrsiI9WNQ9Za1MMUU9DVctm6apXzlx1hB/l+aVnDXSDjkh4N
-	 QvgaAOM3tu4ncCUg6rHdS4vcbEcudDnVQzOvq366W6IAHphDTJsU0LdsOnZhOCdcN+
-	 LWAt3nE4/TQqKAJy/7avYheqcDs+6Y22nmtYfbU157k9/pw6XKoOCk4sAEfHfnDwcl
-	 9vd6C4FKC59DyuYX27WgwsxigtTSeAOoBWgO9j1O9v7XRoQ42s8AhimbM6JlTV/UlF
-	 wkdcjBzJ0UsMDkIfc+DHqzoLshCBfImV/eeXDEJ0TBl/ibZ3hIPPmyY+I2WHndIb/5
-	 qK960JzLWCTGA==
+	b=PQoZMOn4sI1W8uAQnmmTLiVGpty+KfHkJN+ZFXkrjyCp1aPEoWTc5ilCK0o0fiuV2
+	 yHZ8mDTLDu1fn6Xfmrdydn8219635G92iYYWLn4xbaaamCIWGC96ZG37tgStYOU3gA
+	 oKkt0Ld3TGhNpv7XM0RGD6ecyYCtKzPwaBr8LUBVnbhUskr0OT0ujmFgVvFGJiEWRA
+	 qbud52HoIfR2n94xxwJtw7KwWNOUe2x7Z0sMl+POynTbbAcrprGaH03Oh50UhI/jNM
+	 QuV17gBsN29gYcfM4ArzIyP8+KaBVnW8ZxXlIF63F6oaGQ/kzb3eggnT7wPgkYlkUU
+	 dXbHCS0w/5EWg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Zhao Li <enderaoelyther@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-6.1] wifi: cfg80211: validate assoc response length before status and IE access
-Date: Mon, 31 Aug 2026 09:29:41 -0400
-Message-ID: <20260831133314.4125787-553-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: validate txq_id in TX response handler
+Date: Mon, 31 Aug 2026 09:29:45 -0400
+Message-ID: <20260831133314.4125787-557-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,79 +52,69 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Zhao Li <enderaoelyther@gmail.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit b760113aeca2e9362d56bf9e9263373ffe6c8eb3 ]
+[ Upstream commit e66ddfd94b829b8ecaaac932d9487fb4de6d267c ]
 
-cfg80211_rx_assoc_resp() initialises the status and response-IE fields
-of cfg80211_connect_resp_params from the management frame before
-proving that the frame is long enough for those offsets. S1G and
-regular association responses also have different IE offsets, but the
-S1G path only patched resp_ie after the unsafe initialiser had already
-run.
+Validate txq_id from TX response notification before passing to
+iwl_trans_reclaim(). Other reclaim paths in this file perform this
+check to prevent out-of-bounds access on malformed notifications.
 
-Defer resp_ie, resp_ie_len, and status to after the link-iteration
-loop. Use a bool to remember whether the frame is S1G, then validate
-the appropriate minimum length and set all three fields in a single
-if/else block. Funnel short-frame and SME-reject cleanup through a
-shared free_bss label for the abandon paths.
-
-Assisted-by: Codex:gpt-5.5
-Assisted-by: Claude:claude-opus-4.8
-Signed-off-by: Zhao Li <enderaoelyther@gmail.com>
-Link: https://patch.msgid.link/20260707025336.22557-2-enderaoelyther@gmail.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Assisted-by: GitHubCopilot:claude-haiku-4.5
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715215523.b938c2dcf08d.I8a88ec359e229f1c41ac9c49fd9ce28a2b62b274@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: cfg80211: validate assoc response
-length before status and IE access`
+# Stable Backport Analysis: `wifi: iwlwifi: mld: validate txq_id in TX
+response handler`
 
-**Local tree:** `v6.18.44-1-g2736c32da98b9` (kernel **6.18.44**)
+**Local tree:** `v6.18.44-2-g1b9e1abadee04` (Makefile: 6.18.44)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: Subject line
-**Record:** `[wifi: cfg80211]` **`validate`** — validate association-
-response frame length before reading status code and IE fields in
-`cfg80211_rx_assoc_resp()`.
+**Record:** `[wifi: iwlwifi: mld]` `[validate]` — Add bounds validation
+for `txq_id` in the MLD TX response notification handler before calling
+`iwl_trans_reclaim()`.
 
 ### Step 1.2: Tags
 **Record:**
-- **Assisted-by:** Codex:gpt-5.5, Claude:claude-opus-4.8
-- **Signed-off-by:** Zhao Li \<enderaoelyther@gmail.com\>
-- **Link:** https://patch.msgid.link/20260707025336.22557-2-
-  enderaoelyther@gmail.com
-- **Signed-off-by:** Johannes Berg \<johannes.berg@intel.com\> (cfg80211
-  maintainer)
-- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, Cc:
-  stable@
-- **Notable:** Maintainer sign-off; part of v2 3-patch series (this is
-  patch 2/3)
+- **Fixes:** — none
+- **Reported-by:** — none
+- **Tested-by:** — none
+- **Reviewed-by:** — none on patch 1 (Johannes Berg reviewed other
+  patches in the series)
+- **Acked-by:** — none
+- **Link:** `https://patch.msgid.link/20260715215523.b938c2dcf08d...`
+  (blocked by bot protection; content recovered from local mbox)
+- **Cc: stable:** — none (expected for manual review)
+- **Signed-off-by:** Emmanuel Grumbach, Miri Korenblit (ignore pipeline
+  SOBs)
+- **Assisted-by:** GitHubCopilot:claude-haiku-4.5
+
+Notable: no syzbot/user report, but the commit explicitly describes an
+OOB access on malformed firmware notifications.
 
 ### Step 1.3: Body analysis
 **Record:**
-- **Bug:** `cfg80211_rx_assoc_resp()` sets `status`, `resp_ie`, and
-  `resp_ie_len` from the management frame before verifying `data->len`
-  is large enough.
-- **S1G nuance:** S1G and regular assoc responses use different IE
-  offsets; the S1G branch only corrected `resp_ie` after the unsafe
-  initializer had already run.
-- **Symptom:** Out-of-bounds reads on short/malformed association-
-  response buffers passed into an exported cfg80211 callback.
-- **Fix approach:** Defer those three fields until after the link loop;
-  record S1G with a bool; validate minimum length per frame type;
-  consolidate BSS cleanup under `free_bss`.
-- **Version info:** None stated in commit message.
+- **Bug:** `txq_id` from a TX response notification is passed to
+  `iwl_trans_reclaim()` without validation.
+- **Symptom:** Out-of-bounds access when firmware sends a malformed
+  notification with an invalid queue ID.
+- **Root cause:** Inconsistent validation — other reclaim paths in the
+  same file already check `txq_id >= ARRAY_SIZE(mld->fw_id_to_txq)`.
+- **Version info:** none stated.
 
 ### Step 1.4: Hidden bug fix?
-**Record:** **Yes** — despite “validate” wording, this is a concrete
-memory-safety fix (OOB read + unsigned underflow on `resp_ie_len`), not
-cosmetic cleanup.
+**Record:** Not disguised — this is an explicit defensive bounds-check
+bug fix, consistent with other `IWL_FW_CHECK` validations in iwlwifi MLD
+code.
 
 ---
 
@@ -133,192 +122,183 @@ cosmetic cleanup.
 
 ### Step 2.1: Inventory
 **Record:**
-- **Files:** `net/wireless/mlme.c` only (~35 insertions, ~21 deletions)
-- **Function modified:** `cfg80211_rx_assoc_resp()`
-- **Scope:** Single-file, surgical fix in one exported function
+- **File:** `drivers/net/wireless/intel/iwlwifi/mld/tx.c` (+4 lines)
+- **Function:** `iwl_mld_handle_tx_resp_notif()`
+- **Scope:** Single-file, surgical fix
 
-### Step 2.2: Code flow per hunk
+### Step 2.2: Code flow change
 **Record:**
-1. **Struct initializer:** Before — reads `mgmt->u.assoc_resp.variable`,
-   computes `resp_ie_len`, reads `status_code` immediately. After — only
-   safe fields initialized; `is_s1g = false` added.
-2. **S1G link loop:** Before — overwrites `resp_ie`/`resp_ie_len` for
-   S1G. After — sets `is_s1g = true` only.
-3. **Post-loop validation (new):** Checks `data->len` against
-   `offsetof(..., u.s1g_assoc_resp.variable)` (28) or `offsetof(...,
-   u.assoc_resp.variable)` (30); on failure `goto free_bss`. Then sets
-   `resp_ie`, `resp_ie_len`, `status`.
-4. **SME-reject path:** Before — duplicated BSS cleanup loop. After —
-   `goto free_bss` shared label; same
-   `cfg80211_unhold_bss`/`cfg80211_put_bss` behavior.
+- **Before:** After parsing `ssn`, immediately calls
+  `iwl_trans_reclaim(mld->trans, txq_id, ssn, &skbs, false)`.
+- **After:** Validates `txq_id < ARRAY_SIZE(mld->fw_id_to_txq)` via
+  `IWL_FW_CHECK()`; returns early on failure.
+- **Path affected:** Firmware TX response notification handler (normal
+  TX completion path).
 
 ### Step 2.3: Bug mechanism
-**Record:** **Memory safety / bounds validation**
-- **OOB read:** `le16_to_cpu(mgmt->u.assoc_resp.status_code)` at offset
-  26 requires `len >= 28`; no check existed.
-- **Unsigned underflow:** `resp_ie_len = data->len - offsetof(...,
-  variable)` wraps to a huge value when `data->len < offsetof`,
-  affecting `nlmsg_new()` sizing and `nla_put()` copies downstream.
-- **S1G partial fix gap:** S1G IE offset differs (28 vs 30), but unsafe
-  initializer always ran first.
+**Record:** **Buffer overflow / out-of-bounds access.** `txq_id` comes
+from `le16_to_cpu(tx_resp->tx_queue)` (range 0–65535).
+`iwl_pcie_reclaim()` indexes `trans_pcie->txqs.txq[txq_id]` with no
+bounds check — array size is `IWL_MAX_TVQM_QUEUES` (512). Values ≥ 512
+cause OOB array access before `WARN_ON(!txq)` can help.
 
 ### Step 2.4: Fix quality
-**Record:** Obviously correct; minimal; mirrors existing kernel
-`offsetof` length-guard patterns. **Regression risk:** Low — only adds
-early returns on frames that were already malformed; BSS cleanup
-preserved via `free_bss`.
+**Record:**
+- **Quality:** High — identical pattern already used at lines 1283–1286
+  and 1389–1392 in the same file.
+- **Regression risk:** Very low — only rejects already-invalid queue
+  IDs.
+- **Red flags:** None.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** Buggy lines in current tree all trace to `5d324e5159d9e` in
-this checkout’s shallow history (merge root). The unsafe initializer
-pattern is present in `net/wireless/mlme.c` as checked out.
+**Record:** Lines around the missing check blame to `5d324e5159d9e`
+(v6.18 merge point in this tree). The handler and missing validation
+have been present since MLD `tx.c` landed in v6.18.
 
 ### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag in commit message.
+**Record:** N/A — no `Fixes:` tag.
 
 ### Step 3.3: Related file history
-**Record:** Only two commits touch `net/wireless/mlme.c` in this tree
-(`5d324e5159d9e`, `c3ab9657866fc` radar fix). This patch is
-**standalone** (patch 2/3 of a series; does not depend on patch 1/3 for
-assoc_resp logic).
+**Record:**
+- `Invalid txq id` validation exists in flush and compressed-BA handlers
+  since MLD `tx.c` was introduced.
+- `iwl_mld_handle_tx_resp_notif()` was the inconsistent outlier.
+- Part of `[PATCH 1/15]` iwlwifi fixes series (2026-07-15); patch 1 is
+  standalone.
 
 ### Step 3.4: Author context
-**Record:** Zhao Li submitted the series; **Johannes Berg** (cfg80211
-maintainer) signed off. v2 changelog notes revision per Johannes’ review
-on patch 1.
+**Record:** Emmanuel Grumbach (Intel iwlwifi maintainer). Miri Korenblit
+(iwlwifi maintainer) signed off. Similar MLD validation fixes already
+backported to this tree (e.g. `1de92789ce31e` sta_mask validation).
 
-### Step 3.5: Prerequisites
-**Record:** **None required** for this hunk. Patch applies to current
-`mlme.c` without structural dependencies. Local tree lacks
-`assoc_encrypted` field present in some newer trees — mbox patch matches
-local tree.
+### Step 3.5: Dependencies
+**Record:** None. Self-contained 4-line addition; applies cleanly to
+current HEAD (verified with `git apply --check`).
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original discussion
-**Record:** Local mbox `v2_20260707_enderaoelyther_wifi_cfg80211_validat
-e_rx_tx_mlme_callback_frame_lengths_before_access.mbx` contains v2
-series. `b4 mbox` on patch 2 msgid returned only the patch itself (no
-review replies in cached thread). lore.kernel.org blocked by bot
-protection.
+### Step 4.1: Patch discussion
+**Record:**
+- `b4 dig -c 2df6643a5aa80`: no match (commit not in local tree).
+- Local mbox
+  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`:
+  patch 1/15, standalone.
+- No stable nomination in patch 1; no NAKs found.
+- Link URL blocked by Anubis anti-bot page.
 
 ### Step 4.2: Reviewers
-**Record:** Johannes Berg reviewed v2 series (noted in patch 1
-changelog). Maintainer sign-off on this commit confirmed.
+**Record:** Patch 1 has no `Reviewed-by`. Johannes Berg reviewed other
+patches in the series.
 
-### Step 4.3: Bug reports
-**Record:** No syzbot, bugzilla, or user Reported-by tags. Series patch
-1 documents concrete mwifiex short-frame path for **different**
-functions (`cfg80211_rx_mlme_mgmt`), not this one.
+### Step 4.3: Bug report
+**Record:** No external bug report, syzbot, or user Reported-by. Bug
+identified by code inspection (Copilot-assisted).
 
-### Step 4.4: Related patches
-**Record:** 3-patch series:
-1. `cfg80211_rx_mlme_mgmt` / `cfg80211_tx_mlme_mgmt` length validation
-2. **This commit** — `cfg80211_rx_assoc_resp`
-3. `ieee80211_rx_mgmt_deauth` length validation in mac80211
-
-Each is independently backportable.
+### Step 4.4: Series context
+**Record:** Patch 1/15 is independent. Other patches in the series are
+unrelated (NVM channels, mvm fixes, etc.).
 
 ### Step 4.5: Stable list history
-**Record:** Could not search lore stable list (bot protection). No
-stable nomination found in local mbox.
+**Record:** Not searched on lore (patch not yet merged). Similar iwlwifi
+MLD validation fixes have been backported to this tree with `Cc:
+stable@vger.kernel.org`.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `cfg80211_rx_assoc_resp()` (modified)
+**Record:** `iwl_mld_handle_tx_resp_notif()`, `iwl_trans_reclaim()`,
+`iwl_pcie_reclaim()`.
 
 ### Step 5.2: Callers
-**Record:**
-- `net/mac80211/mlme.c` — primary path; validates `len < 24 + 6`
-  (returns early) before calling
-- `drivers/net/wireless/marvell/mwifiex/cmdevt.c` —
-  `mwifiex_process_assoc_resp()` calls directly with
-  `priv->assoc_rsp_buf` / `priv->assoc_rsp_size` (no equivalent length
-  gate)
+**Record:** Registered in `iwl_mld_rx_handlers[]` as
+`RX_HANDLER_NO_OBJECT(LEGACY_GROUP, TX_CMD, tx_resp_notif,
+RX_HANDLER_SYNC)` in `mld/notif.c`. Invoked synchronously on every TX
+completion notification from firmware.
 
 ### Step 5.3: Callees
-**Record:** `cfg80211_sme_rx_assoc_resp()`,
-`trace_cfg80211_send_rx_assoc()`, `nl80211_send_rx_assoc()`,
-`__cfg80211_connect_result()`, `cfg80211_unhold_bss()`,
-`cfg80211_put_bss()`
+**Record:** `iwl_trans_reclaim()` → `iwl_pcie_reclaim()` →
+`trans_pcie->txqs.txq[txq_id]` (unchecked index).
 
 ### Step 5.4: Reachability
-**Record:** **Yes** — exported `EXPORT_SYMBOL` callback invoked from
-driver association-completion path during WiFi connect. Malicious or
-buggy firmware/driver can supply short buffers. Downstream
-`nl80211_send_connect_result()` uses `cr->resp_ie_len` in `nlmsg_new()`
-and `nla_put()`.
+**Record:** Hot path — every transmitted frame gets a TX response
+notification on MLD-capable Intel WiFi hardware. Malformed notifications
+can occur during firmware errors/corruption (the scenario `IWL_FW_CHECK`
+is designed for).
 
 ### Step 5.5: Similar patterns
-**Record:** Same series adds identical length-guard pattern to
-`cfg80211_rx_mlme_mgmt()` and mac80211 deauth handler — systematic fix
-for cfg80211 MLME frame parsing.
+**Record:** Same validation in:
+- `iwl_mld_flush_link_sta_txqs()` (lines 1283–1286)
+- `iwl_mld_handle_compressed_ba_notif()` (lines 1389–1392)
+
+`iwl_pcie` TX path uses `WARN_ONCE(txq_id >= IWL_MAX_TVQM_QUEUES, ...)`
+in `tx-gen2.c` line 727.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.44)
+## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
 
-### Step 6.1: Buggy code present?
-**Record:** **Yes** — current `net/wireless/mlme.c` lines 35–39
-initialize `resp_ie`, `resp_ie_len`, and `status` before any length
-check; S1G branch at 61–66 partially adjusts `resp_ie` only.
+### Step 6.1: Buggy code exists?
+**Record:** **Yes.** Current HEAD and `v6.18` tag both lack the
+validation in `iwl_mld_handle_tx_resp_notif()` at line 1109. MLD `tx.c`
+exists in v6.18 (`git ls-tree v6.18` confirmed).
 
 ### Step 6.2: Backport complications
-**Record:** **Clean apply expected** — all patch anchor strings verified
-present in local file; no `assoc_encrypted` mismatch.
+**Record:** Clean apply — `git apply --check` succeeded with zero
+conflicts.
 
 ### Step 6.3: Related fixes already present?
-**Record:** **No** — `git log --grep` found no equivalent validation
-commit for this function in this tree.
+**Record:** The sibling-path validations (flush, compressed BA) are
+present. This specific gap in the TX response handler is **not** fixed
+yet.
 
 ---
 
-## PHASE 7: SUBSYSTEM CONTEXT
+## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** **net/wireless (cfg80211)** — IMPORTANT/CORE for WiFi;
-affects all cfg80211 users.
+**Record:** `drivers/net/wireless/intel/iwlwifi/mld/` — **IMPORTANT**
+(Intel WiFi driver, common laptop hardware; MLD path for newer WiFi 7 /
+MLO devices).
 
-### Step 7.2: Activity
-**Record:** Active in 6.18 (MLO, S1G link handling in
-`cfg80211_rx_assoc_resp`).
+### Step 7.2: Subsystem activity
+**Record:** Actively maintained; multiple MLD fixes already in this
+6.18.y tree.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
 ### Step 8.1: Who is affected
-**Record:** WiFi station connect paths using cfg80211 — especially
-drivers calling `cfg80211_rx_assoc_resp()` directly (mwifiex confirmed
-in-tree).
+**Record:** Users with Intel WiFi hardware using the MLD opmode
+(`iwlmld`) on kernel 6.18+. Not universal, but affects a growing
+hardware population.
 
 ### Step 8.2: Trigger conditions
-**Record:** Association-response buffer shorter than minimum fixed-field
-size passed to `cfg80211_rx_assoc_resp()`. mac80211 mitigates its own
-path (`len >= 30`), but exported API has no such guard. Trigger is
-plausible with misbehaving firmware/drivers, not merely theoretical
-given documented similar mwifiex issues in the same series.
+**Record:** Firmware sends TX response with `txq_id >= 512`. Most likely
+during firmware malfunction, corruption, or error recovery — the exact
+scenario iwlwifi guards against with `IWL_FW_CHECK`. Not easily user-
+triggerable, but reachable on every TX completion notification.
 
 ### Step 8.3: Failure mode severity
-**Record:** OOB read of frame fields; `resp_ie_len` underflow →
-oversized netlink allocation / OOB `nla_put` copy. **Severity: HIGH**
-(kernel crash or memory corruption during WiFi association).
+**Record:** OOB read of `txq[txq_id]` → possible NULL deref or use of
+garbage pointer in `iwl_pcie_reclaim()` → **kernel oops**. Severity:
+**HIGH**.
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH — closes real bounds-check hole in exported cfg80211
-  API
-- **Risk:** LOW — small, localized, adds defensive validation only
-- **Ratio:** Strongly favors backport
+- **Benefit:** HIGH — prevents potential crash on malformed firmware
+  notification.
+- **Risk:** VERY LOW — 4 lines, proven pattern, early return only for
+  invalid IDs.
+- **Ratio:** Strongly favors backport.
 
 ---
 
@@ -327,183 +307,99 @@ oversized netlink allocation / OOB `nla_put` copy. **Severity: HIGH**
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real memory-safety bug in exported cfg80211 function
-- Driver (mwifiex) calls API without mac80211’s length guard
-- Downstream code uses `resp_ie_len` in allocations/copies
-- Small, maintainer-reviewed, self-contained fix
-- Buggy code confirmed present in 6.18.44 tree
-- Clean apply expected
+- Real OOB bug with crash potential
+- Small, surgical, obviously correct fix
+- Matches existing validation in the same file
+- Bug present since v6.18 MLD code landed
+- Applies cleanly to 6.18.44
+- iwlwifi maintainers authored/signed
+- Similar MLD validation fixes already backported to this tree
 
 **AGAINST backport:**
-- mac80211 primary path already checks `len >= 30`
-- No syzbot/user crash report attached to this specific patch
-- Full series context suggests defense-in-depth across MLME handlers
+- No user report or syzbot reproduction
+- Requires malformed firmware notification (edge case)
+- MLD-only (not all iwlwifi users)
+- No explicit `Cc: stable` or `Reviewed-by` on this specific patch
 
-**Unresolved:**
-- Exact upstream commit SHA not in this checkout (fix not yet merged
-  here)
-- Full lore review thread not accessible (bot protection)
-- Historical introduction date of bug not determinable in shallow
-  history
+**Unresolved:** None that affect the decision.
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — logic is straightforward;
-   maintainer SOB; v2 reviewed
-2. Fixes real bug affecting users? **PASS** — OOB read on exported WiFi
-   connect callback
-3. Important issue? **PASS** — crash/memory corruption potential (HIGH)
-4. Small and contained? **PASS** — ~56 lines, one function, one file
-5. No new features/APIs? **PASS** — validation only
-6. Can apply to local tree? **PASS** — buggy code present; anchors match
+1. Obviously correct and tested? **PASS** — mirrors two existing checks
+   in the same file; no Tested-by but pattern is proven.
+2. Fixes a real bug? **PASS** — missing bounds check before unchecked
+   array index.
+3. Important issue? **PASS** — OOB access → potential kernel crash
+   (HIGH).
+4. Small and contained? **PASS** — 4 lines, one function.
+5. No new features or APIs? **PASS** — defensive validation only.
+6. Can apply to local tree? **PASS** — verified clean apply.
 
 ### Step 9.3: Exception categories
-**Record:** N/A (not device ID/quirk/build/docs); standard bug-fix
-exception applies.
+**Record:** N/A — standard bug fix, not a device-ID/quirk/build/doc
+exception.
 
 ### Step 9.4: Decision rationale
-This patch closes a genuine bounds-checking hole in
-`cfg80211_rx_assoc_resp()`, an exported function on a common WiFi
-connect path. Short frames can cause out-of-bounds reads and
-`resp_ie_len` underflow before any validation. While mac80211 validates
-length on its call path, mwifiex calls the API directly without
-equivalent checks. The fix is small, maintainer-signed, and applies
-cleanly to this 6.18.44 tree.
+
+This commit closes a validation gap in `iwl_mld_handle_tx_resp_notif()`
+that sibling reclaim handlers in the same file already cover. Without
+it, a malformed firmware TX response with `txq_id >= 512` can cause an
+out-of-bounds access in `iwl_pcie_reclaim()` before any safety check
+runs. The fix is minimal, follows an established iwlwifi pattern,
+applies cleanly to the 6.18.44 tree where the bug exists, and prevents a
+potential kernel crash on hardware using the MLD driver path.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body from user-provided commit
-  message and local mbox
-- **[Phase 2]** Diff analysis against user-provided diff and current
-  `net/wireless/mlme.c`
-- **[Phase 2]** Computed offsets: status at 26 (needs len≥28), assoc
-  variable at 30, S1G variable at 28
-- **[Phase 3]** `git blame -L 31,67 net/wireless/mlme.c`: buggy lines
-  present
-- **[Phase 3]** `git log --oneline -20 -- net/wireless/mlme.c`: shallow
-  history noted
-- **[Phase 3]** `git log --grep`: no duplicate fix found
-- **[Phase 4]** Read local mbox series file; patch 2/3 identified as
-  standalone
-- **[Phase 4]** `b4 mbox` on msgid: saved single-message thread
-- **[Phase 4]** lore.kernel.org fetch: blocked (bot protection) —
-  **UNVERIFIED** for full thread/stable discussion
-- **[Phase 5]** `grep cfg80211_rx_assoc_resp(`: callers in mac80211,
-  mwifiex
-- **[Phase 5]** Read mac80211 caller: `if (len < 24 + 6) return;` at
-  line 6521
-- **[Phase 5]** Read mwifiex `cmdevt.c`: direct call without length
-  validation
-- **[Phase 5]** Read `nl80211_send_connect_result()`: uses
-  `cr->resp_ie_len` in `nlmsg_new` and `nla_put`
-- **[Phase 6]** `git describe HEAD`: v6.18.44-1-g2736c32da98b9; `make
-  kernelversion`: 6.18.44
-- **[Phase 6]** Read current `mlme.c` lines 24–97: pre-fix buggy code
-  confirmed
-- **[Phase 6]** Python anchor check: all patch target strings FOUND
-- **[Phase 8]** Failure mode: OOB read + unsigned underflow → HIGH
-  severity
+- [Phase 1] Parsed subject, tags, body from commit message and local
+  mbox
+- [Phase 1] Link URL fetch blocked; recovered patch from
+  `20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
+- [Phase 2] Read `iwl_mld_handle_tx_resp_notif()` at lines 1073–1149 —
+  missing validation confirmed
+- [Phase 2] Read sibling validations at lines 1283–1286 and 1389–1392
+- [Phase 2] Read `iwl_pcie_reclaim()` at `pcie/gen1_2/tx.c:2339` —
+  unchecked `txq[txq_id]` access
+- [Phase 2] Confirmed `IWL_MAX_TVQM_QUEUES = 512` in `iwl-trans.h:269`
+- [Phase 2] Confirmed `fw_id_to_txq[IWL_MAX_TVQM_QUEUES]` in
+  `mld/mld.h:200`
+- [Phase 3] `git blame -L 1103,1110` — code from v6.18 merge
+- [Phase 3] `git show v6.18:.../mld/tx.c` — bug present in v6.18 release
+- [Phase 3] `git log -S 'Invalid txq id'` — validation in flush/BA paths
+  since MLD introduction
+- [Phase 4] `b4 dig -c 2df6643a5aa80` — no result (commit not in tree)
+- [Phase 4] Read mbox patch 1/15 — standalone, 4 lines
+- [Phase 5] `grep iwl_mld_handle_tx_resp_notif` — registered in
+  `mld/notif.c:399` as TX_CMD handler
+- [Phase 5] Read `IWL_FW_CHECK` macro in `fw/dbg.h:334`
+- [Phase 6] `git describe HEAD` → v6.18.44; Makefile confirms 6.18.44
+- [Phase 6] `git ls-tree v6.18 drivers/.../mld/tx.c` — MLD code in v6.18
+- [Phase 6] `git apply --check` — patch applies cleanly
+- [Phase 6] Compared with backported fix `1de92789ce31e` (similar MLD
+  validation pattern)
+- [Phase 8] Assessed failure mode: OOB → crash, severity HIGH
 
 **YES**
 
- net/wireless/mlme.c | 56 ++++++++++++++++++++++++++++-----------------
- 1 file changed, 35 insertions(+), 21 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mld/tx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 3fc175f9f8686..bf2c0d26e11c6 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -32,14 +32,10 @@ void cfg80211_rx_assoc_resp(struct net_device *dev,
- 		.timeout_reason = NL80211_TIMEOUT_UNSPECIFIED,
- 		.req_ie = data->req_ies,
- 		.req_ie_len = data->req_ies_len,
--		.resp_ie = mgmt->u.assoc_resp.variable,
--		.resp_ie_len = data->len -
--			       offsetof(struct ieee80211_mgmt,
--					u.assoc_resp.variable),
--		.status = le16_to_cpu(mgmt->u.assoc_resp.status_code),
- 		.ap_mld_addr = data->ap_mld_addr,
- 	};
- 	unsigned int link_id;
-+	bool is_s1g = false;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mld/tx.c b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
+index a60bfb1a2ab22..130f3a99de96f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mld/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mld/tx.c
+@@ -1103,6 +1103,10 @@ void iwl_mld_handle_tx_resp_notif(struct iwl_mld *mld,
+ 	ssn = le32_to_cpup((__le32 *)agg_status +
+ 			   tx_resp->frame_count) & 0xFFFF;
  
- 	for (link_id = 0; link_id < ARRAY_SIZE(data->links); link_id++) {
- 		cr.links[link_id].status = data->links[link_id].status;
-@@ -60,16 +56,32 @@ void cfg80211_rx_assoc_resp(struct net_device *dev,
- 
- 		if (cr.links[link_id].bss->channel->band == NL80211_BAND_S1GHZ) {
- 			WARN_ON(link_id);
--			cr.resp_ie = (u8 *)&mgmt->u.s1g_assoc_resp.variable;
--			cr.resp_ie_len = data->len -
--					 offsetof(struct ieee80211_mgmt,
--						  u.s1g_assoc_resp.variable);
-+			is_s1g = true;
- 		}
- 
- 		if (cr.ap_mld_addr)
- 			cr.valid_links |= BIT(link_id);
- 	}
- 
-+	if (is_s1g) {
-+		if (data->len < offsetof(struct ieee80211_mgmt,
-+					 u.s1g_assoc_resp.variable))
-+			goto free_bss;
-+		cr.resp_ie = (u8 *)&mgmt->u.s1g_assoc_resp.variable;
-+		cr.resp_ie_len = data->len -
-+				 offsetof(struct ieee80211_mgmt,
-+					  u.s1g_assoc_resp.variable);
-+	} else {
-+		if (data->len < offsetof(struct ieee80211_mgmt,
-+					 u.assoc_resp.variable))
-+			goto free_bss;
-+		cr.resp_ie = mgmt->u.assoc_resp.variable;
-+		cr.resp_ie_len = data->len -
-+				 offsetof(struct ieee80211_mgmt,
-+					  u.assoc_resp.variable);
-+	}
-+	cr.status = le16_to_cpu(mgmt->u.assoc_resp.status_code);
++	if (IWL_FW_CHECK(mld, txq_id >= ARRAY_SIZE(mld->fw_id_to_txq),
++			 "Invalid txq id %d\n", txq_id))
++		return;
 +
- 	trace_cfg80211_send_rx_assoc(dev, data);
+ 	__skb_queue_head_init(&skbs);
  
- 	/*
-@@ -78,22 +90,24 @@ void cfg80211_rx_assoc_resp(struct net_device *dev,
- 	 * and got a reject -- we only try again with an assoc
- 	 * frame instead of reassoc.
- 	 */
--	if (cfg80211_sme_rx_assoc_resp(wdev, cr.status)) {
--		for (link_id = 0; link_id < ARRAY_SIZE(data->links); link_id++) {
--			struct cfg80211_bss *bss = data->links[link_id].bss;
--
--			if (!bss)
--				continue;
--
--			cfg80211_unhold_bss(bss_from_pub(bss));
--			cfg80211_put_bss(wiphy, bss);
--		}
--		return;
--	}
-+	if (cfg80211_sme_rx_assoc_resp(wdev, cr.status))
-+		goto free_bss;
- 
- 	nl80211_send_rx_assoc(rdev, dev, data);
- 	/* update current_bss etc., consumes the bss reference */
- 	__cfg80211_connect_result(dev, &cr, cr.status == WLAN_STATUS_SUCCESS);
-+	return;
-+
-+free_bss:
-+	for (link_id = 0; link_id < ARRAY_SIZE(data->links); link_id++) {
-+		struct cfg80211_bss *bss = data->links[link_id].bss;
-+
-+		if (!bss)
-+			continue;
-+
-+		cfg80211_unhold_bss(bss_from_pub(bss));
-+		cfg80211_put_bss(wiphy, bss);
-+	}
- }
- EXPORT_SYMBOL(cfg80211_rx_assoc_resp);
- 
+ 	/* we can free until ssn % q.n_bd not inclusive */
 -- 
 2.53.0
 
