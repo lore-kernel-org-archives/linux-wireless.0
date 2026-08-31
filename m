@@ -1,42 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C8D565111;
-	Mon, 31 Aug 2026 13:47:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF321569F2C;
+	Mon, 31 Aug 2026 13:48:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184077; cv=none; b=un2m1gxrvrlsiSIKSyAbOXRhB1MNl/78cCi+G96lF8vN/uyOUQl78o4KdQWgE8bpI1kdMPEqvXYVjjC60f41+LDJiGQ2VEUC6P5o93VTawkEN7g75Jpm7d2bzScWYWy8CEzUdCOpeUrrpjgX0aROKR9dhyT1ur7h/5aVRdRguK4=
+	t=1788184098; cv=none; b=Clh4XcE0KYolSr/8KBtr8eYsETzzLOGTpHVv1yBHnIfe3eQB3Tg9pRRdB2E/1zvXGfrU/ff3n33dgoDkpd8lvI0MQKb1gfNfaeRm9I6IGzlv8NJmVDy8e0x0/4opKgML/go1gNXi1zom5ltMT6laZ8uwBGgwnaBL7blQTlyXRNo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184077; c=relaxed/simple;
-	bh=wVL1YIJPlbDy/sek2DgAlItW+ozYH1TUIDGq2UvPtF8=;
+	s=arc-20240116; t=1788184098; c=relaxed/simple;
+	bh=pWlITHxsdaR6tNy9qB/AzeymDyMTpAtdKdFnL3D5sUA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Heng3J+xHSfUv+ayqPVQokJIMfwt5u8a+2u5zK+b87FFhudyxy+KskdLbLc35aZTvC6GCbQaUcLJUaiE01vb7gyOrnefFZ9rb8lan1mix3f71jmuZ0otw6Bd1KpbbOmgv7EYydO5t6GDoVz1Bx68YOVWuOnlmpN5QLVosETOuXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Si3QEYnl; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=WwqYFt/bUXKn3oBiMFhmlsz02X66TL0E3UX5nLPxdKTav+l0AIBdmNFYClbwOCV6VUOGWsC8NoBicnB1jg09NL9Wf6RLbhjWqtMX0ApfN0EtogEl9Uj0wKu33IS7P2hfz9MjE0LfGlAaBzGeDlNT8ZgkSeKUfyEKYExwEllcxRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=krVpy1ko; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Si3QEYnl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FBE21F00A3E;
-	Mon, 31 Aug 2026 13:47:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="krVpy1ko"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 614E11F00ADB;
+	Mon, 31 Aug 2026 13:48:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184075;
-	bh=GjKDFAUDy91EhvmuMW3l0NSZA+T7hWB6tOHcKdnDrzg=;
+	s=k20260515; t=1788184095;
+	bh=dpzFcOsUzknn7jzsTuxyFFmfi2Q3KDvIdInsUb0qOtE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Si3QEYnlKBo5UV7lIryzxy+r3EAda+MbG+G0r1VHH5iWGpfTUg0Wjqv9u/BO2soAI
-	 RYq3/tLXYN3Z11j4PF+OSUYYBrEk0ZzCvAffNWXI9FQ0EfmsMowXSaty+H7B5+MSR8
-	 RUr0eqDfqcP4zgNYG33RY1/WiloV23IJYSVqamun0muKsYBF2n7n/moT/FFRVRUYfe
-	 AC8L4gC1QVy2XzaTOiJS7XgBfDX+SR9o84UWgj+OU+iIcH9NDgs90yYJ6lcDS6dVW7
-	 D0EWMbm5v+df29vuwiprRDOy2kC+X+wfK/An6MmboeIjjutX5cJIV44qJMrTH9WOYK
-	 m+ZFtBPZ3T/AQ==
+	b=krVpy1kouME1As/HCW+TEFNMYYC97E0mkxfDT48gBWYHcxzbWreigNtn6Fbmehhvz
+	 fCLwjvfE3NCETRyTTR1js4EnPqBTKkSjkg0V6NxeI0nDIpdeyfKdmBU+AmOakLzWOy
+	 q6M67txowtLF4PW2m7VKBt/r+Jz5g2G3aAOiIyCfZrccdgzMoVfv20Qub0/VeV628a
+	 iraqjbMJrU0TljrbgbPvye+E2LzqPVntzinfY9bY0Uvg1UQio92PDe8mxP9Yx5Ypfr
+	 R2j9ph+tblVQJZfhTzjLgUzf8ggXIA8ypc2v/5fWXWPlvhCB3x0oElepVYcdes730s
+	 iLMzOW/xzBRnQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Avraham Stern <avraham.stern@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Ping-Ke Shih <pkshih@realtek.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: call iwl_mld_free_ap_early_key() for AP only
-Date: Mon, 31 Aug 2026 09:28:24 -0400
-Message-ID: <20260831133314.4125787-476-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.6] wifi: rtw89: phy: check length before parsing PHY status IE
+Date: Mon, 31 Aug 2026 09:28:36 -0400
+Message-ID: <20260831133314.4125787-488-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,284 +51,275 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit c35c44434329c6b3bd2c6c1e5add5ae10d933a4d ]
+[ Upstream commit 884495c39de1a02f42bd40051b921e2311d6ac91 ]
 
-The driver supports intalling IGTK on a NAN device interface. When
-the IGTK is removed, iwl_mld_free_ap_early_key() is called which
-results in a warning since no links are attached to this interface.
-The iwl_mld_free_ap_early_key() function should be called for AP or
-IBSS interfaces only. Check the interface type before calling it.
+Hardware might report PHY status IE with unexpected length, and parser
+might access out of range. Check the length ahead.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Link: https://patch.msgid.link/20260512222731.d67d658b421d.Ife2d1f3b17119ce696582ce6a2a69026d368d8af@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Link: https://patch.msgid.link/20260506131000.1706298-12-pkshih@realtek.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mld: call
-iwl_mld_free_ap_early_key() for AP only`
+# Stable Backport Analysis: `wifi: rtw89: phy: check length before
+parsing PHY status IE`
 
-**Local tree:** `v6.18.44` (Makefile: 6.18.44)
+**Local tree:** Linux **6.18.43** (`git describe HEAD` →
+`v6.18.43-1-gc7f0dac02d232`)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: Subject line
-**Record:** `[wifi: iwlwifi: mld]` `[call/fix]` — Only call
-`iwl_mld_free_ap_early_key()` on AP/IBSS interfaces, not on all non-
-pairwise key removals.
+### Step 1.1: Parse the subject line
+**Record:** `[wifi: rtw89: phy]` `[check]` — validate PHY status IE
+length before parsing; prevents out-of-range access when hardware
+reports unexpected IE lengths.
 
-### Step 1.2: Tags
+### Step 1.2: Parse all commit message tags
 **Record:**
-- **Signed-off-by:** Avraham Stern `<avraham.stern@intel.com>` (author)
-- **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (maintainer)
-- **Link:** `https://patch.msgid.link/20260512222731.d67d658b421d...`
-  (patch submission reference)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Cc:
-  stable@vger.kernel.org`
-- Notable: no syzbot/fuzzer report; Intel iwlwifi maintainer sign-off
+- **Signed-off-by:** Ping-Ke Shih `<pkshih@realtek.com>` (author)
+- **Link:**
+  https://patch.msgid.link/20260506131000.1706298-12-pkshih@realtek.com
+- **No** Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or
+  Cc: stable tags
+- Message ID suffix `-12-` indicates patch 12 of a series (series
+  context noted; core reorder fix is still standalone)
 
-### Step 1.3: Body analysis
+### Step 1.3: Analyze commit body
 **Record:**
-- **Bug:** IGTK can be installed on a NAN device interface. On removal,
-  `iwl_mld_free_ap_early_key()` is called unconditionally for non-
-  pairwise keys, but NAN has no attached links → `WARN_ON(!link)` fires
-  inside that helper.
-- **Symptom:** Kernel warning (`WARN_ON`) during IGTK removal on NAN.
-- **Root cause:** `iwl_mld_free_ap_early_key()` is AP/IBSS-only logic
-  (early key staging before bcast/mcast STAs exist), but the remove path
-  called it for every non-pairwise key regardless of interface type.
-- **Fix:** Gate the call on `vif->type == NL80211_IFTYPE_AP || vif->type
-  == NL80211_IFTYPE_ADHOC`, matching the store path.
+- **Bug:** Hardware may deliver PHY status IEs with unexpected length;
+  parser can read past the skb buffer.
+- **Symptom:** Out-of-range memory access during PHY status parsing
+  (potential oops / info leak).
+- **Root cause:** `rtw89_core_process_phy_status_ie()` runs before
+  confirming `pos + ie_len <= end`.
+- **No** explicit kernel version range in the message.
 
-### Step 1.4: Hidden bug fix?
-**Record:** Yes. Although not labeled "fix", this corrects an asymmetric
-store/remove bug. The store path already restricts early-key handling to
-AP/IBSS; the remove path did not.
+### Step 1.4: Detect hidden bug fixes
+**Record:** Not disguised — message explicitly describes an OOB-access
+bug. The fix is reordering validation before parsing, a standard bounds-
+check pattern.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: Inventory
+### Step 2.1: Inventory the changes
 **Record:**
-- **File:** `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c` (+2
-  lines, scope unchanged)
-- **Function:** `iwl_mld_set_key_remove()`
-- **Scope:** Single-file, surgical (2-line condition extension)
+- **File:** `drivers/net/wireless/realtek/rtw89/core.c` (~5 lines
+  changed, reorder + minor error-path additions)
+- **Function:** `rtw89_core_rx_parse_phy_sts()`
+- **Scope:** Single-file, surgical fix in one loop body
 
 ### Step 2.2: Code flow change
-**Record:**
-- **Before:** Any non-pairwise key removal →
-  `iwl_mld_free_ap_early_key()`.
-- **After:** Non-pairwise key removal on AP or IBSS only →
-  `iwl_mld_free_ap_early_key()`.
-- **Affected path:** `DISABLE_KEY` → `iwl_mld_set_key_remove()` → early-
-  key cleanup before `iwl_mld_remove_key()`.
+**Record (per hunk):**
 
-### Step 2.3: Bug mechanism
-**Record:** **Logic / correctness fix.** `iwl_mld_free_ap_early_key()`
-dereferences `mld_vif->link[key->link_id]`:
-
-```196:207:drivers/net/wireless/intel/iwlwifi/mld/ap.c
-void iwl_mld_free_ap_early_key(struct iwl_mld *mld,
-                               struct ieee80211_key_conf *key,
-                               struct iwl_mld_vif *mld_vif)
-{
-        struct iwl_mld_link *link;
-
-        if (WARN_ON(key->link_id < 0))
-                return;
-
-        link = iwl_mld_link_dereference_check(mld_vif, key->link_id);
-        if (WARN_ON(!link))
-                return;
+**Before:**
+```c
+ie_len = rtw89_core_get_phy_status_ie_len(rtwdev, iehdr);
+rtw89_core_process_phy_status_ie(rtwdev, iehdr, phy_ppdu);  // parses
+first
+pos += ie_len;
+if (pos > end || ie_len == 0)
+    return -EINVAL;
 ```
 
-Called from interfaces that never use early-key storage → spurious
-`WARN_ON`.
+**After:**
+```c
+ie_len = rtw89_core_get_phy_status_ie_len(rtwdev, iehdr);
+pos += ie_len;
+if (pos > end || ie_len == 0) {
+    /* clear ie09/ie10 on newer trees */
+    return -EINVAL;
+}
+rtw89_core_process_phy_status_ie(rtwdev, iehdr, phy_ppdu);  // parse
+only if in-bounds
+```
+
+**Affected path:** RX PPDU status processing loop (normal + error
+paths).
+
+### Step 2.3: Bug mechanism
+**Record:** **Buffer over-read / out-of-bounds access.**
+`rtw89_core_process_phy_status_ie()` casts `iehdr` to structures like
+`rtw89_phy_sts_ie01` (24 bytes) and `rtw89_phy_sts_ie01_v2` (40 bytes,
+accesses `w8`/`w9`). If `ie_len` is wrong or the remaining buffer is
+shorter than the structure, the parser reads past `end` before the
+existing bounds check runs.
 
 ### Step 2.4: Fix quality
-**Record:** Obviously correct; mirrors existing store guard at lines
-2099–2102. Minimal regression risk. No new APIs or behavior changes
-beyond suppressing incorrect helper calls.
+**Record:** Obviously correct — validate-then-use is the right pattern.
+Minimal regression risk (only skips parsing of IEs already known to be
+invalid). No API or behavioral changes for valid packets.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: Blame
-**Record:** All lines in this file blame to `7e22de67e545d` (squashed
-stable snapshot). Meaningful per-line history unavailable in this
-checkout.
+### Step 3.1: Blame changed lines
+**Record:** `rtw89_core_rx_parse_phy_sts()` and the process-before-check
+ordering are present at the v6.18 merge point (`6bda50f4333fa`,
+2025-11-29). The buggy ordering has been in this tree since at least
+**6.18.0**.
 
-### Step 3.2: Fixes: tag
-**Record:** N/A — no `Fixes:` tag present.
+### Step 3.2: Follow Fixes: tag
+**Record:** N/A — no Fixes: tag.
 
-### Step 3.3: File history
-**Record:** `git log` on `mld/mac80211.c` returns only the squashed HEAD
-commit. Cannot trace introduction of the asymmetry via git history in
-this tree.
+### Step 3.3: File history for related changes
+**Record:** Recent rtw89 fixes in this tree follow the same pattern:
+- `ebeaa3b24ba56` — validate release report before use (same author)
+- `ef7fa19809b2d` — validate TX release report sequence
+- `ad445de67359f` — bounds check on firmware `mac_id`
+
+Standalone fix; no prerequisite commits required for the reorder.
 
 ### Step 3.4: Author context
-**Record:** Avraham Stern (Intel iwlwifi). Miri Korenblit signed off —
-iwlwifi maintainer. Part of May 2026 iwlwifi update series (NAN/IGTK
-work in
-`20260511_miriam_rachel_korenblit_wifi_iwlwifi_updates_2026_05_11.mbx`).
+**Record:** Ping-Ke Shih is the primary Realtek rtw89 maintainer.
+Multiple rtw89 stable backports from this author are already in 6.18.y.
 
 ### Step 3.5: Dependencies
-**Record:** Standalone. No series dependency. Applies to existing
-`iwl_mld_set_key_remove()` without prerequisite commits.
+**Record:** The upstream diff also touches `ie09`/`ie10` fields and
+monitor-mode accept logic that **do not exist** in 6.18.43. The core
+reorder fix applies independently; backport would drop those hunks.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original discussion
-**Record:** `b4 dig -c HEAD` did not match this patch (HEAD is unrelated
-amdgpu commit). No `.mbx` file for this specific patch in the workspace.
-Lore.kernel.org blocked by bot protection. Link tag points to May 12,
-2026 submission; not directly fetchable.
+### Step 4.1: Original patch discussion
+**Record:** `b4 dig -c` could not match (commit not in local tree).
+lore.kernel.org and patch.msgid.link blocked by bot protection
+(Anubis/403). **UNVERIFIED:** full review thread content.
 
 ### Step 4.2: Reviewers
-**Record:** UNVERIFIED — could not retrieve thread via b4/lore.
+**Record:** **UNVERIFIED** — `b4 dig -w` not possible without commit
+hash.
 
 ### Step 4.3: Bug report
-**Record:** No external bug report referenced. Bug described in commit
-message only (NAN IGTK removal warning).
+**Record:** No syzbot/bugzilla link. Bug is described as hardware-
+reported malformed PHY status data — plausible real-world trigger
+(firmware edge cases), not purely theoretical.
 
-### Step 4.4: Related patches
-**Record:** Related iwlwifi mld NAN/IGTK work in
-`20260511_miriam_rachel_korenblit_wifi_iwlwifi_updates_2026_05_11.mbx`
-(patches 8–10 add NAN TLC, NAN data, separate TX/RX IGTK tracking). This
-fix is a follow-on to that work.
+### Step 4.4: Related patches / series
+**Record:** Message ID indicates patch 12 of a series. The bounds-check
+reorder does not depend on earlier series patches for correctness in
+6.18.43.
 
-### Step 4.5: Stable list history
-**Record:** UNVERIFIED — lore stable search inaccessible.
+### Step 4.5: Stable mailing list
+**Record:** **UNVERIFIED** — could not search lore stable archive due to
+access restrictions.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `iwl_mld_set_key_remove()`, `iwl_mld_free_ap_early_key()`,
-`iwl_mld_store_ap_early_key()`, `iwl_mld_mac80211_set_key()`.
+**Record:** `rtw89_core_rx_parse_phy_sts()`,
+`rtw89_core_process_phy_status_ie()`,
+`rtw89_core_get_phy_status_ie_len()`,
+`rtw89_core_parse_phy_status_ie01()`,
+`rtw89_core_parse_phy_status_ie01_v2()`.
 
 ### Step 5.2: Callers
 **Record:**
-- `iwl_mld_set_key_remove()` ← `iwl_mld_mac80211_set_key()`
-  (`DISABLE_KEY`)
-- `iwl_mld_mac80211_set_key()` is the mac80211 `set_key` driver callback
-  — reachable on normal WiFi key install/remove from userspace
-  (wpa_supplicant, hostapd, NetworkManager).
+- `rtw89_core_rx_process_phy_sts()` → `rtw89_core_rx_parse_phy_sts()`
+- `rtw89_core_rx_process_ppdu_sts()` → `rtw89_core_rx_process_phy_sts()`
+- `rtw89_core_rx_process_report()` handles
+  `RTW89_CORE_RX_TYPE_PPDU_STAT`
+
+Called on every PPDU status report from firmware during normal WiFi RX.
 
 ### Step 5.3: Callees
-**Record:** `iwl_mld_free_ap_early_key()` →
-`iwl_mld_link_dereference_check()` → `WARN_ON` on invalid/missing link.
-`iwl_mld_remove_key()` handles actual FW key removal afterward.
+**Record:** IE parsers read multi-word hardware structures via
+`le32_get_bits()` at fixed offsets (e.g., `ie->w8`, `ie->w9` up to 40
+bytes into `rtw89_phy_sts_ie01_v2`).
 
 ### Step 5.4: Reachability
-**Record:** **Yes, from userspace.** Any `DISABLE_KEY` for a group key
-(GTK/IGTK/BIGTK) triggers this path. Store path is already AP/IBSS-only:
-
-```2094:2102:drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-        /* After exiting from RFKILL, hostapd configures GTK/ITGK before
-the
-  - AP is started, but those keys can't be sent to the FW before the
-  - MCAST/BCAST STAs are added to it (which happens upon AP start).
-  - Store it here to be sent later when the AP is started.
-         */
-        if ((vif->type == NL80211_IFTYPE_ADHOC ||
-             vif->type == NL80211_IFTYPE_AP) && !sta &&
-             !mld_vif->ap_ibss_active)
-                return iwl_mld_store_ap_early_key(mld, key, mld_vif);
-```
-
-For STA, `key->link_id` is often `-1` (non per-link keys per `key.c`),
-which also triggers `WARN_ON(key->link_id < 0)` in the helper today.
+**Record:** Triggered by firmware RX reports on active WiFi interfaces —
+common runtime path, not init-only or debug-only.
 
 ### Step 5.5: Similar patterns
-**Record:** Store/remove asymmetry is the only instance. Fix aligns
-remove with store.
+**Record:** Same driver already had multiple “validate before use”
+stable backports (`ebeaa3b`, `ef7fa198`, `ad445de`), confirming
+maintainer awareness of malformed-firmware crash class.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE (6.18.44)
+## PHASE 6: CROSS-REFERENCE AGAINST LOCAL TREE (6.18.43)
 
-### Step 6.1: Buggy code present?
-**Record:** **Yes.** Current tree at lines 2160–2162 still has the
-unconditional call:
+### Step 6.1: Does buggy code exist?
+**Record:** **YES.** Current code at lines 2024–2026 still calls
+`rtw89_core_process_phy_status_ie()` before the bounds check:
 
-```2160:2162:drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-        /* if this key was stored to be added later to the FW - free it
-here */
-        if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-                iwl_mld_free_ap_early_key(mld, key, mld_vif);
+```2021:2031:drivers/net/wireless/realtek/rtw89/core.c
+        while (pos < end) {
+                const struct rtw89_phy_sts_iehdr *iehdr = pos;
+
+                ie_len = rtw89_core_get_phy_status_ie_len(rtwdev,
+iehdr);
+                rtw89_core_process_phy_status_ie(rtwdev, iehdr,
+phy_ppdu);
+                pos += ie_len;
+                if (pos > end || ie_len == 0) {
+                        rtw89_debug(rtwdev, RTW89_DBG_TXRX,
+                                    "phy status parse failed\n");
+                        return -EINVAL;
+                }
+        }
 ```
 
-`iwl_mld` driver fully present (65 files under `mld/`).
-
-### Step 6.2: Backport difficulty
-**Record:** Clean apply expected — 2-line condition change, no conflicts
-anticipated.
+### Step 6.2: Backport complications
+**Record:** **Clean apply** for the reorder hunk. Upstream `ie09`/`ie10`
+clearing and monitor-mode `accept` logic are not in 6.18.43 and should
+be omitted during backport.
 
 ### Step 6.3: Related fixes already present?
-**Record:** No equivalent fix found. `git log --grep` found nothing
-(squashed history).
-
-### NAN-specific note for this tree
-**Record:** `NL80211_IFTYPE_NAN` is **not** in `wiphy->interface_modes`
-in this tree (lines 268–273). Full NAN IGTK support from the May 11
-series (patches 8–10) is **not** present (no `tx_igtk`/`rx_igtk`, no
-`NL80211_IFTYPE_NAN` in mac80211.c). The commit-message NAN scenario is
-not yet reachable here, but the STA group-key removal path **is**
-reachable and can hit the same helper incorrectly.
+**Record:** **No** — grep found no “check length before parsing” commit;
+fix not yet applied.
 
 ---
 
 ## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** `drivers/net/wireless/intel/iwlwifi/mld` — IMPORTANT (Intel
-WiFi driver, iwl_mld for newer MLD-capable hardware). Not core kernel,
-but affects WiFi users on supported Intel hardware.
+**Record:** `drivers/net/wireless/realtek/rtw89` — **IMPORTANT**
+(Realtek WiFi devices on PCI/USB; widely deployed on laptops and
+desktops with `CONFIG_RTW89`).
 
-### Step 7.2: Activity
-**Record:** Actively developed; iwl_mld is relatively new (copyright
-2024–2025) with ongoing NAN/MLO work.
+### Step 7.2: Subsystem activity
+**Record:** High — 27+ rtw89 commits in this tree’s recent history;
+active maintenance and stable backports.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## PHASE 8: IMPACT AND RISK
 
 ### Step 8.1: Who is affected
-**Record:** Users of Intel iwl_mld hardware (WiFi 6E/7 MLD-capable
-devices). All interface types that remove group keys (STA most common
-today; NAN when that support lands).
+**Record:** Users with rtw89-supported hardware (RTL8852AE/BE,
+RTL8922AE/DE, etc.) running normal WiFi traffic.
 
 ### Step 8.2: Trigger conditions
-**Record:** Removing any non-pairwise key (GTK/IGTK/BIGTK) on a non-
-AP/IBSS interface. Common during STA disconnect/roaming. Unprivileged
-users trigger via normal WiFi stack operations.
+**Record:** Malformed or unexpectedly-sized PHY status IE from
+hardware/firmware. Not every packet, but reachable during normal RX
+without special privileges. Unprivileged users can generate WiFi traffic
+that produces PPDU status reports.
 
 ### Step 8.3: Failure mode severity
-**Record:** `WARN_ON` in driver — **MEDIUM**. No crash, corruption, or
-deadlock by default. Can spam dmesg; with `panic_on_warn` enabled, could
-panic. Functional key removal continues via `iwl_mld_remove_key()`.
+**Record:** Out-of-bounds read from skb data → **HIGH** severity (kernel
+oops possible; potential info leak past buffer). Existing error return
+path does not prevent damage because parsing happens first.
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** Eliminates spurious warnings on STA (and future NAN)
-  group-key removal; corrects logic bug; trivial fix.
-- **Risk:** Very low — 2 lines, mirrors existing store guard, no
-  behavior change for AP/IBSS.
-- **Ratio:** Favorable for backport.
+- **Benefit:** HIGH — prevents crash/info-leak on malformed firmware
+  data in a hot RX path
+- **Risk:** VERY LOW — ~3-line reorder, no logic change for valid IEs
+- **Ratio:** Strongly favors backport
 
 ---
 
@@ -338,114 +328,109 @@ panic. Functional key removal continues via `iwl_mld_remove_key()`.
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real logic bug: remove path calls AP-only helper for all non-pairwise
-  keys
-- Reachable today on STA group-key removal (common path)
-- Matches existing store-path guard — obviously correct
-- 2-line, contained fix; no new APIs
-- iwl_mld code exists in v6.18.44; fix applies cleanly
-- Intel maintainer sign-off
+- Real OOB-read bug in production RX path
+- Bug confirmed present in 6.18.43
+- Small, obviously correct fix
+- Same author/maintainer pattern already accepted in this tree
+- Prevents kernel crash on malformed hardware reports
 
 **AGAINST backport:**
-- Failure mode is `WARN_ON` only, not crash/corruption (borderline
-  importance)
-- NAN-specific scenario from commit message not yet reachable in 6.18.44
-  (NAN not exposed)
-- iwl_mld user base still growing vs legacy mvm
+- No syzbot/user crash report attached (weaker evidence, but mechanism
+  is clear from code)
+- Upstream patch is part of a series and includes hunks not applicable
+  to 6.18.43 (minor backport adaptation needed)
+- Mailing list review not verified
 
-**UNRESOLVED:**
-- No mailing-list review thread retrieved
-- Cannot confirm via git when asymmetry was introduced (squashed tree)
+**Unresolved:** Full lore review thread; whether a user-visible crash
+report exists.
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — mirrors store guard;
-   maintainer SOB; logic verifiable by inspection. No independent
-   Tested-by.
-2. Fixes a real bug affecting users? **PASS** — spurious `WARN_ON` on
-   group-key removal for non-AP/IBSS interfaces.
-3. Important issue? **PASS (borderline)** — `WARN_ON` spam; possible
-   panic with `panic_on_warn`; not data corruption or security.
-4. Small and contained? **PASS** — 2 lines, one function.
-5. No new features or APIs? **PASS**.
-6. Can apply to local tree? **PASS** — buggy code confirmed present.
+1. Obviously correct and tested? **PASS** — reorder is self-evident;
+   author is driver maintainer
+2. Fixes a real bug? **PASS** — OOB read before bounds check
+3. Important issue? **PASS** — crash / memory safety in RX hot path
+   (**HIGH**)
+4. Small and contained? **PASS** — single function, few lines
+5. No new features/APIs? **PASS**
+6. Can apply to local tree? **PASS** — reorder applies cleanly; omit
+   `ie09`/`ie10` hunks
 
 ### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build fix, or docs).
+**Record:** N/A (not device ID, quirk, DT, build, or docs — standard bug
+fix).
 
 ### Step 9.4: Decision rationale
-
-This is a small, obviously correct fix for a real driver logic error.
-The store path already limits early-key handling to AP/IBSS; the remove
-path should match. Without the fix, removing group keys on STA (and
-eventually NAN) triggers unnecessary `WARN_ON` calls inside
-`iwl_mld_free_ap_early_key()`. While severity is medium (warning, not
-crash), the fix is minimal, low-risk, and aligns two code paths that
-should never have diverged. It meets stable criteria for iwlwifi driver
-bug fixes.
+This commit fixes a clear ordering bug: the driver parses PHY status
+information elements before verifying they fit within the received skb
+buffer. When hardware reports an unexpected IE length, parsers access
+fixed offsets (up to 40 bytes) that can extend past the buffer end,
+causing a kernel oops or information leak. The bug exists in 6.18.43,
+the fix is minimal and follows established rtw89 stable-backport
+patterns from the same maintainer, and it addresses a serious failure
+mode on a common RX path.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed commit message, tags, and body from user query
-- **[Phase 2]** Read diff and `iwl_mld_free_ap_early_key()` in `ap.c`;
-  confirmed `WARN_ON` mechanism
-- **[Phase 2]** Read `iwl_mld_set_key_remove()` and store-path guard in
-  `mac80211.c`
-- **[Phase 3]** `git describe HEAD` → `v6.18.44`
-- **[Phase 3]** `git blame -L 2160,2162` → lines present, squashed
-  history
-- **[Phase 3]** `git log --oneline --
-  drivers/net/wireless/intel/iwlwifi/mld/mac80211.c` → single squashed
-  commit
-- **[Phase 4]** `b4 dig -c HEAD` → no match for this patch
-- **[Phase 4]** Searched workspace `.mbx` files → no mbox for this
-  specific patch
-- **[Phase 4]** WebFetch lore.kernel.org → blocked (bot protection)
-- **[Phase 4]** Read
-  `20260511_miriam_rachel_korenblit_wifi_iwlwifi_updates_2026_05_11.mbx`
-  → related NAN/IGTK series context
-- **[Phase 5]** `rg iwl_mld_free_ap_early_key` → call sites in
-  `mac80211.c`, definition in `ap.c`
-- **[Phase 5]** Traced `iwl_mld_mac80211_set_key()` → `DISABLE_KEY` →
-  `iwl_mld_set_key_remove()`
-- **[Phase 5]** Read `key.c` `iwl_mld_get_key_sta_mask()` →
-  `key->link_id < 0` common for non per-link STA keys
-- **[Phase 6]** Confirmed buggy code at lines 2160–2162 without AP/IBSS
-  check
-- **[Phase 6]** Confirmed `NL80211_IFTYPE_NAN` not in `interface_modes`
-  (lines 268–273)
-- **[Phase 6]** Confirmed no `tx_igtk`/`rx_igtk` NAN IGTK refactor from
-  May series in current tree
-- **[Phase 6]** Confirmed `iwl_mld` driver present (65 files)
-- **[Phase 7]** Identified subsystem as iwlwifi mld driver
-- **[Phase 8]** Assessed failure mode as `WARN_ON` (MEDIUM severity)
-- **UNVERIFIED:** Mailing-list review discussion and explicit stable
-  nominations
-- **UNVERIFIED:** Whether `panic_on_warn` reports exist for this issue
-- **UNVERIFIED:** Exact commit SHA on mainline (not in this tree's git
-  log)
+- **[Phase 1]** Parsed subject, tags (Signed-off-by, Link); no
+  Fixes:/Reported-by
+- **[Phase 2]** Read diff and current `core.c` lines 2007–2038;
+  confirmed process-before-check ordering
+- **[Phase 2]** Verified IE structure sizes in `txrx.h`
+  (`rtw89_phy_sts_ie01` 24B, `rtw89_phy_sts_ie01_v2` 40B with `w8`/`w9`)
+- **[Phase 3]** `git blame -L 2007,2040`: function present since
+  `6bda50f4333fa` (v6.18 merge)
+- **[Phase 3]** `git show 6bda50f4333fa:core.c`: function existed at
+  v6.18.0 with same bug pattern
+- **[Phase 3]** `git log --oneline -20 --
+  drivers/net/wireless/realtek/rtw89/`: related validation fixes present
+- **[Phase 3]** `git show ebeaa3b24ba56`, `ad445de67359f`: same
+  “validate before use” pattern already backported
+- **[Phase 4]** `b4 dig -c HEAD`: no match (commit not in tree)
+- **[Phase 4]** lore.kernel.org / patch.msgid.link: **BLOCKED** (bot
+  protection) — review thread UNVERIFIED
+- **[Phase 5]** `grep rtw89_core_rx_process_phy_sts`: call chain through
+  `rtw89_core_rx_process_ppdu_sts` → PPDU_STAT RX path
+- **[Phase 5]** Read `rtw89_core_rx_process_phy_ppdu_iter`: only uses
+  parsed data after `phy_ppdu->valid` set on success
+- **[Phase 6]** `git describe HEAD` / `make kernelversion`: tree is
+  6.18.43
+- **[Phase 6]** `grep ie09|ie10 drivers/net/wireless/realtek/rtw89/`: no
+  matches — upstream-only hunks not in this tree
+- **[Phase 6]** `grep "check length before parsing"`: not present — fix
+  not yet applied
+- **[Phase 8]** Confirmed failure mode is OOB read with HIGH severity on
+  active WiFi RX path
+
+---
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 4 +++-
+ drivers/net/wireless/realtek/rtw89/core.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 322669d78b193..27ae06e208402 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -2164,7 +2164,9 @@ static void iwl_mld_set_key_remove(struct iwl_mld *mld,
+diff --git a/drivers/net/wireless/realtek/rtw89/core.c b/drivers/net/wireless/realtek/rtw89/core.c
+index c2bf839fd82a9..2eb992c1c2d08 100644
+--- a/drivers/net/wireless/realtek/rtw89/core.c
++++ b/drivers/net/wireless/realtek/rtw89/core.c
+@@ -2026,13 +2026,15 @@ static int rtw89_core_rx_parse_phy_sts(struct rtw89_dev *rtwdev,
+ 		const struct rtw89_phy_sts_iehdr *iehdr = pos;
+ 
+ 		ie_len = rtw89_core_get_phy_status_ie_len(rtwdev, iehdr);
+-		rtw89_core_process_phy_status_ie(rtwdev, iehdr, phy_ppdu);
+ 		pos += ie_len;
+ 		if (pos > end || ie_len == 0) {
+ 			rtw89_debug(rtwdev, RTW89_DBG_TXRX,
+ 				    "phy status parse failed\n");
++
+ 			return -EINVAL;
+ 		}
++
++		rtw89_core_process_phy_status_ie(rtwdev, iehdr, phy_ppdu);
  	}
  
- 	/* if this key was stored to be added later to the FW - free it here */
--	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
-+	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE) &&
-+	    (vif->type == NL80211_IFTYPE_AP ||
-+	     vif->type == NL80211_IFTYPE_ADHOC))
- 		iwl_mld_free_ap_early_key(mld, key, mld_vif);
- 
- 	/* We already removed it */
+ 	rtw89_chip_convert_rpl_to_rssi(rtwdev, phy_ppdu);
 -- 
 2.53.0
 
