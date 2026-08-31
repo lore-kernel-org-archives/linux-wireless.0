@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE3C533582;
-	Mon, 31 Aug 2026 13:45:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2168B511182;
+	Mon, 31 Aug 2026 13:45:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183908; cv=none; b=tNvWkZssmHXWl9XAnzYKaP9wxH6S4iuCFP+K0FHZVGPYTKkG2gmw8uG0lQVMuXeTHLmZQHK8ZmHolMKvDUVOdT2hTyL7udD41Aq1Cmebxgg/Fj//344lJMRqgHocydrc/pplHy2qz2SBFurwat9cU6MTSeQiKvM9sbTl7uBTd3Q=
+	t=1788183922; cv=none; b=UP/9K7vadFdidWCyMutAngBYxYvKwRB7vqQO826LGAVosWqrHpzjdfYdxIcsRF52DpRcA+OzNis7GoJjg9C00TKTlqYFgvz5dHncahnX2IVMtkL/6hh85DYdpM8l49NnL/MCHDG1b+rzr578zmP6TtV2q58lOBXRtXdk68dpCD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183908; c=relaxed/simple;
-	bh=sid1sV8s4q74X6o+frYf112Qrz0DPI3Du+XUomqiJzk=;
+	s=arc-20240116; t=1788183922; c=relaxed/simple;
+	bh=M4hwHtfTpYx/TxyJAriiHTcWQXWc+JKhZGanuk43jDg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FFd6R/CNLWD33gZ/oH9hYpEkfK9mLnK8iK9JsLrc7vq/wEWWGqqTCp6E23w3Yk1EUfKpoaXM4ak0HPk+WMYT0ovrQLj5voCUUSVqCJYO4vR9Xmal3/isgOGhL2Eb9jMuGGsxANiRODy8rzycdK60roqOjijQdRA9p+hCg+pc81w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BLDTigrU; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=MTLvT/+hpSnDHk0r0HqN2NcKyex3fU0IhT1Nyfhziwh79aptL+bV/fy6OR6y7simA+FpvPtEGprOYQa2/S+ZAMjh6Hve6jZPEnHoO8YrLDS0xRPqWmZuSWTFT/QyTTz2FrMTJ+dyBopUBfM8qfYScjJy5+nESSYq6msQ2mlEv7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kMU0TvZv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BLDTigrU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB77A1F00A3F;
-	Mon, 31 Aug 2026 13:45:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kMU0TvZv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEA9C1F00A3D;
+	Mon, 31 Aug 2026 13:45:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183906;
-	bh=oN6+Wuu9JYt/03J6GSnpQ/bNKMItuNfqEycApNwj0K8=;
+	s=k20260515; t=1788183920;
+	bh=erwCL33Eq4WHQ+2TstlMbI5oG5L8AKbn3R7j2Sm0+FA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=BLDTigrUYHoCwOkyh1u3i3xKAmhXNDAeTJbKyGhQlxdkxCMYaXacx8B7z7UKxMFyX
-	 1N1BPTJo69f/SM0zgqT91UNOOErrzyrfIXC0ICvuPwegKTj6tj7m8DuM6orCpQdT5a
-	 kab+/mBN7Ae0ulc1sCGCvXGQKfj6HaPxe321xxXj1KumwY8xDv8pBfGkLyO8TSaF/Q
-	 Y/fX2Dcqfo+hLkk5ryDC0O4gVfy3Oh5Rv2DrdJH5BrIgEQZiKH9jldVVV4OAtoSoax
-	 1Tvv+f35qAW9e049YweHldMlxHrWGtVV4g2tRQsFvww2KHmdM1jqK2w4NmyBxWKdX7
-	 IgDWcC79FFZaw==
+	b=kMU0TvZvPAsXeKzv0GlSMuHc7+wcP5yzk6bQYj6uGRyIXjoTZbOMLTv0+JjfqBneT
+	 g49l1/B3Wmw7SjAM/DcwMRK0CA6u/aKxdOan1c58bGvMBCdqW3HB6u1xK+P1wMspA+
+	 9LJ4YeohqlQosoR/xxUUXtrWRNnnyzgwxtZ0hcIq2t7bsfLonLl+ovhJk/bhZf71Nx
+	 r78hho/j7HN2UUtBGbQpo5gIQr0jz0Fxd5QWNdy4Nd16sLRhszDi7nkPTUypJpKsUT
+	 ukBtBBwUV8+yxHYiBOx8vhMIejHANPgilaIPcYTJXXYD/SPDWGAVhxVybbKkyHagWU
+	 oSVbkpuAA+J9w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Jouni Malinen <j@w1.fi>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: validate SEC_RT TLV minimum size
-Date: Mon, 31 Aug 2026 09:26:41 -0400
-Message-ID: <20260831133314.4125787-373-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: mac80211: always allow transmitting null-data on TXQs
+Date: Mon, 31 Aug 2026 09:26:49 -0400
+Message-ID: <20260831133314.4125787-381-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -52,386 +53,395 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit d13d5d299c11b7bd3362d5692c56225d9e176664 ]
+[ Upstream commit 51129a2ca0482b006d0e12a0aa025ff1e1cad2cb ]
 
-Reject firmware section TLVs that are shorter than the offset field
-before subtracting sizeof(offset) from the section size.
+Jouni reported that certain sequences of tests caused some
+WDS tests to fail after applying the upcoming hwsim changes
+for NAN. I bisected that down to converting hwsim to TXQs,
+and after a long debug session found that the 4-addr NDP was
+getting dropped, because it goes out via a (management) TXQ
+and is a data frame.
 
-This prevents size underflow for malformed TLVs.
+It's unclear to me now why this only happens in some test
+sequences (e.g. "sigma_dut_sae_h2e_ap_loop ap_wds_sta" and
+"sigma_dut_eap_ttls_all_akm_suites ap_wds_sta_open"), maybe
+that affects timing and the frame is otherwise delayed in
+some way.
 
-Assisted-by: GitHubCopilot:GPT-5.3-Codex
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260717173215.17b040b27edc.I6b32d1e9ad707417e2e604f08a63582456209372@changeid
-Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Correct the check to only drop frames that actually carry
+data, not NDPs.
+
+Reported-by: Jouni Malinen <j@w1.fi>
+Link: https://patch.msgid.link/20260417141601.851ddf4adb59.I3d668c0e1bdca9cd98f2fc46f84a066e68cc7a62@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit Message Forensics
+# Stable Backport Analysis: `wifi: mac80211: always allow transmitting
+null-data on TXQs`
 
-**Step 1.1 — Subject line**
-
-Record: `[wifi: iwlwifi]` `[validate]` — validate minimum size of SEC_RT
-firmware section TLVs before parsing.
-
-**Step 1.2 — Tags**
-
-Record:
-- `Assisted-by: GitHubCopilot:GPT-5.3-Codex`
-- `Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-- `Link: https://patch.msgid.link/20260717173215.17b040b27edc...`
-
-Notable patterns: No `Fixes:`, `Reported-by:`, `Cc:
-stable@vger.kernel.org`, `Tested-by:`, or `Reviewed-by:` tags. Absence
-of stable tags is expected for manual review. Intel internal fixes
-series (patch 5/5).
-
-**Step 1.3 — Body analysis**
-
-Record:
-- **Bug:** `iwl_store_ucode_sec()` subtracts `sizeof(offset)` from TLV
-  length without verifying the TLV is at least that large.
-- **Symptom:** Integer underflow on `sec->size` for malformed TLVs
-  (`tlv_len` 0–3).
-- **Root cause:** `sec->size = size - sizeof(sec_parse->offset)` with
-  signed `int size`; negative result assigned to `size_t` becomes a very
-  large value.
-- **Version info:** None in commit message.
-
-**Step 1.4 — Hidden bug fix?**
-
-Record: Yes — described as validation, but it is a real memory-safety
-bug fix (underflow → huge allocation + out-of-bounds `memcpy`).
+**Local tree:** Linux **6.18.43** (`stable/linux-6.18.y`, detached HEAD)
 
 ---
 
-## Phase 2: Diff Analysis
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-**Step 2.1 — Inventory**
+### Step 1.1: Subject line
+**Record:** `[wifi: mac80211]` `[allow]` — always allow transmitting
+null-data frames on TXQs during dequeue.
 
-Record:
-- **File:** `drivers/net/wireless/intel/iwlwifi/iwl-drv.c` (+4 / −1)
-- **Function:** `iwl_store_ucode_sec()`
-- **Scope:** Single-file, surgical fix
+### Step 1.2: Commit tags
+**Record:**
+- **Reported-by:** Jouni Malinen `<j@w1.fi>` (hostap/wpa_supplicant
+  maintainer — credible wireless reporter)
+- **Link:** https://patch.msgid.link/20260417141601.851ddf4adb59.I3d668c
+  0e1bdca9cd98f2fc46f84a066e68cc7a62@changeid
+- **Signed-off-by:** Johannes Berg `<johannes.berg@intel.com>` (mac80211
+  maintainer)
+- No Fixes:, Cc: stable, Reviewed-by, Tested-by, or syzbot tags
+- Notable: single reporter, but a highly credible one in the WiFi stack
 
-**Step 2.2 — Code flow change**
+### Step 1.3: Body analysis
+**Record:**
+- **Bug:** 4-address null data packets (NDPs/nullfunc) are silently
+  dropped in `ieee80211_tx_dequeue()` because they are IEEE 802.11 data-
+  type frames routed through a management TXQ while the target STA is
+  not yet `WLAN_STA_AUTHORIZED`.
+- **Symptom:** WDS (Wireless Distribution System) test failures —
+  specifically WiFi Alliance sigma tests `sigma_dut_sae_h2e_ap_loop
+  ap_wds_sta` and `sigma_dut_eap_ttls_all_akm_suites ap_wds_sta_open`.
+- **Root cause (author):** The unauthorized-station drop check uses
+  `ieee80211_is_data()`, which matches nullfunc frames; it should use
+  `ieee80211_is_data_present()`, which excludes null/QoS-null subtypes.
+- **Timing:** Intermittent — only some test sequences trigger it; author
+  suspects timing affects whether the frame is still unauthorized when
+  dequeued.
 
-Record:
-- **Hunk 1 (parameter type):** `int size` → `size_t size` (matches
-  `tlv_len` as `u32` and `sec->size` as `size_t`).
-- **Hunk 2 (validation):** Before casting `data` to `struct
-  fw_sec_parsing *` and subtracting offset size, reject `size <
-  sizeof(sec_parse->offset)` with `-EINVAL`.
-- **Before:** Malformed TLV with `tlv_len < 4` → read past TLV data,
-  underflow `sec->size` → huge `size_t`.
-- **After:** Early rejection before offset read or size subtraction.
-
-**Step 2.3 — Bug mechanism**
-
-Record:
-- **Category:** Buffer overflow / out-of-bounds read + integer
-  underflow.
-- **Mechanism:** With `tlv_len=1`, `sec->size = 1 - 4 = -3` (signed) →
-  `SIZE_MAX-2` as `size_t`. Later `iwl_alloc_fw_desc()` does
-  `vmalloc(sec->size)` and `memcpy(data, sec->data, desc->len)` far
-  beyond the firmware buffer.
-
-**Step 2.4 — Fix quality**
-
-Record: Obviously correct minimum-length check; minimal change; low
-regression risk. Pre-existing issue: callers ignore
-`iwl_store_ucode_sec()` return value, but the fix still prevents storing
-a corrupted section entry.
-
----
-
-## Phase 3: Git History Investigation
-
-**Step 3.1 — Blame**
-
-Record: `iwl_store_ucode_sec()` and the vulnerable subtraction are
-present in current `stable/linux-6.18.y` checkout (`v6.18.44`). Shallow
-repo limits deep blame; function is long-standing MVM firmware parsing
-code.
-
-**Step 3.2 — Fixes: tag**
-
-Record: Not applicable — no `Fixes:` tag.
-
-**Step 3.3 — Related changes**
-
-Record:
-- Part of `[PATCH iwlwifi-fixes 0/5]` series (July 17, 2026).
-- Patch 1/5 (`acad742714bdc` — bound aligned TLV advance) is a related
-  but separate fix in the same file; **not** in 6.18.y yet.
-- This patch (5/5) is standalone and applies cleanly without patch 1/5.
-- Similar backported fix already in tree: `eae7fdf7d4469` (validate pnvm
-  payload length).
-
-**Step 3.4 — Author context**
-
-Record: Emmanuel Grumbach and Miri Korenblit are iwlwifi maintainers.
-Multiple similar validation fixes from same authors are already in
-6.18.y.
-
-**Step 3.5 — Dependencies**
-
-Record: No dependencies on other series patches. `git apply --check`
-succeeds on current tree. Standalone.
+### Step 1.4: Hidden bug fix detection
+**Record:** Yes — despite “allow transmitting” wording, this is a logic
+bug fix. The unauthorized-port drop was incorrectly classifying nullfunc
+signaling frames as data frames carrying payload.
 
 ---
 
-## Phase 4: Mailing List and External Research
+## PHASE 2: DIFF ANALYSIS
 
-**Step 4.1 — Original discussion**
+### Step 2.1: Change inventory
+**Record:**
+- **Files:** `net/mac80211/tx.c` — 1 insertion, 1 deletion (net 0 lines)
+- **Function:** `ieee80211_tx_dequeue()`
+- **Scope:** Single-file, single-line surgical fix
 
-Record:
-- `b4 dig -c d13d5d299c11b`: https://patch.msgid.link/20260717173215.17b
-  040b27edc.I6b32d1e9ad707417e2e604f08a63582456209372@changeid
-- Series: v1 only, patch 5/5 of 5.
-- Cover letter: "A few fixes from our internal tree."
-- No reviewer replies, NAKs, or stable nominations in thread.
+### Step 2.2: Code flow change
+**Record:**
+- **Before:** In `ieee80211_tx_dequeue()`, when `txq->sta` is set,
+  nullfunc frames matching `ieee80211_is_data()` are dropped if the STA
+  lacks `WLAN_STA_AUTHORIZED` (unless injected or EAPOL).
+- **After:** Only frames with actual data payload
+  (`ieee80211_is_data_present()`) are subject to the unauthorized drop.
+  Nullfunc/NDP frames pass through.
+- **Path affected:** Software TXQ dequeue path — normal TX path for
+  drivers using `ieee80211_tx_dequeue()`.
 
-**Step 4.2 — Reviewers**
+### Step 2.3: Bug mechanism
+**Record:**
+- **Category:** Logic / correctness fix (incorrect frame classification)
+- **Mechanism:** `ieee80211_is_data()` returns true for
+  `IEEE80211_STYPE_NULLFUNC` frames. `ieee80211_is_data_present()` masks
+  bit 0x40 to exclude null/QoS-null subtypes. The unauthorized-port
+  guard was meant to block user data to unauthorized STAs, not signaling
+  nullfunc frames used in 4-address WDS setup.
 
-Record: `b4 dig -w`: To johannes@sipsolutions.net; Cc linux-
-wireless@vger.kernel.org, Emmanuel Grumbach. No explicit review acks in
-thread.
-
-**Step 4.3 — Bug report**
-
-Record: No external bug report, syzbot, or sanitizer report. Intel
-internal finding (Copilot-assisted).
-
-**Step 4.4 — Series context**
-
-Record: 5-patch series; patches 1–4 touch different files (`iwl-drv.c`,
-`iwl-dbg-tlv.c`, `acpi.c`, `uefi.c`). Only patch 5/5 is under review
-here.
-
-**Step 4.5 — Stable list**
-
-Record: No stable@vger.kernel.org discussion found for this specific
-fix.
-
----
-
-## Phase 5: Code Semantic Analysis
-
-**Step 5.1 — Key functions**
-
-Record: `iwl_store_ucode_sec()` (modified); callers in
-`iwl_parse_tlv_firmware()` switch cases.
-
-**Step 5.2 — Callers**
-
-Record: Called from 7 sites in `iwl_parse_tlv_firmware()` for:
-- `IWL_UCODE_TLV_SEC_RT`, `SEC_INIT`, `SEC_WOWLAN`
-- `IWL_UCODE_TLV_SECURE_SEC_RT`, `SECURE_SEC_INIT`, `SECURE_SEC_WOWLAN`
-- `IWL_UCODE_TLV_SEC_RT_USNIFFER`
-
-All during firmware image parsing at driver probe / firmware load.
-
-**Step 5.3 — Callees**
-
-Record: `krealloc()`, `le32_to_cpu()`; stores into `img->sec[]` consumed
-later by `iwl_alloc_ucode_mem()` → `iwl_alloc_fw_desc()` → `vmalloc()` +
-`memcpy()`.
-
-**Step 5.4 — Reachability**
-
-Record:
-- `iwl_req_fw_callback()` → `iwl_parse_tlv_firmware()` →
-  `iwl_store_ucode_sec()`
-- Triggered on every iwlwifi device probe when loading TLV-format MVM
-  firmware from `/lib/firmware`.
-- Malformed firmware (corrupted file) triggers the bug; legitimate Intel
-  firmware is unaffected.
-
-**Step 5.5 — Similar patterns**
-
-Record: Same file has explicit `invalid_tlv_len` checks for many TLV
-types, but SEC_RT family lacks minimum-length validation. `pnvm.c` has
-similar unchecked `tlv_len - sizeof(*section)` (separate issue). Patch
-1/5 in the same series addresses aligned-length underflow in the TLV
-walker.
+### Step 2.4: Fix quality
+**Record:**
+- **Obviously correct:** Yes — same file already uses
+  `ieee80211_is_data_present()` at lines 633, 640, 667, and 1312 for the
+  same data-vs-nullfunc distinction.
+- **Minimal:** One-line change, no unrelated edits.
+- **Regression risk:** Very low — only exempts nullfunc frames (no
+  payload) from an unauthorized-data drop; EAPOL exemption path
+  unchanged.
 
 ---
 
-## Phase 6: Cross-Referencing Against Local Tree
+## PHASE 3: GIT HISTORY INVESTIGATION
 
-**Step 6.1 — Buggy code in tree?**
+### Step 3.1: Blame
+**Record:** In 6.18.43, lines 3891–3910 are present with
+`ieee80211_is_data()`. Git blame in this tree points to `19eef1d98eeda`
+(afs fix) due to a wholesale tree import; history is not granular here.
+Verified the buggy pattern exists identically in `v6.18`, `v6.12`,
+`v6.6`, `v6.1`, and `v5.10` tags.
 
-Record: **Yes.** Local tree is `linux-6.18.y` at `v6.18.44`. Current
-`iwl-drv.c` lacks the minimum-size check; vulnerable line is:
+### Step 3.2: Fixes: tag
+**Record:** N/A — no Fixes: tag in commit message.
 
-```515:515:drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-        sec->size = size - sizeof(sec_parse->offset);
-```
+### Step 3.3: Related file history
+**Record:** Fix commit `51129a2ca0482` exists on `wireless-next`/`all-
+next` but is **not** in `stable/linux-6.18.y`. Recent stable `tx.c`
+changes since v6.18 are unrelated skb-free/injection fixes. Standalone
+one-commit fix.
 
-Commit `d13d5d299c11b` is on `master` but not yet in this stable branch.
+### Step 3.4: Author context
+**Record:** Johannes Berg is the mac80211 subsystem maintainer. No
+related series — v1 only (confirmed via b4 dig -a).
 
-**Step 6.2 — Backport complications**
-
-Record: Clean apply (`git apply --check` passes). No conflicts expected.
-
-**Step 6.3 — Related fixes already present?**
-
-Record: No equivalent SEC_RT minimum-size fix in tree. Related pnvm
-validation fix (`eae7fdf7d4469`) is already backported.
-
----
-
-## Phase 7: Subsystem and Maintainer Context
-
-**Step 7.1 — Subsystem**
-
-Record: `drivers/net/wireless/intel/iwlwifi` — IMPORTANT (widely
-deployed WiFi driver on Intel laptops/desktops).
-
-**Step 7.2 — Activity**
-
-Record: Actively maintained; multiple validation fixes backported to
-6.18.y in 2025–2026.
+### Step 3.5: Dependencies
+**Record:** None. `ieee80211_is_data_present()` is defined in
+`include/linux/ieee80211.h` and has been present since at least v5.10 in
+this tree. Fix applies cleanly to 6.18.43 at line 3898.
 
 ---
 
-## Phase 8: Impact and Risk Assessment
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-**Step 8.1 — Who is affected**
+### Step 4.1: Original discussion
+**Record:** `b4 dig -c 51129a2ca0482` found the thread: https://patch.ms
+gid.link/20260417141601.851ddf4adb59.I3d668c0e1bdca9cd98f2fc46f84a066e68
+cc7a62@changeid. Single v1 patch, no replies in downloaded mbox. No
+stable nomination, no NAKs, no reviewer comments in thread.
 
-Record: iwlwifi users loading TLV-format MVM firmware (`CONFIG_IWLMVM`).
-Affects driver probe path on Intel WiFi hardware.
+### Step 4.2: Reviewers
+**Record:** `b4 dig -w` shows CC to `linux-wireless@vger.kernel.org`,
+Johannes Berg, Jouni Malinen. No explicit Reviewed-by in thread.
 
-**Step 8.2 — Trigger conditions**
+### Step 4.3: Bug report
+**Record:** Reported by Jouni Malinen during WDS sigma certification
+test failures. Severity: connectivity failure in 4-address WDS setups,
+timing-dependent. No syzbot/CVE.
 
-Record: Firmware image containing SEC_RT-family TLV with `tlv_len <
-sizeof(__le32)` (0–3 bytes). Requires replacing/corrupting firmware file
-(typically root). Not triggerable by normal Intel firmware. Corrupted
-downloads or malicious firmware replacement are realistic vectors.
+### Step 4.4: Related patches
+**Record:** Bug surfaced during hwsim TXQ conversion for NAN, but the
+fix targets core mac80211 `ieee80211_tx_dequeue()` — not hwsim-specific.
+No multi-patch series dependency.
 
-**Step 8.3 — Failure severity**
-
-Record:
-- Huge `sec->size` → `vmalloc()` of enormous size (OOM pressure)
-- `memcpy()` out-of-bounds read from firmware buffer → kernel crash or
-  info leak
-- **Severity: HIGH** (memory safety during probe)
-
-**Step 8.4 — Risk vs benefit**
-
-Record:
-- **Benefit:** HIGH — prevents OOB read and runaway allocation on
-  malformed input
-- **Risk:** VERY LOW — 4-line defensive check, no API changes
-- **Ratio:** Strongly favors backport
+### Step 4.5: Stable list history
+**Record:** Lore search blocked by Anubis bot protection on direct
+WebFetch. No stable-list discussion found via b4.
 
 ---
 
-## Phase 9: Final Synthesis
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 9.1 — Evidence summary**
+### Step 5.1: Key functions
+**Record:** `ieee80211_tx_dequeue()` modified. Related:
+`ieee80211_send_4addr_nullfunc()` (sends the affected frame type).
 
-FOR:
-- Real integer underflow → OOB read bug
-- HIGH severity if triggered
-- Small, obviously correct fix
-- Code exists in 6.18.y; applies cleanly
-- Consistent with other iwlwifi validation fixes already in stable
-- Maintainer-authored
+### Step 5.2: Callers
+**Record:** `ieee80211_tx_dequeue()` called from:
+- `net/mac80211/util.c` (wake TX queue handler)
+- Multiple wireless drivers: iwlwifi, mt76, ath9k/ath10k, rtw88, rtw89,
+  etc.
+- Hot path for all drivers using software TXQs.
 
-AGAINST:
-- No user/syzbot report (internal finding)
-- Trigger requires malformed firmware (unusual in practice)
-- Callers don't propagate `iwl_store_ucode_sec()` error (pre-existing;
-  fix still prevents bad state)
-- Patch 1/5 from same series is a separate related fix, not a blocker
+### Step 5.3: Callees
+**Record:** Dequeue path calls `test_sta_flag(tx.sta,
+WLAN_STA_AUTHORIZED)`, `ieee80211_is_our_addr()`,
+`ieee80211_free_txskb()` on drop.
 
-**Step 9.2 — Stable rules checklist**
+### Step 5.4: Reachability
+**Record:** Triggerable during normal WiFi operation when:
+1. Driver uses `ieee80211_tx_dequeue()` (most modern mac80211 drivers)
+2. Frame is a 4-address nullfunc (`ieee80211_send_4addr_nullfunc()` in
+   `mlme.c:6458`, `cfg.c:281`)
+3. Target STA in TXQ is not yet `WLAN_STA_AUTHORIZED`
+4. Frame is not injected and not EAPOL
 
-1. Obviously correct and tested? **PASS** — logic is trivial; no runtime
-   tests in commit, but mechanism is verifiable by inspection.
-2. Fixes a real bug? **PASS** — underflow with OOB read consequence.
-3. Important issue? **PASS** — memory safety / potential crash during
-   probe.
-4. Small and contained? **PASS** — 4 lines, one function.
-5. No new features/APIs? **PASS** — defensive validation only.
-6. Can apply to local tree? **PASS** — clean apply verified.
+Reachable from userspace-driven WDS/4-address configuration — no special
+privileges beyond normal wireless admin.
 
-**Step 9.3 — Exception category**
+### Step 5.5: Similar patterns
+**Record:** Same file consistently uses `ieee80211_is_data_present()`
+for “does this frame carry data?” decisions (lines 633, 640, 667, 1312).
+The `ieee80211_tx_dequeue()` check is the outlier using
+`ieee80211_is_data()`.
 
-Record: Not applicable (not device ID, quirk, DT, build, or docs).
+---
 
-**Step 9.4 — Decision rationale**
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.43)
 
-For the locally checked-out **linux-6.18.y** tree, this commit should be
-backported. The vulnerable code is present, the fix is minimal and self-
-contained, and the failure mode (size underflow leading to out-of-bounds
-`memcpy` during firmware parsing) is a legitimate stability/memory-
-safety issue appropriate for stable.
+### Step 6.1: Buggy code present?
+**Record:** **Yes.** At `net/mac80211/tx.c:3898`, the tree uses
+`ieee80211_is_data(hdr->frame_control)`. Bug present since at least
+v5.10; confirmed in v6.18.0 and v6.12.0.
+
+### Step 6.2: Backport complications
+**Record:** **Clean apply** — identical context at line 3898 in 6.18.43
+matches mainline fix. No refactoring conflicts.
+
+### Step 6.3: Related fixes already present?
+**Record:** **No.** `git branch --contains 51129a2ca0482` shows fix only
+on development branches (wireless-next, all-next), not
+stable/linux-6.18.y.
+
+---
+
+## PHASE 7: SUBSYSTEM CONTEXT
+
+### Step 7.1: Subsystem criticality
+**Record:** `net/mac80211` — **CORE/IMPORTANT**. mac80211 is the shared
+802.11 stack for virtually all Linux WiFi drivers.
+
+### Step 7.2: Activity
+**Record:** Actively maintained; recent stable backports to tx.c in
+6.18.y (injection, skb-free fixes).
+
+---
+
+## PHASE 8: IMPACT AND RISK ASSESSMENT
+
+### Step 8.1: Who is affected
+**Record:** Users of **4-address WDS mode** and AP+WDS-bridging setups.
+Not universal, but affects a real production use case (enterprise
+bridging, repeater setups, certification-tested configurations).
+
+### Step 8.2: Trigger conditions
+**Record:** Timing-dependent race between nullfunc TX and STA
+authorization during WDS 4-address setup. Not every boot, but
+reproducible in certification tests. Triggerable by normal wireless
+admin configuring WDS.
+
+### Step 8.3: Failure mode
+**Record:** Silent frame drop → 4-address WDS setup fails → connectivity
+broken. **Severity: MEDIUM-HIGH** (functional connectivity failure, not
+crash/corruption/security, but complete feature breakage when
+triggered).
+
+### Step 8.4: Risk-benefit
+**Record:**
+- **Benefit:** Restores 4-address WDS nullfunc transmission; fixes
+  logically incorrect frame classification that has existed for years.
+- **Risk:** Minimal — one-line change, maintainer-authored, aligns with
+  existing in-file conventions, only relaxes drop for zero-payload
+  nullfunc frames.
+- **Ratio:** High benefit, very low risk.
+
+---
+
+## PHASE 9: FINAL SYNTHESIS
+
+### Step 9.1: Evidence summary
+
+**FOR backport:**
+- Real logic bug — nullfunc frames incorrectly treated as data-carrying
+- Causes WDS 4-address connectivity failures (reported by Jouni Malinen)
+- One-line, obviously correct fix matching existing mac80211 conventions
+- mac80211 maintainer-authored
+- Bug present in 6.18.43; fix applies cleanly
+- No dependencies; helper function already exists
+- Affects common driver TXQ dequeue path
+
+**AGAINST backport:**
+- Not a crash, security, or data-corruption issue
+- Timing-dependent; author notes uncertainty about production frequency
+- Discovered in hwsim/NAN TXQ testing context
+- No explicit stable nomination or reviewer thread discussion
+- WDS is a narrower audience than general WiFi
+
+**Unresolved:** Exact production frequency outside certification tests
+(author explicitly uncertain).
+
+### Step 9.2: Stable rules checklist
+1. Obviously correct and tested? **PASS** — logically correct,
+   consistent with in-file patterns; reported via WDS sigma tests.
+2. Fixes a real bug affecting users? **PASS** — silent drop of 4addr
+   nullfunc breaks WDS setup.
+3. Important issue? **PASS** — connectivity failure in WDS/4-address
+   mode (functional break, not cosmetic).
+4. Small and contained? **PASS** — 1 line, 1 file.
+5. No new features or APIs? **PASS** — pure logic correction.
+6. Can apply to local tree? **PASS** — clean apply to 6.18.43.
+
+### Step 9.3: Exception categories
+**Record:** N/A — not a device ID, quirk, DT, build, or docs fix.
+Standard bug fix.
+
+### Step 9.4: Decision rationale
+
+This is a long-standing classification error in
+`ieee80211_tx_dequeue()`: the unauthorized-port drop guard was meant to
+block user data to STAs that have not completed 802.1X authorization,
+but it also blocked nullfunc signaling frames that carry no payload.
+Those frames are essential for 4-address WDS negotiation
+(`ieee80211_send_4addr_nullfunc()`). The fix changes one macro call to
+match the same data-vs-nullfunc distinction used elsewhere in the same
+file. The change is maintainer-authored, trivial, zero-risk, and fixes a
+real connectivity bug in WDS deployments.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed commit message and tags from user query and `git show
-  d13d5d299c11b`
-- [Phase 2] Read current `iwl-drv.c` lines 493–519, 150–168, 999–1044,
-  1458–1474, 1646–1702
-- [Phase 2] Confirmed `sec->size` is `size_t`, parameter was `int`,
-  subtraction at line 515
-- [Phase 3] `git describe HEAD` → `v6.18.44`; `make kernelversion` →
-  `6.18.44`
-- [Phase 3] `git blame` on `iwl_store_ucode_sec`; shallow repo noted
-- [Phase 3] `git log stable/linux-6.18.y..master -- iwl-drv.c` — commit
-  not in stable, patch 1/5 also absent
-- [Phase 3] `git apply --check` of commit diff on HEAD — passes
-- [Phase 4] `b4 dig -c d13d5d299c11b` — found lore URL
-- [Phase 4] `b4 dig -a` — v1 only, patch 5/5
-- [Phase 4] `b4 dig -w` — johannes, linux-wireless, Emmanuel Grumbach
-- [Phase 4] `b4 dig -m /tmp/iwlwifi_sec_rt.mbox` — read cover letter; no
-  reviews/stable/tested-by
-- [Phase 5] `grep iwl_store_ucode_sec` — 7 call sites in TLV parser
-- [Phase 5] Traced call chain: `iwl_req_fw_callback` →
-  `iwl_parse_tlv_firmware` → `iwl_alloc_ucode` → `iwl_alloc_fw_desc`
-- [Phase 6] Confirmed buggy code present at HEAD; fix absent
-  (`d13d5d299c11b` only on master)
-- [Phase 6] Confirmed `eae7fdf7d4469` similar pnvm fix already in stable
-- [Phase 8] Confirmed TLV parser allows `tlv_len < 4` for SEC_RT cases
-  (no `invalid_tlv_len` guard unlike other TLVs)
+- [Phase 1] `git describe HEAD` / `make kernelversion`: tree is 6.18.43
+- [Phase 1] Parsed tags: Reported-by Jouni Malinen, Link to
+  patch.msgid.link, SOB Johannes Berg
+- [Phase 2] Read `include/linux/ieee80211.h:481-528`: confirmed
+  `ieee80211_is_data()` vs `ieee80211_is_data_present()` semantics
+- [Phase 2] Read `net/mac80211/tx.c:3891-3910`: buggy code uses
+  `ieee80211_is_data()` at line 3898
+- [Phase 2] Grep `ieee80211_is_data_present` in tx.c: used at lines 633,
+  640, 667, 1312 for same distinction
+- [Phase 3] `git show 51129a2ca0482`: confirmed mainline fix commit and
+  exact diff
+- [Phase 3] `git show v6.18:net/mac80211/tx.c` lines 3875-3895: buggy
+  code present in v6.18.0
+- [Phase 3] `git show v6.12:net/mac80211/tx.c` lines 3875-3895: buggy
+  code present in v6.12.0
+- [Phase 3] `git show v5.10:net/mac80211/tx.c` line 3640: buggy pattern
+  present since v5.10
+- [Phase 3] `git branch --contains 51129a2ca0482`: fix NOT in
+  stable/linux-6.18.y
+- [Phase 4] `b4 dig -c 51129a2ca0482`: found lore thread URL
+- [Phase 4] `b4 dig -a`: single v1 revision only
+- [Phase 4] `b4 dig -w`: CC linux-wireless, Johannes Berg, Jouni Malinen
+- [Phase 4] `b4 dig -m /tmp/null_data_txq.mbox`: thread contains only
+  patch, no replies/stable nomination
+- [Phase 5] Grep `ieee80211_tx_dequeue` callers: util.c + iwlwifi, mt76,
+  ath9k, ath10k, rtw88, rtw89
+- [Phase 5] Read `mlme.c:2403-2431`, `mlme.c:6457-6458`,
+  `cfg.c:280-281`: 4addr nullfunc send sites
+- [Phase 6] Confirmed buggy code at tx.c:3898 in current 6.18.43
+  checkout
+- [Phase 6] Confirmed `ieee80211_is_data_present` exists in
+  include/linux/ieee80211.h
+- [Phase 8] Assessed failure mode: silent frame drop → WDS connectivity
+  failure, severity MEDIUM-HIGH
 
-**YES**
+**YES**The background history searches finished, but they didn’t add
+much beyond what we already verified.
 
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+`git log -S "tx_handlers_drop_unauth_port"` only surfaced unrelated
+commits like the afs import (`19eef1d98eeda`) and `Linux 6.18-rc7`,
+because this repo’s history is heavily squashed. The reverse pickaxe on
+`all-next` similarly hit very old unrelated commits.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 3a4bcfd60905c..e3b1bf31ca60e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -491,7 +491,7 @@ static void set_sec_offset(struct iwl_firmware_pieces *pieces,
-  * Gets uCode section from tlv.
-  */
- static int iwl_store_ucode_sec(struct fw_img_parsing *img,
--			       const void *data, int size)
-+			       const void *data, size_t size)
- {
- 	struct fw_sec *sec;
- 	const struct fw_sec_parsing *sec_parse;
-@@ -500,6 +500,9 @@ static int iwl_store_ucode_sec(struct fw_img_parsing *img,
- 	if (WARN_ON(!img || !data))
- 		return -EINVAL;
- 
-+	if (size < sizeof(sec_parse->offset))
-+		return -EINVAL;
-+
- 	sec_parse = (const struct fw_sec_parsing *)data;
- 
- 	alloc_size = sizeof(*img->sec) * (img->sec_counter + 1);
+That doesn’t change the conclusion. Using release tags (`v5.10` through
+`v6.18`) confirmed the buggy `ieee80211_is_data()` check has been in
+`ieee80211_tx_dequeue()` for a long time, and the one-line fix still
+applies cleanly to **6.18.43**.
+
+**Verdict remains: YES** for backport to this tree.
+
+ net/mac80211/tx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c125871adb62b..602974a16edc6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3895,7 +3895,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		 * injected frames or EAPOL frames from the local station.
+ 		 */
+ 		if (unlikely(!(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+-			     ieee80211_is_data(hdr->frame_control) &&
++			     ieee80211_is_data_present(hdr->frame_control) &&
+ 			     !ieee80211_vif_is_mesh(&tx.sdata->vif) &&
+ 			     tx.sdata->vif.type != NL80211_IFTYPE_OCB &&
+ 			     !is_multicast_ether_addr(hdr->addr1) &&
 -- 
 2.53.0
 
