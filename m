@@ -1,296 +1,359 @@
-Received: from mx0b-0024c301.pphosted.com (mx0b-0024c301.pphosted.com [148.163.153.153])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DBB7396B98;
-	Mon, 31 Aug 2026 16:57:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.153.153
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788195456; cv=fail; b=gq6CdtfBKZDHY0TX2ULYcT0ww8XogJkIOX0o4+FswibI3Sx56P87FHrkpd9xWT+YVi0mZrCvLayoWm6tNeTaMgtgClNMki5GIzO3J7LXzXRjT8nVUxhOHEkMvbXg/Nl6q7IJbmbjfaO9t8iIdQGsk9DXBiGQGL+Bwcxh+3VU720=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788195456; c=relaxed/simple;
-	bh=u0vgj3fPsrZQ7HINeUuTBk2mEzUlaodk53EcYXEhrQo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=rvcDZ/ebXdqnpOBh6ldSHdAggFGhrl5p/ED2m4ww/YCEOhh7zgQPv18W69VU74cZvF5AEB0nVBwiJQTxFKzqt/OcwuTUy7HLcHv/u81krmKm3kai2rjkq6D5SyZ1fu1Bal41Cn3Gz+87zhOJXzdEiNTACcs4DDRzZ+mWkbEZs+c=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=silabs.com; spf=pass smtp.mailfrom=silabs.com; dkim=pass (2048-bit key) header.d=silabs.com header.i=@silabs.com header.b=WqXZnKYy; dkim=pass (1024-bit key) header.d=silabs.com header.i=@silabs.com header.b=Ei3aI8DG; arc=fail smtp.client-ip=148.163.153.153
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=silabs.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=silabs.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707B438425B;
+	Mon, 31 Aug 2026 17:09:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1788196144; cv=none; b=eVu7oF03vmQ/NWdgjGZgbptv3P+nzLB3D2HqhTTVo/nabRCsbqeFx3VcxLXg/6rhRPxolE+UrMrXjJnhO5ydwMnkdfjdNILl3HmPSajK+4b8Vt5fe4QpM6AWJZdChFtaLHwpKzw+pqrIs8/QzC1DD0c+jk4oB8F6frcUTcmVpuc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1788196144; c=relaxed/simple;
+	bh=+3DIZOxdzrQpzbWhf2Y0JttOTGaGZazacDBixIjfGKE=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=M/P4KX1VeAzzgiiQcHL0NhGHP+cg+7U0VuH/Stp9J2aXKb+yvqhCFqYd5iqVMQlDHui72cXf589RqJnX+oZadsSBelfF9oyYZJjtkJLVmV0Pi0jEUuF6h0chhW7voAde8TCCPrWWXVmrDZLSRI2NXVRQ6dJI2EpVt2yFJM/NrdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b4Mldb7U; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=silabs.com header.i=@silabs.com header.b="WqXZnKYy";
-	dkim=pass (1024-bit key) header.d=silabs.com header.i=@silabs.com header.b="Ei3aI8DG"
-Received: from pps.filterd (m0101742.ppops.net [127.0.0.1])
-	by mx0a-0024c301.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 67VFiOgk3259035;
-	Mon, 31 Aug 2026 11:41:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=silabs.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pps12202023;
-	 bh=u0vgj3fPsrZQ7HINeUuTBk2mEzUlaodk53EcYXEhrQo=; b=WqXZnKYyMuhb
-	FFkS2IQ3opE4TAMflGe8QPZxDTMgHVWDlR9A80Tu/k/73LXJMkiS84Bhbz/soQzg
-	tnMt7TjI+Pm5h/VvdtTlUUcaUOy0QLNQQHSzjOSlTDOiHXosdbR2pQOxxHt4qMda
-	yKMY4Ml/iW7iWxpwOzSuDl5ON7WH9pXGcCWOXwTyeYpSS9E1b/mRfpZY6/oG3LBk
-	jYtxe/1NUT/jQGGYEKYBT9eTxkQZRi0G3sVgEMoA32LWh3vMc9Obg004XUqVLpQI
-	BrK/PkqggddgAWj3wN1s2wLqix1AzRqQ2OytR6cpxepeWq//eMm/592fMeeoBi3J
-	tnyDFO3Tmw==
-Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11022135.outbound.protection.outlook.com [52.101.43.135])
-	by mx0a-0024c301.pphosted.com (PPS) with ESMTPS id 4gbrx946p7-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 31 Aug 2026 11:41:24 -0500 (CDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QCxPrkWbjZ7TNjBru184Eah6kNOCYSj+0ix7rBDVpiIkMASNNa2sOcgyckx9GYRp3nJjbMNVr5YGoOsdwiYLpi1Ziz49tD8RJHAaO7A6YLVoYCX9vBC8AQa+MNovmlkhKPbruAlWkFYWLGucSY78zYQNO0iT+4UdpWNH2WU12h6kuBCIPf7e622ByTKa8DCYVaJjArpSay2wHcn9iZJ9Pvw18uB0zNWz8VtTxQezivwy4j6Ux3n0wrYGF0s5arnG/4dcjXRKac0bUScZvInbbuZPCH9XWbZAxxRIun+VLGdViLvyTpUQhTrr0Z7LA4oKDclWT4/Mvg0x77JHEEOPeg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=u0vgj3fPsrZQ7HINeUuTBk2mEzUlaodk53EcYXEhrQo=;
- b=wVpPFlbuPnfLCPAzVPKxbKqufJZg7d0mU0zGaZl9D+7iSpCGsRFDUd2Y0JhMok7ioKVDn70+NcpWupGE7pXCAzIuyEsuyVwqjezk/+ePnS9tSNWb82CkuHJbOGG8IpGMXe3hf+CkeTXY5Wg9J++muVwcqP4gaXt53UxdP4/RssnaLiT3TVJKg9izB5Um4toOcHWxRYvo1qWM+PzwklfdCa9+fSLqOBZv5v+KC1AptPOtQw6R4nUkbnT7IN2ZkfISVqR5yfxVoOtkika17alck7EGeEQ6vbnSms90jFAMyarBj+6rzzexwelcy6YqqXz6gztsE5TeT3jKlBLR7lv1ig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=silabs.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u0vgj3fPsrZQ7HINeUuTBk2mEzUlaodk53EcYXEhrQo=;
- b=Ei3aI8DGSkp4gsnhyIS8EPPjDkRXybAAz3w7enAJwSBS9a/fYk5HvJStwpuQvpeRj86YDLAPmqWH0JxuykwYrwFpOp8LlS7uGb8o2ifV/mfQk0kNOyl6ULtUFmwzcQCDv9r3jc7YlSrYaoaFk0GIzuLHWMQrV9XVyzFyz2JQQqc=
-Received: from IA1PR11MB7773.namprd11.prod.outlook.com (2603:10b6:208:3f0::21)
- by IA1PR11MB6492.namprd11.prod.outlook.com (2603:10b6:208:3a4::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.360.13; Mon, 31 Aug
- 2026 16:41:22 +0000
-Received: from IA1PR11MB7773.namprd11.prod.outlook.com
- ([fe80::acd3:fd18:5809:64c4]) by IA1PR11MB7773.namprd11.prod.outlook.com
- ([fe80::acd3:fd18:5809:64c4%6]) with mapi id 15.21.0360.008; Mon, 31 Aug 2026
- 16:41:22 +0000
-From: =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= <jerome.pouiller@silabs.com>
-To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-devel@silabs.com,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Lukas Stockmann <lukas.stockmann@siemens.com>,
-        Gerard Salvatella <gerard.salvatella@siemens.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= <jerome.pouiller@silabs.com>
-Subject: [PATCH wireless-next 1/2] wifi: wfx: fix possible device hang during init
-Date: Mon, 31 Aug 2026 18:40:12 +0200
-Message-ID: <20260831164056.47683-2-jerome.pouiller@silabs.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260831164056.47683-1-jerome.pouiller@silabs.com>
-References: <20260831164056.47683-1-jerome.pouiller@silabs.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-ClientProxiedBy: PAYP264CA0031.FRAP264.PROD.OUTLOOK.COM
- (2603:10a6:102:11f::18) To IA1PR11MB7773.namprd11.prod.outlook.com
- (2603:10b6:208:3f0::21)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b4Mldb7U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1788196142; x=1819732142;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=+3DIZOxdzrQpzbWhf2Y0JttOTGaGZazacDBixIjfGKE=;
+  b=b4Mldb7UgHPNxbM1IegIZUdNtfHo1FVOwdE5RY80YunJJuDkzkxjvZmo
+   eyF+hCFCpQaLMMjXmRwbK5jNluBLYIwIwn6ttPV4OuV9Ji2DRLWekrVfW
+   zzceixFNh67y+pHiOouOdjOJUR8rtifcXxmLb+rvmkg3kjK0mpaqef2Mc
+   fOD8f4xI7Psokw6ZCzq7eqUFwmOSY+dImtlUDTaQ5UZC6F+tekyT5lzUJ
+   SuAiGfWwrUzdfp7aM6g4+TNiQqkpRC03+kkcie/KSW6J5UXUnJ3Fyo5Wb
+   VZdnbCNjq37hOIbHX0l2IDu7pyi9w1g2my47v2SrLar1LdJVQfMIsj4sS
+   A==;
+X-CSE-ConnectionGUID: jfmIQQHdSUCe6u26eF9Zdg==
+X-CSE-MsgGUID: nTM9C5hJQkKfWC4EltkkZA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="87743859"
+X-IronPort-AV: E=Sophos;i="6.25,254,1779174000"; 
+   d="scan'208";a="87743859"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 10:09:01 -0700
+X-CSE-ConnectionGUID: KSurwrRqThawPNQccTrC+A==
+X-CSE-MsgGUID: iX2W+S9rTgmgVvmz3T7Z0g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.25,254,1779174000"; 
+   d="scan'208";a="264566609"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.121])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2026 10:08:57 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 31 Aug 2026 20:08:54 +0300 (EEST)
+To: Navon John Lukose <navonjohnlukose@gmail.com>
+cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>, 
+    linux-wireless@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>, 
+    Emmanuel Grumbach <emmanuel.grumbach@intel.com>, 
+    Nika Krasnova <nika@nikableh.moe>, Bjorn Helgaas <helgaas@kernel.org>, 
+    Mark Pearson <mpearson-lenovo@squebb.ca>, 
+    Mark Pearson <markpearson@lenovo.com>, linux-pci@vger.kernel.org, 
+    linux-kernel@vger.kernel.org, stable+noautosel@kernel.org
+Subject: Re: [PATCH wireless v2 3/3] wifi: iwlwifi: pcie: recover a device
+ that lost power in D3cold
+In-Reply-To: <20260831130332.323549-4-navonjohnlukose@gmail.com>
+Message-ID: <95451bf2-5411-481e-c0ad-ac5cfe7e7c43@linux.intel.com>
+References: <20260831130332.323549-1-navonjohnlukose@gmail.com> <20260831130332.323549-4-navonjohnlukose@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA1PR11MB7773:EE_|IA1PR11MB6492:EE_
-X-MS-Office365-Filtering-Correlation-Id: d21b12cc-a3d9-46ac-5c9d-08df077eb0db
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|4022899009|23010399003|1800799024|10070799003|366016|376014|52116014|6133799003|22082099003|18002099003|10067099003|5023799004|3023799007|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	w7Rsxiulv9EW+Xyzu+t2opJ4GaQ5PQkYzU1fxZq93ocqAmM32hlTNdiuzDhsv4jk9Eg+a94i6boU+TzHL9t1L0gBAQ/bR+sd5arhpubxQN7Gju5JbWkhLMvkBsGFx2jlJy84M04NqtGFzyv+YSTDBJG5pMpGLGGD2U+2CugLuVzW96UEw0cev5+6JMPaqk4defQbt8/sQUTKjUAmUK4H0rzBJJYlp6FS0XQwwwThOLZo7oq28X1CWg851bqmwomSIwIDemOC9r2HLnftz6x4anOlPXfvZSYaAmDzE32/zOe8qvoJrPDxMHSoRu9UM2PBCwJ1G3TlXXPH2HTg7KmY9gU/z9biWDCe7zVWhzrslUaFXFl/VZGJbU2NmiPN8P1jYevTNN/MJS1Gl198MfWFIdCj+SEhOD89kTXE789XRudlhmnHiogwrpYqTeiFMW8W9pcM2Mxz7Ve1aL2jolKktRPnKsxidcWL7/IN2WOkHwtgnjleXo8N22ZIhqMJnXfgOyNMiNZ9C3jTOLkDvfAwcA5r5NMBBz2yb+VsVwY738j/GGH8DR2WzeyPQeIgtDPMCRhEPy3lk4CEqF+iwQTJs5f3w5NzQ9ymfCFP1qAcry/1Paxt9wpR0lrwDEZgrIVT229Y/jjtimqzCrgOfhXpZ7f9x3/sJQb3duSjtQdXRj0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA1PR11MB7773.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(4022899009)(23010399003)(1800799024)(10070799003)(366016)(376014)(52116014)(6133799003)(22082099003)(18002099003)(10067099003)(5023799004)(3023799007)(56012099006);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Y1YwOUVTbWJqdGJkM0crSzgyYkdhUGdEdEJCRHlvcFJTaU1PTXZCMUFLMkx5?=
- =?utf-8?B?eHRYb2gvYzl4TWhDdStFVGVWS3JKSk4yUlBLUG40Mm5JNGRubG1zNGJVOXJW?=
- =?utf-8?B?TTg3N3Ara1BCa0ZBYkxtdGZNc1JGQ1BuOXZhRmtPNlZ4LzBwcFZiK29sU0lK?=
- =?utf-8?B?eHg2MjJhSEdzNzk2U2tIMWlQbzRkWUlnazdydG5LdWVNYUhHUW94N0tyMXlx?=
- =?utf-8?B?eFZmellZRUtpUFVhT2VDSXJ6SThaaURDN1BhcmRQSlFUeVFoL2dTbytJNlNs?=
- =?utf-8?B?ZjVndTJYZFZSK1EzWGMyaXJXSTJDdzMwQi9zVTFrR1docVpRbVJwV2dnK0l4?=
- =?utf-8?B?NHpleE5Pcy83SVJnNkgxNy9Id2Z5MzlMUCtFNWxINDZUS1pYdXM0VVVhcExu?=
- =?utf-8?B?SVRlUkkwbElpaGdTektMS1N0d0JvdG0xd2hFVVpmVHlLbFJpaWUweEkrVWwy?=
- =?utf-8?B?WWg1OS9uamI3aFVKeGNYd3ZFV3pDdnJUaW5aREZvNFlnTkZPSHdndUZsdkZX?=
- =?utf-8?B?bmd6YUFIbGlsOGFJQWpyR3ZwOFBXMmtJaVBMSjdIaDZXWTlLVVhWYWswSitY?=
- =?utf-8?B?ZWluNEhJNko4bnNXOXEzaS9VVEUxUUEzK1hEWGorVVJ6Z253RFdqbTN1cHV6?=
- =?utf-8?B?VjZFQ1RLTElFR2xzcHU1NCtCQ2dOazl4YXVyZGlVbXdiZzBDWGxUbHB1VXAv?=
- =?utf-8?B?ZWkyckRLU3cxWE9IMnlIUkNzZHB3ZDN4T2ROVCtvdlNsODIvVlQwVjRXTFRW?=
- =?utf-8?B?YmJNYWh5Y1Q3eERHNWpMSXBscmdIaUNSTVBqUFBGdXI4UnM4a0dMMlNTd1ZC?=
- =?utf-8?B?UytnNjBMYjdocWNZOGtyNk9rZzBsWWR1MVNaaTNUOXZSNEwzZlBrVnRUUHlD?=
- =?utf-8?B?NS9aQ1V6YlNFZFJwdEZWWVVwNkJHaFJPMm9hMERHQmRrNUt0cTFrZk1sYjQ0?=
- =?utf-8?B?OUU0MEMzMFUwVkZQRW5RUjErU1Vlb3c0L0lqcUpYSmxaQWtZVFArcWczTVlG?=
- =?utf-8?B?d0dWRkFSeXFrNFBncVdlRnNUdDkxN0FpVjNpYXBuQ01la3FxNU90SkN6Rk5I?=
- =?utf-8?B?SVFidzJBaUlGN1JPSHZBYmE4c1FxZm11NWdOOHlFZkF3MFl4cUtZTHQ4K2hX?=
- =?utf-8?B?ZTZrTWFVbG5hZ1dWNFV3eDc0d1NGN2duM0pvUWROSERPSm5aOTBCcjA0dzdv?=
- =?utf-8?B?d0NaQ2t2d1R4ZXBvMFdYWDJKT1QyUnZaS1p1U0w3MTFwanZWZnNra0o3bEE2?=
- =?utf-8?B?ZWRVTTZFa1dzcGhQTkpVbEY4MSt6NG54OWdxVTVpTUc5NTZ2M0lZOGFJNm02?=
- =?utf-8?B?QUtzdHIrNHhWV1g3cVJwNmtxWmlzMFlxZWpTRTU4NSt0WkYweXVhMitudVRj?=
- =?utf-8?B?eUYva29Da2tvbm9ac2NFUTN0NG1VeVgwQzVVT0JMTzZGOUFoeVNvWC8vZUdw?=
- =?utf-8?B?K0NWZVcvajhIYzAwY3BsRnZyK3gwcktKaWdpbm9jNTVNT2M4bjJEMGVpM0Vq?=
- =?utf-8?B?WXdTNlAyall3QzZualFXcmVVVEx4ODExSEs5MmdwTS9KTWN1OVcxQjdSSW8v?=
- =?utf-8?B?SktRbG5lMnNLZCt6R2FHRVhYSEZjTFpIQTZrUllzcFNwMHlMeC8veXhyZkxJ?=
- =?utf-8?B?WFRta3FRWFdQd00yc0JmeDNhaTJUbDNtdWhIM2FUeWUyUUFwODdGOTZZYXlO?=
- =?utf-8?B?Yy9FQ3RCRGVjUmFuUlRJSjRpanc0VVhNN2Y2S2hpbWxmSDNra05yaXlENjM1?=
- =?utf-8?B?UFdGc2tRZGdRWDJianNDWWlqc3lkcWVrR2pnZWdDUWNGZ3M2YWxGb2dHcVky?=
- =?utf-8?B?Y01LekRaT0x3QzFqaVpjVXNuWGpkRndVeGQzbkJsUXFPZ2N2OW1aR284RVM1?=
- =?utf-8?B?QTZwTTdQU1p3VHNCRVAzM2V4SkV3Q3VGdTR5UmJYTEdld3NHQXpzUlNyZnA4?=
- =?utf-8?B?cUZRUVQvS2tWcTZQbUZmNHJtYVFoZ0RhcjVtaEZ3bktSOG1zOU5HWHUrZkhQ?=
- =?utf-8?B?S1dvRGE3Nk9zKzgzWG12Z3NYVWVWbEhsQXFQbFV6a2lWcXh3Qlh5NWtTZnlT?=
- =?utf-8?B?SDVaMUc2a0RUSmErZ3dmU1FLbnFQaEVoNFVkbXNObStxU25TYTZxbnB1ZFFZ?=
- =?utf-8?B?YWVDaWcrcDkwYjdrYTFtcFFUemttSDFCd3VSZDl1NHc3SE5DYWN5ZVoxdXFl?=
- =?utf-8?B?Zk1yaXFRTWNLTE1FQ3RhVGZsdENGMm4za2Q3UFFsbzgyaXdaVllkdUk2VzZB?=
- =?utf-8?B?aTV5dXNabG9wbXhpQ3ZTTVVxYjBUTHU4Q09RYUxoUGZQQWVybVRRL2FOMUd0?=
- =?utf-8?B?U3ZSV2FLU1RRMGZKckw0V0p3d3lTSVovbGxScFVkTHJJSzJOSTA1M2tkalFv?=
- =?utf-8?Q?63ky2IE+vO6+r7pJE5VpxFnCYdQUTd5ene8SGSLrj9Rlg?=
-X-MS-Exchange-AntiSpam-MessageData-1: WRC8jEAu+et19A==
-X-Exchange-RoutingPolicyChecked:
-	1SOPVNAqpLbKmbpWoZZPLVz29r3bPkhrDyYJ3hLtbacPVu+ovDlVKsGaeKW2I9nIKJAbwnSNovaQIF04AxaQx5gwc/5pqHj77nj/mi12qnkZLW8FsIWMvkrEj3Sg1NofJL5ZjQ7fVNKD9YdhjbbD+LNHdY0lIdPTLOmFHfd91gaBv7Jt84U9xYyAOwwEZD6c1XaMh4CGCcZkjbPNy8UIUS0XZOn35zHrSRd+Pc0a+UkpLKaEgor4vsMwxC6gaOp2XQpSmVux7OF49Mz7nLtAOEDffRvN3cAknieEbG8f0U5cxyx6rmovzWHLgaNu9HrVlLjE/udEjha7X4yTkPtopA==
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d21b12cc-a3d9-46ac-5c9d-08df077eb0db
-X-MS-Exchange-CrossTenant-AuthSource: IA1PR11MB7773.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Aug 2026 16:41:22.5699
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jRJ0qLE5NJoiLeMvmVvmERU/WKP3w2JNS+80fatMAh0KkMKzBnMhpXKxTaHETHzm2kI3/em5CeHyeIwokrVOuA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR11MB6492
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwODMxMDE0MyBTYWx0ZWRfX/mNnCvz86UhP
- WODgpUcVMYUU7636SqtEc4sBij//FztoDf1dAMejhvlGenlnT4K/+iUc7khupFDhVQxSJdRgjtQ
- cFDVVPXk7BMAbYmfENyXEoPnpvUxOI8Rh19+4wFEviuuK0ncc1OGFnWnWhlKCTEgHRWC4H5nfN4
- naxsbc4/OenTjMYyRKK7UsEA1u/kBVmqGERFZ5jwg+O/zE1B3AVPdNs0MPEiucb6zzDY21wWiXr
- ElzU9YvSW5lM1By3MS2S9JNZENLbAEas2AOVzcG5vISu5QGSQNrX30ZrqPSTwNP15OZlAt0vfGs
- 9JKstsenmFkp5revUDBn8O3XlappehvSZP0v9/Gl+EiEa/805wU4TgKby3bzBiIDNHHUcPKa82a
- JgJOvxukGgqNJm5gpMaW+QlFJeaxDMEOil/P9n7piRhwzxmNB2pcLa4wfpBivi6VxJ/9TbfJRJF
- XDIRg1ncbq1PfP8lCpg==
-X-Proofpoint-GUID: hfohcS7LEOe-8Ak0dYlHJjGcUHS1xnhW
-X-Proofpoint-ORIG-GUID: hfohcS7LEOe-8Ak0dYlHJjGcUHS1xnhW
-X-Proofpoint-Spam-Info: AW1haW4tMjYwODMxMDE0MyBTYWx0ZWRfX0pYN2UKBgRkc
- PLchO8SuUyk87sOHUPn2tv95WvZ7bMc6wCWTTPyX1zNwnFRvq74xVs38GUIbGXDS17lgrUImvIu
- RcoZ96YGPrH6KgD8CT+Xg2rqO00ugJA=
-X-Authority-Analysis: v=2.4 cv=fMwJG5ae c=1 sm=1 tr=0 ts=6a95aeb4 cx=c_pps
- a=L1NvDXWcvSIeBCESApydMg==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
- a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=Sv0fKeRqtYgA:10 a=M51BFTxLslgA:10
- a=i1IsUcr2s-wA:10 a=VkNPw1HP01LnGYTKEx00:22 a=gIHJBl62Mt9vjvfn7G3b:22
- a=buQUfWhnF1OtDDk5FV7I:22 a=a_U1oVfrAAAA:8 a=2AEO0YjSAAAA:8
- a=dKDZkz7uocvUXfRaKuEA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-08-31_05,2026-08-31_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
- impostorscore=0 adultscore=0 malwarescore=0 phishscore=0 clxscore=1011
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2608310143
+Content-Type: text/plain; charset=US-ASCII
 
-VGhlIFdGeHh4IGRldmljZSBwcm92aWRlcyBhbiBTRElPIGludGVyZmFjZS4gSW4gYWRkaXRpb24g
-dG8gdGhlIHVzdWFsCmluLWJhbmQgU0RJTyBJUlEsIHRoZSBkZXZpY2UgYWxzbyBzdXBwb3J0cyBv
-dXQtb2YtYmFuZCBJUlEgbGluZS4gT09CIElSUQpyZXF1aXJlcyBhIHNwZWNpZmljIGluaXRpYWxp
-emF0aW9uIGRlc2NyaWJlZCBpbiBjb21taXQgZjAwZGMxZDc4OWUxYwooInN0YWdpbmc6IHdmeDog
-cG9sbCBJUlEgZHVyaW5nIGluaXQiKToKCiAgICBXaGVuIHRoZSBjaGlwIHN0YXJ0cyBpbiBTRElP
-IG1vZGUsIHRoZSBleHRlcm5hbCBJUlEgKGFrYSBPdXQtT2YtQmFuZAogICAgSVJRKSBjYW5ub3Qg
-YmUgdXNlZCBiZWZvcmUgdG8gY29uZmlndXJlIGl0LiBUaGVyZWZvcmUsIHRoZSBmaXJzdAogICAg
-ZXhjaGFuZ2VzIHdpdGggdGhlIGNoaXAgaGF2ZSB0byBiZSBkb25lIHdpdGhvdXQgdGhlIE9PQiBJ
-UlEuCgogICAgVGhpcyBwYXRjaCBhbGxvdyB0byBwb2xsIHRoZSBkYXRhIHVudGlsIHRoZSBPT0Ig
-SVJRIGlzIGNvcnJlY3RseQogICAgc2V0dXAuIEluIG9yZGVyIHRvIGtlZXAgdGhlIGNvZGUgc2lt
-cGxlciwgdGhpcyBwYXRjaCBhbHNvIHBvbGwgZGF0YQogICAgZXZlbiBpZiBPT0IgSVJRIGlzIG5v
-dCB1c2VkLgoKQ29tbWl0IDU3YWE1NTdmMTEwZDkgKCJzdGFnaW5nOiB3Zng6IGludHJvZHVjZSBh
-IHdheSB0byBwb2xsIElSUSIpCmFubm91bmNlIHNvbWUgbGltaXRhdGlvbiBhYm91dCB0aGUgZGF0
-YSBwb2xsaW5nIG1lY2hhbmlzbToKCiAgICBUaGlzIGZ1bmN0aW9uIFt3ZnhfYmhfcG9sbF9pcnEo
-KV0gbXVzdCB1c2VkIHdpdGggY2FyZTogaWYgYW4gSVJRCiAgICBmaXJlcyB3aGlsZSB0aGUgaG9z
-dCByZWFkcyBjb250cm9sIHJlZ2lzdGVyLCB0aGUgSVJRIGNhbiBiZSBsb3N0LgoKSG93ZXZlciwg
-d2l0aCBsYXN0IGFuYWx5c2lzLCBpdCBzZWVtcyBpdCBkb2VzIG5vdCBvbmx5IGltcGFjdCB0aGUg
-SVJRLgpXaGVuIHRoaXMgY29uZGl0aW9uIGhhcHBlbiB0aGUgaGFyZHdhcmUgaXMgbG9zdCBhbmQg
-d29uJ3QgcmVwbHkgdGhlIG5leHQKY29tbWFuZHMuIFRoZSBvbmx5IHdheSB0byByZWNvdmVyIHRo
-ZSBlcnJvciBpcyB0byBwdWxsIHRoZSByZXNldCBwaW4gYW5kCmJpbmQgdGhlIGRldmljZSBhZ2Fp
-bi4KCkN1cnJlbnRseSB3ZnhfYmhfcG9sbF9pcnEoKSBpcyBvbmx5IHVzZWQgZHVyaW5nIHRoZSB0
-d28gZmlyc3QgZXhjaGFuZ2VzCndpdGggdGhlIGhhcmR3YXJlLiBUaGVyZWZvcmUsIGl0IGhhcyBi
-ZWVuIHJlcG9ydGVkIHRvIG9ubHkgaGFwcGVuIGFmdGVyCmEgZmV3IGhvdXJzIG9mIGJpbmQvcmVi
-aW5kIGluIGEgbG9vcC4gVGhpcyBleHBsYWluIHdoeSBpdCBoYXMgbm90IGJlZW4KcmVwb3J0ZWQg
-YmVmb3JlLgoKRm9ydHVuYXRlbHksIHdmeF9iaF9wb2xsX2lycSgpIGlzIG9ubHkgcmVxdWlyZWQg
-Zm9yIE9PQiBJUlEsIHdoaWNoIGlzCnByb2JhYmx5IHZlcnkgbWFyZ2luYWwuIFRoZSBJbi1CYW5k
-IElSUSBjYXNlIGFsc28gdXNlcyB0aGlzIGZ1bmN0aW9uLApidXQgb25seSB0byBzaW1wbGlmeSB0
-aGUgY29kZS4KClRoaXMgcGF0Y2ggbGltaXRzIHRoZSB1c2Ugb2Ygd2Z4X2JoX3BvbGxfaXJxKCkg
-dG8gdGhlIE9PQiBJUlEuIFRoZSBidXMKZHJpdmVyIG5vdyB0ZWxscyB3ZnhfcHJvYmUoKSB3aGV0
-aGVyIHBvbGxpbmcgaXMgbmVjZXNzYXJ5LiBXaGVuIGl0IGlzCm5vdCAoaW4tYmFuZCBTRElPIElS
-USBhbmQgU1BJKSwgdGhlIElSUSBpcyBzdWJzY3JpYmVkIGJlZm9yZSB0aGUgZmlyc3QKZXhjaGFu
-Z2Ugd2l0aCB0aGUgZGV2aWNlIGFuZCB3ZnhfYmhfcG9sbF9pcnEoKSBpcyBuZXZlciBjYWxsZWQu
-IFdoZW4gaXQKaXMgKFNESU8gd2l0aCBPT0IgSVJRKSwgdGhlIGJlaGF2aW9yIGlzIHVuY2hhbmdl
-ZDogdGhlIGNvbnRyb2wgcmVnaXN0ZXIKaXMgcG9sbGVkIHVudGlsIHRoZSBQRFMgZmlsZSBoYXMg
-Y29uZmlndXJlZCB0aGUgSVJRIGxpbmUuCgpUbyBjb25jbHVkZSwgSW4tQmFuZCB1c2VycyBhcmUg
-bm93IHNhZmUuIFVzZXJzIG9mIE9PQiBJUlEgd2lsbCBiZSBzdGlsbAppbXBhY3RlZCBieSB0aGUg
-YnVnLCBidXQgdGhlcmUgaXMgbm90aGluZyB3ZSBjYW4gZG8gKGFuZCBub2JvZHkKY29tcGxhaW5l
-ZCBkdXJpbmcgdGhlIGxhc3QgNiB5ZWFycykuCgpGaXhlczogZjAwZGMxZDc4OWUxYyAoInN0YWdp
-bmc6IHdmeDogcG9sbCBJUlEgZHVyaW5nIGluaXQiKQpSZXBvcnRlZC1ieTogR2VyYXJkIFNhbHZh
-dGVsbGEgPGdlcmFyZC5zYWx2YXRlbGxhQHNpZW1lbnMuY29tPgpSZXBvcnRlZC1ieTogTHVrYXMg
-U3RvY2ttYW5uIDxsdWthcy5zdG9ja21hbm5Ac2llbWVucy5jb20+ClNpZ25lZC1vZmYtYnk6IErD
-qXLDtG1lIFBvdWlsbGVyIDxqZXJvbWUucG91aWxsZXJAc2lsYWJzLmNvbT4KLS0tCiBkcml2ZXJz
-L25ldC93aXJlbGVzcy9zaWxhYnMvd2Z4L2JoLmMgICAgICAgfCAgNiArKy0tLQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3Mvc2lsYWJzL3dmeC9idXNfc2Rpby5jIHwgIDEgKwogZHJpdmVycy9uZXQvd2ly
-ZWxlc3Mvc2lsYWJzL3dmeC9tYWluLmMgICAgIHwgMzEgKysrKysrKysrKysrKystLS0tLS0tLQog
-MyBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspLCAxNCBkZWxldGlvbnMoLSkKCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9zaWxhYnMvd2Z4L2JoLmMgYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9zaWxhYnMvd2Z4L2JoLmMKaW5kZXggMjFkZmRjZjljYzI3My4uMDA3MTY1OWJj
-OWM5OCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mvc2lsYWJzL3dmeC9iaC5jCisr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYmguYwpAQCAtMjg0LDEwICsyODQs
-MTAgQEAgdm9pZCB3ZnhfYmhfcmVxdWVzdF90eChzdHJ1Y3Qgd2Z4X2RldiAqd2RldikKIH0KIAog
-LyogSWYgSVJRIGlzIG5vdCBhdmFpbGFibGUsIHRoaXMgZnVuY3Rpb24gYWxsb3cgdG8gbWFudWFs
-bHkgcG9sbCB0aGUgY29udHJvbCByZWdpc3RlciBhbmQgc2ltdWxhdGUKLSAqIGFuIElSUSBhaGVu
-IGFuIGV2ZW50IGhhcHBlbmVkLgorICogYW4gSVJRIHdoZW4gYW4gZXZlbnQgaGFwcGVuZWQuCiAg
-KgotICogTm90ZSB0aGF0IHRoZSBkZXZpY2UgaGFzIGEgYnVnOiBJZiBhbiBJUlEgcmFpc2Ugd2hp
-bGUgaG9zdCByZWFkIGNvbnRyb2wgcmVnaXN0ZXIsIHRoZSBJUlEgaXMKLSAqIGxvc3QuIFNvLCB1
-c2UgdGhpcyBmdW5jdGlvbiBjYXJlZnVsbHkgKG9ubHkgZHVpbmcgZGV2aWNlIGluaXRpYWxpc2F0
-aW9uKS4KKyAqIE5vdGUgdGhhdCB0aGUgZGV2aWNlIGhhcyBhIGJ1ZzogSWYgYW4gSVJRIHJhaXNl
-IHdoaWxlIGhvc3QgcmVhZCBjb250cm9sIHJlZ2lzdGVyLCB0aGUgZGV2aWNlIGlzCisgKiBsb3N0
-LiBVbmZvcnR1bmF0ZWx5LCB0aGlzIGlzIHRoZSBvbmx5IHdheSB0byBpbml0aWFsaXplIHRoZSBT
-RElPIHdpdGggb3V0LW9mLWJhbmQgSVJRLgogICovCiB2b2lkIHdmeF9iaF9wb2xsX2lycShzdHJ1
-Y3Qgd2Z4X2RldiAqd2RldikKIHsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Np
-bGFicy93ZngvYnVzX3NkaW8uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvYnVz
-X3NkaW8uYwppbmRleCBhYjA3OTNiOTkwOGY0Li4xY2EyY2MyNjJmZWIyIDEwMDY0NAotLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9zaWxhYnMvd2Z4L2J1c19zZGlvLmMKKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3Mvc2lsYWJzL3dmeC9idXNfc2Rpby5jCkBAIC0yNzksNiArMjc5LDcgQEAgc3Rh
-dGljIGludCB3Znhfc2Rpb19wcm9iZShzdHJ1Y3Qgc2Rpb19mdW5jICpmdW5jLCBjb25zdCBzdHJ1
-Y3Qgc2Rpb19kZXZpY2VfaWQgKmkKIAkJZ290byBzZGlvX3JlbGVhc2U7CiAJfQogCisJYnVzLT5j
-b3JlLT5wb2xsX2lycSA9ICEhYnVzLT5vZl9pcnE7CiAJcmV0ID0gd2Z4X3Byb2JlKGJ1cy0+Y29y
-ZSk7CiAJaWYgKHJldCkKIAkJZ290byBzZGlvX3JlbGVhc2U7CmRpZmYgLS1naXQgYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9zaWxhYnMvd2Z4L21haW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3Np
-bGFicy93ZngvbWFpbi5jCmluZGV4IGRkYTM2ZTQxZWVkMTMuLmRhMzBlOGY0ODFhZGEgMTAwNjQ0
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvbWFpbi5jCisrKyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL3NpbGFicy93ZngvbWFpbi5jCkBAIC0zNjIsNyArMzYyLDYgQEAgaW50
-IHdmeF9wcm9iZShzdHJ1Y3Qgd2Z4X2RldiAqd2RldikKIAkgKi8KIAlncGlvX3NhdmVkID0gd2Rl
-di0+cGRhdGEuZ3Bpb193YWtldXA7CiAJd2Rldi0+cGRhdGEuZ3Bpb193YWtldXAgPSBOVUxMOwot
-CXdkZXYtPnBvbGxfaXJxID0gdHJ1ZTsKIAogCXdkZXYtPmJoX3dxID0gYWxsb2Nfd29ya3F1ZXVl
-KCJ3ZnhfYmhfd3EiLCBXUV9ISUdIUFJJIHwgV1FfUEVSQ1BVLCAwKTsKIAlpZiAoIXdkZXYtPmJo
-X3dxKQpAQCAtMzc0LDEyICszNzMsMTkgQEAgaW50IHdmeF9wcm9iZShzdHJ1Y3Qgd2Z4X2RldiAq
-d2RldikKIAlpZiAoZXJyKQogCQlnb3RvIGJoX3VucmVnaXN0ZXI7CiAKLQl3ZnhfYmhfcG9sbF9p
-cnEod2Rldik7CisJaWYgKHdkZXYtPnBvbGxfaXJxKSB7CisJCXdmeF9iaF9wb2xsX2lycSh3ZGV2
-KTsKKwl9IGVsc2UgeworCQllcnIgPSB3ZGV2LT5od2J1c19vcHMtPmlycV9zdWJzY3JpYmUod2Rl
-di0+aHdidXNfcHJpdik7CisJCWlmIChlcnIpCisJCQlnb3RvIGJoX3VucmVnaXN0ZXI7CisJfQor
-CiAJZXJyID0gd2FpdF9mb3JfY29tcGxldGlvbl90aW1lb3V0KCZ3ZGV2LT5maXJtd2FyZV9yZWFk
-eSwgMSAqIEhaKTsKIAlpZiAoZXJyID09IDApIHsKIAkJZGV2X2Vycih3ZGV2LT5kZXYsICJ0aW1l
-b3V0IHdoaWxlIHdhaXRpbmcgZm9yIHN0YXJ0dXAgaW5kaWNhdGlvblxuIik7CiAJCWVyciA9IC1F
-VElNRURPVVQ7Ci0JCWdvdG8gYmhfdW5yZWdpc3RlcjsKKwkJZ290byBpcnFfdW5zdWJzY3JpYmU7
-CiAJfQogCiAJLyogRklYTUU6IGZpbGwgd2lwaHk6Omh3X3ZlcnNpb24gKi8KQEAgLTM5OSwxMiAr
-NDA1LDEyIEBAIGludCB3ZnhfcHJvYmUoc3RydWN0IHdmeF9kZXYgKndkZXYpCiAJCWRldl9lcnIo
-d2Rldi0+ZGV2LCAidW5zdXBwb3J0ZWQgZmlybXdhcmUgQVBJIHZlcnNpb24gKGV4cGVjdCAxIHdo
-aWxlIGZpcm13YXJlIHJldHVybnMgJWQpXG4iLAogCQkJd2Rldi0+aHdfY2Fwcy5hcGlfdmVyc2lv
-bl9tYWpvcik7CiAJCWVyciA9IC1FT1BOT1RTVVBQOwotCQlnb3RvIGJoX3VucmVnaXN0ZXI7CisJ
-CWdvdG8gaXJxX3Vuc3Vic2NyaWJlOwogCX0KIAogCWlmICh3ZGV2LT5od19jYXBzLmxpbmtfbW9k
-ZSA9PSBTRUNfTElOS19FTkZPUkNFRCkgewogCQlkZXZfZXJyKHdkZXYtPmRldiwgImNoaXAgcmVx
-dWlyZSBzZWN1cmVfbGluaywgYnV0IGNhbid0IG5lZ290aWF0ZSBpdFxuIik7Ci0JCWdvdG8gYmhf
-dW5yZWdpc3RlcjsKKwkJZ290byBpcnFfdW5zdWJzY3JpYmU7CiAJfQogCiAJaWYgKHdkZXYtPmh3
-X2NhcHMucmVnaW9uX3NlbF9tb2RlKSB7CkBAIC00MjAsMTIgKzQyNiwxNCBAQCBpbnQgd2Z4X3By
-b2JlKHN0cnVjdCB3ZnhfZGV2ICp3ZGV2KQogCWRldl9kYmcod2Rldi0+ZGV2LCAic2VuZGluZyBj
-b25maWd1cmF0aW9uIGZpbGUgJXNcbiIsIHdkZXYtPnBkYXRhLmZpbGVfcGRzKTsKIAllcnIgPSB3
-Znhfc2VuZF9wZGF0YV9wZHMod2Rldik7CiAJaWYgKGVyciA8IDAgJiYgZXJyICE9IC1FTk9FTlQp
-Ci0JCWdvdG8gYmhfdW5yZWdpc3RlcjsKKwkJZ290byBpcnFfdW5zdWJzY3JpYmU7CiAKLQl3ZGV2
-LT5wb2xsX2lycSA9IGZhbHNlOwotCWVyciA9IHdkZXYtPmh3YnVzX29wcy0+aXJxX3N1YnNjcmli
-ZSh3ZGV2LT5od2J1c19wcml2KTsKLQlpZiAoZXJyKQotCQlnb3RvIGJoX3VucmVnaXN0ZXI7CisJ
-aWYgKHdkZXYtPnBvbGxfaXJxKSB7CisJCXdkZXYtPnBvbGxfaXJxID0gZmFsc2U7CisJCWVyciA9
-IHdkZXYtPmh3YnVzX29wcy0+aXJxX3N1YnNjcmliZSh3ZGV2LT5od2J1c19wcml2KTsKKwkJaWYg
-KGVycikKKwkJCWdvdG8gYmhfdW5yZWdpc3RlcjsKKwl9CiAKIAllcnIgPSB3ZnhfaGlmX3VzZV9t
-dWx0aV90eF9jb25mKHdkZXYsIHRydWUpOwogCWlmIChlcnIpCkBAIC00NzQsNyArNDgyLDggQEAg
-aW50IHdmeF9wcm9iZShzdHJ1Y3Qgd2Z4X2RldiAqd2RldikKIGllZWU4MDIxMV91bnJlZ2lzdGVy
-OgogCWllZWU4MDIxMV91bnJlZ2lzdGVyX2h3KHdkZXYtPmh3KTsKIGlycV91bnN1YnNjcmliZToK
-LQl3ZGV2LT5od2J1c19vcHMtPmlycV91bnN1YnNjcmliZSh3ZGV2LT5od2J1c19wcml2KTsKKwlp
-ZiAoIXdkZXYtPnBvbGxfaXJxKQorCQl3ZGV2LT5od2J1c19vcHMtPmlycV91bnN1YnNjcmliZSh3
-ZGV2LT5od2J1c19wcml2KTsKIGJoX3VucmVnaXN0ZXI6CiAJd2Z4X2JoX3VucmVnaXN0ZXIod2Rl
-dik7CiAJZGVzdHJveV93b3JrcXVldWUod2Rldi0+Ymhfd3EpOwotLSAKMi40Ny4zCgo=
+On Mon, 31 Aug 2026, Navon John Lukose wrote:
+
+> On a Lenovo Yoga Pro 7 14IAH10 (Arrow Lake-H) with a discrete BE200
+> (8086:272b), D3cold removes the module's power rail and the device does
+> not restart when the rail and PERST# are restored. After _ON the
+> power-enable and PERST# GPIO pad registers read correct and the link
+> still never trains; config space reads all ones until reboot.
+> 
+> The platform can recover it, with a WLAN-specific reset line driven by
+> the object _PRR returns - which is exactly the product reset the driver
+> already implements. The problem is ordering: AML only dispatches the
+> vendor DSM that selects that mode after reading the device's PCI ID back
+> out of config space,
+> 
+>     Method (WIST) { Switch (ToInteger (VDID)) { Case (0x272B8086) {...} } }
+>     Method (_DSM) { ... If (WIST ()) { ... Return (IFUN (...)) } ... }
+> 
+> so once the device is off the bus acpi_check_dsm() fails and the mode
+> stays deselected. iwl_trans_pcie_removal_wk() is the only place that
+> selects it today, and by then it is too late: _RST takes its other
+> branch and issues a function level reset to a device that is not there.
+> 
+> So arm the mode in .suspend, while the device still answers, and disarm
+> it again in .resume. Treat the device as gone only when two independent
+> signals agree: the mode we armed can no longer be disarmed (so the
+> platform cannot see the device either) and CSR_HW_REV reads all ones (so
+> neither can we). Either alone is not enough - a DSM can fail for
+> transient ACPI reasons on a healthy adapter, and a false positive costs a
+> remove, a platform reset and a rescan on every resume. The order of the
+> terms is load bearing: a device in D3hot answers config cycles but does
+> not decode its BARs, so the DSM would still work while CSR_HW_REV read
+> all ones. The disarm has to short-circuit.
+> 
+> Recovery goes through the existing iwl_trans_pcie_reset() path, which
+> only queues a work item, so the remove, the _RST and the rescan happen
+> after .resume has returned and the PM core has dropped the device lock.
+> The op_mode is not notified beyond the STATUS_TRANS_DEAD that
+> iwl_trans_pcie_reset() sets; as today, it finds out by having its own
+> resume fail against the dead device. Taking this path also skips the
+> handshake timeouts and the bogus ADVANCED_SYSASSERT dump the driver
+> otherwise produces against absent hardware, which on this machine cost
+> about two seconds on every failed resume.
+> 
+> Arming is confined to discrete modules: on integrated CNVi parts
+> iwl_trans_pcie_set_product_reset() sends EN_PROD_RESET on its own, which
+> lands in \_SB.PC00.CNVW.RSTT and is what the CNVi _RST branches on before
+> killing Bluetooth and issuing the PLDR. Arming that from .suspend on
+> hardware I cannot test is not worth it, so the integrated mask stays as
+> unexercised as it is today.
+> 
+> iwl_trans_pcie_set_product_reset() now reports whether the DSM took, and
+> its error on failure becomes a debug message: .suspend would otherwise log
+> an error on every suspend on every discrete machine without this DSM. So
+> iwl_trans_pcie_removal_wk() no longer logs at error level when it cannot
+> arm, which on the recovery path is every time, since the device is off the
+> bus by then. The cost is that a genuine product reset on a live device
+> with no DSM support is now silent at error level too.
+> 
+> One known limitation: where me_present is not 0, iwl_trans_pcie_reset()
+> downgrades the request to IWL_RESET_MODE_FUNC_RESET. The device still
+> comes back, because the mode is already armed and _RST does the product
+> reset regardless, but the Bluetooth function is not torn down first.
+> 
+> Cc: stable+noautosel@kernel.org # new suspend/resume behaviour, one machine
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=221695
+> Link: https://lore.kernel.org/all/20260722021321.68902-1-nika@nikableh.moe/
+> Link: https://lore.kernel.org/all/20260829093922.37103-1-navonjohnlukose@gmail.com/
+> Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
+> ---
+> The bugzilla and the first lore Link: are other BE200/GL reports of the
+> same 0xffffffff-until-reboot, on machines I do not have; neither is
+> claimed as fixed, hence Link: and not Closes:. The assert in the bugzilla
+> report is the dump against absent hardware this patch skips, not a
+> firmware bug it fixes. The second lore Link: is my own analysis of this
+> machine's AML.
+> 
+> Lenovo Yoga Pro 7 14IAH10 (Arrow Lake-H, Core Ultra 9 285H), BIOS
+> QGCN35WW, discrete BE200 SUBSYS_00F48086, Bluetooth on USB, no CSME,
+> stock ACPI tables.
+> 
+> This machine ships a udev rule forcing d3cold_allowed to 0, which would
+> have made the test vacuous. It was moved aside for the whole run and
+> d3cold_allowed written back to 1 before every cycle, so the device really
+> did reach D3cold: detection fired on all five cycles, which cannot happen
+> otherwise. Before the patch every cycle left the device dead until reboot;
+> with it the device recovered on all five, four with wifi connected at
+> suspend and one with the radio down, the case where .suspend runs with no
+> op_mode. With the reset skipped and nothing else changed it stayed absent,
+> so it is the reset that recovers it and not the remove/rescan.
+> 
+> With debug=0x100 one cycle logs the intended path end to end:
+> 
+>     iwl_trans_pcie_set_product_reset Enabled product reset via DSM
+>     iwl_trans_pcie_check_product_reset_mode product reset mode is 0x1
+>     iwl_trans_pcie_set_product_reset can't disable product reset via DSM (-19)
+>     device not responding after resume
+>     scheduling reset (mode=6)
+>     iwl_trans_pcie_set_product_reset can't enable product reset via DSM (-19)
+>     iwl_trans_pcie_call_reset called _RST on _PRR object
+> 
+> mode=6 is IWL_RESET_MODE_PROD_RESET, so the request was not downgraded.
+> The link trained in 64-76 ms and the interface was usable 5.00-5.05 s after
+> .resume returned; end to end it is closer to 7 s, because the PCI core
+> spends ~2 s retraining a link that cannot train before .resume is called.
+> 4.365 s of the rest is one _RST evaluation against a 4.320 s floor computed
+> from the Sleep() operators in the AML, so essentially all of it is platform
+> AML, and asking for a product reset is not what costs it: both arms of _RST
+> fall through to the same two 2000 ms sleeps and the product arm adds only
+> 2 x RDLY (160 ms each here).
+> 
+> What is untested or untestable with one machine:
+> 
+> - .suspend and .resume are untouched on integrated/CNVi: the arming helper
+>   returns early there, so prod_reset_set is never set. (The error-level
+>   demotion does apply to integrated parts on the removal_wk() path.)
+>   Getting the CNVi case working needs someone with the hardware.
+> - Where me_present is non-zero - including the permanent -1 that
+>   iwl_pcie_check_me_status() leaves on everything below
+>   IWL_DEVICE_FAMILY_BZ, which is four of the five Intel IDs this AML
+>   accepts - the request is downgraded to IWL_RESET_MODE_FUNC_RESET. The
+>   device still comes back, because the mode is armed and _RST does the
+>   product reset anyway, but Bluetooth is not torn down first. That is the
+>   pre-existing hazard the previous patch describes, now reachable from
+>   resume. me_present is a real 0 here, so this is reasoned, not observed.
+> - If the disarm fails transiently on a live device, the code clears
+>   prod_reset_set and carries on while the platform's mode stays selected
+>   until the next probe, which re-opens that same hazard. Retrying the
+>   disarm would narrow it; I did not, because a retry loop around an AML
+>   method on the resume path needs a bound I cannot justify from one
+>   machine.
+> - Only s2idle was tested. The same callback is .freeze and .poweroff, so
+>   hibernate arms too and the image is snapshotted while armed, meaning a
+>   restore kernel disarms a mode a previous boot selected. Harmless as far
+>   as I can reason it, but unexercised. A device that dies at runtime is
+>   still unrecoverable; that needs the same thing on runtime PM, which
+>   iwlwifi does not implement.
+> - Only one BIOS. On mine the reset method branches solely on the mode
+>   variable, never on WIST()/VDID, which is what makes the downgrade above
+>   survivable. I cannot claim that for every implementation.
+> - On a platform with the arming DSM but no usable _PRR,
+>   iwl_trans_pcie_call_reset() falls back to pci_reset_function() against a
+>   device that is gone, and pci_dev_wait() polls config space for up to
+>   ~65 s per reset method with pci_lock_rescan_remove() held. That is the
+>   cost of a true positive, not a false one: a false positive still answers
+>   config cycles, so pci_dev_wait() returns on its first read.
+> - iwl_trans_pcie_removal_wk() holds pci_lock_rescan_remove() across the
+>   whole reset, so it is now held for ~4.3 s during system resume on a
+>   machine that also has Thunderbolt wanting it. Pre-existing, but this
+>   patch is what puts it on the resume path.
+> 
+> The arming mask is heavier than the recovery needs - only EN_PROD_RESET
+> drives the GPIO - but I kept it so the reset armed from .suspend is bit for
+> bit the one iwl_trans_pcie_removal_wk() already arms. Narrowing it is an
+> easy follow-up.
+> 
+>  drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 24 +++++++++++++++++++
+>  .../intel/iwlwifi/pcie/gen1_2/internal.h      |  4 ++++
+>  .../intel/iwlwifi/pcie/gen1_2/trans.c         | 24 ++++++++++++++-----
+>  3 files changed, 46 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> index 7a7b101..5d01a4d 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> @@ -1203,11 +1203,19 @@ static void iwl_pci_remove(struct pci_dev *pdev)
+>  
+>  static int iwl_pci_suspend(struct device *device)
+>  {
+> +	struct iwl_trans *trans = pci_get_drvdata(to_pci_dev(device));
+> +
+>  	/* Before you put code here, think about WoWLAN. You cannot check here
+>  	 * whether WoWLAN is enabled or not, and your code will run even if
+>  	 * WoWLAN is enabled - don't kill the NIC, someone may need it in Sx.
+>  	 */
+>  
+> +	/* Has to be here, while the device still answers: AML gates this DSM
+> +	 * on reading the device's PCI ID out of config space. It doesn't touch
+> +	 * the NIC.
+> +	 */
+> +	iwl_trans_pcie_arm_product_reset(trans, true);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -1229,6 +1237,22 @@ static int _iwl_pci_resume(struct device *device, bool restore)
+>  	 */
+>  	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+>  
+> +	/* Two signals that it didn't come back from D3cold: the platform can't
+> +	 * deselect the mode armed in .suspend (so it can't see the device
+> +	 * either), and the device doesn't answer. Before the op_mode test: the
+> +	 * firmware may never have been loaded.
+> +	 */
+> +	if (trans_pcie->prod_reset_set) {
+> +		iwl_trans_pcie_arm_product_reset(trans, false);
+> +		if (trans_pcie->prod_reset_set &&
+> +		    iwl_read32(trans, CSR_HW_REV) == ~0U) {
+> +			IWL_ERR(trans, "device not responding after resume\n");
+> +			iwl_trans_pcie_reset(trans, IWL_RESET_MODE_PROD_RESET);
+> +			return 0;
+> +		}
+> +		trans_pcie->prod_reset_set = false;
+> +	}
+> +
+>  	if (!trans->op_mode)
+>  		return 0;
+>  
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+> index d84c7c1..1caaff9 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/internal.h
+> @@ -495,6 +495,8 @@ struct iwl_pcie_txqs {
+>   * @isr_stats: interrupt statistics
+>   * @napi_dev: (fake) netdev for NAPI registration
+>   * @txqs: transport tx queues data.
+> + * @prod_reset_set: the product reset mode is selected in the platform;
+> + *	system suspend/resume only, so process context only
+>   * @me_present: WiAMT/CSME is detected as present (1), not present (0)
+>   *	or unknown (-1, so can still use it as a boolean safely)
+>   * @me_recheck_wk: worker to recheck WiAMT/CSME presence
+> @@ -605,6 +607,7 @@ struct iwl_trans_pcie {
+>  
+>  	struct iwl_pcie_txqs txqs;
+>  
+> +	bool prod_reset_set;
+>  	s8 me_present;
+>  	struct delayed_work me_recheck_wk;
+>  
+> @@ -657,6 +660,7 @@ bool _iwl_trans_pcie_grab_nic_access(struct iwl_trans *trans, bool silent);
+>  
+>  void iwl_trans_pcie_check_product_reset_status(struct pci_dev *pdev);
+>  void iwl_trans_pcie_check_product_reset_mode(struct pci_dev *pdev);
+> +void iwl_trans_pcie_arm_product_reset(struct iwl_trans *trans, bool arm);
+>  
+>  /*****************************************************
+>  * RX
+> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> index df89fb3..56eb35d 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> @@ -2075,7 +2075,7 @@ void iwl_trans_pcie_check_product_reset_mode(struct pci_dev *pdev)
+>  	ACPI_FREE(res);
+>  }
+>  
+> -static void iwl_trans_pcie_set_product_reset(struct pci_dev *pdev, bool enable,
+> +static bool iwl_trans_pcie_set_product_reset(struct pci_dev *pdev, bool enable,
+>  					     bool integrated)
+>  {
+>  	union acpi_object *res;
+> @@ -2089,17 +2089,29 @@ static void iwl_trans_pcie_set_product_reset(struct pci_dev *pdev, bool enable,
+>  						 DSM_INTERNAL_PLDR_CMD_SET_MODE,
+>  						 mode);
+>  	if (IS_ERR(res)) {
+> -		if (enable)
+> -			IWL_ERR_DEV(&pdev->dev,
+> -				    "ACPI _DSM not available (%d), cannot do product reset\n",
+> -				    (int)PTR_ERR(res));
+> -		return;
+> +		IWL_DEBUG_DEV_POWER(&pdev->dev,
+> +				    "can't %sable product reset via DSM (%d)\n",
+> +				    enable ? "en" : "dis", (int)PTR_ERR(res));
+
+str_enable_disable() + make sure you've the necessary include for it.
+
+-- 
+ i.
+
+> +		return false;
+>  	}
+>  
+>  	ACPI_FREE(res);
+>  	IWL_DEBUG_DEV_POWER(&pdev->dev, "%sabled product reset via DSM\n",
+>  			    enable ? "En" : "Dis");
+>  	iwl_trans_pcie_check_product_reset_mode(pdev);
+> +	return true;
+> +}
+> +
+> +void iwl_trans_pcie_arm_product_reset(struct iwl_trans *trans, bool arm)
+> +{
+> +	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+> +
+> +	/* discrete only: the integrated arming mask is untested */
+> +	if (trans->mac_cfg->integrated)
+> +		return;
+> +
+> +	if (iwl_trans_pcie_set_product_reset(trans_pcie->pci_dev, arm, false))
+> +		trans_pcie->prod_reset_set = arm;
+>  }
+>  
+>  void iwl_trans_pcie_check_product_reset_status(struct pci_dev *pdev)
+> 
