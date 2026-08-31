@@ -1,119 +1,101 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D6D34A1E02
-	for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 13:41:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22E24A1E1B;
+	Mon, 31 Aug 2026 13:41:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183710; cv=none; b=fJPR7hUvjlvmgo6lGCv1i7Gd7/vdqQpdF7IuCAYcjJ7OVan4T5wHUzyj7cOTj02ZfdujL1i1qFLvAq+f66BBG8YipsEMINR4v+VL0rV+e5DWFgJji7KNcXOTZqnVj98min2nfFgO61vgcmwJAuM4Yq5epaqgHDxLrI7+Q2Djv6I=
+	t=1788183711; cv=none; b=QmV28zs45n9Bmsjp5Uy+qe19rO4yvmJ9Tg7zhHfL94qhojWgxx/rB+V3MKMnJEpJSosekgy5/4UNPqHTqAvd+zle5C2MFf22JdbnjCTVnV3CwQpQ3LsfkFDQkybZla1i+RTYVaaHL/24uwqyiMWY2ly7x/P0Q2PAa+qQTckAHuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183710; c=relaxed/simple;
-	bh=IMH5XC1IQty2kDprL4vVOLUz5Rdo2SwjUCPUHF5zKr0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gWXRfUoIB+NMQNMrbrCnUpIgUoIu/DXV04ohJP0sQvZuhE4h26WGROYW3Wa24jm8LfBnOEOMdNR3GYKXfS+SOY/aKUKwwqlbPMqdmbo4lPYDLuvmOo4fcFAmuQ+6OunCRcMMsYv0TaXICCLrvkv0zR9LB4f/15Uv6BC3dBg7e2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f+7dIIom; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788183711; c=relaxed/simple;
+	bh=+nMALovB10NfONBUbJxks57h4L2oR8ruKLFxL4t6RDM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N1Jv55ALDZNGORv4CHDff9Eeh4unMt2vXjVDMfFpUDWCMh8ohaRvOm2lVXM64gDf0OVbr8c8+PxBEHU+eCMw9krOn7/KIm3530ZDNWDhih5rRx4Mz1NYoB9hicA4txMzdqY96MoNWgfSuWs9eDXKryDqDFMlwWMIseuP+iohR3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FcbUka6W; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f+7dIIom"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-cbe4592c193so673882a12.3
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 06:41:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788183707; x=1788788507; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KrvWK7y12wmzNf9yKs8qJQvTPbcMwwSOqP849lffmgI=;
-        b=f+7dIIomVJa6uRIKV5UlrAw23v8IxJO0is8Mwl3aHFseDGbGnDZ3GbUyCY7JzADIyu
-         KlqKspw7kPOpEdZ/mrVqsyUaNp0/ePM3CFNe4mWoj1qtgW6i2eG0O0yv/0Cd42hrN41T
-         chKc/ZvyV0OhqcvvCj1NsqvClxRAYH1Y94cjpaNywRHVn1vEl2iXxlQSU9JpEzFwqMe7
-         x8urBPi2JVu2haxMMnQEV6a5fO7Fr0uaqgCNuSaHf6ef0tm5jnnQkqwiFBSqoIpiroHl
-         tAcGtgV/CZgx+6fgUBzlmYKnluEIK8oRUb0csW5PbfZqXLOLnL/lqzQAMzR8xK0IFxVa
-         3VOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788183707; x=1788788507;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KrvWK7y12wmzNf9yKs8qJQvTPbcMwwSOqP849lffmgI=;
-        b=cMnMqzPx7FTLh/ZeVyQWbSvyu/+9Kaz8HN48vWeQ+zFr0VvK9uqnV+PGJBKQPxxCzJ
-         oDua5Q8YiJNku//eDxjnMiih9Z+uvlnRCjWquYOL8xA/zZWNKJajUQsL9wEfW3Q28Irq
-         LZrMFCaIchYwMJgd4Qs2rTOBj0q3+dzuBf/x2prTTvdgIQjO8miI5Ygv1TfRGQig9ICx
-         42Hk4LpztgVMntLBncPivce7GMYWn8y4JbSMI0q2H+tUH2MpfwzdlGY7PWOOe8VYMXCF
-         uzRlSU/SIcMlYsmjHWkDvICW51YAvJXQYndeUjGwREGKfS5szO2HCvGl0cyx8GJAfIP6
-         Y15g==
-X-Forwarded-Encrypted: i=1; AKwUvBw/ff91sfXXjc/pj+wyU6eKbYJv/bccKasgaDDRC9UpghNG7+360Yb31olZZPqEY5eOewOCpzdFIW0GgSpjgw==@vger.kernel.org
-X-Gm-Message-State: AFuF++mSaV2FDD6uMch/n0bWWaolB31t/5wvazfRFGP0GqBAf7nSzBvt
-	GEi9aw25ckCwYWR08JvY/505lmbGHbeoQlVeQxtzsHrWzEBtDWyymJQ1
-X-Gm-Gg: AYBFou0u87+0GVMsD4UNK3iz7OMj+qW3/jBeEcPf4dEgVrhVnxh8GoRfy6N8vuZMGxt
-	yBy6YKma0x47B0cfojxttI4qzYgdsqrgM0H0cghd3okwZXGhXTVhfkvubI9A0Hx0uNrK4V7xTJw
-	k3GgqP/0PsmSBIEZEB9KFSt448wCDHmtt26sThD1tgowWLAkPPpsRN54KgR4p8M0Hkd4unc+nb9
-	KQM6Jxf0FYAzE/5W4eqLdUcUy35AwyozyzaOOOJjGangM9JJPdpxJ1RDw4MB5jQAaSuWH0jI2ae
-	Ki8u4Bxv72mCup3RV6ISVS0zpN9siafrGB2aWnaUAPJMD3vihemXk/uTHbS/GK2xEmfDWnoIj5T
-	uK9t/AJIiE0HQbucILW8nS2Ru+8y88FZU8OweR6hq0OPeflqE6j3NVfhPN7EpV2bzVGimMoyLDM
-	qPrV7u98k/ebOnAp3YGg63cODsMat4iZMXsuGEqMngdoiLrqP5yjD/Jqkk9kSDriTPB3neZuEa1
-	lJH3Vi3X6+N/KsPIjJmch452v8M
-X-Received: by 2002:a17:90b:4ad1:b0:38e:76f8:fcbb with SMTP id 98e67ed59e1d1-398bac28133mr12752617a91.4.1788183707208;
-        Mon, 31 Aug 2026 06:41:47 -0700 (PDT)
-Received: from cachyos-aura ([45.112.149.37])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3286f7be440sm34752102eec.7.2026.08.31.06.41.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2026 06:41:46 -0700 (PDT)
-From: Navon John Lukose <navonjohnlukose@gmail.com>
-To: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FcbUka6W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7CA31F00ADE;
+	Mon, 31 Aug 2026 13:41:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788183709;
+	bh=La1Xp1x5Nei/poEFeumFUOtK4pgaG2CWMMXIdscTe6E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=FcbUka6WHKzwDtz20SIEUzavBcez6fLIy6gSCZifgtxMOHx/wndExneZF3uIZwbV2
+	 4rxSnMuP0vTlmchq9m1oK15QLLTmgby9jdyknxPTy50Q5Bkw3iNUFzlMQdgRygpUZ0
+	 wUdiYEIcAdEG3+Zbidb2SbjwW0x0wo9u6OLwAHPGwWEai59bpTlOKnV8Jlqf1HL/O2
+	 9hDm0IfesxbB98AOTKIBEQJM0OBURhzliVomeOZAPDFgftpYAE6z9Ruu1CGY15Yl2N
+	 njwYu0Of8/CuE59Xh2niUtQGWvPjGJyZin7NP+dxeT7/LtQ5jESBapuyc+o3hOcGO/
+	 Rux6I0GmNtQVA==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH wireless] wifi: iwlwifi: pcie: cancel the ME recheck work on probe failure
-Date: Mon, 31 Aug 2026 19:11:40 +0530
-Message-ID: <20260831134140.480276-1-navonjohnlukose@gmail.com>
-X-Mailer: git-send-email 2.55.0
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Sasha Levin <sashal@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.18-5.10] wifi: iwlwifi: mvm: fix an off-by-1 boundary check
+Date: Mon, 31 Aug 2026 09:24:46 -0400
+Message-ID: <20260831133314.4125787-258-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
+References: <20260831133314.4125787-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.18.48
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-iwl_pcie_check_me_status() schedules me_recheck_wk a second out when it
-cannot decide whether CSME is present yet. iwl_pci_gen1_2_probe() calls it
-before iwl_drv_start(), and if that fails the error path goes straight to
-iwl_trans_pcie_free() without cancelling the work. The trans, and with it
-the delayed_work and the trans_pcie the callback dereferences, is freed
-while the timer is still armed.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-iwl_pcie_gen1_2_remove() does cancel it, so only the probe error path is
-affected. Cancel it there too.
+[ Upstream commit d77aff138c9ec6c8562f4c2c9f262d3d9c4b4cb8 ]
 
-The window is narrow: reaching the schedule needs both reads in
-iwl_pcie_check_me_status() to fail, and iwl_pci_probe() already bails with
--EIO on an all-ones CSR_HW_REV before iwl_pci_gen1_2_probe() runs, so it
-takes a device that answers config space and CSR_HW_REV but then fails
-iwl_trans_grab_nic_access(). I found this by inspection rather than by
-tripping over it, and I have no way to force that state on the hardware I
-have.
+Before looking at the 11th byte, check the length is big enough.
 
-Cc: stable@vger.kernel.org
-Fixes: 41fff83fe6cd ("wifi: iwlwifi: pcie: check for WiAMT/CSME presence")
-Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Link: https://patch.msgid.link/20260714141909.d22bf52a18d0.If0ef6612a67cca671428b06dbdeec68549e50ae6@changeid
+Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index 28b276c..a30854d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -4369,6 +4369,8 @@ int iwl_pci_gen1_2_probe(struct pci_dev *pdev,
+LLM Generated explanations, may be completely bogus:
+
+**Verdict: YES** — backport to this tree (Linux 6.18.44).
+
+This is a one-line fix in `iwl_mvm_check_he_obss_narrow_bw_ru_iter()`:
+the check used `elem->datalen < 10` but then read `elem->data[10]`, so
+an Extended Capabilities element with exactly 10 data bytes caused an
+out-of-bounds read. The bug has been present since 2019 (`4f58121dc40a`)
+and still exists in 6.18.44; fix `d77aff138c9ec` applies cleanly and is
+only on mainline so far, not in this stable tree.
+
+Worth noting: the same off-by-one exists in `iwl_mld/mac80211.c`, but
+this commit only fixes the mvm path.
+
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 2d2587c6e9757..92471bc7b505b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3529,7 +3529,7 @@ static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
+ 	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
+ 				  ies->len);
  
- 	if (IS_ERR(iwl_trans->drv)) {
- 		ret = PTR_ERR(iwl_trans->drv);
-+		/* iwl_pcie_check_me_status() may have armed this */
-+		cancel_delayed_work_sync(&trans_pcie->me_recheck_wk);
- 		goto out_free_trans;
- 	}
- 
+-	if (!elem || elem->datalen < 10 ||
++	if (!elem || elem->datalen < 11 ||
+ 	    !(elem->data[10] &
+ 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
+ 		data->tolerated = false;
 -- 
-2.55.0
+2.53.0
 
