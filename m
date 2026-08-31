@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB27489884;
-	Mon, 31 Aug 2026 13:38:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9597548CD47;
+	Mon, 31 Aug 2026 13:38:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183496; cv=none; b=MRSvucRVB/+dLPWA3v+QRNOJDdwrM0JSa3ulQpCfz34e40lTy8hchc9oUG/2cNQbBACf/RslXH1tMryObM8RVNLBIKcWCsd3HfcFp98ulqPOqcRr+ZYtary9Kr7km8lXjLx9By/mwsAqYiClP+OeehGJqF8BHEXgxEkhmAMSC1U=
+	t=1788183506; cv=none; b=YBRMHuYcv5SAOzNSvigmCuXoujYRaSL0GISl/wexDb+5XyQVNnCNZpzC3SGGXeKRVnVisOJbkIUuqjqawLuMeFIrFuJrKq166/8TI4lQBB/TAAX7wdQGkq1FFoL61f0hjtH/aHGsevwEPKCmlioyi5qGZ2BsvdcdtIbLOtutqkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183496; c=relaxed/simple;
-	bh=Cw8eDKmRdU4BwKlSJSxqyKbtRbH+AHgTJ4HGetoKkgM=;
+	s=arc-20240116; t=1788183506; c=relaxed/simple;
+	bh=BZaqUhVwE9M9AvVI1ckdH04/KyPfZsht/RVSbm0/E5I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DCnOE/jvSeFIS6Sir+YupPbH1BMUE0mIClVcwioem00oET/qysdEHsFEawNuD81xif/T03QQgb1gTV46Pvz5QnpiE43IeqQV44Rx13I2FvsOj/S/yqQn+148cfPrMbLi48/2V1bYX1AkZnXD2xi6s+Bfls9CWElnF/5mJUDO64U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dfHqHZ9v; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=D7i4yJQfG/nY1dA23qos10prxnITaZ1XbC7gH9rj8B7s+mKnMzZKZBT6+LaMGmH2qQJeffKlZDQ/h3ZfT/y5fc6/BH0eOkNh3Ad5Ajjtuuyj8cZbS+tqJt3scT6kN2IIQQTClDPN8CmCFIzgoGShYU/+G0eQLx2b9k6cBzN6Fu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FcKezk6S; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dfHqHZ9v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9F5B1F00A3D;
-	Mon, 31 Aug 2026 13:38:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FcKezk6S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63AF01F000E9;
+	Mon, 31 Aug 2026 13:38:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183494;
-	bh=hYgzEllo7HF+eHVPpFFsRiisOnsvxr8ifuz0RVW3pTY=;
+	s=k20260515; t=1788183503;
+	bh=zYjGexxpgR3gyp+1xzYD3nJSA80PSxg8RoXvPs2h2uU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=dfHqHZ9vArzFy/C6R++CeOuPCWjCmAAsRaJGPGZKTemE3KIGYX/c1xeFjyb/Pi5zY
-	 R7S5pNeXw5cvo9tcR9GgHyPbVpc1Y56Mkiy/UJx3NLL1Davrj1cvgScGMr2ZuYfZHX
-	 sWxhyyfzZ013nuCz0+3RhLcb7+AJUc1bYh1CBBjPhk//xjEk9EnVWO5qvCo/I6a6Wk
-	 B0QLkIk5rHz82wqPnBybIArjbP8yzKN9L7kZa2NdpPqhI+QNEb17PFwG+/4pNo0Jgv
-	 p81JnwFeZThS2dmgJH4sCHrOEMXqyyP1Uq+phoV5K5gTKcQSGaOKn0fPjMb8g36nMV
-	 0ygqpUIx2e75Q==
+	b=FcKezk6SuwCs27ZYSUeRWBHtk6vTnTHCyNcs4CKlYbv2QdbHPyjlT7nnHljvjCxHb
+	 RSrrCgwf95fO6DtiCb8NNxEhw6zwpIUxEiKuk5vUBnNMX26kNIPhqucCl6yPQWDuHi
+	 NIAFl39lK+gL8Fsq4zAKWh4Gctkeu0ml8QLucTz+3TUMezC3j6KSsDQrqpuOGtDnXK
+	 KsW91vvZ7rl6XumcOC+BcO3pDp3NeF1O25CzdkYA4bQZBTiBkJLnGl5QSYJwihQOiT
+	 NiIA84xpCYy+YO9k61+sr2AdTxmFGYxuORl+Iu/IUx5e4StKZxcE1QLHufSJDabShK
+	 +Xt7kGNykwCyA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -34,9 +34,9 @@ Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: mld: fix an off-by-1 boundary check
-Date: Mon, 31 Aug 2026 09:22:38 -0400
-Message-ID: <20260831133314.4125787-130-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: adapt ND match notif sizing to fixed matches array
+Date: Mon, 31 Aug 2026 09:22:43 -0400
+Message-ID: <20260831133314.4125787-135-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -54,351 +54,462 @@ Content-Transfer-Encoding: 8bit
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 402620cdcf4d4ee311551906dfae832b33a0cc60 ]
+[ Upstream commit a426d3227c669ef0ad9855b311a68129f10ac8bf ]
 
-Before looking at the 11th byte, check the length is big enough.
+Switch iwl_scan_offload_match_info::matches to a fixed-size array and
+adjust D3 netdetect size handling accordingly.
 
+In MVM D3 paths, compute expected payload size as
+offsetof(struct iwl_scan_offload_match_info, matches) + matches_len to
+preserve previous behavior after the struct layout change.
+
+In MLD D3 netdetect handling, keep the simple full-notification size
+assumption and validate against sizeof(*notif) before accessing data.
+
+This keeps scan offload / netdetect functionality unchanged while
+making length checks consistent with the new struct definition.
+
+Assisted-by: GitHubCopilot:gpt-5.3-codex
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Link: https://patch.msgid.link/20260714141909.336b527e3fc6.I6fe839f4e70d673632fd7ca757e81827af87b029@changeid
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260715215523.4c4346140bcc.I44313ac41daca352e6aecdba09a1c3570c3eea06@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: mld: fix an off-by-1
-boundary check`
+## Phase 1: Commit Message Forensics
 
-**Local tree:** `v6.18.44` (`6.18.44`, detached from
-`stable/linux-6.18.y`)
-**Fix commit (mainline):** `402620cdcf4d4` — not present in this tree;
-`git apply --check` succeeds.
+### Step 1.1: Subject Line
+**Record:** `[wifi: iwlwifi]` `[adapt]` — adapt ND (netdetect) match-
+notification sizing after changing
+`iwl_scan_offload_match_info::matches` to a fixed-size array.
 
----
+### Step 1.2: Tags
+**Record:**
+- **Assisted-by:** GitHubCopilot:gpt-5.3-codex
+- **Signed-off-by:** Emmanuel Grumbach \<emmanuel.grumbach@intel.com\>
+- **Signed-off-by:** Miri Korenblit
+  \<miriam.rachel.korenblit@intel.com\>
+- **Link:** https://patch.msgid.link/20260715215523.4c4346140bcc.I44313a
+  c41daca352e6aecdba09a1c3570c3eea06@changeid
 
-## PHASE 1: COMMIT MESSAGE FORENSICS
+No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
+stable tags. Absence of Cc: stable is expected per review instructions.
 
-**Step 1.1 — Subject line**
-Record: `[wifi: iwlwifi: mld]` `[fix]` — correct an off-by-1 boundary
-check before reading the 11th byte of the Extended Capabilities IE.
+Notable: authored/signed by Intel iwlwifi maintainers; patch 15/15 in
+the "wifi: iwlwifi: fixes - 07-15-2026" series (local mbox).
 
-**Step 1.2 — Tags**
-Record:
-- `Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>`
-  (author)
-- `Link: https://patch.msgid.link/20260714141909.336b527e3fc6...` (patch
-  submission)
-- `Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>`
-  (committer)
-- No `Fixes:`, `Reported-by:`, `Cc: stable@vger.kernel.org`, `Tested-
-  by:`, syzbot links
+### Step 1.3: Body Analysis
+**Record:**
+- **Bug described:** After switching `matches[]` (flexible array) to
+  `matches[IWL_SCAN_MAX_PROFILES_V2]` (fixed array), `sizeof(struct
+  iwl_scan_offload_match_info)` changes from header-only (24 bytes) to
+  header + 8 profile slots (144 bytes). Existing length checks that use
+  `sizeof()` become wrong.
+- **Symptom/failure mode:** Incorrect length validation can allow out-
+  of-bounds reads when copying match data in D3/WoWLAN netdetect paths,
+  or reject valid notifications if checks double-count match data.
+- **Root cause:** Flexible-array `sizeof()` semantics vs. fixed-array
+  `sizeof()` semantics; `iwl_mvm_netdetect_query_results()` only
+  validated the header size while copying `matches_len` bytes.
+- **Version info:** None in commit message.
 
-**Step 1.3 — Body**
-Record:
-- **Bug:** Code reads `elem->data[10]` (the 11th byte,
-  `WLAN_EXT_CAPA10_*`) but only requires `elem->datalen >= 10`. When
-  `datalen == 10`, valid indices are `0..9`; index `10` is one byte past
-  the element.
-- **Symptom:** Out-of-bounds read when parsing neighbor BSS Extended
-  Capabilities during DFS-channel HE OBSS narrow-BW-RU tolerance checks.
-- **Root cause:** Off-by-one in the length guard.
-
-**Step 1.4 — Hidden bug fix?**
-Record: No — this is an explicit, straightforward boundary-check fix.
-
----
-
-## PHASE 2: DIFF ANALYSIS
-
-**Step 2.1 — Inventory**
-Record:
-- `drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`: 1 insertion, 1
-  deletion (~1 line net)
-- Function modified: `iwl_mld_check_he_obss_narrow_bw_ru_iter()`
-- Scope: single-file, surgical fix
-
-**Step 2.2 — Code flow**
-Record:
-- **Before:** Proceed when `elem->datalen >= 10`, then read
-  `elem->data[10]`.
-- **After:** Proceed only when `elem->datalen >= 11`, then read
-  `elem->data[10]`.
-- **Path:** BSS iteration callback during station association on
-  DFS/radar channels with HE.
-
-**Step 2.3 — Bug mechanism**
-Record: **Buffer out-of-bounds read (off-by-one).** `struct element` has
-`data[]` of length `datalen`; accessing `data[10]` requires `datalen >=
-11`.
-
-**Step 2.4 — Fix quality**
-Record: Obviously correct, minimal, no API changes. Regression risk is
-very low (only tightens a bounds check). Worst case: a borderline
-10-byte IE is treated as non-tolerant, which is the safe default
-(`*tolerated = false`).
+### Step 1.4: Hidden Bug Fix Detection
+**Record:** Yes — disguised as a struct-layout adaptation, but it fixes
+real out-of-bounds read conditions in WoWLAN netdetect handling. The MVM
+query path and MLD notification path both validate too few bytes
+relative to what `memcpy()` consumes.
 
 ---
 
-## PHASE 3: GIT HISTORY INVESTIGATION
+## Phase 2: Diff Analysis
 
-**Step 3.1 — Blame**
-Record: Buggy lines introduced in `5d324e5159d9e` (Linus Torvalds,
-2025-11-28), the merge that brought the iwlwifi MLD driver into this
-tree. Present since `v6.18.0`.
+### Step 2.1: Inventory
+**Record:**
+| File | Changes |
+|------|---------|
+| `drivers/net/wireless/intel/iwlwifi/fw/api/scan.h` | Copyright year;
+`matches[]` → `matches[IWL_SCAN_MAX_PROFILES_V2]` |
+| `drivers/net/wireless/intel/iwlwifi/mvm/d3.c` | 3 hunks in
+`iwl_mvm_netdetect_query_results()` and
+`iwl_mvm_nd_match_info_handler()` |
 
-**Step 3.2 — Fixes: tag**
-Record: N/A — no `Fixes:` tag. Bug introduced with the MLD OBSS narrow-
-BW-RU check code itself.
+**Functions modified:** `iwl_mvm_netdetect_query_results()`,
+`iwl_mvm_nd_match_info_handler()`
+**Scope:** Single-subsystem, surgical (~8 insertions, ~5 deletions
+across 2 files).
 
-**Step 3.3 — Related changes**
-Record: Mainline has a sibling fix `d77aff138c9ec` (`wifi: iwlwifi: mvm:
-fix an off-by-1 boundary check`) for the same pattern in
-`mvm/mac80211.c`. This commit is patch 03/15 of the `iwlwifi-fixes`
-series (2026-07-14) and is standalone for the MLD path.
+### Step 2.2: Code Flow Changes
 
-**Step 3.4 — Author context**
-Record: Emmanuel Grumbach is a long-standing iwlwifi developer. Miri
-Korenblit is the iwlwifi maintainer/committer. Series includes other
-iwlwifi fixes from the same authors.
+**Hunk 1 — `scan.h` struct:**
+- **Before:** `matches[]` flex array; `sizeof(struct)` = 24 (header
+  only).
+- **After:** `matches[8]` fixed array; `sizeof(struct)` = 144 (header +
+  8 × 15-byte entries).
 
-**Step 3.5 — Dependencies**
-Record: None. One-line change with no structural prerequisites. Applies
-cleanly to this tree (`git apply --check` passed).
+**Hunk 2 — `iwl_mvm_netdetect_query_results()` V2 path:**
+- **Before:** `query_len = sizeof(struct iwl_scan_offload_match_info)`
+  (= 24); then `memcpy(..., matches_len)` where `matches_len` can be up
+  to 120 bytes.
+- **After:** `query_len = offsetof(..., matches) + matches_len` (= 24 +
+  matches_len). Validation now covers data actually copied.
 
----
+**Hunk 2 — V1 path:**
+- **Before:** `query_len = sizeof(v1 struct)` (= 24 header only).
+- **After:** `query_len = sizeof(v1 struct) + matches_len`.
 
-## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+**Hunk 3 — `iwl_mvm_nd_match_info_handler()`:**
+- **Before:** `len < sizeof(struct) + matches_len` (= 24 + matches_len)
+  — correct with flex array (already fixed by dd90880 in this tree).
+- **After:** `len < offsetof(..., matches) + matches_len` (= 24 +
+  matches_len) — equivalent numerically, but required to avoid breaking
+  the check after the struct change (without it, `sizeof + matches_len`
+  would be 144 + matches_len, wrongly rejecting valid notifications).
 
-**Step 4.1 — Original discussion**
-Record: `b4 dig -c 402620cdcf4d4` → [PATCH iwlwifi-fixes 03/15]](https:/
-/patch.msgid.link/20260714141909.336b527e3fc6.I6fe839f4e70d673632fd7ca75
-7e81827af87b029@changeid). Part of a 15-patch `iwlwifi-fixes` series
-(v1, 2026-07-14). No explicit `Cc: stable` found in the thread.
+### Step 2.3: Bug Mechanism
+**Record:** **Category:** Memory safety / out-of-bounds read.
 
-**Step 4.2 — Reviewers**
-Record: `b4 dig -w` shows CC to `johannes@sipsolutions.net`, `linux-
-wireless@vger.kernel.org`, Emmanuel Grumbach. Series has `Reviewed-by:
-Ilan Peer <ilan.peer@intel.com>`.
+**Specific mechanism:**
+1. `iwl_mvm_netdetect_query_results()` accepted responses as short as 24
+   bytes but copied up to `matches_len` bytes (up to 120 for V2, more
+   for V1).
+2. `iwl_mld_netdetect_match_info_handler()` (MLD, unchanged in diff)
+   checks `len < sizeof(*notif)` (= 24 with flex array) then
+   `memcpy(..., NETDETECT_QUERY_BUF_LEN)` (= 120 bytes). The struct
+   change makes `sizeof(*notif)` = 144, aligning validation with the
+   copy.
+3. The `offsetof` change in `iwl_mvm_nd_match_info_handler()` prevents a
+   regression from the struct layout change.
 
-**Step 4.3 — Bug report**
-Record: N/A — no external bug report or syzbot link. Bug identified by
-code inspection (author).
-
-**Step 4.4 — Series context**
-Record: Patch 03/15 of 15; this specific hunk is independent. The mvm
-counterpart is a separate commit in the same series.
-
-**Step 4.5 — Stable list**
-Record: No stable-list discussion found for this patch.
-
----
-
-## PHASE 5: CODE SEMANTIC ANALYSIS
-
-**Step 5.1 — Key functions**
-Record: `iwl_mld_check_he_obss_narrow_bw_ru_iter()`, called from
-`iwl_mld_check_he_obss_narrow_bw_ru()`.
-
-**Step 5.2 — Callers**
-Record:
-- `iwl_mld_check_he_obss_narrow_bw_ru()` ←
-  `iwl_mld_link_set_2mhz_block()`
-- `iwl_mld_link_set_2mhz_block()` ← `iwl_mld_move_sta_state_up()` (AUTH
-  → ASSOC, station mode)
-- `iwl_mld_move_sta_state_up()` ← `iwl_mld_sta_state()` (mac80211
-  station state machine)
-
-**Step 5.3 — Callees**
-Record: `cfg80211_find_elem()`, `rcu_dereference()`,
-`cfg80211_bss_iter()` — parses untrusted beacon/probe-response IEs from
-neighboring BSSes.
-
-**Step 5.4 — Reachability**
-Record: Triggered during WiFi client association on DFS/radar channels
-when the STA has HE capabilities. Neighbor APs (including malicious
-ones) can advertise an Extended Capabilities element of exactly 10
-bytes. Reachable from normal WiFi operation, not an obscure init path.
-
-**Step 5.5 — Similar patterns**
-Record: Identical bug exists in `iwlwifi/mvm/mac80211.c` and
-`rtw89/mac.c` in this tree (`datalen < 10` before `data[10]`). Those are
-out of scope for this commit but confirm this is a known pattern.
+### Step 2.4: Fix Quality
+**Record:** Fix is minimal and logically sound. Using `offsetof +
+matches_len` is the standard pattern for variable-length trailing data
+with a fixed-maximum struct. Regression risk is low: MVM paths preserve
+prior effective thresholds; MLD gets stricter validation matching what
+`memcpy` already required. No public API changes.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
+## Phase 3: Git History Investigation
 
-**Step 6.1 — Buggy code present?**
-Record: **Yes.** At line 1580 in
-`drivers/net/wireless/intel/iwlwifi/mld/mac80211.c`:
+### Step 3.1: Blame
+**Record:** `matches[]` at `scan.h:1277` comes from merge
+`5d324e5159d9e` (6.18-rc8 era). The flex-array layout and insufficient
+query-path validation have been present since this code landed in the
+6.18.y lineage.
 
-```1580:1582:drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-        if (!elem || elem->datalen < 10 ||
-            !(elem->data[10] &
-              WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
-```
+### Step 3.2: Fixes: Tag
+**Record:** Not applicable — no Fixes: tag in this commit.
 
-Iwlwifi MLD driver (`CONFIG_IWLMLD`) has been in this tree since
-v6.18.0.
+Related prior fix in this tree: `dd90880eb5ec5` (stable backport of
+upstream `744fabc338e87`) fixed the same class of OOB read in
+`iwl_mvm_nd_match_info_handler()` only. It did **not** fix
+`iwl_mvm_netdetect_query_results()` or MLD netdetect validation.
 
-**Step 6.2 — Backport complications**
-Record: Clean apply — `git apply --check` on commit `402620cdcf4d4`
-succeeded with no conflicts.
+### Step 3.3: File History
+**Record:** Recent iwlwifi D3 changes in this tree include `dd90880`
+(nd_match_info_handler OOB) and `2d5dec5` (wake packet handler). This
+commit is the logical follow-up for adjacent netdetect paths. It is
+patch 15/15 in a series but only touches `scan.h` and `mvm/d3.c` — no
+dependency on patches 1–14 for these hunks.
 
-**Step 6.3 — Related fixes already present?**
-Record: No — `git log HEAD --grep="off-by-1 boundary"` returns nothing.
-Fix is not in `6.18.44`.
+### Step 3.4: Author Context
+**Record:** Emmanuel Grumbach is a long-standing Intel iwlwifi
+maintainer (11 of 15 patches in the series). Miri Korenblit is the
+series submitter. High subsystem credibility.
 
----
-
-## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-
-**Step 7.1 — Subsystem**
-Record: `drivers/net/wireless/intel/iwlwifi/mld` — Intel WiFi driver
-(MLD/MLO-capable devices). Criticality: **IMPORTANT** (network driver,
-security-relevant parsing of untrusted frames), hardware-specific to
-Intel MLD devices.
-
-**Step 7.2 — Activity**
-Record: iwlwifi MLD is actively developed in 6.18.y (multiple recent mld
-fixes in tree history).
+### Step 3.5: Prerequisites
+**Record:** Self-contained. Verified with `git apply --check` — applies
+cleanly to this tree (minor line offsets only). No prerequisite commits
+required.
 
 ---
 
-## PHASE 8: IMPACT AND RISK ASSESSMENT
+## Phase 4: Mailing List and External Research
 
-**Step 8.1 — Who is affected**
-Record: Users of Intel MLD-capable WiFi (`CONFIG_IWLMLD`) on 6.18.x,
-connecting as a station on DFS channels with HE.
+### Step 4.1: Original Discussion
+**Record:** `b4 dig -c <commit>` unavailable (commit not yet in git).
+Local mbox
+`20260715_miriam_rachel_korenblit_wifi_iwlwifi_fixes_07_15_2026.mbx`
+contains the patch. Lore/patch.msgid.link fetches blocked by bot
+protection. Cover letter describes series as "bugfixes" with no per-
+patch stable nominations.
 
-**Step 8.2 — Trigger conditions**
-Record: Station association on a radar/DFS channel; neighbor BSS with
-Extended Capabilities IE of length exactly 10 bytes. Unprivileged remote
-attacker via a rogue AP beacon can trigger the OOB read. Timing-
-independent.
+### Step 4.2: Reviewers
+**Record:** UNVERIFIED for patch 15 specifically — no Reviewed-by on
+this individual patch. Series patch 2 has Reviewed-by: Johannes Berg.
+Maintainers Grumbach/Korenblit are authors.
 
-**Step 8.3 — Failure mode**
-Record: **Out-of-bounds kernel read** of one byte beyond the IE buffer.
-Severity: **MEDIUM-HIGH** — potential information leak or KASAN splat;
-in production without KASAN, silent read of adjacent memory. Not a
-typical crash path, but a real memory-safety bug in kernel code parsing
-attacker-controlled WiFi frames.
+### Step 4.3: Bug Reports
+**Record:** No Reported-by or syzbot link. Same bug class as SVACE-found
+dd90880 (already in 6.18.y). Mechanism verified by code inspection.
 
-**Step 8.4 — Risk vs benefit**
-Record:
-- **Benefit:** Closes a verified OOB read on a reachable WiFi code path;
-  aligns MLD code with correct bounds checking.
-- **Risk:** Very low — one-character change (`10` → `11`), no behavior
-  change for correctly-sized IEs.
-- **Ratio:** Strong benefit, minimal risk.
+### Step 4.4: Series Context
+**Record:** Part of 15-patch iwlwifi validation-hardening series. This
+patch is independently applicable; it does not require other series
+patches.
+
+### Step 4.5: Stable List History
+**Record:** UNVERIFIED — lore.kernel.org/stable search blocked. Related
+fix dd90880 was explicitly Cc: stable and is already in this 6.18.y
+tree.
 
 ---
 
-## PHASE 9: FINAL SYNTHESIS
+## Phase 5: Code Semantic Analysis
 
-**Step 9.1 — Evidence summary**
+### Step 5.1: Key Functions
+**Record:** `iwl_mvm_netdetect_query_results()`,
+`iwl_mvm_nd_match_info_handler()`, and (indirectly via struct change)
+`iwl_mld_netdetect_match_info_handler()`.
 
-| FOR backport | AGAINST backport |
-|---|---|
-| Verified off-by-one OOB read | No syzbot/user crash report |
-| Reachable from WiFi association on DFS | Affects only IWLMLD hardware
-|
-| Untrusted beacon data (security-relevant) | mvm/rtw89 have same bug
-but need separate commits |
-| 1-line, obviously correct fix | Trigger requires DFS + 10-byte IE
-(somewhat niche) |
-| Applies cleanly to 6.18.44 | |
-| Bug present since v6.18.0 in this tree | |
-| Intel maintainer-authored, reviewed | |
+### Step 5.2: Callers
+**Record:**
+- `iwl_mvm_netdetect_query_results()` — called from D3 resume/WoWLAN
+  netdetect reporting path (`d3.c:~2610`) when firmware uses query-based
+  ND results.
+- `iwl_mvm_nd_match_info_handler()` — called from D3 notification
+  handler on `OFFLOAD_MATCH_INFO_NOTIF` (`d3.c:~2967`).
+- `iwl_mld_netdetect_match_info_handler()` — called from MLD D3 resume
+  notification dispatch (`mld/d3.c:~1322`).
 
-**Step 9.2 — Stable rules checklist**
-1. Obviously correct and tested? **PASS** — mathematically correct
-   bounds fix; reviewed on mailing list.
-2. Fixes a real bug? **PASS** — confirmed OOB read when `datalen == 10`.
-3. Important issue? **PASS** — kernel memory-safety bug parsing
-   untrusted wireless frames (MEDIUM-HIGH).
-4. Small and contained? **PASS** — 1 line, 1 file.
-5. No new features/APIs? **PASS**.
-6. Can apply to local tree? **PASS** — code exists, patch applies
-   cleanly.
+All are WoWLAN suspend/resume (D3) paths on Intel wireless hardware.
 
-**Step 9.3 — Exception category**
-Record: N/A (standard bug fix, not device-ID/quirk/docs).
+### Step 5.3: Callees
+**Record:** `iwl_mvm_send_cmd()`, `iwl_rx_packet_payload_len()`,
+`memcpy()`, `le32_to_cpu()`, `IWL_ERR()`, `IWL_FW_CHECK()`.
 
-**Step 9.4 — Decision rationale**
-This tree (`6.18.44`) ships the iwlwifi MLD driver with a confirmed off-
-by-one that reads `elem->data[10]` when only 10 bytes are valid. The fix
-is minimal, correct, and closes a memory-safety hole on a path reachable
-during normal WiFi client association. It meets all stable-kernel
-criteria for this tree.
+### Step 5.4: Reachability
+**Record:** Triggered during system suspend with WoWLAN netdetect
+configured — common laptop use case. Requires
+`CONFIG_IWLMVM`/`CONFIG_IWLMVM` module and compatible Intel firmware.
+Reachable from normal userspace power-management (suspend), not a root-
+only obscure ioctl.
+
+### Step 5.5: Similar Patterns
+**Record:** Same `sizeof(flex_array_struct) + trailing_data` under-
+validation pattern that dd90880 fixed in
+`iwl_mvm_nd_match_info_handler()`. The query path
+(`iwl_mvm_netdetect_query_results`) was left unfixed. MLD path has the
+identical pattern with `sizeof(*notif)`.
+
+---
+
+## Phase 6: Cross-Reference Against Local Tree
+
+### Step 6.1: Buggy Code Present?
+**Record:** **Yes.** Local tree is `stable/linux-6.18.y` at v6.18.44
+(`git describe HEAD` → `v6.18.44-2-g1b9e1abadee04`). Confirmed:
+- `matches[]` flex array at `scan.h:1277`
+- `query_len = sizeof(struct iwl_scan_offload_match_info)` without
+  `matches_len` at `mvm/d3.c:2473`
+- MLD `len < sizeof(*notif)` (= 24) before 120-byte `memcpy` at
+  `mld/d3.c:1134-1152`
+
+### Step 6.2: Backport Complications
+**Record:** Clean apply expected — `git apply --check` succeeded with
+only line-offset adjustments. No conflicting refactors in these
+functions on 6.18.y.
+
+### Step 6.3: Related Fixes Already Present?
+**Record:** `dd90880eb5ec5` fixed `iwl_mvm_nd_match_info_handler()`
+length check (flex-array era). The query-path and MLD-path bugs remain
+unfixed. This commit's `offsetof` change in `nd_match_info_handler`
+preserves dd90880's effective threshold after the struct change.
+
+---
+
+## Phase 7: Subsystem and Maintainer Context
+
+### Step 7.1: Subsystem Criticality
+**Record:** **Subsystem:** `drivers/net/wireless/intel/iwlwifi` — WiFi
+driver (IMPORTANT). Affects Intel laptop/desktop WiFi users using WoWLAN
+netdetect.
+
+### Step 7.2: Subsystem Activity
+**Record:** Actively maintained; recent stable backports include dd90880
+and wake-packet fixes in the same D3 code.
+
+---
+
+## Phase 8: Impact and Risk Assessment
+
+### Step 8.1: Who Is Affected
+**Record:** Users of Intel iwlwifi (MVM and MLD) with WoWLAN network-
+detection enabled during suspend. Config-dependent (`CONFIG_IWLWIFI`,
+`CONFIG_IWLMVM`/`CONFIG_IWLMLO`), but affects a large installed base of
+Intel WiFi laptops.
+
+### Step 8.2: Trigger Conditions
+**Record:** System suspend with netdetect profiles configured; firmware
+returns a scan-offload match query response or notification shorter than
+header + match data. Unprivileged users trigger suspend via normal power
+management. If firmware always sends full payloads, the bug is latent;
+if firmware sends truncated/malformed data, OOB read occurs.
+
+### Step 8.3: Failure Mode Severity
+**Record:** Out-of-bounds kernel read from firmware notification buffer
+→ potential kernel oops, info leak, or corrupted netdetect results.
+**Severity: HIGH** (memory safety in kernel, WoWLAN resume path).
+
+### Step 8.4: Risk-Benefit
+**Record:**
+- **Benefit:** HIGH — closes OOB reads in netdetect query and
+  notification paths; aligns validation with actual `memcpy` sizes;
+  complements dd90880 already in tree.
+- **Risk:** LOW — ~13 lines, 2 files, no behavior change for correctly-
+  sized firmware payloads; MLD gets stricter validation that matches
+  existing `memcpy` requirements.
+- **Ratio:** Strong benefit, low risk.
+
+---
+
+## Phase 9: Final Synthesis
+
+### Step 9.1: Evidence Summary
+
+**FOR backport:**
+- Fixes real out-of-bounds read in `iwl_mvm_netdetect_query_results()`
+  (both V1 and V2 API branches) — only 24-byte header validated, up to
+  120+ bytes copied.
+- Fixes MLD netdetect under-validation via struct `sizeof` correction
+  (24 → 144 bytes required before 120-byte `memcpy`).
+- Same bug class as dd90880, already backported to this 6.18.y tree.
+- WoWLAN/D3 suspend path — user-visible laptop functionality.
+- Small, surgical, from Intel iwlwifi maintainers.
+- Applies cleanly to this tree.
+- No new features or APIs.
+
+**AGAINST backport:**
+- Struct layout change (flex → fixed array) is slightly broader than a
+  one-line check fix, but necessary and internal to firmware API
+  headers.
+- No explicit Reported-by or Cc: stable (not a negative signal per
+  instructions).
+- Part of a 15-patch series (but this patch is standalone).
+
+**Unresolved:** Lore discussion and stable-list history could not be
+fetched (bot protection).
+
+### Step 9.2: Stable Rules Checklist
+1. Obviously correct and tested? **PASS** — logic verified by size
+   arithmetic; Intel maintainer authorship.
+2. Fixes a real bug affecting users? **PASS** — OOB read in WoWLAN
+   netdetect paths.
+3. Important issue? **PASS** — memory safety / potential crash on
+   suspend resume.
+4. Small and contained? **PASS** — 2 files, ~13 lines.
+5. No new features or APIs? **PASS** — correctness/validation fix only.
+6. Can apply to local tree? **PASS** — `git apply --check` succeeded.
+
+### Step 9.3: Exception Categories
+**Record:** Not applicable (not a device ID, quirk, DT, build, or docs-
+only change). Qualifies as a memory-safety bug fix.
+
+### Step 9.4: Problem Summary for Stable Users
+
+This commit addresses insufficient payload-length validation in Intel
+iwlwifi WoWLAN network-detection (netdetect) handling during D3
+suspend/resume. The MVM query-results path validates only the 24-byte
+notification header but then copies up to 120 bytes of match data; the
+MLD path has the same under-validation. A short or malformed firmware
+response can cause an out-of-bounds kernel read. The patch also changes
+the firmware API struct from a flexible to a fixed-size matches array (8
+entries, matching `IWL_SCAN_MAX_PROFILES_V2`) and adjusts MVM length
+calculations with `offsetof()` so checks remain correct.
+
+This is a natural companion to dd90880 (already in 6.18.y), which fixed
+the same under-validation pattern in the MVM notification handler but
+left the query path and MLD path unfixed.
 
 ---
 
 ## Verification
 
-- [Phase 1] `git describe HEAD` → `v6.18.44-1-g2736c32da98b9`; `make
-  kernelversion` → `6.18.44`
-- [Phase 1] Parsed commit message tags from user-provided diff and `git
-  show 402620cdcf4d4`
-- [Phase 2] Diff: 1-line change `datalen < 10` → `datalen < 11` in
-  `iwl_mld_check_he_obss_narrow_bw_ru_iter()`
-- [Phase 2] Verified `struct element` layout in
-  `include/linux/ieee80211.h` (`datalen` + `data[]`)
-- [Phase 2] Verified
-  `WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT` maps to bit 7 of
-  byte index 10
-- [Phase 3] `git blame -L 1580,1582` → introduced in `5d324e5159d9e`
-  (2025-11-28)
-- [Phase 3] `git tag --contains 5d324e5159d9e | grep v6.18` → present
-  since `v6.18`
-- [Phase 3] `git show 402620cdcf4d4` on `master` → fix commit identified
-- [Phase 3] `git merge-base --is-ancestor 402620cdcf4d4 HEAD` → exit 1
-  (not in current tree)
-- [Phase 4] `b4 dig -c 402620cdcf4d4` → lore URL found; patch 03/15 of
-  iwlwifi-fixes series
-- [Phase 4] `b4 dig -c 402620cdcf4d4 -w` → CC'd to linux-wireless,
-  johannes, Intel authors
-- [Phase 4] `b4 dig -c 402620cdcf4d4 -m /tmp/iwlwifi_thread.mbox` →
-  `Reviewed-by: Ilan Peer`; no stable Cc
-- [Phase 5] Traced call chain: `iwl_mld_sta_state` →
-  `iwl_mld_move_sta_state_up` → `iwl_mld_link_set_2mhz_block` →
-  `iwl_mld_check_he_obss_narrow_bw_ru` → iter callback
-- [Phase 5] Confirmed DFS-only path via `IEEE80211_CHAN_RADAR` check at
-  line 1598
-- [Phase 6] `grep 'datalen < 10'` in mld/mac80211.c → buggy code present
-  at line 1580
-- [Phase 6] `git show 402620cdcf4d4 --format= | git apply --check` →
-  applies cleanly
-- [Phase 6] `grep 'datalen < 11'` in iwlwifi/ → no fix present yet
-- [Phase 8] Noted identical pattern in `mvm/mac80211.c:3531` and
-  `rtw89/mac.c:4888` (separate fixes)
+- [Phase 1] Parsed subject, tags, body from user-provided commit message
+  and local mbox patch 15/15.
+- [Phase 2] Diff analysis: 2 files, functions
+  `iwl_mvm_netdetect_query_results` and `iwl_mvm_nd_match_info_handler`;
+  computed sizes (header=24, profile_match=15, fixed struct=144,
+  matches_len up to 120 for V2).
+- [Phase 3] `git blame scan.h:1277` → merge 5d324e5159d9e; `git log`
+  shows dd90880 already in tree for nd_match_info_handler; upstream
+  744fabc338e87 present.
+- [Phase 3] `git apply --check` on patch hunks → applies cleanly to
+  6.18.44 tree.
+- [Phase 4] Local mbox cover letter read; lore/patch.msgid.link blocked
+  by bot protection — UNVERIFIED for list discussion.
+- [Phase 4] `b4 dig -c` not usable (commit not in git history).
+- [Phase 5] `grep` call chains: netdetect_query from d3.c:2610;
+  nd_match_info_handler from d3.c:2967; mld handler from mld/d3.c:1322.
+- [Phase 5] Read current `mvm/d3.c:2471-2492`, `mvm/d3.c:2838`,
+  `mld/d3.c:1134-1152` — confirmed under-validation before memcpy.
+- [Phase 6] `git describe HEAD` → v6.18.44 on `stable/linux-6.18.y`;
+  buggy code confirmed present.
+- [Phase 6] No duplicate fix for query path found in tree.
+- [Phase 8] Failure mode: OOB read, severity HIGH; trigger: WoWLAN
+  netdetect during suspend.
 
-**YES**The background search for the fix on mainline finished with exit
-code 128, but it did return the important result before failing: the MLD
-fix is commit `402620cdcf4d4`, and there’s a matching MVM fix at
-`d77aff138c9ec`. The error was likely from follow-up `git log` calls
-against branches that don’t exist in this repo (`main`).
+**YES**
 
-That doesn’t change the earlier analysis: for this `6.18.44` tree the
-bug is present, the patch applies cleanly, and the backport
-recommendation remains **YES**.
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c      | 9 ++++++---
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/intel/iwlwifi/mld/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-index 27ae06e208402..65700b09b27d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mld/mac80211.c
-@@ -1583,7 +1583,7 @@ static void iwl_mld_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
- 	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, ies->data,
- 				  ies->len);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index 46fcc32608e34..b05948fbb2a37 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+ /*
+- * Copyright (C) 2012-2014, 2018-2025 Intel Corporation
++ * Copyright (C) 2012-2014, 2018-2026 Intel Corporation
+  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
+  * Copyright (C) 2016-2017 Intel Deutschland GmbH
+  */
+@@ -1274,7 +1274,7 @@ struct iwl_scan_offload_match_info {
+ 	u8 resume_while_scanning;
+ 	u8 self_recovery;
+ 	__le16 reserved;
+-	struct iwl_scan_offload_profile_match matches[];
++	struct iwl_scan_offload_profile_match matches[IWL_SCAN_MAX_PROFILES_V2];
+ } __packed; /* SCAN_OFFLOAD_PROFILES_QUERY_RSP_S_VER_3 and
+ 	     * SCAN_OFFLOAD_MATCH_INFO_NOTIFICATION_S_VER_1
+ 	     */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 82dca6ba56c7f..58384d7e7cd35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -2481,13 +2481,15 @@ iwl_mvm_netdetect_query_results(struct iwl_mvm *mvm,
  
--	if (!elem || elem->datalen < 10 ||
-+	if (!elem || elem->datalen < 11 ||
- 	    !(elem->data[10] &
- 	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
- 		*tolerated = false;
+ 	if (fw_has_api(&mvm->fw->ucode_capa,
+ 		       IWL_UCODE_TLV_API_SCAN_OFFLOAD_CHANS)) {
+-		query_len = sizeof(struct iwl_scan_offload_match_info);
+ 		matches_len = sizeof(struct iwl_scan_offload_profile_match) *
+ 			max_profiles;
++		query_len = offsetof(struct iwl_scan_offload_match_info,
++				     matches) + matches_len;
+ 	} else {
+-		query_len = sizeof(struct iwl_scan_offload_profiles_query_v1);
+ 		matches_len = sizeof(struct iwl_scan_offload_profile_match_v1) *
+ 			max_profiles;
++		query_len = sizeof(struct iwl_scan_offload_profiles_query_v1) +
++			matches_len;
+ 	}
+ 
+ 	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
+@@ -2846,7 +2848,8 @@ static void iwl_mvm_nd_match_info_handler(struct iwl_mvm *mvm,
+ 	if (IS_ERR_OR_NULL(vif))
+ 		return;
+ 
+-	if (len < sizeof(struct iwl_scan_offload_match_info) + matches_len) {
++	if (len < offsetof(struct iwl_scan_offload_match_info, matches) +
++		    matches_len) {
+ 		IWL_ERR(mvm, "Invalid scan match info notification\n");
+ 		return;
+ 	}
 -- 
 2.53.0
 
