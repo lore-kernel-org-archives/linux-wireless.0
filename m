@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 949595540B6;
-	Mon, 31 Aug 2026 13:46:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C8CC55C331;
+	Mon, 31 Aug 2026 13:47:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184022; cv=none; b=PT2JIF28SjKzuq8AfZqvd/3kt1c/6qLDADqSf5QtqvJ6RDiwxnoTtxhZk7Wh+/dWH+qmjATL1BmA9Rf1nzWUeqdLNAWx77gPtpgjnw9Y9rzRgv5DhdzqNhY6lF0Id96k4UK/+tbz54qlLRnal0r70FWpSHnXIMVEGUrl2GBfxz8=
+	t=1788184031; cv=none; b=hWAfc58qaItnIHYxR0UKMD91nLM3CGJ3ER5kpNwc7f18CvsdefOmg0iF/EJ+uaPosRCHU3G8gRoD3iGx//s9rOKeUZS9hrRYK3zJppzx5TRaoKP+IJq7EeEcapmAjMGwU4GNkApSNIw4LTkvCD4R9+xr2Xn1qGcq2psyv9a2Ixo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184022; c=relaxed/simple;
-	bh=zwvwbOhGw1C7ophV7SpK5Uw2kEtfLSP+tp9L42IJE+c=;
+	s=arc-20240116; t=1788184031; c=relaxed/simple;
+	bh=CXf2XXNXyH+N999dw91S990cWsJg0zFZCl5pXNWl4P0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CYSvqtU32NBQufbZ3VPwRi2UbfO7WmOGhsWhb61cANHgN3uRaQTcSWFQ9LZCwg3Qus6vrNBWsakOSRNjVLLZIm67s+sFoiOPrOfMVQxDjdGPzm7S62jSCwi0IN9nFS3rUE3/UrQwcAUwuyKG1bbS/sPZ8cxl2wioCWxbmfgia1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T+rAC9OW; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=ThBAlAKHdBLC1awExsj/w9nLArDl3sfsUbZc+WvZegM0ICCd6FGGVynUHY6HdJxrMTPxhCEhDC3bxmoRnTiXE80zuBHj+qzbC5zGW+rFI52+jXnna9j2LnQrW5DE3Hb7X7TPRWt4ZZuY+Wcu0cC9JAmeHDLrCcZcjs4CjwDUnz0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aCo322JB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T+rAC9OW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47DB41F00A3F;
-	Mon, 31 Aug 2026 13:46:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aCo322JB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1754E1F000E9;
+	Mon, 31 Aug 2026 13:47:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184018;
-	bh=KpQJogOnWNm1wLnORWhkcR5bmVd9p4So25qtBfHPoz8=;
+	s=k20260515; t=1788184028;
+	bh=MYn0f3VU4AfkZURexRgzvVmSfbJTJTQAyw1KqLC7Coc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=T+rAC9OWbM6h2dAyHcWLHGOWclrIF53qC0bYGvwrTalHIr3z5x/7OX7Da8cYFaYsG
-	 X6kBzfYuYlLBZyMAH1oOgguAIUpArX/S7wGGuDTbYjf451cbp4Gw1ornxTx6UVhBXs
-	 yghC6a/4hCYf83OLhDft7f0i58FcdufxXWjVSSxlFdhuV/9Wab+TGAWZTAkyblXXOe
-	 hlQirdKAqWDhQzdi7oWbUn/cCwpAwosL9MU9LrlIeAuAc9j/l7u8dGWirVcLetfPRz
-	 4/7j3E7dFXQkoXOv0GfcfbLX88r8tDyRodufPTdHM0mLdJrrI5fqlGpONXb4056N+l
-	 NXapE6yFhNcsA==
+	b=aCo322JBciqsccrsHNRNaEc8LeH6wzrVGqB3ypxd5zE2TYpIDKFneL1LMKScosp26
+	 SZms5b3/z/1LFWqAAp0DQjUlaYM0xdzR0Z4EVpL/FmYz/xmbzRZsyak5WrD6Lr5uV7
+	 omVmGKI3gTBSshX4m9nSNY1KPzsGQ9qR1XGCJLLP7Pg1o9DZwpjND3i2gcStQ3/IfG
+	 /9XO1gcKjOTLI8vnzCKJyIIJdi8Drv+C3+bLgpPFBCACWzDFE5/+YJB8mKhoNXsXPP
+	 aGOOgqizJ0LQZTKsSofGXi2e+dErRMKROE41sgIcuQi7rckrfyytP68d1bodx2yiTY
+	 jrACiHF1FdlEw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Daniel Gabay <daniel.gabay@intel.com>,
+Cc: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
+	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: iwlwifi: fix the access to CNVR TOP registers
-Date: Mon, 31 Aug 2026 09:27:49 -0400
-Message-ID: <20260831133314.4125787-441-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.12] wifi: mac80211: ibss: wait for in-flight TX on disconnect
+Date: Mon, 31 Aug 2026 09:27:55 -0400
+Message-ID: <20260831133314.4125787-447-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -53,501 +54,406 @@ X-stable-base: Linux 6.18.48
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
 
-[ Upstream commit c73869c1df2a27dc3c928e94b42660124318f727 ]
+[ Upstream commit d0e69d9afa59b93c30294eba89b1f15f69e91105 ]
 
-For Dr and Sc, we need to wait until the TOP is ready to gets its
-registers read by the host.
+While leaving an IBSS in ieee80211_ibss_disconnect() mac80211 flushes
+stations, turns the carrier off and immediately tells the driver to
+leave as well. While there may be synchronize_net() in station flush
+and in this code later, packets can still be transmitted due to
+cross-CPU race conditions after carrier off is set.
+Therefore, it's possible for a race to happen where a TX to the
+driver occurs while or after telling it to leave the IBSS. This can
+be confusing to drivers, and in the case of iwlwifi leads to an
+attempt to use invalid queues.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Daniel Gabay <daniel.gabay@intel.com>
-Link: https://patch.msgid.link/20260511203428.09778340db51.I28d678ad404bbf8068f139666d38e29be5aa063b@changeid
+Move netif_carrier_off() to occur before sta_info_flush() during
+IBSS disconnect, and add synchronize_net() if flushing didn't,
+so that the synchronize_net() always happens between turning the
+carrier off and telling the driver, avoiding this race.
+
+Signed-off-by: Pagadala Yesu Anjaneyulu <pagadala.yesu.anjaneyulu@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Miri Korenblit <miriam.rachel.korenblit@intel.com>
+Link: https://patch.msgid.link/20260706223751.da1ce439cc93.If5cf482f87ab98ce66dd48724e24c81fed236d3f@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: iwlwifi: fix the access to CNVR TOP
-registers`
+# Stable Backport Analysis: `wifi: mac80211: ibss: wait for in-flight TX
+on disconnect`
 
-**Local tree:** Linux **6.18.44** (`git describe HEAD` → `v6.18.44`)
+**Local tree:** `v6.18.44` (`stable/linux-6.18.y`, HEAD `2736c32da98b9`)
+**Upstream commit:** `d0e69d9afa59` (mainline, Jul 7 2026)
+**Candidate on autosel:** `8763b7cb9523a` — **not yet applied** to this
+checkout
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
-### Step 1.1: PARSE THE SUBJECT LINE
-**Record:** `[wifi: iwlwifi]` `[fix]` — Correct premature access to CNVR
-TOP peripheral registers on DR and SC device families during early
-hardware identification.
+### Step 1.1: Subject line
+**Record:** `[wifi: mac80211: ibss]` — implicit **fix**
+(wait/synchronize) — ensure in-flight TX completes before telling the
+driver to leave IBSS on disconnect.
 
-### Step 1.2: PARSE ALL COMMIT MESSAGE TAGS
+### Step 1.2: Tags
 **Record:**
-- **Signed-off-by:** Emmanuel Grumbach `<emmanuel.grumbach@intel.com>`
-  (author)
-- **Reviewed-by:** Daniel Gabay `<daniel.gabay@intel.com>` (Intel
-  reviewer)
-- **Link:** `https://patch.msgid.link/20260511203428...` (patch
-  submission reference)
-- **Signed-off-by:** Miri Korenblit
-  `<miriam.rachel.korenblit@intel.com>` (maintainer committer)
-- No `Fixes:`, `Reported-by:`, `Cc: stable@vger.kernel.org`, or syzbot
-  tags
-- Notable: Intel-internal review; part of `[PATCH 3/15]` iwlwifi update
-  series (May 11, 2026)
+- **Fixes:** — absent (expected for manual review)
+- **Reported-by:** — none
+- **Tested-by:** — none
+- **Reviewed-by:** Johannes Berg `<johannes.berg@intel.com>` (mac80211
+  maintainer)
+- **Acked-by:** — none
+- **Link:** https://patch.msgid.link/20260706223751.da1ce439cc93.If5cf48
+  2f87ab98ce66dd48724e24c81fed236d3f@changeid
+- **Cc: stable:** — absent (expected)
+- **Signed-off-by:** Pagadala Yesu Anjaneyulu, Miri Korenblit, Johannes
+  Berg (ignore pipeline SOB)
 
-### Step 1.3: ANALYZE THE COMMIT BODY TEXT
+Notable: maintainer Reviewed-by; no syzbot/user reports; Intel-internal
+fix.
+
+### Step 1.3: Body analysis
 **Record:**
-- **Bug:** On DR and SC families, the host reads CNVR TOP peripheral
-  registers before the TOP block is ready.
-- **Symptom:** Incorrect or unavailable peripheral register reads during
-  `get_crf_id()` in the PCIe probe path; can lead to wrong/missing RF ID
-  and probe failure.
-- **Root cause:** Missing hardware-readiness wait before `WFPM_CTRL_REG`
-  / peripheral register access.
-- **Version info:** None explicit; hardware-specific to
-  `IWL_DEVICE_FAMILY_DR` and `IWL_DEVICE_FAMILY_SC`.
+- **Bug:** On IBSS disconnect, mac80211 flushes stations, turns carrier
+  off, then immediately calls `drv_leave_ibss()`. Cross-CPU races allow
+  TX to reach the driver during/after leave.
+- **Symptom:** Driver confusion; iwlwifi attempts to use invalid queues.
+- **Root cause:** `synchronize_net()` may be skipped when
+  `sta_info_flush()` returns 0 (no stations); carrier was turned off too
+  late; no guaranteed net stack drain between carrier-off and
+  `drv_leave_ibss()`.
+- **Version info:** None in message; fix landed in mainline after v6.18.
 
-### Step 1.4: DETECT HIDDEN BUG FIXES
-**Record:** Not disguised — this is an explicit hardware-init timing bug
-fix, not cleanup or optimization.
+### Step 1.4: Hidden bug fix?
+**Record:** Yes — despite no "fix" in subject, this is a
+synchronization/race fix disguised as ordering cleanup. Not cosmetic.
 
 ---
 
 ## PHASE 2: DIFF ANALYSIS
 
-### Step 2.1: INVENTORY THE CHANGES
+### Step 2.1: Inventory
 **Record:**
-| File | Change |
-|------|--------|
-| `iwl-io.c` | +18 lines (new poll helper) |
-| `iwl-io.h` | +2 lines (declaration) |
-| `iwl-prph.h` | +5 lines (register/bit defines) |
-| `pcie/gen1_2/trans.c` | +24 lines (wait logic in `get_crf_id()`) |
+- **File:** `net/mac80211/ibss.c` only (+3 / -6 lines)
+- **Functions:** `ieee80211_ibss_disconnect()`,
+  `ieee80211_csa_connection_drop_work()`, `ieee80211_ibss_leave()`
+- **Scope:** Single-file surgical fix
 
-- **Functions modified:** `get_crf_id()`; new
-  `iwl_poll_umac_prph_bits_no_grab()`
-- **Scope:** Single-subsystem, 4-file surgical fix (~51 lines total
-  including copyright year bumps)
+### Step 2.2: Code flow per hunk
 
-### Step 2.2: UNDERSTAND THE CODE FLOW CHANGE
-**Record:**
-- **Hunk 1 (`iwl-io.c` / `iwl-io.h`):** Adds
-  `iwl_poll_umac_prph_bits_no_grab()` — mirrors `iwl_poll_prph_bit()`
-  but uses `iwl_read_umac_prph_no_grab()` for contexts where NIC access
-  is already held.
-- **Hunk 2 (`iwl-prph.h`):** Defines `WFPM_RSRCS_4PHS_REQ_STTS`,
-  `WFPM_RSRCS_4PHS_ACK_STTS`, and CNVR TOP request/ack bits.
-- **Hunk 3 (`trans.c` / `get_crf_id()`):**
-  - **Before:** Immediately reads/writes UMAC peripheral registers.
-  - **After (DR/SC only):** Checks REQ bit 6; polls ACK bit 6 (50 ms
-    timeout); then proceeds with peripheral access.
-  - **Path:** Early probe, inside `iwl_pci_gen1_2_probe()` →
-    `get_crf_id()` with NIC access held.
+**Hunk 1 — `ieee80211_ibss_disconnect()`:**
+- **Before:** `sta_info_flush()` → incomplete-sta cleanup →
+  `netif_carrier_off()` → … → `drv_leave_ibss()`
+- **After:** `netif_carrier_off()` → `sta_info_flush()`; if flush
+  returned 0, `synchronize_net()` → … → `drv_leave_ibss()`
+- **Path:** IBSS disconnect / leave / CSA drop
 
-### Step 2.3: IDENTIFY THE BUG MECHANISM
-**Record:**
-- **Category:** Logic / hardware-init correctness fix
-  (timing/sequencing).
-- **Mechanism:** `get_crf_id()` reads `WFPM_CTRL_REG`,
-  `sd_reg_ver_addr`, and `CNVI_AUX_MISC_CHIP` before CNVR TOP signals
-  readiness via `WFPM_RSRCS_4PHS_ACK_STTS` bit 6. On DR/SC this yields
-  garbage or zero `hw_crf_id`, causing `map_crf_id()` to fail and probe
-  to return `-EINVAL`.
+**Hunk 2 — `ieee80211_csa_connection_drop_work()`:**
+- **Before:** disconnect → `synchronize_rcu()` → purge skb queue
+- **After:** disconnect → purge skb queue (RCU sync removed; disconnect
+  now guarantees `synchronize_net()`)
 
-### Step 2.4: ASSESS THE FIX QUALITY
-**Record:**
-- Follows existing `iwl_poll_prph_bit()` / `iwl_poll_umac_prph_bit()`
-  patterns.
-- Minimal, device-family-gated (`DR` and `SC` only).
-- **Minor concern:** On ACK poll timeout, code logs `IWL_ERR` but still
-  proceeds (best-effort, same as many iwlwifi init paths). REQ-bit-clear
-  path returns early from `get_crf_id()` without reading registers.
-- **Regression risk:** Low — change is gated to two families and adds a
-  wait before existing reads.
+**Hunk 3 — `ieee80211_ibss_leave()`:**
+- **Before:** disconnect → … → `synchronize_rcu()` → purge skb queue
+- **After:** disconnect → purge skb queue
+
+### Step 2.3: Bug mechanism
+**Record:** **Race condition / synchronization bug**
+- `sta_info_flush()` only calls `synchronize_net()` when stations are
+  actually flushed (`free_list` non-empty); returns 0 with no sync when
+  empty.
+- Old ordering allowed new TX between flush and carrier-off; even after
+  carrier-off, in-flight TX on other CPUs could reach the driver after
+  `drv_leave_ibss()`.
+- Fix: carrier-off first (blocks new xmit via `!netif_carrier_ok()` in
+  `__dev_direct_xmit()`), then always `synchronize_net()` before
+  `drv_leave_ibss()`.
+
+### Step 2.4: Fix quality
+**Record:** Obviously correct; mirrors the existing IBSS merge path in
+the same file (`netif_carrier_off()` + `synchronize_net()` before
+`drv_leave_ibss()` at lines 244–249). Minimal. Low regression risk —
+adds only ordering + one conditional sync call; maintainer-reviewed.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
-### Step 3.1: BLAME THE CHANGED LINES
-**Record:** `get_crf_id()` at lines 3990–4040 in `trans.c` is present in
-this tree. Git blame in this checkout is shallow (single squashed commit
-per file), so the exact introduction commit could not be determined from
-local history.
+### Step 3.1: Blame
+**Record:** Current disconnect ordering in this tree dates to the v6.18
+import (`5d324e5159d9e`). Deeper per-line history not available in this
+shallow stable checkout; bug appears longstanding in IBSS disconnect
+(merge path already had the correct pattern separately).
 
-### Step 3.2: FOLLOW THE FIXES: TAG
-**Record:** No `Fixes:` tag present — not applicable.
+### Step 3.2: Fixes: tag
+**Record:** N/A — no Fixes: tag.
 
-### Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES
-**Record:** Local git history for `drivers/net/wireless/intel/iwlwifi/`
-is extremely shallow (no meaningful per-file history). Patch is **3/15**
-in the May 2026 iwlwifi series; this commit is standalone and does not
-depend on patches 1/15 or 2/15.
+### Step 3.3: Related file history
+**Record:** Fix is standalone (v1 only on lore). On `autosel` branch,
+only this commit touches `ibss.c` for this issue. Mainline fix
+`d0e69d9afa59` is **not** in `remotes/stable/linux-6.18.y`.
 
-### Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS
-**Record:** Emmanuel Grumbach is a long-standing iwlwifi maintainer.
-Series cover letter lists him as author of this fix among other iwlwifi
-changes. Cannot verify author history in this shallow tree.
+### Step 3.4: Author context
+**Record:** Pagadala Yesu Anjaneyulu — Intel iwlwifi contributor.
+Johannes Berg (maintainer) reviewed. Miri Korenblit committed upstream.
 
-### Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS
-**Record:** No prerequisites identified. Required symbols
-(`iwl_read_umac_prph_no_grab`, `IWL_DEVICE_FAMILY_DR`,
-`IWL_DEVICE_FAMILY_SC`, `get_crf_id`) all exist in this tree. Patch
-should apply cleanly.
+### Step 3.5: Dependencies
+**Record:** None. Self-contained; no series prerequisites. Applies
+cleanly to current `ibss.c` in this tree.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION
-**Record:** Patch found in local mbox
-`20260511_miriam_rachel_korenblit_wifi_iwlwifi_updates_2026_05_11.mbx`
-as `[PATCH 3/15]`. Cover letter classifies it under "Features, cleanups
-and **fixes**". `b4 dig -c HEAD` did not match (HEAD is the stable
-release tag, not this commit). `b4 dig` by subject failed (wrong
-invocation). Link fetch blocked by bot protection — could not read full
-lore thread.
+### Step 4.1: Original discussion
+**Record:** `b4 dig -c 8763b7cb9523a` → https://patch.msgid.link/2026070
+6223751.da1ce439cc93.If5cf482f87ab98ce66dd48724e24c81fed236d3f@changeid
+Single-message thread (patch only, no replies). v1 only.
 
-### Step 4.2: CHECK WHO REVIEWED THE PATCH
-**Record:** `Reviewed-by: Daniel Gabay <daniel.gabay@intel.com>`. Series
-addressed to iwlwifi maintainers. Full `-w` recipient list not
-retrieved.
+### Step 4.2: Reviewers
+**Record:** `b4 dig -w`: CC'd `johannes@sipsolutions.net`, `linux-
+wireless@vger.kernel.org`, Miri Korenblit, Johannes Berg. Appropriate
+maintainers included.
 
-### Step 4.3: SEARCH FOR THE BUG REPORT
-**Record:** No external bug report, syzbot link, or user `Reported-by:`
-— internal Intel discovery/fix.
+### Step 4.3: Bug report
+**Record:** No external bug report. iwlwifi invalid-queue issue
+described in commit message only (Intel-internal).
 
-### Step 4.4: CHECK FOR RELATED PATCHES AND SERIES
-**Record:** Part of 15-patch series; patches 1/15 (debugfs PE naming)
-and 2/15 (firmware core bump) are independent. This fix is self-
-contained.
+### Step 4.4: Related patches
+**Record:** Standalone; not part of a series.
 
-### Step 4.5: CHECK STABLE MAILING LIST HISTORY
-**Record:** Not searched on lore stable list (no stable nomination found
-in available sources). Absence of `Cc: stable` is expected per review
-instructions.
+### Step 4.5: Stable list
+**Record:** Not searched on lore stable list; no stable nomination found
+in thread (thread has no replies).
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF
-**Record:** `iwl_poll_umac_prph_bits_no_grab()` (new), `get_crf_id()`
-(modified), callers of `get_crf_id()`.
+### Step 5.1: Key functions
+**Record:** `ieee80211_ibss_disconnect()`, `sta_info_flush()` /
+`__sta_info_flush()`, `drv_leave_ibss()`, `ieee80211_ibss_leave()`,
+`ieee80211_csa_connection_drop_work()`
 
-### Step 5.2: TRACE CALLERS
-**Record:** `get_crf_id()` is called from `iwl_pci_gen1_2_probe()` at
-line 4195, during early PCIe probe after `iwl_trans_activate_nic()` and
-`iwl_trans_grab_nic_access()`. This runs for every iwlwifi PCIe gen1/2
-device, including all SC PCI IDs (`0xE440`, `0xE340`, `0xD340`,
-`0x6E70`, `0xD240` in `pcie/drv.c`).
+### Step 5.2: Callers
+**Record:**
+- `ieee80211_ibss_disconnect()` ← `ieee80211_ibss_leave()`,
+  `ieee80211_csa_connection_drop_work()`
+- `ieee80211_ibss_leave()` ← `ieee80211_leave_ibss()` in `cfg.c`
+  (nl80211 `.leave_ibss` op)
+- Userspace triggers via `NL80211_CMD_LEAVE_IBSS` / interface down; CSA
+  radar path triggers disconnect work
 
-### Step 5.3: TRACE CALLEES
-**Record:** Uses `iwl_read_umac_prph_no_grab()`,
-`iwl_write_umac_prph_no_grab()`, `iwl_read_prph_no_grab()`,
-`udelay(IWL_POLL_INTERVAL)` — standard iwlwifi register I/O.
+### Step 5.3: Callees
+**Record:** `netif_carrier_off()`, `sta_info_flush()` (may call
+`synchronize_net()` internally), `synchronize_net()`,
+`drv_leave_ibss()`, `ieee80211_bss_info_change_notify()`
 
-### Step 5.4: FOLLOW THE CALL CHAIN
-**Record:** PCI probe → `iwl_pci_gen1_2_probe()` → `get_crf_id()` →
-`map_crf_id()` (if `hw_rf_id` is zero). Reachable on every boot/module
-load for affected hardware. Not userspace-triggerable directly, but
-affects all users of SC (and future DR) WiFi hardware.
+### Step 5.4: Reachability
+**Record:** Reachable from userspace via cfg80211/nl80211 when leaving
+ad-hoc/IBSS mode or on CSA-driven disconnect. Not obscure kernel-only
+init path.
 
-### Step 5.5: SEARCH FOR SIMILAR PATTERNS
-**Record:** `iwl_poll_umac_prph_bit()` exists in `iwl-io.h` (uses
-`iwl_poll_prph_bit` with grab). `rx.c` uses `iwl_poll_umac_prph_bit()`
-for RFH status. New `no_grab` variant is needed because `get_crf_id()`
-runs with NIC access already held — verified: no existing
-`poll_*_no_grab` helper before this patch.
+### Step 5.5: Similar patterns
+**Record:** IBSS merge path in same file already uses
+`netif_carrier_off()` + `synchronize_net()` before `drv_leave_ibss()` —
+confirms the disconnect path was missing this established pattern.
 
 ---
 
-## PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE
 
-### Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?
-**Record:** **YES.** `get_crf_id()` in `trans.c` (lines 3990–4040)
-accesses peripheral registers without CNVR TOP readiness wait.
-`IWL_DEVICE_FAMILY_SC` and `IWL_DEVICE_FAMILY_DR` are defined; SC PCI
-IDs are present in `pcie/drv.c`. DR config (`cfg/dr.c`) exists but has
-no PCI ID table entry yet in this tree. The buggy code path is live for
-SC devices today.
+### Step 6.1: Buggy code present?
+**Record:** **Yes.** Current tree at lines 678–708 of
+`net/mac80211/ibss.c` has `sta_info_flush()` before
+`netif_carrier_off()`, then `drv_leave_ibss()` with no guaranteed
+`synchronize_net()` when flush returns 0.
 
-### Step 6.2: CHECK FOR BACKPORT COMPLICATIONS
-**Record:** Expected **clean apply**. Target functions and register-
-access helpers exist unchanged. No conflicting recent changes found
-(shallow history). Only copyright year lines differ cosmetically.
+### Step 6.2: Backport complications
+**Record:** Clean apply expected — autosel commit `8763b7cb9523a` is a
+trivial 9-line change against identical code in this tree.
 
-### Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE
-**Record:** **No.** `iwl_poll_umac_prph_bits_no_grab`,
-`WFPM_RSRCS_4PHS_*`, and `RSRC_*_CNVR_TOP` are absent from this tree
-(grep confirmed).
+### Step 6.3: Related fixes already present?
+**Record:** **No.** `git log remotes/stable/linux-6.18.y` does not
+contain `d0e69d9afa59` or `8763b7cb9523a`.
 
 ---
 
 ## PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
 
-### Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY
-**Record:** `drivers/net/wireless/intel/iwlwifi` — **IMPORTANT** (widely
-deployed Intel WiFi driver; probe/init path).
+### Step 7.1: Subsystem criticality
+**Record:** `net/mac80211` — **IMPORTANT** (wireless stack; affects all
+WiFi users on affected paths; IBSS/adhoc is a niche but real mode).
 
-### Step 7.2: ASSESS SUBSYSTEM ACTIVITY
-**Record:** Actively developed; DR family added recently (cfg copyright
-2024–2025). SC family has been present longer (2015+). Cannot assess
-commit frequency from shallow local history.
+### Step 7.2: Subsystem activity
+**Record:** Actively maintained; iwlwifi is a widely deployed driver.
 
 ---
 
 ## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: DETERMINE WHO IS AFFECTED
-**Record:** Users with Intel WiFi **SC-family** hardware (PCI IDs in
-`drv.c`). **DR-family** users when PCI IDs are added. Config-dependent
-(`CONFIG_IWLWIFI`).
+### Step 8.1: Who is affected
+**Record:** Users leaving IBSS/adhoc mode (or dropped by CSA/radar) with
+drivers that assume no TX after `leave_ibss` — notably **iwlwifi**.
+Config-specific (`NL80211_IFTYPE_ADHOC`), not universal.
 
-### Step 8.2: DETERMINE THE TRIGGER CONDITIONS
-**Record:** Every probe/resume path where blank OTP requires reading CRF
-ID from peripheral registers. Timing-dependent on DR/SC silicon — CNVR
-TOP not ready at the moment `get_crf_id()` runs. Common on boot; not
-privilege-dependent.
+### Step 8.2: Trigger conditions
+**Record:** IBSS leave, interface teardown, CSA connection drop.
+Userspace-triggerable via nl80211. Race is timing-dependent but
+realistic on SMP. Unprivileged users can trigger if they control the
+wireless interface.
 
-### Step 8.3: DETERMINE THE FAILURE MODE SEVERITY
+### Step 8.3: Failure mode severity
+**Record:** Driver TX after IBSS teardown → invalid queue usage in
+iwlwifi (`WARN_ON` paths in `mvm/tx.c`). Severity: **MEDIUM-HIGH** for
+affected users (driver malfunction, possible packet loss/warnings; race
+class can escalate depending on driver). Not a mass crash, but a real
+correctness bug in a common driver.
+
+### Step 8.4: Risk-benefit
 **Record:**
-- Wrong/zero `hw_crf_id` → `map_crf_id()` returns `-EIO` → probe fails
-  with `-EINVAL` at line 4211–4214
-- **Severity: HIGH** — WiFi completely non-functional on affected
-  hardware (not a kernel panic, but total device failure)
-- No data corruption or security exposure identified
-
-### Step 8.4: CALCULATE RISK-BENEFIT RATIO
-**Record:**
-- **Benefit:** HIGH for SC (and future DR) users — restores reliable
-  probe/hardware identification
-- **Risk:** LOW — ~30 lines of functional code, family-gated, follows
-  established polling pattern
-- **Ratio:** Strongly favorable
+- **Benefit:** MEDIUM — fixes real disconnect race for IBSS+iwlwifi;
+  aligns with proven pattern already in same file
+- **Risk:** LOW — 9 lines, maintainer-reviewed, no API changes
+- **Ratio:** Favorable for stable
 
 ---
 
 ## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: COMPILE THE EVIDENCE
+### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real hardware-init bug on DR/SC silicon
-- Probe failure (`-EINVAL`) when RF ID cannot be read correctly
-- Small, surgical, Intel-reviewed fix
-- Buggy code confirmed present in 6.18.44
-- SC PCI IDs actively supported in this tree
-- Follows existing iwlwifi polling conventions
-- Standalone within a larger series
+- Real cross-CPU race on IBSS disconnect
+- Concrete iwlwifi impact (invalid queues)
+- Small, surgical, maintainer-reviewed fix
+- Matches existing correct IBSS merge pattern in same file
+- Buggy code confirmed in v6.18.44 tree; fix not yet applied
+- Applies cleanly
 
 **AGAINST backport:**
-- No external user/syzbot report (internal Intel fix)
-- DR PCI IDs not yet in `drv.c` (fix most immediately benefits SC)
-- On ACK timeout, driver still proceeds (mitigation is wait, not hard
-  abort)
-- Shallow git history limits introduction-date analysis
+- IBSS/adhoc is a niche mode
+- No public bug report or syzbot reproducer
+- Failure mode may be WARN-level rather than panic (unverified crash
+  severity)
+- `synchronize_rcu()` removal rationale not discussed on lore (only
+  maintainer review)
 
 **Unresolved:**
-- Exact lore thread review discussion (link blocked)
-- Whether SC devices in the field routinely hit this without the fix
-  (Intel says they need the wait)
+- Exact kernel version that introduced the buggy disconnect ordering
+  (history too shallow to pinpoint)
+- Whether iwlwifi issue always manifests as WARN vs harder failure
 
-### Step 9.2: STABLE RULES CHECKLIST
-1. Obviously correct and tested? **PASS** — standard poll-before-read
-   pattern; Intel reviewed
-2. Fixes a real bug affecting users? **PASS** — probe failure on SC
-   hardware
-3. Important issue? **PASS** — HIGH severity (device completely non-
-   functional)
-4. Small and contained? **PASS** — 4 files, ~30 lines functional code
-5. No new features or APIs? **PASS** — internal driver helper only
-6. Can apply to local tree? **PASS** — all prerequisites present
+### Step 9.2: Stable rules checklist
+1. Obviously correct and tested? **PASS** — logic sound; Reviewed-by
+   maintainer; mirrors in-tree pattern
+2. Fixes real bug affecting users? **PASS** — race on IBSS disconnect
+   with iwlwifi impact
+3. Important issue? **PASS** — driver malfunction on disconnect (MEDIUM-
+   HIGH for affected config)
+4. Small and contained? **PASS** — 9 lines, 1 file
+5. No new features/APIs? **PASS** — ordering/sync only
+6. Can apply to local tree? **PASS** — clean apply to current `ibss.c`
 
-### Step 9.3: EXCEPTION CATEGORIES
-**Record:** Hardware workaround / hardware-init quirk for specific Intel
-WiFi silicon (DR/SC CNVR TOP sequencing).
+### Step 9.3: Exception categories
+**Record:** None (not device ID, quirk, DT, build, or docs).
 
-### Step 9.4: DECISION RATIONALE
+### Step 9.4: Decision rationale
 
-For **Linux 6.18.44**, this commit should be backported. The tree
-contains SC-family PCI device support and the buggy `get_crf_id()` path
-that reads CNVR TOP peripheral registers without waiting for hardware
-readiness. Without the fix, affected Intel WiFi hardware can fail probe
-entirely when blank OTP requires CRF-ID-based RF identification. The fix
-is minimal, gated to the affected families, reviewed by Intel, and
-introduces no userspace-visible changes.
+For **linux-6.18.y** (this checkout): the buggy disconnect sequencing
+exists, the fix is small and maintainer-approved, and it prevents a
+realistic SMP race where TX reaches iwlwifi after IBSS teardown. The fix
+follows an established pattern already used in the IBSS merge path in
+the same file. Conservative stable criteria are met.
 
 ---
 
 ## Verification
 
-- **[Phase 1]** Parsed subject, tags, body from provided commit message
-  and local mbox
-- **[Phase 2]** Analyzed full diff: 4 files, new poll helper +
-  `get_crf_id()` wait logic
-- **[Phase 3]** `git blame` on `get_crf_id()`: present in tree; shallow
-  history limits introduction commit
-- **[Phase 3]** No `Fixes:` tag to follow
-- **[Phase 3]** Mbox confirms patch 3/15, standalone
-- **[Phase 4]** Local mbox `20260511_miriam_rachel_korenblit_wifi_iwlwif
-  i_updates_2026_05_11.mbx`: found patch 3/15 and cover letter
-- **[Phase 4]** `b4 dig -c HEAD`: no match (HEAD is v6.18.44 tag, not
-  this commit)
-- **[Phase 4]** Link fetch to patch.msgid.link: blocked by bot
-  protection
-- **[Phase 4]** `Reviewed-by: Daniel Gabay` confirmed from commit
-  message
-- **[Phase 5]** `get_crf_id()` caller: `iwl_pci_gen1_2_probe()` line
-  4195 in `trans.c`
-- **[Phase 5]** Downstream: `map_crf_id()` at lines 4211–4214 can return
-  `-EINVAL` on probe failure
-- **[Phase 5]** Existing `iwl_poll_umac_prph_bit()` uses grab; new
-  `no_grab` variant needed in held-access context
-- **[Phase 6]** `git describe HEAD`: v6.18.44
-- **[Phase 6]** Grep: `iwl_poll_umac_prph_bits_no_grab` /
-  `WFPM_RSRCS_4PHS_*` absent — fix not yet applied
-- **[Phase 6]** Grep: `IWL_DEVICE_FAMILY_DR` / `SC` present; SC PCI IDs
-  in `pcie/drv.c` (5 devices); DR config exists but no PCI ID entry
-- **[Phase 6]** Read `get_crf_id()` lines 3990–4040: buggy code (no CNVR
-  TOP wait) confirmed
-- **[Phase 8]** Failure mode traced: bad `hw_crf_id` → `map_crf_id()`
-  `-EIO` → probe `-EINVAL`
+- [Phase 1] Parsed subject, tags, body from provided commit message and
+  `git show 8763b7cb9523a`
+- [Phase 2] Diff analysis: 3 insertions, 6 deletions in `ibss.c`;
+  verified `sta_info_flush()` conditional `synchronize_net()` at
+  `sta_info.c:1684-1687`
+- [Phase 2] Verified `__dev_direct_xmit()` carrier check at
+  `net/core/dev.c:4853-4854`
+- [Phase 3] `git describe HEAD` → v6.18.44; tree is
+  `stable/linux-6.18.y`
+- [Phase 3] `git show remotes/stable/linux-6.18.y:net/mac80211/ibss.c` →
+  buggy ordering confirmed
+- [Phase 3] Fix not in stable: `git log remotes/stable/linux-6.18.y | rg
+  d0e69d9` → empty; merge-base with fix is `Linux 6.18`
+- [Phase 3] `git show d0e69d9afa59` → upstream mainline commit confirmed
+- [Phase 4] `b4 dig -c 8763b7cb9523a` → lore URL found
+- [Phase 4] `b4 dig -a` → v1 only
+- [Phase 4] `b4 dig -w` → Johannes Berg, linux-wireless CC'd
+- [Phase 4] `/tmp/ibss_thread.mbox` → single patch, no replies, no
+  stable nomination
+- [Phase 5] `grep ieee80211_ibss_leave` → called from `cfg.c:3223`
+  (nl80211 leave_ibss)
+- [Phase 5] Verified IBSS merge correct pattern at `ibss.c:244-249`
+- [Phase 5] iwlwifi invalid queue paths at `mvm/tx.c:814`
+  (`WARN_ON(queue == IWL_MVM_INVALID_QUEUE)`)
+- [Phase 6] Read current `ibss.c:653-710` and `1814-1828` — buggy code
+  present, `synchronize_rcu()` still in leave paths
+- [Phase 6] `git show 8763b7cb9523a` on autosel — patch applies to
+  identical code
+- [Phase 8] IBSS reachability via `cfg.c` `.leave_ibss` op confirmed
+- **UNVERIFIED:** Exact introduction commit of buggy disconnect ordering
+  (shallow history)
+- **UNVERIFIED:** Whether iwlwifi issue always causes only WARN vs oops
 
 **YES**
 
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   | 18 ++++++++++++-
- drivers/net/wireless/intel/iwlwifi/iwl-io.h   |  4 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  7 ++++-
- .../intel/iwlwifi/pcie/gen1_2/trans.c         | 26 ++++++++++++++++++-
- 4 files changed, 51 insertions(+), 4 deletions(-)
+ net/mac80211/ibss.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.c b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-index b1944584c6931..c4ccfffdf6af9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2003-2014, 2018-2022, 2024-2025 Intel Corporation
-+ * Copyright (C) 2003-2014, 2018-2022, 2024-2026 Intel Corporation
-  * Copyright (C) 2015-2016 Intel Deutschland GmbH
-  */
- #include <linux/device.h>
-@@ -168,6 +168,22 @@ int iwl_poll_prph_bit(struct iwl_trans *trans, u32 addr,
- 	return -ETIMEDOUT;
- }
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 6e36b09fe97f8..6ca2ff354e768 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -675,7 +675,9 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
  
-+int iwl_poll_umac_prph_bits_no_grab(struct iwl_trans *trans, u32 addr,
-+				    u32 bits, u32 mask, int timeout)
-+{
-+	int t = 0;
-+
-+	do {
-+		if ((iwl_read_umac_prph_no_grab(trans, addr) & mask) ==
-+		    (bits & mask))
-+			return 0;
-+		udelay(IWL_POLL_INTERVAL);
-+		t += IWL_POLL_INTERVAL;
-+	} while (t < timeout);
-+
-+	return -ETIMEDOUT;
-+}
-+
- void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask)
- {
- 	if (iwl_trans_grab_nic_access(trans)) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-io.h b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-index 5bcec239ffc4a..d920a32fc173c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-io.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2018-2021, 2025 Intel Corporation
-+ * Copyright (C) 2018-2021, 2025-2026 Intel Corporation
-  */
- #ifndef __iwl_io_h__
- #define __iwl_io_h__
-@@ -51,6 +51,8 @@ static inline void iwl_write_prph(struct iwl_trans *trans, u32 ofs, u32 val)
+ 	ifibss->state = IEEE80211_IBSS_MLME_SEARCH;
  
- int iwl_poll_prph_bit(struct iwl_trans *trans, u32 addr,
- 		      u32 bits, u32 mask, int timeout);
-+int iwl_poll_umac_prph_bits_no_grab(struct iwl_trans *trans, u32 addr,
-+				    u32 bits, u32 mask, int timeout);
- void iwl_set_bits_prph(struct iwl_trans *trans, u32 ofs, u32 mask);
- void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 ofs,
- 			    u32 bits, u32 mask);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index a7214ddcfaf56..6ca1f51b69a1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -1,6 +1,6 @@
- /* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
- /*
-- * Copyright (C) 2005-2014, 2018-2025 Intel Corporation
-+ * Copyright (C) 2005-2014, 2018-2026 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016 Intel Deutschland GmbH
-  */
-@@ -411,6 +411,11 @@ enum {
- #define HPM_SECONDARY_DEVICE_STATE      0xa03404
- #define WFPM_MAC_OTP_CFG7_ADDR		0xa03338
- #define WFPM_MAC_OTP_CFG7_DATA		0xa0333c
-+#define WFPM_RSRCS_4PHS_REQ_STTS	0xa033f8
-+#define WFPM_RSRCS_4PHS_ACK_STTS	0xa033fc
-+
-+#define RSRC_REQ_CNVR_TOP BIT(6)
-+#define RSRC_ACK_CNVR_TOP BIT(6)
+-	sta_info_flush(sdata, -1);
++	netif_carrier_off(sdata->dev);
++	if (!sta_info_flush(sdata, -1))
++		synchronize_net();
  
+ 	spin_lock_bh(&ifibss->incomplete_lock);
+ 	while (!list_empty(&ifibss->incomplete_stations)) {
+@@ -689,8 +691,6 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 	spin_unlock_bh(&ifibss->incomplete_lock);
  
- /* For UMAG_GEN_HW_STATUS reg check */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-index 59307b5df4417..b003abf1fe2ce 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
- /*
-- * Copyright (C) 2007-2015, 2018-2024 Intel Corporation
-+ * Copyright (C) 2007-2015, 2018-2024, 2026 Intel Corporation
-  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
-  * Copyright (C) 2016-2017 Intel Deutschland GmbH
-  */
-@@ -4000,6 +4000,30 @@ static void get_crf_id(struct iwl_trans *iwl_trans,
- 	else
- 		sd_reg_ver_addr = SD_REG_VER;
+-	netif_carrier_off(sdata->dev);
+-
+ 	sdata->vif.cfg.ibss_joined = false;
+ 	sdata->vif.cfg.ibss_creator = false;
+ 	sdata->vif.bss_conf.enable_beacon = false;
+@@ -717,7 +717,6 @@ static void ieee80211_csa_connection_drop_work(struct wiphy *wiphy,
+ 			     u.ibss.csa_connection_drop_work);
  
-+	/* wait until the device is ready to access the prph registers */
-+	if (iwl_trans->mac_cfg->device_family == IWL_DEVICE_FAMILY_DR ||
-+	    iwl_trans->mac_cfg->device_family == IWL_DEVICE_FAMILY_SC) {
-+		u32 req = iwl_read_umac_prph_no_grab(iwl_trans,
-+						     WFPM_RSRCS_4PHS_REQ_STTS);
-+		int ret;
-+
-+		if (!(req & RSRC_REQ_CNVR_TOP)) {
-+			IWL_ERR(iwl_trans,
-+				"WFPM_RSRCS_4PHS_REQ_STTS bit 6 is clear 0x%x\n",
-+				req);
-+			return;
-+		}
-+
-+		ret = iwl_poll_umac_prph_bits_no_grab(iwl_trans,
-+						      WFPM_RSRCS_4PHS_ACK_STTS,
-+						      RSRC_ACK_CNVR_TOP,
-+						      RSRC_ACK_CNVR_TOP,
-+						      50 * 1000);
-+		if (ret < 0)
-+			IWL_ERR(iwl_trans,
-+				"WFPM_RSRCS_4PHS_ACK_STTS bit 6 is clear\n");
-+	}
-+
- 	/* Enable access to peripheral registers */
- 	val = iwl_read_umac_prph_no_grab(iwl_trans, WFPM_CTRL_REG);
- 	val |= WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK;
+ 	ieee80211_ibss_disconnect(sdata);
+-	synchronize_rcu();
+ 	skb_queue_purge(&sdata->skb_queue);
+ 
+ 	/* trigger a scan to find another IBSS network to join */
+@@ -1823,8 +1822,6 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ 	memset(&ifibss->ht_capa, 0, sizeof(ifibss->ht_capa));
+ 	memset(&ifibss->ht_capa_mask, 0, sizeof(ifibss->ht_capa_mask));
+ 
+-	synchronize_rcu();
+-
+ 	skb_queue_purge(&sdata->skb_queue);
+ 
+ 	timer_delete_sync(&sdata->u.ibss.timer);
 -- 
 2.53.0
 
