@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F565463B85;
-	Mon, 31 Aug 2026 13:47:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CDA55650EC;
+	Mon, 31 Aug 2026 13:47:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788184068; cv=none; b=RJCZStvrxnc2jMl772I4YNP1dTnZ7zCJcsG8rpg5qY2RWigsKYOkS3CooJk7TxCXxfLMidc/065UZQ52L5Z7RCnjLONKbJ7aGpaGC2DvhJgxyc8tXYj9SQqanQfZ1nY+YWNwIyaO+ACVJaJe2zRInc9M0o/lpmE3ujX5alIRM3M=
+	t=1788184076; cv=none; b=dVCC68eECbdOumxdd3lvKug7u1ypCZ+1Y3u5s7Aivsigp7pr0HRBf6MjhYnZNOEoAh13EAicpKrZkacFsr5zFoPvsiSSXxDhr5LEB1LidH71PsMVrFXmTBrYA31q8J+XN9iuKv1drrrrJTAZpYxwAEjCePoTysmf84aeb7T27jI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788184068; c=relaxed/simple;
-	bh=T+KJEYiXhwV86mH4htXeP5xfNjt5uRzB8leGiTJm0ZM=;
+	s=arc-20240116; t=1788184076; c=relaxed/simple;
+	bh=B8jXb2kB+MvImiJHPQN+DD76LkGnzGIfTZlmh916Lzg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JUnPbtIDZ37nXudJPvptChz7EDEkUwHG34B8dzWDg/q9OZ3sIFKhvaV9WlLEfHssFxVURMqIABmJ+w+IvqBMbTLVqI8rsjbxrrlxQOlfWFEmnG6oDKTzM0KKBcmNYjTgcXFY0M1yugptiEyqxvHRG1chc+ApZ/X7N1tCQpeuPqU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GZPKFqs5; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=JJ0ftkrf5zTrlGFwoUObvG5yiPxGzopY9tBpUQ3q/GNDs+YXnIZihUVWgadGPZ+GRlURrbmv6hgGe4AJ0EGZI1z0SlZpJbF9c1cNtOrNB4JYYTLvzz4KkuppaDN2/tEU+kb/QD+4HjvSSj0YAj7AeNYdekFBAjV23StnVMil1EI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mNbhbZW2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GZPKFqs5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 063011F00A3F;
-	Mon, 31 Aug 2026 13:47:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mNbhbZW2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81FC81F00A3D;
+	Mon, 31 Aug 2026 13:47:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788184065;
-	bh=2BaV6aSCBfWzbisaA6ISQZlpEcse2nanP+Vnl+b0oeY=;
+	s=k20260515; t=1788184074;
+	bh=50s9L/q2gc6UqpjOQy0K5eDvQc3IehRiRxZgThDfxkA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=GZPKFqs5Sw1P5ijK/Z+czEzKQLsaTJK+KWD8T5EtL24Y1vTjG5Eicfnpj6XQvCJFi
-	 8p6qNklI2sbf6fdAsv57k6NmakUZ2WdNi3vGnG1+lW2SkTuX53QLZ5TAqNzIjxNE2A
-	 NEf55csJbBFFzaPcpizSpKNGxZnYi9iodF07g42JQ/cH6yO4UHfsHxK8lNmdZnJYj9
-	 tkmiG4XXEM4Qawz1t9vBYFnzUFCWBisjEqECY7RJ7YHfrk+YcF3pimGw2pDy6RYkWq
-	 nUQWkL6qYQkFBrKbJEjszR+EywuxehiHQFDlAqqqABi/NYw40oPgyZH4P2n3ScmbYd
-	 Jdf7ZpPbF8NIA==
+	b=mNbhbZW2Kfpw1j611greWItmLtWvyQw3U4iaQVadedGFpuupy4LS200ZwdbQscZsI
+	 lVw17MBO09vbwFwUbH+pg5GpCjoe1ZRI5YY6h1HcvRwcOM5eK32VclD40kh//mZib4
+	 jcuMh3XTcRfMGmtk3jk5ytnZ6dFUDLXnJmbJwPiV0X6JI65QGyBRWZNoSt/KjoWSkD
+	 SG7Oa6L9b19POTIycRaDlNFLXWzOJxJgqes5eC7/roF2uJOH9hLwjdTzO6CfqASnV3
+	 R1Gq8hbcpyxjZQvYSUcUG1HQE38Crr2099L7PqYztcappMpByxYp9fyNsqST7txRil
+	 JrKD8mjunSpcg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
 Cc: Johannes Berg <johannes.berg@intel.com>,
+	Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>,
+	Ilan Peer <ilan.peer@intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	johannes@sipsolutions.net,
 	linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18] wifi: mac80211: clarify beacon parsing with MBSSID/EMA
-Date: Mon, 31 Aug 2026 09:28:18 -0400
-Message-ID: <20260831133314.4125787-470-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18] wifi: cfg80211: harden cfg80211_defragment_element()
+Date: Mon, 31 Aug 2026 09:28:23 -0400
+Message-ID: <20260831133314.4125787-475-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
 References: <20260831133314.4125787-1-sashal@kernel.org>
@@ -54,68 +56,75 @@ Content-Transfer-Encoding: 8bit
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 32e223198539bd8be5a84764df869f88bc56f25b ]
+[ Upstream commit e48223525a54d3a3182d2d9a497dca022b942b4d ]
 
-When connected to a non-transmitting BSS of multiple BSSID
-set with EMA, the correct profile for the connection isn't
-always present in the beacon. Indicate this in the parser
-and use the information to not check everything in beacon
-processing, since the information might not be correct if
-taken only from the transmitted BSS.
+A previous commit changed mac80211 to no longer make wrong
+calls to cfg80211_defragment_element() with the element
+pointing outside of the buffer. Additionally, harden this
+function itself against that and always return -EINVAL in
+case the element isn't inside the source buffer.
 
-Link: https://patch.msgid.link/20260529102644.97527a7dfd7b.Iecd0ef578b85a5a0057538cfff5fdff41d19b7ea@changeid
+Reviewed-by: Miriam Rachel Korenblit <miriam.rachel.korenblit@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Link: https://patch.msgid.link/20260529102644.198945754054.I5ae8fdebf9008abc6e15d0b0f10c3a7b73d02eab@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-# Stable Backport Analysis: `wifi: mac80211: clarify beacon parsing with
-MBSSID/EMA`
+# Stable Backport Analysis: `wifi: cfg80211: harden
+cfg80211_defragment_element()`
 
-**Local tree:** `v6.18.44` (6.18.44)
+**Local tree:** Linux **6.18.44** (`stable/linux-6.18.y`, detached HEAD)
+**Upstream commit:** `e48223525a54d` (not in this tree; patch applies
+cleanly)
 
 ---
 
 ## PHASE 1: COMMIT MESSAGE FORENSICS
 
 ### Step 1.1: Subject line
-**Record:** `[wifi: mac80211]` `[clarify]` — When connected to a non-
-transmitting BSS in an MBSSID set with EMA, beacon parsing may not find
-the correct profile; the parser should record that and skip processing
-that depends on profile-specific data.
+**Record:** `[wifi: cfg80211]` `[harden]` — add bounds validation to
+`cfg80211_defragment_element()` so `elem` must lie fully inside the
+`ies` buffer.
 
 ### Step 1.2: Tags
 **Record:**
-- **Fixes:** — none
-- **Reported-by:** — none
-- **Tested-by:** — none
-- **Reviewed-by:** — none
-- **Acked-by:** — none
-- **Link:** https://patch.msgid.link/20260529102644.97527a7dfd7b.Iecd0ef
-  578b85a5a0057538cfff5fdff41d19b7ea@changeid
-- **Cc: stable:** — none (expected for manual review)
-- **Signed-off-by:** Johannes Berg \<johannes.berg@intel.com\> (mac80211
-  maintainer)
+| Tag | Value |
+|-----|-------|
+| Fixes: | None |
+| Reported-by: | None |
+| Tested-by: | None |
+| Reviewed-by: | Miriam Rachel Korenblit, Ilan Peer |
+| Acked-by: | None |
+| Link: | https://patch.msgid.link/20260529102644.198945754054.I5ae8fdeb
+f9008abc6e15d0b0f10c3a7b73d02eab@changeid |
+| Cc: stable@vger.kernel.org | None (expected for manual review) |
+| Signed-off-by: | Johannes Berg (author) |
 
-No syzbot, no user bug reports in the message.
+Notable: two Intel wireless reviewers; no syzbot/user bug report; no
+explicit stable nomination.
 
 ### Step 1.3: Body analysis
 **Record:**
-- **Bug:** With EMA (Enhanced Multi-BSSID Advertisement), a non-
-  transmitting BSS profile may be absent from a given beacon. The parser
-  cannot return complete element data for the connected BSS.
-- **Symptom:** Beacon processing still uses incomplete/incorrect data
-  (from the transmitted BSS) for profile-specific updates.
-- **Root cause:** No signal that the non-transmitted profile was
-  missing; downstream code treats parsed elements as authoritative.
-- **Version info:** None stated.
+- **Bug described:** Callers could pass an `elem` pointer outside the
+  `ies` source buffer; the function did not validate containment before
+  dereferencing `elem->datalen` and calling `memmove()`.
+- **Symptom:** Out-of-bounds reads/copies when `elem` and `ies` refer to
+  different buffers or when the element length extends past `ies +
+  ieslen`.
+- **Root cause:** Missing input validation in an `EXPORT_SYMBOL` helper
+  that processes untrusted 802.11 Information Elements.
+- **Dependency:** References a prior mac80211 commit that stopped
+  passing mismatched `elem`/`ies` pairs (that fix is **already in
+  6.18.y** as `55c479aae99b1`).
 
 ### Step 1.4: Hidden bug fix?
-**Record:** Yes. "Clarify" understates it. This is a correctness fix
-that prevents applying WMM, bandwidth, TWT, power constraint, and ML
-reconfiguration from the wrong BSS's beacon data — behavior that can
-cause spurious disconnects.
+**Record:** Yes. “Harden” is defense-in-depth, but it enforces the
+documented API contract (`@ies: elements where @elem is contained`) and
+prevents OOB access if callers pass inconsistent pointers or if
+`elem->datalen` would extend past the buffer end.
 
 ---
 
@@ -123,208 +132,217 @@ cause spurious disconnects.
 
 ### Step 2.1: Inventory
 **Record:**
-| File | Change |
-|------|--------|
-| `net/mac80211/ieee80211_i.h` | +9 lines: new
-`mbssid_nontx_profile_missing` bool in `struct ieee802_11_elems` |
-| `net/mac80211/parse.c` | +4 lines: set flag when `transmitted_bss` set
-and `nontx_len == 0` |
-| `net/mac80211/mlme.c` | ~90 lines: reorder + gate beacon processing
-behind flag |
+| File | Changes | Functions |
+|------|---------|-----------|
+| `net/wireless/scan.c` | +4 / -2 (net +2 functional) |
+`cfg80211_defragment_element()` |
 
-**Functions modified:** `ieee802_11_parse_elems_full()`,
-`ieee80211_rx_mgmt_beacon()`
-**Scope:** Single-subsystem, 3 files, focused logic change with some
-reordering.
+**Scope:** Single-file, surgical fix.
 
-### Step 2.2: Code flow changes
+### Step 2.2: Code flow change
 **Record:**
-
-**parse.c hunk:** Before → after
-- Before: `ieee802_11_find_bssid_profile()` returns 0 silently when
-  profile absent; caller has no way to know parsing is incomplete.
-- After: Sets `elems->mbssid_nontx_profile_missing = true` when
-  connected to non-transmitted BSS and profile not found.
-
-**mlme.c hunk:** Before → after
-- Before: All beacon-derived updates run unconditionally (WMM, cross-
-  link CSA, BW config, TWT, power constraint, ML reconfig).
-- After: Essential processing still runs (beacon monitor, SSID check,
-  TIM/PS, P2P NoA, timing, CRC, CSA from transmitted BSS, DTIM, ERP).
-  Profile-dependent updates are skipped when flag is set; `goto apply`
-  jumps to `ieee80211_link_info_change_notify()`.
+- **Before:** Only `if (!elem) return -EINVAL;`, then immediately read
+  `elem->datalen` and `memmove()` from `elem->data`.
+- **After:** Also reject when:
+  1. `(const u8 *)elem < ies`
+  2. Element header extends past `ies + ieslen`
+  3. Full element (`header + elem->datalen`) extends past `ies + ieslen`
+- **Path affected:** Entry validation on all callers before any data
+  access or copy.
 
 ### Step 2.3: Bug mechanism
-**Record:** **Category:** Logic/correctness fix (incorrect data
-application)
-**Mechanism:** When `nontx_len == 0`, `sub.len == 0` so inner profile
-parsing is skipped and `elems` contains outer/transmitted-BSS data.
-Without the flag, `ieee80211_config_bw()` can see apparent
-mode/bandwidth changes and return `-EINVAL`, triggering disconnect.
-`ieee80211_sta_wmm_params()`, `ieee80211_recalc_twt_req()`,
-`ieee80211_handle_pwr_constr()`, and `ieee80211_ml_reconfiguration()`
-can apply wrong parameters.
+**Record:** **Memory safety / buffer overflow prevention (d).** The
+function trusted caller-supplied `elem`/`ies` pairing. The already-
+backported mac80211 bug (`55c479aae99b1`) passed a defragmented `elem`
+with the original frame’s `ies`/`ieslen`, enabling heap-adjacent OOB
+reads/copies. This patch validates containment at the API boundary.
 
 ### Step 2.4: Fix quality
-**Record:** Fix is logically sound and minimal for the problem. The
-maintainer explicitly documents what must still run vs. what must be
-skipped. Reordering (CSA before gated block, RNR outside profile) is
-intentional. Low regression risk: only affects the
-`mbssid_nontx_profile_missing` path, which is currently unhandled.
+**Record:** Obviously correct. Checks are ordered so `elem->datalen` is
+only read after the element header is confirmed in-bounds. Minimal, no
+API change (still returns `-EINVAL`). Very low regression risk — only
+rejects previously-undefined invalid input.
 
 ---
 
 ## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** `ieee802_11_find_bssid_profile()` introduced in
-`9d0480a7c05b6` (Jan 2024, "move element parsing to a new file"). MBSSID
-non-transmitted profile search fixed in `e1e6ebf490e55` (Jun 2025).
-Buggy "process all beacon data even when profile missing" behavior
-present since MBSSID STA parsing was added; EMA makes the missing-
-profile case expected and recurring.
+**Record:** Original `if (!elem)` from `f837a653a0970` (“wifi: cfg80211:
+add element defragmentation helper”, June 2023). Function has been in
+this tree since well before 6.18 branched.
 
 ### Step 3.2: Fixes: tag
-**Record:** N/A — no Fixes: tag.
+**Record:** N/A — no `Fixes:` tag. Related buggy caller introduced by
+`4d70e9c5488dd` (May 2024, in this tree), fixed by `55c479aae99b1`
+(already in 6.18.y).
 
 ### Step 3.3: Related file history
-**Record:** Related MBSSID commits in this tree: `e1e6ebf490e55`
-(profile search fix), `182a2786d248e` (don't use old MBSSID elements),
-`1afa18e9e7239` (EMA beacon switch count), `68b9bea267bfc` (RNR for EMA
-AP). Standalone fix; not part of a numbered series. Commit not present
-in this tree (candidate only).
+**Record:** Related commits in this tree:
+- `55c479aae99b1` — mac80211 MLE defragmentation caller fix (IN TREE)
+- `023c1f2f06092` — cfg80211 MLE defragmentation OOB fix (IN TREE, had
+  `Cc: stable`)
+- `11ac7a5e75f51` — bound element ID read when checking non-inheritance
+  (recent hardening pattern)
+
+This hardening patch is standalone (only touches `scan.c`); it does not
+require other patches from wireless-next 07/16 series.
 
 ### Step 3.4: Author context
-**Record:** Johannes Berg is mac80211/cfg80211 maintainer. Recent
-related work in tree includes MLE defragmentation fix, non-transmitted
-BSSID profile search fix.
+**Record:** Johannes Berg is cfg80211/mac80211 maintainer. He authored
+both the mac80211 caller fix and this cfg80211 hardening as companion
+changes.
 
 ### Step 3.5: Dependencies
-**Record:** Patch context references `empty_non_inheritance` and
-`sub.type`, which are **not** in v6.18.44 (`sub.action` is used instead;
-no `empty_non_inheritance`). Those are context from a newer mainline
-base, not part of this commit's actual diff. Core changes (flag +
-gating) are self-contained and apply to this tree with minor context
-adaptation. No other commits required for the fix to function.
+**Record:** The mac80211 caller fix (`55c479aae99b1`) is already in
+6.18.y. This patch applies standalone (`git apply --check` passes). No
+structural prerequisites missing.
 
 ---
 
 ## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
 ### Step 4.1: Original discussion
-**Record:** `b4 dig -c` failed (commit not in local tree). `b4 dig` by
-subject failed (wrong usage). Lore/patch.msgid.link blocked by bot
-protection. Could not retrieve thread discussion.
+**Record:** `b4 dig -c e48223525a54d` → https://patch.msgid.link/2026052
+9102644.198945754054.I5ae8fdebf9008abc6e15d0b0f10c3a7b73d02eab@changeid
+Part of wireless-next series patch **07/16**; this specific hunk is
+self-contained. No thread replies found in mbox. No `Cc: stable` in
+submission.
 
 ### Step 4.2: Reviewers
-**Record:** UNVERIFIED — could not access lore thread.
+**Record:** `b4 dig -w` — CC’d to Miriam Rachel Korenblit and Ilan Peer;
+both Reviewed-by on the patch.
 
 ### Step 4.3: Bug report
-**Record:** No external bug report. No syzbot. Issue is protocol-
-correctness driven, identified by maintainer.
+**Record:** No external bug report, syzbot, or crash log. Bug mechanism
+documented in companion commit `55c479aae99b1` (“potentially overrun the
+heap data”).
 
-### Step 4.4: Related patches
-**Record:** Part of ongoing MBSSID/EMA beacon-parsing work. Complements
-`e1e6ebf490e55` (profile search) already in tree. Standalone value.
+### Step 4.4: Series context
+**Record:** Patch 07/16 of a 16-patch UHR/wireless-next series. Only
+`net/wireless/scan.c` changed; no dependency on patches 08–16.
 
-### Step 4.5: Stable list history
-**Record:** UNVERIFIED — lore blocked.
+### Step 4.5: Stable list
+**Record:** No stable-list discussion found for this specific patch. The
+companion mac80211 fix was already backported to 6.18.y.
 
 ---
 
 ## PHASE 5: CODE SEMANTIC ANALYSIS
 
 ### Step 5.1: Key functions
-**Record:** `ieee802_11_parse_elems_full()`,
-`ieee802_11_find_bssid_profile()`, `ieee80211_rx_mgmt_beacon()`,
-`ieee80211_config_bw()`, `ieee80211_sta_wmm_params()`
+**Record:** `cfg80211_defragment_element()` (modified).
 
 ### Step 5.2: Callers
-**Record:** `ieee80211_rx_mgmt_beacon()` called from management RX path
-(`ieee80211_rx_mgmt`, lines ~8156/8186) — normal connected-STA beacon
-receive path. High-frequency, every beacon interval.
+**Record:** In-tree callers (all reachable from WiFi frame processing):
+| Caller | File | Context |
+|--------|------|---------|
+| MLE per-sta profile defrag | `net/mac80211/parse.c:860` | Beacon/probe
+IE parsing |
+| Basic MLE defrag | `net/mac80211/parse.c:909` | EHT ML element parsing
+|
+| Reconf/EPCS MLE defrag | `net/mac80211/parse.c:968` | Post-`55c479`
+fixed path |
+| STA profile enumeration | `net/mac80211/mlme.c:7266,7295` | ML STA
+setup |
+| EPCS per-link parsing | `net/mac80211/mlme.c:11018` | EPCS response
+handling |
+| Internal MLE defrag | `net/wireless/scan.c:2726,2768` | Scan/BSS
+inform paths |
+
+Also `EXPORT_SYMBOL` — external modules may call it. KUnit tests in
+`net/wireless/tests/fragmentation.c`.
 
 ### Step 5.3: Callees
-**Record:** Parser calls `ieee802_11_find_bssid_profile()`,
-`cfg80211_find_ext_elem()`, `_ieee802_11_parse_elems_full()`. Beacon
-handler calls disconnect path via `ieee80211_config_bw()` →
-`ieee80211_set_disassoc()`.
+**Record:** `memmove()` for data copy; fragment loop walks subsequent
+elements.
 
 ### Step 5.4: Reachability
-**Record:** Triggered when STA is associated to a non-transmitted BSS
-(`bss->transmitted_bss` set) on an EMA-capable AP. EMA detection exists
-in tree (`bss_conf->ema_ap`, `WLAN_EXT_CAPA11_EMA_SUPPORT`). Reachable
-from normal WiFi association — no special privileges needed beyond
-connecting to such an AP.
+**Record:** Reachable from processing received 802.11 management frames
+(beacons, probe responses, ML reconfiguration). Remote AP/client can
+supply crafted IE data. **Userspace-reachable via WiFi traffic**
+(unprivileged on wireless networks).
 
 ### Step 5.5: Similar patterns
-**Record:** EMA beacon generation/parsing fixes already in tree
-(`1afa18e9e7239`, `68b9bea267bfc`). This follows the same MBSSID/EMA
-correctness theme.
+**Record:** Same subsystem recently backported `11ac7a5e75f51` (bound
+element ID reads) and `55c479aae99b1` (MLE defragmentation caller fix).
+Consistent hardening pattern for WiFi IE parsing.
 
 ---
 
-## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (v6.18.44)
+## PHASE 6: CROSS-REFERENCE WITH LOCAL TREE (6.18.44)
 
 ### Step 6.1: Buggy code present?
-**Record:** **Yes.** Current `ieee80211_rx_mgmt_beacon()` at lines
-7616–7703 processes WMM, BW, TWT, power constraint, and ML reconfig
-without checking whether the non-transmitted profile was found.
-`ieee802_11_find_bssid_profile()` can return 0 (line 825).
-`mbssid_nontx_profile_missing` does not exist. MBSSID/EMA infrastructure
-is present.
+**Record:** **Yes.** Current code at lines 2629–2630 only checks
+`!elem`:
+
+```2629:2634:net/wireless/scan.c
+        if (!elem)
+                return -EINVAL;
+
+        /* elem might be invalid after the memmove */
+        next = (void *)(elem->data + elem->datalen);
+        elem_datalen = elem->datalen;
+```
+
+Function present since 2023; buggy caller path existed from
+`4d70e9c5488dd` until `55c479aae99b1` (caller fix now in tree, API
+validation still missing).
 
 ### Step 6.2: Backport complications
-**Record:** Expected **minor conflicts** — patch base uses `sub.type`
-vs. local `sub.action`; `empty_non_inheritance` is context-only and not
-needed for this commit's actual changes. Core 3-file change should apply
-cleanly with trivial adaptation.
+**Record:** **Clean apply** — `git show e48223525a54d | git apply
+--check` succeeds. Only incidental copyright year change (2025→2026).
 
 ### Step 6.3: Related fixes already present?
-**Record:** `e1e6ebf490e55` (profile search return fix) is in tree. This
-complementary fix is **not** present. No duplicate fix found.
+**Record:**
+- `55c479aae99b1` (mac80211 caller fix) — **IN TREE**
+- `023c1f2f06092` (cfg80211 MLE OOB) — **IN TREE**
+- `e48223525a54d` (this hardening) — **NOT IN TREE**
 
 ---
 
 ## PHASE 7: SUBSYSTEM CONTEXT
 
 ### Step 7.1: Subsystem criticality
-**Record:** `net/mac80211` — **IMPORTANT** (WiFi stack used broadly; STA
-beacon path is core connectivity).
+**Record:** **net/wireless (cfg80211)** — IMPORTANT. WiFi stack
+processes untrusted over-the-air data on virtually all
+laptops/phones/embedded devices with WiFi.
 
 ### Step 7.2: Activity
-**Record:** Actively developed; recent MBSSID/MLE/EMA fixes indicate
-this area is still maturing and bug-prone.
+**Record:** Actively maintained; multiple recent WiFi IE parsing
+hardening fixes in 6.18.y.
 
 ---
 
-## PHASE 8: IMPACT AND RISK
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: Who is affected
-**Record:** WiFi clients connected to **non-transmitted BSSs** in **EMA-
-enabled MBSSID** deployments (enterprise/campus WiFi 6/7 APs). Config-
-specific, but user population is growing.
+### Step 8.1: Who is affected?
+**Record:** All systems with `CONFIG_CFG80211` / WiFi enabled processing
+multi-link (EHT) elements or fragmented IEs.
 
 ### Step 8.2: Trigger conditions
-**Record:** Every beacon where EMA rotation omits the connected non-
-transmitted profile — **periodic and expected** with EMA, not rare.
-Unprivileged users trigger by normal WiFi association.
+**Record:**
+- **Known (now fixed at caller):** Mismatched `elem`/`ies` buffers in
+  mac80211 reconf/EPCS paths.
+- **Remaining:** Any caller bug, `EXPORT_SYMBOL` misuse, or element
+  whose declared length extends past the `ies` buffer — function
+  previously proceeded to `memmove()`.
+- **Likelihood post-`55c479`:** Primary known trigger closed; API-level
+  hole remains for edge cases and external callers.
 
 ### Step 8.3: Failure mode severity
-**Record:**
-- **Spurious disconnect** via `ieee80211_config_bw()` returning
-  `-EINVAL` (lines 7678–7687) — **CRITICAL**
-- Wrong WMM/QoS parameters — **MEDIUM**
-- Wrong TWT/power/ML reconfig — **MEDIUM**
+**Record:** Out-of-bounds kernel memory read/copy from WiFi IE
+processing. **Severity: HIGH** (potential info leak or crash; WiFi
+parsing is a classic remote attack surface). Companion mac80211 commit
+explicitly documented heap-adjacent overrun risk.
 
 ### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH for affected deployments — prevents recurring
-  disconnects and incorrect connection parameters during normal EMA
-  operation
-- **Risk:** LOW — small flag + early-exit; only affects the previously-
-  unhandled missing-profile path
-- **Ratio:** Strong benefit, low risk
+- **Benefit:** Closes API-level OOB class; companion to already-
+  backported mac80211 fix; protects `EXPORT_SYMBOL` boundary.
+- **Risk:** Very low — 3-line bounds check, returns `-EINVAL` for
+  invalid input only.
+- **Ratio:** Favorable for stable.
 
 ---
 
@@ -333,274 +351,127 @@ Unprivileged users trigger by normal WiFi association.
 ### Step 9.1: Evidence summary
 
 **FOR backport:**
-- Real bug: incomplete beacon parse treated as complete
-- Can cause spurious disconnects (`ieee80211_config_bw()`)
-- EMA makes missing profiles expected, not exceptional
-- Small, maintainer-authored, logically correct fix
-- Buggy code confirmed in v6.18.44
-- MBSSID/EMA support already in tree
+- Real OOB bug class documented in companion fix already in 6.18.y
+- WiFi IE parsing = remote attack surface
+- Tiny, obviously correct, applies cleanly
+- Maintainer-authored, reviewed by subsystem developers
+- Enforces documented API contract on `EXPORT_SYMBOL` function
+- Consistent with recent WiFi hardening backports in 6.18.y
 
 **AGAINST backport:**
-- No explicit user/syzbot report
-- Niche scenario (non-transmitted BSS + EMA)
-- Slight mainline divergence in patch context (`sub.type`,
-  `empty_non_inheritance`)
-- "Clarify" wording understates severity
+- Primary caller bug already fixed by `55c479aae99b1`
+- No syzbot report or user crash report for this specific patch
+- Pure defense-in-depth after caller fix
+- No explicit stable nomination
 
-**Unresolved:** Mailing list review feedback (lore inaccessible).
+**Unresolved:** No reproducer tested post-`55c479`; remaining
+exploitability is inferred from code analysis, not a fresh crash report.
 
 ### Step 9.2: Stable rules checklist
-1. Obviously correct and tested? **PASS** — logic verified in code;
-   maintainer-authored; no Tested-by
-2. Fixes a real bug? **PASS** — incorrect beacon data application when
-   EMA profile absent
-3. Important issue? **PASS** — spurious disconnects (CRITICAL), wrong
-   connection params (MEDIUM)
-4. Small and contained? **PASS** — 3 files, ~100 lines, no API changes
-5. No new features/APIs? **PASS** — internal flag only
-6. Can apply to local tree? **PASS** — buggy code present; minor context
-   adaptation expected
+| Criterion | Result |
+|-----------|--------|
+| 1. Obviously correct and tested? | **PASS** — trivial bounds check;
+existing KUnit tests cover valid paths; no new test for invalid input |
+| 2. Fixes a real bug affecting users? | **PASS** — OOB in WiFi IE
+defragmentation; caller bug was real and already hit stable |
+| 3. Important issue? | **PASS** — OOB / potential crash in network-
+facing code (HIGH) |
+| 4. Small and contained? | **PASS** — 3 functional lines, 1 file |
+| 5. No new features/APIs? | **PASS** — validation only |
+| 6. Can apply to local tree? | **PASS** — clean apply; prerequisite
+mac80211 fix already present |
 
-### Step 9.3: Exception categories
-**Record:** None (not device ID, quirk, DT, build, or docs). Standard
-bug fix.
+### Step 9.3: Exception category
+**Record:** Not a device-ID/quirk/DT/docs exception. Qualifies as a
+**security-relevant memory safety hardening** fix.
 
 ### Step 9.4: Decision rationale
-When a STA is connected to a non-transmitted BSS on an EMA AP, beacon
-profiles rotate and the connected profile is intentionally absent from
-many beacons. The current v6.18.44 code parses outer/transmitted-BSS
-elements and applies them as if they belong to the connected BSS —
-including bandwidth tracking that can trigger disconnect. This commit
-adds a clear signal (`mbssid_nontx_profile_missing`) and skips profile-
-dependent updates while preserving essential beacon handling
-(monitoring, CSA, DTIM, ERP). This is exactly the kind of connectivity-
-stability fix stable trees should carry.
+
+The mac80211 caller fix (`55c479aae99b1`) already in 6.18.y stopped the
+known wrong `elem`/`ies` pairing, but `cfg80211_defragment_element()`
+itself still performs unchecked `memmove()` based on `elem->datalen`
+without verifying the element fits in the declared buffer. This is the
+natural companion fix for an OOB class that stable already acknowledged
+by backporting the caller fix. The change is minimal, low-risk, and
+hardens a boundary that processes untrusted WiFi frame content.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed subject, body, tags: only Link + SOB from Johannes
-  Berg
-- [Phase 2] Diff analysis: 3 files, flag in `ieee802_11_elems`, set in
-  `parse.c`, gating in `mlme.c`
-- [Phase 2] Verified `ieee80211_config_bw()` disconnect path at lines
-  1288–1294, 1346–1350, 7678–7687
-- [Phase 3] `git describe HEAD`: v6.18.44
-- [Phase 3] `git blame` on `ieee802_11_find_bssid_profile()`: introduced
-  9d0480a7c05b6 (2024)
-- [Phase 3] `e1e6ebf490e55` confirmed in tree (related profile search
-  fix)
-- [Phase 3] `git log --grep="clarify beacon parsing"`: no match — commit
-  not in tree
-- [Phase 4] `b4 dig -c`: failed (commit not in tree)
-- [Phase 4] Lore/patch.msgid.link: blocked by bot protection —
-  UNVERIFIED
-- [Phase 5] `grep ieee80211_rx_mgmt_beacon`: called from mgmt RX at
-  lines 8156, 8186
-- [Phase 5] Traced `nontx_len == 0` path in `parse.c` lines 1023–1058:
-  inner profile parsing skipped
-- [Phase 6] `grep mbssid_nontx_profile_missing`: not in tree (fix
-  absent, buggy code present)
-- [Phase 6] `grep empty_non_inheritance`: not in tree (context-only
-  divergence)
-- [Phase 6] Verified `WLAN_EXT_CAPA11_EMA_SUPPORT` and
-  `bss_conf->ema_ap` in mlme.c
-- [Phase 6] Read current `ieee80211_rx_mgmt_beacon()` lines 7384–7708:
-  matches pre-fix behavior
-- [Phase 8] Disconnect path confirmed: `ieee80211_config_bw()` failure →
-  `ieee80211_set_disassoc()`
-- [UNVERIFIED] Mailing list reviewer feedback and stable nominations
+- [Phase 1] Parsed subject, tags, body from provided commit message
+- [Phase 1] Confirmed no Fixes:/Reported-by:/Cc: stable tags
+- [Phase 2] Diff: 3 bounds checks added to
+  `cfg80211_defragment_element()` entry in `net/wireless/scan.c`
+- [Phase 3] `git describe HEAD` → v6.18.44 (6.18.44)
+- [Phase 3] `git blame` lines 2629–2630 → `f837a653a0970` (Jun 2023)
+- [Phase 3] `git merge-base --is-ancestor 4d70e9c5488d HEAD` → buggy
+  caller intro IN TREE
+- [Phase 3] `git merge-base --is-ancestor 55c479aae99b1 HEAD` → mac80211
+  fix IN TREE
+- [Phase 3] `git merge-base --is-ancestor e48223525a54d HEAD` →
+  hardening NOT IN TREE
+- [Phase 3] `git merge-base --is-ancestor 023c1f2f06092 HEAD` → related
+  OOB fix IN TREE
+- [Phase 4] `b4 dig -c e48223525a54d` → lore URL found
+- [Phase 4] `b4 dig -m /tmp/harden_defrag.mbox` → patch 07/16, Reviewed-
+  by confirmed, no stable CC
+- [Phase 4] WebFetch lore URL → blocked (bot protection); used mbox
+  instead
+- [Phase 5] `grep cfg80211_defragment_element` → 6 in-tree call sites +
+  EXPORT_SYMBOL + KUnit tests
+- [Phase 5] Read callers in `parse.c`, `mlme.c`, `scan.c` — all WiFi
+  frame processing paths
+- [Phase 6] Read current `scan.c:2621–2687` — only `!elem` check present
+  (buggy state)
+- [Phase 6] `git show e48223525a54d | git apply --check` → applies
+  cleanly
+- [Phase 7] `git log --oneline -20 -- net/wireless/` → active subsystem
+  with recent hardening backports
+- [Phase 8] mac80211 fix commit message documents “potentially overrun
+  the heap data” (`git show 55c479aae99b1`)
 
-**YES**The background search finished: none of the three greps (`clarify
-beacon parsing`, `mbssid_nontx`, `empty_non_inheritance`) matched
-anything in this tree, so the commit is not in v6.18.44 yet — it's only
-a backport candidate.
+**YES**The background lookup finished: the related mac80211 fix is
+**`55c479aae99b1`** (`wifi: mac80211: fix MLE defragmentation`), and
+it’s **already in this 6.18.44 tree**. That commit fixed callers passing
+a defragmented `elem` with the original frame’s `ies` buffer, which
+could cause out-of-bounds reads/copies.
 
-That matches the earlier analysis: the buggy beacon-handling path is
-present, and the fix should still apply with minor context tweaks
-(`sub.action` vs `sub.type`).
+The commit under review (**`e48223525a54d`**) adds bounds checks inside
+`cfg80211_defragment_element()` itself. It is **not** in 6.18.y yet, but
+it **applies cleanly** and is the natural companion to the mac80211 fix
+already backported.
 
-**YES** — backport recommended for this tree.
+**Verdict for 6.18.y: YES** — small, low-risk hardening on a WiFi IE
+parsing path that processes untrusted over-the-air data.
 
- net/mac80211/ieee80211_i.h |  9 +++++
- net/mac80211/mlme.c        | 83 ++++++++++++++++++++++++++++----------
- net/mac80211/parse.c       |  4 ++
- 3 files changed, 75 insertions(+), 21 deletions(-)
+ net/wireless/scan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5c0c833fcf7a9..b0e64cf346e2b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1864,6 +1864,15 @@ struct ieee802_11_elems {
- 	struct ieee80211_mle_per_sta_profile *prof;
- 	size_t sta_prof_len;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 11f7a27bb7046..9648e24181fb0 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -5,7 +5,7 @@
+  * Copyright 2008 Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright 2016	Intel Deutschland GmbH
+- * Copyright (C) 2018-2025 Intel Corporation
++ * Copyright (C) 2018-2026 Intel Corporation
+  */
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+@@ -2626,7 +2626,9 @@ ssize_t cfg80211_defragment_element(const struct element *elem, const u8 *ies,
+ 	ssize_t copied;
+ 	u8 elem_datalen;
  
-+	/*
-+	 * When parsing the beacon with MBSSID (from a transmitted BSS), this
-+	 * indicates that the profile the parser was instructed to look for
-+	 * (via the bss value in &struct ieee80211_elems_parse_params) couldn't
-+	 * be found (due to EMA, or perhaps broken AP) and the result cannot be
-+	 * considered complete.
-+	 */
-+	bool mbssid_nontx_profile_missing;
-+
- 	/* whether/which parse error occurred while retrieving these elements */
- 	u8 parse_error;
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9ec4125c06d19..3c33e56c12a80 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -7400,8 +7400,6 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 	struct link_sta_info *link_sta;
- 	struct sta_info *sta;
- 	u64 changed = 0;
--	bool erp_valid;
--	u8 erp_value = 0;
- 	u32 ncrc = 0;
- 	u8 *bssid, *variable = mgmt->u.beacon.variable;
- 	u8 deauth_buf[IEEE80211_DEAUTH_FRAME_LEN];
-@@ -7521,6 +7519,13 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 	if (!elems)
- 		return;
+-	if (!elem)
++	if (!elem || (const u8 *)elem < ies ||
++	    (const u8 *)elem + sizeof(*elem) > ies + ieslen ||
++	    (const u8 *)elem + sizeof(*elem) + elem->datalen > ies + ieslen)
+ 		return -EINVAL;
  
-+	/*
-+	 * Note: with MBSSID and an EMA (or broken) AP, we could fail to find
-+	 * the correct multi-BSSID profile for the non-transmitting AP we're
-+	 * connected to. The result's elems->mbssid_nontx_profile_missing is
-+	 * indicating that, but some things must happen regardless.
-+	 */
-+
- 	if (rx_status->flag & RX_FLAG_DECRYPTED &&
- 	    ieee80211_mgd_ssid_mismatch(sdata, elems)) {
- 		sdata_info(sdata, "SSID mismatch for AP %pM, disconnect\n",
-@@ -7556,6 +7561,11 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 		}
- 	}
- 
-+	/*
-+	 * P2P will almost certainly not have MBSSID, but this just
-+	 * assumes that it would at least always inherit NoA anyway
-+	 * since it's absent from the channel.
-+	 */
- 	if (sdata->vif.p2p ||
- 	    sdata->vif.driver_flags & IEEE80211_VIF_GET_NOA_UPDATE) {
- 		struct ieee80211_p2p_noa_attr noa = {};
-@@ -7613,23 +7623,17 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 
- 	ieee80211_rx_bss_info(link, mgmt, len, rx_status);
- 
-+	/*
-+	 * This assumes that all members of a multiple BSS set must be
-+	 * switching together, so we can parse channel switch elements
-+	 * from the transmitted BSS even if our non-transmitted one is
-+	 * not present in this beacon (due to EMA.)
-+	 */
- 	ieee80211_sta_process_chanswitch(link, rx_status->mactime,
- 					 rx_status->device_timestamp,
- 					 elems, elems,
- 					 IEEE80211_CSA_SOURCE_BEACON);
- 
--	/* note that after this elems->ml_basic can no longer be used fully */
--	ieee80211_mgd_check_cross_link_csa(sdata, rx_status->link_id, elems);
--
--	ieee80211_mgd_update_bss_param_ch_cnt(sdata, bss_conf, elems);
--
--	if (!sdata->u.mgd.epcs.enabled &&
--	    !link->u.mgd.disable_wmm_tracking &&
--	    ieee80211_sta_wmm_params(local, link, elems->wmm_param,
--				     elems->wmm_param_len,
--				     elems->mu_edca_param_set))
--		changed |= BSS_CHANGED_QOS;
--
- 	/*
- 	 * If we haven't had a beacon before, tell the driver about the
- 	 * DTIM period (and beacon timing if desired) now.
-@@ -7646,17 +7650,53 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 		ieee80211_recalc_ps_vif(sdata);
- 	}
- 
--	if (elems->erp_info) {
--		erp_valid = true;
--		erp_value = elems->erp_info[0];
--	} else {
--		erp_valid = false;
--	}
-+	/* RNR isn't inside an MBSSID profile */
-+	ieee80211_mgd_update_bss_param_ch_cnt(sdata, bss_conf, elems);
-+
-+	/* assume ERP would be inherited anyway */
-+	if (!ieee80211_is_s1g_beacon(hdr->frame_control)) {
-+		u8 erp_value = 0;
-+		bool erp_valid;
-+
-+		if (elems->erp_info) {
-+			erp_valid = true;
-+			erp_value = elems->erp_info[0];
-+		} else {
-+			erp_valid = false;
-+		}
- 
--	if (!ieee80211_is_s1g_beacon(hdr->frame_control))
- 		changed |= ieee80211_handle_bss_capability(link,
- 				le16_to_cpu(mgmt->u.beacon.capab_info),
- 				erp_valid, erp_value);
-+	}
-+
-+	/*
-+	 * There are some other things that we can only do when the
-+	 * real non-transmitted profile was actually parsed, so exit
-+	 * here before doing those.
-+	 */
-+	if (elems->mbssid_nontx_profile_missing)
-+		goto apply;
-+
-+	/*
-+	 * This requires multi-link element, which is from the MBSSID profile.
-+	 * Note that after this elems->ml_basic can no longer be used fully.
-+	 *
-+	 * Note also that currently the parsing is incorrect, so this will
-+	 * never actually do anything.
-+	 */
-+	ieee80211_mgd_check_cross_link_csa(sdata, rx_status->link_id, elems);
-+
-+	/*
-+	 * EDCA parameters should be the same, but perhaps ACM can differ
-+	 * between BSSes in an MBSSID set.
-+	 */
-+	if (!sdata->u.mgd.epcs.enabled &&
-+	    !link->u.mgd.disable_wmm_tracking &&
-+	    ieee80211_sta_wmm_params(local, link, elems->wmm_param,
-+				     elems->wmm_param_len,
-+				     elems->mu_edca_param_set))
-+		changed |= BSS_CHANGED_QOS;
- 
- 	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
- 	if (WARN_ON(!sta)) {
-@@ -7702,6 +7742,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_link_data *link,
- 	ieee80211_process_adv_ttlm(sdata, elems,
- 				      le64_to_cpu(mgmt->u.beacon.timestamp));
- 
-+apply:
- 	ieee80211_link_info_change_notify(sdata, link, changed);
- free:
- 	kfree(elems);
-diff --git a/net/mac80211/parse.c b/net/mac80211/parse.c
-index b9ec99f51851a..b117572f8cb17 100644
---- a/net/mac80211/parse.c
-+++ b/net/mac80211/parse.c
-@@ -1032,6 +1032,10 @@ ieee802_11_parse_elems_full(struct ieee80211_elems_parse_params *params)
- 		sub.action = params->action;
- 		sub.link_id = params->link_id;
- 
-+		/* indicate to consumer whether or not profile was found */
-+		if (params->bss->transmitted_bss && !nontx_len)
-+			elems->mbssid_nontx_profile_missing = true;
-+
- 		/* consume the space used for non-transmitted profile */
- 		elems_parse->scratch_pos += nontx_len;
- 
+ 	/* elem might be invalid after the memmove */
 -- 
 2.53.0
 
