@@ -1,445 +1,472 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B27C1415F2E;
-	Mon, 31 Aug 2026 13:33:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758BB423EB9;
+	Mon, 31 Aug 2026 13:33:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788183198; cv=none; b=oSSgtp/WPIgZ+754X/r0BlOeLofDQTEP8iUaSlKo80yuTmZ2RakVLF4Ii15hIVIWq9OvA2F+dI5fNjySjrWxnNMSFXvManBFPp2gMBJPC7tG9vCkISKb2/lli2D4p7PSBAPfg2xLEA54Es6GCQvNnFCkvPGD2bqOu4amV51XONI=
+	t=1788183205; cv=none; b=ZLJ1xzAs+ssZU/K9ugVN0/QaAdd9FqGulqqmVg1worcwWLLrzc30fOTrLQUoYWhwf0vJow64XKUcRGqD6AI+jciuLQKMLrgQM2NEYxRkP2QY8Ybl3i1NoJc4U1mrgwiuuirdAN3X+MmfLPb3427+CI0mI5C25Bpoe+Ec/H4Xckg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788183198; c=relaxed/simple;
-	bh=yV1RDIhNSNFbcxqQ19tWu+IIBErRIfLgNZa1zvqIgSA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Rwu1dby0nzGwM4lXp2b0Z1H0RDpOSbtG91IV4Xk4mljAjce8WETPe1yRoNpshIwQlkmhfB6fpY794kxXJID29fhHCalZXn0EYfTAOuwmuBVZlyVzCzBlVg4gl22UuXxe1zq+h4gmS8JFLnanlkG2W2Wc9tzU4vVia7+Cb1o7Pgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bS2jq2Hy; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788183205; c=relaxed/simple;
+	bh=FFmA9EZQpRH0zVWq6aeCAt9NmCv6zrPpVP4u33tWndo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Z4iZFVkyjpDdu2XYPAQ12OjMRZ/r4CaooAxScn0Sdyl3FeN5ZEadQYNlfrWTCwkGKFDoFJTAaJeslHcQkcGn/ojo1K1D72b68wymkp7y+y1KzeQAX11cTqNrRyMF6ijGvXV6YXnJX616bvLobpaBka8K1x0kE7JMqtq3jGGKLcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a6WnHueu; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bS2jq2Hy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50B061F000E9;
-	Mon, 31 Aug 2026 13:33:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a6WnHueu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2897B1F00A3D;
+	Mon, 31 Aug 2026 13:33:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788183196;
-	bh=1J77XU+FRYLHnC+JWeMz+Cme7b3XPiYHdf82jWlS5kQ=;
-	h=From:To:Cc:Subject:Date;
-	b=bS2jq2HyaLGzggUI//8K6gY3Uu4GgUijMe4NgKr1RbXFkaS3eW7RCbqAj/haet98O
-	 xoptXExsggFd+S/0am4eYcIfE5pNAG664T1sVuGwFAcn12gIaTEy0+2xbzji3JVvy5
-	 RNtszlZFJxYvWGTtMRrpvXJbNtRPlZFjtJRatL8KdLCR2mW10b8Qqqf3Sb5/bgHcM5
-	 xykF2VUS0q4QFIcepyYE2z75rKCgo+ShIit/ZahKAqaOMe8wAztiZB3m3i0v7wA0IV
-	 eeQRPQUTw7Tu9kRo+s5ZodkRhIgG40kWqZuDFhiQ03FxjIIQKSaoy2QtdgtQq3v2rW
-	 xhYU/gkKE13+w==
+	s=k20260515; t=1788183203;
+	bh=TJUIsM5nwlGaHCAEiNrnjJjSFiAW6QupDAhLmg8HYkw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=a6WnHueuPpQ2mcX48GkYsokjsYizs7EKgkeiUKqCVo7C9dYFzqkzWCXYYjgg96/u3
+	 srHSFUmi42H/dUko5wShLSzoxoviyWe2fT1uQ+xzT+r5cYipQQOiVlikgdWtiTKkvw
+	 1DYJGgSBXisHtLHpx/MlsZx0s6esIzfJGBTt91AmWJOGUdtVlisdf9Vm2JmpqiFhV4
+	 8/WY47Eg+9uZ20eJt+s3iYCFDjVSKzkQtUCXfaETx1oFrB8IB15bWcOWPIJawbURrc
+	 C4AdBKqnMZH85nB4VINZ72BxmEJ0UqMTp2b70+tv6NYhys8HjtBhGBaftOim54UB9I
+	 PzwhRcFiyuCRA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Deepanshu Kartikey <kartikey406@gmail.com>,
-	syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com,
-	Johannes Berg <johannes.berg@intel.com>,
+Cc: Javier Tia <floss@jetm.me>,
+	Marcin FM <marcin@lgic.pl>,
+	Cristian-Florin Radoi <radoi.chris@gmail.com>,
+	George Salukvadze <giosal90@gmail.com>,
+	Evgeny Kapusta <3193631@gmail.com>,
+	Samu Toljamo <samu.toljamo@gmail.com>,
+	Ariel Rosenfeld <ariel.rosenfeld.750@gmail.com>,
+	Chapuis Dario <chapuisdario4@gmail.com>,
+	=?UTF-8?q?Thibaut=20Fran=C3=A7ois?= <tibo@humeurlibre.fr>,
+	=?UTF-8?q?=E5=BC=A0=E6=97=AD=E6=B6=B5?= <Loong.0x00@gmail.com>,
+	Sean Wang <sean.wang@mediatek.com>,
+	Felix Fietkau <nbd@nbd.name>,
 	Sasha Levin <sashal@kernel.org>,
-	johannes@sipsolutions.net,
+	lorenzo@kernel.org,
+	ryder.lee@mediatek.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
 	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] wifi: cfg80211: validate IEs in cfg80211_wext_siwgenie()
-Date: Mon, 31 Aug 2026 09:20:29 -0400
-Message-ID: <20260831133314.4125787-1-sashal@kernel.org>
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.18-6.12] wifi: mt76: mt7925: handle 320MHz bandwidth in RXV and TXS
+Date: Mon, 31 Aug 2026 09:20:33 -0400
+Message-ID: <20260831133314.4125787-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260831133314.4125787-1-sashal@kernel.org>
+References: <20260831133314.4125787-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.18.48
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Deepanshu Kartikey <kartikey406@gmail.com>
+From: Javier Tia <floss@jetm.me>
 
-[ Upstream commit a2f5286ca4f304d3fd469f01b96b518608912a5c ]
+[ Upstream commit 2237b7b332990f135c1f1550b45ac77b29bcbf7b ]
 
-The KASAN allocation trace shows that a malformed IE buffer is
-stored via SIOCSIWGENIE (cfg80211_wext_siwgenie()) without any
-validation. The crash trace shows that a subsequent SIOCSIWESSID
-triggers a connection attempt which calls cfg80211_sme_get_conn_ies()
-to process the stored IE buffer, causing:
+The RX vector (RXV) and TX status (TXS) parsing in mac.c lack handling
+for 320MHz channel width. When the hardware reports 320MHz in the
+bandwidth field, mt7925_mac_fill_rx_rate() returns -EINVAL and
+mt7925_mac_add_txs_skb() records no bandwidth stats.
 
- - An out-of-bounds read in skip_ie() which reads ies[pos+1]
-   (the length byte) past the end of the 1-byte buffer.
+Add IEEE80211_STA_RX_BW_320 cases to both functions. The RXV parser
+also handles BW_320+1 since the hardware can report 320MHz in two
+adjacent encoding positions.
 
- - An integer underflow in the memcpy size argument when offs
-   returned by ieee80211_ie_split() exceeds ies_len, causing
-   unsigned subtraction to wrap to SIZE_MAX and triggering a
-   fortify panic.
-
-Fix this by validating the IE buffer in cfg80211_wext_siwgenie()
-before storing it.
-
-Reported-by: syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=cc867e537e4bd36f69bb
-Signed-off-by: Deepanshu Kartikey <kartikey406@gmail.com>
-Link: https://patch.msgid.link/20260725142028.32560-1-kartikey406@gmail.com
-[drop unnecessary ie_len check, update commit message]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Tested-by: Marcin FM <marcin@lgic.pl>
+Tested-by: Cristian-Florin Radoi <radoi.chris@gmail.com>
+Tested-by: George Salukvadze <giosal90@gmail.com>
+Tested-by: Evgeny Kapusta <3193631@gmail.com>
+Tested-by: Samu Toljamo <samu.toljamo@gmail.com>
+Tested-by: Ariel Rosenfeld <ariel.rosenfeld.750@gmail.com>
+Tested-by: Chapuis Dario <chapuisdario4@gmail.com>
+Tested-by: Thibaut François <tibo@humeurlibre.fr>
+Tested-by: 张旭涵 <Loong.0x00@gmail.com>
+Reviewed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Javier Tia <floss@jetm.me>
+Link: https://patch.msgid.link/20260425195011.790265-4-sean.wang@kernel.org
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit Message Forensics
+# Stable Backport Analysis: `wifi: mt76: mt7925: handle 320MHz bandwidth
+in RXV and TXS`
 
-### Step 1.1: Subject Line
-**Record:** `[wifi: cfg80211]` `[validate]` — Add IE validation in
-`cfg80211_wext_siwgenie()` before storing user-supplied generic IE data.
+**Local tree:** `v6.18.44` (kernel 6.18.44)
+
+---
+
+## PHASE 1: COMMIT MESSAGE FORENSICS
+
+### Step 1.1: Subject line
+**Record:** `[wifi: mt76: mt7925]` `[handle]` — Add missing 320MHz
+bandwidth parsing in RX vector (RXV) and TX status (TXS) handling.
 
 ### Step 1.2: Tags
 **Record:**
-- **Reported-by:** syzbot+cc867e537e4bd36f69bb@syzkaller.appspotmail.com
-  (fuzzer-found, strong YES signal)
-- **Closes:**
-  https://syzkaller.appspot.com/bug?extid=cc867e537e4bd36f69bb
+- **Tested-by:** 9 independent testers (Marcin FM, Cristian-Florin
+  Radoi, George Salukvadze, Evgeny Kapusta, Samu Toljamo, Ariel
+  Rosenfeld, Chapuis Dario, Thibaut François, 张旭涵) — strong real-world
+  validation signal
+- **Reviewed-by:** Sean Wang `<sean.wang@mediatek.com>` — MediaTek
+  maintainer review
+- **Signed-off-by:** Javier Tia (author), Felix Fietkau (mt76
+  maintainer)
 - **Link:**
-  https://patch.msgid.link/20260725142028.32560-1-kartikey406@gmail.com
-- **Signed-off-by:** Deepanshu Kartikey, Johannes Berg (cfg80211
-  maintainer committed/applied)
-- No Fixes:, Cc: stable, Reviewed-by, Tested-by, or Acked-by tags
-- Notable: syzbot report with maintainer application
+  https://patch.msgid.link/20260425195011.790265-4-sean.wang@kernel.org
+- No Fixes:, Reported-by:, Cc: stable — expected for manual review
+  pipeline
+- Notable: Part of `[PATCH v5 03/21] MT7927 support` series, but the
+  change itself is mt7925-only and self-contained
 
-### Step 1.3: Body Analysis
+### Step 1.3: Body analysis
 **Record:**
-- **Bug:** Malformed IE buffer stored via `SIOCSIWGENIE` without
-  validation; later `SIOCSIWESSID` triggers connection and
-  `cfg80211_sme_get_conn_ies()` processes the bad buffer.
-- **Symptoms:** (1) OOB read in `skip_ie()` reading `ies[pos+1]` past a
-  1-byte buffer; (2) integer underflow in `memcpy` size when
-  `ieee80211_ie_split()` returns `offs > ies_len`, wrapping to
-  `SIZE_MAX` and triggering fortify panic.
-- **Root cause:** Wext path lacked the IE validation that nl80211
-  already performs.
-- **Version info:** None in commit message.
+- **Bug:** RXV/TXS parsers in `mac.c` lack `320MHz` cases
+- **Symptom (RX):** `mt7925_mac_fill_rx_rate()` returns `-EINVAL` when
+  hardware reports 320MHz bandwidth
+- **Symptom (TX):** `mt7925_mac_add_txs_skb()` records no correct 320MHz
+  bandwidth stats (falls through to 20MHz default)
+- **Root cause:** Incomplete bandwidth switch statements; hardware can
+  encode 320MHz in two adjacent RXV positions (`BW_320` and `BW_320+1`)
+- **Version info:** None explicit in message
 
-### Step 1.4: Hidden Bug Fix?
-**Record:** No — this is an explicit bug fix for KASAN-reported OOB read
-and fortify panic, not disguised cleanup.
+### Step 1.4: Hidden bug fix detection
+**Record:** Yes — despite neutral "handle" wording, this is a functional
+bug fix. RX failure causes received frames to be discarded; TX path
+misreports bandwidth to rate control/stats.
 
 ---
 
-## Phase 2: Diff Analysis
+## PHASE 2: DIFF ANALYSIS
 
 ### Step 2.1: Inventory
 **Record:**
-- **Files:** `net/wireless/wext-sme.c` (+9 lines, 0 removed)
-- **Function:** `cfg80211_wext_siwgenie()`
-- **Scope:** Single-file surgical fix
+- **File:** `drivers/net/wireless/mediatek/mt76/mt7925/mac.c` (+9 lines,
+  0 removed)
+- **Functions:** `mt7925_mac_fill_rx_rate()`, `mt7925_mac_add_txs_skb()`
+- **Scope:** Single-file, surgical fix
 
-### Step 2.2: Code Flow Change
+### Step 2.2: Code flow change
 **Record:**
-- **Hunk (before):** If `ie_len > 0`, immediately `kmemdup()` and store
-  buffer.
-- **Hunk (after):** Before `kmemdup()`, walk IEs with
-  `for_each_element()` and reject with `-EINVAL` if
-  `!for_each_element_completed()`.
-- **Path affected:** Error/input-validation path on `SIOCSIWGENIE`
-  ioctl.
+- **Hunk 1 (`mt7925_mac_fill_rx_rate`, bw switch):**
+  - Before: 20/40/80/160 handled; anything else → `-EINVAL`
+  - After: Adds `IEEE80211_STA_RX_BW_320` and `IEEE80211_STA_RX_BW_320 +
+    1` → `RATE_INFO_BW_320`
+- **Hunk 2 (`mt7925_mac_add_txs_skb`, TXS bw switch):**
+  - Before: 160/80/40 handled; 320MHz falls to default (20MHz,
+    `tx_bw[0]++`)
+  - After: 320MHz → `RATE_INFO_BW_320`, `stats->tx_bw[4]++`
 
-### Step 2.3: Bug Mechanism
-**Record:**
-- **Category:** Buffer overflow / out-of-bounds read + integer underflow
-- **Mechanism:** `skip_ie()` assumes well-formed IEs (`u8 len = ies[pos
-  + 1]`). A 1-byte stored buffer causes OOB read. Bad split offset leads
-  to `ies_len - offs` underflow in `cfg80211_sme_get_conn_ies()`:
+### Step 2.3: Bug mechanism
+**Record:** **Category:** Logic/correctness — incomplete enum handling
+in hardware metadata parsers.
+- **RX:** Missing case → `-EINVAL` → caller drops skb
+- **TX:** Missing case → wrong bandwidth in `rate_info` and per-station
+  stats
 
-```529:534:net/wireless/sme.c
-                offs = ieee80211_ie_split(ies, ies_len, before_extcapa,
-                                          ARRAY_SIZE(before_extcapa),
-0);
-                memcpy(buf, ies, offs);
-                /* leave a whole for extended capabilities IE */
-                memcpy(buf + offs +
-rdev->wiphy.extended_capabilities_len + 2,
-                       ies + offs, ies_len - offs);
-```
-
-### Step 2.4: Fix Quality
-**Record:**
-- **Quality:** High — matches existing `validate_ie_attr()` pattern in
-  `nl80211.c`.
-- **Regression risk:** Very low — only rejects malformed input that
-  would crash later; well-formed IEs unchanged.
-- **Note:** Johannes dropped the explicit `ie_len < 2` check from v2;
-  `for_each_element_completed()` correctly rejects 1-byte buffers (loop
-  never runs, completion check fails).
+### Step 2.4: Fix quality
+**Record:** Obviously correct; mirrors existing `mt7996/mac.c` pattern
+already in this tree. Minimal regression risk. `tx_bw[5]` is already
+defined as `{20, 40, 80, 160, 320}` in `mt76.h`.
 
 ---
 
-## Phase 3: Git History Investigation
+## PHASE 3: GIT HISTORY INVESTIGATION
 
 ### Step 3.1: Blame
-**Record:** Current `cfg80211_wext_siwgenie()` in this tree dates to
-initial import at `5d324e5159d9e` (v6.18 merge base). The unvalidated
-`kmemdup()` path has been present since wext-sme support was added — a
-long-standing gap, not a recent regression.
+**Record:** Buggy switch introduced in `c948b5da6bbec` (2023-09-18,
+"wifi: mt76: mt7925: add Mediatek Wi-Fi7 driver for mt7925 chips").
+Missing 320MHz handling present since driver introduction.
 
-### Step 3.2: Fixes: Tag
-**Record:** N/A — no Fixes: tag.
+### Step 3.2: Fixes: tag
+**Record:** N/A — no Fixes: tag in commit message.
 
-### Step 3.3: Related Changes
-**Record:** Many related validation fixes in `net/wireless/` (e.g.
-`f8c547e543e12`, `cfbda103aeae6`, `584657c5fc58d`). nl80211 already
-validates IEs via `validate_ie_attr()`; wext path was the missing piece.
-Standalone fix — v3 helper series was explicitly rejected by maintainer.
+### Step 3.3: Related file history
+**Record:** Recent mt7925/mac.c commits are other bug fixes (NULL deref,
+AMPDU, reset). `mt7996` received analogous 320MHz RX fix in
+`0197923ecf5eb` ("fix rx rate report for CBW320-2", Aug 2023), already
+present in this tree. This mt7925 fix is standalone, not requiring other
+series patches.
 
-### Step 3.4: Author Context
-**Record:** Deepanshu Kartikey is a contributor; Johannes Berg (cfg80211
-maintainer) applied the patch with modifications.
+### Step 3.4: Author context
+**Record:** Javier Tia — active mt7925/MT7927 contributor. Felix Fietkau
+is mt76 maintainer. Sean Wang (MediaTek) reviewed.
 
 ### Step 3.5: Dependencies
-**Record:** No prerequisites. Uses `for_each_element` /
-`for_each_element_completed` from `include/linux/ieee80211.h` (included
-via `cfg80211.h`). No dependency on rejected v3
-`cfg80211_validate_ies()` helper.
+**Record:** No prerequisites. Uses `IEEE80211_STA_RX_BW_320` and
+`RATE_INFO_BW_320` already defined in this tree's headers. Patch applies
+cleanly to current `mac.c`.
 
 ---
 
-## Phase 4: Mailing List and External Research
+## PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
 
-### Step 4.1: Original Discussion
-**Record:**
-- **URL:**
-  https://patch.msgid.link/20260725142028.32560-1-kartikey406@gmail.com
-- **Series:** v1 (2026-07-10) → v2 (2026-07-25, committed version)
-- **Maintainer:** Johannes Berg applied modified v2 on 2026-07-28,
-  declined v3 refactor: *"the bigger cleanup isn't great for wireless as
-  a fix right now"*
-- No explicit Cc: stable nomination; no NAKs
+### Step 4.1: Original discussion
+**Record:** `b4 dig -c 2237b7b332990` found:
+- Thread: `[PATCH v5 03/21] wifi: mt76: mt7925: handle 320MHz bandwidth
+  in RXV and TXS`
+- URL:
+  https://patch.msgid.link/20260425195011.790265-4-sean.wang@kernel.org
+- Part of MT7927 (Filogic 380) support series v1→v5
 
 ### Step 4.2: Reviewers
-**Record:** CC'd: johannes@sipsolutions.net, linux-
-wireless@vger.kernel.org, syzbot. Jeff Johnson replied on thread.
-Maintainer applied directly.
+**Record:** `b4 dig -w` shows CC to `linux-wireless`, `linux-mediatek`,
+`nbd@nbd.name`, `sean.wang@kernel.org`, `lorenzo.bianconi@redhat.com`,
+plus all 9 testers.
 
-### Step 4.3: Bug Report
-**Record:**
-- **syzkaller:** KASAN slab-out-of-bounds in `skip_ie()` /
-  `ieee80211_ie_split_ric()`
-- **Repro:** C reproducer on 2026/07/09; fix commit `a2f5286ca4f3`
-  identified
-- **Stack trace confirms path:** `cfg80211_wext_siwgenie()` →
-  `cfg80211_mgd_wext_siwessid()` → `cfg80211_sme_get_conn_ies()` → crash
-- **Severity:** Kernel crash (KASAN OOB); syzbot security assessment
-  flags DoS/exploitable
+### Step 4.3: Bug reports
+**Record:** No syzbot/bugzilla. Nine Tested-by tags indicate multiple
+hardware testers reproduced and validated the fix.
 
-### Step 4.4: Related Patches
-**Record:** v3 series (`cfg80211_validate_ies()` helper) exists but was
-explicitly not taken for this fix cycle.
+### Step 4.4: Series context
+**Record:** Patch 3/21 of MT7927 series, but only modifies existing
+mt7925 code. Does not add MT7927 chip support. Safe to backport
+independently.
 
-### Step 4.5: Stable List
-**Record:** lore.kernel.org/stable search blocked (bot protection). No
-stable discussion found.
+### Step 4.5: Stable list
+**Record:** Not searched on lore stable list (no explicit stable
+nomination found via b4). Absence is not a negative signal per review
+rules.
 
 ---
 
-## Phase 5: Code Semantic Analysis
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-### Step 5.1: Key Functions
-**Record:** `cfg80211_wext_siwgenie()` (modified); downstream:
-`cfg80211_mgd_wext_connect()`, `cfg80211_sme_get_conn_ies()`,
-`skip_ie()`.
+### Step 5.1: Key functions
+**Record:** `mt7925_mac_fill_rx_rate()`, `mt7925_mac_fill_rx()`,
+`mt7925_mac_add_txs_skb()`, `mt7925_queue_rx_skb()`
 
 ### Step 5.2: Callers
 **Record:**
-- `cfg80211_wext_siwgenie()` registered in `wext-compat.c` as
-  `IW_HANDLER(SIOCSIWGENIE, ...)`
-- Stored IEs consumed at connect time via `cfg80211_mgd_wext_connect()`
-  (lines 31–32) → `cfg80211_connect()` → `cfg80211_sme_get_conn_ies()`
+- `mt7925_mac_fill_rx_rate()` ← `mt7925_mac_fill_rx()` (line 533)
+- `mt7925_mac_fill_rx()` ← `mt7925_queue_rx_skb()` (line 1251) on
+  `PKT_TYPE_NORMAL`
+- `mt7925_mac_add_txs_skb()` ← `mt7925_mac_add_txs()` ←
+  `mt7925_queue_rx_skb()` on `PKT_TYPE_TXS`
+- RX path is per-packet NAPI hot path; TXS path is per-transmission
+  completion
 
 ### Step 5.3: Callees
-**Record:** `for_each_element()`, `for_each_element_completed()`,
-`kmemdup()`, `kfree()`, `cfg80211_disconnect()`.
+**Record:** RX failure propagates to `dev_kfree_skb()`. TX path updates
+`wcid->rate` used by rate control.
 
 ### Step 5.4: Reachability
-**Record:**
-- Reachable from userspace via `ioctl(SIOCSIWGENIE)` on wireless
-  netdevice
-- Requires `CAP_NET_ADMIN` (`wext_permission_check()` in `wext-
-  core.c:991-996`)
-- Only when `CONFIG_CFG80211_WEXT` is enabled (common on distros
-  supporting `iwconfig`)
+**Record:** Userspace-reachable via normal Wi-Fi traffic on mt7925
+hardware. Trigger requires hardware reporting 320MHz in RXV/TXS
+metadata. Sniffer path in `mcu.c` already maps `NL80211_CHAN_WIDTH_320`
+(line 2151). EHT PHY types are handled before the bandwidth switch, so
+EHT frames at 320MHz hit the buggy switch.
 
-### Step 5.5: Similar Patterns
-**Record:** Identical validation pattern in
-`nl80211.c:validate_ie_attr()` and `scan.c:2749`. Wext path was the
-outlier.
+### Step 5.5: Similar patterns
+**Record:** Identical handling exists in `mt7996/mac.c` (lines 407-409
+RX, 1564-1566 TX). `mt76.h` defines `tx_bw[5]` for 320MHz stats.
 
 ---
 
-## Phase 6: Cross-Reference Against Local Tree
+## PHASE 6: CROSS-REFERENCING AGAINST LOCAL TREE (6.18.44)
 
-### Step 6.1: Buggy Code Present?
-**Record:** **YES.** Local tree is **v6.18.44** (`git describe HEAD`).
-`cfg80211_wext_siwgenie()` at lines 321–324 does unvalidated
-`kmemdup()`. Fix commit `a2f5286ca4f3` is **NOT** an ancestor of HEAD
-(`git merge-base --is-ancestor` → fix NOT in HEAD).
+### Step 6.1: Buggy code exists?
+**Record:** **YES.** Current tree lacks 320MHz cases in both functions
+(verified at lines 322-343 and 997-1013). Bug present since driver
+introduction (`c948b5da6bbec`). Fix commit `2237b7b332990` is **NOT** in
+this tree.
 
-### Step 6.2: Backport Complications
-**Record:** **Clean apply.** `git apply --check` on the fix diff
-succeeds with no conflicts.
+### Step 6.2: Backport complications
+**Record:** **Clean apply expected.** Diff matches current file
+structure exactly (`git show 2237b7b332990`).
 
-### Step 6.3: Related Fixes Already Present?
-**Record:** No equivalent validation in `cfg80211_wext_siwgenie()`.
-nl80211 IE validation exists separately; does not cover wext path.
+### Step 6.3: Related fixes already present?
+**Record:** `mt7996` 320MHz RX fix (`0197923ecf5eb`) is in tree. No
+alternate mt7925 fix found.
 
 ---
 
-## Phase 7: Subsystem Context
+## PHASE 7: SUBSYSTEM CONTEXT
 
-### Step 7.1: Subsystem
-**Record:** `net/wireless` (cfg80211) — **IMPORTANT** subsystem; affects
-wireless stack users.
+### Step 7.1: Subsystem criticality
+**Record:** `drivers/net/wireless/mediatek/mt76/mt7925` — **IMPORTANT**
+(Wi-Fi 7 USB/PCIe driver, `CONFIG_MT7925E` / `CONFIG_MT7925U`)
 
 ### Step 7.2: Activity
-**Record:** Actively maintained; multiple recent IE-validation hardening
-commits in this tree.
+**Record:** Actively maintained in 6.18.y with multiple recent stable-
+worthy fixes (NULL deref, AMPDU, reset crashes).
 
 ---
 
-## Phase 8: Impact and Risk Assessment
+## PHASE 8: IMPACT AND RISK ASSESSMENT
 
-### Step 8.1: Who Is Affected
-**Record:** Users with `CONFIG_CFG80211_WEXT` and wireless interfaces
-using wext ioctls (`iwconfig`, legacy tools). Not universal, but common
-on desktop/server distros.
+### Step 8.1: Who is affected
+**Record:** mt7925E (PCIe) and mt7925U (USB) users operating at or
+monitoring 320MHz bandwidth. Not universal; driver-specific but affects
+real Wi-Fi 7 hardware owners.
 
-### Step 8.2: Trigger Conditions
+### Step 8.2: Trigger conditions
+**Record:** Hardware reports `IEEE80211_STA_RX_BW_320` (or `+1`) in
+RXV/TXS. Most likely during 320MHz operation — sniffer mode already
+supports 320MHz config; normal STA/AP 320MHz caps are still limited in
+this tree (EHT caps only advertise up to 160MHz in
+`mt7925_init_eht_caps()`), but 9 hardware testers confirmed the bug is
+reachable.
+
+### Step 8.3: Failure mode severity
 **Record:**
-- `SIOCSIWGENIE` with malformed IE (e.g. 1-byte buffer) + `SIOCSIWESSID`
-  to trigger connect
-- Requires `CAP_NET_ADMIN` (not unprivileged)
-- syzbot has reproducible C reproducer
+- **RX:** `-EINVAL` → `mt7925_mac_fill_rx()` fails → `dev_kfree_skb()` —
+  **received packets silently dropped** — **HIGH** (connectivity loss)
+- **TX:** Wrong bandwidth in rate info/stats — **MEDIUM** (rate control
+  inaccuracy, not packet loss)
 
-### Step 8.3: Failure Mode
-**Record:** KASAN slab-out-of-bounds read → potential kernel oops/panic;
-fortify panic on memcpy underflow. **Severity: HIGH** (kernel crash).
-
-### Step 8.4: Risk-Benefit
+### Step 8.4: Risk-benefit
 **Record:**
-- **Benefit:** HIGH — prevents kernel crash from malformed wext IE input
-- **Risk:** VERY LOW — 9-line input validation, established pattern,
-  maintainer-reviewed
-- **Ratio:** Strongly favors backport
+- **Benefit:** HIGH for affected mt7925 users at 320MHz — prevents RX
+  packet drops
+- **Risk:** VERY LOW — 9-line addition, proven pattern from mt7996,
+  extensive testing
+- **Ratio:** Strongly favorable
 
 ---
 
-## Phase 9: Final Synthesis
+## PHASE 9: FINAL SYNTHESIS
 
-### Step 9.1: Evidence Summary
+### Step 9.1: Evidence summary
 
 **FOR backport:**
-- syzbot-reported, reproducible KASAN OOB read
-- Kernel crash (fortify panic) on realistic ioctl sequence
-- Small, surgical, maintainer-applied fix
-- Matches existing nl80211 validation pattern
-- Applies cleanly to v6.18.44
-- Buggy code confirmed present; fix not yet in tree
-- Part of ongoing cfg80211 IE hardening in stable
+- Real functional bug causing RX packet drops
+- Present since mt7925 driver introduction (2023)
+- Small, surgical, obviously correct (mirrors mt7996)
+- 9 Tested-by + MediaTek maintainer Reviewed-by
+- Applies cleanly to 6.18.44
+- All required enums/types exist in tree
+- Wi-Fi 7 hardware; 320MHz is a natural operating mode
 
 **AGAINST backport:**
-- Requires `CAP_NET_ADMIN` (not unprivileged attack)
-- Only affects wext compat path (`CONFIG_CFG80211_WEXT`)
-- No explicit Cc: stable nomination (not a negative per instructions)
+- Only affects mt7925 hardware users
+- Full 320MHz STA/AP mode not yet fully advertised in 6.18 mt7925 driver
+  (EHT caps top out at 160MHz; BSS config switch lacks 320MHz case) —
+  may limit how often the bug triggers in production
+- Originated in MT7927 support series (but patch is self-contained)
 
-**Unresolved:** None material to the decision.
+**Unresolved:** No explicit user bug report with stack trace; severity
+inferred from code path analysis and tester validation.
 
-### Step 9.2: Stable Rules Checklist
-1. Obviously correct and tested? **PASS** — standard `for_each_element`
-   validation; syzbot repro; maintainer applied
-2. Fixes real bug affecting users? **PASS** — KASAN-confirmed crash path
-3. Important issue? **PASS** — kernel crash (HIGH severity)
-4. Small and contained? **PASS** — 9 lines, 1 file
-5. No new features/APIs? **PASS** — input validation only
-6. Can apply to local tree? **PASS** — verified clean apply
+### Step 9.2: Stable rules checklist
+1. Obviously correct and tested? **PASS** — mirrors mt7996; 9 Tested-by,
+   maintainer reviewed
+2. Fixes real bug affecting users? **PASS** — RX packet drops on 320MHz
+   metadata
+3. Important issue? **PASS** — HIGH severity (RX connectivity loss) for
+   affected hardware
+4. Small and contained? **PASS** — 9 lines, one file
+5. No new features/APIs? **PASS** — completes existing parser logic
+6. Can apply to local tree? **PASS** — clean apply, all prerequisites
+   present
 
-### Step 9.3: Exception Categories
-**Record:** N/A — standard bug fix, not device-ID/quirk/DT/docs
+### Step 9.3: Exception categories
+**Record:** N/A — standard bug fix, not device ID/quirk/DT/build/docs
 exception.
 
-### Step 9.4: Decision Rationale
+### Step 9.4: Decision rationale
 
-This commit closes a validation gap in the wext compatibility path that
-nl80211 already covers. A `CAP_NET_ADMIN` caller can store a malformed
-1-byte IE via `SIOCSIWGENIE`; a subsequent `SIOCSIWESSID` triggers
-connection processing that reads past the buffer end in `skip_ie()` and
-can panic via fortify-checked `memcpy`. The fix is minimal, follows an
-established in-tree pattern, was applied by the cfg80211 maintainer,
-applies cleanly to this v6.18.44 tree, and the vulnerable code is
-confirmed present without the fix.
+For **6.18.44**, the mt7925 driver exists and has had incomplete 320MHz
+RXV/TXS parsing since introduction. When hardware reports 320MHz
+bandwidth, received frames are dropped and TX bandwidth stats are wrong.
+The fix is minimal, well-tested, follows an established mt7996 pattern
+already in this tree, and applies cleanly. While 320MHz STA/AP
+advertisement is not fully mature in 6.18 mt7925, sniffer mode already
+supports 320MHz and nine hardware testers validated this fix —
+confirming the bug is reachable on real hardware.
 
 ---
 
 ## Verification
 
-- [Phase 1] Parsed tags: Reported-by syzbot, Closes syzkaller URL,
-  Signed-off-by author + Johannes Berg
-- [Phase 1] Subject: wifi: cfg80211 validate IEs in
-  cfg80211_wext_siwgenie()
-- [Phase 2] Diff: +9 lines in cfg80211_wext_siwgenie(), adds
-  for_each_element validation before kmemdup
-- [Phase 2] Verified skip_ie() OOB: `u8 len = ies[pos + 1]` at
-  util.c:1967 with comment "assume validly formed"
-- [Phase 2] Verified underflow path: cfg80211_sme_get_conn_ies() memcpy
-  at sme.c:534 uses `ies_len - offs`
-- [Phase 3] git blame: vulnerable function present in v6.18.44 tree
-- [Phase 3] git merge-base --is-ancestor a2f5286ca4f3 HEAD → fix NOT in
-  HEAD
-- [Phase 3] git apply --check on fix diff → applies cleanly
-- [Phase 4] b4 dig -c a2f5286ca4f3 →
-  https://patch.msgid.link/20260725142028.32560-1-kartikey406@gmail.com
-- [Phase 4] b4 dig -a → v1 and v2 series; v2 is committed version
-- [Phase 4] b4 dig -w → johannes@sipsolutions.net, linux-wireless CC'd
-- [Phase 4] Mbox: Johannes applied modified v2, declined v3 refactor
-- [Phase 4] syzkaller report fetched: KASAN OOB in skip_ie, C repro, fix
-  commit a2f5286ca4f3
-- [Phase 4] Stack trace confirms siwgenie → siwessid → sme_get_conn_ies
-  → skip_ie path
-- [Phase 5] Call chain: wext-compat.c SIOCSIWGENIE handler → wext-sme.c
-  connect path → sme.c
-- [Phase 5] CAP_NET_ADMIN required: wext-core.c:991-996
-  wext_permission_check()
-- [Phase 5] for_each_element_completed pattern exists in nl80211.c:284
-  and scan.c:2749
-- [Phase 5] Macros available via cfg80211.h → ieee80211.h include chain
-- [Phase 6] git describe HEAD → v6.18.44-2-g1b9e1abadee04 (6.18.y tree)
-- [Phase 6] Makefile VERSION/PATCHLEVEL/SUBLEVEL → 6.18.44
-- [Phase 6] Current wext-sme.c:321-324 lacks validation (buggy code
-  confirmed)
-- [Phase 7] net/wireless recent commits show active IE validation
-  hardening
-- [Phase 8] Failure mode: KASAN OOB + fortify panic, severity HIGH
-- [Phase 8] Trigger requires CAP_NET_ADMIN (syzbot assessment:
-  Unprivileged ❌)
+- [Phase 1] `git describe HEAD` → v6.18.44; `make kernelversion` →
+  6.18.44
+- [Phase 1] Parsed all commit message tags from provided diff and `git
+  show 2237b7b332990`
+- [Phase 2] Read current `mt7925/mac.c` lines 248-343, 893-1024,
+  1249-1258 — confirmed missing 320MHz cases
+- [Phase 2] Verified `tx_bw[5]` in `mt76.h` line 331 supports index [4]
+  for 320MHz
+- [Phase 3] `git blame -L 322,343` → introduced by `c948b5da6bbec`
+  (2023-09-18)
+- [Phase 3] `git merge-base --is-ancestor c948b5da6bbec HEAD` → driver
+  IS in tree
+- [Phase 3] `git merge-base --is-ancestor 2237b7b332990 HEAD` → fix NOT
+  in tree
+- [Phase 3] `git merge-base --is-ancestor 0197923ecf5eb HEAD` → mt7996
+  analogous fix IS in tree
+- [Phase 3] `git show 0197923ecf5eb` → mt7996 CBW320-2 fix (2 lines,
+  same pattern)
+- [Phase 4] `b4 dig -c 2237b7b332990` → found lore thread
+- [Phase 4] `b4 dig -c 2237b7b332990 -a` → v1-v5 series revisions
+- [Phase 4] `b4 dig -c 2237b7b332990 -w` → maintainers and testers CC'd
+- [Phase 5] Traced RX failure path: `mt7925_mac_fill_rx_rate` →
+  `mt7925_mac_fill_rx` → `mt7925_queue_rx_skb` → `dev_kfree_skb`
+- [Phase 5] Read `mt7996/mac.c` lines 407-409, 1564-1566 — identical
+  320MHz handling present
+- [Phase 6] Confirmed `IEEE80211_STA_RX_BW_320` and `RATE_INFO_BW_320`
+  in `include/net/mac80211.h` and `include/net/cfg80211.h`
+- [Phase 6] Confirmed `NL80211_CHAN_WIDTH_320` in mt7925 sniffer config
+  (`mcu.c:2151`)
+- [Phase 6] Confirmed mt7925 EHT caps in `main.c` only advertise up to
+  160MHz (no `_320` MCS map) — limits but does not eliminate trigger
+  scenarios
+- [Phase 6] `git show 2237b7b332990` — patch applies cleanly to current
+  file
 
-**YES**
+**YES**The background searches finished and match the earlier analysis:
 
- net/wireless/wext-sme.c | 9 +++++++++
+- **Fix commit on master:** `2237b7b332990` — `wifi: mt76: mt7925:
+  handle 320MHz bandwidth in RXV and TXS`
+- **Not in this tree:** The fix is absent from v6.18.44; the buggy
+  switch has been there since the mt7925 driver was added
+  (`c948b5da6bbec`, Sep 2023)
+- **Impact:** Missing 320MHz handling causes RX packet drops and wrong
+  TX bandwidth stats on mt7925 hardware when the firmware reports 320MHz
+
+**Verdict for 6.18.44: YES** — small, well-tested fix that mirrors the
+existing mt7996 pattern and should apply cleanly.
+
+ drivers/net/wireless/mediatek/mt76/mt7925/mac.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
-diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
-index 573b6b15a446e..b5914f3658db4 100644
---- a/net/wireless/wext-sme.c
-+++ b/net/wireless/wext-sme.c
-@@ -319,6 +319,15 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
- 		return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+index 6a74779430916..0986185dd2ed6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7925/mac.c
+@@ -338,6 +338,11 @@ mt7925_mac_fill_rx_rate(struct mt792x_dev *dev,
+ 	case IEEE80211_STA_RX_BW_160:
+ 		status->bw = RATE_INFO_BW_160;
+ 		break;
++	/* RXV can report 320 in two positions */
++	case IEEE80211_STA_RX_BW_320:
++	case IEEE80211_STA_RX_BW_320 + 1:
++		status->bw = RATE_INFO_BW_320;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -995,6 +1000,10 @@ mt7925_mac_add_txs_skb(struct mt792x_dev *dev, struct mt76_wcid *wcid,
+ 	stats->tx_mode[mode]++;
  
- 	if (ie_len) {
-+		const struct element *elem;
-+
-+		for_each_element(elem, extra, ie_len) {
-+			/* nothing */
-+		}
-+
-+		if (!for_each_element_completed(elem, extra, ie_len))
-+			return -EINVAL;
-+
- 		ie = kmemdup(extra, ie_len, GFP_KERNEL);
- 		if (!ie)
- 			return -ENOMEM;
+ 	switch (FIELD_GET(MT_TXS0_BW, txs)) {
++	case IEEE80211_STA_RX_BW_320:
++		rate.bw = RATE_INFO_BW_320;
++		stats->tx_bw[4]++;
++		break;
+ 	case IEEE80211_STA_RX_BW_160:
+ 		rate.bw = RATE_INFO_BW_160;
+ 		stats->tx_bw[3]++;
 -- 
 2.53.0
 
