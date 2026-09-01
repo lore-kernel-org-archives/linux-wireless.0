@@ -1,38 +1,85 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 001D82F5324
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 11:18:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82C782BEC4E
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 12:32:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788261521; cv=none; b=PMjnh1WCeJAWBcsMeJy52HAjv8Zb2+CpGAWXH3jvH+hwlJxUiwGsxZfccO7kAEMKbMTZo3IbsuHuzvB5RIFQnlWTxc/cM4CiLqncsEbh1aKJldZD3iwujtMybkZl2NAKHjldsaHGz/BMHmpqEgsJIOfTxhEv+H63k4diEfUYkg8=
+	t=1788265949; cv=none; b=iQiVRnoc8WXkUdWZ5iyUg1u+UL8Lc5zi6S8vvTa235Zr4oktaxYyrIMnG+LcaAw9+YEP8IGVUnR64BfIThubzVz0jSfB0BYxjhvOntlKn+ueBWnxnDhOSvjjmt0PnoIdOS/juQUN3YELlAsTzu+WdzM+LbVSt4WcQnk8/uoGR5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788261521; c=relaxed/simple;
-	bh=fvIWSL6YkHcJVCQ5SThWtPGcHr6g++pogdng+9sct+g=;
+	s=arc-20240116; t=1788265949; c=relaxed/simple;
+	bh=L/1GqbI6CVNHTOL+k5Bs8hxag5TXOK8IKP5ljcwCiiU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fPoWDP91aCNiz1FUe+mwEjbvZt7Ce+HM4Sh//C8N8XN/gs6RiMpXuYo+Bx2H8mUAEGgnWL8JLvZgkT7cHitCPpCZJ3KFvv3pIxCHxt94mFY/0lv3lSzSN/eMg97/ktblSq2c1zECwwxfu69URGG0r/sl2Jm2BqUS85GwjD9gSAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=Y6F+iXd/; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	 In-Reply-To:Content-Type; b=hR/kDgYMzr8UFtROD2LzOlMN6Uqi+pXBVlJojB9tj9A8e0te7PPChrIp0Z5n666wBHfuZQojPiukRqR12cnX0hbihx0WD5ybrAnofK+F9uxhjlYvbnNRXpsIJsQCPEgm+bFaCdsBgG5UhhyEHYkNayZYiWrDN0rFSZDcFOOmjqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=irf9zcoS; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=c/brrIno; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Y6F+iXd/"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender:Reply-To:
-	Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-	Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-	List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=rgmL92h5XLCrFWaqnhiuVXrBTMLsaLg5UegKNjUl3C8=; b=Y6F+iXd/aMi/2XiJJxTfHlVB+R
-	9kTdl0GAU9jg4oMUwCVRDntnEW4c04rj8v1aw5+hVa6SDkqMLYGfPZy0kQZmvatYZ41ZsKwVHmSiQ
-	kZ7ls/B/VFWJSYR0Wv8eFHLBtJE69qpEcfj6IS869+SNl4tuVjF0ZEuJrX0PaJP4yWeY=;
-Received: from p54a43140.dip0.t-ipconnect.de ([84.164.49.64] helo=nf.local)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1x1MVc-00CHLW-0t;
-	Tue, 01 Sep 2026 13:18:32 +0200
-Message-ID: <840a505b-bff8-4e57-9bb6-892a42b9aad2@nbd.name>
-Date: Tue, 1 Sep 2026 13:18:31 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="irf9zcoS";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="c/brrIno"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 681AJdxA2406438
+	for <linux-wireless@vger.kernel.org>; Tue, 1 Sep 2026 12:32:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	UicsQCF2CHWzuvo39HPg9O428ToJvHotIHdRWV/p2dg=; b=irf9zcoSmiDPinKB
+	60PluqS2vnI1lsOxUmCHBUVLANxeE5+APsUjKskvpzQEekTcbKXSncLl5oeu6M6Z
+	vAUA86FCM7dOMEBoReY9kKpEK07FFOS9ELKOwDbBgObeS8uQWFee8prHRvR96N2m
+	r2dLGBV/COzhVJFapfVPAIVKdhNuHx370XD5bS+vCH7kRp5BH9aJRn5jagnWc7Nd
+	fQ6TyVfbbJxYaEqT2FfALq2dprYxZa1YM9yhy3EOu8EbRCs7RN3xvoYgy2e3j4yL
+	Vgx0oTVGXkMC8gQ/Az8NcwaclewhP83CJv6iIryVS9AxRVTAdbD4wlrK7YDGpENL
+	gt98Sw==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gdp7r2a5x-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 12:32:27 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3965ba1ba3eso6187623a91.2
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 05:32:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788265946; x=1788870746; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=UicsQCF2CHWzuvo39HPg9O428ToJvHotIHdRWV/p2dg=;
+        b=c/brrInoJKxkzbClhPcfhxsegHuy6BKKg3M4YsW2ASz0Q9qfmuWdDkjbpV0dV8E4jo
+         c9OxMrcH+ENj+4NR2bwiwEr7DAKOIFWKk2yND9QrO2SBsOV8RQtyDj3bJFXWYZZ7eozA
+         t2K4blrQ5sC/ACE6OAqHe8NrZUf06v/gT6pkZWlNK0TFXnvSj9HZY7UTl0Rz/dch5ZBA
+         tHlVbZLLU7e4PKbCcVZIu/6xwCiB590VjAnTWexgMSFoOrjF6FxHUoXBe2KPs5gZsERM
+         urb85LynfiT9z0r20tPEKDAjUqDhvSIaLuoPfYPLKVuySSRaQ8vuiSipzZSAqwk6KLwJ
+         0mUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788265946; x=1788870746;
+        h=content-transfer-encoding:content-type:in-reply-to:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=UicsQCF2CHWzuvo39HPg9O428ToJvHotIHdRWV/p2dg=;
+        b=qrVcgteEDVdIjC844MRd0I7n0xcYflvdPGo+igODWJqYDnOuBIr9fsHbovqIl5s+v5
+         YHYhX43j8PmOAwGD/Frwt0mAi3N+GP+GfFfT4eKHx5AWOn/4d3sKNQ9yfRnSOAZIz3b3
+         QNfmFSSIHDjTMzvwKqsJdJcR3NNPfLaXvHuepovsK/9d8X4gurTp7WoIfcqsLo3tYJo9
+         N4WonJFmxCOOPV3UInlpKJszx+dGpSHt9dULaM64Dg4bftrKi5zoZO9Z7iXItw7BjzRz
+         pfrZLWmg4evO5nkNwvyxHhrSru6/NMJEyU5Uvqjn5cSN72cE/ubb6jyfeXdG8B6qmOLf
+         L14w==
+X-Gm-Message-State: AFuF++nMx80BU9NepjxW2tUata5Ii/r1a7DVvrVazuz806EfzFrpLCPU
+	9h7JemL4yThjo4S5gWH6rS494qesKqTz9p+37NhcNrDSshDW2Z9BCJLtkwCjiLcRgLYTsWVFDZu
+	eXVqZA27dDBgoYTcT8PHi13hIsmrsoTByBxs07/Oh55YQ7Yh0je0TbnyHVpO1v87JZQRnsQ==
+X-Gm-Gg: AYBFou1QBuD6vRIQ8gCs9OsP+sQZKqiNmq2ebtIfdcl4yI3JPm44BWear+y0LVU+7v1
+	WwPa7WddqnE2doCCkkf4QnTI74kapaXxUPk4QEBCX6b7x35CLKwi1JaJ4n3S2ttcwVliQfQo7nM
+	P7FQcyl6RPgNU3pBmZgdJEz/Z4h1vgcAmc5+xggvoxynuaLunc+GWRhG/EvtzzZdY1HwVJ85umh
+	t5aCHaitHMglGNidI3VDKpPabNf6kMG1XuhiIuATBTuRWu9kHkaMxPHzl+u4BweBeg/OOzjt8LC
+	oWjgpG8apEhXy2LjvWnjXen0hwEpaLwzSb+jFKNX6kkxDXI0HmCCc46HHIS7Eh6y6GWyG+GyCy9
+	kwLiPfd8vBn3XZ3CJPP/2VCYRIA4MnsUX2TWMhwBmbGb+
+X-Received: by 2002:a17:90b:4e88:b0:398:a145:5d3d with SMTP id 98e67ed59e1d1-39907b17a4dmr12472464a91.6.1788265946438;
+        Tue, 01 Sep 2026 05:32:26 -0700 (PDT)
+X-Received: by 2002:a17:90b:4e88:b0:398:a145:5d3d with SMTP id 98e67ed59e1d1-39907b17a4dmr12472352a91.6.1788265945902;
+        Tue, 01 Sep 2026 05:32:25 -0700 (PDT)
+Received: from [192.168.11.105] ([124.123.80.135])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-142e0d18eaasm39622866c88.1.2026.09.01.05.32.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Sep 2026 05:32:25 -0700 (PDT)
+Message-ID: <0fc0b82d-69c6-453d-bdf5-c51a9237035a@oss.qualcomm.com>
+Date: Tue, 1 Sep 2026 18:02:17 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -40,58 +87,64 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] wifi: mt76: mt7996: use spin_lock_irqsave for reg_lock
-To: Valera Kozlov <valera.kozlov19@gmail.com>,
- Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Cc: Shayne Chen <shayne.chen@mediatek.com>, Sean Wang
- <sean.wang@mediatek.com>, linux-wireless@vger.kernel.org
-References: <20260824062301.270-1-valera.kozlov19@gmail.com>
+Subject: Re: [PATCH v2 1/2] wifi: ath12k: support calibration-variant from
+ device tree
+To: Andrew LaMarche <andrewjlamarche@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Jeff Johnson
+ <jjohnson@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        ath12k@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Ernest Van Hoecke <ernestvanhoecke@gmail.com>
+References: <20260630133001.1426824-1-andrewjlamarche@gmail.com>
+From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
 Content-Language: en-US
-From: Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCeMncXpbbWNT2AtoAYICrKyX5R3iMAoMhw
- cL98efvrjdstUfTCP2pfetyN
-In-Reply-To: <20260824062301.270-1-valera.kozlov19@gmail.com>
+In-Reply-To: <20260630133001.1426824-1-andrewjlamarche@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=beZbluPB c=1 sm=1 tr=0 ts=6a96c5db cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=kllYWVK2JqQtNyhMtAlpJw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
+ a=pGLkceISAAAA:8 a=EUspDBNiAAAA:8 a=erCTOyO-HGHO-QmL5V4A:9 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAxMDExMSBTYWx0ZWRfXzKYWOhIafKXp
+ KSnJ9YFTtaoJZoneAdzMn9obl3udPlmxosJsFbEtEn5sdsyTM4Ok+p7cZbPkmODvybJn6Xf+X8L
+ gliKO1l0BnBgX4jcggj+D29wGlL/FAAPVvZ7x1it6r7z63iMEQ3YE99iAm70AlgsMDD+OEEpXXW
+ RE2LMRlO+Xz5qjS25JvRsxtgzzhLdhsbUy76SwvG4CDGPnm4LkiX+07JtWs6Nk1vuCAHAAebZuG
+ bkQdP7yZVW6EoHcOb+S9Wfpc63EtA96sqt8F4p5c9raijNLuAKFOF++2uJjVgEjOHnxbtzwAR5J
+ gu/O3521sWIhcX9TgCwWn5heccjxQPFTty0hPUdJsLMPdfqRpVgYaDv60hRRzuX3FN0nkojm2LH
+ Sl9aVfrI2XY7S2I5yeoPwf7I4mOFDKUB8sUzp9DQ5JEBP0ZesPUUQDoL4gmZ7eREn3AMakoeslq
+ qrW9XBR2bTVzJ8g86bQ==
+X-Proofpoint-GUID: UNeN4cazuRR1GLe1gbK_uZXfrASms0Av
+X-Proofpoint-ORIG-GUID: UNeN4cazuRR1GLe1gbK_uZXfrASms0Av
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAxMDExMSBTYWx0ZWRfX6l+OgtgpWnix
+ PJ6pJEz9j/9nNqdZAaA1AYnbFCMzL3WXL7FCg9CzZC+wR3tG2EuQ2FjG6+PrlXHp2s+eesnV4U0
+ QZmVVPmMewtmeQk2bN4DFhNVicWU7EE=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-01_03,2026-08-31_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 lowpriorityscore=0 bulkscore=0 clxscore=1015 impostorscore=0
+ priorityscore=1501 malwarescore=0 spamscore=0 adultscore=0 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609010111
 
-On 24.08.26 08:23, Valera Kozlov wrote:
-> mt7996_rr()/wr()/rmw() and mt7996_memcpy_fromio() take dev->reg_lock
-> via spin_lock_bh() when accessing remapped registers. This is not
-> safe against hard-IRQ context, which can lead to race conditions and
-> kernel panics on some platforms.
+On 6/30/2026 7:00 PM, Andrew LaMarche wrote:
+> ath10k and ath11k support reading calibration variants from the device
+> tree to locate the correct Board Description File (BDF). The ath12k-wsi
+> binding already describes using qcom,calibration-variant but it is not
+> implemented in the driver.
 > 
-> MediaTek's own vendor tree independently found and fixed this same
-> issue, reporting it as causing AP panics via Asynchronous SError
-> Interrupt during normal WiFi operation:
-> https://github.com/mediatek/mtk-openwrt-feeds/commit/3edfc0cbf7dc666a0b051b54f51634d6ff2a3be6
+> Many ath12k designs expose all the radios under a single phy, each of
+> which typically require a separate BDF. Without this, the radios may not
+> come up or will not be calibrated correctly.
 > 
-> Switch to spin_lock_irqsave()/spin_unlock_irqrestore() to make the
-> locking safe against hard-IRQ context.
+> Fix this by parsing the device tree for the generation-agnostic
+> qcom,calibration-variant. This allows the driver to properly select,
+> read and apply the correct BDF.
 > 
-> Signed-off-by: Valera Kozlov <valera.kozlov19@gmail.com>
-When you send mt76 patches to this list, they should be against the mt76 
-or mt76-fixes branch of my wireless tree at
-https://github.com/nbd168/wireless
-
-- Felix
+> Signed-off-by: Andrew LaMarche <andrewjlamarche@gmail.com>
+Reviewed-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
