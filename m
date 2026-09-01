@@ -1,137 +1,188 @@
-Received: from smtp.inf.ufrgs.br (smtp.inf.ufrgs.br [143.54.11.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C1D53CC7DF
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 03:01:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=143.54.11.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 921C138F642;
+	Tue,  1 Sep 2026 05:24:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788231687; cv=none; b=JEZUlNyVmiLjy3OYwtjx/d1TT9/aCmAIPbiuACzPUY+DfCWDRpGzV3j293ehpR4PAeZMm4Rhz/KEBEvckxs5pr9Jab+YaWxFoJNPhDjn5AhwHa3NUvPdr/MEDSvV9d8ZHmR9JZyb70SHNHl502pX5LWVbLFwZr0covdBJbZh2z0=
+	t=1788240260; cv=none; b=GljuV5TXzb6JzoGJYpwY580062jimutYaslH1WYvrgGFtgQ3RypU+0EgNx6bXCbXN/vi39XpYMTtMi1Kthr7l9dDd6QjsaUPmK1/NO33Ytac3c7A0CRP8cBnl1d/wnWngmpJcVivrGaHEQAZdPcKBFuCJ9aqjc6rXkpyD40BtKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788231687; c=relaxed/simple;
-	bh=uPkOQj6AnobFhvshk8VE4DVpskoyOYkhJa1GxGaZHV4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UNUHq7m7LDGszpQ+CbIqDr2kzmC0WjrB4BxhygdIOg5TAvr/gpJ34fvMOkeEQ/8i9jIkXi8q695cJDhBm9BSDzEX2l96vXuY1IGQDb2lgHEwgOkMqz5gGOHGET1HnFgb4FXeLpxjx3di0SWary7p47kXO31L/iVCTT5lw5Y/Lzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inf.ufrgs.br; spf=pass smtp.mailfrom=inf.ufrgs.br; dkim=pass (2048-bit key) header.d=inf.ufrgs.br header.i=@inf.ufrgs.br header.b=PqGBzpL2; arc=none smtp.client-ip=143.54.11.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=inf.ufrgs.br
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inf.ufrgs.br
+	s=arc-20240116; t=1788240260; c=relaxed/simple;
+	bh=Rd1+8Drlvqve5BS7MQCml9zsuJlAOqB4b34aulE+dEM=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=ARFEvvu6Eht3x7lbV5mVnmwZz6KJLgO7AU0UwZIKHQ96dVZi+lUEOtCnN3xc8NECnwkfuWaPq/CfRCNq/RAWJ9NkLKCak6ZIWcEtjqQ58G8/Tbqrw7JsiuShguo49LuIaiDBNeBRG6wdIEa6VnzwgNcjiV7WhPh8j+AIIHcdtaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=S4WSMe25; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=inf.ufrgs.br header.i=@inf.ufrgs.br header.b="PqGBzpL2"
-Received: from localhost.. (unknown [179.104.165.168])
-	by smtp.inf.ufrgs.br (Postfix) with ESMTPSA id 3EAF51210C9;
-	Mon, 31 Aug 2026 23:55:35 -0300 (-03)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=inf.ufrgs.br;
-	s=dkim2026; t=1788231336;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=wZ+GicGdAxvX2n3fUwDYS8b2goo3qMfithlKy5RGr48=;
-	b=PqGBzpL2L4k5pTkjEV+4+cS8FSBelQI0hfUbf7EvriDcfXmkAyz75UvHx4XLawTwHCkhTG
-	JgUSHeFJqA45JBDPc7/p2SOicYQ6ByI9wqWq+kLD/wD3k6qhSBMjDROLzgMZMJEWbGEO6v
-	ppJjLKQdNyMHqRei5/Y4k10BscAhAi+Med6Mhm+Nx8lPaBFEP261K9gPrBCPjWQo7Hj3YJ
-	IO3K55y2I+s1x/+/3Z4UT2liN8jdsezxwryysOiJaVB02QFigZD8oaTqC6y6dArKaMpeCD
-	sElXVzizUacKpCMRWVT45b8rrV3sGYVCCbDDrdIQVEboh8EkurXLpituq/2PBA==
-From: Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
-Subject: [PATCH wireless] wifi: mac80211: fix channel changes for active monitors
-Date: Mon, 31 Aug 2026 23:55:25 -0300
-Message-ID: <20260901025525.4017-1-matheus.aalmeida@inf.ufrgs.br>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="S4WSMe25"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6815ODwoC1394487, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1788240253; bh=E1gVoItUvm6Loo9Ud9VyGjaKlBM9ZGi38uHYPKnX07I=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=S4WSMe25gEaGEnX42Uzoo0O+dUszrlIsTB16nUUmjRsT085T0gllDehqWCneww1jn
+	 01z3xjTFvqC1FI+FDfCn3EB/kG7wcTox7LirIKpinIMEjju+MyspeWcf718vzGPNo6
+	 Pgcgedneqw/pBUBLfrLKSB792V8Hc7Lo+WYB2ai6GT2KbtJzklu7GTErAVEfF7/Xxv
+	 q3whtLZ4YfxuoaMgmmm8dvjWp1JoTE0I3smp/BcvrjboVWLJKAt80xKB9qlkBxiPSL
+	 JldubCr+Bp4nAMV9BlfiESkEJbORGvpAgE446YrMBjUbf9nA5GOyNBGVfqbgHbVh/K
+	 jJ+gwev+QtIkQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6815ODwoC1394487
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 1 Sep 2026 13:24:13 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Tue, 1 Sep 2026 13:24:13 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Tue, 1 Sep 2026 13:24:13 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: Mehmet Fide <mehmet.fide@gmail.com>
+CC: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the
+ high queue only for DTIM delivery
+Thread-Topic: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the
+ high queue only for DTIM delivery
+Thread-Index: AQHdK66WOfaBclcfS0e15NhvFyIcILazZGiAgAXJeAA=
+Date: Tue, 1 Sep 2026 05:24:13 +0000
+Message-ID: <9209280c3f044363afd884687ae3cb6b@realtek.com>
+References: <20260814053426.2473247-1-mehmet.fide@gmail.com>
+ <20260828191051.178481-1-mehmet.fide@gmail.com>
+In-Reply-To: <20260828191051.178481-1-mehmet.fide@gmail.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Active monitor interfaces are added to the driver as real VIFs so that
-frames addressed to their MAC address can be acknowledged. However,
-ieee80211_set_monitor_channel() redirects monitor channel changes to the
-hidden monitor_sdata whenever the driver does not set
-NO_VIRTUAL_MONITOR.
+Mehmet Fide <mehmet.fide@gmail.com> wrote:
+> Hi Ping-Ke, Bitterblue,
+>=20
+> thanks for the ack on this one. It has not been applied yet, and before
+> I post anything on top of it I would like your opinion, because I now
+> have a case where the same lockup comes back with this patch in place.
+>=20
+> What happens
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> The patch made the after-DTIM routing conditional, but nothing bounds
+> that path. mac80211 sets IEEE80211_TX_CTL_SEND_AFTER_DTIM on every bmc
+> frame while a single station is dozing, so one client in power save is
+> enough to put all broadcast and multicast traffic back on the high
+> queue. The chip drains that queue at beacon pace while the frames
+> occupy the shared TX page pool, so ordinary chatter such as mDNS
+> exhausts the pool and with it every other transmit, including the auth
+> and assoc responses other clients need. The AP still beacons and looks
+> alive, but nothing can join until the device is rebooted. That is what
+> our field report looked like.
+>=20
+> Measured on an AM62 based AP with an RTL8822BU, one associated client
+> in power save, and 40 broadcast frames per second generated on the AP
+> itself. Free page count at 0x240:
+>=20
+>   t=3D0     1803
+>   t=3D30s   1148
+>   t=3D60s    716
+>   t=3D90s     16   <- 0.9 % left
+>   ...       16   pinned for as long as the traffic runs
 
-An active-only monitor does not create monitor_sdata, so the function can
-return success after only updating monitor_chanreq. The active monitor
-itself never gets a channel context, making channel changes ineffective.
+Have you confirmed the broadcast frames ate all of them?
 
-Use the active monitor VIF directly when changing channels, while keeping
-monitor_chanreq private to the hidden virtual monitor. Also treat active
-monitors as valid directly channel-bound monitor interfaces in channel
-width and SMPS accounting.
+The HIQ packets only send out right after beacon within ATIM
+window controlled by REG_ATIMWND (0x055A). Can you try to
+enlarge the size to see if it will be different?
 
-This fixes active monitor channel switching with mac80211_hwsim. Before
-this change, an active monitor failed to discover any APs while scanning.
-With the fix applied, scanning works across channels 1, 6 and 11 with both
-channels=1 and channels=2, and authentication and association on channel 6
-succeed without mac80211 or hwsim warnings.
+>=20
+> and at that point dmesg starts printing "error beacon valid" and
+> "failed to download drv rsvd page". When the client wakes or the
+> traffic stops the pool recovers; in the field both conditions persist,
+> so the AP stays dead.
 
-Fixes: 0a44dfc07074 ("wifi: mac80211: simplify non-chanctx drivers")
-Assisted-by: Codex:gpt-5.6-sol
-Signed-off-by: Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
----
- net/mac80211/cfg.c  | 9 +++++++--
- net/mac80211/chan.c | 8 ++++++--
- 2 files changed, 13 insertions(+), 4 deletions(-)
+If you stop 40 broadcast frames per second, will AP become available?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 43f142624d33..c844ae2abcb4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1064,12 +1064,16 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_chan_req chanreq = { .oper = *chandef };
-+	bool use_virtual_monitor;
- 	int ret;
- 
- 	lockdep_assert_wiphy(local->hw.wiphy);
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR)) {
-+	use_virtual_monitor =
-+		!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR) &&
-+		!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE);
-+	if (use_virtual_monitor) {
- 		if (cfg80211_chandef_identical(&local->monitor_chanreq.oper,
- 					       &chanreq.oper))
- 			return 0;
-@@ -1090,7 +1094,8 @@ static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
- 	if (ret)
- 		return ret;
- done:
--	local->monitor_chanreq = chanreq;
-+	if (use_virtual_monitor)
-+		local->monitor_chanreq = chanreq;
- 	return 0;
- }
- 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 5152b84a3357..800b7585c010 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -543,7 +543,9 @@ ieee80211_get_width_of_link(struct ieee80211_link_data *link)
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--		WARN_ON_ONCE(!ieee80211_hw_check(&local->hw,
-+		WARN_ON_ONCE(!(link->sdata->u.mntr.flags &
-+			       MONITOR_FLAG_ACTIVE) &&
-+			     !ieee80211_hw_check(&local->hw,
- 						 NO_VIRTUAL_MONITOR));
- 		fallthrough;
- 	case NL80211_IFTYPE_ADHOC:
-@@ -1279,7 +1281,9 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
- 				continue;
- 			break;
- 		case NL80211_IFTYPE_MONITOR:
--			if (!ieee80211_hw_check(&local->hw, NO_VIRTUAL_MONITOR))
-+			if (!(iter.sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) &&
-+			    !ieee80211_hw_check(&local->hw,
-+						NO_VIRTUAL_MONITOR))
- 				continue;
- 			break;
- 		case NL80211_IFTYPE_AP:
--- 
-2.47.3
+>=20
+> How to reproduce
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+>   - any rtw88 USB device as an AP, one client associated
+>   - put the client into power save (a phone with the screen off will
+>     do; on Windows set "Wireless Adapter Settings -> Power Saving Mode"
+>     to maximum and reconnect)
+>   - from the AP itself send roughly 40 multicast or broadcast packets
+>     per second, for example in a loop:
+>       socat -u - UDP4-DATAGRAM:224.0.0.251:5353,ttl=3D1
+>   - watch the free page count:
+>       echo "0x240 4" > /sys/kernel/debug/ieee80211/phyX/rtw88/read_reg
+>       cat /sys/kernel/debug/ieee80211/phyX/rtw88/read_reg
+>=20
+> Do not ping the client while watching. That wakes it, mac80211 flushes
+> the queue and the pool recovers, which is what hid the problem from me
+> in the first run.
+>=20
+> What I would like to do
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> Mirror the vendor driver. It never lets chatter into the hardware high
+> queue: xmitframe_hiq_filter() in core/rtw_xmit.c admits only ARP, EAPOL
+> and DHCP (CONFIG_RTW_HIQ_FILTER, default "allow special"), everything
+> else leaves on its access category queue. With the same rule in rtw88
+> the pool stays at 1803 in the test above, a DHCP flood still takes the
+> after-DTIM path, so the filter is selective rather than a blanket
+> disable, and plain join/ping cycling without power save is unchanged
+> (10/10 here).
+>=20
+> The trade-off is that a dozing station can miss non-special multicast,
+> since we do not buffer it in software the way the vendor does.
+
+Is it possible to declare IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and
+call ieee80211_get_buffered_bc() to get the BC packets to send?
+
+>=20
+> Before I post a patch:
+>=20
+>   1. Is such a filter acceptable as the fix, or would you rather see a
+>      hard bound on how many bmc frames may sit on the high queue, which
+>      would also cover an ARP or DHCP broadcast storm?
+
+I think it depends on which kind of packets get lost we can accept.=20
+
+The vendor driver considers ARP, EAPOL and DHCP as important ones, because
+user experience becomes bad if they get lost, but actually they have
+their own re-transmit.
+
+Consider multicast streaming, I guess it has error correction (like FEC),
+so maybe it has more tolerant to handle packet loss. (I'm not familiar with
+streaming, and no much experience with playing multicast streaming).
+
+>=20
+>   2. Or both, filter first and bound on top?
+
+With the filter, I think it will not reason bound, because there will not
+be much that kind of packets. Maybe, check bound first, and then filter ?
+
+>=20
+>   3. Is there a way to learn the DTIM boundary on USB that I have
+>      missed? With one the driver could hand the chip a single burst per
+>      DTIM and the pool could not run dry at all.
+
+I think this is not possible, because USB needs time to transmit packets=20
+from host to WiFi card, and then it needs to wait for next DTIM. Though
+driver can prepare packets earlier, but it will be inaccurate=20
+(still buffered in hardware HIQ).
+
+
+As above, we have ATIM window, BC buffer in mac80211, HIQ filter,
+and HIQ bound. But I don't have clear picture how to combine them to
+deal with this case. Since you have spent time to dig the problem,
+you may have more sense and better idea. :)
+
 
