@@ -1,83 +1,258 @@
-Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A9E45FFA2
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 08:05:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BB846EC62;
+	Tue,  1 Sep 2026 08:06:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788249959; cv=none; b=XCQ+siFHzty/pk5zxUgmdNt23rOL8TqS484k7dzcCU+pSSRGXOLmmNgSVZPmcQHQaYd9pKwbD+Hft4oDg5QVRHYvM9bM7I5hAwukWhkl0moAqvnqoBgz5I1tIddW0GFxi1/SePb0EX28bKWCsv3IlmKHMcaTZPJxpIbv5xxmhU8=
+	t=1788249988; cv=none; b=eWZtqCU7TiQgz8u4yHWBocI4C9ubQbuJPa4Nfc0vi7cfv1PryMnSD7DUG9iJtfACY93vlqViQNXdsmsUEme6SyS5/bb9qjrHLAdLK02oaz1wAdSoQjoYS/EzpETIO2fnP78e0JPqdXJFuNqXi9ncQdccODFvYQr8BfxPHn0GDGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788249959; c=relaxed/simple;
-	bh=/fXyNC1SCrVVh1dlZ7cd+p57PMSaOXahAXDGkXDuVMo=;
-	h=Content-Type:To:From:Date:Mime-Version:Cc:Subject:Message-Id; b=ZK/hoAD+BHq9hThWVTZ8pchW6L2iJFaod5/S0FTHopMAkzdh+OYt4znOLv2gJbCesp5Sl94mAixX8PC1FIOIQZrC8/iWCBgmM8OebzCSGyyMaDXWP7HdaDiN+/pI7RnbK/4ZCJBGZIva+8n0/W4i0GBiOelsecMSt//bSDwmh8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=moonshot.ai; spf=pass smtp.mailfrom=moonshot.ai; dkim=pass (2048-bit key) header.d=moonshot.ai header.i=@moonshot.ai header.b=i/NvTp+C; arc=none smtp.client-ip=209.127.231.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=moonshot.ai
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=moonshot.ai
+	s=arc-20240116; t=1788249988; c=relaxed/simple;
+	bh=cQ0VKjzzBn4lnIvRRKhBBZXsQ5qGxOVYBI+CNGVX48k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fxpTODSln+JdAOPIlhdwrDfDoWbIS74DvmXwOH3vqkYw6dOl32eXGBsRp8mNcw2jJY6i8PqbvHndh9GMVs0WAYC+RFcG5NdRQiF61O5tSw87FxpatsLjXMHO8ovcTLahcr4TKHIZa9mwWL9tLNo/waZLSQ5YvVhIwkD+p7+z//4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kbRbsjfv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=moonshot.ai header.i=@moonshot.ai header.b="i/NvTp+C"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=feishu2510091218; d=moonshot.ai; t=1788249945; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=olD/KwTfA6Mw6pBOtKDza7C0xrnqoRE53Nj2OT+WgiA=;
- b=i/NvTp+C48190yZkH53H/TWbop5Po3JxSUmEmrrTnO+xxgm4EWtQR6HgF60HkK9BlZik+3
- rSmQ+nKvNBE5fk/5IAnLwLL+g2Yxk/M0cgdJqXDNdz4V3eCyuCKIznf8n9mhUAzxP44XSV
- vzcSR0S4qSYI/7cY7dJlw0CvfD9aaaIs7mTR/k/Ox+ICWNWvNEiotlVpcLxs3TOYjVAaDl
- THDP6xn8iuSPJyHRk6P5lmD94YqPD4BDmbO53yXZIexfckRb8uUb+btBM8e0N7b7LdOD3s
- +JubZrUZFp6xkBXK39F9xoOOxmOjNt7PMZvaf0X7I4Dhfp9LqDqoG6P1oMB+1w==
-Received: from dev.msh-dev.svc.cluster.local ([117.157.206.135]) by smtp.feishu.cn with ESMTPS; Tue, 01 Sep 2026 16:05:42 +0800
-Content-Type: text/plain; charset=UTF-8
-To: "Johannes Berg" <johannes@sipsolutions.net>
-X-Lms-Return-Path: <lba+26a968757+9cdf54+vger.kernel.org+yilinzhang@moonshot.ai>
-Content-Transfer-Encoding: 7bit
-From: "Yilin Zhang" <yilinzhang@moonshot.ai>
-Date: Tue,  1 Sep 2026 16:04:27 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kbRbsjfv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C8E81F00A3D;
+	Tue,  1 Sep 2026 08:06:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788249984;
+	bh=U9bwqjzCxpQGyOH6T5XiHxQafAKabtxYiX65cyonlc0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=kbRbsjfvc7p41dNhCRd2hJuYih9Hfi2wcLb95PXqKL41rRU/08xQg2zhgmP0p7/UX
+	 aCBgNqAafGb1u8ZcpV3k6B+OHqaBRbiISXeL4UtUncjnK+Rkxqh/VfIp6jGUvNRGeZ
+	 +i52Nc8J3gVpipR6XllPURBs8ykNJDroZTrGft+YKuTcRN75wcS7wNMsS48WVqiMOt
+	 JRE6ODRvQobQ+4jwJVT4xHZXgvTSjxLefA1lS95WGdjzhEnW2jGLTGsB/2sNiR2EXU
+	 4WfdzLpOi4oHlA9BHHoKVkb8ueK9mfVj1mgyRJzPN0cBqTneA65FZxWhRsXKhYISQg
+	 MzDDcdQAG9hGA==
+Date: Tue, 1 Sep 2026 10:06:05 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Jingoo Han <jingoohan1@gmail.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev, linux-wireless@vger.kernel.org, 
+	ath11k@lists.infradead.org, qiang.yu@oss.qualcomm.com
+Subject: Re: [PATCH v5 4/6] bus: mhi: host: Add support for Bandwidth scale
+Message-ID: <tm33xb3nrq7v6ezoewvn34rteg47pmow27kda5mdmoufsckw7t@tzssd2mqm5zt>
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-4-6dea79786b37@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Yilin Zhang <yilinzhang@moonshot.ai>
-Cc: "Yilin Zhang" <yilinzhang@moonshot.ai>, <linux-wireless@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, 
-	"Sergey Matyukevich" <sergey.matyukevich.os@quantenna.com>, 
-	"Dmitry Antipov" <dmantipov@yandex.ru>, 
-	"Kimi Security Team" <bug-report@moonshot.ai>
-Subject: [PATCH] cfg80211: fix double-free of shared hidden-group beacon IEs
-Message-Id: <20260901080427.1983015-1-yilinzhang@moonshot.ai>
-X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260819-bwscale-v5-4-6dea79786b37@oss.qualcomm.com>
 
-cfg80211_update_known_bss() adopts new->pub.beacon_ies without
-checking whether new is a hidden group member.
+On Wed, Aug 19, 2026 at 06:55:55PM +0530, Krishna Chaitanya Chundru wrote:
+> As per MHI spec v1.2, sec 14, MHI supports bandwidth scaling to reduce
+> power consumption. MHI bandwidth scaling is advertised by devices that
+> contain the bandwidth scaling capability registers. If enabled, the device
+> aggregates bandwidth requirements and sends them to the host through
+> dedicated mhi event ring. After the host performs the bandwidth switch,
+> it sends an acknowledgment by ringing a doorbell.
+> 
+> if the host supports bandwidth scaling events, then it must set
+> BW_CFG.ENABLED bit, set BW_CFG.DB_CHAN_ID to the channel ID to the
+> doorbell that will be used by the host to communicate the bandwidth
+> scaling status and BW_CFG.ER_INDEX to the index for the event ring
+> to which the device should send bandwidth scaling request in the
+> bandwidth scaling capability register.
+> 
+> As part of mmio init check if the bw scale capability is present or not,
+> if present advertise host supports bw scale by setting all the required
+> fields.
+> 
+> MHI layer will only forward the bw scaling request to the controller
+> driver since MHI doesn't have any idea about transport layer used by
+> the controller, it is responsibility of the controller driver to do actual
+> bw scaling and then pass status to the MHI. MHI will response back to the
+> device based up on the status of the bw scale received.
+> 
+> Add a new get_misc_doorbell() to get doorbell for misc capabilities to
+> use the doorbell with mhi events like MHI BW scale etc.
+> 
+> Use workqueue & mutex for the bw scale events as the pci_set_target_speed()
+> which will called by the mhi controller driver can sleep.
+> 
+> Co-developed-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+> Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/bus/mhi/common.h        |  13 +++++
+>  drivers/bus/mhi/host/init.c     |  93 +++++++++++++++++++++++++++++++--
+>  drivers/bus/mhi/host/internal.h |   6 ++-
+>  drivers/bus/mhi/host/main.c     | 113 +++++++++++++++++++++++++++++++++++++++-
+>  drivers/bus/mhi/host/pm.c       |  10 +++-
+>  drivers/bus/mhi/host/trace.h    |   7 +++
+>  include/linux/mhi.h             |  13 +++++
+>  7 files changed, 247 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/bus/mhi/common.h b/drivers/bus/mhi/common.h
+> index 4c316f3d5a68..267260901a41 100644
+> --- a/drivers/bus/mhi/common.h
+> +++ b/drivers/bus/mhi/common.h
+> @@ -215,6 +215,19 @@
+>  #define MHI_CAP_ID_MAX_TRB_LEN		0x5
+>  #define MHI_CAP_ID_MAX			0x6
+>  
+> +/* MHI Bandwidth scaling offsets */
+> +#define MHI_BW_SCALE_CFG_OFFSET		0x4
+> +#define MHI_BW_SCALE_CAP_ID		(3)
+> +#define MHI_BW_SCALE_DB_CHAN_ID		GENMASK(31, 25)
+> +#define MHI_BW_SCALE_ENABLED		BIT(24)
+> +#define MHI_BW_SCALE_ER_INDEX		GENMASK(23, 19)
+> +
+> +#define MHI_TRE_GET_EV_BW_REQ_SEQ(tre)	FIELD_GET(GENMASK(15, 8), (MHI_TRE_GET_DWORD(tre, 0)))
+> +
+> +#define MHI_BW_SCALE_RESULT(status, seq)	(FIELD_PREP(GENMASK(11, 8), status) | \
+> +						FIELD_PREP(GENMASK(7, 0), seq))
+> +#define MHI_BW_SCALE_NACK			0xF
 
-cfg80211_update_assoc_bss_entry() can pass such a member as new on a
-CSA channel switch, so the same IEs get two owners and are freed
-twice.
+0xf
 
-Same issue as commit 26e84445f02c ("wifi: cfg80211: fix
-use-after-free in cmp_bss()"), which fixed only the drop path.
+> +
+>  enum mhi_pkt_type {
+>  	MHI_PKT_TYPE_INVALID = 0x0,
+>  	MHI_PKT_TYPE_NOOP_CMD = 0x1,
+> diff --git a/drivers/bus/mhi/host/init.c b/drivers/bus/mhi/host/init.c
+> index 32db4aa4bbe8..d0975b6c2df0 100644
+> --- a/drivers/bus/mhi/host/init.c
+> +++ b/drivers/bus/mhi/host/init.c
+> @@ -497,10 +497,66 @@ static int mhi_find_capability(struct mhi_controller *mhi_cntrl, u32 capability)
+>  	return 0;
+>  }
+>  
+> +static int mhi_get_er_index(struct mhi_controller *mhi_cntrl,
+> +			    enum mhi_er_data_type type)
+> +{
+> +	struct mhi_event *mhi_event = mhi_cntrl->mhi_event;
+> +	int i;
+> +
+> +	/* Find event ring for requested type */
+> +	for (i = 0; i < mhi_cntrl->total_ev_rings; i++, mhi_event++) {
+> +		if (mhi_event->data_type == type)
+> +			return mhi_event->er_index;
+> +	}
+> +
+> +	return -ENOENT;
+> +}
+> +
+> +static int mhi_init_bw_scale(struct mhi_controller *mhi_cntrl,
+> +			     int bw_scale_db)
+> +{
+> +	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+> +	struct mhi_event *mhi_event;
+> +	u32 bw_cfg_offset, val;
+> +	int er_index, i;
+> +
+> +	bw_cfg_offset = mhi_find_capability(mhi_cntrl, MHI_BW_SCALE_CAP_ID);
+> +	if (!bw_cfg_offset)
+> +		return 0;
+> +
+> +	er_index = mhi_get_er_index(mhi_cntrl, MHI_ER_BW_SCALE);
+> +	if (er_index < 0)
+> +		return er_index;
+> +
+> +	/* Initialize BW scale event ring resources */
+> +	mhi_event = mhi_cntrl->mhi_event;
+> +	for (i = 0; i < mhi_cntrl->total_ev_rings; i++, mhi_event++) {
+> +		if (mhi_event->data_type == MHI_ER_BW_SCALE) {
+> +			INIT_WORK(&mhi_event->work, mhi_process_ev_work);
+> +			mutex_init(&mhi_event->mutex);
 
-Reported-by: Kimi Security Team <bug-report@moonshot.ai>
-Fixes: 0afd425b1b64 ("cfg80211: fix duplicated scan entries after channel switch")
-Signed-off-by: Yilin Zhang <yilinzhang@moonshot.ai>
----
- net/wireless/scan.c | 3 +++
- 1 file changed, 3 insertions(+)
+Why do you need mutex only for this event and not for other events?
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 071083c..1fbbcda 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1937,6 +1937,9 @@ cfg80211_update_known_bss(struct cfg80211_registered_device *rdev,
- 			return false;
- 		}
- 
-+		if (new->pub.hidden_beacon_bss)
-+			return true;
-+
- 		old = rcu_access_pointer(known->pub.beacon_ies);
- 
- 		rcu_assign_pointer(known->pub.beacon_ies, new->pub.beacon_ies);
+> +			break;
+> +		}
+> +	}
+> +
+> +	bw_cfg_offset += MHI_BW_SCALE_CFG_OFFSET;
+> +
+> +	/* Advertise host support */
+> +	val = FIELD_PREP(MHI_BW_SCALE_DB_CHAN_ID, bw_scale_db) |
+> +			 FIELD_PREP(MHI_BW_SCALE_ER_INDEX, er_index) |
+> +			 MHI_BW_SCALE_ENABLED;
+> +
+> +	mhi_write_reg(mhi_cntrl, mhi_cntrl->regs, bw_cfg_offset, val);
+> +
+> +	dev_dbg(dev, "Bandwidth scaling setup complete with event ring: %d\n",
+> +		er_index);
+> +
+> +	return 0;
+> +}
+> +
+>  int mhi_init_mmio(struct mhi_controller *mhi_cntrl)
+>  {
+> -	u32 val;
+> -	int i, ret;
+> +	u32 val, chdb_offset;
+> +	int i, ret, doorbell = 0;
+>  	struct mhi_chan *mhi_chan;
+>  	struct mhi_event *mhi_event;
+>  	void __iomem *base = mhi_cntrl->regs;
+> @@ -581,6 +637,8 @@ int mhi_init_mmio(struct mhi_controller *mhi_cntrl)
+>  		return -ERANGE;
+>  	}
+>  
+> +	chdb_offset = val;
+> +
+>  	/* Setup wake db */
+>  	mhi_cntrl->wake_db = base + val + (8 * MHI_DEV_WAKE_DB);
+>  	mhi_cntrl->wake_set = false;
+> @@ -634,6 +692,17 @@ int mhi_init_mmio(struct mhi_controller *mhi_cntrl)
+>  		return ret;
+>  	}
+>  
+> +	if (mhi_cntrl->get_misc_doorbell)
+> +		doorbell = mhi_cntrl->get_misc_doorbell(mhi_cntrl, MHI_ER_BW_SCALE);
+
+Why can't you add the doorbell number to 'mhi_event_config'?
+
+> +
+> +	if (doorbell > 0) {
+> +		ret = mhi_init_bw_scale(mhi_cntrl, doorbell);
+> +		if (!ret)
+> +			mhi_cntrl->bw_scale_db = base + chdb_offset + (8 * doorbell);
+> +		else
+> +			dev_warn(dev, "Failed to setup bandwidth scaling: %d\n", ret);
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> @@ -778,6 +847,9 @@ static int parse_ev_cfg(struct mhi_controller *mhi_cntrl,
+>  		case MHI_ER_CTRL:
+>  			mhi_event->process_event = mhi_process_ctrl_ev_ring;
+>  			break;
+> +		case MHI_ER_BW_SCALE:
+> +			mhi_event->process_event = mhi_process_bw_scale_ev_ring;
+> +			break;
+>  		default:
+>  			dev_err(dev, "Event Ring type not supported\n");
+>  			goto error_ev_cfg;
+> @@ -1001,10 +1073,12 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
+>  
+>  		mhi_event->mhi_cntrl = mhi_cntrl;
+>  		spin_lock_init(&mhi_event->lock);
+> -		if (mhi_event->data_type == MHI_ER_CTRL)
+> +		if (mhi_event->data_type == MHI_ER_CTRL) {
+>  			tasklet_init(&mhi_event->task, mhi_ctrl_ev_task,
+>  				     (ulong)mhi_event);
+> -		else
+> +		} else if (mhi_event->data_type == MHI_ER_BW_SCALE) {
+> +		/* BW scale resources will be initialized in mhi_init_mmio() if capability exists */
+
+But you are just skipping the tasklet here. Provide an apt reason for that.
+
+- Mani
+
 -- 
-2.34.1
+மணிவண்ணன் சதாசிவம்
