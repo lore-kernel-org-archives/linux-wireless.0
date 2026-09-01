@@ -1,82 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-41.ptr.blmpb.com (va-2-41.ptr.blmpb.com [209.127.231.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3FB46E01F;
-	Tue,  1 Sep 2026 07:50:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A9E45FFA2
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 08:05:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788249036; cv=none; b=H3iznkLOH6006n6L9Mt/1uQQNbkc1HN62V6N7u8HoIw3hvoFG7p/IgJlLepitAV9++P+P8YNktjgWHtO0kGDB43ahtT4+Jidljx1jDxpOacTXyVRWXcueCqXa17b85QOaAUMr4dRViI5zt3K7JvOFG3GRdXf1fdxJkYlDmrSolI=
+	t=1788249959; cv=none; b=XCQ+siFHzty/pk5zxUgmdNt23rOL8TqS484k7dzcCU+pSSRGXOLmmNgSVZPmcQHQaYd9pKwbD+Hft4oDg5QVRHYvM9bM7I5hAwukWhkl0moAqvnqoBgz5I1tIddW0GFxi1/SePb0EX28bKWCsv3IlmKHMcaTZPJxpIbv5xxmhU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788249036; c=relaxed/simple;
-	bh=kqWV7eewRd1Mp6Q79yDxU92tWRnsRsSA9cz0QMHLvck=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rAWj9UVYsv8RU9t3ZvRl+7eYlMDEBonz7WlALT76LT3sTYfzHCSp8nmS5GuK3iUDvpXf5qogErMn9IbSheH0p8aYFZmK2LaT7TyZ6U2sdwszS/qX+ubDad2MAazoJXKx49RCv1+b/nbUW5zqqUb2rcBWrbAmh/mOO89aHr2sxew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lmzf1UMb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1788249959; c=relaxed/simple;
+	bh=/fXyNC1SCrVVh1dlZ7cd+p57PMSaOXahAXDGkXDuVMo=;
+	h=Content-Type:To:From:Date:Mime-Version:Cc:Subject:Message-Id; b=ZK/hoAD+BHq9hThWVTZ8pchW6L2iJFaod5/S0FTHopMAkzdh+OYt4znOLv2gJbCesp5Sl94mAixX8PC1FIOIQZrC8/iWCBgmM8OebzCSGyyMaDXWP7HdaDiN+/pI7RnbK/4ZCJBGZIva+8n0/W4i0GBiOelsecMSt//bSDwmh8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=moonshot.ai; spf=pass smtp.mailfrom=moonshot.ai; dkim=pass (2048-bit key) header.d=moonshot.ai header.i=@moonshot.ai header.b=i/NvTp+C; arc=none smtp.client-ip=209.127.231.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=moonshot.ai
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=moonshot.ai
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lmzf1UMb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 978FB1F00A3E;
-	Tue,  1 Sep 2026 07:50:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1788249035;
-	bh=x1XZqBPHN0ntygf3/sUmkFR/mSTqD3HugbTSHCQc+5A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Lmzf1UMbiB39d1gc12cr4PVgNp41UnVkAi4mZKGEy4OqkYosoNwTR2BRsXte2Is3I
-	 d2vSAXjExa6n5mANF3a/0flakPB2Y7973LmP3bCiZoYlST3a9Nq82NXz/gVae0/Rmm
-	 nZKxEuItT/UTr8/EO/1MX3qgiIBGWeXwZzoorELlCZIsT4s3IHHfHxY9Y/lCtBgWT/
-	 6xaf6manuipM75QWrRlmpNwxurmMi0hppVKkB0oz3/MbOaxPD2TI1xOkVmooPyQuma
-	 sjXfT3BdbvTQQc5c41DRETIZJ7PXxlI/YotQQzOi+xT6sxCHLnVe0wuxamvW3Z9VKx
-	 4PeY2RWDLmcRw==
-Date: Tue, 1 Sep 2026 09:50:15 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Jeff Johnson <jjohnson@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev, linux-wireless@vger.kernel.org, 
-	ath11k@lists.infradead.org, qiang.yu@oss.qualcomm.com
-Subject: Re: [PATCH v5 3/6] PCI: Add pci_lnkctl2_bus_speed() to convert
- lnkctl2speed to pci_bus_speed
-Message-ID: <lcljoi3djqgtxuqqtvb43n6z6ns3kzmjwcceqhvovmiqe4eqhs@chgulo7facny>
-References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
- <20260819-bwscale-v5-3-6dea79786b37@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=moonshot.ai header.i=@moonshot.ai header.b="i/NvTp+C"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=feishu2510091218; d=moonshot.ai; t=1788249945; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=olD/KwTfA6Mw6pBOtKDza7C0xrnqoRE53Nj2OT+WgiA=;
+ b=i/NvTp+C48190yZkH53H/TWbop5Po3JxSUmEmrrTnO+xxgm4EWtQR6HgF60HkK9BlZik+3
+ rSmQ+nKvNBE5fk/5IAnLwLL+g2Yxk/M0cgdJqXDNdz4V3eCyuCKIznf8n9mhUAzxP44XSV
+ vzcSR0S4qSYI/7cY7dJlw0CvfD9aaaIs7mTR/k/Ox+ICWNWvNEiotlVpcLxs3TOYjVAaDl
+ THDP6xn8iuSPJyHRk6P5lmD94YqPD4BDmbO53yXZIexfckRb8uUb+btBM8e0N7b7LdOD3s
+ +JubZrUZFp6xkBXK39F9xoOOxmOjNt7PMZvaf0X7I4Dhfp9LqDqoG6P1oMB+1w==
+Received: from dev.msh-dev.svc.cluster.local ([117.157.206.135]) by smtp.feishu.cn with ESMTPS; Tue, 01 Sep 2026 16:05:42 +0800
+Content-Type: text/plain; charset=UTF-8
+To: "Johannes Berg" <johannes@sipsolutions.net>
+X-Lms-Return-Path: <lba+26a968757+9cdf54+vger.kernel.org+yilinzhang@moonshot.ai>
+Content-Transfer-Encoding: 7bit
+From: "Yilin Zhang" <yilinzhang@moonshot.ai>
+Date: Tue,  1 Sep 2026 16:04:27 +0800
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260819-bwscale-v5-3-6dea79786b37@oss.qualcomm.com>
+Mime-Version: 1.0
+X-Original-From: Yilin Zhang <yilinzhang@moonshot.ai>
+Cc: "Yilin Zhang" <yilinzhang@moonshot.ai>, <linux-wireless@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, 
+	"Sergey Matyukevich" <sergey.matyukevich.os@quantenna.com>, 
+	"Dmitry Antipov" <dmantipov@yandex.ru>, 
+	"Kimi Security Team" <bug-report@moonshot.ai>
+Subject: [PATCH] cfg80211: fix double-free of shared hidden-group beacon IEs
+Message-Id: <20260901080427.1983015-1-yilinzhang@moonshot.ai>
+X-Mailer: git-send-email 2.34.1
 
-On Wed, Aug 19, 2026 at 06:55:54PM +0530, Krishna Chaitanya Chundru wrote:
-> Add a exported function to convert lnkctl2speed to enum pci_bus_speed,
-> so that other kernel drivers can use it.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/pci.c   | 15 +++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 77b17b13ee61..cda7d210ddbf 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5939,6 +5939,21 @@ int pcie_link_speed_mbps(struct pci_dev *pdev)
->  }
->  EXPORT_SYMBOL(pcie_link_speed_mbps);
->  
-> +/**
-> + * pci_lnkctl2_bus_speed - convert Link Control 2 Target Link Speed to pci_bus_speed
-> + * @speed: Target Link Speed (TLS) value from Link Control 2 register (0-4 for Gen1-Gen5)
+cfg80211_update_known_bss() adopts new->pub.beacon_ies without
+checking whether new is a hidden group member.
 
-Use GT/S instead of Gen.
+cfg80211_update_assoc_bss_entry() can pass such a member as new on a
+CSA channel switch, so the same IEs get two owners and are freed
+twice.
 
-- Mani
+Same issue as commit 26e84445f02c ("wifi: cfg80211: fix
+use-after-free in cmp_bss()"), which fixed only the drop path.
 
+Reported-by: Kimi Security Team <bug-report@moonshot.ai>
+Fixes: 0afd425b1b64 ("cfg80211: fix duplicated scan entries after channel switch")
+Signed-off-by: Yilin Zhang <yilinzhang@moonshot.ai>
+---
+ net/wireless/scan.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 071083c..1fbbcda 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1937,6 +1937,9 @@ cfg80211_update_known_bss(struct cfg80211_registered_device *rdev,
+ 			return false;
+ 		}
+ 
++		if (new->pub.hidden_beacon_bss)
++			return true;
++
+ 		old = rcu_access_pointer(known->pub.beacon_ies);
+ 
+ 		rcu_assign_pointer(known->pub.beacon_ies, new->pub.beacon_ies);
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
