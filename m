@@ -1,96 +1,82 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B58F3321DE
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 06:57:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56AB44483B9;
+	Tue,  1 Sep 2026 07:15:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788245822; cv=none; b=jWCIYKeykk5J8d3kRozuz6usW1HBr68DUf2knROxW3mRGmM6i+l75LuVqOAU/zyhkqLFxc9x0/coHNZ+5UMz/hVFfn6+kvzEzwNvu5zS8R16XBWSjwVJEJu49REuYGTkctOmSyDZztHxDQtVngmAFeWOXlysUCJqudbvMWawMng=
+	t=1788246953; cv=none; b=SoM+h8SoY3vQeovVoEohtpVf0xQWJnkZjGvDswExhTIZdL4tAYnI1gG8bPfLYhIyflZEHOLwlN6c1R9TFxb5CvwRd7yRxSwWjJgaiESzR6DAgS2+rOpPWwqh1hzkxwXaBmeoj30CdKVMGQsk4LjWTcut89NjktJXe4bOBGbUk+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788245822; c=relaxed/simple;
-	bh=FU6oWgCVS36J+D815+YMgAwN/Nk8iJwBsczv26jRlp4=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VOINytGLNQfwmsqYmY2qPO4UcRrFy9KPaihdCTUxOEfWf1XUiudHcAoVRltRChsAn87x+zqk7CmiN1B4wgPbZ4XcZlAGSTp6S8thdJp9aLztcqVb+lVjXF7/VpOb5HNYVzcGODpPyAptIAG3ZCiPnISf6lPrMhG5fk3975zUVDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=odS/gVyH; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788246953; c=relaxed/simple;
+	bh=CQhdniJ6ytQBLPKBNUGYkZcuBEuTvR5bKJgrmTdSV60=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c2RIY+QwrXCScZp6LhDHO//WePisbTqohMxm31V1Nd+d79R1kcVSKy6gesSRyxgnmKMuxwaN2EBrsP6A6hDbF3oBETjVjiF8tmso4f3ndXPPFy2qSiw75mxLLC7sXAuKLt4qZqtv5uOD1jpveFl41GQLgO0Sn9NAu4KDs89hkT4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=VCkwem0V; arc=none smtp.client-ip=217.10.52.160
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="odS/gVyH"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2d8fd3b729dso23705635ad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Aug 2026 23:57:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788245820; x=1788850620; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=q32SeAudVTuiY20cWEi3a7Xbsol0OX0/y07mW5kK2EY=;
-        b=odS/gVyHShZ/jjqwfBHBT0dVU/JLUcVWEFq4Zctn+m7gezjJBzbR3DZvTDUMxhrCoo
-         zOKADWmFfAEVCIFpCZGbY1ZBersKy4Xtc9TuyjvUu3uBjii7FwUX+WK61HB/ceZCUwEn
-         F6zm/9pDSGX2B/P3I4U9U1FfT1WwKzE7J949zXa78XgVmhaHwHy60GNo+kqJnI9yKHXP
-         GB7eYqSRoo5iJDJ/aJn6v/lU7TzNJFjLR/u8s8/2ZcDA+iR9oE476SpztlQzYEN2bDqG
-         brU6QB8WNv1wp+JsJpOqISWieV7VPgAsdcwbigLblcDlpyugPeGb/dXUgE/9PnWzooMS
-         zH3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788245820; x=1788850620;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=q32SeAudVTuiY20cWEi3a7Xbsol0OX0/y07mW5kK2EY=;
-        b=fNbXu4l+AHIcS1aUzJZB7fKLp6EH8jLxw1nVLL/PpoWARG7TegB71/Q7gYtTvvHRKb
-         BeFu/sKOqDRVxlFSC3DFB5B+qAnWs0sLlwmG2blPeou86slN+4fIgXWi8yzDYAQLkIc1
-         sJnIuQ5chj3UmzLUB3TLI/8ybvTmA91hzxzrF5skhCOC3eClfQ+H/qsJzVzo/9+PEUWr
-         2PbR5mSVvieIwDVTnRyDmxkK0y2ZgHLrKsxvtV9iBKIxfcNpDv6BIBg9sMsBHb4lbSJ0
-         su6zcqGAmeByzGv0bKCU+1S0htYEOqga5X8mfQKYlOCLwlpSwsCJAtsow4LI5MLkSYCD
-         FE6w==
-X-Gm-Message-State: AFuF++lIbpfIeMmmVEMHBA47k3v0veWU+cuLWMnJERtUrSrr37/+KgLf
-	xZmBbVqdVd25eV3+ruJD4OiLFR7ng3IMDhsRtb8Ut7UY0rG9F9TOOAzd47vBntQD61o=
-X-Gm-Gg: AYBFou3Y74zfD9ibb5YIAvis9LfQ92JBGymKChMX6qc1fu4hy4lAJYTk1CVls9C3dwU
-	YUIMNGcV5/8bhIz/6i7NJdpCMmuWFF2iF8Bi7JunPHiRhjrVJhly2HjnOhvze5O56Gkf1PYaKN/
-	oLMB8LRDgf+aPaldLZQophv5gK/01Byj5l0cV1RJkFBOcR2pTaJ4xtl5dF7GdX74q7NjsMEC0hJ
-	8snurKr6GI2HwGN+hZIc/zQe/BelRgu44vRTF08uaqO7+XmQPo59VxgfPXCKNQNC+Dkz+6gZ5F+
-	DCKmOnOy9ClCf/tVlEFhsm6l4NBvTEw3+1JDldjQP1YQFaiV+f/M0qxt1bFitzSPjsUaIgTSUjb
-	r//p2vVFzmmu0RSKeqk9pIB7suIuiQcP7SBRrr6C9523SxhuKItmaKla2GzP8HHfQyinlGo86Ar
-	Qrb8tzok2OU5Yr1KtrYxoNP7OipGDwKdtQb4rGQMxC4LBI75zVKYNkzEt5VbZ6JcEW9+8lppELh
-	75+KL1Qa2VLeJTZINk9FaTsGYaTb5ePXPUSF4dzbaajUqpYSwk=
-X-Received: by 2002:a17:90b:4a4b:b0:398:9be6:f999 with SMTP id 98e67ed59e1d1-39907e17dcdmr7521854a91.24.1788245820373;
-        Mon, 31 Aug 2026 23:57:00 -0700 (PDT)
-Received: from nxpwireless-Inspiron-14-Plus-7440 (61-228-209-44.dynamic-ip.hinet.net. [61.228.209.44])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3990bd21e9dsm4243604a91.4.2026.08.31.23.56.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 Aug 2026 23:56:59 -0700 (PDT)
-From: Jeff Chen <chunfan.chen@gmail.com>
-X-Google-Original-From: Jeff Chen <jeff.chen_1@nxp.com>
-Date: Tue, 1 Sep 2026 14:56:54 +0800
-To: Jeff Chen <chunfan.chen@gmail.com>
-Cc: linux-wireless@vger.kernel.org, error27@gmail.com,
-	johannes@sipsolutions.net, Dan Carpenter <dan.carpenter@linaro.org>
-Subject: Re: [PATCH] wifi: nxpwifi: fix return value check in
- change_vif_to_sta/ap
-Message-ID: <apZ3NjwKESguarhV@nxpwireless-Inspiron-14-Plus-7440>
-References: <20260825104942.5730-1-jeff.chen_1@nxp.com>
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="VCkwem0V"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
+  t=1788246952; x=1819782952;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=CQhdniJ6ytQBLPKBNUGYkZcuBEuTvR5bKJgrmTdSV60=;
+  b=VCkwem0VkMXYs8vqKjGtkTWLWGY75eOfoPNAzNn1GGP9lC/17/fo/C2E
+   6v3GgdPtjVFGIgeYecYcTqNDClGwDZYRpxBnbY5ClUUQCTFjdDBAX6Gh+
+   S77k9JZEUiuyrmIgM6SPA4Xa+vY4Qy8ar0L4lp/l+OCmCweYoT0rk6cCl
+   Q=;
+X-CSE-ConnectionGUID: zrK6w3BVRzyE9EkXFaGZsA==
+X-CSE-MsgGUID: A/SxG0cERSOpeTJIqPm25w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11892"; a="144879284"
+X-IronPort-AV: E=Sophos;i="6.25,255,1779141600"; 
+   d="scan'208";a="144879284"
+X-Amp-Result: SKIPPED(no attachment in message)
+Received: from unknown (HELO MUCSE803.infineon.com) ([172.23.29.29])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2026 09:14:36 +0200
+Received: from MUCSE809.infineon.com (172.23.29.35) by MUCSE803.infineon.com
+ (172.23.29.29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Tue, 1 Sep
+ 2026 09:14:35 +0200
+Received: from ISCN5CG5251XQT.infineon.com (10.161.6.196) by
+ MUCSE809.infineon.com (172.23.29.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.46; Tue, 1 Sep 2026 09:14:32 +0200
+Date: Tue, 1 Sep 2026 15:14:24 +0800
+From: HungTsung Huang <Jason.Huang2@infineon.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes.berg@intel.com>,
+	<johannes@sipsolutions.net>, <hsin-hung.li@cypress.com>,
+	<linux-kernel@vger.kernel.org>, <brcm80211@lists.linux.dev>,
+	<brcm80211-dev-list.pdl@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
+	<jeff.johnson@oss.qualcomm.com>, Carella Chen <carella.chen@infineon.com>
+Subject: Re: [PATCH v5 1/5] wifi: nl80211: add roam offload extended feature
+Message-ID: <20260901071424.GA1876155@ISCN5CG5251XQT.infineon.com>
+References: <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-0-eeab4fda0f31@infineon.com>
+ <20260821-upstream-wireless-next-main-jason-11r-support-v1-v5-1-eeab4fda0f31@infineon.com>
+ <382c3dbb-ff32-4e62-9b79-c6e4cc6273ef@broadcom.com>
+ <8a866e2b-8802-4a8e-8421-2732da5f5c8f@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Disposition: inline
-In-Reply-To: <20260825104942.5730-1-jeff.chen_1@nxp.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8a866e2b-8802-4a8e-8421-2732da5f5c8f@broadcom.com>
+X-ClientProxiedBy: MUCSE823.infineon.com (172.23.29.54) To
+ MUCSE809.infineon.com (172.23.29.35)
 
-On Tue, Aug 25, 2026 at 06:49:42 PM +0800, Jeff Chen wrote:
-> nxpwifi_change_vif_to_sta() and nxpwifi_change_vif_to_ap() both call
-> nxpwifi_set_bss_mode() without storing the return value, then check
-> 'if (ret)' which tests the stale value from the previous call. The
-> 'if (ret) goto done' is therefore dead code, and errors from
-> nxpwifi_set_bss_mode() are silently ignored.
+Hi Arend,
+
+> Actually there is a checkpatch warning that line with the STA_1X check
+> is 82 characters. So my suggestion please make it FAST_ROAMING instead
+> of ROAM_OFFLOAD and swap the two checks to fix the checkpatch warning.
 > 
+Thank you for your suggestion. We will rename it to NL80211_EXT_FEATURE_FAST_ROAM_OFFLOAD.
+The name reflects that userspace offloads fast-roaming handling to the driver/firmware,
+and it covers both FT and OKC. We will also reorder the checks to avoid the line-length warning.
 
-From: Jeff Chen <jeff.chen_1@nxp.com>
-
-Please ignore this patch. wifibot reported an "email address mismatch" 
-warning, so I have fixed the setup and already submitted v2.
-
-Thanks,
-Jeff
+Thank you.
