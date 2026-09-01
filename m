@@ -1,91 +1,75 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A543472771
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 08:56:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363EE470E84
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 09:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788252995; cv=none; b=sPNqfKbfCFEjoAWPZ+RdMxujEHTVGRG83Fki5Gwe/fgNTSE2RYhdX9NKF2ULI0QOoGaXpyjKFVow2haPdU8FcA2QluRg36/jb1HJvQxEOCo32a3v/qeK/JieqJBE/KsUbo3R4Hn6/8PpHk1+NFNeNcZfp2wWXvOS7tqlCoebrNI=
+	t=1788254315; cv=none; b=OWhBqnzFQ3VeXzDl/ZncUWvHaUr+hYE+iJYgBZVxyJ7MOLu5d40eIxKa9kADuEXebGm8ASa+NnhfxalUzpZNrF8EmhwOQHJnLUEM94KHDU/imtCZ1dLGup1UWqwKlwlYr4biW5+rLnhkWgYI46iSv6k7qmDRJUc+/xG35yR724s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788252995; c=relaxed/simple;
-	bh=A4xUzfDdDJYsOGANI2gW2/2hVZXzXBKxIuvh9sx7HyU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xz2G/2AEgrCtZc41WfWGkYf2WCIPHj4u3XL9xJzUKlbrP9Kz3NWNbcyaJv3vys1pV76CEeVIbJAh/2M6Kqs+5EWPelfTTVDC4bu7XHE0lD/RBPuTysz2sbQbm9gQsXpFqMh+HL2L/IzaDuxq03QIiNA6Ia5vRG85GQXGSKlxC4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=H54HGPWZ; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZaXrksSA; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1788254315; c=relaxed/simple;
+	bh=XzqNVl6OeV+SYBeUHRgc3K1ehXXBOoZK78nLesljXrA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=upX57xgn16h3oGHatC++zlj93nMq3sy2zKfV+9j00Ux2/wktSUSIgekvi4Mi3UFeADfiiSPpmKHTg50jTwU/NZe8rfq0Mt92kOSJDmZ/0yq04P/aZ7On0a7aO2iGvzUWFgXWhjtEKNbqgccIQ2+OHVUNczN/MRBMDkM6bZh2qBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VWviulsQ; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="H54HGPWZ";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZaXrksSA"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68179OOJ2321944
-	for <linux-wireless@vger.kernel.org>; Tue, 1 Sep 2026 08:56:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=MatJlJXhqEb
-	HsgisvSSw+ap61p7CAazHvfTs4veKE8o=; b=H54HGPWZG+wJOTSrAnQWSSU4BQX
-	oLp9JMeTDfiLFaeyFbZKkwZklJDwNsSf+BMEQ2JOKY7L+tkNN1S11q2KaMRMUeZs
-	mRlN5J6U7G56xbz84PQVIB8wGQ9/luL+pp3yhWcrZbA9hm9vCPYpykFS/ZIXMt+h
-	4NDBSqq8uX4TPOgT/4dDVEw00RLv/BqR8i7QDT/c6TvOtahj7YW60RmNr8DI6QIS
-	GXRfWoX4vur4/aKPEyzfrZaWSgzLYSvosUQgQ6fvxiGfqKs0K4ILTdTBbcnRhmUW
-	L8PB2+/8j9LPoSOLt834ge7haj8vxy5l2IbPgL6nNmW02erYUiXfgdpLS2Q==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4gdfchb2xp-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 08:56:30 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2d932ef41c4so13235775ad.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 01:56:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VWviulsQ"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-490cf322ed0so53539585e9.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 02:18:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1788252990; x=1788857790; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1788254312; x=1788859112; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=MatJlJXhqEbHsgisvSSw+ap61p7CAazHvfTs4veKE8o=;
-        b=ZaXrksSAcpZjxd7d+XX7cabldZVNZjI6MQoF4PxMc/Fo/qSWt2BhuWuXGoHG8RMvo2
-         akdn5YEYT49Zih8C5j506PDhXIGmV3JTvGODEF0dqxKriPP5umSbbBquGiLtRT/uKlTv
-         ZHDdNX+2AceRmx70woTkurhLYGizkmCQehhgS2GmaUonaytQKM0Wx4gWUt+IsciOoGsf
-         Bf6s3O3kqhKAv2H8KceatqKpsEinamyNHLLDzaHsryaCFqLfyCRqQsqMOtLyyArF8dtN
-         KelXJGVIyVS6XQgfGnN6YJQBEfrnsa9QsshvIq9gbI6azIP8NaGxZHAcegGFTZqlvyYN
-         AhTA==
+        bh=ox17qlfGwgbDEYWgR5CMA+apR26DItVeT8iYjLmPkvw=;
+        b=VWviulsQppmWLeniK8mvEs0U1qKgQ88Cox59vb/9yeUu6TOZKH4hRZl+Cxe8dhgulp
+         AezmMLaFX30hNmM7iEy6GXxrDe7w4QBQdYZQVBt88ndkT07c46LLczN5AM61i8mY2j9s
+         IwBnRO6dScojW2mr3yrh9gr3LyK6lPk9JCsxqv1ZX3V6SJG36r7Itsly+6dbfefY7Dxb
+         VG98QFbOiI61ke3+2Zla/v22qY5zRIfSQA4PoZHSQgp6lgo6qy7hwaD6M08TNImh+lYA
+         wIxWoqba3fQm4tOLsUrPGem2pfgNYN0F3lMJF/ha1X4M32hN95yPmrFhRt95GC9i3ob2
+         IjIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788252990; x=1788857790;
+        d=1e100.net; s=20251104; t=1788254312; x=1788859112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MatJlJXhqEbHsgisvSSw+ap61p7CAazHvfTs4veKE8o=;
-        b=CBwskbx2gax8DeQTWV6J9bH2WSYCh6ocGvXDJhBrJhbXoIAQo7cx6n6tB2xtvlOvJk
-         NMX5/x2n91VvXwIelr347agS6w/0nGZBmHbzni3uEJoy/ChxqNBaSGWS81Etl8MQvkLD
-         DqPVnRRaoGEqX8IlA6hN/XRuoieF5qSiUjhrgSXfUyC5MpJQ5rUhyFGzuENserHlv2nv
-         RNt9mHalNhGOnwlSDJQKHUTvVWdvUAvZ9c57abjfx+gND7Mx/luFz8PiDNY86x/aSfUk
-         OZKLKlmwzoqr7T/eV+yGnyZwWUM7u3+PePzAO7SRZnkz/xxEviH897QgUjFDxmgQG/5P
-         DHkA==
-X-Gm-Message-State: AFuF++kzfvyGM8J5ITFp+gyNj5Og8ZdGSxSwQKixto9z89R9pQSa6fVg
-	TRqXFa0SES8eZBakiT9oHFMk2d5Sp0+WHSHY0HGPt+1Lvxo0ME6pPOLoUUZSf2Sl0VpJahkwX5k
-	AX2ZVgtMwEQdi2ljLE0nZkw6/RRbs8xzCb8QKbE/5SYK6/OzeIWZkAkDeSrwVYtA2NNLNJg==
-X-Gm-Gg: AYBFou1TRZEOfqX7Sq+sBXbyBUe/oCajCL/kIGzQLLIaYQ3bfaUzxXeGiZ7LxLPZrdn
-	umoa/96Q4vZAGvxkF63APHa/sjzukrkkMutXl3nBWOgAJTXGy0rFb4eBAMNgJa0Sg8Y2YwWuyZh
-	LPDtQNDOR6J7Etozd8NCGhIabw4a1ZX6eCF8wZPPBKMfhHlgTXSajERhEou6/Grh6830AWrUp66
-	MDjVlReIz5MogTSppDUl8+GLD5si3ClU7TirzrAz18u5lwsXvWQa98kncf5Z1caXOsQE5idPKEl
-	L0PhuDt0Em+b2JmDFTBoMnFf1QkFakF81W8XFDm6ndTGywebYLzJnojbH9p3BnNXtjEOcBYBdgN
-	a+RM/CrYKQUSQEWkwR7BjKsDVT7BzfVw6qz8yO3qzfJHzt5jROb/Kd8mmd08ePl+oqJyj/UxbqS
-	2LjjnQCPZZWxpsxA==
-X-Received: by 2002:a17:903:2c08:b0:2d8:d4d2:d139 with SMTP id d9443c01a7336-2d952960702mr42859335ad.21.1788252989749;
-        Tue, 01 Sep 2026 01:56:29 -0700 (PDT)
-X-Received: by 2002:a17:903:2c08:b0:2d8:d4d2:d139 with SMTP id d9443c01a7336-2d952960702mr42859045ad.21.1788252989294;
-        Tue, 01 Sep 2026 01:56:29 -0700 (PDT)
-Received: from hu-aisr-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-32b5bef7683sm22490776eec.12.2026.09.01.01.56.27
+        bh=ox17qlfGwgbDEYWgR5CMA+apR26DItVeT8iYjLmPkvw=;
+        b=VJwf86RyyZJ3GW5mJXNgsGt0dMNveFXm7vLuS4xpfVM5b2ezfNonhuFYt04V1v9c11
+         KbLyhMRVi2ay0VJY9d2w7UX2Sr+FLR5bKlZAXK9ZK55BFQ2xtHSXBRWeWt5AIK66GWlH
+         +eZ4JKIlpTaPv9UFEXDPLvzWlruGyGVOq1q1byAhYB20uMvDx8DgFsBm42qN6MRq/0Bo
+         o6rycvg0ABG29ZgyipeRRGkczPXl/D8KNiswDA/y4W1C8d8jIz1SE5vNK8Y9e+p6z+d1
+         oMn6Xj9PLJ0z/4rcgxtO2+VU0p4+mYOxAJpIWBXElqLyqgK1i5jFV6HVct650vHLSe5B
+         DSSQ==
+X-Forwarded-Encrypted: i=1; AHgh+RoVGOmcEQ3b7U+N1qnz3PsnVGcZ3b6VPTrLuvITEbPz1k3DNDokQ2jHHmueYu1xAnaQiUwogduglvUONuYCZA==@vger.kernel.org
+X-Gm-Message-State: AFuF++nhazAJ61Y2c3tZFBe+NYpPADYKpVL1RQsfnYB4SgBib4EgThFR
+	T+SMQaPa/9odnVI16u+FKQI/tHoHT4+E6qP7mP+Wu/ADV1sLF+xmxtFe
+X-Gm-Gg: AR+sD105jM2gtM03H9AbL0B1uYKul6gW/0LvYvVjKLsStYtGV+Pv4ElPK8GP8i/JYOf
+	YY2BwzQVme14zMYQsXIsUlPDR/gZNU5JwpgzeU8lH0r7hPtqNviFLNouRVNx9eTBHy+n6y2/bK4
+	+3AR6QSPLygvKw+HM2myk7QhPIvVFVucL9P/Zdf0L90H/1IxajCm7SlAYFZw/F+uPbydN1dDxpT
+	qThFfKkqc9rEintabhUIkOKnxqHWPehrgAK4/9XcT6tdB3MijL4o0lBJu8YKHqn1mCM6vkN5COe
+	7rrZAmjeCIsoKP74kbZJz94ly54isa9YewXxH+fYj2tRPpvIDmkkntMSz9EBG4X2ercQML8JOx/
+	1iRSUgGyCXo4VZRliqpWDe2Puz8bxupPo6ul8Mr+39DQzoq1E1oMme8O+aUupRvziYPXpuMzig1
+	VV8NJDH144Y2+ajrFW+QiFxs2+iKuj9/TXAkRhCwiVJ9jz93o6OhY9yNSGE9IYXLQn0A==
+X-Received: by 2002:a05:600c:8107:b0:49c:d26a:cf70 with SMTP id 5b1f17b1804b1-49cd26ad005mr307050445e9.15.1788254312032;
+        Tue, 01 Sep 2026 02:18:32 -0700 (PDT)
+Received: from deb05.proceq.com ([213.160.61.66])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49cdce08862sm54140625e9.1.2026.09.01.02.18.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2026 01:56:28 -0700 (PDT)
-From: Aishwarya R <aishwarya.r@oss.qualcomm.com>
-To: ath12k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, Aishwarya R <aishwarya.r@oss.qualcomm.com>
-Subject: [PATCH ath-next 2/2] wifi: ath12k: move is_authorized flag to ath12k_sta
-Date: Tue,  1 Sep 2026 14:26:16 +0530
-Message-Id: <20260901085616.2959268-3-aishwarya.r@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260901085616.2959268-1-aishwarya.r@oss.qualcomm.com>
-References: <20260901085616.2959268-1-aishwarya.r@oss.qualcomm.com>
+        Tue, 01 Sep 2026 02:18:31 -0700 (PDT)
+From: Mehmet Fide <mehmet.fide@gmail.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Bitterblue Smith <rtl8821cerfe2@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mehmet Fide <mehmet.fide@screeningeagle.com>
+Subject: Re: [PATCH rtw-next v3] wifi: rtw88: usb: route bmc frames via the high queue only for DTIM delivery
+Date: Tue,  1 Sep 2026 11:18:30 +0200
+Message-ID: <20260901091830.2506562-1-mehmet.fide@gmail.com>
+X-Mailer: git-send-email 2.54.0
+In-Reply-To: <9209280c3f044363afd884687ae3cb6b@realtek.com>
+References: <9209280c3f044363afd884687ae3cb6b@realtek.com>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -93,162 +77,111 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: SWWCh7l9yI-HUeJmpYT0YPWeTz37GBQi
-X-Authority-Analysis: v=2.4 cv=G9Ms1dk5 c=1 sm=1 tr=0 ts=6a96933e cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=EUspDBNiAAAA:8
- a=P8DYBBCEK76YGRFjgHgA:9 a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-GUID: SWWCh7l9yI-HUeJmpYT0YPWeTz37GBQi
-X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAxMDA3OSBTYWx0ZWRfX3ATeJaFXM2IV
- Sgjvq9U5YC92XyBOPlKlVhrV3d57OepDxT6rhUJ96tcJFi2BDqoNlz5Xpsb6QAbYT2vzrU/zjhT
- VEjvjjBE7j0LyDBHeh7bJZ70+3wv9KA=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAxMDA3OSBTYWx0ZWRfX9SWnq6Z0EjGS
- dGRu1J518HsfJdDOQJmFksR1L1cQlS/vUEbmdJp2nvgLg63uoURlxgdEOjys+bbwM/QVhj1lfy2
- gJMpzs6xEFgVHDwE3J6mai58IenfISIJrBljR7xrDSFZtEnNqdwSEZkq2rqpHDa1OaXtiLU4dwm
- V+7/7M8aWbktqdfyyynTCNq/ZgKbizgKOgGil71LXTSa/ASqE26+BiH2Q4AbIDqMlPoNKhaKg1P
- tioA0iE0duqK70WX4Bb03vPh37J0qTAnlCsBB9byYC0EHkm12oa7Yo/kLiAq9+AU/gu44NU5pjN
- dD0Sxz3u8tlUiXLaAIkp/HEiCnPqOUSyCMZ84ZCF7eZcIlPAF92KmUTpn8r5itEC8dyJ8anAvhz
- 1TlVdsCPNk0pjaL/iw1x2B8wSjBKFWG6KeV1tYImhsqAaLUtC49Cfeh+63AJ6Mn5hss7V3XZcv1
- j+9edBM+a7zykCiaEzg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-09-01_02,2026-08-31_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 suspectscore=0 adultscore=0 phishscore=0 malwarescore=0
- impostorscore=0 spamscore=0 bulkscore=0 clxscore=1015 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609010079
 
-Authorization state is shared across all link peers that belong to the
-station level property. Storing is_authorized in struct
-ath12k_dp_link_peer duplicates the same state for every link and
-requires all copies to be updated whenever the authorization state
-changes.
+From: Mehmet Fide <mehmet.fide@screeningeagle.com>
 
-Move is_authorized to ath12k_sta and update the authorize/unauthorize
-handlers to set it there directly. ath12k_bss_assoc() only reads the
-flag to decide whether to re-authorize the BSS peer after vdev up, so
-read it from ahsta instead of looking up the dp_peer.
+Hi Ping-Ke,
 
-Previously, is_authorized was protected by dp_lock. After moving it to
-ath12k_sta, all accesses are serialized by the wiphy mutex, so the flag
-is now protected by the wiphy lock instead.
+thanks for the detailed answers, and for the ATIM window pointer - I ran
+that experiment today. All numbers below are from the same bench setup
+as before (RTL8822BU USB2 AP, dtim_period=2, one associated Windows
+client in power save, ~40 broadcast/multicast frames per second
+generated on the AP, free page count read at 0x240, nothing touching
+the client during the runs).
 
-Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.6-01243-QCAHKSWPL_SILICONZ-1
+> Have you confirmed the broadcast frames ate all of them?
 
-Signed-off-by: Aishwarya R <aishwarya.r@oss.qualcomm.com>
----
- drivers/net/wireless/ath/ath12k/core.h    |  2 ++
- drivers/net/wireless/ath/ath12k/dp_peer.h |  1 -
- drivers/net/wireless/ath/ath12k/mac.c     | 36 ++---------------------
- 3 files changed, 5 insertions(+), 34 deletions(-)
+Yes, three ways. The drain tracks the storm linearly (1803 -> 16 in
+~105 s) and only while it runs. With an instrumented build I counted
+the high queue draining ~3 frames per DTIM, which at dtim_period=2 is
+~15 frames/s against ~40/s coming in. And with a test build that keeps
+the same storm off the high queue (routed to the AC queues instead),
+the count never leaves 1803 - same traffic, only the queue changed.
 
-diff --git a/drivers/net/wireless/ath/ath12k/core.h b/drivers/net/wireless/ath/ath12k/core.h
-index a98fc6e0699d..a04757a038f2 100644
---- a/drivers/net/wireless/ath/ath12k/core.h
-+++ b/drivers/net/wireless/ath/ath12k/core.h
-@@ -529,6 +529,8 @@ struct ath12k_sta {
- 	enum ieee80211_sta_state state;
- 
- 	bool enable_4addr;
-+
-+	bool is_authorized;
- };
- 
- #define ATH12K_HALF_20MHZ_BW	10
-diff --git a/drivers/net/wireless/ath/ath12k/dp_peer.h b/drivers/net/wireless/ath/ath12k/dp_peer.h
-index 256fc79d714e..d01ef1aea48b 100644
---- a/drivers/net/wireless/ath/ath12k/dp_peer.h
-+++ b/drivers/net/wireless/ath/ath12k/dp_peer.h
-@@ -80,7 +80,6 @@ struct ath12k_dp_link_peer {
- 
- 	struct ppdu_user_delayba ppdu_stats_delayba;
- 	bool delayba_flag;
--	bool is_authorized;
- 	bool mlo;
- 	/* protected by ab->data_lock */
- 
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 5ddd60e0a1f5..4ec2ee1b17fc 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -3914,11 +3914,8 @@ static void ath12k_bss_assoc(struct ath12k *ar,
- 	struct ath12k_link_sta *arsta;
- 	struct ieee80211_sta *ap_sta;
- 	struct ath12k_sta *ahsta;
--	struct ath12k_dp_link_peer *peer;
--	bool is_auth = false;
- 	u32 hemode = 0;
- 	int ret;
--	struct ath12k_dp *dp = ath12k_ab_to_dp(ar->ab);
- 
- 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
- 
-@@ -4022,17 +4019,8 @@ static void ath12k_bss_assoc(struct ath12k *ar,
- 		   "mac vdev %d up (associated) bssid %pM aid %d\n",
- 		   arvif->vdev_id, bss_conf->bssid, vif->cfg.aid);
- 
--	spin_lock_bh(&dp->dp_lock);
--
--	peer = ath12k_dp_link_peer_find_by_vdev_and_addr(dp, arvif->vdev_id,
--							 arvif->bssid);
--	if (peer && peer->is_authorized)
--		is_auth = true;
--
--	spin_unlock_bh(&dp->dp_lock);
--
- 	/* Authorize BSS Peer */
--	if (is_auth) {
-+	if (ahsta->is_authorized) {
- 		ret = ath12k_wmi_set_peer_param(ar, arvif->bssid,
- 						arvif->vdev_id,
- 						WMI_PEER_AUTHORIZE,
-@@ -7020,20 +7008,11 @@ static int ath12k_mac_station_unauthorize(struct ath12k *ar,
- 					  struct ath12k_link_vif *arvif,
- 					  struct ath12k_link_sta *arsta)
- {
--	struct ath12k_dp_link_peer *peer;
- 	int ret;
--	struct ath12k_dp *dp = ath12k_ab_to_dp(ar->ab);
- 
- 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
- 
--	spin_lock_bh(&dp->dp_lock);
--
--	peer = ath12k_dp_link_peer_find_by_vdev_and_addr(dp, arvif->vdev_id,
--							 arsta->addr);
--	if (peer)
--		peer->is_authorized = false;
--
--	spin_unlock_bh(&dp->dp_lock);
-+	arsta->ahsta->is_authorized = false;
- 
- 	/* Driver must clear the keys during the state change from
- 	 * IEEE80211_STA_AUTHORIZED to IEEE80211_STA_ASSOC, since after
-@@ -7055,21 +7034,12 @@ static int ath12k_mac_station_authorize(struct ath12k *ar,
- 					struct ath12k_link_vif *arvif,
- 					struct ath12k_link_sta *arsta)
- {
--	struct ath12k_dp_link_peer *peer;
- 	struct ieee80211_vif *vif = ath12k_ahvif_to_vif(arvif->ahvif);
- 	int ret;
--	struct ath12k_dp *dp = ath12k_ab_to_dp(ar->ab);
- 
- 	lockdep_assert_wiphy(ath12k_ar_to_hw(ar)->wiphy);
- 
--	spin_lock_bh(&dp->dp_lock);
--
--	peer = ath12k_dp_link_peer_find_by_vdev_and_addr(dp, arvif->vdev_id,
--							 arsta->addr);
--	if (peer)
--		peer->is_authorized = true;
--
--	spin_unlock_bh(&dp->dp_lock);
-+	arsta->ahsta->is_authorized = true;
- 
- 	if (vif->type == NL80211_IFTYPE_STATION && arvif->is_up) {
- 		ret = ath12k_wmi_set_peer_param(ar, arsta->addr,
--- 
-2.34.1
+> The HIQ packets only send out right after beacon within ATIM
+> window controlled by REG_ATIMWND (0x055A). Can you try to
+> enlarge the size to see if it will be different?
 
+It makes a dramatic difference. Same storm, only REG_ATIMWND changed:
+
+  0x02 (default)  pool 1803 -> 16 in ~105 s, pinned  (reproduced twice)
+  0x04            pool never leaves 1803 over 180 s
+  0x08            same, never drops
+  0x10            same, never drops  (reproduced twice)
+
+So the default 2 TU window is what limits the drain to ~3 frames per
+DTIM, and already 4 TU drains faster than this storm fills.
+
+One more observation worth recording: with the client *actively
+pinging* the AP the pool still drains to 16 at the default window.
+Windows dynamic power save dozes between packets, so a client that
+looks perfectly alive keeps the dozing condition asserted. That matches
+our field failure: the link looked healthy and yet the AP died.
+
+> If you stop 40 broadcast frames per second, will AP become available?
+
+Yes. In both runs the pool was back to 1803 about 60 s after the storm
+stopped, and the reconnects between the runs above all succeeded. In
+the field neither condition stops (the chatter is mDNS/SSDP from the
+clients' own segment), which is why it presents as a permanent lockup.
+
+> I think this is not possible, because USB needs time to transmit
+> packets from host to WiFi card, and then it needs to wait for next
+> DTIM.
+
+Understood, I have dropped that idea.
+
+> Is it possible to declare IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and
+> call ieee80211_get_buffered_bc() to get the BC packets to send?
+
+I looked at how the existing users time the release. ath9k_htc can do
+it on USB only because its firmware sends an SWBA event at beacon time
+(WMI_SWBA_EVENTID) and the driver pulls the buffered frames from that
+handler; rt2500usb has no such event and explicitly refuses to set the
+flag for that reason (see the comment in rt2500usb_probe_hw_mode).
+
+Interestingly, the firmware seems to already have the needed event: the
+vendor driver enables a beacon-early C2H report through a bit in the
+SET_PWR_MODE H2C (SET_H2CCMD_PWRMODE_PARM_BCN_EARLY_C2H_RPT, C2H id
+0x1E), though it only uses it for TDLS channel switching, i.e. in a
+station power-save context. Do you know whether that report also works
+in AP mode on the USB chips, and fires early enough to pace
+ieee80211_get_buffered_bc()? If it does, this becomes the clean
+long-term solution and I would be happy to prototype it.
+
+For what it is worth, the vendor driver does not use any beacon event
+for bmc delivery on USB either: it parks at most one filtered burst in
+the high queue, lets the hardware pace it out after the DTIM beacon,
+and refills only when the queue reads back empty - in other words, its
+real protection is a hard bound on high queue occupancy, which is what
+patch 1/2 below brings to rtw88.
+
+> Maybe, check bound first, and then filter ?
+
+Agreed. Here is how I would combine the four knobs:
+
+  - bound (patch 1/2): hard cap on how many bmc frames may sit on the
+    high queue (token bucket refilled at what the default window
+    drains, overflow goes out on the AC queues awake-style). This is
+    the guarantee: the pool stays healthy under any storm, including
+    the ARP/DHCP bursts the filter admits.
+  - filter (patch 2/2): admit only ARP, EAPOL and DHCP to the high
+    queue, matching the vendor driver's default. Ordinary chatter never
+    reaches the beacon-paced path, so the bound rarely engages.
+  - ATIM window: given the measurements, a moderate raise (0x04
+    already drains this storm, 0x10 gives headroom) would add drain
+    capacity as a complement. I left it out of the series for now
+    because the queue stays unbounded either way and a wider window
+    costs every PS station awake time after each DTIM - I assume that
+    is why the vendor driver keeps it small and filters instead. If
+    the firmware is fine with a larger window on these chips I can add
+    it as a third patch; is 0x055A safe to raise across the USB chips?
+  - mac80211 BC buffering: the long-term correct PS delivery, gated on
+    a beacon-time event as above; follow-up work, not part of this
+    series.
+
+If the plan looks right I will send the two patches (based on rtw-next
+with the acked v3 applied) in the next days.
+
+Best regards,
+Mehmet
