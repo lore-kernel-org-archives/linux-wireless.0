@@ -1,117 +1,162 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49ECB47DF84
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 16:10:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98FE241A4F8;
+	Tue,  1 Sep 2026 16:17:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788279034; cv=none; b=Pl36SHEm318a/SEYwWhhgRnIaWSGdx46h9NTCjVaD3ToR9KjOu1K2z+0jYW4O1hhjPghclGU22ef9SiLKkfHyEtyW16DE5skkhCPCPyx2k6Tyg5OO/evzACKon1hWUHVdNbdWN0+GENvf2qC5/bDfR6ttqPciwjYY+Qu6kAyMjg=
+	t=1788279459; cv=none; b=HtwtEJG8ICzkVKT940/L3vc8SobTTC5Y1OrX/9IPPXBl0XcEGe0pUjYPiGbFtuzIC8pX3UGs8rPj+DR7GoRWlpXW7DkqVpylhAIwFgD43ZoZq+MXAej8sa5i2fMY4c/fuEniKtZacmgC10lOx26N3xFdRUiVprKCW+kW68jk3jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788279034; c=relaxed/simple;
-	bh=kB+wRcwLg9jpN6jhg7tmxn+hiV+nveguI8b9GP8r5oc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Do9mq6LODfCXlvJuOg51e8Mw14OAInCZhaorAOvn+V1RovPGbtMIA9c/NBT8nvnEsTaJFp9QOAhm2cC218rzDCBn/38v0GGCT1853AqOd+vkeZ+yDZ3ygyaG+Q43yKiu5cdObFU2LLN2dfue+ciEiV8jod0XuJ5Qb41hNSnPzVU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l2upDrJC; arc=none smtp.client-ip=209.85.219.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788279459; c=relaxed/simple;
+	bh=xFoID5dsCVdyNnoS77h4yQyZjhMsd4vvPl14vyIBDT8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=HrsFjTTuc0npJlcnNXD0+X4r/9r2ES8o8KkEuY3R7zmdxLFM3/LNOocYShqiAjWjAKkDlGqSjzjK0KszxwhgPE7s/+PJ+1/sUi9xjOQK15TfSQuoAloR6SL2wDbvsQ5WUCVrePEzAjef3xXXUbskkDrnwWEOO4mwiQ14ZzmSxd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k1EeFBQ/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l2upDrJC"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-90e970f710cso162296d6.3
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 09:10:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788279032; x=1788883832; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qd8FjjdakEvlndPpogmSOky/bdaCcagMgEJZOrnyBdY=;
-        b=l2upDrJC/GwSxGdiavmH/jNLDexiu0A7sUvAv1R5e217OjectCukxLJCjaltAkpJO0
-         4EI2kmBDoaN7IsrBuwnezJYNkV82eiYtoHFE36aH7xrPUaApYKxpwGxwtyymUfvBRLWs
-         5pnNsPB+iHJk0VNvAWl9IVfPA0UVJLuslvzsLbp0tPxOiOFxtiuIBiQpQy8Jrs6LhWCB
-         K9bYNeg7I6Ag96UHOxn2NhT1AMpuXVZzWR3DyI1zZgrnU6qxaJaFza6w3t+QxxQIwm9J
-         BF6KJhEb6DLhfGqLEGm7fJF0KfmXM0V+4I78ECqJBAMV83L9eAMWQBKUBvs2XVpNCdLN
-         49hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788279032; x=1788883832;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qd8FjjdakEvlndPpogmSOky/bdaCcagMgEJZOrnyBdY=;
-        b=jj+9iffyxSaentxacQsKi914WWXY4lSoFYofeI7a47mOdYnDxwY+oFhq2CkFE7P9dY
-         EDszK5tvzgitPLFYQEvjaFlsZfRxK9JzLjBB5Ja9DbCEbH5+CAZ2jO5dRA+jzhFeX5K4
-         0skjb7iAs7CtOeKDo3iGLx4KY3xA7v3UsK67Y4xkR33la79L2Wult2QXJomfPvzi3kDK
-         8U7w0Hq/SKUOyL9MsXDpBSKRrTwOKeDzMR6p+hfuJWfHeDonbfEWe4xapp2Z/F2pXa2E
-         EC1fbxDgT47wk+w8mlmWFQXg1H6SmEz/UlflxapneqBXsZa4XZOJtPmHPMpaMz4oP4YM
-         jlQg==
-X-Forwarded-Encrypted: i=1; AHgh+Ro5slilbOT40g/zZSTdnavYOIkVCgc6DwcB1XOUuCtnnT4hxIQAldDDCN8UBnKwJx8GhWdGDXGXU1stAjK05Q==@vger.kernel.org
-X-Gm-Message-State: AFuF++lEvheKUSZxw0GBPWfwJG0tU4ZZmapAcgprGWaPHsfcjc3pTz01
-	5nN63DaVmQOZ8zJIBKvDM67ADQp1+E8Qi7oQooomXPysSmHtjjksgYEMiKBV4W4Lf8k=
-X-Gm-Gg: AYBFou0m6rvzUMH5PRvU8uwJ6Cde20vBYy2Soq9Q4E728GX9cH66T38rC6YGbGftXCw
-	EbCl2/ibvZ4TyRSFIawoz992Fca1h991sKPz0wVMV2wmo701CwWYABveGK1lXdSE7v6nG6EiE4c
-	mZm3SW+3HgHrk556WaVFB3p4SAsDIC3HPNGr49xzeXblPLlmhMlrRRQGVfP5fFK3wsNdA7nOEjz
-	wIR9kNc3DeMkV2Eeosp9wEWm1nzZmT4Sai/57Yc0N5Tm7jJ5Yv6Le6lRs9rBfGq867ua3V5aERg
-	O5xGX/L/GaSaT3BGMbo1BJdoQ8lkExYGlszWQt5p121MGkTri41h4E9AnYNRlR21I95RxDkV1rv
-	5UQIyhpgDRzape+piBZXaqhjVLfbzDSB1MsQmkhwsvrYGXL2H1qmlzDTEV7fAGfPIZilGTZO7gU
-	xUIXTrueRlNFR5BgKLVbMnk7KxiXoXRxDJi2jhzE6e0yUy53XVdgFdt93yQM5YP92oejs4Pd2i0
-	wcvMkY+D3HCwDGoeD4QI9vzX5pMD9vqDjU=
-X-Received: by 2002:a05:6214:2425:b0:90e:95c1:47d3 with SMTP id 6a1803df08f44-90e95c14964mr82027126d6.8.1788279031820;
-        Tue, 01 Sep 2026 09:10:31 -0700 (PDT)
-Received: from Valhalla.lan (50-36-57-116.bng01.ssvl.sc.frontiernet.net. [50.36.57.116])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-90d98d54cfasm92683046d6.40.2026.09.01.09.10.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2026 09:10:31 -0700 (PDT)
-From: Hans Buchheim <hbuchheim@gmail.com>
-To: Eason Lai <eason.lai@mediatek.com>,
-	linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>,
-	Lorenzo Bianconi <lorenzo@kernel.org>,
-	linux-mediatek@lists.infradead.org,
-	kun.wu@mediatek.com,
-	deren.wu@mediatek.com,
-	Sean Wang <sean.wang@mediatek.com>,
-	quan.zhou@mediatek.com,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	leon.yen@mediatek.com,
-	litien.chang@mediatek.com,
-	jb.tsai@mediatek.com,
-	Devin Wittmayer <lucid_duck@justthetip.ca>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] wifi: mt76: fix memory leak in USB TX path
-Date: Tue,  1 Sep 2026 12:10:15 -0400
-Message-ID: <20260901161015.607195-1-hbuchheim@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260827083526.1621600-3-eason.lai@mediatek.com>
-References: <20260827083526.1621600-3-eason.lai@mediatek.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k1EeFBQ/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 315A51F000E9;
+	Tue,  1 Sep 2026 16:17:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1788279458;
+	bh=Q/H4D9YN1A9VR8cxIJXQbn/Vltw0TakhOCAYQeeVo8o=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=k1EeFBQ/ooyW10zvdB0HYPv+QHoiBhb/Qbf0VthiHYhazqmrfasfY7b6hu9wW6v0l
+	 Rh9yxoLn96EpSacM3n9AxoVa17eMqQXzGb7ZSGmm9385CTzdOrh2kFcHmMMy2Wk3nT
+	 +rv6BPrKOBIO9JVCUxgDJqkRD4C0qv0S3w5NXcng7kbyhQZMuZ5AIjKiEgyXBv4ST2
+	 D2LK3gHWVZkC04GBBjUcsn8nwACYk8utPgaLtizIBuc/Khds8NAgxIL+XjaVf2gs+A
+	 mUePM3wdeWBG3OjqmRLOyd/vUjZ1i4KpbxJ5+WUWAZFJEtRINGNW3PAHhC9x9knjr5
+	 ww+T7HWCCx0Pg==
+Date: Tue, 1 Sep 2026 11:17:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Navon John Lukose <navonjohnlukose@gmail.com>
+Cc: Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Nika Krasnova <nika@nikableh.moe>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	Mark Pearson <markpearson@lenovo.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH wireless v2 1/3] wifi: iwlwifi: pcie: don't infer CSME
+ presence from a failed read
+Message-ID: <20260901161736.GA1883420@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260901154828.GA1879052@bhelgaas>
 
-I tested this series on another mt7921u USB device and confirmed that it fixes the zero-length WNM-frame skb/socket-charge leak.
+On Tue, Sep 01, 2026 at 10:48:28AM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 31, 2026 at 06:33:30PM +0530, Navon John Lukose wrote:
+> > iwl_pcie_check_me_status() decides whether WiAMT/CSME is present from two
+> > register reads, without checking that either read reached the device.
+> > 
+> > iwl_read_prph() returns 0x5a5a5a5a when it cannot grab NIC access, and
+> > that value has CNVI_SCU_REG_FOR_ECO_1_WIAMT_KNOWN set and
+> > CNVI_SCU_REG_FOR_ECO_1_WIAMT_PRESENT clear. A read that never reached
+> > the hardware is therefore taken as a positive statement that there is no
+> > CSME, and the function returns without scheduling the recheck. That is
+> > reachable at probe: iwl_pci_gen1_2_probe() carries on when
+> > iwl_pcie_prepare_card_hw() fails, and iwl_pcie_check_me_status() then
+> > runs against a card it cannot talk to.
+> > 
+> > The second read has the mirror-image problem: an all-ones
+> > CSR_HW_IF_CONFIG_REG has both ME_OWN and IAMT_UP set, so a device that
+> > has fallen off the bus latches me_present to 1. So does the one in
+> > iwl_pcie_recheck_me_status(), which runs a second after probe with no
+> > guarantee that the device is still answering.
+> > 
+> > me_present is never recomputed after that, and any non-zero value makes
+> > iwl_trans_pcie_reset() downgrade IWL_RESET_MODE_PROD_RESET to
+> > IWL_RESET_MODE_FUNC_RESET, so one bad read permanently weakens the
+> > recovery. In the 0x5a5a5a5a case it goes the other way and permits a
+> > product reset on a machine that may well have CSME.
+> > 
+> > Don't take those values as data. iwl_trans_is_hw_error_value() matches
+> > 0x5a5a5a5[0-f] and 0xa5a5a5a[0-f] but not ~0, so the prph read in
+> > iwl_pcie_check_me_status() needs both tests, the way
+> > iwl_pcie_irq_handler() does; the two CSR reads only need the ~0 one. At
+> > probe that leaves me_present at -1 (unknown) and still schedules the
+> > recheck; in the recheck it keeps the previous value.
+> > 
+> > This does change the reset ladder in the poisoned-read case, and -1 is
+> > truthy: a product reset that iwl_trans_pcie_reset() used to allow -
+> > because 0x5a5a5a5a had been read as me_present = 0 - is now downgraded
+> > to a function level reset. That is the conservative direction, and the 0
+> > was never a reading, but it is a behaviour change and not a no-op.
+> > 
+> > Cc: stable@vger.kernel.org
+> > Fixes: 41fff83fe6cd ("wifi: iwlwifi: pcie: check for WiAMT/CSME presence")
+> > Signed-off-by: Navon John Lukose <navonjohnlukose@gmail.com>
+> > ---
+> > Backport note: the bug arrived in v6.14, so the affected branches that are
+> > still supported are 6.18.y, 7.1.y and 7.2.y. All three have the code in
+> > pcie/gen1_2/trans.c as trans_pcie->me_present, so this applies as posted
+> > with no rewrite.
+> > 
+> > Only if you care about anything older that has the bug - v6.14 through
+> > v6.17, all EOL now: v6.16 and below have both functions in pcie/drv.c
+> > (377edee91b89 "wifi: iwlwifi: pcie move gen1_2 probe to gen1_2/trans.c"
+> > moved them), and v6.15 and below spell the field trans->me_present
+> > (cd6d6de694e2 "wifi: iwlwifi: pcie: move ME check data to pcie" renamed
+> > it). The hunks are otherwise identical; iwl_trans_is_hw_error_value()
+> > exists in every affected release.
+> > 
+> >  .../net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c  | 13 +++++++++----
+> >  1 file changed, 9 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> > index 28b276c..c6a771e 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/pcie/gen1_2/trans.c
+> > @@ -4194,7 +4194,8 @@ static void iwl_pcie_recheck_me_status(struct work_struct *wk)
+> >  	u32 val;
+> >  
+> >  	val = iwl_read32(trans_pcie->trans, CSR_HW_IF_CONFIG_REG);
+> > -	trans_pcie->me_present = !!(val & CSR_HW_IF_CONFIG_REG_IAMT_UP);
+> > +	if (val != ~0U)
+> 
+> Consider using PCI_POSSIBLE_ERROR() for these tests.
+> 
+> > +		trans_pcie->me_present = !!(val & CSR_HW_IF_CONFIG_REG_IAMT_UP);
+> >  }
+> >  
+> >  static void iwl_pcie_check_me_status(struct iwl_trans *trans)
+> > @@ -4212,15 +4213,19 @@ static void iwl_pcie_check_me_status(struct iwl_trans *trans)
+> >  		return;
+> >  
+> >  	val = iwl_read_prph(trans, CNVI_SCU_REG_FOR_ECO_1);
+> > -	if (val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_KNOWN) {
+> > +	/* iwl_read_prph() returns 0x5a5a5a5a if it never reached the NIC, and
+> > +	 * that value has WIAMT_KNOWN set and WIAMT_PRESENT clear
+> > +	 */
+> > +	if (val != ~0U && !iwl_trans_is_hw_error_value(val) &&
 
-Hardware and software:
+I wonder whether iwl_trans_is_hw_error_value() should itself check for
+PCI_POSSIBLE_ERROR() internally.  Or other callers should also check.
 
-  x86_64
-  Netgear USB 0846:9065, mt7921u
-  Linux 7.1.9-arch1-2
-  wpa_supplicant 2.12
-  NetworkManager 1.58.1
-  firmware HW/SW 0x8a108a10, WM build 20260224110949
+iwlwifi has a mix of checking for 0xffffffff and ~0.  I don't know if
+it can use non-PCI transports, but some of those places look like they
+could use PCI_POSSIBLE_ERROR().
 
-I applied both v4 changes without semantic modification to the exact Linux 7.1.9 source and built the mt76 module set against matching Arch headers.
-
-The reproducer used a nonblocking AF_PACKET/SOCK_DGRAM ETH_P_IP socket to send zero-byte payloads to the associated AP and sampled SIOCOUTQ after each send. This produces the same packet shape as wpa_supplicant's synthetic WNM keep-alive without using the supplicant's socket.
-
-With the stock modules, eight sends returned success and SIOCOUTQ increased monotonically by 960 bytes per frame:
-
-  960, 1920, 2880, 3840, 4800, 5760, 6720, 7680
-
-With v4 applied, 500 identical frames paced 10 ms apart completed with SIOCOUTQ=0 on all 500 samples. Both the immediate and settled final values were zero. An additional unpaced burst created a temporary backlog that drained completely to zero in 1.35 seconds.
-
-The link remained healthy after the test: 0% gateway and Internet packet loss, and no mt76 pending-TX timeout, firmware reset, warning, or error in the kernel log.
-
-The reproducer and this report were prepared with assistance from OpenAI Codex using GPT-5.6 Sol at x-high reasoning effort. I reviewed the procedure and results and ran the tests on the hardware described above.
-
-Tested-by: Hans Buchheim <hbuchheim@gmail.com>
+> > +	    (val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_KNOWN)) {
+> >  		trans_pcie->me_present =
+> >  			!!(val & CNVI_SCU_REG_FOR_ECO_1_WIAMT_PRESENT);
+> >  		return;
+> >  	}
+> >  
+> >  	val = iwl_read32(trans, CSR_HW_IF_CONFIG_REG);
+> > -	if (val & (CSR_HW_IF_CONFIG_REG_ME_OWN |
+> > -		   CSR_HW_IF_CONFIG_REG_IAMT_UP)) {
+> > +	if (val != ~0U && (val & (CSR_HW_IF_CONFIG_REG_ME_OWN |
+> > +				  CSR_HW_IF_CONFIG_REG_IAMT_UP))) {
+> >  		trans_pcie->me_present = 1;
+> >  		return;
+> >  	}
+> > -- 
+> > 2.55.0
+> > 
