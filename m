@@ -1,107 +1,59 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84C0847B42F;
-	Tue,  1 Sep 2026 09:33:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472BB4756C6;
+	Tue,  1 Sep 2026 09:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788255246; cv=none; b=Rgnw5SpIF9k1OC/GABPj0nAanwNATaituLej42F/n8kEM1+uTAdedF1z+okM/xHC9u8Q7q3Uz2n02mGQEELyH4vH35AgVKeIFNAFE6vvNo3IKlJh6Gn4xjv7G6RMwLS7PhiT7RM1A7dTtw1PDO+4ULsclkr205FYrNYeCzjjhQw=
+	t=1788255472; cv=none; b=fXyDtjn6CuKxIU3nrc0TCiG/A2cbsy5dMvHiuvtKC4PyLswUI26d0tZOoJa2aLZchfQUYpadFwVpPY1O2x4Xt6AVHWVUa8QJ72bQv3gx7XlfikQqNmDS3OoxX4or+nORj5xsvUfP4Vpva/BJhfJoFkJNY2En8PSnVugiAqK1m7k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788255246; c=relaxed/simple;
-	bh=yAarwhC65bRtl93giLS4adl7GvmbWlUWmZMvKt6AUOA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=U0Otlt/X9FKQU6z5hwqXGH7sPgzq7ER00V+Ws8hgVzM39B+o3O85a5PjMGvBXhxLhJviyLSXIb7sQI2GcVStv9UzNOW6ZxRDYEOIRa6pqWGe8lxfzvH4gWmtr+Y5iZFNotHXFQky5CSnM0uiklEsZvrKi6aO0P93Oh4HY5a9RAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PPMZvbmE; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1788255472; c=relaxed/simple;
+	bh=xyiHZ8eCHA8Ex+gxojy6zdg2J/qRqTMXTXsbIjIWnw4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mPbrlBJkDZHaA49fhI2Fx6KUrQBG1gWpc6VPUGNmGXwiw7DVr1+cmZngkOhQGC9hF/7NOUPpeQGWXUD6UGugxyfrpegypUdo6HVF8KaDPVhc6z3QweOfIm3KBKCz7YmdyfMz97X38mBsCcyv8AtI2ShWxApdnkApIym87AqNi+M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=YliBS9Bh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PPMZvbmE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=yT
-	ZckLkW8YBc7vASN2tUGiSNOlOsyecF5Ji42NfmAxU=; b=PPMZvbmEiWPQ7w5sgw
-	lKXSPVEHqfbA7e6dRPG99QQjQ5AcSiKMtnDGp9JomABx7wkJCeOWHByU9YqgGhl5
-	OskzqZhTUCJy6kC/4vS1TGJVKhWUKo13ANdgyqvo/PpTct89QBblRfjqAd3m9as4
-	2iW0r046uPdb6kfV/kq53Gnbg=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgD3Pyrzm5Zql_oSPQ--.53813S2;
-	Tue, 01 Sep 2026 17:33:40 +0800 (CST)
-From: Gongwei Li <13875017792@163.com>
-To: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Chin-Yen Lee <timlee@realtek.com>,
-	Kalle Valo <kvalo@kernel.org>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Gongwei Li <ligongwei@kylinos.cn>
-Subject: [PATCH] wifi: rtw89: fw: propagate real error code in rtw89_fw_h2c_add_general_pkt()
-Date: Tue,  1 Sep 2026 17:33:31 +0800
-Message-Id: <20260901093331.3441469-1-13875017792@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="YliBS9Bh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 073211F000E9;
+	Tue,  1 Sep 2026 09:37:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1788255460;
+	bh=SWjUKAF7YFFnyw5e+qfcEAcM53/3OiOmPglVRHrDtv4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=YliBS9BhYwvnURng67uiMMNbJsKzxT/pRy2CSYg9GKPwq43vdOWFwHCzaZ3YBf7xN
+	 oX73CPhYZPhzhkZpN9SKTz11II86Pz5znF6SeCY0to1aReeyJQ7fzGIY77CNoGk5wu
+	 UHR2oyeV9b0hPUeFYWv1WrlobJC1+LQ1zM1TOjPo=
+Date: Tue, 1 Sep 2026 11:37:36 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Yi Cong <cong.yi@linux.dev>
+Cc: error27@gmail.com, linux-staging@lists.linux.dev,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yi Cong <yicong@kylinos.cn>
+Subject: Re: [PATCH v3 0/4] staging: rtl8723bs: fix several memory-safety bugs
+Message-ID: <2026090127-enrage-diaper-1c6f@gregkh>
+References: <20260731011856.2006363-1-cong.yi@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgD3Pyrzm5Zql_oSPQ--.53813S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Cw1xuFWxCF17JF4UuFy7trb_yoW8WFyrpF
-	WrCa47CFn8Jr1xWa48Ja43WF1rX3ZrtFWjkrZ0k3s5Z3yrXw1rKFyrKFyjvF909rWDXayj
-	vrWvvFnrC3ZYv3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jYHq7UUUUU=
-X-CM-SenderInfo: rprtmlyvqrllizs6il2tof0z/xtbC4RRkH2qWm-TLAAAA3W
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260731011856.2006363-1-cong.yi@linux.dev>
 
-From: Gongwei Li <ligongwei@kylinos.cn>
+On Fri, Jul 31, 2026 at 09:18:52AM +0800, Yi Cong wrote:
+> From: Yi Cong <yicong@kylinos.cn>
+> 
+> This small series fixes four memory-safety / resource-management bugs in
+> the rtl8723bs SDIO staging driver.
+> 
+> v3:
+>  - Add tag "Assisted-by" for each patch.
 
-The error path of rtw89_fw_h2c_add_general_pkt() returns -ENOMEM
-unconditionally, which masks the real reason of a failure. In
-particular:
+Please see:
+	https://lore.kernel.org/r/2026080354-skater-urgent-31b2@gregkh
 
-* rtw89_fw_h2c_add_pkt_offload() can fail with -ENOSPC when no more
-  packet offload slot is available, or with the error of H2C TX, but
-  the callers only see -ENOMEM and get misled when debugging.
+sorry,
 
-* For an unsupported type, the switch default case returns -ENOMEM,
-  which is misleading and should be -EINVAL.
-
-Return a real error code instead of -ENOMEM, and use -EINVAL for
-unsupported types.
-
-Fixes: 5c12bb66b79d ("wifi: rtw89: refine packet offload flow")
-Signed-off-by: Gongwei Li <ligongwei@kylinos.cn>
----
-  drivers/net/wireless/realtek/rtw89/fw.c | 7 +++++--
-  1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
-index d6a594b75ab2..ab2d0b0cb1e5 100644
---- a/drivers/net/wireless/realtek/rtw89/fw.c
-+++ b/drivers/net/wireless/realtek/rtw89/fw.c
-@@ -3013,11 +3013,14 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
- 		skb = rtw89_arp_response_get(rtwdev, rtwvif_link);
- 		break;
- 	default:
-+		ret = -EINVAL;
- 		goto err;
- 	}
- 
--	if (!skb)
-+	if (!skb) {
-+		ret = -ENOMEM;
- 		goto err;
-+	}
- 
- 	ret = rtw89_fw_h2c_add_pkt_offload(rtwdev, &info->id, skb);
- 	kfree_skb(skb);
-@@ -3031,7 +3034,7 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
- 
- err:
- 	kfree(info);
--	return -ENOMEM;
-+	return ret;
- }
- 
- void rtw89_fw_release_general_pkt_list_vif(struct rtw89_dev *rtwdev,
-
--- 
-
-2.25.1
-
+greg k-h
