@@ -1,46 +1,69 @@
-Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E55E14908AD
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 19:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD323C3C02
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 19:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788290595; cv=none; b=dHMRHwex6fzFrHcMifiVefVFoZnwsdOqYQtSqnhxByvsOENJ8vZYU5+ev7f0fba9hAR4XLgynJBVvA4zNsghsXi97sTOWqUeeaF7UTY16mDttQeoVbrN0H3azkDcFJydmAag/ZEn8SeBfjDTt6N9W2cta6eWWRI+Cj/ZT/o4S34=
+	t=1788291860; cv=none; b=WMMu+/6xDt7Y44Ug3ktqkoWEWOZSfmHzjquCnpNpeUHltQ3Z3We9M1f4BP7btlHyql+PwB/HOljl4Q1qw/PDx5/ynomD45rjNhUDIQhPxrK/zE9p8F/jzI4nCItqMrUixOM5JbgNsz+eiDvbJTjyGEK8HZi7AWbHxJOJQkwgC+I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788290595; c=relaxed/simple;
-	bh=1wQlB39M9V1BYchU/8sz6ViFjGe0DgV2eyVYFBpOrAM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CpfLxi2PjSLI5jjCAdrfDQeChGy0jYftoEp1+MLWzEBuWWoFinnwjRVoi2qnVr1tOJiVsTkpKPUZ7BjBFepcGHfz849Tc1JNknLlExpmA24k25lwiAcaCGDHZq3iIbH6sL5iCdqi5xLFK4AAS+yViwsrN3fmIb0EnQgV2F5WlIA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca; spf=pass smtp.mailfrom=justthetip.ca; dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b=HZnpEvzP; arc=none smtp.client-ip=91.218.175.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=justthetip.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=justthetip.ca
+	s=arc-20240116; t=1788291860; c=relaxed/simple;
+	bh=vJ1gUL/MUs6aFjhsZNpKLyV5U2rtjvRoa6ou/s+kvw0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RkOw08dLob9w8EVnDNPt+4/0jLCL7GWTk61cH9ip6ds/ccAEVlbgRNIv7Te3l5OpJ8qamQq2XcSiGka2d7ptMp7DHuLi+LoBAeBP4YRaYYI74NYcyOIEsPq3E9x9032XIWeyRo556cOPznt//AYFuoI4qUt3OGpw9uho2Zrm3q8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bpkoz/0W; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=justthetip.ca header.i=@justthetip.ca header.b="HZnpEvzP"
-X-Envelope-To: linux-wireless@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1wQlB39M9V1BYchU/8sz6ViFjGe0DgV2eyVYFBpOrAM=;
- c=simple/simple; d=justthetip.ca;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1788290590; v=1; x=1788895390;
- b=HZnpEvzPOkdzyVMazIosJo9odJjFfrXrQzmnGC1UCZ8Jb82yG5CrmvSNUyyiJzTbgyAYU8Ay
- OojBWA0IGkEXoSGg8lzADf7G8GnKU/bAyeJzyvpzUofZBW5RVO6Vy59xxa7hKljYgIkvPeeZfo6
- dzRHdZYswcQWEAt34nO+Gt+BmYe34VdX+PV3aFHAcHPX1PyOZ5EzBjaLT1fnQSSGVDZqNU4C9vI
- I7PVrpOVRDItuxldUWMrZLGJ6t8lEjBh9tgOyz/Iz3MspUU1EMPS/ATtSypUPcof8SS7g2qRpV7
- q3lsb41KuLHUjGw1rOaK9NYmKKpspzQ7FIPNX1Bz30CBQ==
-X-Envelope-To: linux-wireless@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 63220c7e2fbc9a39;
-	Tue, 01 Sep 2026 19:23:00 +0000
-X-Mizu-Trace-ID: 63220c7e2fbc9a39
-X-Migadu-Flow: FLOW_OUT
-From: Devin Wittmayer <lucid_duck@justthetip.ca>
-To: Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH wireless] wifi: mac80211: fix channel changes for active monitors
-Date: Tue,  1 Sep 2026 12:22:58 -0700
-Message-ID: <20260901192258.6603-1-lucid_duck@justthetip.ca>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260901025525.4017-1-matheus.aalmeida@inf.ufrgs.br>
-References: <20260901025525.4017-1-matheus.aalmeida@inf.ufrgs.br>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bpkoz/0W"
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3966791a6eeso269271a91.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 12:44:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1788291858; x=1788896658; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+xVIch34Nbif/rvLV74dX0Irc4hTEm6Qb3Dw/ncNbVY=;
+        b=Bpkoz/0W+5EcuDcTu2jY46/K5jyJ8UDIkULhKGqWZFg8CU7CCagf2RF0r5KsvQ+4UG
+         e2DKyZ4R716RCdFFWtbZBJa0EeQMOTRjEywBHRo0myLHDnEEmxQEY+7tq25LGYJNKQ7g
+         3/MYiJ9YF1UyQjA7XIA816l/eKocIsC6NUptdzUGE786qamlA0MsafTQ/sleWnreXbRa
+         BUQn51DXvaOMiTHl9HywO0zc86NN+oAf9y/btv3irs4xnMI9RFwzgSVxiainjr+lWcGp
+         TQdYqTTWDDLvjaaZ4pMm80qSicAebQLJxm86upuphLz9CqRUJ6b01HwYdhBadQ7DEcKy
+         aCxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788291858; x=1788896658;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+xVIch34Nbif/rvLV74dX0Irc4hTEm6Qb3Dw/ncNbVY=;
+        b=DB+ptN+UMuuLHWVBfmKmuc6eDRFFctw0hB/mpLd/uMOqrgyFZFdwmQ0ya3okBoyhwz
+         L/mhWF5Q75doGKDDE1uBYxo07PXjIsSdZCw9217RCMGV1td2xMOtGqL+Ghqn+aE8vIRz
+         53ZMNpo3kE3BJ4dYnWERmSYmKsiftwJyZX/Py9LaDZMaUeijaIb37cAjtVM8CqEkXTmk
+         MITW31rXKfQjim+xCvc+osNB9TnCvoXYQp3CCCW5VvAkGapILJrvIbFuellFFIplFJYP
+         bh2rWiJ11cRwFXf7GpbXOSHV8uWXvWAW+8ut5/msX+iSbjlHJ4ZMOQp8QrHX1bxbj0HV
+         +T0Q==
+X-Gm-Message-State: AFuF++m5RvTtTyWtFPVNLN7iGXpOcTCf3+sWhgfSXg5kt7J+AfDXuric
+	59ZB/itgwTXLCSpdbhoaj8gB1gSVh2MIBiUWfzlm1X0LhRPjASSFInl7ScUOWIjQeX8=
+X-Gm-Gg: AYBFou38AVQ/EN0KGQuuTYEGeTJkxRyP4wrmbymLNZOOZTVWWoXFcq8rZd0wR59HfKq
+	W4U0OBn1eA/eU/ZyaQ4mqrBAmCnXWP4WHyAAxIFpafvanBEaBttPnxLBStlwAh/Upp0ZzqLJlmp
+	qagRXqDBV6SrVMCfyQqyKy7C7F6s+TDDXSlC67qbOnNy2Jhc2wwvarPcn2doNRbcaJtg73PmAw+
+	nCU4hQybLIMPv5NeHRkVP3boFi3zlE78n95GFAAn0JLm2Mo3Ap5VTRbYnYgL90FavwJm57oEZLS
+	4gtoNggYY0EO/CPxXXdL4ZSPvjP15uMYVUS+eOIrY5AZmtIatc8dpg2/4/5jSt0xKSSrmBKGTNs
+	FIXVuBJ/rbdaAs1EI0KFFmUXSE8UOtxBjCzcRGF5tdqR3biMGu65yP0w+qsBJuvdHmtAv6O1lss
+	mmOHkJW5Xv/E0z4oinsVMri3s0lpurmJ0551mQ4a4+yzQTUAnhPDSrTE/aY747uQjjMNQFpTtqS
+	f5oKaI5xnV+oJFIJo52zekQ
+X-Received: by 2002:a17:90a:d407:b0:398:e73e:5a13 with SMTP id 98e67ed59e1d1-39907bbe00cmr16920649a91.9.1788291858509;
+        Tue, 01 Sep 2026 12:44:18 -0700 (PDT)
+Received: from ca91a6afa0c8 ([31.7.57.58])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-32f07b79cf9sm309019eec.18.2026.09.01.12.44.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Sep 2026 12:44:17 -0700 (PDT)
+From: Valera Kozlov <valera.kozlov19@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@nbd.name,
+	Valera Kozlov <valera.kozlov19@gmail.com>
+Subject: [PATCH v2 1/2] wifi: mt76: mt7996: use spin_lock_irqsave for reg_lock
+Date: Tue,  1 Sep 2026 22:43:37 +0300
+Message-ID: <20260901194338.110-1-valera.kozlov19@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -49,68 +72,99 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Nice catch. This has been sitting there since early 2024 and it is good
-to see it on the list.
+mt7996_rr()/wr()/rmw() and mt7996_memcpy_fromio() take dev->reg_lock
+via spin_lock_bh() when accessing remapped registers. This is not
+safe against hard-IRQ context, which can lead to race conditions and
+kernel panics on some platforms.
 
-Tested-by: Devin Wittmayer <lucid_duck@justthetip.ca>
+MediaTek's own vendor tree independently found and fixed this same
+issue, reporting it as causing AP panics via Asynchronous SError
+Interrupt during normal WiFi operation:
+https://github.com/mediatek/mtk-openwrt-feeds/commit/3edfc0cbf7dc666a0b051b54f51634d6ff2a3be6
 
-Two MediaTek USB adapters on the same chip, before and after on each.
-One on 7.2.2, where it applies clean and I tested it as posted. One on
-a Pi 5 on 6.18.34, which needs two small edits, since that tree has not
-had the chan.c refactor and calls the iterator link instead of iter.
+Switch to spin_lock_irqsave()/spin_unlock_irqrestore() to make the
+locking safe against hard-IRQ context.
 
-Before, the monitor sits on one frequency and every channel request is
-accepted and thrown away. Eight cells across the two machines, hundreds
-of frames, not one on the channel I asked for, and nothing in the log to
-say so. After, it goes where it is told, every time, on both.
+Signed-off-by: Valera Kozlov <valera.kozlov19@gmail.com>
+---
+ .../net/wireless/mediatek/mt76/mt7996/mmio.c  | 20 +++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-I went through this in March on the same chip and wrote it up with diffs
-and results, three defects in all:
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
+index fbfbb96a742f..4e335e601581 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7996/mmio.c
+@@ -391,29 +391,31 @@ void mt7996_memcpy_fromio(struct mt7996_dev *dev, void *buf, u32 offset,
+ 			  size_t len)
+ {
+ 	u32 addr = __mt7996_reg_addr(dev, offset);
++	unsigned long flags;
+ 
+ 	if (addr != INVALID_REG_ADDR) {
+ 		memcpy_fromio(buf, dev->mt76.mmio.regs + addr, len);
+ 		return;
+ 	}
+ 
+-	spin_lock_bh(&dev->reg_lock);
++	spin_lock_irqsave(&dev->reg_lock, flags);
+ 	memcpy_fromio(buf, dev->mt76.mmio.regs +
+ 			   __mt7996_reg_remap_addr(dev, offset), len);
+-	spin_unlock_bh(&dev->reg_lock);
++	spin_unlock_irqrestore(&dev->reg_lock, flags);
+ }
+ 
+ static u32 mt7996_rr(struct mt76_dev *mdev, u32 offset)
+ {
+ 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
+ 	u32 addr = __mt7996_reg_addr(dev, offset), val;
++	unsigned long flags;
+ 
+ 	if (addr != INVALID_REG_ADDR)
+ 		return dev->bus_ops->rr(mdev, addr);
+ 
+-	spin_lock_bh(&dev->reg_lock);
++	spin_lock_irqsave(&dev->reg_lock, flags);
+ 	val = dev->bus_ops->rr(mdev, __mt7996_reg_remap_addr(dev, offset));
+-	spin_unlock_bh(&dev->reg_lock);
++	spin_unlock_irqrestore(&dev->reg_lock, flags);
+ 
+ 	return val;
+ }
+@@ -422,28 +424,30 @@ static void mt7996_wr(struct mt76_dev *mdev, u32 offset, u32 val)
+ {
+ 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
+ 	u32 addr = __mt7996_reg_addr(dev, offset);
++	unsigned long flags;
+ 
+ 	if (addr != INVALID_REG_ADDR) {
+ 		dev->bus_ops->wr(mdev, addr, val);
+ 		return;
+ 	}
+ 
+-	spin_lock_bh(&dev->reg_lock);
++	spin_lock_irqsave(&dev->reg_lock, flags);
+ 	dev->bus_ops->wr(mdev, __mt7996_reg_remap_addr(dev, offset), val);
+-	spin_unlock_bh(&dev->reg_lock);
++	spin_unlock_irqrestore(&dev->reg_lock, flags);
+ }
+ 
+ static u32 mt7996_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
+ {
+ 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
+ 	u32 addr = __mt7996_reg_addr(dev, offset);
++	unsigned long flags;
+ 
+ 	if (addr != INVALID_REG_ADDR)
+ 		return dev->bus_ops->rmw(mdev, addr, mask, val);
+ 
+-	spin_lock_bh(&dev->reg_lock);
++	spin_lock_irqsave(&dev->reg_lock, flags);
+ 	val = dev->bus_ops->rmw(mdev, __mt7996_reg_remap_addr(dev, offset), mask, val);
+-	spin_unlock_bh(&dev->reg_lock);
++	spin_unlock_irqrestore(&dev->reg_lock, flags);
+ 
+ 	return val;
+ }
+-- 
+2.53.0
 
-  https://github.com/morrownr/USB-WiFi/issues/682#issuecomment-4115109552
-
-Yours is the third, and the SMPS hunk is a piece I did not have. Still
-open is that an active monitor gets no channel at all when it is
-created, only when something later asks for one. Your patch covers that
-in practice for anything that sets a channel.
-
-The iface.c hunk there gives it one at creation, but do not take it
-alone. On mt76 the sniffer is armed only when the channel changes,
-never when it is first assigned. So once the interface starts life on
-the right channel, asking for that channel changes nothing and it hears
-nothing: four runs, zero frames every time, with a passive monitor on
-the same channel hearing traffic in all four. Ask for a different
-channel and it works. The driver half is mine.
-
-Good to have another pair of eyes on the monitor paths, they do not get
-many.
-
-Devin
-
-On Mon, Sep 1, 2026 at 2:55 AM Matheus Alves de Almeida
-<matheus.aalmeida@inf.ufrgs.br> wrote:
-
-> Active monitor interfaces are added to the driver as real VIFs so that
-> frames addressed to their MAC address can be acknowledged. However,
-> ieee80211_set_monitor_channel() redirects monitor channel changes to the
-> hidden monitor_sdata whenever the driver does not set
-> NO_VIRTUAL_MONITOR.
->
-> An active-only monitor does not create monitor_sdata, so the function can
-> return success after only updating monitor_chanreq. The active monitor
-> itself never gets a channel context, making channel changes ineffective.
->
-> Use the active monitor VIF directly when changing channels, while keeping
-> monitor_chanreq private to the hidden virtual monitor. Also treat active
-> monitors as valid directly channel-bound monitor interfaces in channel
-> width and SMPS accounting.
->
-> This fixes active monitor channel switching with mac80211_hwsim. Before
-> this change, an active monitor failed to discover any APs while scanning.
-> With the fix applied, scanning works across channels 1, 6 and 11 with both
-> channels=1 and channels=2, and authentication and association on channel 6
-> succeed without mac80211 or hwsim warnings.
->
-> Fixes: 0a44dfc07074 ("wifi: mac80211: simplify non-chanctx drivers")
-> Assisted-by: Codex:gpt-5.6-sol
-> Signed-off-by: Matheus Alves de Almeida <matheus.aalmeida@inf.ufrgs.br>
