@@ -1,42 +1,40 @@
-Received: from nbd.name (nbd.name [46.4.11.11])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E94470E81
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Sep 2026 09:22:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84C0847B42F;
+	Tue,  1 Sep 2026 09:33:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788254565; cv=none; b=KRk2qovU9V67F+aY/ZmK9W0/Yn65syqp5+gWKcv2LlhSOGa5JldDFHvsIIl9vKVOL6sLO6Toie/jndlfkAxkNuPOrdwqzciRaANAs3yHSFh2e7NmnSkXoDohAxYSxtWzoAd7HRdlsRg8iv81SXBPE7kOn83vfl5rIH2KaG3tqCk=
+	t=1788255246; cv=none; b=Rgnw5SpIF9k1OC/GABPj0nAanwNATaituLej42F/n8kEM1+uTAdedF1z+okM/xHC9u8Q7q3Uz2n02mGQEELyH4vH35AgVKeIFNAFE6vvNo3IKlJh6Gn4xjv7G6RMwLS7PhiT7RM1A7dTtw1PDO+4ULsclkr205FYrNYeCzjjhQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788254565; c=relaxed/simple;
-	bh=BMiEawLOn/49/4q2/00+IZbZfLIz0tM7W2cWqINpcCQ=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=kD0DLm92aTYOzTS3qpSL0masnMKE4oLPS5PaEmQ0DOacj+xax8WDVEY5Rd7gWWMQiDmxNrShVZIP+T5aobV5yBnkauUSIbJWVlgYojsMczMlu3TteQLlk3tKtKGEnF/VT2PXsUit4BnEnq+wps4j+MGT/lcAseilxzmwcmGqtBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=kPHs1ZuW; arc=none smtp.client-ip=46.4.11.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
+	s=arc-20240116; t=1788255246; c=relaxed/simple;
+	bh=yAarwhC65bRtl93giLS4adl7GvmbWlUWmZMvKt6AUOA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=U0Otlt/X9FKQU6z5hwqXGH7sPgzq7ER00V+Ws8hgVzM39B+o3O85a5PjMGvBXhxLhJviyLSXIb7sQI2GcVStv9UzNOW6ZxRDYEOIRa6pqWGe8lxfzvH4gWmtr+Y5iZFNotHXFQky5CSnM0uiklEsZvrKi6aO0P93Oh4HY5a9RAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PPMZvbmE; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kPHs1ZuW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-	s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=cT0d2TxaVWL9BZRjMZDH5TdJy0gneavRUlBVpQfyznI=; b=kPHs1ZuWS7A8sFWnGwN/5Pw1Ud
-	rdDH5sJqnF1wXNf45Y/Qr34aK6VrJbYR3p12tUKD6HWtr6BCp9uEovolWkbJfoNJtbBoyp/7wjJYv
-	Do1id7Qnni+X3gs/FeCqn+gWKCdZP82dnvwZ06X4//ttPXz/MNYsXYgxVPAAx/scLt98=;
-Received: from p200300cadf14d1000000000000000162.dip0.t-ipconnect.de ([2003:ca:df14:d100::162] helo=localhost.localdomain)
-	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <nbd@nbd.name>)
-	id 1x1KhO-00CF4r-2S
-	for linux-wireless@vger.kernel.org;
-	Tue, 01 Sep 2026 11:22:34 +0200
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH mt76-fixes] wifi: mt76: use ALTX queue for packets to disassociated stations
-Date: Tue,  1 Sep 2026 11:22:32 +0200
-Message-ID: <20260901092232.461379-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PPMZvbmE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=yT
+	ZckLkW8YBc7vASN2tUGiSNOlOsyecF5Ji42NfmAxU=; b=PPMZvbmEiWPQ7w5sgw
+	lKXSPVEHqfbA7e6dRPG99QQjQ5AcSiKMtnDGp9JomABx7wkJCeOWHByU9YqgGhl5
+	OskzqZhTUCJy6kC/4vS1TGJVKhWUKo13ANdgyqvo/PpTct89QBblRfjqAd3m9as4
+	2iW0r046uPdb6kfV/kq53Gnbg=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgD3Pyrzm5Zql_oSPQ--.53813S2;
+	Tue, 01 Sep 2026 17:33:40 +0800 (CST)
+From: Gongwei Li <13875017792@163.com>
+To: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Chin-Yen Lee <timlee@realtek.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Gongwei Li <ligongwei@kylinos.cn>
+Subject: [PATCH] wifi: rtw89: fw: propagate real error code in rtw89_fw_h2c_add_general_pkt()
+Date: Tue,  1 Sep 2026 17:33:31 +0800
+Message-Id: <20260901093331.3441469-1-13875017792@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
@@ -44,65 +42,66 @@ List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:QCgvCgD3Pyrzm5Zql_oSPQ--.53813S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cw1xuFWxCF17JF4UuFy7trb_yoW8WFyrpF
+	WrCa47CFn8Jr1xWa48Ja43WF1rX3ZrtFWjkrZ0k3s5Z3yrXw1rKFyrKFyjvF909rWDXayj
+	vrWvvFnrC3ZYv3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jYHq7UUUUU=
+X-CM-SenderInfo: rprtmlyvqrllizs6il2tof0z/xtbC4RRkH2qWm-TLAAAA3W
 
-Running these packets through regular buffering queues could cause them
-to hang, especially when the packets were for stations that in disassoc
-state.
+From: Gongwei Li <ligongwei@kylinos.cn>
 
-Fixes: dedf2ec30fe4 ("wifi: mt76: fix queue assignment for deauth packets")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The error path of rtw89_fw_h2c_add_general_pkt() returns -ENOMEM
+unconditionally, which masks the real reason of a failure. In
+particular:
+
+* rtw89_fw_h2c_add_pkt_offload() can fail with -ENOSPC when no more
+  packet offload slot is available, or with the error of H2C TX, but
+  the callers only see -ENOMEM and get misled when debugging.
+
+* For an unsupported type, the switch default case returns -ENOMEM,
+  which is misleading and should be -EINVAL.
+
+Return a real error code instead of -ENOMEM, and use -EINVAL for
+unsupported types.
+
+Fixes: 5c12bb66b79d ("wifi: rtw89: refine packet offload flow")
+Signed-off-by: Gongwei Li <ligongwei@kylinos.cn>
 ---
- drivers/net/wireless/mediatek/mt76/mt7915/main.c | 2 ++
- drivers/net/wireless/mediatek/mt76/mt7996/main.c | 1 +
- drivers/net/wireless/mediatek/mt76/tx.c          | 3 ++-
- 3 files changed, 5 insertions(+), 1 deletion(-)
+  drivers/net/wireless/realtek/rtw89/fw.c | 7 +++++--
+  1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/main.c b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-index a8286f8becf9..a03d89aabe80 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/main.c
-@@ -805,6 +805,7 @@ __mt7915_drop_sta(void *ptr, u8 *mac, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index d6a594b75ab2..ab2d0b0cb1e5 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -3013,11 +3013,14 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
+ 		skb = rtw89_arp_response_get(rtwdev, rtwvif_link);
+ 		break;
+ 	default:
++		ret = -EINVAL;
+ 		goto err;
+ 	}
  
- 	msta = (struct mt7915_sta *)sta->drv_priv;
- 	mt7915_mcu_add_sta(data->dev, vif, sta, CONN_STATE_DISCONNECT, false);
-+	msta->wcid.tx_info &= ~MT_WCID_TX_INFO_SET;
- 	msta->wcid.sta_disabled = 1;
- 	msta->wcid.sta = 0;
+-	if (!skb)
++	if (!skb) {
++		ret = -ENOMEM;
+ 		goto err;
++	}
+ 
+ 	ret = rtw89_fw_h2c_add_pkt_offload(rtwdev, &info->id, skb);
+ 	kfree_skb(skb);
+@@ -3031,7 +3034,7 @@ static int rtw89_fw_h2c_add_general_pkt(struct rtw89_dev *rtwdev,
+ 
+ err:
+ 	kfree(info);
+-	return -ENOMEM;
++	return ret;
  }
-@@ -871,6 +872,7 @@ int mt7915_mac_sta_event(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 		mutex_unlock(&dev->mt76.mutex);
  
- 		mt7915_mcu_add_sta(dev, vif, sta, CONN_STATE_DISCONNECT, false);
-+		msta->wcid.tx_info &= ~MT_WCID_TX_INFO_SET;
- 		msta->wcid.sta_disabled = 1;
- 		msta->wcid.sta = 0;
- 		return 0;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7996/main.c b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-index d17d1dbb2038..dd7a01c02a7c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7996/main.c
-@@ -1433,6 +1433,7 @@ mt7996_mac_sta_event(struct mt7996_dev *dev, struct ieee80211_vif *vif,
- 			else if (sta->mlo && links == BIT(link_id)) /* last link */
- 				mt7996_mcu_teardown_mld_sta(dev, link,
- 							    msta_link);
-+			msta_link->wcid.tx_info &= ~MT_WCID_TX_INFO_SET;
- 			msta_link->wcid.sta_disabled = 1;
- 			msta_link->wcid.sta = 0;
- 			links = links & ~BIT(link_id);
-diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
-index b1e894b19cbd..3c623df2e741 100644
---- a/drivers/net/wireless/mediatek/mt76/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/tx.c
-@@ -680,7 +680,8 @@ mt76_txq_schedule_pending_wcid(struct mt76_phy *phy, struct mt76_wcid *wcid,
- 		if ((dev->drv->drv_flags & MT_DRV_HW_MGMT_TXQ) &&
- 		    !(info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) &&
- 		    !ieee80211_is_data_present(hdr->frame_control) &&
--		    (!ieee80211_is_bufferable_mmpdu(skb) ||
-+		    (!(wcid->tx_info & MT_WCID_TX_INFO_SET) ||
-+		     !ieee80211_is_bufferable_mmpdu(skb) ||
- 		     ieee80211_is_deauth(hdr->frame_control) ||
- 		     ieee80211_is_disassoc(hdr->frame_control) ||
- 		     head == &wcid->tx_offchannel))
+ void rtw89_fw_release_general_pkt_list_vif(struct rtw89_dev *rtwdev,
+
 -- 
-2.47.3
+
+2.25.1
 
