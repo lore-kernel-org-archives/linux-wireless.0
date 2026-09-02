@@ -1,101 +1,94 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF21314D1A;
-	Wed,  2 Sep 2026 03:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+Received: from hqu.edu.cn (hqu.edu.cn [210.34.240.11])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 869151E98E3;
+	Wed,  2 Sep 2026 03:14:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.34.240.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788318701; cv=none; b=uXFxxRfpm4l7QxShgBbqoUrZWj0hbLdJG417fJBlo7yoeFUtuBv365GypIIl9zwpDTO7YNpM0dw1Z7JfdEh4jMyj0x4yzGMUjAsOaibR62ww967V+riMzvf60hCij/VF+bYDlU/ZVvRbxW14kOZK0XOAkEWZb0xGpbOFFKg6bBA=
+	t=1788318857; cv=none; b=giYh1aq/EmxUlJrs5aDJs2ofukGf8OzBoD6KcMRkp7Fj12BiRZfLm5y2r0l0aqyxF2QznnvciamRrGD4Tm0J45xD+EGJGyfYXh3aT+ndB8MneezDtbAmPm6E4WOmdbzzjqS/FcBKhE+ekrSsa+IFKfLxbIsJxPGwqbH12Qiwm/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788318701; c=relaxed/simple;
-	bh=jtSkEWaiv+81DPIQGS9p28gI244T5O6QzjH2iSlwgi0=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type; b=WZrQkXAjFzRwUZV27O8Qc9nYPuP9mrR2yxdq9v3AVkwERl2ruLCZ/7E3SvCg978l8Hv3IBRxK5WJjpes9WJdu2CoXsj0nvTjyV7l1weZxzGCD6ZW60vjX8pkJH/MAzba6llRo6M+CFhtAzNJZPCAVlCWNfgoN+OZLhELUe8JHrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=uYkWm7+H; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="uYkWm7+H"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6823BWfI42274139, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788318693; bh=aiEng/mnt6rQzAUZpwgdHJvsxotzEHAmGtn/B25uVrY=;
-	h=From:To:CC:Subject:In-Reply-To:References:Message-ID:Date:
-	 MIME-Version:Content-Type;
-	b=uYkWm7+HEbOYGenzQrp06kx3lBmZDnl0F57PXPoAdDIMM0eveg8Leo5jdaPSJ+8Be
-	 H7uSjrAliu3roovYNpxGHEQahmwG5eV95I3erZJwL3rkcM29Ta2b16A+wtg7aRtHyG
-	 IC73rHkLC8gdz6rEL/dEH/awGCg5CHdRud53WxyAT5GGv4tucNg50uVJeWJ2iDw+oN
-	 VgGnT8FVtp99UeJuPr6FbWUSZToGe/z8lFUOiTsgALBjkh4nNbFiNzGufx0lRqsI0e
-	 LVizlVEWBgKgPrZqFT8yauroaIdCbyj1n6yIrGdzJCkvcoVwliVPhPNjIbPY+1312l
-	 ytSEsWMEn/BAg==
-Received: from mail.realtek.com (rtkexhmbs04.realtek.com.tw[10.21.1.54])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6823BWfI42274139
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 2 Sep 2026 11:11:33 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS04.realtek.com.tw (10.21.1.54) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 2 Sep 2026 11:11:33 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43 via Frontend
- Transport; Wed, 2 Sep 2026 11:11:28 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: Rahul Kumar Rai <learn.rahul.rai@gmail.com>, Ping-Ke Shih
-	<pkshih@realtek.com>
-CC: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Rahul
- Kumar Rai <learn.rahul.rai@gmail.com>
-Subject: Re: [PATCH] wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming A15 FA506IH
-In-Reply-To: <20260823-fa506ih-rtw88-quirk-v1-1-ef0984d59e72@gmail.com>
-References: <20260823-fa506ih-rtw88-quirk-v1-1-ef0984d59e72@gmail.com>
-Message-ID: <5f1c2935-2e27-4ab0-ab9f-9a7de15c8718@RTKEXHMBS04.realtek.com.tw>
-Date: Wed, 2 Sep 2026 11:11:28 +0800
+	s=arc-20240116; t=1788318857; c=relaxed/simple;
+	bh=jFHv3W2G7YXo76CgZ/Be7FLQW6T2KPEoP89YguzR63U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=a00IRnxh4wd3A3S6m8g0DIyFgg7sfPPtcrUAmHeKQk1unKRtbjuFtJBYXZpiamhBqqi2NhpJV8G63hYBYCePRpIvqVrvr2VmhL6SeAx8pW9h0hCPJqxCEPzHNSVC2m2hjtjCRR9ijmcpOvi04dHYChfwql0Cbi/nSnmF8qULBUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stu.hqu.edu.cn; spf=pass smtp.mailfrom=stu.hqu.edu.cn; arc=none smtp.client-ip=210.34.240.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=stu.hqu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=stu.hqu.edu.cn
+Received: from raspberry-nas (unknown [27.42.228.181])
+	by cmweb (Coremail) with SMTP id C_Ai0gAXe9qClJdq6ygFAA--.10449S2;
+	Wed, 02 Sep 2026 11:14:11 +0800 (CST)
+From: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
+To: linux-wireless@vger.kernel.org
+Cc: pkshih@realtek.com,
+	linux-kernel@vger.kernel.org,
+	YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
+Subject: [PATCH v3] wifi: rtw88: use firmware MAC address as fallback
+Date: Wed,  2 Sep 2026 11:14:08 +0800
+Message-ID: <20260902031408.4155609-1-raspberrykan@stu.hqu.edu.cn>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260902024622.4149279-1-raspberrykan@stu.hqu.edu.cn>
+References: <20260902024622.4149279-1-raspberrykan@stu.hqu.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:C_Ai0gAXe9qClJdq6ygFAA--.10449S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr18tw4fur1kJF47tr1fJFb_yoW8XF1xpa
+	y8JaySkFnrJr45ua1fWa1S9F1rGan3JayUAr9Yy3s09rn8XryFvrWDKF9Fvr1jgFWDZF42
+	yr15tr9rKFZ0vF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUym14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r1j
+	6r4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxG
+	rwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4
+	vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IY
+	x2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26c
+	xKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAF
+	wI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUywZ7UUUUU=
+X-CM-SenderInfo: ysvskiyqsqlko6vw3hxktxhvlgxou0/1tbiAQAQBGqVmGMDTgAJsV
 
-Rahul Kumar Rai <learn.rahul.rai@gmail.com> wrote:
+Some devices provide the Wi-Fi MAC address through firmware instead of
+storing a valid address in the Wi-Fi chip efuse.
 
-> From: Rahul Kumar Rai <learn.rahul.rai@gmail.com>
-> 
-> The RTL8822CE on the ASUS TUF Gaming A15 FA506IH fails to return from
-> PCIe low-power states across system suspend. The device is inaccessible
-> on the way back to D0, so the MAC power-on sequence and the firmware
-> handshake that follow it fail, and the driver gives up. Wi-Fi stays
-> unavailable until the machine is powered off completely:
-> 
->   rtw88_8822ce 0000:03:00.0: Unable to change power state from D3cold to D0, device inaccessible
->   rtw88_8822ce 0000:03:00.0: failed to poll offset=0x5 mask=0x2 value=0x0
->   rtw88_8822ce 0000:03:00.0: mac power on failed
->   rtw88_8822ce 0000:03:00.0: probe with driver rtw88_8822ce failed with error -114
-> 
-> Reads of the ASPM link-configuration register over DBI also time out
-> around the same transitions.
-> 
-> This is not a one-off. It has been recurring on this machine for a long
-> time. The kernel logs still on disk begin at 2026-07-20 and already
-> contain six failed D-state transitions and three probe failures of this
-> kind, and the problem was present well before that window.
-> 
-> This is the same platform ASPM inter-operability problem already handled
-> for other machines through rtw_pci_quirks[], including the closely
-> related ASUS TUF Gaming A15 FA506II. The FA506IH reports a different DMI
-> board name, so that entry does not match. Disabling PCI ASPM and deep
-> power save stops the failure on this model as well.
-> 
->   DMI_SYS_VENDOR = ASUSTeK COMPUTER INC.
->   DMI_BOARD_NAME = FA506IH
-> 
-> Signed-off-by: Rahul Kumar Rai <learn.rahul.rai@gmail.com>
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+This is the case on the Xiaomi Mi Box 4, which uses an Amlogic S905L
+SoC and an RTL8723DS Wi-Fi chip. The Wi-Fi MAC address is stored in the
+S905L efuse rather than the RTL8723DS efuse and is provided to the
+device through firmware.
 
-1 patch(es) applied to rtw-next branch of rtw.git, thanks.
+Try to read the MAC address from firmware before falling back to a
+randomly generated address.
 
-c5a8c4936dc5 wifi: rtw88: disable ASPM and deep PS on ASUS TUF Gaming A15 FA506IH
-
+Signed-off-by: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
 ---
-https://github.com/pkshih/rtw.git
+Changes in v3:
+- Add Xiaomi Mi Box 4, Amlogic S905L and RTL8723DS hardware details
+  to the commit message.
+
+ drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index cd9254370fcc..0f23498b5c96 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -2060,8 +2060,11 @@ static int rtw_chip_efuse_info_setup(struct rtw_dev *rtwdev)
+ 	efuse->ext_lna_5g = efuse->lna_type_5g & BIT(3) ? 1 : 0;
+ 
+ 	if (!is_valid_ether_addr(efuse->addr)) {
+-		eth_random_addr(efuse->addr);
+-		dev_warn(rtwdev->dev, "efuse MAC invalid, using random\n");
++		if (device_get_mac_address(rtwdev->dev, efuse->addr)) {
++			eth_random_addr(efuse->addr);
++			dev_warn(rtwdev->dev,
++				 "failed to get valid MAC address, using random\n");
++		}
+ 	}
+ 
+ out_disable:
+-- 
+2.53.0
 
