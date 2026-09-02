@@ -1,54 +1,54 @@
-Received: from smtp2.infineon.com (smtp2.infineon.com [217.10.52.18])
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA1BC372EE9
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3200637702E
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:55:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368142; cv=none; b=j8fj/rZR0MzwxH1hll8GtGb9nZ5x9eA0FSvajcYFp6S20zLSHpc5FmZlaV5BfX2Yq39eNaEPYk1cEttjnOyXTq/A3deAa8GQsrCPIBFoXj8FevtDd+5FBDZUpPFkakRhgYJJsAVKLYLWOCrVj7wvXTvSetQTqj9aIjgy8n3fFz4=
+	t=1788368155; cv=none; b=uTAssBtDil1uYWd0gnodUyGssb9qdWfnPiq9y5GSGXUBsILe0GW3cuKAvpyJHGpCwV/ltHfwKRpZ/V//CSmVodX1EaB2+cfMnGPwo3bMpJNDYD8A1VESyvCLG2axnvjXGqlW1ljjhdeajrzOycJKTFItFL1psAMcZDJASFU7zc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368142; c=relaxed/simple;
-	bh=WuzHMJHeDVXcQZHo/tdUR4r4lyQv1Z9vDYLSpbK1GQA=;
+	s=arc-20240116; t=1788368155; c=relaxed/simple;
+	bh=HATjRfgH3Nj0bSJvRouKD/+ycPbA965yZSlOmmNwKrY=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rmMYmTTDymagyoN20ceiMxgx2rnFggGtTeF3rBRkFDe+gwevvRSz5/XhpU22ro0j7Czd5qBVAQOJ+cODrP3wsw3TXol6bj1bzM2tHCOS4BZ9veMTRQG3xMAG76vwwjh3OnI0DxCaAnUH0u7PchoRYUHHQkYsvWs7hWaPFcu50II=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=mLs4HBl9; arc=none smtp.client-ip=217.10.52.18
+	 MIME-Version:Content-Type; b=n3G4GvFLw3QPRTMY1Y5z8ZiRS/vHlat6JnHpPsQWJLmoNlpA1ksIs//M68lgDzzSbJ0nSrKUK3fQyCcedjsY/32t2QDLZQR5H5hVz2GaLYr0IVc8PH1h5lj2uNv2Cq6Ca2AyDDsInFoxFNbVaGZnPongwc9bKPhIkanJZMODJ/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=G3Mmiibb; arc=none smtp.client-ip=217.10.52.160
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="mLs4HBl9"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="G3Mmiibb"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788368140; x=1819904140;
+  t=1788368152; x=1819904152;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=WuzHMJHeDVXcQZHo/tdUR4r4lyQv1Z9vDYLSpbK1GQA=;
-  b=mLs4HBl930gWDvuajV6uGeHlKDt5OX5EsT2Sh/DRcgqH98v+1RARa89f
-   5CeUlATSM/RCXJ/X0dx/rym08lzJQAX0PGdH1D5uiBlK1m1PRfhPHvRd7
-   HSEVRonaG4/FPYxhzXgDEr8ld64mKqpDC5yt+QQpGGSPTJ+hW/rBG/Enr
-   A=;
-X-CSE-ConnectionGUID: d8X/Zy/CT7SGS9084spCaw==
-X-CSE-MsgGUID: z3DSkWYqRjmiAHH9uebGQQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="176357133"
+  bh=HATjRfgH3Nj0bSJvRouKD/+ycPbA965yZSlOmmNwKrY=;
+  b=G3Mmiibbdc40iVflWexxDmuYnhRQrld3GcWKdeeswqUw4sfGI3tiqSA7
+   05ynpf+PIQuAzztv44STm4kEdYeXBfVpma+Hw5Y8lo40EioI0bkApC4+D
+   yljpynnrt37Jaj0BQgczT1uLSB/MiSGA8jYsMN9RG0Hn2LF+eLjNkHv+q
+   U=;
+X-CSE-ConnectionGUID: JAvDZehkQVGEv2tpRrwzcQ==
+X-CSE-MsgGUID: PxmoaaTxTH2nbYu/WKp+CQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="145161394"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="176357133"
+   d="scan'208";a="145161394"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE822.infineon.com) ([172.23.29.53])
-  by smtp2.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:55:38 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE822.infineon.com
- (172.23.29.53) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE819.infineon.com) ([172.23.29.45])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:55:50 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE819.infineon.com
+ (172.23.29.45) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:55:37 +0200
+ 2026 18:55:49 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:55:35 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:55:47 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 21/25] wifi: inffmac: add scan.c/h
-Date: Wed, 2 Sep 2026 16:50:52 +0000
-Message-ID: <20260902165057.456447-22-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 22/25] wifi: inffmac: add chan.c/h
+Date: Wed, 2 Sep 2026 16:50:53 +0000
+Message-ID: <20260902165057.456447-23-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,832 +60,827 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE812.infineon.com (172.23.29.38) To
+X-ClientProxiedBy: MUCSE815.infineon.com (172.23.29.41) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Driver imeplementation of the SCAN functionality to discover all active BSS
-in the medium. Also support collecting the channel survery dump.
+Common definitions of the wifi channel and chanspec specific structures,
+MACROs and helper functions.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- drivers/net/wireless/infineon/inffmac/scan.c | 800 +++++++++++++++++++
- drivers/net/wireless/infineon/inffmac/scan.h | 136 ++++
- 2 files changed, 936 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/scan.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/scan.h
+ drivers/net/wireless/infineon/inffmac/chan.c | 795 +++++++++++++++++++
+ drivers/net/wireless/infineon/inffmac/chan.h | 365 +++++++++
+ 2 files changed, 1160 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/chan.c
+ create mode 100644 drivers/net/wireless/infineon/inffmac/chan.h
 
-diff --git a/drivers/net/wireless/infineon/inffmac/scan.c b/drivers/net/wireless/infineon/inffmac/scan.c
+diff --git a/drivers/net/wireless/infineon/inffmac/chan.c b/drivers/net/wireless/infineon/inffmac/chan.c
 new file mode 100644
-index 000000000000..f71dcc60386a
+index 000000000000..6d81d6d2f92d
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/scan.c
-@@ -0,0 +1,800 @@
++++ b/drivers/net/wireless/infineon/inffmac/chan.c
+@@ -0,0 +1,795 @@
 +// SPDX-License-Identifier: ISC
 +/*
-+ * Copyright (c) 2010 Broadcom Corporation
++ * Copyright (c) 2013 Broadcom Corporation
 + *
 + * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
 + * All rights reserved.
 + */
 +
-+#include <linux/kernel.h>
-+#include <linux/etherdevice.h>
 +#include <linux/module.h>
-+#include <linux/vmalloc.h>
-+#include <linux/string.h>
 +#include <net/cfg80211.h>
-+#include <net/netlink.h>
 +
-+#include "main.h"
-+#include "utils.h"
-+#include "chan.h"
-+#include "debug.h"
-+#include "fwsignal.h"
 +#include "cfg80211.h"
 +#include "interface.h"
-+#include "feature.h"
++#include "chan.h"
++#include "utils.h"
++#include "debug.h"
 +#include "dev_cmd.h"
++#include "feature.h"
 +
-+s32
-+inff_dongle_scantime(struct inff_if *ifp)
-+{
-+	struct inff_pub *drvr = ifp->drvr;
-+	s32 err = 0;
++#define INFF_MAX_CHANSPEC_LIST \
++	(INFF_DCMD_MEDLEN / sizeof(__le32) - 1)
 +
-+	err = inff_fwcmd_int_set(ifp, INFF_C_SET_SCAN_CHANNEL_TIME,
-+				 INFF_SCAN_CHANNEL_TIME);
-+	if (err) {
-+		iphy_err(drvr, "Scan assoc time error (%d)\n", err);
-+		goto dongle_scantime_out;
-+	}
-+	err = inff_fwcmd_int_set(ifp, INFF_C_SET_SCAN_UNASSOC_TIME,
-+				 INFF_SCAN_UNASSOC_TIME);
-+	if (err) {
-+		iphy_err(drvr, "Scan unassoc time error (%d)\n", err);
-+		goto dongle_scantime_out;
++#define RATE_TO_BASE100KBPS(rate)   (((rate) * 10) / 2)
++#define RATETAB_ENT(_bitrate, _rateid, _flags) \
++	{                                                               \
++		.bitrate        = (_bitrate),     \
++		.hw_value       = (_rateid),                            \
++		.flags          = (_flags),                             \
 +	}
 +
-+	err = inff_fwcmd_int_set(ifp, INFF_C_SET_SCAN_PASSIVE_TIME,
-+				 INFF_SCAN_PASSIVE_TIME);
-+	if (err) {
-+		iphy_err(drvr, "Scan passive time error (%d)\n", err);
-+		goto dongle_scantime_out;
-+	}
++static struct ieee80211_rate __wl_rates[] = {
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_1M), INF_RATE_1M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_2M), INF_RATE_2M, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_5M5), INF_RATE_5M5, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_11M), INF_RATE_11M, IEEE80211_RATE_SHORT_PREAMBLE),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_6M), INF_RATE_6M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_9M), INF_RATE_9M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_12M), INF_RATE_12M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_18M), INF_RATE_18M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_24M), INF_RATE_24M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_36M), INF_RATE_36M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_48M), INF_RATE_48M, 0),
++	RATETAB_ENT(RATE_TO_BASE100KBPS(INF_RATE_54M), INF_RATE_54M, 0),
++};
 +
-+dongle_scantime_out:
-+	return err;
++#define wl_g_rates		(__wl_rates + 0)
++#define wl_g_rates_size		ARRAY_SIZE(__wl_rates)
++#define wl_a_rates		(__wl_rates + 4)
++#define wl_a_rates_size		(wl_g_rates_size - 4)
++
++#define CHAN2G(_channel, _freq) {				\
++	.band			= NL80211_BAND_2GHZ,		\
++	.center_freq		= (_freq),			\
++	.hw_value		= (_channel),			\
++	.max_antenna_gain	= 0,				\
++	.max_power		= 30,				\
 +}
 +
-+static void
-+inff_cp_scan_reset(struct inff_scan_info *scan)
-+{
-+	scan->request = NULL;
-+	scan->bss_count = 0;
-+	scan->used_buf_len = 0;
-+
-+	if (scan->bss_buf)
-+		memset(scan->bss_buf, 0, INFF_SCAN_BUF_SIZE);
++#define CH5G_FREQ(_channel)	(5000 + (5 * (_channel)))
++#define CHAN5G(_channel, _freq) {					\
++	.band			= NL80211_BAND_5GHZ,		\
++	.center_freq		= (_freq),	\
++	.hw_value		= (_channel),			\
++	.max_antenna_gain	= 0,				\
++	.max_power		= 30,				\
 +}
 +
-+static void
-+inff_cp_scan_complete(struct inff_pub *drvr, bool aborted)
-+{
-+	struct inff_cfg80211_info *cfg = drvr->config;
-+	struct inff_scan_info *scan = &drvr->config->scan;
-+	struct cfg80211_scan_info info = {
-+		.aborted = aborted,
-+	};
-+
-+	if (aborted)
-+		set_bit(INFF_SCAN_STATUS_ABORT, &cfg->scan_status);
-+
-+	if (!scan || !scan->request)
-+		return;
-+
-+	inff_dbg(SCAN, "%s\n", aborted ? "aborted" : "done");
-+	cfg80211_scan_done(scan->request, &info);
-+
-+	if (!test_and_clear_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status))
-+		inff_dbg(SCAN, "Scan complete complete/abort\n");
-+
-+	inff_cp_scan_reset(scan);
-+
-+	if (aborted)
-+		clear_bit(INFF_SCAN_STATUS_ABORT, &cfg->scan_status);
++#define CH6G_FREQ(_channel)	(5950 + (5 * (_channel)))
++#define CHAN6G(_channel, _freq) {				\
++	.band			= NL80211_BAND_6GHZ,		\
++	.center_freq		= (_freq),	\
++	.hw_value		= (_channel),			\
++	.max_antenna_gain	= 0,				\
++	.max_power		= 30,				\
 +}
 +
-+void
-+inff_cp_scan_abort(struct inff_pub *drvr)
++static struct ieee80211_channel __wl_2ghz_channels[] = {
++	CHAN2G(1, 2412), CHAN2G(2, 2417), CHAN2G(3, 2422), CHAN2G(4, 2427),
++	CHAN2G(5, 2432), CHAN2G(6, 2437), CHAN2G(7, 2442), CHAN2G(8, 2447),
++	CHAN2G(9, 2452), CHAN2G(10, 2457), CHAN2G(11, 2462), CHAN2G(12, 2467),
++	CHAN2G(13, 2472), CHAN2G(14, 2484)
++};
++
++static struct ieee80211_channel __wl_5ghz_channels[] = {
++	CHAN5G(34, CH5G_FREQ(34)), CHAN5G(36, CH5G_FREQ(36)), CHAN5G(38, CH5G_FREQ(38)),
++	CHAN5G(40, CH5G_FREQ(40)), CHAN5G(42, CH5G_FREQ(42)), CHAN5G(44, CH5G_FREQ(44)),
++	CHAN5G(46, CH5G_FREQ(46)), CHAN5G(48, CH5G_FREQ(48)), CHAN5G(52, CH5G_FREQ(52)),
++	CHAN5G(56, CH5G_FREQ(56)), CHAN5G(60, CH5G_FREQ(60)), CHAN5G(64, CH5G_FREQ(64)),
++	CHAN5G(100, CH5G_FREQ(100)), CHAN5G(104, CH5G_FREQ(104)), CHAN5G(108, CH5G_FREQ(108)),
++	CHAN5G(112, CH5G_FREQ(112)), CHAN5G(116, CH5G_FREQ(116)), CHAN5G(120, CH5G_FREQ(120)),
++	CHAN5G(124, CH5G_FREQ(124)), CHAN5G(128, CH5G_FREQ(128)), CHAN5G(132, CH5G_FREQ(132)),
++	CHAN5G(136, CH5G_FREQ(136)), CHAN5G(140, CH5G_FREQ(140)), CHAN5G(144, CH5G_FREQ(144)),
++	CHAN5G(149, CH5G_FREQ(149)), CHAN5G(153, CH5G_FREQ(153)), CHAN5G(157, CH5G_FREQ(157)),
++	CHAN5G(161, CH5G_FREQ(161)), CHAN5G(165, CH5G_FREQ(165))
++};
++
++static struct ieee80211_channel __wl_6ghz_channels[] = {
++	CHAN6G(1, CH6G_FREQ(1)), CHAN6G(5, CH6G_FREQ(5)), CHAN6G(9, CH6G_FREQ(9)),
++	CHAN6G(13, CH6G_FREQ(13)), CHAN6G(17, CH6G_FREQ(17)),
++	CHAN6G(21, CH6G_FREQ(21)), CHAN6G(25, CH6G_FREQ(25)), CHAN6G(29, CH6G_FREQ(29)),
++	CHAN6G(33, CH6G_FREQ(33)), CHAN6G(37, CH6G_FREQ(37)),
++	CHAN6G(41, CH6G_FREQ(41)), CHAN6G(45, CH6G_FREQ(45)), CHAN6G(49, CH6G_FREQ(49)),
++	CHAN6G(53, CH6G_FREQ(53)), CHAN6G(57, CH6G_FREQ(57)),
++	CHAN6G(61, CH6G_FREQ(61)), CHAN6G(65, CH6G_FREQ(65)), CHAN6G(69, CH6G_FREQ(69)),
++	CHAN6G(73, CH6G_FREQ(73)), CHAN6G(77, CH6G_FREQ(77)),
++	CHAN6G(81, CH6G_FREQ(81)), CHAN6G(85, CH6G_FREQ(85)), CHAN6G(89, CH6G_FREQ(89)),
++	CHAN6G(93, CH6G_FREQ(93)), CHAN6G(97, CH6G_FREQ(97)),
++	CHAN6G(101, CH6G_FREQ(101)), CHAN6G(105, CH6G_FREQ(105)), CHAN6G(109, CH6G_FREQ(109)),
++	CHAN6G(113, CH6G_FREQ(113)), CHAN6G(117, CH6G_FREQ(117)),
++	CHAN6G(121, CH6G_FREQ(121)), CHAN6G(125, CH6G_FREQ(125)), CHAN6G(129, CH6G_FREQ(129)),
++	CHAN6G(133, CH6G_FREQ(133)), CHAN6G(137, CH6G_FREQ(137)),
++	CHAN6G(141, CH6G_FREQ(141)), CHAN6G(145, CH6G_FREQ(145)), CHAN6G(149, CH6G_FREQ(149)),
++	CHAN6G(153, CH6G_FREQ(153)), CHAN6G(157, CH6G_FREQ(157)),
++	CHAN6G(161, CH6G_FREQ(161)), CHAN6G(165, CH6G_FREQ(165)), CHAN6G(169, CH6G_FREQ(169)),
++	CHAN6G(173, CH6G_FREQ(173)), CHAN6G(177, CH6G_FREQ(177)),
++	CHAN6G(181, CH6G_FREQ(181)), CHAN6G(185, CH6G_FREQ(185)), CHAN6G(189, CH6G_FREQ(189)),
++	CHAN6G(193, CH6G_FREQ(193)), CHAN6G(197, CH6G_FREQ(197)),
++	CHAN6G(201, CH6G_FREQ(201)), CHAN6G(205, CH6G_FREQ(205)), CHAN6G(209, CH6G_FREQ(209)),
++	CHAN6G(213, CH6G_FREQ(213)), CHAN6G(217, CH6G_FREQ(217)),
++	CHAN6G(221, CH6G_FREQ(221)), CHAN6G(225, CH6G_FREQ(225)), CHAN6G(229, CH6G_FREQ(229)),
++	CHAN6G(233, CH6G_FREQ(233))
++};
++
++/* Band templates duplicated per wiphy. The channel info
++ * above is added to the band during setup.
++ */
++static const struct ieee80211_supported_band __wl_band_2ghz = {
++	.band = NL80211_BAND_2GHZ,
++	.bitrates = wl_g_rates,
++	.n_bitrates = wl_g_rates_size,
++};
++
++static const struct ieee80211_supported_band __wl_band_5ghz = {
++	.band = NL80211_BAND_5GHZ,
++	.bitrates = wl_a_rates,
++	.n_bitrates = wl_a_rates_size,
++};
++
++static struct ieee80211_supported_band __wl_band_6ghz = {
++	.band = NL80211_BAND_6GHZ,
++	.bitrates = wl_a_rates,
++	.n_bitrates = wl_a_rates_size,
++};
++
++enum nl80211_band
++inff_chan_band_to_nl80211(u8 band)
 +{
-+	inff_cp_scan_complete(drvr, true);
++	if (band == INFF_CHAN_BAND_2G)
++		return NL80211_BAND_2GHZ;
++	else if (band == INFF_CHAN_BAND_5G)
++		return NL80211_BAND_5GHZ;
++	else
++		return NL80211_BAND_6GHZ;
 +}
 +
-+static s32
-+inff_cp_scan_inform_single_bss(struct inff_scan_info *scan,
-+			       struct inff_cp_bss_info *bss)
++static u16
++inff_chan_bw_to_chspec_bw(enum inff_chan_bw bw)
 +{
-+	struct wiphy *wiphy = scan->wiphy;
-+	struct cfg80211_bss *cfg80211_bss;
-+	struct cfg80211_inform_bss bss_data = {};
-+	enum nl80211_band band;
-+	u16 channel;
-+	u32 freq;
-+	u8 *ie;
-+
-+	inff_dbg(SCAN, "SSID: %s\n", bss->ssid);
-+	inff_dbg(SCAN, "BSSID: %pM\n", bss->macaddr);
-+
-+	channel = bss->channel;
-+	band = inff_cp_chan_band_to_nl80211(bss->band);
-+
-+	freq = ieee80211_channel_to_frequency(channel, band);
-+	if (!freq) {
-+		inff_err("failed to get frequency from channel %d and band %d\n",
-+			 channel, band);
-+		return -EINVAL;
++	switch (bw) {
++	case INFF_CHAN_BW_20:
++		return INFF_CHSPEC_BW_20;
++	case INFF_CHAN_BW_40:
++		return INFF_CHSPEC_BW_40;
++	case INFF_CHAN_BW_80:
++		return INFF_CHSPEC_BW_80;
++	case INFF_CHAN_BW_160:
++		return INFF_CHSPEC_BW_160;
++	default:
++		WARN_ON(1);
 +	}
-+
-+	bss_data.chan = ieee80211_get_channel(wiphy, freq);
-+	if (!bss_data.chan) {
-+		inff_err("failed to get channel from freq %d\n", freq);
-+		return -EINVAL;
-+	}
-+
-+	bss_data.boottime_ns = ktime_to_ns(ktime_get_boottime());
-+	bss_data.signal = bss->signal_strength * 100;
-+
-+	inff_dbg(SCAN, "Channel: %d(%d)\n", channel, freq);
-+	inff_dbg(SCAN, "Capability: %X\n", bss->capability);
-+	inff_dbg(SCAN, "Beacon interval: %d\n", bss->beacon_period);
-+	inff_dbg(SCAN, "Signal: %d\n", bss->signal_strength);
-+
-+	ie = (unsigned char *)bss + sizeof(*bss);
-+
-+	cfg80211_bss = cfg80211_inform_bss_data(wiphy, &bss_data,
-+						CFG80211_BSS_FTYPE_UNKNOWN,
-+						(const u8 *)bss->macaddr,
-+						0, bss->capability,
-+						bss->beacon_period, ie,
-+						bss->ie_len, GFP_KERNEL);
-+	if (!cfg80211_bss)
-+		return -ENOMEM;
-+
-+	cfg80211_put_bss(wiphy, cfg80211_bss);
-+
 +	return 0;
-+}
-+
-+static void
-+inff_cp_scan_inform_bss(struct inff_scan_info *scan)
-+{
-+	struct inff_cp_bss_info *bss = (struct inff_cp_bss_info *)scan->bss_buf;
-+	s32 err = 0;
-+	int i;
-+
-+	inff_dbg(SCAN, "scanned AP count (%d)\n", scan->bss_count);
-+	for (i = 0; i < scan->bss_count; i++) {
-+		err = inff_cp_scan_inform_single_bss(scan, bss);
-+		if (err == -ENOMEM)
-+			break;
-+
-+		bss = (struct inff_cp_bss_info *)
-+			((unsigned char *)bss + bss->length);
-+	}
-+}
-+
-+static void
-+inff_cp_scan_save_bss(struct inff_scan_info *scan, struct inff_cpevt_scan *new_bss)
-+{
-+	struct inff_cp_bss_info *bss = (struct inff_cp_bss_info *)scan->bss_buf;
-+	u32 new_bss_len;
-+	u8 i;
-+
-+	new_bss_len = sizeof(*bss) + new_bss->ie_len;
-+
-+	for (i = 0; i < scan->bss_count; i++) {
-+		if (!memcmp(&bss->macaddr, &new_bss->macaddr, ETH_ALEN))
-+			return;
-+
-+		bss = (struct inff_cp_bss_info *)((unsigned char *)bss + bss->length);
-+	}
-+
-+	if (scan->used_buf_len + new_bss_len > INFF_SCAN_BUF_SIZE) {
-+		inff_err("scan buffer is not enough\n");
-+		return;
-+	}
-+
-+	bss->length = new_bss_len;
-+	bss->ssid_length = new_bss->ssid_length;
-+	memcpy(bss->ssid, new_bss->ssid, new_bss->ssid_length);
-+	memcpy(bss->macaddr, new_bss->macaddr, ETH_ALEN);
-+	bss->signal_strength = new_bss->signal_strength;
-+	bss->channel = new_bss->channel;
-+	bss->band = new_bss->band;
-+	bss->beacon_period = new_bss->beacon_period;
-+	bss->capability = new_bss->capability;
-+	bss->ie_len = new_bss->ie_len;
-+
-+	memcpy((u8 *)bss + sizeof(*bss), new_bss->ie, new_bss->ie_len);
-+
-+	inff_dbg(SCAN, "BSS Idx %d\n", scan->bss_count);
-+	inff_dbg(SCAN, "SSID: %s\n", bss->ssid);
-+	inff_dbg(SCAN, "BSSID: %pM\n", bss->macaddr);
-+
-+	scan->bss_count++;
-+	scan->used_buf_len += new_bss_len;
-+	inff_dbg(SCAN, "used_buf_len: %d\n", scan->used_buf_len);
 +}
 +
 +/*
-+ * inff_cp_scan_event_handler() - handle scan event.
-+ *
-+ * @scan: scan info context.
-+ * @event: scan event.
++ * inff_chan_encchspec: encodes channel info into a chanspec, requires center channel
++ *	number, ignores control one
 + */
-+int
-+inff_cp_scan_event_handler(struct inff_pub *drvr,
-+			   struct inff_cpevt_scan *scan_event)
++void
++inff_chan_encchspec(struct inff_chan *ch)
 +{
-+	int ret = 0;
-+	struct inff_scan_info *scan = &drvr->config->scan;
++	if (ch->bw == INFF_CHAN_BW_20 || ch->sb == INFF_CHAN_SB_NONE)
++		ch->sb = INFF_CHAN_SB_L;
 +
-+	if (!scan->request)
-+		return 0;
++	inff_maskset16(&ch->chspec, INFF_CHSPEC_CH_MASK,
++		       INFF_CHSPEC_CH_SHIFT, ch->chnum);
++	inff_maskset16(&ch->chspec, INFF_CHSPEC_SB_MASK,
++		       INFF_CHSPEC_SB_SHIFT, ch->sb);
++	inff_maskset16(&ch->chspec, INFF_CHSPEC_BW_MASK,
++		       0, inff_chan_bw_to_chspec_bw(ch->bw));
 +
-+	if (scan_event->scan_complete) {
-+		inff_cp_scan_inform_bss(scan);
-+		inff_cp_scan_complete(drvr, false);
-+	} else {
-+		inff_cp_scan_save_bss(scan, scan_event);
++	ch->chspec &= ~INFF_CHSPEC_BND_MASK;
++	switch (ch->band) {
++	case INFF_CHAN_BAND_6G:
++		ch->chspec |= INFF_CHSPEC_BND_6G;
++		break;
++	case INFF_CHAN_BAND_5G:
++		ch->chspec |= INFF_CHSPEC_BND_5G;
++		break;
++	case INFF_CHAN_BAND_2G:
++		ch->chspec |= INFF_CHSPEC_BND_2G;
++		break;
++	default:
++		WARN_ONCE(1, "Invalid band 0x%04x\n", ch->band);
++		break;
 +	}
-+
-+	return ret;
 +}
 +
-+int
-+inff_cp_scan_init(struct inff_cfg80211_info *cfg)
++/*
++ * inff_chan_decchspec: decodes chanspec into generic info
++ */
++void
++inff_chan_decchspec(struct inff_chan *ch)
 +{
-+	struct inff_scan_info *scan = &cfg->scan;
++	u16 val;
 +
-+	scan->wiphy = cfg->wiphy;
++	ch->chnum = (u8)(ch->chspec & INFF_CHSPEC_CH_MASK);
++	ch->control_ch_num = ch->chnum;
 +
-+	scan->bss_buf = kzalloc(INFF_SCAN_BUF_SIZE, GFP_KERNEL);
-+	if (!scan->bss_buf)
-+		return -ENOMEM;
-+
-+	inff_cp_scan_reset(scan);
-+
-+	return 0;
-+}
-+
-+int
-+inff_cp_scan_start(struct inff_cfg80211_info *cfg, struct cfg80211_scan_request *request)
-+{
-+	struct inff_cfg80211_vif *vif = NULL;
-+	struct inff_scan_info *scan = &cfg->scan;
-+	int err;
-+
-+	if (test_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
-+		inff_err("Scan in-progress\n");
-+		return -EAGAIN;
-+	}
-+
-+	vif = container_of(request->wdev, struct inff_cfg80211_vif, wdev);
-+
-+	scan->request = request;
-+
-+	err = inff_cpcmd_data_set(vif->ifp, INFF_CP_C_SCAN, NULL, 0);
-+	if (err) {
-+		inff_err("scan failed %d\n", err);
-+		clear_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+		return -EINVAL;
-+	}
-+
-+	set_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+	return 0;
-+}
-+
-+s32
-+inff_run_escan(struct inff_cfg80211_info *cfg, struct inff_if *ifp,
-+	       struct cfg80211_scan_request *request)
-+{
-+	s32 params_size = INFF_SCAN_PARAMS_V2_FIXED_SIZE +
-+			  offsetof(struct inff_escan_params_le, params_v2_le);
-+	struct inff_escan_params_le *params;
-+	s32 err = 0;
-+
-+	inff_dbg(SCAN, "E-SCAN START\n");
-+
-+	if (request) {
-+		/* Allocate space for populating ssids in struct */
-+		params_size += sizeof(u32) * ((request->n_channels + 1) / 2);
-+
-+		/* Allocate space for populating ssids in struct */
-+		params_size += sizeof(struct inff_ssid_le) * request->n_ssids;
-+	}
-+
-+	params = kzalloc(params_size, GFP_KERNEL);
-+	if (!params) {
-+		err = -ENOMEM;
-+		goto exit;
-+	}
-+	WARN_ON_ONCE(params_size + sizeof("escan") >= INFF_DCMD_MEDLEN);
-+	inff_escan_prep(cfg, &params->params_v2_le, request);
-+
-+	params->version = cpu_to_le32(INFF_ESCAN_REQ_VERSION_V2);
-+
-+	if (!inff_feat_is_enabled(ifp, INFF_FEAT_SCAN_V2)) {
-+		struct inff_escan_params_le *params_v1;
-+
-+		params_size -= INFF_SCAN_PARAMS_V2_FIXED_SIZE;
-+		params_size += INFF_SCAN_PARAMS_FIXED_SIZE;
-+		params_v1 = kzalloc(params_size, GFP_KERNEL);
-+		if (!params_v1) {
-+			err = -ENOMEM;
-+			goto exit_params;
++	switch (ch->chspec & INFF_CHSPEC_BW_MASK) {
++	case INFF_CHSPEC_BW_20:
++		ch->bw = INFF_CHAN_BW_20;
++		ch->sb = INFF_CHAN_SB_NONE;
++		break;
++	case INFF_CHSPEC_BW_40:
++		ch->bw = INFF_CHAN_BW_40;
++		val = ch->chspec & INFF_CHSPEC_SB_MASK;
++		if (val == INFF_CHSPEC_SB_L) {
++			ch->sb = INFF_CHAN_SB_L;
++			ch->control_ch_num -= CH_10MHZ_APART;
++		} else if (val == INFF_CHSPEC_SB_U) {
++			ch->sb = INFF_CHAN_SB_U;
++			ch->control_ch_num += CH_10MHZ_APART;
++		} else {
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
 +		}
-+		params_v1->version = cpu_to_le32(INFF_ESCAN_REQ_VERSION);
-+		inff_scan_params_v2_to_v1(&params->params_v2_le, &params_v1->params_le);
-+		kfree(params);
-+		params = params_v1;
-+	}
-+
-+	params->action = cpu_to_le16(WL_ESCAN_ACTION_START);
-+	params->sync_id = cpu_to_le16(0x1234);
-+
-+	err = inff_fwcmd_iovar_data_set(ifp, "escan", params, params_size);
-+	if (err) {
-+		if (err == -EBUSY)
-+			inff_dbg(INFO, "system busy : escan canceled\n");
-+		else
-+			iphy_err(ifp->drvr, "error (%d)\n", err);
-+	}
-+
-+exit_params:
-+	kfree(params);
-+exit:
-+	return err;
-+}
-+
-+static s32
-+inff_do_escan(struct inff_if *ifp, struct cfg80211_scan_request *request)
-+{
-+	struct inff_cfg80211_info *cfg = ifp->drvr->config;
-+	s32 err;
-+	struct inff_scan_results *results;
-+	struct escan_info *escan = &cfg->escan_info;
-+
-+	escan->ifp = ifp;
-+	escan->wiphy = cfg->wiphy;
-+	escan->escan_state = WL_ESCAN_STATE_SCANNING;
-+
-+	inff_scan_config_mpc(ifp, 0);
-+	results = (struct inff_scan_results *)cfg->escan_info.escan_buf;
-+	results->version = 0;
-+	results->count = 0;
-+	results->buflen = WL_ESCAN_RESULTS_FIXED_SIZE;
-+
-+	err = escan->run(cfg, ifp, request);
-+	if (err)
-+		inff_scan_config_mpc(ifp, 1);
-+	return err;
-+}
-+
-+void inff_abort_scanning(struct inff_cfg80211_info *cfg)
-+{
-+	struct escan_info *escan = &cfg->escan_info;
-+
-+	set_bit(INFF_SCAN_STATUS_ABORT, &cfg->scan_status);
-+	if (cfg->int_escan_map || cfg->scan_request) {
-+		escan->escan_state = WL_ESCAN_STATE_IDLE;
-+		inff_notify_escan_complete(cfg, escan->ifp, true, true);
-+	}
-+	clear_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+	clear_bit(INFF_SCAN_STATUS_ABORT, &cfg->scan_status);
-+}
-+
-+void inff_escan_prep(struct inff_cfg80211_info *cfg,
-+		     struct inff_scan_params_v2_le *params_le,
-+		     struct cfg80211_scan_request *request)
-+{
-+	u32 n_ssids;
-+	u32 n_channels;
-+	s32 i;
-+	s32 offset;
-+	u16 chanspec;
-+	char *ptr;
-+	int length;
-+	struct inff_ssid_le ssid_le;
-+
-+	eth_broadcast_addr(params_le->bssid);
-+
-+	length = INFF_SCAN_PARAMS_V2_FIXED_SIZE;
-+
-+	params_le->version = cpu_to_le16(INFF_SCAN_PARAMS_VERSION_V2);
-+	params_le->bss_type = DOT11_BSSTYPE_ANY;
-+	params_le->scan_type = cpu_to_le32(INFF_SCANTYPE_ACTIVE);
-+	params_le->channel_num = 0;
-+	params_le->nprobes = cpu_to_le32(-1);
-+	params_le->active_time = cpu_to_le32(-1);
-+	params_le->passive_time = cpu_to_le32(-1);
-+	params_le->home_time = cpu_to_le32(-1);
-+	memset(&params_le->ssid_le, 0, sizeof(params_le->ssid_le));
-+
-+	/* Scan abort */
-+	if (!request) {
-+		length += sizeof(u16);
-+		params_le->channel_num = cpu_to_le32(1);
-+		params_le->channel_list[0] = cpu_to_le16(-1);
-+		params_le->length = cpu_to_le16(length);
-+		return;
-+	}
-+
-+	n_ssids = request->n_ssids;
-+	n_channels = request->n_channels;
-+
-+	/* Copy channel array if applicable */
-+	inff_dbg(SCAN, "### List of channelspecs to scan ### %d\n",
-+		 n_channels);
-+	if (n_channels > 0) {
-+		length += roundup(sizeof(u16) * n_channels, sizeof(u32));
-+		for (i = 0; i < n_channels; i++) {
-+			chanspec = inff_nl80211_chan_to_chanspec(request->channels[i]);
-+			inff_dbg(SCAN, "Chan : %d, Channel spec: %x\n",
-+				 request->channels[i]->hw_value, chanspec);
-+			params_le->channel_list[i] = cpu_to_le16(chanspec);
++		break;
++	case INFF_CHSPEC_BW_80:
++		ch->bw = INFF_CHAN_BW_80;
++		ch->sb = inff_maskget16(ch->chspec, INFF_CHSPEC_SB_MASK,
++					INFF_CHSPEC_SB_SHIFT);
++		switch (ch->sb) {
++		case INFF_CHAN_SB_LL:
++			ch->control_ch_num -= CH_30MHZ_APART;
++			break;
++		case INFF_CHAN_SB_LU:
++			ch->control_ch_num -= CH_10MHZ_APART;
++			break;
++		case INFF_CHAN_SB_UL:
++			ch->control_ch_num += CH_10MHZ_APART;
++			break;
++		case INFF_CHAN_SB_UU:
++			ch->control_ch_num += CH_30MHZ_APART;
++			break;
++		default:
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
++			break;
 +		}
-+	} else {
-+		inff_dbg(SCAN, "Scanning all channels\n");
++		break;
++	case INFF_CHSPEC_BW_160:
++		ch->bw = INFF_CHAN_BW_160;
++		ch->sb = inff_maskget16(ch->chspec, INFF_CHSPEC_SB_MASK,
++					INFF_CHSPEC_SB_SHIFT);
++		switch (ch->sb) {
++		case INFF_CHAN_SB_LLL:
++			ch->control_ch_num -= CH_70MHZ_APART;
++			break;
++		case INFF_CHAN_SB_LLU:
++			ch->control_ch_num -= CH_50MHZ_APART;
++			break;
++		case INFF_CHAN_SB_LUL:
++			ch->control_ch_num -= CH_30MHZ_APART;
++			break;
++		case INFF_CHAN_SB_LUU:
++			ch->control_ch_num -= CH_10MHZ_APART;
++			break;
++		case INFF_CHAN_SB_ULL:
++			ch->control_ch_num += CH_10MHZ_APART;
++			break;
++		case INFF_CHAN_SB_ULU:
++			ch->control_ch_num += CH_30MHZ_APART;
++			break;
++		case INFF_CHAN_SB_UUL:
++			ch->control_ch_num += CH_50MHZ_APART;
++			break;
++		case INFF_CHAN_SB_UUU:
++			ch->control_ch_num += CH_70MHZ_APART;
++			break;
++		default:
++			WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
++			break;
++		}
++		break;
++	case INFF_CHSPEC_BW_8080:
++	default:
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
++		break;
 +	}
 +
-+	/* Copy ssid array if applicable */
-+	inff_dbg(SCAN, "### List of SSIDs to scan ### %d\n", n_ssids);
-+	if (n_ssids > 0) {
-+		offset = offsetof(struct inff_scan_params_v2_le, channel_list) +
-+				n_channels * sizeof(u16);
-+		offset = roundup(offset, sizeof(u32));
-+		length += sizeof(ssid_le) * n_ssids;
-+		ptr = (char *)params_le + offset;
-+		for (i = 0; i < n_ssids; i++) {
-+			memset(&ssid_le, 0, sizeof(ssid_le));
-+			ssid_le.SSID_len =
-+					cpu_to_le32(request->ssids[i].ssid_len);
-+			memcpy(ssid_le.SSID, request->ssids[i].ssid,
-+			       request->ssids[i].ssid_len);
-+			if (!ssid_le.SSID_len)
-+				inff_dbg(SCAN, "%d: Broadcast scan\n", i);
-+			else
-+				inff_dbg(SCAN, "%d: scan for  %.32s size=%d\n",
-+					 i, ssid_le.SSID, ssid_le.SSID_len);
-+			memcpy(ptr, &ssid_le, sizeof(ssid_le));
-+			ptr += sizeof(ssid_le);
-+		}
-+	} else {
-+		inff_dbg(SCAN, "Performing passive scan\n");
-+		params_le->scan_type = cpu_to_le32(INFF_SCANTYPE_PASSIVE);
++	switch (ch->chspec & INFF_CHSPEC_BND_MASK) {
++	case INFF_CHSPEC_BND_6G:
++		ch->band = INFF_CHAN_BAND_6G;
++		break;
++	case INFF_CHSPEC_BND_5G:
++		ch->band = INFF_CHAN_BAND_5G;
++		break;
++	case INFF_CHSPEC_BND_2G:
++		ch->band = INFF_CHAN_BAND_2G;
++		break;
++	default:
++		WARN_ONCE(1, "Invalid chanspec 0x%04x\n", ch->chspec);
++		break;
 +	}
-+	params_le->length = cpu_to_le16(length);
-+	/* Adding mask to channel numbers */
-+	params_le->channel_num =
-+		cpu_to_le32((n_ssids << INFF_SCAN_PARAMS_NSSID_SHIFT) |
-+			(n_channels & INFF_SCAN_PARAMS_COUNT_MASK));
 +}
 +
-+s32
-+inff_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
++void
++inff_chan_update_bw40_channel_flag(struct ieee80211_channel *channel,
++				   struct inff_chan *ch)
 +{
-+	struct inff_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	u32 ht40_flag;
++
++	ht40_flag = channel->flags & IEEE80211_CHAN_NO_HT40;
++	if (ch->sb == INFF_CHAN_SB_U) {
++		if (ht40_flag == IEEE80211_CHAN_NO_HT40)
++			channel->flags &= ~IEEE80211_CHAN_NO_HT40;
++		channel->flags |= IEEE80211_CHAN_NO_HT40PLUS;
++	} else {
++		/* It should be one of
++		 * IEEE80211_CHAN_NO_HT40 or
++		 * IEEE80211_CHAN_NO_HT40PLUS
++		 */
++		channel->flags &= ~IEEE80211_CHAN_NO_HT40;
++		if (ht40_flag == IEEE80211_CHAN_NO_HT40)
++			channel->flags |= IEEE80211_CHAN_NO_HT40MINUS;
++	}
++}
++
++int
++inff_chan_enable_bw40_2g(struct inff_cfg80211_info *cfg)
++{
 +	struct inff_pub *drvr = cfg->pub;
-+	struct inff_cfg80211_vif *vif;
-+	s32 err = 0;
-+	struct inff_tlv *interworking_ie = NULL;
++	struct inff_if *ifp = inff_get_ifp(drvr, 0);
++	struct ieee80211_supported_band *band;
++	struct inff_fwcmd_bwcap_le band_bwcap;
++	struct inff_chanspec_list *list;
++	u8 *pbuf;
++	u32 val;
++	int err;
++	struct inff_chan ch;
++	u32 num_chan;
++	int i, j;
 +
-+	vif = container_of(request->wdev, struct inff_cfg80211_vif, wdev);
-+	if (!inff_check_vif_up(vif))
-+		return -EIO;
++	/* verify support for bw_cap command */
++	val = WLC_BAND_5G;
++	err = inff_fwcmd_iovar_int_get(ifp, "bw_cap", &val);
 +
-+	if (inff_socitype_is_cp(drvr->bus_if)) {
-+		err = inff_cp_scan_start(cfg, request);
-+		if (err)
-+			goto scan_out;
-+		else
-+			return 0;
-+	}
-+
-+	if (test_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
-+		iphy_err(drvr, "Scanning already: status (%lu)\n",
-+			 cfg->scan_status);
-+		return -EAGAIN;
-+	}
-+	if (test_bit(INFF_SCAN_STATUS_ABORT, &cfg->scan_status)) {
-+		iphy_err(drvr, "Scanning being aborted: status (%lu)\n",
-+			 cfg->scan_status);
-+		return -EAGAIN;
-+	}
-+	if (test_bit(INFF_SCAN_STATUS_SUPPRESS, &cfg->scan_status)) {
-+		iphy_err(drvr, "Scanning suppressed: status (%lu)\n",
-+			 cfg->scan_status);
-+		return -EAGAIN;
-+	}
-+	if (test_bit(INFF_VIF_STATUS_CONNECTING, &vif->sme_state)) {
-+		iphy_err(drvr, "Connecting: status (%lu)\n", vif->sme_state);
-+		return -EAGAIN;
-+	}
-+
-+	inff_dbg(SCAN, "START ESCAN\n");
-+
-+	cfg->scan_request = request;
-+	set_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+
-+	interworking_ie = inff_find_iwie(request->ie, request->ie_len);
-+	if (interworking_ie) {
-+		err = inff_add_iwie(cfg, vif->ifp,
-+				    INFF_VNDR_IE_CUSTOM_FLAG,
-+				    interworking_ie->id,
-+				    interworking_ie->data,
-+				    interworking_ie->len);
-+		if (err)
-+			inff_err("Failed to add interworking IE");
++	if (!err) {
++		/* only set 2G bandwidth using bw_cap command */
++		band_bwcap.band = cpu_to_le32(WLC_BAND_2G);
++		band_bwcap.bw_cap = cpu_to_le32(WLC_BW_CAP_40MHZ);
++		err = inff_fwcmd_iovar_data_set(ifp, "bw_cap", &band_bwcap,
++						sizeof(band_bwcap));
 +	} else {
-+		/* we have to clear IW IE  */
-+		inff_clear_iwie(cfg, vif->ifp);
++		inff_dbg(INFO, "fallback to mimo_bw_cap\n");
++		val = WLC_N_BW_40ALL;
++		err = inff_fwcmd_iovar_int_set(ifp, "mimo_bw_cap", val);
 +	}
 +
-+	cfg->escan_info.run = inff_run_escan;
++	if (!err) {
++		/* update channel info in 2G band */
++		pbuf = kzalloc(INFF_DCMD_MEDLEN, GFP_KERNEL);
 +
-+	err = inff_do_escan(vif->ifp, request);
-+	if (err)
-+		goto scan_out;
++		if (!pbuf)
++			return -ENOMEM;
 +
-+	/* Arm scan timeout timer */
-+	wiphy_delayed_work_queue(cfg->wiphy, &cfg->escan_timeout_work,
-+				 msecs_to_jiffies(INFF_ESCAN_TIMER_INTERVAL_MS));
++		ch.band = INFF_CHAN_BAND_2G;
++		ch.bw = INFF_CHAN_BW_40;
++		ch.sb = INFF_CHAN_SB_NONE;
++		ch.chnum = 0;
++		inff_chan_encchspec(&ch);
 +
-+	return 0;
++		/* pass encoded chanspec in query */
++		*(__le16 *)pbuf = cpu_to_le16(ch.chspec);
 +
-+scan_out:
-+	iphy_err(drvr, "scan error (%d)\n", err);
-+	clear_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+	cfg->scan_request = NULL;
++		err = inff_fwcmd_iovar_data_get(ifp, "chanspecs", pbuf,
++						INFF_DCMD_MEDLEN);
++		if (err) {
++			iphy_err(drvr, "get chanspecs error (%d)\n", err);
++			kfree(pbuf);
++			return err;
++		}
++
++		band = cfg->wiphy->bands[NL80211_BAND_2GHZ];
++		list = (struct inff_chanspec_list *)pbuf;
++		num_chan = le32_to_cpu(list->count);
++		if (num_chan > INFF_MAX_CHANSPEC_LIST) {
++			iphy_err(drvr, "Invalid count of channel Spec. (%u)\n",
++				 num_chan);
++			kfree(pbuf);
++			return -EINVAL;
++		}
++
++		for (i = 0; i < num_chan; i++) {
++			ch.chspec = (u16)le32_to_cpu(list->element[i]);
++			inff_chan_decchspec(&ch);
++			if (WARN_ON(ch.band != INFF_CHAN_BAND_2G))
++				continue;
++			if (WARN_ON(ch.bw != INFF_CHAN_BW_40))
++				continue;
++			for (j = 0; j < band->n_channels; j++) {
++				if (band->channels[j].hw_value == ch.control_ch_num)
++					break;
++			}
++			if (WARN_ON(j == band->n_channels))
++				continue;
++
++			inff_chan_update_bw40_channel_flag(&band->channels[j], &ch);
++		}
++		kfree(pbuf);
++	}
 +	return err;
 +}
 +
-+static s32
-+inff_cfg80211_escan_handler(struct inff_if *ifp,
-+			    const struct inff_event_msg *e, void *data)
++u16
++inff_nl80211_chan_to_chanspec(struct ieee80211_channel *ch)
++{
++	struct inff_chan ch_inf = {0};
++
++	switch (ch->band) {
++	case NL80211_BAND_2GHZ:
++		ch_inf.band = INFF_CHAN_BAND_2G;
++		break;
++	case NL80211_BAND_5GHZ:
++		ch_inf.band = INFF_CHAN_BAND_5G;
++		break;
++	case NL80211_BAND_6GHZ:
++		ch_inf.band = INFF_CHAN_BAND_6G;
++		break;
++	case NL80211_BAND_60GHZ:
++	default:
++		WARN_ON_ONCE(1);
++	}
++	ch_inf.chnum = ieee80211_frequency_to_channel(ch->center_freq);
++	ch_inf.bw = INFF_CHAN_BW_20;
++	inff_chan_encchspec(&ch_inf);
++
++	return ch_inf.chspec;
++}
++
++void
++inff_nl80211_chan_get_bwcap(struct inff_if *ifp, u32 bw_cap[])
 +{
 +	struct inff_pub *drvr = ifp->drvr;
++	u32 band, mimo_bwcap;
++	int err;
++
++	band = WLC_BAND_2G;
++	err = inff_fwcmd_iovar_int_get(ifp, "bw_cap", &band);
++	if (!err) {
++		bw_cap[NL80211_BAND_2GHZ] = band;
++		band = WLC_BAND_5G;
++		err = inff_fwcmd_iovar_int_get(ifp, "bw_cap", &band);
++		if (!err) {
++			bw_cap[NL80211_BAND_5GHZ] = band;
++
++			band = WLC_BAND_6G;
++			err = inff_fwcmd_iovar_int_get(ifp, "bw_cap", &band);
++			if (!err) {
++				bw_cap[NL80211_BAND_6GHZ] = band;
++				return;
++			}
++			return;
++		}
++		WARN_ON(1);
++		return;
++	}
++	inff_dbg(INFO, "fallback to mimo_bw_cap info\n");
++	mimo_bwcap = 0;
++	err = inff_fwcmd_iovar_int_get(ifp, "mimo_bw_cap", &mimo_bwcap);
++	if (err)
++		/* assume 20MHz if firmware does not give a clue */
++		mimo_bwcap = WLC_N_BW_20ALL;
++
++	switch (mimo_bwcap) {
++	case WLC_N_BW_40ALL:
++		bw_cap[NL80211_BAND_2GHZ] |= WLC_BW_40MHZ_BIT;
++		fallthrough;
++	case WLC_N_BW_20IN2G_40IN5G:
++		bw_cap[NL80211_BAND_5GHZ] |= WLC_BW_40MHZ_BIT;
++		fallthrough;
++	case WLC_N_BW_20ALL:
++		bw_cap[NL80211_BAND_2GHZ] |= WLC_BW_20MHZ_BIT;
++		bw_cap[NL80211_BAND_5GHZ] |= WLC_BW_20MHZ_BIT;
++		break;
++	default:
++		iphy_err(drvr, "invalid mimo_bw_cap value\n");
++	}
++}
++
++static void
++inff_wiphy_reset_band_and_channel(struct wiphy *wiphy)
++{
++	enum nl80211_band band;
++	struct ieee80211_supported_band *wiphy_band = NULL;
++
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		wiphy_band = wiphy->bands[band];
++		if (!wiphy_band)
++			continue;
++
++		kfree(wiphy_band->channels);
++		wiphy_band->channels = NULL;
++		kfree(wiphy_band);
++		wiphy->bands[band] = NULL;
++	}
++}
++
++int
++inff_fill_band_with_default_chanlist(struct wiphy *wiphy,
++				     struct inff_if *ifp)
++{
++	struct inff_pub *drvr = ifp->drvr;
++	struct ieee80211_supported_band *band;
 +	struct inff_cfg80211_info *cfg = drvr->config;
-+	s32 status;
-+	struct inff_escan_result_le *escan_result_le;
-+	u32 escan_buflen;
-+	struct inff_bss_info_le *bss_info_le;
-+	struct inff_bss_info_le *bss = NULL;
-+	u32 bi_length;
-+	struct inff_scan_results *list;
-+	u32 i;
-+	bool aborted;
++	int err, i;
++	__le32 bandlist[4];
++	u32 n_bands;
 +
-+	status = e->status;
-+
-+	if (status == INFF_E_STATUS_ABORT)
-+		goto exit;
-+
-+	if (!test_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
-+		iphy_err(drvr, "scan not ready, bsscfgidx=%d\n",
-+			 ifp->bsscfgidx);
-+		return -EPERM;
++	err = inff_fwcmd_data_get(ifp, INFF_C_GET_BANDLIST, &bandlist,
++				  sizeof(bandlist));
++	if (err) {
++		iphy_err(drvr, "could not obtain band info: err=%d\n", err);
++		return err;
 +	}
 +
-+	if (status == INFF_E_STATUS_PARTIAL) {
-+		inff_dbg(SCAN, "ESCAN Partial result\n");
-+		if (e->datalen < sizeof(*escan_result_le)) {
-+			iphy_err(drvr, "invalid event data length\n");
-+			goto exit;
-+		}
-+		escan_result_le = (struct inff_escan_result_le *)data;
-+		if (!escan_result_le) {
-+			iphy_err(drvr, "Invalid escan result (NULL pointer)\n");
-+			goto exit;
-+		}
-+		escan_buflen = le32_to_cpu(escan_result_le->buflen);
-+		if (escan_buflen > INFF_ESCAN_BUF_SIZE ||
-+		    escan_buflen > e->datalen ||
-+		    escan_buflen < sizeof(*escan_result_le)) {
-+			iphy_err(drvr, "Invalid escan buffer length: %d\n",
-+				 escan_buflen);
-+			goto exit;
-+		}
-+		if (le16_to_cpu(escan_result_le->bss_count) != 1) {
-+			iphy_err(drvr, "Invalid bss_count %d: ignoring\n",
-+				 escan_result_le->bss_count);
-+			goto exit;
-+		}
-+		bss_info_le = &escan_result_le->bss_info_le;
++	/* Reset bands if needed */
++	if (cfg->bands_reset_required) {
++		inff_dbg(TRACE, "Performing band reset due to country change\n");
++		inff_wiphy_reset_band_and_channel(wiphy);
++		cfg->bands_reset_required = false;
++	}
 +
-+		if (!cfg->int_escan_map && !cfg->scan_request) {
-+			inff_dbg(SCAN, "result without cfg80211 request\n");
-+			goto exit;
-+		}
++	n_bands = le32_to_cpu(bandlist[0]);
++	for (i = 1; i <= n_bands && i < ARRAY_SIZE(bandlist); i++) {
++		if (bandlist[i] == cpu_to_le32(WLC_BAND_2G) &&
++		    !wiphy->bands[NL80211_BAND_2GHZ]) {
++			band = kmemdup(&__wl_band_2ghz, sizeof(__wl_band_2ghz),
++				       GFP_KERNEL);
++			if (!band)
++				goto mem_err;
++			band->channels = kmemdup(&__wl_2ghz_channels,
++						 sizeof(__wl_2ghz_channels),
++						 GFP_KERNEL);
++			if (!band->channels)
++				goto mem_err;
 +
-+		bi_length = le32_to_cpu(bss_info_le->length);
-+		if (bi_length != escan_buflen -	WL_ESCAN_RESULTS_FIXED_SIZE) {
-+			iphy_err(drvr, "Ignoring invalid bss_info length: %d\n",
-+				 bi_length);
-+			goto exit;
-+		}
++			/* restore 2G channels info */
++			band->n_channels = ARRAY_SIZE(__wl_2ghz_channels);
++			wiphy->bands[NL80211_BAND_2GHZ] = band;
++		} else if (bandlist[i] == cpu_to_le32(WLC_BAND_5G) &&
++		    !wiphy->bands[NL80211_BAND_5GHZ]) {
++			band = kmemdup(&__wl_band_5ghz, sizeof(__wl_band_5ghz),
++				       GFP_KERNEL);
++			if (!band)
++				goto mem_err;
++			band->channels = kmemdup(&__wl_5ghz_channels,
++						 sizeof(__wl_5ghz_channels),
++						 GFP_KERNEL);
++			if (!band->channels)
++				goto mem_err;
 +
-+		if (!(cfg->wiphy->interface_modes &
-+		      BIT(NL80211_IFTYPE_ADHOC))) {
-+			if (le16_to_cpu(bss_info_le->capability) &
-+						WLAN_CAPABILITY_IBSS) {
-+				iphy_err(drvr, "Ignoring IBSS result\n");
-+				goto exit;
++			/* restore 5G channels info */
++			band->n_channels = ARRAY_SIZE(__wl_5ghz_channels);
++			wiphy->bands[NL80211_BAND_5GHZ] = band;
++		} else if (bandlist[i] == cpu_to_le32(WLC_BAND_6G) &&
++			!wiphy->bands[NL80211_BAND_6GHZ]) {
++			band = kmemdup(&__wl_band_6ghz, sizeof(__wl_band_6ghz),
++				       GFP_KERNEL);
++			if (!band)
++				goto mem_err;
++			band->channels = kmemdup(&__wl_6ghz_channels,
++						 sizeof(__wl_6ghz_channels),
++						 GFP_KERNEL);
++			if (!band->channels)
++				goto mem_err;
++
++			/* restore 6G channels info */
++			band->n_channels = ARRAY_SIZE(__wl_6ghz_channels);
++			wiphy->bands[NL80211_BAND_6GHZ] = band;
++		}
++	}
++
++	if (wiphy->bands[NL80211_BAND_5GHZ] &&
++	    inff_feat_is_enabled(ifp, INFF_FEAT_DOT11H))
++		wiphy_ext_feature_set(wiphy,
++				      NL80211_EXT_FEATURE_DFS_OFFLOAD);
++
++	return 0;
++
++mem_err:
++	inff_wiphy_reset_band_and_channel(wiphy);
++	return -ENOMEM;
++}
++
++static void
++inff_wiphy_rm_disabled_band_and_channel(struct wiphy *wiphy)
++{
++	enum nl80211_band band;
++	struct ieee80211_supported_band *wiphy_band = NULL;
++	struct ieee80211_channel *cur = NULL;
++	struct ieee80211_channel *next = NULL;
++	u32 n_ch = 0;
++	u32 i, j;
++
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		wiphy_band = wiphy->bands[band];
++		if (!wiphy_band)
++			continue;
++
++		n_ch = wiphy_band->n_channels;
++		for (i = 0; i < n_ch;) {
++			cur = &wiphy_band->channels[i];
++			if (cur->flags == IEEE80211_CHAN_DISABLED) {
++				for (j = i; j < n_ch - 1; j++) {
++					cur = &wiphy_band->channels[j];
++					next = &wiphy_band->channels[j + 1];
++					memcpy(cur, next, sizeof(*cur));
++				}
++				n_ch--;
++			} else {
++				i++;
 +			}
 +		}
 +
-+		list = (struct inff_scan_results *)
-+				cfg->escan_info.escan_buf;
-+
-+		if (bi_length > INFF_ESCAN_BUF_SIZE - list->buflen) {
-+			iphy_err(drvr, "Buffer is too small: ignoring\n");
-+			goto exit;
++		wiphy_band->n_channels = n_ch;
++		if (!n_ch) {
++			kfree(wiphy_band->channels);
++			wiphy_band->channels = NULL;
++			kfree(wiphy_band);
++			wiphy->bands[band] = NULL;
 +		}
-+
-+		for (i = 0; i < list->count; i++) {
-+			bss = bss ? (struct inff_bss_info_le *)
-+				((unsigned char *)bss +
-+				le32_to_cpu(bss->length)) : list->bss_info_le;
-+			if (inff_compare_update_same_bss(cfg, bss,
-+							 bss_info_le))
-+				goto exit;
-+		}
-+		memcpy(&cfg->escan_info.escan_buf[list->buflen], bss_info_le,
-+		       bi_length);
-+		list->version = le32_to_cpu(bss_info_le->version);
-+		list->buflen += bi_length;
-+		list->count++;
-+	} else {
-+		cfg->escan_info.escan_state = WL_ESCAN_STATE_IDLE;
-+		if (cfg->int_escan_map || cfg->scan_request) {
-+			inff_inform_bss(cfg);
-+			aborted = status != INFF_E_STATUS_SUCCESS;
-+			inff_notify_escan_complete(cfg, ifp, aborted, false);
-+		} else {
-+			inff_dbg(SCAN, "Ignored scan complete result 0x%x\n",
-+				 status);
-+		}
-+	}
-+exit:	return 0;
-+}
-+
-+static void inff_cfg80211_escan_timeout_worker(struct wiphy *wiphy,
-+					       struct wiphy_work *work)
-+{
-+	struct inff_cfg80211_info *cfg =
-+			container_of(work, struct inff_cfg80211_info,
-+				     escan_timeout_work.work);
-+
-+	lockdep_assert_wiphy(wiphy);
-+
-+	if (cfg->int_escan_map || cfg->scan_request) {
-+		iphy_err(cfg->pub, "ESCAN Request timed out\n");
-+		inff_inform_bss(cfg);
-+		inff_notify_escan_complete(cfg, cfg->escan_info.ifp, true, true);
 +	}
 +}
 +
-+int inff_init_escan(struct inff_cfg80211_info *cfg)
++int
++inff_nl80211_chan_populate(struct inff_cfg80211_info *cfg,
++			   u32 bw_cap[])
 +{
-+	cfg->scan_request = NULL;
++	struct wiphy *wiphy = cfg->wiphy;
++	struct inff_pub *drvr = cfg->pub;
++	struct inff_if *ifp = inff_get_ifp(drvr, 0);
++	struct ieee80211_supported_band *band;
++	struct ieee80211_channel *channel;
++	struct inff_chanspec_list *list;
++	struct inff_chan ch;
++	int err;
++	u8 *pbuf;
++	u32 i, j;
++	u32 total;
++	u32 chaninfo;
 +
-+	cfg->escan_info.escan_buf = kzalloc(INFF_ESCAN_BUF_SIZE, GFP_KERNEL);
-+	if (!cfg->escan_info.escan_buf)
++	err = inff_fill_band_with_default_chanlist(wiphy, ifp);
++	if (err) {
++		iphy_err(drvr, "could not retrore band and channels: err=%d\n", err);
++		goto fail_pbuf;
++	}
++
++	band = wiphy->bands[NL80211_BAND_2GHZ];
++	if (band) {
++		for (i = 0; i < band->n_channels; i++)
++			band->channels[i].flags = IEEE80211_CHAN_DISABLED;
++	}
++	band = wiphy->bands[NL80211_BAND_5GHZ];
++	if (band) {
++		for (i = 0; i < band->n_channels; i++)
++			band->channels[i].flags = IEEE80211_CHAN_DISABLED;
++	}
++	band = wiphy->bands[NL80211_BAND_6GHZ];
++	if (band) {
++		for (i = 0; i < band->n_channels; i++)
++			band->channels[i].flags = IEEE80211_CHAN_DISABLED;
++	}
++
++	pbuf = kzalloc(INFF_DCMD_MEDLEN, GFP_KERNEL);
++	if (!pbuf)
 +		return -ENOMEM;
 +
-+	inff_fwevt_register(cfg->pub, INFF_E_ESCAN_RESULT,
-+			    inff_cfg80211_escan_handler);
-+	cfg->escan_info.escan_state = WL_ESCAN_STATE_IDLE;
-+
-+	/* Init scan timeout delayed work */
-+	wiphy_delayed_work_init(&cfg->escan_timeout_work,
-+				inff_cfg80211_escan_timeout_worker);
-+
-+	return 0;
-+}
-+
-+void inff_deinit_escan(struct inff_cfg80211_info *cfg)
-+{
-+	kfree(cfg->escan_info.escan_buf);
-+	cfg->escan_info.escan_buf = NULL;
-+
-+	inff_abort_scanning(cfg);
-+
-+	wiphy_delayed_work_cancel(cfg->wiphy, &cfg->escan_timeout_work);
-+}
-+
-+void inff_scan_params_v2_to_v1(struct inff_scan_params_v2_le *params_v2_le,
-+			       struct inff_scan_params_le *params_le)
-+{
-+	size_t params_size;
-+	u32 ch;
-+	int n_channels, n_ssids;
-+
-+	memcpy(&params_le->ssid_le, &params_v2_le->ssid_le,
-+	       sizeof(params_le->ssid_le));
-+	memcpy(&params_le->bssid, &params_v2_le->bssid,
-+	       sizeof(params_le->bssid));
-+
-+	params_le->bss_type = params_v2_le->bss_type;
-+	params_le->scan_type = le32_to_cpu(params_v2_le->scan_type);
-+	params_le->nprobes = params_v2_le->nprobes;
-+	params_le->active_time = params_v2_le->active_time;
-+	params_le->passive_time = params_v2_le->passive_time;
-+	params_le->home_time = params_v2_le->home_time;
-+	params_le->channel_num = params_v2_le->channel_num;
-+
-+	ch = le32_to_cpu(params_v2_le->channel_num);
-+	n_channels = ch & INFF_SCAN_PARAMS_COUNT_MASK;
-+	n_ssids = ch >> INFF_SCAN_PARAMS_NSSID_SHIFT;
-+
-+	params_size = sizeof(u16) * n_channels;
-+	if (n_ssids > 0) {
-+		params_size = roundup(params_size, sizeof(u32));
-+		params_size += sizeof(struct inff_ssid_le) * n_ssids;
++	err = inff_fwcmd_iovar_data_get(ifp, "chanspecs", pbuf,
++					INFF_DCMD_MEDLEN);
++	if (err) {
++		iphy_err(drvr, "get chanspecs error (%d)\n", err);
++		goto fail_pbuf;
 +	}
 +
-+	memcpy(&params_le->channel_list[0],
-+	       &params_v2_le->channel_list[0], params_size);
-+}
++	list = (struct inff_chanspec_list *)pbuf;
++	total = le32_to_cpu(list->count);
++	if (total > INFF_MAX_CHANSPEC_LIST) {
++		iphy_err(drvr, "Invalid count of channel Spec. (%u)\n",
++			 total);
++		err = -EINVAL;
++		goto fail_pbuf;
++	}
 +
-+void inff_scan_config_mpc(struct inff_if *ifp, int mpc)
-+{
-+	if (inff_feat_is_quirk_enabled(ifp, INFF_FEAT_QUIRK_NEED_MPC))
-+		inff_set_mpc(ifp, mpc);
-+}
++	for (i = 0; i < total; i++) {
++		ch.chspec = (u16)le32_to_cpu(list->element[i]);
++		inff_chan_decchspec(&ch);
 +
-+s32 inff_notify_escan_complete(struct inff_cfg80211_info *cfg,
-+			       struct inff_if *ifp, bool aborted,
-+				bool fw_abort)
-+{
-+	struct inff_pub *drvr = cfg->pub;
-+	struct inff_scan_params_v2_le params_v2_le;
-+	struct cfg80211_scan_request *scan_request;
-+	s32 err = 0;
-+
-+	/* clear scan request, because the FW abort can cause a second call */
-+	/* to this functon and might cause a double cfg80211_scan_done      */
-+	scan_request = cfg->scan_request;
-+	cfg->scan_request = NULL;
-+
-+	wiphy_delayed_work_cancel(cfg->wiphy, &cfg->escan_timeout_work);
-+
-+	if (fw_abort) {
-+		/* Do a scan abort to stop the driver's scan engine */
-+		inff_dbg(SCAN, "ABORT scan in firmware\n");
-+
-+		inff_escan_prep(cfg, &params_v2_le, NULL);
-+
-+		/* E-Scan (or anyother type) can be aborted by SCAN */
-+		if (inff_feat_is_enabled(ifp, INFF_FEAT_SCAN_V2)) {
-+			err = inff_fwcmd_data_set(ifp, INFF_C_SCAN,
-+						  &params_v2_le,
-+						  sizeof(params_v2_le));
++		if (ch.band == INFF_CHAN_BAND_2G) {
++			band = wiphy->bands[NL80211_BAND_2GHZ];
++		} else if (ch.band == INFF_CHAN_BAND_5G) {
++			band = wiphy->bands[NL80211_BAND_5GHZ];
++		} else if (ch.band == INFF_CHAN_BAND_6G) {
++			band = wiphy->bands[NL80211_BAND_6GHZ];
 +		} else {
-+			struct inff_scan_params_le params_le;
++			iphy_err(drvr, "Invalid channel Spec. 0x%x.\n",
++				 ch.chspec);
++			continue;
++		}
++		if (!band)
++			continue;
++		if (!(bw_cap[band->band] & WLC_BW_40MHZ_BIT) &&
++		    ch.bw == INFF_CHAN_BW_40)
++			continue;
++		if (!(bw_cap[band->band] & WLC_BW_80MHZ_BIT) &&
++		    ch.bw == INFF_CHAN_BW_80)
++			continue;
 +
-+			inff_scan_params_v2_to_v1(&params_v2_le, &params_le);
-+			err = inff_fwcmd_data_set(ifp, INFF_C_SCAN,
-+						  &params_le,
-+						  sizeof(params_le));
++		channel = NULL;
++		for (j = 0; j < band->n_channels; j++) {
++			if (band->channels[j].hw_value == ch.control_ch_num) {
++				channel = &band->channels[j];
++				break;
++			}
++		}
++		if (!channel) {
++			/* It seems firmware supports some channel we never
++			 * considered. Something new in IEEE standard?
++			 */
++			iphy_err(drvr, "Ignoring unexpected firmware channel %d\n",
++				 ch.control_ch_num);
++			continue;
 +		}
 +
-+		if (err)
-+			iphy_err(drvr, "Scan abort failed\n");
++		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
++			continue;
++
++		/* assuming the chanspecs order is HT20,
++		 * HT40 upper, HT40 lower, and VHT80.
++		 */
++		switch (ch.bw) {
++		case INFF_CHAN_BW_160:
++			channel->flags &= ~IEEE80211_CHAN_NO_160MHZ;
++			break;
++		case INFF_CHAN_BW_80:
++			channel->flags &= ~IEEE80211_CHAN_NO_80MHZ;
++			break;
++		case INFF_CHAN_BW_40:
++			inff_chan_update_bw40_channel_flag(channel, &ch);
++			break;
++		default:
++			wiphy_warn(wiphy, "Firmware reported unsupported bandwidth %d\n",
++				   ch.bw);
++			fallthrough;
++		case INFF_CHAN_BW_20:
++			/* enable the channel and disable other bandwidths
++			 * for now as mentioned order assure they are enabled
++			 * for subsequent chanspecs.
++			 */
++			channel->flags = IEEE80211_CHAN_NO_HT40 |
++					 IEEE80211_CHAN_NO_80MHZ |
++					 IEEE80211_CHAN_NO_160MHZ;
++			ch.bw = INFF_CHAN_BW_20;
++			inff_chan_encchspec(&ch);
++			chaninfo = ch.chspec;
++			err = inff_fwcmd_bsscfg_int_get(ifp, "per_chan_info",
++							&chaninfo);
++			if (!err) {
++				if (chaninfo & WL_CHAN_RADAR)
++					channel->flags |=
++						(IEEE80211_CHAN_RADAR |
++						 IEEE80211_CHAN_NO_IR);
++				if (chaninfo & WL_CHAN_PASSIVE)
++					channel->flags |=
++						IEEE80211_CHAN_NO_IR;
++			}
++		}
 +	}
 +
-+	inff_scan_config_mpc(ifp, 1);
++	/* Remove disabled channels and band to avoid unexpected restore. */
++	inff_wiphy_rm_disabled_band_and_channel(wiphy);
 +
-+	if (scan_request) {
-+		struct cfg80211_scan_info info = {
-+			.aborted = aborted,
-+		};
-+
-+		inff_dbg(SCAN, "ESCAN Completed scan: %s\n",
-+			 aborted ? "Aborted" : "Done");
-+		cfg80211_scan_done(scan_request, &info);
-+	}
-+	if (!test_and_clear_bit(INFF_SCAN_STATUS_BUSY, &cfg->scan_status))
-+		inff_dbg(SCAN, "Scan complete\n");
-+
++fail_pbuf:
++	kfree(pbuf);
 +	return err;
 +}
-diff --git a/drivers/net/wireless/infineon/inffmac/scan.h b/drivers/net/wireless/infineon/inffmac/scan.h
++
+diff --git a/drivers/net/wireless/infineon/inffmac/chan.h b/drivers/net/wireless/infineon/inffmac/chan.h
 new file mode 100644
-index 000000000000..2303a959ea1c
+index 000000000000..47ba1879bf21
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/scan.h
-@@ -0,0 +1,136 @@
++++ b/drivers/net/wireless/infineon/inffmac/chan.h
+@@ -0,0 +1,365 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
 + * Copyright (c) 2010 Broadcom Corporation
@@ -894,134 +889,363 @@ index 000000000000..2303a959ea1c
 + * All rights reserved.
 + */
 +
-+#ifndef INFF_SCAN_H
-+#define INFF_SCAN_H
++#ifndef	INFF_CHAN_H
++#define	INFF_CHAN_H
 +
-+#define INFF_SCAN_IE_LEN_MAX            2048
++#include <linux/if_ether.h>
++#include <linux/ieee80211.h>
++#include <linux/nl80211.h>
 +
-+#define INFF_SCAN_JOIN_ACTIVE_DWELL_TIME_MS             320
-+#define INFF_SCAN_JOIN_PASSIVE_DWELL_TIME_MS            400
-+#define INFF_SCAN_JOIN_ACTIVE_DWELL_TIME_MS_6E          80
-+#define INFF_SCAN_JOIN_PASSIVE_DWELL_TIME_MS_6E 130
-+#define INFF_SCAN_JOIN_PROBE_INTERVAL_MS        20
-+
-+#define INFF_SCAN_CHANNEL_TIME          40
-+#define INFF_SCAN_UNASSOC_TIME          40
-+#define INFF_SCAN_PASSIVE_TIME          120
-+
-+/* Keep SCAN_BUF_SIZE below 64K (65536). Allocing over 64K can be
-+ * problematic on some systems and should be avoided.
++/*
++ * A chanspec (u16) holds the channel number, band, bandwidth and control
++ * sideband
 + */
-+#define INFF_SCAN_BUF_SIZE		65000
-+#define INFF_ESCAN_BUF_SIZE		65000
-+#define INFF_ESCAN_TIMER_INTERVAL_MS	10000	/* E-Scan timeout */
 +
-+#define WL_ESCAN_ACTION_START		1
-+#define WL_ESCAN_ACTION_CONTINUE	2
-+#define WL_ESCAN_ACTION_ABORT		3
++/* channel defines */
++#define CH_UPPER_SB			0x01
++#define CH_LOWER_SB			0x02
++#define CH_EWA_VALID			0x04
++#define CH_70MHZ_APART			14
++#define CH_50MHZ_APART			10
++#define CH_30MHZ_APART			6
++#define CH_20MHZ_APART			4
++#define CH_10MHZ_APART			2
++#define CH_5MHZ_APART			1 /* 2G band channels are 5 Mhz apart */
++#define CH_MIN_2G_CHANNEL		1
++#define CH_MAX_2G_CHANNEL		14	/* Max channel in 2G band */
++#define CH_MIN_5G_CHANNEL		34
++
++/* bandstate array indices */
++#define BAND_2G_INDEX		0	/* wlc->bandstate[x] index */
++#define BAND_5G_INDEX		1	/* wlc->bandstate[x] index */
++
++/*
++ * max # supported channels. The max channel no is 216, this is that + 1
++ * rounded up to a multiple of NBBY (8). DO NOT MAKE it > 255: channels are
++ * u8's all over
++ */
++#define	MAXCHANNEL		224
++
++#define WL_CHANSPEC_CHAN_MASK		0x00ff
++#define WL_CHANSPEC_CHAN_SHIFT		0
++
++#define WL_CHANSPEC_CTL_SB_MASK		0x0300
++#define WL_CHANSPEC_CTL_SB_SHIFT	     8
++#define WL_CHANSPEC_CTL_SB_LOWER	0x0100
++#define WL_CHANSPEC_CTL_SB_UPPER	0x0200
++#define WL_CHANSPEC_CTL_SB_NONE		0x0300
++
++#define WL_CHANSPEC_BW_MASK		0x0C00
++#define WL_CHANSPEC_BW_SHIFT		    10
++#define WL_CHANSPEC_BW_10		0x0400
++#define WL_CHANSPEC_BW_20		0x0800
++#define WL_CHANSPEC_BW_40		0x0C00
++#define WL_CHANSPEC_BW_80		0x2000
++
++#define WL_CHANSPEC_BAND_MASK		0xf000
++#define WL_CHANSPEC_BAND_SHIFT		12
++#define WL_CHANSPEC_BAND_5G		0x1000
++#define WL_CHANSPEC_BAND_2G		0x2000
++#define INVCHANSPEC			255
++
++#define WL_CHAN_VALID_HW		BIT(0) /* valid with current HW */
++#define WL_CHAN_VALID_SW		BIT(1) /* valid with country sett. */
++#define WL_CHAN_BAND_5G			BIT(2) /* 5GHz-band channel */
++#define WL_CHAN_RADAR			BIT(3) /* radar sensitive  channel */
++#define WL_CHAN_INACTIVE		BIT(4) /* inactive due to radar */
++#define WL_CHAN_PASSIVE			BIT(5) /* channel in passive mode */
++#define WL_CHAN_RESTRICTED		BIT(6) /* restricted use channel */
++
++/* values for band specific 40MHz capabilities  */
++#define WLC_N_BW_20ALL			0
++#define WLC_N_BW_40ALL			1
++#define WLC_N_BW_20IN2G_40IN5G		2
++
++#define WLC_BW_20MHZ_BIT		BIT(0)
++#define WLC_BW_40MHZ_BIT		BIT(1)
++#define WLC_BW_80MHZ_BIT		BIT(2)
++#define WLC_BW_160MHZ_BIT		BIT(3)
++
++/* Bandwidth capabilities */
++#define WLC_BW_CAP_20MHZ		(WLC_BW_20MHZ_BIT)
++#define WLC_BW_CAP_40MHZ		(WLC_BW_40MHZ_BIT | WLC_BW_20MHZ_BIT)
++#define WLC_BW_CAP_80MHZ		(WLC_BW_80MHZ_BIT | WLC_BW_40MHZ_BIT | \
++					 WLC_BW_20MHZ_BIT)
++#define WLC_BW_CAP_160MHZ		(WLC_BW_160MHZ_BIT | WLC_BW_80MHZ_BIT | \
++					 WLC_BW_40MHZ_BIT | WLC_BW_20MHZ_BIT)
++#define WLC_BW_CAP_UNRESTRICTED		0xFF
++
++/* band types */
++#define	WLC_BAND_AUTO			0	/* auto-select */
++#define	WLC_BAND_5G			1	/* 5 Ghz */
++#define	WLC_BAND_2G			2	/* 2.4 Ghz */
++#define	WLC_BAND_6G			3	/* 6 Ghz */
++#define	WLC_BAND_ALL			4	/* all bands */
++
++#define CHSPEC_CHANNEL(chspec)	((u8)((chspec) & WL_CHANSPEC_CHAN_MASK))
++#define CHSPEC_BAND(chspec)	((chspec) & WL_CHANSPEC_BAND_MASK)
++
++#define CHSPEC_CTL_SB(chspec)	((chspec) & WL_CHANSPEC_CTL_SB_MASK)
++#define CHSPEC_BW(chspec)	((chspec) & WL_CHANSPEC_BW_MASK)
++
++#define CHSPEC_IS10(chspec) \
++	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_10)
++
++#define CHSPEC_IS20(chspec) \
++	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_20)
++
++#define CHSPEC_IS40(chspec) \
++	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_40)
++
++#define CHSPEC_IS80(chspec) \
++	(((chspec) & WL_CHANSPEC_BW_MASK) == WL_CHANSPEC_BW_80)
++
++#define CHSPEC_IS5G(chspec) \
++	(((chspec) & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_5G)
++
++#define CHSPEC_IS2G(chspec) \
++	(((chspec) & WL_CHANSPEC_BAND_MASK) == WL_CHANSPEC_BAND_2G)
++
++#define CHSPEC_SB_NONE(chspec) \
++	(((chspec) & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_NONE)
++
++#define CHSPEC_SB_UPPER(chspec) \
++	(((chspec) & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_UPPER)
++
++#define CHSPEC_SB_LOWER(chspec) \
++	(((chspec) & WL_CHANSPEC_CTL_SB_MASK) == WL_CHANSPEC_CTL_SB_LOWER)
++
++#define CHSPEC_CTL_CHAN(chspec) {\
++	typeof(i) _chspec = (chspec); \
++	((CHSPEC_SB_LOWER(_chspec)) ? \
++	(lower_20_sb((_chspec & WL_CHANSPEC_CHAN_MASK))) : \
++	(upper_20_sb((_chspec & WL_CHANSPEC_CHAN_MASK)))); \
++	}
++
++/* band types */
++#define INF_BAND_AUTO           0       /* auto-select */
++#define INF_BAND_5G             1       /* 5 Ghz */
++#define INF_BAND_2G             2       /* 2.4 Ghz */
++#define INF_BAND_ALL            3       /* all bands */
++
++#define CHSPEC2BAND(chspec) (CHSPEC_IS5G(chspec) ? INF_BAND_5G : INF_BAND_2G)
++
++#define CHANSPEC_STR_LEN    8
++
++/*
++ * Enumeration of 802.11 radio bands
++ */
++enum cp_channel_band {
++	INFF_CP_WIFI_BAND_ANY = 0,     /**< Platform will choose an available band.  */
++	INFF_CP_WIFI_BAND_5GHZ,        /**< 5-GHz radio band.                        */
++	INFF_CP_WIFI_BAND_2_4GHZ,      /**< 2.4-GHz radio band.                      */
++	INFF_CP_WIFI_BAND_6GHZ,        /**< 6-GHz radio band.                        */
++};
++
++static inline enum nl80211_band inff_cp_chan_band_to_nl80211(int band)
++{
++	switch (band) {
++	case INFF_CP_WIFI_BAND_2_4GHZ:
++		return NL80211_BAND_2GHZ;
++	case INFF_CP_WIFI_BAND_5GHZ:
++		return NL80211_BAND_5GHZ;
++	default:
++		return NL80211_BAND_6GHZ;
++	}
++}
++
++static inline enum cp_channel_band inff_cp_nl80211_to_chan_band(int band)
++{
++	switch (band) {
++	case NL80211_BAND_2GHZ:
++		return INFF_CP_WIFI_BAND_2_4GHZ;
++	case NL80211_BAND_5GHZ:
++		return INFF_CP_WIFI_BAND_5GHZ;
++	case NL80211_BAND_6GHZ:
++		return INFF_CP_WIFI_BAND_6GHZ;
++	default:
++		return INFF_CP_WIFI_BAND_ANY;
++	}
++}
++
++static inline int lower_20_sb(int channel)
++{
++	return channel > CH_10MHZ_APART ? (channel - CH_10MHZ_APART) : 0;
++}
++
++static inline int upper_20_sb(int channel)
++{
++	return (channel < (MAXCHANNEL - CH_10MHZ_APART)) ?
++	       channel + CH_10MHZ_APART : 0;
++}
++
++static inline int chspec_bandunit(u16 chspec)
++{
++	return CHSPEC_IS5G(chspec) ? BAND_5G_INDEX : BAND_2G_INDEX;
++}
++
++static inline u16 ch20mhz_chspec(int channel)
++{
++	u16 rc = channel <= CH_MAX_2G_CHANNEL ?
++		 WL_CHANSPEC_BAND_2G : WL_CHANSPEC_BAND_5G;
++
++	return	(u16)((u16)channel | WL_CHANSPEC_BW_20 |
++		      WL_CHANSPEC_CTL_SB_NONE | rc);
++}
++
++static inline int next_20mhz_chan(int channel)
++{
++	return channel < (MAXCHANNEL - CH_20MHZ_APART) ?
++	       channel + CH_20MHZ_APART : 0;
++}
++
++/* defined rate in 500kbps */
++#define INF_MAXRATE	108	/* in 500kbps units */
++#define INF_RATE_1M	2	/* in 500kbps units */
++#define INF_RATE_2M	4	/* in 500kbps units */
++#define INF_RATE_5M5	11	/* in 500kbps units */
++#define INF_RATE_11M	22	/* in 500kbps units */
++#define INF_RATE_6M	12	/* in 500kbps units */
++#define INF_RATE_9M	18	/* in 500kbps units */
++#define INF_RATE_12M	24	/* in 500kbps units */
++#define INF_RATE_18M	36	/* in 500kbps units */
++#define INF_RATE_24M	48	/* in 500kbps units */
++#define INF_RATE_36M	72	/* in 500kbps units */
++#define INF_RATE_48M	96	/* in 500kbps units */
++#define INF_RATE_54M	108	/* in 500kbps units */
++
++#define INF_2G_25MHZ_OFFSET		5	/* 2.4GHz band channel offset */
++
++#define MCSSET_LEN	16
++
++static inline bool ac_bitmap_tst(u8 bitmap, int prec)
++{
++	return (bitmap & (1 << (prec))) != 0;
++}
++
++/* A chanspec (channel specification) holds the channel number, band,
++ * bandwidth and control sideband
++ */
++
++/* chanspec binary format */
++
++#define INFF_CHSPEC_INVALID		255
++/* bit 0~7 channel number
++ * for 80+80 channels: bit 0~3 low channel id, bit 4~7 high channel id
++ */
++#define INFF_CHSPEC_CH_MASK		0x00ff
++#define INFF_CHSPEC_CH_SHIFT		0
++#define INFF_CHSPEC_CHL_MASK		0x000f
++#define INFF_CHSPEC_CHL_SHIFT		0
++#define INFF_CHSPEC_CHH_MASK		0x00f0
++#define INFF_CHSPEC_CHH_SHIFT		4
++
++/* bit 8~16 for Chanspec
++ * bit 8~10 sideband
++ * bit 11~13 bandwidth
++ * bit 14~15 spectral band
++ */
++#define INFF_CHSPEC_SB_MASK	0x0700
++#define INFF_CHSPEC_SB_SHIFT	8
++#define  INFF_CHSPEC_SB_LLL	0x0000
++#define  INFF_CHSPEC_SB_LLU	0x0100
++#define  INFF_CHSPEC_SB_LUL	0x0200
++#define  INFF_CHSPEC_SB_LUU	0x0300
++#define  INFF_CHSPEC_SB_ULL	0x0400
++#define  INFF_CHSPEC_SB_ULU	0x0500
++#define  INFF_CHSPEC_SB_UUL	0x0600
++#define  INFF_CHSPEC_SB_UUU	0x0700
++#define  INFF_CHSPEC_SB_LL	INFF_CHSPEC_SB_LLL
++#define  INFF_CHSPEC_SB_LU	INFF_CHSPEC_SB_LLU
++#define  INFF_CHSPEC_SB_UL	INFF_CHSPEC_SB_LUL
++#define  INFF_CHSPEC_SB_UU	INFF_CHSPEC_SB_LUU
++#define  INFF_CHSPEC_SB_L	INFF_CHSPEC_SB_LLL
++#define  INFF_CHSPEC_SB_U	INFF_CHSPEC_SB_LLU
++#define INFF_CHSPEC_BW_MASK	0x3800
++#define INFF_CHSPEC_BW_SHIFT	11
++#define  INFF_CHSPEC_BW_5	0x0000
++#define  INFF_CHSPEC_BW_10	0x0800
++#define  INFF_CHSPEC_BW_20	0x1000
++#define  INFF_CHSPEC_BW_40	0x1800
++#define  INFF_CHSPEC_BW_80	0x2000
++#define  INFF_CHSPEC_BW_160	0x2800
++#define  INFF_CHSPEC_BW_8080	0x3000
++#define INFF_CHSPEC_BND_MASK	0xc000
++#define INFF_CHSPEC_BND_SHIFT	14
++#define  INFF_CHSPEC_BND_2G	0x0000
++#define  INFF_CHSPEC_BND_3G	0x4000
++#define  INFF_CHSPEC_BND_6G	0x8000
++#define  INFF_CHSPEC_BND_5G	0xc000
++#define INFF_CHSPEC_IS5G(chspec) \
++	(((chspec) & INFF_CHSPEC_BND_MASK) == INFF_CHSPEC_BND_5G)
++#define INFF_CHSPEC_IS6G(chspec) \
++	(((chspec) & INFF_CHSPEC_BND_MASK) == INFF_CHSPEC_BND_6G)
++#define INFF_CHAN_BAND_2G		1
++#define INFF_CHAN_BAND_5G		2
++#define INFF_CHAN_BAND_6G		3
++
++enum inff_chan_bw {
++	INFF_CHAN_BW_20,
++	INFF_CHAN_BW_40,
++	INFF_CHAN_BW_80,
++	INFF_CHAN_BW_80P80,
++	INFF_CHAN_BW_160,
++};
++
++enum inff_chan_sb {
++	INFF_CHAN_SB_NONE = -1,
++	INFF_CHAN_SB_LLL,
++	INFF_CHAN_SB_LLU,
++	INFF_CHAN_SB_LUL,
++	INFF_CHAN_SB_LUU,
++	INFF_CHAN_SB_ULL,
++	INFF_CHAN_SB_ULU,
++	INFF_CHAN_SB_UUL,
++	INFF_CHAN_SB_UUU,
++	INFF_CHAN_SB_L = INFF_CHAN_SB_LLL,
++	INFF_CHAN_SB_U = INFF_CHAN_SB_LLU,
++	INFF_CHAN_SB_LL = INFF_CHAN_SB_LLL,
++	INFF_CHAN_SB_LU = INFF_CHAN_SB_LLU,
++	INFF_CHAN_SB_UL = INFF_CHAN_SB_LUL,
++	INFF_CHAN_SB_UU = INFF_CHAN_SB_LUU,
++};
 +
 +/**
-+ * enum inff_scan_status - scan engine status
++ * struct inff_chan - stores channel formats
 + *
-+ * @INFF_SCAN_STATUS_BUSY: scanning in progress on dongle.
-+ * @INFF_SCAN_STATUS_ABORT: scan being aborted on dongle.
-+ * @INFF_SCAN_STATUS_SUPPRESS: scanning is suppressed in driver.
++ * This structure can be used with functions translating chanspec into generic
++ * channel info and the other way.
++ *
++ * @chspec: firmware specific format
++ * @chnum: center channel number
++ * @control_ch_num: control channel number
++ * @band: frequency band
++ * @bw: channel width
++ * @sb: control sideband (location of control channel against the center one)
 + */
-+enum inff_scan_status {
-+	INFF_SCAN_STATUS_BUSY,
-+	INFF_SCAN_STATUS_ABORT,
-+	INFF_SCAN_STATUS_SUPPRESS,
++struct inff_chan {
++	u16 chspec;
++	u8 chnum;
++	u8 control_ch_num;
++	u8 band;
++	enum inff_chan_bw bw;
++	enum inff_chan_sb sb;
 +};
 +
-+/* dongle escan state */
-+enum wl_escan_state {
-+	WL_ESCAN_STATE_IDLE,
-+	WL_ESCAN_STATE_SCANNING
-+};
++enum nl80211_band inff_chan_band_to_nl80211(u8 band);
++void inff_chan_encchspec(struct inff_chan *ch);
++void inff_chan_decchspec(struct inff_chan *ch);
++void inff_chan_update_bw40_channel_flag(struct ieee80211_channel *channel,
++					struct inff_chan *ch);
++int inff_chan_enable_bw40_2g(struct inff_cfg80211_info *cfg);
++u16 inff_nl80211_chan_to_chanspec(struct ieee80211_channel *ch);
++void inff_nl80211_chan_get_bwcap(struct inff_if *ifp, u32 bw_cap[]);
++int inff_fill_band_with_default_chanlist(struct wiphy *wiphy,
++					 struct inff_if *ifp);
++int inff_nl80211_chan_populate(struct inff_cfg80211_info *cfg,
++			       u32 bw_cap[]);
 +
-+/**
-+ * BSS info structure
-+ * Applications MUST CHECK ie_offset field and length field to access IEs and
-+ * next bss_info structure in a vector (in struct inff_scan_results)
-+ */
-+struct inff_cp_bss_info {
-+	/* byte length of data in this record, starting at version and including IEs */
-+	u32    length;
-+	/* SSID length */
-+	u8     ssid_length;
-+	/* SSID of the access point */
-+	char   ssid[IEEE80211_MAX_SSID_LEN + 1];
-+	/* MAC Address of the access point */
-+	u8     macaddr[ETH_ALEN];
-+	/* signal strength */
-+	s16    signal_strength;
-+	/* channel number */
-+	u8     channel;
-+	/* WiFi band of access point */
-+	u8     band;
-+	/* Interval b/w two consecutive beacon frames. Units are Kusec */
-+	u16    beacon_period;
-+	/* Capability information */
-+	u16    capability;
-+	/* Length of the IE.  */
-+	u32    ie_len;
-+};
-+
-+struct inff_scan_info {
-+	struct wiphy *wiphy;
-+	struct cfg80211_scan_request *request;
-+	u32 bss_count;
-+	u8 *bss_buf;
-+	u32 used_buf_len;
-+};
-+
-+struct escan_info {
-+	u32 escan_state;
-+	u8 *escan_buf;
-+	struct wiphy *wiphy;
-+	struct inff_if *ifp;
-+	s32 (*run)(struct inff_cfg80211_info *cfg, struct inff_if *ifp,
-+		   struct cfg80211_scan_request *request);
-+};
-+
-+s32 inff_dongle_scantime(struct inff_if *ifp);
-+
-+s32 inff_run_escan(struct inff_cfg80211_info *cfg, struct inff_if *ifp,
-+		   struct cfg80211_scan_request *request);
-+
-+s32 inff_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request);
-+
-+void inff_escan_prep(struct inff_cfg80211_info *cfg,
-+		     struct inff_scan_params_v2_le *params_le,
-+		     struct cfg80211_scan_request *request);
-+
-+int inff_init_escan(struct inff_cfg80211_info *cfg);
-+void inff_deinit_escan(struct inff_cfg80211_info *cfg);
-+
-+int inff_cfg80211_sched_scan_stop(struct wiphy *wiphy,
-+				  struct net_device *ndev, u64 reqid);
-+
-+int inff_cfg80211_sched_scan_start(struct wiphy *wiphy,
-+				   struct net_device *ndev,
-+				   struct cfg80211_sched_scan_request *req);
-+
-+void inff_scan_params_v2_to_v1(struct inff_scan_params_v2_le *params_v2_le,
-+			       struct inff_scan_params_le *params_le);
-+
-+s32 inff_notify_escan_complete(struct inff_cfg80211_info *cfg,
-+			       struct inff_if *ifp, bool aborted,
-+			       bool fw_abort);
-+void inff_scan_config_mpc(struct inff_if *ifp, int mpc);
-+void inff_abort_scanning(struct inff_cfg80211_info *cfg);
-+
-+int
-+inff_cp_scan_init(struct inff_cfg80211_info *cfg);
-+int
-+inff_cp_scan_start(struct inff_cfg80211_info *cfg, struct cfg80211_scan_request *request);
-+int
-+inff_cp_scan_event_handler(struct inff_pub *drvr, struct inff_cpevt_scan *result);
-+void inff_cp_scan_abort(struct inff_pub *drvr);
-+#endif /* INFF_SCAN_H */
++#endif /* INFF_CHAN_H */
 -- 
 2.43.0
 
