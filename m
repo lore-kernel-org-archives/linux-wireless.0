@@ -1,147 +1,107 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9300E30EF77
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 01:01:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780AE343D9D;
+	Wed,  2 Sep 2026 01:22:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788310885; cv=none; b=unb0lElX6LGBWFSY0a4x7jKacKLk7xrbs1gHXIKXIgdswiuBe+ze2xbKQzvPu+oWJgQ2ETATD3yYzodvdkpse1xGl2YlWzJGhsyggoFOaXILRu+2BV8KH5OTXQLiXzxXT50pw5Qhoj9iiJ7yPNHmIVRaby8Ws2LIK1mwo9Me4tQ=
+	t=1788312147; cv=none; b=oXwd8ghtZ2rIZqkRLl89UMgu0Sj4e6fNgEXcQKmljtCtVzeEVRmSNdFnXKEs06I1XrwQ+BbROHNYk5zSd+wBcEpsIh9W3TmbBnAA0Wsazyo8OIAQCD/ELXd/jkS0fPDNo/bEs4MtD1MSgXvBHMKqaaf6PaCaBOZbOVa14dQGTf0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788310885; c=relaxed/simple;
-	bh=Q6tfhjQHAk22vFyZ3PtUbqriLWpDS8KohLhNM5fxKrc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lGQGkXEBphFZO5KK24fbmUapEktWhy9FExGPYN0Rmg3hxBgoCjmEUhVWmBLvIKPP7SdkXRRANnOdr+cv7hSbRUyuUYcvjFGbXCsRdBupfCg43Y/TfQO1nmmQ8GXUMolO7TsATywv0YwiRivGWHV3LReklxeOXN5ni6o1+GlJr3Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QQkAAR1B; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1788312147; c=relaxed/simple;
+	bh=5PnUx2nE3UNmaLS+bLdkhV1ANeaCBATNyLWNFwTT4KQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=RWPna/7jvwnWKlTFWVIOikblzT3jwYbGAsbothl7qG5DJ2jUvQh0VkL9x+S/PKoySjkLfJv9q26Dup1WIY0SCL5bD9XbB5R+TibK7oyAfv9EEx1zGJrkK/ouvG7KS8zFD0ee69rLSt6u74J//dDh34lEwXf8xLH6xcwQNJ859HI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=akhgtygh; arc=none smtp.client-ip=211.75.126.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QQkAAR1B"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2d58efc7356so5083045ad.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 18:01:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1788310883; x=1788915683; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=mIsvf/pMgFR1o4nDemQvggnheWLtStmBokvR+GjxbWU=;
-        b=QQkAAR1BA9GLVIQtGv+SlGTkRoBZpcc63+Ys//eGIHd5v2NHhRRp0tReiibNER1aUQ
-         fcBUDTydglo/Hi/f/63FucHq8b5+dbIouzLKex5PaD/kq97z5aGuGrQQU5ZmVvG5xzOP
-         pmUogVMBEsNnmtSTyYuSPwohLW+r/EK4VCAhKIR8/OMYMm+iwGGwVSvVl90B8dWYfAzp
-         xaYJDM8V08VxfmmHm/37rETWdzYZ1tSNA3CyjhEhpGIwB22xPJ7D0sZRfLqkHjlEVBDb
-         kyN4bggKZz4zMvQtybMN8OpvCiFX6uGkDvDfpupR4wUX4igQdofnMh8wHTp+gqMCcCIm
-         C9nQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1788310883; x=1788915683;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mIsvf/pMgFR1o4nDemQvggnheWLtStmBokvR+GjxbWU=;
-        b=CPPi2XxiuAvx1jTce5Su88ovs6c6ty0WFzZM+9tGYMna7NXRl6kL/9De1IULiYlVp9
-         6qJj8LOWSFU/kVbynrIReR7lZdnj9Dne9ZiyknmHAv6w5Ukrk/AS/+epZOHQdfAju5Rf
-         W6S/HLIy2e2507nFZ8dWtLEKwxcfQacqid+dZxubxOTHOS1yRAVE+Hxo+54zJtRSNxI6
-         guCgHQqzCUj8OgT+L77sZwwx1LVsVe/gVazpsxQeBg7bgfHRc/X8BAX1RV+xGDWMB3lA
-         +NgGSwk7TJchCtmOEc2KqiltCCGaWHcXydP6Y1nQ5yUBeqzT7tO87Y47umHC6Wli4ZTx
-         8cEA==
-X-Forwarded-Encrypted: i=1; AKwUvBxYxozm/p6umwDQmUshCuqehAsAHfyAALce50xuV2MATrLdfMnXOJblT9Qg1J/Fw4Klk9gn4iIWTZm/3Eo38A==@vger.kernel.org
-X-Gm-Message-State: AFuF++lbyBpB+3fLILFDHJp0kWbNtWapFqeuuXAIpnnr25y7Mui0VY+8
-	w2d4OcV85dhdy0gJ7cmp+cW7R5uYZw6I9+pnEBrO356cqomygADwBiV3
-X-Gm-Gg: AYBFou3JDvWYj4n4HZyiBNdyfp/s0wUc+zrLWPkMZp/jqjO5i+ShJQy4kb0eOMfWJWa
-	5JzHcTUFBHJkL0K1Qf6rStNI0SDNdSXKg8jIqnHGXtduaAgppJkJK1+XS71aN4jbhb7WsucCpxs
-	ZotzgJJWNVmSWkyzKacLQTbbQYH/kWglJmSHFVk+p9tlBfPPQIGeR4WSoK3IrCw2TJouIOaRJQn
-	O8ydYfoOdLsCvV9ZCiobUA/gYxwgPGl+/3OzFVchMijsBu28yENlu2o5Y9D5T8ndgMg3MgpwA6d
-	sZfq6gL9VzZtcfDpUlnvWTszeMVHpp3hhB4RvmKR5+iY2c/y02t5vyrQ47FNH71Uu388S2nPsVn
-	jb0tmQEz5MWlt2WVj2dKXCzyMj1v917N7boLHml8B7IA//TTPzvMpTAzs/16HydW/bqVGIVCLAU
-	cSuREnTg9zQtU+JtHAW3NfX5F1wRl1aMkXnN0lWph+ffsnL4bWOaCffD2Cc9606qu8/lcwc4Szp
-	S7MLq3l/OXvP3Vt
-X-Received: by 2002:a17:90b:17cd:b0:38e:67e1:15b with SMTP id 98e67ed59e1d1-39aededf539mr1313470a91.6.1788310881957;
-        Tue, 01 Sep 2026 18:01:21 -0700 (PDT)
-Received: from localhost (211-75-139-220.hinet-ip.hinet.net. [211.75.139.220])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-39ae0dfe6b6sm2164002a91.1.2026.09.01.18.01.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2026 18:01:21 -0700 (PDT)
-Sender: AceLan Kao <acelan@gmail.com>
-From: "Chia-Lin Kao (AceLan)" <acelan.kao@canonical.com>
-To: Jeff Johnson <jjohnson@kernel.org>
-Cc: Vignesh C <quic_vignc@quicinc.com>,
-	Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>,
-	Mahendran P <quic_mahep@quicinc.com>,
-	linux-wireless@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wifi: ath12k: fix NULL dereference in hw scan cleanup path
-Date: Wed,  2 Sep 2026 09:01:17 +0800
-Message-ID: <20260902010117.3225320-1-acelan.kao@canonical.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="akhgtygh"
+X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6821MFwtC2212040, This message is accepted by code: ctloc85258
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
+	t=1788312135; bh=yh0oxiqUtWIyAs+sQaX50i8WERvCzlu5W42z4mfDHEY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	b=akhgtyghRz8lZEqKjFgjjvIkF/+p0nrXZtk7XkjnZ3yBXOH4HcVlxNWEWsVzUQ81B
+	 cr1jPGotznhrZaoUHMM350Y1OPbBzXRv8bhwu6PgxHZ4aewWxBcQ96CQ4oFcnfzt1k
+	 gxy0au0bVx/eJ8G7904fn0pXgN7rS6wtHkEhAI1/mxGYH/BAqNXZKhpYqT5RnY4woe
+	 56e6jYCP48JjAYzMliK7GBOaZbIAYDaV37DxgE0inUvz0e9qVPCVqkFtmVc5UZUpnl
+	 0N5QAAFE8BJjkLjthXvwbn5XmKMKLgQSMN4S00XYomD6A8k46oWziIv9uMyzf/Upvf
+	 EVf53R/969TSQ==
+Received: from mail.realtek.com (rtkexhmbs02.realtek.com.tw[172.21.6.41])
+	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6821MFwtC2212040
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Wed, 2 Sep 2026 09:22:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw (10.21.1.56) by
+ RTKEXHMBS02.realtek.com.tw (172.21.6.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.43; Wed, 2 Sep 2026 09:22:15 +0800
+Received: from RTKEXHMBS06.realtek.com.tw ([::1]) by
+ RTKEXHMBS06.realtek.com.tw ([fe80::126f:59ad:658:674d%10]) with mapi id
+ 15.02.2562.043; Wed, 2 Sep 2026 09:22:15 +0800
+From: Ping-Ke Shih <pkshih@realtek.com>
+To: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>, "linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] wifi: rtw88: use firmware MAC address as fallback
+Thread-Topic: [PATCH] wifi: rtw88: use firmware MAC address as fallback
+Thread-Index: AQHdOg/rKigchPTsY0+A+iPeLR6Lhba6fQxQ
+Date: Wed, 2 Sep 2026 01:22:15 +0000
+Message-ID: <4d1e5555bad84badba213f11b431c762@realtek.com>
+References: <20260901124551.3921506-1-raspberrykan@stu.hqu.edu.cn>
+In-Reply-To: <20260901124551.3921506-1-raspberrykan@stu.hqu.edu.cn>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ath12k_mac_op_hw_scan() walks ahvif->links_map in its abort path to
-tear down the scan vdevs it may have created. It skips link vifs which
-are no longer present:
+YuChia-Kan <raspberrykan@stu.hqu.edu.cn> wrote:
+> Some devices provide the Wi-Fi MAC address through firmware instead of
+> storing a valid address in the chip efuse.
+>=20
+> Try to read the MAC address from firmware before falling back to a
+> randomly generated address.
 
-	arvif = wiphy_dereference(hw->wiphy, ahvif->link[link_id]);
-	if (!arvif)
-		continue;
+Please share the board and WiFi chip you are using.
 
-	ar = arvif->ar;
-	if (ar->scan.arvif == arvif) {
+>=20
+> Signed-off-by: YuChia-Kan <raspberrykan@stu.hqu.edu.cn>
+> ---
+>  drivers/net/wireless/realtek/rtw88/main.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wire=
+less/realtek/rtw88/main.c
+> index cd9254370fcc..b9d8e0f5d15e 100644
+> --- a/drivers/net/wireless/realtek/rtw88/main.c
+> +++ b/drivers/net/wireless/realtek/rtw88/main.c
+> @@ -2060,8 +2060,12 @@ static int rtw_chip_efuse_info_setup(struct rtw_de=
+v *rtwdev)
+>         efuse->ext_lna_5g =3D efuse->lna_type_5g & BIT(3) ? 1 : 0;
+>=20
+>         if (!is_valid_ether_addr(efuse->addr)) {
+> -               eth_random_addr(efuse->addr);
+> -               dev_warn(rtwdev->dev, "efuse MAC invalid, using random\n"=
+);
+> +               mac_ret =3D device_get_mac_address(rtwdev->dev, efuse->ad=
+dr);
 
-but it does not check arvif->ar, which is cleared in several teardown
-paths while the link remains set in links_map. When firmware crashes
-and the reset worker detaches the link vifs from their radio, a scan
-request arriving in that window fails, enters the abort path and
-dereferences a NULL ar:
+mac_ret isn't declared.=20
 
-  BUG: kernel NULL pointer dereference, address: 0000000000001508
-  RIP: 0010:ath12k_mac_op_hw_scan+0x170/0x8a0 [ath12k]
-  Call Trace:
-   drv_hw_scan+0xa0/0x160 [mac80211]
-   __ieee80211_start_scan+0x305/0x7b0 [mac80211]
-   ieee80211_request_scan+0xe/0x20 [mac80211]
-   nl80211_trigger_scan+0x610/0xa20 [cfg80211]
-
-0x1508 is the offset of scan.arvif within struct ath12k, reached from
-a NULL base.
-
-The oops happens in a task holding wiphy and rtnl locks, so it takes
-down the rest of the networking stack with it: subsequent scan, netns
-and NetworkManager operations block indefinitely in D state.
-
-Check the radio before using it, matching the existing arvif check
-directly above and the arvif->ar check already used elsewhere in this
-file.
-
-Fixes: feed05f1526e8 ("wifi: ath12k: Split scan request for split band device")
-Signed-off-by: Chia-Lin Kao (AceLan) <acelan.kao@canonical.com>
----
- drivers/net/wireless/ath/ath12k/mac.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath12k/mac.c b/drivers/net/wireless/ath/ath12k/mac.c
-index 99bf5cf79d102..64a636f3ae3c6 100644
---- a/drivers/net/wireless/ath/ath12k/mac.c
-+++ b/drivers/net/wireless/ath/ath12k/mac.c
-@@ -5821,6 +5821,16 @@ int ath12k_mac_op_hw_scan(struct ieee80211_hw *hw,
- 				continue;
- 
- 			ar = arvif->ar;
-+
-+			/* The link vif may have been detached from its radio
-+			 * while this scan request was being processed, for
-+			 * example by a firmware recovery running concurrently.
-+			 * The link is still set in links_map in that case, so
-+			 * the radio has to be checked before it is used.
-+			 */
-+			if (!ar)
-+				continue;
-+
- 			if (ar->scan.arvif == arvif) {
- 				wiphy_work_cancel(hw->wiphy, &ar->scan.vdev_clean_wk);
- 				spin_lock_bh(&ar->data_lock);
--- 
-2.53.0
+> +               if (mac_ret) {
+> +                       eth_random_addr(efuse->addr);
+> +                       dev_warn(rtwdev->dev,
+> +                                "failed to get valid MAC address, using =
+random\n");
+> +               }
+>         }
+>=20
+>  out_disable:
+> --
+> 2.53.0
 
