@@ -1,188 +1,298 @@
-Received: from outbound.mr.icloud.com (mr-2002f-snip4-4.eps.apple.com [57.103.68.237])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9192730AD1A
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 04:14:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.68.237
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA1933D4E2
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 04:53:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788322461; cv=none; b=b4cZcMbnvIDPrys6zvfl56GOQBbe42YTUZF59OVT3PyhdfMucwljka2ic5H5RCKFUumk9rA8ahi2uar1Lnm6aKLWxExvUB/617tzLSo/aa0gWP7IiUXf2z6mJUEyeyNCRP880C7HCjFjvdxd8JQVmld1AZnWQ4GQmkdnXHlziv0=
+	t=1788324783; cv=none; b=IyRHtRdi4+Bp22ti8Kx836mGzq9dtohpyQ1o+DTwyrtwOoOxsnFNdPnzOPBXF+oq5hrjQLrz3Rn1cZiNgHKNHd49sM++bHAwLaLRst4618VK3Nn51W0WTVFMAAZu7vu8155ARAthtvj0egLReSo+plfFQTHY6usGAp4Y/Qb4bkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788322461; c=relaxed/simple;
-	bh=ymerjc2ZZeZpVB3H/xBuFEeF15PcKTSyoAHc8LSsCj8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iH/ihmU2xlfCHmnmHnUlchiXT/1D/ircPaQ3SwPspvyPpnkTUTifXC7lurxCKEsGPk/OVbnp/hsEH3soSbpKJlPJ0rk5A4PeGn5C4uDwTjBuZxBbupF5cSoeh3X8jtSOdERMnbQ85Oy4+AVn/07F1msbGO5yzgDvAB5IFmRWgBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mugops.com; spf=pass smtp.mailfrom=mugops.com; dkim=pass (2048-bit key) header.d=mugops.com header.i=@mugops.com header.b=QhTqjz+a; arc=none smtp.client-ip=57.103.68.237
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mugops.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mugops.com
+	s=arc-20240116; t=1788324783; c=relaxed/simple;
+	bh=lzwBvj5rCRwC9vpohTFNC3A3Mdt/eIKsHDElx/0cUzk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IvI7ObNLPNrXKyqDPQnAPw8CRDiKepwEdcNiAy99lAQzTejt8ziT7KyryULKmvzO0kIxAgKzd/0ESNAqghHoZwaEz+e/RHxxmiMwWMblzMJ2WzXtqg4yAaFenDIOHn2UZsBOCphoOiemPWPtBB3I6rRKOHNzujqkiLBXy14FirY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=U4UyBEj7; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LaL1zUzh; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mugops.com header.i=@mugops.com header.b="QhTqjz+a"
-Received: from outbound.mr.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-2a-60-percent-9 (Postfix) with ESMTPS id 6DD5A1800105;
-	Wed, 02 Sep 2026 04:14:16 +0000 (UTC)
-X-ICL-RepId: 01a06053-230f-77a1-a2d5-4ca82b34aedb
-X-ICL-Out-Info: HUtFAUMHWwJACUgBTUQeDx5WFlZNRAJCTQhKB0MDXxxBAEAdVQFLVxQEEFoJUgQcA0wVWi1aHlUfSQsdDlgGEhZdRV4YUARCAxcbXAAXGVFNAVhbCFsEDx9MDFECQgVWXlQKHQRUB10FXVZQAlpLQgRLRWhcBVwcQBdIHV9qS1YUBBVGClgbQV5aF15NWgJWTQVKA18BWwtAC0gHXARYC14OTgVYGlofGFAcVgIZGEcdUDheGFAEQgMXG1wACUtGCUkdDg5CGEYfVCdXAloKWx4=
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mugops.com; s=sig1; t=1788322459; x=1790914459; bh=P8bTnWEyJUxXVkFvR/GQLqNyBTi2JLeqpEghmiKgmik=; h=From:To:Subject:Date:Message-ID:MIME-Version:x-icloud-hme; b=QhTqjz+a5OIxf1uXj0MzdfI3OhbmiDos+yboZcNjoKDSoyzWzKZZMpA9FTviOk5fDXeRGnLWpzEZRP4zDHstrYBcSpdXjDCjKHwfqIt8YiuRhF/ywYeH5pZUNNKCRMETKtaDik7FcAfbO/LalxiCH3XkEcdR3n/l1GBzYRtyLzZRKztHWvqSY36U7/yg37B7eCvUx2eMBvuI5z4HH1/hfIIfBxpgb5xBoz1+M7+qbxy9GaM75Q3ZaXhYN4Ad9iXigq+S2p/oQDbH0+qBOc5VVSPNF73nNmMdaWcPD8nrGtKckF4BzzjeN+kguFJCK3asHtrKMNS530oS1Sa747RpjA==
-mail-alias-created-date: 1773467597841
-Received: from localhost.localdomain (unknown [17.156.200.36])
-	by p00-icloudmta-asmtp-us-west-2a-60-percent-9 (Postfix) with ESMTPSA id 5B836180014F;
-	Wed, 02 Sep 2026 04:14:14 +0000 (UTC)
-From: Hideo Sumi <hideo.sumi@mugops.com>
-To: Manikanta Mylavarapu <quic_mmanikan@quicinc.com>
-Cc: Jeff Johnson <jjohnson@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	linux-remoteproc@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	ath12k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: IPQ5332 multipd: missing text PD level and qcom,rproc ownership
-Date: Wed,  2 Sep 2026 13:13:37 +0900
-Message-ID: <20260902041339.7665-1-hideo.sumi@mugops.com>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="U4UyBEj7";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LaL1zUzh"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6822ZO5v173618
+	for <linux-wireless@vger.kernel.org>; Wed, 2 Sep 2026 04:53:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=; b=U4UyBEj7NkKGWdyG
+	q1Mw86N1eMYbj6BtBltl9J7A3Z+rgCHPb119lZGYX+tbBY/HGzzj3TpPCEBcetXJ
+	4XHJtslfDYoCb3ffmVQ1PqrqP5lWLoidDLlug+RFQ8pZQ03HVcOwjQTD5QWaU5en
+	3UxryAXhnO3d6IlcYOZedDq9+5OwmRb3zyi3c3dgniofwggkfUMXuJ7hfiBeWg0a
+	wHvcYZnf0YVm352Hgqbz8R7aioJPAdQUFgTWonWPAfzzCd4xJw9yEpq2F9nMje8n
+	7hz+fD5fMjARQL6AApAJ7wgacICECaAMu452SzxLIDvqWIs+YU0ZbsB9L/oM2rxu
+	Rn/CFA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4geb560dch-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 04:52:59 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-398ba5404d2so915666a91.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 21:52:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788324779; x=1788929579; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=;
+        b=LaL1zUzhlhZYmx99JcqRHY1Au9CYg8qCu6FnA9fB+knjWPAc/AlrOgqzT7HdWj5Twi
+         bxTZF9hby9JBZGslTp4QZ4n3RQ6Q0cHUpxcIzLD3bVDeZTA3CDEkz0MqfhgR8Dw2Lu/A
+         eb5b2+8yG/QDcSJPyKFXsISF6eSG+e3IoZ5bMrmI8VSUvqAFhCKenuySBGdkSjRPWNUI
+         ZNaxqJ1IfONRlhZ5Dt4wHdJwSimMB495ROkKdOKFospGBzShKiecBM7IOFd/m8wu655y
+         kyczeuR/m/YqkmdqKLzjBi3fRZykOKcQKRmTBEVB2P39vNaz4udyLC4ru0C8DvDpmjzJ
+         t5kQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788324779; x=1788929579;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=IpYFqn52MzyyerSAhaJx9+MNvz9oY9L3KfTClhX+lTk=;
+        b=jlBvB/le1o//banVs2vVNDSseCxhKanYjbwggcmE1L6W+LCwxzXKuJ+JTApInj0G4y
+         jpgR3e0ezFgh7tfLr3awyrWLVOjqKt5dourElRfQgCcKOUEajtrWheQhYLUXd5NXqopy
+         CcrGBmkc9icPaY+kcymDYI7nrczsk/Mo9GmyDo+O7dzbHhx8IWb39scACHmNYOWPBMG+
+         450Vk1o5nV0aR1MxA78+b046jNSlx93uEPWuMdMi83BH3hfSaPsneOcacOp/CKlTouk9
+         gs+mvjWFTg0/GXevCkdsQVsxxzDRIl8Bb++W4X+64JeZ/38PQUswpj4svdGTQxxN8/g3
+         +RGA==
+X-Forwarded-Encrypted: i=1; AKwUvBzjWm8nLdrfhIZj3RMpCJ9hBAJ+6euykgr/XQmv5shb2B+SeStoC1Iv+G9CgPsNEQKgV0dtE/3xQYy5699acw==@vger.kernel.org
+X-Gm-Message-State: AFuF++nBJ7Vs0XvA6nlSe/qhKqDQ7+KZUKBmFwtcywJBGmvdvn+r7HKk
+	Sowzo63Y1x22eZclCv+mrXM/NYoRc7lgfrjxwOpNRDD+Y8Ih33SmuYRE9q4qxf4b1K7RAR6ZrpP
+	6CKdL+1LziQu16xLuswZh8FMlssbdBnaG12pQx398PLs2+IOFIgLvfDEDSevVjBdUXmhhvA==
+X-Gm-Gg: AYBFou3qqyO6ddmWdZ7fsnAmET5/ZKRQJ7NAk9GU4snkAOzazkCkjhRVgxxSnWucGad
+	QEGDiAVSU9POaP1I65SOYvl8e3h8pNJ/KgpvibeeX2C7V2frsOVyFGIp+AKuofU6zjgLDgEERWV
+	S/AMZCs5XxynSxexNl/Od2w/N5cerlyavY7UUHn8miZo8oNwcG31R9P07ujcpnb2Dpf2qmwyouB
+	4YfdD4EEQd7MX9Qf6XelZu3sRsiPKN8naUxANyu+FeBKCz5ti4OOolBTAIThvZt9LjzZIiMMJFE
+	K4VQKpr+PEwozoCmYiO83GrPA0iBT1gNJpCPaXICvpWlMI7wyC0N4f5U0stxR9+aHH8SmJ7cPvm
+	mJcIf6h4cce15EBjzCQzpO4nKa4J0Y3up
+X-Received: by 2002:a17:90b:35c8:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-39aedf43130mr3258306a91.10.1788324778572;
+        Tue, 01 Sep 2026 21:52:58 -0700 (PDT)
+X-Received: by 2002:a17:90b:35c8:b0:393:194d:5366 with SMTP id 98e67ed59e1d1-39aedf43130mr3258234a91.10.1788324778096;
+        Tue, 01 Sep 2026 21:52:58 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-14310adaeaasm1068788c88.10.2026.09.01.21.52.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Sep 2026 21:52:57 -0700 (PDT)
+Message-ID: <5c3f1611-275e-4664-b3e2-748da6d210ed@oss.qualcomm.com>
+Date: Wed, 2 Sep 2026 10:22:51 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: MF4VUnUysPfHYYGpCoEx83kFLF4BZ9nG
-X-Proofpoint-ORIG-GUID: MF4VUnUysPfHYYGpCoEx83kFLF4BZ9nG
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDAzNSBTYWx0ZWRfX7n6qUbazuRZl
- +L+8OD54ht7f6JQy6WEzJtx5RTIKXwy7SVhuRYQweVAlLf7Z3oWmPJn0NdU1a0VqgDaaIfeuQGz
- h+4GGtaWuWwMVyFQBP3AcqQ0p7bsPAykRIlaTpRdgYJa9in4vkAE4YSQvd/p2srcoBKTUWyQLb+
- Oo/X8qECti3ppUGdXMmXAF2jzg858KfkaoQeLKRsweQxiPeoKIEBQfcX+GWetd3Yjo2Zp69/s63
- Rmdsd+A3e6cELdblXSEM0cLXJ6F9Gi/j2qMIP4XseTexehAIOJSpyvdnTHWKGNbrggAPbiisVPL
- vaYTa1h7nn9Q7i/ypGifMqzTpYSg5E1wt/JW92OK/NXb0KPCBQ37UBa9EA1RLA=
-X-Authority-Info-Out: v=2.4 cv=cNvtc1eN c=1 sm=1 tr=0 ts=6a97a299
- cx=c_apl:c_pps:t_out a=9mRn2PO/+PIrVdEbaIuMPg==:117
- a=9mRn2PO/+PIrVdEbaIuMPg==:17 a=VdqzKS8jKosA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=_vlfWRWgPTq3-XICB4gA:9
-X-JNJ: AAAAAAAB9YZqR8kp5r5nOFOn+L6opk//pkNHto4NurxhPhL4HzjX3OPidzx+ODGkCRBvivBhZo9SDbcwvx5OhykJQ+220XH7S3pGPAro/hlAThibpKjGOaVEUrSwV5jEq3q/H96f+8CvkwlrIQHZbEEKfeA4Y5dZ9whtX/ensqnSc5Bf49zfkbLLz0GxXz1QJkoStb2Rrc0wXlMOBE9Pno441pKeDiD5ZDffdb63IALuKhMLOtlXOS702wuAEezPrHXRoBbfurhaOBKzoWKEQ2WGnq63+lgbhyoSPlAoKG+4G/GWRNkLhPL9XGXgYfoK7HKF4ErV7ZLkacsdBg/SSGkAZht46q/U6ib1vs29YqgiFRvNqpwptG2tY2DppPYTyp9UyoeJG22ILqngy4SEiDBXBtGSChHHM+ayBjbl7OQDqeBfHNEm5ngxt5iQhFwRhvqak08T6mIqCBq9vTatFLXFGk7D/RxQbH1kE50HSB8XOrkW3+mgu6cT/CjP0GoK+iu3CgHQEKmAzmF5u3JtRphUqcTRFhvuzZCnstRx3ONe5uCWaDoQVeXqSxr3HP6v4VwiYEAPiIJxTajwkPQQQJH7vBedHlHLzm/GWYohEWjjbPKe/L96DHRpKm4luSyw0zH51hon6ULXyNwOzZb8EHZZfNbpi9DQi3xDeH+Girq3TBqk4crUjzch+pIlRHDKvDgWUtZN3R5AdDDY/Pm2xKbLV2nVSm12zBrCNMA31ClwpBEJambZtrsaToXbzi4gP2wVUWy7UUXLwMaUfZ7osNB/zot+Xgdm4wCIo/2w26lH6EPQCtdOW+cqrFgtyTsjZDX+c6FQ16fvh8wBO4gMnnpZul8KlCW6D0InkPUDGxSyZ+XWyImypA/oVE3fvoQ4raaMRTXAM2Gn4TNP1jpV5mOlILItvEOVLAOno85ejxXTeX7Dhz7NVa2rZKVWCnUe0SwGIWM4JLP911yUmQpSO1DC5IDLpIL
- 8rH0pxgk1JX33bp+u5k+BrOYH8Gk18p/wrYMnANLbV2Id90u017X/SYihtIHmwXnpjgZUgUip8BwuP8SFQN2tkWpZrK4/YhnzFdi562Un+EOgGECmx6XHF8fDOoPrMpMhHOLObOJ1Zn+9uALju6Kbx4Eykd3SU6rMR533TzmASLQKiZYfaCHyPWCjdNQhovDUnXWKk+5bxj/qQg+PoIuG1RIhbnZqyxRKTnnhfdo2h2sJXlgZSKBW6ODNVPY0lIEB9Z2lRVfd0UwZwXET7L/AzKM=
-
-Hi Manikanta, all,
-
-I have been bringing up the WiFi subsystem on an IPQ5332 board using the
-multipd remoteproc driver (qcom_q6v5_mpd) together with the ath12k AHB
-backend, on 6.18.44. Two things came out of it that I could not settle
-from the code alone. Both look structural rather than like mistakes on
-my side, so I would rather report them than sit on them.
-
-Caveat up front: I am running vendor (QSDK) Q6 firmware, as there is no
-upstream firmware for this part. If either answer is "that is a
-vendor-firmware-only concern", that is a perfectly good answer and I
-will stop there.
-
-
-1. The root PD does not boot without a text PD level, and the binding
-   has no way to describe one
-   ------------------------------------------------------------------
-
-With the DT shaped as the binding describes -- a root PD with user PDs
-pd-1/pd-2 directly underneath -- the root PD never reaches a usable
-state:
-
-  qcom-q6-mpd d100000.remoteproc: fatal error without message
-
-No further diagnostics, and the user PDs never come up.
-
-The vendor DT has a level between the root PD and the user PDs: a text
-PD (compatible "qcom,ipq5332-mpd-upd-text") that owns a separate
-firmware image, with the user PDs as its children rather than the
-root's:
-
-  q6v5_wcss             qcom,ipq5332-q6-mpd        q6_fw0.mdt
-    text-pd             qcom,ipq5332-mpd-upd-text  q6_fw3.mdt
-      pd1                                          q6_fw1.mdt
-      pd2                                          q6_fw2.mdt
-
-Once I added that level -- a text PD node with its own firmware-name,
-the user PDs reparented under it, and a small driver change so that
-q6_register_userpd() recurses and the PAS ID is derived from the node
--- the fatal error disappeared and the whole chain came up:
-
-  remoteproc remoteproc2: powering up pd1
-  remoteproc remoteproc1: powering up text-pd3
-  remoteproc remoteproc0: powering up d100000.remoteproc
-  remoteproc remoteproc0: remote processor d100000.remoteproc is now up
-  remoteproc remoteproc1: remote processor text-pd3 is now up
-  remoteproc remoteproc2: remote processor pd1 is now up
-
-The ordering is the interesting part. "powering up" runs child to parent
-as rproc_boot() recurses upward, and "is now up" comes back parent to
-child as it unwinds -- which is exactly the parent-first dependency the
-multipd model exists to express. The text PD simply was not one of the
-levels it can express.
-
-So: is the text PD level deliberately out of scope upstream -- because
-upstream firmware for these parts is expected to be packaged without a
-separate text image, say -- or is it a level that should exist and is
-not there yet?
-
-I ask because if it is the latter, the binding as posted cannot describe
-this hardware at all, and that seems worth settling before it lands. I
-have a working change against qcom_q6v5_mpd.c and would be glad to send
-it as an RFC. I did not want to send it uninvited if the omission is
-intentional.
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/6] PCI/bwctrl: Set host bridge OPP and optionally
+ disable ASPM around link retraining
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi
+ <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        qiang.yu@oss.qualcomm.com
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-1-6dea79786b37@oss.qualcomm.com>
+ <atba2336nxz566wvbfrvclbx7yyma5elhnojb7ozz4ku6dk3q3@c2wa24laiqyd>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <atba2336nxz566wvbfrvclbx7yyma5elhnojb7ozz4ku6dk3q3@c2wa24laiqyd>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA0MSBTYWx0ZWRfXwyxTd6OtQHMG
+ EPArTPL2ZM60/lAlknZ212NvdN+B8KF9sqV6MdCyhxeUYV2QIwlC3PKFX5KovPj8nnl25emgEEu
+ CTCENXqAh/Hbp17yeEI9p7h2yQkLBaJQyasG7FA3UodM2Yy3zwT1ZixDDKZCjEjvyERyvWLmfvv
+ qGFixC2R6KwW2MacOnFIKRsAjDmOWxVKSfCgTC41e0XGHUh1q7oOH0JvV+/uCVdwDHzSZo/YhbP
+ Le6w3ABNP1Ee86dVr+fPusmizju4kpHTguqqYpO08ARFyWFU2H6+DC6AxFnO85VLZPorDfcOfda
+ VHDhzOuQqmpUhtIZwdtch8gjQFB7ehF00GNI5F1VqDcA4y3RuT9VMSn6QaPsC8AZw9+3OfYwax0
+ 0v6oMSUE5udcDYXBMvQ+/Rg7dfr3F8dE+tvGjDR53+jGcJ3y6+0/qM7q4ff1obVKZ/Ge2FNUmy1
+ qQM68K5e2KQJZKgecrg==
+X-Proofpoint-GUID: ENwUoLKiM9UxdrPa8CgMRXZTXPeeSp7d
+X-Authority-Analysis: v=2.4 cv=D8N37PRj c=1 sm=1 tr=0 ts=6a97abab cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=EUspDBNiAAAA:8 a=6HI80psrSe5n1y8aGwAA:9 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-ORIG-GUID: ENwUoLKiM9UxdrPa8CgMRXZTXPeeSp7d
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA0MSBTYWx0ZWRfX8rmRTIcq0GeT
+ JBocI7DND5zkRDFNnf2D7FwCAPr0Lg/q7spKqEJ5lrOSXMF/JQZqrdbeteZ/fgfpGeVmpGwXJeu
+ j5d0kDtInoYGKEvTAZOBJ4BtTBj1OCI=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-01_06,2026-09-01_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 lowpriorityscore=0 spamscore=0 phishscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 impostorscore=0 priorityscore=1501
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606150000
+ definitions=main-2609020041
 
 
-2. The vendor DT and the ath12k AHB backend disagree about what
-   qcom,rproc points at
-   ------------------------------------------------------------------
 
-This one I can describe precisely, but I cannot tell which side is
-meant to be authoritative.
+On 9/1/2026 1:12 PM, Manivannan Sadhasivam wrote:
+> On Wed, Aug 19, 2026 at 06:55:52PM +0530, Krishna Chaitanya Chundru wrote:
+>> PCIe host bridge controllers may need their operating point raised before
+> Use either "Host Bridge devices" or "PCIe controllers".
+>
+>> retraining to a higher link speed so that hardware resources (e.g., RPMh
+>> votes on Qualcomm platforms) are available at the requested data rate.
+>> After retraining, the operating point must be updated to reflect the
+>> actual negotiated speed.
+>>
+>> Add pcie_set_opp() to look up an OPP on the host bridge parent device
+>> using a key of (per-lane frequency in kHz, LNKCTL2 Target Link Speed
+>> level).  Keying by generation rather than total bandwidth lets OPP tables
+>> remain width-independent.
+>>
+>> In pcie_set_target_speed(), call pcie_set_opp() before retraining only
+>> when upscaling (speed_req > cur_bus_speed), since only raising the
+>> operating point requires pre-staging hardware.  After retraining, call
+>> pcie_set_opp() unconditionally with the actual cur_bus_speed to settle
+>> the votes.  Both calls are skipped for downstream ports of PCIe switches,
+>> as those are outside the host controller's scope.
+>>
+>> Some controllers also require ASPM to be disabled around link retraining.
+>> Add a disable_aspm_for_retrain flag to pci_host_bridge; when set,
+>> pcie_set_target_speed() saves the child device's ASPM state, disables all
+>> ASPM link states before retraining, and restores them afterward.
+>>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>  drivers/pci/pcie/bwctrl.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>  include/linux/pci.h       |  1 +
+>>  2 files changed, 63 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+>> index c4c8d260bf96..6fa1522c47db 100644
+>> --- a/drivers/pci/pcie/bwctrl.c
+>> +++ b/drivers/pci/pcie/bwctrl.c
+>> @@ -28,9 +28,11 @@
+>>  #include <linux/mutex.h>
+>>  #include <linux/pci.h>
+>>  #include <linux/pci-bwctrl.h>
+>> +#include <linux/pm_opp.h>
+>>  #include <linux/rwsem.h>
+>>  #include <linux/slab.h>
+>>  #include <linux/types.h>
+>> +#include <linux/units.h>
+>>  
+>>  #include "../pci.h"
+>>  #include "portdrv.h"
+>> @@ -120,6 +122,38 @@ static int pcie_bwctrl_change_speed(struct pci_dev *port, u16 target_speed, bool
+>>  	return pcie_retrain_link(port, use_lt);
+>>  }
+>>  
+>> +static int pcie_set_opp(struct pci_dev *pdev, struct pci_host_bridge *host,
+>> +			enum pci_bus_speed speed)
+>> +{
+>> +	struct device *dev = host->dev.parent;
+>> +	struct dev_pm_opp_key key = {};
+>> +	int ret, freq_mbps, width;
+>> +	unsigned long freq_kbps;
+>> +	struct dev_pm_opp *opp;
+>> +	u16 lnksta;
+>> +
+>> +	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+>> +	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+>> +
+>> +	freq_mbps = pcie_dev_speed_mbps(speed);
+>> +	if (freq_mbps < 0)
+>> +		return -EINVAL;
+>> +
+>> +	freq_kbps = freq_mbps * KILO;
+>> +	key.freq = freq_kbps;
+>> +	key.level = pci_bus_speed2lnkctl2(speed);
+>> +	key.bw = 0;
+> 'key' is already 0 initialized above.
+>
+>> +	opp = dev_pm_opp_find_key_exact(dev, &key, true);
+>> +	if (!IS_ERR(opp)) {
+>> +		ret = dev_pm_opp_set_opp(dev, opp);
+>> +		if (ret)
+>> +			dev_err(dev, "Failed to set OPP for freq (%lu): %d\n",
+>> +				freq_kbps * width, ret);
+>> +		dev_pm_opp_put(opp);
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>>  /**
+>>   * pcie_set_target_speed - Set downstream Link Speed for PCIe Port
+>>   * @port:	PCIe Port
+>> @@ -140,9 +174,12 @@ static int pcie_bwctrl_change_speed(struct pci_dev *port, u16 target_speed, bool
+>>  int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  			  bool use_lt)
+>>  {
+>> +	struct pci_host_bridge *host = pci_find_host_bridge(port->bus);
+>> +	bool is_rootbus = pci_is_root_bus(port->bus);
+>>  	struct pci_bus *bus = port->subordinate;
+>> +	struct pci_dev *child = NULL;
+>> +	int aspm_state = 0, ret;
+>>  	u16 target_speed;
+>> -	int ret;
+>>  
+>>  	if (WARN_ON_ONCE(!pcie_valid_speed(speed_req)))
+>>  		return -EINVAL;
+>> @@ -152,6 +189,24 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  
+>>  	target_speed = pcie_bwctrl_select_speed(port, speed_req);
+>>  
+>> +	/*
+>> +	 * The host bridge driver may need to be scaled for targeted speed
+> "Host Bridge resources may need to be..."
+>
+>> +	 * otherwise link might not come up at requested speed.
+>> +	 */
+>> +	if (is_rootbus && host && bus) {
+>> +		/* Get function 0 of downstream device */
+>> +		list_for_each_entry(child, &bus->devices, bus_list)
+>> +			if (PCI_FUNC(child->devfn) == 0)
+>> +				break;
+>> +
+>> +		if (child && host->disable_aspm_for_retrain) {
+>> +			aspm_state = pcie_aspm_enabled(child);
+>> +			pci_disable_link_state_locked(child, PCIE_LINK_STATE_ALL);
+>> +		}
+> You mentioned that the Host Bridge requires disabling ASPM during retraining,
+> but here you are disabling ASPM of the downstream device. So the issue is device
+> specific or Host Bridge (RP?) specific?
+Issue is RP specific, if aspm driver disables the ASPM only when we pass the
+child, if the we pass root port dev, it will just return without modifying the
+aspm.
 
-In ath12k's AHB backend, qcom,rproc is the *root* PD. ahb.c resolves the
-phandle and boots it via a function named ath12k_ahb_boot_root_pd(),
-waits for rootpd_ready, and then does the entire user PD lifecycle
-itself: qcom_mdt_load() of amss_<n>.mdt into memory-region[0],
-qcom_scm_pas_auth_and_reset() with a PAS ID it computes locally, and a
-spawn via qcom_smem_state_update_bits(). It also requests the "spawn",
-"ready" and "stop-ack" interrupts by name to drive that sequence.
+Ack for remaining comments.
 
-In the vendor DT, qcom,rproc is the *user* PD:
+- Krishna Chaitanya.
+>> +		if (speed_req > bus->cur_bus_speed)
+>> +			pcie_set_opp(port, host, speed_req);
+>> +	}
+>> +
+>>  	scoped_guard(rwsem_read, &pcie_bwctrl_setspeed_rwsem) {
+>>  		struct pcie_bwctrl_data *data = port->link_bwctrl;
+>>  
+>> @@ -176,6 +231,12 @@ int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
+>>  	    !list_empty(&bus->devices))
+>>  		ret = -EAGAIN;
+>>  
+>> +	if (bus && is_rootbus && host) {
+> Maintain an order for this check. I think this order makes sense than the above
+> one.
+>
+>
+> - Mani
+>
 
-  wifi@c0000000 {
-      compatible = "qcom,cnss-qca5332", "qcom,ipq5332-wifi";
-      qcom,rproc = <&remoteproc_pd1>;              /* the user PD */
-      qcom,userpd-subsys-name = "q6v5_wcss_userpd1";
-  };
-
-There, remoteproc owns the user PD -- image, PAS, spawn and the same
-three interrupts -- and the WiFi driver only attaches to it.
-
-These are mutually exclusive, and on this board they collide. With
-qcom_q6v5_mpd instantiating user PD rprocs as its binding describes, the
-PD boots fine and then ath12k cannot have the interrupt it needs:
-
-  remoteproc remoteproc2: remote processor pd1 is now up
-  genirq: Flags mismatch irq 31. 00002001 (UserPD1-spawn)
-          vs. 00002001 (q6v5_wcss_userpd1_spawn-ack)
-  ath12k_ahb c000000.wifi: error -EBUSY: Request spawn irq failed: -16
-
-Same interrupt, same flags, two requesters, neither wrong in isolation.
-
-So which is the intended division of labour?
-
-  - Are the pd-1/pd-2 nodes in the multipd binding meant for non-WiFi
-    PDs only, with WiFi user PDs left entirely to ath12k -- so a board
-    with only WiFi user PDs should describe none of them, and point
-    qcom,rproc at the root PD?
-  - Or is remoteproc meant to own them, as the vendor DT has it, and
-    ath12k's AHB backend should attach rather than load and spawn when
-    qcom,rproc resolves to a user PD?
-
-I have deliberately not sent a patch for this one. Either answer implies
-a behaviour change in a driver used by boards I cannot test, and
-guessing at the ownership model and then changing ath12k for everyone is
-not mine to do.
-
-Happy to test patches, provide full boot logs, or run experiments on
-this board -- it is on a serial console with a recoverable second
-firmware bank, so I can iterate destructively without much risk.
-
-Thanks for the series, and for reading this far.
-
-Regards,
-Hideo Sumi
