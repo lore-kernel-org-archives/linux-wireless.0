@@ -1,42 +1,42 @@
 Received: from nbd.name (nbd.name [46.4.11.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C63AA38644D
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0A8E3AFAEC
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 08:46:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.4.11.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788338779; cv=none; b=DLUkH5Jg1wbgaKde8w2aTdcqRlB9dwY1Pt+g+eI0XRP2kbQLuq6DDsWHB37G7bvCeyd7344AYPveeXgX4bJpLNhFhB8QhBpnWfu2nyJOk3VA7OmQMe4/KNAuL3W8FJfcVaklON5PL/adjpx3E/F2QHibFsFWFpf5nPmW/PFBilw=
+	t=1788338780; cv=none; b=jgAvn3rUTD2HEOq2LpZAmAOeeADodz/GiCsfOHXAtr5HxsH4NhttT/zlrFf1EQfIK2PrZk1EWBFMmTr7eaxoONfLzRDw26sSakzt8YfVIpfkrWanthtaxg8nBrd4jVtHEaXgrAHM2+2dva7PKDm/F/1qYPd3Mn2f2rHskYcs8dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788338779; c=relaxed/simple;
-	bh=taog7Cem6+1aXAah4MU3BggaW0Z5MU/cixDAbbjH9yU=;
+	s=arc-20240116; t=1788338780; c=relaxed/simple;
+	bh=VFP2a20Q/oGuhbC5Ic4360SXlEpJv+T5zwNkAFDQLDQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HhNqVWSsLnG7sD4Kgke+KfFCr3AK+PL1M82IgnFFqx7vaJzLmUdk18nXBOZx4pnj5sDYosTK+D5/CS7lZO07iu8WfkKGbiZuC6rAd2uVC3inGtXlgUbDTmmKqk1UhhTdfdyp8iG4DIWXt9hHBWWeMXxfs543NFRkII1tvJ4yqg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=kzaSvbQg; arc=none smtp.client-ip=46.4.11.11
+	 MIME-Version; b=bAJ0XZetpc1AJy8+VyrnD2ZE6KZwN3HC7+7u6HIlK5lcVOnTdIxY8gAGCb1Z7Ib5fVZiDWuqXxukG7FG3SsCTVl2ckWx68bL5YT+nNf7AEOwiBfGWEkDkw3lGQwtVLd578Y6LAc8H/HoVL2gWOlzut16ZFG10dR1zuewDIhMGbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name; spf=pass smtp.mailfrom=nbd.name; dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b=bpcnxB/p; arc=none smtp.client-ip=46.4.11.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nbd.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nbd.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kzaSvbQg"
+	dkim=pass (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="bpcnxB/p"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
 	s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=EUH2aVMZPAUEzn0Zj1FXeQbfQRfLbMOwCaHk1VWp0Ps=; b=kzaSvbQgXrv7dQRrmW5s5WNZmS
-	uYRk1j/Ptts24Aao079yDgNnKieqkvibMnCvk2FXQbS/jzxtocSYXANwOX4gXNNMRv+8DsEnogB6A
-	HzkhxqrCyyOivjiukRNJ+q2Cs/jO+dTMhZcbsFHoSq6cY2e+2ZL3ZXmxeEpgOZBhZA8c=;
+	bh=vPK/8L1OOgMvrlet8t21sd2ID3v8obiyNbIs294Sku0=; b=bpcnxB/pjGtLsSDEbaghB+hCwK
+	rbOYS9x/5JMjl+j1cWI7/LGl4k9/VX6Da5QNcIT/oX3UjTE+YX9sBrqlaugMaIk0Wk4gptbLQ0BAQ
+	RA7fgBF5zlYI98+yALBxcnpYYx3Ds3NdHHdymvphIdVuLlNUQvY42nOI7+DSR3UPmRmE=;
 Received: from p200300cadf14d1000000000000000162.dip0.t-ipconnect.de ([2003:ca:df14:d100::162] helo=localhost.localdomain)
 	by ds12 with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.96)
 	(envelope-from <nbd@nbd.name>)
-	id 1x1gbn-00Cwkn-0D;
-	Wed, 02 Sep 2026 10:46:15 +0200
+	id 1x1gbn-00Cwkn-34;
+	Wed, 02 Sep 2026 10:46:16 +0200
 From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
 Cc: johannes@sipsolutions.net
-Subject: [RFC PATCH 08/15] wifi: mac80211: add SCS and MSCS rule storage
-Date: Wed,  2 Sep 2026 10:46:03 +0200
-Message-ID: <4f4886f09b8b980fa18e2e92d10675388c318248.1788338716.git-series.nbd@nbd.name>
+Subject: [RFC PATCH 13/15] wifi: mac80211: add SCS and MSCS debugfs files
+Date: Wed,  2 Sep 2026 10:46:08 +0200
+Message-ID: <e9b1c9962846e2a3930920a97acb1e3527df80e1.1788338716.git-series.nbd@nbd.name>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
 References: <cover.3af9ba310d9145a9dfd653b5a886feaba98e8884.1788338716.git-series.nbd@nbd.name>
@@ -48,373 +48,287 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Implement the set_scs and set_mscs cfg80211 ops.
+Dump the parsed classifier of every rule and every learned tuple, rather
+than counters, because what an operator needs to see is which rule
+claimed a flow and what the AP learned from the station.
 
-A request edits the rule set of one station, so the result mixes its
-descriptors with those of earlier requests. mac80211 therefore rebuilds
-the set whole, into one allocation that owns every rule it holds. That
-gives the set a single lifetime and keeps the ownership rule simple.
+Both are seq_file iterators, so neither sizes a buffer for a set that the
+standard bounds at 255 rules of 255 classifiers. A rule set is one
+allocation that a request replaces whole, so a rule is named by its
+position and looked up again on every read, and the dump is a snapshot
+either way. The learned entries are not an RCU list, so that walk holds
+the lock of the station.
 
-An accepted removal answers with TCLAS_PROCESSING_TERMINATED, which the
-standard reserves for it.
+Neither takes the wiphy lock, which a debugfs reader must not, because
+the remover holds it while it waits for readers to finish.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/Makefile      |   3 +-
- net/mac80211/cfg.c         |   2 +-
- net/mac80211/ieee80211_i.h |   8 +-
- net/mac80211/scs.c         | 220 ++++++++++++++++++++++++++++++++++++++-
- net/mac80211/sta_info.c    |   1 +-
- net/mac80211/sta_info.h    |  38 +++++++-
- 6 files changed, 271 insertions(+), 1 deletion(-)
- create mode 100644 net/mac80211/scs.c
+ net/mac80211/debugfs_sta.c | 238 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 238 insertions(+)
 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 36f1e3e2222b..8f8729e44c5f 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -35,7 +35,8 @@ mac80211-y := \
- 	tdls.o \
- 	ocb.o \
- 	airtime.o \
--	eht.o uhr.o nan.o
-+	eht.o uhr.o nan.o \
-+	scs.o
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index ef75255d47d5..adf403043164 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -10,6 +10,7 @@
  
- mac80211-$(CONFIG_MAC80211_LEDS) += led.o
- mac80211-$(CONFIG_MAC80211_DEBUGFS) += \
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 23f4f9ec86d0..aea6bce2afa6 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -6059,6 +6059,8 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.end_cac = ieee80211_end_cac,
- 	.channel_switch = ieee80211_channel_switch,
- 	.set_qos_map = ieee80211_set_qos_map,
-+	.set_scs = ieee80211_set_scs,
-+	.set_mscs = ieee80211_set_mscs,
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 5761e9621491..31a630e68a2b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2204,6 +2204,14 @@ void ieee80211_recalc_txpower(struct ieee80211_link_data *link,
- 			      bool update_bss);
- void ieee80211_recalc_offload(struct ieee80211_local *local);
+ #include <linux/debugfs.h>
+ #include <linux/ieee80211.h>
++#include <linux/if_vlan.h>
+ #include "ieee80211_i.h"
+ #include "debugfs.h"
+ #include "debugfs_sta.h"
+@@ -131,6 +132,241 @@ static ssize_t sta_last_seq_ctrl_read(struct file *file, char __user *userbuf,
+ }
+ STA_OPS(last_seq_ctrl);
  
-+/* SCS and MSCS */
-+int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
-+		      const u8 *peer, struct cfg80211_scs_desc * const *desc,
-+		      struct cfg80211_scs_result *res, u8 n_desc);
-+int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
-+		       const u8 *peer, struct cfg80211_mscs_desc *desc);
-+void ieee80211_sta_scs_free(struct sta_info *sta);
-+
- /* link handling */
- void ieee80211_link_setup(struct ieee80211_link_data *link);
- void ieee80211_link_init(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/scs.c b/net/mac80211/scs.c
-new file mode 100644
-index 000000000000..d2daefb8e90c
---- /dev/null
-+++ b/net/mac80211/scs.c
-@@ -0,0 +1,220 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Stream classification service (SCS) and mirrored SCS (MSCS)
-+ *
-+ * Copyright (C) 2026 Felix Fietkau <nbd@nbd.name>
-+ */
-+#include <linux/ieee80211.h>
-+#include <net/cfg80211.h>
-+#include "ieee80211_i.h"
-+#include "sta_info.h"
-+
-+/* An hour, in TUs of 1024 microseconds */
-+#define IEEE80211_MSCS_TIMEOUT_MAX_TU	3515625
-+
-+static size_t ieee80211_scs_rule_size(const struct cfg80211_scs_desc *desc)
++static void sta_flow_key_show(struct seq_file *s,
++			      const struct cfg80211_flow_key *key, u32 fields)
 +{
-+	return ALIGN(struct_size(desc, tclas, desc->n_tclas) +
-+		     desc->qos_char_len, __alignof__(*desc));
-+}
++	u16 tci = be16_to_cpu(key->vlan_tci);
 +
-+/* Copy one rule to @pos and return the aligned octet after it */
-+static void *ieee80211_scs_rule_copy(const struct cfg80211_scs_desc *src,
-+				     void *pos)
-+{
-+	size_t len = struct_size(src, tclas, src->n_tclas);
-+	struct cfg80211_scs_desc *dst = pos;
++	if (fields & BIT(CFG80211_FLOW_F_ETH_SA))
++		seq_printf(s, " sa=%pM", key->sa);
++	if (fields & BIT(CFG80211_FLOW_F_ETH_DA))
++		seq_printf(s, " da=%pM", key->da);
++	if (fields & BIT(CFG80211_FLOW_F_ETH_TYPE))
++		seq_printf(s, " ethertype=0x%04x", be16_to_cpu(key->eth_type));
 +
-+	memcpy(dst, src, len);
-+	pos += len;
++	if (fields & BIT(CFG80211_FLOW_F_VLAN_PCP))
++		seq_printf(s, " pcp=%u",
++			   (tci & VLAN_PRIO_MASK) >> VLAN_PRIO_SHIFT);
++	if (fields & BIT(CFG80211_FLOW_F_VLAN_DEI))
++		seq_printf(s, " dei=%u", !!(tci & VLAN_CFI_MASK));
++	if (fields & BIT(CFG80211_FLOW_F_VLAN_VID))
++		seq_printf(s, " vid=%u", tci & VLAN_VID_MASK);
 +
-+	if (src->qos_char_len) {
-+		memcpy(pos, src->qos_char, src->qos_char_len);
-+		dst->qos_char = pos;
-+	} else {
-+		dst->qos_char = NULL;
-+	}
++	if (fields & BIT(CFG80211_FLOW_F_IP_VERSION))
++		seq_printf(s, " ipv%u", key->ip_version);
 +
-+	return PTR_ALIGN(pos + src->qos_char_len, __alignof__(*dst));
-+}
++	if (fields & BIT(CFG80211_FLOW_F_IP_SRC))
++		seq_printf(s, key->ip_version == 6 ? " src=%pI6" : " src=%pI4",
++			   &key->src);
++	if (fields & BIT(CFG80211_FLOW_F_IP_DST))
++		seq_printf(s, key->ip_version == 6 ? " dst=%pI6" : " dst=%pI4",
++			   &key->dst);
 +
-+static u8 ieee80211_scs_rule_find(struct cfg80211_scs_desc * const *rule,
-+				  u8 n_rules, u8 id)
-+{
-+	u8 i;
++	if (fields & BIT(CFG80211_FLOW_F_SRC_PORT))
++		seq_printf(s, " sport=%u", be16_to_cpu(key->src_port));
++	if (fields & BIT(CFG80211_FLOW_F_DST_PORT))
++		seq_printf(s, " dport=%u", be16_to_cpu(key->dst_port));
 +
-+	for (i = 0; i < n_rules; i++)
-+		if (rule[i]->id == id)
-+			break;
-+
-+	return i;
++	if (fields & BIT(CFG80211_FLOW_F_DSCP))
++		seq_printf(s, " dscp=%u", key->dscp);
++	if (fields & BIT(CFG80211_FLOW_F_PROTO))
++		seq_printf(s, " proto=%u", key->proto);
++	if (fields & BIT(CFG80211_FLOW_F_FLOW_LABEL))
++		seq_printf(s, " flowlabel=0x%05x", be32_to_cpu(key->flow_label));
 +}
 +
 +/*
-+ * One request is an edit of the rule set, so the result mixes descriptors of
-+ * this request with descriptors of earlier ones. @rule therefore holds a mix
-+ * of pointers into the old set and pointers the caller owns, and the block
-+ * built from it owns a copy of every one of them.
++ * A rule set is one allocation that a request replaces whole, so a rule is
++ * named by its position and looked up again for every read. One that arrives
++ * while the dump runs may be missed, and the dump is a snapshot either way.
 + */
-+static struct ieee80211_scs_sta *
-+ieee80211_scs_sta_build(struct cfg80211_scs_desc * const *rule, u8 n_rules)
++static void *sta_scs_seq_start(struct seq_file *s, loff_t *pos)
++	__acquires(RCU)
 +{
++	struct sta_info *sta = s->private;
 +	struct ieee80211_scs_sta *scs;
-+	size_t head, size;
-+	void *pos;
-+	u8 i;
 +
-+	if (!n_rules)
++	rcu_read_lock();
++	scs = rcu_dereference(sta->scs);
++	if (!scs || *pos >= scs->n_rules)
 +		return NULL;
 +
-+	head = ALIGN(struct_size(scs, rule, n_rules), __alignof__(**rule));
-+
-+	size = head;
-+	for (i = 0; i < n_rules; i++)
-+		size += ieee80211_scs_rule_size(rule[i]);
-+
-+	/*
-+	 * A station may hold 255 rules of 255 classifiers, which is past what
-+	 * the page allocator hands out in one piece.
-+	 */
-+	scs = kvzalloc(size, GFP_KERNEL);
-+	if (!scs)
-+		return ERR_PTR(-ENOMEM);
-+
-+	/* Set before the array is filled, for __counted_by() */
-+	scs->n_rules = n_rules;
-+
-+	pos = (void *)scs + head;
-+	for (i = 0; i < n_rules; i++) {
-+		scs->rule[i] = pos;
-+		pos = ieee80211_scs_rule_copy(rule[i], pos);
-+	}
-+
-+	return scs;
++	return scs->rule[*pos];
 +}
 +
-+int ieee80211_set_scs(struct wiphy *wiphy, struct net_device *dev,
-+		      const u8 *peer, struct cfg80211_scs_desc * const *desc,
-+		      struct cfg80211_scs_result *res, u8 n_desc)
++static void *sta_scs_seq_next(struct seq_file *s, void *v, loff_t *pos)
 +{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_scs_sta *scs, *old;
-+	struct cfg80211_scs_desc **rule;
++	struct sta_info *sta = s->private;
++	struct ieee80211_scs_sta *scs = rcu_dereference(sta->scs);
++
++	++*pos;
++	if (!scs || *pos >= scs->n_rules)
++		return NULL;
++
++	return scs->rule[*pos];
++}
++
++static void sta_scs_seq_stop(struct seq_file *s, void *v)
++	__releases(RCU)
++{
++	rcu_read_unlock();
++}
++
++static int sta_scs_seq_show(struct seq_file *s, void *v)
++{
++	static const char * const processing[] = {
++		[CFG80211_TCLAS_PROCESSING_ALL] = "all",
++		[CFG80211_TCLAS_PROCESSING_ANY] = "any",
++		[CFG80211_TCLAS_PROCESSING_DEFAULT] = "default",
++	};
++	const struct cfg80211_scs_desc *desc = v;
++	const char *proc = "none";
++	u8 i;
++
++	if (desc->tclas_processing < ARRAY_SIZE(processing))
++		proc = processing[desc->tclas_processing];
++
++	seq_printf(s, "scsid %u up %u processing %s", desc->id, desc->up, proc);
++
++	if (desc->qos_char)
++		seq_printf(s, " qos_char %u direction %u", desc->qos_char_len,
++			   ieee80211_qos_char_direction(desc->qos_char));
++
++	seq_putc(s, '\n');
++
++	for (i = 0; i < desc->n_tclas; i++) {
++		const struct cfg80211_tclas *t = &desc->tclas[i];
++
++		seq_printf(s, "  type %u", t->type);
++		sta_flow_key_show(s, &t->key, t->fields);
++		seq_putc(s, '\n');
++	}
++
++	return 0;
++}
++
++static const struct seq_operations sta_scs_seq_ops = {
++	.start = sta_scs_seq_start,
++	.next = sta_scs_seq_next,
++	.stop = sta_scs_seq_stop,
++	.show = sta_scs_seq_show,
++};
++
++static int sta_scs_open(struct inode *inode, struct file *file)
++{
++	int ret = seq_open(file, &sta_scs_seq_ops);
++
++	if (!ret)
++		((struct seq_file *)file->private_data)->private = inode->i_private;
++
++	return ret;
++}
++
++static const struct file_operations sta_scs_ops = {
++	.open = sta_scs_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release,
++};
++
++struct sta_mscs_iter {
 +	struct sta_info *sta;
-+	u8 i, n_rules = 0;
++	struct ieee80211_mscs_sta *mscs;
++};
 +
-+	lockdep_assert_wiphy(wiphy);
++/* The entry list is not an RCU list, so the whole walk holds the lock */
++static void *sta_mscs_seq_start(struct seq_file *s, loff_t *pos)
++	__acquires(RCU)
++{
++	struct sta_mscs_iter *iter = s->private;
 +
-+	sta = sta_info_get_bss(sdata, peer);
-+	if (!sta)
-+		return -ENOENT;
++	rcu_read_lock();
++	iter->mscs = rcu_dereference(iter->sta->mscs);
++	if (!iter->mscs)
++		return NULL;
 +
-+	old = wiphy_dereference(wiphy, sta->scs);
++	spin_lock_bh(&iter->mscs->lock);
 +
-+	/*
-+	 * Every rule carries an SCSID of its own and an SCSID is 1 to 255, so
-+	 * this bounds the working array, and the resulting set with it.
-+	 */
-+	rule = kcalloc((old ? old->n_rules : 0) + n_desc, sizeof(*rule),
-+		       GFP_KERNEL);
-+	if (!rule)
++	if (*pos == 0)
++		return SEQ_START_TOKEN;
++
++	return seq_list_start(&iter->mscs->entries, *pos - 1);
++}
++
++static void *sta_mscs_seq_next(struct seq_file *s, void *v, loff_t *pos)
++{
++	struct sta_mscs_iter *iter = s->private;
++
++	if (v == SEQ_START_TOKEN) {
++		++*pos;
++		return seq_list_start(&iter->mscs->entries, 0);
++	}
++
++	return seq_list_next(v, &iter->mscs->entries, pos);
++}
++
++static void sta_mscs_seq_stop(struct seq_file *s, void *v)
++	__releases(RCU)
++{
++	struct sta_mscs_iter *iter = s->private;
++
++	if (iter->mscs)
++		spin_unlock_bh(&iter->mscs->lock);
++
++	rcu_read_unlock();
++}
++
++static int sta_mscs_seq_show(struct seq_file *s, void *v)
++{
++	struct sta_mscs_iter *iter = s->private;
++	struct ieee80211_mscs_sta *mscs = iter->mscs;
++	struct ieee80211_flow_entry *entry;
++
++	if (v == SEQ_START_TOKEN) {
++		seq_printf(s,
++			   "up_bitmap 0x%02x up_limit %u timeout %ums entries %u\n",
++			   mscs->up_bitmap, mscs->up_limit,
++			   jiffies_to_msecs(mscs->timeout), mscs->n_entries);
++		return 0;
++	}
++
++	entry = list_entry(v, struct ieee80211_flow_entry, list);
++
++	seq_printf(s, "  up %u age %ums", READ_ONCE(entry->up),
++		   jiffies_to_msecs(jiffies - READ_ONCE(entry->last_update)));
++	sta_flow_key_show(s, &entry->hkey.key, mscs->layout);
++	seq_putc(s, '\n');
++
++	return 0;
++}
++
++static const struct seq_operations sta_mscs_seq_ops = {
++	.start = sta_mscs_seq_start,
++	.next = sta_mscs_seq_next,
++	.stop = sta_mscs_seq_stop,
++	.show = sta_mscs_seq_show,
++};
++
++static int sta_mscs_open(struct inode *inode, struct file *file)
++{
++	struct sta_mscs_iter *iter;
++
++	iter = __seq_open_private(file, &sta_mscs_seq_ops, sizeof(*iter));
++	if (!iter)
 +		return -ENOMEM;
 +
-+	if (old) {
-+		n_rules = old->n_rules;
-+		memcpy(rule, old->rule, n_rules * sizeof(*rule));
-+	}
-+
-+	for (i = 0; i < n_desc; i++) {
-+		u8 at = ieee80211_scs_rule_find(rule, n_rules, desc[i]->id);
-+
-+		if (desc[i]->req_type == NL80211_SCS_REQ_REMOVE) {
-+			/* 11.25.2 answers any removal with its own status */
-+			res[i].status = WLAN_STATUS_TCLAS_PROCESSING_TERMINATED;
-+
-+			if (at < n_rules) {
-+				n_rules--;
-+				memmove(&rule[at], &rule[at + 1],
-+					(n_rules - at) * sizeof(*rule));
-+			}
-+
-+			continue;
-+		}
-+
-+		if (at < n_rules)
-+			rule[at] = desc[i];
-+		else
-+			rule[n_rules++] = desc[i];
-+	}
-+
-+	scs = ieee80211_scs_sta_build(rule, n_rules);
-+	kfree(rule);
-+	if (IS_ERR(scs))
-+		return PTR_ERR(scs);
-+
-+	rcu_assign_pointer(sta->scs, scs);
-+	if (old)
-+		kvfree_rcu(old, rcu_head);
++	iter->sta = inode->i_private;
 +
 +	return 0;
 +}
 +
-+int ieee80211_set_mscs(struct wiphy *wiphy, struct net_device *dev,
-+		       const u8 *peer, struct cfg80211_mscs_desc *desc)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_mscs_sta *mscs = NULL, *old;
-+	struct sta_info *sta;
-+	u32 tu;
-+
-+	lockdep_assert_wiphy(wiphy);
-+
-+	sta = sta_info_get_bss(sdata, peer);
-+	if (!sta)
-+		return -ENOENT;
-+
-+	if (desc->req_type != NL80211_SCS_REQ_REMOVE) {
-+		mscs = kzalloc_obj(*mscs);
-+		if (!mscs)
-+			return -ENOMEM;
-+
-+		mscs->layout = desc->fields;
-+		mscs->up_bitmap = desc->up_bitmap;
-+		mscs->up_limit = desc->up_limit;
-+
-+		/*
-+		 * The field is a u32 of TUs, up to about 50 days, which
-+		 * jiffies arithmetic cannot carry: time_after_eq() needs the
-+		 * difference to stay well inside the wrap. 11.25.3 only
-+		 * permits dropping a variable once the timeout has passed and
-+		 * nowhere requires keeping one until then, so capping is a
-+		 * choice about usefulness rather than conformance, and an idle
-+		 * hour leaves nothing worth keeping. A short timeout rounds
-+		 * down to nothing at a low HZ, and zero would mean never, so
-+		 * keep a jiffy.
-+		 */
-+		tu = min(desc->stream_timeout, IEEE80211_MSCS_TIMEOUT_MAX_TU);
-+		mscs->timeout = max(1UL, usecs_to_jiffies(tu * 1024));
-+	}
-+
-+	old = wiphy_dereference(wiphy, sta->mscs);
-+	rcu_assign_pointer(sta->mscs, mscs);
-+	if (old)
-+		kfree_rcu(old, rcu_head);
-+
-+	return 0;
-+}
-+
-+void ieee80211_sta_scs_free(struct sta_info *sta)
-+{
-+	struct ieee80211_mscs_sta *mscs;
-+	struct ieee80211_scs_sta *scs;
-+
-+	scs = rcu_dereference_raw(sta->scs);
-+	RCU_INIT_POINTER(sta->scs, NULL);
-+	kvfree(scs);
-+
-+	mscs = rcu_dereference_raw(sta->mscs);
-+	RCU_INIT_POINTER(sta->mscs, NULL);
-+	kfree(mscs);
-+}
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index fdf00cbf49d8..e14d78b002f1 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -508,6 +508,7 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
- 	kfree(sta->mesh);
- #endif
- 
-+	ieee80211_sta_scs_free(sta);
- 	sta_info_free_link(&sta->deflink);
- 	kfree(sta);
- }
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ee0d32877c5b..2682b3095474 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -635,6 +635,39 @@ struct ieee80211_sta_removed_link_stats {
- };
- 
- /**
-+ * struct ieee80211_scs_sta - the SCS rule set of one station
-+ *
-+ * @rcu_head: for freeing
-+ * @n_rules: number of entries in @rule
-+ * @rule: the active descriptors, in the order they were installed
-+ *
-+ * One allocation holds this structure, the descriptors it points to and their
-+ * QoS Characteristics octets, so the whole set has one lifetime.
-+ */
-+struct ieee80211_scs_sta {
-+	struct rcu_head rcu_head;
-+	u8 n_rules;
-+	struct cfg80211_scs_desc *rule[] __counted_by(n_rules);
++static const struct file_operations sta_mscs_ops = {
++	.open = sta_mscs_open,
++	.read = seq_read,
++	.llseek = seq_lseek,
++	.release = seq_release_private,
 +};
 +
-+/**
-+ * struct ieee80211_mscs_sta - the MSCS of one station
-+ *
-+ * @rcu_head: for freeing
-+ * @layout: classifier parameters, a bitmap of &enum cfg80211_flow_field
-+ * @up_bitmap: user priorities that the AP learns from, one bit each
-+ * @up_limit: ceiling for the assigned user priority
-+ * @timeout: minimum lifetime of a learned value, in jiffies
-+ */
-+struct ieee80211_mscs_sta {
-+	struct rcu_head rcu_head;
-+	u32 layout;
-+	u8 up_bitmap;
-+	u8 up_limit;
-+	unsigned long timeout;
-+};
-+
-+/**
-  * struct sta_info - STA information
-  *
-  * This structure collects information about a station that
-@@ -694,6 +727,8 @@ struct ieee80211_sta_removed_link_stats {
-  *
-  * @fast_tx: TX fastpath information
-  * @fast_rx: RX fastpath information
-+ * @scs: SCS rule set, or %NULL
-+ * @mscs: MSCS parameters, or %NULL
-  * @tdls_chandef: a TDLS peer can have a wider chandef that is compatible to
-  *	the BSS one.
-  * @frags: fragment cache
-@@ -730,6 +765,9 @@ struct sta_info {
- 	struct ieee80211_fast_tx __rcu *fast_tx;
- 	struct ieee80211_fast_rx __rcu *fast_rx;
+ #define AQM_TXQ_ENTRY_LEN 130
  
-+	struct ieee80211_scs_sta __rcu *scs;
-+	struct ieee80211_mscs_sta __rcu *mscs;
-+
- #ifdef CONFIG_MAC80211_MESH
- 	struct mesh_sta *mesh;
- #endif
+ static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
+@@ -1252,6 +1488,8 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	sta->debugfs_dir = debugfs_create_dir(mac, stations_dir);
+ 
+ 	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(scs);
++	DEBUGFS_ADD(mscs);
+ 	DEBUGFS_ADD(aid);
+ 	DEBUGFS_ADD(num_ps_buf_frames);
+ 	DEBUGFS_ADD(last_seq_ctrl);
 -- 
 git-series 0.9.1
