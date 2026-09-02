@@ -1,209 +1,260 @@
-Received: from rtits2.realtek.com.tw (rtits2.realtek.com [211.75.126.72])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BC343672BF
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 05:30:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.75.126.72
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDA313672BF
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 05:31:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788327057; cv=none; b=SvOUl6o+0NDbxMARAlLxvDdnIbBVMeojhx0A3hURCAXMmN7i3O/NOptdKxiPcls2S7DC7LXmuM8cx3lXxTXHd4x3qeiC5Yqgu4142G7j4NHvny+FymOpuziGpiGttBipeWcF1I9p+5xh6LV7LkYV/zGZ70f5526lyeZvM587cds=
+	t=1788327062; cv=none; b=HHWWjCzXLD3FBbyZLxPmuPbMZAdPtmJBbGAaqJ594a3jknf2bdZKes/NiAOhQigcJqRIAlxUWF305G79wS5f/dlmbSnGsqXn3fM4IZ/eYC0e9m7i1mqm2XQFQfaRivc3oGdeNkpQ762Q/+fbXzFdZp6FXN1zT3ct/Lg4TXPj2pM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788327057; c=relaxed/simple;
-	bh=dpJjUhCEntCBuEgiFETaJAvPL/R/SMfdoZuJrs9E4xk=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RLvPaRs8HJcb+J+lw0/V6weh18Ae5j5z9VbZ50ds7+qISuioaV+RbStvvyYh5V3rOSw/N2/LRtXs20gkEgUdYWTZ/pcySWuzLvKBY214XJLh7W/nZkCo0UrIUIWN9Dt6p2Lq5B4ydV4qa3bqF22P/kh9ryAJeuTxw0s57DxpLkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com; spf=pass smtp.mailfrom=realtek.com; dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b=UmawRDt8; arc=none smtp.client-ip=211.75.126.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=realtek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=realtek.com
+	s=arc-20240116; t=1788327062; c=relaxed/simple;
+	bh=EErxRj9UamHxjL4qovNFexC2eoDhDkme3XwtJu95u6Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Rj+hb+goW2NalutXXcQrKnXQLNurGR0kxKpEVzbHhAz1N3fAx5JlXiUlkmRDJE/n/fRlKeBfcA7gn2CsfJevyGqWmfrzJ02HibJ3KL/WdSYYG4h/L1sjq0ZOhbLaUXtVn2qW33NTa+i/krkMloySRT1hKQqgBec9D1xhzVIuv38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=c2jPeDiT; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cVUiNyW/; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=realtek.com header.i=@realtek.com header.b="UmawRDt8"
-X-SpamFilter-By: ArmorX SpamTrap 5.80 with qID 6825Urj562368450, This message is accepted by code: ctloc85258
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=realtek.com; s=dkim;
-	t=1788327053; bh=MkD4eWK5CPZChu0Oa2Y8KgxecdWq0HPAOJlInd0hkvg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding:Content-Type;
-	b=UmawRDt8Bq9GWa4Lq+3zzFK2rb5KPWALyjWfKk1KUs/uyqhGwlPrzYvj/c3XBb1gz
-	 GToKeGcHUJdjJxP45BofeeePCPSyXw2sYR6nMZfwfJgnJIpJsCTPJ6jxvBMRtwTL7i
-	 oCAGTV1Q0rC0BrhdY4ayD7DeVOvN4REDZ8ktppdmagVhtte1QVIZucs3vd21qNVbHX
-	 Tl0y9iigHMci7MRAkohu68WKZ5flRx3FIc77morz0SaH4Dr9BMBoFWn/RloRivxiLo
-	 3m8TIKJo50xSSGA++hQxU5bJAnTHLLKnLBp+BsYVX+ZoyVRGLp31UxnL5FxHP1CPVe
-	 fVn0b6DmOlFVA==
-Received: from mail.realtek.com (rtkexhmbs03.realtek.com.tw[10.21.1.53])
-	by rtits2.realtek.com.tw (8.15.2/3.29/5.94) with ESMTPS id 6825Urj562368450
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Sep 2026 13:30:53 +0800
-Received: from RTKEXHMBS05.realtek.com.tw (10.21.1.55) by
- RTKEXHMBS03.realtek.com.tw (10.21.1.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 2 Sep 2026 13:30:53 +0800
-Received: from RTKEXHMBS04.realtek.com.tw (10.21.1.54) by
- RTKEXHMBS05.realtek.com.tw (10.21.1.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.43; Wed, 2 Sep 2026 13:30:53 +0800
-Received: from [127.0.1.1] (172.21.40.75) by RTKEXHMBS04.realtek.com.tw
- (10.21.1.54) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.43 via Frontend
- Transport; Wed, 2 Sep 2026 13:30:53 +0800
-From: Ping-Ke Shih <pkshih@realtek.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <owen.hsiao@realtek.com>, <echuang@realtek.com>,
-	<henchy.chen@realtek.com>, <phhuang@realtek.com>, <kevin_yang@realtek.com>
-Subject: [PATCH rtw-next v2 07/14] wifi: rtw89: 8922d: update BB wrapper RFSI ctrl to v5
-Date: Wed, 2 Sep 2026 13:29:51 +0800
-Message-ID: <20260902052958.50371-8-pkshih@realtek.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20260902052958.50371-1-pkshih@realtek.com>
-References: <20260902052958.50371-1-pkshih@realtek.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="c2jPeDiT";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cVUiNyW/"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 68202PU81013570
+	for <linux-wireless@vger.kernel.org>; Wed, 2 Sep 2026 05:31:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	EErxRj9UamHxjL4qovNFexC2eoDhDkme3XwtJu95u6Y=; b=c2jPeDiTCeOUZ+Ms
+	LDfvknHx3w8HS4tzLQFo8FeefuE26hYIfDzmCR63ke5HsTrJhVNRJ4izfpXB0ssw
+	webIHA/6bABWsLA1p/ztDuFgHvg1mkJXMCDTkhmkQP3IGyj7VCPugPCCD+1Oq7Oe
+	GKwl73PE7usS1R0M0BFMgfEmqQwzWrKy2dI0rZbPKedLcZDptd4JdDT+Ap5zr7or
+	Xcj9TYijr4hxx1KlLlOSR1iT/240UHSABpzX0lHN4vfOpdyXfvXJSNYZVlnVAgcA
+	OQaL+qvn/miYq+lTGRaGVsYnHHepG14/UNsfuRW4Uht9HuVYjLcLQQFZ8OMwvjOS
+	GVLutA==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ge8whgx2p-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Sep 2026 05:31:00 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc12e8e22b7so1609207a12.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Sep 2026 22:30:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1788327059; x=1788931859; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=EErxRj9UamHxjL4qovNFexC2eoDhDkme3XwtJu95u6Y=;
+        b=cVUiNyW/ohBB+s7jOsi+qnKDuhoqnsuIqqXC6JiO1+cXdWMuegmxe0TrzVCLnvvhc0
+         3tHsxF4IX2c+KjMxnRRUHzHYaUJN252/ubYX0D+7eC8di2GkQc7yjvZu2xPfRFfvGYGy
+         cAFCwd/3XKPHmaWs3X9R98gBKLQBjOu6HkNYGRVwlBULfteYKCGl9p0H3hpq0mvzXzhp
+         i4C2OOjgMk1UYrSeWqa9eCsItFpd3MyP2Zi8WXc+0E2AqcbhKrZogBZiQo4130PR1HRL
+         Dg6gIBTlZ5H8NiVDdww1aWJlRE5D23RVK5VZkkF10at0T93liQCBoDhjDuDdlYLtjG7N
+         qCBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1788327059; x=1788931859;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EErxRj9UamHxjL4qovNFexC2eoDhDkme3XwtJu95u6Y=;
+        b=Gljz/zFbePwLawVnkhrVcZVctGtPDUK1NBIMlZrmCv7LYwUCoHg5vNSN1YBuDAUFDv
+         hWxkqUbOuN9Yst23cEfhk2Xe7lMjd/iuj1lJpiSaEK6xX2Np1ryRFUTM4BR4Wtk3oKnG
+         uXoTcXEPdOwqfqQhWknbnqVVqZMe5DCc5mwgoVeyf9Hdo1tXVQNvtoj2QcDfbleTYm7d
+         SV3x56IHpIwlbgyxas1Gn8ruh+Gdt70AcG42u25Mv3EUNSlc4mx/ajNnzuZfH94dCOeb
+         E2VR4VvahjeVjeaPkTOIP9S1dnq6kuSIPjAYWL6EcNjT+0u4qLKkxtX8dHvIsIFr8Bkg
+         ZzJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzAEqNqXr9jzz7A7T3rc6C+ZQ/rDJA/5dh3StoCLCEVY0FIMxfaKWYve2+NRVFI9Gbtjrnb8LPuzYbd2clEcg==@vger.kernel.org
+X-Gm-Message-State: AFuF++lPDep7EG9q/7QKaX82g+fZWoziuQWpgt1TfvKm6S8wd8C+Y2C9
+	g+Q+kKnGg4MSx46zTJnm2oQDcmyIR2/jpKKKmJjVdilEM6o/HE13kuNuvvz3sPMTCnRErTwnJ5e
+	jhHmQFksYVb4dhlVBlcIsTXZXnYFQWtZk5gGPu7kBoIlRQGD6dakhptmhHQFYGH7r9hl6YQ==
+X-Gm-Gg: AYBFou1poSZHxc58ZU6jcoinw/rxJVLG7olFJyQG1wafMeIv7KXDGd/EPcoi40QnFZe
+	NPsrC6JU6GqE4YaruKYg3eslEPi872DbEFUGsqQBjgD0LdVFvTVPFQ3EucM/cmEYCX3FvJT4OGh
+	udjbYG8knGwbyiXqu9OIJ849RMPq9GpRKeDR65N+hUFTrcxL1cw2mNI4j6S+O5Bo5w7QNv8OLbr
+	NeLeIGZqsYlj4Diy/l71Aj9lLqbeN8Dz3wRB4f6iLxQRIvAyQeSUgD22ciHZ7I7eSXqbxIyqndM
+	a+MOuzaUvKUEZTITVQYpr4lLdE6vg0TaY73yExs1mbseD4nzblD4aGm5+NsnOs/gCnBBsk7AB0E
+	j4yVHrkyl31zPBkJe+zb34ECs42rWOYhS
+X-Received: by 2002:a17:90b:1c07:b0:398:d8eb:cb2a with SMTP id 98e67ed59e1d1-39aee260bc0mr2726725a91.23.1788327059338;
+        Tue, 01 Sep 2026 22:30:59 -0700 (PDT)
+X-Received: by 2002:a17:90b:1c07:b0:398:d8eb:cb2a with SMTP id 98e67ed59e1d1-39aee260bc0mr2726667a91.23.1788327058905;
+        Tue, 01 Sep 2026 22:30:58 -0700 (PDT)
+Received: from [10.218.35.45] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1430e8c6fcbsm5163942c88.0.2026.09.01.22.30.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Sep 2026 22:30:58 -0700 (PDT)
+Message-ID: <774adaa9-55de-4456-9ee2-eb3c5d7ea0a5@oss.qualcomm.com>
+Date: Wed, 2 Sep 2026 11:00:51 +0530
 Precedence: bulk
 X-Mailing-List: linux-wireless@vger.kernel.org
 List-Id: <linux-wireless.vger.kernel.org>
 List-Subscribe: <mailto:linux-wireless+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 5/6] wifi: ath11k: Add support for MHI bandwidth
+ scaling
+To: Neil Armstrong <neil.armstrong@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi
+ <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        qiang.yu@oss.qualcomm.com, Miaoqing Pan <quic_miaoqing@quicinc.com>
+References: <20260819-bwscale-v5-0-6dea79786b37@oss.qualcomm.com>
+ <20260819-bwscale-v5-5-6dea79786b37@oss.qualcomm.com>
+ <5b10cb13-77e6-4754-a885-92c873866ef4@linaro.org>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <5b10cb13-77e6-4754-a885-92c873866ef4@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+X-Authority-Analysis: v=2.4 cv=fLkJG5ae c=1 sm=1 tr=0 ts=6a97b494 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=VdqzKS8jKosA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
+ a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=WikkZxfSKXF9q-dYMVUA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=3WC7DwWrALyhR5TkjVHa:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: yJxPi4rniZ5ZVoQiuvvbA8q5QZpfAou4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwOTAyMDA0NiBTYWx0ZWRfXyVTVkFnnqw+m
+ 0IE/gsx7inivKMyEBxYlD5yYJzkedqia/EhtDHOhHxA6biLSO05cZIL466G8lHTPzXoxoUcy9LX
+ jon+3S4ku1rXalh+nUOK1XP8bvZPIjqPymzWvKFETgpKqQMPtu5PzZaRkRpiu5pYPDzYFEB9onn
+ 42IC4Vr0CoO14Is0NOV8JdKnTRS3/3PVP/6mcKbnW7JGEVp9gpdx1W6b1ALhC5LJ+W1hSoqZUvv
+ olbWMhP+xN2GxA6qjcxXd4REJ4doF9Jmsy7LQ6MdjTwQJunSaH5iRigx056X21viNql2LONlkvF
+ SJrXYa4Bb9hPHPzbPCpXmPricg/Cy9XjRsNf/KjMbrcGxXSfpoEj/LSJBAbh7K+Ql2MPv3qN1WV
+ GdGpyjqSAVHRWq9oADmGZPkbAjgl/cGTCM+NdEURx9wUjreycbsX8HCKmnzvABkd6PreKMxwJzO
+ w33JfmfEVSEX6gqdG3g==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwOTAyMDA0NiBTYWx0ZWRfXw5dFwOkwWox8
+ Vc/JA1bVWtG5QnQaA3ZAE8IRjNOD3/ID8f6oQo8N44vnBrlCjv79rzO0LaF8Gq/DSZ56AYVFFUE
+ YDfMs9bmZZ5PG1oweYa7bTlpADcjzlU=
+X-Proofpoint-GUID: yJxPi4rniZ5ZVoQiuvvbA8q5QZpfAou4
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-09-01_06,2026-09-01_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 malwarescore=0 impostorscore=0 clxscore=1015 priorityscore=1501
+ spamscore=0 phishscore=0 lowpriorityscore=0 adultscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606150000 definitions=main-2609020046
 
-Update the BB wrapper RFSI control configuration tables for RTL8922D
-variants to v5. The major change is to define qam_th[] per band to
-optimize performance for RTL8922D_CID7090 variant, and others variants
-keep to use the same values for both bands.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtw89/phy.h      |  2 +-
- drivers/net/wireless/realtek/rtw89/phy_be.c   |  9 +++++----
- drivers/net/wireless/realtek/rtw89/rtw8922d.c | 15 +++++++++------
- 3 files changed, 15 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw89/phy.h b/drivers/net/wireless/realtek/rtw89/phy.h
-index 977cc680ee08..7bbda2ba5b5c 100644
---- a/drivers/net/wireless/realtek/rtw89/phy.h
-+++ b/drivers/net/wireless/realtek/rtw89/phy.h
-@@ -631,8 +631,8 @@ struct rtw89_bb_wrap_common_data {
- 		} cim3k;
- 		u32 rfsi_ct_opt[2];
- 		u8 pb_tb;
-+		u8 qam_th[3];
- 	} bands[RFSI_CTRL_BAND_NUM];
--	u8 qam_th[3];
- };
- 
- struct rtw89_bb_wrap_common_data_gen2 {
-diff --git a/drivers/net/wireless/realtek/rtw89/phy_be.c b/drivers/net/wireless/realtek/rtw89/phy_be.c
-index a8fdf22e06c8..b94754d38673 100644
---- a/drivers/net/wireless/realtek/rtw89/phy_be.c
-+++ b/drivers/net/wireless/realtek/rtw89/phy_be.c
-@@ -732,6 +732,7 @@ void rtw89_phy_bb_wrap_set_rfsi_bandedge_ch(struct rtw89_dev *rtwdev,
- EXPORT_SYMBOL(rtw89_phy_bb_wrap_set_rfsi_bandedge_ch);
- 
- static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
-+						       const struct rtw89_chan *chan,
- 						       enum rtw89_mac_idx mac_idx)
- {
- 	const struct rtw89_bb_wrap_data *d = rtwdev->phy_info.bb_wrap_data;
-@@ -740,9 +741,9 @@ static void rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(struct rtw89_dev *rtwdev,
- 	if (!d || !d->common)
- 		return;
- 
--	th0 = d->common->qam_th[0];
--	th1 = d->common->qam_th[1];
--	th2 = d->common->qam_th[2];
-+	th0 = d->common->bands[chan->rfsi_band].qam_th[0];
-+	th1 = d->common->bands[chan->rfsi_band].qam_th[1];
-+	th2 = d->common->bands[chan->rfsi_band].qam_th[2];
- 
- 	/* TH0 */
- 	rtw89_write32_idx(rtwdev, R_QAM_TH0_BE4, B_QAM_TH0_0_BE4, th0, mac_idx);
-@@ -1222,7 +1223,7 @@ void rtw89_phy_bb_wrap_tx_rfsi_ctrl_init_by_chan(struct rtw89_dev *rtwdev,
- 						 const struct rtw89_chan *chan,
- 						 u8 mac_idx)
- {
--	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(rtwdev, mac_idx);
-+	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_init(rtwdev, chan, mac_idx);
- 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen2_init(rtwdev, mac_idx);
- 	rtw89_phy_bb_wrap_tx_rfsi_qam_comp_th_gen3_init(rtwdev, chan, mac_idx);
- 	rtw89_phy_bb_wrap_tx_rfsi_scenario_def(rtwdev, chan, mac_idx);
-diff --git a/drivers/net/wireless/realtek/rtw89/rtw8922d.c b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-index 4d779ebf6121..5f910163163f 100644
---- a/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-+++ b/drivers/net/wireless/realtek/rtw89/rtw8922d.c
-@@ -347,14 +347,15 @@ static const struct rtw89_bb_wrap_common_data rtw8922d_bb_wrap_common_data_7025
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 3,
-+		.qam_th = {RFSI_BPSK, RFSI_QPSK, RFSI_256QAM},
- 	},
- 	[RFSI_CTRL_BAND_2GHZ] = {
- 		.cim3k = {CIM3K_ON, CIM3K_ON, CIM3K_ENABLE, CIM3K_ENABLE},
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 0,
-+		.qam_th = {RFSI_BPSK, RFSI_QPSK, RFSI_256QAM},
- 	}},
--	.qam_th = {RFSI_BPSK, RFSI_QPSK, RFSI_256QAM},
- };
- 
- static const struct rtw89_bb_wrap_common_data rtw8922d_bb_wrap_common_data_7090 = {
-@@ -364,14 +365,15 @@ static const struct rtw89_bb_wrap_common_data rtw8922d_bb_wrap_common_data_7090
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 0,
-+		.qam_th = {RFSI_BPSK, RFSI_QPSK, RFSI_256QAM},
- 	},
- 	[RFSI_CTRL_BAND_2GHZ] = {
- 		.cim3k = {CIM3K_ON, CIM3K_ON, CIM3K_ENABLE, CIM3K_ENABLE},
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 0,
-+		.qam_th = {RFSI_QPSK, RFSI_16QAM, RFSI_256QAM},
- 	}},
--	.qam_th = {RFSI_BPSK, RFSI_QPSK, RFSI_256QAM},
- };
- 
- static const struct rtw89_bb_wrap_common_data rtw8922d_bb_wrap_common_data_7090_rfe38 = {
-@@ -381,14 +383,15 @@ static const struct rtw89_bb_wrap_common_data rtw8922d_bb_wrap_common_data_7090_
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 0,
-+		.qam_th = {RFSI_QPSK, RFSI_16QAM, RFSI_256QAM},
- 	},
- 	[RFSI_CTRL_BAND_2GHZ] = {
- 		.cim3k = {CIM3K_ON, CIM3K_ON, CIM3K_ENABLE, CIM3K_ENABLE},
- 		.rfsi_ct_opt = {_8nibble(2, 2, 2, 2, 1, 1, 1, 1),
- 				_8nibble(2, 2, 2, 2, 1, 1, 1, 1)},
- 		.pb_tb = 0,
-+		.qam_th = {RFSI_QPSK, RFSI_16QAM, RFSI_256QAM},
- 	}},
--	.qam_th = {RFSI_QPSK, RFSI_16QAM, RFSI_256QAM},
- };
- 
- static const
-@@ -474,7 +477,7 @@ static const struct rtw89_bb_wrap_data rtw8922d_bb_wrap_data_7090_default = {
- 	},
- 	[RFSI_CTRL_BAND_2GHZ] = {
- 		.qam_comp_th0 = {0x4000, 0x4400, 0x4500, 0, 0, 0, 0, 0, 0, 0},
--		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4500, 0, 0,
-+		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4600, 0, 0,
- 						  0, 0, 0, 0, 0)},
- 		.qam_comp_th2 = {_10qam_comp_code(0x4000, 0x4400, 0x4400, 0, 0,
- 						  0, 0, 0, 0, 0)},
-@@ -492,7 +495,7 @@ static const struct rtw89_bb_wrap_data rtw8922d_bb_wrap_data_7090_rfe38 = {
- 	.bands = {
- 	[RFSI_CTRL_BAND_5_6GHZ] = {
- 		.qam_comp_th0 = {0x4000, 0x4400, 0x4500, 0, 0, 0, 0, 0, 0, 0},
--		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4500, 0,
-+		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4600, 0,
- 						  0, 0, 0, 0, 0, 0)},
- 		.qam_comp_th2 = {_10qam_comp_code(0x4000, 0x4400, 0x4400, 0,
- 						  0, 0, 0, 0, 0, 0)},
-@@ -502,7 +505,7 @@ static const struct rtw89_bb_wrap_data rtw8922d_bb_wrap_data_7090_rfe38 = {
- 	},
- 	[RFSI_CTRL_BAND_2GHZ] = {
- 		.qam_comp_th0 = {0x4000, 0x4400, 0x4500, 0, 0, 0, 0, 0, 0, 0},
--		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4400, 0, 0,
-+		.qam_comp_th1 = {_10qam_comp_code(0x4000, 0x4400, 0x4700, 0, 0,
- 						  0, 0, 0, 0, 0)},
- 		.qam_comp_th2 = {_10qam_comp_code(0x4000, 0x4400, 0x4400, 0, 0,
- 						  0, 0, 0, 0, 0)},
--- 
-2.25.1
+On 9/1/2026 8:15 PM, Neil Armstrong wrote:
+> Hi,
+>
+> On 8/19/26 15:25, Krishna Chaitanya Chundru wrote:
+>> From: Miaoqing Pan <quic_miaoqing@quicinc.com>
+>>
+>> Add support for MHI bandwidth scaling, which will reduce power consumption
+>> if WLAN operates with lower bandwidth. This feature is only enabled for
+>> QCA6390.
+>>
+>> Bandwidth scaling is initiated by the endpoint firmware based upon the
+>> bandwidth requirements, if there is high bandwidth data endpoint requests
+>> for higher data rates or if there is less bandwidth they request for lower
+>> data rates to reduce power. Endpoint initiates this through MHI protocol.
+>>
+>> Tested-on: WCN6855 hw2.1 PCI
+>> WLAN.HSP.1.1-04546-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+>
+> Somehow unrelated, but I added this to the ath12k to test on an WCN785x and
+> I just
+> got a single event to set the speed to 5GT/s and no further event whatever
+> the state
+> of the Wireless link is.
+>
+> Is there anything required on the ath12k side to allow lowering the speed to
+> 2.5GT/s ? 
+some wifi device has some limitation due to that they will stay in gen2 only.
+
+- Krishna Chaitanya.
+>
+> Thanks,
+> Neil
+>
+>>
+>> Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath11k/mhi.c | 38
+>> +++++++++++++++++++++++++++++++++++
+>>   1 file changed, 38 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath11k/mhi.c
+>> b/drivers/net/wireless/ath/ath11k/mhi.c
+>> index a6c9ff112c68..9bff4c4bca3b 100644
+>> --- a/drivers/net/wireless/ath/ath11k/mhi.c
+>> +++ b/drivers/net/wireless/ath/ath11k/mhi.c
+>> @@ -20,6 +20,7 @@
+>>   #define MHI_TIMEOUT_DEFAULT_MS    20000
+>>   #define RDDM_DUMP_SIZE    0x420000
+>>   #define MHI_CB_INVALID    0xff
+>> +#define MHI_BW_SCALE_CHAN_DB 126
+>>     static const struct mhi_channel_config ath11k_mhi_channels_qca6390[] = {
+>>       {
+>> @@ -71,6 +72,17 @@ static struct mhi_event_config
+>> ath11k_mhi_events_qca6390[] = {
+>>           .client_managed = false,
+>>           .offload_channel = false,
+>>       },
+>> +    {
+>> +        .num_elements = 8,
+>> +        .irq_moderation_ms = 0,
+>> +        .irq = 1,
+>> +        .mode = MHI_DB_BRST_DISABLE,
+>> +        .data_type = MHI_ER_BW_SCALE,
+>> +        .priority = 2,
+>> +        .hardware_event = false,
+>> +        .client_managed = false,
+>> +        .offload_channel = false,
+>> +    },
+>>   };
+>>     static const struct mhi_controller_config ath11k_mhi_config_qca6390 = {
+>> @@ -311,6 +323,30 @@ static void ath11k_mhi_op_write_reg(struct
+>> mhi_controller *mhi_cntrl,
+>>       writel(val, addr);
+>>   }
+>>   +static int ath11k_mhi_op_get_misc_doorbell(struct mhi_controller
+>> *mhi_cntrl,
+>> +                       enum mhi_er_data_type type)
+>> +{
+>> +    if (type == MHI_ER_BW_SCALE)
+>> +        return MHI_BW_SCALE_CHAN_DB;
+>> +
+>> +    return -EOPNOTSUPP;
+>> +}
+>> +
+>> +static int ath11k_mhi_op_bw_scale(struct mhi_controller *mhi_cntrl,
+>> +                  struct mhi_link_info *link_info)
+>> +{
+>> +    enum pci_bus_speed speed =
+>> pci_lnkctl2_bus_speed(link_info->target_link_speed);
+>> +    struct ath11k_base *ab = dev_get_drvdata(mhi_cntrl->cntrl_dev);
+>> +    struct pci_dev *pci_dev = to_pci_dev(ab->dev);
+>> +    struct pci_dev *pdev;
+>> +
+>> +    pdev = pci_upstream_bridge(pci_dev);
+>> +    if (!pdev)
+>> +        return -ENODEV;
+>> +
+>> +    return pcie_set_target_speed(pdev, speed, true);
+>> +}
+>> +
+>>   static int ath11k_mhi_read_addr_from_dt(struct mhi_controller *mhi_ctrl)
+>>   {
+>>       struct device_node *np;
+>> @@ -387,6 +423,8 @@ int ath11k_mhi_register(struct ath11k_pci *ab_pci)
+>>       mhi_ctrl->status_cb = ath11k_mhi_op_status_cb;
+>>       mhi_ctrl->read_reg = ath11k_mhi_op_read_reg;
+>>       mhi_ctrl->write_reg = ath11k_mhi_op_write_reg;
+>> +    mhi_ctrl->bw_scale = ath11k_mhi_op_bw_scale;
+>> +    mhi_ctrl->get_misc_doorbell = ath11k_mhi_op_get_misc_doorbell;
+>>         switch (ab->hw_rev) {
+>>       case ATH11K_HW_QCN9074_HW10:
+>>
+>
 
