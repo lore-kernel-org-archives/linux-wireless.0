@@ -1,54 +1,54 @@
-Received: from smtp9.infineon.com (smtp9.infineon.com [217.10.52.204])
+Received: from smtp14.infineon.com (smtp14.infineon.com [217.10.52.160])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C213644A3
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3280B463B91
+	for <linux-wireless@vger.kernel.org>; Wed,  2 Sep 2026 16:56:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.10.52.160
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1788368178; cv=none; b=o6VqqJ1MhFIqwsOUJug+sakTlp14Vd+InKci87Dr5V0eY1PH11ivxL7SLwcBXKfTqG0nNmtJJTbfs7L9FHHqOMlGf6hZ63vw2ULQ+laZ+x/yfLbWBjuunzHaoUzxftZnSb/hJIVC2j7hIbPCrAebkOouY/TmuewQclXajXd7cP8=
+	t=1788368189; cv=none; b=rl0nCutiPmvitkiqhEPGX2zBA/zO75Ia8TOFcQo/I4ySl4DOQI4mY4p8hfaI+y9gZdEJTQhBblGOZy5QdHcTR68PqyjVJIWeeHz+m6N9gVMBO3l6hYmGJ0FQN76UmeliOxlArhVJa//gsM6+oc8qmntVFFR+yEYmh5iqeIgrb2M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1788368178; c=relaxed/simple;
-	bh=7z1/xHfine8TlBkQF6GUVIevLJ213HcLz9/TsLbsopU=;
+	s=arc-20240116; t=1788368189; c=relaxed/simple;
+	bh=nzNUHKG1pSCx+3YBUxyGMecwzpH4qM5zqc9+Mk6Fqrw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Jd4717XiwOLEnAewygc2lBJSJGk9VDLRnGldLa9qVhxatvbD2rzw0XkGoqpsW/xCQsThfrMmY++58H6J/wfIcHliM23NiKAPY5l5O9rTJ5fEemfuTBfKkFSxC1sqx2HoBJRk7zbXIEAcnsSVdd5vDFTZ6URvK9FLlOazur/VLyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=HAopXc3v; arc=none smtp.client-ip=217.10.52.204
+	 MIME-Version:Content-Type; b=q27rjIsVhV61t6rjol6sSatR+yC0QPO/vwh1FIumPrMmDHEai96zmGIVfHKkhEUafi/oAYk/pIhkJmDkVKZp3dFVh3m6qLGBugf+iBdDjc6sGisM5JZcNM8SyMCE/6ToIjkCyLJnGRDEC4kc3iwTP8SDfLgnKhxAUIGK6Ht0ysw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com; spf=pass smtp.mailfrom=infineon.com; dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b=eo6fQTis; arc=none smtp.client-ip=217.10.52.160
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=infineon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infineon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="HAopXc3v"
+	dkim=pass (1024-bit key) header.d=infineon.com header.i=@infineon.com header.b="eo6fQTis"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=infineon.com; i=@infineon.com; q=dns/txt; s=IFXMAIL;
-  t=1788368176; x=1819904176;
+  t=1788368187; x=1819904187;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7z1/xHfine8TlBkQF6GUVIevLJ213HcLz9/TsLbsopU=;
-  b=HAopXc3vFCjzm1LHFuTB4cNJphEesDDnJhViZtqt3FIiV0M6OlwHKt/p
-   FzOZz1RQJqknh1ADe/9zklb+gWXM04bzF1jZvmlRHwe8cWizV//SZ0Nb+
-   y1GdIkYAtu184olq5QkTVuyi+Elen+H94Fk1xufAp8uGC8MctLFqiLwfz
-   k=;
-X-CSE-ConnectionGUID: Vv9+bD8MRJ6elNjy3S6EKQ==
-X-CSE-MsgGUID: aRiuYgJGTmyAuvYUMWI+uA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="107706065"
+  bh=nzNUHKG1pSCx+3YBUxyGMecwzpH4qM5zqc9+Mk6Fqrw=;
+  b=eo6fQTisBJEFKhQIxlxR/S9N3GL7ETDfKZ09AP1mdScAISpNeh3qjlDL
+   R87qkVDC+KA1zRjbFCRO80nYIxzF1UVB+v3gkE5yJImD42YepbXXVFgVW
+   fc5qGeD5iz5xVjdtod5PIRsjmS6mC3GMgn1GVr5Llpgd8FWuRQb2Scnwu
+   E=;
+X-CSE-ConnectionGUID: LDGBUu6PSueVSGjOaasA8A==
+X-CSE-MsgGUID: 3Kd3sjtaTImNSLCGMTKb+w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11894"; a="145161437"
 X-IronPort-AV: E=Sophos;i="6.25,258,1779141600"; 
-   d="scan'208";a="107706065"
+   d="scan'208";a="145161437"
 X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO MUCSE812.infineon.com) ([172.23.29.38])
-  by smtp9.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:56:14 +0200
-Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE812.infineon.com
- (172.23.29.38) with Microsoft SMTP Server (version=TLS1_2,
+Received: from unknown (HELO MUCSE805.infineon.com) ([172.23.29.31])
+  by smtp14.infineon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2026 18:56:25 +0200
+Received: from MUCSE827.infineon.com (172.23.29.20) by MUCSE805.infineon.com
+ (172.23.29.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.46; Wed, 2 Sep
- 2026 18:56:13 +0200
+ 2026 18:56:24 +0200
 Received: from ISCN5CG54722ST.infineon.com (10.161.6.196) by
  MUCSE827.infineon.com (172.23.29.20) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.46; Wed, 2 Sep 2026 18:56:11 +0200
+ 15.2.2562.46; Wed, 2 Sep 2026 18:56:23 +0200
 From: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 To: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 CC: <arend.vanspriel@broadcom.com>, <wlan-kernel-dev-list@infineon.com>,
 	<gokulkumar.sivakumar@infineon.com>
-Subject: [PATCH wireless-next v3 24/25] wifi: inffmac: add utils.c/h
-Date: Wed, 2 Sep 2026 16:50:55 +0000
-Message-ID: <20260902165057.456447-25-gokulkumar.sivakumar@infineon.com>
+Subject: [PATCH wireless-next v3 25/25] wifi: inffmac: add Kconfig, Makefile
+Date: Wed, 2 Sep 2026 16:50:56 +0000
+Message-ID: <20260902165057.456447-26-gokulkumar.sivakumar@infineon.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
 References: <20260902165057.456447-1-gokulkumar.sivakumar@infineon.com>
@@ -60,556 +60,80 @@ List-Unsubscribe: <mailto:linux-wireless+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: MUCSE824.infineon.com (172.23.29.55) To
+X-ClientProxiedBy: MUCSE810.infineon.com (172.23.29.36) To
  MUCSE827.infineon.com (172.23.29.20)
 
-Imeplemenation of common utility functions and MACRO definitions which can
-be used by other driver source files.
+Introduce a new Kconfig and Makefile for the inffmac driver sub-directory.
 
 Signed-off-by: Gokul Sivakumar <gokulkumar.sivakumar@infineon.com>
 ---
- drivers/net/wireless/infineon/inffmac/utils.c | 291 ++++++++++++++++++
- drivers/net/wireless/infineon/inffmac/utils.h | 233 ++++++++++++++
- 2 files changed, 524 insertions(+)
- create mode 100644 drivers/net/wireless/infineon/inffmac/utils.c
- create mode 100644 drivers/net/wireless/infineon/inffmac/utils.h
+ drivers/net/wireless/infineon/inffmac/Kconfig | 13 +++++++
+ .../net/wireless/infineon/inffmac/Makefile    | 36 +++++++++++++++++++
+ 2 files changed, 49 insertions(+)
+ create mode 100644 drivers/net/wireless/infineon/inffmac/Kconfig
+ create mode 100644 drivers/net/wireless/infineon/inffmac/Makefile
 
-diff --git a/drivers/net/wireless/infineon/inffmac/utils.c b/drivers/net/wireless/infineon/inffmac/utils.c
+diff --git a/drivers/net/wireless/infineon/inffmac/Kconfig b/drivers/net/wireless/infineon/inffmac/Kconfig
 new file mode 100644
-index 000000000000..5d6468808d79
+index 000000000000..036ef2421f32
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/utils.c
-@@ -0,0 +1,291 @@
-+// SPDX-License-Identifier: ISC
++++ b/drivers/net/wireless/infineon/inffmac/Kconfig
+@@ -0,0 +1,13 @@
++# SPDX-License-Identifier: ISC
 +
-+/*
-+ * Copyright (c) 2010 Broadcom Corporation
-+ *
-+ * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
-+ * All rights reserved.
-+ */
-+
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
-+#include <linux/netdevice.h>
-+#include <linux/module.h>
-+
-+#include "utils.h"
-+
-+struct sk_buff *inff_pkt_buf_get_skb(uint len)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = dev_alloc_skb(len);
-+	if (skb) {
-+		skb_put(skb, len);
-+		skb->priority = 0;
-+	}
-+
-+	return skb;
-+}
-+
-+/* Free the driver packet. Free the tag if present */
-+void inff_pkt_buf_free_skb(struct sk_buff *skb)
-+{
-+	if (!skb)
-+		return;
-+
-+	WARN_ON(skb->next);
-+	dev_kfree_skb_any(skb);
-+}
-+
-+/*
-+ * osl multiple-precedence packet queue
-+ * hi_prec is always >= the number of the highest non-empty precedence
-+ */
-+struct sk_buff *inff_pktq_penq(struct pktq *pq, int prec,
-+			       struct sk_buff *p)
-+{
-+	struct sk_buff_head *q;
-+
-+	if (pktq_full(pq) || pktq_pfull(pq, prec))
-+		return NULL;
-+
-+	q = &pq->q[prec].skblist;
-+	skb_queue_tail(q, p);
-+	pq->len++;
-+
-+	if (pq->hi_prec < prec)
-+		pq->hi_prec = (u8)prec;
-+
-+	return p;
-+}
-+
-+struct sk_buff *inff_pktq_penq_head(struct pktq *pq, int prec,
-+				    struct sk_buff *p)
-+{
-+	struct sk_buff_head *q;
-+
-+	if (pktq_full(pq) || pktq_pfull(pq, prec))
-+		return NULL;
-+
-+	q = &pq->q[prec].skblist;
-+	skb_queue_head(q, p);
-+	pq->len++;
-+
-+	if (pq->hi_prec < prec)
-+		pq->hi_prec = (u8)prec;
-+
-+	return p;
-+}
-+
-+struct sk_buff *inff_pktq_pdeq(struct pktq *pq, int prec)
-+{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p;
-+
-+	q = &pq->q[prec].skblist;
-+	p = skb_dequeue(q);
-+	if (!p)
-+		return NULL;
-+
-+	pq->len--;
-+	return p;
-+}
-+
-+/*
-+ * precedence based dequeue with match function. Passing a NULL pointer
-+ * for the match function parameter is considered to be a wildcard so
-+ * any packet on the queue is returned. In that case it is no different
-+ * from inff_pktq_pdeq() above.
-+ */
-+struct sk_buff *inff_pktq_pdeq_match(struct pktq *pq, int prec,
-+				     bool (*match_fn)(struct sk_buff *skb,
-+						      void *arg), void *arg)
-+{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p, *next;
-+
-+	q = &pq->q[prec].skblist;
-+	skb_queue_walk_safe(q, p, next) {
-+		if (!match_fn || match_fn(p, arg)) {
-+			skb_unlink(p, q);
-+			pq->len--;
-+			return p;
-+		}
-+	}
-+	return NULL;
-+}
-+
-+struct sk_buff *inff_pktq_pdeq_tail(struct pktq *pq, int prec)
-+{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p;
-+
-+	q = &pq->q[prec].skblist;
-+	p = skb_dequeue_tail(q);
-+	if (!p)
-+		return NULL;
-+
-+	pq->len--;
-+	return p;
-+}
-+
-+void
-+inff_pktq_pflush(struct pktq *pq, int prec, bool dir,
-+		 bool (*fn)(struct sk_buff *, void *), void *arg)
-+{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p, *next;
-+
-+	q = &pq->q[prec].skblist;
-+	skb_queue_walk_safe(q, p, next) {
-+		if (!fn || (*fn) (p, arg)) {
-+			skb_unlink(p, q);
-+			inff_pkt_buf_free_skb(p);
-+			pq->len--;
-+		}
-+	}
-+}
-+
-+void inff_pktq_flush(struct pktq *pq, bool dir,
-+		     bool (*fn)(struct sk_buff *, void *), void *arg)
-+{
-+	int prec;
-+
-+	for (prec = 0; prec < pq->num_prec; prec++)
-+		inff_pktq_pflush(pq, prec, dir, fn, arg);
-+}
-+
-+void inff_pktq_init(struct pktq *pq, int num_prec, int max_len)
-+{
-+	int prec;
-+
-+	/* pq is variable size; only zero out what's requested */
-+	memset(pq, 0,
-+	       offsetof(struct pktq, q) + (sizeof(struct pktq_prec) * num_prec));
-+
-+	pq->num_prec = (u16)num_prec;
-+
-+	pq->max = (u16)max_len;
-+
-+	for (prec = 0; prec < num_prec; prec++) {
-+		pq->q[prec].max = pq->max;
-+		skb_queue_head_init(&pq->q[prec].skblist);
-+	}
-+}
-+
-+struct sk_buff *inff_pktq_peek_tail(struct pktq *pq, int *prec_out)
-+{
-+	int prec;
-+
-+	if (pktq_empty(pq))
-+		return NULL;
-+
-+	for (prec = 0; prec < pq->hi_prec; prec++)
-+		if (!skb_queue_empty(&pq->q[prec].skblist))
-+			break;
-+
-+	if (prec_out)
-+		*prec_out = prec;
-+
-+	return skb_peek_tail(&pq->q[prec].skblist);
-+}
-+
-+/* Return sum of lengths of a specific set of precedences */
-+int inff_pktq_mlen(struct pktq *pq, uint prec_bmp)
-+{
-+	int prec, len;
-+
-+	len = 0;
-+
-+	for (prec = 0; prec <= pq->hi_prec; prec++)
-+		if (prec_bmp & (1 << prec))
-+			len += pq->q[prec].skblist.qlen;
-+
-+	return len;
-+}
-+
-+/* Priority dequeue from a specific set of precedences */
-+struct sk_buff *inff_pktq_mdeq(struct pktq *pq, uint prec_bmp,
-+			       int *prec_out)
-+{
-+	struct sk_buff_head *q;
-+	struct sk_buff *p;
-+	int prec;
-+
-+	if (pktq_empty(pq))
-+		return NULL;
-+
-+	while ((prec = pq->hi_prec) > 0 &&
-+	       skb_queue_empty(&pq->q[prec].skblist))
-+		pq->hi_prec--;
-+
-+	while ((prec_bmp & (1 << prec)) == 0 ||
-+	       skb_queue_empty(&pq->q[prec].skblist))
-+		if (prec-- == 0)
-+			return NULL;
-+
-+	q = &pq->q[prec].skblist;
-+	p = skb_dequeue(q);
-+	if (!p)
-+		return NULL;
-+
-+	pq->len--;
-+
-+	if (prec_out)
-+		*prec_out = prec;
-+
-+	return p;
-+}
-+
-+/* Produce a human-readable string for boardrev */
-+char *inff_boardrev_str(u32 brev, char *buf)
-+{
-+	char c;
-+
-+	if (brev < 0x100) {
-+		snprintf(buf, INFF_BOARDREV_LEN, "%d.%d",
-+			 (brev & 0xf0) >> 4, brev & 0xf);
-+	} else {
-+		c = (brev & 0xf000) == 0x1000 ? 'P' : 'A';
-+		snprintf(buf, INFF_BOARDREV_LEN, "%c%03x", c, brev & 0xfff);
-+	}
-+	return buf;
-+}
-+
-+char *inff_dotrev_str(u32 dotrev, char *buf)
-+{
-+	u8 dotval[4];
-+
-+	if (!dotrev) {
-+		snprintf(buf, INFF_DOTREV_LEN, "unknown");
-+		return buf;
-+	}
-+	dotval[0] = (dotrev >> 24) & 0xFF;
-+	dotval[1] = (dotrev >> 16) & 0xFF;
-+	dotval[2] = (dotrev >> 8) & 0xFF;
-+	dotval[3] = dotrev & 0xFF;
-+
-+	if (dotval[3])
-+		snprintf(buf, INFF_DOTREV_LEN, "%d.%d.%d.%d", dotval[0],
-+			 dotval[1], dotval[2], dotval[3]);
-+	else if (dotval[2])
-+		snprintf(buf, INFF_DOTREV_LEN, "%d.%d.%d", dotval[0],
-+			 dotval[1], dotval[2]);
-+	else
-+		snprintf(buf, INFF_DOTREV_LEN, "%d.%d", dotval[0],
-+			 dotval[1]);
-+
-+	return buf;
-+}
-+
-+struct sk_buff *__inff_pkt_buf_get_skb(uint len, gfp_t gfp_mask)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = __netdev_alloc_skb(NULL, len, gfp_mask);
-+	if (skb) {
-+		skb_put(skb, len);
-+		skb->priority = 0;
-+	}
-+	return skb;
-+}
-diff --git a/drivers/net/wireless/infineon/inffmac/utils.h b/drivers/net/wireless/infineon/inffmac/utils.h
++config INFFMAC
++	tristate "Infineon FullMAC WLAN driver"
++	depends on CFG80211 && MMC
++	select FW_LOADER
++	select FW_UPLOAD
++	default y
++	help
++	  This module adds support for wireless adapters based on Infineon
++	  FullMAC chipsets. It has to work with at least one of the bus
++	  interface support. If you choose to build a module, it'll be called
++	  inffmac.ko.
+diff --git a/drivers/net/wireless/infineon/inffmac/Makefile b/drivers/net/wireless/infineon/inffmac/Makefile
 new file mode 100644
-index 000000000000..79a100647eab
+index 000000000000..1e13c2b2e5ec
 --- /dev/null
-+++ b/drivers/net/wireless/infineon/inffmac/utils.h
-@@ -0,0 +1,233 @@
-+/* SPDX-License-Identifier: ISC */
-+/*
-+ * Copyright (c) 2010 Broadcom Corporation
-+ *
-+ * Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
-+ * All rights reserved.
-+ */
++++ b/drivers/net/wireless/infineon/inffmac/Makefile
+@@ -0,0 +1,36 @@
++# SPDX-License-Identifier: ISC
++#
++# Copyright (c) 2025-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG.
++# All rights reserved.
++#
++# Makefile fragment for Infineon 802.11 Networking Device Driver
++#
 +
-+#ifndef	INFF_UTILS_H
-+#define	INFF_UTILS_H
++ccflags-y += -I $(src)
 +
-+#include <linux/skbuff.h>
-+
-+/*
-+ * Spin at most 'us' microseconds while 'exp' is true.
-+ * Caller should explicitly test 'exp' when this completes
-+ * and take appropriate error action if 'exp' is still true.
-+ */
-+#define SPINWAIT(exp, us) { \
-+	uint countdown = (us) + 9; \
-+	while ((exp) && (countdown >= 10)) {\
-+		usleep_range(10, 20); \
-+		countdown -= 10; \
-+	} \
-+}
-+
-+/* Spin at most 'ms' milliseconds with polling interval 'interval' milliseconds
-+ * while 'exp' is true. Caller should explicitly test 'exp' when this completes
-+ * and take appropriate error action if 'exp' is still true.
-+ */
-+#define SPINWAIT_MS(exp, ms, interval) { \
-+	typeof(interval) interval_ = (interval); \
-+	uint countdown = (ms) + (interval_ - 1U); \
-+	while ((exp) && (countdown >= interval_)) { \
-+		msleep(interval_); \
-+		countdown -= interval_; \
-+	} \
-+}
-+
-+/* osl multi-precedence packet queue */
-+#define PKTQ_LEN_DEFAULT        128	/* Max 128 packets */
-+#define PKTQ_MAX_PREC           16	/* Maximum precedence levels */
-+
-+/* the largest reasonable packet buffer driver uses for ethernet MTU in bytes */
-+#define	PKTBUFSZ	2048
-+
-+#ifndef setbit
-+#ifndef NBBY			/* the BSD family defines NBBY */
-+#define	NBBY	8		/* 8 bits per byte */
-+#endif				/* #ifndef NBBY */
-+#define	setbit(a, i)	{ \
-+	typeof(i) _i = (i); \
-+	(((u8 *)a)[(_i) / NBBY] |= 1 << ((_i) % NBBY)); \
-+	}
-+#define	clrbit(a, i)	{ \
-+	typeof(i) _i = (i); \
-+	(((u8 *)a)[(_i) / NBBY] &= ~(1 << ((_i) % NBBY))); \
-+	}
-+#define	isset(a, i)	{ \
-+	typeof(i) _i = (i); \
-+	(((const u8 *)a)[(_i) / NBBY] & (1 << ((_i) % NBBY))); \
-+	}
-+#define	isclr(a, i)	{ \
-+	typeof(i) _i = (i); \
-+	((((const u8 *)a)[(_i) / NBBY] & (1 << ((_i) % NBBY))) == 0); \
-+	}
-+#endif				/* setbit */
-+
-+#define	NBITS(type)	(sizeof(type) * 8)
-+#define NBITVAL(nbits)	(1 << (nbits))
-+#define MAXBITVAL(nbits)	((1 << (nbits)) - 1)
-+#define	NBITMASK(nbits)	MAXBITVAL(nbits)
-+#define MAXNBVAL(nbyte)	MAXBITVAL((nbyte) * 8)
-+
-+/* crc defines */
-+#define CRC16_INIT_VALUE 0xffff	/* Initial CRC16 checksum value */
-+#define CRC16_GOOD_VALUE 0xf0b8	/* Good final CRC16 checksum value */
-+
-+/* 18-bytes of Ethernet address buffer length */
-+#define ETHER_ADDR_STR_LEN	18
-+
-+struct pktq_prec {
-+	struct sk_buff_head skblist;
-+	u16 max;		/* maximum number of queued packets */
-+};
-+
-+/* multi-priority pkt queue */
-+struct pktq {
-+	u16 num_prec;	/* number of precedences in use */
-+	u16 hi_prec;	/* rapid dequeue hint (>= highest non-empty prec) */
-+	u16 max;	/* total max packets */
-+	u16 len;	/* total number of packets */
-+	/*
-+	 * q array must be last since # of elements can be either
-+	 * PKTQ_MAX_PREC or 1
-+	 */
-+	struct pktq_prec q[PKTQ_MAX_PREC];
-+};
-+
-+/* operations on a specific precedence in packet queue */
-+
-+static inline int pktq_plen(struct pktq *pq, int prec)
-+{
-+	return pq->q[prec].skblist.qlen;
-+}
-+
-+static inline int pktq_pavail(struct pktq *pq, int prec)
-+{
-+	return pq->q[prec].max - pq->q[prec].skblist.qlen;
-+}
-+
-+static inline bool pktq_pfull(struct pktq *pq, int prec)
-+{
-+	return pq->q[prec].skblist.qlen >= pq->q[prec].max;
-+}
-+
-+static inline bool pktq_pempty(struct pktq *pq, int prec)
-+{
-+	return skb_queue_empty(&pq->q[prec].skblist);
-+}
-+
-+static inline struct sk_buff *pktq_ppeek(struct pktq *pq, int prec)
-+{
-+	return skb_peek(&pq->q[prec].skblist);
-+}
-+
-+static inline struct sk_buff *pktq_ppeek_tail(struct pktq *pq, int prec)
-+{
-+	return skb_peek_tail(&pq->q[prec].skblist);
-+}
-+
-+struct sk_buff *inff_pktq_penq(struct pktq *pq, int prec, struct sk_buff *p);
-+struct sk_buff *inff_pktq_penq_head(struct pktq *pq, int prec,
-+				    struct sk_buff *p);
-+struct sk_buff *inff_pktq_pdeq(struct pktq *pq, int prec);
-+struct sk_buff *inff_pktq_pdeq_tail(struct pktq *pq, int prec);
-+struct sk_buff *inff_pktq_pdeq_match(struct pktq *pq, int prec,
-+				     bool (*match_fn)(struct sk_buff *p,
-+						      void *arg),
-+				      void *arg);
-+
-+/* packet primitives */
-+struct sk_buff *inff_pkt_buf_get_skb(uint len);
-+void inff_pkt_buf_free_skb(struct sk_buff *skb);
-+struct sk_buff *__inff_pkt_buf_get_skb(uint len, gfp_t gfp_mask);
-+
-+/* Empty the queue at particular precedence level */
-+/* callback function fn(pkt, arg) returns true if pkt belongs to if */
-+void inff_pktq_pflush(struct pktq *pq, int prec, bool dir,
-+		      bool (*fn)(struct sk_buff *, void *), void *arg);
-+
-+/* operations on a set of precedences in packet queue */
-+
-+int inff_pktq_mlen(struct pktq *pq, uint prec_bmp);
-+struct sk_buff *inff_pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
-+
-+/* operations on packet queue as a whole */
-+
-+static inline int pktq_len(struct pktq *pq)
-+{
-+	return (int)pq->len;
-+}
-+
-+static inline int pktq_max(struct pktq *pq)
-+{
-+	return (int)pq->max;
-+}
-+
-+static inline int pktq_avail(struct pktq *pq)
-+{
-+	return (int)(pq->max - pq->len);
-+}
-+
-+static inline bool pktq_full(struct pktq *pq)
-+{
-+	return pq->len >= pq->max;
-+}
-+
-+static inline bool pktq_empty(struct pktq *pq)
-+{
-+	return pq->len == 0;
-+}
-+
-+void inff_pktq_init(struct pktq *pq, int num_prec, int max_len);
-+/* prec_out may be NULL if caller is not interested in return value */
-+struct sk_buff *inff_pktq_peek_tail(struct pktq *pq, int *prec_out);
-+void inff_pktq_flush(struct pktq *pq, bool dir,
-+		     bool (*fn)(struct sk_buff *, void *), void *arg);
-+
-+/*
-+ * bitfield macros using masking and shift
-+ *
-+ * remark: the mask parameter should be a shifted mask.
-+ */
-+static inline void inff_maskset32(u32 *var, u32 mask, u8 shift, u32 value)
-+{
-+	value = (value << shift) & mask;
-+	*var = (*var & ~mask) | value;
-+}
-+
-+static inline u32 inff_maskget32(u32 var, u32 mask, u8 shift)
-+{
-+	return (var & mask) >> shift;
-+}
-+
-+static inline void inff_maskset16(u16 *var, u16 mask, u8 shift, u16 value)
-+{
-+	value = (value << shift) & mask;
-+	*var = (*var & ~mask) | value;
-+}
-+
-+static inline u16 inff_maskget16(u16 var, u16 mask, u8 shift)
-+{
-+	return (var & mask) >> shift;
-+}
-+
-+static __always_inline void inff_delay(u32 ms)
-+{
-+	if (ms < 1000 / HZ) {
-+		cond_resched();
-+		mdelay(ms);
-+	} else {
-+		msleep(ms);
-+	}
-+}
-+
-+#define INFF_BOARDREV_LEN	8
-+#define INFF_DOTREV_LEN	16
-+
-+char *inff_boardrev_str(u32 brev, char *buf);
-+char *inff_dotrev_str(u32 dotrev, char *buf);
-+
-+#endif /* INFF_UTILS_H */
++obj-$(CONFIG_INFFMAC) += inffmac.o
++inffmac-objs += \
++		bcdc.o \
++		bus_proto.o \
++		cfg80211.o \
++		chan.o \
++		chip.o \
++		chip_acw74xx.o \
++		chip_cyw5591x.o \
++		dev_cmd.o \
++		dev_evt.o \
++		dfu.o \
++		feature.o \
++		firmware.o \
++		fwsignal.o \
++		he.o \
++		icdc.o \
++		ie.o \
++		interface.o \
++		main.o \
++		net.o \
++		scan.o \
++		sdio.o \
++		utils.o
++inffmac-$(CONFIG_INF_DEBUG) += \
++		debug.o
 -- 
 2.43.0
 
